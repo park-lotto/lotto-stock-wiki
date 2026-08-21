@@ -527,6 +527,16 @@ body.is-admin .admin-only{display:block}
               title="채널마다 상위 2개만 — 한 채널이 화면을 도배하는 걸 막습니다. 어떤 2개인지는 지금 켠 정렬 탭이 정합니다(최신순이면 최신 2개, 조회수순이면 조회수 상위 2개). 끄면 전부 봅니다">📺 채널당 2개</button>
       <span class="fcount" id="fcount"></span>
     </div>
+    <!-- 렌즈 검색국가(2026-08-22 사장님 "김밥 렌즈를 해외꺼까지 돌릴 거 없잖아").
+         ★위 '걸러내기'와 축이 다르다 — 저건 **이미 받아온 결과**를 거르는 것이고,
+           여기는 **검색을 나가기 전에** 어느 나라를 돌릴지 정한다(= SerpApi 비용).
+           국내 소재를 한국만으로 돌리면 4회 → 1회로 준다.
+         칩 목록은 /api/lens/locales가 준다 — 여기 하드코딩하면 서버 env와 어긋난다. -->
+    <div class="filters" id="lensLocales" style="display:none">
+      <span class="flabel" title="렌즈(🔍 숏템파워검색)가 어느 나라 구글에 물어볼지. 끄면 그 나라는 검색하지 않아 SerpApi 비용이 줄고, 결과도 그만큼 줄어듭니다. 한 번 정하면 계속 유지됩니다">🔍 렌즈 검색국가</span>
+      <span id="lensLocaleChips"></span>
+      <span class="fcount" id="lensLocaleNote"></span>
+    </div>
     <!-- 카테고리 줄 — 라벨은 renderCtypes()가 함께 그린다(2026-08-17 사장님 "기간/강도지표/단순지표/카테고리") -->
     <div class="ctypes" id="ctypes"></div>
     <!-- 발굴 축(유튜브 전용) — 채널을 축별로 모아온 결과를 랭킹에서 바로 고른다.
@@ -687,6 +697,64 @@ function togglePerChannel(){
   const b = document.querySelector('.ftog[data-f="perch"]');
   if(b) b.classList.toggle('on', PER_CHANNEL_ON);
   render();
+}
+// ── 🔍 렌즈 검색국가 (2026-08-22 사장님 "김밥 렌즈를 해외꺼까지 돌릴 거 없잖아") ──
+// 렌즈는 버튼을 누르는 순간 검색이 나간다 → 고르는 자리는 **렌즈 밖**이어야 한다.
+// 여기서 정해두면 그 뒤 누르는 모든 렌즈가 그 나라로만 나간다(SerpApi 4회 → 1회).
+// ★칩 목록은 서버(/api/lens/locales)가 준다 — 프론트에 나라를 박으면 서버 env와 어긋난다.
+let LENS_LOCALES_ALL = [];     // [{key,label}] — 서버가 주는 전체 목록
+let LENS_LOCALES_OFF = new Set();   // 꺼둔 것만 저장한다(새 나라가 늘면 기본 켜짐이 되게)
+function _loadLensLocalesOff(){
+  try{ return new Set(JSON.parse(localStorage.getItem('ss_lens_loc_off')||'[]')); }
+  catch(e){ return new Set(); }
+}
+function _saveLensLocalesOff(){
+  try{ localStorage.setItem('ss_lens_loc_off', JSON.stringify([...LENS_LOCALES_OFF])); }catch(e){}
+}
+// 지금 켜져 있는 나라 → "ko:kr,ja:jp". 렌즈 검색이 이 값을 서버로 보낸다.
+function lensLocalesParam(){
+  return LENS_LOCALES_ALL.map(l=>l.key).filter(k=>!LENS_LOCALES_OFF.has(k)).join(',');
+}
+async function initLensLocales(){
+  try{
+    const d = await (await fetch('/api/lens/locales')).json();
+    LENS_LOCALES_ALL = d.locales||[];
+  }catch(e){ LENS_LOCALES_ALL = []; }
+  if(!LENS_LOCALES_ALL.length) return;      // 못 받으면 줄을 아예 안 띄운다(전체 검색 그대로)
+  LENS_LOCALES_OFF = _loadLensLocalesOff();
+  const row = document.getElementById('lensLocales');
+  if(row) row.style.display = '';
+  renderLensLocaleChips();
+}
+function renderLensLocaleChips(){
+  const box = document.getElementById('lensLocaleChips');
+  if(!box) return;
+  box.innerHTML = LENS_LOCALES_ALL.map(l=>{
+    const on = !LENS_LOCALES_OFF.has(l.key);
+    return `<button class="ftog${on?' on':''}" data-loc="${l.key}" onclick="toggleLensLocale('${l.key}')"
+      title="${on?'끄면':'켜면'} 렌즈가 이 나라를 검색하지 ${on?'않습니다':'않던 것을 다시 검색합니다'}">${l.label}</button>`;
+  }).join('');
+  const note = document.getElementById('lensLocaleNote');
+  if(note){
+    const n = LENS_LOCALES_ALL.length - LENS_LOCALES_OFF.size;
+    note.textContent = n < LENS_LOCALES_ALL.length
+      ? `${n}개국만 검색 (SerpApi ${n}회)` : '';
+  }
+}
+function toggleLensLocale(key){
+  if(LENS_LOCALES_OFF.has(key)){
+    LENS_LOCALES_OFF.delete(key);
+  }else{
+    // ★마지막 하나는 못 끄게 — 0개가 되면 렌즈가 조용히 빈손이 된다(서버도 전체로
+    //   되돌리지만, 화면에 "0개국"이 떠 있는 채로 4벌이 도는 게 더 헷갈린다).
+    if(LENS_LOCALES_ALL.length - LENS_LOCALES_OFF.size <= 1){
+      alert('최소 한 나라는 켜 두세요 — 전부 끄면 렌즈가 검색할 곳이 없습니다.');
+      return;
+    }
+    LENS_LOCALES_OFF.add(key);
+  }
+  _saveLensLocalesOff();
+  renderLensLocaleChips();
 }
 // ── 플랫폼별 안내문구·지표 툴팁(2026-07-24, 토글 노출 대응) — 인스타 기준 문구를
 // 그대로 두면 틱톡/유튜브(시드계정·키워드+14일창, 조회수기반)에 거짓 설명이 된다. ──
@@ -2471,6 +2539,10 @@ async function lensSearch(btn, shortcode){
   }).catch(()=>{});
   const fd=new FormData(); fd.append('frame', blob, 'f.jpg');
   if(caption) fd.append('source_caption', caption);
+  // 🔍 렌즈 검색국가 — 랭킹 상단에서 꺼둔 나라는 아예 검색하지 않는다(SerpApi 절약).
+  // 빈 문자열이면 서버가 전체로 폴백한다(옛 화면·초기화 실패와 같은 취급).
+  try{ const _loc=(typeof lensLocalesParam==='function')?lensLocalesParam():'';
+       if(_loc) fd.append('locales', _loc); }catch(e){}
   try{
     const r=await fetch('/api/lens/search',{method:'POST',body:fd});
     const st=LENS_STATE[shortcode]; if(!st) return;   // 사용자가 닫았을 수 있음
@@ -3912,6 +3984,7 @@ async function commitScene(){
 }
 
 renderCtypes(); renderCats(); renderStyles(); renderFilterButtons(); loadLast(); loadRefAdded(); updatePlatformCopy(PLATFORM);
+initLensLocales();   // 🔍 렌즈 검색국가 칩(2026-08-22) — 서버 목록을 받아 줄을 띄운다
 
 // ── 관리자(사장님 cid0) 전용 운영버튼(2026-07-22) ──
 // 수집·전수조사·레퍼런스등록은 크롤 비용이 드는 운영 액션이라 관리자만 쓴다.

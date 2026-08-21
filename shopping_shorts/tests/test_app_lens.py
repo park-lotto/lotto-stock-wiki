@@ -26,7 +26,7 @@ def _client(tmp_path, monkeypatch, items=None, limit_reached=False):
     monkeypatch.setattr(appmod, "DB_PATH", db)
     monkeypatch.setattr(appmod, "PUBLIC_BASE_URL", "https://example.test")
     monkeypatch.setattr(appmod, "search_similar_videos",
-                        lambda url, api_key=None, source_caption="", stats=None: items if items is not None else [])
+                        lambda url, api_key=None, source_caption="", stats=None, locales=None: items if items is not None else [])
     # imgur 업로드는 네트워크라 목킹 — None 반환 시 서버URL 폴백 경로를 탄다
     monkeypatch.setattr(appmod, "upload_frame", lambda raw: None)
     if limit_reached:
@@ -59,7 +59,7 @@ def test_lens_search_forwards_source_caption(tmp_path, monkeypatch):
     monkeypatch.setattr(appmod, "upload_frame", lambda raw: None)
     captured = {}
 
-    def fake_search(url, api_key=None, source_caption="", stats=None):
+    def fake_search(url, api_key=None, source_caption="", stats=None, locales=None):
         captured["source_caption"] = source_caption
         return []
     monkeypatch.setattr(appmod, "search_similar_videos", fake_search)
@@ -364,7 +364,7 @@ def test_lens_search_reports_instagram_dropoff(tmp_path, monkeypatch):
     ]
     monkeypatch.setattr(lens_discover, "verify_matches", lambda items, keywords=None: items)
     monkeypatch.setattr(appmod, "search_similar_videos",
-                        lambda url, api_key=None, source_caption="", stats=None:
+                        lambda url, api_key=None, source_caption="", stats=None, locales=None:
                         _run_real(lens_discover, raw_matches, stats))
     c = TestClient(appmod.app)
     d = _post_img(c).json()
@@ -558,3 +558,59 @@ def test_lens_search_캡션없으면_채점을_아예_안_부른다(tmp_path, mo
                files={"frame": ("f.jpg", _JPG_1PX, "image/jpeg")}).json()   # 캡션 없음
     assert d["ok"] is True
     assert called == []          # ★한 번도 안 불렀다
+
+
+# ── 검색 국가 고르기 API (2026-08-22) ────────────────────────────────────
+# 사장님: "김밥 렌즈를 해외꺼까지 돌릴 거 없잖아" — 국내 소재는 한국만 돌려 SerpApi를 아낀다.
+
+def test_lens_locales_목록을_서버가_알려준다(tmp_path, monkeypatch):
+    """프론트가 칩을 그릴 목록. ★서버 설정을 그대로 노출한다(하드코딩 금지)."""
+    monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
+    c = TestClient(appmod.app)
+    d = c.get("/api/lens/locales").json()
+    assert d["ok"] is True and d["locales"]
+    keys = [x["key"] for x in d["locales"]]
+    assert keys == [f"{hl}:{cc}" for hl, cc in appmod.lens_discover._LENS_LOCALES]
+    assert all(x["label"] for x in d["locales"])          # 이름이 비면 칩이 빈칸이 된다
+
+
+def test_lens_search_고른_나라만_서버로_전달된다(tmp_path, monkeypatch):
+    """폼의 locales가 search_similar_videos까지 도달하는가(배선 확인)."""
+    got = {}
+
+    def _spy(url, api_key=None, source_caption="", stats=None, locales=None):
+        got["locales"] = locales
+        return []
+    monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
+    monkeypatch.setattr(appmod, "PUBLIC_BASE_URL", "https://example.test")
+    monkeypatch.setattr(appmod, "upload_frame", lambda raw: "https://img/x.jpg")
+    monkeypatch.setattr(appmod, "search_similar_videos", _spy)
+    c = TestClient(appmod.app)
+    r = c.post("/api/lens/search", files={"frame": ("f.jpg", _JPG_1PX, "image/jpeg")},
+               data={"locales": "ko:kr"})
+    assert r.status_code == 200
+    assert got["locales"] == [("ko", "kr")]
+
+
+def test_lens_search_locales_없으면_빈목록_전달_전체가_돈다(tmp_path, monkeypatch):
+    """옛 화면(locales를 안 보냄)도 그대로 돌아야 한다 — 회귀 0."""
+    got = {}
+
+    def _spy(url, api_key=None, source_caption="", stats=None, locales=None):
+        got["locales"] = locales
+        return []
+    monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
+    monkeypatch.setattr(appmod, "PUBLIC_BASE_URL", "https://example.test")
+    monkeypatch.setattr(appmod, "upload_frame", lambda raw: "https://img/x.jpg")
+    monkeypatch.setattr(appmod, "search_similar_videos", _spy)
+    c = TestClient(appmod.app)
+    c.post("/api/lens/search", files={"frame": ("f.jpg", _JPG_1PX, "image/jpeg")})
+    assert got["locales"] == []       # 빈 목록 → lens_discover가 전체로 폴백한다
+
+
+def test_parse_lens_locales_잡값을_걸러낸다():
+    """콜론 없는 값·빈 칸·공백은 버린다. 판정(유효성)은 lens_discover가 한다."""
+    assert appmod._parse_lens_locales("ko:kr, ja:jp") == [("ko", "kr"), ("ja", "jp")]
+    assert appmod._parse_lens_locales("") == []
+    assert appmod._parse_lens_locales("garbage,,:,ko:") == []
+    assert appmod._parse_lens_locales("  ko:kr  ") == [("ko", "kr")]
