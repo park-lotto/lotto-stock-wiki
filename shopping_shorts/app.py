@@ -11451,10 +11451,17 @@ def api_script_styles(request: Request, category: str = None, job: str = None):
     for s in styles:
         fits = s.get("fit_categories") or []
         verified = bool(cat) and (not fits or cat in fits)
+        # ★"⚠ 타소재"만 띄우면 **그럼 이건 뭐에 쓰는 건데**를 알 수 없다(2026-08-21 사장님
+        #   요청: "타소재 저 자리에 레시피·홈템 등 어울릴 대본스타일 표시해줘").
+        #   fit_categories에는 **기계용 이름**(지인증언형·오용형…)과 **사람이 고르는 소재**
+        #   (홈템·레시피·뷰티·기타)가 섞여 있다 — 소재만 갈라 보낸다.
+        #   ⚠️가르는 목록을 화면에 또 적지 않는다(0순위-B). 서버 상수가 정본이다.
+        fit_topics = [x for x in fits if x in _PINNABLE_CATEGORIES]
         out.append({
             "id": s["id"], "name": s["name"], "situation_type": s["situation_type"],
             "beat_roles": s["beat_roles"], "chars_per_30s": s["chars_per_30s"],
-            "fit_categories": fits, "source_count": s["source_count"],
+            "fit_categories": fits, "fit_topics": fit_topics,
+            "source_count": s["source_count"],
             "perf_score": s["perf_score"],
             "fit": "검증" if verified else "타소재",
             # 사용자가 이름만 보고는 못 고른다 — 어디서 나왔고 얼마나 통했는지를 함께 준다.
