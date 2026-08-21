@@ -179,7 +179,16 @@ STYLES = {
                 "harvest": lambda ts: harvest_pair(ts, ys._FOOD, ys._PRODUCT)},
     # 2026-08-20 신설 — 위 score_novel 주석 참고. min 3은 다른 축과 같은 눈높이.
     # 2026-08-20 신설 — 판정·검색어 생성은 yt_style에 있다(어휘축이 사는 곳, 0순위-B).
-    "신기템": {"score": ys.score_novel, "min": 3,
+    # ★신기템만 문턱이 둘이다(2026-08-21 실측). 이 축은 판정이 쉬워 다른 축과 같은
+    #   눈높이(min 3)로 두면 우연히 걸린 채널이 통째로 들어온다. 하룻밤 549채널을
+    #   열어보니 두 종류로 오염돼 있었다:
+    #     ① 잡채널 — 구독 중앙값 264(다른 축 1,410~8,030), 100명 미만이 38%
+    #     ② 대형 오탐 — 25편 중 3편(12%)만 우연히 맞은 큰 채널
+    #        (시스레터 1/12=이케아 브이로그 · 알쓸피식 2/12=피부과 · 서툴러도 1/12)
+    #        진짜(오늘의건짐 3/12 ≈ 6/25)와 갈리는 선이 25편 중 5편이었다.
+    #   연예인·오용형은 공식 자체가 어려워 그게 곧 필터였고, 이 축은 그게 없다.
+    #   실측 잔존: 549 → 68채널(구독 중앙값 10,450) — 다른 축과 같은 급이 된다.
+    "신기템": {"score": ys.score_novel, "min": 5, "min_subs": 1000,
              "harvest": lambda ts: ys.harvest_novel(ts)},
 }
 BLOCK = ["뉴스", "news", "kbs", "mbc", "sbs", "jtbc", "ytn", "연합", "정치", "국회",
@@ -310,10 +319,15 @@ while st["cycles"] < MAX_CYCLES:
                 st["rejected"][cid] = title
                 continue
             sc = cfg["score"](titles, title)
-            if sc >= cfg["min"]:
-                pool[cid] = {"title": title,
-                             "subs": int((stats or {}).get("subscriberCount", 0)),
-                             "score": sc}
+            subs = int((stats or {}).get("subscriberCount", 0))
+            # ★구독자 하한(2026-08-20 신기템 실측). 판정이 쉬운 축은 신생·소형 채널이
+            #   전부 통과해 풀이 잡채널로 찬다 — 하룻밤에 549채널이 들어왔는데 구독
+            #   중앙값 264(다른 축 1,410~8,030), 100명 미만이 38%였다. 연예인·오용형
+            #   공식은 어려워서 그 자체가 필터였던 것이고, 신기템은 그게 없다.
+            #   레퍼런스로 쓸 수 없는 채널은 **안 담는 게 낫다** — 담아두면 다음 회차가
+            #   그 채널 제목에서 검색어를 뽑아 같은 급을 계속 데려온다(오염이 번진다).
+            if sc >= cfg["min"] and subs >= cfg.get("min_subs", 0):
+                pool[cid] = {"title": title, "subs": subs, "score": sc}
                 new += 1
                 made_any = True
             else:

@@ -66,5 +66,28 @@ def test_수확기_STYLES에_등록됐다():
     src = p.read_text(encoding="utf-8")
     m = re.search(r'"신기템":\s*\{[^}]*?"min":\s*(\d+)', src, re.S)
     assert m, "harvest_styles_forever.STYLES에 '신기템'이 없다"
-    assert m.group(1) == "3", m.group(0)
+    assert m.group(1) == "5", m.group(0)
     assert "ys.score_novel" in src, "판정을 yt_style에서 가져다 쓰는 배선이 끊겼다"
+
+
+def test_신기템만_구독하한을_갖는다():
+    """이 축은 판정이 쉬워 문턱이 둘이다(2026-08-21 실측).
+
+    min 3 · 하한 없음으로 하룻밤 549채널이 들어왔는데 두 종류로 오염돼 있었다:
+      ① 잡채널   구독 중앙값 264(다른 축 1,410~8,030) · 100명 미만 38%
+      ② 대형 오탐 25편 중 3편(12%)만 우연히 맞은 큰 채널
+                 (시스레터 1/12=이케아 브이로그 · 알쓸피식 2/12=피부과)
+                 진짜(오늘의건짐 3/12)와 갈리는 선이 25편 중 5편이었다.
+    연예인·오용형은 공식 자체가 어려워 그게 곧 필터다 — 하한을 걸면 멀쩡한 채널이 잘린다.
+    실측 잔존: 549 → 68채널(구독 중앙값 10,450).
+    """
+    src = (pathlib.Path(__file__).resolve().parents[2]
+           / "scripts" / "harvest_styles_forever.py").read_text(encoding="utf-8")
+    def cfg(style):
+        m = re.search(r'"%s":\s*\{(.*?)\}' % style, src, re.S)
+        assert m, "%s 축이 STYLES에 없다" % style
+        return m.group(1)
+    assert '"min_subs": 1000' in cfg("신기템")
+    for style in ("썰쇼핑", "연예인결합", "레시피쇼핑"):
+        assert "min_subs" not in cfg(style), style
+    assert 'sc >= cfg["min"] and subs >= cfg.get("min_subs", 0)' in src,         "등록부가 두 문턱을 함께 보지 않는다"
