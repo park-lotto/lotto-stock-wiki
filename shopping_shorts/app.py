@@ -11732,7 +11732,12 @@ def _assembled_drafts(spines, sources, store, seconds=30, job_id=""):
             slots_by_track[track] = slots
         slots = slots_by_track[track]
         try:
-            d = spine_fill.build_draft(sp, slots, seconds=seconds) if slots else None
+            # ★수치 근거 검사의 재료로 **담긴 영상 전사**를 넘긴다(2026-08-21).
+            #   슬롯 값을 넘기면 자기 자신과 대조라 무엇을 넣어도 통과한다(실측).
+            _src_text = " ".join((x.get("full_text") or "")
+                                 for x in (sources or [])[:_FACTS_MAX_SOURCES])
+            d = (spine_fill.build_draft(sp, slots, seconds=seconds, source_text=_src_text)
+                 if slots else None)
         except Exception as e:      # noqa: BLE001 — 조립 실패가 생성을 막으면 안 된다
             print("조립 실패(style=%s): %s" % (sp.get("id"), str(e)[:120]))
             d = None
