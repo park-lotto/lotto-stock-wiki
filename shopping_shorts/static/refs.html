@@ -83,6 +83,8 @@
   .catsel{background:var(--inset,#0c1412);color:inherit;border:1px solid var(--line,#1e2b26);
           border-radius:6px;padding:3px 6px;font-size:12px;cursor:pointer}
   .catsel.pinned{border-color:var(--accent,#37e0bd);color:var(--accent,#37e0bd);font-weight:700}
+.styb{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;
+       background:rgba(111,240,214,.14);color:#6ff0d6;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -238,8 +240,10 @@ async function loadList(){
         category:c.category||''}));
     }else{
       const d=await (await fetch('/api/seeds?platform='+PLAT)).json();
-      ITEMS=(d.items||[]).filter(s=>s.kind==='account').map(s=>({key:s.value, name:'',
-        added:s.added_at||'', last:'', src:'', followers:0}));
+      // 유튜브는 시드 값이 채널 URL이라 화면에 ID만 보였다 — 서버가 발굴 때 저장해 둔
+      // 채널명·스타일(썰쇼핑·신기템 등)을 함께 준다(2026-08-21, store.list_seeds).
+      ITEMS=(d.items||[]).filter(s=>s.kind==='account').map(s=>({key:s.value, name:s.name||'',
+        added:s.added_at||'', last:'', src:'', followers:0, style:s.style||''}));
     }
   }catch(e){ wrap.innerHTML='<div class="empty">목록을 불러오지 못했습니다.</div>'; return; }
   renderRows();
@@ -253,7 +257,7 @@ function renderRows(){
   cnt.textContent=ITEMS.length?('('+ITEMS.length+')'):'';
   if(!ITEMS.length){ wrap.innerHTML='<div class="empty">아직 등록된 채널이 없습니다. 위에서 붙여넣어 등록하세요.</div>'; return; }
   let rows=ITEMS.slice();
-  if(q) rows=rows.filter(r=>(r.key+' '+r.name).toLowerCase().includes(q));
+  if(q) rows=rows.filter(r=>(r.key+' '+r.name+' '+(r.style||'')).toLowerCase().includes(q));
   if(sort==='name') rows.sort((a,b)=>a.key.localeCompare(b.key,'ko'));
   else if(sort==='added_old') rows.sort((a,b)=>(a.added||'').localeCompare(b.added||''));
   else if(sort==='active') rows.sort((a,b)=>activity(a.last).d-activity(b.last).d);   // 최근 활동 먼저
@@ -265,7 +269,9 @@ function renderRows(){
     const nm=r.name?'<div class="nm">'+esc(r.name)+'</div>':'';
     const ac=activity(r.last);
     const actCell=isIg ? '<td class="ac '+ac.cls+'">'+ac.txt+'</td>' : '<td class="ac ac-none">—</td>';
-    const catCell=isIg ? '<td class="cat">'+catSelect(k, r.category)+'</td>' : '<td class="cat">—</td>';
+    // 인스타=사람이 지정하는 카테고리 / 유튜브=발굴이 매긴 스타일(읽기 전용).
+    const catCell=isIg ? '<td class="cat">'+catSelect(k, r.category)+'</td>'
+      : '<td class="cat">'+(r.style?'<span class="styb">'+esc(r.style)+'</span>':'—')+'</td>';
     return '<tr><td class="num">'+(i+1)+'</td>'
       +'<td><span class="handle">@'+esc(r.key)+'</span>'+badge+nm+'</td>'
       +catCell
@@ -275,7 +281,7 @@ function renderRows(){
   }).join('');
   const shown = rows.length!==ITEMS.length ? ' <span class="nm">('+rows.length+'개 표시)</span>' : '';
   wrap.innerHTML='<table class="tbl"><thead><tr><th>#</th><th>채널'+shown
-    +'</th><th title="비워두면 자동판정. 지정하면 그 채널의 영상 중 화면분석(비전태그)이 없는 것만 이 카테고리로 들어갑니다">카테고리</th>'
+    +'</th><th title="'+(isIg?'비워두면 자동판정. 지정하면 그 채널의 영상 중 화면분석(비전태그)이 없는 것만 이 카테고리로 들어갑니다':'발굴이 매긴 채널 스타일입니다. 검색창에 스타일 이름을 치면 그 축만 모아 봅니다')+'">'+(isIg?'카테고리':'스타일')+'</th>'
     +'<th>활동</th><th>등록일</th><th></th></tr></thead><tbody>'+body+'</tbody></table>';
 }
 

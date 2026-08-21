@@ -1813,10 +1813,38 @@ class Store:
             c.execute("DELETE FROM platform_seeds WHERE platform=? AND value=?", (platform, value))
 
     def list_seeds(self, platform):
+        """플랫폼 시드 목록. 유튜브는 발굴 스타일(썰쇼핑·신기템 등)을 함께 준다.
+
+        ★왜 붙이나(2026-08-21 사장님 "신기템이 어디서 볼 수 있나"): 발굴이 축별로
+          채널을 모으는데 화면은 그걸 읽는 곳이 한 군데도 없었다 — channel_styles를
+          조회하는 API가 앱에 0건이었다. 모아만 놓고 못 보면 모은 적 없는 것과 같다.
+        ★조인 키: seeds.value는 채널 URL(.../channel/UC...)이고 styles는 channel_id다.
+          URL 안에 id가 들어 있어 그걸로 맞춘다(실측 558건 매칭). 파이썬에서 맞추는 이유는
+          SQL LIKE 조인이 인덱스를 못 타 시드가 늘수록 느려지기 때문이다.
+        """
         with self._conn() as c:
             rows = c.execute("SELECT kind, value, added_at FROM platform_seeds WHERE platform=? "
                              "ORDER BY added_at ASC, rowid ASC", (platform,)).fetchall()
-        return [{"kind": r[0], "value": r[1], "added_at": r[2] or ""} for r in rows]
+            styles = {}
+            if platform == "youtube":
+                try:
+                    styles = {r[0]: (r[1], r[2] or "") for r in c.execute(
+                        "SELECT channel_id, style, title FROM channel_styles")}
+                except sqlite3.Error:
+                    styles = {}      # 발굴을 한 번도 안 돌린 환경(테이블 없음) — 빈칸으로 둔다
+        out = []
+        for kind, value, added in rows:
+            item = {"kind": kind, "value": value, "added_at": added or ""}
+            if styles:
+                v = value or ""
+                # URL 꼬리가 곧 channel_id다. 전체를 훑지 않고 꼬리만 잘라 한 번에 찾는다.
+                cid = v.rstrip("/").rsplit("/", 1)[-1]
+                st, title = styles.get(cid, ("", ""))
+                item["style"] = st
+                # 채널명도 같이 준다 — 유튜브 시드는 값이 URL이라 화면에 ID만 보였다.
+                item["name"] = title
+            out.append(item)
+        return out
 
     # ── 쓰레드 게시물 ──
     _THREADS_COLS = ("code", "username", "caption", "tail_caption", "coupang_url",
