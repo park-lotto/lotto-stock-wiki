@@ -25,13 +25,23 @@ t('여는 쪽이 레일까지 연다', /_pvOpen[\s\S]{0,200}mixPreviewRail[\s\S]
 //   거기에 더해 #mixPreview까지 켠다(가조립 재생 뒤 확정 결과가 안 보이던 것을 고친 부분).
 //   그래서 **둘 중 무엇을 부르든** 통과시킨다 — 이 단언이 지키려는 건 함수 이름이 아니라
 //   "그리기 전에 자리를 연다"는 규약이다(옛 이름만 고집하면 판정처 일원화를 막는다).
-t('영상 그릴 때 자리를 연다', /_renderPreviewVideo[\s\S]{0,200}(_pvOpen\(\)|_pvShow\('video'\))/.test(code));
+// ★2026-08-22: 확정 결과가 가는 자리가 **장면편집(iframe) 안 확정본 탭**으로 옮겨졌다
+//   (사장님 "저걸 누르면 미리보기 재생했던 곳에서 하라니까"). 그래서 _renderPreviewVideo는
+//   ①_labCall('showConfirmVideo', src)를 먼저 부르고 ②실패했을 때만 옛 좌측 자리를 연다.
+//   규약은 그대로다 — **그리기 전에 보이는 자리를 확보한다**. 두 경로를 다 요구한다:
+//   ①만 있으면 iframe 없을 때 0×0, ②만 있으면 사장님 지시 회귀.
+t('영상 그릴 때 자리를 연다',
+  /function _renderPreviewVideo[\s\S]{0,600}_labCall\('showConfirmVideo'/.test(code) &&
+  /function _renderPreviewVideo[\s\S]{0,900}(_pvOpen\(\)|_pvShow\(')/.test(code));
 // ★이 단언은 원래 `_pvOpen()`이 2번 이상 나오는지 셌다. 판정처를 _pvShow로 모은 뒤엔
 //   실제 호출부가 전부 _pvShow로 옮겨가, **정의 1줄 + _pvShow 안의 1줄 = 2**로 우연히
 //   통과하게 됐다(2026-08-21 실측) — 즉 startPreview를 더는 검사하지 않는 빈 단언이었다.
 //   그래서 세는 것을 그만두고 **이름 그대로 "미리보기 시작할 때 자리를 여는가"**를 본다.
+//   2026-08-22: 여기도 자리가 옮겨졌다(위 주석 참고). 로더는 _labCall('showConfirmLoading')로
+//   장면편집 안에 띄우고, 못 넣었을 때만 _pvShow(...)로 옛 좌측 자리를 연다. 둘 다 요구한다.
 t('미리보기 시작할 때도 연다',
-  /async function startPreview\(\)[\s\S]{0,1200}_pvShow\('video'\)/.test(code));
+  /async function startPreview\(\)[\s\S]{0,1600}_labCall\('showConfirmLoading'/.test(code) &&
+  /async function startPreview\(\)[\s\S]{0,1800}_pvShow\('/.test(code));
 // _pvOpen/_pvClose 정의 안은 당연히 패널을 직접 만진다 — 그 둘을 뺀 나머지에서
 // 직접 만지는 곳이 없어야 한다(있으면 레일을 안 열어 또 0x0이 된다).
 t('정의 밖에서 패널을 직접 만지지 않는다', (function(){

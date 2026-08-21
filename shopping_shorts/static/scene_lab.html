@@ -290,6 +290,23 @@ button.act.play:hover{background:var(--accent);color:#fff;border-color:var(--acc
   border-radius:10px;background:var(--panel);display:flex;flex-direction:column;
   align-items:center;justify-content:center;gap:10px;color:var(--dim);text-align:center}
 #playerhost:has(#player.on) #playerIdle{display:none}
+/* ★탭(2026-08-22) — 한 자리를 [가조립 | 확정본]이 나눠 쓴다. */
+#pvTabs{display:flex;gap:6px;margin-bottom:8px;flex:0 0 auto}
+.pvTab{flex:1 1 0;padding:7px 10px;font-size:12px;font-weight:800;cursor:pointer;
+  border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--dim)}
+.pvTab.on{background:var(--accent,#2ee6a8);color:#06231a;border-color:transparent}
+.pvTab:disabled{opacity:.4;cursor:default}
+/* 확정본 탭일 때만 확정 패널을 보이고, 가조립 쪽(안내·재생기)은 감춘다.
+   ★data-pane 하나로 전환한다 — JS가 display를 따로 토글하면 판단이 두 벌이 된다(0순위-B). */
+#confirmPane{display:none;flex:1 1 auto;min-height:0;width:100%}
+#playerhost[data-pane="confirm"] #confirmPane{display:block}
+#playerhost[data-pane="confirm"] #playerIdle,
+#playerhost[data-pane="confirm"] #player{display:none}
+#confirmBody video{width:100%;aspect-ratio:var(--shorts-pv-ar,9/16);object-fit:contain;
+  border-radius:8px;background:#000;display:block}
+#confirmBody .cfLoad{aspect-ratio:var(--shorts-pv-ar,9/16);width:100%;display:flex;
+  align-items:center;justify-content:center;border:1px dashed var(--line);
+  border-radius:10px;color:var(--dim);font-size:13px;text-align:center;padding:14px}
 .pidleIcon{font-size:30px;opacity:.55}
 .pidleTxt{font-size:12px;line-height:1.7}
 /* ★영상은 **칸 폭을 꽉 채운다** — 크기가 1순위(2026-08-17 사장님 "최대로 키워 자꾸
@@ -381,6 +398,13 @@ button.act.play:hover{background:var(--accent);color:#fff;border-color:var(--acc
   <div class="tbrow" id="tbrow"></div>
 </div>
 <div id="playerhost" data-embed-hide>
+  <!-- ★[가조립 | 확정본] 탭(2026-08-22 사장님 "미리보기 재생했던 곳에서 하라니까").
+       확정 결과가 부모(제작소) 좌측에 **또 다른 9:16 칸**으로 열리던 것을 이 자리로 가져온다.
+       확정본이 없으면 그 탭은 못 누른다(disabled) — 빈 칸을 보여줄 이유가 없다. -->
+  <div id="pvTabs">
+    <button type="button" class="pvTab on" data-pane="draft" onclick="pvTab('draft')">가조립</button>
+    <button type="button" class="pvTab" data-pane="confirm" onclick="pvTab('confirm')" disabled>확정본</button>
+  </div>
   <div class="lbl" style="display:flex;align-items:center;gap:14px"><button class="act play" id="pball" onclick="playAll(event)">▶️ 전체 재생</button><label style="cursor:pointer" title="전체에 적용: 장면마다 컷 하나씩, 멘트 시간을 길이 비례로 나눕니다."><input type="checkbox" onchange="toggleOne(this.checked)"> 1장=1컷</label></div>
   <!-- 재생 전 안내(2026-08-16) — 미리보기 칸이 통째로 비어 있으면 "여기가 뭐 하는
        자리인지" 알 수 없다. #player가 켜지면(.on) 이건 자동으로 숨는다. -->
@@ -401,6 +425,11 @@ button.act.play:hover{background:var(--accent);color:#fff;border-color:var(--acc
         <label style="cursor:pointer"><input type="checkbox" id="subcut" checked
           onchange="subPerCut=this.checked"> 컷 번호</label></div>
     </div>
+  <!-- 확정 결과 mp4가 여기로 온다(부모가 showConfirmVideo로 채운다).
+       ★#player의 **형제**여야 한다 — 안에 들어가면 .on 전환에 끌려다닌다. -->
+  <div id="confirmPane">
+    <div id="confirmBody"></div>
+  </div>
 </div>
 </div>
 
@@ -435,6 +464,76 @@ button.act.play:hover{background:var(--accent);color:#fff;border-color:var(--acc
 
 <script id="scene-lab-data" type="application/json">null</script>
 <script src="/scene_play.js"></script>
+<script>
+// ★확정본 탭(2026-08-22 사장님 "미리보기 재생했던 곳에서 하라니까").
+//   확정 결과가 부모(제작소) 좌측에 또 다른 9:16 칸으로 열리던 것을 이 자리로 가져왔다.
+//   부모는 postMessage가 아니라 이 함수들을 **직접 부른다**(같은 도메인).
+//   (postMessage는 2026-08-15에 조용히 실패해서 버린 경로다 — 되살리지 마라)
+function pvTab(which){
+  var host = document.getElementById('playerhost');
+  if (!host) return;
+  var btn = host.querySelector('.pvTab[data-pane="' + which + '"]');
+  if (btn && btn.disabled) return;              // 확정본이 아직 없으면 안 넘어간다
+  host.setAttribute('data-pane', which);
+  host.querySelectorAll('.pvTab').forEach(function(b){
+    b.classList.toggle('on', b.getAttribute('data-pane') === which);
+  });
+  // 가조립으로 돌아가면 확정본 영상은 소리를 멈춘다(두 개가 같이 울리면 안 된다).
+  if (which !== 'confirm'){
+    var v = document.querySelector('#confirmBody video');
+    if (v) { try{ v.pause(); }catch(e){} }
+  } else {
+    try{ if (typeof stopPlay === 'function') stopPlay(); }catch(e){}   // 가조립 재생 정지
+  }
+}
+function _cfEnable(on){
+  var b = document.querySelector('.pvTab[data-pane="confirm"]');
+  if (b) b.disabled = !on;
+}
+// 렌더 시작 — 로더를 이 자리에 띄우고 확정본 탭으로 넘어간다.
+// ★렌더 **실패 문구**도 이 자리로 온다(부모 _pvFail). 그래서 ⏳를 무조건 붙이면
+//   "⏳ ⚠️ 렌더 실패"가 돼 아직 도는 것처럼 읽힌다 — 부른 쪽이 이미 아이콘을
+//   붙였으면 그대로 쓴다(2026-08-22).
+function showConfirmLoading(msg){
+  var body = document.getElementById('confirmBody');
+  if (!body) return;
+  var m = msg || '미리보기 만드는 중…';
+  var hasIcon = /^\s*(⏳|⚠️|❌)/.test(m);
+  body.innerHTML = '<div class="cfLoad">' + (hasIcon ? '' : '⏳ ') + m + '</div>';
+  _cfEnable(true);
+  pvTab('confirm');
+}
+// 렌더 끝 — 같은 자리에 진짜 영상.
+function showConfirmVideo(src){
+  var body = document.getElementById('confirmBody');
+  if (!body) return;
+  body.innerHTML = '<video controls muted playsinline autoplay src="' + src + '"></video>';
+  _cfEnable(true);
+  pvTab('confirm');
+}
+// 재매칭 등으로 확정본이 무효가 됐다 — 탭을 잠그고 가조립으로 되돌린다.
+function clearConfirm(){
+  var body = document.getElementById('confirmBody');
+  if (body) body.innerHTML = '';
+  var host = document.getElementById('playerhost');
+  if (host) host.setAttribute('data-pane', 'draft');
+  var b = document.querySelector('.pvTab[data-pane="confirm"]');
+  if (b){ b.disabled = true; b.classList.remove('on'); }
+  var d = document.querySelector('.pvTab[data-pane="draft"]');
+  if (d) d.classList.add('on');
+}
+// ★window에 붙여야 부모가 부를 수 있다 — function 선언은 window 속성이 되지만
+//   명시해 둔다(이 저장소에서 let/const 전역을 바깥에서 못 읽어 사고가 난 전례가 있다).
+window.pvTab = pvTab;
+window.showConfirmLoading = showConfirmLoading;
+window.showConfirmVideo = showConfirmVideo;
+window.clearConfirm = clearConfirm;
+// 초기 상태: 가조립
+(function(){
+  var host = document.getElementById('playerhost');
+  if (host && !host.getAttribute('data-pane')) host.setAttribute('data-pane', 'draft');
+})();
+</script>
 <script>
 // ★한 파일 두 모드(2026-08-15 제작소 이식): 위 JSON 태그에 데이터가 인라인돼 있으면
 //   로컬 실험실(build.py가 채움), null이면 제작소 임베드 — ?job=으로 서버 API에서 받는다.
