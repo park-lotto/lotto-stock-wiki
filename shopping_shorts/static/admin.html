@@ -123,8 +123,9 @@ function renderCustomers(){
   });
   document.getElementById('cnt').textContent=rest.length;
   document.getElementById('rows').innerHTML= rest.length ? rest.map(c=>{
-    const lvl=c.level==='full'?(c.plan==='pro'?'<span class="badge pro">pro</span>':'<span class="badge trial">체험중</span>')
-              :'<span class="badge free">일반회원</span>';
+    const lvl=c.plan==='pro'?'<span class="badge pro">pro</span>'
+              :(c.plan==='trial'?'<span class="badge trial">체험판(랭킹만)</span>'
+              :(c.level==='full'?'<span class="badge trial">체험중</span>':'<span class="badge free">일반회원</span>'));
     const u=c.usage||{};
     const acc=c.access_7d||{ips:0,devices:0};
     // 돌려쓰기 의심: 최근 7일 고유 IP 3개↑ 또는 기기 3종↑이면 빨간 강조(차단은 안 함, 사장님 눈으로 판단)
@@ -240,10 +241,10 @@ async function grantPoints(cid){
 }
 async function grantTrial(cid){
   const def=(CURRENT.trial_days||'7');
-  const days=prompt('체험 며칠 줄까요? (전기능 열림)', def);
+  const days=prompt('체험 며칠 줄까요? (랭킹·즐겨찾기·렌즈 10회/일만 · 제작소는 미리보기)', def);
   if(days===null) return;
   const r=await fetch('/api/admin/set_plan',{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({customer_id:cid, plan:'free', days:Number(days)||0})});
+    body:JSON.stringify({customer_id:cid, plan:'trial', days:Number(days)||0})});
   const m=document.getElementById('cMsg');
   if(r.ok){const d=await r.json();
     m.textContent='✅ 체험 부여됨'+(d.granted?' · 포인트 +'+d.granted+'P (잔액 '+d.balance+'P)':' · 포인트 충분(잔액 '+d.balance+'P)');

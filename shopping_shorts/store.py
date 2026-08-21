@@ -4630,7 +4630,10 @@ class Store:
             c.execute("DELETE FROM customers WHERE id=?", (customer_id,))
 
     def set_plan(self, customer_id, plan, full_access_until=None):
-        """등급 변경. plan='pro'|'free'. full_access_until(epoch초)를 주면 함께 설정(체험창)."""
+        """등급 변경. plan='pro'|'free'|'trial'. full_access_until(epoch초)를 주면 함께 설정.
+
+        trial = 체험판(랭킹전용) — access_level이 ranking_only로 떨군다. 이때
+        full_access_until은 권한이 아니라 화면 'D-N' 표시용이다(app.access_level 참조)."""
         with self._conn() as c:
             if full_access_until is None:
                 c.execute("UPDATE customers SET plan=? WHERE id=?", (plan, customer_id))
