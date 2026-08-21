@@ -649,6 +649,16 @@ def build_list_draft(spine, slot_sets, seconds=30, source_text=""):
     script = " ".join(b["text"] for b in beats)
     checks, _full = script_gate.check(spine, beats, seconds=seconds,
                                       facts_text=(source_text or ""))
+    # ★게이트를 통과한 **뒤에** 문장을 다듬는다(2026-08-21).
+    #   순서가 반대면 둘이 서로 싸운다 — script_gate의 '문장틀 준수'는
+    #   `template_matches`로 템플릿 **원문과 대조**하므로, 다듬은 문장은 당연히
+    #   안 맞아 "이 스타일에서 벗어났어요" 경고가 떠버렸다(사장님 화면 실측).
+    #   게이트가 보는 건 "조립이 틀을 지켰나"다 → 조립 원본으로 판정하고,
+    #   화면에는 다듬은 문장을 낸다. 다듬기가 뜻·수치를 못 바꾸는 건
+    #   beat_polish 자체 검사가 막는다.
+    from shopping_shorts import beat_polish
+    beats, _polish_note = beat_polish.polish(beats, spine.get("name") or "")
+    script = " ".join(b["text"] for b in beats)
     return {
         "beats": beats, "script": script, "hook": beats[0]["text"],
         "checks": checks, "passed": script_gate.passed(checks), "tries": 0,
@@ -777,11 +787,6 @@ def build_draft(spine, slots, seconds=30, source_text="", seed=""):
     beats, missing = fill(spine, slots, seconds=seconds, seed=seed)
     if missing or not beats:
         return None
-    # ★틀은 조립이 잡고 문장은 모델이 쓴다(2026-08-21). 조립본은 뜻은 맞는데
-    #   빈칸 값의 형태가 제각각이라 조사·어미가 어깋난다. 자세한 이유는 beat_polish 문서.
-    #   실패하면 조립 원본 그대로 간다 — 어느 쪽으로 갔는지는 polish에 남는다.
-    from shopping_shorts import beat_polish
-    beats, _polish_note = beat_polish.polish(beats, spine.get("name") or "")
     script = " ".join(b["text"] for b in beats)
     # ★수치 근거 검사를 조립 경로에도 건다(2026-08-21). 종전엔 facts_text를 안 넘겨
     #   `grounding_check`가 통째로 건너뛰어졌다 — 생성기 경로만 검사받고 조립은 무검사였다.
@@ -794,6 +799,13 @@ def build_draft(spine, slots, seconds=30, source_text="", seed=""):
     #     종전과 같이 검사를 건너뛴다(오탐으로 정상 대본을 막지 않는다).
     checks, _full = script_gate.check(spine, beats, seconds=seconds,
                                       facts_text=(source_text or ""))
+    # ★게이트를 통과한 뒤에 문장을 다듬는다(2026-08-21). 순서가 반대면 둘이 서로 싸운다 —
+    #   script_gate의 '문장틀 준수'는 template_matches로 템플릿 **원문과 대조**하므로
+    #   다듬은 문장은 당연히 안 맞아 "이 스타일에서 벗어났어요" 경고가 떠버렸다(사장님 화면 실측).
+    #   게이트가 보는 건 "조립이 틀을 지켰나" → 조립 원본으로 판정하고, 화면에는 다듬은 문장을 낸다.
+    from shopping_shorts import beat_polish
+    beats, _polish_note = beat_polish.polish(beats, spine.get("name") or "")
+    script = " ".join(b["text"] for b in beats)
     return {
         "beats": beats,
         "script": script,
@@ -806,4 +818,5 @@ def build_draft(spine, slots, seconds=30, source_text="", seed=""):
         # ★어느 경로로 만든 대본인지 **화면이 말할 수 있게** 표시한다.
         #   조용한 폴백이 쳇바퀴의 뿌리였다(memory: reference_silent_fallback_pipeline_undo).
         "made_by": "조립",
+        "polish": _polish_note,
     }
