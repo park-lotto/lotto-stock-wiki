@@ -1419,6 +1419,18 @@
                 <div style="padding:2px 0 12px">
                 <div class="sub" style="margin-bottom:10px;font-size:11px">문구는 대본에서 자동으로 들어와요. 여기선 <b>보이는 모양</b>만 정합니다.</div>
 
+                <!-- ⭐ 자막 프리셋(2026-08-22) — 자막 모양만 따로 저장·적용.
+                     ★값의 주인은 그대로다: 저장은 STATE.captionStyle을 그대로 담고,
+                     적용은 기존 applyConfig(null, cap)에 맡긴다(효과 복원까지 이미 들어있다). -->
+                <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px">
+                  <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:6px">⭐ 자막 프리셋 <span style="font-weight:400">— 누르면 바로 적용</span></div>
+                  <div id="capPresets" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px"></div>
+                  <div style="display:flex;gap:6px;flex-wrap:wrap">
+                    <input id="capPresetName" type="text" placeholder="예: 내 기본 자막" style="flex:1;min-width:140px;background:#0a1017;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:7px 10px;font-size:13px">
+                    <button class="tab" onclick="saveCapPreset()" style="flex:0 0 auto;min-width:auto;padding:7px 14px;font-size:12px;white-space:nowrap;background:var(--sel-bg);border-color:var(--accent)">💾 자막 저장</button>
+                  </div>
+                </div>
+
                 <!-- ① 글씨 -->
                 <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px">
                   <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:8px">① 글씨</div>
@@ -1438,7 +1450,7 @@
                   <div style="font-size:12px;color:var(--sub)">세로 위치 <b id="capYV">84</b>%
                     <input id="capY" type="range" min="0" max="100" value="84" oninput="CAP_POS_TOUCHED=true;updateCaption()" style="width:100%"></div>
                   <div class="hint" style="margin-top:6px;font-size:11px">💡 미리보기에서 자막을 <b>드래그</b>해도 옮겨져요.</div>
-                  <button type="button" id="capResetRegionBtn" class="tab" onclick="resetCapToRegion()" style="display:none;flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;margin-top:6px;white-space:nowrap">↩ 지워진 자막 자리(1번)로 되돌리기</button>
+                  <button type="button" id="capResetRegionBtn" class="tab" hidden onclick="resetCapToRegion()" style="display:none !important;flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;margin-top:6px;white-space:nowrap">↩ 지워진 자막 자리(1번)로 되돌리기</button>
                 </div>
 
                 <!-- ③ 테두리·박스·효과 -->
@@ -1460,8 +1472,6 @@
                     <span style="font-size:12px;color:var(--sub)">효과</span>
                     <button type="button" class="capEff tab active" data-eff="none" onclick="setCapEffect('none')" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;white-space:nowrap">없음</button>
                     <button type="button" class="capEff tab" data-eff="fade" onclick="setCapEffect('fade')" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;white-space:nowrap">페이드</button>
-                    <button type="button" class="capEff tab" data-eff="slide" onclick="setCapEffect('slide')" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;white-space:nowrap">슬라이드</button>
-                    <button type="button" class="capEff tab" data-eff="pop" onclick="setCapEffect('pop')" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;white-space:nowrap">팝</button>
                     <button type="button" class="capEff tab" data-eff="sparkle" onclick="setCapEffect('sparkle')" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;white-space:nowrap">✦ 반짝(CTA)</button>
                   </div>
                 </div>
@@ -1470,47 +1480,64 @@
 
               <!-- ── 🎨 헤드카피(상단 큰 글씨) ── -->
               <details style="border-top:1px dashed var(--line)">
-                <summary style="cursor:pointer;font-size:13px;font-weight:700;padding:8px 0">🎨 헤드카피(상단 큰 글씨) 꾸미기 — 폰트·색상·굵기·크기</summary>
+                <summary style="cursor:pointer;font-size:13px;font-weight:700;padding:8px 0">🎨 헤드카피(상단 큰 글씨) 꾸미기</summary>
                 <div style="padding:2px 0 12px">
-              <div id="hcPresets" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"></div>
-              <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
-                <span style="font-size:12px;color:var(--sub)">폰트
-                  <span id="hcFontPicker" style="position:relative;display:inline-block;vertical-align:middle">
-                    <button type="button" id="hcFontBtn" onclick="toggleFontMenu(event)"
-                      style="background:var(--inset);color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:5px 10px;cursor:pointer;min-width:130px;text-align:left;font-size:13px">폰트 선택 ▾</button>
-                    <div id="hcFontMenu" style="display:none;position:absolute;top:calc(100% + 4px);left:0;z-index:60;background:var(--inset);border:1px solid var(--line);border-radius:8px;max-height:340px;overflow:auto;box-shadow:0 12px 34px rgba(0,0,0,.55);min-width:190px"></div>
-                  </span>
-                  <select id="hcFont" onchange="updateHC()" style="display:none"></select></span>
-                <label style="font-size:12px;color:var(--sub)">색상 <input id="hcColor" type="color" value="#FF8800" oninput="updateHC()"></label>
-                <label style="font-size:12px;color:var(--sub)">굵기
-                  <select id="hcWeight" onchange="updateHC()" style="background:var(--inset);color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:4px">
-                    <option value="700">굵게</option><option value="900" selected>아주 굵게</option><option value="400">보통</option>
-                  </select></label>
-              </div>
-              <div style="margin-top:10px;font-size:12px;color:var(--sub)">글씨 크기 <span id="hcSizeV">64</span>px
-                <input id="hcSize" type="range" min="28" max="120" value="64" oninput="updateHC()" style="width:100%"></div>
-              <div style="font-size:12px;color:var(--sub)">세로 위치 <span id="hcYV">14</span>%
-                <input id="hcY" type="range" min="0" max="100" value="14" oninput="HC_Y_TOUCHED=true;updateHC()" style="width:100%"></div>
-              <div style="font-size:12px;color:var(--sub)">가로 위치 <span id="hcXV">50</span>%
-                <input id="hcX" type="range" min="0" max="100" value="50" oninput="updateHC()" style="width:100%"></div>
-              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
-                <span style="font-size:12px;color:var(--sub);align-self:center">정렬:</span>
-                <button class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 10px;font-size:12px;white-space:nowrap" onclick="alignHC('top')">⬆ 위</button>
-                <button class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 10px;font-size:12px;white-space:nowrap" onclick="alignHC('mid')">중간</button>
-                <button class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 10px;font-size:12px;white-space:nowrap" onclick="alignHC('bottom')">⬇ 하단</button>
-                <button class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 10px;font-size:12px;white-space:nowrap" onclick="alignHC('center')">↔ 가운데</button>
-              </div>
-              <label style="display:flex;align-items:center;gap:8px;margin-top:10px;font-size:13px;cursor:pointer">
-                <input id="hcOutline" type="checkbox" checked onchange="updateHC()"> 외곽선
-                <input id="hcOutColor" type="color" value="#000000" oninput="updateHC()">
-                <span style="color:var(--sub)">두께 <input id="hcOutW" type="range" min="0" max="12" value="6" oninput="updateHC()"></span>
-              </label>
-              <label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;cursor:pointer">
-                <input id="hcBox" type="checkbox" onchange="updateHC()"> 배경 박스
-                <input id="hcBoxColor" type="color" value="#000000" oninput="updateHC()">
-                <span style="color:var(--sub)">여백 <input id="hcBoxPad" type="range" min="0" max="40" value="16" oninput="updateHC()"></span>
-                <span style="color:var(--sub)">투명도 <input id="hcBoxOpacity" type="range" min="20" max="100" value="80" oninput="updateHC()"></span>
-              </label>
+              <div id="hcPresets" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px"></div>
+
+                <!-- ① 글씨 -->
+                <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px">
+                  <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:8px">① 글씨</div>
+                  <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+                    <span style="font-size:12px;color:var(--sub)">폰트
+                      <span id="hcFontPicker" style="position:relative;display:inline-block;vertical-align:middle">
+                        <button type="button" id="hcFontBtn" onclick="toggleFontMenu(event)"
+                          style="background:#0a1017;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:6px 10px;cursor:pointer;min-width:150px;text-align:left;font-size:13px">폰트 선택 ▾</button>
+                        <div id="hcFontMenu" style="display:none;position:absolute;top:calc(100% + 4px);left:0;z-index:60;background:var(--inset);border:1px solid var(--line);border-radius:8px;max-height:340px;overflow:auto;box-shadow:0 12px 34px rgba(0,0,0,.55);min-width:190px"></div>
+                      </span>
+                      <select id="hcFont" onchange="updateHC()" style="display:none"></select></span>
+                    <label style="font-size:12px;color:var(--sub)">색상
+                      <input id="hcColor" type="color" value="#FF8800" oninput="updateHC()" style="vertical-align:middle;cursor:pointer"></label>
+                    <label style="font-size:12px;color:var(--sub)">굵기
+                      <select id="hcWeight" onchange="updateHC()" style="background:#0a1017;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:5px 8px">
+                        <option value="700">굵게</option><option value="900" selected>아주 굵게</option><option value="400">보통</option>
+                      </select></label>
+                  </div>
+                  <div style="margin-top:8px;font-size:12px;color:var(--sub)">크기 <b id="hcSizeV">64</b>px
+                    <input id="hcSize" type="range" min="28" max="120" value="64" oninput="updateHC()" style="width:100%"></div>
+                </div>
+
+                <!-- ② 자리 -->
+                <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px">
+                  <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:8px">② 자리</div>
+                  <div style="font-size:12px;color:var(--sub)">세로 위치 <b id="hcYV">14</b>%
+                    <input id="hcY" type="range" min="0" max="100" value="14" oninput="HC_Y_TOUCHED=true;updateHC()" style="width:100%"></div>
+                  <div style="font-size:12px;color:var(--sub)">가로 위치 <b id="hcXV">50</b>%
+                    <input id="hcX" type="range" min="0" max="100" value="50" oninput="updateHC()" style="width:100%"></div>
+                  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+                    <span style="font-size:12px;color:var(--sub);align-self:center">한 번에</span>
+                    <button class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 10px;font-size:12px;white-space:nowrap" onclick="alignHC('top')">⬆ 위</button>
+                    <button class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 10px;font-size:12px;white-space:nowrap" onclick="alignHC('mid')">중간</button>
+                    <button class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 10px;font-size:12px;white-space:nowrap" onclick="alignHC('bottom')">⬇ 하단</button>
+                    <button class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 10px;font-size:12px;white-space:nowrap" onclick="alignHC('center')">↔ 가운데</button>
+                  </div>
+                  <div class="hint" style="margin-top:6px;font-size:11px">💡 미리보기에서 글자를 <b>드래그</b>해도 옮겨져요.</div>
+                </div>
+
+                <!-- ③ 테두리 · 박스 -->
+                <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px">
+                  <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:8px">③ 테두리 · 박스</div>
+                  <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+                    <input id="hcOutline" type="checkbox" checked onchange="updateHC()"> 외곽선
+                    <input id="hcOutColor" type="color" value="#000000" oninput="updateHC()">
+                    <span style="color:var(--sub);font-size:12px">두께 <input id="hcOutW" type="range" min="0" max="12" value="6" oninput="updateHC()"></span>
+                  </label>
+                  <label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;cursor:pointer">
+                    <input id="hcBox" type="checkbox" onchange="updateHC()"> 배경 박스
+                    <input id="hcBoxColor" type="color" value="#000000" oninput="updateHC()">
+                    <span style="color:var(--sub);font-size:12px">여백 <input id="hcBoxPad" type="range" min="0" max="40" value="16" oninput="updateHC()"></span>
+                    <span style="color:var(--sub);font-size:12px">투명도 <input id="hcBoxOpacity" type="range" min="20" max="100" value="80" oninput="updateHC()"></span>
+                  </label>
+                </div>
                 </div>
               </details>
 
@@ -1525,8 +1552,8 @@
               </details>
 
               <!-- ── 🏷 워터마크·추가텍스트·BGM·이미지 ── -->
-              <details style="border-top:1px dashed var(--line)">
-                <summary style="cursor:pointer;font-size:13px;font-weight:700;padding:8px 0">🏷 워터마크 · 추가 텍스트 · BGM · 이미지</summary>
+              <details style="border-top:1px dashed var(--line)" open>
+                <summary style="cursor:pointer;font-size:13px;font-weight:700;padding:8px 0">🏷 워터마크 · 이미지</summary>
                 <div style="padding:2px 0 12px">
                 <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
                   <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
@@ -1539,18 +1566,17 @@
                     </select></label>
                   <label style="font-size:12px;color:var(--sub)">투명도 <input id="wmAlpha" type="range" min="20" max="100" value="60" oninput="updateDeco()"></label>
                 </div>
-                <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-                  <span style="font-size:13px;font-weight:600">➕ 추가 텍스트</span>
-                  <button class="tab" onclick="addExtraText()" style="flex:0 0 auto;min-width:auto;padding:5px 13px;font-size:12px;white-space:nowrap">+ 텍스트 추가</button>
-                  <span class="hint">미리보기에서 <b>드래그</b>로 위치 이동</span>
-                </div>
-                <div id="extraTextList"></div>
-                <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;border-top:1px dashed var(--line);padding-top:12px">
-                  <span style="font-size:13px;font-weight:600">🎵 배경음악(BGM)</span>
-                  <input id="bgmFile" type="file" accept="audio/*,.mp3,.wav,.m4a" onchange="uploadBgm(this)" style="font-size:12px;max-width:220px">
+                <!-- 추가 텍스트: 사장님 지시로 화면에서 뺌(2026-08-22).
+                     ★#extraTextList는 남긴다 — renderExtraTexts()가 이 자리를 찾고,
+                     예전 작업에 저장된 extra_texts는 렌더에 그대로 살아있다. -->
+                <div id="extraTextList" hidden style="display:none"></div>
+                <!-- 배경음악(BGM): 사장님 지시로 화면에서 뺌(2026-08-22).
+                     ★입력칸을 통째로 지우면 uploadBgm()이 bgmStatus에 널가드 없이 쓰다 터진다.
+                     숨겨서 배선을 살려두면 예전 작업의 bgm도 그대로 렌더된다. -->
+                <div hidden style="display:none">
+                  <input id="bgmFile" type="file" accept="audio/*,.mp3,.wav,.m4a" onchange="uploadBgm(this)">
                   <span id="bgmStatus" class="hint"></span>
-                  <label style="font-size:12px;color:var(--sub)">볼륨 <input id="bgmVol" type="range" min="0" max="60" value="15" oninput="updateBgmVol()"> <span id="bgmVolV">15</span>%</label>
-                  <button onclick="clearBgm()" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:12px">제거</button>
+                  <input id="bgmVol" type="range" min="0" max="60" value="15" oninput="updateBgmVol()"><span id="bgmVolV">15</span>
                 </div>
                 </div>
               </details>
@@ -2696,7 +2722,7 @@ function initHeadcopy(){
   renderFontSelect();
   renderPresets();
   renderFullPresets();
-  renderMyPresets();
+  renderMyPresets(); renderCapPresets();
   renderHighlightRules();
   bindHCDrag();
   bindCapDrag();
@@ -3114,6 +3140,30 @@ function saveMyPreset(){
 }
 function applyMyPreset(i){ const p=myPresets()[i]; if(p) applyConfig(p.hc, p.cap); }
 function deleteMyPreset(i){ const list=myPresets(); list.splice(i,1); localStorage.setItem('hc_my_presets', JSON.stringify(list)); renderMyPresets(); }
+// ── ⭐ 자막 프리셋(2026-08-22 사장님 "자막도 프리셋 등록해봐") ──
+// 내 프리셋(hc+cap 통째)과 달리 **자막 모양만** 담는다. 헤드카피는 건드리지 않는다.
+// ★새 저장소를 쓰되 값의 형태는 기존 cap과 똑같다 → applyConfig가 그대로 복원한다(효과 포함).
+function capPresets(){ try{ return JSON.parse(localStorage.getItem('cap_presets')||'[]'); }catch(e){ return []; } }
+function saveCapPreset(){
+  const el=document.getElementById('capPresetName');
+  const name=((el&&el.value)||'').trim();
+  if(!name){ alert('자막 프리셋 이름을 입력하세요'); return; }
+  if(!STATE.captionStyle){ alert('자막 모양을 한 번 만진 뒤에 저장해 주세요'); return; }
+  const list=capPresets();
+  list.push({name, cap:STATE.captionStyle});
+  localStorage.setItem('cap_presets', JSON.stringify(list));
+  el.value=''; renderCapPresets();
+}
+function applyCapPreset(i){ const p=capPresets()[i]; if(p) applyConfig(null, p.cap); }   // 자막만 적용
+function deleteCapPreset(i){ const list=capPresets(); list.splice(i,1); localStorage.setItem('cap_presets', JSON.stringify(list)); renderCapPresets(); }
+function renderCapPresets(){
+  const box=document.getElementById('capPresets'); if(!box) return;
+  const list=capPresets();
+  box.innerHTML = list.length ? list.map((p,i)=>`<span style="display:inline-flex;align-items:center;gap:4px;background:#0a1017;border:1px solid var(--line);border-radius:9px;padding:2px 4px 2px 0">
+    <button class="tab" onclick="applyCapPreset(${i})" style="flex:0 0 auto;min-width:auto;padding:5px 11px;font-size:12px;white-space:nowrap;border:none;background:none">⭐ ${p.name}</button>
+    <button onclick="deleteCapPreset(${i})" title="삭제" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:14px">✕</button></span>`).join('')
+    : '<span class="hint" style="font-size:11px">아직 저장한 자막 프리셋이 없어요. 자막 모양을 정한 뒤 “💾 자막 저장”을 누르면 여기 쌓여요.</span>';
+}
 // ── 🏷 워터마크 · 추가 텍스트(deco) ──────────────
 const WM_POS={bc:{x:50,y:88},br:{x:82,y:94},bl:{x:18,y:94},tr:{x:82,y:8},tl:{x:18,y:8}};
 let WM_MANUAL_Y=null;   // 워터마크를 미리보기에서 세로로 드래그해 잡은 y%(없으면 프리셋 사용)
