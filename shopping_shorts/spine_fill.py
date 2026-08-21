@@ -616,6 +616,10 @@ def fill_list(spine, slot_sets, seconds=None):
                 #   ⚠️길이 맞춤이 뒤에서 항목을 자르므로, 번호는 여기서 박아야 한다.
                 if st.get("_src_index") is not None:
                     b["src_index"] = st["_src_index"]
+                # ★화면 배정이 실제로 보는 건 **영상 id**다(순번이 아니다) — 담긴 순서와
+                #   화면 쪽 목록 순서가 같다고 믿으면 언젠가 어긋난다(0순위-B).
+                if st.get("_src_video"):
+                    b["src_video"] = st["_src_video"]
                 beats.append(b)
                 n += 1
         if not any(b["role"].startswith("item") for b in beats):

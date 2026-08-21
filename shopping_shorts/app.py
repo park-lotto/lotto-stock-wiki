@@ -11864,6 +11864,11 @@ def _insta_slot_sets(sources, store, cache_only=False):
             # ★몇 번째 영상인지 표식을 붙여 보낸다 — 재료가 모자라 건너뛴 편이 있어서
             #   sets의 순번과 담긴 영상의 순번이 어긋난다. 화면 배치가 이 번호를 본다.
             sl["_src_index"] = i
+            # ★영상 id는 **그 편의 세그먼트**에서 뽑는다 — 화면 배정이 쓰는 것과 같은
+            #   규칙(backbone._vid_of)이라 두 쪽이 같은 영상을 가리킨다.
+            if segs:
+                from shopping_shorts.backbone import _vid_of
+                sl["_src_video"] = _vid_of(segs[0])
             sets.append(sl)
     if len(sets) < 2:
         return [], "나열형은 화면 근거가 있는 영상이 2편 이상 필요합니다(현재 %d편)" % len(sets)
