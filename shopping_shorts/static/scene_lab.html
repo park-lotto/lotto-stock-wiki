@@ -59,6 +59,9 @@ h1{font-size:16px;margin:0;font-weight:700}
 /* ⚠️.tbhint(위 40행)는 머리글 안내문이 이미 쓰는 클래스다 — 덮어쓰면 그쪽이 깨진다.
    편집칸 안내는 전용 클래스를 쓴다(같은 이름 두 벌 금지). */
 .tbehint{font-size:10px;color:var(--dim);line-height:1.4}
+.sfxplay{background:#0b1118;color:var(--fg);border:1px solid var(--line);border-radius:6px;
+         font-size:11px;padding:1px 6px;cursor:pointer}
+.sfxplay:hover{border-color:var(--accent);color:var(--accent)}
 .sfxsel{background:#0b1118;color:var(--fg);border:1px solid var(--line);border-radius:6px;
         font-size:11px;padding:1px 4px;max-width:150px}
 .tbeat:hover{border-color:var(--accent)}
@@ -1008,8 +1011,10 @@ function sfxControl(i){
   const posOpts = Object.entries(SFX_POS_LABEL).map(([k,l]) =>
     `<option value="${k}" ${pos===k?'selected':''}>${l}</option>`).join('');
   return `<select class="sfxsel" title="이 칸에 넣을 효과음" onchange="setSfx(${i}, this.value)">${opts}</select>`
-    + (cur.asset_id ? `<select class="sfxsel" title="효과음이 울리는 자리"
-         onchange="setSfxPos(${i}, this.value)">${posOpts}</select>` : '');
+    + (cur.asset_id ? `<button class="sfxplay" title="이 효과음만 지금 들어봅니다"
+           onclick="event.stopPropagation();previewSfx(${cur.asset_id})">▶</button>`
+         + `<select class="sfxsel" title="효과음이 울리는 자리 — 칸을 재생하면 이 시각에 실제로 울립니다"
+              onchange="setSfxPos(${i}, this.value)">${posOpts}</select>` : '');
 }
 
 async function _sfxPost(i, body){
