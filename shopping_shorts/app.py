@@ -7672,6 +7672,13 @@ def access_level(customer_id, now=None):
         return "pending"
     if cust.get("plan") == "pro":
         return "full"
+    # ★체험판(plan="trial", 2026-08-21 사장님 "체험판은 레퍼런스랭킹만 + 렌즈 10회")
+    #   = 기간과 무관하게 ranking_only. 제작소는 얼린 미리보기가 나가고 유료 API는 402.
+    #   full_access_until은 화면에 'D-N'을 띄우는 표시용으로만 남는다.
+    #   ⚠️ 예전 '체험'은 free+full_access_until로 **full**을 줬다 — 이름은 체험인데
+    #      권한은 pro와 같아, 체험 계정이 진짜 제작소에 들어갔다(2026-08-21 실측).
+    if cust.get("plan") == "trial":
+        return "ranking_only"
     if now is None:
         now = int(datetime.now(timezone.utc).timestamp())
     if now < (cust.get("full_access_until") or 0):
@@ -8121,16 +8128,21 @@ async def _admin_set_plan(request: Request):
     except (TypeError, ValueError):
         return JSONResponse({"error": "customer_id 필요"}, status_code=422)
     plan = body.get("plan")
-    if plan not in ("free", "pro"):
-        return JSONResponse({"error": "plan=free|pro"}, status_code=422)
+    if plan not in ("free", "pro", "trial"):
+        return JSONResponse({"error": "plan=free|pro|trial"}, status_code=422)
     days = body.get("days")
     st = Store(DB_PATH)
     granted = None
     if plan == "pro":
         st.set_plan(cid, "pro")                         # 결제 승격 = 전기능 무기한
+    elif plan == "trial":
+        # 체험판 = 랭킹전용(랭킹·즐겨찾기·렌즈 하루 10회). days는 화면 'D-N' 표시용.
+        until = int(datetime.now(timezone.utc).timestamp()) + int(days or 0) * 86400
+        st.set_plan(cid, "trial", full_access_until=until)
+        granted = _trial_topup(st, cid)                 # 렌즈도 포인트를 쓴다 → 연료까지 준다
     elif days:
         until = int(datetime.now(timezone.utc).timestamp()) + int(days) * 86400
-        st.set_plan(cid, "free", full_access_until=until)   # 체험 창 재부여
+        st.set_plan(cid, "free", full_access_until=until)   # (구)전기능 체험 창
         granted = _trial_topup(st, cid)                 # ★등급만 열면 잔액 0으로 402가 난다
     else:
         st.set_plan(cid, "free", full_access_until=0)   # 즉시 무료(랭킹만)로 내림

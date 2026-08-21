@@ -31,14 +31,18 @@
   var NAV = [
     { label: "리서치", items: [
       { icon: "📊", text: "레퍼런스 랭킹",   href: "/", free: true },
-      { icon: "⭐", text: "영상 즐겨찾기",   href: "/collection" },
+      // ★free:true = 잠금(🔒) 대상에서 뺀다. 서버 화이트리스트(_FREE_EXACT_GET)와 짝이다 —
+      //   서버만 열고 여기를 안 열면 체험 사용자는 눌러도 페이월 모달만 보고 못 들어간다.
+      { icon: "⭐", text: "영상 즐겨찾기",   href: "/collection", free: true },
       { icon: "🔎", text: "신규채널 픽업",   href: "/discover" },
       { icon: "🎞️", text: "장면 라이브러리", href: "/scene_library" },
       { icon: "🏆", text: "역대 히트작",     href: "/archive", admin: true },
       { icon: "📋", text: "레퍼런스 채널 관리", href: "/refs", admin: true },
     ] },
     { label: "제작", items: [
-      { icon: "🎬", text: "숏템 제작소",     href: "/produce" },
+      // 제작소는 등급에 따라 서버가 다른 파일을 준다(full=진짜 / 그 외=얼린 미리보기).
+      // 그래서 잠그지 않는다 — 사장님 지시 "열어두되 사용 자체가 안 되게".
+      { icon: "🎬", text: "숏템 제작소",     href: "/produce", free: true },
     ] },
     { label: "소통", items: [
       { icon: "💬", text: "인스타 소통공간", href: "/outreach" },
@@ -413,7 +417,10 @@
     if (admin) { tier = "관리자"; tierColor = "#ffd97a"; sub = "전 기능 · 무제한"; }
     else if (d.plan === "pro") { tier = "프로"; tierColor = "#6ff0d6"; sub = "전 기능 이용중"; }
     else if (d.level === "pending") { tier = "승인대기"; tierColor = "#ffa94d"; sub = "승인 후 이용 가능해요"; }
-    else if (typeof d.days_left === "number" && d.days_left > 0) { tier = "체험 D-" + d.days_left; tierColor = "#7db4ff"; sub = "만료 후엔 랭킹만 열려요"; }
+    else if (typeof d.days_left === "number" && d.days_left > 0) { tier = "체험 D-" + d.days_left; tierColor = "#7db4ff";
+      // 체험판(plan="trial")은 처음부터 랭킹전용이다 — 옛 문구("만료 후엔 랭킹만")는
+      // 지금 다 쓸 수 있다는 뜻으로 읽혀 오해를 준다.
+      sub = (d.plan === "trial") ? "랭킹·즐겨찾기·렌즈 10회/일" : "만료 후엔 랭킹만 열려요"; }
     else { tier = "무료"; tierColor = "#8b98a9"; sub = "랭킹 열람만 가능해요"; }
     var usage = "";
     if (d.usage && d.usage_limits) {
