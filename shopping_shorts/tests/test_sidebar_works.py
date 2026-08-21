@@ -54,7 +54,16 @@ async function fetch(url){
   if (WORKS_RESPONSE === 'throw') throw new Error('네트워크');
   return { json: async () => WORKS_RESPONSE };
 }
-const window = { location };
+// 실제 브라우저 window에는 addEventListener가 있다 — 스텁에 없어서
+// "window.addEventListener is not a function"으로 죽었다(2026-08-21). 계약을
+// 발명하는 게 아니라 빠져 있던 진짜 계약을 채운다. 핸들러를 모아두고 _gesture()로
+// 실제 조작을 흉내 낸다(유료게이트 402 판정이 이걸 본다).
+const _WIN_LISTENERS = [];
+const window = { location,
+  addEventListener(ev, fn){ _WIN_LISTENERS.push([ev, fn]); } };
+function _gesture(ev){
+  _WIN_LISTENERS.filter(([e]) => e === (ev || 'click')).forEach(([, fn]) => fn({}));
+}
 """
 
 
@@ -413,3 +422,35 @@ def test_rename_pencil_has_variation_selector():
     U+FE0F(VS16)를 붙여야 연필 모양이 된다 — 아이콘이 뭔지 모르면 아무도 안 누른다."""
     src = SIDEBAR_JS.read_text(encoding="utf-8")
     assert "\u270f\ufe0f" in src, "✏에 VS16(U+FE0F)이 빠졌다 — 막대기로 보인다"
+
+
+# ── 유료게이트 402 모달은 "사장님이 누른 요청"에만 뜬다(2026-08-21 오탐 수정) ──
+# 실사고: 체험 D-7·사용량 0/10인 랭킹 전용 계정이 페이지를 여는 것만으로
+# "무료 체험이 끝났어요"를 봤다. 페이지 로드 중 배경 호출 4개가 402였기 때문이다.
+
+_PW_HARNESS = """
+console.debug = () => {};   // 배경 402 흔적 로그가 판정 출력에 섞이지 않게
+window.fetch = async () => ({ status: 402, clone: () => ({ json: async () => ({ error: '등급 부족' }) }) });
+const _stub = { onclick: null, style: {}, remove(){}, appendChild(){} };
+const _origGet = document.getElementById.bind(document);
+document.getElementById = (id) => (id === 'ss-pw-close' ? _stub : _origGet(id));
+function _modalShown(){ return _created.some(o => o.id === 'ss-pw-modal'); }
+"""
+
+
+def test_background_402_does_not_show_expiry_modal():
+    """아무도 안 눌렀는데 난 402(배경 호출)로는 만료 모달이 뜨면 안 된다."""
+    out = _run("await window.fetch('/api/produce/works');"
+               " await new Promise(r=>setTimeout(r,0));"
+               " console.log(_modalShown() ? 'shown' : 'none');",
+               harness_override=_PW_HARNESS)
+    assert out == "none"
+
+
+def test_402_after_user_click_shows_modal():
+    """반대로 사장님이 누른 직후의 402는 반드시 안내해야 한다(잠긴 기능 안내가 죽으면 안 된다)."""
+    out = _run("_gesture('click'); await window.fetch('/api/lens/cn/keywords');"
+               " await new Promise(r=>setTimeout(r,0));"
+               " console.log(_modalShown() ? 'shown' : 'none');",
+               harness_override=_PW_HARNESS)
+    assert out == "shown"

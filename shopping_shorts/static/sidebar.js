@@ -456,10 +456,45 @@
     }).catch(function () {});
   }
   // 유료 API가 402(등급부족)를 주면 만료 안내 모달 — 페이지 내 어떤 유료버튼이든 공통 처리.
+  //
+  // ★모달은 **사장님이 뭔가를 눌러서 난 402**에만 뜬다(2026-08-21 근본 수정).
+  //   실사고: 체험 D-7(사용량 0/10)인 랭킹 전용 계정이 랭킹 페이지를 열자마자
+  //   "무료 체험이 끝났어요"를 봤다. 아무것도 안 눌렀는데 떴다 — 페이지가 로드되며
+  //   스스로 부르는 배경 호출들이 402를 받았기 때문이다(서버 실측, 한 번의 접속에서
+  //   /api/produce/works · /api/admin/pending · /api/prune/removed · /api/discover/added
+  //   4개가 동시에 402). 이 계정 등급에서 그 API들이 402인 것 자체는 **정상**이다.
+  //   틀린 건 "402면 무조건 모달"이라는 판정이었다.
+  //
+  //   ⚠️ URL 목록으로 거르지 않는다. 위 4개는 오늘 걸린 것일 뿐이고, 배경 호출은
+  //      페이지마다 계속 늘어난다(index.html·discover.html에도 이미 있다) — 목록은
+  //      반드시 썩는다(CLAUDE.md: 손 관리 목록은 이미 3번 썩었다). 대신 **가른다**:
+  //      사용자의 조작에서 비롯됐는가. 배경 호출은 정의상 아무도 안 누른 순간에 난다.
+  //
+  //   판정은 여기 한 곳에서만 한다(0순위-B). 잠긴 메뉴를 눌렀을 때 뜨는 모달은
+  //   _pwLockSidebar가 __ssShowPaywall을 직접 부르므로 이 규칙과 무관하게 그대로 산다.
+  var _lastGesture = 0;
+  ["pointerdown", "keydown", "click", "submit"].forEach(function (ev) {
+    // capture 단계 — 페이지 핸들러가 stopPropagation을 걸어도 우리는 먼저 본다.
+    window.addEventListener(ev, function () { _lastGesture = Date.now(); }, true);
+  });
+  // 조작 → 요청 사이에 허용할 간격. 누른 뒤 곧바로 나가는 요청만 '사용자 것'으로 본다.
+  // 8초·30초로 도는 폴러는 이 창을 넘겨 자연히 배제된다(폴러 목록을 관리할 필요가 없다).
+  var _GESTURE_MS = 3000;
   var _origFetch = window.fetch;
   window.fetch = function () {
+    // ★판정 시각은 **응답이 아니라 요청**이다. 느린 API가 5초 뒤에 402를 줘도,
+    //   누르고 나간 요청이면 사장님에겐 방금 누른 그 버튼의 결과다.
+    var byUser = (Date.now() - _lastGesture) < _GESTURE_MS;
+    // ★url은 여기서 붙잡는다 — 아래 then 안의 arguments는 (resp)라 호출 주소가 아니다.
+    var _reqUrl = arguments[0];
     return _origFetch.apply(this, arguments).then(function (resp) {
       if (resp && resp.status === 402) {
+        if (!byUser) {
+          // 배경 호출의 402 — 정상 동작이다. 조용히 넘기되 흔적은 남긴다
+          // (조용히 삼키면 다음에 "왜 안 되지"가 된다).
+          try { console.debug("[paywall] 배경 호출 402 — 모달 생략:", _reqUrl); } catch (e) {}
+          return resp;
+        }
         // 응답 본문을 복제해서 읽는다(원본은 호출부가 그대로 쓴다).
         try {
           resp.clone().json().then(function (d) {
