@@ -11420,6 +11420,14 @@ def api_script_styles(request: Request, category: str = None, job: str = None):
             "fit": "검증" if verified else "타소재",
             # 사용자가 이름만 보고는 못 고른다 — 어디서 나왔고 얼마나 통했는지를 함께 준다.
             "evidence": s.get("situation_type") or "",
+            # ★실제 문장 예시·스토리라인을 함께 준다(2026-08-21 사장님 요청).
+            #   역할어(title·hook·twist…)만 보여주면 그게 무슨 말인지 알 수 없다 —
+            #   "이 스타일로 만들면 이런 문장이 나온다"를 카드가 직접 보여줘야 고를 수 있다.
+            #   전부 DB에 이미 있던 값이다(templates_json·beat_chain_json). 새로 만들지 않았다.
+            "templates": s.get("templates") or {},
+            "beat_chain": s.get("beat_chain") or [],
+            "emotion_arc": s.get("emotion_arc") or "",
+            "appeal": s.get("appeal") or "",
         })
         if _srcs:
             out[-1]["cover"] = _spine_cover(s, _srcs, store, job, _cache=_cover_cache)
