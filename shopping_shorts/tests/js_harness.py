@@ -32,6 +32,7 @@
 `suffix`를 인자로 열어두지 않았다.
 """
 import os
+import pathlib
 import shutil
 import subprocess
 import tempfile
@@ -43,6 +44,23 @@ NODE = shutil.which("node")
 
 #: 테스트 파일 맨 위에 `pytestmark = requires_node` 로 달면 node 없을 때 통째 skip.
 requires_node = pytest.mark.skipif(NODE is None, reason="node 없음")
+
+
+def _js_env():
+    """임시파일 실행 때문에 깨지는 경로 기준점을 env로 보정한다(2026-08-21).
+
+    `run_js`는 JS를 **임시 .js 파일**로 옮겨 돌리므로 `__dirname`이 temp 폴더가 된다.
+    그래서 `path.join(__dirname, '../static/produce.html')` 같은 상대경로가
+    `AppData\\Local\\static\\produce.html`을 가리켜 ENOENT로 죽는다.
+
+    원본 위치를 아는 곳은 여기 하나뿐이니 여기서 채운다(0순위-B: 같은 판단 두 번 금지).
+    이미 호출부가 지정했으면 그 값을 존중한다.
+    """
+    env = dict(os.environ)
+    env.setdefault(
+        "PRODUCE_HTML",
+        str(pathlib.Path(__file__).resolve().parents[1] / "static" / "produce.html"))
+    return env
 
 
 def run_js(code, timeout=30, check=True):
@@ -64,7 +82,7 @@ def run_js(code, timeout=30, check=True):
             f.write(code)
         r = subprocess.run([NODE, path], capture_output=True, text=True,
                            timeout=timeout, stdin=subprocess.DEVNULL,
-                           encoding="utf-8", errors="replace")
+                           encoding="utf-8", errors="replace", env=_js_env())
     finally:
         try:
             os.unlink(path)
@@ -94,6 +112,7 @@ def run_js_proc(code, **kw):
     kw.setdefault("stdin", subprocess.DEVNULL)
     kw.setdefault("encoding", "utf-8")
     kw.setdefault("errors", "replace")
+    kw.setdefault("env", _js_env())       # run_js와 같은 경로 보정(0순위-B)
     fd, path = tempfile.mkstemp(suffix=".js")
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as f:
