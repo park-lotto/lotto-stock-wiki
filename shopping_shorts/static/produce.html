@@ -1332,7 +1332,7 @@
                (2026-07-19에 '자동 재채움'을 일부러 없앴다 — 자동으로 밀어넣으면 그 버그가 되살아난다) -->
           <div id="hcCopyBox" style="margin-bottom:10px">
             <div style="font-size:13px;font-weight:800;margin-bottom:6px">✍ 고정카피
-              <span style="font-size:11px;color:var(--accent2);font-weight:600">— 누르면 아래 칸에 들어갑니다</span>
+              <span style="font-size:11px;color:var(--accent2);font-weight:600">— 누르면 아래로</span>
               <button type="button" class="tab" onclick="loadHeadcopySuggest(true)"
                 style="min-width:auto;padding:3px 10px;font-size:11px;margin-left:6px">↻ 다시 뽑기</button>
               <!-- ★넣을 수만 있고 뺄 수가 없었다(2026-08-18 사장님 지적). 한 번 넣으면
@@ -1343,7 +1343,7 @@
             <div id="hcCopyCards" style="display:flex;gap:6px;flex-wrap:wrap"></div>
             <div id="hcCopyMsg" class="hint" style="margin-top:4px"></div>
           </div>
-          <div style="font-size:13px;margin-bottom:4px">헤드카피 문구 <span class="hint" style="font-size:11px">— Enter로 줄바꿈, 길면 자동으로 줄이 나뉘어요</span></div>
+          <div style="font-size:13px;margin-bottom:4px">헤드카피 문구</div>
           <textarea id="hcText" rows="2" placeholder="예: 써보면 놀라는 이것" oninput="updateHC()"
             style="width:100%;background:var(--inset);border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px;margin-bottom:12px;resize:vertical;font-family:inherit;font-size:14px;line-height:1.4"></textarea>
           <!-- ⚡빠른 조절(2026-08-19 사장님 "폰트나 색상도 지정이 되야지") — 문구를 고치는
@@ -1351,8 +1351,8 @@
                아래 '직접 다듬기'의 진짜 입력칸(hcFont/hcColor/hcSize/hcY/hcX)에 그대로 써넣고
                updateHC()를 부른다 — 같은 값이 두 벌이 되면 반드시 어긋난다(0순위-B). -->
           <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:12px">
-            <div style="font-size:13px;font-weight:700;margin-bottom:8px">⚡ 빠른 조절
-              <span style="font-size:11px;color:var(--sub);font-weight:400">— 미리보기에서 글자를 끌어 옮길 수도 있어요</span></div>
+            <div style="font-size:13px;font-weight:700;margin-bottom:8px">🎨 글씨 · 자리
+              <span style="font-size:11px;color:var(--sub);font-weight:400">— 미리보기에서 끌어도 옮겨져요</span></div>
             <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
               <!-- ★폰트는 '진짜 그 글씨체로' 보여준다(2026-08-19 사장님 "썸네일쪽처럼 이쁜폰트로").
                    밋밋한 <select>는 22종이 전부 같은 고딕으로 보여 고를 수가 없었다.
@@ -1381,11 +1381,18 @@
               <input id="hcYQ" type="range" min="0" max="100" oninput="HC_Y_TOUCHED=true;hcQuick('hcY', this.value)" style="width:100%"></div>
             <div style="font-size:12px;color:var(--sub)">가로 위치 <span id="hcXQV">50</span>%
               <input id="hcXQ" type="range" min="0" max="100" oninput="hcQuick('hcX', this.value)" style="width:100%"></div>
-            <div style="font-size:11px;color:var(--sub);margin-top:6px">줄바꿈은 문구 칸의 Enter로 정해요 — 넣은 줄 그대로 나오고, 넘치면 글씨가 자동으로 작아집니다.</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;align-items:center">
+              <span style="font-size:12px;color:var(--sub)">한 번에</span>
+              <button class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 10px;font-size:12px;white-space:nowrap" onclick="alignHC('top')">⬆ 위</button>
+              <button class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 10px;font-size:12px;white-space:nowrap" onclick="alignHC('mid')">중간</button>
+              <button class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 10px;font-size:12px;white-space:nowrap" onclick="alignHC('bottom')">⬇ 하단</button>
+              <button class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 10px;font-size:12px;white-space:nowrap" onclick="alignHC('center')">↔ 가운데</button>
+            </div>
+            <div style="font-size:11px;color:var(--sub);margin-top:6px">줄바꿈은 문구 칸에서 Enter로 정해요.</div>
           </div>
           <!-- 강조 단어(노출 유지) -->
           <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:12px">
-            <div style="font-size:13px;font-weight:700;margin-bottom:2px">🎯 강조 단어 <span style="font-size:11px;color:var(--sub);font-weight:400">— 헤드카피 + 자막 공통(키워드 일치 시 자동 강조)</span></div>
+            <div style="font-size:13px;font-weight:700;margin-bottom:2px">🎯 강조 단어 <span style="font-size:11px;color:var(--sub);font-weight:400">— 헤드카피·자막 공통</span></div>
             <div id="highlightRuleList" style="margin-top:6px"></div>
             <button class="tab" onclick="addHighlightRule()" style="flex:0 0 auto;min-width:auto;padding:6px 12px;font-size:12px;margin-top:4px">+ 강조 단어 추가</button>
           </div>
@@ -1394,52 +1401,29 @@
                "스타일 안에 헤드카피는 삭제해 / 문구가 헤드카피니까").
                ★마크업을 그대로 옮겼다 — id·핸들러 무수정(값의 주인은 그대로). -->
           <div style="border-top:1px dashed var(--line);padding-top:10px;margin-top:4px">
-            <div style="font-size:13px;font-weight:800;margin-bottom:8px">🎨 헤드카피 꾸미기</div>
+
 
               <div id="hcPresets" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px"></div>
 
-                <!-- ① 글씨 -->
-                <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px">
-                  <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:8px">① 글씨</div>
-                  <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
-                    <span style="font-size:12px;color:var(--sub)">폰트
-                      <span id="hcFontPicker" style="position:relative;display:inline-block;vertical-align:middle">
-                        <button type="button" id="hcFontBtn" onclick="toggleFontMenu(event)"
-                          style="background:#0a1017;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:6px 10px;cursor:pointer;min-width:150px;text-align:left;font-size:13px">폰트 선택 ▾</button>
-                        <div id="hcFontMenu" style="display:none;position:absolute;top:calc(100% + 4px);left:0;z-index:60;background:var(--inset);border:1px solid var(--line);border-radius:8px;max-height:340px;overflow:auto;box-shadow:0 12px 34px rgba(0,0,0,.55);min-width:190px"></div>
-                      </span>
-                      <select id="hcFont" onchange="updateHC()" style="display:none"></select></span>
-                    <label style="font-size:12px;color:var(--sub)">색상
-                      <input id="hcColor" type="color" value="#FF8800" oninput="updateHC()" style="vertical-align:middle;cursor:pointer"></label>
-                    <label style="font-size:12px;color:var(--sub)">굵기
-                      <select id="hcWeight" onchange="updateHC()" style="background:#0a1017;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:5px 8px">
-                        <option value="700">굵게</option><option value="900" selected>아주 굵게</option><option value="400">보통</option>
-                      </select></label>
-                  </div>
-                  <div style="margin-top:8px;font-size:12px;color:var(--sub)">크기 <b id="hcSizeV">64</b>px
-                    <input id="hcSize" type="range" min="28" max="120" value="64" oninput="updateHC()" style="width:100%"></div>
+                <!-- ★①글씨·②자리는 ⚡빠른 조절과 같은 값을 만지는 중복이라 화면에서 뺐다
+                     (2026-08-22 사장님 "여기 중복이야"). ★삭제가 아니라 숨김이다 —
+                     updateHC()가 이 칸들을 읽어 값을 만들고, applyConfig()가 여기에 써넣는다.
+                     빠른 조절은 hcQuick()으로 이 칸에 값을 넣는 **미러**일 뿐이다(0순위-B). -->
+                <div hidden style="display:none">
+                  <span id="hcFontPicker"><button type="button" id="hcFontBtn" onclick="toggleFontMenu(event)">폰트</button>
+                    <div id="hcFontMenu" style="display:none"></div></span>
+                  <select id="hcFont" onchange="updateHC()"></select>
+                  <input id="hcColor" type="color" value="#FF8800" oninput="updateHC()">
+                  <select id="hcWeight" onchange="updateHC()">
+                    <option value="700">굵게</option><option value="900" selected>아주 굵게</option><option value="400">보통</option>
+                  </select>
+                  <span id="hcSizeV">64</span><input id="hcSize" type="range" min="28" max="120" value="64" oninput="updateHC()">
+                  <span id="hcYV">14</span><input id="hcY" type="range" min="0" max="100" value="14" oninput="HC_Y_TOUCHED=true;updateHC()">
+                  <span id="hcXV">50</span><input id="hcX" type="range" min="0" max="100" value="50" oninput="updateHC()">
                 </div>
-
-                <!-- ② 자리 -->
-                <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px">
-                  <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:8px">② 자리</div>
-                  <div style="font-size:12px;color:var(--sub)">세로 위치 <b id="hcYV">14</b>%
-                    <input id="hcY" type="range" min="0" max="100" value="14" oninput="HC_Y_TOUCHED=true;updateHC()" style="width:100%"></div>
-                  <div style="font-size:12px;color:var(--sub)">가로 위치 <b id="hcXV">50</b>%
-                    <input id="hcX" type="range" min="0" max="100" value="50" oninput="updateHC()" style="width:100%"></div>
-                  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
-                    <span style="font-size:12px;color:var(--sub);align-self:center">한 번에</span>
-                    <button class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 10px;font-size:12px;white-space:nowrap" onclick="alignHC('top')">⬆ 위</button>
-                    <button class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 10px;font-size:12px;white-space:nowrap" onclick="alignHC('mid')">중간</button>
-                    <button class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 10px;font-size:12px;white-space:nowrap" onclick="alignHC('bottom')">⬇ 하단</button>
-                    <button class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 10px;font-size:12px;white-space:nowrap" onclick="alignHC('center')">↔ 가운데</button>
-                  </div>
-                  <div class="hint" style="margin-top:6px;font-size:11px">💡 미리보기에서 글자를 <b>드래그</b>해도 옮겨져요.</div>
-                </div>
-
                 <!-- ③ 테두리 · 박스 -->
                 <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px">
-                  <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:8px">③ 테두리 · 박스</div>
+                  <div style="font-size:13px;font-weight:700;margin-bottom:8px">🎨 테두리 · 박스</div>
                   <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
                     <input id="hcOutline" type="checkbox" checked onchange="updateHC()"> 외곽선
                     <input id="hcOutColor" type="color" value="#000000" oninput="updateHC()">
@@ -1456,42 +1440,38 @@
           </div>
           <div id="decoPaneStyle">
           <!-- 🎯 완성 스타일 카드(Task2가 renderStyleCards로 채움) -->
-          <div style="font-size:13px;font-weight:800;margin-bottom:6px">🎯 완성 스타일 <span style="font-size:11px;color:var(--accent2);font-weight:600">— 누르면 그대로 완성</span></div>
+          <div style="font-size:13px;font-weight:800;margin-bottom:6px">🎯 완성 스타일 <span style="font-size:11px;color:var(--accent2);font-weight:600">— 누르면 끝</span></div>
           <div id="fullPresets" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px"></div>
-          <button type="button" id="moreStylesBtn" onclick="toggleMoreStyles()" class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;margin-bottom:14px">+ 더보기</button>
-          <!-- ⭐ 내 프리셋 라이브러리(항상 노출) — 내가 저장한 스타일을 딸깍 적용 -->
-          <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:12px">
-            <div style="font-size:13px;font-weight:800;margin-bottom:2px">⭐ 내 프리셋 <span style="font-size:11px;color:var(--accent2);font-weight:600">— 누르면 바로 적용</span></div>
-            <div style="font-size:11px;color:var(--sub);margin-bottom:8px">지금 화면 스타일이 마음에 들면 저장해 두고, 다음엔 딸깍 한 번으로 그대로 불러와요.</div>
-            <div id="myPresets" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px"></div>
-            <div style="display:flex;gap:6px;flex-wrap:wrap">
-              <input id="myPresetName" type="text" placeholder="예: 내 채널 기본형" style="flex:1;min-width:150px;background:#0a1017;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:8px 10px;font-size:13px">
-              <button class="tab" onclick="saveMyPreset()" style="flex:0 0 auto;min-width:auto;padding:8px 16px;font-size:13px;white-space:nowrap;background:var(--sel-bg);border-color:var(--accent)">💾 지금 스타일 저장</button>
-            </div>
+          <button type="button" id="moreStylesBtn" onclick="toggleMoreStyles()" class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;margin-bottom:10px">+ 더보기</button>
+          <!-- ⭐ 내 프리셋 — 헤드카피+자막을 통째로 저장한다. 헤드카피가 딴 탭으로 간 뒤에도
+               '한 방에 완성' 갈래라 완성 스타일 바로 밑에 둔다(2026-08-22 간결화). -->
+          <div style="font-size:13px;font-weight:800;margin:10px 0 6px">⭐ 내 프리셋 <span style="font-size:11px;color:var(--accent2);font-weight:600">— 누르면 바로 적용</span></div>
+          <div id="myPresets" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px"></div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
+            <input id="myPresetName" type="text" placeholder="이 스타일 이름" style="flex:1;min-width:130px;background:#0a1017;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:7px 10px;font-size:13px">
+            <button class="tab" onclick="saveMyPreset()" style="flex:0 0 auto;min-width:auto;padding:7px 14px;font-size:12px;white-space:nowrap;background:var(--sel-bg);border-color:var(--accent)">💾 지금 스타일 저장</button>
           </div>
           <!-- ★기본 펼침(2026-08-18). 사장님이 "폰트·색상·크기 조정이 없다"고 하셨는데
                실제로는 여기 다 있었다 — 접힘 안에 또 접혀 있어 못 찾으신 것이다.
                조절을 새로 만들면 같은 값이 두 군데 생겨 어긋난다(0순위-B) → 펼쳐서 보이게만 한다. -->
           <details id="advDetails" style="margin-bottom:4px" open>
-            <summary style="cursor:pointer;font-size:13px;color:var(--accent2);font-weight:700;padding:6px 0">✏️ 직접 다듬기 — 폰트·크기·위치·자막·내 프리셋 ▾</summary>
+            <summary style="cursor:pointer;font-size:13px;color:var(--accent2);font-weight:700;padding:6px 0">✏️ 직접 다듬기 ▾</summary>
             <div id="advBody" style="margin-top:10px">
-              <div class="sub" style="margin-bottom:8px;font-size:11px">필요한 것만 펼쳐 손보세요. 대부분은 위 <b>완성 스타일</b>만 눌러도 됩니다.</div>
+              
 
               <!-- ── 💬 자막(하단 나레이션) ── -->
               <details style="border-top:1px dashed var(--line);margin-top:2px" open>
                 <summary style="cursor:pointer;font-size:13px;font-weight:700;padding:8px 0">💬 자막(하단 나레이션) 꾸미기</summary>
                 <div style="padding:2px 0 12px">
-                <div class="sub" style="margin-bottom:10px;font-size:11px">문구는 대본에서 자동으로 들어와요. 여기선 <b>보이는 모양</b>만 정합니다.</div>
-
                 <!-- ⭐ 자막 프리셋(2026-08-22) — 자막 모양만 따로 저장·적용.
                      ★값의 주인은 그대로다: 저장은 STATE.captionStyle을 그대로 담고,
                      적용은 기존 applyConfig(null, cap)에 맡긴다(효과 복원까지 이미 들어있다). -->
                 <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px">
-                  <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:6px">⭐ 자막 프리셋 <span style="font-weight:400">— 누르면 바로 적용</span></div>
+                  <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:6px">⭐ 자막 프리셋</div>
                   <div id="capPresets" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px"></div>
                   <div style="display:flex;gap:6px;flex-wrap:wrap">
-                    <input id="capPresetName" type="text" placeholder="예: 내 기본 자막" style="flex:1;min-width:140px;background:#0a1017;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:7px 10px;font-size:13px">
-                    <button class="tab" onclick="saveCapPreset()" style="flex:0 0 auto;min-width:auto;padding:7px 14px;font-size:12px;white-space:nowrap;background:var(--sel-bg);border-color:var(--accent)">💾 자막 저장</button>
+                    <input id="capPresetName" type="text" placeholder="이름 (자막만)" style="flex:1;min-width:140px;background:#0a1017;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:7px 10px;font-size:13px">
+                    <button class="tab" onclick="saveCapPreset()" style="flex:0 0 auto;min-width:auto;padding:7px 14px;font-size:12px;white-space:nowrap;background:var(--sel-bg);border-color:var(--accent)">💾 저장</button>
                   </div>
                 </div>
 
@@ -1513,7 +1493,7 @@
                   <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:8px">② 자리</div>
                   <div style="font-size:12px;color:var(--sub)">세로 위치 <b id="capYV">84</b>%
                     <input id="capY" type="range" min="0" max="100" value="84" oninput="CAP_POS_TOUCHED=true;updateCaption()" style="width:100%"></div>
-                  <div class="hint" style="margin-top:6px;font-size:11px">💡 미리보기에서 자막을 <b>드래그</b>해도 옮겨져요.</div>
+                  <div class="hint" style="margin-top:6px;font-size:11px">💡 미리보기에서 끌어도 옮겨져요.</div>
                   <button type="button" id="capResetRegionBtn" class="tab" hidden onclick="resetCapToRegion()" style="display:none !important;flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;margin-top:6px;white-space:nowrap">↩ 지워진 자막 자리(1번)로 되돌리기</button>
                 </div>
 
@@ -1531,7 +1511,7 @@
                     <span style="color:var(--sub);font-size:12px">여백 <input id="capBoxPad" type="range" min="0" max="40" value="12" oninput="updateCaption()"></span>
                     <span style="color:var(--sub);font-size:12px">투명도 <input id="capBoxOpacity" type="range" min="20" max="100" value="80" oninput="updateCaption()"></span>
                   </label>
-                  <div class="hint" style="font-size:11px;margin-top:4px">켜면 하단 바 대신 글자마다 박스가 생겨요.</div>
+                  <div class="hint" style="font-size:11px;margin-top:4px"></div>
                   <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;align-items:center">
                     <span style="font-size:12px;color:var(--sub)">효과</span>
                     <button type="button" class="capEff tab active" data-eff="none" onclick="setCapEffect('none')" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;white-space:nowrap">없음</button>
@@ -1569,6 +1549,19 @@
                     </select></label>
                   <label style="font-size:12px;color:var(--sub)">투명도 <input id="wmAlpha" type="range" min="20" max="100" value="60" oninput="updateDeco()"></label>
                 </div>
+                <!-- 🔴 [광고] 표시 — 틀(템플릿)에 들어가는 값이지만 공통 기능이라 여기 둔다
+                     (2026-08-22 사장님 지시). ★값의 주인은 숨은 frAd 하나 —
+                     여기선 그 칸에 써넣고 frUpdate()를 부른다(0순위-B). -->
+                <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px">
+                  <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+                    <input id="adBadgeOn" type="checkbox" onchange="setAdBadge(this.checked)">
+                    <b>[광고] 표시</b>
+                    <span style="font-size:11px;color:var(--sub);font-weight:400">— 틀 오른쪽 위(돋보기 위)에 붙어요</span>
+                  </label>
+                  <div id="adBadgeHint" class="hint" style="font-size:11px;margin-top:4px;display:none">템플릿 탭에서 틀을 먼저 고르세요.</div>
+                </div>
+                <!-- 숨은 진짜 칸: frFill/frUpdate가 이 id를 읽고 쓴다(지우면 배선이 끊긴다) -->
+                <label hidden style="display:none"><input id="frAd" type="checkbox" onchange="frUpdate()"></label>
                 <!-- 추가 텍스트: 사장님 지시로 화면에서 뺌(2026-08-22).
                      ★#extraTextList는 남긴다 — renderExtraTexts()가 이 자리를 찾고,
                      예전 작업에 저장된 extra_texts는 렌더에 그대로 살아있다. -->
@@ -1603,7 +1596,6 @@
                            실제 채널이랑 안 맞는다"로 보였다. -->
                       <label>채널명 <input id="frChannel" oninput="frUpdate()" placeholder="내 채널 이름"
                         style="width:150px;padding:5px 8px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--txt)"></label>
-                      <label style="cursor:pointer"><input id="frAd" type="checkbox" onchange="frUpdate()"> [광고]</label>
                       <label style="cursor:pointer"><input id="frIcons" type="checkbox" checked onchange="frUpdate()"> ☰ 🔍</label>
                     </div>
                     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:12px;margin-top:8px">
@@ -1632,16 +1624,39 @@
                       <button type="button" class="tab" onclick="frBar('frBottom',20)" style="min-width:auto;padding:4px 12px;font-size:14px">＋</button>
                       <span id="frBottomVal" style="color:var(--sub);min-width:52px">0px</span>
                     </div>
+                    <!-- 🎨 글자 꾸미기(2026-08-22 신설) — 제목·채널명의 폰트·크기·가로위치.
+                         ★크기 0 = '자동'(프리셋이 정한 값). 0을 "0px"로 읽으면 글자가 사라진다. -->
+                    <div style="border-top:1px dashed var(--line);margin-top:10px;padding-top:10px">
+                      <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:6px">🎨 글자 꾸미기</div>
+                      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:12px">
+                        <span style="min-width:44px">제목</span>
+                        <select id="frTtFont" onchange="frUpdate()" style="background:#0a1017;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:5px 8px;font-size:12px"></select>
+                        <span>크기 <b id="frTtSizeV" style="color:var(--sub)">자동</b></span>
+                        <input id="frTtSize" type="range" min="0" max="140" step="2" value="0" oninput="frUpdate()" style="width:110px">
+                        <span>가로 <b id="frTtXV" style="color:var(--sub)">50%</b></span>
+                        <input id="frTtX" type="range" min="0" max="100" value="50" oninput="frUpdate()" style="width:110px">
+                      </div>
+                      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:12px;margin-top:8px">
+                        <span style="min-width:44px">채널명</span>
+                        <select id="frChFont" onchange="frUpdate()" style="background:#0a1017;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:5px 8px;font-size:12px"></select>
+                        <span>크기 <b id="frChSizeV" style="color:var(--sub)">자동</b></span>
+                        <input id="frChSize" type="range" min="0" max="140" step="2" value="0" oninput="frUpdate()" style="width:110px">
+                        <span>가로 <b id="frChXV" style="color:var(--sub)">50%</b></span>
+                        <input id="frChX" type="range" min="0" max="100" value="50" oninput="frUpdate()" style="width:110px">
+                      </div>
+                      <div class="hint" style="font-size:11px;margin-top:6px">크기를 맨 왼쪽(자동)에 두면 틀이 정한 크기를 씁니다.</div>
+                    </div>
                   </div>
                 </div>
-                <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:12px">
-                  <div style="font-size:13px;font-weight:800;margin-bottom:6px">🖼 템플릿
-                    <span style="font-size:11px;color:var(--sub);font-weight:400">— 영상 위에 얹는 틀(색띠만)</span></div>
-                  <div id="tplCards" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px"></div>
-                  <div style="font-size:12px;color:var(--sub)">표시 구간
-                    <label style="margin-left:8px;cursor:pointer"><input type="radio" name="tplSpan" value="full" checked onchange="setTemplateSpan('full')"> 영상 전체</label>
-                    <label style="margin-left:8px;cursor:pointer"><input type="radio" name="tplSpan" value="first" onchange="setTemplateSpan('first')"> 첫 장면만</label>
-                  </div>
+                <!-- 🖼 색띠 템플릿 카드줄: 사장님 지시로 감춤(2026-08-22 "이미 위에 있으니").
+                     ★삭제 아님 — renderTemplateCards()가 이 자리를 찾고, 예전 작업이
+                     색띠 템플릿(STATE.deco.template.id)을 쓰고 있으면 그대로 렌더된다. -->
+                <div id="tplCards" hidden style="display:none"></div>
+                <!-- ★'표시 구간'은 남긴다: setTemplateSpan은 색띠 전용이 아니라
+                     STATE.deco.template 전체(위쪽 '내용물 있는 틀' 포함)에 걸린다. -->
+                <div style="font-size:12px;color:var(--sub);margin-bottom:12px">표시 구간
+                  <label style="margin-left:8px;cursor:pointer"><input type="radio" name="tplSpan" value="full" checked onchange="setTemplateSpan('full')"> 영상 전체</label>
+                  <label style="margin-left:8px;cursor:pointer"><input type="radio" name="tplSpan" value="first" onchange="setTemplateSpan('first')"> 첫 장면만</label>
                 </div>
                 <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;border-top:1px dashed var(--line);padding-top:12px">
                   <span style="font-size:13px;font-weight:600">🖼 이미지 오버레이</span>
@@ -2585,7 +2600,10 @@ function frameUrl(f){
   const q=new URLSearchParams({preset:f.preset||'news_coral', bar_h:f.bar_h??190,
     bottom_h:f.bottom_h??0,
     channel:f.channel||'', title:f.title||'', views:f.views||'', comments:f.comments||'',
-    ad_badge:f.ad_badge?'1':'0', icons:f.icons?'1':'0'});
+    ad_badge:f.ad_badge?'1':'0', icons:f.icons?'1':'0',
+    // 글자 꾸미기(2026-08-22) — 빈값/0이면 서버가 프리셋 기본으로 되돌린다
+    ch_font:f.ch_font||'', ch_size:f.ch_size??0, ch_x:f.ch_x??50,
+    title_font:f.title_font||'', title_size:f.title_size??0, title_x:f.title_x??50});
   return '/api/produce/frame.png?'+q.toString();
 }
 async function loadFramePresets(){
@@ -2600,21 +2618,38 @@ function renderFramePresets(){
   const box=document.getElementById('frPresets'); if(!box) return;
   const f=(STATE.deco&&STATE.deco.template&&STATE.deco.template.frame)||null;
   const cur=f?f.preset:'';
-  // ★격자로 고정한다(2026-08-22 사장님 "프리셋쪽이 두서없이 난잡").
-  //   flex-wrap이면 이름 길이에 따라 줄마다 칸 수가 달라져 들쭉날쭉해 보인다.
-  //   2열 고정 + 이름 한 줄 자르기 + 넘치면 스크롤 → 어느 폭에서도 줄이 맞는다.
-  const chip=(on,onclick,swatch,label)=>`<button type="button" class="tab${on?' on':''}" onclick="${onclick}"
-      style="min-width:0;width:100%;padding:7px 10px;font-size:12px;display:flex;align-items:center;gap:6px;text-align:left">
-      ${swatch}<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${label}</span></button>`;
-  box.style.cssText='display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;'
-    +'max-height:206px;overflow-y:auto;margin-bottom:10px;padding-right:2px';
-  box.innerHTML = chip(!f, "frPick('')", '', '안 씀')
-    + FR_PRESETS.map(p=>chip(cur===p.id, `frPick('${p.id}')`,
-        `<span style="flex:0 0 auto;display:inline-block;width:10px;height:10px;border-radius:2px;background:${p.bar}"></span>`,
-        esc(p.name))).join('');
+  // ★글자만 나열하면 뭐가 뭔지 모른다(2026-08-22 사장님 "시각화 보기편하게").
+  //   각 틀을 **9:16 축소판**으로 그린다 — 띠 색·띠 높이·제목 블록이 한눈에 보인다.
+  //   높이는 실제 bar_h(1920 기준)를 비율로 환산해 **틀마다 다르게** 그린다.
+  const TH=76;                     // 축소판 높이(px). 9:16이라 폭은 자동 43px
+  const card=(on,onclick,thumb,label)=>`<button type="button" class="tab${on?' on':''}" onclick="${onclick}"
+      style="min-width:0;width:100%;padding:6px 4px;font-size:11px;display:flex;flex-direction:column;
+             align-items:center;gap:5px;line-height:1.25">
+      ${thumb}
+      <span style="width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center">${label}</span></button>`;
+  // 한 틀의 축소판: 위 띠(색) + 제목 블록(흰) + 나머지(영상 자리)
+  const thumbOf=p=>{
+    const barPct=Math.max(3, Math.min(45, ((p.bar_h!=null?p.bar_h:190)/1920)*100));
+    const head=p.has_head
+      ? `<div style="position:absolute;left:0;right:0;top:${barPct}%;height:16%;background:#fff;
+           border-bottom:1px solid #d8d8d8"></div>` : '';
+    return `<div style="position:relative;width:${Math.round(TH*9/16)}px;height:${TH}px;border-radius:4px;
+        overflow:hidden;background:#c9ced6;border:1px solid rgba(255,255,255,.18);flex:0 0 auto">
+        <div style="position:absolute;left:0;right:0;top:0;height:${barPct}%;background:${p.bar}"></div>
+        ${head}</div>`;
+  };
+  const noneThumb=`<div style="width:${Math.round(TH*9/16)}px;height:${TH}px;border-radius:4px;
+      border:1px dashed var(--line);display:flex;align-items:center;justify-content:center;
+      color:var(--sub);font-size:10px;flex:0 0 auto">없음</div>`;
+  // 축소판이 커졌으니 한 줄에 4칸(폭이 좁으면 자동으로 줄어든다)
+  box.style.cssText='display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:6px;'
+    +'max-height:280px;overflow-y:auto;margin-bottom:10px;padding-right:2px';
+  box.innerHTML = card(!f, "frPick('')", noneThumb, '안 씀')
+    + FR_PRESETS.map(p=>card(cur===p.id, `frPick('${p.id}')`, thumbOf(p), esc(p.name))).join('');
   const fields=document.getElementById('frFields');
   if(fields) fields.style.display=f?'':'none';
-  if(f) frFill(f);
+  fillFrameFontSelects();
+  if(f) frFill(f); else syncAdBadge();
 }
 function frFill(f){
   const g=id=>document.getElementById(id);
@@ -2628,6 +2663,18 @@ function frFill(f){
   if(g('frBarVal')) g('frBarVal').textContent=(f.bar_h??190)+'px';
   if(g('frBottom')) g('frBottom').value=f.bottom_h??0;
   if(g('frBottomVal')) g('frBottomVal').textContent=(f.bottom_h??0)+'px';
+  // 글자 꾸미기 — 저장된 값이 없으면 '자동'(0/50)으로 되돌린다
+  if(g('frChFont')) g('frChFont').value=f.ch_font||'';
+  if(g('frChSize')) g('frChSize').value=f.ch_size??0;
+  if(g('frChX')) g('frChX').value=f.ch_x??50;
+  if(g('frTtFont')) g('frTtFont').value=f.title_font||'';
+  if(g('frTtSize')) g('frTtSize').value=f.title_size??0;
+  if(g('frTtX')) g('frTtX').value=f.title_x??50;
+  if(g('frChSizeV')) g('frChSizeV').textContent=(f.ch_size?f.ch_size+'px':'자동');
+  if(g('frTtSizeV')) g('frTtSizeV').textContent=(f.title_size?f.title_size+'px':'자동');
+  if(g('frChXV')) g('frChXV').textContent=(f.ch_x??50)+'%';
+  if(g('frTtXV')) g('frTtXV').textContent=(f.title_x??50)+'%';
+  fillFrameFontSelects(); syncAdBadge();
 }
 function frPick(preset){
   if(!STATE.deco) STATE.deco={extra_texts:[], motion:null};
@@ -2675,6 +2722,17 @@ function frUpdate(){
   f.icons=!!(g('frIcons')||{}).checked;
   f.bar_h=parseInt((g('frBar')||{}).value||190,10);
   f.bottom_h=parseInt((g('frBottom')||{}).value||0,10);
+  // 글자 꾸미기 — 값의 주인은 이 입력칸들 하나뿐(0순위-B)
+  f.ch_font=(g('frChFont')||{}).value||'';
+  f.ch_size=parseInt((g('frChSize')||{}).value||0,10);
+  f.ch_x=parseInt((g('frChX')||{}).value||50,10);
+  f.title_font=(g('frTtFont')||{}).value||'';
+  f.title_size=parseInt((g('frTtSize')||{}).value||0,10);
+  f.title_x=parseInt((g('frTtX')||{}).value||50,10);
+  const lab=(id,v,suf)=>{ const t=g(id); if(t) t.textContent=(v?v+suf:'자동'); };
+  lab('frChSizeV',f.ch_size,'px'); lab('frTtSizeV',f.title_size,'px');
+  if(g('frChXV')) g('frChXV').textContent=f.ch_x+'%';
+  if(g('frTtXV')) g('frTtXV').textContent=f.title_x+'%';
   if(g('frBarVal')) g('frBarVal').textContent=f.bar_h+'px';
   if(g('frBottomVal')) g('frBottomVal').textContent=f.bottom_h+'px';
   renderTemplatePreview(); saveHeadcopy();
@@ -2746,6 +2804,35 @@ function bindFrameHandle(el, inputId){
   };
   el.addEventListener('mousedown',start);
   el.addEventListener('touchstart',start,{passive:false});
+}
+// [광고] 표시 — 자막 탭에 둔 스위치. 값의 주인은 숨은 frAd 하나다(0순위-B).
+function setAdBadge(on){
+  const real=document.getElementById('frAd');
+  const hint=document.getElementById('adBadgeHint');
+  const hasFrame=!!(STATE.deco&&STATE.deco.template&&STATE.deco.template.frame);
+  if(!hasFrame){   // 고른 틀이 없으면 붙일 자리가 없다 — 되돌리고 알려준다
+    if(hint) hint.style.display=on?'':'none';
+    const box=document.getElementById('adBadgeOn'); if(box) box.checked=false;
+    return;
+  }
+  if(hint) hint.style.display='none';
+  if(real) real.checked=!!on;
+  frUpdate();
+}
+// 틀을 고르거나 작업을 다시 열 때 스위치를 실제 값에 맞춘다
+function syncAdBadge(){
+  const box=document.getElementById('adBadgeOn'); if(!box) return;
+  const f=STATE.deco&&STATE.deco.template&&STATE.deco.template.frame;
+  box.checked=!!(f&&f.ad_badge);
+  const hint=document.getElementById('adBadgeHint'); if(hint) hint.style.display='none';
+}
+// 틀 글자용 폰트 목록 — 정본은 HC_FONTS 하나(0순위-B). '자동'은 프리셋 기본을 뜻한다.
+function fillFrameFontSelects(){
+  ['frTtFont','frChFont'].forEach(id=>{
+    const el=document.getElementById(id); if(!el||el.options.length) return;
+    el.innerHTML='<option value="">자동(틀 기본)</option>'
+      + HC_FONTS.map(f=>`<option value="${f.file}">${f.name}</option>`).join('');
+  });
 }
 function frFromHeadcopy(){
   const t=document.getElementById('frTitle'), hc=document.getElementById('hcText');
@@ -3237,7 +3324,7 @@ function renderCapPresets(){
   box.innerHTML = list.length ? list.map((p,i)=>`<span style="display:inline-flex;align-items:center;gap:4px;background:#0a1017;border:1px solid var(--line);border-radius:9px;padding:2px 4px 2px 0">
     <button class="tab" onclick="applyCapPreset(${i})" style="flex:0 0 auto;min-width:auto;padding:5px 11px;font-size:12px;white-space:nowrap;border:none;background:none">⭐ ${p.name}</button>
     <button onclick="deleteCapPreset(${i})" title="삭제" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:14px">✕</button></span>`).join('')
-    : '<span class="hint" style="font-size:11px">아직 저장한 자막 프리셋이 없어요. 자막 모양을 정한 뒤 “💾 자막 저장”을 누르면 여기 쌓여요.</span>';
+    : '<span class="hint" style="font-size:11px">자막 모양만 따로 저장해요.</span>';
 }
 // ── 🏷 워터마크 · 추가 텍스트(deco) ──────────────
 const WM_POS={bc:{x:50,y:88},br:{x:82,y:94},bl:{x:18,y:94},tr:{x:82,y:8},tl:{x:18,y:8}};
@@ -3408,7 +3495,7 @@ function renderMyPresets(){
   box.innerHTML = list.length ? list.map((p,i)=>`<span style="display:inline-flex;align-items:center;gap:4px;background:var(--inset);border:1px solid var(--line);border-radius:9px;padding:2px 4px 2px 0;margin:0 6px 6px 0">
     <button class="tab" onclick="applyMyPreset(${i})" style="flex:0 0 auto;min-width:auto;padding:5px 11px;font-size:12px;white-space:nowrap;border:none;background:none">⭐ ${p.name}</button>
     <button onclick="deleteMyPreset(${i})" title="삭제" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:14px">✕</button></span>`).join('')
-    : '<span class="hint">아직 저장한 프리셋이 없어요. 완성 스타일을 고르거나 직접 다듬은 뒤, 아래 “💾 지금 스타일 저장”을 누르면 여기 쌓여요.</span>';
+    : '<span class="hint" style="font-size:11px">지금 화면 전체를 저장해 두면 딸깍 한 번으로 불러와요.</span>';
 }
 // 번들 폰트 22종(ttf/otf만 — 미리보기=실제 렌더 일치). ⭐=쇼츠 헤드카피 추천 베스트5
 const HC_FONTS=[
