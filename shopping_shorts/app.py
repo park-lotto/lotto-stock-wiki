@@ -726,11 +726,43 @@ def api_reference(platform: str = "instagram", days: int = 0, min_comments: int 
     if blocked:
         items = [i for i in items
                  if (i.get("username") or "").strip().lstrip("@").lower() not in blocked]
+    _attach_channel_style(items, store, platform)   # 유튜브: 발굴 축(신기템 등)을 화면 필터로
     _attach_vision_tags(items, store)   # 백그라운드로 채워진 주제태그를 실어 보냄(검색 정확도 승격)
     _attach_durations(items, store)     # ⏱ 영상 길이 캐시 결합 + 빈 곳 백필 예약
     if platform == "instagram":
         _attach_posted_at(items)        # 'X시간 전' 실시간 계산용 발행시각
     return {"ok": True, "items": items, "collected_at": collected_at}
+
+
+def _attach_channel_style(items, store, platform):
+    """유튜브 랭킹 항목에 발굴 스타일(썰쇼핑·신기템 등)을 붙인다(2026-08-21).
+
+    사장님 "신기템이 어디서 볼 수 있나" — 발굴은 축별로 채널을 모으는데 랭킹은 그걸
+    전혀 안 봤다. 실측하니 오늘 수집분 9,499건 중 이미 신기템 채널 영상이 77건 들어와
+    있었다(연예인결합 1,034 · 썰쇼핑 626 · 레시피쇼핑 311). 즉 **데이터는 이미 있고
+    이름표만 없었다** — 새 수집 경로를 만들 일이 아니었다.
+
+    ★유튜브만 붙인다: username이 곧 channel_id라 바로 맞는다. 인스타는 username이
+      핸들이라 이 표와 축이 다르다(그쪽은 사람이 지정하는 카테고리를 쓴다).
+    ★조회는 store.channel_style_map() 한 곳에서만 한다(0순위-B).
+    """
+    if platform != "youtube" or not items:
+        return
+    styles = store.channel_style_map()
+    if not styles:
+        return
+    from shopping_shorts import yt_style as _ys
+    for it in items:
+        st = styles.get((it.get("username") or "").strip(), "")
+        # ★채널 축만 믿으면 그 채널의 **다른 장르 영상까지 딸려온다**(2026-08-21 브라우저 실측).
+        #   신기템 채널 15곳의 영상 77건에 포켓몬고 2편·트로트 2편이 섞여 있었다 —
+        #   채널 문턱(25편 중 5편)을 넘겼을 뿐 나머지가 다른 장르인 채널들이다.
+        #   판정은 yt_style 한 곳에서만 한다(0순위-B).
+        # ⚠️다른 축은 이 검사를 안 건다: 썰쇼핑은 categorize가 영상 단위로 이미 가르고
+        #   (제품정체형·오용형), 연예인·레시피는 채널 성격이 곧 영상 성격이라 실측상 문제가 없었다.
+        if st == "신기템" and not _ys.is_novel_video(it.get("caption")):
+            st = ""
+        it["style"] = st
 
 
 @app.get("/api/seeds")
@@ -11421,6 +11453,14 @@ def api_script_styles(request: Request, category: str = None, job: str = None):
             "fit": "검증" if verified else "타소재",
             # 사용자가 이름만 보고는 못 고른다 — 어디서 나왔고 얼마나 통했는지를 함께 준다.
             "evidence": s.get("situation_type") or "",
+            # ★실제 문장 예시·스토리라인을 함께 준다(2026-08-21 사장님 요청).
+            #   역할어(title·hook·twist…)만 보여주면 그게 무슨 말인지 알 수 없다 —
+            #   "이 스타일로 만들면 이런 문장이 나온다"를 카드가 직접 보여줘야 고를 수 있다.
+            #   전부 DB에 이미 있던 값이다(templates_json·beat_chain_json). 새로 만들지 않았다.
+            "templates": s.get("templates") or {},
+            "beat_chain": s.get("beat_chain") or [],
+            "emotion_arc": s.get("emotion_arc") or "",
+            "appeal": s.get("appeal") or "",
         })
         if _srcs:
             out[-1]["cover"] = _spine_cover(s, _srcs, store, job, _cache=_cover_cache)
@@ -11765,7 +11805,11 @@ def _assembled_drafts(spines, sources, store, seconds=30, job_id=""):
         # "어느 칸이 비는지" 안내하는 데만 쓴다.
         _blocked = bool(probs_by_track.get(track))
         try:
-            d = (spine_fill.build_draft(sp, slots, seconds=seconds)
+            # ★수치 근거 검사의 재료로 **담긴 영상 전사**를 넘긴다(2026-08-21).
+            #   슬롯 값을 넘기면 자기 자신과 대조라 무엇을 넣어도 통과한다(실측).
+            _src_text = " ".join((x.get("full_text") or "")
+                                 for x in (sources or [])[:_FACTS_MAX_SOURCES])
+            d = (spine_fill.build_draft(sp, slots, seconds=seconds, source_text=_src_text)
                  if (slots and not _blocked) else None)
         except Exception as e:      # noqa: BLE001 — 조립 실패가 생성을 막으면 안 된다
             print("조립 실패(style=%s): %s" % (sp.get("id"), str(e)[:120]))

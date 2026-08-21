@@ -583,7 +583,7 @@ def _same_thing(a, b):
     return len(short) >= 2 and short in long_
 
 
-def build_draft(spine, slots, seconds=30):
+def build_draft(spine, slots, seconds=30, source_text=""):
     """슬롯 조립 → **생성기와 같은 모양**의 대본 1안. 못 채우는 칸이 있으면 None.
 
     ★같은 모양으로 돌려주는 이유: 화면·게이트·저장이 이미 이 모양을 다룬다
@@ -599,7 +599,17 @@ def build_draft(spine, slots, seconds=30):
     if missing or not beats:
         return None
     script = " ".join(b["text"] for b in beats)
-    checks, _full = script_gate.check(spine, beats, seconds=seconds)
+    # ★수치 근거 검사를 조립 경로에도 건다(2026-08-21). 종전엔 facts_text를 안 넘겨
+    #   `grounding_check`가 통째로 건너뛰어졌다 — 생성기 경로만 검사받고 조립은 무검사였다.
+    #
+    #   ⚠️재료는 **원본 전사**여야 한다. 처음엔 슬롯 값들을 재료로 넘겼는데 그건
+    #     **자기 자신과 대조**하는 꼴이라 무엇을 넣어도 통과했다(실측: 효과 슬롯에
+    #     "체취의 53%"를 일부러 심었는데 '수치 근거 OK'가 나왔다). 검사가 있는 척만 하는
+    #     배선은 없느니만 못하다 — 있는데 안 걸리는 판정이 가격 칸 사고의 뿌리였다.
+    #   → 호출부가 source_text(담긴 영상 전사)를 넘겨야 진짜 검사가 된다. 안 넘기면
+    #     종전과 같이 검사를 건너뛴다(오탐으로 정상 대본을 막지 않는다).
+    checks, _full = script_gate.check(spine, beats, seconds=seconds,
+                                      facts_text=(source_text or ""))
     return {
         "beats": beats,
         "script": script,
