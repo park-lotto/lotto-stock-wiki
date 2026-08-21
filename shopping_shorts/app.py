@@ -751,8 +751,18 @@ def _attach_channel_style(items, store, platform):
     styles = store.channel_style_map()
     if not styles:
         return
+    from shopping_shorts import yt_style as _ys
     for it in items:
-        it["style"] = styles.get((it.get("username") or "").strip(), "")
+        st = styles.get((it.get("username") or "").strip(), "")
+        # ★채널 축만 믿으면 그 채널의 **다른 장르 영상까지 딸려온다**(2026-08-21 브라우저 실측).
+        #   신기템 채널 15곳의 영상 77건에 포켓몬고 2편·트로트 2편이 섞여 있었다 —
+        #   채널 문턱(25편 중 5편)을 넘겼을 뿐 나머지가 다른 장르인 채널들이다.
+        #   판정은 yt_style 한 곳에서만 한다(0순위-B).
+        # ⚠️다른 축은 이 검사를 안 건다: 썰쇼핑은 categorize가 영상 단위로 이미 가르고
+        #   (제품정체형·오용형), 연예인·레시피는 채널 성격이 곧 영상 성격이라 실측상 문제가 없었다.
+        if st == "신기템" and not _ys.is_novel_video(it.get("caption")):
+            st = ""
+        it["style"] = st
 
 
 @app.get("/api/seeds")

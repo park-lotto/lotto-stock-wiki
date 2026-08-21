@@ -77,3 +77,22 @@ def test_스타일표가_없어도_랭킹은_산다(tmp_path):
     items = [{"username": "UCq"}]
     _attach_channel_style(items, st, "youtube")
     assert items == [{"username": "UCq"}]
+
+
+def test_신기템은_영상_제목도_본다(tmp_path):
+    """채널 축만 믿으면 그 채널의 다른 장르가 딸려온다(2026-08-21 브라우저 실측).
+
+    신기템 채널 15곳의 영상 77건에 포켓몬고·트로트가 섞여 있었다 — 채널 문턱을 넘겼을
+    뿐 나머지 편수는 다른 장르인 채널들이다.
+    """
+    from shopping_shorts.app import _attach_channel_style
+    st = _store(tmp_path)
+    items = [
+        {"username": "UCabc123", "caption": "나만 몰랐던 불편 해결 쿠팡 아이디어템 BEST3"},
+        {"username": "UCabc123", "caption": "고인물만 알아보는 ㅈ된 상황 [포켓몬고]"},
+        {"username": "UCabc123", "caption": "성공 확언 트로트 :울타리를 깨고"},
+    ]
+    _attach_channel_style(items, st, "youtube")
+    assert items[0]["style"] == "신기템"
+    assert items[1]["style"] == "", "같은 채널이라도 게임 영상은 축이 아니다"
+    assert items[2]["style"] == "", "같은 채널이라도 트로트는 축이 아니다"
