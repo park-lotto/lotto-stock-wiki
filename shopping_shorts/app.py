@@ -11824,7 +11824,11 @@ def _assembled_drafts(spines, sources, store, seconds=30, job_id=""):
             #   슬롯 값을 넘기면 자기 자신과 대조라 무엇을 넣어도 통과한다(실측).
             _src_text = " ".join((x.get("full_text") or "")
                                  for x in (sources or [])[:_FACTS_MAX_SOURCES])
-            d = (spine_fill.build_draft(sp, slots, seconds=seconds, source_text=_src_text)
+            # ★seed=job_id — 같은 재료·같은 틀이라도 job마다 다른 변형에서 시작한다.
+            #   없으면 항상 1번 문장이 걸려 몇 편을 뽑아도 첫 대사가 같았다.
+            #   job_id 해시라 같은 job을 다시 돌리면 같은 대본이 나온다(재현성 유지).
+            d = (spine_fill.build_draft(sp, slots, seconds=seconds, source_text=_src_text,
+                                        seed=str(job_id or ""))
                  if (slots and not _blocked) else None)
         except Exception as e:      # noqa: BLE001 — 조립 실패가 생성을 막으면 안 된다
             print("조립 실패(style=%s): %s" % (sp.get("id"), str(e)[:120]))
