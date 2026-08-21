@@ -11478,7 +11478,9 @@ def api_script_styles(request: Request, category: str = None, job: str = None):
         if _srcs:
             out[-1]["cover"] = _spine_cover(s, _srcs, store, job, _cache=_cover_cache)
     out.sort(key=lambda x: (x["fit"] != "검증", -(x["perf_score"] or 0), -(x["source_count"] or 0)))
-    return {"ok": True, "styles": out}
+    # ★지금 담긴 소재도 함께 준다(2026-08-21) — 화면이 소재 배지 중 **어느 것이 지금
+    #   소재인지** 강조하려면 이 값이 필요하다. 화면이 따로 알아낼 방법이 없다.
+    return {"ok": True, "styles": out, "category": cat or ""}
 
 
 def _facts_block_for_job(job_id, store=None):

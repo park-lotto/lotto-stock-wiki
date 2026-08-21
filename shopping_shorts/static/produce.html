@@ -9993,7 +9993,7 @@ async function s2LoadStyles(){
   try{
     const d=await (await fetch('/api/script/styles'+(cat?('?category='+encodeURIComponent(cat)):''))).json();
     if(!d.ok){ row.innerHTML='<div class="hint" style="color:var(--fire)">스타일을 불러오지 못했습니다</div>'; return; }
-    S2.styles=d.styles||[]; S2.loadedStyles=true;
+    S2.styles=d.styles||[]; S2.category=d.category||''; S2.loadedStyles=true;
     // 기본 = AI에게 맡김(고른 스타일 0개). 사장님이 고른 만큼 안이 나온다.
     s2RenderStyles();
   }catch(e){ row.innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; }
@@ -10008,14 +10008,18 @@ function s2RenderStyles(){
   const cards=S2.styles.map(st=>{
     const on=S2.picked.indexOf(st.id)>=0;
     const nth=on?(' · '+String.fromCharCode(65+S2.picked.indexOf(st.id))+'안'):'';
-    // ★'타소재'라고만 하면 그럼 이건 뭐에 쓰는 건지 알 수 없다(2026-08-21 사장님 요청).
-    //   그 스타일이 **어울리는 소재**를 대신 보여준다. 소재 목록은 서버가 갈라 준다
-    //   (fit_topics = 홈템·레시피·뷰티·기타만. 기계용 이름은 서버에서 제외).
-    //   소재가 안 적힌 스타일(유튜브 3종)은 아무 소재에나 쓸 수 있다는 뜻이라 '범용'.
+    // ★배지는 **소재 이름 그대로** 보여준다(2026-08-21 사장님: "체크 표시가 아니고
+    //   레시피·홈템 이런 식으로 해줘야 사용자도 선택하기 편하지").
+    //   ✅/⚠ 기호는 "쓸 수 있나 없나"만 말할 뿐, **뭐에 쓰는 건지**를 안 알려줬다.
+    //   지금 담긴 소재와 같은 배지는 초록(ok), 나머지는 금색(warn)으로 갈라 한눈에 보이게.
+    //   소재 목록·현재 소재는 전부 서버가 준다(fit_topics·category) — 화면에 목록을
+    //   다시 적지 않는다(0순위-B).
     const _topics=(st.fit_topics||[]);
-    const badge=st.fit==='검증'?`<span class="s2-badge ok">✅ 검증${nth}</span>`
-                :(_topics.length?`<span class="s2-badge warn">${esc(_topics.join('·'))}용${nth}</span>`
-                                :`<span class="s2-badge warn">범용${nth}</span>`);
+    const _cat=(S2.category||'');
+    const badge=(_topics.length
+        ? _topics.map(t=>`<span class="s2-badge ${t===_cat?'ok':'warn'}">${esc(t)}</span>`).join('')
+        : `<span class="s2-badge warn">유튜브 전용</span>`)
+      + (nth?`<span class="s2-badge ok">${esc(nth.replace(/^\s*·\s*/,''))}</span>`:'');
     // 플랫폼은 제목 **앞**에 배지로. 이름·설명에 박힌 말머리는 지워 중복을 없앤다.
     const plat=s2Platform(st);
     const platBadge = plat ? `<span class="s2-plat ${plat}">${plat==='yt'?'유튜브':'인스타'}</span>` : '';
