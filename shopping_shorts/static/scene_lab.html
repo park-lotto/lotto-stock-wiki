@@ -436,21 +436,6 @@ button.act.play:hover{background:var(--accent);color:#fff;border-color:var(--acc
 <script id="scene-lab-data" type="application/json">null</script>
 <script src="/scene_play.js"></script>
 <script>
-// ★제작소(iframe) 안에서는 이 화면의 재생기를 숨긴다(2026-08-21 사장님 "왜 하나가 더 있나").
-//   재생은 이미 **바깥 큰 자리**에서 난다 — playAllHere/playBeatHere가 부모의
-//   sceneLabPlayAll/sceneLabPlay를 직접 부르기 때문이다(이 파일 위쪽 참조).
-//   그래서 여기 재생기는 자리만 차지하고 아무도 안 쓴다 = 9:16 상자가 두 개로 보였다.
-//   data-embed-hide 표식은 2026-08-16부터 마크업에 있었으나 **읽는 코드가 없어** 죽어 있었다.
-//   ⚠️단독으로 열었을 때(window.parent === window)는 이 화면이 유일한 재생기다 — 숨기면 안 된다.
-(function(){
-  if (window.parent !== window) {                  // 제작소 안(iframe) — 이 재생기는 잉여다
-    document.querySelectorAll('[data-embed-hide]').forEach(function(el){
-      el.style.display = 'none';
-    });
-  }
-})();
-</script>
-<script>
 // ★한 파일 두 모드(2026-08-15 제작소 이식): 위 JSON 태그에 데이터가 인라인돼 있으면
 //   로컬 실험실(build.py가 채움), null이면 제작소 임베드 — ?job=으로 서버 API에서 받는다.
 //   UI·계산 코드는 이 어댑터(SL) 말고는 모드를 모른다(두 벌 금지, 0순위-B).

@@ -54,16 +54,3 @@ def test_기존_가시성_규약도_그대로다():
     js = _HTML.parent.parent / "tests" / "test_preview_visible.js"
     out = run_js(js.read_text(encoding="utf-8"))
     assert "FAIL 0" in out, out
-
-
-def test_임베드일때_iframe_재생기를_숨긴다():
-    """제작소 안(iframe)에선 scene_lab 자기 재생기를 숨긴다 — 안 그러면 9:16 상자가 둘.
-
-    data-embed-hide 표식은 2026-08-16부터 마크업에 있었지만 **읽는 코드가 없어**
-    죽어 있었다(실측: 코드베이스 전수검색 1건 = 속성 붙은 그 줄뿐).
-    """
-    lab = (_HTML.parent / "scene_lab.html").read_text(encoding="utf-8")
-    code = "\n".join(l for l in lab.split("\n") if not l.strip().startswith("//"))
-    assert "data-embed-hide" in code, "표식이 사라졌다"
-    assert "querySelectorAll('[data-embed-hide]')" in code, "표식을 읽는 코드가 없다"
-    assert "window.parent !== window" in code, "임베드 판정이 없다"
