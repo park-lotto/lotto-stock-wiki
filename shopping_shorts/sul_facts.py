@@ -266,12 +266,53 @@ def analyze_sul(raw, *, log=print):
         if v:
             out[k] = v
     for k in ("category_word", "product_name", "origin_country", "origin_story"):
-        v = (data.get(k) or "").strip()
+        v = _clean_short(data.get(k), _SHORT_MAX.get(k, 60))
         if v:
             out[k] = v
     # ★모델이 이 칸을 안 주면 **false로 본다**(없는 걸 true로 보면 옛 사고가 재발한다).
     out["misuse_genre"] = bool(data.get("misuse_genre"))
     return out
+
+
+# 짧은 값 칸의 상한(글자). 넘으면 **버린다** — 자르면 잘린 지시문이 대본에 박힌다.
+#   나라·제품군은 짧다. origin_story(탄생 배경)만 문장이라 길게 둔다.
+_SHORT_MAX = {"origin_country": 12, "category_word": 20, "product_name": 40,
+              "origin_story": 120}
+
+# 모델이 **지시를 값으로 되뱉을 때** 나오는 냄새. 하나라도 걸리면 그 칸을 비운다.
+_INSTRUCTION_SMELL = (
+    "빈 문자열", "빈 값", "비워", "처리 필요", "지침", "지시", "추정됨", "확인 불가",
+    "정보 없음", "알 수 없음", "해당 없음", "참고로", "※", "주의:", "N/A", "없음(",
+)
+
+
+def _clean_short(raw, limit):
+    """짧은 값 칸 하나를 **믿을 수 있을 때만** 통과시킨다. 아니면 ''.
+
+    ★2026-08-21 실사고. 프롬프트에 "영상에 안 나오면 비워라"라고 적어 뒀더니 모델이
+      **그 지시를 값으로 되뱉었다.** 사장님이 담아주신 5편 중 4편이 이랬다:
+
+        origin_country = "중국 또는 정보 없음 (영상 불명확함으로 비움이나 중국어로
+                          추정 가능하나 보수적으로 비움 적용) ※주의: 지…"
+
+      이대로 대본에 실리면 "…에서 바이럴이 터지며 매출이 폭발했다는데"의 빈칸에
+      저 문장이 통째로 들어간다. 게이트는 문장틀만 보므로 **못 잡는다.**
+
+    ★처방은 프롬프트 강화가 아니다(메모리 `reference_prompt_says_but_nobody_checks`) —
+      프롬프트가 말해도 아무도 검사 안 하면 안 지켜진다. 저장 단일출구인 여기서 막는다.
+    ★자르지 않고 **버린다**: 12자로 자르면 "중국 또는 정보 없"이 남아 더 나쁘다.
+      비면 그 슬롯을 쓰는 템플릿이 자동으로 안 걸린다(pick_template 규약) = 안전한 폴백.
+    """
+    v = ("" if raw is None else str(raw)).strip()
+    if not v:
+        return ""
+    low = v.replace(" ", "")
+    for w in _INSTRUCTION_SMELL:
+        if w.replace(" ", "") in low:
+            return ""
+    if len(v) > limit:
+        return ""
+    return v
 
 
 def sul_prompt_block(facts, max_items=4):
