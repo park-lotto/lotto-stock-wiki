@@ -3932,6 +3932,8 @@ def api_mix_scene_lab_data(job_id: str):
         if _v and _b:
             src_brief[_v] = _b
     caps, tts_dur = _lab_captions(plan)
+    # ★편성이 서버에 얹힌 시각 — 화면이 "내 저장본과 서버 중 뭐가 최신인가"를 가른다.
+    scene_lab_at = (plan.get("scene_lab") or {}).get("at")
     # ★소재 종류(2026-08-17 사장님 "레시피 틀로 고정돼서 재료·반죽 준비 이런 게 들어왔다").
     #   실험실 팔레트 머리글이 요리 전용으로 하드코딩돼 있어, 젤펜 영상인데도
     #   '🥣 재료·반죽 준비 · 섞기·짜기'가 떴다(실측 job 202377f690d9: 소스 4개 전부 cat=기타).
@@ -3950,6 +3952,7 @@ def api_mix_scene_lab_data(job_id: str):
     return {"ok": True, "data": {
         "job_id": job_id,
         "category": category,
+        "scene_lab_at": scene_lab_at,      # 편성이 서버에 얹힌 시각(화면이 최신 판정에 쓴다)
         "beats": plan.get("beats") or [],
         "urls": job.get("urls") or [],
         "src_brief": src_brief,

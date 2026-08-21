@@ -785,6 +785,17 @@ let mode = 'live';
 function baseList(b){
   return [b.primary, ...(b.alternates || [])].filter(Boolean).map(s => s.seg_id);
 }
+// 서버에 **얹혀 있는 편성**(scene_override)을 담긴 목록으로 되돌린다.
+// baseList는 AI 원본(primary+alternates)이라 이것과 다르다 — 서버 편성을 불러오는
+// 자리에서 baseList를 쓰면 "서버 것을 불러왔다"면서 엉뚱한 배치가 뜬다.
+// ✂트림으로 한 장면이 두 토막이 되어 들어오므로 같은 seg_id는 한 번만 센다.
+function serverList(b){
+  const ov = b && b.scene_override;
+  if (!ov || !ov.length) return null;
+  const out = [];
+  ov.forEach(s => { const id = s && s.seg_id; if (id && !out.includes(id)) out.push(id); });
+  return out.length ? out : null;
+}
 function initLists(){
   lists = DATA.beats.map(b => {
     const all = baseList(b);
@@ -1021,6 +1032,14 @@ async function makeTts(){
     //   담아둔 편성은 저장돼 있어 새로 읽어도 그대로 남는다(saveWork).
     say('✅ 음성 준비 완료 — 자막 시간을 맞추는 중…');
     await new Promise(r => setTimeout(r, 800));
+    // ★대본을 고치는 중이면 새로고침을 미룬다(2026-08-21 버그리뷰 P3-7).
+    //   화면을 열 때마다 자동으로 음성을 만들기 때문에(autoMakeTts), 사장님이 대본을
+    //   입력하는 도중 완료되면 페이지가 통째로 다시 떴다. 편집 내용은 저장돼 복원되지만
+    //   커서와 입력 흐름이 끊긴다. 같은 장치가 repaint()에도 있다(isNarrEditing).
+    while (typeof isNarrEditing === 'function' && isNarrEditing()){
+      say('✅ 음성 준비 완료 — 대본 수정을 마치면 자막 시간을 맞춥니다');
+      await new Promise(r => setTimeout(r, 1500));
+    }
     location.reload();
   }catch(e){
     say('⚠ 음성 만들기 실패: ' + (e.message || e));
@@ -1515,9 +1534,33 @@ function palDragEnd(){ palDrag = null; }
 //  없어 그냥 통과하고, 이벤트가 칸으로 번져 여기로 온다.)
 function beatDrop(i, ev){
   if (ev){ ev.preventDefault(); ev.stopPropagation(); }
-  if (!palDrag) return;
-  const sid = palDrag; palDrag = null;
-  selBeat(i); add(sid);
+  if (palDrag){                                  // 팔레트에서 담기(종전 그대로)
+    const sid = palDrag; palDrag = null;
+    selBeat(i); add(sid); return;
+  }
+  // ★칸 → 칸 옮기기(2026-08-21 버그리뷰 P2-2). 종전엔 dragFrom을 안 봐서 1번 칸의
+  //   조각을 2번 칸에 끌면 **아무 일도 안 일어났다**(에러도 안내도 없음). 그래서
+  //   빼고 → 팔레트에서 찾아 → 다시 담기 3단계를 거쳐야 했다.
+  //   담기·빼기 로직은 새로 만들지 않는다 — 있는 목록을 옮길 뿐이다.
+  if (dragFrom && dragFrom.i !== i){
+    const from = dragFrom.i, k = dragFrom.k;
+    const sid = (lists[from] || [])[k];
+    itemDragEnd();
+    if (!sid) return;
+    if ((lists[i] || []).includes(sid)){
+      nsay(`이미 ${i+1}번 칸에 담긴 장면이에요`);
+      return;
+    }
+    lists[from].splice(k, 1);
+    lists[i].push(sid);
+    PICKED.delete(pkKey(from, sid));             // 체크는 칸번호로 기억한다 — 같이 옮긴다
+    if (AUTOADD[from]){                          // 자동으로 담아준 기록도 정리(되돌리기 개수 보존)
+      AUTOADD[from] = AUTOADD[from].filter(x => x !== sid);
+      if (!AUTOADD[from].length) delete AUTOADD[from];
+    }
+    sel = i; render();
+    nsay(`장면을 ${from+1}번 칸 → ${i+1}번 칸으로 옮겼어요`);
+  }
 }
 // ★내가 조립한 것을 브라우저에 저장한다(2026-08-14 사장님 "방금 조립한 게 없어지고
 //   네가 만든 걸로 되어 있어"). 새로고침·페이지 재빌드에도 남는다. 잡별로 따로 저장하므로
@@ -1546,6 +1589,28 @@ function autoApply(){
   clearTimeout(_autoApplyTimer);
   _autoApplyTimer = setTimeout(() => { applyServer({auto: true}); }, 1200);
 }
+// ★내 저장본 vs 서버 편성 — **새 쪽**을 쓴다(2026-08-21 버그리뷰 P1).
+//   종전엔 localStorage가 무조건 이겼다. 그래서 화면에 보이는 편성과 실제로 렌더되는
+//   편성이 다른 상태가 계속 유지됐다(실측 job 14e75ac6024a: 화면은 2번 칸 '장면 없음'인데
+//   서버엔 3.2초짜리가 남아 있었다 / 다른 잡은 화면 12.1초 vs 서버 7.0초).
+//   다른 PC·다른 브라우저에서 열면 편성이 다르게 보이던 것도 같은 뿌리다.
+//
+// ⚠️판정 기준을 mix_jobs.updated_at으로 하면 안 된다 — 음성 생성 같은 다른 이유로도
+//   움직여서 서버가 늘 새로워 보이고, 그러면 사장님이 방금 한 편집을 매번 버린다.
+//   그래서 서버가 **편성을 얹은 시각**(edit_plan.scene_lab.at)만 본다.
+// ⚠️여유 30초: 내 저장(saveWork) → 서버 반영(autoApply 1.2초 뒤)이라 서버 시각이 내
+//   저장본보다 늘 조금 늦다. 여유가 없으면 **내가 방금 한 편집을 내가 버린다.**
+//   다른 기기에서 고친 경우는 보통 몇 분 이상 벌어지므로 30초로 충분히 갈린다.
+function serverEditIsNewer(){
+  const sAt = DATA && DATA.scene_lab_at;
+  if (!sAt) return false;                       // 서버에 얹힌 편성이 없다 → 내 것이 맞다
+  let lAt = null;
+  try{ lAt = (JSON.parse(localStorage.getItem(SAVE_KEY) || 'null') || {}).at; }catch(e){}
+  if (!lAt) return false;
+  const sv = Date.parse(sAt), lo = Date.parse(lAt);
+  if (!sv || !lo) return false;                 // 시각을 못 읽으면 종전대로(내 것 우선)
+  return (sv - lo) > 30000;
+}
 function loadWork(){
   try{
     const raw = localStorage.getItem(SAVE_KEY);
@@ -1553,7 +1618,12 @@ function loadWork(){
     const w = JSON.parse(raw);
     if (!w || !Array.isArray(w.lists) || w.lists.length !== DATA.beats.length) return false;
     mode = w.mode || 'hand';
-    lists = w.lists.map(l => Array.isArray(l) ? l.slice() : []);
+    // ★같은 조각이 한 칸에 두 번 들어 있으면 자리 찾기(indexOf)가 늘 첫 번째를 집어
+    //   순서 바꾸기(bandDrop)가 엉뚱한 자리로 간다(2026-08-21 버그리뷰 P3-5).
+    //   담기 경로(add·칸간 이동·채우기)는 모두 중복을 막으므로, 옛 저장본에 남은 중복만
+    //   여기서 걷어내면 그 병의 조건 자체가 사라진다 — 자리 계산을 새로 만들 필요가 없다
+    //   (컷은 라운드로빈으로 되풀이돼서 컷 번호와 담긴 목록의 자리가 1:1이 아니다).
+    lists = w.lists.map(l => Array.isArray(l) ? [...new Set(l)] : []);
     chosen.clear(); (w.chosen || []).forEach(x => chosen.add(x));
     Object.keys(NARR).forEach(k => delete NARR[k]);
     Object.assign(NARR, w.narr || {});
@@ -1899,7 +1969,24 @@ async function autoFill(i){
   const ai = await aiPicks(i);
   if (btn) btn.disabled = false;
   if (ai && ai.length){
-    const fresh = ai.filter(sid => !lists.flat().includes(sid));
+    let fresh = ai.filter(sid => !lists.flat().includes(sid));
+    // ★AI가 고른 것도 **이 칸이 감당할 만큼만** 담는다(2026-08-21 버그리뷰 P2-4).
+    //   종전엔 AI 경로만 길이를 안 봐서, 2.7초 말하는 칸에 5장이 통째로 들어가고
+    //   대부분이 화면에 안 나왔다. 아래 규칙 경로는 need/have/addLen을 지키는데
+    //   같은 판단이 한 경로에만 있던 셈이다(0순위-B).
+    //   AI는 **무엇을 고를지**만 정하고, 몇 장 담을지는 아래와 같은 계산으로 코드가 정한다.
+    if (fresh.length){
+      const _addLen = id => Math.min(effLen(id), MAX_SHOT);
+      let room = beatDur(i) - (lists[i] || [])
+        .filter(id => DATA.segments[id] && !tooShort(id))
+        .reduce((a, id) => a + _addLen(id), 0);
+      const kept = [];
+      for (const sid of fresh){
+        if (room < MIN_CLIP - EPS) break;        // 남은 자리가 0.8초 미만이면 담아도 화면에 안 나온다
+        kept.push(sid); room -= _addLen(sid);
+      }
+      fresh = kept;
+    }
     if (fresh.length){
       lists[i].push(...fresh); AUTOADD[i] = fresh; sel = i; render();
       const el0 = document.getElementById('savedmsg');
@@ -1920,7 +2007,13 @@ async function autoFill(i){
   const addLen = id => Math.min(effLen(id), MAX_SHOT);
   let have = ids.filter(id => DATA.segments[id] && !tooShort(id))
                 .reduce((a, id) => a + addLen(id), 0);
-  if (need - have < 0.1) return;
+  if (need - have < 0.1){
+    // ★조용한 무반응은 고장으로 보인다(2026-08-21). 칸이 이미 대사 길이만큼 차 있으면
+    //   더 담아도 화면에 안 나오는데, 종전엔 아무 말 없이 끝나 "채우기가 안 된다"가 됐다.
+    const el0 = document.getElementById('savedmsg');
+    if (el0) el0.textContent = `이 칸은 이미 대사(${need.toFixed(1)}초)만큼 차 있어요 — 더 담아도 화면에 안 나옵니다`;
+    return;
+  }
   const inAny = new Set(lists.flat());                   // 다른 칸에 나온 장면은 안 쓴다(되풀이 방지)
   // 같은 그림(phash 중복) 방지 — 이 칸만 아니라 **모든 칸** 기준. 실측: 칸1에 s3-20을 담으면
   // 칸4의 s3-2와 그림이 똑같아(거리0) 영상에 같은 화면이 두 번 나온다.
@@ -2033,7 +2126,20 @@ function move(i, d){
   pj.forEach(sid => PICKED.add(pkKey(i, sid)));
   sel = j; render();
 }
+// 사람이 편성을 손댔나 — 판정은 여기 한 곳(0순위-B). 저장본이 있거나 고른 장면이 있으면 손댄 것.
+function _hasMyEdits(){
+  if (chosen.size) return true;
+  if (Object.keys(AUTOADD).length) return true;
+  try{ return !!localStorage.getItem(SAVE_KEY); }catch(e){ return false; }
+}
 function setMode(m){
+  // ★손댄 편성을 확인 없이 날리지 않는다(2026-08-21 버그리뷰 P2-3).
+  //   모드를 바꾸면 initLists가 전 칸을 기본 배치로 되돌리는데 되돌리기가 없다.
+  //   ⚠️boot·reset이 부르는 첫 호출은 막으면 안 된다 — 모드가 실제로 **바뀔 때**만 묻는다.
+  if (m !== mode && _hasMyEdits()
+      && !confirm('지금 담아 둔 편성이 모두 기본 배치로 돌아갑니다. 계속할까요?')){
+    return;
+  }
   mode = m;
   ['live','one','hand','pick'].forEach(x =>
     document.getElementById('m-' + x).classList.toggle('on', x === m));
@@ -2043,6 +2149,12 @@ function setMode(m){
   render();
 }
 function reset(){
+  // ★무엇이 지워지는지 밝히고 확인받는다(2026-08-21 버그리뷰 P3-6).
+  //   편성뿐 아니라 ✂트림·🔗합치기·늘려채우기까지 전부 사라지는데 종전엔 확인이 없었다.
+  if (_hasMyEdits()
+      && !confirm('담은 편성과 ✂자르기·🔗합치기·늘려채우기가 모두 지워지고 처음 배치로 돌아갑니다. 계속할까요?')){
+    return;
+  }
   clearWork();
   Object.keys(TRIMS).forEach(k => delete TRIMS[k]);   // ✂ 잘라낸 것도 처음으로
   Object.keys(MERGES).forEach(k => delete MERGES[k]);  // 🔗 합친 것도 처음으로
@@ -2114,7 +2226,15 @@ async function boot(){
   }
   // ★저장된 내 편집이 있으면 그것부터 — 없을 때만 기본 배치로 연다.
   warmVideos();
-  if (loadWork()) render();
+  if (serverEditIsNewer()){
+    // 다른 곳에서 더 최근에 고쳤다 — 내 옛 저장본을 버리고 서버 편성으로 연다.
+    clearWork();
+    lists = DATA.beats.map(b => serverList(b) || baseList(b));
+    mode = 'hand';                       // 서버 편성 = 사람이 정한 배치다
+    render();
+    nsay('🔄 다른 곳에서 편집한 내용이 더 최신이라 서버 편성을 불러왔어요');
+  }
+  else if (loadWork()) render();
   else if (loadSaved()) render();                       // 다른 PC에서 넘어온 조립
   else if (DATA.picks && (DATA.picks.lists || []).length) setMode('pick');
   else { initLists(); render(); }
