@@ -1400,8 +1400,63 @@
             <div id="advBody" style="margin-top:10px">
               <div class="sub" style="margin-bottom:8px;font-size:11px">필요한 것만 펼쳐 손보세요. 대부분은 위 <b>완성 스타일</b>만 눌러도 됩니다.</div>
 
-              <!-- ── 🎨 헤드카피(상단 큰 글씨) ── -->
+              <!-- ── 💬 자막(하단 나레이션) ── -->
               <details style="border-top:1px dashed var(--line);margin-top:2px" open>
+                <summary style="cursor:pointer;font-size:13px;font-weight:700;padding:8px 0">💬 자막(하단 나레이션) 꾸미기</summary>
+                <div style="padding:2px 0 12px">
+                <div class="sub" style="margin-bottom:10px;font-size:11px">문구는 대본에서 자동으로 들어와요. 여기선 <b>보이는 모양</b>만 정합니다.</div>
+
+                <!-- ① 글씨 -->
+                <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px">
+                  <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:8px">① 글씨</div>
+                  <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+                    <label style="font-size:12px;color:var(--sub)">폰트
+                      <select id="capFont" onchange="updateCaption()" style="background:#0a1017;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:5px 8px"></select></label>
+                    <label style="font-size:12px;color:var(--sub)">색상
+                      <input id="capColor" type="color" value="#FFFFFF" oninput="updateCaption()" style="vertical-align:middle;cursor:pointer"></label>
+                  </div>
+                  <div style="margin-top:8px;font-size:12px;color:var(--sub)">크기 <b id="capSizeV">54</b>px
+                    <input id="capSize" type="range" min="28" max="96" value="54" oninput="updateCaption()" style="width:100%"></div>
+                </div>
+
+                <!-- ② 자리 -->
+                <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px">
+                  <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:8px">② 자리</div>
+                  <div style="font-size:12px;color:var(--sub)">세로 위치 <b id="capYV">84</b>%
+                    <input id="capY" type="range" min="0" max="100" value="84" oninput="CAP_POS_TOUCHED=true;updateCaption()" style="width:100%"></div>
+                  <div class="hint" style="margin-top:6px;font-size:11px">💡 미리보기에서 자막을 <b>드래그</b>해도 옮겨져요.</div>
+                  <button type="button" id="capResetRegionBtn" class="tab" onclick="resetCapToRegion()" style="display:none;flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;margin-top:6px;white-space:nowrap">↩ 지워진 자막 자리(1번)로 되돌리기</button>
+                </div>
+
+                <!-- ③ 테두리·박스·효과 -->
+                <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px">
+                  <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:8px">③ 테두리 · 박스 · 효과</div>
+                  <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+                    <input id="capOutline" type="checkbox" checked onchange="updateCaption()"> 외곽선
+                    <input id="capOutColor" type="color" value="#000000" oninput="updateCaption()">
+                    <span style="color:var(--sub);font-size:12px">두께 <input id="capOutW" type="range" min="0" max="12" value="5" oninput="updateCaption()"></span>
+                  </label>
+                  <label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;cursor:pointer">
+                    <input id="capBox" type="checkbox" onchange="updateCaption()"> 배경 박스
+                    <input id="capBoxColor" type="color" value="#000000" oninput="updateCaption()">
+                    <span style="color:var(--sub);font-size:12px">여백 <input id="capBoxPad" type="range" min="0" max="40" value="12" oninput="updateCaption()"></span>
+                    <span style="color:var(--sub);font-size:12px">투명도 <input id="capBoxOpacity" type="range" min="20" max="100" value="80" oninput="updateCaption()"></span>
+                  </label>
+                  <div class="hint" style="font-size:11px;margin-top:4px">켜면 하단 바 대신 글자마다 박스가 생겨요.</div>
+                  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;align-items:center">
+                    <span style="font-size:12px;color:var(--sub)">효과</span>
+                    <button type="button" class="capEff tab active" data-eff="none" onclick="setCapEffect('none')" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;white-space:nowrap">없음</button>
+                    <button type="button" class="capEff tab" data-eff="fade" onclick="setCapEffect('fade')" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;white-space:nowrap">페이드</button>
+                    <button type="button" class="capEff tab" data-eff="slide" onclick="setCapEffect('slide')" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;white-space:nowrap">슬라이드</button>
+                    <button type="button" class="capEff tab" data-eff="pop" onclick="setCapEffect('pop')" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;white-space:nowrap">팝</button>
+                    <button type="button" class="capEff tab" data-eff="sparkle" onclick="setCapEffect('sparkle')" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;white-space:nowrap">✦ 반짝(CTA)</button>
+                  </div>
+                </div>
+              </div>
+              </details>
+
+              <!-- ── 🎨 헤드카피(상단 큰 글씨) ── -->
+              <details style="border-top:1px dashed var(--line)">
                 <summary style="cursor:pointer;font-size:13px;font-weight:700;padding:8px 0">🎨 헤드카피(상단 큰 글씨) 꾸미기 — 폰트·색상·굵기·크기</summary>
                 <div style="padding:2px 0 12px">
               <div id="hcPresets" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"></div>
@@ -1444,44 +1499,6 @@
                 <span style="color:var(--sub)">투명도 <input id="hcBoxOpacity" type="range" min="20" max="100" value="80" oninput="updateHC()"></span>
               </label>
                 </div>
-              </details>
-
-              <!-- ── 💬 자막(하단 나레이션) ── -->
-              <details style="border-top:1px dashed var(--line)">
-                <summary style="cursor:pointer;font-size:13px;font-weight:700;padding:8px 0">💬 자막(하단 나레이션) 꾸미기</summary>
-                <div style="padding:2px 0 12px">
-                <div class="sub" style="margin-bottom:10px">나레이션 자막(문구는 대본에서 자동)의 폰트·색·박스·효과. 미리보기 하단에 <b>샘플</b>로 표시됩니다.</div>
-                <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center">
-                  <label style="font-size:12px;color:var(--sub)">폰트
-                    <select id="capFont" onchange="updateCaption()" style="background:var(--inset);color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:4px"></select></label>
-                  <label style="font-size:12px;color:var(--sub)">색상 <input id="capColor" type="color" value="#FFFFFF" oninput="updateCaption()"></label>
-                </div>
-                <div style="margin-top:8px;font-size:12px;color:var(--sub)">글씨 크기 <span id="capSizeV">54</span>px
-                  <input id="capSize" type="range" min="28" max="96" value="54" oninput="updateCaption()" style="width:100%"></div>
-                <div style="font-size:12px;color:var(--sub)">세로 위치 <span id="capYV">84</span>%
-                  <input id="capY" type="range" min="0" max="100" value="84" oninput="CAP_POS_TOUCHED=true;updateCaption()" style="width:100%"></div>
-                <div class="hint" style="margin-top:4px;font-size:11px">💡 미리보기에서 자막을 <b>드래그</b>하면 원하는 자리로 옮겨져요.</div>
-                <button type="button" id="capResetRegionBtn" class="tab" onclick="resetCapToRegion()" style="display:none;flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;margin-top:6px;white-space:nowrap">↩ 지워진 자막 자리(1번)로 되돌리기</button>
-                <label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;cursor:pointer">
-                  <input id="capOutline" type="checkbox" checked onchange="updateCaption()"> 외곽선
-                  <input id="capOutColor" type="color" value="#000000" oninput="updateCaption()">
-                  <span style="color:var(--sub)">두께 <input id="capOutW" type="range" min="0" max="12" value="5" oninput="updateCaption()"></span>
-                </label>
-                <label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;cursor:pointer">
-                  <input id="capBox" type="checkbox" onchange="updateCaption()"> 배경 박스<span style="color:var(--sub);font-size:11px">(켜면 하단 바 대신 글자마다 박스)</span>
-                  <input id="capBoxColor" type="color" value="#000000" oninput="updateCaption()">
-                  <span style="color:var(--sub)">여백 <input id="capBoxPad" type="range" min="0" max="40" value="12" oninput="updateCaption()"></span>
-                  <span style="color:var(--sub)">투명도 <input id="capBoxOpacity" type="range" min="20" max="100" value="80" oninput="updateCaption()"></span>
-                </label>
-                <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;align-items:center">
-                  <span style="font-size:12px;color:var(--sub)">효과:</span>
-                  <button type="button" class="capEff tab active" data-eff="none" onclick="setCapEffect('none')" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;white-space:nowrap">없음</button>
-                  <button type="button" class="capEff tab" data-eff="fade" onclick="setCapEffect('fade')" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;white-space:nowrap">페이드</button>
-                  <button type="button" class="capEff tab" data-eff="slide" onclick="setCapEffect('slide')" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;white-space:nowrap">슬라이드</button>
-                  <button type="button" class="capEff tab" data-eff="pop" onclick="setCapEffect('pop')" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;white-space:nowrap">팝</button>
-                  <button type="button" class="capEff tab" data-eff="sparkle" onclick="setCapEffect('sparkle')" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;white-space:nowrap">✦ 반짝(CTA)</button>
-                </div>
-              </div>
               </details>
 
               <!-- ── 🎬 모션 팩 ── -->
