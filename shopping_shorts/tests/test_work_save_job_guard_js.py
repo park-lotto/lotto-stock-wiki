@@ -8,10 +8,16 @@
 import json
 import pathlib
 import re
-import shutil
-import subprocess
 
 import pytest
+
+# ★node는 공용 하네스로 띄운다(2026-08-21). 직접 subprocess로 부르면 pytest가 stdin을
+#   캡처한 상태라 윈도우에서 WinError 6(핸들이 잘못됨)로 간헐 실패한다 —
+#   track finish 게이트가 이것 때문에 헛돌았다. 하네스가 stdin=DEVNULL과 임시파일
+#   실행(명령줄 32,767자 상한 회피)을 함께 처리한다.
+from shopping_shorts.tests.js_harness import requires_node, run_js_proc
+
+pytestmark = requires_node
 
 PRODUCE_HTML = pathlib.Path(__file__).resolve().parents[1] / "static" / "produce.html"
 
@@ -24,9 +30,6 @@ def _push_work_src():
 
 
 def _run(mix_job_js):
-    node = shutil.which("node")
-    if not node:
-        pytest.skip("node 없음")
     src = _push_work_src()
     script = f"""
 let HANDOFF = [{{}}];      // 저장 가드 통과용(작업이 있다)
@@ -51,8 +54,7 @@ async function fetch(url, opts){{
 _pushWork().then(() => console.log(JSON.stringify(SENT)));
 """
     # encoding 명시 — 윈도우 기본 cp949로는 produce.html의 한글 주석이 디코드 에러를 낸다.
-    out = subprocess.run([node, "-e", script], capture_output=True, text=True,
-                         encoding="utf-8", errors="replace", timeout=30)
+    out = run_js_proc(script)
     assert out.returncode == 0, out.stderr
     return json.loads(out.stdout.strip().splitlines()[-1])
 
