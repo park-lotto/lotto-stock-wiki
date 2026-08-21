@@ -574,14 +574,22 @@ def fill_list(spine, slot_sets, seconds=None):
     merged = {}
     for st in sets:                       # intro·cta는 아무 편 재료나 쓸 수 있게 합쳐 둔다
         for k, v in st.items():
-            merged.setdefault(k, v)
+            if not k.startswith("_"):     # 밑줄로 시작하는 건 슬롯이 아니라 표식이다
+                merged.setdefault(k, v)
     for role in roles:
         if role != "item":
             t = pick_template(templates.get(role), merged)
             text = fill_one(t, merged) if t else ""
             (beats.append({"role": role, "text": text}) if text else missing.append(role))
             continue
-        for i, st in enumerate(sets[:len(ORDINALS)]):
+        # ★순번(첫 번째·두 번째…)은 **실제로 나간 항목 수**로 센다(2026-08-21 실측).
+        #   재료가 모자란 편을 건너뛰면 원본 순번은 구멍이 나서 "첫 번째 → 세 번째"로
+        #   튄다. 듣는 사람에겐 두 번째가 통째로 사라진 것으로 들린다.
+        #   변형 돌려쓰기도 같은 번호를 쓴다 — 그래야 꼬리가 고르게 갈린다.
+        n = 0
+        for st in sets:
+            if n >= len(ORDINALS):
+                break
             # ★항목마다 **다른 변형**을 돌려 쓴다(2026-08-21 실측으로 추가).
             #   전부 첫 변형을 쓰면 "…두고두고 쓰기 좋더라고요"가 항목마다 반복돼
             #   조립 티가 그대로 난다.
@@ -592,15 +600,24 @@ def fill_list(spine, slot_sets, seconds=None):
             if usable:
                 _mx = max(len(slots_in(x)) for x in usable)
                 rich = [x for x in usable if len(slots_in(x)) == _mx]
-                t = rich[i % len(rich)]
+                t = rich[n % len(rich)]
             else:
                 t = ""
             if not t:
                 continue                  # 재료가 모자란 항목은 **건너뛴다**(빈칸을 내보내지 않는다)
             text = fill_one(t, st)
             if text:
-                beats.append({"role": "item%d" % (i + 1),
-                              "text": "%s %s" % (ORDINALS[i], text)})
+                b = {"role": "item%d" % (n + 1),
+                     "text": "%s %s" % (ORDINALS[n], text)}
+                # ★이 항목이 **몇 번째 영상**에서 나왔는지 남긴다(2026-08-21).
+                #   나열형은 항목마다 다른 제품이라 화면도 그 편에서 와야 한다.
+                #   대본에 표식이 없으면 화면 배치 단계가 담긴 영상 전부를 한 덩어리로
+                #   보고 아무 컷이나 붙인다 — 말과 화면이 어긋나는 그 사고다.
+                #   ⚠️길이 맞춤이 뒤에서 항목을 자르므로, 번호는 여기서 박아야 한다.
+                if st.get("_src_index") is not None:
+                    b["src_index"] = st["_src_index"]
+                beats.append(b)
+                n += 1
         if not any(b["role"].startswith("item") for b in beats):
             missing.append("item")
     # ★목표 초가 있으면 **항목 수를 거기 맞춰 자른다**(2026-08-21).

@@ -11855,11 +11855,14 @@ def _insta_slot_sets(sources, store, cache_only=False):
     sets = []
     # _facts_per_source는 전사가 빈 영상을 건너뛰므로 편수가 어긋날 수 있다.
     # 짝이 맞는 만큼만 쓴다 — 어긋난 채로 장면을 붙이면 남의 화면으로 검사하게 된다.
-    for f, src in zip(facts, srcs):
+    for i, (f, src) in enumerate(zip(facts, srcs)):
         segs = [x for x in (src.get("segments") or []) if isinstance(x, dict)]
         one = insta_facts.gate_by_scene(f, segs)
         sl = spine_fill.slots_from_insta(one)
         if sl:
+            # ★몇 번째 영상인지 표식을 붙여 보낸다 — 재료가 모자라 건너뛴 편이 있어서
+            #   sets의 순번과 담긴 영상의 순번이 어긋난다. 화면 배치가 이 번호를 본다.
+            sl["_src_index"] = i
             sets.append(sl)
     if len(sets) < 2:
         return [], "나열형은 화면 근거가 있는 영상이 2편 이상 필요합니다(현재 %d편)" % len(sets)
