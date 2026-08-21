@@ -407,6 +407,8 @@ function warmVideos(){
 
 function stopPlay(){
   clearTimeout(seqTimer); seqTimer = null; seq = [];
+  clearSfxTimers();                              // 예약된 효과음도 끈다 — 안 끄면 멈춘 뒤에 울린다
+  if (sfxAudio) { try{ sfxAudio.pause(); }catch(e){} }
   playKey = null; seqPaused = false;
   // 전체 재생 체인 끊기 — 음성 재생기가 A/B 두 개이므로 **양쪽 다** 끊고 멈춘다.
   [ttsEl(0), ttsEl(1)].forEach(a => { if (a){ a.onended = null; a.pause(); } });
@@ -470,6 +472,7 @@ function playBeat(i, ev){
   startSeq(clips);
   // 음성은 화면과 별개 트랙 — 같이 0초부터 튼다(캡컷의 오디오 트랙과 같은 개념).
   playTts(i, 0);
+  armSfx(i);                       // 효과음도 같은 시각 기준으로 예약
   tickSub();
 }
 // 자막은 음성 시각을 따라간다(화면 컷이 몇 개로 쪼개지든 무관).
@@ -535,6 +538,7 @@ function runAllFrom(i){
     seatTts(i + 1, (i + 1) % 2);      // ← 이음매의 버퍼를 없애는 핵심 한 줄
   }
   const a = playTts(i, i % 2);
+  armSfx(i);
   a.onended = () => { if (playKey === 'all') runAllFrom(i + 1); };
   tickSub();
 }
@@ -770,6 +774,8 @@ function togglePause(ev){
     seqPaused = true;
     seqRemain = Math.max(50, seqNextAt - Date.now());   // 이 컷의 남은 시간
     clearTimeout(seqTimer);
+    clearSfxTimers();          // 멈춘 동안 울리지 않게. 재개하면 그 칸 기준으로 다시 잡는다
+                               // (남은 시간을 정밀 추적하진 않는다 — 미리듣기라 근사로 충분)
     if (curVid) curVid.pause();
     const a = audio(); if (a && !a.paused) a.pause();
     clearInterval(subTimer);
@@ -784,6 +790,58 @@ function togglePause(ev){
       paintCut();
     }
     if (seqBeat != null) tickSub();
+    if (seqBeat != null) armSfx(seqBeat);
   }
   updatePlayBtns();
+}
+
+
+// ── 🔊 효과음 재생(2026-08-21 사장님 "미리 들어볼 수 있게") ──────────────────
+// 종전엔 고르기만 하고 **최종 렌더까지 가야** 소리를 들을 수 있었다 — 마음에 안 들면
+// 렌더를 다시 돌려야 했다. 여기서 렌더와 같은 타점으로 미리 울린다.
+// ★렌더(video_assemble._burn_captions)와 **같은 규칙**을 쓴다:
+//     first      = 칸 시작(0초)
+//     transition = 칸 끝(= 다음 칸 시작)
+//     last       = 마지막 자막 직전까지의 합
+//   두 곳이 어긋나면 "미리듣기와 완성본이 다르다"가 된다. 여기 계산을 바꾸면 렌더도 봐라.
+// ⚠️미리보기는 어디까지나 근사다 — 볼륨(sfx_volume)은 렌더에서 정해지므로 여기선 기본 음량.
+let sfxAudio = null;
+const sfxTimers = [];
+
+function sfxUrl(assetId){ return '/api/scene/' + encodeURIComponent(assetId) + '/media'; }
+
+// 자산 하나를 지금 즉시 들려준다(드롭다운 옆 ▶ 미리듣기).
+function previewSfx(assetId){
+  try{
+    if (sfxAudio) sfxAudio.pause();
+    sfxAudio = new Audio(sfxUrl(assetId));
+    sfxAudio.play().catch(()=>{});
+  }catch(e){}
+}
+
+function clearSfxTimers(){
+  while (sfxTimers.length) clearTimeout(sfxTimers.pop());
+}
+
+// 이 칸을 지금 재생하기 시작했다 — 타점에 맞춰 효과음을 예약한다.
+function armSfx(i){
+  clearSfxTimers();
+  const b = (DATA.beats || [])[i];
+  const sfx = b && b.sfx;
+  if (!sfx || !sfx.asset_id || !SL.server) return;
+  const dur = beatDur(i);                      // 이 칸이 화면에 머무는 초
+  let at = 0;
+  if (sfx.position === 'transition') at = dur;
+  else if (sfx.position !== 'first'){
+    // last = 마지막 자막 구간이 시작하는 지점. 자막 구간 정보가 없으면 칸 끝 근처로 근사한다
+    // (렌더는 실제 자막 길이로 계산한다 — 여기선 들려주는 게 목적이라 근사로 충분하다).
+    const n = (b.caption_lines || []).length;
+    at = n > 1 ? dur * (n - 1) / n : 0;
+  }
+  sfxTimers.push(setTimeout(() => {
+    try{
+      const a = new Audio(sfxUrl(sfx.asset_id));
+      a.play().catch(()=>{});
+    }catch(e){}
+  }, Math.max(0, at * 1000)));
 }

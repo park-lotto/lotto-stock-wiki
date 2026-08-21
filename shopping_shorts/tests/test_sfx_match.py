@@ -140,3 +140,16 @@ def test_match_sfx_does_not_mutate_input():
     snap = copy.deepcopy(plan)
     scene_match.match_sfx(plan, [_sfx(7, "훅")])
     assert plan == snap
+
+
+def test_미리듣기와_렌더가_같은_타점_규칙을_쓴다():
+    """장면편집 미리듣기(scene_play.js)와 렌더(video_assemble)가 어긋나면
+    "미리 들은 것과 완성본이 다르다"가 된다 — 두 곳이 같은 규칙을 쓰는지 소스로 못박는다.
+    (2026-08-21 사장님 "미리 들어볼 수 있게")"""
+    import pathlib
+    js = (pathlib.Path(__file__).resolve().parents[1]
+          / "static" / "scene_play.js").read_text(encoding="utf-8")
+    assert "function armSfx" in js, "재생 중 효과음 예약 함수가 없다"
+    assert "'transition'" in js and "at = dur" in js, "전환 타점이 칸 끝이 아니다"
+    assert "'first'" in js, "칸 시작 타점 분기가 없다"
+    assert "clearSfxTimers" in js, "정지 시 예약을 끄지 않으면 멈춘 뒤에 울린다"
