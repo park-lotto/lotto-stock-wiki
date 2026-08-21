@@ -20,7 +20,12 @@ const t = (n, c) => { c ? (p++, console.log('  PASS', n)) : (f++, console.log(' 
 
 t('여닫기가 한 곳에 정의돼 있다', /function _pvOpen\(\)/.test(code) && /function _pvClose\(\)/.test(code));
 t('여는 쪽이 레일까지 연다', /_pvOpen[\s\S]{0,200}mixPreviewRail[\s\S]{0,120}display *= *''/.test(code));
-t('영상 그릴 때 자리를 연다', /_renderPreviewVideo[\s\S]{0,200}_pvOpen\(\)/.test(code));
+// ★2026-08-21: 자리 주인 판정처를 _pvShow 하나로 모으면서 여기서 부르는 이름이 바뀌었다.
+//   _pvShow는 첫 줄에서 _pvOpen()을 부르므로 "레일까지 연다"는 규약은 그대로고,
+//   거기에 더해 #mixPreview까지 켠다(가조립 재생 뒤 확정 결과가 안 보이던 것을 고친 부분).
+//   그래서 **둘 중 무엇을 부르든** 통과시킨다 — 이 단언이 지키려는 건 함수 이름이 아니라
+//   "그리기 전에 자리를 연다"는 규약이다(옛 이름만 고집하면 판정처 일원화를 막는다).
+t('영상 그릴 때 자리를 연다', /_renderPreviewVideo[\s\S]{0,200}(_pvOpen\(\)|_pvShow\('video'\))/.test(code));
 t('미리보기 시작할 때도 연다', code.split('_pvOpen()').length - 1 >= 2);
 // _pvOpen/_pvClose 정의 안은 당연히 패널을 직접 만진다 — 그 둘을 뺀 나머지에서
 // 직접 만지는 곳이 없어야 한다(있으면 레일을 안 열어 또 0x0이 된다).

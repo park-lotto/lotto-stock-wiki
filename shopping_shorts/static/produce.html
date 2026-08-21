@@ -4310,7 +4310,7 @@ function _pvShow(which){
 }
 function _renderPreviewVideo(job){
   const box=document.getElementById('mixPreview'); if(!box) return;
-  if(typeof _pvOpen==='function') _pvOpen();
+  if(typeof _pvShow==='function') _pvShow('video');
   box.innerHTML = '<video controls muted playsinline autoplay style="display:block;width:100%;aspect-ratio:var(--shorts-pv-ar,9/16);object-fit:contain;border-radius:12px;background:#000;box-shadow:0 8px 30px rgba(0,0,0,.4)"'
     + ' src="/api/produce/mix/preview/'+encodeURIComponent(job)+'?t='+Date.now()+'"></video>'
 ;   // 안내 문구 없음(2026-08-15 사장님 "랜더 아래쪽 문구들은 다 지워")
@@ -7363,7 +7363,9 @@ async function startPreview(){
     return;
   }
   if(btn) btn.disabled = true;     // 렌더는 20초+ 걸린다 — 그 사이 재클릭을 막는다
-  if(typeof _pvOpen==='function') _pvOpen();   // 좌측 프리뷰 자리 확보(레일까지 — 안 열면 렌더는 되는데 0x0이라 안 보인다)
+  // ★자리를 '확정 결과'로 넘겨받는다 — 가조립을 재생한 뒤였다면 #mixPreview가 꺼져 있어
+  //   로더를 innerHTML에 써도 안 보였다(2026-08-21 사장님 제보의 직접 원인).
+  if(typeof _pvShow==='function') _pvShow('video');
   // 같은 9:16 자리에서 민트 로더가 돌게 한다(loader.js). 없으면 텍스트로 폴백.
   box.innerHTML = '<div id="pvLoadFrame" style="aspect-ratio:var(--shorts-pv-ar,9/16);width:100%;border:1px solid var(--line);border-radius:16px;background:var(--inset);display:flex;align-items:center;justify-content:center;overflow:hidden"></div>';
   try{
