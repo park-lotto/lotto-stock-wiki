@@ -465,7 +465,13 @@ def test_go_has_gate_guard():
     html = PRODUCE_HTML.read_text(encoding="utf-8")
     i = html.find("function go(d){")
     assert i != -1, "go() 못 찾음"
-    body = html[i: i + 320]
+    # ★2026-08-22 조정 — 지우지 말고 읽어라(단언 자체는 그대로다).
+    #   종전엔 `html[i:i+320]`으로 **글자 수 320개**를 잘라 봤다. 이건 시한폭탄이다:
+    #   go() 안의 주석이나 안내 문구가 몇 글자만 길어져도 jump(가 창 밖으로 밀려나
+    #   기능은 멀쩡한데 테스트만 깨진다(실측: 확정 버튼 삭제로 토스트 문구가 길어지자
+    #   바로 FAIL). 창 크기가 아니라 **함수 본문**을 보게 바꾼다 — 지키려는 규약
+    #   ("go는 jump로 위임한다")은 하나도 안 느슨해졌다.
+    body = html[i:].split("\nfunction ", 1)[0]
     assert "jump(" in body, f"go()가 jump()로 위임하지 않는다 — 게이트 가드를 우회할 수 있다: {body[:180]!r}"
     # jump() 자체는 여전히 stepLocked로 게이트를 지킨다(위임 대상이 가드를 갖고 있는지 확인).
     j = html.find("function jump(")
