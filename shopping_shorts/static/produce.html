@@ -6523,7 +6523,7 @@ async function startProduceMix(){
     //     → onchange가 안 떠서 onSubToggle()의 /api/produce/mix/settings가 **한 번도 안 불림**
     //     → 화면은 "켜짐", job은 0. 렌더가 job을 읽으므로 원본 자막이 그대로 남는다.
     //   2462줄의 복원 경로 주석(꺼진 줄 알았는데 몰래 과금)과 같은 계열의 반대 방향 사고다.
-    const _mixBody={script:STATE.script, urls, target_seconds:30, scene_first:true,
+    const _mixBody={script:STATE.script, urls, target_seconds:25, scene_first:true,
                     subtitle_removal: !!STATE.subtitleRemoval};
     if(_bbIdx>=0) _mixBody.backbone_main=_bbIdx;   // ⭐메인 지정 시에만(없으면 서버 자동 선정)
     // ★비트별 출처 장면을 함께 보낸다(2026-08-18). 2단계가 남긴 src_seg — 3단계가
@@ -10601,7 +10601,7 @@ async function s2RegenBeat(i,j,tmpl){
   try{
     const s=S2.seed||{};
     const body={style_id:dr.style_id, role:role, beats:beats, template:tmpl||'',
-      base_script:s.text||'', category:s.category||PM_CATEGORY||'', target_seconds:30};
+      base_script:s.text||'', category:s.category||PM_CATEGORY||'', target_seconds:25};
     if(s.shortcode) body.shortcode=s.shortcode;
     if(typeof MIX_JOB!=='undefined' && MIX_JOB) body.job_id=MIX_JOB;
     if(typeof WORK_ID!=='undefined' && WORK_ID) body.work_id=WORK_ID;
