@@ -487,13 +487,22 @@ def render(spec):
             half = d.textlength(s["channel"], font=f) / 2
             cx = max(half + 20, min(W - half - 20, cx))
             d.text((cx, cy), s["channel"], font=f, fill=on_bar, anchor="mm")
-        if s["ad_badge"]:
-            # ★[광고]는 **오른쪽 아이콘(돋보기) 위**에 둔다(2026-08-22 사장님 지시).
-            #   전에는 채널명 옆이라 채널명이 비면 아예 안 보였다 — 이제 채널명과
-            #   무관하게 늘 같은 자리다.
-            fb = _font("meta", 24)
-            d.text((W - 96, max(14, cy - int(bar_h * 0.28))), "[광고]",
-                   font=fb, fill=on_bar, anchor="mm")
+
+    # ★[광고]는 **틀과 독립**이다(2026-08-22 사장님 "템플릿 없어도 사용가능").
+    #   그래서 띠(bar_h>0) 블록 **밖**에서 그린다 — 띠가 없어도 나온다.
+    #   자리는 오른쪽 아이콘(돋보기) 위. 띠가 없으면 띠에 얹을 수 없으니
+    #   화면 맨 위 여백에 두고, 글자색도 띠 위가 아니면 흰색+검은 외곽선으로 읽히게 한다.
+    if s["ad_badge"]:
+        fb = _font("meta", 24)
+        if bar_h > 0:
+            ax, ay, fill, stroke = W - 96, max(14, bar_h // 2 - int(bar_h * 0.28)), on_bar, None
+        else:
+            ax, ay, fill, stroke = W - 96, 40, (255, 255, 255, 255), (0, 0, 0, 255)
+        if stroke:
+            d.text((ax, ay), "[광고]", font=fb, fill=fill, anchor="mm",
+                   stroke_width=3, stroke_fill=stroke)
+        else:
+            d.text((ax, ay), "[광고]", font=fb, fill=fill, anchor="mm")
 
     if s["bottom_h"] > 0:
         d.rectangle([0, H - s["bottom_h"], W, H - 1], fill=bar_col)
