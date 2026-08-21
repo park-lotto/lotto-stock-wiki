@@ -46,3 +46,34 @@ def test_스타일_테이블이_없어도_목록은_나온다(tmp_path):
     st = Store(str(tmp_path / "n.db"))
     st.add_seed("youtube", "account", "https://www.youtube.com/channel/UCq1")
     assert len(st.list_seeds("youtube")) == 1
+
+
+def test_유튜브_랭킹에_스타일이_붙는다(tmp_path):
+    """2026-08-21 사장님 "신기템이 어디서 볼 수 있나".
+
+    실측: 유튜브 수집분 9,499건 중 이미 신기템 채널 영상이 77건 있었다
+    (연예인결합 1,034 · 썰쇼핑 626 · 레시피쇼핑 311). 데이터는 있고 이름표만 없었다.
+    """
+    from shopping_shorts.app import _attach_channel_style
+    st = _store(tmp_path)
+    items = [{"username": "UCabc123"}, {"username": "UCzzz999"}]
+    _attach_channel_style(items, st, "youtube")
+    assert items[0]["style"] == "신기템"
+    assert items[1]["style"] == "", "발굴에 없는 채널은 빈칸이어야 한다"
+
+
+def test_인스타는_스타일을_안_붙인다(tmp_path):
+    """인스타 username은 핸들이라 이 표와 축이 다르다 — 붙이면 엉뚱한 채널에 이름표가 간다."""
+    from shopping_shorts.app import _attach_channel_style
+    st = _store(tmp_path)
+    items = [{"username": "UCabc123"}]
+    _attach_channel_style(items, st, "instagram")
+    assert "style" not in items[0]
+
+
+def test_스타일표가_없어도_랭킹은_산다(tmp_path):
+    from shopping_shorts.app import _attach_channel_style
+    st = Store(str(tmp_path / "n2.db"))
+    items = [{"username": "UCq"}]
+    _attach_channel_style(items, st, "youtube")
+    assert items == [{"username": "UCq"}]
