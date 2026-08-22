@@ -100,3 +100,25 @@ def test_미리보기_비율_리터럴이_되살아나지_않았다():
         seg = m.group(0)
         assert "--shorts-pv-ar" in seg, f"{name}이 비율 변수를 안 쓴다"
         assert not re.search(r"aspect-ratio:\s*9/16\s*[;}\"']", seg), f"{name}에 9/16 리터럴"
+
+
+def test_미리보기는_폭이_아니라_높이가_크기를_정한다():
+    """2026-08-22 사장님 "미리보기창이 너무 크가 스크롤없이 맞춰봐".
+
+    종전 `#vidbox{width:100%}`는 폭 393px에서 세로 699px를 만들어 361px 칸을 뚫었다
+    (실측 338px 초과 → 안쪽 스크롤). 높이를 fitPlayer가 재서 주고 폭은 aspect-ratio가
+    계산한다. width:100%로 되돌리면 스크롤이 그대로 돌아온다.
+    """
+    import pathlib
+    base = pathlib.Path(__file__).resolve().parents[1] / "static"
+    css = (base / "scene_lab.html").read_text(encoding="utf-8")
+    js = (base / "scene_play.js").read_text(encoding="utf-8")
+    i = css.index("#player #vidbox{")
+    block = css[i:css.index("}", i)]
+    assert "width:auto" in block, "폭이 다시 크기를 정하고 있다"
+    # max-width:100%는 있어야 한다(칸을 넘지 않게) — 금지 대상은 폭 자체를 100%로 두는 것.
+    assert ";width:100%" not in block and "{width:100%" not in block
+    assert "aspect-ratio" in block, "폭 계산 근거가 사라졌다"
+    assert "function fitPlayer" in js, "높이를 재서 주는 곳이 없다"
+    assert "PV_MIN_H" in js, "최소 높이 보호가 없다"
+    assert "addEventListener('resize'" in js, "창 크기가 바뀌면 다시 맞춰야 한다"
