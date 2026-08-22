@@ -13,6 +13,7 @@ from google.genai import types
 
 from shopping_shorts import comment_gen
 from pipeline.atoms import key_vault
+from shopping_shorts import keyroute
 
 _MODEL = comment_gen._MODEL
 _GEN_GROUP = "general"
@@ -203,7 +204,7 @@ def _build_prompt(job, captions, only, locked, keyword_stats):
 def generate(job, captions=None, only=None, locked=None, keyword_stats=None):
     """key_vault 캐스케이드로 SEO 일습 생성. 소진키는 마킹하고 다음 키로.
     무키·전부실패면 None."""
-    keys = key_vault.get_live_keys_cascade(_GEN_GROUP)
+    keys = keyroute.gemini_keys(_GEN_GROUP)
     if not keys:
         return None
     prompt = _build_prompt(job, captions, only, locked, keyword_stats)

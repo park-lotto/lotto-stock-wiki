@@ -81,7 +81,7 @@ from shopping_shorts.video_assemble import _probe_duration, _effective_dur, _TRI
 from shopping_shorts.narration_naturalize import naturalize as _naturalize
 from shopping_shorts import frame_extract, scene_assets, scene_cut
 from shopping_shorts import effect_match, remotion_render, points
-from shopping_shorts import keycrypt, keyroute, pricing      # BYOK(사용자 키·포인트). points는 위에서 이미 import
+from shopping_shorts import keycrypt, keyctx, keyroute, pricing      # BYOK(사용자 키·포인트). points는 위에서 이미 import
 from shopping_shorts import video_assemble
 from shopping_shorts import seo_generate, seo_probe
 from shopping_shorts import pattern_bank
@@ -3106,14 +3106,23 @@ def api_mix_candidate_clone(request: Request, body: dict):
 
 
 @app.post("/api/settings/vmake_key")
-def api_set_vmake_key(body: dict):
+def api_set_vmake_key(body: dict, request: Request):
+    # ★관리자 전용. 이건 **회사 전역 키**라 아무나 덮어쓰면 키를 등록 안 한
+    #   모든 고객의 자막제거가 그 키로 나가거나(비용 전가) 통째로 멈춘다.
+    #   고객 개인 키는 아래 /api/settings/keys 다 — 이름이 비슷하니 주의.
+    denied = _require_admin(request)
+    if denied:
+        return denied
     key = (body.get("key") or "").strip()
     Store(DB_PATH).set_setting("vmake_api_key", key)
     return {"ok": True}
 
 
 @app.get("/api/settings/vmake_key")
-def api_get_vmake_key():
+def api_get_vmake_key(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
     key = Store(DB_PATH).get_setting("vmake_api_key", "")
     return {"ok": True, "configured": bool(key)}      # 원문은 노출하지 않음
 
@@ -7837,6 +7846,7 @@ def _track_activity(customer_id, path):
 async def _auth_guard(request: Request, call_next):
     if not _AUTH_ON:
         request.state.customer_id = 0
+        keyctx.set_owner(0)
         return await call_next(request)
     path = request.url.path
     # /api/find/frame/*는 Google Lens·SerpApi 등 외부 이미지검색 크롤러가 인증
@@ -7864,6 +7874,9 @@ async def _auth_guard(request: Request, call_next):
     customer_id = _verify_session(request.cookies.get("dash_auth"))
     if customer_id is not None:
         request.state.customer_id = customer_id
+        # ★제미나이처럼 '인자로 cid를 못 흘리는' 경로가 이걸 읽는다(keyctx 참조).
+        #   미들웨어에서 한 번만 정하므로 엔드포인트가 각자 챙길 필요가 없다.
+        keyctx.set_owner(customer_id)
         _record_access(customer_id, request)   # 돌려쓰기 소프트감지(best-effort, 차단 안 함)
         _track_activity(customer_id, path)     # 접속중·활동기록(best-effort)
         lvl = access_level(customer_id)
