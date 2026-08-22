@@ -7,6 +7,9 @@ mix 경로만 안 막혀 있었다.
 
 위키 유래 대본은 이미 위키에 있으니 담을 원본이 없다 → 버튼을 숨긴다.
 """
+# ★stdin=DEVNULL: pytest가 stdin을 캡처한 상태에서 node를 띄우면 윈도우에서
+#   WinError 6(핸들이 잘못됨)로 **간헐 실패**한다 — 묶어 돌릴 때만 터져서
+#   track finish 게이트가 헛돌던 원인이다(2026-08-22 일괄 수정).
 import pathlib
 import shutil
 import subprocess
@@ -85,7 +88,7 @@ def _run(scenario: str, tmp_path) -> subprocess.CompletedProcess:
     f.write_text(src, encoding="utf-8")
     # encoding="utf-8", errors="replace": 기본(cp949) 캡처는 실패메시지의 한글 console.error를
     # 못 읽어 리더 스레드에서 죽는다(stderr=None으로 보임) — test_produce_subject.py의 _run_race와 동일 수정.
-    return subprocess.run([NODE, str(f)], capture_output=True, text=True,
+    return subprocess.run([NODE, str(f)], stdin=subprocess.DEVNULL, capture_output=True, text=True,
                            encoding="utf-8", errors="replace", timeout=30)
 
 
@@ -172,7 +175,7 @@ def _run_confirm(start: str, end: str, scenario: str, tmp_path) -> subprocess.Co
     src = _CONFIRM_HARNESS_PREFIX + _extract_span(start, end) + scenario
     f = tmp_path / "probe_confirm.js"
     f.write_text(src, encoding="utf-8")
-    return subprocess.run([NODE, str(f)], capture_output=True, text=True,
+    return subprocess.run([NODE, str(f)], stdin=subprocess.DEVNULL, capture_output=True, text=True,
                            encoding="utf-8", errors="replace", timeout=30)
 
 
@@ -300,7 +303,7 @@ def _run_restore(scenario: str, tmp_path) -> subprocess.CompletedProcess:
     src = _RESTORE_HARNESS_PREFIX + _extract_restore_and_peek() + scenario
     f = tmp_path / "probe_restore.js"
     f.write_text(src, encoding="utf-8")
-    return subprocess.run([NODE, str(f)], capture_output=True, text=True,
+    return subprocess.run([NODE, str(f)], stdin=subprocess.DEVNULL, capture_output=True, text=True,
                            encoding="utf-8", errors="replace", timeout=30)
 
 
@@ -440,7 +443,7 @@ def _run_catchange(scenario: str, tmp_path) -> subprocess.CompletedProcess:
     src = _CATCHANGE_HARNESS_PREFIX + _extract_span(_CATCHANGE_START, _CATCHANGE_END) + scenario
     f = tmp_path / "probe_catchange.js"
     f.write_text(src, encoding="utf-8")
-    return subprocess.run([NODE, str(f)], capture_output=True, text=True,
+    return subprocess.run([NODE, str(f)], stdin=subprocess.DEVNULL, capture_output=True, text=True,
                            encoding="utf-8", errors="replace", timeout=30)
 
 
