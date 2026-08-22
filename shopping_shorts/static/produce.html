@@ -2207,19 +2207,21 @@ async function initMatch(){
     //   ⚠️ 2단계 확정 시점에 걸지 않는 이유는 그대로 유효하다: 대본을 다듬기도 전에
     //      시작하면 2단계가 존재 이유를 잃고, 대본이 바뀌면 매칭을 버려야 한다(=과금 낭비).
     if(!(STATE.script || '').trim()){
-      if(st) st.textContent = '아직 대본이 없어요 — ' + stepName('script')
-        + '에서 대본을 먼저 만들고 확정해주세요.';
+      setMixStatusText('아직 대본이 없어요 — ' + stepName('script')
+        + '에서 대본을 먼저 만들고 확정해주세요.');
       return;
     }
     if(_MIX_AUTOSTARTED) return;    // 실패한 뒤 다시 안 들어오게(요금·무한루프 방지)
     _MIX_AUTOSTARTED = true;
-    if(st) st.textContent = '⏳ 대본에 화면을 붙이는 중이에요…';
+    drawMixStatus('⏳ 대본에 화면을 붙이는 중이에요…', true);   // 도는 중 표시
     try{ await startProduceMix(); }
     catch(e){
       _MIX_AUTOSTARTED = false;     // 진짜 실패는 다시 시도할 수 있어야 한다
-      if(st) st.innerHTML = '❌ 화면 붙이기를 시작하지 못했어요.'
-        + '<div style="margin-top:10px"><button class="cta-shine" onclick="initMatch()">'
-        + '다시 시도</button></div>';
+      // 실패 — 도는 점을 지우고(hint 복귀) 재시도 버튼을 붙인다.
+      const _st = setMixStatusText('❌ 화면 붙이기를 시작하지 못했어요.');
+      if(_st) _st.insertAdjacentHTML('beforeend',
+        '<div style="margin-top:10px"><button class="cta-shine" onclick="initMatch()">'
+        + '다시 시도</button></div>');
     }
     return;
   }
@@ -2243,8 +2245,8 @@ async function _remixIfScriptChanged(){
   if(typeof s.script_hash !== 'string' || !s.script_hash) return;   // 옛 job엔 지문이 없다 → 그대로 둔다
   const now = await _scriptHash(STATE.script);
   if(!now || now === s.script_hash) return;                          // 안 바뀌었다
-  const st = document.getElementById('mixStatus');
-  if(st) st.textContent = '✏️ 대본이 바뀌었어요 — 화면을 다시 붙이는 중이에요…';
+  // 이것도 '도는 중'이다 — 도는 점을 붙여 멈춘 것처럼 보이지 않게(2026-08-23).
+  drawMixStatus('✏️ 대본이 바뀌었어요 — 화면을 다시 붙이는 중이에요…', true);
   await startProduceMix();
 }
 // ── 화면 붙이기 끝 ──
@@ -4267,6 +4269,37 @@ function openGenFromWiki(){
 
 // ── 1단계 제작소: 영상믹스(given_script 매칭) ──────────────
 let MIX_JOB=null, MIX_POLL=null;
+// ── 3단계 경과시간(2026-08-23 사장님 "되고 있는지 모름") ──
+// 진행바를 없앤 뒤 상태가 글자 한 줄이라 멈춘 건지 도는 건지 구분이 안 됐다.
+// ★job이 언제 바뀌든 여기 한 곳에서 시계를 리셋한다 — MIX_JOB에 대입하는 곳이 3군데라
+//   각자 리셋하게 두면 반드시 한 곳이 빠진다(0순위-B). pollMix가 매 tick 확인한다.
+let _MIX_T0=0, _MIX_T0_JOB=null;
+// ★평범한 글자로 되돌릴 때는 **반드시 이걸로** 쓴다(0순위-B).
+//   textContent만 바꾸면 위에서 붙인 .match-progress(초록 테두리+도는 점)가 남아
+//   빈 초록 상자가 화면에 떠 있게 된다. 클래스 복구를 각 호출부에 맡기면 반드시 빠진다.
+// ★#mixStatus를 그리는 **유일한 함수**(2026-08-23). 여러 함수가 같은 자리를 제각기
+//   덮어쓰면 "고쳤는데 또 나는" 버그가 된다(test_dom_owner_budget이 이걸 강제한다).
+//   busy=true면 도는 점 + 경과시간, false면 평범한 글자로 되돌린다.
+//   ⚠️ className을 안 되돌리면 실패해놓고 영원히 도는 것처럼 보인다.
+function drawMixStatus(msg, busy, right){
+  const st=document.getElementById('mixStatus'); if(!st) return null;
+  if(busy){
+    st.className='match-progress';
+    st.innerHTML='<span class="dot"></span><span>'+esc(msg||'')+'</span>'
+      + (right?'<span style="margin-left:auto;font-weight:600;opacity:.75">'+esc(right)+'</span>':'');
+  }else{
+    st.className='hint';
+    st.textContent=msg||'';
+  }
+  return st;
+}
+function setMixStatusText(msg){ return drawMixStatus(msg, false); }
+function _mixElapsed(){
+  if(MIX_JOB && MIX_JOB!==_MIX_T0_JOB){ _MIX_T0_JOB=MIX_JOB; _MIX_T0=Date.now(); }
+  if(!_MIX_T0) return '';
+  const s=Math.max(0, Math.round((Date.now()-_MIX_T0)/1000));
+  return s<60 ? (s+'초 경과') : (Math.floor(s/60)+'분 '+(s%60)+'초 경과');
+}
 // ★매칭 완료 자동이동을 이미 한 job(2026-08-18). 폴러가 재기동돼도 두 번 끌고 가지 않게
 //   한다 — 이게 없으면 완료된 job에서 2.5초마다 3단계로 튕긴다(사장님 제보).
 let _mixAutoJumped = null;
@@ -5149,7 +5182,7 @@ function cancelMixReview(){
   try{ _syncSceneLab(false); }catch(_){ }   // 실험실 iframe도 내린다(옛 잡을 계속 보여주면 안 된다)
   const el=document.getElementById('mixReview'); if(el) el.innerHTML='';
   const mc=document.getElementById('mixCandidates'); if(mc) mc.innerHTML='';
-  const st=document.getElementById('mixStatus'); if(st){ st.textContent=''; }   // _sblPipe 정리는 진행바와 함께 없앴다(2026-08-22)
+  setMixStatusText('');   // ★클래스까지 되돌린다 — textContent만 지우면 빈 초록 상자가 남는다
   const _pvBox=document.getElementById('mixPreview'); if(_pvBox) _pvBox.innerHTML='';
   if(typeof _pvClose==='function') _pvClose();
   try{ refreshNextBtn(); }catch(_){ }   // 미리보기 사라졌으니 [다음] 다시 잠근다
@@ -6319,7 +6352,7 @@ function confirmMixUrls(){
   wrap.innerHTML='<div class="row" style="margin-bottom:6px;display:flex;gap:6px;align-items:center"><input class="mixUrl" type="text" placeholder="인스타/유튜브/틱톡 URL" style="flex:1;min-width:0;background:var(--inset);border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px"><button class="urlDel" title="이 칸 지우기" onclick="removeMixUrlRow(this)" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:16px;padding:0 4px">✕</button></div>';
   renderPool(); syncFootageToMixUrls(); refreshFinalPeek(); saveWork();
   if(typeof refreshStep0==='function') refreshStep0();   // Task4: 확정 즉시 useFootage:true라 AI PICK 재조회
-  if(!added && typed.length===0){ const st=document.getElementById('mixStatus'); if(st) st.textContent='먼저 URL을 입력하세요.'; }
+  if(!added && typed.length===0){ setMixStatusText('먼저 URL을 입력하세요.'); }
 }
 // URL 입력칸 한 줄 지우기 — 최소 한 칸은 남긴다.
 function removeMixUrlRow(btn){
@@ -6827,7 +6860,8 @@ async function startProduceMix(){
   const urls=collectMixUrls();   // 영상풀 담긴 것 + 입력칸에 남은 것(중복 제거)
   if(urls.length<1){ alert('소스 영상 URL을 1개 이상 입력하세요(확정 또는 🎬담기)'); return; }
   try{ logPick('S3', {picked: 'mix_start', sources: urls, source_n: urls.length}); }catch(e){}
-  const st=document.getElementById('mixStatus'); st.textContent='⏳ 시작 중…';
+  setMixStatusText('⏳ 시작 중…');
+  const st=document.getElementById('mixStatus');
   document.getElementById('mixReview').innerHTML='';
   try{ _syncSceneLab(false); }catch(_){ }   // 새 매칭 시작 — 옛 잡의 실험실을 내린다(완료되면 다시 뜬다)
   const _mcEl=document.getElementById('mixCandidates'); if(_mcEl) _mcEl.innerHTML='';
@@ -6888,10 +6922,11 @@ async function startProduceMix(){
     try{ if(typeof _pushWorkNow === 'function') _pushWorkNow(); }catch(_){ }   // 서버 확정은 지금
     // ★단계바(파이프) 없앰(2026-08-22 사장님). 시작 상태는 한 줄 글자로 알린다 —
     //   pollMix가 첫 tick에 같은 자리를 덮어쓴다(빈 채로 두면 2.5초간 아무 표시가 없다).
-    st.textContent = '상태: 영상 다운로드 중…';
+    // 첫 tick 전 2.5초 동안도 '도는 중'으로 보이게 — pollMix와 같은 모양으로 그린다.
+    drawMixStatus('영상 다운로드 중…', true);
     setMixPoll(pollMix,2500); pollMix();
     refreshNextBtn();   // 새 job은 아직 미리보기가 없다 — 다시 잠근다
-  }catch(e){ st.textContent='❌ 네트워크 오류'; }
+  }catch(e){ setMixStatusText('❌ 네트워크 오류'); }   // 도는 점도 함께 지운다
 }
 // ★MIX_POLL 예약은 반드시 여기로(2026-08-20 사장님 "믹스확정을 누르면 안되고 다시 원래대로").
 //   같은 변수에 새 setInterval을 넣는 곳이 3군데였는데 아무도 앞의 것을 안 죽여서, 핸들을
@@ -6908,18 +6943,23 @@ async function pollMix(){
   try{
     const d=await (await fetch('/api/mix/status/'+MIX_JOB)).json();
     const st=document.getElementById('mixStatus');
-    if(!d.ok){ st.textContent='상태 조회 실패'+(d.error?' — '+d.error:''); clearInterval(MIX_POLL); const th0=document.getElementById('theater'); if(th0) th0.hidden=true; setMatchingUI(false); return; }
+    if(!d.ok){ setMixStatusText('상태 조회 실패'+(d.error?' — '+d.error:'')); clearInterval(MIX_POLL); const th0=document.getElementById('theater'); if(th0) th0.hidden=true; setMatchingUI(false); return; }
     // ★순서 대기(2026-08-06): 워커가 아직 안 집은 잡은 '다운로드 중'이 아니라 대기 중이다 —
     //   멈춘 것처럼 보이던 원인. queue_ahead: null=진행 중 / 0=다음 차례 / N=내 앞 N개.
     const _waiting = (typeof d.queue_ahead==='number');
     const _label = _waiting
       ? ('순서 대기 중…'+(d.queue_ahead>0?(' — 내 앞 작업 '+d.queue_ahead+'개'):' 곧 시작합니다'))
       : (MIX_LABEL[d.status]||d.status);
-    // ★진행바를 없앴으니(2026-08-22) 상태는 **한 줄 글자**로만 알린다.
+    // ★진행바를 없앤 뒤(2026-08-22) 글자만 남으니 **도는 중인지 알 수가 없었다**
+    //   (2026-08-23 사장님 "조립되고 있는 과정 루프가 안 뜬다 / 사용자는 되고 있는지 모름").
+    //   진행바를 되살리는 대신 **도는 점 + 경과시간**만 붙인다 — 화면은 그대로 두고
+    //   "살아있다"만 보이게. 스타일은 이미 있는 .match-progress를 그대로 쓴다(0순위-B:
+    //   9단계 finalStatus가 쓰는 것과 같은 것. 새로 만들면 두 벌이 된다).
     //   실패(failed)는 아래 전용 분기가 상세까지 그리므로 여기서 건드리지 않는다 —
     //   여기서 덮으면 그 상세가 매 tick 지워진다.
     if(d.status!=='failed'){
-      st.textContent='상태: '+_label+(d.error?' — '+d.error:'');
+      const _busy = d.status!=='ready_for_review' && d.status!=='done';
+      drawMixStatus(_label+(d.error?' — '+d.error:''), _busy, _busy?_mixElapsed():'');
     }
     updateMatchProgress(_label);   // ★Task8: 패널0 미러링 — 사용자가 있는 화면에도 같은 단계 표시
     // 극장(Task5) 종료 — 성공/실패 어느 쪽이든 대기 연출은 끝났으니 숨긴다. (commit 7d156f09c에서
@@ -6960,7 +7000,9 @@ async function pollMix(){
     // 실패 표시: 사용자에겐 순화된 d.error만. d.error_detail은 서버가 **관리자에게만** 채워
     // 내려주므로(2026-08-04), 있으면 원문을 접이식으로 덧붙인다 — 사고를 눈으로 바로 잡으라고.
     if(d.status==='failed'){ setMatchingUI(false);
-      st.textContent='❌ 매칭 실패'+(d.error?' — '+d.error:'');
+      // ★실패면 도는 점을 반드시 지운다 — className을 안 되돌리면 실패해놓고 영원히
+      //   도는 것처럼 보인다(2026-08-23). textContent만 바꾸면 클래스가 남는다.
+      setMixStatusText('❌ 매칭 실패'+(d.error?' — '+d.error:''));
       if(d.error_detail){
         const dt=document.createElement('details');
         dt.style.cssText='margin-top:6px;font-size:12px;color:var(--sub)';

@@ -81,6 +81,10 @@ function showPanel(){ refreshNextBtn(); }
 function saveWork(){}   // 상태유지(2026-07-19): jump/go/startProduceMix가 단계·job을 서버에 남긴다 — 슬라이스 밖 심볼
 function alert(){}
 function pollMix(){}                        // 슬라이스 밖 — 이 테스트는 미리보기 게이트만 본다
+// 3단계 상태줄 helper(2026-08-23). 슬라이스 밖 심볼 — 없으면 startProduceMix가
+// ReferenceError로 죽어 이 게이트 테스트가 통째로 빨간불이 된다(실측).
+function setMixStatusText(){}
+function drawMixStatus(){}   // #mixStatus를 그리는 유일한 함수 — 슬라이스 밖 심볼
 // startProduceMix가 소스 URL을 collectMixUrls()로 읽는다(2026-07-18 개편). 슬라이스 밖 심볼이라
 // 여기서 준다 — 실제 로직과 동일(영상풀 담긴 것 + 입력칸, 중복 제거). HANDOFF는 이 테스트에선 빈다.
 var HANDOFF = [];
