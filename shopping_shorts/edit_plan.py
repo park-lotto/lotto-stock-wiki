@@ -468,6 +468,7 @@ _MIN_SET_SECS = 4.0     # 비트 하나가 이보다 짧으면 할 말이 없다
 # 프롬프트에 적어 줄 "최소 몇 세트" 힌트 = 게이트 최소비트. plan_gate와 한 값을 쓴다
 # (여기서 5를 따로 박으면 게이트만 올렸을 때 조용히 어긋난다).
 from shopping_shorts.plan_gate import _MIN_BEATS as _GATE_MIN_BEATS_HINT  # noqa: E402
+from shopping_shorts import keyroute
 
 # 모델이 할 말이 없을 때 뱉는 자리표시자들. 실측은 `filler`(job e99d0e8e3e02, 6개)지만
 # 같은 계열이 몇 개 더 있어 함께 막는다. 역할 이름을 그대로 적은 것도 자리표시자다.
@@ -2175,7 +2176,7 @@ def _vault_call(prompt, schema, max_tries=8, key_offset=0):
       A/B/C 스타일이 통째로 안 입혀졌다). 키가 18개 살아있는데 0번만 두들긴 것.
       후보 인덱스·워커 PID를 섞어 오프셋을 주면 서로 다른 키로 나가 429 자체가
       안 난다. 실패 시 동작은 종전과 같다 — 대기 없이 다음 키로 순차 회전."""
-    keys = key_vault.get_live_keys_cascade("general")
+    keys = keyroute.gemini_keys("general")
     if not keys:
         # ★위키 예비풀(general/ingest/embed/briefing)이 전멸하면 SHORTS 전용풀의
         #   살아있는 키로라도 대본을 만든다(2026-08-10 실사고). 이날 위키 4개 그룹이
