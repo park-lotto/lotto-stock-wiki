@@ -89,7 +89,11 @@ h1{font-size:16px;margin:0;font-weight:700}
 .tbeat .h .d.dwarn{color:#ffd08f}
 .tbeat .h .d.dbad{color:#ffb9b9;font-weight:700}
 .tbcuts{display:flex;gap:5px}
-.tbcut{position:relative;width:104px;flex:0 0 auto}
+/* ★썸네일 폭 104 → 78(2026-08-22 사장님 "영상을 줄여줘" 후속). 9:16이라 폭이 곧
+   칸 띠의 높이다(104면 185px, 78이면 139px) — 줄인 46px이 그대로 미리보기 몫이 된다.
+   미리보기가 스크롤 없이 들어가려면 어디선가 자리를 내줘야 했고, 조각을 알아보는 데는
+   78px로도 충분하다(실측: 번호·초·체크박스 전부 읽힌다). */
+.tbcut{position:relative;width:78px;flex:0 0 auto}
 .tbcut img{width:100%;aspect-ratio:9/16;object-fit:cover;display:block;border-radius:5px;
   border:1px solid var(--line);background:#000}
 .tbcut .s{position:absolute;left:4px;top:4px;background:#000c;color:#fff;font-size:11px;
@@ -349,8 +353,11 @@ button.act.play:hover{background:var(--accent);color:#fff;border-color:var(--acc
 .phead .x:hover{color:var(--bad)}
 .pinfo{font-size:10px;color:var(--dim);margin-top:5px;line-height:1.4;min-height:26px}
 /* 자막 트랙 — 크게·가운데(2026-08-15 사장님 "폰트 키우고 가운데 정렬") */
-#subbox{margin-top:6px;min-height:56px;font-size:18px;line-height:1.5;font-weight:700;
-  background:#000a;border-radius:6px;padding:8px 10px;word-break:keep-all;text-align:center}
+/* ★min-height 56 → 34(2026-08-22) — 미리보기에선 자막이 1줄이면 충분하다.
+   길면 스크롤되지 자리를 더 먹지 않는다. 이 22px도 영상 몫으로 넘긴다. */
+#subbox{margin-top:6px;min-height:34px;max-height:64px;overflow-y:auto;font-size:18px;
+  line-height:1.5;font-weight:700;
+  background:#000a;border-radius:6px;padding:6px 10px;word-break:keep-all;text-align:center}
 /* 구간 이동 진행바(2026-08-15 사장님 "미리보기 켜질 때 구간이동") */
 /* ★진행바를 두툼하게(2026-08-17) — 얇으면 마우스로 잡기가 어렵다(시니어 원칙) */
 #seek{width:100%;margin:8px 0 0;accent-color:var(--accent);cursor:pointer;display:block;height:20px}
@@ -439,7 +446,8 @@ button.act.play:hover{background:var(--accent);color:#fff;border-color:var(--acc
     <button type="button" class="pvTab" data-pane="confirm" onclick="pvTab('confirm')"
             title="자막과 음성까지 얹은 진짜 결과 — 누르면 만들어져요(20초쯤)">자막+음성 완성본</button>
   </div>
-  <div class="lbl" style="display:flex;align-items:center;gap:14px"><button class="act play" id="pball" onclick="playAll(event)">▶️ 전체 재생</button><label style="cursor:pointer" title="전체에 적용: 장면마다 컷 하나씩, 멘트 시간을 길이 비례로 나눕니다."><input type="checkbox" onchange="toggleOne(this.checked)"> 1장=1컷</label></div>
+  <!-- ★줄 높이를 줄인다(2026-08-22) — 버튼 자체는 그대로고 위아래 여백만 뗀다. -->
+  <div class="lbl" style="display:flex;align-items:center;gap:14px;margin:0;min-height:0"><button class="act play" id="pball" onclick="playAll(event)">▶️ 전체 재생</button><label style="cursor:pointer" title="전체에 적용: 장면마다 컷 하나씩, 멘트 시간을 길이 비례로 나눕니다."><input type="checkbox" onchange="toggleOne(this.checked)"> 1장=1컷</label></div>
   <!-- 재생 전 안내(2026-08-16) — 미리보기 칸이 통째로 비어 있으면 "여기가 뭐 하는
        자리인지" 알 수 없다. #player가 켜지면(.on) 이건 자동으로 숨는다. -->
   <div id="playerIdle">
