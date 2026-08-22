@@ -9,6 +9,7 @@ comment_gen 전용키가 아니라 key_vault 공유풀(general→…)을 캐스�
 """
 import hashlib
 import json
+import re
 
 from google.genai import types
 
@@ -57,12 +58,13 @@ _PROMPT = """너는 한국 쇼츠 채널의 썸네일 카피라이터다. 아래
 
 [더 세게 만드는 법]
 - **구체가 이긴다**: "편리한 세탁기"(X) → "속옷 따로 빨래"(O). 대본의 구체어를 그대로 살려라.
-- **긴장을 남겨라**: 답을 다 말하지 말고 궁금하게 끊는다. "이거 진짜 요물"보다 "속옷 빨래 / 이제 안 해요".
+- **긴장을 남겨라**: 답을 다 말하지 말고 궁금하게 끊는다. "이거 진짜 요물"보다 "속옷 빨래\\n이제 안 해요".
 - **일상어로**: 광고 문구체(최고·혁신·강력) 금지. 사람이 말하듯.
 - **두 줄이 한 방을 만든다**: 윗줄=상황·타깃, 아랫줄=반전·결론. 아랫줄에 힘을 실어라.
 
 [썸네일 제목 규격 — SEO 제목과 다르다. 어기면 못 쓴다]
 - **보통 두 줄**로 만든다: 줄바꿈(\\n)을 꼭 넣어 1줄·2줄로 나눈다. 각 줄 3~8글자. (형식 예: "<윗줄 3~8자>\\n<아랫줄 3~8자>")
+- ★두 줄로 나누는 것은 **오직 줄바꿈(\\n)**이다. '/'·'|'·'·' 같은 구분기호를 절대 쓰지 마라 — 그 기호가 썸네일에 글자 그대로 그려진다.
 - ★소재는 **오직 아래 [대본] 내용**에서만 가져온다. 이 지시문의 형식 예시·참고 훅에 든 단어를 제목에 쓰지 마라(예시는 길이·줄바꿈·말맛을 보여줄 뿐이다).
 - 짧고 강하게. 검색용 긴 문장 금지. 아주 짧아 한 줄이 자연스러우면 한 줄도 허용.
 - 대본에 실제로 있는 사실만. 없는 효능·과장·허위 금지.
@@ -117,6 +119,25 @@ def _bank_block(seed=0):
             + "\n".join(lines) + "\n")
 
 
+# 모델이 두 줄을 '/'로 나눠 보내는 일이 있다(프롬프트로 금지했지만 프롬프트는 보장이 아니다).
+# 그대로 두면 캔버스가 '/'를 **글자로 그린다** — thumbAutoLines는 줄바꿈(\n)만 줄로 친다.
+# 그래서 생성 결과를 **여기 한 곳에서** 정규화해 프론트·캔버스가 항상 진짜 줄바꿈만 받게 한다
+# (CLAUDE.md 0순위-B: 같은 판단을 프론트·백엔드 두 곳에 적지 않는다).
+_SEP_RE = re.compile(r"\s+[/|·‧｜]\s+")     # ★양쪽 공백이 있을 때만 구분자 — '24/7'은 안 건드린다
+
+
+def _normalize_title(text):
+    """구분기호를 줄바꿈으로 바꾸고 빈줄·양끝 공백을 정리한다.
+
+    줄 수는 건드리지 않는다(한 줄이면 한 줄 그대로, 세 줄이면 세 줄 그대로).
+    두 줄로 '만드는' 일은 프롬프트와 thumbAutoLines가 하는 일이다 — 여기서는
+    기호가 글자로 그려지는 것만 막는다."""
+    t = str(text or "").replace("\r\n", "\n").replace("\r", "\n")
+    t = _SEP_RE.sub("\n", t)
+    lines = [ln.strip() for ln in t.split("\n")]
+    return "\n".join([ln for ln in lines if ln])
+
+
 def _build_prompt(job, seed=0):
     struct = job.get("script_structure") or {}
     head = (job.get("headcopy") or {}).get("text") or ""
@@ -146,7 +167,11 @@ def generate(job, seed=0):
                     response_mime_type="application/json", response_schema=_SCHEMA),
             )
             data = json.loads(resp.text)
-            return data.get("titles") or []
+            out = data.get("titles") or []
+            for it in out:
+                if isinstance(it, dict):
+                    it["text"] = _normalize_title(it.get("text"))
+            return out
         except Exception as e:  # noqa: BLE001 — 생성 실패는 치명적 아님
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
                 key_vault.mark_exhausted(key_vault._owner_group(key) or _GEN_GROUP, key)
