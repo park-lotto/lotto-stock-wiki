@@ -1534,7 +1534,7 @@ def _ensure_clean_sources(store, job, job_id, work, key, customer_id=0):
     """clean_sources 맵을 채워 반환. 이미 있고 파일이 존재하면 스킵(재과금 0).
     각 스레드는 remove_subtitles만 하고 경로를 반환 → DB 저장은 취합 후 메인에서 1회(경합 없음).
 
-    ★돈이 나가는 함수다 — 청소할 소스 1편당 VMake 1콜(실비용 500원)이고
+    ★돈이 나가는 함수다 — 청소할 소스 1편당 VMake 1콜(50크레딧)이고
       여기서 **선차감**한다(_charge_clean). 자막제거의 유일한 계량 지점이라
       run_clean_sources·run_render 어느 쪽으로 들어와도 여기를 지난다."""
     source_map = _resolve_sources(job, Path(work))
