@@ -10,6 +10,8 @@
 *.json  text eol=lf
 *.md    text eol=lf
 *.sh    text eol=lf
+# ★systemd 유닛은 CRLF면 서버에서 깨진다 — 윈도우에서 편집해도 LF로 박는다(2026-08-22)
+*.service text eol=lf
 *.txt   text eol=lf
 *.yml   text eol=lf
 *.yaml  text eol=lf
