@@ -317,7 +317,25 @@ def hook_checks(style, full, product=""):
     return out
 
 
-def check(style, beats, facts_text="", product="", seconds=30, assembled=False):
+def prior_verdict(checks):
+    """앞서 나온 '화자 일관성' 판정을 **그대로 재사용**하는 판정기를 만든다.
+
+    ★왜 필요한가: 길이가 넘친 대본은 재단(_trim_to_budget) 뒤 게이트를 다시 돈다.
+      그때 판정기를 안 넘기면 앞서 찾은 화자 실패가 checks에서 **조용히 사라진다**
+      (판정은 했는데 화면·재작성 지시문에 안 실리는 미탐).
+      그렇다고 판정기를 다시 넘기면 **유료 LLM 호출이 두 배**가 된다.
+      재단은 군더더기 부사만 덜어내므로 화자를 바꿀 수 없다 → 앞 판정을 물려준다.
+
+    앞에 판정이 없으면(키 소진 등) None을 돌려주는 판정기 → 검사 항목이 안 생긴다.
+    """
+    hit = [c for c in (checks or []) if c.get("name") == "화자 일관성"]
+    if not hit:
+        return lambda _text: {}
+    return lambda _text: {"ok": hit[0]["ok"], "why": hit[0].get("detail") or ""}
+
+
+def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
+          speaker_judge=None):
     """(checks, full_text) 반환. checks = [{name, ok, detail}, ...]
 
     style: {"beat_roles": [...], "templates": {role: [...]}, "chars_per_30s": int}
@@ -326,6 +344,9 @@ def check(style, beats, facts_text="", product="", seconds=30, assembled=False):
         검사한다. 안 주면 그 검사는 건너뛴다 — 기존 호출부는 그대로 = 회귀 0.
     assembled: 이 대본이 **조립**(spine_fill)으로 만들어졌나. 조립만 '문장틀 준수'를
         묻는다 — 아래 그 검사 주석 참조. 기본 False = 생성기.
+    speaker_judge: 대본 전문을 받아 {"ok": bool, "why": str}를 돌려주는 판정기.
+        주면 '화자 일관성'을 검사한다. 안 주면 그 검사는 **항목 자체를 안 만든다**
+        (기존 호출부 그대로 = 회귀 0). 아래 그 검사 주석 참조.
     """
     beats = beats or []
     want = list(style.get("beat_roles") or [])
@@ -461,6 +482,29 @@ def check(style, beats, facts_text="", product="", seconds=30, assembled=False):
 
     # ★훅 3초(2026-08-19) — 스타일이 선언할 때만. 위 함수 하나가 판단을 전담한다.
     checks += hook_checks(style, full, product)
+
+    # ★화자 일관성(2026-08-23 사장님 "말이되는건지") — 판정기를 준 경우에만.
+    #   헌장(_STORY_RULES_CORE)에 "훅에서 등장시킨 그 인물이 결말에서 회수돼야 하고
+    #   중간에 슬그머니 다른 인물로 갈아타지 마라"가 **이미 적혀 있었다**. 그런데
+    #   규칙은 프롬프트에만 있고 **지켰는지 보는 판정이 없었다** — 어겨도 미검출이라
+    #   재작성 루프가 안 걸리고 아무도 안 고쳤다.
+    #   실측 제보: "저 친구네 집 갔다가" → "남편 턱이 달라진 거예요"(누구 남편?) →
+    #   "저도 해보니까"(화자가 자기가 씀). 라이브 게이트는 이걸 **전부 통과**시켰다.
+    #   ★규칙(정규식)으로 안 잡는 이유: 라이브 27개에 돌려보니 멀쩡한 대본 2건을
+    #     잡았다(오탐). 이 파일의 기존 원칙대로 오탐이 미탐보다 나쁘다 → LLM 판정.
+    #   ★fail-open: 판정을 못 하면(_call_json이 키 소진 시 {} 반환·예외) **통과**시킨다.
+    #     여기서 막으면 키가 마른 날 대본이 통째로 안 나온다.
+    if speaker_judge is not None:
+        try:
+            _v = speaker_judge(full) or {}
+        except Exception:      # noqa: BLE001 — 판정 실패가 대본 생성을 죽이면 안 된다
+            _v = {}
+        if isinstance(_v, dict) and isinstance(_v.get("ok"), bool):
+            checks.append({"name": "화자 일관성", "ok": _v["ok"],
+                           "detail": (_v.get("why") or "").strip()[:200] or
+                                     ("말하는 사람이 도중에 바뀐다 — 훅에서 등장시킨 그 인물로 "
+                                      "끝까지 꿰어라(3인칭은 '친구 남편'처럼 누구 것인지 밝혀라)")
+                                     if not _v["ok"] else "OK"})
 
     # ★수치 그라운딩(2026-08-16) — 재료를 준 경우에만. 지어낸 수치를 잡는다.
     ok_g, bad = grounding_check(full, facts_text)
