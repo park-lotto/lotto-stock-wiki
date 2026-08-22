@@ -17,6 +17,9 @@
 → **우리가 고칠 수 있는 게 아니다.** 인포크가 `SameSite=None; Secure`로 바꾸지 않는 한
    틀 안에서 로그인 상태를 쓸 수 없다. 새 탭이 유일한 방법이고, 원래 방식이 옳았다.
 """
+# ★stdin=DEVNULL: pytest가 stdin을 캡처한 상태에서 node를 띄우면 윈도우에서
+#   WinError 6(핸들이 잘못됨)로 **간헐 실패**한다 — 묶어 돌릴 때만 터져서
+#   track finish 게이트가 헛돌던 원인이다(2026-08-22 일괄 수정).
 import pathlib
 import re
 import shutil
@@ -134,5 +137,5 @@ def test_produce_inline_js_syntax_ok(tmp_path):
     blocks = re.findall(r"<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>", html, re.S)
     js = tmp_path / "inline.js"
     js.write_text("\n;\n".join(blocks), encoding="utf-8")
-    r = subprocess.run([NODE, "--check", str(js)], capture_output=True, text=True)
+    r = subprocess.run([NODE, "--check", str(js)], stdin=subprocess.DEVNULL, capture_output=True, text=True)
     assert r.returncode == 0, r.stderr

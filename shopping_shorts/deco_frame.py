@@ -302,6 +302,12 @@ DEFAULTS = {
     "bottom_h": 0,         # 하단 띠 높이(px) — 0이면 없음
     "channel": "",         # 가짜 채널명
     "ad_badge": False,     # [광고] 뱃지
+    # ── [광고] 표시 다듬기(2026-08-22 사장님 "크기나 마우스로 위치조정 흐리기") ──
+    #   ★0 = "안 정했음" → 지금까지의 자리·크기를 그대로 쓴다(채널명·제목과 같은 규약).
+    "ad_size": 0,          # 글자 크기(px). 0이면 24
+    "ad_x": 0,             # 가로 위치 %. 0이면 기존 자리(오른쪽 아이콘 위)
+    "ad_y": 0,             # 세로 위치 %. 0이면 기존 자리
+    "ad_alpha": 100,       # 진하기 %. 낮출수록 흐려진다(0=안 보임)
     "icons": True,         # ☰ / 🔍
     "title": "",           # 굵은 후킹 제목(자동 줄바꿈)
     "views": "",           # "264만"
@@ -346,6 +352,14 @@ def _rgb(hex_color):
     return (int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16), 255)
 
 
+def _fade(color, pct):
+    """색을 pct%만큼만 진하게(흐리기). 100이면 그대로 — 기존 그림이 안 바뀐다."""
+    if not isinstance(color, (tuple, list)) or pct >= 100:
+        return color
+    a = color[3] if len(color) > 3 else 255
+    return (color[0], color[1], color[2], int(a * max(0, min(100, pct)) / 100))
+
+
 def normalize(spec):
     """화면이 준 값에 기본값을 채우고 범위를 자른다.
 
@@ -380,7 +394,9 @@ def normalize(spec):
     # ── 글자 꾸미기 값도 **여기 한 곳에서만** 자른다(위 bar_h와 같은 원칙) ──
     # ★0은 "안 정했음"이라 살려둔다 — 그림 그릴 때 프리셋 기본으로 되돌아간다.
     for k, lo, hi in (("ch_size", 0, 200), ("title_size", 0, 200),
-                      ("ch_x", 0, 100), ("title_x", 0, 100)):
+                      ("ch_x", 0, 100), ("title_x", 0, 100),
+                      ("ad_size", 0, 200), ("ad_x", 0, 100), ("ad_y", 0, 100),
+                      ("ad_alpha", 0, 100)):
         try:
             s[k] = int(s[k])
         except (TypeError, ValueError):
@@ -493,11 +509,24 @@ def render(spec):
     #   자리는 오른쪽 아이콘(돋보기) 위. 띠가 없으면 띠에 얹을 수 없으니
     #   화면 맨 위 여백에 두고, 글자색도 띠 위가 아니면 흰색+검은 외곽선으로 읽히게 한다.
     if s["ad_badge"]:
-        fb = _font("meta", 24)
+        # 크기 0 = "안 정했음" → 지금까지의 24px 그대로(채널명·제목과 같은 규약).
+        fb = _font("meta", s["ad_size"] or 24)
         if bar_h > 0:
             ax, ay, fill, stroke = W - 96, max(14, bar_h // 2 - int(bar_h * 0.28)), on_bar, None
         else:
             ax, ay, fill, stroke = W - 96, 40, (255, 255, 255, 255), (0, 0, 0, 255)
+        # 사장님이 화면에서 끌어다 놓았으면 그 자리로(0이면 위 기본 자리 그대로).
+        # ⚠️화면 밖 방지는 **사장님이 자리를 정했을 때만** 건다. 기본 자리에까지 걸면
+        #   띠가 얇을 때 기존 y(최소 14)가 밀려 지금까지의 그림이 바뀐다(회귀).
+        if s["ad_x"]:
+            half = d.textlength("[광고]", font=fb) / 2
+            ax = int(W * s["ad_x"] / 100.0)
+            ax = max(int(half) + 8, min(W - int(half) - 8, ax))
+        if s["ad_y"]:
+            ay = int(H * s["ad_y"] / 100.0)
+            ay = max(fb.size, min(H - fb.size, ay))
+        fill = _fade(fill, s["ad_alpha"])
+        stroke = _fade(stroke, s["ad_alpha"]) if stroke else None
         if stroke:
             d.text((ax, ay), "[광고]", font=fb, fill=fill, anchor="mm",
                    stroke_width=3, stroke_fill=stroke)

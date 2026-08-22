@@ -7,6 +7,9 @@ pmRunGen이 subject를 안 보냈다 → 리메이크 모드인데 소재가 고
 test_produce_category_race.py와 같은 방식 — produce.html의 **실제 소스**를
 앵커로 잘라내 Node로 실행한다. 재구현이 아니라 실물 코드를 검증한다.
 """
+# ★stdin=DEVNULL: pytest가 stdin을 캡처한 상태에서 node를 띄우면 윈도우에서
+#   WinError 6(핸들이 잘못됨)로 **간헐 실패**한다 — 묶어 돌릴 때만 터져서
+#   track finish 게이트가 헛돌던 원인이다(2026-08-22 일괄 수정).
 import pathlib
 import shutil
 import subprocess
@@ -155,7 +158,7 @@ def _run_race(scenario: str, tmp_path) -> subprocess.CompletedProcess:
     f.write_text(src, encoding="utf-8")
     # encoding="utf-8": 기본(cp949) 캡처는 실패메시지의 한글 console.error를 못 읽어
     # 리더 스레드에서 UnicodeDecodeError로 죽는다(stderr=None으로 보임) — 실측.
-    return subprocess.run([NODE, str(f)], capture_output=True, text=True,
+    return subprocess.run([NODE, str(f)], stdin=subprocess.DEVNULL, capture_output=True, text=True,
                            encoding="utf-8", errors="replace", timeout=30)
 
 
@@ -174,7 +177,7 @@ def _run(scenario: str, tmp_path) -> subprocess.CompletedProcess:
     f.write_text(src, encoding="utf-8")
     # encoding="utf-8", errors="replace": _run_race와 동일 이유(기본 cp949 캡처가
     # 실패 시 한글 console.error를 못 읽고 죽어 stderr=None으로 보인다).
-    return subprocess.run([NODE, str(f)], capture_output=True, text=True,
+    return subprocess.run([NODE, str(f)], stdin=subprocess.DEVNULL, capture_output=True, text=True,
                            encoding="utf-8", errors="replace", timeout=30)
 
 
