@@ -493,6 +493,10 @@ function stopPlay(){
   clearSfxTimers();                              // 예약된 효과음도 끈다 — 안 끄면 멈춘 뒤에 울린다
   if (sfxAudio) { try{ sfxAudio.pause(); }catch(e){} }
   playKey = null; seqPaused = false;
+  // 재생을 멈추면 겹쳐뒀던 꾸미기도 걷는다 — 안 걷으면 멈춘 화면 위에 남는다.
+  // ★remove()가 없는 DOM 스텁도 있다(테스트 하네스) — 있는지 보고 부른다.
+  const _pd = document.getElementById('playDeco');
+  if (_pd && typeof _pd.remove === 'function') _pd.remove();
   // 전체 재생 체인 끊기 — 음성 재생기가 A/B 두 개이므로 **양쪽 다** 끊고 멈춘다.
   [ttsEl(0), ttsEl(1)].forEach(a => { if (a){ a.onended = null; a.pause(); } });
   clearInterval(subTimer); seqBeat = null;
@@ -579,6 +583,8 @@ function tickSub(){
     //   (STATE.captionStyle = updateCaption이 정한 값) 여기선 부르기만 한다 — 0순위-B.
     //   그 함수가 없는 화면(scene_lab 단독)에서는 조용히 넘어간다(옛 동작 그대로).
     if (typeof applyPlaySubStyle === 'function'){ try{ applyPlaySubStyle(box); }catch(e){} }
+    // 꾸미기(헤드카피·틀·워터마크)도 재생 화면에 겹쳐 보인다 — 없는 화면에선 조용히 통과.
+    if (typeof syncPlayDeco === 'function'){ try{ syncPlayDeco(); }catch(e){} }
     // 종료 판정도 시계와 같은 기준: 음성이 시계면 음성이 멎을 때,
     // 화면이 시계면 컷이 다 끝났거나 일시정지일 때.
     const dead = audioUsable() ? (a.ended || a.paused)
@@ -640,6 +646,8 @@ let preSeated = -1;
 // 안 주면 예전 그대로 0·1 번갈아 — 칸별 재생·장면 미리보기는 동작이 안 바뀐다.
 function startSeq(clips, slot0){
   clearTimeout(seqTimer);
+  // 재생을 켜는 순간 꾸미기를 얹는다(자막이 뜨기 전에도 틀·헤드카피가 보이게).
+  if (typeof syncPlayDeco === 'function'){ try{ syncPlayDeco(); }catch(e){} }
   seq = clips; seqI = 0; seqPaused = false;
   // 컷 경계 누적(자막을 컷 단위로 끊어 보여주려면 각 컷의 [시작,끝) 초가 필요하다)
   let off = 0;

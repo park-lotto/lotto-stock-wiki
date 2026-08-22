@@ -3284,6 +3284,40 @@ function renderSparkles(on, ypct){
     pv.appendChild(s);
   });
 }
+// ── ▶ 재생 화면에 꾸미기(헤드카피·틀·워터마크·로고) 겹쳐 보이기(2026-08-23) ──────
+// 사장님: "내가 붙인 게 잘 재생되는 건지 ... 캡컷을 대체하고 싶은 게 목적".
+// 재생 화면(#vidbox)엔 **영상만** 나오고 헤드카피·템플릿 틀·워터마크는 안 보였다.
+// 그 자리에서 결과를 못 보니 렌더를 돌려야만 최종 모습을 알 수 있었다.
+// ★새로 그리지 않는다: 이미 정확히 배치돼 있는 #hcPreview의 레이어들을 **복제해서**
+//   재생 상자에 얹는다(0순위-B). 배치·스타일 규칙이 두 벌이 되면 반드시 어긋난다.
+//   같은 9:16 비율이라 %좌표가 그대로 맞는다.
+window.syncPlayDeco = function(){
+  const vb = document.getElementById('vidbox');
+  const src = document.getElementById('hcPreview');
+  if (!vb || !src) return;
+  let layer = document.getElementById('playDeco');
+  if (!layer){
+    layer = document.createElement('div');
+    layer.id = 'playDeco';
+    // pointer-events:none — 재생 중 클릭(일시정지)을 막으면 안 된다.
+    layer.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:4;overflow:hidden';
+    vb.appendChild(layer);
+  }
+  layer.innerHTML = '';
+  // 틀(템플릿) → 헤드카피 → 로고 → 워터마크 순서로, 원본과 같은 겹침 순서를 지킨다.
+  ['tplPreview','hcPreviewText','ovPreview','wmPreview'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const cs = getComputedStyle(el);
+    if (cs.display === 'none' || !el.innerHTML && el.tagName !== 'IMG') return;
+    if (el.tagName === 'IMG' && !el.getAttribute('src')) return;
+    const c = el.cloneNode(true);
+    c.id = 'pd-' + id;                 // id 중복 금지 — 원본을 가리키는 코드가 많다
+    c.style.cursor = 'default';
+    c.style.pointerEvents = 'none';
+    layer.appendChild(c);
+  });
+};
 // ── ▶ 재생 자막에 실제 자막 스타일 입히기(2026-08-23) ────────────────────────
 // scene_play.js의 tickSub가 #subbox에 글자만 넣는다. CSS는 흰색 17px 고정이라
 // 꾸미기를 아무리 해도 재생 화면엔 안 보였다 — 미리보기가 결과를 못 보여주니
