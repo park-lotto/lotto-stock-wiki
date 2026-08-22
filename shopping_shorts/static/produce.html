@@ -9711,7 +9711,11 @@ async function suggestThumbTitles(){
       : '';
     box.innerHTML = _warn + '<div class="hint" style="margin-bottom:2px">마음에 드는 제목을 누르면 바로 얹어져요 ↓</div>' +
       d.titles.map((t, i) => {
-        const shown = esc(t.text || '').replace(/\n/g, ' / ');   // 줄바꿈은 ' / '로 표시
+        // ★썸네일에 실제로 얹히는 모습 그대로 보여준다 — 줄바꿈은 줄바꿈으로(2026-08-23).
+        //   예전엔 ' / '로 바꿔 보여줬는데, 사장님이 그 슬래시를 제목의 일부로 읽고
+        //   문구 칸에 그대로 옮겨 적으면 thumbAutoLines가 '/'를 글자로 그린다
+        //   (줄바꿈은 \\n만 인정). 화면과 결과가 달라 생기는 오해였다 → 목록도 두 줄로.
+        const shown = thumbAutoLines(t.text || '').map(l => esc(l)).join('<br>');
         return `<button class="tab" onclick="applyThumbTitle(${i})"
           style="text-align:left;min-width:auto;padding:9px 11px;white-space:normal;line-height:1.35;height:auto">
           <b style="font-size:14px">${shown}</b>
