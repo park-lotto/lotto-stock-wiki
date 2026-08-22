@@ -574,6 +574,11 @@ function tickSub(){
     const tag = (subPerCut && k >= 0) ? `컷 ${k+1}/${seqBounds.length}` : '';
     box.innerHTML = (tag ? `<div class="subtag">${tag}</div>` : '')
       + `<span class="said">${esc(c ? c.text : '')}</span>`;
+    // ★재생 자막에 **실제 자막 스타일**을 입힌다(2026-08-23 사장님: 미리보기로 결과를
+    //   가늠할 수 있어야 조립이 된다). 스타일 규칙은 produce.html이 갖고 있고
+    //   (STATE.captionStyle = updateCaption이 정한 값) 여기선 부르기만 한다 — 0순위-B.
+    //   그 함수가 없는 화면(scene_lab 단독)에서는 조용히 넘어간다(옛 동작 그대로).
+    if (typeof applyPlaySubStyle === 'function'){ try{ applyPlaySubStyle(box); }catch(e){} }
     // 종료 판정도 시계와 같은 기준: 음성이 시계면 음성이 멎을 때,
     // 화면이 시계면 컷이 다 끝났거나 일시정지일 때.
     const dead = audioUsable() ? (a.ended || a.paused)

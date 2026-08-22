@@ -3284,6 +3284,51 @@ function renderSparkles(on, ypct){
     pv.appendChild(s);
   });
 }
+// ── ▶ 재생 자막에 실제 자막 스타일 입히기(2026-08-23) ────────────────────────
+// scene_play.js의 tickSub가 #subbox에 글자만 넣는다. CSS는 흰색 17px 고정이라
+// 꾸미기를 아무리 해도 재생 화면엔 안 보였다 — 미리보기가 결과를 못 보여주니
+// 조립을 하고도 렌더를 돌려봐야 알 수 있었다.
+// ★여기서 값을 새로 만들지 않는다. STATE.captionStyle(=updateCaption이 정한 것)만 읽는다.
+window.applyPlaySubStyle = function(box){
+  // ★window.STATE로 찾으면 안 된다 — STATE는 최상위 const라 window에 안 붙는다
+  //   (MIX_JOB·WORK_ID에서 이미 두 번 밟은 함정). 같은 스코프이므로 그냥 STATE를 쓰되,
+  //   이 함수가 없는 화면에서도 안 죽게 typeof로 막는다.
+  const cs = (typeof STATE !== 'undefined' && STATE.captionStyle) || null;
+  const el = box && box.querySelector('.said');
+  if (!el) return;
+  if (!cs){ el.removeAttribute('style'); return; }   // 아직 안 정했으면 CSS 기본대로
+  // 재생기 실폭 기준으로 환산한다 — 미리보기 상자(380)와 재생기 폭이 다를 수 있다.
+  // ★재생기가 아직 안 열렸으면 clientWidth가 0이다 — 그대로 쓰면 배율이 0이 돼
+  //   글씨가 사라진다(실측). 0이면 미리보기 기준폭으로 떨어뜨린다.
+  const pw = (box.parentElement && box.parentElement.clientWidth) || PREVIEW_W;
+  const w = pw > 0 ? pw : PREVIEW_W;
+  const scale = w / VIDEO_W;
+  const st = el.style;
+  st.fontFamily = `'${fontCss(cs.font)}',sans-serif`;
+  st.color = cs.color; st.fontWeight = 900;
+  st.display = 'inline-block'; st.whiteSpace = 'nowrap'; st.lineHeight = '1.2';
+  let fs = Math.max(9, (cs.size || 54) * scale);
+  st.fontSize = fs + 'px';
+  const avail = w * 0.92;
+  if (el.scrollWidth > avail) st.fontSize = Math.max(6, fs * avail / el.scrollWidth) + 'px';
+  const ow = ((cs.outline_w || 0) * scale).toFixed(1);
+  const sd = Math.max(1, (cs.shadow_d || 3) * scale).toFixed(1);
+  st.textShadow = cs.outline
+    ? `${ow}px ${ow}px 0 ${cs.outline_color}, -${ow}px -${ow}px 0 ${cs.outline_color}, `
+      + `${ow}px -${ow}px 0 ${cs.outline_color}, -${ow}px ${ow}px 0 ${cs.outline_color}`
+    : (cs.shadow ? `0 ${sd}px ${sd*2}px rgba(0,0,0,.55)` : 'none');
+  if (cs.box){
+    st.background = hexA(cs.box_color, (cs.box_opacity || 80) / 100);
+    st.padding = `${Math.round((cs.box_pad||12)*scale)}px ${Math.round((cs.box_pad||12)*1.5*scale)}px`;
+    st.borderRadius = '6px';
+  } else { st.background = 'none'; st.padding = '2px 6px'; st.borderRadius = '0'; }
+  // 세로 자리도 실제 값대로 — CSS의 bottom:64px 고정을 덮는다.
+  if (cs.y_pct != null){
+    box.style.top = cs.y_pct + '%'; box.style.bottom = 'auto';
+    box.style.transform = 'translateY(-50%)';
+  }
+  if (cs.x_pct != null){ box.style.textAlign = 'center'; }
+};
 function cs_spark_size(){ const g=document.getElementById('capSize'); return g ? Math.max(10,(+g.value||50)*(PREVIEW_W/VIDEO_W)*0.5) : 16; }
 // ── 🎯 완성 스타일 프리셋(원클릭: 헤드카피+자막+효과 한 번에) — 빅채널 레퍼런스 기반 ──
 // 레퍼런스(HOMEDIRECTOR)와 동일: 흰 자막·화면 중상단(y37, 3개 동일)·은은한 그림자(테두리X). 크기만 차이.
