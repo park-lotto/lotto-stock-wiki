@@ -32,15 +32,17 @@ SERVICES = (SVC_GEMINI, SVC_VMAKE, SVC_ELEVENLABS, SVC_YOUTUBE, SVC_SERPAPI)
 # ★등록은 받지만 **실제 호출에 쓰이는** 서비스는 아직 이 둘뿐이다(2026-08-17 실측).
 #   - vmake     : mix_pipeline.py:1432-1433 job의 customer_id → _vmake_key → keys_for
 #   - serpapi   : app.py _lens_api_keys(cid) → 렌즈 호출부 2곳
-#   나머지 셋은 **저장만 된다** — 호출부가 customer_id를 안 넘겨 항상 사장님 키로 돈다:
+#   - gemini    : keyroute.gemini_keys()가 유일한 출구. cid는 인자가 아니라
+#                 keyctx(요청=미들웨어 / 워커=_owned_job 데코레이터)에서 읽는다.
+#                 호출 체인이 3~4겹이라 인자로 흘리면 한 곳만 빠뜨려도 조용히 샌다.
+#   나머지 둘은 **저장만 된다** — 호출부가 customer_id를 안 넘겨 항상 사장님 키로 돈다:
 #   - elevenlabs: mix_pipeline.py:196 synthesize_line 시그니처에 customer_id가 아예 없음
 #   - youtube   : service.py:176·179 yt_search 호출에 customer_id 없음
-#   - gemini    : 실제 키 선택은 key_vault/SHORTS_GEMINI_KEYS 경유(호출부 ~80곳)
 #
 # ⚠️여기 이름을 옮기기 전에 **호출부에 cid가 진짜 닿는지 먼저 확인해라.**
 #   이 목록이 앞서가면 아래 should_charge가 '안 쓰이는 키'로 과금을 면제한다 =
 #   회사 키로 돌면서 돈은 안 받는 구멍이 된다(2026-08-17에 실제로 그 상태였다).
-WIRED = (SVC_VMAKE, SVC_SERPAPI)
+WIRED = (SVC_VMAKE, SVC_SERPAPI, SVC_GEMINI)
 
 
 def uses_customer_key(service):
@@ -135,3 +137,29 @@ def should_charge(store, customer_id, service):
         return True
     _, is_user = keys_for(store, customer_id, service)
     return not is_user
+
+def gemini_keys(group="general", customer_id=None):
+    """제미나이 호출에 쓸 키 목록. **키를 꺼내는 유일한 출구다.**
+
+    고객이 키를 등록했으면 그 키만 쓴다(폴백 없음 — vmake와 같은 규칙).
+    없으면 기존 key_vault 로테이션 그대로. 즉 사장님·크론 동작은 안 바뀐다.
+
+    customer_id를 안 주면 keyctx(지금 처리 중인 작업의 주인)에서 읽는다 —
+    호출 체인이 3~4겹이라 인자로 흘리면 한 곳만 빠뜨려도 조용히 새기 때문이다.
+
+    ★개인 키는 key_vault의 소진관리(mark_exhausted) 대상이 아니다.
+      남의 키 상태를 우리 파일에 기록하면 고객끼리 상태가 섞인다.
+      개인 키가 소진되면 그 사람 호출만 실패하고, 우리 키로 넘어가지 않는다.
+    """
+    from shopping_shorts import keyctx
+    from shopping_shorts.store import Store
+    from shopping_shorts import config
+
+    cid = as_cid(customer_id if customer_id is not None else keyctx.owner_cid())
+    if cid:
+        mine = Store(config.DB_PATH).get_customer_keys_plain(cid, SVC_GEMINI)
+        if mine:
+            logging.info("제미나이: 고객 %s 개인 키 %d개 사용", cid, len(mine))
+            return mine
+    from pipeline.atoms import key_vault
+    return key_vault.get_live_keys_cascade(group)

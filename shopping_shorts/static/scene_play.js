@@ -27,6 +27,42 @@ if (typeof document !== 'undefined' && document.documentElement){
   document.documentElement.style.setProperty('--shorts-pv-ar', PV_AR);
 }
 
+// ── 미리보기를 칸 안에 맞춘다(2026-08-22 사장님 "미리보기창이 너무 크가 스크롤없이 맞춰봐")
+// 종전엔 영상칸이 `폭 100% × 9:16`이라 **폭이 세로를 정했다** — 폭 393px이면 세로가
+// 699px가 되는데 미리보기 영역은 361px뿐이라 338px이 넘쳐 안쪽 스크롤이 생겼다(실측).
+// ★CSS flex로는 못 푼다: `flex:1 1 0`을 줘도 aspect-ratio가 폭을 먼저 잡아 높이가
+//   안 줄어든다(min-height에 붙거나 0으로 사라진다 — 둘 다 실측 확인). 그래서 **남는
+//   높이를 재서 직접 준다.** 폭은 CSS의 aspect-ratio가 알아서 계산한다(높이만 준다).
+// 부르는 곳: 재생 시작·창 크기 변경·탭 전환. 재생 중이 아니면 아무것도 안 한다.
+const PV_MIN_H = 150;      // 이보다 작아지면 미리보기 구실을 못 한다 — 이때만 스크롤을 허용한다
+
+function fitPlayer(){
+  const host = document.getElementById('playerhost');
+  const pl = document.getElementById('player');
+  const vb = document.getElementById('vidbox');
+  if (!host || !pl || !vb || !pl.classList.contains('on')) return;
+  vb.style.height = '';                       // 재계산 전에 비운다(누적 방지)
+  let used = 0;
+  // 영상 말고 세로를 차지하는 것 전부 — 탭·라벨(host) + 진행바·자막·안내(player)
+  for (const c of host.children) if (c !== pl) used += c.getBoundingClientRect().height;
+  for (const c of pl.children) if (c !== vb) used += c.getBoundingClientRect().height;
+  const cs = getComputedStyle(pl), hs = getComputedStyle(host);
+  used += parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom)
+        + parseFloat(hs.paddingTop) + parseFloat(hs.paddingBottom)
+        + (parseFloat(hs.rowGap) || 0) * Math.max(0, host.children.length - 1)
+        + (parseFloat(cs.rowGap) || 0) * Math.max(0, pl.children.length - 1)
+        + 4;                                  // 테두리·반올림 여유
+  const h = Math.round(host.clientHeight - used);
+  vb.style.height = Math.max(PV_MIN_H, h) + 'px';
+}
+
+if (typeof window !== 'undefined'){
+  let _fitT = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(_fitT); _fitT = setTimeout(fitPlayer, 120);
+  });
+}
+
 // 소스 영상 길이를 넘는 구간인가 — 실측(job 409f894230c6): s1-10이 100~104초인데
 // s1.mp4는 78.5초였다. 렌더하면 그 컷은 실체가 없다. 눈에 보이게 표시한다.
 // 최소 컷 길이(0.8초)에 못 미치는 장면 — 담아도 화면에 **안 나온다**(라운드로빈이 건너뛴다).
@@ -562,6 +598,7 @@ function startSeq(clips, slot0){
   if (clips[0]) seat(clips[0]);
   if (clips[1]) seat(clips[1]);
   document.getElementById('player').classList.add('on');
+  fitPlayer();                     // 켜지는 순간 칸 높이에 맞춘다(스크롤 방지)
   // 진행바 갱신 — 끌고 있는 동안(seekDrag)은 안 덮어쓴다.
   clearInterval(posTimer);
   posTimer = setInterval(() => {

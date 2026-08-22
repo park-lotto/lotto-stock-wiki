@@ -15,6 +15,7 @@ from google.genai import types
 from shopping_shorts import comment_gen
 from shopping_shorts import script_engine
 from pipeline.atoms import key_vault
+from shopping_shorts import keyroute
 
 _MODEL = comment_gen._MODEL
 _GEN_GROUP = "general"
@@ -133,7 +134,7 @@ def generate(job, seed=0):
 
     seed: 참고 훅 조각을 회전시킨다(다시 누르면 다른 각도의 후보가 나오게). 같은 seed면 같은 조각
     — 난수를 쓰지 않는 이유는 script_engine과 같다(재현성)."""
-    keys = key_vault.get_live_keys_cascade(_GEN_GROUP)
+    keys = keyroute.gemini_keys(_GEN_GROUP)
     if not keys:
         return None
     prompt = _build_prompt(job, seed=seed)

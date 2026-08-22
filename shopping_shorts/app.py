@@ -81,7 +81,7 @@ from shopping_shorts.video_assemble import _probe_duration, _effective_dur, _TRI
 from shopping_shorts.narration_naturalize import naturalize as _naturalize
 from shopping_shorts import frame_extract, scene_assets, scene_cut
 from shopping_shorts import effect_match, remotion_render, points
-from shopping_shorts import keycrypt, keyroute, pricing      # BYOK(사용자 키·포인트). points는 위에서 이미 import
+from shopping_shorts import keycrypt, keyctx, keyroute, pricing      # BYOK(사용자 키·포인트). points는 위에서 이미 import
 from shopping_shorts import video_assemble
 from shopping_shorts import seo_generate, seo_probe
 from shopping_shorts import pattern_bank
@@ -3106,14 +3106,23 @@ def api_mix_candidate_clone(request: Request, body: dict):
 
 
 @app.post("/api/settings/vmake_key")
-def api_set_vmake_key(body: dict):
+def api_set_vmake_key(body: dict, request: Request):
+    # ★관리자 전용. 이건 **회사 전역 키**라 아무나 덮어쓰면 키를 등록 안 한
+    #   모든 고객의 자막제거가 그 키로 나가거나(비용 전가) 통째로 멈춘다.
+    #   고객 개인 키는 아래 /api/settings/keys 다 — 이름이 비슷하니 주의.
+    denied = _require_admin(request)
+    if denied:
+        return denied
     key = (body.get("key") or "").strip()
     Store(DB_PATH).set_setting("vmake_api_key", key)
     return {"ok": True}
 
 
 @app.get("/api/settings/vmake_key")
-def api_get_vmake_key():
+def api_get_vmake_key(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
     key = Store(DB_PATH).get_setting("vmake_api_key", "")
     return {"ok": True, "configured": bool(key)}      # 원문은 노출하지 않음
 
@@ -5755,6 +5764,61 @@ def api_lens_locales():
     return {"ok": True, "locales": out}
 
 
+_LENS_SRC_MAX = int(os.environ.get("LENS_SRC_MAX", "900"))   # 검색어 소재 글자 상한
+
+
+def _lens_source_text(url, front_caption="", store=None):
+    """검색어를 만들 **소재 텍스트** — 프론트 캡션 + DB 캡션 + 대본을 합친다.
+
+    왜(2026-08-22 사장님 "썸네일 캡션 대본을 빠르게 스캔해서"): 지금까지 검색어는
+    사실상 **썸네일 1장만** 보고 만들어져 제품을 잘못 짚었다. 라이브 실측 3건 중 2건:
+      · 다이소 바닥 흠집 보수제 → "스틱청소기"(전혀 다른 제품)
+      · 흰 양말 과탄산소다      → "이염 방지 시트"
+    캡션을 넣자 둘 다 정확해졌고, 대본까지 넣으니 '과탄산소다'라는 **정확한 제품명**이
+    나왔다(그 단어는 캡션엔 없고 대본에만 있었다).
+
+    ★캡션은 reel_history엔 거의 비어 있다(실측 300건 중 1건). 진짜 캡션은
+      source_enrichment(1,260건)에 있는데 **아무도 안 읽고 있었다** — 여기서 읽는다.
+    ★보강은 부가기능이다 — DB가 없거나 터져도 검색은 살아야 하므로 전부 감싼다."""
+    parts = []
+    if (front_caption or "").strip():
+        parts.append(front_caption.strip())
+    st = store
+    if st is None:
+        try:
+            st = Store(DB_PATH)
+        except Exception as e:               # noqa: BLE001 — DB 없으면 프론트 캡션만 쓴다
+            import sys as _sys
+            print(f"[경고] 렌즈 소재 Store 열기 실패(무시): {e!r}", file=_sys.stderr)
+            st = None
+    if st is not None and url:
+        try:
+            # max_age_days=None: 오래된 캡션도 제품 힌트로는 그대로 쓸모 있다
+            enr = st.get_enrichment(url, max_age_days=None) or {}
+            cap = (enr.get("caption") or "").strip()
+            if cap and cap not in parts:
+                parts.append(cap)
+        except Exception as e:               # noqa: BLE001 — 보강 실패로 검색을 죽이지 않는다
+            import sys as _sys
+            print(f"[경고] 렌즈 캡션 조회 실패(무시): {e!r}", file=_sys.stderr)
+        try:
+            # 대본은 shortcode로 찾는다. 인스타(/reel·/p·/tv)·유튜브(/shorts)·틱톡(/video)
+            # 뿐 아니라 호스트가 다른 URL도 마지막 경로 조각을 코드로 본다 — 못 찾으면
+            # 그냥 대본이 없는 것으로 지나간다(아래 sd가 빈 값이라 안전).
+            m = (_IG_SC_RE.search(url)
+                 or re.search(r"/(?:video|shorts|reel|reels|p|tv)/([A-Za-z0-9_-]+)", url))
+            sc = m.group(1) if m else ""
+            if sc:
+                sd = st.get_script(sc) or {}
+                txt = (sd.get("full_text") or "").strip()
+                if txt:
+                    parts.append(txt)
+        except Exception as e:               # noqa: BLE001 — 대본이 없어도 검색은 돈다
+            import sys as _sys
+            print(f"[경고] 렌즈 대본 조회 실패(무시): {e!r}", file=_sys.stderr)
+    return "\n".join(parts)[:_LENS_SRC_MAX]
+
+
 def _parse_lens_locales(raw):
     """프론트가 보낸 "ko:kr,ja:jp" → [("ko","kr"), ("ja","jp")]. 비면 [](=전체).
 
@@ -6129,10 +6193,13 @@ async def api_lens_cn(request: Request, frame: UploadFile = File(None),
 
 @app.post("/api/lens/cn/keywords")
 async def api_lens_cn_keywords(request: Request, frame: UploadFile = File(None),
-                                source_caption: str = Form(""), exclude: str = Form("")):
+                                source_caption: str = Form(""), exclude: str = Form(""),
+                                source_url: str = Form("")):
     """프레임(+캡션) → 중국어 후보 검색어 리스트. Gemini 비전 1회, Apify 안 부름.
     프론트가 렌즈 열 때 호출해 후보 버튼을 그린다(2026-07-19)."""
-    if frame is None and not (source_caption or "").strip():
+    # ★source_url이 있으면 캡션이 비어도 진행한다 — DB에서 캡션·대본을 찾아올 수 있다
+    #   (프론트 캡션은 거의 항상 비어 있다: 실측 300건 중 1건).
+    if frame is None and not (source_caption or "").strip() and not (source_url or "").strip():
         return {"ok": True, "product": "", "candidates": []}
     raw = None
     if frame is not None:
@@ -6146,7 +6213,10 @@ async def api_lens_cn_keywords(request: Request, frame: UploadFile = File(None),
         # ★ to_thread 필수 — cn_search_candidates는 Gemini SDK를 **블로킹**으로 부른다.
         #   async def 안에서 그냥 부르면 이벤트루프가 그 5~10초 동안 통째로 멈춰,
         #   프론트가 동시에 던진 /api/lens/yt가 뒤에서 줄을 서 20초가 됐다(2026-08-16 실측).
-        v = await asyncio.to_thread(cn_search_candidates, raw, source_caption, exclude=seen)
+        # ★썸네일 1장만 보면 제품을 잘못 짚는다(실측 3건 중 2건). DB에 있는
+        #   캡션·대본을 합쳐 소재를 넉넉히 준다 — 비용 0(이미 저장된 것).
+        src = await asyncio.to_thread(_lens_source_text, source_url, source_caption)
+        v = await asyncio.to_thread(cn_search_candidates, raw, src, exclude=seen)
     except Exception:
         v = {}
     return {"ok": True, "product": v.get("product", ""),
@@ -7463,7 +7533,9 @@ _TERMS_BODY = f"""
 <h2>제7조 (책임의 제한)</h2>
 <p>서비스는 AI 자동 생성 결과물을 제공하며, 결과물의 상업적 성과·정확성·완전성을 보증하지 않습니다. 회사는 이용자가 업로드한 소재로 인한 분쟁, 이용자의 서비스 이용 결과에 대해 법령이 허용하는 범위에서 책임을 지지 않습니다.</p>
 <h2>제8조 (약관의 개정)</h2>
-<p>회사는 관련 법령을 위반하지 않는 범위에서 약관을 개정할 수 있으며, 개정 시 시행일과 개정 내용을 서비스 내에 공지합니다.</p>
+<p>회사는 관련 법령을 위반하지 않는 범위에서 이 약관을 개정할 수 있습니다. 약관을 개정하는 경우 시행일과 개정 내용을 시행일 <b>7일 전</b>부터 서비스 내에 공지하며, 이용자에게 불리하거나 중대한 변경의 경우 시행일 <b>30일 전</b>부터 공지합니다. 이용자가 개정 약관에 동의하지 않는 경우 이용계약을 해지할 수 있습니다.</p>
+<h2>제9조 (계약상 지위의 승계)</h2>
+<p>회사의 영업양도, 법인 전환, 합병·분할 등의 사유가 발생하는 경우, 이 약관에 따른 이용계약상의 지위와 권리·의무는 승계인에게 승계될 수 있습니다. 회사는 이 경우 승계 사실과 시행일을 사전에 공지하며, 이용자는 이에 동의하지 않는 경우 이용계약을 해지할 수 있습니다.</p>
 """
 
 _PRIVACY_BODY = f"""
@@ -7507,19 +7579,40 @@ _PRIVACY_BODY = f"""
 """
 
 _REFUND_BODY = f"""
-<p>{_BRAND['name']}(이하 "회사")의 이용권 결제에 대한 환불 기준은 다음과 같습니다. 본 서비스는 결제 즉시 이용 가능한 <b>디지털 콘텐츠(이용권)</b>입니다.</p>
-<h2>1. 전액 환불 (미사용)</h2>
-<p>결제 후 서비스 기능(렌즈·제작 등)을 <b>한 번도 사용하지 않은 경우</b>, 결제일로부터 <b>7일 이내</b> 요청 시 전액 환불해 드립니다.</p>
-<h2>2. 환불 불가 (사용 개시 후)</h2>
-<p>이용권으로 <b>제작(렌더)·렌즈 등 기능을 1회라도 사용한 경우</b>, 해당 이용권은 디지털 콘텐츠의 특성상 환불이 불가합니다. 이는 「전자상거래법」 제17조제2항에 따라 <b>사용에 의해 재화등의 가치가 현저히 감소한 경우</b>에 해당합니다.</p>
+<p>{_BRAND['name']}(이하 "회사")의 이용권 결제에 대한 환불 기준은 다음과 같습니다.
+본 서비스는 온라인으로 제공되는 <b>디지털 콘텐츠(이용권)</b>입니다.</p>
+
+<h2>1. 전액 환불</h2>
+<ul>
+<li>결제 후 <b>정식(Pro) 계정으로 전환되기 전</b>: 전액 환불</li>
+<li>정식(Pro) 계정 전환 후에도 <b>프로그램 사용을 시작하지 않은 경우</b>: 전액 환불</li>
+</ul>
+
+<h2>2. 청약철회의 제한 (사용 개시 후)</h2>
+<p>정식(Pro) 계정 전환 후 <b>영상 제작 작업을 생성한 시점</b>부터는 디지털 콘텐츠의 제공이
+개시된 것으로 보아, 「전자상거래 등에서의 소비자보호에 관한 법률」 제17조제2항에 따라
+청약철회가 제한됩니다.</p>
+<p style="color:#8aa0a0;font-size:13px">
+※ 회사는 가입 전 <b>무료 멤버 등록</b>을 통해 레퍼런스랭킹 등 주요 기능을 미리 체험할 수 있도록
+제공하고 있습니다. 구매 전 충분히 확인하신 후 결제해 주시기 바랍니다.</p>
+
 <h2>3. 회사 귀책 사유</h2>
-<p>서비스 장애 등 회사의 책임 있는 사유로 이용권을 정상적으로 사용하지 못한 경우, 사용하지 못한 분에 대해 환불하거나 이용권을 복구해 드립니다. (제작 실패 시 소진된 이용 횟수는 자동 복구됩니다.)</p>
-<h2>4. 환불 절차</h2>
+<p>서비스 장애 등 회사의 책임 있는 사유로 이용권을 정상적으로 사용하지 못한 경우,
+사용하지 못한 분에 대해 환불하거나 이용권을 복구해 드립니다.
+(제작 실패 시 소진된 이용 횟수는 자동 복구됩니다.)</p>
+
+<h2>4. 환불에서 제외되는 비용</h2>
+<p>Gemini API, YouTube API 등 <b>외부 서비스 이용료로 이미 발생한 실비</b>는 환불 대상에서
+제외됩니다. 해당 비용은 이용자가 개별 계정으로 직접 등록·결제하는 항목입니다.</p>
+
+<h2>5. 환불 절차</h2>
 <ul>
 <li>환불은 아래 사업자정보의 문의처로 요청해 주세요.</li>
 <li>계좌입금 결제분은 입금하신 계좌로, 요청 확인 후 영업일 기준 3일 이내 환불합니다.</li>
 </ul>
-<p style="color:#8aa0a0;font-size:12.5px;margin-top:14px">※ 본 정책은 관련 법령의 소비자 보호 규정에 우선하지 않으며, 법령과 상충하는 부분은 법령이 정하는 바에 따릅니다.</p>
+
+<p style="color:#8aa0a0;font-size:12.5px;margin-top:14px">※ 본 정책은 관련 법령의 소비자 보호
+규정에 우선하지 않으며, 법령과 상충하는 부분은 법령이 정하는 바에 따릅니다.</p>
 """
 
 
@@ -7776,6 +7869,7 @@ def _track_activity(customer_id, path):
 async def _auth_guard(request: Request, call_next):
     if not _AUTH_ON:
         request.state.customer_id = 0
+        keyctx.set_owner(0)
         return await call_next(request)
     path = request.url.path
     # /api/find/frame/*는 Google Lens·SerpApi 등 외부 이미지검색 크롤러가 인증
@@ -7803,6 +7897,9 @@ async def _auth_guard(request: Request, call_next):
     customer_id = _verify_session(request.cookies.get("dash_auth"))
     if customer_id is not None:
         request.state.customer_id = customer_id
+        # ★제미나이처럼 '인자로 cid를 못 흘리는' 경로가 이걸 읽는다(keyctx 참조).
+        #   미들웨어에서 한 번만 정하므로 엔드포인트가 각자 챙길 필요가 없다.
+        keyctx.set_owner(customer_id)
         _record_access(customer_id, request)   # 돌려쓰기 소프트감지(best-effort, 차단 안 함)
         _track_activity(customer_id, path)     # 접속중·활동기록(best-effort)
         lvl = access_level(customer_id)
@@ -8435,6 +8532,34 @@ def _admin_page(request: Request):
         return HTMLResponse("<h2 style='font-family:sans-serif'>관리자 전용입니다</h2>", status_code=403)
     return FileResponse(Path(__file__).parent / "static" / "admin.html",
                         media_type="text/html; charset=utf-8")
+
+
+# ── 관측판(2026-08-22) — 1기 100명을 받기 전에 "얼마나 버티나"를 숫자로 남긴다 ──
+#    계산은 이미 했다. 문제는 계산이 맞았는지 알 방법이 없다는 것이었다.
+#    판단이 필요한 지표는 셋뿐이다: 동시 렌더 최대치 · 디스크 여유 · 월 송신량.
+@app.get("/ops", response_class=HTMLResponse)
+def _ops_page(request: Request):
+    if not _is_admin(getattr(request.state, "customer_id", None)):
+        return HTMLResponse("<h2 style='font-family:sans-serif'>관리자 전용입니다</h2>",
+                            status_code=403)
+    return FileResponse(Path(__file__).parent / "static" / "ops.html",
+                        media_type="text/html; charset=utf-8")
+
+
+@app.get("/api/admin/capacity")
+def _api_capacity(request: Request, days: int = 14):
+    """관측판 데이터. 지금 상태(실시간 1회 표본) + 날짜별 최대치 + 판정 한 줄."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import capacity_watch
+    try:
+        now = capacity_watch.sample(DB_PATH)     # 열 때마다 한 점 더 찍는다(공짜에 가깝다)
+    except Exception as e:      # noqa: BLE001 — 관측이 서비스를 죽이면 안 된다
+        return {"ok": False, "error": str(e)}
+    return {"ok": True, "now": now,
+            "daily": capacity_watch.daily(DB_PATH, days=max(1, min(days, 60))),
+            "verdict": capacity_watch.verdict(DB_PATH, cores=now.get("cores"))}
 
 
 @app.get("/insta_fill_comment.user.js", include_in_schema=False)
