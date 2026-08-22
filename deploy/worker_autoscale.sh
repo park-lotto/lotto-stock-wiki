@@ -29,9 +29,19 @@ ENV_FILE=/etc/shopping-shorts.env
 [ -f "$ENV_FILE" ] && . "$ENV_FILE" 2>/dev/null
 
 CORES="$(nproc)"
-WANT="${SHORTS_WORKERS:-$((CORES - 2))}"
-[ "$WANT" -lt 3 ] && WANT=3
-[ "$WANT" -gt 6 ] && WANT=6
+if [ -n "${SHORTS_WORKERS:-}" ]; then
+  # ★사람이 일부러 적은 숫자는 그대로 따른다. 자동 상한(6)에 걸어버리면
+  #   "덮어쓸 수 있다"고 해놓고 조용히 무시하는 꼴이 된다(실측으로 잡은 불일치).
+  #   오타 방지용 안전선만 남긴다: 1~12.
+  WANT="$SHORTS_WORKERS"
+  [ "$WANT" -lt 1 ] && WANT=1
+  [ "$WANT" -gt 12 ] && WANT=12
+  echo "[워커자동조정] SHORTS_WORKERS=$SHORTS_WORKERS 지정됨 — 자동 계산을 쓰지 않는다"
+else
+  WANT="$((CORES - 2))"
+  [ "$WANT" -lt 3 ] && WANT=3
+  [ "$WANT" -gt 6 ] && WANT=6
+fi
 
 echo "[워커자동조정] $(date '+%F %T') 코어 ${CORES}개 → 워커 ${WANT}개 목표"
 

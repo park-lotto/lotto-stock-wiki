@@ -30,9 +30,15 @@ CORES="$(nproc)"
 #     동시 1개 16.2초 / 3개 55.7초 / 6개 158.6초 — 코어를 넘기면 손해가 급격히 커진다.
 #   그래서 "코어당 1개, 단 2코어는 서비스 몫으로 남긴다"로 잡는다.
 #   바꾸려면 여기 숫자 하나만 고치면 된다(WORKERS=8 로 실행해 덮어쓸 수도 있다).
-WANT="${WORKERS:-$((CORES - 2))}"
-[ "$WANT" -lt 3 ] && WANT=3
-[ "$WANT" -gt 6 ] && WANT=6
+if [ -n "${WORKERS:-}" ]; then
+  WANT="$WORKERS"            # 사람이 적은 값이 이긴다(오타 안전선 1~12만 건다)
+  [ "$WANT" -lt 1 ] && WANT=1
+  [ "$WANT" -gt 12 ] && WANT=12
+else
+  WANT="$((CORES - 2))"
+  [ "$WANT" -lt 3 ] && WANT=3
+  [ "$WANT" -gt 6 ] && WANT=6
+fi
 
 echo "=== 증설 후 마무리 ==="
 echo "코어 $CORES개 감지 → 워커 $WANT개로 맞춘다"
