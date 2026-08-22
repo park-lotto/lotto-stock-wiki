@@ -40,6 +40,14 @@
       --accent:#12b886;--accent2:#0ca678;--fire:#e0524a;--ok:#12b886;--gold:#b8860b;
       --inset:#eef7f3;--sel-bg:linear-gradient(90deg,#d8f2ea,#eafaf5);--sel-fg:#0a7d66;
       --grad:linear-gradient(135deg,#19c9ab,#0a8f79);--hover:#eef7f3;color-scheme:light;}
+    /* ★9단계 최종렌더 미리보기 폭(2026-08-23 사장님 "최종렌더 크기랑 썸네일 크기 동일하게").
+       완성영상 300px / 썸네일 200px로 **따로** 박혀 있어 두 칸 높이가 안 맞았다(9:16이라
+       폭이 다르면 높이가 1.5배 차이난다). 값을 정하는 곳을 여기 하나로 모은다(0순위-B) —
+       마크업의 flex-basis와 각 카드의 max-width가 전부 이 값을 본다. */
+    :root{--fin-w:260px}
+    #finalVideo>*,#finalThumb>*{max-width:var(--fin-w)}
+    /* 두 칸 모두 9:16 — 썸네일 이미지가 세로로 길어도 영상과 같은 높이에서 멈춘다. */
+    #finalVideo video,#finalThumb img{width:100%;max-width:var(--fin-w);display:block}
     *{box-sizing:border-box}
     /* 시니어 타이포: 본문 12~13 지배 → 15px 기준 상향(인라인 12px 지정은 그대로, 미지정 텍스트가 커진다) */
     body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic',system-ui,sans-serif;margin:0;min-height:100vh;font-size:15px}
@@ -1821,13 +1829,13 @@
       <div id="inpockBox" style="margin-bottom:12px"></div>
       <!-- ◀ 좌: 미리보기(9:16, 2단계 미리보기와 같은 자리 규약) / 우: 렌더 버튼·상태·내보내기 -->
       <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start">
-        <div style="flex:0 1 300px;min-width:240px">
+        <div style="flex:0 1 var(--fin-w);min-width:var(--fin-w)">
           <div class="hint" style="margin-bottom:6px">🪞 완성 영상 (9:16)</div>
           <div id="finalVideo"></div>
         </div>
         <!-- 🖼 6단계에서 고른 썸네일이 여기로 온다(2026-08-04). 예전엔 골라도 소비하는 곳이
              0곳이라 최종 화면에서 확인할 길이 없었다 → 카톡 전송도 영상만 갔다. -->
-        <div style="flex:0 1 200px;min-width:160px">
+        <div style="flex:0 1 var(--fin-w);min-width:var(--fin-w)">
           <div class="hint" style="margin-bottom:6px">🖼 썸네일 (커버)</div>
           <div id="finalThumb"></div>
         </div>
@@ -8723,7 +8731,7 @@ async function refreshFinalThumb(){
     { const cb=document.getElementById('thumbIntro'); if(cb && d) cb.checked=!!d.intro; }
     if(d && d.ok && d.url){
       FINAL_THUMB_URL=d.url;
-      box.innerHTML=`<img src="${esc(d.url)}" alt="선택 썸네일" style="width:100%;max-width:200px;border-radius:12px;display:block;border:2px solid var(--accent2)">`
+      box.innerHTML=`<img src="${esc(d.url)}" alt="선택 썸네일" style="border-radius:12px;border:2px solid var(--accent2)">`
         + `<a class="btn-prev" style="display:block;margin-top:6px;padding:7px;text-align:center;text-decoration:none;font-size:12px" href="${esc(d.url)}" download="${esc(d.name||'thumb.png')}">⬇ PNG 저장</a>`
         + `<div class="hint" style="margin-top:6px;line-height:1.5">QR로 폰에 보낼 때 <b>영상과 함께</b> 전송됩니다</div>`;
       _syncExport(); return;
@@ -8752,7 +8760,7 @@ async function refreshFinal(){
   try{
     const d=await (await fetch('/api/mix/status/'+encodeURIComponent(MIX_JOB))).json();
     if(d && d.status==='done'){
-      if(fv) fv.innerHTML=`<video controls src="/api/mix/video/${esc(MIX_JOB)}" style="max-width:300px;width:100%;border-radius:12px"></video>`;
+      if(fv) fv.innerHTML=`<video controls src="/api/mix/video/${esc(MIX_JOB)}" style="border-radius:12px"></video>`;
       renderExport({rendered:true});
     } else { _finalIdleSlot(); }
   }catch(e){ _finalIdleSlot(); }
@@ -8963,7 +8971,7 @@ function _rfTick(){
 function _finalIdleSlot(){
   const fv=document.getElementById('finalVideo');
   if(fv && !fv.querySelector('video') && !document.getElementById('rfBar'))
-    fv.innerHTML=`<div style="aspect-ratio:9/16;max-width:300px;border:2px dashed var(--line);border-radius:16px;background:var(--inset);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--sub);text-align:center;padding:20px">
+    fv.innerHTML=`<div style="aspect-ratio:9/16;border:2px dashed var(--line);border-radius:16px;background:var(--inset);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--sub);text-align:center;padding:20px">
       <div style="font-size:30px;opacity:.5">🎬</div>
       <div style="font-size:12px;line-height:1.6">최종 렌더를 누르면<br>완성 영상이 여기서 재생돼요</div>
     </div>`;
@@ -8974,7 +8982,7 @@ async function renderFinal(){
   if(btn){ if(btn.dataset.orig==null) btn.dataset.orig=btn.innerHTML; btn.disabled=true; btn.innerHTML='<span class="skm-spin">🔄</span> 렌더 중…'; }
   const st=document.getElementById('finalStatus'); if(st){ st.className='match-progress'; st.innerHTML='<span class="dot"></span><span>렌더 준비 중…</span>'; }
   // 렌더 전 '미리보기 자리' — 완성 영상이 여기서 나온다(2단계 미리보기와 동일 연출)
-  document.getElementById('finalVideo').innerHTML=`<div style="aspect-ratio:9/16;max-width:300px;border:2px solid var(--line);border-radius:16px;background:var(--inset);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:var(--sub);text-align:center;padding:20px">
+  document.getElementById('finalVideo').innerHTML=`<div style="aspect-ratio:9/16;border:2px solid var(--line);border-radius:16px;background:var(--inset);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:var(--sub);text-align:center;padding:20px">
     <div id="rfEmoji" style="font-size:38px;animation:rfBounce 1s ease-in-out infinite">🎬</div>
     <div style="font-size:15px;font-weight:800;color:var(--fg)">숏템메이커 최종 렌더 중</div>
     <div id="rfStage" style="font-size:12px;color:var(--sub)">준비 중…</div>
@@ -9002,7 +9010,7 @@ async function pollFinal(){
       const rf=document.getElementById('rfStage'); if(rf) rf.textContent=(MIX_LABEL[d.status]||d.status);   // 박스 안 단계 라벨도 동적 갱신
     }
     if(d.status==='done'){ clearInterval(MIX_POLL); clearInterval(_rfTimer);
-      document.getElementById('finalVideo').innerHTML=`<video controls autoplay muted src="/api/mix/video/${esc(MIX_JOB)}" style="max-width:300px;border-radius:12px;margin-top:10px"></video>`;
+      document.getElementById('finalVideo').innerHTML=`<video controls autoplay muted src="/api/mix/video/${esc(MIX_JOB)}" style="border-radius:12px;margin-top:10px"></video>`;
       _finalRenderRestore('✅ 렌더 완료 — 완성 영상이 재생됩니다');
       renderExport({rendered:true});     // 렌더 완료 → 완성 MP4 다운로드 버튼까지
       refreshFinalThumb();               // 썸네일 카드·버튼 라벨도 이때 맞춘다(렌더 전엔 없었다)
