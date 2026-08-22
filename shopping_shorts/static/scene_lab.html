@@ -112,6 +112,16 @@ h1{font-size:16px;margin:0;font-weight:700}
 .tbcut .pk{position:absolute;left:4px;bottom:6px;width:16px;height:16px;cursor:pointer;
   accent-color:var(--warn);margin:0}
 .tbcut.picked img{border-color:var(--warn);box-shadow:0 0 0 2px var(--warn) inset}
+/* ★안 나오는 조각(2026-08-23 사장님 "안보이지만 계속 쌓이는거같은데").
+   담긴 목록(lists[i])과 화면에 뜨는 컷(planClips 결과)이 달라서, 자막 길이를 넘겨
+   담은 조각은 **머리글 초에는 더해지는데 썸네일이 없어** 보이지도 빼지도 못했다.
+   → 흐리게라도 그려서 '있다'는 걸 보이게 하고, 두 번 클릭으로 뺄 수 있게 한다. */
+.tbcut.unused img{opacity:.32;filter:grayscale(.7);border-style:dashed}
+.tbcut.unused .s{background:#0009;color:#bbb}
+.tbcut.unused .n{background:rgba(150,150,150,.75);color:#111}
+.tbcut .off{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  background:rgba(0,0,0,.78);color:#ffd479;font-size:9.5px;font-weight:800;
+  padding:2px 5px;border-radius:4px;white-space:nowrap;pointer-events:none;letter-spacing:-.2px}
 .tbeat.empty{border-style:dashed}
 .tbempty{color:var(--dim);font-size:11.5px;padding:14px 10px}
 /* ★[미리보기 | 영상조각] 좌우(2026-08-16 사장님). 영상 조각이 아래로 길게 늘어지는 게
@@ -1327,6 +1337,29 @@ function renderBand(){
                     onclick="event.stopPropagation();togglePick(${i}, '${c.seg_id}', this.checked)"
                     ondblclick="event.stopPropagation()"></div>`).join('')
       : `<div class="tbempty">장면을 담아주세요</div>`;
+    // ★담겼지만 화면엔 안 나오는 조각을 흐리게 이어 붙인다(2026-08-23).
+    //   planClips는 자막 길이를 채우면 거기서 멈춘다 — 남은 id는 컷이 하나도 안 생겨
+    //   썸네일이 없었다. 그래서 머리글 초만 오르고(have) 보이지도 빼지도 못했다.
+    //   ★목록의 주인은 lists[i] 그대로다. 여기선 '그리기만' 한다(0순위-B).
+    const usedIds = new Set(clips.map(c => c.seg_id));
+    const unusedCuts = (lists[i] || []).filter(id => !usedIds.has(id)).map(id => {
+      const seg = DATA.segments[id] || {};
+      const why = tooShort(id) ? '너무 짧음' : '자리 없음';
+      return `<div class="tbcut unused ${isPicked(i, id) ? 'picked' : ''}"
+             draggable="true"
+             ondragstart="event.stopPropagation();bandDragStart(${i}, '${id}', event)"
+             ondragend="itemDragEnd()"
+             ondragover="if(dragFrom){event.preventDefault();event.dataTransfer.dropEffect='move';}"
+             ondrop="bandDrop(${i}, '${id}', event)"
+             ondblclick="event.stopPropagation();dropCutFromBand(${i}, '${id}')"
+             title="${segMark(id)} · ${seg.label || ''} — 담겨 있지만 이 칸에서는 화면에 안 나옵니다(${why}). 두 번 클릭하면 뺍니다. 다른 칸으로 끌어 옮길 수도 있어요.">
+             <img src="${SL.thumb(id)}" loading="lazy"><span class="n">${segMark(id)}</span
+             ><span class="s">${effLen(id).toFixed(1)}</span><span class="off">안 나옴</span
+             ><input type="checkbox" class="pk" title="빼려면 체크"
+                    ${isPicked(i, id) ? 'checked' : ''}
+                    onclick="event.stopPropagation();togglePick(${i}, '${id}', this.checked)"
+                    ondblclick="event.stopPropagation()"></div>`;
+    }).join('');
     // 담기·빼기는 기존 기능(add/delSeg)을 그대로 쓴다 — 아래 소스에서 끌어다 놓거나 두 번 클릭.
     return `<div class="tbeat ${clips.length ? '' : 'empty'} ${playKey === 'beat:' + i ? 'on' : ''} ${sel === i ? 'sel' : ''}"
                  onclick="selBeat(${i});playBeatHere(${i}, event)"
@@ -1368,7 +1401,7 @@ function renderBand(){
               : '이 칸의 대사를 AI가 읽고, 그 말이 실제로 보이는 화면을 골라 담습니다'}"
               onclick="autoFill(${i})">${AUTOADD[i] ? `↩ 담은 ${AUTOADD[i].length}장 빼기` : '✨ 채우기'}</button>
           </span></div>
-        <div class="tbcuts">${cuts}</div>
+        <div class="tbcuts">${cuts}${unusedCuts}</div>
         <!-- ★썸네일 아래 대본 — ✏대본수정을 누르면 여기가 편집칸이 된다(2026-08-17 사장님
              "누르면 썸네일아래 대본 수정되게"). 읽기 전용일 때는 종전과 같은 모양이다. -->
         <div class="tbsay ${narrOf(i) ? '' : 'none'}${NARR_EDIT[i] ? ' editing' : ''}"
@@ -1388,7 +1421,12 @@ function renderBand(){
   }).join('');
   row.innerHTML = html;
   const t = document.getElementById('tbtot');
-  if (t) t.textContent = `· 총 ${total.toFixed(1)}초 · 컷 ${row.querySelectorAll('.tbcut').length}개`;
+  // ★'안 나옴' 카드는 컷 수에서 뺀다(2026-08-23). .tbcut을 그대로 세면 화면에 안 나오는
+  //   조각까지 컷으로 잡혀 "컷 13개"가 부풀고, 총 초(total)와도 아귀가 안 맞는다.
+  const shown = row.querySelectorAll('.tbcut:not(.unused)').length;
+  const hidden = row.querySelectorAll('.tbcut.unused').length;
+  if (t) t.textContent = `· 총 ${total.toFixed(1)}초 · 컷 ${shown}개`
+    + (hidden ? ` · 안 나오는 조각 ${hidden}개` : '');
 }
 
 function render(){

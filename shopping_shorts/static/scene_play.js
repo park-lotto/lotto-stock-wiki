@@ -302,12 +302,59 @@ function planClips(segIds, ttsDur, spread){
     clips.push({seg_id: seg.seg_id, video_id: seg.video_id, start: seg.start, dur: take});
     filled += take;
   }
-  const short = ttsDur - filled;
+  let short = ttsDur - filled;
   if (short > EPS && clips.length){
     // spread(늘려 채우기 토글 ON): 부족분을 마지막 컷에 몰지 않고 전 컷에 비례로 나눈다.
     // 컷마다 조금씩 길어질 뿐 라운드로빈 결과(컷 수·순서·시작점)는 그대로다.
-    if (spread && filled > EPS) clips.forEach(c => { c.dur *= ttsDur / filled; });
-    else clips[clips.length - 1].dur += short;   // 그 장면이 계속 나온다
+    if (spread && filled > EPS){
+      clips.forEach(c => { c.dur *= ttsDur / filled; });
+    } else {
+      // ★부족분은 **소스 원본의 뒷부분 실프레임**으로 먼저 메운다(2026-08-23 사장님
+      //   "미리보기가 좀더 정확하게 보여야 조립을 하는데 헷갈리지 않는다").
+      //   종전엔 무조건 마지막 컷을 늘려서(=그 화면이 멈춘 듯) 보여줬는데,
+      //   실제 렌더(video_assemble._plan_beat_clips)는 릴에 남은 실프레임을 1배속으로
+      //   이어 붙인다. 그래서 미리보기만 어색하고 결과물은 멀쩡한 '거짓 경고'가 났다.
+      //   ★규칙을 새로 만들지 않는다 — 서버의 1·2순위를 그대로 옮긴다(0순위-B).
+      const srcDur = (typeof DATA === 'object' && DATA && DATA.src_duration) || {};
+      // 1순위: 마지막 컷이 쓰던 소스에 남은 뒷부분을 그 컷에 이어 붙인다.
+      const last = clips[clips.length - 1];
+      const lastTotal = +srcDur[last.video_id] || 0;
+      if (lastTotal > 0){
+        const room = Math.max(0, lastTotal - (last.start + last.dur));
+        const ext = Math.min(short, room);
+        if (ext > EPS){ last.dur += ext; short -= ext; }
+      }
+      // 2순위: 담긴 소스들의 '아직 안 튼 뒷부분'을 앞으로만 밀며 새 컷으로 붙인다.
+      //   같은 창을 다시 틀지 않으므로 되풀이가 아니라 새 화면이다.
+      if (short > EPS){
+        const head = {};
+        clips.forEach(c => {
+          const e = c.start + c.dur;
+          if (e > (head[c.video_id] || 0)) head[c.video_id] = e;
+        });
+        const chunk = MAX_SHOT > EPS ? MAX_SHOT : short;
+        let guard = 0;
+        while (short > EPS && guard++ < 500){
+          let moved = false;
+          for (const seg of segments){
+            if (short <= EPS) break;
+            const total = +srcDur[seg.video_id] || 0;
+            if (!total) continue;
+            const h = head[seg.video_id] != null ? head[seg.video_id] : seg.end;
+            const avail = total - h;
+            if (avail <= EPS) continue;
+            const take = Math.min(short, chunk, avail);
+            if (take <= EPS) continue;
+            clips.push({seg_id: seg.seg_id, video_id: seg.video_id, start: h, dur: take, tail: true});
+            head[seg.video_id] = h + take;
+            short -= take; moved = true;
+          }
+          if (!moved) break;
+        }
+      }
+      // 3순위: 쓸 실프레임이 아예 없으면 그때만 마지막 컷을 늘린다(=화면 정지).
+      if (short > EPS) clips[clips.length - 1].dur += short;
+    }
   }
   return clips;
 }
