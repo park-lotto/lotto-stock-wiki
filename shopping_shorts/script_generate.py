@@ -393,6 +393,7 @@ def _sources_product(sources):
     return ""
 
 def generate_one_style(sources, style, target_seconds=30, bank_context="", facts_block="",
+                       seed="",
                        note=None):
     """스타일 1개로 대본 1안. → {beats, script, hook, checks, passed, tries, style_id, style_name}
 
@@ -408,7 +409,9 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
     from shopping_shorts import bank_assemble, script_gate
 
     seconds = max(5, min(int(target_seconds or 30), 90))
-    head = bank_assemble.style_block(style, seconds=seconds)
+    # ★seed(job_id)를 넘겨 문장틀 순서를 job마다 돌린다 — 안 넘기면 항상 같은
+    #   순서라 모델이 앞쪽 틀에 쏠린다(실측: 훅 10개 중 6개가 한 번도 안 나옴).
+    head = bank_assemble.style_block(style, seconds=seconds, seed=seed)
     if not head:
         return None
     base = (_MIX_PROMPT.format(sources=_mix_source_block((sources or [])[:SOURCE_MAX]),
@@ -730,7 +733,7 @@ def regen_one_beat(sources, style, role, beats, template="", target_seconds=30,
 
 
 def generate_by_styles(sources, styles, target_seconds=30, bank_context="", facts_block="",
-                       reasons=None):
+                       reasons=None, seed=""):
     """스타일 목록(보통 2개) → 각 1안. 실패한 스타일은 건너뛴다(하나라도 나오면 화면은 산다).
 
     facts_block은 그대로 흘려보낸다 — 빈 값이면 기존 경로(회귀 0).
@@ -746,7 +749,7 @@ def generate_by_styles(sources, styles, target_seconds=30, bank_context="", fact
         note = {} if reasons is not None else None
         try:
             d = generate_one_style(sources, st, target_seconds, bank_context, facts_block,
-                                   note=note)
+                                   seed=seed, note=note)
         except Exception as e:      # noqa: BLE001 — 한 스타일 실패로 나머지를 죽이지 않는다
             print(f"generate_by_styles 실패(style={st.get('id')}): {e}")
             if reasons is not None:
