@@ -8498,6 +8498,34 @@ def _admin_page(request: Request):
                         media_type="text/html; charset=utf-8")
 
 
+# ── 관측판(2026-08-22) — 1기 100명을 받기 전에 "얼마나 버티나"를 숫자로 남긴다 ──
+#    계산은 이미 했다. 문제는 계산이 맞았는지 알 방법이 없다는 것이었다.
+#    판단이 필요한 지표는 셋뿐이다: 동시 렌더 최대치 · 디스크 여유 · 월 송신량.
+@app.get("/ops", response_class=HTMLResponse)
+def _ops_page(request: Request):
+    if not _is_admin(getattr(request.state, "customer_id", None)):
+        return HTMLResponse("<h2 style='font-family:sans-serif'>관리자 전용입니다</h2>",
+                            status_code=403)
+    return FileResponse(Path(__file__).parent / "static" / "ops.html",
+                        media_type="text/html; charset=utf-8")
+
+
+@app.get("/api/admin/capacity")
+def _api_capacity(request: Request, days: int = 14):
+    """관측판 데이터. 지금 상태(실시간 1회 표본) + 날짜별 최대치 + 판정 한 줄."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import capacity_watch
+    try:
+        now = capacity_watch.sample(DB_PATH)     # 열 때마다 한 점 더 찍는다(공짜에 가깝다)
+    except Exception as e:      # noqa: BLE001 — 관측이 서비스를 죽이면 안 된다
+        return {"ok": False, "error": str(e)}
+    return {"ok": True, "now": now,
+            "daily": capacity_watch.daily(DB_PATH, days=max(1, min(days, 60))),
+            "verdict": capacity_watch.verdict(DB_PATH, cores=now.get("cores"))}
+
+
 @app.get("/insta_fill_comment.user.js", include_in_schema=False)
 def _serve_userscript():
     """댓글 자동채우기 유저스크립트 — Tampermonkey가 이 URL로 설치·자동업데이트한다.
