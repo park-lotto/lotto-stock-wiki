@@ -2934,16 +2934,31 @@ function bindFrameHandle(el, inputId){
     const isTop=(inputId==='frBar');
     const pt=e=>(e.touches&&e.touches[0])?e.touches[0].clientY:e.clientY;
     const y0=pt(ev), v0=parseInt(input.value||0,10);
+    // ★끄는 동안엔 **화면만** 고친다(2026-08-23 사장님 "이동이 안됨 / 너무 느리게 로딩").
+    //   예전엔 move가 곧장 frUpdate()를 불렀는데, 그 끝이 renderTemplatePreview →
+    //   `el.src=frameUrl(...)`이라 **마우스가 1px 움직일 때마다 frame.png를 새로 받았다**.
+    //   브라우저는 진행 중이던 요청을 버리고 다시 받으므로 끄는 내내 그림이 한 번도
+    //   안 앉는다 — 손잡이는 실제로 움직이는데 화면이 안 따라와 "이동이 안 된다"로 보였다.
+    //   (saveHeadcopy의 POST도 픽셀마다 나갔다. 그쪽은 디바운스로 따로 막았다.)
+    //   그래서 서버를 때리는 일은 손 뗄 때 한 번만 하고, 끄는 중엔 입력칸 값과
+    //   손잡이 위치만 즉시 갱신한다. 값의 주인은 여전히 입력칸 하나다(0순위-B).
     const move=e=>{
+      if(e.cancelable) e.preventDefault();    // 모바일에서 끌 때 화면이 같이 스크롤되는 것 방지
       const dy=(pt(e)-y0)*scale;              // 화면 이동량 → 영상 px
       // 위 띠는 아래로 끌면 커지고, 아래 띠는 위로 끌면 커진다(사장님 지시 그대로).
       const v=Math.round((isTop ? v0+dy : v0-dy)/10)*10;
       input.value=Math.max(0, Math.min(FR_MAX_BAR, v));
-      frUpdate();
+      // 값을 STATE에 즉시 반영해야 syncFrameHandles가 새 위치를 읽는다(그림은 안 건드림).
+      const f=STATE.deco&&STATE.deco.template&&STATE.deco.template.frame;
+      if(f){ f[isTop?'bar_h':'bottom_h']=parseInt(input.value,10); }
+      const lbl=document.getElementById(isTop?'frBarVal':'frBottomVal');
+      if(lbl) lbl.textContent=input.value+'px';
+      syncFrameHandles();                     // 손잡이는 손끝을 따라온다
     };
     const up=()=>{
       document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',up);
       document.removeEventListener('touchmove',move); document.removeEventListener('touchend',up);
+      frUpdate();                             // 그림 재요청·저장은 여기서 딱 한 번
     };
     document.addEventListener('mousemove',move); document.addEventListener('mouseup',up);
     document.addEventListener('touchmove',move,{passive:false}); document.addEventListener('touchend',up);
@@ -4004,7 +4019,18 @@ async function ensureCleanRegions(){
     if(d && d.clean_regions) CLEAN_REGIONS=d.clean_regions; }catch(e){}
   applyErasedRegion();
 }
-async function saveHeadcopy(){
+// ★저장은 디바운스한다(2026-08-23). 슬라이더·드래그처럼 값이 연속으로 바뀌는 곳에서
+//   호출되므로, 안 묶으면 픽셀마다 POST가 나가 서버·회선을 먹고 미리보기까지 밀린다.
+//   같은 파일 saveWork(_workTimer)가 이미 쓰는 규약을 그대로 따른다(0순위-B).
+//   ⚠️떠나기 직전 등 "지금 당장" 저장해야 하면 saveHeadcopy(true)로 부른다.
+let _hcSaveTimer=null;
+function saveHeadcopy(now){
+  clearTimeout(_hcSaveTimer); _hcSaveTimer=null;
+  if(now) return _pushHeadcopy();
+  _hcSaveTimer=setTimeout(_pushHeadcopy, 400);
+}
+async function _pushHeadcopy(){
+  _hcSaveTimer=null;
   if(!MIX_JOB) return;
   try{ await fetch('/api/produce/mix/settings',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({job_id:MIX_JOB, headcopy:STATE.headcopy, caption_style:STATE.captionStyle, deco:STATE.deco})}); }catch(e){}
@@ -8984,7 +9010,9 @@ async function renderFinal(){
     <div style="font-size:11px;opacity:.45">끝나면 여기서 바로 재생돼요</div>
   </div>`;
   _rfStart=Date.now(); clearInterval(_rfTimer); _rfTimer=setInterval(_rfTick,1000); _rfTick();
-  await saveHeadcopy();   // 헤드카피 설정을 job에 반영 후 렌더
+  // ★반드시 **즉시**(true) 저장한다 — 디바운스에 걸린 채로 렌더를 시작하면 아직 안 올라간
+  //   설정으로 구워진다. saveHeadcopy는 400ms 디바운스라 인자 없이 부르면 await해도 안 기다린다.
+  await saveHeadcopy(true);   // 헤드카피 설정을 job에 반영 후 렌더
   // 썸네일 인트로 체크는 렌더 요청과 **같이** 보낸다 — 따로 저장하는 경로를 만들면
   // '체크했는데 안 붙었다'가 난다(저장 실패를 아무도 모른다).
   const _intro = !!(document.getElementById('thumbIntro')||{}).checked;
