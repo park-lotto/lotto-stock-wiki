@@ -614,3 +614,63 @@ def test_parse_lens_locales_잡값을_걸러낸다():
     assert appmod._parse_lens_locales("") == []
     assert appmod._parse_lens_locales("garbage,,:,ko:") == []
     assert appmod._parse_lens_locales("  ko:kr  ") == [("ko", "kr")]
+
+
+# ── 검색어 소재 보강 (2026-08-22 사장님 "썸네일 캡션 대본을 빠르게 스캔해서") ──
+# 왜: 검색어가 **썸네일 1장만** 보고 만들어져 제품을 잘못 짚었다(실측 3건 중 2건:
+#     다이소 바닥보수제→"스틱청소기", 과탄산소다→"이염방지시트").
+#     캡션은 reel_history엔 거의 비어 있고(300건 중 1건) source_enrichment에 1,260건
+#     있는데 **아무도 안 읽고 있었다**. 대본(script_extracts)도 마찬가지.
+
+def test_lens_소재수집_캡션이_비면_DB에서_채운다(tmp_path, monkeypatch):
+    """프론트가 빈 캡션을 보내도 서버가 DB(source_enrichment)에서 찾아 쓴다."""
+    monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
+    st = Store(str(tmp_path / "t.db"))
+    st.upsert_enrichment("https://www.instagram.com/reel/AAA/", "instagram",
+                         {"caption": "다이소 가면 이거 꼭 사오세요 바닥 찍힘 복구"},
+                         "ok", "2026-08-22T00:00:00")
+    got = appmod._lens_source_text("https://www.instagram.com/reel/AAA/", "", store=st)
+    assert "다이소" in got and "바닥 찍힘" in got
+
+
+def test_lens_소재수집_대본이_있으면_함께_쓴다(tmp_path, monkeypatch):
+    """★대본에만 있는 제품명이 검색어를 살린다(실측: '과탄산소다'는 대본에만 있었다)."""
+    monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
+    st = Store(str(tmp_path / "t.db"))
+    st.save_script("BBB", {"full_text": "흰 양말 누렇게 된 거 과탄산소다 한 스푼이면 됩니다"})
+    got = appmod._lens_source_text("https://www.instagram.com/reel/BBB/", "", store=st)
+    assert "과탄산소다" in got
+
+
+def test_lens_소재수집_프론트캡션이_있으면_그것도_쓴다(tmp_path, monkeypatch):
+    """프론트가 준 캡션을 버리지 않는다 — DB에 없을 때 유일한 단서다."""
+    monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
+    st = Store(str(tmp_path / "t.db"))
+    got = appmod._lens_source_text("https://x/reel/CCC/", "프론트가 준 캡션", store=st)
+    assert "프론트가 준 캡션" in got
+
+
+def test_lens_소재수집_아무것도_없으면_빈문자(tmp_path, monkeypatch):
+    """DB에도 없고 프론트도 안 주면 빈 문자열 — 옛 동작(썸네일만) 그대로."""
+    monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
+    st = Store(str(tmp_path / "t.db"))
+    assert appmod._lens_source_text("https://x/reel/NONE/", "", store=st) == ""
+
+
+def test_lens_소재수집_길이를_자른다(tmp_path, monkeypatch):
+    """대본이 길면 프롬프트가 비대해진다 — 상한을 둔다(비용·지연)."""
+    monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
+    st = Store(str(tmp_path / "t.db"))
+    st.save_script("LONG", {"full_text": "가" * 5000})
+    got = appmod._lens_source_text("https://x/reel/LONG/", "", store=st)
+    assert 0 < len(got) <= appmod._LENS_SRC_MAX
+
+
+def test_lens_소재수집_DB오류여도_죽지_않는다(tmp_path, monkeypatch):
+    """보강은 부가기능이다 — DB가 터져도 렌즈 검색은 살아야 한다."""
+    monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
+
+    class _Boom:
+        def get_enrichment(self, *a, **k): raise RuntimeError("db down")
+        def get_script(self, *a, **k): raise RuntimeError("db down")
+    assert appmod._lens_source_text("https://x/reel/X/", "원본캡션", store=_Boom()) == "원본캡션"

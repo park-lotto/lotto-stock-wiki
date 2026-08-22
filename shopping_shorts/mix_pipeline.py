@@ -721,6 +721,39 @@ def _edl_empty_reason(source_scripts, plan):
             " — Gemini 응답이 비었거나(키 소진·차단·과부하) 편집안 파싱에 실패했습니다.")
 
 
+def _owned_job(fn):
+    """워커가 **누구 작업인지** 알고 돌게 한다.
+
+    ★왜 필요한가: 제미나이 키를 고르는 쪽(keyroute.gemini_keys)은 인자로 cid를
+      못 받는다 — 호출 체인이 3~4겹이라 시그니처를 20곳 넘게 고쳐야 하기 때문이다.
+      대신 keyctx에 담아두고 그쪽이 읽는다. 워커는 HTTP 미들웨어를 안 거치고
+      별도 스레드에서 도니까(contextvar는 스레드마다 따로) 여기서 직접 열어준다.
+
+    안 열면 0(사장님)으로 떨어진다 — 남의 키를 쓰는 일은 생기지 않는다.
+    """
+    import functools
+    import inspect
+
+    sig = inspect.signature(fn)
+
+    @functools.wraps(fn)
+    def wrap(*a, **kw):
+        from shopping_shorts import keyctx
+        cid = 0
+        try:
+            b = sig.bind(*a, **kw)
+            b.apply_defaults()
+            cid = _job_customer_id(b.arguments.get("db_path"),
+                                   b.arguments.get("job_id")) or 0
+        except Exception:      # noqa: BLE001 — 주인을 못 알아내도 본작업은 돌아야 한다
+            pass
+        with keyctx.owner(cid):
+            return fn(*a, **kw)
+
+    return wrap
+
+
+@_owned_job
 def run_mix_job(job_id, db_path, work_root):
     """다운로드→추출→EDL→TTS. 완료 시 status='ready_for_review'."""
     # 이 job 안에서 나가는 모든 Gemini 콜에 job_id·customer_id를 붙인다(2026-08-16).
@@ -1332,6 +1365,7 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     store.update_mix_job(job_id, edit_plan=plan, status="ready_for_review")
 
 
+@_owned_job
 def retype_mix_job(job_id, video_type, db_path, work_root):
     """사용자가 감지된 영상 유형을 바꾸면, 저장된 extract로 EDL+TTS만 재생성한다
     (재다운로드·재추출 없음 — 방식3의 '확인/변경' 경로, 설계 §3-6)."""
@@ -1544,7 +1578,7 @@ def _ensure_clean_sources(store, job, job_id, work, key, customer_id=0):
     """clean_sources 맵을 채워 반환. 이미 있고 파일이 존재하면 스킵(재과금 0).
     각 스레드는 remove_subtitles만 하고 경로를 반환 → DB 저장은 취합 후 메인에서 1회(경합 없음).
 
-    ★돈이 나가는 함수다 — 청소할 소스 1편당 VMake 1콜(실비용 500원)이고
+    ★돈이 나가는 함수다 — 청소할 소스 1편당 VMake 1콜(50크레딧)이고
       여기서 **선차감**한다(_charge_clean). 자막제거의 유일한 계량 지점이라
       run_clean_sources·run_render 어느 쪽으로 들어와도 여기를 지난다."""
     source_map = _resolve_sources(job, Path(work))
@@ -1581,6 +1615,7 @@ def _ensure_clean_sources(store, job, job_id, work, key, customer_id=0):
     return cached
 
 
+@_owned_job
 def assemble_clean_video(job_id, db_path, work_root):
     """자막제거(2단계) 후 '자막 없는 조립본'(clean_video_path)을 만들어 DB에 저장하고 경로 반환.
     VMake는 이미 탔으므로 clean_fn=None으로 청소된 소스를 재조립만 한다(추가과금 0). edit_plan·
@@ -1614,6 +1649,7 @@ def assemble_clean_video(job_id, db_path, work_root):
         return None
 
 
+@_owned_job
 def run_clean_sources(job_id, db_path, work_root):
     """2단계: 각 소스 원본을 VMake로 자막제거해 clean_sources에 캐시.
     BackgroundTasks로 불리므로 예외를 밖으로 안 던진다(clean_status로만 알린다)."""
@@ -1650,6 +1686,7 @@ def run_clean_sources(job_id, db_path, work_root):
     assemble_clean_video(job_id, db_path, work_root)
 
 
+@_owned_job
 def run_preview(job_id, db_path, work_root):
     """1단계 미리보기: 유료 자막제거(VMake)·꾸미기 없이 믹스+음성+기본자막만 렌더.
 
@@ -1727,6 +1764,7 @@ def _thumb_intro_png(job, thumb):
     return last if last.exists() else None
 
 
+@_owned_job
 def run_render(job_id, db_path, work_root):
     """확인된 EDL을 최종 mp4로 렌더. subtitle_removal이 켜져 있으면 믹스 후
     VMake로 원본 자막을 제거하고 그 위에 우리 자막을 굽는다. 완료 시 status='done'."""

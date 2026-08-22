@@ -20,6 +20,7 @@ from google.genai import types
 
 from shopping_shorts import comment_gen, gemini_audit
 from shopping_shorts.store import PATTERN_BUCKETS
+from shopping_shorts import keyroute
 
 _MODEL = comment_gen._MODEL
 
@@ -84,7 +85,7 @@ def _vault_fallback(prompt, schema, max_tries=4):
     """전용 SHORTS 키풀이 비었을 때 key_vault 예비키풀(general)로 폴백. edit_plan._vault_call과 동일 경로.
     서버에 SHORTS_GEMINI_KEYS 미설정이어도 부품은행 추출이 도는 핵심 수정."""
     kv = comment_gen.key_vault
-    keys = kv.get_live_keys_cascade("general")
+    keys = keyroute.gemini_keys("general")
     if not keys:
         return None
     for key in keys[:max_tries]:

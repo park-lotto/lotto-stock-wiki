@@ -2714,6 +2714,9 @@ async function fetchLensCnKeywords(shortcode, caption, blob, append){
     const fd=new FormData();
     if(blob) fd.append('frame', blob, 'f.jpg');
     if(caption) fd.append('source_caption', caption);
+    // ★원본 주소를 함께 보낸다(2026-08-22) — 서버가 이 주소로 DB에서 캡션·대본을 찾아
+    //   검색어 소재를 채운다. 카드가 들고 있는 캡션은 거의 항상 비어 있다(실측 300건 중 1건).
+    try{ const _src=findItem(shortcode); if(_src && _src.url) fd.append('source_url', _src.url); }catch(e){}
     // 🔄 다른 검색어: 이미 보여준 후보를 넘겨 '겹치지 않는 다른 각도'로 받는다(2026-08-14).
     if(append && st0) fd.append('exclude', (st0.cnCands||[]).map(c=>[c.ko,c.zh].filter(Boolean).join('\n')).join('\n'));
     const d=await (await fetch('/api/lens/cn/keywords',{method:'POST',body:fd})).json();
