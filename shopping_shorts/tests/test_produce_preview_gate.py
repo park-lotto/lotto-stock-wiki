@@ -13,6 +13,7 @@ no-op으로 스텁해 **startPreview·pollPreview가 한 줄도 실행되지 않
 비동기 배선을 실제로 구동한다.
 """
 import pathlib
+import re
 import shutil
 import subprocess
 
@@ -424,13 +425,26 @@ def test_preview_gate_scenarios(name, scenario, tmp_path):
 
 
 def test_preview_video_is_muted_by_default():
-    """★사장님 지시: 음소거가 기본값. 열면 조용하고, 원하면 켠다(스펙 §4.2)."""
+    """★사장님 지시: 음소거가 기본값. 열면 조용하고, 원하면 켠다(스펙 §4.2).
+
+    2026-08-22 조정: 예전엔 `mix/preview/`의 **첫 등장** 앞 300자를 봤는데, 확정 결과를
+    장면편집 안으로 옮기면서 그 첫 등장이 URL을 조립하는 `const src = ...` 줄이 됐다
+    (video 태그는 그 아래). 위치 대신 **_renderPreviewVideo가 실제로 그리는 태그**를
+    직접 집는다 — 위아래로 줄이 늘어도 안 깨지고, 검사하려던 것은 그대로다.
+    ★확정 결과 재생 자리가 장면편집(scene_lab)으로 옮겨졌으므로 **거기 태그도** 같이
+    본다(2026-08-22). 안 그러면 이제 사장님이 실제로 보는 쪽이 검사 밖에 남는다.
+    """
     html = PRODUCE_HTML.read_text(encoding="utf-8")
-    i = html.find("mix/preview/")
-    assert i != -1, "미리보기 <video>가 없다"
-    tag = html[max(0, i - 300): i + 100]
-    assert "muted" in tag, f"미리보기 video에 muted가 없다 — 열자마자 소리가 난다: {tag[-160:]!r}"
-    assert "controls" in tag, "controls가 없다 — 음소거 해제·탐색을 못 한다"
+    assert "mix/preview/" in html, "미리보기 URL이 없다"
+    body = html.split("function _renderPreviewVideo(")[1].split("\n// 편집안")[0]
+    checked = re.findall(r"<video [^>]*>", body)
+    lab = (PRODUCE_HTML.parent / "scene_lab.html").read_text(encoding="utf-8")
+    lab_body = lab.split("function showConfirmVideo(")[1].split("\nfunction ")[0]
+    checked += re.findall(r"<video [^>]*>", lab_body)
+    assert len(checked) >= 2, f"미리보기 video를 못 찾았다(찾은 것: {checked!r})"
+    for tag in checked:
+        assert "muted" in tag, f"미리보기 video에 muted가 없다 — 열자마자 소리가 난다: {tag!r}"
+        assert "controls" in tag, f"controls가 없다 — 음소거 해제·탐색을 못 한다: {tag!r}"
 
 
 def test_preview_url_has_cache_buster():
@@ -451,7 +465,13 @@ def test_go_has_gate_guard():
     html = PRODUCE_HTML.read_text(encoding="utf-8")
     i = html.find("function go(d){")
     assert i != -1, "go() 못 찾음"
-    body = html[i: i + 320]
+    # ★2026-08-22 조정 — 지우지 말고 읽어라(단언 자체는 그대로다).
+    #   종전엔 `html[i:i+320]`으로 **글자 수 320개**를 잘라 봤다. 이건 시한폭탄이다:
+    #   go() 안의 주석이나 안내 문구가 몇 글자만 길어져도 jump(가 창 밖으로 밀려나
+    #   기능은 멀쩡한데 테스트만 깨진다(실측: 확정 버튼 삭제로 토스트 문구가 길어지자
+    #   바로 FAIL). 창 크기가 아니라 **함수 본문**을 보게 바꾼다 — 지키려는 규약
+    #   ("go는 jump로 위임한다")은 하나도 안 느슨해졌다.
+    body = html[i:].split("\nfunction ", 1)[0]
     assert "jump(" in body, f"go()가 jump()로 위임하지 않는다 — 게이트 가드를 우회할 수 있다: {body[:180]!r}"
     # jump() 자체는 여전히 stepLocked로 게이트를 지킨다(위임 대상이 가드를 갖고 있는지 확인).
     j = html.find("function jump(")

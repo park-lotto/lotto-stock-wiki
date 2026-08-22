@@ -6,6 +6,7 @@
 
 둘 다 부가기능(실패해도 서비스 자체엔 영향 없음) — 예외는 항목 단위로 삼켜서
 한 건 실패가 전체를 막지 않게 한다."""
+from pathlib import Path
 import json
 import sys
 from datetime import datetime, timezone
@@ -199,6 +200,16 @@ def run(db_path):
     n8 = _auto_register_instagram()
     print(f"daily_batch: 구조 {n1} · 통계 {n2} · 자동흡수 {n3} · perf {n4} · 스파인 {n5} · "
           f"승인 {n6} · 샤홍발굴 {n7} · 인스타발굴 {n8}")
+    # ★디스크 정리(2026-08-22) — 완성본은 남기고 옛 작업의 중간 재료만 버린다.
+    #   실측: 작업 1건당 82MB. 회원 100명이 하루 1편씩만 만들어도 한 달 246GB가
+    #   쌓여 여유 226GB를 넘긴다. 디스크가 차면 렌더·수집이 통째로 죽으므로
+    #   유지보수 배치에 함께 태운다.
+    #   ⚠️ 정리가 실패해도 배치 전체를 죽이지 않는다 — 다른 유지보수는 이미 끝났다.
+    try:
+        from shopping_shorts import disk_cleanup
+        print(disk_cleanup.run(Path(db_path).parent, store=store))
+    except Exception as e:      # noqa: BLE001
+        print(f"디스크정리 실패(무시하고 계속): {e}")
 
 
 def _auto_register_xiaohongshu():

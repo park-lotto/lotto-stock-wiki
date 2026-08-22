@@ -57,6 +57,7 @@ from shopping_shorts import mix_pipeline
 from shopping_shorts.mix_pipeline import (run_mix_job, run_render, run_preview, retype_mix_job,
                                           _source_video_id, resynth_tts_job, resynth_one_beat,
                                           run_clean_sources, _resolve_sources)
+from shopping_shorts import lens_discover
 from shopping_shorts.lens_discover import search_similar_videos, upload_frame
 from shopping_shorts import cn_search, kw_search, douyin_search, xiaohongshu_search
 from shopping_shorts import youtube_search
@@ -2367,6 +2368,40 @@ def api_wiki_subject(request: Request, shortcode: str):
     return {"ok": True, "subject": subject}
 
 
+def _gen_fail_message(reasons, asm_why=""):
+    """대본이 0개일 때 **왜**인지 화면에 말해준다(2026-08-22 신설).
+
+    종전엔 원인과 무관하게 늘 "생성 실패(키 소진 또는 응답 오류) — 잠시 후 재시도"였다.
+    실측(2026-08-22): 로그에 429·quota가 한 건도 없는데 이 문구가 떴다. 사장님은 키가
+    되살아나길 기다리며 재시도만 반복했지만, 키는 처음부터 멀쩡했으므로 영원히 안 풀린다.
+    **틀린 원인은 틀린 처방을 부른다** — 그래서 사유별로 갈라 말한다.
+
+    reasons: generate_by_styles가 채워 준 [{kind, keys, detail}, ...]
+    asm_why: 틀 조립이 실패한 이유(있으면 곁들인다 — 재료 부족일 때 진짜 원인인 경우가 있다)
+    """
+    kinds = {r.get("kind") for r in (reasons or [])}
+    if "no_keys" in kinds:
+        return ("AI 키가 하나도 안 남았습니다 — 오늘 한도를 다 썼거나 키가 잠겼습니다. "
+                "관리페이지에서 키 상태를 확인해 주세요.")
+    if "exhausted" in kinds:
+        return ("AI 키가 모두 소진됐습니다(하루 한도). 잠시 후 다시 시도하거나 "
+                "관리페이지에서 키를 확인해 주세요.")
+    if "rate_limit" in kinds:
+        return "AI 호출이 순간적으로 몰렸습니다(분당 한도) — 1~2분 뒤 다시 시도해 주세요."
+    if "api_error" in kinds:
+        det = next((r.get("detail") for r in (reasons or [])
+                    if r.get("kind") == "api_error" and r.get("detail")), "")
+        # ★키 문제가 아니다. '잠시 후 재시도'라고 말하지 않는다 — 기다려도 안 풀린다.
+        return "AI 응답 오류입니다(키 문제가 아닙니다)%s" % ((" — %s" % det) if det else "")
+    if "empty" in kinds:
+        return ("AI가 조건에 맞는 문장을 만들지 못했습니다 — 스타일을 바꾸거나 "
+                "담긴 영상(재료)을 늘려서 다시 시도해 주세요."
+                + ((" (틀 조립: %s)" % asm_why) if asm_why else ""))
+    # 여기까지 왔으면 애초에 시도조차 안 됐다(고른 스타일이 카테고리에 다 걸러진 경우 등).
+    return ("만들 수 있는 대본이 없습니다 — 고른 스타일이 이 카테고리에 맞지 않을 수 있어요."
+            + ((" (%s)" % asm_why) if asm_why else ""))
+
+
 @app.post("/api/wiki/generate")
 def api_wiki_generate(request: Request, shortcode: str, body: dict):
     """도서관 S급 1개의 구조를 빌려 새 20초 대본 초안 생성(모드 remake/transplant, 4단 요소 모드).
@@ -2527,15 +2562,22 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
             except Exception as _e:      # noqa: BLE001 — 축 판정 실패가 생성을 막으면 안 된다
                 print("축 판정 건너뜀: %s" % str(_e)[:120])
         _assembled, _asm_left, _asm_why = _assembled_drafts(
-            _picked, _src, store, body.get("target_seconds") or 30, job_id=_jid)
+            _picked, _src, store, body.get("target_seconds") or 25, job_id=_jid)
         _styled = list(_assembled)
+        _gen_reasons = []
         if _asm_left:
             _styled += script_generate.generate_by_styles(
-                _src, _asm_left, target_seconds=body.get("target_seconds") or 30,
-                bank_context=_bank_ctx, facts_block=_facts_block)
+                _src, _asm_left, target_seconds=body.get("target_seconds") or 25,
+                bank_context=_bank_ctx, facts_block=_facts_block,
+                reasons=_gen_reasons)
         if not _styled:
+            # ★원인별로 다르게 말한다(2026-08-22). 종전엔 무슨 일이 나든 "키 소진 또는
+            #   응답 오류"만 떴다 — 실측(08-22)에서 키가 멀쩡한데도 그 문구가 떠서
+            #   사장님이 키 회복을 기다리며 재시도만 반복했다. 원인을 못 가르는 문구는
+            #   "잠시 후 재시도"라는 **틀린 처방**까지 같이 준다.
             return JSONResponse(status_code=502, content={
-                "ok": False, "error": "생성 실패(키 소진 또는 응답 오류) — 잠시 후 재시도"})
+                "ok": False, "error": _gen_fail_message(_gen_reasons, _asm_why),
+                "reasons": _gen_reasons})
         _cid_ = _cid(request)
         for dr in _styled:
             did = uuid.uuid4().hex[:12]
@@ -2885,7 +2927,7 @@ def api_mix_start(request: Request, background_tasks: BackgroundTasks, body: dic
     blocked = _ssrf_guard(*urls)      # 이 URL들은 run_mix_job이 그대로 다운로드한다
     if blocked:
         return blocked
-    target = int(body.get("target_seconds") or 30)
+    target = int(body.get("target_seconds") or 25)
     structure = body.get("structure") if body.get("structure") in ("template", "free") else "template"
     subtitle_removal = bool(body.get("subtitle_removal", False))
     scene_first = bool(body.get("scene_first", False))
@@ -3039,7 +3081,7 @@ def api_mix_candidate_clone(request: Request, body: dict):
     global_incr_and_alert("render")
     urls = src.get("urls") or []
     new_id = uuid.uuid4().hex[:12]
-    store.create_mix_job(new_id, urls, src.get("target_seconds") or 30,
+    store.create_mix_job(new_id, urls, src.get("target_seconds") or 25,
                          src.get("structure") or "free",
                          subtitle_removal=bool(src.get("subtitle_removal")),
                          given_script=src.get("given_script"),
@@ -5691,9 +5733,103 @@ def api_media(platform: str, id: str):
     return {"ok": bool(url), "url": url}
 
 
+# 로케일 → 화면에 보일 이름. 여기 없는 로케일은 코드를 그대로 이름으로 쓴다
+# (LENS_LOCALES에 새 나라를 넣어도 칩이 뜨긴 한다 — 이름만 못생길 뿐).
+_LENS_LOCALE_LABELS = {
+    "ko:kr": "🇰🇷 한국", "en:us": "🇺🇸 미국",
+    "zh-cn:tw": "🇨🇳 중국", "ja:jp": "🇯🇵 일본",
+    "vi:vn": "🇻🇳 베트남", "th:th": "🇹🇭 태국", "id:id": "🇮🇩 인니",
+}
+
+
+@app.get("/api/lens/locales")
+def api_lens_locales():
+    """렌즈가 돌릴 수 있는 나라 목록. 프론트가 이걸로 칩을 그린다.
+
+    ★서버 설정(LENS_LOCALES)을 그대로 노출한다 — 프론트에 나라를 하드코딩하면
+      서버 env를 바꿨을 때 화면과 어긋난다(0순위-B)."""
+    out = []
+    for hl, cc in lens_discover._LENS_LOCALES:
+        key = f"{hl}:{cc}"
+        out.append({"key": key, "label": _LENS_LOCALE_LABELS.get(key, key)})
+    return {"ok": True, "locales": out}
+
+
+_LENS_SRC_MAX = int(os.environ.get("LENS_SRC_MAX", "900"))   # 검색어 소재 글자 상한
+
+
+def _lens_source_text(url, front_caption="", store=None):
+    """검색어를 만들 **소재 텍스트** — 프론트 캡션 + DB 캡션 + 대본을 합친다.
+
+    왜(2026-08-22 사장님 "썸네일 캡션 대본을 빠르게 스캔해서"): 지금까지 검색어는
+    사실상 **썸네일 1장만** 보고 만들어져 제품을 잘못 짚었다. 라이브 실측 3건 중 2건:
+      · 다이소 바닥 흠집 보수제 → "스틱청소기"(전혀 다른 제품)
+      · 흰 양말 과탄산소다      → "이염 방지 시트"
+    캡션을 넣자 둘 다 정확해졌고, 대본까지 넣으니 '과탄산소다'라는 **정확한 제품명**이
+    나왔다(그 단어는 캡션엔 없고 대본에만 있었다).
+
+    ★캡션은 reel_history엔 거의 비어 있다(실측 300건 중 1건). 진짜 캡션은
+      source_enrichment(1,260건)에 있는데 **아무도 안 읽고 있었다** — 여기서 읽는다.
+    ★보강은 부가기능이다 — DB가 없거나 터져도 검색은 살아야 하므로 전부 감싼다."""
+    parts = []
+    if (front_caption or "").strip():
+        parts.append(front_caption.strip())
+    st = store
+    if st is None:
+        try:
+            st = Store(DB_PATH)
+        except Exception as e:               # noqa: BLE001 — DB 없으면 프론트 캡션만 쓴다
+            import sys as _sys
+            print(f"[경고] 렌즈 소재 Store 열기 실패(무시): {e!r}", file=_sys.stderr)
+            st = None
+    if st is not None and url:
+        try:
+            # max_age_days=None: 오래된 캡션도 제품 힌트로는 그대로 쓸모 있다
+            enr = st.get_enrichment(url, max_age_days=None) or {}
+            cap = (enr.get("caption") or "").strip()
+            if cap and cap not in parts:
+                parts.append(cap)
+        except Exception as e:               # noqa: BLE001 — 보강 실패로 검색을 죽이지 않는다
+            import sys as _sys
+            print(f"[경고] 렌즈 캡션 조회 실패(무시): {e!r}", file=_sys.stderr)
+        try:
+            # 대본은 shortcode로 찾는다. 인스타(/reel·/p·/tv)·유튜브(/shorts)·틱톡(/video)
+            # 뿐 아니라 호스트가 다른 URL도 마지막 경로 조각을 코드로 본다 — 못 찾으면
+            # 그냥 대본이 없는 것으로 지나간다(아래 sd가 빈 값이라 안전).
+            m = (_IG_SC_RE.search(url)
+                 or re.search(r"/(?:video|shorts|reel|reels|p|tv)/([A-Za-z0-9_-]+)", url))
+            sc = m.group(1) if m else ""
+            if sc:
+                sd = st.get_script(sc) or {}
+                txt = (sd.get("full_text") or "").strip()
+                if txt:
+                    parts.append(txt)
+        except Exception as e:               # noqa: BLE001 — 대본이 없어도 검색은 돈다
+            import sys as _sys
+            print(f"[경고] 렌즈 대본 조회 실패(무시): {e!r}", file=_sys.stderr)
+    return "\n".join(parts)[:_LENS_SRC_MAX]
+
+
+def _parse_lens_locales(raw):
+    """프론트가 보낸 "ko:kr,ja:jp" → [("ko","kr"), ("ja","jp")]. 비면 [](=전체).
+
+    실제로 어느 나라를 돌릴지 **정하는 건 lens_discover._resolve_locales**다(0순위-B).
+    여기서는 문자열을 튜플로 바꾸기만 한다 — 유효성·빈값 폴백을 두 곳에 적으면 어긋난다."""
+    out = []
+    for part in (raw or "").split(","):
+        part = part.strip()
+        if not part or ":" not in part:
+            continue
+        hl, _, cc = part.partition(":")
+        hl, cc = hl.strip(), cc.strip()
+        if hl and cc:
+            out.append((hl, cc))
+    return out
+
+
 @app.post("/api/lens/search")
 async def api_lens_search(request: Request, frame: UploadFile = File(...),
-                           source_caption: str = Form("")):
+                           source_caption: str = Form(""), locales: str = Form("")):
     """멈춘 프레임 캡처 이미지 → 구글렌즈 → 5플랫폼 유사영상. 월 호출가드(429 lens_limit).
 
     캡처본을 find_frames/lens/{uuid}.jpg로 저장하고 기존 /api/find/frame 서빙
@@ -5738,8 +5874,14 @@ async def api_lens_search(request: Request, frame: UploadFile = File(...),
         rows = await asyncio.to_thread(
             functools.partial(search_similar_videos, image_url,
                               api_key=_lens_api_keys(cid),
-                              source_caption=source_caption, stats=diag))
-        items = _lens_finalize(rows, store)
+                              source_caption=source_caption, stats=diag,
+                              locales=_parse_lens_locales(locales)))
+        # ★채점(Gemini)은 **블로킹**이다 → to_thread. 여기서 그냥 부르면 이벤트루프가
+        #   몇 초 멈춰, 프론트가 동시에 던진 /api/lens/cn/keywords가 뒤에서 굶는다
+        #   (위 SerpApi·비전 호출과 같은 이유). 채점을 끝낸 뒤 _lens_finalize엔
+        #   caption=None으로 넘겨 **두 번 채점하지 않는다**.
+        await asyncio.to_thread(_lens_judge, rows, source_caption)
+        items = _lens_finalize(rows, store, caption=None)
         store.bump_lens(month)
         # diag: 인스타 결과가 0/왕창으로 튀는 이유를 화면에서 갈라 보기 위한 계측(2026-08-14).
         return {"ok": True, "items": items, "count": len(items), "diag": diag}
@@ -5762,7 +5904,31 @@ _IG_SC_RE = re.compile(r"instagram\.com/(?:reel|reels|p|tv)/([A-Za-z0-9_-]+)")
 _LENS_DURFILL_LAST = 0.0   # 렌즈발 길이 백필 예약 게이트(10분) — _DURFILL_LAST와 같은 결
 
 
-def _lens_finalize(items, store):
+def _lens_judge(items, caption):
+    """렌즈 결과에 AI 유사도 채점을 얹는다(sim/match). 실패·불가 시 조용히 그대로 둔다.
+
+    왜(2026-08-21 사장님 "검색 정확도가 떨어진 것 같다"): 샤오홍슈·도우인(/api/lens/cn)과
+    유튜브(/api/lens/yt)는 이미 judge_same_product로 채점하는데 **메인 렌즈에만 없었다**.
+    그래서 렌즈 본 결과의 match는 lens_discover._title_matches(캡션 2자 토큰이 제목에
+    부분포함되면 True)에만 의존했다 — 오탐이 쉽고, 중국어·영어 제목은 아예 안 맞아
+    False가 되니 프론트 '⚠️ 다른주제 숨기기'를 기본 꺼둘 수밖에 없었다.
+    같은 함수를 그대로 쓴다(0순위-B: 판정을 새로 짜지 않는다).
+
+    ★부가기능이다 — 채점이 비거나 터져도 렌즈 결과는 그대로 산다."""
+    if not items or not (caption or "").strip():
+        return                      # 기준이 없으면 채점 자체가 무의미 → Gemini 호출 안 함
+    try:
+        verdicts = judge_same_product(caption, [i.get("title", "") for i in items])
+    except Exception:               # noqa: BLE001 — 채점 실패로 검색을 죽이지 않는다
+        return
+    if len(verdicts) != len(items):
+        return                      # 개수가 어긋나면 짝이 밀린다 → 통째로 버린다
+    for it, vd in zip(items, verdicts):
+        it["sim"] = vd
+        it["match"] = True if vd == "same" else (False if vd == "no" else None)
+
+
+def _lens_finalize(items, store, caption=""):
     try:
         sc_of = {}
         for it in items:
@@ -5797,7 +5963,15 @@ def _lens_finalize(items, store):
         import sys as _sys
         import traceback as _tb
         _tb.print_exc(file=_sys.stderr)
-    items.sort(key=lambda i: 0 if i.get("platform") == "instagram" else 1)
+    # ★채점은 정렬 **전에** 한다 — sim이 있어야 관련도순으로 세울 수 있다.
+    #   caption=None이면 호출부가 이미 채점을 끝냈다는 뜻(async 경로가 스레드에서 먼저 돌린다).
+    if caption is not None:
+        _lens_judge(items, caption)
+    # 정렬 키 2개: ①관련도(same→similar/미채점→no) ②같은 관련도면 인스타 먼저.
+    #   채점이 없으면(캡션 없음·실패) 모두 같은 1등급이 되어 **종전 인스타 우선 그대로**다.
+    _rank = {"same": 0, "similar": 1, "no": 2}
+    items.sort(key=lambda i: (_rank.get(i.get("sim"), 1),
+                              0 if i.get("platform") == "instagram" else 1))
     return items
 
 
@@ -5895,7 +6069,7 @@ def api_lens_trace_url(request: Request, body: dict):
                 "ok": False, "error": "영상/썸네일을 가져오지 못했습니다(봇차단·만료·미지원 URL)"})
         items = _lens_finalize(
             search_similar_videos(image_url, api_key=_lens_api_keys(cid),
-                                  source_caption=caption), store)
+                                  source_caption=caption), store, caption=caption)
         # 📕🎬 중국앱 키워드 후보(비전). 렌즈 유사영상은 프론트가 프레임으로 뽑지만 trace는
         # 프레임이 서버에만 있다(유튜브는 아예 썸네일 URL·caption 없음) → 서버가 image_url에서
         # 바이트를 받아 직접 만든다. cn_search_candidates는 image_bytes가 없으면 빈 리스트라
@@ -6010,10 +6184,13 @@ async def api_lens_cn(request: Request, frame: UploadFile = File(None),
 
 @app.post("/api/lens/cn/keywords")
 async def api_lens_cn_keywords(request: Request, frame: UploadFile = File(None),
-                                source_caption: str = Form(""), exclude: str = Form("")):
+                                source_caption: str = Form(""), exclude: str = Form(""),
+                                source_url: str = Form("")):
     """프레임(+캡션) → 중국어 후보 검색어 리스트. Gemini 비전 1회, Apify 안 부름.
     프론트가 렌즈 열 때 호출해 후보 버튼을 그린다(2026-07-19)."""
-    if frame is None and not (source_caption or "").strip():
+    # ★source_url이 있으면 캡션이 비어도 진행한다 — DB에서 캡션·대본을 찾아올 수 있다
+    #   (프론트 캡션은 거의 항상 비어 있다: 실측 300건 중 1건).
+    if frame is None and not (source_caption or "").strip() and not (source_url or "").strip():
         return {"ok": True, "product": "", "candidates": []}
     raw = None
     if frame is not None:
@@ -6027,7 +6204,10 @@ async def api_lens_cn_keywords(request: Request, frame: UploadFile = File(None),
         # ★ to_thread 필수 — cn_search_candidates는 Gemini SDK를 **블로킹**으로 부른다.
         #   async def 안에서 그냥 부르면 이벤트루프가 그 5~10초 동안 통째로 멈춰,
         #   프론트가 동시에 던진 /api/lens/yt가 뒤에서 줄을 서 20초가 됐다(2026-08-16 실측).
-        v = await asyncio.to_thread(cn_search_candidates, raw, source_caption, exclude=seen)
+        # ★썸네일 1장만 보면 제품을 잘못 짚는다(실측 3건 중 2건). DB에 있는
+        #   캡션·대본을 합쳐 소재를 넉넉히 준다 — 비용 0(이미 저장된 것).
+        src = await asyncio.to_thread(_lens_source_text, source_url, source_caption)
+        v = await asyncio.to_thread(cn_search_candidates, raw, src, exclude=seen)
     except Exception:
         v = {}
     return {"ok": True, "product": v.get("product", ""),
@@ -10151,7 +10331,7 @@ def api_produce_mix_start(request: Request, background_tasks: BackgroundTasks, b
     # 1개면 그 영상 안에서 구간 순서편집(재배치), 2개 이상이면 여러 영상을 섞는
     # 믹스 — build_edit_plan(edit_plan.py)의 세그먼트 인벤토리 매칭이 소스 개수와
     # 무관하게 동작해서 이 유효성검사만 완화하면 별도 분기 없이 그대로 지원된다(2026-07-14).
-    target = int(body.get("target_seconds") or 30)
+    target = int(body.get("target_seconds") or 25)
     subtitle_removal = bool(body.get("subtitle_removal", False))
     script_structure = body.get("script_structure") or None
     if not isinstance(script_structure, dict):
@@ -12493,7 +12673,7 @@ def api_script_beat_regen(request: Request, body: dict):
         out = script_generate.regen_one_beat(
             _src, style, role, beats,
             template=body.get("template") or "",
-            target_seconds=body.get("target_seconds") or 30,
+            target_seconds=body.get("target_seconds") or 25,
             bank_context=_bank_ctx, facts_block=_facts_block)
     except Exception as e:  # noqa: BLE001 — 실패해도 화면이 살아야 한다(원본 문장 유지)
         print(f"beat regen 실패(style={style_id}, role={role}): {e}")

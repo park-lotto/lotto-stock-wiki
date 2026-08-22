@@ -1,0 +1,71 @@
+<title>대본 A/B 실측</title>
+<style>
+:root{--bg:#fff;--fg:#16181d;--mut:#5c6370;--line:#e3e6ea;--card:#fff;
+      --good:#0f7b4f;--goodbg:#e6f5ee;--bad:#b4232c;--badbg:#fdeced;--neu:#f1f3f5;
+      --beforebg:#fffaf7;--afterbg:#f5fbf8;}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){
+  --bg:#14161a;--fg:#e8eaed;--mut:#9aa3ad;--line:#2a2f37;--card:#1b1e24;
+  --good:#5fd39b;--goodbg:#12301f;--bad:#ff8a8a;--badbg:#3a1c1f;--neu:#22262d;
+  --beforebg:#221c18;--afterbg:#15241d;}}
+:root[data-theme=dark]{--bg:#14161a;--fg:#e8eaed;--mut:#9aa3ad;--line:#2a2f37;--card:#1b1e24;
+  --good:#5fd39b;--goodbg:#12301f;--bad:#ff8a8a;--badbg:#3a1c1f;--neu:#22262d;
+  --beforebg:#221c18;--afterbg:#15241d;}
+*{box-sizing:border-box}
+body{margin:0;padding:24px;background:var(--bg);color:var(--fg);
+ font:16px/1.65 -apple-system,"Segoe UI","Malgun Gothic",sans-serif;}
+.wrap{max-width:1180px;margin:0 auto}
+h1{font-size:24px;margin:0 0 4px} .sub{color:var(--mut);margin:0 0 20px}
+.seed{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:22px}
+.seed h4{margin:0 0 8px;font-size:14px;color:var(--mut);font-weight:600}
+.seed a{display:inline-block;margin:2px 10px 2px 0;font-size:13px;color:#2f6fd0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:20px}
+.card h2{margin:0 0 14px;font-size:19px} .card h2 small{color:var(--mut);font-weight:400;font-size:13px}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:860px){.pair{grid-template-columns:1fr}}
+.col{border:1px solid var(--line);border-radius:10px;padding:14px;min-width:0}
+.col.before{background:var(--beforebg)} .col.after{background:var(--afterbg)}
+.col h3{margin:0 0 10px;font-size:15px} .col h3 em{color:var(--mut);font-style:normal;font-weight:400;font-size:12px}
+.stat{margin-bottom:10px;display:flex;gap:6px;flex-wrap:wrap}
+.stat span{font-size:12px;padding:3px 9px;border-radius:99px;background:var(--neu);color:var(--mut)}
+.stat .good{background:var(--goodbg);color:var(--good);font-weight:600}
+.stat .bad{background:var(--badbg);color:var(--bad);font-weight:600}
+.beat{display:flex;gap:9px;padding:7px 0;border-bottom:1px dashed var(--line);align-items:baseline;flex-wrap:wrap}
+.beat:last-child{border-bottom:0}
+.role{flex:0 0 88px;font-size:11.5px;color:var(--mut);font-family:ui-monospace,Consolas,monospace}
+.txt{flex:1 1 240px;min-width:0}
+.beat.leak{background:var(--badbg);border-radius:6px;padding:7px 8px}
+.beat.cta{background:var(--goodbg);border-radius:6px;padding:7px 8px}
+.warn{flex:0 0 auto;font-size:11px;color:var(--bad);font-weight:700}
+.fails{margin-top:10px;font-size:12px;color:var(--bad);background:var(--badbg);padding:8px 10px;border-radius:8px}
+.empty{color:var(--bad);font-weight:600;padding:10px 0}
+</style>
+<div class="wrap">
+<h1>대본 A/B 실측 — 진짜 영상으로</h1>
+<p class="sub">담긴 영상 4편(미니 무선 고데기)에서 뽑은 실제 재료로, 같은 스타일에 대해 고치기 전/후를 각각 생성했습니다.</p>
+<div class="seed"><h4>씨앗 영상 4편 (job 8de99cb299d6)</h4><a href="https://www.instagram.com/reel/DMXiOcfzsbm/" target="_blank">DMXiOcfzsbm</a><a href="https://www.instagram.com/reel/DZFguIyPGIV/" target="_blank">DZFguIyPGIV</a><a href="https://www.instagram.com/reel/DcOeKHWyOvv/" target="_blank">DcOeKHWyOvv</a><a href="https://www.instagram.com/reel/DcPZqPIhicR/" target="_blank">DcPZqPIhicR</a></div>
+
+    <section class="card">
+      <h2>가족갈등 반전형 <small>스파인 #52</small></h2>
+      <div class="pair">
+        <div class="col before"><h3>고치기 전 <em>(어제까지)</em></h3><div class="stat"><span class="bad">생성 실패</span></div><div class="empty">대본이 안 나왔습니다 (생성 실패)</div>
+          <div class="fails">게이트가 잡은 것: 구간 순서, hook 문장틀 준수, situation 문장틀 준수, notice 문장틀 준수, ask 문장틀 준수, reveal 문장틀 준수, method 문장틀 준수, result 문장틀 준수</div></div>
+        <div class="col after"><h3>고친 뒤 <em>(지금)</em></h3><div class="stat"><span class="good">CTA 누출 0</span> <span class="good">게이트 실패 0</span> <span class="neu">233자</span></div><div class="beat"><span class="role">hook</span><span class="txt">저 친구네 집 갔다가 진짜 충격 받았잖아요.</span></div><div class="beat"><span class="role">situation</span><span class="txt">아니, 외출 전인데 앞머리 볼륨이 확 살아있는 거예요.</span></div><div class="beat"><span class="role">notice</span><span class="txt">너무 신기해서 대체 어떻게 한 거냐고 바로 물어봤거든요.</span></div><div class="beat"><span class="role">ask</span><span class="txt">앞머리에 이거 하나 썼다는 거예요.</span></div><div class="beat"><span class="role">reveal</span><span class="txt">알고 보니 180도 고온으로 뿌리 볼륨을 살리는 미니 고데기더라고요.</span></div><div class="beat"><span class="role">method</span><span class="txt">슥슥 빗어주면 20초 만에 끝이라는데요.</span></div><div class="beat"><span class="role">result</span><span class="txt">저도 해보니까 진짜 가라앉던 앞머리가 탱글하게 살아나는 거 있죠.</span></div><div class="beat"><span class="role">escalation</span><span class="txt">심지어 한 번으로 끝나는 게 아니라 휴대도 진짜 간편하더라고요.</span></div><div class="beat"><span class="role">regret</span><span class="txt">진작 알았으면 그동안 축 처진 머리 때문에 괜히 고생 안 했을 텐데요.</span></div><div class="beat cta"><span class="role">cta</span><span class="txt">다들 어디 거냐고 물어봐서 댓글에 &#x27;미니&#x27; 남겨주시면 제가 산 좌표 알려드릴게요.</span></div></div>
+      </div>
+    </section>
+    <section class="card">
+      <h2>단정 명령형 <small>스파인 #53</small></h2>
+      <div class="pair">
+        <div class="col before"><h3>고치기 전 <em>(어제까지)</em></h3><div class="stat"><span class="bad">CTA 누출 1</span> <span class="bad">게이트 실패 8</span> <span class="neu">244자</span></div><div class="beat"><span class="role">hook</span><span class="txt">여러분 앞머리 볼륨 무조건 이걸로 살리세요.</span></div><div class="beat"><span class="role">method</span><span class="txt">오후만 되면 축 처져서 고민이었는데, 디자이너 친구가 이건 빗듯이 쓸어주면 된다고 하더라고요.</span></div><div class="beat"><span class="role">steps</span><span class="txt">예열도 20초면 뚝딱 끝나고, 볼륨 필요한 곳에 머물렀다 빼주면 끝이거든요.</span></div><div class="beat"><span class="role">texture</span><span class="txt">금방 죽던 머리가 탱글하게 살아나 인상이 훨씬 화사해 보이네요.</span></div><div class="beat leak"><span class="role">usage</span><span class="txt">검색해도 안 나와 다들 물어보는데, 댓글에 &#x27;앞머리&#x27; 남겨주시면 제가 산 좌표 드릴게요.</span><span class="warn">CTA가 여기서 새어나옴</span></div><div class="beat"><span class="role">escalation</span><span class="txt">심지어 180도 고온이라 똥손도 절대 망할 수가 없는 거 있죠.</span></div><div class="beat"><span class="role">benefit</span><span class="txt">부피도 작아 파우치에 넣고 다니면 수정 화장 걱정 없이 외출용으로도 딱이에요.</span></div><div class="beat"><span class="role">witness</span><span class="txt">아침마다 바빴던 딸도 이것만 챙기길래 저도 하나 더 샀답니다.</span></div><div class="beat cta"><span class="role">cta</span><span class="txt">궁금하면 댓글에 나도 남겨주세요.</span></div>
+          <div class="fails">게이트가 잡은 것: hook 문장틀 준수, method 문장틀 준수, steps 문장틀 준수, texture 문장틀 준수, usage 문장틀 준수, escalation 문장틀 준수, benefit 문장틀 준수, witness 문장틀 준수</div></div>
+        <div class="col after"><h3>고친 뒤 <em>(지금)</em></h3><div class="stat"><span class="good">CTA 누출 0</span> <span class="good">게이트 실패 0</span> <span class="neu">245자</span></div><div class="beat"><span class="role">hook</span><span class="txt">여러분 앞머리 볼륨 무조건 이걸로 살리세요.</span></div><div class="beat"><span class="role">method</span><span class="txt">아침마다 고데기 하느라 고생했는데, 원래 슥 빗기만 하면 끝나는 거거든요.</span></div><div class="beat"><span class="role">steps</span><span class="txt">친구가 일본 가서 사 왔길래 써봤는데, 예열 20초 만에 빗질 두 번이면 볼륨이 쫙 살아나요.</span></div><div class="beat"><span class="role">texture</span><span class="txt">손으로 만져보면 뿌리부터 탱글하게 살아난 게 느껴져요.</span></div><div class="beat"><span class="role">usage</span><span class="txt">외출할 때 파우치에 쏙 넣어 다니면 수정 화장 대신 쓰기 좋아요.</span></div><div class="beat"><span class="role">escalation</span><span class="txt">심지어 무선이라 장소 상관없고, 금방 뜨거워지는데 안전해서 실패할 수가 없는 거 있죠.</span></div><div class="beat"><span class="role">benefit</span><span class="txt">축 처진 앞머리 걱정 없이 오후 내내 예쁜 볼륨 유지 가능하거든요.</span></div><div class="beat"><span class="role">witness</span><span class="txt">이거 써보고 나서 친구들이 어디 거냐고 물어볼 정도로 난리예요.</span></div><div class="beat cta"><span class="role">cta</span><span class="txt">구매처 궁금하면 댓글에 &#x27;볼륨&#x27; 남겨주시면 제가 산 링크 드릴게요.</span></div></div>
+      </div>
+    </section>
+    <section class="card">
+      <h2>다이소 내부인형 <small>스파인 #57</small></h2>
+      <div class="pair">
+        <div class="col before"><h3>고치기 전 <em>(어제까지)</em></h3><div class="stat"><span class="good">CTA 누출 0</span> <span class="bad">게이트 실패 3</span> <span class="neu">243자</span></div><div class="beat"><span class="role">hook</span><span class="txt">와 여러분 다이소 가면 이 앞머리 고데기 무조건 데려오세요</span></div><div class="beat"><span class="role">problem</span><span class="txt">아침마다 드라이해도 오후만 되면 앞머리가 푹 꺼져서 진짜 스트레스였거든요</span></div><div class="beat"><span class="role">reveal</span><span class="txt">다이소에서 일하는 친한 언니한테 들었는데요</span></div><div class="beat"><span class="role">proof</span><span class="txt">진열하자마자 품절되는 제품이라며 보이면 바로 사라고 하더라고요</span></div><div class="beat"><span class="role">demo</span><span class="txt">방법도 진짜 간단해요. 그냥 앞머리에 슥슥 빗어주면 뿌리부터 뽕이 확 살아나거든요, 이게 끝이에요</span></div><div class="beat"><span class="role">result</span><span class="txt">와 오후까지도 앞머리 볼륨이 탱글하게 살아있는 거 있죠. 진짜 앞머리 처짐 때문에 고민이신 분들은 이거 꼭 써보세요</span></div><div class="beat"><span class="role">price</span><span class="txt">심지어 이걸 다이소에서 판다는 게 더 놀랍더라고요</span></div><div class="beat cta"><span class="role">cta</span><span class="txt">어떤 제품인지 궁금하시면 댓글에 &#x27;앞머리&#x27; 남겨주세요 바로 정보 알려드릴게요</span></div>
+          <div class="fails">게이트가 잡은 것: hook 문장틀 준수, problem 문장틀 준수, cta 문장틀 준수</div></div>
+        <div class="col after"><h3>고친 뒤 <em>(지금)</em></h3><div class="stat"><span class="good">CTA 누출 0</span> <span class="good">게이트 실패 0</span> <span class="neu">243자</span></div><div class="beat"><span class="role">hook</span><span class="txt">여러분 다이소 가면 이거 무조건 데려오세요</span></div><div class="beat"><span class="role">problem</span><span class="txt">아침에 정성껏 드라이해도 오후만 되면 앞머리가 툭 처져서 진짜 속상하고 예민했거든요.</span></div><div class="beat"><span class="role">reveal</span><span class="txt">아는 언니가 다이소 매니저로 있는데 이 미니 고데기가 요즘 그렇게 잘 나간다더라고요.</span></div><div class="beat"><span class="role">proof</span><span class="txt">매장에 깔리기 무섭게 사라지는 요즘 가장 핫한 아이템이라 보이면 바로 집으라고 하네요.</span></div><div class="beat"><span class="role">demo</span><span class="txt">방법도 진짜 간단해요. 전원 켜고 슥슥 빗어주기만 하면 뿌리부터 볼륨이 빵빵하게 살아나는 거예요.</span></div><div class="beat"><span class="role">result</span><span class="txt">와 축 처진 머리가 하루 종일 탱글탱글하게 유지되는 거 있죠.</span></div><div class="beat"><span class="role">price</span><span class="txt">심지어 가격은 진짜 착하게 나와서 솔직히 믿기지가 않더라고요.</span></div><div class="beat cta"><span class="role">cta</span><span class="txt">어떤 제품인지 궁금하시면 댓글 남겨주세요 바로 링크 챙겨드릴게요.</span></div></div>
+      </div>
+    </section>
+</div>
