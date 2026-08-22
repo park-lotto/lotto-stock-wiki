@@ -5069,9 +5069,16 @@ def api_mix_capcut(job_id: str, base: str = ""):
     timeline = _beat_timeline(plan, tts_paths)
     out_root = work / "capcut"
     out_root.mkdir(parents=True, exist_ok=True)
+    # ★완성본도 함께 보낸다(2026-08-23 사장님 "완성본 조각들이 그대로 옮겨지고").
+    #   타임라인엔 안 올리고 **미디어 보관함에만** 넣는다 — 타임라인에 올리면 TTS와 겹쳐
+    #   소리가 두 번 난다. 참고·대조용으로 보관함에 두면 필요할 때 끌어다 쓸 수 있다.
+    #   아직 렌더 전이면 None → 그 항목만 빠진다(내보내기는 그대로 된다).
+    _final = job.get("video_path") if (job.get("video_path")
+                                       and Path(job["video_path"]).exists()) else None
     proj, project, files = capcut_draft.assemble_draft_folder(
         out_root, base, plan=plan, timeline=timeline, source_video_paths=source_video_paths,
-        tts_paths=tts_paths, project_name=_capcut_project_name(job_id, job, plan))
+        tts_paths=tts_paths, project_name=_capcut_project_name(job_id, job, plan),
+        final_video=_final)
     texts, assets = {}, []
     for name in files:
         if name.endswith(".json"):
