@@ -1116,18 +1116,36 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
         # 비트당 다중 클립: 각 구간을 [start, start+src_dur]만큼만 잘라(유출 0) 이어붙이고,
         # 부족분은 마지막 클립을 슬로모(setpts)로 늘려 대사 길이에 맞춘다.
         sub_paths = []
+        # ★전환용 여유(2026-08-23): xfade는 두 컷을 overlap만큼 **겹치므로** 그냥 겹치면
+        #   비트가 overlap*(n-1)만큼 짧아지고, 그러면 뒤 칸 자막이 통째로 밀린다(t0 누적).
+        #   그래서 각 컷을 미리 overlap만큼 **길게** 만들어 둔다 → 겹친 뒤 원래 길이가 된다.
+        #   컷이 1개면 겹칠 데가 없으니 0.
+        # ★여유는 overlap 전부가 아니라 **overlap*(n-1)/n**이다(실측으로 잡은 오류).
+        #   컷 n개를 각각 pad만큼 늘려 겹치면 총합 = n*(base+pad) - overlap*(n-1).
+        #   이게 원래 n*base와 같으려면 pad = overlap*(n-1)/n.
+        #   overlap을 통째로 얹으면 비트가 0.3초쯤 길어져 **뒤 자막이 전부 밀린다**.
+        _n = len(plan)
+        _pad = (_trans_sec() * (_n - 1) / _n) if _n > 1 else 0.0
         for j, c in enumerate(plan):
             src = source_video_paths[c["video_id"]]
             sub = work / f"beat_{idx}_{j}.mp4"
             # 슬로우 상한(1.15배)+정지프레임(2026-07-19): 무제한 슬로우크롤 제거.
             # 재생은 최대 _MAX_SLOWMO배까지만 늘리고, 남는 시간은 마지막 프레임 정지(freeze).
             # play_out+freeze == out_dur → 총 길이·오디오/자막 싱크 불변.
-            play_out, freeze = _speed_and_freeze(c["src_dur"], c["out_dur"])
+            # 전환 여유를 이 컷에 얹는다. 소스에 실프레임이 남아 있으면 그것으로(자연스럽다),
+            # 없으면 out_dur만 늘려 슬로모/freeze 기계가 흡수한다.
+            _c_src, _c_out = c["src_dur"], c["out_dur"]
+            if _pad > 1e-3:
+                _sd = _src_dur(c["video_id"])
+                _room = max(0.0, _sd - (c["start"] + _c_src)) if _sd > 0 else 0.0
+                _c_src = _c_src + min(_pad, _room)
+                _c_out = _c_out + _pad
+            play_out, freeze = _speed_and_freeze(_c_src, _c_out)
             # freeze 클립은 움직이는 부분을 정적 베이스줌으로 두고, 켄번즈 모션은 freeze
             # 패스에서 전체(play+freeze)에 한 번만 건다(정지 구간도 살아있게, 2026-07-19).
             # 안 그러면 pass1 줌 + freeze 켄번즈가 겹쳐 줌이 두 번 쌓인다.
             clip_vf = _base_zoom_vf() if freeze > 1e-3 else vf
-            factor = play_out / c["src_dur"] if c["src_dur"] > 1e-6 else 1.0
+            factor = play_out / _c_src if _c_src > 1e-6 else 1.0
             vf_full = f"{clip_vf},setpts={factor:.6f}*PTS" if factor > 1.0 + 1e-6 else clip_vf
             # start를 소스 안으로 당긴다(타트랙 병합, 2026-07-19). 약한 매칭이 소스 밖을 잡으면
             #   -ss가 끝을 넘어 0프레임이 나와 concat이 죽는다. [start, start+src_dur]가 소스
@@ -1135,13 +1153,13 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
             sdur = _src_dur(c["video_id"])
             start = c["start"]
             if sdur > 0:
-                start = max(0.0, min(start, sdur - min(c["src_dur"], sdur)))
+                start = max(0.0, min(start, sdur - min(_c_src, sdur)))
             # 1단계 — 움직임: 입력을 [start, start+src_dur]만 읽어(-ss+입력측 -t) 유출 차단.
             #   입력 제한이 핵심(P1) — 상한 배율이 out_dur/src_dur보다 작으면 setpts가 다음
             #   구간까지 끌어와 유출된다(다색 소스 실측). 잘라두면 이 구간만 play_out으로 늘어난다.
             sub = work / f"beat_{idx}_{j}.mp4"
             _run_ffmpeg([
-                "ffmpeg", "-y", "-ss", f"{start:.3f}", "-t", f"{c['src_dur']:.3f}",
+                "ffmpeg", "-y", "-ss", f"{start:.3f}", "-t", f"{_c_src:.3f}",
                 "-i", str(src),
                 "-vf", vf_full, "-r", "30", "-an", "-t", f"{play_out:.3f}",
                 "-c:v", "libx264", "-preset", _mid_preset(), "-crf", _mid_crf(), *_threads_args(), "-pix_fmt", "yuv420p", str(sub),
@@ -1164,10 +1182,24 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
             continue
         # 비트의 클립들(동일 규격)을 concat → 비트 무음 영상(길이 ≈ tts_dur)
         beat_video = work / f"beat_{idx}_v.mp4"
-        cat = work / f"beat_{idx}_list.txt"
-        cat.write_text("".join(f"file '{p.as_posix()}'\n" for p in sub_paths), encoding="utf-8")
-        _run_ffmpeg(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(cat),
-                     "-c", "copy", str(beat_video)])
+        # ★컷 전환(2026-08-23 사장님 "부자연스럽다 / 캡컷을 대체하고 싶다"):
+        #   켜져 있으면 컷 사이를 xfade로 겹쳐 넘긴다.
+        #   ★총 길이는 concat과 **같아야** 한다 — 자막이 비트 t0 누적으로 자리를 잡으므로
+        #     비트가 조금이라도 길어지면 뒤 자막이 통째로 밀린다.
+        #     그래서 컷을 미리 overlap만큼 길게 뽑아둔다(아래 out_dur 보정).
+        #   실패하거나 여유가 없으면 조용히 하드컷으로 돌아간다 — 렌더를 죽이지 않는다.
+        faded = None
+        _tsec = _trans_sec()
+        if _tsec > 1e-3 and len(sub_paths) > 1:
+            faded = _xfade_concat(sub_paths, work / f"beat_{idx}_x.mp4",
+                                  _tsec, _trans_kind())
+        if faded is not None:
+            beat_video = faded
+        else:
+            cat = work / f"beat_{idx}_list.txt"
+            cat.write_text("".join(f"file '{p.as_posix()}'\n" for p in sub_paths), encoding="utf-8")
+            _run_ffmpeg(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(cat),
+                         "-c", "copy", str(beat_video)])
         # 컷어웨이(장면라이브러리 페이즈2-B): 라이브러리 자산을 비트 영상 위에 풀프레임
         # 오버레이. 창=[0, min(자산길이, tts_dur)]. 비트 길이·TTS 오디오 불변 → 자막 t0 싱크
         # 불변. beat_video는 이미 규격(1080x1920)·vf 적용 → 재-vf 없이 오버레이만 얹는다.
@@ -1212,6 +1244,63 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
     _run_ffmpeg(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(concat_txt),
                  "-c", "copy", str(mix_raw)])
     return str(mix_raw)
+
+
+# ── 컷 전환 설정(2026-08-23) ─────────────────────────────────────────────────
+# 정의처는 config 하나. 여기서 한 번 읽어 렌더 전체가 같은 값을 쓴다(0순위-B).
+def _trans_sec():
+    try:
+        from shopping_shorts import config as _c
+        return max(0.0, float(getattr(_c, "TRANSITION_SECONDS", 0.0) or 0.0))
+    except Exception:
+        return 0.0
+
+
+def _trans_kind():
+    try:
+        from shopping_shorts import config as _c
+        return str(getattr(_c, "TRANSITION_KIND", "fade") or "fade")
+    except Exception:
+        return "fade"
+
+
+def _xfade_concat(clip_paths, out_path, overlap, kind="fade"):
+    """컷들을 xfade로 겹쳐 이어 붙인다. **총 길이는 concat과 같다.**
+
+    ★왜 길이가 같아야 하나: 자막·오디오는 비트 t0를 누적해서 자리를 잡는다
+      (`t0 += dur`). 비트가 조금이라도 길거나 짧아지면 **그 뒤 자막이 통째로 밀린다**.
+      xfade는 두 영상을 overlap만큼 **겹치므로** 이어붙인 총 길이가
+      sum(len) - overlap*(n-1)이 된다. 그래서 각 컷을 미리 overlap만큼 길게 받아
+      (호출부가 `+overlap`으로 뽑아준다) 겹친 뒤 원래 합계가 되게 맞춘다.
+
+    겹칠 수 없으면(컷이 1개거나 너무 짧으면) None을 돌려준다 — 호출부가 하드컷으로 간다.
+    """
+    if len(clip_paths) < 2 or overlap <= 1e-3:
+        return None
+    durs = [_probe_duration(p) for p in clip_paths]
+    if any(d <= overlap + 0.05 for d in durs):
+        return None                      # 겹칠 여유가 없는 컷이 있으면 통째로 포기
+    args, fc, cur = [], [], "0:v"
+    for i, p in enumerate(clip_paths):
+        args += ["-i", str(p)]
+    acc = durs[0]
+    for i in range(1, len(clip_paths)):
+        off = acc - overlap              # 앞 영상이 끝나기 overlap초 전부터 겹친다
+        lbl = f"x{i}"
+        fc.append(f"[{cur}][{i}:v]xfade=transition={kind}:duration={overlap:.3f}"
+                  f":offset={off:.3f}[{lbl}]")
+        cur = lbl
+        acc = off + durs[i]              # 겹친 만큼 총길이가 줄어든다
+    try:
+        _run_ffmpeg(["ffmpeg", "-y", *args, "-filter_complex", ";".join(fc),
+                     "-map", f"[{cur}]", "-r", "30", "-an",
+                     "-c:v", "libx264", "-preset", _mid_preset(), "-crf", _mid_crf(),
+                     *_threads_args(), "-pix_fmt", "yuv420p", str(out_path)])
+    except Exception:
+        return None                      # 전환에 실패해도 렌더 전체를 죽이지 않는다
+    if not out_path.exists() or _probe_duration(out_path) <= 0.05:
+        return None
+    return out_path
 
 
 def _motion_layer_filters(layers, next_input_idx, vcur):
