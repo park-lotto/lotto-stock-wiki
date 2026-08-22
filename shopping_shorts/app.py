@@ -2569,7 +2569,7 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
             _styled += script_generate.generate_by_styles(
                 _src, _asm_left, target_seconds=body.get("target_seconds") or 25,
                 bank_context=_bank_ctx, facts_block=_facts_block,
-                reasons=_gen_reasons)
+                reasons=_gen_reasons, seed=_jid)
         if not _styled:
             # ★원인별로 다르게 말한다(2026-08-22). 종전엔 무슨 일이 나든 "키 소진 또는
             #   응답 오류"만 떴다 — 실측(08-22)에서 키가 멀쩡한데도 그 문구가 떠서

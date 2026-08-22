@@ -1,5 +1,6 @@
 """생성 프롬프트 주입용 은행 컨텍스트 조립(Phase2 토대). store 읽기만, Gemini 없음.
 ★중괄호 소독 필수 — script_generate 프롬프트가 .format()을 돌린다(_STORY_RULES_CORE 옆에 낀다)."""
+import hashlib
 import random
 
 from shopping_shorts.pattern_bank import STYLE_BUCKETS, CONTENT_BUCKETS
@@ -299,7 +300,27 @@ def beat_descs(style):
     return out
 
 
-def style_block(style, seconds=30):
+def _rotate(items, seed, role):
+    """이 job·이 칸에서 몇 번째 틀부터 보여줄까 — 목록을 회전해 돌려준다(2026-08-23).
+
+    ★why: `style_block`은 문장틀을 **항상 같은 순서**로 실었고, 모델은 특정 문장에
+      쏠린다. 다이소 훅 10개로 8회 뽑은 실측 — 10개 중 **6개가 한 번도 안 나왔다**
+      (6번 3회·7번 3회에 몰림). 틀을 늘려도 순서가 고정이면 소용이 없다.
+    ★랜덤이 아니라 seed(job_id) 해시다 — 같은 job을 다시 돌리면 같은 대본이 나온다.
+      role을 섞어 한 대본 안에서도 칸마다 다른 번호에서 시작한다.
+      (조립 경로의 `spine_fill._rotate_idx`와 같은 규칙 — 그쪽은 하나를 고르고
+       여기는 순서를 돌린다는 점만 다르다.)
+    ★seed가 없으면 원본 그대로 = 회귀 0.
+    """
+    n = len(items or [])
+    if not seed or n <= 1:
+        return list(items or [])
+    h = hashlib.md5(("%s|%s" % (seed, role)).encode("utf-8")).hexdigest()
+    k = int(h[:8], 16) % n
+    return list(items[k:]) + list(items[:k])
+
+
+def style_block(style, seconds=30, seed=""):
     """★스타일(스파인+beat_roles) → **칸을 못 박는** 프롬프트 블록(2026-08-15).
 
     `spine_charter`와 다른 점이 핵심이다. charter는 "이 골격을 따르라"는 **권유**라 AI가
@@ -319,7 +340,8 @@ def style_block(style, seconds=30):
     descs = beat_descs(style)
     lines = []
     for i, role in enumerate(roles, 1):
-        tmpl = templates.get(role) or []
+        # ★job마다 다른 틀에서 시작한다 — 순서가 고정이면 모델이 앞쪽에 쏠린다.
+        tmpl = _rotate(templates.get(role) or [], seed, role)
         tail = ("\n     쓸 수 있는 문장틀(빈칸만 우리 소재에 맞게 채워라. 틀 자체를 새로 짓지 마라): "
                 + " / ".join('"%s"' % _sanitize(x) for x in tmpl)) if tmpl else ""
         lines.append('  %d) role="%s" — %s%s' % (i, role, _sanitize(descs.get(role, "")), tail))
@@ -374,6 +396,14 @@ def genre_block(style):
             "  · 이 장르는 완시청으로 먹는다 — 행동을 요구하면 흐름이 끊긴다"
             "(실측: 이 계열 히트작 전부 CTA가 없다).\n"
             "  · 마지막 칸도 CTA가 아니라 **이야기의 마무리**로 닫아라.")
+    if (style or {}).get("hook_conceal"):
+        out.append(
+            "\n★[훅에서 정체 숨기기] 첫 문장(훅)에 **제품 이름을 쓰지 마라**. "
+            "'이거 / 이것 / 이 제품'처럼 가려서 말해라.\n"
+            "  · O: \"여러분 다이소 가면 이거 꼭 사오세요\"\n"
+            "  · X: \"여러분 다이소 가면 이 앞머리 고데기 꼭 사오세요\" "
+            "(정체가 나오면 궁금할 이유가 없어져 훅이 죽는다)\n"
+            "  · 무엇인지는 뒤쪽 칸에서 밝혀라 — 그때까지 끌고 가는 게 이 구조의 힘이다.")
     return "".join(out)
 
 
