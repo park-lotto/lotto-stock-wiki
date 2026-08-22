@@ -5534,10 +5534,14 @@ function renderPool(){
 // ── 담은 영상 인라인 재생(2026-08-17) — 레퍼런스 랭킹과 같은 방식 ─────────────
 // 재생 가능 판정: 직접 mp4(play_url)가 있거나, 원본 URL로 서버가 해석해 줄 수 있는
 // 플랫폼이면 ▶를 붙인다. URL조차 없는 항목(직접 입력 전)은 누를 게 없으므로 뺀다.
+// ★판정은 poolPlay가 실제로 쓰는 것과 **같은 눈**이어야 한다(0순위-B). 종전엔
+//   `it.url || it.shortcode`라 렌즈 해시만 있고 url이 없는 항목에도 ▶가 붙었는데,
+//   poolPlay는 그 해시로 아무것도 못 해 눌러도 실패했다 — 못 트는 ▶를 보여주지 않는다.
+//   ⚠️play_url(직접 mp4)은 id가 필요 없는 경로(poolPlay ①)라 먼저 통과시킨다.
 function _poolCanPlay(it){
   if(!it) return false;
   if(it.play_url) return true;
-  return !!(it.url || it.shortcode);
+  return !!(_poolPlatformOf(it.url) && _poolPlayId(it));
 }
 // ▶ 클릭 → 그 칸의 <img>를 <video>로 교체해 바로 재생(화면 이동 없음).
 //   ①play_url 있으면 즉시(/api/video 프록시 — CDN이 리퍼러·IP를 따져 직접재생을 막는다)
@@ -5558,7 +5562,7 @@ async function poolPlay(badge, i){
   //   img가 있으면 그 자리를 대체하고, 없으면 카드 맨 앞에 넣는다.
   const img = card.querySelector('img');
   const plat = _poolPlatformOf(it.url);
-  const id   = it.shortcode || _poolVideoIdOf(it.url);
+  const id   = _poolPlayId(it);      // 렌즈 해시를 거른다(판정은 _poolPlayId 한 곳)
   const put = (el)=>{ if(img && img.parentElement) img.replaceWith(el); else card.insertBefore(el, card.firstChild); };
   const swap = (src, onFail)=>{
     const v=document.createElement('video');
@@ -5638,7 +5642,15 @@ function _poolFallback(card, el, i, plat, id){
     }else{ el.remove(); }
   }
   card.dataset.playing='';
-  _poolPlayFail(card, i, '이 영상은 인앱 재생 소스가 없어요');
+  // ★인스타는 임베드 폴백이 **없다**(로그인 벽) — 위 iframe 분기가 유튜브·틱톡만이라
+  //   인스타는 항상 여기로 떨어진다. 종전 문구는 "인앱 재생 소스가 없어요"였는데,
+  //   해석이 잘 되던 영상이 렌즈 해시 때문에 실패한 경우(2026-08-23 제보의 증상)까지
+  //   싸잡아 "소스가 없다"고 해 원인을 가렸다. 플랫폼을 밝혀 원본으로 안내한다.
+  //   ⚠️안내창을 새로 만들지 않는다 — _poolPlayFail이 이미 그 자리(bottom:0)에 문구와
+  //     '원본 ↗' 링크를 띄우고 ▶까지 되살린다. 하나 더 붙이면 두 겹으로 겹친다.
+  _poolPlayFail(card, i, plat==='instagram'
+    ? '인스타는 여기서 재생이 안 돼요'
+    : '이 영상은 인앱 재생 소스가 없어요');
 }
 function _poolLoading(card){
   const d=document.createElement('div');
@@ -5668,6 +5680,25 @@ function _poolPlatformOf(u){
   if(/tiktok\.com/i.test(s))            return 'tiktok';
   if(/instagram\.com/i.test(s))         return 'instagram';
   return '';
+}
+// ★재생에 쓸 영상 ID를 정하는 곳은 여기 하나다(2026-08-23 사장님 "▶ 누르면 사라짐").
+//   렌즈로 찾은 영상은 shortcode가 **진짜 ID가 아니라 내부 해시**다
+//   (lens_instagram_quypyf · grab_douyin_…). 그걸 /api/media에 보내면 ok:False가 오고
+//   인스타는 임베드 폴백이 없어 썸네일로 되돌아간다 = "눌렀는데 사라졌다".
+//   실측: 최근 작업 handoff 59건 중 43건(73%)이 이 해시였고 전부 url은 갖고 있었다.
+//   ⚠️`lens_tiktok_7458060642738605355`처럼 **해시 안에 진짜 ID가 들어 있는** 형태도 있다
+//     (mix_pipeline._cache_keys_for_url 주석). 그건 url이 없을 때의 마지막 폴백으로만 쓴다.
+//   같은 함정·같은 처방: 메모리 reference_캐시키_URL추론금지("추론 전에 적힌 것을 읽는다").
+function _poolPlayId(it){
+  if (!it) return '';
+  const sc = String(it.shortcode || '');
+  const isHash = /^(lens|grab)_/.test(sc);
+  if (sc && !isHash) return sc;                  // 진짜 shortcode — 그대로 쓴다
+  const fromUrl = _poolVideoIdOf(it.url);
+  if (fromUrl) return fromUrl;                   // ★url에서 뽑은 것이 우선
+  // url이 없다 — 해시 꼬리가 숫자 ID면(lens_tiktok_745806…) 그거라도 쓴다.
+  const tail = sc.replace(/^(lens|grab)_[a-z]+_/, '');
+  return /^\d{6,}$/.test(tail) ? tail : '';
 }
 // ★URL에서 짧은해시를 만들어내려 하지 마라(도우인·샤오홍슈는 URL로 유도 불가 — 메모리
 //   reference_캐시키_URL추론금지). 여기선 shortcode가 없을 때의 마지막 폴백으로만 쓴다.
@@ -6012,6 +6043,7 @@ async function autoloadFootageScripts(){
     url: h.url, video_url: h.video_url||'', shortcode: h.shortcode||'', name: h.name||'',
     thumbnail: h.thumbnail||'', caption: h.caption||'', category: h.category||'',
     followers: h.followers||0, comments: h.comments||0,
+    views: h.views||0,
   }));
   if(!items.length) return false;
   try{
@@ -6035,6 +6067,10 @@ async function autoloadAllFootage(){
       url: h.url, video_url: h.video_url||'', shortcode: h.shortcode||'', name: h.name||'',
       thumbnail: h.thumbnail||'', caption: h.caption||'', category: h.category||'',
       followers: h.followers||0, comments: h.comments||0,
+      // ★두 곳 다 싣는다 — 한 곳만 고치면 배치 경로에 따라 값이 갈린다(0순위-B).
+      //   ⚠️서버 script_wiki엔 아직 views 컬럼이 없어(save_to_wiki) 지금은 저장되지 않는다.
+      //     카드 표시는 이것과 무관하다 — HANDOFF(saveWork가 통째로 담는다)가 원천이다.
+      views: h.views||0,
     }));
     if(!items.length) break;
     let d;
