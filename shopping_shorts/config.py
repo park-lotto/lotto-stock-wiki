@@ -297,6 +297,15 @@ MIN_SHOT_SECONDS = 1.2       # 컷 하나 최소 길이 — 이보다 짧은 조
 # 한 컷을 이보다 오래 안 끈다 — 긴 정지(7초 홀드) 대신 distinct 앵글로 컷(벤치마크 ~1.1초).
 # 렌더가 이 상한으로 세그먼트를 번갈아 재생해 컷 밀도를 만든다(0=끄기·옛 동작).
 MAX_SHOT_SECONDS = 2.2
+# ── 컷 전환(2026-08-23 사장님 "부자연스럽고 ... 캡컷을 대체하고 싶은 게 목적") ──────
+# 컷과 컷 사이를 딱 끊지 않고 짧게 겹쳐 넘긴다(xfade). 0이면 종전대로 하드컷.
+# ★비트(칸) 길이는 절대 안 바뀐다 — 겹치는 만큼 각 컷을 미리 늘려 받아
+#   총합이 tts_dur과 같게 유지한다. 안 그러면 뒤 칸 자막이 통째로 밀린다(t0 누적).
+# ★컷 **안**에서만 겹친다. 칸과 칸 사이는 안 건드린다(칸 경계에서 겹치면
+#   그 칸의 음성·자막 시작점이 흔들린다).
+TRANSITION_SECONDS = float(os.environ.get("SHORTS_TRANSITION_SECONDS", "0.25"))
+# 전환 종류(ffmpeg xfade transition 이름). fade가 가장 무난하다.
+TRANSITION_KIND = os.environ.get("SHORTS_TRANSITION_KIND", "fade")
 # 1장=1컷(2026-08-14): 담은 장면을 순서대로 한 번씩만 쓴다(라운드로빈 되돌아옴 없음).
 # 길이는 나레이션을 장수로 고르게 나눠 준다. 기본 off — 켜면 영상 결과가 바뀐다.
 ONE_CLIP_PER_SEGMENT = False
