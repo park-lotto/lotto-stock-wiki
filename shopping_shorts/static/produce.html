@@ -1591,7 +1591,28 @@
                     <b>[광고] 표시</b>
                   </label>
                   <div id="adBadgeHint" class="hint" style="font-size:11px;margin-top:4px;display:none">템플릿 탭에서 틀을 먼저 고르세요.</div>
+                  <!-- 크기·흐리기·위치 다듬기(2026-08-22 사장님 "크기나 마우스로 위치조정 흐리기등").
+                       ★값의 주인은 아래 숨은 칸(frAdSize/frAdAlpha/frAdX/frAdY) 하나다 —
+                         여기 슬라이더는 그 칸에 써넣고 frUpdate()를 부른다(0순위-B). -->
+                  <div id="adBadgeTune" style="margin-top:8px;display:none">
+                    <label style="display:block;font-size:12px;color:var(--sub);margin-bottom:4px">
+                      크기 <b id="frAdSizeV">자동</b>
+                      <input id="frAdSize" type="range" min="0" max="120" step="2" value="0"
+                             oninput="frUpdate()" style="width:100%"></label>
+                    <label style="display:block;font-size:12px;color:var(--sub)">
+                      흐리기 <b id="frAdAlphaV">또렷</b>
+                      <input id="frAdAlpha" type="range" min="10" max="100" step="5" value="100"
+                             oninput="frUpdate()" style="width:100%"></label>
+                    <div class="hint" style="font-size:11px;margin-top:2px">
+                      위치는 왼쪽 미리보기에서 <b>[광고]를 끌어서</b> 옮기세요.
+                      <button type="button" class="btn" style="padding:2px 8px;font-size:11px;margin-left:6px;background:var(--inset);border:1px solid var(--line);color:var(--sub)"
+                              onclick="frAdReset()">처음 자리로</button>
+                    </div>
+                  </div>
                 </div>
+                <!-- 숨은 진짜 칸: 위치는 드래그가 써넣는다 -->
+                <label hidden style="display:none"><input id="frAdX" type="number" value="0" onchange="frUpdate()"></label>
+                <label hidden style="display:none"><input id="frAdY" type="number" value="0" onchange="frUpdate()"></label>
                 <!-- 숨은 진짜 칸: frFill/frUpdate가 이 id를 읽고 쓴다(지우면 배선이 끊긴다) -->
                 <label hidden style="display:none"><input id="frAd" type="checkbox" onchange="frUpdate()"></label>
                 <!-- 추가 텍스트: 사장님 지시로 화면에서 뺌(2026-08-22).
@@ -2647,7 +2668,9 @@ function frameUrl(f){
     ad_badge:f.ad_badge?'1':'0', icons:f.icons?'1':'0',
     // 글자 꾸미기(2026-08-22) — 빈값/0이면 서버가 프리셋 기본으로 되돌린다
     ch_font:f.ch_font||'', ch_size:f.ch_size??0, ch_x:f.ch_x??50,
-    title_font:f.title_font||'', title_size:f.title_size??0, title_x:f.title_x??50});
+    title_font:f.title_font||'', title_size:f.title_size??0, title_x:f.title_x??50,
+    // [광고] 다듬기(2026-08-22) — 0이면 서버가 지금까지의 자리·크기를 그대로 쓴다
+    ad_size:f.ad_size??0, ad_x:f.ad_x??0, ad_y:f.ad_y??0, ad_alpha:f.ad_alpha??100});
   return '/api/produce/frame.png?'+q.toString();
 }
 async function loadFramePresets(){
@@ -2710,6 +2733,10 @@ function frFill(f){
   // 글자 꾸미기 — 저장된 값이 없으면 '자동'(0/50)으로 되돌린다
   if(g('frChFont')) g('frChFont').value=f.ch_font||'';
   if(g('frChSize')) g('frChSize').value=f.ch_size??0;
+  if(g('frAdSize')) g('frAdSize').value=f.ad_size??0;
+  if(g('frAdAlpha')) g('frAdAlpha').value=f.ad_alpha??100;
+  if(g('frAdX')) g('frAdX').value=f.ad_x??0;
+  if(g('frAdY')) g('frAdY').value=f.ad_y??0;
   if(g('frChX')) g('frChX').value=f.ch_x??50;
   if(g('frTtFont')) g('frTtFont').value=f.title_font||'';
   if(g('frTtSize')) g('frTtSize').value=f.title_size??0;
@@ -2773,6 +2800,14 @@ function frUpdate(){
   f.title_font=(g('frTtFont')||{}).value||'';
   f.title_size=parseInt((g('frTtSize')||{}).value||0,10);
   f.title_x=parseInt((g('frTtX')||{}).value||50,10);
+  f.ad_size=parseInt((g('frAdSize')||{}).value||0,10);
+  f.ad_alpha=parseInt((g('frAdAlpha')||{}).value||100,10);
+  f.ad_x=parseInt((g('frAdX')||{}).value||0,10);
+  f.ad_y=parseInt((g('frAdY')||{}).value||0,10);
+  if(g('frAdSizeV')) g('frAdSizeV').textContent=f.ad_size?f.ad_size+'px':'자동';
+  if(g('frAdAlphaV')) g('frAdAlphaV').textContent=f.ad_alpha>=100?'또렷':f.ad_alpha+'%';
+  // 다듬기 칸은 [광고]를 켰을 때만 보인다(꺼져 있으면 조절할 대상이 없다)
+  if(g('adBadgeTune')) g('adBadgeTune').style.display=f.ad_badge?'':'none';
   const lab=(id,v,suf)=>{ const t=g(id); if(t) t.textContent=(v?v+suf:'자동'); };
   lab('frChSizeV',f.ch_size,'px'); lab('frTtSizeV',f.title_size,'px');
   if(g('frChXV')) g('frChXV').textContent=f.ch_x+'%';
@@ -2800,6 +2835,7 @@ function frDragScale(){
 }
 function syncFrameHandles(){
   const pv=document.getElementById('hcPreview'); if(!pv) return;
+  try{ syncAdHandle(); }catch(e){}   // [광고] 손잡이도 같은 시점에 맞춘다
   const t=STATE.deco&&STATE.deco.template;
   const on=!!(t&&t.frame);
   ['frHandleTop','frHandleBottom'].forEach(id=>{
@@ -2823,6 +2859,72 @@ function syncFrameHandles(){
     if(id==='frHandleTop') el.style.top=Math.max(0,(f.bar_h??190)/scale-7)+'px';
     else                   el.style.bottom=Math.max(0,(f.bottom_h??0)/scale-7)+'px';
   });
+}
+// ── 🖱 [광고] 위치 드래그(2026-08-22 사장님 "마우스로 위치조정") ─────────────────
+// 띠 손잡이와 같은 원리다: 서버 그림 위에 **투명 손잡이**를 얹고, 끌면 숨은 칸
+// (frAdX/frAdY)에 %를 써넣고 frUpdate()를 부른다. 값의 주인은 그 칸 하나(0순위-B).
+// ★기본 자리는 서버(deco_frame)가 정한다 — 여기서 다시 계산하면 두 벌이 돼 어긋난다.
+//   그래서 "아직 안 정했을 때"의 표시 좌표만 서버 기본과 같은 값으로 맞춰 둔다.
+const FR_AD_DEF_X = 984 / 1080 * 100;          // 오른쪽 아이콘 위(deco_frame: W-96)
+function frAdDefaultY(barH){                    // 띠가 있으면 띠 안, 없으면 위 여백 40px
+  const y = barH > 0 ? Math.max(14, barH / 2 - barH * 0.28) : 40;
+  return y / 1920 * 100;
+}
+function frAdReset(){
+  const gx=document.getElementById('frAdX'), gy=document.getElementById('frAdY');
+  if(gx) gx.value=0;
+  if(gy) gy.value=0;
+  frUpdate();
+}
+function syncAdHandle(){
+  const pv=document.getElementById('hcPreview'); if(!pv) return;
+  const t=STATE.deco&&STATE.deco.template;
+  const f=t&&t.frame;
+  let el=document.getElementById('frHandleAd');
+  const on=!!(f&&f.ad_badge);
+  if(!on){ if(el) el.style.display='none'; return; }
+  if(!el){
+    el=document.createElement('div');
+    el.id='frHandleAd';
+    // 틀 그림(z-index 4)보다 위. 반투명 테두리만 — [광고] 글자 자체는 서버 그림이 그린다.
+    el.style.cssText='position:absolute;width:64px;height:30px;margin:-15px 0 0 -32px;'
+      +'cursor:move;z-index:7;border:1px dashed rgba(255,255,255,.75);border-radius:6px;'
+      +'background:rgba(0,0,0,.12)';
+    el.title='끌어서 [광고] 위치 옮기기';
+    pv.appendChild(el);
+    bindAdHandle(el);
+  }
+  el.style.display='block';
+  el.style.left=(f.ad_x||FR_AD_DEF_X)+'%';
+  el.style.top=(f.ad_y||frAdDefaultY(f.bar_h??190))+'%';
+}
+function bindAdHandle(el){
+  const start=(ev)=>{
+    ev.preventDefault(); ev.stopPropagation();
+    const pv=document.getElementById('hcPreview'); if(!pv) return;
+    const gx=document.getElementById('frAdX'), gy=document.getElementById('frAdY');
+    const t=STATE.deco&&STATE.deco.template, f=t&&t.frame; if(!f||!gx||!gy) return;
+    const box=pv.getBoundingClientRect();
+    const px=e=>(e.touches&&e.touches[0])?e.touches[0].clientX:e.clientX;
+    const py=e=>(e.touches&&e.touches[0])?e.touches[0].clientY:e.clientY;
+    const move=e=>{
+      // 미리보기 안 좌표 → %. 1~99로 가둬 화면 밖으로 못 나가게 한다
+      // (서버도 글자 폭만큼 한 번 더 당긴다 — 두 곳이 같은 방향이라 어긋나지 않는다).
+      const xp=Math.round((px(e)-box.left)/box.width*100);
+      const yp=Math.round((py(e)-box.top)/box.height*100);
+      gx.value=Math.max(1, Math.min(99, xp));
+      gy.value=Math.max(1, Math.min(99, yp));
+      frUpdate();
+    };
+    const end=()=>{
+      document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',end);
+      document.removeEventListener('touchmove',move); document.removeEventListener('touchend',end);
+    };
+    document.addEventListener('mousemove',move); document.addEventListener('mouseup',end);
+    document.addEventListener('touchmove',move,{passive:false}); document.addEventListener('touchend',end);
+  };
+  el.addEventListener('mousedown',start);
+  el.addEventListener('touchstart',start,{passive:false});
 }
 function bindFrameHandle(el, inputId){
   const start=(ev)=>{
@@ -8752,14 +8854,18 @@ function renderExport(opts){
     // ★1순위: 캡컷으로 바로 보내기(원클릭). 60대 북극성 — 클릭 한 번이면 캡컷에 프로젝트가 생긴다.
     + (capcutOk
         ? `<button class="btn-next" style="${big};border:0;cursor:pointer;font-size:15px" onclick="sendToCapCut()">🎬 캡컷으로 보내기</button>`
-          + `<a class="btn-prev" style="${small}" href="/static/capcut_setup.bat" download>⚙ 캡컷 자동설정(최초 1회)</a>`
+          // ★경로에 `/static/`을 붙이지 마라 — 정적 파일은 **루트에 마운트**돼 있다
+          //   (app.py `app.mount("/", ...)`). 2026-08-22 실측: `/static/capcut_setup.bat`은
+          //   404였고, 그래서 고객은 자동설정 파일도 그림 매뉴얼도 **한 번도 못 받았다**
+          //   (핸드오프의 ".bat 실제 동작 확인"이 한 달째 미확인이던 진짜 이유).
+          + `<a class="btn-prev" style="${small}" href="/capcut_setup.bat" download>⚙ 캡컷 자동설정(최초 1회)</a>`
           + `<button class="btn-prev" style="${small};border:0;cursor:pointer" onclick="resetCapCutFolder()">폴더 다시 지정</button>`
           // ★그림 매뉴얼(2026-08-19 사장님 "이미지로 해야 이해한다"). 글로 적은 안내는 아무도
           //   안 읽는다 — 준비 단계를 그림 4장으로 만든 페이지를 새 탭으로 연다.
-          + `<a class="btn-prev" style="${small}" href="/static/capcut_manual.html" target="_blank" rel="noopener">📖 그림으로 보는 준비 방법</a>`
+          + `<a class="btn-prev" style="${small}" href="/capcut_manual.html" target="_blank" rel="noopener">📖 그림으로 보는 준비 방법</a>`
           + '<div class="hint" style="margin:4px 0 10px">캡컷이 깔려 있으면 클릭 한 번으로 프로젝트가 만들어집니다. <b>처음 쓰실 때만</b>: 위 <b>⚙자동설정</b> 파일을 받아 한 번 더블클릭(캡컷은 꺼둔 채) → 캡컷 켜기 → 폴더 한 번 지정. Chrome·Edge 전용.</div>'
         : '<div class="hint" style="margin-bottom:10px">💡 캡컷으로 바로 보내기는 <b>Chrome·Edge</b>에서만 됩니다. 지금 브라우저에선 아래 ZIP을 받아 캡컷에 올리세요. '
-            + '<a href="/static/capcut_manual.html" target="_blank" rel="noopener" style="color:var(--accent2)">📖 그림으로 보는 준비 방법</a></div>')
+            + '<a href="/capcut_manual.html" target="_blank" rel="noopener" style="color:var(--accent2)">📖 그림으로 보는 준비 방법</a></div>')
     + (rendered?`<a class="btn-next" style="${big}" href="/api/mix/video/${j}?dl=1" download>⬇ 완성 영상(MP4)</a>`:'')
     // ★'📱 카톡·공유로 보내기' 버튼은 뺐다(2026-08-18 사장님 지시). 데스크톱 브라우저는
     //   파일 공유(Web Share Level 2)를 대부분 못 해 눌러도 다운로드 안내로 떨어졌고,

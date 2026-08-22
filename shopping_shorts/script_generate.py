@@ -15,6 +15,7 @@ from google.genai import types
 
 from shopping_shorts import comment_gen
 from pipeline.atoms import key_vault
+from shopping_shorts import keyroute
 
 _MODEL = comment_gen._MODEL
 
@@ -58,7 +59,7 @@ def _call_json(prompt, schema, note=None):
       늘 "키 소진 또는 응답 오류"가 떴다(실측 2026-08-22: 키가 멀쩡한데도 그 문구).
       note를 안 주면 종전과 완전히 동일하다(회귀 0).
     """
-    keys = key_vault.get_live_keys_cascade(_GEN_GROUP)
+    keys = keyroute.gemini_keys(_GEN_GROUP)
     if note is not None:
         note["keys"] = len(keys)
         if not keys:
