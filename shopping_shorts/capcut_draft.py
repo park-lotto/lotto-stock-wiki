@@ -139,6 +139,49 @@ _DEFAULT_FONT = ("C:/Users/TheRose/AppData/Local/CapCut/Apps/8.9.1.3802/"
                  "Resources/Font/SystemFont/en.ttf")
 
 
+def _safe_part(s, limit=20):
+    """파일명 조각 안전화 — 한글은 살리고 경로에 위험한 문자만 뺀다."""
+    out = "".join(c for c in (s or "") if c.isalnum() or c in "_-")
+    return out[:limit]
+
+
+def _cut(src, start, end, out_path):
+    """소스 [start,end]를 잘라 out_path(mp4)로. **export_bundle._cut_clip을 그대로 쓴다**
+    (0순위-B: 컷 방식이 두 벌이 되면 ZIP과 캡컷의 조각이 달라진다).
+    실패해도 예외를 안 던진다 — 조각 하나가 실패해도 내보내기 전체는 살아야 한다."""
+    try:
+        from shopping_shorts.export_bundle import _cut_clip
+        return _cut_clip(src, start, end, out_path)
+    except Exception as e:      # noqa: BLE001
+        print("조각 컷 실패(%s): %s" % (getattr(out_path, "name", out_path), str(e)[:100]))
+        return False
+
+
+def _beat_clips(beat, beat_dur, src_durs):
+    """비트의 화면 조각 계획 — **렌더와 같은 함수**를 쓴다(0순위-B).
+
+    실제 렌더(`video_assemble._render_mix`)와 캡컷이 서로 다른 계산을 하면 "캡컷에서 연 것"과
+    "완성본"이 다른 영상이 된다. 그래서 계획은 `plan_beat_clips_for` 하나가 정한다.
+
+    ★import를 함수 안에서 한다 — capcut_draft는 순수 생성기라 모듈 최상단에서 video_assemble
+      (ffmpeg 계열)을 끌어오면 테스트·임포트가 무거워진다.
+    실패해도 draft 생성 자체는 살려야 하므로(내보내기가 통째로 죽으면 안 된다) 못 구하면
+    primary 하나로 되돌아간다 — 종전 동작과 같다.
+    """
+    try:
+        from shopping_shorts.video_assemble import plan_beat_clips_for
+        clips = plan_beat_clips_for(beat, float(beat_dur or 0.0), src_durs or {})
+        if clips:
+            return clips
+    except Exception as e:      # noqa: BLE001 — 계획 실패가 내보내기를 죽이면 안 된다
+        print("capcut 조각 계획 실패(primary로 대체): %s" % str(e)[:120])
+    prim = beat.get("primary") or {}
+    if prim.get("video_id") and prim.get("start") is not None:
+        return [{"video_id": prim["video_id"], "start": prim["start"],
+                 "src_dur": float(beat_dur or 0.0), "out_dur": float(beat_dur or 0.0)}]
+    return []
+
+
 def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
                 project_name, canvas=(1080, 1920), font_path=_DEFAULT_FONT, video_durs=None):
     """편집안 → (draft_content_dict, assets_to_copy).
@@ -170,26 +213,42 @@ def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
             continue
         total_us = max(total_us, t0 + dur)
 
-        # ── 영상 트랙: 비트 primary 소스 클립 ──
-        prim = beat.get("primary") or {}
-        src_real = source_video_paths.get(prim.get("video_id"))
-        if src_real and prim.get("start") is not None:
-            abs_path = asset_paths.get(src_real)
-            if abs_path:
-                assets_to_copy.append((src_real, abs_path))
-                sp, ca, sc, ph, vs = _speed(), _canvas(), _sound_channel_mapping(), _placeholder_info(), _vocal_separation()
-                for m, key in ((sp, "speeds"), (ca, "canvases"), (sc, "sound_channel_mappings"),
-                               (ph, "placeholder_infos"), (vs, "vocal_separations")):
-                    mats[key].append(m)
-                vdur = _us((video_durs or {}).get(src_real, 0.0)) or (t0 + dur)
-                vm = _video_material(abs_path, prim.get("video_id", "clip"), vdur, cw, ch)
-                mats["videos"].append(vm)
-                # volume=0.0 → 원본 클립 오디오 음소거(원본 음악·말소리 제거, 우리 TTS만 들리게).
-                # last_nonzero_volume=1.0이라 사장님이 캡컷에서 필요하면 되살릴 수 있다.
-                seg = _base_segment(vm["id"], t0, dur, source_start=_us(prim["start"]),
-                                    source_dur=dur, render_index=0, volume=0.0,
-                                    extra_refs=[sp["id"], ca["id"], sc["id"], ph["id"], vs["id"]])
-                vid_track["segments"].append(seg)
+        # ── 영상 트랙: 비트의 화면 조각 **전부** ──
+        # ★2026-08-23 수정. 예전엔 `beat["primary"]` **하나만** 올렸다. 그런데 비트 하나에는
+        #   화면이 여러 개 붙는다(primary + alternates, 실험실 편성이면 scene_override).
+        #   실측: 조각 19개인 job이 캡컷엔 7개만 갔다 = 완성본과 **다른 영상**이 열렸다.
+        #   계획은 렌더와 **같은 함수**가 준다(video_assemble.plan_beat_clips_for, 0순위-B) —
+        #   여기서 따로 나누면 또 어긋난다.
+        _srcd = {vid: (video_durs or {}).get(real, 0.0)
+                 for vid, real in source_video_paths.items() if real}
+        _clips = _beat_clips(beat, tl.get("dur", 0.0), _srcd)
+        _acc = t0
+        for ci, c in enumerate(_clips):
+            src_real = source_video_paths.get(c.get("video_id"))
+            abs_path = asset_paths.get(src_real) if src_real else None
+            if not abs_path:
+                continue
+            # 마지막 조각은 반올림 오차를 흡수해 비트 끝에 정확히 맞춘다(빈틈·겹침 0).
+            c_dur = (t0 + dur - _acc) if ci == len(_clips) - 1 else _us(c.get("out_dur", 0.0))
+            if c_dur <= 0:
+                continue
+            assets_to_copy.append((src_real, abs_path))
+            sp, ca, sc, ph, vs = _speed(), _canvas(), _sound_channel_mapping(), _placeholder_info(), _vocal_separation()
+            for m, key in ((sp, "speeds"), (ca, "canvases"), (sc, "sound_channel_mappings"),
+                           (ph, "placeholder_infos"), (vs, "vocal_separations")):
+                mats[key].append(m)
+            vdur = _us((video_durs or {}).get(src_real, 0.0)) or (t0 + dur)
+            vm = _video_material(abs_path, c.get("video_id", "clip"), vdur, cw, ch)
+            mats["videos"].append(vm)
+            # volume=0.0 → 원본 클립 오디오 음소거(원본 음악·말소리 제거, 우리 TTS만 들리게).
+            # last_nonzero_volume=1.0이라 사장님이 캡컷에서 필요하면 되살릴 수 있다.
+            # source_dur은 **읽을 원본 길이**(src_dur)다 — out_dur을 쓰면 슬로모 구간이 어긋난다.
+            seg = _base_segment(vm["id"], _acc, c_dur, source_start=_us(c.get("start", 0.0)),
+                                source_dur=_us(c.get("src_dur", 0.0)) or c_dur,
+                                render_index=0, volume=0.0,
+                                extra_refs=[sp["id"], ca["id"], sc["id"], ph["id"], vs["id"]])
+            vid_track["segments"].append(seg)
+            _acc += c_dur
 
         # ── 음성 트랙: 비트 TTS ──
         tts_real = tts_paths.get(idx)
@@ -269,7 +328,7 @@ def _skeleton(name, cw, ch, duration_us):
 
 def assemble_draft_folder(out_root, base_abs, *, plan, timeline, source_video_paths,
                           tts_paths, project_name, canvas=(1080, 1920), font_path=_DEFAULT_FONT,
-                          probe=None):
+                          probe=None, final_video=None):
     """draft 폴더를 out_root/<project>/ 에 실제로 조립한다(에셋 복사 + draft_content.json + meta).
 
     base_abs: 캡컷이 이 draft 폴더를 볼 **절대경로**(예: C:/capcutproject/CapCut Drafts). draft가
@@ -285,8 +344,16 @@ def assemble_draft_folder(out_root, base_abs, *, plan, timeline, source_video_pa
     base_abs = base_abs.replace("\\", "/").rstrip("/")
 
     # 소스 영상: 비트에 실제 쓰인 것만 폴더당 1회 복사. 캡컷이 볼 절대경로 매핑 구성.
-    used_vids = {(plan_beat.get("primary") or {}).get("video_id")
-                 for plan_beat in plan.get("beats", [])}
+    # ★2026-08-23 — 여기도 `primary`만 보고 있었다(같은 병의 **세 번째 자리**).
+    #   alternates 소스가 복사되지 않아 asset_paths에 없고, 그러면 아래 build_draft가
+    #   그 조각을 **조용히 건너뛴다**(실측: 화면 3개인 비트가 타임라인에 2개만 올라감).
+    #   화면 재료의 단일 출처(_beat_material)와 같은 기준으로 모은다.
+    def _vids_of(pb):
+        segs = pb.get("scene_override") or ([pb.get("primary")] + list(pb.get("alternates") or []))
+        return {s.get("video_id") for s in segs if s}
+    used_vids = set()
+    for plan_beat in plan.get("beats", []):
+        used_vids |= _vids_of(plan_beat)
     asset_paths, video_durs = {}, {}
     for vid, real in source_video_paths.items():
         if vid not in used_vids or not real or not Path(real).exists():
@@ -308,7 +375,57 @@ def assemble_draft_folder(out_root, base_abs, *, plan, timeline, source_video_pa
     draft, _ = build_draft(plan=plan, timeline=timeline, source_video_paths=source_video_paths,
                            tts_paths=tts_paths, asset_paths=asset_paths, project_name=project,
                            canvas=canvas, font_path=font_path, video_durs=video_durs)
-    meta = build_meta(project, f"{base_abs}/{project}", draft["duration"])
+
+    # ── 미디어 보관함(2026-08-23 사장님 "라이브러리에 조각 영상들 불러올 수 있게") ──
+    #   타임라인은 그대로 두고, **장면 조각을 캡컷 보관함에 넣어** 끌어다 갈아끼울 수 있게 한다.
+    #   자막·TTS는 트랙이 따로라 갈아끼워도 그대로 남는다.
+    media = []
+    cw2, ch2 = canvas
+    #   ① 장면 조각 — 원본에서 잘라낸 **깨끗한 화면**(자막·효과 안 구워짐).
+    #      갈아끼워도 자막이 어긋나지 않는다. 파일명을 비트 순서로 지어 보관함에서 정렬된다.
+    for tl in timeline:
+        beat = {b["beat_idx"]: b for b in plan.get("beats", [])}.get(tl["beat_idx"])
+        if not beat:
+            continue
+        _srcd = {vid: (video_durs or {}).get(real, 0.0)
+                 for vid, real in source_video_paths.items() if real}
+        for ci, c in enumerate(_beat_clips(beat, tl.get("dur", 0.0), _srcd)):
+            real = source_video_paths.get(c.get("video_id"))
+            if not real or not Path(real).exists():
+                continue
+            role = _safe_part(tl.get("role") or beat.get("role") or "")
+            name = "cut_%02d_%d%s.mp4" % (int(tl["beat_idx"]), ci, ("_" + role) if role else "")
+            out = proj / name
+            st = float(c.get("start", 0.0))
+            if not _cut(real, st, st + float(c.get("src_dur", 0.0) or 0.0), out):
+                continue
+            media.append({"path": f"{base_abs}/{project}/{name}", "name": name,
+                          "dur": float(c.get("out_dur", 0.0) or 0.0), "w": cw2, "h": ch2})
+    #   ② 완성본 — 참고용. 보관함에만 넣고 타임라인엔 안 올린다(TTS와 겹치면 두 번 들린다).
+    if final_video and Path(final_video).exists():
+        shutil.copy(final_video, proj / "final.mp4")
+        try:
+            _fdur = probe(final_video)
+        except Exception:
+            _fdur = 0.0
+        media.append({"path": f"{base_abs}/{project}/final.mp4", "name": "final.mp4",
+                      "dur": _fdur, "w": cw2, "h": ch2})
+    #   ③ 이미 복사해 둔 소스 원본·TTS도 보관함에 올려 바로 쓸 수 있게 한다.
+    #      ★TTS는 video_durs에 없다(영상만 잰다) — 길이 0으로 넣으면 보관함에서 못 쓴다.
+    #        음성은 여기서 따로 잰다.
+    for real, abs_path in asset_paths.items():
+        nm = abs_path.rsplit("/", 1)[-1]
+        is_vid = nm.lower().endswith(".mp4")
+        dur = (video_durs or {}).get(real, 0.0)
+        if not dur:
+            try:
+                dur = probe(real)
+            except Exception:
+                dur = 0.0
+        media.append({"path": abs_path, "name": nm, "dur": dur,
+                      "w": cw2 if is_vid else 0, "h": ch2 if is_vid else 0})
+
+    meta = build_meta(project, f"{base_abs}/{project}", draft["duration"], media=media)
     (proj / "draft_content.json").write_text(json.dumps(draft, ensure_ascii=False), encoding="utf-8")
     (proj / "draft_meta_info.json").write_text(json.dumps(meta, ensure_ascii=False), encoding="utf-8")
     return proj, project, sorted(p.name for p in proj.iterdir())
@@ -320,8 +437,46 @@ def safe_project_name(s, default="쇼핑쇼츠"):
     return (s or default)[:50]
 
 
-def build_meta(project_name, draft_folder, duration_us):
-    """draft_meta_info.json(최소). draft_folder = 캡컷이 볼 이 프로젝트 폴더 절대경로."""
+_AUDIO_EXT = (".mp3", ".wav", ".m4a", ".aac", ".flac", ".ogg")
+
+
+def _media_entry(item):
+    """미디어 보관함 항목 1개.
+
+    ★형식은 실제 캡컷 프로젝트에서 실측했다(2026-08-23, 추측 아님):
+      `%LOCALAPPDATA%/CapCut/User Data/Projects/com.lveditor.draft/0618/draft_meta_info.json`
+    """
+    path = str(item.get("path") or "").replace("\\", "/")
+    name = item.get("name") or path.rsplit("/", 1)[-1]
+    dur = _us(item.get("dur") or 0.0)
+    # mp3를 video로 등록하면 캡컷이 잘못 읽는다 — 확장자로 가른다.
+    kind = "music" if name.lower().endswith(_AUDIO_EXT) else "video"
+    return {
+        "id": _uid(), "type": 0, "metetype": kind,
+        "file_Path": path, "extra_info": name,
+        "duration": dur,
+        "width": int(item.get("w") or 0), "height": int(item.get("h") or 0),
+        "roughcut_time_range": {"start": 0, "duration": dur},
+        "sub_time_range": {"start": -1, "duration": -1},
+        # 아래는 실측 항목에 있던 값 그대로(무해한 기본값).
+        "item_source": 1, "create_time": 0, "import_time": 0, "import_time_ms": 0,
+        "ai_group_type": "", "md5": "", "enter_from": 0,
+    }
+
+
+def build_meta(project_name, draft_folder, duration_us, media=None):
+    """draft_meta_info.json(최소). draft_folder = 캡컷이 볼 이 프로젝트 폴더 절대경로.
+
+    media: 캡컷 **미디어 보관함**에 띄울 파일 목록(2026-08-23 사장님 지시).
+      [{"path": 절대경로, "name": 보일이름, "dur": 초, "w": 가로, "h": 세로}, ...]
+      타임라인은 그대로 두고 보관함에만 넣는다 — 조각을 끌어다 장면을 갈아끼우기 위함.
+      **안 주면 예전과 동일**(빈 보관함) = 회귀 0.
+
+    ★`draft_materials`는 그룹 배열이다(실측): type 0=영상·이미지, 1~6은 다른 갈래.
+      빈 그룹도 함께 있어야 캡컷이 정상으로 읽는다.
+    """
+    entries = [_media_entry(m) for m in (media or []) if m and m.get("path")]
+    groups = [{"type": t, "value": entries if t == 0 else []} for t in range(7)]
     return {
         "draft_id": _uid(), "draft_name": project_name, "draft_fold_path": draft_folder,
         "draft_root_path": draft_folder.rsplit("/", 1)[0].rsplit("\\", 1)[0],
@@ -329,5 +484,5 @@ def build_meta(project_name, draft_folder, duration_us):
         "tm_draft_create": 0, "tm_draft_modified": 0, "draft_deeplink_url": "",
         "draft_cover": "draft_cover.jpg", "draft_enterprise_info": {"draft_enterprise_extra": "",
         "draft_enterprise_id": "", "draft_enterprise_name": "", "enterprise_material": []},
-        "draft_materials": [], "draft_duration": duration_us,
+        "draft_materials": groups, "draft_duration": duration_us,
     }

@@ -430,6 +430,53 @@ def _spread_stretch(plan, eps=1e-3):
     return plan
 
 
+def plan_beat_clips_for(beat, tts_dur, src_durs, *, runout=0.0):
+    """비트 하나의 **화면 조각 계획**을 정한다 — 렌더·캡컷·ZIP이 **모두 이 함수를 쓴다**.
+
+    반환: [{"video_id","start","src_dur","out_dur"}, ...] (없으면 [])
+
+    ## 왜 이 함수가 생겼나 (2026-08-23 실사고)
+
+    화면 조각을 정하는 판단이 **세 군데에 따로** 적혀 있었다:
+      · 렌더(build_video)  — `_beat_material` 전부를 쓴다(정상)
+      · 캡컷(capcut_draft) — `beat["primary"]` 하나만 (`capcut_draft.py:174`)
+      · ZIP(export_bundle) — `beat["primary"]` 하나만 (`export_bundle.py:117`)
+
+    라이브 실측: 화면 조각 19개인 job이 캡컷엔 **7개**만 갔다(3분의 1).
+    → 캡컷에서 연 것과 완성본이 **다른 영상**이었다. CLAUDE.md 0순위-B 그대로다.
+
+    ★고칠 때 `_plan_beat_clips`만 부르면 안 된다 — 그 앞뒤로 판단이 더 있다(손상 소스
+      제외·포인트 비트 홀드·1장1컷·늘려채우기·마지막 여운). 그 6줄을 내보내기에 다시
+      적으면 **또 두 벌**이 된다. 그래서 블록을 통째로 여기로 옮기고, 렌더도 이걸 부른다.
+
+    src_durs: {video_id: 소스 총길이(초)}. 0.05 이하면 디코드 불가로 보고 그 구간을 뺀다
+              (안 빼면 아래 -ss 렌더가 예외로 죽는다, 2026-07-19).
+    runout:   마지막 비트 여운(초). 0이면 안 붙인다.
+    """
+    from shopping_shorts import backbone as _bb, config as _cfg
+    # 순서 구간 리스트 = _beat_material(기본: [primary]+alternates / 실험실 편성이 있으면
+    # scene_override). 소스에 실재하고 + 디코드 가능한 것만.
+    segs = [s for s in _beat_material(beat)
+            if s and (src_durs or {}).get(s.get("video_id"), 0.0) > 0.05]
+    if not segs:
+        return []
+    beat_src_durs = {s["video_id"]: src_durs[s["video_id"]] for s in segs}
+    # 컷 밀도(2026-07-22): 한 컷을 MAX_SHOT_SECONDS 넘게 안 끌고 distinct 세그먼트를 번갈아
+    # 재생 → 긴 정지 대신 컷. 포인트 비트는 홀드가 맞으니 라운드로빈 안 한다.
+    _max_shot = None if _bb.is_point_beat(beat) else getattr(_cfg, "MAX_SHOT_SECONDS", 0) or None
+    # 1장=1컷 모드(기본 off). 켜면 담은 장면이 순서대로 한 번씩만 나온다(되돌아옴 없음).
+    _one = bool(getattr(_cfg, "ONE_CLIP_PER_SEGMENT", False))
+    plan = _plan_beat_clips(segs, tts_dur, src_durs=beat_src_durs, max_shot=_max_shot,
+                            one_per_seg=_one)
+    # ★늘려 채우기(실험실 칸별 토글): 부족분을 전 컷에 고르게 — 여운보다 먼저.
+    #   여운은 일부러 붙이는 무성 꼬리라 재배분 대상이 아니다. 플래그 없으면 그대로.
+    if beat.get("stretch_fill"):
+        _spread_stretch(plan)
+    if runout > 0:
+        _extend_last_clip_for_runout(plan, segs, runout)
+    return plan
+
+
 def _plan_beat_clips(segments, tts_dur, min_clip=_MIN_CLIP, src_durs=None, max_shot=None,
                      one_per_seg=False):
     """비트의 순서 구간 리스트 → 나레이션 길이(tts_dur)에 맞춘 클립 계획.
@@ -1052,32 +1099,19 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
             continue
         tts_dur = _beat_effective_dur(beat, tts)
         _head_trim = beat.get("head_trim", 0.0)
-        # 순서 구간 리스트 = _beat_material(기본: [primary]+alternates / 실험실 편성이 있으면
-        # scene_override). 소스에 실재하고 + 디코드 가능한 것만.
-        # 손상/빈 소스(_src_dur=0)는 여기서 걸러야 아래 -ss 렌더가 예외로 죽지 않는다(2026-07-19).
-        segs = [s for s in _beat_material(beat)
-                if s and s.get("video_id") in source_video_paths
-                and _src_dur(s["video_id"]) > 0.05]
-        if not segs:
-            continue
-        # 소스별 총길이를 넘겨 '멈춤 대신 소스 실프레임 더 재생'을 켠다(2026-07-20).
-        beat_src_durs = {s["video_id"]: _src_dur(s["video_id"]) for s in segs}
-        # 컷 밀도(2026-07-22): 한 컷을 MAX_SHOT_SECONDS 넘게 안 끌고 distinct 세그먼트를 번갈아
-        # 재생 → 긴 정지 대신 컷(벤치마크급). 포인트 비트는 홀드가 맞으니 라운드로빈 안 함.
-        from shopping_shorts import backbone as _bb, config as _cfg
-        _max_shot = None if _bb.is_point_beat(beat) else getattr(_cfg, "MAX_SHOT_SECONDS", 0) or None
-        # 1장=1컷 모드(기본 off). 켜면 담은 장면이 순서대로 한 번씩만 나온다(되돌아옴 없음).
-        _one = bool(getattr(_cfg, "ONE_CLIP_PER_SEGMENT", False))
-        plan = _plan_beat_clips(segs, tts_dur, src_durs=beat_src_durs, max_shot=_max_shot,
-                                one_per_seg=_one)
-        # ★늘려 채우기(실험실 칸별 토글): 부족분을 전 컷에 고르게 — 여운(runout)보다 먼저.
-        #   여운은 일부러 붙이는 무성 꼬리라 재배분 대상이 아니다. 플래그 없으면 그대로.
-        if beat.get("stretch_fill"):
-            _spread_stretch(plan)
+        # ★화면 조각 계획은 **공용 함수 하나**가 정한다(2026-08-23, 0순위-B).
+        #   예전엔 이 블록이 여기에만 있어서 캡컷·ZIP 내보내기가 각자 `primary` 하나만
+        #   보고 있었다(실측: 조각 19개인 job이 캡컷엔 7개). 이제 셋이 같은 함수를 부른다.
+        #   손상/빈 소스 제외·포인트비트 홀드·1장1컷·늘려채우기·여운이 전부 그 안에 있다.
+        _srcd = {s.get("video_id"): _src_dur(s.get("video_id"))
+                 for s in _beat_material(beat)
+                 if s and s.get("video_id") in source_video_paths}
         # 마지막 비트 여운: 실프레임 여유는 1배속으로, 부족분은 아래 slowmo/freeze 기계가 흡수.
         runout = _LAST_RUNOUT if idx == _runout_idx else 0.0
-        if runout > 0:
-            _extend_last_clip_for_runout(plan, segs, runout)
+        plan = plan_beat_clips_for(beat, tts_dur, _srcd, runout=runout)
+        if not plan:
+            continue
+        segs = [s for s in _beat_material(beat) if s and _srcd.get(s.get("video_id"), 0.0) > 0.05]
         vf = _kenburns_vf(tts_dur) if idx in important else _base_zoom_vf()
         # 비트당 다중 클립: 각 구간을 [start, start+src_dur]만큼만 잘라(유출 0) 이어붙이고,
         # 부족분은 마지막 클립을 슬로모(setpts)로 늘려 대사 길이에 맞춘다.
