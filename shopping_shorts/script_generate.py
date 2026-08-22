@@ -165,6 +165,17 @@ _STORY_RULES_CORE = """- ★★★짤드라마 필수(이게 이 포맷의 생�
   홧김에 다르게 해봤더니 → (그랬더니) 웬걸" 처럼 왜 그 행동을 했는지 연결하라. 근거 없이
   "그런데 갑자기 이렇게 하니까"로 점프하면 스토리가 끊긴다. 시작(설정)–중간(전환)–끝(회수)이
   한 인물의 한 사건으로 꿰여야 '탄탄하다'.
+- ★★★화자(말하는 사람)는 끝까지 한 사람이다 — 아래는 실제로 나온 **실패작**이다(2026-08-23):
+  ✗ "저 친구네 집 갔다가 충격 받았잖아요 / 남편 턱이 훨씬 깔끔하게 달라진 거예요 /
+     ... / 저도 해보니까 자극 없이 밀리는 거죠"
+  무엇이 틀렸나: ①친구 남편인데 그냥 "남편"이라 써서 **화자 본인의 남편**으로 읽힌다
+  ②친구 남편 얘기로 시작해놓고 결말은 "저도 해보니까"로 **화자가 직접 쓴 사람**이 된다
+  (여성 화자가 남성용 면도기를 자기 턱에 미는 그림이 된다 = 말이 안 된다).
+  ○ 이렇게 써라: "친구 **남편** 턱이 달라졌길래 / 뭐 썼냐고 물어봤더니 / **우리 남편한테도**
+     사줬거든요 / 이제 아침마다 이것만 찾는 거 있죠"
+  → 남의 물건을 보고 내가 샀다면 **"그래서 우리 ○○한테 사줬더니"** 같은 다리를 반드시 놓아라.
+     3인칭 인물의 소유물은 **누구 것인지 밝혀라**("친구 남편"·"언니네 아이").
+     화자의 성별·처지가 도중에 바뀌면 안 된다.
 - ★가장 중요한 건 스토리라인이다. 아래 규칙은 전부 '하나의 탄탄한 이야기'를 위한 것 —
   사람이 자기 이야기를 들려주듯 자연스럽게 흐르게 하라. 정보 나열·설명문 금지.
 - ★한 스토리 원칙: 대본 전체가 인물 1명·사건 1개·결말 1개의 '하나의 이야기'다.
@@ -438,7 +449,8 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
         #   product가 비면 그 검사는 건너뛴다(회귀 0).
         checks, full = script_gate.check(style, res, facts_text=facts_block,
                                          product=_sources_product(sources),
-                                         seconds=seconds)
+                                         seconds=seconds,
+                                         speaker_judge=_speaker_judge)
         tries.append({"chars": len(script_gate.norm(full)),
                       "fails": [c["name"] for c in checks if not c["ok"]]})
         if script_gate.passed(checks):
@@ -467,9 +479,12 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
             _new = _trim_to_budget(_b.get("text", ""), max(6, int(_cap * _n / _tot)))
             if _new:
                 _b["text"] = _new
+        # ★앞 판정을 물려준다 — 안 그러면 화자 실패가 여기서 조용히 사라지고,
+        #   판정기를 다시 넘기면 유료 호출이 두 배가 된다(재단은 화자를 못 바꾼다).
         checks, full = script_gate.check(style, res, facts_text=facts_block,
                                          product=_sources_product(sources),
-                                         seconds=seconds)
+                                         seconds=seconds,
+                                         speaker_judge=script_gate.prior_verdict(checks))
         tries.append({"chars": len(script_gate.norm(full)), "trimmed": True,
                       "fails": [c["name"] for c in checks if not c["ok"]]})
 
@@ -484,6 +499,49 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
         "checks": checks, "passed": script_gate.passed(checks), "tries": tries,
         "chars": len(script_gate.norm(full)), "sec": script_gate.est_seconds(full),
     }
+
+
+_SPEAKER_SCHEMA = {
+    "type": "object",
+    "properties": {"ok": {"type": "boolean"}, "why": {"type": "string"}},
+    "required": ["ok", "why"],
+}
+
+_SPEAKER_PROMPT = """다음 한국어 숏폼 대본에서 **말하는 사람(화자)이 처음부터 끝까지 한 사람으로
+일관되는지**만 판정해라. 다른 것(길이·문법·재미)은 보지 마라.
+
+FAIL로 잡을 것 — 이 셋만:
+1) 3인칭 인물의 소유물인데 **누구 것인지 안 밝혀** 화자 것으로 읽히는 경우.
+   예: "친구네 집 갔다가" 다음에 그냥 "남편 턱이 달라진 거예요" → 누구 남편인지 없다.
+       ("친구 남편"이라고 써야 맞다)
+2) 시작에서 등장시킨 인물을 **중간에 슬그머니 다른 인물로 갈아탄** 경우.
+   예: 친구 남편 얘기로 시작해놓고 결말이 "저도 해보니까"로 화자 본인 체험이 된다.
+3) 화자의 성별·처지가 도중에 **모순**되는 경우.
+   예: 남편이 있다고 해놓고 뒤에서 자기가 남편인 것처럼 말한다.
+
+⚠️통과시킬 것(오탐 금지):
+- 화자가 남의 물건을 보고 자기도 샀다는 흐름은 **연결어가 있으면 정상**이다.
+  ("친구 남편 게 좋아 보여서 → 우리 남편한테도 사줬더니" = OK)
+- 지인·언니·조카가 잠깐 등장했다 빠지는 건 정상이다.
+- 제품을 '이거'로만 부르는 것도 정상이다.
+확실히 어긋난 것만 FAIL. 애매하면 통과(ok=true)시켜라.
+
+why에는 **무엇을 어떻게 고쳐야 하는지** 한 문장으로 적어라(FAIL일 때만).
+
+[대본]
+{script}"""
+
+
+def _speaker_judge(text):
+    """대본 전문 → {"ok": bool, "why": str}. 판정 못 하면 {} (게이트가 통과시킨다).
+
+    ★fail-open: _call_json은 무키·소진·응답오류를 전부 {}로 돌려준다. 그대로
+      넘기면 script_gate가 '판정 불가'로 보고 검사 항목을 안 만든다 — 키가 마른
+      날 대본이 통째로 막히는 일을 막는다.
+    """
+    if not (text or "").strip():
+        return {}
+    return _call_json(_SPEAKER_PROMPT.format(script=text), _SPEAKER_SCHEMA)
 
 
 _BEAT_SCHEMA = {
