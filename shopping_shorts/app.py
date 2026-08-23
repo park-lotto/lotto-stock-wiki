@@ -6269,9 +6269,28 @@ async def api_lens_cn_search(request: Request, keyword: str = Form(""),
     if not kw:
         return {"ok": True, "items": [], "count": 0, "keyword": "", "meta": {}}
     n = max(1, min(int(max_results or 8), 60))
+    # ★유료게이트 — 2026-08-23 점검에서 과금·상한이 아예 없던 것을 발견.
+    #   Playwright가 0건이면 Apify(유료)로 폴백하므로 공짜 경로가 아니다.
+    cid = getattr(request.state, "customer_id", 0)
+    if _global_over_cap("lens"):
+        return JSONResponse(status_code=429, content={
+            "ok": False, "error_code": "global_limit",
+            "error": "지금 소재 찾기 이용이 많아요. 잠시 후 다시 시도해 주세요."})
+    if not check_and_count(cid, "lens"):
+        return JSONResponse(status_code=429, content={
+            "ok": False, "error_code": "daily_limit",
+            "error": "오늘 소재 찾기 횟수를 다 썼어요. 결제하면 더 쓸 수 있어요."})
+    _denied = _charge_or_402(cid, pricing.OP_LENS, keyroute.SVC_SERPAPI)
+    if _denied:
+        return _denied
     # ★to_thread 필수 — 백엔드가 Playwright·Apify를 **블로킹**으로 부른다.
     #   안 하면 이벤트루프가 막혀 다른 렌즈 요청이 전부 굶는다(/api/lens/yt와 같은 이유).
-    res = await asyncio.to_thread(cn_search.search, kw, n)
+    try:
+        res = await asyncio.to_thread(cn_search.search, kw, n)
+    except Exception:
+        refund_credit(cid, "lens")
+        _refund_points(cid, pricing.OP_LENS, keyroute.SVC_SERPAPI)
+        raise
     for r in res["items"]:
         r["match"] = None          # 렌즈 카드 계약(제목 매칭은 프론트가 안 씀)
     return {"ok": True, **res}
@@ -6289,9 +6308,30 @@ async def api_lens_kw_search(request: Request, keyword: str = Form(""),
     if not kw:
         return {"ok": True, "items": [], "count": 0, "keyword": "", "meta": {}}
     n = max(1, min(int(max_results or 8), 60))
+    # ★유료게이트 — docstring이 "CN과 같은 기준으로 건다"고 적어놓고 실제로는
+    #   과금·상한이 하나도 없었다(2026-08-23 점검). 틱톡은 Apify 유료라 공짜가 아니고,
+    #   /api/lens/search와 달리 이 경로는 승인된 체험 계정이 무제한으로 태울 수 있었다.
+    cid = getattr(request.state, "customer_id", 0)
+    if _global_over_cap("lens"):
+        return JSONResponse(status_code=429, content={
+            "ok": False, "error_code": "global_limit",
+            "error": "지금 소재 찾기 이용이 많아요. 잠시 후 다시 시도해 주세요."})
+    if not check_and_count(cid, "lens"):
+        return JSONResponse(status_code=429, content={
+            "ok": False, "error_code": "daily_limit",
+            "error": "오늘 소재 찾기 횟수를 다 썼어요. 결제하면 더 쓸 수 있어요."})
+    _denied = _charge_or_402(cid, pricing.OP_LENS, keyroute.SVC_SERPAPI)
+    if _denied:
+        return _denied
     # ★to_thread 필수 — 백엔드가 Playwright·Apify·HTTP를 **블로킹**으로 부른다.
     #   안 하면 이벤트루프가 막혀 다른 렌즈 요청이 전부 굶는다(cn/search와 같은 이유).
-    res = await asyncio.to_thread(kw_search.search, kw, n)
+    try:
+        res = await asyncio.to_thread(kw_search.search, kw, n)
+    except Exception:
+        # 실패는 과금하지 않는다 — 차감과 환불이 같은 판단을 봐야 잔액이 안 갉힌다.
+        refund_credit(cid, "lens")
+        _refund_points(cid, pricing.OP_LENS, keyroute.SVC_SERPAPI)
+        raise
     for r in res["items"]:
         r["match"] = None          # 렌즈 카드 계약(제목 매칭은 프론트가 안 씀)
     return {"ok": True, **res}
