@@ -27,7 +27,7 @@ from shopping_shorts import service
 from shopping_shorts.service import collect, census, generate_missing_drafts, next_draft_targets, youtube_channel_board
 from shopping_shorts.outreach import build_queue
 from shopping_shorts.instagram_parse import shortcode_to_timestamp
-from shopping_shorts.store import Store
+from shopping_shorts.store import Store, style_spine_rank
 from shopping_shorts import vision_tagging
 from shopping_shorts.auto_run import run_auto_job, default_stages
 from shopping_shorts import config
@@ -12282,7 +12282,10 @@ def api_script_styles(request: Request, category: str = None, job: str = None):
         })
         if _srcs:
             out[-1]["cover"] = _spine_cover(s, _srcs, store, job, _cache=_cover_cache)
-    out.sort(key=lambda x: (x["fit"] != "검증", -(x["perf_score"] or 0), -(x["source_count"] or 0)))
+    # ★순위 규칙은 `store.style_spine_rank` 한 곳에서만 정한다(0순위-B) — 여기와
+    #   자동 선택(auto_style)이 따로 적혀 있어서 실제로 어긋나 있었다(2026-08-24).
+    #   이 목록만 "검증 먼저"를 앞에 덧붙인다(사람이 고르는 화면이라 소재 적합이 먼저다).
+    out.sort(key=lambda x: (x["fit"] != "검증",) + style_spine_rank(x))
     # ★지금 담긴 소재도 함께 준다(2026-08-21) — 화면이 소재 배지 중 **어느 것이 지금
     #   소재인지** 강조하려면 이 값이 필요하다. 화면이 따로 알아낼 방법이 없다.
     return {"ok": True, "styles": out, "category": cat or ""}
