@@ -523,5 +523,19 @@
     "track": "인스타문형학습",
     "summary": "세션 재개 — git pull만 수행(main·트랙 폴더 둘 다 이미 최신). main은 bd0da1d8e(화자일관성 트랙 병합본)까지 와 있음. 코드 변경 없음.",
     "next": "핸드오프대로 4번 칸 음성 미입힘 조사 — work 1b38b9f779de → job 26b72c2b6b05(reference.db). beat_3_f1c82e40f5.mp3 실재·길이 0 아닌지부터 확인하고 되는 칸(1·2·3·5)과 대조."
+  },
+  {
+    "date": "2026-08-23",
+    "category": "스탁브레인",
+    "track": "BYOK배선",
+    "summary": "깃풀 확인 — origin/main과 이미 동기화(bd0da1d8e). 어제 BYOK 제미나이 배선은 main 반영 완료.",
+    "next": "Vertex 등록정보(프로젝트ID·리전·서비스계정JSON) 대기 → key_vault에 Vertex 갈래 추가. 성우 배선·유튜브제작 6-①A 미착수"
+  },
+  {
+    "date": "2026-08-23",
+    "category": "스탁브레인",
+    "track": "효과음배치",
+    "summary": "main 폴더 git pull — Already up to date. 어제 미리보기 작업(fitPlayer 높이맞춤·썸네일 78px 축소) 반영 확인. 타 세션 커밋(화자일관성·대본칸설명)도 들어와 있음.",
+    "next": "미리보기 스크롤 64px 잔여 — 마지막 선택 대기: A 최소높이 보호 해제(스크롤 제거·영상 100px, 크게볼땐 넓게보기) / B 틀 124vh→140vh(영상 200px대·페이지 길어짐)."
   }
 ]
