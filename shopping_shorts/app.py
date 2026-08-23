@@ -6503,6 +6503,7 @@ _AUTH_ALLOW = ("/login", "/api/login", "/signup", "/api/signup", "/favicon.ico",
                "/notice_1gi.html",   # 1기 사전신청 안내 + 신청 버튼
                "/api_manual.html",   # API 발급 매뉴얼(위 페이지와 설정 화면에서 링크)
                "/api/prereg",        # 사전신청 접수(POST) — 회원이 아닌 사람이 낸다
+               "/api/deposit_claim", # 입금 신고(POST) — 아직 회원이 아닌 사람도 낸다
                "/pay",               # 결제 안내(신청 직후 여기로 보낸다)
                # PWA: 매니페스트는 브라우저가 쿠키 없이(credentials omit) fetch한다 → 공개 필수.
                "/manifest.webmanifest", "/apple-touch-icon.png",
@@ -6539,7 +6540,7 @@ _COOKIE_MAX_AGE = 60 * 60 * 24 * 30  # 30일
 #   /api/lens/kw/search·cn/search는 틱톡·샤오홍슈가 Apify 유료인데 과금검사가
 #   없어서(실측) prefix로 열면 상한 없이 샌다.
 _FREE_EXACT_ANY = {"/login", "/signup", "/api/login", "/api/signup", "/logout",
-                   "/api/prereg", "/pay",   # 사전신청·결제안내 — 등급과 무관하게 열린다
+                   "/api/prereg", "/api/deposit_claim", "/pay",   # 사전신청·입금신고·결제안내
 
                    "/api/mix/basket/toggle",
                    "/api/lens/search", "/api/lens/trace_url"}
@@ -7502,7 +7503,55 @@ def _deposit_body():
     note_html = (f'<div class=note>{_h.escape(note)}</div>' if note else
                  '<div class=note>입금 금액·이용권은 아래로 <b>문의</b>해 주세요.<br>'
                  '입금 후 <b>입금자명</b>을 알려주시면 <b>바로 이용권을 열어드려요.</b></div>')
-    return rows + note_html + _deposit_contact(kakao, phone)
+    return rows + note_html + _DEPOSIT_CLAIM_HTML + _deposit_contact(kakao, phone)
+
+
+# '입금 완료했습니다' — 고객이 직접 알리는 창구(2026-08-23).
+# ★카톡을 놓쳐 입금하고 방치되는 걸 막는 게 목적이다. 입금 '증명'이 아니므로
+#   사장님이 통장을 보고 승인하는 절차는 그대로다.
+_DEPOSIT_CLAIM_HTML = """
+<div id=dcWrap style="margin-top:14px">
+  <button id=dcOpen style="width:100%;background:#101820;border:1px solid #2a3647;color:#b7c6c2;
+    border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">
+    ✅ 입금 완료했습니다</button>
+  <div id=dcForm style="display:none;margin-top:10px">
+    <input id=dcName placeholder="성함" maxlength=40 style="width:100%;margin-bottom:7px;padding:12px;
+      border-radius:10px;border:1px solid #1e2b2c;background:#0a1113;color:#e8f0ee;font-size:14px;font-family:inherit">
+    <input id=dcWho placeholder="입금자명 (통장에 찍힌 이름)" maxlength=40 style="width:100%;margin-bottom:7px;padding:12px;
+      border-radius:10px;border:1px solid #1e2b2c;background:#0a1113;color:#e8f0ee;font-size:14px;font-family:inherit">
+    <input id=dcContact placeholder="연락처 또는 이메일" maxlength=120 style="width:100%;margin-bottom:9px;padding:12px;
+      border-radius:10px;border:1px solid #1e2b2c;background:#0a1113;color:#e8f0ee;font-size:14px;font-family:inherit">
+    <button id=dcSend style="width:100%;background:linear-gradient(135deg,#6ff0d6,#1f9e7a);color:#08110e;
+      border:0;border-radius:10px;padding:13px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit">
+      알리기</button>
+    <div id=dcMsg style="margin-top:9px;font-size:13px;color:#8aa0a0;text-align:center;line-height:1.6"></div>
+  </div>
+</div>
+<script>
+(function(){
+  var o=document.getElementById('dcOpen'),f=document.getElementById('dcForm');
+  var s=document.getElementById('dcSend'),m=document.getElementById('dcMsg'),busy=false;
+  o.onclick=function(){ f.style.display='block'; o.style.display='none';
+                        document.getElementById('dcName').focus(); };
+  s.onclick=function(){
+    if(busy) return;                                  // 두 번 눌러 중복 신고 방지
+    var g=function(i){return (document.getElementById(i).value||'').trim();};
+    if(!g('dcName')||!g('dcWho')){ m.textContent='성함과 입금자명을 입력해 주세요.'; m.style.color='#e0a34b'; return; }
+    busy=true; s.disabled=true; s.textContent='보내는 중…';
+    fetch('/api/deposit_claim',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({name:g('dcName'),depositor:g('dcWho'),contact:g('dcContact')})})
+      .then(function(r){return r.json().then(function(d){return {ok:r.ok,d:d};});})
+      .then(function(res){
+        if(!res.ok) throw new Error(res.d&&res.d.error?res.d.error:'전송에 실패했어요');
+        f.innerHTML='<div style="background:#101c18;border:1px solid #1d3a30;border-radius:12px;'
+          +'padding:16px;font-size:14px;color:#b9d3c9;line-height:1.7;text-align:center">'
+          +'✅ 알려주셔서 감사합니다.<br>입금 확인 후 <b>바로 이용권을 열어드립니다.</b></div>';
+      })
+      .catch(function(e){ busy=false; s.disabled=false; s.textContent='알리기';
+        m.textContent=(e&&e.message)||'전송에 실패했어요.'; m.style.color='#e0a34b'; });
+  };
+})();
+</script>"""
 
 
 def _deposit_contact(kakao, phone):
@@ -8394,6 +8443,61 @@ async def _api_prereg(request: Request):
     Store(DB_PATH).add_prereg(name, phone, email, channel)
     href, _label = _pay_cta()
     return {"ok": True, "pay_href": href}
+
+
+@app.post("/api/deposit_claim")
+async def _api_deposit_claim(request: Request):
+    """'입금 완료했습니다'(공개). 카톡을 놓쳐 입금하고 방치되는 걸 막는 알림 창구다.
+
+    ★이건 입금 '증명'이 아니다 — 사장님이 통장을 보고 확인하는 절차는 그대로다.
+      기존 관리자 쪽지함(ops_alert)에 얹어 새 폴러 없이 '띠링'을 그대로 재사용한다.
+    """
+    body = await request.json()
+    name = (body.get("name") or "").strip()
+    depositor = (body.get("depositor") or "").strip()
+    contact = (body.get("contact") or "").strip()
+    if not name or not depositor:
+        return JSONResponse({"error": "성함과 입금자명을 입력해 주세요"}, status_code=422)
+    if len(name) > 40 or len(depositor) > 40 or len(contact) > 120:
+        return JSONResponse({"error": "입력이 너무 깁니다"}, status_code=422)
+    st = Store(DB_PATH)
+    st.add_deposit_claim(name, depositor, contact)
+    try:
+        from shopping_shorts import ops_alert
+        # cooldown 0 — 입금 신고는 도배가 아니라 한 건 한 건이 돈이다. 묶으면 놓친다.
+        ops_alert.raise_alert("deposit_claim", f"💰 입금 신고 — {name}",
+                              f"입금자명 {depositor} / 연락처 {contact or '-'}",
+                              cooldown_sec=0, store=st)
+    except Exception as e:      # noqa: BLE001 — 알림 실패가 접수를 막으면 안 된다
+        # ★조용히 삼키지 않는다: 알림이 안 울리면 사장님이 입금 신고를 놓친다.
+        #   접수는 이미 저장됐으니 진행하되, 왜 안 울렸는지는 로그에 남긴다.
+        # ⚠️ app.py는 최상단에 `import sys`가 없다(모듈 전역에 sys가 없음).
+        #    이 파일의 다른 곳들과 같은 방식으로 지역 import 한다.
+        import sys as _sys
+        print(f"[입금신고] 관리자 알림 실패(접수는 정상): {e!r}", file=_sys.stderr)
+    return {"ok": True}
+
+
+@app.get("/api/admin/deposit_claims")
+def _admin_deposit_claims(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    return {"items": Store(DB_PATH).list_deposit_claims(only_open=True)}
+
+
+@app.post("/api/admin/deposit_claim/done")
+async def _admin_deposit_claim_done(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    body = await request.json()
+    try:
+        cid = int(body.get("id"))
+    except (TypeError, ValueError):
+        return JSONResponse({"error": "id 필요"}, status_code=422)
+    Store(DB_PATH).close_deposit_claim(cid)
+    return {"ok": True}
 
 
 @app.get("/api/admin/prereg")

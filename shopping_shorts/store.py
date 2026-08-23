@@ -310,6 +310,17 @@ class Store:
                     created_at TEXT NOT NULL
                 )
             """)
+            # '입금 완료했습니다' 신고(2026-08-23) — 카톡을 놓쳐 입금하고 방치되는 걸 막는다.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS deposit_claim (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    depositor TEXT NOT NULL,
+                    contact TEXT,
+                    done INTEGER NOT NULL DEFAULT 0,
+                    created_at TEXT NOT NULL
+                )
+            """)
             c.execute("""
                 CREATE TABLE IF NOT EXISTS last_run (
                     id INTEGER PRIMARY KEY CHECK (id = 1),
@@ -4951,6 +4962,31 @@ class Store:
                 "INSERT INTO prereg(name, phone, email, channel, created_at) VALUES(?,?,?,?,?)",
                 (name, phone, email, channel or "", now))
             return cur.lastrowid
+
+    def add_deposit_claim(self, name, depositor, contact=""):
+        """'입금 완료했습니다' 신고 저장 → id.
+        ★고객이 직접 누르는 것이라 **입금 사실을 증명하지 않는다** — 사장님이 통장을
+          보고 확인하는 절차는 그대로다. 이건 '연락을 놓치지 않기 위한 알림'이다."""
+        now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        with self._conn() as c:
+            cur = c.execute(
+                "INSERT INTO deposit_claim(name, depositor, contact, done, created_at) "
+                "VALUES(?,?,?,0,?)", (name, depositor, contact or "", now))
+            return cur.lastrowid
+
+    def list_deposit_claims(self, only_open=True):
+        """입금 신고 목록 — 최신순. only_open이면 아직 처리 안 한 것만."""
+        q = ("SELECT id, name, depositor, contact, done, created_at FROM deposit_claim "
+             + ("WHERE done=0 " if only_open else "") + "ORDER BY id DESC")
+        with self._conn() as c:
+            rows = c.execute(q).fetchall()
+        return [{"id": r[0], "name": r[1], "depositor": r[2], "contact": r[3],
+                 "done": r[4], "created_at": r[5]} for r in rows]
+
+    def close_deposit_claim(self, claim_id):
+        """처리 완료 표시(승인하고 나면 목록에서 내린다)."""
+        with self._conn() as c:
+            c.execute("UPDATE deposit_claim SET done=1 WHERE id=?", (int(claim_id),))
 
     def list_prereg(self):
         """사전신청 전체 — 최신순. 관리자 화면·발송 명단용."""
