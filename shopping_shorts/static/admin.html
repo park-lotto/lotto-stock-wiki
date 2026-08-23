@@ -8,6 +8,7 @@ h2{font-size:15px;margin:0 0 12px;color:#cfd2d6}
 table{width:100%;border-collapse:collapse;font-size:15px}
 th,td{text-align:left;padding:11px 12px;border-bottom:1px solid #23232a}
 th{color:#9a9aa2;font-weight:600;font-size:14px}
+th.mini,td.mini{white-space:nowrap;min-width:52px}
 .badge{padding:3px 9px;border-radius:10px;font-size:13px;font-weight:700}
 .filterbar{display:flex;gap:10px;margin:4px 0 14px;flex-wrap:wrap}
 .filterbar input{width:280px;max-width:60vw;font-size:15px;padding:9px 12px}
@@ -61,7 +62,7 @@ tbody tr:hover{background:#1b1b22}
 <div class=card>
   <h2>고객 (<span id=cnt>0</span>명) <span id=cMsg class=msg></span></h2>
   <div class=filterbar>
-    <input id=custSearch placeholder="🔍 이름·전화·이메일로 찾기" oninput="renderCustomers()">
+    <input id=custSearch placeholder="🔍 이름·전화·이메일·성별·연령으로 찾기" oninput="renderCustomers()">
     <select id=tierFilter onchange="renderCustomers()">
       <option value="">전체 등급</option>
       <option value="pro">pro</option>
@@ -69,8 +70,8 @@ tbody tr:hover{background:#1b1b22}
       <option value="free">일반회원</option>
     </select>
   </div>
-  <table><thead><tr><th>ID</th><th>이름</th><th>전화</th><th>이메일/아이디</th><th>등급</th><th>상태</th><th>시작일</th><th>마감일</th><th>결제</th><th>포인트</th><th>오늘 사용(렌즈/렌더/대본)</th><th>접속7일(IP/기기)</th><th>접속/활동</th><th>조작</th></tr></thead>
-  <tbody id=rows><tr><td colspan=12 class=empty>불러오는 중…</td></tr></tbody></table>
+  <table><thead><tr><th>ID</th><th>이름</th><th>전화</th><th class=mini>성별</th><th class=mini>연령</th><th>이메일/아이디</th><th>등급</th><th>상태</th><th>시작일</th><th>마감일</th><th>결제</th><th>포인트</th><th>오늘 사용(렌즈/렌더/대본)</th><th>접속7일(IP/기기)</th><th>접속/활동</th><th>조작</th></tr></thead>
+  <tbody id=rows><tr><td colspan=16 class=empty>불러오는 중…</td></tr></tbody></table>
 </div>
 
 <script>
@@ -132,7 +133,7 @@ function _subseq(hay, q){            // hay 안에서 q의 글자가 '순서대�
   return i===q.length;
 }
 function _custMatch(c, q){
-  const fields=[c.name,c.phone,c.email,c.username]
+  const fields=[c.name,c.phone,c.email,c.username,c.gender,c.age_band]
     .map(v=>(v||'').toString().toLowerCase()).filter(Boolean);
   // 전화번호는 하이픈 유무가 제각각 → 숫자만 남긴 형태도 같이 본다(01012345678 로 쳐도 걸리게)
   const digits=(c.phone||'').toString().replace(/\D/g,'');
@@ -162,7 +163,10 @@ function renderCustomers(){
     const ls = c.last_seen||0, nowS=Math.floor(Date.now()/1000);
     const online = ls && (nowS-ls) < 300;   // 5분 내 활동 = 접속중
     const seenCell = `<span class=actlink data-actcid=${c.id} title="최근 활동 보기" style="cursor:pointer;color:${online?'#7ee787':'#8ab4f8'}">${online?'🟢 접속중':(ls?'⚪ '+_ago(nowS-ls):'-')}</span>`;
-    return `<tr><td>${c.id}</td><td>${esc(c.name)}${adminBadge}</td><td>${esc(c.phone)}</td><td>${esc(c.email||c.username)}</td><td>${c.plan}</td><td>${lvl}</td>
+    return `<tr><td>${c.id}</td><td>${esc(c.name)}${adminBadge}</td><td>${esc(c.phone)}</td>
+      <td class=mini style="color:${c.gender?'#e8eaed':'#5f6773'}">${esc(c.gender)||'—'}</td>
+      <td class=mini style="color:${c.age_band?'#e8eaed':'#5f6773'}">${esc(c.age_band)||'—'}</td>
+      <td>${esc(c.email||c.username)}</td><td>${c.plan}</td><td>${lvl}</td>
       <td style="color:#8a8a92">${c.approved_at? new Date(c.approved_at*1000).toLocaleDateString('ko-KR'):'-'}</td>
       <td style="color:#8a8a92">${c.full_access_until? new Date(c.full_access_until*1000).toLocaleDateString('ko-KR'):'-'}</td>
       <td>${c.last_payment? `<span class=paylink data-cid=${c.id} style="cursor:pointer;color:#8ab4f8">${c.last_payment.amount.toLocaleString()}원 · ${c.payment_count}건</span>` : '-'}</td>
@@ -180,7 +184,7 @@ function renderCustomers(){
             ? `<button class=badm onclick="setAdmin(${c.id},false)">관리자해제</button>`
             : `<button class=badm onclick="setAdmin(${c.id},true)">관리자지정</button>`)}
           ${c.is_admin?'':`<button class=bdel onclick="delCustomer(${c.id})">삭제</button>`}</td></tr>`;
-  }).join('') : '<tr><td colspan=14 class=empty>조건에 맞는 고객이 없어요</td></tr>';
+  }).join('') : '<tr><td colspan=16 class=empty>조건에 맞는 고객이 없어요</td></tr>';
 }
 // ── 입금 신고 (2026-08-23) ──────────────────────────────────
 // 고객이 /pay에서 '입금 완료했습니다'를 누른 것. 통장 확인은 그대로 하시고,

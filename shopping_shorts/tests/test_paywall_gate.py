@@ -98,7 +98,10 @@ def test_anonymous_pricing_is_public(tmp_path, monkeypatch):
 def test_pending_gate_blocks_everything(tmp_path, monkeypatch):
     """미승인(pending) 세션은 API=403, 화면=대기실 HTML, /logout만 통과."""
     s = _setup(tmp_path, monkeypatch)
-    cid = s.create_customer("pend", "pw12", approved=False)
+    # 2026-08-24: 가입 정보(이름·전화·성별·연령)가 비면 대기실 대신 /welcome으로 보낸다.
+    # 이 테스트가 보려는 건 **대기실 화면**이므로 정보는 다 낸 상태로 만든다.
+    cid = s.create_customer("pend", "pw12", approved=False, name="대기", phone="010-0000-0000",
+                            gender="남성", age_band="30대")
     with s._conn() as conn:                      # 체험창 만료 강제 → 진짜 pending 상태로 검증
         conn.execute("UPDATE customers SET trial_ends_at=NULL WHERE id=?", (cid,))
     c = TestClient(appmod.app, cookies={"dash_auth": _cookie(cid)})
