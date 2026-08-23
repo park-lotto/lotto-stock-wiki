@@ -7,6 +7,8 @@ from fastapi.testclient import TestClient
 from shopping_shorts import app as appmod
 from shopping_shorts.store import Store
 
+_REAL_CHALLENGE_FETCH = appmod._challenge_fetch   # env 픽스처가 no-op로 덮기 전의 진짜 구현
+
 
 def _cookie(cid):
     exp = int(datetime.now(timezone.utc).timestamp()) + 3600
@@ -21,7 +23,7 @@ def env(tmp_path, monkeypatch):
     st = Store(str(tmp_path / "t.db"))
     st.ensure_paywall_schema()
     # 수집은 Task5에서 붙인다 — 여기서는 아무 일도 안 하게 막아둔다.
-    monkeypatch.setattr(appmod, "_challenge_fetch_async", lambda *a, **k: None,
+    monkeypatch.setattr(appmod, "_challenge_fetch", lambda *a, **k: None,
                         raising=False)
     return st
 
@@ -156,3 +158,86 @@ def test_mine_for_non_member_says_so(env):
     assert r.status_code == 200
     assert r.json()["is_member"] is False
     assert r.json()["items"] == []
+
+
+def test_fetch_fills_meta_on_success(env, monkeypatch):
+    """수집이 되면 썸네일·조회수가 채워지고 ok가 된다.
+
+    ★키 이름 주의: probe_grab_meta는 yt-dlp의 view_count를 **views로 바꿔서**
+    준다(media_download.py:141-145). view_count로 읽으면 조용히 항상 None이다.
+    """
+    env.add_challenge_member(77)
+    monkeypatch.setattr(appmod, "probe_grab_meta",
+                        lambda u: {"title": "제목", "thumbnail": "https://x/t.jpg",
+                                   "channel": "채널", "views": 1234,
+                                   "likes": 10, "comments": 3},
+                        raising=False)
+    monkeypatch.setattr(appmod, "_challenge_fetch", _REAL_CHALLENGE_FETCH)   # env가 덮은 no-op을 되돌린다
+    sid = env.add_challenge_submission(77, "https://youtu.be/abc123", "youtube",
+                                       "abc123", "sc:abc123", "2026-08-24")
+    appmod._challenge_fetch(sid, "https://youtu.be/abc123", "youtube")
+    row = env.list_challenge_submissions(customer_id=77)[0]
+    assert row["fetch_status"] == "ok"
+    assert row["title"] == "제목"
+    assert row["thumb"] == "https://x/t.jpg"
+    assert row["channel"] == "채널"
+    assert row["views"] == 1234
+
+
+def test_fetch_failure_keeps_submission(env, monkeypatch):
+    """★수집이 터져도 제출은 남고 카운트는 유지된다 — 이게 가장 중요하다."""
+    env.add_challenge_member(77)
+
+    def _boom(u):
+        raise RuntimeError("수집 실패")
+
+    monkeypatch.setattr(appmod, "probe_grab_meta", _boom, raising=False)
+    monkeypatch.setattr(appmod, "_challenge_fetch", _REAL_CHALLENGE_FETCH)   # env가 덮은 no-op을 되돌린다
+    sid = env.add_challenge_submission(77, "https://youtu.be/abc123", "youtube",
+                                       "abc123", "sc:abc123", "2026-08-24")
+    appmod._challenge_fetch(sid, "https://youtu.be/abc123", "youtube")   # 예외가 새면 안 된다
+    rows = env.list_challenge_submissions(customer_id=77)
+    assert len(rows) == 1
+    assert rows[0]["fetch_status"] == "failed"
+
+
+def test_fetch_empty_meta_marks_failed(env, monkeypatch):
+    """yt-dlp가 빈 값을 주면(비공개·삭제된 영상) failed — 링크는 남는다."""
+    env.add_challenge_member(77)
+    monkeypatch.setattr(appmod, "probe_grab_meta", lambda u: {}, raising=False)
+    monkeypatch.setattr(appmod, "_challenge_fetch", _REAL_CHALLENGE_FETCH)   # env가 덮은 no-op을 되돌린다
+    sid = env.add_challenge_submission(77, "https://youtu.be/abc123", "youtube",
+                                       "abc123", "sc:abc123", "2026-08-24")
+    appmod._challenge_fetch(sid, "https://youtu.be/abc123", "youtube")
+    rows = env.list_challenge_submissions(customer_id=77)
+    assert len(rows) == 1
+    assert rows[0]["fetch_status"] == "failed"
+
+
+def test_tiktok_is_skipped_not_failed(env, monkeypatch):
+    """틱톡은 단건 조회 함수가 없다 — 시도하지 않고 skipped로 둔다."""
+    env.add_challenge_member(77)
+    called = []
+    monkeypatch.setattr(appmod, "probe_grab_meta",
+                        lambda u: called.append(u) or {}, raising=False)
+    monkeypatch.setattr(appmod, "_challenge_fetch", _REAL_CHALLENGE_FETCH)   # env가 덮은 no-op을 되돌린다
+    sid = env.add_challenge_submission(77, "https://vt.tiktok.com/x", "tiktok",
+                                       "", "url:vt.tiktok.com/x", "2026-08-24")
+    appmod._challenge_fetch(sid, "https://vt.tiktok.com/x", "tiktok")
+    assert env.list_challenge_submissions(customer_id=77)[0]["fetch_status"] == "skipped"
+    assert called == []          # 시도조차 안 했다
+
+
+def test_submit_schedules_background_fetch(env, monkeypatch):
+    """제출하면 수집이 백그라운드 작업으로 예약된다(응답을 막지 않는다)."""
+    env.add_challenge_member(77)
+    seen = []
+    monkeypatch.setattr(appmod, "_challenge_fetch",
+                        lambda *a: seen.append(a), raising=False)
+    r = _client().post("/api/challenge/submit",
+                       params={"url": "https://youtu.be/abc123"},
+                       cookies={"dash_auth": _cookie(77)})
+    assert r.status_code == 200, r.text
+    assert len(seen) == 1
+    assert seen[0][1] == "https://youtu.be/abc123"
+    assert seen[0][2] == "youtube"

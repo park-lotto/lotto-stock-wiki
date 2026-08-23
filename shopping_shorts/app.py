@@ -9987,16 +9987,48 @@ def _challenge_period(store):
             goal)
 
 
-def _challenge_fetch_async(sub_id, url, platform):
-    """제출 영상의 썸네일·조회수를 백그라운드로 채운다(Task5에서 구현).
+def _challenge_fetch(sub_id, url, platform):
+    """제출 영상의 썸네일·조회수를 채운다(백그라운드).
 
-    지금은 아무 것도 하지 않는다 — fetch_status는 'pending'으로 남는다.
+    ★실패해도 예외를 밖으로 내보내지 않는다 — 제출 행은 이미 저장돼 있고
+    달성 카운트도 확정됐다. 수집은 장식이다. 다만 조용히 삼키지 말고
+    fetch_status에 반드시 남긴다(except: pass가 SQL 오류를 삼켜 라이브에서
+    조용히 0건이 된 전례가 있다).
+
+    ★키 이름: probe_grab_meta는 yt-dlp의 view_count·like_count·comment_count·
+    uploader를 **이미 바꿔서** 준다(media_download.py:141-145) →
+    views·likes·comments·channel. view_count로 읽으면 항상 None이다.
     """
-    return None
+    store = Store(DB_PATH)
+    if platform == "tiktok":
+        # 틱톡은 단건 조회 함수가 없다(tiktok_client는 계정 단위뿐).
+        # 시도조차 하지 않으므로 'failed'가 아니라 'skipped'다.
+        store.update_challenge_submission_meta(sub_id, fetch_status="skipped")
+        return
+    try:
+        meta = probe_grab_meta(url) or {}
+    except Exception as e:  # noqa: BLE001 — 수집 실패가 제출을 무효로 만들지 않는다
+        import sys as _sys
+        print(f"[challenge] 수집 실패 sub_id={sub_id} url={url}: {e!r}", file=_sys.stderr)
+        store.update_challenge_submission_meta(sub_id, fetch_status="failed")
+        return
+    if not meta:
+        # 비공개·삭제된 영상 등 — 링크는 남기고 실패로만 표시한다.
+        store.update_challenge_submission_meta(sub_id, fetch_status="failed")
+        return
+    store.update_challenge_submission_meta(
+        sub_id,
+        title=meta.get("title") or None,
+        thumb=meta.get("thumbnail") or None,
+        channel=meta.get("channel") or None,
+        views=meta.get("views"),
+        likes=meta.get("likes"),
+        comments=meta.get("comments"),
+        fetch_status="ok")
 
 
 @app.post("/api/challenge/submit")
-def api_challenge_submit(request: Request, url: str = ""):
+def api_challenge_submit(request: Request, background_tasks: BackgroundTasks, url: str = ""):
     """멤버가 챌린지 영상 링크를 낸다.
 
     ★저장 먼저, 수집 나중. 링크가 들어온 순간 행이 생기고 달성 카운트가
@@ -10025,7 +10057,7 @@ def api_challenge_submit(request: Request, url: str = ""):
     if not sub_id:
         return JSONResponse(status_code=422,
                             content={"ok": False, "error": "이미 제출한 영상이에요"})
-    _challenge_fetch_async(sub_id, u, platform)
+    background_tasks.add_task(_challenge_fetch, sub_id, u, platform)   # 썸네일·조회수 등 보강
     today = sum(1 for s in store.list_challenge_submissions(customer_id=cid)
                 if s["submit_day"] == day)
     return {"ok": True, "id": sub_id, "today": today, "goal": goal, "day": day}
