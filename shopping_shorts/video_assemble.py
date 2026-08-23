@@ -1834,16 +1834,31 @@ def assemble(edit_plan, tts_paths, source_video_paths, out_path, clean_fn=None, 
     preview_preset() 컨텍스트로 veryfast로 감싼다 — 최종은 그대로 medium 고화질."""
     work = Path(out_path).parent / f"asm_{uuid.uuid4().hex[:8]}"
     work.mkdir(parents=True, exist_ok=True)
-    mix_raw = _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=cutaway_paths)
-    base_video = clean_fn(mix_raw) if clean_fn else mix_raw
-    if not burn_captions:
-        # '자막 없는 clean 배경'용(썸네일 배경 등, 2026-07-22) — 우리 나레이션 자막·꾸미기를
-        # 굽는 _burn_captions 패스를 통째로 건너뛴다. base_video(믹스[+원본자막제거])를 그대로
-        # 확정하므로 ①썸네일에 나레이션 자막이 안 박히고 ②캡션 인코딩 패스가 없어 더 빠르다.
-        import shutil
-        shutil.copyfile(base_video, out_path)
-        return out_path
-    return _burn_captions(base_video, edit_plan, tts_paths, out_path, work, headcopy, caption_style, deco, sfx_paths=sfx_paths)
+    # ★작업이 끝나면 이 폴더를 지운다(2026-08-23). 종전엔 지우는 코드가 아예 없어서
+    #   렌더 1회마다 **195MB씩 영구히 쌓였다**(실측 2026-08-23: asm_ 321개 = 21GB,
+    #   mix_jobs 31GB 중 3분의 2). 1기 100명이 쓰면 하루에도 수십 GB가 이 자리에 쌓인다.
+    #   ⚠️finally로 감싸는 이유: 반환 지점이 둘(자막 굽기 생략/일반)이고 예외로도 빠져나간다 —
+    #     한 군데만 지우면 나머지 경로가 계속 남긴다(0순위-B).
+    #   ⚠️out_path는 work **밖**이라 안전하다(work는 out_path의 형제 폴더).
+    #     실패해도 삼킨다 — 청소가 렌더를 죽이면 안 된다.
+    try:
+        mix_raw = _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=cutaway_paths)
+        base_video = clean_fn(mix_raw) if clean_fn else mix_raw
+        if not burn_captions:
+            # '자막 없는 clean 배경'용(썸네일 배경 등, 2026-07-22) — 우리 나레이션 자막·꾸미기를
+            # 굽는 _burn_captions 패스를 통째로 건너뛴다. base_video(믹스[+원본자막제거])를 그대로
+            # 확정하므로 ①썸네일에 나레이션 자막이 안 박히고 ②캡션 인코딩 패스가 없어 더 빠르다.
+            import shutil
+            shutil.copyfile(base_video, out_path)
+            return out_path
+        return _burn_captions(base_video, edit_plan, tts_paths, out_path, work, headcopy, caption_style, deco, sfx_paths=sfx_paths)
+    finally:
+        try:
+            import shutil as _sh
+            _sh.rmtree(work, ignore_errors=True)
+        except Exception as e:      # noqa: BLE001 — 청소 실패가 제작을 막지 않는다
+            # 삼키되 조용히 넘기지 않는다 — 이게 계속 실패하면 디스크가 다시 찬다.
+            print(f"[assemble] 작업폴더 정리 실패(무해, 디스크만 남음): {e!r}", file=sys.stderr)
 
 
 def _probe_audio_params(path):
