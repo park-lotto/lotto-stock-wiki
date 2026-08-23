@@ -211,12 +211,26 @@ def _detail_context():
     # 챌린지에 걸려 상세 조회가 통째로 None을 돌려주는 사고가 났다(발굴 0건과
     # 같은 뿌리, 0순위-B). 로테이션 풀(reference — 신선 계정)을 1순위로 쓰고,
     # 풀이 비어 있을 때만 기존 단일 세션으로 폴백한다 — 동작 불변.
+    # ★계정↔프록시는 **짝으로** 정한다(0순위-B, 2026-08-24 실사고).
+    # 예전엔 slots[0] 고정 + 프록시가 elif라, 0번 계정만 프록시 없이 AWS 서버
+    # 맨 IP(43.200.48.69)로 매일 119~125건씩 나갔다. 나머지 6개는 한국 가정회선
+    # (kr-11~)으로 나가는데 0번만 데이터센터 IP → 인스타가 세션을 회수했다
+    # (HTTP 302 + set-cookie: sessionid=deleted. 쿠키 만료일은 2027년이었다).
+    #
+    # ⚠️ 로테이션만 붙이면 7계정이 같은 서버IP를 돌려써 **전멸**한다.
+    # 계정을 고르면 그 계정의 짝 출구도 반드시 함께 건다.
     session_path = ""
+    _proxy_kw = None
     try:
-        from shopping_shorts.channel_archive import POOL_REFERENCE, session_slots
+        from shopping_shorts.channel_archive import (POOL_REFERENCE, live_slots,
+                                                     playwright_proxy_kw,
+                                                     session_slots, slot_proxy)
         slots = session_slots(POOL_REFERENCE)
         if slots:
-            session_path = slots[0]
+            # 죽은 슬롯은 건너뛰되 **원래 인덱스를 보존**한다(출구 IP가 인덱스에
+            # 매여 있어, 당겨지면 계정↔IP 1:1이 통째로 뒤바뀐다).
+            _i, session_path = live_slots(slots)[0]
+            _proxy_kw = playwright_proxy_kw(slot_proxy(_i, POOL_REFERENCE))
     except Exception:                       # noqa: BLE001 — 풀 조회 실패 시 기존 경로
         pass
     if not session_path and config.INSTAGRAM_SESSION_PATH \
@@ -224,6 +238,8 @@ def _detail_context():
         session_path = config.INSTAGRAM_SESSION_PATH
     if session_path:
         ctx_kw["storage_state"] = session_path
+    if _proxy_kw:
+        ctx_kw["proxy"] = _proxy_kw
     elif config.INSTAGRAM_PROXY:
         from shopping_shorts.channel_archive import playwright_proxy_kw
         _pk = playwright_proxy_kw(config.INSTAGRAM_PROXY)
