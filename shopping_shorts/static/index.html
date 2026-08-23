@@ -765,6 +765,12 @@ const DESC_BY_PLATFORM = {
   xiaohongshu: '등록한 <b>샤오홍슈 채널</b>의 최근 <b>48시간</b> 이내 노트를 참여도 기반 강도로 랭킹합니다. (무료 수집)',
   threads:   '등록한 <b>쓰레드 계정</b>의 최근 <b>48시간</b> 이내 게시물을 댓글 기반 강도로 랭킹합니다. (무료 수집)',
 };
+// ★탭에 **보이는 글자**도 플랫폼마다 다르다(2026-08-23 사장님 "유튜브는 시간당 조회수가
+//   메인이어야 한다. 댓글이 없어서"). 종전엔 툴팁만 바꾸고 라벨은 인스타 기준
+//   '시간당댓글'로 고정돼 있었다 — **값은 이미 조회수 기반인데 이름만 댓글**이라
+//   사장님이 화면을 보고 "댓글로 매기고 있다"고 읽으실 수밖에 없었다(실측: 유튜브
+//   speed=조회수/경과h, 중앙값 22.5/h·최대 42,417/h로 정상 작동 중).
+//   label=보이는 글자 / tip=툴팁. hide=이 플랫폼에서 아예 뜻이 없는 탭.
 const TAB_TIP = {
   instagram: {speed:'댓글 ÷ 경과시간', density:'댓글 ÷ 조회수', fan_density:'댓글 ÷ 팔로워수'},
   tiktok:    {speed:'조회수 ÷ 경과시간', density:'(좋아요+댓글) ÷ 조회수 = 반응률'},
@@ -772,17 +778,47 @@ const TAB_TIP = {
   xiaohongshu: {speed:'(좋아요+댓글+수집+공유) ÷ 경과시간', density:'(수집+공유) ÷ (좋아요+댓글+수집+공유)'},
   threads:   {speed:'댓글 ÷ 경과시간', density:'댓글 ÷ 조회수'},
 };
+const TAB_LABEL = {
+  // ⚠️유튜브·틱톡은 팔로워(구독자)를 항목에 안 싣는다 — 실측 유튜브 8,776건 전부
+  //   followers 없음. 그 탭은 눌러도 전부 0이라 숨긴다(있는 척하면 고장으로 보인다).
+  youtube: {speed:'⚡ 시간당 조회수', density:'💥 조회수당 반응', hide:['fan_density']},
+  tiktok:  {speed:'⚡ 시간당 조회수', density:'💥 조회수당 반응', hide:['fan_density']},
+  xiaohongshu: {speed:'⚡ 시간당 반응', density:'💥 저장·공유 비중', hide:['fan_density']},
+};
+// 이 플랫폼에서 기본으로 세울 정렬 — 유튜브는 '시간당 조회수'가 메인이다(사장님).
+const DEFAULT_TAB = {youtube:'speed', tiktok:'speed'};
+
+// 카드 안 지표 이름 — 탭에 쓰는 이름을 그대로 쓴다(이모지만 뗀다).
+// ★두 벌로 적지 마라(0순위-B): 종전엔 탭은 플랫폼별인데 카드는 '시간당댓글' 고정이라
+//   유튜브 카드가 조회수 값을 '댓글'이라 부르고 있었다.
+function _statLabel(kind){
+  const lab = (TAB_LABEL[PLATFORM] || {})[kind]
+    || (kind === 'speed' ? '⚡ 시간당댓글' : '💥 조회수당댓글');
+  return lab.replace(/^[^\s]*\s/, '');      // 앞의 이모지 한 덩어리 제거
+}
 function updatePlatformCopy(p){
   const descEl=document.querySelector('.desc'); if(descEl) descEl.innerHTML = DESC_BY_PLATFORM[p] || DESC_BY_PLATFORM.instagram;
   const tip = TAB_TIP[p] || TAB_TIP.instagram;
-  const speedEl=document.querySelector('.tab[data-tab="speed"]'); if(speedEl) speedEl.title = tip.speed;
-  const densityEl=document.querySelector('.tab[data-tab="density"]'); if(densityEl) densityEl.title = tip.density;
+  const lab = TAB_LABEL[p] || {};
+  const speedEl=document.querySelector('.tab[data-tab="speed"]');
+  if(speedEl){ speedEl.title = tip.speed; speedEl.textContent = lab.speed || '⚡ 시간당댓글'; }
+  const densityEl=document.querySelector('.tab[data-tab="density"]');
+  if(densityEl){ densityEl.title = tip.density; densityEl.textContent = lab.density || '💥 조회수당댓글'; }
+  // 뜻이 없는 탭은 숨긴다. 다른 플랫폼으로 돌아가면 되살아난다(display를 비운다).
+  const hide = new Set(lab.hide || []);
+  document.querySelectorAll('#tabs .tab[data-tab]').forEach(t => {
+    t.style.display = hide.has(t.dataset.tab) ? 'none' : '';
+  });
+  // 숨긴 탭이 지금 선택돼 있으면 전부 0인 목록이 떠 고장처럼 보인다 → 기본으로 되돌린다.
+  if (hide.has(STATE.tab)) setTab(DEFAULT_TAB[p] || 'comments');
 }
 function ttMode(){ const r=document.querySelector('input[name="ttmode"]:checked'); return r?r.value:'account'; }
 function switchPlatform(p, el){
   PLATFORM=p;
   // ★축은 플랫폼마다 다르다 — 남겨두면 인스타에서 '신기템' 필터가 살아 목록이 통째로 빈다.
   STATE.style="";
+  // 유튜브는 '시간당 조회수'로 세운다(2026-08-23 사장님) — 댓글이 없어 댓글 기준은 무의미하다.
+  setTab(DEFAULT_TAB[p] || 'comments');
   updatePlatformCopy(p);
   document.querySelectorAll('#platformTabs .ctype').forEach(x=>x.classList.remove('active'));
   el.classList.add('active');
@@ -1815,8 +1851,8 @@ function render(opts){
         ${(i.followers||i.duration!=null)?`<div class="folw">${i.followers?`<span title="채널 팔로워(구독자) 수 — 수집이 실어온 실시간 값">👥 팔로워 ${i.followers.toLocaleString()}</span>`:''}${i.duration!=null?`<span class="dur" title="영상 길이">🎬 ${_fmtDur(i.duration)}</span>`:''}</div>`:''}
         ${i.views?`<div class="stat" title="조회수 — 옆의 +숫자는 직전 수집 대비 증가분(= '전체' 탭 정렬 기준)"><span>조회수</span><b>${i.views.toLocaleString()} <span class="delta-up">${i.is_new?'신규':'+'+i.delta}</span></b></div>`:''}
         <div class="stat" title="댓글 수 그대로"><span>댓글</span><b>${i.comments.toLocaleString()}${i.views?'':` <span class="delta-up">${i.is_new?'신규':'+'+i.delta}</span>`}</b></div>
-        <div class="stat" title="댓글 ÷ 경과시간 — 게시 후 시간당 평균"><span>시간당댓글</span><b>${_num(i.speed,1)}</b></div>
-        ${i.views?`<div class="stat" title="댓글 ÷ 조회수 — 본 사람 중 댓글 단 비율"><span>조회수당댓글</span><b>${_pct(i.density)}</b></div>`:''}
+        <div class="stat" title="${(TAB_TIP[PLATFORM]||TAB_TIP.instagram).speed} — 게시 후 시간당 평균"><span>${_statLabel('speed')}</span><b>${_num(i.speed,1)}</b></div>
+        ${i.views?`<div class="stat" title="${(TAB_TIP[PLATFORM]||TAB_TIP.instagram).density}"><span>${_statLabel('density')}</span><b>${_pct(i.density)}</b></div>`:''}
         ${(i.likes&&!i.views)?`<div class="stat" title="좋아요 수 그대로 — 쓰레드는 조회수를 안 준다"><span>좋아요</span><b>${i.likes.toLocaleString()}</b></div>`:''}
         ${i.fan_density?`<div class="stat" title="댓글 ÷ 팔로워수 — 구독자 규모 대비 반응"><span>팔로워당댓글</span><b>${_pct(i.fan_density)}</b></div>`:""}
         ${i.inpock?`<div style="margin-top:6px"><a href="${i.inpock}" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none">🛒 판매채널</a></div>`:''}
