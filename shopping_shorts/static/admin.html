@@ -120,14 +120,32 @@ document.addEventListener('click', async (e)=>{
   alert('최근 활동\n\n'+lines);
 });
 
+// ── 고객 찾기: 퍼지(글자 순서만 맞으면) 매칭 — 2026-08-24 ───────────────
+// 사장님 요청: 이메일을 풀로 다 쳐야 걸리던 걸 몇 자만 쳐도 걸리게.
+// 'the' / 'tbk' / 'black001' 전부 theblackart001@gmail.com 에 걸린다.
+// ★한 칸(필드) 안에서만 순서를 잇는다 — 이름과 이메일을 가로질러 이어붙이면
+//   'sdw' 같은 입력에 무관한 고객이 우수수 걸린다(칸을 합쳐 검색하면 그렇게 된다).
+// 공백으로 띄어 치면 조각마다 각각 어느 칸에든 걸려야 통과(AND).
+function _subseq(hay, q){            // hay 안에서 q의 글자가 '순서대로' 나오나
+  let i=0;
+  for(let k=0;k<hay.length && i<q.length;k++) if(hay[k]===q[i]) i++;
+  return i===q.length;
+}
+function _custMatch(c, q){
+  const fields=[c.name,c.phone,c.email,c.username]
+    .map(v=>(v||'').toString().toLowerCase()).filter(Boolean);
+  // 전화번호는 하이픈 유무가 제각각 → 숫자만 남긴 형태도 같이 본다(01012345678 로 쳐도 걸리게)
+  const digits=(c.phone||'').toString().replace(/\D/g,'');
+  if(digits) fields.push(digits);
+  return q.split(/\s+/).filter(Boolean).every(tok => fields.some(f => _subseq(f, tok)));
+}
 function renderCustomers(){
   const esc=s=>(s||'').toString().replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const q=((document.getElementById('custSearch')||{}).value||'').trim().toLowerCase();
   const tier=(document.getElementById('tierFilter')||{}).value||'';
   const rest=(window._CUST||[]).filter(c=>c.approved_at!=null).filter(c=>{
     if(tier && _tierOf(c)!==tier) return false;
-    if(q){ const hay=`${c.name||''} ${c.phone||''} ${c.email||''} ${c.username||''}`.toLowerCase();
-           if(hay.indexOf(q)<0) return false; }
+    if(q && !_custMatch(c,q)) return false;
     return true;
   });
   document.getElementById('cnt').textContent=rest.length;
