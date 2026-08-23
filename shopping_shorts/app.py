@@ -10081,6 +10081,89 @@ def api_challenge_mine(request: Request):
             "start": start, "end": end, "day": day}
 
 
+@app.get("/api/challenge/board")
+def api_challenge_board(request: Request):
+    """달성현황 — 멤버 × 날짜 그리드용 데이터(관리자 전용)."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    store = Store(DB_PATH)
+    start, end, goal = _challenge_period(store)
+    subs = store.list_challenge_submissions(start=start or None, end=end or None)
+    by_cust = {}
+    for s in subs:
+        by_cust.setdefault(s["customer_id"], []).append(s)
+    members = []
+    for m in store.list_challenge_members():
+        cid = m["customer_id"]
+        summary = challenge.summarize(by_cust.get(cid, []), goal=goal)
+        cust = store.get_customer(cid) or {}      # ★없는 고객이면 None → {}
+        members.append({
+            "customer_id": cid,
+            "name": cust.get("name") or cust.get("username") or f"#{cid}",
+            "email": cust.get("email") or "",
+            "by_day": summary["by_day"],
+            "done_days": summary["done_days"],
+            "total": summary["total"],
+        })
+    return {"ok": True, "members": members, "goal": goal,
+            "start": start, "end": end, "today": challenge.kst_day()}
+
+
+@app.get("/api/challenge/videos")
+def api_challenge_videos(request: Request, sort: str = "recent",
+                         member: int = 0, platform: str = ""):
+    """제출 영상 카드 목록(관리자 전용). sort=recent|views"""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    store = Store(DB_PATH)
+    items = store.list_challenge_submissions(customer_id=member or None)
+    if platform:
+        items = [i for i in items if i["platform"] == platform]
+    if sort == "views":
+        # ★조회수가 아직 없는 항목(수집 전·실패·틱톡)이 섞인다 — None이면 0으로.
+        items.sort(key=lambda i: i.get("views") or 0, reverse=True)
+    names = {}
+    for i in items:
+        cid = i["customer_id"]
+        if cid not in names:
+            cust = store.get_customer(cid) or {}
+            names[cid] = cust.get("name") or cust.get("username") or f"#{cid}"
+        i["member_name"] = names[cid]
+    return {"ok": True, "items": items}
+
+
+@app.get("/api/challenge/members")
+def api_challenge_members(request: Request):
+    """참가자 목록(관리자 전용). 해제한 사람도 포함 — 다시 넣을 수 있게."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    store = Store(DB_PATH)
+    out = []
+    for m in store.list_challenge_members(active_only=False):
+        cust = store.get_customer(m["customer_id"]) or {}
+        out.append({**m,
+                    "name": cust.get("name") or cust.get("username") or f"#{m['customer_id']}",
+                    "email": cust.get("email") or ""})
+    return {"ok": True, "members": out}
+
+
+@app.post("/api/challenge/member")
+def api_challenge_member_set(request: Request, customer_id: int, active: int = 1):
+    """참가자 등록/해제(관리자 전용). active=0이면 해제(이력은 남는다)."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    store = Store(DB_PATH)
+    if active:
+        store.add_challenge_member(int(customer_id))
+    else:
+        store.set_challenge_member_active(int(customer_id), False)
+    return {"ok": True, "customer_id": int(customer_id), "active": bool(active)}
+
+
 @app.get("/api/reference/adopt", response_class=HTMLResponse)
 def api_reference_adopt(request: Request, url: str = "", views: int = 0, likes: int = 0,
                         comments: int = 0, followers: int = 0):

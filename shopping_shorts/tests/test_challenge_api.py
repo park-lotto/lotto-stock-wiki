@@ -241,3 +241,169 @@ def test_submit_schedules_background_fetch(env, monkeypatch):
     assert len(seen) == 1
     assert seen[0][1] == "https://youtu.be/abc123"
     assert seen[0][2] == "youtube"
+
+
+def _admin_env(env, monkeypatch):
+    """cid 5를 관리자로 만든다.
+
+    ★_is_admin(0)은 항상 True다(사장님 계정) — '비관리자' 역할에 cid 0을
+    쓰면 통과해버려 거짓 green이 된다. 그래서 5(관리자)·77(일반)을 쓴다.
+
+    ★access_level도 "full"로 고정한다 — 5·77·11·22는 customers 테이블에 없는
+    가짜 cid라 access_level이 기본 "ranking_only"를 주고, 관리 API는
+    _FREE_EXACT_ANY에 없으므로(의도적으로 안 넣음) 유료게이트가 _require_admin보다
+    먼저 402로 막아버린다. 여기서 고정해야 실제로 테스트하려는
+    "_require_admin이 403으로 막는지"를 검증할 수 있다.
+    """
+    monkeypatch.setattr(appmod, "_is_admin", lambda cid: cid == 5)
+    monkeypatch.setattr(appmod, "access_level", lambda cid, now=None: "full")
+    return env
+
+
+def test_board_requires_admin(env, monkeypatch):
+    _admin_env(env, monkeypatch)
+    r = _client().get("/api/challenge/board", cookies={"dash_auth": _cookie(77)})
+    assert r.status_code == 403
+
+
+def test_board_shows_each_member_per_day(env, monkeypatch):
+    _admin_env(env, monkeypatch)
+    env.add_challenge_member(11)
+    env.add_challenge_member(22)
+    env.add_challenge_submission(11, "https://youtu.be/a", "youtube", "a", "sc:a", "2026-08-24")
+    env.add_challenge_submission(11, "https://youtu.be/b", "youtube", "b", "sc:b", "2026-08-24")
+    env.add_challenge_submission(22, "https://youtu.be/c", "youtube", "c", "sc:c", "2026-08-24")
+    r = _client().get("/api/challenge/board", cookies={"dash_auth": _cookie(5)})
+    assert r.status_code == 200, r.text
+    d = r.json()
+    rows = {m["customer_id"]: m for m in d["members"]}
+    assert rows[11]["by_day"]["2026-08-24"] == 2
+    assert rows[11]["done_days"] == 1        # 목표 2 달성
+    assert rows[22]["by_day"]["2026-08-24"] == 1
+    assert rows[22]["done_days"] == 0        # 1개는 미달성
+    assert d["goal"] == 2
+
+
+def test_board_member_without_customer_row_still_shows(env, monkeypatch):
+    """★get_customer가 None이어도 500이 나면 안 된다(참가자만 등록된 경우)."""
+    _admin_env(env, monkeypatch)
+    env.add_challenge_member(11)
+    r = _client().get("/api/challenge/board", cookies={"dash_auth": _cookie(5)})
+    assert r.status_code == 200, r.text
+    assert r.json()["members"][0]["name"]      # 빈 문자열이 아니라 뭔가는 있어야 한다
+
+
+def test_board_counts_only_period_when_set(env, monkeypatch):
+    """기간을 설정하면 그 밖의 제출은 집계에서 빠진다."""
+    _admin_env(env, monkeypatch)
+    env.add_challenge_member(11)
+    env.set_setting("challenge_start", "2026-08-23")
+    env.set_setting("challenge_end", "2026-08-25")
+    env.add_challenge_submission(11, "https://youtu.be/x", "youtube", "x", "sc:x", "2026-08-20")
+    env.add_challenge_submission(11, "https://youtu.be/y", "youtube", "y", "sc:y", "2026-08-24")
+    r = _client().get("/api/challenge/board", cookies={"dash_auth": _cookie(5)})
+    m = r.json()["members"][0]
+    assert m["total"] == 1                      # 8/20은 기간 밖
+    assert "2026-08-20" not in m["by_day"]
+
+
+def test_videos_requires_admin(env, monkeypatch):
+    _admin_env(env, monkeypatch)
+    r = _client().get("/api/challenge/videos", cookies={"dash_auth": _cookie(77)})
+    assert r.status_code == 403
+
+
+def test_videos_sorted_by_views(env, monkeypatch):
+    """★s1(먼저 넣음=낮은 id)이 더 높은 조회수를 갖게 해야 한다 — id DESC 기본순서와
+    조회수순이 우연히 같아지면(나중 넣은 게 조회수도 높으면) 정렬을 꺼도 테스트가 속아 통과한다."""
+    _admin_env(env, monkeypatch)
+    env.add_challenge_member(11)
+    s1 = env.add_challenge_submission(11, "https://youtu.be/a", "youtube", "a", "sc:a", "2026-08-24")
+    s2 = env.add_challenge_submission(11, "https://youtu.be/b", "youtube", "b", "sc:b", "2026-08-24")
+    env.update_challenge_submission_meta(s1, views=999, fetch_status="ok")
+    env.update_challenge_submission_meta(s2, views=10, fetch_status="ok")
+    r = _client().get("/api/challenge/videos", params={"sort": "views"},
+                      cookies={"dash_auth": _cookie(5)})
+    assert [i["views"] for i in r.json()["items"]] == [999, 10]
+
+
+def test_videos_sort_by_views_handles_missing_views(env, monkeypatch):
+    """★조회수가 아직 없는 항목(수집 전·실패)이 섞여도 정렬이 터지면 안 된다."""
+    _admin_env(env, monkeypatch)
+    env.add_challenge_member(11)
+    s1 = env.add_challenge_submission(11, "https://youtu.be/a", "youtube", "a", "sc:a", "2026-08-24")
+    env.add_challenge_submission(11, "https://vt.tiktok.com/b", "tiktok", "", "url:vt.tiktok.com/b", "2026-08-24")
+    env.update_challenge_submission_meta(s1, views=5, fetch_status="ok")
+    r = _client().get("/api/challenge/videos", params={"sort": "views"},
+                      cookies={"dash_auth": _cookie(5)})
+    assert r.status_code == 200, r.text
+    assert len(r.json()["items"]) == 2
+
+
+def test_videos_filter_by_member(env, monkeypatch):
+    _admin_env(env, monkeypatch)
+    env.add_challenge_member(11)
+    env.add_challenge_member(22)
+    env.add_challenge_submission(11, "https://youtu.be/a", "youtube", "a", "sc:a", "2026-08-24")
+    env.add_challenge_submission(22, "https://youtu.be/b", "youtube", "b", "sc:b", "2026-08-24")
+    r = _client().get("/api/challenge/videos", params={"member": 11},
+                      cookies={"dash_auth": _cookie(5)})
+    items = r.json()["items"]
+    assert len(items) == 1 and items[0]["customer_id"] == 11
+
+
+def test_videos_filter_by_platform(env, monkeypatch):
+    _admin_env(env, monkeypatch)
+    env.add_challenge_member(11)
+    env.add_challenge_submission(11, "https://youtu.be/a", "youtube", "a", "sc:a", "2026-08-24")
+    env.add_challenge_submission(11, "https://vt.tiktok.com/b", "tiktok", "", "url:vt.tiktok.com/b", "2026-08-24")
+    r = _client().get("/api/challenge/videos", params={"platform": "tiktok"},
+                      cookies={"dash_auth": _cookie(5)})
+    items = r.json()["items"]
+    assert len(items) == 1 and items[0]["platform"] == "tiktok"
+
+
+def test_videos_include_member_name(env, monkeypatch):
+    """카드에 누가 올렸는지 표시해야 하므로 이름이 실려야 한다."""
+    _admin_env(env, monkeypatch)
+    env.add_challenge_member(11)
+    env.add_challenge_submission(11, "https://youtu.be/a", "youtube", "a", "sc:a", "2026-08-24")
+    r = _client().get("/api/challenge/videos", cookies={"dash_auth": _cookie(5)})
+    assert r.json()["items"][0]["member_name"]
+
+
+def test_members_requires_admin(env, monkeypatch):
+    _admin_env(env, monkeypatch)
+    r = _client().get("/api/challenge/members", cookies={"dash_auth": _cookie(77)})
+    assert r.status_code == 403
+
+
+def test_add_member_requires_admin(env, monkeypatch):
+    _admin_env(env, monkeypatch)
+    r = _client().post("/api/challenge/member", params={"customer_id": 11},
+                       cookies={"dash_auth": _cookie(77)})
+    assert r.status_code == 403
+    assert env.list_challenge_members() == []
+
+
+def test_admin_can_add_and_remove_member(env, monkeypatch):
+    _admin_env(env, monkeypatch)
+    ck = {"dash_auth": _cookie(5)}
+    c = _client()
+    assert c.post("/api/challenge/member", params={"customer_id": 11},
+                  cookies=ck).status_code == 200
+    assert env.is_challenge_member(11) is True
+    assert c.post("/api/challenge/member",
+                  params={"customer_id": 11, "active": 0},
+                  cookies=ck).status_code == 200
+    assert env.is_challenge_member(11) is False
+
+
+def test_members_list_includes_inactive(env, monkeypatch):
+    """해제한 사람도 목록엔 보여야 한다(다시 넣을 수 있게)."""
+    _admin_env(env, monkeypatch)
+    env.add_challenge_member(11)
+    env.set_challenge_member_active(11, False)
+    r = _client().get("/api/challenge/members", cookies={"dash_auth": _cookie(5)})
+    ms = r.json()["members"]
+    assert len(ms) == 1 and ms[0]["active"] == 0
