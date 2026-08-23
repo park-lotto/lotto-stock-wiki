@@ -5524,6 +5524,23 @@ class Store:
                 "ORDER BY id", (int(customer_id), service)).fetchall()
         return self._decrypt_rows(rows, customer_id, service)
 
+    def get_pooled_keys(self, service):
+        """**전 회원이 등록한 그 서비스의 키 전부**(공용 풀 합류분, 2026-08-24).
+
+        사장님 결정: 제미니·유튜브는 회원에게 1개씩만 받아 우리 풀에 합류시키고
+        회원은 무료로 쓴다(모자란 용량은 사장님이 키를 더 만들어 채운다).
+        그래서 이 목록은 '누구 것'을 따지지 않는다 — 풀에 들어온 순간 공용이다.
+
+        ★개인 전용 경로(keys_for·gemini_keys의 cid 분기)와는 **다른 축**이다.
+          저기는 "내 일은 내 키로", 여기는 "풀 전체". 섞지 마라.
+        ★복호 실패 행은 _decrypt_rows가 로그를 남기고 건너뛴다.
+        """
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT id, key_enc FROM customer_keys WHERE service=? ORDER BY id",
+                (service,)).fetchall()
+        return [plain for _kid, plain in self._decrypt_rows(rows, "pool", service)]
+
     def _decrypt_rows(self, rows, customer_id, service):
         """(id, key_enc) 행들을 복호해 [(id, 평문)]으로. 깨진 행은 로그 후 건너뛴다."""
         from shopping_shorts import keycrypt

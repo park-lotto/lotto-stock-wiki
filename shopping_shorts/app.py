@@ -113,6 +113,20 @@ def _seed_voice_presets():
 
 
 @app.on_event("startup")
+def _join_member_keys():
+    """회원이 등록한 키를 공용 풀(제미니·유튜브)에 합류시킨다(2026-08-24 사장님 정책).
+
+    회원은 키를 1개만 내고 무료로 쓴다 — 모자란 용량은 사장님이 키를 더 만들어 채운다.
+    ★기동 시 1회. 이후 등록분은 /api/settings/keys 저장 직후에 같은 함수를 부른다
+      (재기동을 기다리면 "등록했는데 왜 그대로냐"가 된다).
+    실패해도 기동은 막지 않는다 — 사장님 키만으로 종전과 똑같이 돈다."""
+    try:
+        _resync_pools(Store(DB_PATH), verbose=True)
+    except Exception as e:      # noqa: BLE001
+        logging.warning("회원 키 합류 실패(%s) — 사장님 키로만 돈다", type(e).__name__)
+
+
+@app.on_event("startup")
 def _prune_activity_logs():
     """기동 시 오래된 활동·접속 로그 정리(2026-07-24) — customer_activity/customer_access는
     append만 돼 무한증가한다. 30일 지난 행을 지워 DB 비대를 막는다(best-effort, 실패 무시).
@@ -3231,7 +3245,39 @@ def api_list_keys(request: Request):
             #   "N개 등록됨"을 띄워 사장님이 '넣었는데 왜 안 되냐'로 반나절을 썼다.
             #   wired = 등록 키가 실제 호출에 쓰이는 서비스(나머지는 저장만 된다).
             "personal": bool(cid),
-            "wired": list(keyroute.WIRED)}
+            "wired": list(keyroute.WIRED),
+            # pooled = 회원 키가 **공용 풀에 합류**하는 서비스(2026-08-24). 화면 문구가
+            # 달라진다 — "내 키로 돈다"가 아니라 "풀에 넣고 무료로 쓴다"이기 때문이다.
+            "pooled": list(keyroute.POOLED)}
+
+
+_POOL_REFRESHERS = {
+    keyroute.SVC_GEMINI: ("제미니", lambda p: config.refresh_member_gemini_keys(p)),
+    keyroute.SVC_YOUTUBE: ("유튜브", lambda p: config.refresh_member_youtube_keys(p)),
+}
+
+
+def _resync_pools(store, verbose=False):
+    """회원 키를 공용 풀(제미니·유튜브)에 합류시킨다(2026-08-24 사장님 정책).
+
+    회원은 키를 1개만 내고 풀 전체를 무료로 쓴다 — 모자란 용량은 사장님이 채운다.
+    ★기동·등록·삭제가 **같은 함수**를 쓴다 — 합류 규칙을 두 군데 적으면 어긋난다(0순위-B).
+    ★keyroute.POOLED가 진실 — 여기에 서비스를 손으로 또 적지 않는다.
+    실패해도 요청은 성공시킨다: 키는 이미 DB에 있고 늦어도 다음 기동에 합류한다."""
+    for svc in keyroute.POOLED:
+        label, fn = _POOL_REFRESHERS[svc]
+        try:
+            n_owner, n_member = fn(store.get_pooled_keys(svc))
+            if verbose and n_member:
+                import sys as _sys
+                print(f"[keypool] {label} 사장님 {n_owner} + 회원 {n_member} "
+                      f"= {n_owner + n_member}개", file=_sys.stderr)
+            elif n_member:
+                logging.info("%s 공용풀 갱신: 사장님 %d + 회원 %d",
+                             label, n_owner, n_member)
+        except Exception as e:      # noqa: BLE001 — 한 서비스가 실패해도 나머지는 갱신
+            logging.warning("%s 공용풀 갱신 실패(%s) — 다음 기동에 반영된다",
+                            label, type(e).__name__)
 
 
 @app.post("/api/settings/keys")
@@ -3260,6 +3306,10 @@ def api_add_keys(request: Request, body: dict):
     store = Store(DB_PATH)
     cid = keyroute.as_cid(_cid(request))
     added = sum(1 for p in parts if store.add_customer_key(cid, service, p))
+    # ★제미니는 공용 풀 모델이라 등록 즉시 풀에 넣는다 — 재기동을 기다리면
+    #   "등록했는데 그대로"가 된다. 다른 서비스는 keys_for가 매번 DB를 읽어 불필요.
+    if added and keyroute.is_pooled(service):
+        _resync_pools(store)
     return {"ok": True, "added": added, "keys": store.list_customer_keys(cid)}
 
 
@@ -3269,6 +3319,10 @@ def api_delete_key(request: Request, body: dict):
     cid = keyroute.as_cid(_cid(request))
     # store가 customer_id를 DELETE 조건에 넣는다 → id만 알아도 남의 키는 못 지운다.
     store.delete_customer_key(cid, int(body.get("id") or 0))
+    # ★뺀 키는 공용 풀에서도 즉시 빠져야 한다 — 안 그러면 회원이 지운(또는 구글에서
+    #   폐기한) 키를 우리가 계속 때려 429·401을 맞는다. 어떤 서비스였는지 모르므로
+    #   공용 풀은 항상 다시 만든다(idempotent라 비용 없음).
+    _resync_pools(store)
     return {"ok": True, "keys": store.list_customer_keys(cid)}
 
 
@@ -4677,6 +4731,7 @@ async def api_voice_tune_synth(req: Request):
             beat_role=body.get("beat_role"), beat_index=body.get("beat_index"),
             beat_total=body.get("beat_total"),
             previous_text=body.get("previous_text"), next_text=body.get("next_text"),
+            customer_id=_cid(req),
         )
     hyp = asr_check.transcribe(str(out))
     diff = asr_check.diff_words(text, hyp) if hyp else {"ok": True, "words": [], "no_asr": True}
@@ -4894,10 +4949,14 @@ def api_mix_voice_preview(body: dict):
     out = d / "preview.mp3"
     # 렌더와 동일한 공유 경로(synthesize_line)로 합성한다 — 직접 synthesize_tts를 부르면
     # naturalize 미적용·model v2로 나가 "미리듣기랑 영상 소리가 다르다"가 된다(리뷰 S8).
+    # ★키 주인은 요청자가 아니라 **작업의 주인**으로 잡는다(2026-08-24). 이 라우트는
+    #   Request를 안 받고, job에 customer_id가 이미 있어 렌더 경로와 같은 키를 쓴다
+    #   — 미리듣기와 최종 영상이 다른 키로 나가면 소리가 갈릴 수 있다.
     mix_pipeline.synthesize_line(
         beats[0]["narration"], out, voice=_voice_snapshot(Store(DB_PATH), body),
         beat_role=beats[0].get("role"), beat_index=0, beat_total=len(beats),
         next_text=beats[1]["narration"] if len(beats) > 1 else None,
+        customer_id=job.get("customer_id", 0),
     )
     return FileResponse(str(out), media_type="audio/mpeg")
 
