@@ -4859,6 +4859,8 @@ function _pvFail(html){
 // 좌측 미리보기 레일을 쓰지 않는다(확정 결과는 장면편집 안 자리로 간다, 2026-08-22).
 // 되돌리려면 이 한 줄을 false로 — 폴백 경로는 그대로 살아 있다.
 const _RAIL_OFF = true;
+// job별로 'iframe 기다리기'를 한 번만 한다(폴링·복원이 겹쳐도 타이머가 쌓이지 않게).
+const _PV_LAB_WAITED = {};
 function _pvShow(which){
   // ★확정 결과가 장면편집 안 자리로 간 뒤(2026-08-22)로는 좌측 레일이 **또 하나의
   //   9:16 칸**이 돼 사장님 지적을 받았다("왜 따로 또 자리를 차지하냐").
@@ -4886,6 +4888,42 @@ function _renderPreviewVideo(job){
     const btn0 = document.getElementById('btnPreview'); if(btn0) btn0.disabled = false;
     return;
   }
+  // ★iframe이 **아직 안 뜬 것**과 **영영 못 뜨는 것**을 가른다(2026-08-24).
+  //   복원 경로(_restoreMixContext)는 _syncSceneLab(true)로 iframe src를 막 세팅한
+  //   직후에 여기까지 온다. src 세팅은 비동기라 그 순간 contentWindow에는 아직
+  //   showConfirmVideo가 없다 → _labCall이 false → 폴백이 좌측 레일을 열어버렸다.
+  //   'fallback'은 _RAIL_OFF를 뚫는 **유일한 값**이라, 껐다고 믿은 칸이 되돌아올
+  //   때마다 다시 열렸다(사장님 제보 "맨왼쪽에 또 뜬다").
+  //   → 곧 뜰 iframe이면 잠깐 기다렸다가 제자리(완성본 만들기 탭)에 넣는다.
+  //     정말 못 뜰 때만(2초) 옛 좌측 칸으로 떨어진다 — 결과를 아예 못 보는 일은 없다.
+  //   ⚠️'iframe이 있다'는 판정을 요소 존재로 하면 안 된다 — **contentWindow가 있는
+  //     진짜 iframe**이어야 기다릴 값어치가 있다. 요소만 보면, iframe이 아예 없는
+  //     화면(및 스텁 하네스)에서 오지 않을 것을 2초 기다리다 결과를 늦게 그린다.
+  const _frame = document.getElementById('sceneLabFrame');
+  const _frameReal = !!(_frame && 'contentWindow' in _frame);
+  if (_frameReal && !(typeof _PV_LAB_WAITED !== 'undefined' && _PV_LAB_WAITED[job])){
+    try{ _PV_LAB_WAITED[job] = 1; }catch(e){}
+    let _tries = 0;
+    const _timer = setInterval(function(){
+      _tries++;
+      if (typeof _labCall==='function' && _labCall('showConfirmVideo', src)){
+        clearInterval(_timer);
+        const b2 = document.getElementById('btnPreview'); if(b2) b2.disabled = false;
+        return;
+      }
+      if (_tries >= 20){            // 20 x 100ms = 2초. 그래도 없으면 진짜 폴백.
+        clearInterval(_timer);
+        _renderPreviewVideoFallback(job, src);
+      }
+    }, 100);
+    return;
+  }
+  _renderPreviewVideoFallback(job, src);
+}
+// 옛 좌측 레일에 그리는 **폴백 전용** 경로 — iframe이 정말 못 뜰 때만 온다.
+// ★자리를 여는 판단은 _pvShow 한 곳(0순위-B). 'fallback'만이 _RAIL_OFF를 뚫는다.
+function _renderPreviewVideoFallback(job, src){
+  const box=document.getElementById('mixPreview'); if(!box) return;
   if(typeof _pvShow==='function') _pvShow('fallback');   // 폴백 = 옛 좌측 레일(레일 감춤을 뚫는 유일한 값)
   // display:block — 없으면 video 태그가 inline이라 baseline 아래에 검정 라인이 생긴다.
   //   ⚠️ 주석에 video 태그를 그대로 적지 마라: 이 파일을 정규식으로 훑는 테스트가

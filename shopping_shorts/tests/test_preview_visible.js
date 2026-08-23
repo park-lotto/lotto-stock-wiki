@@ -59,5 +59,21 @@ t('정의 밖에서 패널을 직접 만지지 않는다', (function(){
   return true;
 })());
 
+// ★iframe이 늦게 뜨는 것을 '못 뜬 것'으로 오판하면 좌측 레일이 다시 열린다(2026-08-24).
+//   복원 경로는 _syncSceneLab(true)로 iframe src를 막 세팅한 **직후**에 미리보기를
+//   그린다. src 세팅은 비동기라 그 순간 contentWindow에 showConfirmVideo가 없다
+//   → _labCall false → 'fallback'(_RAIL_OFF를 뚫는 유일한 값)이 레일을 열었다.
+//   사장님 제보: "다시 되돌아가면 맨왼쪽 랜더된게 처음에는 없다가 뜬다".
+t('iframe을 기다린 뒤에 폴백한다', (function(){
+  var body = code.split('function _renderPreviewVideo(')[1] || '';
+  body = body.split('\\nfunction ')[0];
+  if (!/set(Interval|Timeout)\s*\(/.test(body)) return false;
+  var retries = (body.match(/_labCall\('showConfirmVideo'/g) || []).length;
+  return retries >= 2;
+})());
+// 그래도 **영영 못 뜨면** 결과를 아예 못 보는 일은 없어야 한다.
+t('끝내 못 뜨면 좌측으로 폴백한다',
+  /function _renderPreviewVideoFallback\(/.test(code) &&
+  /function _renderPreviewVideoFallback[\s\S]{0,400}_pvShow\('fallback'\)/.test(code));
 console.log('\n결과: PASS ' + p + ' / FAIL ' + f);
 process.exit(f ? 1 : 0);
