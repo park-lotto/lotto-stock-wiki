@@ -1346,6 +1346,14 @@ class Store:
         except sqlite3.OperationalError:
             pass  # 이미 존재
 
+        # ── 가입 마무리 대상 표시(2026-08-24): 1이면 로그인 시 이름·전화 입력화면을 한 번 띄운다. ──
+        #   구글 가입은 이메일만 들어와 이름·전화가 비어 있었다. 신규 가입에만 1을 켠다 —
+        #   기본 0이라 **기존 고객은 화면이 안 바뀐다**(이미 쓰고 계신 분을 갑자기 붙잡지 않는다).
+        try:
+            c.execute("ALTER TABLE customers ADD COLUMN welcome_due INTEGER NOT NULL DEFAULT 0")
+        except sqlite3.OperationalError:
+            pass  # 이미 존재
+
         # ── 회원관리(2026-07-22): 이름·전화 + 결제이력 ──
         #   ★같은 커서 c 사용 — 이 메서드는 _init_schema가 customers를 만드는 열린 트랜잭션
         #   안에서 c를 넘겨받는다. 새 self._conn()을 열면 미커밋 customers가 안 보여 깨진다.
@@ -4585,7 +4593,7 @@ class Store:
             "sha256", password.encode("utf-8"), bytes.fromhex(salt), Store._PBKDF2_ITERATIONS
         ).hex()
 
-    def create_customer(self, username, password, email=None, google_sub=None, approved=True, name=None, phone=None):
+    def create_customer(self, username, password, email=None, google_sub=None, approved=True, name=None, phone=None, welcome_due=False):
         """신규 고객 계정 생성. username 중복이면 ValueError. 성공 시 customer_id 반환.
         approved=True(기본): 가입 즉시 승인+무료체험 시작(full_access_until=now+trial_days).
         approved=False: 대기중(approved_at=NULL) + 체험 미시작(full_access_until=0).
@@ -4616,10 +4624,11 @@ class Store:
             try:
                 cur = c.execute(
                     "INSERT INTO customers(username, password_hash, salt, created_at, "
-                    "plan, full_access_until, email, google_sub, approved_at, name, phone, trial_ends_at) "
-                    "VALUES(?,?,?,datetime('now'),'free',?,?,?,?,?,?,?)",
+                    "plan, full_access_until, email, google_sub, approved_at, name, phone, "
+                    "trial_ends_at, welcome_due) "
+                    "VALUES(?,?,?,datetime('now'),'free',?,?,?,?,?,?,?,?)",
                     (username, pw_hash, salt, full_access_until, email, google_sub,
-                     approved_at, name, phone, trial_ends_at),
+                     approved_at, name, phone, trial_ends_at, 1 if welcome_due else 0),
                 )
             except sqlite3.IntegrityError:
                 raise ValueError(f"이미 존재하는 아이디: {username}")
@@ -4637,7 +4646,8 @@ class Store:
         username = "g_" + str(google_sub)               # username 유니크 제약 충족용(절단X — sub 전체가 dedup 키)
         try:
             cid = self.create_customer(username, secrets.token_hex(16),
-                                       email=email, google_sub=google_sub, approved=False)
+                                       email=email, google_sub=google_sub, approved=False,
+                                       welcome_due=True)   # 이름·전화를 못 받았다 → 로그인 후 한 번 물어본다
             return _ret(cid, True)                       # 방금 새로 만든 계정 = 신규가입
         except ValueError:
             with self._conn() as c:                     # 경합으로 방금 생성됐으면 재조회
@@ -4675,7 +4685,7 @@ class Store:
         with self._conn() as c:
             row = c.execute(
                 "SELECT id, username, created_at, plan, full_access_until, google_sub, email, "
-                "approved_at, name, phone, trial_ends_at, admin "
+                "approved_at, name, phone, trial_ends_at, admin, welcome_due "
                 "FROM customers WHERE id=?", (customer_id,)
             ).fetchone()
         if not row:
@@ -4684,7 +4694,12 @@ class Store:
                 "plan": row[3] or "free", "full_access_until": row[4] or 0,
                 "google_sub": row[5], "email": row[6], "approved_at": row[7],
                 "name": row[8], "phone": row[9], "trial_ends_at": row[10],
-                "admin": bool(row[11])}
+                "admin": bool(row[11]), "welcome_due": bool(row[12])}
+
+    def clear_welcome_due(self, customer_id):
+        """가입 마무리(이름·전화) 입력을 마쳤다 → 다시 묻지 않는다."""
+        with self._conn() as c:
+            c.execute("UPDATE customers SET welcome_due=0 WHERE id=?", (customer_id,))
 
     def set_customer_admin(self, customer_id, is_admin):
         """관리자 지정/회수(사장님 UI). admin=1이면 _is_admin이 관리자로 인정(권한 동일).

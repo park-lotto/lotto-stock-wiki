@@ -68,7 +68,7 @@ def test_signup_fires_telegram_notify(tmp_path, monkeypatch):
     monkeypatch.setattr(notify, "send_telegram", lambda text, **k: sent.setdefault("text", text) or True)
     cl = TestClient(appmod.app)
     r = cl.post("/api/signup",
-                content="user=hong&pass=pw12&name=홍길동&phone=010-2222",
+                content="user=hong&pass=pw12&name=홍길동&phone=010-2222-3333",
                 headers={"content-type": "application/x-www-form-urlencoded"},
                 follow_redirects=False)
     assert r.status_code == 303

@@ -7371,6 +7371,101 @@ text-decoration:none;font-size:14px}</style></head>
 <form method=post action="/logout" style="margin-top:16px"><button type=submit style="background:none;border:0;color:#8ab4f8;font-size:14px;cursor:pointer;text-decoration:none">로그아웃</button></form>
 <div style="margin-top:20px;color:#5f6773;font-size:12px">__LEGAL__</div></div></body></html>""")
 
+# ── 가입 마무리: 이름·전화 받기 (2026-08-24 사장님 요청) ──────────────────
+# 구글 로그인 가입은 이메일만 들어오고 이름·전화가 **아예 안 들어온다**(get_or_create_by_google이
+# email만 넘긴다) → 관리자 고객표의 '이름·전화' 칸이 통째로 비어 있었다(실측 179명 대부분).
+# 그래서 구글로 새로 가입한 사람에게 이 화면을 한 번 띄워 받는다. 아이디 가입은 폼에서 이미
+# 받으므로 안 뜬다(빈칸으로 냈으면 여기서 한 번 더 물어본다).
+# ★건너뛰기는 일부러 안 뒀다 — 승인 판단에 필요한 정보라 사장님이 "받는 걸로" 결정하셨다.
+#   다만 로그아웃은 열어둔다(갇히면 안 된다 — 대기실과 같은 원칙).
+_WELCOME_HTML = _fill_brand(r"""<!doctype html><html lang=ko><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<link rel=manifest href="/manifest.webmanifest"><meta name=theme-color content="#0c1411"><link rel=icon href="/favicon.ico"><link rel=apple-touch-icon href="/apple-touch-icon.png">
+<title>가입 마무리 · __NAME__</title>
+<style>*{box-sizing:border-box}body{font-family:-apple-system,'Malgun Gothic',sans-serif;
+background:radial-gradient(900px 500px at 50% -15%,rgba(111,240,214,.10),transparent 60%),#0f1115;
+color:#e8eaed;margin:0;display:flex;min-height:100vh;align-items:center;justify-content:center;padding:20px}
+.box{width:360px;max-width:100%;background:linear-gradient(180deg,#151a1c,#0f1416);
+border:1px solid #222c2e;border-radius:18px;padding:32px 26px 24px;text-align:center;
+box-shadow:0 24px 60px rgba(0,0,0,.5)}
+.emoji{font-size:44px}h1{font-size:20px;margin:14px 0 6px}
+p.sub{color:#9aa0a6;line-height:1.6;font-size:14px;margin:0 0 20px}
+label{display:block;text-align:left;color:#8aa0a0;font-size:12.5px;margin:12px 0 5px;font-weight:600}
+input{width:100%;padding:12px 13px;background:#0b1012;border:1px solid #2a3436;border-radius:10px;
+color:#eee;font-size:15px}
+input:focus{outline:0;border-color:#37e0bd}
+button.go{width:100%;margin-top:20px;padding:13px;background:linear-gradient(135deg,#6ff0d6,#1f9e7a);
+color:#08110e;border:0;border-radius:11px;font-weight:700;font-size:15px;cursor:pointer}
+.err{color:#e74c3c;font-size:12.5px;min-height:15px;margin-top:10px}
+.out{background:none;border:0;color:#6b7580;font-size:12.5px;cursor:pointer;margin-top:14px}</style></head>
+<body><form class=box method=post action="/api/welcome">
+<div class=emoji>👋</div>
+<h1>거의 다 됐어요</h1>
+<p class=sub>승인 안내를 드리려면<br>이름과 연락처가 필요해요.</p>
+<label for=w_name>이름</label>
+<input id=w_name name=name placeholder="홍길동" autocomplete=name autofocus required>
+<label for=w_phone>전화번호</label>
+<input id=w_phone name=phone type=tel placeholder="010-0000-0000" autocomplete=tel required>
+<button class=go type=submit>시작하기</button>
+<div class=err>__ERR__</div>
+</form>
+<script>
+// 전화번호 자동 하이픈 — 사장님이 표에서 눈으로 읽기 좋게 형식을 통일한다.
+document.getElementById('w_phone').addEventListener('input', function(e){
+  var d=e.target.value.replace(/\D/g,'').slice(0,11);
+  e.target.value = d.length<4 ? d
+    : d.length<8 ? d.slice(0,3)+'-'+d.slice(3)
+    : d.slice(0,3)+'-'+d.slice(3,7)+'-'+d.slice(7);
+});
+</script>
+</body></html>""")
+
+
+def _needs_welcome(customer_id):
+    """이 고객에게 가입 마무리(이름·전화) 화면을 띄워야 하나.
+    사장님(0)·둘 다 채워진 고객은 False. ★기존 고객(이미 쓰고 계신 분)까지 붙잡으면
+    갑자기 화면이 막히므로, 구글 가입분과 새로 가입한 사람만 대상으로 한다."""
+    if _as_cid(customer_id) == 0:
+        return False
+    cust = Store(DB_PATH).get_customer(customer_id)
+    if not cust:
+        return False
+    if (cust.get("name") or "").strip() and (cust.get("phone") or "").strip():
+        return False
+    return bool(cust.get("welcome_due"))
+
+
+@app.get("/welcome", response_class=HTMLResponse)
+def _welcome_page(request: Request, e: str = ""):
+    cid = getattr(request.state, "customer_id", None)
+    if cid is None or not _needs_welcome(cid):
+        return RedirectResponse("/", status_code=303)
+    msg = e.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
+    return HTMLResponse(_WELCOME_HTML.replace("__ERR__", msg))
+
+
+@app.post("/api/welcome")
+async def _api_welcome(req: Request):
+    cid = getattr(req.state, "customer_id", None)
+    if cid is None:
+        return RedirectResponse("/login", status_code=303)
+    body = (await req.body()).decode("utf-8", "ignore")
+    form = urllib.parse.parse_qs(body)
+    name = (form.get("name") or [""])[0].strip()
+    phone = (form.get("phone") or [""])[0].strip()
+    digits = re.sub(r"\D", "", phone)
+    if not name:
+        return RedirectResponse("/welcome?e=" + urllib.parse.quote("이름을 입력해주세요"), status_code=303)
+    if not (9 <= len(digits) <= 11):
+        return RedirectResponse("/welcome?e=" + urllib.parse.quote("전화번호를 정확히 입력해주세요"), status_code=303)
+    st = Store(DB_PATH)
+    st.update_customer_info(cid, name, phone)     # ★관리자 정보수정과 같은 경로를 쓴다(0순위-B)
+    st.clear_welcome_due(cid)                     # 두 번 묻지 않는다
+    _notify_new_signup(name=name, username="구글", phone=phone,
+                       email=(st.get_customer(cid) or {}).get("email"))
+    return RedirectResponse("/", status_code=303)
+
+
 # 로그아웃 확인 화면 — GET /logout이 세션을 안 지우는 대신 이 화면을 준다(CSRF 방어).
 # 실제 로그아웃은 이 폼의 POST만.
 _LOGOUT_CONFIRM_HTML = _fill_brand("""<!doctype html><html lang=ko><head><meta charset=utf-8>
@@ -7407,10 +7502,10 @@ a{color:#7db4ff;font-size:12px;text-decoration:none}
 .foot{text-align:center;margin-top:14px}</style></head>
 <body><form class=box method=post action=/api/signup>
 <h1>🛍️ 숏템메이커 가입</h1>
-<input name=user placeholder=아이디(영문/숫자) autocomplete=username autofocus>
-<input name=name placeholder=이름 autocomplete=name>
-<input name=phone placeholder="전화번호(010-0000-0000)" autocomplete=tel>
-<input name=pass type=password placeholder=비밀번호 autocomplete=new-password>
+<input name=user placeholder=아이디(영문/숫자) autocomplete=username autofocus required>
+<input name=name placeholder=이름 autocomplete=name required>
+<input name=phone type=tel placeholder="전화번호(010-0000-0000)" autocomplete=tel required>
+<input name=pass type=password placeholder=비밀번호 autocomplete=new-password required>
 <button>가입하기</button>
 <div class=err>__ERR__</div>
 <div class=foot><a href=/login>이미 계정이 있으신가요? 로그인</a></div>
@@ -7828,9 +7923,15 @@ async def _api_signup(req: Request):
     phone = (form.get("phone") or [""])[0].strip()
     if len(u) < 3 or len(p) < 4:
         return RedirectResponse("/signup?e=" + urllib.parse.quote("아이디 3자·비밀번호 4자 이상"), status_code=303)
+    # ★HTML required는 브라우저 힌트일 뿐이라 서버에서도 막는다(curl·자동가입 우회 방지).
+    if not name:
+        return RedirectResponse("/signup?e=" + urllib.parse.quote("이름을 입력해주세요"), status_code=303)
+    if not (9 <= len(re.sub(r"\D", "", phone)) <= 11):
+        return RedirectResponse("/signup?e=" + urllib.parse.quote("전화번호를 정확히 입력해주세요"), status_code=303)
     try:
-        customer_id = Store(DB_PATH).create_customer(u, p, approved=False,
-                                                     name=name or None, phone=phone or None)
+        customer_id = Store(DB_PATH).create_customer(
+            u, p, approved=False, name=name or None, phone=phone or None,
+            welcome_due=not (name and phone))   # 빈칸으로 냈으면 로그인 후 한 번 더 물어본다
     except ValueError:
         return RedirectResponse("/signup?e=" + urllib.parse.quote("이미 존재하는 아이디입니다"), status_code=303)
     _notify_new_signup(name=name, username=u, phone=phone)   # 사장님 텔레 알림(무키면 no-op)
@@ -8034,10 +8135,23 @@ async def _auth_guard(request: Request, call_next):
         keyctx.set_owner(customer_id)
         _record_access(customer_id, request)   # 돌려쓰기 소프트감지(best-effort, 차단 안 함)
         _track_activity(customer_id, path)     # 접속중·활동기록(best-effort)
+        # ★가입 마무리(이름·전화)를 아직 안 낸 신규 가입자 → 승인 대기실보다 먼저 여기로.
+        #   사장님이 승인 여부를 판단하려면 이름·연락처가 필요하다(2026-08-24).
+        #   /welcome·/api/welcome·/logout은 통과시켜야 화면이 뜨고 제출·탈출이 된다.
+        if (path not in ("/welcome", "/api/welcome", "/logout")
+                and not path.startswith("/static")
+                and _needs_welcome(customer_id)):
+            if path.startswith("/api/"):
+                return JSONResponse({"error": "가입 정보를 먼저 입력해주세요", "level": "welcome"},
+                                    status_code=403)
+            return RedirectResponse("/welcome", status_code=303)
         lvl = access_level(customer_id)
         if lvl == "pending":
             # 승인 전 전면 차단. /logout만 통과(로그아웃 가능), /static은 위에서 이미 허용.
-            if path == "/logout":
+            # ★/welcome·/api/welcome도 통과 — 구글 신규가입자는 '미승인(pending)'인 채로
+            #   이름·전화를 내야 한다. 안 열어주면 위에서 /welcome으로 보내놓고 여기서
+            #   대기실 화면을 돌려줘, 입력칸이 영영 안 보인다(2026-08-24 실측).
+            if path in ("/logout", "/welcome", "/api/welcome"):
                 return await call_next(request)
             if path.startswith("/api/"):
                 return JSONResponse({"error": "승인 대기중이에요", "level": "pending"}, status_code=403)
