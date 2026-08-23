@@ -362,13 +362,28 @@
       '<div style="font-size:40px">🔒</div>' +
       '<div style="font-size:18px;font-weight:800;margin:10px 0 6px">' + escHtml(opts.title || "무료 체험이 끝났어요") + '</div>' +
       '<div style="font-size:14px;color:#b8b8c0;line-height:1.6">' +
-        (opts.body ? escHtml(opts.body) : '이 기능은 결제하시면 계속 쓸 수 있어요.<br>담아둔 영상·자료는 <b>그대로 보존</b>돼요.') + '</div>' +
+        // 줄바꿈(\n)은 <br>로 — escHtml 먼저 하고 바꾼다(순서 반대면 태그가 escape된다).
+        (opts.body ? escHtml(opts.body).replace(/\n/g, "<br>")
+                   : '이 기능은 결제하시면 계속 쓸 수 있어요.<br>담아둔 영상·자료는 <b>그대로 보존</b>돼요.') + '</div>' +
       '<div style="margin-top:14px;font-size:14px;color:#7db4ff">' +
         (k ? "카톡: " + escHtml(k) + "<br>" : "") +
         (ph ? "전화: " + escHtml(ph) : "") +
         (!k && !ph ? "결제를 원하시면 안내받으신 판매 채널로 문의해 주세요." : "") +
       "</div>" +
-      '<div style="margin-top:18px"><button id="ss-pw-close" style="background:#4f9dfa;color:#111;border:0;border-radius:8px;padding:10px 22px;font-weight:800;font-size:14px;cursor:pointer">닫기</button></div>' +
+      // 결제로 가는 길(2026-08-23). 예전엔 '카톡 문의'만 있어서, 계좌를 넣어놔도
+      // 기존 회원은 결제 안내 화면으로 갈 방법이 아예 없었다(사장님이 일일이 카톡으로
+      // 계좌를 알려줘야 했다). 주소·문구는 서버(/api/me pay_cta)가 정한 것을 그대로 쓴다.
+      (_pw.cta && _pw.cta.href
+        ? '<div style="margin-top:18px"><a id="ss-pw-pay" href="' + escHtml(_pw.cta.href) + '"' +
+          (/^https?:\/\//.test(_pw.cta.href) ? ' target="_blank" rel="noopener"' : "") +
+          ' style="display:block;background:linear-gradient(135deg,#6ff0d6,#1f9e7a);color:#08110e;' +
+          'border-radius:10px;padding:13px 20px;font-weight:800;font-size:15px;text-decoration:none">' +
+          escHtml(_pw.cta.label || "💳 결제 안내") + "</a></div>"
+        : "") +
+      '<div style="margin-top:' + (_pw.cta && _pw.cta.href ? "10px" : "18px") + '"><button id="ss-pw-close" style="background:' +
+      (_pw.cta && _pw.cta.href ? "transparent;color:#8a8a92;border:1px solid #2a2a30" : "#4f9dfa;color:#111;border:0") +
+      ';border-radius:8px;padding:10px 22px;font-weight:800;font-size:14px;cursor:pointer">' +
+      escHtml(opts.closeLabel || "닫기") + "</button></div>" +
       "</div>";
     document.body.appendChild(m);
     document.getElementById("ss-pw-close").onclick = function () { m.style.display = "none"; };
@@ -452,10 +467,36 @@
     fetch("/api/me").then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
       if (!d) return;
       _pw.level = d.level; _pw.contact = d.contact || {};
+      _pw.cta = d.pay_cta || null;
       _accountCard(d);   // 로고 아래 계정 패널
       if (d.level === "ranking_only") _pwLockSidebar();
       else if (typeof d.days_left === "number" && d.days_left >= 0 && d.plan !== "pro") _pwBanner(d.days_left);
+      _payPrompt(d);     // 미결제 회원에게 결제 안내 팝업(하루 1회)
     }).catch(function () {});
+  }
+
+  // ── 결제 안내 팝업 (2026-08-23, 사장님 요청) ──────────────────────
+  // 무료·체험 회원이 로그인하면 하루 1회 결제 안내를 띄운다.
+  // ★안 뜨는 조건은 **등급으로만** 판정한다 — 사장님이 입금을 확인하고 승인하면
+  //   plan이 pro가 되고, 그 순간부터 자동으로 안 뜬다. 별도 '봤음' 처리가 필요 없다
+  //   (플래그를 따로 두면 승인했는데도 계속 뜨는 사고가 난다).
+  // 승인대기(pending)는 애초에 이 화면을 못 본다 — 서버가 전용 안내화면을 준다.
+  var _PAY_SEEN_KEY = "ss_pay_prompt_day";
+  function _payPrompt(d) {
+    if (!d || d.is_admin || d.plan === "pro") return;   // 결제한 사람·관리자에겐 안 뜬다
+    if (!(_pw.cta && _pw.cta.href)) return;             // 결제 안내가 준비 안 됐으면 조용히 넘긴다
+    var today = new Date().toISOString().slice(0, 10);  // YYYY-MM-DD
+    try { if (localStorage.getItem(_PAY_SEEN_KEY) === today) return; } catch (e) {}
+    try { localStorage.setItem(_PAY_SEEN_KEY, today); } catch (e) {}
+    setTimeout(function () {
+      _pwModal({
+        title: "가입 신청 감사합니다 🙏",
+        body: "숏템메이커 1기 · 1년 이용권 770,000원\n"
+            + "아래에서 결제 안내를 확인하실 수 있어요.\n"
+            + "입금 후 알려주시면 바로 열어드립니다.",
+        closeLabel: "나중에"
+      });
+    }, 900);   // 화면이 다 그려진 뒤에 띄운다(로딩 중 겹쳐 보이지 않게)
   }
   // 유료 API가 402(등급부족)를 주면 만료 안내 모달 — 페이지 내 어떤 유료버튼이든 공통 처리.
   //
