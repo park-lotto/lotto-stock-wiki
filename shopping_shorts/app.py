@@ -6785,20 +6785,28 @@ def _fill_brand(s: str) -> str:
              .replace("__GOOGLE_SVG__", _GOOGLE_SVG))
 
 
-def _with_pay(html: str) -> str:
-    """결제 CTA(__PAY_HREF__/__PAY_LABEL__)를 요청 시점에 채운다 — 설정 pay_url(외부 결제링크)이
-    있으면 '결제하기', 없으면 카톡 문의로 폴백. 설정 변경이 재시작 없이 바로 반영되게 요청마다 읽는다."""
+def _pay_cta():
+    """결제 CTA(주소·문구)를 정하는 **단일 출처**(0순위-B).
+
+    우선순위: 외부 결제링크(pay_url) > 계좌입금 안내페이지(/pay, 계좌 설정 시) > 카톡 문의.
+    ★서버 화면(_with_pay)과 프론트 모달(sidebar.js가 /api/me로 받아 씀)이 **둘 다 이걸 쓴다**.
+      규칙을 양쪽에 따로 적으면 카드 결제를 열었을 때 한쪽만 안 바뀐다.
+    설정 변경이 재시작 없이 반영되게 요청마다 읽는다.
+    """
     st = Store(DB_PATH)
     pay = (st.get_setting("pay_url", "") or "").strip()
     bank = (st.get_setting("bank_account", "") or "").strip()
     kakao = (st.get_setting("contact_kakao", "") or _BRAND.get("kakao") or "/login").strip()
-    # 우선순위: 외부 결제링크(pay_url) > 계좌입금 안내페이지(/pay, 계좌 설정 시) > 카톡 문의
     if pay:
-        href, label = pay, "💳 결제하기 →"
-    elif bank:
-        href, label = "/pay", "💳 결제 안내"
-    else:
-        href, label = kakao, "카톡으로 문의"
+        return pay, "💳 결제하기 →"
+    if bank:
+        return "/pay", "💳 결제 안내"
+    return kakao, "카톡으로 문의"
+
+
+def _with_pay(html: str) -> str:
+    """결제 CTA(__PAY_HREF__/__PAY_LABEL__)를 요청 시점에 채운다."""
+    href, label = _pay_cta()
     return html.replace("__PAY_HREF__", href).replace("__PAY_LABEL__", label)
 
 
@@ -8277,7 +8285,10 @@ def _api_me(request: Request):
                        "script": _lim("limit_script", 10)},
             "contact": {"kakao": st.get_setting("contact_kakao", ""),
                         "phone": st.get_setting("contact_phone", ""),
-                        "pay": st.get_setting("pay_url", "")}}
+                        "pay": st.get_setting("pay_url", "")},
+            # 결제 CTA — 서버 화면(_with_pay)과 **같은 함수**가 정한다(0순위-B).
+            # 프론트가 규칙을 다시 판단하면 카드 결제를 열었을 때 한쪽만 안 바뀐다.
+            "pay_cta": dict(zip(("href", "label"), _pay_cta()))}
 
 
 # ── 유료게이트 관리자(사장님 cid0 전용) — 결제 승격·설정 조정 ──
