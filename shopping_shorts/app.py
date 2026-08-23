@@ -6442,6 +6442,10 @@ if not _AUTH_ON:
     print("⚠️ [보안] DASH_PASS 미설정 → 인증·유료게이트 OFF(전원 full/admin). "
           "운영이면 DASH_PASS를 반드시 설정하세요.", file=_sys.stderr)
 _AUTH_ALLOW = ("/login", "/api/login", "/signup", "/api/signup", "/favicon.ico", "/healthz",
+               # 도움말(2026-08-23) — 가입 전 문의를 줄이려면 로그인 전에도 보여야 한다.
+               # ★읽기만 공개다. 쓰기(/api/help/save·delete·reorder·upload)는 관리자만이며
+               #   그 판정은 각 라우트가 직접 한다(여기 목록에 넣지 않는다).
+               "/help", "/api/help/items",
                "/pay",   # 계좌입금 안내 페이지(공개 — 대기중·비로그인도 결제 안내 봄)
                "/terms", "/privacy", "/refund",   # 법적 고지(공개 — 비로그인·대기중도 열람)
                # PWA: 매니페스트는 브라우저가 쿠키 없이(credentials omit) fetch한다 → 공개 필수.
@@ -6515,7 +6519,8 @@ def _ranking_only_blocked(path: str, method: str = "GET") -> bool:
         return False
     if any(path.startswith(p) for p in _FREE_PREFIX):
         return False
-    if path in _AUTH_ALLOW or path.startswith("/api/find/frame/"):
+    if (path in _AUTH_ALLOW or path.startswith("/api/find/frame/")
+            or path.startswith("/api/help/media/")):
         return False   # 유저스크립트 담기·favicon 등 기존 공개 경로(단 /api/grab은 핸들러서 등급확인)
     return True
 
@@ -7897,6 +7902,7 @@ async def _auth_guard(request: Request, call_next):
     #   사장님 PC의 도우미가 로그인 쿠키 없이 폴링한다. 엔드포인트가 자체 토큰
     #   (COUPANG_RELAY_TOKEN)을 검사하고, 토큰이 비어 있으면 스스로 403으로 닫는다.
     if (path in _AUTH_ALLOW or path.startswith("/static") or path.startswith("/api/find/frame/")
+            or path.startswith("/api/help/media/")   # 도움말 이미지·영상(공개 읽기)
             or path.startswith("/s/") or path.startswith("/api/share/v/")
             or path.startswith("/api/share/t/")
             or path.startswith("/api/yt_relay/") or path.startswith("/api/coupang/relay/")):
@@ -10534,6 +10540,105 @@ def api_produce_frame_presets():
                          "headcopy": v.get("headcopy")}
                         for k, v in deco_frame.PRESETS.items()],
             "defaults": deco_frame.DEFAULTS}
+
+
+# ── 도움말 페이지(2026-08-23 사장님 "자주하는 질문과 이미지 설명 / CS 해결") ──────────
+# 읽기는 공개(_AUTH_ALLOW), 쓰기는 관리자만. kind='faq'(자주 묻는 질문) · 'log'(오늘 있었던 일).
+_HELP_MEDIA_DIR = Path(__file__).parent / "data" / "help_media"
+_HELP_MEDIA_MAX = 60 * 1024 * 1024        # 설명 영상까지 받으므로 조금 넉넉히(장면자산 20MB보다 큼)
+_HELP_EXT = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
+             ".gif": "image/gif", ".webp": "image/webp", ".mp4": "video/mp4",
+             ".webm": "video/webm"}
+
+
+def _help_admin_or_403(request: Request):
+    """쓰기는 관리자만 — 판정은 기존 _is_admin 하나를 쓴다(0순위-B)."""
+    if _is_admin(getattr(request.state, "customer_id", None)):
+        return None
+    return JSONResponse(status_code=403, content={"ok": False, "error": "관리자만 고칠 수 있어요"})
+
+
+@app.get("/help", response_class=HTMLResponse)
+def page_help():
+    """도움말 페이지 — 로그인 없이 열린다(가입 전 문의를 줄이는 게 목적)."""
+    return FileResponse(str(Path(__file__).parent / "static" / "help.html"),
+                        media_type="text/html")
+
+
+@app.get("/api/help/items")
+def api_help_items(request: Request, kind: str = ""):
+    """공개 읽기. 관리자면 숨긴 항목까지 함께 준다(화면에서 흐리게 보여준다)."""
+    admin = _is_admin(getattr(request.state, "customer_id", None))
+    store = Store(DB_PATH)
+    return {"ok": True, "admin": admin,
+            "items": store.help_list(kind=(kind or None), include_hidden=admin)}
+
+
+@app.post("/api/help/save")
+def api_help_save(request: Request, body: dict):
+    denied = _help_admin_or_403(request)
+    if denied:
+        return denied
+    item_id = body.get("id") or None
+    fields = {k: body[k] for k in ("kind", "title", "body", "category", "pinned", "hidden", "sort", "media")
+              if k in body}
+    if not item_id and not (fields.get("title") or "").strip():
+        return JSONResponse(status_code=422, content={"ok": False, "error": "제목(질문)을 적어주세요"})
+    new_id = Store(DB_PATH).help_save(item_id, **fields)
+    return {"ok": True, "id": new_id}
+
+
+@app.post("/api/help/delete")
+def api_help_delete(request: Request, body: dict):
+    denied = _help_admin_or_403(request)
+    if denied:
+        return denied
+    Store(DB_PATH).help_delete(body.get("id"))
+    return {"ok": True}
+
+
+@app.post("/api/help/reorder")
+def api_help_reorder(request: Request, body: dict):
+    denied = _help_admin_or_403(request)
+    if denied:
+        return denied
+    Store(DB_PATH).help_reorder(body.get("ids") or [])
+    return {"ok": True}
+
+
+@app.post("/api/help/upload")
+async def api_help_upload(request: Request, file: UploadFile = File(...)):
+    """설명용 이미지·영상 1개 업로드 → 공개 URL을 돌려준다."""
+    denied = _help_admin_or_403(request)
+    if denied:
+        return denied
+    ext = Path(file.filename or "").suffix.lower()
+    if ext not in _HELP_EXT:
+        return JSONResponse(status_code=422, content={
+            "ok": False, "error": "이미지(png·jpg·gif·webp) 또는 영상(mp4·webm)만 올릴 수 있어요"})
+    raw = await file.read()
+    if len(raw) > _HELP_MEDIA_MAX:
+        return JSONResponse(status_code=413, content={
+            "ok": False, "error": f"파일이 너무 커요(최대 {_HELP_MEDIA_MAX // (1024 * 1024)}MB)"})
+    _HELP_MEDIA_DIR.mkdir(parents=True, exist_ok=True)
+    name = hashlib.sha1(raw).hexdigest()[:20] + ext      # 내용 해시 = 같은 파일은 한 번만 쌓인다
+    (_HELP_MEDIA_DIR / name).write_bytes(raw)
+    return {"ok": True, "url": f"/api/help/media/{name}",
+            "kind": "video" if ext in (".mp4", ".webm") else "image"}
+
+
+@app.get("/api/help/media/{name}")
+def api_help_media(name: str):
+    """공개 서빙. 파일명은 서버가 지은 해시라 경로 조작이 끼어들 자리가 없다 —
+    그래도 확장자·형식을 한 번 더 검사한다(클라이언트 문자열을 경로로 쓰지 않는 원칙)."""
+    ext = Path(name).suffix.lower()
+    if ext not in _HELP_EXT or not re.fullmatch(r"[0-9a-f]{20}", Path(name).stem or ""):
+        return JSONResponse(status_code=404, content={"ok": False})
+    path = _HELP_MEDIA_DIR / name
+    if not path.exists():
+        return JSONResponse(status_code=404, content={"ok": False})
+    return FileResponse(str(path), media_type=_HELP_EXT[ext],
+                        headers={"Cache-Control": "public, max-age=31536000"})
 
 
 @app.get("/api/produce/frame.png")

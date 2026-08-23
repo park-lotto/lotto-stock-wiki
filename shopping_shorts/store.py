@@ -194,6 +194,26 @@ class Store:
                 )
             """)
             c.execute("CREATE INDEX IF NOT EXISTS idx_shortcode ON snapshots(shortcode, id)")
+            # ── 도움말(2026-08-23 사장님 "자주하는 질문과 이미지 설명 / 반복되는 질문도 많고") ──
+            # 한 테이블에 두 종류를 담는다: kind='faq'(자주 묻는 질문) · kind='log'(오늘 있었던 일).
+            # 화면·정렬·미디어 처리가 같아서 테이블을 둘로 나누면 같은 코드가 두 벌이 된다(0순위-B).
+            #  media_json = [{"kind":"image|video","url":"/api/help/media/xxx.png","cap":"설명"}]
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS help_item (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    kind TEXT NOT NULL DEFAULT 'faq',
+                    title TEXT NOT NULL,
+                    body TEXT NOT NULL DEFAULT '',
+                    media_json TEXT NOT NULL DEFAULT '[]',
+                    category TEXT NOT NULL DEFAULT '',
+                    pinned INTEGER NOT NULL DEFAULT 0,
+                    sort INTEGER NOT NULL DEFAULT 0,
+                    hidden INTEGER NOT NULL DEFAULT 0,
+                    created_at TEXT,
+                    updated_at TEXT
+                )
+            """)
+            c.execute("CREATE INDEX IF NOT EXISTS idx_help_kind ON help_item(kind, hidden, pinned, sort, id)")
             c.execute("""
                 CREATE TABLE IF NOT EXISTS comment_drafts (
                     shortcode TEXT PRIMARY KEY,
@@ -5294,3 +5314,80 @@ class Store:
                 (int(customer_id), int(limit)),
             ).fetchall()
         return [{"delta": r[0], "reason": r[1], "created_at": r[2]} for r in rows]
+
+    # ── 도움말(FAQ · 오늘 있었던 일) ─────────────────────────────────────────
+    # 2026-08-23 사장님: "자주하는 질문과 이미지 설명들을 보여둘 수 있는 페이지 / 사람들
+    # CS 해결 / 반복되는 질문도 많고 / 영상이나 이미지 텍스트로 쉽게 설명해주는".
+    # 읽기는 로그인 없이 누구나(공개), 쓰기는 관리자만 — 그 판정은 app.py 라우트에서 한다.
+    def help_list(self, kind=None, include_hidden=False):
+        """보여줄 순서 그대로 돌려준다: 고정(pinned) 먼저 → sort 작은 순 → 최신 순."""
+        q = "SELECT * FROM help_item WHERE 1=1"
+        args = []
+        if kind:
+            q += " AND kind=?"
+            args.append(kind)
+        if not include_hidden:
+            q += " AND hidden=0"
+        q += " ORDER BY pinned DESC, sort ASC, id DESC"
+        with self._conn() as c:
+            c.row_factory = sqlite3.Row
+            return [self._help_row(r) for r in c.execute(q, args).fetchall()]
+
+    def help_get(self, item_id):
+        with self._conn() as c:
+            c.row_factory = sqlite3.Row
+            r = c.execute("SELECT * FROM help_item WHERE id=?", (int(item_id),)).fetchone()
+            return self._help_row(r) if r else None
+
+    @staticmethod
+    def _help_row(r):
+        d = dict(r)
+        try:
+            d["media"] = json.loads(d.pop("media_json") or "[]")
+        except (ValueError, TypeError):
+            d["media"] = []
+        d["pinned"] = bool(d.get("pinned"))
+        d["hidden"] = bool(d.get("hidden"))
+        return d
+
+    def help_save(self, item_id=None, **f):
+        """새로 만들거나(item_id=None) 있는 것을 고친다. 준 항목만 바뀐다."""
+        now = datetime.now(timezone.utc).isoformat()
+        cols = {}
+        for k in ("kind", "title", "body", "category"):
+            if k in f:
+                cols[k] = str(f[k] or "")
+        for k in ("pinned", "hidden"):
+            if k in f:
+                cols[k] = 1 if f[k] else 0
+        if "sort" in f:
+            try:
+                cols["sort"] = int(f["sort"])
+            except (TypeError, ValueError):
+                cols["sort"] = 0
+        if "media" in f:
+            cols["media_json"] = json.dumps(f["media"] or [], ensure_ascii=False)
+        cols["updated_at"] = now
+        with self._conn() as c:
+            if item_id:
+                sets = ", ".join(f"{k}=?" for k in cols)
+                c.execute(f"UPDATE help_item SET {sets} WHERE id=?",
+                          list(cols.values()) + [int(item_id)])
+                return int(item_id)
+            cols.setdefault("kind", "faq")
+            cols.setdefault("title", "")
+            cols["created_at"] = now
+            keys = ", ".join(cols)
+            marks = ", ".join("?" for _ in cols)
+            cur = c.execute(f"INSERT INTO help_item ({keys}) VALUES ({marks})", list(cols.values()))
+            return int(cur.lastrowid)
+
+    def help_delete(self, item_id):
+        with self._conn() as c:
+            c.execute("DELETE FROM help_item WHERE id=?", (int(item_id),))
+
+    def help_reorder(self, ids):
+        """화면에서 끌어 옮긴 순서를 그대로 저장한다(앞에서부터 0,1,2…)."""
+        with self._conn() as c:
+            for i, iid in enumerate(ids or []):
+                c.execute("UPDATE help_item SET sort=? WHERE id=?", (i, int(iid)))

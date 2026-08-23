@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>도움말 · 숏템메이커</title>
+<link rel="stylesheet" href="/theme.css">
+<style>
+  body{margin:0;background:var(--bg,#0f1115);color:var(--txt,#e6eaf0);
+       font:15px/1.7 -apple-system,"Malgun Gothic","맑은 고딕",sans-serif}
+  .wrap{max-width:900px;margin:0 auto;padding:24px 16px 80px}
+  .top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+  h1{font-size:24px;margin:0}
+  .sub{color:var(--sub,#9aa5b1);font-size:14px;margin:0 0 20px}
+  .home{margin-left:auto;font-size:13px;color:var(--sub,#9aa5b1);text-decoration:none;
+        border:1px solid var(--line,#2a3038);border-radius:8px;padding:5px 12px}
+  .search{width:100%;padding:11px 14px;border-radius:10px;border:1px solid var(--line,#2a3038);
+          background:var(--inset,#161a21);color:inherit;font-size:15px;margin-bottom:18px}
+  h2{font-size:18px;margin:28px 0 10px;display:flex;align-items:center;gap:8px}
+  .item{border:1px solid var(--line,#2a3038);border-radius:12px;background:var(--card,#161a21);
+        margin-bottom:10px;overflow:hidden}
+  .item.hidden-row{opacity:.45}
+  .q{display:flex;align-items:flex-start;gap:10px;padding:14px 16px;cursor:pointer;font-weight:600}
+  .q .mark{color:var(--accent,#6ee7c7);flex:0 0 auto}
+  .q .ttl{flex:1}
+  .q .chev{color:var(--sub,#9aa5b1);flex:0 0 auto;transition:transform .15s}
+  .item.open .q .chev{transform:rotate(180deg)}
+  .a{display:none;padding:0 16px 16px;border-top:1px solid var(--line,#2a3038)}
+  .item.open .a{display:block}
+  .a p{white-space:pre-wrap;margin:12px 0}
+  .media{margin:12px 0}
+  .media img,.media video{width:100%;border-radius:10px;border:1px solid var(--line,#2a3038);display:block}
+  .cap{font-size:13px;color:var(--sub,#9aa5b1);margin-top:6px}
+  .pin{font-size:11px;background:#3a2f14;color:#f0b429;border-radius:5px;padding:2px 7px}
+  .date{font-size:12px;color:var(--sub,#9aa5b1);font-weight:400;margin-left:auto}
+  .empty{color:var(--sub,#9aa5b1);padding:22px;text-align:center;
+         border:1px dashed var(--line,#2a3038);border-radius:12px}
+  /* 관리자 편집 */
+  .adm{display:none}
+  body.is-admin .adm{display:block}
+  body.is-admin .adm-inline{display:inline-block}
+  .btn{border:1px solid var(--line,#2a3038);background:var(--inset,#161a21);color:var(--sub,#9aa5b1);
+       border-radius:8px;padding:5px 11px;font-size:13px;cursor:pointer}
+  .btn:hover{color:var(--txt,#e6eaf0)}
+  .btn.pri{background:var(--accent,#6ee7c7);color:#08130f;border-color:transparent;font-weight:700}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+  .ed{padding:14px 16px;border-top:1px solid var(--line,#2a3038);display:none}
+  .item.editing .ed{display:block}
+  .ed input[type=text],.ed textarea,.ed select{width:100%;box-sizing:border-box;padding:9px 11px;
+       border-radius:8px;border:1px solid var(--line,#2a3038);background:var(--bg,#0f1115);
+       color:inherit;font:inherit;margin-top:4px}
+  .ed textarea{min-height:130px;resize:vertical}
+  .lab{font-size:12px;color:var(--sub,#9aa5b1);margin-top:10px;display:block}
+  .thumbs{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .thumb{position:relative;width:100px}
+  .thumb img,.thumb video{width:100%;height:70px;object-fit:cover;border-radius:8px;
+       border:1px solid var(--line,#2a3038)}
+  .thumb .x{position:absolute;top:-6px;right:-6px;background:#3a1a1a;color:#ff6b6b;border:none;
+       border-radius:50%;width:22px;height:22px;cursor:pointer;font-size:13px}
+  .thumb input{width:100%;font-size:11px;margin-top:3px;padding:3px 5px;border-radius:6px;
+       border:1px solid var(--line,#2a3038);background:var(--bg,#0f1115);color:inherit}
+  .msg{font-size:13px;color:var(--accent,#6ee7c7);margin-left:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <h1>도움말</h1>
+    <a class="home" href="/produce">← 제작소로</a>
+  </div>
+  <p class="sub">궁금한 것을 찾아보세요. 없으면 카톡으로 물어봐 주세요 — 자주 나오는 질문은 여기에 올려둡니다.</p>
+
+  <input id="q" class="search" type="search" placeholder="🔍 궁금한 낱말로 찾기 (예: 자막, 음성, 결제)"
+         oninput="render()">
+
+  <h2>📌 자주 묻는 질문
+    <button class="btn adm-inline" style="display:none;margin-left:6px" onclick="addItem('faq')">+ 질문 추가</button>
+  </h2>
+  <div id="faqList"></div>
+
+  <h2>🗓 오늘 있었던 일
+    <button class="btn adm-inline" style="display:none;margin-left:6px" onclick="addItem('log')">+ 소식 추가</button>
+  </h2>
+  <div id="logList"></div>
+</div>
+
+<script>
+// ★값의 주인은 서버(help_item 테이블) 하나다. 화면은 받아 그리고, 고치면 바로 돌려보낸다.
+let ITEMS=[], IS_ADMIN=false;
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const byId=id=>document.getElementById(id);
+
+async function load(){
+  try{
+    const d=await (await fetch('/api/help/items',{cache:'no-store'})).json();
+    ITEMS=(d&&d.items)||[]; IS_ADMIN=!!(d&&d.admin);
+  }catch(e){ ITEMS=[]; }
+  document.body.classList.toggle('is-admin', IS_ADMIN);
+  document.querySelectorAll('.adm-inline').forEach(b=>b.style.display=IS_ADMIN?'inline-block':'none');
+  render();
+}
+
+function matches(it, kw){
+  if(!kw) return true;
+  return (it.title+' '+it.body+' '+(it.category||'')).toLowerCase().includes(kw);
+}
+
+function mediaHTML(m){
+  if(!m || !m.length) return '';
+  return m.map(x=>{
+    const cap=x.cap?`<div class="cap">${esc(x.cap)}</div>`:'';
+    // 영상은 controls만 — 자동재생은 데이터를 잡아먹고 소리로 놀라게 한다
+    const el=(x.kind==='video')
+      ? `<video src="${esc(x.url)}" controls preload="metadata" playsinline></video>`
+      : `<img src="${esc(x.url)}" loading="lazy" alt="">`;
+    return `<div class="media">${el}${cap}</div>`;
+  }).join('');
+}
+
+function itemHTML(it){
+  const d=(it.updated_at||it.created_at||'').slice(0,10);
+  return `<div class="item ${it.hidden?'hidden-row':''}" data-id="${it.id}">
+    <div class="q" onclick="toggle(${it.id})">
+      <span class="mark">Q</span><span class="ttl">${esc(it.title)}</span>
+      ${it.pinned?'<span class="pin">고정</span>':''}
+      ${it.kind==='log'&&d?`<span class="date">${esc(d)}</span>`:''}
+      <span class="chev">▾</span>
+    </div>
+    <div class="a">
+      ${it.body?`<p>${esc(it.body)}</p>`:''}
+      ${mediaHTML(it.media)}
+      <div class="row adm" style="display:none">
+        <button class="btn" onclick="edit(${it.id})">✏ 고치기</button>
+        <button class="btn" onclick="toggleFlag(${it.id},'pinned')">${it.pinned?'고정 풀기':'맨 위 고정'}</button>
+        <button class="btn" onclick="toggleFlag(${it.id},'hidden')">${it.hidden?'다시 보이기':'숨기기'}</button>
+        <button class="btn" style="color:#ff6b6b" onclick="del(${it.id})">🗑 지우기</button>
+      </div>
+    </div>
+    <div class="ed"></div>
+  </div>`;
+}
+
+function render(){
+  const kw=(byId('q').value||'').trim().toLowerCase();
+  for(const [kind, box, none] of [['faq','faqList','아직 올라온 질문이 없어요.'],
+                                  ['log','logList','아직 올라온 소식이 없어요.']]){
+    const list=ITEMS.filter(it=>it.kind===kind && matches(it,kw));
+    byId(box).innerHTML = list.length ? list.map(itemHTML).join('')
+                                      : `<div class="empty">${kw?'찾는 내용이 없어요.':none}</div>`;
+  }
+  if(IS_ADMIN) document.querySelectorAll('.row.adm').forEach(r=>r.style.display='flex');
+  // 검색 중에는 바로 펼쳐 보여준다 — 찾았는데 또 눌러야 하면 번거롭다
+  if(kw) document.querySelectorAll('.item').forEach(el=>el.classList.add('open'));
+}
+
+function toggle(id){
+  const el=document.querySelector(`.item[data-id="${id}"]`);
+  if(el && !el.classList.contains('editing')) el.classList.toggle('open');
+}
+
+// ── 관리자 편집 ─────────────────────────────────────────────────────────
+let DRAFT_MEDIA=[];
+function addItem(kind){
+  ITEMS.unshift({id:0, kind:kind, title:'', body:'', media:[], pinned:false, hidden:true});
+  render(); edit(0);
+}
+function edit(id){
+  const it=ITEMS.find(x=>x.id===id); if(!it) return;
+  DRAFT_MEDIA=JSON.parse(JSON.stringify(it.media||[]));
+  const el=document.querySelector(`.item[data-id="${id}"]`);
+  el.classList.add('editing','open');
+  el.querySelector('.ed').innerHTML=`
+    <label class="lab">${it.kind==='log'?'제목':'질문'}</label>
+    <input type="text" id="e-title" value="${esc(it.title)}" placeholder="${it.kind==='log'?'예: 자막 크기 조절 기능이 생겼어요':'예: 음성이 안 나와요'}">
+    <label class="lab">설명 (여러 줄로 써도 그대로 보입니다)</label>
+    <textarea id="e-body" placeholder="쉬운 말로 풀어서 적어주세요.">${esc(it.body)}</textarea>
+    <label class="lab">그림·영상으로 설명 (이미지 png·jpg·gif·webp / 영상 mp4·webm)</label>
+    <div class="row">
+      <input type="file" id="e-file" accept="image/*,video/mp4,video/webm" onchange="upload(this)">
+      <span id="e-msg" class="msg"></span>
+    </div>
+    <div class="thumbs" id="e-thumbs"></div>
+    <div class="row" style="margin-top:14px">
+      <button class="btn pri" onclick="save(${id})">저장</button>
+      <button class="btn" onclick="load()">취소</button>
+      <label style="font-size:13px;color:var(--sub);margin-left:6px">
+        <input type="checkbox" id="e-hidden" ${it.hidden?'checked':''}> 숨겨두기(나만 보기)</label>
+    </div>`;
+  drawThumbs();
+  el.querySelector('#e-title').focus();
+}
+function drawThumbs(){
+  const box=byId('e-thumbs'); if(!box) return;
+  box.innerHTML=DRAFT_MEDIA.map((m,i)=>`<div class="thumb">
+    ${m.kind==='video'?`<video src="${esc(m.url)}" muted></video>`:`<img src="${esc(m.url)}" alt="">`}
+    <button class="x" onclick="rmMedia(${i})" title="빼기">×</button>
+    <input type="text" placeholder="설명(선택)" value="${esc(m.cap||'')}" oninput="DRAFT_MEDIA[${i}].cap=this.value">
+  </div>`).join('');
+}
+function rmMedia(i){ DRAFT_MEDIA.splice(i,1); drawThumbs(); }
+async function upload(input){
+  const f=input.files&&input.files[0]; if(!f) return;
+  const msg=byId('e-msg'); msg.textContent='올리는 중…';
+  const fd=new FormData(); fd.append('file', f);
+  try{
+    const d=await (await fetch('/api/help/upload',{method:'POST',body:fd})).json();
+    if(!d.ok){ msg.textContent='⚠ '+(d.error||'실패'); return; }
+    DRAFT_MEDIA.push({kind:d.kind, url:d.url, cap:''}); drawThumbs();
+    msg.textContent='✅ 올렸어요';
+  }catch(e){ msg.textContent='⚠ 네트워크 오류'; }
+  input.value='';
+}
+async function save(id){
+  const it=ITEMS.find(x=>x.id===id); if(!it) return;
+  const body={kind:it.kind, title:byId('e-title').value.trim(),
+              body:byId('e-body').value, media:DRAFT_MEDIA,
+              hidden:byId('e-hidden').checked};
+  if(id) body.id=id;
+  if(!body.title){ alert('제목(질문)을 적어주세요'); return; }
+  const d=await (await fetch('/api/help/save',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(body)})).json();
+  if(!d.ok){ alert(d.error||'저장 실패'); return; }
+  load();
+}
+async function toggleFlag(id, key){
+  const it=ITEMS.find(x=>x.id===id); if(!it) return;
+  const b={id:id}; b[key]=!it[key];
+  await fetch('/api/help/save',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(b)});
+  load();
+}
+async function del(id){
+  if(!confirm('이 항목을 지울까요? 되돌릴 수 없습니다.')) return;
+  await fetch('/api/help/delete',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({id:id})});
+  load();
+}
+load();
+</script>
+</body>
+</html>
