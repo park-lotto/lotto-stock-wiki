@@ -409,6 +409,43 @@ def _beat_material(beat):
     return [s for s in ([beat.get("primary")] + list(beat.get("alternates") or [])) if s]
 
 
+def _apply_fixed_lens(plan, fixed, tts_dur, min_clip=0.6, eps=1e-3):
+    """✋ 손으로 정한 컷 길이를 반영한다(2026-08-24). **총합은 tts_dur 그대로.**
+
+    ★화면(scene_play.js applyFixedLens)과 **같은 규칙**이어야 한다 — 규칙이 갈리면
+      미리보기와 결과가 어긋나고, 그게 이 작업을 시작한 이유다(0순위-B).
+      정한 컷은 그 길이로, 나머지 컷은 남은 시간을 **원래 비율대로** 나눠 갖는다.
+
+    fixed = {seg_id: 초}. plan 원소는 out_dur를 갖는다(src_dur는 안 건드린다 —
+    입력에서 읽는 구간은 그대로 두고 출력 길이만 조절해 슬로모/freeze 기계가 흡수한다).
+    """
+    if not plan or not fixed:
+        return plan
+    fx = [c for c in plan if fixed.get(c.get("seg_id")) and fixed[c["seg_id"]] > 0]
+    fr = [c for c in plan if c not in fx]
+    if not fx:
+        return plan
+    want = sum(fixed[c["seg_id"]] for c in fx)
+    room = tts_dur - len(fr) * min_clip          # 나머지 컷의 최소 몫은 남겨둔다
+    cap = max(min_clip, room if fr else tts_dur)
+    k = (cap / want) if want > cap else 1.0
+    for c in fx:
+        c["out_dur"] = max(min_clip * 0.5, fixed[c["seg_id"]] * k)
+    want = sum(c["out_dur"] for c in fx)
+    rest = max(0.0, tts_dur - want)
+    if fr:
+        tot = sum(c["out_dur"] for c in fr)
+        if tot > eps:
+            for c in fr:
+                c["out_dur"] = c["out_dur"] / tot * rest
+        else:
+            for c in fr:
+                c["out_dur"] = rest / len(fr)
+    else:
+        fx[-1]["out_dur"] += tts_dur - sum(c["out_dur"] for c in fx)
+    return plan
+
+
 def _spread_stretch(plan, eps=1e-3):
     """늘려 채우기(scene_lab 칸별 토글 beat["stretch_fill"]) — 재료가 모자라 화면을 늘려야
     할 때(out_dur 합 > src_dur 합), 그 부족분을 마지막 컷에 몰지 않고 **전 컷에 재료 길이
@@ -468,6 +505,10 @@ def plan_beat_clips_for(beat, tts_dur, src_durs, *, runout=0.0):
     _one = bool(getattr(_cfg, "ONE_CLIP_PER_SEGMENT", False))
     plan = _plan_beat_clips(segs, tts_dur, src_durs=beat_src_durs, max_shot=_max_shot,
                             one_per_seg=_one)
+    # ✋ 손으로 정한 컷 길이가 있으면 먼저 반영한다(칸 총합은 안 바뀐다).
+    _fixed = beat.get("fixed_lens") or {}
+    if _fixed:
+        _apply_fixed_lens(plan, _fixed, tts_dur)
     # ★늘려 채우기(실험실 칸별 토글): 부족분을 전 컷에 고르게 — 여운보다 먼저.
     #   여운은 일부러 붙이는 무성 꼬리라 재배분 대상이 아니다. 플래그 없으면 그대로.
     if beat.get("stretch_fill"):
