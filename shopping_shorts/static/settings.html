@@ -102,6 +102,8 @@
   .keyDel:hover{border-color:var(--fire);color:var(--fire)}
   .svcFoot{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
   .svcFoot .btn{font-size:13px;padding:8px 14px;font-weight:600}
+  /* 매뉴얼은 <a>라 버튼 모양을 따로 맞춘다(밑줄 제거·inline-block) */
+  .svcFoot a.btn{display:inline-block;text-decoration:none}
   .msg{margin-top:12px;font-size:14px;font-weight:700;display:none}
   .msg.on{display:block}
   .msg.ok{color:var(--ok)}
@@ -448,7 +450,11 @@ function renderKeys(){
              (s.multi ? "추가" : "저장") + '</button></div>';
     }
 
+    /* ★영상은 아직 URL이 없다(GUIDE_VIDEO 전부 빈 값) — 그동안 눌러도 안내문만 뜬다.
+       그림 매뉴얼(api_manual.html)은 지금 바로 있으므로 **먼저** 놓는다. 서비스별
+       앵커(#gemini 등)로 바로 그 항목에 떨어진다. */
     var foot = '<div class="svcFoot">' +
+      '<a class="btn" href="/api_manual.html#' + s.id + '" target="_blank" rel="noopener">📖 그림으로 보는 발급 방법</a>' +
       '<button class="btn" onclick="askGuide(\'' + s.id + '\')">▶ 받는 방법 영상</button>' +
       (mine.length ? '<button class="btn" onclick="verifyKeys(\'' + s.id + '\')">전체 확인</button>' : '') +
     '</div>';
