@@ -597,8 +597,16 @@ def api_tiktok_settings_get(request: Request):
 
 
 @app.post("/api/tiktok/settings")
-def api_tiktok_settings_set(body: dict):
-    """틱톡 노브 저장. body: {search_count, daily_limit, month_budget} (부분 갱신 허용)."""
+def api_tiktok_settings_set(body: dict, request: Request):
+    """틱톡 노브 저장. body: {search_count, daily_limit, month_budget} (부분 갱신 허용).
+
+    ★관리자 전용이다. 이건 **전역 설정**이라 아무 로그인 고객이나 바꾸면
+      수집 일일 상한을 0으로 내려 서비스를 방해하거나, 유료 검색을 되살렸을 때
+      오염된 예산 노브가 그대로 발효된다(2026-08-23 점검에서 가드 부재 발견).
+    """
+    denied = _require_admin(request)
+    if denied:
+        return denied
     store = Store(DB_PATH)
     if "search_count" in body:
         store.set_setting("tiktok_search_count", str(int(body["search_count"])))
@@ -8256,7 +8264,8 @@ def _require_admin(request):
     return None
 
 
-_ADMIN_SETTING_KEYS = {"trial_days", "trial_event_hours", "limit_lens", "limit_render", "limit_script",
+_ADMIN_SETTING_KEYS = {"trial_days", "trial_grant_points", "trial_event_hours",
+                       "limit_lens", "limit_render", "limit_script",
                        "limit_lens_pro", "limit_render_pro", "limit_script_pro",
                        "global_cap_lens", "global_cap_render", "global_cap_script",
                        "contact_kakao", "contact_phone", "pay_url",
@@ -8286,7 +8295,15 @@ def _admin_customers(request: Request):
         cu["points"] = pricing.to_display(points.balance(st, cu["id"]))
         # last_seen은 store.list_customers가 이미 넣어줌 → 프론트가 '접속중/N분전' 계산
         out.append(cu)
-    return {"ok": True, "customers": out, "settings": st.all_settings()}
+    # ★설정은 **화면이 쓰는 것만** 보낸다. all_settings()를 그대로 실으면
+    #   운영 로그성 키(last_run::youtube 5MB, last_run::threads 438KB 등)까지 딸려와
+    #   응답이 6.2MB가 되고, 화면은 그동안 "고객 0명"으로 보인다(2026-08-23 실측:
+    #   fetch 4.4초 + 파싱 1.8초. 고객 155명 데이터는 75KB뿐이었다).
+    #   ★_ADMIN_SETTING_KEYS를 그대로 쓴다 — 저장 가능한 키와 보여줄 키가 어긋나면
+    #     "입력했는데 저장이 안 되는" 칸이 생긴다(0순위-B).
+    allc = st.all_settings()
+    shown = {k: v for k, v in allc.items() if k in _ADMIN_SETTING_KEYS}
+    return {"ok": True, "customers": out, "settings": shown}
 
 
 @app.get("/api/admin/pending")

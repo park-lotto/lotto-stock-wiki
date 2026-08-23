@@ -42,7 +42,15 @@ SERVICES = (SVC_GEMINI, SVC_VMAKE, SVC_ELEVENLABS, SVC_YOUTUBE, SVC_SERPAPI)
 # ⚠️여기 이름을 옮기기 전에 **호출부에 cid가 진짜 닿는지 먼저 확인해라.**
 #   이 목록이 앞서가면 아래 should_charge가 '안 쓰이는 키'로 과금을 면제한다 =
 #   회사 키로 돌면서 돈은 안 받는 구멍이 된다(2026-08-17에 실제로 그 상태였다).
-WIRED = (SVC_VMAKE, SVC_SERPAPI, SVC_GEMINI)
+# ★2026-08-23 gemini를 다시 뺐다 — 배선이 "일부만" 끝났기 때문이다.
+#   keyroute.gemini_keys()로 개인 키가 나가는 곳은 5곳(edit_plan·script_generate·
+#   seo_generate·thumb_title·pattern_bank)뿐이고, 태깅·대본추출 경로는
+#   comment_gen이 회사 풀(config.SHORTS_GEMINI_KEYS)을 인덱스로 직접 돌린다.
+#   WIRED는 **서비스 단위**라 경로를 구분하지 못한다 → 등록만 하면 그 경로들까지
+#   과금이 면제돼 "회사 키로 돌면서 돈은 안 받는" 상태가 된다(2026-08-17과 같은 사고).
+#   개인 키를 쓰는 5곳의 비용 절감은 그대로 유지되고, 과금만 정직해진다.
+#   comment_gen까지 배선이 끝나면 그때 다시 넣어라.
+WIRED = (SVC_VMAKE, SVC_SERPAPI)
 
 
 def uses_customer_key(service):

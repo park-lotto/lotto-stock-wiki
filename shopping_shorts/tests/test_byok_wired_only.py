@@ -29,19 +29,18 @@ def test_wired_is_a_subset_of_registerable_services():
 def test_only_actually_wired_services_are_listed():
     """★이 목록을 늘리기 전에 호출부에 cid가 진짜 닿는지 확인해라.
     앞서가면 '안 쓰이는 키로 과금 면제' 구멍이 그대로 다시 열린다."""
-    assert set(keyroute.WIRED) == {keyroute.SVC_VMAKE, keyroute.SVC_SERPAPI,
-                                   keyroute.SVC_GEMINI}
+    assert set(keyroute.WIRED) == {keyroute.SVC_VMAKE, keyroute.SVC_SERPAPI}
 
 
-@pytest.mark.parametrize("svc", [keyroute.SVC_ELEVENLABS, keyroute.SVC_YOUTUBE])
+@pytest.mark.parametrize("svc", [keyroute.SVC_GEMINI, keyroute.SVC_ELEVENLABS,
+                                 keyroute.SVC_YOUTUBE])
 def test_unwired_key_does_not_buy_free_usage(store, svc):
     """키를 등록해도 과금은 그대로 — 실제로는 회사 키로 돌기 때문이다."""
     store.add_customer_key(7, svc, "mine-1")
     assert keyroute.should_charge(store, 7, svc) is True
 
 
-@pytest.mark.parametrize("svc", [keyroute.SVC_VMAKE, keyroute.SVC_SERPAPI,
-                                 keyroute.SVC_GEMINI])
+@pytest.mark.parametrize("svc", [keyroute.SVC_VMAKE, keyroute.SVC_SERPAPI])
 def test_wired_key_is_free(store, svc):
     assert keyroute.should_charge(store, 7, svc) is True      # 등록 전
     store.add_customer_key(7, svc, "mine-1")

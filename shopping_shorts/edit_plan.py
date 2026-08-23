@@ -4522,8 +4522,11 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
         c0 = _safe_candidate(0)
         cands = [c0] if c0 else []
     else:
-        from concurrent.futures import ThreadPoolExecutor
-        with ThreadPoolExecutor(max_workers=n) as ex:
+        # ★keyctx.pool을 쓴다(맨 ThreadPoolExecutor 금지) — contextvar는 스레드를
+        #   건너지 않아서, 여기서 고객 주인이 끊기면 등록한 제미나이 키를 무시하고
+        #   회사 키로 돌면서 과금만 면제된다(2026-08-23 실측 결함).
+        from shopping_shorts import keyctx
+        with keyctx.pool(max_workers=n) as ex:
             # 순서 보존이 중요하다 — 후보 i에 배정된 스타일(trio: A=메종/B=채이/
             # C=스탠다드)과 화면 표시 순서가 어긋나면 안 된다. map은 입력 순서대로 준다.
             cands = [c for c in ex.map(_safe_candidate, range(n)) if c]
