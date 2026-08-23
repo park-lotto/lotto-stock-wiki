@@ -149,6 +149,31 @@ def _ensure_screen_time(plan, store, job_id):
         return plan
 
 
+def style_spine_rank(sp):
+    """대본 스타일 추천 순서 — **이 함수 하나가 정본이다**(0순위-B).
+
+    ★2026-08-24 실사고: 같은 "추천 순서"가 두 군데에 다르게 적혀 있었다.
+        · 카드 목록(app `/api/produce/styles`)  = 검증 먼저 → perf_score → **source_count**
+        · 자동 선택(`auto_style`)               = `list_spines`의 `perf_score DESC, id DESC`
+      라이브 실측: 스타일 스파인 11개의 `perf_score`가 **전부 0.0**이라 첫 키가 죽고
+      자동 선택은 사실상 **id DESC = 최근에 만든 것 우선**으로 돌았다. 그래서
+      히트작 근거가 **0편**인 무지후회형(62)·정체의문형(61)이 1·2위로 추천되고,
+      23편(발명품형)·12편(단정 명령형)짜리가 아래에 깔렸다 — 순서가 정확히 거꾸로였다.
+      (사장님 제보: "ai추천도 너무 이상하게 추천을 한다 / 안 맞게")
+
+    정렬 키 = (perf_score 내림, source_count 내림, id 내림)
+      · `perf_score`  — 성과 되먹임. 지금은 전부 0이라 사실상 안 쓰인다(살아나면 자동으로 우선).
+      · `source_count`— **히트작 몇 편에서 뽑은 틀인가.** 지금 유일하게 실값이 있는 근거다.
+      · `id`          — 마지막 동점 처리(재현성 — 같은 입력에 같은 순서).
+
+    ⚠️거르지 않는다 — 정렬만 한다. 거르면 "고른 게 조용히 사라지는" 사고가 난다
+      (2026-08-17 실사고: 카테고리 잠금이 사장님이 고른 스타일 2개를 버렸다).
+    """
+    return (-(sp.get("perf_score") or 0),
+            -(sp.get("source_count") or 0),
+            -(sp.get("id") or 0))
+
+
 class Store:
     def __init__(self, db_path):
         self.db_path = Path(db_path)
@@ -3824,7 +3849,7 @@ class Store:
         ]
 
     def list_style_spines(self, category=None, status="approved"):
-        """**스타일로 쓸 수 있는** 스파인만 — beat_roles가 붙은 것.
+        """**스타일로 쓸 수 있는** 스파인만 — beat_roles가 붙은 것. `style_spine_rank` 순으로 준다.
 
         ★카테고리 잠금(2026-08-15 실측 근거): 무선 이어폰 소재에 살림용 '시월드형'을 씌우니
           구조 검사는 6/6 통과했는데 읽으면 어색했다("남편한테 욕 바가지"+"음향 전문가 추천").
@@ -3838,6 +3863,7 @@ class Store:
             if category and fits and category not in fits:
                 continue
             out.append(sp)
+        out.sort(key=style_spine_rank)
         return out
 
     def set_spine_status(self, spine_id, status):
