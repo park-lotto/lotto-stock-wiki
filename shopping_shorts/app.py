@@ -8468,8 +8468,13 @@ async def _api_deposit_claim(request: Request):
         ops_alert.raise_alert("deposit_claim", f"💰 입금 신고 — {name}",
                               f"입금자명 {depositor} / 연락처 {contact or '-'}",
                               cooldown_sec=0, store=st)
-    except Exception:      # noqa: BLE001 — 알림 실패가 접수를 막으면 안 된다
-        pass
+    except Exception as e:      # noqa: BLE001 — 알림 실패가 접수를 막으면 안 된다
+        # ★조용히 삼키지 않는다: 알림이 안 울리면 사장님이 입금 신고를 놓친다.
+        #   접수는 이미 저장됐으니 진행하되, 왜 안 울렸는지는 로그에 남긴다.
+        # ⚠️ app.py는 최상단에 `import sys`가 없다(모듈 전역에 sys가 없음).
+        #    이 파일의 다른 곳들과 같은 방식으로 지역 import 한다.
+        import sys as _sys
+        print(f"[입금신고] 관리자 알림 실패(접수는 정상): {e!r}", file=_sys.stderr)
     return {"ok": True}
 
 
