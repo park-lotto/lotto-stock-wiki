@@ -59,6 +59,7 @@ from shopping_shorts.mix_pipeline import (run_mix_job, run_render, run_preview, 
                                           run_clean_sources, _resolve_sources)
 from shopping_shorts import lens_discover
 from shopping_shorts.lens_discover import search_similar_videos, upload_frame
+from shopping_shorts import challenge
 from shopping_shorts import cn_search, kw_search, douyin_search, xiaohongshu_search
 from shopping_shorts import youtube_search
 from shopping_shorts.config import APIFY_TOKENS
@@ -6543,7 +6544,11 @@ _FREE_EXACT_ANY = {"/login", "/signup", "/api/login", "/api/signup", "/logout",
                    "/api/prereg", "/api/deposit_claim", "/pay",   # 사전신청·입금신고·결제안내
 
                    "/api/mix/basket/toggle",
-                   "/api/lens/search", "/api/lens/trace_url"}
+                   "/api/lens/search", "/api/lens/trace_url",
+                   # ★1기 챌린지(2026-08-24): 참가자격은 challenge_member 여부로 핸들러 안에서
+                   #   따로 막는다(403). 결제등급(ranking_only)과는 무관해야 한다 — 챌린지
+                   #   멤버가 전부 pro는 아니다. 여기 안 넣으면 등급 402가 먼저 막아버린다.
+                   "/api/challenge/submit", "/api/challenge/mine"}
 # GET만 무료(레퍼런스 랭킹 '조회') — POST/PUT 등 데이터변경은 같은 경로여도 차단.
 _FREE_EXACT_GET = {"/", "/pricing", "/account", "/api/me", "/api/reference", "/api/thumb", "/api/video",
                    # 가입 전 안내 2장(2026-08-23) — 무료·체험만료 등급도 봐야 한다.
@@ -9963,6 +9968,85 @@ def _adopt_into_ranking(store, platform, url, meta):
     else:
         store.save_last_run_platform(platform, merged, now_iso)
     return item
+
+
+# ── 1기 챌린지 (2026-08-24) ──────────────────────────────────────────
+# 하루 2영상 챌린지. 판정 로직은 shopping_shorts/challenge.py에 모아 두었다
+# (app.py가 13,000줄을 넘어 더 얹지 않는다). 여기 라우트는 얇게 유지한다.
+_CHALLENGE_PLATFORMS = ("instagram", "youtube", "tiktok")
+
+
+def _challenge_period(store):
+    """설정된 기간·목표. 없으면 열린 기간·목표 2."""
+    try:
+        goal = int(store.get_setting("challenge_daily_goal", 2) or 2)
+    except (TypeError, ValueError):
+        goal = 2
+    return (store.get_setting("challenge_start", "") or "",
+            store.get_setting("challenge_end", "") or "",
+            goal)
+
+
+def _challenge_fetch_async(sub_id, url, platform):
+    """제출 영상의 썸네일·조회수를 백그라운드로 채운다(Task5에서 구현).
+
+    지금은 아무 것도 하지 않는다 — fetch_status는 'pending'으로 남는다.
+    """
+    return None
+
+
+@app.post("/api/challenge/submit")
+def api_challenge_submit(request: Request, url: str = ""):
+    """멤버가 챌린지 영상 링크를 낸다.
+
+    ★저장 먼저, 수집 나중. 링크가 들어온 순간 행이 생기고 달성 카운트가
+    확정된다 — 인스타 수집은 수십 초가 걸리고 간헐적으로 실패하는데, 거기에
+    카운트를 묶으면 '올렸는데 미달성' 사고가 난다.
+    """
+    cid = _cid(request)
+    store = Store(DB_PATH)
+    if not store.is_challenge_member(cid):
+        return JSONResponse(status_code=403,
+                            content={"ok": False, "error": "1기 챌린지 참가자만 제출할 수 있어요"})
+    u = (url or "").strip()
+    platform = _grab_platform(u)
+    if platform not in _CHALLENGE_PLATFORMS:
+        return JSONResponse(status_code=422, content={
+            "ok": False,
+            "error": "인스타그램·유튜브·틱톡 영상 주소를 넣어주세요"})
+    start, end, goal = _challenge_period(store)
+    day = challenge.kst_day()
+    if not challenge.in_period(day, start, end):
+        return JSONResponse(status_code=422,
+                            content={"ok": False, "error": "지금은 챌린지 기간이 아니에요"})
+    code = challenge.video_code(u, platform)
+    key = challenge.dedup_key(u, code)
+    sub_id = store.add_challenge_submission(cid, u, platform, code, key, day)
+    if not sub_id:
+        return JSONResponse(status_code=422,
+                            content={"ok": False, "error": "이미 제출한 영상이에요"})
+    _challenge_fetch_async(sub_id, u, platform)
+    today = sum(1 for s in store.list_challenge_submissions(customer_id=cid)
+                if s["submit_day"] == day)
+    return {"ok": True, "id": sub_id, "today": today, "goal": goal, "day": day}
+
+
+@app.get("/api/challenge/mine")
+def api_challenge_mine(request: Request):
+    """내 제출 목록 + 오늘 카운트. 참가자가 아니어도 200으로 안내한다."""
+    cid = _cid(request)
+    store = Store(DB_PATH)
+    start, end, goal = _challenge_period(store)
+    if not store.is_challenge_member(cid):
+        return {"ok": True, "is_member": False, "items": [], "today": 0,
+                "goal": goal, "start": start, "end": end}
+    items = store.list_challenge_submissions(customer_id=cid)
+    day = challenge.kst_day()
+    summary = challenge.summarize(items, goal=goal)
+    return {"ok": True, "is_member": True, "items": items,
+            "today": summary["by_day"].get(day, 0), "goal": goal,
+            "done_days": summary["done_days"], "total": summary["total"],
+            "start": start, "end": end, "day": day}
 
 
 @app.get("/api/reference/adopt", response_class=HTMLResponse)
