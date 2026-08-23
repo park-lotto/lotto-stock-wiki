@@ -309,6 +309,7 @@ var KEYS_ENABLED = true;
    WIRED   : 등록 키가 실제 호출에 쓰이는 서비스 목록 */
 var PERSONAL = true;
 var WIRED = [];
+var POOLED = [];   /* 회원 키가 공용 풀에 합류하는 서비스(2026-08-24) */
 
 function esc(s){ return (s==null?"":String(s)).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 function el(id){ return document.getElementById(id); }
@@ -400,6 +401,7 @@ async function loadKeys(){
     KEYS_ENABLED = (d.enabled !== false);
     PERSONAL = (d.personal !== false);
     WIRED = d.wired || [];
+    POOLED = d.pooled || [];
     KEYS = d.keys || [];
     renderKeys();
   } catch (e) {
@@ -427,6 +429,9 @@ function renderKeys(){
        거짓말이고, 서버도 그렇게 안 준다(keyroute.should_charge). */
     var freeTxt = (s.freeOp && PRICES[s.freeOp] != null && WIRED.indexOf(s.id) >= 0)
       ? "등록하면 " + num(PRICES[s.freeOp]) + "P → 0P" : "";
+    /* ★공용 풀 서비스는 "내 키로 돈다"가 아니다 — 키를 풀에 넣어주는 대신 무료로 쓴다.
+       사실대로 적는다: 내 키 1개만 내면 풀 전체를 쓰게 되고 포인트가 안 깎인다. */
+    var isPooled = POOLED.indexOf(s.id) >= 0;
 
     var rows = mine.map(function(k){
       var st = STATUS[k.status] || STATUS.unknown;
@@ -467,6 +472,9 @@ function renderKeys(){
          등록해도 아무 일이 안 일어나는데 된 줄 안다(2026-08-17 실사고). */
       (WIRED.indexOf(s.id) < 0
         ? '<div class="warnBox" style="display:block;margin:8px 0">준비 중입니다 — 지금 등록하시면 저장은 되지만 <b>아직 실제 작업에는 쓰이지 않습니다.</b> 그동안은 포인트로 그대로 쓰실 수 있습니다.</div>'
+        : '') +
+      (isPooled
+        ? '<div class="svcDesc" style="color:var(--accent);font-weight:700">키 <b>1개만</b> 등록하시면 이 기능을 <b>포인트 없이</b> 쓰실 수 있어요 — 등록하신 키는 공용 키 묶음에 함께 들어가고, 대신 묶음 전체를 쓰시게 됩니다.</div>'
         : '') +
       /* note는 우리가 SERVICES에 직접 적은 문구뿐이라 <b> 태그를 그대로 살린다.
          ★사용자 입력을 여기 넣지 마라 — 넣는 순간 XSS 구멍이 된다. */

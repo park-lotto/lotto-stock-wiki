@@ -26,11 +26,13 @@ def test_tts_uses_user_key(store, monkeypatch):
     assert keys == ["내TTS"] and is_user is True
 
 
-def test_youtube_uses_user_key(store, monkeypatch):
-    monkeypatch.setattr(keyroute, "_owner_keys", lambda svc: ["사장님YT"])
+def test_youtube_uses_the_shared_pool(store, monkeypatch):
+    """★유튜브는 공용 풀(2026-08-24) — 키 1개를 내면 풀 전체를 무료로 쓴다."""
+    monkeypatch.setattr(keyroute, "_owner_keys", lambda svc: ["사장님YT", "내YT"])
     store.add_customer_key(3, keyroute.SVC_YOUTUBE, "내YT")
     keys, is_user = keyroute.keys_for(store, 3, keyroute.SVC_YOUTUBE)
-    assert keys == ["내YT"] and is_user is True
+    assert "사장님YT" in keys and "내YT" in keys
+    assert is_user is True                      # 과금 면제는 유지
 
 
 def test_batch_uses_owner_keys(store, monkeypatch):
@@ -115,10 +117,10 @@ def test_synthesize_tts_mocks_when_no_key_anywhere(store, monkeypatch, tmp_path)
 def test_youtube_helper_returns_user_key(store, monkeypatch):
     """★youtube_client._tokens_for가 사용자 키를 집는지."""
     from shopping_shorts import youtube_client
-    monkeypatch.setattr(keyroute, "_owner_keys", lambda svc: ["사장님YT"])
+    monkeypatch.setattr(keyroute, "_owner_keys", lambda svc: ["사장님YT", "내YT키"])
     store.add_customer_key(9, keyroute.SVC_YOUTUBE, "내YT키")
     monkeypatch.setattr(youtube_client.config, "DB_PATH", store.db_path)
-    assert youtube_client._tokens_for(9) == ["내YT키"]
+    assert "내YT키" in youtube_client._tokens_for(9)
 
 
 def test_youtube_helper_falls_back_to_owner_keys(store, monkeypatch):
@@ -132,7 +134,9 @@ def test_youtube_helper_falls_back_to_owner_keys(store, monkeypatch):
 def test_search_shorts_uses_user_key(store, monkeypatch):
     """★search_shorts가 사용자 키로 검색하는지 — 실제 요청 토큰을 본다."""
     from shopping_shorts import youtube_client as yc
-    monkeypatch.setattr(keyroute, "_owner_keys", lambda svc: ["사장님YT"])
+    # 공용 풀이라 풀 전체가 나온다 — 이 테스트는 '사용자 키가 실제 요청에 쓰이는가'를
+    # 보는 것이므로 풀을 그 키 하나로 두고 확인한다.
+    monkeypatch.setattr(keyroute, "_owner_keys", lambda svc: ["내YT키"])
     store.add_customer_key(9, keyroute.SVC_YOUTUBE, "내YT키")
     monkeypatch.setattr(yc.config, "DB_PATH", store.db_path)
 
