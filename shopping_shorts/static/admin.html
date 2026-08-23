@@ -47,7 +47,7 @@ tbody tr:hover{background:#1b1b22}
 <div class="card wait">
   <h2>🕓 승인 대기중 (<span id=pcnt>0</span>명) <span id=pMsg class=msg></span></h2>
   <table><thead><tr><th>ID</th><th>이름</th><th>전화</th><th>이메일/아이디</th><th>가입일</th><th>승인</th></tr></thead>
-  <tbody id=prows></tbody></table>
+  <tbody id=prows><tr><td colspan=6 class=empty>불러오는 중…</td></tr></tbody></table>
 </div>
 
 <div class=card>
@@ -62,7 +62,7 @@ tbody tr:hover{background:#1b1b22}
     </select>
   </div>
   <table><thead><tr><th>ID</th><th>이름</th><th>전화</th><th>이메일/아이디</th><th>등급</th><th>상태</th><th>시작일</th><th>마감일</th><th>결제</th><th>포인트</th><th>오늘 사용(렌즈/렌더/대본)</th><th>접속7일(IP/기기)</th><th>접속/활동</th><th>조작</th></tr></thead>
-  <tbody id=rows></tbody></table>
+  <tbody id=rows><tr><td colspan=12 class=empty>불러오는 중…</td></tr></tbody></table>
 </div>
 
 <script>
@@ -263,5 +263,13 @@ async function saveSettings(){
   if(r.ok){m.textContent='✅ 저장됨';m.className='msg';}else{m.textContent='❌ 실패';m.className='msg err';}
   setTimeout(()=>m.textContent='',2000);
 }
-load();
+// ★첫 로드 — 실패하면 화면이 반드시 말한다.
+//   예전엔 예외가 나도 표가 "0명"으로 남아 '고객이 없는 것처럼' 보였다(2026-08-23).
+load().catch(e=>{
+  const msg = '목록을 불러오지 못했습니다 — ' + (e && e.message || e);
+  const pr=document.getElementById('prows'), rw=document.getElementById('rows');
+  if(pr) pr.innerHTML='<tr><td colspan=6 class=empty style="color:#f87171">'+msg+'</td></tr>';
+  if(rw) rw.innerHTML='<tr><td colspan=12 class=empty style="color:#f87171">'+msg+'</td></tr>';
+  console.error('[admin] load 실패', e);
+});
 </script></body></html>

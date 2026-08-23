@@ -60,3 +60,43 @@ class owner:
         if self._token is not None:
             reset_owner(self._token)
         return False
+
+class pool:
+    """컨텍스트를 물려주는 ThreadPoolExecutor.
+
+    ★왜 필요한가 (2026-08-23 실측 결함)
+    contextvar는 **스레드를 건너지 않는다.** 워커가 keyctx.owner(cid)를 열어도
+    그 안에서 ThreadPoolExecutor를 만들면 하위 스레드는 주인을 모른다 →
+    고객이 등록한 제미나이 키를 무시하고 **회사 키로 돌면서 과금은 면제**되는,
+    가장 나쁜 조합이 생긴다(WIRED가 등록만 보고 면제하기 때문).
+
+    submit할 때 지금 컨텍스트를 복사해 넘긴다. map도 내부적으로 submit을 쓰므로
+    함께 커버된다. 사용법은 ThreadPoolExecutor와 완전히 같다:
+
+        with keyctx.pool(max_workers=4) as ex:
+            list(ex.map(fn, items))
+    """
+
+    def __init__(self, max_workers=None, **kw):
+        from concurrent.futures import ThreadPoolExecutor
+        self._ex = ThreadPoolExecutor(max_workers=max_workers, **kw)
+
+    def submit(self, fn, *a, **kw):
+        ctx = contextvars.copy_context()
+        return self._ex.submit(ctx.run, fn, *a, **kw)
+
+    def map(self, fn, *iterables, **kw):
+        # ThreadPoolExecutor.map은 self.submit을 부르지 않고 내부 구현을 쓰므로
+        # 여기서 직접 submit으로 풀어 컨텍스트가 확실히 넘어가게 한다.
+        futs = [self.submit(fn, *args) for args in zip(*iterables)]
+        return (f.result() for f in futs)
+
+    def shutdown(self, *a, **kw):
+        return self._ex.shutdown(*a, **kw)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        self._ex.shutdown(wait=True)
+        return False
