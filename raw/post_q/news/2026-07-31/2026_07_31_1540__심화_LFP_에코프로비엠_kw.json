@@ -1,0 +1,40 @@
+{
+  "target_kind": "sector",
+  "sector_name": "2차전지",
+  "sector_view": "긍정",
+  "points": [
+    "ESS 시장 확대에 따른 LFP 배터리 수요 증가",
+    "포스코, 에코프로, 엘앤에프 등 국내 주요 배터리 소재 기업들의 LFP 사업 진출"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "에코프로비엠",
+      "comment": "ESS 시장 확산에 대응하기 위해 LFP 배터리 관련 전략을 추진함",
+      "ts": null,
+      "quote": "포스코·에코프로·엘앤에프, ESS 확산에 LFP 카드 꺼냈다",
+      "sector": "2차전지"
+    },
+    {
+      "name": "포스코",
+      "comment": "ESS 시장 확산에 대응하기 위해 LFP 배터리 관련 전략을 추진함",
+      "ts": null,
+      "quote": "포스코·에코프로·엘앤에프, ESS 확산에 LFP 카드 꺼냈다",
+      "sector": "철강"
+    },
+    {
+      "name": "엘앤에프",
+      "comment": "ESS 시장 확산에 대응하기 위해 LFP 배터리 관련 전략을 추진함",
+      "ts": null,
+      "quote": "포스코·에코프로·엘앤에프, ESS 확산에 LFP 카드 꺼냈다",
+      "sector": "2차전지"
+    }
+  ],
+  "events": [
+    {
+      "fact": "포스코, 에코프로, 엘앤에프가 ESS 시장 확대를 계기로 LFP 사업 전략을 발표함",
+      "ts": "2026-07-31",
+      "quote": "포스코·에코프로·엘앤에프, ESS 확산에 LFP 카드 꺼냈다"
+    }
+  ],
+  "quote": "포스코·에코프로·엘앤에프, ESS 확산에 LFP 카드 꺼냈다"
+}

@@ -537,5 +537,19 @@
     "track": "효과음배치",
     "summary": "main 폴더 git pull — Already up to date. 어제 미리보기 작업(fitPlayer 높이맞춤·썸네일 78px 축소) 반영 확인. 타 세션 커밋(화자일관성·대본칸설명)도 들어와 있음.",
     "next": "미리보기 스크롤 64px 잔여 — 마지막 선택 대기: A 최소높이 보호 해제(스크롤 제거·영상 100px, 크게볼땐 넓게보기) / B 틀 124vh→140vh(영상 200px대·페이지 길어짐)."
+  },
+  {
+    "date": "2026-08-23",
+    "category": "스탁브레인",
+    "track": "main/깃관리",
+    "summary": "git pull 처리. 미커밋 50건(크롤봇·위키 자동생성)이 rebase를 막아 stash→pull→pop으로 진행. 결과 Already up to date(HEAD bd0da1d8e). 다른 세션 작업 track/화자일관성·track/대본칸설명 병합분 확인.",
+    "next": "미커밋 50건 정리 여부 사장님 결정 대기(다음 pull마다 계속 걸림)"
+  },
+  {
+    "date": "2026-08-23",
+    "category": "스탁브레인",
+    "track": "서버증설",
+    "summary": "git pull 막힘 해소: 추적변경 17건은 이 PC 자동 인제스트 산출물(08-22·08-23 Excel ingest, 종목 목표주가·log.md)이라 버리지 않고 커밋 보존(8b8000ab8) 후 pull 완료. dashboard_log.json은 실행중 갱신돼 재커밋(232366bf2).",
+    "next": "pipeline/dashboard_log.json gitignore 여부 사장님 확인(매 pull마다 걸림) / 증설: 스냅샷→8vCPU→SSH개방→새IP 공유 대기"
   }
 ]
