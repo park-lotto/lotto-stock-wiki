@@ -44,6 +44,14 @@ tbody tr:hover{background:#1b1b22}
   <button class=save onclick=saveSettings()>설정 저장</button>
 </details>
 
+<!-- 입금 신고(2026-08-23) — 고객이 /pay에서 '입금 완료했습니다'를 누르면 여기 뜬다.
+     ★입금 증명이 아니다. 통장 확인은 그대로 하시고, 이건 '연락을 놓치지 않기 위한' 목록이다. -->
+<div class="card wait">
+  <h2>💰 입금 신고 (<span id=dcnt>0</span>건) <span id=dMsg class=msg></span></h2>
+  <table><thead><tr><th>신고시각</th><th>성함</th><th>입금자명</th><th>연락처</th><th>처리</th></tr></thead>
+  <tbody id=drows><tr><td colspan=5 class=empty>불러오는 중…</td></tr></tbody></table>
+</div>
+
 <div class="card wait">
   <h2>🕓 승인 대기중 (<span id=pcnt>0</span>명) <span id=pMsg class=msg></span></h2>
   <table><thead><tr><th>ID</th><th>이름</th><th>전화</th><th>이메일/아이디</th><th>가입일</th><th>승인</th></tr></thead>
@@ -80,6 +88,7 @@ async function load(){
   // 설정 폼
   document.getElementById('settings').innerHTML=SETTING_FIELDS.map(([k,label])=>
     `<div class=setfield><label>${label}</label><input id=set_${k} value="${(CURRENT[k]??'').toString().replace(/"/g,'&quot;')}"></div>`).join('');
+  loadDepositClaims();   // 입금 신고 목록(별도 API — 실패해도 이 화면은 계속 뜬다)
   // 미승인(approved_at null) = 순수대기 + 이벤트 체험중 → 모두 대기명단(사장님이 승인 가능해야 함).
   const pend=d.customers.filter(c=>c.approved_at==null);
   const rest=d.customers.filter(c=>c.approved_at!=null);
@@ -155,6 +164,35 @@ function renderCustomers(){
           ${c.is_admin?'':`<button class=bdel onclick="delCustomer(${c.id})">삭제</button>`}</td></tr>`;
   }).join('') : '<tr><td colspan=14 class=empty>조건에 맞는 고객이 없어요</td></tr>';
 }
+// ── 입금 신고 (2026-08-23) ──────────────────────────────────
+// 고객이 /pay에서 '입금 완료했습니다'를 누른 것. 통장 확인은 그대로 하시고,
+// 확인이 끝나면 [확인함]을 눌러 목록에서 내린다(승인은 아래 고객표에서 따로).
+async function loadDepositClaims(){
+  try{
+    const r=await fetch('/api/admin/deposit_claims');
+    if(!r.ok) return;
+    const items=(await r.json()).items||[];
+    document.getElementById('dcnt').textContent=items.length;
+    const esc=s=>(s||'').toString().replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    document.getElementById('drows').innerHTML= items.length ? items.map(c=>{
+      const t=c.created_at? new Date(c.created_at).toLocaleString('ko-KR'):'-';
+      return `<tr><td>${esc(t)}</td><td><b>${esc(c.name)}</b></td>`
+        +`<td style="color:#ffd479">${esc(c.depositor)}</td><td>${esc(c.contact)||'-'}</td>`
+        +`<td><button class=bok onclick="closeClaim(${Number(c.id)})">확인함</button></td></tr>`;
+    }).join('') : '<tr><td colspan=5 class=empty>새 입금 신고가 없습니다.</td></tr>';
+  }catch(e){}
+}
+async function closeClaim(id){
+  const m=document.getElementById('dMsg');
+  m.textContent='처리 중…';
+  try{
+    const r=await fetch('/api/admin/deposit_claim/done',{method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id})});
+    m.textContent = r.ok ? '처리했습니다.' : '실패했습니다.';
+  }catch(e){ m.textContent='실패했습니다.'; }
+  loadDepositClaims();
+}
+
 async function approveCustomer(cid){
   const days = prompt('이용일수 (예: 30)', '');
   if(days===null) return;
