@@ -5057,6 +5057,9 @@ def apply_scene_lab(plan, seg_map, edits):
     # 붙어 있는 구간이라 이어 붙이기 = 긴 구간 하나이고, scene_override는 원래부터 임의
     # 구간 목록이므로 새 개념이 필요 없다(0순위-B: 규칙 변경 시 scene_play.js와 함께).
     merges = edits.get("merges") or {}
+    # ✋ 손으로 정한 컷 길이(2026-08-24). 키는 "칸번호:조각id" → 초.
+    #   화면(FIXLEN)이 그대로 올려준다. 없으면 종전대로 전부 자동 계산이다.
+    fixlen = edits.get("fixlen") or {}
     member_of = {}
     for lead, mem in merges.items():
         for m in (mem or []):
@@ -5093,6 +5096,21 @@ def apply_scene_lab(plan, seg_map, edits):
                      "shot_role": seg.get("shot_role") or "기타"}
             over.extend(_lab_trim_pieces(entry, trims.get(sid)))
         beat["scene_override"] = over
+        # ✋ 이 칸에서 손으로 정한 길이만 골라 담는다({조각id: 초}).
+        #   렌더(_plan_beat_clips)가 이걸 보고 그 컷을 그 길이로 고정한다.
+        _bi = eb.get("beat_idx")
+        _mine = {}
+        for _k, _v in (fixlen or {}).items():
+            try:
+                _ki, _sid = str(_k).split(":", 1)
+            except ValueError:
+                continue
+            if str(_ki) == str(_bi) and _sid in seg_map and float(_v) > 0:
+                _mine[_sid] = round(float(_v), 3)
+        if _mine:
+            beat["fixed_lens"] = _mine
+        else:
+            beat.pop("fixed_lens", None)
         if eb.get("stretch"):
             beat["stretch_fill"] = True
         else:
@@ -5102,7 +5120,7 @@ def apply_scene_lab(plan, seg_map, edits):
     #   최신인지 가르는 유일한 기준이다 — mix_jobs.updated_at은 음성 생성 같은 다른
     #   이유로도 움직여서 편성 시각으로 쓸 수 없다.
     plan["scene_lab"] = {"beats": edits.get("beats") or [], "trims": trims,
-                         "merges": merges, "applied": applied,
+                         "merges": merges, "fixlen": fixlen, "applied": applied,
                          "at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
     return plan
 

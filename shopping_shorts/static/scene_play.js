@@ -122,6 +122,47 @@ const chosen = new Set();    // 사람이 손으로 담은 seg_id
 
 
 const TRIMS = {};                  // sid → [a, b] (장면 시작 기준 초)
+// ── ✋ 컷 길이 수동 지정(2026-08-24 사장님 "2번") ────────────────────────────
+// FIXLEN["칸번호:조각id"] = 초. 사장님이 직접 정한 컷 길이.
+// ★칸 전체 길이는 음성에 매여 있어 바꿀 수 없다(자막이 t0 누적으로 자리를 잡는다).
+//   그래서 "정한 컷은 그대로, **나머지 컷이 비례로 줄어든다**"가 규칙이다(사장님 선택).
+const FIXLEN = {};
+function fixKey(i, sid){ return i + ':' + sid; }
+function getFix(i, sid){ const v = FIXLEN[fixKey(i, sid)]; return v > 0 ? v : 0; }
+function setFix(i, sid, sec){
+  const k = fixKey(i, sid);
+  if (!(sec > 0)) delete FIXLEN[k];
+  else FIXLEN[k] = Math.round(sec * 100) / 100;
+  (typeof render === 'function' && render());
+}
+// 지정 길이를 반영해 컷 길이를 다시 나눈다. 총합(ttsDur)은 **그대로 유지**한다.
+// ★planClips의 분배 규칙은 안 건드린다 — 만들어진 결과를 뒤에서 손본다(0순위-B:
+//   길이를 정하는 곳이 두 군데가 되면 어긋난다. 여기가 마지막 한 곳이다).
+function applyFixedLens(clips, beatIdx, ttsDur){
+  if (!clips.length || beatIdx == null) return clips;
+  const fixed = [], free = [];
+  clips.forEach(c => (getFix(beatIdx, c.seg_id) > 0 ? fixed : free).push(c));
+  if (!fixed.length) return clips;
+  // 지정분 합계. 칸을 넘기면 지정분끼리 비례로 눌러 담는다(넘쳐서 뒤가 밀리면 안 된다).
+  let want = fixed.reduce((a, c) => a + getFix(beatIdx, c.seg_id), 0);
+  const room = ttsDur - free.length * MIN_CLIP;      // 나머지 컷도 최소는 살려둔다
+  const cap = Math.max(MIN_CLIP, free.length ? room : ttsDur);
+  const k = want > cap ? cap / want : 1;
+  fixed.forEach(c => { c.dur = Math.max(MIN_CLIP * 0.5, getFix(beatIdx, c.seg_id) * k); });
+  want = fixed.reduce((a, c) => a + c.dur, 0);
+  // 나머지는 남은 시간을 **원래 비율대로** 나눠 갖는다.
+  const rest = Math.max(0, ttsDur - want);
+  const freeTotal = free.reduce((a, c) => a + c.dur, 0);
+  if (free.length){
+    if (freeTotal > EPS) free.forEach(c => { c.dur = c.dur / freeTotal * rest; });
+    else free.forEach(c => { c.dur = rest / free.length; });
+  } else if (fixed.length){
+    // 전부 지정이면 합계가 딱 맞도록 마지막 컷으로 보정(반올림 오차 흡수)
+    const diff = ttsDur - fixed.reduce((a, c) => a + c.dur, 0);
+    fixed[fixed.length - 1].dur += diff;
+  }
+  return clips;
+}
 // ★조각 합치기(2026-08-17 사장님 "0.5초 같은 건 못 쓰니까 짤리자나 3개 합쳐서 훅에 넣으려고").
 //   0.8초 미만 조각은 라운드로빈이 건너뛰어 담아도 화면에 안 나온다. 새 추출본은
 //   script_extract._merge_too_short가 자동으로 합치지만, **이미 뽑아 둔 잡**과 "자동으론
@@ -243,7 +284,9 @@ function unTrim(sid){
 let onePerSeg = false;   
 const STRETCH = {};                 // beat_idx → true(늘려 채우기 켬)
 function toggleStretch(i, on){ if (on) STRETCH[i] = true; else delete STRETCH[i]; (typeof render === 'function' && render()); }
-function planClips(segIds, ttsDur, spread){
+// beatIdx는 **선택**이다 — 넘기면 그 칸의 수동 지정 길이(FIXLEN)를 반영한다.
+// 안 넘기는 옛 호출부는 종전과 똑같이 동작한다(하위호환).
+function planClips(segIds, ttsDur, spread, beatIdx){
   // ✂ 트림된 장면은 '구멍 뺀 두 토막'으로 갈라서 넣는다 — 아래 분배 규칙은 그대로다.
   const segments = segIds.flatMap(id => trimPieces(id).map(p => ({...p, seg_id: id})))
                          .filter(s => s.start != null);
@@ -272,7 +315,8 @@ function planClips(segIds, ttsDur, spread){
         filled += take;
       });
     }
-    return clips;
+    return (typeof applyFixedLens === 'function')
+    ? applyFixedLens(clips, beatIdx, ttsDur) : clips;
   }
   if (segments.length > 1){
     const pos = segments.map(s => s.start);
@@ -356,7 +400,8 @@ function planClips(segIds, ttsDur, spread){
       if (short > EPS) clips[clips.length - 1].dur += short;
     }
   }
-  return clips;
+  return (typeof applyFixedLens === 'function')
+    ? applyFixedLens(clips, beatIdx, ttsDur) : clips;
 }
 
 // 타임프레임 한 줄 — 실제 컷을 시간 순서대로. 계산은 planClips 하나만 쓴다(아래 필름과 동일).
@@ -548,7 +593,7 @@ function playSegs(sids, label){
 }
 function playBeat(i, ev){
   if (ev) ev.stopPropagation();
-  const clips = planClips(lists[i] || [], beatDur(i), STRETCH[i]);
+  const clips = planClips(lists[i] || [], beatDur(i), STRETCH[i], i);
   if (!clips.length) return;
   // ★재생 버튼을 다시 누르면 **일시정지/재개** 토글(2026-08-15 사장님 "누르면 일시정지").
   //   완전 정지는 미리보기 창의 닫기 ✕. 끝까지 다 돈 뒤에 누르면 처음부터 다시.
@@ -615,7 +660,7 @@ function runAllFrom(i){
     try{ if (typeof onPlayAllFinished === 'function') onPlayAllFinished(); }catch(e){}
     stopPlay(); return;
   }
-  const clips = planClips(lists[i] || [], beatDur(i), STRETCH[i]);
+  const clips = planClips(lists[i] || [], beatDur(i), STRETCH[i], i);
   seqBeat = i; sel = i;
   seqLabel = `전체 재생 - 칸 ${i+1}/${DATA.beats.length} (${DATA.beats[i].role || ''})`;
   if (!clips.length){ runAllFrom(i + 1); return; }
@@ -627,7 +672,7 @@ function runAllFrom(i){
   //   그래서 칸 넘김 전용 슬롯을 따로 두고 칸마다 번갈아 쓴다(handoffSlot) → 절대 안 겹친다.
   const nx = DATA.beats[i + 1];
   if (nx){
-    const ncl = planClips(lists[i + 1] || [], beatDur(i + 1), STRETCH[i + 1]);
+    const ncl = planClips(lists[i + 1] || [], beatDur(i + 1), STRETCH[i + 1], i + 1);
     if (ncl[0]){ ncl[0]._slot = handoffSlot(i + 1); seat(ncl[0]); preSeated = i + 1; }
     seatTts(i + 1, (i + 1) % 2);      // ← 이음매의 버퍼를 없애는 핵심 한 줄
   }

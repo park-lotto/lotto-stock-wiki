@@ -112,6 +112,10 @@ h1{font-size:16px;margin:0;font-weight:700}
 .tbcut .pk{position:absolute;left:4px;bottom:6px;width:16px;height:16px;cursor:pointer;
   accent-color:var(--warn);margin:0}
 .tbcut.picked img{border-color:var(--warn);box-shadow:0 0 0 2px var(--warn) inset}
+/* ✋ 손으로 길이를 정한 컷(2026-08-24) — 초 배지를 눌러 정한다. 자동 계산과 구분되게 표시. */
+.tbcut .s{cursor:pointer}
+.tbcut .s.fixed{background:var(--accent);color:#04201b;font-weight:800}
+.tbcut .s.fixed + *{}
 /* ★안 나오는 조각(2026-08-23 사장님 "안보이지만 계속 쌓이는거같은데").
    담긴 목록(lists[i])과 화면에 뜨는 컷(planClips 결과)이 달라서, 자막 길이를 넘겨
    담은 조각은 **머리글 초에는 더해지는데 썸네일이 없어** 보이지도 빼지도 못했다.
@@ -436,6 +440,19 @@ button.act.play:hover{background:var(--accent);color:#fff;border-color:var(--acc
     <button type="button" id="ttsBtn" class="act" style="padding:3px 10px;font-size:11.5px"
             onclick="makeTts()" title="음성이 없는 칸의 음성을 만듭니다(1~2분)">🔊 음성 만들기</button>
     <span class="tbhint" id="tbhint">조각을 누르면 그 조각만 · 아래 대본을 누르면 그 칸 전체가 재생됩니다 · 주황 = 재료가 모자라 늘어난 컷</span>
+    <!-- ✋ 컷 길이 직접 정하기(2026-08-24) — 초 배지를 누르면 열린다.
+         모달(prompt)이 아니라 한 줄 패널이다: 브라우저 모달은 화면을 통째로 멈춘다. -->
+    <div id="cutLenBox" style="display:none;align-items:center;gap:8px;margin-top:6px;
+         background:var(--inset);border:1px solid var(--accent);border-radius:8px;padding:6px 10px;font-size:12px">
+      <b>✋ 컷 길이</b>
+      <span id="cutLenWho" style="color:var(--sub)"></span>
+      <input id="cutLenVal" type="number" step="0.1" min="0.1" onkeydown="cutLenKey(event)"
+             style="width:74px;background:#0a1017;border:1px solid var(--line);color:var(--txt);
+                    border-radius:6px;padding:4px 7px;font-size:13px">초
+      <button class="act" onclick="saveCutLen()">적용</button>
+      <button class="act" onclick="closeCutLen()">취소</button>
+      <span class="tbhint">정한 컷은 그대로, 나머지 컷이 비례로 줄어듭니다 · Enter 적용 · Esc 취소</span>
+    </div>
   </div>
   <div class="tbrow" id="tbrow"></div>
 </div>
@@ -1298,7 +1315,7 @@ function beatFill(i, clips){
   const okIds = ids.filter(id => DATA.segments[id] && !tooShort(id));
   const need = beatDur(i);
   const have = okIds.reduce((a, id) => a + effLen(id), 0);
-  const cuts = clips || planClips(ids, need, STRETCH[i]);
+  const cuts = clips || planClips(ids, need, STRETCH[i], i);
   return { ids, okIds, need, have,
            lack: Math.max(0, need - have),
            over: Math.max(0, have - need),
@@ -1311,7 +1328,7 @@ function renderBand(){
   const row = document.getElementById('tbrow'); if (!row) return;
   let total = 0;
   const html = DATA.beats.map((b, i) => {
-    const clips = planClips(lists[i] || [], beatDur(i), STRETCH[i]);
+    const clips = planClips(lists[i] || [], beatDur(i), STRETCH[i], i);
     const sec = clips.reduce((a, c) => a + c.dur, 0);
     total += sec;
     // ★자막 길이 짝표기(2026-08-17 사장님 "4.9/5로 표시"). planClips는 부족분을 반드시
@@ -1331,7 +1348,7 @@ function renderBand(){
              onclick="bandCutClick(${i}, '${c.seg_id}', event)"
              ondblclick="event.stopPropagation();clearTimeout(clickTimer);dropCutFromBand(${i}, '${c.seg_id}')"
              title="${segMark(c.seg_id)} = 영상 ${srcNo(c.seg_id)}의 ${segNo(c.seg_id)}번째 조각 · ${(DATA.segments[c.seg_id]||{}).label || c.video_id} · ${c.start.toFixed(1)}초부터 ${c.dur.toFixed(2)}초 · 누르면 이 조각만 미리보기 · 끌어서 순서 바꾸기 · 아래 소스로 끌면 빼기 · 두 번 클릭도 빼기">
-             <img src="${SL.thumb(c.seg_id)}" loading="lazy"><span class="n">${segMark(c.seg_id)}</span><span class="s">${c.dur.toFixed(1)}</span
+             <img src="${SL.thumb(c.seg_id)}" loading="lazy"><span class="n">${segMark(c.seg_id)}</span><span class="s ${getFix(i, c.seg_id) ? 'fixed' : ''}" title="${getFix(i, c.seg_id) ? '내가 정한 길이 — 누르면 자동으로 되돌립니다' : '누르면 이 컷의 길이를 직접 정합니다'}" onclick="event.stopPropagation();askCutLen(${i}, '${c.seg_id}')">${getFix(i, c.seg_id) ? '✋' : ''}${c.dur.toFixed(1)}</span
              ><input type="checkbox" class="pk" title="빼려면 체크 — 여러 장 고르고 위 [고른 것 빼기]를 누르세요"
                     ${isPicked(i, c.seg_id) ? 'checked' : ''}
                     onclick="event.stopPropagation();togglePick(${i}, '${c.seg_id}', this.checked)"
@@ -1545,7 +1562,7 @@ function render(){
   const _why = (DATA.picks || {}).why || [];
   document.getElementById('film').innerHTML = DATA.beats.map((b, i) => {
     const ids = lists[i] || [];
-    const clips = planClips(ids, beatDur(i), STRETCH[i]);
+    const clips = planClips(ids, beatDur(i), STRETCH[i], i);
     totCuts += clips.length;
     const bdur = clips.reduce((a,c) => a + c.dur, 0);
     totDur += bdur;
@@ -1946,6 +1963,47 @@ const NARR_BUSY = {};                  // beat_idx → 음성·자막 재생성 
 // 머리글 안내문에 상태를 쓴다. makeTts의 say는 그 함수 안의 지역 클로저라 여기서 못 쓴다
 // (이름만 같다고 쓸 수 있는 게 아니다 — 실제로 확인하고 전용 헬퍼를 뒀다).
 function nsay(t){ const h = document.getElementById('tbhint'); if (h) h.textContent = t; }
+// ── ✋ 컷 길이 직접 정하기(2026-08-24 사장님 "2번") ──────────────────────────
+// 초 배지를 누르면 그 컷의 길이를 정한다. 이미 정해져 있으면 자동으로 되돌린다.
+// ★칸 전체 길이는 음성에 매여 바꿀 수 없다 — 정한 컷은 그대로 두고
+//   **나머지 컷이 비례로 줄어든다**(사장님 선택). 계산은 applyFixedLens 한 곳(0순위-B).
+// ★prompt()는 쓰지 않는다 — 브라우저 모달은 자동화·확장에서 화면을 통째로 멈춘다.
+function askCutLen(i, sid){
+  if (getFix(i, sid) > 0){                  // 이미 정해둔 것 → 누르면 자동으로
+    setFix(i, sid, 0);
+    nsay(`${segMark(sid)} 길이를 자동으로 되돌렸어요`);
+    return;
+  }
+  const box = document.getElementById('cutLenBox');
+  if (!box) return;
+  box.dataset.i = i; box.dataset.sid = sid;
+  const cur = (planClips(lists[i] || [], beatDur(i), STRETCH[i], i)
+                 .find(c => c.seg_id === sid) || {}).dur || 1;
+  const inp = document.getElementById('cutLenVal');
+  inp.value = cur.toFixed(1);
+  document.getElementById('cutLenWho').textContent =
+    `${i+1}번 칸 · ${segMark(sid)} (칸 전체 ${beatDur(i).toFixed(1)}초)`;
+  box.style.display = 'flex';
+  inp.focus(); inp.select();
+}
+function saveCutLen(){
+  const box = document.getElementById('cutLenBox'); if (!box) return;
+  const i = +box.dataset.i, sid = box.dataset.sid;
+  const v = parseFloat(document.getElementById('cutLenVal').value);
+  box.style.display = 'none';
+  if (!(v > 0)){ nsay('길이는 0보다 커야 해요'); return; }
+  const need = beatDur(i);
+  if (v >= need - 0.05 && (lists[i] || []).length > 1){
+    // 한 컷이 칸을 다 먹으면 나머지가 사라진다 — 막지 말고 알려만 준다(사장님 뜻일 수 있다).
+    nsay(`${v.toFixed(1)}초는 칸 전체(${need.toFixed(1)}초)와 비슷해요 — 나머지 컷이 아주 짧아집니다`);
+  }
+  setFix(i, sid, v);
+}
+function closeCutLen(){ const b=document.getElementById('cutLenBox'); if (b) b.style.display='none'; }
+function cutLenKey(e){
+  if (e.key === 'Enter'){ e.preventDefault(); saveCutLen(); }
+  else if (e.key === 'Escape'){ e.preventDefault(); closeCutLen(); }
+}
 // ★편집 중에는 배경 다시그리기를 미룬다(2026-08-19 사장님 "아까 분명히 고쳤는데 안 된다").
 //   pollPhash()가 페이지를 연 뒤 4초마다 최대 20회 render()를 부르는데, render()는
 //   renderBand()로 칸 DOM을 **통째로 갈아끼운다** — 고치는 도중이면 contenteditable이
@@ -2082,6 +2140,9 @@ async function applyServer(opt){
       list: (lists[i] || []).slice(), stretch: !!STRETCH[i]})),
     trims: TRIMS,
     merges: MERGES,          // 🔗 합친 조각(대표 → 이어 붙일 조각들) — 서버는 긴 구간 하나로 받는다
+    // ✋ 손으로 정한 컷 길이(2026-08-24). 안 보내면 미리보기에만 살고 렌더는 자동 계산이라
+    //    "화면과 결과가 다르다"가 된다 — 그게 이 작업의 출발점이었다.
+    fixlen: FIXLEN,
   };
   if (msg) msg.textContent = auto ? '💾 저장 중…' : '📤 서버에 반영하는 중… (SSH, 몇 초)';
   try{
