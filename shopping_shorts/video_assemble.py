@@ -1856,8 +1856,9 @@ def assemble(edit_plan, tts_paths, source_video_paths, out_path, clean_fn=None, 
         try:
             import shutil as _sh
             _sh.rmtree(work, ignore_errors=True)
-        except Exception:      # noqa: BLE001 — 청소 실패가 제작을 막지 않는다
-            pass
+        except Exception as e:      # noqa: BLE001 — 청소 실패가 제작을 막지 않는다
+            # 삼키되 조용히 넘기지 않는다 — 이게 계속 실패하면 디스크가 다시 찬다.
+            print(f"[assemble] 작업폴더 정리 실패(무해, 디스크만 남음): {e!r}", file=sys.stderr)
 
 
 def _probe_audio_params(path):
