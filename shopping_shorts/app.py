@@ -12638,19 +12638,29 @@ def _assembled_drafts(spines, sources, store, seconds=30, job_id=""):
       기본값은 꺼지지 않음(회귀 0). admin에서 켜면 전부 생성기로 간다.
     """
     # store가 None일 수 있다(테스트가 그렇게 부른다) — 없으면 종전대로 조립한다.
+    # ★이름을 `_off`로 쓰지 마라 — 아래 `split_by_subject`가 같은 이름을 재사용해
+    #   내 플래그를 덮어쓴다(0순위-B: `if A: x=1` 뒤 `x=2`). 예전엔 위에서 즉시
+    #   return해 안 드러났는데, 진단을 살리려고 아래로 내리자마자 실제로 터졌다
+    #   (2026-08-24, 테스트가 잡았다: assemble_off=1인데 조립본이 나왔다).
     try:
-        _off = str((store.get_setting("assemble_off") if store else "") or "") == "1"
+        _assemble_off = str((store.get_setting("assemble_off") if store else "") or "") == "1"
     except Exception:      # noqa: BLE001 — 설정 조회 실패가 생성을 막지 않는다
-        _off = False
-    if _off:
-        import sys as _sys       # ★이 함수 안에서 sys가 안 보인다(라이브 500 실사고). 지연 임포트한다.
-        print("assemble_off=1 → 조립 건너뛰고 전부 생성기로", file=_sys.stderr)
-        # ★반환값은 **3개**다(out, left, why). 2개로 돌려보내 라이브가 500으로 죽었다
-        #   (ValueError: not enough values to unpack). docstring만 보고 2개로 착각한 탃 —
-        #   호출부(app.py:2529)를 봤으면 바로 보였다.
-        return [], list(spines or []), ["설정에서 틀 조립을 꺼두었습니다 — 전부 생성기로 만듭니다"]
+        _assemble_off = False
     out, left = [], []
     _why = []          # 조립을 못 한 이유(화면이 말해준다)
+    if _assemble_off:
+        import sys as _sys       # ★이 함수 안에서 sys가 안 보인다(라이브 500 실사고). 지연 임포트한다.
+        print("assemble_off=1 → 조립은 건너뛰되 재료 진단은 돈다", file=_sys.stderr)
+        # ★2026-08-24: 예전엔 여기서 **즉시 return** 했다. 그래서 이 아래에 있는
+        #   재료 진단이 통째로 죽었다 — `sul_material_problem`("이 영상은 오용형이
+        #   아닙니다")·`split_by_subject`("소재가 다른 영상 N편을 뺐습니다")·칸 커버리지가
+        #   전부 계산되지 않았고, 화면엔 "설정에서 껐습니다" 한 줄만 떴다.
+        #   실측(크림치즈 job a31d8f7625e4): 재료 4편이 전부 레시피라 오용형이 성립
+        #   안 되는데 아무도 안 알려줘, 모델이 빈칸을 지어낸 맹탕 B안이 나왔다.
+        #   ★조립을 끄는 것과 진단을 끄는 것은 **다른 판단**이다(0순위-B). 하나로 묶여
+        #     있어서 조립을 끄니 진단이 조용히 같이 꺼졌다. 이제 _blocked로만 막는다
+        #     — 조립은 여전히 안 하고(비문 문제 회피 그대로), 사유는 화면까지 간다.
+        _why.append("설정에서 틀 조립을 꺼두었습니다 — 전부 생성기로 만듭니다")
     try:
         from shopping_shorts import spine_fill, sul_facts
     except Exception:      # noqa: BLE001 — 조립 모듈이 없어도 기존 경로는 살아야 한다
@@ -12720,7 +12730,9 @@ def _assembled_drafts(spines, sources, store, seconds=30, job_id=""):
         slots = slots_by_track[track]
         # 자격 미달(_prob)인 갈래는 슬롯이 있어도 조립하지 않는다 — 슬롯은 아래에서
         # "어느 칸이 비는지" 안내하는 데만 쓴다.
-        _blocked = bool(probs_by_track.get(track))
+        # ★`_off`(설정에서 조립 끔)도 여기서 막는다 — 위에서 즉시 return하던 것을
+        #   여기로 내렸다. 재료 진단은 돌고 조립만 안 한다(2026-08-24).
+        _blocked = _assemble_off or bool(probs_by_track.get(track))
         try:
             # ★수치 근거 검사의 재료로 **담긴 영상 전사**를 넘긴다(2026-08-21).
             #   슬롯 값을 넘기면 자기 자신과 대조라 무엇을 넣어도 통과한다(실측).
