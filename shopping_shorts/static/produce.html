@@ -1864,8 +1864,8 @@
       <h3 data-steptitle="mix">3 · 영상대본MIX</h3>
       <div class="sub">문장마다 어떤 화면이 붙는지 정하고 미리 봅니다 — 아래 타임프레임이 <b>영상 전체의 흐름</b>입니다.</div>
       <!-- ★확정 버튼(#mixPreviewCta)을 없앴다(2026-08-22 사장님
-           "이거 2개는 삭제하고 자막+음성 완성본 이 자리에 … 이걸 누르면 랜더되는걸로").
-           장면 편집 안 [자막+음성 완성본] 탭이 렌더 입구가 됐다(scene_lab.html _askRender).
+           "이거 2개는 삭제하고 완성본 만들기 이 자리에 … 이걸 누르면 랜더되는걸로").
+           장면 편집 안 [완성본 만들기] 탭이 렌더 입구가 됐다(scene_lab.html _askRender).
            ※#btnPreview를 참조하는 코드(startPreview 등)는 전부 if(btn) 가드가 있어
              그대로 둔다 — 지우면 다른 경로가 깨진다. -->
       <!-- ★2단계 확정 대본 ↔ 지금 붙어 있는 job의 대본이 다르면 여기서 알린다(2026-08-18
@@ -4136,7 +4136,7 @@ function go(d){
   // 앞으로 갈 때만 막는다 — 되돌아가는 길은 언제나 열어둔다.
   if(d > 0 && cur === 7 && MIX_JOB && !canGoNext()){
     // typeof 가드: jump/go만 잘라 돌리는 테스트 하네스엔 toast가 없다(메모리 슬라이스하네스 규칙)
-    if(typeof toast === 'function') toast('먼저 [자막+음성 완성본] 탭을 눌러 확인하세요');   // 옛 확정 버튼 대체(2026-08-22)
+    if(typeof toast === 'function') toast('먼저 [완성본 만들기] 탭을 눌러 확인하세요');   // 옛 확정 버튼 대체(2026-08-22)
     return;
   }
   // 오브 순서로 ±d 이동 → 매핑을 경유해 jump(o)에 위임한다. 게이트 가드는 jump 안에 있다
@@ -5219,12 +5219,12 @@ function _renderMixReviewBody(d){
       <div class="scene-trim" id="sceneTrim${i}">${renderTrimControls(b, i)}</div>
     </div>`).join('')+`<div class="hint" style="margin-top:6px">✅ 매칭 완료${(d.beats||[]).some(b=>!b.respined&&b.fit&&b.fit<=2)?' <span style="color:var(--fire)">— ⚠️ 표시된 문장은 영상이 약합니다</span>':''} — 아래에서 <b>미리보기</b>를 확인한 뒤 다음으로 넘어가세요.</div>`
     +`<button class="btn" style="margin-top:8px;padding:7px 14px;background:var(--inset);border:1px solid var(--line);color:var(--sub)" onclick="cancelMixReview()" title="이 매칭을 취소하고 소스·대본을 고쳐 처음부터 다시 매칭합니다">✕ 취소하고 다시 매칭</button>`
-    +`<div class="hint" style="margin-top:6px">완성본은 장면 편집의 <b>자막+음성 완성본</b> 탭에서 만들어집니다 🪞 · 장면이 안 맞으면 각 문장의 <b>🎞 다른 화면으로 바꾸기</b>로 고치거나, 위 <b>✕ 취소하고 다시 매칭</b>으로 다시 하세요.</div>`
+    +`<div class="hint" style="margin-top:6px">완성본은 장면 편집의 <b>완성본 만들기</b> 탭에서 만들어집니다 🪞 · 장면이 안 맞으면 각 문장의 <b>🎞 다른 화면으로 바꾸기</b>로 고치거나, 위 <b>✕ 취소하고 다시 매칭</b>으로 다시 하세요.</div>`
     +`<details id="bankInjectedBox" style="margin-top:10px;font-size:12px"><summary style="cursor:pointer;color:var(--sub)">🏦 이번 대본에 쓴 은행 부품 보기 (검증)</summary><div id="bankInjectedBody" class="hint" style="margin-top:6px">불러오는 중…</div></details>`;
   _loadBankInjected();
   // ★확정 버튼을 여기서 그리던 것을 없앴다(2026-08-22 사장님
   //   "이거 2개는 삭제하고 … 이걸 누르면 랜더되는걸로"). 렌더 입구는 장면 편집 안
-  //   [자막+음성 완성본] 탭 하나다(scene_lab.html _askRender).
+  //   [완성본 만들기] 탭 하나다(scene_lab.html _askRender).
   //   남은 것: 빈 칸 경고(#emptyBeatHint)는 마크업에 상시 자리로 옮겼고, 옛 도구는
   //   #mixOldTools에 그린다(SHOW_OLD_SCENE_TOOLS를 켰을 때만).
   const _cta=document.getElementById('mixOldTools');
@@ -5253,7 +5253,7 @@ function _renderMixReviewBody(d){
   // ★안내 문구도 새 입구를 가리킨다(2026-08-22) — 없어진 버튼 이름을 계속 부르면
   //   사장님이 화면에 없는 것을 찾게 된다. 이 칸은 이제 폴백 자리(_RAIL_OFF)라
   //   평소엔 안 보이지만, 문구는 진실을 말해야 한다.
-  if(_pvBox) _pvBox.innerHTML='<div style="aspect-ratio:var(--shorts-pv-ar,9/16);width:100%;border:2px dashed var(--line);border-radius:16px;background:var(--inset);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--sub);text-align:center;padding:18px"><div style="font-size:34px">🪞</div><div style="font-size:14px;line-height:1.5">장면 편집의 <b style="color:var(--accent)">자막+음성 완성본</b> 탭을<br>누르면 영상이<br>만들어지는 걸 보실 수 있어요</div></div>';
+  if(_pvBox) _pvBox.innerHTML='<div style="aspect-ratio:var(--shorts-pv-ar,9/16);width:100%;border:2px dashed var(--line);border-radius:16px;background:var(--inset);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--sub);text-align:center;padding:18px"><div style="font-size:34px">🪞</div><div style="font-size:14px;line-height:1.5">장면 편집의 <b style="color:var(--accent)">완성본 만들기</b> 탭을<br>누르면 영상이<br>만들어지는 걸 보실 수 있어요</div></div>';
   }
 }
 // 매칭 결과 취소 → 처음부터 다시(2026-07-20 사장님). 장면이 대사와 안 맞거나 이상하게 나오면
@@ -7956,9 +7956,9 @@ function refreshNextBtn(){
   const gated = (cur === 7 && MIX_JOB && !canGoNext());
   b.disabled = false;
   // ★가리키는 대상만 바꿨다(2026-08-22) — [대본×영상믹스 확정] 버튼이 없어지고
-  //   [자막+음성 완성본] 탭이 그 일을 한다. "확정하세요"는 그대로 둔다: 게이트 회귀
+  //   [완성본 만들기] 탭이 그 일을 한다. "확정하세요"는 그대로 둔다: 게이트 회귀
   //   테스트(test_produce_preview_gate)가 이 낱말로 "왜 잠겼는지 알려주나"를 판정한다.
-  b.textContent = gated ? '먼저 [자막+음성 완성본]을 확정하세요'
+  b.textContent = gated ? '먼저 [완성본 만들기]를 확정하세요'
                         : (orbIndex()===STEP_LABELS.length-1 ? '완료' : '다음 →');
   b.title = gated ? stepLockMsg() : '';
 }
