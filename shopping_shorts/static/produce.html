@@ -3008,7 +3008,10 @@ function renderTemplatePreview(){
   const pv=document.getElementById('hcPreview'); if(!pv) return;
   let el=document.getElementById('tplPreview');
   const t=STATE.deco&&STATE.deco.template;
-  if(!t||(!t.id&&!t.frame)){ if(el) el.style.display='none'; return; }
+  // ★틀을 지울 때 손잡이도 같이 지운다(2026-08-24 사장님 "삭제했는데 높이조절하는건 안지워짐").
+  //   손잡이는 미리보기에 직접 붙어 있어(pv.appendChild) 틀 그림만 숨기면 그대로 남는다.
+  //   숨기는 판단은 syncFrameHandles 한 곳에 있다(0순위-B) — 여기선 부르기만 한다.
+  if(!t||(!t.id&&!t.frame)){ if(el) el.style.display='none'; syncFrameHandles(); return; }
   // 틀(frame)이면 서버가 그린 그림을 그대로 얹는다 — 렌더가 쓰는 것과 같은 그림이다.
   if(t.frame){
     if(!el){
