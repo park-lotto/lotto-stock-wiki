@@ -6573,7 +6573,12 @@ _FREE_EXACT_GET = {"/", "/pricing", "/account", "/api/me", "/api/reference", "/a
                    "/collection", "/api/mix/basket",
                    # ★2026-08-20 체험판: 제작소는 HTML만 연다(소개 페이지가 뜬다).
                    #   /api/produce/* 는 열지 않는다 — 과금 기능은 계속 막힌다.
-                   "/produce", "/produce.html"}
+                   "/produce", "/produce.html",
+                   # ★1기 챌린지(2026-08-24): 페이지 껍데기(HTML)는 결제등급과 무관하게 연다.
+                   #   위 _FREE_EXACT_ANY와 같은 이유 — 참가자격은 /api/challenge/* 핸들러 안에서
+                   #   challenge_member 여부로 403 처리한다. 여기 안 넣으면 pro가 아닌 참가자가
+                   #   /challenge를 열기도 전에 402로 막힌다. HTML 껍데기라 정보가 새지도 않는다.
+                   "/challenge", "/challenge/admin"}
 # 경계있는 prefix만(과다매칭 방지 — 트레일링 슬래시).
 _FREE_PREFIX = ("/static/", "/auth/google/")
 
@@ -10162,6 +10167,21 @@ def api_challenge_member_set(request: Request, customer_id: int, active: int = 1
     else:
         store.set_challenge_member_active(int(customer_id), False)
     return {"ok": True, "customer_id": int(customer_id), "active": bool(active)}
+
+
+@app.get("/challenge", response_class=HTMLResponse)
+def page_challenge():
+    """멤버 제출 화면 — 단톡방에 이 주소를 공유한다."""
+    return FileResponse(Path(__file__).parent / "static" / "challenge.html",
+                        media_type="text/html; charset=utf-8")
+
+
+@app.get("/challenge/admin", response_class=HTMLResponse)
+def page_challenge_admin():
+    """관리 화면(Task 8에서 HTML을 만든다). 데이터 API가 관리자를 검사하므로
+    페이지 자체는 열어둔다 — 비관리자가 열면 목록이 비고 안내가 뜬다."""
+    return FileResponse(Path(__file__).parent / "static" / "challenge_admin.html",
+                        media_type="text/html; charset=utf-8")
 
 
 @app.get("/api/reference/adopt", response_class=HTMLResponse)
