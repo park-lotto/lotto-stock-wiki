@@ -142,6 +142,12 @@ def _ensure_screen_time(plan, store, job_id):
         #   훅·중간 비트가 장면 설명 말투로 창작돼 있었다. 화면길이·출처장면과 같은 이유로
         #   저장 출구에 둔다(만드는 경로가 여럿, 0순위-B).
         beats, _restored = _ep.enforce_scripted_narration(beats, job.get("given_script") or "")
+        # ★그리고 **순서·전량**도 지킨다(2026-08-24 사장님 "1" = 강하게).
+        #   위 검사는 '지어냈나'만 본다 — 실사고(잡 432d04a955bf)는 문장이 전부 진짜
+        #   대본 문장이라 fixed=0으로 통과했는데, 2번째 문장이 맨 끝 cta로 밀리고
+        #   CTA 문장은 통째로 빠져 있었다. 판정축이 하나면 교정이 통째로 죽는다.
+        #   ⚠️순서 배분이 대사를 바꾸므로 **창작 되돌림 뒤에** 온다(되돌린 문장도 제자리로).
+        beats, _reordered = _ep.enforce_script_order(beats, job.get("given_script") or "")
         out = dict(plan)
         out["beats"] = _ep._fill_beat_screen_time(beats, seg_map)
         return out

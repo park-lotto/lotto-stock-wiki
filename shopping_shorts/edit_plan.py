@@ -5200,6 +5200,79 @@ def enforce_scripted_narration(beats, given_script):
     return beats, fixed
 
 
+def enforce_script_order(beats, given_script):
+    """확정 대본 모드: 문장을 **대본 순서 그대로** 칸에 다시 배분한다(2026-08-24).
+
+    사장님 결정("1" = 강하게): 2단계에서 확정한 순서가 곧 영상 순서다. 어느 칸에
+    어느 문장이 들어갈지를 AI에 맡기는 한 같은 사고가 반복된다.
+
+    ★실사고(잡 432d04a955bf): 10문장 중 2번째가 맨 끝 cta 칸으로 밀리고, CTA 문장은
+      통째로 빠졌다. 문장이 전부 진짜 대본 문장이라 `enforce_scripted_narration`
+      (창작 검사)은 `fixed=0`으로 통과시켰다 — 검사에 순서·누락 축이 없었다.
+
+    바꾸는 것 / 안 바꾸는 것:
+      · 바꾼다   — 각 칸의 narration(대본 순서대로 재배분)
+      · 안 바꾼다 — 칸 수·role·primary/alternates(=AI가 고른 화면). 화면 배치는
+                    그대로 두고 **대사만** 제자리로 돌린다.
+
+    배분 규칙: 칸의 길이(target_seconds)에 비례해 문장을 나눠 담되,
+      · 문장은 쪼개지 않는다(문장 중간을 가르면 프랑켄 문장이 된다)
+      · 칸보다 문장이 많으면 **버리지 않고** 남은 문장을 마지막 칸에 이어 붙인다
+      · 칸보다 문장이 적으면 뒤 칸이 비지 않게 최소 한 문장씩은 채운다
+    반환: (고친 beats, 바꾼 칸 수)
+    """
+    beats = beats or []
+    if not (given_script or "").strip() or not beats:
+        return beats, 0
+    sents = [s for s in script_sentences(given_script) if _narr_key(s)]
+    if not sents:
+        return beats, 0
+
+    n = len(beats)
+    # 이미 대본 순서를 지키고 있으면 손대지 않는다(멀쩡한 걸 흔들지 않는다).
+    joined = _narr_key("".join(b.get("narration") or "" for b in beats))
+    if joined == _narr_key(given_script):
+        return beats, 0
+
+    # 칸 길이 비례로 문장을 나눈다 — 긴 칸에 더 많이. 길이 정보가 없으면 균등.
+    secs = [float(b.get("target_seconds") or 0) or 1.0 for b in beats]
+    total_sec = sum(secs) or float(n)
+    total_len = sum(len(x) for x in sents) or 1
+    buckets, cur, budget_carry = [], [], 0.0
+    si = 0
+    for i, sec in enumerate(secs):
+        left_beats = n - i
+        # 이 칸이 가져갈 글자 예산(남은 칸에 최소 한 문장씩은 남겨둔다)
+        budget = total_len * (sec / total_sec) + budget_carry
+        cur = []
+        while si < len(sents):
+            # 남은 문장 수가 남은 칸 수와 같아지면 한 문장만 넣고 넘긴다(빈 칸 방지)
+            if cur and (len(sents) - si) <= (left_beats - 1):
+                break
+            cur.append(sents[si])
+            si += 1
+            if sum(len(x) for x in cur) >= budget and (len(sents) - si) >= left_beats:
+                break
+        budget_carry = budget - sum(len(x) for x in cur)
+        buckets.append(cur)
+    # 남은 문장은 **버리지 않고** 마지막 칸에 이어 붙인다(누락 금지)
+    if si < len(sents):
+        buckets[-1].extend(sents[si:])
+
+    fixed = 0
+    for b, chunk in zip(beats, buckets):
+        text = " ".join(chunk).strip()
+        if not text:
+            continue                      # 채울 게 없으면 옛 대사를 지우지 않는다
+        if _narr_key(text) == _narr_key(b.get("narration")):
+            continue
+        b["narration"] = text
+        b["narration_reordered"] = True
+        _drop_stale_tts(b)                # 대사가 바뀌면 옛 음성은 버린다(2026-08-19 실사고)
+        fixed += 1
+    return beats, fixed
+
+
 def _drop_stale_tts(beat):
     """되돌린 비트의 **옛 음성을 버린다**(2026-08-19 실사고 — 잡 c5249702331d beat2).
 
