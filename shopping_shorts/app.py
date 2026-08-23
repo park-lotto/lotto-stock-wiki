@@ -6496,6 +6496,12 @@ _AUTH_ALLOW = ("/login", "/api/login", "/signup", "/api/signup", "/favicon.ico",
                "/help", "/api/help/items",
                "/pay",   # 계좌입금 안내 페이지(공개 — 대기중·비로그인도 결제 안내 봄)
                "/terms", "/privacy", "/refund",   # 법적 고지(공개 — 비로그인·대기중도 열람)
+               # 가입 전 안내(2026-08-23) — ★반드시 비로그인 공개다. 이 두 장은 아직 회원이
+               # 아닌 사람에게 뿌리는 링크(공지·카톡)라, 로그인에 막히면 링크가 통째로 죽는다.
+               # 실측: 넣기 전엔 둘 다 307 → /login 이었다(로그인된 브라우저에선 정상으로
+               # 보여서 못 잡았다. 확인은 반드시 curl 등 쿠키 없는 요청으로 하라).
+               "/notice_1gi.html",   # 1기 사전신청 안내 + 신청 버튼
+               "/api_manual.html",   # API 발급 매뉴얼(위 페이지와 설정 화면에서 링크)
                # PWA: 매니페스트는 브라우저가 쿠키 없이(credentials omit) fetch한다 → 공개 필수.
                "/manifest.webmanifest", "/apple-touch-icon.png",
                "/brand-logo.png",   # 로고(로그인·대문 락업) — 비로그인 화면에도 떠야 한다
@@ -6535,6 +6541,10 @@ _FREE_EXACT_ANY = {"/login", "/signup", "/api/login", "/api/signup", "/logout",
                    "/api/lens/search", "/api/lens/trace_url"}
 # GET만 무료(레퍼런스 랭킹 '조회') — POST/PUT 등 데이터변경은 같은 경로여도 차단.
 _FREE_EXACT_GET = {"/", "/pricing", "/account", "/api/me", "/api/reference", "/api/thumb", "/api/video",
+                   # 가입 전 안내 2장(2026-08-23) — 무료·체험만료 등급도 봐야 한다.
+                   # _AUTH_ALLOW가 비로그인을 열어주고, 여기가 로그인한 무료 등급의 402를 막는다.
+                   # 둘 다 넣어야 완전히 열린다 — 한쪽만 넣으면 한쪽 사람만 못 본다.
+                   "/notice_1gi.html", "/api_manual.html",
                    # ★/api/media (2026-08-21). 랭킹 카드의 영상을 누르면 프론트가 이걸로
                    #   재생용 mp4 주소를 받는다 — 하는 일은 주소 반환뿐이고 /api/video·
                    #   /api/thumb과 같은 급인데 이것만 빠져 있었다. 그래서 "랭킹은 열어준다"
