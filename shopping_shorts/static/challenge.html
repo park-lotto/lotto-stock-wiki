@@ -22,10 +22,14 @@
   .sub{color:var(--sub);font-size:14px;margin-bottom:20px}
   .today{display:flex;align-items:baseline;gap:10px;background:var(--panel);
          border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:18px}
-  .today b{font-size:38px;line-height:1;color:var(--accent)}
+  /* ★큰 숫자는 '오늘 N' 하나뿐이다. .today b 처럼 자손 전체에 걸면 오른쪽
+     '달성한 날 N일'의 <b>까지 38px이 되어 13px 줄 안에서 튀어나오고,
+     line-height:1이라 윗줄과 겹친다(2026-08-24 사장님 제보). 첫 칸으로 좁힌다. */
+  .today .big{font-size:38px;line-height:1;color:var(--accent)}
   .today .goal{font-size:18px;color:var(--sub)}
   .today .lbl{font-size:13px;color:var(--sub)}
-  .today .done{margin-left:auto;font-size:13px;color:var(--sub);text-align:right}
+  .today .done{margin-left:auto;font-size:13px;line-height:1.6;color:var(--sub);text-align:right}
+  .today .done b{font-size:15px;color:var(--txt)}
   .box{display:flex;gap:8px;margin-bottom:8px}
   .box input{flex:1;min-width:0;padding:13px 14px;font-size:15px;border-radius:10px;
              border:1px solid var(--line);background:var(--inset);color:inherit}
@@ -54,7 +58,7 @@
   <div class="sub" id="period">하루 2영상 · 올린 영상 링크를 넣어주세요</div>
 
   <div class="today">
-    <div><b id="todayN">0</b><span class="goal"> / <span id="goalN">2</span></span></div>
+    <div><b class="big" id="todayN">0</b><span class="goal"> / <span id="goalN">2</span></span></div>
     <div class="lbl">오늘</div>
     <div class="done">달성한 날 <b id="doneN">0</b>일<br>총 <span id="totalN">0</span>개</div>
   </div>
