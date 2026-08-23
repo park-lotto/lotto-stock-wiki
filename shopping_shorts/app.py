@@ -8397,7 +8397,9 @@ _ADMIN_SETTING_KEYS = {"trial_days", "trial_grant_points", "trial_event_hours",
                        "bank_name", "bank_account", "bank_holder", "deposit_note",
                        "biz_name", "biz_owner", "biz_regno", "biz_addr", "biz_sales_no", "biz_email",
                        # 조립 끄기 — "1"이면 틀 조립을 건너뛰고 전부 생성기로(2026-08-21)
-                       "assemble_off"}
+                       "assemble_off",
+                       # 1기 챌린지(2026-08-24) — 기간·하루 목표
+                       "challenge_start", "challenge_end", "challenge_daily_goal"}
 
 
 @app.get("/api/admin/customers")
@@ -8414,6 +8416,7 @@ def _admin_customers(request: Request):
         cu["usage"] = {op: st.usage_get(cu["id"], op, day) for op in ("lens", "render", "script")}
         cu["access_7d"] = st.access_summary(cu["id"], since7)   # {ips, devices} 최근 7일 고유 수
         cu["is_admin"] = _is_admin(cu["id"])                    # 관리자 배지용
+        cu["challenge"] = st.is_challenge_member(cu["id"])      # 1기 챌린지 참가 여부(2026-08-24)
         cu["code_admin"] = _code_admin(cu["id"])                # 코드 고정 관리자(UI 토글 불가)
         # 포인트 잔액(화면 단위 P) — 등급이 full이어도 잔액 0이면 유료 op가 402로 막힌다.
         # 관리자가 그 상태를 목록에서 바로 보게 한다(2026-08-20 체험 계정 402 사고).

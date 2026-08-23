@@ -407,3 +407,10 @@ def test_members_list_includes_inactive(env, monkeypatch):
     r = _client().get("/api/challenge/members", cookies={"dash_auth": _cookie(5)})
     ms = r.json()["members"]
     assert len(ms) == 1 and ms[0]["active"] == 0
+
+
+def test_challenge_settings_are_admin_settable():
+    """기간·목표를 admin 설정으로 저장할 수 있다 — 2기·3기를 코드 수정 없이 연다."""
+    assert "challenge_start" in appmod._ADMIN_SETTING_KEYS
+    assert "challenge_end" in appmod._ADMIN_SETTING_KEYS
+    assert "challenge_daily_goal" in appmod._ADMIN_SETTING_KEYS

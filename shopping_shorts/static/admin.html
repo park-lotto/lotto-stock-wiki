@@ -17,7 +17,7 @@ th{color:#9a9aa2;font-weight:600;font-size:14px}
 .pending{background:#3d341c;color:#ffd479}
 button{border:0;border-radius:7px;padding:7px 13px;font-weight:700;font-size:13px;cursor:pointer;margin-right:4px}
 .bpro{background:#2ea043;color:#fff}.bfree{background:#6e2020;color:#fff}.bok{background:#d19b1e;color:#111}.bpay{background:#3a5bd0;color:#fff}.bpt{background:#7a4bd0;color:#fff}
-.bedit{background:#5a4bd0;color:#fff}.bdel{background:#8b1a1a;color:#fff}.btrial{background:#1c6a8a;color:#fff}.badm{background:#7a3da8;color:#fff}
+.bedit{background:#5a4bd0;color:#fff}.bdel{background:#8b1a1a;color:#fff}.btrial{background:#1c6a8a;color:#fff}.badm{background:#7a3da8;color:#fff}.bchal{background:#c2410c;color:#fff}
 .wait{border-color:#5a4a1e;background:#1a1710}.wait h2{color:#ffd479}
 .empty{color:#6a6a72;font-size:13px;padding:6px 2px}
 input{background:#0e0e12;border:1px solid #333;border-radius:7px;color:#eee;padding:8px 10px;font-size:13px;width:90px}
@@ -79,7 +79,8 @@ const SETTING_FIELDS=[
   ['limit_script','무료 대본/일'],['limit_lens_pro','pro 렌즈/일'],['limit_render_pro','pro 렌더/일'],
   ['global_cap_lens','전역 렌즈/일'],['contact_kakao','카톡 안내'],['contact_phone','전화 안내'],['pay_url','결제 링크(URL)'],
   ['bank_name','은행'],['bank_account','계좌번호'],['bank_holder','예금주'],['deposit_note','입금 안내문구'],
-  ['biz_name','[약관] 상호'],['biz_owner','[약관] 대표자'],['biz_regno','[약관] 사업자등록번호'],['biz_addr','[약관] 주소'],['biz_sales_no','[약관] 통신판매업신고번호'],['biz_email','[약관] 문의 이메일']];
+  ['biz_name','[약관] 상호'],['biz_owner','[약관] 대표자'],['biz_regno','[약관] 사업자등록번호'],['biz_addr','[약관] 주소'],['biz_sales_no','[약관] 통신판매업신고번호'],['biz_email','[약관] 문의 이메일'],
+  ['challenge_start','[챌린지] 시작일(YYYY-MM-DD)'],['challenge_end','[챌린지] 종료일(YYYY-MM-DD)'],['challenge_daily_goal','[챌린지] 하루 목표 영상 수']];
 let CURRENT={};
 async function load(){
   const r=await fetch('/api/admin/customers');
@@ -161,6 +162,7 @@ function renderCustomers(){
           ${c.code_admin?'':(c.is_admin
             ? `<button class=badm onclick="setAdmin(${c.id},false)">관리자해제</button>`
             : `<button class=badm onclick="setAdmin(${c.id},true)">관리자지정</button>`)}
+          <button class=bchal onclick="setChallenge(${c.id},${c.challenge?'false':'true'})">${c.challenge?'🔥챌린지해제':'챌린지참가'}</button>
           ${c.is_admin?'':`<button class=bdel onclick="delCustomer(${c.id})">삭제</button>`}</td></tr>`;
   }).join('') : '<tr><td colspan=14 class=empty>조건에 맞는 고객이 없어요</td></tr>';
 }
@@ -270,6 +272,13 @@ async function setAdmin(cid,flag){
   const m=document.getElementById('cMsg');
   if(r.ok){m.textContent=flag?'✅ 관리자 지정됨':'✅ 관리자 해제됨';m.className='msg';load();}else{m.textContent='❌ 실패';m.className='msg err';}
   setTimeout(()=>m.textContent='',2000);
+}
+// 1기 챌린지 참가 토글(2026-08-24) — 참가자만 /challenge에서 영상을 제출할 수 있다.
+async function setChallenge(cid,flag){
+  const r=await fetch(`/api/challenge/member?customer_id=${cid}&active=${flag?1:0}`,{method:'POST'});
+  const m=document.getElementById('cMsg');
+  if(r.ok){m.textContent=flag?'✅ 챌린지 참가 등록':'✅ 챌린지 참가 해제';m.className='msg';load();}
+  else{m.textContent='❌ 실패';m.className='msg err';}
 }
 async function grantPoints(cid){
   // 등급(체험·pro)은 게이트만 연다 — 유료 op는 포인트도 있어야 돈다(2026-08-20 402 사고).
