@@ -47,7 +47,16 @@ t('미리보기 시작할 때도 연다',
 t('정의 밖에서 패널을 직접 만지지 않는다', (function(){
   var stripped = code.split('function _pvOpen()')[0]
                  + (code.split('function _renderPreviewVideo')[1] || '');
-  return !/mixPreviewPanel'\)[^\n]*style\.display *=/.test(stripped);
+  // ★한 줄짜리만 잡던 것을 고쳤다(2026-08-24). 실제 재발은 **두 줄로 갈라 쓴** 모양이었다:
+  //     const _pvPanel=document.getElementById('mixPreviewPanel'), ...
+  //     if(_pvPanel) _pvPanel.style.display='';
+  //   id와 style.display가 다른 줄이라 [^\n]* 가 넘지 못했고 이 단언은 **통과했다**.
+  //   그 사이 좌측 레일이 _RAIL_OFF를 우회해 다시 열렸다(사장님 "맨왼쪽 랜더된게
+  //   처음에는 없다가 뜬다"). 이제 ①한 줄형 ②변수에 담는 두 줄형을 둘 다 막는다.
+  if (/mixPreviewPanel'\)[^\n]*style\.display *=/.test(stripped)) return false;
+  var m = stripped.match(/(\w+)\s*=\s*document\.getElementById\('mixPreviewPanel'\)/);
+  if (m && new RegExp('\\b' + m[1] + '\\.style\\.display\\s*=').test(stripped)) return false;
+  return true;
 })());
 
 console.log('\n결과: PASS ' + p + ' / FAIL ' + f);

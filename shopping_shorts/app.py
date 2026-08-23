@@ -7381,6 +7381,185 @@ text-decoration:none;font-size:14px}</style></head>
 <form method=post action="/logout" style="margin-top:16px"><button type=submit style="background:none;border:0;color:#8ab4f8;font-size:14px;cursor:pointer;text-decoration:none">로그아웃</button></form>
 <div style="margin-top:20px;color:#5f6773;font-size:12px">__LEGAL__</div></div></body></html>""")
 
+# ── 가입 마무리: 이름·전화 받기 (2026-08-24 사장님 요청) ──────────────────
+# 구글 로그인 가입은 이메일만 들어오고 이름·전화가 **아예 안 들어온다**(get_or_create_by_google이
+# email만 넘긴다) → 관리자 고객표의 '이름·전화' 칸이 통째로 비어 있었다(실측 179명 대부분).
+# 그래서 구글로 새로 가입한 사람에게 이 화면을 한 번 띄워 받는다. 아이디 가입은 폼에서 이미
+# 받으므로 안 뜬다(빈칸으로 냈으면 여기서 한 번 더 물어본다).
+# ★건너뛰기는 일부러 안 뒀다 — 승인 판단에 필요한 정보라 사장님이 "받는 걸로" 결정하셨다.
+#   다만 로그아웃은 열어둔다(갇히면 안 된다 — 대기실과 같은 원칙).
+_WELCOME_HTML = _fill_brand(r"""<!doctype html><html lang=ko><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<link rel=manifest href="/manifest.webmanifest"><meta name=theme-color content="#0c1411"><link rel=icon href="/favicon.ico"><link rel=apple-touch-icon href="/apple-touch-icon.png">
+<title>가입 마무리 · __NAME__</title>
+<style>*{box-sizing:border-box}body{font-family:-apple-system,'Malgun Gothic',sans-serif;
+background:radial-gradient(900px 500px at 50% -15%,rgba(111,240,214,.10),transparent 60%),#0f1115;
+color:#e8eaed;margin:0;display:flex;min-height:100vh;align-items:center;justify-content:center;padding:20px}
+.box{width:360px;max-width:100%;background:linear-gradient(180deg,#151a1c,#0f1416);
+border:1px solid #222c2e;border-radius:18px;padding:32px 26px 24px;text-align:center;
+box-shadow:0 24px 60px rgba(0,0,0,.5)}
+.emoji{font-size:44px}h1{font-size:20px;margin:14px 0 6px}
+p.sub{color:#9aa0a6;line-height:1.6;font-size:14px;margin:0 0 20px}
+label{display:block;text-align:left;color:#8aa0a0;font-size:12.5px;margin:14px 0 6px;font-weight:600}
+input[type=text],input[type=tel]{width:100%;padding:12px 13px;background:#0b1012;
+border:1px solid #2a3436;border-radius:10px;color:#eee;font-size:15px}
+input:focus{outline:0;border-color:#37e0bd}
+/* 성별·연령대 = 라디오를 알약 버튼처럼. 폰에서 손가락으로 누르기 좋게 넉넉히. */
+.pick{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}
+.pick.age{grid-template-columns:repeat(5,1fr)}
+.pick input{position:absolute;opacity:0;width:0;height:0}
+.pick label{margin:0;text-align:center;padding:11px 4px;
+background:#0b1012;border:1px solid #2a3436;border-radius:10px;color:#b7c6c2;font-size:14px;
+font-weight:600;cursor:pointer;transition:.12s}
+.pick label:hover{border-color:#37e0bd}
+.pick input:checked+label{background:linear-gradient(135deg,#6ff0d6,#1f9e7a);color:#08110e;
+border-color:#37e0bd}
+.pick input:focus-visible+label{outline:2px solid #37e0bd;outline-offset:2px}
+button.go{width:100%;margin-top:22px;padding:13px;background:linear-gradient(135deg,#6ff0d6,#1f9e7a);
+color:#08110e;border:0;border-radius:11px;font-weight:700;font-size:15px;cursor:pointer}
+.err{color:#e74c3c;font-size:12.5px;min-height:15px;margin-top:10px}</style></head>
+<body><form class=box method=post action="/api/welcome">
+<div class=emoji>👋</div>
+<h1>거의 다 됐어요</h1>
+<p class=sub>__LEAD__</p>
+<label for=w_name>이름</label>
+<input type=text id=w_name name=name value="__NAME_V__" placeholder="홍길동" autocomplete=name required>
+<label for=w_phone>전화번호</label>
+<input type=tel id=w_phone name=phone value="__PHONE_V__" placeholder="010-0000-0000" autocomplete=tel required>
+<label>성별</label>
+<div class=pick>__GENDER__</div>
+<label>연령대</label>
+<div class="pick age">__AGE__</div>
+<button class=go type=submit>시작하기</button>
+<div class=err>__ERR__</div>
+</form>
+<script>
+// 전화번호 자동 하이픈 — 사장님이 표에서 눈으로 읽기 좋게 형식을 통일한다.
+document.getElementById('w_phone').addEventListener('input', function(e){
+  var d=e.target.value.replace(/\D/g,'').slice(0,11);
+  e.target.value = d.length<4 ? d
+    : d.length<8 ? d.slice(0,3)+'-'+d.slice(3)
+    : d.slice(0,3)+'-'+d.slice(3,7)+'-'+d.slice(7);
+});
+// 첫 빈칸에 커서 — 기존 고객은 이름·전화가 이미 차 있어 성별부터 고르면 된다.
+(function(){var n=document.getElementById('w_name'),p=document.getElementById('w_phone');
+ if(!n.value){n.focus();} else if(!p.value){p.focus();}})();
+</script>
+</body></html>""")
+
+
+# 성별·연령대 선택지(2026-08-24 사장님 확정). ★값을 바꾸면 이미 저장된 고객 값과
+# 어긋나므로 함부로 고치지 마라 — 화면·검증·관리자표가 모두 이 목록 하나만 본다(0순위-B).
+_GENDER_OPTS = ("남성", "여성")
+_AGE_OPTS = ("20대", "30대", "40대", "50대", "기타")
+
+
+def _pick_html(field, opts, current):
+    """알약 라디오 묶음 HTML. current와 같은 값이면 미리 선택해 둔다(기존 고객 재방문)."""
+    out = []
+    for i, o in enumerate(opts):
+        rid = f"{field}_{i}"
+        chk = " checked" if o == (current or "") else ""
+        out.append(f'<input type=radio id={rid} name={field} value="{o}" required{chk}>'
+                   f'<label for={rid}>{o}</label>')
+    return "".join(out)
+
+
+# 가입 마무리 화면에서 받는 네 가지. 하나라도 비면 화면을 띄운다.
+_WELCOME_FIELDS = ("name", "phone", "gender", "age_band")
+
+
+def _welcome_missing(cust):
+    """이 고객에게 아직 안 받은 칸 목록. 빈 리스트면 다 받은 것."""
+    return [f for f in _WELCOME_FIELDS if not (cust.get(f) or "").strip()]
+
+
+def _is_page_nav(request, path):
+    """이 요청이 '사람이 화면을 여는 것'인가. 가입 마무리 화면으로 붙잡을 대상 판정용.
+    API·정적파일·이미지·fetch는 제외한다 — 이미 열려 있던 화면이 갑자기 깨지면 안 된다.
+    브라우저는 문서 이동에 Sec-Fetch-Mode: navigate를 붙인다(없으면 Accept로 갈음)."""
+    if request.method != "GET":
+        return False
+    if path.startswith(("/api/", "/static", "/s/", "/auth/")) or "." in path.rsplit("/", 1)[-1]:
+        return False
+    mode = request.headers.get("sec-fetch-mode")
+    if mode:
+        return mode == "navigate"
+    return "text/html" in (request.headers.get("accept") or "")
+
+
+def _needs_welcome(customer_id):
+    """이 고객에게 가입 마무리(이름·전화·성별·연령대) 화면을 띄워야 하나.
+    ★2026-08-24 사장님 결정으로 **기존 고객도 대상**이다 — 비어 있는 칸이 하나라도
+      있으면 다음 접속 때 한 번 물어본다(백필). 그래서 welcome_due 플래그가 아니라
+      '실제로 비었는가'로 판정한다. 다 채우면 자연히 안 뜬다 → 플래그 없이도 안 갇힌다.
+    사장님(0)은 제외."""
+    if _as_cid(customer_id) == 0:
+        return False
+    cust = Store(DB_PATH).get_customer(customer_id)
+    if not cust:
+        return False
+    return bool(_welcome_missing(cust))
+
+
+def _esc_attr(v):
+    """HTML 속성에 넣기 전 이스케이프 — 이름은 고객이 친 값이라 그냥 넣으면 XSS."""
+    return (v or "").replace("&", "&amp;").replace('"', "&quot;")                     .replace("<", "&lt;").replace(">", "&gt;")
+
+
+@app.get("/welcome", response_class=HTMLResponse)
+def _welcome_page(request: Request, e: str = ""):
+    cid = getattr(request.state, "customer_id", None)
+    if cid is None or not _needs_welcome(cid):
+        return RedirectResponse("/", status_code=303)
+    cust = Store(DB_PATH).get_customer(cid) or {}
+    missing = _welcome_missing(cust)
+    # 기존 고객은 이름·전화가 이미 있고 성별·연령대만 비었을 수 있다 → 있는 값은 채워서 보여준다.
+    lead = ("승인 안내를 드리려면<br>아래 정보가 필요해요."
+            if len(missing) == len(_WELCOME_FIELDS)
+            else "몇 가지만 더 알려주시면<br>바로 이용하실 수 있어요.")
+    msg = e.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
+    html = (_WELCOME_HTML
+            .replace("__LEAD__", lead)
+            .replace("__NAME_V__", _esc_attr(cust.get("name")))
+            .replace("__PHONE_V__", _esc_attr(cust.get("phone")))
+            .replace("__GENDER__", _pick_html("gender", _GENDER_OPTS, cust.get("gender")))
+            .replace("__AGE__", _pick_html("age_band", _AGE_OPTS, cust.get("age_band")))
+            .replace("__ERR__", msg))
+    return HTMLResponse(html)
+
+
+@app.post("/api/welcome")
+async def _api_welcome(req: Request):
+    cid = getattr(req.state, "customer_id", None)
+    if cid is None:
+        return RedirectResponse("/login", status_code=303)
+    body = (await req.body()).decode("utf-8", "ignore")
+    form = urllib.parse.parse_qs(body)
+    name = (form.get("name") or [""])[0].strip()
+    phone = (form.get("phone") or [""])[0].strip()
+    gender = (form.get("gender") or [""])[0].strip()
+    age_band = (form.get("age_band") or [""])[0].strip()
+    digits = re.sub(r"\D", "", phone)
+    if not name:
+        return RedirectResponse("/welcome?e=" + urllib.parse.quote("이름을 입력해주세요"), status_code=303)
+    if not (9 <= len(digits) <= 11):
+        return RedirectResponse("/welcome?e=" + urllib.parse.quote("전화번호를 정확히 입력해주세요"), status_code=303)
+    # ★목록에 없는 값은 반려한다 — required는 브라우저 힌트일 뿐이라 curl로 아무 문자열이나
+    #   보낼 수 있다. 그러면 관리자표에 쓰레기 값이 남는다.
+    if gender not in _GENDER_OPTS:
+        return RedirectResponse("/welcome?e=" + urllib.parse.quote("성별을 선택해주세요"), status_code=303)
+    if age_band not in _AGE_OPTS:
+        return RedirectResponse("/welcome?e=" + urllib.parse.quote("연령대를 선택해주세요"), status_code=303)
+    st = Store(DB_PATH)
+    # ★관리자 정보수정과 같은 경로를 쓴다(0순위-B)
+    st.update_customer_info(cid, name, phone, gender=gender, age_band=age_band)
+    st.clear_welcome_due(cid)                     # 두 번 묻지 않는다
+    _notify_new_signup(name=name, username="구글", phone=phone,
+                       email=(st.get_customer(cid) or {}).get("email"))
+    return RedirectResponse("/", status_code=303)
+
+
 # 로그아웃 확인 화면 — GET /logout이 세션을 안 지우는 대신 이 화면을 준다(CSRF 방어).
 # 실제 로그아웃은 이 폼의 POST만.
 _LOGOUT_CONFIRM_HTML = _fill_brand("""<!doctype html><html lang=ko><head><meta charset=utf-8>
@@ -7401,15 +7580,23 @@ _LOGIN_HTML = _fill_brand(_LOGIN_TMPL)
 _PRICING_HTML = _fill_brand(_PRICING_TMPL)
 _ACCOUNT_HTML = _fill_brand(_ACCOUNT_TMPL)
 
-_SIGNUP_HTML = """<!doctype html><html lang=ko><head><meta charset=utf-8>
+_SIGNUP_HTML = r"""<!doctype html><html lang=ko><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1">
 <link rel=manifest href="/manifest.webmanifest"><meta name=theme-color content="#0c1411"><link rel=icon href="/favicon.ico"><link rel=apple-touch-icon href="/apple-touch-icon.png"><title>숏템메이커 가입</title>
 <style>body{margin:0;height:100vh;display:flex;align-items:center;justify-content:center;
 background:#0b0b0e;font-family:system-ui,'Noto Sans KR',sans-serif}
 .box{background:#16161c;border:1px solid #2a2a30;border-radius:14px;padding:32px 28px;width:280px}
 h1{color:#4f9dfa;font-size:18px;margin:0 0 18px;text-align:center;letter-spacing:1px}
-input{width:100%;box-sizing:border-box;margin:6px 0;padding:11px 12px;background:#0e0e12;
+input[type=text],input[type=tel],input[type=password]{width:100%;box-sizing:border-box;
+margin:6px 0;padding:11px 12px;background:#0e0e12;
 border:1px solid #333;border-radius:8px;color:#eee;font-size:14px}
+.plabel{display:block;text-align:left;color:#8a8a92;font-size:12px;margin:12px 0 5px;font-weight:600}
+.pick{display:flex;flex-wrap:wrap;gap:6px}
+.pick input{position:absolute;opacity:0;width:0;height:0}
+.pick label{flex:1 1 auto;min-width:58px;text-align:center;padding:10px 6px;background:#0e0e12;
+border:1px solid #333;border-radius:8px;color:#c7c7cf;font-size:13px;font-weight:600;cursor:pointer}
+.pick label:hover{border-color:#4f9dfa}
+.pick input:checked+label{background:#4f9dfa;color:#111;border-color:#4f9dfa}
 button{width:100%;margin-top:12px;padding:11px;background:#4f9dfa;color:#111;border:0;
 border-radius:8px;font-weight:700;font-size:14px;cursor:pointer}
 a{color:#7db4ff;font-size:12px;text-decoration:none}
@@ -7417,14 +7604,25 @@ a{color:#7db4ff;font-size:12px;text-decoration:none}
 .foot{text-align:center;margin-top:14px}</style></head>
 <body><form class=box method=post action=/api/signup>
 <h1>🛍️ 숏템메이커 가입</h1>
-<input name=user placeholder=아이디(영문/숫자) autocomplete=username autofocus>
-<input name=name placeholder=이름 autocomplete=name>
-<input name=phone placeholder="전화번호(010-0000-0000)" autocomplete=tel>
-<input name=pass type=password placeholder=비밀번호 autocomplete=new-password>
+<input type=text name=user placeholder=아이디(영문/숫자) autocomplete=username autofocus required>
+<input type=text name=name placeholder=이름 autocomplete=name required>
+<input name=phone type=tel id=s_phone placeholder="전화번호(010-0000-0000)" autocomplete=tel required>
+<input name=pass type=password placeholder=비밀번호 autocomplete=new-password required>
+<span class=plabel>성별</span><div class=pick>__GENDER__</div>
+<span class=plabel>연령대</span><div class=pick>__AGE__</div>
 <button>가입하기</button>
 <div class=err>__ERR__</div>
 <div class=foot><a href=/login>이미 계정이 있으신가요? 로그인</a></div>
-</form></body></html>"""
+</form>
+<script>
+document.getElementById('s_phone').addEventListener('input', function(e){
+  var d=e.target.value.replace(/\D/g,'').slice(0,11);
+  e.target.value = d.length<4 ? d
+    : d.length<8 ? d.slice(0,3)+'-'+d.slice(3)
+    : d.slice(0,3)+'-'+d.slice(3,7)+'-'+d.slice(7);
+});
+</script>
+</body></html>"""
 
 
 @app.get("/login", response_class=HTMLResponse)
@@ -7788,7 +7986,11 @@ def _account_page():
 
 @app.get("/signup", response_class=HTMLResponse)
 def _signup_page(e: str = ""):
-    return _SIGNUP_HTML.replace("__ERR__", e or "")
+    # 성별·연령대 알약은 /welcome과 **같은 목록·같은 렌더 함수**를 쓴다(0순위-B).
+    return (_SIGNUP_HTML
+            .replace("__GENDER__", _pick_html("gender", _GENDER_OPTS, None))
+            .replace("__AGE__", _pick_html("age_band", _AGE_OPTS, None))
+            .replace("__ERR__", e or ""))
 
 
 @app.post("/api/login")
@@ -7836,11 +8038,23 @@ async def _api_signup(req: Request):
     p = (form.get("pass") or [""])[0]
     name = (form.get("name") or [""])[0].strip()
     phone = (form.get("phone") or [""])[0].strip()
+    gender = (form.get("gender") or [""])[0].strip()
+    age_band = (form.get("age_band") or [""])[0].strip()
     if len(u) < 3 or len(p) < 4:
         return RedirectResponse("/signup?e=" + urllib.parse.quote("아이디 3자·비밀번호 4자 이상"), status_code=303)
+    # ★HTML required는 브라우저 힌트일 뿐이라 서버에서도 막는다(curl·자동가입 우회 방지).
+    if not name:
+        return RedirectResponse("/signup?e=" + urllib.parse.quote("이름을 입력해주세요"), status_code=303)
+    if not (9 <= len(re.sub(r"\D", "", phone)) <= 11):
+        return RedirectResponse("/signup?e=" + urllib.parse.quote("전화번호를 정확히 입력해주세요"), status_code=303)
+    if gender not in _GENDER_OPTS:
+        return RedirectResponse("/signup?e=" + urllib.parse.quote("성별을 선택해주세요"), status_code=303)
+    if age_band not in _AGE_OPTS:
+        return RedirectResponse("/signup?e=" + urllib.parse.quote("연령대를 선택해주세요"), status_code=303)
     try:
-        customer_id = Store(DB_PATH).create_customer(u, p, approved=False,
-                                                     name=name or None, phone=phone or None)
+        customer_id = Store(DB_PATH).create_customer(
+            u, p, approved=False, name=name or None, phone=phone or None,
+            gender=gender, age_band=age_band)   # 여기서 다 받으니 /welcome으로 또 안 끌려간다
     except ValueError:
         return RedirectResponse("/signup?e=" + urllib.parse.quote("이미 존재하는 아이디입니다"), status_code=303)
     _notify_new_signup(name=name, username=u, phone=phone)   # 사장님 텔레 알림(무키면 no-op)
@@ -8047,8 +8261,14 @@ async def _auth_guard(request: Request, call_next):
         lvl = access_level(customer_id)
         if lvl == "pending":
             # 승인 전 전면 차단. /logout만 통과(로그아웃 가능), /static은 위에서 이미 허용.
-            if path == "/logout":
+            # ★/welcome·/api/welcome도 통과 — 구글 신규가입자는 '미승인(pending)'인 채로
+            #   이름·전화·성별·연령대를 내야 한다. 안 열어주면 /welcome으로 보내놓고 여기서
+            #   대기실 화면을 돌려줘, 입력칸이 영영 안 보인다(2026-08-24 실측).
+            if path in ("/logout", "/welcome", "/api/welcome"):
                 return await call_next(request)
+            # 아직 못 받은 게 있으면 대기실 대신 입력화면으로 (승인 판단에 필요한 정보다)
+            if _needs_welcome(customer_id) and not path.startswith("/api/"):
+                return RedirectResponse("/welcome", status_code=303)
             if path.startswith("/api/"):
                 return JSONResponse({"error": "승인 대기중이에요", "level": "pending"}, status_code=403)
             return HTMLResponse(_with_pay(_PENDING_HTML))
@@ -8058,6 +8278,16 @@ async def _auth_guard(request: Request, call_next):
             return JSONResponse(
                 {"error": "유료 기능이에요. 결제하면 열려요.", "level": "ranking_only"},
                 status_code=402)
+        # ── 가입 마무리(이름·전화·성별·연령대) — 2026-08-24 ────────────────────────
+        # ★반드시 **모든 접근권한 판정 뒤**에 둔다. 앞에 두면 이 리다이렉트(303)가
+        #   관리자게이트·유료게이트보다 먼저 떠서 "막혀야 할 사람이 안 막힌 것처럼" 보인다
+        #   (실측: 이걸 앞에 뒀더니 무관한 테스트 36건이 403 대신 303을 받았다).
+        #   여기까지 왔다 = 원래 들어갈 수 있는 사람이고, 정보만 덜 낸 것이다.
+        # ★화면 이동(GET 문서 요청)만 붙잡는다. API를 막으면 이미 열려 있던 화면이
+        #   갑자기 오류를 뱉는다 — 사람은 그냥 다음 이동 때 입력하면 된다.
+        if (_is_page_nav(request, path) and path != "/welcome"
+                and _needs_welcome(customer_id)):
+            return RedirectResponse("/welcome", status_code=303)
         return await call_next(request)
     if path.startswith("/api/"):
         return JSONResponse({"error": "unauthorized"}, status_code=401)
@@ -12746,19 +12976,29 @@ def _assembled_drafts(spines, sources, store, seconds=30, job_id=""):
       기본값은 꺼지지 않음(회귀 0). admin에서 켜면 전부 생성기로 간다.
     """
     # store가 None일 수 있다(테스트가 그렇게 부른다) — 없으면 종전대로 조립한다.
+    # ★이름을 `_off`로 쓰지 마라 — 아래 `split_by_subject`가 같은 이름을 재사용해
+    #   내 플래그를 덮어쓴다(0순위-B: `if A: x=1` 뒤 `x=2`). 예전엔 위에서 즉시
+    #   return해 안 드러났는데, 진단을 살리려고 아래로 내리자마자 실제로 터졌다
+    #   (2026-08-24, 테스트가 잡았다: assemble_off=1인데 조립본이 나왔다).
     try:
-        _off = str((store.get_setting("assemble_off") if store else "") or "") == "1"
+        _assemble_off = str((store.get_setting("assemble_off") if store else "") or "") == "1"
     except Exception:      # noqa: BLE001 — 설정 조회 실패가 생성을 막지 않는다
-        _off = False
-    if _off:
-        import sys as _sys       # ★이 함수 안에서 sys가 안 보인다(라이브 500 실사고). 지연 임포트한다.
-        print("assemble_off=1 → 조립 건너뛰고 전부 생성기로", file=_sys.stderr)
-        # ★반환값은 **3개**다(out, left, why). 2개로 돌려보내 라이브가 500으로 죽었다
-        #   (ValueError: not enough values to unpack). docstring만 보고 2개로 착각한 탃 —
-        #   호출부(app.py:2529)를 봤으면 바로 보였다.
-        return [], list(spines or []), ["설정에서 틀 조립을 꺼두었습니다 — 전부 생성기로 만듭니다"]
+        _assemble_off = False
     out, left = [], []
     _why = []          # 조립을 못 한 이유(화면이 말해준다)
+    if _assemble_off:
+        import sys as _sys       # ★이 함수 안에서 sys가 안 보인다(라이브 500 실사고). 지연 임포트한다.
+        print("assemble_off=1 → 조립은 건너뛰되 재료 진단은 돈다", file=_sys.stderr)
+        # ★2026-08-24: 예전엔 여기서 **즉시 return** 했다. 그래서 이 아래에 있는
+        #   재료 진단이 통째로 죽었다 — `sul_material_problem`("이 영상은 오용형이
+        #   아닙니다")·`split_by_subject`("소재가 다른 영상 N편을 뺐습니다")·칸 커버리지가
+        #   전부 계산되지 않았고, 화면엔 "설정에서 껐습니다" 한 줄만 떴다.
+        #   실측(크림치즈 job a31d8f7625e4): 재료 4편이 전부 레시피라 오용형이 성립
+        #   안 되는데 아무도 안 알려줘, 모델이 빈칸을 지어낸 맹탕 B안이 나왔다.
+        #   ★조립을 끄는 것과 진단을 끄는 것은 **다른 판단**이다(0순위-B). 하나로 묶여
+        #     있어서 조립을 끄니 진단이 조용히 같이 꺼졌다. 이제 _blocked로만 막는다
+        #     — 조립은 여전히 안 하고(비문 문제 회피 그대로), 사유는 화면까지 간다.
+        _why.append("설정에서 틀 조립을 꺼두었습니다 — 전부 생성기로 만듭니다")
     try:
         from shopping_shorts import spine_fill, sul_facts
     except Exception:      # noqa: BLE001 — 조립 모듈이 없어도 기존 경로는 살아야 한다
@@ -12828,7 +13068,9 @@ def _assembled_drafts(spines, sources, store, seconds=30, job_id=""):
         slots = slots_by_track[track]
         # 자격 미달(_prob)인 갈래는 슬롯이 있어도 조립하지 않는다 — 슬롯은 아래에서
         # "어느 칸이 비는지" 안내하는 데만 쓴다.
-        _blocked = bool(probs_by_track.get(track))
+        # ★`_off`(설정에서 조립 끔)도 여기서 막는다 — 위에서 즉시 return하던 것을
+        #   여기로 내렸다. 재료 진단은 돌고 조립만 안 한다(2026-08-24).
+        _blocked = _assemble_off or bool(probs_by_track.get(track))
         try:
             # ★수치 근거 검사의 재료로 **담긴 영상 전사**를 넘긴다(2026-08-21).
             #   슬롯 값을 넘기면 자기 자신과 대조라 무엇을 넣어도 통과한다(실측).

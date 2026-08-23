@@ -121,6 +121,67 @@ def session_slots(pool=None):
     return [config.INSTAGRAM_SESSION_PATH] if config.INSTAGRAM_SESSION_PATH else []
 
 
+def session_alive(session_path, timeout=15):
+    """세션 파일이 **인스타에서 아직 유효한가**. 파일 존재·쿠키 유무가 아니다.
+
+    ★2026-08-24 실사고: 7계정 중 3개가 죽었는데 파일도 쿠키도 멀쩡했다
+    (sessionid·ds_user_id·csrftoken 전부 있고 만료일은 2027년).
+    인스타가 능동 회수한 것이라 **물어봐야만** 안다:
+        살아있음 → HTTP 200
+        죽음     → HTTP 302 + `set-cookie: sessionid=deleted`
+
+    쿠키 존재로 판정하면 죽은 걸 산 것으로 본다(이번에 그래서 2주간 몰랐다).
+    판정 불가(네트워크 오류 등)는 **True**로 본다 — 멀쩡한 계정을 우리 손으로
+    빼는 쪽이 더 위험하다.
+    """
+    import json
+    import urllib.error
+    import urllib.request
+    try:
+        with open(session_path, encoding="utf-8") as f:
+            cookies = json.load(f).get("cookies", [])
+        sid = next((c["value"] for c in cookies if c.get("name") == "sessionid"), "")
+    except Exception:                       # noqa: BLE001 — 못 읽으면 판정 보류
+        return True
+    if not sid:
+        return False
+    req = urllib.request.Request(
+        "https://www.instagram.com/",
+        headers={"User-Agent": ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                                "Chrome/126.0 Safari/537.36"),
+                 "Cookie": f"sessionid={sid}"})
+    try:
+        class _NoRedirect(urllib.request.HTTPRedirectHandler):
+            def redirect_request(self, *a, **kw):
+                return None
+        op = urllib.request.build_opener(_NoRedirect)
+        with op.open(req, timeout=timeout) as r:
+            return r.status == 200
+    except urllib.error.HTTPError as e:
+        return e.code == 200
+    except Exception:                       # noqa: BLE001 — 네트워크 문제는 보류
+        return True
+
+
+def live_slots(slots, alive=None):
+    """살아있는 슬롯만 **원래 인덱스를 달고** 돌려준다 → [(index, path), …].
+
+    ★인덱스를 보존하는 게 핵심이다. 죽은 파일을 목록에서 지우면 뒤가 당겨져
+    `slot_proxy(index)`가 주는 출구 IP가 통째로 재배치된다 — 계정↔IP 1:1이 깨져
+    인스타 눈엔 "쓰던 사람이 갑자기 다른 집에서 접속"으로 보인다(2026-08-05 실측:
+    계정만 바꾸고 IP가 같으면 몇 시간 만에 scraping_warning).
+
+    전부 죽었다고 나오면 **원본을 그대로** 돌려준다 — 판정이 틀렸을 때
+    수집이 통째로 0건이 되는 쪽이 훨씬 나쁘다(2026-08-06 랭킹 공백 사고).
+    """
+    check = alive or session_alive
+    live = [(i, p) for i, p in enumerate(slots) if check(p)]
+    if not live:
+        return list(enumerate(slots))
+    return live
+
+
 def slot_proxy(index, pool=None):
     """계정 슬롯 index에 고정 배정되는 한국 주거용 출구.
 

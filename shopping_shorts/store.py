@@ -1377,6 +1377,22 @@ class Store:
         except sqlite3.OperationalError:
             pass  # 이미 존재
 
+        # ── 가입 마무리 대상 표시(2026-08-24): 1이면 로그인 시 이름·전화 입력화면을 한 번 띄운다. ──
+        #   구글 가입은 이메일만 들어와 이름·전화가 비어 있었다. 신규 가입에만 1을 켠다 —
+        #   기본 0이라 **기존 고객은 화면이 안 바뀐다**(이미 쓰고 계신 분을 갑자기 붙잡지 않는다).
+        try:
+            c.execute("ALTER TABLE customers ADD COLUMN welcome_due INTEGER NOT NULL DEFAULT 0")
+        except sqlite3.OperationalError:
+            pass  # 이미 존재
+
+        # ── 성별·연령대(2026-08-24): 가입 마무리 화면에서 이름·전화와 함께 받는다. ──
+        #   NULL=아직 안 받음. 기존 고객은 NULL로 남고 다음 접속 때 한 번 물어본다(백필).
+        for _col in ("gender", "age_band"):
+            try:
+                c.execute(f"ALTER TABLE customers ADD COLUMN {_col} TEXT")
+            except sqlite3.OperationalError:
+                pass  # 이미 존재
+
         # ── 회원관리(2026-07-22): 이름·전화 + 결제이력 ──
         #   ★같은 커서 c 사용 — 이 메서드는 _init_schema가 customers를 만드는 열린 트랜잭션
         #   안에서 c를 넘겨받는다. 새 self._conn()을 열면 미커밋 customers가 안 보여 깨진다.
@@ -4616,7 +4632,8 @@ class Store:
             "sha256", password.encode("utf-8"), bytes.fromhex(salt), Store._PBKDF2_ITERATIONS
         ).hex()
 
-    def create_customer(self, username, password, email=None, google_sub=None, approved=True, name=None, phone=None):
+    def create_customer(self, username, password, email=None, google_sub=None, approved=True,
+                        name=None, phone=None, welcome_due=False, gender=None, age_band=None):
         """신규 고객 계정 생성. username 중복이면 ValueError. 성공 시 customer_id 반환.
         approved=True(기본): 가입 즉시 승인+무료체험 시작(full_access_until=now+trial_days).
         approved=False: 대기중(approved_at=NULL) + 체험 미시작(full_access_until=0).
@@ -4647,10 +4664,12 @@ class Store:
             try:
                 cur = c.execute(
                     "INSERT INTO customers(username, password_hash, salt, created_at, "
-                    "plan, full_access_until, email, google_sub, approved_at, name, phone, trial_ends_at) "
-                    "VALUES(?,?,?,datetime('now'),'free',?,?,?,?,?,?,?)",
+                    "plan, full_access_until, email, google_sub, approved_at, name, phone, "
+                    "trial_ends_at, welcome_due, gender, age_band) "
+                    "VALUES(?,?,?,datetime('now'),'free',?,?,?,?,?,?,?,?,?,?)",
                     (username, pw_hash, salt, full_access_until, email, google_sub,
-                     approved_at, name, phone, trial_ends_at),
+                     approved_at, name, phone, trial_ends_at, 1 if welcome_due else 0,
+                     gender, age_band),
                 )
             except sqlite3.IntegrityError:
                 raise ValueError(f"이미 존재하는 아이디: {username}")
@@ -4668,7 +4687,8 @@ class Store:
         username = "g_" + str(google_sub)               # username 유니크 제약 충족용(절단X — sub 전체가 dedup 키)
         try:
             cid = self.create_customer(username, secrets.token_hex(16),
-                                       email=email, google_sub=google_sub, approved=False)
+                                       email=email, google_sub=google_sub, approved=False,
+                                       welcome_due=True)   # 이름·전화를 못 받았다 → 로그인 후 한 번 물어본다
             return _ret(cid, True)                       # 방금 새로 만든 계정 = 신규가입
         except ValueError:
             with self._conn() as c:                     # 경합으로 방금 생성됐으면 재조회
@@ -4706,7 +4726,8 @@ class Store:
         with self._conn() as c:
             row = c.execute(
                 "SELECT id, username, created_at, plan, full_access_until, google_sub, email, "
-                "approved_at, name, phone, trial_ends_at, admin "
+                "approved_at, name, phone, trial_ends_at, admin, welcome_due, "
+                "gender, age_band "
                 "FROM customers WHERE id=?", (customer_id,)
             ).fetchone()
         if not row:
@@ -4715,7 +4736,13 @@ class Store:
                 "plan": row[3] or "free", "full_access_until": row[4] or 0,
                 "google_sub": row[5], "email": row[6], "approved_at": row[7],
                 "name": row[8], "phone": row[9], "trial_ends_at": row[10],
-                "admin": bool(row[11])}
+                "admin": bool(row[11]), "welcome_due": bool(row[12]),
+                "gender": row[13], "age_band": row[14]}
+
+    def clear_welcome_due(self, customer_id):
+        """가입 마무리(이름·전화) 입력을 마쳤다 → 다시 묻지 않는다."""
+        with self._conn() as c:
+            c.execute("UPDATE customers SET welcome_due=0 WHERE id=?", (customer_id,))
 
     def set_customer_admin(self, customer_id, is_admin):
         """관리자 지정/회수(사장님 UI). admin=1이면 _is_admin이 관리자로 인정(권한 동일).
@@ -4726,14 +4753,20 @@ class Store:
             c.execute("UPDATE customers SET admin=? WHERE id=?",
                       (1 if is_admin else 0, customer_id))
 
-    def update_customer_info(self, customer_id, name, phone):
-        """관리자 정보수정: 이름·전화 갱신(구글 가입은 이름·전화가 비어 admin에서 채운다).
-        None이 아닌 값만 덮어쓴다 — 한쪽만 고칠 때 다른 쪽을 지우지 않게."""
+    def update_customer_info(self, customer_id, name, phone, gender=None, age_band=None):
+        """관리자 정보수정 + 가입 마무리 화면: 이름·전화·성별·연령대 갱신.
+        None이 아닌 값만 덮어쓴다 — 한쪽만 고칠 때 다른 쪽을 지우지 않게.
+        ★가입 마무리(/api/welcome)도 이 메서드를 쓴다. 저장 경로를 둘로 만들면
+          언젠가 어긋난다(0순위-B)."""
         sets, params = [], []
         if name is not None:
             sets.append("name=?"); params.append(name)
         if phone is not None:
             sets.append("phone=?"); params.append(phone)
+        if gender is not None:
+            sets.append("gender=?"); params.append(gender)
+        if age_band is not None:
+            sets.append("age_band=?"); params.append(age_band)
         if not sets:
             return
         params.append(customer_id)
@@ -4827,7 +4860,7 @@ class Store:
         """관리자용 전체 고객 목록(사장님 cid0 제외). 최근 가입 먼저. 최근 결제 요약 포함."""
         with self._conn() as c:
             rows = c.execute(
-                "SELECT id, username, email, plan, full_access_until, created_at, approved_at, name, phone, trial_ends_at, admin, last_seen "
+                "SELECT id, username, email, plan, full_access_until, created_at, approved_at, name, phone, trial_ends_at, admin, last_seen, gender, age_band "
                 "FROM customers WHERE id != 0 ORDER BY id DESC"
             ).fetchall()
             out = []
@@ -4839,7 +4872,7 @@ class Store:
                 out.append({"id": cid, "username": r[1], "email": r[2], "plan": r[3] or "free",
                             "full_access_until": r[4] or 0, "created_at": r[5], "approved_at": r[6],
                             "name": r[7], "phone": r[8], "trial_ends_at": r[9], "admin": bool(r[10]),
-                            "last_seen": r[11],
+                            "last_seen": r[11], "gender": r[12], "age_band": r[13],
                             "last_payment": ({"amount": p[0], "paid_at": p[1]} if p else None),
                             "payment_count": cnt})
         return out

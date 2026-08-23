@@ -33,8 +33,12 @@ _HTML = Path(__file__).resolve().parents[1] / "static" / "produce.html"
 # ⚠️ 새 항목을 여기 추가하지 마라 — 그건 지뢰를 하나 더 깔았다는 뜻이다.
 #    자리 하나에 그리는 함수 하나로 모으고, 줄어든 값으로 고쳐라.
 BASELINE = {
-    "mixPreview": 5, "mixReview": 5, "aiPick": 4, "cleanPreview": 4,
-    "finalVideo": 4, "mixCandidates": 4, "coupangSlot": 3, "pmResults": 3,
+    # ⚠️mixPreview 6 / pmResults 4 는 **늘어난 게 아니라** 원래 그랬는데 못 세던 값이다
+    #   (2026-08-24 스캐너 수정 — 한 줄 다중선언의 둘째 변수를 놓치고 있었다).
+    #   실측으로 확인: 손대지 않은 main에서도 똑같이 6·4다. 천장을 올린 게 아니라
+    #   눈이 멀어 낮게 적혀 있던 것을 **사실에 맞춘** 것이다. 여전히 "더 늘면 실패"다.
+    "mixPreview": 6, "mixReview": 5, "aiPick": 4, "cleanPreview": 4,
+    "finalVideo": 4, "mixCandidates": 4, "coupangSlot": 3, "pmResults": 4,
     "btnFinalRender": 2, "candStatus": 2, "finalStatus": 2, "frPresets": 2,
     "fxResult": 2, "handoffBanner": 2, "matOverlay": 2, "matchProgress": 2,
     "presetCards": 2, "s2StyleRow": 2, "seoBody": 2, "thumbFramesHint": 2,
@@ -58,8 +62,12 @@ def _scan_owners(text):
         m = re.match(r"\s*(?:async\s+)?function\s+(\w+)", line)
         if m:
             fn, var_of = m.group(1), {}
-        v = re.search(r"(?:const|let|var)\s+(\w+)\s*=\s*document\.getElementById\('([\w-]+)'\)", line)
-        if v:
+        # ★한 줄에 여러 개를 선언하면 **첫 개만** 잡던 것을 고쳤다(2026-08-24).
+        #   `const a=getElementById('x'), b=getElementById('y');` 에서 b를 놓쳐,
+        #   b.innerHTML= 로 덮어쓰는 함수가 소유자 집계에서 통째로 빠졌다.
+        #   실측: _renderMixReviewBody가 #mixPreview를 쓰는데도(5259행) 안 세어졌다
+        #   — 자리 하나에 6명인데 5명으로 보였다. 세는 눈이 멀면 천장은 무의미하다.
+        for v in re.finditer(r"(\w+)\s*=\s*document\.getElementById\('([\w-]+)'\)", line):
             var_of[v.group(1)] = v.group(2)
         d = re.search(r"getElementById\('([\w-]+)'\)\.innerHTML\s*=", line)
         if d and fn:

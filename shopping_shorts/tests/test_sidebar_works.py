@@ -487,3 +487,46 @@ def test_points_402_still_says_points():
     """포인트 부족 분기는 그대로 살아 있어야 한다(2026-08-20 수정 회귀 방지)."""
     html = _modal_html_after_click("{ error: '포인트가 부족합니다 (필요 10P, 보유 0P)' }")
     assert "포인트가 부족해요" in html
+
+
+# ── 숏템 제작소 = 항상 빈 작업으로 (2026-08-24 사장님 "그냥 새로운 작업하려니
+#    마지막에 담긴 제작소 페이지가 뜬다 → 빈 페이지로 띄워줘") ──────────────
+# 쿼리 없는 /produce는 _bootAccountLatestOrLocal()이 직전/계정 최신작업을 이어받는다
+# (2026-07-26 크로스기기 싱크). 그 경로는 랭킹의 '제작소로 보내기'에 여전히 필요하므로
+# 남겨두고, **사이드바 메뉴만** ?new=1로 보낸다.
+
+# 제작 메뉴(data-ss-href="/produce") 한 줄만 뽑아 출력하는 JS.
+_GRAB_PRODUCE_ITEM = r"""
+const _re = new RegExp('<div class="ss-item[^>]*data-ss-href="/produce"[^>]*>');
+const _m = _nav.innerHTML.match(_re);
+console.log(_m ? _m[0] : 'NOTFOUND');
+"""
+
+def test_produce_menu_opens_a_blank_new_work():
+    """메뉴 클릭 = ?new=1 → produce.html이 clearWork() 후 빈 작업을 연다."""
+    out = _run(_GRAB_PRODUCE_ITEM)
+    assert "location.href='/produce?new=1'" in out, out
+
+
+def test_produce_menu_stays_highlighted_on_produce_page():
+    """★href에 ?new=1을 박으면 active 판정(it.href === path)이 깨져 활성표시가 죽는다.
+
+    그래서 href는 쿼리 없는 /produce로 두고 go로만 이동한다. 이 테스트가 그 실수를 막는다.
+    """
+    out = _run(_GRAB_PRODUCE_ITEM,
+               harness_override="location.pathname='/produce';location.href='/produce';")
+    assert "ss-item active" in out, out
+
+
+def test_produce_menu_is_clickable_even_while_on_produce():
+    """제작소를 보고 있을 때도 눌러서 빈 작업으로 갈 수 있어야 한다(종전엔 active라 죽어 있었다)."""
+    out = _run(_GRAB_PRODUCE_ITEM,
+               harness_override="location.pathname='/produce';location.href='/produce';")
+    assert "onclick=" in out, out
+
+
+def test_produce_menu_stays_free_of_the_paywall():
+    """data-ss-href는 쿼리 없는 경로여야 서버 화이트리스트(_FREE_EXACT_GET)와 짝이 맞는다."""
+    out = _run(_GRAB_PRODUCE_ITEM)
+    assert 'data-ss-href="/produce"' in out, out
+    assert 'data-ss-free="1"' in out, out

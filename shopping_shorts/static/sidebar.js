@@ -42,7 +42,16 @@
     { label: "제작", items: [
       // 제작소는 등급에 따라 서버가 다른 파일을 준다(full=진짜 / 그 외=얼린 미리보기).
       // 그래서 잠그지 않는다 — 사장님 지시 "열어두되 사용 자체가 안 되게".
-      { icon: "🎬", text: "숏템 제작소",     href: "/produce", free: true },
+
+      // ★go = 실제로 이동할 주소(2026-08-24 사장님 "그냥 새로운 작업하려면 빈 페이지").
+      //   href는 그대로 /produce로 둔다 — 위 active 판정(it.href === path)과
+      //   유료게이트 data-ss-href가 **쿼리 없는 경로**로 맞춰져 있어서,
+      //   href에 ?new=1을 붙이면 제작소에서 이 메뉴의 활성표시가 죽는다.
+      //   ?new=1 → produce.html _bootRestore가 clearWork() 후 빈 작업을 열어준다.
+      //   기존 작업은 아래 '내 작업'(?work=<id>) 목록에 그대로 남는다 — 유실 0.
+      //   ⚠ 랭킹의 '제작소로 보내기'는 재료를 sessionStorage에 담고 **쿼리 없는**
+      //      /produce로 가야 한다(_consumeProduceHandoff) — 그쪽은 안 건드린다.
+      { icon: "🎬", text: "숏템 제작소",     href: "/produce", go: "/produce?new=1", free: true },
       // 1기 챌린지(2026-08-24) — 하루 2영상 업로드 챌린지.
       // free:true는 서버 _FREE_EXACT_GET과 짝이다(챌린지 참가자격은 결제등급과 별개).
       { icon: "🔥", text: "1기 챌린지",      href: "/challenge", free: true },
@@ -182,7 +191,11 @@
       // 관리자 전용 항목(admin:true)은 기본 숨김으로 렌더 → /api/me가 is_admin이면 아래에서 노출.
       var cls = "ss-item" + (active ? " active" : "") + (it.href ? "" : " ss-disabled") + (it.admin ? " ss-admin-only" : "");
       var hide = it.admin ? ' style="display:none"' : "";
-      var onclick = it.href && !active ? ' onclick="location.href=\'' + esc(it.href) + "'\"" : "";
+      // 클릭 목적지는 go가 있으면 go, 없으면 href(종전과 동일).
+      var target = it.go || it.href;
+      // ★active여도 go가 있으면 클릭을 살린다 — 제작소를 보고 있을 때도
+      //   이 버튼을 눌러 빈 작업으로 가야 한다(같은 경로라 종전엔 클릭이 죽어 있었다).
+      var onclick = target && (!active || it.go) ? ' onclick="location.href=\'' + esc(target) + "'\"" : "";
       var payAttr = (it.href ? ' data-ss-href="' + esc(it.href) + '"' : "") + (it.free ? ' data-ss-free="1"' : "");
       html += '<div class="' + cls + '"' + payAttr + hide + onclick + ">" + it.icon + " " + it.text + "</div>";
     });
