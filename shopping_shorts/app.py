@@ -6502,6 +6502,8 @@ _AUTH_ALLOW = ("/login", "/api/login", "/signup", "/api/signup", "/favicon.ico",
                # 보여서 못 잡았다. 확인은 반드시 curl 등 쿠키 없는 요청으로 하라).
                "/notice_1gi.html",   # 1기 사전신청 안내 + 신청 버튼
                "/api_manual.html",   # API 발급 매뉴얼(위 페이지와 설정 화면에서 링크)
+               "/api/prereg",        # 사전신청 접수(POST) — 회원이 아닌 사람이 낸다
+               "/pay",               # 결제 안내(신청 직후 여기로 보낸다)
                # PWA: 매니페스트는 브라우저가 쿠키 없이(credentials omit) fetch한다 → 공개 필수.
                "/manifest.webmanifest", "/apple-touch-icon.png",
                "/brand-logo.png",   # 로고(로그인·대문 락업) — 비로그인 화면에도 떠야 한다
@@ -6537,6 +6539,8 @@ _COOKIE_MAX_AGE = 60 * 60 * 24 * 30  # 30일
 #   /api/lens/kw/search·cn/search는 틱톡·샤오홍슈가 Apify 유료인데 과금검사가
 #   없어서(실측) prefix로 열면 상한 없이 샌다.
 _FREE_EXACT_ANY = {"/login", "/signup", "/api/login", "/api/signup", "/logout",
+                   "/api/prereg", "/pay",   # 사전신청·결제안내 — 등급과 무관하게 열린다
+
                    "/api/mix/basket/toggle",
                    "/api/lens/search", "/api/lens/trace_url"}
 # GET만 무료(레퍼런스 랭킹 '조회') — POST/PUT 등 데이터변경은 같은 경로여도 차단.
@@ -8366,6 +8370,39 @@ def _admin_customers(request: Request):
     allc = st.all_settings()
     shown = {k: v for k, v in allc.items() if k in _ADMIN_SETTING_KEYS}
     return {"ok": True, "customers": out, "settings": shown}
+
+
+@app.post("/api/prereg")
+async def _api_prereg(request: Request):
+    """1기 사전신청 접수(공개 — 아직 회원이 아닌 사람이 낸다).
+
+    ★구글폼을 여기로 옮긴 이유: 구글폼은 제출 후 **자동 이동이 원천 불가**다.
+      신청 직후가 가장 뜨거운 순간이라, 결제안내까지 클릭 없이 이어져야 한다.
+      그래서 응답에 결제 주소(_pay_cta)를 실어 보내고 화면이 그리로 넘긴다.
+    """
+    body = await request.json()
+    name = (body.get("name") or "").strip()
+    phone = (body.get("phone") or "").strip()
+    email = (body.get("email") or "").strip()
+    channel = (body.get("channel") or "").strip()
+    if not name or not phone or not email:
+        return JSONResponse({"error": "성함·연락처·이메일을 모두 입력해 주세요"}, status_code=422)
+    if "@" not in email or "." not in email.split("@")[-1]:
+        return JSONResponse({"error": "이메일 주소를 확인해 주세요"}, status_code=422)
+    if len(name) > 40 or len(phone) > 40 or len(email) > 120 or len(channel) > 40:
+        return JSONResponse({"error": "입력이 너무 깁니다"}, status_code=422)
+    Store(DB_PATH).add_prereg(name, phone, email, channel)
+    href, _label = _pay_cta()
+    return {"ok": True, "pay_href": href}
+
+
+@app.get("/api/admin/prereg")
+def _admin_prereg(request: Request):
+    """사전신청 명단(관리자). 이메일 일괄발송 명단으로 쓴다."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    return {"items": Store(DB_PATH).list_prereg()}
 
 
 @app.get("/api/admin/pending")

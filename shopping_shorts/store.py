@@ -297,6 +297,19 @@ class Store:
                     expires_at INTEGER NOT NULL
                 )
             """)
+            # 1기 사전신청(2026-08-23) — 구글폼을 사이트로 옮겼다. 제출 즉시 결제안내로
+            # 보내려면(구글폼은 자동이동이 원천 불가) 신청을 우리가 받아야 한다.
+            # ★비로그인도 낸다 — 아직 회원이 아닌 사람에게 뿌리는 폼이다.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS prereg (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    phone TEXT NOT NULL,
+                    email TEXT NOT NULL,
+                    channel TEXT,
+                    created_at TEXT NOT NULL
+                )
+            """)
             c.execute("""
                 CREATE TABLE IF NOT EXISTS last_run (
                     id INTEGER PRIMARY KEY CHECK (id = 1),
@@ -4927,6 +4940,26 @@ class Store:
             return str(row[0]) if row and row[0] is not None else None
         except sqlite3.Error:
             return None
+
+    def add_prereg(self, name, phone, email, channel=""):
+        """1기 사전신청 한 건 저장 → id. 같은 이메일로 또 내면 최신 것으로 갱신한다
+        (오타 고쳐 다시 내는 사람이 있어 중복 행이 쌓이면 발송 명단이 더러워진다)."""
+        now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        with self._conn() as c:
+            c.execute("DELETE FROM prereg WHERE lower(email)=lower(?)", (email,))
+            cur = c.execute(
+                "INSERT INTO prereg(name, phone, email, channel, created_at) VALUES(?,?,?,?,?)",
+                (name, phone, email, channel or "", now))
+            return cur.lastrowid
+
+    def list_prereg(self):
+        """사전신청 전체 — 최신순. 관리자 화면·발송 명단용."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT id, name, phone, email, channel, created_at "
+                "FROM prereg ORDER BY id DESC").fetchall()
+        return [{"id": r[0], "name": r[1], "phone": r[2], "email": r[3],
+                 "channel": r[4], "created_at": r[5]} for r in rows]
 
     def put_share_link(self, sid, job_id, expires_at):
         """QR 단축링크 저장 + 만료분 청소(누수 방지)."""
