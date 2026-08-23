@@ -1,0 +1,168 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>1기 챌린지 — 영상 제출</title>
+<link rel="stylesheet" href="/theme.css">
+<style>
+  /* ★팔레트는 index.html·produce.html과 같은 토큰을 쓴다(실측 index.html:12-27).
+     theme.css에는 --bg/--txt/--panel/--line이 **없다**(--mint/--aurora만) —
+     각 페이지가 인라인 :root로 정의한다. fallback에만 기대면 라이트 모드에서
+     글자가 안 보인다. */
+  :root{--bg:#0a0f0d;--panel:#101815;--line:#1e2b26;--txt:#eaf3f0;--sub:#8fa1a0;
+    --accent:#37e0bd;--accent2:#1f9e7a;--fire:#ff6b6b;--ok:#37e0bd;--gold:#f0c453;
+    --inset:#0c1412;--hover:#131d19;--shorts-ar:9/16;color-scheme:dark;}
+  :root[data-theme="light"]{--bg:#f4faf7;--panel:#ffffff;--line:#d5e6df;--txt:#0f1a16;--sub:#5c726d;
+    --accent:#12b886;--accent2:#0ca678;--fire:#e0524a;--ok:#12b886;--gold:#b8860b;
+    --inset:#eef7f3;--hover:#eef7f3;color-scheme:light;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);
+       font-family:'IBM Plex Sans KR','Malgun Gothic',system-ui,sans-serif}
+  .wrap{max-width:720px;margin:0 auto;padding:24px 16px 60px}
+  h1{font-size:22px;margin:0 0 4px}
+  .sub{color:var(--sub);font-size:14px;margin-bottom:20px}
+  .today{display:flex;align-items:baseline;gap:10px;background:var(--panel);
+         border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:18px}
+  .today b{font-size:38px;line-height:1;color:var(--accent)}
+  .today .goal{font-size:18px;color:var(--sub)}
+  .today .lbl{font-size:13px;color:var(--sub)}
+  .today .done{margin-left:auto;font-size:13px;color:var(--sub);text-align:right}
+  .box{display:flex;gap:8px;margin-bottom:8px}
+  .box input{flex:1;min-width:0;padding:13px 14px;font-size:15px;border-radius:10px;
+             border:1px solid var(--line);background:var(--inset);color:inherit}
+  .box button{padding:13px 22px;font-size:15px;font-weight:700;border:0;border-radius:10px;
+              background:var(--accent2);color:#fff;cursor:pointer}
+  .box button:disabled{opacity:.5;cursor:default}
+  .msg{min-height:20px;font-size:14px;margin-bottom:22px}
+  .msg.ok{color:var(--accent)} .msg.no{color:var(--fire)}
+  .day{margin:22px 0 10px;font-size:13px;color:var(--sub);
+       border-top:1px solid var(--line);padding-top:12px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+  .card{background:var(--panel);border:1px solid var(--line);
+        border-radius:12px;overflow:hidden;display:flex;flex-direction:column;
+        text-decoration:none;color:inherit}
+  .card .th{aspect-ratio:var(--shorts-ar);background:var(--inset);display:block;
+            object-fit:cover;width:100%}
+  .card .no-th{aspect-ratio:var(--shorts-ar);display:flex;align-items:center;
+               justify-content:center;color:var(--sub);font-size:26px;background:var(--inset)}
+  .card .t{font-size:12px;padding:8px 9px;line-height:1.4;
+           display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .card .m{font-size:11px;color:var(--sub);padding:0 9px 9px;margin-top:auto}
+  .empty{color:var(--sub);font-size:14px;padding:30px 0;text-align:center;line-height:1.7}
+</style>
+<div class="wrap">
+  <h1>🔥 1기 챌린지</h1>
+  <div class="sub" id="period">하루 2영상 · 올린 영상 링크를 넣어주세요</div>
+
+  <div class="today">
+    <div><b id="todayN">0</b><span class="goal"> / <span id="goalN">2</span></span></div>
+    <div class="lbl">오늘</div>
+    <div class="done">달성한 날 <b id="doneN">0</b>일<br>총 <span id="totalN">0</span>개</div>
+  </div>
+
+  <div class="box">
+    <input id="url" type="url" placeholder="인스타·유튜브·틱톡 영상 주소를 붙여넣기"
+           autocomplete="off" enterkeyhint="send">
+    <button id="go">제출</button>
+  </div>
+  <div class="msg" id="msg"></div>
+
+  <div id="list"><div class="empty">아직 제출한 영상이 없어요</div></div>
+</div>
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g,
+  c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function say(text, ok) {
+  const m = $('#msg');
+  m.textContent = text;
+  m.className = 'msg ' + (ok ? 'ok' : 'no');
+}
+
+function cardHtml(it) {
+  // ★썸네일 프록시 파라미터는 ?url= 이다(app.py:5579). ?u=로 쓰면 422.
+  const th = it.thumb
+    ? `<img class="th" src="/api/thumb?url=${encodeURIComponent(it.thumb)}" alt="" loading="lazy">`
+    : `<div class="no-th">🎬</div>`;
+  let meta;
+  if (it.fetch_status === 'ok' && (it.views || it.views === 0)) {
+    meta = `조회 ${Number(it.views).toLocaleString()}`;
+  } else if (it.platform === 'tiktok') {
+    meta = '틱톡';
+  } else if (it.fetch_status === 'failed') {
+    meta = '정보 없음';
+  } else {
+    meta = '정보 수집 중';
+  }
+  return `<a class="card" href="${esc(it.url)}" target="_blank" rel="noopener">
+    ${th}
+    <div class="t">${esc(it.title || it.url)}</div>
+    <div class="m">${esc(meta)}</div>
+  </a>`;
+}
+
+function render(d) {
+  $('#todayN').textContent = d.today || 0;
+  $('#goalN').textContent = d.goal || 2;
+  $('#doneN').textContent = d.done_days || 0;
+  $('#totalN').textContent = d.total || 0;
+  if (d.start || d.end) {
+    $('#period').textContent =
+      `하루 ${d.goal || 2}영상 · ${d.start || ''} ~ ${d.end || ''}`;
+  }
+  if (!d.is_member) {
+    $('#list').innerHTML = '<div class="empty">1기 챌린지 참가자만 제출할 수 있어요.<br>'
+      + '참가 신청은 사장님께 문의해주세요.</div>';
+    $('#go').disabled = true;
+    $('#url').disabled = true;
+    return;
+  }
+  const items = d.items || [];
+  if (!items.length) {
+    $('#list').innerHTML = '<div class="empty">아직 제출한 영상이 없어요</div>';
+    return;
+  }
+  const byDay = {};
+  items.forEach(i => { (byDay[i.submit_day] = byDay[i.submit_day] || []).push(i); });
+  $('#list').innerHTML = Object.keys(byDay).sort().reverse().map(day =>
+    `<div class="day">${esc(day)} · ${byDay[day].length}개</div>
+     <div class="cards">${byDay[day].map(cardHtml).join('')}</div>`
+  ).join('');
+}
+
+async function load() {
+  try {
+    const r = await fetch('/api/challenge/mine');
+    if (!r.ok) { say('불러오지 못했어요 — 로그인 후 다시 열어주세요', false); return; }
+    render(await r.json());
+  } catch (e) {
+    say('불러오지 못했어요 — 새로고침 해주세요', false);
+  }
+}
+
+async function submit() {
+  const url = $('#url').value.trim();
+  if (!url) { say('영상 주소를 넣어주세요', false); return; }
+  $('#go').disabled = true;
+  say('제출 중…', true);
+  try {
+    const r = await fetch('/api/challenge/submit?url=' + encodeURIComponent(url),
+                          { method: 'POST' });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) { say(d.error || '제출하지 못했어요', false); return; }
+    $('#url').value = '';
+    say(`제출 완료! 오늘 ${d.today}개`, true);
+    await load();
+    // 수집이 끝나면 썸네일이 채워진다 — 잠깐 뒤 한 번만 다시 읽는다.
+    setTimeout(load, 6000);
+  } catch (e) {
+    say('제출하지 못했어요 — 잠시 후 다시 시도해주세요', false);
+  } finally {
+    $('#go').disabled = false;
+  }
+}
+
+$('#go').addEventListener('click', submit);
+$('#url').addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
+load();
+</script>

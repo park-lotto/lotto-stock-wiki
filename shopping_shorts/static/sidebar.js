@@ -42,6 +42,7 @@
     { label: "제작", items: [
       // 제작소는 등급에 따라 서버가 다른 파일을 준다(full=진짜 / 그 외=얼린 미리보기).
       // 그래서 잠그지 않는다 — 사장님 지시 "열어두되 사용 자체가 안 되게".
+
       // ★go = 실제로 이동할 주소(2026-08-24 사장님 "그냥 새로운 작업하려면 빈 페이지").
       //   href는 그대로 /produce로 둔다 — 위 active 판정(it.href === path)과
       //   유료게이트 data-ss-href가 **쿼리 없는 경로**로 맞춰져 있어서,
@@ -51,6 +52,10 @@
       //   ⚠ 랭킹의 '제작소로 보내기'는 재료를 sessionStorage에 담고 **쿼리 없는**
       //      /produce로 가야 한다(_consumeProduceHandoff) — 그쪽은 안 건드린다.
       { icon: "🎬", text: "숏템 제작소",     href: "/produce", go: "/produce?new=1", free: true },
+      // 1기 챌린지(2026-08-24) — 하루 2영상 업로드 챌린지.
+      // free:true는 서버 _FREE_EXACT_GET과 짝이다(챌린지 참가자격은 결제등급과 별개).
+      { icon: "🔥", text: "1기 챌린지",      href: "/challenge", free: true },
+      { icon: "🏁", text: "챌린지 관리",     href: "/challenge/admin", free: true, admin: true },
     ] },
     { label: "소통", items: [
       { icon: "💬", text: "인스타 소통공간", href: "/outreach" },

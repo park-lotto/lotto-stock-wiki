@@ -59,6 +59,7 @@ from shopping_shorts.mix_pipeline import (run_mix_job, run_render, run_preview, 
                                           run_clean_sources, _resolve_sources)
 from shopping_shorts import lens_discover
 from shopping_shorts.lens_discover import search_similar_videos, upload_frame
+from shopping_shorts import challenge
 from shopping_shorts import cn_search, kw_search, douyin_search, xiaohongshu_search
 from shopping_shorts import youtube_search
 from shopping_shorts.config import APIFY_TOKENS
@@ -6543,7 +6544,11 @@ _FREE_EXACT_ANY = {"/login", "/signup", "/api/login", "/api/signup", "/logout",
                    "/api/prereg", "/api/deposit_claim", "/pay",   # 사전신청·입금신고·결제안내
 
                    "/api/mix/basket/toggle",
-                   "/api/lens/search", "/api/lens/trace_url"}
+                   "/api/lens/search", "/api/lens/trace_url",
+                   # ★1기 챌린지(2026-08-24): 참가자격은 challenge_member 여부로 핸들러 안에서
+                   #   따로 막는다(403). 결제등급(ranking_only)과는 무관해야 한다 — 챌린지
+                   #   멤버가 전부 pro는 아니다. 여기 안 넣으면 등급 402가 먼저 막아버린다.
+                   "/api/challenge/submit", "/api/challenge/mine"}
 # GET만 무료(레퍼런스 랭킹 '조회') — POST/PUT 등 데이터변경은 같은 경로여도 차단.
 _FREE_EXACT_GET = {"/", "/pricing", "/account", "/api/me", "/api/reference", "/api/thumb", "/api/video",
                    # 가입 전 안내 2장(2026-08-23) — 무료·체험만료 등급도 봐야 한다.
@@ -6568,7 +6573,12 @@ _FREE_EXACT_GET = {"/", "/pricing", "/account", "/api/me", "/api/reference", "/a
                    "/collection", "/api/mix/basket",
                    # ★2026-08-20 체험판: 제작소는 HTML만 연다(소개 페이지가 뜬다).
                    #   /api/produce/* 는 열지 않는다 — 과금 기능은 계속 막힌다.
-                   "/produce", "/produce.html"}
+                   "/produce", "/produce.html",
+                   # ★1기 챌린지(2026-08-24): 페이지 껍데기(HTML)는 결제등급과 무관하게 연다.
+                   #   위 _FREE_EXACT_ANY와 같은 이유 — 참가자격은 /api/challenge/* 핸들러 안에서
+                   #   challenge_member 여부로 403 처리한다. 여기 안 넣으면 pro가 아닌 참가자가
+                   #   /challenge를 열기도 전에 402로 막힌다. HTML 껍데기라 정보가 새지도 않는다.
+                   "/challenge", "/challenge/admin"}
 # 경계있는 prefix만(과다매칭 방지 — 트레일링 슬래시).
 _FREE_PREFIX = ("/static/", "/auth/google/")
 
@@ -8617,7 +8627,9 @@ _ADMIN_SETTING_KEYS = {"trial_days", "trial_grant_points", "trial_event_hours",
                        "bank_name", "bank_account", "bank_holder", "deposit_note",
                        "biz_name", "biz_owner", "biz_regno", "biz_addr", "biz_sales_no", "biz_email",
                        # 조립 끄기 — "1"이면 틀 조립을 건너뛰고 전부 생성기로(2026-08-21)
-                       "assemble_off"}
+                       "assemble_off",
+                       # 1기 챌린지(2026-08-24) — 기간·하루 목표
+                       "challenge_start", "challenge_end", "challenge_daily_goal"}
 
 
 @app.get("/api/admin/customers")
@@ -8634,6 +8646,7 @@ def _admin_customers(request: Request):
         cu["usage"] = {op: st.usage_get(cu["id"], op, day) for op in ("lens", "render", "script")}
         cu["access_7d"] = st.access_summary(cu["id"], since7)   # {ips, devices} 최근 7일 고유 수
         cu["is_admin"] = _is_admin(cu["id"])                    # 관리자 배지용
+        cu["challenge"] = st.is_challenge_member(cu["id"])      # 1기 챌린지 참가 여부(2026-08-24)
         cu["code_admin"] = _code_admin(cu["id"])                # 코드 고정 관리자(UI 토글 불가)
         # 포인트 잔액(화면 단위 P) — 등급이 full이어도 잔액 0이면 유료 op가 402로 막힌다.
         # 관리자가 그 상태를 목록에서 바로 보게 한다(2026-08-20 체험 계정 402 사고).
@@ -10193,6 +10206,215 @@ def _adopt_into_ranking(store, platform, url, meta):
     else:
         store.save_last_run_platform(platform, merged, now_iso)
     return item
+
+
+# ── 1기 챌린지 (2026-08-24) ──────────────────────────────────────────
+# 하루 2영상 챌린지. 판정 로직은 shopping_shorts/challenge.py에 모아 두었다
+# (app.py가 13,000줄을 넘어 더 얹지 않는다). 여기 라우트는 얇게 유지한다.
+_CHALLENGE_PLATFORMS = ("instagram", "youtube", "tiktok")
+
+
+def _challenge_period(store):
+    """설정된 기간·목표. 없으면 열린 기간·목표 2."""
+    try:
+        goal = int(store.get_setting("challenge_daily_goal", 2) or 2)
+    except (TypeError, ValueError):
+        goal = 2
+    return (store.get_setting("challenge_start", "") or "",
+            store.get_setting("challenge_end", "") or "",
+            goal)
+
+
+def _challenge_fetch(sub_id, url, platform):
+    """제출 영상의 썸네일·조회수를 채운다(백그라운드).
+
+    ★실패해도 예외를 밖으로 내보내지 않는다 — 제출 행은 이미 저장돼 있고
+    달성 카운트도 확정됐다. 수집은 장식이다. 다만 조용히 삼키지 말고
+    fetch_status에 반드시 남긴다(except: pass가 SQL 오류를 삼켜 라이브에서
+    조용히 0건이 된 전례가 있다).
+
+    ★키 이름: probe_grab_meta는 yt-dlp의 view_count·like_count·comment_count·
+    uploader를 **이미 바꿔서** 준다(media_download.py:141-145) →
+    views·likes·comments·channel. view_count로 읽으면 항상 None이다.
+    """
+    store = Store(DB_PATH)
+    if platform == "tiktok":
+        # 틱톡은 단건 조회 함수가 없다(tiktok_client는 계정 단위뿐).
+        # 시도조차 하지 않으므로 'failed'가 아니라 'skipped'다.
+        store.update_challenge_submission_meta(sub_id, fetch_status="skipped")
+        return
+    try:
+        meta = probe_grab_meta(url) or {}
+    except Exception as e:  # noqa: BLE001 — 수집 실패가 제출을 무효로 만들지 않는다
+        import sys as _sys
+        print(f"[challenge] 수집 실패 sub_id={sub_id} url={url}: {e!r}", file=_sys.stderr)
+        store.update_challenge_submission_meta(sub_id, fetch_status="failed")
+        return
+    if not meta:
+        # 비공개·삭제된 영상 등 — 링크는 남기고 실패로만 표시한다.
+        store.update_challenge_submission_meta(sub_id, fetch_status="failed")
+        return
+    store.update_challenge_submission_meta(
+        sub_id,
+        title=meta.get("title") or None,
+        thumb=meta.get("thumbnail") or None,
+        channel=meta.get("channel") or None,
+        views=meta.get("views"),
+        likes=meta.get("likes"),
+        comments=meta.get("comments"),
+        fetch_status="ok")
+
+
+@app.post("/api/challenge/submit")
+def api_challenge_submit(request: Request, background_tasks: BackgroundTasks, url: str = ""):
+    """멤버가 챌린지 영상 링크를 낸다.
+
+    ★저장 먼저, 수집 나중. 링크가 들어온 순간 행이 생기고 달성 카운트가
+    확정된다 — 인스타 수집은 수십 초가 걸리고 간헐적으로 실패하는데, 거기에
+    카운트를 묶으면 '올렸는데 미달성' 사고가 난다.
+    """
+    cid = _cid(request)
+    store = Store(DB_PATH)
+    if not store.is_challenge_member(cid):
+        return JSONResponse(status_code=403,
+                            content={"ok": False, "error": "1기 챌린지 참가자만 제출할 수 있어요"})
+    u = (url or "").strip()
+    platform = _grab_platform(u)
+    if platform not in _CHALLENGE_PLATFORMS:
+        return JSONResponse(status_code=422, content={
+            "ok": False,
+            "error": "인스타그램·유튜브·틱톡 영상 주소를 넣어주세요"})
+    start, end, goal = _challenge_period(store)
+    day = challenge.kst_day()
+    if not challenge.in_period(day, start, end):
+        return JSONResponse(status_code=422,
+                            content={"ok": False, "error": "지금은 챌린지 기간이 아니에요"})
+    code = challenge.video_code(u, platform)
+    key = challenge.dedup_key(u, code)
+    sub_id = store.add_challenge_submission(cid, u, platform, code, key, day)
+    if not sub_id:
+        return JSONResponse(status_code=422,
+                            content={"ok": False, "error": "이미 제출한 영상이에요"})
+    background_tasks.add_task(_challenge_fetch, sub_id, u, platform)   # 썸네일·조회수 등 보강
+    today = sum(1 for s in store.list_challenge_submissions(customer_id=cid)
+                if s["submit_day"] == day)
+    return {"ok": True, "id": sub_id, "today": today, "goal": goal, "day": day}
+
+
+@app.get("/api/challenge/mine")
+def api_challenge_mine(request: Request):
+    """내 제출 목록 + 오늘 카운트. 참가자가 아니어도 200으로 안내한다."""
+    cid = _cid(request)
+    store = Store(DB_PATH)
+    start, end, goal = _challenge_period(store)
+    if not store.is_challenge_member(cid):
+        return {"ok": True, "is_member": False, "items": [], "today": 0,
+                "goal": goal, "start": start, "end": end}
+    items = store.list_challenge_submissions(customer_id=cid)
+    day = challenge.kst_day()
+    summary = challenge.summarize(items, goal=goal)
+    return {"ok": True, "is_member": True, "items": items,
+            "today": summary["by_day"].get(day, 0), "goal": goal,
+            "done_days": summary["done_days"], "total": summary["total"],
+            "start": start, "end": end, "day": day}
+
+
+@app.get("/api/challenge/board")
+def api_challenge_board(request: Request):
+    """달성현황 — 멤버 × 날짜 그리드용 데이터(관리자 전용)."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    store = Store(DB_PATH)
+    start, end, goal = _challenge_period(store)
+    subs = store.list_challenge_submissions(start=start or None, end=end or None)
+    by_cust = {}
+    for s in subs:
+        by_cust.setdefault(s["customer_id"], []).append(s)
+    members = []
+    for m in store.list_challenge_members():
+        cid = m["customer_id"]
+        summary = challenge.summarize(by_cust.get(cid, []), goal=goal)
+        cust = store.get_customer(cid) or {}      # ★없는 고객이면 None → {}
+        members.append({
+            "customer_id": cid,
+            "name": cust.get("name") or cust.get("username") or f"#{cid}",
+            "email": cust.get("email") or "",
+            "by_day": summary["by_day"],
+            "done_days": summary["done_days"],
+            "total": summary["total"],
+        })
+    return {"ok": True, "members": members, "goal": goal,
+            "start": start, "end": end, "today": challenge.kst_day()}
+
+
+@app.get("/api/challenge/videos")
+def api_challenge_videos(request: Request, sort: str = "recent",
+                         member: int = 0, platform: str = ""):
+    """제출 영상 카드 목록(관리자 전용). sort=recent|views"""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    store = Store(DB_PATH)
+    items = store.list_challenge_submissions(customer_id=member or None)
+    if platform:
+        items = [i for i in items if i["platform"] == platform]
+    if sort == "views":
+        # ★조회수가 아직 없는 항목(수집 전·실패·틱톡)이 섞인다 — None이면 0으로.
+        items.sort(key=lambda i: i.get("views") or 0, reverse=True)
+    names = {}
+    for i in items:
+        cid = i["customer_id"]
+        if cid not in names:
+            cust = store.get_customer(cid) or {}
+            names[cid] = cust.get("name") or cust.get("username") or f"#{cid}"
+        i["member_name"] = names[cid]
+    return {"ok": True, "items": items}
+
+
+@app.get("/api/challenge/members")
+def api_challenge_members(request: Request):
+    """참가자 목록(관리자 전용). 해제한 사람도 포함 — 다시 넣을 수 있게."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    store = Store(DB_PATH)
+    out = []
+    for m in store.list_challenge_members(active_only=False):
+        cust = store.get_customer(m["customer_id"]) or {}
+        out.append({**m,
+                    "name": cust.get("name") or cust.get("username") or f"#{m['customer_id']}",
+                    "email": cust.get("email") or ""})
+    return {"ok": True, "members": out}
+
+
+@app.post("/api/challenge/member")
+def api_challenge_member_set(request: Request, customer_id: int, active: int = 1):
+    """참가자 등록/해제(관리자 전용). active=0이면 해제(이력은 남는다)."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    store = Store(DB_PATH)
+    if active:
+        store.add_challenge_member(int(customer_id))
+    else:
+        store.set_challenge_member_active(int(customer_id), False)
+    return {"ok": True, "customer_id": int(customer_id), "active": bool(active)}
+
+
+@app.get("/challenge", response_class=HTMLResponse)
+def page_challenge():
+    """멤버 제출 화면 — 단톡방에 이 주소를 공유한다."""
+    return FileResponse(Path(__file__).parent / "static" / "challenge.html",
+                        media_type="text/html; charset=utf-8")
+
+
+@app.get("/challenge/admin", response_class=HTMLResponse)
+def page_challenge_admin():
+    """관리 화면(Task 8에서 HTML을 만든다). 데이터 API가 관리자를 검사하므로
+    페이지 자체는 열어둔다 — 비관리자가 열면 목록이 비고 안내가 뜬다."""
+    return FileResponse(Path(__file__).parent / "static" / "challenge_admin.html",
+                        media_type="text/html; charset=utf-8")
 
 
 @app.get("/api/reference/adopt", response_class=HTMLResponse)

@@ -321,6 +321,37 @@ class Store:
                     created_at TEXT NOT NULL
                 )
             """)
+            # 1기 챌린지(2026-08-24) — 하루 2영상 업로드 챌린지 참가자·제출물.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS challenge_member (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    customer_id INTEGER NOT NULL UNIQUE,
+                    cohort TEXT NOT NULL DEFAULT '1기',
+                    active INTEGER NOT NULL DEFAULT 1,
+                    created_at TEXT NOT NULL
+                )
+            """)
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS challenge_submission (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    customer_id INTEGER NOT NULL,
+                    url TEXT NOT NULL,
+                    platform TEXT NOT NULL,
+                    shortcode TEXT,
+                    dedup_key TEXT NOT NULL,
+                    submit_day TEXT NOT NULL,
+                    submitted_at TEXT NOT NULL,
+                    title TEXT, thumb TEXT, channel TEXT,
+                    views INTEGER, likes INTEGER, comments INTEGER,
+                    fetch_status TEXT NOT NULL DEFAULT 'pending'
+                )
+            """)
+            c.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_chal_sub_dedup "
+                      "ON challenge_submission(customer_id, dedup_key)")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_chal_sub_day "
+                      "ON challenge_submission(submit_day)")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_chal_sub_cust "
+                      "ON challenge_submission(customer_id, submit_day)")
             c.execute("""
                 CREATE TABLE IF NOT EXISTS last_run (
                     id INTEGER PRIMARY KEY CHECK (id = 1),
@@ -5029,6 +5060,100 @@ class Store:
                 "FROM prereg ORDER BY id DESC").fetchall()
         return [{"id": r[0], "name": r[1], "phone": r[2], "email": r[3],
                  "channel": r[4], "created_at": r[5]} for r in rows]
+
+    # ── 1기 챌린지 (2026-08-24) ────────────────────────────────────
+    def add_challenge_member(self, customer_id, cohort="1기"):
+        """참가자 등록 → id. 이미 있으면 다시 활성화만 하고 끝(idempotent)."""
+        now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        with self._conn() as c:
+            cur = c.execute(
+                "INSERT INTO challenge_member(customer_id, cohort, active, created_at) "
+                "VALUES(?,?,1,?) ON CONFLICT(customer_id) DO UPDATE SET active=1",
+                (int(customer_id), cohort, now))
+            return cur.lastrowid
+
+    def set_challenge_member_active(self, customer_id, active):
+        """참가 해제/재개. 행을 지우지 않는다 — 제출 이력은 남는다."""
+        with self._conn() as c:
+            c.execute("UPDATE challenge_member SET active=? WHERE customer_id=?",
+                      (1 if active else 0, int(customer_id)))
+
+    def is_challenge_member(self, customer_id):
+        with self._conn() as c:
+            r = c.execute("SELECT 1 FROM challenge_member "
+                          "WHERE customer_id=? AND active=1",
+                          (int(customer_id),)).fetchone()
+        return r is not None
+
+    def list_challenge_members(self, active_only=True):
+        q = ("SELECT customer_id, cohort, active, created_at FROM challenge_member "
+             + ("WHERE active=1 " if active_only else "") + "ORDER BY id")
+        with self._conn() as c:
+            rows = c.execute(q).fetchall()
+        return [{"customer_id": r[0], "cohort": r[1], "active": r[2],
+                 "created_at": r[3]} for r in rows]
+
+    def add_challenge_submission(self, customer_id, url, platform, shortcode,
+                                 dedup_key, submit_day):
+        """제출 저장 → id. 같은 사람이 같은 영상을 또 내면 0을 돌려준다.
+
+        ★수집(썸네일·조회수)은 여기서 하지 않는다. 링크가 들어온 순간 행이
+        생기고 달성 카운트가 확정된다 — 수집 실패가 카운트를 갉아먹으면
+        '올렸는데 미달성' 사고가 난다.
+        """
+        now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        with self._conn() as c:
+            cur = c.execute(
+                "INSERT OR IGNORE INTO challenge_submission"
+                "(customer_id, url, platform, shortcode, dedup_key, submit_day,"
+                " submitted_at, fetch_status) VALUES(?,?,?,?,?,?,?,'pending')",
+                (int(customer_id), url, platform, shortcode or "",
+                 dedup_key, submit_day, now))
+            return cur.lastrowid if cur.rowcount else 0
+
+    def update_challenge_submission_meta(self, sub_id, *, title=None, thumb=None,
+                                         channel=None, views=None, likes=None,
+                                         comments=None, fetch_status=None):
+        """수집 결과를 나중에 채운다. None인 것은 건드리지 않는다."""
+        sets, args = [], []
+        for col, val in (("title", title), ("thumb", thumb), ("channel", channel),
+                         ("views", views), ("likes", likes), ("comments", comments),
+                         ("fetch_status", fetch_status)):
+            if val is not None:
+                sets.append(f"{col}=?")
+                args.append(val)
+        if not sets:
+            return
+        args.append(int(sub_id))
+        with self._conn() as c:
+            c.execute(f"UPDATE challenge_submission SET {', '.join(sets)} WHERE id=?",
+                      args)
+
+    def list_challenge_submissions(self, customer_id=None, start=None, end=None):
+        """제출 목록 — 최신순. customer_id를 주면 그 사람 것만."""
+        q = ("SELECT id, customer_id, url, platform, shortcode, submit_day,"
+             " submitted_at, title, thumb, channel, views, likes, comments,"
+             " fetch_status FROM challenge_submission")
+        where, args = [], []
+        if customer_id is not None:
+            where.append("customer_id=?")
+            args.append(int(customer_id))
+        if start:
+            where.append("submit_day>=?")
+            args.append(start)
+        if end:
+            where.append("submit_day<=?")
+            args.append(end)
+        if where:
+            q += " WHERE " + " AND ".join(where)
+        q += " ORDER BY id DESC"
+        with self._conn() as c:
+            rows = c.execute(q, args).fetchall()
+        return [{"id": r[0], "customer_id": r[1], "url": r[2], "platform": r[3],
+                 "shortcode": r[4], "submit_day": r[5], "submitted_at": r[6],
+                 "title": r[7], "thumb": r[8], "channel": r[9], "views": r[10],
+                 "likes": r[11], "comments": r[12], "fetch_status": r[13]}
+                for r in rows]
 
     def put_share_link(self, sid, job_id, expires_at):
         """QR 단축링크 저장 + 만료분 청소(누수 방지)."""
