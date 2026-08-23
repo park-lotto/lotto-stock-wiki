@@ -20,7 +20,9 @@ from shopping_shorts import channel_tier
 from shopping_shorts.store import Store
 from shopping_shorts.comment_gen import generate as _gen_comments
 from shopping_shorts import ai_categorize, topic_grouper
-from shopping_shorts.youtube_client import search_shorts as yt_search, fetch_channel_shorts as yt_fetch_channel
+from shopping_shorts.youtube_client import (search_shorts as yt_search,
+                                           fetch_channel_shorts as yt_fetch_channel,
+                                           fetch_subscribers as yt_fetch_subscribers)
 from shopping_shorts.youtube_category_presets import preset_keywords
 from shopping_shorts.tiktok_client import fetch_account_videos as tt_fetch
 from shopping_shorts.tiktok_search import search_full as tt_search_full
@@ -191,11 +193,15 @@ def _collect_youtube(categories=None, seed_only=False):
             continue
         seen.add(vid)
         deduped.append(r)
+    # 구독자 대비 지표용(2026-08-24 사장님 "구독자대비로 해줘").
+    # 채널 단위로 중복제거해 부르므로 50채널당 1 unit — search.list(100u) 대비 무시할 수준.
+    # 실패해도 {}가 와서 fan_density만 None이 된다(랭킹 자체는 그대로 나간다).
+    subs = yt_fetch_subscribers([r.get("channel_id") for r in deduped])
     items = build_youtube_items(
         deduped,
         prev_base=lambda sc: store.prev_base_platform("youtube", sc),
         prev_delta=lambda sc: store.prev_delta_platform("youtube", sc),
-        now=now, window_hours=YOUTUBE_WINDOW_HOURS,
+        now=now, window_hours=YOUTUBE_WINDOW_HOURS, subs=subs,
     )
     apply_grades(items)
     run_date = now.strftime("%Y-%m-%d %H:%M")

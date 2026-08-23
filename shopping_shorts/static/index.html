@@ -768,15 +768,65 @@ const DESC_BY_PLATFORM = {
 const TAB_TIP = {
   instagram: {speed:'댓글 ÷ 경과시간', density:'댓글 ÷ 조회수', fan_density:'댓글 ÷ 팔로워수'},
   tiktok:    {speed:'조회수 ÷ 경과시간', density:'(좋아요+댓글) ÷ 조회수 = 반응률'},
-  youtube:   {speed:'조회수 ÷ 경과시간', density:'(좋아요+댓글) ÷ 조회수 = 반응률'},
+  youtube:   {speed:'조회수 ÷ 경과시간', density:'(좋아요+댓글) ÷ 조회수 = 반응률',
+              fan_density:'조회수 ÷ 구독자수 — 채널 규모 대비 얼마나 터졌는지(작은 채널의 대박을 잡는 눈)'},
   xiaohongshu: {speed:'(좋아요+댓글+수집+공유) ÷ 경과시간', density:'(수집+공유) ÷ (좋아요+댓글+수집+공유)'},
   threads:   {speed:'댓글 ÷ 경과시간', density:'댓글 ÷ 조회수'},
 };
+// ── 지표 '이름'도 플랫폼마다 다르다(2026-08-24 사장님 "이름고치고") ──────────────
+// 여태 툴팁(TAB_TIP)만 갈리고 **글자는 한 벌**이라, 유튜브에서 조회수÷시간으로
+// 정렬하면서 화면엔 "시간당댓글"이라 적혀 거짓말을 했다. 이름의 정의처는 여기 하나다
+// (0순위-B) — 탭도 카드도 이 표만 읽는다.
+// ★fan_density가 없는 플랫폼은 키를 비워 둔다 → 그 탭이 자동으로 숨는다.
+const METRIC_LABELS = {
+  instagram:   {speed:'시간당댓글', density:'조회수당댓글', fan_density:'팔로워당댓글'},
+  youtube:     {speed:'시간당조회수', density:'반응률', fan_density:'구독자당조회수'},
+  tiktok:      {speed:'시간당조회수', density:'반응률'},
+  xiaohongshu: {speed:'시간당반응', density:'저장·공유율'},
+  threads:     {speed:'시간당댓글', density:'조회수당댓글'},
+};
+// 지표 이름 하나 — 모르는 플랫폼·지표는 인스타 이름으로 떨어진다(빈 화면보다 낫다).
+// 카드 툴팁 = 그 플랫폼의 실제 식(TAB_TIP). 이름과 식을 한 곳에서 짝지어 준다.
+function _mtip(metric, p){
+  const t = TAB_TIP[p || PLATFORM] || TAB_TIP.instagram;
+  return t[metric] || '';
+}
+function _mlabel(metric, p){
+  const t = METRIC_LABELS[p || PLATFORM] || METRIC_LABELS.instagram;
+  return t[metric] || METRIC_LABELS.instagram[metric] || metric;
+}
+// 탭 글자를 지금 플랫폼 이름으로 갈아끼운다. 이모지는 마크업에 그대로 두고
+// **글자만** 바꾼다(아이콘까지 표에 넣으면 두 곳에서 정하게 된다).
+function applyMetricLabels(p){
+  const ICON = {speed:'⚡', density:'💥', fan_density:'🙌'};
+  ['speed','density','fan_density'].forEach(m=>{
+    const el = document.querySelector('.tab[data-tab="'+m+'"]');
+    if(!el) return;
+    const t = METRIC_LABELS[p || PLATFORM] || METRIC_LABELS.instagram;
+    // ★그 플랫폼에 없는 지표는 탭을 숨긴다 — 유튜브 🙌는 구독자를 못 가져온 동안
+    //   항상 0이라 "눌러도 아무 일 없는 탭"이었다.
+    const has = !!t[m];
+    el.style.display = has ? '' : 'none';
+    if(has) el.textContent = ICON[m] + ' ' + t[m];
+    // 숨긴 탭이 활성이면 기본(전체)으로 되돌린다 — 안 그러면 목록이 빈 채로 남는다
+    if(!has && el.classList.contains('active')){
+      el.classList.remove('active');
+      const home = document.querySelector('.tab[data-tab="comments"]');
+      if(home){ home.classList.add('active'); STATE.tab='comments'; }
+    }
+  });
+}
 function updatePlatformCopy(p){
   const descEl=document.querySelector('.desc'); if(descEl) descEl.innerHTML = DESC_BY_PLATFORM[p] || DESC_BY_PLATFORM.instagram;
   const tip = TAB_TIP[p] || TAB_TIP.instagram;
-  const speedEl=document.querySelector('.tab[data-tab="speed"]'); if(speedEl) speedEl.title = tip.speed;
-  const densityEl=document.querySelector('.tab[data-tab="density"]'); if(densityEl) densityEl.title = tip.density;
+  // ★세 지표를 한 루프로 돈다 — 예전엔 speed·density만 적어 fan_density 툴팁이
+  //   인스타 문구("댓글 ÷ 팔로워수")로 굳어 있었다(실브라우저에서 잡힌 버그).
+  //   지표를 늘릴 때 여기 한 줄을 빠뜨리면 그 탭만 옛 설명으로 샌다.
+  ['speed','density','fan_density'].forEach(m=>{
+    const el=document.querySelector('.tab[data-tab="'+m+'"]');
+    if(el && tip[m]) el.title = tip[m];
+  });
+  applyMetricLabels(p);          // 툴팁만 바꾸고 글자를 안 바꾸면 이름이 거짓말을 한다
 }
 function ttMode(){ const r=document.querySelector('input[name="ttmode"]:checked'); return r?r.value:'account'; }
 function switchPlatform(p, el){
@@ -1815,10 +1865,10 @@ function render(opts){
         ${(i.followers||i.duration!=null)?`<div class="folw">${i.followers?`<span title="채널 팔로워(구독자) 수 — 수집이 실어온 실시간 값">👥 팔로워 ${i.followers.toLocaleString()}</span>`:''}${i.duration!=null?`<span class="dur" title="영상 길이">🎬 ${_fmtDur(i.duration)}</span>`:''}</div>`:''}
         ${i.views?`<div class="stat" title="조회수 — 옆의 +숫자는 직전 수집 대비 증가분(= '전체' 탭 정렬 기준)"><span>조회수</span><b>${i.views.toLocaleString()} <span class="delta-up">${i.is_new?'신규':'+'+i.delta}</span></b></div>`:''}
         <div class="stat" title="댓글 수 그대로"><span>댓글</span><b>${i.comments.toLocaleString()}${i.views?'':` <span class="delta-up">${i.is_new?'신규':'+'+i.delta}</span>`}</b></div>
-        <div class="stat" title="댓글 ÷ 경과시간 — 게시 후 시간당 평균"><span>시간당댓글</span><b>${_num(i.speed,1)}</b></div>
-        ${i.views?`<div class="stat" title="댓글 ÷ 조회수 — 본 사람 중 댓글 단 비율"><span>조회수당댓글</span><b>${_pct(i.density)}</b></div>`:''}
+        <div class="stat" title="${_mtip('speed')}"><span>${_mlabel('speed')}</span><b>${_num(i.speed,1)}</b></div>
+        ${i.views?`<div class="stat" title="${_mtip('density')}"><span>${_mlabel('density')}</span><b>${_pct(i.density)}</b></div>`:''}
         ${(i.likes&&!i.views)?`<div class="stat" title="좋아요 수 그대로 — 쓰레드는 조회수를 안 준다"><span>좋아요</span><b>${i.likes.toLocaleString()}</b></div>`:''}
-        ${i.fan_density?`<div class="stat" title="댓글 ÷ 팔로워수 — 구독자 규모 대비 반응"><span>팔로워당댓글</span><b>${_pct(i.fan_density)}</b></div>`:""}
+        ${i.fan_density?`<div class="stat" title="${_mtip('fan_density')}"><span>${_mlabel('fan_density')}</span><b>${_pct(i.fan_density)}</b></div>`:""}
         ${i.inpock?`<div style="margin-top:6px"><a href="${i.inpock}" target="_blank" style="font-size:11px;color:var(--accent);text-decoration:none">🛒 판매채널</a></div>`:''}
         <div class="actions">
           <div class="btns">
