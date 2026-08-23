@@ -43,6 +43,10 @@
       // 제작소는 등급에 따라 서버가 다른 파일을 준다(full=진짜 / 그 외=얼린 미리보기).
       // 그래서 잠그지 않는다 — 사장님 지시 "열어두되 사용 자체가 안 되게".
       { icon: "🎬", text: "숏템 제작소",     href: "/produce", free: true },
+      // 1기 챌린지(2026-08-24) — 하루 2영상 업로드 챌린지.
+      // free:true는 서버 _FREE_EXACT_GET과 짝이다(챌린지 참가자격은 결제등급과 별개).
+      { icon: "🔥", text: "1기 챌린지",      href: "/challenge", free: true },
+      { icon: "🏁", text: "챌린지 관리",     href: "/challenge/admin", free: true, admin: true },
     ] },
     { label: "소통", items: [
       { icon: "💬", text: "인스타 소통공간", href: "/outreach" },
