@@ -67,7 +67,7 @@ tbody tr:hover{background:#1b1b22}
 
 <script>
 const SETTING_FIELDS=[
-  ['trial_days','체험 기간(일)'],['trial_grant_points','체험 기본 포인트(P)'],['trial_event_hours','가입 자동체험(시간,0=끔)'],['limit_lens','무료 렌즈/일'],['limit_render','무료 렌더/일'],
+  ['trial_days','체험 기간(일)'],['trial_grant_points','체험 기본 포인트(P)'],['pro_grant_points','결제(pro) 기본 포인트(P)'],['trial_event_hours','가입 자동체험(시간,0=끔)'],['limit_lens','무료 렌즈/일'],['limit_render','무료 렌더/일'],
   ['limit_script','무료 대본/일'],['limit_lens_pro','pro 렌즈/일'],['limit_render_pro','pro 렌더/일'],
   ['global_cap_lens','전역 렌즈/일'],['contact_kakao','카톡 안내'],['contact_phone','전화 안내'],['pay_url','결제 링크(URL)'],
   ['bank_name','은행'],['bank_account','계좌번호'],['bank_holder','예금주'],['deposit_note','입금 안내문구'],
@@ -214,7 +214,12 @@ async function setPlan(cid,plan){
   const r=await fetch('/api/admin/set_plan',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({customer_id:cid,plan})});
   const m=document.getElementById('cMsg');
-  if(r.ok){m.textContent='✅ 변경됨';m.className='msg';load();}else{m.textContent='❌ 실패';m.className='msg err';}
+  // ★포인트 지급 결과까지 보여준다(2026-08-23). pro로 올려도 잔액이 0이면 유료 작업이
+  //   402로 막히므로, 사장님이 '연료가 들어갔나'를 이 자리에서 바로 알아야 한다.
+  if(r.ok){const d=await r.json().catch(()=>({}));
+    m.textContent='✅ 변경됨'+(d.granted?' · 포인트 +'+d.granted+'P (잔액 '+d.balance+'P)'
+                              :(d.balance!=null?' · 잔액 '+d.balance+'P':''));
+    m.className='msg';load();}else{m.textContent='❌ 실패';m.className='msg err';}
   setTimeout(()=>m.textContent='',2000);
 }
 async function setAdmin(cid,flag){

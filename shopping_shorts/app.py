@@ -8265,6 +8265,7 @@ def _require_admin(request):
 
 
 _ADMIN_SETTING_KEYS = {"trial_days", "trial_grant_points", "trial_event_hours",
+                       "pro_grant_points",
                        "limit_lens", "limit_render", "limit_script",
                        "limit_lens_pro", "limit_render_pro", "limit_script_pro",
                        "global_cap_lens", "global_cap_render", "global_cap_script",
@@ -8402,6 +8403,39 @@ def _admin_customer_activity(request: Request, customer_id: int):
 # 내역 근거(2026-08-20 사장님 "렌즈 10P 이런 식으로"): 렌즈 10P + 영상 30P + 대본 10P = 50P.
 # 부족하면 관리자가 '포인트' 버튼으로 충전한다(사장님 지시).
 _TRIAL_GRANT_P_DEFAULT = 50
+# 결제(pro) 계정 기본 포인트. 하루 한도가 렌더 10회이고 영상 1편이 대략 9P
+# (자막제거 5 + 믹스 3 + 음성 1)이라 **하루치 100P**를 기준선으로 둔다.
+# 부족하면 관리자가 '포인트' 버튼으로 더 넣는다 — 설정 pro_grant_points로도 바꾼다.
+_PRO_GRANT_P_DEFAULT = 100
+
+
+def _grant_topup(store, customer_id, setting_key, default_p, reason):
+    """기준 포인트까지 **채운다**(top-up). 지급한 P를 돌려준다(0=이미 충분).
+
+    ★체험(trial)과 결제(pro)가 기준선만 다르고 규칙은 같다 — 함수를 둘로 나누면
+      한쪽만 고쳐져 언젠가 어긋난다(0순위-B)."""
+    try:
+        target_p = float(store.get_setting(setting_key, default_p))
+    except (TypeError, ValueError):
+        target_p = default_p
+    target = int(round(target_p * 100))          # 내부값 = 포인트×100
+    cur = points.balance(store, customer_id)
+    if cur >= target:
+        return 0
+    points.add(store, customer_id, target - cur, reason)
+    return pricing.to_display(target - cur)
+
+
+def _pro_topup(store, customer_id):
+    """★결제 승격에도 연료를 준다(2026-08-23 사장님 '실제 77만원 고객').
+
+    포인트 차감은 **등급을 보지 않는다** — _charge_or_402 → keyroute.should_charge는
+    '본인 API 키가 있는가'만 본다. 그래서 pro로 올려도 잔액이 0이면 자막제거·영상제작·
+    음성이 전부 402로 막힌다. 실제로 trial 분기에는 '★등급만 열면 잔액 0으로 402가
+    난다'는 주석까지 달려 있었는데 **pro 분기에만 그 처리가 빠져 있었다.**
+    돈을 낸 고객에게 제일 크게 티가 나는 자리라 같은 규칙을 여기에도 건다."""
+    return _grant_topup(store, customer_id, "pro_grant_points",
+                        _PRO_GRANT_P_DEFAULT, "pro_grant")
 
 
 def _trial_topup(store, customer_id):
@@ -8411,16 +8445,8 @@ def _trial_topup(store, customer_id):
       기준보다 적을 때 **차액만** 넣으면 몇 번을 눌러도 기준선 하나로 수렴한다.
     ★왜 필요한가: 등급(full)만 열고 잔액이 0이면 유료 op가 _charge_or_402에서 402로
       막힌다 — 화면엔 '체험이 끝났어요'로 보여 오진을 부른다(2026-08-20 실사고)."""
-    try:
-        target_p = float(store.get_setting("trial_grant_points", _TRIAL_GRANT_P_DEFAULT))
-    except (TypeError, ValueError):
-        target_p = _TRIAL_GRANT_P_DEFAULT
-    target = int(round(target_p * 100))          # 내부값 = 포인트×100
-    cur = points.balance(store, customer_id)
-    if cur >= target:
-        return 0
-    points.add(store, customer_id, target - cur, "trial_grant")
-    return pricing.to_display(target - cur)
+    return _grant_topup(store, customer_id, "trial_grant_points",
+                        _TRIAL_GRANT_P_DEFAULT, "trial_grant")
 
 
 @app.post("/api/admin/set_plan")
@@ -8441,6 +8467,7 @@ async def _admin_set_plan(request: Request):
     granted = None
     if plan == "pro":
         st.set_plan(cid, "pro")                         # 결제 승격 = 전기능 무기한
+        granted = _pro_topup(st, cid)                   # ★연료까지 — 없으면 402로 막힌다
     elif plan == "trial":
         # 체험판 = 랭킹전용(랭킹·즐겨찾기·렌즈 하루 10회). days는 화면 'D-N' 표시용.
         until = int(datetime.now(timezone.utc).timestamp()) + int(days or 0) * 86400
