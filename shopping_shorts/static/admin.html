@@ -444,9 +444,17 @@ function _bugWhen(ts){
   return d.toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
 }
 function loadBugs(){
-  fetch('/api/admin/bug-reports?status=open').then(function(r){return r.json();}).then(function(d){
+  /* ★status=open만 부르면 처리한 신고가 목록에서 통째로 사라져 "해결됐는지 아닌지"를
+     볼 수 없다(2026-08-25 사장님 지시). 전부 받아 **미해결을 위로** 올리고 상태를
+     배지로 구분한다. 머리글 숫자는 여전히 '미해결 건수'다 — 처리할 일의 개수니까. */
+  fetch('/api/admin/bug-reports').then(function(r){return r.json();}).then(function(d){
     var rows=(d&&d.reports)||[];
-    document.getElementById('bcnt').textContent=rows.length;
+    rows.sort(function(a,b){
+      var ao=(a.status!=='done')?0:1, bo=(b.status!=='done')?0:1;
+      if(ao!==bo) return ao-bo;                       // 미해결 먼저
+      return (b.created_at||0)-(a.created_at||0);     // 그 안에서 최신순
+    });
+    document.getElementById('bcnt').textContent = rows.filter(function(b){return b.status!=='done';}).length;
     var esc=function(x){return (x==null?'':String(x)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');};
     document.getElementById('brows').innerHTML = rows.length ? rows.map(function(b){
       var where=[];
@@ -465,15 +473,29 @@ function loadBugs(){
           'style="width:88px;height:60px;object-fit:cover;border-radius:6px;border:1px solid #2b3a3a;cursor:zoom-in" '+
           'onclick="window.open(this.src)" title="눌러서 크게 보기">'
         : '<span style="color:#5f6773">-</span>';
-      return '<tr><td class=mini>'+_bugWhen(b.created_at)+'</td>'+
+      // 상태 배지 — 해결됐는지 한눈에. 답장을 보내면 서버가 자동으로 done이 된다.
+      var done = (b.status==='done');
+      var badge = done
+        ? '<span class="badge pro">✅ 해결됨</span>'
+        : '<span class="badge pending">🕓 미해결</span>';
+      var replied = b.reply
+        ? '<div class=mini style="color:#7ee787;margin-top:4px">💬 답장: '+esc(b.reply.slice(0,40))+(b.reply.length>40?'…':'')+'</div>'
+        : '';
+      // 해결된 줄은 눈에 덜 띄게 — 처리할 일(미해결)이 먼저 보여야 한다.
+      var dim = done ? ' style="opacity:.62"' : '';
+      var act = done
+        ? '<button class=bedit onclick="replyBug('+b.id+')">답장수정</button> '+
+          '<button class=btrial onclick="reopenBug('+b.id+')">다시 열기</button>'
+        : '<button class=bedit onclick="replyBug('+b.id+')">답장</button> '+
+          '<button class=bfree onclick="doneBug('+b.id+')">확인함</button>';
+      return '<tr'+dim+'><td class=mini>'+_bugWhen(b.created_at)+'<div style="margin-top:4px">'+badge+'</div></td>'+
         '<td>'+esc(b.customer_name)+'<div class=mini style="color:#5f6773">cid '+b.customer_id+'</div></td>'+
-        '<td style="max-width:320px">'+esc(b.message)+url+'</td>'+
+        '<td style="max-width:320px">'+esc(b.message)+url+replied+'</td>'+
         '<td>'+shot+'</td>'+
         '<td class=mini>'+(where.join('<br>')||'-')+'</td>'+
         '<td>'+errCell+'</td>'+
-        '<td><button class=bedit onclick="replyBug('+b.id+')">답장</button> '+
-            '<button class=bfree onclick="doneBug('+b.id+')">확인함</button></td></tr>';
-    }).join('') : '<tr><td colspan=7 class=empty>새 신고 없음</td></tr>';
+        '<td>'+act+'</td></tr>';
+    }).join('') : '<tr><td colspan=7 class=empty>신고 없음</td></tr>';
   }).catch(function(e){
     document.getElementById('bMsg').textContent='불러오기 실패: '+e.message;
   });
@@ -494,6 +516,13 @@ function replyBug(id){
 function doneBug(id){
   fetch('/api/admin/bug-reports/'+id,{method:'POST',
     headers:{'Content-Type':'application/json'},body:JSON.stringify({status:'done'})})
+    .then(function(){ loadBugs(); });
+}
+/* 다시 열기(2026-08-25) — 해결로 표시했는데 또 그러면 되돌린다.
+   서버는 status를 'open'|'done'만 받는다(app.py api_admin_bug_report_update). */
+function reopenBug(id){
+  fetch('/api/admin/bug-reports/'+id,{method:'POST',
+    headers:{'Content-Type':'application/json'},body:JSON.stringify({status:'open'})})
     .then(function(){ loadBugs(); });
 }
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',loadBugs);
