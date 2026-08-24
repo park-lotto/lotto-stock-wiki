@@ -4972,6 +4972,36 @@ class Store:
                 "WHERE customer_id=? AND day>=?", (customer_id, since_day)).fetchone()
         return {"ips": (row[0] or 0), "devices": (row[1] or 0)}
 
+    # ── 관리자 목록용 일괄 조회 (2026-08-24) ──
+    #    ★고객 1명당 쿼리를 도는 구조(N+1)라 155명에서 775번을 돌았다.
+    #      목록이 뜨는 데 3.7초가 걸렸고, 그동안 화면은 비어 있다.
+    #      아래 세 함수는 **한 번의 쿼리로** 전원 몫을 가져온다.
+    def access_summary_all(self, since_day):
+        """{customer_id: {"ips": n, "devices": n}} — access_summary의 일괄판."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT customer_id, COUNT(DISTINCT ip), COUNT(DISTINCT ua) "
+                "FROM customer_access WHERE day>=? GROUP BY customer_id",
+                (since_day,)).fetchall()
+        return {r[0]: {"ips": (r[1] or 0), "devices": (r[2] or 0)} for r in rows}
+
+    def usage_all(self, day):
+        """{customer_id: {op: count}} — usage_get의 일괄판."""
+        out = {}
+        with self._conn() as c:
+            for cid, op, cnt in c.execute(
+                    "SELECT customer_id, op, count FROM usage WHERE day=?", (day,)):
+                out.setdefault(cid, {})[op] = cnt
+        return out
+
+    def points_balance_all(self):
+        """{customer_id: 잔액} — points_balance의 일괄판(내부 단위 그대로)."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT customer_id, COALESCE(SUM(delta), 0) FROM points_ledger "
+                "GROUP BY customer_id").fetchall()
+        return {r[0]: r[1] for r in rows}
+
     def prune_activity(self, keep_days=30, now_ts=None):
         """오래된 활동·접속 로그 정리(2026-07-24) — 두 테이블은 계속 append만 돼 무한증가한다.
         customer_activity(at=epoch초)·customer_access(day=YYYY-MM-DD)에서 keep_days보다
@@ -5126,6 +5156,12 @@ class Store:
                           "WHERE customer_id=? AND active=1",
                           (int(customer_id),)).fetchone()
         return r is not None
+
+    def challenge_member_ids(self):
+        """활성 챌린지 참가자 id 집합 — is_challenge_member의 일괄판(관리자 목록용)."""
+        with self._conn() as c:
+            return {r[0] for r in c.execute(
+                "SELECT customer_id FROM challenge_member WHERE active=1")}
 
     def list_challenge_members(self, active_only=True):
         q = ("SELECT customer_id, cohort, active, created_at FROM challenge_member "

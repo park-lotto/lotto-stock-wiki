@@ -108,14 +108,40 @@ async function startMix(){
   const seen=new Set(); const urls=[...basketUrls, ...manual].filter(u=>!seen.has(u)&&seen.add(u));
   if(urls.length<2){ alert('영상 2개 이상 필요 — 랭킹에서 담기하거나 URL 직접 추가'); return; }
   const body={urls, target_seconds:+document.getElementById('target').value, structure:document.getElementById('structure').value, subtitle_removal:document.getElementById('subtitleRemoval').checked};
-  const r=await fetch('/api/mix/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-  const d=await r.json(); if(!d.ok){ alert(d.error); return; }
+  // ★네트워크·서버 오류를 삼키면 버튼을 눌러도 아무 일이 안 일어난 것처럼 보인다.
+  //   무슨 일이 있었는지 반드시 말한다(2026-08-23 점검).
+  let d;
+  try{
+    const r=await fetch('/api/mix/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    d=await r.json();
+  }catch(e){
+    alert('영상 만들기를 시작하지 못했습니다 — ' + (e && e.message || e) + '
+잠시 후 다시 시도해 주세요.');
+    return;
+  }
+  if(!d || !d.ok){ alert((d && d.error) || '시작하지 못했습니다. 잠시 후 다시 시도해 주세요.'); return; }
   JOB=d.job_id; document.getElementById('inputPanel').style.display='none';
   POLL=setInterval(poll,2500); poll();
 }
 const LABEL={downloading:'영상 다운로드 중…',extracting:'대본 추출 중…',planning:'편집안 생성 중…',tts:'음성 생성 중…',ready_for_review:'검토 준비 완료',rendering:'최종 렌더 중…',done:'완료',failed:'실패'};
+let POLL_FAILS=0;
 async function poll(){
-  const r=await fetch('/api/mix/status/'+JOB); const d=await r.json();
+  let r, d;
+  try{
+    r=await fetch('/api/mix/status/'+JOB); d=await r.json();
+    POLL_FAILS=0;                      // 한 번 성공하면 실패 누적을 지운다
+  }catch(e){
+    // ★잠깐 끊긴 것과 진짜 죽은 것을 가른다 — 매번 멈추면 지나가는 오류에도 제작이 끊긴다.
+    POLL_FAILS++;
+    document.getElementById('status').textContent =
+      '연결이 불안정합니다 — 다시 확인하는 중 (' + POLL_FAILS + '/5)';
+    if(POLL_FAILS>=5){
+      clearInterval(POLL);
+      document.getElementById('status').textContent =
+        '상태를 확인할 수 없습니다 — 새로고침해 주세요. 작업은 서버에서 계속 진행됩니다.';
+    }
+    return;
+  }
   if(!d.ok){
     document.getElementById('status').textContent='상태 조회 실패'+(d.error?(' — '+d.error):'');
     clearInterval(POLL);
@@ -127,8 +153,15 @@ async function poll(){
   if(d.status==='failed'){ clearInterval(POLL); }
 }
 async function loadReview(){
-  const r=await fetch('/api/mix/result/'+JOB); const d=await r.json();
-  if(!d.ok){ console.warn('mix result 실패', d.error); document.getElementById('status').textContent='편집안 로드 실패'+(d.error?(' — '+d.error):''); return; }
+  let r, d;
+  try{
+    r=await fetch('/api/mix/result/'+JOB); d=await r.json();
+  }catch(e){
+    document.getElementById('status').textContent =
+      '편집안을 불러오지 못했습니다 — ' + (e && e.message || e) + ' (새로고침해 주세요)';
+    return;
+  }
+  if(!d || !d.ok){ console.warn('mix result 실패', d.error); document.getElementById('status').textContent='편집안 로드 실패'+(d.error?(' — '+d.error):''); return; }
   const el=document.getElementById('review');
   // 감지된 영상 유형(방식3: 자동감지+확인) — 틀리면 드롭다운으로 바꿔 재생성
   const typeOpts=(d.video_types||[]).map(t=>

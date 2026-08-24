@@ -8756,16 +8756,24 @@ def _admin_customers(request: Request):
     day = _today_utc()
     since7 = (datetime.now(timezone.utc) - timedelta(days=7)).strftime("%Y-%m-%d")  # 돌려쓰기 감지 창(7일)
     out = []
+    # ★한 번에 다 가져온다 — 고객마다 쿼리를 돌면(N+1) 155명에서 900번 가까이 나가
+    #   목록이 3.7초 걸렸다(2026-08-23 실측). 값의 뜻은 낱개 함수와 같다.
+    usage_map = st.usage_all(day)
+    access_map = st.access_summary_all(since7)
+    points_map = st.points_balance_all()
+    challenge_ids = st.challenge_member_ids()
     for cu in st.list_customers():
-        cu["level"] = access_level(cu["id"])
-        cu["usage"] = {op: st.usage_get(cu["id"], op, day) for op in ("lens", "render", "script")}
-        cu["access_7d"] = st.access_summary(cu["id"], since7)   # {ips, devices} 최근 7일 고유 수
-        cu["is_admin"] = _is_admin(cu["id"])                    # 관리자 배지용
-        cu["challenge"] = st.is_challenge_member(cu["id"])      # 1기 챌린지 참가 여부(2026-08-24)
-        cu["code_admin"] = _code_admin(cu["id"])                # 코드 고정 관리자(UI 토글 불가)
+        _cid = cu["id"]
+        cu["level"] = access_level(_cid)
+        _u = usage_map.get(_cid, {})
+        cu["usage"] = {op: _u.get(op, 0) for op in ("lens", "render", "script")}
+        cu["access_7d"] = access_map.get(_cid, {"ips": 0, "devices": 0})  # 최근 7일 고유 수
+        cu["is_admin"] = _is_admin(_cid)                        # 관리자 배지용
+        cu["challenge"] = _cid in challenge_ids                 # 1기 챌린지 참가 여부(2026-08-24)
+        cu["code_admin"] = _code_admin(_cid)                    # 코드 고정 관리자(UI 토글 불가)
         # 포인트 잔액(화면 단위 P) — 등급이 full이어도 잔액 0이면 유료 op가 402로 막힌다.
         # 관리자가 그 상태를 목록에서 바로 보게 한다(2026-08-20 체험 계정 402 사고).
-        cu["points"] = pricing.to_display(points.balance(st, cu["id"]))
+        cu["points"] = pricing.to_display(points_map.get(_cid, 0))
         # last_seen은 store.list_customers가 이미 넣어줌 → 프론트가 '접속중/N분전' 계산
         out.append(cu)
     # ★설정은 **화면이 쓰는 것만** 보낸다. all_settings()를 그대로 실으면
