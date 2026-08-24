@@ -148,3 +148,16 @@ def test_admin_routes_require_admin(tmp_path, monkeypatch):
     c = TestClient(app_module.app)
     assert c.get("/api/bot/qa").status_code in (401, 403)
     assert c.get("/api/bot/unanswered").status_code in (401, 403)
+
+
+def test_phone_script_stays_thin():
+    """★폰에 로직이 들어가면 고칠 곳이 두 군데가 된다(0순위-B).
+    카톡이 바뀌어 폰을 갈아엎어도 판정은 서버에 남아 있어야 한다."""
+    import pathlib
+    p = pathlib.Path(__file__).resolve().parents[1] / "userscript" / "kakao_bot.js"
+    code = [l for l in p.read_text(encoding="utf-8").splitlines()
+            if l.strip() and not l.strip().startswith("//")]
+    assert len(code) <= 30, f"폰 스크립트가 {len(code)}줄 — 로직이 새어 들어갔다"
+    for banned in ("환불", "결제", "포인트"):
+        assert banned not in p.read_text(encoding="utf-8"), \
+            f"'{banned}' 판정이 폰에 있다 — 서버에만 있어야 한다"
