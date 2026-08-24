@@ -6554,6 +6554,9 @@ if not _AUTH_ON:
     print("⚠️ [보안] DASH_PASS 미설정 → 인증·유료게이트 OFF(전원 full/admin). "
           "운영이면 DASH_PASS를 반드시 설정하세요.", file=_sys.stderr)
 _AUTH_ALLOW = ("/login", "/api/login", "/signup", "/api/signup", "/favicon.ico", "/healthz",
+               # 설치·준비 안내(2026-08-24 사장님 "고객한테 보낼 수 있는 주소로 줘").
+               # 단톡방·카톡으로 링크만 뿌리면 되도록 **로그인 없이** 열린다.
+               "/setup", "/setup.html",
                # 도움말(2026-08-23) — 가입 전 문의를 줄이려면 로그인 전에도 보여야 한다.
                # ★읽기만 공개다. 쓰기(/api/help/save·delete·reorder·upload)는 관리자만이며
                #   그 판정은 각 라우트가 직접 한다(여기 목록에 넣지 않는다).
@@ -11351,6 +11354,14 @@ def _help_admin_or_403(request: Request):
     if _is_admin(getattr(request.state, "customer_id", None)):
         return None
     return JSONResponse(status_code=403, content={"ok": False, "error": "관리자만 고칠 수 있어요"})
+
+
+@app.get("/setup", response_class=HTMLResponse)
+def page_setup():
+    """설치·준비 안내 — 고객에게 링크로 보내는 자리(로그인 불필요).
+    ★.html 없는 짧은 주소를 따로 둔다: 카톡·단톡방에 붙였을 때 읽기 쉽다."""
+    return FileResponse(str(Path(__file__).parent / "static" / "setup.html"),
+                        media_type="text/html")
 
 
 @app.get("/help", response_class=HTMLResponse)
