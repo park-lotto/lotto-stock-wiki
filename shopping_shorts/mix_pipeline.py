@@ -5,6 +5,7 @@ run_render: 사용자가 확인 후 최종 ffmpeg 렌더 → done.
 각 단계에서 mix_jobs.status를 갱신하고, 예외는 status='failed'+error로 잡는다.
 """
 import hashlib
+import logging
 import re
 import subprocess
 import sys
@@ -910,10 +911,11 @@ def run_mix_job(job_id, db_path, work_root):
             #   되돌린다. produce 2단계·auto_run·retype는 과금 안 해 이 값이 없다 → 오환불로 전역
             #   카운터를 갉아 다른 유저 과금을 상쇄하는 일을 막는다(리뷰 B/F).
             _refund_render_charge(store, job.get("customer_id", 0), job.get("render_charge_day"))
-            _refund_mix_points(store, job.get("customer_id", 0), job.get("render_charge_day"))
+            _refund_mix_points(store, job.get("customer_id", 0), job.get("render_charge_day"),
+                               job.get("mix_charged"))
 
 
-def _refund_mix_points(store, customer_id, charge_day):
+def _refund_mix_points(store, customer_id, charge_day, charged=None):
     """영상제작 실패 → 차감한 포인트 환불. 크레딧 환불(_refund_render_charge)과 대칭.
 
     ★charge_day가 표식이다 — /api/mix/start 계열이 과금할 때만 채워지므로,
@@ -930,8 +932,18 @@ def _refund_mix_points(store, customer_id, charge_day):
     if not keyroute.as_cid(customer_id):
         return                       # 사장님(cid 0)은 애초에 과금 안 했다
     try:
-        # 차감할 때와 같은 조건으로 되묻는다 — 사용자 키를 쓰는 사람은 안 깎였으니
-        # 환불하면 없던 포인트가 생긴다(_charge_or_402와 짝).
+        if charged is not None:
+            # ★정상 경로 — 차감할 때 정한 액수를 그대로 돌려준다.
+            #   0이면 애초에 안 깎였으니 환불도 없다.
+            if int(charged) > 0:
+                points.refund(store, customer_id, int(charged), pricing.OP_MIX)
+            return
+        # ↓ mix_charged 칸이 생기기 전(2026-08-24 이전)에 시작된 job 호환.
+        #   이 경로는 환불 시점에 다시 판단하므로 차감과 어긋날 수 있다 —
+        #   개인 키로 0원 차감된 뒤 키를 지우면 없던 포인트가 생긴다.
+        #   배포 직후 진행 중이던 job만 여기로 오고, 몇 분이면 사라진다.
+        logging.warning("mix 환불: mix_charged가 없는 옛 job이라 재판단으로 환불한다 (cid=%s)",
+                        customer_id)
         if keyroute.should_charge(store, customer_id, keyroute.SVC_GEMINI):
             points.refund(store, customer_id,
                           pricing.cost(store, pricing.OP_MIX), pricing.OP_MIX)
