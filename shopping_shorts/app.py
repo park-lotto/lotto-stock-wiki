@@ -92,6 +92,7 @@ from shopping_shorts import bank_assemble
 from shopping_shorts import thumb_title
 from shopping_shorts import headcopy_gen
 from shopping_shorts import deco_templates
+from shopping_shorts import bot_qa, bot_answer
 import uuid
 
 app = FastAPI(title="숏템메이커 레퍼런스 랭킹")   # /docs 노출 제목 — 브랜드 통일(2026-07-25)
@@ -1092,6 +1093,55 @@ def api_comment_done(request: Request, shortcode: str):
     store = Store(DB_PATH)
     store.mark_commented(shortcode, customer_id=_cid(request))
     return {"ok": True, "shortcode": shortcode}
+
+
+# ── 카톡 답변봇(2026-08-25) ────────────────────────────────────────────────
+# 공기계 폰(메신저봇R)이 부르는 유일한 입구. **판정·검색·생성은 전부 여기서** 하고
+# 폰은 배달만 한다 — 카톡이 업데이트돼 알림 파싱이 깨져도 이 코드는 무사하다.
+_BOT_ASKED = {}          # {(day, sender): 횟수} — 하루 상한. 프로세스 재시작 시 초기화(무해)
+
+
+@app.post("/api/kakao/ask")
+async def api_kakao_ask(request: Request):
+    """폰이 보낸 카톡 메시지 → 답장 문자열. 답할 게 없으면 빈 문자열."""
+    if (os.getenv("KAKAO_BOT_SECRET", "") or "") != (request.headers.get("X-Bot-Secret") or ""):
+        return JSONResponse(status_code=401, content={"ok": False, "error": "bad secret"})
+    body = await request.json()
+    room = (body.get("room") or "").strip()
+    sender = (body.get("sender") or "").strip()
+    text = body.get("text") or ""
+
+    st = Store(DB_PATH)
+    # ★긴급 정지 — 매 요청 읽는다(재시작 없이 즉시 반영, contact_kakao 선례)
+    if (st.get_setting("kakao_bot_enabled", "1") or "1").strip() in ("0", "off", "false"):
+        return {"ok": True, "reply": ""}
+
+    question = bot_qa.parse_command(text)
+    if not question:
+        return {"ok": True, "reply": ""}          # 호출 안 된 말엔 아무 반응 없음
+
+    # 하루 상한(사람당) — 초과는 조용히 무시한다(경고를 보내면 그것도 도배가 된다)
+    limit = int(st.get_setting("kakao_bot_daily_limit", "20") or 20)
+    day = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    key = (day, sender)
+    if _BOT_ASKED.get(key, 0) >= limit:
+        return {"ok": True, "reply": ""}
+    _BOT_ASKED[key] = _BOT_ASKED.get(key, 0) + 1
+
+    # 돈·계정 질문은 AI를 안 거친다(잘못 답하면 분쟁)
+    if bot_qa.is_sensitive(question):
+        kakao = (st.get_setting("contact_kakao", "") or "").strip()
+        tail = ("\n" + kakao) if kakao else ""
+        return {"ok": True,
+                "reply": bot_qa.trim("결제·환불 관련은 운영자가 직접 확인해 드립니다." + tail)}
+
+    hits = bot_qa.search(question, st.bot_qa_list(status="approved"), room=room)
+    reply = bot_answer.answer(question, hits)
+    if not reply:
+        # ★지어내지 않는다 — 못 답한 질문은 쌓아서 다음에 채울 목록으로 쓴다
+        st.bot_unanswered_add(room or "문의", question)
+        return {"ok": True, "reply": "확인해서 알려드릴게요."}
+    return {"ok": True, "reply": bot_qa.trim(reply)}
 
 
 @app.post("/api/save")
@@ -6754,6 +6804,10 @@ _AUTH_ALLOW = ("/login", "/api/login", "/signup", "/api/signup", "/favicon.ico",
                # 유저스크립트(insta_fill_comment)가 인스타 탭에서 전송 감지 시 GM_xmlhttpRequest로
                # 완료기록을 POST한다. 인증쿠키 없이 오므로 허용. 마킹은 저위험(되돌리기 가능).
                "/api/comment/done",
+               # 카톡 답변봇(2026-08-25) — 공기계 폰이 로그인 쿠키 없이 부른다.
+               # ★대신 X-Bot-Secret 헤더로 막는다(라우트가 직접 검사). 열어두면
+               #   아무나 우리 제미니 한도를 태울 수 있다.
+               "/api/kakao/ask",
                # 원클릭 담기: /grab(북마클릿 설치안내)는 공개, /api/grab(팝업)은 자체적으로
                # 세션쿠키를 검증해 고객을 식별한다(_cid 폴백이 legacy라 여기선 직접 검증). 미들웨어
                # 401을 피해 친절한 팝업 응답을 주려고 allowlist에 둔다.

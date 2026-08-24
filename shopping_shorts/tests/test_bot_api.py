@@ -37,3 +37,73 @@ def test_unanswered_same_question_is_counted_not_duplicated(store):
     store.bot_unanswered_add("문의", "이거 어떻게 써요")
     rows = store.bot_unanswered_list()
     assert len(rows) == 1 and rows[0]["count"] == 2
+
+
+# ── 라우트 ──────────────────────────────────────────────────────────
+from fastapi.testclient import TestClient
+
+
+@pytest.fixture()
+def client(tmp_path, monkeypatch):
+    """★/api/kakao/ask는 로그인 쿠키가 아니라 **자체 비밀키 헤더**로 막는다.
+    그래서 여기선 DASH_PASS를 안 켠다(폰은 로그인을 못 한다 — 그게 설계다)."""
+    monkeypatch.setenv("KAKAO_BOT_SECRET", "s3cret")
+    from shopping_shorts import app as app_module
+    monkeypatch.setattr(app_module, "DB_PATH", str(tmp_path / "t.db"))
+    # ★_BOT_ASKED는 모듈 전역(프로세스 수명)이라 테스트끼리 하루상한 카운트가 새어든다
+    # (실측: 순서상 우연히 통과했지만 상한 테스트가 진짜 0에서 시작 안 함) — 매 테스트 격리.
+    app_module._BOT_ASKED.clear()
+    return TestClient(app_module.app)
+
+
+def _ask(client, text, room="문의", secret="s3cret"):
+    return client.post("/api/kakao/ask",
+                       headers={"X-Bot-Secret": secret},
+                       json={"room": room, "sender": "홍길동", "text": text})
+
+
+def test_wrong_secret_is_rejected(client):
+    """★열어두면 아무나 우리 제미니 한도를 태운다."""
+    assert _ask(client, "!질문 포인트", secret="nope").status_code == 401
+
+
+def test_non_command_gets_no_reply(client):
+    r = _ask(client, "그냥 잡담")
+    assert r.status_code == 200 and r.json()["reply"] == ""
+
+
+def test_unknown_question_is_recorded_not_invented(client):
+    """★모르면 지어내지 말고 '확인해서 알려드릴게요' + 목록에 쌓는다."""
+    r = _ask(client, "!질문 화성 갈 수 있나요")
+    assert "확인" in r.json()["reply"]
+    from shopping_shorts.store import Store
+    from shopping_shorts import app as app_module
+    rows = Store(app_module.DB_PATH).bot_unanswered_list()
+    assert rows and rows[0]["question"] == "화성 갈 수 있나요"
+
+
+def test_sensitive_question_skips_ai(client, monkeypatch):
+    """돈 얘기는 AI를 안 거치고 사람 연결로 간다."""
+    from shopping_shorts import bot_answer
+    monkeypatch.setattr(bot_answer, "_call",
+                        lambda p: pytest.fail("민감 질문에 AI를 불렀다"))
+    r = _ask(client, "!질문 환불 해주세요")
+    assert r.status_code == 200 and r.json()["reply"]
+
+
+def test_kill_switch_stops_everything(client):
+    """긴급 정지 — 폰을 안 만지고 서버 설정 한 줄로 멈춘다."""
+    from shopping_shorts.store import Store
+    from shopping_shorts import app as app_module
+    Store(app_module.DB_PATH).set_setting("kakao_bot_enabled", "0")
+    assert _ask(client, "!질문 아무거나").json()["reply"] == ""
+
+
+def test_daily_limit_per_sender(client, monkeypatch):
+    """사람당 하루 상한 — 장난·도배 방지."""
+    from shopping_shorts.store import Store
+    from shopping_shorts import app as app_module
+    Store(app_module.DB_PATH).set_setting("kakao_bot_daily_limit", "2")
+    for _ in range(2):
+        _ask(client, "!질문 화성 갈 수 있나요")
+    assert _ask(client, "!질문 화성 갈 수 있나요").json()["reply"] == ""
