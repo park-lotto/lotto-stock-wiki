@@ -2963,7 +2963,8 @@ def api_mix_start(request: Request, background_tasks: BackgroundTasks, body: dic
         return JSONResponse(status_code=429, content={
             "ok": False, "error_code": "daily_limit",
             "error": "오늘 영상 만들기 횟수를 다 썼어요. 결제하면 더 만들 수 있어요."})
-    _denied = _charge_or_402(cid, pricing.OP_MIX, keyroute.SVC_GEMINI)
+    _charged = {}                      # ★깎은 액수를 그대로 job에 남긴다(환불이 재판단하지 않게)
+    _denied = _charge_or_402(cid, pricing.OP_MIX, keyroute.SVC_GEMINI, out=_charged)
     if _denied:
         return _denied
     global_incr_and_alert("render")
@@ -2973,6 +2974,7 @@ def api_mix_start(request: Request, background_tasks: BackgroundTasks, body: dic
     Store(DB_PATH).create_mix_job(job_id, urls, target, structure, subtitle_removal=subtitle_removal,
                                   customer_id=cid,
                                   render_charge_day=("trial" if _is_trial(cid) else _today_utc()),
+                                  mix_charged=_charged.get("charged", 0),
                                   scene_first=scene_first)
     Store(DB_PATH).enqueue("mix", {"job_id": job_id})
     return {"ok": True, "job_id": job_id}
@@ -3098,7 +3100,8 @@ def api_mix_candidate_clone(request: Request, body: dict):
         return JSONResponse(status_code=429, content={
             "ok": False, "error_code": "daily_limit",
             "error": "오늘 영상 만들기 횟수를 다 썼어요. 결제하면 더 만들 수 있어요."})
-    _denied = _charge_or_402(cid, pricing.OP_MIX, keyroute.SVC_GEMINI)
+    _charged = {}                      # ★깎은 액수를 그대로 job에 남긴다(환불이 재판단하지 않게)
+    _denied = _charge_or_402(cid, pricing.OP_MIX, keyroute.SVC_GEMINI, out=_charged)
     if _denied:
         return _denied
     global_incr_and_alert("render")
@@ -3111,6 +3114,7 @@ def api_mix_candidate_clone(request: Request, body: dict):
                          script_structure=src.get("script_structure"),
                          customer_id=cid,
                          render_charge_day=("trial" if _is_trial(cid) else _today_utc()),
+                         mix_charged=_charged.get("charged", 0),
                          scene_first=bool(src.get("scene_first")),
                          backbone_main=src.get("backbone_main"))
     _clone_mix_work_sources(job_id, new_id, len(urls))
@@ -8478,7 +8482,7 @@ def check_and_count(customer_id, op):
     return True
 
 
-def _charge_or_402(customer_id, op, service):
+def _charge_or_402(customer_id, op, service, out=None):
     """포인트를 깎는다. 부족하면 402 응답을 반환(호출부가 그대로 return).
     깎을 필요가 없으면(사용자가 자기 키 등록) None.
 
@@ -8488,7 +8492,14 @@ def _charge_or_402(customer_id, op, service):
 
     cid 0(사장님 본인)은 keyroute가 개인키 조회를 건너뛰고 사장님 키를 주므로
     should_charge가 True를 준다. 하지만 자기 키로 자기한테 청구하는 꼴이라
-    과금 대상이 아니다 — mix_pipeline._charge_clean과 같은 판단을 쓴다."""
+    과금 대상이 아니다 — mix_pipeline._charge_clean과 같은 판단을 쓴다.
+
+    ★out에 dict를 주면 out["charged"]에 **실제로 깎은 액수**(0 포함)를 담는다.
+      환불이 '환불 시점에 다시 판단'하면 차감과 어긋난다 — 개인 키로 0원 차감된 뒤
+      키를 지우고 일부러 실패시키면 없던 포인트가 생겼다(2026-08-23 점검).
+      호출부는 이 값을 저장해 두고, 환불은 그 값만 돌려줘야 한다."""
+    if out is not None:
+        out["charged"] = 0
     if not keyroute.as_cid(customer_id):
         return None
     store = Store(DB_PATH)
@@ -8496,6 +8507,8 @@ def _charge_or_402(customer_id, op, service):
         return None
     need = pricing.cost(store, op)
     if points.deduct(store, customer_id, need, op):
+        if out is not None:
+            out["charged"] = need
         return None
     return JSONResponse(status_code=402, content={
         "ok": False,
@@ -8632,9 +8645,12 @@ def _api_me(request: Request):
     return {"customer_id": cid, "level": access_level(cid, now), "plan": plan,
             "days_left": days_left, "is_admin": is_admin,
             "email": email, "name": name, "member_days": member_days,
-            "usage": usage, "usage_limits": limits,
-            "limits": {"lens": _lim("limit_lens", 5), "render": _lim("limit_render", 2),
-                       "script": _lim("limit_script", 10)},
+            # ★limits = **이 사람의 실제 한도**. 예전엔 plan을 안 보고 무료 등급 값을
+            #   하드코딩해서, Pro 결제 고객의 마이페이지에 "영상 제작 2회"가 떴다
+            #   (2026-08-23 실측: 관리자 계정에도 2회로 표시). 같은 값을 두 곳에서
+            #   따로 정하면 반드시 어긋난다(0순위-B) → 위 계산 결과를 그대로 쓴다.
+            #   None = 무제한(관리자). 화면은 이 값을 "무제한"으로 표시한다.
+            "usage": usage, "usage_limits": limits, "limits": limits,
             "contact": {"kakao": st.get_setting("contact_kakao", ""),
                         "phone": st.get_setting("contact_phone", ""),
                         "pay": st.get_setting("pay_url", "")},
@@ -11191,7 +11207,8 @@ def api_produce_mix_start(request: Request, background_tasks: BackgroundTasks, b
         return JSONResponse(status_code=429, content={
             "ok": False, "error_code": "daily_limit",
             "error": "오늘 영상 만들기 횟수를 다 썼어요. 결제하면 더 만들 수 있어요."})
-    _denied = _charge_or_402(cid, pricing.OP_MIX, keyroute.SVC_GEMINI)
+    _charged = {}                      # ★깎은 액수를 그대로 job에 남긴다(환불이 재판단하지 않게)
+    _denied = _charge_or_402(cid, pricing.OP_MIX, keyroute.SVC_GEMINI, out=_charged)
     if _denied:
         return _denied
     global_incr_and_alert("render")
@@ -11208,6 +11225,7 @@ def api_produce_mix_start(request: Request, background_tasks: BackgroundTasks, b
                                   script_structure=script_structure, scene_first=scene_first,
                                   customer_id=cid,
                                   render_charge_day=("trial" if _is_trial(cid) else _today_utc()),
+                         mix_charged=_charged.get("charged", 0),
                                   backbone_main=backbone_main)
     Store(DB_PATH).enqueue("mix", {"job_id": job_id})
     return {"ok": True, "job_id": job_id}

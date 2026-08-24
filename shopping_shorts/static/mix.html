@@ -49,8 +49,13 @@
         <input type="checkbox" id="subtitleRemoval"/> 원본 자막 제거 (VMake)
       </label>
     </div>
-    <div class="row" style="align-items:center;flex-wrap:wrap">
-      <input type="password" id="vmakeKey" autocomplete="off" placeholder="vmake.ai 개인 API 키 (app_key:secret)" style="flex:1;min-width:220px"/>
+    <!-- ★관리자 전용 — 이건 **회사 전역 키**다(개인 키가 아니다).
+         고객에게 보이면 ①자기 키인 줄 알고 넣어 회사 키를 덮어쓰고
+         ②그래도 포인트는 그대로 깎여 "등록했는데 왜 깎이냐"가 된다.
+         고객의 개인 키 등록은 마이페이지(/settings)의 '내 키 등록'이다.
+         2026-08-23 점검에서 노출 발견 → 관리자에게만 보이게 감춘다. -->
+    <div class="row" id="vmakeKeyRow" style="align-items:center;flex-wrap:wrap;display:none">
+      <input type="password" id="vmakeKey" autocomplete="off" placeholder="[관리자] 회사 전역 vmake 키 (app_key:secret)" style="flex:1;min-width:220px"/>
       <button class="ghost" onclick="saveVmakeKey()">키 저장</button>
       <span id="vmakeKeyState" style="font-size:12px;color:#9a9aa5"></span>
     </div>
@@ -185,6 +190,19 @@ async function saveVmakeKey(){
     document.getElementById('vmakeKeyState').textContent=ok?'등록됨':'실패';
   }catch(e){ document.getElementById('vmakeKeyState').textContent='실패'; }
 }
+// ★관리자에게만 회사 전역 키 칸을 보여준다. 판정은 서버(/api/me.is_admin)가 한다 —
+//   화면이 스스로 정하면 서버와 어긋난다(0순위-B).
+async function _revealAdminOnly(){
+  try{
+    const me = await (await fetch('/api/me')).json();
+    if(me && me.is_admin){
+      const row = document.getElementById('vmakeKeyRow');
+      if(row) row.style.display = '';
+    }
+  }catch(e){ /* 실패하면 감춘 채로 둔다 — 안전한 쪽 */ }
+}
+_revealAdminOnly();
+
 async function loadVmakeKeyState(){
   try{
     const j=await (await fetch('/api/settings/vmake_key')).json();

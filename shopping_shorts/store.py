@@ -1162,6 +1162,11 @@ class Store:
                 # 추적링크·인포크 등록여부). 링크는 영상에 안 들어가고 SEO 설명란·
                 # 인포크링크 등록에서만 꺼내 쓴다.
                 ("product_json", "TEXT"),
+                # ★실제로 깎은 영상제작 포인트(내부 100배 정수). 0=안 깎음, NULL=옛 job.
+                #   환불이 '환불 시점에 다시 판단'하면 차감과 어긋난다 — 개인 키로 0원
+                #   차감된 뒤 키를 지우고 일부러 실패시키면 없던 포인트가 생겼다
+                #   (2026-08-23 점검). 차감할 때 정한 값을 그대로 돌려주기 위한 칸이다.
+                ("mix_charged", "INTEGER"),
             ):
                 try:
                     c.execute(f"ALTER TABLE mix_jobs ADD COLUMN {col} {ddl}")
@@ -3995,7 +4000,7 @@ class Store:
 
     def create_mix_job(self, job_id, urls, target_seconds, structure,
                        subtitle_removal=False, given_script=None, script_structure=None,
-                       customer_id=LEGACY_CUSTOMER_ID, render_charge_day=None,
+                       customer_id=LEGACY_CUSTOMER_ID, render_charge_day=None, mix_charged=None,
                        scene_first=False, backbone_main=None):
         """새 믹스 job 생성. 초기 status='downloading'.
         given_script: 영상제작 2단계 — 확정 대본을 그대로 쓸 때(나레이션 자동생성 대신).
@@ -4013,13 +4018,15 @@ class Store:
             c.execute(
                 "INSERT INTO mix_jobs(job_id, urls_json, target_seconds, structure, "
                 "status, created_at, updated_at, subtitle_removal, given_script, "
-                "script_structure_json, customer_id, render_charge_day, scene_first, backbone_main) "
-                "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                "script_structure_json, customer_id, render_charge_day, scene_first, backbone_main, "
+                "mix_charged) "
+                "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 (job_id, json.dumps(urls, ensure_ascii=False), target_seconds,
                  structure, "downloading", now, now, 1 if subtitle_removal else 0,
                  given_script or None,
                  json.dumps(script_structure, ensure_ascii=False) if script_structure else None,
-                 customer_id, render_charge_day, 1 if scene_first else 0, bb),
+                 customer_id, render_charge_day, 1 if scene_first else 0, bb,
+                 None if mix_charged is None else int(mix_charged)),
             )
 
     def get_mix_job(self, job_id):
@@ -4034,7 +4041,8 @@ class Store:
                 "preview_status, preview_path, preview_error, "
                 "thumbnail_json, seo_json, "
                 "clean_sources_json, clean_status, clean_error, customer_id, render_charge_day, "
-                "scene_first, backbone_main, clean_regions_json, product_json "
+                "scene_first, backbone_main, clean_regions_json, product_json, "
+                "mix_charged "
                 "FROM mix_jobs WHERE job_id=?", (job_id,),
             ).fetchone()
         if not row:
@@ -4065,6 +4073,8 @@ class Store:
             "backbone_main": row[33],
             "clean_regions": json.loads(row[34]) if row[34] else None,
             "product": json.loads(row[35]) if row[35] else None,
+            # 실제로 깎은 영상제작 포인트. None = 이 칸이 생기기 전의 옛 job.
+            "mix_charged": row[36],
         }
 
     def set_mix_product(self, job_id, product):

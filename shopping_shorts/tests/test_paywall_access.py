@@ -67,7 +67,12 @@ def test_api_me_auth_off_is_admin(tmp_path, monkeypatch):
     d = c.get("/api/me").json()
     assert d["customer_id"] == 0 and d["level"] == "full" and d["plan"] == "pro"
     assert d["days_left"] is None
-    assert d["limits"]["lens"] == 5 and d["limits"]["render"] == 2
+    # ★관리자(cid 0)는 하루 한도가 없다 → None(무제한).
+    #   2026-08-23까지는 여기가 무료 등급 값(5/2)이었다 — /api/me가 한도를 두 벌 실었고
+    #   화면이 하드코딩 쪽을 읽어 "Pro인데 영상 제작 2회"가 떴다. 두 필드를 합치면서
+    #   이 계약도 사실에 맞췄다. usage_limits와 limits는 언제나 같은 값이어야 한다.
+    assert d["limits"]["lens"] is None and d["limits"]["render"] is None
+    assert d["limits"] == d["usage_limits"]
 
 
 def test_access_level_pending(tmp_path, monkeypatch):
