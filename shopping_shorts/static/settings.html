@@ -533,7 +533,13 @@ function addResultText(svc, res){
   var good  = res.filter(function(r){ return r.ok; }).length;
 
   if (bad && !good) {
-    return "❌ 키가 맞지 않습니다.\n\n" + name + " 키를 다시 확인해서 붙여넣어 주세요.\n" +
+    /* ★서버가 준 사유를 그대로 보여준다(2026-08-24 실사고).
+       종전엔 "다시 확인해 주세요"만 띄워 무엇이 틀렸는지 알 길이 없었다 —
+       실제로 고객이 키 대신 '키 ID'를 넣었는데, ElevenLabs가 정확히 알려준 그 말을
+       우리가 버리고 있었다(서버에서 직접 호출해보고서야 원인을 알았다). */
+    var why = (res.filter(function(r){ return r.reason; })[0] || {}).reason || "";
+    return "❌ 키가 맞지 않습니다.\n\n" +
+           (why ? why + "\n\n" : (name + " 키를 다시 확인해서 붙여넣어 주세요.\n")) +
            "저장은 됐지만 이 상태로는 쓸 수 없습니다 — 틀린 키는 [삭제]해 주세요.";
   }
   if (empty && !good) {
