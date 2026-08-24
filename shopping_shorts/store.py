@@ -1405,6 +1405,32 @@ class Store:
                         job_id TEXT,
                         created_at REAL NOT NULL
                     )""")
+        # ── 오류 신고(2026-08-24 사장님 "오류신고 버튼 만들기, 내 관리페이지에 보이기") ──
+        #    고객에게 물어서 받는 방식은 반드시 샌다 — job_id·URL·콘솔오류를 고객이 알 리 없다.
+        #    버튼 한 번에 진단 정보를 **자동으로** 담아 여기 쌓고, 관리자 페이지가 그대로 읽는다.
+        c.execute("""CREATE TABLE IF NOT EXISTS bug_reports (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        customer_id INTEGER NOT NULL,
+                        created_at INTEGER NOT NULL,
+                        message TEXT NOT NULL,
+                        page_url TEXT,
+                        job_id TEXT,
+                        work_id TEXT,
+                        step TEXT,
+                        user_agent TEXT,
+                        console_json TEXT,
+                        status TEXT NOT NULL DEFAULT 'open',
+                        handled_at INTEGER,
+                        note TEXT
+                    )""")
+        c.execute("CREATE INDEX IF NOT EXISTS idx_bugrep_open "
+                  "ON bug_reports(status, created_at DESC)")
+        # 답장(쪽지) — 신고한 고객이 자기 화면에서 바로 본다. read_at은 '고객이 봤나'.
+        for _col, _type in (("reply", "TEXT"), ("replied_at", "INTEGER"), ("read_at", "INTEGER")):
+            try:
+                c.execute("ALTER TABLE bug_reports ADD COLUMN %s %s" % (_col, _type))
+            except sqlite3.OperationalError:
+                pass                      # 이미 있음
         # ── 회원승인(2026-07-21): approved_at NULL=대기중 / 값(epoch초)=승인시각 ──
         try:
             c.execute("ALTER TABLE customers ADD COLUMN approved_at INTEGER")
@@ -4068,6 +4094,92 @@ class Store:
         except sqlite3.Error as e:
             print("[선점표] 조회 실패: %r" % (e,), file=sys.stderr)
             return None
+
+    # ── 오류 신고(2026-08-24) ──────────────────────────────────────────
+    def add_bug_report(self, customer_id, message, **info):
+        """신고 1건 저장 → 새 id. info: page_url·job_id·work_id·step·user_agent·console(list)."""
+        console = info.get("console")
+        row = (
+            int(customer_id or 0), int(time.time()), (message or "")[:2000],
+            (info.get("page_url") or "")[:500], (info.get("job_id") or "")[:64],
+            (info.get("work_id") or "")[:64], (info.get("step") or "")[:64],
+            (info.get("user_agent") or "")[:300],
+            json.dumps(console[-20:], ensure_ascii=False)[:4000] if console else None,
+        )
+        with self._conn() as c:
+            cur = c.execute(
+                "INSERT INTO bug_reports(customer_id, created_at, message, page_url, job_id, "
+                "work_id, step, user_agent, console_json) VALUES(?,?,?,?,?,?,?,?,?)", row)
+            return cur.lastrowid
+
+    def list_bug_reports(self, status=None, limit=200):
+        """신고 목록(최신 먼저). status=None이면 전부."""
+        q = ("SELECT id, customer_id, created_at, message, page_url, job_id, work_id, step, "
+             "user_agent, console_json, status, handled_at, IFNULL(note,''), "
+             "IFNULL(reply,''), replied_at, read_at FROM bug_reports")
+        args = []
+        if status:
+            q += " WHERE status=?"
+            args.append(status)
+        q += " ORDER BY created_at DESC, id DESC LIMIT ?"
+        args.append(int(limit))
+        keys = ("id", "customer_id", "created_at", "message", "page_url", "job_id", "work_id",
+                "step", "user_agent", "console_json", "status", "handled_at", "note",
+                "reply", "replied_at", "read_at")
+        with self._conn() as c:
+            return [dict(zip(keys, r)) for r in c.execute(q, args)]
+
+    def set_bug_report_status(self, report_id, status, note=None):
+        """처리 상태 변경(open/done). note는 주면 덮어쓴다."""
+        with self._conn() as c:
+            if note is None:
+                c.execute("UPDATE bug_reports SET status=?, handled_at=? WHERE id=?",
+                          (status, int(time.time()), int(report_id)))
+            else:
+                c.execute("UPDATE bug_reports SET status=?, handled_at=?, note=? WHERE id=?",
+                          (status, int(time.time()), note[:1000], int(report_id)))
+
+    def reply_bug_report(self, report_id, reply):
+        """답장을 남긴다(+처리완료 표시). 고객 화면이 이걸 읽어 띄운다."""
+        with self._conn() as c:
+            c.execute("UPDATE bug_reports SET reply=?, replied_at=?, status='done', "
+                      "read_at=NULL WHERE id=?",
+                      ((reply or "")[:2000], int(time.time()), int(report_id)))
+
+    def my_bug_replies(self, customer_id, unread_only=True):
+        """이 고객이 받은 답장 목록(최신 먼저). unread_only면 아직 안 본 것만."""
+        q = ("SELECT id, message, reply, replied_at FROM bug_reports "
+             "WHERE customer_id=? AND IFNULL(reply,'')<>''")
+        if unread_only:
+            q += " AND read_at IS NULL"
+        q += " ORDER BY replied_at DESC, id DESC LIMIT 20"
+        keys = ("id", "message", "reply", "replied_at")
+        with self._conn() as c:
+            return [dict(zip(keys, r)) for r in c.execute(q, (int(customer_id or 0),))]
+
+    def mark_bug_reply_read(self, report_id, customer_id):
+        """고객이 답장을 봤다고 표시. 남의 신고를 못 건드리게 customer_id를 함께 본다."""
+        with self._conn() as c:
+            c.execute("UPDATE bug_reports SET read_at=? WHERE id=? AND customer_id=?",
+                      (int(time.time()), int(report_id), int(customer_id or 0)))
+
+    def bad_key_services(self, customer_id):
+        """이 고객이 등록해 둔 키 중 **틀린 것으로 판정된** 서비스 목록.
+
+        status='bad' = 등록할 때 실제로 호출해보고 거절당한 키다. 개인 전용 서비스는
+        사장님 키로 폴백하지 않으므로, 이 상태로 제작을 시작하면 반드시 실패한다.
+        """
+        if not customer_id:
+            return []
+        with self._conn() as c:
+            return [r[0] for r in c.execute(
+                "SELECT DISTINCT service FROM customer_keys WHERE customer_id=? AND status='bad'",
+                (int(customer_id),))]
+
+    def open_bug_report_count(self):
+        """안 본 신고 수 — 관리자 화면 배지용."""
+        with self._conn() as c:
+            return c.execute("SELECT COUNT(*) FROM bug_reports WHERE status='open'").fetchone()[0]
 
     def recent_same_mix_job(self, customer_id, urls, given_script, within_sec=30):
         """방금(within_sec 안에) 같은 고객이 같은 대본·같은 소스로 만든 job이 있으면 그 id.
