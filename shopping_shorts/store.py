@@ -848,7 +848,13 @@ class Store:
             # recommended) "베스트인데 순서는 뒤"라는 모순 상태가 표현 가능해진다(설계 §4.1).
             for col, ddl in (("group_id", "TEXT"), ("variant", "TEXT NOT NULL DEFAULT 'stable'"),
                              ("naturalize_profile_json", "TEXT"),
-                             ("best", "INTEGER NOT NULL DEFAULT 0")):
+                             ("best", "INTEGER NOT NULL DEFAULT 0"),
+                             # owner_customer_id(2026-08-24): 이 성우를 **누가 담았나**.
+                             #   0 = 공용(사장님이 큐레이션한 것, 모두에게 보인다)
+                             #   N = 그 고객이 라이브러리에서 담은 것 — 본인에게만 보인다.
+                             # ★없으면 A가 담은 목소리가 B에게도 뜨는데, B의 키엔 그 음성이
+                             #   없어 합성이 통째로 실패한다(담기는 각자 계정에 되기 때문).
+                             ("owner_customer_id", "INTEGER NOT NULL DEFAULT 0")):
                 try:
                     c.execute(f"ALTER TABLE voice_presets ADD COLUMN {col} {ddl}")
                 except sqlite3.OperationalError:
@@ -4424,8 +4430,8 @@ class Store:
                 INSERT INTO voice_presets(preset_id, name, one_liner, lang, archetype,
                     base_voice_id, model_id, voice_settings_json, default_speed,
                     default_silence_trim, sample_file, source_ref, origin, created_at,
-                    group_id, variant, naturalize_profile_json, best)
-                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                    group_id, variant, naturalize_profile_json, best, owner_customer_id)
+                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                 ON CONFLICT(preset_id) DO UPDATE SET
                     name=excluded.name, one_liner=excluded.one_liner, lang=excluded.lang,
                     archetype=excluded.archetype, base_voice_id=excluded.base_voice_id,
@@ -4434,7 +4440,7 @@ class Store:
                     default_silence_trim=excluded.default_silence_trim,
                     sample_file=excluded.sample_file, source_ref=excluded.source_ref,
                     origin=excluded.origin, group_id=excluded.group_id, variant=excluded.variant,
-                    best=excluded.best,
+                    best=excluded.best, owner_customer_id=excluded.owner_customer_id,
                     -- 동결 프로파일만은 COALESCE로 보존한다. 다른 컬럼과 달리 이 값의 소스오브
                     -- 트루스는 JSON 파일이 아니라 튜닝 작업대(DB)다. excluded로 덮으면 startup
                     -- seed_presets가 매 재기동마다 NULL로 지워버린다(2026-07-15 리뷰 S2).
@@ -4449,6 +4455,9 @@ class Store:
                 p.get("sample_file"), p.get("source_ref"), p.get("origin", "curated"), now,
                 p.get("group_id") or p["preset_id"], p.get("variant", "stable"), prof_json,
                 int(bool(p.get("best", False))),
+                # 0=공용(사장님 큐레이션) / N=그 고객이 라이브러리에서 담은 것.
+                # 기존 호출부는 이 키를 안 넘기므로 그대로 0 — 회귀 없음.
+                int(p.get("owner_customer_id", 0) or 0),
             ))
 
     def _row_to_preset(self, r):
@@ -4472,14 +4481,26 @@ class Store:
                           "WHERE preset_id=?", (preset_id,)).fetchone()
         return self._row_to_preset(r) if r else None
 
-    def list_voice_presets(self, lang=None):
+    def list_voice_presets(self, lang=None, customer_id=None):
+        """성우 프리셋 목록.
+
+        customer_id: 주면 **공용(owner 0) + 그 고객이 담은 것**만 준다(2026-08-24).
+          안 주면 전부 — 관리자 화면·배치처럼 소유자를 안 가리는 곳의 기존 동작이다.
+          ★남이 담은 성우를 보여주면 안 된다: 담기는 각자 일레븐랩스 계정에 되므로
+            내 키로는 그 voice_id가 없어 합성이 실패한다."""
         q = ("SELECT preset_id,name,one_liner,lang,archetype,base_voice_id,model_id,"
              "voice_settings_json,default_speed,default_silence_trim,sample_file,"
              "source_ref,origin,created_at,group_id,variant,naturalize_profile_json,"
              "best FROM voice_presets")
-        args = ()
+        where, args = [], []
         if lang:
-            q += " WHERE lang=?"; args = (lang,)
+            where.append("lang=?"); args.append(lang)
+        if customer_id is not None:
+            where.append("(owner_customer_id=0 OR owner_customer_id=?)")
+            args.append(int(customer_id))
+        if where:
+            q += " WHERE " + " AND ".join(where)
+        args = tuple(args)
         # 베스트가 앞, 그 안에선 기존 순서(삽입 시각) 유지. ★순서의 소스오브트루스는
         # 여기다 — assets/voice_presets.json의 배열 순서가 아니다(설계 §4.1의 실측).
         q += " ORDER BY best DESC, created_at"
