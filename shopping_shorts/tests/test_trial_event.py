@@ -3,8 +3,14 @@ from shopping_shorts.store import Store
 
 
 def _store(tmp_path):
-    """무료체험 이벤트 OFF(기본) — 가입 직후 바로 대기실."""
-    return Store(str(tmp_path / "t.db"))
+    """무료체험 이벤트 OFF — 가입 직후 바로 대기실.
+
+    ★2026-08-25부터 기본값이 72시간(3일)이라 **명시적으로 0을 넣어야** OFF가 된다.
+      예전엔 기본이 0이라 아무것도 안 해도 OFF였다(그래서 이 헬퍼가 빈 Store였다).
+    """
+    s = Store(str(tmp_path / "t.db"))
+    s.set_setting("trial_event_hours", "0")
+    return s
 
 
 def _evt_store(tmp_path):
@@ -14,14 +20,34 @@ def _evt_store(tmp_path):
     return s
 
 
-# ── 기본(이벤트 OFF): 가입 직후 바로 대기실(잠김) ──
-def test_default_signup_is_pending_no_trial(tmp_path, monkeypatch):
+# ── 기본: 가입 즉시 체험 3일(2026-08-25 정책 변경) ──
+def test_default_signup_gets_3day_trial(tmp_path, monkeypatch):
+    """★기본 정책 변경(2026-08-25 사장님 "가입되면 체험3일 자동, 확인 누르면 고객관리로").
+
+    예전엔 가입 직후 바로 잠겼고(pending) 사장님이 일일이 체험을 줘야 했다.
+    이제 trial_event_hours 기본값이 72시간이라 가입 즉시 3일 체험이 열린다.
+    (설정을 0으로 두면 옛 동작으로 돌아간다 — 아래 _store가 그 경우다.)
+    """
     import shopping_shorts.app as app
     monkeypatch.setattr(app, "DB_PATH", str(tmp_path / "t.db"))
-    s = _store(tmp_path)
-    cid = s.create_customer("evt", "pw12", approved=False)   # 자동체험 OFF가 기본
-    assert s.get_customer(cid)["trial_ends_at"] is None      # 체험창 없음
-    assert app.access_level(cid) == "pending"                # 바로 대기실(잠김)
+    s = Store(str(tmp_path / "t.db"))            # 설정을 건드리지 않은 기본 상태
+    cid = s.create_customer("evt", "pw12", approved=False)
+    cust = s.get_customer(cid)
+    now = int(time.time())
+    assert cust["approved_at"] is None                        # 아직 대기실 목록에 뜬다
+    assert 71 * 3600 <= (cust["trial_ends_at"] - now) <= 72 * 3600   # 3일 창
+    assert app.access_level(cid) == "full"                    # 바로 써볼 수 있다
+    assert app._is_trial(cid) is True
+
+
+def test_signup_stays_locked_when_event_off(tmp_path, monkeypatch):
+    """설정으로 끄면(0) 옛 동작 그대로 — 가입 직후 잠김."""
+    import shopping_shorts.app as app
+    monkeypatch.setattr(app, "DB_PATH", str(tmp_path / "t.db"))
+    s = _store(tmp_path)                                      # trial_event_hours=0
+    cid = s.create_customer("evt", "pw12", approved=False)
+    assert s.get_customer(cid)["trial_ends_at"] is None
+    assert app.access_level(cid) == "pending"
     assert app._is_trial(cid) is False
 
 
@@ -193,3 +219,60 @@ def test_pro_daily_render_limit_is_10(tmp_path, monkeypatch):
     for i in range(10):
         assert app.check_and_count(cid, "render") is True, f"{i}회차는 통과해야"
     assert app.check_and_count(cid, "render") is False       # 11회차 차단
+
+
+# ── '확인함'(ack) — 대기실에서만 내리고 체험은 유지(2026-08-25) ──
+def test_ack_keeps_trial_and_removes_from_pending(tmp_path, monkeypatch):
+    """★사장님 지시의 핵심: 확인을 눌러도 체험 3일은 그대로 흘러가야 한다.
+
+    access_level은 체험창(trial_ends_at)을 approved_at이 비어 있을 때만 본다.
+    ack가 approved_at만 채우고 끝내면 **그 순간 체험이 끊긴다** — 그래서
+    남은 시간을 full_access_until로 옮긴다. 이 테스트가 그걸 지킨다.
+    """
+    import shopping_shorts.app as app
+    monkeypatch.setattr(app, "DB_PATH", str(tmp_path / "t.db"))
+    s = Store(str(tmp_path / "t.db"))
+    cid = s.create_customer("acked", "pw12", approved=False)
+    assert app.access_level(cid) == "full"                    # 가입 즉시 체험
+    assert any(p["id"] == cid for p in s.pending_customers())  # 대기실에 있다
+
+    assert s.ack_customer(cid) is True
+    assert not any(p["id"] == cid for p in s.pending_customers())  # 대기실에서 내려감
+    assert app.access_level(cid) == "full"                    # ★체험이 살아 있다
+    now = int(time.time())
+    assert 71 * 3600 <= (s.get_customer(cid)["full_access_until"] - now) <= 72 * 3600
+
+
+def test_ack_is_idempotent(tmp_path):
+    """두 번 눌러도 기간이 늘거나 줄지 않는다."""
+    s = Store(str(tmp_path / "t.db"))
+    cid = s.create_customer("twice", "pw12", approved=False)
+    assert s.ack_customer(cid) is True
+    fau = s.get_customer(cid)["full_access_until"]
+    assert s.ack_customer(cid) is False        # 이미 내려간 고객
+    assert s.get_customer(cid)["full_access_until"] == fau
+
+
+def test_ack_expires_after_trial(tmp_path, monkeypatch):
+    """3일이 지나면 알아서 잠긴다 — 공짜로 계속 쓰면 안 된다."""
+    import sqlite3
+    import shopping_shorts.app as app
+    monkeypatch.setattr(app, "DB_PATH", str(tmp_path / "t.db"))
+    s = Store(str(tmp_path / "t.db"))
+    cid = s.create_customer("gone", "pw12", approved=False)
+    s.ack_customer(cid)
+    c = sqlite3.connect(str(tmp_path / "t.db"))
+    c.execute("UPDATE customers SET full_access_until=? WHERE id=?",
+              (int(time.time()) - 10, cid))
+    c.commit()
+    assert app.access_level(cid) == "ranking_only"
+
+
+def test_ack_does_not_touch_already_approved(tmp_path):
+    """결제로 승인된 고객을 ack해도 기간이 안 바뀐다(연장·삭감 사고 방지)."""
+    s = Store(str(tmp_path / "t.db"))
+    cid = s.create_customer("paid", "pw12", approved=False)
+    s.approve_customer(cid, 30, 10000, "계좌")
+    before = s.get_customer(cid)["full_access_until"]
+    assert s.ack_customer(cid) is False
+    assert s.get_customer(cid)["full_access_until"] == before

@@ -9460,6 +9460,29 @@ async def _admin_approve(request: Request):
     return {"ok": True, "customer": cust}
 
 
+@app.post("/api/admin/ack")
+async def _admin_ack(request: Request):
+    """'확인함' — 대기실에서만 내린다(2026-08-25 사장님 "일일이 버튼 누르니 안 좋아").
+
+    /api/admin/approve와 다르다:
+      approve = 기간 부여 + 결제 기록 (돈을 받았을 때. 프롬프트 3번)
+      ack     = 봤다는 표시만. **클릭 한 번.** 남은 체험은 그대로 흘러간다.
+    """
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    body = await request.json()
+    try:
+        cid = int(body.get("customer_id"))
+    except (TypeError, ValueError):
+        return JSONResponse({"error": "customer_id 필요"}, status_code=422)
+    if not Store(DB_PATH).ack_customer(cid):
+        return JSONResponse({"error": "없는 고객이거나 이미 확인함"}, status_code=422)
+    import sys as _s
+    print(f"[admin] ack cid={cid} (체험 유지, 대기실에서만 내림)", file=_s.stderr)
+    return {"ok": True}
+
+
 @app.post("/api/admin/payment")
 async def _admin_payment(request: Request):
     """이미 승인된 고객에 결제 추가+기간 연장(approve_customer 재호출과 동일 경로)."""
