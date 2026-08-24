@@ -512,9 +512,16 @@ def fetch_reels(usernames, on_progress=None, _scrape_one=None):
     # reference 폴더가 없으면 기존처럼 상위 폴더 전체로 폴백한다(동작 불변).
     slots = []
     if _scrape_one is None and os.getenv("INSTAGRAM_COLLECT_ROTATION", "") == "1":
-        from shopping_shorts.channel_archive import (POOL_REFERENCE, session_slots,
-                                                     slot_proxy)
-        slots = [(gi, sp) for gi, sp in enumerate(session_slots(POOL_REFERENCE))]
+        from shopping_shorts.channel_archive import (POOL_REFERENCE, live_slots,
+                                                     session_slots, slot_proxy)
+        # ★죽은 계정을 빼고 돈다(2026-08-24). 종전엔 enumerate(session_slots(...))로
+        #   **전체**를 돌려서, 계정 절반이 인스타에 회수된 날엔 그 확률만큼 그대로
+        #   unknown이 됐다(실측 08-24: 10슬롯 중 5개 사망 → 42건, 기준 50 미달로
+        #   랭킹 캐시가 통째로 안 갱신). 같은 날 아침 히트작 쪽에만 붙여둔 live_slots를
+        #   레퍼런스 수집에도 붙인다 — 판정·인덱스 보존 규칙은 그 함수 한 곳에 있다.
+        #   ⚠️live_slots는 (원래 인덱스, 경로)를 준다. 인덱스를 보존해야 slot_proxy가
+        #   주는 출구 IP가 안 바뀐다(계정↔IP 1:1). 전멸 판정이면 원본을 그대로 준다.
+        slots = list(live_slots(session_slots(POOL_REFERENCE)))
     for i, uname in enumerate(names, start=1):
         if slots:
             gi, sp = slots[(i - 1) % len(slots)]
