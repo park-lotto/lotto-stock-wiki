@@ -11,6 +11,7 @@ import os
 import re
 import secrets
 import shutil
+import threading
 import socket
 import tempfile
 import time
@@ -3165,6 +3166,63 @@ def api_get_vmake_key(request: Request):
 #   평문 경로는 keyroute.keys_for(→get_customer_keys_plain) 하나뿐이다.
 # ─────────────────────────────────────────────────────────────────────
 
+# 마지막 검증 실패 사유 — 스레드별로 따로 둔다(요청이 겹쳐도 남의 사유를 보면 안 된다).
+_KEY_FAIL = threading.local()
+
+
+def _remember_key_failure(service: str, code: int, body: str) -> None:
+    """업체가 준 실패 사유를 사람 말로 바꿔 기억해둔다. 로그에도 남긴다."""
+    msg = _explain_key_failure(service, code, body)
+    _KEY_FAIL.reason = msg
+    print(f"[keycheck] {service} 실패 code={code} → {msg} | {body[:160]}", file=sys.stderr)
+
+
+def _take_key_failure() -> str:
+    """기억해둔 사유를 꺼내 비운다(다음 검증이 옛 사유를 물려받지 않게)."""
+    msg = getattr(_KEY_FAIL, "reason", "") or ""
+    _KEY_FAIL.reason = ""
+    return msg
+
+
+def _explain_key_failure(service: str, code: int, body: str) -> str:
+    """업체 응답 → 고객이 **무엇을 고쳐야 하는지** 아는 한 줄."""
+    low = (body or "").lower()
+    if code == 0:
+        return "인터넷 연결이 불안정해 확인하지 못했습니다. 잠시 뒤 다시 시도해주세요."
+    if service == keyroute.SVC_ELEVENLABS:
+        # 실측(2026-08-24): 고객이 키 목록의 **ID**를 붙여넣었다.
+        #   ElevenLabs가 "API key ID used as API key"라고 정확히 알려주는데 우리가 버렸다.
+        if "api key id used as api key" in low or "key id" in low:
+            return ("키가 아니라 **키 ID**를 붙여넣으셨어요. ElevenLabs에서 키를 새로 만들 때 "
+                    "한 번만 보이는 `sk_`로 시작하는 값을 넣어주세요.")
+        if "invalid_api_key" in low or code in (401, 403):
+            return "ElevenLabs가 이 키를 인식하지 못합니다. 키를 새로 만들어 다시 넣어주세요."
+        if code == 429:
+            return "요청이 너무 많습니다. 잠시 뒤 다시 확인해주세요."
+    if code in (401, 403):
+        return "키가 인식되지 않습니다(권한 없음). 값을 다시 확인해주세요."
+    if code == 429:
+        return "요청 한도를 넘었습니다. 잠시 뒤 다시 시도해주세요."
+    return f"확인에 실패했습니다 (응답 코드 {code})."
+
+
+def _key_format_hint(service: str, key: str) -> str:
+    """호출하기 **전에** 눈으로 걸러지는 실수를 잡는다 → 문제면 안내 문구, 괜찮으면 "".
+
+    ★실호출 전에 막는 이유: 같은 실수가 계속 들어오는데 그때마다 외부 API를 때리고
+      "키가 맞지 않습니다"만 돌려주면 고객은 뭘 고쳐야 할지 모른다.
+    """
+    k = (key or "").strip()
+    if not k:
+        return "키가 비어 있습니다."
+    if service == keyroute.SVC_ELEVENLABS:
+        # 실측: 정상 키 5개가 전부 `sk_` + 51자. 잘못 넣은 값은 ID(64자, sk_ 없음)였다.
+        if not k.startswith("sk_"):
+            return ("ElevenLabs 키는 `sk_`로 시작합니다. 키 목록에 보이는 **ID**가 아니라, "
+                    "키를 만들 때 한 번만 보이는 값을 붙여넣어 주세요.")
+    return ""
+
+
 def _probe_user_key(service: str, key: str) -> bool:
     """등록된 키가 실제로 도는가. 판정만 하고 예외를 밖으로 안 흘린다.
 
@@ -3204,10 +3262,19 @@ def _probe_user_key(service: str, key: str) -> bool:
     else:
         raise ValueError(f"모르는 service: {service!r}")
     try:
-        return requests.get(url, timeout=10, **kw).status_code == 200
-    except requests.RequestException:
+        r = requests.get(url, timeout=10, **kw)
+        if r.status_code == 200:
+            return True
+        # ★왜 틀렸는지를 남긴다(2026-08-24 실사고). 종전엔 bool만 돌려줘
+        #   "키가 맞지 않습니다"만 뜨고 사유가 통째로 버려졌다 — 로그에도 안 남아
+        #   서버에서 직접 호출해보고서야 원인을 알았다(고객이 키 ID를 붙여넣은 것).
+        #   업체가 정확히 알려주는 말을 우리가 버리면 안 된다.
+        _remember_key_failure(service, r.status_code, r.text[:300])
+        return False
+    except requests.RequestException as e:
         # ★네트워크 실패는 '검증 실패'라는 판정이지 버그 은폐가 아니다.
         #   requests 예외만 잡는다 — 코드 오류(TypeError 등)까지 삼키면 원인을 못 찾는다.
+        _remember_key_failure(service, 0, f"네트워크 오류: {e!r}"[:300])
         return False
 
 
@@ -3222,6 +3289,12 @@ def _key_status(service: str, key: str) -> str:
       키는 멀쩡하므로 'bad'(키가 틀렸습니다)도 거짓이다. 그래서 셋으로 가른다.
 
     잔량 조회가 실패하면 ok로 둔다 — 확인 못 한 것을 소진으로 단정하지 않는다."""
+    # ★호출 전에 형식부터 본다(2026-08-24). 눈으로 걸러지는 실수는 외부 API를
+    #   때리기 전에 잡아 **무엇을 고쳐야 하는지** 바로 알려준다.
+    _hint = _key_format_hint(service, key)
+    if _hint:
+        _KEY_FAIL.reason = _hint
+        return "bad"
     if not _probe_user_key(service, key):
         return "bad"
     if service == keyroute.SVC_SERPAPI:
@@ -3365,11 +3438,14 @@ def api_verify_keys(request: Request, body: dict):
     results = []
     for key_id, plain in store.get_customer_keys_with_id(cid, service):
         status = _key_status(service, plain)
+        # ★왜 안 되는지를 함께 보낸다(2026-08-24). 종전엔 status만 줘서 화면이
+        #   "키가 맞지 않습니다"밖에 못 띄웠고, 고객은 뭘 고쳐야 할지 몰랐다.
+        reason = _take_key_failure() if status != "ok" else ""
         store.set_customer_key_status(key_id, status)
         # ★평문은 안 싣는다. 화면은 label로 어느 키인지 알아본다.
         # ok는 "쓸 수 있는가" — 무료분이 바닥난 키(empty)는 검색이 0건이라 False다.
         results.append({"id": key_id, "label": labels.get(key_id, ""),
-                        "ok": status == "ok", "status": status})
+                        "ok": status == "ok", "status": status, "reason": reason})
     return {"ok": True, "results": results, "keys": store.list_customer_keys(cid)}
 
 
