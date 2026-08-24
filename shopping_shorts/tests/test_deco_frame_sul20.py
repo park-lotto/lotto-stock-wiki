@@ -302,3 +302,101 @@ def test_position_is_remembered_across_templates():
     seg = HTML[HTML.index("function applyHeadcopySet"):HTML.index("function alignHC")]
     assert "if(!HC_Y_TOUCHED)" in seg.replace(" ", "") or "!HC_Y_TOUCHED" in seg, (
         "만진 적 있으면 y를 덮어쓰면 안 된다")
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# 자막도 한 세트 (2026-08-25)
+#
+# 제미니는 실측 때 cap_color·cap_outline·cap_y·cap_box를 **처음부터 읽고 있었는데**
+# 소비처가 0곳이었다(코드 전체 grep 0건). 그래서 틀·헤드카피만 채널 질감을 따라가고
+# 자막만 우리 기본값으로 나가 "한 세트로 안 보인다"가 됐다.
+# ══════════════════════════════════════════════════════════════════════════
+CAPPED = {k: v for k, v in df.PRESETS.items() if v.get("caption")}
+
+
+def test_every_benchmarked_preset_ships_a_caption_set():
+    """틀·헤드카피가 있으면 자막도 있어야 한다 — 셋이 한 세트다."""
+    missing = [k for k in NEW if not df.PRESETS[k].get("caption")]
+    assert not missing, f"자막 세트가 빠진 틀: {missing}"
+    assert len(CAPPED) == 20
+
+
+def test_caption_set_is_complete_and_in_ui_range():
+    """화면 입력칸이 받을 수 있는 값이어야 한다(헤드카피와 같은 계약)."""
+    for k, v in CAPPED.items():
+        c = v["caption"]
+        for f in ("color", "outline_color", "y_pct", "box"):
+            assert f in c, f"{k}: 자막 세트에 {f}가 없다"
+        assert c["color"].startswith("#") and len(c["color"]) == 7, f"{k}: 자막 색이 헥사가 아니다"
+        assert c["outline_color"].startswith("#") and len(c["outline_color"]) == 7
+        assert 0 <= c["y_pct"] <= 100, f"{k}: 자막 y가 화면 밖({c['y_pct']})"
+        assert isinstance(c["box"], bool)
+
+
+def test_caption_does_not_collide_with_headcopy():
+    """★배포 직전 로컬 실측에서 잡은 결함(2026-08-25).
+
+    처음엔 "자막은 원래 헤드카피보다 아래"라고 **가정하고** 띠만 피했다. 틀렸다 —
+    20종 전부 8% 이내로 붙었고 12종은 자막이 헤드카피보다 **위**였다(활용정점
+    헤드44/자막34). 제미니가 읽은 cap_y는 그 채널 원본 기준인데 우리 hl_y는
+    띠+제목블록을 피하느라 이미 아래로 밀린 값이라 둘이 만난 것이다.
+    """
+    bad = []
+    for k, v in CAPPED.items():
+        gap = v["caption"]["y_pct"] - v["headcopy"]["y"]
+        if gap < 8:
+            bad.append(f"{k}(헤드{v['headcopy']['y']}/자막{v['caption']['y_pct']}, 차이 {gap})")
+    assert not bad, "자막이 헤드카피와 겹친다: " + ", ".join(bad)
+
+
+def test_caption_is_visible_against_its_own_outline():
+    """글자색과 외곽선색이 같으면 두꺼운 외곽선이 글자를 먹는다(헤드카피와 같은 함정)."""
+    def lum(h):
+        h = h.lstrip("#")
+        r, g, b = (int(h[i:i + 2], 16) / 255 for i in (0, 2, 4))
+        return 0.2126 * r + 0.7152 * g + 0.0722 * b
+    for k, v in CAPPED.items():
+        c = v["caption"]
+        assert abs(lum(c["color"]) - lum(c["outline_color"])) >= 0.2, (
+            f"{k}: 자막 글자색({c['color']})과 외곽선({c['outline_color']})이 구분되지 않는다")
+
+
+def test_caption_set_omits_font_and_size_on_purpose():
+    """★실측 스키마가 안 물어본 값은 **넣지 않는다** — 지어내면 살림킹왕짱 색 뒤집힘과
+    같은 사고가 난다. 폰트·크기는 사장님이 화면에서 정한 값을 그대로 둔다."""
+    for k, v in CAPPED.items():
+        assert "font" not in v["caption"], f"{k}: 자막 폰트는 실측하지 않았으므로 넣으면 안 된다"
+        assert "size" not in v["caption"], f"{k}: 자막 크기는 실측하지 않았으므로 넣으면 안 된다"
+
+
+def test_legacy_presets_have_no_caption_set():
+    """옛 4종은 자막을 안 건드린다 — 저장된 작업의 생김새가 바뀌면 안 된다."""
+    for k in LEGACY:
+        assert not df.PRESETS[k].get("caption"), f"{k}: 옛 틀에 자막 세트가 붙으면 기존 작업이 바뀐다"
+
+
+def test_api_ships_caption_to_the_screen():
+    """서버가 안 내려주면 화면이 알 방법이 없다(headcopy와 같은 자리에서 함께 간다)."""
+    app_py = (pathlib.Path(__file__).resolve().parents[1] / "app.py").read_text(encoding="utf-8")
+    seg = app_py[app_py.index("def api_produce_frame_presets"):][:2000]
+    assert '"caption": v.get("caption")' in seg, "프리셋 API가 caption을 안 내려준다"
+
+
+def test_ui_applies_caption_set_when_frame_picked():
+    """틀을 고르면 자막도 같이 맞춘다 — 안 그러면 자막만 겉돈다."""
+    assert "function applyCaptionSet" in HTML
+    seg = HTML[HTML.index("function frPick"):HTML.index("function frUpdate")]
+    assert "applyCaptionSet" in seg, "frPick이 자막 세트를 적용하지 않는다"
+
+
+def test_caption_position_is_remembered_across_templates():
+    """★자막 자리를 옮겼으면 틀을 바꿔도 지킨다(헤드카피 HC_Y_TOUCHED와 같은 규약)."""
+    seg = HTML[HTML.index("function applyCaptionSet"):HTML.index("function alignHC")]
+    assert "CAP_POS_TOUCHED" in seg, "자막도 만진 자리를 지켜야 한다"
+
+
+def test_ui_does_not_overwrite_caption_font_or_size():
+    """화면에서도 폰트·크기는 안 건드린다(위 데이터 계약과 짝)."""
+    seg = HTML[HTML.index("function applyCaptionSet"):HTML.index("function alignHC")]
+    assert "capFont" not in seg, "자막 폰트는 실측값이 없으므로 덮으면 안 된다"
+    assert "capSize" not in seg, "자막 크기는 실측값이 없으므로 덮으면 안 된다"

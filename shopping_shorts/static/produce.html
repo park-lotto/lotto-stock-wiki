@@ -2852,6 +2852,9 @@ function frPick(preset){
     //   값의 주인은 여전히 hcFont/hcSize/… 진짜 입력칸 하나 — 여기선 그 칸에 써넣고
     //   updateHC()가 돌게 한다(0순위-B). 새 값을 STATE.headcopy에 직접 넣지 않는다.
     if(meta.headcopy) applyHeadcopySet(meta.headcopy);
+    // ★자막도 같이 — 틀·헤드카피만 채널을 따라가면 자막만 겉돌아 "한 세트로 안 보인다"가
+    //   된다(2026-08-25). 제미니가 실측 때 이미 읽어둔 값인데 소비처가 0곳이었다.
+    if(meta.caption) applyCaptionSet(meta.caption);
   }
   renderFramePresets(); renderTemplateCards(); renderTemplatePreview(); saveHeadcopy();
 }
@@ -4086,6 +4089,26 @@ function applyHeadcopySet(p){
     if(typeof renderHighlightRules==='function') renderHighlightRules();
   }
   updateHC();
+}
+function applyCaptionSet(p){
+  // 틀을 고르면 자막도 그 채널 값으로 맞춘다(2026-08-25). applyHeadcopySet과 짝 —
+  // ★값의 주인은 입력칸 하나뿐이다(0순위-B). STATE.captionStyle을 직접 만지지 않고
+  //   칸에 써넣고 updateCaption()이 돌게 한다.
+  if(!p) return;                       // 옛 4종(news_*)엔 caption이 없다 → 안 건드림
+  const g=id=>document.getElementById(id);
+  if(!g('capColor')) return;           // 자막 UI가 아직 안 그려졌으면 조용히 통과
+  const set=(id,v)=>{ const el=g(id); if(el && v!=null) el.value=v; };
+  set('capColor',p.color);
+  if(g('capOutline')) g('capOutline').checked = p.outline!==false;
+  set('capOutColor',p.outline_color||'#000000');
+  if(g('capBox')) g('capBox').checked = !!p.box;
+  set('capBoxColor',p.box_color||'#000000');
+  // ★자리를 한 번이라도 옮겼으면 그 자리를 지킨다 — 헤드카피 hcY와 같은 규약
+  //   (2026-08-20 사장님: "다른 템플릿을 누르면 애써 맞춘 위치가 날아간다").
+  if(!CAP_POS_TOUCHED) set('capY',p.y_pct);
+  // ★폰트·크기·두께는 **일부러 안 건드린다** — 실측 스키마가 그걸 안 물어봤다.
+  //   없는 값을 지어내면 살림킹왕짱 색 뒤집힘과 같은 사고가 난다(deco_frame._cap 참조).
+  updateCaption();
 }
 function alignHC(where){
   const g=id=>document.getElementById(id);

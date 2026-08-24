@@ -11739,7 +11739,12 @@ def api_produce_frame_presets():
                          "has_head": v.get("has_head"),
                          "demo_views": v.get("demo_views"),
                          "demo_comments": v.get("demo_comments"),
-                         "headcopy": v.get("headcopy")}
+                         "headcopy": v.get("headcopy"),
+                         # ★자막도 한 세트로 내려준다(2026-08-25). 틀·헤드카피만
+                         #   채널 질감을 따라가고 자막만 우리 기본값이면 "한 세트로
+                         #   안 보인다"가 된다. 옛 4종(news_*)엔 없어서 None이 가고,
+                         #   화면은 None이면 자막을 안 건드린다(기존 동작 그대로).
+                         "caption": v.get("caption")}
                         for k, v in deco_frame.PRESETS.items()],
             "defaults": deco_frame.DEFAULTS}
 

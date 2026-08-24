@@ -54,6 +54,22 @@ def _hc(font, size, color, color2, y, outline_w=12, outline_color="#000000",
             "box": bool(box), "box_color": box_color, "box_pad": 16, "box_opacity": 100}
 
 
+def _cap(color, outline_color, y, box=False):
+    """자막 한 세트(색·외곽선·세로위치·박스). 헤드카피(_hc)와 짝이다.
+
+    ★왜 생겼나(2026-08-25): 제미니는 실측 때 cap_color·cap_outline·cap_y·cap_box를
+      **처음부터 읽고 있었는데** 소비처가 0곳이었다(실측: 코드 전체 grep 0건).
+      그래서 틀과 헤드카피만 채널 질감을 따라가고 자막만 우리 기본값으로 나가
+      "한 세트로 안 보인다"가 됐다.
+
+    ★여기 없는 값(폰트·크기·두께)은 **일부러 안 넣는다.** 실측 스키마가 그걸 안
+      물어봤기 때문이다 — 없는 걸 지어내면 살림킹왕짱 색 뒤집힘과 같은 사고가 난다.
+      화면이 쓰던 값을 그대로 둔다(빈값 = "안 정했음" 규약, DEFAULTS와 같다).
+    """
+    return {"color": color, "outline": True, "outline_color": outline_color,
+            "y_pct": y, "box": bool(box), "box_color": "#000000"}
+
+
 PRESETS = {
     # ══════════════════════════════════════════════════════════════════
     # 2026-08-20 · 사장님 재지시: "실제 영상들 안봤지? 제미니한테 시키면안되나?
@@ -76,6 +92,7 @@ PRESETS = {
         "has_head": True, "demo_views": "264만",
         "demo_comments": "587",
         "headcopy": _hc("TmonMonsori.ttf", 90, "#000000", "#00D3FA", 44, 7, "#FFFFFF", True, "#FFFFFF"),
+        "caption": _cap("#000000", "#FFFFFF", 63, False),
         # 상단의 강렬한 빨간색 검색창 디자인을 활용하여 브랜드의 시그니처 스타일을 보여줍니다. 헤드라인에 두꺼운 검은색 외곽선과 네온 
     },
     "sul_salrim": {
@@ -87,6 +104,7 @@ PRESETS = {
         "has_head": True, "demo_views": "264만",
         "demo_comments": "587",
         "headcopy": _hc("TmonMonsori.ttf", 86, "#000000", "#000000", 37, 5, "#FFFFFF", True, "#FFFFFF"),
+        "caption": _cap("#000000", "#FFFFFF", 55, False),
         # 웹사이트 헤더를 모티브로 한 상단바와 타이틀 영역을 상단에 고정 배치하여 정보 전달력을 극대화한 디자인입니다. 군더더기 없는 
     },
     "sul_sulchip": {
@@ -98,6 +116,7 @@ PRESETS = {
         "has_head": True, "demo_views": "264만",
         "demo_comments": "587",
         "headcopy": _hc("SpoqaHanSansNeo-Bold.otf", 90, "#FFFFFF", "#26D953", 38, 7, "#000000", False, "#FFFFFF"),
+        "caption": _cap("#000000", "#FFFFFF", 57, True),
         # 상단의 회색 검색창 레이아웃과 고정된 흰색 타이틀 바가 깔끔하게 매칭되어 정돈된 분위기를 줍니다. 화면 중앙에 둥근 흰색 박스
     },
     "sul_bangkkul": {
@@ -109,6 +128,7 @@ PRESETS = {
         "has_head": True, "demo_views": "264만",
         "demo_comments": "587",
         "headcopy": _hc("Pretendard-Bold.otf", 63, "#333333", "#00A34F", 36, 5, "#FFFFFF", True, "#FFFFFF"),
+        "caption": _cap("#111111", "#FFFFFF", 50, True),
         # 이 채널은 상단의 강렬한 핫핑크색 포털 스타일 헤더와 함께 커뮤니티 인기 글 레이아웃을 차용한 독특한 UI 피드를 보여줍니다.
     },
     "sul_lucky": {
@@ -120,6 +140,7 @@ PRESETS = {
         "has_head": True, "demo_views": "264만",
         "demo_comments": "587",
         "headcopy": _hc("Pretendard-ExtraBold.otf", 86, "#FFFFFF", "#F9D803", 40, 7, "#111111", True, "#000000"),
+        "caption": _cap("#000000", "#FFFFFF", 58, False),
         # 빨간색 브랜드 상단 바가 뚜렷하게 존재감을 드러내며 채널 정체성을 강조합니다. 검은색 반투명 박스 위에 얹힌 두꺼운 2줄 헤드
     },
     "sul_cheat": {
@@ -131,6 +152,7 @@ PRESETS = {
         "has_head": True, "demo_views": "264만",
         "demo_comments": "587",
         "headcopy": _hc("TmonMonsori.ttf", 90, "#FFFFFF", "#FF1E1E", 38, 7, "#000000", False, "#000000"),
+        "caption": _cap("#000000", "#FFFFFF", 57, False),
         # 이 채널은 모바일 쇼핑몰 또는 SNS 상세페이지 레이아웃을 상단에 씌워 실제 탐색하는 듯한 인터페이스 효과를 줍니다. 붉은색과
     },
     "sul_gongami": {
@@ -142,6 +164,7 @@ PRESETS = {
         "has_head": True, "demo_views": "264만",
         "demo_comments": "587",
         "headcopy": _hc("Pretendard-ExtraBold.otf", 81, "#FFFFFF", "#64E9CC", 38, 7, "#111111", False, "#222222"),
+        "caption": _cap("#000000", "#FFFFFF", 55, True),
         # 상단에 채널 이름과 아이콘을 배치해 고유의 브랜드 정체성을 유지하는 레이아웃입니다. 본문 자막은 둥근 흰색 박스를 씌워 가독성
     },
     "sul_core": {
@@ -153,6 +176,7 @@ PRESETS = {
         "has_head": True, "demo_views": "264만",
         "demo_comments": "587",
         "headcopy": _hc("NotoSansKR-Bold.otf", 73, "#FFFFFF", "#FBEC15", 34, 7, "#000000", False, "#000000"),
+        "caption": _cap("#000000", "#FFFFFF", 50, True),
         # 상단의 짙은 버건디색 배경 위에 흰색과 노란색의 두꺼운 테두리 헤드라인을 배치하여 강렬한 시각적 효과를 줍니다. 자막과 추가 
     },
     "sul_jangchak": {
@@ -164,6 +188,7 @@ PRESETS = {
         "has_head": True, "demo_views": "264만",
         "demo_comments": "587",
         "headcopy": _hc("GmarketSansBold.otf", 89, "#FFFFFF", "#11B3F3", 40, 7, "#000000", False, "#FFFFFF"),
+        "caption": _cap("#333333", "#FFFFFF", 59, False),
         # 상하단에 넓은 여백을 두고 정보성 텍스트를 배치하는 전형적인 카드 뉴스 형태의 레이아웃입니다. 굵은 테두리의 메인 타이틀과 깔
     },
     "sul_chunjae": {
@@ -175,6 +200,7 @@ PRESETS = {
         "has_head": False, "demo_views": "264만",
         "demo_comments": "587",
         "headcopy": _hc("GmarketSansBold.otf", 70, "#FFFFFF", "#FFE000", 26, 5, "#000000", False, "#FFFFFF"),
+        "caption": _cap("#000000", "#FFFFFF", 41, True),
         # 상단 영역에 넓고 어두운 백그라운드를 배치하고 노란색과 흰색의 대비가 강한 고딕 헤드라인을 사용하여 정보를 직관적으로 강조합니
     },
     "sul_even": {
@@ -186,6 +212,7 @@ PRESETS = {
         "has_head": True, "demo_views": "264만",
         "demo_comments": "587",
         "headcopy": _hc("SpoqaHanSansNeo-Bold.otf", 90, "#FFFFFF", "#2EE3E3", 37, 7, "#000000", False, "#000000"),
+        "caption": _cap("#FFFFFF", "#000000", 56, False),
         # 상단 메뉴 바 영역과 깔끔하게 배치된 타이틀 구성이 모바일 웹사이트의 상단 뷰를 연상시켜 신뢰감을 줍니다. 본문 자막에는 가독
     },
     "sul_igeo": {
@@ -197,6 +224,7 @@ PRESETS = {
         "has_head": True, "demo_views": "264만",
         "demo_comments": "587",
         "headcopy": _hc("Pretendard-ExtraBold.otf", 73, "#111111", "#111111", 37, 5, "#FFFFFF", True, "#FFFFFF"),
+        "caption": _cap("#111111", "#FFFFFF", 53, False),
         # 상단에 딥 그린 톤의 UI 바를 배치하고 로고와 메뉴 아이콘을 얹어 모바일 웹 브라우저 같은 친숙한 느낌을 줍니다. 헤드라인과
     },
     "sul_dalrae": {
@@ -208,6 +236,7 @@ PRESETS = {
         "has_head": True, "demo_views": "264만",
         "demo_comments": "587",
         "headcopy": _hc("Pretendard-ExtraBold.otf", 81, "#FFFFFF", "#FFE600", 28, 7, "#000000", False, "#000000"),
+        "caption": _cap("#000000", "#FFFFFF", 45, True),
         # 상단의 넓은 블랙 영역과 그 아래 배치된 화이트 서브타이틀 바가 정돈된 그리드 레이아웃을 형성합니다. 볼드한 서체와 원색의 옐
     },
     "sul_kkultip": {
@@ -219,6 +248,7 @@ PRESETS = {
         "has_head": True, "demo_views": "264만",
         "demo_comments": "587",
         "headcopy": _hc("TmonMonsori.ttf", 90, "#FFFFFF", "#FFFFFF", 30, 7, "#000000", False, "#FFFFFF"),
+        "caption": _cap("#FFFFFF", "#000000", 49, True),
         # 상단에 별점, 조회수, 댓글수 데코레이션을 포함한 고정 포털 프레임을 배치하여 정보의 신뢰도와 주목도를 높였습니다. 자막은 깔
     },
     "sul_daissue": {
@@ -230,6 +260,7 @@ PRESETS = {
         "has_head": True, "demo_views": "264만",
         "demo_comments": "587",
         "headcopy": _hc("GmarketSansBold.otf", 90, "#FFFFFF", "#00EBFF", 39, 7, "#000000", False, "#FFFFFF"),
+        "caption": _cap("#111111", "#FFFFFF", 58, True),
         # 상단에 다이소 매장을 연상시키는 민트색 UI 디자인과 함께 둥글고 두꺼운 서체의 강렬한 헤드라인을 적용했습니다. 동영상 프레임
     },
     "sul_insaeng": {
@@ -241,6 +272,7 @@ PRESETS = {
         "has_head": True, "demo_views": "264만",
         "demo_comments": "587",
         "headcopy": _hc("GmarketSansBold.otf", 90, "#1C1C1C", "#00BAD6", 37, 7, "#FFFFFF", False, "#00B0FF"),
+        "caption": _cap("#111111", "#FFFFFF", 56, False),
         # 인터넷 커뮤니티 게시글을 모바일 웹 브라우저로 캡처한 듯한 노란색 상단 레이아웃이 독특합니다. 실제 게시글 상세 화면처럼 작성
     },
     "sul_namanto": {
@@ -252,6 +284,7 @@ PRESETS = {
         "has_head": True, "demo_views": "264만",
         "demo_comments": "587",
         "headcopy": _hc("Pretendard-SemiBold.otf", 59, "#222222", "#222222", 33, 5, "#FFFFFF", True, "#FFFFFF"),
+        "caption": _cap("#111111", "#FFFFFF", 47, True),
         # 상단에 인스타그램 피드 혹은 커뮤니티 글을 연상시키는 모던한 카드형 UI를 배치하여 친숙하고 신뢰감 있는 정보 전달 방식을 사
     },
     "sul_yosae": {
@@ -263,6 +296,7 @@ PRESETS = {
         "has_head": False, "demo_views": "264만",
         "demo_comments": "587",
         "headcopy": _hc("NotoSansKR-Bold.otf", 89, "#FFFFFF", "#52E4FF", 30, 7, "#000000", True, "#000000"),
+        "caption": _cap("#FEE809", "#000000", 49, False),
         # 이 채널은 상단 검은 레터박스 영역에 굵은 테두리의 흰색 및 하늘색 조합 헤드라인을 배치하여 주목도를 높입니다. 본문 자막 역
     },
     "sul_museun": {
@@ -274,6 +308,7 @@ PRESETS = {
         "has_head": True, "demo_views": "264만",
         "demo_comments": "587",
         "headcopy": _hc("NotoSansKR-Bold.otf", 70, "#FFFFFF", "#FFFFFF", 38, 5, "#000000", True, "#000000"),
+        "caption": _cap("#000000", "#FFFFFF", 53, True),
         # 이 채널은 상단에 모바일 웹 포털 UI를 그대로 모방한 독특한 레이아웃을 고수하여 시청자에게 익숙함과 신뢰를 줍니다. 헤드라인
     },
     "sul_jipdori": {
@@ -285,10 +320,9 @@ PRESETS = {
         "has_head": False, "demo_views": "264만",
         "demo_comments": "587",
         "headcopy": _hc("NotoSansKR-Bold.otf", 65, "#000000", "#000000", 37, 5, "#FFFFFF", True, "#F6EBDB"),
+        "caption": _cap("#000000", "#FFFFFF", 52, False),
         # 상단을 따뜻한 테라코타 색상의 타이틀 바와 넓은 크림색 헤더 영역으로 분할하여 텍스트를 배치한 독특한 레이아웃입니다. 군더더기
     },
-
-    # ── 기존 4종(옛 작업이 가리키고 있다 — id 재사용·삭제 금지) ──────────
     "news_coral":  {"name": "커뮤니티 · 살구", "bar": "#F08080", "on_bar": "#FFFFFF"},
     "news_lime":   {"name": "커뮤니티 · 연두", "bar": "#B5D46A", "on_bar": "#1A1A1A"},
     "news_gray":   {"name": "커뮤니티 · 그레이", "bar": "#6E6E6E", "on_bar": "#FFFFFF"},
