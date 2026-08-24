@@ -481,7 +481,10 @@
           '<div class="ss-acct-badge" style="color:' + tierColor + ";border-color:" + tierColor + '">' + escHtml(tier) + "</div></div></div>" +
       '<div class="ss-acct-sub">' + escHtml(sub) + "</div>" + usage + member +
       '<div class="ss-acct-links">' +
-        (admin ? '<a href="/admin" target="_blank" rel="noopener" class="ss-acct-link wide" style="color:#ffd97a;border-color:#5a4a1e">🔐 관리페이지</a>' : '') +
+        // ★새 탭(target=_blank)으로 열지 않는다(2026-08-24 사장님 "주소창 없이 따로 뜬다").
+        //   레퍼런스 랭킹 등 다른 메뉴처럼 **같은 창에서** 이어서 열려야 사이드바가
+        //   유지되고 뒤로가기도 자연스럽다.
+        (admin ? '<a href="/admin" class="ss-acct-link wide" style="color:#ffd97a;border-color:#5a4a1e">🔐 관리페이지</a>' : '') +
         '<a href="/settings" class="ss-acct-link">👤 마이페이지</a>' +
         '<a href="#" class="ss-acct-link" onclick="window.__ssLogout();return false">↩ 로그아웃</a></div>';
     var h1 = nav.querySelector("h1");
