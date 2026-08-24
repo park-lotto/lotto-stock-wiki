@@ -6605,6 +6605,12 @@ _COOKIE_MAX_AGE = 60 * 60 * 24 * 30  # 30일
 #   없어서(실측) prefix로 열면 상한 없이 샌다.
 _FREE_EXACT_ANY = {"/login", "/signup", "/api/login", "/api/signup", "/logout",
                    "/api/prereg", "/api/deposit_claim", "/pay",   # 사전신청·입금신고·결제안내
+                   # ★가입 마무리 화면(2026-08-24). 등급과 무관하게 열려야 한다 —
+                   #   막으면 **빠져나갈 수 없는 막다른 길**이 된다: 어느 화면을 열든
+                   #   미들웨어가 /welcome으로 보내는데(_needs_welcome), 정작 /welcome이
+                   #   402라 아무 데도 못 간다. 실제로 체험판 고객이 이 상태에 갇혔다.
+                   #   ⚠️ 정보를 받는 화면이지 유료 기능이 아니다. GET·POST 둘 다 연다.
+                   "/welcome", "/api/welcome",
 
                    "/api/mix/basket/toggle",
                    "/api/lens/search", "/api/lens/trace_url",

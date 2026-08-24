@@ -33,6 +33,11 @@ def test_ranking_only_blocked_helper():
     assert appmod._ranking_only_blocked("/api/media", "POST") is True   # 조회만 무료
     assert appmod._ranking_only_blocked("/static/app.js", "GET") is False
     assert appmod._ranking_only_blocked("/api/login", "POST") is False      # 로그인 폼=무료
+    # ★가입 마무리는 등급과 무관하게 열려야 한다(2026-08-24 실사고).
+    #   막으면 막다른 길이 된다: 어느 화면을 열든 미들웨어가 /welcome으로 보내는데
+    #   그 /welcome이 402라 아무 데도 못 간다 — 체험판 고객이 실제로 갇혔다.
+    assert appmod._ranking_only_blocked("/welcome", "GET") is False
+    assert appmod._ranking_only_blocked("/api/welcome", "POST") is False
     # 차단돼야 하는 것들
     assert appmod._ranking_only_blocked("/api/reference", "POST") is True    # 같은 경로여도 POST=차단
     assert appmod._ranking_only_blocked("/api/reference/register", "GET") is True  # 등록=차단
