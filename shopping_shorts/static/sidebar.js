@@ -865,7 +865,6 @@
 
   window.ssOpenBugReport = function () {
     css();
-    var ctx = context();
     var back = document.createElement("div");
     back.className = "ssbug-back";
     SHOT = null;
@@ -884,10 +883,8 @@
           '<div id="ssBugShot" style="margin-top:10px"></div>' +
         "</div>" +
         '<div class="info"><b>함께 보내지는 것</b><br>' +
-          '· 지금 페이지: ' + esc(ctx.page_url.slice(0, 90)) +
-          (ctx.work_id ? "<br>· 작업번호: " + esc(ctx.work_id) : "") +
-          (ctx.step ? "<br>· 진행 단계: " + esc(ctx.step) : "") +
-          (ctx.console.length ? "<br>· 화면 오류 " + ctx.console.length + "건" : "") +
+          '지금 보고 계신 화면과 작업 정보가 자동으로 함께 갑니다. ' +
+          '따로 적으실 것은 없습니다.' +
         "</div>" +
         '<div class="msg" id="ssBugMsg"></div>' +
         '<div class="row"><button class="no" id="ssBugNo">닫기</button>' +
