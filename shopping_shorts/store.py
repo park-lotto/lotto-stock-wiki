@@ -1426,11 +1426,12 @@ class Store:
         c.execute("CREATE INDEX IF NOT EXISTS idx_bugrep_open "
                   "ON bug_reports(status, created_at DESC)")
         # 답장(쪽지) — 신고한 고객이 자기 화면에서 바로 본다. read_at은 '고객이 봤나'.
+        # ★있는 컬럼인지 먼저 보고 없을 때만 붙인다 — try/except로 삼키면 진짜 오류까지
+        #   같이 묻힌다(매 기동마다 나는 '이미 있음'을 로그로 흘릴 수도 없다).
+        _have = {r[1] for r in c.execute("PRAGMA table_info(bug_reports)")}
         for _col, _type in (("reply", "TEXT"), ("replied_at", "INTEGER"), ("read_at", "INTEGER")):
-            try:
+            if _col not in _have:
                 c.execute("ALTER TABLE bug_reports ADD COLUMN %s %s" % (_col, _type))
-            except sqlite3.OperationalError:
-                pass                      # 이미 있음
         # ── 회원승인(2026-07-21): approved_at NULL=대기중 / 값(epoch초)=승인시각 ──
         try:
             c.execute("ALTER TABLE customers ADD COLUMN approved_at INTEGER")
