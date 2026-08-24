@@ -222,6 +222,18 @@
       </svg>
     </div>
     <p class="say">숏템메이커 9단계에서 <b>⚙ 캡컷 자동설정</b> 을 눌러 파일을 받고, 그 파일을 <b>더블클릭</b>하면 캡컷 폴더가 자동으로 만들어집니다.</p>
+    <!-- ★여기서 바로 받게 한다(2026-08-24 사장님 "캡컷은 자동 설정파일이 어디있어?").
+         이 그림 매뉴얼을 보면서도 정작 파일은 제작소 화면에서만 받을 수 있었다 —
+         보고 있는 자리에서 못 받으면 안내가 안내 구실을 못한다.
+         ⚠️경로에 /static/을 붙이지 마라. 정적 파일은 루트 마운트다(2026-08-22 실사고). -->
+    <p style="text-align:center;margin:14px 0 4px">
+      <a href="/capcut_setup.bat" download
+         style="display:inline-block;padding:12px 22px;border-radius:12px;background:#34e0a1;
+                color:#08130f;font-weight:800;text-decoration:none;font-size:16px">
+        ⚙ 자동설정 파일 받기
+      </a>
+    </p>
+    <p class="say" style="font-size:14px;opacity:.75">받은 파일을 더블클릭하면 됩니다. 최초 한 번만 하시면 돼요.</p>
     <div class="warnbox"><span class="ic">⚠</span><span><b>캡컷은 완전히 꺼둔 채로</b> 실행하세요. 켜져 있으면 캡컷이 설정을 되돌려버립니다.</span></div>
   </div>
 
