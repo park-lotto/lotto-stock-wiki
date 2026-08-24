@@ -200,6 +200,16 @@ function _custMatch(c, q){
   if(digits) fields.push(digits);
   return q.split(/\s+/).filter(Boolean).every(tok => fields.some(f => _subseq(f, tok)));
 }
+// 크레딧 차감 대 실제 영상 대조(2026-08-24). usage(가운데 숫자)는 **UTC 날짜** 버킷이라
+// 한국시간 00:00~09:00 제작분은 전날 칸으로 간다 — 그래서 한국시간 오늘 실측을 따로 붙인다.
+// 차감(charged) > 만든 영상(made)이면 빨갛게 띄운다: 중복 접수이거나 실패 환불 대기다.
+function _madeCell(c){
+  const m=c.made_today||{made:0,charged:0};
+  if(!m.charged && !m.made) return '';
+  const bad = m.charged > m.made;
+  return ` <span title="한국시간 오늘 실측 — 차감 ${m.charged}건 / 실제 영상 ${m.made}개"
+    style="color:${bad?'#ff6b6b':'#7ee787'};font-weight:${bad?'700':'400'}">(실제 ${m.made}${bad?' ⚠️':''})</span>`;
+}
 function renderCustomers(){
   const esc=s=>(s||'').toString().replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const q=((document.getElementById('custSearch')||{}).value||'').trim().toLowerCase();
@@ -231,7 +241,7 @@ function renderCustomers(){
       <td style="color:#8a8a92">${c.full_access_until? new Date(c.full_access_until*1000).toLocaleDateString('ko-KR'):'-'}</td>
       <td>${c.last_payment? `<span class=paylink data-cid=${c.id} style="cursor:pointer;color:#8ab4f8">${c.last_payment.amount.toLocaleString()}원 · ${c.payment_count}건</span>` : '-'}</td>
       <td><span style="color:${(c.points||0)<=0?'#ff6b6b':'#7ee787'};font-weight:700">${c.points||0}P</span></td>
-      <td>${u.lens||0}/${u.render||0}/${u.script||0}</td>
+      <td>${u.lens||0}/${u.render||0}/${u.script||0}${_madeCell(c)}</td>
       <td>${accCell}</td>
       <td>${seenCell}</td>
       <td><button class=bpay onclick="addPayment(${c.id})">결제추가</button>

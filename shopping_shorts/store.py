@@ -5112,6 +5112,29 @@ class Store:
                 out.setdefault(cid, {})[op] = cnt
         return out
 
+    def made_and_charged_since_all(self, start_iso):
+        """start_iso(포함) 이후 고객별 (실제 만들어진 영상 수, 과금된 접수 건수).
+
+        → {customer_id: {"made": n, "charged": m}}
+
+        ★왜 필요한가(2026-08-24): 크레딧 카운터(usage)는 **UTC 날짜** 버킷이라 한국시간
+          00:00~09:00에 만든 건 전날 칸으로 간다. 게다가 중복 접수 사고까지 겹쳐
+          "7개 만들었는데 10개가 찍혔다"는 제보를 숫자로 확인할 방법이 없었다.
+          그래서 관리자 목록이 **실제 영상 수**를 나란히 보여준다 — 어긋나면 눈에 띈다.
+        - made    : video_path가 실제로 채워진 job (= 고객이 받은 영상)
+        - charged : render_charge_day가 찍힌 job (= 크레딧을 깎은 접수)
+          둘이 다르면 실패 환불 대기이거나 중복 접수다.
+        """
+        out = {}
+        with self._conn() as c:
+            for cid, made, charged in c.execute(
+                    "SELECT customer_id, "
+                    "SUM(CASE WHEN IFNULL(video_path,'')<>'' THEN 1 ELSE 0 END), "
+                    "SUM(CASE WHEN IFNULL(render_charge_day,'')<>'' THEN 1 ELSE 0 END) "
+                    "FROM mix_jobs WHERE created_at>=? GROUP BY customer_id", (start_iso,)):
+                out[cid] = {"made": made or 0, "charged": charged or 0}
+        return out
+
     def points_balance_all(self):
         """{customer_id: 잔액} — points_balance의 일괄판(내부 단위 그대로)."""
         with self._conn() as c:
