@@ -5,6 +5,7 @@ import logging
 import os
 import secrets
 import sqlite3
+import time
 import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -1273,6 +1274,19 @@ class Store:
                         action TEXT NOT NULL
                     )""")
         c.execute("CREATE INDEX IF NOT EXISTS idx_cust_act ON customer_activity(customer_id, at)")
+        # ── 제작 접수 선점표(2026-08-24): 같은 요청이 두 번 접수돼 render 크레딧이
+        #    **두 배로** 나가던 것을 원자적으로 막는다.
+        #    08-19에 넣은 recent_same_mix_job 가드는 "조회 → (과금) → 기록" 순서라
+        #    조회 시점엔 상대 요청이 아직 DB에 없었다. 0.03~0.17초 차이로 들어온 두 요청이
+        #    **둘 다 조회를 통과**해 각자 과금했다(실측 cid=57, 08-23 2쌍 · 08-24 5쌍 = 7쌍).
+        #    그래서 판단을 조회가 아니라 **INSERT 성공 여부**로 바꾼다 — PRIMARY KEY 충돌은
+        #    SQLite가 원자적으로 처리하므로 스레드·프로세스가 몇 개든 딱 하나만 이긴다. ──
+        c.execute("""CREATE TABLE IF NOT EXISTS mix_claims (
+                        fingerprint TEXT PRIMARY KEY,
+                        customer_id INTEGER NOT NULL,
+                        job_id TEXT,
+                        created_at REAL NOT NULL
+                    )""")
         # ── 회원승인(2026-07-21): approved_at NULL=대기중 / 값(epoch초)=승인시각 ──
         try:
             c.execute("ALTER TABLE customers ADD COLUMN approved_at INTEGER")
@@ -3837,6 +3851,71 @@ class Store:
             if bucket in counts and status in counts[bucket]:
                 counts[bucket][status] = n
         return counts
+
+    # ── 제작 접수 선점(2026-08-24) — 중복 과금 차단의 **단 하나뿐인 판단처**(0순위-B) ──
+    @staticmethod
+    def _mix_fingerprint(customer_id, urls, given_script):
+        """같은 요청인지 가르는 지문. urls·대본이 같으면 같은 지문이다."""
+        raw = json.dumps([int(customer_id or 0), list(urls or []), (given_script or "")],
+                         ensure_ascii=False, sort_keys=True)
+        return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:32]
+
+    def claim_mix_request(self, customer_id, urls, given_script, within_sec=30):
+        """이 제작 요청을 내가 맡는다고 원자적으로 선언한다.
+
+        반환: (fingerprint, won, existing_job_id)
+          won=True  → 내가 이겼다. 과금하고 job을 만든 뒤 attach_mix_claim으로 job_id를 붙인다.
+          won=False → 같은 요청이 within_sec 안에 이미 접수됐다. **과금하면 안 된다.**
+                      existing_job_id가 있으면 그 job을 그대로 쓰면 된다(아직 없을 수도 있다 —
+                      이긴 쪽이 job을 만들기 전이면 None. 호출부가 잠깐 기다린다).
+
+        ★판단을 조회가 아니라 INSERT 성공 여부로 한다. 조회는 "그 순간 없었다"만 말해줄 뿐
+          이라, 상대가 아직 기록하기 전이면 둘 다 통과한다(08-19 가드가 이래서 뚫렸다).
+          PRIMARY KEY 충돌 처리는 SQLite가 원자적으로 보장하므로 딱 하나만 이긴다.
+        ⚠️ 가드가 예외로 죽어도 제작을 막지는 않는다(fail-open) — 중복 과금보다 제작 실패가 나쁘다.
+        """
+        fp = self._mix_fingerprint(customer_id, urls, given_script)
+        now = time.time()
+        try:
+            with self._conn() as c:
+                c.execute("DELETE FROM mix_claims WHERE created_at < ?", (now - float(within_sec),))
+                cur = c.execute(
+                    "INSERT OR IGNORE INTO mix_claims(fingerprint, customer_id, job_id, created_at) "
+                    "VALUES(?,?,?,?)", (fp, int(customer_id or 0), None, now))
+                if cur.rowcount:
+                    return (fp, True, None)
+                row = c.execute("SELECT job_id FROM mix_claims WHERE fingerprint=?", (fp,)).fetchone()
+            return (fp, False, (row[0] if row else None))
+        except (sqlite3.Error, ValueError, TypeError):
+            return (fp, True, None)
+
+    def attach_mix_claim(self, fingerprint, job_id):
+        """이긴 요청이 job을 만든 뒤 job_id를 선점표에 붙인다 — 진 쪽이 이걸 읽어 같은 job을 쓴다."""
+        try:
+            with self._conn() as c:
+                c.execute("UPDATE mix_claims SET job_id=? WHERE fingerprint=?", (job_id, fingerprint))
+        except sqlite3.Error:
+            pass
+
+    def release_mix_claim(self, fingerprint):
+        """이겼지만 job을 못 만든 경우(과금 거절·상한 초과) 선점표를 놓아준다.
+        안 놓으면 within_sec 동안 그 고객이 같은 대본으로 **재시도조차 못 한다**."""
+        try:
+            with self._conn() as c:
+                c.execute("DELETE FROM mix_claims WHERE fingerprint=? AND job_id IS NULL",
+                          (fingerprint,))
+        except sqlite3.Error:
+            pass
+
+    def get_mix_claim_job(self, fingerprint):
+        """선점표에 붙은 job_id(없으면 None)."""
+        try:
+            with self._conn() as c:
+                row = c.execute("SELECT job_id FROM mix_claims WHERE fingerprint=?",
+                                (fingerprint,)).fetchone()
+            return row[0] if row else None
+        except sqlite3.Error:
+            return None
 
     def recent_same_mix_job(self, customer_id, urls, given_script, within_sec=30):
         """방금(within_sec 안에) 같은 고객이 같은 대본·같은 소스로 만든 job이 있으면 그 id.

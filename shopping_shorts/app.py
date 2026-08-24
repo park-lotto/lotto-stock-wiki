@@ -2890,16 +2890,35 @@ def api_mix_start(request: Request, background_tasks: BackgroundTasks, body: dic
     subtitle_removal = bool(body.get("subtitle_removal", False))
     scene_first = bool(body.get("scene_first", False))
     cid = getattr(request.state, "customer_id", 0)
+    # 이 구경로에는 중복 가드가 아예 없었다(2026-08-24) — /api/produce/mix/start와 같은
+    # 판단처를 쓴다(0순위-B). 여기선 확정 대본이 없으므로 지문은 (cid + urls)로 잡힌다.
+    _store = Store(DB_PATH)
+    _fp, _won, _claim_job = _store.claim_mix_request(cid, urls, None)
+    if not _won:
+        for _ in range(30):
+            if _claim_job:
+                break
+            time.sleep(0.1)
+            _claim_job = _store.get_mix_claim_job(_fp)
+        if _claim_job:
+            return {"ok": True, "job_id": _claim_job, "deduped": True}
+        return JSONResponse(status_code=409, content={
+            "ok": False, "error_code": "duplicate",
+            "error": "같은 요청이 방금 접수됐어요. 잠시 후 다시 눌러주세요."})
     if _global_over_cap("render"):
+        _store.release_mix_claim(_fp)
         return JSONResponse(status_code=429, content={
             "ok": False, "error_code": "global_limit",
             "error": "지금 영상 만들기 이용이 많아요. 잠시 후 다시 시도해 주세요."})
     if not check_and_count(cid, "render"):
+        _store.release_mix_claim(_fp)
         return JSONResponse(status_code=429, content={
             "ok": False, "error_code": "daily_limit",
             "error": "오늘 영상 만들기 횟수를 다 썼어요. 결제하면 더 만들 수 있어요."})
     _denied = _charge_or_402(cid, pricing.OP_MIX, keyroute.SVC_GEMINI)
     if _denied:
+        uncount(cid, "render")
+        _store.release_mix_claim(_fp)
         return _denied
     global_incr_and_alert("render")
     job_id = uuid.uuid4().hex[:12]
@@ -2909,6 +2928,7 @@ def api_mix_start(request: Request, background_tasks: BackgroundTasks, body: dic
                                   customer_id=cid,
                                   render_charge_day=("trial" if _is_trial(cid) else _today_utc()),
                                   scene_first=scene_first)
+    _store.attach_mix_claim(_fp, job_id)
     Store(DB_PATH).enqueue("mix", {"job_id": job_id})
     return {"ok": True, "job_id": job_id}
 
@@ -7831,6 +7851,22 @@ def check_and_count(customer_id, op):
     return True
 
 
+def uncount(customer_id, op):
+    """check_and_count로 센 것을 **같은 버킷에** 되돌린다(2026-08-24).
+
+    센 곳과 되돌리는 곳이 버킷을 따로 판단하면 반드시 어긋난다(0순위-B) — 특히 체험
+    유저의 render는 날짜가 아니라 영구 "trial" 버킷이라, 오늘 날짜로 되돌리면 체험
+    1회가 그대로 날아간다. 관리자는 애초에 안 세므로 되돌릴 것도 없다.
+    """
+    if op in ("render", "lens") and _is_admin(customer_id):
+        return
+    st = Store(DB_PATH)
+    if op == "render" and _is_trial(customer_id):
+        st.usage_decr(customer_id, "render", "trial")
+        return
+    st.usage_decr(customer_id, op, _today_utc())
+
+
 def _charge_or_402(customer_id, op, service):
     """포인트를 깎는다. 부족하면 402 응답을 반환(호출부가 그대로 return).
     깎을 필요가 없으면(사용자가 자기 키 등록) None.
@@ -10166,19 +10202,40 @@ def api_produce_mix_start(request: Request, background_tasks: BackgroundTasks, b
     #   헷갈리는 데 그치지 않고 render 크레딧이 두 번 나가고 Gemini·ffmpeg가 두 벌 돌았다.
     #   미리보기(/mix/preview)·자막제거(/mix/clean)엔 이미 같은 성격의 가드가 있었다.
     #   판단은 store.recent_same_mix_job 한 곳에서만 한다(0순위-B).
-    _dup = Store(DB_PATH).recent_same_mix_job(cid, urls, script)
-    if _dup:
-        return {"ok": True, "job_id": _dup, "deduped": True}
+    # ★선점표를 **과금보다 먼저** 원자적으로 꽂는다(2026-08-24). 08-19에 넣은 조회형 가드
+    #   (recent_same_mix_job)는 "조회 → 과금 → 기록" 순서라 조회 시점에 상대 요청이 아직
+    #   기록되기 전이었다 — 0.03~0.17초 차이로 들어온 두 요청이 둘 다 통과해 각자 과금했다
+    #   (실측 cid=57: 08-23 2쌍 · 08-24 5쌍, render 크레딧 10회 차감 / 실제 영상 5개).
+    #   판단은 store.claim_mix_request 한 곳에서만 한다(0순위-B).
+    _store = Store(DB_PATH)
+    _fp, _won, _claim_job = _store.claim_mix_request(cid, urls, script)
+    if not _won:
+        # 진 쪽: 절대 과금하지 않는다. 이긴 쪽이 job을 만들 때까지 잠깐 기다려 같은 job을 돌려준다.
+        for _ in range(30):                       # 최대 3초(0.1초 × 30) — 실측 간격은 0.2초 미만
+            if _claim_job:
+                break
+            time.sleep(0.1)
+            _claim_job = _store.get_mix_claim_job(_fp)
+        if _claim_job:
+            return {"ok": True, "job_id": _claim_job, "deduped": True}
+        # 이긴 쪽이 과금 거절 등으로 job을 못 만들었다 → 사용자에게 재시도를 알린다(과금 0).
+        return JSONResponse(status_code=409, content={
+            "ok": False, "error_code": "duplicate",
+            "error": "같은 요청이 방금 접수됐어요. 잠시 후 다시 눌러주세요."})
     if _global_over_cap("render"):
+        _store.release_mix_claim(_fp)
         return JSONResponse(status_code=429, content={
             "ok": False, "error_code": "global_limit",
             "error": "지금 영상 만들기 이용이 많아요. 잠시 후 다시 시도해 주세요."})
     if not check_and_count(cid, "render"):
+        _store.release_mix_claim(_fp)
         return JSONResponse(status_code=429, content={
             "ok": False, "error_code": "daily_limit",
             "error": "오늘 영상 만들기 횟수를 다 썼어요. 결제하면 더 만들 수 있어요."})
     _denied = _charge_or_402(cid, pricing.OP_MIX, keyroute.SVC_GEMINI)
     if _denied:
+        uncount(cid, "render")           # 위에서 센 render를 같은 버킷으로 되돌린다
+        _store.release_mix_claim(_fp)
         return _denied
     global_incr_and_alert("render")
     # 장면 우선 대본 모드(2026-07-20, Task7): produce.html "우리 시스템으로 믹스"는 항상 이 값을
@@ -10195,6 +10252,7 @@ def api_produce_mix_start(request: Request, background_tasks: BackgroundTasks, b
                                   customer_id=cid,
                                   render_charge_day=("trial" if _is_trial(cid) else _today_utc()),
                                   backbone_main=backbone_main)
+    _store.attach_mix_claim(_fp, job_id)     # 진 쪽이 이걸 읽어 같은 job을 쓴다
     Store(DB_PATH).enqueue("mix", {"job_id": job_id})
     return {"ok": True, "job_id": job_id}
 
