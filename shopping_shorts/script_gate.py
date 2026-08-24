@@ -48,6 +48,49 @@ _TAIL_EMI = ("거든요", "더라고요", "더라구요", "었어요", "았어�
 DENSITY_LO, DENSITY_HI = 0.7, 1.4
 DEFAULT_CHARS_PER_30S = 135      # 스타일에 실측값이 없을 때만(일반 기준 4.5자/초)
 
+# ─────────────────────────────────────────────────────────────────────────
+# ★길이의 단위는 **norm(공백·문장부호 제외)** 하나뿐이다 (2026-08-24)
+#
+# 이 시스템에서 길이를 재는 곳은 전부 `norm()` 기준이다:
+#   · est_seconds()  — 화면의 "N초" 표시
+#   · check()        — 말 밀도 판정
+#   · _speech_cps()  — edit_plan._SYLLABLES_PER_SEC(5.7). 주석이 못 박는다:
+#                      "한글 1글자 ≈ 1음절" → 공백은 음절이 아니다 = norm
+#
+# 그런데 **DB `spine.chars_per_30s`만 raw(공백 포함)**로 쌓였다. 히트작 전사를
+# 그대로 세어 넣었기 때문이다. 실측(693편)으로 확인:
+#     norm/raw = 0.7395 (중앙값, p10~p90 = 0.715~0.776)
+#     히트작 밀도 raw 309 / norm 229 per 30s
+#
+# ## 이 한 줄이 없으면 무슨 일이 나는가 (전부 실측)
+#
+# raw 스케일 밀도(270~327)를 norm 천장(≈222/30초)과 비교하니 **항상 천장에 잘렸다**:
+#     밀도 240 → 창 155~222자
+#     밀도 327 → 창 155~222자      ← 서로 다른 창이 **1종류뿐**
+# 승인 스타일 11개가 100% 같은 창을 썼다 = **스타일별 밀도가 통째로 죽어 있었다.**
+# 천장 222가 히트작 norm 229와 우연히 가까워 결과가 그럴듯해 안 들켰다.
+#
+# 재측정으로 교차검증했다(hook_axis로 스파인↔전사를 이어 norm으로 다시 셈):
+#     가족갈등 반전형 230 (×0.7395 → 227) · 단정 명령형 236 (242)
+#     금지경고형     230 (230)            · 다이소 내부인형 228 (220)
+# 두 방법이 2% 안에서 일치한다. 표본이 5편 미만인 스타일도 덮으려고 계수를 쓴다.
+#
+# ## 왜 DB를 안 고치고 여기서 바꾸나
+#
+# DB 값을 환산해 넣으면 **저장된 수의 뜻이 조용히 바뀐다** — 다음에 누가 전사에서
+# 밀도를 다시 재 넣으면(그게 자연스러운 동작이다) raw가 다시 들어오고, 아무도 모른다.
+# 값은 잰 그대로 두고 **쓰는 자리에서 한 번** 환산한다. 환산하는 곳은 여기 하나뿐이다.
+_NORM_PER_RAW = 0.7395   # 히트작 전사 693편 실측 중앙값
+
+
+def norm_chars_per_30s(style):
+    """스타일의 히트작 밀도를 **norm 기준**으로 돌려준다 — 길이 판단의 유일한 입구.
+
+    DB는 raw로 쌓여 있고 이 시스템의 나머지는 전부 norm이다. 그 경계가 여기다.
+    """
+    raw = (style or {}).get("chars_per_30s") or 0
+    return int(raw * _NORM_PER_RAW) if raw else DEFAULT_CHARS_PER_30S
+
 # ★말 밀도의 **천장**(2026-08-18 사장님: "계속 4초 이상 나온다 / 30초 이내가 릴스 기본").
 #   히트작 실측 밀도(chars_per_30s)를 그대로 목표로 주면 264~377자가 나오는데, 우리
 #   라이브 보이스의 실측 속도는 **8.19자/초**(edit_plan.py:4226, 라이브 렌더 20건)라
@@ -80,7 +123,10 @@ def density_target(style, seconds=30):
     프롬프트(bank_assemble.style_block)와 판정(check)이 서로 다른 수를 쓰면
     "시킨 대로 썼는데 반려"가 난다."""
     sec = max(5, min(int(seconds or 30), 90))
-    tgt = int(((style or {}).get("chars_per_30s") or DEFAULT_CHARS_PER_30S) * sec / 30)
+    # ★norm 기준으로 환산해서 쓴다 — 천장(_speech_cps)도 norm이라 단위가 맞아야
+    #   비교가 성립한다. 종전엔 raw 예산을 norm 천장과 견줘 **항상 천장에 잘렸고**,
+    #   그 탓에 스타일별 밀도가 전부 같은 값이 됐다(위 주석의 실측 참조).
+    tgt = int(norm_chars_per_30s(style) * sec / 30)
     return max(1, min(tgt, int(_speech_cps() * sec)))
 
 
@@ -317,13 +363,36 @@ def hook_checks(style, full, product=""):
     return out
 
 
-def check(style, beats, facts_text="", product="", seconds=30):
+def prior_verdict(checks):
+    """앞서 나온 '화자 일관성' 판정을 **그대로 재사용**하는 판정기를 만든다.
+
+    ★왜 필요한가: 길이가 넘친 대본은 재단(_trim_to_budget) 뒤 게이트를 다시 돈다.
+      그때 판정기를 안 넘기면 앞서 찾은 화자 실패가 checks에서 **조용히 사라진다**
+      (판정은 했는데 화면·재작성 지시문에 안 실리는 미탐).
+      그렇다고 판정기를 다시 넘기면 **유료 LLM 호출이 두 배**가 된다.
+      재단은 군더더기 부사만 덜어내므로 화자를 바꿀 수 없다 → 앞 판정을 물려준다.
+
+    앞에 판정이 없으면(키 소진 등) None을 돌려주는 판정기 → 검사 항목이 안 생긴다.
+    """
+    hit = [c for c in (checks or []) if c.get("name") == "화자 일관성"]
+    if not hit:
+        return lambda _text: {}
+    return lambda _text: {"ok": hit[0]["ok"], "why": hit[0].get("detail") or ""}
+
+
+def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
+          speaker_judge=None):
     """(checks, full_text) 반환. checks = [{name, ok, detail}, ...]
 
     style: {"beat_roles": [...], "templates": {role: [...]}, "chars_per_30s": int}
     beats: [{"role": "...", "text": "..."}, ...]  ← 모델이 돌려준 것
     facts_text: 이 대본에 준 **재료 원문**(product_facts 등). 주면 수치 그라운딩을
         검사한다. 안 주면 그 검사는 건너뛴다 — 기존 호출부는 그대로 = 회귀 0.
+    assembled: 이 대본이 **조립**(spine_fill)으로 만들어졌나. 조립만 '문장틀 준수'를
+        묻는다 — 아래 그 검사 주석 참조. 기본 False = 생성기.
+    speaker_judge: 대본 전문을 받아 {"ok": bool, "why": str}를 돌려주는 판정기.
+        주면 '화자 일관성'을 검사한다. 안 주면 그 검사는 **항목 자체를 안 만든다**
+        (기존 호출부 그대로 = 회귀 0). 아래 그 검사 주석 참조.
     """
     beats = beats or []
     want = list(style.get("beat_roles") or [])
@@ -344,7 +413,17 @@ def check(style, beats, facts_text="", product="", seconds=30):
     checks = [{"name": "구간 순서", "ok": got_cmp == want,
                "detail": "기대 %s / 실제 %s" % (want, got_cmp)}]
 
-    templates = style.get("templates") or {}
+    # ★'문장틀 준수'는 **조립 대본에만** 묻는다(2026-08-22 실측).
+    #   이 검사는 대본을 템플릿 원문과 **글자 단위로** 대조한다(template_matches).
+    #   조립(spine_fill)은 틀을 글자 그대로 쓰므로 옳다. 그러나 생성기는 틀을
+    #   **참고만** 하고 문장을 새로 쓴다 — assemble_off=1(사장님 지시)로 지금은
+    #   전부 생성기다. 그대로 두면 **잘 쓸수록 떨어진다**.
+    #   라이브 실측(스콘 소재 실제 대본 6편): 비문 0건인데 6편 전부 게이트 실패
+    #   (cta 83% · escalation 67% · hook 67%가 '문장틀 준수'로 떨어졌다).
+    #   피해가 두 겹이다 — ①무의미한 ⚠️가 화면을 덮어 진짜 문제를 가린다
+    #   ②재작성 루프가 "틀에 맞춰라"로 돌아 생성기의 장점을 도로 깎는다.
+    #   ⚠️없애지 않는다. 조립은 종전대로 검사한다(회귀 0).
+    templates = (style.get("templates") or {}) if assembled else {}
     for role in want:
         tmpl = templates.get(role) or []
         if not tmpl:
@@ -449,6 +528,29 @@ def check(style, beats, facts_text="", product="", seconds=30):
 
     # ★훅 3초(2026-08-19) — 스타일이 선언할 때만. 위 함수 하나가 판단을 전담한다.
     checks += hook_checks(style, full, product)
+
+    # ★화자 일관성(2026-08-23 사장님 "말이되는건지") — 판정기를 준 경우에만.
+    #   헌장(_STORY_RULES_CORE)에 "훅에서 등장시킨 그 인물이 결말에서 회수돼야 하고
+    #   중간에 슬그머니 다른 인물로 갈아타지 마라"가 **이미 적혀 있었다**. 그런데
+    #   규칙은 프롬프트에만 있고 **지켰는지 보는 판정이 없었다** — 어겨도 미검출이라
+    #   재작성 루프가 안 걸리고 아무도 안 고쳤다.
+    #   실측 제보: "저 친구네 집 갔다가" → "남편 턱이 달라진 거예요"(누구 남편?) →
+    #   "저도 해보니까"(화자가 자기가 씀). 라이브 게이트는 이걸 **전부 통과**시켰다.
+    #   ★규칙(정규식)으로 안 잡는 이유: 라이브 27개에 돌려보니 멀쩡한 대본 2건을
+    #     잡았다(오탐). 이 파일의 기존 원칙대로 오탐이 미탐보다 나쁘다 → LLM 판정.
+    #   ★fail-open: 판정을 못 하면(_call_json이 키 소진 시 {} 반환·예외) **통과**시킨다.
+    #     여기서 막으면 키가 마른 날 대본이 통째로 안 나온다.
+    if speaker_judge is not None:
+        try:
+            _v = speaker_judge(full) or {}
+        except Exception:      # noqa: BLE001 — 판정 실패가 대본 생성을 죽이면 안 된다
+            _v = {}
+        if isinstance(_v, dict) and isinstance(_v.get("ok"), bool):
+            checks.append({"name": "화자 일관성", "ok": _v["ok"],
+                           "detail": (_v.get("why") or "").strip()[:200] or
+                                     ("말하는 사람이 도중에 바뀐다 — 훅에서 등장시킨 그 인물로 "
+                                      "끝까지 꿰어라(3인칭은 '친구 남편'처럼 누구 것인지 밝혀라)")
+                                     if not _v["ok"] else "OK"})
 
     # ★수치 그라운딩(2026-08-16) — 재료를 준 경우에만. 지어낸 수치를 잡는다.
     ok_g, bad = grounding_check(full, facts_text)

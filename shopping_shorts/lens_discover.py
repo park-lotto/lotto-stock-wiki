@@ -421,7 +421,25 @@ def _lens_call(image_url, keys, hl, country, timeout, budget=None, dead=None):
     return []
 
 
-def search_similar_videos(image_url, api_key=None, timeout=60, source_caption=None, stats=None):
+def _resolve_locales(locales):
+    """부르는 쪽이 고른 국가 → 실제로 돌릴 로케일 목록. 판정은 **여기 한 곳에서만**(0순위-B).
+
+    왜(2026-08-22 사장님 "김밥 렌즈를 해외까지 돌릴 거 없잖아"): 국내 소재인 걸 아는데도
+    로케일 4벌이 무조건 다 나가 SerpApi를 4회 썼다. 한국만 고르면 1회로 준다(잔량 4배).
+
+    ★안전핀 — 고른 게 0개면 **종전 전체**로 되돌린다. 프론트가 칩을 전부 끈 채 보내거나
+      옛 화면이 빈 값을 보낼 수 있는데, 그대로 두면 렌즈가 조용히 빈손이 된다.
+    ★설정(_LENS_LOCALES)에 없는 값은 버린다 — 아무 값이나 SerpApi로 흘려보내지 않는다."""
+    if not locales:
+        return list(_LENS_LOCALES)
+    allowed = list(_LENS_LOCALES)
+    want = {(str(hl), str(cc)) for hl, cc in locales}
+    picked = [loc for loc in allowed if loc in want]   # 설정 순서를 유지한다
+    return picked or allowed
+
+
+def search_similar_videos(image_url, api_key=None, timeout=60, source_caption=None,
+                          stats=None, locales=None):
     """공개 이미지 URL → [{platform, url, title, thumbnail, match}]. 5개 동영상 플랫폼만.
     키 없음·호출 실패 시 [].
 
@@ -449,19 +467,28 @@ def search_similar_videos(image_url, api_key=None, timeout=60, source_caption=No
     #   겹침이 1건 남짓이라 합치면 결과가 두 배가 된다. 대신 SerpApi를 로케일당
     #   1회씩 쓴다(렌즈 1번 = 2회 차감). 아래 _LENS_LOCALES로 조절 가능.
     matches = []
+    # ★어느 나라를 돌릴지는 _resolve_locales가 정한다(0순위-B — 판정은 한 곳에서만).
+    run_locales = _resolve_locales(locales)
     # ★호출 예산 — 로케일들이 **공유**한다. 재시도까지 합쳐 총 _MAX_CALLS_PER_SEARCH회.
     #   리스트로 넘겨 _lens_call 안에서 깎는다(정수는 값 복사라 안 깎인다).
-    budget = [_MAX_CALLS_PER_SEARCH]
+    #   ★고른 나라가 적으면 예산도 **비례해서** 줄인다 — 안 줄이면 한국만 골라도 예산이
+    #     그대로라 재시도로 다 써버려 **비용이 하나도 안 준다**(이 기능의 목적이 죽는다).
+    #     ⚠️ 로케일 수로 그냥 자르면(min) 재시도 여유가 0이 돼 기존 재시도가 죽는다
+    #        (test_retries_when_lens_returns_no_results_then_succeeds가 이걸 잡았다).
+    #        그래서 '나라당 예산'을 유지하는 비례식으로 깎는다.
+    _per = _MAX_CALLS_PER_SEARCH / max(1, len(_LENS_LOCALES))     # 나라당 몫(재시도 포함)
+    start_budget = max(1, round(_per * len(run_locales)))
+    budget = [start_budget]
     # 이번 검색에서 소진으로 확인된 키 — 로케일마다 같은 죽은 키를 다시 찌르지 않는다
     # (라이브 실측: 로케일 3벌이면 죽은 키를 3번 찔러 왕복만 낭비했다).
     dead = set()
-    for i, (hl, country) in enumerate(_LENS_LOCALES):
+    for i, (hl, country) in enumerate(run_locales):
         if budget[0] <= 0:
             break                        # 예산 소진 → 남은 로케일은 건너뛴다
         # ★뒤 로케일 몫을 남겨둔다 — 앞 로케일의 재시도가 예산을 다 먹으면
         #   zh가 아예 안 돈다(사장님 "중국어가 얼마나 나올지 보고싶다").
         #   남은 로케일 수만큼 예약해두고, 이번 로케일은 나머지만 쓴다.
-        reserve = (len(_LENS_LOCALES) - i - 1) if _RESERVE_PER_LOCALE else 0
+        reserve = (len(run_locales) - i - 1) if _RESERVE_PER_LOCALE else 0
         allow = max(1, budget[0] - reserve)
         sub = [min(allow, budget[0])]
         got = _lens_call(image_url, keys, hl, country, timeout, sub, dead)
@@ -472,7 +499,9 @@ def search_similar_videos(image_url, api_key=None, timeout=60, source_caption=No
     if stats is not None and isinstance(stats, dict):
         # 실제로 '검색을 해준' 호출 수(소진 키 왕복은 환불되므로 여기 안 잡힌다).
         # 한도에 실제로 찍히는 건 이 숫자다.
-        stats["serpapi_calls"] = _MAX_CALLS_PER_SEARCH - budget[0]
+        # ★시작 예산에서 남은 것을 뺀다 — 상수를 쓰면 나라를 골랐을 때 틀린 수가 나온다
+        #   (한국만 골라 1회 썼는데 "4회 썼다"고 보고하게 된다).
+        stats["serpapi_calls"] = start_budget - budget[0]
     # ★인스타 편차 계측(2026-08-14 사장님 "인스타는 0건이거나 왕창이거나 편차가 심하다").
     #   추측하지 않으려면 어디서 사라지는지 세야 한다. 렌즈 원본(visual_matches) 중
     #   인스타 링크가 몇 개였고, 그중 몇 개가 개별 게시물이 아니라(프로필·/explore·

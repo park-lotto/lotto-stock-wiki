@@ -181,3 +181,50 @@ def test_어느_칸이_왜_안됐는지_말한다(monkeypatch):
     msg = " ".join(why)
     assert "유튜브 은폐형" in msg and "칸" in msg
     assert "reveal" in msg or "benefit" in msg, "어느 칸이 빈지 말해야 한다"
+
+
+class _OffStore:
+    """assemble_off 설정만 답하는 최소 store(테스트용)."""
+
+    def __init__(self, off):
+        self._off = off
+        self._d = {}
+
+    def get_setting(self, key, default=""):
+        return self._off if key == "assemble_off" else self._d.get(key, default)
+
+    def set_setting(self, key, value):
+        self._d[key] = value
+
+
+def test_조립을_꺼도_재료_사유는_화면까지_간다(monkeypatch):
+    """★2026-08-24 회귀 방지 — 조립을 끄는 것과 진단을 끄는 것은 다른 판단이다.
+
+    예전엔 `assemble_off=1`이면 함수 맨 앞에서 즉시 return 해서, 그 아래에 있던
+    재료 자격 판정(`sul_material_problem`)·소재 분리·칸 커버리지가 **통째로 안 돌았다**.
+    화면엔 "설정에서 껐습니다" 한 줄만 떠서, 재료가 그 틀에 안 맞는다는 사실을
+    사장님이 대본을 다 뽑고 나서야 알 수 있었다(실측: 크림치즈 job a31d8f7625e4 —
+    재료 4편이 전부 레시피라 오용형이 성립 안 되는데 아무도 안 알려줘 맹탕 B안이 나왔다).
+    """
+    # 크림치즈 실측 재료 — 오용형이 아니다(misuse_genre=False)
+    _stub_sul(monkeypatch, {"category_word": "크림치즈", "misuse_genre": False,
+                            "misuses": [], "original_use": [], "hidden_property": []})
+    out, left, why = app._assembled_drafts([SUL_SPINE], [{"full_text": "자막"}],
+                                           _OffStore("1"))
+    # 조립은 여전히 안 한다(비문 회피 그대로) — 전부 생성기로 넘어간다
+    assert out == [] and left == [SUL_SPINE]
+    # ★그래도 "왜 이 틀이 안 되는지"는 말해준다
+    assert any("오용형이 아닙니다" in w for w in why), why
+    assert any("틀 조립을 꺼두었습니다" in w for w in why), why
+
+
+def test_조립을_꺼도_슬롯이_다_차면_조립은_안_한다(monkeypatch):
+    """재료가 멀쩡해도 assemble_off=1이면 조립본을 만들지 않는다(끄기의 본뜻)."""
+    _stub_sul(monkeypatch, FULL)
+    out, left, _why = app._assembled_drafts([SUL_SPINE], [{"full_text": "자막"}],
+                                            _OffStore("1"))
+    assert out == [] and left == [SUL_SPINE]
+    # 끄지 않으면 종전대로 조립된다(대조군)
+    out2, left2, _ = app._assembled_drafts([SUL_SPINE], [{"full_text": "자막"}],
+                                           _OffStore("0"))
+    assert len(out2) == 1 and not left2

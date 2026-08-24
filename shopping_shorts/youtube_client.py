@@ -372,3 +372,47 @@ def enrich_youtube(url):
         "caption": sn.get("description", ""),
         "top_comments": top,
     }
+
+
+def fetch_subscribers(channel_ids, tokens=None):
+    """channel_id 목록 → {channel_id: 구독자수}. 실패한 채널은 **키를 안 만든다**.
+
+    2026-08-24 사장님 "구독자대비로 해줘" — 랭킹의 🙌 탭이 유튜브에서 항상 0이었다.
+    수집이 videos.list만 불러 subscriberCount를 아예 안 가져왔기 때문이다.
+
+    비용: channels.list(part=statistics) = **채널 50개당 1 unit**. 영상이 아니라
+    채널 단위로 중복제거하므로 실측 기준 한 자릿수 unit이다(search.list 100u에 비하면
+    무시할 수준).
+
+    ★실패를 0으로 채우지 않는다 — 없는 키는 호출부에서 None이 되고, 0으로 채우면
+      "구독자 대비 0%"라는 거짓 정보가 된다(ranking.build_youtube_items docstring 참조).
+    ★키 로테이션은 이 모듈의 다른 호출과 같은 방식으로 한다(403이면 다음 키).
+      비전 API 9곳이 로테이션을 안 써서 23키 중 1번만 때리던 전례가 있다.
+    """
+    ids = [c for c in dict.fromkeys(channel_ids) if c]      # 중복제거·빈값 제거(순서 유지)
+    if not ids:
+        return {}
+    toks = list(tokens if tokens is not None else YOUTUBE_API_KEYS)
+    if not toks:
+        return {}
+    out, ti = {}, 0
+    for i in range(0, len(ids), 50):                        # API 상한 50개/호출
+        chunk = ids[i:i + 50]
+        while ti < len(toks):
+            try:
+                r = requests.get(_CHANNELS_URL, params={
+                    "part": "statistics", "id": ",".join(chunk),
+                    "key": toks[ti]}, timeout=30)
+            except requests.exceptions.RequestException:
+                break                                        # 네트워크 실패는 이 청크만 포기
+            if r.status_code == 403:                         # 쿼터 소진 — 다음 키로 같은 청크 재시도
+                ti += 1
+                continue
+            if r.status_code != 200:
+                break
+            for it in r.json().get("items", []):
+                n = int((it.get("statistics") or {}).get("subscriberCount") or 0)
+                if n > 0:                                    # 0/비공개는 키를 안 만든다
+                    out[it["id"]] = n
+            break
+    return out

@@ -5,6 +5,7 @@ run_render: 사용자가 확인 후 최종 ffmpeg 렌더 → done.
 각 단계에서 mix_jobs.status를 갱신하고, 예외는 status='failed'+error로 잡는다.
 """
 import hashlib
+import logging
 import re
 import subprocess
 import sys
@@ -159,6 +160,16 @@ _DEFAULT_VOICE = {
     "voice_id": "aiUUgjHa4mpHf6UenZuf",
     "model_id": "eleven_v3",
     "settings": {"stability": 0.35, "similarity_boost": 0.78, "style": 0.4},
+    # ★1.4 (2026-08-22 사장님 지시 — 2.2는 실제로 들어보니 말도 안 되게 빨랐다).
+    #   ⚠️아래 "메종 8.45자/초"는 **자막 글자수 ÷ 영상 길이**로 낸 값이라
+    #     사람이 말하는 속도가 아니다(무음·화면전환·자막만 있는 구간이 섞였다).
+    #     그 값을 TTS 배속 목표로 삼은 것이 잘못이었다. 재측정 전까지 참고만 할 것.
+    #   [옛 근거 — 검증 실패]
+    #   메종 23.8초·193자·**8.45자/초** ← 사장님이 "밀도·시간 다 맞다"고 지목한 채널.
+    #   우리는 1.6에서 6.46자/초라 히트작 하위10%(6.72)보다도 느렸다 — 같은 25초에
+    #   메종보다 49자 적게 말한다 = "말이 빈다". 배속 샘플 실측(렌더와 같은 경로):
+    #   1.6→6.51 · 1.8→7.26 · 2.0→7.66 · **2.2→8.75자/초**(메종과 일치).
+    #   ⚠️길이는 글자를 줄여서 맞추면 안 된다 — 그러면 말이 비는 쪽으로 되돌아간다.
     "speed": 1.6,
     "silence_trim": "mid",
     # 컷편집 빠른 느낌(2026-07-25 사장님): 4단계 UI 기본(⚡속도감 모드 체크)과 동일하게
@@ -205,7 +216,7 @@ def asr_ranker(path, text):
 
 def synthesize_line(narration, out_path, *, voice=None, profile=None, beat_role=None,
                     beat_index=None, beat_total=None, previous_text=None, next_text=None,
-                    ranker=asr_ranker, global_pron=None):
+                    ranker=asr_ranker, global_pron=None, customer_id=0):
     """한 줄을 naturalize→TTS(N-best·연속성)→후처리까지 합성하고 변환텍스트를 반환.
 
     **튜닝 작업대와 실제 렌더가 공유하는 단일 경로**다. 양쪽이 각자 파이프라인을 조립하면
@@ -213,7 +224,12 @@ def synthesize_line(narration, out_path, *, voice=None, profile=None, beat_role=
     새 호출부를 만들지 말고 이 함수를 쓸 것.
 
     profile 미지정 시 voice 스냅샷의 naturalize_profile을 쓴다. seed/n_best는 merge_profile을
-    거친 값으로 읽어 텍스트와 오디오가 같은 기준을 보게 한다(S10)."""
+    거친 값으로 읽어 텍스트와 오디오가 같은 기준을 보게 한다(S10).
+
+    customer_id: **누구 키로 합성하나**(2026-08-24). 0=사장님 키(기존 동작 그대로).
+    하류는 이미 다 뚫려 있었다 — synthesize_best(**kw)가 그대로 넘기고
+    synthesize_tts→tts._api_key→keyroute.keys_for가 받는다. 여기만 안 받아서
+    회원이 일레븐랩스 키를 등록해도 항상 사장님 키로 돌았다(keyroute.py 주석 참조)."""
     voice_id, settings, speed, extra_tempo, trim, prof_v, model_id, pace_mode = _voice_params(voice)
     prof = merge_profile(profile if profile is not None else prof_v)
     # 전역 발음교정을 profile 위에 병합(설계 §2-A) — 렌더·작업대 공통 choke.
@@ -231,7 +247,8 @@ def synthesize_line(narration, out_path, *, voice=None, profile=None, beat_role=
                         base_seed=(prof.get("seed") if prof.get("seed") is not None else _PINNED_TTS_SEED),
                         ranker=ranker,
                         voice_id=voice_id, voice_settings=settings, speed=speed,
-                        model_id=model_id, previous_text=previous_text, next_text=next_text)
+                        model_id=model_id, previous_text=previous_text, next_text=next_text,
+                        customer_id=customer_id)
     # ★무음 제거 '전에' 어디를 자를지 재서 사이드카에 남긴다(2026-08-06). post_process는
     # 제자리 덮어쓰기라 뒤에는 원본 타임라인을 알 길이 없다. 이 구간들이 있어야 TTS
     # 타임스탬프를 조각별로 당겨 자막을 맞출 수 있다(선형사상으론 누적 드리프트가 남는다).
@@ -301,7 +318,8 @@ def mismatched_beats(beats):
     return [b.get("beat_idx") for b in (beats or []) if not tts_matches_narration(b)]
 
 
-def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron=None):
+def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron=None,
+                      customer_id=0):
     """비트별로 synthesize_line 호출. beat['tts_path']를 채운다.
     연속성(previous_text/next_text)은 인접 비트의 '원문'(naturalize 전) narration을 쓴다
     — naturalize된 텍스트(오디오 태그·추임새 포함)를 연속성으로 넘기면 ElevenLabs가
@@ -335,7 +353,7 @@ def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron
             beat_index=i, beat_total=total,
             previous_text=beats[i - 1]["narration"] if i > 0 else None,
             next_text=beats[i + 1]["narration"] if i < total - 1 else None,
-            global_pron=global_pron,
+            global_pron=global_pron, customer_id=customer_id,
         )
         beat["tts_path"] = str(out)
         # ★비트 끝 무음 트림(2026-07-22) — 각 비트 TTS 뒤 자연 무음(호흡·여백)을 잘라 이어붙임을
@@ -711,6 +729,39 @@ def _edl_empty_reason(source_scripts, plan):
             " — Gemini 응답이 비었거나(키 소진·차단·과부하) 편집안 파싱에 실패했습니다.")
 
 
+def _owned_job(fn):
+    """워커가 **누구 작업인지** 알고 돌게 한다.
+
+    ★왜 필요한가: 제미나이 키를 고르는 쪽(keyroute.gemini_keys)은 인자로 cid를
+      못 받는다 — 호출 체인이 3~4겹이라 시그니처를 20곳 넘게 고쳐야 하기 때문이다.
+      대신 keyctx에 담아두고 그쪽이 읽는다. 워커는 HTTP 미들웨어를 안 거치고
+      별도 스레드에서 도니까(contextvar는 스레드마다 따로) 여기서 직접 열어준다.
+
+    안 열면 0(사장님)으로 떨어진다 — 남의 키를 쓰는 일은 생기지 않는다.
+    """
+    import functools
+    import inspect
+
+    sig = inspect.signature(fn)
+
+    @functools.wraps(fn)
+    def wrap(*a, **kw):
+        from shopping_shorts import keyctx
+        cid = 0
+        try:
+            b = sig.bind(*a, **kw)
+            b.apply_defaults()
+            cid = _job_customer_id(b.arguments.get("db_path"),
+                                   b.arguments.get("job_id")) or 0
+        except Exception:      # noqa: BLE001 — 주인을 못 알아내도 본작업은 돌아야 한다
+            pass
+        with keyctx.owner(cid):
+            return fn(*a, **kw)
+
+    return wrap
+
+
+@_owned_job
 def run_mix_job(job_id, db_path, work_root):
     """다운로드→추출→EDL→TTS. 완료 시 status='ready_for_review'."""
     # 이 job 안에서 나가는 모든 Gemini 콜에 job_id·customer_id를 붙인다(2026-08-16).
@@ -867,10 +918,11 @@ def run_mix_job(job_id, db_path, work_root):
             #   되돌린다. produce 2단계·auto_run·retype는 과금 안 해 이 값이 없다 → 오환불로 전역
             #   카운터를 갉아 다른 유저 과금을 상쇄하는 일을 막는다(리뷰 B/F).
             _refund_render_charge(store, job.get("customer_id", 0), job.get("render_charge_day"))
-            _refund_mix_points(store, job.get("customer_id", 0), job.get("render_charge_day"))
+            _refund_mix_points(store, job.get("customer_id", 0), job.get("render_charge_day"),
+                               job.get("mix_charged"))
 
 
-def _refund_mix_points(store, customer_id, charge_day):
+def _refund_mix_points(store, customer_id, charge_day, charged=None):
     """영상제작 실패 → 차감한 포인트 환불. 크레딧 환불(_refund_render_charge)과 대칭.
 
     ★charge_day가 표식이다 — /api/mix/start 계열이 과금할 때만 채워지므로,
@@ -887,8 +939,18 @@ def _refund_mix_points(store, customer_id, charge_day):
     if not keyroute.as_cid(customer_id):
         return                       # 사장님(cid 0)은 애초에 과금 안 했다
     try:
-        # 차감할 때와 같은 조건으로 되묻는다 — 사용자 키를 쓰는 사람은 안 깎였으니
-        # 환불하면 없던 포인트가 생긴다(_charge_or_402와 짝).
+        if charged is not None:
+            # ★정상 경로 — 차감할 때 정한 액수를 그대로 돌려준다.
+            #   0이면 애초에 안 깎였으니 환불도 없다.
+            if int(charged) > 0:
+                points.refund(store, customer_id, int(charged), pricing.OP_MIX)
+            return
+        # ↓ mix_charged 칸이 생기기 전(2026-08-24 이전)에 시작된 job 호환.
+        #   이 경로는 환불 시점에 다시 판단하므로 차감과 어긋날 수 있다 —
+        #   개인 키로 0원 차감된 뒤 키를 지우면 없던 포인트가 생긴다.
+        #   배포 직후 진행 중이던 job만 여기로 오고, 몇 분이면 사라진다.
+        logging.warning("mix 환불: mix_charged가 없는 옛 job이라 재판단으로 환불한다 (cid=%s)",
+                        customer_id)
         if keyroute.should_charge(store, customer_id, keyroute.SVC_GEMINI):
             points.refund(store, customer_id,
                           pricing.cost(store, pricing.OP_MIX), pricing.OP_MIX)
@@ -1290,7 +1352,8 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
 
     # 4) 비트별 TTS (naturalize + N-best + 연속성 + 프리셋 후처리)
     store.update_mix_job(job_id, status="tts")
-    _synthesize_beats(plan["beats"], work / "tts", voice=voice, global_pron=global_pron)
+    _synthesize_beats(plan["beats"], work / "tts", voice=voice, global_pron=global_pron,
+                      customer_id=customer_id)
 
     # 4.2) 프리즈 뿌리 fix(2026-07-21) — 화면을 **실 TTS 길이**만큼 재보정한다. fill은 plan
     # 시점에 나레이션 추정(글자÷5.7)으로 채웠는데, 빠른 보이스면 실제 TTS가 추정과 달라 생긴
@@ -1322,6 +1385,7 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     store.update_mix_job(job_id, edit_plan=plan, status="ready_for_review")
 
 
+@_owned_job
 def retype_mix_job(job_id, video_type, db_path, work_root):
     """사용자가 감지된 영상 유형을 바꾸면, 저장된 extract로 EDL+TTS만 재생성한다
     (재다운로드·재추출 없음 — 방식3의 '확인/변경' 경로, 설계 §3-6)."""
@@ -1534,7 +1598,7 @@ def _ensure_clean_sources(store, job, job_id, work, key, customer_id=0):
     """clean_sources 맵을 채워 반환. 이미 있고 파일이 존재하면 스킵(재과금 0).
     각 스레드는 remove_subtitles만 하고 경로를 반환 → DB 저장은 취합 후 메인에서 1회(경합 없음).
 
-    ★돈이 나가는 함수다 — 청소할 소스 1편당 VMake 1콜(실비용 500원)이고
+    ★돈이 나가는 함수다 — 청소할 소스 1편당 VMake 1콜(50크레딧)이고
       여기서 **선차감**한다(_charge_clean). 자막제거의 유일한 계량 지점이라
       run_clean_sources·run_render 어느 쪽으로 들어와도 여기를 지난다."""
     source_map = _resolve_sources(job, Path(work))
@@ -1571,6 +1635,7 @@ def _ensure_clean_sources(store, job, job_id, work, key, customer_id=0):
     return cached
 
 
+@_owned_job
 def assemble_clean_video(job_id, db_path, work_root):
     """자막제거(2단계) 후 '자막 없는 조립본'(clean_video_path)을 만들어 DB에 저장하고 경로 반환.
     VMake는 이미 탔으므로 clean_fn=None으로 청소된 소스를 재조립만 한다(추가과금 0). edit_plan·
@@ -1604,6 +1669,7 @@ def assemble_clean_video(job_id, db_path, work_root):
         return None
 
 
+@_owned_job
 def run_clean_sources(job_id, db_path, work_root):
     """2단계: 각 소스 원본을 VMake로 자막제거해 clean_sources에 캐시.
     BackgroundTasks로 불리므로 예외를 밖으로 안 던진다(clean_status로만 알린다)."""
@@ -1640,6 +1706,7 @@ def run_clean_sources(job_id, db_path, work_root):
     assemble_clean_video(job_id, db_path, work_root)
 
 
+@_owned_job
 def run_preview(job_id, db_path, work_root):
     """1단계 미리보기: 유료 자막제거(VMake)·꾸미기 없이 믹스+음성+기본자막만 렌더.
 
@@ -1673,7 +1740,7 @@ def run_preview(job_id, db_path, work_root):
         #   조립 직전 스스로 낫는다 — 이미 있는 비트는 skip(재과금 0), 빠진 비트만 합성.
         #   합성 결과(tts_path)를 edit_plan에 되박아 최종 렌더가 재합성 없이 재사용하게 한다.
         _synthesize_beats(plan["beats"], work / "tts", voice=job.get("voice"), skip_existing=True,
-                          global_pron=_gpron)
+                          global_pron=_gpron, customer_id=job.get("customer_id", 0))
         store.update_mix_job(job_id, edit_plan=plan)
         tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan["beats"] if b.get("tts_path")}
         source_video_paths = _resolve_sources(job, work)
@@ -1717,6 +1784,7 @@ def _thumb_intro_png(job, thumb):
     return last if last.exists() else None
 
 
+@_owned_job
 def run_render(job_id, db_path, work_root):
     """확인된 EDL을 최종 mp4로 렌더. subtitle_removal이 켜져 있으면 믹스 후
     VMake로 원본 자막을 제거하고 그 위에 우리 자막을 굽는다. 완료 시 status='done'."""
@@ -1733,7 +1801,7 @@ def run_render(job_id, db_path, work_root):
         # ★TTS 보장(2026-07-21) — run_preview와 같은 방어심층. 미리보기를 건너뛰고 바로 렌더에
         #   와도(또는 TTS 없는 후보가 edit_plan에 있어도) 조립 직전 스스로 낫는다. 이미 있으면 skip.
         _synthesize_beats(plan["beats"], work / "tts", voice=job.get("voice"), skip_existing=True,
-                          global_pron=_gpron)
+                          global_pron=_gpron, customer_id=job.get("customer_id", 0))
         store.update_mix_job(job_id, edit_plan=plan)
         tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan["beats"] if b.get("tts_path")}
         source_video_paths = _resolve_sources(job, work)
@@ -1905,7 +1973,8 @@ def resynth_tts_job(job_id, db_path, work_root):
     store.update_mix_job(job_id, status="tts")
     try:
         _synthesize_beats(plan["beats"], work / "tts", voice=job.get("voice"),
-                          global_pron=pron_corrections.load(store))
+                          global_pron=pron_corrections.load(store),
+                          customer_id=job.get("customer_id", 0))
         store.update_mix_job(job_id, edit_plan=plan, status="ready_for_review")
     except Exception as e:
         traceback.print_exc(file=sys.stderr)

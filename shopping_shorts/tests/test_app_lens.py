@@ -26,7 +26,7 @@ def _client(tmp_path, monkeypatch, items=None, limit_reached=False):
     monkeypatch.setattr(appmod, "DB_PATH", db)
     monkeypatch.setattr(appmod, "PUBLIC_BASE_URL", "https://example.test")
     monkeypatch.setattr(appmod, "search_similar_videos",
-                        lambda url, api_key=None, source_caption="", stats=None: items if items is not None else [])
+                        lambda url, api_key=None, source_caption="", stats=None, locales=None: items if items is not None else [])
     # imgur 업로드는 네트워크라 목킹 — None 반환 시 서버URL 폴백 경로를 탄다
     monkeypatch.setattr(appmod, "upload_frame", lambda raw: None)
     if limit_reached:
@@ -59,7 +59,7 @@ def test_lens_search_forwards_source_caption(tmp_path, monkeypatch):
     monkeypatch.setattr(appmod, "upload_frame", lambda raw: None)
     captured = {}
 
-    def fake_search(url, api_key=None, source_caption="", stats=None):
+    def fake_search(url, api_key=None, source_caption="", stats=None, locales=None):
         captured["source_caption"] = source_caption
         return []
     monkeypatch.setattr(appmod, "search_similar_videos", fake_search)
@@ -364,7 +364,7 @@ def test_lens_search_reports_instagram_dropoff(tmp_path, monkeypatch):
     ]
     monkeypatch.setattr(lens_discover, "verify_matches", lambda items, keywords=None: items)
     monkeypatch.setattr(appmod, "search_similar_videos",
-                        lambda url, api_key=None, source_caption="", stats=None:
+                        lambda url, api_key=None, source_caption="", stats=None, locales=None:
                         _run_real(lens_discover, raw_matches, stats))
     c = TestClient(appmod.app)
     d = _post_img(c).json()
@@ -469,3 +469,208 @@ def test_lens_month_limit_scales_with_keys(tmp_path, monkeypatch):
     assert appmod._lens_month_limit(s) == per           # 키 0개여도 최소 1키분
     s.set_setting("lens_month_limit", "50")
     assert appmod._lens_month_limit(s) == 50            # 설정 override 우선
+
+
+# ── /api/lens/search 유사도 채점 (2026-08-21) ────────────────────────────
+# 왜: 샤오홍슈·도우인(/api/lens/cn)과 유튜브(/api/lens/yt)엔 judge_same_product가
+#     붙어 있는데 **메인 렌즈에만 빠져 있었다**. 그래서 렌즈 본 결과는 옛 문자열
+#     매칭(_title_matches: 2자 토큰 부분포함)에만 의존했고, 프론트의
+#     '⚠️ 다른주제 숨기기'가 거의 못 걸렀다. 같은 함수를 그대로 쓴다(0순위-B).
+
+def test_lens_search_채점되면_무관한것이_match_False로_표시된다(tmp_path, monkeypatch):
+    """메인 렌즈도 AI 유사도 채점을 받는다 — ⚠️다른주제 배지가 정확해진다."""
+    items = [
+        {"platform": "instagram", "url": "https://www.instagram.com/reel/AAA/",
+         "title": "물총 리뷰", "match": None},
+        {"platform": "instagram", "url": "https://www.instagram.com/reel/BBB/",
+         "title": "코스피 시황", "match": None},
+    ]
+    c, _ = _client(tmp_path, monkeypatch, items=items)
+    monkeypatch.setattr(appmod, "judge_same_product", lambda p, t: ["same", "no"])
+    d = c.post("/api/lens/search", files={"frame": ("f.jpg", _JPG_1PX, "image/jpeg")},
+               data={"source_caption": "물총"}).json()
+    byurl = {i["url"]: i for i in d["items"]}
+    assert byurl["https://www.instagram.com/reel/AAA/"]["match"] is True
+    assert byurl["https://www.instagram.com/reel/BBB/"]["match"] is False   # ★프론트가 거른다
+    assert byurl["https://www.instagram.com/reel/AAA/"]["sim"] == "same"
+
+
+def test_lens_search_관련도순_정렬되고_인스타우선은_유지된다(tmp_path, monkeypatch):
+    """정렬 키 2개: ①관련도(same→similar→no) ②같은 관련도면 인스타 먼저.
+
+    기존 동작(인스타 우선)을 깨지 않으면서 관련도를 **위 순위**로 얹는다."""
+    items = [
+        {"platform": "instagram", "url": "https://www.instagram.com/reel/NO/",
+         "title": "무관", "match": None},
+        {"platform": "youtube", "url": "https://youtu.be/SAME", "title": "딱 그것", "match": None},
+        {"platform": "instagram", "url": "https://www.instagram.com/reel/SAME/",
+         "title": "딱 그것 인스타", "match": None},
+    ]
+    c, _ = _client(tmp_path, monkeypatch, items=items)
+    monkeypatch.setattr(appmod, "judge_same_product", lambda p, t: ["no", "same", "same"])
+    d = c.post("/api/lens/search", files={"frame": ("f.jpg", _JPG_1PX, "image/jpeg")},
+               data={"source_caption": "물총"}).json()
+    urls = [i["url"] for i in d["items"]]
+    # same 둘이 앞, 그 안에서 인스타가 유튜브보다 먼저, no는 맨 뒤
+    assert urls == ["https://www.instagram.com/reel/SAME/",
+                    "https://youtu.be/SAME",
+                    "https://www.instagram.com/reel/NO/"]
+
+
+def test_lens_search_채점실패해도_결과는_그대로_나온다(tmp_path, monkeypatch):
+    """채점이 빈 배열(키 소진·모델 실패)이면 기존 동작 그대로 — 결과를 죽이지 않는다."""
+    items = [
+        {"platform": "youtube", "url": "https://youtu.be/x", "title": "a", "match": None},
+        {"platform": "instagram", "url": "https://www.instagram.com/reel/CCC/",
+         "title": "b", "match": None},
+    ]
+    c, _ = _client(tmp_path, monkeypatch, items=items)
+    monkeypatch.setattr(appmod, "judge_same_product", lambda p, t: [])
+    d = c.post("/api/lens/search", files={"frame": ("f.jpg", _JPG_1PX, "image/jpeg")},
+               data={"source_caption": "물총"}).json()
+    assert d["count"] == 2
+    assert d["items"][0]["platform"] == "instagram"      # 폴백 = 종전 인스타 우선 정렬
+
+
+def test_lens_search_채점이_예외를_던져도_검색은_산다(tmp_path, monkeypatch):
+    """채점은 부가기능이다 — 터져도 렌즈 결과를 통째로 죽이면 안 된다."""
+    items = [{"platform": "instagram", "url": "https://www.instagram.com/reel/DDD/",
+              "title": "a", "match": None}]
+    c, _ = _client(tmp_path, monkeypatch, items=items)
+
+    def _boom(p, t):
+        raise RuntimeError("gemini down")
+    monkeypatch.setattr(appmod, "judge_same_product", _boom)
+    d = c.post("/api/lens/search", files={"frame": ("f.jpg", _JPG_1PX, "image/jpeg")},
+               data={"source_caption": "물총"}).json()
+    assert d["ok"] is True and d["count"] == 1
+
+
+def test_lens_search_캡션없으면_채점을_아예_안_부른다(tmp_path, monkeypatch):
+    """기준 제품이 없으면 채점은 무의미하다 — 헛돈(Gemini 호출)을 쓰지 않는다."""
+    called = []
+    items = [{"platform": "instagram", "url": "https://www.instagram.com/reel/EEE/",
+              "title": "a", "match": None}]
+    c, _ = _client(tmp_path, monkeypatch, items=items)
+    monkeypatch.setattr(appmod, "judge_same_product",
+                        lambda p, t: called.append(1) or ["same"])
+    d = c.post("/api/lens/search",
+               files={"frame": ("f.jpg", _JPG_1PX, "image/jpeg")}).json()   # 캡션 없음
+    assert d["ok"] is True
+    assert called == []          # ★한 번도 안 불렀다
+
+
+# ── 검색 국가 고르기 API (2026-08-22) ────────────────────────────────────
+# 사장님: "김밥 렌즈를 해외꺼까지 돌릴 거 없잖아" — 국내 소재는 한국만 돌려 SerpApi를 아낀다.
+
+def test_lens_locales_목록을_서버가_알려준다(tmp_path, monkeypatch):
+    """프론트가 칩을 그릴 목록. ★서버 설정을 그대로 노출한다(하드코딩 금지)."""
+    monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
+    c = TestClient(appmod.app)
+    d = c.get("/api/lens/locales").json()
+    assert d["ok"] is True and d["locales"]
+    keys = [x["key"] for x in d["locales"]]
+    assert keys == [f"{hl}:{cc}" for hl, cc in appmod.lens_discover._LENS_LOCALES]
+    assert all(x["label"] for x in d["locales"])          # 이름이 비면 칩이 빈칸이 된다
+
+
+def test_lens_search_고른_나라만_서버로_전달된다(tmp_path, monkeypatch):
+    """폼의 locales가 search_similar_videos까지 도달하는가(배선 확인)."""
+    got = {}
+
+    def _spy(url, api_key=None, source_caption="", stats=None, locales=None):
+        got["locales"] = locales
+        return []
+    monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
+    monkeypatch.setattr(appmod, "PUBLIC_BASE_URL", "https://example.test")
+    monkeypatch.setattr(appmod, "upload_frame", lambda raw: "https://img/x.jpg")
+    monkeypatch.setattr(appmod, "search_similar_videos", _spy)
+    c = TestClient(appmod.app)
+    r = c.post("/api/lens/search", files={"frame": ("f.jpg", _JPG_1PX, "image/jpeg")},
+               data={"locales": "ko:kr"})
+    assert r.status_code == 200
+    assert got["locales"] == [("ko", "kr")]
+
+
+def test_lens_search_locales_없으면_빈목록_전달_전체가_돈다(tmp_path, monkeypatch):
+    """옛 화면(locales를 안 보냄)도 그대로 돌아야 한다 — 회귀 0."""
+    got = {}
+
+    def _spy(url, api_key=None, source_caption="", stats=None, locales=None):
+        got["locales"] = locales
+        return []
+    monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
+    monkeypatch.setattr(appmod, "PUBLIC_BASE_URL", "https://example.test")
+    monkeypatch.setattr(appmod, "upload_frame", lambda raw: "https://img/x.jpg")
+    monkeypatch.setattr(appmod, "search_similar_videos", _spy)
+    c = TestClient(appmod.app)
+    c.post("/api/lens/search", files={"frame": ("f.jpg", _JPG_1PX, "image/jpeg")})
+    assert got["locales"] == []       # 빈 목록 → lens_discover가 전체로 폴백한다
+
+
+def test_parse_lens_locales_잡값을_걸러낸다():
+    """콜론 없는 값·빈 칸·공백은 버린다. 판정(유효성)은 lens_discover가 한다."""
+    assert appmod._parse_lens_locales("ko:kr, ja:jp") == [("ko", "kr"), ("ja", "jp")]
+    assert appmod._parse_lens_locales("") == []
+    assert appmod._parse_lens_locales("garbage,,:,ko:") == []
+    assert appmod._parse_lens_locales("  ko:kr  ") == [("ko", "kr")]
+
+
+# ── 검색어 소재 보강 (2026-08-22 사장님 "썸네일 캡션 대본을 빠르게 스캔해서") ──
+# 왜: 검색어가 **썸네일 1장만** 보고 만들어져 제품을 잘못 짚었다(실측 3건 중 2건:
+#     다이소 바닥보수제→"스틱청소기", 과탄산소다→"이염방지시트").
+#     캡션은 reel_history엔 거의 비어 있고(300건 중 1건) source_enrichment에 1,260건
+#     있는데 **아무도 안 읽고 있었다**. 대본(script_extracts)도 마찬가지.
+
+def test_lens_소재수집_캡션이_비면_DB에서_채운다(tmp_path, monkeypatch):
+    """프론트가 빈 캡션을 보내도 서버가 DB(source_enrichment)에서 찾아 쓴다."""
+    monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
+    st = Store(str(tmp_path / "t.db"))
+    st.upsert_enrichment("https://www.instagram.com/reel/AAA/", "instagram",
+                         {"caption": "다이소 가면 이거 꼭 사오세요 바닥 찍힘 복구"},
+                         "ok", "2026-08-22T00:00:00")
+    got = appmod._lens_source_text("https://www.instagram.com/reel/AAA/", "", store=st)
+    assert "다이소" in got and "바닥 찍힘" in got
+
+
+def test_lens_소재수집_대본이_있으면_함께_쓴다(tmp_path, monkeypatch):
+    """★대본에만 있는 제품명이 검색어를 살린다(실측: '과탄산소다'는 대본에만 있었다)."""
+    monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
+    st = Store(str(tmp_path / "t.db"))
+    st.save_script("BBB", {"full_text": "흰 양말 누렇게 된 거 과탄산소다 한 스푼이면 됩니다"})
+    got = appmod._lens_source_text("https://www.instagram.com/reel/BBB/", "", store=st)
+    assert "과탄산소다" in got
+
+
+def test_lens_소재수집_프론트캡션이_있으면_그것도_쓴다(tmp_path, monkeypatch):
+    """프론트가 준 캡션을 버리지 않는다 — DB에 없을 때 유일한 단서다."""
+    monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
+    st = Store(str(tmp_path / "t.db"))
+    got = appmod._lens_source_text("https://x/reel/CCC/", "프론트가 준 캡션", store=st)
+    assert "프론트가 준 캡션" in got
+
+
+def test_lens_소재수집_아무것도_없으면_빈문자(tmp_path, monkeypatch):
+    """DB에도 없고 프론트도 안 주면 빈 문자열 — 옛 동작(썸네일만) 그대로."""
+    monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
+    st = Store(str(tmp_path / "t.db"))
+    assert appmod._lens_source_text("https://x/reel/NONE/", "", store=st) == ""
+
+
+def test_lens_소재수집_길이를_자른다(tmp_path, monkeypatch):
+    """대본이 길면 프롬프트가 비대해진다 — 상한을 둔다(비용·지연)."""
+    monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
+    st = Store(str(tmp_path / "t.db"))
+    st.save_script("LONG", {"full_text": "가" * 5000})
+    got = appmod._lens_source_text("https://x/reel/LONG/", "", store=st)
+    assert 0 < len(got) <= appmod._LENS_SRC_MAX
+
+
+def test_lens_소재수집_DB오류여도_죽지_않는다(tmp_path, monkeypatch):
+    """보강은 부가기능이다 — DB가 터져도 렌즈 검색은 살아야 한다."""
+    monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
+
+    class _Boom:
+        def get_enrichment(self, *a, **k): raise RuntimeError("db down")
+        def get_script(self, *a, **k): raise RuntimeError("db down")
+    assert appmod._lens_source_text("https://x/reel/X/", "원본캡션", store=_Boom()) == "원본캡션"

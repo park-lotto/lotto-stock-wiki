@@ -8,6 +8,7 @@ h2{font-size:15px;margin:0 0 12px;color:#cfd2d6}
 table{width:100%;border-collapse:collapse;font-size:15px}
 th,td{text-align:left;padding:11px 12px;border-bottom:1px solid #23232a}
 th{color:#9a9aa2;font-weight:600;font-size:14px}
+th.mini,td.mini{white-space:nowrap;min-width:52px}
 .badge{padding:3px 9px;border-radius:10px;font-size:13px;font-weight:700}
 .filterbar{display:flex;gap:10px;margin:4px 0 14px;flex-wrap:wrap}
 .filterbar input{width:280px;max-width:60vw;font-size:15px;padding:9px 12px}
@@ -17,7 +18,7 @@ th{color:#9a9aa2;font-weight:600;font-size:14px}
 .pending{background:#3d341c;color:#ffd479}
 button{border:0;border-radius:7px;padding:7px 13px;font-weight:700;font-size:13px;cursor:pointer;margin-right:4px}
 .bpro{background:#2ea043;color:#fff}.bfree{background:#6e2020;color:#fff}.bok{background:#d19b1e;color:#111}.bpay{background:#3a5bd0;color:#fff}.bpt{background:#7a4bd0;color:#fff}
-.bedit{background:#5a4bd0;color:#fff}.bdel{background:#8b1a1a;color:#fff}.btrial{background:#1c6a8a;color:#fff}.badm{background:#7a3da8;color:#fff}
+.bedit{background:#5a4bd0;color:#fff}.bdel{background:#8b1a1a;color:#fff}.btrial{background:#1c6a8a;color:#fff}.badm{background:#7a3da8;color:#fff}.bchal{background:#c2410c;color:#fff}
 .wait{border-color:#5a4a1e;background:#1a1710}.wait h2{color:#ffd479}
 .empty{color:#6a6a72;font-size:13px;padding:6px 2px}
 input{background:#0e0e12;border:1px solid #333;border-radius:7px;color:#eee;padding:8px 10px;font-size:13px;width:90px}
@@ -34,26 +35,77 @@ details.card[open]>summary::before{content:'▾'}
 .setfield label{min-width:92px;margin:0}
 .setfield input{flex:1;width:auto}
 tbody tr:hover{background:#1b1b22}
+/* ── 바로가기(2026-08-24) — 주소를 외우지 않아도 되게 ── */
+.quicknav{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 16px}
+.qbtn{display:flex;flex-direction:column;gap:2px;padding:10px 14px;border-radius:10px;
+      background:#16161c;border:1px solid #2a2a30;color:#e8e8ea;text-decoration:none;
+      font-size:14px;font-weight:700;min-width:132px;transition:border-color .12s,background .12s}
+.qbtn:hover{background:#1c1c24;border-color:#3a5bd0}
+.qbtn small{color:#8a8a92;font-size:11.5px;font-weight:400}
+/* 관측판은 오픈 기간에 가장 자주 봐야 하는 화면이라 눈에 띄게 둔다 */
+.qbtn.hot{border-color:#2ea043;background:linear-gradient(180deg,#12241c,#16161c)}
+.qbtn.hot:hover{border-color:#3ecf8e}
+/* ── 요약 — 표를 열기 전에 '처리할 게 있나'부터 답한다 ── */
+.summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:10px;margin-bottom:18px}
+.sbox{background:#16161c;border:1px solid #2a2a30;border-radius:10px;padding:11px 13px}
+.sk{color:#8a8a92;font-size:12px;margin-bottom:3px}
+.sv{font-size:21px;font-weight:800;letter-spacing:-.5px}
+/* 처리할 게 남아 있으면 숫자가 스스로 알린다(0이면 조용하다) */
+.sv.need{color:#ffd479}
+/* ── 구역 제목 — 카드가 늘어서기만 하면 어디가 어딘지 모른다 ── */
+.grouphead{font-size:13px;color:#8a8a92;font-weight:700;margin:22px 0 10px;
+           letter-spacing:.4px;border-bottom:1px solid #23232a;padding-bottom:7px}
 </style></head><body>
-<h1>🔐 유료게이트 관리자</h1>
+<h1>🔐 관리자</h1>
 <div class=sub>결제 확인된 계정을 <b>pro</b>로 승격 / 체험·크레딧 설정 조정</div>
 
+<!-- 바로가기(2026-08-24) — 관리자가 자주 오가는 화면을 여기 모은다. 예전엔 주소를
+     외워서 쳐야 했다(특히 관측판 /ops는 어디에도 링크가 없었다).
+     ★새 탭으로 연다: 관리 작업 중 화면이 통째로 바뀌면 하던 일을 잃는다. -->
+<nav class=quicknav>
+  <a href="/ops" target="_blank" rel="noopener" class="qbtn hot">📊 관측판<small>서버가 버티나</small></a>
+  <a href="/refs" target="_blank" rel="noopener" class=qbtn>📋 레퍼런스 채널<small>수집 소스 관리</small></a>
+  <a href="/produce" target="_blank" rel="noopener" class=qbtn>🎬 제작소<small>영상 만들기</small></a>
+  <a href="/" target="_blank" rel="noopener" class=qbtn>🏠 서비스 화면<small>고객이 보는 것</small></a>
+</nav>
+
+<!-- 요약 — 표를 열기 전에 "지금 처리할 게 있나"를 먼저 답한다. -->
+<div class=summary id=summary>
+  <div class=sbox><div class=sk>입금 신고</div><div class=sv id=sum_dep>–</div></div>
+  <div class=sbox><div class=sk>승인 대기</div><div class=sv id=sum_pend>–</div></div>
+  <div class=sbox><div class=sk>전체 고객</div><div class=sv id=sum_all>–</div></div>
+  <div class=sbox><div class=sk>pro</div><div class=sv id=sum_pro>–</div></div>
+  <div class=sbox><div class=sk>체험중</div><div class=sv id=sum_trial>–</div></div>
+</div>
+
 <details class=card>
-  <summary>⚙️ 설정 (체험·크레딧·안내) <span id=setMsg class=msg></span></summary>
+  <summary>⚙️ 설정 — 체험·크레딧·결제안내 (평소엔 접어둔다) <span id=setMsg class=msg></span></summary>
   <div id=settings class=setgrid></div>
   <button class=save onclick=saveSettings()>설정 저장</button>
 </details>
 
+<h2 class=grouphead>🔔 오늘 처리할 일</h2>
+
+<!-- 입금 신고(2026-08-23) — 고객이 /pay에서 '입금 완료했습니다'를 누르면 여기 뜬다.
+     ★입금 증명이 아니다. 통장 확인은 그대로 하시고, 이건 '연락을 놓치지 않기 위한' 목록이다. -->
+<div class="card wait">
+  <h2>💰 입금 신고 (<span id=dcnt>0</span>건) <span id=dMsg class=msg></span></h2>
+  <table><thead><tr><th>신고시각</th><th>성함</th><th>입금자명</th><th>연락처</th><th>처리</th></tr></thead>
+  <tbody id=drows><tr><td colspan=5 class=empty>불러오는 중…</td></tr></tbody></table>
+</div>
+
 <div class="card wait">
   <h2>🕓 승인 대기중 (<span id=pcnt>0</span>명) <span id=pMsg class=msg></span></h2>
   <table><thead><tr><th>ID</th><th>이름</th><th>전화</th><th>이메일/아이디</th><th>가입일</th><th>승인</th></tr></thead>
-  <tbody id=prows></tbody></table>
+  <tbody id=prows><tr><td colspan=6 class=empty>불러오는 중…</td></tr></tbody></table>
 </div>
+
+<h2 class=grouphead>👥 고객 관리</h2>
 
 <div class=card>
   <h2>고객 (<span id=cnt>0</span>명) <span id=cMsg class=msg></span></h2>
   <div class=filterbar>
-    <input id=custSearch placeholder="🔍 이름·전화·이메일로 찾기" oninput="renderCustomers()">
+    <input id=custSearch placeholder="🔍 이름·전화·이메일·성별·연령으로 찾기" oninput="renderCustomers()">
     <select id=tierFilter onchange="renderCustomers()">
       <option value="">전체 등급</option>
       <option value="pro">pro</option>
@@ -61,18 +113,32 @@ tbody tr:hover{background:#1b1b22}
       <option value="free">일반회원</option>
     </select>
   </div>
-  <table><thead><tr><th>ID</th><th>이름</th><th>전화</th><th>이메일/아이디</th><th>등급</th><th>상태</th><th>시작일</th><th>마감일</th><th>결제</th><th>포인트</th><th>오늘 사용(렌즈/렌더/대본)</th><th>접속7일(IP/기기)</th><th>접속/활동</th><th>조작</th></tr></thead>
-  <tbody id=rows></tbody></table>
+  <table><thead><tr><th>ID</th><th>이름</th><th>전화</th><th class=mini>성별</th><th class=mini>연령</th><th>이메일/아이디</th><th>등급</th><th>상태</th><th>시작일</th><th>마감일</th><th>결제</th><th>포인트</th><th>오늘 사용(렌즈/렌더/대본)</th><th>접속7일(IP/기기)</th><th>접속/활동</th><th>조작</th></tr></thead>
+  <tbody id=rows><tr><td colspan=16 class=empty>불러오는 중…</td></tr></tbody></table>
 </div>
 
 <script>
 const SETTING_FIELDS=[
-  ['trial_days','체험 기간(일)'],['trial_grant_points','체험 기본 포인트(P)'],['trial_event_hours','가입 자동체험(시간,0=끔)'],['limit_lens','무료 렌즈/일'],['limit_render','무료 렌더/일'],
+  ['trial_days','체험 기간(일)'],['trial_grant_points','체험 기본 포인트(P)'],['pro_grant_points','결제(pro) 기본 포인트(P)'],['trial_event_hours','가입 자동체험(시간,0=끔)'],['limit_lens','무료 렌즈/일'],['limit_render','무료 렌더/일'],
   ['limit_script','무료 대본/일'],['limit_lens_pro','pro 렌즈/일'],['limit_render_pro','pro 렌더/일'],
   ['global_cap_lens','전역 렌즈/일'],['contact_kakao','카톡 안내'],['contact_phone','전화 안내'],['pay_url','결제 링크(URL)'],
   ['bank_name','은행'],['bank_account','계좌번호'],['bank_holder','예금주'],['deposit_note','입금 안내문구'],
-  ['biz_name','[약관] 상호'],['biz_owner','[약관] 대표자'],['biz_regno','[약관] 사업자등록번호'],['biz_addr','[약관] 주소'],['biz_sales_no','[약관] 통신판매업신고번호'],['biz_email','[약관] 문의 이메일']];
+  ['biz_name','[약관] 상호'],['biz_owner','[약관] 대표자'],['biz_regno','[약관] 사업자등록번호'],['biz_addr','[약관] 주소'],['biz_sales_no','[약관] 통신판매업신고번호'],['biz_email','[약관] 문의 이메일'],
+  ['challenge_start','[챌린지] 시작일(YYYY-MM-DD)'],['challenge_end','[챌린지] 종료일(YYYY-MM-DD)'],['challenge_daily_goal','[챌린지] 하루 목표 영상 수']];
 let CURRENT={};
+// 상단 요약 — 처리할 게 남아 있으면 숫자가 스스로 눈에 띈다(0이면 조용하다).
+// 입금 신고 건수는 별도 API라 loadDepositClaims()가 채운 뒤 여기로 넘겨준다.
+function fillSummary(customers, pendCount, depCount){
+  const set=(id,v,need)=>{ const el=document.getElementById(id); if(!el) return;
+    el.textContent=v; el.classList.toggle('need', !!need && Number(v)>0); };
+  if(Array.isArray(customers)){
+    set('sum_all', customers.length);
+    set('sum_pro', customers.filter(c=>c.plan==='pro').length);
+    set('sum_trial', customers.filter(c=>c.plan==='trial').length);
+  }
+  if(pendCount!==undefined) set('sum_pend', pendCount, true);
+  if(depCount!==undefined) set('sum_dep', depCount, true);
+}
 async function load(){
   const r=await fetch('/api/admin/customers');
   if(r.status===403){document.body.innerHTML='<h2>관리자 전용입니다</h2>';return;}
@@ -80,9 +146,13 @@ async function load(){
   // 설정 폼
   document.getElementById('settings').innerHTML=SETTING_FIELDS.map(([k,label])=>
     `<div class=setfield><label>${label}</label><input id=set_${k} value="${(CURRENT[k]??'').toString().replace(/"/g,'&quot;')}"></div>`).join('');
+  loadDepositClaims();   // 입금 신고 목록(별도 API — 실패해도 이 화면은 계속 뜬다)
   // 미승인(approved_at null) = 순수대기 + 이벤트 체험중 → 모두 대기명단(사장님이 승인 가능해야 함).
   const pend=d.customers.filter(c=>c.approved_at==null);
   const rest=d.customers.filter(c=>c.approved_at!=null);
+  // 요약 채우기(2026-08-24) — 표를 훑기 전에 '처리할 게 있나'를 먼저 답한다.
+  // ★숫자는 아래 표와 **같은 배열**에서 뽑는다. 따로 세면 언젠가 어긋난다(0순위-B).
+  fillSummary(d.customers, pend.length);
   const esc=s=>(s||'').toString().replace(/</g,'&lt;').replace(/>/g,'&gt;');
   // 승인 대기 표
   document.getElementById('pcnt').textContent=pend.length;
@@ -111,14 +181,32 @@ document.addEventListener('click', async (e)=>{
   alert('최근 활동\n\n'+lines);
 });
 
+// ── 고객 찾기: 퍼지(글자 순서만 맞으면) 매칭 — 2026-08-24 ───────────────
+// 사장님 요청: 이메일을 풀로 다 쳐야 걸리던 걸 몇 자만 쳐도 걸리게.
+// 'the' / 'tbk' / 'black001' 전부 theblackart001@gmail.com 에 걸린다.
+// ★한 칸(필드) 안에서만 순서를 잇는다 — 이름과 이메일을 가로질러 이어붙이면
+//   'sdw' 같은 입력에 무관한 고객이 우수수 걸린다(칸을 합쳐 검색하면 그렇게 된다).
+// 공백으로 띄어 치면 조각마다 각각 어느 칸에든 걸려야 통과(AND).
+function _subseq(hay, q){            // hay 안에서 q의 글자가 '순서대로' 나오나
+  let i=0;
+  for(let k=0;k<hay.length && i<q.length;k++) if(hay[k]===q[i]) i++;
+  return i===q.length;
+}
+function _custMatch(c, q){
+  const fields=[c.name,c.phone,c.email,c.username,c.gender,c.age_band]
+    .map(v=>(v||'').toString().toLowerCase()).filter(Boolean);
+  // 전화번호는 하이픈 유무가 제각각 → 숫자만 남긴 형태도 같이 본다(01012345678 로 쳐도 걸리게)
+  const digits=(c.phone||'').toString().replace(/\D/g,'');
+  if(digits) fields.push(digits);
+  return q.split(/\s+/).filter(Boolean).every(tok => fields.some(f => _subseq(f, tok)));
+}
 function renderCustomers(){
   const esc=s=>(s||'').toString().replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const q=((document.getElementById('custSearch')||{}).value||'').trim().toLowerCase();
   const tier=(document.getElementById('tierFilter')||{}).value||'';
   const rest=(window._CUST||[]).filter(c=>c.approved_at!=null).filter(c=>{
     if(tier && _tierOf(c)!==tier) return false;
-    if(q){ const hay=`${c.name||''} ${c.phone||''} ${c.email||''} ${c.username||''}`.toLowerCase();
-           if(hay.indexOf(q)<0) return false; }
+    if(q && !_custMatch(c,q)) return false;
     return true;
   });
   document.getElementById('cnt').textContent=rest.length;
@@ -135,7 +223,10 @@ function renderCustomers(){
     const ls = c.last_seen||0, nowS=Math.floor(Date.now()/1000);
     const online = ls && (nowS-ls) < 300;   // 5분 내 활동 = 접속중
     const seenCell = `<span class=actlink data-actcid=${c.id} title="최근 활동 보기" style="cursor:pointer;color:${online?'#7ee787':'#8ab4f8'}">${online?'🟢 접속중':(ls?'⚪ '+_ago(nowS-ls):'-')}</span>`;
-    return `<tr><td>${c.id}</td><td>${esc(c.name)}${adminBadge}</td><td>${esc(c.phone)}</td><td>${esc(c.email||c.username)}</td><td>${c.plan}</td><td>${lvl}</td>
+    return `<tr><td>${c.id}</td><td>${esc(c.name)}${adminBadge}</td><td>${esc(c.phone)}</td>
+      <td class=mini style="color:${c.gender?'#e8eaed':'#5f6773'}">${esc(c.gender)||'—'}</td>
+      <td class=mini style="color:${c.age_band?'#e8eaed':'#5f6773'}">${esc(c.age_band)||'—'}</td>
+      <td>${esc(c.email||c.username)}</td><td>${c.plan}</td><td>${lvl}</td>
       <td style="color:#8a8a92">${c.approved_at? new Date(c.approved_at*1000).toLocaleDateString('ko-KR'):'-'}</td>
       <td style="color:#8a8a92">${c.full_access_until? new Date(c.full_access_until*1000).toLocaleDateString('ko-KR'):'-'}</td>
       <td>${c.last_payment? `<span class=paylink data-cid=${c.id} style="cursor:pointer;color:#8ab4f8">${c.last_payment.amount.toLocaleString()}원 · ${c.payment_count}건</span>` : '-'}</td>
@@ -152,9 +243,40 @@ function renderCustomers(){
           ${c.code_admin?'':(c.is_admin
             ? `<button class=badm onclick="setAdmin(${c.id},false)">관리자해제</button>`
             : `<button class=badm onclick="setAdmin(${c.id},true)">관리자지정</button>`)}
+          <button class=bchal onclick="setChallenge(${c.id},${c.challenge?'false':'true'})">${c.challenge?'🔥챌린지해제':'챌린지참가'}</button>
           ${c.is_admin?'':`<button class=bdel onclick="delCustomer(${c.id})">삭제</button>`}</td></tr>`;
-  }).join('') : '<tr><td colspan=14 class=empty>조건에 맞는 고객이 없어요</td></tr>';
+  }).join('') : '<tr><td colspan=16 class=empty>조건에 맞는 고객이 없어요</td></tr>';
 }
+// ── 입금 신고 (2026-08-23) ──────────────────────────────────
+// 고객이 /pay에서 '입금 완료했습니다'를 누른 것. 통장 확인은 그대로 하시고,
+// 확인이 끝나면 [확인함]을 눌러 목록에서 내린다(승인은 아래 고객표에서 따로).
+async function loadDepositClaims(){
+  try{
+    const r=await fetch('/api/admin/deposit_claims');
+    if(!r.ok) return;
+    const items=(await r.json()).items||[];
+    document.getElementById('dcnt').textContent=items.length;
+    fillSummary(null, undefined, items.length);   // 상단 요약에도 같은 숫자를 넘긴다
+    const esc=s=>(s||'').toString().replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    document.getElementById('drows').innerHTML= items.length ? items.map(c=>{
+      const t=c.created_at? new Date(c.created_at).toLocaleString('ko-KR'):'-';
+      return `<tr><td>${esc(t)}</td><td><b>${esc(c.name)}</b></td>`
+        +`<td style="color:#ffd479">${esc(c.depositor)}</td><td>${esc(c.contact)||'-'}</td>`
+        +`<td><button class=bok onclick="closeClaim(${Number(c.id)})">확인함</button></td></tr>`;
+    }).join('') : '<tr><td colspan=5 class=empty>새 입금 신고가 없습니다.</td></tr>';
+  }catch(e){}
+}
+async function closeClaim(id){
+  const m=document.getElementById('dMsg');
+  m.textContent='처리 중…';
+  try{
+    const r=await fetch('/api/admin/deposit_claim/done',{method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id})});
+    m.textContent = r.ok ? '처리했습니다.' : '실패했습니다.';
+  }catch(e){ m.textContent='실패했습니다.'; }
+  loadDepositClaims();
+}
+
 async function approveCustomer(cid){
   const days = prompt('이용일수 (예: 30)', '');
   if(days===null) return;
@@ -214,7 +336,12 @@ async function setPlan(cid,plan){
   const r=await fetch('/api/admin/set_plan',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({customer_id:cid,plan})});
   const m=document.getElementById('cMsg');
-  if(r.ok){m.textContent='✅ 변경됨';m.className='msg';load();}else{m.textContent='❌ 실패';m.className='msg err';}
+  // ★포인트 지급 결과까지 보여준다(2026-08-23). pro로 올려도 잔액이 0이면 유료 작업이
+  //   402로 막히므로, 사장님이 '연료가 들어갔나'를 이 자리에서 바로 알아야 한다.
+  if(r.ok){const d=await r.json().catch(()=>({}));
+    m.textContent='✅ 변경됨'+(d.granted?' · 포인트 +'+d.granted+'P (잔액 '+d.balance+'P)'
+                              :(d.balance!=null?' · 잔액 '+d.balance+'P':''));
+    m.className='msg';load();}else{m.textContent='❌ 실패';m.className='msg err';}
   setTimeout(()=>m.textContent='',2000);
 }
 async function setAdmin(cid,flag){
@@ -227,6 +354,13 @@ async function setAdmin(cid,flag){
   const m=document.getElementById('cMsg');
   if(r.ok){m.textContent=flag?'✅ 관리자 지정됨':'✅ 관리자 해제됨';m.className='msg';load();}else{m.textContent='❌ 실패';m.className='msg err';}
   setTimeout(()=>m.textContent='',2000);
+}
+// 1기 챌린지 참가 토글(2026-08-24) — 참가자만 /challenge에서 영상을 제출할 수 있다.
+async function setChallenge(cid,flag){
+  const r=await fetch(`/api/challenge/member?customer_id=${cid}&active=${flag?1:0}`,{method:'POST'});
+  const m=document.getElementById('cMsg');
+  if(r.ok){m.textContent=flag?'✅ 챌린지 참가 등록':'✅ 챌린지 참가 해제';m.className='msg';load();}
+  else{m.textContent='❌ 실패';m.className='msg err';}
 }
 async function grantPoints(cid){
   // 등급(체험·pro)은 게이트만 연다 — 유료 op는 포인트도 있어야 돈다(2026-08-20 402 사고).
@@ -258,5 +392,13 @@ async function saveSettings(){
   if(r.ok){m.textContent='✅ 저장됨';m.className='msg';}else{m.textContent='❌ 실패';m.className='msg err';}
   setTimeout(()=>m.textContent='',2000);
 }
-load();
+// ★첫 로드 — 실패하면 화면이 반드시 말한다.
+//   예전엔 예외가 나도 표가 "0명"으로 남아 '고객이 없는 것처럼' 보였다(2026-08-23).
+load().catch(e=>{
+  const msg = '목록을 불러오지 못했습니다 — ' + (e && e.message || e);
+  const pr=document.getElementById('prows'), rw=document.getElementById('rows');
+  if(pr) pr.innerHTML='<tr><td colspan=6 class=empty style="color:#f87171">'+msg+'</td></tr>';
+  if(rw) rw.innerHTML='<tr><td colspan=12 class=empty style="color:#f87171">'+msg+'</td></tr>';
+  console.error('[admin] load 실패', e);
+});
 </script></body></html>

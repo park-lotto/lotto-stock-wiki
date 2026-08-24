@@ -39,7 +39,7 @@ PKG = pathlib.Path(__file__).resolve().parents[1]
 #: 내리는 건 언제나 환영 — 줄었으면 이 숫자도 같이 내려라(그래야 되돌아가지 않는다).
 BUDGET = {
     "app.py": 35,
-    "store.py": 28,
+    "store.py": 30,   # +2(2026-08-24): welcome_due·성별연령 컬럼 마이그레이션 — 위 컬럼들과 같은 "이미 존재" 패턴
     "instagram_playwright.py": 9,
     "media_download.py": 4,
     "mix_pipeline.py": 4,

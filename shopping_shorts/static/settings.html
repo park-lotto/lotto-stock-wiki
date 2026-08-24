@@ -102,6 +102,8 @@
   .keyDel:hover{border-color:var(--fire);color:var(--fire)}
   .svcFoot{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
   .svcFoot .btn{font-size:13px;padding:8px 14px;font-weight:600}
+  /* 매뉴얼은 <a>라 버튼 모양을 따로 맞춘다(밑줄 제거·inline-block) */
+  .svcFoot a.btn{display:inline-block;text-decoration:none}
   .msg{margin-top:12px;font-size:14px;font-weight:700;display:none}
   .msg.on{display:block}
   .msg.ok{color:var(--ok)}
@@ -155,9 +157,9 @@
     <div class="secTitle">하루 이용 한도</div>
     <div class="secDesc">서버를 지키기 위한 안전장치입니다. 내 키를 등록하셔도 이 한도는 그대로입니다.</div>
     <div class="misc">
-      <div class="miscRow"><span>🎞️ 영상 제작</span><span class="miscCost"><span id="limRender">–</span> 회</span></div>
-      <div class="miscRow"><span>🔎 렌즈로 찾기</span><span class="miscCost"><span id="limLens">–</span> 회</span></div>
-      <div class="miscRow"><span>📝 대본 뽑기</span><span class="miscCost"><span id="limScript">–</span> 회</span></div>
+      <div class="miscRow"><span>🎞️ 영상 제작</span><span class="miscCost"><span id="limRender">–</span><span id="limRenderUnit"> 회</span></span></div>
+      <div class="miscRow"><span>🔎 렌즈로 찾기</span><span class="miscCost"><span id="limLens">–</span><span id="limLensUnit"> 회</span></span></div>
+      <div class="miscRow"><span>📝 대본 뽑기</span><span class="miscCost"><span id="limScript">–</span><span id="limScriptUnit"> 회</span></span></div>
     </div>
 
     <div class="msg err" id="acctErr"></div>
@@ -307,6 +309,7 @@ var KEYS_ENABLED = true;
    WIRED   : 등록 키가 실제 호출에 쓰이는 서비스 목록 */
 var PERSONAL = true;
 var WIRED = [];
+var POOLED = [];   /* 회원 키가 공용 풀에 합류하는 서비스(2026-08-24) */
 
 function esc(s){ return (s==null?"":String(s)).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 function el(id){ return document.getElementById(id); }
@@ -362,6 +365,8 @@ function postJSON(url, body){
 
 /* ── 💎 포인트 ──────────────────────────────────────── */
 function num(v){ return (v == null) ? "–" : Number(v).toLocaleString("ko-KR"); }
+// 하루 한도 표시 — null은 '무제한'이다(관리자). num()의 "–"와 뜻이 달라 따로 쓴다.
+function lim(v){ return (v == null) ? "무제한" : Number(v).toLocaleString("ko-KR"); }
 
 async function loadPoints(){
   clearErr("pointsErr");
@@ -398,6 +403,7 @@ async function loadKeys(){
     KEYS_ENABLED = (d.enabled !== false);
     PERSONAL = (d.personal !== false);
     WIRED = d.wired || [];
+    POOLED = d.pooled || [];
     KEYS = d.keys || [];
     renderKeys();
   } catch (e) {
@@ -425,6 +431,9 @@ function renderKeys(){
        거짓말이고, 서버도 그렇게 안 준다(keyroute.should_charge). */
     var freeTxt = (s.freeOp && PRICES[s.freeOp] != null && WIRED.indexOf(s.id) >= 0)
       ? "등록하면 " + num(PRICES[s.freeOp]) + "P → 0P" : "";
+    /* ★공용 풀 서비스는 "내 키로 돈다"가 아니다 — 키를 풀에 넣어주는 대신 무료로 쓴다.
+       사실대로 적는다: 내 키 1개만 내면 풀 전체를 쓰게 되고 포인트가 안 깎인다. */
+    var isPooled = POOLED.indexOf(s.id) >= 0;
 
     var rows = mine.map(function(k){
       var st = STATUS[k.status] || STATUS.unknown;
@@ -448,7 +457,11 @@ function renderKeys(){
              (s.multi ? "추가" : "저장") + '</button></div>';
     }
 
+    /* ★영상은 아직 URL이 없다(GUIDE_VIDEO 전부 빈 값) — 그동안 눌러도 안내문만 뜬다.
+       그림 매뉴얼(api_manual.html)은 지금 바로 있으므로 **먼저** 놓는다. 서비스별
+       앵커(#gemini 등)로 바로 그 항목에 떨어진다. */
     var foot = '<div class="svcFoot">' +
+      '<a class="btn" href="/api_manual.html#' + s.id + '" target="_blank" rel="noopener">📖 그림으로 보는 발급 방법</a>' +
       '<button class="btn" onclick="askGuide(\'' + s.id + '\')">▶ 받는 방법 영상</button>' +
       (mine.length ? '<button class="btn" onclick="verifyKeys(\'' + s.id + '\')">전체 확인</button>' : '') +
     '</div>';
@@ -461,6 +474,9 @@ function renderKeys(){
          등록해도 아무 일이 안 일어나는데 된 줄 안다(2026-08-17 실사고). */
       (WIRED.indexOf(s.id) < 0
         ? '<div class="warnBox" style="display:block;margin:8px 0">준비 중입니다 — 지금 등록하시면 저장은 되지만 <b>아직 실제 작업에는 쓰이지 않습니다.</b> 그동안은 포인트로 그대로 쓰실 수 있습니다.</div>'
+        : '') +
+      (isPooled
+        ? '<div class="svcDesc" style="color:var(--accent);font-weight:700">키 <b>1개만</b> 등록하시면 이 기능을 <b>포인트 없이</b> 쓰실 수 있어요 — 등록하신 키는 공용 키 묶음에 함께 들어가고, 대신 묶음 전체를 쓰시게 됩니다.</div>'
         : '') +
       /* note는 우리가 SERVICES에 직접 적은 문구뿐이라 <b> 태그를 그대로 살린다.
          ★사용자 입력을 여기 넣지 마라 — 넣는 순간 XSS 구멍이 된다. */
@@ -517,7 +533,13 @@ function addResultText(svc, res){
   var good  = res.filter(function(r){ return r.ok; }).length;
 
   if (bad && !good) {
-    return "❌ 키가 맞지 않습니다.\n\n" + name + " 키를 다시 확인해서 붙여넣어 주세요.\n" +
+    /* ★서버가 준 사유를 그대로 보여준다(2026-08-24 실사고).
+       종전엔 "다시 확인해 주세요"만 띄워 무엇이 틀렸는지 알 길이 없었다 —
+       실제로 고객이 키 대신 '키 ID'를 넣었는데, ElevenLabs가 정확히 알려준 그 말을
+       우리가 버리고 있었다(서버에서 직접 호출해보고서야 원인을 알았다). */
+    var why = (res.filter(function(r){ return r.reason; })[0] || {}).reason || "";
+    return "❌ 키가 맞지 않습니다.\n\n" +
+           (why ? why + "\n\n" : (name + " 키를 다시 확인해서 붙여넣어 주세요.\n")) +
            "저장은 됐지만 이 상태로는 쓸 수 없습니다 — 틀린 키는 [삭제]해 주세요.";
   }
   if (empty && !good) {
@@ -586,10 +608,14 @@ async function loadAccount(){
     el("acctPlanSub").textContent = (d.days_left != null)
       ? ("남은 기간 " + num(d.days_left) + "일")
       : "전 기능 이용중";
-    var lim = d.limits || {};
-    el("limRender").textContent  = num(lim.render);
-    el("limLens").textContent    = num(lim.lens);
-    el("limScript").textContent  = num(lim.script);
+    var limits = d.limits || {};
+    // 무제한(관리자)이면 "무제한"만 남기고 뒤의 "회"를 지운다 — "무제한 회"는 말이 안 된다.
+    ["Render", "Lens", "Script"].forEach(function(k){
+      var v = limits[k.toLowerCase()];
+      el("lim" + k).textContent = lim(v);
+      var u = el("lim" + k + "Unit");
+      if (u) u.style.display = (v == null) ? "none" : "";
+    });
   } catch (e) {
     el("acctPlanSub").textContent = "";
     showErr("acctErr", "계정 정보를 불러오지 못했습니다: " + e.message);

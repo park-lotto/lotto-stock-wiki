@@ -1,0 +1,298 @@
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd"> 
+ <html xmlns:o="urn:schemas-microsoft-com:office:office"
+xmlns:x="urn:schemas-microsoft-com:office:excel"
+xmlns="http://www.w3.org/TR/REC-html40">
+	<HEAD>
+		<title>리포트서머리</title>
+		<meta name="CODE_LANGUAGE" Content="C#">
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+		<style type="text/css">
+			td { FONT: 11px '맑은 고딕'; COLOR: #333333; border-top:none;border-bottom:0.5pt solid rgb(209,209,209);}
+			br {mso-data-placement:same-cell;}
+			body { PADDING-RIGHT: 0px; PADDING-LEFT: 0px; PADDING-BOTTOM: 0px; MARGIN: 0px; FONT: 9pt '맑은 고딕'; PADDING-TOP: 0px }
+			form { PADDING-RIGHT: 0px; PADDING-LEFT: 0px; PADDING-BOTTOM: 0px; MARGIN: 0px; FONT: 9pt '맑은 고딕'; PADDING-TOP: 0px }
+			.title{font:bold 14pt 'HY견고딕';color:rgb(47,71,107)}
+			.hd { font: bold 9pt '맑은 고딕'; color: rgb(53,91,157); height: 30px; background-color: rgb(247,247,247); text-align: center;border-top:1px rgb(47,71,107) solid}
+			.strdeg{mso-width-source:userset;width:80px;height: 24px;text-align: left}
+			.pre_recomm{mso-width-source:userset;width:80px;height: 24px;text-align: left}
+			.recomm{width:80px;height: 24px;text-align: left}
+			.brk{mso-width-source:userset;width:110px;height: 24px;text-align: left}
+			.cmp,.ind{mso-width-source:userset;width:90px;height: 24px;text-align: left}
+			.strprc{mso-width-source:userset;width:60px;height: 24px;text-align: right}
+			.pre_targer_prc{mso-width-source:userset;width:60px;height: 24px;text-align: right}
+			.close_prc{mso-width-source:userset;width:80px;height: 24px;text-align: right}
+			.comment{width:500px;height: 49px;}
+			.comment2{width:450px;height: 49px;}
+			.rpt_title{width:275px;height:24px;text-align: left}
+			.img0{width:20px;height:30px;line-height:30px;font-size:11pt;font-family:'HY견고딕';font-weight:bold;color:rgb(101,102,102)}
+			.img1{width:20px;height:30px;line-height:30px;font-size:7pt;font-family:'맑은 고딕';color:rgb(254,1,10)}
+			.img2{width:20px;height:30px;line-height:30px;font-size:11pt;font-family:'맑은 고딕';font-weight:bold;color:rgb(14,152,15)}
+			.img3{width:20px;height:30px;line-height:30px;font-size:7pt;font-family:'맑은 고딕';color:rgb(52,101,254)}
+			.img4{width:20px;height:30px;line-height:30px;font-size:9pt;font-family:'맑은 고딕';font-weight:bold;color:rgb(254,1,10)}
+			@page
+	            {mso-header-data:"&R리포트서머리";
+	            mso-footer-data:"Page &P of &N";
+	            margin:.5in 0in .4in 0in;
+	            mso-header-margin:.31in;
+	            mso-footer-margin:.2in;
+	            mso-page-orientation:landscape;}
+		</style>
+    <!--[if gte mso 9]><xml>
+       <x:ExcelWorkbook>
+        <x:ExcelWorksheets>
+         <x:ExcelWorksheet>
+          <x:Name>WiseReport ReportSummary</x:Name>
+          <x:WorksheetOptions>
+            <x:FreezePanes/>
+            <x:FrozenNoSplit/>
+            <x:SplitHorizontal>5</x:SplitHorizontal>
+            <x:TopRowBottomPane>5</x:TopRowBottomPane>
+            <x:ActivePane>2</x:ActivePane>
+            <x:DoNotDisplayGridlines/>
+            <x:Print>
+                <x:PaperSizeIndex>9</x:PaperSizeIndex>
+                <x:Scale>90</x:Scale> 
+                <x:ValidPrinterInfo/>
+            </x:Print>
+          </x:WorksheetOptions>
+         </x:ExcelWorksheet>
+        </x:ExcelWorksheets>
+       </x:ExcelWorkbook>
+      </xml><![endif]-->
+	</HEAD>
+	<body bottomMargin="0" leftMargin="0" topMargin="0" rightMargin="0">
+         
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-C8B2QNTM16"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-C8B2QNTM16');
+</script>
+
+		<form method="post" action="./summaryexcel.aspx?cn=&amp;fmt=2&amp;ee=20260824&amp;sortCol=&amp;sortTyp=" id="Form1">
+<div class="aspNetHidden">
+<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="/wEPDwULLTE5ODc1MjczMzhkZK1uVmb2cGLVvIQ+lHb37TlJRESJ" />
+</div>
+
+<script type="text/javascript">
+//<![CDATA[
+var theForm = document.forms['Form1'];
+if (!theForm) {
+    theForm = document.Form1;
+}
+function __doPostBack(eventTarget, eventArgument) {
+    if (!theForm.onsubmit || (theForm.onsubmit() != false)) {
+        theForm.__EVENTTARGET.value = eventTarget;
+        theForm.__EVENTARGUMENT.value = eventArgument;
+        theForm.submit();
+    }
+}
+//]]>
+</script>
+
+
+<script src="/WebResource.axd?d=EnHdU53b5uA6lKGq8bLJgCXexEBiKJSTKiXq84RtXnNu7LDCmV1KxyTtwXgDEBhZaJdTNK9Rr5w1-1BOBKBccwQcrBs1&amp;t=638286403360000000" type="text/javascript"></script>
+
+<div class="aspNetHidden">
+
+	<input type="hidden" name="__VIEWSTATEGENERATOR" id="__VIEWSTATEGENERATOR" value="3E16E249" />
+	<input type="hidden" name="__SCROLLPOSITIONX" id="__SCROLLPOSITIONX" value="0" />
+	<input type="hidden" name="__SCROLLPOSITIONY" id="__SCROLLPOSITIONY" value="0" />
+	<input type="hidden" name="__EVENTTARGET" id="__EVENTTARGET" value="" />
+	<input type="hidden" name="__EVENTARGUMENT" id="__EVENTARGUMENT" value="" />
+</div>
+        <div id="ind_excel">
+                <table style="border-collapse:collapse;table-layout:fixed;mso-width-source:userset;width:1100px">
+                     <col style='mso-width-source:userset;width:90px'>
+                     <col style='mso-width-source:userset;width:90px'>                     
+                     <col style='mso-width-source:userset;width:25px'>
+                     <col style='mso-width-source:userset;width:80px'>
+                     <col style='mso-width-source:userset;width:90px'>
+					<col style='mso-width-source:userset;width:275px'>
+                     <col style='mso-width-source:userset;width:450px'>
+				    <tr>
+					    <td colspan="7" height="30" align="center" class="title">산업리포트 요약(2026.08.24)</td>
+				    </tr>
+                    <tr>
+                        <td class="hd">기관명/작성자</td>
+                        <td class="hd">산업명</td>                        
+                        <td class="hd" colspan="2">투자의견</td>
+                        <td class="hd">이전의견</td>
+						<td class="hd">제목</td>
+                        <td class="hd">요약</td>
+                    </tr>
+                    <tr>
+                        <td colspan="7" style="height: 1px;border-bottom:1px solid rgb(209,209,209)"></td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">하나증권</font><br/>윤재성,김형준</td>
+                        <td class="ind"><font color="rgb(53,91,157)">화학</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm">Overweight</td>
+                        
+                        <td class="pre_recomm">Overweight</td>
+						<td class="rpt_title">Weekly Monitor: 8월 윤활기유 수출가 강세 지속</td>
+                        <td class="comment2"><span class="comment_text">▶</span> WTI 87.1$(+6%), Dubai 97.8$ (+11%). 정제마진 39.3$(WoW -1.2$)<br/><span class="comment_text">▶</span> 석유화학 강세. 납사 +6% Vs. 에틸렌 +12%, 벤젠 +6%, 천연고무/PET/DOP +5%, SM/BD/면화/아세톤 +4% 등이 눈에 띔<br/><span class="comment_text">▶</span> Top Picks: S-Oil, SK이노베이션, OCI홀딩스, 한화솔루션, 코오롱인더, KCC, 효성티앤씨</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">하나증권</font><br/>박성봉,김승규</td>
+                        <td class="ind"><font color="rgb(53,91,157)">철강</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm">Overweight</td>
+                        
+                        <td class="pre_recomm"></td>
+						<td class="rpt_title">철강금속 Weekly: 업황 부진으로 중국 철강 생산 감소세 지속</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 국내 철강 유통가격: 여름철 비수기 영향으로 판매 부진과 재고 증가로 전반적으로 약세 기록<br/><span class="comment_text">▶</span> 중국 철강 유통가격: 철강 선물 가격 반등과 인프라 투자 회복 기대감으로 소폭 상승 마감<br/><span class="comment_text">▶</span> 산업용 금속가격: 미달러 약세로 전반적으로 상승. 전기동은 LME 재고 증가로 소폭 하락</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">DS투자증권</font><br/>강태호</td>
+                        <td class="ind"><font color="rgb(53,91,157)">우주항공과국방</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm"></td>
+                        
+                        <td class="pre_recomm"></td>
+						<td class="rpt_title">매태호 - K9MH의 미국 진출, 단일 수주 이상의 의미</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 한화에어로스페이스 K9MH, MTC프로그램 시제품 공급 경쟁 승리<br/><span class="comment_text">▶</span> 미국 진출, 단일 수주 이상의 의미</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">하나증권</font><br/>박종대,양정석</td>
+                        <td class="ind"><font color="rgb(53,91,157)">판매업체</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm">Overweight</td>
+                        
+                        <td class="pre_recomm">Overweight</td>
+						<td class="rpt_title">Weekly Retail-Cos.Letter: 8월 소비심리가 중요한 이유</td>
+                        <td class="comment2"></td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">키움증권</font><br/>박상준,권용일</td>
+                        <td class="ind"><font color="rgb(53,91,157)">식품</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm"></td>
+                        
+                        <td class="pre_recomm">비중확대</td>
+						<td class="rpt_title">키움 음식료 Weekly</td>
+                        <td class="comment2"></td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">하나증권</font><br/>심은주,고찬결</td>
+                        <td class="ind"><font color="rgb(53,91,157)">식품</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm">Overweight</td>
+                        
+                        <td class="pre_recomm">Overweight</td>
+						<td class="rpt_title">F&B Weekly Comment: 환율 민감도+ 외식 업체 실적 동향(교촌/더본코리아)</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 전주 음식료 업종지수는 코스피 대비 0.2%p 아웃퍼폼 시현<br/><span class="comment_text">▶</span> 2분기 호실적을 발표한 라면 및 빙과 업체들의 주가 흐름이 견조했던 한 주 였음<br/><span class="comment_text">▶</span> 한편, 원달러 환율이 한 달 전 1,480원에서 1,390원으로 급락하면서 섹터 환율 민감도에 대한 질의가 많았던 한 주 였음</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">키움증권</font><br/>허혜민,신민수,김종현</td>
+                        <td class="ind"><font color="rgb(53,91,157)">제약</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm"></td>
+                        
+                        <td class="pre_recomm"></td>
+						<td class="rpt_title">Kiwoom Healthcare 종합정리</td>
+                        <td class="comment2"></td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">하나증권</font><br/>최정욱,정소영</td>
+                        <td class="ind"><font color="rgb(53,91,157)">은행</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm">Overweight</td>
+                        
+                        <td class="pre_recomm"></td>
+						<td class="rpt_title">은행 Weekly - 업종에 우호적인 매크로 환경에도 주가 약세 지속</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 전주에도 은행주는 3.2% 하락해 KOSPI 하락률 0.9% 대비 초과하락<br/><span class="comment_text">▶</span> 지난주 특징주는 우리금융. 은행주가 전반적으로 모두 하락했지만 우리금융은 한주간 주가가 5.8% 하락해 하락 폭이 가장컸음<br/><span class="comment_text">▶</span> 증시 거래대금 감소로 은행 신탁이익(ETF 관련) 및 증권 브로커리지수수료 감소에 대한 우려가 지속될 수 밖에 없는 가운데 예보료 인상과 서민금융·상생금융(중저신용자·청년대출) 확대, 고액·고가주택 대출에 대한 위험가중치 상향 및 국고채 담합 과징금 우려 등의 네거티브 뉴스플로우들이 이어지고 있는 상황</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">하나증권</font><br/>김홍식,이상훈</td>
+                        <td class="ind"><font color="rgb(53,91,157)">통신장비</font></td>                        
+                        
+                            <td class="img2">=</td>
+                            <td class="recomm">Overweight</td>
+                        
+                        <td class="pre_recomm">Overweight</td>
+						<td class="rpt_title">AI 데이터센터 다음은 AI 기지국입니다</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 데이터센터 이후 AI 기지국 도입 통한 IT 발전 도모가 이슈화되는 상황<br/><span class="comment_text">▶</span> 피지컬 AI 성공 위해 미국/한국 등 5G SA/6G부터 AI 기지국으로 전환 예상<br/><span class="comment_text">▶</span> 국내에서도 AI 기지국 활성화 논의될 전망, 신규 주파수 할당/5G SA 도입 예상</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">하나증권</font><br/>김현수</td>
+                        <td class="ind"><font color="rgb(53,91,157)">전자장비와기기</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm">Overweight</td>
+                        
+                        <td class="pre_recomm">Overweight</td>
+						<td class="rpt_title">Weekly 이배속 : ESS 성장 논리의 확장, 곳곳에서 확인되는 수주의 징후들</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 데이터 포인트 해석 및 투자 전략 : 대형주 매수<br/><span class="comment_text">▶</span> Car/Energy/Robot : 미국 PJM, 신규 데이터센터 자체 전력 확보 요구 강화<br/><span class="comment_text">▶</span> Cell : LG에너지솔루션, 미국 드론·무인 무기용 배터리 공급 검토</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">하나증권</font><br/>김록호,박규연</td>
+                        <td class="ind"><font color="rgb(53,91,157)">반도체와반도체장비</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm">Overweight</td>
+                        
+                        <td class="pre_recomm"></td>
+						<td class="rpt_title">반도체 및 소부장 Weekly: 연말까지 주주환원 기대감 유효</td>
+                        <td class="comment2"><span class="comment_text">▶</span> 데이터 포인트 및 주간 리뷰: 긍정적 수출 데이터 지속과 주주환원 공유<br/><span class="comment_text">▶</span> 전망 및 전략: 비중확대 유효. Nvidia 실적 발표</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">신한투자증권</font><br/>한승훈,최민기</td>
+                        <td class="ind"><font color="rgb(53,91,157)">복합유틸리티</font></td>                        
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="recomm"></td>
+                        
+                        <td class="pre_recomm">중립</td>
+						<td class="rpt_title">유틸리티/신재생 Weekly Power Up</td>
+                        <td class="comment2"></td>
+                    </tr>
+                    
+                    <!--tr style="height:5px; border:0px;">
+                        <td colspan="7" style="border-bottom:0px solid rgb(209,209,209)"></td>
+                    </tr-->
+				    <tr>
+                        <td colspan="7" style="height:96px;border-bottom:0px solid rgb(209,209,209)"><img alt="" src="https://www.wisereport.co.kr/wisereport/summary/images/excel_footer.png"/></td>
+				    </tr>
+			    </table>
+            </div>
+    
+
+<script type="text/javascript">
+//<![CDATA[
+
+theForm.oldSubmit = theForm.submit;
+theForm.submit = WebForm_SaveScrollPositionSubmit;
+
+theForm.oldOnSubmit = theForm.onsubmit;
+theForm.onsubmit = WebForm_SaveScrollPositionOnSubmit;
+//]]>
+</script>
+</form>
+	</body>
+</HTML>
+

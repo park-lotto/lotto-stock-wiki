@@ -106,23 +106,62 @@ def _cut_clip(src, start, end, out_path):
         return False
 
 
-def _beat_source_clips(plan, timeline, source_video_paths, out_dir):
-    """비트별 primary 구간을 잘라 out_dir/beat_NN_<역할>.mp4 로. 잘린 경로 리스트 반환.
+def _beat_source_clips(plan, timeline, source_video_paths, out_dir, src_durs=None):
+    """비트의 **화면 조각 전부**를 잘라 out_dir/beat_NN_i_<역할>.mp4 로. 경로 리스트 반환.
+
+    ★2026-08-23 수정. 예전엔 `beat["primary"]` **하나만** 잘랐다. 비트 하나에 화면이 여러 개
+      붙는데(primary + alternates, 실험실 편성이면 scene_override) 첫 개만 담은 것이다.
+      실측: 조각 19개인 job이 ZIP엔 7개만 들어갔다 = 완성본과 다른 구성.
+      계획은 렌더와 **같은 함수**가 준다(0순위-B) — 여기서 따로 나누면 또 어긋난다.
+
     소스 mp4가 없는(스킵된) 비트는 조용히 건너뛴다(_resolve_sources 스킵 일관성)."""
     out_dir.mkdir(parents=True, exist_ok=True)
     beats_by_idx = {b["beat_idx"]: b for b in plan.get("beats", [])}
     clips = []
     for b in timeline:
         beat = beats_by_idx.get(b["beat_idx"])
-        prim = (beat or {}).get("primary") or {}
-        src = source_video_paths.get(prim.get("video_id"))
-        if not src or prim.get("start") is None or prim.get("end") is None:
+        if not beat:
             continue
         role = safe_name(b.get("role") or "", default="scene")
-        out = out_dir / f"beat_{b['beat_idx']:02d}_{role}.mp4"
-        if _cut_clip(src, prim["start"], prim["end"], out):
-            clips.append(out)
+        for ci, c in enumerate(_beat_clips(beat, b.get("dur", 0.0),
+                                           src_durs or _durs_of(source_video_paths))):
+            src = source_video_paths.get(c.get("video_id"))
+            st, sd = c.get("start"), c.get("src_dur")
+            if not src or st is None or not sd:
+                continue
+            out = out_dir / f"beat_{b['beat_idx']:02d}_{ci}_{role}.mp4"
+            if _cut_clip(src, st, float(st) + float(sd), out):
+                clips.append(out)
     return clips
+
+
+def _durs_of(source_video_paths):
+    """{video_id: 소스 총길이(초)} — plan_beat_clips_for가 손상 소스를 거를 때 쓴다."""
+    from shopping_shorts.video_assemble import _probe_duration
+    out = {}
+    for vid, real in (source_video_paths or {}).items():
+        try:
+            out[vid] = _probe_duration(real) if real else 0.0
+        except Exception:
+            out[vid] = 0.0
+    return out
+
+
+def _beat_clips(beat, beat_dur, src_durs):
+    """화면 조각 계획 — **렌더와 같은 함수**를 쓴다(0순위-B). 실패하면 primary 하나로 폴백."""
+    try:
+        from shopping_shorts.video_assemble import plan_beat_clips_for
+        clips = plan_beat_clips_for(beat, float(beat_dur or 0.0), src_durs or {})
+        if clips:
+            return clips
+    except Exception as e:      # noqa: BLE001 — 계획 실패가 ZIP 전체를 막으면 안 된다
+        print("ZIP 조각 계획 실패(primary로 대체): %s" % str(e)[:120])
+    prim = beat.get("primary") or {}
+    if prim.get("video_id") and prim.get("start") is not None and prim.get("end") is not None:
+        return [{"video_id": prim["video_id"], "start": prim["start"],
+                 "src_dur": float(prim["end"]) - float(prim["start"]),
+                 "out_dur": float(beat_dur or 0.0)}]
+    return []
 
 
 def build_export_zip(out_zip, *, plan, timeline, source_video_paths, tts_paths,

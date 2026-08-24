@@ -409,6 +409,43 @@ def _beat_material(beat):
     return [s for s in ([beat.get("primary")] + list(beat.get("alternates") or [])) if s]
 
 
+def _apply_fixed_lens(plan, fixed, tts_dur, min_clip=0.6, eps=1e-3):
+    """✋ 손으로 정한 컷 길이를 반영한다(2026-08-24). **총합은 tts_dur 그대로.**
+
+    ★화면(scene_play.js applyFixedLens)과 **같은 규칙**이어야 한다 — 규칙이 갈리면
+      미리보기와 결과가 어긋나고, 그게 이 작업을 시작한 이유다(0순위-B).
+      정한 컷은 그 길이로, 나머지 컷은 남은 시간을 **원래 비율대로** 나눠 갖는다.
+
+    fixed = {seg_id: 초}. plan 원소는 out_dur를 갖는다(src_dur는 안 건드린다 —
+    입력에서 읽는 구간은 그대로 두고 출력 길이만 조절해 슬로모/freeze 기계가 흡수한다).
+    """
+    if not plan or not fixed:
+        return plan
+    fx = [c for c in plan if fixed.get(c.get("seg_id")) and fixed[c["seg_id"]] > 0]
+    fr = [c for c in plan if c not in fx]
+    if not fx:
+        return plan
+    want = sum(fixed[c["seg_id"]] for c in fx)
+    room = tts_dur - len(fr) * min_clip          # 나머지 컷의 최소 몫은 남겨둔다
+    cap = max(min_clip, room if fr else tts_dur)
+    k = (cap / want) if want > cap else 1.0
+    for c in fx:
+        c["out_dur"] = max(min_clip * 0.5, fixed[c["seg_id"]] * k)
+    want = sum(c["out_dur"] for c in fx)
+    rest = max(0.0, tts_dur - want)
+    if fr:
+        tot = sum(c["out_dur"] for c in fr)
+        if tot > eps:
+            for c in fr:
+                c["out_dur"] = c["out_dur"] / tot * rest
+        else:
+            for c in fr:
+                c["out_dur"] = rest / len(fr)
+    else:
+        fx[-1]["out_dur"] += tts_dur - sum(c["out_dur"] for c in fx)
+    return plan
+
+
 def _spread_stretch(plan, eps=1e-3):
     """늘려 채우기(scene_lab 칸별 토글 beat["stretch_fill"]) — 재료가 모자라 화면을 늘려야
     할 때(out_dur 합 > src_dur 합), 그 부족분을 마지막 컷에 몰지 않고 **전 컷에 재료 길이
@@ -427,6 +464,57 @@ def _spread_stretch(plan, eps=1e-3):
         c["out_dur"] = float(c["src_dur"]) * sc
         acc += c["out_dur"]
     plan[-1]["out_dur"] = max(eps, tot_out - acc)   # 반올림 오차는 마지막이 흡수(합 보존)
+    return plan
+
+
+def plan_beat_clips_for(beat, tts_dur, src_durs, *, runout=0.0):
+    """비트 하나의 **화면 조각 계획**을 정한다 — 렌더·캡컷·ZIP이 **모두 이 함수를 쓴다**.
+
+    반환: [{"video_id","start","src_dur","out_dur"}, ...] (없으면 [])
+
+    ## 왜 이 함수가 생겼나 (2026-08-23 실사고)
+
+    화면 조각을 정하는 판단이 **세 군데에 따로** 적혀 있었다:
+      · 렌더(build_video)  — `_beat_material` 전부를 쓴다(정상)
+      · 캡컷(capcut_draft) — `beat["primary"]` 하나만 (`capcut_draft.py:174`)
+      · ZIP(export_bundle) — `beat["primary"]` 하나만 (`export_bundle.py:117`)
+
+    라이브 실측: 화면 조각 19개인 job이 캡컷엔 **7개**만 갔다(3분의 1).
+    → 캡컷에서 연 것과 완성본이 **다른 영상**이었다. CLAUDE.md 0순위-B 그대로다.
+
+    ★고칠 때 `_plan_beat_clips`만 부르면 안 된다 — 그 앞뒤로 판단이 더 있다(손상 소스
+      제외·포인트 비트 홀드·1장1컷·늘려채우기·마지막 여운). 그 6줄을 내보내기에 다시
+      적으면 **또 두 벌**이 된다. 그래서 블록을 통째로 여기로 옮기고, 렌더도 이걸 부른다.
+
+    src_durs: {video_id: 소스 총길이(초)}. 0.05 이하면 디코드 불가로 보고 그 구간을 뺀다
+              (안 빼면 아래 -ss 렌더가 예외로 죽는다, 2026-07-19).
+    runout:   마지막 비트 여운(초). 0이면 안 붙인다.
+    """
+    from shopping_shorts import backbone as _bb, config as _cfg
+    # 순서 구간 리스트 = _beat_material(기본: [primary]+alternates / 실험실 편성이 있으면
+    # scene_override). 소스에 실재하고 + 디코드 가능한 것만.
+    segs = [s for s in _beat_material(beat)
+            if s and (src_durs or {}).get(s.get("video_id"), 0.0) > 0.05]
+    if not segs:
+        return []
+    beat_src_durs = {s["video_id"]: src_durs[s["video_id"]] for s in segs}
+    # 컷 밀도(2026-07-22): 한 컷을 MAX_SHOT_SECONDS 넘게 안 끌고 distinct 세그먼트를 번갈아
+    # 재생 → 긴 정지 대신 컷. 포인트 비트는 홀드가 맞으니 라운드로빈 안 한다.
+    _max_shot = None if _bb.is_point_beat(beat) else getattr(_cfg, "MAX_SHOT_SECONDS", 0) or None
+    # 1장=1컷 모드(기본 off). 켜면 담은 장면이 순서대로 한 번씩만 나온다(되돌아옴 없음).
+    _one = bool(getattr(_cfg, "ONE_CLIP_PER_SEGMENT", False))
+    plan = _plan_beat_clips(segs, tts_dur, src_durs=beat_src_durs, max_shot=_max_shot,
+                            one_per_seg=_one)
+    # ✋ 손으로 정한 컷 길이가 있으면 먼저 반영한다(칸 총합은 안 바뀐다).
+    _fixed = beat.get("fixed_lens") or {}
+    if _fixed:
+        _apply_fixed_lens(plan, _fixed, tts_dur)
+    # ★늘려 채우기(실험실 칸별 토글): 부족분을 전 컷에 고르게 — 여운보다 먼저.
+    #   여운은 일부러 붙이는 무성 꼬리라 재배분 대상이 아니다. 플래그 없으면 그대로.
+    if beat.get("stretch_fill"):
+        _spread_stretch(plan)
+    if runout > 0:
+        _extend_last_clip_for_runout(plan, segs, runout)
     return plan
 
 
@@ -1052,48 +1140,53 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
             continue
         tts_dur = _beat_effective_dur(beat, tts)
         _head_trim = beat.get("head_trim", 0.0)
-        # 순서 구간 리스트 = _beat_material(기본: [primary]+alternates / 실험실 편성이 있으면
-        # scene_override). 소스에 실재하고 + 디코드 가능한 것만.
-        # 손상/빈 소스(_src_dur=0)는 여기서 걸러야 아래 -ss 렌더가 예외로 죽지 않는다(2026-07-19).
-        segs = [s for s in _beat_material(beat)
-                if s and s.get("video_id") in source_video_paths
-                and _src_dur(s["video_id"]) > 0.05]
-        if not segs:
-            continue
-        # 소스별 총길이를 넘겨 '멈춤 대신 소스 실프레임 더 재생'을 켠다(2026-07-20).
-        beat_src_durs = {s["video_id"]: _src_dur(s["video_id"]) for s in segs}
-        # 컷 밀도(2026-07-22): 한 컷을 MAX_SHOT_SECONDS 넘게 안 끌고 distinct 세그먼트를 번갈아
-        # 재생 → 긴 정지 대신 컷(벤치마크급). 포인트 비트는 홀드가 맞으니 라운드로빈 안 함.
-        from shopping_shorts import backbone as _bb, config as _cfg
-        _max_shot = None if _bb.is_point_beat(beat) else getattr(_cfg, "MAX_SHOT_SECONDS", 0) or None
-        # 1장=1컷 모드(기본 off). 켜면 담은 장면이 순서대로 한 번씩만 나온다(되돌아옴 없음).
-        _one = bool(getattr(_cfg, "ONE_CLIP_PER_SEGMENT", False))
-        plan = _plan_beat_clips(segs, tts_dur, src_durs=beat_src_durs, max_shot=_max_shot,
-                                one_per_seg=_one)
-        # ★늘려 채우기(실험실 칸별 토글): 부족분을 전 컷에 고르게 — 여운(runout)보다 먼저.
-        #   여운은 일부러 붙이는 무성 꼬리라 재배분 대상이 아니다. 플래그 없으면 그대로.
-        if beat.get("stretch_fill"):
-            _spread_stretch(plan)
+        # ★화면 조각 계획은 **공용 함수 하나**가 정한다(2026-08-23, 0순위-B).
+        #   예전엔 이 블록이 여기에만 있어서 캡컷·ZIP 내보내기가 각자 `primary` 하나만
+        #   보고 있었다(실측: 조각 19개인 job이 캡컷엔 7개). 이제 셋이 같은 함수를 부른다.
+        #   손상/빈 소스 제외·포인트비트 홀드·1장1컷·늘려채우기·여운이 전부 그 안에 있다.
+        _srcd = {s.get("video_id"): _src_dur(s.get("video_id"))
+                 for s in _beat_material(beat)
+                 if s and s.get("video_id") in source_video_paths}
         # 마지막 비트 여운: 실프레임 여유는 1배속으로, 부족분은 아래 slowmo/freeze 기계가 흡수.
         runout = _LAST_RUNOUT if idx == _runout_idx else 0.0
-        if runout > 0:
-            _extend_last_clip_for_runout(plan, segs, runout)
+        plan = plan_beat_clips_for(beat, tts_dur, _srcd, runout=runout)
+        if not plan:
+            continue
+        segs = [s for s in _beat_material(beat) if s and _srcd.get(s.get("video_id"), 0.0) > 0.05]
         vf = _kenburns_vf(tts_dur) if idx in important else _base_zoom_vf()
         # 비트당 다중 클립: 각 구간을 [start, start+src_dur]만큼만 잘라(유출 0) 이어붙이고,
         # 부족분은 마지막 클립을 슬로모(setpts)로 늘려 대사 길이에 맞춘다.
         sub_paths = []
+        # ★전환용 여유(2026-08-23): xfade는 두 컷을 overlap만큼 **겹치므로** 그냥 겹치면
+        #   비트가 overlap*(n-1)만큼 짧아지고, 그러면 뒤 칸 자막이 통째로 밀린다(t0 누적).
+        #   그래서 각 컷을 미리 overlap만큼 **길게** 만들어 둔다 → 겹친 뒤 원래 길이가 된다.
+        #   컷이 1개면 겹칠 데가 없으니 0.
+        # ★여유는 overlap 전부가 아니라 **overlap*(n-1)/n**이다(실측으로 잡은 오류).
+        #   컷 n개를 각각 pad만큼 늘려 겹치면 총합 = n*(base+pad) - overlap*(n-1).
+        #   이게 원래 n*base와 같으려면 pad = overlap*(n-1)/n.
+        #   overlap을 통째로 얹으면 비트가 0.3초쯤 길어져 **뒤 자막이 전부 밀린다**.
+        _n = len(plan)
+        _pad = (_trans_sec() * (_n - 1) / _n) if _n > 1 else 0.0
         for j, c in enumerate(plan):
             src = source_video_paths[c["video_id"]]
             sub = work / f"beat_{idx}_{j}.mp4"
             # 슬로우 상한(1.15배)+정지프레임(2026-07-19): 무제한 슬로우크롤 제거.
             # 재생은 최대 _MAX_SLOWMO배까지만 늘리고, 남는 시간은 마지막 프레임 정지(freeze).
             # play_out+freeze == out_dur → 총 길이·오디오/자막 싱크 불변.
-            play_out, freeze = _speed_and_freeze(c["src_dur"], c["out_dur"])
+            # 전환 여유를 이 컷에 얹는다. 소스에 실프레임이 남아 있으면 그것으로(자연스럽다),
+            # 없으면 out_dur만 늘려 슬로모/freeze 기계가 흡수한다.
+            _c_src, _c_out = c["src_dur"], c["out_dur"]
+            if _pad > 1e-3:
+                _sd = _src_dur(c["video_id"])
+                _room = max(0.0, _sd - (c["start"] + _c_src)) if _sd > 0 else 0.0
+                _c_src = _c_src + min(_pad, _room)
+                _c_out = _c_out + _pad
+            play_out, freeze = _speed_and_freeze(_c_src, _c_out)
             # freeze 클립은 움직이는 부분을 정적 베이스줌으로 두고, 켄번즈 모션은 freeze
             # 패스에서 전체(play+freeze)에 한 번만 건다(정지 구간도 살아있게, 2026-07-19).
             # 안 그러면 pass1 줌 + freeze 켄번즈가 겹쳐 줌이 두 번 쌓인다.
             clip_vf = _base_zoom_vf() if freeze > 1e-3 else vf
-            factor = play_out / c["src_dur"] if c["src_dur"] > 1e-6 else 1.0
+            factor = play_out / _c_src if _c_src > 1e-6 else 1.0
             vf_full = f"{clip_vf},setpts={factor:.6f}*PTS" if factor > 1.0 + 1e-6 else clip_vf
             # start를 소스 안으로 당긴다(타트랙 병합, 2026-07-19). 약한 매칭이 소스 밖을 잡으면
             #   -ss가 끝을 넘어 0프레임이 나와 concat이 죽는다. [start, start+src_dur]가 소스
@@ -1101,13 +1194,13 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
             sdur = _src_dur(c["video_id"])
             start = c["start"]
             if sdur > 0:
-                start = max(0.0, min(start, sdur - min(c["src_dur"], sdur)))
+                start = max(0.0, min(start, sdur - min(_c_src, sdur)))
             # 1단계 — 움직임: 입력을 [start, start+src_dur]만 읽어(-ss+입력측 -t) 유출 차단.
             #   입력 제한이 핵심(P1) — 상한 배율이 out_dur/src_dur보다 작으면 setpts가 다음
             #   구간까지 끌어와 유출된다(다색 소스 실측). 잘라두면 이 구간만 play_out으로 늘어난다.
             sub = work / f"beat_{idx}_{j}.mp4"
             _run_ffmpeg([
-                "ffmpeg", "-y", "-ss", f"{start:.3f}", "-t", f"{c['src_dur']:.3f}",
+                "ffmpeg", "-y", "-ss", f"{start:.3f}", "-t", f"{_c_src:.3f}",
                 "-i", str(src),
                 "-vf", vf_full, "-r", "30", "-an", "-t", f"{play_out:.3f}",
                 "-c:v", "libx264", "-preset", _mid_preset(), "-crf", _mid_crf(), *_threads_args(), "-pix_fmt", "yuv420p", str(sub),
@@ -1130,10 +1223,24 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
             continue
         # 비트의 클립들(동일 규격)을 concat → 비트 무음 영상(길이 ≈ tts_dur)
         beat_video = work / f"beat_{idx}_v.mp4"
-        cat = work / f"beat_{idx}_list.txt"
-        cat.write_text("".join(f"file '{p.as_posix()}'\n" for p in sub_paths), encoding="utf-8")
-        _run_ffmpeg(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(cat),
-                     "-c", "copy", str(beat_video)])
+        # ★컷 전환(2026-08-23 사장님 "부자연스럽다 / 캡컷을 대체하고 싶다"):
+        #   켜져 있으면 컷 사이를 xfade로 겹쳐 넘긴다.
+        #   ★총 길이는 concat과 **같아야** 한다 — 자막이 비트 t0 누적으로 자리를 잡으므로
+        #     비트가 조금이라도 길어지면 뒤 자막이 통째로 밀린다.
+        #     그래서 컷을 미리 overlap만큼 길게 뽑아둔다(아래 out_dur 보정).
+        #   실패하거나 여유가 없으면 조용히 하드컷으로 돌아간다 — 렌더를 죽이지 않는다.
+        faded = None
+        _tsec = _trans_sec()
+        if _tsec > 1e-3 and len(sub_paths) > 1:
+            faded = _xfade_concat(sub_paths, work / f"beat_{idx}_x.mp4",
+                                  _tsec, _trans_kind())
+        if faded is not None:
+            beat_video = faded
+        else:
+            cat = work / f"beat_{idx}_list.txt"
+            cat.write_text("".join(f"file '{p.as_posix()}'\n" for p in sub_paths), encoding="utf-8")
+            _run_ffmpeg(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(cat),
+                         "-c", "copy", str(beat_video)])
         # 컷어웨이(장면라이브러리 페이즈2-B): 라이브러리 자산을 비트 영상 위에 풀프레임
         # 오버레이. 창=[0, min(자산길이, tts_dur)]. 비트 길이·TTS 오디오 불변 → 자막 t0 싱크
         # 불변. beat_video는 이미 규격(1080x1920)·vf 적용 → 재-vf 없이 오버레이만 얹는다.
@@ -1178,6 +1285,63 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
     _run_ffmpeg(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(concat_txt),
                  "-c", "copy", str(mix_raw)])
     return str(mix_raw)
+
+
+# ── 컷 전환 설정(2026-08-23) ─────────────────────────────────────────────────
+# 정의처는 config 하나. 여기서 한 번 읽어 렌더 전체가 같은 값을 쓴다(0순위-B).
+def _trans_sec():
+    try:
+        from shopping_shorts import config as _c
+        return max(0.0, float(getattr(_c, "TRANSITION_SECONDS", 0.0) or 0.0))
+    except Exception:
+        return 0.0
+
+
+def _trans_kind():
+    try:
+        from shopping_shorts import config as _c
+        return str(getattr(_c, "TRANSITION_KIND", "fade") or "fade")
+    except Exception:
+        return "fade"
+
+
+def _xfade_concat(clip_paths, out_path, overlap, kind="fade"):
+    """컷들을 xfade로 겹쳐 이어 붙인다. **총 길이는 concat과 같다.**
+
+    ★왜 길이가 같아야 하나: 자막·오디오는 비트 t0를 누적해서 자리를 잡는다
+      (`t0 += dur`). 비트가 조금이라도 길거나 짧아지면 **그 뒤 자막이 통째로 밀린다**.
+      xfade는 두 영상을 overlap만큼 **겹치므로** 이어붙인 총 길이가
+      sum(len) - overlap*(n-1)이 된다. 그래서 각 컷을 미리 overlap만큼 길게 받아
+      (호출부가 `+overlap`으로 뽑아준다) 겹친 뒤 원래 합계가 되게 맞춘다.
+
+    겹칠 수 없으면(컷이 1개거나 너무 짧으면) None을 돌려준다 — 호출부가 하드컷으로 간다.
+    """
+    if len(clip_paths) < 2 or overlap <= 1e-3:
+        return None
+    durs = [_probe_duration(p) for p in clip_paths]
+    if any(d <= overlap + 0.05 for d in durs):
+        return None                      # 겹칠 여유가 없는 컷이 있으면 통째로 포기
+    args, fc, cur = [], [], "0:v"
+    for i, p in enumerate(clip_paths):
+        args += ["-i", str(p)]
+    acc = durs[0]
+    for i in range(1, len(clip_paths)):
+        off = acc - overlap              # 앞 영상이 끝나기 overlap초 전부터 겹친다
+        lbl = f"x{i}"
+        fc.append(f"[{cur}][{i}:v]xfade=transition={kind}:duration={overlap:.3f}"
+                  f":offset={off:.3f}[{lbl}]")
+        cur = lbl
+        acc = off + durs[i]              # 겹친 만큼 총길이가 줄어든다
+    try:
+        _run_ffmpeg(["ffmpeg", "-y", *args, "-filter_complex", ";".join(fc),
+                     "-map", f"[{cur}]", "-r", "30", "-an",
+                     "-c:v", "libx264", "-preset", _mid_preset(), "-crf", _mid_crf(),
+                     *_threads_args(), "-pix_fmt", "yuv420p", str(out_path)])
+    except Exception:
+        return None                      # 전환에 실패해도 렌더 전체를 죽이지 않는다
+    if not out_path.exists() or _probe_duration(out_path) <= 0.05:
+        return None
+    return out_path
 
 
 def _motion_layer_filters(layers, next_input_idx, vcur):
@@ -1711,16 +1875,31 @@ def assemble(edit_plan, tts_paths, source_video_paths, out_path, clean_fn=None, 
     preview_preset() 컨텍스트로 veryfast로 감싼다 — 최종은 그대로 medium 고화질."""
     work = Path(out_path).parent / f"asm_{uuid.uuid4().hex[:8]}"
     work.mkdir(parents=True, exist_ok=True)
-    mix_raw = _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=cutaway_paths)
-    base_video = clean_fn(mix_raw) if clean_fn else mix_raw
-    if not burn_captions:
-        # '자막 없는 clean 배경'용(썸네일 배경 등, 2026-07-22) — 우리 나레이션 자막·꾸미기를
-        # 굽는 _burn_captions 패스를 통째로 건너뛴다. base_video(믹스[+원본자막제거])를 그대로
-        # 확정하므로 ①썸네일에 나레이션 자막이 안 박히고 ②캡션 인코딩 패스가 없어 더 빠르다.
-        import shutil
-        shutil.copyfile(base_video, out_path)
-        return out_path
-    return _burn_captions(base_video, edit_plan, tts_paths, out_path, work, headcopy, caption_style, deco, sfx_paths=sfx_paths)
+    # ★작업이 끝나면 이 폴더를 지운다(2026-08-23). 종전엔 지우는 코드가 아예 없어서
+    #   렌더 1회마다 **195MB씩 영구히 쌓였다**(실측 2026-08-23: asm_ 321개 = 21GB,
+    #   mix_jobs 31GB 중 3분의 2). 1기 100명이 쓰면 하루에도 수십 GB가 이 자리에 쌓인다.
+    #   ⚠️finally로 감싸는 이유: 반환 지점이 둘(자막 굽기 생략/일반)이고 예외로도 빠져나간다 —
+    #     한 군데만 지우면 나머지 경로가 계속 남긴다(0순위-B).
+    #   ⚠️out_path는 work **밖**이라 안전하다(work는 out_path의 형제 폴더).
+    #     실패해도 삼킨다 — 청소가 렌더를 죽이면 안 된다.
+    try:
+        mix_raw = _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=cutaway_paths)
+        base_video = clean_fn(mix_raw) if clean_fn else mix_raw
+        if not burn_captions:
+            # '자막 없는 clean 배경'용(썸네일 배경 등, 2026-07-22) — 우리 나레이션 자막·꾸미기를
+            # 굽는 _burn_captions 패스를 통째로 건너뛴다. base_video(믹스[+원본자막제거])를 그대로
+            # 확정하므로 ①썸네일에 나레이션 자막이 안 박히고 ②캡션 인코딩 패스가 없어 더 빠르다.
+            import shutil
+            shutil.copyfile(base_video, out_path)
+            return out_path
+        return _burn_captions(base_video, edit_plan, tts_paths, out_path, work, headcopy, caption_style, deco, sfx_paths=sfx_paths)
+    finally:
+        try:
+            import shutil as _sh
+            _sh.rmtree(work, ignore_errors=True)
+        except Exception as e:      # noqa: BLE001 — 청소 실패가 제작을 막지 않는다
+            # 삼키되 조용히 넘기지 않는다 — 이게 계속 실패하면 디스크가 다시 찬다.
+            print(f"[assemble] 작업폴더 정리 실패(무해, 디스크만 남음): {e!r}", file=sys.stderr)
 
 
 def _probe_audio_params(path):

@@ -302,11 +302,26 @@ DEFAULTS = {
     "bottom_h": 0,         # 하단 띠 높이(px) — 0이면 없음
     "channel": "",         # 가짜 채널명
     "ad_badge": False,     # [광고] 뱃지
+    # ── [광고] 표시 다듬기(2026-08-22 사장님 "크기나 마우스로 위치조정 흐리기") ──
+    #   ★0 = "안 정했음" → 지금까지의 자리·크기를 그대로 쓴다(채널명·제목과 같은 규약).
+    "ad_size": 0,          # 글자 크기(px). 0이면 24
+    "ad_x": 0,             # 가로 위치 %. 0이면 기존 자리(오른쪽 아이콘 위)
+    "ad_y": 0,             # 세로 위치 %. 0이면 기존 자리
+    "ad_alpha": 100,       # 진하기 %. 낮출수록 흐려진다(0=안 보임)
     "icons": True,         # ☰ / 🔍
     "title": "",           # 굵은 후킹 제목(자동 줄바꿈)
     "views": "",           # "264만"
     "comments": "",        # "587"
     "head_bg": "#FFFFFF",  # 제목·메타가 얹히는 흰 블록
+    # ── 글자 꾸미기(2026-08-22 신설) ─────────────────────────────
+    # ★비워두면(""/None) **프리셋이 정한 값**을 쓴다 — 기존 20여 종의 생김새가
+    #   그대로 유지되게 하려면 "안 정했음"과 "0으로 정했음"을 갈라야 한다.
+    "ch_font": "",         # 채널명 폰트 파일명(빈값=Pretendard-Bold)
+    "ch_size": 0,          # 채널명 글씨 크기(0=띠 높이의 30%, 기존 자동 규칙)
+    "ch_x": 50,            # 채널명 가로 위치 %(50=가운데)
+    "title_font": "",      # 제목 폰트(빈값=Pretendard-ExtraBold)
+    "title_size": 0,       # 제목 크기(0=62, 기존 값)
+    "title_x": 50,         # 제목 가로 위치 %
 }
 
 _FONTS = {
@@ -316,7 +331,16 @@ _FONTS = {
 }
 
 
-def _font(kind, size):
+def _font(kind, size, override=""):
+    """kind = 기본 폰트 갈래. override에 파일명이 오면 그걸 먼저 쓴다.
+
+    ★override는 화면이 고른 폰트다. 없는 파일이면 조용히 기본으로 돌아간다 —
+      여기서 죽으면 그림 전체가 안 나온다.
+    """
+    if override:
+        po = _FONT_DIR / override
+        if po.exists():
+            return ImageFont.truetype(str(po), size)
     p = _FONT_DIR / _FONTS[kind]
     if p.exists():
         return ImageFont.truetype(str(p), size)
@@ -326,6 +350,14 @@ def _font(kind, size):
 def _rgb(hex_color):
     h = (hex_color or "#000000").lstrip("#")
     return (int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16), 255)
+
+
+def _fade(color, pct):
+    """색을 pct%만큼만 진하게(흐리기). 100이면 그대로 — 기존 그림이 안 바뀐다."""
+    if not isinstance(color, (tuple, list)) or pct >= 100:
+        return color
+    a = color[3] if len(color) > 3 else 255
+    return (color[0], color[1], color[2], int(a * max(0, min(100, pct)) / 100))
 
 
 def normalize(spec):
@@ -359,6 +391,21 @@ def normalize(spec):
         s[k] = str(s[k] or "").strip()[:60]
     s["ad_badge"] = bool(s["ad_badge"])
     s["icons"] = bool(s["icons"])
+    # ── 글자 꾸미기 값도 **여기 한 곳에서만** 자른다(위 bar_h와 같은 원칙) ──
+    # ★0은 "안 정했음"이라 살려둔다 — 그림 그릴 때 프리셋 기본으로 되돌아간다.
+    for k, lo, hi in (("ch_size", 0, 200), ("title_size", 0, 200),
+                      ("ch_x", 0, 100), ("title_x", 0, 100),
+                      ("ad_size", 0, 200), ("ad_x", 0, 100), ("ad_y", 0, 100),
+                      ("ad_alpha", 0, 100)):
+        try:
+            s[k] = int(s[k])
+        except (TypeError, ValueError):
+            s[k] = DEFAULTS[k]
+        s[k] = max(lo, min(hi, s[k]))
+    # 폰트는 파일명만 받는다 — 경로가 섞이면 폰트 폴더 밖을 읽을 수 있다.
+    for k in ("ch_font", "title_font"):
+        v = str(s[k] or "").strip()
+        s[k] = v if (v and "/" not in v and "\\" not in v and ".." not in v) else ""
     return s
 
 
@@ -448,12 +495,43 @@ def render(spec):
             if right:
                 right(d, W - 96, cy, on_bar)
         if s["channel"]:
-            f = _font("bar", max(28, int(bar_h * 0.30)))
-            tw = d.textlength(s["channel"], font=f)
-            d.text((W / 2 - tw / 2, cy), s["channel"], font=f, fill=on_bar, anchor="lm")
-            if s["ad_badge"]:
-                fb = _font("meta", 24)
-                d.text((W / 2 + tw / 2 + 16, cy), "[광고]", font=fb, fill=on_bar, anchor="lm")
+            # 크기 0 = "안 정했음" → 기존 자동 규칙(띠 높이의 30%)을 그대로 쓴다.
+            csize = s["ch_size"] or max(28, int(bar_h * 0.30))
+            f = _font("bar", csize, s["ch_font"])
+            cx = W * (s["ch_x"] / 100.0)
+            # 글자 절반이 화면 밖으로 나가지 않게 중심을 안쪽으로 당긴다.
+            half = d.textlength(s["channel"], font=f) / 2
+            cx = max(half + 20, min(W - half - 20, cx))
+            d.text((cx, cy), s["channel"], font=f, fill=on_bar, anchor="mm")
+
+    # ★[광고]는 **틀과 독립**이다(2026-08-22 사장님 "템플릿 없어도 사용가능").
+    #   그래서 띠(bar_h>0) 블록 **밖**에서 그린다 — 띠가 없어도 나온다.
+    #   자리는 오른쪽 아이콘(돋보기) 위. 띠가 없으면 띠에 얹을 수 없으니
+    #   화면 맨 위 여백에 두고, 글자색도 띠 위가 아니면 흰색+검은 외곽선으로 읽히게 한다.
+    if s["ad_badge"]:
+        # 크기 0 = "안 정했음" → 지금까지의 24px 그대로(채널명·제목과 같은 규약).
+        fb = _font("meta", s["ad_size"] or 24)
+        if bar_h > 0:
+            ax, ay, fill, stroke = W - 96, max(14, bar_h // 2 - int(bar_h * 0.28)), on_bar, None
+        else:
+            ax, ay, fill, stroke = W - 96, 40, (255, 255, 255, 255), (0, 0, 0, 255)
+        # 사장님이 화면에서 끌어다 놓았으면 그 자리로(0이면 위 기본 자리 그대로).
+        # ⚠️화면 밖 방지는 **사장님이 자리를 정했을 때만** 건다. 기본 자리에까지 걸면
+        #   띠가 얇을 때 기존 y(최소 14)가 밀려 지금까지의 그림이 바뀐다(회귀).
+        if s["ad_x"]:
+            half = d.textlength("[광고]", font=fb) / 2
+            ax = int(W * s["ad_x"] / 100.0)
+            ax = max(int(half) + 8, min(W - int(half) - 8, ax))
+        if s["ad_y"]:
+            ay = int(H * s["ad_y"] / 100.0)
+            ay = max(fb.size, min(H - fb.size, ay))
+        fill = _fade(fill, s["ad_alpha"])
+        stroke = _fade(stroke, s["ad_alpha"]) if stroke else None
+        if stroke:
+            d.text((ax, ay), "[광고]", font=fb, fill=fill, anchor="mm",
+                   stroke_width=3, stroke_fill=stroke)
+        else:
+            d.text((ax, ay), "[광고]", font=fb, fill=fill, anchor="mm")
 
     if s["bottom_h"] > 0:
         d.rectangle([0, H - s["bottom_h"], W, H - 1], fill=bar_col)
@@ -461,10 +539,17 @@ def render(spec):
     # 제목·메타가 얹히는 흰 블록 — 내용이 있을 때만 그린다(빈 블록이 영상을 가리면 손해).
     y = bar_h
     if s["title"] or s["views"] or s["comments"]:
-        ft = _font("title", 62)
+        tsize = s["title_size"] or 62
+        ft = _font("title", tsize, s["title_font"])
         fm = _font("meta", 30)
-        lines = _wrap(d, s["title"], ft, W - 120)
-        line_h = 78
+        # ★가로위치를 옮기면 그 자리에서 쓸 수 있는 폭이 줄어든다.
+        #   예전처럼 W-120으로 접으면 왼쪽으로 민 제목이 화면 밖으로 잘린다(실측).
+        #   중심에서 가까운 쪽 여백의 2배가 실제로 그릴 수 있는 폭이다.
+        tx = W * (s["title_x"] / 100.0)
+        avail = int(min(tx, W - tx) * 2) - 40
+        lines = _wrap(d, s["title"], ft, max(200, min(W - 120, avail)))
+        # 줄 간격도 글씨 크기를 따라간다 — 안 그러면 키웠을 때 글자가 겹친다.
+        line_h = max(40, int(tsize * 1.26))
         meta = ""
         if s["views"]:
             meta = f"조회수 {s['views']}"
@@ -474,7 +559,7 @@ def render(spec):
         d.rectangle([0, y, W, y + block_h - 1], fill=_rgb(s["head_bg"]))
         ty = y + 36
         for ln in lines:
-            d.text((W / 2, ty), ln, font=ft, fill=(20, 20, 20, 255), anchor="ma")
+            d.text((tx, ty), ln, font=ft, fill=(20, 20, 20, 255), anchor="ma")
             ty += line_h
         if meta:
             d.text((60, ty + 6), meta, font=fm, fill=(120, 120, 120, 255), anchor="la")

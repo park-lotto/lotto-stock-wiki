@@ -188,14 +188,41 @@ def test_예산을_안_주면_종전_그대로다(monkeypatch):
 # 32~46초짜리가 나온다. 길이는 플랫폼 규격이라 밀도보다 우선한다.
 
 def test_density_target_capped_by_speech_speed():
-    from shopping_shorts.script_gate import density_target, SPEECH_CHARS_PER_SEC
+    """천장은 그대로 — 말속도보다 빠른 대본은 없다.
+
+    ★단위 주의(2026-08-24): DB `chars_per_30s`는 **raw**(공백 포함)로 쌓여 있고
+      천장·판정은 **norm**(공백 제외)이다. density_target이 그 경계에서 환산한다
+      (`script_gate.norm_chars_per_30s`). 그래서 여기 기대값도 norm으로 적는다.
+    """
+    from shopping_shorts.script_gate import (density_target, norm_chars_per_30s,
+                                             SPEECH_CHARS_PER_SEC)
     cap = int(SPEECH_CHARS_PER_SEC * 30)
+    # 히트작 실측 밀도는 환산해도 천장을 넘는다 → 천장이 이긴다
     assert density_target({"chars_per_30s": 377}, 30) == cap
-    assert density_target({"chars_per_30s": 264}, 30) == cap
-    # 천장 아래인 스타일은 그대로 존중한다(회귀 0)
-    assert density_target({"chars_per_30s": 135}, 30) == 135
     # 길이를 늘려 잡으면 천장도 같이 올라간다
     assert density_target({"chars_per_30s": 377}, 60) == int(SPEECH_CHARS_PER_SEC * 60)
+
+
+def test_density_target_respects_styles_below_the_cap():
+    """★천장 아래 스타일은 **제 값**을 지킨다 — 이게 스타일별 밀도가 사는 조건이다.
+
+    2026-08-24 이전엔 raw 예산을 norm 천장과 견줘 **11개 스타일 100%가 천장에 잘렸다**
+    (밀도를 240으로 적든 327로 적든 창이 똑같았다 = 스타일별 밀도가 죽어 있었다).
+    """
+    from shopping_shorts.script_gate import density_target, norm_chars_per_30s
+    # raw 264 → norm 195 < 천장 222 → 잘리지 않는다
+    assert density_target({"chars_per_30s": 264}, 30) == norm_chars_per_30s({"chars_per_30s": 264})
+    # 서로 다른 밀도는 서로 다른 목표를 준다(같아지면 밀도가 죽은 것)
+    assert density_target({"chars_per_30s": 240}, 30) != density_target({"chars_per_30s": 300}, 30)
+
+
+def test_norm_chars_per_30s_converts_raw_to_norm():
+    """DB(raw) → 판정(norm) 경계는 **이 함수 하나**다(0순위-B)."""
+    from shopping_shorts.script_gate import norm_chars_per_30s, DEFAULT_CHARS_PER_30S
+    assert norm_chars_per_30s({"chars_per_30s": 300}) == int(300 * 0.7395)
+    assert norm_chars_per_30s({}) == DEFAULT_CHARS_PER_30S      # 값 없으면 기본값
+    assert norm_chars_per_30s(None) == DEFAULT_CHARS_PER_30S
+
 
 
 def test_gate_upper_bound_never_exceeds_speech_cap():

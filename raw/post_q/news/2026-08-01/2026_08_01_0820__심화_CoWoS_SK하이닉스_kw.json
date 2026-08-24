@@ -1,0 +1,47 @@
+{
+  "target_kind": "sector",
+  "sector_name": "반도체",
+  "sector_view": "긍정",
+  "points": [
+    "SK하이닉스의 HBM 시장 지배력 강화 및 차세대 HBM4 개발",
+    "TSMC의 CoWoS 기술 협력 및 인텔 EMIB 등 첨단 패키징 기술 다변화",
+    "엔비디아 AI 가속기 공급망에서의 핵심 역할 수행",
+    "AI 반도체 시장 성장에 따른 패키징 및 메모리 공급망의 전략적 재편"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "SK하이닉스",
+      "comment": "HBM 시장 1위 업체로 TSMC, 인텔과 협력하여 차세대 패키징 생태계 주도",
+      "ts": "2026-08-01",
+      "quote": "SK하이닉스, TSMC와 손잡고 'HBM4' 개발…2026년 양산",
+      "sector": "반도체"
+    },
+    {
+      "name": "피에스케이홀딩스",
+      "comment": "CoWoS 및 HBM 동시 수혜 기대",
+      "ts": "2024-03-16",
+      "quote": "피에스케이홀딩스, 목표가 15만원 상향…'CoWoS·HBM 동시 수혜'",
+      "sector": "반도체"
+    },
+    {
+      "name": "브로드컴",
+      "comment": "ASIC 시장 움직임에 따른 구글 TPU 계약으로 메모리 업체와 동반 수혜",
+      "ts": "2024-04-09",
+      "quote": "브로드컴(AVGO.N), 구글 TPU 장기 계약 체결.. 삼성전자와 SK하이닉스 수혜",
+      "sector": "반도체"
+    }
+  ],
+  "events": [
+    {
+      "fact": "SK하이닉스, 차세대 HBM4 양산을 위해 TSMC와 기술 협력",
+      "ts": "2024-04-19",
+      "quote": "SK하이닉스, 차세대 HBM에 TSMC 패키징 기술 'CoWoS' 선택"
+    },
+    {
+      "fact": "SK하이닉스, 인텔 2.5D 패키징 기술 EMIB 협력 검토",
+      "ts": "2024-05-11",
+      "quote": "SK하이닉스, 인텔과 2.5D 패키징 협력 추진…AI칩 공급망 변동 예고"
+    }
+  ],
+  "quote": "SK하이닉스, TSMC와 손잡고 'HBM4' 개발…2026년 양산"
+}

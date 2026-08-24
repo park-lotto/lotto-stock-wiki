@@ -115,7 +115,10 @@ def test_admin_customers_has_name_phone_and_last_payment(tmp_path, monkeypatch):
 def test_signup_stores_name_phone(tmp_path, monkeypatch):
     s = _setup(tmp_path, monkeypatch)
     c = TestClient(appmod.app, follow_redirects=False)
-    c.post("/api/signup", data={"user": "newby", "pass": "pw12345", "name": "이영희", "phone": "010-1111-2222"})
+    c.post("/api/signup", data={"user": "newby", "pass": "pw12345", "name": "이영희",
+                                "phone": "010-1111-2222", "gender": "여성", "age_band": "30대"})
     with s._conn() as conn:
-        row = conn.execute("SELECT name, phone FROM customers WHERE username='newby'").fetchone()
+        row = conn.execute("SELECT name, phone, gender, age_band FROM customers "
+                           "WHERE username='newby'").fetchone()
     assert row is not None and row[0] == "이영희" and row[1] == "010-1111-2222"
+    assert row[2] == "여성" and row[3] == "30대"

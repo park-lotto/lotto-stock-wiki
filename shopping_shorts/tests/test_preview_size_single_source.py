@@ -75,7 +75,9 @@ def test_미리보기_비율_리터럴이_되살아나지_않았다():
     # produce: #player video CSS · 렌더결과 video · 자리표시 · 로더 frame
     for pat, name in (
         (r"#player video\{[^}]*\}", "produce #player video"),
-        (r"_renderPreviewVideo[\s\S]{0,400}?<video[^>]*>", "렌더 결과 video"),
+        # 2026-08-22: 확정 결과를 장면편집 안으로 넘기는 분기·주석이 앞에 붙어 창을
+        # 400자에서 900자로 넓혔다(검사 대상은 그대로 그 아래 <video> 태그다).
+        (r"_renderPreviewVideo[\s\S]{0,900}?<video[^>]*>", "렌더 결과 video"),
         (r"pvLoadFrame[^>]*>", "로더 frame"),
     ):
         m = re.search(pat, PROD, re.S)
@@ -84,13 +86,39 @@ def test_미리보기_비율_리터럴이_되살아나지_않았다():
         assert "--shorts-pv-ar" in seg, f"{name}이 비율 변수를 안 쓴다"
         assert not re.search(r"aspect-ratio:\s*9/16\s*[;\"']", seg), f"{name}에 9/16 리터럴"
         assert "max-height:520px" not in seg, f"{name}에 520px 클램프가 되살아났다"
-    # scene_lab: #vidbox · #player video
+    # scene_lab: #vidbox · #player video · 확정본 패널(2026-08-22 신설)
+    # ★확정 결과가 이 파일로 옮겨오면서 9:16 상자가 **두 개 더** 생겼다(영상·로더).
+    #   여기 안 걸면 그 둘만 비율 리터럴로 갈라져도 아무도 못 잡는다.
     for pat, name in (
         (r"#player #vidbox\{[^}]*\}", "scene_lab #vidbox"),
         (r"#player video\{[^}]*\}", "scene_lab #player video"),
+        (r"#confirmBody video\{[^}]*\}", "scene_lab 확정본 video"),
+        (r"#confirmBody \.cfLoad\{[^}]*\}", "scene_lab 확정본 로더"),
     ):
         m = re.search(pat, LAB, re.S)
         assert m, f"{name}을 못 찾았다"
         seg = m.group(0)
         assert "--shorts-pv-ar" in seg, f"{name}이 비율 변수를 안 쓴다"
         assert not re.search(r"aspect-ratio:\s*9/16\s*[;}\"']", seg), f"{name}에 9/16 리터럴"
+
+
+def test_미리보기는_폭이_아니라_높이가_크기를_정한다():
+    """2026-08-22 사장님 "미리보기창이 너무 크가 스크롤없이 맞춰봐".
+
+    종전 `#vidbox{width:100%}`는 폭 393px에서 세로 699px를 만들어 361px 칸을 뚫었다
+    (실측 338px 초과 → 안쪽 스크롤). 높이를 fitPlayer가 재서 주고 폭은 aspect-ratio가
+    계산한다. width:100%로 되돌리면 스크롤이 그대로 돌아온다.
+    """
+    import pathlib
+    base = pathlib.Path(__file__).resolve().parents[1] / "static"
+    css = (base / "scene_lab.html").read_text(encoding="utf-8")
+    js = (base / "scene_play.js").read_text(encoding="utf-8")
+    i = css.index("#player #vidbox{")
+    block = css[i:css.index("}", i)]
+    assert "width:auto" in block, "폭이 다시 크기를 정하고 있다"
+    # max-width:100%는 있어야 한다(칸을 넘지 않게) — 금지 대상은 폭 자체를 100%로 두는 것.
+    assert ";width:100%" not in block and "{width:100%" not in block
+    assert "aspect-ratio" in block, "폭 계산 근거가 사라졌다"
+    assert "function fitPlayer" in js, "높이를 재서 주는 곳이 없다"
+    assert "PV_MIN_H" in js, "최소 높이 보호가 없다"
+    assert "addEventListener('resize'" in js, "창 크기가 바뀌면 다시 맞춰야 한다"

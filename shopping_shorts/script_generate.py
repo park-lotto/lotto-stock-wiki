@@ -15,6 +15,7 @@ from google.genai import types
 
 from shopping_shorts import comment_gen
 from pipeline.atoms import key_vault
+from shopping_shorts import keyroute
 
 _MODEL = comment_gen._MODEL
 
@@ -48,10 +49,22 @@ def _style_extra():
         return ""
 
 
-def _call_json(prompt, schema):
+def _call_json(prompt, schema, note=None):
     """key_vault 캐스케이드 키풀로 JSON 1콜. 소진키는 마킹하고 다음 키로.
-    무키·전부실패면 {} (호출부는 반드시 빈 dict 허용 — fail-open)."""
-    keys = key_vault.get_live_keys_cascade(_GEN_GROUP)
+    무키·전부실패면 {} (호출부는 반드시 빈 dict 허용 — fail-open).
+
+    note: dict를 주면 **왜 실패했는지**를 담아 돌려준다(2026-08-22 추가).
+      이 함수는 ①키가 아예 없음 ②키는 있는데 전부 소진 ③응답 오류를 **전부 `{}`로**
+      돌려줘서, 호출부가 원인을 구분할 방법이 없었다. 그 결과 화면에는 원인과 무관하게
+      늘 "키 소진 또는 응답 오류"가 떴다(실측 2026-08-22: 키가 멀쩡한데도 그 문구).
+      note를 안 주면 종전과 완전히 동일하다(회귀 0).
+    """
+    keys = keyroute.gemini_keys(_GEN_GROUP)
+    if note is not None:
+        note["keys"] = len(keys)
+        if not keys:
+            # ★키가 하나도 안 남았을 때만 진짜 '키 소진'이다.
+            note["reason"] = "no_keys"
     for key in keys:
         try:
             resp = key_vault.get_client_for_key(key).models.generate_content(
@@ -63,9 +76,17 @@ def _call_json(prompt, schema):
         except Exception as e:  # noqa: BLE001 — 생성 실패는 치명적 아님
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
                 key_vault.mark_exhausted(key_vault._owner_group(key) or _GEN_GROUP, key)
+                if note is not None:
+                    note["reason"] = "exhausted"     # 돌다가 다 말랐다 = 진짜 소진
                 continue
             if key_vault.is_quota_error(e):
+                if note is not None:
+                    note["reason"] = "rate_limit"    # 분당 한도 — 잠시 뒤 재시도가 맞다
                 continue  # 순간 rate limit — 다음 키로
+            if note is not None:
+                # 키 문제가 아니다 — 응답·스키마·네트워크 쪽. '잠시 후 재시도'는 헛말이다.
+                note["reason"] = "api_error"
+                note["detail"] = "%s: %s" % (type(e).__name__, str(e)[:200])
             return {}
     return {}
 
@@ -144,6 +165,17 @@ _STORY_RULES_CORE = """- ★★★짤드라마 필수(이게 이 포맷의 생�
   홧김에 다르게 해봤더니 → (그랬더니) 웬걸" 처럼 왜 그 행동을 했는지 연결하라. 근거 없이
   "그런데 갑자기 이렇게 하니까"로 점프하면 스토리가 끊긴다. 시작(설정)–중간(전환)–끝(회수)이
   한 인물의 한 사건으로 꿰여야 '탄탄하다'.
+- ★★★화자(말하는 사람)는 끝까지 한 사람이다 — 아래는 실제로 나온 **실패작**이다(2026-08-23):
+  ✗ "저 친구네 집 갔다가 충격 받았잖아요 / 남편 턱이 훨씬 깔끔하게 달라진 거예요 /
+     ... / 저도 해보니까 자극 없이 밀리는 거죠"
+  무엇이 틀렸나: ①친구 남편인데 그냥 "남편"이라 써서 **화자 본인의 남편**으로 읽힌다
+  ②친구 남편 얘기로 시작해놓고 결말은 "저도 해보니까"로 **화자가 직접 쓴 사람**이 된다
+  (여성 화자가 남성용 면도기를 자기 턱에 미는 그림이 된다 = 말이 안 된다).
+  ○ 이렇게 써라: "친구 **남편** 턱이 달라졌길래 / 뭐 썼냐고 물어봤더니 / **우리 남편한테도**
+     사줬거든요 / 이제 아침마다 이것만 찾는 거 있죠"
+  → 남의 물건을 보고 내가 샀다면 **"그래서 우리 ○○한테 사줬더니"** 같은 다리를 반드시 놓아라.
+     3인칭 인물의 소유물은 **누구 것인지 밝혀라**("친구 남편"·"언니네 아이").
+     화자의 성별·처지가 도중에 바뀌면 안 된다.
 - ★가장 중요한 건 스토리라인이다. 아래 규칙은 전부 '하나의 탄탄한 이야기'를 위한 것 —
   사람이 자기 이야기를 들려주듯 자연스럽게 흐르게 하라. 정보 나열·설명문 금지.
 - ★한 스토리 원칙: 대본 전체가 인물 1명·사건 1개·결말 1개의 '하나의 이야기'다.
@@ -371,7 +403,9 @@ def _sources_product(sources):
             return p
     return ""
 
-def generate_one_style(sources, style, target_seconds=30, bank_context="", facts_block=""):
+def generate_one_style(sources, style, target_seconds=30, bank_context="", facts_block="",
+                       seed="",
+                       note=None):
     """스타일 1개로 대본 1안. → {beats, script, hook, checks, passed, tries, style_id, style_name}
 
     ★조용히 통과시키지 않는다: 게이트를 못 넘으면 passed=False로 **표시해서** 돌려준다.
@@ -386,7 +420,9 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
     from shopping_shorts import bank_assemble, script_gate
 
     seconds = max(5, min(int(target_seconds or 30), 90))
-    head = bank_assemble.style_block(style, seconds=seconds)
+    # ★seed(job_id)를 넘겨 문장틀 순서를 job마다 돌린다 — 안 넘기면 항상 같은
+    #   순서라 모델이 앞쪽 틀에 쏠린다(실측: 훅 10개 중 6개가 한 번도 안 나옴).
+    head = bank_assemble.style_block(style, seconds=seconds, seed=seed)
     if not head:
         return None
     base = (_MIX_PROMPT.format(sources=_mix_source_block((sources or [])[:SOURCE_MAX]),
@@ -406,7 +442,7 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
     #   실패하면 그 마지막 판을 그대로 내보냈다 — 더 길어진 판이 나가는 일이 생긴다.
     best = None
     for _ in range(STYLE_REWRITES + 1):
-        data = _call_json(base + extra, _STYLE_SCHEMA)
+        data = _call_json(base + extra, _STYLE_SCHEMA, note=note)
         res = (data or {}).get("beats") or []
         if not res:
             break
@@ -416,7 +452,8 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
         #   product가 비면 그 검사는 건너뛴다(회귀 0).
         checks, full = script_gate.check(style, res, facts_text=facts_block,
                                          product=_sources_product(sources),
-                                         seconds=seconds)
+                                         seconds=seconds,
+                                         speaker_judge=_speaker_judge)
         tries.append({"chars": len(script_gate.norm(full)),
                       "fails": [c["name"] for c in checks if not c["ok"]]})
         if script_gate.passed(checks):
@@ -445,9 +482,12 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
             _new = _trim_to_budget(_b.get("text", ""), max(6, int(_cap * _n / _tot)))
             if _new:
                 _b["text"] = _new
+        # ★앞 판정을 물려준다 — 안 그러면 화자 실패가 여기서 조용히 사라지고,
+        #   판정기를 다시 넘기면 유료 호출이 두 배가 된다(재단은 화자를 못 바꾼다).
         checks, full = script_gate.check(style, res, facts_text=facts_block,
                                          product=_sources_product(sources),
-                                         seconds=seconds)
+                                         seconds=seconds,
+                                         speaker_judge=script_gate.prior_verdict(checks))
         tries.append({"chars": len(script_gate.norm(full)), "trimmed": True,
                       "fails": [c["name"] for c in checks if not c["ok"]]})
 
@@ -464,6 +504,49 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
     }
 
 
+_SPEAKER_SCHEMA = {
+    "type": "object",
+    "properties": {"ok": {"type": "boolean"}, "why": {"type": "string"}},
+    "required": ["ok", "why"],
+}
+
+_SPEAKER_PROMPT = """다음 한국어 숏폼 대본에서 **말하는 사람(화자)이 처음부터 끝까지 한 사람으로
+일관되는지**만 판정해라. 다른 것(길이·문법·재미)은 보지 마라.
+
+FAIL로 잡을 것 — 이 셋만:
+1) 3인칭 인물의 소유물인데 **누구 것인지 안 밝혀** 화자 것으로 읽히는 경우.
+   예: "친구네 집 갔다가" 다음에 그냥 "남편 턱이 달라진 거예요" → 누구 남편인지 없다.
+       ("친구 남편"이라고 써야 맞다)
+2) 시작에서 등장시킨 인물을 **중간에 슬그머니 다른 인물로 갈아탄** 경우.
+   예: 친구 남편 얘기로 시작해놓고 결말이 "저도 해보니까"로 화자 본인 체험이 된다.
+3) 화자의 성별·처지가 도중에 **모순**되는 경우.
+   예: 남편이 있다고 해놓고 뒤에서 자기가 남편인 것처럼 말한다.
+
+⚠️통과시킬 것(오탐 금지):
+- 화자가 남의 물건을 보고 자기도 샀다는 흐름은 **연결어가 있으면 정상**이다.
+  ("친구 남편 게 좋아 보여서 → 우리 남편한테도 사줬더니" = OK)
+- 지인·언니·조카가 잠깐 등장했다 빠지는 건 정상이다.
+- 제품을 '이거'로만 부르는 것도 정상이다.
+확실히 어긋난 것만 FAIL. 애매하면 통과(ok=true)시켜라.
+
+why에는 **무엇을 어떻게 고쳐야 하는지** 한 문장으로 적어라(FAIL일 때만).
+
+[대본]
+{script}"""
+
+
+def _speaker_judge(text):
+    """대본 전문 → {"ok": bool, "why": str}. 판정 못 하면 {} (게이트가 통과시킨다).
+
+    ★fail-open: _call_json은 무키·소진·응답오류를 전부 {}로 돌려준다. 그대로
+      넘기면 script_gate가 '판정 불가'로 보고 검사 항목을 안 만든다 — 키가 마른
+      날 대본이 통째로 막히는 일을 막는다.
+    """
+    if not (text or "").strip():
+        return {}
+    return _call_json(_SPEAKER_PROMPT.format(script=text), _SPEAKER_SCHEMA)
+
+
 _BEAT_SCHEMA = {
     "type": "object",
     "properties": {"text": {"type": "string"}},
@@ -472,9 +555,49 @@ _BEAT_SCHEMA = {
 
 BEAT_REGEN_TRIES = 2     # 틀 준수를 못 지켰을 때 다시 쓰는 횟수. generate_one_style과 같은 사상.
 # 한 칸이 원래 길이의 몇 배까지 허용되나. 표현을 바꾸면 길이는 자연히 출렁이므로 넉넉히 두되,
-# **대본 전체를 삼키는 폭주**(실측: 한 줄 훅 → 5줄)는 잡는다. 짧은 칸은 배수만으론 너무
-# 빡빡해서 `+40자`와 큰 쪽을 쓴다(20자 칸이 30자가 되는 건 정상이다).
-_BEAT_LEN_MAX = 1.8
+# **대본 전체를 삼키는 폭주**(실측: 한 줄 훅 → 5줄)는 잡는다.
+#
+# ★2026-08-22 실측 수정 — 종전 `max(per*1.8, per+40)`은 **거의 언제나 `+40`이 이겨서**
+#   길이 게이트가 사실상 없는 것과 같았다. 라이브 대본 166비트를 재보니 중앙값 25자·
+#   p90 37자인데, 그 구간에서 `+40`이 주는 상한은:
+#       10자 칸 → 50자(5.0배) · 25자 칸 → 65자(2.6배) · 37자 칸 → 77자(2.1배)
+#   즉 **짧은 칸일수록 더 헐렁했다**(짧은 칸을 봐주려고 넣은 값이 정반대로 작동).
+#   `1.8`은 50자 이상에서만 발동해 실제로는 거의 쓰이지도 않았다.
+#   실사고(사장님 제보): 50자 '방법' 칸이 74자로 2배가 됐는데 상한 90자라 통과 →
+#   4.6초가 9.0초가 되고 아래 '단계'·'질감' 칸과 내용이 겹쳤다.
+#
+#   그래서 배수를 조이고(1.8→1.35), 하한 여유도 +40자 → +12자로 줄인다. 12자는
+#   "표현을 바꾸다 보면 이 정도는 는다"는 몫이지 문장 하나를 더 담을 수 있는 크기가
+#   아니다(한국어 한 문장 ≈ 20자+). 새 상한: 10자→22자 · 25자→34자 · 37자→50자.
+_BEAT_LEN_MAX = 1.35
+_BEAT_LEN_SLACK = 12
+
+
+def beat_len(text):
+    """한 칸의 길이 — **norm(공백·문장부호 제외)**. 길이를 재는 곳은 전부 이걸 쓴다.
+
+    ★단위를 함수로 못 박는 이유(2026-08-24 실사고): 예산은 `len(원문)`(raw)로 잡고
+      판정은 `len(norm(...))`로 해서, 곱하기 1.35를 하기도 전에 이미 26%가 공짜였다.
+      실효 상한이 1.8배 = **조이기 전과 같은 값**이라 "고쳤는데 또 길어진다"가 났다.
+      (길이 수정이 5번째였다 — 매번 배수만 만지고 단위는 아무도 안 봤다)
+    """
+    # 지연 import — 이 모듈은 script_gate를 함수 안에서만 부른다(순환 import 회피 관례).
+    from shopping_shorts import script_gate as _sg
+    return len(_sg.norm(text or ""))
+
+
+def _beat_len_cap(per):
+    """한 칸을 다시 쓸 때 허용하는 최대 글자 수.
+
+    ★`per`는 반드시 **norm 기준**이어야 한다(`beat_len()`으로 잰 값).
+      raw를 넣으면 상한이 26% 헐렁해져 이 함수가 있으나 마나가 된다.
+
+    ★판정과 최종 방어가 **같은 값을 봐야 한다**(0순위-B). 종전엔 같은 식
+      `max(per*1.8, per+40)`이 재시도 루프와 마지막 반환문 **두 군데에 따로** 적혀
+      있었다 — 한쪽만 고치면 "게이트는 통과인데 None이 나온다"(또는 그 반대)가 조용히
+      생긴다. 값을 정하는 곳을 함수 하나로 뽑아 그 가능성을 없앤다.
+    """
+    return max(per * _BEAT_LEN_MAX, per + _BEAT_LEN_SLACK)
 
 
 def regen_one_beat(sources, style, role, beats, template="", target_seconds=30,
@@ -521,7 +644,9 @@ def regen_one_beat(sources, style, role, beats, template="", target_seconds=30,
     picked = (template or "").strip()
     want = [picked] if picked and picked in templates else list(templates)
 
-    descs = style.get("beat_descs") or dict(zip(roles, style.get("beat_chain") or []))
+    # ★짝짓기는 bank_assemble.beat_descs 한 곳에서만 정한다(0순위-B) — 예전엔 여기와
+    #   style_block 두 군데에 같은 zip()이 적혀 있었고, 둘 다 조용히 끊겼다.
+    descs = bank_assemble.beat_descs(style)
     # ★분량은 **지금 그 칸에 있던 문장 길이**에 맞춘다(2026-08-17 실측 수정).
     #   처음엔 전체 생성과 같은 '칸 평균'(chars_per_30s ÷ 칸수)을 줬는데, 한 칸만 다시 쓸
     #   때는 그게 틀렸다 — 칸마다 제 길이가 다르기 때문이다. 실측에서 한 문장짜리 훅이
@@ -529,9 +654,12 @@ def regen_one_beat(sources, style, role, beats, template="", target_seconds=30,
     #   대본 전체 밀도는 나머지 칸이 그대로 있으므로 이 칸만 제자리를 지키면 유지된다.
     prev_text = next((str(b.get("text") or "") for b in (beats or [])
                       if isinstance(b, dict) and b.get("role") == role), "")
-    per = len(prev_text.strip())
+    # ★norm으로 잰다 — 아래 판정(`n_out`)·상한(`_beat_len_cap`)과 **같은 단위**여야 한다.
+    #   종전엔 여기만 raw(len)라 상한이 26% 헐렁했다(2026-08-24 실사고, beat_len 주석 참조).
+    per = beat_len(prev_text)
     if not per:     # 빈 칸을 채우는 경우에만 스타일 평균으로 되돌아간다
-        chars = style.get("chars_per_30s") or 0
+        # 스타일 밀도도 norm으로 환산해서 쓴다(script_gate가 한 곳에서 정한다, 0순위-B).
+        chars = script_gate.norm_chars_per_30s(style)
         per = int(chars * seconds / 30 / max(1, len(roles))) if chars else 0
 
     # 앞뒤 문맥 — 지금 대본에서 이 칸을 뺀 나머지를 순서대로 보여준다.
@@ -589,8 +717,14 @@ def regen_one_beat(sources, style, role, beats, template="", target_seconds=30,
         + tmpl_line
         # ★"2~3문장씩"을 여기선 요구하지 않는다 — 그 지시는 대본 **전체**를 채울 때 것이고,
         #   한 칸만 다시 쓸 때 붙이면 짧아야 할 훅까지 부풀어 힘이 죽는다(실측).
-        + (("\n★분량: **%d자 안팎**(지금 이 칸과 비슷한 길이로. 길게 늘이지 마라 — "
-            "이 칸이 길어지면 대본 전체 호흡이 무너진다)." % per) if per else "")
+        # ★상한을 처음부터 숫자로 준다(2026-08-22). 종전엔 "안팎"만 말해 첫 시도가 자주
+        #   넘쳤고, 재시도 3회를 다 태워 502로 끝났다(사장님: "바꾸면 너무 길어진다").
+        #   판정이 쓰는 값(_beat_len_cap)과 **같은 수**를 보여준다 — 여기서 다른 수를 말하면
+        #   지킨 문장이 벌받는다(0순위-B).
+        + (("\n★분량: **%d자 안팎, 많아도 %d자**(공백 제외). 지금 이 칸과 비슷한 길이로 써라. "
+            "길게 늘이지 마라 — 이 칸이 길어지면 대본 전체 호흡이 무너지고 아래 칸과 내용이 겹친다. "
+            "문장은 **한 문장**이 기본이다."
+            % (per, int(_beat_len_cap(per)))) if per else "")
         + bank_assemble.voice_block(style)
         + "\n\n★반드시 지켜라:\n"
           "- **이 칸의 역할만** 하라. 다른 칸이 할 말(문제제기·시연·증거·CTA)을 여기에 끌어오지 마라.\n"
@@ -617,8 +751,8 @@ def regen_one_beat(sources, style, role, beats, template="", target_seconds=30,
         # ★칸 하나가 대본 전체를 삼키는 것을 막는다(2026-08-17 사장님 제보로 추가).
         #   미끼 칸에 문제제기·시연·증거·CTA가 통째로 들어와 5줄이 됐다. 프롬프트로
         #   부탁만 해서는 안 된다 — **판정해서 되돌려야** 고쳐진다(게이트와 같은 사상).
-        n_out = len(script_gate.norm(out))
-        too_long = bool(per) and n_out > max(per * _BEAT_LEN_MAX, per + 40)
+        n_out = beat_len(out)
+        too_long = bool(per) and n_out > _beat_len_cap(per)
         # CTA는 마지막 칸 몫이다. 다른 칸이 댓글 유도를 하면 그 칸의 역할을 벗어난 것이다.
         cta_role = roles[-1] if roles else ""
         stole_cta = (role != cta_role) and ("남겨주" in script_gate.norm(out))
@@ -649,8 +783,13 @@ def regen_one_beat(sources, style, role, beats, template="", target_seconds=30,
             extra += ("- 원래 있던 문장을 **그대로 돌려줬다**. 사용자는 '바꿔달라'고 누른 것이다. "
                       "같은 뜻이라도 표현·어순·시작하는 말을 확실히 다르게 써라.\n")
         if too_long:
-            extra += ("- **너무 길다(%d자). 이 칸은 %d자 안팎이어야 한다.** 대본 전체를 쓰지 마라 — "
-                      "이 칸 하나의 대사만 써라. 다른 칸이 할 말은 빼라.\n" % (n_out, per))
+            # ★상한을 **숫자로** 알려준다(2026-08-22). 종전엔 "%d자 안팎"만 말해서 모델이
+            #   어디까지가 통과인지 몰랐고, 재시도해도 또 길게 써서 3회를 다 태우고 502가 났다.
+            #   판정이 쓰는 값(_beat_len_cap)을 그대로 보여줘야 고칠 수 있다.
+            extra += ("- **너무 길다(%d자). 이 칸은 %d자 안팎, 많아도 %d자를 넘기지 마라.** "
+                      "대본 전체를 쓰지 마라 — 이 칸 하나의 대사만 써라. 다른 칸이 할 말은 빼고, "
+                      "곁가지 수식어를 덜어내 한 문장으로 줄여라.\n"
+                      % (n_out, per, int(_beat_len_cap(per))))
         if stole_cta:
             extra += ("- **댓글 유도(CTA)를 여기에 썼다.** CTA는 마지막 '%s' 칸 몫이다. "
                       "이 칸에서는 빼라.\n" % cta_role)
@@ -661,8 +800,8 @@ def regen_one_beat(sources, style, role, beats, template="", target_seconds=30,
         return None
     if prev_text and script_gate.norm(out) == script_gate.norm(prev_text):
         return None
-    _n = len(script_gate.norm(out))
-    if per and _n > max(per * _BEAT_LEN_MAX, per + 40):
+    _n = beat_len(out)          # 재시도 루프와 **같은 함수**로 잰다(0순위-B)
+    if per and _n > _beat_len_cap(per):
         return None
     if roles and role != roles[-1] and "남겨주" in script_gate.norm(out):
         return None
@@ -670,19 +809,39 @@ def regen_one_beat(sources, style, role, beats, template="", target_seconds=30,
             "matched": (not want) or script_gate.template_matches(out, want), "tries": tries}
 
 
-def generate_by_styles(sources, styles, target_seconds=30, bank_context="", facts_block=""):
+def generate_by_styles(sources, styles, target_seconds=30, bank_context="", facts_block="",
+                       reasons=None, seed=""):
     """스타일 목록(보통 2개) → 각 1안. 실패한 스타일은 건너뛴다(하나라도 나오면 화면은 산다).
 
-    facts_block은 그대로 흘려보낸다 — 빈 값이면 기존 경로(회귀 0)."""
+    facts_block은 그대로 흘려보낸다 — 빈 값이면 기존 경로(회귀 0).
+
+    reasons: 리스트를 주면 **실패 사유를 담아 돌려준다**(2026-08-22 추가).
+      종전엔 사유가 `print`로만 나가서 호출부(app.py)가 "왜 0개인지" 알 길이 없었고,
+      화면에는 원인과 무관하게 늘 "키 소진 또는 응답 오류"가 떴다 — 키가 멀쩡한데도
+      사장님이 키 회복을 기다리며 재시도만 반복하게 만든 문구다.
+      **주지 않으면 종전과 완전히 동일하게 동작한다**(기본값 None = 회귀 0).
+    """
     out = []
     for st in styles or []:
+        note = {} if reasons is not None else None
         try:
-            d = generate_one_style(sources, st, target_seconds, bank_context, facts_block)
+            d = generate_one_style(sources, st, target_seconds, bank_context, facts_block,
+                                   seed=seed, note=note)
         except Exception as e:      # noqa: BLE001 — 한 스타일 실패로 나머지를 죽이지 않는다
             print(f"generate_by_styles 실패(style={st.get('id')}): {e}")
+            if reasons is not None:
+                reasons.append({"style": st.get("name") or st.get("id"),
+                                "kind": type(e).__name__, "detail": str(e)[:200]})
             d = None
         if d and d.get("beats"):
             out.append(d)
+        elif reasons is not None:
+            # 예외 없이 빈손 = 키가 없거나·소진·응답오류·게이트 반ней. _call_json이 note에
+            # 적어준 사유를 그대로 올린다(없으면 '빈손'으로만 표시).
+            reasons.append({"style": st.get("name") or st.get("id"),
+                            "kind": (note or {}).get("reason") or "empty",
+                            "keys": (note or {}).get("keys"),
+                            "detail": (note or {}).get("detail") or ""})
     return out
 
 

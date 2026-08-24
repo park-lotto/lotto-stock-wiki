@@ -166,6 +166,64 @@ if (os.environ.get("SHORTS_BULK_MODE") == "1" and _PRODUCE_RESERVED > 0
         and len(SHORTS_GEMINI_KEYS) > _PRODUCE_RESERVED):
     SHORTS_GEMINI_KEYS = SHORTS_GEMINI_KEYS[:-_PRODUCE_RESERVED]
 
+# ★회원 키 풀 합류(2026-08-24 사장님 "우리풀에 한개씩 넣어서 하고 ... 모자란건 내가 더
+#   만들거나해서 채워준다"). 회원이 등록한 제미니 키를 이 목록 **뒤에** 붙인다.
+#
+#   왜 여기서 하나 — SHORTS_GEMINI_KEYS를 **인덱스로** 돌리는 곳이 여럿이다
+#   (comment_gen._live_key_indices·edit_plan:2189…). 각자 따로 회원 키를 붙이면
+#   같은 인덱스가 모듈마다 다른 키를 가리켜 소진표시가 엉뚱한 키에 박힌다
+#   (0순위-B: 같은 판단을 두 번 적지 마라). 그래서 목록 자체를 한 곳에서 늘린다.
+#
+#   ⚠️config는 DB를 못 읽는다(순환 import + 기동 시점엔 DB가 없을 수 있다).
+#   그래서 여기선 자리만 만들고, 실제 합류는 refresh_member_gemini_keys()를
+#   호출하는 쪽(앱 기동·주기 갱신)에서 한다. 안 부르면 종전과 100% 같다.
+#
+#   ★append가 아니라 '사장님 키 + 회원 키'로 **다시 만든다** — 두 번 불러도
+#   회원 키가 중복으로 쌓이지 않는다(idempotent).
+#   ★★위치 주의: 반드시 _PRODUCE_RESERVED 트림 **뒤**에서 사장님 키를 뜬다.
+#     앞에서 뜨면 BULK_MODE에서 잘라낸 예약 키가 refresh 때 되살아나
+#     제작소 비상 예약이 조용히 무력화된다(2026-08-04 사고 재발).
+_OWNER_GEMINI_KEYS = list(SHORTS_GEMINI_KEYS)
+
+
+def _merge_pool(owner_keys, pooled):
+    """사장님 키 + 회원 키(중복 제거, 사장님 우선). 합류 규칙은 여기 한 곳뿐이다."""
+    keys = list(owner_keys)
+    seen = set(keys)
+    for k in (pooled or []):
+        if k and k not in seen:
+            seen.add(k)
+            keys.append(k)
+    return keys
+
+
+def refresh_member_gemini_keys(pooled):
+    """회원 제미니 키를 공용 풀에 합류시킨다. pooled = 평문 키 목록.
+
+    반환: (사장님 키 수, 새로 붙은 회원 키 수). 중복은 제거한다.
+    ⚠️인덱스 기반 소진상태와 짝이 어긋나지 않도록 **사장님 키를 앞에** 둔다 —
+      회원이 키를 넣고 빼도 앞쪽 인덱스의 의미가 안 변한다."""
+    global SHORTS_GEMINI_KEYS
+    SHORTS_GEMINI_KEYS = _merge_pool(_OWNER_GEMINI_KEYS, pooled)
+    # ★제미니 풀은 **두 벌**이다 — 여기(SHORTS_GEMINI_KEY*, 태깅·댓글·카테고리)와
+    #   key_vault(GEMINI_API_KEY*, 제작소 대본·SEO·썸네일). 한쪽만 채우면 회원 키가
+    #   절반의 경로에서만 쓰여 "등록했는데 왜 그대로냐"가 된다. 짝은 함께 정한다(0순위-B).
+    try:
+        from pipeline.atoms import key_vault
+        key_vault.set_member_keys(pooled)
+    except Exception:      # noqa: BLE001 — 주식위키 쪽이 없어도 쇼핑쇼츠는 돌아야 한다
+        pass
+    return len(_OWNER_GEMINI_KEYS), len(SHORTS_GEMINI_KEYS) - len(_OWNER_GEMINI_KEYS)
+
+
+def refresh_member_youtube_keys(pooled):
+    """회원 유튜브 키를 공용 풀에 합류시킨다(제미니와 같은 규칙)."""
+    global YOUTUBE_API_KEYS
+    YOUTUBE_API_KEYS = _merge_pool(_OWNER_YOUTUBE_KEYS, pooled)
+    return len(_OWNER_YOUTUBE_KEYS), len(YOUTUBE_API_KEYS) - len(_OWNER_YOUTUBE_KEYS)
+
+
+
 # YouTube Data API v3 키 풀(제품찾기 실수집용, 2026-07-09) — 무료 할당량 계정별
 # 소진 대비 로테이션. _N 넘버링 동적 스캔(SHORTS_GEMINI_KEYS와 동일 패턴).
 _YOUTUBE_MAX = 30
@@ -173,6 +231,10 @@ YOUTUBE_API_KEYS = [
     v for i in range(1, _YOUTUBE_MAX + 1)
     if (v := os.environ.get("YOUTUBE_API_KEY" if i == 1 else f"YOUTUBE_API_KEY_{i}", ""))
 ]
+
+# 회원 키 합류용 원본 스냅샷(2026-08-24) — 제미니와 같은 이유. refresh_member_youtube_keys
+# 참조. 유튜브는 예약 트림(_PRODUCE_RESERVED)이 없어 정의 직후에 떠도 된다.
+_OWNER_YOUTUBE_KEYS = list(YOUTUBE_API_KEYS)
 
 # SerpApi(Google Lens 엔진) — 제품 정확 명칭 확인용(2026-07-10). 어제는 "구매처
 # 찾기"(쇼핑링크 노출)로 잘못 썼다가 삭제했는데, 오늘은 용도를 바꿔서 프레임을
@@ -297,6 +359,15 @@ MIN_SHOT_SECONDS = 1.2       # 컷 하나 최소 길이 — 이보다 짧은 조
 # 한 컷을 이보다 오래 안 끈다 — 긴 정지(7초 홀드) 대신 distinct 앵글로 컷(벤치마크 ~1.1초).
 # 렌더가 이 상한으로 세그먼트를 번갈아 재생해 컷 밀도를 만든다(0=끄기·옛 동작).
 MAX_SHOT_SECONDS = 2.2
+# ── 컷 전환(2026-08-23 사장님 "부자연스럽고 ... 캡컷을 대체하고 싶은 게 목적") ──────
+# 컷과 컷 사이를 딱 끊지 않고 짧게 겹쳐 넘긴다(xfade). 0이면 종전대로 하드컷.
+# ★비트(칸) 길이는 절대 안 바뀐다 — 겹치는 만큼 각 컷을 미리 늘려 받아
+#   총합이 tts_dur과 같게 유지한다. 안 그러면 뒤 칸 자막이 통째로 밀린다(t0 누적).
+# ★컷 **안**에서만 겹친다. 칸과 칸 사이는 안 건드린다(칸 경계에서 겹치면
+#   그 칸의 음성·자막 시작점이 흔들린다).
+TRANSITION_SECONDS = float(os.environ.get("SHORTS_TRANSITION_SECONDS", "0.25"))
+# 전환 종류(ffmpeg xfade transition 이름). fade가 가장 무난하다.
+TRANSITION_KIND = os.environ.get("SHORTS_TRANSITION_KIND", "fade")
 # 1장=1컷(2026-08-14): 담은 장면을 순서대로 한 번씩만 쓴다(라운드로빈 되돌아옴 없음).
 # 길이는 나레이션을 장수로 고르게 나눠 준다. 기본 off — 켜면 영상 결과가 바뀐다.
 ONE_CLIP_PER_SEGMENT = False
@@ -350,3 +421,10 @@ DOUYIN_SESSION_PATH = os.getenv("DOUYIN_SESSION_PATH", "/home/ubuntu/douyin_sess
 #   즉 샤오홍슈(세션 있음 → 무료 성공)와 도우인(세션 없음 → Apify)의 차이와 같다.
 #   이 파일이 생기는 순간 kw_search가 자동으로 무료 경로를 먼저 타고 비용이 0이 된다.
 TIKTOK_SESSION_PATH = os.getenv("TIKTOK_SESSION_PATH", "/home/ubuntu/tiktok_session.json")
+
+# ── 외부 도구 실행 상한 (2026-08-23 점검: 타임아웃이 없어 행이 걸리면 스레드가 영구 점유됐다)
+#    ★값은 여기서만 정한다 — 파일마다 따로 적으면 어긋난다(0순위-B).
+#    ffprobe/ffmpeg는 audio_post가 쓰던 FFMPEG_TIMEOUT_SEC와 같은 이름을 유지해 호환.
+FFMPEG_TIMEOUT_SEC = int(os.getenv("FFMPEG_TIMEOUT_SEC", "30") or 30)      # 메타 조회·짧은 변환
+MEDIA_CLIP_TIMEOUT_SEC = int(os.getenv("MEDIA_CLIP_TIMEOUT_SEC", "300") or 300)   # 클립 컷·프레임 추출
+REMOTION_TIMEOUT_SEC = int(os.getenv("REMOTION_TIMEOUT_SEC", "1800") or 1800)     # node 렌더(길다)

@@ -162,11 +162,20 @@ def sort_by(items, tab):
     return sorted(items, key=lambda i: (i.get(key) or 0), reverse=True)
 
 
-def build_youtube_items(raw, prev_base, prev_delta, now=None, window_hours=48):
+def build_youtube_items(raw, prev_base, prev_delta, now=None, window_hours=48,
+                        subs=None):
     """유튜브 원시 dict → 공통 item(조회수 기반 지표). 48h 이내만.
 
     prev_base(shortcode)->int|None: 직전 base_count(조회수). prev_delta 동일.
     speed=조회수/경과h, density=(좋아요+댓글)/조회수, accel=Δ−직전Δ.
+
+    subs {channel_id: 구독자수}|None (2026-08-24 사장님 "구독자대비로 해줘"):
+      넘기면 followers·fan_density를 채운다. **유튜브의 구독자 대비는 조회수 기준**
+      (조회수÷구독자) — 이 플랫폼의 다른 지표가 전부 조회수 축이라 여기만 댓글로
+      갈리면 같은 탭 안에서 뜻이 달라진다.
+    ★모르는 채널은 0이 아니라 **None**으로 남긴다. 0으로 채우면 "구독자 대비 0%"라는
+      거짓 정보가 되고 apply_grades 정규화에서 구조적 최하위가 된다(인스타 density가
+      실제로 밟은 함정 — 212/316건이 0으로 고착했다).
     """
     now = now or datetime.now(timezone.utc)
     items = []
@@ -186,13 +195,15 @@ def build_youtube_items(raw, prev_base, prev_delta, now=None, window_hours=48):
         accel = None if prev_d is None else delta - prev_d
         likes = int(r.get("likes") or 0)
         comments = int(r.get("comments") or 0)
+        # 구독자: 모르는 채널·0(비공개)은 None으로 떨어뜨린다(0 나눗셈·거짓 0% 방지)
+        _subs_n = int((subs or {}).get(r.get("channel_id")) or 0) or None
         items.append({
             "platform": "youtube",
             "shortcode": sc,
             "name": r.get("channel_title"),
             "username": r.get("channel_id"),
             "inpock": "",
-            "followers": None,
+            "followers": _subs_n,
             "thumbnail": r.get("thumbnail", ""),
             "video_url": "",                       # 인라인은 mix 다운로드 시 해석
             "url": f"https://www.youtube.com/watch?v={sc}",
@@ -206,6 +217,8 @@ def build_youtube_items(raw, prev_base, prev_delta, now=None, window_hours=48):
             "accel": accel,
             "speed": views / age if age > 0 else float(views),
             "density": (likes + comments) / views if views else 0.0,
+            # 구독자 대비 = 조회수 ÷ 구독자. 모르면 None(0 나눗셈·거짓 0% 방지).
+            "fan_density": (views / _subs_n) if _subs_n else None,
             "category": categorize(r.get("channel_title"), r.get("title", "")),
             "caption": r.get("title", ""),
         })

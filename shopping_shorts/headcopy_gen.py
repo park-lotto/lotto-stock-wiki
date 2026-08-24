@@ -12,6 +12,8 @@ from shopping_shorts.script_generate import _call_json
 _MAX_LEN = 26          # ★썸네일 문구는 두 줄이 전부다(2026-08-18). 40자였을 땐 화면에서 4줄로
 _LINE_LEN = 13         #   무너져 문단처럼 보였다 — 두 줄 x 13자를 넘기지 않는다.
 _WANT = 4
+_WHY_LEN = 80          # ★이유문은 카드 밑에 한 줄로 깔린다(썸네일 제목 추천과 같은 모양).
+                       #   길어지면 카드가 문단이 돼 고르기가 더 어려워진다.
 
 _SCHEMA = {
     "type": "object",
@@ -20,8 +22,9 @@ _SCHEMA = {
             "type": "array",
             "items": {
                 "type": "object",
-                "properties": {"label": {"type": "string"}, "text": {"type": "string"}},
-                "required": ["label", "text"],
+                "properties": {"label": {"type": "string"}, "text": {"type": "string"},
+                               "why": {"type": "string"}},
+                "required": ["label", "text", "why"],
             },
         }
     },
@@ -43,9 +46,13 @@ _PROMPT = """너는 쇼츠 영상의 **헤드카피**(영상 위에 크게 박�
 - 마침표로 끝내지 마라. 이모지·해시태그·따옴표를 넣지 마라.
 - 대본에 **없는 사실을 지어내지 마라**(가격·수치·효능을 새로 만들지 않는다).
 
+각 후보마다 **why**도 함께 써라:
+- why: 어떤 훅 장치를 썼고 왜 스크롤이 멈추는지 **한 줄로**({whylen}자 이내).
+- 문구를 그대로 옮겨 적지 마라 — **왜 먹히는지**를 말해라.
+
 좋은 예:
-네일샵 10만원
-아끼는 셀프 꿀팁
+  text: 첫 줄 "네일샵 10만원" / 둘째 줄 "아끼는 셀프 꿀팁"  (사이에 줄바꿈 하나)
+  why:  "구체적 금액으로 손해 회피 심리를 건드려 클릭을 유도했습니다"
 
 [대본]
 {script}
@@ -82,7 +89,7 @@ def suggest(script, want=_WANT):
     if not s:
         return []                      # 재료가 없으면 부르지 않는다(빈 재료로 지어낸다)
     data = _call_json(_PROMPT.format(script=s[:4000], maxlen=_MAX_LEN,
-                                     linelen=_LINE_LEN), _SCHEMA) or {}
+                                     linelen=_LINE_LEN, whylen=_WHY_LEN), _SCHEMA) or {}
     copies = data.get("copies") if isinstance(data, dict) else None
     if not isinstance(copies, list):
         copies = []
@@ -101,8 +108,11 @@ def suggest(script, want=_WANT):
             continue
         label = c.get("label")
         label = label.strip() if isinstance(label, str) else ""
+        # ★why가 없어도 죽지 않는다 — 옛 캐시·구버전 응답이 그대로 올 수 있다.
+        why = c.get("why")
+        why = why.strip() if isinstance(why, str) else ""
         seen.add(text)
-        out.append({"label": label or "제안", "text": text})
+        out.append({"label": label or "제안", "text": text, "why": why[:_WHY_LEN]})
         if len(out) >= want:
             break
     return out

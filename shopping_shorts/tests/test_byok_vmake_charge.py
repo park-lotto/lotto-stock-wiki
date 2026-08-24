@@ -88,16 +88,19 @@ def test_mix_refund_skips_owner(store):
 
 
 def test_mix_refund_follows_the_same_judgement_as_the_charge(store):
-    """★2026-08-17 뒤집힌 계약. 예전엔 '제미나이 키가 있으면 영상제작은 안 깎이니
-    환불도 없다'였는데, 그 면제 자체가 구멍이었다 — 제미나이 키는 실제 호출에
-    안 쓰여서(key_vault 경유) 회사 키로 돌면서 돈만 안 받는 상태였다.
-    이제 영상제작은 제미나이 키가 있어도 과금되고, 따라서 실패하면 환불된다.
+    """★핵심은 숫자가 아니라 **차감과 환불이 같은 판단(keyroute.should_charge)을
+    본다**는 것이다. 한쪽만 바뀌면 잔액이 조용히 갉히거나 부푼다.
 
-    핵심은 숫자가 아니라 **차감과 환불이 같은 판단(keyroute.should_charge)을
-    본다**는 것이다. 한쪽만 바뀌면 잔액이 조용히 갉히거나 부푼다."""
+    이력: 2026-08-22 면제 → 08-23 되돌림(배선이 일부만 끝나 '회사 키로 돌면서 돈은
+    안 받는' 상태가 됐다) → **2026-08-24 공용 풀로 전환**(회원 키가 회사 풀에 합류하므로
+    그 전제가 깨졌다. 사장님: 키 1개 받고 무료로 쓰게 해준다).
+
+    ★그래서 여기선 '제미니가 과금이냐'를 박지 않는다 — 정책은 바뀔 수 있다.
+      바뀌면 안 되는 것은 **차감과 환불이 같은 판단을 본다**는 것뿐이다."""
     from shopping_shorts import keyroute
     store.add_customer_key(9, keyroute.SVC_GEMINI, "mykey")
-    assert keyroute.should_charge(store, 9, keyroute.SVC_GEMINI) is True
+    charged = keyroute.should_charge(store, 9, keyroute.SVC_GEMINI)
     points.add(store, 9, 500)
-    mp._refund_mix_points(store, 9, "2026-08-17")
-    assert points.balance(store, 9) == 500 + pricing.cost(store, pricing.OP_MIX)
+    mp._refund_mix_points(store, 9, "2026-08-23")
+    expected = 500 + (pricing.cost(store, pricing.OP_MIX) if charged else 0)
+    assert points.balance(store, 9) == expected

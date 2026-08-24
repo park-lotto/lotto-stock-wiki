@@ -1,0 +1,40 @@
+{
+  "target_kind": "sector",
+  "sector_name": "2차전지",
+  "sector_view": "긍정",
+  "points": [
+    "ESS 시장을 중심으로 국내 배터리 3사의 경쟁이 심화되고 있음",
+    "LG에너지솔루션은 풀 패키지 전략, 삼성SDI는 기술력, SK온은 그룹 시너지를 통한 경쟁력 확보 중"
+  ],
+  "stocks_mentioned": [
+    {
+      "name": "LG에너지솔루션",
+      "comment": "ESS 시장에서 풀 패키지 전략을 앞세워 경쟁 중",
+      "ts": null,
+      "quote": "LG ‘풀 패키지’",
+      "sector": "2차전지"
+    },
+    {
+      "name": "삼성SDI",
+      "comment": "ESS 시장에서 기술력을 앞세워 경쟁 중",
+      "ts": null,
+      "quote": "삼성 ‘기술력’",
+      "sector": "2차전지"
+    },
+    {
+      "name": "SK온",
+      "comment": "ESS 시장에서 그룹 시너지를 앞세워 경쟁 중",
+      "ts": null,
+      "quote": "SK ‘그룹 시너지’",
+      "sector": "2차전지"
+    }
+  ],
+  "events": [
+    {
+      "fact": "K배터리, ESS 경쟁 후끈",
+      "ts": "2026-07-30 09:00",
+      "quote": "K배터리, ESS 경쟁 후끈…LG ‘풀 패키지’·삼성 ‘기술력’·SK ‘그룹 시너지’"
+    }
+  ],
+  "quote": "K배터리, ESS 경쟁 후끈…LG ‘풀 패키지’·삼성 ‘기술력’·SK ‘그룹 시너지’"
+}

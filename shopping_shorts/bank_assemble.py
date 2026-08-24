@@ -1,5 +1,6 @@
 """생성 프롬프트 주입용 은행 컨텍스트 조립(Phase2 토대). store 읽기만, Gemini 없음.
 ★중괄호 소독 필수 — script_generate 프롬프트가 .format()을 돌린다(_STORY_RULES_CORE 옆에 낀다)."""
+import hashlib
 import random
 
 from shopping_shorts.pattern_bank import STYLE_BUCKETS, CONTENT_BUCKETS
@@ -199,7 +200,127 @@ def winners_block(store, category, k=2, max_chars=420):
             + "\n\n".join(lines))
 
 
-def style_block(style, seconds=30):
+#: 칸 이름(role)만 있고 설명이 없을 때 쓰는 최소 안내(2026-08-22).
+#  ★"설명 없음"을 그대로 내보내면 모델이 칸 이름만 보고 추측한다 — 그게 08-21
+#    "문장이 서로 안 이어진다"의 한 축이었다. 뜻이 분명한 역할어는 여기서 메꾼다.
+_ROLE_FALLBACK = {
+    "hook": "첫 3초 — 가장 강한 한 방으로 연다",
+    "bait": "첫 3초 — 가장 강한 한 방으로 연다",
+    "title": "화면 제목 — 궁금증을 거는 한 줄",
+    "problem": "무엇이 불편했는지 구체적으로",
+    "pain": "무엇이 불편했는지 구체적으로",
+    "situation": "어떤 상황이었는지 구체적으로",
+    "context": "어쩌다 이걸 찾게 됐는지",
+    "origin": "원래 이게 왜 문제였는지",
+    "mistake": "다들 하는 그 실수",
+    "reveal": "반전 — 알고 보니 무엇이었는지",
+    "notice": "무엇을 눈치챘는지",
+    "source": "누구에게서 알게 됐는지",
+    "authority": "누가 만들었나 · 왜 믿을 만한가",
+    "proof": "정말 그런지 보여주는 근거",
+    "evidence": "정말 그런지 보여주는 근거",
+    "mechanism": "왜 그렇게 되는지 — 구조·원리",
+    "spec": "핵심 기능·사양을 한 줄로",
+    "method": "어떻게 쓰는지 — 동작을 눈에 보이게",
+    "steps": "순서대로 — 몇 번 만에 끝나는지",
+    "demo": "실제로 해 보이는 장면",
+    "ease": "얼마나 간단한지",
+    "usage": "어디에 쓰면 좋은지",
+    "targets": "어떻게 해결하는지",
+    "cases": "이렇게까지 쓰더라 — 활용 사례",
+    "twist": "진짜 반전 — 예상 밖의 쓰임",
+    "spread": "어쩌다 소문이 퍼졌는지",
+    "scale": "얼마나 화제인지",
+    "texture": "먹었을 때·썼을 때의 감각",
+    "result": "쓰고 나서 어떻게 달라졌는지",
+    "price": "가격 — 얼마나 부담 없는지",
+    "benefit": "그래서 무엇이 좋아지는지",
+    "witness": "주변 반응 — 누가 뭐라고 했는지",
+    "escalation": "한 단계 더 — 고조 연결어로 시작한다",
+    "bonus": "덤으로 좋은 점 하나 더",
+    "regret": "진작 알았으면 — 뒤늦은 아쉬움",
+    "fit": "어떤 사람에게 맞는지",
+    "emotion": "그때 기분을 한 줄로",
+    "conflict": "무엇이 부딪혔는지",
+    "intro": "무엇을 몇 개 소개하는지 한 줄로",
+    "item": "항목 하나 — 무엇이고 왜 좋은지",
+    "adverb": "한 단계 더 — 고조 연결어로 시작한다",
+    "cta": "댓글 유도 — 받을 것을 반드시 말한다",
+}
+
+#: 설명이 CTA 문구인지(마지막 칸 것인지) 알아보는 표식.
+_CTA_MARK = ("남겨주", "댓글에")
+
+
+def beat_descs(style):
+    """칸(role) → 설명. **모든 칸이 설명을 갖는다**(2026-08-22).
+
+    ## 왜 zip()을 쓰면 안 되나 (라이브 실측)
+
+    예전엔 `dict(zip(roles, beat_chain))`이었다. `zip`은 **짧은 쪽에서 조용히 끊긴다** —
+    오류도 경고도 없이 뒤쪽 칸이 설명 없이 나간다. 서버 43개 스파인 실측(08-22):
+
+      · 어긋난 스파인 **10개**
+      · id=52 가족갈등 반전형: 칸 10 · 설명 5 → 뒤 5칸(method·result·escalation·regret·cta) 무설명
+      · **6개는 설명이 0개** → 8칸 전부가 role 이름만 나간다(다이소 내부인형 등)
+
+    설명이 없으면 모델은 칸 이름만 보고 추측한다. 실제 피해(08-21 단정 명령형 스콘):
+    cta 칸에 설명이 없어 "다들 이 방법으로 편하게 만드시길 바라요"로 끝나고 **CTA가 증발**했다.
+
+    ## CTA는 마지막 칸에 앵커한다
+
+    beat_chain의 마지막 원소는 대개 CTA 문구인데, 칸이 더 많으면 그게 **중간 칸으로 밀린다**.
+    실측(08-21 13:11 가족갈등 반전형): 5번 칸 `reveal`이 "댓글에 '불꽃' 남겨주시면 좌표
+    드릴게요"를 말하고 cta 칸에서 또 말했다 — 대본 한가운데서 댓글을 유도한 것이다.
+    → CTA 문구로 보이는 설명은 **마지막 칸에 붙이고**, 나머지를 앞에서부터 순서대로 채운다.
+
+    ★`beat_descs`가 스타일에 직접 들어 있으면 그것을 그대로 쓴다(옛 경로 = 회귀 0).
+    """
+    roles = list((style or {}).get("beat_roles") or [])
+    if not roles:
+        return {}
+    given = (style or {}).get("beat_descs")
+    if given:
+        out = dict(given)
+    else:
+        chain = [str(x).strip() for x in ((style or {}).get("beat_chain") or []) if str(x).strip()]
+        out = {}
+        # ★CTA 문구는 마지막 칸 몫으로 떼어둔다 — 중간 칸으로 밀리지 않게.
+        tail_desc = ""
+        if chain and len(chain) < len(roles) and any(m in chain[-1] for m in _CTA_MARK):
+            tail_desc = chain.pop()
+        for role, desc in zip(roles, chain):        # 남은 것을 앞에서부터
+            out[role] = desc
+        if tail_desc:
+            out[roles[-1]] = tail_desc
+    # 빈 칸은 역할어 기본 안내로 메운다. 그것도 없으면 최소한 이름이라도 문장으로.
+    for role in roles:
+        if not str(out.get(role) or "").strip():
+            out[role] = _ROLE_FALLBACK.get(role, "%s — 이 칸의 역할에 맞게 쓴다" % role)
+    return out
+
+
+def _rotate(items, seed, role):
+    """이 job·이 칸에서 몇 번째 틀부터 보여줄까 — 목록을 회전해 돌려준다(2026-08-23).
+
+    ★why: `style_block`은 문장틀을 **항상 같은 순서**로 실었고, 모델은 특정 문장에
+      쏠린다. 다이소 훅 10개로 8회 뽑은 실측 — 10개 중 **6개가 한 번도 안 나왔다**
+      (6번 3회·7번 3회에 몰림). 틀을 늘려도 순서가 고정이면 소용이 없다.
+    ★랜덤이 아니라 seed(job_id) 해시다 — 같은 job을 다시 돌리면 같은 대본이 나온다.
+      role을 섞어 한 대본 안에서도 칸마다 다른 번호에서 시작한다.
+      (조립 경로의 `spine_fill._rotate_idx`와 같은 규칙 — 그쪽은 하나를 고르고
+       여기는 순서를 돌린다는 점만 다르다.)
+    ★seed가 없으면 원본 그대로 = 회귀 0.
+    """
+    n = len(items or [])
+    if not seed or n <= 1:
+        return list(items or [])
+    h = hashlib.md5(("%s|%s" % (seed, role)).encode("utf-8")).hexdigest()
+    k = int(h[:8], 16) % n
+    return list(items[k:]) + list(items[:k])
+
+
+def style_block(style, seconds=30, seed=""):
     """★스타일(스파인+beat_roles) → **칸을 못 박는** 프롬프트 블록(2026-08-15).
 
     `spine_charter`와 다른 점이 핵심이다. charter는 "이 골격을 따르라"는 **권유**라 AI가
@@ -214,12 +335,13 @@ def style_block(style, seconds=30):
         return ""
     roles = style["beat_roles"]
     templates = style.get("templates") or {}
-    # 칸 설명은 기존 beat_chain_json(사람이 읽는 자연어)을 순서대로 빌려 쓴다 —
-    # 같은 내용을 두 곳에 적지 않기 위해서다(0순위-B). 개수가 안 맞으면 있는 만큼만.
-    descs = style.get("beat_descs") or dict(zip(roles, style.get("beat_chain") or []))
+    # 칸 설명은 beat_descs()가 한 곳에서 정한다(0순위-B) — 짝짓기 규칙이 두 군데에
+    # 적혀 있으면 반드시 어긋난다. zip()으로 조용히 끊기던 것을 그 함수가 막는다.
+    descs = beat_descs(style)
     lines = []
     for i, role in enumerate(roles, 1):
-        tmpl = templates.get(role) or []
+        # ★job마다 다른 틀에서 시작한다 — 순서가 고정이면 모델이 앞쪽에 쏠린다.
+        tmpl = _rotate(templates.get(role) or [], seed, role)
         tail = ("\n     쓸 수 있는 문장틀(빈칸만 우리 소재에 맞게 채워라. 틀 자체를 새로 짓지 마라): "
                 + " / ".join('"%s"' % _sanitize(x) for x in tmpl)) if tmpl else ""
         lines.append('  %d) role="%s" — %s%s' % (i, role, _sanitize(descs.get(role, "")), tail))
@@ -237,7 +359,52 @@ def style_block(style, seconds=30):
             % _sanitize(style.get("name") or "")
             + "\n".join(lines)
             + "\n- 각 칸의 role 값을 위와 **똑같이** 돌려줘라(검사기가 대조한다)." + dens
+            # ★장르 규칙(반말체·CTA금지)을 프롬프트에도 싣는다 — 게이트만 검사하면
+            #   모델은 그 판정을 못 보고 계속 같은 걸 쓴다(2026-08-22 사장님 화면).
+            + genre_block(style)
             + voice_block(style))
+
+
+def genre_block(style):
+    """유튜브 썰 장르 규칙 → 프롬프트 블록(2026-08-22). 선언 안 한 스타일은 ''(회귀 0).
+
+    ## 왜 필요한가 — 판정만 있고 지시가 없었다
+
+    `script_gate`는 유튜브 썰(hook_3s)에 **반말체**를 검사하고 `no_cta`면 CTA를 반려한다.
+    그런데 **프롬프트 어디에도 그 말이 없었다** — 유튜브 스파인 3개(55·56·60)는 `voice`
+    사전이 비어 `voice_block`이 빈 문자열을 돌려준다.
+    더 나쁜 건 CTA다: `_STORY_RULES_CORE`가 "댓글에 'OO' 남겨주시면 …드릴게요"를
+    **쓰라고 시키는데** 게이트는 그걸 쓰면 반려한다 — 시켜놓고 벌주는 구조였다.
+    실측(2026-08-22 사장님 화면): A안·B안 둘 다 `말끝(반말체)`·`CTA 금지` 경고를 단 채 나왔다.
+
+    ★모델은 판정을 못 본다. 고치려면 프롬프트에서 못 박아야 한다.
+      (판정만 두면 아무도 안 고치고, 프롬프트만 두면 안 지킨다 — 둘 다 필요하다)
+    """
+    out = []
+    if (style or {}).get("hook_3s"):
+        out.append(
+            "\n★[말투 — 이 장르의 서명] 처음부터 끝까지 **반말체**로 써라. "
+            "존댓말을 단 한 문장도 쓰지 마라.\n"
+            "  · 쓸 것:  ~했음 / ~하더라 / ~라는 거 / ~인데 / ~더라고 / ~임\n"
+            "  · 쓰지 말 것: ~거든요 / ~드릴게요 / ~예요 / ~습니다 / ~하세요\n"
+            "  · 첫 문장(훅)의 말투를 **끝까지 그대로** 유지해라 — 중간에 존댓말로 "
+            "돌아가면 다른 사람이 말하는 것처럼 들린다.")
+    if (style or {}).get("no_cta"):
+        out.append(
+            "\n★[CTA 금지] 댓글·구독·좋아요·링크를 **부르지 마라**. "
+            "'댓글에 OO 남겨주세요' 류를 쓰면 반려된다.\n"
+            "  · 이 장르는 완시청으로 먹는다 — 행동을 요구하면 흐름이 끊긴다"
+            "(실측: 이 계열 히트작 전부 CTA가 없다).\n"
+            "  · 마지막 칸도 CTA가 아니라 **이야기의 마무리**로 닫아라.")
+    if (style or {}).get("hook_conceal"):
+        out.append(
+            "\n★[훅에서 정체 숨기기] 첫 문장(훅)에 **제품 이름을 쓰지 마라**. "
+            "'이거 / 이것 / 이 제품'처럼 가려서 말해라.\n"
+            "  · O: \"여러분 다이소 가면 이거 꼭 사오세요\"\n"
+            "  · X: \"여러분 다이소 가면 이 앞머리 고데기 꼭 사오세요\" "
+            "(정체가 나오면 궁금할 이유가 없어져 훅이 죽는다)\n"
+            "  · 무엇인지는 뒤쪽 칸에서 밝혀라 — 그때까지 끌고 가는 게 이 구조의 힘이다.")
+    return "".join(out)
 
 
 def voice_block(style):

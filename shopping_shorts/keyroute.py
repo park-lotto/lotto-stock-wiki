@@ -32,15 +32,43 @@ SERVICES = (SVC_GEMINI, SVC_VMAKE, SVC_ELEVENLABS, SVC_YOUTUBE, SVC_SERPAPI)
 # ★등록은 받지만 **실제 호출에 쓰이는** 서비스는 아직 이 둘뿐이다(2026-08-17 실측).
 #   - vmake     : mix_pipeline.py:1432-1433 job의 customer_id → _vmake_key → keys_for
 #   - serpapi   : app.py _lens_api_keys(cid) → 렌즈 호출부 2곳
-#   나머지 셋은 **저장만 된다** — 호출부가 customer_id를 안 넘겨 항상 사장님 키로 돈다:
-#   - elevenlabs: mix_pipeline.py:196 synthesize_line 시그니처에 customer_id가 아예 없음
-#   - youtube   : service.py:176·179 yt_search 호출에 customer_id 없음
-#   - gemini    : 실제 키 선택은 key_vault/SHORTS_GEMINI_KEYS 경유(호출부 ~80곳)
+#   - gemini    : keyroute.gemini_keys()가 유일한 출구. cid는 인자가 아니라
+#                 keyctx(요청=미들웨어 / 워커=_owned_job 데코레이터)에서 읽는다.
+#                 호출 체인이 3~4겹이라 인자로 흘리면 한 곳만 빠뜨려도 조용히 샌다.
+#   ★2026-08-24 elevenlabs 배선 완료 → WIRED에 넣었다.
+#     synthesize_line에 customer_id를 받아 synthesize_best(**kw)→synthesize_tts→
+#     tts._api_key→keys_for까지 흘린다(하류는 원래 다 뚫려 있었고 여기만 빠져 있었다).
+#     호출부 6곳 전부 주인을 넘긴다: 렌더 4곳은 job["customer_id"], 보이스튜닝은
+#     _cid(req), 믹스 미리듣기는 job(요청자 아님 — 미리듣기와 최종본이 같은 키를 써야 한다).
+#     ⚠️eleven_voices.bake_sample·make_preview는 **공용 보이스 라이브러리** 굽기라
+#       일부러 사장님 키(cid 0)로 둔다 — 회원 크레딧으로 공용 자산을 구우면 안 된다.
+#   - youtube   : service.py:176·179 yt_search 호출에 customer_id 없음 (아래 회원풀 참조)
 #
 # ⚠️여기 이름을 옮기기 전에 **호출부에 cid가 진짜 닿는지 먼저 확인해라.**
 #   이 목록이 앞서가면 아래 should_charge가 '안 쓰이는 키'로 과금을 면제한다 =
 #   회사 키로 돌면서 돈은 안 받는 구멍이 된다(2026-08-17에 실제로 그 상태였다).
-WIRED = (SVC_VMAKE, SVC_SERPAPI)
+# ★2026-08-23 gemini를 뺐던 이유(아래)는 **2026-08-24 정책 변경으로 해소됐다.**
+#   [옛 이유] 개인 키가 나가는 곳은 5곳뿐이고 태깅·대본추출은 comment_gen이 회사 풀을
+#   인덱스로 직접 돌려서, 면제만 켜면 "회사 키로 돌면서 돈은 안 받는" 구멍이 됐다.
+#   [해소] 이제 회원 키가 **회사 풀에 합류**한다(config.refresh_member_gemini_keys).
+#   즉 comment_gen이 도는 그 풀 안에 회원 키가 들어 있다 — 회사 키로만 돌던 전제가
+#   더는 성립하지 않는다. 사장님 결정: 키 1개 받고 **무료로 쓰게 해준다**(모자란
+#   용량은 사장님이 키를 더 만들어 채운다). 의도된 거래라 누수가 아니다.
+#   ⚠️단 합류 배선(config.refresh_member_gemini_keys 호출)이 살아 있어야 성립한다.
+#     그 호출을 지우면 여기 면제도 같이 빼라 — 안 그러면 08-17 사고가 그대로 재현된다.
+WIRED = (SVC_VMAKE, SVC_SERPAPI, SVC_ELEVENLABS, SVC_GEMINI, SVC_YOUTUBE)
+
+# ★공용 풀 모델(2026-08-24 사장님 결정) — 이 서비스들은 회원 키를 **우리 풀에 합류**시키고
+#   회원은 풀 전체를 무료로 쓴다. 키 1개만 받는데 그 1개로만 돌리면 곧바로 한도에 걸려
+#   "부담 줄이려 1개만 받은" 취지가 뒤집히기 때문이다.
+#   나머지(vmake·serpapi·elevenlabs)는 **개인 전용**이다 — 회원이 자기 돈으로 결제하는
+#   서비스라 남의 키를 쓰면 안 되고, 자기 키만 쓴다(폴백 없음).
+POOLED = (SVC_GEMINI, SVC_YOUTUBE)
+
+
+def is_pooled(service):
+    """회원 키가 공용 풀에 합류하는 서비스인가. 판단은 여기 한 곳(0순위-B)."""
+    return service in POOLED
 
 
 def uses_customer_key(service):
@@ -114,8 +142,14 @@ def keys_for(store, customer_id, service):
     cid = as_cid(customer_id)
     if cid:                                   # cid 0 = 사장님 본인이라 조회 안 함
         mine = store.get_customer_keys_plain(cid, service)
+        if mine and not is_pooled(service):
+            return mine, True                 # ★개인 전용: 여기서 끝. 사장님 키를 안 섞는다
         if mine:
-            return mine, True                 # ★여기서 끝. 사장님 키를 섞지 않는다
+            # ★공용 풀 모델(gemini·youtube): 자기 키를 냈으면 **풀 전체**를 쓴다.
+            #   is_user=True를 그대로 돌려주므로 should_charge가 면제로 이어진다
+            #   ("키 1개 내고 무료로 쓴다"는 거래). 풀은 사장님 키 + 전 회원 키.
+            pooled = _owner_keys(service)     # 이미 회원 키가 합류돼 있는 목록
+            return (pooled or mine), True
     owner = _owner_keys(service)
     if not owner and service == SVC_VMAKE:
         owner = _owner_vmake_key(store)
@@ -135,3 +169,32 @@ def should_charge(store, customer_id, service):
         return True
     _, is_user = keys_for(store, customer_id, service)
     return not is_user
+
+def gemini_keys(group="general", customer_id=None):
+    """제미나이 호출에 쓸 키 목록. **키를 꺼내는 유일한 출구다.**
+
+    ★2026-08-24 정책 변경(사장님): 제미니는 회원에게 **1개만** 받아 **우리 풀에
+      합류**시키고 회원은 무료로 쓴다. 모자란 용량은 사장님이 키를 더 만들어 채운다.
+
+      그래서 "내 키만 쓴다(폴백 없음)"를 **버렸다**. 키 1개만 받는데 그 1개로만
+      돌리면 분당 15·하루 500에 곧바로 걸려 회원이 오히려 못 쓴다 — 부담을 줄이려
+      1개만 받은 취지가 뒤집힌다. 풀에 넣었으면 풀 전체를 쓰는 게 맞다.
+
+      vmake·serpapi는 종전 그대로 "내 키만"이다(keys_for). 저긴 회원이 자기 돈으로
+      결제하는 서비스라 남의 키를 쓰면 안 된다. **제미니만 공용 풀 모델이다.**
+
+    ★합류는 **여기서 하지 않는다.** config.SHORTS_GEMINI_KEYS가 이미 합류된 목록이고
+      (app 기동·키 등록/삭제 때 refresh_member_gemini_keys가 다시 만든다), 여기서 또
+      DB를 읽어 붙이면 같은 판단이 두 곳에 생겨 반드시 어긋난다(0순위-B).
+      매 호출 DB를 읽는 비용도 없앤다.
+
+    ★회원 키는 key_vault의 소진관리(mark_exhausted) 대상이 아니다 — 상태파일이
+      인덱스 기반이라 목록이 흔들리면 **엉뚱한 키가 죽은 것으로 기록된다**.
+      그래서 합류분은 사장님 키 **뒤에만** 붙는다(config._merge_pool).
+    """
+    from shopping_shorts import keyctx
+    from pipeline.atoms import key_vault
+
+    # cid는 더 이상 '누구 키를 쓸까'를 가르지 않는다(공용 풀). 소진 로그·디버깅용으로만 읽는다.
+    _ = as_cid(customer_id if customer_id is not None else keyctx.owner_cid())
+    return key_vault.get_live_keys_cascade(group)

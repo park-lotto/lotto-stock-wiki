@@ -232,14 +232,26 @@ def _app_src():
     return Path(app_mod.__file__).read_text(encoding="utf-8")
 
 
-def test_all_eight_sites_wired():
-    """★check_and_count 지점마다 과금이 붙었는지 — 하나라도 빠지면 공짜 구멍."""
+# 유료 작업 지점 수 — 늘어나면 여기도 같이 올린다.
+# 2026-08-17: 8곳 / 2026-08-23: 10곳(렌즈 cn·kw search가 과금 없이 열려 있던 것을 막음)
+_PAID_SITES = 10
+
+
+def test_every_paid_site_is_wired():
+    """★check_and_count 지점마다 과금이 붙었는지 — 하나라도 빠지면 공짜 구멍.
+
+    개수를 박아두는 이유: 새 유료 경로를 추가하면서 과금을 빠뜨리면 이 테스트가
+    깨져서 **의도한 증가인지 사람이 확인하게** 만든다. 실제로 렌즈 두 경로가
+    과금 없이 열려 있던 것을 2026-08-23에 발견했다."""
     src = _app_src()
     calls = [m for m in re.finditer(r"check_and_count\(", src)]
-    # 정의 1개 + 호출 8개
-    assert len(calls) == 9, f"check_and_count 등장 횟수가 9가 아니다: {len(calls)}"
-    assert src.count("_charge_or_402(") == 9, (
-        "_charge_or_402 정의 1 + 호출 8 = 9가 아니다: " f"{src.count('_charge_or_402(')}")
+    want = _PAID_SITES + 1                                   # 정의 1개 + 호출 N개
+    assert len(calls) == want, (
+        f"check_and_count 등장 횟수가 {want}가 아니다: {len(calls)} "
+        "— 유료 경로를 늘렸으면 _PAID_SITES도 올려라")
+    assert src.count("_charge_or_402(") == want, (
+        f"_charge_or_402 정의 1 + 호출 {_PAID_SITES} = {want}가 아니다: "
+        f"{src.count('_charge_or_402(')}")
 
 
 def test_wiring_uses_constants_not_literals():

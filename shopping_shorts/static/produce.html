@@ -40,6 +40,14 @@
       --accent:#12b886;--accent2:#0ca678;--fire:#e0524a;--ok:#12b886;--gold:#b8860b;
       --inset:#eef7f3;--sel-bg:linear-gradient(90deg,#d8f2ea,#eafaf5);--sel-fg:#0a7d66;
       --grad:linear-gradient(135deg,#19c9ab,#0a8f79);--hover:#eef7f3;color-scheme:light;}
+    /* ★9단계 최종렌더 미리보기 폭(2026-08-23 사장님 "최종렌더 크기랑 썸네일 크기 동일하게").
+       완성영상 300px / 썸네일 200px로 **따로** 박혀 있어 두 칸 높이가 안 맞았다(9:16이라
+       폭이 다르면 높이가 1.5배 차이난다). 값을 정하는 곳을 여기 하나로 모은다(0순위-B) —
+       마크업의 flex-basis와 각 카드의 max-width가 전부 이 값을 본다. */
+    :root{--fin-w:260px}
+    #finalVideo>*,#finalThumb>*{max-width:var(--fin-w)}
+    /* 두 칸 모두 9:16 — 썸네일 이미지가 세로로 길어도 영상과 같은 높이에서 멈춘다. */
+    #finalVideo video,#finalThumb img{width:100%;max-width:var(--fin-w);display:block}
     *{box-sizing:border-box}
     /* 시니어 타이포: 본문 12~13 지배 → 15px 기준 상향(인라인 12px 지정은 그대로, 미지정 텍스트가 커진다) */
     body{background:var(--bg);color:var(--txt);font-family:'Malgun Gothic',system-ui,sans-serif;margin:0;min-height:100vh;font-size:15px}
@@ -94,7 +102,10 @@
        랭킹 페이지(index.html)는 .main{flex:1}만 쓰고 상한이 없어 화면 끝까지 채운다 —
        제작소만 1120px에 묶여 오른쪽이 통째로 비어 있었다. 세로 영상(9:16) 레일은
        각자 max-width를 그대로 두므로, 늘어난 폭은 옆의 대본·결과 칼럼이 먹는다. */
-    .steps{margin:26px 0 30px}  /* 컨테이너는 블록 — 안의 .orbbar(theme.css)가 100% 채워 오브를 균등 분배 */
+    /* ★위아래 여백을 26/30 → 16/20으로 줄였다(2026-08-22 사장님 "스크롤 너무 내리지않고
+       최소화"). 오브바 하나가 순수 여백으로만 56px을 먹고 있었다 — 이만큼 아래 내용이
+       화면 밖으로 밀려난다. 0으로 만들지 않는다(8/4의 배수 · 모서리 한 줄 기준 유지). */
+    .steps{margin:16px 0 20px}  /* 컨테이너는 블록 — 안의 .orbbar(theme.css)가 100% 채워 오브를 균등 분배 */
     .step{display:flex;flex-direction:column;align-items:center;flex:1;position:relative;cursor:pointer}
     .step .dot{width:52px;height:52px;border-radius:50%;background:var(--panel);border:2px solid var(--line);
       display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:var(--sub);z-index:1;
@@ -906,8 +917,14 @@
     white-space:nowrap;overflow:hidden;cursor:pointer}
   .s2-tab.on{background:var(--sel-bg);border-color:var(--accent);color:var(--sel-fg)}
   #s2Root.mode-side .s2-tabs{display:none}
-  .s2-dhead{display:flex;align-items:center;gap:16px;height:24px;margin-bottom:8px}
-  .s2-dname{font-size:12px;color:var(--s2-sub);text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  /* ★안 제목을 크게(2026-08-22 사장님 지시). 좌우 보기에서 어느 쪽이 A안·B안인지가
+     제일 먼저 보여야 하는데 12px 흐린 회색이라 옆의 '✅ 구조 지킴'보다도 안 띄었다.
+     높이도 24 → 28px(글자가 커지면 잘린다). uppercase는 한글엔 효과가 없어 뺐다. */
+  .s2-dhead{display:flex;align-items:center;gap:16px;height:28px;margin-bottom:8px}
+  .s2-dname{font-size:16px;font-weight:800;color:var(--txt);letter-spacing:0;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  /* 스타일 이름(· 유튜브 발명품형)은 안 이름보다 한 급 낮게 — 'A안'이 주인공이다. */
+  .s2-dname .sty{font-size:13px;font-weight:600;color:var(--s2-sub)}
   .s2-gate{margin-left:auto;font-size:12.5px;font-weight:700;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
   .s2-gate.pass{color:var(--ok)}
   .s2-gate.fail{color:var(--fire)}
@@ -931,6 +948,15 @@
   .s2-chk{display:block;font-size:11px;font-weight:400;color:var(--ok);margin-top:4px}
   .s2-swap{justify-self:stretch;font-size:12px;color:var(--accent);background:none;border:1px solid var(--line);border-radius:8px;padding:8px 0;text-align:center;white-space:nowrap;cursor:pointer}
   .s2-swap:hover{border-color:var(--accent)}
+  /* ★줄 삭제(2026-08-22 사장님 "여기서 대본을 어떻게 지우나"). 종전엔 글자를 전부 지워
+     빈 칸으로 두는 방법뿐이었는데, 화면엔 빈 행이 그대로 남아 지워졌는지 알 수 없었다.
+     [바꾸기]와 같은 칸에 세로로 쌓는다 — 칸 폭(88px)은 그대로라 다른 줄이 안 밀린다. */
+  .s2-acts{justify-self:stretch;display:flex;flex-direction:column;gap:4px}
+  .s2-acts .s2-swap{width:100%}
+  .s2-del{font-size:12px;color:var(--s2-sub);background:none;border:1px solid var(--line);
+    border-radius:8px;padding:6px 0;text-align:center;white-space:nowrap;cursor:pointer}
+  .s2-del:hover{color:var(--fire);border-color:var(--fire)}
+  .s2-row.s2-busy .s2-del{pointer-events:none;opacity:.4}
   /* 게이트 실패 = 성적표가 아니라 "고칠 곳 안내" */
   .s2-fix{border-top:1px dashed var(--line);padding:16px 0}
   .s2-fix .fx-t{font-size:13px;font-weight:700;color:var(--fire)}
@@ -958,8 +984,24 @@
   .s2-raw{flex:none;font-size:11.5px;color:var(--s2-sub);background:var(--inset);border:1px solid var(--line);
     border-radius:6px;padding:4px 8px;white-space:nowrap;cursor:pointer}
   .s2-raw:hover{color:var(--accent);border-color:var(--accent)}
-  /* 틀 없이 이 칸만 다시 — 목록 맨 끝에 두고 점선으로 갈라 '틀 후보'와 구분한다. */
-  .s2-cand.free{border-style:dashed;color:var(--accent);margin-top:8px}
+  /* ★AI 자동 생성 — **맨 위에 제일 눈에 띄게**(2026-08-22 사장님 지시).
+     종전엔 목록 **맨 끝**에 점선으로 조그맣게 뒀다. 그런데 실제로 가장 많이 쓰는 건
+     "그냥 AI가 알아서 써줘"인데, 그걸 쓰려고 틀 6개를 다 훑고 맨 아래까지 내려가야 했다
+     ("선택이 너무 많다"). **기본 동작을 맨 위에, 나머지는 그 아래 선택지로** 뒤집는다.
+     ─ 크기(48→56px)·굵기·강조색·왼쪽 띠로 '이게 기본'임을 한눈에 보이게 한다.
+     ─ 아래 틀 목록과는 실선 구분선으로 가른다(점선 테두리는 '보조'로 읽혀 뺐다). */
+  .s2-cand.free{min-height:56px;color:var(--sel-fg);background:var(--sel-bg);
+    border-color:var(--accent);font-weight:700;font-size:14.5px;margin-bottom:0;
+    box-shadow:inset 3px 0 0 var(--accent)}
+  .s2-cand.free:hover{background:var(--hover);border-color:var(--accent)}
+  .s2-cand.free .tx{overflow:visible;text-overflow:clip}   /* 문구가 잘리면 없는 안내다 */
+  .s2-cand.free .sub{display:block;font-weight:400;font-size:11.5px;color:var(--s2-sub);margin-top:2px}
+  /* AI 칸과 틀 목록 사이 가르개 — "위=기본 / 아래=직접 고르기"를 눈으로 가른다. */
+  /* 가르개는 **왼쪽 정렬**로 둔다 — 다른 줄이 전부 왼쪽 시작이라 가운데로 띄우면
+     혼자 어긋나 보인다(2026-08-22 렌더 확인). 선은 글자 뒤로만 뻗는다. */
+  .s2-bank .bk-or{display:flex;align-items:center;gap:8px;margin:14px 0 8px;
+    font-size:11px;color:var(--s2-sub);letter-spacing:.04em}
+  .s2-bank .bk-or::after{content:"";flex:1;height:1px;background:var(--line)}
   /* 재생성 도는 동안 — 그 칸만 흐리게 + 클릭 잠금(다른 칸은 계속 쓸 수 있다). */
   .s2-row.s2-busy .s2-sent{opacity:.6;font-style:italic}
   .s2-row.s2-busy .s2-swap{pointer-events:none;opacity:.4}
@@ -982,6 +1024,10 @@
     .panel[data-step="8"] .s2-cardrow{grid-template-columns:1fr}
     .s2-row-in{grid-template-columns:88px 1fr}
     .s2-swap{grid-column:2;justify-self:end;padding:8px 16px}
+    /* 좁은 화면에선 [바꾸기]·[🗑]을 가로로 눕혀 문장 아래 오른쪽 끝에 붙인다. */
+    .s2-acts{grid-column:2;justify-self:end;flex-direction:row;gap:8px}
+    .s2-acts .s2-swap{width:auto;padding:8px 16px}
+    .s2-del{padding:8px 12px}
     .s2-tabs{gap:8px}
     .si-top{flex-wrap:wrap}
     .si-quote{white-space:normal}
@@ -1051,7 +1097,18 @@
           <span class="hint" style="margin-left:auto">뺄 건 우상단 ✕ · 누르면 메인으로</span>
         </div>
         <div id="poolList" class="poolGrid"></div>
-        <div id="poolEmpty" class="hint" style="display:none;margin-top:8px">즐겨찾기에서 영상을 보내거나, 아래에 URL을 직접 넣으세요.</div>
+        <!-- 빈 상태 = 재료를 가지러 갈 자리(2026-08-24 사장님 "여기 누르면 레퍼런스랭킹으로
+             갈지 영상즐겨찾기로 갈지 버튼 두 개 만들어줘"). 종전엔 "즐겨찾기에서 보내거나"라는
+             **글만** 있어서, 어디로 가야 하는지 알아도 손이 한 번 더 갔다(사이드바까지).
+             재료가 오는 길은 실제로 이 둘뿐이다 — 랭킹(/)·즐겨찾기(/collection) 양쪽 다
+             제작소로 보내기(sendToProduce)가 붙어 있다. HANDOFF가 비었을 때만 보인다. -->
+        <div id="poolEmpty" style="display:none;margin-top:8px">
+          <div class="hint" style="margin-top:0">쓸 영상을 담으러 가볼까요 — 담은 뒤 <b>제작소로 보내기</b>를 누르면 여기에 쌓입니다.</div>
+          <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+            <button class="btn-next" onclick="location.href='/'">📊 레퍼런스 랭킹에서 찾기</button>
+            <button class="btn-prev" onclick="location.href='/collection'">⭐ 영상 즐겨찾기에서 담기</button>
+          </div>
+        </div>
         <div id="footageList" class="hint" style="margin:8px 0"></div>
           <details style="margin-top:6px">
             <summary style="cursor:pointer;font-size:12px;color:var(--sub)">🔗 URL 직접 추가 ▾</summary>
@@ -1211,6 +1268,25 @@
              안 바뀐 것처럼 보인다(사장님 질문 "추가를 하거나 이 성우로 적용을 하려면?"). -->
         <div id="elvDone" class="hint" style="display:none;margin-top:8px;padding:8px 10px;border:1px solid var(--ok);border-radius:8px;line-height:1.5"></div>
       </div>
+      <!-- 고객용 목소리 찾기(2026-08-24) — 일레븐랩스 공개 라이브러리에서 직접 골라 담는다.
+           ★본인 키가 있어야 쓸 수 있다: 담기는 각자 계정에 되므로 키가 없으면 합성 때 실패한다.
+             서버가 need_key로 알려주면 등록 안내를 대신 띄운다. -->
+      <div id="vlibBox" style="margin-top:8px">
+        <button class="btn-prev" style="padding:6px 12px;min-height:44px"
+                onclick="toggleVoiceLibrary()">🔎 마음에 드는 목소리 찾기</button>
+        <div id="vlibPanel" style="display:none;margin-top:8px;border:1px solid var(--line);border-radius:9px;padding:10px">
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+            <input id="vlibQ" placeholder="예) 차분한, 밝은, 뉴스" style="flex:1 1 150px;min-width:120px;
+              padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--txt)">
+            <select id="vlibGender" style="padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--txt)">
+              <option value="">성별 전체</option><option value="female">여성</option><option value="male">남성</option>
+            </select>
+            <button class="btn-next" style="padding:8px 14px" onclick="searchVoiceLibrary(0)">찾기</button>
+          </div>
+          <div class="hint" style="margin-top:6px">한국어 목소리를 먼저 보여줍니다. 담으면 내 성우 카드에 바로 추가돼요.</div>
+          <div id="vlibList" style="margin-top:10px;max-height:340px;overflow:auto"></div>
+        </div>
+      </div>
       <!-- ★한 칸 안에서는 세로로 쌓는다 — 360px 폭에 카드와 설정을 좌우로 나누면 둘 다 좁아진다. -->
       <div id="voiceUI" style="display:flex;flex-direction:column;gap:12px;margin-top:10px">
         <!-- ① 성우 카드 (⭐베스트 5 상시 + ＋더보기로 나머지 9명) — 먼저 하는 일 -->
@@ -1290,8 +1366,8 @@
             <img id="hcPreviewBg" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none" alt="">
 <!-- 2026-07-27 사장님: "원본 자막이 있던 자리" 점선 박스 제거(필요 없음). 자동 정렬
                  (applyErasedRegion)과 '다시 그 자리로' 버튼은 그대로 — 표시만 뺀 것. -->
-            <div id="capPreviewText" style="position:absolute;left:50%;transform:translate(-50%,-50%);text-align:center;white-space:pre-wrap;word-break:keep-all;line-height:1.2;z-index:2;cursor:move;user-select:none"></div>
-            <div id="hcPreviewText" style="position:absolute;transform:translate(-50%,-50%);text-align:center;line-height:1.18;word-break:keep-all;padding:0 6px;cursor:move;user-select:none;z-index:3"></div>
+            <div id="capPreviewText" style="position:absolute;left:50%;transform:translate(-50%,-50%);text-align:center;white-space:pre-wrap;word-break:keep-all;line-height:1.2;z-index:5;cursor:move;user-select:none"></div>
+            <div id="hcPreviewText" style="position:absolute;transform:translate(-50%,-50%);text-align:center;line-height:1.18;word-break:keep-all;padding:0 6px;cursor:move;user-select:none;z-index:5"></div>
             <div id="extraPreview"></div>
             <img id="ovPreview" style="position:absolute;transform:translate(-50%,-50%);cursor:move;user-select:none;z-index:5;display:none" alt="">
             <div id="wmPreview" style="position:absolute;transform:translate(-50%,-50%);white-space:nowrap;z-index:6;pointer-events:none;display:none"></div>
@@ -1309,17 +1385,17 @@
         <div style="flex:1;min-width:300px">
           <!-- 🗂 4탭 — 우측 컨트롤만 가른다. 좌측 미러는 탭 밖(항상 보인다). -->
           <div id="decoTabs" style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
-            <button type="button" class="tab on" data-decotab="copy" onclick="decoTab('copy')" style="min-width:auto;padding:7px 14px;font-size:12px">✍ 문구</button>
-            <button type="button" class="tab" data-decotab="style" onclick="decoTab('style')" style="min-width:auto;padding:7px 14px;font-size:12px">🎯 스타일</button>
+            <button type="button" class="tab on" data-decotab="style" onclick="decoTab('style')" style="min-width:auto;padding:7px 14px;font-size:12px">💬 자막</button>
+            <button type="button" class="tab" data-decotab="copy" onclick="decoTab('copy')" style="min-width:auto;padding:7px 14px;font-size:12px">🎨 헤드카피</button>
             <button type="button" class="tab" data-decotab="tpl" onclick="decoTab('tpl')" style="min-width:auto;padding:7px 14px;font-size:12px">🖼 템플릿</button>
             <button type="button" class="tab" data-decotab="fx" onclick="decoTab('fx')" style="min-width:auto;padding:7px 14px;font-size:12px">✨ 효과</button>
           </div>
-          <div id="decoPaneCopy">
+          <div id="decoPaneCopy" style="display:none">
           <!-- ✍ 고정카피 후보 — 대본에서 AI가 뽑는다. ★누를 때만 textarea에 들어간다
                (2026-07-19에 '자동 재채움'을 일부러 없앴다 — 자동으로 밀어넣으면 그 버그가 되살아난다) -->
           <div id="hcCopyBox" style="margin-bottom:10px">
             <div style="font-size:13px;font-weight:800;margin-bottom:6px">✍ 고정카피
-              <span style="font-size:11px;color:var(--accent2);font-weight:600">— 누르면 아래 칸에 들어갑니다</span>
+              <span style="font-size:11px;color:var(--accent2);font-weight:600">— 누르면 아래로</span>
               <button type="button" class="tab" onclick="loadHeadcopySuggest(true)"
                 style="min-width:auto;padding:3px 10px;font-size:11px;margin-left:6px">↻ 다시 뽑기</button>
               <!-- ★넣을 수만 있고 뺄 수가 없었다(2026-08-18 사장님 지적). 한 번 넣으면
@@ -1330,7 +1406,7 @@
             <div id="hcCopyCards" style="display:flex;gap:6px;flex-wrap:wrap"></div>
             <div id="hcCopyMsg" class="hint" style="margin-top:4px"></div>
           </div>
-          <div style="font-size:13px;margin-bottom:4px">헤드카피 문구 <span class="hint" style="font-size:11px">— Enter로 줄바꿈, 길면 자동으로 줄이 나뉘어요</span></div>
+          <div style="font-size:13px;margin-bottom:4px">헤드카피 문구</div>
           <textarea id="hcText" rows="2" placeholder="예: 써보면 놀라는 이것" oninput="updateHC()"
             style="width:100%;background:var(--inset);border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px;margin-bottom:12px;resize:vertical;font-family:inherit;font-size:14px;line-height:1.4"></textarea>
           <!-- ⚡빠른 조절(2026-08-19 사장님 "폰트나 색상도 지정이 되야지") — 문구를 고치는
@@ -1338,8 +1414,8 @@
                아래 '직접 다듬기'의 진짜 입력칸(hcFont/hcColor/hcSize/hcY/hcX)에 그대로 써넣고
                updateHC()를 부른다 — 같은 값이 두 벌이 되면 반드시 어긋난다(0순위-B). -->
           <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:12px">
-            <div style="font-size:13px;font-weight:700;margin-bottom:8px">⚡ 빠른 조절
-              <span style="font-size:11px;color:var(--sub);font-weight:400">— 미리보기에서 글자를 끌어 옮길 수도 있어요</span></div>
+            <div style="font-size:13px;font-weight:700;margin-bottom:8px">🎨 글씨 · 자리
+              <span style="font-size:11px;color:var(--sub);font-weight:400">— 미리보기에서 끌어도 옮겨져요</span></div>
             <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
               <!-- ★폰트는 '진짜 그 글씨체로' 보여준다(2026-08-19 사장님 "썸네일쪽처럼 이쁜폰트로").
                    밋밋한 <select>는 22종이 전부 같은 고딕으로 보여 고를 수가 없었다.
@@ -1362,130 +1438,168 @@
                   <option value="400">보통</option><option value="700">굵게</option><option value="900">아주 굵게</option>
                 </select></label>
             </div>
-            <div style="margin-top:8px;font-size:12px;color:var(--sub)">글씨 크기 <span id="hcSizeQV">64</span>px
-              <input id="hcSizeQ" type="range" min="28" max="120" oninput="hcQuick('hcSize', this.value)" style="width:100%"></div>
-            <div style="font-size:12px;color:var(--sub)">세로 위치 <span id="hcYQV">14</span>%
-              <input id="hcYQ" type="range" min="0" max="100" oninput="HC_Y_TOUCHED=true;hcQuick('hcY', this.value)" style="width:100%"></div>
-            <div style="font-size:12px;color:var(--sub)">가로 위치 <span id="hcXQV">50</span>%
-              <input id="hcXQ" type="range" min="0" max="100" oninput="hcQuick('hcX', this.value)" style="width:100%"></div>
-            <div style="font-size:11px;color:var(--sub);margin-top:6px">줄바꿈은 문구 칸의 Enter로 정해요 — 넣은 줄 그대로 나오고, 넘치면 글씨가 자동으로 작아집니다.</div>
-          </div>
-          <!-- 강조 단어(노출 유지) -->
-          <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:12px">
-            <div style="font-size:13px;font-weight:700;margin-bottom:2px">🎯 강조 단어 <span style="font-size:11px;color:var(--sub);font-weight:400">— 헤드카피 + 자막 공통(키워드 일치 시 자동 강조)</span></div>
-            <div id="highlightRuleList" style="margin-top:6px"></div>
-            <button class="tab" onclick="addHighlightRule()" style="flex:0 0 auto;min-width:auto;padding:6px 12px;font-size:12px;margin-top:4px">+ 강조 단어 추가</button>
-          </div>
-          </div>
-          <div id="decoPaneStyle" style="display:none">
-          <!-- 🎯 완성 스타일 카드(Task2가 renderStyleCards로 채움) -->
-          <div style="font-size:13px;font-weight:800;margin-bottom:6px">🎯 완성 스타일 <span style="font-size:11px;color:var(--accent2);font-weight:600">— 누르면 그대로 완성</span></div>
-          <div id="fullPresets" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px"></div>
-          <button type="button" id="moreStylesBtn" onclick="toggleMoreStyles()" class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;margin-bottom:14px">+ 더보기</button>
-          <!-- ⭐ 내 프리셋 라이브러리(항상 노출) — 내가 저장한 스타일을 딸깍 적용 -->
-          <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:12px">
-            <div style="font-size:13px;font-weight:800;margin-bottom:2px">⭐ 내 프리셋 <span style="font-size:11px;color:var(--accent2);font-weight:600">— 누르면 바로 적용</span></div>
-            <div style="font-size:11px;color:var(--sub);margin-bottom:8px">지금 화면 스타일이 마음에 들면 저장해 두고, 다음엔 딸깍 한 번으로 그대로 불러와요.</div>
-            <div id="myPresets" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px"></div>
-            <div style="display:flex;gap:6px;flex-wrap:wrap">
-              <input id="myPresetName" type="text" placeholder="예: 내 채널 기본형" style="flex:1;min-width:150px;background:#0a1017;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:8px 10px;font-size:13px">
-              <button class="tab" onclick="saveMyPreset()" style="flex:0 0 auto;min-width:auto;padding:8px 16px;font-size:13px;white-space:nowrap;background:var(--sel-bg);border-color:var(--accent)">💾 지금 스타일 저장</button>
+            <!-- 슬라이더가 화면 폭을 다 먹어 커 보였다(2026-08-22 사장님 "너무 커").
+                 폭을 고정하고 라벨을 옆에 붙여 한 줄씩 짧게 만든다. -->
+            <div style="display:flex;gap:10px;align-items:center;font-size:12px;color:var(--sub);margin-top:8px">
+              <span style="min-width:64px">글씨 크기</span>
+              <input id="hcSizeQ" type="range" min="28" max="120" oninput="hcQuick('hcSize', this.value)" style="flex:1;max-width:200px">
+              <b id="hcSizeQV" style="color:var(--txt);min-width:30px">64</b>px</div>
+            <div style="display:flex;gap:10px;align-items:center;font-size:12px;color:var(--sub);margin-top:6px">
+              <span style="min-width:64px">세로 위치</span>
+              <input id="hcYQ" type="range" min="0" max="100" oninput="HC_Y_TOUCHED=true;hcQuick('hcY', this.value)" style="flex:1;max-width:200px">
+              <b id="hcYQV" style="color:var(--txt);min-width:30px">14</b>%</div>
+            <div style="display:flex;gap:10px;align-items:center;font-size:12px;color:var(--sub);margin-top:6px">
+              <span style="min-width:64px">가로 위치</span>
+              <input id="hcXQ" type="range" min="0" max="100" oninput="hcQuick('hcX', this.value)" style="flex:1;max-width:200px">
+              <b id="hcXQV" style="color:var(--txt);min-width:30px">50</b>%</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;align-items:center">
+              <span style="font-size:12px;color:var(--sub)">한 번에</span>
+              <button class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 10px;font-size:12px;white-space:nowrap" onclick="alignHC('top')">⬆ 위</button>
+              <button class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 10px;font-size:12px;white-space:nowrap" onclick="alignHC('mid')">중간</button>
+              <button class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 10px;font-size:12px;white-space:nowrap" onclick="alignHC('bottom')">⬇ 하단</button>
+              <button class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 10px;font-size:12px;white-space:nowrap" onclick="alignHC('center')">↔ 가운데</button>
             </div>
+            <div style="font-size:11px;color:var(--sub);margin-top:6px">줄바꿈은 문구 칸에서 Enter로 정해요.</div>
+          </div>
+          <!-- 🎯 강조 단어 — 화면에서 뺐다(2026-08-24 사장님 "이건 삭제해도 되고").
+               ★삭제한 것은 **손으로 넣는 UI뿐**이다. STATE.deco.highlight_rules 자체는
+               그대로 산다 — applyHeadcopySet이 틀의 2줄째 색(color2)을 이 규칙으로 넣고
+               미리보기(updateHC)와 실렌더(video_assemble)가 그걸 읽는다. 여기까지 지우면
+               '흰→노랑' 투톤이 통째로 죽는다. 색은 이제 카드의 색 고르개로 고른다.
+               renderHighlightRules()는 자리가 없어도 조용히 돌아간다(if(!box) return). -->
+
+          <!-- 🎨 헤드카피 꾸미기 — 스타일(자막) 탭에서 여기로 옮김(2026-08-22 사장님:
+               "스타일 안에 헤드카피는 삭제해 / 문구가 헤드카피니까").
+               ★마크업을 그대로 옮겼다 — id·핸들러 무수정(값의 주인은 그대로). -->
+          <div style="border-top:1px dashed var(--line);padding-top:10px;margin-top:4px">
+
+
+              <!-- 🖼 프리셋 줄 — 화면에서 뺐다(2026-08-24 사장님 "이건 삭제해도 되고").
+                   ★HC_PRESETS 배열은 **지우지 않는다**: 썸네일 탭(thumbPresets)과 틀
+                   (applyHeadcopySet)이 같은 배열을 쓴다. 폰트·팩톤은 그대로 썸네일 것을
+                   활용하고, 여기선 카드의 색 고르개로 색만 바꾼다. -->
+
+                <!-- ★①글씨·②자리는 ⚡빠른 조절과 같은 값을 만지는 중복이라 화면에서 뺐다
+                     (2026-08-22 사장님 "여기 중복이야"). ★삭제가 아니라 숨김이다 —
+                     updateHC()가 이 칸들을 읽어 값을 만들고, applyConfig()가 여기에 써넣는다.
+                     빠른 조절은 hcQuick()으로 이 칸에 값을 넣는 **미러**일 뿐이다(0순위-B). -->
+                <div hidden style="display:none">
+                  <span id="hcFontPicker"><button type="button" id="hcFontBtn" onclick="toggleFontMenu(event)">폰트</button>
+                    <div id="hcFontMenu" style="display:none"></div></span>
+                  <select id="hcFont" onchange="updateHC()"></select>
+                  <input id="hcColor" type="color" value="#FF8800" oninput="updateHC()">
+                  <select id="hcWeight" onchange="updateHC()">
+                    <option value="700">굵게</option><option value="900" selected>아주 굵게</option><option value="400">보통</option>
+                  </select>
+                  <span id="hcSizeV">64</span><input id="hcSize" type="range" min="28" max="120" value="64" oninput="updateHC()">
+                  <span id="hcYV">14</span><input id="hcY" type="range" min="0" max="100" value="14" oninput="HC_Y_TOUCHED=true;updateHC()">
+                  <span id="hcXV">50</span><input id="hcX" type="range" min="0" max="100" value="50" oninput="updateHC()">
+                </div>
+                <!-- ③ 테두리 · 박스 -->
+                <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px">
+                  <div style="font-size:13px;font-weight:700;margin-bottom:8px">🎨 테두리 · 박스</div>
+                  <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+                    <input id="hcOutline" type="checkbox" checked onchange="updateHC()"> 외곽선
+                    <input id="hcOutColor" type="color" value="#000000" oninput="updateHC()">
+                    <span style="color:var(--sub);font-size:12px">두께 <input id="hcOutW" type="range" min="0" max="12" value="6" oninput="updateHC()"></span>
+                  </label>
+                  <label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;cursor:pointer">
+                    <input id="hcBox" type="checkbox" onchange="updateHC()"> 배경 박스
+                    <input id="hcBoxColor" type="color" value="#000000" oninput="updateHC()">
+                    <span style="color:var(--sub);font-size:12px">여백 <input id="hcBoxPad" type="range" min="0" max="40" value="16" oninput="updateHC()"></span>
+                    <span style="color:var(--sub);font-size:12px">투명도 <input id="hcBoxOpacity" type="range" min="20" max="100" value="80" oninput="updateHC()"></span>
+                  </label>
+                </div>
+                          </div>
+          </div>
+          <div id="decoPaneStyle">
+          <!-- 🎯 완성 스타일 카드(Task2가 renderStyleCards로 채움) -->
+          <div style="font-size:13px;font-weight:800;margin-bottom:6px">🎯 완성 스타일 <span style="font-size:11px;color:var(--accent2);font-weight:600">— 누르면 끝</span></div>
+          <div id="fullPresets" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px"></div>
+          <button type="button" id="moreStylesBtn" onclick="toggleMoreStyles()" class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;margin-bottom:10px">+ 더보기</button>
+          <!-- ⭐ 내 프리셋 — 헤드카피+자막을 통째로 저장한다. 헤드카피가 딴 탭으로 간 뒤에도
+               '한 방에 완성' 갈래라 완성 스타일 바로 밑에 둔다(2026-08-22 간결화). -->
+          <div style="font-size:13px;font-weight:800;margin:10px 0 6px">⭐ 내 프리셋 <span style="font-size:11px;color:var(--accent2);font-weight:600">— 누르면 바로 적용</span></div>
+          <div id="myPresets" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px"></div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
+            <input id="myPresetName" type="text" placeholder="이 스타일 이름" style="flex:1;min-width:130px;background:#0a1017;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:7px 10px;font-size:13px">
+            <button class="tab" onclick="saveMyPreset()" style="flex:0 0 auto;min-width:auto;padding:7px 14px;font-size:12px;white-space:nowrap;background:var(--sel-bg);border-color:var(--accent)">💾 지금 스타일 저장</button>
           </div>
           <!-- ★기본 펼침(2026-08-18). 사장님이 "폰트·색상·크기 조정이 없다"고 하셨는데
                실제로는 여기 다 있었다 — 접힘 안에 또 접혀 있어 못 찾으신 것이다.
                조절을 새로 만들면 같은 값이 두 군데 생겨 어긋난다(0순위-B) → 펼쳐서 보이게만 한다. -->
           <details id="advDetails" style="margin-bottom:4px" open>
-            <summary style="cursor:pointer;font-size:13px;color:var(--accent2);font-weight:700;padding:6px 0">✏️ 직접 다듬기 — 폰트·크기·위치·자막·내 프리셋 ▾</summary>
+            <summary style="cursor:pointer;font-size:13px;color:var(--accent2);font-weight:700;padding:6px 0">✏️ 직접 다듬기 ▾</summary>
             <div id="advBody" style="margin-top:10px">
-              <div class="sub" style="margin-bottom:8px;font-size:11px">필요한 것만 펼쳐 손보세요. 대부분은 위 <b>완성 스타일</b>만 눌러도 됩니다.</div>
-
-              <!-- ── 🎨 헤드카피(상단 큰 글씨) ── -->
-              <details style="border-top:1px dashed var(--line);margin-top:2px" open>
-                <summary style="cursor:pointer;font-size:13px;font-weight:700;padding:8px 0">🎨 헤드카피(상단 큰 글씨) 꾸미기 — 폰트·색상·굵기·크기</summary>
-                <div style="padding:2px 0 12px">
-              <div id="hcPresets" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"></div>
-              <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
-                <span style="font-size:12px;color:var(--sub)">폰트
-                  <span id="hcFontPicker" style="position:relative;display:inline-block;vertical-align:middle">
-                    <button type="button" id="hcFontBtn" onclick="toggleFontMenu(event)"
-                      style="background:var(--inset);color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:5px 10px;cursor:pointer;min-width:130px;text-align:left;font-size:13px">폰트 선택 ▾</button>
-                    <div id="hcFontMenu" style="display:none;position:absolute;top:calc(100% + 4px);left:0;z-index:60;background:var(--inset);border:1px solid var(--line);border-radius:8px;max-height:340px;overflow:auto;box-shadow:0 12px 34px rgba(0,0,0,.55);min-width:190px"></div>
-                  </span>
-                  <select id="hcFont" onchange="updateHC()" style="display:none"></select></span>
-                <label style="font-size:12px;color:var(--sub)">색상 <input id="hcColor" type="color" value="#FF8800" oninput="updateHC()"></label>
-                <label style="font-size:12px;color:var(--sub)">굵기
-                  <select id="hcWeight" onchange="updateHC()" style="background:var(--inset);color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:4px">
-                    <option value="700">굵게</option><option value="900" selected>아주 굵게</option><option value="400">보통</option>
-                  </select></label>
-              </div>
-              <div style="margin-top:10px;font-size:12px;color:var(--sub)">글씨 크기 <span id="hcSizeV">64</span>px
-                <input id="hcSize" type="range" min="28" max="120" value="64" oninput="updateHC()" style="width:100%"></div>
-              <div style="font-size:12px;color:var(--sub)">세로 위치 <span id="hcYV">14</span>%
-                <input id="hcY" type="range" min="0" max="100" value="14" oninput="HC_Y_TOUCHED=true;updateHC()" style="width:100%"></div>
-              <div style="font-size:12px;color:var(--sub)">가로 위치 <span id="hcXV">50</span>%
-                <input id="hcX" type="range" min="0" max="100" value="50" oninput="updateHC()" style="width:100%"></div>
-              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
-                <span style="font-size:12px;color:var(--sub);align-self:center">정렬:</span>
-                <button class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 10px;font-size:12px;white-space:nowrap" onclick="alignHC('top')">⬆ 위</button>
-                <button class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 10px;font-size:12px;white-space:nowrap" onclick="alignHC('mid')">중간</button>
-                <button class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 10px;font-size:12px;white-space:nowrap" onclick="alignHC('bottom')">⬇ 하단</button>
-                <button class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 10px;font-size:12px;white-space:nowrap" onclick="alignHC('center')">↔ 가운데</button>
-              </div>
-              <label style="display:flex;align-items:center;gap:8px;margin-top:10px;font-size:13px;cursor:pointer">
-                <input id="hcOutline" type="checkbox" checked onchange="updateHC()"> 외곽선
-                <input id="hcOutColor" type="color" value="#000000" oninput="updateHC()">
-                <span style="color:var(--sub)">두께 <input id="hcOutW" type="range" min="0" max="12" value="6" oninput="updateHC()"></span>
-              </label>
-              <label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;cursor:pointer">
-                <input id="hcBox" type="checkbox" onchange="updateHC()"> 배경 박스
-                <input id="hcBoxColor" type="color" value="#000000" oninput="updateHC()">
-                <span style="color:var(--sub)">여백 <input id="hcBoxPad" type="range" min="0" max="40" value="16" oninput="updateHC()"></span>
-                <span style="color:var(--sub)">투명도 <input id="hcBoxOpacity" type="range" min="20" max="100" value="80" oninput="updateHC()"></span>
-              </label>
-                </div>
-              </details>
+              
 
               <!-- ── 💬 자막(하단 나레이션) ── -->
-              <details style="border-top:1px dashed var(--line)">
+              <details style="border-top:1px dashed var(--line);margin-top:2px" open>
                 <summary style="cursor:pointer;font-size:13px;font-weight:700;padding:8px 0">💬 자막(하단 나레이션) 꾸미기</summary>
                 <div style="padding:2px 0 12px">
-                <div class="sub" style="margin-bottom:10px">나레이션 자막(문구는 대본에서 자동)의 폰트·색·박스·효과. 미리보기 하단에 <b>샘플</b>로 표시됩니다.</div>
-                <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center">
-                  <label style="font-size:12px;color:var(--sub)">폰트
-                    <select id="capFont" onchange="updateCaption()" style="background:var(--inset);color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:4px"></select></label>
-                  <label style="font-size:12px;color:var(--sub)">색상 <input id="capColor" type="color" value="#FFFFFF" oninput="updateCaption()"></label>
+                <!-- ⭐ 자막 프리셋(2026-08-22) — 자막 모양만 따로 저장·적용.
+                     ★값의 주인은 그대로다: 저장은 STATE.captionStyle을 그대로 담고,
+                     적용은 기존 applyConfig(null, cap)에 맡긴다(효과 복원까지 이미 들어있다). -->
+                <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px">
+                  <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:6px">⭐ 자막 프리셋</div>
+                  <div id="capPresets" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px"></div>
+                  <div style="display:flex;gap:6px;flex-wrap:wrap">
+                    <input id="capPresetName" type="text" placeholder="이름 (자막만)" style="flex:1;min-width:140px;background:#0a1017;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:7px 10px;font-size:13px">
+                    <button class="tab" onclick="saveCapPreset()" style="flex:0 0 auto;min-width:auto;padding:7px 14px;font-size:12px;white-space:nowrap;background:var(--sel-bg);border-color:var(--accent)">💾 저장</button>
+                  </div>
                 </div>
-                <div style="margin-top:8px;font-size:12px;color:var(--sub)">글씨 크기 <span id="capSizeV">54</span>px
-                  <input id="capSize" type="range" min="28" max="96" value="54" oninput="updateCaption()" style="width:100%"></div>
-                <div style="font-size:12px;color:var(--sub)">세로 위치 <span id="capYV">84</span>%
-                  <input id="capY" type="range" min="0" max="100" value="84" oninput="CAP_POS_TOUCHED=true;updateCaption()" style="width:100%"></div>
-                <div class="hint" style="margin-top:4px;font-size:11px">💡 미리보기에서 자막을 <b>드래그</b>하면 원하는 자리로 옮겨져요.</div>
-                <button type="button" id="capResetRegionBtn" class="tab" onclick="resetCapToRegion()" style="display:none;flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;margin-top:6px;white-space:nowrap">↩ 지워진 자막 자리(1번)로 되돌리기</button>
-                <label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;cursor:pointer">
-                  <input id="capOutline" type="checkbox" checked onchange="updateCaption()"> 외곽선
-                  <input id="capOutColor" type="color" value="#000000" oninput="updateCaption()">
-                  <span style="color:var(--sub)">두께 <input id="capOutW" type="range" min="0" max="12" value="5" oninput="updateCaption()"></span>
-                </label>
-                <label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;cursor:pointer">
-                  <input id="capBox" type="checkbox" onchange="updateCaption()"> 배경 박스<span style="color:var(--sub);font-size:11px">(켜면 하단 바 대신 글자마다 박스)</span>
-                  <input id="capBoxColor" type="color" value="#000000" oninput="updateCaption()">
-                  <span style="color:var(--sub)">여백 <input id="capBoxPad" type="range" min="0" max="40" value="12" oninput="updateCaption()"></span>
-                  <span style="color:var(--sub)">투명도 <input id="capBoxOpacity" type="range" min="20" max="100" value="80" oninput="updateCaption()"></span>
-                </label>
-                <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;align-items:center">
-                  <span style="font-size:12px;color:var(--sub)">효과:</span>
-                  <button type="button" class="capEff tab active" data-eff="none" onclick="setCapEffect('none')" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;white-space:nowrap">없음</button>
-                  <button type="button" class="capEff tab" data-eff="fade" onclick="setCapEffect('fade')" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;white-space:nowrap">페이드</button>
-                  <button type="button" class="capEff tab" data-eff="slide" onclick="setCapEffect('slide')" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;white-space:nowrap">슬라이드</button>
-                  <button type="button" class="capEff tab" data-eff="pop" onclick="setCapEffect('pop')" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;white-space:nowrap">팝</button>
-                  <button type="button" class="capEff tab" data-eff="sparkle" onclick="setCapEffect('sparkle')" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;white-space:nowrap">✦ 반짝(CTA)</button>
+
+                <!-- ① 글씨 -->
+                <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px">
+                  <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:8px">① 글씨</div>
+                  <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+                    <label style="font-size:12px;color:var(--sub)">폰트
+                      <select id="capFont" onchange="updateCaption()" style="background:#0a1017;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:5px 8px"></select></label>
+                    <label style="font-size:12px;color:var(--sub)">색상
+                      <input id="capColor" type="color" value="#FFFFFF" oninput="updateCaption()" style="vertical-align:middle;cursor:pointer"></label>
+                  </div>
+                  <div style="margin-top:8px;font-size:12px;color:var(--sub)">크기 <b id="capSizeV">54</b>px
+                    <input id="capSize" type="range" min="28" max="96" value="54" oninput="updateCaption()" style="width:100%"></div>
+                </div>
+
+                <!-- ② 자리 -->
+                <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px">
+                  <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:8px">② 자리</div>
+                  <div style="font-size:12px;color:var(--sub)">세로 위치 <b id="capYV">84</b>%
+                    <input id="capY" type="range" min="0" max="100" value="84" oninput="CAP_POS_TOUCHED=true;updateCaption()" style="width:100%"></div>
+                  <div class="hint" style="margin-top:6px;font-size:11px">💡 미리보기에서 끌어도 옮겨져요.</div>
+                  <button type="button" id="capResetRegionBtn" class="tab" hidden onclick="resetCapToRegion()" style="display:none !important;flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;margin-top:6px;white-space:nowrap">↩ 지워진 자막 자리(1번)로 되돌리기</button>
+                </div>
+
+                <!-- ③ 테두리·박스·효과 -->
+                <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px">
+                  <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:8px">③ 테두리 · 박스 · 효과</div>
+                  <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+                    <input id="capOutline" type="checkbox" checked onchange="updateCaption()"> 외곽선
+                    <input id="capOutColor" type="color" value="#000000" oninput="updateCaption()">
+                    <span style="color:var(--sub);font-size:12px">두께 <input id="capOutW" type="range" min="0" max="12" value="5" oninput="updateCaption()"></span>
+                  </label>
+                  <label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;cursor:pointer">
+                    <input id="capBox" type="checkbox" onchange="updateCaption()"> 배경 박스
+                    <input id="capBoxColor" type="color" value="#000000" oninput="updateCaption()">
+                    <span style="color:var(--sub);font-size:12px">여백 <input id="capBoxPad" type="range" min="0" max="40" value="12" oninput="updateCaption()"></span>
+                    <span style="color:var(--sub);font-size:12px">투명도 <input id="capBoxOpacity" type="range" min="20" max="100" value="80" oninput="updateCaption()"></span>
+                  </label>
+                  <div class="hint" style="font-size:11px;margin-top:4px"></div>
+                  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;align-items:center">
+                    <span style="font-size:12px;color:var(--sub)">효과</span>
+                    <button type="button" class="capEff tab active" data-eff="none" onclick="setCapEffect('none')" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;white-space:nowrap">없음</button>
+                    <button type="button" class="capEff tab" data-eff="fade" onclick="setCapEffect('fade')" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;white-space:nowrap">페이드</button>
+                    <button type="button" class="capEff tab" data-eff="sparkle" onclick="setCapEffect('sparkle')" style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;white-space:nowrap">✦ 반짝(CTA)</button>
+                  </div>
                 </div>
               </div>
               </details>
 
-              <!-- ── 🎬 모션 팩 ── -->
-              <details style="border-top:1px dashed var(--line)">
+              <!-- ── 🎬 모션 팩 ── 사장님 지시로 감춤(2026-08-22).
+                   ★삭제 아님: STATE.deco.motion.pack_id 배선이 살아있어야 완성 스타일이
+                   지정한 모션과 옛 작업이 그대로 렌더된다. -->
+              <details hidden style="border-top:1px dashed var(--line);display:none">
                 <summary style="cursor:pointer;font-size:13px;font-weight:700;padding:8px 0">🎬 모션 팩</summary>
                 <div style="padding:2px 0 12px">
                   <select id="motionPack" onchange="pickMotionPack(this.value)" style="width:100%;padding:6px;border-radius:6px">
@@ -1495,8 +1609,8 @@
               </details>
 
               <!-- ── 🏷 워터마크·추가텍스트·BGM·이미지 ── -->
-              <details style="border-top:1px dashed var(--line)">
-                <summary style="cursor:pointer;font-size:13px;font-weight:700;padding:8px 0">🏷 워터마크 · 추가 텍스트 · BGM · 이미지</summary>
+              <details style="border-top:1px dashed var(--line)" open>
+                <summary style="cursor:pointer;font-size:13px;font-weight:700;padding:8px 0">🏷 워터마크 · 이미지</summary>
                 <div style="padding:2px 0 12px">
                 <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
                   <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
@@ -1509,18 +1623,50 @@
                     </select></label>
                   <label style="font-size:12px;color:var(--sub)">투명도 <input id="wmAlpha" type="range" min="20" max="100" value="60" oninput="updateDeco()"></label>
                 </div>
-                <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-                  <span style="font-size:13px;font-weight:600">➕ 추가 텍스트</span>
-                  <button class="tab" onclick="addExtraText()" style="flex:0 0 auto;min-width:auto;padding:5px 13px;font-size:12px;white-space:nowrap">+ 텍스트 추가</button>
-                  <span class="hint">미리보기에서 <b>드래그</b>로 위치 이동</span>
+                <!-- 🔴 [광고] 표시 — 틀(템플릿)에 들어가는 값이지만 공통 기능이라 여기 둔다
+                     (2026-08-22 사장님 지시). ★값의 주인은 숨은 frAd 하나 —
+                     여기선 그 칸에 써넣고 frUpdate()를 부른다(0순위-B). -->
+                <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px">
+                  <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+                    <input id="adBadgeOn" type="checkbox" onchange="setAdBadge(this.checked)">
+                    <b>[광고] 표시</b>
+                  </label>
+                  <div id="adBadgeHint" class="hint" style="font-size:11px;margin-top:4px;display:none">템플릿 탭에서 틀을 먼저 고르세요.</div>
+                  <!-- 크기·흐리기·위치 다듬기(2026-08-22 사장님 "크기나 마우스로 위치조정 흐리기등").
+                       ★값의 주인은 아래 숨은 칸(frAdSize/frAdAlpha/frAdX/frAdY) 하나다 —
+                         여기 슬라이더는 그 칸에 써넣고 frUpdate()를 부른다(0순위-B). -->
+                  <div id="adBadgeTune" style="margin-top:8px;display:none">
+                    <label style="display:block;font-size:12px;color:var(--sub);margin-bottom:4px">
+                      크기 <b id="frAdSizeV">자동</b>
+                      <input id="frAdSize" type="range" min="0" max="120" step="2" value="0"
+                             oninput="frUpdate()" style="width:100%"></label>
+                    <label style="display:block;font-size:12px;color:var(--sub)">
+                      흐리기 <b id="frAdAlphaV">또렷</b>
+                      <input id="frAdAlpha" type="range" min="10" max="100" step="5" value="100"
+                             oninput="frUpdate()" style="width:100%"></label>
+                    <div class="hint" style="font-size:11px;margin-top:2px">
+                      위치는 왼쪽 미리보기에서 <b>[광고]를 끌어서</b> 옮기세요.
+                      <button type="button" class="btn" style="padding:2px 8px;font-size:11px;margin-left:6px;background:var(--inset);border:1px solid var(--line);color:var(--sub)"
+                              onclick="frAdReset()">처음 자리로</button>
+                    </div>
+                  </div>
                 </div>
-                <div id="extraTextList"></div>
-                <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;border-top:1px dashed var(--line);padding-top:12px">
-                  <span style="font-size:13px;font-weight:600">🎵 배경음악(BGM)</span>
-                  <input id="bgmFile" type="file" accept="audio/*,.mp3,.wav,.m4a" onchange="uploadBgm(this)" style="font-size:12px;max-width:220px">
+                <!-- 숨은 진짜 칸: 위치는 드래그가 써넣는다 -->
+                <label hidden style="display:none"><input id="frAdX" type="number" value="0" onchange="frUpdate()"></label>
+                <label hidden style="display:none"><input id="frAdY" type="number" value="0" onchange="frUpdate()"></label>
+                <!-- 숨은 진짜 칸: frFill/frUpdate가 이 id를 읽고 쓴다(지우면 배선이 끊긴다) -->
+                <label hidden style="display:none"><input id="frAd" type="checkbox" onchange="frUpdate()"></label>
+                <!-- 추가 텍스트: 사장님 지시로 화면에서 뺌(2026-08-22).
+                     ★#extraTextList는 남긴다 — renderExtraTexts()가 이 자리를 찾고,
+                     예전 작업에 저장된 extra_texts는 렌더에 그대로 살아있다. -->
+                <div id="extraTextList" hidden style="display:none"></div>
+                <!-- 배경음악(BGM): 사장님 지시로 화면에서 뺌(2026-08-22).
+                     ★입력칸을 통째로 지우면 uploadBgm()이 bgmStatus에 널가드 없이 쓰다 터진다.
+                     숨겨서 배선을 살려두면 예전 작업의 bgm도 그대로 렌더된다. -->
+                <div hidden style="display:none">
+                  <input id="bgmFile" type="file" accept="audio/*,.mp3,.wav,.m4a" onchange="uploadBgm(this)">
                   <span id="bgmStatus" class="hint"></span>
-                  <label style="font-size:12px;color:var(--sub)">볼륨 <input id="bgmVol" type="range" min="0" max="60" value="15" oninput="updateBgmVol()"> <span id="bgmVolV">15</span>%</label>
-                  <button onclick="clearBgm()" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:12px">제거</button>
+                  <input id="bgmVol" type="range" min="0" max="60" value="15" oninput="updateBgmVol()"><span id="bgmVolV">15</span>
                 </div>
                 </div>
               </details>
@@ -1544,7 +1690,6 @@
                            실제 채널이랑 안 맞는다"로 보였다. -->
                       <label>채널명 <input id="frChannel" oninput="frUpdate()" placeholder="내 채널 이름"
                         style="width:150px;padding:5px 8px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--txt)"></label>
-                      <label style="cursor:pointer"><input id="frAd" type="checkbox" onchange="frUpdate()"> [광고]</label>
                       <label style="cursor:pointer"><input id="frIcons" type="checkbox" checked onchange="frUpdate()"> ☰ 🔍</label>
                     </div>
                     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:12px;margin-top:8px">
@@ -1559,30 +1704,52 @@
                         style="width:70px;padding:5px 8px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--txt)"></label>
                     </div>
                     <!-- 띠 높이: 슬라이더는 시니어에게 어렵다(딸깍/시니어 북극성) → −/＋ 버튼을 같이 둔다 -->
-                    <div style="display:flex;gap:8px;align-items:center;font-size:12px;margin-top:8px">
-                      <span style="min-width:56px">⬆ 위 띠</span>
-                      <button type="button" class="tab" onclick="frBar('frBar',-20)" style="min-width:auto;padding:4px 12px;font-size:14px">−</button>
-                      <input id="frBar" type="range" min="0" max="400" step="10" value="190" oninput="frUpdate()" style="width:150px">
-                      <button type="button" class="tab" onclick="frBar('frBar',20)" style="min-width:auto;padding:4px 12px;font-size:14px">＋</button>
-                      <span id="frBarVal" style="color:var(--sub);min-width:52px">190px</span>
+                    <!-- 띠 높이: 슬라이더·버튼을 빼고 **미리보기에서 끌어서만** 조절한다
+                         (2026-08-22 사장님 "마우스로 조절키만").
+                         ★입력칸은 지우지 않고 숨긴다 — frUpdate/frFill/드래그 손잡이가
+                         전부 이 칸을 읽고 쓴다. 지우면 배선이 통째로 끊긴다. -->
+                    <div style="display:flex;gap:14px;align-items:center;font-size:12px;margin-top:8px;flex-wrap:wrap">
+                      <span style="color:var(--sub)">⬆ 위 띠 <b id="frBarVal" style="color:var(--txt)">190px</b></span>
+                      <span style="color:var(--sub)">⬇ 아래 띠 <b id="frBottomVal" style="color:var(--txt)">0px</b></span>
+                      <span class="hint" style="font-size:11px">미리보기에서 띠 경계를 끌어 조절하세요</span>
                     </div>
-                    <div style="display:flex;gap:8px;align-items:center;font-size:12px;margin-top:6px">
-                      <span style="min-width:56px">⬇ 아래 띠</span>
-                      <button type="button" class="tab" onclick="frBar('frBottom',-20)" style="min-width:auto;padding:4px 12px;font-size:14px">−</button>
-                      <input id="frBottom" type="range" min="0" max="400" step="10" value="0" oninput="frUpdate()" style="width:150px">
-                      <button type="button" class="tab" onclick="frBar('frBottom',20)" style="min-width:auto;padding:4px 12px;font-size:14px">＋</button>
-                      <span id="frBottomVal" style="color:var(--sub);min-width:52px">0px</span>
+                    <div hidden style="display:none">
+                      <input id="frBar" type="range" min="0" max="400" step="10" value="190" oninput="frUpdate()">
+                      <input id="frBottom" type="range" min="0" max="400" step="10" value="0" oninput="frUpdate()">
+                    </div>
+                    <!-- 🎨 글자 꾸미기(2026-08-22 신설) — 제목·채널명의 폰트·크기·가로위치.
+                         ★크기 0 = '자동'(프리셋이 정한 값). 0을 "0px"로 읽으면 글자가 사라진다. -->
+                    <div style="border-top:1px dashed var(--line);margin-top:10px;padding-top:10px">
+                      <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:6px">🎨 글자 꾸미기</div>
+                      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:12px">
+                        <span style="min-width:44px">제목</span>
+                        <select id="frTtFont" onchange="frUpdate()" style="background:#0a1017;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:5px 8px;font-size:12px"></select>
+                        <span>크기 <b id="frTtSizeV" style="color:var(--sub)">자동</b></span>
+                        <input id="frTtSize" type="range" min="0" max="140" step="2" value="0" oninput="frUpdate()" style="width:110px">
+                        <span>가로 <b id="frTtXV" style="color:var(--sub)">50%</b></span>
+                        <input id="frTtX" type="range" min="0" max="100" value="50" oninput="frUpdate()" style="width:110px">
+                      </div>
+                      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:12px;margin-top:8px">
+                        <span style="min-width:44px">채널명</span>
+                        <select id="frChFont" onchange="frUpdate()" style="background:#0a1017;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:5px 8px;font-size:12px"></select>
+                        <span>크기 <b id="frChSizeV" style="color:var(--sub)">자동</b></span>
+                        <input id="frChSize" type="range" min="0" max="140" step="2" value="0" oninput="frUpdate()" style="width:110px">
+                        <span>가로 <b id="frChXV" style="color:var(--sub)">50%</b></span>
+                        <input id="frChX" type="range" min="0" max="100" value="50" oninput="frUpdate()" style="width:110px">
+                      </div>
+                      <div class="hint" style="font-size:11px;margin-top:6px">크기를 맨 왼쪽(자동)에 두면 틀이 정한 크기를 씁니다.</div>
                     </div>
                   </div>
                 </div>
-                <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:12px">
-                  <div style="font-size:13px;font-weight:800;margin-bottom:6px">🖼 템플릿
-                    <span style="font-size:11px;color:var(--sub);font-weight:400">— 영상 위에 얹는 틀(색띠만)</span></div>
-                  <div id="tplCards" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px"></div>
-                  <div style="font-size:12px;color:var(--sub)">표시 구간
-                    <label style="margin-left:8px;cursor:pointer"><input type="radio" name="tplSpan" value="full" checked onchange="setTemplateSpan('full')"> 영상 전체</label>
-                    <label style="margin-left:8px;cursor:pointer"><input type="radio" name="tplSpan" value="first" onchange="setTemplateSpan('first')"> 첫 장면만</label>
-                  </div>
+                <!-- 🖼 색띠 템플릿 카드줄: 사장님 지시로 감춤(2026-08-22 "이미 위에 있으니").
+                     ★삭제 아님 — renderTemplateCards()가 이 자리를 찾고, 예전 작업이
+                     색띠 템플릿(STATE.deco.template.id)을 쓰고 있으면 그대로 렌더된다. -->
+                <div id="tplCards" hidden style="display:none"></div>
+                <!-- ★'표시 구간'은 남긴다: setTemplateSpan은 색띠 전용이 아니라
+                     STATE.deco.template 전체(위쪽 '내용물 있는 틀' 포함)에 걸린다. -->
+                <div style="font-size:12px;color:var(--sub);margin-bottom:12px">표시 구간
+                  <label style="margin-left:8px;cursor:pointer"><input type="radio" name="tplSpan" value="full" checked onchange="setTemplateSpan('full')"> 영상 전체</label>
+                  <label style="margin-left:8px;cursor:pointer"><input type="radio" name="tplSpan" value="first" onchange="setTemplateSpan('first')"> 첫 장면만</label>
                 </div>
                 <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;border-top:1px dashed var(--line);padding-top:12px">
                   <span style="font-size:13px;font-weight:600">🖼 이미지 오버레이</span>
@@ -1695,13 +1862,13 @@
       <div id="inpockBox" style="margin-bottom:12px"></div>
       <!-- ◀ 좌: 미리보기(9:16, 2단계 미리보기와 같은 자리 규약) / 우: 렌더 버튼·상태·내보내기 -->
       <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start">
-        <div style="flex:0 1 300px;min-width:240px">
+        <div style="flex:0 1 var(--fin-w);min-width:var(--fin-w)">
           <div class="hint" style="margin-bottom:6px">🪞 완성 영상 (9:16)</div>
           <div id="finalVideo"></div>
         </div>
         <!-- 🖼 6단계에서 고른 썸네일이 여기로 온다(2026-08-04). 예전엔 골라도 소비하는 곳이
              0곳이라 최종 화면에서 확인할 길이 없었다 → 카톡 전송도 영상만 갔다. -->
-        <div style="flex:0 1 200px;min-width:160px">
+        <div style="flex:0 1 var(--fin-w);min-width:var(--fin-w)">
           <div class="hint" style="margin-bottom:6px">🖼 썸네일 (커버)</div>
           <div id="finalThumb"></div>
         </div>
@@ -1729,9 +1896,11 @@
     <section class="panel" data-step="7">
       <h3 data-steptitle="mix">3 · 영상대본MIX</h3>
       <div class="sub">문장마다 어떤 화면이 붙는지 정하고 미리 봅니다 — 아래 타임프레임이 <b>영상 전체의 흐름</b>입니다.</div>
-      <!-- ★미리보기 버튼은 **머리글 바로 아래**(2026-08-17 사장님) — 예전엔 단계바 한참
-           아래에 있어 빈 공간을 사이에 두고 떨어져 있었다. 자리만 옮기고 그리는 코드
-           (#mixPreviewCta에 innerHTML)는 그대로다 — 이 id는 화면에 하나뿐이어야 한다. -->
+      <!-- ★확정 버튼(#mixPreviewCta)을 없앴다(2026-08-22 사장님
+           "이거 2개는 삭제하고 완성본 만들기 이 자리에 … 이걸 누르면 랜더되는걸로").
+           장면 편집 안 [완성본 만들기] 탭이 렌더 입구가 됐다(scene_lab.html _askRender).
+           ※#btnPreview를 참조하는 코드(startPreview 등)는 전부 if(btn) 가드가 있어
+             그대로 둔다 — 지우면 다른 경로가 깨진다. -->
       <!-- ★2단계 확정 대본 ↔ 지금 붙어 있는 job의 대본이 다르면 여기서 알린다(2026-08-18
            사장님 제보 "2번 대본이랑 3번 대본이랑 다르게 들어간다"). 자동 재매칭은 안 한다 —
            재매칭은 render 크레딧이 나가는 유료 동작이라 반드시 사람이 눌러야 한다. -->
@@ -1742,7 +1911,15 @@
         <button class="btn-next" style="margin-left:8px;padding:6px 14px"
                 onclick="startProduceMix()">✔ 확정한 대본으로 다시 매칭</button>
       </div>
-      <div id="mixPreviewCta" style="margin:10px 0 4px"></div>
+      <!-- ★빈 칸 경고는 확정 버튼과 **함께 지우면 안 된다**(2026-08-22). 예전엔 이 줄이
+           #mixPreviewCta의 innerHTML 안에 같이 그려졌는데, 버튼을 지우면서 경고까지
+           사라지면 "왜 확정이 안 되는지" 아무도 모른다(startPreview의 EMPTY_BEATS 가드는
+           누른 뒤에야 토스트를 띄운다 — 누르기 전에 보이는 경고가 따로 필요하다).
+           그래서 마크업에 상시 자리를 두고 sceneLabEmptyBeats가 채운다. -->
+      <div id="emptyBeatHint" style="display:none;margin:8px 0 4px;font-size:13px;color:var(--fire);font-weight:600"></div>
+      <!-- 옛 도구(훅 시작점 미세조정·다시 만들기) 자리. SHOW_OLD_SCENE_TOOLS=false라
+           평소엔 비어 있다 — 켰을 때 그려질 곳이 필요해 남긴다(예전엔 #mixPreviewCta였다). -->
+      <div id="mixOldTools"></div>
       <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start">
         <!-- ◀ 좌측 레일: ③ 미리보기(9:16) — 편집안이 뜨면(loadMixReview) 여기가 프리뷰 자리가 된다.
              T8: 다른 패널의 .previewSlot과 같은 규약(sticky) 공유. -->
@@ -1841,7 +2018,10 @@
       <div class="sub">쓸 대본을 고르고 다듬습니다.</div>
       <!-- ★모드 클래스(mode-tab/mode-side)는 이 컨테이너에 붙는다 — 목업은 단독 페이지라
            body에 붙였지만 여기선 한 패널일 뿐이라 전역을 더럽히면 안 된다. -->
-      <div id="s2Root" class="mode-tab">
+      <!-- ★기본 보기 = 좌우(2026-08-22 사장님 지시). 두 안을 나란히 놓고 고르는 게
+           기본 사용법인데 기본값이 탭이라 매번 손으로 바꿔야 했다.
+           ⚠️아래 버튼의 class="on"과 **짝**이다 — 한쪽만 고치면 화면과 버튼이 어긋난다. -->
+      <div id="s2Root" class="mode-side">
 
         <!-- ① 재료 — ★고르는 자리가 아니다(2026-08-17 사장님 지시로 '씨앗 선택' 폐지).
              대본 1편을 지정하면 그 편에 끌려가 편협해지고, 무엇보다 **어느 편을 고르냐가
@@ -1885,8 +2065,8 @@
             <div class="s2-label" id="s2ResultLabel">③ 결과 대본</div>
             <div class="s2-modes">
               보기
-              <button id="s2ModeTab" class="on" onclick="s2SetMode('tab')">🗂 탭</button>
-              <button id="s2ModeSide" onclick="s2SetMode('side')">↔ 좌우</button>
+              <button id="s2ModeTab" onclick="s2SetMode('tab')">🗂 탭</button>
+              <button id="s2ModeSide" class="on" onclick="s2SetMode('side')">↔ 좌우</button>
             </div>
           </div>
           <div class="s2-tabs" id="s2Tabs"></div>
@@ -2068,19 +2248,21 @@ async function initMatch(){
     //   ⚠️ 2단계 확정 시점에 걸지 않는 이유는 그대로 유효하다: 대본을 다듬기도 전에
     //      시작하면 2단계가 존재 이유를 잃고, 대본이 바뀌면 매칭을 버려야 한다(=과금 낭비).
     if(!(STATE.script || '').trim()){
-      if(st) st.textContent = '아직 대본이 없어요 — ' + stepName('script')
-        + '에서 대본을 먼저 만들고 확정해주세요.';
+      setMixStatusText('아직 대본이 없어요 — ' + stepName('script')
+        + '에서 대본을 먼저 만들고 확정해주세요.');
       return;
     }
     if(_MIX_AUTOSTARTED) return;    // 실패한 뒤 다시 안 들어오게(요금·무한루프 방지)
     _MIX_AUTOSTARTED = true;
-    if(st) st.textContent = '⏳ 대본에 화면을 붙이는 중이에요…';
+    drawMixStatus('⏳ 대본에 화면을 붙이는 중이에요…', true);   // 도는 중 표시
     try{ await startProduceMix(); }
     catch(e){
       _MIX_AUTOSTARTED = false;     // 진짜 실패는 다시 시도할 수 있어야 한다
-      if(st) st.innerHTML = '❌ 화면 붙이기를 시작하지 못했어요.'
-        + '<div style="margin-top:10px"><button class="cta-shine" onclick="initMatch()">'
-        + '다시 시도</button></div>';
+      // 실패 — 도는 점을 지우고(hint 복귀) 재시도 버튼을 붙인다.
+      const _st = setMixStatusText('❌ 화면 붙이기를 시작하지 못했어요.');
+      if(_st) _st.insertAdjacentHTML('beforeend',
+        '<div style="margin-top:10px"><button class="cta-shine" onclick="initMatch()">'
+        + '다시 시도</button></div>');
     }
     return;
   }
@@ -2104,8 +2286,8 @@ async function _remixIfScriptChanged(){
   if(typeof s.script_hash !== 'string' || !s.script_hash) return;   // 옛 job엔 지문이 없다 → 그대로 둔다
   const now = await _scriptHash(STATE.script);
   if(!now || now === s.script_hash) return;                          // 안 바뀌었다
-  const st = document.getElementById('mixStatus');
-  if(st) st.textContent = '✏️ 대본이 바뀌었어요 — 화면을 다시 붙이는 중이에요…';
+  // 이것도 '도는 중'이다 — 도는 점을 붙여 멈춘 것처럼 보이지 않게(2026-08-23).
+  drawMixStatus('✏️ 대본이 바뀌었어요 — 화면을 다시 붙이는 중이에요…', true);
   await startProduceMix();
 }
 // ── 화면 붙이기 끝 ──
@@ -2442,14 +2624,41 @@ async function loadHeadcopySuggest(force){
     }
     HC_COPY_LOADED_HASH=h;
     window._hcCopies=list;
-    box.innerHTML=list.map((c,i)=>
-      `<button type="button" class="tab" onclick="useHeadcopy(${i})" style="min-width:auto;padding:7px 12px;font-size:12px;text-align:left;max-width:220px">`
-      + `<span style="color:var(--accent2);font-size:10px">#${i+1} ${esc(c.label||'')}</span><br>${esc(c.text||'')}</button>`).join('');
+    // ★썸네일 제목 추천(suggestThumbTitles)과 **같은 모양**으로 보여준다(2026-08-24 사장님
+    //   "헤드카피도 템플릿 안에 들어가는 거니 흡수해서"). 두 줄은 두 줄로, 밑에 왜 먹히는지.
+    //   줄바꿈을 그대로 두면 카드에서 한 줄로 붙어 보여 실제 결과와 달라진다.
+    // ★폰트·팩톤은 새로 만들지 않는다 — 썸네일과 같은 HC_FONTS/HC_PRESETS를 쓰는
+    //   hcFont/hcColor가 값의 주인이다(0순위-B). 여기선 색만 더 고를 수 있게 한다.
+    box.innerHTML=list.map((c,i)=>{
+      const shown=esc(c.text||'').split(new RegExp('\\r?\\n')).join('<br>');
+      const cur=(document.getElementById('hcColor')||{}).value||'#FFFFFF';
+      return `<button type="button" class="tab" onclick="useHeadcopy(${i})"`
+      + ` style="min-width:auto;padding:9px 11px;font-size:12px;text-align:left;max-width:240px;white-space:normal;line-height:1.35;height:auto">`
+      + `<span style="color:var(--accent2);font-size:10px">#${i+1} ${esc(c.label||'')}</span>`
+      + `<b style="display:block;font-size:14px;margin-top:2px">${shown}</b>`
+      + (c.why?`<span class="hint" style="display:block;font-size:10px;opacity:.7;margin-top:2px">${esc(c.why)}</span>`:'')
+      + `<span style="display:flex;align-items:center;gap:5px;margin-top:5px">`
+      + `<span class="hint" style="font-size:10px;opacity:.7">글자색</span>`
+      // ★색 고르개를 누를 때 카드까지 눌리면 문구가 멋대로 바뀐다 — 전파를 막는다.
+      + `<input type="color" value="${cur}" onclick="event.stopPropagation()"`
+      + ` oninput="event.stopPropagation();useHeadcopyColor(${i},this.value)"`
+      + ` style="width:26px;height:20px;padding:0;border:1px solid var(--line);border-radius:4px;background:none;cursor:pointer">`
+      + `</span></button>`;
+    }).join('');
     if(msg) msg.textContent='';
   }catch(e){
     box.innerHTML='';
     if(msg) msg.innerHTML='<span style="color:var(--fire)">문구를 불러오지 못했어요(네트워크)</span>';
   }
+}
+// 🎨 카드의 색 고르개 — 그 문구를 넣으면서 글자색까지 한 번에(2026-08-24 사장님
+// "색상변경만 추가로 넣어줘"). ★값의 주인은 hcColor 하나다 — STATE.headcopy를 직접
+// 만지면 값이 두 벌이 돼 반드시 어긋난다(0순위-B). applyPreset과 같은 방식으로 쓴다.
+function useHeadcopyColor(i,color){
+  const g=document.getElementById('hcColor'); if(!g) return;
+  g.value=color;
+  useHeadcopy(i);      // 문구도 함께 넣는다 — 색만 바꾸고 문구가 안 들어오면 헛손질이 된다
+  updateHC();
 }
 function useHeadcopy(i){
   const c=(window._hcCopies||[])[i]; if(!c) return;
@@ -2526,7 +2735,12 @@ function frameUrl(f){
   const q=new URLSearchParams({preset:f.preset||'news_coral', bar_h:f.bar_h??190,
     bottom_h:f.bottom_h??0,
     channel:f.channel||'', title:f.title||'', views:f.views||'', comments:f.comments||'',
-    ad_badge:f.ad_badge?'1':'0', icons:f.icons?'1':'0'});
+    ad_badge:f.ad_badge?'1':'0', icons:f.icons?'1':'0',
+    // 글자 꾸미기(2026-08-22) — 빈값/0이면 서버가 프리셋 기본으로 되돌린다
+    ch_font:f.ch_font||'', ch_size:f.ch_size??0, ch_x:f.ch_x??50,
+    title_font:f.title_font||'', title_size:f.title_size??0, title_x:f.title_x??50,
+    // [광고] 다듬기(2026-08-22) — 0이면 서버가 지금까지의 자리·크기를 그대로 쓴다
+    ad_size:f.ad_size??0, ad_x:f.ad_x??0, ad_y:f.ad_y??0, ad_alpha:f.ad_alpha??100});
   return '/api/produce/frame.png?'+q.toString();
 }
 async function loadFramePresets(){
@@ -2541,14 +2755,38 @@ function renderFramePresets(){
   const box=document.getElementById('frPresets'); if(!box) return;
   const f=(STATE.deco&&STATE.deco.template&&STATE.deco.template.frame)||null;
   const cur=f?f.preset:'';
-  box.innerHTML=`<button type="button" class="tab${f?'':' on'}" onclick="frPick('')"
-      style="min-width:auto;padding:6px 12px;font-size:12px">안 씀</button>`
-    + FR_PRESETS.map(p=>`<button type="button" class="tab${cur===p.id?' on':''}" onclick="frPick('${p.id}')"
-        style="min-width:auto;padding:6px 12px;font-size:12px">
-        <span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${p.bar};margin-right:6px"></span>${esc(p.name)}</button>`).join('');
+  // ★글자만 나열하면 뭐가 뭔지 모른다(2026-08-22 사장님 "시각화 보기편하게").
+  //   각 틀을 **9:16 축소판**으로 그린다 — 띠 색·띠 높이·제목 블록이 한눈에 보인다.
+  //   높이는 실제 bar_h(1920 기준)를 비율로 환산해 **틀마다 다르게** 그린다.
+  const TH=76;                     // 축소판 높이(px). 9:16이라 폭은 자동 43px
+  const card=(on,onclick,thumb,label)=>`<button type="button" class="tab${on?' on':''}" onclick="${onclick}"
+      style="min-width:0;width:100%;padding:6px 4px;font-size:11px;display:flex;flex-direction:column;
+             align-items:center;gap:5px;line-height:1.25">
+      ${thumb}
+      <span style="width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center">${label}</span></button>`;
+  // 한 틀의 축소판: 위 띠(색) + 제목 블록(흰) + 나머지(영상 자리)
+  const thumbOf=p=>{
+    const barPct=Math.max(3, Math.min(45, ((p.bar_h!=null?p.bar_h:190)/1920)*100));
+    const head=p.has_head
+      ? `<div style="position:absolute;left:0;right:0;top:${barPct}%;height:16%;background:#fff;
+           border-bottom:1px solid #d8d8d8"></div>` : '';
+    return `<div style="position:relative;width:${Math.round(TH*9/16)}px;height:${TH}px;border-radius:4px;
+        overflow:hidden;background:#c9ced6;border:1px solid rgba(255,255,255,.18);flex:0 0 auto">
+        <div style="position:absolute;left:0;right:0;top:0;height:${barPct}%;background:${p.bar}"></div>
+        ${head}</div>`;
+  };
+  const noneThumb=`<div style="width:${Math.round(TH*9/16)}px;height:${TH}px;border-radius:4px;
+      border:1px dashed var(--line);display:flex;align-items:center;justify-content:center;
+      color:var(--sub);font-size:10px;flex:0 0 auto">없음</div>`;
+  // 축소판이 커졌으니 한 줄에 4칸(폭이 좁으면 자동으로 줄어든다)
+  box.style.cssText='display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:6px;'
+    +'max-height:280px;overflow-y:auto;margin-bottom:10px;padding-right:2px';
+  box.innerHTML = card(!f, "frPick('')", noneThumb, '안 씀')
+    + FR_PRESETS.map(p=>card(cur===p.id, `frPick('${p.id}')`, thumbOf(p), esc(p.name))).join('');
   const fields=document.getElementById('frFields');
   if(fields) fields.style.display=f?'':'none';
-  if(f) frFill(f);
+  fillFrameFontSelects();
+  if(f) frFill(f); else syncAdBadge();
 }
 function frFill(f){
   const g=id=>document.getElementById(id);
@@ -2562,6 +2800,22 @@ function frFill(f){
   if(g('frBarVal')) g('frBarVal').textContent=(f.bar_h??190)+'px';
   if(g('frBottom')) g('frBottom').value=f.bottom_h??0;
   if(g('frBottomVal')) g('frBottomVal').textContent=(f.bottom_h??0)+'px';
+  // 글자 꾸미기 — 저장된 값이 없으면 '자동'(0/50)으로 되돌린다
+  if(g('frChFont')) g('frChFont').value=f.ch_font||'';
+  if(g('frChSize')) g('frChSize').value=f.ch_size??0;
+  if(g('frAdSize')) g('frAdSize').value=f.ad_size??0;
+  if(g('frAdAlpha')) g('frAdAlpha').value=f.ad_alpha??100;
+  if(g('frAdX')) g('frAdX').value=f.ad_x??0;
+  if(g('frAdY')) g('frAdY').value=f.ad_y??0;
+  if(g('frChX')) g('frChX').value=f.ch_x??50;
+  if(g('frTtFont')) g('frTtFont').value=f.title_font||'';
+  if(g('frTtSize')) g('frTtSize').value=f.title_size??0;
+  if(g('frTtX')) g('frTtX').value=f.title_x??50;
+  if(g('frChSizeV')) g('frChSizeV').textContent=(f.ch_size?f.ch_size+'px':'자동');
+  if(g('frTtSizeV')) g('frTtSizeV').textContent=(f.title_size?f.title_size+'px':'자동');
+  if(g('frChXV')) g('frChXV').textContent=(f.ch_x??50)+'%';
+  if(g('frTtXV')) g('frTtXV').textContent=(f.title_x??50)+'%';
+  fillFrameFontSelects(); syncAdBadge();
 }
 function frPick(preset){
   if(!STATE.deco) STATE.deco={extra_texts:[], motion:null};
@@ -2609,6 +2863,25 @@ function frUpdate(){
   f.icons=!!(g('frIcons')||{}).checked;
   f.bar_h=parseInt((g('frBar')||{}).value||190,10);
   f.bottom_h=parseInt((g('frBottom')||{}).value||0,10);
+  // 글자 꾸미기 — 값의 주인은 이 입력칸들 하나뿐(0순위-B)
+  f.ch_font=(g('frChFont')||{}).value||'';
+  f.ch_size=parseInt((g('frChSize')||{}).value||0,10);
+  f.ch_x=parseInt((g('frChX')||{}).value||50,10);
+  f.title_font=(g('frTtFont')||{}).value||'';
+  f.title_size=parseInt((g('frTtSize')||{}).value||0,10);
+  f.title_x=parseInt((g('frTtX')||{}).value||50,10);
+  f.ad_size=parseInt((g('frAdSize')||{}).value||0,10);
+  f.ad_alpha=parseInt((g('frAdAlpha')||{}).value||100,10);
+  f.ad_x=parseInt((g('frAdX')||{}).value||0,10);
+  f.ad_y=parseInt((g('frAdY')||{}).value||0,10);
+  if(g('frAdSizeV')) g('frAdSizeV').textContent=f.ad_size?f.ad_size+'px':'자동';
+  if(g('frAdAlphaV')) g('frAdAlphaV').textContent=f.ad_alpha>=100?'또렷':f.ad_alpha+'%';
+  // 다듬기 칸은 [광고]를 켰을 때만 보인다(꺼져 있으면 조절할 대상이 없다)
+  if(g('adBadgeTune')) g('adBadgeTune').style.display=f.ad_badge?'':'none';
+  const lab=(id,v,suf)=>{ const t=g(id); if(t) t.textContent=(v?v+suf:'자동'); };
+  lab('frChSizeV',f.ch_size,'px'); lab('frTtSizeV',f.title_size,'px');
+  if(g('frChXV')) g('frChXV').textContent=f.ch_x+'%';
+  if(g('frTtXV')) g('frTtXV').textContent=f.title_x+'%';
   if(g('frBarVal')) g('frBarVal').textContent=f.bar_h+'px';
   if(g('frBottomVal')) g('frBottomVal').textContent=f.bottom_h+'px';
   renderTemplatePreview(); saveHeadcopy();
@@ -2617,6 +2890,173 @@ function frBar(id, delta){
   const el=document.getElementById(id); if(!el) return;
   el.value=Math.max(0, Math.min(400, parseInt(el.value||0,10)+delta));
   frUpdate();
+}
+// ── 🖱 띠 높이 드래그 조절(2026-08-22 사장님 "끄트머리 잡고 잡아당기면 조정되게") ──
+// 서버가 그린 틀 그림(#tplPreview)은 pointer-events:none이라 그 위를 잡을 수 없다.
+// → 띠 경계에 **투명 손잡이**를 얹고, 끌면 슬라이더 값을 고쳐 frUpdate()를 부른다.
+// ★값의 주인은 여전히 frBar/frBottom 입력칸 하나다(0순위-B) — 여기선 그 칸에 써넣기만 한다.
+// ★띠 높이는 **1920 기준 px**이다(deco_frame.py: W,H=1080,1920).
+//   미리보기는 폭이 변하는 반응형이라 배율을 상수로 박으면 안 되고, 그때그때 실제 높이로 환산한다.
+const FR_MAX_BAR=400;   // 슬라이더 상한과 같은 값
+function frDragScale(){
+  const pv=document.getElementById('hcPreview');
+  const h=pv?pv.getBoundingClientRect().height:0;
+  return h>0 ? (1920/h) : 0;     // 화면 1px이 영상 몇 px인가
+}
+function syncFrameHandles(){
+  const pv=document.getElementById('hcPreview'); if(!pv) return;
+  try{ syncAdHandle(); }catch(e){}   // [광고] 손잡이도 같은 시점에 맞춘다
+  const t=STATE.deco&&STATE.deco.template;
+  const on=!!(t&&t.frame);
+  ['frHandleTop','frHandleBottom'].forEach(id=>{
+    let el=document.getElementById(id);
+    if(!on){ if(el) el.style.display='none'; return; }
+    if(!el){
+      el=document.createElement('div');
+      el.id=id;
+      // z-index는 틀 그림(4)보다 위. 높이 14px의 얇은 띠 — 손이 닿되 화면은 안 가린다.
+      el.style.cssText='position:absolute;left:0;width:100%;height:14px;cursor:ns-resize;z-index:6;'
+        +'display:flex;align-items:center;justify-content:center';
+      el.innerHTML='<div style="width:44px;height:4px;border-radius:3px;background:rgba(255,255,255,.85);'
+        +'box-shadow:0 0 0 1px rgba(0,0,0,.45)"></div>';
+      el.title='끌어서 띠 높이 조절';
+      pv.appendChild(el);
+      bindFrameHandle(el, id==='frHandleTop'?'frBar':'frBottom');
+    }
+    el.style.display='flex';   // ★''로 두면 cssText의 flex까지 지워져 막대가 왼쪽에 붙는다
+    const scale=frDragScale(); if(!scale) return;
+    const f=t.frame;
+    if(id==='frHandleTop') el.style.top=Math.max(0,(f.bar_h??190)/scale-7)+'px';
+    else                   el.style.bottom=Math.max(0,(f.bottom_h??0)/scale-7)+'px';
+  });
+}
+// ── 🖱 [광고] 위치 드래그(2026-08-22 사장님 "마우스로 위치조정") ─────────────────
+// 띠 손잡이와 같은 원리다: 서버 그림 위에 **투명 손잡이**를 얹고, 끌면 숨은 칸
+// (frAdX/frAdY)에 %를 써넣고 frUpdate()를 부른다. 값의 주인은 그 칸 하나(0순위-B).
+// ★기본 자리는 서버(deco_frame)가 정한다 — 여기서 다시 계산하면 두 벌이 돼 어긋난다.
+//   그래서 "아직 안 정했을 때"의 표시 좌표만 서버 기본과 같은 값으로 맞춰 둔다.
+const FR_AD_DEF_X = 984 / 1080 * 100;          // 오른쪽 아이콘 위(deco_frame: W-96)
+function frAdDefaultY(barH){                    // 띠가 있으면 띠 안, 없으면 위 여백 40px
+  const y = barH > 0 ? Math.max(14, barH / 2 - barH * 0.28) : 40;
+  return y / 1920 * 100;
+}
+function frAdReset(){
+  const gx=document.getElementById('frAdX'), gy=document.getElementById('frAdY');
+  if(gx) gx.value=0;
+  if(gy) gy.value=0;
+  frUpdate();
+}
+function syncAdHandle(){
+  const pv=document.getElementById('hcPreview'); if(!pv) return;
+  const t=STATE.deco&&STATE.deco.template;
+  const f=t&&t.frame;
+  let el=document.getElementById('frHandleAd');
+  const on=!!(f&&f.ad_badge);
+  if(!on){ if(el) el.style.display='none'; return; }
+  if(!el){
+    el=document.createElement('div');
+    el.id='frHandleAd';
+    // 틀 그림(z-index 4)보다 위. 반투명 테두리만 — [광고] 글자 자체는 서버 그림이 그린다.
+    el.style.cssText='position:absolute;width:64px;height:30px;margin:-15px 0 0 -32px;'
+      +'cursor:move;z-index:7;border:1px dashed rgba(255,255,255,.75);border-radius:6px;'
+      +'background:rgba(0,0,0,.12)';
+    el.title='끌어서 [광고] 위치 옮기기';
+    pv.appendChild(el);
+    bindAdHandle(el);
+  }
+  el.style.display='block';
+  el.style.left=(f.ad_x||FR_AD_DEF_X)+'%';
+  el.style.top=(f.ad_y||frAdDefaultY(f.bar_h??190))+'%';
+}
+function bindAdHandle(el){
+  const start=(ev)=>{
+    ev.preventDefault(); ev.stopPropagation();
+    const pv=document.getElementById('hcPreview'); if(!pv) return;
+    const gx=document.getElementById('frAdX'), gy=document.getElementById('frAdY');
+    const t=STATE.deco&&STATE.deco.template, f=t&&t.frame; if(!f||!gx||!gy) return;
+    const box=pv.getBoundingClientRect();
+    const px=e=>(e.touches&&e.touches[0])?e.touches[0].clientX:e.clientX;
+    const py=e=>(e.touches&&e.touches[0])?e.touches[0].clientY:e.clientY;
+    const move=e=>{
+      // 미리보기 안 좌표 → %. 1~99로 가둬 화면 밖으로 못 나가게 한다
+      // (서버도 글자 폭만큼 한 번 더 당긴다 — 두 곳이 같은 방향이라 어긋나지 않는다).
+      const xp=Math.round((px(e)-box.left)/box.width*100);
+      const yp=Math.round((py(e)-box.top)/box.height*100);
+      gx.value=Math.max(1, Math.min(99, xp));
+      gy.value=Math.max(1, Math.min(99, yp));
+      frUpdate();
+    };
+    const end=()=>{
+      document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',end);
+      document.removeEventListener('touchmove',move); document.removeEventListener('touchend',end);
+    };
+    document.addEventListener('mousemove',move); document.addEventListener('mouseup',end);
+    document.addEventListener('touchmove',move,{passive:false}); document.addEventListener('touchend',end);
+  };
+  el.addEventListener('mousedown',start);
+  el.addEventListener('touchstart',start,{passive:false});
+}
+function bindFrameHandle(el, inputId){
+  const start=(ev)=>{
+    ev.preventDefault();
+    const input=document.getElementById(inputId); if(!input) return;
+    const scale=frDragScale(); if(!scale) return;
+    const isTop=(inputId==='frBar');
+    const pt=e=>(e.touches&&e.touches[0])?e.touches[0].clientY:e.clientY;
+    const y0=pt(ev), v0=parseInt(input.value||0,10);
+    const move=e=>{
+      const dy=(pt(e)-y0)*scale;              // 화면 이동량 → 영상 px
+      // 위 띠는 아래로 끌면 커지고, 아래 띠는 위로 끌면 커진다(사장님 지시 그대로).
+      const v=Math.round((isTop ? v0+dy : v0-dy)/10)*10;
+      input.value=Math.max(0, Math.min(FR_MAX_BAR, v));
+      frUpdate();
+    };
+    const up=()=>{
+      document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',up);
+      document.removeEventListener('touchmove',move); document.removeEventListener('touchend',up);
+    };
+    document.addEventListener('mousemove',move); document.addEventListener('mouseup',up);
+    document.addEventListener('touchmove',move,{passive:false}); document.addEventListener('touchend',up);
+  };
+  el.addEventListener('mousedown',start);
+  el.addEventListener('touchstart',start,{passive:false});
+}
+// [광고] 표시 — 자막 탭에 둔 스위치. 값의 주인은 숨은 frAd 하나다(0순위-B).
+function setAdBadge(on){
+  const real=document.getElementById('frAd');
+  const hint=document.getElementById('adBadgeHint');
+  if(hint) hint.style.display='none';
+  if(!STATE.deco) STATE.deco={extra_texts:[], motion:null};
+  const hasFrame=!!(STATE.deco.template&&STATE.deco.template.frame);
+  if(!hasFrame){
+    // ★틀이 없어도 쓸 수 있어야 한다(2026-08-22 사장님 지시).
+    //   끄는 거면 만들 것도 없다.
+    if(!on){ if(real) real.checked=false; return; }
+    // 띠 0 · 글자 없음 = **[광고]만 있는 빈 틀**. 서버가 띠 없이 뱃지만 그린다.
+    STATE.deco.template={span:(STATE.deco.template&&STATE.deco.template.span)||'full',
+      frame:{preset:'news_coral', bar_h:0, bottom_h:0, channel:'', title:'',
+             views:'', comments:'', ad_badge:true, icons:false}};
+    if(real) real.checked=true;
+    renderFramePresets(); renderTemplatePreview(); saveHeadcopy();
+    return;
+  }
+  if(real) real.checked=!!on;
+  frUpdate();
+}
+// 틀을 고르거나 작업을 다시 열 때 스위치를 실제 값에 맞춘다
+function syncAdBadge(){
+  const box=document.getElementById('adBadgeOn'); if(!box) return;
+  const f=STATE.deco&&STATE.deco.template&&STATE.deco.template.frame;
+  box.checked=!!(f&&f.ad_badge);
+  const hint=document.getElementById('adBadgeHint'); if(hint) hint.style.display='none';
+}
+// 틀 글자용 폰트 목록 — 정본은 HC_FONTS 하나(0순위-B). '자동'은 프리셋 기본을 뜻한다.
+function fillFrameFontSelects(){
+  ['frTtFont','frChFont'].forEach(id=>{
+    const el=document.getElementById(id); if(!el||el.options.length) return;
+    el.innerHTML='<option value="">자동(틀 기본)</option>'
+      + HC_FONTS.map(f=>`<option value="${f.file}">${f.name}</option>`).join('');
+  });
 }
 function frFromHeadcopy(){
   const t=document.getElementById('frTitle'), hc=document.getElementById('hcText');
@@ -2628,7 +3068,10 @@ function renderTemplatePreview(){
   const pv=document.getElementById('hcPreview'); if(!pv) return;
   let el=document.getElementById('tplPreview');
   const t=STATE.deco&&STATE.deco.template;
-  if(!t||(!t.id&&!t.frame)){ if(el) el.style.display='none'; return; }
+  // ★틀을 지울 때 손잡이도 같이 지운다(2026-08-24 사장님 "삭제했는데 높이조절하는건 안지워짐").
+  //   손잡이는 미리보기에 직접 붙어 있어(pv.appendChild) 틀 그림만 숨기면 그대로 남는다.
+  //   숨기는 판단은 syncFrameHandles 한 곳에 있다(0순위-B) — 여기선 부르기만 한다.
+  if(!t||(!t.id&&!t.frame)){ if(el) el.style.display='none'; syncFrameHandles(); return; }
   // 틀(frame)이면 서버가 그린 그림을 그대로 얹는다 — 렌더가 쓰는 것과 같은 그림이다.
   if(t.frame){
     if(!el){
@@ -2637,8 +3080,10 @@ function renderTemplatePreview(){
       pv.appendChild(el);
     }
     el.src=frameUrl(t.frame); el.style.display='';
+    syncFrameHandles();
     return;
   }
+  syncFrameHandles();
   const meta=TPL_LIST.find(x=>x.id===t.id); if(!meta) return;
   if(!el){
     el=document.createElement('img'); el.id='tplPreview';
@@ -2666,7 +3111,7 @@ function initHeadcopy(){
   renderFontSelect();
   renderPresets();
   renderFullPresets();
-  renderMyPresets();
+  renderMyPresets(); renderCapPresets();
   renderHighlightRules();
   bindHCDrag();
   bindCapDrag();
@@ -2912,6 +3357,85 @@ function renderSparkles(on, ypct){
     pv.appendChild(s);
   });
 }
+// ── ▶ 재생 화면에 꾸미기(헤드카피·틀·워터마크·로고) 겹쳐 보이기(2026-08-23) ──────
+// 사장님: "내가 붙인 게 잘 재생되는 건지 ... 캡컷을 대체하고 싶은 게 목적".
+// 재생 화면(#vidbox)엔 **영상만** 나오고 헤드카피·템플릿 틀·워터마크는 안 보였다.
+// 그 자리에서 결과를 못 보니 렌더를 돌려야만 최종 모습을 알 수 있었다.
+// ★새로 그리지 않는다: 이미 정확히 배치돼 있는 #hcPreview의 레이어들을 **복제해서**
+//   재생 상자에 얹는다(0순위-B). 배치·스타일 규칙이 두 벌이 되면 반드시 어긋난다.
+//   같은 9:16 비율이라 %좌표가 그대로 맞는다.
+window.syncPlayDeco = function(){
+  const vb = document.getElementById('vidbox');
+  const src = document.getElementById('hcPreview');
+  if (!vb || !src) return;
+  let layer = document.getElementById('playDeco');
+  if (!layer){
+    layer = document.createElement('div');
+    layer.id = 'playDeco';
+    // pointer-events:none — 재생 중 클릭(일시정지)을 막으면 안 된다.
+    layer.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:4;overflow:hidden';
+    vb.appendChild(layer);
+  }
+  layer.innerHTML = '';
+  // 틀(템플릿) → 헤드카피 → 로고 → 워터마크 순서로, 원본과 같은 겹침 순서를 지킨다.
+  ['tplPreview','hcPreviewText','ovPreview','wmPreview'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const cs = getComputedStyle(el);
+    if (cs.display === 'none' || !el.innerHTML && el.tagName !== 'IMG') return;
+    if (el.tagName === 'IMG' && !el.getAttribute('src')) return;
+    const c = el.cloneNode(true);
+    c.id = 'pd-' + id;                 // id 중복 금지 — 원본을 가리키는 코드가 많다
+    c.style.cursor = 'default';
+    c.style.pointerEvents = 'none';
+    layer.appendChild(c);
+  });
+};
+// ── ▶ 재생 자막에 실제 자막 스타일 입히기(2026-08-23) ────────────────────────
+// scene_play.js의 tickSub가 #subbox에 글자만 넣는다. CSS는 흰색 17px 고정이라
+// 꾸미기를 아무리 해도 재생 화면엔 안 보였다 — 미리보기가 결과를 못 보여주니
+// 조립을 하고도 렌더를 돌려봐야 알 수 있었다.
+// ★여기서 값을 새로 만들지 않는다. STATE.captionStyle(=updateCaption이 정한 것)만 읽는다.
+window.applyPlaySubStyle = function(box){
+  // ★window.STATE로 찾으면 안 된다 — STATE는 최상위 const라 window에 안 붙는다
+  //   (MIX_JOB·WORK_ID에서 이미 두 번 밟은 함정). 같은 스코프이므로 그냥 STATE를 쓰되,
+  //   이 함수가 없는 화면에서도 안 죽게 typeof로 막는다.
+  const cs = (typeof STATE !== 'undefined' && STATE.captionStyle) || null;
+  const el = box && box.querySelector('.said');
+  if (!el) return;
+  if (!cs){ el.removeAttribute('style'); return; }   // 아직 안 정했으면 CSS 기본대로
+  // 재생기 실폭 기준으로 환산한다 — 미리보기 상자(380)와 재생기 폭이 다를 수 있다.
+  // ★재생기가 아직 안 열렸으면 clientWidth가 0이다 — 그대로 쓰면 배율이 0이 돼
+  //   글씨가 사라진다(실측). 0이면 미리보기 기준폭으로 떨어뜨린다.
+  const pw = (box.parentElement && box.parentElement.clientWidth) || PREVIEW_W;
+  const w = pw > 0 ? pw : PREVIEW_W;
+  const scale = w / VIDEO_W;
+  const st = el.style;
+  st.fontFamily = `'${fontCss(cs.font)}',sans-serif`;
+  st.color = cs.color; st.fontWeight = 900;
+  st.display = 'inline-block'; st.whiteSpace = 'nowrap'; st.lineHeight = '1.2';
+  let fs = Math.max(9, (cs.size || 54) * scale);
+  st.fontSize = fs + 'px';
+  const avail = w * 0.92;
+  if (el.scrollWidth > avail) st.fontSize = Math.max(6, fs * avail / el.scrollWidth) + 'px';
+  const ow = ((cs.outline_w || 0) * scale).toFixed(1);
+  const sd = Math.max(1, (cs.shadow_d || 3) * scale).toFixed(1);
+  st.textShadow = cs.outline
+    ? `${ow}px ${ow}px 0 ${cs.outline_color}, -${ow}px -${ow}px 0 ${cs.outline_color}, `
+      + `${ow}px -${ow}px 0 ${cs.outline_color}, -${ow}px ${ow}px 0 ${cs.outline_color}`
+    : (cs.shadow ? `0 ${sd}px ${sd*2}px rgba(0,0,0,.55)` : 'none');
+  if (cs.box){
+    st.background = hexA(cs.box_color, (cs.box_opacity || 80) / 100);
+    st.padding = `${Math.round((cs.box_pad||12)*scale)}px ${Math.round((cs.box_pad||12)*1.5*scale)}px`;
+    st.borderRadius = '6px';
+  } else { st.background = 'none'; st.padding = '2px 6px'; st.borderRadius = '0'; }
+  // 세로 자리도 실제 값대로 — CSS의 bottom:64px 고정을 덮는다.
+  if (cs.y_pct != null){
+    box.style.top = cs.y_pct + '%'; box.style.bottom = 'auto';
+    box.style.transform = 'translateY(-50%)';
+  }
+  if (cs.x_pct != null){ box.style.textAlign = 'center'; }
+};
 function cs_spark_size(){ const g=document.getElementById('capSize'); return g ? Math.max(10,(+g.value||50)*(PREVIEW_W/VIDEO_W)*0.5) : 16; }
 // ── 🎯 완성 스타일 프리셋(원클릭: 헤드카피+자막+효과 한 번에) — 빅채널 레퍼런스 기반 ──
 // 레퍼런스(HOMEDIRECTOR)와 동일: 흰 자막·화면 중상단(y37, 3개 동일)·은은한 그림자(테두리X). 크기만 차이.
@@ -3084,6 +3608,30 @@ function saveMyPreset(){
 }
 function applyMyPreset(i){ const p=myPresets()[i]; if(p) applyConfig(p.hc, p.cap); }
 function deleteMyPreset(i){ const list=myPresets(); list.splice(i,1); localStorage.setItem('hc_my_presets', JSON.stringify(list)); renderMyPresets(); }
+// ── ⭐ 자막 프리셋(2026-08-22 사장님 "자막도 프리셋 등록해봐") ──
+// 내 프리셋(hc+cap 통째)과 달리 **자막 모양만** 담는다. 헤드카피는 건드리지 않는다.
+// ★새 저장소를 쓰되 값의 형태는 기존 cap과 똑같다 → applyConfig가 그대로 복원한다(효과 포함).
+function capPresets(){ try{ return JSON.parse(localStorage.getItem('cap_presets')||'[]'); }catch(e){ return []; } }
+function saveCapPreset(){
+  const el=document.getElementById('capPresetName');
+  const name=((el&&el.value)||'').trim();
+  if(!name){ alert('자막 프리셋 이름을 입력하세요'); return; }
+  if(!STATE.captionStyle){ alert('자막 모양을 한 번 만진 뒤에 저장해 주세요'); return; }
+  const list=capPresets();
+  list.push({name, cap:STATE.captionStyle});
+  localStorage.setItem('cap_presets', JSON.stringify(list));
+  el.value=''; renderCapPresets();
+}
+function applyCapPreset(i){ const p=capPresets()[i]; if(p) applyConfig(null, p.cap); }   // 자막만 적용
+function deleteCapPreset(i){ const list=capPresets(); list.splice(i,1); localStorage.setItem('cap_presets', JSON.stringify(list)); renderCapPresets(); }
+function renderCapPresets(){
+  const box=document.getElementById('capPresets'); if(!box) return;
+  const list=capPresets();
+  box.innerHTML = list.length ? list.map((p,i)=>`<span style="display:inline-flex;align-items:center;gap:4px;background:#0a1017;border:1px solid var(--line);border-radius:9px;padding:2px 4px 2px 0">
+    <button class="tab" onclick="applyCapPreset(${i})" style="flex:0 0 auto;min-width:auto;padding:5px 11px;font-size:12px;white-space:nowrap;border:none;background:none">⭐ ${p.name}</button>
+    <button onclick="deleteCapPreset(${i})" title="삭제" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:14px">✕</button></span>`).join('')
+    : '<span class="hint" style="font-size:11px">자막 모양만 따로 저장해요.</span>';
+}
 // ── 🏷 워터마크 · 추가 텍스트(deco) ──────────────
 const WM_POS={bc:{x:50,y:88},br:{x:82,y:94},bl:{x:18,y:94},tr:{x:82,y:8},tl:{x:18,y:8}};
 let WM_MANUAL_Y=null;   // 워터마크를 미리보기에서 세로로 드래그해 잡은 y%(없으면 프리셋 사용)
@@ -3253,7 +3801,7 @@ function renderMyPresets(){
   box.innerHTML = list.length ? list.map((p,i)=>`<span style="display:inline-flex;align-items:center;gap:4px;background:var(--inset);border:1px solid var(--line);border-radius:9px;padding:2px 4px 2px 0;margin:0 6px 6px 0">
     <button class="tab" onclick="applyMyPreset(${i})" style="flex:0 0 auto;min-width:auto;padding:5px 11px;font-size:12px;white-space:nowrap;border:none;background:none">⭐ ${p.name}</button>
     <button onclick="deleteMyPreset(${i})" title="삭제" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:14px">✕</button></span>`).join('')
-    : '<span class="hint">아직 저장한 프리셋이 없어요. 완성 스타일을 고르거나 직접 다듬은 뒤, 아래 “💾 지금 스타일 저장”을 누르면 여기 쌓여요.</span>';
+    : '<span class="hint" style="font-size:11px">지금 화면 전체를 저장해 두면 딸깍 한 번으로 불러와요.</span>';
 }
 // 번들 폰트 22종(ttf/otf만 — 미리보기=실제 렌더 일치). ⭐=쇼츠 헤드카피 추천 베스트5
 const HC_FONTS=[
@@ -3477,11 +4025,13 @@ const HC_PRESETS=[
 ];
 function renderPresets(){
   const box=document.getElementById('hcPresets'); if(!box) return;
-  const cats=['썸네일','내용'];
+  // 내용형(하단 강조자막)은 뺐다(2026-08-22 사장님 지시) — 자막 꾸미기는 자막 탭에 따로 있다.
+  // ★HC_PRESETS 자체는 그대로 둔다: applyPreset(i)가 **배열 인덱스**로 찾으므로
+  //   원소를 지우면 인덱스가 밀려 엉뚱한 프리셋이 적용된다.
+  const cats=['썸네일'];
   box.innerHTML=cats.map(cat=>{
     const items=HC_PRESETS.map((p,i)=>({p,i})).filter(x=>x.p.cat===cat);
-    return `<div style="width:100%;font-size:11px;color:var(--sub);margin:2px 0 4px">${cat==='썸네일'?'🖼 썸네일형(상단 헤드라인)':'💬 내용형(하단 강조자막)'}</div>
-      <div style="display:flex;gap:7px;flex-wrap:wrap;width:100%;margin-bottom:8px">`+
+    return `<div style="display:flex;gap:7px;flex-wrap:wrap;width:100%;margin-bottom:8px">`+
       items.map(({p,i})=>`<button class="tab" title="${p.name}"
         style="flex:0 0 auto;min-width:auto;padding:5px 11px;font-size:12px;white-space:nowrap;border-left:10px solid ${p.box?p.box_color:p.color}"
         onclick="applyPreset(${i})">${p.name}</button>`).join('')+`</div>`;
@@ -3649,7 +4199,7 @@ function go(d){
   // 앞으로 갈 때만 막는다 — 되돌아가는 길은 언제나 열어둔다.
   if(d > 0 && cur === 7 && MIX_JOB && !canGoNext()){
     // typeof 가드: jump/go만 잘라 돌리는 테스트 하네스엔 toast가 없다(메모리 슬라이스하네스 규칙)
-    if(typeof toast === 'function') toast('먼저 [대본×영상믹스 확정]을 눌러 확인하세요');
+    if(typeof toast === 'function') toast('먼저 [완성본 만들기] 탭을 눌러 확인하세요');   // 옛 확정 버튼 대체(2026-08-22)
     return;
   }
   // 오브 순서로 ±d 이동 → 매핑을 경유해 jump(o)에 위임한다. 게이트 가드는 jump 안에 있다
@@ -3869,6 +4419,37 @@ function openGenFromWiki(){
 
 // ── 1단계 제작소: 영상믹스(given_script 매칭) ──────────────
 let MIX_JOB=null, MIX_POLL=null;
+// ── 3단계 경과시간(2026-08-23 사장님 "되고 있는지 모름") ──
+// 진행바를 없앤 뒤 상태가 글자 한 줄이라 멈춘 건지 도는 건지 구분이 안 됐다.
+// ★job이 언제 바뀌든 여기 한 곳에서 시계를 리셋한다 — MIX_JOB에 대입하는 곳이 3군데라
+//   각자 리셋하게 두면 반드시 한 곳이 빠진다(0순위-B). pollMix가 매 tick 확인한다.
+let _MIX_T0=0, _MIX_T0_JOB=null;
+// ★평범한 글자로 되돌릴 때는 **반드시 이걸로** 쓴다(0순위-B).
+//   textContent만 바꾸면 위에서 붙인 .match-progress(초록 테두리+도는 점)가 남아
+//   빈 초록 상자가 화면에 떠 있게 된다. 클래스 복구를 각 호출부에 맡기면 반드시 빠진다.
+// ★#mixStatus를 그리는 **유일한 함수**(2026-08-23). 여러 함수가 같은 자리를 제각기
+//   덮어쓰면 "고쳤는데 또 나는" 버그가 된다(test_dom_owner_budget이 이걸 강제한다).
+//   busy=true면 도는 점 + 경과시간, false면 평범한 글자로 되돌린다.
+//   ⚠️ className을 안 되돌리면 실패해놓고 영원히 도는 것처럼 보인다.
+function drawMixStatus(msg, busy, right){
+  const st=document.getElementById('mixStatus'); if(!st) return null;
+  if(busy){
+    st.className='match-progress';
+    st.innerHTML='<span class="dot"></span><span>'+esc(msg||'')+'</span>'
+      + (right?'<span style="margin-left:auto;font-weight:600;opacity:.75">'+esc(right)+'</span>':'');
+  }else{
+    st.className='hint';
+    st.textContent=msg||'';
+  }
+  return st;
+}
+function setMixStatusText(msg){ return drawMixStatus(msg, false); }
+function _mixElapsed(){
+  if(MIX_JOB && MIX_JOB!==_MIX_T0_JOB){ _MIX_T0_JOB=MIX_JOB; _MIX_T0=Date.now(); }
+  if(!_MIX_T0) return '';
+  const s=Math.max(0, Math.round((Date.now()-_MIX_T0)/1000));
+  return s<60 ? (s+'초 경과') : (Math.floor(s/60)+'분 '+(s%60)+'초 경과');
+}
 // ★매칭 완료 자동이동을 이미 한 job(2026-08-18). 폴러가 재기동돼도 두 번 끌고 가지 않게
 //   한다 — 이게 없으면 완료된 job에서 2.5초마다 3단계로 튕긴다(사장님 제보).
 let _mixAutoJumped = null;
@@ -3886,10 +4467,10 @@ function renderScriptDrift(){
 let _MIX_AUTOSTARTED=false;
 let VP_BEATS=[]; let _vpHeard=new Set();
 const MIX_LABEL={downloading:'영상 다운로드 중…',extracting:'대본 분석 중…',planning:'장면 매칭 중…',tts:'음성 생성 중…',ready_for_review:'매칭 완료',rendering:'최종 렌더 중…',done:'완료',failed:'실패'};
-// 동적 로딩 파이프라인(loader.js) 단계 순서. 파이프라인 컨트롤러 자체는 최상위 변수로 두지 않고
-// #mixStatus 엘리먼트 속성(_sblPipe)에 담는다 — startProduceMix만 잘라 도는 테스트 하네스에서
-// 미선언 최상위 변수 대입이 예외를 던져 게이트 재잠금을 건너뛰던 회귀를 막기 위함(2026-07-19).
-const MIX_STAGE_ORDER=['downloading','extracting','planning','tts'];
+// ★매칭 진행바(다운로드→분석→매칭→음성→완료 5칸 파이프)를 없앴다(2026-08-22 사장님
+//   "이거 2개는 삭제하고"). 매칭이 끝나도 화면에 남아 자리만 먹었고, 상태는 아래
+//   MIX_LABEL 한 줄 글자로 이미 다 보인다(진행바만 뺀다 — 글자는 남긴다).
+//   ※지웠던 것: const MIX_STAGE_ORDER, SBLoader.pipeline(#mixStatus._sblPipe).
 function addMixUrl(){
   const wrap=document.getElementById('mixUrls');
   if(wrap.querySelectorAll('.mixUrl').length>=5) return;
@@ -4292,11 +4873,112 @@ function _pvClose(){
   const p=document.getElementById('mixPreviewPanel'); if(p) p.style.display='none';
   const rail=document.getElementById('mixPreviewRail'); if(rail) rail.style.display='none';
 }
+// ★자리의 주인을 정하는 곳은 여기 하나다(2026-08-21 사장님 "그 미리보기 자리에서
+//   믹스확정이 돌아가게 하면 안 되냐"). 9:16 상자는 화면에 **하나**고, 그 자리에
+//   들어설 수 있는 건 둘 중 하나뿐이다:
+//     'play'  = 가조립 재생기(#player, scene_play.js가 .on으로 켠다) — 공짜
+//     'video' = 확정 결과 mp4(#mixPreview) — 서버 렌더 20초+
+//   예전엔 이 판단이 5곳에 흩어져 있었고, 그래서 startPreview 경로만 구멍이 났다:
+//   _sceneLabPrep이 #mixPreview를 display:none으로 꺼두는데 startPreview는 innerHTML만
+//   채우고 display를 안 되돌려, **가조립을 한 번이라도 재생한 뒤엔 확정 결과가 안 보였다**.
+//   (0순위-B: 같은 판단을 두 번 적으면 반드시 어긋난다)
+// ★장면 편집(iframe) 안 함수를 부른다 — 확정 결과를 **재생하던 그 자리**에 띄우기 위해서다
+//   (2026-08-22 사장님 "미리보기 재생했던 곳에서 하라니까").
+//   같은 도메인이라 contentWindow로 직접 부른다. postMessage는 2026-08-15에 조용히
+//   실패해서 버린 경로다(값 복사 과정에서 죽었다) — 되살리지 마라.
+//   iframe이 아직 안 떴으면 조용히 false를 준다(부모가 폴백할 수 있게).
+function _labCall(fn, arg){
+  try{
+    const f = document.getElementById('sceneLabFrame');
+    const w = f && f.contentWindow;
+    if (w && typeof w[fn] === 'function'){ w[fn](arg); return true; }
+  }catch(e){ console.warn('장면편집 호출 실패: ' + fn, e); }
+  return false;
+}
+// ★렌더 실패 문구도 **로더가 돌던 그 자리**에 띄운다(2026-08-22).
+//   로더는 장면편집 안으로 갔는데 오류만 좌측 #mixPreview에 쓰면, 그 칸은 이제
+//   아무도 열지 않으므로 사장님은 **영원히 도는 로더**만 보게 된다. 자리를 옮길 땐
+//   성공 경로뿐 아니라 실패 경로도 같이 옮겨야 한다(0순위-B: 판단은 한 곳에서).
+function _pvFail(html){
+  if (typeof _labCall==='function' && _labCall('showConfirmLoading', html)) return;
+  const box=document.getElementById('mixPreview'); if(!box) return;
+  if(typeof _pvShow==='function') _pvShow('fallback');
+  box.innerHTML = '<div class="hint" style="color:var(--fire)">' + html + '</div>';
+}
+// 좌측 미리보기 레일을 쓰지 않는다(확정 결과는 장면편집 안 자리로 간다, 2026-08-22).
+// 되돌리려면 이 한 줄을 false로 — 폴백 경로는 그대로 살아 있다.
+const _RAIL_OFF = true;
+// job별로 'iframe 기다리기'를 한 번만 한다(폴링·복원이 겹쳐도 타이머가 쌓이지 않게).
+const _PV_LAB_WAITED = {};
+function _pvShow(which){
+  // ★확정 결과가 장면편집 안 자리로 간 뒤(2026-08-22)로는 좌측 레일이 **또 하나의
+  //   9:16 칸**이 돼 사장님 지적을 받았다("왜 따로 또 자리를 차지하냐").
+  //   레일은 폴백 전용이다 — 평소엔 열지 않는다.
+  //   typeof 가드: 슬라이스 하네스는 이 파일의 함수 부분집합만 node로 돌려
+  //   _RAIL_OFF 선언이 그 범위 밖일 수 있다(2026-08-20 실측 함정).
+  if (typeof _RAIL_OFF !== 'undefined' && _RAIL_OFF && which !== 'fallback') return;
+  _pvOpen();                                   // 레일·패널은 늘 함께 연다(정의는 _pvOpen 한 곳)
+  const pv = document.getElementById('mixPreview');
+  // ★'fallback'도 확정 결과를 그리는 자리다 — 'video'와 **같이** 켜야 한다.
+  //   여기서 'video'만 켜면 폴백이 레일은 열고 정작 #mixPreview는 display:none으로
+  //   덮어, 2026-08-18의 "렌더는 됐는데 0×0이라 아무도 못 본다"가 그대로 재발한다.
+  if (pv) pv.style.display = (which === 'video' || which === 'fallback') ? '' : 'none';
+  const hint = document.getElementById('mixPreviewHint');
+  if (hint) hint.style.display = 'none';
+}
 function _renderPreviewVideo(job){
   const box=document.getElementById('mixPreview'); if(!box) return;
-  if(typeof _pvOpen==='function') _pvOpen();
+  // ?t= 캐시버스터: 같은 job을 다시 렌더하면 브라우저가 옛 mp4를 그대로 물고 있다.
+  const src = '/api/produce/mix/preview/'+encodeURIComponent(job)+'?t='+Date.now();
+  // ★확정 결과는 **장면 편집 안 재생 자리**에서 본다(2026-08-22 사장님).
+  //   거기 못 넣었을 때만(iframe 미로드 등) 예전처럼 좌측 칸에 그린다 — 결과를
+  //   아예 못 보는 일은 없어야 한다.
+  if (typeof _labCall==='function' && _labCall('showConfirmVideo', src)){
+    const btn0 = document.getElementById('btnPreview'); if(btn0) btn0.disabled = false;
+    return;
+  }
+  // ★iframe이 **아직 안 뜬 것**과 **영영 못 뜨는 것**을 가른다(2026-08-24).
+  //   복원 경로(_restoreMixContext)는 _syncSceneLab(true)로 iframe src를 막 세팅한
+  //   직후에 여기까지 온다. src 세팅은 비동기라 그 순간 contentWindow에는 아직
+  //   showConfirmVideo가 없다 → _labCall이 false → 폴백이 좌측 레일을 열어버렸다.
+  //   'fallback'은 _RAIL_OFF를 뚫는 **유일한 값**이라, 껐다고 믿은 칸이 되돌아올
+  //   때마다 다시 열렸다(사장님 제보 "맨왼쪽에 또 뜬다").
+  //   → 곧 뜰 iframe이면 잠깐 기다렸다가 제자리(완성본 만들기 탭)에 넣는다.
+  //     정말 못 뜰 때만(2초) 옛 좌측 칸으로 떨어진다 — 결과를 아예 못 보는 일은 없다.
+  //   ⚠️'iframe이 있다'는 판정을 요소 존재로 하면 안 된다 — **contentWindow가 있는
+  //     진짜 iframe**이어야 기다릴 값어치가 있다. 요소만 보면, iframe이 아예 없는
+  //     화면(및 스텁 하네스)에서 오지 않을 것을 2초 기다리다 결과를 늦게 그린다.
+  const _frame = document.getElementById('sceneLabFrame');
+  const _frameReal = !!(_frame && 'contentWindow' in _frame);
+  if (_frameReal && !(typeof _PV_LAB_WAITED !== 'undefined' && _PV_LAB_WAITED[job])){
+    try{ _PV_LAB_WAITED[job] = 1; }catch(e){}
+    let _tries = 0;
+    const _timer = setInterval(function(){
+      _tries++;
+      if (typeof _labCall==='function' && _labCall('showConfirmVideo', src)){
+        clearInterval(_timer);
+        const b2 = document.getElementById('btnPreview'); if(b2) b2.disabled = false;
+        return;
+      }
+      if (_tries >= 20){            // 20 x 100ms = 2초. 그래도 없으면 진짜 폴백.
+        clearInterval(_timer);
+        _renderPreviewVideoFallback(job, src);
+      }
+    }, 100);
+    return;
+  }
+  _renderPreviewVideoFallback(job, src);
+}
+// 옛 좌측 레일에 그리는 **폴백 전용** 경로 — iframe이 정말 못 뜰 때만 온다.
+// ★자리를 여는 판단은 _pvShow 한 곳(0순위-B). 'fallback'만이 _RAIL_OFF를 뚫는다.
+function _renderPreviewVideoFallback(job, src){
+  const box=document.getElementById('mixPreview'); if(!box) return;
+  if(typeof _pvShow==='function') _pvShow('fallback');   // 폴백 = 옛 좌측 레일(레일 감춤을 뚫는 유일한 값)
+  // display:block — 없으면 video 태그가 inline이라 baseline 아래에 검정 라인이 생긴다.
+  //   ⚠️ 주석에 video 태그를 그대로 적지 마라: 이 파일을 정규식으로 훑는 테스트가
+  //      주석 속 태그를 진짜 태그로 오인한다(2026-08-22 실측).
   box.innerHTML = '<video controls muted playsinline autoplay style="display:block;width:100%;aspect-ratio:var(--shorts-pv-ar,9/16);object-fit:contain;border-radius:12px;background:#000;box-shadow:0 8px 30px rgba(0,0,0,.4)"'
-    + ' src="/api/produce/mix/preview/'+encodeURIComponent(job)+'?t='+Date.now()+'"></video>'
+    + ' src="'+src+'"></video>'
 ;   // 안내 문구 없음(2026-08-15 사장님 "랜더 아래쪽 문구들은 다 지워")
   const btn = document.getElementById('btnPreview'); if(btn) btn.disabled = false;
 }
@@ -4638,12 +5320,15 @@ function _renderMixReviewBody(d){
       <div class="scene-trim" id="sceneTrim${i}">${renderTrimControls(b, i)}</div>
     </div>`).join('')+`<div class="hint" style="margin-top:6px">✅ 매칭 완료${(d.beats||[]).some(b=>!b.respined&&b.fit&&b.fit<=2)?' <span style="color:var(--fire)">— ⚠️ 표시된 문장은 영상이 약합니다</span>':''} — 아래에서 <b>미리보기</b>를 확인한 뒤 다음으로 넘어가세요.</div>`
     +`<button class="btn" style="margin-top:8px;padding:7px 14px;background:var(--inset);border:1px solid var(--line);color:var(--sub)" onclick="cancelMixReview()" title="이 매칭을 취소하고 소스·대본을 고쳐 처음부터 다시 매칭합니다">✕ 취소하고 다시 매칭</button>`
-    +`<div class="hint" style="margin-top:6px">미리보기는 <b>왼쪽 화면</b>에 표시됩니다 🪞 · 장면이 안 맞으면 각 문장의 <b>🎞 다른 화면으로 바꾸기</b>로 고치거나, 위 <b>✕ 취소하고 다시 매칭</b>으로 다시 하세요.</div>`
+    +`<div class="hint" style="margin-top:6px">완성본은 장면 편집의 <b>완성본 만들기</b> 탭에서 만들어집니다 🪞 · 장면이 안 맞으면 각 문장의 <b>🎞 다른 화면으로 바꾸기</b>로 고치거나, 위 <b>✕ 취소하고 다시 매칭</b>으로 다시 하세요.</div>`
     +`<details id="bankInjectedBox" style="margin-top:10px;font-size:12px"><summary style="cursor:pointer;color:var(--sub)">🏦 이번 대본에 쓴 은행 부품 보기 (검증)</summary><div id="bankInjectedBody" class="hint" style="margin-top:6px">불러오는 중…</div></details>`;
   _loadBankInjected();
-  // 🎬 대본×영상믹스 확정 버튼은 접힌 '장면 확인' 안이 아니라 패널의 항상 보이는 자리(#mixPreviewCta)에
-  // 그린다(2026-07-23 사장님: "넘어왔는데 랜더하는 게 없다" — 버튼이 접힌 details에 묻혀 있었다).
-  const _cta=document.getElementById('mixPreviewCta');
+  // ★확정 버튼을 여기서 그리던 것을 없앴다(2026-08-22 사장님
+  //   "이거 2개는 삭제하고 … 이걸 누르면 랜더되는걸로"). 렌더 입구는 장면 편집 안
+  //   [완성본 만들기] 탭 하나다(scene_lab.html _askRender).
+  //   남은 것: 빈 칸 경고(#emptyBeatHint)는 마크업에 상시 자리로 옮겼고, 옛 도구는
+  //   #mixOldTools에 그린다(SHOW_OLD_SCENE_TOOLS를 켰을 때만).
+  const _cta=document.getElementById('mixOldTools');
   // 🎯 3초 훅 미세조정(P1): 백엔드가 훅 시작을 모션 피크로 자동 이동한다. 여기서 0.2초씩 앞/뒤로 override.
   // ★라벨은 인라인 계산(외부함수 _fmtHookDelta 의존 금지 — 리프레시 회귀테스트가 함수 부분집합만 평가).
   const _hd=(STATE.hook_inpoint_delta||0);
@@ -4655,20 +5340,29 @@ function _renderMixReviewBody(d){
     +'<span style="opacity:.6"> (모션 피크 자동, 조정 후 다시 미리보기)</span></div>';
   // 훅 시작점·다시 만들기는 SHOW_OLD_SCENE_TOOLS로 함께 감춘다(2026-08-15 사장님). 켜면 원래대로.
   const _old = (typeof SHOW_OLD_SCENE_TOOLS!=='undefined') && SHOW_OLD_SCENE_TOOLS;
-  if(_cta) _cta.innerHTML='<button id="btnPreview" class="btn-next" style="padding:8px 16px" onclick="startPreview()">🎬 대본×영상믹스 확정</button>'
-    +'<div id="emptyBeatHint" style="display:none;margin-top:6px;font-size:13px;color:var(--fire);font-weight:600"></div>'
-    +(_old?_hookAdj:'')
+  if(_cta) _cta.innerHTML=(_old?_hookAdj:'')
     +(_old?'<button class="btn" style="margin-left:8px;padding:8px 14px;background:var(--inset);border:1px solid var(--line);color:var(--sub)" onclick="cancelMixReview()" title="이 결과가 마음에 안 들면 소스·대본을 고쳐 처음부터 다시 만듭니다">🔄 마음에 안 들어요 · 다시 만들기</button>':'')
     ;   // 안내 줄 삭제(2026-08-15 사장님)
-  const _pvPanel=document.getElementById('mixPreviewPanel'), _pvBox=document.getElementById('mixPreview');
-  if(_pvPanel) _pvPanel.style.display='';
+  const _pvBox=document.getElementById('mixPreview');
+  // ★자리를 여는 판단은 _pvShow 한 곳이다(2026-08-24). 종전엔 여기서 #mixPreviewPanel의
+  //   display를 **직접** 켜서 _pvShow의 _RAIL_OFF 판정을 통째로 우회했다 — 좌측 레일은
+  //   2026-08-22에 폴백 전용으로 껐는데(사장님 "왜 따로 또 자리를 차지하냐"), 이 한 줄이
+  //   되돌아올 때마다 그 칸을 다시 열었다. 편집안은 복원 때 await 2번(mix/status →
+  //   mix/result) 뒤에 그려지므로, 없던 9:16 상자가 **뒤늦게 튀어나오는** 것으로 보였다
+  //   (사장님 제보 "다시 되돌아가면 맨왼쪽 랜더된게 처음에는 없다가 뜬다").
+  //   ⚠️렌더 결과는 여기가 아니라 장면편집 [완성본 만들기] 탭에 있다(showConfirmVideo) —
+  //     이 칸을 안 열어도 잃는 것이 없다. 폴백(_pvShow('fallback'))은 그대로 살아 있다.
+  if(typeof _pvShow==='function') _pvShow('video');
   // ★렌더 중이거나 결과가 붙어 있으면 안내문으로 덮지 않는다(2026-08-20).
   //   이 함수는 폴링마다 다시 불리는데 끝에서 무조건 안내문을 써서, 확정 직후 로더도
   //   완성된 영상도 1초 만에 지워졌다. 폴러 고아 수정(setMixPoll)과 짝인 2차 방어다.
   //   ※<video> 유무로 막으면 안 된다 — 재매칭은 옆 영상을 치우고 안내문을 다시 띄워야 
   //   게이트가 잠긴다(회귀테스트 C3). 보호는 '렌더 중'일 때만.
   if(_pvBox && PREVIEW_STATUS !== 'rendering'){
-  if(_pvBox) _pvBox.innerHTML='<div style="aspect-ratio:var(--shorts-pv-ar,9/16);width:100%;border:2px dashed var(--line);border-radius:16px;background:var(--inset);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--sub);text-align:center;padding:18px"><div style="font-size:34px">🪞</div><div style="font-size:14px;line-height:1.5">오른쪽 <b style="color:var(--accent)">🎬 대본×영상믹스 확정</b>를<br>누르면 <b>여기에서</b> 영상이<br>만들어지는 걸 보실 수 있어요</div></div>';
+  // ★안내 문구도 새 입구를 가리킨다(2026-08-22) — 없어진 버튼 이름을 계속 부르면
+  //   사장님이 화면에 없는 것을 찾게 된다. 이 칸은 이제 폴백 자리(_RAIL_OFF)라
+  //   평소엔 안 보이지만, 문구는 진실을 말해야 한다.
+  if(_pvBox) _pvBox.innerHTML='<div style="aspect-ratio:var(--shorts-pv-ar,9/16);width:100%;border:2px dashed var(--line);border-radius:16px;background:var(--inset);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--sub);text-align:center;padding:18px"><div style="font-size:34px">🪞</div><div style="font-size:14px;line-height:1.5">장면 편집의 <b style="color:var(--accent)">완성본 만들기</b> 탭을<br>누르면 영상이<br>만들어지는 걸 보실 수 있어요</div></div>';
   }
 }
 // 매칭 결과 취소 → 처음부터 다시(2026-07-20 사장님). 장면이 대사와 안 맞거나 이상하게 나오면
@@ -4684,7 +5378,7 @@ function cancelMixReview(){
   try{ _syncSceneLab(false); }catch(_){ }   // 실험실 iframe도 내린다(옛 잡을 계속 보여주면 안 된다)
   const el=document.getElementById('mixReview'); if(el) el.innerHTML='';
   const mc=document.getElementById('mixCandidates'); if(mc) mc.innerHTML='';
-  const st=document.getElementById('mixStatus'); if(st){ st.textContent=''; st._sblPipe=null; }
+  setMixStatusText('');   // ★클래스까지 되돌린다 — textContent만 지우면 빈 초록 상자가 남는다
   const _pvBox=document.getElementById('mixPreview'); if(_pvBox) _pvBox.innerHTML='';
   if(typeof _pvClose==='function') _pvClose();
   try{ refreshNextBtn(); }catch(_){ }   // 미리보기 사라졌으니 [다음] 다시 잠근다
@@ -4957,10 +5651,14 @@ function renderPool(){
 // ── 담은 영상 인라인 재생(2026-08-17) — 레퍼런스 랭킹과 같은 방식 ─────────────
 // 재생 가능 판정: 직접 mp4(play_url)가 있거나, 원본 URL로 서버가 해석해 줄 수 있는
 // 플랫폼이면 ▶를 붙인다. URL조차 없는 항목(직접 입력 전)은 누를 게 없으므로 뺀다.
+// ★판정은 poolPlay가 실제로 쓰는 것과 **같은 눈**이어야 한다(0순위-B). 종전엔
+//   `it.url || it.shortcode`라 렌즈 해시만 있고 url이 없는 항목에도 ▶가 붙었는데,
+//   poolPlay는 그 해시로 아무것도 못 해 눌러도 실패했다 — 못 트는 ▶를 보여주지 않는다.
+//   ⚠️play_url(직접 mp4)은 id가 필요 없는 경로(poolPlay ①)라 먼저 통과시킨다.
 function _poolCanPlay(it){
   if(!it) return false;
   if(it.play_url) return true;
-  return !!(it.url || it.shortcode);
+  return !!(_poolPlatformOf(it.url) && _poolPlayId(it));
 }
 // ▶ 클릭 → 그 칸의 <img>를 <video>로 교체해 바로 재생(화면 이동 없음).
 //   ①play_url 있으면 즉시(/api/video 프록시 — CDN이 리퍼러·IP를 따져 직접재생을 막는다)
@@ -4981,7 +5679,7 @@ async function poolPlay(badge, i){
   //   img가 있으면 그 자리를 대체하고, 없으면 카드 맨 앞에 넣는다.
   const img = card.querySelector('img');
   const plat = _poolPlatformOf(it.url);
-  const id   = it.shortcode || _poolVideoIdOf(it.url);
+  const id   = _poolPlayId(it);      // 렌즈 해시를 거른다(판정은 _poolPlayId 한 곳)
   const put = (el)=>{ if(img && img.parentElement) img.replaceWith(el); else card.insertBefore(el, card.firstChild); };
   const swap = (src, onFail)=>{
     const v=document.createElement('video');
@@ -5061,7 +5759,15 @@ function _poolFallback(card, el, i, plat, id){
     }else{ el.remove(); }
   }
   card.dataset.playing='';
-  _poolPlayFail(card, i, '이 영상은 인앱 재생 소스가 없어요');
+  // ★인스타는 임베드 폴백이 **없다**(로그인 벽) — 위 iframe 분기가 유튜브·틱톡만이라
+  //   인스타는 항상 여기로 떨어진다. 종전 문구는 "인앱 재생 소스가 없어요"였는데,
+  //   해석이 잘 되던 영상이 렌즈 해시 때문에 실패한 경우(2026-08-23 제보의 증상)까지
+  //   싸잡아 "소스가 없다"고 해 원인을 가렸다. 플랫폼을 밝혀 원본으로 안내한다.
+  //   ⚠️안내창을 새로 만들지 않는다 — _poolPlayFail이 이미 그 자리(bottom:0)에 문구와
+  //     '원본 ↗' 링크를 띄우고 ▶까지 되살린다. 하나 더 붙이면 두 겹으로 겹친다.
+  _poolPlayFail(card, i, plat==='instagram'
+    ? '인스타는 여기서 재생이 안 돼요'
+    : '이 영상은 인앱 재생 소스가 없어요');
 }
 function _poolLoading(card){
   const d=document.createElement('div');
@@ -5091,6 +5797,25 @@ function _poolPlatformOf(u){
   if(/tiktok\.com/i.test(s))            return 'tiktok';
   if(/instagram\.com/i.test(s))         return 'instagram';
   return '';
+}
+// ★재생에 쓸 영상 ID를 정하는 곳은 여기 하나다(2026-08-23 사장님 "▶ 누르면 사라짐").
+//   렌즈로 찾은 영상은 shortcode가 **진짜 ID가 아니라 내부 해시**다
+//   (lens_instagram_quypyf · grab_douyin_…). 그걸 /api/media에 보내면 ok:False가 오고
+//   인스타는 임베드 폴백이 없어 썸네일로 되돌아간다 = "눌렀는데 사라졌다".
+//   실측: 최근 작업 handoff 59건 중 43건(73%)이 이 해시였고 전부 url은 갖고 있었다.
+//   ⚠️`lens_tiktok_7458060642738605355`처럼 **해시 안에 진짜 ID가 들어 있는** 형태도 있다
+//     (mix_pipeline._cache_keys_for_url 주석). 그건 url이 없을 때의 마지막 폴백으로만 쓴다.
+//   같은 함정·같은 처방: 메모리 reference_캐시키_URL추론금지("추론 전에 적힌 것을 읽는다").
+function _poolPlayId(it){
+  if (!it) return '';
+  const sc = String(it.shortcode || '');
+  const isHash = /^(lens|grab)_/.test(sc);
+  if (sc && !isHash) return sc;                  // 진짜 shortcode — 그대로 쓴다
+  const fromUrl = _poolVideoIdOf(it.url);
+  if (fromUrl) return fromUrl;                   // ★url에서 뽑은 것이 우선
+  // url이 없다 — 해시 꼬리가 숫자 ID면(lens_tiktok_745806…) 그거라도 쓴다.
+  const tail = sc.replace(/^(lens|grab)_[a-z]+_/, '');
+  return /^\d{6,}$/.test(tail) ? tail : '';
 }
 // ★URL에서 짧은해시를 만들어내려 하지 마라(도우인·샤오홍슈는 URL로 유도 불가 — 메모리
 //   reference_캐시키_URL추론금지). 여기선 shortcode가 없을 때의 마지막 폴백으로만 쓴다.
@@ -5435,6 +6160,7 @@ async function autoloadFootageScripts(){
     url: h.url, video_url: h.video_url||'', shortcode: h.shortcode||'', name: h.name||'',
     thumbnail: h.thumbnail||'', caption: h.caption||'', category: h.category||'',
     followers: h.followers||0, comments: h.comments||0,
+    views: h.views||0,
   }));
   if(!items.length) return false;
   try{
@@ -5458,6 +6184,10 @@ async function autoloadAllFootage(){
       url: h.url, video_url: h.video_url||'', shortcode: h.shortcode||'', name: h.name||'',
       thumbnail: h.thumbnail||'', caption: h.caption||'', category: h.category||'',
       followers: h.followers||0, comments: h.comments||0,
+      // ★두 곳 다 싣는다 — 한 곳만 고치면 배치 경로에 따라 값이 갈린다(0순위-B).
+      //   ⚠️서버 script_wiki엔 아직 views 컬럼이 없어(save_to_wiki) 지금은 저장되지 않는다.
+      //     카드 표시는 이것과 무관하다 — HANDOFF(saveWork가 통째로 담는다)가 원천이다.
+      views: h.views||0,
     }));
     if(!items.length) break;
     let d;
@@ -5854,7 +6584,7 @@ function confirmMixUrls(){
   wrap.innerHTML='<div class="row" style="margin-bottom:6px;display:flex;gap:6px;align-items:center"><input class="mixUrl" type="text" placeholder="인스타/유튜브/틱톡 URL" style="flex:1;min-width:0;background:var(--inset);border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px"><button class="urlDel" title="이 칸 지우기" onclick="removeMixUrlRow(this)" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:16px;padding:0 4px">✕</button></div>';
   renderPool(); syncFootageToMixUrls(); refreshFinalPeek(); saveWork();
   if(typeof refreshStep0==='function') refreshStep0();   // Task4: 확정 즉시 useFootage:true라 AI PICK 재조회
-  if(!added && typed.length===0){ const st=document.getElementById('mixStatus'); if(st) st.textContent='먼저 URL을 입력하세요.'; }
+  if(!added && typed.length===0){ setMixStatusText('먼저 URL을 입력하세요.'); }
 }
 // URL 입력칸 한 줄 지우기 — 최소 한 칸은 남긴다.
 function removeMixUrlRow(btn){
@@ -6362,7 +7092,8 @@ async function startProduceMix(){
   const urls=collectMixUrls();   // 영상풀 담긴 것 + 입력칸에 남은 것(중복 제거)
   if(urls.length<1){ alert('소스 영상 URL을 1개 이상 입력하세요(확정 또는 🎬담기)'); return; }
   try{ logPick('S3', {picked: 'mix_start', sources: urls, source_n: urls.length}); }catch(e){}
-  const st=document.getElementById('mixStatus'); st.textContent='⏳ 시작 중…';
+  setMixStatusText('⏳ 시작 중…');
+  const st=document.getElementById('mixStatus');
   document.getElementById('mixReview').innerHTML='';
   try{ _syncSceneLab(false); }catch(_){ }   // 새 매칭 시작 — 옛 잡의 실험실을 내린다(완료되면 다시 뜬다)
   const _mcEl=document.getElementById('mixCandidates'); if(_mcEl) _mcEl.innerHTML='';
@@ -6380,7 +7111,7 @@ async function startProduceMix(){
     //     → onchange가 안 떠서 onSubToggle()의 /api/produce/mix/settings가 **한 번도 안 불림**
     //     → 화면은 "켜짐", job은 0. 렌더가 job을 읽으므로 원본 자막이 그대로 남는다.
     //   2462줄의 복원 경로 주석(꺼진 줄 알았는데 몰래 과금)과 같은 계열의 반대 방향 사고다.
-    const _mixBody={script:STATE.script, urls, target_seconds:30, scene_first:true,
+    const _mixBody={script:STATE.script, urls, target_seconds:25, scene_first:true,
                     subtitle_removal: !!STATE.subtitleRemoval};
     if(_bbIdx>=0) _mixBody.backbone_main=_bbIdx;   // ⭐메인 지정 시에만(없으면 서버 자동 선정)
     // ★비트별 출처 장면을 함께 보낸다(2026-08-18). 2단계가 남긴 src_seg — 3단계가
@@ -6421,20 +7152,13 @@ async function startProduceMix(){
     //      잘라 도는 게이트 테스트엔 _pushWorkNow 스텁이 없다 — try/typeof로 감싼다.
     saveWork();          // 로컬(sessionStorage)·표시 갱신은 종전대로
     try{ if(typeof _pushWorkNow === 'function') _pushWorkNow(); }catch(_){ }   // 서버 확정은 지금
-    // 동적 단계바 시작(loader.js 있을 때만). 컨트롤러는 #mixStatus 속성에 담는다(최상위 변수 X).
-    // ★로딩 UI는 부가기능 — 절대 매칭 흐름(폴링·게이트 재잠금)을 막으면 안 된다. try/catch로 감싼다.
-    st._sblPipe = null;
-    try{
-      if (typeof window!=='undefined' && window.SBLoader){
-        st._sblPipe = SBLoader.pipeline(st, [
-          {label:'다운로드'},{label:'분석'},{label:'매칭'},{label:'음성'},{label:'완료'}
-        ]);
-        st._sblPipe.set(0, '영상 다운로드 중… <b>1/4</b>');
-      }
-    }catch(_){ st._sblPipe = null; }
+    // ★단계바(파이프) 없앰(2026-08-22 사장님). 시작 상태는 한 줄 글자로 알린다 —
+    //   pollMix가 첫 tick에 같은 자리를 덮어쓴다(빈 채로 두면 2.5초간 아무 표시가 없다).
+    // 첫 tick 전 2.5초 동안도 '도는 중'으로 보이게 — pollMix와 같은 모양으로 그린다.
+    drawMixStatus('영상 다운로드 중…', true);
     setMixPoll(pollMix,2500); pollMix();
     refreshNextBtn();   // 새 job은 아직 미리보기가 없다 — 다시 잠근다
-  }catch(e){ st.textContent='❌ 네트워크 오류'; }
+  }catch(e){ setMixStatusText('❌ 네트워크 오류'); }   // 도는 점도 함께 지운다
 }
 // ★MIX_POLL 예약은 반드시 여기로(2026-08-20 사장님 "믹스확정을 누르면 안되고 다시 원래대로").
 //   같은 변수에 새 setInterval을 넣는 곳이 3군데였는데 아무도 앞의 것을 안 죽여서, 핸들을
@@ -6451,24 +7175,23 @@ async function pollMix(){
   try{
     const d=await (await fetch('/api/mix/status/'+MIX_JOB)).json();
     const st=document.getElementById('mixStatus');
-    if(!d.ok){ if(st) st._sblPipe=null; st.textContent='상태 조회 실패'+(d.error?' — '+d.error:''); clearInterval(MIX_POLL); const th0=document.getElementById('theater'); if(th0) th0.hidden=true; setMatchingUI(false); return; }
-    const _pipe = st ? st._sblPipe : null;
+    if(!d.ok){ setMixStatusText('상태 조회 실패'+(d.error?' — '+d.error:'')); clearInterval(MIX_POLL); const th0=document.getElementById('theater'); if(th0) th0.hidden=true; setMatchingUI(false); return; }
     // ★순서 대기(2026-08-06): 워커가 아직 안 집은 잡은 '다운로드 중'이 아니라 대기 중이다 —
     //   멈춘 것처럼 보이던 원인. queue_ahead: null=진행 중 / 0=다음 차례 / N=내 앞 N개.
     const _waiting = (typeof d.queue_ahead==='number');
     const _label = _waiting
       ? ('순서 대기 중…'+(d.queue_ahead>0?(' — 내 앞 작업 '+d.queue_ahead+'개'):' 곧 시작합니다'))
       : (MIX_LABEL[d.status]||d.status);
-    if(_pipe && d.status!=='failed'){
-      // 단계바 진행. ready_for_review=전부 완료, 그 외는 해당 단계로.
-      const idx=MIX_STAGE_ORDER.indexOf(d.status);
-      // 완료는 done()으로 — set(4)는 5단계를 '진행 중'(스피너·펄스)으로 그려 "완료!"인데도 뱅글뱅글 돈다.
-      if(d.status==='ready_for_review') _pipe.done('매칭 완료! 아래에서 대본 후보를 골라주세요');
-      else if(_waiting) _pipe.set(0, _label);
-      else if(idx>=0) _pipe.set(idx, _label+' <b>'+(idx+1)+'/4</b>');
-      else st.textContent='상태: '+_label;   // rendering 등
-    } else if(d.status!=='failed'){
-      st.textContent='상태: '+_label+(d.error?' — '+d.error:'');   // loader.js 폴백
+    // ★진행바를 없앤 뒤(2026-08-22) 글자만 남으니 **도는 중인지 알 수가 없었다**
+    //   (2026-08-23 사장님 "조립되고 있는 과정 루프가 안 뜬다 / 사용자는 되고 있는지 모름").
+    //   진행바를 되살리는 대신 **도는 점 + 경과시간**만 붙인다 — 화면은 그대로 두고
+    //   "살아있다"만 보이게. 스타일은 이미 있는 .match-progress를 그대로 쓴다(0순위-B:
+    //   9단계 finalStatus가 쓰는 것과 같은 것. 새로 만들면 두 벌이 된다).
+    //   실패(failed)는 아래 전용 분기가 상세까지 그리므로 여기서 건드리지 않는다 —
+    //   여기서 덮으면 그 상세가 매 tick 지워진다.
+    if(d.status!=='failed'){
+      const _busy = d.status!=='ready_for_review' && d.status!=='done';
+      drawMixStatus(_label+(d.error?' — '+d.error:''), _busy, _busy?_mixElapsed():'');
     }
     updateMatchProgress(_label);   // ★Task8: 패널0 미러링 — 사용자가 있는 화면에도 같은 단계 표시
     // 극장(Task5) 종료 — 성공/실패 어느 쪽이든 대기 연출은 끝났으니 숨긴다. (commit 7d156f09c에서
@@ -6508,8 +7231,10 @@ async function pollMix(){
     }
     // 실패 표시: 사용자에겐 순화된 d.error만. d.error_detail은 서버가 **관리자에게만** 채워
     // 내려주므로(2026-08-04), 있으면 원문을 접이식으로 덧붙인다 — 사고를 눈으로 바로 잡으라고.
-    if(d.status==='failed'){ setMatchingUI(false); if(st) st._sblPipe=null;
-      st.textContent='❌ 매칭 실패'+(d.error?' — '+d.error:'');
+    if(d.status==='failed'){ setMatchingUI(false);
+      // ★실패면 도는 점을 반드시 지운다 — className을 안 되돌리면 실패해놓고 영원히
+      //   도는 것처럼 보인다(2026-08-23). textContent만 바꾸면 클래스가 남는다.
+      setMixStatusText('❌ 매칭 실패'+(d.error?' — '+d.error:''));
       if(d.error_detail){
         const dt=document.createElement('details');
         dt.style.cssText='margin-top:6px;font-size:12px;color:var(--sub)';
@@ -6548,8 +7273,25 @@ try{ if(!SHOW_OLD_SCENE_TOOLS){ const _md=document.getElementById('matchSceneDet
 //   크기가 변한다"). 종전엔 마크업이 150vh/1100px, [⛶넓게 보기] 복귀부가 88vh(min-height 없음)로
 //   **같은 판단이 두 곳에 다르게** 적혀 있었다 — 넓게 보기를 껐다 켜면 원래 크기로 안 돌아오고
 //   쪼그라들었다. 값을 고칠 일이 생기면 이 두 상수만 고친다(CLAUDE.md 0순위-B).
-const _SL_FRAME_H    = '150vh';
-const _SL_FRAME_MINH = '1100px';
+// ★높이를 화면 안으로 들였다(2026-08-22 사장님 "스크롤 너무 내리지않고 최소화").
+//   종전 150vh/1100px은 **화면보다 1.5배 큰** 상자라, 안쪽이 스크롤되기 전에 바깥
+//   페이지가 먼저 길어졌다(스크롤 두 겹 — 사장님이 계속 내려야 했던 이유).
+//   이제 상자를 화면에 맞추면 세로 스크롤은 **장면 편집 자신이** 맡는다.
+//
+//   96px의 근거(DOM에서 잰 값 — 브라우저 실측으로 다시 조정하면 된다):
+//     · 이 상자 위 제목줄(🎬 장면 편집 + [⛶넓게 보기]) = 30px + margin-bottom 6px = 36
+//     · iframe 테두리 위아래 2px                                                =  2
+//     · 아래쪽 숨쉴 여백(8의 배수 · 사장님 정렬 기준)                            = 56
+//                                                                        합계 = 94 → 96(8의 배수)
+//   ※바깥 페이지 머리(.head·.steps·패널 제목 ≈ 340px)는 **빼지 않는다**: 그건 스크롤로
+//     지나가는 것이라 빼면 편집 화면 아래에 그만큼 빈 자리가 생긴다. 여기 상수는
+//     "장면 편집까지 내려왔을 때 상자가 한 화면에 들어오는가"만 책임진다.
+//   ※[⛶넓게 보기]는 calc(100vh - 46px)를 쓴다(위 _applySceneLabFrameSize) — 그쪽은
+//     제목줄이 화면 맨 위로 올라오므로 뺄 값이 더 작다. 두 값이 다른 건 정상이다.
+const _SL_FRAME_H    = 'calc(100vh - 96px)';
+// 하한: 9:16 재생기(440px 폭 → 782px 높이는 안 쓴다. 여기선 탭+타임프레임+팔레트가
+// 최소한 겹치지 않을 크기) — 노트북 768px 화면에서도 안쪽 스크롤로 다 볼 수 있다.
+const _SL_FRAME_MINH = '560px';
 // 크기를 실제로 입히는 유일한 함수 — 첫 렌더도 복귀도 이 문을 지난다.
 function _applySceneLabFrameSize(f, wide){
   if(!f || !f.style) return;
@@ -6600,12 +7342,7 @@ function _sceneLabPrep(lab){
   Object.assign(MERGES, lab.MERGES || {});
   SL.server = true;
   SL.job = (typeof MIX_JOB !== 'undefined' && MIX_JOB) || SL.job;
-  const pvPanel = document.getElementById('mixPreviewPanel');
-  if (pvPanel) pvPanel.style.display = '';
-  const pvHint = document.getElementById('mixPreviewHint');
-  if (pvHint) pvHint.style.display = 'none';
-  const pv = document.getElementById('mixPreview');
-  if (pv) pv.style.display = 'none';
+  _pvShow('play');   // 자리를 가조립 재생기에 넘긴다(판정은 _pvShow 한 곳)
 }
 // 전체 재생 — 1번 칸부터 끝까지 이어서(소스를 바꾼 뒤 전체를 확인할 때)
 function sceneLabPlayAll(lab){
@@ -6648,6 +7385,18 @@ function sceneLabEmptyBeats(list){
       ? (EMPTY_BEATS.map(i => i + 1).join("·") + "번 칸에 장면을 담아주세요")
       : "";
   }
+  // ★빈 칸이 다 채워지면 확정본 자리의 **거절 문구를 걷어낸다**(2026-08-22).
+  //   startPreview의 빈칸 분기가 그 자리에 사유를 써 두는데, 안 걷으면 #confirmBody가
+  //   계속 "비어 있지 않음"이라 _askRender가 영영 렌더를 안 건다(탭을 눌러도 무반응).
+  //   ⚠️걷는 조건은 **거절 문구일 때만**이다 — 로더나 완성된 <video>를 지우면 안 된다.
+  if (!EMPTY_BEATS.length && typeof _labCall === 'function'){
+    try{
+      const _f = document.getElementById('sceneLabFrame');
+      const _w = _f && _f.contentWindow;
+      const _b = _w && _w.document && _w.document.getElementById('confirmBody');
+      if (_b && /칸에 장면을 먼저 담아주세요/.test(_b.innerHTML)) _b.innerHTML = '';
+    }catch(e){ console.warn('빈칸 안내 정리 실패', e); }
+  }
   const hint = document.getElementById("emptyBeatHint");
   if (hint){
     hint.style.display = EMPTY_BEATS.length ? "" : "none";
@@ -6656,9 +7405,11 @@ function sceneLabEmptyBeats(list){
       : "";
   }
 }
+// 가조립 재생을 닫으면 자리를 되돌린다 — **확정 결과가 이미 있을 때만**.
+// 없으면(아직 확정 전) 자리를 비워 두는 게 맞다: 빈 <div>를 켜봐야 보여줄 게 없다.
 function sceneLabPlayClosed(){
   const pv = document.getElementById('mixPreview');
-  if (pv && pv.innerHTML.trim()) pv.style.display = '';
+  if (pv && pv.innerHTML.trim()) _pvShow('video');
 }
 function _syncSceneLab(on){
   const box=document.getElementById('sceneLabBox'), f=document.getElementById('sceneLabFrame');
@@ -6709,6 +7460,9 @@ async function loadMixReview(){
   // 그때 새 job_id가 잡히는데, 옛 폴러를 안 죽이면 그놈이 살아서 새 MIX_JOB을 폴링해 옛 렌더의
   // 결과로 게이트를 열어버린다. ++PREVIEW_GEN은 이미 날아간 요청의 늦은 continuation까지 무효화한다.
   clearInterval(PREVIEW_POLL); PREVIEW_POLL = null; ++PREVIEW_GEN;
+  // 새 매칭 — 옛 확정본은 낡았다. 장면편집 안 확정본 탭을 잠그고 가조립으로 되돌린다
+  // (2026-08-22). 안 지우면 새 편집안 옆에 옛 영상이 남아 "이게 지금 것"으로 보인다.
+  if (typeof _labCall==='function') _labCall('clearConfirm');
   PREVIEW_STATUS = null; WATCHED_ALL = false; refreshNextBtn();
 }
 
@@ -7310,7 +8064,10 @@ function refreshNextBtn(){
   //   이제 눌리기는 하고, 누르면 할 일을 알려준다(막는 판정은 go()가 같은 값으로 한 번만 한다).
   const gated = (cur === 7 && MIX_JOB && !canGoNext());
   b.disabled = false;
-  b.textContent = gated ? '먼저 대본×영상믹스를 확정하세요'
+  // ★가리키는 대상만 바꿨다(2026-08-22) — [대본×영상믹스 확정] 버튼이 없어지고
+  //   [완성본 만들기] 탭이 그 일을 한다. "확정하세요"는 그대로 둔다: 게이트 회귀
+  //   테스트(test_produce_preview_gate)가 이 낱말로 "왜 잠겼는지 알려주나"를 판정한다.
+  b.textContent = gated ? '먼저 [완성본 만들기]를 확정하세요'
                         : (orbIndex()===STEP_LABELS.length-1 ? '완료' : '다음 →');
   b.title = gated ? stepLockMsg() : '';
 }
@@ -7343,28 +8100,42 @@ async function startPreview(){
   // typeof 가드: 게이트 하네스는 이 파일의 **함수 부분집합**만 node로 돌려
   // EMPTY_BEATS 선언이 그 범위 밖이다 — 맨손으로 쓰면 ReferenceError로 죽는다(2026-08-20 실측).
   if (typeof EMPTY_BEATS !== "undefined" && EMPTY_BEATS.length){
-    try{ toast(EMPTY_BEATS.map(i=>i+1).join("·") + "번 칸에 장면을 먼저 담아주세요"); }catch(e){}
+    const _msg = EMPTY_BEATS.map(i=>i+1).join("·") + "번 칸에 장면을 먼저 담아주세요";
+    try{ toast(_msg); }catch(e){}
+    // ★이 **실패 경로도** 확정본 자리에 사유를 남긴다(2026-08-22).
+    //   탭이 렌더 입구가 된 뒤로는 사장님이 탭을 눌러 여기 와 있다 — 여기서 그냥
+    //   return하면 토스트는 몇 초 뒤 사라지고 **빈 칸만** 남아 "눌렀는데 아무 일도
+    //   안 난다"가 된다. 자리를 옮길 땐 성공 경로뿐 아니라 실패 경로도 같이 옮긴다
+    //   (0순위-B / _pvFail 주석과 같은 이유).
+    if (typeof _pvFail === 'function') _pvFail('⚠️ ' + esc(_msg));
+    if(btn) btn.disabled = false;
     return;
   }
   if(btn) btn.disabled = true;     // 렌더는 20초+ 걸린다 — 그 사이 재클릭을 막는다
-  if(typeof _pvOpen==='function') _pvOpen();   // 좌측 프리뷰 자리 확보(레일까지 — 안 열면 렌더는 되는데 0x0이라 안 보인다)
-  // 같은 9:16 자리에서 민트 로더가 돌게 한다(loader.js). 없으면 텍스트로 폴백.
-  box.innerHTML = '<div id="pvLoadFrame" style="aspect-ratio:var(--shorts-pv-ar,9/16);width:100%;border:1px solid var(--line);border-radius:16px;background:var(--inset);display:flex;align-items:center;justify-content:center;overflow:hidden"></div>';
-  try{
-    var _pvf=document.getElementById('pvLoadFrame');
-    if(window.SBLoader && _pvf) SBLoader.spinner(_pvf, {messages:['미리보기 만드는 중…','장면을 이어붙이는 중…','자막·음성 얹는 중…','거의 다 됐어요…'], bar:true});
-    else if(_pvf) _pvf.innerHTML='<div class="hint" style="padding:14px">⏳ 미리보기 만드는 중…</div>';
-  }catch(_){ }
+  // ★자리를 '확정 결과'로 넘겨받는다 — 가조립을 재생한 뒤였다면 #mixPreview가 꺼져 있어
+  //   로더를 innerHTML에 써도 안 보였다(2026-08-21 사장님 제보의 직접 원인).
+  // ★로더도 **재생하던 그 자리**에 띄운다(2026-08-22 사장님 "미리보기 재생했던 곳에서
+  //   하라니까"). 장면 편집(iframe)에 못 넣었을 때만 예전 좌측 자리로 폴백한다.
+  if (typeof _labCall!=='function' || !_labCall('showConfirmLoading', '미리보기 만드는 중…')){
+    if(typeof _pvShow==='function') _pvShow('fallback');
+    // 같은 9:16 자리에서 민트 로더가 돌게 한다(loader.js). 없으면 텍스트로 폴백.
+    box.innerHTML = '<div id="pvLoadFrame" style="aspect-ratio:var(--shorts-pv-ar,9/16);width:100%;border:1px solid var(--line);border-radius:16px;background:var(--inset);display:flex;align-items:center;justify-content:center;overflow:hidden"></div>';
+    try{
+      var _pvf=document.getElementById('pvLoadFrame');
+      if(window.SBLoader && _pvf) SBLoader.spinner(_pvf, {messages:['미리보기 만드는 중…','장면을 이어붙이는 중…','자막·음성 얹는 중…','거의 다 됐어요…'], bar:true});
+      else if(_pvf) _pvf.innerHTML='<div class="hint" style="padding:14px">⏳ 미리보기 만드는 중…</div>';
+    }catch(_){ }
+  }
   PREVIEW_STATUS = 'rendering'; refreshNextBtn();
   try{
     const d = await (await fetch('/api/produce/mix/preview',{method:'POST',
       headers:{'Content-Type':'application/json'}, body: JSON.stringify({job_id: myJob})})).json();
     if(PREVIEW_GEN !== myGen) return;   // 그 사이 재클릭·재매칭이 주인을 가져갔다 — 손대지 않는다
-    if(!d.ok){ PREVIEW_STATUS='failed'; box.innerHTML='<div class="hint" style="color:var(--fire)">⚠️ '+esc(d.error||'미리보기 실패')+'</div>'; if(btn) btn.disabled=false; refreshNextBtn(); return; }
+    if(!d.ok){ PREVIEW_STATUS='failed'; _pvFail('⚠️ '+esc(d.error||'미리보기 실패')); if(btn) btn.disabled=false; refreshNextBtn(); return; }
     PREVIEW_POLL = setInterval(()=>pollPreview(myGen, myJob), 2500); pollPreview(myGen, myJob);
   }catch(e){
     if(PREVIEW_GEN !== myGen) return;
-    PREVIEW_STATUS='failed'; box.innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; if(btn) btn.disabled=false; refreshNextBtn();
+    PREVIEW_STATUS='failed'; _pvFail('네트워크 오류'); if(btn) btn.disabled=false; refreshNextBtn();
   }
 }
 
@@ -7383,8 +8154,8 @@ async function pollPreview(gen, job){
       refreshNextBtn();
     } else if(d.preview_status === 'failed'){
       clearInterval(PREVIEW_POLL); PREVIEW_POLL = null; PREVIEW_STATUS='failed';
-      box.innerHTML = '<div class="hint" style="color:var(--fire)">⚠️ 미리보기 렌더 실패 — '
-        + esc(d.preview_error||'') + '<br>미리보기 없이 진행할 수 있지만, 확인하지 못한 채 유료 자막제거로 넘어갑니다.</div>';
+      _pvFail('⚠️ 미리보기 렌더 실패 — ' + esc(d.preview_error||'')
+        + '<br>미리보기 없이 진행할 수 있지만, 확인하지 못한 채 유료 자막제거로 넘어갑니다.');
       const btn = document.getElementById('btnPreview'); if(btn) btn.disabled = false;
       refreshNextBtn();
     }
@@ -7566,7 +8337,10 @@ let VOICE = { preset_id:null, voice_id:null, settings:null, speed:1.0, silence_t
 let VOICE_GROUPS = [];
 let SEL_VARIANT = {}; // group_id -> 'stable'|'natural'|'expressive'|'whisper' (기본 노출은 stable, 나머지는 버튼으로 전환)
 const VARIANT_LABELS = {stable:'안정', natural:'자연', expressive:'표현', whisper:'속삭임'};
-const SPEEDS=[0.8,0.9,1.0,1.1,1.2,1.3,1.4,1.5];
+// ★1.6까지 연다(2026-08-22 사장님 청취 확정). 종전 상한 1.5는 근거 없이 박혀
+//   있던 값이고, 기본 보이스가 이미 1.6이라 **화면에서 고를 수 없는 값이 실제로
+//   쓰이고 있었다**(고르면 1.5로 내려가는 함정). 실측 6.87자/초.
+const SPEEDS=[0.8,0.9,1.0,1.1,1.2,1.3,1.4,1.5,1.6];
 const SIL=[['off','OFF'],['weak','약'],['mid','중'],['strong','강']];
 // 영상별 "이 영상은 속삭임을 훅에만" 선택(2026-07-17). 새 저장층 없음 — /api/mix/voice의
 // body.whisper_roles가 job voice 스냅샷의 naturalize_profile.whisper.roles에만 얹힌다
@@ -7614,6 +8388,93 @@ async function loadTtsBeats(){
   // 관리자에게만 '＋ 일레븐랩스에서 성우 추가'를 연다(등록은 실TTS 4회 = 크레딧).
   { const a=document.getElementById('elvAdmin'); if(a && window.IS_ADMIN) a.style.display='block'; }
   renderTtsBeats();
+}
+
+// ── 목소리 찾기(일레븐랩스 공개 라이브러리, 2026-08-24) ─────────────────────
+// 사장님: "사용자들이 일레븐랩스 목소리 검색 가능하게".
+// 흐름: 검색 → 미리듣기 → 담기(내 계정) → 성우 카드 자동 등록 → 바로 선택 가능.
+// ★키가 없으면 서버가 need_key로 알려준다 — 그때는 목록 대신 등록 안내를 띄운다.
+//   (담기는 각자 일레븐랩스 계정에 되므로, 키 없이 담으면 합성 때 그 음성이 없어 실패한다)
+// ★결과는 VLIB_RESULTS에 담고 버튼에는 **인덱스만** 넘긴다 — onclick에 JSON을 박으면
+//   따옴표 이스케이프가 반드시 꼬인다(처음에 그렇게 짰다가 문법 오류를 냈다).
+let VLIB_RESULTS = [];
+let VLIB_PAGE = 0;
+let VLIB_AUDIO = null;
+
+function toggleVoiceLibrary(){
+  const p=document.getElementById('vlibPanel'); if(!p) return;
+  const open = p.style.display==='none';
+  p.style.display = open ? 'block' : 'none';
+  if(open && !p.dataset.loaded){ p.dataset.loaded='1'; searchVoiceLibrary(0); }
+}
+
+async function searchVoiceLibrary(page){
+  const box=document.getElementById('vlibList'); if(!box) return;
+  VLIB_PAGE = Math.max(0, page|0);
+  box.innerHTML='<div class="hint">찾는 중…</div>';
+  const q=(document.getElementById('vlibQ')||{}).value||'';
+  const g=(document.getElementById('vlibGender')||{}).value||'';
+  let d;
+  try{
+    d=await (await fetch('/api/voice-library/search?language=ko&page='+VLIB_PAGE
+      +'&q='+encodeURIComponent(q)+'&gender='+encodeURIComponent(g))).json();
+  }catch(e){ box.innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; return; }
+  if(d && d.need_key){
+    box.innerHTML='<div class="hint" style="line-height:1.6">'+esc(d.error||'')
+      +'<br><a href="/keys" style="color:var(--accent2)">→ 내 API 키 등록하러 가기</a></div>';
+    return;
+  }
+  if(!d || !d.ok){
+    box.innerHTML='<div class="hint" style="color:var(--fire)">'+esc((d&&d.error)||'검색 실패')+'</div>'; return;
+  }
+  VLIB_RESULTS = d.voices||[];
+  if(!VLIB_RESULTS.length){ box.innerHTML='<div class="hint">결과가 없습니다. 다른 말로 찾아보세요.</div>'; return; }
+  const rows = VLIB_RESULTS.map(function(v, i){
+    const tags=[v.gender,v.age,v.accent,v.use_case].filter(Boolean).slice(0,3)
+      .map(function(t){ return '<span class="r">'+esc(t)+'</span>'; }).join('');
+    return '<div style="display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)">'
+      + '<div style="flex:1;min-width:0">'
+      +   '<div style="font-weight:700;font-size:13.5px">'+esc(v.name)+'</div>'
+      +   (v.description ? '<div class="hint" style="margin:2px 0 4px">'+esc(v.description.slice(0,70))+'</div>' : '')
+      +   '<div style="display:flex;gap:4px;flex-wrap:wrap">'+tags+'</div>'
+      + '</div>'
+      + (v.preview_url ? '<button class="btn-prev" style="padding:6px 10px" onclick="vlibPlay('+i+')">▶ 듣기</button>' : '')
+      + '<button class="btn-next" style="padding:6px 12px" onclick="vlibAdd(this,'+i+')">담기</button>'
+      + '</div>';
+  }).join('');
+  const nav = '<div style="display:flex;gap:8px;justify-content:center;margin-top:10px">'
+    + (VLIB_PAGE>0 ? '<button class="btn-prev" style="padding:6px 12px" onclick="searchVoiceLibrary('+(VLIB_PAGE-1)+')">← 이전</button>' : '')
+    + (d.has_more ? '<button class="btn-prev" style="padding:6px 12px" onclick="searchVoiceLibrary('+(VLIB_PAGE+1)+')">다음 →</button>' : '')
+    + '</div>';
+  box.innerHTML = rows + nav;
+}
+
+function vlibPlay(i){
+  const v = VLIB_RESULTS[i]; if(!v || !v.preview_url) return;
+  try{ if(VLIB_AUDIO) VLIB_AUDIO.pause(); }catch(e){}
+  VLIB_AUDIO = new Audio(v.preview_url);
+  VLIB_AUDIO.play().catch(function(){ toast('미리듣기를 재생하지 못했습니다'); });
+}
+
+async function vlibAdd(btn, i){
+  const v = VLIB_RESULTS[i]; if(!v) return;
+  const orig = btn.textContent;
+  btn.disabled=true; btn.textContent='담는 중…';
+  try{
+    const r=await (await fetch('/api/voice-library/add',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({voice_id:v.voice_id, public_owner_id:v.public_owner_id, name:v.name})
+    })).json();
+    if(!r || !r.ok){
+      toast('⚠️ '+((r&&r.error)||'담기 실패'));
+      btn.disabled=false; btn.textContent=orig; return;
+    }
+    btn.textContent = r.already ? '이미 있음' : '✓ 담김';
+    toast(r.already ? '이미 담긴 목소리예요' : '내 성우로 담았습니다 — 카드에서 고르세요');
+    await loadPresets();          // 카드 목록을 다시 불러 방금 담은 성우를 띄운다
+  }catch(e){
+    toast('⚠️ 네트워크 오류'); btn.disabled=false; btn.textContent=orig;
+  }
 }
 
 let VOICES_EXPANDED=false;   // ＋더보기 펼침 상태 — 재렌더(pickPreset)가 접힘으로 되돌리지 않게 보존
@@ -8223,7 +9084,7 @@ async function refreshFinalThumb(){
     { const cb=document.getElementById('thumbIntro'); if(cb && d) cb.checked=!!d.intro; }
     if(d && d.ok && d.url){
       FINAL_THUMB_URL=d.url;
-      box.innerHTML=`<img src="${esc(d.url)}" alt="선택 썸네일" style="width:100%;max-width:200px;border-radius:12px;display:block;border:2px solid var(--accent2)">`
+      box.innerHTML=`<img src="${esc(d.url)}" alt="선택 썸네일" style="border-radius:12px;border:2px solid var(--accent2)">`
         + `<a class="btn-prev" style="display:block;margin-top:6px;padding:7px;text-align:center;text-decoration:none;font-size:12px" href="${esc(d.url)}" download="${esc(d.name||'thumb.png')}">⬇ PNG 저장</a>`
         + `<div class="hint" style="margin-top:6px;line-height:1.5">QR로 폰에 보낼 때 <b>영상과 함께</b> 전송됩니다</div>`;
       _syncExport(); return;
@@ -8252,7 +9113,7 @@ async function refreshFinal(){
   try{
     const d=await (await fetch('/api/mix/status/'+encodeURIComponent(MIX_JOB))).json();
     if(d && d.status==='done'){
-      if(fv) fv.innerHTML=`<video controls src="/api/mix/video/${esc(MIX_JOB)}" style="max-width:300px;width:100%;border-radius:12px"></video>`;
+      if(fv) fv.innerHTML=`<video controls src="/api/mix/video/${esc(MIX_JOB)}" style="border-radius:12px"></video>`;
       renderExport({rendered:true});
     } else { _finalIdleSlot(); }
   }catch(e){ _finalIdleSlot(); }
@@ -8354,14 +9215,18 @@ function renderExport(opts){
     // ★1순위: 캡컷으로 바로 보내기(원클릭). 60대 북극성 — 클릭 한 번이면 캡컷에 프로젝트가 생긴다.
     + (capcutOk
         ? `<button class="btn-next" style="${big};border:0;cursor:pointer;font-size:15px" onclick="sendToCapCut()">🎬 캡컷으로 보내기</button>`
-          + `<a class="btn-prev" style="${small}" href="/static/capcut_setup.bat" download>⚙ 캡컷 자동설정(최초 1회)</a>`
+          // ★경로에 `/static/`을 붙이지 마라 — 정적 파일은 **루트에 마운트**돼 있다
+          //   (app.py `app.mount("/", ...)`). 2026-08-22 실측: `/static/capcut_setup.bat`은
+          //   404였고, 그래서 고객은 자동설정 파일도 그림 매뉴얼도 **한 번도 못 받았다**
+          //   (핸드오프의 ".bat 실제 동작 확인"이 한 달째 미확인이던 진짜 이유).
+          + `<a class="btn-prev" style="${small}" href="/capcut_setup.bat" download>⚙ 캡컷 자동설정(최초 1회)</a>`
           + `<button class="btn-prev" style="${small};border:0;cursor:pointer" onclick="resetCapCutFolder()">폴더 다시 지정</button>`
           // ★그림 매뉴얼(2026-08-19 사장님 "이미지로 해야 이해한다"). 글로 적은 안내는 아무도
           //   안 읽는다 — 준비 단계를 그림 4장으로 만든 페이지를 새 탭으로 연다.
-          + `<a class="btn-prev" style="${small}" href="/static/capcut_manual.html" target="_blank" rel="noopener">📖 그림으로 보는 준비 방법</a>`
+          + `<a class="btn-prev" style="${small}" href="/capcut_manual.html" target="_blank" rel="noopener">📖 그림으로 보는 준비 방법</a>`
           + '<div class="hint" style="margin:4px 0 10px">캡컷이 깔려 있으면 클릭 한 번으로 프로젝트가 만들어집니다. <b>처음 쓰실 때만</b>: 위 <b>⚙자동설정</b> 파일을 받아 한 번 더블클릭(캡컷은 꺼둔 채) → 캡컷 켜기 → 폴더 한 번 지정. Chrome·Edge 전용.</div>'
         : '<div class="hint" style="margin-bottom:10px">💡 캡컷으로 바로 보내기는 <b>Chrome·Edge</b>에서만 됩니다. 지금 브라우저에선 아래 ZIP을 받아 캡컷에 올리세요. '
-            + '<a href="/static/capcut_manual.html" target="_blank" rel="noopener" style="color:var(--accent2)">📖 그림으로 보는 준비 방법</a></div>')
+            + '<a href="/capcut_manual.html" target="_blank" rel="noopener" style="color:var(--accent2)">📖 그림으로 보는 준비 방법</a></div>')
     + (rendered?`<a class="btn-next" style="${big}" href="/api/mix/video/${j}?dl=1" download>⬇ 완성 영상(MP4)</a>`:'')
     // ★'📱 카톡·공유로 보내기' 버튼은 뺐다(2026-08-18 사장님 지시). 데스크톱 브라우저는
     //   파일 공유(Web Share Level 2)를 대부분 못 해 눌러도 다운로드 안내로 떨어졌고,
@@ -8459,7 +9324,7 @@ function _rfTick(){
 function _finalIdleSlot(){
   const fv=document.getElementById('finalVideo');
   if(fv && !fv.querySelector('video') && !document.getElementById('rfBar'))
-    fv.innerHTML=`<div style="aspect-ratio:9/16;max-width:300px;border:2px dashed var(--line);border-radius:16px;background:var(--inset);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--sub);text-align:center;padding:20px">
+    fv.innerHTML=`<div style="aspect-ratio:9/16;border:2px dashed var(--line);border-radius:16px;background:var(--inset);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--sub);text-align:center;padding:20px">
       <div style="font-size:30px;opacity:.5">🎬</div>
       <div style="font-size:12px;line-height:1.6">최종 렌더를 누르면<br>완성 영상이 여기서 재생돼요</div>
     </div>`;
@@ -8470,7 +9335,7 @@ async function renderFinal(){
   if(btn){ if(btn.dataset.orig==null) btn.dataset.orig=btn.innerHTML; btn.disabled=true; btn.innerHTML='<span class="skm-spin">🔄</span> 렌더 중…'; }
   const st=document.getElementById('finalStatus'); if(st){ st.className='match-progress'; st.innerHTML='<span class="dot"></span><span>렌더 준비 중…</span>'; }
   // 렌더 전 '미리보기 자리' — 완성 영상이 여기서 나온다(2단계 미리보기와 동일 연출)
-  document.getElementById('finalVideo').innerHTML=`<div style="aspect-ratio:9/16;max-width:300px;border:2px solid var(--line);border-radius:16px;background:var(--inset);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:var(--sub);text-align:center;padding:20px">
+  document.getElementById('finalVideo').innerHTML=`<div style="aspect-ratio:9/16;border:2px solid var(--line);border-radius:16px;background:var(--inset);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:var(--sub);text-align:center;padding:20px">
     <div id="rfEmoji" style="font-size:38px;animation:rfBounce 1s ease-in-out infinite">🎬</div>
     <div style="font-size:15px;font-weight:800;color:var(--fg)">숏템메이커 최종 렌더 중</div>
     <div id="rfStage" style="font-size:12px;color:var(--sub)">준비 중…</div>
@@ -8498,7 +9363,7 @@ async function pollFinal(){
       const rf=document.getElementById('rfStage'); if(rf) rf.textContent=(MIX_LABEL[d.status]||d.status);   // 박스 안 단계 라벨도 동적 갱신
     }
     if(d.status==='done'){ clearInterval(MIX_POLL); clearInterval(_rfTimer);
-      document.getElementById('finalVideo').innerHTML=`<video controls autoplay muted src="/api/mix/video/${esc(MIX_JOB)}" style="max-width:300px;border-radius:12px;margin-top:10px"></video>`;
+      document.getElementById('finalVideo').innerHTML=`<video controls autoplay muted src="/api/mix/video/${esc(MIX_JOB)}" style="border-radius:12px;margin-top:10px"></video>`;
       _finalRenderRestore('✅ 렌더 완료 — 완성 영상이 재생됩니다');
       renderExport({rendered:true});     // 렌더 완료 → 완성 MP4 다운로드 버튼까지
       refreshFinalThumb();               // 썸네일 카드·버튼 라벨도 이때 맞춘다(렌더 전엔 없었다)
@@ -9207,7 +10072,11 @@ async function suggestThumbTitles(){
       : '';
     box.innerHTML = _warn + '<div class="hint" style="margin-bottom:2px">마음에 드는 제목을 누르면 바로 얹어져요 ↓</div>' +
       d.titles.map((t, i) => {
-        const shown = esc(t.text || '').replace(/\n/g, ' / ');   // 줄바꿈은 ' / '로 표시
+        // ★썸네일에 실제로 얹히는 모습 그대로 보여준다 — 줄바꿈은 줄바꿈으로(2026-08-23).
+        //   예전엔 ' / '로 바꿔 보여줬는데, 사장님이 그 슬래시를 제목의 일부로 읽고
+        //   문구 칸에 그대로 옮겨 적으면 thumbAutoLines가 '/'를 글자로 그린다
+        //   (줄바꿈은 \\n만 인정). 화면과 결과가 달라 생기는 오해였다 → 목록도 두 줄로.
+        const shown = thumbAutoLines(t.text || '').map(l => esc(l)).join('<br>');
         return `<button class="tab" onclick="applyThumbTitle(${i})"
           style="text-align:left;min-width:auto;padding:9px 11px;white-space:normal;line-height:1.35;height:auto">
           <b style="font-size:14px">${shown}</b>
@@ -10305,7 +11174,11 @@ function s2DraftHtml(dr,i){
       <div class="s2-row-in">
         <div class="s2-role"><div class="rn">${esc(s2RoleName(b.role))}</div><span id="s2sec-${i}-${j}">${s2SecTag(s2SecOf(b.text))}</span></div>
         <div class="s2-sent" contenteditable="true" oninput="s2EditBeat(${i},${j},this)">${esc(b.text||'')}${chk}</div>
-        <button class="s2-swap" onclick="s2OpenBank(${i},${j})">바꾸기</button>
+        <div class="s2-acts">
+          <button class="s2-swap" onclick="s2OpenBank(${i},${j})">바꾸기</button>
+          <button class="s2-del" title="이 줄을 대본에서 아주 뺍니다 — 3단계에서 이 장면 칸도 안 생깁니다"
+            onclick="s2DelBeat(${i},${j})">🗑 빼기</button>
+        </div>
       </div>
       <div class="s2-bank" id="s2b-${i}-${j}"><div class="hint">불러오는 중…</div></div>
     </div>`;
@@ -10317,7 +11190,7 @@ function s2DraftHtml(dr,i){
          <button class="fx-re" onclick="s2Generate()">🔄 전체 다시 만들기</button>
        </div>` : '';
   return `<div class="s2-draft ${i===0?'da':'db'}${i===S2.curDraft?' on':''}" id="s2d-${i}">
-    <div class="s2-dhead"><span class="s2-dname">${String.fromCharCode(65+i)}안${dr.style_name?(' · '+esc(dr.style_name)):''}</span>
+    <div class="s2-dhead"><span class="s2-dname">${String.fromCharCode(65+i)}안${dr.style_name?(`<span class="sty"> · ${esc(dr.style_name)}</span>`):''}</span>
       <span id="s2tot-${i}" title="우리 보이스 실측 속도로 환산한 예상 길이 — 릴스 기본은 30초 이내">${s2SecTag(s2DraftSec(dr), 30)}</span>${gate}</div>
     ${rows}${fix}
     <div class="s2-dfoot">
@@ -10339,6 +11212,43 @@ function s2EditBeat(i,j,el){
   dr.script=beats.map(b=>b.text).filter(Boolean).join('\n');
   try{ s2RefreshSec(i,j); }catch(e){}   // 고친 즉시 그 칸·합계 초를 다시 쓴다
   saveWork();   // ★손으로 고친 문장도 남긴다(디바운스 1초 — 타이핑마다 서버로 안 나간다)
+}
+// ── 🗑 줄 빼기(2026-08-22 사장님 "여기서 대본을 어떻게 지우나") ────────────────────
+// 종전엔 방법이 **글자를 전부 지워 빈 칸으로 두는 것**뿐이었다. script는 빈 칸을 걸러
+// 만들어지니(s2EditBeat) 확정하면 실제로 빠지긴 했는데, 화면엔 빈 행이 그대로 남아
+// 지워졌는지 알 수 없었고 역할 라벨(효과·증언…)도 그대로라 "안 지워진다"로 보였다.
+//
+// ★s2Beats는 dr.beats가 비면 script를 쪼갠 **새 배열**을 만들어 준다(옛 생성기 경로).
+//   그 배열을 splice해도 dr에는 아무것도 안 남는다 — 그래서 지우기 전에 dr.beats로
+//   **못박아 둔다**. 안 그러면 이 경로에서만 조용히 아무 일도 안 일어난다.
+function s2DelBeat(i,j){
+  const dr=S2.drafts[i]; if(!dr) return;
+  const row=document.getElementById(`s2r-${i}-${j}`);
+  if(row && row.classList.contains('s2-busy')) return;   // 재생성 도는 칸은 손대지 않는다
+  const beats=s2Beats(dr).slice();                       // 파생 배열이어도 여기서 실체가 된다
+  if(!beats[j]) return;
+  // 마지막 한 줄까지 빼면 대본이 통째로 사라져 확정도 못 한다(s2Confirm이 빈 대본을 막는다).
+  // 지울 게 아니라 **고쳐 쓸** 상황이므로 여기서 갈라 말해준다.
+  if(beats.filter(x=>((x&&x.text)||'').trim()).length<=1){
+    toast('마지막 한 줄은 뺄 수 없어요 — 문장을 고쳐서 쓰세요'); return;
+  }
+  const b=beats[j];
+  const label=s2RoleName(b.role||'').replace(/^·\s*/,'') || '이 줄';
+  const txt=(b.text||'').trim();
+  const head=txt.slice(0,24)+(txt.length>24?'…':'');
+  if(!confirm(label+' — "'+head+'"\n\n이 줄을 대본에서 뺍니다. 계속할까요?')) return;
+  beats.splice(j,1);
+  dr.beats=beats;
+  // script는 beats에서 다시 만든다 — 두 벌을 따로 고치지 않는다(0순위-B, s2EditBeat와 동일).
+  dr.script=beats.map(x=>x.text).filter(Boolean).join('\n');
+  // ★게이트 판정(dr.checks/passed)은 옛 문장 기준이라 무효다. 그대로 두면 없어진 칸을
+  //   가리키며 "hook 문장틀 준수" 같은 빨간 줄이 남는다. 다시 검사할 길이 화면엔 없으니
+  //   **표시를 지운다** — 모르면 비운다(짐작해서 통과 뱃지를 붙이지 않는다).
+  dr.checks=[]; dr.passed=false;
+  s2CloseBanks();
+  s2RenderDrafts();
+  saveWork();   // 손으로 고친 문장과 같은 취급 — 돈 든 결과다
+  toast('🗑 '+label+' 줄을 뺐습니다 · 남은 '+beats.length+'줄');
 }
 // [바꾸기] — 그 스타일이 가진 **문장틀**을 준다(은행 완성문장이 아니다: 쌀밥 대본에
 // 삼겹살 훅이 뜨던 문제. 빈칸은 이 대본 소재로 채워 쓴다 — app.py:9288 설명 참조).
@@ -10362,10 +11272,15 @@ async function s2OpenBank(i,j){
     const list=(slot.templates||[]);
     // ★안내문은 **실제 동작**을 말한다(2026-08-17). 예전엔 "그 문장이 이 칸에 들어갑니다"라
     //   적어놓고 실제로 {빈칸}째 들어가 사장님이 손으로 채워야 했다 — 화면이 거짓말을 했다.
-    bank.innerHTML=`<div class="bk-t" title="틀을 고르면 그 구조로 이 대본 소재에 맞는 문장을 새로 만듭니다">🧩 ${esc(s2RoleName(role))} 틀 · ${esc(d.name||'')} ${list.length}개 <small style="color:var(--mut);font-weight:400">— 고르면 이 대본 소재로 <b>새 문장을 만듭니다</b> (15~40초)</small></div>`
-      + (list.length?list.map((t,k)=>`<div class="s2-cand"><span class="tx" onclick="s2PickTmpl(${i},${j},${k})">${s2Tmpl(t)}</span><button class="s2-raw" title="AI를 안 거치고 틀 원문을 그대로 넣습니다 — {빈칸}은 직접 채우셔야 합니다" onclick="event.stopPropagation();s2UseTmplRaw(${i},${j},${k})">이대로</button></div>`).join('')
-                    :'<div class="hint">이 칸은 틀이 없습니다 — 아래 [이 칸만 다시]로 새로 쓰거나 문장을 직접 고치세요.</div>')
-      + `<div class="s2-cand free" onclick="s2RegenFree(${i},${j})"><span class="tx">🎲 틀 없이 — <b>이 칸만 다시 써주세요</b></span></div>`;
+    // ★AI 자동 생성을 **맨 위**에 둔다(2026-08-22 사장님 지시: "선택이 너무 많다").
+    //   가장 많이 쓰는 동작이 맨 아래 점선 칸에 숨어 있었다 — 기본을 위로, 선택지를 아래로.
+    //   틀이 없는 칸이면 아래 목록이 비므로 이 칸 하나만 남아 자연히 유일한 길이 된다.
+    bank.innerHTML=`<div class="s2-cand free" onclick="s2RegenFree(${i},${j})"><span class="tx">✨ <b>AI 자동 생성</b> — 이 칸만 새로 써주세요<span class="sub">틀 안 고르고 맡깁니다 · 이 대본 소재로 · 15~40초</span></span></div>`
+      + (list.length
+          ? `<div class="bk-or">또는 문장틀 고르기 · ${esc(d.name||'')} ${list.length}개</div>`
+            + `<div class="bk-t" title="틀을 고르면 그 구조로 이 대본 소재에 맞는 문장을 새로 만듭니다">🧩 ${esc(s2RoleName(role))} 틀 — 고르면 이 대본 소재로 <b>새 문장을 만듭니다</b> (15~40초)</div>`
+            + list.map((t,k)=>`<div class="s2-cand"><span class="tx" onclick="s2PickTmpl(${i},${j},${k})">${s2Tmpl(t)}</span><button class="s2-raw" title="AI를 안 거치고 틀 원문을 그대로 넣습니다 — {빈칸}은 직접 채우셔야 합니다" onclick="event.stopPropagation();s2UseTmplRaw(${i},${j},${k})">이대로</button></div>`).join('')
+          : '<div class="hint" style="margin-top:8px">이 칸은 고를 수 있는 문장틀이 없습니다 — 위 [AI 자동 생성]으로 새로 쓰거나 문장을 직접 고치세요.</div>');
     S2._tmpl=list;
   }catch(e){ bank.innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; }
 }
@@ -10411,7 +11326,7 @@ async function s2RegenBeat(i,j,tmpl){
   try{
     const s=S2.seed||{};
     const body={style_id:dr.style_id, role:role, beats:beats, template:tmpl||'',
-      base_script:s.text||'', category:s.category||PM_CATEGORY||'', target_seconds:30};
+      base_script:s.text||'', category:s.category||PM_CATEGORY||'', target_seconds:25};
     if(s.shortcode) body.shortcode=s.shortcode;
     if(typeof MIX_JOB!=='undefined' && MIX_JOB) body.job_id=MIX_JOB;
     if(typeof WORK_ID!=='undefined' && WORK_ID) body.work_id=WORK_ID;

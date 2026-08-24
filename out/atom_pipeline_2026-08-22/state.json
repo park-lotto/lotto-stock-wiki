@@ -1,0 +1,35 @@
+{
+  "date": "2026-08-22",
+  "steps": {
+    "STEP1 sync+ingest": {
+      "status": "done",
+      "exit": 0,
+      "at": "2026-08-22T07:00:02.273560"
+    },
+    "STEP2 pending": {
+      "status": "done",
+      "exit": 0,
+      "at": "2026-08-22T07:05:08.844201"
+    },
+    "STEP3 report_ingest": {
+      "status": "done",
+      "exit": 0,
+      "at": "2026-08-22T07:05:39.558652"
+    },
+    "STEP3.5 telegram": {
+      "status": "done",
+      "exit": 0,
+      "at": "2026-08-22T07:05:41.398383"
+    },
+    "STEP3.6 blog": {
+      "status": "done",
+      "exit": 0,
+      "at": "2026-08-22T07:05:43.324437"
+    },
+    "STEP3.7 youtube": {
+      "status": "done",
+      "exit": 0,
+      "at": "2026-08-22T07:05:45.183032"
+    }
+  }
+}

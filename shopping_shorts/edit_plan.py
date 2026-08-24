@@ -468,6 +468,7 @@ _MIN_SET_SECS = 4.0     # 비트 하나가 이보다 짧으면 할 말이 없다
 # 프롬프트에 적어 줄 "최소 몇 세트" 힌트 = 게이트 최소비트. plan_gate와 한 값을 쓴다
 # (여기서 5를 따로 박으면 게이트만 올렸을 때 조용히 어긋난다).
 from shopping_shorts.plan_gate import _MIN_BEATS as _GATE_MIN_BEATS_HINT  # noqa: E402
+from shopping_shorts import keyroute
 
 # 모델이 할 말이 없을 때 뱉는 자리표시자들. 실측은 `filler`(job e99d0e8e3e02, 6개)지만
 # 같은 계열이 몇 개 더 있어 함께 막는다. 역할 이름을 그대로 적은 것도 자리표시자다.
@@ -1558,13 +1559,25 @@ _SYLLABLES_PER_SEC = 5.7
 
 
 def _speech_speed():
-    """실제 발화 배속(2026-08-09). _SYLLABLES_PER_SEC은 speed 1.0 기준 실측치라
-    라이브 보이스(speed 1.3~1.6)에선 그만큼 빠르다 — 실측 8.19자/초 ÷ 5.7 = 1.44.
-    env `SCRIPT_SPEECH_SPEED=1.0`이면 종전 동작(회귀 0)."""
+    """실제 발화 배속. _SYLLABLES_PER_SEC은 speed 1.0 기준 실측치라 라이브 보이스에선
+    그만큼 빠르다.
+
+    ★2026-08-22: 1.44 → 2.2. **보이스 배속과 같은 값이어야 한다.**
+      이건 '길이를 계산하는 쪽'이 믿는 배속인데, 보이스가 1.6인데 여기가 1.44라
+      시스템이 제 음성 길이를 계속 짧게 봤다. 배속만 올리고 여기를 두면
+      게이트 상한이 205자에 머물러 **대본이 14자 짧게 잘린다** — 말이 비는 쪽으로
+      되돌아간다. 그래서 보이스 배속과 짝으로 움직인다(0순위-B: 짝으로 움직여야
+      하는 값은 함께 정한다).
+    ★값은 **실측에서 역산한다**(곱셈으로 유도하지 마라). speed 2.2의 실측은
+      8.75자/초이고 `_SYLLABLES_PER_SEC`이 5.7이므로 배수는 8.75 ÷ 5.7 = **1.54**다.
+      배속 숫자(2.2)를 그대로 넣으면 5.7 × 2.2 = 12.5자/초가 되어 실측의 1.4배가 된다
+      — 그러면 대본이 과하게 길어져 영상이 도로 늘어난다(내가 여기서 한 번 틀렸다).
+      speed와 실측 자/초는 **비례하지 않는다**: 1.6→6.51 · 1.8→7.26 · 2.0→7.66 · 2.2→8.75.
+    env `SCRIPT_SPEECH_SPEED`로 되돌릴 수 있다(1.44를 주면 종전 동작)."""
     try:
-        v = float(os.environ.get("SCRIPT_SPEECH_SPEED", "1.44") or 1.44)
+        v = float(os.environ.get("SCRIPT_SPEECH_SPEED", "1.30") or 1.30)
     except (TypeError, ValueError):
-        v = 1.44
+        v = 1.30
     return min(2.0, max(1.0, v))
 
 
@@ -2163,7 +2176,7 @@ def _vault_call(prompt, schema, max_tries=8, key_offset=0):
       A/B/C 스타일이 통째로 안 입혀졌다). 키가 18개 살아있는데 0번만 두들긴 것.
       후보 인덱스·워커 PID를 섞어 오프셋을 주면 서로 다른 키로 나가 429 자체가
       안 난다. 실패 시 동작은 종전과 같다 — 대기 없이 다음 키로 순차 회전."""
-    keys = key_vault.get_live_keys_cascade("general")
+    keys = keyroute.gemini_keys("general")
     if not keys:
         # ★위키 예비풀(general/ingest/embed/briefing)이 전멸하면 SHORTS 전용풀의
         #   살아있는 키로라도 대본을 만든다(2026-08-10 실사고). 이날 위키 4개 그룹이
@@ -4509,8 +4522,11 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
         c0 = _safe_candidate(0)
         cands = [c0] if c0 else []
     else:
-        from concurrent.futures import ThreadPoolExecutor
-        with ThreadPoolExecutor(max_workers=n) as ex:
+        # ★keyctx.pool을 쓴다(맨 ThreadPoolExecutor 금지) — contextvar는 스레드를
+        #   건너지 않아서, 여기서 고객 주인이 끊기면 등록한 제미나이 키를 무시하고
+        #   회사 키로 돌면서 과금만 면제된다(2026-08-23 실측 결함).
+        from shopping_shorts import keyctx
+        with keyctx.pool(max_workers=n) as ex:
             # 순서 보존이 중요하다 — 후보 i에 배정된 스타일(trio: A=메종/B=채이/
             # C=스탠다드)과 화면 표시 순서가 어긋나면 안 된다. map은 입력 순서대로 준다.
             cands = [c for c in ex.map(_safe_candidate, range(n)) if c]
@@ -5041,6 +5057,9 @@ def apply_scene_lab(plan, seg_map, edits):
     # 붙어 있는 구간이라 이어 붙이기 = 긴 구간 하나이고, scene_override는 원래부터 임의
     # 구간 목록이므로 새 개념이 필요 없다(0순위-B: 규칙 변경 시 scene_play.js와 함께).
     merges = edits.get("merges") or {}
+    # ✋ 손으로 정한 컷 길이(2026-08-24). 키는 "칸번호:조각id" → 초.
+    #   화면(FIXLEN)이 그대로 올려준다. 없으면 종전대로 전부 자동 계산이다.
+    fixlen = edits.get("fixlen") or {}
     member_of = {}
     for lead, mem in merges.items():
         for m in (mem or []):
@@ -5077,6 +5096,21 @@ def apply_scene_lab(plan, seg_map, edits):
                      "shot_role": seg.get("shot_role") or "기타"}
             over.extend(_lab_trim_pieces(entry, trims.get(sid)))
         beat["scene_override"] = over
+        # ✋ 이 칸에서 손으로 정한 길이만 골라 담는다({조각id: 초}).
+        #   렌더(_plan_beat_clips)가 이걸 보고 그 컷을 그 길이로 고정한다.
+        _bi = eb.get("beat_idx")
+        _mine = {}
+        for _k, _v in (fixlen or {}).items():
+            try:
+                _ki, _sid = str(_k).split(":", 1)
+            except ValueError:
+                continue
+            if str(_ki) == str(_bi) and _sid in seg_map and float(_v) > 0:
+                _mine[_sid] = round(float(_v), 3)
+        if _mine:
+            beat["fixed_lens"] = _mine
+        else:
+            beat.pop("fixed_lens", None)
         if eb.get("stretch"):
             beat["stretch_fill"] = True
         else:
@@ -5086,7 +5120,7 @@ def apply_scene_lab(plan, seg_map, edits):
     #   최신인지 가르는 유일한 기준이다 — mix_jobs.updated_at은 음성 생성 같은 다른
     #   이유로도 움직여서 편성 시각으로 쓸 수 없다.
     plan["scene_lab"] = {"beats": edits.get("beats") or [], "trims": trims,
-                         "merges": merges, "applied": applied,
+                         "merges": merges, "fixlen": fixlen, "applied": applied,
                          "at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
     return plan
 
@@ -5162,6 +5196,79 @@ def enforce_scripted_narration(beats, given_script):
         beats[i]["narration"] = missing.pop(0)
         beats[i]["narration_restored"] = True
         _drop_stale_tts(beats[i])
+        fixed += 1
+    return beats, fixed
+
+
+def enforce_script_order(beats, given_script):
+    """확정 대본 모드: 문장을 **대본 순서 그대로** 칸에 다시 배분한다(2026-08-24).
+
+    사장님 결정("1" = 강하게): 2단계에서 확정한 순서가 곧 영상 순서다. 어느 칸에
+    어느 문장이 들어갈지를 AI에 맡기는 한 같은 사고가 반복된다.
+
+    ★실사고(잡 432d04a955bf): 10문장 중 2번째가 맨 끝 cta 칸으로 밀리고, CTA 문장은
+      통째로 빠졌다. 문장이 전부 진짜 대본 문장이라 `enforce_scripted_narration`
+      (창작 검사)은 `fixed=0`으로 통과시켰다 — 검사에 순서·누락 축이 없었다.
+
+    바꾸는 것 / 안 바꾸는 것:
+      · 바꾼다   — 각 칸의 narration(대본 순서대로 재배분)
+      · 안 바꾼다 — 칸 수·role·primary/alternates(=AI가 고른 화면). 화면 배치는
+                    그대로 두고 **대사만** 제자리로 돌린다.
+
+    배분 규칙: 칸의 길이(target_seconds)에 비례해 문장을 나눠 담되,
+      · 문장은 쪼개지 않는다(문장 중간을 가르면 프랑켄 문장이 된다)
+      · 칸보다 문장이 많으면 **버리지 않고** 남은 문장을 마지막 칸에 이어 붙인다
+      · 칸보다 문장이 적으면 뒤 칸이 비지 않게 최소 한 문장씩은 채운다
+    반환: (고친 beats, 바꾼 칸 수)
+    """
+    beats = beats or []
+    if not (given_script or "").strip() or not beats:
+        return beats, 0
+    sents = [s for s in script_sentences(given_script) if _narr_key(s)]
+    if not sents:
+        return beats, 0
+
+    n = len(beats)
+    # 이미 대본 순서를 지키고 있으면 손대지 않는다(멀쩡한 걸 흔들지 않는다).
+    joined = _narr_key("".join(b.get("narration") or "" for b in beats))
+    if joined == _narr_key(given_script):
+        return beats, 0
+
+    # 칸 길이 비례로 문장을 나눈다 — 긴 칸에 더 많이. 길이 정보가 없으면 균등.
+    secs = [float(b.get("target_seconds") or 0) or 1.0 for b in beats]
+    total_sec = sum(secs) or float(n)
+    total_len = sum(len(x) for x in sents) or 1
+    buckets, cur, budget_carry = [], [], 0.0
+    si = 0
+    for i, sec in enumerate(secs):
+        left_beats = n - i
+        # 이 칸이 가져갈 글자 예산(남은 칸에 최소 한 문장씩은 남겨둔다)
+        budget = total_len * (sec / total_sec) + budget_carry
+        cur = []
+        while si < len(sents):
+            # 남은 문장 수가 남은 칸 수와 같아지면 한 문장만 넣고 넘긴다(빈 칸 방지)
+            if cur and (len(sents) - si) <= (left_beats - 1):
+                break
+            cur.append(sents[si])
+            si += 1
+            if sum(len(x) for x in cur) >= budget and (len(sents) - si) >= left_beats:
+                break
+        budget_carry = budget - sum(len(x) for x in cur)
+        buckets.append(cur)
+    # 남은 문장은 **버리지 않고** 마지막 칸에 이어 붙인다(누락 금지)
+    if si < len(sents):
+        buckets[-1].extend(sents[si:])
+
+    fixed = 0
+    for b, chunk in zip(beats, buckets):
+        text = " ".join(chunk).strip()
+        if not text:
+            continue                      # 채울 게 없으면 옛 대사를 지우지 않는다
+        if _narr_key(text) == _narr_key(b.get("narration")):
+            continue
+        b["narration"] = text
+        b["narration_reordered"] = True
+        _drop_stale_tts(b)                # 대사가 바뀌면 옛 음성은 버린다(2026-08-19 실사고)
         fixed += 1
     return beats, fixed
 
