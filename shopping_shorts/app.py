@@ -8275,9 +8275,12 @@ def _api_me(request: Request):
     return {"customer_id": cid, "level": access_level(cid, now), "plan": plan,
             "days_left": days_left, "is_admin": is_admin,
             "email": email, "name": name, "member_days": member_days,
-            "usage": usage, "usage_limits": limits,
-            "limits": {"lens": _lim("limit_lens", 5), "render": _lim("limit_render", 2),
-                       "script": _lim("limit_script", 10)},
+            # ★limits = **이 사람의 실제 한도**. 예전엔 plan을 안 보고 무료 등급 값을
+            #   하드코딩해서, Pro 결제 고객의 마이페이지에 "영상 제작 2회"가 떴다
+            #   (2026-08-23 실측: 관리자 계정에도 2회로 표시). 같은 값을 두 곳에서
+            #   따로 정하면 반드시 어긋난다(0순위-B) → 위 계산 결과를 그대로 쓴다.
+            #   None = 무제한(관리자). 화면은 이 값을 "무제한"으로 표시한다.
+            "usage": usage, "usage_limits": limits, "limits": limits,
             "contact": {"kakao": st.get_setting("contact_kakao", ""),
                         "phone": st.get_setting("contact_phone", ""),
                         "pay": st.get_setting("pay_url", "")}}

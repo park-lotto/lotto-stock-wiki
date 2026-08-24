@@ -157,9 +157,9 @@
     <div class="secTitle">하루 이용 한도</div>
     <div class="secDesc">서버를 지키기 위한 안전장치입니다. 내 키를 등록하셔도 이 한도는 그대로입니다.</div>
     <div class="misc">
-      <div class="miscRow"><span>🎞️ 영상 제작</span><span class="miscCost"><span id="limRender">–</span> 회</span></div>
-      <div class="miscRow"><span>🔎 렌즈로 찾기</span><span class="miscCost"><span id="limLens">–</span> 회</span></div>
-      <div class="miscRow"><span>📝 대본 뽑기</span><span class="miscCost"><span id="limScript">–</span> 회</span></div>
+      <div class="miscRow"><span>🎞️ 영상 제작</span><span class="miscCost"><span id="limRender">–</span><span id="limRenderUnit"> 회</span></span></div>
+      <div class="miscRow"><span>🔎 렌즈로 찾기</span><span class="miscCost"><span id="limLens">–</span><span id="limLensUnit"> 회</span></span></div>
+      <div class="miscRow"><span>📝 대본 뽑기</span><span class="miscCost"><span id="limScript">–</span><span id="limScriptUnit"> 회</span></span></div>
     </div>
 
     <div class="msg err" id="acctErr"></div>
@@ -364,6 +364,8 @@ function postJSON(url, body){
 
 /* ── 💎 포인트 ──────────────────────────────────────── */
 function num(v){ return (v == null) ? "–" : Number(v).toLocaleString("ko-KR"); }
+// 하루 한도 표시 — null은 '무제한'이다(관리자). num()의 "–"와 뜻이 달라 따로 쓴다.
+function lim(v){ return (v == null) ? "무제한" : Number(v).toLocaleString("ko-KR"); }
 
 async function loadPoints(){
   clearErr("pointsErr");
@@ -592,10 +594,14 @@ async function loadAccount(){
     el("acctPlanSub").textContent = (d.days_left != null)
       ? ("남은 기간 " + num(d.days_left) + "일")
       : "전 기능 이용중";
-    var lim = d.limits || {};
-    el("limRender").textContent  = num(lim.render);
-    el("limLens").textContent    = num(lim.lens);
-    el("limScript").textContent  = num(lim.script);
+    var limits = d.limits || {};
+    // 무제한(관리자)이면 "무제한"만 남기고 뒤의 "회"를 지운다 — "무제한 회"는 말이 안 된다.
+    ["Render", "Lens", "Script"].forEach(function(k){
+      var v = limits[k.toLowerCase()];
+      el("lim" + k).textContent = lim(v);
+      var u = el("lim" + k + "Unit");
+      if (u) u.style.display = (v == null) ? "none" : "";
+    });
   } catch (e) {
     el("acctPlanSub").textContent = "";
     showErr("acctErr", "계정 정보를 불러오지 못했습니다: " + e.message);
