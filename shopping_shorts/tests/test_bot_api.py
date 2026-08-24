@@ -126,3 +126,25 @@ def test_missing_server_secret_locks_the_route(tmp_path, monkeypatch):
     r2 = c.post("/api/kakao/ask", headers={"X-Bot-Secret": ""},
                 json={"room": "문의", "sender": "x", "text": "!질문 테스트"})
     assert r2.status_code == 401
+
+
+def test_admin_routes_require_admin(tmp_path, monkeypatch):
+    """검수 화면은 관리자만 — 초안을 아무나 승인하면 안 된다.
+
+    ★인증을 켜야 한다(꺼져 있으면 이 코드베이스는 전원 admin 취급 — _auth_guard가
+      _AUTH_ON=False일 때 customer_id=0을 박아버린다). 안 켜고 재면 가드가 없어도
+      통과하는 가짜 green이 된다.
+    ★★`monkeypatch.setenv("DASH_PASS", ...)`로는 안 켜진다 — DASH_PASS·_AUTH_ON은
+      app.py 모듈이 처음 import될 때(6792·6824줄) 딱 한 번만 읽혀서, 같은 pytest
+      프로세스에서 다른 테스트가 먼저 app을 import해두면 이 테스트가 나중에 env를
+      바꿔도 반영되지 않는다(실측: 이 파일만 단독 실행하면 통과, 전체 스위트에서
+      돌리면 200이 나옴 — 정확히 이 함정). 이 코드베이스의 기존 관례대로
+      `monkeypatch.setattr(app_module, "_AUTH_ON", True)`로 직접 스위치를 켠다
+      (test_admin_customer_mgmt.py 등 다수 테스트가 쓰는 패턴)."""
+    from fastapi.testclient import TestClient
+    from shopping_shorts import app as app_module
+    monkeypatch.setattr(app_module, "DB_PATH", str(tmp_path / "t.db"))
+    monkeypatch.setattr(app_module, "_AUTH_ON", True)
+    c = TestClient(app_module.app)
+    assert c.get("/api/bot/qa").status_code in (401, 403)
+    assert c.get("/api/bot/unanswered").status_code in (401, 403)

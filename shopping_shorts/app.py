@@ -1148,6 +1148,58 @@ async def api_kakao_ask(request: Request):
     return {"ok": True, "reply": bot_qa.trim(reply)}
 
 
+# ── 카톡 답변봇 검수 화면(2026-08-25) ──────────────────────────────────────
+# 봇은 status='approved'만 쓴다(bot_qa_list 호출부 참조) — 새 행은 항상 draft라
+# 이 화면 없이는 아무것도 승인이 안 돼 봇이 영원히 침묵한다.
+# ★관리자 판정은 여기서 새로 만들지 않는다 — app.py에 이미 있는 `_require_admin`을
+#   그대로 쓴다(0순위-B: 같은 판단을 두 곳에 적으면 반드시 어긋난다. 이미 이 파일
+#   10곳 이상이 _require_admin을 쓰는 관례다).
+@app.get("/api/bot/qa")
+def api_bot_qa_list(request: Request, status: str = ""):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    return {"ok": True, "items": Store(DB_PATH).bot_qa_list(status=status or None)}
+
+
+@app.post("/api/bot/qa")
+async def api_bot_qa_save(request: Request):
+    """승인·수정·버림. {id, status} 또는 {id, question, answer, tags}."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    b = await request.json()
+    st = Store(DB_PATH)
+    qid = int(b.get("id") or 0)
+    if not qid:
+        qid = st.bot_qa_add(room=b.get("room") or "공통",
+                            question=b.get("question") or "",
+                            answer=b.get("answer") or "",
+                            tags=b.get("tags") or "", source=b.get("source") or "")
+    if b.get("question") is not None:
+        st.bot_qa_update(qid, b.get("question") or "", b.get("answer") or "",
+                         b.get("tags") or "")
+    if b.get("status"):
+        st.bot_qa_set_status(qid, b["status"])
+    return {"ok": True, "id": qid}
+
+
+@app.get("/api/bot/unanswered")
+def api_bot_unanswered(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    return {"ok": True, "items": Store(DB_PATH).bot_unanswered_list()}
+
+
+# ★정적 파일은 인라인 Path로 연다 — `_STATIC`은 app.py 아래쪽(14107줄 부근)에 있어
+#   여기선 그 이름이 아직 없다. /help·/challenge 라우트가 쓰는 방식과 같게 맞춘다.
+@app.get("/bot_admin.html", include_in_schema=False)
+def bot_admin_page():
+    return FileResponse(str(Path(__file__).parent / "static" / "bot_admin.html"),
+                        media_type="text/html")
+
+
 @app.post("/api/save")
 def api_save(request: Request, shortcode: str):
     """제품찾기 소스로 담기 (기능 ③에서 재사용)."""
