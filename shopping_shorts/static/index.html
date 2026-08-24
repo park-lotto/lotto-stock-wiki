@@ -637,6 +637,10 @@ function thumbURL(u, sc){ return u ? ('/api/thumb?url='+encodeURIComponent(u)+'&
 const CTYPES = [
   {key:"전체",  label:"✨ 전체",        topics:[]},
   {key:"썰쇼핑", label:"🎬 썰쇼핑",      topics:[]},
+  // 장비템(2026-08-25) — 만물상점류 '집 밖 장비·공구'. 썰쇼핑과 결이 다르다:
+  // 썰쇼핑은 **화법**(정체 은폐·용도 뒤집기)이 축이고, 장비템은 **제품 도메인**이 축이다.
+  // 기존 5축이 전부 집 안(살림·주방·뷰티)이라 이 버튼이 없으면 갈 곳이 '기타'뿐이다.
+  {key:"장비템", label:"🔧 장비·공구",   topics:[]},
   {key:"홈템",   label:"🏠 홈·살림·가전", topics:[]},
   {key:"비법형", label:"🍳 레시피·꿀팁",  topics:[]},
   {key:"혼합형", label:"💄 뷰티",        topics:[]},
@@ -650,7 +654,7 @@ const CTYPES = [
 //   버튼으로는 못 찾는 상태였다. 백엔드에 카테고리를 추가하면 **반드시 여기도** 추가하라.
 //   (test_ranking_style_filter.py가 이 짝을 검사한다)
 const TOPIC_CTYPE = {홈템:"홈템", 가전:"홈템", 레시피:"비법형", 뷰티:"혼합형", 기타:"기타",
-                     제품정체형:"썰쇼핑", 오용형:"썰쇼핑"};
+                     제품정체형:"썰쇼핑", 오용형:"썰쇼핑", 장비템:"장비템"};
 let STATE = {items:[], tab:"comments", ctype:"전체", cat:"전체", q:"", style:"",
              filters:_loadFilters()};
 // 걸러내기 상태는 브라우저에 기억시킨다 — 새로고침마다 다시 켜게 하면 아무도 안 쓴다.
