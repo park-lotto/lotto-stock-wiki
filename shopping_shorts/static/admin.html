@@ -86,6 +86,15 @@ tbody tr:hover{background:#1b1b22}
 
 <h2 class=grouphead>🔔 오늘 처리할 일</h2>
 
+<!-- 오류 신고(2026-08-24) — 고객이 사이드바 '🐞 오류 신고'를 누르면 여기 쌓인다.
+     ★고객은 한 줄만 쓴다. 페이지·작업번호·단계·화면오류는 화면이 자동으로 담아 보낸다
+       (고객에게 job_id를 물어보면 못 받는다 — 실제로 그래서 원인 찾는 데 오래 걸렸다). -->
+<div class="card wait">
+  <h2>🐞 오류 신고 (<span id=bcnt>0</span>건) <span id=bMsg class=msg></span></h2>
+  <table><thead><tr><th>시각</th><th>고객</th><th>내용</th><th>어디서</th><th>화면오류</th><th>처리</th></tr></thead>
+  <tbody id=brows><tr><td colspan=6 class=empty>불러오는 중…</td></tr></tbody></table>
+</div>
+
 <!-- 입금 신고(2026-08-23) — 고객이 /pay에서 '입금 완료했습니다'를 누르면 여기 뜬다.
      ★입금 증명이 아니다. 통장 확인은 그대로 하시고, 이건 '연락을 놓치지 않기 위한' 목록이다. -->
 <div class="card wait">
@@ -411,4 +420,62 @@ load().catch(e=>{
   if(rw) rw.innerHTML='<tr><td colspan=12 class=empty style="color:#f87171">'+msg+'</td></tr>';
   console.error('[admin] load 실패', e);
 });
+
+/* ── 오류 신고함(2026-08-24) ─────────────────────────────────────────
+   신고를 받아만 두면 "말해도 반응 없네"가 된다 → 답장을 여기서 바로 쓴다.
+   답장은 고객 화면이 다음 접속 때 스스로 띄운다(카톡으로 따로 안 보내도 된다). */
+function _bugWhen(ts){
+  var d=new Date(ts*1000), n=Date.now()/1000, s=n-ts;
+  if(s<3600) return Math.max(1,Math.round(s/60))+'분 전';
+  if(s<86400) return Math.round(s/3600)+'시간 전';
+  return d.toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+}
+function loadBugs(){
+  fetch('/api/admin/bug-reports?status=open').then(function(r){return r.json();}).then(function(d){
+    var rows=(d&&d.reports)||[];
+    document.getElementById('bcnt').textContent=rows.length;
+    var esc=function(x){return (x==null?'':String(x)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');};
+    document.getElementById('brows').innerHTML = rows.length ? rows.map(function(b){
+      var where=[];
+      if(b.step) where.push(esc(b.step)+'단계');
+      if(b.work_id) where.push('작업 '+esc(b.work_id));
+      if(b.job_id) where.push('job '+esc(b.job_id));
+      var url=b.page_url?('<div class=mini style="color:#5f6773">'+esc(b.page_url.slice(0,70))+'</div>'):'';
+      var errs=[];
+      try{ errs=JSON.parse(b.console_json||'[]'); }catch(e){ errs=[]; }
+      var errCell = errs.length
+        ? '<span style="color:#ff6b6b;cursor:pointer" title="'+esc(errs.join('\n'))+'">'+errs.length+'건 ⚠️</span>'
+        : '<span style="color:#5f6773">-</span>';
+      return '<tr><td class=mini>'+_bugWhen(b.created_at)+'</td>'+
+        '<td>'+esc(b.customer_name)+'<div class=mini style="color:#5f6773">cid '+b.customer_id+'</div></td>'+
+        '<td style="max-width:320px">'+esc(b.message)+url+'</td>'+
+        '<td class=mini>'+(where.join('<br>')||'-')+'</td>'+
+        '<td>'+errCell+'</td>'+
+        '<td><button class=bedit onclick="replyBug('+b.id+')">답장</button> '+
+            '<button class=bfree onclick="doneBug('+b.id+')">확인함</button></td></tr>';
+    }).join('') : '<tr><td colspan=6 class=empty>새 신고 없음</td></tr>';
+  }).catch(function(e){
+    document.getElementById('bMsg').textContent='불러오기 실패: '+e.message;
+  });
+}
+function replyBug(id){
+  var t=prompt('고객에게 보낼 답장을 적어주세요.\n(고객이 다음 접속 때 화면에서 바로 봅니다)');
+  if(t==null) return;
+  t=t.trim();
+  if(!t){ alert('답장 내용이 비었습니다.'); return; }
+  fetch('/api/admin/bug-reports/'+id+'/reply',{method:'POST',
+    headers:{'Content-Type':'application/json'},body:JSON.stringify({reply:t})})
+    .then(function(r){return r.json();}).then(function(d){
+      if(!d||!d.ok) throw new Error((d&&d.error)||'실패');
+      document.getElementById('bMsg').textContent='답장 보냈습니다 (#'+id+')';
+      loadBugs();
+    }).catch(function(e){ alert('답장 실패: '+e.message); });
+}
+function doneBug(id){
+  fetch('/api/admin/bug-reports/'+id,{method:'POST',
+    headers:{'Content-Type':'application/json'},body:JSON.stringify({status:'done'})})
+    .then(function(){ loadBugs(); });
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',loadBugs);
+else loadBugs();
 </script></body></html>

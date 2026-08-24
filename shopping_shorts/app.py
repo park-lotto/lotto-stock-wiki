@@ -2959,6 +2959,9 @@ def api_mix_start(request: Request, background_tasks: BackgroundTasks, body: dic
     cid = getattr(request.state, "customer_id", 0)
     # 이 구경로에는 중복 가드가 아예 없었다(2026-08-24) — /api/produce/mix/start와 같은
     # 판단처를 쓴다(0순위-B). 여기선 확정 대본이 없으므로 지문은 (cid + urls)로 잡힌다.
+    _blocked = _bad_key_block(cid)
+    if _blocked:
+        return _blocked
     _store = Store(DB_PATH)
     _fp, _won, _claim_job = _store.claim_mix_request(cid, urls, None)
     if not _won:
@@ -8676,6 +8679,34 @@ def check_and_count(customer_id, op):
     return True
 
 
+_SVC_KO = {"elevenlabs": "목소리(ElevenLabs)", "vmake": "자막제거(Vmake)",
+           "serpapi": "제품찾기(SerpApi)", "gemini": "AI(Gemini)", "youtube": "유튜브"}
+
+
+def _bad_key_block(customer_id):
+    """틀린 키를 들고 있으면 제작을 **시작 전에** 세운다 → 429/422 응답(아니면 None).
+
+    ★개인 전용 서비스만 막는다. 제미니·유튜브는 공용 풀이라 회원 키가 틀려도
+      풀의 다른 키로 돈다 — 막으면 멀쩡히 될 일을 막는 꼴이다(keyroute.POOLED가 진실).
+    ★왜 여기서 막나: 안 막으면 대본까지 다 만들고 3단계 TTS에서 400으로 죽는다.
+      고객은 30분을 버리고 "처리 중 문제"라는 말만 듣는다(2026-08-24 cid 192 실측 4회).
+    """
+    try:
+        bad = Store(DB_PATH).bad_key_services(customer_id)
+    except Exception as e:  # noqa: BLE001 — 조회 실패가 제작을 막으면 안 된다
+        print(f"[키검사] 상태 조회 실패(통과시킴): {e!r}", file=sys.stderr)
+        return None
+    blocking = [s for s in bad if not keyroute.is_pooled(s)]
+    if not blocking:
+        return None
+    names = " · ".join(_SVC_KO.get(s, s) for s in blocking)
+    return JSONResponse(status_code=422, content={
+        "ok": False, "error_code": "bad_key",
+        "error": ("%s 키가 올바르지 않아 영상을 만들 수 없어요. "
+                  "마이페이지 > 키에서 다시 등록해 주세요. "
+                  "(ElevenLabs 키는 sk_로 시작합니다 — 목록에 보이는 ID가 아닙니다)" % names)})
+
+
 def uncount(customer_id, op):
     """check_and_count로 센 것을 **같은 버킷에** 되돌린다(2026-08-24).
 
@@ -8915,6 +8946,87 @@ _ADMIN_SETTING_KEYS = {"trial_days", "trial_grant_points", "trial_event_hours",
                        "assemble_off",
                        # 1기 챌린지(2026-08-24) — 기간·하루 목표
                        "challenge_start", "challenge_end", "challenge_daily_goal"}
+
+
+# ── 오류 신고(2026-08-24) ────────────────────────────────────────────────
+# 사장님: "오류신고 버튼 만들기 / 내 관리페이지에 보이기".
+# ★고객에게 물어서 받으면 반드시 샌다 — job_id·현재 URL·콘솔 오류를 고객이 알 리 없다.
+#   실제로 김만기님 제작 4회 전패를 화면 캡처만으로는 못 찾았고 DB를 뒤져서야 원인을 알았다.
+#   그래서 고객은 **한 줄만 쓰고**, 진단 정보는 화면이 자동으로 담아 보낸다.
+@app.post("/api/bug-report")
+def api_bug_report(request: Request, body: dict):
+    """오류 신고 접수. body: {message, page_url?, job_id?, work_id?, step?, console?[]}"""
+    msg = (body.get("message") or "").strip()
+    if not msg:
+        return JSONResponse(status_code=422,
+                            content={"ok": False, "error": "어떤 문제인지 한 줄만 적어주세요"})
+    cid = getattr(request.state, "customer_id", 0)
+    console = body.get("console")
+    rid = Store(DB_PATH).add_bug_report(
+        cid, msg,
+        page_url=body.get("page_url"), job_id=body.get("job_id"),
+        work_id=body.get("work_id"), step=body.get("step"),
+        user_agent=request.headers.get("user-agent", ""),
+        console=console if isinstance(console, list) else None,
+    )
+    return {"ok": True, "id": rid,
+            "message": "접수됐어요. 확인하고 알려드릴게요 (접수번호 #%d)" % rid}
+
+
+@app.get("/api/admin/bug-reports")
+def api_admin_bug_reports(request: Request, status: str = ""):
+    """관리자: 신고 목록. status='open'이면 아직 안 본 것만."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    st = Store(DB_PATH)
+    rows = st.list_bug_reports(status=status or None)
+    names = {c["id"]: c.get("name") or c.get("email") or "" for c in st.list_customers()}
+    for r in rows:
+        r["customer_name"] = names.get(r["customer_id"], "비회원" if not r["customer_id"] else "?")
+    return {"ok": True, "reports": rows, "open": st.open_bug_report_count()}
+
+
+@app.post("/api/admin/bug-reports/{report_id}")
+def api_admin_bug_report_update(request: Request, report_id: int, body: dict):
+    """관리자: 처리 완료 표시(+메모)."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    status = body.get("status") if body.get("status") in ("open", "done") else "done"
+    Store(DB_PATH).set_bug_report_status(report_id, status, body.get("note"))
+    return {"ok": True}
+
+
+@app.post("/api/admin/bug-reports/{report_id}/reply")
+def api_admin_bug_reply(request: Request, report_id: int, body: dict):
+    """관리자: 신고에 답장(쪽지)을 남긴다 → 고객 화면이 스스로 띄운다."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    text = (body.get("reply") or "").strip()
+    if not text:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "답장 내용이 비었어요"})
+    Store(DB_PATH).reply_bug_report(report_id, text)
+    return {"ok": True}
+
+
+@app.get("/api/bug-report/replies")
+def api_bug_replies(request: Request):
+    """고객: 내가 받은 **안 읽은** 답장. 사이드바가 페이지마다 조용히 물어본다."""
+    cid = getattr(request.state, "customer_id", 0)
+    if not cid:
+        return {"ok": True, "replies": []}
+    return {"ok": True, "replies": Store(DB_PATH).my_bug_replies(cid, unread_only=True)}
+
+
+@app.post("/api/bug-report/replies/{report_id}/read")
+def api_bug_reply_read(request: Request, report_id: int):
+    """고객이 답장을 확인했다 — 다시 안 뜬다."""
+    cid = getattr(request.state, "customer_id", 0)
+    if cid:
+        Store(DB_PATH).mark_bug_reply_read(report_id, cid)
+    return {"ok": True}
 
 
 @app.get("/api/admin/customers")
@@ -11427,6 +11539,9 @@ def api_produce_mix_start(request: Request, background_tasks: BackgroundTasks, b
     #   기록되기 전이었다 — 0.03~0.17초 차이로 들어온 두 요청이 둘 다 통과해 각자 과금했다
     #   (실측 cid=57: 08-23 2쌍 · 08-24 5쌍, render 크레딧 10회 차감 / 실제 영상 5개).
     #   판단은 store.claim_mix_request 한 곳에서만 한다(0순위-B).
+    _blocked = _bad_key_block(cid)      # 틀린 키면 여기서 끝 — 과금·선점표 둘 다 없다
+    if _blocked:
+        return _blocked
     _store = Store(DB_PATH)
     _fp, _won, _claim_job = _store.claim_mix_request(cid, urls, script)
     if not _won:

@@ -61,6 +61,9 @@
       { icon: "💬", text: "인스타 소통공간", href: "/outreach" },
       // 도움말(2026-08-23) — 반복 문의를 줄이는 자리. 로그인 없이도 열리므로 free.
       { icon: "❓", text: "도움말·자주 묻는 질문", href: "/help", free: true },
+      // 오류 신고(2026-08-24 사장님 지시) — href 없이 클릭만 받는다(id로 잡는다).
+      // ★고객에게 "job_id 알려주세요"라고 물으면 못 받는다. 화면이 자동으로 담는다.
+      { icon: "🐞", text: "오류 신고", id: "ssBugBtn", free: true },
     ] },
     // ★2026-08-17 '설정 > 내 설정' 그룹을 없앴다. 상단 계정 카드의 '마이페이지'와
     //   같은 곳(/settings)인데 이름만 달라서, 사장님이 키 등록표를 못 찾으셨다.
@@ -189,15 +192,20 @@
     g.items.forEach(function (it) {
       var active = !!it.href && (it.href === path || (it.href === "/" && path === "/"));
       // 관리자 전용 항목(admin:true)은 기본 숨김으로 렌더 → /api/me가 is_admin이면 아래에서 노출.
-      var cls = "ss-item" + (active ? " active" : "") + (it.href ? "" : " ss-disabled") + (it.admin ? " ss-admin-only" : "");
+      // id 항목(오류 신고 등)은 링크가 아니라 **그 자리에서 창을 여는 버튼**이다 —
+      // href가 없다고 ss-disabled(회색)로 만들면 눌리지 않는다(2026-08-24).
+      var isBtn = !it.href && !!it.id;
+      var cls = "ss-item" + (active ? " active" : "") + ((it.href || isBtn) ? "" : " ss-disabled") + (it.admin ? " ss-admin-only" : "");
       var hide = it.admin ? ' style="display:none"' : "";
       // 클릭 목적지는 go가 있으면 go, 없으면 href(종전과 동일).
       var target = it.go || it.href;
       // ★active여도 go가 있으면 클릭을 살린다 — 제작소를 보고 있을 때도
       //   이 버튼을 눌러 빈 작업으로 가야 한다(같은 경로라 종전엔 클릭이 죽어 있었다).
-      var onclick = target && (!active || it.go) ? ' onclick="location.href=\'' + esc(target) + "'\"" : "";
+      var onclick = isBtn ? ' onclick="ssOpenBugReport()"' :
+          target && (!active || it.go) ? ' onclick="location.href=\'' + esc(target) + "'\"" : "";
       var payAttr = (it.href ? ' data-ss-href="' + esc(it.href) + '"' : "") + (it.free ? ' data-ss-free="1"' : "");
-      html += '<div class="' + cls + '"' + payAttr + hide + onclick + ">" + it.icon + " " + it.text + "</div>";
+      var idAttr = it.id ? ' id="' + it.id + '"' : "";
+      html += '<div class="' + cls + '"' + idAttr + payAttr + hide + onclick + ">" + it.icon + " " + it.text + "</div>";
     });
     html += "</div>";
   });
@@ -730,5 +738,154 @@
     mountWorks();
     initPaywall();
     initSignupAlert();
+  }
+})();
+
+/* ── 오류 신고 + 답장(쪽지) — 2026-08-24 사장님 지시 ─────────────────────────
+   "오류신고 버튼 만들기 / 내 관리페이지에 보이기 / 바로 버그 수정하고 쪽지를 남겨줄 수 있나"
+
+   ★고객에게 job_id·URL·콘솔오류를 물어보면 못 받는다. 실제로 김만기님 제작 4회 전패를
+     화면 캡처만으로는 못 찾았고 서버 DB를 뒤져서야 원인을 알았다(일레븐랩스 키 대신 키 ID).
+     그래서 고객은 **한 줄만 쓰고**, 진단 정보는 화면이 스스로 담아 보낸다.
+   ★자바스크립트 오류도 몰래 모아둔다 — "화면이 하얘요"의 진짜 원인이 대개 여기 있다. */
+(function () {
+  var ERRS = [];
+  window.addEventListener("error", function (e) {
+    ERRS.push(String((e && e.message) || e) + " @" + ((e && e.filename) || "?") + ":" + ((e && e.lineno) || 0));
+    if (ERRS.length > 20) ERRS.shift();
+  });
+  window.addEventListener("unhandledrejection", function (e) {
+    ERRS.push("promise: " + String((e && e.reason && e.reason.message) || (e && e.reason) || e));
+    if (ERRS.length > 20) ERRS.shift();
+  });
+
+  function q(name) {
+    var m = new RegExp("[?&]" + name + "=([^&]+)").exec(location.search);
+    return m ? decodeURIComponent(m[1]) : "";
+  }
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+  function css() {
+    if (document.getElementById("ssBugCss")) return;
+    var st = document.createElement("style");
+    st.id = "ssBugCss";
+    st.textContent =
+      ".ssbug-back{position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:99999;display:flex;" +
+      "align-items:center;justify-content:center;padding:16px}" +
+      ".ssbug{background:#141a1a;border:1px solid #2b3a3a;border-radius:14px;max-width:520px;width:100%;" +
+      "padding:20px;color:#e8eaed;font-size:14.5px;line-height:1.6;box-shadow:0 12px 40px rgba(0,0,0,.5)}" +
+      ".ssbug h3{margin:0 0 6px;font-size:18px;color:#6ff0d6}" +
+      ".ssbug p.sub{margin:0 0 14px;color:#8aa0a0;font-size:13px}" +
+      ".ssbug textarea{width:100%;box-sizing:border-box;min-height:110px;background:#0e1414;color:#e8eaed;" +
+      "border:1px solid #2b3a3a;border-radius:10px;padding:11px;font:inherit;resize:vertical}" +
+      ".ssbug .info{margin:10px 0 0;font-size:12.5px;color:#7d8f8f;background:#0e1414;border-radius:8px;padding:9px 11px}" +
+      ".ssbug .row{display:flex;gap:8px;margin-top:14px}" +
+      ".ssbug button{flex:1;padding:11px;border-radius:10px;border:0;font:inherit;font-weight:700;cursor:pointer}" +
+      ".ssbug .ok{background:#6ff0d6;color:#062b25}.ssbug .no{background:#222c2c;color:#c7d2d2}" +
+      ".ssbug .msg{margin-top:12px;font-size:13.5px}";
+    document.head.appendChild(st);
+  }
+
+  /* 지금 화면이 무엇을 하고 있었나 — 고객이 몰라도 되는 것들을 화면이 대신 안다. */
+  function context() {
+    var job = "";
+    try { job = (window.JOB_ID || (window.MIX && window.MIX.job_id) || ""); } catch (e) { job = ""; }
+    var step = "";
+    try {
+      var on = document.querySelector(".step.active, .stepper .active, [data-step].active");
+      step = on ? (on.getAttribute("data-step") || (on.textContent || "").trim().slice(0, 30)) : "";
+    } catch (e) { step = ""; }
+    return {
+      page_url: location.href.slice(0, 500),
+      work_id: q("work"),
+      job_id: String(job || ""),
+      step: step,
+      console: ERRS.slice(-20)
+    };
+  }
+
+  window.ssOpenBugReport = function () {
+    css();
+    var ctx = context();
+    var back = document.createElement("div");
+    back.className = "ssbug-back";
+    back.innerHTML =
+      '<div class="ssbug" role="dialog" aria-modal="true">' +
+        "<h3>🐞 오류 신고</h3>" +
+        '<p class="sub">어떤 문제인지 한 줄만 적어주세요. 화면 정보는 자동으로 함께 보내집니다.</p>' +
+        '<textarea id="ssBugText" placeholder="예) 5단계에서 영상 만들기를 누르면 계속 실패해요"></textarea>' +
+        '<div class="info">함께 보내는 것 — 지금 페이지' +
+          (ctx.work_id ? " / 작업번호 " + esc(ctx.work_id) : "") +
+          (ctx.step ? " / " + esc(ctx.step) + "단계" : "") +
+          (ctx.console.length ? " / 화면 오류 " + ctx.console.length + "건" : "") +
+        "</div>" +
+        '<div class="msg" id="ssBugMsg"></div>' +
+        '<div class="row"><button class="no" id="ssBugNo">닫기</button>' +
+        '<button class="ok" id="ssBugGo">보내기</button></div>' +
+      "</div>";
+    document.body.appendChild(back);
+    var close = function () { back.remove(); };
+    back.addEventListener("click", function (e) { if (e.target === back) close(); });
+    document.getElementById("ssBugNo").onclick = close;
+    var ta = document.getElementById("ssBugText");
+    ta.focus();
+    document.getElementById("ssBugGo").onclick = function () {
+      var btn = this;
+      var text = (ta.value || "").trim();
+      var msg = document.getElementById("ssBugMsg");
+      if (!text) { msg.style.color = "#ff9b9b"; msg.textContent = "어떤 문제인지 한 줄만 적어주세요."; ta.focus(); return; }
+      btn.disabled = true; btn.textContent = "보내는 중…";
+      var body = context();
+      body.message = text;
+      fetch("/api/bug-report", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      }).then(function (r) { return r.json(); }).then(function (d) {
+        if (!d || !d.ok) throw new Error((d && d.error) || "접수 실패");
+        msg.style.color = "#7ee787";
+        msg.textContent = d.message || "접수됐어요.";
+        ta.disabled = true; btn.style.display = "none";
+        document.getElementById("ssBugNo").textContent = "확인";
+      }).catch(function (e) {
+        msg.style.color = "#ff9b9b";
+        msg.textContent = "보내지 못했어요 — 잠시 후 다시 눌러주세요. (" + e.message + ")";
+        btn.disabled = false; btn.textContent = "보내기";
+      });
+    };
+  };
+
+  /* 답장(쪽지) — 신고만 받고 끝나면 "말해도 반응 없네"가 된다.
+     안 읽은 답장이 있으면 다음 화면에서 자동으로 뜬다(카톡으로 따로 안 보내도 된다). */
+  function showReplies() {
+    fetch("/api/bug-report/replies", { credentials: "same-origin" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (!d || !d.replies || !d.replies.length) return;
+        var rep = d.replies[0];
+        css();
+        var back = document.createElement("div");
+        back.className = "ssbug-back";
+        back.innerHTML =
+          '<div class="ssbug">' +
+            "<h3>📩 신고하신 건 답변드립니다</h3>" +
+            '<p class="sub">' + esc((rep.message || "").slice(0, 80)) + "</p>" +
+            '<div class="info" style="color:#d7e3e3;font-size:14px;white-space:pre-wrap">' +
+              esc(rep.reply) + "</div>" +
+            '<div class="row"><button class="ok" id="ssRepOk">확인했어요</button></div>' +
+          "</div>";
+        document.body.appendChild(back);
+        document.getElementById("ssRepOk").onclick = function () {
+          fetch("/api/bug-report/replies/" + rep.id + "/read", { method: "POST" })
+            .catch(function () {})
+            .then(function () { back.remove(); });
+        };
+      })
+      .catch(function () {});   /* 답장 확인 실패가 화면을 막으면 안 된다 */
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", showReplies);
+  } else {
+    showReplies();
   }
 })();
