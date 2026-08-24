@@ -9034,7 +9034,9 @@ def api_admin_bug_reports(request: Request, status: str = ""):
     rows = st.list_bug_reports(status=status or None)
     names = {c["id"]: c.get("name") or c.get("email") or "" for c in st.list_customers()}
     for r in rows:
-        r["customer_name"] = names.get(r["customer_id"], "비회원" if not r["customer_id"] else "?")
+        # cid 0 = 사장님(관리자) 계정이다 — '비회원'으로 적으면 사장님 신고가 남처럼 보인다.
+        r["customer_name"] = names.get(
+            r["customer_id"], "관리자(사장님)" if not r["customer_id"] else "탈퇴/삭제된 계정")
     return {"ok": True, "reports": rows, "open": st.open_bug_report_count()}
 
 
@@ -9064,7 +9066,13 @@ def api_admin_bug_reply(request: Request, report_id: int, body: dict):
 
 @app.get("/api/bug-report/replies")
 def api_bug_replies(request: Request):
-    """고객: 내가 받은 **안 읽은** 답장. 사이드바가 페이지마다 조용히 물어본다."""
+    """고객: 내가 받은 **안 읽은** 답장. 사이드바가 페이지마다 조용히 물어본다.
+
+    ⚠️cid 0은 **비로그인과 사장님(관리자) 둘 다**라서 구분이 안 된다 — 그래서 0이면
+      아무것도 안 준다. 안 그러면 비로그인 방문자에게 사장님 신고의 답장이 새어 나간다.
+      결과적으로 사장님 본인·비로그인이 낸 신고는 답장이 화면에 안 뜬다(2026-08-24 실측).
+      실제 고객은 전부 cid>0이라 정상 동작한다 — 서버에서 흐름 전체를 확인했다.
+    """
     cid = getattr(request.state, "customer_id", 0)
     if not cid:
         return {"ok": True, "replies": []}
