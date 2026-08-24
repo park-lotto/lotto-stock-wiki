@@ -9232,11 +9232,24 @@ def _admin_pending(request: Request):
         alerts = ops_alert.list_alerts()
     except Exception:                                       # noqa: BLE001 — 알림이 승인화면을 막지 않는다
         alerts = []
+    # 오류 신고 알림(2026-08-25 사장님 "접수되면 가입·입금처럼 왼쪽 상단에 작은 팝업").
+    # 위 alerts와 같은 이유로 여기 얹는다 — 새 폴러를 만들지 않는다(0순위-B).
+    # 실패해도 승인 팝업을 죽이지 않는다.
+    try:
+        st_bug = Store(DB_PATH)
+        open_bugs = st_bug.list_bug_reports(status="open", limit=1)
+        bug_newest = open_bugs[0] if open_bugs else None
+        bug_open = st_bug.open_bug_report_count()
+    except Exception:                                       # noqa: BLE001
+        bug_newest, bug_open = None, 0
     return {"ok": True, "count": len(pend),
             "newest_id": (newest["id"] if newest else 0),
             "newest": newest, "pending": pend[:20],          # 팝업 목록은 최근 20건까지
             "alerts": alerts,
-            "alert_unread": sum(1 for a in alerts if not a.get("read"))}
+            "alert_unread": sum(1 for a in alerts if not a.get("read")),
+            "bug_newest_id": (bug_newest["id"] if bug_newest else 0),
+            "bug_newest": bug_newest,
+            "bug_open": bug_open}
 
 
 @app.post("/api/admin/alerts/read")
