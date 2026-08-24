@@ -1104,7 +1104,11 @@ _BOT_ASKED = {}          # {(day, sender): 횟수} — 하루 상한. 프로세�
 @app.post("/api/kakao/ask")
 async def api_kakao_ask(request: Request):
     """폰이 보낸 카톡 메시지 → 답장 문자열. 답할 게 없으면 빈 문자열."""
-    if (os.getenv("KAKAO_BOT_SECRET", "") or "") != (request.headers.get("X-Bot-Secret") or ""):
+    # ★비밀키가 **서버에 없으면 잠근다**(2026-08-25 실측 사고 방지). 종전 비교식은
+    #   미설정("")과 헤더없음("")이 같아져 **아무나 부를 수 있었다**(실측 200).
+    #   키를 안 넣은 채 배포되는 게 정상 경로이므로(사장님이 나중에 넣는다) 여기서 막는다.
+    _secret = (os.getenv("KAKAO_BOT_SECRET", "") or "").strip()
+    if not _secret or _secret != (request.headers.get("X-Bot-Secret") or ""):
         return JSONResponse(status_code=401, content={"ok": False, "error": "bad secret"})
     body = await request.json()
     room = (body.get("room") or "").strip()

@@ -107,3 +107,22 @@ def test_daily_limit_per_sender(client, monkeypatch):
     for _ in range(2):
         _ask(client, "!질문 화성 갈 수 있나요")
     assert _ask(client, "!질문 화성 갈 수 있나요").json()["reply"] == ""
+
+
+def test_missing_server_secret_locks_the_route(tmp_path, monkeypatch):
+    """★비밀키를 서버에 안 넣은 상태에서 **아무나 부를 수 있으면 안 된다**.
+
+    2026-08-25 실측: 종전 비교식은 미설정("")과 헤더없음("")이 같아져 200을 줬다.
+    사장님이 키를 나중에 넣는 게 정상 경로라, 그 사이에 열려 있으면 안 된다."""
+    monkeypatch.delenv("KAKAO_BOT_SECRET", raising=False)
+    from fastapi.testclient import TestClient
+    from shopping_shorts import app as app_module
+    monkeypatch.setattr(app_module, "DB_PATH", str(tmp_path / "t.db"))
+    app_module._BOT_ASKED.clear()
+    c = TestClient(app_module.app)
+    r = c.post("/api/kakao/ask", json={"room": "문의", "sender": "x", "text": "!질문 테스트"})
+    assert r.status_code == 401, "비밀키 미설정인데 라우트가 열려 있다"
+    # 헤더를 아무렇게나 붙여도 마찬가지
+    r2 = c.post("/api/kakao/ask", headers={"X-Bot-Secret": ""},
+                json={"room": "문의", "sender": "x", "text": "!질문 테스트"})
+    assert r2.status_code == 401
