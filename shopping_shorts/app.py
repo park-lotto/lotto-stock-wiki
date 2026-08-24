@@ -3179,7 +3179,19 @@ def _probe_user_key(service: str, key: str) -> bool:
     if service == keyroute.SVC_VMAKE:
         return ":" in key           # ak:sk 형식. 실호출 안 함(크레딧 소모)
     if service == keyroute.SVC_ELEVENLABS:
-        url, kw = "https://api.elevenlabs.io/v1/user", {"headers": {"xi-api-key": key}}
+        # ★`/v1/user`가 아니라 `/v1/voices`로 본다(2026-08-24 라이브 실측).
+        #   일레븐랩스 키는 **권한(scope)을 좁게 만들 수 있다.** 고객이 그렇게 만들면
+        #   TTS는 멀쩡히 되는데 `/v1/user`만 401이 난다:
+        #     /v1/user  → 401 "missing the permission user_read"
+        #     /v1/voices→ 200
+        #     실제 TTS  → 200 (음성 16,762바이트 생성됨)
+        #   그런데 우리는 /v1/user 하나로 판정해 **"키가 틀렸습니다"**를 띄웠다.
+        #   돈 내고 키까지 등록한 고객이 자기 키가 죽은 줄 안다 — 제일 나쁜 오진이다.
+        #   판정은 **우리가 실제로 쓰는 기능이 되는가**로 해야 한다(CLAUDE.md 0순위-B:
+        #   "진짜 판정은 실제로 데이터가 나오는가로 하라").
+        #   `/v1/voices`를 고른 이유: TTS와 같은 voices 권한을 요구하고, 실제 합성이
+        #   아니라 목록 조회라 **크레딧을 안 쓴다**(확인 버튼이 돈을 쓰면 안 된다).
+        url, kw = "https://api.elevenlabs.io/v1/voices", {"headers": {"xi-api-key": key}}
     elif service == keyroute.SVC_YOUTUBE:
         url = ("https://www.googleapis.com/youtube/v3/videos"
                f"?part=id&id=dQw4w9WgXcQ&key={urllib.parse.quote(key)}")
