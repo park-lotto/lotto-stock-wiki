@@ -32,6 +32,13 @@ def test_ranking_only_blocked_helper():
     assert appmod._ranking_only_blocked("/api/media", "GET") is False
     assert appmod._ranking_only_blocked("/api/media", "POST") is True   # 조회만 무료
     assert appmod._ranking_only_blocked("/static/app.js", "GET") is False
+    # ★화면을 그리는 정적 자원은 등급과 무관하게 열려야 한다(2026-08-24 실사고).
+    #   sidebar.js만 예외 목록에 있고 theme.css·loader.js·scene_play.js는 빠져 있어
+    #   체험판 고객 전원이 스타일 깨진 화면을 봤다(라이브 로그: theme.css 402,
+    #   제작소 단계바가 세로로 늘어짐). 목록이 아니라 확장자로 판정한다.
+    for asset in ("/theme.css", "/loader.js", "/scene_play.js", "/x.woff2", "/logo.png"):
+        assert appmod._ranking_only_blocked(asset, "GET") is False, asset
+    assert appmod._ranking_only_blocked("/theme.css", "POST") is True   # 자원 요청이 아니다
     assert appmod._ranking_only_blocked("/api/login", "POST") is False      # 로그인 폼=무료
     # ★가입 마무리는 등급과 무관하게 열려야 한다(2026-08-24 실사고).
     #   막으면 막다른 길이 된다: 어느 화면을 열든 미들웨어가 /welcome으로 보내는데

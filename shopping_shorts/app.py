@@ -6652,10 +6652,24 @@ _FREE_EXACT_GET = {"/", "/pricing", "/account", "/api/me", "/api/reference", "/a
 _FREE_PREFIX = ("/static/", "/auth/google/")
 
 
+# 화면을 그리는 정적 자원의 확장자. 이건 '기능'이 아니라 **화면 그 자체**다.
+# ★목록으로 파일명을 나열하지 않는다(2026-08-24). 실제로 그렇게 하다 sidebar.js만
+#   예외로 들어가 있고 theme.css·loader.js·scene_play.js는 빠져 있었다 — 그래서
+#   체험판 고객 전원이 **스타일이 깨진 화면**을 봤다(실측: theme.css 402, 단계바가
+#   세로로 늘어짐). 새 파일이 늘 때마다 목록을 고쳐야 하면 반드시 또 빠진다.
+_ASSET_SUFFIXES = (".css", ".js", ".map", ".ico", ".png", ".jpg", ".jpeg",
+                   ".svg", ".gif", ".webp", ".woff", ".woff2", ".ttf")
+
+
 def _ranking_only_blocked(path: str, method: str = "GET") -> bool:
     """ranking_only 등급에게 이 경로를 막아야 하나. FREE 목록 외 전부 True(차단).
     GET 무료 경로는 POST 등으로 오면 막는다(method-aware)."""
     if path in _FREE_EXACT_ANY:
+        return False
+    # ★정적 자원(css·js·글꼴·아이콘)은 등급과 무관하게 내준다. 막아봐야 지켜지는 건
+    #   없고(기능은 API에서 막힌다) 화면만 깨진다 — 고객은 "고장난 서비스"로 본다.
+    #   GET/HEAD만. POST로 오는 건 자원 요청이 아니다.
+    if method in ("GET", "HEAD") and path.endswith(_ASSET_SUFFIXES):
         return False
     if method == "GET" and path in _FREE_EXACT_GET:
         return False
