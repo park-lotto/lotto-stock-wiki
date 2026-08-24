@@ -5,6 +5,7 @@ import logging
 import os
 import secrets
 import sqlite3
+import sys
 import time
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -4034,12 +4035,17 @@ class Store:
             return (fp, True, None)
 
     def attach_mix_claim(self, fingerprint, job_id):
-        """이긴 요청이 job을 만든 뒤 job_id를 선점표에 붙인다 — 진 쪽이 이걸 읽어 같은 job을 쓴다."""
+        """이긴 요청이 job을 만든 뒤 job_id를 선점표에 붙인다 — 진 쪽이 이걸 읽어 같은 job을 쓴다.
+
+        실패해도 제작은 그대로 간다(이미 job이 있다). 다만 **진 쪽이 job을 못 찾아
+        409를 받는다** — 조용히 넘기면 "가끔 중복이라며 거절된다"로만 보이므로 남긴다.
+        """
         try:
             with self._conn() as c:
                 c.execute("UPDATE mix_claims SET job_id=? WHERE fingerprint=?", (job_id, fingerprint))
-        except sqlite3.Error:
-            pass
+        except sqlite3.Error as e:
+            print("[선점표] job_id 부착 실패(무해, 중복요청이 409를 받을 수 있음): %r" % (e,),
+                  file=sys.stderr)
 
     def release_mix_claim(self, fingerprint):
         """이겼지만 job을 못 만든 경우(과금 거절·상한 초과) 선점표를 놓아준다.
@@ -4048,8 +4054,9 @@ class Store:
             with self._conn() as c:
                 c.execute("DELETE FROM mix_claims WHERE fingerprint=? AND job_id IS NULL",
                           (fingerprint,))
-        except sqlite3.Error:
-            pass
+        except sqlite3.Error as e:
+            print("[선점표] 반납 실패 — 이 고객은 %d초간 같은 요청을 다시 못 보낸다: %r"
+                  % (30, e), file=sys.stderr)
 
     def get_mix_claim_job(self, fingerprint):
         """선점표에 붙은 job_id(없으면 None)."""
@@ -4058,7 +4065,8 @@ class Store:
                 row = c.execute("SELECT job_id FROM mix_claims WHERE fingerprint=?",
                                 (fingerprint,)).fetchone()
             return row[0] if row else None
-        except sqlite3.Error:
+        except sqlite3.Error as e:
+            print("[선점표] 조회 실패: %r" % (e,), file=sys.stderr)
             return None
 
     def recent_same_mix_job(self, customer_id, urls, given_script, within_sec=30):
