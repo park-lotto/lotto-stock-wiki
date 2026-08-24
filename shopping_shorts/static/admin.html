@@ -184,7 +184,8 @@ async function load(){
     const trialBadge = trialLeft ? ` <span class="badge trial">🎁 체험중 ${trialLeft}h</span>` : '';
     return `<tr><td>${c.id}</td><td>${esc(c.name)}${trialBadge}</td><td>${esc(c.phone)}</td><td>${esc(c.email||c.username)}</td>
       <td style="font-size:12px;color:#8a8a92">${joined}</td>
-      <td><button class=bok onclick="approveCustomer(${c.id})">✅ 승인</button></td></tr>`;
+      <td><button class=bok onclick="ackCustomer(${c.id})" title="체험은 그대로 두고 대기실에서만 내립니다">✅ 확인</button>
+          <button class=bpro onclick="approveCustomer(${c.id})" title="결제받고 기간을 줄 때">💳 결제승인</button></td></tr>`;
   }).join('') : '<tr><td colspan=6 class=empty>대기 중인 가입 신청이 없어요</td></tr>';
   // 일반 고객표 — 검색·등급 필터 적용 렌더
   renderCustomers();
@@ -308,6 +309,16 @@ async function closeClaim(id){
   loadDepositClaims();
 }
 
+/* '확인' — 클릭 한 번(2026-08-25 사장님 "일일이 버튼 누르니 안 좋아").
+   남은 체험은 그대로 두고 대기실에서만 내린다 → 아래 고객표로 옮겨간다. */
+async function ackCustomer(cid){
+  const r = await fetch('/api/admin/ack',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({customer_id:cid})});
+  const m=document.getElementById('pMsg');
+  if(r.ok){m.textContent='✅ 확인함 — 고객관리로 내려갔어요';m.className='msg';load();}
+  else{m.textContent='❌ 실패';m.className='msg err';}
+  setTimeout(()=>m.textContent='',2500);
+}
 async function approveCustomer(cid){
   const days = prompt('이용일수 (예: 30)', '');
   if(days===null) return;
