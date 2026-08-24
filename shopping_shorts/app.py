@@ -8929,6 +8929,13 @@ def _admin_customers(request: Request):
     # ★한 번에 다 가져온다 — 고객마다 쿼리를 돌면(N+1) 155명에서 900번 가까이 나가
     #   목록이 3.7초 걸렸다(2026-08-23 실측). 값의 뜻은 낱개 함수와 같다.
     usage_map = st.usage_all(day)
+    # ★한국시간 오늘 실제로 만들어진 영상 수(2026-08-24). usage는 UTC 날짜 버킷이라
+    #   한국시간 00:00~09:00 제작분이 전날 칸으로 가고, 중복 접수까지 겹치면
+    #   "7개 만들었는데 10개가 찍혔다"를 화면에서 대조할 방법이 없었다.
+    _kst_midnight = (datetime.now(timezone(timedelta(hours=9)))
+                     .replace(hour=0, minute=0, second=0, microsecond=0)
+                     .astimezone(timezone.utc).isoformat())
+    made_map = st.made_and_charged_since_all(_kst_midnight)
     access_map = st.access_summary_all(since7)
     points_map = st.points_balance_all()
     challenge_ids = st.challenge_member_ids()
@@ -8937,6 +8944,7 @@ def _admin_customers(request: Request):
         cu["level"] = access_level(_cid)
         _u = usage_map.get(_cid, {})
         cu["usage"] = {op: _u.get(op, 0) for op in ("lens", "render", "script")}
+        cu["made_today"] = made_map.get(_cid, {"made": 0, "charged": 0})   # 한국시간 오늘 실측
         cu["access_7d"] = access_map.get(_cid, {"ips": 0, "devices": 0})  # 최근 7일 고유 수
         cu["is_admin"] = _is_admin(_cid)                        # 관리자 배지용
         cu["challenge"] = _cid in challenge_ids                 # 1기 챌린지 참가 여부(2026-08-24)
