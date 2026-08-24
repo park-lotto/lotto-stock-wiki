@@ -6,6 +6,11 @@ h1{color:#4f9dfa;font-size:20px;margin:0 0 4px}.sub{color:#8a8a92;font-size:13px
 .card{background:#16161c;border:1px solid #2a2a30;border-radius:12px;padding:16px;margin-bottom:16px}
 h2{font-size:15px;margin:0 0 12px;color:#cfd2d6}
 table{width:100%;border-collapse:collapse;font-size:15px}
+/* ★사이드바(270px)가 생기며 본문이 좁아졌다(2026-08-24). 고객표는 열이 14개라
+   width:100%로 욱여넣으면 머리글이 세로로 쪼개진다("이름"→"이/름").
+   필요한 폭은 유지하고 카드 안에서 가로 스크롤시킨다. */
+.card{overflow-x:auto}
+#rows td,thead th{white-space:nowrap}
 th,td{text-align:left;padding:11px 12px;border-bottom:1px solid #23232a}
 th{color:#9a9aa2;font-weight:600;font-size:14px}
 th.mini,td.mini{white-space:nowrap;min-width:52px}
@@ -35,7 +40,13 @@ details.card[open]>summary::before{content:'▾'}
 .setfield label{min-width:92px;margin:0}
 .setfield input{flex:1;width:auto}
 tbody tr:hover{background:#1b1b22}
+/* ★사이드바와 나란히 놓기(2026-08-24 사장님 "따로 뜨지 말고 이어서").
+   sidebar.js가 body{display:flex}를 주입하고 <aside class="ss-nav">를 맨 앞에
+   넣는다 → 본문은 남은 폭을 채우는 flex 자식이어야 한다. min-width:0이 없으면
+   넓은 표가 사이드바를 밀어낸다(flex 자식 기본 min-width:auto). */
+.main{flex:1;min-width:0;padding:16px 20px 40px;overflow-x:auto}
 </style></head><body>
+<div class="main">
 <h1>🔐 유료게이트 관리자</h1>
 <div class=sub>결제 확인된 계정을 <b>pro</b>로 승격 / 체험·크레딧 설정 조정</div>
 
@@ -341,4 +352,7 @@ load().catch(e=>{
   if(rw) rw.innerHTML='<tr><td colspan=12 class=empty style="color:#f87171">'+msg+'</td></tr>';
   console.error('[admin] load 실패', e);
 });
-</script></body></html>
+</script>
+</div>
+<script src="/sidebar.js?v=2"></script>
+</body></html>
