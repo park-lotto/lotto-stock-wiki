@@ -573,8 +573,24 @@ _BEAT_LEN_MAX = 1.35
 _BEAT_LEN_SLACK = 12
 
 
+def beat_len(text):
+    """한 칸의 길이 — **norm(공백·문장부호 제외)**. 길이를 재는 곳은 전부 이걸 쓴다.
+
+    ★단위를 함수로 못 박는 이유(2026-08-24 실사고): 예산은 `len(원문)`(raw)로 잡고
+      판정은 `len(norm(...))`로 해서, 곱하기 1.35를 하기도 전에 이미 26%가 공짜였다.
+      실효 상한이 1.8배 = **조이기 전과 같은 값**이라 "고쳤는데 또 길어진다"가 났다.
+      (길이 수정이 5번째였다 — 매번 배수만 만지고 단위는 아무도 안 봤다)
+    """
+    # 지연 import — 이 모듈은 script_gate를 함수 안에서만 부른다(순환 import 회피 관례).
+    from shopping_shorts import script_gate as _sg
+    return len(_sg.norm(text or ""))
+
+
 def _beat_len_cap(per):
-    """한 칸을 다시 쓸 때 허용하는 최대 글자 수(공백 제거 기준).
+    """한 칸을 다시 쓸 때 허용하는 최대 글자 수.
+
+    ★`per`는 반드시 **norm 기준**이어야 한다(`beat_len()`으로 잰 값).
+      raw를 넣으면 상한이 26% 헐렁해져 이 함수가 있으나 마나가 된다.
 
     ★판정과 최종 방어가 **같은 값을 봐야 한다**(0순위-B). 종전엔 같은 식
       `max(per*1.8, per+40)`이 재시도 루프와 마지막 반환문 **두 군데에 따로** 적혀
@@ -638,9 +654,12 @@ def regen_one_beat(sources, style, role, beats, template="", target_seconds=30,
     #   대본 전체 밀도는 나머지 칸이 그대로 있으므로 이 칸만 제자리를 지키면 유지된다.
     prev_text = next((str(b.get("text") or "") for b in (beats or [])
                       if isinstance(b, dict) and b.get("role") == role), "")
-    per = len(prev_text.strip())
+    # ★norm으로 잰다 — 아래 판정(`n_out`)·상한(`_beat_len_cap`)과 **같은 단위**여야 한다.
+    #   종전엔 여기만 raw(len)라 상한이 26% 헐렁했다(2026-08-24 실사고, beat_len 주석 참조).
+    per = beat_len(prev_text)
     if not per:     # 빈 칸을 채우는 경우에만 스타일 평균으로 되돌아간다
-        chars = style.get("chars_per_30s") or 0
+        # 스타일 밀도도 norm으로 환산해서 쓴다(script_gate가 한 곳에서 정한다, 0순위-B).
+        chars = script_gate.norm_chars_per_30s(style)
         per = int(chars * seconds / 30 / max(1, len(roles))) if chars else 0
 
     # 앞뒤 문맥 — 지금 대본에서 이 칸을 뺀 나머지를 순서대로 보여준다.
@@ -732,7 +751,7 @@ def regen_one_beat(sources, style, role, beats, template="", target_seconds=30,
         # ★칸 하나가 대본 전체를 삼키는 것을 막는다(2026-08-17 사장님 제보로 추가).
         #   미끼 칸에 문제제기·시연·증거·CTA가 통째로 들어와 5줄이 됐다. 프롬프트로
         #   부탁만 해서는 안 된다 — **판정해서 되돌려야** 고쳐진다(게이트와 같은 사상).
-        n_out = len(script_gate.norm(out))
+        n_out = beat_len(out)
         too_long = bool(per) and n_out > _beat_len_cap(per)
         # CTA는 마지막 칸 몫이다. 다른 칸이 댓글 유도를 하면 그 칸의 역할을 벗어난 것이다.
         cta_role = roles[-1] if roles else ""
@@ -781,7 +800,7 @@ def regen_one_beat(sources, style, role, beats, template="", target_seconds=30,
         return None
     if prev_text and script_gate.norm(out) == script_gate.norm(prev_text):
         return None
-    _n = len(script_gate.norm(out))
+    _n = beat_len(out)          # 재시도 루프와 **같은 함수**로 잰다(0순위-B)
     if per and _n > _beat_len_cap(per):
         return None
     if roles and role != roles[-1] and "남겨주" in script_gate.norm(out):

@@ -123,8 +123,14 @@ def sample(db_path):
 def daily(db_path, days=14):
     """날짜별 요약 — **최대치**로 본다. 평균은 위험한 순간을 숨긴다.
 
-    송신량은 누적값이라 그대로 쓰면 안 된다(재부팅되면 0으로 돌아간다).
-    하루 안에서 (최댓값 − 최솟값)으로 **그날 늘어난 양**을 본다.
+    ★송신량은 누적 카운터라 (최댓값 − 최솟값)으로 계산하면 안 된다(2026-08-24 수정).
+      `/proc/net/dev`는 **재부팅하면 0으로 돌아간다.** 그날 안에 재부팅이 한 번만
+      있어도 최솟값이 재부팅 후 값이 돼 그날 송신이 통째로 부풀거나 사라진다.
+      실제로 서버 증설(옛 서버 58GB → 새 서버 0.2GB)에서 하루 67GB라는 없는
+      숫자가 표에 찍혔다 — 이 숫자로 요금을 판단하면 그대로 오판이다.
+
+      그래서 **연속한 표본 사이의 증가분만 더한다.** 값이 줄어든 구간(=재부팅·교체)은
+      건너뛴다. 재부팅 직전까지의 양은 살고, 카운터가 되감긴 만큼만 잃는다.
     """
     conn = sqlite3.connect(str(db_path), timeout=10)
     try:
@@ -132,17 +138,37 @@ def daily(db_path, days=14):
         rows = conn.execute(
             "SELECT substr(at,1,10) d, "
             "       MAX(running), MAX(queued), MAX(workers), MAX(load1), "
-            "       MIN(disk_free_gb), MAX(disk_used_gb), "
-            "       MAX(net_tx_gb) - MIN(net_tx_gb), COUNT(*) "
+            "       MIN(disk_free_gb), MAX(disk_used_gb), COUNT(*) "
             "  FROM capacity_samples "
             " WHERE at >= date('now', ?) "
             " GROUP BY d ORDER BY d DESC", (f"-{int(days)} days",)).fetchall()
+        tx = _daily_tx(conn, days)
         return [{"date": r[0], "max_running": r[1], "max_queued": r[2],
                  "max_workers": r[3], "max_load1": r[4],
                  "min_disk_free_gb": r[5], "max_disk_used_gb": r[6],
-                 "tx_gb": round(r[7] or 0, 2), "samples": r[8]} for r in rows]
+                 "tx_gb": round(tx.get(r[0], 0.0), 2), "samples": r[7]} for r in rows]
     finally:
         conn.close()
+
+
+def _daily_tx(conn, days):
+    """날짜 → 그날 송신량(GB). 누적 카운터의 **증가분만** 더한다.
+
+    카운터가 줄어든 구간은 재부팅이므로 그 구간은 0으로 친다 — 되감긴 양은
+    알 방법이 없다. 없는 숫자를 지어내는 것보다 조금 적게 세는 게 낫다.
+    """
+    out = {}
+    prev = None
+    for at, v in conn.execute(
+            "SELECT at, net_tx_gb FROM capacity_samples "
+            " WHERE at >= date('now', ?) AND net_tx_gb IS NOT NULL "
+            " ORDER BY at ASC", (f"-{int(days)} days",)):
+        day = at[:10]
+        out.setdefault(day, 0.0)
+        if prev is not None and v >= prev:
+            out[day] += v - prev
+        prev = v
+    return out
 
 
 def verdict(db_path, cores=None):

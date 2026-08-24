@@ -156,7 +156,7 @@ def test_make_poster_still_image_does_not_delegate_to_frame_extract(monkeypatch,
     monkeypatch.setattr(scene_assets.frame_extract, "extract_frame_at", boom)
 
     seen_cmd = {}
-    def fake_run(cmd, capture_output=True, check=False):
+    def fake_run(cmd, capture_output=True, check=False, **kw):
         seen_cmd["cmd"] = cmd
         out.write_bytes(b"poster-bytes")
         class R:
@@ -189,7 +189,7 @@ def test_make_poster_still_image_returns_none_on_ffmpeg_failure(monkeypatch, tmp
     media = tmp_path / "arrow.png"
     media.write_bytes(b"fake-png")
 
-    def fake_run(cmd, capture_output=True, check=False):
+    def fake_run(cmd, capture_output=True, check=False, **kw):
         class R:
             returncode = 1
             stderr = b"ffmpeg: error"
@@ -220,7 +220,7 @@ def test_make_poster_still_gif_and_webp_keep_using_frame_extract(monkeypatch, tm
 
 
 def test_probe_duration_parses_ffprobe(monkeypatch, tmp_path):
-    def fake_run(cmd, capture_output=True, check=False):
+    def fake_run(cmd, capture_output=True, check=False, **kw):
         assert "ffprobe" in cmd[0]
 
         class R:
@@ -234,7 +234,7 @@ def test_probe_duration_parses_ffprobe(monkeypatch, tmp_path):
 
 
 def test_probe_duration_returns_zero_on_failure(monkeypatch, tmp_path):
-    def fake_run(cmd, capture_output=True, check=False):
+    def fake_run(cmd, capture_output=True, check=False, **kw):
         class R:
             returncode = 1
             stdout = b""
@@ -248,7 +248,7 @@ def test_probe_duration_returns_zero_on_failure(monkeypatch, tmp_path):
 def test_probe_duration_survives_missing_ffprobe(monkeypatch, tmp_path):
     # ffprobe가 없으면 run은 returncode가 아니라 FileNotFoundError를 던진다.
     # 길이는 표시용이므로 저장 자체가 터지면 안 된다.
-    def boom(cmd, capture_output=True, check=False):
+    def boom(cmd, capture_output=True, check=False, **kw):
         raise FileNotFoundError("ffprobe")
     monkeypatch.setattr(scene_assets.subprocess, "run", boom)
 

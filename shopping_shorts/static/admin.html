@@ -40,6 +40,27 @@ details.card[open]>summary::before{content:'▾'}
 .setfield label{min-width:92px;margin:0}
 .setfield input{flex:1;width:auto}
 tbody tr:hover{background:#1b1b22}
+
+/* ── 바로가기(2026-08-24) — 주소를 외우지 않아도 되게 ── */
+.quicknav{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 16px}
+.qbtn{display:flex;flex-direction:column;gap:2px;padding:10px 14px;border-radius:10px;
+      background:#16161c;border:1px solid #2a2a30;color:#e8e8ea;text-decoration:none;
+      font-size:14px;font-weight:700;min-width:132px;transition:border-color .12s,background .12s}
+.qbtn:hover{background:#1c1c24;border-color:#3a5bd0}
+.qbtn small{color:#8a8a92;font-size:11.5px;font-weight:400}
+/* 관측판은 오픈 기간에 가장 자주 봐야 하는 화면이라 눈에 띄게 둔다 */
+.qbtn.hot{border-color:#2ea043;background:linear-gradient(180deg,#12241c,#16161c)}
+.qbtn.hot:hover{border-color:#3ecf8e}
+/* ── 요약 — 표를 열기 전에 '처리할 게 있나'부터 답한다 ── */
+.summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:10px;margin-bottom:18px}
+.sbox{background:#16161c;border:1px solid #2a2a30;border-radius:10px;padding:11px 13px}
+.sk{color:#8a8a92;font-size:12px;margin-bottom:3px}
+.sv{font-size:21px;font-weight:800;letter-spacing:-.5px}
+/* 처리할 게 남아 있으면 숫자가 스스로 알린다(0이면 조용하다) */
+.sv.need{color:#ffd479}
+/* ── 구역 제목 — 카드가 늘어서기만 하면 어디가 어딘지 모른다 ── */
+.grouphead{font-size:13px;color:#8a8a92;font-weight:700;margin:22px 0 10px;
+           letter-spacing:.4px;border-bottom:1px solid #23232a;padding-bottom:7px}
 /* ★사이드바와 나란히 놓기(2026-08-24 사장님 "따로 뜨지 말고 이어서").
    sidebar.js가 body{display:flex}를 주입하고 <aside class="ss-nav">를 맨 앞에
    넣는다 → 본문은 남은 폭을 채우는 flex 자식이어야 한다. min-width:0이 없으면
@@ -47,14 +68,44 @@ tbody tr:hover{background:#1b1b22}
 .main{flex:1;min-width:0;padding:16px 20px 40px;overflow-x:auto}
 </style></head><body>
 <div class="main">
-<h1>🔐 유료게이트 관리자</h1>
+<h1>🔐 관리자</h1>
 <div class=sub>결제 확인된 계정을 <b>pro</b>로 승격 / 체험·크레딧 설정 조정</div>
 
+<!-- 바로가기(2026-08-24) — 관리자가 자주 오가는 화면을 여기 모은다. 예전엔 주소를
+     외워서 쳐야 했다(특히 관측판 /ops는 어디에도 링크가 없었다).
+     ★새 탭으로 연다: 관리 작업 중 화면이 통째로 바뀌면 하던 일을 잃는다. -->
+<nav class=quicknav>
+  <a href="/ops" target="_blank" rel="noopener" class="qbtn hot">📊 관측판<small>서버가 버티나</small></a>
+  <a href="/refs" target="_blank" rel="noopener" class=qbtn>📋 레퍼런스 채널<small>수집 소스 관리</small></a>
+  <a href="/produce" target="_blank" rel="noopener" class=qbtn>🎬 제작소<small>영상 만들기</small></a>
+  <a href="/" target="_blank" rel="noopener" class=qbtn>🏠 서비스 화면<small>고객이 보는 것</small></a>
+</nav>
+
+<!-- 요약 — 표를 열기 전에 "지금 처리할 게 있나"를 먼저 답한다. -->
+<div class=summary id=summary>
+  <div class=sbox><div class=sk>입금 신고</div><div class=sv id=sum_dep>–</div></div>
+  <div class=sbox><div class=sk>승인 대기</div><div class=sv id=sum_pend>–</div></div>
+  <div class=sbox><div class=sk>전체 고객</div><div class=sv id=sum_all>–</div></div>
+  <div class=sbox><div class=sk>pro</div><div class=sv id=sum_pro>–</div></div>
+  <div class=sbox><div class=sk>체험중</div><div class=sv id=sum_trial>–</div></div>
+</div>
+
 <details class=card>
-  <summary>⚙️ 설정 (체험·크레딧·안내) <span id=setMsg class=msg></span></summary>
+  <summary>⚙️ 설정 — 체험·크레딧·결제안내 (평소엔 접어둔다) <span id=setMsg class=msg></span></summary>
   <div id=settings class=setgrid></div>
   <button class=save onclick=saveSettings()>설정 저장</button>
 </details>
+
+<h2 class=grouphead>🔔 오늘 처리할 일</h2>
+
+<!-- 오류 신고(2026-08-24) — 고객이 사이드바 '🐞 오류 신고'를 누르면 여기 쌓인다.
+     ★고객은 한 줄만 쓴다. 페이지·작업번호·단계·화면오류는 화면이 자동으로 담아 보낸다
+       (고객에게 job_id를 물어보면 못 받는다 — 실제로 그래서 원인 찾는 데 오래 걸렸다). -->
+<div class="card wait">
+  <h2>🐞 오류 신고 (<span id=bcnt>0</span>건) <span id=bMsg class=msg></span></h2>
+  <table><thead><tr><th>시각</th><th>고객</th><th>내용</th><th>사진</th><th>어디서</th><th>화면오류</th><th>처리</th></tr></thead>
+  <tbody id=brows><tr><td colspan=7 class=empty>불러오는 중…</td></tr></tbody></table>
+</div>
 
 <!-- 입금 신고(2026-08-23) — 고객이 /pay에서 '입금 완료했습니다'를 누르면 여기 뜬다.
      ★입금 증명이 아니다. 통장 확인은 그대로 하시고, 이건 '연락을 놓치지 않기 위한' 목록이다. -->
@@ -69,6 +120,8 @@ tbody tr:hover{background:#1b1b22}
   <table><thead><tr><th>ID</th><th>이름</th><th>전화</th><th>이메일/아이디</th><th>가입일</th><th>승인</th></tr></thead>
   <tbody id=prows><tr><td colspan=6 class=empty>불러오는 중…</td></tr></tbody></table>
 </div>
+
+<h2 class=grouphead>👥 고객 관리</h2>
 
 <div class=card>
   <h2>고객 (<span id=cnt>0</span>명) <span id=cMsg class=msg></span></h2>
@@ -94,6 +147,19 @@ const SETTING_FIELDS=[
   ['biz_name','[약관] 상호'],['biz_owner','[약관] 대표자'],['biz_regno','[약관] 사업자등록번호'],['biz_addr','[약관] 주소'],['biz_sales_no','[약관] 통신판매업신고번호'],['biz_email','[약관] 문의 이메일'],
   ['challenge_start','[챌린지] 시작일(YYYY-MM-DD)'],['challenge_end','[챌린지] 종료일(YYYY-MM-DD)'],['challenge_daily_goal','[챌린지] 하루 목표 영상 수']];
 let CURRENT={};
+// 상단 요약 — 처리할 게 남아 있으면 숫자가 스스로 눈에 띈다(0이면 조용하다).
+// 입금 신고 건수는 별도 API라 loadDepositClaims()가 채운 뒤 여기로 넘겨준다.
+function fillSummary(customers, pendCount, depCount){
+  const set=(id,v,need)=>{ const el=document.getElementById(id); if(!el) return;
+    el.textContent=v; el.classList.toggle('need', !!need && Number(v)>0); };
+  if(Array.isArray(customers)){
+    set('sum_all', customers.length);
+    set('sum_pro', customers.filter(c=>c.plan==='pro').length);
+    set('sum_trial', customers.filter(c=>c.plan==='trial').length);
+  }
+  if(pendCount!==undefined) set('sum_pend', pendCount, true);
+  if(depCount!==undefined) set('sum_dep', depCount, true);
+}
 async function load(){
   const r=await fetch('/api/admin/customers');
   if(r.status===403){document.body.innerHTML='<h2>관리자 전용입니다</h2>';return;}
@@ -105,6 +171,9 @@ async function load(){
   // 미승인(approved_at null) = 순수대기 + 이벤트 체험중 → 모두 대기명단(사장님이 승인 가능해야 함).
   const pend=d.customers.filter(c=>c.approved_at==null);
   const rest=d.customers.filter(c=>c.approved_at!=null);
+  // 요약 채우기(2026-08-24) — 표를 훑기 전에 '처리할 게 있나'를 먼저 답한다.
+  // ★숫자는 아래 표와 **같은 배열**에서 뽑는다. 따로 세면 언젠가 어긋난다(0순위-B).
+  fillSummary(d.customers, pend.length);
   const esc=s=>(s||'').toString().replace(/</g,'&lt;').replace(/>/g,'&gt;');
   // 승인 대기 표
   document.getElementById('pcnt').textContent=pend.length;
@@ -152,6 +221,16 @@ function _custMatch(c, q){
   if(digits) fields.push(digits);
   return q.split(/\s+/).filter(Boolean).every(tok => fields.some(f => _subseq(f, tok)));
 }
+// 크레딧 차감 대 실제 영상 대조(2026-08-24). usage(가운데 숫자)는 **UTC 날짜** 버킷이라
+// 한국시간 00:00~09:00 제작분은 전날 칸으로 간다 — 그래서 한국시간 오늘 실측을 따로 붙인다.
+// 차감(charged) > 만든 영상(made)이면 빨갛게 띄운다: 중복 접수이거나 실패 환불 대기다.
+function _madeCell(c){
+  const m=c.made_today||{made:0,charged:0};
+  if(!m.charged && !m.made) return '';
+  const bad = m.charged > m.made;
+  return ` <span title="한국시간 오늘 실측 — 차감 ${m.charged}건 / 실제 영상 ${m.made}개"
+    style="color:${bad?'#ff6b6b':'#7ee787'};font-weight:${bad?'700':'400'}">(실제 ${m.made}${bad?' ⚠️':''})</span>`;
+}
 function renderCustomers(){
   const esc=s=>(s||'').toString().replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const q=((document.getElementById('custSearch')||{}).value||'').trim().toLowerCase();
@@ -183,7 +262,7 @@ function renderCustomers(){
       <td style="color:#8a8a92">${c.full_access_until? new Date(c.full_access_until*1000).toLocaleDateString('ko-KR'):'-'}</td>
       <td>${c.last_payment? `<span class=paylink data-cid=${c.id} style="cursor:pointer;color:#8ab4f8">${c.last_payment.amount.toLocaleString()}원 · ${c.payment_count}건</span>` : '-'}</td>
       <td><span style="color:${(c.points||0)<=0?'#ff6b6b':'#7ee787'};font-weight:700">${c.points||0}P</span></td>
-      <td>${u.lens||0}/${u.render||0}/${u.script||0}</td>
+      <td>${u.lens||0}/${u.render||0}/${u.script||0}${_madeCell(c)}</td>
       <td>${accCell}</td>
       <td>${seenCell}</td>
       <td><button class=bpay onclick="addPayment(${c.id})">결제추가</button>
@@ -208,6 +287,7 @@ async function loadDepositClaims(){
     if(!r.ok) return;
     const items=(await r.json()).items||[];
     document.getElementById('dcnt').textContent=items.length;
+    fillSummary(null, undefined, items.length);   // 상단 요약에도 같은 숫자를 넘긴다
     const esc=s=>(s||'').toString().replace(/</g,'&lt;').replace(/>/g,'&gt;');
     document.getElementById('drows').innerHTML= items.length ? items.map(c=>{
       const t=c.created_at? new Date(c.created_at).toLocaleString('ko-KR'):'-';
@@ -352,6 +432,72 @@ load().catch(e=>{
   if(rw) rw.innerHTML='<tr><td colspan=12 class=empty style="color:#f87171">'+msg+'</td></tr>';
   console.error('[admin] load 실패', e);
 });
+
+
+/* ── 오류 신고함(2026-08-24) ─────────────────────────────────────────
+   신고를 받아만 두면 "말해도 반응 없네"가 된다 → 답장을 여기서 바로 쓴다.
+   답장은 고객 화면이 다음 접속 때 스스로 띄운다(카톡으로 따로 안 보내도 된다). */
+function _bugWhen(ts){
+  var d=new Date(ts*1000), n=Date.now()/1000, s=n-ts;
+  if(s<3600) return Math.max(1,Math.round(s/60))+'분 전';
+  if(s<86400) return Math.round(s/3600)+'시간 전';
+  return d.toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+}
+function loadBugs(){
+  fetch('/api/admin/bug-reports?status=open').then(function(r){return r.json();}).then(function(d){
+    var rows=(d&&d.reports)||[];
+    document.getElementById('bcnt').textContent=rows.length;
+    var esc=function(x){return (x==null?'':String(x)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');};
+    document.getElementById('brows').innerHTML = rows.length ? rows.map(function(b){
+      var where=[];
+      if(b.step) where.push(esc(b.step)+'단계');
+      if(b.work_id) where.push('작업 '+esc(b.work_id));
+      if(b.job_id) where.push('job '+esc(b.job_id));
+      var url=b.page_url?('<div class=mini style="color:#5f6773">'+esc(b.page_url.slice(0,70))+'</div>'):'';
+      var errs=[];
+      try{ errs=JSON.parse(b.console_json||'[]'); }catch(e){ errs=[]; }
+      var errCell = errs.length
+        ? '<span style="color:#ff6b6b;cursor:pointer" title="'+esc(errs.join('\n'))+'">'+errs.length+'건 ⚠️</span>'
+        : '<span style="color:#5f6773">-</span>';
+      // 사진은 썸네일로 보여주고 누르면 원본을 새 탭에서 연다 — 대개 사진 한 장이면 즉시 갈린다.
+      var shot = b.shot_path
+        ? '<img src="/api/admin/bug-shot/'+encodeURIComponent(b.shot_path)+'" '+
+          'style="width:88px;height:60px;object-fit:cover;border-radius:6px;border:1px solid #2b3a3a;cursor:zoom-in" '+
+          'onclick="window.open(this.src)" title="눌러서 크게 보기">'
+        : '<span style="color:#5f6773">-</span>';
+      return '<tr><td class=mini>'+_bugWhen(b.created_at)+'</td>'+
+        '<td>'+esc(b.customer_name)+'<div class=mini style="color:#5f6773">cid '+b.customer_id+'</div></td>'+
+        '<td style="max-width:320px">'+esc(b.message)+url+'</td>'+
+        '<td>'+shot+'</td>'+
+        '<td class=mini>'+(where.join('<br>')||'-')+'</td>'+
+        '<td>'+errCell+'</td>'+
+        '<td><button class=bedit onclick="replyBug('+b.id+')">답장</button> '+
+            '<button class=bfree onclick="doneBug('+b.id+')">확인함</button></td></tr>';
+    }).join('') : '<tr><td colspan=7 class=empty>새 신고 없음</td></tr>';
+  }).catch(function(e){
+    document.getElementById('bMsg').textContent='불러오기 실패: '+e.message;
+  });
+}
+function replyBug(id){
+  var t=prompt('고객에게 보낼 답장을 적어주세요.\n(고객이 다음 접속 때 화면에서 바로 봅니다)');
+  if(t==null) return;
+  t=t.trim();
+  if(!t){ alert('답장 내용이 비었습니다.'); return; }
+  fetch('/api/admin/bug-reports/'+id+'/reply',{method:'POST',
+    headers:{'Content-Type':'application/json'},body:JSON.stringify({reply:t})})
+    .then(function(r){return r.json();}).then(function(d){
+      if(!d||!d.ok) throw new Error((d&&d.error)||'실패');
+      document.getElementById('bMsg').textContent='답장 보냈습니다 (#'+id+')';
+      loadBugs();
+    }).catch(function(e){ alert('답장 실패: '+e.message); });
+}
+function doneBug(id){
+  fetch('/api/admin/bug-reports/'+id,{method:'POST',
+    headers:{'Content-Type':'application/json'},body:JSON.stringify({status:'done'})})
+    .then(function(){ loadBugs(); });
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',loadBugs);
+else loadBugs();
 </script>
 </div>
 <script src="/sidebar.js?v=2"></script>

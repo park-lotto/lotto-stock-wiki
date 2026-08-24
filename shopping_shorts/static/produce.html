@@ -1268,6 +1268,25 @@
              안 바뀐 것처럼 보인다(사장님 질문 "추가를 하거나 이 성우로 적용을 하려면?"). -->
         <div id="elvDone" class="hint" style="display:none;margin-top:8px;padding:8px 10px;border:1px solid var(--ok);border-radius:8px;line-height:1.5"></div>
       </div>
+      <!-- 고객용 목소리 찾기(2026-08-24) — 일레븐랩스 공개 라이브러리에서 직접 골라 담는다.
+           ★본인 키가 있어야 쓸 수 있다: 담기는 각자 계정에 되므로 키가 없으면 합성 때 실패한다.
+             서버가 need_key로 알려주면 등록 안내를 대신 띄운다. -->
+      <div id="vlibBox" style="margin-top:8px">
+        <button class="btn-prev" style="padding:6px 12px;min-height:44px"
+                onclick="toggleVoiceLibrary()">🔎 마음에 드는 목소리 찾기</button>
+        <div id="vlibPanel" style="display:none;margin-top:8px;border:1px solid var(--line);border-radius:9px;padding:10px">
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+            <input id="vlibQ" placeholder="예) 차분한, 밝은, 뉴스" style="flex:1 1 150px;min-width:120px;
+              padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--txt)">
+            <select id="vlibGender" style="padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--txt)">
+              <option value="">성별 전체</option><option value="female">여성</option><option value="male">남성</option>
+            </select>
+            <button class="btn-next" style="padding:8px 14px" onclick="searchVoiceLibrary(0)">찾기</button>
+          </div>
+          <div class="hint" style="margin-top:6px">한국어 목소리를 먼저 보여줍니다. 담으면 내 성우 카드에 바로 추가돼요.</div>
+          <div id="vlibList" style="margin-top:10px;max-height:340px;overflow:auto"></div>
+        </div>
+      </div>
       <!-- ★한 칸 안에서는 세로로 쌓는다 — 360px 폭에 카드와 설정을 좌우로 나누면 둘 다 좁아진다. -->
       <div id="voiceUI" style="display:flex;flex-direction:column;gap:12px;margin-top:10px">
         <!-- ① 성우 카드 (⭐베스트 5 상시 + ＋더보기로 나머지 9명) — 먼저 하는 일 -->
@@ -1442,12 +1461,12 @@
             </div>
             <div style="font-size:11px;color:var(--sub);margin-top:6px">줄바꿈은 문구 칸에서 Enter로 정해요.</div>
           </div>
-          <!-- 강조 단어(노출 유지) -->
-          <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:12px">
-            <div style="font-size:13px;font-weight:700;margin-bottom:2px">🎯 강조 단어 <span style="font-size:11px;color:var(--sub);font-weight:400">— 헤드카피·자막 공통</span></div>
-            <div id="highlightRuleList" style="margin-top:6px"></div>
-            <button class="tab" onclick="addHighlightRule()" style="flex:0 0 auto;min-width:auto;padding:6px 12px;font-size:12px;margin-top:4px">+ 강조 단어 추가</button>
-          </div>
+          <!-- 🎯 강조 단어 — 화면에서 뺐다(2026-08-24 사장님 "이건 삭제해도 되고").
+               ★삭제한 것은 **손으로 넣는 UI뿐**이다. STATE.deco.highlight_rules 자체는
+               그대로 산다 — applyHeadcopySet이 틀의 2줄째 색(color2)을 이 규칙으로 넣고
+               미리보기(updateHC)와 실렌더(video_assemble)가 그걸 읽는다. 여기까지 지우면
+               '흰→노랑' 투톤이 통째로 죽는다. 색은 이제 카드의 색 고르개로 고른다.
+               renderHighlightRules()는 자리가 없어도 조용히 돌아간다(if(!box) return). -->
 
           <!-- 🎨 헤드카피 꾸미기 — 스타일(자막) 탭에서 여기로 옮김(2026-08-22 사장님:
                "스타일 안에 헤드카피는 삭제해 / 문구가 헤드카피니까").
@@ -1455,7 +1474,10 @@
           <div style="border-top:1px dashed var(--line);padding-top:10px;margin-top:4px">
 
 
-              <div id="hcPresets" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px"></div>
+              <!-- 🖼 프리셋 줄 — 화면에서 뺐다(2026-08-24 사장님 "이건 삭제해도 되고").
+                   ★HC_PRESETS 배열은 **지우지 않는다**: 썸네일 탭(thumbPresets)과 틀
+                   (applyHeadcopySet)이 같은 배열을 쓴다. 폰트·팩톤은 그대로 썸네일 것을
+                   활용하고, 여기선 카드의 색 고르개로 색만 바꾼다. -->
 
                 <!-- ★①글씨·②자리는 ⚡빠른 조절과 같은 값을 만지는 중복이라 화면에서 뺐다
                      (2026-08-22 사장님 "여기 중복이야"). ★삭제가 아니라 숨김이다 —
@@ -2602,14 +2624,41 @@ async function loadHeadcopySuggest(force){
     }
     HC_COPY_LOADED_HASH=h;
     window._hcCopies=list;
-    box.innerHTML=list.map((c,i)=>
-      `<button type="button" class="tab" onclick="useHeadcopy(${i})" style="min-width:auto;padding:7px 12px;font-size:12px;text-align:left;max-width:220px">`
-      + `<span style="color:var(--accent2);font-size:10px">#${i+1} ${esc(c.label||'')}</span><br>${esc(c.text||'')}</button>`).join('');
+    // ★썸네일 제목 추천(suggestThumbTitles)과 **같은 모양**으로 보여준다(2026-08-24 사장님
+    //   "헤드카피도 템플릿 안에 들어가는 거니 흡수해서"). 두 줄은 두 줄로, 밑에 왜 먹히는지.
+    //   줄바꿈을 그대로 두면 카드에서 한 줄로 붙어 보여 실제 결과와 달라진다.
+    // ★폰트·팩톤은 새로 만들지 않는다 — 썸네일과 같은 HC_FONTS/HC_PRESETS를 쓰는
+    //   hcFont/hcColor가 값의 주인이다(0순위-B). 여기선 색만 더 고를 수 있게 한다.
+    box.innerHTML=list.map((c,i)=>{
+      const shown=esc(c.text||'').split(new RegExp('\\r?\\n')).join('<br>');
+      const cur=(document.getElementById('hcColor')||{}).value||'#FFFFFF';
+      return `<button type="button" class="tab" onclick="useHeadcopy(${i})"`
+      + ` style="min-width:auto;padding:9px 11px;font-size:12px;text-align:left;max-width:240px;white-space:normal;line-height:1.35;height:auto">`
+      + `<span style="color:var(--accent2);font-size:10px">#${i+1} ${esc(c.label||'')}</span>`
+      + `<b style="display:block;font-size:14px;margin-top:2px">${shown}</b>`
+      + (c.why?`<span class="hint" style="display:block;font-size:10px;opacity:.7;margin-top:2px">${esc(c.why)}</span>`:'')
+      + `<span style="display:flex;align-items:center;gap:5px;margin-top:5px">`
+      + `<span class="hint" style="font-size:10px;opacity:.7">글자색</span>`
+      // ★색 고르개를 누를 때 카드까지 눌리면 문구가 멋대로 바뀐다 — 전파를 막는다.
+      + `<input type="color" value="${cur}" onclick="event.stopPropagation()"`
+      + ` oninput="event.stopPropagation();useHeadcopyColor(${i},this.value)"`
+      + ` style="width:26px;height:20px;padding:0;border:1px solid var(--line);border-radius:4px;background:none;cursor:pointer">`
+      + `</span></button>`;
+    }).join('');
     if(msg) msg.textContent='';
   }catch(e){
     box.innerHTML='';
     if(msg) msg.innerHTML='<span style="color:var(--fire)">문구를 불러오지 못했어요(네트워크)</span>';
   }
+}
+// 🎨 카드의 색 고르개 — 그 문구를 넣으면서 글자색까지 한 번에(2026-08-24 사장님
+// "색상변경만 추가로 넣어줘"). ★값의 주인은 hcColor 하나다 — STATE.headcopy를 직접
+// 만지면 값이 두 벌이 돼 반드시 어긋난다(0순위-B). applyPreset과 같은 방식으로 쓴다.
+function useHeadcopyColor(i,color){
+  const g=document.getElementById('hcColor'); if(!g) return;
+  g.value=color;
+  useHeadcopy(i);      // 문구도 함께 넣는다 — 색만 바꾸고 문구가 안 들어오면 헛손질이 된다
+  updateHC();
 }
 function useHeadcopy(i){
   const c=(window._hcCopies||[])[i]; if(!c) return;
@@ -8339,6 +8388,93 @@ async function loadTtsBeats(){
   // 관리자에게만 '＋ 일레븐랩스에서 성우 추가'를 연다(등록은 실TTS 4회 = 크레딧).
   { const a=document.getElementById('elvAdmin'); if(a && window.IS_ADMIN) a.style.display='block'; }
   renderTtsBeats();
+}
+
+// ── 목소리 찾기(일레븐랩스 공개 라이브러리, 2026-08-24) ─────────────────────
+// 사장님: "사용자들이 일레븐랩스 목소리 검색 가능하게".
+// 흐름: 검색 → 미리듣기 → 담기(내 계정) → 성우 카드 자동 등록 → 바로 선택 가능.
+// ★키가 없으면 서버가 need_key로 알려준다 — 그때는 목록 대신 등록 안내를 띄운다.
+//   (담기는 각자 일레븐랩스 계정에 되므로, 키 없이 담으면 합성 때 그 음성이 없어 실패한다)
+// ★결과는 VLIB_RESULTS에 담고 버튼에는 **인덱스만** 넘긴다 — onclick에 JSON을 박으면
+//   따옴표 이스케이프가 반드시 꼬인다(처음에 그렇게 짰다가 문법 오류를 냈다).
+let VLIB_RESULTS = [];
+let VLIB_PAGE = 0;
+let VLIB_AUDIO = null;
+
+function toggleVoiceLibrary(){
+  const p=document.getElementById('vlibPanel'); if(!p) return;
+  const open = p.style.display==='none';
+  p.style.display = open ? 'block' : 'none';
+  if(open && !p.dataset.loaded){ p.dataset.loaded='1'; searchVoiceLibrary(0); }
+}
+
+async function searchVoiceLibrary(page){
+  const box=document.getElementById('vlibList'); if(!box) return;
+  VLIB_PAGE = Math.max(0, page|0);
+  box.innerHTML='<div class="hint">찾는 중…</div>';
+  const q=(document.getElementById('vlibQ')||{}).value||'';
+  const g=(document.getElementById('vlibGender')||{}).value||'';
+  let d;
+  try{
+    d=await (await fetch('/api/voice-library/search?language=ko&page='+VLIB_PAGE
+      +'&q='+encodeURIComponent(q)+'&gender='+encodeURIComponent(g))).json();
+  }catch(e){ box.innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; return; }
+  if(d && d.need_key){
+    box.innerHTML='<div class="hint" style="line-height:1.6">'+esc(d.error||'')
+      +'<br><a href="/keys" style="color:var(--accent2)">→ 내 API 키 등록하러 가기</a></div>';
+    return;
+  }
+  if(!d || !d.ok){
+    box.innerHTML='<div class="hint" style="color:var(--fire)">'+esc((d&&d.error)||'검색 실패')+'</div>'; return;
+  }
+  VLIB_RESULTS = d.voices||[];
+  if(!VLIB_RESULTS.length){ box.innerHTML='<div class="hint">결과가 없습니다. 다른 말로 찾아보세요.</div>'; return; }
+  const rows = VLIB_RESULTS.map(function(v, i){
+    const tags=[v.gender,v.age,v.accent,v.use_case].filter(Boolean).slice(0,3)
+      .map(function(t){ return '<span class="r">'+esc(t)+'</span>'; }).join('');
+    return '<div style="display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)">'
+      + '<div style="flex:1;min-width:0">'
+      +   '<div style="font-weight:700;font-size:13.5px">'+esc(v.name)+'</div>'
+      +   (v.description ? '<div class="hint" style="margin:2px 0 4px">'+esc(v.description.slice(0,70))+'</div>' : '')
+      +   '<div style="display:flex;gap:4px;flex-wrap:wrap">'+tags+'</div>'
+      + '</div>'
+      + (v.preview_url ? '<button class="btn-prev" style="padding:6px 10px" onclick="vlibPlay('+i+')">▶ 듣기</button>' : '')
+      + '<button class="btn-next" style="padding:6px 12px" onclick="vlibAdd(this,'+i+')">담기</button>'
+      + '</div>';
+  }).join('');
+  const nav = '<div style="display:flex;gap:8px;justify-content:center;margin-top:10px">'
+    + (VLIB_PAGE>0 ? '<button class="btn-prev" style="padding:6px 12px" onclick="searchVoiceLibrary('+(VLIB_PAGE-1)+')">← 이전</button>' : '')
+    + (d.has_more ? '<button class="btn-prev" style="padding:6px 12px" onclick="searchVoiceLibrary('+(VLIB_PAGE+1)+')">다음 →</button>' : '')
+    + '</div>';
+  box.innerHTML = rows + nav;
+}
+
+function vlibPlay(i){
+  const v = VLIB_RESULTS[i]; if(!v || !v.preview_url) return;
+  try{ if(VLIB_AUDIO) VLIB_AUDIO.pause(); }catch(e){}
+  VLIB_AUDIO = new Audio(v.preview_url);
+  VLIB_AUDIO.play().catch(function(){ toast('미리듣기를 재생하지 못했습니다'); });
+}
+
+async function vlibAdd(btn, i){
+  const v = VLIB_RESULTS[i]; if(!v) return;
+  const orig = btn.textContent;
+  btn.disabled=true; btn.textContent='담는 중…';
+  try{
+    const r=await (await fetch('/api/voice-library/add',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({voice_id:v.voice_id, public_owner_id:v.public_owner_id, name:v.name})
+    })).json();
+    if(!r || !r.ok){
+      toast('⚠️ '+((r&&r.error)||'담기 실패'));
+      btn.disabled=false; btn.textContent=orig; return;
+    }
+    btn.textContent = r.already ? '이미 있음' : '✓ 담김';
+    toast(r.already ? '이미 담긴 목소리예요' : '내 성우로 담았습니다 — 카드에서 고르세요');
+    await loadPresets();          // 카드 목록을 다시 불러 방금 담은 성우를 띄운다
+  }catch(e){
+    toast('⚠️ 네트워크 오류'); btn.disabled=false; btn.textContent=orig;
+  }
 }
 
 let VOICES_EXPANDED=false;   // ＋더보기 펼침 상태 — 재렌더(pickPreset)가 접힘으로 되돌리지 않게 보존

@@ -61,6 +61,9 @@
       { icon: "💬", text: "인스타 소통공간", href: "/outreach" },
       // 도움말(2026-08-23) — 반복 문의를 줄이는 자리. 로그인 없이도 열리므로 free.
       { icon: "❓", text: "도움말·자주 묻는 질문", href: "/help", free: true },
+      // 오류 신고(2026-08-24 사장님 지시) — href 없이 클릭만 받는다(id로 잡는다).
+      // ★고객에게 "job_id 알려주세요"라고 물으면 못 받는다. 화면이 자동으로 담는다.
+      { icon: "🐞", text: "오류 신고", id: "ssBugBtn", free: true },
     ] },
     // ★2026-08-17 '설정 > 내 설정' 그룹을 없앴다. 상단 계정 카드의 '마이페이지'와
     //   같은 곳(/settings)인데 이름만 달라서, 사장님이 키 등록표를 못 찾으셨다.
@@ -189,15 +192,20 @@
     g.items.forEach(function (it) {
       var active = !!it.href && (it.href === path || (it.href === "/" && path === "/"));
       // 관리자 전용 항목(admin:true)은 기본 숨김으로 렌더 → /api/me가 is_admin이면 아래에서 노출.
-      var cls = "ss-item" + (active ? " active" : "") + (it.href ? "" : " ss-disabled") + (it.admin ? " ss-admin-only" : "");
+      // id 항목(오류 신고 등)은 링크가 아니라 **그 자리에서 창을 여는 버튼**이다 —
+      // href가 없다고 ss-disabled(회색)로 만들면 눌리지 않는다(2026-08-24).
+      var isBtn = !it.href && !!it.id;
+      var cls = "ss-item" + (active ? " active" : "") + ((it.href || isBtn) ? "" : " ss-disabled") + (it.admin ? " ss-admin-only" : "");
       var hide = it.admin ? ' style="display:none"' : "";
       // 클릭 목적지는 go가 있으면 go, 없으면 href(종전과 동일).
       var target = it.go || it.href;
       // ★active여도 go가 있으면 클릭을 살린다 — 제작소를 보고 있을 때도
       //   이 버튼을 눌러 빈 작업으로 가야 한다(같은 경로라 종전엔 클릭이 죽어 있었다).
-      var onclick = target && (!active || it.go) ? ' onclick="location.href=\'' + esc(target) + "'\"" : "";
+      var onclick = isBtn ? ' onclick="ssOpenBugReport()"' :
+          target && (!active || it.go) ? ' onclick="location.href=\'' + esc(target) + "'\"" : "";
       var payAttr = (it.href ? ' data-ss-href="' + esc(it.href) + '"' : "") + (it.free ? ' data-ss-free="1"' : "");
-      html += '<div class="' + cls + '"' + payAttr + hide + onclick + ">" + it.icon + " " + it.text + "</div>";
+      var idAttr = it.id ? ' id="' + it.id + '"' : "";
+      html += '<div class="' + cls + '"' + idAttr + payAttr + hide + onclick + ">" + it.icon + " " + it.text + "</div>";
     });
     html += "</div>";
   });
@@ -733,5 +741,244 @@
     mountWorks();
     initPaywall();
     initSignupAlert();
+  }
+})();
+
+/* ── 오류 신고 + 답장(쪽지) — 2026-08-24 사장님 지시 ─────────────────────────
+   "오류신고 버튼 만들기 / 내 관리페이지에 보이기 / 바로 버그 수정하고 쪽지를 남겨줄 수 있나"
+
+   ★고객에게 job_id·URL·콘솔오류를 물어보면 못 받는다. 실제로 김만기님 제작 4회 전패를
+     화면 캡처만으로는 못 찾았고 서버 DB를 뒤져서야 원인을 알았다(일레븐랩스 키 대신 키 ID).
+     그래서 고객은 **한 줄만 쓰고**, 진단 정보는 화면이 스스로 담아 보낸다.
+   ★자바스크립트 오류도 몰래 모아둔다 — "화면이 하얘요"의 진짜 원인이 대개 여기 있다. */
+(function () {
+  var ERRS = [];
+  window.addEventListener("error", function (e) {
+    ERRS.push(String((e && e.message) || e) + " @" + ((e && e.filename) || "?") + ":" + ((e && e.lineno) || 0));
+    if (ERRS.length > 20) ERRS.shift();
+  });
+  window.addEventListener("unhandledrejection", function (e) {
+    ERRS.push("promise: " + String((e && e.reason && e.reason.message) || (e && e.reason) || e));
+    if (ERRS.length > 20) ERRS.shift();
+  });
+
+  function q(name) {
+    var m = new RegExp("[?&]" + name + "=([^&]+)").exec(location.search);
+    return m ? decodeURIComponent(m[1]) : "";
+  }
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+  function css() {
+    if (document.getElementById("ssBugCss")) return;
+    var st = document.createElement("style");
+    st.id = "ssBugCss";
+    st.textContent =
+      ".ssbug-back{position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:99999;display:flex;" +
+      "align-items:center;justify-content:center;padding:16px}" +
+      ".ssbug{background:#141a1a;border:1px solid #2b3a3a;border-radius:14px;max-width:560px;width:100%;" +
+      "padding:24px;color:#e8eaed;font-size:16px;line-height:1.65;box-shadow:0 12px 40px rgba(0,0,0,.5);" +
+      "max-height:92vh;overflow:auto}" +
+      ".ssbug h3{margin:0 0 8px;font-size:21px;color:#6ff0d6}" +
+      ".ssbug p.sub{margin:0 0 16px;color:#9db2b2;font-size:15px}" +
+      ".ssbug textarea{width:100%;box-sizing:border-box;min-height:120px;background:#0e1414;color:#e8eaed;" +
+      "border:1px solid #2b3a3a;border-radius:10px;padding:13px;font:inherit;font-size:16.5px;resize:vertical}" +
+      ".ssbug .info{margin:12px 0 0;font-size:14px;color:#9db2b2;background:#0e1414;border-radius:8px;padding:11px 13px}" +
+      ".ssbug .info b{color:#c7d2d2;font-weight:600}" +
+      ".ssbug .drop{margin-top:12px;border:1px dashed #35494a;border-radius:10px;padding:14px;text-align:center;" +
+      "font-size:14.5px;color:#9db2b2;background:#0e1414}" +
+      ".ssbug .drop button{background:#1e2b2b;color:#cfe3e3;border:0;border-radius:9px;padding:9px 15px;" +
+      "font:inherit;font-size:14.5px;font-weight:600;cursor:pointer;flex:none}" +
+      ".ssbug .row{display:flex;gap:10px;margin-top:18px}" +
+      ".ssbug button{flex:1;padding:14px;border-radius:10px;border:0;font:inherit;font-size:16.5px;" +
+      "font-weight:700;cursor:pointer}" +
+      ".ssbug .ok{background:#6ff0d6;color:#062b25}.ssbug .no{background:#222c2c;color:#c7d2d2}" +
+      ".ssbug .msg{margin-top:14px;font-size:15.5px}";
+    document.head.appendChild(st);
+  }
+
+  /* 지금 화면이 무엇을 하고 있었나 — 고객이 몰라도 되는 것들을 화면이 대신 안다. */
+  function context() {
+    var job = "";
+    try { job = (window.JOB_ID || (window.MIX && window.MIX.job_id) || ""); } catch (e) { job = ""; }
+    var step = "";
+    try {
+      var on = document.querySelector(".step.active, .stepper .active, [data-step].active");
+      step = on ? (on.getAttribute("data-step") || (on.textContent || "").trim().slice(0, 30)) : "";
+    } catch (e) { step = ""; }
+    return {
+      page_url: location.href.slice(0, 500),
+      work_id: q("work"),
+      job_id: String(job || ""),
+      step: step,
+      console: ERRS.slice(-20)
+    };
+  }
+
+
+  /* ★2026-08-24 사장님: "지금 페이지 url을 첨부해야하는거 아닌가? 사진? 링크?
+        그 문제 장면도 같이 해줘야 판단이 쉽지 / 글자 잘보이게"
+     - URL은 원래도 자동으로 보내고 있었지만 **고객에게 안 보였다** → 눈에 보이게 적는다.
+     - 화면 사진을 붙일 수 있게 한다: [사진 고르기] · Ctrl+V 붙여넣기 · 끌어다 놓기 셋 다.
+       윈도우는 Win+Shift+S로 찍으면 클립보드에 들어가므로 **붙여넣기가 가장 빠른 길**이다.
+     - 글자를 키운다(시니어 타깃) — 본문 16px, 입력칸 16.5px. */
+  var SHOT = null;                       /* data:image/... 한 장 */
+
+  function shrink(file, cb) {
+    /* 화면 사진은 대개 2~4MB다. 1280px·JPEG로 줄여 보낸다 — 판독에는 충분하고
+       업로드가 빠르며 서버 6MB 상한에도 안 걸린다. 실패하면 원본을 그대로 쓴다. */
+    var fr = new FileReader();
+    fr.onload = function () {
+      var img = new Image();
+      img.onload = function () {
+        try {
+          var max = 1280, w = img.width, h = img.height;
+          var r = Math.min(1, max / Math.max(w, h));
+          var cv = document.createElement("canvas");
+          cv.width = Math.round(w * r); cv.height = Math.round(h * r);
+          cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
+          cb(cv.toDataURL("image/jpeg", 0.8));
+        } catch (e) { cb(fr.result); }
+      };
+      img.onerror = function () { cb(fr.result); };
+      img.src = fr.result;
+    };
+    fr.onerror = function () { cb(null); };
+    fr.readAsDataURL(file);
+  }
+
+  function setShot(file) {
+    if (!file || !/^image\//.test(file.type)) return;
+    var box = document.getElementById("ssBugShot");
+    if (box) box.innerHTML = '<span style="color:#8aa0a0">사진 줄이는 중…</span>';
+    shrink(file, function (d) {
+      SHOT = d;
+      if (!box) return;
+      box.innerHTML = d
+        ? '<img src="' + d + '" style="max-width:100%;max-height:190px;border-radius:8px;' +
+          'border:1px solid #2b3a3a">' +
+          '<div style="margin-top:6px"><button type="button" id="ssShotDel" ' +
+          'style="background:#2a2020;color:#ff9b9b;border:0;border-radius:8px;padding:7px 12px;' +
+          'font:inherit;cursor:pointer">사진 빼기</button></div>'
+        : '<span style="color:#ff9b9b">사진을 읽지 못했어요</span>';
+      var del = document.getElementById("ssShotDel");
+      if (del) del.onclick = function () { SHOT = null; box.innerHTML = ""; };
+    });
+  }
+
+  window.ssOpenBugReport = function () {
+    css();
+    var back = document.createElement("div");
+    back.className = "ssbug-back";
+    SHOT = null;
+    back.innerHTML =
+      '<div class="ssbug" role="dialog" aria-modal="true">' +
+        "<h3>🐞 오류 신고</h3>" +
+        '<p class="sub">어떤 문제인지 한 줄만 적어주세요.<br>' +
+          '<b style="color:#cfe3e3">문제가 보이는 화면 사진</b>을 같이 보내주시면 훨씬 빨리 찾습니다.</p>' +
+        '<textarea id="ssBugText" placeholder="예) 5단계에서 영상 만들기를 누르면 계속 실패해요"></textarea>' +
+        '<div class="drop" id="ssBugDrop">' +
+          '📷 <b>화면 사진</b> — <button type="button" id="ssShotPick">사진 고르기</button>' +
+          '<div style="margin-top:8px;font-size:13.5px;color:#7d8f8f">' +
+            '캡처하신 뒤 <b>Ctrl+V</b>로 붙여넣거나 여기에 끌어다 놓으셔도 됩니다' +
+            '<br>(윈도우는 <b>Win+Shift+S</b>, 맥은 <b>⌘⇧4</b>로 화면을 찍습니다)</div>' +
+          '<input type="file" id="ssShotFile" accept="image/*" style="display:none">' +
+          '<div id="ssBugShot" style="margin-top:10px"></div>' +
+        "</div>" +
+        '<div class="info"><b>함께 보내지는 것</b><br>' +
+          '지금 보고 계신 화면과 작업 정보가 자동으로 함께 갑니다. ' +
+          '따로 적으실 것은 없습니다.' +
+        "</div>" +
+        '<div class="msg" id="ssBugMsg"></div>' +
+        '<div class="row"><button class="no" id="ssBugNo">닫기</button>' +
+        '<button class="ok" id="ssBugGo">보내기</button></div>' +
+      "</div>";
+    document.body.appendChild(back);
+    var close = function () { back.remove(); };
+    back.addEventListener("click", function (e) { if (e.target === back) close(); });
+    document.getElementById("ssBugNo").onclick = close;
+    var ta = document.getElementById("ssBugText");
+    ta.focus();
+    /* 사진 넣는 길 세 가지 — 하나만 되면 못 쓰는 사람이 생긴다. */
+    var fileEl = document.getElementById("ssShotFile");
+    document.getElementById("ssShotPick").onclick = function () { fileEl.click(); };
+    fileEl.onchange = function () { if (this.files && this.files[0]) setShot(this.files[0]); };
+    back.addEventListener("paste", function (e) {          /* Ctrl+V (윈도우 캡처가 여기로 온다) */
+      var items = (e.clipboardData || {}).items || [];
+      for (var i = 0; i < items.length; i++) {
+        if (items[i].type && items[i].type.indexOf("image/") === 0) {
+          setShot(items[i].getAsFile());
+          e.preventDefault();
+          return;
+        }
+      }
+    });
+    var drop = document.getElementById("ssBugDrop");
+    drop.addEventListener("dragover", function (e) { e.preventDefault(); drop.style.borderColor = "#6ff0d6"; });
+    drop.addEventListener("dragleave", function () { drop.style.borderColor = "#35494a"; });
+    drop.addEventListener("drop", function (e) {
+      e.preventDefault();
+      drop.style.borderColor = "#35494a";
+      var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+      if (f) setShot(f);
+    });
+    document.getElementById("ssBugGo").onclick = function () {
+      var btn = this;
+      var text = (ta.value || "").trim();
+      var msg = document.getElementById("ssBugMsg");
+      if (!text) { msg.style.color = "#ff9b9b"; msg.textContent = "어떤 문제인지 한 줄만 적어주세요."; ta.focus(); return; }
+      btn.disabled = true; btn.textContent = "보내는 중…";
+      var body = context();
+      body.message = text;
+      body.shot = SHOT;                 /* 없으면 null — 서버가 그냥 건너뛴다 */
+      fetch("/api/bug-report", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      }).then(function (r) { return r.json(); }).then(function (d) {
+        if (!d || !d.ok) throw new Error((d && d.error) || "접수 실패");
+        msg.style.color = "#7ee787";
+        msg.textContent = d.message || "접수됐어요.";
+        ta.disabled = true; btn.style.display = "none";
+        document.getElementById("ssBugNo").textContent = "확인";
+      }).catch(function (e) {
+        msg.style.color = "#ff9b9b";
+        msg.textContent = "보내지 못했어요 — 잠시 후 다시 눌러주세요. (" + e.message + ")";
+        btn.disabled = false; btn.textContent = "보내기";
+      });
+    };
+  };
+
+  /* 답장(쪽지) — 신고만 받고 끝나면 "말해도 반응 없네"가 된다.
+     안 읽은 답장이 있으면 다음 화면에서 자동으로 뜬다(카톡으로 따로 안 보내도 된다). */
+  function showReplies() {
+    fetch("/api/bug-report/replies", { credentials: "same-origin" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (!d || !d.replies || !d.replies.length) return;
+        var rep = d.replies[0];
+        css();
+        var back = document.createElement("div");
+        back.className = "ssbug-back";
+        back.innerHTML =
+          '<div class="ssbug">' +
+            "<h3>📩 신고하신 건 답변드립니다</h3>" +
+            '<p class="sub">' + esc((rep.message || "").slice(0, 80)) + "</p>" +
+            '<div class="info" style="color:#d7e3e3;font-size:14px;white-space:pre-wrap">' +
+              esc(rep.reply) + "</div>" +
+            '<div class="row"><button class="ok" id="ssRepOk">확인했어요</button></div>' +
+          "</div>";
+        document.body.appendChild(back);
+        document.getElementById("ssRepOk").onclick = function () {
+          fetch("/api/bug-report/replies/" + rep.id + "/read", { method: "POST" })
+            .catch(function () {})
+            .then(function () { back.remove(); });
+        };
+      })
+      .catch(function () {});   /* 답장 확인 실패가 화면을 막으면 안 된다 */
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", showReplies);
+  } else {
+    showReplies();
   }
 })();

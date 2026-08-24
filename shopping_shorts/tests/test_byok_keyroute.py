@@ -29,15 +29,25 @@ def test_no_user_key_uses_owner(store, monkeypatch):
     assert is_user is False
 
 
-def test_never_falls_back(store, monkeypatch):
-    """★사장님 지시: 폴백 없음. 사용자 키가 있으면 그것만 쓴다.
-    사용자 키가 소진돼도 사장님 키로 넘어가면 안 된다 — 그러면 비용이 샌다."""
+def test_personal_service_never_falls_back(store, monkeypatch):
+    """★개인 전용(vmake·serpapi·elevenlabs)은 폴백 없음 — 자기 키만 쓴다.
+    회원이 자기 돈으로 결제하는 서비스라 사장님 키로 넘어가면 비용이 샌다."""
     monkeypatch.setattr(keyroute, "_owner_keys", lambda svc: ["사장님키1", "사장님키2"])
-    store.add_customer_key(7, "gemini", "내키")
-    keys, is_user = keyroute.keys_for(store, 7, "gemini")
+    store.add_customer_key(7, "vmake", "내키")
+    keys, is_user = keyroute.keys_for(store, 7, "vmake")
     assert keys == ["내키"]
     assert "사장님키1" not in keys
     assert "사장님키2" not in keys
+
+
+def test_pooled_service_does_fall_back_to_the_pool(store, monkeypatch):
+    """★공용 풀(gemini·youtube)은 반대다 — 키 1개를 내면 풀 전체를 쓴다.
+    (2026-08-24 사장님: "우리풀에 한개씩 넣어서 하고 모자란건 내가 더 만들어 채운다")"""
+    monkeypatch.setattr(keyroute, "_owner_keys", lambda svc: ["사장님키1", "내키"])
+    store.add_customer_key(7, "gemini", "내키")
+    keys, is_user = keyroute.keys_for(store, 7, "gemini")
+    assert "사장님키1" in keys
+    assert is_user is True          # 면제는 유지된다
 
 
 def test_string_customer_id(store, monkeypatch):
@@ -58,12 +68,12 @@ def test_users_do_not_share(store, monkeypatch):
     assert is_user is False
 
 
-def test_gemini_returns_all_user_keys(store, monkeypatch):
-    """구글은 여러 개 — 하나가 한도에 걸리면 다음으로 넘어가야 하니 전부 준다."""
+def test_serpapi_returns_all_user_keys(store, monkeypatch):
+    """개인 전용 중 여러 개를 받는 서비스 — 등록한 만큼 전부 준다."""
     monkeypatch.setattr(keyroute, "_owner_keys", lambda svc: ["사장님키"])
     for k in ("k1", "k2", "k3"):
-        store.add_customer_key(7, "gemini", k)
-    keys, is_user = keyroute.keys_for(store, 7, "gemini")
+        store.add_customer_key(7, "serpapi", k)
+    keys, is_user = keyroute.keys_for(store, 7, "serpapi")
     assert keys == ["k1", "k2", "k3"]
     assert is_user is True
 
