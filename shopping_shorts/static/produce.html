@@ -1268,6 +1268,25 @@
              안 바뀐 것처럼 보인다(사장님 질문 "추가를 하거나 이 성우로 적용을 하려면?"). -->
         <div id="elvDone" class="hint" style="display:none;margin-top:8px;padding:8px 10px;border:1px solid var(--ok);border-radius:8px;line-height:1.5"></div>
       </div>
+      <!-- 고객용 목소리 찾기(2026-08-24) — 일레븐랩스 공개 라이브러리에서 직접 골라 담는다.
+           ★본인 키가 있어야 쓸 수 있다: 담기는 각자 계정에 되므로 키가 없으면 합성 때 실패한다.
+             서버가 need_key로 알려주면 등록 안내를 대신 띄운다. -->
+      <div id="vlibBox" style="margin-top:8px">
+        <button class="btn-prev" style="padding:6px 12px;min-height:44px"
+                onclick="toggleVoiceLibrary()">🔎 마음에 드는 목소리 찾기</button>
+        <div id="vlibPanel" style="display:none;margin-top:8px;border:1px solid var(--line);border-radius:9px;padding:10px">
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+            <input id="vlibQ" placeholder="예) 차분한, 밝은, 뉴스" style="flex:1 1 150px;min-width:120px;
+              padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--txt)">
+            <select id="vlibGender" style="padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--txt)">
+              <option value="">성별 전체</option><option value="female">여성</option><option value="male">남성</option>
+            </select>
+            <button class="btn-next" style="padding:8px 14px" onclick="searchVoiceLibrary(0)">찾기</button>
+          </div>
+          <div class="hint" style="margin-top:6px">한국어 목소리를 먼저 보여줍니다. 담으면 내 성우 카드에 바로 추가돼요.</div>
+          <div id="vlibList" style="margin-top:10px;max-height:340px;overflow:auto"></div>
+        </div>
+      </div>
       <!-- ★한 칸 안에서는 세로로 쌓는다 — 360px 폭에 카드와 설정을 좌우로 나누면 둘 다 좁아진다. -->
       <div id="voiceUI" style="display:flex;flex-direction:column;gap:12px;margin-top:10px">
         <!-- ① 성우 카드 (⭐베스트 5 상시 + ＋더보기로 나머지 9명) — 먼저 하는 일 -->
@@ -8369,6 +8388,93 @@ async function loadTtsBeats(){
   // 관리자에게만 '＋ 일레븐랩스에서 성우 추가'를 연다(등록은 실TTS 4회 = 크레딧).
   { const a=document.getElementById('elvAdmin'); if(a && window.IS_ADMIN) a.style.display='block'; }
   renderTtsBeats();
+}
+
+// ── 목소리 찾기(일레븐랩스 공개 라이브러리, 2026-08-24) ─────────────────────
+// 사장님: "사용자들이 일레븐랩스 목소리 검색 가능하게".
+// 흐름: 검색 → 미리듣기 → 담기(내 계정) → 성우 카드 자동 등록 → 바로 선택 가능.
+// ★키가 없으면 서버가 need_key로 알려준다 — 그때는 목록 대신 등록 안내를 띄운다.
+//   (담기는 각자 일레븐랩스 계정에 되므로, 키 없이 담으면 합성 때 그 음성이 없어 실패한다)
+// ★결과는 VLIB_RESULTS에 담고 버튼에는 **인덱스만** 넘긴다 — onclick에 JSON을 박으면
+//   따옴표 이스케이프가 반드시 꼬인다(처음에 그렇게 짰다가 문법 오류를 냈다).
+let VLIB_RESULTS = [];
+let VLIB_PAGE = 0;
+let VLIB_AUDIO = null;
+
+function toggleVoiceLibrary(){
+  const p=document.getElementById('vlibPanel'); if(!p) return;
+  const open = p.style.display==='none';
+  p.style.display = open ? 'block' : 'none';
+  if(open && !p.dataset.loaded){ p.dataset.loaded='1'; searchVoiceLibrary(0); }
+}
+
+async function searchVoiceLibrary(page){
+  const box=document.getElementById('vlibList'); if(!box) return;
+  VLIB_PAGE = Math.max(0, page|0);
+  box.innerHTML='<div class="hint">찾는 중…</div>';
+  const q=(document.getElementById('vlibQ')||{}).value||'';
+  const g=(document.getElementById('vlibGender')||{}).value||'';
+  let d;
+  try{
+    d=await (await fetch('/api/voice-library/search?language=ko&page='+VLIB_PAGE
+      +'&q='+encodeURIComponent(q)+'&gender='+encodeURIComponent(g))).json();
+  }catch(e){ box.innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; return; }
+  if(d && d.need_key){
+    box.innerHTML='<div class="hint" style="line-height:1.6">'+esc(d.error||'')
+      +'<br><a href="/keys" style="color:var(--accent2)">→ 내 API 키 등록하러 가기</a></div>';
+    return;
+  }
+  if(!d || !d.ok){
+    box.innerHTML='<div class="hint" style="color:var(--fire)">'+esc((d&&d.error)||'검색 실패')+'</div>'; return;
+  }
+  VLIB_RESULTS = d.voices||[];
+  if(!VLIB_RESULTS.length){ box.innerHTML='<div class="hint">결과가 없습니다. 다른 말로 찾아보세요.</div>'; return; }
+  const rows = VLIB_RESULTS.map(function(v, i){
+    const tags=[v.gender,v.age,v.accent,v.use_case].filter(Boolean).slice(0,3)
+      .map(function(t){ return '<span class="r">'+esc(t)+'</span>'; }).join('');
+    return '<div style="display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)">'
+      + '<div style="flex:1;min-width:0">'
+      +   '<div style="font-weight:700;font-size:13.5px">'+esc(v.name)+'</div>'
+      +   (v.description ? '<div class="hint" style="margin:2px 0 4px">'+esc(v.description.slice(0,70))+'</div>' : '')
+      +   '<div style="display:flex;gap:4px;flex-wrap:wrap">'+tags+'</div>'
+      + '</div>'
+      + (v.preview_url ? '<button class="btn-prev" style="padding:6px 10px" onclick="vlibPlay('+i+')">▶ 듣기</button>' : '')
+      + '<button class="btn-next" style="padding:6px 12px" onclick="vlibAdd(this,'+i+')">담기</button>'
+      + '</div>';
+  }).join('');
+  const nav = '<div style="display:flex;gap:8px;justify-content:center;margin-top:10px">'
+    + (VLIB_PAGE>0 ? '<button class="btn-prev" style="padding:6px 12px" onclick="searchVoiceLibrary('+(VLIB_PAGE-1)+')">← 이전</button>' : '')
+    + (d.has_more ? '<button class="btn-prev" style="padding:6px 12px" onclick="searchVoiceLibrary('+(VLIB_PAGE+1)+')">다음 →</button>' : '')
+    + '</div>';
+  box.innerHTML = rows + nav;
+}
+
+function vlibPlay(i){
+  const v = VLIB_RESULTS[i]; if(!v || !v.preview_url) return;
+  try{ if(VLIB_AUDIO) VLIB_AUDIO.pause(); }catch(e){}
+  VLIB_AUDIO = new Audio(v.preview_url);
+  VLIB_AUDIO.play().catch(function(){ toast('미리듣기를 재생하지 못했습니다'); });
+}
+
+async function vlibAdd(btn, i){
+  const v = VLIB_RESULTS[i]; if(!v) return;
+  const orig = btn.textContent;
+  btn.disabled=true; btn.textContent='담는 중…';
+  try{
+    const r=await (await fetch('/api/voice-library/add',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({voice_id:v.voice_id, public_owner_id:v.public_owner_id, name:v.name})
+    })).json();
+    if(!r || !r.ok){
+      toast('⚠️ '+((r&&r.error)||'담기 실패'));
+      btn.disabled=false; btn.textContent=orig; return;
+    }
+    btn.textContent = r.already ? '이미 있음' : '✓ 담김';
+    toast(r.already ? '이미 담긴 목소리예요' : '내 성우로 담았습니다 — 카드에서 고르세요');
+    await loadPresets();          // 카드 목록을 다시 불러 방금 담은 성우를 띄운다
+  }catch(e){
+    toast('⚠️ 네트워크 오류'); btn.disabled=false; btn.textContent=orig;
+  }
 }
 
 let VOICES_EXPANDED=false;   // ＋더보기 펼침 상태 — 재렌더(pickPreset)가 접힘으로 되돌리지 않게 보존

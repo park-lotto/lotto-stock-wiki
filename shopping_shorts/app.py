@@ -4530,15 +4530,72 @@ def api_mix_caption_offset(job_id: str, beat_idx: int, body: dict):
     return {"ok": True, "offset": offset}
 
 
+@app.get("/api/voice-library/search")
+def api_voice_library_search(request: Request, q: str = "", language: str = "",
+                             gender: str = "", page: int = 0):
+    """일레븐랩스 **공개 음성 라이브러리** 검색(2026-08-24 사장님: "사용자들이 목소리 검색 가능하게").
+
+    ★본인 키가 있어야 한다. 담기는 각자 계정에 되므로, 키 없이 담으면 합성 때
+      사장님 키로 나가 그 voice_id가 없어 실패한다 — 그래서 여기서 먼저 막고 안내한다.
+    """
+    cid = getattr(request.state, "customer_id", 0) or 0
+    from shopping_shorts import eleven_voices, keyroute
+    keys, _src = keyroute.keys_for(Store(DB_PATH), cid, keyroute.SVC_ELEVENLABS)
+    if not keys or _src != "customer":
+        return {"ok": False, "voices": [], "need_key": True,
+                "error": "내 일레븐랩스 키를 등록하면 원하는 목소리를 직접 찾아 쓸 수 있어요."}
+    return eleven_voices.search_shared(customer_id=cid, query=q, language=(language or None),
+                                       gender=(gender or None), page=page)
+
+
+@app.post("/api/voice-library/add")
+async def api_voice_library_add(request: Request):
+    """고른 공개 음성을 **내 계정에 담고 성우 카드까지 만든다**.
+
+    body: {voice_id, public_owner_id, name, one_liner?}
+    담기(add_shared) → 카드 등록(register)까지 한 번에 한다 — 둘로 나누면 담기고도
+    카드가 없는 어중간한 상태가 생긴다. 카드에는 owner_customer_id를 박아 **본인에게만** 보인다.
+    """
+    cid = getattr(request.state, "customer_id", 0) or 0
+    from shopping_shorts import eleven_voices, keyroute
+    keys, _src = keyroute.keys_for(Store(DB_PATH), cid, keyroute.SVC_ELEVENLABS)
+    if not keys or _src != "customer":
+        return JSONResponse({"ok": False, "need_key": True,
+                             "error": "내 일레븐랩스 키를 먼저 등록해주세요."}, status_code=400)
+    body = await request.json()
+    vid = (body or {}).get("voice_id") or ""
+    owner = (body or {}).get("public_owner_id") or ""
+    name = ((body or {}).get("name") or "내 성우").strip()[:40]
+    added = eleven_voices.add_shared(cid, owner, vid, name)
+    if not added.get("ok"):
+        return JSONResponse({"ok": False, "error": added.get("error") or "담기 실패"},
+                            status_code=502)
+    try:
+        res = eleven_voices.register(Store(DB_PATH), added["voice_id"], name,
+                                     one_liner=((body or {}).get("one_liner") or "")[:60],
+                                     lang="KR", bake=True, owner_customer_id=cid)
+    except Exception as e:      # noqa: BLE001 — 담기는 됐으니 그 사실은 알려준다
+        print(f"[voice-library] 카드 등록 실패: {e!r}", file=sys.stderr)
+        return JSONResponse({"ok": False, "added": True,
+                             "error": "계정에는 담겼는데 성우 카드 등록에 실패했습니다."},
+                            status_code=502)
+    return {"ok": True, "already": added.get("already", False),
+            "group_id": res["group_id"], "count": res["count"],
+            "sample_failed": res.get("sample_failed") or []}
+
+
 @app.get("/api/voice-presets")
-def api_voice_presets(lang: str = "KR"):
+def api_voice_presets(request: Request, lang: str = "KR"):
     """성우별 그룹 목록(유저 노출용 — source_ref는 내부 전용이라 제외).
 
     성우 1명당 stable(기본 노출)/natural/expressive를 variants에 묶어 반환하고,
     베스트 5명은 whisper까지 4톤이다(2026-07-16 청취 판정). best=베스트 성우 플래그로,
     프론트가 ⭐ 배지에 쓴다. **순서는 여기서 정하지 않는다** — Store.list_voice_presets의
     ORDER BY best DESC, created_at이 정본이고 이 함수는 그 순서를 보존만 한다."""
-    rows = Store(DB_PATH).list_voice_presets(lang=lang)
+    # ★소유자를 가린다(2026-08-24). 공용(사장님 큐레이션) + 내가 라이브러리에서 담은 것만.
+    #   남이 담은 성우는 **그 사람 일레븐랩스 계정에만** 있어서, 내 키로 고르면 합성이 실패한다.
+    _cid = getattr(request.state, "customer_id", 0) or 0
+    rows = Store(DB_PATH).list_voice_presets(lang=lang, customer_id=_cid)
     groups = {}
     for p in rows:
         # 튜닝 작업대가 만든 임시 프리셋(origin="tuned", :1526)은 카드에서 뺀다.

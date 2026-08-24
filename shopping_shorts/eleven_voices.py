@@ -160,8 +160,14 @@ def make_preview(voice_id, force=False):
     return out, False
 
 
-def register(store, voice_id, name, one_liner="", lang="KR", bake=True):
-    """보이스 등록 = 프리셋 4종 upsert (+ 샘플 굽기). 등록된 group_id와 실패한 샘플 목록 반환."""
+def register(store, voice_id, name, one_liner="", lang="KR", bake=True,
+             owner_customer_id=0):
+    """보이스 등록 = 프리셋 4종 upsert (+ 샘플 굽기). 등록된 group_id와 실패한 샘플 목록 반환.
+
+    owner_customer_id(2026-08-24): 0=공용(사장님이 담은 것, 모두에게 보임) /
+      N=그 고객이 라이브러리에서 담은 것 — **본인에게만** 보인다.
+      담기는 각자 일레븐랩스 계정에 되므로, 남에게 보이면 그 사람 키엔 없는 voice_id라
+      합성이 실패한다. 기존 호출부는 이 인자를 안 넘겨 0 그대로다(회귀 없음)."""
     rows = build_group(voice_id, name, one_liner, lang)
     failed = []
     for p in rows:
@@ -173,5 +179,119 @@ def register(store, voice_id, name, one_liner="", lang="KR", bake=True):
                 p["sample_file"] = None
         else:
             p["sample_file"] = None
+        p["owner_customer_id"] = int(owner_customer_id or 0)
         store.upsert_voice_preset(p)
     return {"group_id": rows[0]["group_id"], "count": len(rows), "sample_failed": failed}
+
+
+# ── 공개 라이브러리 검색·담기 (2026-08-24) ──────────────────────────────────
+# 왜: 지금까지 고객이 쓸 수 있는 목소리는 **사장님이 미리 담아둔 것뿐**이었다.
+#     원하는 톤이 없으면 방법이 없다. 일레븐랩스 공개 라이브러리(수천 개)를 직접
+#     검색해 자기 계정에 담고 바로 쓰게 한다.
+#
+# 흐름: search_shared() → add_shared() → (기존) register() 로 성우 카드가 된다.
+#       ★register까지 이어지므로 카드·샘플·톤 4종은 기존 경로를 그대로 탄다(0순위-B).
+#
+# ⚠️담기는 **고객 본인 계정**에 된다(본인 키로 호출). 그래서 본인 키가 없으면
+#   담아도 합성이 사장님 키로 나가 실패한다 — 호출부가 키 유무를 먼저 막아야 한다.
+_SHARED_ENDPOINT = "https://api.elevenlabs.io/v1/shared-voices"
+_ADD_ENDPOINT = "https://api.elevenlabs.io/v1/voices/add/{owner}/{vid}"
+
+
+def search_shared(customer_id=0, query="", language=None, gender=None,
+                  category=None, page_size=24, page=0):
+    """공개 음성 라이브러리 검색 → {"ok","voices","has_more","error"}.
+
+    voices 항목: voice_id·public_owner_id(담을 때 필요)·name·description·
+                 preview_url·labels·language·gender·category·free(무료 여부)
+    ★public_owner_id를 반드시 함께 준다 — 담기 API가 (owner, voice_id) 쌍을 요구한다.
+      이걸 빠뜨리면 화면에서 고르고도 담을 수가 없다.
+    """
+    from shopping_shorts import tts
+    api_key = tts._api_key(customer_id)
+    if not api_key:
+        return {"ok": False, "voices": [], "has_more": False,
+                "error": "일레븐랩스 키가 없습니다"}
+    params = {"page_size": max(1, min(int(page_size or 24), 100)),
+              "page": max(0, int(page or 0))}
+    if query:
+        params["search"] = str(query)[:100]
+    if language:
+        params["language"] = language
+    if gender:
+        params["gender"] = gender
+    if category:
+        params["category"] = category
+    try:
+        r = requests.get(_SHARED_ENDPOINT, headers={"xi-api-key": api_key},
+                         params=params, timeout=_TIMEOUT)
+    except Exception as e:                                   # 네트워크 자체 실패
+        return {"ok": False, "voices": [], "has_more": False, "error": f"검색 실패: {e}"}
+    if r.status_code != 200:
+        return {"ok": False, "voices": [], "has_more": False,
+                "error": f"검색 실패 (HTTP {r.status_code})"}
+    try:
+        body = r.json()
+    except Exception:
+        return {"ok": False, "voices": [], "has_more": False, "error": "응답을 읽지 못했습니다"}
+    raw = body.get("voices") if isinstance(body, dict) else None
+    out = []
+    for v in (raw or []):
+        if not isinstance(v, dict) or not v.get("voice_id"):
+            continue
+        out.append({
+            "voice_id": v.get("voice_id"),
+            # 응답 키가 버전에 따라 갈린다 — 있는 쪽을 쓴다(없으면 담기 버튼을 못 만든다).
+            "public_owner_id": v.get("public_owner_id") or v.get("public_user_id") or "",
+            "name": v.get("name") or "(이름 없음)",
+            "description": (v.get("description") or "")[:200],
+            "preview_url": v.get("preview_url") or None,
+            "language": v.get("language") or "",
+            "gender": (v.get("labels") or {}).get("gender") or v.get("gender") or "",
+            "accent": (v.get("labels") or {}).get("accent") or v.get("accent") or "",
+            "age": (v.get("labels") or {}).get("age") or v.get("age") or "",
+            "use_case": (v.get("labels") or {}).get("use_case") or v.get("use_case") or "",
+            "category": v.get("category") or "",
+            "free": bool(v.get("free_users_allowed", True)),
+        })
+    return {"ok": True, "voices": out,
+            "has_more": len(out) >= params["page_size"], "error": None}
+
+
+def add_shared(customer_id, public_owner_id, voice_id, name):
+    """공개 음성을 **고객 본인 계정**에 담는다 → {"ok","voice_id","error"}.
+
+    담긴 뒤에는 /v1/voices에 나타나므로 기존 register()로 성우 카드를 만들 수 있다.
+    ★이미 담긴 음성을 다시 담으면 400이 온다 — 실패가 아니라 '이미 있음'이므로
+      호출부가 그대로 진행할 수 있게 ok=True, already=True로 알려준다.
+    """
+    from shopping_shorts import tts
+    api_key = tts._api_key(customer_id)
+    if not api_key:
+        return {"ok": False, "voice_id": None, "already": False,
+                "error": "일레븐랩스 키가 없습니다"}
+    if not public_owner_id or not voice_id:
+        return {"ok": False, "voice_id": None, "already": False,
+                "error": "음성 정보가 모자랍니다(소유자·ID)"}
+    url = _ADD_ENDPOINT.format(owner=public_owner_id, vid=voice_id)
+    try:
+        r = requests.post(url, headers={"xi-api-key": api_key},
+                          json={"new_name": (name or "voice")[:60]}, timeout=_TIMEOUT)
+    except Exception as e:
+        return {"ok": False, "voice_id": None, "already": False, "error": f"담기 실패: {e}"}
+    if r.status_code == 200:
+        try:
+            new_id = (r.json() or {}).get("voice_id") or voice_id
+        except Exception:
+            new_id = voice_id
+        return {"ok": True, "voice_id": new_id, "already": False, "error": None}
+    # 이미 담긴 경우를 성공으로 돌려준다(같은 목소리를 두 번 눌렀을 뿐이다).
+    body = ""
+    try:
+        body = r.text[:300]
+    except Exception:
+        pass
+    if r.status_code == 400 and ("already" in body.lower() or "exists" in body.lower()):
+        return {"ok": True, "voice_id": voice_id, "already": True, "error": None}
+    return {"ok": False, "voice_id": None, "already": False,
+            "error": f"담기 실패 (HTTP {r.status_code})"}
