@@ -421,3 +421,10 @@ DOUYIN_SESSION_PATH = os.getenv("DOUYIN_SESSION_PATH", "/home/ubuntu/douyin_sess
 #   즉 샤오홍슈(세션 있음 → 무료 성공)와 도우인(세션 없음 → Apify)의 차이와 같다.
 #   이 파일이 생기는 순간 kw_search가 자동으로 무료 경로를 먼저 타고 비용이 0이 된다.
 TIKTOK_SESSION_PATH = os.getenv("TIKTOK_SESSION_PATH", "/home/ubuntu/tiktok_session.json")
+
+# ── 외부 도구 실행 상한 (2026-08-23 점검: 타임아웃이 없어 행이 걸리면 스레드가 영구 점유됐다)
+#    ★값은 여기서만 정한다 — 파일마다 따로 적으면 어긋난다(0순위-B).
+#    ffprobe/ffmpeg는 audio_post가 쓰던 FFMPEG_TIMEOUT_SEC와 같은 이름을 유지해 호환.
+FFMPEG_TIMEOUT_SEC = int(os.getenv("FFMPEG_TIMEOUT_SEC", "30") or 30)      # 메타 조회·짧은 변환
+MEDIA_CLIP_TIMEOUT_SEC = int(os.getenv("MEDIA_CLIP_TIMEOUT_SEC", "300") or 300)   # 클립 컷·프레임 추출
+REMOTION_TIMEOUT_SEC = int(os.getenv("REMOTION_TIMEOUT_SEC", "1800") or 1800)     # node 렌더(길다)

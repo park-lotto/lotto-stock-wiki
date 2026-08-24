@@ -1,0 +1,433 @@
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd"> 
+ <html xmlns:o="urn:schemas-microsoft-com:office:office"
+xmlns:x="urn:schemas-microsoft-com:office:excel"
+xmlns="http://www.w3.org/TR/REC-html40">
+	<HEAD>
+		<title>리포트서머리</title>
+		<meta name="CODE_LANGUAGE" Content="C#">
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+		<style type="text/css">
+			td { FONT: 11px '맑은 고딕'; COLOR: #333333; border-top:none;border-bottom:0.5pt solid rgb(209,209,209);}
+			br {mso-data-placement:same-cell;}
+			body { PADDING-RIGHT: 0px; PADDING-LEFT: 0px; PADDING-BOTTOM: 0px; MARGIN: 0px; FONT: 9pt '맑은 고딕'; PADDING-TOP: 0px }
+			form { PADDING-RIGHT: 0px; PADDING-LEFT: 0px; PADDING-BOTTOM: 0px; MARGIN: 0px; FONT: 9pt '맑은 고딕'; PADDING-TOP: 0px }
+			.title{font:bold 14pt 'HY견고딕';color:rgb(47,71,107)}
+			.hd { font: bold 9pt '맑은 고딕'; color: rgb(53,91,157); height: 30px; background-color: rgb(247,247,247); text-align: center;border-top:1px rgb(47,71,107) solid}
+			.strdeg{mso-width-source:userset;width:80px;height: 24px;text-align: left}
+			.pre_recomm{mso-width-source:userset;width:80px;height: 24px;text-align: left}
+			.recomm{width:80px;height: 24px;text-align: left}
+			.brk{mso-width-source:userset;width:110px;height: 24px;text-align: left}
+			.cmp,.ind{mso-width-source:userset;width:90px;height: 24px;text-align: left}
+			.strprc{mso-width-source:userset;width:60px;height: 24px;text-align: right}
+			.pre_targer_prc{mso-width-source:userset;width:60px;height: 24px;text-align: right}
+			.close_prc{mso-width-source:userset;width:80px;height: 24px;text-align: right}
+			.comment{width:500px;height: 49px;}
+			.comment2{width:450px;height: 49px;}
+			.rpt_title{width:275px;height:24px;text-align: left}
+			.img0{width:20px;height:30px;line-height:30px;font-size:11pt;font-family:'HY견고딕';font-weight:bold;color:rgb(101,102,102)}
+			.img1{width:20px;height:30px;line-height:30px;font-size:7pt;font-family:'맑은 고딕';color:rgb(254,1,10)}
+			.img2{width:20px;height:30px;line-height:30px;font-size:11pt;font-family:'맑은 고딕';font-weight:bold;color:rgb(14,152,15)}
+			.img3{width:20px;height:30px;line-height:30px;font-size:7pt;font-family:'맑은 고딕';color:rgb(52,101,254)}
+			.img4{width:20px;height:30px;line-height:30px;font-size:9pt;font-family:'맑은 고딕';font-weight:bold;color:rgb(254,1,10)}
+			@page
+	            {mso-header-data:"&R리포트서머리";
+	            mso-footer-data:"Page &P of &N";
+	            margin:.5in 0in .4in 0in;
+	            mso-header-margin:.31in;
+	            mso-footer-margin:.2in;
+	            mso-page-orientation:landscape;}
+		</style>
+    <!--[if gte mso 9]><xml>
+       <x:ExcelWorkbook>
+        <x:ExcelWorksheets>
+         <x:ExcelWorksheet>
+          <x:Name>WiseReport ReportSummary</x:Name>
+          <x:WorksheetOptions>
+            <x:FreezePanes/>
+            <x:FrozenNoSplit/>
+            <x:SplitHorizontal>5</x:SplitHorizontal>
+            <x:TopRowBottomPane>5</x:TopRowBottomPane>
+            <x:ActivePane>2</x:ActivePane>
+            <x:DoNotDisplayGridlines/>
+            <x:Print>
+                <x:PaperSizeIndex>9</x:PaperSizeIndex>
+                <x:Scale>90</x:Scale> 
+                <x:ValidPrinterInfo/>
+            </x:Print>
+          </x:WorksheetOptions>
+         </x:ExcelWorksheet>
+        </x:ExcelWorksheets>
+       </x:ExcelWorkbook>
+      </xml><![endif]-->
+	</HEAD>
+	<body bottomMargin="0" leftMargin="0" topMargin="0" rightMargin="0">
+         
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-C8B2QNTM16"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-C8B2QNTM16');
+</script>
+
+		<form method="post" action="./summaryexcel.aspx?cn=&amp;fmt=1&amp;ee=20260824&amp;sortCol=&amp;sortTyp=" id="Form1">
+<div class="aspNetHidden">
+<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="/wEPDwULLTE5ODc1MjczMzhkZK1uVmb2cGLVvIQ+lHb37TlJRESJ" />
+</div>
+
+<script type="text/javascript">
+//<![CDATA[
+var theForm = document.forms['Form1'];
+if (!theForm) {
+    theForm = document.Form1;
+}
+function __doPostBack(eventTarget, eventArgument) {
+    if (!theForm.onsubmit || (theForm.onsubmit() != false)) {
+        theForm.__EVENTTARGET.value = eventTarget;
+        theForm.__EVENTARGUMENT.value = eventArgument;
+        theForm.submit();
+    }
+}
+//]]>
+</script>
+
+
+<script src="/WebResource.axd?d=EnHdU53b5uA6lKGq8bLJgCXexEBiKJSTKiXq84RtXnNu7LDCmV1KxyTtwXgDEBhZaJdTNK9Rr5w1-1BOBKBccwQcrBs1&amp;t=638286403360000000" type="text/javascript"></script>
+
+<div class="aspNetHidden">
+
+	<input type="hidden" name="__VIEWSTATEGENERATOR" id="__VIEWSTATEGENERATOR" value="3E16E249" />
+	<input type="hidden" name="__SCROLLPOSITIONX" id="__SCROLLPOSITIONX" value="0" />
+	<input type="hidden" name="__SCROLLPOSITIONY" id="__SCROLLPOSITIONY" value="0" />
+	<input type="hidden" name="__EVENTTARGET" id="__EVENTTARGET" value="" />
+	<input type="hidden" name="__EVENTARGUMENT" id="__EVENTARGUMENT" value="" />
+</div>
+        <div id="cmp_excel">
+                <table style="border-collapse:collapse;table-layout:fixed;mso-width-source:userset;width:1100px">
+                     <col style='mso-width-source:userset;width:110px'>
+                     <col style='mso-width-source:userset;width:90px'>
+                     <col style='mso-width-source:userset;width:20px'>
+                     <col style='mso-width-source:userset;width:80px'>
+                     
+                     <col style='mso-width-source:userset;width:20px'>
+                     <col style='mso-width-source:userset;width:60px'>
+					 
+                     <col style='mso-width-source:userset;width:80px'>
+					 <col style='mso-width-source:userset;width:200px'>
+                     <col style='mso-width-source:userset;width:440px'>
+ 				    <tr>
+					    <td colspan="9" height="30" align="center" class="title">기업리포트 요약(2026.08.24)</td>
+				    </tr>
+                    <tr>
+                        <td class="hd" style="mso-width-source:userset;width:110px;">기관명/작성자</td>
+                        <td class="hd" style="mso-width-source:userset;width:90px;">기업명</td>
+                        <td class="hd" colspan="2">투자의견</td>
+                        
+                        <td class="hd" colspan="2">목표주가</td>
+                        
+                        <td class="hd" style="mso-width-source:userset;width:80px;">전일수정주가</td>
+						<td class="hd" style="mso-width-source:userset;width:200px;">제목</td>
+                        <td class="hd" style="mso-width-source:userset;width:440px;">요약</td>
+                    </tr>
+                    <tr>
+                        <td colspan="9" style="height: 1px;border-bottom:1px solid rgb(209,209,209)"></td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">하나증권</font><br/>고연수</td>
+                        <td class="cmp"><font color="rgb(53,91,157)">현대해상</font><br/>[001450]</td>
+                        
+                            <td class="img2">=</td>
+                            <td class="strdeg">BUY</td>
+                        
+                            <td class="img2">=</td>
+                            <td class="strprc">57,000</td>
+                        
+                        
+                        <td class="close_prc">49,750</td>
+						<td class="rpt_title">NDR 후기 - 해준금 제도 완화의 최대 수혜주</td>
+                        <td class="comment"><span class="comment_text">▶</span> 4분기 간편보험 관련 가정변경에 따른 CSM 조정은 예상대비 양호할 전망  <br/><span class="comment_text">▶</span> 현대해상에 대한 투자의견 ＇BUY＇, 목표주가 57,000원 유지</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">IBK투자증권</font><br/>이동욱</td>
+                        <td class="cmp"><font color="rgb(53,91,157)">롯데정밀화학</font><br/>[004000]</td>
+                        
+                            <td class="img2">=</td>
+                            <td class="strdeg">매수</td>
+                        
+                            <td class="img2">=</td>
+                            <td class="strprc">86,000</td>
+                        
+                        
+                        <td class="close_prc">44,150</td>
+						<td class="rpt_title">반도체 소재는 커지고, 계열사 지원 부담은 줄다</td>
+                        <td class="comment"><span class="comment_text">▶</span> TMAC 증설, 한덕화학 평택 투자와 맞물린 구조적 성장 <br/><span class="comment_text">▶</span> 롯데건설 실적 개선, 계열 자금지원 리스크 완화</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">KB증권</font><br/>김동원,이창민,강다현</td>
+                        <td class="cmp"><font color="rgb(53,91,157)">삼성전자</font><br/>[005930]</td>
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="strdeg"></td>
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="strprc"></td>
+                        
+                        
+                        <td class="close_prc">281,500</td>
+						<td class="rpt_title">주주환원 확대, 재평가 전환점</td>
+                        <td class="comment"><span class="comment_text">▶</span> 총 잔여 재원 110조원, 3분기 30조원 이후 80조원 추가 환원 <br/><span class="comment_text">▶</span> 8월 24일부터 15조원 규모 임직원 보상용 자사주 매입 시작 <br/><span class="comment_text">▶</span> 앤트로픽 IPO 수혜, 2027년 1월 신규 주주 환원 정책 공개</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">하나증권</font><br/>송선재,박태웅</td>
+                        <td class="cmp"><font color="rgb(53,91,157)">DN오토모티브</font><br/>[007340]</td>
+                        
+                            <td class="img2">=</td>
+                            <td class="strdeg">BUY</td>
+                        
+                            <td class="img2">=</td>
+                            <td class="strprc">80,000</td>
+                        
+                        
+                        <td class="close_prc">44,200</td>
+						<td class="rpt_title">NDR 후기: 흔들린 건 주가뿐</td>
+                        <td class="comment"><span class="comment_text">▶</span> 실적은 견고, 우려는 과도<br/><span class="comment_text">▶</span> NDR의 주요 내용: 하반기 전망, DN솔루션즈/Heller 전망, DN솔루션즈 상장 이슈</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">스터닝밸류리서치</font><br/>정금열</td>
+                        <td class="cmp"><font color="rgb(53,91,157)">OCI홀딩스</font><br/>[010060]</td>
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="strdeg"></td>
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="strprc"></td>
+                        
+                        
+                        <td class="close_prc">265,000</td>
+						<td class="rpt_title">태양광을 넘어 우주·AI까지, 성장판이 열린다</td>
+                        <td class="comment"><span class="comment_text">▶</span> 미국 태양광 공급망 재편의 최대 수혜주<br/><span class="comment_text">▶</span> 폴리실리콘 3.5만톤 완판 → 2029년 CAPA 7만톤 확대<br/><span class="comment_text">▶</span> 신규 LTA 확보로 2029년까지 물량 확보<br/><span class="comment_text">▶</span> AI 데이터센터·우주산업이라는 새로운 성장회사로 주목</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">DS투자증권</font><br/>강태호</td>
+                        <td class="cmp"><font color="rgb(53,91,157)">한화에어로스페이스</font><br/>[012450]</td>
+                        
+                            <td class="img2">=</td>
+                            <td class="strdeg">BUY</td>
+                        
+                            <td class="img1">▲</td>
+                            <td class="strprc"><font color='#FF6600'>1,830,000</span></td>
+                        
+                        
+                        <td class="close_prc">1,085,000</td>
+						<td class="rpt_title">K9MH의 미국 진출, 단일 수주 이상의 의미</td>
+                        <td class="comment"><span class="comment_text">▶</span> K9MH, MTC프로그램 시제품 공급 경쟁 승리<br/><span class="comment_text">▶</span> 미국 진출, 단일 수주 이상의 의미</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">DS투자증권</font><br/>장지혜</td>
+                        <td class="cmp"><font color="rgb(53,91,157)">풀무원</font><br/>[017810]</td>
+                        
+                            <td class="img2">=</td>
+                            <td class="strdeg">BUY</td>
+                        
+                            <td class="img2">=</td>
+                            <td class="strprc">17,000</td>
+                        
+                        
+                        <td class="close_prc">9,230</td>
+						<td class="rpt_title">건강한 먹거리로 더 건강한 재무구조를 향해</td>
+                        <td class="comment"><span class="comment_text">▶</span> 2Q26Re: 식품서비스 호조와 해외식품 적자 축소로 실적 개선  <br/><span class="comment_text">▶</span> NDR 주요 내용: 해외 영업 실적 전망과 재무 구조 개선 계획  <br/><span class="comment_text">▶</span> 투자의견 매수, 목표주가 1.7만원 유지</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">키움증권</font><br/>임수진,박정현</td>
+                        <td class="cmp"><font color="rgb(53,91,157)">롯데관광개발</font><br/>[032350]</td>
+                        
+                            <td class="img2">=</td>
+                            <td class="strdeg">BUY</td>
+                        
+                            <td class="img3">▼</td>
+                            <td class="strprc"><font color='#3366CC'>23,000</span></td>
+                        
+                        
+                        <td class="close_prc">12,750</td>
+						<td class="rpt_title">극심한 저평가 구간</td>
+                        <td class="comment"><span class="comment_text">▶</span> 2Q26 Review: 컨센 부합하는 호실적 기록<br/><span class="comment_text">▶</span> 기금 우려는 -8%, 주가 낙폭은 -45%</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">KB증권</font><br/>이지은,이종건</td>
+                        <td class="cmp"><font color="rgb(53,91,157)">카카오</font><br/>[035720]</td>
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="strdeg"></td>
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="strprc"></td>
+                        
+                        
+                        <td class="close_prc">35,800</td>
+						<td class="rpt_title">분할만으로는 재평가되지 않는다</td>
+                        <td class="comment"><span class="comment_text">▶</span> 8/21 인적분할을 통한 기업가치 제고 전략 공시 <br/><span class="comment_text">▶</span> 분할 이후 기업가치 제고의 조건 ① 카카오AI, 분할 자체보다 AI 사업의 실적 성과가 우선<br/><span class="comment_text">▶</span> 분할 이후 기업가치 제고의 조건 ② 카카오X, 자회사 가치 합산을 넘어 지주회사 자체의 할인 축소 필요</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">한국투자증권</font><br/>정호윤,황인준</td>
+                        <td class="cmp"><font color="rgb(53,91,157)">카카오</font><br/>[035720]</td>
+                        
+                            <td class="img2">=</td>
+                            <td class="strdeg">매수</td>
+                        
+                            <td class="img2">=</td>
+                            <td class="strprc">60,000</td>
+                        
+                        
+                        <td class="close_prc">35,800</td>
+						<td class="rpt_title">명확해진 과제</td>
+                        <td class="comment"><span class="comment_text">▶</span> 카카오X와 카카오AI로 인적분할 발표<br/><span class="comment_text">▶</span> 목적은 저평가 해소와 의사결정 및 자원배분 효율화<br/><span class="comment_text">▶</span> 분할만으로는 문제가 해결되지 않을 것</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">하나증권</font><br/>이준호</td>
+                        <td class="cmp"><font color="rgb(53,91,157)">카카오</font><br/>[035720]</td>
+                        
+                            <td class="img2">=</td>
+                            <td class="strdeg">BUY</td>
+                        
+                            <td class="img3">▼</td>
+                            <td class="strprc"><font color='#3366CC'>50,000</span></td>
+                        
+                        
+                        <td class="close_prc">35,800</td>
+						<td class="rpt_title">X/AI로 나뉘는 카카오, 우선은 지켜보자</td>
+                        <td class="comment"><span class="comment_text">▶</span> 인적분할 발표  <br/><span class="comment_text">▶</span> 카카오X, 카카오AI의 현재와 미래  <br/><span class="comment_text">▶</span> 투자의견 Buy, 목표주가 50,000원으로 하향</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">DB증권</font><br/>신은정</td>
+                        <td class="cmp"><font color="rgb(53,91,157)">카카오</font><br/>[035720]</td>
+                        
+                            <td class="img2">=</td>
+                            <td class="strdeg">Buy</td>
+                        
+                            <td class="img2">=</td>
+                            <td class="strprc">57,000</td>
+                        
+                        
+                        <td class="close_prc">35,800</td>
+						<td class="rpt_title">가만히 있는 것보다 낫다. 풀어야 할 숙제도 많다.</td>
+                        <td class="comment"><span class="comment_text">▶</span> 카카오 인적분할 공시<br/><span class="comment_text">▶</span> 분할 이후 방향 구체화 필요</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">스터닝밸류리서치</font><br/>이호진</td>
+                        <td class="cmp"><font color="rgb(53,91,157)">한세실업</font><br/>[105630]</td>
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="strdeg"></td>
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="strprc"></td>
+                        
+                        
+                        <td class="close_prc">8,840</td>
+						<td class="rpt_title">고단가 브랜드 비중확대와 2Q 어닝 서프라이즈</td>
+                        <td class="comment"><span class="comment_text">▶</span> 미국 빅바이어 기반 글로벌 의류 OEM/ODM기업<br/><span class="comment_text">▶</span> 2Q26, 고단가 믹스와 물량 회복에 실적 서프라이즈<br/><span class="comment_text">▶</span> 관세 시대의 해답, 중미 니어쇼어링과 원단 수직계열화</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">상상인증권</font><br/>하태기</td>
+                        <td class="cmp"><font color="rgb(53,91,157)">라파스</font><br/>[214260]</td>
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="strdeg"></td>
+                        
+                            <td class="img0">&nbsp;</td>
+                            <td class="strprc"></td>
+                        
+                        
+                        <td class="close_prc">8,530</td>
+						<td class="rpt_title">내수 ODM 매출 성장이 기대된다</td>
+                        <td class="comment"><span class="comment_text">▶</span> 2026년 상반기 매출 성장 부진, 적자 지속<br/><span class="comment_text">▶</span> ODM부문에서 수출은 정체, 내수는 고성장 중이며 하반기 성장 폭 확대 전망<br/><span class="comment_text">▶</span> 자사 브랜드 제품 매출 성장에는 아직 시간이 필요해 보인다</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">하나증권</font><br/>김홍식,이상훈</td>
+                        <td class="cmp"><font color="rgb(53,91,157)">에치에프알</font><br/>[230240]</td>
+                        
+                            <td class="img2">=</td>
+                            <td class="strdeg">BUY</td>
+                        
+                            <td class="img2">=</td>
+                            <td class="strprc">50,000</td>
+                        
+                        
+                        <td class="close_prc">13,200</td>
+						<td class="rpt_title">어차피 내년 실적은 개선될 수 밖에 없습니다</td>
+                        <td class="comment"><span class="comment_text">▶</span> HFR에 대한 투자의견 매수, 목표주가 50,000원 유지  <br/><span class="comment_text">▶</span> 원재료 가격 폭등으로 인한 실적 악화, 사업 본원 경쟁력은 여전히 유지 중  <br/><span class="comment_text">▶</span> 내년 4월 어퍼 C 밴드 경매 시작되면 실적 회복됩니다</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">SK증권</font><br/>나민식,고서영</td>
+                        <td class="cmp"><font color="rgb(53,91,157)">HD현대일렉트릭</font><br/>[267260]</td>
+                        
+                            <td class="img2">=</td>
+                            <td class="strdeg">매수</td>
+                        
+                            <td class="img2">=</td>
+                            <td class="strprc">900,000</td>
+                        
+                        
+                        <td class="close_prc">718,000</td>
+						<td class="rpt_title">수익성은 유틸리티, 성장은 증설이 만든다</td>
+                        <td class="comment"><span class="comment_text">▶</span> 초고압을 굳히고, 배전으로 넓힌다  <br/><span class="comment_text">▶</span> 증설현황 업데이트  <br/><span class="comment_text">▶</span> AI에 묶여서 움직이지만</td>
+                    </tr>
+                    
+                    <tr style="mso-height-source:auto;">
+                        <td class="brk"><font color="rgb(53,91,157)">키움증권</font><br/>김진구</td>
+                        <td class="cmp"><font color="rgb(53,91,157)">카카오페이</font><br/>[377300]</td>
+                        
+                            <td class="img2">=</td>
+                            <td class="strdeg">BUY</td>
+                        
+                            <td class="img3">▼</td>
+                            <td class="strprc"><font color='#3366CC'>85,000</span></td>
+                        
+                        
+                        <td class="close_prc">42,500</td>
+						<td class="rpt_title">프런티어 업체 제휴 요구</td>
+                        <td class="comment"><span class="comment_text">▶</span> 동사 목표주가의 하향  <br/><span class="comment_text">▶</span> 자산관리 확장성 저감  <br/><span class="comment_text">▶</span> 프런티어 확장성 여지</td>
+                    </tr>
+                    
+                    <!--tr style="height:5px; border:0px;">
+                        <td colspan="10" style="border-bottom:0px solid rgb(209,209,209)"></td>
+                    </tr-->
+				    <tr>
+                        <td colspan="9" style="border-bottom:0px solid rgb(209,209,209);"><img alt="" src="https://www.wisereport.co.kr/wisereport/summary/images/excel_footer.png" border="0"/></td>
+				    </tr>
+			    </table>
+            </div>
+    
+
+<script type="text/javascript">
+//<![CDATA[
+
+theForm.oldSubmit = theForm.submit;
+theForm.submit = WebForm_SaveScrollPositionSubmit;
+
+theForm.oldOnSubmit = theForm.onsubmit;
+theForm.onsubmit = WebForm_SaveScrollPositionOnSubmit;
+//]]>
+</script>
+</form>
+	</body>
+</HTML>
+

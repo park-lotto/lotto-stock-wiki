@@ -11,6 +11,8 @@ import os
 import re
 import secrets
 import shutil
+import sys
+import threading
 import socket
 import tempfile
 import time
@@ -2955,16 +2957,39 @@ def api_mix_start(request: Request, background_tasks: BackgroundTasks, body: dic
     subtitle_removal = bool(body.get("subtitle_removal", False))
     scene_first = bool(body.get("scene_first", False))
     cid = getattr(request.state, "customer_id", 0)
+    # 이 구경로에는 중복 가드가 아예 없었다(2026-08-24) — /api/produce/mix/start와 같은
+    # 판단처를 쓴다(0순위-B). 여기선 확정 대본이 없으므로 지문은 (cid + urls)로 잡힌다.
+    _blocked = _bad_key_block(cid)
+    if _blocked:
+        return _blocked
+    _store = Store(DB_PATH)
+    _fp, _won, _claim_job = _store.claim_mix_request(cid, urls, None)
+    if not _won:
+        for _ in range(30):
+            if _claim_job:
+                break
+            time.sleep(0.1)
+            _claim_job = _store.get_mix_claim_job(_fp)
+        if _claim_job:
+            return {"ok": True, "job_id": _claim_job, "deduped": True}
+        return JSONResponse(status_code=409, content={
+            "ok": False, "error_code": "duplicate",
+            "error": "같은 요청이 방금 접수됐어요. 잠시 후 다시 눌러주세요."})
     if _global_over_cap("render"):
+        _store.release_mix_claim(_fp)
         return JSONResponse(status_code=429, content={
             "ok": False, "error_code": "global_limit",
             "error": "지금 영상 만들기 이용이 많아요. 잠시 후 다시 시도해 주세요."})
     if not check_and_count(cid, "render"):
+        _store.release_mix_claim(_fp)
         return JSONResponse(status_code=429, content={
             "ok": False, "error_code": "daily_limit",
             "error": "오늘 영상 만들기 횟수를 다 썼어요. 결제하면 더 만들 수 있어요."})
-    _denied = _charge_or_402(cid, pricing.OP_MIX, keyroute.SVC_GEMINI)
+    _charged = {}                      # ★깎은 액수를 그대로 job에 남긴다(환불이 재판단하지 않게)
+    _denied = _charge_or_402(cid, pricing.OP_MIX, keyroute.SVC_GEMINI, out=_charged)
     if _denied:
+        uncount(cid, "render")
+        _store.release_mix_claim(_fp)
         return _denied
     global_incr_and_alert("render")
     job_id = uuid.uuid4().hex[:12]
@@ -2973,7 +2998,9 @@ def api_mix_start(request: Request, background_tasks: BackgroundTasks, body: dic
     Store(DB_PATH).create_mix_job(job_id, urls, target, structure, subtitle_removal=subtitle_removal,
                                   customer_id=cid,
                                   render_charge_day=("trial" if _is_trial(cid) else _today_utc()),
+                                  mix_charged=_charged.get("charged", 0),
                                   scene_first=scene_first)
+    _store.attach_mix_claim(_fp, job_id)
     Store(DB_PATH).enqueue("mix", {"job_id": job_id})
     return {"ok": True, "job_id": job_id}
 
@@ -3098,7 +3125,8 @@ def api_mix_candidate_clone(request: Request, body: dict):
         return JSONResponse(status_code=429, content={
             "ok": False, "error_code": "daily_limit",
             "error": "오늘 영상 만들기 횟수를 다 썼어요. 결제하면 더 만들 수 있어요."})
-    _denied = _charge_or_402(cid, pricing.OP_MIX, keyroute.SVC_GEMINI)
+    _charged = {}                      # ★깎은 액수를 그대로 job에 남긴다(환불이 재판단하지 않게)
+    _denied = _charge_or_402(cid, pricing.OP_MIX, keyroute.SVC_GEMINI, out=_charged)
     if _denied:
         return _denied
     global_incr_and_alert("render")
@@ -3111,6 +3139,7 @@ def api_mix_candidate_clone(request: Request, body: dict):
                          script_structure=src.get("script_structure"),
                          customer_id=cid,
                          render_charge_day=("trial" if _is_trial(cid) else _today_utc()),
+                                  mix_charged=_charged.get("charged", 0),
                          scene_first=bool(src.get("scene_first")),
                          backbone_main=src.get("backbone_main"))
     _clone_mix_work_sources(job_id, new_id, len(urls))
@@ -3161,6 +3190,63 @@ def api_get_vmake_key(request: Request):
 #   평문 경로는 keyroute.keys_for(→get_customer_keys_plain) 하나뿐이다.
 # ─────────────────────────────────────────────────────────────────────
 
+# 마지막 검증 실패 사유 — 스레드별로 따로 둔다(요청이 겹쳐도 남의 사유를 보면 안 된다).
+_KEY_FAIL = threading.local()
+
+
+def _remember_key_failure(service: str, code: int, body: str) -> None:
+    """업체가 준 실패 사유를 사람 말로 바꿔 기억해둔다. 로그에도 남긴다."""
+    msg = _explain_key_failure(service, code, body)
+    _KEY_FAIL.reason = msg
+    print(f"[keycheck] {service} 실패 code={code} → {msg} | {body[:160]}", file=sys.stderr)
+
+
+def _take_key_failure() -> str:
+    """기억해둔 사유를 꺼내 비운다(다음 검증이 옛 사유를 물려받지 않게)."""
+    msg = getattr(_KEY_FAIL, "reason", "") or ""
+    _KEY_FAIL.reason = ""
+    return msg
+
+
+def _explain_key_failure(service: str, code: int, body: str) -> str:
+    """업체 응답 → 고객이 **무엇을 고쳐야 하는지** 아는 한 줄."""
+    low = (body or "").lower()
+    if code == 0:
+        return "인터넷 연결이 불안정해 확인하지 못했습니다. 잠시 뒤 다시 시도해주세요."
+    if service == keyroute.SVC_ELEVENLABS:
+        # 실측(2026-08-24): 고객이 키 목록의 **ID**를 붙여넣었다.
+        #   ElevenLabs가 "API key ID used as API key"라고 정확히 알려주는데 우리가 버렸다.
+        if "api key id used as api key" in low or "key id" in low:
+            return ("키가 아니라 **키 ID**를 붙여넣으셨어요. ElevenLabs에서 키를 새로 만들 때 "
+                    "한 번만 보이는 `sk_`로 시작하는 값을 넣어주세요.")
+        if "invalid_api_key" in low or code in (401, 403):
+            return "ElevenLabs가 이 키를 인식하지 못합니다. 키를 새로 만들어 다시 넣어주세요."
+        if code == 429:
+            return "요청이 너무 많습니다. 잠시 뒤 다시 확인해주세요."
+    if code in (401, 403):
+        return "키가 인식되지 않습니다(권한 없음). 값을 다시 확인해주세요."
+    if code == 429:
+        return "요청 한도를 넘었습니다. 잠시 뒤 다시 시도해주세요."
+    return f"확인에 실패했습니다 (응답 코드 {code})."
+
+
+def _key_format_hint(service: str, key: str) -> str:
+    """호출하기 **전에** 눈으로 걸러지는 실수를 잡는다 → 문제면 안내 문구, 괜찮으면 "".
+
+    ★실호출 전에 막는 이유: 같은 실수가 계속 들어오는데 그때마다 외부 API를 때리고
+      "키가 맞지 않습니다"만 돌려주면 고객은 뭘 고쳐야 할지 모른다.
+    """
+    k = (key or "").strip()
+    if not k:
+        return "키가 비어 있습니다."
+    if service == keyroute.SVC_ELEVENLABS:
+        # 실측: 정상 키 5개가 전부 `sk_` + 51자. 잘못 넣은 값은 ID(64자, sk_ 없음)였다.
+        if not k.startswith("sk_"):
+            return ("ElevenLabs 키는 `sk_`로 시작합니다. 키 목록에 보이는 **ID**가 아니라, "
+                    "키를 만들 때 한 번만 보이는 값을 붙여넣어 주세요.")
+    return ""
+
+
 def _probe_user_key(service: str, key: str) -> bool:
     """등록된 키가 실제로 도는가. 판정만 하고 예외를 밖으로 안 흘린다.
 
@@ -3175,7 +3261,19 @@ def _probe_user_key(service: str, key: str) -> bool:
     if service == keyroute.SVC_VMAKE:
         return ":" in key           # ak:sk 형식. 실호출 안 함(크레딧 소모)
     if service == keyroute.SVC_ELEVENLABS:
-        url, kw = "https://api.elevenlabs.io/v1/user", {"headers": {"xi-api-key": key}}
+        # ★`/v1/user`가 아니라 `/v1/voices`로 본다(2026-08-24 라이브 실측).
+        #   일레븐랩스 키는 **권한(scope)을 좁게 만들 수 있다.** 고객이 그렇게 만들면
+        #   TTS는 멀쩡히 되는데 `/v1/user`만 401이 난다:
+        #     /v1/user  → 401 "missing the permission user_read"
+        #     /v1/voices→ 200
+        #     실제 TTS  → 200 (음성 16,762바이트 생성됨)
+        #   그런데 우리는 /v1/user 하나로 판정해 **"키가 틀렸습니다"**를 띄웠다.
+        #   돈 내고 키까지 등록한 고객이 자기 키가 죽은 줄 안다 — 제일 나쁜 오진이다.
+        #   판정은 **우리가 실제로 쓰는 기능이 되는가**로 해야 한다(CLAUDE.md 0순위-B:
+        #   "진짜 판정은 실제로 데이터가 나오는가로 하라").
+        #   `/v1/voices`를 고른 이유: TTS와 같은 voices 권한을 요구하고, 실제 합성이
+        #   아니라 목록 조회라 **크레딧을 안 쓴다**(확인 버튼이 돈을 쓰면 안 된다).
+        url, kw = "https://api.elevenlabs.io/v1/voices", {"headers": {"xi-api-key": key}}
     elif service == keyroute.SVC_YOUTUBE:
         url = ("https://www.googleapis.com/youtube/v3/videos"
                f"?part=id&id=dQw4w9WgXcQ&key={urllib.parse.quote(key)}")
@@ -3188,10 +3286,19 @@ def _probe_user_key(service: str, key: str) -> bool:
     else:
         raise ValueError(f"모르는 service: {service!r}")
     try:
-        return requests.get(url, timeout=10, **kw).status_code == 200
-    except requests.RequestException:
+        r = requests.get(url, timeout=10, **kw)
+        if r.status_code == 200:
+            return True
+        # ★왜 틀렸는지를 남긴다(2026-08-24 실사고). 종전엔 bool만 돌려줘
+        #   "키가 맞지 않습니다"만 뜨고 사유가 통째로 버려졌다 — 로그에도 안 남아
+        #   서버에서 직접 호출해보고서야 원인을 알았다(고객이 키 ID를 붙여넣은 것).
+        #   업체가 정확히 알려주는 말을 우리가 버리면 안 된다.
+        _remember_key_failure(service, r.status_code, r.text[:300])
+        return False
+    except requests.RequestException as e:
         # ★네트워크 실패는 '검증 실패'라는 판정이지 버그 은폐가 아니다.
         #   requests 예외만 잡는다 — 코드 오류(TypeError 등)까지 삼키면 원인을 못 찾는다.
+        _remember_key_failure(service, 0, f"네트워크 오류: {e!r}"[:300])
         return False
 
 
@@ -3206,6 +3313,12 @@ def _key_status(service: str, key: str) -> str:
       키는 멀쩡하므로 'bad'(키가 틀렸습니다)도 거짓이다. 그래서 셋으로 가른다.
 
     잔량 조회가 실패하면 ok로 둔다 — 확인 못 한 것을 소진으로 단정하지 않는다."""
+    # ★호출 전에 형식부터 본다(2026-08-24). 눈으로 걸러지는 실수는 외부 API를
+    #   때리기 전에 잡아 **무엇을 고쳐야 하는지** 바로 알려준다.
+    _hint = _key_format_hint(service, key)
+    if _hint:
+        _KEY_FAIL.reason = _hint
+        return "bad"
     if not _probe_user_key(service, key):
         return "bad"
     if service == keyroute.SVC_SERPAPI:
@@ -3349,11 +3462,14 @@ def api_verify_keys(request: Request, body: dict):
     results = []
     for key_id, plain in store.get_customer_keys_with_id(cid, service):
         status = _key_status(service, plain)
+        # ★왜 안 되는지를 함께 보낸다(2026-08-24). 종전엔 status만 줘서 화면이
+        #   "키가 맞지 않습니다"밖에 못 띄웠고, 고객은 뭘 고쳐야 할지 몰랐다.
+        reason = _take_key_failure() if status != "ok" else ""
         store.set_customer_key_status(key_id, status)
         # ★평문은 안 싣는다. 화면은 label로 어느 키인지 알아본다.
         # ok는 "쓸 수 있는가" — 무료분이 바닥난 키(empty)는 검색이 0건이라 False다.
         results.append({"id": key_id, "label": labels.get(key_id, ""),
-                        "ok": status == "ok", "status": status})
+                        "ok": status == "ok", "status": status, "reason": reason})
     return {"ok": True, "results": results, "keys": store.list_customer_keys(cid)}
 
 
@@ -4514,15 +4630,72 @@ def api_mix_caption_offset(job_id: str, beat_idx: int, body: dict):
     return {"ok": True, "offset": offset}
 
 
+@app.get("/api/voice-library/search")
+def api_voice_library_search(request: Request, q: str = "", language: str = "",
+                             gender: str = "", page: int = 0):
+    """일레븐랩스 **공개 음성 라이브러리** 검색(2026-08-24 사장님: "사용자들이 목소리 검색 가능하게").
+
+    ★본인 키가 있어야 한다. 담기는 각자 계정에 되므로, 키 없이 담으면 합성 때
+      사장님 키로 나가 그 voice_id가 없어 실패한다 — 그래서 여기서 먼저 막고 안내한다.
+    """
+    cid = getattr(request.state, "customer_id", 0) or 0
+    from shopping_shorts import eleven_voices, keyroute
+    keys, _src = keyroute.keys_for(Store(DB_PATH), cid, keyroute.SVC_ELEVENLABS)
+    if not keys or _src != "customer":
+        return {"ok": False, "voices": [], "need_key": True,
+                "error": "내 일레븐랩스 키를 등록하면 원하는 목소리를 직접 찾아 쓸 수 있어요."}
+    return eleven_voices.search_shared(customer_id=cid, query=q, language=(language or None),
+                                       gender=(gender or None), page=page)
+
+
+@app.post("/api/voice-library/add")
+async def api_voice_library_add(request: Request):
+    """고른 공개 음성을 **내 계정에 담고 성우 카드까지 만든다**.
+
+    body: {voice_id, public_owner_id, name, one_liner?}
+    담기(add_shared) → 카드 등록(register)까지 한 번에 한다 — 둘로 나누면 담기고도
+    카드가 없는 어중간한 상태가 생긴다. 카드에는 owner_customer_id를 박아 **본인에게만** 보인다.
+    """
+    cid = getattr(request.state, "customer_id", 0) or 0
+    from shopping_shorts import eleven_voices, keyroute
+    keys, _src = keyroute.keys_for(Store(DB_PATH), cid, keyroute.SVC_ELEVENLABS)
+    if not keys or _src != "customer":
+        return JSONResponse({"ok": False, "need_key": True,
+                             "error": "내 일레븐랩스 키를 먼저 등록해주세요."}, status_code=400)
+    body = await request.json()
+    vid = (body or {}).get("voice_id") or ""
+    owner = (body or {}).get("public_owner_id") or ""
+    name = ((body or {}).get("name") or "내 성우").strip()[:40]
+    added = eleven_voices.add_shared(cid, owner, vid, name)
+    if not added.get("ok"):
+        return JSONResponse({"ok": False, "error": added.get("error") or "담기 실패"},
+                            status_code=502)
+    try:
+        res = eleven_voices.register(Store(DB_PATH), added["voice_id"], name,
+                                     one_liner=((body or {}).get("one_liner") or "")[:60],
+                                     lang="KR", bake=True, owner_customer_id=cid)
+    except Exception as e:      # noqa: BLE001 — 담기는 됐으니 그 사실은 알려준다
+        print(f"[voice-library] 카드 등록 실패: {e!r}", file=sys.stderr)
+        return JSONResponse({"ok": False, "added": True,
+                             "error": "계정에는 담겼는데 성우 카드 등록에 실패했습니다."},
+                            status_code=502)
+    return {"ok": True, "already": added.get("already", False),
+            "group_id": res["group_id"], "count": res["count"],
+            "sample_failed": res.get("sample_failed") or []}
+
+
 @app.get("/api/voice-presets")
-def api_voice_presets(lang: str = "KR"):
+def api_voice_presets(request: Request, lang: str = "KR"):
     """성우별 그룹 목록(유저 노출용 — source_ref는 내부 전용이라 제외).
 
     성우 1명당 stable(기본 노출)/natural/expressive를 variants에 묶어 반환하고,
     베스트 5명은 whisper까지 4톤이다(2026-07-16 청취 판정). best=베스트 성우 플래그로,
     프론트가 ⭐ 배지에 쓴다. **순서는 여기서 정하지 않는다** — Store.list_voice_presets의
     ORDER BY best DESC, created_at이 정본이고 이 함수는 그 순서를 보존만 한다."""
-    rows = Store(DB_PATH).list_voice_presets(lang=lang)
+    # ★소유자를 가린다(2026-08-24). 공용(사장님 큐레이션) + 내가 라이브러리에서 담은 것만.
+    #   남이 담은 성우는 **그 사람 일레븐랩스 계정에만** 있어서, 내 키로 고르면 합성이 실패한다.
+    _cid = getattr(request.state, "customer_id", 0) or 0
+    rows = Store(DB_PATH).list_voice_presets(lang=lang, customer_id=_cid)
     groups = {}
     for p in rows:
         # 튜닝 작업대가 만든 임시 프리셋(origin="tuned", :1526)은 카드에서 뺀다.
@@ -6550,6 +6723,14 @@ if not _AUTH_ON:
     print("⚠️ [보안] DASH_PASS 미설정 → 인증·유료게이트 OFF(전원 full/admin). "
           "운영이면 DASH_PASS를 반드시 설정하세요.", file=_sys.stderr)
 _AUTH_ALLOW = ("/login", "/api/login", "/signup", "/api/signup", "/favicon.ico", "/healthz",
+               # 설치·준비 안내(2026-08-24 사장님 "고객한테 보낼 수 있는 주소로 줘").
+               # 단톡방·카톡으로 링크만 뿌리면 되도록 **로그인 없이** 열린다.
+               "/setup", "/setup.html",
+               # 캡컷 준비 안내와 자동설정 파일도 공개(2026-08-24 사장님 "공개").
+               # 설치 안내를 단톡방 링크로 뿌리는데 그 안의 캡컷 링크만 로그인을 요구하면
+               # 거기서 끊긴다 — 안내는 끝까지 따라갈 수 있어야 안내다.
+               # .bat은 내려받기만 하는 정적 파일이고 계정 정보를 담지 않는다.
+               "/capcut_manual.html", "/capcut_setup.bat",
                # 도움말(2026-08-23) — 가입 전 문의를 줄이려면 로그인 전에도 보여야 한다.
                # ★읽기만 공개다. 쓰기(/api/help/save·delete·reorder·upload)는 관리자만이며
                #   그 판정은 각 라우트가 직접 한다(여기 목록에 넣지 않는다).
@@ -6601,6 +6782,12 @@ _COOKIE_MAX_AGE = 60 * 60 * 24 * 30  # 30일
 #   없어서(실측) prefix로 열면 상한 없이 샌다.
 _FREE_EXACT_ANY = {"/login", "/signup", "/api/login", "/api/signup", "/logout",
                    "/api/prereg", "/api/deposit_claim", "/pay",   # 사전신청·입금신고·결제안내
+                   # ★가입 마무리 화면(2026-08-24). 등급과 무관하게 열려야 한다 —
+                   #   막으면 **빠져나갈 수 없는 막다른 길**이 된다: 어느 화면을 열든
+                   #   미들웨어가 /welcome으로 보내는데(_needs_welcome), 정작 /welcome이
+                   #   402라 아무 데도 못 간다. 실제로 체험판 고객이 이 상태에 갇혔다.
+                   #   ⚠️ 정보를 받는 화면이지 유료 기능이 아니다. GET·POST 둘 다 연다.
+                   "/welcome", "/api/welcome",
 
                    "/api/mix/basket/toggle",
                    "/api/lens/search", "/api/lens/trace_url",
@@ -6642,10 +6829,24 @@ _FREE_EXACT_GET = {"/", "/pricing", "/account", "/api/me", "/api/reference", "/a
 _FREE_PREFIX = ("/static/", "/auth/google/")
 
 
+# 화면을 그리는 정적 자원의 확장자. 이건 '기능'이 아니라 **화면 그 자체**다.
+# ★목록으로 파일명을 나열하지 않는다(2026-08-24). 실제로 그렇게 하다 sidebar.js만
+#   예외로 들어가 있고 theme.css·loader.js·scene_play.js는 빠져 있었다 — 그래서
+#   체험판 고객 전원이 **스타일이 깨진 화면**을 봤다(실측: theme.css 402, 단계바가
+#   세로로 늘어짐). 새 파일이 늘 때마다 목록을 고쳐야 하면 반드시 또 빠진다.
+_ASSET_SUFFIXES = (".css", ".js", ".map", ".ico", ".png", ".jpg", ".jpeg",
+                   ".svg", ".gif", ".webp", ".woff", ".woff2", ".ttf")
+
+
 def _ranking_only_blocked(path: str, method: str = "GET") -> bool:
     """ranking_only 등급에게 이 경로를 막아야 하나. FREE 목록 외 전부 True(차단).
     GET 무료 경로는 POST 등으로 오면 막는다(method-aware)."""
     if path in _FREE_EXACT_ANY:
+        return False
+    # ★정적 자원(css·js·글꼴·아이콘)은 등급과 무관하게 내준다. 막아봐야 지켜지는 건
+    #   없고(기능은 API에서 막힌다) 화면만 깨진다 — 고객은 "고장난 서비스"로 본다.
+    #   GET/HEAD만. POST로 오는 건 자원 요청이 아니다.
+    if method in ("GET", "HEAD") and path.endswith(_ASSET_SUFFIXES):
         return False
     if method == "GET" and path in _FREE_EXACT_GET:
         return False
@@ -8478,7 +8679,51 @@ def check_and_count(customer_id, op):
     return True
 
 
-def _charge_or_402(customer_id, op, service):
+_SVC_KO = {"elevenlabs": "목소리(ElevenLabs)", "vmake": "자막제거(Vmake)",
+           "serpapi": "제품찾기(SerpApi)", "gemini": "AI(Gemini)", "youtube": "유튜브"}
+
+
+def _bad_key_block(customer_id):
+    """틀린 키를 들고 있으면 제작을 **시작 전에** 세운다 → 429/422 응답(아니면 None).
+
+    ★개인 전용 서비스만 막는다. 제미니·유튜브는 공용 풀이라 회원 키가 틀려도
+      풀의 다른 키로 돈다 — 막으면 멀쩡히 될 일을 막는 꼴이다(keyroute.POOLED가 진실).
+    ★왜 여기서 막나: 안 막으면 대본까지 다 만들고 3단계 TTS에서 400으로 죽는다.
+      고객은 30분을 버리고 "처리 중 문제"라는 말만 듣는다(2026-08-24 cid 192 실측 4회).
+    """
+    try:
+        bad = Store(DB_PATH).bad_key_services(customer_id)
+    except Exception as e:  # noqa: BLE001 — 조회 실패가 제작을 막으면 안 된다
+        print(f"[키검사] 상태 조회 실패(통과시킴): {e!r}", file=sys.stderr)
+        return None
+    blocking = [s for s in bad if not keyroute.is_pooled(s)]
+    if not blocking:
+        return None
+    names = " · ".join(_SVC_KO.get(s, s) for s in blocking)
+    return JSONResponse(status_code=422, content={
+        "ok": False, "error_code": "bad_key",
+        "error": ("%s 키가 올바르지 않아 영상을 만들 수 없어요. "
+                  "마이페이지 > 키에서 다시 등록해 주세요. "
+                  "(ElevenLabs 키는 sk_로 시작합니다 — 목록에 보이는 ID가 아닙니다)" % names)})
+
+
+def uncount(customer_id, op):
+    """check_and_count로 센 것을 **같은 버킷에** 되돌린다(2026-08-24).
+
+    센 곳과 되돌리는 곳이 버킷을 따로 판단하면 반드시 어긋난다(0순위-B) — 특히 체험
+    유저의 render는 날짜가 아니라 영구 "trial" 버킷이라, 오늘 날짜로 되돌리면 체험
+    1회가 그대로 날아간다. 관리자는 애초에 안 세므로 되돌릴 것도 없다.
+    """
+    if op in ("render", "lens") and _is_admin(customer_id):
+        return
+    st = Store(DB_PATH)
+    if op == "render" and _is_trial(customer_id):
+        st.usage_decr(customer_id, "render", "trial")
+        return
+    st.usage_decr(customer_id, op, _today_utc())
+
+
+def _charge_or_402(customer_id, op, service, out=None):
     """포인트를 깎는다. 부족하면 402 응답을 반환(호출부가 그대로 return).
     깎을 필요가 없으면(사용자가 자기 키 등록) None.
 
@@ -8488,7 +8733,14 @@ def _charge_or_402(customer_id, op, service):
 
     cid 0(사장님 본인)은 keyroute가 개인키 조회를 건너뛰고 사장님 키를 주므로
     should_charge가 True를 준다. 하지만 자기 키로 자기한테 청구하는 꼴이라
-    과금 대상이 아니다 — mix_pipeline._charge_clean과 같은 판단을 쓴다."""
+    과금 대상이 아니다 — mix_pipeline._charge_clean과 같은 판단을 쓴다.
+
+    ★out에 dict를 주면 out["charged"]에 **실제로 깎은 액수**(0 포함)를 담는다.
+      환불이 '환불 시점에 다시 판단'하면 차감과 어긋난다 — 개인 키로 0원 차감된 뒤
+      키를 지우고 일부러 실패시키면 없던 포인트가 생겼다(2026-08-23 점검).
+      호출부는 이 값을 저장해 두고, 환불은 그 값만 돌려줘야 한다."""
+    if out is not None:
+        out["charged"] = 0
     if not keyroute.as_cid(customer_id):
         return None
     store = Store(DB_PATH)
@@ -8496,6 +8748,8 @@ def _charge_or_402(customer_id, op, service):
         return None
     need = pricing.cost(store, op)
     if points.deduct(store, customer_id, need, op):
+        if out is not None:
+            out["charged"] = need
         return None
     return JSONResponse(status_code=402, content={
         "ok": False,
@@ -8632,9 +8886,12 @@ def _api_me(request: Request):
     return {"customer_id": cid, "level": access_level(cid, now), "plan": plan,
             "days_left": days_left, "is_admin": is_admin,
             "email": email, "name": name, "member_days": member_days,
-            "usage": usage, "usage_limits": limits,
-            "limits": {"lens": _lim("limit_lens", 5), "render": _lim("limit_render", 2),
-                       "script": _lim("limit_script", 10)},
+            # ★limits = **이 사람의 실제 한도**. 예전엔 plan을 안 보고 무료 등급 값을
+            #   하드코딩해서, Pro 결제 고객의 마이페이지에 "영상 제작 2회"가 떴다
+            #   (2026-08-23 실측: 관리자 계정에도 2회로 표시). 같은 값을 두 곳에서
+            #   따로 정하면 반드시 어긋난다(0순위-B) → 위 계산 결과를 그대로 쓴다.
+            #   None = 무제한(관리자). 화면은 이 값을 "무제한"으로 표시한다.
+            "usage": usage, "usage_limits": limits, "limits": limits,
             "contact": {"kakao": st.get_setting("contact_kakao", ""),
                         "phone": st.get_setting("contact_phone", ""),
                         "pay": st.get_setting("pay_url", "")},
@@ -8691,6 +8948,138 @@ _ADMIN_SETTING_KEYS = {"trial_days", "trial_grant_points", "trial_event_hours",
                        "challenge_start", "challenge_end", "challenge_daily_goal"}
 
 
+# ── 오류 신고(2026-08-24) ────────────────────────────────────────────────
+# 사장님: "오류신고 버튼 만들기 / 내 관리페이지에 보이기".
+# ★고객에게 물어서 받으면 반드시 샌다 — job_id·현재 URL·콘솔 오류를 고객이 알 리 없다.
+#   실제로 김만기님 제작 4회 전패를 화면 캡처만으로는 못 찾았고 DB를 뒤져서야 원인을 알았다.
+#   그래서 고객은 **한 줄만 쓰고**, 진단 정보는 화면이 자동으로 담아 보낸다.
+_BUG_SHOT_DIR = Path(__file__).parent / "data" / "bug_shots"
+_BUG_SHOT_MAX = 6 * 1024 * 1024        # 6MB — 화면이 이미 1280px로 줄여 보낸다
+
+
+def _save_bug_shot(data_url):
+    """신고에 딸려온 화면 사진(data:image/...;base64,...)을 파일로 저장 → 상대경로(없으면 "").
+
+    ★DB에 base64를 넣지 않는다 — 신고 몇 백 건이면 DB가 그대로 뚱뚱해지고 목록 조회까지 느려진다.
+    ★저장 실패가 신고 접수를 막으면 안 된다. 사진은 있으면 좋은 것이지 필수가 아니다.
+    """
+    if not data_url or not isinstance(data_url, str) or not data_url.startswith("data:image/"):
+        return ""
+    try:
+        head, b64 = data_url.split(",", 1)
+        ext = "png" if "png" in head else "jpg"
+        # ★validate=True — 기본값은 이상한 글자를 **조용히 버리고** 빈 바이트를 돌려준다.
+        #   그러면 0바이트짜리 쓰레기 파일이 쌓인다(실측: "!!!!"가 파일로 저장됐다).
+        raw = base64.b64decode(b64, validate=True)
+        # 진짜 이미지인지 앞머리로 확인 — 확장자·MIME은 보내는 쪽이 마음대로 적을 수 있다.
+        if not (raw[:4] == b"\x89PNG" or raw[:3] == b"\xff\xd8\xff"
+                or raw[:4] == b"GIF8" or raw[8:12] == b"WEBP"):
+            print("[오류신고] 사진이 아닌 데이터 — 버린다", file=sys.stderr)
+            return ""
+        if len(raw) > _BUG_SHOT_MAX:
+            print("[오류신고] 사진이 너무 큼(%.1fMB) — 버린다" % (len(raw) / 1048576),
+                  file=sys.stderr)
+            return ""
+        _BUG_SHOT_DIR.mkdir(parents=True, exist_ok=True)
+        name = "%s.%s" % (uuid.uuid4().hex[:16], ext)
+        (_BUG_SHOT_DIR / name).write_bytes(raw)
+        return name
+    except Exception as e:  # noqa: BLE001 — 사진 없이라도 신고는 접수돼야 한다
+        print(f"[오류신고] 사진 저장 실패(신고는 접수함): {e!r}", file=sys.stderr)
+        return ""
+
+
+@app.get("/api/admin/bug-shot/{name}")
+def api_admin_bug_shot(request: Request, name: str):
+    """관리자: 신고에 딸린 화면 사진. 경로 탈출 방지로 파일명만 받는다."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    safe = re.sub(r"[^0-9a-zA-Z.]", "", name or "")
+    p = _BUG_SHOT_DIR / safe
+    if not safe or not p.exists():
+        return JSONResponse(status_code=404, content={"ok": False})
+    return FileResponse(str(p))
+
+
+@app.post("/api/bug-report")
+def api_bug_report(request: Request, body: dict):
+    """오류 신고 접수. body: {message, page_url?, job_id?, work_id?, step?, console?[]}"""
+    msg = (body.get("message") or "").strip()
+    if not msg:
+        return JSONResponse(status_code=422,
+                            content={"ok": False, "error": "어떤 문제인지 한 줄만 적어주세요"})
+    cid = getattr(request.state, "customer_id", 0)
+    console = body.get("console")
+    shot = _save_bug_shot(body.get("shot"))
+    rid = Store(DB_PATH).add_bug_report(
+        cid, msg,
+        page_url=body.get("page_url"), job_id=body.get("job_id"),
+        work_id=body.get("work_id"), step=body.get("step"),
+        user_agent=request.headers.get("user-agent", ""),
+        console=console if isinstance(console, list) else None,
+        shot_path=shot,
+    )
+    return {"ok": True, "id": rid,
+            "message": "접수됐어요. 확인하고 알려드릴게요 (접수번호 #%d)" % rid}
+
+
+@app.get("/api/admin/bug-reports")
+def api_admin_bug_reports(request: Request, status: str = ""):
+    """관리자: 신고 목록. status='open'이면 아직 안 본 것만."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    st = Store(DB_PATH)
+    rows = st.list_bug_reports(status=status or None)
+    names = {c["id"]: c.get("name") or c.get("email") or "" for c in st.list_customers()}
+    for r in rows:
+        r["customer_name"] = names.get(r["customer_id"], "비회원" if not r["customer_id"] else "?")
+    return {"ok": True, "reports": rows, "open": st.open_bug_report_count()}
+
+
+@app.post("/api/admin/bug-reports/{report_id}")
+def api_admin_bug_report_update(request: Request, report_id: int, body: dict):
+    """관리자: 처리 완료 표시(+메모)."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    status = body.get("status") if body.get("status") in ("open", "done") else "done"
+    Store(DB_PATH).set_bug_report_status(report_id, status, body.get("note"))
+    return {"ok": True}
+
+
+@app.post("/api/admin/bug-reports/{report_id}/reply")
+def api_admin_bug_reply(request: Request, report_id: int, body: dict):
+    """관리자: 신고에 답장(쪽지)을 남긴다 → 고객 화면이 스스로 띄운다."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    text = (body.get("reply") or "").strip()
+    if not text:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "답장 내용이 비었어요"})
+    Store(DB_PATH).reply_bug_report(report_id, text)
+    return {"ok": True}
+
+
+@app.get("/api/bug-report/replies")
+def api_bug_replies(request: Request):
+    """고객: 내가 받은 **안 읽은** 답장. 사이드바가 페이지마다 조용히 물어본다."""
+    cid = getattr(request.state, "customer_id", 0)
+    if not cid:
+        return {"ok": True, "replies": []}
+    return {"ok": True, "replies": Store(DB_PATH).my_bug_replies(cid, unread_only=True)}
+
+
+@app.post("/api/bug-report/replies/{report_id}/read")
+def api_bug_reply_read(request: Request, report_id: int):
+    """고객이 답장을 확인했다 — 다시 안 뜬다."""
+    cid = getattr(request.state, "customer_id", 0)
+    if cid:
+        Store(DB_PATH).mark_bug_reply_read(report_id, cid)
+    return {"ok": True}
+
+
 @app.get("/api/admin/customers")
 def _admin_customers(request: Request):
     denied = _require_admin(request)
@@ -8700,16 +9089,32 @@ def _admin_customers(request: Request):
     day = _today_utc()
     since7 = (datetime.now(timezone.utc) - timedelta(days=7)).strftime("%Y-%m-%d")  # 돌려쓰기 감지 창(7일)
     out = []
+    # ★한 번에 다 가져온다 — 고객마다 쿼리를 돌면(N+1) 155명에서 900번 가까이 나가
+    #   목록이 3.7초 걸렸다(2026-08-23 실측). 값의 뜻은 낱개 함수와 같다.
+    usage_map = st.usage_all(day)
+    # ★한국시간 오늘 실제로 만들어진 영상 수(2026-08-24). usage는 UTC 날짜 버킷이라
+    #   한국시간 00:00~09:00 제작분이 전날 칸으로 가고, 중복 접수까지 겹치면
+    #   "7개 만들었는데 10개가 찍혔다"를 화면에서 대조할 방법이 없었다.
+    _kst_midnight = (datetime.now(timezone(timedelta(hours=9)))
+                     .replace(hour=0, minute=0, second=0, microsecond=0)
+                     .astimezone(timezone.utc).isoformat())
+    made_map = st.made_and_charged_since_all(_kst_midnight)
+    access_map = st.access_summary_all(since7)
+    points_map = st.points_balance_all()
+    challenge_ids = st.challenge_member_ids()
     for cu in st.list_customers():
-        cu["level"] = access_level(cu["id"])
-        cu["usage"] = {op: st.usage_get(cu["id"], op, day) for op in ("lens", "render", "script")}
-        cu["access_7d"] = st.access_summary(cu["id"], since7)   # {ips, devices} 최근 7일 고유 수
-        cu["is_admin"] = _is_admin(cu["id"])                    # 관리자 배지용
-        cu["challenge"] = st.is_challenge_member(cu["id"])      # 1기 챌린지 참가 여부(2026-08-24)
-        cu["code_admin"] = _code_admin(cu["id"])                # 코드 고정 관리자(UI 토글 불가)
+        _cid = cu["id"]
+        cu["level"] = access_level(_cid)
+        _u = usage_map.get(_cid, {})
+        cu["usage"] = {op: _u.get(op, 0) for op in ("lens", "render", "script")}
+        cu["made_today"] = made_map.get(_cid, {"made": 0, "charged": 0})   # 한국시간 오늘 실측
+        cu["access_7d"] = access_map.get(_cid, {"ips": 0, "devices": 0})  # 최근 7일 고유 수
+        cu["is_admin"] = _is_admin(_cid)                        # 관리자 배지용
+        cu["challenge"] = _cid in challenge_ids                 # 1기 챌린지 참가 여부(2026-08-24)
+        cu["code_admin"] = _code_admin(_cid)                    # 코드 고정 관리자(UI 토글 불가)
         # 포인트 잔액(화면 단위 P) — 등급이 full이어도 잔액 0이면 유료 op가 402로 막힌다.
         # 관리자가 그 상태를 목록에서 바로 보게 한다(2026-08-20 체험 계정 402 사고).
-        cu["points"] = pricing.to_display(points.balance(st, cu["id"]))
+        cu["points"] = pricing.to_display(points_map.get(_cid, 0))
         # last_seen은 store.list_customers가 이미 넣어줌 → 프론트가 '접속중/N분전' 계산
         out.append(cu)
     # ★설정은 **화면이 쓰는 것만** 보낸다. all_settings()를 그대로 실으면
@@ -11180,19 +11585,44 @@ def api_produce_mix_start(request: Request, background_tasks: BackgroundTasks, b
     #   헷갈리는 데 그치지 않고 render 크레딧이 두 번 나가고 Gemini·ffmpeg가 두 벌 돌았다.
     #   미리보기(/mix/preview)·자막제거(/mix/clean)엔 이미 같은 성격의 가드가 있었다.
     #   판단은 store.recent_same_mix_job 한 곳에서만 한다(0순위-B).
-    _dup = Store(DB_PATH).recent_same_mix_job(cid, urls, script)
-    if _dup:
-        return {"ok": True, "job_id": _dup, "deduped": True}
+    # ★선점표를 **과금보다 먼저** 원자적으로 꽂는다(2026-08-24). 08-19에 넣은 조회형 가드
+    #   (recent_same_mix_job)는 "조회 → 과금 → 기록" 순서라 조회 시점에 상대 요청이 아직
+    #   기록되기 전이었다 — 0.03~0.17초 차이로 들어온 두 요청이 둘 다 통과해 각자 과금했다
+    #   (실측 cid=57: 08-23 2쌍 · 08-24 5쌍, render 크레딧 10회 차감 / 실제 영상 5개).
+    #   판단은 store.claim_mix_request 한 곳에서만 한다(0순위-B).
+    _blocked = _bad_key_block(cid)      # 틀린 키면 여기서 끝 — 과금·선점표 둘 다 없다
+    if _blocked:
+        return _blocked
+    _store = Store(DB_PATH)
+    _fp, _won, _claim_job = _store.claim_mix_request(cid, urls, script)
+    if not _won:
+        # 진 쪽: 절대 과금하지 않는다. 이긴 쪽이 job을 만들 때까지 잠깐 기다려 같은 job을 돌려준다.
+        for _ in range(30):                       # 최대 3초(0.1초 × 30) — 실측 간격은 0.2초 미만
+            if _claim_job:
+                break
+            time.sleep(0.1)
+            _claim_job = _store.get_mix_claim_job(_fp)
+        if _claim_job:
+            return {"ok": True, "job_id": _claim_job, "deduped": True}
+        # 이긴 쪽이 과금 거절 등으로 job을 못 만들었다 → 사용자에게 재시도를 알린다(과금 0).
+        return JSONResponse(status_code=409, content={
+            "ok": False, "error_code": "duplicate",
+            "error": "같은 요청이 방금 접수됐어요. 잠시 후 다시 눌러주세요."})
     if _global_over_cap("render"):
+        _store.release_mix_claim(_fp)
         return JSONResponse(status_code=429, content={
             "ok": False, "error_code": "global_limit",
             "error": "지금 영상 만들기 이용이 많아요. 잠시 후 다시 시도해 주세요."})
     if not check_and_count(cid, "render"):
+        _store.release_mix_claim(_fp)
         return JSONResponse(status_code=429, content={
             "ok": False, "error_code": "daily_limit",
             "error": "오늘 영상 만들기 횟수를 다 썼어요. 결제하면 더 만들 수 있어요."})
-    _denied = _charge_or_402(cid, pricing.OP_MIX, keyroute.SVC_GEMINI)
+    _charged = {}                      # ★깎은 액수를 그대로 job에 남긴다(환불이 재판단하지 않게)
+    _denied = _charge_or_402(cid, pricing.OP_MIX, keyroute.SVC_GEMINI, out=_charged)
     if _denied:
+        uncount(cid, "render")           # 위에서 센 render를 같은 버킷으로 되돌린다
+        _store.release_mix_claim(_fp)
         return _denied
     global_incr_and_alert("render")
     # 장면 우선 대본 모드(2026-07-20, Task7): produce.html "우리 시스템으로 믹스"는 항상 이 값을
@@ -11208,7 +11638,9 @@ def api_produce_mix_start(request: Request, background_tasks: BackgroundTasks, b
                                   script_structure=script_structure, scene_first=scene_first,
                                   customer_id=cid,
                                   render_charge_day=("trial" if _is_trial(cid) else _today_utc()),
+                                  mix_charged=_charged.get("charged", 0),
                                   backbone_main=backbone_main)
+    _store.attach_mix_claim(_fp, job_id)     # 진 쪽이 이걸 읽어 같은 job을 쓴다
     Store(DB_PATH).enqueue("mix", {"job_id": job_id})
     return {"ok": True, "job_id": job_id}
 
@@ -11313,6 +11745,14 @@ def _help_admin_or_403(request: Request):
     if _is_admin(getattr(request.state, "customer_id", None)):
         return None
     return JSONResponse(status_code=403, content={"ok": False, "error": "관리자만 고칠 수 있어요"})
+
+
+@app.get("/setup", response_class=HTMLResponse)
+def page_setup():
+    """설치·준비 안내 — 고객에게 링크로 보내는 자리(로그인 불필요).
+    ★.html 없는 짧은 주소를 따로 둔다: 카톡·단톡방에 붙였을 때 읽기 쉽다."""
+    return FileResponse(str(Path(__file__).parent / "static" / "setup.html"),
+                        media_type="text/html")
 
 
 @app.get("/help", response_class=HTMLResponse)

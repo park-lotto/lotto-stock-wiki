@@ -7,6 +7,7 @@
 import re
 import subprocess
 from pathlib import Path
+from shopping_shorts import config as _cfg
 
 
 def _ffprobe(args):
@@ -14,7 +15,7 @@ def _ffprobe(args):
     # 이게 없으면 테스트에서 OSError [WinError 6]이 난다. 실서비스에선 무해.
     r = subprocess.run(["ffprobe", "-v", "error"] + args,
                        capture_output=True, text=True, check=False,
-                       stdin=subprocess.DEVNULL)
+                       stdin=subprocess.DEVNULL, timeout=_cfg.FFMPEG_TIMEOUT_SEC)
     if r.returncode != 0 or not r.stdout.strip():
         raise RuntimeError(f"ffprobe 실패: {r.stderr.strip() or '출력 없음'}")
     return r.stdout.strip()
@@ -58,7 +59,7 @@ def _boundary_frames(path, threshold, fps):
          "-vf", f"select='gt(scene,{threshold})',showinfo",
          "-vsync", "vfr", "-f", "null", "-"],
         capture_output=True, text=True, check=False,
-        stdin=subprocess.DEVNULL)
+        stdin=subprocess.DEVNULL, timeout=_cfg.MEDIA_CLIP_TIMEOUT_SEC)
     return {round(float(m) * fps) for m in _PTS_RE.findall(r.stderr)}
 
 
@@ -72,7 +73,8 @@ def extract_poster(path, frame_no, fps, out_path):
     out_path.parent.mkdir(parents=True, exist_ok=True)
     cmd = ["ffmpeg", "-y", "-v", "error", "-ss", f"{max(0, frame_no) / fps:.6f}",
            "-i", str(path), "-frames:v", "1", "-vf", "scale=180:-1", str(out_path)]
-    subprocess.run(cmd, capture_output=True, check=False, stdin=subprocess.DEVNULL)
+    subprocess.run(cmd, capture_output=True, check=False, stdin=subprocess.DEVNULL,
+                   timeout=_cfg.MEDIA_CLIP_TIMEOUT_SEC)
     return out_path if out_path.exists() else None
 
 
@@ -142,7 +144,7 @@ def frame_motion(path, ss=None, to=None):
             "-vf", "signalstats,metadata=print:key=lavfi.signalstats.YDIF",
             "-vsync", "vfr", "-f", "null", "-"]
     r = subprocess.run(cmd, capture_output=True, text=True, check=False,
-                       stdin=subprocess.DEVNULL)
+                       stdin=subprocess.DEVNULL, timeout=_cfg.MEDIA_CLIP_TIMEOUT_SEC)
     out = {}
     frame_no = 0
     for m in _YDIF_RE.findall(r.stderr):

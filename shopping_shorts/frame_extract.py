@@ -3,6 +3,7 @@ import subprocess
 import uuid
 from pathlib import Path
 import requests
+from shopping_shorts import config as _cfg
 
 
 def download_video(video_url, dest_dir):
@@ -10,7 +11,7 @@ def download_video(video_url, dest_dir):
     dest_dir = Path(dest_dir)
     dest_dir.mkdir(parents=True, exist_ok=True)
     path = dest_dir / f"{uuid.uuid4().hex}.mp4"
-    resp = requests.get(video_url, stream=True, timeout=60)
+    resp = requests.get(video_url, stream=True, timeout=_cfg.MEDIA_CLIP_TIMEOUT_SEC)
     resp.raise_for_status()
     with open(path, "wb") as f:
         for chunk in resp.iter_content(chunk_size=1 << 16):
@@ -34,7 +35,8 @@ def extract_frames(video_path, dest_dir, max_frames=6):
         str(pattern),
     ]
     result = subprocess.run(cmd, capture_output=True, check=False,
-                            stdin=subprocess.DEVNULL)   # 위 extract_frame_at과 같은 이유
+                            stdin=subprocess.DEVNULL,   # 위 extract_frame_at과 같은 이유
+                            timeout=_cfg.MEDIA_CLIP_TIMEOUT_SEC)
     if result.returncode != 0:
         raise RuntimeError(f"ffmpeg 프레임 추출 실패: {result.stderr}")
     return sorted(dest_dir.glob("frame_*.jpg"))
@@ -60,7 +62,8 @@ def extract_frame_at(video_path, dest_dir, timestamp_sec, filename="frame_hint.j
     # 처리 스레드)에서 부르면 윈도우가 OSError WinError 6(잘못된 핸들)로 죽는다.
     # 리눅스 서버에선 안 터져 여태 안 드러났다(scene_cut은 처음부터 붙여놨다).
     result = subprocess.run(cmd, capture_output=True, check=False,
-                            stdin=subprocess.DEVNULL)
+                            stdin=subprocess.DEVNULL,
+                            timeout=_cfg.MEDIA_CLIP_TIMEOUT_SEC)
     if result.returncode != 0 or not out_path.exists():
         return None
     return out_path
@@ -73,7 +76,8 @@ def _probe_duration(video_path):
         "-of", "default=noprint_wrappers=1:nokey=1", str(video_path),
     ]
     result = subprocess.run(cmd, capture_output=True, check=False,
-                            stdin=subprocess.DEVNULL)
+                            stdin=subprocess.DEVNULL,
+                            timeout=_cfg.FFMPEG_TIMEOUT_SEC)   # 메타 조회라 짧게
     if result.returncode != 0:
         return None
     try:

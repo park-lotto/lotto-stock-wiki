@@ -1415,6 +1415,40 @@ def _match_highlight(word, highlight_rules):
     return None
 
 
+def _lacks_space_glyph(pil_font):
+    """이 폰트가 띄어쓰기를 '없는 글자 네모(⊠)'로 그리는가 — 2026-08-24 고객 제보 실측.
+
+    빙그레체(Binggrae-Bold)·리디바탕(RIDIBatang)은 U+0020 글리프가 아예 없어서,
+    이 폰트를 자막으로 고르면 **모든 띄어쓰기가 ⊠로** 나온다(고객 영상에서 확인:
+    "진짜⊠이렇게", "이거⊠한스푼만⊠넣고⊠볶으라는거에요"). 나머지 20종은 멀쩡하다.
+
+    판정: 정상 폰트는 공백 마스크 높이가 0이고, 없는 폰트는 글자 높이만큼(≈70px@70) 나온다.
+    ⚠️폰트 이름으로 판정하지 마라 — 폰트가 추가될 때마다 목록을 고쳐야 하고, 그 목록은 반드시
+      썩는다. 글리프 유무를 직접 본다.
+    """
+    try:
+        return pil_font.getmask(" ").size[1] > 0
+    except Exception as e:  # noqa: BLE001 — 판정 실패가 자막을 막으면 안 된다
+        print(f"[자막] 공백 글리프 판정 실패(정상으로 간주): {e!r}", file=sys.stderr)
+        return False
+
+
+def _space_px(pil_font, size):
+    """띄어쓰기 한 칸의 폭. 공백 글리프가 없는 폰트는 advance가 ⊠ 네모 폭(≈1em)이라
+    그대로 쓰면 어절이 과하게 벌어진다 → 흔한 비율 0.28em으로 대체한다."""
+    return size * 0.28 if _lacks_space_glyph(pil_font) else pil_font.getlength(" ")
+
+
+def _text_px(pil_font, text, size):
+    """**실제로 그려질** 폭. 공백 없는 폰트에서도 맞다.
+    중앙정렬·자동축소가 이 값을 쓰므로 getlength를 직접 부르지 마라(0순위-B)."""
+    if not _lacks_space_glyph(pil_font):
+        return pil_font.getlength(text)
+    words = (text or "").split(" ")
+    return (sum(pil_font.getlength(w) for w in words)
+            + _space_px(pil_font, size) * max(0, len(words) - 1))
+
+
 def _build_segments(line, base_color, highlight_rules):
     """한 줄 텍스트를 공백 기준 토큰화하고, 연속된 동일 스타일(강조 or 기본) 토큰을 묶어
     [(text, color, box, box_color), ...] 세그먼트 리스트로 반환. 사이 공백은 각 세그먼트
@@ -1509,7 +1543,7 @@ def _segmented_drawtext(text, base_style, work, key_prefix, x_pct, y_pct,
     if single_line:
         # 자막: 개행·연속공백을 한 칸으로 접어 한 줄로. 폭 초과 시 폰트 축소(줄바꿈 금지).
         one = " ".join(" ".join(lines).split())
-        w = pil_font.getlength(one) if one else 0
+        w = _text_px(pil_font, one, size) if one else 0
         if w > max_w:
             size = max(8, int(size * max_w / w))
             try:
@@ -1519,7 +1553,7 @@ def _segmented_drawtext(text, base_style, work, key_prefix, x_pct, y_pct,
         lines = [one]
     elif fit_lines:
         # 헤드카피: 줄 수는 그대로, 가장 넓은 줄이 폭에 들어가게 폰트만 줄인다.
-        widest = max((pil_font.getlength(ln) for ln in lines if ln), default=0)
+        widest = max((_text_px(pil_font, ln, size) for ln in lines if ln), default=0)
         if widest > max_w:
             size = max(8, int(size * max_w / widest))
             try:
@@ -1539,40 +1573,51 @@ def _segmented_drawtext(text, base_style, work, key_prefix, x_pct, y_pct,
         segs = _build_segments(line, base_color_raw, highlight_rules or [])
         if not segs:
             continue
-        widths = [pil_font.getlength(s[0]) for s in segs]
+        widths = [_text_px(pil_font, s[0], size) for s in segs]
         line_w = sum(widths)
         start_x = x_center - line_w / 2
         line_y = y_top - total_h / 2 + li * line_h
         run_x = start_x
+        # ★공백 글리프가 없는 폰트(빙그레·리디바탕)에서는 띄어쓰기를 drawtext에 **넘기지
+        #   않는다** — 넘기면 ⊠(.notdef 네모)로 그려진다(2026-08-24 고객 제보 실측).
+        #   대신 어절을 따로 그리고 사이는 좌표로 벌린다. 정상 폰트는 종전 그대로 한 번에
+        #   그린다(회귀 0) — 어절을 쪼개면 box 스타일의 배경이 어절마다 끊기기 때문이다.
+        no_space = _lacks_space_glyph(pil_font)
+        gap = _space_px(pil_font, size)
         for (seg_text, seg_color, seg_box, seg_box_color), w in zip(segs, widths):
             if not seg_text.strip():
                 run_x += w
                 continue
-            key = f"{key_prefix}_{li}_{len(parts)}"
-            (work / f"txt_{key}.txt").write_text(seg_text.rstrip(), encoding="utf-8")
-            seg_parts = [
-                f"drawtext=fontfile={fontref}:textfile=txt_{key}.txt",
-                f"fontcolor={_hex_to_ff(seg_color, default_color)}",
-                f"fontsize={size}",
-                f"x={int(run_x)}", f"y={int(line_y)}",
-            ]
-            if base_style.get("outline"):
-                seg_parts.append(f"borderw={max(1, _ui_px(base_style.get('outline_w'), 9))}")
-                seg_parts.append(f"bordercolor={_hex_to_ff(base_style.get('outline_color'), '0x000000')}")
-            if base_style.get("shadow"):
-                # 은은한 드롭 그림자(레퍼런스 자막룩) — 두꺼운 테두리 대신 부드러운 가독성.
-                sc = _hex_to_ff(base_style.get("shadow_color"), "0x000000")
-                sd = max(1, _ui_px(base_style.get("shadow_d"), 5))
-                seg_parts += [f"shadowcolor={sc}@0.55", f"shadowx={sd}", f"shadowy={sd}"]
-            if seg_box:
-                bc = _hex_to_ff(seg_box_color, "0x000000")
-                seg_parts += ["box=1", f"boxcolor={bc}@0.90", "boxborderw=12"]
-            elif base_style.get("box") and not seg_box:
-                bc = _hex_to_ff(base_style.get("box_color"), "0x000000")
-                op = max(0.0, min(1.0, (base_style.get("box_opacity") or 80) / 100.0))
-                pad = max(0, _ui_px(base_style.get("box_pad"), 24, zero_ok=True))
-                seg_parts += ["box=1", f"boxcolor={bc}@{op:.2f}", f"boxborderw={pad}"]
-            parts.append(":".join(seg_parts))
+            chunks = ([t for t in seg_text.split(" ") if t] if no_space
+                      else [seg_text.rstrip()])
+            cx = run_x
+            for chunk in chunks:
+                key = f"{key_prefix}_{li}_{len(parts)}"
+                (work / f"txt_{key}.txt").write_text(chunk, encoding="utf-8")
+                seg_parts = [
+                    f"drawtext=fontfile={fontref}:textfile=txt_{key}.txt",
+                    f"fontcolor={_hex_to_ff(seg_color, default_color)}",
+                    f"fontsize={size}",
+                    f"x={int(cx)}", f"y={int(line_y)}",
+                ]
+                if base_style.get("outline"):
+                    seg_parts.append(f"borderw={max(1, _ui_px(base_style.get('outline_w'), 9))}")
+                    seg_parts.append(f"bordercolor={_hex_to_ff(base_style.get('outline_color'), '0x000000')}")
+                if base_style.get("shadow"):
+                    # 은은한 드롭 그림자(레퍼런스 자막룩) — 두꺼운 테두리 대신 부드러운 가독성.
+                    sc = _hex_to_ff(base_style.get("shadow_color"), "0x000000")
+                    sd = max(1, _ui_px(base_style.get("shadow_d"), 5))
+                    seg_parts += [f"shadowcolor={sc}@0.55", f"shadowx={sd}", f"shadowy={sd}"]
+                if seg_box:
+                    bc = _hex_to_ff(seg_box_color, "0x000000")
+                    seg_parts += ["box=1", f"boxcolor={bc}@0.90", "boxborderw=12"]
+                elif base_style.get("box") and not seg_box:
+                    bc = _hex_to_ff(base_style.get("box_color"), "0x000000")
+                    op = max(0.0, min(1.0, (base_style.get("box_opacity") or 80) / 100.0))
+                    pad = max(0, _ui_px(base_style.get("box_pad"), 24, zero_ok=True))
+                    seg_parts += ["box=1", f"boxcolor={bc}@{op:.2f}", f"boxborderw={pad}"]
+                parts.append(":".join(seg_parts))
+                cx += pil_font.getlength(chunk) + gap
             run_x += w
     return parts
 
