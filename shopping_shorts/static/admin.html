@@ -91,8 +91,8 @@ tbody tr:hover{background:#1b1b22}
        (고객에게 job_id를 물어보면 못 받는다 — 실제로 그래서 원인 찾는 데 오래 걸렸다). -->
 <div class="card wait">
   <h2>🐞 오류 신고 (<span id=bcnt>0</span>건) <span id=bMsg class=msg></span></h2>
-  <table><thead><tr><th>시각</th><th>고객</th><th>내용</th><th>어디서</th><th>화면오류</th><th>처리</th></tr></thead>
-  <tbody id=brows><tr><td colspan=6 class=empty>불러오는 중…</td></tr></tbody></table>
+  <table><thead><tr><th>시각</th><th>고객</th><th>내용</th><th>사진</th><th>어디서</th><th>화면오류</th><th>처리</th></tr></thead>
+  <tbody id=brows><tr><td colspan=7 class=empty>불러오는 중…</td></tr></tbody></table>
 </div>
 
 <!-- 입금 신고(2026-08-23) — 고객이 /pay에서 '입금 완료했습니다'를 누르면 여기 뜬다.
@@ -446,14 +446,21 @@ function loadBugs(){
       var errCell = errs.length
         ? '<span style="color:#ff6b6b;cursor:pointer" title="'+esc(errs.join('\n'))+'">'+errs.length+'건 ⚠️</span>'
         : '<span style="color:#5f6773">-</span>';
+      // 사진은 썸네일로 보여주고 누르면 원본을 새 탭에서 연다 — 대개 사진 한 장이면 즉시 갈린다.
+      var shot = b.shot_path
+        ? '<img src="/api/admin/bug-shot/'+encodeURIComponent(b.shot_path)+'" '+
+          'style="width:88px;height:60px;object-fit:cover;border-radius:6px;border:1px solid #2b3a3a;cursor:zoom-in" '+
+          'onclick="window.open(this.src)" title="눌러서 크게 보기">'
+        : '<span style="color:#5f6773">-</span>';
       return '<tr><td class=mini>'+_bugWhen(b.created_at)+'</td>'+
         '<td>'+esc(b.customer_name)+'<div class=mini style="color:#5f6773">cid '+b.customer_id+'</div></td>'+
         '<td style="max-width:320px">'+esc(b.message)+url+'</td>'+
+        '<td>'+shot+'</td>'+
         '<td class=mini>'+(where.join('<br>')||'-')+'</td>'+
         '<td>'+errCell+'</td>'+
         '<td><button class=bedit onclick="replyBug('+b.id+')">답장</button> '+
             '<button class=bfree onclick="doneBug('+b.id+')">확인함</button></td></tr>';
-    }).join('') : '<tr><td colspan=6 class=empty>새 신고 없음</td></tr>';
+    }).join('') : '<tr><td colspan=7 class=empty>새 신고 없음</td></tr>';
   }).catch(function(e){
     document.getElementById('bMsg').textContent='불러오기 실패: '+e.message;
   });

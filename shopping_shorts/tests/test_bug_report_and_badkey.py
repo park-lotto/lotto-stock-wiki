@@ -118,3 +118,64 @@ def test_조회가_깨져도_제작을_막지_않는다(st, monkeypatch):
         raise RuntimeError("DB 고장")
     monkeypatch.setattr(Store, "bad_key_services", boom)
     assert app._bad_key_block(192) is None
+
+
+# ── 화면 사진 첨부(2026-08-24 사장님 "그 문제 장면도 같이 해줘야 판단이 쉽지") ──
+import base64
+from pathlib import Path
+
+_PNG = base64.b64decode(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==")
+_JPG = bytes([0xFF, 0xD8, 0xFF]) + b"\x00" * 40
+
+
+def _url(raw, mime="image/png"):
+    return "data:%s;base64,%s" % (mime, base64.b64encode(raw).decode())
+
+
+@pytest.fixture()
+def shotdir(tmp_path, monkeypatch):
+    d = tmp_path / "shots"
+    monkeypatch.setattr(app, "_BUG_SHOT_DIR", d)
+    return d
+
+
+def test_사진을_파일로_저장하고_이름을_돌려준다(shotdir):
+    name = app._save_bug_shot(_url(_PNG))
+    assert name.endswith(".png")
+    assert (shotdir / name).read_bytes() == _PNG
+
+
+def test_jpeg도_받는다(shotdir):
+    assert app._save_bug_shot(_url(_JPG, "image/jpeg")).endswith(".jpg")
+
+
+@pytest.mark.parametrize("bad", [
+    None, "", "그냥 글자", "data:text/html;base64,AAAA",
+    "data:image/png;base64,!!!!",                       # 깨진 base64
+])
+def test_사진이_아니면_저장하지_않는다(shotdir, bad):
+    assert app._save_bug_shot(bad) == ""
+    assert not shotdir.exists() or list(shotdir.glob("*")) == []
+
+
+def test_이미지인_척하는_데이터는_막는다(shotdir):
+    """★확장자·MIME은 보내는 쪽이 마음대로 적는다 — 앞머리(매직바이트)로 판정해야 한다.
+    기본 b64decode는 이상한 글자를 조용히 버려서 0바이트 쓰레기 파일이 쌓였다(실측)."""
+    assert app._save_bug_shot(_url(b"<html>hack</html>")) == ""
+    assert not shotdir.exists() or list(shotdir.glob("*")) == []
+
+
+def test_너무_큰_사진은_버린다(shotdir):
+    assert app._save_bug_shot(_url(_PNG + b"\x00" * (7 * 1024 * 1024))) == ""
+
+
+def test_사진_없이도_신고는_접수된다(st):
+    """사진은 있으면 좋은 것이지 필수가 아니다 — 없다고 신고를 막으면 안 된다."""
+    assert st.add_bug_report(1, "글만 씁니다") > 0
+    assert st.list_bug_reports()[0]["shot_path"] == ""
+
+
+def test_신고에_사진경로가_붙는다(st):
+    st.add_bug_report(192, "화면이 이상해요", shot_path="abc123.png")
+    assert st.list_bug_reports()[0]["shot_path"] == "abc123.png"

@@ -8953,6 +8953,55 @@ _ADMIN_SETTING_KEYS = {"trial_days", "trial_grant_points", "trial_event_hours",
 # ★고객에게 물어서 받으면 반드시 샌다 — job_id·현재 URL·콘솔 오류를 고객이 알 리 없다.
 #   실제로 김만기님 제작 4회 전패를 화면 캡처만으로는 못 찾았고 DB를 뒤져서야 원인을 알았다.
 #   그래서 고객은 **한 줄만 쓰고**, 진단 정보는 화면이 자동으로 담아 보낸다.
+_BUG_SHOT_DIR = Path(__file__).parent / "data" / "bug_shots"
+_BUG_SHOT_MAX = 6 * 1024 * 1024        # 6MB — 화면이 이미 1280px로 줄여 보낸다
+
+
+def _save_bug_shot(data_url):
+    """신고에 딸려온 화면 사진(data:image/...;base64,...)을 파일로 저장 → 상대경로(없으면 "").
+
+    ★DB에 base64를 넣지 않는다 — 신고 몇 백 건이면 DB가 그대로 뚱뚱해지고 목록 조회까지 느려진다.
+    ★저장 실패가 신고 접수를 막으면 안 된다. 사진은 있으면 좋은 것이지 필수가 아니다.
+    """
+    if not data_url or not isinstance(data_url, str) or not data_url.startswith("data:image/"):
+        return ""
+    try:
+        head, b64 = data_url.split(",", 1)
+        ext = "png" if "png" in head else "jpg"
+        # ★validate=True — 기본값은 이상한 글자를 **조용히 버리고** 빈 바이트를 돌려준다.
+        #   그러면 0바이트짜리 쓰레기 파일이 쌓인다(실측: "!!!!"가 파일로 저장됐다).
+        raw = base64.b64decode(b64, validate=True)
+        # 진짜 이미지인지 앞머리로 확인 — 확장자·MIME은 보내는 쪽이 마음대로 적을 수 있다.
+        if not (raw[:4] == b"\x89PNG" or raw[:3] == b"\xff\xd8\xff"
+                or raw[:4] == b"GIF8" or raw[8:12] == b"WEBP"):
+            print("[오류신고] 사진이 아닌 데이터 — 버린다", file=sys.stderr)
+            return ""
+        if len(raw) > _BUG_SHOT_MAX:
+            print("[오류신고] 사진이 너무 큼(%.1fMB) — 버린다" % (len(raw) / 1048576),
+                  file=sys.stderr)
+            return ""
+        _BUG_SHOT_DIR.mkdir(parents=True, exist_ok=True)
+        name = "%s.%s" % (uuid.uuid4().hex[:16], ext)
+        (_BUG_SHOT_DIR / name).write_bytes(raw)
+        return name
+    except Exception as e:  # noqa: BLE001 — 사진 없이라도 신고는 접수돼야 한다
+        print(f"[오류신고] 사진 저장 실패(신고는 접수함): {e!r}", file=sys.stderr)
+        return ""
+
+
+@app.get("/api/admin/bug-shot/{name}")
+def api_admin_bug_shot(request: Request, name: str):
+    """관리자: 신고에 딸린 화면 사진. 경로 탈출 방지로 파일명만 받는다."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    safe = re.sub(r"[^0-9a-zA-Z.]", "", name or "")
+    p = _BUG_SHOT_DIR / safe
+    if not safe or not p.exists():
+        return JSONResponse(status_code=404, content={"ok": False})
+    return FileResponse(str(p))
+
+
 @app.post("/api/bug-report")
 def api_bug_report(request: Request, body: dict):
     """오류 신고 접수. body: {message, page_url?, job_id?, work_id?, step?, console?[]}"""
@@ -8962,12 +9011,14 @@ def api_bug_report(request: Request, body: dict):
                             content={"ok": False, "error": "어떤 문제인지 한 줄만 적어주세요"})
     cid = getattr(request.state, "customer_id", 0)
     console = body.get("console")
+    shot = _save_bug_shot(body.get("shot"))
     rid = Store(DB_PATH).add_bug_report(
         cid, msg,
         page_url=body.get("page_url"), job_id=body.get("job_id"),
         work_id=body.get("work_id"), step=body.get("step"),
         user_agent=request.headers.get("user-agent", ""),
         console=console if isinstance(console, list) else None,
+        shot_path=shot,
     )
     return {"ok": True, "id": rid,
             "message": "접수됐어요. 확인하고 알려드릴게요 (접수번호 #%d)" % rid}

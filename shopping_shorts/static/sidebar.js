@@ -773,17 +773,24 @@
     st.textContent =
       ".ssbug-back{position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:99999;display:flex;" +
       "align-items:center;justify-content:center;padding:16px}" +
-      ".ssbug{background:#141a1a;border:1px solid #2b3a3a;border-radius:14px;max-width:520px;width:100%;" +
-      "padding:20px;color:#e8eaed;font-size:14.5px;line-height:1.6;box-shadow:0 12px 40px rgba(0,0,0,.5)}" +
-      ".ssbug h3{margin:0 0 6px;font-size:18px;color:#6ff0d6}" +
-      ".ssbug p.sub{margin:0 0 14px;color:#8aa0a0;font-size:13px}" +
-      ".ssbug textarea{width:100%;box-sizing:border-box;min-height:110px;background:#0e1414;color:#e8eaed;" +
-      "border:1px solid #2b3a3a;border-radius:10px;padding:11px;font:inherit;resize:vertical}" +
-      ".ssbug .info{margin:10px 0 0;font-size:12.5px;color:#7d8f8f;background:#0e1414;border-radius:8px;padding:9px 11px}" +
-      ".ssbug .row{display:flex;gap:8px;margin-top:14px}" +
-      ".ssbug button{flex:1;padding:11px;border-radius:10px;border:0;font:inherit;font-weight:700;cursor:pointer}" +
+      ".ssbug{background:#141a1a;border:1px solid #2b3a3a;border-radius:14px;max-width:560px;width:100%;" +
+      "padding:24px;color:#e8eaed;font-size:16px;line-height:1.65;box-shadow:0 12px 40px rgba(0,0,0,.5);" +
+      "max-height:92vh;overflow:auto}" +
+      ".ssbug h3{margin:0 0 8px;font-size:21px;color:#6ff0d6}" +
+      ".ssbug p.sub{margin:0 0 16px;color:#9db2b2;font-size:15px}" +
+      ".ssbug textarea{width:100%;box-sizing:border-box;min-height:120px;background:#0e1414;color:#e8eaed;" +
+      "border:1px solid #2b3a3a;border-radius:10px;padding:13px;font:inherit;font-size:16.5px;resize:vertical}" +
+      ".ssbug .info{margin:12px 0 0;font-size:14px;color:#9db2b2;background:#0e1414;border-radius:8px;padding:11px 13px}" +
+      ".ssbug .info b{color:#c7d2d2;font-weight:600}" +
+      ".ssbug .drop{margin-top:12px;border:1px dashed #35494a;border-radius:10px;padding:14px;text-align:center;" +
+      "font-size:14.5px;color:#9db2b2;background:#0e1414}" +
+      ".ssbug .drop button{background:#1e2b2b;color:#cfe3e3;border:0;border-radius:9px;padding:9px 15px;" +
+      "font:inherit;font-size:14.5px;font-weight:600;cursor:pointer;flex:none}" +
+      ".ssbug .row{display:flex;gap:10px;margin-top:18px}" +
+      ".ssbug button{flex:1;padding:14px;border-radius:10px;border:0;font:inherit;font-size:16.5px;" +
+      "font-weight:700;cursor:pointer}" +
       ".ssbug .ok{background:#6ff0d6;color:#062b25}.ssbug .no{background:#222c2c;color:#c7d2d2}" +
-      ".ssbug .msg{margin-top:12px;font-size:13.5px}";
+      ".ssbug .msg{margin-top:14px;font-size:15.5px}";
     document.head.appendChild(st);
   }
 
@@ -805,20 +812,82 @@
     };
   }
 
+
+  /* ★2026-08-24 사장님: "지금 페이지 url을 첨부해야하는거 아닌가? 사진? 링크?
+        그 문제 장면도 같이 해줘야 판단이 쉽지 / 글자 잘보이게"
+     - URL은 원래도 자동으로 보내고 있었지만 **고객에게 안 보였다** → 눈에 보이게 적는다.
+     - 화면 사진을 붙일 수 있게 한다: [사진 고르기] · Ctrl+V 붙여넣기 · 끌어다 놓기 셋 다.
+       윈도우는 Win+Shift+S로 찍으면 클립보드에 들어가므로 **붙여넣기가 가장 빠른 길**이다.
+     - 글자를 키운다(시니어 타깃) — 본문 16px, 입력칸 16.5px. */
+  var SHOT = null;                       /* data:image/... 한 장 */
+
+  function shrink(file, cb) {
+    /* 화면 사진은 대개 2~4MB다. 1280px·JPEG로 줄여 보낸다 — 판독에는 충분하고
+       업로드가 빠르며 서버 6MB 상한에도 안 걸린다. 실패하면 원본을 그대로 쓴다. */
+    var fr = new FileReader();
+    fr.onload = function () {
+      var img = new Image();
+      img.onload = function () {
+        try {
+          var max = 1280, w = img.width, h = img.height;
+          var r = Math.min(1, max / Math.max(w, h));
+          var cv = document.createElement("canvas");
+          cv.width = Math.round(w * r); cv.height = Math.round(h * r);
+          cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
+          cb(cv.toDataURL("image/jpeg", 0.8));
+        } catch (e) { cb(fr.result); }
+      };
+      img.onerror = function () { cb(fr.result); };
+      img.src = fr.result;
+    };
+    fr.onerror = function () { cb(null); };
+    fr.readAsDataURL(file);
+  }
+
+  function setShot(file) {
+    if (!file || !/^image\//.test(file.type)) return;
+    var box = document.getElementById("ssBugShot");
+    if (box) box.innerHTML = '<span style="color:#8aa0a0">사진 줄이는 중…</span>';
+    shrink(file, function (d) {
+      SHOT = d;
+      if (!box) return;
+      box.innerHTML = d
+        ? '<img src="' + d + '" style="max-width:100%;max-height:190px;border-radius:8px;' +
+          'border:1px solid #2b3a3a">' +
+          '<div style="margin-top:6px"><button type="button" id="ssShotDel" ' +
+          'style="background:#2a2020;color:#ff9b9b;border:0;border-radius:8px;padding:7px 12px;' +
+          'font:inherit;cursor:pointer">사진 빼기</button></div>'
+        : '<span style="color:#ff9b9b">사진을 읽지 못했어요</span>';
+      var del = document.getElementById("ssShotDel");
+      if (del) del.onclick = function () { SHOT = null; box.innerHTML = ""; };
+    });
+  }
+
   window.ssOpenBugReport = function () {
     css();
     var ctx = context();
     var back = document.createElement("div");
     back.className = "ssbug-back";
+    SHOT = null;
     back.innerHTML =
       '<div class="ssbug" role="dialog" aria-modal="true">' +
         "<h3>🐞 오류 신고</h3>" +
-        '<p class="sub">어떤 문제인지 한 줄만 적어주세요. 화면 정보는 자동으로 함께 보내집니다.</p>' +
+        '<p class="sub">어떤 문제인지 한 줄만 적어주세요.<br>' +
+          '<b style="color:#cfe3e3">문제가 보이는 화면 사진</b>을 같이 보내주시면 훨씬 빨리 찾습니다.</p>' +
         '<textarea id="ssBugText" placeholder="예) 5단계에서 영상 만들기를 누르면 계속 실패해요"></textarea>' +
-        '<div class="info">함께 보내는 것 — 지금 페이지' +
-          (ctx.work_id ? " / 작업번호 " + esc(ctx.work_id) : "") +
-          (ctx.step ? " / " + esc(ctx.step) + "단계" : "") +
-          (ctx.console.length ? " / 화면 오류 " + ctx.console.length + "건" : "") +
+        '<div class="drop" id="ssBugDrop">' +
+          '📷 <b>화면 사진</b> — <button type="button" id="ssShotPick">사진 고르기</button>' +
+          '<div style="margin-top:8px;font-size:13.5px;color:#7d8f8f">' +
+            '캡처하신 뒤 <b>Ctrl+V</b>로 붙여넣거나 여기에 끌어다 놓으셔도 됩니다' +
+            '<br>(윈도우는 <b>Win+Shift+S</b>, 맥은 <b>⌘⇧4</b>로 화면을 찍습니다)</div>' +
+          '<input type="file" id="ssShotFile" accept="image/*" style="display:none">' +
+          '<div id="ssBugShot" style="margin-top:10px"></div>' +
+        "</div>" +
+        '<div class="info"><b>함께 보내지는 것</b><br>' +
+          '· 지금 페이지: ' + esc(ctx.page_url.slice(0, 90)) +
+          (ctx.work_id ? "<br>· 작업번호: " + esc(ctx.work_id) : "") +
+          (ctx.step ? "<br>· 진행 단계: " + esc(ctx.step) : "") +
+          (ctx.console.length ? "<br>· 화면 오류 " + ctx.console.length + "건" : "") +
         "</div>" +
         '<div class="msg" id="ssBugMsg"></div>' +
         '<div class="row"><button class="no" id="ssBugNo">닫기</button>' +
@@ -830,6 +899,29 @@
     document.getElementById("ssBugNo").onclick = close;
     var ta = document.getElementById("ssBugText");
     ta.focus();
+    /* 사진 넣는 길 세 가지 — 하나만 되면 못 쓰는 사람이 생긴다. */
+    var fileEl = document.getElementById("ssShotFile");
+    document.getElementById("ssShotPick").onclick = function () { fileEl.click(); };
+    fileEl.onchange = function () { if (this.files && this.files[0]) setShot(this.files[0]); };
+    back.addEventListener("paste", function (e) {          /* Ctrl+V (윈도우 캡처가 여기로 온다) */
+      var items = (e.clipboardData || {}).items || [];
+      for (var i = 0; i < items.length; i++) {
+        if (items[i].type && items[i].type.indexOf("image/") === 0) {
+          setShot(items[i].getAsFile());
+          e.preventDefault();
+          return;
+        }
+      }
+    });
+    var drop = document.getElementById("ssBugDrop");
+    drop.addEventListener("dragover", function (e) { e.preventDefault(); drop.style.borderColor = "#6ff0d6"; });
+    drop.addEventListener("dragleave", function () { drop.style.borderColor = "#35494a"; });
+    drop.addEventListener("drop", function (e) {
+      e.preventDefault();
+      drop.style.borderColor = "#35494a";
+      var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+      if (f) setShot(f);
+    });
     document.getElementById("ssBugGo").onclick = function () {
       var btn = this;
       var text = (ta.value || "").trim();
@@ -838,6 +930,7 @@
       btn.disabled = true; btn.textContent = "보내는 중…";
       var body = context();
       body.message = text;
+      body.shot = SHOT;                 /* 없으면 null — 서버가 그냥 건너뛴다 */
       fetch("/api/bug-report", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body)
