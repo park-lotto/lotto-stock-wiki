@@ -2105,7 +2105,16 @@ class Store:
         return row[0] if row else None
 
     # ── 플랫폼별 마지막 수집 결과(last_run 테이블에 platform 컬럼이 없어 settings 재사용) ──
+    #
+    # ★상한이 필요한 이유 (2026-08-24 실측)
+    #   '주소로 가져오기'는 새 1건을 앞에 붙이고 나머지를 그대로 둔다 — 지우는 쪽이 없어
+    #   계속 커졌다. 유튜브가 8,281건(4.47MB)까지 쌓여 /api/reference 한 번에 그걸 다
+    #   내려보냈고(실측 974ms), 관리자 목록 응답에도 통째로 딸려갔다.
+    #   랭킹은 최신순이라 뒤쪽 수천 건은 화면에서 볼 일이 없다.
+    LAST_RUN_MAX_ITEMS = 3000
+
     def save_last_run_platform(self, platform, items, collected_at):
+        items = list(items or [])[: self.LAST_RUN_MAX_ITEMS]   # 앞쪽이 최신이다
         with self._conn() as c:
             c.execute("INSERT OR REPLACE INTO settings(key, value) VALUES(?,?)",
                       (f"last_run::{platform}", json.dumps({"items": items, "collected_at": collected_at}, ensure_ascii=False)))
@@ -2466,6 +2475,7 @@ class Store:
         """마지막 수집 결과 전체(items + 시각)를 저장. 단일 행 덮어쓰기.
         + 수집분을 reel_history에 누적(shortcode upsert)해 48h 창에서 내려가도
         30일간 보존한다. 누적은 부가작업 — 실패해도 last_run 저장은 살린다."""
+        items = list(items or [])[: self.LAST_RUN_MAX_ITEMS]   # 플랫폼별 저장과 같은 상한
         with self._conn() as c:
             c.execute(
                 "INSERT INTO last_run(id, items_json, collected_at) VALUES(1, ?, ?) "
