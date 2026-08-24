@@ -1812,6 +1812,9 @@
           <div style="font-size:12px;color:var(--sub);margin:12px 0 4px">🎨 고급 도형 — 화살표·강조 (색·크기·각도 조절돼요)</div>
           <div id="thumbShapes" style="display:flex;gap:6px;flex-wrap:wrap"></div>
 
+          <div style="font-size:12px;color:var(--sub);margin:12px 0 4px">🏷 배지 — 누르면 얹혀요 (문구·색 바꿀 수 있어요)</div>
+          <div id="thumbBadges" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+
           <button class="btn-next" style="width:100%;margin:10px 0 4px;padding:10px;font-size:14px"
                   onclick="suggestThumbTitles()">🪄 원본 영상 보고 제목 추천받기</button>
           <div id="thumbTitleSuggest" style="display:flex;flex-direction:column;gap:5px"></div>
@@ -9659,6 +9662,85 @@ function drawShape(ctx, L, W, H){
   ctx.restore();
 }
 
+// ── 🏷 배지 레이어(2026-08-25) ────────────────────────────────────────
+// 사장님 지시: 어그로 썸네일의 좌상단 빨간 알약("진짜 봐야할 것") 같은 부품을 달라.
+// ★글자 레이어로 흉내내면 안 된다 — 자동 두 줄(thumbAutoLines)·grow-to-fill이 걸려
+//   알약이 글자를 못 감싼다. 그래서 별도 kind:'badge'로 두고 그 둘을 안 태운다.
+//   (스티커·도형이 같은 이유로 별도 레이어인 것과 같은 판단 — 0순위-B)
+// L = {kind:'badge', text, size:(캔버스 폭 대비 % — 글자 높이), x, y, rot,
+//      color:(알약 바탕), text_color:(글자), dot:(왼쪽 동그라미 표시 여부)}
+const THUMB_BADGE_LIST = [
+  {label: '진짜 봐야할 것', color: '#FF2D2D'},
+  {label: '충격',          color: '#FF2D2D'},
+  {label: '실화',          color: '#FF2D2D'},
+  {label: '꿀팁',          color: '#1FA84E'},
+  {label: '이건 몰랐지',    color: '#7B2FF7'},
+  {label: '주목',          color: '#FF8A00'},
+  {label: '레전드',        color: '#FF2D2D'},
+  {label: '990원',         color: '#111111'},
+];
+
+function drawBadge(ctx, L, W, H){
+  const txt = String(L.text == null ? '' : L.text);
+  if (!txt) return;                                   // 빈 배지는 안 그린다
+  const fs  = W * ((L.size != null ? L.size : 5) / 100);   // 글자 높이 = 폭 대비 %
+  const padX = fs * 0.62, padY = fs * 0.42;
+  ctx.save();
+  ctx.translate(L.x * W, L.y * H);
+  if (L.rot) ctx.rotate(L.rot * Math.PI / 180);
+  ctx.font = `900 ${fs}px ${thumbFontCss(L.font)}`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  const dot = L.dot === false ? 0 : fs * 0.62;        // 왼쪽 동그라미(참조 이미지의 흰 원)
+  const gap = dot ? fs * 0.30 : 0;
+  const tw  = ctx.measureText(txt).width;
+  const bw  = tw + padX * 2 + dot + gap;
+  const bh  = fs + padY * 2;
+  const r   = bh / 2;                                  // 알약 = 완전 둥근 모서리
+  // 밝은 배경에서도 알약이 뜨게 그림자 — 스티커·도형과 같은 규칙.
+  ctx.shadowColor = 'rgba(0,0,0,0.38)';
+  ctx.shadowBlur = fs * 0.30; ctx.shadowOffsetY = fs * 0.08;
+  ctx.fillStyle = L.color || '#FF2D2D';
+  _roundRectPath(ctx, -bw / 2, -bh / 2, bw, bh, r);
+  ctx.fill();
+  ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+  const tc = L.text_color || '#FFFFFF';
+  if (dot){
+    ctx.fillStyle = tc;
+    ctx.beginPath();
+    ctx.arc(-bw / 2 + padX + dot / 2, 0, dot / 2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.fillStyle = tc;
+  ctx.fillText(txt, -bw / 2 + padX + dot + gap + tw / 2, 0);
+  ctx.restore();
+}
+
+// roundRect는 구형 브라우저·헤드리스에 없다(실측: 있으면 쓰고 없으면 손으로 그린다).
+function _roundRectPath(ctx, x, y, w, h, r){
+  r = Math.min(r, w / 2, h / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+function addThumbBadge(label){
+  const def = THUMB_BADGE_LIST.find(b => b.label === label) || {};
+  THUMB_STATE.layers.push({kind: 'badge', text: label, size: 5, x: 0.30, y: 0.075,
+                           rot: 0, color: def.color || '#FF2D2D',
+                           text_color: '#FFFFFF', dot: true});
+  THUMB_STATE.sel = THUMB_STATE.layers.length - 1;
+  renderThumbLayers(); renderThumbCanvas();
+}
+
 function drawThumb(ctx, img, layers, W, H){
   const s = W / THUMB_W;                    // 캔버스 배율 — 외곽선·박스 여백용
   // ★매 렌더마다 먼저 지운다(2026-07-18 라이브 실측) — job 없을 때 드래그 잔상이 쌓이던 것 봉인.
@@ -9667,6 +9749,7 @@ function drawThumb(ctx, img, layers, W, H){
   (layers || []).forEach(L => {
     if (L.kind === 'sticker'){ if (L.emoji) drawSticker(ctx, L, W, H); return; }
     if (L.kind === 'shape'){ drawShape(ctx, L, W, H); return; }
+    if (L.kind === 'badge'){ drawBadge(ctx, L, W, H); return; }
     if (!L.text) return;
     const {lines, size, family} = thumbFit(ctx, L, W, H);      // 자동 2줄 + grow-to-fill
     const lh = size * 1.16;                                     // 줄 간격
@@ -9985,7 +10068,7 @@ function selectThumbLayer(i){ THUMB_STATE.sel = i; renderThumbLayers(); renderTh
 // 선택 해제 — 손잡이(점선 네모·✕·⤢)를 치운다. 고르는 판단은 여기 한 곳(0순위-B):
 // 빈 곳 클릭·Esc 둘 다 이 함수를 부른다.
 function deselectThumbLayer(){
-  const ti = (THUMB_STATE.layers || []).findIndex(L => !['sticker', 'shape'].includes(L.kind));
+  const ti = (THUMB_STATE.layers || []).findIndex(L => !['sticker', 'shape', 'badge'].includes(L.kind));
   THUMB_STATE.sel = ti;               // 글자 레이어가 없으면 -1 → 손잡이도 편집칸도 없음
   renderThumbLayers(); renderThumbHandles();   // 편집칸(#thumbEdit)도 renderThumbLayers가 같이 그린다
 }
@@ -10004,7 +10087,7 @@ function applyThumbPreset(i){
   const cur = THUMB_STATE.layers[THUMB_STATE.sel]; if (!cur) return;
   // ★스티커·도형을 고른 채 색 프리셋을 누르면 빈 글자 레이어로 바뀌어 조용히 사라진다.
   //   글자 스타일은 그것들과 무관하니 그냥 무시한다(사장님 것을 지우지 않는다).
-  if (cur.kind === 'sticker' || cur.kind === 'shape') return;
+  if (cur.kind === 'sticker' || cur.kind === 'shape' || cur.kind === 'badge') return;
   const styled = thumbPresetToLayer(p);
   styled.text = cur.text;          // 스타일만 바꾼다 — 문구·위치는 사장님 것
   // y를 빼먹으면 드래그로 잡은 세로 위치가 프리셋의 기본값(상단 12%)으로 튄다.
@@ -10095,8 +10178,8 @@ function applyThumbTitle(i){
   if (!THUMB_STATE.layers.length) addThumbLayer();   // 레이어가 없으면 하나 만들어 얹는다
   // ★스티커·도형을 고른 채 추천 제목을 누르면 거기에 문구가 박혀 그림이 사라진다.
   //   제목은 글자 레이어의 것이니, 글자 레이어를 찾아 얹고(없으면 새로 만든다) 그걸 선택한다.
-  if (['sticker', 'shape'].includes((THUMB_STATE.layers[THUMB_STATE.sel] || {}).kind)){
-    const ti = THUMB_STATE.layers.findIndex(L => !['sticker', 'shape'].includes(L.kind));
+  if (['sticker', 'shape', 'badge'].includes((THUMB_STATE.layers[THUMB_STATE.sel] || {}).kind)){
+    const ti = THUMB_STATE.layers.findIndex(L => !['sticker', 'shape', 'badge'].includes(L.kind));
     if (ti >= 0) THUMB_STATE.sel = ti;
     else { addThumbLayer(); }
   }
@@ -10115,7 +10198,9 @@ function renderThumbLayers(){
         ? L.emoji + ' <span style="opacity:.6">스티커</span>'
         : L.kind === 'shape'
           ? '🎨 <span style="opacity:.6">' + ((THUMB_SHAPE_LIST.find(s => s.key === L.shape) || {}).label || L.shape) + '</span>'
-          : (esc(L.text) || '(빈 문구)')}</span>
+          : L.kind === 'badge'
+            ? '🏷 ' + (esc(L.text) || '<span style="opacity:.6">(빈 배지)</span>')
+            : (esc(L.text) || '(빈 문구)')}</span>
       <span onclick="event.stopPropagation();removeThumbLayer(${i})" style="cursor:pointer">✕</span>
     </div>`).join('');
   const _sb = document.getElementById('thumbStickers');
@@ -10141,6 +10226,15 @@ function renderThumbLayers(){
                                         color: def.color}, cv.width, cv.height);
       });
     }
+  }
+  // 🏷 배지 버튼 — 실제 색을 칠해 보여준다(고를 때 결과가 바로 보이게).
+  const _bdb = document.getElementById('thumbBadges');
+  if (_bdb){
+    _bdb.innerHTML = THUMB_BADGE_LIST.map(b =>
+      `<button class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 11px;font-size:12px;
+        border-radius:999px;background:${b.color};color:#fff;border:0"
+        onclick="addThumbBadge(${JSON.stringify(b.label).replace(/"/g, '&quot;')})">${esc(b.label)}</button>`
+    ).join('');
   }
   document.getElementById('thumbPresets').innerHTML =
     HC_PRESETS.filter(p => p.cat === '썸네일').map((p, i) =>
@@ -10174,6 +10268,45 @@ function renderThumbLayers(){
              oninput="setThumbField('size', this.value)" style="width:100%">
       <label style="font-size:11px;color:var(--sub)">각도 ${L.rot}° — 화살표 방향을 여기서 돌려요</label>
       <input type="range" min="-180" max="180" value="${L.rot}"
+             oninput="setThumbField('rot', this.value)" style="width:100%">`;
+    return;
+  }
+  // 🏷 배지는 **글자를 품은 알약**이라 편집 항목이 글자·도형 어느 쪽과도 다르다:
+  //   문구(자동 줄바꿈 없음) + 알약색 + 글자색 + 왼쪽 동그라미 켜고 끄기.
+  if (L && L.kind === 'badge'){
+    document.getElementById('thumbEdit').innerHTML = `
+      <div style="font-size:12px;color:var(--sub);margin-bottom:6px">선택한 배지</div>
+      <input value="${esc(L.text || '')}" maxlength="20" placeholder="배지에 넣을 짧은 문구"
+             oninput="setThumbField('text', this.value)"
+             style="width:100%;padding:8px 10px;font-size:14px;margin-bottom:8px">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+        <label style="font-size:11px;color:var(--sub);flex:0 0 auto">알약색</label>
+        <input type="color" value="${L.color || '#FF2D2D'}"
+               oninput="setThumbField('color', this.value)">
+        ${['#FF2D2D','#FF8A00','#1FA84E','#7B2FF7','#111111','#FFFFFF']
+          .map(c => `<button class="tab" onclick="setThumbField('color','${c}')"
+             style="flex:0 0 auto;min-width:auto;width:19px;height:19px;padding:0;background:${c};
+                    border:1px solid #0006"></button>`).join('')}
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+        <label style="font-size:11px;color:var(--sub);flex:0 0 auto">글자색</label>
+        <input type="color" value="${L.text_color || '#FFFFFF'}"
+               oninput="setThumbField('text_color', this.value)">
+        <label style="font-size:11px;color:var(--sub);margin-left:8px">
+          <input type="checkbox" ${L.dot === false ? '' : 'checked'}
+                 onchange="setThumbField('dot', this.checked)"> 왼쪽 동그라미</label>
+      </div>
+      <div style="font-size:11px;color:var(--sub);margin-bottom:3px">위치 — 눌러서 옮기기 (드래그도 됩니다)</div>
+      <div style="display:flex;gap:6px;margin-bottom:8px">
+        <button class="tab" style="flex:1;min-width:auto;padding:8px 0" onclick="setThumbPos('top')">⬆ 위</button>
+        <button class="tab" style="flex:1;min-width:auto;padding:8px 0" onclick="setThumbPos('mid')">⏺ 가운데</button>
+        <button class="tab" style="flex:1;min-width:auto;padding:8px 0" onclick="setThumbPos('bot')">⬇ 아래</button>
+      </div>
+      <label style="font-size:11px;color:var(--sub)">크기</label>
+      <input type="range" min="2" max="14" step="0.5" value="${L.size}"
+             oninput="setThumbField('size', this.value)" style="width:100%">
+      <label style="font-size:11px;color:var(--sub)">각도 ${L.rot}°</label>
+      <input type="range" min="-30" max="30" value="${L.rot}"
              oninput="setThumbField('rot', this.value)" style="width:100%">`;
     return;
   }
