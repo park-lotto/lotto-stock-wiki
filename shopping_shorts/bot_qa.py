@@ -38,3 +38,46 @@ def trim(text):
     if len(t) <= MAX_REPLY:
         return t
     return t[:MAX_REPLY - 1].rstrip() + "…"
+
+
+#: 한 번에 AI에게 먹이는 자료 개수. 자료가 1,000개로 늘어도 이 수는 안 변한다.
+TOP_N = 5
+#: 이 점수 미만이면 "근거 없음"으로 본다 → 호출부가 AI를 안 부른다.
+MIN_SCORE = 2
+
+_WORD = re.compile(r"[0-9A-Za-z가-힣]+")
+
+
+def _words(text):
+    """2글자 이상 낱말만. 1글자는 아무 데나 걸려 잡음이 된다."""
+    return {w for w in _WORD.findall(text or "") if len(w) >= 2}
+
+
+def _score(question_words, item):
+    """겹치는 낱말 수. 질문·태그가 본문보다 무겁다(제목이 곧 주제다)."""
+    q = _words(item.get("question")) | _words(item.get("tags"))
+    a = _words(item.get("answer"))
+    return len(question_words & q) * 2 + len(question_words & a)
+
+
+def search(question, items, room):
+    """질문에 맞는 자료 TOP_N개. 근거가 약하면 **빈 리스트**를 준다.
+
+    ★빈 리스트가 이 설계의 핵심이다 — 호출부는 빈 손이면 AI를 아예 안 부르고
+      "확인해서 알려드릴게요"로 간다. 자료 밖을 지어내는 걸 여기서 막는다.
+    """
+    qw = _words(question)
+    if not qw:
+        return []
+    scored = []
+    for it in items or []:
+        # 방 전용 자료는 그 방에서만 보인다(체험단 자료가 문의방으로 새면 안 된다)
+        r = it.get("room") or "공통"
+        if r != "공통" and r != room:
+            continue
+        s = _score(qw, it)
+        if s >= MIN_SCORE:
+            # 그 방 전용 자료를 공통보다 앞세운다(체험단방에선 챌린지가 먼저)
+            scored.append((s + (1 if r == room else 0), it))
+    scored.sort(key=lambda x: -x[0])
+    return [it for _, it in scored[:TOP_N]]

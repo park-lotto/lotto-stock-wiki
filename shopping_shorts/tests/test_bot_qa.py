@@ -49,3 +49,42 @@ def test_long_answer_is_trimmed():
 
 def test_short_answer_is_untouched():
     assert bot_qa.trim("짧은 답") == "짧은 답"
+
+
+# ── 검색 ────────────────────────────────────────────────────────────
+QA = [
+    {"id": 1, "room": "공통", "question": "포인트는 어떻게 사나요",
+     "answer": "설정 화면에서 충전합니다.", "tags": "포인트 충전 결제"},
+    {"id": 2, "room": "공통", "question": "영상은 몇 개까지 만들 수 있나요",
+     "answer": "포인트가 있는 만큼 만듭니다.", "tags": "영상 제작 개수"},
+    {"id": 3, "room": "체험단", "question": "챌린지는 하루 몇 개 올리나요",
+     "answer": "하루 2개입니다.", "tags": "챌린지 제출 하루"},
+]
+
+
+def test_search_finds_relevant_item():
+    hits = bot_qa.search("포인트 충전하고 싶어요", QA, room="문의")
+    assert hits and hits[0]["id"] == 1
+
+
+def test_search_returns_empty_for_unrelated_question():
+    """★자료에 없으면 빈 손으로 온다 → 호출부가 AI를 안 부른다(지어내기 차단)."""
+    assert bot_qa.search("오늘 날씨 어때요", QA, room="문의") == []
+
+
+def test_search_limits_to_top_n():
+    """수백 개로 늘어도 3~5개만 먹인다 — 느려지지도 비싸지지도 않는다."""
+    many = [dict(QA[0], id=i) for i in range(100)]
+    assert len(bot_qa.search("포인트", many, room="문의")) <= bot_qa.TOP_N
+
+
+def test_challenge_room_prefers_challenge_material():
+    """체험단방에선 챌린지 자료를 먼저 본다."""
+    hits = bot_qa.search("하루 몇 개", QA, room="체험단")
+    assert hits[0]["id"] == 3
+
+
+def test_challenge_only_material_hidden_in_other_room():
+    """체험단 전용 자료가 문의방으로 새면 안 된다."""
+    hits = bot_qa.search("챌린지 하루 몇 개", QA, room="문의")
+    assert all(h["room"] != "체험단" for h in hits)
