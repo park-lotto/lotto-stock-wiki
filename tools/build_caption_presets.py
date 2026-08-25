@@ -45,14 +45,21 @@ def build(paths):
     rows = []
     for p in paths:
         rows += json.loads(pathlib.Path(p).read_text(encoding="utf-8"))
-    # 파일 → 채널 되찾기(목록 원장에서)
+    # 파일 → 채널 되찾기.
+    # ★유튜브는 파일명이 video_id라 바로 이어지는데, **인스타는 파일명이 해시**다
+    #   (다운로드가 붙인 이름). 그래서 매핑 원장(path 포함)이 꼭 있어야 한다 —
+    #   없으면 편마다 별개 채널이 돼 '채널당 3편 최빈값'이 통째로 죽는다
+    #   (2026-08-25 실측: 20계정이 47채널로 쪼개지고 전부 '동점'이 됐다).
     owner = {}
-    for name, key in (("yt60.json", "video_id"), ("ig60.json", "shortcode")):
-        f = pathlib.Path("C:/tmp") / name
-        if not f.exists():
-            continue
-        for r in json.loads(f.read_text(encoding="utf-8")):
-            owner[r[key]] = r.get("channel") or r.get("username")
+    ref = BASE / "docs" / "reference"
+    ymap = ref / "자막실측_유튜브_매핑.json"
+    if ymap.exists():
+        for r in json.loads(ymap.read_text(encoding="utf-8")):
+            owner[r["video_id"]] = r.get("channel")
+    imap = ref / "자막실측_인스타_매핑.json"
+    if imap.exists():
+        for r in json.loads(imap.read_text(encoding="utf-8")):
+            owner[pathlib.Path(r["path"]).stem] = r.get("username")
 
     by_ch = collections.defaultdict(list)
     for r in rows:
