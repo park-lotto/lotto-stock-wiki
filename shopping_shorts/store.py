@@ -2216,10 +2216,26 @@ class Store:
     #   계속 커졌다. 유튜브가 8,281건(4.47MB)까지 쌓여 /api/reference 한 번에 그걸 다
     #   내려보냈고(실측 974ms), 관리자 목록 응답에도 통째로 딸려갔다.
     #   랭킹은 최신순이라 뒤쪽 수천 건은 화면에서 볼 일이 없다.
-    LAST_RUN_MAX_ITEMS = 3000
+    #   ★2026-08-25 회귀 수정: 상한은 맞았지만 **자르는 기준이 틀렸다**.
+    #   "앞쪽이 최신"이라고 적어뒀는데 build_youtube_items는 정렬을 하지 않는다 —
+    #   수집한 순서(채널·키워드를 훑은 순서) 그대로다. 실측(08-25 목록):
+    #     앞 1500건 평균 176.0h vs 뒤 1500건 평균 162.7h → 앞쪽이 오히려 더 오래됐다.
+    #   그래서 8,580건 중 5,580건이 '뒤에서 수집됐다'는 이유만으로 잘렸고, 뒤쪽에서
+    #   훑는 채널은 통째로 사라졌다(사장님 제보: "어제까지 썰쇼핑 엄청 많았는데").
+    #   → 자르기 전에 **최신순으로 정렬**한다. 잘리는 건 오래된 뒤쪽뿐이다.
+    #   상한도 8000으로 올린다 — 어제(8,281건) 수준을 유지하면서 무한 증식만 막는다.
+    LAST_RUN_MAX_ITEMS = 8000
+
+    @staticmethod
+    def _newest_first(items):
+        """자르기 전 최신순 정렬. age_hours가 없는 항목은 뒤로 보낸다(정렬 불가).
+        ★정렬 없이 자르면 '수집 순서 뒤쪽' 채널이 통째로 사라진다(2026-08-25 회귀)."""
+        return sorted(items or [],
+                      key=lambda i: (i.get("age_hours") is None,
+                                     i.get("age_hours") if i.get("age_hours") is not None else 0))
 
     def save_last_run_platform(self, platform, items, collected_at):
-        items = list(items or [])[: self.LAST_RUN_MAX_ITEMS]   # 앞쪽이 최신이다
+        items = self._newest_first(items)[: self.LAST_RUN_MAX_ITEMS]
         with self._conn() as c:
             c.execute("INSERT OR REPLACE INTO settings(key, value) VALUES(?,?)",
                       (f"last_run::{platform}", json.dumps({"items": items, "collected_at": collected_at}, ensure_ascii=False)))
@@ -2580,7 +2596,7 @@ class Store:
         """마지막 수집 결과 전체(items + 시각)를 저장. 단일 행 덮어쓰기.
         + 수집분을 reel_history에 누적(shortcode upsert)해 48h 창에서 내려가도
         30일간 보존한다. 누적은 부가작업 — 실패해도 last_run 저장은 살린다."""
-        items = list(items or [])[: self.LAST_RUN_MAX_ITEMS]   # 플랫폼별 저장과 같은 상한
+        items = self._newest_first(items)[: self.LAST_RUN_MAX_ITEMS]   # 플랫폼별 저장과 같은 규칙
         with self._conn() as c:
             c.execute(
                 "INSERT INTO last_run(id, items_json, collected_at) VALUES(1, ?, ?) "
