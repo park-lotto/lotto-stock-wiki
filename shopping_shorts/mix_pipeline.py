@@ -5,6 +5,8 @@ run_render: 사용자가 확인 후 최종 ffmpeg 렌더 → done.
 각 단계에서 mix_jobs.status를 갱신하고, 예외는 status='failed'+error로 잡는다.
 """
 import hashlib
+import os
+import json
 import logging
 import re
 import subprocess
@@ -1594,6 +1596,144 @@ def _clean_one(item, key, work):
     return vid, clean_path, region
 
 
+# ── 소스 이어붙여 1콜로 청소 (2026-08-25 사장님 지시) ─────────────────────
+# 왜: 자막제거는 **건당 50크레딧**이라(pricing.py 실측) 소스마다 부르면 소스 개수배로
+#     나간다. 실측 사고 — 고객 Plus 플랜 월 1,000크레딧 = 20건인데, 소스 4개짜리
+#     영상 하나에 4건(200크레딧)이 나가 **영상 5개**만에 바닥났다. 화면 안내는
+#     "영상 1편당 5P"인데 실제로는 소스 개수×5P를 깎고 있었다(안내와 구현 불일치).
+#     소스를 하나로 붙여 1콜로 보내면 안내대로 영상 1편당 1건이 된다.
+#
+# 어떻게: 소스마다 해상도·fps가 제각각이라(실측: 720x1280·1080x1920·1440x2560,
+#     24·30·60fps) 그냥 못 붙인다. **가장 큰 해상도**에 맞춰 정규화한 뒤 concat한다
+#     — 작은 걸 키우는 방향이라 원본 정보 손실이 없다. 비율은 전부 9:16이라
+#     레터박스가 필요 없다(실측).
+#
+# 안전장치: 붙이기·자르기 중 무엇이든 실패하면 **기존 소스별 방식으로 되돌아간다**.
+#     새 경로가 고장나도 고객 작업은 그대로 된다(실패 대신 비싸게라도 완성).
+
+# VMake에 한 번에 보낼 최대 길이(초). 넘으면 여러 묶음으로 나눠 붙인다.
+# 처리 시간이 길이에 비례해 늘어나므로 무한정 붙이지 않는다.
+_JOIN_MAX_SEC = float(os.environ.get("SHORTS_CLEAN_JOIN_MAX_SEC", "240"))
+# 이어붙이기 자체를 끌 수 있는 스위치 — 문제가 생기면 배포 없이 되돌린다.
+_JOIN_ENABLED = os.environ.get("SHORTS_CLEAN_JOIN", "1") != "0"
+
+
+def _probe_wh_dur(path):
+    """(width, height, duration) — ffprobe 1회."""
+    out = subprocess.run(
+        ["ffprobe", "-v", "error", "-select_streams", "v:0",
+         "-show_entries", "stream=width,height",
+         "-show_entries", "format=duration", "-of", "json", str(path)],
+        capture_output=True, text=True, check=True).stdout
+    j = json.loads(out)
+    st = j["streams"][0]
+    return int(st["width"]), int(st["height"]), float(j["format"]["duration"])
+
+
+def _join_sources(items, work):
+    """[(vid, src)] → (합본경로, [(vid, 시작초, 길이초)]). 실패하면 예외.
+
+    ★규격을 통일하지 않으면 concat이 깨진다 — 해상도·fps·SAR을 맞춘다.
+      해상도는 **최대값** 기준(업스케일 방향이라 원본 손실 없음).
+    """
+    work = Path(work)
+    info = [(vid, src) + _probe_wh_dur(src) for vid, src in items]
+    W = max(i[2] for i in info)
+    H = max(i[3] for i in info)
+    parts, spans, t = [], [], 0.0
+    for idx, (vid, src, _w, _h, dur) in enumerate(info):
+        norm = str(work / f"join_norm_{idx}.mp4")
+        subprocess.run(
+            ["ffmpeg", "-y", "-v", "error", "-i", str(src),
+             "-vf", f"scale={W}:{H}:flags=lanczos,setsar=1,fps=30",
+             "-c:v", "libx264", "-preset", "veryfast", "-crf", "18",
+             "-pix_fmt", "yuv420p",
+             "-c:a", "aac", "-ar", "48000", "-ac", "2", norm], check=True)
+        # ★길이는 정규화 **후** 다시 잰다 — fps 변환으로 소수점이 밀리면
+        #   뒤 소스들의 시작점이 통째로 어긋난다(짝은 함께 정한다).
+        _w2, _h2, dur2 = _probe_wh_dur(norm)
+        parts.append(norm)
+        spans.append((vid, t, dur2))
+        t += dur2
+    lst = work / "join_list.txt"
+    lst.write_text("".join("file " + chr(39) + x + chr(39) + chr(10) for x in parts), encoding="utf-8")
+    joined = str(work / "join_all.mp4")
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "concat", "-safe", "0",
+                    "-i", str(lst), "-c", "copy", joined], check=True)
+    return joined, spans
+
+
+def _split_cleaned(cleaned, spans, work):
+    """청소된 합본을 구간별로 잘라 {vid: 경로}. 잘라낸 파일이 비면 예외."""
+    work = Path(work)
+    out = {}
+    for vid, start, dur in spans:
+        dst = str(work / f"clean_src_{vid}.mp4")
+        subprocess.run(
+            ["ffmpeg", "-y", "-v", "error", "-ss", f"{start:.3f}", "-i", str(cleaned),
+             "-t", f"{dur:.3f}", "-c:v", "libx264", "-preset", "veryfast", "-crf", "18",
+             "-pix_fmt", "yuv420p", "-c:a", "aac", "-ar", "48000", "-ac", "2", dst],
+            check=True)
+        if not Path(dst).exists() or Path(dst).stat().st_size < 1024:
+            raise RuntimeError(f"합본 분할 결과가 비었습니다: {vid}")
+        out[vid] = dst
+    return out
+
+
+def _join_batches(items, work):
+    """길이 상한에 맞춰 [(vid,src)]를 묶음들로 가른다. 각 묶음이 VMake 1콜이다."""
+    batches, cur, cur_sec = [], [], 0.0
+    for vid, src in items:
+        try:
+            _w, _h, dur = _probe_wh_dur(src)
+        except Exception:
+            dur = 0.0
+        if cur and cur_sec + dur > _JOIN_MAX_SEC:
+            batches.append(cur)
+            cur, cur_sec = [], 0.0
+        cur.append((vid, src))
+        cur_sec += dur
+    if cur:
+        batches.append(cur)
+    return batches
+
+
+def _clean_joined(items, key, work, tag=""):
+    """소스 여러 편을 붙여 **VMake 1콜**로 청소 → {vid: 클린경로}, {vid: region}.
+
+    붙이기·청소·자르기 중 어디서 실패하든 예외를 올린다 — 호출부가 옛 방식으로 되돌린다.
+    """
+    sub = Path(work) / f"join{tag}"
+    sub.mkdir(parents=True, exist_ok=True)
+    joined, spans = _join_sources(items, sub)
+    out = str(sub / "joined_clean.mp4")
+    last = None
+    for attempt in range(_CLEAN_RETRY + 1):
+        try:
+            cleaned = remove_subtitles(joined, key, out_path=out)
+            break
+        except Exception as e:                      # noqa: BLE001 — 재시도 후 상위로
+            last = e
+            if attempt >= _CLEAN_RETRY:
+                print(f"[clean] 합본 최종 실패({attempt + 1}회): {e}", file=sys.stderr)
+                raise
+            print(f"[clean] 합본 실패 — {_CLEAN_RETRY_WAIT}초 뒤 재시도"
+                  f"({attempt + 1}/{_CLEAN_RETRY}): {e}", file=sys.stderr)
+            time.sleep(_CLEAN_RETRY_WAIT)
+    paths = _split_cleaned(cleaned, spans, work)
+    regions = {}
+    src_map = dict(items)
+    for vid, dst in paths.items():
+        # region은 원본↔클린을 소스별로 대조해 구한다(합본이 아니라 조각 기준).
+        try:
+            r = sub_region.detect_erased_region(src_map[vid], dst, work)
+        except Exception:                            # noqa: BLE001 — best-effort
+            r = None
+        if r:
+            regions[vid] = r
+    return paths, regions
+
+
 def _ensure_clean_sources(store, job, job_id, work, key, customer_id=0):
     """clean_sources 맵을 채워 반환. 이미 있고 파일이 존재하면 스킵(재과금 0).
     각 스레드는 remove_subtitles만 하고 경로를 반환 → DB 저장은 취합 후 메인에서 1회(경합 없음).
@@ -1607,18 +1747,41 @@ def _ensure_clean_sources(store, job, job_id, work, key, customer_id=0):
     regions = dict((job.get("clean_regions") or {}).get("sources") or {})
     todo = [(vid, src) for vid, src in source_map.items()
             if not (cached.get(vid) and Path(cached[vid]).exists())]
-    # ★todo가 확정된 뒤에 과금한다 — 캐시된 소스는 VMake를 안 타니 돈도 안 나간다.
-    #   라우트에선 소스 개수를 모르므로(큐에 넣기만 한다) 여기가 유일한 계량 지점이다.
-    charged = _charge_clean(store, customer_id, len(todo))
+    # ★과금은 **VMake 콜 수**로 한다 — 소스 개수가 아니다(2026-08-25 수정).
+    #   예전엔 len(todo)로 깎아서, 소스 4개짜리 영상 하나에 20P가 나갔다.
+    #   화면 안내는 "영상 1편당 5P"인데 실제로는 4배를 깎던 불일치(실사고).
+    #   이제 소스를 붙여 1콜로 보내므로 콜 수 = 묶음 수이고, 보통 1이다.
+    batches = _join_batches(todo, work) if (_JOIN_ENABLED and len(todo) > 1) else [[t] for t in todo]
+    charged = _charge_clean(store, customer_id, len(batches))
     try:
         if todo:
-            with ThreadPoolExecutor(max_workers=len(todo)) as ex:
-                for vid, out, region in ex.map(lambda t: _clean_one(t, key, work), todo):
-                    cached[vid] = out
-                    if region:
-                        regions[vid] = region
-                    else:
-                        regions.pop(vid, None)   # 이 소스엔 지속 변화 없음(원본에 자막 없었음)
+            done = {}
+            for bi, batch in enumerate(batches):
+                if len(batch) > 1:
+                    try:
+                        paths, regs = _clean_joined(batch, key, work, tag=str(bi))
+                        done.update(paths)
+                        for vid in dict(batch):
+                            if vid in regs:
+                                regions[vid] = regs[vid]
+                            else:
+                                regions.pop(vid, None)
+                        continue
+                    except Exception as e:      # noqa: BLE001
+                        # ★붙이기가 깨져도 고객 작업은 살린다 — 옛 방식(소스별)으로 되돌린다.
+                        #   콜이 늘어 비용은 더 들지만, 실패보다 낫다. 로그로 남겨 원인을 본다.
+                        print("[clean] 합본 실패 → 소스별로 되돌림: %s" % e, file=sys.stderr)
+                        extra = len(batch) - 1      # 이미 1콜분은 깎았다 → 나머지만 추가
+                        if extra > 0:
+                            charged += _charge_clean(store, customer_id, extra)
+                with ThreadPoolExecutor(max_workers=len(batch)) as ex:
+                    for vid, out, region in ex.map(lambda t: _clean_one(t, key, work), batch):
+                        done[vid] = out
+                        if region:
+                            regions[vid] = region
+                        else:
+                            regions.pop(vid, None)  # 이 소스엔 지속 변화 없음(원본에 자막 없었음)
+            cached.update(done)
             # 넓고 자주 쓰인 위치를 1번으로 — 소스마다 자막 위치가 달라도 대표 한 자리를 고른다.
             primary = sub_region.pick_primary(list(regions.values()))
             store.update_mix_job(job_id, clean_sources=cached,
