@@ -5168,15 +5168,27 @@ def enforce_scripted_narration(beats, given_script):
     - 교정: 창작 비트를 **아직 화면에 안 쓰인 대본 문장**으로 순서대로 갈아끼운다.
       남는 창작 비트는 그대로 둔다(지우면 화면 길이가 무너진다) — 대신 표시를 남긴다.
     반환: (고친 beats, 바꾼 개수)
+
+    ★`narration_manual`이 붙은 비트는 건드리지 않는다 (2026-08-25 고객 오류신고 cid 110).
+      이 검사는 "**EDL이** 지어냈나"를 보는 것인데, 3단계에서 **사람이 직접 고친** 문장도
+      given_script(1단계 원본)에 없으므로 똑같이 창작으로 몰려 매번 되돌려졌다.
+      실측: 저장 API는 {"ok":true,"saved":true}를 주는데 DB의 narration은 원본 그대로였다.
+      (고객 작업 253042206536 beat5도 tts_ver만 1로 오르고 파일명 해시는 그대로였다
+       = 글자는 안 바뀐 채 음성만 재합성)
+      표식은 사람이 고치는 그 자리(app의 3단계 저장 API)에서만 달린다 — AI 경로는 못 단다.
     """
     beats = beats or []
     if not (given_script or "").strip() or not beats:
         return beats, 0
     full = _narr_key(given_script)
     bad = [i for i, b in enumerate(beats)
-           if _narr_key(b.get("narration")) and _narr_key(b.get("narration")) not in full]
+           if not b.get("narration_manual")
+           and _narr_key(b.get("narration")) and _narr_key(b.get("narration")) not in full]
     if not bad:
         return beats, 0
+    # ⚠️`used`는 '이미 화면에 쓰인 대본 문장'이라 **되돌릴 재료에서 뺄 것**을 고른다.
+    #   사람이 고친 비트는 bad가 아니므로 자연히 여기 들어오는데, 그 문장은 대본에 없어
+    #   어느 대본 문장과도 안 겹친다 → missing 계산에 영향을 주지 않는다(의도한 동작).
     used = "".join(_narr_key(b.get("narration")) for i, b in enumerate(beats) if i not in bad)
     missing = [s for s in script_sentences(given_script)
                if _narr_key(s) and _narr_key(s)[:12] not in used]
@@ -5228,14 +5240,27 @@ def enforce_script_order(beats, given_script):
     if not sents:
         return beats, 0
 
-    n = len(beats)
+    # ★사람이 3단계에서 직접 고친 칸은 재배분 대상에서 **통째로 뺀다**
+    #   (2026-08-25 고객신고 cid 110). 이 함수는 given_script 문장만으로 칸을 다시 채우므로,
+    #   대본에 없는 '사람이 고친 문장'은 그냥 두면 덮여 사라진다.
+    #   ⚠️단순히 적용 단계에서 건너뛰기만 하면 **그 칸 몫의 대본 문장이 버려진다**
+    #     (실측: 3칸 중 가운데를 고치니 '둘째 문장'이 통째로 사라졌다). 이 함수의 규약은
+    #     '칸보다 문장이 많아도 버리지 않는다'이므로, 배분 계산 자체에서 빼서 남은 칸들이
+    #     그 몫까지 나눠 갖게 한다.
+    targets = [i for i, b in enumerate(beats) if not b.get("narration_manual")]
+    if not targets:
+        return beats, 0                   # 전부 사람이 고쳤다 — 손댈 게 없다
+
     # 이미 대본 순서를 지키고 있으면 손대지 않는다(멀쩡한 걸 흔들지 않는다).
-    joined = _narr_key("".join(b.get("narration") or "" for b in beats))
+    # 비교는 **재배분 대상 칸만** 이어붙여 본다 — 사람이 고친 칸의 문장은 대본에 없어서
+    # 통째로 이으면 절대 안 맞고, 그러면 멀쩡한 계획도 매번 흔들린다.
+    joined = _narr_key("".join(beats[i].get("narration") or "" for i in targets))
     if joined == _narr_key(given_script):
         return beats, 0
 
+    n = len(targets)
     # 칸 길이 비례로 문장을 나눈다 — 긴 칸에 더 많이. 길이 정보가 없으면 균등.
-    secs = [float(b.get("target_seconds") or 0) or 1.0 for b in beats]
+    secs = [float(beats[i].get("target_seconds") or 0) or 1.0 for i in targets]
     total_sec = sum(secs) or float(n)
     total_len = sum(len(x) for x in sents) or 1
     buckets, cur, budget_carry = [], [], 0.0
@@ -5260,7 +5285,11 @@ def enforce_script_order(beats, given_script):
         buckets[-1].extend(sents[si:])
 
     fixed = 0
-    for b, chunk in zip(beats, buckets):
+    # buckets는 **재배분 대상 칸(targets)** 순서로 만들어졌다 — 원래 인덱스로 되끼운다.
+    # (되돌림 enforce_scripted_narration만 막았을 때 증상이 그대로였던 이유가 여기다:
+    #  저장 출구의 관문은 **둘**이고, 양쪽 다 표식을 존중해야 한다.)
+    for bi, chunk in zip(targets, buckets):
+        b = beats[bi]
         text = " ".join(chunk).strip()
         if not text:
             continue                      # 채울 게 없으면 옛 대사를 지우지 않는다
