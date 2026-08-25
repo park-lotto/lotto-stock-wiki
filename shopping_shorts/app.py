@@ -8427,6 +8427,7 @@ async def _api_signup(req: Request):
             gender=gender, age_band=age_band)   # 여기서 다 받으니 /welcome으로 또 안 끌려간다
     except ValueError:
         return RedirectResponse("/signup?e=" + urllib.parse.quote("이미 존재하는 아이디입니다"), status_code=303)
+    _signup_topup(customer_id)                               # ★가입 즉시 자동체험 = 연료도 같이(없으면 402)
     _notify_new_signup(name=name, username=u, phone=phone)   # 사장님 텔레 알림(무키면 no-op)
     r = RedirectResponse("/", status_code=303)
     _set_session_cookie(r, customer_id)
@@ -8506,6 +8507,7 @@ def _google_callback(request: Request, code: str = "", state: str = "", error: s
     if cid is None:
         return RedirectResponse("/login?e=" + urllib.parse.quote("계정 생성 실패"), status_code=303)
     if created:                                              # 신규 구글 가입만 알림(재로그인은 조용히)
+        _signup_topup(cid)                                   # ★가입 즉시 자동체험 = 연료도 같이(없으면 402)
         _notify_new_signup(username="구글", email=ident.get("email"))
     r = RedirectResponse("/", status_code=303)
     _set_session_cookie(r, cid)
@@ -9479,6 +9481,21 @@ def _trial_topup(store, customer_id):
       막힌다 — 화면엔 '체험이 끝났어요'로 보여 오진을 부른다(2026-08-20 실사고)."""
     return _grant_topup(store, customer_id, "trial_grant_points",
                         _TRIAL_GRANT_P_DEFAULT, "trial_grant")
+
+
+def _signup_topup(customer_id):
+    """가입 즉시 자동체험(create_customer의 trial_ends_at)에도 **포인트를 같이 준다**.
+
+    ★왜: 등급(체험창)만 열려도 잔액 0이면 유료 op가 _charge_or_402에서 402로 막힌다.
+      관리자 '체험' 버튼(set_plan)에는 _trial_topup이 있었는데 **자동 가입 경로에만
+      빠져 있었다**(실측 2026-08-25: 체험중 계정들이 전부 0P). 기준선은 한 곳
+      (_trial_topup)에서만 정한다 — 두 벌로 적으면 언젠가 어긋난다(0순위-B)."""
+    try:
+        return _trial_topup(Store(DB_PATH), int(customer_id))
+    except Exception as e:                       # 지급 실패로 가입 자체를 막지 않는다
+        import sys as _s
+        print(f"[signup] topup 실패 cid={customer_id}: {e}", file=_s.stderr)
+        return 0
 
 
 @app.post("/api/admin/set_plan")
