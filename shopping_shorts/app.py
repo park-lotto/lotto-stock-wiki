@@ -1824,6 +1824,95 @@ def api_refs_crawl_status(request: Request, days: int = 7):
     return {"ok": True, "days": days, "runs": runs}
 
 
+@app.get("/api/refs/ig_accounts")
+def api_refs_ig_accounts(request: Request, check: int = 0):
+    """인스타 수집 계정 현황(2026-08-25) — 몇 개 쓰고 있고, 살아 있는가.
+
+    풀(archive/reference)별로 세션 파일을 세고, check=1이면 **인스타에 물어서**
+    생사를 판정한다(session_alive: 쿠키 존재로 보면 죽은 걸 산 것으로 본다 —
+    2026-08-24 실사고). 기본은 세지만 하고 묻지 않는다(계정당 HTTP 1회라 느리다).
+    """
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import channel_archive as _ca
+    pools = []
+    for pool in (_ca.POOL_REFERENCE, _ca.POOL_ARCHIVE):
+        slots = _ca.session_slots(pool)
+        accounts = []
+        for i, path in enumerate(slots):
+            row = {"slot": i, "file": os.path.basename(path),
+                   "proxy": "", "alive": None}
+            try:
+                # ★프록시 원문에는 계정·비밀번호가 들어 있다 — 출구 이름(kr-11)만 남긴다.
+                raw = _ca.slot_proxy(i, pool=pool) or ""
+                m = re.search(r"//([^:]+):", raw)
+                row["proxy"] = m.group(1) if m else ""
+            except Exception:                     # noqa: BLE001 — 표시용
+                pass
+            if check:
+                try:
+                    row["alive"] = bool(_ca.session_alive(path))
+                except Exception:                 # noqa: BLE001 — 판정 보류
+                    row["alive"] = None
+            accounts.append(row)
+        alive = [a for a in accounts if a["alive"] is True]
+        pools.append({"pool": pool, "total": len(accounts),
+                      "alive": len(alive) if check else None,
+                      "accounts": accounts})
+    return {"ok": True, "checked": bool(check), "pools": pools}
+
+
+@app.get("/api/refs/api_usage")
+def api_refs_api_usage(request: Request, days: int = 7):
+    """API 키 현황·소모량(2026-08-25) — 키가 몇 개고 오늘 얼마나 탔는지.
+
+    키 개수는 config 풀에서, 오늘 소진된 키는 comment_gen의 인덱스 상태파일에서,
+    실제 소모(호출·토큰·원화)는 usage_meter가 쌓는 gemini_usage에서 가져온다.
+    '더 채워야 하나'는 화면에서 소진율로 판단할 수 있게 숫자만 정직하게 준다.
+    """
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    days = max(1, min(int(days or 7), 30))
+    from shopping_shorts import config as _cfg
+    keys = {"gemini_total": len(_cfg.SHORTS_GEMINI_KEYS),
+            "gemini_owner": len(_cfg._OWNER_GEMINI_KEYS),
+            "youtube_total": len(_cfg.YOUTUBE_API_KEYS),
+            "exhausted_today": 0, "live": 0}
+    keys["gemini_member"] = max(0, keys["gemini_total"] - keys["gemini_owner"])
+    try:
+        from shopping_shorts import comment_gen as _cg
+        exhausted = set(_cg._load_state().get("exhausted") or [])
+        keys["exhausted_today"] = len([i for i in exhausted if i < keys["gemini_total"]])
+        keys["live"] = keys["gemini_total"] - keys["exhausted_today"]
+    except Exception:                             # noqa: BLE001 — 상태파일 없으면 0
+        keys["live"] = keys["gemini_total"]
+
+    daily, ops = [], []
+    try:
+        import sqlite3
+        from datetime import datetime, timezone, timedelta
+        since = (datetime.now(timezone.utc) - timedelta(days=days)).strftime("%Y-%m-%d")
+        conn = sqlite3.connect(DB_PATH)
+        try:
+            for day, calls, tin, tout, krw in conn.execute(
+                    "SELECT day, COUNT(*), SUM(in_tokens), SUM(out_tokens), SUM(krw) "
+                    "FROM gemini_usage WHERE day>=? GROUP BY day ORDER BY day DESC", (since,)):
+                daily.append({"day": day, "calls": calls, "in_tokens": tin or 0,
+                              "out_tokens": tout or 0, "krw": round(krw or 0, 1)})
+            today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+            for op, calls, krw in conn.execute(
+                    "SELECT COALESCE(op,'(미지정)'), COUNT(*), SUM(krw) FROM gemini_usage "
+                    "WHERE day=? GROUP BY op ORDER BY COUNT(*) DESC LIMIT 12", (today,)):
+                ops.append({"op": op, "calls": calls, "krw": round(krw or 0, 1)})
+        finally:
+            conn.close()
+    except Exception as e:                        # noqa: BLE001 — 표가 없을 수도 있다
+        return {"ok": True, "keys": keys, "daily": [], "ops": [], "note": str(e)}
+    return {"ok": True, "keys": keys, "daily": daily, "ops": ops}
+
+
 @app.post("/api/refs/category")
 def api_refs_set_category(request: Request, username: str, category: str = ""):
     """채널 카테고리 지정/해제(관리자 전용, 2026-07-31).
