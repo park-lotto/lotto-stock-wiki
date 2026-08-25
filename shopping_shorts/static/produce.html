@@ -2740,6 +2740,8 @@ async function loadHeadcopySuggest(force){
     }
     HC_COPY_LOADED_HASH=h;
     window._hcCopies=list;
+    // 후보가 막 도착한 순간에도 번호가 보이게 한다 — 이 전엔 후보가 0개라 빈칸이었다.
+    if(typeof frHcLabel==='function') frHcLabel();
     // ★썸네일 제목 추천(suggestThumbTitles)과 **같은 모양**으로 보여준다(2026-08-24 사장님
     //   "헤드카피도 템플릿 안에 들어가는 거니 흡수해서"). 두 줄은 두 줄로, 밑에 왜 먹히는지.
     //   줄바꿈을 그대로 두면 카드에서 한 줄로 붙어 보여 실제 결과와 달라진다.
@@ -3020,7 +3022,9 @@ function frPick(preset){
     //   된다(2026-08-25). 제미니가 실측 때 이미 읽어둔 값인데 소비처가 0곳이었다.
     if(meta.caption) applyCaptionSet(meta.caption);
   }
-  renderFramePresets(); renderTemplateCards(); renderTemplatePreview(); saveHeadcopy();
+  renderFramePresets(); renderTemplateCards(); renderTemplatePreview();
+  frHcLabel();          // 틀을 고른 순간에도 "지금 몇 번 문구인지" 보이게 한다
+  saveHeadcopy();
 }
 function frUpdate(){
   const f=STATE.deco&&STATE.deco.template&&STATE.deco.template.frame; if(!f) return;
@@ -3062,6 +3066,7 @@ function frUpdate(){
   if(g('frTtXV')) g('frTtXV').textContent=f.title_x+'%';
   if(g('frBarVal')) g('frBarVal').textContent=f.bar_h+'px';
   if(g('frBottomVal')) g('frBottomVal').textContent=f.bottom_h+'px';
+  frHcLabel();          // 제목칸을 직접 고치면 번호도 따라 바뀐다(안 그러면 거짓말이 된다)
   renderTemplatePreview(); saveHeadcopy();
 }
 function frBar(id, delta){
@@ -3296,6 +3301,21 @@ function frFromHeadcopy(){
 function _hcCopyList(){ return (window._hcCopies||[]).map(c=>(c&&c.text||'').trim()).filter(Boolean); }
 function _hcFirstCopy(){ return _hcCopyList()[0]||''; }
 let FR_HC_IDX=0;
+function frHcLabel(){
+  // 지금 제목칸이 몇 번 문구인지 표시한다(2026-08-26 사장님 "네" — 템플릿을 눌러
+  // 1번이 자동으로 들어갔을 때도 번호가 보여야 한다).
+  // ★번호를 정하는 곳은 여기 하나다(0순위-B). frPick·frSwapHeadcopy가 각자
+  //   문자열을 만들면 언젠가 서로 다른 말을 한다.
+  // ★상태를 만들지 않고 **제목칸을 읽어서** 매번 다시 센다 — 사장님이 칸을 직접
+  //   고치면 FR_HC_IDX는 옛 번호로 남아 거짓말이 된다.
+  const msg=document.getElementById('frHcMsg'); if(!msg) return;
+  const t=document.getElementById('frTitle');
+  const list=_hcCopyList();
+  if(!list.length){ msg.textContent=''; return; }   // 후보가 없으면 조용히(안내는 누를 때만)
+  const at=list.indexOf(((t||{}).value||'').trim());
+  msg.textContent = at>=0 ? `문구 ${at+1} / ${list.length}`
+                          : `직접 쓴 문구 · 후보 ${list.length}개`;
+}
 function frSwapHeadcopy(){
   // 제목칸의 문구를 다음 후보로 돌린다(2026-08-25 사장님 "교체는 헤드카피 바꾸기
   // 버튼을 만들어줘 템플릿쪽에서 하게"). 후보가 없으면 왜 없는지 알려준다.
@@ -3311,7 +3331,7 @@ function frSwapHeadcopy(){
   const at=list.indexOf(cur);
   FR_HC_IDX = at>=0 ? (at+1)%list.length : 0;
   t.value=list[FR_HC_IDX];
-  if(msg) msg.textContent=`문구 ${FR_HC_IDX+1} / ${list.length}`;
+  frHcLabel();          // 번호 문구를 만드는 곳은 frHcLabel 하나(0순위-B)
   frUpdate();
 }
 function renderTemplatePreview(){
