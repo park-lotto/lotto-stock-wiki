@@ -2173,6 +2173,30 @@ class Store:
                 "VALUES(?,?,?,?,?)",
                 [(platform, run_date, r["shortcode"], r.get("base"), r.get("delta")) for r in rows])
 
+    def crawl_runs(self, days=7):
+        """크롤 회차 목록(관리페이지 '크롤현황' 탭, 2026-08-25).
+
+        인스타는 snapshots, 나머지 플랫폼은 platform_snapshots에 회차가 쌓인다.
+        두 테이블을 같은 모양으로 합쳐 **최근 회차부터** 돌려준다.
+        run_date는 UTC 문자열('YYYY-MM-DD HH:MM')이다 — KST 변환은 화면에서 한다.
+        (과거 일부 발굴 회차는 로컬시각으로 저장돼 있다. 2026-08-25에 UTC로 통일했다.)
+        """
+        cutoff = (datetime.now(timezone.utc) - timedelta(days=int(days))).strftime("%Y-%m-%d %H:%M")
+        runs = []
+        with self._conn() as c:
+            for run_date, cnt, accounts in c.execute(
+                    "SELECT run_date, COUNT(*), COUNT(DISTINCT username) FROM snapshots "
+                    "WHERE run_date>=? GROUP BY run_date", (cutoff,)):
+                runs.append({"platform": "instagram", "at": run_date,
+                             "count": cnt, "accounts": accounts})
+            for platform, run_date, cnt in c.execute(
+                    "SELECT platform, run_date, COUNT(*) FROM platform_snapshots "
+                    "WHERE run_date>=? GROUP BY platform, run_date", (cutoff,)):
+                runs.append({"platform": platform, "at": run_date,
+                             "count": cnt, "accounts": 0})
+        runs.sort(key=lambda r: r["at"], reverse=True)
+        return runs
+
     def prev_base_platform(self, platform, shortcode):
         with self._conn() as c:
             row = c.execute("SELECT base FROM platform_snapshots WHERE platform=? AND shortcode=? "
