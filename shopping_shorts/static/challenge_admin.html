@@ -63,6 +63,29 @@
   .card .m{font-size:11px;color:var(--sub);padding:0 9px 9px;margin-top:auto}
   .who-tag{font-size:11px;color:var(--accent);padding:8px 9px 0;font-weight:600}
   .empty{color:var(--sub);padding:40px 0;text-align:center;font-size:14px}
+  .btn{padding:8px 14px;border:1px solid var(--line);border-radius:8px;cursor:pointer;
+       background:var(--inset);color:var(--txt);font-size:13px;font-weight:600}
+  .btn:hover{border-color:var(--accent)}
+  #mgrid td,#mgrid th{padding:7px 10px;border-bottom:1px solid var(--line);
+       white-space:nowrap;text-align:left}
+  #mgrid th{position:sticky;top:0;background:var(--panel);z-index:2;font-size:12px;color:var(--sub)}
+  .chal-on{color:var(--accent);font-weight:700}
+  /* 재생 모달 — 나가지 않고 100명 영상을 훑는다 */
+  .pl{display:none;position:fixed;inset:0;background:rgba(0,0,0,.86);z-index:99;
+      align-items:center;justify-content:center}
+  .pl.on{display:flex}
+  .plbox{position:relative;width:min(420px,94vw)}
+  .plframe{aspect-ratio:9/16;max-height:82vh;background:#000;border-radius:12px;
+           overflow:hidden}
+  .plframe iframe{width:100%;height:100%;border:0}
+  .plinfo{color:#fff;font-size:13px;padding:10px 2px;line-height:1.5}
+  .plinfo a{color:var(--accent)}
+  .plclose{position:absolute;top:-38px;right:0;background:none;border:0;color:#fff;
+           font-size:24px;cursor:pointer}
+  .plnav{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.5);
+         border:0;color:#fff;font-size:34px;cursor:pointer;padding:14px 10px;
+         border-radius:8px;line-height:1}
+  .plnav:hover{background:rgba(0,0,0,.8)}
 </style>
 <div class="main">
 <div class="wrap">
@@ -70,6 +93,7 @@
   <div class="tabs">
     <button class="tab on" data-p="board">달성현황</button>
     <button class="tab" data-p="videos">영상</button>
+    <button class="tab" data-p="members">참가자</button>
   </div>
 
   <div class="pane on" id="p-board">
@@ -94,8 +118,32 @@
     </div>
     <div id="cards"><div class="empty">불러오는 중…</div></div>
   </div>
+
+  <div class="pane" id="p-members">
+    <div class="bar">
+      <input id="msearch" placeholder="이름·이메일 검색" style="flex:1;min-width:180px;
+        padding:8px 10px;border:1px solid var(--line);border-radius:8px;
+        background:var(--inset);color:var(--txt);font-size:13px">
+      <label style="font-size:13px;display:flex;align-items:center;gap:5px;cursor:pointer">
+        <input type="checkbox" id="monly"> 참가자만</label>
+      <button id="mAdd" class="btn">✅ 선택 참가</button>
+      <button id="mDel" class="btn">해제</button>
+      <span id="mcount"></span>
+    </div>
+    <div class="gridwrap" style="max-height:70vh">
+      <table id="mgrid"></table>
+    </div>
+  </div>
 </div>
 </div>
+
+<div id="player" class="pl"><div class="plbox">
+  <button class="plclose" id="plX">✕</button>
+  <button class="plnav" id="plPrev" style="left:8px">‹</button>
+  <button class="plnav" id="plNext" style="right:8px">›</button>
+  <div class="plframe" id="plFrame"></div>
+  <div class="plinfo" id="plInfo"></div>
+</div></div>
 <script src="/sidebar.js?v=2"></script>
 <script>
 const $ = s => document.querySelector(s);
@@ -164,7 +212,7 @@ async function loadBoard() {
   }
 }
 
-function cardHtml(it) {
+function cardHtml(it, idx) {
   // ★썸네일 프록시 파라미터는 ?url= 이다(app.py:5579). ?u=로 쓰면 422.
   const th = it.thumb
     ? `<img class="th" src="/api/thumb?url=${encodeURIComponent(it.thumb)}" alt="" loading="lazy">`
@@ -179,12 +227,14 @@ function cardHtml(it) {
   } else {
     meta = '수집 중';
   }
-  return `<a class="card" href="${esc(it.url)}" target="_blank" rel="noopener">
-    ${th}
+  // ★임베드가 있으면 화면 안에서 재생(탭이 100개 열리지 않게), 없으면 원래대로 링크.
+  const inner = `${th}
     <div class="who-tag">${esc(it.member_name || '')}</div>
     <div class="t">${esc(it.title || it.url)}</div>
-    <div class="m">${esc(it.submit_day)} · ${esc(meta)}</div>
-  </a>`;
+    <div class="m">${esc(it.submit_day)} · ${esc(meta)}</div>`;
+  return it.embed
+    ? `<div class="card" data-i="${idx}" style="cursor:pointer">${inner}</div>`
+    : `<a class="card" href="${esc(it.url)}" target="_blank" rel="noopener">${inner}</a>`;
 }
 
 async function loadVideos() {
@@ -203,9 +253,12 @@ async function loadVideos() {
     const d = await r.json();
     const items = d.items || [];
     $('#vcount').textContent = `${items.length}개`;
+    VIDS = items;   // 모달이 ←→로 넘어다니려면 목록을 들고 있어야 한다
     $('#cards').innerHTML = items.length
       ? '<div class="cards">' + items.map(cardHtml).join('') + '</div>'
       : '<div class="empty">제출된 영상이 없어요</div>';
+    $('#cards').querySelectorAll('.card[data-i]').forEach(el =>
+      el.addEventListener('click', () => openPlayer(+el.dataset.i)));
   } catch (e) {
     $('#cards').innerHTML = '<div class="empty">불러오지 못했어요</div>';
   }
@@ -218,10 +271,119 @@ document.querySelectorAll('.tab').forEach(t => {
     t.classList.add('on');
     $('#p-' + t.dataset.p).classList.add('on');
     if (t.dataset.p === 'videos') loadVideos();
+    if (t.dataset.p === 'members') loadMembers();
   });
 });
 ['#sort', '#member', '#platform'].forEach(s =>
   $(s).addEventListener('change', loadVideos));
+
+// ───────── 재생 모달 ─────────
+let VIDS = [], PL = -1;
+
+function openPlayer(i) {
+  if (i < 0 || i >= VIDS.length) return;
+  PL = i;
+  const it = VIDS[i];
+  // ★iframe을 매번 새로 만든다 — src만 바꾸면 앞 영상 소리가 남는 브라우저가 있다.
+  $('#plFrame').innerHTML =
+    `<iframe src="${esc(it.embed)}" allow="autoplay; encrypted-media"
+             allowfullscreen referrerpolicy="origin"></iframe>`;
+  $('#plInfo').innerHTML =
+    `<b>${esc(it.member_name || '')}</b> · ${esc(it.submit_day)}<br>` +
+    `${esc(it.title || '')}<br>` +
+    `<a href="${esc(it.url)}" target="_blank" rel="noopener">원본 열기 ↗</a>` +
+    `<span style="float:right;color:#999">${i + 1} / ${VIDS.length}</span>`;
+  $('#player').classList.add('on');
+}
+function closePlayer() {
+  $('#player').classList.remove('on');
+  $('#plFrame').innerHTML = '';   // 재생 중단 — 안 지우면 뒤에서 계속 돈다
+  PL = -1;
+}
+$('#plX').addEventListener('click', closePlayer);
+$('#plPrev').addEventListener('click', () => openPlayer(PL - 1));
+$('#plNext').addEventListener('click', () => openPlayer(PL + 1));
+$('#player').addEventListener('click', e => { if (e.target.id === 'player') closePlayer(); });
+document.addEventListener('keydown', e => {
+  if (!$('#player').classList.contains('on')) return;
+  if (e.key === 'Escape') closePlayer();
+  if (e.key === 'ArrowLeft') openPlayer(PL - 1);
+  if (e.key === 'ArrowRight') openPlayer(PL + 1);
+});
+
+// ───────── 참가자 탭 ─────────
+let CUSTS = [];
+
+async function loadMembers() {
+  $('#mgrid').innerHTML = '<tr><td class="empty">불러오는 중…</td></tr>';
+  try {
+    const r = await fetch('/api/admin/customers');
+    if (!r.ok) throw new Error('bad status ' + r.status);
+    const d = await r.json();
+    CUSTS = d.customers || d.items || [];
+    renderMembers();
+  } catch (e) {
+    $('#mgrid').innerHTML = '<tr><td class="empty">불러오지 못했어요</td></tr>';
+  }
+}
+
+function renderMembers() {
+  const q = ($('#msearch').value || '').trim().toLowerCase();
+  const only = $('#monly').checked;
+  const rows = CUSTS.filter(c => {
+    if (only && !c.challenge) return false;
+    if (!q) return true;
+    return String(c.name || '').toLowerCase().includes(q)
+        || String(c.email || '').toLowerCase().includes(q);
+  });
+  $('#mcount').textContent =
+    `${rows.length}명 표시 · 참가자 ${CUSTS.filter(c => c.challenge).length}명`;
+  $('#mgrid').innerHTML =
+    '<tr><th><input type="checkbox" id="mAll"></th><th>이름</th><th>이메일</th>'
+    + '<th>챌린지</th></tr>'
+    + (rows.map(c => `<tr>
+        <td><input type="checkbox" class="mchk" value="${c.id}"></td>
+        <td>${esc(c.name || ('#' + c.id))}</td>
+        <td>${esc(c.email || '')}</td>
+        <td class="${c.challenge ? 'chal-on' : ''}">${c.challenge ? '🔥 참가중' : '—'}</td>
+      </tr>`).join('')
+      || '<tr><td class="empty" colspan="4">해당하는 고객이 없어요</td></tr>');
+  const all = $('#mAll');
+  if (all) all.addEventListener('change', () =>
+    document.querySelectorAll('.mchk').forEach(x => { x.checked = all.checked; }));
+}
+
+// ★alert()를 쓰지 않는다 — 모달이 뜨는 동안 화면이 통째로 멈추고,
+//   100명을 훑는 작업에서 매번 확인을 눌러야 해서 오히려 손이 더 간다.
+function mNote(msg, bad) {
+  const el = $('#mcount');
+  el.textContent = msg;
+  el.style.color = bad ? '#e66' : 'var(--accent)';
+  setTimeout(renderMembers, 2500);   // 잠시 뒤 원래 집계로 되돌린다
+}
+
+async function bulkMembers(active) {
+  const ids = [...document.querySelectorAll('.mchk:checked')].map(x => +x.value);
+  if (!ids.length) { mNote('선택된 고객이 없어요', true); return; }
+  try {
+    const r = await fetch('/api/challenge/members/bulk', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids, active: active ? 1 : 0 }),
+    });
+    if (!r.ok) throw new Error('bad status ' + r.status);
+    const d = await r.json();
+    // 화면을 서버 사실로 다시 맞춘다 — 로컬에서 짐작해 칠하지 않는다
+    await loadMembers();
+    mNote(`${d.count}명 ${active ? '참가 처리' : '해제'}했어요`);
+  } catch (e) {
+    mNote('실패했어요 — 다시 시도해 주세요', true);
+  }
+}
+
+$('#mAdd').addEventListener('click', () => bulkMembers(true));
+$('#mDel').addEventListener('click', () => bulkMembers(false));
+$('#msearch').addEventListener('input', renderMembers);
+$('#monly').addEventListener('change', renderMembers);
 
 loadBoard();
 </script>

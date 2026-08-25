@@ -92,6 +92,7 @@ from shopping_shorts import bank_assemble
 from shopping_shorts import thumb_title
 from shopping_shorts import headcopy_gen
 from shopping_shorts import deco_templates
+from shopping_shorts import bot_qa, bot_answer
 import uuid
 
 app = FastAPI(title="숏템메이커 레퍼런스 랭킹")   # /docs 노출 제목 — 브랜드 통일(2026-07-25)
@@ -1094,6 +1095,119 @@ def api_comment_done(request: Request, shortcode: str):
     return {"ok": True, "shortcode": shortcode}
 
 
+# ── 카톡 답변봇(2026-08-25) ────────────────────────────────────────────────
+# 공기계 폰(메신저봇R)이 부르는 유일한 입구. **판정·검색·생성은 전부 여기서** 하고
+# 폰은 배달만 한다 — 카톡이 업데이트돼 알림 파싱이 깨져도 이 코드는 무사하다.
+_BOT_ASKED = {}          # {(day, sender): 횟수} — 하루 상한. 프로세스 재시작 시 초기화(무해)
+
+
+@app.post("/api/kakao/ask")
+async def api_kakao_ask(request: Request):
+    """폰이 보낸 카톡 메시지 → 답장 문자열. 답할 게 없으면 빈 문자열."""
+    # ★비밀키가 **서버에 없으면 잠근다**(2026-08-25 실측 사고 방지). 종전 비교식은
+    #   미설정("")과 헤더없음("")이 같아져 **아무나 부를 수 있었다**(실측 200).
+    #   키를 안 넣은 채 배포되는 게 정상 경로이므로(사장님이 나중에 넣는다) 여기서 막는다.
+    _secret = (os.getenv("KAKAO_BOT_SECRET", "") or "").strip()
+    if not _secret or _secret != (request.headers.get("X-Bot-Secret") or ""):
+        return JSONResponse(status_code=401, content={"ok": False, "error": "bad secret"})
+    # ★본문이 UTF-8이 아니거나 JSON이 아니면 500이 난다(실측 2026-08-25: cp949로 보내면
+    #   request.json()이 UnicodeDecodeError). 폰이 어떤 인코딩으로 보내든 서버가 죽지 않게
+    #   여기서 받아 빈 답으로 넘긴다 — 방에 오류를 뿌리지 않는 게 봇의 원칙이다.
+    try:
+        body = await request.json()
+    except Exception:
+        return {"ok": True, "reply": ""}
+    if not isinstance(body, dict):
+        return {"ok": True, "reply": ""}
+    room = (body.get("room") or "").strip()
+    sender = (body.get("sender") or "").strip()
+    text = body.get("text") or ""
+
+    st = Store(DB_PATH)
+    # ★긴급 정지 — 매 요청 읽는다(재시작 없이 즉시 반영, contact_kakao 선례)
+    if (st.get_setting("kakao_bot_enabled", "1") or "1").strip() in ("0", "off", "false"):
+        return {"ok": True, "reply": ""}
+
+    question = bot_qa.parse_command(text)
+    if not question:
+        return {"ok": True, "reply": ""}          # 호출 안 된 말엔 아무 반응 없음
+
+    # 하루 상한(사람당) — 초과는 조용히 무시한다(경고를 보내면 그것도 도배가 된다)
+    limit = int(st.get_setting("kakao_bot_daily_limit", "20") or 20)
+    day = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    key = (day, sender)
+    if _BOT_ASKED.get(key, 0) >= limit:
+        return {"ok": True, "reply": ""}
+    _BOT_ASKED[key] = _BOT_ASKED.get(key, 0) + 1
+
+    # 돈·계정 질문은 AI를 안 거친다(잘못 답하면 분쟁)
+    if bot_qa.is_sensitive(question):
+        kakao = (st.get_setting("contact_kakao", "") or "").strip()
+        tail = ("\n" + kakao) if kakao else ""
+        return {"ok": True,
+                "reply": bot_qa.trim("결제·환불 관련은 운영자가 직접 확인해 드립니다." + tail)}
+
+    hits = bot_qa.search(question, st.bot_qa_list(status="approved"), room=room)
+    reply = bot_answer.answer(question, hits)
+    if not reply:
+        # ★지어내지 않는다 — 못 답한 질문은 쌓아서 다음에 채울 목록으로 쓴다
+        st.bot_unanswered_add(room or "문의", question)
+        return {"ok": True, "reply": "확인해서 알려드릴게요."}
+    return {"ok": True, "reply": bot_qa.trim(reply)}
+
+
+# ── 카톡 답변봇 검수 화면(2026-08-25) ──────────────────────────────────────
+# 봇은 status='approved'만 쓴다(bot_qa_list 호출부 참조) — 새 행은 항상 draft라
+# 이 화면 없이는 아무것도 승인이 안 돼 봇이 영원히 침묵한다.
+# ★관리자 판정은 여기서 새로 만들지 않는다 — app.py에 이미 있는 `_require_admin`을
+#   그대로 쓴다(0순위-B: 같은 판단을 두 곳에 적으면 반드시 어긋난다. 이미 이 파일
+#   10곳 이상이 _require_admin을 쓰는 관례다).
+@app.get("/api/bot/qa")
+def api_bot_qa_list(request: Request, status: str = ""):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    return {"ok": True, "items": Store(DB_PATH).bot_qa_list(status=status or None)}
+
+
+@app.post("/api/bot/qa")
+async def api_bot_qa_save(request: Request):
+    """승인·수정·버림. {id, status} 또는 {id, question, answer, tags}."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    b = await request.json()
+    st = Store(DB_PATH)
+    qid = int(b.get("id") or 0)
+    if not qid:
+        qid = st.bot_qa_add(room=b.get("room") or "공통",
+                            question=b.get("question") or "",
+                            answer=b.get("answer") or "",
+                            tags=b.get("tags") or "", source=b.get("source") or "")
+    if b.get("question") is not None:
+        st.bot_qa_update(qid, b.get("question") or "", b.get("answer") or "",
+                         b.get("tags") or "")
+    if b.get("status"):
+        st.bot_qa_set_status(qid, b["status"])
+    return {"ok": True, "id": qid}
+
+
+@app.get("/api/bot/unanswered")
+def api_bot_unanswered(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    return {"ok": True, "items": Store(DB_PATH).bot_unanswered_list()}
+
+
+# ★정적 파일은 인라인 Path로 연다 — `_STATIC`은 app.py 아래쪽(14107줄 부근)에 있어
+#   여기선 그 이름이 아직 없다. /help·/challenge 라우트가 쓰는 방식과 같게 맞춘다.
+@app.get("/bot_admin.html", include_in_schema=False)
+def bot_admin_page():
+    return FileResponse(str(Path(__file__).parent / "static" / "bot_admin.html"),
+                        media_type="text/html")
+
+
 @app.post("/api/save")
 def api_save(request: Request, shortcode: str):
     """제품찾기 소스로 담기 (기능 ③에서 재사용)."""
@@ -1701,6 +1815,110 @@ def api_refs_instagram(request: Request):
             "category": pinned.get(u, ""),      # 사람이 지정한 것만(빈값=자동판정)
         })
     return {"ok": True, "items": items}
+
+
+@app.get("/api/refs/crawl_status")
+def api_refs_crawl_status(request: Request, days: int = 7):
+    """관리페이지 '크롤현황' 탭(2026-08-25) — 하루에 크롤이 몇 번, 몇 건 돌았는지.
+
+    사장님이 "오늘 크롤 돌았나"를 매번 서버 DB로 확인해야 했다. 회차 목록을 그대로
+    내려주고 날짜 묶음은 화면에서 한다. 시각은 UTC 문자열이라 화면에서 KST(+9)로 바꾼다.
+    """
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    days = max(1, min(int(days or 7), 30))
+    runs = Store(DB_PATH).crawl_runs(days=days)
+    return {"ok": True, "days": days, "runs": runs}
+
+
+@app.get("/api/refs/ig_accounts")
+def api_refs_ig_accounts(request: Request, check: int = 0):
+    """인스타 수집 계정 현황(2026-08-25) — 몇 개 쓰고 있고, 살아 있는가.
+
+    풀(archive/reference)별로 세션 파일을 세고, check=1이면 **인스타에 물어서**
+    생사를 판정한다(session_alive: 쿠키 존재로 보면 죽은 걸 산 것으로 본다 —
+    2026-08-24 실사고). 기본은 세지만 하고 묻지 않는다(계정당 HTTP 1회라 느리다).
+    """
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import channel_archive as _ca
+    pools = []
+    for pool in (_ca.POOL_REFERENCE, _ca.POOL_ARCHIVE):
+        slots = _ca.session_slots(pool)
+        accounts = []
+        for i, path in enumerate(slots):
+            row = {"slot": i, "file": os.path.basename(path),
+                   "proxy": "", "alive": None}
+            try:
+                # ★프록시 원문에는 계정·비밀번호가 들어 있다 — 출구 이름(kr-11)만 남긴다.
+                raw = _ca.slot_proxy(i, pool=pool) or ""
+                m = re.search(r"//([^:]+):", raw)
+                row["proxy"] = m.group(1) if m else ""
+            except Exception as e:                # noqa: BLE001 — 표시용, 수집엔 무해
+                print(f"[경고] 프록시 표시 실패(무시): {e!r}", file=sys.stderr)
+            if check:
+                try:
+                    row["alive"] = bool(_ca.session_alive(path))
+                except Exception:                 # noqa: BLE001 — 판정 보류
+                    row["alive"] = None
+            accounts.append(row)
+        alive = [a for a in accounts if a["alive"] is True]
+        pools.append({"pool": pool, "total": len(accounts),
+                      "alive": len(alive) if check else None,
+                      "accounts": accounts})
+    return {"ok": True, "checked": bool(check), "pools": pools}
+
+
+@app.get("/api/refs/api_usage")
+def api_refs_api_usage(request: Request, days: int = 7):
+    """API 키 현황·소모량(2026-08-25) — 키가 몇 개고 오늘 얼마나 탔는지.
+
+    키 개수는 config 풀에서, 오늘 소진된 키는 comment_gen의 인덱스 상태파일에서,
+    실제 소모(호출·토큰·원화)는 usage_meter가 쌓는 gemini_usage에서 가져온다.
+    '더 채워야 하나'는 화면에서 소진율로 판단할 수 있게 숫자만 정직하게 준다.
+    """
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    days = max(1, min(int(days or 7), 30))
+    from shopping_shorts import config as _cfg
+    keys = {"gemini_total": len(_cfg.SHORTS_GEMINI_KEYS),
+            "gemini_owner": len(_cfg._OWNER_GEMINI_KEYS),
+            "youtube_total": len(_cfg.YOUTUBE_API_KEYS),
+            "exhausted_today": 0, "live": 0}
+    keys["gemini_member"] = max(0, keys["gemini_total"] - keys["gemini_owner"])
+    try:
+        from shopping_shorts import comment_gen as _cg
+        exhausted = set(_cg._load_state().get("exhausted") or [])
+        keys["exhausted_today"] = len([i for i in exhausted if i < keys["gemini_total"]])
+        keys["live"] = keys["gemini_total"] - keys["exhausted_today"]
+    except Exception:                             # noqa: BLE001 — 상태파일 없으면 0
+        keys["live"] = keys["gemini_total"]
+
+    daily, ops = [], []
+    try:
+        import sqlite3
+        from datetime import datetime, timezone, timedelta
+        since = (datetime.now(timezone.utc) - timedelta(days=days)).strftime("%Y-%m-%d")
+        conn = sqlite3.connect(DB_PATH)
+        try:
+            for day, calls, tin, tout, krw in conn.execute(
+                    "SELECT day, COUNT(*), SUM(in_tokens), SUM(out_tokens), SUM(krw) "
+                    "FROM gemini_usage WHERE day>=? GROUP BY day ORDER BY day DESC", (since,)):
+                daily.append({"day": day, "calls": calls, "in_tokens": tin or 0,
+                              "out_tokens": tout or 0, "krw": round(krw or 0, 1)})
+            today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+            for op, calls, krw in conn.execute(
+                    "SELECT COALESCE(op,'(미지정)'), COUNT(*), SUM(krw) FROM gemini_usage "
+                    "WHERE day=? GROUP BY op ORDER BY COUNT(*) DESC LIMIT 12", (today,)):
+                ops.append({"op": op, "calls": calls, "krw": round(krw or 0, 1)})
+        finally:
+            conn.close()
+    except Exception as e:                        # noqa: BLE001 — 표가 없을 수도 있다
+        return {"ok": True, "keys": keys, "daily": [], "ops": [], "note": str(e)}
+    return {"ok": True, "keys": keys, "daily": daily, "ops": ops}
 
 
 @app.post("/api/refs/category")
@@ -3643,6 +3861,9 @@ def api_mix_status(job_id: str, request: Request):
             "preview_error": preview_error,
             "clean_status": clean_status,
             "clean_error": clean_error,
+            # ★실패 '종류'를 함께 준다(2026-08-25). 프론트가 원문을 문자열 검사하면
+            #   같은 판단이 두 곳에 흩어진다(0순위-B) — 분류는 서버 한 곳에서만.
+            "clean_error_kind": clean_failure_kind(clean_error) if clean_status == "failed" else None,
             # 자막제거 확인용 소스 개수(2026-08-18) — 3단계가 "소스 1/N"으로 넘겨보는 데만 쓴다.
             # 경로는 안 내보내고 개수만. 청소본이 있으면 그 개수, 없으면 담은 URL 개수.
             "clean_source_count": len(job.get("clean_sources") or {}) or len(job.get("urls") or []),
@@ -4393,6 +4614,31 @@ def api_mix_render(background_tasks: BackgroundTasks, body: dict):
 
 
 _PREVIEW_STALE_SEC = 600   # 10분 — 이보다 오래 'rendering'이면 죽은 렌더의 잔해로 본다.
+
+
+def clean_failure_kind(clean_error):
+    """자막제거 실패를 **고객이 할 수 있는 행동**으로 가른다. 판단은 여기 한 곳(0순위-B).
+
+    ★왜 필요한가(2026-08-25 실사고): 화면은 실패를 전부 "잠시 후 다시 시도해 주세요"로
+      안내했다. 그런데 실제 1위 원인은 **고객이 등록한 VMake 키의 크레딧 소진**이라
+      다시 시도해도 영원히 안 된다. 고객(김용덕)은 그걸 모르고 재시도만 반복했다.
+      사유는 이미 clean_error에 원문이 들어 있었는데 화면엔 console.warn으로만 찍혔다.
+
+    반환: 'no_credit' | 'interrupted' | 'unsupported' | 'unknown'
+    """
+    e = (clean_error or "")
+    low = e.lower()
+    # VMake가 직접 주는 코드다(실측 원문:
+    #   "[60002] You don't have enough credits for this API. Purchase a subscription...")
+    if "60002" in e or "enough credits" in low:
+        return "no_credit"
+    # 배포·재시작으로 BackgroundTask가 죽은 경우 — 이건 진짜로 다시 시도하면 된다.
+    if "서버 재시작" in e or "중단되었습니다" in e:
+        return "interrupted"
+    # 영상 자체를 VMake가 처리 못 한 경우(실측 code 10101 'right reduce error').
+    if "10101" in e or "결과가 비었습니다" in e:
+        return "unsupported"
+    return "unknown"
 
 
 def _render_is_stale(job) -> bool:
@@ -6726,11 +6972,15 @@ _AUTH_ALLOW = ("/login", "/api/login", "/signup", "/api/signup", "/favicon.ico",
                # 설치·준비 안내(2026-08-24 사장님 "고객한테 보낼 수 있는 주소로 줘").
                # 단톡방·카톡으로 링크만 뿌리면 되도록 **로그인 없이** 열린다.
                "/setup", "/setup.html",
+               # 쿠팡파트너스 안내(2026-08-25)도 같은 이유로 공개.
+               "/coupang", "/coupang.html",
+               # 인포크링크 안내(2026-08-25)도 같은 이유로 공개.
+               "/inpock", "/inpock.html",
                # 캡컷 준비 안내와 자동설정 파일도 공개(2026-08-24 사장님 "공개").
                # 설치 안내를 단톡방 링크로 뿌리는데 그 안의 캡컷 링크만 로그인을 요구하면
                # 거기서 끊긴다 — 안내는 끝까지 따라갈 수 있어야 안내다.
                # .bat은 내려받기만 하는 정적 파일이고 계정 정보를 담지 않는다.
-               "/capcut_manual.html", "/capcut_setup.bat",
+               "/capcut_manual.html", "/capcut_setup.bat", "/capcut_easy.html",
                # 도움말(2026-08-23) — 가입 전 문의를 줄이려면 로그인 전에도 보여야 한다.
                # ★읽기만 공개다. 쓰기(/api/help/save·delete·reorder·upload)는 관리자만이며
                #   그 판정은 각 라우트가 직접 한다(여기 목록에 넣지 않는다).
@@ -6754,6 +7004,10 @@ _AUTH_ALLOW = ("/login", "/api/login", "/signup", "/api/signup", "/favicon.ico",
                # 유저스크립트(insta_fill_comment)가 인스타 탭에서 전송 감지 시 GM_xmlhttpRequest로
                # 완료기록을 POST한다. 인증쿠키 없이 오므로 허용. 마킹은 저위험(되돌리기 가능).
                "/api/comment/done",
+               # 카톡 답변봇(2026-08-25) — 공기계 폰이 로그인 쿠키 없이 부른다.
+               # ★대신 X-Bot-Secret 헤더로 막는다(라우트가 직접 검사). 열어두면
+               #   아무나 우리 제미니 한도를 태울 수 있다.
+               "/api/kakao/ask",
                # 원클릭 담기: /grab(북마클릿 설치안내)는 공개, /api/grab(팝업)은 자체적으로
                # 세션쿠키를 검증해 고객을 식별한다(_cid 폴백이 legacy라 여기선 직접 검증). 미들웨어
                # 401을 피해 친절한 팝업 응답을 주려고 allowlist에 둔다.
@@ -8317,6 +8571,8 @@ async def _api_signup(req: Request):
             gender=gender, age_band=age_band)   # 여기서 다 받으니 /welcome으로 또 안 끌려간다
     except ValueError:
         return RedirectResponse("/signup?e=" + urllib.parse.quote("이미 존재하는 아이디입니다"), status_code=303)
+    _signup_topup(customer_id)                               # ★가입 즉시 자동체험 = 연료도 같이(없으면 402)
+    _send_setup_mail((form.get("email") or [""])[0].strip(), name)   # 안내 메일(설정 없으면 no-op)
     _notify_new_signup(name=name, username=u, phone=phone)   # 사장님 텔레 알림(무키면 no-op)
     r = RedirectResponse("/", status_code=303)
     _set_session_cookie(r, customer_id)
@@ -8396,6 +8652,8 @@ def _google_callback(request: Request, code: str = "", state: str = "", error: s
     if cid is None:
         return RedirectResponse("/login?e=" + urllib.parse.quote("계정 생성 실패"), status_code=303)
     if created:                                              # 신규 구글 가입만 알림(재로그인은 조용히)
+        _signup_topup(cid)                                   # ★가입 즉시 자동체험 = 연료도 같이(없으면 402)
+        _send_setup_mail(ident.get("email"))                 # 안내 메일(설정 없으면 no-op)
         _notify_new_signup(username="구글", email=ident.get("email"))
     r = RedirectResponse("/", status_code=303)
     _set_session_cookie(r, cid)
@@ -8548,6 +8806,17 @@ async def _auth_guard(request: Request, call_next):
         if (_is_page_nav(request, path) and path != "/welcome"
                 and _needs_welcome(customer_id)):
             return RedirectResponse("/welcome", status_code=303)
+        # ── 설치안내 1회 자동 노출(2026-08-25) ────────────────────────────────
+        # 사장님 지시 "1번은 가입후 입금사람에게" — 체험만 하는 분은 안 붙잡는다.
+        # 플래그는 approve_customer(최초 승인)·set_plan(pro)에서만 선다.
+        # ★/welcome과 같은 자리(모든 권한 판정 뒤 · 화면이동만)에 둔다 — 앞에 두면
+        #   이 303이 게이트보다 먼저 떠서 막혀야 할 사람이 안 막힌 것처럼 보인다.
+        if _is_page_nav(request, path) and path not in ("/setup", "/welcome"):
+            try:
+                if Store(DB_PATH).is_setup_due(customer_id):
+                    return RedirectResponse("/setup?first=1", status_code=303)
+            except Exception as e:  # noqa: BLE001 — 안내 때문에 서비스를 막지 않는다
+                print(f"[setup] 안내 판정 실패(무시): {e!r}", file=sys.stderr)
         return await call_next(request)
     if path.startswith("/api/"):
         return JSONResponse({"error": "unauthorized"}, status_code=401)
@@ -9371,6 +9640,35 @@ def _trial_topup(store, customer_id):
                         _TRIAL_GRANT_P_DEFAULT, "trial_grant")
 
 
+def _send_setup_mail(email, name=None):
+    """가입 안내 메일 — 부가채널이라 절대 가입을 막지 않는다(mailer가 예외를 삼킨다).
+    SMTP 설정이 없으면 조용히 no-op. 본문은 mailer 한 곳에서만 만든다(0순위-B)."""
+    try:
+        from shopping_shorts import mailer
+        ok = mailer.send(email, "[숏템메이커] 가입 안내 — 설치와 준비 3가지",
+                         mailer.setup_notice_html(PUBLIC_BASE_URL, name))
+        import sys as _s
+        print(f"[signup] 안내메일 {'발송' if ok else '건너뜀'} → {email}", file=_s.stderr)
+        return ok
+    except Exception:
+        return False
+
+
+def _signup_topup(customer_id):
+    """가입 즉시 자동체험(create_customer의 trial_ends_at)에도 **포인트를 같이 준다**.
+
+    ★왜: 등급(체험창)만 열려도 잔액 0이면 유료 op가 _charge_or_402에서 402로 막힌다.
+      관리자 '체험' 버튼(set_plan)에는 _trial_topup이 있었는데 **자동 가입 경로에만
+      빠져 있었다**(실측 2026-08-25: 체험중 계정들이 전부 0P). 기준선은 한 곳
+      (_trial_topup)에서만 정한다 — 두 벌로 적으면 언젠가 어긋난다(0순위-B)."""
+    try:
+        return _trial_topup(Store(DB_PATH), int(customer_id))
+    except Exception as e:                       # 지급 실패로 가입 자체를 막지 않는다
+        import sys as _s
+        print(f"[signup] topup 실패 cid={customer_id}: {e}", file=_s.stderr)
+        return 0
+
+
 @app.post("/api/admin/set_plan")
 async def _admin_set_plan(request: Request):
     denied = _require_admin(request)
@@ -9390,6 +9688,7 @@ async def _admin_set_plan(request: Request):
     if plan == "pro":
         st.set_plan(cid, "pro")                         # 결제 승격 = 전기능 무기한
         granted = _pro_topup(st, cid)                   # ★연료까지 — 없으면 402로 막힌다
+        st.mark_setup_due(cid)                          # 입금하신 분에게 설치안내 1회 노출
     elif plan == "trial":
         # 체험판 = 랭킹전용(랭킹·즐겨찾기·렌즈 하루 10회). days는 화면 'D-N' 표시용.
         until = int(datetime.now(timezone.utc).timestamp()) + int(days or 0) * 86400
@@ -9458,6 +9757,37 @@ async def _admin_approve(request: Request):
     import sys as _s
     print(f"[admin] approve cid={cid} +{period_days}d {amount}원", file=_s.stderr)
     return {"ok": True, "customer": cust}
+
+
+@app.post("/api/admin/ack")
+async def _admin_ack(request: Request):
+    """'확인함' — 대기실에서만 내린다(2026-08-25 사장님 "일일이 버튼 누르니 안 좋아").
+
+    /api/admin/approve와 다르다:
+      approve = 기간 부여 + 결제 기록 (돈을 받았을 때. 프롬프트 3번)
+      ack     = 봤다는 표시만. **클릭 한 번.** 남은 체험은 그대로 흘러간다.
+    """
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    body = await request.json()
+    try:
+        cid = int(body.get("customer_id"))
+    except (TypeError, ValueError):
+        return JSONResponse({"error": "customer_id 필요"}, status_code=422)
+    st = Store(DB_PATH)
+    if not st.ack_customer(cid):
+        return JSONResponse({"error": "없는 고객이거나 이미 확인함"}, status_code=422)
+    # ★확인만 하면 잔액 0인 채로 고객관리에 내려간다(2026-08-25 사장님 "확인 눌러
+    #   내리면 포인트 안 나온다"). 실측: cid 213·214가 approved_at은 있는데 0P라
+    #   사장님이 '체험' 버튼을 따로 눌러 50P를 채워야 했다. 등급만 열고 연료를 안 주면
+    #   유료 op가 402로 막히는 것과 같은 함정이다(_trial_topup 주석 참조).
+    #   top-up이라 이미 충분하면 0을 돌려준다 — 여러 번 눌러도 기준선 하나로 수렴한다.
+    granted = _trial_topup(st, cid)
+    import sys as _s
+    print(f"[admin] ack cid={cid} (체험 유지, 대기실에서만 내림) topup={granted}", file=_s.stderr)
+    return {"ok": True, "granted": granted,
+            "balance": pricing.to_display(points.balance(st, cid))}
 
 
 @app.post("/api/admin/payment")
@@ -10715,11 +11045,14 @@ def _challenge_fetch(sub_id, url, platform):
     views·likes·comments·channel. view_count로 읽으면 항상 None이다.
     """
     store = Store(DB_PATH)
-    if platform == "tiktok":
-        # 틱톡은 단건 조회 함수가 없다(tiktok_client는 계정 단위뿐).
-        # 시도조차 하지 않으므로 'failed'가 아니라 'skipped'다.
-        store.update_challenge_submission_meta(sub_id, fetch_status="skipped")
-        return
+    # ★틱톡도 probe_grab_meta를 그대로 태운다(2026-08-25 실측으로 정정).
+    #   예전 주석은 "틱톡은 단건 조회 함수가 없다"며 통째로 skipped 처리했는데,
+    #   probe_grab_meta는 **이미 틱톡 oEmbed 폴백을 갖고 있다**(media_download.py:104).
+    #   실측(https://www.tiktok.com/@tiktok/video/7106594312292453675):
+    #     thumbnail ✅ · title ✅ · channel ✅ · views ❌(None)
+    #   조회수만 안 나온다(yt-dlp가 틱톡을 못 뚫는다) — 썸네일·제목이 채워지는 것만으로도
+    #   영상 탭이 링크 대신 카드로 보이고, AI 코멘트를 쓸 재료가 생긴다.
+    #   조회수가 없다고 'failed'로 떨어뜨리지 않는다 — meta가 비어 있을 때만 failed다.
     try:
         meta = probe_grab_meta(url) or {}
     except Exception as e:  # noqa: BLE001 — 수집 실패가 제출을 무효로 만들지 않는다
@@ -10846,6 +11179,9 @@ def api_challenge_videos(request: Request, sort: str = "recent",
             cust = store.get_customer(cid) or {}
             names[cid] = cust.get("name") or cust.get("username") or f"#{cid}"
         i["member_name"] = names[cid]
+        # ★화면 안에서 재생하려고 임베드 주소를 여기서 한 번만 만든다.
+        #   프론트가 각자 만들면 플랫폼 판단이 두 벌이 된다(0순위-B).
+        i["embed"] = challenge.embed_url(i["url"], i["platform"], i.get("shortcode") or "")
     return {"ok": True, "items": items}
 
 
@@ -10877,6 +11213,27 @@ def api_challenge_member_set(request: Request, customer_id: int, active: int = 1
     else:
         store.set_challenge_member_active(int(customer_id), False)
     return {"ok": True, "customer_id": int(customer_id), "active": bool(active)}
+
+
+@app.post("/api/challenge/members/bulk")
+def api_challenge_members_bulk(request: Request, body: dict):
+    """참가자 **일괄** 등록/해제(관리자 전용). body={"ids":[1,2,3], "active":1}
+
+    왜 필요한가: 1기 100명을 고객관리 화면에서 한 명씩 누르면 100번 클릭·100번
+    왕복이다. 판단(누가 참가자인가)은 그대로 store 한 곳에 두고, 횟수만 줄인다.
+    """
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    ids = [int(x) for x in (body or {}).get("ids", []) if str(x).strip().isdigit()]
+    active = bool((body or {}).get("active", 1))
+    store = Store(DB_PATH)
+    for cid in ids:
+        if active:
+            store.add_challenge_member(cid)
+        else:
+            store.set_challenge_member_active(cid, False)
+    return {"ok": True, "count": len(ids), "active": active}
 
 
 @app.get("/challenge", response_class=HTMLResponse)
@@ -11776,10 +12133,41 @@ def _help_admin_or_403(request: Request):
 
 
 @app.get("/setup", response_class=HTMLResponse)
-def page_setup():
+def page_setup(request: Request):
     """설치·준비 안내 — 고객에게 링크로 보내는 자리(로그인 불필요).
-    ★.html 없는 짧은 주소를 따로 둔다: 카톡·단톡방에 붙였을 때 읽기 쉽다."""
+    ★.html 없는 짧은 주소를 따로 둔다: 카톡·단톡방에 붙였을 때 읽기 쉽다.
+    ★열어보면 자동노출 플래그를 내린다 — 다시 보고 싶으면 메뉴/링크로 언제든 온다."""
+    # ★쿠키에서 직접 읽는다 — /setup은 _AUTH_ALLOW라 미들웨어가 인증 전에 통과시켜
+    #   request.state.customer_id가 **안 채워진다**. 그래서 예전 코드는 플래그를 못 내렸고,
+    #   '나가기'를 눌러 /로 가면 미들웨어가 다시 /setup?first=1로 보내 **갇혔다**
+    #   (2026-08-25 실측: 클릭해도 주소가 그대로 /setup?first=1).
+    _cid_ = _verify_session(request.cookies.get("dash_auth", ""))
+    if _cid_ is not None:
+        try:
+            Store(DB_PATH).clear_setup_due(_cid_)
+        except Exception as e:  # noqa: BLE001 — 플래그 해제 실패로 안내를 못 보게 하지 않는다
+            print(f"[setup] 플래그 해제 실패(무시): {e!r}", file=sys.stderr)
     return FileResponse(str(Path(__file__).parent / "static" / "setup.html"),
+                        media_type="text/html")
+
+
+@app.get("/coupang", response_class=HTMLResponse)
+def page_coupang():
+    """쿠팡파트너스 안내 — 가입·추적링크·고지문구. /setup과 같이 로그인 없이 열린다
+    (단톡방·카톡에 링크만 뿌리면 되도록)."""
+    return FileResponse(str(Path(__file__).parent / "static" / "coupang.html"),
+                        media_type="text/html")
+
+
+@app.get("/inpock", response_class=HTMLResponse)
+def page_inpock():
+    """인포크링크 안내 — 가입·상품등록·자동DM, 그리고 번호 규칙(2026-08-25 사장님).
+
+    ★쿠팡 가입·추적링크는 /coupang이 이미 끝까지 안내한다 — 여기서 되풀이하지 않고
+      링크로 보낸다(0순위-B: 같은 설명을 두 곳에 적으면 언젠가 어긋난다).
+      이 페이지가 채우는 빈칸은 **인포크 쪽 절차**다(coupang.html에 인포크는 한 줄뿐).
+    """
+    return FileResponse(str(Path(__file__).parent / "static" / "inpock.html"),
                         media_type="text/html")
 
 

@@ -7,7 +7,9 @@
    /api/reference 한 번에 그걸 다 내려보냈다(실측 974ms).
    관리자 목록 응답에도 통째로 딸려가 6.25MB가 됐던 원인이기도 하다.
 
-   랭킹은 최신순이라 뒤쪽 수천 건은 화면에서 볼 일이 없다.
+   ★2026-08-25: 자르는 **기준**이 틀려 회귀가 났다. 목록은 최신순이 아니라
+   수집 순서라, 뒤에서 훑는 채널이 통째로 사라졌다. 이제 자르기 전에 최신순으로
+   정렬한다(_newest_first). 아래 test_newest_by_age_survives가 그 규칙을 지킨다.
 """
 import pytest
 from cryptography.fernet import Fernet
@@ -27,21 +29,21 @@ def _items(n):
 
 
 def test_platform_save_is_capped(store):
-    store.save_last_run_platform("youtube", _items(5000), "2026-08-24")
+    store.save_last_run_platform("youtube", _items(Store.LAST_RUN_MAX_ITEMS + 500), "2026-08-24")
     got, _at = store.load_last_run_platform("youtube")
     assert len(got) == Store.LAST_RUN_MAX_ITEMS
 
 
 def test_instagram_save_is_capped_the_same(store):
     """★두 경로가 다른 상한을 쓰면 어긋난다(0순위-B)."""
-    store.save_last_run(_items(5000), "2026-08-24")
+    store.save_last_run(_items(Store.LAST_RUN_MAX_ITEMS + 500), "2026-08-24")
     got, _at = store.load_last_run()
     assert len(got) == Store.LAST_RUN_MAX_ITEMS
 
 
 def test_newest_survives_the_cut(store):
     """★자르는 쪽은 **뒤(오래된 것)**여야 한다. 앞을 자르면 방금 등록한 게 사라진다."""
-    store.save_last_run_platform("youtube", _items(5000), "2026-08-24")
+    store.save_last_run_platform("youtube", _items(Store.LAST_RUN_MAX_ITEMS + 500), "2026-08-24")
     got, _at = store.load_last_run_platform("youtube")
     assert got[0]["shortcode"] == "c0", "맨 앞(최신)이 잘려나갔다"
 
@@ -57,3 +59,18 @@ def test_empty_is_safe(store):
     store.save_last_run_platform("tiktok", [], "2026-08-24")
     got, _at = store.load_last_run_platform("tiktok")
     assert got == []
+
+
+def test_newest_by_age_survives(store):
+    """★회귀 방지(2026-08-25): 수집 순서가 뒤죽박죽이어도 **최신이 남고 오래된 것이 잘린다**.
+
+    정렬 없이 자르면 '뒤에서 수집됐다'는 이유만으로 채널이 통째로 사라진다
+    (실측: 8,580건 중 5,580건이 잘려 썰쇼핑 채널이 화면에서 없어졌다)."""
+    n = Store.LAST_RUN_MAX_ITEMS
+    old = [{"shortcode": "old%d" % i, "age_hours": 300.0} for i in range(n)]
+    fresh = [{"shortcode": "fresh%d" % i, "age_hours": 1.0} for i in range(500)]
+    store.save_last_run_platform("youtube", old + fresh, "2026-08-25")   # 최신이 뒤에 있다
+    got, _at = store.load_last_run_platform("youtube")
+    kept = {g["shortcode"] for g in got}
+    assert all(("fresh%d" % i) in kept for i in range(500)), "최신 500건이 잘려나갔다"
+    assert len(got) == n

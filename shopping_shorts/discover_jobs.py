@@ -10,6 +10,7 @@ Apify 또는 무료 Playwright, 2026-07-30 config.INSTAGRAM_SCRAPER로 분기 �
 프론트는 '중단됨'으로 처리한다."""
 import threading
 import time
+from datetime import datetime, timezone
 import re
 from concurrent.futures import ThreadPoolExecutor
 from shopping_shorts.config import DB_PATH
@@ -208,7 +209,9 @@ def _run(days, max_total, accumulate, auto_register=False):
             raise RuntimeError("발굴 0건 — 세션/차단 의심, 직전 피드 유지")
         store.save_discovery_feed(items)
         store.save_run(
-            time.strftime("%Y-%m-%d %H:%M"),
+            # UTC로 통일(2026-08-25) — 수집 경로(service.py)는 UTC로 저장하는데
+            # 여기만 로컬(KST)이라 같은 테이블에 9시간 어긋난 회차가 섞여 있었다.
+            datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M"),
             [{"shortcode": i["shortcode"], "username": i["username"],
               "comments": i["comments"], "delta": i["delta"]} for i in items],
         )

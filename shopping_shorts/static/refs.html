@@ -99,6 +99,7 @@
     <div class="tab" data-p="tiktok" onclick="switchPlat('tiktok',this)">🎵 틱톡</div>
     <div class="tab" data-p="xiaohongshu" onclick="switchPlat('xiaohongshu',this)">📕 샤오홍슈</div>
     <div class="tab" data-p="youtube" onclick="switchPlat('youtube',this)">▶️ 유튜브</div>
+    <div class="tab" data-p="status" onclick="switchPlat('status',this)">📊 크롤현황</div>
   </div>
 
   <div id="ytNote" class="yt-note" style="display:none">
@@ -128,6 +129,37 @@
     </div>
     <div class="tblwrap" id="listWrap"><div class="empty">불러오는 중…</div></div>
   </div>
+
+  <div class="card" id="statusCard" style="display:none">
+    <h2>📊 오늘 크롤 현황 <span class="count" id="stToday"></span></h2>
+    <p class="lead" style="margin:0 0 12px">모든 시각은 <b>한국시간(KST)</b>입니다. 크롤이 돌면 바로 여기에 뜹니다.</p>
+    <div class="toolbar">
+      <select id="stDays" onchange="loadStatus()">
+        <option value="3">최근 3일</option>
+        <option value="7" selected>최근 7일</option>
+        <option value="14">최근 14일</option>
+        <option value="30">최근 30일</option>
+      </select>
+      <button class="go" onclick="loadStatus()">새로고침</button>
+    </div>
+    <div class="tblwrap" id="stWrap"><div class="empty">불러오는 중…</div></div>
+  </div>
+
+  <div class="card" id="acctCard" style="display:none">
+    <h2>👤 인스타 수집 계정 <span class="count" id="acctSum"></span></h2>
+    <p class="lead" style="margin:0 0 12px">계정 하나가 막히면 다음 계정으로 넘어갑니다.
+      <b>살아있는지는 인스타에 직접 물어야</b> 압니다(쿠키가 멀쩡해도 회수된 계정이 있습니다).</p>
+    <div class="toolbar">
+      <button class="go" onclick="loadAccounts(1)">🔎 생사 확인(계정마다 1회 접속)</button>
+      <button class="go" onclick="loadAccounts(0)">목록만 새로고침</button>
+    </div>
+    <div class="tblwrap" id="acctWrap"><div class="empty">불러오는 중…</div></div>
+  </div>
+
+  <div class="card" id="keyCard" style="display:none">
+    <h2>🔑 API 키 현황 <span class="count" id="keySum"></span></h2>
+    <div class="tblwrap" id="keyWrap"><div class="empty">불러오는 중…</div></div>
+  </div>
 </div>
 
 <script>
@@ -145,9 +177,21 @@ const CFG={
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
 function switchPlat(p, el){
-  PLAT=p;
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
+  // 크롤현황은 등록/목록과 성격이 달라 카드를 통째로 갈아끼운다(2026-08-25).
+  const isStatus = (p==='status');
+  document.querySelectorAll('.wrap > .card').forEach(c=>{
+    if(!['statusCard','acctCard','keyCard'].includes(c.id)) c.style.display = isStatus ? 'none' : '';
+  });
+  ['statusCard','acctCard','keyCard'].forEach(id=>{
+    document.getElementById(id).style.display = isStatus ? '' : 'none';
+  });
+  if(isStatus){
+    document.getElementById('ytNote').style.display='none';
+    loadStatus(); loadAccounts(0); loadKeys(); return;
+  }
+  PLAT=p;
   document.getElementById('box').placeholder=CFG[p].ph;
   document.getElementById('hint').textContent=CFG[p].hint;
   document.getElementById('ytNote').style.display=(p==='youtube')?'block':'none';
@@ -322,6 +366,171 @@ async function removeOne(key){
     }
   }catch(e){}
   loadList();
+}
+
+// ── 크롤현황(2026-08-25) ──────────────────────────────────────────
+const PLAT_LABEL={instagram:'📷 인스타',tiktok:'🎵 틱톡',xiaohongshu:'📕 샤오홍슈',
+                  youtube:'▶️ 유튜브',overseas:'🌍 해외HOT',threads:'🧵 쓰레드'};
+
+// 서버는 UTC 문자열('YYYY-MM-DD HH:MM')로 준다 → KST(+9)로 옮긴다.
+function utcToKst(s){
+  const m=/^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})$/.exec(s||'');
+  if(!m) return {date:s||'', time:''};
+  const d=new Date(Date.UTC(+m[1],+m[2]-1,+m[3],+m[4],+m[5]));
+  d.setUTCHours(d.getUTCHours()+9);
+  const p=n=>String(n).padStart(2,'0');
+  return {date:d.getUTCFullYear()+'-'+p(d.getUTCMonth()+1)+'-'+p(d.getUTCDate()),
+          time:p(d.getUTCHours())+':'+p(d.getUTCMinutes())};
+}
+function kstToday(){
+  const d=new Date(); d.setUTCHours(d.getUTCHours()+9);
+  const p=n=>String(n).padStart(2,'0');
+  return d.getUTCFullYear()+'-'+p(d.getUTCMonth()+1)+'-'+p(d.getUTCDate());
+}
+
+async function loadStatus(){
+  const wrap=document.getElementById('stWrap');
+  wrap.innerHTML='<div class="empty">불러오는 중…</div>';
+  const days=document.getElementById('stDays').value;
+  let d={};
+  try{
+    const r=await fetch('/api/refs/crawl_status?days='+days);
+    d=await r.json();
+    if(!r.ok||!d.ok) throw new Error(d.error||('HTTP '+r.status));
+  }catch(e){
+    wrap.innerHTML='<div class="empty">불러오기 실패: '+esc(e.message)+'</div>'; return;
+  }
+  const runs=(d.runs||[]).map(r=>{const k=utcToKst(r.at); return {...r, kdate:k.date, ktime:k.time};});
+  // 날짜별(KST) 묶기 — 최신 날짜 먼저.
+  const byDate={};
+  runs.forEach(r=>{ (byDate[r.kdate]=byDate[r.kdate]||[]).push(r); });
+  const dates=Object.keys(byDate).sort().reverse();
+
+  const today=kstToday();
+  const tr=byDate[today]||[];
+  const tTotal=tr.reduce((a,b)=>a+b.count,0);
+  document.getElementById('stToday').textContent =
+    tr.length ? (tr.length+'회 · '+tTotal.toLocaleString()+'건') : '아직 없음';
+
+  if(!dates.length){ wrap.innerHTML='<div class="empty">기록이 없습니다.</div>'; return; }
+  let html='';
+  dates.forEach(date=>{
+    const rows=byDate[date].slice().sort((a,b)=>b.ktime.localeCompare(a.ktime));
+    const total=rows.reduce((a,b)=>a+b.count,0);
+    html+='<div style="margin:14px 0 6px;font-weight:700">'+esc(date)
+        + (date===today?' <span class="count">오늘</span>':'')
+        + ' <span class="count">'+rows.length+'회 · '+total.toLocaleString()+'건</span></div>';
+    html+='<table class="tbl"><thead><tr><th>시각(KST)</th><th>플랫폼</th>'
+        + '<th>수집 건수</th><th>계정 수</th></tr></thead><tbody>';
+    rows.forEach(r=>{
+      html+='<tr><td class="date">'+esc(r.ktime)+'</td>'
+          + '<td>'+esc(PLAT_LABEL[r.platform]||r.platform)+'</td>'
+          + '<td>'+r.count.toLocaleString()+'</td>'
+          + '<td class="num">'+(r.accounts?r.accounts.toLocaleString():'—')+'</td></tr>';
+    });
+    html+='</tbody></table>';
+  });
+  wrap.innerHTML=html;
+}
+
+const POOL_LABEL={reference:'레퍼런스 랭킹(매일 수집)', archive:'히트작 아카이브'};
+
+async function loadAccounts(check){
+  const wrap=document.getElementById('acctWrap');
+  wrap.innerHTML='<div class="empty">'+(check?'인스타에 물어보는 중… (계정 수만큼 걸립니다)':'불러오는 중…')+'</div>';
+  let d={};
+  try{
+    const r=await fetch('/api/refs/ig_accounts'+(check?'?check=1':''));
+    d=await r.json(); if(!r.ok||!d.ok) throw new Error(d.error||('HTTP '+r.status));
+  }catch(e){ wrap.innerHTML='<div class="empty">불러오기 실패: '+esc(e.message)+'</div>'; return; }
+
+  const pools=d.pools||[];
+  const total=pools.reduce((a,p)=>a+p.total,0);
+  const aliveKnown=d.checked ? pools.reduce((a,p)=>a+(p.alive||0),0) : null;
+  document.getElementById('acctSum').textContent =
+    total+'개'+(d.checked ? ' · 살아있음 '+aliveKnown+'개' : '');
+
+  let html='';
+  pools.forEach(p=>{
+    const dead=d.checked ? p.total-(p.alive||0) : 0;
+    html+='<div style="margin:14px 0 6px;font-weight:700">'+esc(POOL_LABEL[p.pool]||p.pool)
+        + ' <span class="count">'+p.total+'개'
+        + (d.checked ? (dead? ' · ⚠️ 죽음 '+dead+'개' : ' · ✅ 전부 정상') : '')
+        + '</span></div>';
+    if(!p.total){ html+='<div class="empty">계정 없음</div>'; return; }
+    html+='<table class="tbl"><thead><tr><th>슬롯</th><th>세션 파일</th>'
+        + '<th>전용 출구 IP</th><th>상태</th></tr></thead><tbody>';
+    p.accounts.forEach(a=>{
+      const st = a.alive===true ? '<span style="color:#37e0bd">살아있음</span>'
+               : a.alive===false ? '<span style="color:#ff7a7a">죽음 — 재로그인 필요</span>'
+               : '<span class="nm">미확인</span>';
+      html+='<tr><td class="num">'+a.slot+'</td><td class="handle">'+esc(a.file)+'</td>'
+          + '<td class="nm">'+esc(a.proxy||'—')+'</td><td>'+st+'</td></tr>';
+    });
+    html+='</tbody></table>';
+  });
+  if(d.checked){
+    html+='<p class="lead" style="margin-top:12px">죽은 계정은 그 계정으로 다시 로그인해 세션 파일을 새로 뽑으면 살아납니다.'
+        + ' 계정↔출구 IP는 1:1로 묶여 있으니 <b>파일 순서를 바꾸지 마세요</b>(바꾸면 인스타 눈에 수상하게 보입니다).</p>';
+  }
+  wrap.innerHTML=html;
+}
+
+async function loadKeys(){
+  const wrap=document.getElementById('keyWrap');
+  wrap.innerHTML='<div class="empty">불러오는 중…</div>';
+  let d={};
+  try{
+    const r=await fetch('/api/refs/api_usage?days=7');
+    d=await r.json(); if(!r.ok||!d.ok) throw new Error(d.error||('HTTP '+r.status));
+  }catch(e){ wrap.innerHTML='<div class="empty">불러오기 실패: '+esc(e.message)+'</div>'; return; }
+
+  const k=d.keys||{};
+  const live=k.live||0, tot=k.gemini_total||0, ex=k.exhausted_today||0;
+  document.getElementById('keySum').textContent =
+    '제미니 '+tot+'개 중 '+live+'개 남음'+(ex?(' · 오늘 소진 '+ex+'개'):'');
+
+  // 더 채워야 하나 — 오늘 소진 비율로만 말한다(추정 아닌 실측 기준).
+  const ratio = tot ? ex/tot : 0;
+  let advice, color;
+  if(!tot){ advice='키가 등록돼 있지 않습니다 — 채워야 합니다.'; color='#ff7a7a'; }
+  else if(ratio>=0.7){ advice='🔴 오늘 '+Math.round(ratio*100)+'% 소진 — 키를 더 채우세요.'; color='#ff7a7a'; }
+  else if(ratio>=0.4){ advice='🟠 오늘 '+Math.round(ratio*100)+'% 소진 — 여유가 줄고 있습니다.'; color='#ffc46b'; }
+  else{ advice='🟢 여유 있음 — 지금은 더 채우지 않아도 됩니다.'; color='#37e0bd'; }
+
+  let html='<div style="margin:0 0 10px;font-weight:700;color:'+color+'">'+esc(advice)+'</div>';
+  html+='<table class="tbl"><tbody>'
+      + '<tr><th>제미니 키</th><td>'+tot+'개 (사장님 '+(k.gemini_owner||0)+' · 회원 '+(k.gemini_member||0)+')</td></tr>'
+      + '<tr><th>오늘 소진</th><td>'+ex+'개 → 남은 키 '+live+'개</td></tr>'
+      + '<tr><th>유튜브 키</th><td>'+(k.youtube_total||0)+'개</td></tr>'
+      + '</tbody></table>';
+
+  const daily=d.daily||[];
+  html+='<div style="margin:16px 0 6px;font-weight:700">최근 7일 소모</div>';
+  if(!daily.length){ html+='<div class="empty">기록 없음</div>'; }
+  else{
+    html+='<table class="tbl"><thead><tr><th>날짜(UTC)</th><th>호출</th>'
+        + '<th>입력 토큰</th><th>출력 토큰</th><th>비용(원)</th></tr></thead><tbody>';
+    daily.forEach(r=>{
+      html+='<tr><td class="date">'+esc(r.day)+'</td><td>'+r.calls.toLocaleString()+'</td>'
+          + '<td class="nm">'+(r.in_tokens||0).toLocaleString()+'</td>'
+          + '<td class="nm">'+(r.out_tokens||0).toLocaleString()+'</td>'
+          + '<td>'+(r.krw||0).toLocaleString()+'</td></tr>';
+    });
+    html+='</tbody></table>';
+  }
+
+  const ops=d.ops||[];
+  if(ops.length){
+    html+='<div style="margin:16px 0 6px;font-weight:700">오늘 어디에 쓰였나</div>';
+    html+='<table class="tbl"><thead><tr><th>기능</th><th>호출</th><th>비용(원)</th></tr></thead><tbody>';
+    ops.forEach(o=>{
+      html+='<tr><td class="handle">'+esc(o.op)+'</td><td>'+o.calls.toLocaleString()+'</td>'
+          + '<td>'+(o.krw||0).toLocaleString()+'</td></tr>';
+    });
+    html+='</tbody></table>';
+  }
+  wrap.innerHTML=html;
 }
 
 document.getElementById('box').placeholder=CFG.instagram.ph;

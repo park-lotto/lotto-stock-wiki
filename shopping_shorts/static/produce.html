@@ -2604,6 +2604,9 @@ function seoTagDel(i){
 // 설명란에 쿠팡 상품 링크 + 공정위 대가성 고지문구를 덧붙인다(2026-07-28).
 // AI 생성 결과를 자동으로 건드리지 않고 버튼으로 둔 이유: seoGenerate가 설명을
 // 다시 만들 때마다 자동 삽입분이 사라지거나 두 번 붙는 사고가 나기 때문이다.
+// ★화면에 실제로 보이는 이름 한 곳(0순위-B). coupangInner()의 머리글과 같아야 한다 —
+//   안내가 '🛒 상품 확정'이라 적혀 있어 그 이름을 화면에서 못 찾는 일이 있었다(2026-08-25 제보).
+const COUPANG_UI = '🔗 쿠팡 연결 대상';
 async function seoAppendCoupang(){
   const msg=document.getElementById('seoCoupangMsg');
   const set=(t,color)=>{ if(msg){ msg.textContent=t; msg.style.color=color||''; } };
@@ -2614,7 +2617,8 @@ async function seoAppendCoupang(){
   // ★안내는 "위를 보세요"다(2026-08-18) — 상품 확정 UI가 이 버튼 바로 위에 있다.
   //   예전엔 3단계로 보냈는데 그 화면은 이제 비어 있어 헛걸음이 됐다.
   if(!d || !d.ok || !d.product){
-    set('연결할 쿠팡 상품이 없습니다 — 위 🛒 상품 확정에서 먼저 고르세요','var(--fire)');
+    set('연결할 쿠팡 상품이 없습니다 — 아래로 옮겨드린 「'+COUPANG_UI+'」에서 상품을 먼저 정하세요 '
+        +'(카드를 누르거나, 카드가 없으면 쿠팡 상품 URL을 붙여넣고 저장)','var(--fire)');
     const _cs=document.getElementById('coupangSlot');
     if(_cs) _cs.scrollIntoView({behavior:'smooth', block:'center'});
     return; }
@@ -8600,11 +8604,44 @@ async function pollClean(gen,job){
       clearInterval(CLEAN_POLL); CLEAN_POLL=null;
       if(d.clean_error) console.warn('clean failed:', d.clean_error);
       const _sc=document.getElementById('cleanShowcase'); if(_sc) _sc.style.display='';  // 실패 시 데모 다시 노출(빈 화면 방지)
-      box.innerHTML='<div class="cp-fail"><b>자막 제거에 실패했어요.</b> 잠시 후 다시 시도해 주세요. (문제가 계속되면 관리자에게 문의)</div>'
-        +'<button class="cp-redo" onclick="startCleanPreview()">↻ 다시 시도</button>';
+      // ★사유별로 갈라 안내한다(2026-08-25 실사고). 예전엔 전부 "잠시 후 다시 시도"라
+      //   크레딧이 떨어진 고객이 영원히 되지 않는 재시도만 반복했다(실측: 소스 40편 처리 후 소진).
+      //   분류는 서버가 한다(app.py clean_failure_kind) — 여기서 원문을 또 검사하면
+      //   같은 판단이 두 곳에 흩어진다(0순위-B).
+      box.innerHTML = cleanFailHtml(d.clean_error_kind);
       if(btn) btn.disabled=false;
     }
   }catch(e){ /* 다음 tick 재시도 */ }
+}
+
+// 자막제거 실패 안내 — 사유(kind)는 서버가 정한다(app.py clean_failure_kind).
+// 고객이 **지금 무엇을 하면 되는지**만 적는다. 되지도 않을 재시도를 권하지 않는다.
+// ★이 파일에는 외부 업체명을 쓰지 않는다(브랜드 정책, test_subclean_ui가 검사).
+//   업체 이름과 충전 주소는 키를 등록하는 설정 화면에 있으므로 그리로 보낸다.
+function cleanFailHtml(kind){
+  const redo = '<button class="cp-redo" onclick="startCleanPreview()">↻ 다시 시도</button>';
+  if(kind === 'no_credit'){
+    // 자막제거는 **소스 1편당 1회** 차감이다(mix_pipeline._charge_clean).
+    // 소스를 4개 담으면 영상 1개에 4회가 나가서 고객 체감보다 훨씬 빨리 닳는다.
+    return '<div class="cp-fail"><b>등록하신 자막제거 키의 크레딧이 모두 소진되었습니다.</b><br>'
+      + '<span style="opacity:.85">숏템메이커가 아니라 <b>키를 발급받으신 곳</b>의 잔액 문제라, '
+      + '다시 눌러도 같은 결과가 나옵니다. 충전하시면 바로 이어서 하실 수 있어요.</span></div>'
+      + '<div class="cp-fail" style="margin-top:8px;opacity:.9">💡 자막 제거는 <b>소스 영상 1편당 1회</b> 차감됩니다. '
+      + '소스를 4개 담아 만드시면 영상 하나에 4회가 나갑니다.</div>'
+      + '<a class="cp-redo" href="/settings.html#keys" target="_blank" rel="noopener" '
+      + 'style="display:inline-block;text-decoration:none">🔑 키·충전 안내 보기</a>';
+  }
+  if(kind === 'interrupted'){
+    return '<div class="cp-fail"><b>작업이 중간에 멈췄어요.</b> 서버 업데이트 등으로 끊긴 경우입니다. '
+      + '다시 시도하시면 됩니다.</div>' + redo;
+  }
+  if(kind === 'unsupported'){
+    return '<div class="cp-fail"><b>이 영상은 자막 제거가 되지 않았어요.</b><br>'
+      + '<span style="opacity:.85">AI가 처리하지 못하는 화면이 섞여 있을 수 있습니다. '
+      + '다른 소스로 바꾸거나, 자막 제거 없이 진행해 보세요.</span></div>' + redo;
+  }
+  return '<div class="cp-fail"><b>자막 제거에 실패했어요.</b> 잠시 후 다시 시도해 주세요. '
+    + '(문제가 계속되면 관리자에게 문의)</div>' + redo;
 }
 
 // ── 3단계 자막제거 ──────────────
@@ -9272,7 +9309,7 @@ async function refreshInpock(){
   if(!p){
     // ★상품 확정 UI는 8단계 SEO(#coupangSlot)에 있다 — 2026-08-18 쿠파스 트랙이 3단계에서
     //   이사했다. 여기가 계속 3단계를 가리키면 "가라는 곳이 빈 화면"이 된다(그쪽이 고친 것과 같은 함정).
-    el.innerHTML='<div class="hint">🛒 연결할 쿠팡 상품이 없습니다 — '+stepName('seo')+' 🛒 상품 확정에서 지정하면 여기에 등록용 링크가 뜹니다.</div>';
+    el.innerHTML='<div class="hint">🛒 연결할 쿠팡 상품이 없습니다 — '+stepName('seo')+' 「'+COUPANG_UI+'」에서 상품을 정하면 여기에 등록용 링크가 뜹니다.</div>';
     return;
   }
   el.innerHTML=`<div style="border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--inset)">
@@ -9338,7 +9375,7 @@ async function inpockModalOpen(){
   // ★올릴 링크가 없으면 열지 않는다. 상품이 있어도 url·partner_url이 둘 다 비면
   //   final_link가 빈 문자열이라(coupang_partners.final_link) 버튼은 그려지고 링크만 없다.
   if(!link){
-    alert('올릴 링크가 없습니다 — '+stepName('seo')+' 🛒 상품 확정에서 쿠팡 상품을 먼저 지정하세요.');
+    alert('올릴 링크가 없습니다 — '+stepName('seo')+' 「'+COUPANG_UI+'」에서 쿠팡 상품을 먼저 정하세요.');
     return;
   }
   const copied = await inpockCopyChecked();
@@ -9536,6 +9573,7 @@ function renderExport(opts){
           + `<button class="btn-prev" style="${small};border:0;cursor:pointer" onclick="resetCapCutFolder()">폴더 다시 지정</button>`
           // ★그림 매뉴얼(2026-08-19 사장님 "이미지로 해야 이해한다"). 글로 적은 안내는 아무도
           //   안 읽는다 — 준비 단계를 그림 4장으로 만든 페이지를 새 탭으로 연다.
+          + `<a class="btn-prev" style="${small}" href="/capcut_easy.html" target="_blank" rel="noopener">⚡ 3번만 하면 끝(간단안내)</a>`
           + `<a class="btn-prev" style="${small}" href="/capcut_manual.html" target="_blank" rel="noopener">📖 그림으로 보는 준비 방법</a>`
           + '<div class="hint" style="margin:4px 0 10px">캡컷이 깔려 있으면 클릭 한 번으로 프로젝트가 만들어집니다. <b>처음 쓰실 때만</b>: 위 <b>⚙자동설정</b> 파일을 받아 한 번 더블클릭(캡컷은 꺼둔 채) → 캡컷 켜기 → 폴더 한 번 지정. Chrome·Edge 전용.</div>'
         : '<div class="hint" style="margin-bottom:10px">💡 캡컷으로 바로 보내기는 <b>Chrome·Edge</b>에서만 됩니다. 지금 브라우저에선 아래 ZIP을 받아 캡컷에 올리세요. '

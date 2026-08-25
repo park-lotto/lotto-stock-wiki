@@ -876,6 +876,31 @@ class Store:
                     PRIMARY KEY (platform, value)
                 )
             """)
+            # 카톡 답변봇(2026-08-25) — 고객용 지식. status가 approved인 것만 봇이 쓴다.
+            # ★초안(draft)이 새어나가면 검수의 의미가 없다 — 조회는 반드시 status로 거른다.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS bot_qa (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    room TEXT NOT NULL DEFAULT '공통',
+                    question TEXT NOT NULL,
+                    answer TEXT NOT NULL,
+                    tags TEXT,
+                    status TEXT NOT NULL DEFAULT 'draft',
+                    source TEXT,
+                    updated_at TEXT
+                )
+            """)
+            # 못 답한 질문 = 다음에 채울 목록. 같은 질문은 count를 올린다.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS bot_unanswered (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    room TEXT NOT NULL,
+                    question TEXT NOT NULL,
+                    count INTEGER NOT NULL DEFAULT 1,
+                    asked_at TEXT,
+                    UNIQUE(room, question)
+                )
+            """)
             c.execute("""
                 CREATE TABLE IF NOT EXISTS platform_snapshots (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -1449,6 +1474,13 @@ class Store:
             c.execute("ALTER TABLE customers ADD COLUMN trial_ends_at INTEGER")
         except sqlite3.OperationalError:
             pass  # 이미 존재. 하위호환: 기존 행은 NULL(만료 취급)로 남아 동작 불변.
+
+        # ── 설치안내 자동노출(2026-08-25): 입금(pro 승격)한 분에게 /setup을 한 번 띄운다.
+        #    1=아직 안 봤다. 사장님 지시 "1번은 가입후 입금사람에게". 체험만 하는 분은 안 띄운다. ──
+        try:
+            c.execute("ALTER TABLE customers ADD COLUMN setup_due INTEGER NOT NULL DEFAULT 0")
+        except sqlite3.OperationalError:
+            pass  # 이미 존재
 
         # ── 관리자 지정(2026-07-22): admin=1이면 관리자(권한 관리자와 동일). 사장님이 UI로 부여/회수. ──
         try:
@@ -2141,6 +2173,30 @@ class Store:
                 "VALUES(?,?,?,?,?)",
                 [(platform, run_date, r["shortcode"], r.get("base"), r.get("delta")) for r in rows])
 
+    def crawl_runs(self, days=7):
+        """크롤 회차 목록(관리페이지 '크롤현황' 탭, 2026-08-25).
+
+        인스타는 snapshots, 나머지 플랫폼은 platform_snapshots에 회차가 쌓인다.
+        두 테이블을 같은 모양으로 합쳐 **최근 회차부터** 돌려준다.
+        run_date는 UTC 문자열('YYYY-MM-DD HH:MM')이다 — KST 변환은 화면에서 한다.
+        (과거 일부 발굴 회차는 로컬시각으로 저장돼 있다. 2026-08-25에 UTC로 통일했다.)
+        """
+        cutoff = (datetime.now(timezone.utc) - timedelta(days=int(days))).strftime("%Y-%m-%d %H:%M")
+        runs = []
+        with self._conn() as c:
+            for run_date, cnt, accounts in c.execute(
+                    "SELECT run_date, COUNT(*), COUNT(DISTINCT username) FROM snapshots "
+                    "WHERE run_date>=? GROUP BY run_date", (cutoff,)):
+                runs.append({"platform": "instagram", "at": run_date,
+                             "count": cnt, "accounts": accounts})
+            for platform, run_date, cnt in c.execute(
+                    "SELECT platform, run_date, COUNT(*) FROM platform_snapshots "
+                    "WHERE run_date>=? GROUP BY platform, run_date", (cutoff,)):
+                runs.append({"platform": platform, "at": run_date,
+                             "count": cnt, "accounts": 0})
+        runs.sort(key=lambda r: r["at"], reverse=True)
+        return runs
+
     def prev_base_platform(self, platform, shortcode):
         with self._conn() as c:
             row = c.execute("SELECT base FROM platform_snapshots WHERE platform=? AND shortcode=? "
@@ -2160,10 +2216,26 @@ class Store:
     #   계속 커졌다. 유튜브가 8,281건(4.47MB)까지 쌓여 /api/reference 한 번에 그걸 다
     #   내려보냈고(실측 974ms), 관리자 목록 응답에도 통째로 딸려갔다.
     #   랭킹은 최신순이라 뒤쪽 수천 건은 화면에서 볼 일이 없다.
-    LAST_RUN_MAX_ITEMS = 3000
+    #   ★2026-08-25 회귀 수정: 상한은 맞았지만 **자르는 기준이 틀렸다**.
+    #   "앞쪽이 최신"이라고 적어뒀는데 build_youtube_items는 정렬을 하지 않는다 —
+    #   수집한 순서(채널·키워드를 훑은 순서) 그대로다. 실측(08-25 목록):
+    #     앞 1500건 평균 176.0h vs 뒤 1500건 평균 162.7h → 앞쪽이 오히려 더 오래됐다.
+    #   그래서 8,580건 중 5,580건이 '뒤에서 수집됐다'는 이유만으로 잘렸고, 뒤쪽에서
+    #   훑는 채널은 통째로 사라졌다(사장님 제보: "어제까지 썰쇼핑 엄청 많았는데").
+    #   → 자르기 전에 **최신순으로 정렬**한다. 잘리는 건 오래된 뒤쪽뿐이다.
+    #   상한도 8000으로 올린다 — 어제(8,281건) 수준을 유지하면서 무한 증식만 막는다.
+    LAST_RUN_MAX_ITEMS = 8000
+
+    @staticmethod
+    def _newest_first(items):
+        """자르기 전 최신순 정렬. age_hours가 없는 항목은 뒤로 보낸다(정렬 불가).
+        ★정렬 없이 자르면 '수집 순서 뒤쪽' 채널이 통째로 사라진다(2026-08-25 회귀)."""
+        return sorted(items or [],
+                      key=lambda i: (i.get("age_hours") is None,
+                                     i.get("age_hours") if i.get("age_hours") is not None else 0))
 
     def save_last_run_platform(self, platform, items, collected_at):
-        items = list(items or [])[: self.LAST_RUN_MAX_ITEMS]   # 앞쪽이 최신이다
+        items = self._newest_first(items)[: self.LAST_RUN_MAX_ITEMS]
         with self._conn() as c:
             c.execute("INSERT OR REPLACE INTO settings(key, value) VALUES(?,?)",
                       (f"last_run::{platform}", json.dumps({"items": items, "collected_at": collected_at}, ensure_ascii=False)))
@@ -2524,7 +2596,7 @@ class Store:
         """마지막 수집 결과 전체(items + 시각)를 저장. 단일 행 덮어쓰기.
         + 수집분을 reel_history에 누적(shortcode upsert)해 48h 창에서 내려가도
         30일간 보존한다. 누적은 부가작업 — 실패해도 last_run 저장은 살린다."""
-        items = list(items or [])[: self.LAST_RUN_MAX_ITEMS]   # 플랫폼별 저장과 같은 상한
+        items = self._newest_first(items)[: self.LAST_RUN_MAX_ITEMS]   # 플랫폼별 저장과 같은 규칙
         with self._conn() as c:
             c.execute(
                 "INSERT INTO last_run(id, items_json, collected_at) VALUES(1, ?, ?) "
@@ -4733,6 +4805,60 @@ class Store:
                             (group_id, origin))
             return cur.rowcount
 
+    # ── 카톡 답변봇(2026-08-25) ──────────────────────────────────────
+    def bot_qa_add(self, room, question, answer, tags="", source=""):
+        """새 Q&A. **항상 draft로 들어간다** — 검수를 거쳐야 봇이 쓴다."""
+        with self._conn() as c:
+            cur = c.execute(
+                "INSERT INTO bot_qa(room, question, answer, tags, status, source, updated_at) "
+                "VALUES(?,?,?,?,'draft',?, datetime('now'))",
+                (room, question, answer, tags, source))
+            return cur.lastrowid
+
+    def bot_qa_list(self, status=None, room=None):
+        """status를 주면 그것만(봇은 'approved'로 부른다)."""
+        sql = "SELECT id, room, question, answer, tags, status, source FROM bot_qa"
+        args, where = [], []
+        if status:
+            where.append("status=?"); args.append(status)
+        if room:
+            where.append("(room=? OR room='공통')"); args.append(room)
+        if where:
+            sql += " WHERE " + " AND ".join(where)
+        sql += " ORDER BY id DESC"
+        with self._conn() as c:
+            rows = c.execute(sql, args).fetchall()
+        return [{"id": r[0], "room": r[1], "question": r[2], "answer": r[3],
+                 "tags": r[4], "status": r[5], "source": r[6]} for r in rows]
+
+    def bot_qa_set_status(self, qa_id, status):
+        with self._conn() as c:
+            c.execute("UPDATE bot_qa SET status=?, updated_at=datetime('now') WHERE id=?",
+                      (status, qa_id))
+
+    def bot_qa_update(self, qa_id, question, answer, tags=""):
+        with self._conn() as c:
+            c.execute("UPDATE bot_qa SET question=?, answer=?, tags=?, "
+                      "updated_at=datetime('now') WHERE id=?",
+                      (question, answer, tags, qa_id))
+
+    def bot_unanswered_add(self, room, question):
+        """못 답한 질문 적재. 같은 질문이면 count를 올린다."""
+        with self._conn() as c:
+            c.execute(
+                "INSERT INTO bot_unanswered(room, question, count, asked_at) "
+                "VALUES(?,?,1, datetime('now')) "
+                "ON CONFLICT(room, question) DO UPDATE SET count=count+1, "
+                "asked_at=datetime('now')",
+                (room, question))
+
+    def bot_unanswered_list(self):
+        with self._conn() as c:
+            rows = c.execute("SELECT id, room, question, count, asked_at "
+                             "FROM bot_unanswered ORDER BY count DESC, id DESC").fetchall()
+        return [{"id": r[0], "room": r[1], "question": r[2],
+                 "count": r[3], "asked_at": r[4]} for r in rows]
+
     def get_setting(self, key, default=None):
         """전역 설정값 조회(예: vmake_api_key). 없으면 default."""
         with self._conn() as c:
@@ -4928,13 +5054,17 @@ class Store:
         else:
             full_access_until = 0
             approved_at = None
-            # 무료체험 이벤트는 기본 OFF(2026-07-22 사장님 결정): 가입 직후 바로 대기실(잠김),
-            # 사장님이 체험/pro를 줘야 시작. 설정 trial_event_hours를 0보다 크게 주면 그 시간만큼
-            # 자동 맛보기(옛 이벤트)를 다시 켤 수 있다.
+            # ★가입 즉시 자동 체험 3일(2026-08-25 사장님 "가입되면 승인대기중 쪽에
+            #   체험3일로 자동으로 하고, 내가 확인을 누르면 고객관리로 내려줘").
+            #   기본값을 72시간으로 둔다 — 설정을 안 건드려도 켜진다(서버 settings는 미설정).
+            #   0으로 바꾸면 옛 동작(가입 직후 잠김, 사장님이 줘야 시작)으로 돌아간다.
+            #   ⚠️ 이 창은 approved_at이 비어 있을 때만 유효하다(access_level).
+            #      사장님이 '확인'을 누르면 ack_customer가 남은 시간을 full_access_until로
+            #      옮겨 체험이 끊기지 않게 한다.
             try:
-                trial_hours = int(self.get_setting("trial_event_hours", 0))
+                trial_hours = int(self.get_setting("trial_event_hours", 72))
             except (TypeError, ValueError):
-                trial_hours = 0
+                trial_hours = 72
             trial_ends_at = (now_ts + trial_hours * 3600) if trial_hours > 0 else None
         with self._conn() as c:
             try:
@@ -4982,6 +5112,35 @@ class Store:
         return [{"id": r[0], "username": r[1], "name": r[2], "phone": r[3],
                  "email": r[4], "created_at": r[5]} for r in rows]
 
+    def ack_customer(self, customer_id):
+        """'확인함' — 대기실에서만 내린다. 체험 기간은 **건드리지 않는다**(2026-08-25 사장님:
+        "가입되면 자동 체험3일, 내가 확인 누르면 고객관리로 내려줘. 일일이 버튼 누르니 안 좋아").
+
+        approve_customer와 다르다:
+          approve_customer  = 승인+기간 부여+결제 기록 (사장님이 돈을 받았을 때)
+          ack_customer      = 봤다는 표시만. 남은 체험은 그대로 흘러가고, 끝나면 알아서 잠긴다.
+
+        이미 승인된 고객이면 아무 것도 하지 않는다(연장 사고 방지).
+
+        ★남은 체험을 반드시 옮겨야 한다(안 그러면 확인을 누르는 순간 체험이 끊긴다).
+          access_level은 체험창(trial_ends_at)을 **approved_at이 비어 있을 때만** 본다.
+          approved_at을 채우면 그 분기를 못 타므로, 남은 시간을 승인 고객이 쓰는
+          full_access_until로 이관한다 → 체험이 그대로 흘러가고 끝나면 알아서 잠긴다.
+          이미 full_access_until이 더 길면 그대로 둔다(줄이지 않는다).
+        """
+        now_ts = int(datetime.now(timezone.utc).timestamp())
+        with self._conn() as c:
+            row = c.execute("SELECT approved_at, trial_ends_at, full_access_until "
+                            "FROM customers WHERE id=?", (int(customer_id),)).fetchone()
+            if row is None or row[0] is not None:
+                return False                       # 없는 고객이거나 이미 내려간 고객
+            trial_ends = row[1] or 0
+            fau = row[2] or 0
+            new_fau = max(fau, trial_ends)         # 남은 체험을 이어받는다(줄이지 않는다)
+            c.execute("UPDATE customers SET approved_at=?, full_access_until=? WHERE id=?",
+                      (now_ts, new_fau, int(customer_id)))
+        return True
+
     def verify_customer(self, username, password):
         """username/password 검증 → 성공 시 customer_id, 실패 시 None.
         타이밍 공격 방지를 위해 hmac.compare_digest로 해시 비교."""
@@ -5019,6 +5178,22 @@ class Store:
         """가입 마무리(이름·전화) 입력을 마쳤다 → 다시 묻지 않는다."""
         with self._conn() as c:
             c.execute("UPDATE customers SET welcome_due=0 WHERE id=?", (customer_id,))
+
+    def mark_setup_due(self, customer_id):
+        """입금(pro 승격)한 분에게 설치안내(/setup)를 다음 화면이동 때 한 번 띄운다."""
+        with self._conn() as c:
+            c.execute("UPDATE customers SET setup_due=1 WHERE id=?", (int(customer_id),))
+
+    def clear_setup_due(self, customer_id):
+        """설치안내를 봤다 → 다시 안 띄운다(메뉴 링크로는 언제든 다시 볼 수 있다)."""
+        with self._conn() as c:
+            c.execute("UPDATE customers SET setup_due=0 WHERE id=?", (int(customer_id),))
+
+    def is_setup_due(self, customer_id):
+        with self._conn() as c:
+            row = c.execute("SELECT setup_due FROM customers WHERE id=?",
+                            (int(customer_id),)).fetchone()
+        return bool(row and row[0])
 
     def set_customer_admin(self, customer_id, is_admin):
         """관리자 지정/회수(사장님 UI). admin=1이면 _is_admin이 관리자로 인정(권한 동일).
@@ -5119,8 +5294,10 @@ class Store:
             base = fau if fau > now_ts else now_ts          # 연장 기준: 미래 만료면 그 뒤, 아니면 now
             new_until = base + add
             if approved_at is None:
-                c.execute("UPDATE customers SET approved_at=?, full_access_until=? WHERE id=?",
-                          (now_ts, now_ts + add, customer_id))
+                # ★최초 승인(=입금) 때만 설치안내를 띄운다(2026-08-25 사장님 "1번은 가입후
+                #   입금사람에게"). 연장 때마다 띄우면 이미 세팅을 끝낸 분에게 성가시다.
+                c.execute("UPDATE customers SET approved_at=?, full_access_until=?, setup_due=1 "
+                          "WHERE id=?", (now_ts, now_ts + add, customer_id))
             else:
                 c.execute("UPDATE customers SET full_access_until=? WHERE id=?",
                           (new_until, customer_id))
