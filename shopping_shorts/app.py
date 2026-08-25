@@ -6944,6 +6944,8 @@ _AUTH_ALLOW = ("/login", "/api/login", "/signup", "/api/signup", "/favicon.ico",
                # 설치·준비 안내(2026-08-24 사장님 "고객한테 보낼 수 있는 주소로 줘").
                # 단톡방·카톡으로 링크만 뿌리면 되도록 **로그인 없이** 열린다.
                "/setup", "/setup.html",
+               # 쿠팡파트너스 안내(2026-08-25)도 같은 이유로 공개.
+               "/coupang", "/coupang.html",
                # 캡컷 준비 안내와 자동설정 파일도 공개(2026-08-24 사장님 "공개").
                # 설치 안내를 단톡방 링크로 뿌리는데 그 안의 캡컷 링크만 로그인을 요구하면
                # 거기서 끊긴다 — 안내는 끝까지 따라갈 수 있어야 안내다.
@@ -12101,6 +12103,14 @@ def page_setup(request: Request):
         except Exception as e:  # noqa: BLE001 — 플래그 해제 실패로 안내를 못 보게 하지 않는다
             print(f"[setup] 플래그 해제 실패(무시): {e!r}", file=sys.stderr)
     return FileResponse(str(Path(__file__).parent / "static" / "setup.html"),
+                        media_type="text/html")
+
+
+@app.get("/coupang", response_class=HTMLResponse)
+def page_coupang():
+    """쿠팡파트너스 안내 — 가입·추적링크·고지문구. /setup과 같이 로그인 없이 열린다
+    (단톡방·카톡에 링크만 뿌리면 되도록)."""
+    return FileResponse(str(Path(__file__).parent / "static" / "coupang.html"),
                         media_type="text/html")
 
 
