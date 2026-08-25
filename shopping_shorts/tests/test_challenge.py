@@ -95,3 +95,28 @@ def test_summarize_empty():
     assert got["by_day"] == {}
     assert got["done_days"] == 0
     assert got["total"] == 0
+
+
+# ── 임베드 주소(2026-08-25) ───────────────────────────────────────────
+# 관리 화면에서 카드를 누르면 플랫폼으로 튕겨 나가 탭이 100개 열리던 것을
+# 화면 안 재생으로 바꿨다. 주소를 만드는 판단은 여기 한 곳에만 있다.
+
+def test_embed_url_three_platforms():
+    assert challenge.embed_url("https://www.youtube.com/shorts/xY12345",
+                               "youtube") == "https://www.youtube.com/embed/xY12345"
+    assert challenge.embed_url("https://www.instagram.com/reel/ABC123def/",
+                               "instagram") == "https://www.instagram.com/p/ABC123def/embed"
+    assert challenge.embed_url("https://www.tiktok.com/@a/video/7106594312292453675",
+                               "tiktok") == "https://www.tiktok.com/embed/v2/7106594312292453675"
+
+
+def test_embed_url_empty_when_no_code():
+    """틱톡 단축링크엔 영상 id가 없다 → 빈 문자열. 화면은 원본 링크로 폴백한다."""
+    assert challenge.embed_url("https://vt.tiktok.com/ZSabc/", "tiktok") == ""
+    assert challenge.embed_url("https://example.com/x", "") == ""
+
+
+def test_embed_url_reuses_given_code():
+    """DB에 저장된 shortcode를 넘기면 그것을 쓴다 — 같은 판단을 두 번 하지 않는다."""
+    assert challenge.embed_url("https://vt.tiktok.com/ZSabc/", "tiktok",
+                               "999888777") == "https://www.tiktok.com/embed/v2/999888777"

@@ -63,6 +63,32 @@ def video_code(url, platform):
     return ""
 
 
+def embed_url(url, platform, code=""):
+    """플랫폼 영상 URL → **화면 안에서 재생되는** 임베드 주소. 못 만들면 빈 문자열.
+
+    왜 필요한가: 관리 화면에서 카드를 누르면 인스타·틱톡으로 **튕겨 나가서**
+    100명 영상을 훑는 데 탭이 100개 열린다. 임베드면 나가지 않고 본다.
+
+    ⚠️ 예전에 '임베드를 폐지'한 기록이 있으나(memory: 쇼핑쇼츠_자동화) 그것은
+    **검색 결과**를 긁어와 보여주는 이야기였다(관련성 30~50%가 문제). 여기는
+    URL이 확정된 특정 영상이라 그 판단이 적용되지 않는다.
+
+    code를 넘기면 그것을 쓴다(DB에 이미 저장된 shortcode 재사용 — 같은 판단을
+    두 번 하지 않는다). 없으면 여기서 video_code로 뽑는다.
+    """
+    c = (code or "").strip() or video_code(url, platform)
+    if not c:
+        return ""
+    if platform == "youtube":
+        return "https://www.youtube.com/embed/" + c
+    if platform == "instagram":
+        # 릴스·게시물 모두 /p/<code>/embed 로 열린다(로그인 불필요).
+        return "https://www.instagram.com/p/" + c + "/embed"
+    if platform == "tiktok":
+        return "https://www.tiktok.com/embed/v2/" + c
+    return ""
+
+
 def dedup_key(url, shortcode=""):
     """같은 영상을 두 번 낸 것인지 판정하는 키. 저장 시점에 확정한다.
 

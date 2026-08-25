@@ -10848,11 +10848,14 @@ def _challenge_fetch(sub_id, url, platform):
     views·likes·comments·channel. view_count로 읽으면 항상 None이다.
     """
     store = Store(DB_PATH)
-    if platform == "tiktok":
-        # 틱톡은 단건 조회 함수가 없다(tiktok_client는 계정 단위뿐).
-        # 시도조차 하지 않으므로 'failed'가 아니라 'skipped'다.
-        store.update_challenge_submission_meta(sub_id, fetch_status="skipped")
-        return
+    # ★틱톡도 probe_grab_meta를 그대로 태운다(2026-08-25 실측으로 정정).
+    #   예전 주석은 "틱톡은 단건 조회 함수가 없다"며 통째로 skipped 처리했는데,
+    #   probe_grab_meta는 **이미 틱톡 oEmbed 폴백을 갖고 있다**(media_download.py:104).
+    #   실측(https://www.tiktok.com/@tiktok/video/7106594312292453675):
+    #     thumbnail ✅ · title ✅ · channel ✅ · views ❌(None)
+    #   조회수만 안 나온다(yt-dlp가 틱톡을 못 뚫는다) — 썸네일·제목이 채워지는 것만으로도
+    #   영상 탭이 링크 대신 카드로 보이고, AI 코멘트를 쓸 재료가 생긴다.
+    #   조회수가 없다고 'failed'로 떨어뜨리지 않는다 — meta가 비어 있을 때만 failed다.
     try:
         meta = probe_grab_meta(url) or {}
     except Exception as e:  # noqa: BLE001 — 수집 실패가 제출을 무효로 만들지 않는다
@@ -10979,6 +10982,9 @@ def api_challenge_videos(request: Request, sort: str = "recent",
             cust = store.get_customer(cid) or {}
             names[cid] = cust.get("name") or cust.get("username") or f"#{cid}"
         i["member_name"] = names[cid]
+        # ★화면 안에서 재생하려고 임베드 주소를 여기서 한 번만 만든다.
+        #   프론트가 각자 만들면 플랫폼 판단이 두 벌이 된다(0순위-B).
+        i["embed"] = challenge.embed_url(i["url"], i["platform"], i.get("shortcode") or "")
     return {"ok": True, "items": items}
 
 
@@ -11010,6 +11016,27 @@ def api_challenge_member_set(request: Request, customer_id: int, active: int = 1
     else:
         store.set_challenge_member_active(int(customer_id), False)
     return {"ok": True, "customer_id": int(customer_id), "active": bool(active)}
+
+
+@app.post("/api/challenge/members/bulk")
+def api_challenge_members_bulk(request: Request, body: dict):
+    """참가자 **일괄** 등록/해제(관리자 전용). body={"ids":[1,2,3], "active":1}
+
+    왜 필요한가: 1기 100명을 고객관리 화면에서 한 명씩 누르면 100번 클릭·100번
+    왕복이다. 판단(누가 참가자인가)은 그대로 store 한 곳에 두고, 횟수만 줄인다.
+    """
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    ids = [int(x) for x in (body or {}).get("ids", []) if str(x).strip().isdigit()]
+    active = bool((body or {}).get("active", 1))
+    store = Store(DB_PATH)
+    for cid in ids:
+        if active:
+            store.add_challenge_member(cid)
+        else:
+            store.set_challenge_member_active(cid, False)
+    return {"ok": True, "count": len(ids), "active": active}
 
 
 @app.get("/challenge", response_class=HTMLResponse)

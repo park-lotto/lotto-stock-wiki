@@ -214,18 +214,42 @@ def test_fetch_empty_meta_marks_failed(env, monkeypatch):
     assert rows[0]["fetch_status"] == "failed"
 
 
-def test_tiktok_is_skipped_not_failed(env, monkeypatch):
-    """틱톡은 단건 조회 함수가 없다 — 시도하지 않고 skipped로 둔다."""
+def test_tiktok_is_fetched_like_others(env, monkeypatch):
+    """틱톡도 수집을 **시도한다**(2026-08-25 정정).
+
+    예전엔 "단건 조회 함수가 없다"며 통째로 skipped였는데, probe_grab_meta는
+    이미 틱톡 oEmbed 폴백을 갖고 있다(media_download.py). 실측으로 썸네일·제목·
+    채널이 나온다 — 조회수만 None이다.
+    """
     env.add_challenge_member(77)
     called = []
     monkeypatch.setattr(appmod, "probe_grab_meta",
-                        lambda u: called.append(u) or {}, raising=False)
-    monkeypatch.setattr(appmod, "_challenge_fetch", _REAL_CHALLENGE_FETCH)   # env가 덮은 no-op을 되돌린다
-    sid = env.add_challenge_submission(77, "https://vt.tiktok.com/x", "tiktok",
+                        lambda u: called.append(u) or {"thumbnail": "https://t/x.jpg",
+                                                       "title": "틱톡 영상",
+                                                       "channel": "@someone"},
+                        raising=False)
+    monkeypatch.setattr(appmod, "_challenge_fetch", _REAL_CHALLENGE_FETCH)
+    url = "https://www.tiktok.com/@a/video/7106594312292453675"
+    sid = env.add_challenge_submission(77, url, "tiktok",
+                                       "7106594312292453675",
+                                       "sc:7106594312292453675", "2026-08-24")
+    appmod._challenge_fetch(sid, url, "tiktok")
+    row = env.list_challenge_submissions(customer_id=77)[0]
+    assert called == [url]                    # 시도했다
+    assert row["fetch_status"] == "ok"
+    assert row["thumb"] == "https://t/x.jpg"  # 썸네일이 채워진다
+    assert row["views"] is None               # 조회수는 안 나온다 — 그래도 ok다
+
+
+def test_tiktok_empty_meta_is_failed(env, monkeypatch):
+    """수집이 빈손이면 failed — 링크는 남는다(카운트와 무관)."""
+    env.add_challenge_member(78)
+    monkeypatch.setattr(appmod, "probe_grab_meta", lambda u: {}, raising=False)
+    monkeypatch.setattr(appmod, "_challenge_fetch", _REAL_CHALLENGE_FETCH)
+    sid = env.add_challenge_submission(78, "https://vt.tiktok.com/x", "tiktok",
                                        "", "url:vt.tiktok.com/x", "2026-08-24")
     appmod._challenge_fetch(sid, "https://vt.tiktok.com/x", "tiktok")
-    assert env.list_challenge_submissions(customer_id=77)[0]["fetch_status"] == "skipped"
-    assert called == []          # 시도조차 안 했다
+    assert env.list_challenge_submissions(customer_id=78)[0]["fetch_status"] == "failed"
 
 
 def test_submit_schedules_background_fetch(env, monkeypatch):
