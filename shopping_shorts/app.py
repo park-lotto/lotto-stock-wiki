@@ -6946,6 +6946,8 @@ _AUTH_ALLOW = ("/login", "/api/login", "/signup", "/api/signup", "/favicon.ico",
                "/setup", "/setup.html",
                # 쿠팡파트너스 안내(2026-08-25)도 같은 이유로 공개.
                "/coupang", "/coupang.html",
+               # 인포크링크 안내(2026-08-25)도 같은 이유로 공개.
+               "/inpock", "/inpock.html",
                # 캡컷 준비 안내와 자동설정 파일도 공개(2026-08-24 사장님 "공개").
                # 설치 안내를 단톡방 링크로 뿌리는데 그 안의 캡컷 링크만 로그인을 요구하면
                # 거기서 끊긴다 — 안내는 끝까지 따라갈 수 있어야 안내다.
@@ -12111,6 +12113,18 @@ def page_coupang():
     """쿠팡파트너스 안내 — 가입·추적링크·고지문구. /setup과 같이 로그인 없이 열린다
     (단톡방·카톡에 링크만 뿌리면 되도록)."""
     return FileResponse(str(Path(__file__).parent / "static" / "coupang.html"),
+                        media_type="text/html")
+
+
+@app.get("/inpock", response_class=HTMLResponse)
+def page_inpock():
+    """인포크링크 안내 — 가입·상품등록·자동DM, 그리고 번호 규칙(2026-08-25 사장님).
+
+    ★쿠팡 가입·추적링크는 /coupang이 이미 끝까지 안내한다 — 여기서 되풀이하지 않고
+      링크로 보낸다(0순위-B: 같은 설명을 두 곳에 적으면 언젠가 어긋난다).
+      이 페이지가 채우는 빈칸은 **인포크 쪽 절차**다(coupang.html에 인포크는 한 줄뿐).
+    """
+    return FileResponse(str(Path(__file__).parent / "static" / "inpock.html"),
                         media_type="text/html")
 
 
