@@ -12,6 +12,10 @@
  *   });
  *   roll.destroy();                 // 접을 때 반드시 부른다(영상·타이머 정리)
  *
+ * ★재생은 '미리보기 창'에서 한다(2026-08-26 사장님). opt.onPlay(a,b)를 주면
+ *   스페이스·구간재생을 그쪽으로 넘긴다 — 필름 안의 <video>는 썸네일 추출과
+ *   스크러빙(프레임 확인)에만 쓴다. onPlay가 없으면 종전대로 안에서 재생한다.
+ *
  * ★데모(scratchpad/filmdemo)에서 실측으로 밟은 함정 — 여기 다 반영돼 있다:
  *   · 1칸 = 정확히 1초(STEP). t=i*(DUR/N)로 뽑으면 화면과 재생이 어긋난다
  *   · 썸네일은 칸 한가운데에서 뽑는다(정각은 그 칸 안의 전환을 놓쳐 22.6% 다른 그림)
@@ -263,7 +267,8 @@
         `<span class="frmk"><button type="button" class="frbtn mk">＋ 구간</button>` +
         `<input type="number" class="frlen" step="0.1" min="0.1" value="2.4"><span class="frhint">초</span></span>` +
         (BOXES.length
-          ? `<button type="button" class="frbtn ok">⬆ 담기 (${BOXES.length}개 · ${total.toFixed(2)}초)</button>` +
+          ? `<button type="button" class="frbtn" data-act="play">▶ 미리보기에서 듣기</button>` +
+            `<button type="button" class="frbtn ok">⬆ 담기 (${BOXES.length}개 · ${total.toFixed(2)}초)</button>` +
             `<button type="button" class="frbtn" data-act="clr">비우기</button>`
           : '');
       const mk = barEl.querySelector('.mk'); if (mk) mk.onclick = makeBox;
@@ -271,6 +276,12 @@
       if (ok) ok.onclick = () => { if (opt.onCommit) opt.onCommit(BOXES.map(b => ({ s: b.s, e: b.e }))); };
       const clr = barEl.querySelector('[data-act="clr"]');
       if (clr) clr.onclick = () => { BOXES = []; ACTBOX = null; drawBoxes(); drawBar(); };
+      const pl = barEl.querySelector('[data-act="play"]');
+      if (pl) pl.onclick = () => {
+        const b = (ACTBOX != null && BOXES[ACTBOX]) ? BOXES[ACTBOX] : BOXES[0];
+        if (!b) return;
+        if (typeof opt.onPlay === 'function') opt.onPlay(b.s, b.e);
+      };
     }
 
     function applyW() {
@@ -388,8 +399,16 @@
       const tag = (e.target && e.target.tagName || '').toLowerCase();
       if (tag === 'input' || tag === 'textarea' || (e.target && e.target.isContentEditable)) return;
       e.preventDefault();
+      const bx = (ACTBOX != null && BOXES[ACTBOX]) ? BOXES[ACTBOX] : null;
+      // ★미리보기 창으로 넘긴다 — 구간이 있으면 그 구간, 없으면 지금 위치부터
+      if (typeof opt.onPlay === 'function'){
+        const a2 = bx ? bx.s : (pv.currentTime || 0);
+        const b2 = bx ? bx.e : Math.min(DUR, a2 + 3);
+        opt.onPlay(a2, b2);
+        return;
+      }
       if (playing) { pv.pause(); playing = false; if (raf) cancelAnimationFrame(raf); raf = 0; return; }
-      const b = (ACTBOX != null && BOXES[ACTBOX]) ? BOXES[ACTBOX] : null;
+      const b = bx;
       if (b && (pv.currentTime < b.s - 0.05 || pv.currentTime >= b.e - 0.02)) pv.currentTime = b.s;
       pv.play().then(() => {
         playing = true;
