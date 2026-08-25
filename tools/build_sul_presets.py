@@ -123,6 +123,48 @@ def _visible(color, outline, has_box):
     return outline
 
 
+# 자막 세로위치 잡음 걸러내기(2026-08-25). 20채널 실측 분포에서 뽑은 값이지
+# 임의로 정한 게 아니다 — 원장이 바뀌면 아래 한 줄로 다시 잰다:
+#   py -c "import json;ys=sorted(r['cap_y'] for r in json.load(open('docs/reference/썰쇼핑_영상디자인_실측.json',encoding='utf-8')));print(ys)"
+# 실측 분포: 0.0 / 28~44에 16개 / 55 / 68.5 / 85 / 92
+_CAP_Y_MAX = 48        # 이 위로 튀면 '하단 자막 한 장면'을 읽은 잡음으로 본다
+_CAP_Y_TYPICAL = 35    # 16채널의 중앙값
+_CAP_GAP_PCT = 4       # 헤드카피 블록 바닥과 자막 사이 최소 간격(%) — 붙으면 읽기 힘들다
+
+
+def _cap_y(cap_y, bar_h, sub_h, hl_y, hl_size):
+    """자막 세로 위치(%) — **헤드카피 아래로** 내려보낸다.
+
+    ★상한을 규칙으로 건다(2026-08-25 실측). 20채널 중 **16채널이 28~44%**에
+      몰려 있는데(중앙값 35%) 4곳만 92·85·68.5·0.0으로 튄다. 이건 채널 규격이 아니라
+      **그 영상 그 장면의 하단 자막을 읽은 잡음**이다(원장 n=3의 합의가 중앙값이라
+      3편 중 2편이 다르면 끌려간다). 0.0은 미검출.
+      → 손으로 "92는 이상하니 35로" 찍으면 살림킹왕짱 색 뒤집힘과 같은 짓이다.
+        무리에서 벗어난 값만 **무리의 중앙값으로 돌린다**(값의 주인은 여전히 실측).
+
+    ★★헤드카피 겹침(2026-08-25 로컬 실측에서 잡음 — 배포 전에 눈으로 봐서 살았다):
+      처음엔 "자막은 원래 헤드카피보다 아래"라고 **가정하고** 띠만 피했다. 틀렸다.
+      실측하니 **20종 전부** 헤드카피와 8% 이내였고 12종은 자막이 헤드카피보다 **위**
+      였다(활용정점 헤드44/자막34). 이유: 제미니가 읽은 cap_y는 그 채널 원본 기준인데,
+      우리 hl_y는 띠+제목블록을 피하느라 **이미 아래로 밀린 값**이라 둘이 만난 것이다.
+      → 자막 자리는 헤드카피와 **같은 곳에서** 정해야 한다(0순위-B: 한 화면의 세로
+        자리를 두 함수가 따로 정하면 반드시 어긋난다). 헤드카피 블록 바닥을 계산해
+        그 아래로 민다.
+    """
+    try:
+        y = int(round(float(cap_y)))
+    except (TypeError, ValueError):
+        y = 0
+    if y <= 0 or y > _CAP_Y_MAX:
+        y = _CAP_Y_TYPICAL
+    floor_pct = round((bar_h + sub_h) / H * 100) + 3
+    # 헤드카피 블록 바닥(%) — hl_y는 블록 **한가운데**이고 2줄이므로 절반은 1줄 높이다.
+    # (build()의 half_block 계산과 같은 근거 — 여기서만 어림하면 어긋난다)
+    hl_half_pct = (hl_size * (H / 720) * 1.18) / H * 100
+    floor_pct = max(floor_pct, round(hl_y + hl_half_pct) + _CAP_GAP_PCT)
+    return max(0, min(92, max(y, floor_pct)))
+
+
 def build(rows):
     fonts = _fonts()
     out = []
@@ -186,6 +228,23 @@ def build(rows):
             "hc_y": hl_y,
             "hc_box": bool(r.get("hl_box")),
             "hc_box_color": _hex(r.get("hl_box_color"), "#FFFFFF"),
+            # ── 자막(2026-08-25) ─────────────────────────────────────────
+            # ★제미니는 cap_*를 **처음부터 읽고 있었는데 아무도 안 썼다**(실측: 코드
+            #   전체에서 cap_y/cap_color/cap_outline/cap_box 소비처 0건). 그래서
+            #   틀·헤드카피만 채널 질감을 따라가고 자막만 우리 기본값이라 "한 세트로
+            #   안 보인다"가 됐다. 새 측정 없이 이미 낸 비용을 회수하는 것이다.
+            # ★색 안전장치는 헤드카피와 **같은 함수**를 쓴다(0순위-B) — 자막용으로
+            #   따로 짜면 언젠가 두 판정이 어긋난다.
+            "cap_color": _hex(r.get("cap_color"), "#FFFFFF"),
+            "cap_out": _visible(_hex(r.get("cap_color"), "#FFFFFF"),
+                                _hex(r.get("cap_outline"), "#000000"),
+                                bool(r.get("cap_box"))),
+            # ★hl_y·hl_size를 함께 넘긴다 — 자막은 헤드카피 아래로 가야 한다(겹침 방지).
+            "cap_y": _cap_y(r.get("cap_y"),
+                            _pct_to_px(r.get("bar_h_pct"), 190),
+                            _pct_to_px(r.get("sub_h_pct"), 0) if r.get("sub_exists") else 0,
+                            hl_y, _font_for(r.get("hl_size"))),
+            "cap_box": bool(r.get("cap_box")),
             "font": fonts.get(r["channel"], DEFAULT_FONT),
             # 흰 제목블록을 쓰는 채널인가(실측 17/20) + 그 채널다운 샘플 수치
             "has_head": bool(r.get("sub_exists")),
@@ -214,6 +273,9 @@ def emit(rows):
         print(f'        "headcopy": _hc("{r["font"]}", {r["hc_size"]}, "{r["hc_c1"]}", '
               f'"{r["hc_c2"]}", {r["hc_y"]}, {r["hc_out_w"]}, "{r["hc_out"]}", '
               f'{r["hc_box"]}, "{r["hc_box_color"]}"),')
+        # ★자막도 한 세트로 싣는다 — 틀·헤드카피만 채널을 따라가면 자막만 겉돈다.
+        print(f'        "caption": _cap("{r["cap_color"]}", "{r["cap_out"]}", '
+              f'{r["cap_y"]}, {r["cap_box"]}),')
         if r["notes"]:
             print(f'        # {r["notes"]}')
         print("    },")

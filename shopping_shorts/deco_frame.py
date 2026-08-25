@@ -10,6 +10,7 @@
 import hashlib
 import json
 import pathlib
+import re
 
 from PIL import Image, ImageDraw, ImageFont
 
@@ -54,6 +55,26 @@ def _hc(font, size, color, color2, y, outline_w=12, outline_color="#000000",
             "box": bool(box), "box_color": box_color, "box_pad": 16, "box_opacity": 100}
 
 
+def _cap(color, outline_color, y, box=False):
+    """자막 한 세트(색·외곽선·세로위치·박스). 헤드카피(_hc)와 짝이다.
+
+    ★왜 생겼나(2026-08-25): 제미니는 실측 때 cap_color·cap_outline·cap_y·cap_box를
+      **처음부터 읽고 있었는데** 소비처가 0곳이었다(실측: 코드 전체 grep 0건).
+      그래서 틀과 헤드카피만 채널 질감을 따라가고 자막만 우리 기본값으로 나가
+      "한 세트로 안 보인다"가 됐다.
+
+    ★여기 없는 값(폰트·크기·두께)은 **일부러 안 넣는다.** 실측 스키마가 그걸 안
+      물어봤기 때문이다 — 없는 걸 지어내면 살림킹왕짱 색 뒤집힘과 같은 사고가 난다.
+      화면이 쓰던 값을 그대로 둔다(빈값 = "안 정했음" 규약, DEFAULTS와 같다).
+    """
+    # ★박스 색은 지어내지 않는다 — 실측한 outline_color를 그대로 쓴다(2026-08-25 결함).
+    #   외곽선 색 = 그 채널이 글자 뒤에 깔던 '밝은 면' 색이다. 예전엔 여기 "#000000"을
+    #   박아뒀는데, cap_color가 검정인 채널이 많아 **검은 박스 위 검은 글자**가 됐다
+    #   (실측: 박스 켜진 틀 중 9종). 글자가 외곽선만으로 겨우 읽혀 뭉개져 보였다.
+    return {"color": color, "outline": True, "outline_color": outline_color,
+            "y_pct": y, "box": bool(box), "box_color": outline_color}
+
+
 PRESETS = {
     # ══════════════════════════════════════════════════════════════════
     # 2026-08-20 · 사장님 재지시: "실제 영상들 안봤지? 제미니한테 시키면안되나?
@@ -76,6 +97,7 @@ PRESETS = {
         "has_head": True, "demo_views": "264만",
         "demo_comments": "587",
         "headcopy": _hc("TmonMonsori.ttf", 90, "#000000", "#00D3FA", 44, 7, "#FFFFFF", True, "#FFFFFF"),
+        "caption": _cap("#000000", "#FFFFFF", 63, False),
         # 상단의 강렬한 빨간색 검색창 디자인을 활용하여 브랜드의 시그니처 스타일을 보여줍니다. 헤드라인에 두꺼운 검은색 외곽선과 네온 
     },
     "sul_salrim": {
@@ -87,6 +109,7 @@ PRESETS = {
         "has_head": True, "demo_views": "264만",
         "demo_comments": "587",
         "headcopy": _hc("TmonMonsori.ttf", 86, "#000000", "#000000", 37, 5, "#FFFFFF", True, "#FFFFFF"),
+        "caption": _cap("#000000", "#FFFFFF", 55, False),
         # 웹사이트 헤더를 모티브로 한 상단바와 타이틀 영역을 상단에 고정 배치하여 정보 전달력을 극대화한 디자인입니다. 군더더기 없는 
     },
     "sul_sulchip": {
@@ -98,6 +121,7 @@ PRESETS = {
         "has_head": True, "demo_views": "264만",
         "demo_comments": "587",
         "headcopy": _hc("SpoqaHanSansNeo-Bold.otf", 90, "#FFFFFF", "#26D953", 38, 7, "#000000", False, "#FFFFFF"),
+        "caption": _cap("#000000", "#FFFFFF", 57, True),
         # 상단의 회색 검색창 레이아웃과 고정된 흰색 타이틀 바가 깔끔하게 매칭되어 정돈된 분위기를 줍니다. 화면 중앙에 둥근 흰색 박스
     },
     "sul_bangkkul": {
@@ -109,6 +133,7 @@ PRESETS = {
         "has_head": True, "demo_views": "264만",
         "demo_comments": "587",
         "headcopy": _hc("Pretendard-Bold.otf", 63, "#333333", "#00A34F", 36, 5, "#FFFFFF", True, "#FFFFFF"),
+        "caption": _cap("#111111", "#FFFFFF", 50, True),
         # 이 채널은 상단의 강렬한 핫핑크색 포털 스타일 헤더와 함께 커뮤니티 인기 글 레이아웃을 차용한 독특한 UI 피드를 보여줍니다.
     },
     "sul_lucky": {
@@ -120,6 +145,7 @@ PRESETS = {
         "has_head": True, "demo_views": "264만",
         "demo_comments": "587",
         "headcopy": _hc("Pretendard-ExtraBold.otf", 86, "#FFFFFF", "#F9D803", 40, 7, "#111111", True, "#000000"),
+        "caption": _cap("#000000", "#FFFFFF", 58, False),
         # 빨간색 브랜드 상단 바가 뚜렷하게 존재감을 드러내며 채널 정체성을 강조합니다. 검은색 반투명 박스 위에 얹힌 두꺼운 2줄 헤드
     },
     "sul_cheat": {
@@ -131,6 +157,7 @@ PRESETS = {
         "has_head": True, "demo_views": "264만",
         "demo_comments": "587",
         "headcopy": _hc("TmonMonsori.ttf", 90, "#FFFFFF", "#FF1E1E", 38, 7, "#000000", False, "#000000"),
+        "caption": _cap("#000000", "#FFFFFF", 57, False),
         # 이 채널은 모바일 쇼핑몰 또는 SNS 상세페이지 레이아웃을 상단에 씌워 실제 탐색하는 듯한 인터페이스 효과를 줍니다. 붉은색과
     },
     "sul_gongami": {
@@ -142,6 +169,7 @@ PRESETS = {
         "has_head": True, "demo_views": "264만",
         "demo_comments": "587",
         "headcopy": _hc("Pretendard-ExtraBold.otf", 81, "#FFFFFF", "#64E9CC", 38, 7, "#111111", False, "#222222"),
+        "caption": _cap("#000000", "#FFFFFF", 55, True),
         # 상단에 채널 이름과 아이콘을 배치해 고유의 브랜드 정체성을 유지하는 레이아웃입니다. 본문 자막은 둥근 흰색 박스를 씌워 가독성
     },
     "sul_core": {
@@ -153,6 +181,7 @@ PRESETS = {
         "has_head": True, "demo_views": "264만",
         "demo_comments": "587",
         "headcopy": _hc("NotoSansKR-Bold.otf", 73, "#FFFFFF", "#FBEC15", 34, 7, "#000000", False, "#000000"),
+        "caption": _cap("#000000", "#FFFFFF", 50, True),
         # 상단의 짙은 버건디색 배경 위에 흰색과 노란색의 두꺼운 테두리 헤드라인을 배치하여 강렬한 시각적 효과를 줍니다. 자막과 추가 
     },
     "sul_jangchak": {
@@ -164,6 +193,7 @@ PRESETS = {
         "has_head": True, "demo_views": "264만",
         "demo_comments": "587",
         "headcopy": _hc("GmarketSansBold.otf", 89, "#FFFFFF", "#11B3F3", 40, 7, "#000000", False, "#FFFFFF"),
+        "caption": _cap("#333333", "#FFFFFF", 59, False),
         # 상하단에 넓은 여백을 두고 정보성 텍스트를 배치하는 전형적인 카드 뉴스 형태의 레이아웃입니다. 굵은 테두리의 메인 타이틀과 깔
     },
     "sul_chunjae": {
@@ -175,6 +205,7 @@ PRESETS = {
         "has_head": False, "demo_views": "264만",
         "demo_comments": "587",
         "headcopy": _hc("GmarketSansBold.otf", 70, "#FFFFFF", "#FFE000", 26, 5, "#000000", False, "#FFFFFF"),
+        "caption": _cap("#000000", "#FFFFFF", 41, True),
         # 상단 영역에 넓고 어두운 백그라운드를 배치하고 노란색과 흰색의 대비가 강한 고딕 헤드라인을 사용하여 정보를 직관적으로 강조합니
     },
     "sul_even": {
@@ -186,6 +217,7 @@ PRESETS = {
         "has_head": True, "demo_views": "264만",
         "demo_comments": "587",
         "headcopy": _hc("SpoqaHanSansNeo-Bold.otf", 90, "#FFFFFF", "#2EE3E3", 37, 7, "#000000", False, "#000000"),
+        "caption": _cap("#FFFFFF", "#000000", 56, False),
         # 상단 메뉴 바 영역과 깔끔하게 배치된 타이틀 구성이 모바일 웹사이트의 상단 뷰를 연상시켜 신뢰감을 줍니다. 본문 자막에는 가독
     },
     "sul_igeo": {
@@ -197,6 +229,7 @@ PRESETS = {
         "has_head": True, "demo_views": "264만",
         "demo_comments": "587",
         "headcopy": _hc("Pretendard-ExtraBold.otf", 73, "#111111", "#111111", 37, 5, "#FFFFFF", True, "#FFFFFF"),
+        "caption": _cap("#111111", "#FFFFFF", 53, False),
         # 상단에 딥 그린 톤의 UI 바를 배치하고 로고와 메뉴 아이콘을 얹어 모바일 웹 브라우저 같은 친숙한 느낌을 줍니다. 헤드라인과
     },
     "sul_dalrae": {
@@ -208,6 +241,7 @@ PRESETS = {
         "has_head": True, "demo_views": "264만",
         "demo_comments": "587",
         "headcopy": _hc("Pretendard-ExtraBold.otf", 81, "#FFFFFF", "#FFE600", 28, 7, "#000000", False, "#000000"),
+        "caption": _cap("#000000", "#FFFFFF", 45, True),
         # 상단의 넓은 블랙 영역과 그 아래 배치된 화이트 서브타이틀 바가 정돈된 그리드 레이아웃을 형성합니다. 볼드한 서체와 원색의 옐
     },
     "sul_kkultip": {
@@ -219,6 +253,7 @@ PRESETS = {
         "has_head": True, "demo_views": "264만",
         "demo_comments": "587",
         "headcopy": _hc("TmonMonsori.ttf", 90, "#FFFFFF", "#FFFFFF", 30, 7, "#000000", False, "#FFFFFF"),
+        "caption": _cap("#FFFFFF", "#000000", 49, True),
         # 상단에 별점, 조회수, 댓글수 데코레이션을 포함한 고정 포털 프레임을 배치하여 정보의 신뢰도와 주목도를 높였습니다. 자막은 깔
     },
     "sul_daissue": {
@@ -230,6 +265,7 @@ PRESETS = {
         "has_head": True, "demo_views": "264만",
         "demo_comments": "587",
         "headcopy": _hc("GmarketSansBold.otf", 90, "#FFFFFF", "#00EBFF", 39, 7, "#000000", False, "#FFFFFF"),
+        "caption": _cap("#111111", "#FFFFFF", 58, True),
         # 상단에 다이소 매장을 연상시키는 민트색 UI 디자인과 함께 둥글고 두꺼운 서체의 강렬한 헤드라인을 적용했습니다. 동영상 프레임
     },
     "sul_insaeng": {
@@ -241,6 +277,7 @@ PRESETS = {
         "has_head": True, "demo_views": "264만",
         "demo_comments": "587",
         "headcopy": _hc("GmarketSansBold.otf", 90, "#1C1C1C", "#00BAD6", 37, 7, "#FFFFFF", False, "#00B0FF"),
+        "caption": _cap("#111111", "#FFFFFF", 56, False),
         # 인터넷 커뮤니티 게시글을 모바일 웹 브라우저로 캡처한 듯한 노란색 상단 레이아웃이 독특합니다. 실제 게시글 상세 화면처럼 작성
     },
     "sul_namanto": {
@@ -252,6 +289,7 @@ PRESETS = {
         "has_head": True, "demo_views": "264만",
         "demo_comments": "587",
         "headcopy": _hc("Pretendard-SemiBold.otf", 59, "#222222", "#222222", 33, 5, "#FFFFFF", True, "#FFFFFF"),
+        "caption": _cap("#111111", "#FFFFFF", 47, True),
         # 상단에 인스타그램 피드 혹은 커뮤니티 글을 연상시키는 모던한 카드형 UI를 배치하여 친숙하고 신뢰감 있는 정보 전달 방식을 사
     },
     "sul_yosae": {
@@ -263,6 +301,7 @@ PRESETS = {
         "has_head": False, "demo_views": "264만",
         "demo_comments": "587",
         "headcopy": _hc("NotoSansKR-Bold.otf", 89, "#FFFFFF", "#52E4FF", 30, 7, "#000000", True, "#000000"),
+        "caption": _cap("#FEE809", "#000000", 49, False),
         # 이 채널은 상단 검은 레터박스 영역에 굵은 테두리의 흰색 및 하늘색 조합 헤드라인을 배치하여 주목도를 높입니다. 본문 자막 역
     },
     "sul_museun": {
@@ -274,6 +313,7 @@ PRESETS = {
         "has_head": True, "demo_views": "264만",
         "demo_comments": "587",
         "headcopy": _hc("NotoSansKR-Bold.otf", 70, "#FFFFFF", "#FFFFFF", 38, 5, "#000000", True, "#000000"),
+        "caption": _cap("#000000", "#FFFFFF", 53, True),
         # 이 채널은 상단에 모바일 웹 포털 UI를 그대로 모방한 독특한 레이아웃을 고수하여 시청자에게 익숙함과 신뢰를 줍니다. 헤드라인
     },
     "sul_jipdori": {
@@ -285,10 +325,9 @@ PRESETS = {
         "has_head": False, "demo_views": "264만",
         "demo_comments": "587",
         "headcopy": _hc("NotoSansKR-Bold.otf", 65, "#000000", "#000000", 37, 5, "#FFFFFF", True, "#F6EBDB"),
+        "caption": _cap("#000000", "#FFFFFF", 52, False),
         # 상단을 따뜻한 테라코타 색상의 타이틀 바와 넓은 크림색 헤더 영역으로 분할하여 텍스트를 배치한 독특한 레이아웃입니다. 군더더기
     },
-
-    # ── 기존 4종(옛 작업이 가리키고 있다 — id 재사용·삭제 금지) ──────────
     "news_coral":  {"name": "커뮤니티 · 살구", "bar": "#F08080", "on_bar": "#FFFFFF"},
     "news_lime":   {"name": "커뮤니티 · 연두", "bar": "#B5D46A", "on_bar": "#1A1A1A"},
     "news_gray":   {"name": "커뮤니티 · 그레이", "bar": "#6E6E6E", "on_bar": "#FFFFFF"},
@@ -322,6 +361,29 @@ DEFAULTS = {
     "title_font": "",      # 제목 폰트(빈값=Pretendard-ExtraBold)
     "title_size": 0,       # 제목 크기(0=62, 기존 값)
     "title_x": 50,         # 제목 가로 위치 %
+    # ── 틀 커스텀(2026-08-25 사장님 "거기서 커스텀해서 수정할 수 있게") ──────
+    # ★실측은 근사치다 — 폰트는 견본에서 고른 것이고, 색도 프레임 한 장에서 읽었다.
+    #   "똑같이" 맞추는 마지막 한 뼘은 **사람 손**이어야 한다. 그런데 여기까지는
+    #   프리셋에만 있고 화면이 못 건드려서, 고른 뒤엔 손댈 방법이 아예 없었다.
+    # ★빈값 = "안 정했음" → 프리셋 값(위 글자 꾸미기와 **같은 규약**. 0순위-B).
+    "bar_color": "",       # 띠 색(빈값=프리셋 bar)
+    "on_bar_color": "",    # 띠 위 글자·아이콘 색(빈값=프리셋 on_bar)
+    "left_icon": "",       # 왼쪽 아이콘(hamburger/search/dots/back/bookmark/none)
+    "right_icon": "",      # 오른쪽 아이콘(같은 값들)
+    "center_kind": "",     # 띠 가운데(검색창/채널명/없음)
+    "sub_bg_c": "",        # 제목 블록 바탕색(빈값=프리셋 sub_bg)
+    "sub_text_c": "",      # 조회수·댓글 글자색(빈값=프리셋 sub_text)
+    # ── 레이아웃(2026-08-25 사장님 "디자인이 이거 하나밖에 안되는거야?") ────────
+    # ★뿌리: 실측 스키마가 bar_color·bar_h_pct처럼 **"띠가 어떻게 생겼냐"만** 물었다.
+    #   그래서 커뮤니티 글이든 쇼핑몰 상세페이지든 전부 '띠 하나 + 제목줄'로 뭉개져
+    #   들어왔고, 20종이 색만 다른 한 벌이 됐다. 제미니는 차이를 알고 notes에 적어뒀다:
+    #     커뮤니티 게시글형 6 / 웹헤더·브랜드바형 8 / 검색창형 3 / 쇼핑몰형 2 / 뉴스형 1
+    #   → 골격 자체를 고르는 축을 만든다. 빈값이면 프리셋 layout, 그것도 없으면 기본.
+    "layout": "",          # ""(=기본·웹헤더형) / "community"
+    "post_cat": "",        # 커뮤니티형: 카테고리 태그(빈값이면 안 그림)
+    "post_author": "",     # 커뮤니티형: 작성자
+    "post_time": "",       # 커뮤니티형: 작성 시간
+    "post_likes": "",      # 커뮤니티형: 추천 수
 }
 
 _FONTS = {
@@ -345,6 +407,14 @@ def _font(kind, size, override=""):
     if p.exists():
         return ImageFont.truetype(str(p), size)
     return ImageFont.load_default()
+
+
+# 틀 커스텀 입력 검사용(normalize에서 쓴다).
+_VALID_HEX = re.compile(r"#[0-9A-Fa-f]{6}")
+# 'none'도 유효한 선택이다("아이콘 안 씀"). _ICONS엔 없으므로 따로 둔다.
+_ICON_CHOICES = ("hamburger", "search", "dots", "back", "bookmark", "none")
+# 골격 종류. ""(빈값)은 "안 정했음" → 프리셋 → 기본(웹헤더형).
+_LAYOUTS = ("community",)
 
 
 def _rgb(hex_color):
@@ -406,12 +476,44 @@ def normalize(spec):
     for k in ("ch_font", "title_font"):
         v = str(s[k] or "").strip()
         s[k] = v if (v and "/" not in v and "\\" not in v and ".." not in v) else ""
+    # ── 틀 커스텀 값 검사도 **여기 한 곳** ────────────────────────────
+    # 색은 #RRGGBB만 받는다. 이상한 값이 오면 빈값(= 프리셋 그대로)으로 떨어뜨린다
+    # — 예외로 죽으면 미리보기가 통째로 안 나온다(그림 한 장이 화면 전체를 막는다).
+    for k in ("bar_color", "on_bar_color", "sub_bg_c", "sub_text_c"):
+        v = str(s[k] or "").strip()
+        if not v.startswith("#"):
+            v = "#" + v if v else ""
+        s[k] = v.upper() if _VALID_HEX.fullmatch(v or "") else ""
+    # 아이콘은 우리가 그릴 줄 아는 이름만. 'none'은 "안 그림"이라 유효한 값이다.
+    for k in ("left_icon", "right_icon"):
+        v = str(s[k] or "").strip()
+        s[k] = v if v in _ICON_CHOICES else ""
+    v = str(s["center_kind"] or "").strip()
+    s["center_kind"] = v if v in _CENTER else ""
+    v = str(s["layout"] or "").strip()
+    s["layout"] = v if v in _LAYOUTS else ""
+    for k in ("post_cat", "post_author", "post_time", "post_likes"):
+        s[k] = str(s[k] or "").strip()[:30]
     return s
 
 
+# ★그리는 코드가 바뀌면 올려라. 캐시키에 섞여 옛 그림이 되살아나는 걸 막는다.
+#   2026-08-25 실사고 직전에 발견: 키가 spec만 봐서, 틀 그리는 규칙을 고쳐도
+#   같은 파일이 그대로 나왔다("고쳤는데 화면은 그대로"의 단골 원인).
+#   프리셋 값 변경도 마찬가지라 PRESETS 해시도 함께 섞는다 — 잊어버려도 자동으로 갈린다.
+RENDER_VER = 2
+
+
+def _presets_sig():
+    raw = json.dumps(PRESETS, sort_keys=True, ensure_ascii=False).encode("utf-8")
+    return hashlib.sha1(raw).hexdigest()[:8]
+
+
 def cache_key(spec):
-    """같은 spec이면 같은 파일 — 렌더마다 다시 그리지 않게."""
+    """같은 spec이면 같은 파일 — 렌더마다 다시 그리지 않게.
+    ★단, **그리는 코드/프리셋이 바뀌면 달라진다**(RENDER_VER + PRESETS 해시)."""
     s = normalize(spec)
+    s = dict(s, _v=RENDER_VER, _p=_presets_sig())
     raw = json.dumps(s, sort_keys=True, ensure_ascii=False).encode("utf-8")
     return hashlib.sha1(raw).hexdigest()[:16]
 
@@ -467,16 +569,39 @@ def _bookmark(d, cx, cy, color, w=30, h=42, th=8):
     d.line([cx + w // 2, cy + h // 2, cx, cy + h // 6], fill=color, width=th)
 
 
+def _lum(c):
+    """색의 밝기(0~255). 글자가 바탕에 묻히는지 판정하는 데만 쓴다."""
+    return (c[0] * 299 + c[1] * 587 + c[2] * 114) / 1000
+
+
+def _searchbar(d, cx, cy, color, w=560, h=64):
+    """띠 가운데의 **둥근 검색창**. 실측 center_kind='검색창'인 채널이 쓴다.
+    채널명을 그냥 글자로 찍는 것과 인상이 완전히 다르다(브랜드 시그니처)."""
+    x0, x1 = cx - w // 2, cx + w // 2
+    d.rounded_rectangle([x0, cy - h // 2, x1, cy + h // 2],
+                        radius=h // 2, outline=color, width=4)
+    _search(d, x1 - h // 2 - 6, cy, color, r=int(h * 0.26), th=5)
+
+
 # 실측에서 나온 아이콘 종류 → 그리는 함수. 없는 이름이 와도 죽지 않게 get으로 받는다.
 _ICONS = {"hamburger": _hamburger, "search": _search, "dots": _dots,
           "back": _back, "bookmark": _bookmark}
+
+# 띠 가운데에 무엇이 오나(실측 center_kind). ★표기가 세 벌로 온다('없음'·'none'·null)
+#   — 아이콘 표(ICON)처럼 여기서 한 값으로 모은다. 모르는 값은 '채널명'(지금까지 동작).
+_CENTER = {"검색창": "search", "search": "search",
+           "채널명": "name", "name": "name",
+           "없음": "none", "none": "none", "": "none", None: "name"}
 
 
 def render(spec):
     """spec → 1080x1920 RGBA 이미지. 가운데는 투명(영상이 비쳐야 한다)."""
     s = normalize(spec)
     p = PRESETS[s["preset"]]
-    bar_col, on_bar = _rgb(p["bar"]), _rgb(p["on_bar"])
+    # ★사장님이 화면에서 고른 값이 먼저, 없으면 실측(프리셋). 빈값="안 정했음" 규약.
+    #   실측은 프레임 한 장에서 읽은 근사치라 마지막 한 뼘은 사람 손이어야 한다.
+    bar_col = _rgb(s["bar_color"] or p["bar"])
+    on_bar = _rgb(s["on_bar_color"] or p["on_bar"])
 
     im = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     d = ImageDraw.Draw(im)
@@ -488,13 +613,19 @@ def render(spec):
         if s["icons"]:
             # ★어느 아이콘인지도 채널마다 다르다(실측: 햄버거·돋보기·⋮·←·북마크).
             #   전에는 무조건 ☰+🔍이라 ⋮를 쓰는 채널이 딴 채널처럼 보였다.
-            left = _ICONS.get(p.get("left_icon", "hamburger"))
-            right = _ICONS.get(p.get("right_icon", "search"))
+            left = _ICONS.get(s["left_icon"] or p.get("left_icon", "hamburger"))
+            right = _ICONS.get(s["right_icon"] or p.get("right_icon", "search"))
             if left:
                 left(d, 92, cy, on_bar)
             if right:
                 right(d, W - 96, cy, on_bar)
-        if s["channel"]:
+        # ★띠 가운데 구성은 채널마다 다르다(실측 center_kind: 검색창 2 / 채널명 13 / 없음 5).
+        #   2026-08-25까지 이 값의 **소비처가 0곳**이라 전부 '채널명'으로만 그려졌다 —
+        #   "틀이 다 똑같다 / 색만 바뀐 거냐"(사장님)의 직접 원인이었다. cap_* 사고와 같은 모양.
+        center = _CENTER.get(s["center_kind"] or p.get("center_kind"), "name")
+        if center == "search":
+            _searchbar(d, W // 2, cy, on_bar, h=max(44, int(bar_h * 0.34)))
+        elif center == "name" and s["channel"]:
             # 크기 0 = "안 정했음" → 기존 자동 규칙(띠 높이의 30%)을 그대로 쓴다.
             csize = s["ch_size"] or max(28, int(bar_h * 0.30))
             f = _font("bar", csize, s["ch_font"])
@@ -556,15 +687,35 @@ def render(spec):
         if s["comments"]:
             meta = (meta + " | " if meta else "") + f"댓글 {s['comments']}개"
         block_h = 36 + len(lines) * line_h + (52 if meta else 0) + 24
-        d.rectangle([0, y, W, y + block_h - 1], fill=_rgb(s["head_bg"]))
+        # ★제목 블록의 **바탕색·글자색도 채널마다 다르다**(실측 sub_bg 5가지·sub_text 9가지).
+        #   2026-08-25까지 소비처 0곳이라 흰 바탕+검은 글자 한 벌로만 나갔다(center_kind와 같은 사고).
+        #   사장님이 화면에서 직접 정한 head_bg가 있으면 그게 먼저다(사람 손 > 실측).
+        touched = str(s["head_bg"]).upper() not in ("#FFFFFF", "#FFF")
+        bg = _rgb(s["sub_bg_c"] or (s["head_bg"] if touched
+                                    else (p.get("sub_bg") or s["head_bg"])))
+        # 글자색: 실측 sub_text. 없으면 지금까지의 값. 바탕이 어두우면 검은 글자가 안 보이므로
+        # 바탕 밝기로 갈라준다(지어내는 게 아니라 **안 보이는 걸 막는** 규칙 — box_color와 같다).
+        dark_bg = _lum(bg) < 128
+        title_fill = (245, 245, 245, 255) if dark_bg else (20, 20, 20, 255)
+        _fallback_meta = (190, 190, 190, 255) if dark_bg else (120, 120, 120, 255)
+        _meta_src = s["sub_text_c"] or p.get("sub_text")
+        meta_fill = _rgb(_meta_src) if _meta_src else _fallback_meta
+        # ★실측이 틀릴 수도 있다 — '요새난리'는 검은 바탕에 검은 글자로 읽혀 왔다(실측 1종).
+        #   값을 고쳐 쓰진 않되(원본은 실측이 주인), **안 보이면 폴백**한다.
+        #   단 **사장님이 직접 고른 색(sub_text_c)은 건드리지 않는다** — 사람 손이
+        #   자동 보정보다 위다. 일부러 배경과 같은 색을 쓸 수도 있다(글자 숨기기).
+        if not s["sub_text_c"] and abs(_lum(meta_fill) - _lum(bg)) < 60:
+            meta_fill = _fallback_meta
+        rule_fill = (210, 210, 210, 255) if dark_bg else (30, 30, 30, 255)
+        d.rectangle([0, y, W, y + block_h - 1], fill=bg)
         ty = y + 36
         for ln in lines:
-            d.text((tx, ty), ln, font=ft, fill=(20, 20, 20, 255), anchor="ma")
+            d.text((tx, ty), ln, font=ft, fill=title_fill, anchor="ma")
             ty += line_h
         if meta:
-            d.text((60, ty + 6), meta, font=fm, fill=(120, 120, 120, 255), anchor="la")
+            d.text((60, ty + 6), meta, font=fm, fill=meta_fill, anchor="la")
             ty += 46
-            d.rectangle([60, ty + 8, W - 60, ty + 11], fill=(30, 30, 30, 255))
+            d.rectangle([60, ty + 8, W - 60, ty + 11], fill=rule_fill)
     return im
 
 

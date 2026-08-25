@@ -302,3 +302,209 @@ def test_position_is_remembered_across_templates():
     seg = HTML[HTML.index("function applyHeadcopySet"):HTML.index("function alignHC")]
     assert "if(!HC_Y_TOUCHED)" in seg.replace(" ", "") or "!HC_Y_TOUCHED" in seg, (
         "만진 적 있으면 y를 덮어쓰면 안 된다")
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# 자막도 한 세트 (2026-08-25)
+#
+# 제미니는 실측 때 cap_color·cap_outline·cap_y·cap_box를 **처음부터 읽고 있었는데**
+# 소비처가 0곳이었다(코드 전체 grep 0건). 그래서 틀·헤드카피만 채널 질감을 따라가고
+# 자막만 우리 기본값으로 나가 "한 세트로 안 보인다"가 됐다.
+# ══════════════════════════════════════════════════════════════════════════
+CAPPED = {k: v for k, v in df.PRESETS.items() if v.get("caption")}
+
+
+def test_every_benchmarked_preset_ships_a_caption_set():
+    """틀·헤드카피가 있으면 자막도 있어야 한다 — 셋이 한 세트다."""
+    missing = [k for k in NEW if not df.PRESETS[k].get("caption")]
+    assert not missing, f"자막 세트가 빠진 틀: {missing}"
+    assert len(CAPPED) == 20
+
+
+def test_caption_set_is_complete_and_in_ui_range():
+    """화면 입력칸이 받을 수 있는 값이어야 한다(헤드카피와 같은 계약)."""
+    for k, v in CAPPED.items():
+        c = v["caption"]
+        for f in ("color", "outline_color", "y_pct", "box"):
+            assert f in c, f"{k}: 자막 세트에 {f}가 없다"
+        assert c["color"].startswith("#") and len(c["color"]) == 7, f"{k}: 자막 색이 헥사가 아니다"
+        assert c["outline_color"].startswith("#") and len(c["outline_color"]) == 7
+        assert 0 <= c["y_pct"] <= 100, f"{k}: 자막 y가 화면 밖({c['y_pct']})"
+        assert isinstance(c["box"], bool)
+
+
+def test_caption_does_not_collide_with_headcopy():
+    """★배포 직전 로컬 실측에서 잡은 결함(2026-08-25).
+
+    처음엔 "자막은 원래 헤드카피보다 아래"라고 **가정하고** 띠만 피했다. 틀렸다 —
+    20종 전부 8% 이내로 붙었고 12종은 자막이 헤드카피보다 **위**였다(활용정점
+    헤드44/자막34). 제미니가 읽은 cap_y는 그 채널 원본 기준인데 우리 hl_y는
+    띠+제목블록을 피하느라 이미 아래로 밀린 값이라 둘이 만난 것이다.
+    """
+    bad = []
+    for k, v in CAPPED.items():
+        gap = v["caption"]["y_pct"] - v["headcopy"]["y"]
+        if gap < 8:
+            bad.append(f"{k}(헤드{v['headcopy']['y']}/자막{v['caption']['y_pct']}, 차이 {gap})")
+    assert not bad, "자막이 헤드카피와 겹친다: " + ", ".join(bad)
+
+
+def test_caption_is_visible_against_its_own_outline():
+    """글자색과 외곽선색이 같으면 두꺼운 외곽선이 글자를 먹는다(헤드카피와 같은 함정)."""
+    def lum(h):
+        h = h.lstrip("#")
+        r, g, b = (int(h[i:i + 2], 16) / 255 for i in (0, 2, 4))
+        return 0.2126 * r + 0.7152 * g + 0.0722 * b
+    for k, v in CAPPED.items():
+        c = v["caption"]
+        assert abs(lum(c["color"]) - lum(c["outline_color"])) >= 0.2, (
+            f"{k}: 자막 글자색({c['color']})과 외곽선({c['outline_color']})이 구분되지 않는다")
+
+
+def test_caption_set_omits_font_and_size_on_purpose():
+    """★실측 스키마가 안 물어본 값은 **넣지 않는다** — 지어내면 살림킹왕짱 색 뒤집힘과
+    같은 사고가 난다. 폰트·크기는 사장님이 화면에서 정한 값을 그대로 둔다."""
+    for k, v in CAPPED.items():
+        assert "font" not in v["caption"], f"{k}: 자막 폰트는 실측하지 않았으므로 넣으면 안 된다"
+        assert "size" not in v["caption"], f"{k}: 자막 크기는 실측하지 않았으므로 넣으면 안 된다"
+
+
+def test_legacy_presets_have_no_caption_set():
+    """옛 4종은 자막을 안 건드린다 — 저장된 작업의 생김새가 바뀌면 안 된다."""
+    for k in LEGACY:
+        assert not df.PRESETS[k].get("caption"), f"{k}: 옛 틀에 자막 세트가 붙으면 기존 작업이 바뀐다"
+
+
+def test_api_ships_caption_to_the_screen():
+    """서버가 안 내려주면 화면이 알 방법이 없다(headcopy와 같은 자리에서 함께 간다)."""
+    app_py = (pathlib.Path(__file__).resolve().parents[1] / "app.py").read_text(encoding="utf-8")
+    seg = app_py[app_py.index("def api_produce_frame_presets"):][:2000]
+    assert '"caption": v.get("caption")' in seg, "프리셋 API가 caption을 안 내려준다"
+
+
+def test_ui_applies_caption_set_when_frame_picked():
+    """틀을 고르면 자막도 같이 맞춘다 — 안 그러면 자막만 겉돈다."""
+    assert "function applyCaptionSet" in HTML
+    seg = HTML[HTML.index("function frPick"):HTML.index("function frUpdate")]
+    assert "applyCaptionSet" in seg, "frPick이 자막 세트를 적용하지 않는다"
+
+
+def test_caption_position_is_remembered_across_templates():
+    """★자막 자리를 옮겼으면 틀을 바꿔도 지킨다(헤드카피 HC_Y_TOUCHED와 같은 규약)."""
+    seg = HTML[HTML.index("function applyCaptionSet"):HTML.index("function alignHC")]
+    assert "CAP_POS_TOUCHED" in seg, "자막도 만진 자리를 지켜야 한다"
+
+
+def test_ui_does_not_overwrite_caption_font_or_size():
+    """화면에서도 폰트·크기는 안 건드린다(위 데이터 계약과 짝)."""
+    seg = HTML[HTML.index("function applyCaptionSet"):HTML.index("function alignHC")]
+    assert "capFont" not in seg, "자막 폰트는 실측값이 없으므로 덮으면 안 된다"
+    assert "capSize" not in seg, "자막 크기는 실측값이 없으므로 덮으면 안 된다"
+
+
+# ── 2026-08-25 (회사PC) 사장님 지적: "틀이 다 똑같다 / 색만 바뀐 거냐" ──────────
+# 실측해둔 축 4개(center_kind·sub_bg·sub_text·sub_h)의 **소비처가 0곳**이라
+# 24종이 한 벌 레이아웃으로만 그려지고 있었다. cap_* 사고(같은 날 새벽)와 같은 모양.
+# 아래 테스트가 지키는 건 문자열이 아니라 **"채널마다 달라 보인다"는 요건**이다.
+
+def test_center_kind_is_actually_consumed():
+    """띠 가운데 구성(검색창/채널명/없음)이 그림을 실제로 바꾼다."""
+    from shopping_shorts import deco_frame as d
+    base = dict(channel="내 채널", title="제목", views="1만", comments="2", icons=True)
+    # 검색창 채널과 채널명 채널은 같은 글자를 줘도 다른 그림이어야 한다
+    a = d.render(dict(base, preset="sul_hwaryong"))    # center_kind=검색창
+    b = d.render(dict(base, preset="sul_lucky"))       # center_kind=채널명
+    assert a.tobytes() != b.tobytes()
+
+
+def test_no_text_is_invisible_on_its_own_background():
+    """어떤 틀에서도 제목·메타 글자가 바탕에 묻히지 않는다.
+
+    ★실측이 틀릴 수 있다 — '요새난리'는 검은 바탕에 검은 글자로 읽혀 왔다.
+      값은 실측이 주인이되, **안 보이면 폴백**한다(box_color와 같은 규약).
+    """
+    from shopping_shorts import deco_frame as d
+    for pid in d.PRESETS:
+        im = d.render({"preset": pid, "channel": "내 채널", "title": "이건 진짜 사야 돼요",
+                       "views": "264만", "comments": "587", "icons": True}).convert("RGB")
+        bh = d.PRESETS[pid].get("bar_h") or 0
+        seen = set()
+        for y in range(bh, min(bh + 520, 1920), 3):
+            for x in range(60, 700, 4):
+                seen.add(im.getpixel((x, y)))
+        assert len(seen) >= 3, f"{pid}: 제목 블록에 글자가 안 보인다"
+
+
+def test_caption_box_color_is_measured_not_invented():
+    """자막 박스 색은 실측 outline_color를 쓴다 — 검은 박스 위 검은 글자 금지.
+
+    ★2026-08-25 사장님 "자막이 깨진다"의 원인. box_color를 "#000000"으로 지어넣어
+      cap_color가 검정인 9종이 글자↔박스 같은 색이 됐다.
+    """
+    from shopping_shorts import deco_frame as d
+    for pid, p in d.PRESETS.items():
+        c = p.get("caption")
+        if not c or not c.get("box"):
+            continue
+        assert c["color"].lower() != c["box_color"].lower(), f"{pid}: 글자색=박스색"
+
+
+def test_cache_key_changes_when_drawing_code_changes():
+    """그리는 규칙을 고치면 캐시가 갈린다 — 옛 그림이 되살아나면 '고쳤는데 그대로'가 된다."""
+    from shopping_shorts import deco_frame as d
+    spec = {"preset": "sul_hwaryong", "channel": "내 채널"}
+    k1 = d.cache_key(spec)
+    old = d.RENDER_VER
+    try:
+        d.RENDER_VER = old + 1
+        assert d.cache_key(spec) != k1
+    finally:
+        d.RENDER_VER = old
+
+
+# ── 틀 커스텀(2026-08-25 사장님 "거기서 커스텀해서 수정할 수 있게") ──────────
+# 실측은 프레임 한 장에서 읽은 근사치다 — "똑같이" 맞추는 마지막 한 뼘은 사람 손이어야
+# 한다. 그런데 색·아이콘·가운데 구성은 프리셋에만 있어 고른 뒤엔 손댈 방법이 없었다.
+
+def test_custom_overrides_actually_change_the_image():
+    """손본 값 7가지가 전부 실제로 그림을 바꾼다(하나라도 죽으면 '안 먹는다'가 된다)."""
+    from shopping_shorts import deco_frame as d
+    base = {"preset": "sul_hwaryong", "channel": "내 채널", "title": "제목",
+            "views": "1만", "comments": "2", "icons": True}
+    ref = d.render(base).tobytes()
+    for kw in ({"bar_color": "#0055FF"}, {"on_bar_color": "#FFEE00"},
+               {"left_icon": "dots"}, {"right_icon": "none"},
+               {"center_kind": "채널명"}, {"sub_bg_c": "#000000"},
+               {"sub_text_c": "#FF0000"}):
+        assert d.render(dict(base, **kw)).tobytes() != ref, f"{kw} 가 그림을 안 바꾼다"
+
+
+def test_empty_custom_falls_back_to_measured_preset():
+    """빈값 = '안 정했음' → 실측 그대로. ('틀 그대로' 되돌리기가 이 규약에 얹혀 있다)"""
+    from shopping_shorts import deco_frame as d
+    base = {"preset": "sul_hwaryong", "channel": "내 채널", "title": "제목"}
+    blank = dict(base, bar_color="", on_bar_color="", sub_bg_c="", sub_text_c="",
+                 left_icon="", right_icon="", center_kind="")
+    assert d.render(blank).tobytes() == d.render(base).tobytes()
+
+
+def test_bad_custom_values_never_crash_the_preview():
+    """이상한 값이 와도 죽지 않는다 — 그림 한 장이 못 나오면 화면 전체가 막힌다."""
+    from shopping_shorts import deco_frame as d
+    junk = {"preset": "sul_hwaryong", "channel": "내 채널", "title": "제목",
+            "bar_color": "javascript:alert(1)", "sub_bg_c": "../../etc/passwd",
+            "left_icon": "../evil", "center_kind": "<script>"}
+    n = d.normalize(junk)
+    assert n["bar_color"] == "" and n["sub_bg_c"] == ""
+    assert n["left_icon"] == "" and n["center_kind"] == ""
+    d.render(junk)      # 예외 없이 그려져야 한다
+
+
+def test_user_picked_meta_color_beats_auto_contrast_guard():
+    """사장님이 직접 고른 색은 자동 보정이 덮지 않는다(사람 손 > 자동)."""
+    from shopping_shorts import deco_frame as d
+    # 바탕과 같은 색을 일부러 골랐다 — 폴백이 끼어들면 다른 그림이 된다
+    same = {"preset": "sul_hwaryong", "title": "제목", "views": "1만",
+            "sub_bg_c": "#000000", "sub_text_c": "#000000"}
+    auto = dict(same); auto.pop("sub_text_c")
+    assert d.render(same).tobytes() != d.render(auto).tobytes()
