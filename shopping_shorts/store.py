@@ -876,6 +876,31 @@ class Store:
                     PRIMARY KEY (platform, value)
                 )
             """)
+            # 카톡 답변봇(2026-08-25) — 고객용 지식. status가 approved인 것만 봇이 쓴다.
+            # ★초안(draft)이 새어나가면 검수의 의미가 없다 — 조회는 반드시 status로 거른다.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS bot_qa (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    room TEXT NOT NULL DEFAULT '공통',
+                    question TEXT NOT NULL,
+                    answer TEXT NOT NULL,
+                    tags TEXT,
+                    status TEXT NOT NULL DEFAULT 'draft',
+                    source TEXT,
+                    updated_at TEXT
+                )
+            """)
+            # 못 답한 질문 = 다음에 채울 목록. 같은 질문은 count를 올린다.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS bot_unanswered (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    room TEXT NOT NULL,
+                    question TEXT NOT NULL,
+                    count INTEGER NOT NULL DEFAULT 1,
+                    asked_at TEXT,
+                    UNIQUE(room, question)
+                )
+            """)
             c.execute("""
                 CREATE TABLE IF NOT EXISTS platform_snapshots (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -4732,6 +4757,60 @@ class Store:
             cur = c.execute("DELETE FROM voice_presets WHERE group_id=? AND origin=?",
                             (group_id, origin))
             return cur.rowcount
+
+    # ── 카톡 답변봇(2026-08-25) ──────────────────────────────────────
+    def bot_qa_add(self, room, question, answer, tags="", source=""):
+        """새 Q&A. **항상 draft로 들어간다** — 검수를 거쳐야 봇이 쓴다."""
+        with self._conn() as c:
+            cur = c.execute(
+                "INSERT INTO bot_qa(room, question, answer, tags, status, source, updated_at) "
+                "VALUES(?,?,?,?,'draft',?, datetime('now'))",
+                (room, question, answer, tags, source))
+            return cur.lastrowid
+
+    def bot_qa_list(self, status=None, room=None):
+        """status를 주면 그것만(봇은 'approved'로 부른다)."""
+        sql = "SELECT id, room, question, answer, tags, status, source FROM bot_qa"
+        args, where = [], []
+        if status:
+            where.append("status=?"); args.append(status)
+        if room:
+            where.append("(room=? OR room='공통')"); args.append(room)
+        if where:
+            sql += " WHERE " + " AND ".join(where)
+        sql += " ORDER BY id DESC"
+        with self._conn() as c:
+            rows = c.execute(sql, args).fetchall()
+        return [{"id": r[0], "room": r[1], "question": r[2], "answer": r[3],
+                 "tags": r[4], "status": r[5], "source": r[6]} for r in rows]
+
+    def bot_qa_set_status(self, qa_id, status):
+        with self._conn() as c:
+            c.execute("UPDATE bot_qa SET status=?, updated_at=datetime('now') WHERE id=?",
+                      (status, qa_id))
+
+    def bot_qa_update(self, qa_id, question, answer, tags=""):
+        with self._conn() as c:
+            c.execute("UPDATE bot_qa SET question=?, answer=?, tags=?, "
+                      "updated_at=datetime('now') WHERE id=?",
+                      (question, answer, tags, qa_id))
+
+    def bot_unanswered_add(self, room, question):
+        """못 답한 질문 적재. 같은 질문이면 count를 올린다."""
+        with self._conn() as c:
+            c.execute(
+                "INSERT INTO bot_unanswered(room, question, count, asked_at) "
+                "VALUES(?,?,1, datetime('now')) "
+                "ON CONFLICT(room, question) DO UPDATE SET count=count+1, "
+                "asked_at=datetime('now')",
+                (room, question))
+
+    def bot_unanswered_list(self):
+        with self._conn() as c:
+            rows = c.execute("SELECT id, room, question, count, asked_at "
+                             "FROM bot_unanswered ORDER BY count DESC, id DESC").fetchall()
+        return [{"id": r[0], "room": r[1], "question": r[2],
+                 "count": r[3], "asked_at": r[4]} for r in rows]
 
     def get_setting(self, key, default=None):
         """전역 설정값 조회(예: vmake_api_key). 없으면 default."""

@@ -1,0 +1,45 @@
+<!doctype html><meta charset="utf-8">
+<title>답변봇 검수</title>
+<style>
+ body{font-family:system-ui,sans-serif;max-width:920px;margin:24px auto;padding:0 16px}
+ .card{border:1px solid #ddd;border-radius:10px;padding:12px;margin:10px 0}
+ .q{font-weight:600;margin-bottom:6px}
+ textarea{width:100%;min-height:64px;font:inherit;padding:8px}
+ button{padding:8px 12px;border-radius:8px;border:1px solid #ccc;cursor:pointer;margin-right:6px}
+ .ok{background:#2ecc71;color:#fff;border-color:#2ecc71}
+ .no{background:#e74c3c;color:#fff;border-color:#e74c3c}
+ .cnt{color:#888;font-size:13px}
+</style>
+<h1>답변봇 검수</h1>
+<h2>미답변 — 다음에 채울 목록</h2>
+<div id="un"></div>
+<h2>초안</h2>
+<div id="qa"></div>
+<script>
+async function load(){
+  const u = await (await fetch('/api/bot/unanswered')).json();
+  document.getElementById('un').innerHTML = (u.items||[]).map(i =>
+    `<div class=card><div class=q>${esc(i.question)}</div>
+     <span class=cnt>${esc(i.room)} · ${i.count}번 물음</span></div>`).join('') || '<p>없음</p>';
+  const d = await (await fetch('/api/bot/qa?status=draft')).json();
+  document.getElementById('qa').innerHTML = (d.items||[]).map(i =>
+    `<div class=card data-id="${i.id}">
+       <input class=q style="width:100%" value="${esc(i.question)}">
+       <textarea>${esc(i.answer)}</textarea>
+       <button class=ok onclick="save(${i.id},'approved')">✅ 승인</button>
+       <button onclick="save(${i.id},'')">✏️ 저장만</button>
+       <button class=no onclick="save(${i.id},'rejected')">🗑️ 버림</button>
+       <span class=cnt>${esc(i.source||'')}</span>
+     </div>`).join('') || '<p>초안이 없습니다</p>';
+}
+function esc(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+async function save(id, status){
+  const el = document.querySelector(`[data-id="${id}"]`);
+  await fetch('/api/bot/qa', {method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({id, status,
+      question: el.querySelector('input').value,
+      answer: el.querySelector('textarea').value})});
+  load();
+}
+load();
+</script>
