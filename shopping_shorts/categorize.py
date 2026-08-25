@@ -206,6 +206,9 @@ TOPIC_CTYPE = {
 }
 
 _CAP_W = 3   # 캡션(영상별 신호) 가중
+# 장비템 승격 점수 상한 — 이 값을 넘는 다른 축 점수는 이기지 못한다(홈템 본진 보호).
+# 상수로 뽑아둔 이유: 회수율 A/B에서 이 노브만 갈아끼워 재는 게 유일한 변수이기 때문.
+_GEAR_CAP = _CAP_W * 2
 _NAME_W = 1  # 채널명(도배 가능) 가중
 
 
@@ -314,7 +317,7 @@ def categorize(name, caption=""):
     #   ("…센터펀치 꿀팁#센터펀치 #DIY공구 #셀프인테리어" → '셀프인테리어'가 홈템 3점).
     #   그래서 기타 제한만 걸면 쇼핑만물상 결이 통째로 빠진다 → 오용형처럼 공식이 이기게 한다.
     #   대신 지는 쪽이 '약한 단어 몇 개'일 때만 이기도록 점수 상한을 둔다(홈템 본진은 안 뺏는다).
-    if _is_gear(name_t, cap_t) and best_score <= _CAP_W * 2:
+    if _is_gear(name_t, cap_t) and best_score <= _GEAR_CAP:
         return "장비템"
     return best
 
