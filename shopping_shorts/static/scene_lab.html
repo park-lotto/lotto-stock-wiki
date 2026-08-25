@@ -108,6 +108,10 @@ h1{font-size:16px;margin:0;font-weight:700}
 .frbtn.ok{background:#1a6b3a;border-color:#2ea043}
 .frpv{display:none}
 /* 펼침 자리 — 카드/컷 오른쪽에 끼어든다 */
+/* ★펼침 자리 — 맨 위(타임프레임 바로 아래) 전체 폭 */
+#rollbay{margin:0 0 10px}
+#rollbay .frslot{margin:0}
+#rollbay .fr{min-width:0}
 .frslot{flex:0 0 auto;margin-left:6px}
 /* ⑥ 영상당 가로 한 줄(2026-08-26 사장님) — 줄바꿈 대신 옆으로 스크롤 */
 .thumbs.oneline{display:flex;flex-wrap:nowrap;overflow-x:auto;gap:10px;padding-bottom:8px;
@@ -1133,6 +1137,18 @@ function _rollCaps(vid){
   return out.sort((a,b) => a[0] - b[0]);
 }
 
+// ★필름 구간을 큰 미리보기에서 듣기. seg_id가 필요한 기존 경로를 그대로 쓰기 위해
+//   '_pv_' 임시 조각을 만든다. EXTRA에는 넣지 않는다 — 담은 게 아니라 미리 듣는 것뿐이라
+//   저장·전송에 섞이면 안 된다(담기는 commitRoll만 한다).
+function playRange(vid, a, b){
+  if (!(b > a)) return;
+  const id = `_pv_${vid}_${a.toFixed(2)}_${b.toFixed(2)}`.replace(/[^\w.]+/g, '_');
+  DATA.segments[id] = {video_id: vid, start: a, end: b, scene_desc: '',
+    text: '', label: `미리듣기 ${a.toFixed(1)}~${b.toFixed(1)}초`,
+    shot_role: '기타', is_key: false, action: '', change: '', benefits: []};
+  playSegHere(id);
+}
+
 function closeRoll(){
   if (ROLL.inst) { try { ROLL.inst.destroy(); } catch(_){} }
   if (ROLL.host && ROLL.host.parentNode) ROLL.host.parentNode.removeChild(ROLL.host);
@@ -1166,10 +1182,21 @@ function renderRollHosts(beatIdx){
   }
   if (!anchor){ markRollBtns(); return; }
 
+  // ★맨 위 고정 자리에 편다(2026-08-26 사장님 "필름 펼치면 맨위도 가게").
+  //   카드 옆에 끼우면 카드 폭(150px)에 눌려 필름이 제구실을 못 한다.
+  let bay = document.getElementById('rollbay');
+  if (!bay){
+    bay = document.createElement('div');
+    bay.id = 'rollbay';
+    const tz = document.getElementById('topzone');
+    if (tz && tz.parentNode) tz.parentNode.insertBefore(bay, tz.nextSibling);
+    else document.body.insertBefore(bay, document.body.firstChild);
+  }
   const host = document.createElement('div');
   host.className = 'frslot';
-  anchor.parentNode.insertBefore(host, anchor.nextSibling);
+  bay.appendChild(host);
   ROLL.host = host;
+  try{ bay.scrollIntoView({block:'nearest', behavior:'smooth'}); }catch(_){}
 
   let vid, dur, from = null, to = null, name = '';
   if (vidOnly){
@@ -1191,6 +1218,9 @@ function renderRollHosts(beatIdx){
     caps: _rollCaps(vid),
     onClose(){ closeRoll(); renderRollHosts(); },
     onCommit(ranges){ commitRoll(kind, sid, vid, ranges, beatIdx); },
+    // ★재생은 미리보기 창에서(2026-08-26 사장님). 임의 구간이라 seg_id가 없으니
+    //   임시 조각을 만들어 **기존 경로**(playSegHere)로 넘긴다 — 새 배선을 안 만든다.
+    onPlay(a, b){ playRange(vid, a, b); },
   });
   markRollBtns();
 }
