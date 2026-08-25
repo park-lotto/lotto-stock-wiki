@@ -1567,7 +1567,16 @@
                   <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:8px">② 자리</div>
                   <div style="font-size:12px;color:var(--sub)">세로 위치 <b id="capYV">84</b>%
                     <input id="capY" type="range" min="0" max="100" value="84" oninput="CAP_POS_TOUCHED=true;updateCaption()" style="width:100%"></div>
-                  <div class="hint" style="margin-top:6px;font-size:11px">💡 미리보기에서 끌어도 옮겨져요.</div>
+                  <!-- ★가로 정렬 버튼(2026-08-25 고객 요청 "자막이 한쪽으로 치우쳐져 있어서
+                       정렬하는 부분이 추가되면 좋겠어요"). 자막은 드래그로 가로 이동이 되는데
+                       (CAP_X_PCT) **되돌리는 길이 없었다** — 한 번 끌면 중앙으로 못 돌아온다.
+                       헤드카피엔 이미 같은 버튼이 있다(alignHC) → 같은 모양으로 맞춘다. -->
+                  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+                    <button type="button" class="tab" onclick="alignCap('left')" style="flex:0 0 auto;min-width:auto;padding:5px 10px;font-size:12px;white-space:nowrap">⇤ 왼쪽</button>
+                    <button type="button" class="tab" onclick="alignCap('center')" style="flex:0 0 auto;min-width:auto;padding:5px 10px;font-size:12px;white-space:nowrap">↔ 가운데</button>
+                    <button type="button" class="tab" onclick="alignCap('right')" style="flex:0 0 auto;min-width:auto;padding:5px 10px;font-size:12px;white-space:nowrap">⇥ 오른쪽</button>
+                  </div>
+                  <div class="hint" style="margin-top:6px;font-size:11px">💡 미리보기에서 끌어도 옮겨져요. 치우쳤으면 <b>↔ 가운데</b>를 누르세요.</div>
                   <button type="button" id="capResetRegionBtn" class="tab" hidden onclick="resetCapToRegion()" style="display:none !important;flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px;margin-top:6px;white-space:nowrap">↩ 지워진 자막 자리(1번)로 되돌리기</button>
                 </div>
 
@@ -4409,6 +4418,16 @@ function alignHC(where){
   else if(where==='bottom') g('hcY').value=88;
   else if(where==='center') g('hcX').value=50;
   updateHC();
+}
+// 자막 가로 정렬 — 헤드카피 alignHC와 같은 규약(2026-08-25 고객 요청).
+// ★CAP_POS_TOUCHED는 건드리지 마라 — 그건 **세로**(capY) 프리셋 덮어쓰기를 막는
+//   깃발이다(4408줄 `if(!CAP_POS_TOUCHED) set('capY', ...)`). 가로를 가운데로 되돌렸다고
+//   "세로를 손댄 적 없다"가 되면 고객이 맞춰둔 세로가 프리셋에 덮인다. 가로만 바꾼다.
+function alignCap(where){
+  if(where==='center') CAP_X_PCT=50;
+  else if(where==='left') CAP_X_PCT=22;
+  else if(where==='right') CAP_X_PCT=78;
+  updateCaption();
 }
 function bindHCDrag(){
   const pv=document.getElementById('hcPreview'), tx=document.getElementById('hcPreviewText');
