@@ -10469,6 +10469,60 @@ def api_produce_picks_remove(request: Request, body: dict):
     return {"ok": True}
 
 
+_FONT_FAV_KEY = "font_favorites"
+
+
+def _font_fav_default():
+    """기본 즐겨찾기 = fonts.json의 star. 사장님이 정해두는 자리(2026-08-26).
+
+    ★파일명을 여기 또 적지 않는다(0순위-B) — 정본은 fonts.json 하나뿐이고,
+      화면 목록(HC_FONTS)도 tools/sync_fonts.py가 같은 파일에서 만든다."""
+    try:
+        p = _STATIC / "fonts.json"
+        return [f["file"] for f in json.loads(p.read_text(encoding="utf-8"))
+                if f.get("star")]
+    except Exception:
+        return []      # 목록을 못 읽어도 화면은 떠야 한다(fail-open)
+
+
+@app.get("/api/fonts/favorites")
+def api_font_favorites(request: Request):
+    """계정별 폰트 즐겨찾기. 한 번도 안 고쳤으면 기본값(fonts.json의 star)을 준다.
+
+    is_default=True면 '아직 사장님 기본 그대로'라는 뜻 — 화면이 [기본으로 되돌리기]
+    버튼을 감추는 데 쓴다."""
+    saved = Store(DB_PATH).get_pref(_FONT_FAV_KEY, customer_id=_cid(request))
+    if saved is None:
+        return {"ok": True, "files": _font_fav_default(), "is_default": True}
+    # 지워진 폰트가 목록에 남아 별만 뜨는 일이 없게 실제 파일과 대조한다.
+    valid = {f["file"] for f in json.loads(
+        (_STATIC / "fonts.json").read_text(encoding="utf-8"))}
+    return {"ok": True, "files": [f for f in saved if f in valid], "is_default": False}
+
+
+@app.post("/api/fonts/favorites")
+def api_font_favorites_set(request: Request, body: dict):
+    """즐겨찾기 저장. body: {files:[...]} 전체 교체, 또는 {reset:true} 기본값 복귀.
+
+    ★전체 교체인 이유: 토글 한 건씩 보내면 빠르게 여러 번 누를 때 순서가 뒤집혀
+      화면과 서버가 어긋난다. 화면이 가진 최종 목록을 통째로 보낸다."""
+    store = Store(DB_PATH)
+    cid = _cid(request)
+    if body.get("reset"):
+        store.clear_pref(_FONT_FAV_KEY, customer_id=cid)
+        return {"ok": True, "files": _font_fav_default(), "is_default": True}
+    files = body.get("files")
+    if not isinstance(files, list):
+        return JSONResponse(status_code=422,
+                            content={"ok": False, "error": "files 배열 필요"})
+    valid = {f["file"] for f in json.loads(
+        (_STATIC / "fonts.json").read_text(encoding="utf-8"))}
+    # 없는 파일은 조용히 버린다 — 화면이 낡아도 서버가 쓰레기를 안 쌓는다.
+    clean = [f for f in dict.fromkeys(files) if f in valid]
+    store.set_pref(_FONT_FAV_KEY, clean, customer_id=cid)
+    return {"ok": True, "files": clean, "is_default": False}
+
+
 @app.get("/api/produce/picks")
 def api_produce_picks(request: Request):
     """영상제작에 담긴 도서관 대본(전체 데이터). 우리믹스 탭 기본 목록."""
