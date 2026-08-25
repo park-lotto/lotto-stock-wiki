@@ -9,6 +9,7 @@ import os
 import json
 import logging
 import re
+import shutil
 import subprocess
 import sys
 import time
@@ -1630,6 +1631,166 @@ def _probe_wh_dur(path):
     return int(st["width"]), int(st["height"]), float(j["format"]["duration"])
 
 
+# ── 사용 구간만 청소(2026-08-25 사장님 "완성본 만들면 하나의 영상인데 그것만 지우면 안 되나") ──
+# 실측(job e68b1bcf8900): 소스 원본 4개 111.6초를 청소했는데 완성본은 30.3초였다.
+# 쓰지도 않을 81초까지 VMake에 보내 시간이 4배 가까이 들었다.
+#
+# 완성본을 직접 청소하지 않는 이유: 그러면 편집을 고칠 때마다 재청소(재과금)다.
+# 소스별 캐시를 지키면서 **보내는 길이만** 줄인다.
+#
+# ★안전선: 청소 안 된 구간이 화면에 나오면 원본 자막이 그대로 보인다.
+#   판정이 조금이라도 애매하면 전체 청소로 되돌린다(None 반환). 아끼려다 자막을 남기지 않는다.
+_SPAN_PAD = float(os.environ.get("SHORTS_CLEAN_SPAN_PAD", "1.5"))     # 앞뒤 여유(초)
+_SPAN_MIN_GAIN = float(os.environ.get("SHORTS_CLEAN_SPAN_MIN_GAIN", "0.8"))  # 이만큼 이하로 줄어야 자른다
+_SPAN_ENABLED = os.environ.get("SHORTS_CLEAN_SPAN", "0") == "1"       # ★기본 꺼짐 — 실측 후 켠다
+
+
+def _used_spans(plan):
+    """편집안이 **실제로 화면에 쓰는** 소스 구간 {video_id: [(start, end), ...]}.
+
+    재료 판정은 video_assemble._beat_material과 같은 규칙이다(0순위-B):
+    사람이 편성한 scene_override가 있으면 그것, 없으면 primary + alternates.
+    alternates를 빼면 안 된다 — 나레이션이 길면 실제로 화면에 나온다(빼면 자막이 남는다).
+
+    하나라도 못 읽으면 **None** — 호출부는 소스 전체를 청소한다.
+    """
+    beats = (plan or {}).get("beats") or []
+    if not beats:
+        return None
+    out = {}
+    for b in beats:
+        over = b.get("scene_override")
+        mats = [dict(s) for s in over if s] if over else                [s for s in ([b.get("primary")] + list(b.get("alternates") or [])) if s]
+        for m in mats:
+            vid = m.get("video_id")
+            try:
+                st, en = float(m.get("start")), float(m.get("end"))
+            except (TypeError, ValueError):
+                return None                       # 숫자가 아니다 → 판정 포기(전체 청소)
+            if not vid or en <= st:
+                return None                       # 뒤집힌 구간 → 판정 포기
+            out.setdefault(vid, []).append((st, en))
+    return out or None
+
+
+def _span_of_source(spans, src_dur, pad=None):
+    """소스 하나에서 잘라 보낼 **한 구간** (start, end). 자를 이유가 없으면 None.
+
+    흩어진 구간을 최소~최대로 묶는다 — 조각을 여럿 만들면 이어붙이기·자르기가 복잡해지고
+    실패 지점이 는다. 대부분 소스는 앞뒤 어딘가에서 몇 초만 쓴다.
+    """
+    pad = _SPAN_PAD if pad is None else pad
+    if not spans or not src_dur or src_dur <= 0:
+        return None
+    lo = max(0.0, min(s for s, _e in spans) - pad)
+    hi = min(float(src_dur), max(e for _s, e in spans) + pad)
+    if hi <= lo:
+        return None
+    if (hi - lo) > src_dur * _SPAN_MIN_GAIN:      # 거의 전체를 쓴다 → 그냥 통째로 보낸다
+        return None
+    return (lo, hi)
+
+
+def _restore_span(orig, cleaned, lo, hi, out_path):
+    """구간만 청소한 결과를 **원본 타임라인 그대로** 되돌린다 → out_path.
+
+    앞[0,lo) + 청소본[lo,hi] + 뒤(hi,끝] 를 이어붙인다. 길이·시각이 원본과 같아야
+    하류(video_assemble)가 edit_plan의 start로 자를 때 엉뚱한 장면이 안 나온다.
+    ★규격을 맞춰서 붙인다 — VMake가 돌려준 청소본은 해상도·fps가 원본과 다를 수 있고,
+      그대로 concat하면 깨진다(_join_sources와 같은 이유·같은 방식).
+    """
+    work = Path(out_path).parent
+    W, H, dur = _probe_wh_dur(orig)
+    parts = []
+
+    def _cut(src, ss, to, tag):
+        dst = str(work / f"rs_{tag}.mp4")
+        cmd = ["ffmpeg", "-y", "-v", "error"]
+        if ss is not None:
+            cmd += ["-ss", f"{ss:.3f}"]
+        cmd += ["-i", str(src)]
+        if to is not None:
+            cmd += ["-t", f"{to:.3f}"]
+        cmd += ["-vf", f"scale={W}:{H}:flags=lanczos,setsar=1,fps=30",
+                "-c:v", "libx264", "-preset", "veryfast", "-crf", "18",
+                "-pix_fmt", "yuv420p", "-c:a", "aac", "-ar", "48000", "-ac", "2", dst]
+        subprocess.run(cmd, check=True)
+        return dst
+
+    if lo > 0.05:                                   # 앞 조각(없으면 만들지 않는다)
+        parts.append(_cut(orig, 0.0, lo, "head"))
+    parts.append(_cut(cleaned, None, None, "mid"))   # 청소된 구간
+    tail = dur - hi
+    if tail > 0.05:                                  # 뒤 조각
+        parts.append(_cut(orig, hi, tail, "tail"))
+
+    if len(parts) == 1:
+        shutil.copyfile(parts[0], out_path)
+        return out_path
+    lst = work / "rs_list.txt"
+    lst.write_text("".join("file " + chr(39) + x + chr(39) + chr(10) for x in parts),
+                   encoding="utf-8")
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "concat", "-safe", "0",
+                    "-i", str(lst), "-c", "copy", str(out_path)], check=True)
+    return out_path
+
+
+def _cut_used_spans(todo, plan, work):
+    """todo의 각 소스를 **쓰이는 구간만** 잘라낸 파일로 바꾼다.
+
+    todo는 [(vid, src)] — 이 리스트를 **제자리에서** 고친다(호출부가 그대로 쓴다).
+    반환: {vid: (원본경로, lo, hi)} — 나중에 _restore_all이 되돌릴 때 쓴다.
+    자를 수 없거나 이득이 없는 소스는 그냥 두고 반환에도 안 넣는다(통째로 청소된다).
+    """
+    spans = _used_spans(plan)
+    if not spans:
+        return {}
+    work = Path(work)
+    cuts = {}
+    for i, (vid, src) in enumerate(list(todo)):
+        used = spans.get(vid)
+        if not used:
+            continue                      # 이 소스는 화면에 안 쓰인다 → 손대지 않는다
+        try:
+            _w, _h, dur = _probe_wh_dur(src)
+            picked = _span_of_source(used, dur)
+            if not picked:
+                continue
+            lo, hi = picked
+            dst = str(work / f"span_src_{vid}.mp4")
+            subprocess.run(
+                ["ffmpeg", "-y", "-v", "error", "-ss", f"{lo:.3f}", "-i", str(src),
+                 "-t", f"{hi - lo:.3f}", "-c:v", "libx264", "-preset", "veryfast",
+                 "-crf", "18", "-pix_fmt", "yuv420p",
+                 "-c:a", "aac", "-ar", "48000", "-ac", "2", dst], check=True)
+            todo[i] = (vid, dst)
+            cuts[vid] = (src, lo, hi)
+            print(f"[clean] {vid}: {dur:.1f}s 중 {lo:.1f}~{hi:.1f}s만 청소", file=sys.stderr)
+        except Exception as e:            # noqa: BLE001 — 자르기 실패는 통째로 보내면 된다
+            print(f"[clean] {vid} 구간 자르기 실패 → 전체 청소: {e}", file=sys.stderr)
+    return cuts
+
+
+def _restore_all(done, cuts, source_map, work):
+    """구간 청소 결과를 원본 타임라인으로 되돌린 {vid: 경로}.
+
+    되돌리기가 실패하면 그 소스는 **원본**을 쓴다 — 시각이 밀린 파일을 넘기면
+    엉뚱한 장면이 나오므로, 자막이 남는 쪽(원본)이 그나마 덜 나쁘다.
+    """
+    out = dict(done)
+    for vid, cleaned in done.items():
+        if vid not in cuts:
+            continue
+        orig, lo, hi = cuts[vid]
+        try:
+            dst = str(Path(work) / f"clean_src_{vid}_full.mp4")
+            out[vid] = _restore_span(orig, cleaned, lo, hi, dst)
+        except Exception as e:            # noqa: BLE001
+            print(f"[clean] {vid} 원복 실패 → 원본 사용: {e}", file=sys.stderr)
+            out[vid] = source_map.get(vid, orig)
+    return out
+
+
 def _join_sources(items, work):
     """[(vid, src)] → (합본경로, [(vid, 시작초, 길이초)]). 실패하면 예외.
 
@@ -1747,6 +1908,15 @@ def _ensure_clean_sources(store, job, job_id, work, key, customer_id=0):
     regions = dict((job.get("clean_regions") or {}).get("sources") or {})
     todo = [(vid, src) for vid, src in source_map.items()
             if not (cached.get(vid) and Path(cached[vid]).exists())]
+    # ★쓰이는 구간만 보낸다(2026-08-25, 플래그 뒤 기본 꺼짐).
+    #   실측 job e68b1bcf8900: 소스 111.6초를 청소했는데 완성본은 30.3초였다.
+    #   VMake 처리 시간은 길이에 비례하므로 안 쓰는 부분을 빼면 그만큼 빨라진다.
+    #   자른 뒤 청소한 결과는 _restore_span으로 **원본 타임라인에 되돌려** 놓는다
+    #   → 하류(video_assemble)는 종전과 똑같이 동작한다(자를 시각이 안 밀린다).
+    #   판정이 애매하면 spans가 None이라 통째로 보낸다(자막을 남기느니 느린 게 낫다).
+    span_cuts = {}
+    if _SPAN_ENABLED and todo:
+        span_cuts = _cut_used_spans(todo, job.get("edit_plan") or {}, work)
     # ★과금은 **VMake 콜 수**로 한다 — 소스 개수가 아니다(2026-08-25 수정).
     #   예전엔 len(todo)로 깎아서, 소스 4개짜리 영상 하나에 20P가 나갔다.
     #   화면 안내는 "영상 1편당 5P"인데 실제로는 4배를 깎던 불일치(실사고).
@@ -1781,6 +1951,9 @@ def _ensure_clean_sources(store, job, job_id, work, key, customer_id=0):
                             regions[vid] = region
                         else:
                             regions.pop(vid, None)  # 이 소스엔 지속 변화 없음(원본에 자막 없었음)
+            # 구간만 잘라 보냈다면 원본 타임라인으로 되돌린다(하류 무변경).
+            if span_cuts:
+                done = _restore_all(done, span_cuts, source_map, work)
             cached.update(done)
             # 넓고 자주 쓰인 위치를 1번으로 — 소스마다 자막 위치가 달라도 대표 한 자리를 고른다.
             primary = sub_region.pick_primary(list(regions.values()))
