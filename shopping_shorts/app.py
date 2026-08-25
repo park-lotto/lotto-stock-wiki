@@ -44,6 +44,8 @@ from shopping_shorts import backbone
 from shopping_shorts.aipick import build_aipick
 from shopping_shorts.categorize import categorize, KEYWORDS as CATEGORY_KEYWORDS
 from shopping_shorts import script_generate
+from shopping_shorts import caption_sync          # 장면별 줄 나누기 후 타이밍 재계산
+from shopping_shorts import tts_timestamps        # 위와 같은 용도(잘라낸 무음 보정)
 from shopping_shorts.apify_client import fetch_single_reel, fetch_reels, fetch_profiles
 from shopping_shorts import discovery, instagram_search
 from shopping_shorts.channels import load_channels, username_from_url, merge_tracked
@@ -12378,6 +12380,88 @@ def api_produce_mix_trim(job_id: str, body: dict):
             "tail_trim": hit.get("tail_trim", 0.0), "trimmed": hit.get(key, 0.0)}
 
 
+def _mix_job_beat_or_error(job_id, body, store):
+    """{job_id, body.beat_idx} → (plan, beat, None) 또는 (None, None, 에러응답).
+    장면 하나를 손보는 API들이 같은 검사를 반복하지 않게 한 곳에 모은다(0순위-B)."""
+    job = store.get_mix_job(job_id)
+    if not job:
+        return None, None, JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    if job.get("status") in ("rendering", "removing_subtitles"):
+        return None, None, JSONResponse(status_code=409, content={"ok": False, "error": "렌더 중에는 못 고쳐요"})
+    plan = job.get("edit_plan") or {}
+    try:
+        bi = int(body.get("beat_idx"))
+    except (TypeError, ValueError):
+        return None, None, JSONResponse(status_code=422, content={"ok": False, "error": "beat_idx 필요"})
+    hit = next((b for b in (plan.get("beats") or []) if b.get("beat_idx") == bi), None)
+    if hit is None:
+        return None, None, JSONResponse(status_code=422, content={"ok": False, "error": "beat_idx 범위 밖"})
+    return plan, hit, None
+
+
+@app.post("/api/produce/mix/{job_id}/cappos")
+def api_produce_mix_cappos(job_id: str, body: dict):
+    """장면 하나의 자막 세로 자리(2026-08-25 사장님 "장면당 자막 배치").
+    body: {beat_idx, pos} — pos = top|mid|bottom. bottom(또는 빈값)이면 **전체 설정으로 되돌린다**.
+    ★%로 번역하는 곳은 video_assemble._CAP_POS_PCT 한 군데뿐이다 — 여기선 뜻만 저장한다.
+    ★음성·타이밍을 건드리지 않는다 → 즉시·무료."""
+    store = Store(DB_PATH)
+    plan, hit, err = _mix_job_beat_or_error(job_id, body, store)
+    if err:
+        return err
+    pos = (body.get("pos") or "").strip().lower()
+    if pos not in ("top", "mid", "bottom", ""):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "pos=top|mid|bottom"})
+    hit["cap_pos"] = pos if pos in ("top", "mid") else None   # bottom = 기본값 = 저장 안 함
+    store.update_mix_job(job_id, edit_plan=plan)
+    return {"ok": True, "pos": hit["cap_pos"] or "bottom"}
+
+
+@app.post("/api/produce/mix/{job_id}/caplines")
+def api_produce_mix_caplines(job_id: str, body: dict):
+    """장면 하나의 자막 줄 나누기(2026-08-25). body: {beat_idx, lines: [str, ...]}
+
+    ★대사 자체는 안 바꾼다 — 이어붙인 글자가 narration과 (공백 무시) 같아야만 저장한다.
+      대사가 바뀌면 음성을 다시 만들어야 하고 그건 다른 API(line)의 일이다.
+    ★그래서 **재합성이 없다** → 즉시·무료. 다만 구절 경계가 바뀌었으니 표시시간(cap_durs)은
+      다시 계산해야 한다. TTS 타임스탬프는 mp3 옆에 남아 있어 다시 읽을 수 있다
+      (_beat_words) — 안 하면 옛 경계 기준 시간이 남아 자막이 밀린다."""
+    store = Store(DB_PATH)
+    plan, hit, err = _mix_job_beat_or_error(job_id, body, store)
+    if err:
+        return err
+    narr = hit.get("narration", "")
+    if body.get("reset"):
+        # '↩ 자동으로' — 사람이 정한 줄을 지우고 규칙/AI 분할로 돌아간다.
+        # ★caption_lines만 지우면 옛 경계 기준 cap_durs가 남아 자막이 밀린다 → 함께 비운다.
+        hit["caption_lines"] = None
+        hit["cap_durs"] = None
+        store.update_mix_job(job_id, edit_plan=plan)
+        return {"ok": True, "lines": video_assemble._caption_segments(narr), "timed": False}
+    lines = [str(x).strip() for x in (body.get("lines") or []) if str(x).strip()]
+    if not lines:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "lines 필요"})
+    if "".join(lines).replace(" ", "") != narr.replace(" ", ""):
+        return JSONResponse(status_code=422,
+                            content={"ok": False, "error": "대사 글자가 달라졌어요 — 줄만 나눠주세요"})
+    hit["caption_lines"] = lines
+    hit["cap_durs"] = None                       # 옛 경계 기준 시간은 무효
+    hit["cap_lead"] = hit.get("cap_lead", 0.0)
+    tts = hit.get("tts_path")
+    if tts and Path(tts).exists():               # 음성은 그대로 → 타임스탬프만 다시 읽어 재계산
+        try:
+            dur = mix_pipeline._probe_duration(tts)
+            words = mix_pipeline._beat_words(
+                tts, dur, removed=tts_timestamps.load_removed(tts))
+            timing = caption_sync.phrase_durs_from_words(narr, words, dur or 0.0, preset=lines)
+            if timing:
+                hit["cap_durs"], hit["cap_lead"] = timing.durs, timing.lead_in
+        except Exception as e:  # noqa: BLE001 — 재계산 실패해도 줄 나누기는 살린다(글자수 폴백)
+            print(f"[caplines] 타이밍 재계산 실패(폴백 사용): {e!r}", file=sys.stderr)
+    store.update_mix_job(job_id, edit_plan=plan)
+    return {"ok": True, "lines": lines, "timed": hit.get("cap_durs") is not None}
+
+
 @app.post("/api/produce/mix/{job_id}/shorten")
 def api_produce_mix_shorten(job_id: str, body: dict):
     """'⏱ 대사가 영상보다 김' 비트의 대사를 화면 예산에 맞게 줄이고 그 비트만 재TTS
@@ -12592,6 +12676,8 @@ def api_produce_mix_beats_preview(job_id: str):
             "segs": video_assemble._caption_segments(narr, preset=b.get("caption_lines")),  # 렌더와 같은 분할
             "durs": b.get("cap_durs"),                              # 구절별 실제 표시시간(없으면 None)
             "lead": b.get("cap_lead", 0.0),                         # 말 시작 전 무음(초) — 렌더와 같은 기준점
+            "pos": b.get("cap_pos") or "bottom",                    # 장면별 자막 자리(기본=전체 설정)
+            "beat_idx": b.get("beat_idx", idx),                     # 저장 API가 쓰는 진짜 번호(목록 순번과 다를 수 있다)
         })
     return {"beats": out}
 

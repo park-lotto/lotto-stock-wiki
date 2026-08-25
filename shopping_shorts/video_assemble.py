@@ -1738,11 +1738,35 @@ def _beat_timeline(edit_plan, tts_paths):
             "cap_lead": _cap_lead,
             "cap_offset": beat.get("cap_offset", 0.0),
             "caption_lines": beat.get("caption_lines"),   # AI가 끊어준 자막 호흡 줄(있으면)
+            # 장면별 자막 자리(2026-08-25). 여기서 안 실으면 저장위치≠읽기위치가 되어
+            # 사장님이 고친 자리가 렌더에 반영되지 않는다(위 cap_durs와 같은 함정).
+            "cap_pos": beat.get("cap_pos"),
             "sfx": beat.get("sfx"),                        # 효과음 매칭(있으면) — position 읽기용
             "head_trim": beat.get("head_trim", 0.0),
         })
         t0 += dur
     return timeline
+
+
+# 장면별 자막 자리(2026-08-25 사장님 "장면당 자막 배치를 수정할 수 있게").
+# 값의 뜻은 여기 한 곳에서만 %로 번역한다 — UI와 렌더가 각자 숫자를 들고 있으면
+# 언젠가 어긋난다(0순위-B). UI는 'top|mid|bottom'만 저장한다.
+#   top    = 18%  (화면 위쪽. 헤드카피와 겹치지 않게 너무 위로는 안 올린다)
+#   mid    = 50%  (한가운데)
+#   bottom = 전체 설정 그대로(=안 건드린 것과 같다)
+_CAP_POS_PCT = {"top": 18.0, "mid": 50.0}
+
+
+def _beat_cap_style(caption_style, beat):
+    """이 비트에 쓸 자막 스타일. beat['cap_pos']가 있으면 세로 위치만 덮어쓴다.
+    없으면 **원본 객체를 그대로** 돌려준다(복사 비용도, 동작 변화도 없음)."""
+    pos = (beat or {}).get("cap_pos")
+    ypct = _CAP_POS_PCT.get(pos)
+    if ypct is None:
+        return caption_style
+    st = dict(caption_style or {})
+    st["y_pct"] = ypct
+    return st
 
 
 def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None, caption_style=None, deco=None, sfx_paths=None):
@@ -1774,7 +1798,8 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
         # 여운을 주면 그 자막이 다음 비트로 0.5초 넘어가 다음 자막과 겹쳐 뭉갠다(전환 겹침, 실측).
         _tail = 0.5 if b is timeline[-1] else 0.0
         filters.extend(_caption_drawtexts(b["narration"], b["dur"], work, b["beat_idx"],
-                                          b["t0"], caption_style, real_durs=b.get("cap_durs"),
+                                          b["t0"], _beat_cap_style(caption_style, b),
+                                          real_durs=b.get("cap_durs"),
                                           cap_offset=b.get("cap_offset", 0.0), tail=_tail,
                                           cap_lines=b.get("caption_lines"),
                                           lead_in=b.get("cap_lead", 0.0)))
