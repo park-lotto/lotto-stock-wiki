@@ -1714,8 +1714,11 @@
                       <span class="hint" style="font-size:11px">미리보기에서 띠 경계를 끌어 조절하세요</span>
                     </div>
                     <div hidden style="display:none">
-                      <input id="frBar" type="range" min="0" max="400" step="10" value="190" oninput="frUpdate()">
-                      <input id="frBottom" type="range" min="0" max="400" step="10" value="0" oninput="frUpdate()">
+                      <!-- ★step=1. 10이면 실측 띠 높이(269 등)를 담지 못해 270으로 스냅하고,
+                           frUpdate가 그 270을 도로 읽어 **실측값이 조용히 어긋난다**(2026-08-25 실측).
+                           어차피 조절은 미리보기 드래그로 하고 이 칸은 값의 그릇일 뿐이다. -->
+                      <input id="frBar" type="range" min="0" max="400" step="1" value="190" oninput="frUpdate()">
+                      <input id="frBottom" type="range" min="0" max="400" step="1" value="0" oninput="frUpdate()">
                     </div>
                     <!-- 🎨 글자 꾸미기(2026-08-22 신설) — 제목·채널명의 폰트·크기·가로위치.
                          ★크기 0 = '자동'(프리셋이 정한 값). 0을 "0px"로 읽으면 글자가 사라진다. -->
@@ -1738,6 +1741,57 @@
                         <input id="frChX" type="range" min="0" max="100" value="50" oninput="frUpdate()" style="width:110px">
                       </div>
                       <div class="hint" style="font-size:11px;margin-top:6px">크기를 맨 왼쪽(자동)에 두면 틀이 정한 크기를 씁니다.</div>
+                    </div>
+                    <!-- 🎨 틀 색·구성 손보기(2026-08-25 사장님 "거기서 커스텀해서 수정할 수 있게")
+                         ★실측은 프레임 한 장에서 읽은 근사치다 — 마지막 한 뼘은 사람 손이어야 한다.
+                           여기 값들은 지금까지 프리셋에만 있어 고른 뒤엔 손댈 방법이 없었다.
+                         ★'틀 그대로' 버튼 = 전부 빈값으로 → 실측값으로 되돌아간다(되돌리기 보장). -->
+                    <div style="border-top:1px dashed var(--line);margin-top:10px;padding-top:10px">
+                      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+                        <div style="font-size:12px;font-weight:700;color:var(--sub)">🎨 틀 색·구성 손보기</div>
+                        <button type="button" onclick="frResetCustom()"
+                          style="background:none;border:1px solid var(--line);color:var(--sub);
+                                 border-radius:6px;padding:3px 8px;font-size:11px;cursor:pointer">↩ 틀 그대로</button>
+                      </div>
+                      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:12px">
+                        <label style="display:flex;align-items:center;gap:5px">띠 색
+                          <input id="frBarColor" type="color" value="#E11F26" oninput="frTouch('bar')"
+                                 style="width:34px;height:26px;padding:0;border:1px solid var(--line);border-radius:5px;background:none;cursor:pointer"></label>
+                        <label style="display:flex;align-items:center;gap:5px">띠 글자
+                          <input id="frOnBarColor" type="color" value="#000000" oninput="frTouch('onbar')"
+                                 style="width:34px;height:26px;padding:0;border:1px solid var(--line);border-radius:5px;background:none;cursor:pointer"></label>
+                        <label style="display:flex;align-items:center;gap:5px">제목 바탕
+                          <input id="frSubBg" type="color" value="#FFFFFF" oninput="frTouch('subbg')"
+                                 style="width:34px;height:26px;padding:0;border:1px solid var(--line);border-radius:5px;background:none;cursor:pointer"></label>
+                        <label style="display:flex;align-items:center;gap:5px">조회수 글자
+                          <input id="frSubText" type="color" value="#757575" oninput="frTouch('subtext')"
+                                 style="width:34px;height:26px;padding:0;border:1px solid var(--line);border-radius:5px;background:none;cursor:pointer"></label>
+                      </div>
+                      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:12px;margin-top:8px">
+                        <span style="min-width:44px">띠 안</span>
+                        <label style="display:flex;align-items:center;gap:4px">왼쪽
+                          <select id="frLeftIcon" onchange="frUpdate()" style="background:#0a1017;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:5px 8px;font-size:12px">
+                            <option value="">틀 기본</option><option value="hamburger">☰ 메뉴</option>
+                            <option value="search">🔍 돋보기</option><option value="dots">⋮ 점3개</option>
+                            <option value="back">← 뒤로</option><option value="bookmark">🔖 북마크</option>
+                            <option value="none">없음</option>
+                          </select></label>
+                        <label style="display:flex;align-items:center;gap:4px">가운데
+                          <select id="frCenter" onchange="frUpdate()" style="background:#0a1017;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:5px 8px;font-size:12px">
+                            <option value="">틀 기본</option><option value="채널명">채널명</option>
+                            <option value="검색창">검색창</option><option value="없음">비우기</option>
+                          </select></label>
+                        <label style="display:flex;align-items:center;gap:4px">오른쪽
+                          <select id="frRightIcon" onchange="frUpdate()" style="background:#0a1017;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:5px 8px;font-size:12px">
+                            <option value="">틀 기본</option><option value="hamburger">☰ 메뉴</option>
+                            <option value="search">🔍 돋보기</option><option value="dots">⋮ 점3개</option>
+                            <option value="back">← 뒤로</option><option value="bookmark">🔖 북마크</option>
+                            <option value="none">없음</option>
+                          </select></label>
+                      </div>
+                      <div class="hint" style="font-size:11px;margin-top:6px">
+                        여기서 실제 채널과 똑같이 맞출 수 있어요. 되돌리려면 <b>↩ 틀 그대로</b>.
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -2734,6 +2788,28 @@ function setTemplateSpan(span){
 // 📰 내용물 있는 틀 — spec은 STATE.deco.template.frame 하나에만 산다.
 // ★그림 URL을 만드는 곳도 여기 하나뿐이다(frameUrl) — 미리보기·카드가 같은 걸 쓴다.
 let FR_PRESETS=[];
+// ★색 입력칸(<input type=color>)은 **빈값을 가질 수 없다** — 항상 #RRGGBB다.
+//   그래서 "안 정했음"을 값으로는 표현 못 한다. 만졌는지를 따로 기억한다.
+//   (헤드카피 HC_Y_TOUCHED·자막 CAP_POS_TOUCHED와 같은 규약)
+let FR_TOUCHED={bar:false,onbar:false,subbg:false,subtext:false};
+function frTouch(k){ FR_TOUCHED[k]=true; frUpdate(); }
+function frResetCustom(){
+  // 손본 것을 전부 물린다 → 서버가 실측(프리셋) 값으로 되돌린다.
+  // ★값(f.*)을 **먼저** 비운다. frFill이 f를 보고 FR_TOUCHED를 되살리므로,
+  //   플래그만 끄면 frFill이 도로 켜서 되돌리기가 통째로 안 먹는다(0순위-B: 같은
+  //   결정을 두 곳에서 정하면 나중 것이 이긴다. 실측으로 잡은 결함이다).
+  const f=STATE.deco&&STATE.deco.template&&STATE.deco.template.frame;
+  if(f){
+    f.bar_color=''; f.on_bar_color=''; f.sub_bg_c=''; f.sub_text_c='';
+    f.left_icon=''; f.right_icon=''; f.center_kind='';
+  }
+  FR_TOUCHED={bar:false,onbar:false,subbg:false,subtext:false};
+  ['frLeftIcon','frRightIcon','frCenter'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  if(f){ frFill(f); }        // 색 칸을 그 틀의 실제 색으로 다시 채운다
+  frUpdate();
+}
 function frameUrl(f){
   const q=new URLSearchParams({preset:f.preset||'news_coral', bar_h:f.bar_h??190,
     bottom_h:f.bottom_h??0,
@@ -2743,7 +2819,13 @@ function frameUrl(f){
     ch_font:f.ch_font||'', ch_size:f.ch_size??0, ch_x:f.ch_x??50,
     title_font:f.title_font||'', title_size:f.title_size??0, title_x:f.title_x??50,
     // [광고] 다듬기(2026-08-22) — 0이면 서버가 지금까지의 자리·크기를 그대로 쓴다
-    ad_size:f.ad_size??0, ad_x:f.ad_x??0, ad_y:f.ad_y??0, ad_alpha:f.ad_alpha??100});
+    ad_size:f.ad_size??0, ad_x:f.ad_x??0, ad_y:f.ad_y??0, ad_alpha:f.ad_alpha??100,
+    // 틀 색·구성 손보기(2026-08-25) — 빈값이면 서버가 실측(프리셋)으로 되돌린다.
+    // ★안 만졌으면 아예 안 보낸다: 색 입력칸은 빈값을 가질 수 없어서(항상 #RRGGBB),
+    //   그냥 보내면 "틀 그대로"가 영영 불가능해진다. 만진 것만 보낸다.
+    bar_color:f.bar_color||'', on_bar_color:f.on_bar_color||'',
+    sub_bg_c:f.sub_bg_c||'', sub_text_c:f.sub_text_c||'',
+    left_icon:f.left_icon||'', right_icon:f.right_icon||'', center_kind:f.center_kind||''});
   return '/api/produce/frame.png?'+q.toString();
 }
 async function loadFramePresets(){
@@ -2819,6 +2901,20 @@ function frFill(f){
   if(g('frTtX')) g('frTtX').value=f.title_x??50;
   if(g('frChSizeV')) g('frChSizeV').textContent=(f.ch_size?f.ch_size+'px':'자동');
   if(g('frTtSizeV')) g('frTtSizeV').textContent=(f.title_size?f.title_size+'px':'자동');
+  // 틀 색·구성 — ★칸을 **그 틀의 실제 색으로 채워놓고** 시작한다.
+  //   빈 칸에서 시작하면 원래 색이 뭐였는지 알 수 없어 '조금만 밀기'가 불가능하다.
+  const pr=FR_PRESETS.find(x=>x.id===f.preset)||{};
+  const setC=(id,v)=>{ const el=g(id); if(el&&v) el.value=v; };
+  setC('frBarColor', f.bar_color||pr.bar);
+  setC('frOnBarColor', f.on_bar_color||pr.on_bar);
+  setC('frSubBg', f.sub_bg_c||pr.sub_bg);
+  setC('frSubText', f.sub_text_c||pr.sub_text);
+  if(g('frLeftIcon')) g('frLeftIcon').value=f.left_icon||'';
+  if(g('frRightIcon')) g('frRightIcon').value=f.right_icon||'';
+  if(g('frCenter')) g('frCenter').value=f.center_kind||'';
+  // 저장된 작업을 다시 열었을 때: 값이 있으면 '만진 것'으로 되살린다(안 그러면 그림이 튄다)
+  FR_TOUCHED={bar:!!f.bar_color, onbar:!!f.on_bar_color,
+              subbg:!!f.sub_bg_c, subtext:!!f.sub_text_c};
   if(g('frChXV')) g('frChXV').textContent=(f.ch_x??50)+'%';
   if(g('frTtXV')) g('frTtXV').textContent=(f.title_x??50)+'%';
   fillFrameFontSelects(); syncAdBadge();
@@ -2879,6 +2975,14 @@ function frUpdate(){
   f.title_font=(g('frTtFont')||{}).value||'';
   f.title_size=parseInt((g('frTtSize')||{}).value||0,10);
   f.title_x=parseInt((g('frTtX')||{}).value||50,10);
+  // 틀 색·구성 — ★색은 **만졌을 때만** 값이 된다(FR_TOUCHED). 안 그러면 '틀 그대로'가 안 된다.
+  f.bar_color=FR_TOUCHED.bar?((g('frBarColor')||{}).value||''):'';
+  f.on_bar_color=FR_TOUCHED.onbar?((g('frOnBarColor')||{}).value||''):'';
+  f.sub_bg_c=FR_TOUCHED.subbg?((g('frSubBg')||{}).value||''):'';
+  f.sub_text_c=FR_TOUCHED.subtext?((g('frSubText')||{}).value||''):'';
+  f.left_icon=(g('frLeftIcon')||{}).value||'';
+  f.right_icon=(g('frRightIcon')||{}).value||'';
+  f.center_kind=(g('frCenter')||{}).value||'';
   f.ad_size=parseInt((g('frAdSize')||{}).value||0,10);
   f.ad_alpha=parseInt((g('frAdAlpha')||{}).value||100,10);
   f.ad_x=parseInt((g('frAdX')||{}).value||0,10);

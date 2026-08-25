@@ -11744,7 +11744,17 @@ def api_produce_frame_presets():
                          #   채널 질감을 따라가고 자막만 우리 기본값이면 "한 세트로
                          #   안 보인다"가 된다. 옛 4종(news_*)엔 없어서 None이 가고,
                          #   화면은 None이면 자막을 안 건드린다(기존 동작 그대로).
-                         "caption": v.get("caption")}
+                         "caption": v.get("caption"),
+                         # ★색·구성도 내려준다(2026-08-25 '틀 색·구성 손보기').
+                         #   화면이 커스텀 칸을 **그 틀의 실제 값으로 채워놓고** 시작해야
+                         #   사장님이 거기서 조금씩 밀어 실제 채널에 맞출 수 있다.
+                         #   (빈 칸에서 시작하면 원래 색이 뭐였는지 알 길이 없다)
+                         "on_bar": v.get("on_bar"),
+                         "sub_bg": v.get("sub_bg"),
+                         "sub_text": v.get("sub_text"),
+                         "left_icon": v.get("left_icon"),
+                         "right_icon": v.get("right_icon"),
+                         "center_kind": v.get("center_kind")}
                         for k, v in deco_frame.PRESETS.items()],
             "defaults": deco_frame.DEFAULTS}
 

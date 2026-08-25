@@ -460,3 +460,51 @@ def test_cache_key_changes_when_drawing_code_changes():
         assert d.cache_key(spec) != k1
     finally:
         d.RENDER_VER = old
+
+
+# ── 틀 커스텀(2026-08-25 사장님 "거기서 커스텀해서 수정할 수 있게") ──────────
+# 실측은 프레임 한 장에서 읽은 근사치다 — "똑같이" 맞추는 마지막 한 뼘은 사람 손이어야
+# 한다. 그런데 색·아이콘·가운데 구성은 프리셋에만 있어 고른 뒤엔 손댈 방법이 없었다.
+
+def test_custom_overrides_actually_change_the_image():
+    """손본 값 7가지가 전부 실제로 그림을 바꾼다(하나라도 죽으면 '안 먹는다'가 된다)."""
+    from shopping_shorts import deco_frame as d
+    base = {"preset": "sul_hwaryong", "channel": "내 채널", "title": "제목",
+            "views": "1만", "comments": "2", "icons": True}
+    ref = d.render(base).tobytes()
+    for kw in ({"bar_color": "#0055FF"}, {"on_bar_color": "#FFEE00"},
+               {"left_icon": "dots"}, {"right_icon": "none"},
+               {"center_kind": "채널명"}, {"sub_bg_c": "#000000"},
+               {"sub_text_c": "#FF0000"}):
+        assert d.render(dict(base, **kw)).tobytes() != ref, f"{kw} 가 그림을 안 바꾼다"
+
+
+def test_empty_custom_falls_back_to_measured_preset():
+    """빈값 = '안 정했음' → 실측 그대로. ('틀 그대로' 되돌리기가 이 규약에 얹혀 있다)"""
+    from shopping_shorts import deco_frame as d
+    base = {"preset": "sul_hwaryong", "channel": "내 채널", "title": "제목"}
+    blank = dict(base, bar_color="", on_bar_color="", sub_bg_c="", sub_text_c="",
+                 left_icon="", right_icon="", center_kind="")
+    assert d.render(blank).tobytes() == d.render(base).tobytes()
+
+
+def test_bad_custom_values_never_crash_the_preview():
+    """이상한 값이 와도 죽지 않는다 — 그림 한 장이 못 나오면 화면 전체가 막힌다."""
+    from shopping_shorts import deco_frame as d
+    junk = {"preset": "sul_hwaryong", "channel": "내 채널", "title": "제목",
+            "bar_color": "javascript:alert(1)", "sub_bg_c": "../../etc/passwd",
+            "left_icon": "../evil", "center_kind": "<script>"}
+    n = d.normalize(junk)
+    assert n["bar_color"] == "" and n["sub_bg_c"] == ""
+    assert n["left_icon"] == "" and n["center_kind"] == ""
+    d.render(junk)      # 예외 없이 그려져야 한다
+
+
+def test_user_picked_meta_color_beats_auto_contrast_guard():
+    """사장님이 직접 고른 색은 자동 보정이 덮지 않는다(사람 손 > 자동)."""
+    from shopping_shorts import deco_frame as d
+    # 바탕과 같은 색을 일부러 골랐다 — 폴백이 끼어들면 다른 그림이 된다
+    same = {"preset": "sul_hwaryong", "title": "제목", "views": "1만",
+            "sub_bg_c": "#000000", "sub_text_c": "#000000"}
+    auto = dict(same); auto.pop("sub_text_c")
+    assert d.render(same).tobytes() != d.render(auto).tobytes()

@@ -10,6 +10,7 @@
 import hashlib
 import json
 import pathlib
+import re
 
 from PIL import Image, ImageDraw, ImageFont
 
@@ -360,6 +361,18 @@ DEFAULTS = {
     "title_font": "",      # 제목 폰트(빈값=Pretendard-ExtraBold)
     "title_size": 0,       # 제목 크기(0=62, 기존 값)
     "title_x": 50,         # 제목 가로 위치 %
+    # ── 틀 커스텀(2026-08-25 사장님 "거기서 커스텀해서 수정할 수 있게") ──────
+    # ★실측은 근사치다 — 폰트는 견본에서 고른 것이고, 색도 프레임 한 장에서 읽었다.
+    #   "똑같이" 맞추는 마지막 한 뼘은 **사람 손**이어야 한다. 그런데 여기까지는
+    #   프리셋에만 있고 화면이 못 건드려서, 고른 뒤엔 손댈 방법이 아예 없었다.
+    # ★빈값 = "안 정했음" → 프리셋 값(위 글자 꾸미기와 **같은 규약**. 0순위-B).
+    "bar_color": "",       # 띠 색(빈값=프리셋 bar)
+    "on_bar_color": "",    # 띠 위 글자·아이콘 색(빈값=프리셋 on_bar)
+    "left_icon": "",       # 왼쪽 아이콘(hamburger/search/dots/back/bookmark/none)
+    "right_icon": "",      # 오른쪽 아이콘(같은 값들)
+    "center_kind": "",     # 띠 가운데(검색창/채널명/없음)
+    "sub_bg_c": "",        # 제목 블록 바탕색(빈값=프리셋 sub_bg)
+    "sub_text_c": "",      # 조회수·댓글 글자색(빈값=프리셋 sub_text)
 }
 
 _FONTS = {
@@ -383,6 +396,12 @@ def _font(kind, size, override=""):
     if p.exists():
         return ImageFont.truetype(str(p), size)
     return ImageFont.load_default()
+
+
+# 틀 커스텀 입력 검사용(normalize에서 쓴다).
+_VALID_HEX = re.compile(r"#[0-9A-Fa-f]{6}")
+# 'none'도 유효한 선택이다("아이콘 안 씀"). _ICONS엔 없으므로 따로 둔다.
+_ICON_CHOICES = ("hamburger", "search", "dots", "back", "bookmark", "none")
 
 
 def _rgb(hex_color):
@@ -444,6 +463,20 @@ def normalize(spec):
     for k in ("ch_font", "title_font"):
         v = str(s[k] or "").strip()
         s[k] = v if (v and "/" not in v and "\\" not in v and ".." not in v) else ""
+    # ── 틀 커스텀 값 검사도 **여기 한 곳** ────────────────────────────
+    # 색은 #RRGGBB만 받는다. 이상한 값이 오면 빈값(= 프리셋 그대로)으로 떨어뜨린다
+    # — 예외로 죽으면 미리보기가 통째로 안 나온다(그림 한 장이 화면 전체를 막는다).
+    for k in ("bar_color", "on_bar_color", "sub_bg_c", "sub_text_c"):
+        v = str(s[k] or "").strip()
+        if not v.startswith("#"):
+            v = "#" + v if v else ""
+        s[k] = v.upper() if _VALID_HEX.fullmatch(v or "") else ""
+    # 아이콘은 우리가 그릴 줄 아는 이름만. 'none'은 "안 그림"이라 유효한 값이다.
+    for k in ("left_icon", "right_icon"):
+        v = str(s[k] or "").strip()
+        s[k] = v if v in _ICON_CHOICES else ""
+    v = str(s["center_kind"] or "").strip()
+    s["center_kind"] = v if v in _CENTER else ""
     return s
 
 
@@ -548,7 +581,10 @@ def render(spec):
     """spec → 1080x1920 RGBA 이미지. 가운데는 투명(영상이 비쳐야 한다)."""
     s = normalize(spec)
     p = PRESETS[s["preset"]]
-    bar_col, on_bar = _rgb(p["bar"]), _rgb(p["on_bar"])
+    # ★사장님이 화면에서 고른 값이 먼저, 없으면 실측(프리셋). 빈값="안 정했음" 규약.
+    #   실측은 프레임 한 장에서 읽은 근사치라 마지막 한 뼘은 사람 손이어야 한다.
+    bar_col = _rgb(s["bar_color"] or p["bar"])
+    on_bar = _rgb(s["on_bar_color"] or p["on_bar"])
 
     im = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     d = ImageDraw.Draw(im)
@@ -560,8 +596,8 @@ def render(spec):
         if s["icons"]:
             # ★어느 아이콘인지도 채널마다 다르다(실측: 햄버거·돋보기·⋮·←·북마크).
             #   전에는 무조건 ☰+🔍이라 ⋮를 쓰는 채널이 딴 채널처럼 보였다.
-            left = _ICONS.get(p.get("left_icon", "hamburger"))
-            right = _ICONS.get(p.get("right_icon", "search"))
+            left = _ICONS.get(s["left_icon"] or p.get("left_icon", "hamburger"))
+            right = _ICONS.get(s["right_icon"] or p.get("right_icon", "search"))
             if left:
                 left(d, 92, cy, on_bar)
             if right:
@@ -569,7 +605,7 @@ def render(spec):
         # ★띠 가운데 구성은 채널마다 다르다(실측 center_kind: 검색창 2 / 채널명 13 / 없음 5).
         #   2026-08-25까지 이 값의 **소비처가 0곳**이라 전부 '채널명'으로만 그려졌다 —
         #   "틀이 다 똑같다 / 색만 바뀐 거냐"(사장님)의 직접 원인이었다. cap_* 사고와 같은 모양.
-        center = _CENTER.get(p.get("center_kind"), "name")
+        center = _CENTER.get(s["center_kind"] or p.get("center_kind"), "name")
         if center == "search":
             _searchbar(d, W // 2, cy, on_bar, h=max(44, int(bar_h * 0.34)))
         elif center == "name" and s["channel"]:
@@ -638,16 +674,20 @@ def render(spec):
         #   2026-08-25까지 소비처 0곳이라 흰 바탕+검은 글자 한 벌로만 나갔다(center_kind와 같은 사고).
         #   사장님이 화면에서 직접 정한 head_bg가 있으면 그게 먼저다(사람 손 > 실측).
         touched = str(s["head_bg"]).upper() not in ("#FFFFFF", "#FFF")
-        bg = _rgb(s["head_bg"]) if touched else _rgb(p.get("sub_bg") or s["head_bg"])
+        bg = _rgb(s["sub_bg_c"] or (s["head_bg"] if touched
+                                    else (p.get("sub_bg") or s["head_bg"])))
         # 글자색: 실측 sub_text. 없으면 지금까지의 값. 바탕이 어두우면 검은 글자가 안 보이므로
         # 바탕 밝기로 갈라준다(지어내는 게 아니라 **안 보이는 걸 막는** 규칙 — box_color와 같다).
         dark_bg = _lum(bg) < 128
         title_fill = (245, 245, 245, 255) if dark_bg else (20, 20, 20, 255)
         _fallback_meta = (190, 190, 190, 255) if dark_bg else (120, 120, 120, 255)
-        meta_fill = _rgb(p["sub_text"]) if p.get("sub_text") else _fallback_meta
+        _meta_src = s["sub_text_c"] or p.get("sub_text")
+        meta_fill = _rgb(_meta_src) if _meta_src else _fallback_meta
         # ★실측이 틀릴 수도 있다 — '요새난리'는 검은 바탕에 검은 글자로 읽혀 왔다(실측 1종).
         #   값을 고쳐 쓰진 않되(원본은 실측이 주인), **안 보이면 폴백**한다.
-        if abs(_lum(meta_fill) - _lum(bg)) < 60:
+        #   단 **사장님이 직접 고른 색(sub_text_c)은 건드리지 않는다** — 사람 손이
+        #   자동 보정보다 위다. 일부러 배경과 같은 색을 쓸 수도 있다(글자 숨기기).
+        if not s["sub_text_c"] and abs(_lum(meta_fill) - _lum(bg)) < 60:
             meta_fill = _fallback_meta
         rule_fill = (210, 210, 210, 255) if dark_bg else (30, 30, 30, 255)
         d.rectangle([0, y, W, y + block_h - 1], fill=bg)
