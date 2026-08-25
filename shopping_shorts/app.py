@@ -12477,7 +12477,9 @@ def api_produce_mix_cappos(job_id: str, body: dict):
         return JSONResponse(status_code=422, content={"ok": False, "error": "pos=top|mid|bottom"})
     hit["cap_pos"] = pos if pos in ("top", "mid") else None   # bottom = 기본값 = 저장 안 함
     store.update_mix_job(job_id, edit_plan=plan)
-    return {"ok": True, "pos": hit["cap_pos"] or "bottom"}
+    # y_pct도 함께 준다 — 화면이 %를 스스로 계산하면 렌더와 두 벌이 된다(0순위-B).
+    return {"ok": True, "pos": hit["cap_pos"] or "bottom",
+            "y_pct": video_assemble._CAP_POS_PCT.get(hit["cap_pos"])}
 
 
 @app.post("/api/produce/mix/{job_id}/caplines")
@@ -12753,6 +12755,10 @@ def api_produce_mix_beats_preview(job_id: str):
             "durs": b.get("cap_durs"),                              # 구절별 실제 표시시간(없으면 None)
             "lead": b.get("cap_lead", 0.0),                         # 말 시작 전 무음(초) — 렌더와 같은 기준점
             "pos": b.get("cap_pos") or "bottom",                    # 장면별 자막 자리(기본=전체 설정)
+            # ★그 자리가 화면상 몇 %인지도 **서버가** 알려준다(2026-08-25).
+            #   미리보기가 %를 스스로 계산하면 렌더와 두 벌이 되어 언젠가 어긋난다(0순위-B).
+            #   None = 전체 설정 그대로(bottom) → 화면은 caption_style.y_pct를 쓴다.
+            "pos_y_pct": video_assemble._CAP_POS_PCT.get(b.get("cap_pos")),
             "beat_idx": b.get("beat_idx", idx),                     # 저장 API가 쓰는 진짜 번호(목록 순번과 다를 수 있다)
         })
     return {"beats": out}

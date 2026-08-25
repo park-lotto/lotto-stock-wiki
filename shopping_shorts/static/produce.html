@@ -3601,7 +3601,10 @@ async function setBeatCapPos(pos){
        body:JSON.stringify({beat_idx:_beatNo(b), pos})});
     const d=await r.json();
     if(!r.ok || !d.ok){ _capMsg(d.error||'저장 실패','var(--fire)'); return; }
-    b.pos=d.pos; renderBeatTools();
+    // ★저장 성공 → 화면도 그 자리로 즉시 옮긴다. %는 서버가 준 값을 쓴다(렌더와 같은 표).
+    b.pos=d.pos; b.pos_y_pct=(d.y_pct!=null?d.y_pct:null);
+    renderBeatTools();
+    if(typeof updateCaption==='function') updateCaption();
     _capMsg('이 장면 자막을 '+({top:'위',mid:'중간',bottom:'아래'}[d.pos]||d.pos)+'로 옮겼어요','var(--ok)');
   }catch(e){ _capMsg('네트워크 오류','var(--fire)'); }
 }
@@ -3664,7 +3667,13 @@ function updateCaption(){
   el.textContent=PREVIEW_CAP_TEXT;
   el.style.fontFamily=`'${fontCss(cs.font)}',sans-serif`;
   el.style.left=cs.x_pct+'%';   // 가로 드래그 반영(기본 50% 중앙)
-  el.style.top=cs.y_pct+'%'; el.style.transform='translate(-50%,-50%)';
+  // ★장면별 자막 자리(2026-08-25 사장님 제보 "1번에서 바꾸고 2번 가면 같은 위치").
+  //   종전엔 전체 설정(cs.y_pct)만 봐서, 장면마다 다르게 저장해도 미리보기는 늘 같은 자리였다.
+  //   저장·최종렌더는 정상이었고 **보이는 것만** 안 따라왔다 → "안 먹혔나"로 읽혔다.
+  //   %는 서버가 준 값(pos_y_pct)을 쓴다 — 렌더와 같은 표(_CAP_POS_PCT)에서 나온다.
+  const _b = (typeof BEATS_PREVIEW!=='undefined' && BEATS_PREVIEW[BEAT_IDX]) || null;
+  const _yp = (_b && _b.pos_y_pct != null) ? _b.pos_y_pct : cs.y_pct;
+  el.style.top=_yp+'%'; el.style.transform='translate(-50%,-50%)';
   el.style.color=cs.color; el.style.fontWeight=900;
   // 자막은 무조건 한 줄 — 줄바꿈 금지(nowrap). 폭(0.92) 넘으면 폰트 자동축소로 한 줄에 맞춘다.
   // 서버 _segmented_drawtext(single_line=True)와 동일 비율: shrink = maxW / textW.
