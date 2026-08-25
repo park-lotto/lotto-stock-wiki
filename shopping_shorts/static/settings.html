@@ -125,6 +125,32 @@
     .balNum{font-size:36px}
     .tab{padding:10px 12px;font-size:15px}
   }
+
+  /* ── 설치와 준비 카드(2026-08-25) ── */
+  .setupIntro{
+    background:rgba(128,128,128,.10);border:1px solid rgba(128,128,128,.28);
+    border-radius:12px;padding:13px 15px;margin:0 0 16px;font-size:15px;line-height:1.6;
+  }
+  .cardGrid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+  .scard{
+    display:block;text-decoration:none;color:inherit;
+    border:1px solid rgba(128,128,128,.32);border-radius:14px;padding:16px 16px 14px;
+    background:rgba(128,128,128,.06);transition:transform .12s ease,border-color .12s ease;
+  }
+  .scard:hover{transform:translateY(-2px);border-color:currentColor}
+  .scard.must{border-color:rgba(255,138,91,.55)}
+  .scardTop{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  .scardNo{font-weight:900;font-size:15px;opacity:.55}
+  .scardTag{
+    font-size:11.5px;font-weight:700;letter-spacing:.02em;padding:2px 8px;border-radius:999px;
+    background:rgba(255,138,91,.18);color:#FF8A5B;
+  }
+  .scardTag.opt{background:rgba(128,128,128,.18);color:inherit;opacity:.75}
+  .scardTag.money{background:rgba(95,207,192,.18);color:#5FCFC0}
+  .scardTitle{font-weight:700;font-size:17px;margin-bottom:6px}
+  .scardDesc{font-size:14px;line-height:1.6;opacity:.78;min-height:44px}
+  .scardGo{margin-top:10px;font-size:13.5px;font-weight:700;opacity:.8}
+  .setupFoot{margin-top:16px;font-size:14px;opacity:.75}
 </style>
 </head>
 <body>
@@ -152,11 +178,60 @@
        본문은 /setup 한 곳만 쓴다 — 여기에 내용을 복사하면 두 벌이 되어 언젠가 어긋난다(0순위-B).
        탭을 처음 열 때만 불러온다(lazy) — 마이페이지 첫 로딩을 무겁게 하지 않는다. -->
   <section class="pane" id="paneSetup">
-    <iframe id="setupFrame" title="설치와 준비 안내" data-src="/setup"
-            style="width:100%;height:78vh;min-height:520px;border:1px solid rgba(128,128,128,.35);
-                   border-radius:12px;background:#fff"></iframe>
-    <div style="margin-top:10px;font-size:14px;opacity:.75">
-      새 창으로 크게 보기 → <a href="/setup" target="_blank" rel="noopener">/setup</a>
+    <!-- ★카드형(2026-08-25 사장님 "스크롤이 너무 길다") — 안내 전문을 통째로 얹으면
+         마이페이지 안에서 스크롤이 두 겹이 된다. 여기서는 **무엇을 해야 하는지만** 보이고,
+         실제 내용은 각 카드가 /setup 의 해당 대목으로 데려간다(내용은 여전히 한 곳). -->
+    <div class="setupIntro">
+      가입과 동시에 <b>체험이 시작되고 포인트 50P</b>가 들어가 있습니다.
+      아래 <b>①②</b>만 해두시면 바로 영상을 만드실 수 있어요. ③④는 원하실 때 하시면 됩니다.
+    </div>
+
+    <div class="cardGrid">
+      <a class="scard must" href="/setup#ready" target="_blank" rel="noopener">
+        <div class="scardTop"><span class="scardNo">①</span><span class="scardTag">먼저</span></div>
+        <div class="scardTitle">채널 준비</div>
+        <div class="scardDesc">유튜브 또는 인스타 채널과 구글 계정. 영상 올릴 곳이 있어야 합니다.</div>
+        <div class="scardGo">무엇이 필요한지 보기 →</div>
+      </a>
+
+      <a class="scard must" href="/grab" target="_blank" rel="noopener">
+        <div class="scardTop"><span class="scardNo">②</span><span class="scardTag">필수</span></div>
+        <div class="scardTitle">📥 담기 확장프로그램</div>
+        <div class="scardDesc">유튜브·틱톡·인스타 영상을 클릭 한 번으로 담습니다. PC 크롬·엣지에서 설치.</div>
+        <div class="scardGo">설치하러 가기 →</div>
+      </a>
+
+      <a class="scard" href="/setup#api" target="_blank" rel="noopener">
+        <div class="scardTop"><span class="scardNo">③</span><span class="scardTag opt">선택</span></div>
+        <div class="scardTitle">🔑 API 키 발급</div>
+        <div class="scardDesc">등록하면 그 작업은 포인트가 안 깎입니다. 안 하셔도 포인트로 그대로 쓰실 수 있어요.</div>
+        <div class="scardGo">어떤 키가 있는지 보기 →</div>
+      </a>
+
+      <a class="scard" href="/setup#capcut" target="_blank" rel="noopener">
+        <div class="scardTop"><span class="scardNo">④</span><span class="scardTag opt">선택</span></div>
+        <div class="scardTitle">🎬 캡컷 연동</div>
+        <div class="scardDesc">완성본을 캡컷에서 더 다듬고 싶은 분만. 최초 1회 설정으로 끝납니다.</div>
+        <div class="scardGo">연동 방법 보기 →</div>
+      </a>
+
+      <a class="scard" href="/coupang" target="_blank" rel="noopener">
+        <div class="scardTop"><span class="scardNo">⑤</span><span class="scardTag money">수익화</span></div>
+        <div class="scardTitle">🛒 쿠팡파트너스</div>
+        <div class="scardDesc">내 추적 링크가 있어야 수수료가 붙습니다. 가입부터 고지문구까지.</div>
+        <div class="scardGo">안내 보기 →</div>
+      </a>
+
+      <a class="scard" href="/setup#points" target="_blank" rel="noopener">
+        <div class="scardTop"><span class="scardNo">⑥</span><span class="scardTag">참고</span></div>
+        <div class="scardTitle">💎 포인트가 얼마나 드나</div>
+        <div class="scardDesc">영상 1편 3P · 자막 지우기 5P · 목소리 1P. 실패하면 자동 환불됩니다.</div>
+        <div class="scardGo">단가표 보기 →</div>
+      </a>
+    </div>
+
+    <div class="setupFoot">
+      전체 안내를 한 번에 읽으시려면 → <a href="/setup" target="_blank" rel="noopener">설치와 준비 전문 보기</a>
     </div>
   </section>
 
@@ -354,9 +429,7 @@ function showTab(which){
     el(t.pane).classList.toggle("on", on);
     el(t.tab).classList.toggle("on", on);
   });
-  if (which === "setup") {                 // 처음 열 때만 실제로 불러온다
-    var f = el("setupFrame");
-    if (f && !f.src && f.dataset.src) f.src = f.dataset.src;
+  if (which === "setup") {
     try { localStorage.setItem(FIRST_KEY, "1"); } catch (e) {}   // 봤다 → 다음부터 내 계정
   }
   window.scrollTo(0, 0);
