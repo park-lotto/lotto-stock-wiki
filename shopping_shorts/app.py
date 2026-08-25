@@ -1848,8 +1848,8 @@ def api_refs_ig_accounts(request: Request, check: int = 0):
                 raw = _ca.slot_proxy(i, pool=pool) or ""
                 m = re.search(r"//([^:]+):", raw)
                 row["proxy"] = m.group(1) if m else ""
-            except Exception:                     # noqa: BLE001 — 표시용
-                pass
+            except Exception as e:                # noqa: BLE001 — 표시용, 수집엔 무해
+                print(f"[경고] 프록시 표시 실패(무시): {e!r}", file=sys.stderr)
             if check:
                 try:
                     row["alive"] = bool(_ca.session_alive(path))
