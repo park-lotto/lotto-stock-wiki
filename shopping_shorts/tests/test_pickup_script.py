@@ -141,6 +141,28 @@ def test_CTA가_같으면_그것도_걸러낸다():
     assert "CTA" in bad[0]["reason"]
 
 
+def test_화면이_구어체_씨앗에서_훅_한_문장만_뽑는다():
+    """★라이브 실측 버그(2026-08-26). 마침표만 보고 자르면 훅이 아니라 대본 대부분이 실린다.
+
+    씨앗 원문 320자에 물음표가 1개뿐이라 `split(/(?<=[.!?])\\s+/)`로는 **240자**가
+    훅으로 잡혔다(브라우저에서 seed_hook 길이를 실측해 발견). 한국어 구어체 대본은
+    마침표가 거의 없다 — 종결어미까지 경계로 봐야 한다(서버 script_sentences와 같은 규약).
+    ⚠️'요' 앞이 명사인 경우(필요·중요·주요)는 자르면 안 된다(같은 날 고친 실사고와 같은 함정).
+
+    화면 코드에 그 규칙이 실제로 박혀 있는지 확인한다(정규식이 옛것으로 되돌아가면 잡힌다).
+    """
+    import pathlib
+    p = pathlib.Path(__file__).resolve().parents[1] / "static" / "produce.html"
+    src = p.read_text(encoding="utf-8")
+    fn = src[src.index("async function s2Generate"):]
+    fn = fn[:fn.index("\n}\n")]
+    assert "body.seed_hook" in fn
+    # 종결어미 경계가 들어갔는가 — 마침표만 보던 옛 규칙이면 이 문자열이 없다.
+    assert "죠)\\s+" in fn or "(?<=죠)" in fn, "종결어미 경계가 없다 — 훅이 통짜로 실린다"
+    assert "가게고구군까나네데돼든래려서세아어에예와지해" in fn, \
+        "'요' 종결어미 화이트리스트가 없다 — 명사 안의 '요'에서 잘린다"
+
+
 def test_씨앗_문형을_못_뽑으면_아무도_안_걸러낸다():
     """판정 기준이 없으면 통과시킨다 — 없는 기준으로 반려하면 멀쩡한 대본이 죽는다."""
     from shopping_shorts.pickup_script import filter_drafts
