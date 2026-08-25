@@ -3725,8 +3725,44 @@ function selectedStyleIdx(){
   const hCol = (h.color||'').toLowerCase();
   return FULL_PRESETS.findIndex(p => p.hc && p.hc.font===h.font && (p.hc.color||'').toLowerCase()===hCol);
 }
+// ── 📺 채널 완성 스타일(2026-08-25 사장님 "자막 템플릿도 완성형으로") ──────────
+// ★기존 완성 스타일 3개는 **사실상 1가지**였다 — 셋 다 흰 자막·y37·같은 그림자고
+//   크기만 54/58/50으로 달랐다(틀 20종이 색만 달랐던 것과 같은 문제).
+// ★재료는 이미 샀다: 20채널 자막 실측(색·외곽선·박스·세로위치)이 있는데
+//   **틀을 골라야만** 적용돼 완성 스타일엔 하나도 안 들어가 있었다.
+//   → FR_PRESETS(deco_frame.PRESETS가 주인)에서 만들어 붙인다. 손으로 20개를 적지 않는다.
+// ★폰트·크기는 **지어내지 않는다** — 실측 스키마가 자막 폰트를 안 물었다.
+//   기본값을 그대로 쓰고, 실측이 준 색·외곽선·박스·위치만 채널 것을 따른다
+//   (살림킹왕짱 색 뒤집힘 사고와 같은 원칙).
+let CH_STYLES_MERGED=false;
+function mergeChannelStyles(){
+  if(CH_STYLES_MERGED || !FR_PRESETS.length) return;
+  const base=FULL_PRESETS[0]||{};
+  FR_PRESETS.forEach(p=>{
+    const c=p.caption; if(!c) return;
+    const h=p.headcopy||{};
+    FULL_PRESETS.push({
+      name:'📺 '+p.name, chip:(c.box? c.box_color : c.color)||'#FFFFFF',
+      // 헤드카피도 그 채널 실측(폰트·색·2색·박스까지 이미 있다) — 한 세트로 간다
+      hc:{font:h.font||(base.hc&&base.hc.font), color:h.color||'#FFFFFF',
+          color2:h.color2, weight:900, size:h.size||54, x:50, y:h.y??12,
+          outline:h.outline!==false, outline_color:h.outline_color||'#000000',
+          outline_w:h.outline_w??2, box:!!h.box, box_color:h.box_color||'#FFFFFF'},
+      // 자막: 실측 색·외곽선·박스·세로위치 / 폰트·크기는 기본값 유지(안 물어본 축)
+      cap:{font:(base.cap&&base.cap.font)||'Pretendard-ExtraBold.otf',
+           size:(base.cap&&base.cap.size)||50,
+           color:c.color, y:c.y_pct, outline:!!c.outline, outline_color:c.outline_color,
+           outline_w:4, box:!!c.box, box_color:c.box_color, box_opacity:100,
+           shadow:!c.outline, effect:'fade'},
+      ref:p.ref||''});
+    STYLE_USE['📺 '+p.name]=(c.box?'박스 자막':(c.outline?'외곽선 자막':'그림자 자막'))
+      + ' · ' + (c.y_pct<50?'상단':'중하단');
+  });
+  CH_STYLES_MERGED=true;
+}
 function renderStyleCards(){
   const box=document.getElementById('fullPresets'); if(!box) return;
+  mergeChannelStyles();
   const selIdx = selectedStyleIdx();
   const featIdx = FEATURED.map(n=>FULL_PRESETS.findIndex(p=>p.name===n)).filter(i=>i>=0);
   const restIdx = FULL_PRESETS.map((_,i)=>i).filter(i=>!featIdx.includes(i));
