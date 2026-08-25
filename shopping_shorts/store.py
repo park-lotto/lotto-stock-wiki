@@ -5993,9 +5993,14 @@ class Store:
           실제로는 안 쓰이는' 상태가 생기고 아무도 이유를 모른다. 침묵 except가
           SQL 오류를 삼켜 라이브 0건이 된 2026-08-10 사고와 같은 모양이다."""
         with self._conn() as c:
+            # ★status='off'는 뺀다(2026-08-25) — 관리자가 끈 키다.
+            #   종전엔 status를 안 봐서, 껐다고 생각해도 그 키가 계속 쓰였다.
+            #   그래서 사장님이 service명을 'vmake_paused'로 바꾸는 편법을 써야 했고,
+            #   그러면 시스템이 "키 없음"으로 보고 **포인트를 계속 깎았다**(cid 57 실사고).
             rows = c.execute(
                 "SELECT id, key_enc FROM customer_keys WHERE customer_id=? AND service=? "
-                "ORDER BY id", (int(customer_id), service)).fetchall()
+                "AND COALESCE(status,'') != 'off' ORDER BY id",
+                (int(customer_id), service)).fetchall()
         return [plain for _kid, plain in self._decrypt_rows(rows, customer_id, service)]
 
     def get_customer_keys_with_id(self, customer_id, service):
@@ -6053,6 +6058,37 @@ class Store:
         with self._conn() as c:
             c.execute("UPDATE customer_keys SET status=?, checked_at=? WHERE id=?",
                       (status, int(time.time()), int(key_id)))
+
+    # ── 포인트 면제(2026-08-25) — 사장님 키로 돌면서 과금만 면제한다 ──────────
+    #   왜: "내 키를 잠시 쓰게 해주되 포인트는 안 깎기"라는 상태가 없었다(cid 57 실사고).
+    #   키를 끄면 사장님 키로 돌아가지만 그건 **과금 대상**이라 잔액이 바닥났다.
+    #   키 끄기(A)와 이 면제(B)는 짝으로 걸어야 의도가 성립한다.
+    def _exempt_key(self, customer_id, service):
+        return f"point_exempt::{int(customer_id)}::{service}"
+
+    def set_point_exempt(self, customer_id, service, on=True):
+        """그 고객의 그 서비스만 과금 면제로 두거나 푼다."""
+        with self._conn() as c:
+            if on:
+                c.execute("INSERT OR REPLACE INTO settings(key, value) VALUES(?,?)",
+                          (self._exempt_key(customer_id, service), "1"))
+            else:
+                c.execute("DELETE FROM settings WHERE key=?",
+                          (self._exempt_key(customer_id, service),))
+
+    def is_point_exempt(self, customer_id, service):
+        with self._conn() as c:
+            row = c.execute("SELECT value FROM settings WHERE key=?",
+                            (self._exempt_key(customer_id, service),)).fetchone()
+        return bool(row and row[0] == "1")
+
+    def list_point_exempt(self, customer_id):
+        """그 고객이 면제받고 있는 서비스 목록 — 관리자 화면 표시용."""
+        pre = f"point_exempt::{int(customer_id)}::"
+        with self._conn() as c:
+            rows = c.execute("SELECT key FROM settings WHERE key LIKE ? AND value='1'",
+                             (pre + "%",)).fetchall()
+        return [r[0][len(pre):] for r in rows]
 
     def count_customer_keys(self, customer_id, service):
         with self._conn() as c:

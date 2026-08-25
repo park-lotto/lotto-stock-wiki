@@ -9707,6 +9707,69 @@ async def _admin_set_plan(request: Request):
     return {"ok": True, "granted": granted, "balance": pricing.to_display(points.balance(st, cid))}
 
 
+@app.get("/api/admin/customer/keys")
+def _admin_customer_keys(request: Request, customer_id: int):
+    """그 고객의 등록 키 목록 + 포인트 면제 상태(2026-08-25).
+    ★평문은 절대 안 싣는다 — list_customer_keys가 key_enc를 빼고 준다."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    st = Store(DB_PATH)
+    return {"ok": True,
+            "keys": st.list_customer_keys(customer_id),
+            "exempt": st.list_point_exempt(customer_id)}
+
+
+@app.post("/api/admin/customer/key_toggle")
+async def _admin_key_toggle(request: Request):
+    """등록 키 하나를 켜고 끈다(2026-08-25 사장님). body: {key_id, on}
+
+    ★DB를 직접 고치지 않게 만든 정식 스위치다. 종전엔 service명을 'vmake_paused'로
+      바꾸는 편법을 썼는데, 그러면 시스템이 '키 없음'으로 보고 **포인트를 계속 깎았다**
+      (cid 57 실사고). 끄기만 하고 끝내지 말고 필요하면 면제(key_exempt)도 함께 걸어라.
+    """
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    body = await request.json()
+    try:
+        kid = int(body.get("key_id"))
+    except (TypeError, ValueError):
+        return JSONResponse({"error": "key_id 필요"}, status_code=422)
+    on = bool(body.get("on"))
+    Store(DB_PATH).set_customer_key_status(kid, "ok" if on else "off")
+    print(f"[admin] key_toggle key_id={kid} on={on}", file=sys.stderr)
+    return {"ok": True, "key_id": kid, "on": on}
+
+
+@app.post("/api/admin/customer/key_exempt")
+async def _admin_key_exempt(request: Request):
+    """그 고객의 그 서비스를 포인트 면제로 두거나 푼다. body: {customer_id, service, on}
+
+    ★사장님 키로 돌면서 **포인트만 면제**하는 상태. "내 키 잠시 쓰게 해줄게"의 자리다.
+      키 끄기(key_toggle)와 짝으로 걸어야 의도가 성립한다.
+    """
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    body = await request.json()
+    try:
+        cid = int(body.get("customer_id"))
+    except (TypeError, ValueError):
+        return JSONResponse({"error": "customer_id 필요"}, status_code=422)
+    from shopping_shorts import keyroute as _kr
+    svc = (body.get("service") or "").strip()
+    if svc not in _kr.SERVICES:
+        return JSONResponse({"error": f"service는 {', '.join(_kr.SERVICES)} 중 하나"},
+                            status_code=422)
+    on = bool(body.get("on"))
+    st = Store(DB_PATH)
+    st.set_point_exempt(cid, svc, on)
+    print(f"[admin] key_exempt cid={cid} svc={svc} on={on}", file=sys.stderr)
+    return {"ok": True, "customer_id": cid, "service": svc, "on": on,
+            "exempt": st.list_point_exempt(cid)}
+
+
 @app.post("/api/admin/points")
 async def _admin_points(request: Request):
     """관리자가 계정에 포인트를 지급/회수한다 (2026-08-20).

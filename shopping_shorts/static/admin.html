@@ -22,7 +22,7 @@ th.mini,td.mini{white-space:nowrap;min-width:52px}
 .admin{background:#3a1c3d;color:#e59aff}
 .pending{background:#3d341c;color:#ffd479}
 button{border:0;border-radius:7px;padding:7px 13px;font-weight:700;font-size:13px;cursor:pointer;margin-right:4px}
-.bpro{background:#2ea043;color:#fff}.bfree{background:#6e2020;color:#fff}.bok{background:#d19b1e;color:#111}.bpay{background:#3a5bd0;color:#fff}.bpt{background:#7a4bd0;color:#fff}
+.bpro{background:#2ea043;color:#fff}.bfree{background:#6e2020;color:#fff}.bok{background:#d19b1e;color:#111}.bpay{background:#3a5bd0;color:#fff}.bpt{background:#7a4bd0;color:#fff}.bkey{background:#0f766e;color:#fff}
 .bedit{background:#5a4bd0;color:#fff}.bdel{background:#8b1a1a;color:#fff}.btrial{background:#1c6a8a;color:#fff}.badm{background:#7a3da8;color:#fff}.bchal{background:#c2410c;color:#fff}
 .wait{border-color:#5a4a1e;background:#1a1710}.wait h2{color:#ffd479}
 .empty{color:#6a6a72;font-size:13px;padding:6px 2px}
@@ -271,6 +271,7 @@ function renderCustomers(){
           <button class=bfree onclick="setPlan(${c.id},'free',this)">일반회원</button>
           <button class=btrial onclick="grantTrial(${c.id},this)">체험</button>
           <button class=bpt onclick="grantPoints(${c.id})">포인트</button>
+          <button class=bkey onclick="openKeys(${c.id},this)">키</button>
           <button class=bpro onclick="setPlan(${c.id},'pro',this)">pro</button>
           ${c.code_admin?'':(c.is_admin
             ? `<button class=badm onclick="setAdmin(${c.id},false)">관리자해제</button>`
@@ -420,6 +421,69 @@ async function setChallenge(cid,flag){
   if(r.ok){m.textContent=flag?'✅ 챌린지 참가 등록':'✅ 챌린지 참가 해제';m.className='msg';load();}
   else{m.textContent='❌ 실패';m.className='msg err';}
 }
+// ── 고객 키 켜기/끄기 + 포인트 면제 (2026-08-25) ─────────────────────────
+// ★왜: 종전엔 키를 끄려면 DB에서 service를 'vmake_paused'로 바꿔야 했다. 그러면
+//   시스템이 "키 없음"으로 보고 **사장님 키로 돌면서 포인트는 계속 깎았다**(cid 57 실사고).
+//   여기서 끄기와 면제를 **짝으로** 걸 수 있게 한다.
+// ★개행은 String.fromCharCode(10)으로 만든다 — 이 파일은 파이썬 문자열을 거쳐 쓰여서
+//   백슬래시 이스케이프가 한 겹 벗겨져 문법이 깨진 전례가 있다(같은 날 실측).
+const _NL = String.fromCharCode(10);
+
+async function openKeys(cid, btn){
+  return _lockWhile(btn, async ()=>{
+    let d={};
+    try{
+      const r = await fetch('/api/admin/customer/keys?customer_id='+cid);
+      d = await r.json();
+      if(!r.ok || !d.ok) throw new Error(d.error || ('HTTP '+r.status));
+    }catch(e){ alert('키 목록을 못 불러왔어요: '+e.message); return; }
+
+    const keys = d.keys || [], exempt = new Set(d.exempt || []);
+    const lines = keys.map(function(k){
+      const on = (k.status||'') !== 'off';
+      return k.id + '. ' + k.service + (on ? '' : ' (꺼짐)')
+           + (exempt.has(k.service) ? ' · 포인트면제' : '');
+    }).join(_NL) || '등록된 키 없음';
+    const svcs = [...new Set(keys.map(k=>k.service))];
+    const msg = '등록 키' + _NL + _NL + lines + _NL + _NL
+      + '무엇을 할까요?' + _NL
+      + '  1 = 키 끄기(사장님 키로 돌아감)' + _NL
+      + '  2 = 키 켜기' + _NL
+      + '  3 = 포인트 면제 켜기' + _NL
+      + '  4 = 포인트 면제 끄기' + _NL
+      + '(취소=닫기)';
+    const pick = prompt(msg, '');
+    if(!pick) return;
+
+    try{
+      if(pick==='1' || pick==='2'){
+        const kid = prompt('어느 키인가요? 앞의 번호를 넣으세요', keys.length?String(keys[0].id):'');
+        if(!kid) return;
+        const r = await fetch('/api/admin/customer/key_toggle',{method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({key_id:Number(kid), on: pick==='2'})});
+        if(!r.ok) throw new Error('HTTP '+r.status);
+        alert(pick==='2'
+          ? '✅ 키를 켰습니다 — 본인 키로 돌아갑니다(포인트 안 깎임)'
+          : '✅ 키를 껐습니다 — 사장님 키로 돌아갑니다.' + _NL
+            + '포인트가 나가지 않게 하려면 3(포인트 면제)도 켜세요');
+      }else if(pick==='3' || pick==='4'){
+        const svc = prompt('어느 서비스인가요? (예: vmake)', svcs[0]||'vmake');
+        if(!svc) return;
+        const r = await fetch('/api/admin/customer/key_exempt',{method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({customer_id:cid, service:svc.trim(), on: pick==='3'})});
+        const j = await r.json().catch(()=>({}));
+        if(!r.ok) throw new Error(j.error || ('HTTP '+r.status));
+        alert(pick==='3'
+          ? '✅ ' + svc + ' 포인트 면제 — 이제 이 고객은 그 작업에 포인트가 안 깎입니다'
+          : '✅ ' + svc + ' 포인트 면제 해제 — 다시 포인트가 깎입니다');
+      }
+    }catch(e){ alert('실패: '+e.message); }
+    load();
+  });
+}
+
 async function grantPoints(cid){
   // 등급(체험·pro)은 게이트만 연다 — 유료 op는 포인트도 있어야 돈다(2026-08-20 402 사고).
   const p=prompt('포인트 몇 P 줄까요? (음수=회수)', '1000');
