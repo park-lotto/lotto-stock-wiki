@@ -165,6 +165,15 @@ def should_charge(store, customer_id, service):
       대본·영상제작은 SVC_GEMINI 기준으로 면제하는데 제미나이 키는 실제 호출에
       안 쓰인다 → 고객이 키만 등록하면 **회사 키로 돌면서 포인트는 0**이었다.
       배선이 끝나 WIRED에 들어가는 순간 이 예외는 저절로 사라진다."""
+    # ★관리자 면제(2026-08-25) — 사장님 키로 돌면서 포인트만 면제하는 상태.
+    #   cid 57 실사고: 키를 꺼두면 사장님 키로 처리되지만 과금은 계속 됐다.
+    #   "내 키 쓰게 해주되 공짜로"라는 사장님 의도를 담는 자리가 여기다.
+    #   ★uses_customer_key 검사보다 **먼저** 본다 — 배선 여부와 무관하게 면제여야 한다.
+    try:
+        if store is not None and as_cid(customer_id) and store.is_point_exempt(customer_id, service):
+            return False
+    except Exception as e:                      # noqa: BLE001 — 면제 조회 실패로 작업을 막지 않는다
+        logging.warning("면제 조회 실패(과금으로 진행): %r", e)
     if not uses_customer_key(service):
         return True
     _, is_user = keys_for(store, customer_id, service)
