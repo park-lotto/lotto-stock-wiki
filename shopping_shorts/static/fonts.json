@@ -18,7 +18,7 @@
   "file": "BMDOHYEON.ttf",
   "css": "HCDohyeon",
   "group": "impact",
-  "star": true
+  "star": false
  },
  {
   "name": "빙그레",
@@ -32,14 +32,14 @@
   "file": "Kkubulim.ttf",
   "css": "HCKkubulim",
   "group": "cute",
-  "star": true
+  "star": false
  },
  {
   "name": "지마켓 산스",
   "file": "GmarketSansBold.otf",
   "css": "HCGmarket",
   "group": "impact",
-  "star": false
+  "star": true
  },
  {
   "name": "SUIT",
@@ -158,14 +158,14 @@
   "file": "Gaegu-Bold.ttf",
   "css": "HCGaegu",
   "group": "hand",
-  "star": true
+  "star": false
  },
  {
   "name": "손글씨 나눔펜",
   "file": "NanumPenScript.ttf",
   "css": "HCNanumPen",
   "group": "hand",
-  "star": true
+  "star": false
  },
  {
   "name": "손글씨 나눔붓",
@@ -186,7 +186,7 @@
   "file": "SingleDay.ttf",
   "css": "HCSingleDay",
   "group": "hand",
-  "star": false
+  "star": true
  },
  {
   "name": "손글씨 포스터리",
@@ -221,14 +221,14 @@
   "file": "CuteFont.ttf",
   "css": "HCCute",
   "group": "cute",
-  "star": false
+  "star": true
  },
  {
   "name": "레트로 킬사인",
   "file": "KirangHaerang.ttf",
   "css": "HCKirang",
   "group": "retro",
-  "star": false
+  "star": true
  },
  {
   "name": "레트로 성실체",
@@ -249,7 +249,7 @@
   "file": "BlackHanSans.ttf",
   "css": "HCBlackHan",
   "group": "impact",
-  "star": true
+  "star": false
  },
  {
   "name": "임팩트 구기",

@@ -38,11 +38,16 @@
 @font-face{font-family:'HCBlackHan';src:url('fonts/BlackHanSans.ttf')}
 @font-face{font-family:'HCGugi';src:url('fonts/Gugi-Regular.ttf')}
 body{background:#0f1115;color:#e8eaed;font-family:system-ui,sans-serif;margin:0;padding:28px}
-h1{font-size:22px;margin:0 0 6px} .sub{color:#9aa0a6;font-size:13px;margin-bottom:26px}
+h1{font-size:22px;margin:0 0 6px} .sub{color:#9aa0a6;font-size:13px;margin-bottom:16px}
 h2{font-size:15px;margin:30px 0 12px;padding-bottom:8px;border-bottom:1px solid #2a2e35}
 .cnt{color:#9aa0a6;font-weight:400;font-size:12px}
+.favbar{background:#171a1f;border:1px solid #3a3320;border-radius:10px;padding:13px 15px;margin-bottom:8px}
+.favbar .t{font-size:12px;color:#ffc83d;margin-bottom:9px;font-weight:600}
+.chip{display:inline-block;background:#20242c;border:1px solid #3a3320;border-radius:7px;
+  padding:5px 11px;margin:0 6px 6px 0;font-size:15px;color:#fff}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
 .card{background:#171a1f;border:1px solid #2a2e35;border-radius:10px;padding:14px}
+.card.fav{border-color:#5a4a1e;background:#1a1812}
 .meta{font-size:12px;color:#9aa0a6;margin-bottom:10px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .meta b{color:#e8eaed;font-size:13px}
 .fn{font-size:10px;color:#5f6368;margin-left:auto}
@@ -50,183 +55,184 @@ h2{font-size:15px;margin:30px 0 12px;padding-bottom:8px;border-bottom:1px solid 
 .sample{font-size:27px;line-height:1.45;color:#fff}
 </style>
 <h1>폰트 견본 — 37종</h1>
-<div class=sub>NEW 15종 추가 (전부 OFL 라이선스 · 상업이용·재배포 가능) · 한글 렌더와 띄어쓰기 실측 검증 완료</div>
-<h2>✍️ 손글씨·캘리그라피 <span class=cnt>8종</span></h2><div class=grid><div class=card>
+<div class=sub>NEW 15종 추가 (전부 OFL · 상업이용·재배포 가능) · 한글 렌더와 띄어쓰기 실측 검증 완료</div>
+<div class=favbar><div class=t>기본 즐겨찾기 7종 — 폰트 목록 맨 위에 뜹니다 (고객이 각자 바꿀 수 있음)</div><span class=chip style="font-family:'HCTmon'">★ 티몬 몬소리</span><span class=chip style="font-family:'HCJua'">★ 배민 주아</span><span class=chip style="font-family:'HCBinggrae'">★ 빙그레</span><span class=chip style="font-family:'HCGmarket'">★ 지마켓 산스</span><span class=chip style="font-family:'HCSingleDay'">★ 손글씨 싱글데이</span><span class=chip style="font-family:'HCCute'">★ 귀여운체</span><span class=chip style="font-family:'HCKirang'">★ 레트로 킬사인</span></div>
+<h2>✍️ 손글씨·캘리그라피 <span class=cnt>8종</span></h2><div class=grid><div class="card">
         <div class=meta><b>손글씨 개구쟁이</b> <span class=new>NEW</span>
           <span class=fn>Gaegu-Bold.ttf</span></div>
         <div class=sample style="font-family:'HCGaegu'">다이소 가시면<br>이건 무조건 사오세요</div>
       </div>
-<div class=card>
+<div class="card">
         <div class=meta><b>손글씨 나눔펜</b> <span class=new>NEW</span>
           <span class=fn>NanumPenScript.ttf</span></div>
         <div class=sample style="font-family:'HCNanumPen'">다이소 가시면<br>이건 무조건 사오세요</div>
       </div>
-<div class=card>
+<div class="card">
         <div class=meta><b>손글씨 나눔붓</b> <span class=new>NEW</span>
           <span class=fn>NanumBrushScript.ttf</span></div>
         <div class=sample style="font-family:'HCNanumBrush'">다이소 가시면<br>이건 무조건 사오세요</div>
       </div>
-<div class=card>
+<div class="card">
         <div class=meta><b>손글씨 하이멜로디</b> <span class=new>NEW</span>
           <span class=fn>HiMelody.ttf</span></div>
         <div class=sample style="font-family:'HCHiMelody'">다이소 가시면<br>이건 무조건 사오세요</div>
       </div>
-<div class=card>
-        <div class=meta><b>손글씨 싱글데이</b> <span class=new>NEW</span>
+<div class="card fav">
+        <div class=meta><b>★ 손글씨 싱글데이</b> <span class=new>NEW</span>
           <span class=fn>SingleDay.ttf</span></div>
         <div class=sample style="font-family:'HCSingleDay'">다이소 가시면<br>이건 무조건 사오세요</div>
       </div>
-<div class=card>
+<div class="card">
         <div class=meta><b>손글씨 포스터리</b> <span class=new>NEW</span>
           <span class=fn>PoorStory.ttf</span></div>
         <div class=sample style="font-family:'HCPoorStory'">다이소 가시면<br>이건 무조건 사오세요</div>
       </div>
-<div class=card>
+<div class="card">
         <div class=meta><b>손글씨 독도</b> <span class=new>NEW</span>
           <span class=fn>Dokdo-Regular.ttf</span></div>
         <div class=sample style="font-family:'HCDokdo'">다이소 가시면<br>이건 무조건 사오세요</div>
       </div>
-<div class=card>
+<div class="card">
         <div class=meta><b>손글씨 동해독도</b> <span class=new>NEW</span>
           <span class=fn>EastSeaDokdo.ttf</span></div>
         <div class=sample style="font-family:'HCEastSea'">다이소 가시면<br>이건 무조건 사오세요</div>
-      </div></div><h2>🧸 귀엽고 통통 <span class=cnt>6종</span></h2><div class=grid><div class=card>
-        <div class=meta><b>배민 주아</b>
+      </div></div><h2>🧸 귀엽고 통통 <span class=cnt>6종</span></h2><div class=grid><div class="card fav">
+        <div class=meta><b>★ 배민 주아</b>
           <span class=fn>BMJUA.ttf</span></div>
         <div class=sample style="font-family:'HCJua'">다이소 가시면<br>이건 무조건 사오세요</div>
       </div>
-<div class=card>
-        <div class=meta><b>빙그레</b>
+<div class="card fav">
+        <div class=meta><b>★ 빙그레</b>
           <span class=fn>Binggrae-Bold.otf</span></div>
         <div class=sample style="font-family:'HCBinggrae'">다이소 가시면<br>이건 무조건 사오세요</div>
       </div>
-<div class=card>
+<div class="card">
         <div class=meta><b>꾸불림체</b>
           <span class=fn>Kkubulim.ttf</span></div>
         <div class=sample style="font-family:'HCKkubulim'">다이소 가시면<br>이건 무조건 사오세요</div>
       </div>
-<div class=card>
+<div class="card">
         <div class=meta><b>옥 말랑</b>
           <span class=fn>OkMallangW.ttf</span></div>
         <div class=sample style="font-family:'HCOkmallang'">다이소 가시면<br>이건 무조건 사오세요</div>
       </div>
-<div class=card>
+<div class="card">
         <div class=meta><b>감자꽃</b> <span class=new>NEW</span>
           <span class=fn>GamjaFlower.ttf</span></div>
         <div class=sample style="font-family:'HCGamja'">다이소 가시면<br>이건 무조건 사오세요</div>
       </div>
-<div class=card>
-        <div class=meta><b>귀여운체</b> <span class=new>NEW</span>
+<div class="card fav">
+        <div class=meta><b>★ 귀여운체</b> <span class=new>NEW</span>
           <span class=fn>CuteFont.ttf</span></div>
         <div class=sample style="font-family:'HCCute'">다이소 가시면<br>이건 무조건 사오세요</div>
-      </div></div><h2>📺 레트로·복고 <span class=cnt>3종</span></h2><div class=grid><div class=card>
-        <div class=meta><b>레트로 킬사인</b> <span class=new>NEW</span>
+      </div></div><h2>📺 레트로·복고 <span class=cnt>3종</span></h2><div class=grid><div class="card fav">
+        <div class=meta><b>★ 레트로 킬사인</b> <span class=new>NEW</span>
           <span class=fn>KirangHaerang.ttf</span></div>
         <div class=sample style="font-family:'HCKirang'">다이소 가시면<br>이건 무조건 사오세요</div>
       </div>
-<div class=card>
+<div class="card">
         <div class=meta><b>레트로 성실체</b> <span class=new>NEW</span>
           <span class=fn>Sunflower-Medium.ttf</span></div>
         <div class=sample style="font-family:'HCSunflower'">다이소 가시면<br>이건 무조건 사오세요</div>
       </div>
-<div class=card>
+<div class="card">
         <div class=meta><b>레트로 흑백사진</b> <span class=new>NEW</span>
           <span class=fn>BlackAndWhitePicture.ttf</span></div>
         <div class=sample style="font-family:'HCBWPic'">다이소 가시면<br>이건 무조건 사오세요</div>
-      </div></div><h2>💥 굵고 강한 임팩트 <span class=cnt>5종</span></h2><div class=grid><div class=card>
-        <div class=meta><b>티몬 몬소리</b>
+      </div></div><h2>💥 굵고 강한 임팩트 <span class=cnt>5종</span></h2><div class=grid><div class="card fav">
+        <div class=meta><b>★ 티몬 몬소리</b>
           <span class=fn>TmonMonsori.ttf</span></div>
         <div class=sample style="font-family:'HCTmon'">다이소 가시면<br>이건 무조건 사오세요</div>
       </div>
-<div class=card>
+<div class="card">
         <div class=meta><b>배민 도현</b>
           <span class=fn>BMDOHYEON.ttf</span></div>
         <div class=sample style="font-family:'HCDohyeon'">다이소 가시면<br>이건 무조건 사오세요</div>
       </div>
-<div class=card>
-        <div class=meta><b>지마켓 산스</b>
+<div class="card fav">
+        <div class=meta><b>★ 지마켓 산스</b>
           <span class=fn>GmarketSansBold.otf</span></div>
         <div class=sample style="font-family:'HCGmarket'">다이소 가시면<br>이건 무조건 사오세요</div>
       </div>
-<div class=card>
+<div class="card">
         <div class=meta><b>임팩트 검은고딕</b> <span class=new>NEW</span>
           <span class=fn>BlackHanSans.ttf</span></div>
         <div class=sample style="font-family:'HCBlackHan'">다이소 가시면<br>이건 무조건 사오세요</div>
       </div>
-<div class=card>
+<div class="card">
         <div class=meta><b>임팩트 구기</b> <span class=new>NEW</span>
           <span class=fn>Gugi-Regular.ttf</span></div>
         <div class=sample style="font-family:'HCGugi'">다이소 가시면<br>이건 무조건 사오세요</div>
-      </div></div><h2>🔤 고딕(본문) <span class=cnt>12종</span></h2><div class=grid><div class=card>
+      </div></div><h2>🔤 고딕(본문) <span class=cnt>12종</span></h2><div class=grid><div class="card">
         <div class=meta><b>SUIT</b>
           <span class=fn>SUIT-Bold.otf</span></div>
         <div class=sample style="font-family:'HCSuit'">다이소 가시면<br>이건 무조건 사오세요</div>
       </div>
-<div class=card>
+<div class="card">
         <div class=meta><b>프리텐다드</b>
           <span class=fn>Pretendard-ExtraBold.otf</span></div>
         <div class=sample style="font-family:'HCPretendard'">다이소 가시면<br>이건 무조건 사오세요</div>
       </div>
-<div class=card>
+<div class="card">
         <div class=meta><b>프리텐다드 Bold</b>
           <span class=fn>Pretendard-Bold.otf</span></div>
         <div class=sample style="font-family:'HCPretendardB'">다이소 가시면<br>이건 무조건 사오세요</div>
       </div>
-<div class=card>
+<div class="card">
         <div class=meta><b>프리텐다드 SemiBold</b>
           <span class=fn>Pretendard-SemiBold.otf</span></div>
         <div class=sample style="font-family:'HCPretendardS'">다이소 가시면<br>이건 무조건 사오세요</div>
       </div>
-<div class=card>
+<div class="card">
         <div class=meta><b>스포카 한 산스</b>
           <span class=fn>SpoqaHanSansNeo-Bold.otf</span></div>
         <div class=sample style="font-family:'HCSpoqa'">다이소 가시면<br>이건 무조건 사오세요</div>
       </div>
-<div class=card>
+<div class="card">
         <div class=meta><b>IBM Plex Sans</b>
           <span class=fn>IBMPlexSansKR-Bold.otf</span></div>
         <div class=sample style="font-family:'HCIBM'">다이소 가시면<br>이건 무조건 사오세요</div>
       </div>
-<div class=card>
+<div class="card">
         <div class=meta><b>노토 산스</b>
           <span class=fn>NotoSansKR-Bold.otf</span></div>
         <div class=sample style="font-family:'HCNoto'">다이소 가시면<br>이건 무조건 사오세요</div>
       </div>
-<div class=card>
+<div class="card">
         <div class=meta><b>나눔고딕</b>
           <span class=fn>NanumGothic-Bold.ttf</span></div>
         <div class=sample style="font-family:'HCNanum'">다이소 가시면<br>이건 무조건 사오세요</div>
       </div>
-<div class=card>
+<div class="card">
         <div class=meta><b>프리텐다드 Reg</b>
           <span class=fn>Pretendard-Regular.otf</span></div>
         <div class=sample style="font-family:'HCPretendardR'">다이소 가시면<br>이건 무조건 사오세요</div>
       </div>
-<div class=card>
+<div class="card">
         <div class=meta><b>SUIT Reg</b>
           <span class=fn>SUIT-Regular.otf</span></div>
         <div class=sample style="font-family:'HCSuitR'">다이소 가시면<br>이건 무조건 사오세요</div>
       </div>
-<div class=card>
+<div class="card">
         <div class=meta><b>스포카 Reg</b>
           <span class=fn>SpoqaHanSansNeo-Regular.otf</span></div>
         <div class=sample style="font-family:'HCSpoqaR'">다이소 가시면<br>이건 무조건 사오세요</div>
       </div>
-<div class=card>
+<div class="card">
         <div class=meta><b>IBM Plex Reg</b>
           <span class=fn>IBMPlexSansKR-Regular.otf</span></div>
         <div class=sample style="font-family:'HCIBMR'">다이소 가시면<br>이건 무조건 사오세요</div>
-      </div></div><h2>📖 명조·바탕 <span class=cnt>3종</span></h2><div class=grid><div class=card>
+      </div></div><h2>📖 명조·바탕 <span class=cnt>3종</span></h2><div class=grid><div class="card">
         <div class=meta><b>경기천년바탕</b>
           <span class=fn>GBatang.otf</span></div>
         <div class=sample style="font-family:'HCGBatang'">다이소 가시면<br>이건 무조건 사오세요</div>
       </div>
-<div class=card>
+<div class="card">
         <div class=meta><b>고운바탕</b>
           <span class=fn>GowunBatang.ttf</span></div>
         <div class=sample style="font-family:'HCGowun'">다이소 가시면<br>이건 무조건 사오세요</div>
       </div>
-<div class=card>
+<div class="card">
         <div class=meta><b>리디바탕</b>
           <span class=fn>RIDIBatang.otf</span></div>
         <div class=sample style="font-family:'HCRidi'">다이소 가시면<br>이건 무조건 사오세요</div>
