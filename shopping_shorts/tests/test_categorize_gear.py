@@ -160,3 +160,14 @@ def test_진짜_드릴은_여전히_잡는다():
     assert categorize("만물상점", "충전 임팩트 전동드릴") == "장비템"
     assert categorize("쇼핑만물상", "드릴비트 세트 추천 #공구추천") == "장비템"
     assert categorize("쇼핑만물상", "타공작업 하기 전 센터펀치 꿀팁 #드릴작업꿀팁") == "장비템"
+
+
+def test_gear_cap_raised_recovers_home_leak():
+    """승격 상한 상향(_CAP_W*4)이 실제로 건지는 것 — 홈템 해시태그에 섞인 장비 영상.
+
+    2026-08-25 A/B: 만물상점+쇼핑만물상 625편 회수 140→159편, 라이브 이동 0건.
+    상한이 *2로 돌아가면 아래 같은 편이 다시 홈템으로 샌다."""
+    from shopping_shorts.categorize import categorize, _CAP_W, _GEAR_CAP
+    assert _GEAR_CAP == _CAP_W * 4
+    # 홈템 어휘 두 개(셀프인테리어·집꾸미기)와 장비 어휘(임팩트드라이버)가 함께 있는 실제 형태
+    assert categorize("", "임팩트드라이버 하나로 끝 #셀프인테리어 #집꾸미기") == "장비템"

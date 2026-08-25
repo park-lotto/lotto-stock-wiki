@@ -69,7 +69,10 @@ def _ids_and_titles(cid, limit=30):
     """yt-dlp flat(쿼터 0)로 채널 쇼츠의 videoId·제목만 받는다.
     ★flat 목록은 duration을 주지 않는다(전부 NA) — 길이는 아래 API로 따로 받는다.
       이 함정에 3R 프로브 613개가 통째로 '쇼츠없음'으로 잘못 나왔다(2026-08-25)."""
+    # ★lang=ko가 없으면 한국 채널도 영어 제목이 내려온다(유튜브 자동번역 제목).
+    #   그러면 한글 사전이 하나도 안 걸려 적합도가 통째로 0이 된다(2026-08-25 실측).
     cmd = ["yt-dlp", "--flat-playlist", "--playlist-end", str(limit),
+           "--extractor-args", "youtube:lang=ko",
            "--print", "%(id)s|%(title)s", "--no-warnings",
            f"https://www.youtube.com/channel/{cid}/shorts"]
     try:
@@ -139,6 +142,10 @@ def gearfit(cid, limit=30):
     길이만 보면 일반 쇼츠 채널이 대거 통과한다(3R 실측 613중 222). 실제로 우리가
     원하는 결은 '장비·공구 제품을 파는' 채널이라 **판정을 한 곳(categorize)에서**
     빌려 쓴다(0순위-B). 새 기준을 여기서 또 만들면 라이브와 어긋난다."""
+    # ★py tools/gear_discover.py 로 돌리면 sys.path[0]이 tools/라 프로젝트 루트가 없다.
+    #   이 한 줄이 없으면 import가 죽고, 아래 호출부 except가 그걸 삼켜 fit이 전부 0이 된다
+    #   (2026-08-25 실측: 258채널 전부 0.00 — 원인 찾는 데 두 번 헛돌았다).
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     from shopping_shorts.categorize import categorize
     _, titles = _ids_and_titles(cid, limit)
     if not titles:
@@ -176,7 +183,8 @@ def main():
                 cid = futs[f]
                 try:
                     fit, n = f.result()
-                except Exception:
+                except Exception as e:
+                    print(f"    fit 실패 {cid}: {e}", file=sys.stderr)
                     fit, n = 0.0, 0
                 res[cid]["fit"] = round(fit, 3)
                 res[cid]["fit_n"] = n
