@@ -235,12 +235,26 @@
     <div class="idx">2</div>
     <div class="body">
       <h3>자동 설정 파일을 <u>한 번만</u> 더블클릭</h3>
-      <p>파일은 <b>두 곳</b>에서 받을 수 있습니다.</p>
-      <p>① 제작소에서 영상 매칭이 끝나면 아래쪽 <b>📤 내보내기</b> 줄에 <b>⚙ 캡컷 자동설정(최초 1회)</b> 버튼이 생깁니다.<br>
-         ② 또는 <code>shoppingshorts.duckdns.org/capcut_manual.html</code>(그림 안내) 안의
-         <b>⚙ 자동설정 파일 받기</b> 버튼.</p>
-      <p class="warn">이 버튼들은 <b>크롬·엣지에서만</b> 보입니다. 다른 브라우저면 안내문만 뜹니다.</p>
-      <p>받은 파일을 더블클릭하면 됩니다. 이 파일이 하는 일은 두 가지뿐입니다.</p>
+      <!-- ★여기서 바로 받게 한다(2026-08-25 사장님 지시). 원래는 제작소 9단계(최종렌더)에
+           들어가야만 버튼이 보였다 — 즉 "최초 1회" 설정인데 영상을 한 편 만들어야 받을 수
+           있었다. 설치안내는 신규 가입자가 캡컷을 처음 붙이는 자리다. 보고 있는 자리에서
+           못 받으면 안내가 안내 구실을 못한다(capcut_manual.html과 같은 이유).
+           ⚠️경로에 /static/을 붙이지 마라. 정적 파일은 루트 마운트다(2026-08-22 실사고). -->
+      <p style="margin:2px 0 4px">
+        <a href="/capcut_setup.bat" download
+           style="display:inline-block;padding:13px 24px;border-radius:12px;background:var(--ok);
+                  color:#fff;font-weight:800;text-decoration:none;font-size:16px;min-height:44px;
+                  line-height:1.3;box-sizing:border-box">
+          ⚙ 자동설정 파일 받기
+        </a>
+      </p>
+      <p style="font-size:14.5px;opacity:.88;margin-top:6px">받은 파일을 <b>더블클릭</b>하면 끝입니다. 최초 한 번만 하시면 돼요.
+         브라우저가 "위험한 파일"이라고 물으면 <b>유지</b>를 눌러주세요.</p>
+      <p style="font-size:14.5px;opacity:.88">그림으로 보고 싶으시면 →
+         <a href="/capcut_manual.html" target="_blank" rel="noopener"
+            style="color:var(--accent);font-weight:700">📖 그림으로 보는 준비 방법</a>
+         &nbsp;/&nbsp; 제작소에서도 <b>📤 내보내기</b> 줄의 <b>⚙ 캡컷 자동설정(최초 1회)</b>으로 받을 수 있습니다.</p>
+      <p>이 파일이 하는 일은 두 가지뿐입니다.</p>
       <p>① <code>C:\capcutproject\CapCut Drafts</code> 폴더를 만들고 &nbsp;
          ② 캡컷의 <b>프로젝트 저장 위치</b>를 그 폴더로 바꿉니다.
          기존 설정은 <code>.bak</code>으로 백업해 두므로 되돌릴 수 있습니다.</p>
