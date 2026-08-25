@@ -185,6 +185,7 @@
     .eff-sparkle{animation:capSparkle 2.6s ease-in-out infinite}
     .cap-spark{position:absolute;font-size:.5em;color:#fff;pointer-events:none;text-shadow:0 0 4px #fff;animation:twinkle 1.3s ease-in-out infinite}
     /* 헤드카피 번들 폰트 22종(브라우저 미리보기 = 실제 렌더 일치, ttf/otf만) */
+/* @@FONTS:BEGIN — tools/sync_fonts.py가 생성. 직접 고치지 마라 */
     @font-face{font-family:'HCTmon';src:url('/fonts/TmonMonsori.ttf')}
     @font-face{font-family:'HCJua';src:url('/fonts/BMJUA.ttf')}
     @font-face{font-family:'HCDohyeon';src:url('/fonts/BMDOHYEON.ttf')}
@@ -207,6 +208,22 @@
     @font-face{font-family:'HCSuitR';src:url('/fonts/SUIT-Regular.otf')}
     @font-face{font-family:'HCSpoqaR';src:url('/fonts/SpoqaHanSansNeo-Regular.otf')}
     @font-face{font-family:'HCIBMR';src:url('/fonts/IBMPlexSansKR-Regular.otf')}
+    @font-face{font-family:'HCGaegu';src:url('/fonts/Gaegu-Bold.ttf')}
+    @font-face{font-family:'HCNanumPen';src:url('/fonts/NanumPenScript.ttf')}
+    @font-face{font-family:'HCNanumBrush';src:url('/fonts/NanumBrushScript.ttf')}
+    @font-face{font-family:'HCHiMelody';src:url('/fonts/HiMelody.ttf')}
+    @font-face{font-family:'HCSingleDay';src:url('/fonts/SingleDay.ttf')}
+    @font-face{font-family:'HCPoorStory';src:url('/fonts/PoorStory.ttf')}
+    @font-face{font-family:'HCDokdo';src:url('/fonts/Dokdo-Regular.ttf')}
+    @font-face{font-family:'HCEastSea';src:url('/fonts/EastSeaDokdo.ttf')}
+    @font-face{font-family:'HCGamja';src:url('/fonts/GamjaFlower.ttf')}
+    @font-face{font-family:'HCCute';src:url('/fonts/CuteFont.ttf')}
+    @font-face{font-family:'HCKirang';src:url('/fonts/KirangHaerang.ttf')}
+    @font-face{font-family:'HCSunflower';src:url('/fonts/Sunflower-Medium.ttf')}
+    @font-face{font-family:'HCBWPic';src:url('/fonts/BlackAndWhitePicture.ttf')}
+    @font-face{font-family:'HCBlackHan';src:url('/fonts/BlackHanSans.ttf')}
+    @font-face{font-family:'HCGugi';src:url('/fonts/Gugi-Regular.ttf')}
+    /* @@FONTS:END */
 
     /* 📝뽑기 생성 모달(도서관 library.html 이식, pm 네임스페이스) */
     .gen-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:flex-start;justify-content:center;padding:24px;overflow:auto}
@@ -4242,30 +4259,47 @@ function renderMyPresets(){
     : '<span class="hint" style="font-size:11px">지금 화면 전체를 저장해 두면 딸깍 한 번으로 불러와요.</span>';
 }
 // 번들 폰트 22종(ttf/otf만 — 미리보기=실제 렌더 일치). ⭐=쇼츠 헤드카피 추천 베스트5
+// @@FONTS:BEGIN — tools/sync_fonts.py가 생성. 직접 고치지 마라
 const HC_FONTS=[
-  {name:'⭐ 티몬 몬소리',       file:'TmonMonsori.ttf',          css:'HCTmon'},
-  {name:'⭐ 배민 주아',        file:'BMJUA.ttf',                css:'HCJua'},
-  {name:'⭐ 배민 도현',        file:'BMDOHYEON.ttf',            css:'HCDohyeon'},
-  {name:'⭐ 빙그레',           file:'Binggrae-Bold.otf',        css:'HCBinggrae'},
-  {name:'⭐ 꾸불림체',         file:'Kkubulim.ttf',             css:'HCKkubulim'},
-  {name:'지마켓 산스',         file:'GmarketSansBold.otf',      css:'HCGmarket'},
-  {name:'SUIT',                file:'SUIT-Bold.otf',            css:'HCSuit'},
-  {name:'프리텐다드',          file:'Pretendard-ExtraBold.otf', css:'HCPretendard'},
-  {name:'프리텐다드 Bold',     file:'Pretendard-Bold.otf',      css:'HCPretendardB'},
-  {name:'프리텐다드 SemiBold', file:'Pretendard-SemiBold.otf',  css:'HCPretendardS'},
-  {name:'스포카 한 산스',      file:'SpoqaHanSansNeo-Bold.otf', css:'HCSpoqa'},
-  {name:'IBM Plex Sans',       file:'IBMPlexSansKR-Bold.otf',   css:'HCIBM'},
-  {name:'노토 산스',           file:'NotoSansKR-Bold.otf',      css:'HCNoto'},
-  {name:'나눔고딕',            file:'NanumGothic-Bold.ttf',     css:'HCNanum'},
-  {name:'옥 말랑',             file:'OkMallangW.ttf',           css:'HCOkmallang'},
-  {name:'경기천년바탕',        file:'GBatang.otf',              css:'HCGBatang'},
-  {name:'고운바탕',            file:'GowunBatang.ttf',          css:'HCGowun'},
-  {name:'리디바탕',            file:'RIDIBatang.otf',           css:'HCRidi'},
-  {name:'프리텐다드 Reg',      file:'Pretendard-Regular.otf',   css:'HCPretendardR'},
-  {name:'SUIT Reg',            file:'SUIT-Regular.otf',         css:'HCSuitR'},
-  {name:'스포카 Reg',          file:'SpoqaHanSansNeo-Regular.otf',css:'HCSpoqaR'},
-  {name:'IBM Plex Reg',        file:'IBMPlexSansKR-Regular.otf',css:'HCIBMR'},
+  {name:'⭐ 티몬 몬소리',       file:'TmonMonsori.ttf',             css:'HCTmon'},
+  {name:'⭐ 배민 주아',        file:'BMJUA.ttf',                   css:'HCJua'},
+  {name:'⭐ 배민 도현',        file:'BMDOHYEON.ttf',               css:'HCDohyeon'},
+  {name:'⭐ 빙그레',          file:'Binggrae-Bold.otf',           css:'HCBinggrae'},
+  {name:'⭐ 꾸불림체',         file:'Kkubulim.ttf',                css:'HCKkubulim'},
+  {name:'지마켓 산스',         file:'GmarketSansBold.otf',         css:'HCGmarket'},
+  {name:'SUIT',           file:'SUIT-Bold.otf',               css:'HCSuit'},
+  {name:'프리텐다드',          file:'Pretendard-ExtraBold.otf',    css:'HCPretendard'},
+  {name:'프리텐다드 Bold',     file:'Pretendard-Bold.otf',         css:'HCPretendardB'},
+  {name:'프리텐다드 SemiBold', file:'Pretendard-SemiBold.otf',     css:'HCPretendardS'},
+  {name:'스포카 한 산스',       file:'SpoqaHanSansNeo-Bold.otf',    css:'HCSpoqa'},
+  {name:'IBM Plex Sans',  file:'IBMPlexSansKR-Bold.otf',      css:'HCIBM'},
+  {name:'노토 산스',          file:'NotoSansKR-Bold.otf',         css:'HCNoto'},
+  {name:'나눔고딕',           file:'NanumGothic-Bold.ttf',        css:'HCNanum'},
+  {name:'옥 말랑',           file:'OkMallangW.ttf',              css:'HCOkmallang'},
+  {name:'경기천년바탕',         file:'GBatang.otf',                 css:'HCGBatang'},
+  {name:'고운바탕',           file:'GowunBatang.ttf',             css:'HCGowun'},
+  {name:'리디바탕',           file:'RIDIBatang.otf',              css:'HCRidi'},
+  {name:'프리텐다드 Reg',      file:'Pretendard-Regular.otf',      css:'HCPretendardR'},
+  {name:'SUIT Reg',       file:'SUIT-Regular.otf',            css:'HCSuitR'},
+  {name:'스포카 Reg',        file:'SpoqaHanSansNeo-Regular.otf', css:'HCSpoqaR'},
+  {name:'IBM Plex Reg',   file:'IBMPlexSansKR-Regular.otf',   css:'HCIBMR'},
+  {name:'⭐ 손글씨 개구쟁이',     file:'Gaegu-Bold.ttf',              css:'HCGaegu'},
+  {name:'⭐ 손글씨 나눔펜',      file:'NanumPenScript.ttf',          css:'HCNanumPen'},
+  {name:'손글씨 나눔붓',        file:'NanumBrushScript.ttf',        css:'HCNanumBrush'},
+  {name:'손글씨 하이멜로디',      file:'HiMelody.ttf',                css:'HCHiMelody'},
+  {name:'손글씨 싱글데이',       file:'SingleDay.ttf',               css:'HCSingleDay'},
+  {name:'손글씨 포스터리',       file:'PoorStory.ttf',               css:'HCPoorStory'},
+  {name:'손글씨 독도',         file:'Dokdo-Regular.ttf',           css:'HCDokdo'},
+  {name:'손글씨 동해독도',       file:'EastSeaDokdo.ttf',            css:'HCEastSea'},
+  {name:'감자꽃',            file:'GamjaFlower.ttf',             css:'HCGamja'},
+  {name:'귀여운체',           file:'CuteFont.ttf',                css:'HCCute'},
+  {name:'레트로 킬사인',        file:'KirangHaerang.ttf',           css:'HCKirang'},
+  {name:'레트로 성실체',        file:'Sunflower-Medium.ttf',        css:'HCSunflower'},
+  {name:'레트로 흑백사진',       file:'BlackAndWhitePicture.ttf',    css:'HCBWPic'},
+  {name:'⭐ 임팩트 검은고딕',     file:'BlackHanSans.ttf',            css:'HCBlackHan'},
+  {name:'임팩트 구기',         file:'Gugi-Regular.ttf',            css:'HCGugi'},
 ];
+// @@FONTS:END
 function fontCss(file){ const f=HC_FONTS.find(x=>x.file===file); return f?f.css:'HCTmon'; }
 let HC_FONT_COMMITTED='TmonMonsori.ttf';
 function renderFontSelect(){

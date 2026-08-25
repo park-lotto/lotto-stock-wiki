@@ -1,0 +1,261 @@
+[
+ {
+  "name": "티몬 몬소리",
+  "file": "TmonMonsori.ttf",
+  "css": "HCTmon",
+  "group": "impact",
+  "star": true
+ },
+ {
+  "name": "배민 주아",
+  "file": "BMJUA.ttf",
+  "css": "HCJua",
+  "group": "cute",
+  "star": true
+ },
+ {
+  "name": "배민 도현",
+  "file": "BMDOHYEON.ttf",
+  "css": "HCDohyeon",
+  "group": "impact",
+  "star": true
+ },
+ {
+  "name": "빙그레",
+  "file": "Binggrae-Bold.otf",
+  "css": "HCBinggrae",
+  "group": "cute",
+  "star": true
+ },
+ {
+  "name": "꾸불림체",
+  "file": "Kkubulim.ttf",
+  "css": "HCKkubulim",
+  "group": "cute",
+  "star": true
+ },
+ {
+  "name": "지마켓 산스",
+  "file": "GmarketSansBold.otf",
+  "css": "HCGmarket",
+  "group": "impact",
+  "star": false
+ },
+ {
+  "name": "SUIT",
+  "file": "SUIT-Bold.otf",
+  "css": "HCSuit",
+  "group": "gothic",
+  "star": false
+ },
+ {
+  "name": "프리텐다드",
+  "file": "Pretendard-ExtraBold.otf",
+  "css": "HCPretendard",
+  "group": "gothic",
+  "star": false
+ },
+ {
+  "name": "프리텐다드 Bold",
+  "file": "Pretendard-Bold.otf",
+  "css": "HCPretendardB",
+  "group": "gothic",
+  "star": false
+ },
+ {
+  "name": "프리텐다드 SemiBold",
+  "file": "Pretendard-SemiBold.otf",
+  "css": "HCPretendardS",
+  "group": "gothic",
+  "star": false
+ },
+ {
+  "name": "스포카 한 산스",
+  "file": "SpoqaHanSansNeo-Bold.otf",
+  "css": "HCSpoqa",
+  "group": "gothic",
+  "star": false
+ },
+ {
+  "name": "IBM Plex Sans",
+  "file": "IBMPlexSansKR-Bold.otf",
+  "css": "HCIBM",
+  "group": "gothic",
+  "star": false
+ },
+ {
+  "name": "노토 산스",
+  "file": "NotoSansKR-Bold.otf",
+  "css": "HCNoto",
+  "group": "gothic",
+  "star": false
+ },
+ {
+  "name": "나눔고딕",
+  "file": "NanumGothic-Bold.ttf",
+  "css": "HCNanum",
+  "group": "gothic",
+  "star": false
+ },
+ {
+  "name": "옥 말랑",
+  "file": "OkMallangW.ttf",
+  "css": "HCOkmallang",
+  "group": "cute",
+  "star": false
+ },
+ {
+  "name": "경기천년바탕",
+  "file": "GBatang.otf",
+  "css": "HCGBatang",
+  "group": "serif",
+  "star": false
+ },
+ {
+  "name": "고운바탕",
+  "file": "GowunBatang.ttf",
+  "css": "HCGowun",
+  "group": "serif",
+  "star": false
+ },
+ {
+  "name": "리디바탕",
+  "file": "RIDIBatang.otf",
+  "css": "HCRidi",
+  "group": "serif",
+  "star": false
+ },
+ {
+  "name": "프리텐다드 Reg",
+  "file": "Pretendard-Regular.otf",
+  "css": "HCPretendardR",
+  "group": "gothic",
+  "star": false
+ },
+ {
+  "name": "SUIT Reg",
+  "file": "SUIT-Regular.otf",
+  "css": "HCSuitR",
+  "group": "gothic",
+  "star": false
+ },
+ {
+  "name": "스포카 Reg",
+  "file": "SpoqaHanSansNeo-Regular.otf",
+  "css": "HCSpoqaR",
+  "group": "gothic",
+  "star": false
+ },
+ {
+  "name": "IBM Plex Reg",
+  "file": "IBMPlexSansKR-Regular.otf",
+  "css": "HCIBMR",
+  "group": "gothic",
+  "star": false
+ },
+ {
+  "name": "손글씨 개구쟁이",
+  "file": "Gaegu-Bold.ttf",
+  "css": "HCGaegu",
+  "group": "hand",
+  "star": true
+ },
+ {
+  "name": "손글씨 나눔펜",
+  "file": "NanumPenScript.ttf",
+  "css": "HCNanumPen",
+  "group": "hand",
+  "star": true
+ },
+ {
+  "name": "손글씨 나눔붓",
+  "file": "NanumBrushScript.ttf",
+  "css": "HCNanumBrush",
+  "group": "hand",
+  "star": false
+ },
+ {
+  "name": "손글씨 하이멜로디",
+  "file": "HiMelody.ttf",
+  "css": "HCHiMelody",
+  "group": "hand",
+  "star": false
+ },
+ {
+  "name": "손글씨 싱글데이",
+  "file": "SingleDay.ttf",
+  "css": "HCSingleDay",
+  "group": "hand",
+  "star": false
+ },
+ {
+  "name": "손글씨 포스터리",
+  "file": "PoorStory.ttf",
+  "css": "HCPoorStory",
+  "group": "hand",
+  "star": false
+ },
+ {
+  "name": "손글씨 독도",
+  "file": "Dokdo-Regular.ttf",
+  "css": "HCDokdo",
+  "group": "hand",
+  "star": false
+ },
+ {
+  "name": "손글씨 동해독도",
+  "file": "EastSeaDokdo.ttf",
+  "css": "HCEastSea",
+  "group": "hand",
+  "star": false
+ },
+ {
+  "name": "감자꽃",
+  "file": "GamjaFlower.ttf",
+  "css": "HCGamja",
+  "group": "cute",
+  "star": false
+ },
+ {
+  "name": "귀여운체",
+  "file": "CuteFont.ttf",
+  "css": "HCCute",
+  "group": "cute",
+  "star": false
+ },
+ {
+  "name": "레트로 킬사인",
+  "file": "KirangHaerang.ttf",
+  "css": "HCKirang",
+  "group": "retro",
+  "star": false
+ },
+ {
+  "name": "레트로 성실체",
+  "file": "Sunflower-Medium.ttf",
+  "css": "HCSunflower",
+  "group": "retro",
+  "star": false
+ },
+ {
+  "name": "레트로 흑백사진",
+  "file": "BlackAndWhitePicture.ttf",
+  "css": "HCBWPic",
+  "group": "retro",
+  "star": false
+ },
+ {
+  "name": "임팩트 검은고딕",
+  "file": "BlackHanSans.ttf",
+  "css": "HCBlackHan",
+  "group": "impact",
+  "star": true
+ },
+ {
+  "name": "임팩트 구기",
+  "file": "Gugi-Regular.ttf",
+  "css": "HCGugi",
+  "group": "impact",
+  "star": false
+ }
+]
