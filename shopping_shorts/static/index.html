@@ -655,6 +655,13 @@ const CTYPES = [
 //   (test_ranking_style_filter.py가 이 짝을 검사한다)
 const TOPIC_CTYPE = {홈템:"홈템", 가전:"홈템", 레시피:"비법형", 뷰티:"혼합형", 기타:"기타",
                      제품정체형:"썰쇼핑", 오용형:"썰쇼핑", 장비템:"장비템"};
+// 플랫폼별로 **버튼만** 감춘다(2026-08-26 사장님 "인스타쪽 썰쇼핑과 장비공구는 없애").
+// 썰쇼핑(제품정체형·오용형)·장비템은 **유튜브 발굴에서 나온 축**이라 인스타에선 안 쓴다.
+// ★항목을 버리는 게 아니다 — 버튼만 안 보인다. 그 카테고리 영상은 '전체'에서 그대로 보인다.
+//   (거르는 코드 render()는 이 표를 쳐다보지 않는다. 거기서 쓰면 항목이 통째로 사라진다.)
+// ★유튜브에선 그대로 둔다 — 실측(2026-08-26) 유튜브 8,000건에 장비템 99·제품정체형 170·
+//   오용형 83건이 실재한다. 같이 숨기면 그 352건이 버튼으로는 못 찾게 된다.
+const CTYPE_HIDDEN = {instagram:["썰쇼핑", "장비템"], threads:["썰쇼핑", "장비템"]};
 let STATE = {items:[], tab:"comments", ctype:"전체", cat:"전체", q:"", style:"",
              filters:_loadFilters()};
 // 걸러내기 상태는 브라우저에 기억시킨다 — 새로고침마다 다시 켜게 하면 아무도 안 쓴다.
@@ -838,6 +845,9 @@ function switchPlatform(p, el){
   // ★축은 플랫폼마다 다르다 — 남겨두면 인스타에서 '신기템' 필터가 살아 목록이 통째로 빈다.
   STATE.style="";
   updatePlatformCopy(p);
+  // ★카테고리 줄도 다시 그린다(2026-08-26) — 플랫폼마다 숨기는 버튼이 다르다.
+  //   안 부르면 유튜브에서 인스타로 갈아타도 썰쇼핑·장비템 버튼이 그대로 남는다.
+  renderCtypes(); renderCats();
   document.querySelectorAll('#platformTabs .ctype').forEach(x=>x.classList.remove('active'));
   el.classList.add('active');
   const isTrend = (p==='douyin');
@@ -1298,8 +1308,11 @@ async function saveTtSettings(){
 }
 
 function renderCtypes(){
+  const hide = CTYPE_HIDDEN[PLATFORM] || [];
+  // 숨긴 버튼이 눌려 있던 채로 플랫폼을 갈아타면 **목록이 빈 채로** 남는다 → 전체로 되돌린다.
+  if (hide.includes(STATE.ctype)){ STATE.ctype = "전체"; STATE.cat = "전체"; }
   document.getElementById("ctypes").innerHTML =
-    '<span class="tab-grp">카테고리</span>' + CTYPES.map(c =>
+    '<span class="tab-grp">카테고리</span>' + CTYPES.filter(c => !hide.includes(c.key)).map(c =>
     `<div class="ctype ${c.key===STATE.ctype?'active':''}" onclick="setCtype('${c.key}')">${c.label}</div>`).join("");
 }
 // 발굴 스타일 줄(유튜브만). 라벨은 발굴이 실제로 매긴 이름 그대로 쓴다 — 화면에서만
@@ -1310,18 +1323,20 @@ function renderCtypes(){
 const STYLE_LABELS = {썰쇼핑:"🎬 썰쇼핑",
                       연예인결합:"⭐ 연예인", 레시피쇼핑:"🍳 레시피"};
 const STYLE_HIDDEN = {신기템:"🆕 신기템"};   // 되살리려면 위 목록으로 옮긴다
+// ★발굴 축 줄을 통째로 숨긴다(2026-08-26 사장님 "발굴축은 헷갈리니까 숨겨놔 카테고리만하고").
+//   왜 헷갈렸나: 같은 화면에 축이 둘이었다 — 카테고리는 **무엇을** 파는가(제품),
+//   발굴 축은 **어떻게** 말하는가(화법). 게다가 '썰쇼핑'이 **양쪽에 다 있어서**
+//   (카테고리 썰쇼핑 = 제품정체형+오용형 / 발굴 축 썰쇼핑 = 채널 화법) 특히 헷갈렸다.
+//   ★판정·수집 코드는 그대로 둔다 — 화면에서만 뺀다. 여기 return 한 줄을 지우면 돌아온다.
+//     지우지 않는 이유: 지우면 나중에 왜 없는지 아무도 모른다(2026-07-21 platformTabs 선례).
+//   ★STATE.style을 반드시 비운다 — 안 비우면 예전에 눌러둔 축이 살아남아
+//     render()의 필터에 계속 걸려 **목록이 조용히 빈 채로** 남는다.
 function renderStyles(){
   const el = document.getElementById("styles");
   if (!el) return;
-  if (PLATFORM !== "youtube"){ el.style.display="none"; el.innerHTML=""; return; }
-  // 이번 수집에 **실제로 있는 축만** 버튼으로 낸다 — 눌러도 0건인 버튼은 고장으로 보인다.
-  const have = new Set(STATE.items.map(i => i.style).filter(Boolean));
-  if (!have.size){ el.style.display="none"; el.innerHTML=""; return; }
-  const keys = Object.keys(STYLE_LABELS).filter(k => have.has(k));
-  el.style.display = "";
-  el.innerHTML = '<span class="tab-grp">발굴 축</span>'
-    + [["", "✨ 전체"], ...keys.map(k => [k, STYLE_LABELS[k]])].map(([k, lbl]) =>
-        `<div class="ctype ${k===STATE.style?'active':''}" onclick="setStyle('${k}')">${lbl}</div>`).join("");
+  STATE.style = "";                       // 숨기는 순간 이 축으로는 거르지 않는다
+  el.style.display = "none";
+  el.innerHTML = "";
 }
 function setStyle(k){ exitChannelView({silent:true}); STATE.style=k; renderStyles(); render(); }
 function renderCats(){
