@@ -196,10 +196,14 @@ class TestAutoStyle:
         src = p.read_text(encoding="utf-8")
         fn = src[src.index("async function s2Generate"):]
         fn = fn[:fn.index("\n}\n")]
-        assert "if(S2.picked.length) body.style_ids=S2.picked;" in fn
-        # 폴백은 살아 있어야 한다(문형을 못 뽑는 씨앗이 있다).
-        assert re.search(r"body\.auto_style\s*=\s*true", fn)
+        # 고른 스타일은 style_ids로 실린다(변수명은 바뀔 수 있으니 실리는지만 본다).
+        assert "style_ids" in fn and "S2.picked" in fn
+        # 폴백은 살아 있어야 한다(문형을 못 뽑는 씨앗도, 아무것도 안 고른 경우도 있다).
+        assert re.search(r"auto_style\s*[:=]\s*true", fn)
         # 픽업 경로가 실제로 씨앗을 싣는가 — 이게 없으면 첫 칸이 예전과 같아진다.
-        assert "body.seed_hook" in fn, "씨앗 훅을 안 보낸다 — 문형을 물려받지 못한다"
-        assert "body.structure" in fn, "씨앗 구조를 안 보낸다"
-        assert "body.elem_modes" in fn, "요소 모드를 안 보낸다(스토리·CTA가 안 갈린다)"
+        assert "seed_hook" in fn, "씨앗 훅을 안 보낸다 — 문형을 물려받지 못한다"
+        assert "structure" in fn, "씨앗 구조를 안 보낸다"
+        assert "elem_modes" in fn, "요소 모드를 안 보낸다(스토리·CTA가 안 갈린다)"
+        # ★2026-08-26: 픽업과 스타일을 **함께** 고를 수 있다(사장님 "두개선택인데 1개밖에").
+        #   서버는 한 요청에 둘 중 하나만 처리하므로 요청을 나눠 보내고 결과를 합친다.
+        assert "usePickup" in fn, "픽업이 여전히 picked.length로 판정된다(배타 구조)"

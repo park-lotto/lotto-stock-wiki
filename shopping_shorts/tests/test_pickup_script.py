@@ -166,7 +166,7 @@ def test_화면이_구어체_씨앗에서_훅_한_문장만_뽑는다():
     # 쓰는 쪽 둘 다 그 함수를 부르는가(두 벌로 갈라지면 결과가 어긋난다).
     gen = src[src.index("async function s2Generate"):]
     gen = gen[:gen.index("\n}\n")]
-    assert "body.seed_hook" in gen
+    assert "seed_hook" in gen, "생성 요청에 씨앗 훅을 안 싣는다"
     assert "s2SeedSentences" in gen, "전체 생성이 공용 분리기를 안 쓴다"
 
 
