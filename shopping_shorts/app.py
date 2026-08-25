@@ -1110,7 +1110,15 @@ async def api_kakao_ask(request: Request):
     _secret = (os.getenv("KAKAO_BOT_SECRET", "") or "").strip()
     if not _secret or _secret != (request.headers.get("X-Bot-Secret") or ""):
         return JSONResponse(status_code=401, content={"ok": False, "error": "bad secret"})
-    body = await request.json()
+    # ★본문이 UTF-8이 아니거나 JSON이 아니면 500이 난다(실측 2026-08-25: cp949로 보내면
+    #   request.json()이 UnicodeDecodeError). 폰이 어떤 인코딩으로 보내든 서버가 죽지 않게
+    #   여기서 받아 빈 답으로 넘긴다 — 방에 오류를 뿌리지 않는 게 봇의 원칙이다.
+    try:
+        body = await request.json()
+    except Exception:
+        return {"ok": True, "reply": ""}
+    if not isinstance(body, dict):
+        return {"ok": True, "reply": ""}
     room = (body.get("room") or "").strip()
     sender = (body.get("sender") or "").strip()
     text = body.get("text") or ""

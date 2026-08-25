@@ -19,7 +19,7 @@ function response(room, msg, sender, isGroupChat, replier) {
   try {
     const body = JSON.stringify({ room: room, sender: sender, text: msg });
     const text = org.jsoup.Jsoup.connect(API)
-      .header("Content-Type", "application/json")
+      .header("Content-Type", "application/json; charset=utf-8")
       .header("X-Bot-Secret", SECRET)
       .requestBody(body).method(org.jsoup.Connection.Method.POST)
       .ignoreContentType(true).ignoreHttpErrors(true)
