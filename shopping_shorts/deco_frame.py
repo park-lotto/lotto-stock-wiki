@@ -373,6 +373,17 @@ DEFAULTS = {
     "center_kind": "",     # 띠 가운데(검색창/채널명/없음)
     "sub_bg_c": "",        # 제목 블록 바탕색(빈값=프리셋 sub_bg)
     "sub_text_c": "",      # 조회수·댓글 글자색(빈값=프리셋 sub_text)
+    # ── 레이아웃(2026-08-25 사장님 "디자인이 이거 하나밖에 안되는거야?") ────────
+    # ★뿌리: 실측 스키마가 bar_color·bar_h_pct처럼 **"띠가 어떻게 생겼냐"만** 물었다.
+    #   그래서 커뮤니티 글이든 쇼핑몰 상세페이지든 전부 '띠 하나 + 제목줄'로 뭉개져
+    #   들어왔고, 20종이 색만 다른 한 벌이 됐다. 제미니는 차이를 알고 notes에 적어뒀다:
+    #     커뮤니티 게시글형 6 / 웹헤더·브랜드바형 8 / 검색창형 3 / 쇼핑몰형 2 / 뉴스형 1
+    #   → 골격 자체를 고르는 축을 만든다. 빈값이면 프리셋 layout, 그것도 없으면 기본.
+    "layout": "",          # ""(=기본·웹헤더형) / "community"
+    "post_cat": "",        # 커뮤니티형: 카테고리 태그(빈값이면 안 그림)
+    "post_author": "",     # 커뮤니티형: 작성자
+    "post_time": "",       # 커뮤니티형: 작성 시간
+    "post_likes": "",      # 커뮤니티형: 추천 수
 }
 
 _FONTS = {
@@ -402,6 +413,8 @@ def _font(kind, size, override=""):
 _VALID_HEX = re.compile(r"#[0-9A-Fa-f]{6}")
 # 'none'도 유효한 선택이다("아이콘 안 씀"). _ICONS엔 없으므로 따로 둔다.
 _ICON_CHOICES = ("hamburger", "search", "dots", "back", "bookmark", "none")
+# 골격 종류. ""(빈값)은 "안 정했음" → 프리셋 → 기본(웹헤더형).
+_LAYOUTS = ("community",)
 
 
 def _rgb(hex_color):
@@ -477,6 +490,10 @@ def normalize(spec):
         s[k] = v if v in _ICON_CHOICES else ""
     v = str(s["center_kind"] or "").strip()
     s["center_kind"] = v if v in _CENTER else ""
+    v = str(s["layout"] or "").strip()
+    s["layout"] = v if v in _LAYOUTS else ""
+    for k in ("post_cat", "post_author", "post_time", "post_likes"):
+        s[k] = str(s[k] or "").strip()[:30]
     return s
 
 
