@@ -1379,6 +1379,30 @@
               <button type="button" class="tab" onclick="stepBeat(1)" style="min-width:auto;padding:8px 14px;font-size:16px">▶</button>
             </div>
             <div class="hint" style="margin-top:6px;text-align:center">◀ ▶ 로 장면을 넘겨가며 자막이 어떻게 나오는지 확인</div>
+
+            <!-- ★이 장면만 손보기(2026-08-25 사장님 "장면당 자막 배치를 수정할 수 있게").
+                 둘 다 음성을 다시 만들지 않는다 → 즉시·무료. 대사를 바꾸는 건 다른 자리다. -->
+            <div style="margin-top:10px;background:var(--inset);border:1px solid var(--line);
+                        border-radius:10px;padding:10px 12px">
+              <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:7px">
+                🎯 이 장면만 손보기 <span class="hint" style="font-weight:400">(다른 장면은 안 바뀌어요)</span></div>
+
+              <div style="font-size:12px;color:var(--sub);margin-bottom:5px">자막 자리 — 제품을 가리면 옮기세요</div>
+              <div id="capPosBtns" style="display:flex;gap:6px;flex-wrap:wrap">
+                <button type="button" class="tab" data-cappos="top"    onclick="setBeatCapPos('top')"    style="flex:1;min-width:auto;padding:7px 10px;font-size:13px">⬆ 위</button>
+                <button type="button" class="tab" data-cappos="mid"    onclick="setBeatCapPos('mid')"    style="flex:1;min-width:auto;padding:7px 10px;font-size:13px">⬍ 중간</button>
+                <button type="button" class="tab" data-cappos="bottom" onclick="setBeatCapPos('bottom')" style="flex:1;min-width:auto;padding:7px 10px;font-size:13px">⬇ 아래</button>
+              </div>
+
+              <div style="font-size:12px;color:var(--sub);margin:10px 0 5px">
+                줄 나누기 — <b>Enter</b>=여기서 끊기 · <b>Backspace</b>(줄 맨 앞)=윗줄과 붙이기</div>
+              <div id="capLinesBox"></div>
+              <div style="display:flex;gap:8px;align-items:center;margin-top:7px">
+                <button type="button" class="tab" onclick="saveBeatCapLines()" style="min-width:auto;padding:6px 14px;font-size:12px">💾 이 장면 줄 저장</button>
+                <button type="button" class="tab" onclick="resetBeatCapLines()" style="min-width:auto;padding:6px 12px;font-size:12px">↩ 자동으로</button>
+                <span id="capLinesMsg" class="hint"></span>
+              </div>
+            </div>
           </div>
         </div>
         <!-- 우: 컨트롤 -->
@@ -3497,6 +3521,7 @@ function showBeat(i){
   _playBeatCaptions(b);
   const cnt=document.getElementById('beatCount');
   if(cnt) cnt.textContent=(BEAT_IDX+1)+' / '+BEATS_PREVIEW.length+' 장면';
+  renderBeatTools();          // 장면을 넘기면 그 장면의 자리·줄을 보여준다
 }
 let CAP_SEQ_TIMER=null;
 function _playBeatCaptions(b){
@@ -3515,6 +3540,104 @@ function _playBeatCaptions(b){
   play();
 }
 function stepBeat(d){ if(BEATS_PREVIEW.length) showBeat(BEAT_IDX+d); }
+
+// ── 🎯 이 장면만 손보기(2026-08-25) ───────────────────────────────────────
+// 자리(cap_pos)와 줄 나누기(caption_lines) 둘 다 **음성을 안 건드린다** → 즉시·무료.
+// ★서버가 진짜 주인이다: 저장이 성공해야 화면 상태를 바꾼다(낙관적 갱신 금지) —
+//   실패했는데 바뀐 것처럼 보이면 렌더 결과와 어긋난다.
+function _curBeat(){ return BEATS_PREVIEW[BEAT_IDX] || null; }
+function _beatNo(b){ return (b && b.beat_idx != null) ? b.beat_idx : BEAT_IDX; }
+function _capMsg(t, color){ const m=document.getElementById('capLinesMsg');
+  if(m){ m.textContent=t||''; m.style.color=color||''; } }
+
+function renderBeatTools(){
+  const b=_curBeat(); if(!b) return;
+  // 자리 버튼 — 지금 값에 불이 들어온다
+  const pos=b.pos||'bottom';
+  document.querySelectorAll('#capPosBtns [data-cappos]').forEach(el=>{
+    el.classList.toggle('on', el.dataset.cappos===pos); });
+  // 줄 편집칸 — 렌더와 같은 분할(segs)을 그대로 줄로 보여준다
+  const box=document.getElementById('capLinesBox'); if(!box) return;
+  const lines=(b.segs && b.segs.length) ? b.segs : [b.caption||''];
+  box.innerHTML='';
+  lines.forEach((ln,i)=>box.appendChild(_capLineInput(ln,i)));
+  _capMsg('');
+}
+
+function _capLineInput(text, i){
+  const inp=document.createElement('input');
+  inp.type='text'; inp.value=text; inp.dataset.capline='1';
+  inp.style.cssText='width:100%;background:#0a1017;border:1px solid var(--line);color:var(--txt);'
+                   +'border-radius:8px;padding:7px 10px;font-size:14px;margin-bottom:5px';
+  inp.addEventListener('keydown', ev=>{
+    if(ev.key==='Enter'){
+      // 커서 자리에서 자른다 → 뒤쪽이 새 줄이 된다(워드프로세서와 같은 감각)
+      ev.preventDefault();
+      const at=inp.selectionStart, head=inp.value.slice(0,at).trim(), tail=inp.value.slice(at).trim();
+      if(!head || !tail) return;                 // 빈 줄은 안 만든다
+      inp.value=head;
+      const nxt=_capLineInput(tail, i+1);
+      inp.parentNode.insertBefore(nxt, inp.nextSibling);
+      nxt.focus(); nxt.setSelectionRange(0,0);
+    } else if(ev.key==='Backspace' && inp.selectionStart===0 && inp.selectionEnd===0){
+      // 줄 맨 앞에서 지우면 윗줄과 합친다
+      const prev=inp.previousElementSibling;
+      if(!prev || prev.dataset.capline!=='1') return;
+      ev.preventDefault();
+      const at=prev.value.length;
+      prev.value=(prev.value+' '+inp.value).trim();
+      inp.parentNode.removeChild(inp);
+      prev.focus(); prev.setSelectionRange(at, at);
+    }
+  });
+  return inp;
+}
+
+async function setBeatCapPos(pos){
+  const b=_curBeat(); if(!b || typeof MIX_JOB==='undefined' || !MIX_JOB) return;
+  try{
+    const r=await fetch('/api/produce/mix/'+encodeURIComponent(MIX_JOB)+'/cappos',
+      {method:'POST',headers:{'Content-Type':'application/json'},
+       body:JSON.stringify({beat_idx:_beatNo(b), pos})});
+    const d=await r.json();
+    if(!r.ok || !d.ok){ _capMsg(d.error||'저장 실패','var(--fire)'); return; }
+    b.pos=d.pos; renderBeatTools();
+    _capMsg('이 장면 자막을 '+({top:'위',mid:'중간',bottom:'아래'}[d.pos]||d.pos)+'로 옮겼어요','var(--ok)');
+  }catch(e){ _capMsg('네트워크 오류','var(--fire)'); }
+}
+
+async function saveBeatCapLines(){
+  const b=_curBeat(); if(!b || typeof MIX_JOB==='undefined' || !MIX_JOB) return;
+  const lines=[...document.querySelectorAll('#capLinesBox [data-capline]')]
+                .map(el=>el.value.trim()).filter(Boolean);
+  if(!lines.length){ _capMsg('줄이 비었어요','var(--fire)'); return; }
+  try{
+    const r=await fetch('/api/produce/mix/'+encodeURIComponent(MIX_JOB)+'/caplines',
+      {method:'POST',headers:{'Content-Type':'application/json'},
+       body:JSON.stringify({beat_idx:_beatNo(b), lines})});
+    const d=await r.json();
+    if(!r.ok || !d.ok){ _capMsg(d.error||'저장 실패','var(--fire)'); return; }
+    b.segs=d.lines; b.durs=null;                 // 표시시간은 서버가 다시 잰다
+    _capMsg('저장했어요'+(d.timed?'':' (표시시간은 글자수 기준)'),'var(--ok)');
+    _playBeatCaptions(b);                        // 바뀐 줄로 미리보기 다시 재생
+  }catch(e){ _capMsg('네트워크 오류','var(--fire)'); }
+}
+
+async function resetBeatCapLines(){
+  // '자동으로' = 사람이 정한 줄을 서버에서 지운다. 화면만 새로 그리면 저장된 줄이
+  // 그대로 남아 되돌아가지 않는다(그래서 reset을 서버에 보낸다).
+  const b=_curBeat(); if(!b || typeof MIX_JOB==='undefined' || !MIX_JOB) return;
+  try{
+    const r=await fetch('/api/produce/mix/'+encodeURIComponent(MIX_JOB)+'/caplines',
+      {method:'POST',headers:{'Content-Type':'application/json'},
+       body:JSON.stringify({beat_idx:_beatNo(b), reset:true})});
+    const d=await r.json();
+    if(!r.ok || !d.ok){ _capMsg(d.error||'되돌리기 실패','var(--fire)'); return; }
+    b.segs=d.lines; b.durs=null; renderBeatTools();
+    _capMsg('자동 분할로 되돌렸어요','var(--ok)');
+    _playBeatCaptions(b);
+  }catch(e){ _capMsg('네트워크 오류','var(--fire)'); }
+}
 function renderCapFontSelect(){
   const s=document.getElementById('capFont');
   if(s && !s.options.length) s.innerHTML=HC_FONTS.map(f=>`<option value="${f.file}"${f.file==='NanumGothic-Bold.ttf'?' selected':''}>${f.name}</option>`).join('');
