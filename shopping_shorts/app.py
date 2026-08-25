@@ -9735,11 +9735,19 @@ async def _admin_ack(request: Request):
         cid = int(body.get("customer_id"))
     except (TypeError, ValueError):
         return JSONResponse({"error": "customer_id 필요"}, status_code=422)
-    if not Store(DB_PATH).ack_customer(cid):
+    st = Store(DB_PATH)
+    if not st.ack_customer(cid):
         return JSONResponse({"error": "없는 고객이거나 이미 확인함"}, status_code=422)
+    # ★확인만 하면 잔액 0인 채로 고객관리에 내려간다(2026-08-25 사장님 "확인 눌러
+    #   내리면 포인트 안 나온다"). 실측: cid 213·214가 approved_at은 있는데 0P라
+    #   사장님이 '체험' 버튼을 따로 눌러 50P를 채워야 했다. 등급만 열고 연료를 안 주면
+    #   유료 op가 402로 막히는 것과 같은 함정이다(_trial_topup 주석 참조).
+    #   top-up이라 이미 충분하면 0을 돌려준다 — 여러 번 눌러도 기준선 하나로 수렴한다.
+    granted = _trial_topup(st, cid)
     import sys as _s
-    print(f"[admin] ack cid={cid} (체험 유지, 대기실에서만 내림)", file=_s.stderr)
-    return {"ok": True}
+    print(f"[admin] ack cid={cid} (체험 유지, 대기실에서만 내림) topup={granted}", file=_s.stderr)
+    return {"ok": True, "granted": granted,
+            "balance": pricing.to_display(points.balance(st, cid))}
 
 
 @app.post("/api/admin/payment")

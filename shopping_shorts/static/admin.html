@@ -315,7 +315,12 @@ async function ackCustomer(cid){
   const r = await fetch('/api/admin/ack',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({customer_id:cid})});
   const m=document.getElementById('pMsg');
-  if(r.ok){m.textContent='✅ 확인함 — 고객관리로 내려갔어요';m.className='msg';load();}
+  if(r.ok){const d=await r.json().catch(()=>({}));
+    // 포인트까지 들어갔는지 이 자리에서 보여준다 — 잔액 0이면 유료 작업이 402로 막힌다.
+    m.textContent='✅ 확인함 — 고객관리로 내려갔어요'
+      +(d.granted?' · 포인트 +'+d.granted+'P (잔액 '+d.balance+'P)'
+                 :(d.balance!=null?' · 잔액 '+d.balance+'P':''));
+    m.className='msg';load();}
   else{m.textContent='❌ 실패';m.className='msg err';}
   setTimeout(()=>m.textContent='',2500);
 }
