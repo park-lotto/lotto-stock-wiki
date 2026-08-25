@@ -1857,7 +1857,7 @@ function render(opts){
   if(items.length > RENDER_CAP) items = items.slice(0, RENDER_CAP);
   el.innerHTML = _notice + items.map((i,idx)=>`
     <div class="card">
-      ${i.thumbnail?`<div class="thumb">
+      ${i.thumbnail?`<div class="thumb" data-thumb="${thumbURL(i.thumbnail, i.shortcode)}">
         <img src="${thumbURL(i.thumbnail, i.shortcode)}" data-vurl="${i.video_url?('/api/video?url='+encodeURIComponent(i.video_url)):''}" ${i.video_url?'onclick="playInline(this)"':(i.platform==='youtube'?`onclick="playYoutube(this,'${i.shortcode}')"`:(i.platform==='tiktok'?`onclick="playTiktok(this,'${i.shortcode}')"`:((i.platform||PLATFORM)==='instagram'?`onclick="playInstagram(this,'${i.shortcode}')"`:'')))} loading="lazy" onerror="this.style.visibility='hidden'">
         ${badgeHTML(i, _bctx)}
         ${(i.video_url||i.platform==='youtube'||i.platform==='tiktok'||(i.platform||PLATFORM)==='instagram')?'<span class="play-badge">▶</span>':''}
@@ -2494,6 +2494,13 @@ function _embedTiktok(el, videoId){
   f.allow='autoplay; encrypted-media; picture-in-picture'; f.allowFullscreen=true;
   el.replaceWith(f);
 }
+/* ★유튜브는 프록시를 못 쓴다(2026-08-25 실측 — 시도했다가 되돌린 기록).
+   googlevideo mp4 URL에는 **발급 IP가 박혀(ip= 파라미터)** 있고, 서버에서 받아
+   흘리려 하면 Referer·UA·Range를 무엇으로 줘도 **403**이다(실측 3가지 조합 전부).
+   그래서 /api/video 화이트리스트에 googlevideo를 넣어도 소용이 없다 — 넣지 마라.
+   → 유튜브는 CDN 직접 재생만 가능하고, 그 경우 canvas가 교차출처로 오염돼
+     **중간 프레임 캡처가 브라우저 보안상 불가능**하다. 썸네일로만 검색된다.
+   (인스타는 cdninstagram이 프록시를 허용해 same-origin이 되어 중간 장면이 된다) */
 function playYoutube(img, videoId){ _playViaMedia(img, videoId, 'youtube', _embedYoutube); }
 function playTiktok(img, videoId){ _playViaMedia(img, videoId, 'tiktok', _embedTiktok); }
 // 인스타 인라인 재생(2026-07-30 복구) — 수집이 직접 mp4를 안 담게 되면서(429 회피) 썸네일
@@ -2561,8 +2568,45 @@ function _captureFrame(shortcode){
   }
   return null;
 }
+
+/* ★재생 중이어도 렌즈가 되게 — 썸네일 주소를 기억해뒀다가 다시 받는다
+   (2026-08-25 사장님 "썸네일말고 중간에 두면 렌즈검색이 되게 안되나").
+
+   왜 필요한가: _playViaMedia가 `img.replaceWith(v)`로 썸네일을 **치워버린다**.
+   인스타·틱톡은 <video>가 남아 프레임을 뜨면 되지만, 유튜브가 mp4를 안 주면
+   iframe으로 폴백하는데 **iframe은 브라우저 보안상 캡처가 불가능**하다
+   → 캡처할 <img>도 <video>도 없어 "이미지를 준비하지 못했습니다"가 떴다.
+
+   해결: 카드를 그릴 때 썸네일 주소를 .thumb에 남겨두고(data-thumb),
+   재생 중이면 그 주소로 이미지를 새로 받아 캡처한다. 재생 화면은 안 건드린다.
+   ⚠️ /api/thumb 프록시라 same-origin → canvas 오염(taint) 없이 toBlob 된다.
+      원본 CDN 주소를 그대로 쓰면 여기서 막힌다. */
+function _captureFrameAsync(shortcode){
+  const sync=_captureFrame(shortcode);
+  if(sync) return Promise.resolve(sync);           // 썸네일·영상이 살아 있으면 그대로
+  const anchor=document.getElementById('save_'+shortcode);
+  const card=anchor && anchor.closest('.card');
+  const box=card && card.querySelector('.thumb');
+  const src=box && box.getAttribute('data-thumb');
+  if(!src) return Promise.resolve(null);
+  return new Promise(resolve=>{
+    const im=new Image();
+    im.crossOrigin='anonymous';
+    im.onload=()=>{
+      if(!im.naturalWidth) return resolve(null);
+      const cv=document.createElement('canvas');
+      cv.width=im.naturalWidth; cv.height=im.naturalHeight;
+      try{ cv.getContext('2d').drawImage(im,0,0); resolve(cv); }
+      catch(e){ resolve(null); }
+    };
+    im.onerror=()=>resolve(null);
+    im.src=src;
+  });
+}
 async function lensSearch(btn, shortcode){
-  const cv=_captureFrame(shortcode);
+  // 재생 중이면 현재 프레임(사장님이 고른 장면), 아니면 썸네일.
+  // 둘 다 없으면(유튜브 iframe 폴백 등) 기억해둔 썸네일 주소로 다시 받아 시도한다.
+  const cv=await _captureFrameAsync(shortcode);
   if(!cv){ openScript('<div style="padding:10px;color:var(--sub)">이미지를 준비하지 못했습니다. 썸네일이 로드된 뒤 다시 눌러주세요.</div>','🔍 렌즈 유사영상',true); return; }
   openScript('<div class="sm-loading">🔍 렌즈 검색 중… (5~15초)</div>','🔍 렌즈 유사영상',true);
   const blob=await new Promise(r=>cv.toBlob(r,'image/jpeg',0.85));
