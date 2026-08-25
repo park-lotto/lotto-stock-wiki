@@ -17,11 +17,15 @@ sys.path.insert(0, str(BASE))
 
 from google.genai import types  # noqa: E402
 
-from shopping_shorts import comment_gen, key_vault  # noqa: E402
-from shopping_shorts.video_analysis import _client_for_key  # noqa: E402
+from pipeline.atoms import key_vault  # noqa: E402  ★video_analysis와 같은 자리에서 가져온다
+from shopping_shorts import comment_gen  # noqa: E402
+from shopping_shorts.video_analysis import _MODEL, _client_for_key  # noqa: E402
 from tools.caption_style_survey import CAPTION_SCHEMA, PROMPT, SHEET  # noqa: E402
 
-MODEL = "gemini-2.5-flash"
+# ★모델명을 여기서 새로 정하지 않는다 — 라이브(video_analysis)가 쓰는 것을 그대로 빌린다.
+#   손으로 박아뒀더니 단종된 이름이었다(2026-08-25: gemini-2.5-flash → 404 '더 이상
+#   제공 안 함'). 모델은 갈리는데 값이 두 벌이면 조사만 통째로 날린다(0순위-B).
+MODEL = _MODEL
 
 
 def analyze_one(video_path, sheet_bytes, max_retries=4):
