@@ -1,0 +1,190 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>캡컷 연결 — 3번만 하면 끝</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@700;900&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<style>
+  :root{
+    --ground:#F3F5F8; --card:#FFFFFF;
+    --ink:#151A21; --ink-2:#4A5563; --ink-3:#79838F;
+    --line:#DCE2EA;
+    --accent:#E23A5E; --accent-soft:#FDEAEF;
+    --warn:#9A6100; --warn-soft:#FDF2DF;
+    --ok:#12775A; --ok-soft:#E1F3EC;
+    --shadow:0 1px 2px rgba(21,26,33,.06), 0 10px 30px rgba(21,26,33,.07);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ground:#0E1116; --card:#161B22;
+      --ink:#EEF1F5; --ink-2:#B2BCC8; --ink-3:#7C8794;
+      --line:#262E38;
+      --accent:#FF6B85; --accent-soft:#2A1720;
+      --warn:#E9B45C; --warn-soft:#2A2114;
+      --ok:#5FD1A9; --ok-soft:#12261F;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 12px 34px rgba(0,0,0,.4);
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#0E1116; --card:#161B22;
+    --ink:#EEF1F5; --ink-2:#B2BCC8; --ink-3:#7C8794;
+    --line:#262E38;
+    --accent:#FF6B85; --accent-soft:#2A1720;
+    --warn:#E9B45C; --warn-soft:#2A2114;
+    --ok:#5FD1A9; --ok-soft:#12261F;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 12px 34px rgba(0,0,0,.4);
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--ground); color:var(--ink);
+    font-family:'IBM Plex Sans KR','Malgun Gothic',system-ui,sans-serif;
+    font-size:20px; line-height:1.7;
+  }
+  .wrap{max-width:640px; margin:0 auto; padding:44px 20px 80px}
+
+  h1{
+    font-family:'Gothic A1',sans-serif; font-weight:900;
+    font-size:clamp(32px,8vw,46px); line-height:1.2; margin:0 0 12px;
+    letter-spacing:-.02em;
+  }
+  .lede{margin:0 0 14px; color:var(--ink-2); font-size:21px}
+  .lede b{color:var(--accent)}
+
+  /* 단계 카드 — 번호를 크게, 할 일을 한 줄로 */
+  .step{
+    background:var(--card); border:1px solid var(--line); border-radius:20px;
+    padding:26px 24px; margin-bottom:16px; box-shadow:var(--shadow);
+    display:flex; gap:20px; align-items:flex-start;
+  }
+  .n{
+    flex:0 0 auto; width:52px; height:52px; border-radius:50%;
+    background:var(--accent); color:#fff;
+    font-family:'Gothic A1',sans-serif; font-weight:900; font-size:26px;
+    display:flex; align-items:center; justify-content:center; line-height:1;
+  }
+  .step.done .n{background:var(--ok)}
+  .body{flex:1 1 auto; min-width:0}
+  .body h2{
+    font-family:'Gothic A1',sans-serif; font-weight:900;
+    font-size:25px; line-height:1.35; margin:6px 0 10px; letter-spacing:-.01em;
+  }
+  .body p{margin:0 0 8px; color:var(--ink-2)}
+  .body p:last-child{margin-bottom:0}
+  .body b{color:var(--ink)}
+
+  /* 구간 제목 */
+  .band{
+    display:flex; align-items:center; gap:12px;
+    margin:36px 0 14px; font-family:'Gothic A1',sans-serif; font-weight:900;
+    font-size:20px; color:var(--ink-3); letter-spacing:.02em;
+  }
+  .band::after{content:''; flex:1 1 auto; height:1px; background:var(--line)}
+
+  /* 다운로드 버튼 */
+  .dl{
+    display:inline-block; margin:6px 0 4px; padding:16px 28px;
+    background:var(--ok); color:#fff; text-decoration:none;
+    border-radius:14px; font-weight:700; font-size:20px;
+  }
+
+  /* 경고 */
+  .warn{
+    background:var(--warn-soft); border-left:5px solid var(--warn);
+    border-radius:0 12px 12px 0; padding:14px 18px; margin:12px 0 0;
+    font-size:18px; color:var(--ink);
+  }
+  .warn b{color:var(--warn)}
+
+  /* 성공 화면 예시 */
+  .screen{
+    background:#0F141A; color:#B9F5D8; border-radius:12px;
+    padding:16px 18px; margin:10px 0 0;
+    font-family:'Consolas','D2Coding',monospace; font-size:16px; line-height:1.6;
+    white-space:pre-wrap; word-break:break-all;
+  }
+
+  /* 안 될 때 */
+  .fix{
+    background:var(--card); border:1px solid var(--line); border-radius:20px;
+    padding:24px; box-shadow:var(--shadow);
+  }
+  .fix dl{margin:0}
+  .fix dt{font-weight:700; margin-top:16px; color:var(--accent)}
+  .fix dt:first-child{margin-top:0}
+  .fix dd{margin:4px 0 0; color:var(--ink-2)}
+
+  .tail{margin-top:34px; color:var(--ink-3); font-size:17px; text-align:center}
+  .tail a{color:var(--accent)}
+</style>
+
+<div class="wrap">
+
+  <h1>캡컷 연결하기</h1>
+  <p class="lede"><b>준비는 딱 2번</b>, 그 뒤로는 <b>보내기 한 번</b>이면 끝입니다.</p>
+
+  <div class="band">처음 한 번만</div>
+
+  <div class="step">
+    <div class="n">1</div>
+    <div class="body">
+      <h2>캡컷을 켜서 로그인하고 — 완전히 끄세요</h2>
+      <p>캡컷은 <b>로그인을 해야</b> 설정 파일을 만듭니다. 로그인을 안 하면 2번이 안 됩니다.</p>
+      <p>로그인했으면 캡컷을 <b>완전히 종료</b>하세요.</p>
+      <div class="warn"><b>왜 꺼야 하나요?</b> 캡컷은 꺼질 때 설정을 자기 값으로 되돌려 놓습니다. 켜둔 채로 2번을 하면 헛수고가 됩니다.</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="n">2</div>
+    <div class="body">
+      <h2>파일 하나 받아서 더블클릭</h2>
+      <!-- ⚠️경로에 /static/을 붙이지 마라. 정적 파일은 루트 마운트다(2026-08-22 실사고). -->
+      <p><a class="dl" href="/capcut_setup.bat" download>⚙ 자동설정 파일 받기</a></p>
+      <p>받은 파일을 <b>더블클릭</b>하면 검은 창이 잠깐 뜹니다. 아래처럼 나오면 성공입니다.</p>
+      <div class="screen">  [O] 설정 완료!  이제 캡컷을 켜시면 됩니다.
+
+  확인된 저장 위치:
+    currentCustomDraftPath=C:\\capcutproject\\CapCut Drafts</div>
+      <p style="margin-top:12px">브라우저가 "위험한 파일"이라고 물으면 <b>유지</b>를 누르세요.</p>
+    </div>
+  </div>
+
+  <div class="band">영상 만들 때마다</div>
+
+  <div class="step done">
+    <div class="n">3</div>
+    <div class="body">
+      <h2>보내기 누르고 → 캡컷 껐다 켜기</h2>
+      <p>제작소 마지막 단계에서 <b>🎬 캡컷으로 보내기</b>를 누릅니다.</p>
+      <p>처음 한 번만 폴더를 물어봅니다 → <b>CapCut Drafts</b> 폴더를 고르고 <b>허용</b>.</p>
+      <p>"보냈어요" 가 뜨면 <b>캡컷을 껐다 다시 켜세요.</b> 프로젝트가 보입니다.</p>
+      <div class="warn"><b>이번엔 캡컷이 켜져 있어도 됩니다.</b> 다만 캡컷은 <b>켤 때</b> 목록을 읽기 때문에, 보낸 뒤에 껐다 켜야 새 영상이 보입니다.</div>
+    </div>
+  </div>
+
+  <div class="band">안 될 때</div>
+
+  <div class="fix">
+    <dl>
+      <dt>"캡컷이 설치되어 있지 않습니다"</dt>
+      <dd>캡컷 PC 버전을 먼저 설치하세요. → capcut.com</dd>
+
+      <dt>"설정 파일이 아직 없습니다"</dt>
+      <dd>캡컷을 켜서 <b>로그인</b>부터 하세요. (1번)</dd>
+
+      <dt>"캡컷이 켜져 있습니다"</dt>
+      <dd>캡컷을 완전히 끄고 다시 더블클릭하세요.</dd>
+
+      <dt>보내기 버튼이 안 보여요</dt>
+      <dd><b>크롬</b>이나 <b>엣지</b>로 접속하세요. 다른 브라우저는 안 됩니다.</dd>
+
+      <dt>보냈다는데 캡컷에 없어요</dt>
+      <dd>캡컷을 껐다가 다시 켜세요. (3번)</dd>
+    </dl>
+  </div>
+
+  <p class="tail">그림으로 더 자세히 보시려면 →
+    <a href="/capcut_manual.html">📖 그림으로 보는 준비 방법</a></p>
+
+</div>
