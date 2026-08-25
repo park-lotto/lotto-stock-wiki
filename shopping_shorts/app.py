@@ -8428,6 +8428,7 @@ async def _api_signup(req: Request):
     except ValueError:
         return RedirectResponse("/signup?e=" + urllib.parse.quote("이미 존재하는 아이디입니다"), status_code=303)
     _signup_topup(customer_id)                               # ★가입 즉시 자동체험 = 연료도 같이(없으면 402)
+    _send_setup_mail((form.get("email") or [""])[0].strip(), name)   # 안내 메일(설정 없으면 no-op)
     _notify_new_signup(name=name, username=u, phone=phone)   # 사장님 텔레 알림(무키면 no-op)
     r = RedirectResponse("/", status_code=303)
     _set_session_cookie(r, customer_id)
@@ -8508,6 +8509,7 @@ def _google_callback(request: Request, code: str = "", state: str = "", error: s
         return RedirectResponse("/login?e=" + urllib.parse.quote("계정 생성 실패"), status_code=303)
     if created:                                              # 신규 구글 가입만 알림(재로그인은 조용히)
         _signup_topup(cid)                                   # ★가입 즉시 자동체험 = 연료도 같이(없으면 402)
+        _send_setup_mail(ident.get("email"))                 # 안내 메일(설정 없으면 no-op)
         _notify_new_signup(username="구글", email=ident.get("email"))
     r = RedirectResponse("/", status_code=303)
     _set_session_cookie(r, cid)
@@ -8660,6 +8662,17 @@ async def _auth_guard(request: Request, call_next):
         if (_is_page_nav(request, path) and path != "/welcome"
                 and _needs_welcome(customer_id)):
             return RedirectResponse("/welcome", status_code=303)
+        # ── 설치안내 1회 자동 노출(2026-08-25) ────────────────────────────────
+        # 사장님 지시 "1번은 가입후 입금사람에게" — 체험만 하는 분은 안 붙잡는다.
+        # 플래그는 approve_customer(최초 승인)·set_plan(pro)에서만 선다.
+        # ★/welcome과 같은 자리(모든 권한 판정 뒤 · 화면이동만)에 둔다 — 앞에 두면
+        #   이 303이 게이트보다 먼저 떠서 막혀야 할 사람이 안 막힌 것처럼 보인다.
+        if _is_page_nav(request, path) and path not in ("/setup", "/welcome"):
+            try:
+                if Store(DB_PATH).is_setup_due(customer_id):
+                    return RedirectResponse("/setup?first=1", status_code=303)
+            except Exception:
+                pass                                    # 안내 때문에 서비스를 막지 않는다
         return await call_next(request)
     if path.startswith("/api/"):
         return JSONResponse({"error": "unauthorized"}, status_code=401)
@@ -9483,6 +9496,20 @@ def _trial_topup(store, customer_id):
                         _TRIAL_GRANT_P_DEFAULT, "trial_grant")
 
 
+def _send_setup_mail(email, name=None):
+    """가입 안내 메일 — 부가채널이라 절대 가입을 막지 않는다(mailer가 예외를 삼킨다).
+    SMTP 설정이 없으면 조용히 no-op. 본문은 mailer 한 곳에서만 만든다(0순위-B)."""
+    try:
+        from shopping_shorts import mailer
+        ok = mailer.send(email, "[숏템메이커] 가입 안내 — 설치와 준비 3가지",
+                         mailer.setup_notice_html(PUBLIC_BASE_URL, name))
+        import sys as _s
+        print(f"[signup] 안내메일 {'발송' if ok else '건너뜀'} → {email}", file=_s.stderr)
+        return ok
+    except Exception:
+        return False
+
+
 def _signup_topup(customer_id):
     """가입 즉시 자동체험(create_customer의 trial_ends_at)에도 **포인트를 같이 준다**.
 
@@ -9517,6 +9544,7 @@ async def _admin_set_plan(request: Request):
     if plan == "pro":
         st.set_plan(cid, "pro")                         # 결제 승격 = 전기능 무기한
         granted = _pro_topup(st, cid)                   # ★연료까지 — 없으면 402로 막힌다
+        st.mark_setup_due(cid)                          # 입금하신 분에게 설치안내 1회 노출
     elif plan == "trial":
         # 체험판 = 랭킹전용(랭킹·즐겨찾기·렌즈 하루 10회). days는 화면 'D-N' 표시용.
         until = int(datetime.now(timezone.utc).timestamp()) + int(days or 0) * 86400
@@ -11911,9 +11939,16 @@ def _help_admin_or_403(request: Request):
 
 
 @app.get("/setup", response_class=HTMLResponse)
-def page_setup():
+def page_setup(request: Request):
     """설치·준비 안내 — 고객에게 링크로 보내는 자리(로그인 불필요).
-    ★.html 없는 짧은 주소를 따로 둔다: 카톡·단톡방에 붙였을 때 읽기 쉽다."""
+    ★.html 없는 짧은 주소를 따로 둔다: 카톡·단톡방에 붙였을 때 읽기 쉽다.
+    ★열어보면 자동노출 플래그를 내린다 — 다시 보고 싶으면 메뉴/링크로 언제든 온다."""
+    _cid_ = getattr(request.state, "customer_id", None)
+    if _cid_ is not None:
+        try:
+            Store(DB_PATH).clear_setup_due(_cid_)
+        except Exception:
+            pass
     return FileResponse(str(Path(__file__).parent / "static" / "setup.html"),
                         media_type="text/html")
 

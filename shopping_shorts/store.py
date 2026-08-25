@@ -1475,6 +1475,13 @@ class Store:
         except sqlite3.OperationalError:
             pass  # 이미 존재. 하위호환: 기존 행은 NULL(만료 취급)로 남아 동작 불변.
 
+        # ── 설치안내 자동노출(2026-08-25): 입금(pro 승격)한 분에게 /setup을 한 번 띄운다.
+        #    1=아직 안 봤다. 사장님 지시 "1번은 가입후 입금사람에게". 체험만 하는 분은 안 띄운다. ──
+        try:
+            c.execute("ALTER TABLE customers ADD COLUMN setup_due INTEGER NOT NULL DEFAULT 0")
+        except sqlite3.OperationalError:
+            pass  # 이미 존재
+
         # ── 관리자 지정(2026-07-22): admin=1이면 관리자(권한 관리자와 동일). 사장님이 UI로 부여/회수. ──
         try:
             c.execute("ALTER TABLE customers ADD COLUMN admin INTEGER NOT NULL DEFAULT 0")
@@ -5132,6 +5139,22 @@ class Store:
         with self._conn() as c:
             c.execute("UPDATE customers SET welcome_due=0 WHERE id=?", (customer_id,))
 
+    def mark_setup_due(self, customer_id):
+        """입금(pro 승격)한 분에게 설치안내(/setup)를 다음 화면이동 때 한 번 띄운다."""
+        with self._conn() as c:
+            c.execute("UPDATE customers SET setup_due=1 WHERE id=?", (int(customer_id),))
+
+    def clear_setup_due(self, customer_id):
+        """설치안내를 봤다 → 다시 안 띄운다(메뉴 링크로는 언제든 다시 볼 수 있다)."""
+        with self._conn() as c:
+            c.execute("UPDATE customers SET setup_due=0 WHERE id=?", (int(customer_id),))
+
+    def is_setup_due(self, customer_id):
+        with self._conn() as c:
+            row = c.execute("SELECT setup_due FROM customers WHERE id=?",
+                            (int(customer_id),)).fetchone()
+        return bool(row and row[0])
+
     def set_customer_admin(self, customer_id, is_admin):
         """관리자 지정/회수(사장님 UI). admin=1이면 _is_admin이 관리자로 인정(권한 동일).
         사장님(0)은 컬럼과 무관하게 항상 관리자라 여기서 건드리지 않는다."""
@@ -5231,8 +5254,10 @@ class Store:
             base = fau if fau > now_ts else now_ts          # 연장 기준: 미래 만료면 그 뒤, 아니면 now
             new_until = base + add
             if approved_at is None:
-                c.execute("UPDATE customers SET approved_at=?, full_access_until=? WHERE id=?",
-                          (now_ts, now_ts + add, customer_id))
+                # ★최초 승인(=입금) 때만 설치안내를 띄운다(2026-08-25 사장님 "1번은 가입후
+                #   입금사람에게"). 연장 때마다 띄우면 이미 세팅을 끝낸 분에게 성가시다.
+                c.execute("UPDATE customers SET approved_at=?, full_access_until=?, setup_due=1 "
+                          "WHERE id=?", (now_ts, now_ts + add, customer_id))
             else:
                 c.execute("UPDATE customers SET full_access_until=? WHERE id=?",
                           (new_until, customer_id))
