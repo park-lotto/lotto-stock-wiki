@@ -12090,7 +12090,11 @@ def page_setup(request: Request):
     """설치·준비 안내 — 고객에게 링크로 보내는 자리(로그인 불필요).
     ★.html 없는 짧은 주소를 따로 둔다: 카톡·단톡방에 붙였을 때 읽기 쉽다.
     ★열어보면 자동노출 플래그를 내린다 — 다시 보고 싶으면 메뉴/링크로 언제든 온다."""
-    _cid_ = getattr(request.state, "customer_id", None)
+    # ★쿠키에서 직접 읽는다 — /setup은 _AUTH_ALLOW라 미들웨어가 인증 전에 통과시켜
+    #   request.state.customer_id가 **안 채워진다**. 그래서 예전 코드는 플래그를 못 내렸고,
+    #   '나가기'를 눌러 /로 가면 미들웨어가 다시 /setup?first=1로 보내 **갇혔다**
+    #   (2026-08-25 실측: 클릭해도 주소가 그대로 /setup?first=1).
+    _cid_ = _verify_session(request.cookies.get("dash_auth", ""))
     if _cid_ is not None:
         try:
             Store(DB_PATH).clear_setup_due(_cid_)
