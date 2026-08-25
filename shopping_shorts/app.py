@@ -12431,6 +12431,19 @@ def api_produce_mix_caplines(job_id: str, body: dict):
     if err:
         return err
     narr = hit.get("narration", "")
+
+    def _cmp_key(txt):
+        """비교용 정규화 — 공백과 **줄 끝에서 떼는 문장부호**를 무시한다.
+
+        ★실측(2026-08-25 라이브): _caption_segments가 마침표를 떼기 때문에
+          narration "여러분 고등어구이 무조건 하세요." 와 줄들을 그대로 이어붙인
+          "여러분고등어구이 무조건 하세요" 가 절대 같아질 수 없었다 → 어떤 장면도
+          저장이 안 됐다. 화면에서 직접 눌러보지 않았으면 못 봤을 결함이다.
+        ★떼는 기준을 여기서 새로 정하지 않고 video_assemble의 목록을 그대로 빌린다
+          (두 벌로 두면 자막 규칙이 바뀔 때 여기만 남아 어긋난다)."""
+        drop = set(video_assemble._CAP_TRIM_TAIL) | set(chr(32)+chr(9)+chr(10)+chr(13))
+        return "".join(ch for ch in (txt or "") if ch not in drop)
+
     if body.get("reset"):
         # '↩ 자동으로' — 사람이 정한 줄을 지우고 규칙/AI 분할로 돌아간다.
         # ★caption_lines만 지우면 옛 경계 기준 cap_durs가 남아 자막이 밀린다 → 함께 비운다.
@@ -12441,7 +12454,7 @@ def api_produce_mix_caplines(job_id: str, body: dict):
     lines = [str(x).strip() for x in (body.get("lines") or []) if str(x).strip()]
     if not lines:
         return JSONResponse(status_code=422, content={"ok": False, "error": "lines 필요"})
-    if "".join(lines).replace(" ", "") != narr.replace(" ", ""):
+    if _cmp_key("".join(lines)) != _cmp_key(narr):
         return JSONResponse(status_code=422,
                             content={"ok": False, "error": "대사 글자가 달라졌어요 — 줄만 나눠주세요"})
     hit["caption_lines"] = lines
