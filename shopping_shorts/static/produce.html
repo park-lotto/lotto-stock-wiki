@@ -837,6 +837,11 @@
   .s2-sfoot button,.s2-sfoot .ghostbtn{font-size:11px;color:var(--s2-sub);background:none;border:1px solid var(--line);
     border-radius:6px;padding:4px 8px;white-space:nowrap}
   .s2-sfoot button:hover{border-color:var(--accent);color:var(--accent)}
+  /* 📄 원문 — 카드 아래로 접었다 편다(2026-08-26). alert은 4000자에서 잘리고 복사도 안 됐다.
+     길면 이 상자 안에서만 스크롤한다 — 카드가 세로로 늘어나 옆 카드와 어긋나지 않게. */
+  .s2-stext{margin-top:10px;padding:10px;border:1px solid var(--line);border-radius:8px;
+    background:rgba(255,255,255,.03);font-size:12px;line-height:1.75;color:var(--s2-sub);
+    white-space:pre-wrap;word-break:break-word;max-height:220px;overflow-y:auto}
   .s2-sfoot .ghostbtn{border-style:dashed;cursor:default}
   /* ① 씨앗 뼈대 상세 — 상시 밴드(펼침 없음 = 카드줄 높이가 안 흔들린다) */
   .s2-seedinfo{border:1px solid var(--accent2);border-radius:12px;background:var(--inset);padding:16px;margin-top:16px}
@@ -11419,6 +11424,7 @@ function _s2Snapshot(){
   //   스냅샷에 work_id를 새겨 **남의 작업 것이면 복원하지 않는다**(_s2Hydrate).
   return {work_id:(typeof WORK_ID !== 'undefined' ? (WORK_ID || null) : null),
           drafts:S2.drafts, curDraft:S2.curDraft||0, picked:S2.picked||[],
+          seedPicks:S2.seedPicks||[],
           materials:S2.materials||null, seed:S2.seed||null};
 }
 // 되살리기. ★없으면 **지운다** — 다른 작업으로 갈아탔는데 앞 작업의 대본이 남아 있으면
@@ -11427,6 +11433,7 @@ function _s2Snapshot(){
 //   복원 실패 분기가 각자 적으면 한쪽만 고쳐져 어긋난다.
 function _s2Reset(){
   S2.drafts = []; S2.curDraft = 0; S2.picked = []; S2.materials = null; S2.seed = null;
+  S2.seedPicks = [];        // seed의 짝 — 남기면 옛 작업의 씨앗 선택이 새 작업에 붙는다
 }
 function _s2Hydrate(w){
   let s = (w && w.s2) || null;
@@ -11440,6 +11447,8 @@ function _s2Hydrate(w){
     S2.picked = Array.isArray(s.picked) ? s.picked : [];
     S2.materials = s.materials || null;
     S2.seed = s.seed || null;
+    // seedPicks는 seed의 짝이다 — 함께 복원하고 함께 지운다(0순위-B, 아래 _s2Reset와 같은 이유).
+    S2.seedPicks = Array.isArray(s.seedPicks) ? s.seedPicks : [];
   } else {
     // ★seed도 **함께** 지운다(2026-08-18 사장님 "왠 다이소청소쪽이 연결이 되나").
     //   drafts만 지우고 seed를 남겼더니, 새 작업에서 s2RenderSeeds()의
@@ -11567,6 +11576,10 @@ function s2RenderSeeds(){
   const row=document.getElementById('s2SeedRow'); if(!row) return;
   const d=window._aiPick;
   S2.seeds=[];
+  // ★1단계에 담긴 영상을 **전부** 후보로 올린다(2026-08-26 사장님 "여기에 1단계영상들을
+  //   다 넣어주고"). 종전엔 AI PICK 1편만 카드가 됐다 — 라벨이 "1편"이라 정직하긴 했지만
+  //   사장님이 다른 영상을 씨앗으로 고를 방법이 아예 없었다.
+  //   AI PICK을 **맨 앞**에 두고(대표), 나머지 담긴 영상을 뒤에 붙인다(중복은 shortcode로 제거).
   if(d && d.pick_id){
     const pm=d.pick_meta||{};
     // ★이름은 `name`이다 — 서버가 실어 보내는 필드가 그것이다(app.py pick_meta).
@@ -11577,17 +11590,40 @@ function s2RenderSeeds(){
       category:pm.category||'', followers:pm.followers, text:d.pick_text||'',
       structure:d.structure||{}, tiles:d.tiles||{}, pick:true});
   }
+  // 담긴 영상(HANDOFF) — AI PICK이 아닌 것들도 씨앗 후보로 올린다.
+  // ⚠️대본 원문이 없는 영상도 카드로 보여준다(분석 대기일 뿐이다). 고르면 원문이 없어
+  //   문형을 못 뽑는데, 그건 서버 판정이 알아서 넘어간다(없는 기준으로 막지 않는다).
+  try{
+    const _hs=(typeof HANDOFF!=='undefined' && HANDOFF)||[];
+    const _seen=new Set(S2.seeds.map(s=>s.shortcode).filter(Boolean));
+    _hs.forEach(h=>{
+      if(!h) return;
+      const sc=h.shortcode||h.url||'';
+      if(!sc || _seen.has(sc)) return;
+      _seen.add(sc);
+      S2.seeds.push({shortcode:sc, title:h.name||h.caption||'담은 영상', thumb:h.thumbnail||'',
+        category:h.category||'', followers:h.followers,
+        text:h.pickScript||'', structure:h.structure||{}, tiles:h.tiles||{}, pick:false});
+    });
+  }catch(e){}
   // ★씨앗은 **지금 담긴 영상**을 따라간다(2026-08-18). 예전엔 `!S2.seed`일 때만
   //   채워서, 한 번 정해진 씨앗이 1단계에서 영상을 바꿔도 그대로 굳었다 —
   //   담긴 영상과 무관한 옛 영상이 대표로 남아 대본이 그쪽으로 끌려갔다.
   //   ⚠️ 사장님이 직접 쓴 대본(shortcode:'')은 AI PICK이 덮으면 안 된다 —
   //      그건 담긴 영상에서 나온 값이 아니라 손으로 넣은 것이다.
   const _manualSeed = S2.seed && !S2.seed.shortcode;
-  if(S2.seeds.length && !_manualSeed){
+  // ★사장님이 직접 고른 씨앗이 있으면 그것을 존중한다(2026-08-26).
+  //   종전엔 AI PICK이 무조건 덮어써서, 다중 선택을 붙여도 고른 게 바로 되돌아갔다.
+  const _handPicked = (S2.seedPicks||[]).length > 0;
+  if(S2.seeds.length && !_manualSeed && !_handPicked){
     // 지금 AI PICK이 가리키는 영상과 다르면 갈아탄다(같으면 그대로 둔다).
     if(!S2.seed || S2.seed.shortcode !== S2.seeds[0].shortcode) S2.seed = S2.seeds[0];
   } else if(!S2.seed && S2.seeds.length){
     S2.seed = S2.seeds[0];
+  } else if(_handPicked){
+    // 고른 목록의 첫 번째를 대표로 유지한다(목록이 다시 그려져도 어긋나지 않게).
+    const _f=S2.seeds.find(x=>(S2.seedPicks||[]).indexOf(x.shortcode)>=0);
+    if(_f) S2.seed=_f;
   }
   const cards=S2.seeds.map((s,i)=>{
     const seg=(s.structure.segments)||[];
@@ -11597,14 +11633,19 @@ function s2RenderSeeds(){
                 s.tiles.engagement_rate!=null?('참여밀도 '+s.tiles.engagement_rate+'%'):''].filter(Boolean).join(' · ');
     const th=s.thumb?`<img src="${s.thumb.includes('gstatic.com')?s.thumb:('/api/thumb?url='+encodeURIComponent(s.thumb))}" referrerpolicy="no-referrer" onerror="this.style.display='none'">`:'🎬';
     const sub=[s.category, (s.followers!=null?('팔로워 '+fmtNum(s.followers)):'')].filter(Boolean).join(' · ');
-    // ★클릭으로 고르지 않는다 — 담긴 것이 전부 재료다. 카드는 확인용.
-    return `<div class="s2-scard${s.pick?' sel':''}" title="담긴 영상은 전부 재료로 들어갑니다 — 고르지 않아도 됩니다">
+    // ★클릭으로 고른다(2026-08-26 사장님 "픽업영상을 하나 골라도 다른거 하나더 고를수있게").
+    //   종전엔 카드가 확인용이라 하나로 굳어 있었다 — 담긴 영상이 여럿이어도 못 바꿨다.
+    //   여러 편을 골라 **함께 재료로** 쓴다(대본은 담긴 것 전부를 이미 쓰지만,
+    //   **구조·훅 문형을 물려받을 대표**는 고른 것들 중 첫 번째다).
+    const on=s2SeedOn(i);
+    return `<div class="s2-scard${on?' sel':''}" onclick="s2ToggleSeed(${i})" title="눌러서 씨앗으로 고르거나 뺍니다(여러 편 선택 가능)">
       ${s.pick?'<span class="s2-spick">🤖 대표 · 완성도 1위</span>':''}
       <div class="s2-swho"><div class="s2-sth">${th}</div>
-        <div><div class="s2-snm">${esc(s.title)}</div>${sub?`<div class="s2-ssub">${esc(sub)}</div>`:''}</div></div>
+        <div><div class="s2-snm">${on?'✅ ':''}${esc(s.title)}</div>${sub?`<div class="s2-ssub">${esc(sub)}</div>`:''}</div></div>
       ${strip}
       <div class="s2-stags">${tags||'&nbsp;'}</div>
       <div class="s2-sfoot"><button onclick="event.stopPropagation();s2ShowSeedText(${i})">📄 원문</button></div>
+      <div class="s2-stext" id="s2stext-${i}" style="display:none"></div>
     </div>`;
   });
   // 아직 분석이 안 끝난 상태 — 빈 화면 대신 "기다리면 나온다"를 그대로 보여준다.
@@ -11623,15 +11664,58 @@ function s2RenderSeeds(){
   row.innerHTML=cards.join('');
   // 재료가 몇 편인지 라벨이 말해준다 — "전부 쓴다"를 글로만 말하면 안 믿긴다.
   const lb=document.getElementById('s2SeedLabel');
-  if(lb) lb.textContent = S2.seeds.length
-    ? ('① 재료 — 담긴 영상 ' + S2.seeds.length + '편을 전부 씁니다 (고르지 않아도 됩니다)')
-    : '① 재료 — 1단계에서 영상을 담아주세요';
+  if(lb){
+    const _on=S2.seeds.filter((s,i)=>s2SeedOn(i)).length;
+    lb.textContent = S2.seeds.length
+      ? ('① 재료 — 담긴 영상 ' + S2.seeds.length + '편 · 대본 구조를 물려받을 씨앗 '
+         + _on + '편 선택됨 (카드를 눌러 고르세요 · 여러 편 가능)')
+      : '① 재료 — 1단계에서 영상을 담아주세요';
+  }
   s2RenderSeedInfo();
 }
+// ★씨앗 원문 → 문장 목록. **여기 한 곳에서만 자른다**(0순위-B).
+//   전체 생성(s2Generate)과 [바꾸기](s2RegenBeat)가 같은 훅을 보게 하려면 규칙이 한 벌이어야 한다.
+//   한국어 구어체 대본은 마침표가 거의 없다(실측: 씨앗 320자에 물음표 1개뿐) — 마침표만
+//   보고 자르면 훅 한 문장이 아니라 **대본 대부분(240자)**이 훅으로 잡힌다. 그래서
+//   종결어미(요/죠 + 다.)까지 경계로 본다(서버 script_sentences와 같은 규약).
+//   ⚠️'요' 앞이 명사면 자르지 않는다(필요·중요·주요… — 2026-08-25 실사고와 같은 함정).
+function s2SeedSentences(text){
+  return String(text||'').trim()
+    .split(/(?<=[.!?])\s+|(?<=[가게고구군까나네데돼든래려서세아어에예와지해]요)\s+|(?<=죠)\s+|(?<=다)\.\s+|\n+/)
+    .map(s=>s.trim()).filter(Boolean);
+}
+// ── 씨앗 고르기(여러 편) ─────────────────────────────────────
+// ★고른 것이 없으면 **대표(AI PICK) 1편**이 골라진 것으로 본다 — 종전 동작 그대로라 회귀 0.
+//   S2.seedPicks는 shortcode 목록이다(인덱스로 두면 목록이 다시 그려질 때 어긋난다).
+function s2SeedOn(i){
+  const s=S2.seeds[i]; if(!s) return false;
+  const picks=S2.seedPicks||[];
+  if(!picks.length) return !!s.pick;          // 아무것도 안 골랐으면 대표가 켜진 것
+  return picks.indexOf(s.shortcode)>=0;
+}
+function s2ToggleSeed(i){
+  const s=S2.seeds[i]; if(!s) return;
+  if(!S2.seedPicks || !S2.seedPicks.length){
+    // 첫 클릭 — 지금 켜져 있는 것(대표)을 목록으로 굳힌 뒤 토글한다.
+    S2.seedPicks=S2.seeds.filter(x=>x.pick).map(x=>x.shortcode);
+  }
+  const k=S2.seedPicks.indexOf(s.shortcode);
+  if(k>=0) S2.seedPicks.splice(k,1); else S2.seedPicks.push(s.shortcode);
+  // ★한 편도 없으면 대표로 되돌린다 — 씨앗이 0편이면 구조·훅을 물려받을 곳이 없다.
+  if(!S2.seedPicks.length) S2.seedPicks=[];
+  // 대표 씨앗(구조·훅을 물려받을 것) = 고른 것 중 첫 번째.
+  const first=S2.seeds.find(x=>s2SeedOn(S2.seeds.indexOf(x)));
+  if(first) S2.seed=first;
+  s2RenderSeeds(); saveWork();
+}
+// ★원문은 alert이 아니라 **카드 아래로 접었다 편다**(2026-08-26 사장님 "원문누르면
+//   아래로 접었다 폈다고 넣어줘"). alert은 4000자에서 잘리고 복사도 안 되고 화면을 막는다.
 function s2ShowSeedText(i){
   const s=S2.seeds[i]; if(!s) return;
-  if(!s.text){ toast('이 영상의 대본 원문이 아직 없습니다'); return; }
-  alert(s.text.slice(0,4000));
+  const box=document.getElementById('s2stext-'+i); if(!box) return;
+  if(box.style.display!=='none'){ box.style.display='none'; return; }
+  box.textContent = (s.text||'').trim() || '이 영상의 대본 원문이 아직 없습니다(1단계 분석 대기)';
+  box.style.display='';
 }
 function s2ManualSeed(){
   const t=prompt('씨앗으로 쓸 대본을 붙여넣으세요');
@@ -11833,14 +11917,7 @@ async function s2Generate(){
       //   종전엔 auto_style로 옆 카드 중 AI가 대신 골랐다(=씨앗 구조를 안 씀).
       //   씨앗 훅이 있으면 그 문형을 물려주고, 없으면 종전 auto_style로 폴백한다
       //   (문형을 못 뽑는 씨앗도 있다 — 없는 기준으로 막지 않는다).
-      const _seedText=(S2.seed&&S2.seed.text)||'';
-      // ★한국어 구어체 대본은 마침표가 거의 없다(실측: 씨앗 320자에 물음표 1개뿐).
-      //   마침표만 보고 자르면 훅 한 문장이 아니라 **대본 대부분(240자)**이 훅으로 잡힌다.
-      //   그래서 종결어미(요/죠 + 다.)까지 경계로 본다 — 서버 script_sentences와 같은 규약.
-      //   ⚠️'요' 앞이 명사인 경우(필요·중요·주요…)는 자르지 않는다(2026-08-25 실사고와 같은 함정).
-      const _sents=_seedText.trim()
-        .split(/(?<=[.!?])\s+|(?<=[가게고구군까나네데돼든래려서세아어에예와지해]요)\s+|(?<=죠)\s+|(?<=다)\.\s+|\n+/)
-        .map(s=>s.trim()).filter(Boolean);
+      const _sents=s2SeedSentences((S2.seed&&S2.seed.text)||'');
       const _hook=_sents[0]||'';
       if(_hook){
         body.seed_hook=_hook;
@@ -12167,6 +12244,14 @@ async function s2RegenBeat(i,j,tmpl){
     const s=S2.seed||{};
     const body={style_id:dr.style_id, role:role, beats:beats, template:tmpl||'',
       base_script:s.text||'', category:s.category||PM_CATEGORY||'', target_seconds:25};
+    // ★픽업영상 대본은 style_id가 없다(스타일을 안 고르는 경로) — 종전엔 서버가 422로
+    //   튕겨 **[바꾸기]가 통째로 막혀 있었다**(2026-08-26 사장님 제보).
+    //   스타일 대신 **씨앗 구조·훅 문형**을 실어 보낸다. 전체 생성과 같은 재료다(0순위-B).
+    if(!dr.style_id){
+      if(s.structure) body.structure=s.structure;
+      const _h=s2SeedSentences(s.text||'')[0]||'';
+      if(_h) body.seed_hook=_h;
+    }
     if(s.shortcode) body.shortcode=s.shortcode;
     if(typeof MIX_JOB!=='undefined' && MIX_JOB) body.job_id=MIX_JOB;
     if(typeof WORK_ID!=='undefined' && WORK_ID) body.work_id=WORK_ID;

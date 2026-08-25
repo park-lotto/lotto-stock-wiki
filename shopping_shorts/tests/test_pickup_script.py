@@ -150,17 +150,24 @@ def test_화면이_구어체_씨앗에서_훅_한_문장만_뽑는다():
     ⚠️'요' 앞이 명사인 경우(필요·중요·주요)는 자르면 안 된다(같은 날 고친 실사고와 같은 함정).
 
     화면 코드에 그 규칙이 실제로 박혀 있는지 확인한다(정규식이 옛것으로 되돌아가면 잡힌다).
+
+    ★2026-08-26 갱신: 자르는 규칙을 **공용 함수 s2SeedSentences 한 곳으로** 뽑았다.
+      전체 생성과 [바꾸기]가 같은 훅을 봐야 하는데 규칙이 두 벌이면 어긋난다(0순위-B).
     """
     import pathlib
     p = pathlib.Path(__file__).resolve().parents[1] / "static" / "produce.html"
     src = p.read_text(encoding="utf-8")
-    fn = src[src.index("async function s2Generate"):]
-    fn = fn[:fn.index("\n}\n")]
-    assert "body.seed_hook" in fn
-    # 종결어미 경계가 들어갔는가 — 마침표만 보던 옛 규칙이면 이 문자열이 없다.
-    assert "죠)\\s+" in fn or "(?<=죠)" in fn, "종결어미 경계가 없다 — 훅이 통짜로 실린다"
+    # 규칙은 공용 함수에 있다.
+    i = src.index("function s2SeedSentences")
+    fn = src[i:i + 900]
+    assert "(?<=죠)" in fn, "종결어미 경계가 없다 — 훅이 통짜로 실린다"
     assert "가게고구군까나네데돼든래려서세아어에예와지해" in fn, \
         "'요' 종결어미 화이트리스트가 없다 — 명사 안의 '요'에서 잘린다"
+    # 쓰는 쪽 둘 다 그 함수를 부르는가(두 벌로 갈라지면 결과가 어긋난다).
+    gen = src[src.index("async function s2Generate"):]
+    gen = gen[:gen.index("\n}\n")]
+    assert "body.seed_hook" in gen
+    assert "s2SeedSentences" in gen, "전체 생성이 공용 분리기를 안 쓴다"
 
 
 def test_씨앗_문형을_못_뽑으면_아무도_안_걸러낸다():
