@@ -5007,13 +5007,17 @@ class Store:
         else:
             full_access_until = 0
             approved_at = None
-            # 무료체험 이벤트는 기본 OFF(2026-07-22 사장님 결정): 가입 직후 바로 대기실(잠김),
-            # 사장님이 체험/pro를 줘야 시작. 설정 trial_event_hours를 0보다 크게 주면 그 시간만큼
-            # 자동 맛보기(옛 이벤트)를 다시 켤 수 있다.
+            # ★가입 즉시 자동 체험 3일(2026-08-25 사장님 "가입되면 승인대기중 쪽에
+            #   체험3일로 자동으로 하고, 내가 확인을 누르면 고객관리로 내려줘").
+            #   기본값을 72시간으로 둔다 — 설정을 안 건드려도 켜진다(서버 settings는 미설정).
+            #   0으로 바꾸면 옛 동작(가입 직후 잠김, 사장님이 줘야 시작)으로 돌아간다.
+            #   ⚠️ 이 창은 approved_at이 비어 있을 때만 유효하다(access_level).
+            #      사장님이 '확인'을 누르면 ack_customer가 남은 시간을 full_access_until로
+            #      옮겨 체험이 끊기지 않게 한다.
             try:
-                trial_hours = int(self.get_setting("trial_event_hours", 0))
+                trial_hours = int(self.get_setting("trial_event_hours", 72))
             except (TypeError, ValueError):
-                trial_hours = 0
+                trial_hours = 72
             trial_ends_at = (now_ts + trial_hours * 3600) if trial_hours > 0 else None
         with self._conn() as c:
             try:
@@ -5060,6 +5064,35 @@ class Store:
             ).fetchall()
         return [{"id": r[0], "username": r[1], "name": r[2], "phone": r[3],
                  "email": r[4], "created_at": r[5]} for r in rows]
+
+    def ack_customer(self, customer_id):
+        """'확인함' — 대기실에서만 내린다. 체험 기간은 **건드리지 않는다**(2026-08-25 사장님:
+        "가입되면 자동 체험3일, 내가 확인 누르면 고객관리로 내려줘. 일일이 버튼 누르니 안 좋아").
+
+        approve_customer와 다르다:
+          approve_customer  = 승인+기간 부여+결제 기록 (사장님이 돈을 받았을 때)
+          ack_customer      = 봤다는 표시만. 남은 체험은 그대로 흘러가고, 끝나면 알아서 잠긴다.
+
+        이미 승인된 고객이면 아무 것도 하지 않는다(연장 사고 방지).
+
+        ★남은 체험을 반드시 옮겨야 한다(안 그러면 확인을 누르는 순간 체험이 끊긴다).
+          access_level은 체험창(trial_ends_at)을 **approved_at이 비어 있을 때만** 본다.
+          approved_at을 채우면 그 분기를 못 타므로, 남은 시간을 승인 고객이 쓰는
+          full_access_until로 이관한다 → 체험이 그대로 흘러가고 끝나면 알아서 잠긴다.
+          이미 full_access_until이 더 길면 그대로 둔다(줄이지 않는다).
+        """
+        now_ts = int(datetime.now(timezone.utc).timestamp())
+        with self._conn() as c:
+            row = c.execute("SELECT approved_at, trial_ends_at, full_access_until "
+                            "FROM customers WHERE id=?", (int(customer_id),)).fetchone()
+            if row is None or row[0] is not None:
+                return False                       # 없는 고객이거나 이미 내려간 고객
+            trial_ends = row[1] or 0
+            fau = row[2] or 0
+            new_fau = max(fau, trial_ends)         # 남은 체험을 이어받는다(줄이지 않는다)
+            c.execute("UPDATE customers SET approved_at=?, full_access_until=? WHERE id=?",
+                      (now_ts, new_fau, int(customer_id)))
+        return True
 
     def verify_customer(self, username, password):
         """username/password 검증 → 성공 시 customer_id, 실패 시 None.

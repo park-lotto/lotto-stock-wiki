@@ -106,8 +106,12 @@ def test_new_google_user_is_routed_to_welcome_and_can_submit(tmp_path, monkeypat
         assert opt in r.text                                   # 선택지가 다 그려져야 한다
     assert "승인 대기중" not in r.text
 
-    r = cl.get("/api/produce/x", cookies=ck)                   # API는 접근권한 게이트가 처리
-    assert r.status_code == 403 and r.json()["level"] == "pending"
+    # ★2026-08-25 정책 변경: 가입 즉시 체험 3일이 열린다(trial_event_hours 기본 72).
+    #   예전엔 여기서 403 pending(가입 직후 잠김)이었다. 이제는 체험 창 안이라 안 막힌다
+    #   — 이 줄이 검증하던 '가입=잠김'은 더 이상 우리 정책이 아니다.
+    #   잠김 동작 자체는 test_trial_event.py(체험 만료 → ranking_only)가 지킨다.
+    from shopping_shorts import app as _appmod
+    assert _appmod.access_level(cid) == "full"                 # 체험 창 안 = 바로 써볼 수 있다
 
     r = cl.post("/api/welcome",
                 data={"name": "홍길동", "phone": "010-1234-5678",

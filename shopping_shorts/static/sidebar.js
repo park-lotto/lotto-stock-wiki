@@ -601,6 +601,7 @@
   // /api/admin/pending 을 폴링한다. 관리자만 200 → 폴러 유지, 비관리자는 첫 응답이 비-200이라
   // 조용히 꺼진다(부하·노출 없음). 새 가입(newest_id 증가)이 감지되면 소리+토스트.
   var _SS_SEEN_KEY = "ss_signup_last_seen";     // 마지막으로 본 최신 가입 id(localStorage) — 새로고침 넘어 유지
+  var _SS_BUG_SEEN_KEY = "ss_bug_last_seen";    // 오류 신고도 같은 방식(2026-08-25)
   var _ssAudioCtx = null;
 
   function _ssDing() {
@@ -644,6 +645,39 @@
       '<div style="font-size:15px;font-weight:700">' + _ssEsc(who) + '</div>' +
       (sub ? '<div style="font-size:12px;color:#9db;margin-top:2px">' + _ssEsc(sub) + '</div>' : '') +
       '<div style="font-size:12px;color:#7fd6a8;margin-top:8px;font-weight:700">클릭 → 승인하러 가기 →</div>';
+    card.onclick = function () { location.href = "/admin"; };
+    box.appendChild(card);
+    setTimeout(function () { try { card.style.transition = "opacity .4s"; card.style.opacity = "0"; setTimeout(function () { card.remove(); }, 400); } catch (e) {} }, 12000);
+    if (!document.getElementById("ssSignupKf")) {
+      var st = document.createElement("style"); st.id = "ssSignupKf";
+      st.textContent = "@keyframes ssSlideIn{from{transform:translateX(30px);opacity:0}to{transform:none;opacity:1}}";
+      document.head.appendChild(st);
+    }
+  }
+
+  // 오류 신고 팝업(2026-08-25 사장님 "접수되면 가입·입금처럼 왼쪽 상단에 작은 팝업").
+  // 가입 토스트와 **같은 자리·같은 소리**를 쓰되 주황으로 구분한다 — 새 배선을 만들지
+  // 않는다(0순위-B). 클릭하면 관리페이지로 간다(가입 알림과 동일한 동작).
+  function _ssBugToast(newest, count) {
+    if (!document.body) return;
+    var box = document.getElementById("ssSignupToasts");
+    if (!box) {
+      box = document.createElement("div");
+      box.id = "ssSignupToasts";
+      box.style.cssText = "position:fixed;top:16px;right:16px;z-index:99999;display:flex;flex-direction:column;gap:10px;max-width:340px;font-family:system-ui,sans-serif";
+      document.body.appendChild(box);
+    }
+    var who = (newest && newest.customer_name) || "고객";
+    var msg = (newest && newest.message) || "";
+    var card = document.createElement("div");
+    card.style.cssText = "background:#181008;color:#f6ecdf;border:1px solid #7a4a12;border-left:4px solid #f0912b;border-radius:12px;padding:14px 16px;box-shadow:0 8px 28px rgba(0,0,0,.45);cursor:pointer;animation:ssSlideIn .25s ease";
+    card.innerHTML =
+      '<div style="font-size:13px;font-weight:800;color:#f0912b;margin-bottom:4px">🐞 새 오류 신고' +
+      (count > 1 ? ' <span style="color:#ffd9a8">· 미해결 ' + count + '건</span>' : '') + '</div>' +
+      '<div style="font-size:15px;font-weight:700">' + _ssEsc(who) + '</div>' +
+      (msg ? '<div style="font-size:12.5px;color:#d9c3a6;margin-top:3px;line-height:1.45">' +
+             _ssEsc(msg.length > 60 ? msg.slice(0, 60) + "…" : msg) + '</div>' : '') +
+      '<div style="font-size:12px;color:#f0b16b;margin-top:8px;font-weight:700">클릭 → 확인하러 가기 →</div>';
     card.onclick = function () { location.href = "/admin"; };
     box.appendChild(card);
     setTimeout(function () { try { card.style.transition = "opacity .4s"; card.style.opacity = "0"; setTimeout(function () { card.remove(); }, 400); } catch (e) {} }, 12000);
@@ -721,6 +755,19 @@
               _ssOpsToast(a);
             });
           } catch (e) { /* 사고 알림 실패가 승인 폴러를 죽이면 안 된다 */ }
+          // 오류 신고(2026-08-25) — 가입과 똑같은 규칙: 첫 방문엔 기준선만 잡고
+          // 조용히 있는다(기존 신고로 시끄럽게 울리지 않는다).
+          try {
+            var bugId = d.bug_newest_id || 0;
+            var bugSeen = parseInt(window.localStorage.getItem(_SS_BUG_SEEN_KEY) || "0", 10) || 0;
+            if (firstRun && bugSeen === 0) {
+              window.localStorage.setItem(_SS_BUG_SEEN_KEY, String(bugId));
+            } else if (bugId > bugSeen) {
+              _ssDing();
+              _ssBugToast(d.bug_newest, d.bug_open);
+              window.localStorage.setItem(_SS_BUG_SEEN_KEY, String(bugId));
+            }
+          } catch (e) { /* 신고 알림 실패가 승인 폴러를 죽이면 안 된다 */ }
           firstRun = false;
           setTimeout(tick, 25000);                  // 관리자면 25초마다 계속
         })
@@ -885,9 +932,14 @@
           '<input type="file" id="ssShotFile" accept="image/*" style="display:none">' +
           '<div id="ssBugShot" style="margin-top:10px"></div>' +
         "</div>" +
+        // ★문구(2026-08-25 사장님): 무엇이 가고 **그 다음 무슨 일이 생기는지**까지 적는다.
+        //   "따로 적으실 것 없습니다"만으론 고객이 '내 얘기가 어디로 갔나' 모른 채 끝난다
+        //   — 실제로 사장님도 "URL을 붙여넣으라고 써야 하지 않나" 하고 되물었다(URL은
+        //   context()가 page_url로 이미 보낸다). 답장은 쪽지로 간다(구현·실측 확인됨:
+        //   reply_bug_report → my_bug_replies → 다음 접속 화면에 자동으로 뜬다).
         '<div class="info"><b>함께 보내지는 것</b><br>' +
-          '지금 보고 계신 화면과 작업 정보가 자동으로 함께 갑니다. ' +
-          '따로 적으실 것은 없습니다.' +
+          '지금 보고 계신 화면과 작업 정보가 숏템메이커 관리자에게 전송됩니다. ' +
+          '확인 후 쪽지로 답변이 전송됩니다.' +
         "</div>" +
         '<div class="msg" id="ssBugMsg"></div>' +
         '<div class="row"><button class="no" id="ssBugNo">닫기</button>' +
