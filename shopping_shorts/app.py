@@ -8671,8 +8671,8 @@ async def _auth_guard(request: Request, call_next):
             try:
                 if Store(DB_PATH).is_setup_due(customer_id):
                     return RedirectResponse("/setup?first=1", status_code=303)
-            except Exception:
-                pass                                    # 안내 때문에 서비스를 막지 않는다
+            except Exception as e:  # noqa: BLE001 — 안내 때문에 서비스를 막지 않는다
+                print(f"[setup] 안내 판정 실패(무시): {e!r}", file=sys.stderr)
         return await call_next(request)
     if path.startswith("/api/"):
         return JSONResponse({"error": "unauthorized"}, status_code=401)
@@ -11947,8 +11947,8 @@ def page_setup(request: Request):
     if _cid_ is not None:
         try:
             Store(DB_PATH).clear_setup_due(_cid_)
-        except Exception:
-            pass
+        except Exception as e:  # noqa: BLE001 — 플래그 해제 실패로 안내를 못 보게 하지 않는다
+            print(f"[setup] 플래그 해제 실패(무시): {e!r}", file=sys.stderr)
     return FileResponse(str(Path(__file__).parent / "static" / "setup.html"),
                         media_type="text/html")
 
