@@ -94,16 +94,39 @@ def test_AI_PICK이_늦게_와도_씨앗이_갱신된다():
     assert "s2RenderSeeds" in blk, "AI PICK 도착 후 씨앗을 다시 그리지 않는다"
 
 
-def test_씨앗을_여러_편_고를_수_있다():
-    """사장님: "픽업영상을 하나 골라도 다른거 하나더 고를수있게 / 지금은 하나고르면 다른건 못골라"."""
+def test_씨앗은_한_편만_고른다():
+    """사장님 확정(2026-08-26): "씨앗은 1편만 고르게 (다중선택 취소)".
+
+    ★내가 처음에 다중선택으로 만들었다가 되돌린 것 — 구조·훅 문형을 물려받는 건
+      어차피 **1편**이라(첫 번째만 쓰였다) 여러 개 켜두면 나머지는 표시만 되고
+      아무 일도 안 했다. 라디오 버튼처럼 하나만 켜지는 게 정직하다.
+    (대본 **재료**는 씨앗 선택과 무관하게 담긴 영상 전부를 쓴다 — 그건 그대로다.)
+    """
     src = _produce_js()
-    assert "function s2ToggleSeed" in src, "고르기 토글이 없다"
-    assert "function s2SeedOn" in src
-    assert "S2.seedPicks" in src, "선택 목록이 없다"
+    assert "function s2PickSeed" in src, "씨앗 고르기 함수가 없다"
+    i = src.index("function s2PickSeed")
+    fn = src[i:i + 600]
+    # 라디오 = 고른 것 하나를 S2.seed에 넣는다(목록에 쌓지 않는다).
+    assert "S2.seed" in fn
+    assert "push(" not in fn, "여러 편을 목록에 쌓는다 — 1편만 골라야 한다"
     # 카드가 실제로 클릭을 받는가(종전엔 확인용이라 onclick이 없었다).
-    i = src.index("function s2RenderSeeds")
-    fn = src[i:i + 4200]
-    assert "s2ToggleSeed(" in fn, "카드에 고르기 클릭이 안 붙었다"
+    j = src.index("function s2RenderSeeds")
+    rs = src[j:j + 4400]
+    assert "s2PickSeed(" in rs, "카드에 고르기 클릭이 안 붙었다"
+
+
+def test_픽업과_스타일을_함께_고를_수_있다():
+    """사장님: "원래 대본 두개선택인데 픽업영상대본 선택후 다른거 누르면 1개밖에 안되는데?"
+
+    ★원인은 버그가 아니라 설계였다 — 픽업 카드가 `S2.picked.length===0`일 때만 켜지는
+      **배타 구조**라, 스타일을 하나 고르면 픽업이 자동으로 꺼졌다(픽업 = '스타일 0개').
+    → 픽업을 별도 플래그(S2.usePickup)로 떼어내 '픽업 + 스타일 1개 = 2안'이 되게 한다."""
+    src = _produce_js()
+    assert "S2.usePickup" in src, "픽업이 여전히 picked.length로 판정된다(배타 구조)"
+    # 픽업 카드가 clearStyles(=picked 비우기)로 동작하면 안 된다.
+    i = src.index("📌 픽업영상 대본")
+    card = src[max(0, i - 400):i + 200]
+    assert "s2ClearStyles()" not in card, "픽업을 누르면 스타일 선택이 통째로 지워진다"
 
 
 def test_선택이_AI_PICK에_덮이지_않는다():
@@ -114,12 +137,13 @@ def test_선택이_AI_PICK에_덮이지_않는다():
     assert "_handPicked" in fn, "직접 고른 씨앗을 존중하는 가드가 없다"
 
 
-def test_선택은_seed와_짝으로_저장되고_지워진다():
-    """★seed만 지우고 seedPicks를 남기면 옛 작업의 선택이 새 작업에 붙는다(0순위-B)."""
+def test_픽업_사용여부가_저장되고_지워진다():
+    """★usePickup은 seed·drafts와 한 작업의 짝이다 — 남기면 옛 작업 설정이 새 작업에 붙는다.
+    (2026-08-18 다이소 사고와 같은 구조: seed만 지우고 짝을 남기면 어긋난다.)"""
     src = _produce_js()
     i = src.index("function _s2Reset")
-    assert "S2.seedPicks = []" in src[i:i + 400], "_s2Reset가 선택을 안 지운다"
-    assert "seedPicks:S2.seedPicks" in src, "스냅샷에 선택이 안 담긴다(새로고침하면 날아간다)"
+    assert "usePickup" in src[i:i + 400], "_s2Reset가 픽업 사용여부를 안 되돌린다"
+    assert "usePickup:" in src, "스냅샷에 안 담긴다(새로고침하면 날아간다)"
 
 
 def test_원문은_alert이_아니라_접었다_편다():

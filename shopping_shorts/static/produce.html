@@ -11430,7 +11430,7 @@ function _s2Snapshot(){
   //   스냅샷에 work_id를 새겨 **남의 작업 것이면 복원하지 않는다**(_s2Hydrate).
   return {work_id:(typeof WORK_ID !== 'undefined' ? (WORK_ID || null) : null),
           drafts:S2.drafts, curDraft:S2.curDraft||0, picked:S2.picked||[],
-          seedPicks:S2.seedPicks||[],
+          usePickup:(S2.usePickup!==false),
           materials:S2.materials||null, seed:S2.seed||null};
 }
 // 되살리기. ★없으면 **지운다** — 다른 작업으로 갈아탔는데 앞 작업의 대본이 남아 있으면
@@ -11439,7 +11439,7 @@ function _s2Snapshot(){
 //   복원 실패 분기가 각자 적으면 한쪽만 고쳐져 어긋난다.
 function _s2Reset(){
   S2.drafts = []; S2.curDraft = 0; S2.picked = []; S2.materials = null; S2.seed = null;
-  S2.seedPicks = [];        // seed의 짝 — 남기면 옛 작업의 씨앗 선택이 새 작업에 붙는다
+  S2.usePickup = true;      // 픽업영상 대본 기본 ON — seed·drafts와 한 작업의 짝이다
 }
 function _s2Hydrate(w){
   let s = (w && w.s2) || null;
@@ -11453,8 +11453,8 @@ function _s2Hydrate(w){
     S2.picked = Array.isArray(s.picked) ? s.picked : [];
     S2.materials = s.materials || null;
     S2.seed = s.seed || null;
-    // seedPicks는 seed의 짝이다 — 함께 복원하고 함께 지운다(0순위-B, 아래 _s2Reset와 같은 이유).
-    S2.seedPicks = Array.isArray(s.seedPicks) ? s.seedPicks : [];
+    // usePickup은 seed의 짝이다 — 함께 복원하고 함께 지운다(0순위-B, 아래 _s2Reset와 같은 이유).
+    S2.usePickup = (s.usePickup !== false);
   } else {
     // ★seed도 **함께** 지운다(2026-08-18 사장님 "왠 다이소청소쪽이 연결이 되나").
     //   drafts만 지우고 seed를 남겼더니, 새 작업에서 s2RenderSeeds()의
@@ -11624,17 +11624,16 @@ function s2RenderSeeds(){
   //      그건 담긴 영상에서 나온 값이 아니라 손으로 넣은 것이다.
   const _manualSeed = S2.seed && !S2.seed.shortcode;
   // ★사장님이 직접 고른 씨앗이 있으면 그것을 존중한다(2026-08-26).
-  //   종전엔 AI PICK이 무조건 덮어써서, 다중 선택을 붙여도 고른 게 바로 되돌아갔다.
-  const _handPicked = (S2.seedPicks||[]).length > 0;
+  //   종전엔 AI PICK이 무조건 덮어써서, 고르기를 붙여도 고른 게 바로 되돌아갔다.
+  //   판정: 지금 seed가 **이번 목록 안에 있으면** 사장님이 고른 것으로 본다
+  //   (담긴 영상이 바뀌어 목록에서 사라졌으면 옛 씨앗이므로 대표로 갈아탄다 — 다이소 사고 방지).
+  const _handPicked = !!(S2.seed && S2.seed.shortcode
+    && S2.seeds.some(x => x.shortcode === S2.seed.shortcode));
   if(S2.seeds.length && !_manualSeed && !_handPicked){
     // 지금 AI PICK이 가리키는 영상과 다르면 갈아탄다(같으면 그대로 둔다).
     if(!S2.seed || S2.seed.shortcode !== S2.seeds[0].shortcode) S2.seed = S2.seeds[0];
   } else if(!S2.seed && S2.seeds.length){
     S2.seed = S2.seeds[0];
-  } else if(_handPicked){
-    // 고른 목록의 첫 번째를 대표로 유지한다(목록이 다시 그려져도 어긋나지 않게).
-    const _f=S2.seeds.find(x=>(S2.seedPicks||[]).indexOf(x.shortcode)>=0);
-    if(_f) S2.seed=_f;
   }
   const cards=S2.seeds.map((s,i)=>{
     const seg=(s.structure.segments)||[];
@@ -11649,7 +11648,7 @@ function s2RenderSeeds(){
     //   여러 편을 골라 **함께 재료로** 쓴다(대본은 담긴 것 전부를 이미 쓰지만,
     //   **구조·훅 문형을 물려받을 대표**는 고른 것들 중 첫 번째다).
     const on=s2SeedOn(i);
-    return `<div class="s2-scard${on?' sel':''}" onclick="s2ToggleSeed(${i})" title="눌러서 씨앗으로 고르거나 뺍니다(여러 편 선택 가능)">
+    return `<div class="s2-scard${on?' sel':''}" onclick="s2PickSeed(${i})" title="이 영상의 대본 구조·훅 문형을 물려받습니다(한 편만 고릅니다)">
       ${s.pick?'<span class="s2-spick">🤖 대표 · 완성도 1위</span>':''}
       <div class="s2-swho"><div class="s2-sth">${th}</div>
         <div><div class="s2-snm">${on?'✅ ':''}${esc(s.title)}</div>${sub?`<div class="s2-ssub">${esc(sub)}</div>`:''}</div></div>
@@ -11676,10 +11675,9 @@ function s2RenderSeeds(){
   // 재료가 몇 편인지 라벨이 말해준다 — "전부 쓴다"를 글로만 말하면 안 믿긴다.
   const lb=document.getElementById('s2SeedLabel');
   if(lb){
-    const _on=S2.seeds.filter((s,i)=>s2SeedOn(i)).length;
     lb.textContent = S2.seeds.length
-      ? ('① 재료 — 담긴 영상 ' + S2.seeds.length + '편 · 대본 구조를 물려받을 씨앗 '
-         + _on + '편 선택됨 (카드를 눌러 고르세요 · 여러 편 가능)')
+      ? ('① 재료 — 담긴 영상 ' + S2.seeds.length + '편을 전부 씁니다 · '
+         + '대본 구조를 물려받을 씨앗은 카드를 눌러 1편만 고르세요')
       : '① 재료 — 1단계에서 영상을 담아주세요';
   }
   s2RenderSeedInfo();
@@ -11695,28 +11693,21 @@ function s2SeedSentences(text){
     .split(/(?<=[.!?])\s+|(?<=[가게고구군까나네데돼든래려서세아어에예와지해]요)\s+|(?<=죠)\s+|(?<=다)\.\s+|\n+/)
     .map(s=>s.trim()).filter(Boolean);
 }
-// ── 씨앗 고르기(여러 편) ─────────────────────────────────────
-// ★고른 것이 없으면 **대표(AI PICK) 1편**이 골라진 것으로 본다 — 종전 동작 그대로라 회귀 0.
-//   S2.seedPicks는 shortcode 목록이다(인덱스로 두면 목록이 다시 그려질 때 어긋난다).
+// ── 씨앗 고르기(한 편) ───────────────────────────────────────
+// ★사장님 확정(2026-08-26): "씨앗은 1편만 고르게" — 라디오 버튼처럼 하나만 켜진다.
+//   내가 처음에 다중선택으로 만들었다가 되돌린 것이다. 구조·훅 문형을 물려받는 건
+//   어차피 **1편**이라(첫 번째만 쓰였다) 여러 개 켜두면 나머지는 표시만 되고 아무 일도
+//   안 했다 — 되는 것처럼 보이는 게 더 나쁘다.
+//   ⚠️대본 **재료**는 씨앗 선택과 무관하게 담긴 영상 전부를 쓴다(그건 그대로다).
 function s2SeedOn(i){
   const s=S2.seeds[i]; if(!s) return false;
-  const picks=S2.seedPicks||[];
-  if(!picks.length) return !!s.pick;          // 아무것도 안 골랐으면 대표가 켜진 것
-  return picks.indexOf(s.shortcode)>=0;
+  // 고른 게 있으면 그것, 없으면 대표(AI PICK)가 켜진 것으로 본다.
+  if(S2.seed && S2.seed.shortcode) return S2.seed.shortcode===s.shortcode;
+  return !!s.pick;
 }
-function s2ToggleSeed(i){
+function s2PickSeed(i){
   const s=S2.seeds[i]; if(!s) return;
-  if(!S2.seedPicks || !S2.seedPicks.length){
-    // 첫 클릭 — 지금 켜져 있는 것(대표)을 목록으로 굳힌 뒤 토글한다.
-    S2.seedPicks=S2.seeds.filter(x=>x.pick).map(x=>x.shortcode);
-  }
-  const k=S2.seedPicks.indexOf(s.shortcode);
-  if(k>=0) S2.seedPicks.splice(k,1); else S2.seedPicks.push(s.shortcode);
-  // ★한 편도 없으면 대표로 되돌린다 — 씨앗이 0편이면 구조·훅을 물려받을 곳이 없다.
-  if(!S2.seedPicks.length) S2.seedPicks=[];
-  // 대표 씨앗(구조·훅을 물려받을 것) = 고른 것 중 첫 번째.
-  const first=S2.seeds.find(x=>s2SeedOn(S2.seeds.indexOf(x)));
-  if(first) S2.seed=first;
+  S2.seed=s;                       // 구조·훅을 물려받을 씨앗 = 이 한 편
   s2RenderSeeds(); saveWork();
 }
 // ★원문은 alert이 아니라 **카드 아래로 접었다 편다**(2026-08-26 사장님 "원문누르면
@@ -11793,7 +11784,12 @@ function s2RenderStyles(){
   //   이제 이 칸은 **씨앗 영상의 대본 템플릿 구조·훅 문형**을 그대로 물려받고
   //   스토리·등장인물·CTA만 새로 쓴다(사장님: "훅도 터지는 영상이니 변형해서").
   const _sh=(S2.seed&&S2.seed.structure&&(S2.seed.structure.segments||[])).map(x=>x.label);
-  const auto=`<div class="s2-card${S2.picked.length?'':' sel'}" onclick="s2ClearStyles()" title="담은 씨앗 영상의 대본 구조·훅 문형을 그대로 쓰고, 스토리·등장인물·CTA만 새로 씁니다">
+  // ★픽업은 스타일과 **함께** 고를 수 있다(2026-08-26 사장님 "원래 대본 두개선택인데
+  //   픽업영상대본 선택후 다른거 누르면 1개밖에 안되는데?").
+  //   원인은 버그가 아니라 설계였다 — 종전엔 `S2.picked.length===0`일 때만 픽업이 켜지는
+  //   **배타 구조**라(픽업 = '스타일 0개'), 스타일을 하나 고르면 픽업이 자동으로 꺼졌다.
+  //   이제 별도 플래그(S2.usePickup)라 '픽업 + 스타일 1개 = 2안'이 나온다.
+  const auto=`<div class="s2-card${(S2.usePickup!==false)?' sel':''}" onclick="s2TogglePickup()" title="담은 씨앗 영상의 대본 구조·훅 문형을 그대로 쓰고, 스토리·등장인물·CTA만 새로 씁니다 (다른 스타일과 함께 고를 수 있어요)">
     <div class="t">📌 픽업영상 대본 <span class="sp"></span><span class="s2-badge ok">기본값</span></div>
     <div class="s2-quote plain">${_sh.length?esc(_sh.join(' → ')):'씨앗 영상 구조 그대로 · 내용은 새로'}</div>
     <div class="s2-meta"><span class="r">훅 문형</span><span class="r">구조</span><span class="d">스토리·CTA는 새로</span></div>
@@ -11886,11 +11882,25 @@ function s2RenderStyles(){
     : 'AI가 스타일까지 골라 2안을 만듭니다';
 }
 function s2ClearStyles(){ S2.picked=[]; s2RenderStyles(); }
+// ★안은 최대 2개다(종전 그대로). 픽업도 한 안을 차지하므로 **함께 세어** 상한을 건다 —
+//   따로 세면 픽업+스타일 2개 = 3안이 되어 종전 규칙이 조용히 깨진다.
+function s2AnCount(){ return (S2.picked||[]).length + ((S2.usePickup!==false)?1:0); }
+function s2TogglePickup(){
+  if(S2.usePickup===false){
+    if(s2AnCount()>=2){ toast('안은 2개까지 — 스타일 하나를 해제하고 고르세요'); return; }
+    S2.usePickup=true;
+  } else {
+    // 픽업을 끄려는데 스타일이 하나도 없으면 만들 안이 0개가 된다 — 막는다.
+    if(!(S2.picked||[]).length){ toast('스타일을 하나 고르면 픽업을 끌 수 있어요'); return; }
+    S2.usePickup=false;
+  }
+  s2RenderStyles(); saveWork();
+}
 function s2ToggleStyle(id){
   const i=S2.picked.indexOf(id);
   if(i>=0) S2.picked.splice(i,1);
   else{
-    if(S2.picked.length>=2){ toast('스타일은 2개까지 — 하나를 해제하고 고르세요'); return; }
+    if(s2AnCount()>=2){ toast('안은 2개까지 — 픽업이나 스타일 하나를 해제하고 고르세요'); return; }
     S2.picked.push(id);
   }
   s2RenderStyles();
@@ -11926,28 +11936,45 @@ async function s2Generate(){
     if(typeof WORK_ID!=='undefined' && WORK_ID) body.work_id=WORK_ID;
     // 스타일을 골랐으면 그대로, 안 골랐으면(=AI에게 맡김) 서버가 추천 상위에서 자동으로 집는다.
     // ★어느 쪽이든 스타일 경로를 타야 역할 칸·게이트·표현사전이 붙는다(2026-08-17).
-    if(S2.picked.length) body.style_ids=S2.picked;
-    else {
-      // ★픽업영상 대본(2026-08-26) — 스타일을 안 고르면 **씨앗 영상 구조**로 만든다.
-      //   종전엔 auto_style로 옆 카드 중 AI가 대신 골랐다(=씨앗 구조를 안 씀).
-      //   씨앗 훅이 있으면 그 문형을 물려주고, 없으면 종전 auto_style로 폴백한다
-      //   (문형을 못 뽑는 씨앗도 있다 — 없는 기준으로 막지 않는다).
-      const _sents=s2SeedSentences((S2.seed&&S2.seed.text)||'');
-      const _hook=_sents[0]||'';
+    // ★픽업과 스타일은 **함께** 고를 수 있다(2026-08-26). 서버는 한 요청에 둘 중 하나만
+    //   처리하므로(style_ids가 오면 스타일 경로) **요청을 나눠 보내고 결과를 합친다** —
+    //   서버를 건드리지 않는다(0순위-B: 생성 판정은 서버 한 곳에 그대로 둔다).
+    const _usePickup = (S2.usePickup!==false);
+    const _sents=s2SeedSentences((S2.seed&&S2.seed.text)||'');
+    const _hook=_sents[0]||'';
+    const _reqs=[];
+    if(_usePickup){
+      const b={...body};
       if(_hook){
-        body.seed_hook=_hook;
+        b.seed_hook=_hook;
         // CTA는 씨앗 원문의 마지막 문장 — 키워드가 겹치는지 서버가 판정한다.
-        if(_sents.length>1) body.seed_cta=_sents[_sents.length-1];
-        if(S2.seed&&S2.seed.structure) body.structure=S2.seed.structure;
+        if(_sents.length>1) b.seed_cta=_sents[_sents.length-1];
+        if(S2.seed&&S2.seed.structure) b.structure=S2.seed.structure;
         // 사장님 확정(2026-08-26): 훅·소재는 유지, 스토리·등장인물·CTA는 전부 다르게.
-        body.elem_modes={hook:'keep', tone:'keep', devices:'keep', appeal:'keep',
-                         characters:'free', development:'free', twist:'free', cta:'free'};
+        b.elem_modes={hook:'keep', tone:'keep', devices:'keep', appeal:'keep',
+                      characters:'free', development:'free', twist:'free', cta:'free'};
       } else {
-        body.auto_style=true;
+        // 문형을 못 뽑는 씨앗도 있다 — 없는 기준으로 막지 않고 종전 경로로 보낸다.
+        b.auto_style=true;
       }
+      b.n=1;
+      _reqs.push(b);
     }
-    const d=await (await fetch('/api/wiki/generate?shortcode='+encodeURIComponent(s.shortcode),
-      {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();
+    if(S2.picked.length) _reqs.push({...body, style_ids:S2.picked});
+    if(!_reqs.length) _reqs.push({...body, auto_style:true});   // 둘 다 없으면 종전 그대로
+    const _outs=await Promise.all(_reqs.map(b=>
+      fetch('/api/wiki/generate?shortcode='+encodeURIComponent(s.shortcode),
+        {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)})
+        .then(r=>r.json()).catch(()=>({ok:false,error:'네트워크 오류'}))));
+    // 하나만 실패해도 나머지는 살린다 — 둘 다 실패했을 때만 오류로 본다.
+    const _good=_outs.filter(x=>x&&x.ok);
+    const d = _good.length
+      ? {ok:true,
+         drafts:_good.flatMap(x=>x.drafts||[]),
+         materials:(_good.find(x=>x.materials)||{}).materials||null,
+         cps:(_good.find(x=>x.cps)||{}).cps||null,
+         pickup_rejected:_good.flatMap(x=>x.pickup_rejected||[])}
+      : (_outs[0]||{ok:false,error:'생성 실패'});
     if(!d.ok){
       if(hint) hint.innerHTML='<span style="color:var(--fire)">⚠️ '+esc(d.error||'생성 실패')+'</span>';
       toast('⚠️ '+(d.error||'생성 실패'));   // 화면 아래에서 눌렀어도 보이게
