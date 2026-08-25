@@ -1809,6 +1809,21 @@ def api_refs_instagram(request: Request):
     return {"ok": True, "items": items}
 
 
+@app.get("/api/refs/crawl_status")
+def api_refs_crawl_status(request: Request, days: int = 7):
+    """관리페이지 '크롤현황' 탭(2026-08-25) — 하루에 크롤이 몇 번, 몇 건 돌았는지.
+
+    사장님이 "오늘 크롤 돌았나"를 매번 서버 DB로 확인해야 했다. 회차 목록을 그대로
+    내려주고 날짜 묶음은 화면에서 한다. 시각은 UTC 문자열이라 화면에서 KST(+9)로 바꾼다.
+    """
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    days = max(1, min(int(days or 7), 30))
+    runs = Store(DB_PATH).crawl_runs(days=days)
+    return {"ok": True, "days": days, "runs": runs}
+
+
 @app.post("/api/refs/category")
 def api_refs_set_category(request: Request, username: str, category: str = ""):
     """채널 카테고리 지정/해제(관리자 전용, 2026-07-31).

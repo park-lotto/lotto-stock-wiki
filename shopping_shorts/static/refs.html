@@ -99,6 +99,7 @@
     <div class="tab" data-p="tiktok" onclick="switchPlat('tiktok',this)">🎵 틱톡</div>
     <div class="tab" data-p="xiaohongshu" onclick="switchPlat('xiaohongshu',this)">📕 샤오홍슈</div>
     <div class="tab" data-p="youtube" onclick="switchPlat('youtube',this)">▶️ 유튜브</div>
+    <div class="tab" data-p="status" onclick="switchPlat('status',this)">📊 크롤현황</div>
   </div>
 
   <div id="ytNote" class="yt-note" style="display:none">
@@ -128,6 +129,21 @@
     </div>
     <div class="tblwrap" id="listWrap"><div class="empty">불러오는 중…</div></div>
   </div>
+
+  <div class="card" id="statusCard" style="display:none">
+    <h2>📊 오늘 크롤 현황 <span class="count" id="stToday"></span></h2>
+    <p class="lead" style="margin:0 0 12px">모든 시각은 <b>한국시간(KST)</b>입니다. 크롤이 돌면 바로 여기에 뜹니다.</p>
+    <div class="toolbar">
+      <select id="stDays" onchange="loadStatus()">
+        <option value="3">최근 3일</option>
+        <option value="7" selected>최근 7일</option>
+        <option value="14">최근 14일</option>
+        <option value="30">최근 30일</option>
+      </select>
+      <button class="go" onclick="loadStatus()">새로고침</button>
+    </div>
+    <div class="tblwrap" id="stWrap"><div class="empty">불러오는 중…</div></div>
+  </div>
 </div>
 
 <script>
@@ -145,9 +161,16 @@ const CFG={
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
 function switchPlat(p, el){
-  PLAT=p;
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
+  // 크롤현황은 등록/목록과 성격이 달라 카드를 통째로 갈아끼운다(2026-08-25).
+  const isStatus = (p==='status');
+  document.querySelectorAll('.wrap > .card').forEach(c=>{
+    if(c.id!=='statusCard') c.style.display = isStatus ? 'none' : '';
+  });
+  document.getElementById('statusCard').style.display = isStatus ? '' : 'none';
+  if(isStatus){ document.getElementById('ytNote').style.display='none'; loadStatus(); return; }
+  PLAT=p;
   document.getElementById('box').placeholder=CFG[p].ph;
   document.getElementById('hint').textContent=CFG[p].hint;
   document.getElementById('ytNote').style.display=(p==='youtube')?'block':'none';
@@ -322,6 +345,71 @@ async function removeOne(key){
     }
   }catch(e){}
   loadList();
+}
+
+// ── 크롤현황(2026-08-25) ──────────────────────────────────────────
+const PLAT_LABEL={instagram:'📷 인스타',tiktok:'🎵 틱톡',xiaohongshu:'📕 샤오홍슈',
+                  youtube:'▶️ 유튜브',overseas:'🌍 해외HOT',threads:'🧵 쓰레드'};
+
+// 서버는 UTC 문자열('YYYY-MM-DD HH:MM')로 준다 → KST(+9)로 옮긴다.
+function utcToKst(s){
+  const m=/^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})$/.exec(s||'');
+  if(!m) return {date:s||'', time:''};
+  const d=new Date(Date.UTC(+m[1],+m[2]-1,+m[3],+m[4],+m[5]));
+  d.setUTCHours(d.getUTCHours()+9);
+  const p=n=>String(n).padStart(2,'0');
+  return {date:d.getUTCFullYear()+'-'+p(d.getUTCMonth()+1)+'-'+p(d.getUTCDate()),
+          time:p(d.getUTCHours())+':'+p(d.getUTCMinutes())};
+}
+function kstToday(){
+  const d=new Date(); d.setUTCHours(d.getUTCHours()+9);
+  const p=n=>String(n).padStart(2,'0');
+  return d.getUTCFullYear()+'-'+p(d.getUTCMonth()+1)+'-'+p(d.getUTCDate());
+}
+
+async function loadStatus(){
+  const wrap=document.getElementById('stWrap');
+  wrap.innerHTML='<div class="empty">불러오는 중…</div>';
+  const days=document.getElementById('stDays').value;
+  let d={};
+  try{
+    const r=await fetch('/api/refs/crawl_status?days='+days);
+    d=await r.json();
+    if(!r.ok||!d.ok) throw new Error(d.error||('HTTP '+r.status));
+  }catch(e){
+    wrap.innerHTML='<div class="empty">불러오기 실패: '+esc(e.message)+'</div>'; return;
+  }
+  const runs=(d.runs||[]).map(r=>{const k=utcToKst(r.at); return {...r, kdate:k.date, ktime:k.time};});
+  // 날짜별(KST) 묶기 — 최신 날짜 먼저.
+  const byDate={};
+  runs.forEach(r=>{ (byDate[r.kdate]=byDate[r.kdate]||[]).push(r); });
+  const dates=Object.keys(byDate).sort().reverse();
+
+  const today=kstToday();
+  const tr=byDate[today]||[];
+  const tTotal=tr.reduce((a,b)=>a+b.count,0);
+  document.getElementById('stToday').textContent =
+    tr.length ? (tr.length+'회 · '+tTotal.toLocaleString()+'건') : '아직 없음';
+
+  if(!dates.length){ wrap.innerHTML='<div class="empty">기록이 없습니다.</div>'; return; }
+  let html='';
+  dates.forEach(date=>{
+    const rows=byDate[date].slice().sort((a,b)=>b.ktime.localeCompare(a.ktime));
+    const total=rows.reduce((a,b)=>a+b.count,0);
+    html+='<div style="margin:14px 0 6px;font-weight:700">'+esc(date)
+        + (date===today?' <span class="count">오늘</span>':'')
+        + ' <span class="count">'+rows.length+'회 · '+total.toLocaleString()+'건</span></div>';
+    html+='<table class="tbl"><thead><tr><th>시각(KST)</th><th>플랫폼</th>'
+        + '<th>수집 건수</th><th>계정 수</th></tr></thead><tbody>';
+    rows.forEach(r=>{
+      html+='<tr><td class="date">'+esc(r.ktime)+'</td>'
+          + '<td>'+esc(PLAT_LABEL[r.platform]||r.platform)+'</td>'
+          + '<td>'+r.count.toLocaleString()+'</td>'
+          + '<td class="num">'+(r.accounts?r.accounts.toLocaleString():'—')+'</td></tr>';
+    });
+    html+='</tbody></table>';
+  });
+  wrap.innerHTML=html;
 }
 
 document.getElementById('box').placeholder=CFG.instagram.ph;
