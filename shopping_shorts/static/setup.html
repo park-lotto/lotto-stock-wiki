@@ -180,9 +180,30 @@
   }
   a{color:var(--accent);text-decoration-thickness:1px;text-underline-offset:2px}
   a:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:3px}
+  /* ── 나가는 길 ── */
+  .exitbar{
+    display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;
+    background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:14px 16px;margin:0 0 26px;box-shadow:var(--shadow);
+  }
+  .exitbar.bottom{margin:34px 0 8px}
+  .exitbtn{
+    flex:0 0 auto;background:var(--accent);color:#fff;text-decoration:none;
+    font-family:'Gothic A1',sans-serif;font-weight:700;font-size:16px;
+    padding:11px 18px;border-radius:10px;white-space:nowrap;
+  }
+  .exitnote{flex:1 1 220px;color:var(--ink-2);font-size:14.5px;line-height:1.5}
 </style>
 
 <div class="wrap">
+
+  <!-- ★나가는 길(2026-08-25 사장님): 이 페이지는 입금 후 한 번 자동으로 뜨는 자리라
+       본화면으로 돌아갈 길이 없으면 갇힌다. 위·아래 두 곳에 같은 출구를 둔다.
+       ★iframe(마이페이지 탭) 안에서는 숨긴다 — 탭 안에서 또 나가라고 하면 헷갈린다. -->
+  <div class="exitbar" id="exitTop">
+    <a class="exitbtn" href="/">🏠 숏템메이커로 들어가기</a>
+    <span class="exitnote">이 안내는 <b>마이페이지 → 📖 설치와 준비</b>에서 언제든 다시 보실 수 있습니다.</span>
+  </div>
 
   <p class="eyebrow">숏템메이커 1기 · 8월 24일 시작</p>
   <h2>설치와 준비</h2>
@@ -450,6 +471,21 @@
     </div>
   </div>
 
+  <div class="exitbar bottom" id="exitBottom">
+    <a class="exitbtn" href="/">🏠 다 읽었습니다 — 숏템메이커 시작하기</a>
+    <span class="exitnote">다시 보실 때는 <b>마이페이지 → 📖 설치와 준비</b></span>
+  </div>
+
   <p class="foot">외부 서비스의 요금제·무료 사용량·API 정책은 각 제공업체 정책에 따라 변경될 수 있습니다. 막히는 곳이 있으면 1기 단톡방에 물어봐 주세요.</p>
 
 </div>
+
+<script>
+/* 마이페이지 탭(iframe) 안에서는 출구를 감춘다 — 이미 사이트 안이다. */
+if (window.top !== window.self) {
+  ["exitTop", "exitBottom"].forEach(function (id) {
+    var e = document.getElementById(id);
+    if (e) e.style.display = "none";
+  });
+}
+</script>
