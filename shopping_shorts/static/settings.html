@@ -133,16 +133,13 @@
   <div class="head">
     <h2>👤 마이페이지</h2>
     <div class="desc">내 이용권과 포인트를 확인하고, 원하시면 내 API 키를 등록해 포인트를 아낄 수 있습니다.</div>
-    <!-- 설치안내 상시 입구(2026-08-25): /setup 은 어디서도 링크가 없어 주소를 쳐야만 들어갔다. -->
-    <div style="margin-top:10px">
-      <a href="/setup" style="display:inline-block;text-decoration:none;font-weight:700;
-         border:1px solid currentColor;border-radius:9px;padding:8px 14px;font-size:14.5px">
-        📖 설치와 준비 안내 — 담기 확장프로그램 · API 키 · 캡컷</a>
-    </div>
   </div>
 
   <div class="tabs">
-    <button class="tab on" id="tabAccount" onclick="showTab('account')">👤 내 계정</button>
+    <!-- ★설치안내를 맨 앞 탭으로(2026-08-25 사장님 "반드시 보라고 계정 앞으로 탭을 두고
+         제일 먼저 뜨게"). 처음 오신 분에겐 이 탭이 기본으로 열린다(아래 FIRST_KEY). -->
+    <button class="tab on" id="tabSetup" onclick="showTab('setup')">📖 설치와 준비</button>
+    <button class="tab" id="tabAccount" onclick="showTab('account')">👤 내 계정</button>
     <button class="tab" id="tabPoints" onclick="showTab('points')">💎 포인트</button>
     <button class="tab" id="tabKeys" onclick="showTab('keys')">🔑 내 키 등록</button>
   </div>
@@ -151,7 +148,19 @@
        예전 /account 페이지(app.py _ACCOUNT_TMPL)를 그대로 흡수한 탭이다.
        같은 데이터(/api/me)를 두 화면이 각자 그리면 언젠가 어긋난다(0순위-B) —
        /account 는 여기로 넘긴다. -->
-  <section class="pane on" id="paneAccount">
+  <!-- ═══════ 📖 설치와 준비 ═══════
+       본문은 /setup 한 곳만 쓴다 — 여기에 내용을 복사하면 두 벌이 되어 언젠가 어긋난다(0순위-B).
+       탭을 처음 열 때만 불러온다(lazy) — 마이페이지 첫 로딩을 무겁게 하지 않는다. -->
+  <section class="pane" id="paneSetup">
+    <iframe id="setupFrame" title="설치와 준비 안내" data-src="/setup"
+            style="width:100%;height:78vh;min-height:520px;border:1px solid rgba(128,128,128,.35);
+                   border-radius:12px;background:#fff"></iframe>
+    <div style="margin-top:10px;font-size:14px;opacity:.75">
+      새 창으로 크게 보기 → <a href="/setup" target="_blank" rel="noopener">/setup</a>
+    </div>
+  </section>
+
+  <section class="pane" id="paneAccount">
     <div class="balCard">
       <div class="lbl">현재 플랜</div>
       <div class="balRow">
@@ -334,6 +343,7 @@ function askGuide(svc){
 /* 탭이 3개가 되면서 "isPoints ? A : B" 식 이분법은 못 쓴다 —
    탭을 하나 더 늘렸을 때 조용히 어긋나지 않도록 목록으로 돈다(0순위-B). */
 var TABS = [
+  { key: "setup",   pane: "paneSetup",   tab: "tabSetup"   },
   { key: "account", pane: "paneAccount", tab: "tabAccount" },
   { key: "points",  pane: "panePoints",  tab: "tabPoints"  },
   { key: "keys",    pane: "paneKeys",    tab: "tabKeys"    }
@@ -344,8 +354,22 @@ function showTab(which){
     el(t.pane).classList.toggle("on", on);
     el(t.tab).classList.toggle("on", on);
   });
+  if (which === "setup") {                 // 처음 열 때만 실제로 불러온다
+    var f = el("setupFrame");
+    if (f && !f.src && f.dataset.src) f.src = f.dataset.src;
+    try { localStorage.setItem(FIRST_KEY, "1"); } catch (e) {}   // 봤다 → 다음부터 내 계정
+  }
   window.scrollTo(0, 0);
 }
+
+/* ★처음 오신 분은 '설치와 준비'가 먼저 뜬다. 한 번 보시면 다음부터 '내 계정'이 기본.
+   저장이 막힌 브라우저(시크릿 등)에서는 매번 안내가 먼저 뜬다 — 안 뜨는 것보다 낫다. */
+var FIRST_KEY = "ss_setup_seen";
+(function initTab(){
+  var seen = false;
+  try { seen = localStorage.getItem(FIRST_KEY) === "1"; } catch (e) {}
+  showTab(seen ? "account" : "setup");
+})();
 
 /* ── 에러 표시 — 침묵 금지. 실패는 사용자에게 보인다 ── */
 function showErr(id, text){
