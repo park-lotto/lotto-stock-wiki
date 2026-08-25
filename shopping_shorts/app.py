@@ -3861,6 +3861,9 @@ def api_mix_status(job_id: str, request: Request):
             "preview_error": preview_error,
             "clean_status": clean_status,
             "clean_error": clean_error,
+            # ★실패 '종류'를 함께 준다(2026-08-25). 프론트가 원문을 문자열 검사하면
+            #   같은 판단이 두 곳에 흩어진다(0순위-B) — 분류는 서버 한 곳에서만.
+            "clean_error_kind": clean_failure_kind(clean_error) if clean_status == "failed" else None,
             # 자막제거 확인용 소스 개수(2026-08-18) — 3단계가 "소스 1/N"으로 넘겨보는 데만 쓴다.
             # 경로는 안 내보내고 개수만. 청소본이 있으면 그 개수, 없으면 담은 URL 개수.
             "clean_source_count": len(job.get("clean_sources") or {}) or len(job.get("urls") or []),
@@ -4611,6 +4614,31 @@ def api_mix_render(background_tasks: BackgroundTasks, body: dict):
 
 
 _PREVIEW_STALE_SEC = 600   # 10분 — 이보다 오래 'rendering'이면 죽은 렌더의 잔해로 본다.
+
+
+def clean_failure_kind(clean_error):
+    """자막제거 실패를 **고객이 할 수 있는 행동**으로 가른다. 판단은 여기 한 곳(0순위-B).
+
+    ★왜 필요한가(2026-08-25 실사고): 화면은 실패를 전부 "잠시 후 다시 시도해 주세요"로
+      안내했다. 그런데 실제 1위 원인은 **고객이 등록한 VMake 키의 크레딧 소진**이라
+      다시 시도해도 영원히 안 된다. 고객(김용덕)은 그걸 모르고 재시도만 반복했다.
+      사유는 이미 clean_error에 원문이 들어 있었는데 화면엔 console.warn으로만 찍혔다.
+
+    반환: 'no_credit' | 'interrupted' | 'unsupported' | 'unknown'
+    """
+    e = (clean_error or "")
+    low = e.lower()
+    # VMake가 직접 주는 코드다(실측 원문:
+    #   "[60002] You don't have enough credits for this API. Purchase a subscription...")
+    if "60002" in e or "enough credits" in low:
+        return "no_credit"
+    # 배포·재시작으로 BackgroundTask가 죽은 경우 — 이건 진짜로 다시 시도하면 된다.
+    if "서버 재시작" in e or "중단되었습니다" in e:
+        return "interrupted"
+    # 영상 자체를 VMake가 처리 못 한 경우(실측 code 10101 'right reduce error').
+    if "10101" in e or "결과가 비었습니다" in e:
+        return "unsupported"
+    return "unknown"
 
 
 def _render_is_stale(job) -> bool:
