@@ -11834,11 +11834,17 @@ async function s2Generate(){
       //   씨앗 훅이 있으면 그 문형을 물려주고, 없으면 종전 auto_style로 폴백한다
       //   (문형을 못 뽑는 씨앗도 있다 — 없는 기준으로 막지 않는다).
       const _seedText=(S2.seed&&S2.seed.text)||'';
-      const _hook=_seedText.trim().split(/(?<=[.!?])\s+|\n+/)[0]||'';
+      // ★한국어 구어체 대본은 마침표가 거의 없다(실측: 씨앗 320자에 물음표 1개뿐).
+      //   마침표만 보고 자르면 훅 한 문장이 아니라 **대본 대부분(240자)**이 훅으로 잡힌다.
+      //   그래서 종결어미(요/죠 + 다.)까지 경계로 본다 — 서버 script_sentences와 같은 규약.
+      //   ⚠️'요' 앞이 명사인 경우(필요·중요·주요…)는 자르지 않는다(2026-08-25 실사고와 같은 함정).
+      const _sents=_seedText.trim()
+        .split(/(?<=[.!?])\s+|(?<=[가게고구군까나네데돼든래려서세아어에예와지해]요)\s+|(?<=죠)\s+|(?<=다)\.\s+|\n+/)
+        .map(s=>s.trim()).filter(Boolean);
+      const _hook=_sents[0]||'';
       if(_hook){
         body.seed_hook=_hook;
         // CTA는 씨앗 원문의 마지막 문장 — 키워드가 겹치는지 서버가 판정한다.
-        const _sents=_seedText.trim().split(/(?<=[.!?])\s+|\n+/).filter(Boolean);
         if(_sents.length>1) body.seed_cta=_sents[_sents.length-1];
         if(S2.seed&&S2.seed.structure) body.structure=S2.seed.structure;
         // 사장님 확정(2026-08-26): 훅·소재는 유지, 스토리·등장인물·CTA는 전부 다르게.
