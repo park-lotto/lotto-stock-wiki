@@ -6940,7 +6940,7 @@ _AUTH_ALLOW = ("/login", "/api/login", "/signup", "/api/signup", "/favicon.ico",
                # 설치 안내를 단톡방 링크로 뿌리는데 그 안의 캡컷 링크만 로그인을 요구하면
                # 거기서 끊긴다 — 안내는 끝까지 따라갈 수 있어야 안내다.
                # .bat은 내려받기만 하는 정적 파일이고 계정 정보를 담지 않는다.
-               "/capcut_manual.html", "/capcut_setup.bat",
+               "/capcut_manual.html", "/capcut_setup.bat", "/capcut_easy.html",
                # 도움말(2026-08-23) — 가입 전 문의를 줄이려면 로그인 전에도 보여야 한다.
                # ★읽기만 공개다. 쓰기(/api/help/save·delete·reorder·upload)는 관리자만이며
                #   그 판정은 각 라우트가 직접 한다(여기 목록에 넣지 않는다).
