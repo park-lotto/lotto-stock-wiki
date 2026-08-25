@@ -80,6 +80,8 @@ def test_재료칸이_담긴_영상_전부를_후보로_올린다():
     assert "candidates" in fn, "담긴 영상을 후보로 안 올린다"
     assert "c.text" in fn, "후보의 대본 원문을 안 싣는다(카드 원문이 빈다)"
     assert "_seen" in fn, "중복 제거가 없다(대표와 후보가 겹친다)"
+    # ★식별자는 video_id다(브라우저 실측). shortcode로 읽으면 전부 빈 값이 돼 조용히 0건.
+    assert "c.video_id" in fn, "후보 식별자를 video_id로 안 읽는다 — 후보가 통째로 걸러진다"
 
 
 def test_AI_PICK이_늦게_와도_씨앗이_갱신된다():
