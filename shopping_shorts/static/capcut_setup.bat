@@ -1,53 +1,52 @@
 @echo off
-chcp 65001 >nul
-title ìº¡ì»· ìë™ ì„¤ì • - ìˆí…œë©”ì´ì»¤
+title Ä¸ÄÆ ÀÚµ¿ ¼³Á¤ - ¼ôÅÛ¸ŞÀÌÄ¿
 echo.
 echo   ============================================
-echo      ìº¡ì»· ìë™ ì„¤ì •  (ìµœì´ˆ í•œ ë²ˆë§Œ ì‹¤í–‰)
+echo      Ä¸ÄÆ ÀÚµ¿ ¼³Á¤  (ÃÖÃÊ ÇÑ ¹ø¸¸ ½ÇÇà)
 echo   ============================================
 echo.
-echo   - í´ë” ë§Œë“¤ê¸°: C:\capcutproject\CapCut Drafts
-echo   - ìº¡ì»· í”„ë¡œì íŠ¸ ì €ì¥ ìœ„ì¹˜ë¥¼ ê·¸ í´ë”ë¡œ ì„¤ì •
+echo   - Æú´õ ¸¸µé±â: C:\capcutproject\CapCut Drafts
+echo   - Ä¸ÄÆ ÇÁ·ÎÁ§Æ® ÀúÀå À§Ä¡¸¦ ±× Æú´õ·Î ¼³Á¤
 echo.
 
-REM 1) ìº¡ì»·ì´ ì‹¤í–‰ ì¤‘ì´ë©´ ì¤‘ë‹¨ (ì‹¤í–‰ ì¤‘ ê³ ì¹˜ë©´ ìº¡ì»·ì´ ì¢…ë£Œí•  ë•Œ ë˜ëŒë ¤ë²„ë¦¼)
+REM 1) Ä¸ÄÆÀÌ ½ÇÇà ÁßÀÌ¸é Áß´Ü (½ÇÇà Áß °íÄ¡¸é Ä¸ÄÆÀÌ Á¾·áÇÒ ¶§ µÇµ¹·Á¹ö¸²)
 tasklist /fi "imagename eq CapCut.exe" 2>nul | find /i "CapCut.exe" >nul
 if not errorlevel 1 (
-  echo   [!] ìº¡ì»·ì´ ì¼œì ¸ ìˆìŠµë‹ˆë‹¤. ìº¡ì»·ì„ ì™„ì „íˆ ì¢…ë£Œí•œ ë’¤ ì´ íŒŒì¼ì„ ë‹¤ì‹œ ì‹¤í–‰í•´ ì£¼ì„¸ìš”.
+  echo   [!] Ä¸ÄÆÀÌ ÄÑÁ® ÀÖ½À´Ï´Ù. Ä¸ÄÆÀ» ¿ÏÀüÈ÷ Á¾·áÇÑ µÚ ÀÌ ÆÄÀÏÀ» ´Ù½Ã ½ÇÇàÇØ ÁÖ¼¼¿ä.
   echo.
   pause
   exit /b 1
 )
 
-REM 2) í´ë” ìƒì„±
+REM 2) Æú´õ »ı¼º
 if not exist "C:\capcutproject\CapCut Drafts" mkdir "C:\capcutproject\CapCut Drafts"
 
-REM 3) ìº¡ì»· ì„¤ì • íŒŒì¼ í™•ì¸
+REM 3) Ä¸ÄÆ ¼³Á¤ ÆÄÀÏ È®ÀÎ
 set "CFG=%LOCALAPPDATA%\CapCut\User Data\Config\globalSetting"
 if not exist "%CFG%" (
-  echo   [!] ìº¡ì»· ì„¤ì • íŒŒì¼ì„ ì°¾ì§€ ëª»í–ˆìŠµë‹ˆë‹¤.
-  echo       ìº¡ì»·ì„ í•œ ë²ˆ ì‹¤í–‰í•˜ê³  ë¡œê·¸ì¸ê¹Œì§€ í•œ ë’¤ ë‹¤ì‹œ ì‹œë„í•´ ì£¼ì„¸ìš”.
+  echo   [!] Ä¸ÄÆ ¼³Á¤ ÆÄÀÏÀ» Ã£Áö ¸øÇß½À´Ï´Ù.
+  echo       Ä¸ÄÆÀ» ÇÑ ¹ø ½ÇÇàÇÏ°í ·Î±×ÀÎ±îÁö ÇÑ µÚ ´Ù½Ã ½ÃµµÇØ ÁÖ¼¼¿ä.
   echo.
   pause
   exit /b 1
 )
 
-REM 4) ì €ì¥ ìœ„ì¹˜ ì„¤ì • (currentCustomDraftPath) â€” ë°±ìŠ¬ë˜ì‹œëŠ” [char]92ë¡œ ë”ë¸” ìƒì„±(ìº¡ì»· í˜•ì‹),
-REM    ë‹¤ë¥¸ ì„¤ì •ì€ ê·¸ëŒ€ë¡œ ë‘ê³  ê·¸ í•œ ì¤„ë§Œ êµì²´, ì›ë³¸ì€ .bakìœ¼ë¡œ ë°±ì—…
+REM 4) ÀúÀå À§Ä¡ ¼³Á¤ (currentCustomDraftPath) - ¹é½½·¡½Ã´Â [char]92·Î ´õºí »ı¼º(Ä¸ÄÆ Çü½Ä),
+REM    ´Ù¸¥ ¼³Á¤Àº ±×´ë·Î µÎ°í ±× ÇÑ ÁÙ¸¸ ±³Ã¼, ¿øº»Àº .bakÀ¸·Î ¹é¾÷
 powershell -NoProfile -Command "$c=$env:LOCALAPPDATA+'\CapCut\User Data\Config\globalSetting'; Copy-Item -LiteralPath $c -Destination ($c+'.bak') -Force; $d=[char]92+[char]92; $v='currentCustomDraftPath=C:'+$d+'capcutproject'+$d+'CapCut Drafts'; $found=$false; $out=foreach($ln in (Get-Content -LiteralPath $c)){ if($ln -like 'currentCustomDraftPath=*'){ $found=$true; $v } else { $ln } }; if(-not $found){ $out+=$v }; $enc=New-Object System.Text.UTF8Encoding($false); [System.IO.File]::WriteAllLines($c,$out,$enc)"
 
 if errorlevel 1 (
-  echo   [!] ì„¤ì • ì¤‘ ì˜¤ë¥˜ê°€ ë°œìƒí–ˆìŠµë‹ˆë‹¤. ë‹¤ì‹œ ì‹œë„í•˜ê±°ë‚˜ ë¬¸ì˜í•´ ì£¼ì„¸ìš”.
+  echo   [!] ¼³Á¤ Áß ¿À·ù°¡ ¹ß»ıÇß½À´Ï´Ù. ´Ù½Ã ½ÃµµÇÏ°Å³ª ¹®ÀÇÇØ ÁÖ¼¼¿ä.
   echo.
   pause
   exit /b 1
 )
 
 echo.
-echo   [O] ì„¤ì • ì™„ë£Œ!  ì´ì œ ìº¡ì»·ì„ ì¼œì‹œë©´ ë©ë‹ˆë‹¤.
+echo   [O] ¼³Á¤ ¿Ï·á!  ÀÌÁ¦ Ä¸ÄÆÀ» ÄÑ½Ã¸é µË´Ï´Ù.
 echo.
-echo       ì œì‘ì†Œì—ì„œ [ìº¡ì»·ìœ¼ë¡œ ë³´ë‚´ê¸°]ë¥¼ ëˆ„ë¥´ë©´
-echo       í”„ë¡œì íŠ¸ê°€ ì´ í´ë”ì— ìë™ìœ¼ë¡œ ë§Œë“¤ì–´ì§‘ë‹ˆë‹¤.
+echo       Á¦ÀÛ¼Ò¿¡¼­ [Ä¸ÄÆÀ¸·Î º¸³»±â]¸¦ ´©¸£¸é
+echo       ÇÁ·ÎÁ§Æ®°¡ ÀÌ Æú´õ¿¡ ÀÚµ¿À¸·Î ¸¸µé¾îÁı´Ï´Ù.
 echo.
 pause
 exit /b 0

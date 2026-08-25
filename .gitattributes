@@ -30,3 +30,6 @@
 *.ttf    binary
 *.otf    binary
 *.pyc    binary
+
+# ★배치파일은 CP949+CRLF 바이트 그대로 보존 — LF/UTF-8이면 한국 윈도우 cmd에서 통째로 깨진다(2026-08-25)
+*.bat    binary
