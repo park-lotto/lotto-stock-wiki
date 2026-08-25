@@ -184,7 +184,7 @@ async function load(){
     const trialBadge = trialLeft ? ` <span class="badge trial">🎁 체험중 ${trialLeft}h</span>` : '';
     return `<tr><td>${c.id}</td><td>${esc(c.name)}${trialBadge}</td><td>${esc(c.phone)}</td><td>${esc(c.email||c.username)}</td>
       <td style="font-size:12px;color:#8a8a92">${joined}</td>
-      <td><button class=bok onclick="ackCustomer(${c.id})" title="체험은 그대로 두고 대기실에서만 내립니다">✅ 확인</button>
+      <td><button class=bok onclick="ackCustomer(${c.id},this)" title="체험은 그대로 두고 대기실에서만 내립니다">✅ 확인</button>
           <button class=bpro onclick="approveCustomer(${c.id})" title="결제받고 기간을 줄 때">💳 결제승인</button></td></tr>`;
   }).join('') : '<tr><td colspan=6 class=empty>대기 중인 가입 신청이 없어요</td></tr>';
   // 일반 고객표 — 검색·등급 필터 적용 렌더
@@ -268,10 +268,10 @@ function renderCustomers(){
       <td>${seenCell}</td>
       <td><button class=bpay onclick="addPayment(${c.id})">결제추가</button>
           <button class=bedit onclick="editInfo(${c.id})">정보수정</button>
-          <button class=bfree onclick="setPlan(${c.id},'free')">일반회원</button>
-          <button class=btrial onclick="grantTrial(${c.id})">체험</button>
+          <button class=bfree onclick="setPlan(${c.id},'free',this)">일반회원</button>
+          <button class=btrial onclick="grantTrial(${c.id},this)">체험</button>
           <button class=bpt onclick="grantPoints(${c.id})">포인트</button>
-          <button class=bpro onclick="setPlan(${c.id},'pro')">pro</button>
+          <button class=bpro onclick="setPlan(${c.id},'pro',this)">pro</button>
           ${c.code_admin?'':(c.is_admin
             ? `<button class=badm onclick="setAdmin(${c.id},false)">관리자해제</button>`
             : `<button class=badm onclick="setAdmin(${c.id},true)">관리자지정</button>`)}
@@ -311,7 +311,17 @@ async function closeClaim(id){
 
 /* '확인' — 클릭 한 번(2026-08-25 사장님 "일일이 버튼 누르니 안 좋아").
    남은 체험은 그대로 두고 대기실에서만 내린다 → 아래 고객표로 옮겨간다. */
-async function ackCustomer(cid){
+// ★연타 잠금(2026-08-25) — 사장님이 "포인트가 안 나온다"고 하신 실체는 두 번째 클릭이었다.
+//   포인트는 top-up이라 첫 클릭에 들어가고, 두 번째는 "이미 충분"이라 0P가 돌아온다.
+//   그 0P가 '안 나왔다'로 읽혔다. 그래서 처리 중에는 버튼을 잠가 두 번 눌리지 않게 한다.
+async function _lockWhile(btn, fn){
+  if(btn){ if(btn.disabled) return; btn.disabled=true; btn.style.opacity='.55'; }
+  try{ return await fn(); }
+  finally{ if(btn){ btn.disabled=false; btn.style.opacity=''; } }
+}
+
+async function ackCustomer(cid, btn){ return _lockWhile(btn, ()=>_ackCustomer(cid)); }
+async function _ackCustomer(cid){
   const r = await fetch('/api/admin/ack',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({customer_id:cid})});
   const m=document.getElementById('pMsg');
@@ -319,7 +329,7 @@ async function ackCustomer(cid){
     // 포인트까지 들어갔는지 이 자리에서 보여준다 — 잔액 0이면 유료 작업이 402로 막힌다.
     m.textContent='✅ 확인함 — 고객관리로 내려갔어요'
       +(d.granted?' · 포인트 +'+d.granted+'P (잔액 '+d.balance+'P)'
-                 :(d.balance!=null?' · 잔액 '+d.balance+'P':''));
+                 :(d.balance!=null?' · 포인트는 이미 충분 (잔액 '+d.balance+'P)':''));
     m.className='msg';load();}
   else{m.textContent='❌ 실패';m.className='msg err';}
   setTimeout(()=>m.textContent='',2500);
@@ -379,7 +389,8 @@ document.addEventListener('click', async (e)=>{
   }).join('\n') || '결제 내역 없음';
   alert('결제 이력\n\n'+lines);
 });
-async function setPlan(cid,plan){
+async function setPlan(cid,plan,btn){ return _lockWhile(btn, ()=>_setPlan(cid,plan)); }
+async function _setPlan(cid,plan){
   const r=await fetch('/api/admin/set_plan',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({customer_id:cid,plan})});
   const m=document.getElementById('cMsg');
@@ -387,7 +398,7 @@ async function setPlan(cid,plan){
   //   402로 막히므로, 사장님이 '연료가 들어갔나'를 이 자리에서 바로 알아야 한다.
   if(r.ok){const d=await r.json().catch(()=>({}));
     m.textContent='✅ 변경됨'+(d.granted?' · 포인트 +'+d.granted+'P (잔액 '+d.balance+'P)'
-                              :(d.balance!=null?' · 잔액 '+d.balance+'P':''));
+                              :(d.balance!=null?' · 포인트는 이미 충분 (잔액 '+d.balance+'P)':''));
     m.className='msg';load();}else{m.textContent='❌ 실패';m.className='msg err';}
   setTimeout(()=>m.textContent='',2000);
 }
@@ -420,7 +431,8 @@ async function grantPoints(cid){
   else{m.textContent='❌ 실패';m.className='msg err';}
   setTimeout(()=>m.textContent='',3000);
 }
-async function grantTrial(cid){
+async function grantTrial(cid, btn){ return _lockWhile(btn, ()=>_grantTrial(cid)); }
+async function _grantTrial(cid){
   const def=(CURRENT.trial_days||'7');
   const days=prompt('체험 며칠 줄까요? (랭킹·즐겨찾기·렌즈 10회/일만 · 제작소는 미리보기)', def);
   if(days===null) return;
@@ -428,7 +440,7 @@ async function grantTrial(cid){
     body:JSON.stringify({customer_id:cid, plan:'trial', days:Number(days)||0})});
   const m=document.getElementById('cMsg');
   if(r.ok){const d=await r.json();
-    m.textContent='✅ 체험 부여됨'+(d.granted?' · 포인트 +'+d.granted+'P (잔액 '+d.balance+'P)':' · 포인트 충분(잔액 '+d.balance+'P)');
+    m.textContent='✅ 체험 부여됨'+(d.granted?' · 포인트 +'+d.granted+'P (잔액 '+d.balance+'P)':' · 포인트는 이미 충분 (잔액 '+d.balance+'P)');
     m.className='msg';load();}else{m.textContent='❌ 실패';m.className='msg err';}
   setTimeout(()=>m.textContent='',2000);
 }
