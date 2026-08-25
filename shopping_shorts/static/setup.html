@@ -193,6 +193,8 @@
     padding:11px 18px;border-radius:10px;white-space:nowrap;
   }
   .exitnote{flex:1 1 220px;color:var(--ink-2);font-size:14.5px;line-height:1.5}
+  .sub{font-family:'Gothic A1',sans-serif;font-weight:900;font-size:19px;margin:34px 0 4px}
+  .tnote{font-size:13.5px;color:var(--ink-3);margin-top:4px;line-height:1.5}
 </style>
 
 <div class="wrap">
@@ -210,7 +212,7 @@
   <p class="h2sub">승인이 끝나면 여기서부터 하시면 됩니다. 설치는 <b>두 개</b>뿐이고 둘 다 PC에서 합니다.
      캡컷은 원하는 분만 하시면 됩니다.</p>
 
-  <h2>미리 해두셔야 하는 것</h2>
+  <h2 id="ready">미리 해두셔야 하는 것</h2>
   <p class="h2sub">숏템메이커는 제작 프로그램이라, 채널 자체는 미리 준비돼 있어야 합니다.</p>
   <ul class="plain yes">
     <li><span class="mk">✓</span><span><b>유튜브 또는 인스타그램 채널 개설</b> — 개설 방법은 제공되지 않습니다</span></li>
@@ -218,7 +220,7 @@
     <li><span class="mk">✓</span><span><b>구글 계정</b> — 로그인과 제미나이 키 발급에 함께 씁니다</span></li>
   </ul>
 
-  <h2>1단계 · 설치할 것</h2>
+  <h2 id="install">1단계 · 설치할 것</h2>
   <p class="h2sub">설치는 사실상 두 개뿐이고, 둘 다 PC에서 합니다.</p>
 
   <div class="step">
@@ -239,7 +241,7 @@
     </div>
   </div>
 
-  <h2>2단계 · 캡컷 연동<span class="chip opt" style="margin-left:8px">선택</span></h2>
+  <h2 id="capcut">2단계 · 캡컷 연동<span class="chip opt" style="margin-left:8px">선택</span></h2>
   <p class="h2sub">완성본을 <b>캡컷에서 더 다듬고 싶은 분만</b> 하시면 됩니다.
      숏템메이커에서 완성 영상을 바로 받거나 QR로 폰에 보내실 거면 이 단계는 건너뛰세요.</p>
 
@@ -264,7 +266,7 @@
     </div>
   </div>
 
-  <h2>3단계 · API 키 발급</h2>
+  <h2 id="api">3단계 · API 키 발급</h2>
   <p class="h2sub">숏템메이커 이용료와는 <b>별도</b>로, 각 서비스에 직접 가입해 키를 받는 부분입니다.</p>
 
   <p><b>등록하시면 그 작업은 포인트가 안 깎입니다.</b> 5개 다 하실 필요는 없고, 쓰실 기능만 하셔도 됩니다. 다만 아래 두 갈래로 성격이 다릅니다.</p>
@@ -330,13 +332,88 @@
     <p>키를 등록하지 않으셔도 <b>포인트가 차감되는 방식</b>으로 그대로 이용하실 수 있습니다. 직접 키를 등록하시면 그만큼 포인트를 아끼는 것이고, 발급이 번거로우시면 포인트로 쓰시면 됩니다.</p>
   </div>
 
-  <p>키 등록은 <b>👤 마이페이지 → 🔑 내 키 등록</b> 탭에서 하시고, 발급 방법은 <b>그림으로 된 단계별 매뉴얼</b>이 준비돼 있습니다 — <code>shoppingshorts.duckdns.org/api_manual.html</code></p>
+  <h3 class="sub">발급받는 곳 — 바로 가는 링크</h3>
+  <p class="h2sub">각 사이트에 <b>직접 가입</b>하신 뒤 키를 복사해 오시면 됩니다. 그림으로 된 단계별 매뉴얼은
+     <a href="/api_manual.html" target="_blank" rel="noopener"><b>API 발급 매뉴얼</b></a>에 있습니다.</p>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>서비스</th><th>발급 페이지</th><th>키 모양</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><b>구글 제미나이</b></td>
+          <td><a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>
+              <div class="tnote">구글 로그인 → <b>Create API key</b> 한 번이면 끝</div></td>
+          <td><code>AIza…</code> 한 줄</td>
+        </tr>
+        <tr>
+          <td><b>유튜브</b></td>
+          <td><a href="https://console.cloud.google.com/apis/library/youtube.googleapis.com" target="_blank" rel="noopener">YouTube Data API v3 사용설정</a>
+              <div class="tnote">프로젝트가 없으면 <a href="https://console.cloud.google.com/projectcreate" target="_blank" rel="noopener">프로젝트 만들기</a> 먼저 →
+                  <b>사용</b> 누른 뒤 <b>사용자 인증 정보 → API 키 만들기</b></div></td>
+          <td><code>AIza…</code> 한 줄</td>
+        </tr>
+        <tr>
+          <td><b>VMake</b></td>
+          <td><a href="https://vmake.ai/developers" target="_blank" rel="noopener">vmake.ai/developers</a>
+              <div class="tnote">가입 후 개발자 페이지에서 <b>앱키</b>와 <b>시크릿</b> 두 값을 받습니다</div></td>
+          <td><code>앱키:시크릿</code> (콜론 한 줄)</td>
+        </tr>
+        <tr>
+          <td><b>ElevenLabs</b></td>
+          <td><a href="https://elevenlabs.io/app/settings/api-keys" target="_blank" rel="noopener">elevenlabs.io → API Keys</a>
+              <div class="tnote">계정이 없으면 <a href="https://elevenlabs.io/sign-up" target="_blank" rel="noopener">가입</a> 먼저</div></td>
+          <td><code>sk_…</code> 한 줄</td>
+        </tr>
+        <tr>
+          <td><b>SerpApi</b></td>
+          <td><a href="https://serpapi.com/manage-api-key" target="_blank" rel="noopener">serpapi.com/manage-api-key</a>
+              <div class="tnote">계정이 없으면 <a href="https://serpapi.com/users/sign_up" target="_blank" rel="noopener">가입</a> 먼저</div></td>
+          <td>영문·숫자 긴 한 줄</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 class="sub">받은 키를 등록하는 법</h3>
+
+  <div class="step">
+    <div class="idx">1</div>
+    <div class="body">
+      <h3>👤 <b>마이페이지</b> → <b>🔑 내 키 등록</b> 탭</h3>
+      <p>화면 오른쪽 위 사람 아이콘으로 들어가시면 됩니다.</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="idx">2</div>
+    <div class="body">
+      <h3>해당 서비스 칸에 <b>붙여넣고 저장</b></h3>
+      <p>키는 <b>앞뒤 공백 없이</b> 한 줄로 넣으세요. 복사할 때 줄바꿈이 같이 딸려오는 일이 잦습니다.</p>
+      <p>저장하면 그 자리에서 <b>키가 맞는지 확인</b>합니다. 틀리면 저장되지 않고 이유를 알려줍니다.</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="idx">3</div>
+    <div class="body">
+      <h3>등록되면 그 작업은 <b>포인트가 안 깎입니다</b></h3>
+      <p>제미나이·유튜브는 등록하신 키가 공용 묶음에 들어가고, <b>묶음 전체를 포인트 없이</b> 쓰시게 됩니다.
+         VMake·ElevenLabs·SerpApi는 <b>등록한 내 키로</b> 돌아가고 요금은 본인 계정에서 나갑니다.</p>
+      <p>키를 지우고 싶으시면 같은 칸을 비우고 저장하시면 됩니다 — 그때부터 다시 포인트로 돌아갑니다.</p>
+    </div>
+  </div>
+
+  <div class="callout warn">
+    <p><b>키는 남에게 보여주지 마세요.</b> 특히 ElevenLabs·VMake·SerpApi는 <b>본인 요금</b>이 나가는 키입니다.
+       단톡방·화면공유에 그대로 노출되면 남이 쓸 수 있습니다. 노출됐다면 각 사이트에서 <b>키를 폐기하고 새로 발급</b>하세요.</p>
+  </div>
 
   <div class="callout warn">
     <p><b>SerpApi는 검색 1번에 3회가 소모됩니다.</b> 한국어·영어·중국어로 각각 찾기 때문입니다. 무료 250회는 실제 검색으로 치면 <b>한 달에 약 83번</b>입니다. 키를 등록하셔도 서버 보호를 위한 <b>하루 10번</b> 제한은 그대로 적용됩니다.</p>
   </div>
 
-  <h2>포인트 — 무엇에 얼마가 드나</h2>
+  <h2 id="points">포인트 — 무엇에 얼마가 드나</h2>
   <p class="h2sub">키를 등록하지 않은 작업은 포인트로 차감됩니다. <b>1P = 100원</b>이고 마진 없이 원가 그대로입니다.</p>
 
   <div class="tablewrap">
@@ -361,7 +438,7 @@
     <p>따로 요청하지 않으셔도 됩니다. 대략 <b>영상 30P + 렌즈 10P + 대본 10P</b>를 써보실 수 있는 양입니다. 다 쓰셨거나 잔액이 0P로 보이면 단톡방이나 카톡으로 알려주시면 채워드립니다. 사이트의 <b>＋ 충전</b> 버튼은 아직 <b>"준비 중"</b>입니다.</p>
   </div>
 
-  <h2>수익화에 필요한 계정</h2>
+  <h2 id="money">수익화에 필요한 계정</h2>
   <p class="h2sub">영상을 만든 뒤 실제로 수익을 붙이려면 아래 두 가지가 필요합니다.</p>
 
   <div class="step">
