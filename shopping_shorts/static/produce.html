@@ -6954,6 +6954,12 @@ function renderAiPick(d, hasFootage){
   // 자동선정 결과(bbMain 미지정 상태)를 왼쪽 레일에도 반영 — 사장님이 아직 안 골랐으면
   // 서버가 고른 완성도 1위 썸네일에 픽 표시가 붙는다(renderPool의 _anyPick 폴백 로직).
   if(typeof renderPool==='function') renderPool();
+  // ★2단계 씨앗도 다시 그린다(2026-08-26). AI PICK은 **비동기로 늦게** 도착하는데
+  //   s2RenderSeeds는 패널 진입(s2Enter) 때만 돌았다 — 이미 2단계에 들어와 있으면
+  //   대표 씨앗이 안 붙고 원문이 빈 카드만 남는다(브라우저 실측: 카드 3편 전부 원문 0자,
+  //   손으로 s2RenderSeeds()를 부르니 곧바로 342자 대표가 맨 앞에 붙었다).
+  //   ⚠️사장님이 직접 고른 선택은 s2RenderSeeds 안의 _handPicked 가드가 지킨다.
+  if(typeof s2RenderSeeds==='function' && document.getElementById('s2SeedRow')) s2RenderSeeds();
   const t = d.tiles || {}, stc = d.structure || {}, seg = (stc.segments) || [];
   const pm = d.pick_meta || {};
   // ★HANDOFF[d.pick_index] 폴백 제거(2026-08-14 사장님 제보 '상단은 한국어인데 메인은 중국어').
@@ -11590,20 +11596,22 @@ function s2RenderSeeds(){
       category:pm.category||'', followers:pm.followers, text:d.pick_text||'',
       structure:d.structure||{}, tiles:d.tiles||{}, pick:true});
   }
-  // 담긴 영상(HANDOFF) — AI PICK이 아닌 것들도 씨앗 후보로 올린다.
-  // ⚠️대본 원문이 없는 영상도 카드로 보여준다(분석 대기일 뿐이다). 고르면 원문이 없어
-  //   문형을 못 뽑는데, 그건 서버 판정이 알아서 넘어간다(없는 기준으로 막지 않는다).
+  // 담긴 나머지 영상 — **AI PICK 응답의 candidates**를 쓴다.
+  // ★HANDOFF를 쓰면 안 된다(실측으로 배운 것): HANDOFF의 `pickScript`는 대본 텍스트가
+  //   아니라 **boolean 플래그**라 카드 원문이 전부 0자로 떴다. candidates에는 각 영상의
+  //   `text`·`structure`가 그대로 실려 있다(aipick.py "원문 보기" 주석) — 대표 카드와
+  //   **같은 출처**라 이름·대본이 어긋날 수도 없다(pick_meta를 쓰는 이유와 같다).
   try{
-    const _hs=(typeof HANDOFF!=='undefined' && HANDOFF)||[];
+    const _cands=(d && d.candidates)||[];
     const _seen=new Set(S2.seeds.map(s=>s.shortcode).filter(Boolean));
-    _hs.forEach(h=>{
-      if(!h) return;
-      const sc=h.shortcode||h.url||'';
+    _cands.forEach(c=>{
+      if(!c) return;
+      const sc=c.shortcode||c.id||'';
       if(!sc || _seen.has(sc)) return;
       _seen.add(sc);
-      S2.seeds.push({shortcode:sc, title:h.name||h.caption||'담은 영상', thumb:h.thumbnail||'',
-        category:h.category||'', followers:h.followers,
-        text:h.pickScript||'', structure:h.structure||{}, tiles:h.tiles||{}, pick:false});
+      S2.seeds.push({shortcode:sc, title:c.title||c.name||'담은 영상', thumb:c.thumbnail||c.thumb||'',
+        category:c.category||'', followers:c.followers,
+        text:c.text||'', structure:c.structure||{}, tiles:c.tiles||{}, pick:false});
     });
   }catch(e){}
   // ★씨앗은 **지금 담긴 영상**을 따라간다(2026-08-18). 예전엔 `!S2.seed`일 때만
@@ -11714,8 +11722,12 @@ function s2ShowSeedText(i){
   const s=S2.seeds[i]; if(!s) return;
   const box=document.getElementById('s2stext-'+i); if(!box) return;
   if(box.style.display!=='none'){ box.style.display='none'; return; }
-  box.textContent = (s.text||'').trim() || '이 영상의 대본 원문이 아직 없습니다(1단계 분석 대기)';
   box.style.display='';
+  // 원문은 AI PICK 응답(candidates[].text)에 이미 실려 온다 — 따로 부르지 않는다.
+  // ⚠️`/api/produce/source_brief`에는 대본 원문이 없다(brief·segments뿐, 실측 확인).
+  //   거기서 가져오려다 응답 필드를 짐작하는 실수를 했다 — 없는 걸 부르면 조용히 빈다.
+  box.textContent = (s.text||'').trim()
+    || '이 영상의 대본 원문이 아직 없습니다(1단계 분석이 끝나면 보입니다)';
 }
 function s2ManualSeed(){
   const t=prompt('씨앗으로 쓸 대본을 붙여넣으세요');

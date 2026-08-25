@@ -68,12 +68,28 @@ def test_재료칸이_담긴_영상_전부를_후보로_올린다():
     """사장님: "여기에 1단계영상들을 다 넣어주고".
 
     종전엔 AI PICK 1편만 카드가 됐다(라벨도 '1편'이었다) — 다른 영상을 씨앗으로
-    고를 방법이 아예 없었다. HANDOFF(담긴 영상)를 후보로 붙인다."""
+    고를 방법이 아예 없었다.
+
+    ★출처는 **AI PICK 응답의 candidates**여야 한다(실측으로 배운 것).
+      처음에 HANDOFF를 썼더니 카드 원문이 전부 0자로 떴다 — HANDOFF의 `pickScript`는
+      대본 텍스트가 아니라 **boolean 플래그**이기 때문이다. candidates에는 각 영상의
+      text·structure가 대표 카드와 **같은 출처**로 실려 있다."""
     src = _produce_js()
     i = src.index("function s2RenderSeeds")
-    fn = src[i:i + 3000]
-    assert "HANDOFF" in fn, "담긴 영상을 후보로 안 올린다"
-    assert "_seen" in fn, "중복 제거가 없다(AI PICK과 HANDOFF가 겹친다)"
+    fn = src[i:i + 3200]
+    assert "candidates" in fn, "담긴 영상을 후보로 안 올린다"
+    assert "c.text" in fn, "후보의 대본 원문을 안 싣는다(카드 원문이 빈다)"
+    assert "_seen" in fn, "중복 제거가 없다(대표와 후보가 겹친다)"
+
+
+def test_AI_PICK이_늦게_와도_씨앗이_갱신된다():
+    """★AI PICK은 비동기로 늦게 온다. s2RenderSeeds가 패널 진입 때만 돌면
+    이미 2단계에 있는 사장님 화면은 **대표 씨앗이 안 붙고 원문이 빈 카드**만 남는다
+    (브라우저 실측: 카드 3편 전부 원문 0자 → 손으로 다시 그리니 342자 대표가 붙었다)."""
+    src = _produce_js()
+    i = src.index("window._aiPick = d;")
+    blk = src[i:i + 900]
+    assert "s2RenderSeeds" in blk, "AI PICK 도착 후 씨앗을 다시 그리지 않는다"
 
 
 def test_씨앗을_여러_편_고를_수_있다():
