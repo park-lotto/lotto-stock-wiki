@@ -2767,16 +2767,19 @@ function renderFramePresets(){
              align-items:center;gap:5px;line-height:1.25">
       ${thumb}
       <span style="width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center">${label}</span></button>`;
-  // 한 틀의 축소판: 위 띠(색) + 제목 블록(흰) + 나머지(영상 자리)
+  // 한 틀의 축소판 = **실제 그림**(frame.png). ★CSS로 흉내내지 않는다.
+  //   2026-08-25 사장님 지적("템플릿은 그냥 색상만 바꾼 건가?"): 예전 축소판은
+  //   회색 종이 위에 색띠만 얹은 손그림이라, 검색창·부제 띠·아이콘이 다 죽어
+  //   24종이 전부 같아 보였다. frame.png는 렌더가 쓰는 바로 그 함수라
+  //   **고른 것 = 나오는 것**이 구조적으로 보장된다(frameUrl 한 곳만 쓴다).
   const thumbOf=p=>{
-    const barPct=Math.max(3, Math.min(45, ((p.bar_h!=null?p.bar_h:190)/1920)*100));
-    const head=p.has_head
-      ? `<div style="position:absolute;left:0;right:0;top:${barPct}%;height:16%;background:#fff;
-           border-bottom:1px solid #d8d8d8"></div>` : '';
+    const u=frameUrl({preset:p.id, bar_h:(p.bar_h!=null?p.bar_h:190), bottom_h:0,
+      channel:'채널명', title:'제목이 여기 들어가요', views:p.demo_views||'264만',
+      comments:p.demo_comments||'587', ad_badge:false, icons:true});
     return `<div style="position:relative;width:${Math.round(TH*9/16)}px;height:${TH}px;border-radius:4px;
         overflow:hidden;background:#c9ced6;border:1px solid rgba(255,255,255,.18);flex:0 0 auto">
-        <div style="position:absolute;left:0;right:0;top:0;height:${barPct}%;background:${p.bar}"></div>
-        ${head}</div>`;
+        <img src="${u}" alt=""
+             style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top"></div>`;
   };
   const noneThumb=`<div style="width:${Math.round(TH*9/16)}px;height:${TH}px;border-radius:4px;
       border:1px dashed var(--line);display:flex;align-items:center;justify-content:center;

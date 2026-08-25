@@ -66,8 +66,12 @@ def _cap(color, outline_color, y, box=False):
       물어봤기 때문이다 — 없는 걸 지어내면 살림킹왕짱 색 뒤집힘과 같은 사고가 난다.
       화면이 쓰던 값을 그대로 둔다(빈값 = "안 정했음" 규약, DEFAULTS와 같다).
     """
+    # ★박스 색은 지어내지 않는다 — 실측한 outline_color를 그대로 쓴다(2026-08-25 결함).
+    #   외곽선 색 = 그 채널이 글자 뒤에 깔던 '밝은 면' 색이다. 예전엔 여기 "#000000"을
+    #   박아뒀는데, cap_color가 검정인 채널이 많아 **검은 박스 위 검은 글자**가 됐다
+    #   (실측: 박스 켜진 틀 중 9종). 글자가 외곽선만으로 겨우 읽혀 뭉개져 보였다.
     return {"color": color, "outline": True, "outline_color": outline_color,
-            "y_pct": y, "box": bool(box), "box_color": "#000000"}
+            "y_pct": y, "box": bool(box), "box_color": outline_color}
 
 
 PRESETS = {
@@ -443,9 +447,23 @@ def normalize(spec):
     return s
 
 
+# ★그리는 코드가 바뀌면 올려라. 캐시키에 섞여 옛 그림이 되살아나는 걸 막는다.
+#   2026-08-25 실사고 직전에 발견: 키가 spec만 봐서, 틀 그리는 규칙을 고쳐도
+#   같은 파일이 그대로 나왔다("고쳤는데 화면은 그대로"의 단골 원인).
+#   프리셋 값 변경도 마찬가지라 PRESETS 해시도 함께 섞는다 — 잊어버려도 자동으로 갈린다.
+RENDER_VER = 2
+
+
+def _presets_sig():
+    raw = json.dumps(PRESETS, sort_keys=True, ensure_ascii=False).encode("utf-8")
+    return hashlib.sha1(raw).hexdigest()[:8]
+
+
 def cache_key(spec):
-    """같은 spec이면 같은 파일 — 렌더마다 다시 그리지 않게."""
+    """같은 spec이면 같은 파일 — 렌더마다 다시 그리지 않게.
+    ★단, **그리는 코드/프리셋이 바뀌면 달라진다**(RENDER_VER + PRESETS 해시)."""
     s = normalize(spec)
+    s = dict(s, _v=RENDER_VER, _p=_presets_sig())
     raw = json.dumps(s, sort_keys=True, ensure_ascii=False).encode("utf-8")
     return hashlib.sha1(raw).hexdigest()[:16]
 
@@ -501,9 +519,29 @@ def _bookmark(d, cx, cy, color, w=30, h=42, th=8):
     d.line([cx + w // 2, cy + h // 2, cx, cy + h // 6], fill=color, width=th)
 
 
+def _lum(c):
+    """색의 밝기(0~255). 글자가 바탕에 묻히는지 판정하는 데만 쓴다."""
+    return (c[0] * 299 + c[1] * 587 + c[2] * 114) / 1000
+
+
+def _searchbar(d, cx, cy, color, w=560, h=64):
+    """띠 가운데의 **둥근 검색창**. 실측 center_kind='검색창'인 채널이 쓴다.
+    채널명을 그냥 글자로 찍는 것과 인상이 완전히 다르다(브랜드 시그니처)."""
+    x0, x1 = cx - w // 2, cx + w // 2
+    d.rounded_rectangle([x0, cy - h // 2, x1, cy + h // 2],
+                        radius=h // 2, outline=color, width=4)
+    _search(d, x1 - h // 2 - 6, cy, color, r=int(h * 0.26), th=5)
+
+
 # 실측에서 나온 아이콘 종류 → 그리는 함수. 없는 이름이 와도 죽지 않게 get으로 받는다.
 _ICONS = {"hamburger": _hamburger, "search": _search, "dots": _dots,
           "back": _back, "bookmark": _bookmark}
+
+# 띠 가운데에 무엇이 오나(실측 center_kind). ★표기가 세 벌로 온다('없음'·'none'·null)
+#   — 아이콘 표(ICON)처럼 여기서 한 값으로 모은다. 모르는 값은 '채널명'(지금까지 동작).
+_CENTER = {"검색창": "search", "search": "search",
+           "채널명": "name", "name": "name",
+           "없음": "none", "none": "none", "": "none", None: "name"}
 
 
 def render(spec):
@@ -528,7 +566,13 @@ def render(spec):
                 left(d, 92, cy, on_bar)
             if right:
                 right(d, W - 96, cy, on_bar)
-        if s["channel"]:
+        # ★띠 가운데 구성은 채널마다 다르다(실측 center_kind: 검색창 2 / 채널명 13 / 없음 5).
+        #   2026-08-25까지 이 값의 **소비처가 0곳**이라 전부 '채널명'으로만 그려졌다 —
+        #   "틀이 다 똑같다 / 색만 바뀐 거냐"(사장님)의 직접 원인이었다. cap_* 사고와 같은 모양.
+        center = _CENTER.get(p.get("center_kind"), "name")
+        if center == "search":
+            _searchbar(d, W // 2, cy, on_bar, h=max(44, int(bar_h * 0.34)))
+        elif center == "name" and s["channel"]:
             # 크기 0 = "안 정했음" → 기존 자동 규칙(띠 높이의 30%)을 그대로 쓴다.
             csize = s["ch_size"] or max(28, int(bar_h * 0.30))
             f = _font("bar", csize, s["ch_font"])
@@ -590,15 +634,31 @@ def render(spec):
         if s["comments"]:
             meta = (meta + " | " if meta else "") + f"댓글 {s['comments']}개"
         block_h = 36 + len(lines) * line_h + (52 if meta else 0) + 24
-        d.rectangle([0, y, W, y + block_h - 1], fill=_rgb(s["head_bg"]))
+        # ★제목 블록의 **바탕색·글자색도 채널마다 다르다**(실측 sub_bg 5가지·sub_text 9가지).
+        #   2026-08-25까지 소비처 0곳이라 흰 바탕+검은 글자 한 벌로만 나갔다(center_kind와 같은 사고).
+        #   사장님이 화면에서 직접 정한 head_bg가 있으면 그게 먼저다(사람 손 > 실측).
+        touched = str(s["head_bg"]).upper() not in ("#FFFFFF", "#FFF")
+        bg = _rgb(s["head_bg"]) if touched else _rgb(p.get("sub_bg") or s["head_bg"])
+        # 글자색: 실측 sub_text. 없으면 지금까지의 값. 바탕이 어두우면 검은 글자가 안 보이므로
+        # 바탕 밝기로 갈라준다(지어내는 게 아니라 **안 보이는 걸 막는** 규칙 — box_color와 같다).
+        dark_bg = _lum(bg) < 128
+        title_fill = (245, 245, 245, 255) if dark_bg else (20, 20, 20, 255)
+        _fallback_meta = (190, 190, 190, 255) if dark_bg else (120, 120, 120, 255)
+        meta_fill = _rgb(p["sub_text"]) if p.get("sub_text") else _fallback_meta
+        # ★실측이 틀릴 수도 있다 — '요새난리'는 검은 바탕에 검은 글자로 읽혀 왔다(실측 1종).
+        #   값을 고쳐 쓰진 않되(원본은 실측이 주인), **안 보이면 폴백**한다.
+        if abs(_lum(meta_fill) - _lum(bg)) < 60:
+            meta_fill = _fallback_meta
+        rule_fill = (210, 210, 210, 255) if dark_bg else (30, 30, 30, 255)
+        d.rectangle([0, y, W, y + block_h - 1], fill=bg)
         ty = y + 36
         for ln in lines:
-            d.text((tx, ty), ln, font=ft, fill=(20, 20, 20, 255), anchor="ma")
+            d.text((tx, ty), ln, font=ft, fill=title_fill, anchor="ma")
             ty += line_h
         if meta:
-            d.text((60, ty + 6), meta, font=fm, fill=(120, 120, 120, 255), anchor="la")
+            d.text((60, ty + 6), meta, font=fm, fill=meta_fill, anchor="la")
             ty += 46
-            d.rectangle([60, ty + 8, W - 60, ty + 11], fill=(30, 30, 30, 255))
+            d.rectangle([60, ty + 8, W - 60, ty + 11], fill=rule_fill)
     return im
 
 
