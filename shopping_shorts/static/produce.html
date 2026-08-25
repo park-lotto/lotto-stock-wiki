@@ -11606,10 +11606,13 @@ function s2RenderSeeds(){
     const _seen=new Set(S2.seeds.map(s=>s.shortcode).filter(Boolean));
     _cands.forEach(c=>{
       if(!c) return;
-      const sc=c.shortcode||c.id||'';
+      // ★식별자는 **video_id**다(브라우저 실측: candidates 키 = video_id·score·name·
+      //   thumbnail·structure·text). shortcode로 읽었더니 전부 빈 값이 돼 3편이
+      //   통째로 걸러졌다 — 필드명을 짐작하면 조용히 0건이 된다.
+      const sc=c.video_id||c.shortcode||c.id||'';
       if(!sc || _seen.has(sc)) return;
       _seen.add(sc);
-      S2.seeds.push({shortcode:sc, title:c.title||c.name||'담은 영상', thumb:c.thumbnail||c.thumb||'',
+      S2.seeds.push({shortcode:sc, title:c.name||c.title||'담은 영상', thumb:c.thumbnail||c.thumb||'',
         category:c.category||'', followers:c.followers,
         text:c.text||'', structure:c.structure||{}, tiles:c.tiles||{}, pick:false});
     });
