@@ -633,13 +633,18 @@ def regen_one_beat(sources, style, role, beats, template="", target_seconds=30,
     from shopping_shorts import bank_assemble, script_gate
 
     role = (role or "").strip()
-    if not role or not style:
+    if not role:
         return None
-    roles = list(style.get("beat_roles") or [])
-    if role not in roles:
+    # ★스파인이 없어도 돈다(2026-08-26 사장님 "픽업영상 대본은 바꾸기를 누르면
+    #   ai자동바꾸기가 왜안되나"). 픽업영상 대본은 **스타일을 안 고르는 경로**라
+    #   style이 None인데, 종전엔 여기서 곧장 None을 반환해 [바꾸기]가 통째로 막혔다.
+    #   스파인이 없으면 역할 검증·문장틀만 건너뛰고 나머지(앞뒤 문맥·재료·길이·판정)는
+    #   전체 생성과 **그대로 같은 경로**로 간다 — 여기서 따로 만들면 결이 어긋난다(0순위-B).
+    roles = list((style or {}).get("beat_roles") or [])
+    if roles and role not in roles:
         return None
     seconds = max(5, min(int(target_seconds or 30), 90))
-    templates = (style.get("templates") or {}).get(role) or []
+    templates = ((style or {}).get("templates") or {}).get(role) or []
     # 고른 틀이 그 칸 것이 아니면 무시한다(클라이언트 값을 믿지 않는다 — work_id 사고와 같은 유형).
     picked = (template or "").strip()
     want = [picked] if picked and picked in templates else list(templates)

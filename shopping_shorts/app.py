@@ -14691,17 +14691,23 @@ def api_script_beat_regen(request: Request, body: dict):
     role = (body.get("role") or "").strip()
     if not role:
         return JSONResponse(status_code=422, content={"ok": False, "error": "role 필요"})
+    # ★style_id는 **선택**이다(2026-08-26 사장님 "픽업영상 대본은 바꾸기를 누르면
+    #   ai자동바꾸기가 왜안되나"). 픽업영상 대본은 스타일을 안 고르는 경로라 style_id가
+    #   없는데, 종전엔 무조건 422로 튕겨 **[바꾸기]가 통째로 막혀 있었다**.
+    #   스타일이 없으면 씨앗 구조(base_script/structure)로 대신 돌린다 — 아래 spines=None.
     try:
         style_id = int(body.get("style_id"))
     except (TypeError, ValueError):
-        return JSONResponse(status_code=422, content={"ok": False, "error": "style_id 필요"})
+        style_id = None
     beats = [b for b in (body.get("beats") or []) if isinstance(b, dict)]
     if not beats:
         return JSONResponse(status_code=422, content={"ok": False, "error": "beats 필요"})
 
-    style = next((s for s in store.list_style_spines(category=None) if s["id"] == style_id), None)
-    if not style:
-        return JSONResponse(status_code=404, content={"ok": False, "error": "없는 스타일"})
+    style = None
+    if style_id is not None:
+        style = next((s for s in store.list_style_spines(category=None) if s["id"] == style_id), None)
+        if not style:
+            return JSONResponse(status_code=404, content={"ok": False, "error": "없는 스타일"})
 
     # 재료 — 전체 생성과 같은 경로로 씨앗 항목을 찾는다(위키에 없으면 body 폴백도 동일).
     shortcode = (body.get("shortcode") or "").strip()
@@ -14713,8 +14719,9 @@ def api_script_beat_regen(request: Request, body: dict):
               "category": body.get("category") or ""}
     # ★고른 스파인을 넘긴다 — 썰 재료 주입 여부는 **스파인의 fit_categories**로 갈린다
     #   (항목 category로는 라이브에서 절대 안 켜졌다. 2026-08-19 실측).
+    #   ⚠️픽업 경로는 스파인이 없다 — [None]을 넘기면 그 아래에서 터진다.
     _src, _facts_block, _job, _jid, _scene_block = _materials_for_generate(
-        it, body, store, cid, spines=[style])
+        it, body, store, cid, spines=[style] if style else None)
 
     _bank_ctx = ""
     if store.get_setting("ping_pong_enabled", "") == "1":
