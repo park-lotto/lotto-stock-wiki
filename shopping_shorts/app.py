@@ -4842,6 +4842,13 @@ def api_mix_scene_lab_narration(job_id: str, beat_idx: int, body: dict,
         return {"ok": True, "unchanged": True, "regen": True,
                 "tts_ver": beat.get("tts_ver") or 0}
     beat["narration"] = text
+    # ★사람이 직접 고쳤다는 표식 (2026-08-25 고객 오류신고 cid 110 "자막수정이 안되요").
+    #   저장 출구(store._ensure_screen_time → enforce_scripted_narration)가 1단계 확정
+    #   대본에 없는 문장을 "EDL이 지어낸 것"으로 보고 **원본으로 되돌리고 있었다.**
+    #   3단계 수정은 원본과 다른 게 당연하므로 고칠 때마다 되돌려졌다 — 저장 API는
+    #   {"ok":true,"saved":true}를 주는데 DB는 그대로라 "저장이 안 된다"로 보였다.
+    #   표식을 여기서만 단다(사람이 고치는 유일한 자리) → AI 창작 방어는 그대로 살아있다.
+    beat["narration_manual"] = True
     # ★대본이 바뀌면 옛 문장 기준으로 계산된 자막 타이밍은 **전부 무효**다. 지워야
     #   _lab_captions·렌더가 새 문장으로 다시 계산한다(안 지우면 옛 구절 수에 맞춰
     #   zip이 잘려 자막이 중간에서 끊긴다).
