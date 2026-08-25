@@ -4264,6 +4264,32 @@ def api_mix_segments(job_id: str):
     return {"ok": True, "segments": segs}
 
 
+
+def _film_seg_from_id(seg_id: str, job: dict):
+    """`film_<video_id>_<start>_<end>` → {video_id,start,end}. 아니면 None.
+
+    ★화면(scene_lab commitRoll)이 만드는 id와 짝이다. 형식이 어긋나면 조용히 None —
+      경로 조작을 막기 위해 video_id가 이 잡의 소스 목록에 있을 때만 통과시킨다.
+    """
+    import re as _re
+    if not isinstance(seg_id, str) or not seg_id.startswith("film_"):
+        return None
+    m = _re.match(r"^film_(.+)_([0-9]+\.[0-9]+)_([0-9]+\.[0-9]+)$", seg_id)
+    if not m:
+        return None
+    vid, a, b = m.group(1), float(m.group(2)), float(m.group(3))
+    if not (b > a >= 0):
+        return None
+    known = set()
+    for ex in (job.get("extract") or {}).values():
+        v = (ex or {}).get("video_id")
+        if v:
+            known.add(str(v))
+    if vid not in known:
+        return None
+    return {"video_id": vid, "start": a, "end": b, "seg_id": seg_id}
+
+
 @app.get("/api/mix/seg_thumb/{job_id}/{seg_id}")
 def api_mix_seg_thumb(job_id: str, seg_id: str):
     """[다른 화면으로] 피커용 seg 썸네일(중간지점 프레임 jpg, 캐시).
@@ -4273,6 +4299,10 @@ def api_mix_seg_thumb(job_id: str, seg_id: str):
         return JSONResponse(status_code=404, content={"ok": False, "error": "데이터 없음"})
     seg_map, _ = _edit_plan._build_inventory(list(job["extract"].values()))
     seg = seg_map.get(seg_id)
+    if not seg:
+        # ★필름에서 만든 조각(2026-08-26) — 화면이 즉석에서 만든 구간이라 인벤토리에 없다.
+        #   id에 영상·구간이 들어 있으니 그걸로 프레임을 뽑는다(없으면 위 훅 컷이 빈칸이 된다).
+        seg = _film_seg_from_id(seg_id, job)
     if not seg:
         return JSONResponse(status_code=404, content={"ok": False, "error": "없는 seg_id"})
     work = _MIX_WORK_DIR / job_id
@@ -4562,7 +4592,11 @@ def api_mix_scene_lab_fill(job_id: str, body: dict):
         return JSONResponse(status_code=422, content={"ok": False, "error": "이 칸엔 멘트가 없어요"})
     seg_map, _ = _edit_plan._build_inventory(list((job.get("extract") or {}).values()))
     taken = {str(s) for s in (body.get("taken") or [])}
-    pool = [sid for sid in seg_map if sid not in taken]
+    # ⚠ AI 자동 채우기 후보에서 첫·끝(CTA·썸네일) 조각을 뺀다(2026-08-26).
+    #   _build_inventory가 edge 표식만 달고 버리지 않게 바뀌었다 — 사람이 화면에서 골라
+    #   쓰는 건 되지만 **AI가 자동으로 집는 건 종전대로 막는다**(설계 ⑤).
+    pool = [sid for sid, _s in seg_map.items()
+            if sid not in taken and not _edit_plan._is_edge_seg(_s)]
     if not pool:
         return {"ok": True, "picks": [], "reason": "남은 장면이 없어요"}
     need = body.get("need")

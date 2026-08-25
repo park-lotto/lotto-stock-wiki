@@ -1,0 +1,430 @@
+/* filmroll.js — 필름 롤러(캡컷식 자르기) 부품 하나.
+ *
+ * ★같은 자르기 UI가 세 곳에서 필요하다(위 훅 컷 · 아래 소스 카드 · 필름형 토글).
+ *   세 벌로 적으면 반드시 어긋난다(0순위-B) — 이 파일 하나만 쓴다.
+ *
+ * 쓰는 법:
+ *   const roll = filmroll(hostEl, {
+ *     videoId, src, dur,            // 원본 영상
+ *     from, to,                     // 지금 쓰는 구간(하이라이트). 없으면 안 그린다
+ *     caps,                         // [[초, "자막"], ...] (선택)
+ *     onCommit(ranges)              // [{s,e}, ...] 담기 눌렀을 때
+ *   });
+ *   roll.destroy();                 // 접을 때 반드시 부른다(영상·타이머 정리)
+ *
+ * ★데모(scratchpad/filmdemo)에서 실측으로 밟은 함정 — 여기 다 반영돼 있다:
+ *   · 1칸 = 정확히 1초(STEP). t=i*(DUR/N)로 뽑으면 화면과 재생이 어긋난다
+ *   · 썸네일은 칸 한가운데에서 뽑는다(정각은 그 칸 안의 전환을 놓쳐 22.6% 다른 그림)
+ *   · 길이는 영상에서 읽는다(하드코딩 22.9 vs 실제 22.867 → 끝으로 갈수록 벌어짐)
+ *   · 썸네일 캐시키와 조회키가 어긋나면 '있는데 안 쓰인다' → thumbAt(초) 하나로
+ *   · 손잡이는 display:block + pointer-events:auto (span은 inline이라 0×0이 된다)
+ */
+(function (global) {
+  'use strict';
+
+  const PPS_BASE = 54;                 // 칸 폭 54px일 때 1초
+  const LADDER = [0.1, 0.2, 0.25, 0.5, 1, 2, 5, 10];
+  const CH = 72;                       // 칸 높이(9:16 → 폭 약 40)
+
+  const CACHE = {};                    // "vid|step|i" → dataURL (전 롤러 공용)
+
+  function calcStep(cw) {
+    const raw = PPS_BASE / cw;
+    let best = LADDER[0];
+    for (const v of LADDER) if (v <= raw) best = v;
+    return best;
+  }
+
+  function filmroll(host, opt) {
+    opt = opt || {};
+    const vid = opt.videoId || '';
+    const caps = opt.caps || [];
+    let DUR = +opt.dur || 0;
+    let CW = 40, STEP = 1, N = 0, off = 0;
+    let MA = null;                     // 찍어둔 시작점
+    let BOXES = [];                    // 확정 구간들
+    let ACTBOX = null;
+    let destroyed = false;
+    let raf = 0, scrubWant = null, scrubBusy = false, playing = false;
+
+    host.innerHTML =
+      '<div class="fr">' +
+        '<div class="frtop">' +
+          '<span class="frname"></span>' +
+          '<span class="frzoom">확대 <input type="range" class="frz" min="26" max="240" value="40"></span>' +
+          '<span class="frstep"></span>' +
+          '<button type="button" class="frclose" title="접기">◀ 접기</button>' +
+        '</div>' +
+        '<div class="frwin">' +
+          '<div class="frload">🎞 필름 뽑는 중…</div>' +
+          '<div class="frbelt"></div>' +
+          '<div class="frcaps"></div>' +
+          '<div class="fruse"></div>' +
+          '<div class="frboxes"></div>' +
+          '<div class="frmark"></div>' +
+          '<div class="frhead"><span class="frgrip"></span><span class="frdur"></span></div>' +
+        '</div>' +
+        '<div class="frbar"></div>' +
+        '<video class="frpv" muted playsinline preload="auto"></video>' +
+        '<canvas class="frcv" style="display:none"></canvas>' +
+      '</div>';
+
+    const $ = s => host.querySelector(s);
+    const win = $('.frwin'), belt = $('.frbelt'), pv = $('.frpv'), cv = $('.frcv');
+    const headEl = $('.frhead'), gripEl = $('.frgrip'), durEl = $('.frdur');
+    const markEl = $('.frmark'), boxesEl = $('.frboxes'), capsEl = $('.frcaps');
+    const useEl = $('.fruse'), barEl = $('.frbar'), loadEl = $('.frload');
+
+    $('.frname').textContent = opt.name || '';
+    $('.frclose').onclick = () => { if (opt.onClose) opt.onClose(); };
+
+    const winW = () => win.clientWidth || 600;
+    const pps = () => CW / STEP;
+    const maxOff = () => Math.max(0, DUR * pps() - winW());
+    const clamp = v => Math.max(0, Math.min(maxOff(), v));
+    const secToX = t => t * pps() - off;
+    const xToSec = x => (x + off) / pps();
+
+    /* 그 시각의 썸네일 — 저장 키를 아는 유일한 곳(캐시키 불일치 방지) */
+    function thumbAt(sec) {
+      const i = Math.floor(sec / STEP);
+      const hit = CACHE[vid + '|' + STEP + '|' + i];
+      if (hit) return hit;
+      let best = '', bd = 1e9;
+      for (const k in CACHE) {
+        const p = k.split('|');
+        if (p[0] !== vid) continue;
+        const st = parseFloat(p[1]), idx = parseInt(p[2], 10);
+        if (!isFinite(st) || !isFinite(idx)) continue;
+        const d = Math.abs(idx * st + st / 2 - sec);
+        if (d < bd) { bd = d; best = CACHE[k]; }
+      }
+      return best;
+    }
+
+    function seekRaw(v, t) {
+      return new Promise(r => {
+        let done = false;
+        const k = () => { if (done) return; done = true; v.removeEventListener('seeked', k); r(); };
+        v.addEventListener('seeked', k);
+        try { v.currentTime = Math.min(Math.max(0, t), Math.max(0, (v.duration || DUR) - 0.04)); }
+        catch (_) { done = true; r(); return; }
+        setTimeout(k, 800);
+      });
+    }
+
+    /* 스크러빙 — 끄는 동안 미리보기가 따라온다. 마지막 요청만 처리한다. */
+    function scrubTo(t) {
+      scrubWant = Math.max(0, Math.min(DUR - 0.03, t));
+      moveHead(scrubWant);
+      if (scrubBusy) return;
+      scrubBusy = true;
+      const pump = () => {
+        if (destroyed || scrubWant === null) { scrubBusy = false; return; }
+        const t2 = scrubWant; scrubWant = null;
+        pv.pause(); playing = false;
+        let done = false;
+        const fin = () => { if (done) return; done = true; pv.removeEventListener('seeked', fin); pump(); };
+        pv.addEventListener('seeked', fin);
+        try { pv.currentTime = t2; } catch (_) { done = true; scrubBusy = false; return; }
+        setTimeout(fin, 240);
+      };
+      pump();
+    }
+
+    function moveHead(t) {
+      if (!headEl) return;
+      if (MA !== null && durEl) {
+        durEl.textContent = Math.abs(t - MA).toFixed(2) + '초';
+        durEl.classList.add('on');
+      } else if (durEl) durEl.classList.remove('on');
+      const x = secToX(t);
+      if (x < -6 || x > winW() + 6) { headEl.classList.remove('on'); return; }
+      headEl.classList.add('on');
+      headEl.style.left = Math.round(x) + 'px';
+    }
+
+    function drawMark() {
+      if (MA === null) { markEl.classList.remove('on'); return; }
+      const x = secToX(MA);
+      if (x < -4 || x > winW() + 4) { markEl.classList.remove('on'); return; }
+      markEl.classList.add('on'); markEl.style.left = Math.round(x) + 'px';
+    }
+
+    function drawUse() {
+      if (opt.from == null || opt.to == null) { useEl.style.display = 'none'; return; }
+      useEl.style.display = 'block';
+      useEl.style.transform = `translateX(${-off}px)`;
+      useEl.style.width = (DUR * pps()) + 'px';
+      useEl.innerHTML = `<span class="u" style="left:${opt.from * pps()}px;` +
+        `width:${Math.max(4, (opt.to - opt.from) * pps())}px"><b>지금 쓰는 구간</b></span>`;
+    }
+
+    function drawCaps() {
+      capsEl.style.transform = `translateX(${-off}px)`;
+      capsEl.style.width = (DUR * pps()) + 'px';
+      if (!caps.length) { capsEl.innerHTML = ''; return; }
+      capsEl.innerHTML = caps.map((c, i) => {
+        const st = c[0], en = (i + 1 < caps.length) ? caps[i + 1][0] : DUR;
+        const w = (en - st) * pps() - 1;
+        if (w < 8) return '';
+        return `<span class="cp" style="left:${st * pps()}px;width:${w}px">${esc(c[1])}</span>`;
+      }).join('');
+    }
+
+    function drawBoxes() {
+      boxesEl.style.width = (DUR * pps()) + 'px';
+      boxesEl.innerHTML = BOXES.map((b, i) =>
+        `<div class="bx${ACTBOX === i ? ' act' : ''}" data-i="${i}" ` +
+        `style="left:${secToX(b.s)}px;width:${Math.max(8, (b.e - b.s) * pps())}px">` +
+        `<span class="t">${(b.e - b.s).toFixed(2)}초</span>` +
+        `<span class="e l" data-edge="l"></span><span class="e r" data-edge="r"></span>` +
+        `<span class="x" data-del="${i}">×</span></div>`).join('');
+      wireBoxes();
+    }
+
+    function wireBoxes() {
+      boxesEl.querySelectorAll('.bx').forEach(el => {
+        let mode = null, sx = 0, s0 = 0, e0 = 0, moved = false;
+        el.addEventListener('pointerdown', ev => {
+          const i = +el.dataset.i, b = BOXES[i]; if (!b) return;
+          if (ev.target.dataset.del !== undefined) {      // × = 즉시 삭제
+            ev.stopPropagation(); ev.preventDefault();
+            BOXES.splice(+ev.target.dataset.del, 1);
+            ACTBOX = null; drawBoxes(); drawBar(); return;
+          }
+          ev.stopPropagation(); ev.preventDefault();
+          mode = ev.target.dataset.edge || 'move';
+          sx = ev.clientX; s0 = b.s; e0 = b.e; moved = false;
+          ACTBOX = i; el.classList.add('dragging');
+          try { el.setPointerCapture(ev.pointerId); } catch (_) {}
+        });
+        el.addEventListener('pointermove', ev => {
+          if (!mode) return;
+          const i = +el.dataset.i, b = BOXES[i]; if (!b) return;
+          const d = (ev.clientX - sx) / pps();
+          if (Math.abs(ev.clientX - sx) > 3) moved = true;
+          if (mode === 'l') b.s = Math.max(0, Math.min(e0 - 0.1, s0 + d));
+          else if (mode === 'r') b.e = Math.min(DUR, Math.max(s0 + 0.1, e0 + d));
+          else { const len = e0 - s0, ns = Math.max(0, Math.min(DUR - len, s0 + d)); b.s = ns; b.e = ns + len; }
+          b.s = Math.round(b.s * 100) / 100; b.e = Math.round(b.e * 100) / 100;
+          el.style.left = secToX(b.s) + 'px';
+          el.style.width = Math.max(8, (b.e - b.s) * pps()) + 'px';
+          const lab = el.querySelector('.t'); if (lab) lab.textContent = (b.e - b.s).toFixed(2) + '초';
+          ev.stopPropagation();
+        });
+        const end = ev => {
+          if (!mode) return;
+          mode = null; el.classList.remove('dragging');
+          const b = BOXES[+el.dataset.i];
+          BOXES.sort((x, y) => x.s - y.s);
+          ACTBOX = b ? BOXES.indexOf(b) : null;
+          drawBoxes(); drawBar();
+          ev.stopPropagation();
+        };
+        el.addEventListener('pointerup', end);
+        el.addEventListener('pointercancel', end);
+        el.addEventListener('click', ev => ev.stopPropagation());
+        el.addEventListener('contextmenu', ev => { ev.preventDefault(); ev.stopPropagation(); });
+      });
+    }
+
+    function addBox(a, b) {
+      if (b - a < 0.1) return false;
+      BOXES.push({ s: Math.round(a * 100) / 100, e: Math.round(b * 100) / 100 });
+      BOXES.sort((x, y) => x.s - y.s);
+      ACTBOX = null; MA = null;
+      drawBoxes(); drawMark(); drawBar();
+      return true;
+    }
+
+    /* 손잡이 우클릭 = 여기 찍기(시작 → 끝) */
+    function markHere() {
+      const t = Math.round(pv.currentTime * 100) / 100;
+      if (MA === null) { MA = t; drawMark(); drawBar(); moveHead(t); return; }
+      const a = Math.min(MA, t), b = Math.max(MA, t);
+      if (b - a < 0.15) { MA = null; drawMark(); drawBar(); moveHead(t); return; }
+      addBox(a, b); moveHead(t);
+    }
+
+    function makeBox() {
+      const el = host.querySelector('.frlen');
+      const n = Math.max(0.1, parseFloat(el && el.value) || 2.4);
+      const a = Math.max(0, Math.min(DUR - 0.1, pv.currentTime));
+      addBox(a, Math.min(DUR, a + n));
+    }
+
+    function drawBar() {
+      const total = BOXES.reduce((a, b) => a + (b.e - b.s), 0);
+      barEl.innerHTML =
+        (MA !== null
+          ? `<span class="frhint">시작 <b>${MA.toFixed(2)}초</b> — 빨간선을 옮기고 <b>손잡이 오른쪽 클릭</b> 한 번 더</span>`
+          : `<span class="frhint"><b>왼쪽 클릭</b>=빨간선 이동 · <b>손잡이 끌기</b>=훑어보기 · <b>손잡이 오른쪽 클릭</b> 2번=구간</span>`) +
+        `<span class="frmk"><button type="button" class="frbtn mk">＋ 구간</button>` +
+        `<input type="number" class="frlen" step="0.1" min="0.1" value="2.4"><span class="frhint">초</span></span>` +
+        (BOXES.length
+          ? `<button type="button" class="frbtn ok">⬆ 담기 (${BOXES.length}개 · ${total.toFixed(2)}초)</button>` +
+            `<button type="button" class="frbtn" data-act="clr">비우기</button>`
+          : '');
+      const mk = barEl.querySelector('.mk'); if (mk) mk.onclick = makeBox;
+      const ok = barEl.querySelector('.ok');
+      if (ok) ok.onclick = () => { if (opt.onCommit) opt.onCommit(BOXES.map(b => ({ s: b.s, e: b.e }))); };
+      const clr = barEl.querySelector('[data-act="clr"]');
+      if (clr) clr.onclick = () => { BOXES = []; ACTBOX = null; drawBoxes(); drawBar(); };
+    }
+
+    function applyW() {
+      off = clamp(off);
+      belt.style.transform = `translateX(${-off}px)`;
+      belt.querySelectorAll('.fc').forEach(c => {
+        const f = parseFloat(c.dataset.frac || '1');
+        c.style.width = (CW * f) + 'px';
+      });
+      boxesEl.style.transform = `translateX(${-off}px)`;
+      markEl.style.transform = 'none';
+      drawCaps(); drawUse(); drawBoxes(); drawMark();
+      moveHead(pv.currentTime || 0);
+    }
+
+    async function strip() {
+      loadEl.style.display = 'block';
+      belt.innerHTML = '';
+      STEP = calcStep(CW);
+      N = Math.max(1, Math.ceil(DUR / STEP));
+      host.querySelector('.frstep').textContent = `한 칸 ${STEP < 1 ? STEP.toFixed(2) : STEP.toFixed(0)}초`;
+      const tmp = document.createElement('video');
+      tmp.muted = true; tmp.preload = 'auto'; tmp.src = opt.src;
+      await new Promise(r => {
+        if (tmp.readyState >= 1) return r();
+        tmp.addEventListener('loadedmetadata', r, { once: true });
+        setTimeout(r, 5000);
+      });
+      if (destroyed) return;
+      if (isFinite(tmp.duration) && tmp.duration > 0) DUR = tmp.duration;
+      N = Math.max(1, Math.ceil(DUR / STEP));
+      const w = Math.max(24, Math.round(CW)), x = cv.getContext('2d');
+      cv.width = w * 2; cv.height = CH * 2;
+      for (let i = 0; i < N; i++) {
+        if (destroyed) return;
+        const t0 = i * STEP;
+        const t = Math.min(DUR - 0.05, t0 + Math.min(STEP / 2, (DUR - t0) / 2));
+        const key = vid + '|' + STEP + '|' + i;
+        let d = CACHE[key];
+        if (!d) {
+          await seekRaw(tmp, t);
+          if (destroyed) return;
+          try { x.drawImage(tmp, 0, 0, cv.width, cv.height); d = cv.toDataURL('image/jpeg', 0.6); CACHE[key] = d; }
+          catch (_) { d = ''; }
+        }
+        const c = document.createElement('div');
+        c.className = 'fc' + (((i + 1) % 5 === 0) ? ' tick' : '');
+        const frac = Math.min(1, (DUR - t0) / STEP);
+        c.style.width = (CW * frac) + 'px';
+        c.dataset.frac = frac; c.dataset.t = t.toFixed(3);
+        const lab = (t0 % (STEP < 1 ? 1 : 5 * STEP) < STEP * 0.9)
+          ? `<span class="s">${t0.toFixed(STEP < 1 ? 1 : 0)}s</span>` : '';
+        c.innerHTML = (d ? `<img src="${d}">` : '') + lab;
+        belt.appendChild(c);
+      }
+      try { tmp.src = ''; } catch (_) {}
+      loadEl.style.display = 'none';
+      applyW(); drawBar();
+    }
+
+    /* ── 마우스 배선 ───────────────────────────────────────── */
+    // ★상태 선언을 배선보다 먼저 — 아래 핸들러들이 참조한다(TDZ 예방)
+    let down = false, sx = 0, so = 0, dragged = false, dg = false;
+    win.addEventListener('contextmenu', e => e.preventDefault());
+    win.addEventListener('click', e => {
+      if (dragged || e.target.closest('.bx')) return;
+      const r = win.getBoundingClientRect();
+      const t = Math.max(0, Math.min(DUR, xToSec(e.clientX - r.left)));
+      pv.pause(); playing = false;
+      scrubTo(t);
+    });
+    win.addEventListener('wheel', e => {
+      e.preventDefault(); off = clamp(off + ((e.deltaY || e.deltaX) > 0 ? pps() * 2 : -pps() * 2)); applyW();
+    }, { passive: false });
+
+    win.addEventListener('pointerdown', e => {
+      if (e.button !== 0 || e.target.closest('.bx') || e.target.closest('.frgrip')) return;
+      down = true; dragged = false; sx = e.clientX; so = off;
+      try { win.setPointerCapture(e.pointerId); } catch (_) {}
+    });
+    win.addEventListener('pointermove', e => {
+      if (!down) return;
+      const dx = e.clientX - sx;
+      if (Math.abs(dx) > 4) dragged = true;
+      off = clamp(so - dx); applyW();
+    });
+    win.addEventListener('pointerup', () => { down = false; setTimeout(() => dragged = false, 30); });
+
+    gripEl.addEventListener('pointerdown', e => {
+      dg = true; e.stopPropagation(); e.preventDefault();
+      try { gripEl.setPointerCapture(e.pointerId); } catch (_) {}
+    });
+    gripEl.addEventListener('pointermove', e => {
+      if (!dg) return;
+      const r = win.getBoundingClientRect();
+      scrubTo(xToSec(e.clientX - r.left));
+      e.stopPropagation();
+    });
+    gripEl.addEventListener('pointerup', e => { dg = false; e.stopPropagation(); });
+    gripEl.addEventListener('click', e => e.stopPropagation());
+    gripEl.addEventListener('contextmenu', e => { e.preventDefault(); e.stopPropagation(); markHere(); });
+
+    host.querySelector('.frz').addEventListener('input', function () {
+      const centerT = xToSec(winW() / 2);
+      CW = +this.value;
+      const ns = calcStep(CW);
+      if (ns !== STEP) { strip().then(() => { off = clamp(centerT * pps() - winW() / 2); applyW(); }); }
+      else { off = clamp(centerT * pps() - winW() / 2); applyW(); }
+    });
+
+    /* 스페이스 = 재생/멈춤 (이 롤러가 열려 있을 때만) */
+    function onKey(e) {
+      if (destroyed) return;
+      if (e.code !== 'Space') return;
+      const tag = (e.target && e.target.tagName || '').toLowerCase();
+      if (tag === 'input' || tag === 'textarea' || (e.target && e.target.isContentEditable)) return;
+      e.preventDefault();
+      if (playing) { pv.pause(); playing = false; if (raf) cancelAnimationFrame(raf); raf = 0; return; }
+      const b = (ACTBOX != null && BOXES[ACTBOX]) ? BOXES[ACTBOX] : null;
+      if (b && (pv.currentTime < b.s - 0.05 || pv.currentTime >= b.e - 0.02)) pv.currentTime = b.s;
+      pv.play().then(() => {
+        playing = true;
+        const loop = () => {
+          if (!playing || destroyed) return;
+          const t = pv.currentTime;
+          if (b && t >= b.e - 0.02) { pv.pause(); playing = false; moveHead(b.e); return; }
+          moveHead(t);
+          raf = requestAnimationFrame(loop);
+        };
+        raf = requestAnimationFrame(loop);
+      }).catch(() => {});
+    }
+    document.addEventListener('keydown', onKey);
+
+    pv.src = opt.src;
+    if (opt.from != null) { try { pv.currentTime = opt.from; } catch (_) {} }
+    strip();
+
+    return {
+      destroy() {
+        destroyed = true;
+        document.removeEventListener('keydown', onKey);
+        if (raf) cancelAnimationFrame(raf);
+        try { pv.pause(); pv.removeAttribute('src'); pv.load(); } catch (_) {}
+        host.innerHTML = '';
+      },
+      boxes: () => BOXES.map(b => ({ s: b.s, e: b.e })),
+    };
+  }
+
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  global.filmroll = filmroll;
+})(window);
