@@ -44,6 +44,7 @@ from shopping_shorts import backbone
 from shopping_shorts.aipick import build_aipick
 from shopping_shorts.categorize import categorize, KEYWORDS as CATEGORY_KEYWORDS
 from shopping_shorts import script_generate
+from shopping_shorts import pickup_script        # 픽업영상 대본 — 씨앗 훅 문형·CTA 판정
 from shopping_shorts import caption_sync          # 장면별 줄 나누기 후 타이밍 재계산
 from shopping_shorts import tts_timestamps        # 위와 같은 용도(잘라낸 무음 보정)
 from shopping_shorts.apify_client import fetch_single_reel, fetch_reels, fetch_profiles
@@ -2852,16 +2853,37 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
                     # ★어떻게 골랐는지 화면이 말할 수 있게(조용한 폴백 금지).
                     "style_axis": _axis_pick or "",
                 }}
+    # ★픽업영상 대본(2026-08-26 사장님) — 씨앗 훅의 **문형만** 물려받고 문장은 새로 쓴다.
+    #   seed_hook이 오면 프롬프트의 훅 줄이 '문형 지정' 지시로 갈리고(script_generate),
+    #   생성 뒤 pickup_script가 판정해 어긴 안을 걸러낸다.
+    #   ⚠️프롬프트만으로는 안 된다 — 실측 4안 중 2안이 문형을 버렸다(지시는 강제가 아니다).
+    _seed_hook = (body.get("seed_hook") or "").strip()
+    _seed_cta = (body.get("seed_cta") or "").strip()
+    if _seed_hook:
+        _gen_kw["seed_hook"] = _seed_hook
     drafts = script_generate.generate_variations(
         it.get("structure") or {}, it.get("full_text") or "", elem_modes, category_lookup, **_gen_kw)
     if not drafts:
         return JSONResponse(status_code=502, content={"ok": False, "error": "생성 실패(Gemini 키 소진 또는 오류) — 잠시 후 재시도"})
+    _pickup_rejected = []
+    if _seed_hook:
+        _ok, _bad = pickup_script.filter_drafts(drafts, _seed_hook, _seed_cta)
+        _pickup_rejected = [b["reason"] for b in _bad]
+        # ★한 안도 안 남으면 **되돌리지 말고 그대로 낸다**(빈손보다 낫다).
+        #   판정은 '더 좋은 걸 고르는' 장치지 '아무것도 못 내게 하는' 장치가 아니다.
+        #   대신 화면이 왜 어겼는지 말할 수 있게 사유를 함께 올린다(조용한 폴백 금지).
+        if _ok:
+            drafts = _ok
     cid = _cid(request)
     for dr in drafts:
         draft_id = uuid.uuid4().hex[:12]
         store.save_draft(draft_id, cid, shortcode, None, dr.get("hook", ""), dr.get("script", ""), None, "generate")
         dr["draft_id"] = draft_id
-    return {"ok": True, "drafts": drafts}
+    _resp = {"ok": True, "drafts": drafts}
+    # ★어긴 안이 왜 걸러졌는지 화면이 말할 수 있게 올린다(조용한 폴백 금지).
+    if _pickup_rejected:
+        _resp["pickup_rejected"] = _pickup_rejected
+    return _resp
 
 
 @app.post("/api/wiki/draft/analyze")

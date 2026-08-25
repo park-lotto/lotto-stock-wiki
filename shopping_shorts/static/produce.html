@@ -11519,10 +11519,16 @@ async function s2LoadStyles(){
 }
 function s2RenderStyles(){
   const row=document.getElementById('s2StyleRow'); if(!row) return;
-  const auto=`<div class="s2-card${S2.picked.length?'':' sel'}" onclick="s2ClearStyles()" title="스타일 고르기까지 AI에게 맡깁니다 — 기존 생성 경로 그대로">
-    <div class="t">🤖 AI에게 맡김 <span class="sp"></span><span class="s2-badge ok">기본값</span></div>
-    <div class="s2-quote plain">${S2.styles.length?('추천: '+esc(S2.styles[0].name)):'AI가 알아서'}</div>
-    <div class="s2-meta"><span class="r">훅</span><span class="r">전개</span><span class="r">CTA</span><span class="d">자동 선택</span></div>
+  // ★픽업영상 대본(2026-08-26 사장님) — 종전 '🤖 AI에게 맡김'을 갈아끼웠다.
+  //   그 칸은 이름과 달리 **옆 카드 중에서 AI가 대신 골라주는 것**이었다(auto_style=true).
+  //   즉 담은 씨앗 영상의 구조를 전혀 안 써서 옆 카드들과 결국 같은 경로였다.
+  //   이제 이 칸은 **씨앗 영상의 대본 템플릿 구조·훅 문형**을 그대로 물려받고
+  //   스토리·등장인물·CTA만 새로 쓴다(사장님: "훅도 터지는 영상이니 변형해서").
+  const _sh=(S2.seed&&S2.seed.structure&&(S2.seed.structure.segments||[])).map(x=>x.label);
+  const auto=`<div class="s2-card${S2.picked.length?'':' sel'}" onclick="s2ClearStyles()" title="담은 씨앗 영상의 대본 구조·훅 문형을 그대로 쓰고, 스토리·등장인물·CTA만 새로 씁니다">
+    <div class="t">📌 픽업영상 대본 <span class="sp"></span><span class="s2-badge ok">기본값</span></div>
+    <div class="s2-quote plain">${_sh.length?esc(_sh.join(' → ')):'씨앗 영상 구조 그대로 · 내용은 새로'}</div>
+    <div class="s2-meta"><span class="r">훅 문형</span><span class="r">구조</span><span class="d">스토리·CTA는 새로</span></div>
   </div>`;
   // ★인스타 먼저, 유튜브 나중(2026-08-21 사장님 지시). 같은 판끼리 붙여놔야 눈이 안 튄다.
   //   그 안의 순서는 서버가 준 그대로 둔다(검증 먼저 → 실적순). 안정 정렬이라 안 뒤집힌다.
@@ -11653,7 +11659,26 @@ async function s2Generate(){
     // 스타일을 골랐으면 그대로, 안 골랐으면(=AI에게 맡김) 서버가 추천 상위에서 자동으로 집는다.
     // ★어느 쪽이든 스타일 경로를 타야 역할 칸·게이트·표현사전이 붙는다(2026-08-17).
     if(S2.picked.length) body.style_ids=S2.picked;
-    else body.auto_style=true;
+    else {
+      // ★픽업영상 대본(2026-08-26) — 스타일을 안 고르면 **씨앗 영상 구조**로 만든다.
+      //   종전엔 auto_style로 옆 카드 중 AI가 대신 골랐다(=씨앗 구조를 안 씀).
+      //   씨앗 훅이 있으면 그 문형을 물려주고, 없으면 종전 auto_style로 폴백한다
+      //   (문형을 못 뽑는 씨앗도 있다 — 없는 기준으로 막지 않는다).
+      const _seedText=(S2.seed&&S2.seed.text)||'';
+      const _hook=_seedText.trim().split(/(?<=[.!?])\s+|\n+/)[0]||'';
+      if(_hook){
+        body.seed_hook=_hook;
+        // CTA는 씨앗 원문의 마지막 문장 — 키워드가 겹치는지 서버가 판정한다.
+        const _sents=_seedText.trim().split(/(?<=[.!?])\s+|\n+/).filter(Boolean);
+        if(_sents.length>1) body.seed_cta=_sents[_sents.length-1];
+        if(S2.seed&&S2.seed.structure) body.structure=S2.seed.structure;
+        // 사장님 확정(2026-08-26): 훅·소재는 유지, 스토리·등장인물·CTA는 전부 다르게.
+        body.elem_modes={hook:'keep', tone:'keep', devices:'keep', appeal:'keep',
+                         characters:'free', development:'free', twist:'free', cta:'free'};
+      } else {
+        body.auto_style=true;
+      }
+    }
     const d=await (await fetch('/api/wiki/generate?shortcode='+encodeURIComponent(s.shortcode),
       {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();
     if(!d.ok){
@@ -11668,6 +11693,14 @@ async function s2Generate(){
     if(S2.picked.length && S2.drafts.length < S2.picked.length && hint){
       hint.innerHTML='<span style="color:var(--gold)">⚠️ 스타일 '+S2.picked.length
         +'개 중 '+S2.drafts.length+'개만 만들어졌어요 — 나머지는 생성에 실패했습니다(다시 시도해 보세요)</span>';
+    }
+    // ★픽업영상 대본에서 걸러낸 안이 있으면 **왜** 걸렀는지 말한다(조용한 폴백 금지).
+    //   안이 줄어든 이유를 안 알려주면 "왜 2안만 나오지?"가 된다.
+    else if((d.pickup_rejected||[]).length && hint){
+      const _cnt={}; d.pickup_rejected.forEach(r=>{_cnt[r]=(_cnt[r]||0)+1;});
+      hint.innerHTML='<span style="color:var(--gold)">🔎 씨앗 훅·CTA와 어긋난 '
+        +d.pickup_rejected.length+'안을 걸렀어요 — '
+        +esc(Object.keys(_cnt).map(k=>k+(_cnt[k]>1?(' ×'+_cnt[k]):'')).join(' · '))+'</span>';
     }
     s2RenderDrafts();
     // ★만들자마자 남긴다(2026-08-17). 여기서 저장 안 하면 확정(s2Confirm) 전에 새로고침한
