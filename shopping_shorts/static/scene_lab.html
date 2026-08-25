@@ -2150,9 +2150,19 @@ async function applyServer(opt){
                                      body: JSON.stringify({payload})});
     const j = await r.json();
     if (!j.ok) throw new Error(j.error || '실패');
-    if (msg) msg.textContent = auto
-      ? '✅ 저장됨 — 이 편성 그대로 영상이 만들어집니다'
-      : '✅ 서버에 반영됨 — 다음 렌더(미리보기/완성)부터 이 편성으로 나옵니다';
+    // ★편성이 바뀌었으면 **이미 만든 완성본은 낡았다** — 비워서 다음 탭 클릭에 새로 만들게 한다
+    //   (2026-08-25 고객 제보: "소재를 빼고 넣은 뒤 완성본 만들기를 눌렀는데 처음 것이 그대로").
+    //   원인은 _askRender가 #confirmBody가 비었을 때만 렌더하는데, 편집 저장 경로에서
+    //   아무도 안 비워줬기 때문이다. 재매칭(loadMixReview)만 clearConfirm을 불렀다.
+    //   ⚠️여기서 자동으로 다시 렌더하지는 않는다 — 렌더는 20초+ 걸리는 유료 작업이고,
+    //     편집 중에는 1.2초마다 이 경로가 돈다. 만드는 건 사장님이 탭을 누를 때다.
+    const _hadConfirm = !!(document.getElementById('confirmBody') || {}).innerHTML.trim();
+    if (_hadConfirm) clearConfirm();
+    if (msg) msg.textContent = _hadConfirm
+      ? '✅ 저장됨 — 편성이 바뀌었어요. [완성본 만들기]를 다시 눌러 새로 만들어 주세요'
+      : (auto
+          ? '✅ 저장됨 — 이 편성 그대로 영상이 만들어집니다'
+          : '✅ 서버에 반영됨 — 다음 렌더(미리보기/완성)부터 이 편성으로 나옵니다');
   }catch(e){
     // ★자동이라고 조용히 넘기지 않는다 — 안 올라간 걸 모르면 화면과 렌더가 어긋난다.
     if (msg) msg.textContent = '⚠ 저장 실패: ' + (e.message || e) + ' — 잠시 뒤 다시 시도돼요';
