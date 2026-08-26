@@ -6465,7 +6465,11 @@ async def api_lens_search(request: Request, frame: UploadFile = File(...),
         #   caption=None으로 넘겨 **두 번 채점하지 않는다**.
         await asyncio.to_thread(_lens_judge, rows, source_caption)
         items = _lens_finalize(rows, store, caption=None)
-        store.bump_lens(month)
+        # ★실제 SerpApi 호출 수만큼 센다(로케일 수만큼 나간다). 1로 세면 잔량이
+        #   조용히 마른다 — 2026-08-27 실측 452회 과소집계.
+        _n = diag.get("serpapi_calls", 1)
+        if _n:                      # 0 = 키가 없어 아예 못 때렸다 → 한도를 깎지 않는다
+            store.bump_lens(month, _n)
         # diag: 인스타 결과가 0/왕창으로 튀는 이유를 화면에서 갈라 보기 위한 계측(2026-08-14).
         return {"ok": True, "items": items, "count": len(items), "diag": diag}
     except Exception:
@@ -6650,9 +6654,11 @@ def api_lens_trace_url(request: Request, body: dict):
         if not image_url:
             return JSONResponse(status_code=502, content={
                 "ok": False, "error": "영상/썸네일을 가져오지 못했습니다(봇차단·만료·미지원 URL)"})
+        _diag = {}      # SerpApi 실제 호출 수를 받아 카운터에 그대로 반영한다
         items = _lens_finalize(
             search_similar_videos(image_url, api_key=_lens_api_keys(cid),
-                                  source_caption=caption), store, caption=caption)
+                                  source_caption=caption, stats=_diag),
+            store, caption=caption)
         # 📕🎬 중국앱 키워드 후보(비전). 렌즈 유사영상은 프론트가 프레임으로 뽑지만 trace는
         # 프레임이 서버에만 있다(유튜브는 아예 썸네일 URL·caption 없음) → 서버가 image_url에서
         # 바이트를 받아 직접 만든다. cn_search_candidates는 image_bytes가 없으면 빈 리스트라
@@ -6663,7 +6669,9 @@ def api_lens_trace_url(request: Request, body: dict):
             cn_cands = (cn_search_candidates(img_bytes, caption) or {}).get("candidates", [])
         except Exception:
             pass
-        store.bump_lens(month)
+        _n = _diag.get("serpapi_calls", 1)
+        if _n:                      # 0 = 키가 없어 아예 못 때렸다 → 한도를 깎지 않는다
+            store.bump_lens(month, _n)
         ok = True
         return {"ok": True, "items": items, "count": len(items), "source_url": url,
                 "caption": caption, "cn_candidates": cn_cands}

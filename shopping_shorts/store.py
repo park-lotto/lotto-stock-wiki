@@ -5068,8 +5068,21 @@ class Store:
         except (TypeError, ValueError):
             return 0
 
-    def bump_lens(self, month):
-        n = self.lens_month_count(month) + 1
+    def bump_lens(self, month, calls=1):
+        """이번 달 렌즈 카운터를 **실제 SerpApi 호출 수(calls)만큼** 올린다.
+
+        ★종전엔 클릭 1회당 무조건 +1이었다. 그런데 검색 1번이 로케일 수만큼
+          SerpApi를 쓴다(2026-08-27 실측: 우리 카운터 664 / 실제 소진 1,116 —
+          452회를 적게 셌다. 키 5개 중 3개가 이미 소진돼 잔량 134회였는데
+          화면은 664/1250이라 '아직 여유'로 보였다).
+          월 가드가 이 값으로 판정하므로 적게 세면 잔량이 조용히 마른다.
+        ★calls가 0·None·음수여도 **최소 1** — 검색을 했는데 0으로 세면 카운터가 멈춘다.
+        """
+        try:
+            n_calls = max(1, int(calls))
+        except (TypeError, ValueError):
+            n_calls = 1
+        n = self.lens_month_count(month) + n_calls
         self.set_setting(f"lens_count:{month}", str(n))
         return n
 

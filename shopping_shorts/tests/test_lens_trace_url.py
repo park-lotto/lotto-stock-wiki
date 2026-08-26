@@ -20,10 +20,15 @@ def _client(monkeypatch, tmp_path):
 
 
 def _capture_search(monkeypatch, calls):
-    def _fake_search(image_url, api_key=None, source_caption=None):
+    def _fake_search(image_url, api_key=None, source_caption=None, stats=None, **kw):
         calls["img"] = image_url
         calls["cap"] = source_caption
         calls["api_key"] = api_key
+        # ★진짜 search_similar_videos는 stats에 실제 SerpApi 호출 수를 적어준다.
+        #   호출부가 그 값으로 월 카운터를 올리므로(2026-08-27) 스텁도 적어줘야
+        #   실제와 같은 모양이 된다. **kw는 앞으로 인자가 늘어도 안 깨지게.
+        if isinstance(stats, dict):
+            stats["serpapi_calls"] = 1
         return [{"platform": "youtube", "url": "https://youtu.be/AAA",
                  "title": "원본", "thumbnail": "t", "match": 0.9}]
     monkeypatch.setattr(app_module, "search_similar_videos", _fake_search)
