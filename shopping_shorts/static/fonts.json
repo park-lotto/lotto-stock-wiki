@@ -98,14 +98,6 @@
   "star": false
  },
  {
-  "name": "옥 말랑 (영문전용)",
-  "file": "OkMallangW.ttf",
-  "css": "HCOkmallang",
-  "group": "latin",
-  "star": false,
-  "latin": true
- },
- {
   "name": "경기천년바탕",
   "file": "GBatang.otf",
   "css": "HCGBatang",

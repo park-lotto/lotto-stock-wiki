@@ -108,10 +108,43 @@ def test_한글폰트라면_한글_글리프가_있다():
         + '\n영문 전용 폰트라면 fonts.json 항목에 "latin": true 를 넣어라.')
 
 
-def test_영문전용_폰트는_이름으로도_드러난다():
-    """사장님이 목록에서 고르기 전에 알아야 한다 — 렌더 폴백은 최후의 방어선일 뿐."""
+def test_옥말랑은_목록에_없다():
+    """2026-08-26 사장님 결정: 영문 전용이라 한글 서비스에 쓸 수 없다 → 목록에서 뺐다.
+    파일은 남겨둔다 — 위 가드들이 실제로 잡는지 시험할 유일한 반례다."""
+    assert (FONT_DIR / "OkMallangW.ttf").exists(), "가드 시험용 표본이 사라졌다"
+    assert "OkMallangW.ttf" not in {f["file"] for f in _manifest()}, (
+        "영문 전용 폰트가 목록에 다시 들어왔다 — 한글이 네모X로 나간다.")
+
+
+def test_몇_글자_빠진다고_글꼴을_바꾸지_않는다(tmp_path):
+    """완성형 2350자 폰트 10종은 '뷁·똠·뎊'이 없다(실측 2026-08-26). 한 글자 때문에
+    사장님이 고른 글꼴이 통째로 바뀌면 두부보다 큰 사고다 — 절반 넘게 못 그릴 때만 되돌린다."""
+    va = _va()
+    (tmp_path / "font.ttf").write_bytes((FONT_DIR / "Pretendard-Bold.otf").read_bytes())
+
+    def ref(f, txt):
+        return va._font_ref(f, tmp_path, "k", txt)
+
+    assert ref("BMJUA.ttf", "똠양꿍 정말 맛있어요") == "font_k.ttf", "1/9자에 글꼴을 버렸다"
+    assert ref("BMJUA.ttf", "똠") == "font.ttf", "전부 두부인데 그대로 썼다"
+    assert ref("OkMallangW.ttf", "정말 맛있어요") == "font.ttf"
+
+
+def test_실사용_글자를_못_그리는_폰트가_없다():
+    """쇼츠 자막에 실제로 쓰는 말로 전수 점검. 실측 2026-08-26: 누락은 '뷁똠뎊'뿐이라
+    아래 목록(실사용 어휘)에는 걸리는 폰트가 없다. 새 폰트가 늘면 여기서 잡힌다."""
+    va = _va()
+    words = ("쫀득 꾸덕 촉촉 폭신 바삭 쫄깃 사르르 뽀득 매콤 달달 고소 진짜 대박 헐 와 우와 "
+             "개꿀 존맛 꿀템 갓성비 핵이득 미쳤다 레알 찐 띵작 쩐다 오지다 지린다 킹받 "
+             "할인 특가 무료배송 리뷰 후기 추천 구매 장바구니 품절임박 마감 "
+             "넣고 볶고 굽고 데치고 섞고 부어 뿌려 찍어 발라 얹어 1위 2개 3천원 5분 100%")
+    text = "".join(dict.fromkeys(words.replace(" ", "")))
+    bad = []
     for f in _manifest():
-        if f.get("latin"):
-            assert "영문" in f["name"], (
-                f"{f['file']} 은 영문 전용인데 이름에 표시가 없다: {f['name']}\n"
-                f"  화면 목록에서 한글 폰트처럼 보여 또 고르게 된다.")
+        fp = FONT_DIR / f["file"]
+        if not fp.exists() or f.get("latin"):
+            continue
+        miss = va._missing_glyphs(fp, text)
+        if miss:
+            bad.append("{}({}) 없는글자={}".format(f["name"], f["file"], miss))
+    assert not bad, "자막에 실제로 쓰는 글자를 못 그리는 폰트:\n  " + "\n  ".join(bad)
