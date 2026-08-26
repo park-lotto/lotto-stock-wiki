@@ -17,6 +17,12 @@ from PIL import Image, ImageDraw, ImageFont
 W, H = 1080, 1920
 _FONT_DIR = pathlib.Path(__file__).resolve().parent / "static" / "fonts"
 
+# 공백 글리프 없는 폰트(빙그레·리디바탕)의 띄어쓰기 ⊠ 우회 — 자막과 같은 판정을 쓴다.
+# ★2026-08-26: 자막(video_assemble)에만 우회가 있고 여기엔 없어서, 꾸미기 틀의
+#   채널명·제목에서 띄어쓰기가 ⊠로 나갔다(36종 전수 렌더로 발견). 같은 판단을
+#   두 번 적으면 이렇게 한쪽만 고쳐진다 → font_glyphs 한 곳에서만 정한다(0순위-B).
+from . import font_glyphs as _fg
+
 # 프리셋 = 사장님이 가져온 '실제로 잘되는' 유튜브 포맷.
 # ★색·기본 높이를 여기 한 곳에서만 정한다. 화면 드롭다운도 이 표를 읽는다.
 #
@@ -631,9 +637,9 @@ def render(spec):
             f = _font("bar", csize, s["ch_font"])
             cx = W * (s["ch_x"] / 100.0)
             # 글자 절반이 화면 밖으로 나가지 않게 중심을 안쪽으로 당긴다.
-            half = d.textlength(s["channel"], font=f) / 2
+            half = _fg.text_px(f, s["channel"], csize) / 2
             cx = max(half + 20, min(W - half - 20, cx))
-            d.text((cx, cy), s["channel"], font=f, fill=on_bar, anchor="mm")
+            _fg.draw_text(d, (cx, cy), s["channel"], f, on_bar, "mm", csize)
 
     # ★[광고]는 **틀과 독립**이다(2026-08-22 사장님 "템플릿 없어도 사용가능").
     #   그래서 띠(bar_h>0) 블록 **밖**에서 그린다 — 띠가 없어도 나온다.
@@ -710,7 +716,7 @@ def render(spec):
         d.rectangle([0, y, W, y + block_h - 1], fill=bg)
         ty = y + 36
         for ln in lines:
-            d.text((tx, ty), ln, font=ft, fill=title_fill, anchor="ma")
+            _fg.draw_text(d, (tx, ty), ln, ft, title_fill, "ma", tsize)
             ty += line_h
         if meta:
             d.text((60, ty + 6), meta, font=fm, fill=meta_fill, anchor="la")
