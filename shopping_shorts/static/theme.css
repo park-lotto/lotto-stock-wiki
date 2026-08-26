@@ -46,6 +46,44 @@
 .orb.locked{ cursor:not-allowed; opacity:.6; }
 @media(prefers-reduced-motion:reduce){ .orb.cur .ball, .orb.cur::after{ animation:none; } }
 
+/* ── 도크 단계바(2026-08-26, 사장님 확정: K3 색흐름 · 1단 절제) ──
+   정본 목업: out/제작소_단계바_최종안.html
+   구조: .dockflow(무지개 진행띠) + .dockbar(행) > .dk > .dkic(아이콘 타일) + .dkl(라벨)
+   ★위 .orbbar는 **지우지 않는다** — 문제가 생기면 renderSteps() 한 곳만 되돌리면 원상복구된다.
+   ★단계 색은 마크업에서 --c/--c2로 넣는다(produce.html STEP_COLORS 한 곳에서만 정한다). */
+.dockflow{ position:relative; height:4px; border-radius:999px; margin:0 10px 8px;
+  background:#131c2b; overflow:hidden; }
+.dockflow .dfull{ position:absolute; inset:0; border-radius:999px; opacity:.22;
+  background:linear-gradient(90deg,#38bdf8,#8c6ef0,#f472b6,#fb7185,#3ee0bf,#fb923c,#facc6b,#a3e635,#34d399); }
+.dockflow .drun{ position:absolute; left:0; top:0; bottom:0; border-radius:999px;
+  background:linear-gradient(90deg,#38bdf8,#8c6ef0,#f472b6,#fb7185,#3ee0bf);
+  box-shadow:0 0 14px rgba(62,224,191,.5); transition:width .3s ease; }
+.dockbar{ display:flex; align-items:flex-end; justify-content:space-between; gap:6px;
+  padding:10px 4px 0; margin:0 2px 6px; }
+.dk{ flex:1; display:flex; flex-direction:column; align-items:center; gap:8px; cursor:pointer;
+  position:relative; --c:#3b455e; --c2:#3b455e; transition:transform .18s ease; }
+.dk:hover{ transform:translateY(-3px); }
+.dkic{ position:relative; width:46px; height:46px; border-radius:14px; display:grid; place-items:center;
+  transition:all .2s ease; background:color-mix(in srgb,var(--c) 12%,#0a1019); color:var(--c);
+  border:1px solid color-mix(in srgb,var(--c) 38%,transparent); }
+.dkic svg{ width:24px; height:24px; display:block; fill:none; stroke:currentColor;
+  stroke-width:1.75; stroke-linecap:round; stroke-linejoin:round; }
+.dkl{ font-size:11px; font-weight:800; text-align:center; line-height:1.25;
+  color:color-mix(in srgb,var(--c) 60%,#46506a); }
+.dk.wait{ opacity:.5; }
+.dk.done .dkic::after{ content:"✓"; position:absolute; right:-4px; top:-4px; width:17px; height:17px;
+  border-radius:50%; background:var(--c); color:#08131a; font-size:10px; font-weight:900;
+  display:grid; place-items:center; border:2px solid #0d1420; }
+.dk.cur .dkic{ width:66px; height:66px; border-radius:19px; border-color:transparent; color:#04201b;
+  background:linear-gradient(150deg,var(--c),var(--c2));
+  box-shadow:0 10px 30px color-mix(in srgb,var(--c) 42%,transparent); }
+.dk.cur .dkic svg{ width:34px; height:34px; stroke-width:1.9; }
+.dk.cur .dkl{ color:#fff; font-size:13.5px; font-weight:900; }
+.dk.cur::before{ content:""; position:absolute; top:-5px; width:76px; height:76px; border-radius:22px;
+  border:2px solid color-mix(in srgb,var(--c) 55%,transparent); animation:dkRing 1.9s ease-out infinite; }
+@keyframes dkRing{ 0%{ transform:scale(.88); opacity:1 } 100%{ transform:scale(1.22); opacity:0 } }
+@media(prefers-reduced-motion:reduce){ .dk.cur::before{ animation:none; } }
+
 /* ── 카드 · CTA · 통계 타일 ── */
 .skm-card{ background:var(--panel); border:1px solid rgba(62,224,191,.4); border-radius:14px; padding:16px; }
 .cta-shine{ position:relative; overflow:hidden; font-weight:900;

@@ -664,7 +664,7 @@
       .chip{font-size:13px}
       /* ★theme.css가 뒤에 링크돼(504줄) 같은 특이도면 진다 — .main을 붙여 한 단 올린다.
          (.cmp-title/.stat-tile span/.stt .k/.cand p/.orb .lb/.cand는 전부 theme.css에도 있다) */
-      .main .cmp-title,.main .orbbar .orb .lb{font-size:12.5px}
+      .main .cmp-title,.main .orbbar .orb .lb,.main .dockbar .dkl{font-size:12.5px}
       .main .stat-tile span,.main .stt .k,.main .cand p{font-size:12.5px}
       .demotag{font-size:11px}
       .cp-lbl{font-size:11px}
@@ -681,6 +681,13 @@
            앞에 붙여 특이도를 한 단 올린다(!important 없이 이기는 정공법). */
       .orbbar .orb .ball{width:44px;height:44px;font-size:15px}
       .orbbar .orbline{top:24px}
+      /* 도크도 같은 이유로 키운다(theme.css를 이기려면 .dockbar를 앞에 붙여야 한다) */
+      .dockbar .dk .dkic{width:54px;height:54px;border-radius:16px}
+      .dockbar .dk .dkic svg{width:28px;height:28px}
+      .dockbar .dk.cur .dkic{width:76px;height:76px;border-radius:22px}
+      .dockbar .dk.cur .dkic svg{width:39px;height:39px}
+      .dockbar .dk.cur::before{width:88px;height:88px;border-radius:25px}
+      .dockbar .dk.cur .dkl{font-size:15px}
     }
 
     /* ══════════════════════════════════════════════════════════════════════
@@ -761,6 +768,22 @@
          오브 자체 색(done/cur)으로만 진척을 보인다 */
       .main .orbbar .orbline,.main .orbbar .orbfill{display:none}
       .main .orbbar .orb .ball{width:40px;height:40px}
+      /* 도크도 같은 처방 — 균등분배를 풀고 가로 스크롤 띠로.
+         ★오브바와 달리 진행띠(.dockflow)는 **살린다**: 스크롤 컨테이너(.dockbar) 바깥의
+           형제 요소라 스크롤해도 안 어긋난다(오브바는 .orbline이 안에 있어 숨겨야 했다). */
+      .main .dockbar{overflow-x:auto;overflow-y:hidden;justify-content:flex-start;
+        gap:4px;margin:0 0 12px;padding:8px 2px 8px;-webkit-overflow-scrolling:touch;
+        scrollbar-width:thin}
+      .main .dockbar .dk{flex:0 0 auto;min-width:64px;padding:0 2px}
+      .main .dockbar .dkl{font-size:11px;white-space:nowrap}
+      .main .dockbar .dk .dkic{width:40px;height:40px;border-radius:12px}
+      .main .dockbar .dk .dkic svg{width:21px;height:21px}
+      .main .dockbar .dk.cur .dkic{width:52px;height:52px;border-radius:15px}
+      .main .dockbar .dk.cur .dkic svg{width:27px;height:27px}
+      .main .dockbar .dk.cur::before{width:62px;height:62px;border-radius:18px}
+      .main .dockbar .dk.cur .dkl{font-size:12px}
+      /* 폰에서 hover 들림은 스크롤 중 덜컹거리게 보인다 */
+      .main .dockbar .dk:hover{transform:none}
       /* 옛 .step 진행바(쓰는 화면이 남아 있으면)도 같이 */
       .step .lbl{font-size:12px}
 
@@ -1973,7 +1996,7 @@
       <div id="thumbGallery" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px"></div>
     </section>
     <section class="panel" data-step="5">
-      <h3 data-steptitle="seo">8 · SEO해시테크</h3>
+      <h3 data-steptitle="seo">8 · 제목·태그</h3>
       <div class="sub">제목·설명·태그를 만들고, 키워드를 유튜브에서 실제로 재서 근거를 붙입니다.</div>
       <div class="seoBar">
         <button class="btn primary" id="seoGenAll" onclick="seoGenerate()">AI로 전체 생성</button>
@@ -1988,7 +2011,7 @@
       <div id="seoBody" class="seoBody"></div>
     </section>
     <section class="panel" data-step="6">
-      <h3 data-steptitle="final">9 · 최종렌더</h3>
+      <h3 data-steptitle="final">9 · 완성본</h3>
       <div class="sub">확정 대본·장면매칭·음성·자막제거 설정을 최종 영상으로 렌더합니다.</div>
       <div id="finalSummary" class="hint" style="margin-bottom:10px"></div>
       <!-- 인포크링크 등록 대기(2026-07-28) — 쿠팡 링크는 영상에 안 들어간다. 완성 후
@@ -2287,7 +2310,30 @@
 //   대본(신규 패널 8)을 2번째로 세우고, 장면 편집(패널 7)을 3번째로 민다.
 //   ★물리 패널 번호(data-step)는 그대로 두고 이 매핑만 바꾼다 — cur===n 분기가
 //   파일 곳곳에 박혀 있어 번호를 다시 매기면 전부 어긋난다.
-const STEP_LABELS = ["영상추출/분석","대본생성","영상대본MIX","고품질 자막제거","TTS음성","자막꾸미기","썸네일","SEO해시테크","최종렌더"];
+const STEP_LABELS = ["영상추출/분석","대본생성","영상대본MIX","고품질 자막제거","TTS음성","자막꾸미기","썸네일","제목·태그","완성본"];
+// ★도크 라벨은 11px이라 긴 이름이 두 줄로 접힌다 → 도크에서만 줄여 쓴다(패널 제목은 STEP_LABELS 그대로).
+//   빈 문자열이면 STEP_LABELS를 그대로 쓴다 — 두 벌을 다 적지 않기 위해서다(0순위-B).
+const STEP_SHORT = ["영상추출","","","자막제거","","","","",""];
+function stepShort(o){ return STEP_SHORT[o] || STEP_LABELS[o]; }
+// 단계 색(2026-08-26 사장님 확정 K3 색흐름). [선/기본색, 현재일 때 그라디언트 끝색]
+// ★여기가 색의 유일한 출처다 — theme.css는 var(--c)만 읽는다.
+const STEP_COLORS = [
+  ["#38bdf8","#0ea5e9"], ["#8c6ef0","#6d4df0"], ["#f472b6","#ec4899"],
+  ["#fb7185","#f43f5e"], ["#7df5db","#14b8a6"], ["#fb923c","#f97316"],
+  ["#facc6b","#f5b53f"], ["#a3e635","#84cc16"], ["#6ee7b7","#10b981"],
+];
+// 단계 아이콘(24x24 stroke 전용, fill 없음 — 색은 currentColor가 받는다)
+const STEP_ICONS = [
+  '<rect x="2.5" y="5" width="13" height="11" rx="2"/><path d="M5.5 5v11M12.5 5v11M2.5 10.5h13"/><circle cx="17.5" cy="16" r="4"/><path d="M20.4 18.9 22.5 21"/>',
+  '<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h4"/>',
+  '<path d="M3 7h4c3 0 3 10 6 10h8"/><path d="M3 17h4c3 0 3-10 6-10h8"/><path d="M18 4l3 3-3 3M18 14l3 3-3 3"/>',
+  '<path d="M8 20h12M14.5 4.5 20 10l-8 8H6.5L4 15.5zM10.5 8.5 16 14"/>',
+  '<rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M9 21h6"/>',
+  '<path d="M4 7h9M8.5 7v9M16.5 9 20 17h-7zM14 19.5h6"/>',
+  '<rect x="2.5" y="4" width="19" height="16" rx="2.5"/><circle cx="8" cy="9.5" r="1.8"/><path d="M3 16.5 8.5 12l4 3.5L16 13l5 4.5"/>',
+  '<path d="M3 4.6h9M3 8h6"/><path d="M21 13.6 13.6 21a1.4 1.4 0 0 1-2 0l-5.9-5.9a1.4 1.4 0 0 1-.4-1V8.4c0-.8.6-1.4 1.4-1.4h5.7c.4 0 .7.1 1 .4l5.6 5.6a1.4 1.4 0 0 1 0 2z"/><circle cx="9.6" cy="10.8" r="1.15"/>',
+  '<path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5zM3.5 7.5 12 12l8.5-4.5M12 12v9"/>',
+];
 // 표시 오브 → 실제 패널 data-step (대본=신규 8이 2번째, 매칭=7이 3번째)
 const ORB_TO_PANEL = [0, 8, 7, 1, 2, 3, 4, 5, 6];
 const PANEL_TO_ORB = Object.fromEntries(ORB_TO_PANEL.map((p,o)=>[p,o]));
@@ -2316,9 +2362,10 @@ function orbIndex(){ return PANEL_TO_ORB[cur] ?? 0; }
 const PANEL_COUNT = document.querySelectorAll('.panel').length;
 let cur = 0;
 
-// v6 목업(.orbbar > .orbline > .orbfill + .orb > .ball + .lb) 그대로 포팅 — 볼(숫자/✓)과
-// 라벨을 항상 같이 그린다(예전엔 title=hover 툴팁뿐이라 라벨이 안 보였다). 진행선(.orbfill)
-// 폭은 현재 오브 인덱스/전체 오브 수로 계산(마지막 오브에서 100%).
+// 도크 단계바(2026-08-26 사장님 확정 — 정본 목업 out/제작소_단계바_최종안.html).
+// 무지개 진행띠 + 단계별 고유색 아이콘. 끝난 단계는 체크 배지, 지금 단계만 크게 뜨며 링이 퍼진다.
+// 진행띠 폭은 현재 인덱스/전체로 계산(마지막에서 100%) — 오브바 때와 같은 식이다.
+// ★옛 오브바 마크업은 theme.css에 그대로 남아 있다 — 되돌리려면 이 함수만 되돌리면 된다.
 function renderSteps(){
   syncPanelTitles();          // 패널 제목의 번호·이름을 STEP_LABELS에 맞춘다(한 벌 원칙)
   const el = document.getElementById('steps');
@@ -2326,17 +2373,18 @@ function renderSteps(){
   const oi = orbIndex();
   const pct = STEP_LABELS.length > 1 ? Math.round(oi / (STEP_LABELS.length - 1) * 100) : 0;
   el.innerHTML =
-    '<div class="orbbar">'
-    + `<div class="orbline"><div class="orbfill" style="width:${pct}%"></div></div>`
+    `<div class="dockflow"><i class="dfull"></i><i class="drun" style="width:${pct}%"></i></div>`
+    + '<div class="dockbar">'
     + STEP_LABELS.map((label, o)=>{
-      const cls = o < oi ? 'orb done' : o === oi ? 'orb cur' : 'orb';
-      const dot = o < oi ? '✓' : (o+1);
-      return `<div class="${cls}" title="${label}" onclick="jump(${o})">`
-        + `<div class="ball">${dot}</div><div class="lb">${label}</div></div>`;
+      const cls = o < oi ? 'dk done' : o === oi ? 'dk cur' : 'dk wait';
+      const [c, c2] = STEP_COLORS[o] || ['#3b455e','#3b455e'];
+      return `<div class="${cls}" style="--c:${c};--c2:${c2}" title="${label}" onclick="jump(${o})">`
+        + `<div class="dkic"><svg viewBox="0 0 24 24">${STEP_ICONS[o]||''}</svg></div>`
+        + `<div class="dkl">${stepShort(o)}</div></div>`;
     }).join('')
     + '</div>';
 }
-// ── 오브바 끝 ──
+// ── 도크 단계바 끝 ──
 function showPanel(){
   document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('show', +p.dataset.step===cur));
   document.getElementById('btnPrev').disabled = cur===0;
