@@ -519,6 +519,23 @@ function seat(c){
   if (Math.abs(v.currentTime - c.start) > 0.05) v.currentTime = c.start;
   return v;
 }
+// ⏱ 큰 미리보기에 **그 영상의 그 시각 한 프레임**을 세워 보여준다(2026-08-26 사장님
+//   "마우스로 잡고 이동을 시키면 미리보기에서도 그대로 화면이동되게").
+//   필름 손잡이를 끄는 동안 불린다 — 재생이 아니라 **정지 프레임**이다.
+//   ★새 재생기를 만들지 않는다: vidFor/showVid가 이미 소스별 재생기를 관리한다(0순위-B).
+function previewFrameAt(videoId, t){
+  if (!videoId || !isFinite(t)) return;
+  try{
+    stopPlay._scrubbing = true;          // 재생 타이머가 이 프레임을 덮지 않게 표식만 둔다
+    const v = vidFor(videoId, 0);
+    v.pause();
+    showVid(v);
+    const p = document.getElementById('player');
+    if (p) p.classList.add('on');        // 안내 화면 대신 재생창을 띄운다
+    if (Math.abs(v.currentTime - t) > 0.02) v.currentTime = Math.max(0, t);
+  }catch(e){ /* 미리보기는 부가기능 — 실패해도 필름 조작을 막지 않는다 */ }
+}
+
 let curVid = null;
 function showVid(v){
   if (curVid === v) return;

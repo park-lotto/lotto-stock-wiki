@@ -6465,7 +6465,11 @@ async def api_lens_search(request: Request, frame: UploadFile = File(...),
         #   caption=None으로 넘겨 **두 번 채점하지 않는다**.
         await asyncio.to_thread(_lens_judge, rows, source_caption)
         items = _lens_finalize(rows, store, caption=None)
-        store.bump_lens(month)
+        # ★실제 SerpApi 호출 수만큼 센다(로케일 수만큼 나간다). 1로 세면 잔량이
+        #   조용히 마른다 — 2026-08-27 실측 452회 과소집계.
+        _n = diag.get("serpapi_calls", 1)
+        if _n:                      # 0 = 키가 없어 아예 못 때렸다 → 한도를 깎지 않는다
+            store.bump_lens(month, _n)
         # diag: 인스타 결과가 0/왕창으로 튀는 이유를 화면에서 갈라 보기 위한 계측(2026-08-14).
         return {"ok": True, "items": items, "count": len(items), "diag": diag}
     except Exception:
@@ -6650,9 +6654,11 @@ def api_lens_trace_url(request: Request, body: dict):
         if not image_url:
             return JSONResponse(status_code=502, content={
                 "ok": False, "error": "영상/썸네일을 가져오지 못했습니다(봇차단·만료·미지원 URL)"})
+        _diag = {}      # SerpApi 실제 호출 수를 받아 카운터에 그대로 반영한다
         items = _lens_finalize(
             search_similar_videos(image_url, api_key=_lens_api_keys(cid),
-                                  source_caption=caption), store, caption=caption)
+                                  source_caption=caption, stats=_diag),
+            store, caption=caption)
         # 📕🎬 중국앱 키워드 후보(비전). 렌즈 유사영상은 프론트가 프레임으로 뽑지만 trace는
         # 프레임이 서버에만 있다(유튜브는 아예 썸네일 URL·caption 없음) → 서버가 image_url에서
         # 바이트를 받아 직접 만든다. cn_search_candidates는 image_bytes가 없으면 빈 리스트라
@@ -6663,7 +6669,9 @@ def api_lens_trace_url(request: Request, body: dict):
             cn_cands = (cn_search_candidates(img_bytes, caption) or {}).get("candidates", [])
         except Exception:
             pass
-        store.bump_lens(month)
+        _n = _diag.get("serpapi_calls", 1)
+        if _n:                      # 0 = 키가 없어 아예 못 때렸다 → 한도를 깎지 않는다
+            store.bump_lens(month, _n)
         ok = True
         return {"ok": True, "items": items, "count": len(items), "source_url": url,
                 "caption": caption, "cn_candidates": cn_cands}
@@ -9026,15 +9034,10 @@ def check_and_count(customer_id, op):
     #   → limit_script 10건. 예열(prewarm)은 customer_id를 문자열로 넘기므로, 하루 10건을 넘는
     #   순간 담긴 영상의 대본 예열이 전부 skipped_limit로 조용히 스킵됐다(실측: 3개 담았는데
     #   유튜브 2개만 대본이 생기고 인스타·샤오홍슈는 0.03초 만에 done 처리).
-    is_paid = (_as_cid(customer_id) == 0) or (st.get_customer(customer_id) or {}).get("plan") == "pro"
-    if op == "lens" and _lens_key_count(customer_id):
-        # 자기 키로 검색하는 회원 — 비용을 본인이 내므로 **낸 키 개수만큼** 한도를 준다.
-        # (2026-08-26 사장님 지시로 '키 있으면 20회 고정' → '키 1개당 10회'로 바꿨다)
-        key, dflt = None, None
-    elif is_paid:
-        key, dflt = f"limit_{op}_pro", _CREDIT_PRO_DEFAULTS.get(op, 100)
-    else:
-        key, dflt = f"limit_{op}", _CREDIT_DEFAULTS.get(op, 5)
+    # ★등급 판정과 한도 설정키를 _limit_tier 한 곳에서 가져온다 — 관리페이지가
+    #   보여주는 한도(_effective_limits)와 여기서 막는 한도가 갈라지면
+    #   "pro인데 10회에서 막힌다"를 아무도 못 찾는다(0순위-B, 2026-08-27 실사고).
+    key, dflt, _tier = _limit_tier(st, customer_id, op)
     if key is None:                       # 자기 키 회원 — 키 개수로 정한다
         limit = _lens_limit_for(st, customer_id, _CREDIT_DEFAULTS["lens"])
     else:
@@ -9212,6 +9215,51 @@ def _lens_limit_for(store, customer_id, fallback):
     except (TypeError, ValueError):
         per = _CREDIT_PER_KEY_DEFAULTS["lens"]
     return per * n
+
+
+def _limit_tier(store, customer_id, op):
+    """이 회원의 op 한도가 **어느 규칙에서** 나오는지 한 곳에서 정한다.
+    → (setting_key, default, tier_label). setting_key=None이면 '키 개수로 계산'.
+
+    ★check_and_count가 이 함수를 쓴다 — 막는 쪽과 보여주는 쪽이 같은 판단을 두 번
+      적으면 반드시 어긋난다(0순위-B). 실제로 그래서 사고가 났다:
+      화면은 "pro"라는데 게이트는 무료와 같은 10회를 걸고 있었다.
+    """
+    if op == "lens" and _lens_key_count(customer_id):
+        return None, None, "byok"          # 자기 키 — 키 개수 × per_key
+    is_paid = ((_as_cid(customer_id) == 0)
+               or (store.get_customer(customer_id) or {}).get("plan") == "pro")
+    if is_paid:
+        return f"limit_{op}_pro", _CREDIT_PRO_DEFAULTS.get(op, 100), "pro"
+    return f"limit_{op}", _CREDIT_DEFAULTS.get(op, 5), "free"
+
+
+def _effective_limits(store, customer_id):
+    """이 회원에게 **실제로 걸려 있는** 하루 한도. 화면이 근거까지 같이 보여주도록
+    {op: {limit, tier, source, fallback}}를 돌려준다.
+
+    ★fallback=True는 "설정칸이 비었거나 숫자가 아니라서 코드 기본값으로 떨어졌다"는 뜻.
+      2026-08-27 실사고가 바로 이것이다 — limit_lens_pro가 빈 문자열('')이라
+      int('')가 ValueError로 터지고 조용히 10회가 적용돼, pro 회원이 무료와 같은
+      한도에서 막혔다. 아무 데도 안 드러나 사장님이 SSH로 DB를 뒤져야 원인을 알았다.
+      그래서 화면에 ⚠️로 띄운다 — 조용한 기본값이 다시 생기지 않게.
+    """
+    out = {}
+    for op in ("lens", "render", "script"):
+        key, dflt, tier = _limit_tier(store, customer_id, op)
+        if key is None:                       # BYOK — 키 개수로 계산, 설정칸 없음
+            out[op] = {"limit": _lens_limit_for(store, customer_id,
+                                                _CREDIT_DEFAULTS["lens"]),
+                       "tier": tier, "source": f"SerpApi 키 {_lens_key_count(customer_id)}개",
+                       "fallback": False}
+            continue
+        raw = store.get_setting(key, None)
+        try:
+            limit, fell = int(raw), False
+        except (TypeError, ValueError):        # 빈칸·공백·글자 → 코드 기본값
+            limit, fell = dflt, True
+        out[op] = {"limit": limit, "tier": tier, "source": key, "fallback": fell}
+    return out
 
 
 def _lens_has_own_key(customer_id):
@@ -9534,6 +9582,9 @@ def _admin_customers(request: Request):
         cu["level"] = access_level(_cid)
         _u = usage_map.get(_cid, {})
         cu["usage"] = {op: _u.get(op, 0) for op in ("lens", "render", "script")}
+        # 이 회원에게 **실제로 걸린** 한도 + 그 근거. 화면이 "10/10"만 보여주면
+        # 10이 어디서 온 값인지 알 수 없다(2026-08-27 pro가 조용히 10회로 떨어진 사고).
+        cu["limits"] = _effective_limits(st, _cid)
         cu["made_today"] = made_map.get(_cid, {"made": 0, "charged": 0})   # 한국시간 오늘 실측
         cu["access_7d"] = access_map.get(_cid, {"ips": 0, "devices": 0})  # 최근 7일 고유 수
         cu["is_admin"] = _is_admin(_cid)                        # 관리자 배지용
@@ -9953,6 +10004,35 @@ async def _admin_points(request: Request):
     return {"ok": True, "balance": pricing.to_display(bal)}
 
 
+@app.post("/api/admin/usage/reset")
+async def _admin_usage_reset(request: Request):
+    """오늘 일일 사용횟수를 0으로 되돌린다 (2026-08-27).
+
+    ★왜 필요한가: 등급(set_plan)·포인트(admin/points)는 버튼이 있는데 **일일 사용횟수만**
+      되돌릴 방법이 UI에도 API에도 없었다. 실제로 김데릭님(cid 241)이 렌즈 10/10을 쓴 뒤
+      입금하셨을 때, 사장님이 서버에 SSH로 붙어 sqlite를 직접 UPDATE해야 했다.
+      운영 중 흔한 일인데 매번 DB를 손으로 만지는 건 위험하다.
+    body: {customer_id, op}  op 생략 시 lens/render/script 전부."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    body = await request.json()
+    try:
+        cid = int(body.get("customer_id"))
+    except (TypeError, ValueError):
+        return JSONResponse({"error": "customer_id 필요"}, status_code=422)
+    ops = [body["op"]] if body.get("op") else ["lens", "render", "script"]
+    bad = [o for o in ops if o not in ("lens", "render", "script")]
+    if bad:
+        return JSONResponse({"error": f"모르는 작업: {bad[0]}"}, status_code=422)
+    st = Store(DB_PATH)
+    day = _today_utc()
+    cleared = {o: st.usage_reset(cid, o, day) for o in ops}
+    print(f"[admin] usage reset cid={cid} day={day} cleared={cleared}", file=sys.stderr)
+    return {"ok": True, "cleared": cleared, "day": day,
+            "usage": {o: st.usage_get(cid, o, day) for o in ("lens", "render", "script")}}
+
+
 @app.post("/api/admin/approve")
 async def _admin_approve(request: Request):
     denied = _require_admin(request)
@@ -10072,6 +10152,27 @@ def _ops_page(request: Request):
                             status_code=403)
     return FileResponse(Path(__file__).parent / "static" / "ops.html",
                         media_type="text/html; charset=utf-8")
+
+
+@app.get("/api/admin/work-lines")
+def _api_admin_work_lines(request: Request):
+    """관리자 작업라인 — **지금 누가 무엇을 하고 있나**(2026-08-26 사장님 지시).
+
+    capacity가 숫자만 주던 것을 사람이 읽는 줄로 바꾼다: 진행·대기·최근완료(실패 포함).
+    ★관리자 전용이다 — 고객 이름이 들어 있다.
+    """
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    store = Store(DB_PATH)
+    out = store.admin_work_lines()
+    # 워커·부하는 이미 capacity가 세는 곳이 있다(0순위-B: 여기서 다시 세지 않는다).
+    try:
+        from shopping_shorts import capacity_watch
+        out["capacity"] = capacity_watch.sample(DB_PATH)
+    except Exception:      # noqa: BLE001 — 관측이 서비스를 죽이면 안 된다
+        out["capacity"] = None
+    return {"ok": True, **out}
 
 
 @app.get("/api/admin/capacity")

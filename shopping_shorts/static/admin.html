@@ -30,6 +30,11 @@ input{background:#0e0e12;border:1px solid #333;border-radius:7px;color:#eee;padd
 label{display:inline-block;min-width:120px;color:#a8a8b0;font-size:13px;margin:5px 0}
 .save{background:#4f9dfa;color:#111;padding:8px 16px;margin-top:10px}
 .msg{color:#7ee787;font-size:12px;margin-left:8px}
+/* 작업 라인(2026-08-26) — 지연·실패만 색을 준다. 다 칠하면 아무것도 안 보인다. */
+.wlnote{font-size:11px;color:#6a6a72;font-weight:500;margin-left:6px}
+.wlcap{font-size:12px;color:#8a8a92;margin:2px 0 10px}
+tr.wlslow td{background:rgba(248,113,113,.10);color:#fca5a5}
+tr.wlfail td{background:rgba(248,113,113,.06);color:#f0a0a0}
 .err{color:#ff9a8a}
 details.card>summary{cursor:pointer;font-size:15px;font-weight:600;color:#cfd2d6;list-style:none;user-select:none}
 details.card>summary::-webkit-details-marker{display:none}
@@ -40,6 +45,37 @@ details.card[open]>summary::before{content:'▾'}
 .setfield label{min-width:92px;margin:0}
 .setfield input{flex:1;width:auto}
 tbody tr:hover{background:#1b1b22}
+
+/* ── 고객 관리 모달(2026-08-27) ─────────────────────────────────────────
+   종전엔 조작 버튼이 한 줄에 10개였고, 누르면 prompt()가 연달아 떴다.
+   "지금 이 사람 상태가 어떤지"를 한 화면에서 보고 고치게 모은다. */
+.mask{position:fixed;inset:0;background:rgba(0,0,0,.66);display:none;z-index:60;
+      align-items:flex-start;justify-content:center;padding:40px 16px;overflow:auto}
+.mask.on{display:flex}
+.modal{background:#16161c;border:1px solid #2f2f38;border-radius:14px;width:520px;max-width:100%;
+       box-shadow:0 18px 50px rgba(0,0,0,.5)}
+.mhead{display:flex;align-items:baseline;gap:10px;padding:16px 18px;border-bottom:1px solid #24242c}
+.mhead b{font-size:17px}.mhead .cid{color:#8a8a92;font-size:13px}
+.mhead .x{margin-left:auto;background:none;color:#8a8a92;font-size:20px;padding:0 4px;margin:0}
+.mhead .x:hover{color:#e8e8ea}
+.msec{padding:14px 18px;border-bottom:1px solid #24242c}
+.msec:last-child{border-bottom:0}
+.msec h3{margin:0 0 10px;font-size:12px;color:#8a8a92;font-weight:700;letter-spacing:.4px}
+.mrow{display:flex;align-items:center;gap:8px;margin:7px 0;font-size:14px}
+.mrow .k{color:#a8a8b0;min-width:52px}
+.mrow .v{font-weight:700}
+.mrow .sp{margin-left:auto;display:flex;gap:6px}
+.mrow input{width:84px;padding:6px 9px}
+.useb{display:grid;grid-template-columns:52px 1fr auto;gap:8px;align-items:center;margin:8px 0;font-size:14px}
+.bar{height:7px;border-radius:4px;background:#24242c;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:4px;background:#4f9dfa}
+.bar i.full{background:#ff6b6b}
+.uct{font-size:13px;color:#a8a8b0;white-space:nowrap}
+.brs{background:#3a5bd0;color:#fff;padding:5px 11px;font-size:12.5px;margin:0}
+.brs[disabled]{background:#2a2a33;color:#6a6a72;cursor:default}
+.warn{background:#241c10;border:1px solid #5a4a1e;color:#ffd479;border-radius:8px;
+      padding:8px 11px;font-size:12.5px;margin:10px 0 0;line-height:1.5}
+.mfoot{padding:12px 18px;display:flex;gap:6px;flex-wrap:wrap;background:#121218;border-radius:0 0 14px 14px}
 
 /* ── 바로가기(2026-08-24) — 주소를 외우지 않아도 되게 ── */
 .quicknav{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 16px}
@@ -96,6 +132,26 @@ tbody tr:hover{background:#1b1b22}
   <button class=save onclick=saveSettings()>설정 저장</button>
 </details>
 
+<!-- 작업 라인(2026-08-26 사장님 "지금 작업중인 사람들 작업 라인을 라이브로 볼수있어?")
+     ★종전엔 큐 화면이 아예 없었다. /api/admin/capacity가 숫자(running·queued)는 줬지만
+       **누가 무엇을 하는지**를 몰라 사장님이 매번 물어봐야 했다.
+     ★실제 피해: 2026-08-25 VMake 크레딧 소진 때 고객이 9번 실패하고 신고할 때까지
+       아무도 몰랐다 — '오래 걸림' 경고만 있었어도 그때 바로 붉게 떴다. -->
+<h2 class=grouphead>🚦 작업 라인 <span class=wlnote>5초마다 자동 갱신</span></h2>
+
+<div class="card">
+  <h2>지금 <span id=wlnow>–</span> <span id=wlMsg class=msg></span></h2>
+  <div id=wlcap class=wlcap>불러오는 중…</div>
+  <table><thead><tr><th class=mini>상태</th><th>고객</th><th>작업</th><th class=mini>경과</th><th>작업번호</th><th>비고</th></tr></thead>
+  <tbody id=wlrows><tr><td colspan=6 class=empty>불러오는 중…</td></tr></tbody></table>
+</div>
+
+<details class=card>
+  <summary>🕘 최근 1시간 완료·실패 (<span id=wlrcnt>0</span>건)</summary>
+  <table><thead><tr><th class=mini>결과</th><th>고객</th><th>작업</th><th class=mini>걸린시간</th><th>끝난시각</th><th>오류</th></tr></thead>
+  <tbody id=wlrecent><tr><td colspan=6 class=empty>–</td></tr></tbody></table>
+</details>
+
 <h2 class=grouphead>🔔 오늘 처리할 일</h2>
 
 <!-- 오류 신고(2026-08-24) — 고객이 사이드바 '🐞 오류 신고'를 누르면 여기 쌓인다.
@@ -119,6 +175,10 @@ tbody tr:hover{background:#1b1b22}
   <h2>🕓 승인 대기중 (<span id=pcnt>0</span>명) <span id=pMsg class=msg></span></h2>
   <table><thead><tr><th>ID</th><th>이름</th><th>전화</th><th>이메일/아이디</th><th>가입일</th><th>승인</th></tr></thead>
   <tbody id=prows><tr><td colspan=6 class=empty>불러오는 중…</td></tr></tbody></table>
+</div>
+
+<div class=mask id=cmask onclick="if(event.target===this)closeCust()">
+  <div class=modal id=cmodal></div>
 </div>
 
 <h2 class=grouphead>👥 고객 관리</h2>
@@ -232,6 +292,20 @@ function _madeCell(c){
   return ` <span title="한국시간 오늘 실측 — 차감 ${m.charged}건 / 실제 영상 ${m.made}개"
     style="color:${bad?'#ff6b6b':'#7ee787'};font-weight:${bad?'700':'400'}">(실제 ${m.made}${bad?' ⚠️':''})</span>`;
 }
+// ★{key,ko} 객체로 둔다 — ['키','라벨'] 배열로 쓰면 test_admin_payload의
+//   SETTING_FIELDS 정규식이 op 이름을 '저장 안 되는 설정칸'으로 오인한다.
+const _OPS=[{key:'lens',ko:'렌즈'},{key:'render',ko:'렌더'},{key:'script',ko:'대본'}];
+// 오늘 사용 — "10/10"처럼 **한도까지** 보여준다. 종전엔 쓴 횟수만 보여서
+// 그게 꽉 찬 건지 여유가 있는 건지 표에서 알 수 없었다(2026-08-27).
+function _useCell(c){
+  const u=c.usage||{}, L=c.limits||{};
+  return _OPS.map(function(o){
+    const n=u[o.key]||0, lim=(L[o.key]||{}).limit;
+    const full = lim!=null && n>=lim;
+    return `<span title="${o.ko}" style="color:${full?'#ff6b6b':'inherit'};font-weight:${full?'700':'400'}">`
+         + n + (lim!=null?'/'+lim:'') + '</span>';
+  }).join('<span style="color:#4a4a52"> · </span>');
+}
 function renderCustomers(){
   const esc=s=>(s||'').toString().replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const q=((document.getElementById('custSearch')||{}).value||'').trim().toLowerCase();
@@ -263,21 +337,11 @@ function renderCustomers(){
       <td style="color:#8a8a92">${c.full_access_until? new Date(c.full_access_until*1000).toLocaleDateString('ko-KR'):'-'}</td>
       <td>${c.last_payment? `<span class=paylink data-cid=${c.id} style="cursor:pointer;color:#8ab4f8">${c.last_payment.amount.toLocaleString()}원 · ${c.payment_count}건</span>` : '-'}</td>
       <td><span style="color:${(c.points||0)<=0?'#ff6b6b':'#7ee787'};font-weight:700">${c.points||0}P</span></td>
-      <td>${u.lens||0}/${u.render||0}/${u.script||0}${_madeCell(c)}</td>
+      <td>${_useCell(c)}${_madeCell(c)}</td>
       <td>${accCell}</td>
       <td>${seenCell}</td>
-      <td><button class=bpay onclick="addPayment(${c.id})">결제추가</button>
-          <button class=bedit onclick="editInfo(${c.id})">정보수정</button>
-          <button class=bfree onclick="setPlan(${c.id},'free',this)">일반회원</button>
-          <button class=btrial onclick="grantTrial(${c.id},this)">체험</button>
-          <button class=bpt onclick="grantPoints(${c.id})">포인트</button>
-          <button class=bkey onclick="openKeys(${c.id},this)">키</button>
-          <button class=bpro onclick="setPlan(${c.id},'pro',this)">pro</button>
-          ${c.code_admin?'':(c.is_admin
-            ? `<button class=badm onclick="setAdmin(${c.id},false)">관리자해제</button>`
-            : `<button class=badm onclick="setAdmin(${c.id},true)">관리자지정</button>`)}
-          <button class=bchal onclick="setChallenge(${c.id},${c.challenge?'false':'true'})">${c.challenge?'🔥챌린지해제':'챌린지참가'}</button>
-          ${c.is_admin?'':`<button class=bdel onclick="delCustomer(${c.id})">삭제</button>`}</td></tr>`;
+      <td><button class=bmng onclick="openCust(${c.id})">관리</button>
+          <button class=bpay onclick="addPayment(${c.id})">결제추가</button></td></tr>`;
   }).join('') : '<tr><td colspan=16 class=empty>조건에 맞는 고객이 없어요</td></tr>';
 }
 // ── 입금 신고 (2026-08-23) ──────────────────────────────────
@@ -421,6 +485,116 @@ async function setChallenge(cid,flag){
   if(r.ok){m.textContent=flag?'✅ 챌린지 참가 등록':'✅ 챌린지 참가 해제';m.className='msg';load();}
   else{m.textContent='❌ 실패';m.className='msg err';}
 }
+// ── 고객 관리 모달(2026-08-27) ──────────────────────────────────────────
+// 한 사람의 상태(등급·포인트·오늘 사용량·키)를 한 화면에서 보고 그 자리에서 고친다.
+// ★왜 만들었나: 조작 버튼이 한 줄에 10개라 무엇부터 눌러야 할지 알 수 없었고,
+//   유료 op가 막히는 관문이 셋(등급·포인트·일일횟수)인데 **일일횟수만 되돌릴
+//   방법이 없어** 사장님이 서버에 SSH로 붙어 sqlite를 직접 고쳐야 했다.
+let CUST_OPEN=null;
+function _c(cid){ return (window._CUST||[]).find(x=>x.id===cid); }
+function closeCust(){ CUST_OPEN=null; document.getElementById('cmask').classList.remove('on'); }
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&CUST_OPEN!==null) closeCust(); });
+
+function openCust(cid){
+  CUST_OPEN=cid;
+  document.getElementById('cmask').classList.add('on');
+  drawCust();
+}
+function drawCust(){
+  const c=_c(CUST_OPEN); if(!c){ closeCust(); return; }
+  const esc=s=>(s||'').toString().replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const u=c.usage||{}, L=c.limits||{}, pts=c.points||0;
+  // 한도가 코드 기본값으로 떨어진 op — 설정칸이 비어 조용히 적용된 것이라 경고한다.
+  const fell=_OPS.filter(o=>(L[o.key]||{}).fallback).map(o=>o.ko);
+  const useRows=_OPS.map(function(o){
+    const key=o.key, n=u[key]||0, li=L[key]||{}, lim=li.limit;
+    const pct = lim ? Math.min(100, Math.round(n/lim*100)) : 0;
+    const full = lim!=null && n>=lim;
+    return `<div class=useb>
+      <span class=k>${o.ko}</span>
+      <span class=bar><i class="${full?'full':''}" style="width:${pct}%"></i></span>
+      <span class=uct>${n} / ${lim!=null?lim:'—'}
+        <button class=brs ${n?'':'disabled'} onclick="resetUse(${c.id},'${key}',this)">리셋</button></span>
+    </div>`;
+  }).join('');
+  const tierNote=_OPS.map(o=>{
+    const li=L[o.key]||{}; return o.ko+' '+(li.tier||'?')+(li.source?' ('+li.source+')':'');
+  }).join(' · ');
+  document.getElementById('cmodal').innerHTML=`
+   <div class=mhead><b>${esc(c.name)||'(이름없음)'}</b>
+     <span class=cid>cid ${c.id} · ${esc(c.email||c.username)}</span>
+     <button class=x onclick=closeCust()>×</button></div>
+
+   <div class=msec><h3>등급</h3>
+     <div class=mrow><span class=k>현재</span>
+       <span class="badge ${c.plan}">${c.plan}</span>
+       <span class=v style="color:#8a8a92;font-weight:400">${c.level||''}</span>
+       <span class=sp>
+         <button class=bfree onclick="setPlan(${c.id},'free',this)">일반</button>
+         <button class=btrial onclick="grantTrial(${c.id},this)">체험</button>
+         <button class=bpro onclick="setPlan(${c.id},'pro',this)">pro</button>
+       </span></div></div>
+
+   <div class=msec><h3>포인트</h3>
+     <div class=mrow><span class=k>잔액</span>
+       <span class=v style="color:${pts<=0?'#ff6b6b':'#7ee787'}">${pts}P</span>
+       <span class=sp>
+         <input id=cpts type=number value=1000 step=100>
+         <button class=bpt onclick="grantPts(${c.id},this)">지급</button>
+         <button class=bdel onclick="grantPts(${c.id},this,-1)">회수</button>
+       </span></div></div>
+
+   <div class=msec><h3>오늘 사용량 (UTC ${_todayUtc()})</h3>
+     ${useRows}
+     <div style="font-size:12px;color:#6a6a72;margin-top:8px">한도 근거 — ${esc(tierNote)}</div>
+     ${fell.length?`<div class=warn>⚠️ <b>${fell.join('·')}</b> 한도가 설정칸이 비어 코드 기본값으로 적용 중입니다.
+       위 ⚙️설정에서 값을 넣지 않으면 pro도 무료와 같은 한도로 막힙니다.</div>`:''}
+   </div>
+
+   <div class=mfoot>
+     <button class=bedit onclick="editInfo(${c.id})">정보수정</button>
+     <button class=bkey onclick="openKeys(${c.id},this)">키</button>
+     <button class=bchal onclick="setChallenge(${c.id},${c.challenge?'false':'true'})">${c.challenge?'🔥챌린지해제':'챌린지참가'}</button>
+     ${c.code_admin?'':(c.is_admin
+       ? `<button class=badm onclick="setAdmin(${c.id},false)">관리자해제</button>`
+       : `<button class=badm onclick="setAdmin(${c.id},true)">관리자지정</button>`)}
+     ${c.is_admin?'':`<button class=bdel onclick="delCustomer(${c.id})">삭제</button>`}
+   </div>`;
+}
+function _todayUtc(){ return new Date().toISOString().slice(0,10); }
+
+// 오늘 사용횟수를 0으로 — 입금 직후 "10회 다 썼다"를 되돌리는 자리.
+async function resetUse(cid, op, btn){
+  return _lockWhile(btn, async ()=>{
+    try{
+      const r=await fetch('/api/admin/usage/reset',{method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({customer_id:cid, op:op})});
+      const d=await r.json().catch(()=>({}));
+      if(!r.ok||!d.ok) throw new Error(d.error||('HTTP '+r.status));
+      const c=_c(cid); if(c&&c.usage) c.usage[op]=0;    // 표·모달 즉시 반영
+      drawCust(); renderCustomers();
+      const m=document.getElementById('cMsg');
+      m.textContent='✅ '+op+' 사용량 리셋 (지운 값 '+(d.cleared||{})[op]+')'; m.className='msg';
+      setTimeout(()=>m.textContent='',3000);
+      load();
+    }catch(e){ alert('리셋 실패: '+e.message); }
+  });
+}
+async function grantPts(cid, btn, sign){
+  const el=document.getElementById('cpts');
+  const p=(Number(el&&el.value)||0)*(sign||1);
+  if(!p){ alert('숫자를 넣어주세요'); return; }
+  return _lockWhile(btn, async ()=>{
+    const r=await fetch('/api/admin/points',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({customer_id:cid, points:p})});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok){ alert('실패: '+(d.error||r.status)); return; }
+    const c=_c(cid); if(c) c.points=d.balance;
+    drawCust(); renderCustomers(); load();
+  });
+}
+
 // ── 고객 키 켜기/끄기 + 포인트 면제 (2026-08-25) ─────────────────────────
 // ★왜: 종전엔 키를 끄려면 DB에서 service를 'vmake_paused'로 바꿔야 했다. 그러면
 //   시스템이 "키 없음"으로 보고 **사장님 키로 돌면서 포인트는 계속 깎았다**(cid 57 실사고).
@@ -524,6 +698,83 @@ load().catch(e=>{
   if(rw) rw.innerHTML='<tr><td colspan=12 class=empty style="color:#f87171">'+msg+'</td></tr>';
   console.error('[admin] load 실패', e);
 });
+
+
+/* ── 작업 라인(2026-08-26 사장님) ────────────────────────────────────
+   지금 도는 것 + 줄 서 있는 것 + 최근 완료·실패를 **한 번의 조회**로 그린다
+   (여러 번 부르면 목록끼리 시점이 어긋난다 — 서버가 한 덩어리로 준다).
+   ★사람이 읽는 화면이라 초를 '분'으로 바꿔 쓴다. 숫자만 있으면 아무도 안 본다. */
+// ★esc는 이 파일에서 **함수 안 지역변수**로 3번 선언돼 있다(232·305·352줄) — 밖에서 부르면
+//   ReferenceError다. 여기서 따로 둔다(같은 규칙, 한 줄이라 두 벌이어도 어긋날 여지가 없다).
+const wlEsc=s=>(s||'').toString().replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function wlAgo(sec){
+  if(sec==null) return '–';
+  if(sec<60) return sec+'초';
+  const m=Math.floor(sec/60);
+  return m<60 ? (m+'분') : (Math.floor(m/60)+'시간 '+(m%60)+'분');
+}
+function wlWho(r){
+  // ★모르면 지어내지 않는다 — 이름이 없으면 id를 그대로 보여준다(0순위: 추측 금지).
+  const nm=(r.owner_name||'').trim();
+  return nm ? wlEsc(nm) : (r.owner ? ('#'+wlEsc(r.owner)) : '–');
+}
+async function loadWorkLines(){
+  try{
+    const r=await fetch('/api/admin/work-lines');
+    if(r.status===403) return;              // 관리자 아님 — 조용히 넘어간다
+    const d=await r.json();
+    if(!d || !d.ok) throw new Error((d&&d.error)||'조회 실패');
+    const run=d.running||[], q=d.queued||[], rc=d.recent||[];
+    const now=document.getElementById('wlnow');
+    if(now) now.textContent='진행 '+run.length+'건 · 대기 '+q.length+'건';
+    // 서버 상태 한 줄(워커·부하) — capacity가 이미 세는 값을 그대로 쓴다.
+    const cap=d.capacity||null, capEl=document.getElementById('wlcap');
+    if(capEl){
+      capEl.textContent = cap
+        ? ('워커 '+(cap.workers!=null?cap.workers:'?')+'개 가동 · 부하 '
+           +(cap.load1!=null?cap.load1:'?')+' / '+(cap.cores!=null?cap.cores:'?')+'코어')
+        : '서버 상태를 못 읽었습니다';
+    }
+    const rows=[];
+    run.forEach(x=>{
+      // ★오래 걸리면 붉게 — 고객이 신고하기 전에 사장님이 먼저 본다.
+      const slow=!!x.slow;
+      rows.push('<tr'+(slow?' class=wlslow':'')+'>'
+        +'<td class=mini>'+(slow?'🔴 지연':'🟢 진행')+'</td>'
+        +'<td>'+wlWho(x)+'</td><td>'+wlEsc(x.label||x.task)+'</td>'
+        +'<td class=mini>'+wlAgo(x.elapsed_sec)+'</td>'
+        +'<td class=mini>'+wlEsc(x.job_id||'–')+'</td>'
+        +'<td>'+(slow?('평소 '+wlAgo(x.slow_limit_sec)+' 안에 끝납니다 — 확인 필요'):'')+'</td></tr>');
+    });
+    q.forEach((x,i)=>{
+      rows.push('<tr><td class=mini>⏳ 대기 '+(i+1)+'</td>'
+        +'<td>'+wlWho(x)+'</td><td>'+wlEsc(x.label||x.task)+'</td>'
+        +'<td class=mini>'+wlAgo(x.wait_sec)+' 대기</td>'
+        +'<td class=mini>'+wlEsc(x.job_id||'–')+'</td><td></td></tr>');
+    });
+    const tb=document.getElementById('wlrows');
+    if(tb) tb.innerHTML = rows.length ? rows.join('')
+      : '<tr><td colspan=6 class=empty>지금 도는 작업이 없습니다 — 한가합니다 👍</td></tr>';
+    // 최근 완료·실패
+    const rcEl=document.getElementById('wlrecent'), rcCnt=document.getElementById('wlrcnt');
+    if(rcCnt) rcCnt.textContent=rc.length;
+    if(rcEl) rcEl.innerHTML = rc.length ? rc.map(x=>
+        '<tr'+(x.state==='failed'?' class=wlfail':'')+'>'
+        +'<td class=mini>'+(x.state==='failed'?'❌ 실패':'✅ 완료')+'</td>'
+        +'<td>'+wlWho(x)+'</td><td>'+wlEsc(x.label||x.task)+'</td>'
+        +'<td class=mini>'+wlAgo(x.elapsed_sec)+'</td>'
+        +'<td class=mini>'+wlEsc((x.finished_at||'').slice(11,19)||'–')+'</td>'
+        +'<td>'+wlEsc((x.error||'').slice(0,120))+'</td></tr>').join('')
+      : '<tr><td colspan=6 class=empty>최근 1시간 내 완료된 작업이 없습니다</td></tr>';
+    const m=document.getElementById('wlMsg'); if(m) m.textContent='';
+  }catch(e){
+    // ★조용히 실패하지 않는다 — 빈 표는 '한가함'과 '고장'을 구별 못 한다.
+    const m=document.getElementById('wlMsg');
+    if(m) m.textContent='⚠️ 불러오지 못했습니다 — '+(e&&e.message||e);
+  }
+}
+loadWorkLines();
+setInterval(loadWorkLines, 5000);   // 라이브 — 관리자만 보는 화면이라 5초면 충분하다
 
 
 /* ── 오류 신고함(2026-08-24) ─────────────────────────────────────────

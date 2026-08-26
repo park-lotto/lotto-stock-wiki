@@ -5068,8 +5068,21 @@ class Store:
         except (TypeError, ValueError):
             return 0
 
-    def bump_lens(self, month):
-        n = self.lens_month_count(month) + 1
+    def bump_lens(self, month, calls=1):
+        """이번 달 렌즈 카운터를 **실제 SerpApi 호출 수(calls)만큼** 올린다.
+
+        ★종전엔 클릭 1회당 무조건 +1이었다. 그런데 검색 1번이 로케일 수만큼
+          SerpApi를 쓴다(2026-08-27 실측: 우리 카운터 664 / 실제 소진 1,116 —
+          452회를 적게 셌다. 키 5개 중 3개가 이미 소진돼 잔량 134회였는데
+          화면은 664/1250이라 '아직 여유'로 보였다).
+          월 가드가 이 값으로 판정하므로 적게 세면 잔량이 조용히 마른다.
+        ★calls가 0·None·음수여도 **최소 1** — 검색을 했는데 0으로 세면 카운터가 멈춘다.
+        """
+        try:
+            n_calls = max(1, int(calls))
+        except (TypeError, ValueError):
+            n_calls = 1
+        n = self.lens_month_count(month) + n_calls
         self.set_setting(f"lens_count:{month}", str(n))
         return n
 
@@ -5395,6 +5408,23 @@ class Store:
             row = c.execute("SELECT count FROM usage WHERE customer_id=? AND op=? AND day=?",
                             (customer_id, op, day)).fetchone()
         return row[0] if row else 0
+
+    def usage_reset(self, customer_id, op, day):
+        """(customer_id, op, day) 사용량을 0으로. **지워진 값**을 돌려준다.
+
+        관리자가 "오늘 렌즈 10회 다 썼는데 방금 입금하셨다" 같은 상황에서 되돌리는 용도.
+        ★행을 지우지 않고 0으로 둔다 — usage_all이 '오늘 0회'를 그대로 보여줘야
+          리셋했다는 사실이 화면에서 사라지지 않는다.
+        없는 행이면 아무 것도 안 하고 0(버튼 연타가 오류가 되면 안 된다).
+        """
+        with self._conn() as c:
+            row = c.execute("SELECT count FROM usage WHERE customer_id=? AND op=? AND day=?",
+                            (customer_id, op, day)).fetchone()
+            if not row:
+                return 0
+            c.execute("UPDATE usage SET count=0 WHERE customer_id=? AND op=? AND day=?",
+                      (customer_id, op, day))
+        return row[0]
 
     # ── 접속중·활동기록(2026-07-22) ──
     def touch_customer(self, customer_id, at):
@@ -5826,6 +5856,107 @@ class Store:
             if not row:
                 return None
             return {"id": row[0], "task": row[1], "args": json.loads(row[2])}
+
+    #: 작업별 '평소 이 정도면 오래 걸린 것'(초). 화면이 붉게 표시하는 기준.
+    #  라이브 실측(2026-08-26 job_queue 완료분): mix·preview·clean은 1~3분에 끝난다.
+    #  ⚠️여기 없는 task는 _WORK_SLOW_DEFAULT를 쓴다 — 새 작업이 생겨도 경고는 계속 돈다.
+    _WORK_SLOW_SEC = {"mix": 300, "preview": 300, "clean": 600, "render": 900,
+                      "durfill": 1800, "prewarm": 1800, "overseas": 1800}
+    _WORK_SLOW_DEFAULT = 600
+
+    #: 화면에 뜨는 작업 이름(영문 task → 사장님이 읽는 말).
+    _WORK_LABEL = {"mix": "영상대본MIX", "preview": "미리보기", "clean": "자막제거",
+                   "render": "최종렌더", "durfill": "길이보정", "prewarm": "담기분석",
+                   "overseas": "해외수집", "census": "전수조사"}
+
+    def admin_work_lines(self, recent=12):
+        """관리자 관측판 — **지금 누가 무엇을 하고 있나**(2026-08-26 사장님 지시).
+
+        종전엔 `/api/admin/capacity`가 숫자(running·queued)만 줬다. 그래서 "3건 대기"까지만
+        보이고 **누구의 무슨 작업인지**를 몰랐다 — 사장님이 매번 물어봐야 했다.
+        ★실제 피해: 2026-08-25 VMake 크레딧 소진 때 고객이 9번 실패하고 신고할 때까지
+          아무도 몰랐다. `elapsed_sec`·`slow`가 있으면 그때 바로 붉게 떴을 것이다.
+
+        반환: {running:[...], queued:[...], recent:[...]}  — **한 번에** 준다.
+              화면이 API를 여러 번 부르면 목록끼리 시점이 어긋난다.
+        ⚠️실패해도 관측이 서비스를 죽이면 안 된다 → 예외는 빈 목록으로 삼킨다
+          (capacity API와 같은 규약).
+        """
+        import json as _json
+
+        def _epoch(s):
+            """'YYYY-MM-DD HH:MM:SS'(UTC) → epoch. 못 읽으면 None."""
+            if not s:
+                return None
+            try:
+                return datetime.strptime(str(s)[:19], "%Y-%m-%d %H:%M:%S").replace(
+                    tzinfo=timezone.utc).timestamp()
+            except (ValueError, TypeError):
+                return None
+
+        def _job_id(args):
+            try:
+                return (_json.loads(args or "{}") or {}).get("job_id") or ""
+            except (ValueError, TypeError):
+                return ""
+
+        try:
+            now = datetime.now(timezone.utc).timestamp()
+            with self._conn() as c:
+                rows = c.execute(
+                    "SELECT id, task, state, args_json, created_at, claimed_at, "
+                    "       heartbeat_at, finished_at, owner, error "
+                    "  FROM job_queue "
+                    " WHERE state IN ('queued','running') "
+                    "    OR (finished_at IS NOT NULL "
+                    "        AND finished_at > datetime('now','-60 minutes')) "
+                    " ORDER BY id").fetchall()
+                names = {}
+                try:
+                    for cid, nm, em in c.execute(
+                            "SELECT id, COALESCE(name,''), COALESCE(email,'') FROM customers"):
+                        names[str(cid)] = nm or em or ""
+                except sqlite3.Error as e:
+                    # 이름은 부가정보다 — 없어도 줄은 보여준다. 단 **조용히 삼키지 않는다**
+                    # (메모리 `테스트_시한폭탄_침묵except`: except:pass가 SQL 오류를 삼켜
+                    #  라이브에서 0건이 된 실사고가 있었다).
+                    print(f"[작업라인] 고객 이름 조회 실패(무시): {e!r}", file=sys.stderr)
+
+            out = {"running": [], "queued": [], "recent": []}
+            for (qid, task, state, args, created, claimed, hb, fin, owner, err) in rows:
+                # 경과: 진행 중이면 '집은 때부터 지금까지', 끝났으면 '집은 때부터 끝까지'.
+                # ⚠️created가 아니라 claimed 기준이다 — 줄 서 있던 시간을 '오래 걸림'으로
+                #   세면 워커가 바쁠 때 전부 빨개진다(경보가 무의미해진다).
+                base = _epoch(claimed) or _epoch(created)
+                end = _epoch(fin) if fin else now
+                elapsed = int(end - base) if (base and end and end >= base) else None
+                item = {
+                    "id": qid, "task": task, "state": state,
+                    "label": self._WORK_LABEL.get(task, task),
+                    "job_id": _job_id(args),
+                    "owner": str(owner or ""),
+                    "owner_name": names.get(str(owner or ""), ""),
+                    "created_at": created, "claimed_at": claimed,
+                    "heartbeat_at": hb, "finished_at": fin,
+                    "error": err or "",
+                    "elapsed_sec": elapsed,
+                }
+                if state == "running":
+                    lim = self._WORK_SLOW_SEC.get(task, self._WORK_SLOW_DEFAULT)
+                    item["slow"] = bool(elapsed is not None and elapsed > lim)
+                    item["slow_limit_sec"] = lim
+                    out["running"].append(item)
+                elif state == "queued":
+                    # 대기는 '줄 선 시간'을 보여준다(집힌 적이 없으니 created 기준).
+                    w = _epoch(created)
+                    item["wait_sec"] = int(now - w) if w else None
+                    out["queued"].append(item)
+                else:
+                    out["recent"].append(item)
+            out["recent"] = sorted(out["recent"], key=lambda x: x["id"], reverse=True)[:recent]
+            return out
+        except sqlite3.Error:
+            return {"running": [], "queued": [], "recent": []}
 
     def mix_queue_ahead(self, job_id):
         """이 잡의 mix 큐 항목이 아직 'queued'면 앞에 선 queued 개수를 반환, 아니면 None.
