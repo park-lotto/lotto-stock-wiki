@@ -104,7 +104,9 @@ h1{font-size:16px;margin:0;font-weight:700}
 .frbar{display:flex;gap:6px;align-items:center;margin-top:7px;flex-wrap:wrap;font-size:11.5px}
 .frhint{color:var(--dim)}
 .frhint b{color:var(--warn)}
-.frmk{display:inline-flex;align-items:center;gap:4px;margin-left:auto}
+/* ★margin-left:auto를 뺐다 — 이게 '＋ 구간'을 오른쪽 끝까지 밀어 안내문과 사이를
+   텅 비웠다(2026-08-26 사장님 캡쳐 529 빨간 타원). 도구는 안내문 바로 뒤에 붙는다. */
+.frmk{display:inline-flex;align-items:center;gap:4px}
 .frlen{width:58px;background:#0e1013;color:var(--warn);border:1px solid var(--line);
     border-radius:6px;padding:4px;font-size:11.5px;font-weight:700;text-align:right}
 .frbtn{background:#22262c;color:var(--fg);border:1px solid var(--line);border-radius:6px;
@@ -195,7 +197,9 @@ h1{font-size:16px;margin:0;font-weight:700}
    칸 띠의 높이다(104면 185px, 78이면 139px) — 줄인 46px이 그대로 미리보기 몫이 된다.
    미리보기가 스크롤 없이 들어가려면 어디선가 자리를 내줘야 했고, 조각을 알아보는 데는
    78px로도 충분하다(실측: 번호·초·체크박스 전부 읽힌다). */
-.tbcut{position:relative;width:78px;flex:0 0 auto}
+/* 훅·칸 썸네일 — 78px는 옆 필름 칸보다 작아 무엇이 들어갔는지 안 보였다
+   (2026-08-26 사장님 캡쳐 530). 필름 칸에 눈높이를 맞춘다. */
+.tbcut{position:relative;width:112px;flex:0 0 auto}
 .tbcut img{width:100%;aspect-ratio:9/16;object-fit:cover;display:block;border-radius:5px;
   border:1px solid var(--line);background:#000}
 .tbcut .s{position:absolute;left:4px;top:4px;background:#000c;color:#fff;font-size:11px;
@@ -661,8 +665,8 @@ body.tight #topband #rollbay .frslot > .fr{flex:1}
      최대한 타이트하게 위로 올려") ══
    .tfold = 촘촘히에서 접는 것. 접을 대상을 늘릴 땐 **이 클래스만** 붙인다(0순위-B). */
 body.tight .tfold{display:none}
-body.tight #dropmsg{padding:3px 0;margin:0;gap:8px;font-size:12px}
-body.tight .srchead{font-size:13.5px;margin:0 0 4px 0;line-height:1.2;min-height:0;align-items:center}
+body.tight #dropmsg{padding:1px 0;margin:0;gap:8px;font-size:12px;line-height:1.15}
+body.tight .srchead{font-size:13.5px;margin:0 0 2px 0;line-height:1.15;min-height:0;align-items:center}
 body.tight .srchead .act,body.tight .srchead .slotbtn{padding:1px 6px;font-size:11px}
 body.tight .srchead .cnt{font-size:11px}
 /* ★위 영역이 70vh면 아래 카드 한 줄(187px)이 잘린다(실측 232px). 카드 줄이 통째로
@@ -1434,7 +1438,7 @@ function toggleTight(){
   localStorage.setItem(TIGHT_KEY, document.body.classList.contains('tight') ? '0' : '1');
   _tightApply();
 }
-const BUILD_TAG = 'F15';   // 필름롤러 14차 — 칸 안 필름 잘림·도구줄 겹침
+const BUILD_TAG = 'F16';   // 필름롤러 15차 — 도구줄 공백 제거·썸네일 112px
 (function(){ const b=document.getElementById('buildtag'); if(b) b.textContent = BUILD_TAG; })();
 
 function toggleHints(){
