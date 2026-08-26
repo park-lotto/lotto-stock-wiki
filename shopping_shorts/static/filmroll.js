@@ -47,6 +47,7 @@
     const caps = opt.caps || [];
     let DUR = +opt.dur || 0;
     let CW = 40, STEP = 1, N = 0, off = 0;
+    let _homed = false;      // 지금 쓰는 구간으로 한 번 옮겼나(처음 펼칠 때만)
     let MA = null;                     // 찍어둔 시작점
     let BOXES = [];                    // 확정 구간들
     let ACTBOX = null;
@@ -350,6 +351,16 @@
       }
       try { tmp.src = ''; } catch (_) {}
       loadEl.style.display = 'none';
+      // ★2026-08-26 3차 사장님 "펼치면 전체 영상이 나오네". 원본 전체를 펴는 건 맞다
+      //   (조각 밖 구간을 잡으려면 원본이 다 보여야 한다) — 문제는 **0초에서 열려서**
+      //   지금 쓰는 구간이 화면 밖에 있었다는 것이다. 처음 한 번만 그 구간으로 옮긴다
+      //   (확대·축소로 다시 그릴 때는 그 자리를 지킨다 — 아래 frz 핸들러가 정한다).
+      if (!_homed && opt.from != null) {
+        _homed = true;
+        const mid = opt.from + Math.max(0, ((opt.to != null ? opt.to : opt.from) - opt.from)) / 2;
+        off = clamp(mid * pps() - winW() / 2);
+        try { pv.currentTime = opt.from; } catch (_) {}
+      }
       applyW(); drawBar();
     }
 
@@ -403,6 +414,35 @@
       else { off = clamp(centerT * pps() - winW() / 2); applyW(); }
     });
 
+    /* ▶ 빨간 막대를 [a,b] 구간 동안 움직인다(소리는 미리보기 창이 낸다).
+       pv는 muted라 자동재생이 막히지 않는다. 브라우저가 그래도 거부하면
+       **시계로** 막대를 움직인다 — 막대가 멈춰 보이는 것보다 낫다. */
+    function stopHead() {
+      playing = false;
+      if (raf) { cancelAnimationFrame(raf); raf = 0; }
+      try { pv.pause(); } catch (_) {}
+    }
+    function runHead(a, b) {
+      stopHead();
+      playing = true;
+      const tick = (getT) => {
+        const loop = () => {
+          if (!playing || destroyed) return;
+          const t = getT();
+          if (t >= b - 0.02) { stopHead(); moveHead(b); return; }
+          moveHead(t);
+          raf = requestAnimationFrame(loop);
+        };
+        raf = requestAnimationFrame(loop);
+      };
+      try { pv.currentTime = a; } catch (_) {}
+      pv.play().then(() => tick(() => pv.currentTime)).catch(() => {
+        // 자동재생 거부 — 시계로 간다(구간 길이만큼 균일하게).
+        const t0 = performance.now();
+        tick(() => a + (performance.now() - t0) / 1000);
+      });
+    }
+
     /* 스페이스 = 재생/멈춤 (이 롤러가 열려 있을 때만) */
     function onKey(e) {
       if (destroyed) return;
@@ -413,9 +453,16 @@
       const bx = (ACTBOX != null && BOXES[ACTBOX]) ? BOXES[ACTBOX] : null;
       // ★미리보기 창으로 넘긴다 — 구간이 있으면 그 구간, 없으면 지금 위치부터
       if (typeof opt.onPlay === 'function'){
+        // ★2026-08-26 3차 사장님 제보 "빨간막대가 안움직여 스페이스바".
+        //   2차에서 재생을 큰 미리보기로 넘기며 여기서 그냥 return했다 — 필름 안 pv가
+        //   안 도니 moveHead 루프가 **아예 시작을 안 했다**(그래서 막대가 멈춰 있었다).
+        //   소리는 미리보기가, **위치 표시는 필름이** 맡는다: pv는 muted라 같이 돌려도
+        //   소리가 겹치지 않는다. 같은 파일·같은 시작점이라 막대가 그림을 따라간다.
+        if (playing) { stopHead(); return; }      // 두 번째 스페이스 = 멈춤
         const a2 = bx ? bx.s : (pv.currentTime || 0);
         const b2 = bx ? bx.e : Math.min(DUR, a2 + 3);
         opt.onPlay(a2, b2);
+        runHead(a2, b2);
         return;
       }
       if (playing) { pv.pause(); playing = false; if (raf) cancelAnimationFrame(raf); raf = 0; return; }
