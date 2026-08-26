@@ -31,6 +31,9 @@
   const PPS_BASE = 54;                 // 칸 폭 54px일 때 1초
   const LADDER = [0.1, 0.2, 0.25, 0.5, 1, 2, 5, 10];
   const CH = 72;                       // 칸 높이(9:16 → 폭 약 40)
+  // ★기본 확대 = 한 칸 0.25초(F21, 사장님). 자동확대(_fitToRange)도 이보다
+  //   성기게는 못 간다 — 기본값과 하한을 여기 한 곳에서만 정한다(0순위-B).
+  const ZOOM_CW = 150, ZOOM_MAX_STEP = 0.25;
 
   const CACHE = {};                    // "vid|step|i" → dataURL (전 롤러 공용)
 
@@ -54,7 +57,7 @@
     const vid = opt.videoId || '';
     const caps = opt.caps || [];
     let DUR = +opt.dur || 0;
-    let CW = 150, STEP = 0.25, N = 0, off = 0;   // 기본 확대 = 한 칸 0.25초(F21, 사장님)
+    let CW = ZOOM_CW, STEP = ZOOM_MAX_STEP, N = 0, off = 0;   // 기본 확대(위 상수)
     let _homed = false;      // 지금 쓰는 구간으로 한 번 옮겼나(처음 펼칠 때만)
     let MA = null;                     // 찍어둔 시작점
     // ★열 때 **이미 쓰는 구간**을 주황 박스로 올린다(2026-08-26 사장님 "상단에 카드형으로
@@ -84,7 +87,7 @@
           //   영상1전체 옆으로 이동하게해서 넓게 / 구간박스 이것도 위쪽으로 이동
           //   아래쪽까지 필름높이는 높여"). 별도 줄로 두면 그 한 줄만큼 필름이 낮아진다.
           '<div class="frbar"></div>' +
-          '<span class="frzoom">확대 <input type="range" class="frz" min="26" max="240" value="150"></span>' +
+          '<span class="frzoom">확대 <input type="range" class="frz" min="26" max="240" value="' + ZOOM_CW + '"></span>' +
           '<span class="frstep"></span>' +
           '<button type="button" class="frclose" title="접기">◀ 접기</button>' +
         '</div>' +
@@ -469,6 +472,11 @@
           const W = winW() * 0.9;
           let want = CW, best = Infinity;
           for (let c = min; c <= max; c++) {
+            // ★한 칸이 0.25초보다 성기면 후보에서 뺀다(F21, 사장님 "0.25로 기본세팅").
+            //   구간이 길면(영상 통째=25초) '다 보이게' 맞추다 한 칸 1초까지 벌어져
+            //   기본 확대가 도로 풀렸다 — 구절(1~2초)을 찍으려면 0.25초가 바닥이다.
+            //   기본값과 하한을 같은 상수(ZOOM_MAX_STEP) 하나로 묶는다(0순위-B).
+            if (calcStep(c) > ZOOM_MAX_STEP) continue;
             const seen = W * calcStep(c) / c;            // 그 배율에서 창에 보이는 초
             const d = Math.abs(seen - span);
             if (d < best) { best = d; want = c; }
