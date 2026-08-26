@@ -330,7 +330,10 @@
       barEl.innerHTML =
         (MA !== null
           ? `<span class="frhint">시작 <b>${MA.toFixed(2)}초</b> — 빨간선을 옮기고 <b>손잡이 클릭</b> 한 번 더</span>`
-          : `<span class="frhint"><b>왼쪽 클릭</b>=빨간선 이동 · <b>손잡이 끌기</b>=훑어보기 · <b>손잡이(빨간 막대) 클릭 2번</b>=구간</span>`) +
+          // ★상시 안내문은 뺐다(2026-08-26 사장님 캡쳐 532) — 한 줄을 통째로 먹으면서
+          //   그만큼 필름이 낮아졌다. 조작법은 오른쪽 위 [?] 도움말에 있다.
+          //   '시작 N초' 같은 **작업 중 상태**는 그대로 남긴다(그건 지금 뭘 하는지다).
+          : '') +
         `<span class="frmk"><button type="button" class="frbtn mk">＋ 구간</button>` +
         `<input type="number" class="frlen" step="0.1" min="0.1" value="2.4"><span class="frhint">초</span></span>` +
         (BOXES.length
