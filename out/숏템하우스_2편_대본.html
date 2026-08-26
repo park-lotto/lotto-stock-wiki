@@ -1,0 +1,985 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>숏템하우스 2편 대본</title>
+<style>
+  :root{
+    --bg:#0e0f12; --panel:#16181d; --panel2:#1c1f26; --line:#2a2e37;
+    --txt:#e8eaed; --dim:#9aa0aa; --gold:#ffd24a; --red:#ff5a5a;
+    --green:#4ade80; --blue:#60a5fa;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--txt);
+    font-family:"Pretendard","Malgun Gothic","맑은 고딕",system-ui,sans-serif;
+    line-height:1.7; padding:0 0 120px;
+  }
+  .wrap{max-width:1000px;margin:0 auto;padding:0 24px}
+
+  /* 헤더 */
+  header{
+    background:linear-gradient(160deg,#1a1d24,#0e0f12);
+    border-bottom:1px solid var(--line); padding:48px 0 36px; margin-bottom:32px;
+  }
+  header h1{margin:0 0 6px;font-size:34px;font-weight:800;letter-spacing:-.5px}
+  header h1 b{color:var(--gold)}
+  header .sub{color:var(--dim);font-size:15px;margin-bottom:18px}
+  .meta{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{
+    background:var(--panel2);border:1px solid var(--line);border-radius:999px;
+    padding:5px 13px;font-size:13px;color:var(--dim)
+  }
+  .chip b{color:var(--txt)}
+
+  /* 금지선 박스 */
+  .ban{
+    background:rgba(255,90,90,.07);border:1px solid rgba(255,90,90,.3);
+    border-radius:12px;padding:18px 22px;margin:24px 0 8px;
+  }
+  .ban h3{margin:0 0 10px;font-size:15px;color:var(--red);letter-spacing:.3px}
+  .ban ul{margin:0;padding-left:18px;font-size:14px;color:#d8c2c2}
+  .ban li{margin:4px 0}
+
+  /* 단계 */
+  .step{margin:44px 0 0;scroll-margin-top:20px}
+  .step-head{
+    display:flex;align-items:baseline;gap:14px;
+    border-bottom:2px solid var(--gold);padding-bottom:10px;margin-bottom:20px;
+  }
+  .step-no{
+    font-size:13px;font-weight:800;color:#0e0f12;background:var(--gold);
+    border-radius:6px;padding:3px 10px;white-space:nowrap
+  }
+  .step-head h2{margin:0;font-size:25px;font-weight:800;letter-spacing:-.4px;flex:1}
+  .time{color:var(--dim);font-size:14px;font-variant-numeric:tabular-nums}
+
+  /* 서브 챕터(6단계 내부) */
+  .sub{
+    margin:28px 0 0;border-left:3px solid var(--blue);
+    padding-left:16px
+  }
+  .sub h3{margin:0 0 14px;font-size:19px;color:var(--blue);font-weight:700}
+  .sub h3 .time{float:right;font-weight:400}
+
+  /* 블록 */
+  .blk{margin:0 0 14px}
+  .label{
+    display:inline-block;font-size:12px;font-weight:700;letter-spacing:.5px;
+    padding:3px 9px;border-radius:5px;margin-bottom:8px
+  }
+  .l-screen{background:#243040;color:#8fb8e8}
+  .l-line{background:#3a3320;color:var(--gold)}
+  .l-cap{background:#243528;color:var(--green)}
+
+  .screen{
+    background:var(--panel);border:1px solid var(--line);border-radius:10px;
+    padding:14px 18px;font-size:14.5px;color:#b9c0cb
+  }
+  .screen b{color:#dbe3ee}
+
+  /* 대사 — 읽으면서 녹음하는 곳이라 제일 크게 */
+  .line{
+    background:var(--panel2);border-left:4px solid var(--gold);border-radius:0 10px 10px 0;
+    padding:20px 24px;font-size:19px;line-height:1.95;color:#f2f0e8
+  }
+  .line p{margin:0 0 9px}
+  .line p:last-child{margin:0}
+  .line b{color:var(--gold);font-weight:700}
+
+  .caps{display:flex;flex-wrap:wrap;gap:7px}
+  .cap{
+    background:#1b2620;border:1px solid #2c4034;color:#a9d6bb;
+    border-radius:6px;padding:5px 11px;font-size:13.5px;font-weight:600
+  }
+  .cap b{color:#e0ffe9}
+
+  /* 녹화 태그 */
+  .rec{
+    display:inline-block;background:var(--red);color:#fff;font-size:11px;
+    font-weight:800;padding:2px 8px;border-radius:4px;margin-left:8px;
+    vertical-align:middle;letter-spacing:.5px
+  }
+  .mot{
+    display:inline-block;background:#3b4a6b;color:#c9d9f5;font-size:11px;
+    font-weight:800;padding:2px 8px;border-radius:4px;margin-left:8px;
+    vertical-align:middle;letter-spacing:.5px
+  }
+
+  /* 표 */
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14.5px}
+  th,td{border:1px solid var(--line);padding:10px 13px;text-align:left;vertical-align:top}
+  th{background:var(--panel2);color:var(--gold);font-weight:700;font-size:13.5px}
+  td b{color:var(--gold)}
+
+  /* 제작시트 */
+  .sheet{margin-top:56px;border-top:1px solid var(--line);padding-top:36px}
+  .sheet h2{font-size:23px;margin:0 0 20px}
+  .sheet h3{font-size:17px;color:var(--gold);margin:26px 0 10px}
+  .sheet ul{padding-left:20px;font-size:15px}
+  .sheet li{margin:6px 0}
+
+  .todo{
+    background:rgba(255,210,74,.06);border:1px solid rgba(255,210,74,.3);
+    border-radius:12px;padding:18px 22px;margin-top:20px
+  }
+  .todo h3{margin:0 0 10px;color:var(--gold);font-size:15px}
+  .todo li{color:#e5dcc4;font-size:14.5px}
+
+  /* 목차 */
+  nav.toc{
+    position:sticky;top:0;background:rgba(14,15,18,.96);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line);padding:11px 0;z-index:50;margin-bottom:0
+  }
+  nav.toc .wrap{display:flex;gap:6px;flex-wrap:wrap}
+  nav.toc a{
+    color:var(--dim);text-decoration:none;font-size:13px;padding:4px 10px;
+    border-radius:6px;border:1px solid transparent;white-space:nowrap
+  }
+  nav.toc a:hover{color:var(--gold);border-color:var(--line);background:var(--panel)}
+
+  @media print{
+    body{background:#fff;color:#111}
+    nav.toc{display:none}
+    .line{background:#faf7ec;color:#111;border-left-color:#c9a227}
+    .line b{color:#8a6d00}
+    .screen{background:#f4f5f7;color:#333}
+    .cap{background:#eef7f1;color:#1e5335}
+    header{background:#fff;color:#111}
+    .step-head h2{color:#111}
+  }
+  @media (max-width:640px){
+    .line{font-size:17px;padding:16px 18px}
+    header h1{font-size:26px}
+  }
+
+  /* ===== 편집 모드 ===== */
+  .editbar{
+    position:sticky;top:0;z-index:200;background:rgba(11,12,15,.97);
+    backdrop-filter:blur(10px);border-bottom:2px solid var(--gold);padding:11px 0;
+  }
+  .editbar .wrap{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .editbar .title{font-size:14px;font-weight:800;color:var(--gold);margin-right:4px}
+  .editbar button{
+    font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer;
+    border-radius:8px;padding:8px 15px;border:1px solid var(--line);
+    background:var(--panel2);color:var(--txt);transition:.12s
+  }
+  .editbar button:hover{border-color:var(--gold)}
+  .editbar button.on{background:var(--gold);color:#0e0f12;border-color:var(--gold)}
+  .editbar button.warn{border-color:#8a3b3b;color:#ffb3b3}
+  #saveState{font-size:13px;color:var(--dim);margin-left:auto;white-space:nowrap}
+  #saveState.saved{color:#4ade80}
+
+  body.editing [data-ed]{
+    outline:1px dashed #4a5262;outline-offset:3px;border-radius:4px;
+    transition:outline-color .12s
+  }
+  body.editing [data-ed]:hover{outline-color:var(--gold)}
+  body.editing [data-ed]:focus{
+    outline:2px solid var(--gold);outline-offset:3px;background:#22262e
+  }
+  [data-ed].dirty{position:relative}
+  [data-ed].dirty::after{
+    content:'수정';position:absolute;top:-9px;right:-6px;
+    background:var(--gold);color:#0e0f12;font-size:10px;font-weight:800;
+    padding:1px 6px;border-radius:4px;letter-spacing:.4px
+  }
+
+  .modal{
+    display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.72);
+    align-items:center;justify-content:center;padding:24px
+  }
+  .modal.show{display:flex}
+  .modal-box{
+    background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    max-width:840px;width:100%;max-height:82vh;display:flex;flex-direction:column;
+    padding:22px
+  }
+  .modal-box h3{margin:0 0 6px;font-size:18px;color:var(--gold)}
+  .modal-box p{margin:0 0 12px;font-size:13.5px;color:var(--dim)}
+  .modal-box textarea{
+    flex:1;min-height:340px;background:#0b0c0f;color:var(--txt);
+    border:1px solid var(--line);border-radius:9px;padding:14px;
+    font-family:ui-monospace,Consolas,monospace;font-size:13px;line-height:1.65;
+    resize:vertical
+  }
+  .modal-actions{display:flex;gap:9px;margin-top:13px;flex-wrap:wrap}
+  .modal-actions button{
+    font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;
+    border-radius:8px;padding:10px 18px;border:1px solid var(--line);
+    background:var(--panel2);color:var(--txt)
+  }
+  .modal-actions button.pri{background:var(--gold);color:#0e0f12;border-color:var(--gold)}
+
+  @media print{ .editbar{display:none} body.editing [data-ed]{outline:none} }
+</style>
+
+<div class="editbar"><div class="wrap">
+  <span class="title">✏️ 수정</span>
+  <button id="btnEdit" class="on">편집 켜짐</button>
+  <button id="btnExport">수정본 뽑기</button>
+  <button id="btnDownload">.md 내려받기</button>
+  <button id="btnRevert" class="warn">원본으로</button>
+  <span id="saveState">불러오는 중…</span>
+</div></div>
+
+<div class="modal" id="modal"><div class="modal-box">
+  <h3>수정본</h3>
+  <p>이 내용을 복사해서 Claude에게 붙여주십시오. 고친 부분만 반영해 대본 파일을 갱신합니다.</p>
+  <textarea id="exportText" readonly></textarea>
+  <div class="modal-actions">
+    <button class="pri" id="btnCopy">전체 복사</button>
+    <button id="btnCloseModal">닫기</button>
+  </div>
+</div></div>
+
+<nav class="toc"><div class="wrap">
+  <a href="#s1">1 문제인식</a>
+  <a href="#s2">2 일반해결책</a>
+  <a href="#s3">3 한계</a>
+  <a href="#s4">4 방향</a>
+  <a href="#s5">5 대안배제</a>
+  <a href="#s6">6 내 아이템</a>
+  <a href="#s7">7 CTA</a>
+  <a href="#sheet">제작시트</a>
+</div></nav>
+
+<header><div class="wrap">
+  <h1>숏템하우스 2편 — <b>방구석 천재가 만든 쇼핑쇼츠 자동화</b></h1>
+  <div class="sub">"유료강의 제발 그만보세요" · 설득구조 7단계 · <b style="color:#4ade80">사장님 수정본 반영(2026-08-20)</b></div>
+  <div class="meta">
+    <span class="chip">길이 <b>11:41</b> <small>(실측)</small></span>
+    <span class="chip">녹화 비중 <b>약 65%</b></span>
+    <span class="chip">6단계 <b>7:25</b></span>
+    <span class="chip">브랜드 <b>숏템메이커</b></span>
+  </div>
+</div></header>
+
+<div class="wrap">
+
+<div class="ban">
+  <h3>🚫 이번 편 금지선 (확정)</h3>
+  <ul>
+    <li><b>금액 언급 전면 금지</b> — 강의 가격·프로그램 결제액 전부 안 씀</li>
+    <li><b>결제내역·이체내역 제작 금지</b> — 위조 증빙</li>
+    <li><b>경쟁 프로그램 화면·이름 금지</b> — 구조만 지적</li>
+    <li><b>썸네일의 <code>1.2만</code>·<code>312</code>를 영상에서 주장 금지</b> (실제 수치 아님)</li>
+    <li>타 채널명·로고·얼굴 전부 블러 · 가짜 지표 ❌ · 후기는 동의받은 것만</li>
+  </ul>
+</div>
+
+<table>
+  <tr><th style="width:38%">썸네일이 던진 약속</th><th>어디서 갚나</th></tr>
+  <tr><td><b>유료강의 제발 그만보세요</b></td><td>1단계 — 단 "비싸다"가 아니라 <b>"들어도 실행이 안 된다"</b></td></tr>
+  <tr><td><b>10분</b></td><td>1단계에서 선언 → 6단계에서 실제로 증명</td></tr>
+  <tr><td><b>방구석 천재가 만든</b></td><td>6단계 진입 직전, 3모니터 개발 컷 한 방</td></tr>
+  <tr><td>우측 결과물 화면</td><td>S1에서 <b>실제 완성본</b>으로 대체 (숫자는 언급 안 함)</td></tr>
+</table>
+
+<!-- 1 -->
+<section class="step" id="s1">
+  <div class="step-head"><span class="step-no">1단계</span><h2>문제 인식</h2><span class="time">0:00–0:33</span></div>
+
+  <div class="blk"><span class="label l-screen">화면</span>
+    <div class="screen">완성 쇼츠 <b>실제 결과물</b> 0.5초 컷으로 촤르륵 → 저장만 해둔 레퍼런스 폴더·북마크 <b>빽빽한 화면</b> → 강의 자료 목록(블러, <b>가격 안 보이게</b>) → 비어 있는 내 채널 업로드 목록.</div>
+  </div>
+
+  <div class="blk"><span class="label l-line">대사</span>
+    <div class="line">
+      <p>"쇼핑쇼츠 돈 된다고… 다들 많이 들으셨죠?</p>
+      <p>유튜브 영상들 아마도 여러 개 보셨을 겁니다. 어쩌면 무료 강의나 유료 강의도 들으셨을 거고요.</p>
+      <p>만드는 법. 여러분은 이미 알고 계십니다. <b>소재는 중국에서 가져오고, 원고 쓰고, 성우 입히고, 자막 지우고.</b></p>
+      <p>근데 지금… 잘 되고 계십니까?</p>
+      <p>저장해둔 레퍼런스는 수십 개인데. <b>잘 안 되지 않던가요?</b></p>
+      <p>문제는 몰라서가 아닙니다. <b>알아도 쉽게 진도가 안 나가는 거죠.</b></p>
+      <p>하나 만드는 데 반나절이 걸리니까요. 그리고 내일 또 해야 하니까요.</p>
+      <p>수익이 언제 찍힐지 모르는 막연함과 싸워야 하는… 그게 병목이고 포인트입니다.</p>
+      <p>오늘은 <b>자꾸 안 된다 힘들다, 그런 얘기 그만하고</b>…</p>
+      <p>지금부터 왜 숏템메이커는 되는지 보여드리겠습니다."</p>
+    </div>
+  </div>
+
+  <div class="blk"><span class="label l-cap">자막</span>
+    <div class="caps">
+      <span class="cap">만드는 법은 <b>이미 안다</b></span>
+      <span class="cap">저장 100개 · 업로드 몇 개?</span>
+      <span class="cap">몰라서가 아니라 <b>안 만들어져서</b></span>
+      <span class="cap">더 배우기 ❌ <b>10분 완성</b> ⭕</span>
+    </div>
+  </div>
+</section>
+
+<!-- 2 -->
+<section class="step" id="s2">
+  <div class="step-head"><span class="step-no">2단계</span><h2>일반적인 해결책</h2><span class="time">0:33–1:37</span></div>
+  <div class="screen" style="border-color:#3a4a2a;background:#1a2015;color:#c3d6ac;margin-bottom:14px">
+    ★ 여기서 <b>진짜로 방법을 다 알려준다.</b> 이걸 빼면 바로 광고가 된다.
+  </div>
+
+  <div class="blk"><span class="label l-screen">화면</span>
+    <div class="screen">유튜브 <b>쇼핑쇼츠 만드는 법</b> 검색결과 빠른 스크롤(채널명·얼굴 블러) → 정석 순서가 리스트로 하나씩 쌓임.<span class="mot">모션</span> → <b>★실측 표 한 장</b>(2026-08-20 자체 분석): 표본 <b>200편</b> / 오용형 <b>92편(46%)</b> / 기타 76편 / 은폐형 15편 / 권위자형 12편 — 아래 <b>조회수 상위 4편(1,200만·1,000만·1,000만·910만) 전부 오용형</b> 강조.<span class="mot">모션</span></div>
+  </div>
+
+  <div class="blk"><span class="label l-line">대사</span>
+    <div class="line">
+      <p>"<b>방법 자체는 이미 공개돼 있습니다.</b></p>
+      <p>유튜브에 치면 잘 알려주는 분들 많습니다. 저도 다 봤습니다. 좋은 내용 많습니다.</p>
+      <p>뭔가 숨어 있는 비밀이 있는 것도 없고, 모두가 아는 그 방법입니다.</p>
+      <p>핵심 강의들에서 나오는 순서 그대로 말씀드리겠습니다. 오늘 이거 하나만 가져가셔도 됩니다.</p>
+      <p>하나. <b>잘되는 영상의 원고 구조를 뜯어봅니다.</b> 여기가 제일 중요합니다.</p>
+      <p>안 되는 영상은 장점만 나열합니다. <b>'좋아요, 튼튼해요.'</b></p>
+      <p>터지는 영상은 이렇게 시작합니다. <b>'여행 가서 짐 떨어뜨린 적 있으시죠?'</b></p>
+      <p>내 얘기 같으니까 끝까지 봅니다. 끝까지 보니까 삽니다. <b>공감이 전부입니다.</b></p>
+      <p>구조는 다섯 개입니다. <b>공감형, 충격형, 손해회피형, 스토리형, 리스트형.</b></p>
+      <p>저는 여기서 <b>한 발 더 갔습니다.</b> 썰쇼핑 채널 백 곳에서 조회수 상위 <b>이백 편</b>을 자막까지 전부 뜯어봤습니다.</p>
+      <p>제일 많이 터진 골격은 하나였습니다. <b>원래 용도를 뒤집는 겁니다.</b> 이백 편 중 <b>절반 가까이</b>가 이 골격이었고, <b>천만 넘긴 것들은 거의 다 여기</b>였습니다.</p>
+      <p>이건 <b>다음 편에서 제대로 뜯겠습니다.</b></p>
+      <p>둘. 그 구조에 맞춰 <b>내 제품 원고를 씁니다.</b></p>
+      <p>셋. <b>소재 영상을 구합니다.</b> 중국 쪽 플랫폼에서 실사용 영상을 받습니다.</p>
+      <p>넷. <b>원본 자막을 지웁니다.</b> 다섯. <b>성우를 입힙니다.</b> 여섯. <b>편집하고 자막 답니다.</b></p>
+      <p>일곱. <b>썸네일과 훅 문구.</b> 여덟. <b>해시태그 뽑고 올립니다.</b></p>
+      <p>이게 전부입니다. 진짜입니다. 숨긴 거 없습니다."</p>
+    </div>
+  </div>
+
+  <div class="blk"><span class="label l-cap">자막</span>
+    <div class="caps">
+      <span class="cap">방법은 <b>이미 공개돼 있음</b></span>
+      <span class="cap">★<b>공감이 전부</b> — 장점 나열 ❌</span>
+      <span class="cap">유형 5개</span>
+      <span class="cap">정석 8단계 <b>전부 공개</b></span>
+      <span class="cap">★<b>200편 직접 분석</b> — 주류는 <b>오용형</b></span>
+      <span class="cap">다음 편 예고</span>
+    </div>
+  </div>
+</section>
+
+<!-- 3 -->
+<section class="step" id="s3">
+  <div class="step-head"><span class="step-no">3단계</span><h2>그 해결책의 한계</h2><span class="time">1:37–2:41</span></div>
+
+  <div class="blk"><span class="label l-screen">화면</span>
+    <div class="screen"><span class="rec">사장님 녹화</span> 정석 과정 <b>실제 재현분</b>을 배속으로 몰아치기 — 확장 설치 → 중국 사이트 <b>회원가입</b> → 파파고 <b>중국어 번체</b> → 검색 → 자막 깨끗한 것 골라내기 → 전용 다운로드 사이트 → <b>F12·Ctrl+F·mp4</b> → 캡컷 → 마스킹 → 성우 사이트 → 다운 → 다시 캡컷.</div>
+  </div>
+
+  <div class="blk"><span class="label l-line">대사</span>
+    <div class="line">
+      <p>"그럼 왜 안 될까요. 방법이 틀려서가 아닙니다.</p>
+      <p>지금 그 여덟 단계를, <b>손으로</b> 하면 이렇게 됩니다.</p>
+      <p>레퍼런스 채널들 엑셀에 매일 정리해 가면서 관리하고,</p>
+      <p>오늘은 어떤 채널에 터진 영상이 올라왔나 하나씩 다 들어가 봅니다.</p>
+      <p>그래, 오늘은 이 영상을 해봐야겠다… 라고 결정하면 뭘 하나요?</p>
+      <p>도우인, 샤오홍슈에서 검색을 해야 하죠?</p>
+      <p>검색을 하려면 또 챗지피티로 들어갑니다. 이 영상에 맞는 검색어를 중국어로 번역해 달라고 합니다.</p>
+      <p>그걸 샤오홍슈에 검색해 봅니다.</p>
+      <p>결과는? 안 나올 때도 많고, 내가 원하는 영상을 못 찾아 키워드를 바꿔 가며 한참을 시간 보내게 됩니다.</p>
+      <p>공감하시나요?</p>
+      <p>이제 대본을 쓰려면 에이아이에게 부탁해야죠.</p>
+      <p>단골 멘트… 너는 백만 쇼츠의 작가야. 이렇게 시작하는 프롬프트를 매일 쓰게 됩니다.</p>
+      <p>그 뒤에 티티에스 입히고, 자막 지우고, 자막 설정하고, 썸네일 만들고,</p>
+      <p>쿠팡 링크에 인포크 링크 세팅… 마지막 <b>캡컷의 지옥</b>.</p>
+      <p>이거 해본 사람만 압니다.</p>
+      <p>초보는 한 편에 반나절입니다. 이걸 하루 이틀은 기분 좋게 합니다. 한 달까지도 버팁니다.</p>
+      <p><b>처음엔 기세 좋게 시간과 에너지를 갈아 넣었는데, 시간이 갈수록 불안합니다.</b></p>
+      <p>그렇습니다. 이쯤 버텼으면 많이 하신 겁니다.</p>
+      <p>평균 일주일 해보고 만세 부르고 도망치는 분들이 대부분이라는 사실.</p>
+      <p>결국 아는 게 부족한 게 아닙니다. 인풋의 에너지가 생각보다 높으니… <b>매일 못 하게 되는 겁니다</b>."</p>
+    </div>
+  </div>
+
+  <div class="blk"><span class="label l-cap">자막</span>
+    <div class="caps">
+      <span class="cap">방법이 틀린 게 아님</span>
+      <span class="cap">가입·인증·번역·F12</span>
+      <span class="cap">자막은 <b>가리는 것</b></span>
+      <span class="cap">40초 vs 18초 → <b>왕복 지옥</b></span>
+      <span class="cap">한 편 = 반나절</span>
+      <span class="cap"><b>한 달을 못 간다</b></span>
+    </div>
+  </div>
+</section>
+
+<!-- 4 -->
+<section class="step" id="s4">
+  <div class="step-head"><span class="step-no">4단계</span><h2>해결의 방향</h2><span class="time">2:41–2:54</span></div>
+
+  <div class="blk"><span class="label l-screen">화면</span>
+    <div class="screen">저울 한쪽에 <b>강의·정보</b>, 다른 쪽에 <b>도구</b> → 도구 쪽으로 기울어짐.<span class="mot">모션</span></div>
+  </div>
+
+  <div class="blk"><span class="label l-line">대사</span>
+    <div class="line">
+      <p>"그래서 결론을 이렇게 냈습니다.</p>
+      <p><b>지금 필요한 건 더 좋은 강의가 아닙니다.</b></p>
+      <p>방법은 이미 다 나와 있습니다. 오늘도 방금 다 알려드렸습니다.</p>
+      <p>필요한 건, 그 여덟 단계를 <b>매일 할 수 있게 만들어주는 도구</b>입니다.</p>
+      <p>배우는 문제가 아니라, <b>실행 시간 문제</b>니까요."</p>
+    </div>
+  </div>
+
+  <div class="blk"><span class="label l-cap">자막</span>
+    <div class="caps">
+      <span class="cap">더 좋은 강의 ❌</span>
+      <span class="cap"><b>매일 할 수 있게 하는 도구</b> ⭕</span>
+      <span class="cap">배움의 문제 아님 = <b>시간의 문제</b></span>
+    </div>
+  </div>
+</section>
+
+<!-- 5 -->
+<section class="step" id="s5">
+  <div class="step-head"><span class="step-no">5단계</span><h2>다른 대안의 한계</h2><span class="time">2:54–3:29</span></div>
+  <div class="screen" style="border-color:#5a2a2a;background:#221515;color:#e0b4b4;margin-bottom:14px">
+    ★ 경쟁사 이름·화면 <b>절대 안 씀.</b> 구조만 지적한다.
+  </div>
+
+  <div class="blk"><span class="label l-screen">화면</span>
+    <div class="screen">8단계 파이프라인이 가로로 놓임 → 어떤 도구는 <b>원고</b>만 초록, 어떤 건 <b>편집</b>만 초록 → <b>초록 사이 회색 구간마다 왕복 화살표</b>가 생김 → 화살표가 쌓이면서 전체가 느려지는 시각화.<span class="mot">모션 · 이 영상 최우선</span></div>
+  </div>
+
+  <div class="blk"><span class="label l-line">대사</span>
+    <div class="line">
+      <p>"그럼 도구를 쓰면 되지 않느냐. 맞습니다. 저도 여러 개 써봤습니다.</p>
+      <p>어디가 나쁘다는 얘기가 아닙니다. <b>구조 얘기를 하는 겁니다.</b></p>
+      <p>대부분 <b>한 토막씩만</b> 자동화합니다.</p>
+      <p>원고만 뽑아주거나. 편집만 줄여주거나. 소재만 찾아주거나.</p>
+      <p>그럼 어떻게 됩니까. <b>자동화된 구간 사이를 제가 왔다갔다 하면서 이어붙여야 합니다.</b></p>
+      <p>원고는 여기서 뽑고, 성우는 저기서 만들고, 편집은 또 다른 데서.</p>
+      <p>파일 받아서 옮기고, 안 맞으면 앞으로 돌아가고.</p>
+      <p><b>아까 그 왕복이 그대로 남아 있는 겁니다.</b></p>
+      <p>그래서 자동화를 써도 시간이 안 줄어듭니다. 체감이 안 됩니다.</p>
+      <p>부분을 아무리 빠르게 해도, <b>이음매가 느리면 전체는 안 빨라집니다.</b></p>
+      <p>그럼 답은 하나입니다. <b>처음부터 끝까지 한 줄로 이어져 있어야 합니다.</b>"</p>
+    </div>
+  </div>
+
+  <div class="blk"><span class="label l-cap">자막</span>
+    <div class="caps">
+      <span class="cap">도구들 = <b>한 토막씩만</b></span>
+      <span class="cap">사이는 <b>내가 이어붙임</b></span>
+      <span class="cap">왕복은 <b>그대로 남음</b></span>
+      <span class="cap"><b>이음매가 느리면 소용없음</b></span>
+      <span class="cap">답 = <b>전 구간이 한 줄로</b></span>
+    </div>
+  </div>
+</section>
+
+<!-- 6 -->
+<section class="step" id="s6">
+  <div class="step-head"><span class="step-no">6단계</span><h2>그래서 만든 것 — 본체</h2><span class="time">3:29–10:54</span></div>
+
+  <div class="sub">
+    <h3>진입 <span class="time">3:29–4:27</span></h3>
+    <div class="blk"><span class="label l-screen">화면</span>
+      <div class="screen"><b>3모니터 개발 장면 실사</b>(썸네일 연결) → 클로드 코드 터미널 폭포 스크롤 → 커밋 로그 → 숏템메이커 화면 → <b>1편 영상 썸네일</b> 잠깐 → 체험 버전 안내 화면</div>
+    </div>
+    <div class="blk"><span class="label l-line">대사</span>
+      <div class="line">
+      <p>"그래서 직접 만들었습니다.</p>
+      <p>제 자랑이지만, 저는 어떤 일이든 남들보다 쉽게 만드는 능력이 있습니다. <b>설계를 잘하는 재주가 있죠</b>.</p>
+      <p>처음엔 팔려고 만든 게 아니라, 진짜 너무 쇼츠 만들기가 힘들고 귀찮아서 <b>제가 매일 쓰려고</b> 만들었습니다.</p>
+      <p>그러다 보니 <b>실용성</b> 쪽에 초점을 뒀습니다.</p>
+      <p>1편 보신 분들 계실 텐데요. 그때 이후로 많은 기능이 추가되고 강화돼서… <b>브이투 버전으로 업그레이드</b>됐습니다.</p>
+      <p>지난 영상, 조회수는 사실 얼마 안 나왔습니다. 그런데 정말 많은 분들이 문의를 주셨고, <b>이미 결제하신 분들도 몇 분 계십니다</b>.</p>
+      <p><b>그만큼 많은 분들의 니즈가 공감이 되었고, 문제를 해결해 줄 수 있는 키 영상이기 때문이라고 생각합니다</b>.</p>
+      <p>그래서 오늘 이 영상은 보완된 프로그램을 좀 더 구체적으로 보여드릴 예정입니다.</p>
+      <p>체험을 원하신다는 문의도 많이 받았습니다.</p>
+      <p><b>체험 버전은 영상 제작까지는 안 되지만</b>… 레퍼런스 랭킹에서 소스들을 찾고, 전반적인 기능을 써보실 수 있게 해드릴 예정입니다.</p>
+      <p>그리고 좋은 소식은, 1기 시작과 함께 <b>저와 크루를 만들어서 함께하실 체험단도 모집합니다</b>.</p>
+      <p>프로그램 피드백과 함께 결과를 만들어 가고, 그다음 프로그램도 함께 갈 분들을 찾는 거죠.</p>
+      <p>자, 그럼 <b>지금부터 다양한 기능들과 영상 제작 과정을 보시겠습니다</b>."</p>
+    </div>
+    </div>
+  </div>
+
+  <div class="sub">
+    <h3>①-A 소재 — 랭킹 구조 읽는 법 <span class="time">4:27–5:47</span></h3>
+    <div class="blk"><span class="label l-screen">화면</span>
+      <div class="screen"><span class="rec">녹화</span> 레퍼런스 랭킹 열기 → <b>기간 탭</b>(48시간·이번주·이번달·역대 히트작) 눌러가며 → <b>지표</b> 바꿔가며 정렬(시간당 댓글 / 조회당 댓글 / 팔로워당 댓글) → 옆 <b>단순 지표</b>도 한 번 → <b>카테고리</b> 탭(전체·썰쇼핑·홈·살림·가전·레시피·꿀팁·뷰티·기타)</div>
+    </div>
+    <div class="blk"><span class="label l-line">대사</span>
+      <div class="line">
+      <p>"첫 번째. 저는 영상 제작에서 오늘은 뭘 만들지 고민하는 시간을 없애고 싶었습니다.</p>
+      <p>오늘은 그냥 생각 없이 이 영상 만들면 되게 하고 싶다. 이게 개발의 첫 시작이었습니다.</p>
+      <p><b>이 부분이 숏템메이커가</b> 다른 프로그램들에 비해 잘 만들어진 부분입니다.</p>
+      <p>지금 터지는 영상들이 카테고리별로 정렬돼 있습니다. <b>오백 개 이상의 채널</b>에서 크롤링된 영상들이 계속 필터되어 올라오는 구조입니다.</p>
+      <p>먼저 기간입니다. <b>사십팔 시간, 이번 주, 이번 달, 역대 히트작</b>으로 구분했습니다.</p>
+      <p>좀 특별한 곳인데, 역대 히트작은 <b>지금까지 모아둔 이십만 건 중에 댓글 만 개가 넘은 것</b>만 모아 줍니다. 학습하기 아주 좋죠.</p>
+      <p>댓글이 무려 인스타에서 <b>십삼만 개</b>나 달렸습니다. 정말 엄청난 영상인 거고,</p>
+      <p>이런 영상들은 대본, 스토리 구조, 씨티에이까지 공부할 수 있고 벤치마킹하기 아주 특별한 영상들이죠. 어차피 유행은 계속 돌고 도니까요.</p>
+      <p>기간을 누르고 지표를 선택하면, 이제 보기 좋게 정렬이 되실 겁니다.</p>
+      <p>지표를 하나씩 볼까요.</p>
+      <p><b>시간당 댓글</b>은, 한 시간에 댓글이 올라오는 숫자입니다. 반응이 빠르게 오는 영상을 보실 수 있죠. 빠르게 벤치마킹하기 아주 좋은 탭입니다.</p>
+      <p><b>조회당 댓글</b>은 조회수 대비 댓글입니다. 이건 조회수가 덜 터졌는데 댓글이 많다는 건데… <b>씨티에이가 좋다</b>는 뜻입니다. 전환율이 높은 영상들을 볼 수 있는 겁니다.</p>
+      <p><b>팔로워당 댓글</b>은, 작은 채널인데 댓글이 터지는 걸 볼 수 있습니다. <b>이쪽에서 알짜가 나오는 경우가 많습니다</b>.</p>
+      <p>채널 초반에 학습하면 도움이 많이 되는 영상들인 거죠. 초보이시면, 저렇게 성장하고 있구나 하고 배우실 겁니다.</p>
+      <p>옆쪽에 단순 지표도 한번씩 눌러보겠습니다.</p>
+      <p>카테고리는 <b>홈·살림·가전, 레시피·꿀팁, 뷰티, 기타 탭으로</b> 나눠 놨습니다."</p>
+    </div>
+    </div>
+    <div class="blk"><span class="label l-cap">자막</span>
+      <div class="caps">
+        <span class="cap"><b>500+</b> 채널 크롤링</span>
+        <span class="cap">48시간 · 이번주 · 이번달 · 역대</span>
+        <span class="cap">시간당 댓글 = <b>반응 속도</b></span>
+        <span class="cap">조회당 댓글 = <b>CTA가 좋다</b></span>
+        <span class="cap">팔로워당 댓글 = <b>알짜가 여기서</b></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="sub">
+    <h3>①-B 소재 — 썰쇼핑 트렌드 분석 <span class="time">5:47–6:39</span></h3>
+    <div class="blk"><span class="label l-screen">화면</span>
+      <div class="screen"><span class="rec">녹화</span> 썰쇼핑 → 유튜브 탭 → 검색란에 <b>천재</b> 검색 → 결과 훑기 → <b>개발자</b> 검색 → <b>떼돈</b> 검색 → 세 키워드가 섞인 제목들 보이게<br>💡 검색 결과의 <b>제목 패턴이 보이게</b> 천천히. 이 구간이 "트렌드 분석"의 증거다</div>
+    </div>
+    <div class="blk"><span class="label l-line">대사</span>
+      <div class="line">
+      <p>"유튜브를 눌러보시면… 이쪽도 재밌는 <b>최신 트렌드</b>가 많이 들어가 있습니다.</p>
+      <p>요즘 썰쇼핑 쇼츠 많이 하시죠? 썰쇼핑 쪽에 보시면 요즘 트렌드를 볼 수 있습니다.</p>
+      <p><b>요즘 천재 시리즈, 개발자 시리즈, 떼돈 시리즈 많이 보이실 텐데</b>,</p>
+      <p>모두 반복되는 <b>대본 템플릿에 영상 믹스만 다른 거</b>라고 보시면 됩니다.</p>
+      <p>검색란에 천재라고 검색해 볼까요? <b>미국 천재, 한국 천재, 땡땡땡</b>으로 시작되는 후킹입니다.</p>
+      <p>개발자 시리즈 볼까요? <b>개발자도 예측 못 한 땡땡땡</b>. 후킹이죠.</p>
+      <p>마지막으로 떼돈, 한번 검색해 보겠습니다. 천재랑 개발자 키워드랑 떼돈이 <b>합쳐지는 게 많이 보이네요</b>.</p>
+      <p>이런 걸 분석해서, 우리는 <b>헤드카피</b>를 쓰면 된다는 겁니다.</p>
+      <p>재미있는 건, 이 모든 영상들의 뻔한 스토리 구조는 정해져 있고, <b>그걸 숏템메이커는 대본 템플릿으로 만들어 뒀다는 겁니다</b>.</p>
+      <p>너무나 많은 레퍼런스가 있습니다.</p>
+      <p>지금껏 이런 영상들을 찾아서 모아 보는 것도 힘들었고… 트렌드를 분석해서 보는 방법도 몰랐을 겁니다.</p>
+      <p>지금까지 직접 찾으시느라, <b>얼마나 귀찮고 힘드셨습니까</b>.</p>
+      <p>노가다 해보신 분이라면… 지금쯤 <b>와, 이런 게 있다고?</b> 하고 계실 겁니다."</p>
+    </div>
+    </div>
+    <div class="blk"><span class="label l-cap">자막</span>
+      <div class="caps">
+        <span class="cap">천재 · 개발자 · 떼돈 <b>시리즈</b></span>
+        <span class="cap">같은 템플릿 + <b>영상 믹스만 다름</b></span>
+        <span class="cap">분석해서 <b>헤드카피</b>를 쓴다</span>
+        <span class="cap">노가다 해보셨으면 <b>"이런 게 있다고?"</b></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="sub">
+    <h3>①-C 소재 — 파워검색 · 담기 · 분석 <span class="time">6:39–8:03</span></h3>
+    <div class="blk"><span class="label l-screen">화면</span>
+      <div class="screen"><span class="rec">녹화 · 끊지 말고 쭉</span> 48시간 + 시간당 댓글 정렬 → <b>무소음 젤펜</b> 영상 선택(댓글 2,700 / 시간당 100+ 보이게) → <b>숏템 파워검색</b> 클릭 → 대기 → 해외 원본 + 한국 인스타 결과 → 스크롤 → 상단 <b>검색어로 찾기</b> → 틱톡·인스타 결과 → 영상 재생 → <b>담기</b> → 틱톡에서도 담기 이모티콘 → 즐겨찾기 이동 → 7개 중 5개 선택(<b>랭킹 영상 꼭 포함</b>) → <b>영상 제작으로 보내기</b> → 폴더명 입력 → <b>새 작업으로 보내기</b> → 분석 진행(배속) → 완료 화면 → <b>축 선택</b> → 다음</div>
+    </div>
+    <div class="blk"><span class="label l-line">대사</span>
+      <div class="line">
+      <p>"자, 그럼 이 영상들 중 하나를 실제로 해볼까요?</p>
+      <p>사십팔 시간 이내 영상 중에, 시간당 댓글로 체크해서 보겠습니다.</p>
+      <p>음… 여기 <b>무소음 젤펜</b> 영상으로 해보겠습니다. 댓글 이천칠백 개고요. <b>시간당 백 개 이상씩</b> 올라가네요.</p>
+      <p>아래 보시면, <b>숏템 파워검색</b>을 눌러보겠습니다. 잠시 기다리시면 영상들이 나올 겁니다.</p>
+      <p>이건 해외 원본 영상이고… 이건 인스타에 올라온 한국 영상이네요.</p>
+      <p>아래로 내려보시면, <b>같은 주제 영상들이 정말 많이</b> 보이죠?</p>
+      <p>여기서 부족하다 싶으면, 위쪽에 <b>검색어로 찾을 수 있는</b> 기능입니다. 눌러보겠습니다. 틱톡, 인스타에 엄청나게 많네요.</p>
+      <p>이제 영상들을 재생해서 끝까지 보신 뒤에… 아래 <b>담기</b> 버튼을 눌러서 담아주겠습니다. <b>최대 다섯 개까지</b> 영상 제작에 쓸 수 있습니다.</p>
+      <p>위쪽 틱톡에 들어가서도, 담기 이모티콘을 누르시면 <b>즐겨찾기로 바로 이동</b>됩니다.</p>
+      <p>여기서 <b>꿀팁</b> 하나. 우리가 검색한 것과 함께, <b>처음 랭킹에 떠 있던 그 영상을 같이 담아야</b> 좋습니다. 반응이 지금 뜨거운 영상이니까… 그걸 벤치마킹에 활용하는 겁니다.</p>
+      <p>그럼 영상 즐겨찾기로 가보겠습니다.</p>
+      <p>방금 담은 일곱 개 영상이 보이는데, 최대 다섯 개까지니까 선택해 보겠습니다. <b>여기 랭킹 영상은 꼭 체크</b>하겠습니다.</p>
+      <p>자, 그럼 <b>영상 제작으로 보내기</b>를 눌러보겠습니다.</p>
+      <p>폴더 이름을 생성하게 돼 있으니, "무소음 젤펜"이라고 하고… <b>새 작업으로 보내기</b>를 선택합니다.</p>
+      <p>잠시 기다리시면 영상을 뜯어서 분석을 시작합니다.</p>
+      <p>지금 하는 작업은, <b>영상을 모두 분해해서 조각을 내는 작업.</b> 그리고 <b>그 영상의 대본을 분석하고 장면을 해석하는 작업</b>입니다.</p>
+      <p>컴퓨터 사양에 따라 차이는 있지만, <b>평균 삼 분</b> 정도 걸립니다.</p>
+      <p>분석이 굉장히 잘돼 있죠?</p>
+      <p>다음 단계로 넘어가기 전에, <b>영상의 뼈대를</b> 선택하는 건데요. 지금 터지고 있는 그 영상을 선택하고… 아래 다음 버튼을 눌러보겠습니다."</p>
+    </div>
+    </div>
+    <div class="blk"><span class="label l-cap">자막</span>
+      <div class="caps">
+        <span class="cap">★<b>숏템 파워검색</b> 한 번</span>
+        <span class="cap">해외 원본 + 한국 영상 <b>한 화면에</b></span>
+        <span class="cap">담기 = <b>최대 5개</b></span>
+        <span class="cap">꿀팁 = <b>랭킹 영상을 꼭 같이</b></span>
+        <span class="cap">자동 분석 <b>평균 3분</b></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="sub">
+    <h3>② 대본 · 장면 이어붙이기 <span class="time">8:03–9:01</span></h3>
+    <div class="blk"><span class="label l-screen">화면</span>
+      <div class="screen"><span class="rec">녹화</span> 대본 스타일 화면 → <b>단정명령형 + 물건발견형</b> 선택 → <b>대본 만들기</b> → 생성 결과 → 후킹·CTA 부분 짚기 → <b>장면 이어붙이기</b>로 이동 → 자동 매칭 완료 → <b>전체 재생</b> → 정렬(결별/소스별) 토글 → 부분 재생 → 수동 매칭 한 번 → <b>대본 믹스 확정</b> 클릭</div>
+    </div>
+    <div class="blk"><span class="label l-line">대사</span>
+      <div class="line">
+        <p>"대본 단계입니다.</p>
+        <p>대본 스타일이 나옵니다. 스타일을 <b>에이아이에게 맡기시면 버튼만</b> 누르시면 되고요. 직접 선택도 <b>두 개까지</b> 하실 수 있으니 해보셔도 됩니다.</p>
+        <p><b>단정명령형과 물건발견형</b>으로 선택하고, 대본 만들기를 눌러보겠습니다.</p>
+        <p>잠시 후 대본이 생성됩니다. 보겠습니다.</p>
+        <p><b>버튼 한 번에 이런 퀄리티의 대본이 나온다는 게… 놀랍지 않습니까.</b></p>
+        <p>이런 후킹, 많이 보셨죠? <b>스토리 구조가 밀도 있고 굉장히 탄탄합니다.</b> 마지막 씨티에이도 좋고요.</p>
+        <p>원하시면 직접 대본을 수정하셔도 되고, 재생성을 눌러보셔도 됩니다.</p>
+        <p>다음 단계인 <b>장면 이어붙이기</b>로 이동합니다.</p>
+        <p>이 단계는, 1단계에서 조각낸 분석 장면들과 2단계에서 생성된 대본이 <b>합쳐지는 단계</b>입니다.</p>
+        <p>잠시 기다리시면 <b>자동으로 매칭</b>돼 있습니다. 전체 재생 한번 해보겠습니다.</p>
+        <p>이미 잘 맞춰진 건데, <b>부분적으로 수정하는 기능</b>도 넣어뒀습니다.</p>
+        <p>정렬을 결별로 할지, 소스별로 할지 선택이 되고요. 부분별로 재생이 각각 됩니다.</p>
+        <p><b>대본과 더 일치하는 장면을 수동으로 매칭</b>할 수 있습니다.</p>
+        <p><b>캡컷으로 가지 않아도 간단한 수정을 할 수 있다</b>는 게… 이게 대박입니다. 에이아이 자동 매칭이 부족할 때는 굉장히 좋은 방법이겠죠.</p>
+        <p>장면 매칭이 다 되셨다면, <b>대본 믹스 확정을 꼭 눌러주세요.</b>"</p>
+      </div>
+    </div>
+    <div class="blk"><span class="label l-cap">자막</span>
+      <div class="caps">
+        <span class="cap">스타일 = AI 자동 or <b>2개 선택</b></span>
+        <span class="cap"><b>버튼 한 번</b>에 이 퀄리티</span>
+        <span class="cap">장면 ↔ 대본 <b>자동 매칭</b></span>
+        <span class="cap">★<b>캡컷 안 가고</b> 부분 수정</span>
+        <span class="cap">⚠️ <b>대본 믹스 확정</b> 꼭</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="sub">
+    <h3>③ 자막 제거 · 티티에스 <span class="time">9:01–9:55</span></h3>
+    <div class="blk"><span class="label l-screen">화면</span>
+      <div class="screen"><span class="rec">녹화</span> 자막 제거 화면 → API 등록/포인트 안내 부분 → <b>자막 지우기</b> 실행 → ★<b>전/후 같은 프레임 대조</b> → TTS 단계 → 미나 목소리로 렌더된 상태 → 다른 목소리 선택 → <b>이 음성으로 전체 선택</b> → 재생성 → 다음</div>
+    </div>
+    <div class="blk"><span class="label l-line">대사</span>
+      <div class="line">
+      <p>"자막을 제거하는 방식은 크게 두 가지가 있습니다. <b>지우는 방식과, 가리는 방식.</b></p>
+      <p>첫 번째, 지우는 방식도 둘로 나뉩니다. <b>서버에서 지우는 방식과, 내 컴퓨터에서 지우는 방식.</b></p>
+      <p>이 프로그램은 <b>서버에서 지우는 방식</b>을 선택했습니다. 컴퓨터 사양에 국한받지 않고… <b>모바일로 하셔도 동일한 속도</b>가 나옵니다.</p>
+      <p>자막 제거를 위해 외부 프로그램으로 가져오는데 <b>업계 최고로 잘 지워집니다.</b> 브이메이크를 쓰고 있고요.</p>
+      <p>직접 결제하시고 에이피아이를 프로그램에 등록하시면 되게 해뒀습니다.</p>
+      <p>그게 번거로우신 분들은, <b>건당 포인트 차감 방식</b>으로도 하고 있습니다. 직접 결제나 포인트 방식이나, 비용은 비슷하니 참고하시면 되고,</p>
+      <p>그런 등록이 번거로우시면 후자를 선택하시면 됩니다.</p>
+      <p>자막 지워지는 거, 한번 보겠습니다. 자막 지우기를 선택하고… 눌러보겠습니다.</p>
+      <p><b>정말 잘 지워졌습니다.</b></p>
+      <p>티티에스 음성으로 넘어가 보겠습니다.</p>
+      <p>앞 단계에서는 이미 맨 위에 있는 <b>미나 목소리</b>로 렌더가 됐습니다.</p>
+      <p>여기서 바꾸고 싶은 목소리를 선택하신 뒤에, <b>이 음성으로 전체 선택</b>을 누르시면… 새롭게 목소리가 생성됩니다.</p>
+      <p>마음에 드셨다면, 다음 버튼을 누르겠습니다."</p>
+    </div>
+    </div>
+    <div class="blk"><span class="label l-cap">자막</span>
+      <div class="caps">
+        <span class="cap"><b>지우기</b> vs 가리기</span>
+        <span class="cap"><b>서버에서</b> 처리 = 모바일도 같은 속도</span>
+        <span class="cap">API 직접등록 or <b>건당 5포인트</b></span>
+        <span class="cap">목소리 <b>전체 교체</b> 한 번에</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="sub">
+    <h3>④ 꾸미기 <span class="time">9:55–10:14</span></h3>
+    <div class="blk"><span class="label l-screen">화면</span>
+      <div class="screen"><span class="rec">녹화</span> <b>문구 탭</b> → 고정 문구 자동 생성 → 직접 수정 한 번 → <b>스타일 탭</b> → 폰트·크기·색상 바꿔보기 → ★<b>"기본형"으로 스타일 저장</b> → 저장된 버튼 눌러 즉시 적용되는 것</div>
+    </div>
+    <div class="blk"><span class="label l-line">대사</span>
+      <div class="line">
+        <p>"네 번째, 꾸미기입니다.</p>
+        <p><b>문구 탭</b>에서는 고정 문구를 넣으실 수 있습니다. 자동 생성이 되고, 직접 수정도 가능합니다.</p>
+        <p><b>스타일 탭</b> 보시면 자막을 꾸밀 수 있습니다. 폰트, 크기, 색상 자유롭게 바꾸실 수 있고요.</p>
+        <p>매번 바꾸기가 귀찮으니… <b>스타일을 저장해두면 편합니다.</b></p>
+        <p>"기본형"이라고 스타일 저장 한번 해보겠습니다.</p>
+        <p>다음부터는 <b>이 버튼만 누르면, 따로 조정 없이</b> 쓰실 수 있습니다."</p>
+      </div>
+    </div>
+    <div class="blk"><span class="label l-cap">자막</span>
+      <div class="caps">
+        <span class="cap">문구 탭 = <b>고정 문구 자동</b></span>
+        <span class="cap">스타일 탭 = 폰트·크기·색상</span>
+        <span class="cap">★<b>스타일 저장</b> → 다음부터 버튼 한 번</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="sub">
+    <h3>⑤ 썸네일 · 에스이오 · 최종 렌더 <span class="time">10:14–10:54</span></h3>
+    <div class="blk"><span class="label l-screen">화면</span>
+      <div class="screen"><span class="rec">녹화</span> AI 장면 후보 → 하나 선택 → <b>제목 추천</b> 클릭 → 밑줄·형광펜·네온 → 이모지 얹기 → <b>썸네일 생성</b> → 다음 → SEO <b>전체 생성</b>(제목·설명·태그) → 최종 렌더 단계 → ★<b>썸네일 체크박스</b>(영상 앞에 삽입) → <b>최종 렌더</b> → 완성본 재생 → <b>카톡 QR 전송</b> → 캡컷 보내기</div>
+    </div>
+    <div class="blk"><span class="label l-line">대사</span>
+      <div class="line">
+        <p>"다섯 번째, 썸네일입니다.</p>
+        <p>에이아이가 쓸 만한 장면을 골라줍니다. <b>하나 고르기만 하면 됩니다.</b> 제목 추천을 눌러봅니다.</p>
+        <p>문구는 <b>대본을 읽고 뽑습니다.</b> 그냥 예쁜 말이 아니라, 이 영상에 맞는 훅입니다.</p>
+        <p>밑줄, 형광펜, 네온. 이모지도 얹습니다. 목록에 없으면 직접 넣으시면 되고요.</p>
+        <p>썸네일 생성 버튼을 눌러보겠습니다. 다음으로 넘어갑니다.</p>
+        <p>에스이오는 <b>에이아이로 전체 생성</b>해 봅니다. 제목, 설명, 태그. <b>복붙만 하시면 되게 편합니다.</b></p>
+        <p>최종 렌더 단계입니다.</p>
+        <p>최종 렌더를 누르기 전에 <b>썸네일 체크</b>를 하면… 영상 앞부분에 살짝 나오게 설정해뒀습니다.</p>
+        <p>렌더된 영상 보시고요.</p>
+        <p>마지막으로 <b>카톡 큐알</b>로 보내시면, 간단하게 모바일로 전송됩니다. 캡컷으로 보낼 수도 있습니다.</p>
+        <p>다만 우리 프로그램의 지향점은… <b>"캡컷까지 가지 말자"</b>입니다. 참고 부탁드립니다."</p>
+      </div>
+    </div>
+    <div class="blk"><span class="label l-cap">자막</span>
+      <div class="caps">
+        <span class="cap">장면 고르기 <b>한 번</b></span>
+        <span class="cap">문구 = <b>대본 읽고 생성</b></span>
+        <span class="cap">SEO <b>전체 생성</b> → 복붙</span>
+        <span class="cap">★<b>썸네일을 영상 맨 앞에</b></span>
+        <span class="cap"><b>카톡 QR</b>로 모바일 전송</span>
+        <span class="cap">지향점 = <b>"캡컷까지 가지 말자"</b></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 7 -->
+<section class="step" id="s7">
+  <div class="step-head"><span class="step-no">7단계</span><h2>행동 유도 (CTA)</h2><span class="time">10:54–11:41</span></div>
+
+  <div class="blk"><span class="label l-screen">화면</span>
+    <div class="screen">완성본 풀 재생 → 원본 레퍼런스와 나란히 → 베타 후기 말풍선(<b>동의받은 것만</b>) → 신청 경로 화면.</div>
+  </div>
+
+  <div class="blk"><span class="label l-line">대사</span>
+    <div class="line">
+      <p>"완성본입니다. 지금 터지는 원본들과 나란히 놓겠습니다. 뒤처집니까.</p>
+      <p>제일 중요한 건 이겁니다. <b>여기까지 오면서 머리를 쓴 적이 없습니다.</b></p>
+      <p>뭘 만들지 고민 안 했고, 원고 안 썼고, 자막 안 만졌습니다.</p>
+      <p>오늘 방법은 다 알려드렸습니다. 지금 수동으로 잘 하시는 분들은 그대로 하셔도 됩니다. 진심입니다.</p>
+      <p><b>매일 되실 것 같으면</b> 다음 편부터는 안 보셔도 됩니다.</p>
+      <p>안 되실 것 같으면, 그때 저를 찾아오시면 됩니다.</p>
+      <p><b>체험 버전</b>도 준비돼 있습니다. 영상 제작까지는 안 되지만, <b>레퍼런스 랭킹은 직접 써보실 수 있습니다.</b></p>
+      <p>오늘 당장 뭘 하실 필요 없습니다. <b>레퍼런스 하나 찾아보는 것부터</b> 시작하시면 됩니다.</p>
+      <p>이 도구는 지금도 매일 고치고 있습니다. 어제 없던 기능이 매일 새롭게 추가될 겁니다.</p>
+      <p>서두에 말씀드렸던 <b>체험단 모집은 단톡방에서</b> 하고 있습니다.</p>
+      <p><b>1기 모집 기간은 한정적으로</b> 할 것이고, 공지는 단톡방에서 이뤄집니다.</p>
+      <p>가격은 <b>일 년 구독 칠십칠만 원</b>입니다. 하루로 나누면 이천 원 조금 넘습니다.</p>
+      <p>오늘도 봐주셔서 감사합니다."</p>
+    </div>
+  </div>
+
+  <div class="blk"><span class="label l-cap">자막</span>
+    <div class="caps">
+      <span class="cap">원본과 비교 — 뒤처집니까</span>
+      <span class="cap"><b>머리 쓴 적 없음</b></span>
+      <span class="cap">방법은 다 알려드림</span>
+      <span class="cap"><b>매일 되면 ❌ 안 되면 ⭕</b></span>
+      <span class="cap">👉 <b>체험 버전</b> 안내</span>
+      <span class="cap">첫 행동 = <b>레퍼런스 하나 찾아보기</b></span>
+      <span class="cap"><b>1년 77만원</b> · 하루 2천원대</span>
+    </div>
+  </div>
+</section>
+
+<!-- 제작시트 -->
+<section class="sheet" id="sheet">
+  <h2>📋 제작 시트</h2>
+
+  <h3>사장님 녹화 (총 6~7분 분량)</h3>
+  <table>
+    <tr><th style="width:18%">구간</th><th>내용</th><th style="width:32%">비고</th></tr>
+    <tr><td><b>3단계</b></td><td>정석 과정 재현 (확장설치→가입→파파고→F12→캡컷 마스킹)</td><td>초시계 없이 진행 — 배속 몰아치기로 "고생의 총량"만 보여준다</td></tr>
+    <tr><td><b>6단계 ①~⑥</b></td><td>숏템박스로 한 편 통째로 제작</td><td>★<b>원테이크로 쭉</b> 찍고 잘라 쓸 것</td></tr>
+    <tr><td>6단계 진입</td><td>3모니터 개발 장면 실사</td><td>썸네일 연결</td></tr>
+  </table>
+
+  <h3>Claude 제작 (모션)</h3>
+  <ul>
+    <li>챕터 카드 6장 (①소재 ②대본 ③자막제거·성우 ④꾸미기 ⑤썸네일 ⑥완성)</li>
+    <li><b>4단계 저울 도식</b> (강의 vs 도구)</li>
+    <li>★<b>5단계 파이프라인 도식</b> — 부분 자동화 사이의 왕복 화살표 시각화 <b>(이 영상에서 제일 중요한 모션)</b></li>
+    <li>배속 표시(<code>×8</code>) · 클릭 하이라이트 링 · 줌인+빨간박스 콜아웃</li>
+    <li>2단계 정석 8단계 리스트 모션</li>
+    <li>7단계 나란히 비교 프레임</li>
+  </ul>
+
+  <div class="todo">
+    <h3>⚠️ 실측 후 확정할 것</h3>
+    <ul>
+      <li>☐ <b>10분</b> — 실제 job 완주 시간. 다르면 대본 숫자를 실제값으로 교체</li>
+      <li>☐ <b>반나절</b> — 3단계 재현하며 측정. 근거 없으면 "해보신 분들은 아신다"로만</li>
+      <li>☐ 베타 후기 — 동의받은 것만</li>
+    </ul>
+  </div>
+</section>
+
+</div>
+
+<script>
+(function(){
+  var KEY='shottem_ep2_script_v7';   // v7 = 예고 중복 제거·초시계 삭제(2026-08-20). v3 저장본이
+  // 교정된 문장을 도로 덮어쓰는 걸 막는다 — load()가 저장값을 innerHTML에 그대로 넣기 때문
+  var body=document.body;
+  var stateEl=document.getElementById('saveState');
+
+  // 1) 편집 가능 영역에 안정적인 id 부여 + 원본 보관
+  var targets=[];
+  document.querySelectorAll('.line, .screen, .cap').forEach(function(el,i){
+    // 안내용 박스(★ 표시 박스)는 제외
+    if(el.classList.contains('screen') && el.closest('.step') && el.textContent.indexOf('★')===0) {}
+    el.setAttribute('data-ed','ed'+i);
+    el.dataset.orig=el.innerHTML;
+    targets.push(el);
+  });
+
+  // 2) 라벨 찾기 — 어느 단계 / 어느 종류인지
+  function labelOf(el){
+    var step=el.closest('.step');
+    var sub=el.closest('.sub');
+    var stepName='';
+    if(step){
+      var h=step.querySelector('.step-head h2');
+      var no=step.querySelector('.step-no');
+      stepName=(no?no.textContent.trim()+' ':'')+(h?h.textContent.trim():'');
+    }
+    if(sub){
+      var sh=sub.querySelector('h3');
+      if(sh){
+        var txt=sh.cloneNode(true);
+        var tm=txt.querySelector('.time'); if(tm) tm.remove();
+        stepName += ' › '+txt.textContent.trim();
+      }
+    }
+    var kind = el.classList.contains('line') ? '대사'
+             : el.classList.contains('screen') ? '화면'
+             : '자막';
+    return {step:stepName||'(머리말)', kind:kind};
+  }
+
+  // 3) 저장 / 불러오기
+  function save(){
+    var data={};
+    targets.forEach(function(el){
+      if(el.innerHTML!==el.dataset.orig) data[el.dataset.ed]=el.innerHTML;
+    });
+    try{
+      localStorage.setItem(KEY, JSON.stringify(data));
+      var n=Object.keys(data).length;
+      stateEl.textContent = n ? ('저장됨 · 수정 '+n+'곳') : '수정 없음';
+      stateEl.className='saved';
+    }catch(e){
+      stateEl.textContent='저장 실패(브라우저 저장공간)';
+      stateEl.className='';
+    }
+    markDirty();
+  }
+  function load(){
+    var raw=null;
+    try{ raw=localStorage.getItem(KEY); }catch(e){}
+    if(!raw){ stateEl.textContent='수정 없음'; markDirty(); return; }
+    var data={};
+    try{ data=JSON.parse(raw)||{}; }catch(e){ data={}; }
+    var n=0;
+    targets.forEach(function(el){
+      var v=data[el.dataset.ed];
+      if(v!=null && v!==el.innerHTML){ el.innerHTML=v; n++; }
+    });
+    stateEl.textContent = n ? ('불러옴 · 수정 '+n+'곳') : '수정 없음';
+    stateEl.className='saved';
+    markDirty();
+  }
+  function markDirty(){
+    targets.forEach(function(el){
+      if(el.innerHTML!==el.dataset.orig) el.classList.add('dirty');
+      else el.classList.remove('dirty');
+    });
+  }
+
+  // 4) 편집 on/off
+  var editing=true;
+  function setEditing(on){
+    editing=on;
+    targets.forEach(function(el){ el.contentEditable = on ? 'true':'false'; });
+    body.classList.toggle('editing', on);
+    var b=document.getElementById('btnEdit');
+    b.textContent = on ? '편집 켜짐' : '편집 꺼짐';
+    b.classList.toggle('on', on);
+  }
+  document.getElementById('btnEdit').onclick=function(){ setEditing(!editing); };
+
+  // 입력 시 자동저장 (디바운스)
+  var t=null;
+  document.addEventListener('input',function(e){
+    if(!e.target.closest || !e.target.closest('[data-ed]')) return;
+    stateEl.textContent='입력 중…'; stateEl.className='';
+    clearTimeout(t); t=setTimeout(save,600);
+  });
+  // 붙여넣기는 서식 없이
+  document.addEventListener('paste',function(e){
+    var host=e.target.closest && e.target.closest('[data-ed]');
+    if(!host) return;
+    e.preventDefault();
+    var txt=(e.clipboardData||window.clipboardData).getData('text/plain');
+    document.execCommand('insertText',false,txt);
+  });
+
+  // 5) 수정본 추출 (마크다운)
+  function html2text(h){
+    var d=document.createElement('div');
+    d.innerHTML=h;
+    d.querySelectorAll('b,strong').forEach(function(b){
+      b.replaceWith(document.createTextNode('**'+b.textContent+'**'));
+    });
+    d.querySelectorAll('br').forEach(function(b){ b.replaceWith(document.createTextNode('\n')); });
+    d.querySelectorAll('p').forEach(function(p){ p.insertAdjacentText('afterend','\n'); });
+    return d.textContent
+      .split('\n').map(function(l){ return l.trim(); }).join('\n')
+      .replace(/\n{3,}/g,'\n\n').trim();
+  }
+  function buildExport(){
+    var out=['# 숏템하우스 2편 대본 — 사장님 수정본','','> 아래는 **바뀐 부분만** 뽑은 것입니다.',''];
+    var count=0, lastStep=null;
+    targets.forEach(function(el){
+      if(el.innerHTML===el.dataset.orig) return;
+      count++;
+      var L=labelOf(el);
+      if(L.step!==lastStep){ out.push('','## '+L.step); lastStep=L.step; }
+      out.push('','### ['+L.kind+']');
+      out.push('');
+      out.push('**바뀐 내용:**');
+      out.push(html2text(el.innerHTML));
+      out.push('');
+      out.push('<원래>');
+      out.push(html2text(el.dataset.orig));
+    });
+    if(!count) return '수정한 곳이 없습니다.\n\n대사·화면·자막 아무 곳이나 클릭해서 고치시면 여기에 모입니다.';
+    out.splice(3,0,'총 '+count+'곳 수정');
+    return out.join('\n');
+  }
+
+  var modal=document.getElementById('modal');
+  document.getElementById('btnExport').onclick=function(){
+    document.getElementById('exportText').value=buildExport();
+    modal.classList.add('show');
+  };
+  document.getElementById('btnCloseModal').onclick=function(){ modal.classList.remove('show'); };
+  modal.addEventListener('click',function(e){ if(e.target===modal) modal.classList.remove('show'); });
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape') modal.classList.remove('show');
+  });
+
+  document.getElementById('btnCopy').onclick=function(){
+    var ta=document.getElementById('exportText');
+    ta.removeAttribute('readonly'); ta.select(); ta.setSelectionRange(0,999999);
+    var ok=false;
+    try{ ok=document.execCommand('copy'); }catch(e){}
+    ta.setAttribute('readonly','');
+    if(!ok && navigator.clipboard){
+      navigator.clipboard.writeText(ta.value).then(function(){ ok=true; });
+    }
+    this.textContent = '복사됨 ✅';
+    var self=this; setTimeout(function(){ self.textContent='전체 복사'; },1600);
+  };
+
+  document.getElementById('btnDownload').onclick=function(){
+    var blob=new Blob([buildExport()],{type:'text/markdown;charset=utf-8'});
+    var a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='숏템하우스_2편_대본_수정본.md';
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },800);
+  };
+
+  document.getElementById('btnRevert').onclick=function(){
+    if(!confirm('고친 내용을 전부 버리고 원본으로 되돌립니다. 계속할까요?')) return;
+    targets.forEach(function(el){ el.innerHTML=el.dataset.orig; });
+    try{ localStorage.removeItem(KEY); }catch(e){}
+    stateEl.textContent='원본으로 되돌림'; stateEl.className='';
+    markDirty();
+  };
+
+  // 시작
+  setEditing(true);
+  load();
+})();
+</script>

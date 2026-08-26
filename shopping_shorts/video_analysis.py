@@ -322,7 +322,13 @@ _SUBJECT_TAGS_PROMPT = """이 이미지는 한국어 쇼츠 영상의 썸네일�
 - subject: 이 영상의 주제 명사 1개(짧게. 예: 오이무침, 블루투스 스피커, 베이글, 소파).
 - keywords: 검색에 쓸 3~6개(주제 명사·핵심 재료·용도·상위 분류. 예: ["오이","다이어트반찬","여름반찬"]).
   ⚠️ 캡션에 우연히 들어간 말이 아니라 '영상이 실제로 다루는 것'만.
-- JSON만: {{"subject": "...", "keywords": ["...", ...]}}
+- ★shot_type: 이 화면이 **재료로 쓸 수 있는 그림인가**를 셋 중 하나로(2026-08-19).
+  우리는 남의 영상을 재료로 새 영상을 만든다 — 리뷰어 얼굴이 주인공이면 못 쓴다.
+  "selfshot" = 촬영자 본인·특정 인물의 얼굴·상반신이 화면의 주인공(카메라 보고 말하기, 브이로그)
+  "product"  = 제품·손·화면·자막이 중심이고 얼굴은 없거나 곁다리(손 시연, 제품 클로즈업, 자막 정보)
+  "other"    = 둘로 못 가름(풍경·동물·그래픽 등)
+- face_prominent: 사람 얼굴이 화면에서 크게 보이면 true.
+- JSON만: {{"subject": "...", "keywords": ["...", ...], "shot_type": "...", "face_prominent": true/false}}
 캡션: {caption}"""
 
 _SUBJECT_TAGS_SCHEMA = {
@@ -330,6 +336,10 @@ _SUBJECT_TAGS_SCHEMA = {
     "properties": {
         "subject": {"type": "string"},
         "keywords": {"type": "array", "items": {"type": "string"}, "minItems": 1, "maxItems": 8},
+        # 2026-08-19 추가. ★required에 넣지 않는다 — 모델이 안 채워도 주제태그(본업)는
+        # 살아야 한다. 못 받으면 빈값이 되고 정리 규칙은 '모름'으로 다룬다.
+        "shot_type": {"type": "string"},
+        "face_prominent": {"type": "boolean"},
     },
     "required": ["subject", "keywords"],
 }
@@ -366,7 +376,11 @@ def subject_tags_vision(image_bytes, caption, max_retries=3, quota_sleep=8):
             keywords = [k.strip() for k in (data.get("keywords") or []) if k and k.strip()]
             if not subject and not keywords:
                 return {}
-            return {"subject": subject, "keywords": keywords}
+            shot = (data.get("shot_type") or "").strip().lower()
+            if shot not in ("selfshot", "product", "other"):
+                shot = ""            # 모르는 값은 안 믿는다(빈값 = 판정 없음)
+            return {"subject": subject, "keywords": keywords,
+                    "shot_type": shot, "face_prominent": bool(data.get("face_prominent"))}
         except Exception as e:
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
                 comment_gen._mark_key_exhausted(idx)
@@ -650,18 +664,27 @@ def cn_search_keyword_vision(image_bytes, caption, max_retries=3, quota_sleep=8)
     return {}
 
 
-_CN_CANDIDATES_PROMPT = """이 이미지는 한국어 쇼츠 영상의 한 장면(썸네일)이다. 화면에 박힌 글자\
-(제품명·주제어)와 물건의 생김새를 아래 캡션과 종합해 '이 영상이 소개하는 바로 그 제품/소재'를 \
-특정하라. 그 제품과 같은 영상을 중국 SNS(샤오홍슈/도우인)에서 찾을 **중국어 검색어 후보 3~4개**를 만들라.
-- 넓은 제품+방식(예: 에어프라이어 감자칩→空气炸锅土豆片) → 좁은 제품명(예: 气泡土豆) 순으로 다양하게.
-- 화면 글자에 제품명이 있으면 최우선 반영. 서로 다른 각도의 검색어(재료·조리법·모양)를 섞어라.
-- 각 후보에 한국어 뜻(ko)을 짧게 달라(사용자가 뭘 누르는지 알게).
-- ★ko는 **한국 사람이 실제로 그렇게 부르는 말**로 **2어절 이하**. 수식어를 겹쳐 없는 말을
-  지어내지 마라 — 이 ko로 인스타·틱톡을 검색하는데, 지어낸 조합은 결과가 0건이다
-  (실측: '고독스 아동용 카메라' 0건 / '고독스 카메라' 18건).
+_CN_CANDIDATES_PROMPT = """이 이미지는 한국어 쇼츠 영상의 한 장면(썸네일)이다. 화면에 박힌 글자와 \
+물건의 생김새를 아래 소재(캡션·대본)와 종합해 '이 영상이 소개하는 바로 그 제품'을 특정하고, \
+같은 제품이 나오는 영상을 찾을 **검색어 후보 5~6개**를 만들라.
+
+★가장 중요 — 소재에 있는 **구체적인 힌트를 그대로 살려라**: 제품명·브랜드(다이소 등)·소재·
+  형태·용도·대상(누가 쓰는지)·문제상황(무엇을 해결하는지). 힌트를 버리고 상위 카테고리로
+  뭉개면 **엉뚱한 영상만 나와 못 찾는다**(실측 실패: 다이소 바닥보수제를 '스틱청소기'로,
+  '프리랜서의 노트북 파우치'를 '노트북 가방'으로 뭉갬).
+
+★길이를 **섞어라** — 플랫폼마다 검색 방식이 다르기 때문이다(실측):
+  - **짧은 것 2개(2어절 이하)**: 인스타는 검색어를 해시태그로 바꿔 찾는다. 사람들이 실제로
+    다는 태그여야 한다 — 길면 0건이다('#출장용노트북모니터' 0건 / '#휴대용모니터' 5건).
+  - **긴 것 3~4개**: 유튜브·틱톡·샤오홍슈는 자연어 검색이라 길수록 정확해진다. 힌트를
+    붙여 구체적으로 써라(예: '이사갈 때 마루 찍힘 셀프 보수').
+  각 후보는 **서로 다른 각도**여야 한다(제품명·브랜드·용도·문제상황·대상).
+
+- ko = 한국어 검색어, zh = 중국어 검색어(축자번역 말고 중국 창작자가 실제 쓰는 표현으로).
+- 실제로 쓰이지 않는 말을 지어내지 마라 — 사람이 검색창에 칠 법한 말이어야 한다.
 - JSON만: {{"product": "한국어 제품명(짧게)", \
-"candidates": [{{"ko": "한국어 뜻", "zh": "중국어 검색어"}}, ...]}}
-캡션: {caption}"""
+"candidates": [{{"ko": "한국어 검색어", "zh": "중국어 검색어"}}, ...]}}
+소재: {caption}"""
 
 _CN_CANDIDATES_SCHEMA = {
     "type": "object",
@@ -674,7 +697,9 @@ _CN_CANDIDATES_SCHEMA = {
                 "properties": {"ko": {"type": "string"}, "zh": {"type": "string"}},
                 "required": ["ko", "zh"],
             },
-            "minItems": 1, "maxItems": 4,
+            # ★프롬프트가 5~6개를 요구한다 — 4로 두면 스키마가 조용히 잘라내
+            #   '짧은 것 2 + 긴 것 3~4' 섞기가 통째로 무너진다(2026-08-22).
+            "minItems": 1, "maxItems": 7,
         },
     },
     "required": ["product", "candidates"],

@@ -6,8 +6,14 @@ h1{color:#4f9dfa;font-size:20px;margin:0 0 4px}.sub{color:#8a8a92;font-size:13px
 .card{background:#16161c;border:1px solid #2a2a30;border-radius:12px;padding:16px;margin-bottom:16px}
 h2{font-size:15px;margin:0 0 12px;color:#cfd2d6}
 table{width:100%;border-collapse:collapse;font-size:15px}
+/* ★사이드바(270px)가 생기며 본문이 좁아졌다(2026-08-24). 고객표는 열이 14개라
+   width:100%로 욱여넣으면 머리글이 세로로 쪼개진다("이름"→"이/름").
+   필요한 폭은 유지하고 카드 안에서 가로 스크롤시킨다. */
+.card{overflow-x:auto}
+#rows td,thead th{white-space:nowrap}
 th,td{text-align:left;padding:11px 12px;border-bottom:1px solid #23232a}
 th{color:#9a9aa2;font-weight:600;font-size:14px}
+th.mini,td.mini{white-space:nowrap;min-width:52px}
 .badge{padding:3px 9px;border-radius:10px;font-size:13px;font-weight:700}
 .filterbar{display:flex;gap:10px;margin:4px 0 14px;flex-wrap:wrap}
 .filterbar input{width:280px;max-width:60vw;font-size:15px;padding:9px 12px}
@@ -16,8 +22,8 @@ th{color:#9a9aa2;font-weight:600;font-size:14px}
 .admin{background:#3a1c3d;color:#e59aff}
 .pending{background:#3d341c;color:#ffd479}
 button{border:0;border-radius:7px;padding:7px 13px;font-weight:700;font-size:13px;cursor:pointer;margin-right:4px}
-.bpro{background:#2ea043;color:#fff}.bfree{background:#6e2020;color:#fff}.bok{background:#d19b1e;color:#111}.bpay{background:#3a5bd0;color:#fff}
-.bedit{background:#5a4bd0;color:#fff}.bdel{background:#8b1a1a;color:#fff}.btrial{background:#1c6a8a;color:#fff}.badm{background:#7a3da8;color:#fff}
+.bpro{background:#2ea043;color:#fff}.bfree{background:#6e2020;color:#fff}.bok{background:#d19b1e;color:#111}.bpay{background:#3a5bd0;color:#fff}.bpt{background:#7a4bd0;color:#fff}.bkey{background:#0f766e;color:#fff}
+.bedit{background:#5a4bd0;color:#fff}.bdel{background:#8b1a1a;color:#fff}.btrial{background:#1c6a8a;color:#fff}.badm{background:#7a3da8;color:#fff}.bchal{background:#c2410c;color:#fff}
 .wait{border-color:#5a4a1e;background:#1a1710}.wait h2{color:#ffd479}
 .empty{color:#6a6a72;font-size:13px;padding:6px 2px}
 input{background:#0e0e12;border:1px solid #333;border-radius:7px;color:#eee;padding:8px 10px;font-size:13px;width:90px}
@@ -34,26 +40,93 @@ details.card[open]>summary::before{content:'▾'}
 .setfield label{min-width:92px;margin:0}
 .setfield input{flex:1;width:auto}
 tbody tr:hover{background:#1b1b22}
+
+/* ── 바로가기(2026-08-24) — 주소를 외우지 않아도 되게 ── */
+.quicknav{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 16px}
+.qbtn{display:flex;flex-direction:column;gap:2px;padding:10px 14px;border-radius:10px;
+      background:#16161c;border:1px solid #2a2a30;color:#e8e8ea;text-decoration:none;
+      font-size:14px;font-weight:700;min-width:132px;transition:border-color .12s,background .12s}
+.qbtn:hover{background:#1c1c24;border-color:#3a5bd0}
+.qbtn small{color:#8a8a92;font-size:11.5px;font-weight:400}
+/* 관측판은 오픈 기간에 가장 자주 봐야 하는 화면이라 눈에 띄게 둔다 */
+.qbtn.hot{border-color:#2ea043;background:linear-gradient(180deg,#12241c,#16161c)}
+.qbtn.hot:hover{border-color:#3ecf8e}
+/* ── 요약 — 표를 열기 전에 '처리할 게 있나'부터 답한다 ── */
+.summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:10px;margin-bottom:18px}
+.sbox{background:#16161c;border:1px solid #2a2a30;border-radius:10px;padding:11px 13px}
+.sk{color:#8a8a92;font-size:12px;margin-bottom:3px}
+.sv{font-size:21px;font-weight:800;letter-spacing:-.5px}
+/* 처리할 게 남아 있으면 숫자가 스스로 알린다(0이면 조용하다) */
+.sv.need{color:#ffd479}
+/* ── 구역 제목 — 카드가 늘어서기만 하면 어디가 어딘지 모른다 ── */
+.grouphead{font-size:13px;color:#8a8a92;font-weight:700;margin:22px 0 10px;
+           letter-spacing:.4px;border-bottom:1px solid #23232a;padding-bottom:7px}
+/* ★사이드바와 나란히 놓기(2026-08-24 사장님 "따로 뜨지 말고 이어서").
+   sidebar.js가 body{display:flex}를 주입하고 <aside class="ss-nav">를 맨 앞에
+   넣는다 → 본문은 남은 폭을 채우는 flex 자식이어야 한다. min-width:0이 없으면
+   넓은 표가 사이드바를 밀어낸다(flex 자식 기본 min-width:auto). */
+.main{flex:1;min-width:0;padding:16px 20px 40px;overflow-x:auto}
 </style></head><body>
-<h1>🔐 유료게이트 관리자</h1>
+<div class="main">
+<h1>🔐 관리자</h1>
 <div class=sub>결제 확인된 계정을 <b>pro</b>로 승격 / 체험·크레딧 설정 조정</div>
 
+<!-- 바로가기(2026-08-24) — 관리자가 자주 오가는 화면을 여기 모은다. 예전엔 주소를
+     외워서 쳐야 했다(특히 관측판 /ops는 어디에도 링크가 없었다).
+     ★새 탭으로 연다: 관리 작업 중 화면이 통째로 바뀌면 하던 일을 잃는다. -->
+<nav class=quicknav>
+  <a href="/ops" target="_blank" rel="noopener" class="qbtn hot">📊 관측판<small>서버가 버티나</small></a>
+  <a href="/refs" target="_blank" rel="noopener" class=qbtn>📋 레퍼런스 채널<small>수집 소스 관리</small></a>
+  <a href="/produce" target="_blank" rel="noopener" class=qbtn>🎬 제작소<small>영상 만들기</small></a>
+  <a href="/" target="_blank" rel="noopener" class=qbtn>🏠 서비스 화면<small>고객이 보는 것</small></a>
+</nav>
+
+<!-- 요약 — 표를 열기 전에 "지금 처리할 게 있나"를 먼저 답한다. -->
+<div class=summary id=summary>
+  <div class=sbox><div class=sk>입금 신고</div><div class=sv id=sum_dep>–</div></div>
+  <div class=sbox><div class=sk>승인 대기</div><div class=sv id=sum_pend>–</div></div>
+  <div class=sbox><div class=sk>전체 고객</div><div class=sv id=sum_all>–</div></div>
+  <div class=sbox><div class=sk>pro</div><div class=sv id=sum_pro>–</div></div>
+  <div class=sbox><div class=sk>체험중</div><div class=sv id=sum_trial>–</div></div>
+</div>
+
 <details class=card>
-  <summary>⚙️ 설정 (체험·크레딧·안내) <span id=setMsg class=msg></span></summary>
+  <summary>⚙️ 설정 — 체험·크레딧·결제안내 (평소엔 접어둔다) <span id=setMsg class=msg></span></summary>
   <div id=settings class=setgrid></div>
   <button class=save onclick=saveSettings()>설정 저장</button>
 </details>
 
+<h2 class=grouphead>🔔 오늘 처리할 일</h2>
+
+<!-- 오류 신고(2026-08-24) — 고객이 사이드바 '🐞 오류 신고'를 누르면 여기 쌓인다.
+     ★고객은 한 줄만 쓴다. 페이지·작업번호·단계·화면오류는 화면이 자동으로 담아 보낸다
+       (고객에게 job_id를 물어보면 못 받는다 — 실제로 그래서 원인 찾는 데 오래 걸렸다). -->
+<div class="card wait">
+  <h2>🐞 오류 신고 (<span id=bcnt>0</span>건) <span id=bMsg class=msg></span></h2>
+  <table><thead><tr><th>시각</th><th>고객</th><th>내용</th><th>사진</th><th>어디서</th><th>화면오류</th><th>처리</th></tr></thead>
+  <tbody id=brows><tr><td colspan=7 class=empty>불러오는 중…</td></tr></tbody></table>
+</div>
+
+<!-- 입금 신고(2026-08-23) — 고객이 /pay에서 '입금 완료했습니다'를 누르면 여기 뜬다.
+     ★입금 증명이 아니다. 통장 확인은 그대로 하시고, 이건 '연락을 놓치지 않기 위한' 목록이다. -->
+<div class="card wait">
+  <h2>💰 입금 신고 (<span id=dcnt>0</span>건) <span id=dMsg class=msg></span></h2>
+  <table><thead><tr><th>신고시각</th><th>성함</th><th>입금자명</th><th>연락처</th><th>처리</th></tr></thead>
+  <tbody id=drows><tr><td colspan=5 class=empty>불러오는 중…</td></tr></tbody></table>
+</div>
+
 <div class="card wait">
   <h2>🕓 승인 대기중 (<span id=pcnt>0</span>명) <span id=pMsg class=msg></span></h2>
   <table><thead><tr><th>ID</th><th>이름</th><th>전화</th><th>이메일/아이디</th><th>가입일</th><th>승인</th></tr></thead>
-  <tbody id=prows></tbody></table>
+  <tbody id=prows><tr><td colspan=6 class=empty>불러오는 중…</td></tr></tbody></table>
 </div>
+
+<h2 class=grouphead>👥 고객 관리</h2>
 
 <div class=card>
   <h2>고객 (<span id=cnt>0</span>명) <span id=cMsg class=msg></span></h2>
   <div class=filterbar>
-    <input id=custSearch placeholder="🔍 이름·전화·이메일로 찾기" oninput="renderCustomers()">
+    <input id=custSearch placeholder="🔍 이름·전화·이메일·성별·연령으로 찾기" oninput="renderCustomers()">
     <select id=tierFilter onchange="renderCustomers()">
       <option value="">전체 등급</option>
       <option value="pro">pro</option>
@@ -61,18 +134,32 @@ tbody tr:hover{background:#1b1b22}
       <option value="free">일반회원</option>
     </select>
   </div>
-  <table><thead><tr><th>ID</th><th>이름</th><th>전화</th><th>이메일/아이디</th><th>등급</th><th>상태</th><th>시작일</th><th>마감일</th><th>결제</th><th>오늘 사용(렌즈/렌더/대본)</th><th>접속7일(IP/기기)</th><th>접속/활동</th><th>조작</th></tr></thead>
-  <tbody id=rows></tbody></table>
+  <table><thead><tr><th>ID</th><th>이름</th><th>전화</th><th class=mini>성별</th><th class=mini>연령</th><th>이메일/아이디</th><th>등급</th><th>상태</th><th>시작일</th><th>마감일</th><th>결제</th><th>포인트</th><th>오늘 사용(렌즈/렌더/대본)</th><th>접속7일(IP/기기)</th><th>접속/활동</th><th>조작</th></tr></thead>
+  <tbody id=rows><tr><td colspan=16 class=empty>불러오는 중…</td></tr></tbody></table>
 </div>
 
 <script>
 const SETTING_FIELDS=[
-  ['trial_days','체험 기간(일)'],['trial_event_hours','가입 자동체험(시간,0=끔)'],['limit_lens','무료 렌즈/일'],['limit_render','무료 렌더/일'],
+  ['trial_days','체험 기간(일)'],['trial_grant_points','체험 기본 포인트(P)'],['pro_grant_points','결제(pro) 기본 포인트(P)'],['trial_event_hours','가입 자동체험(시간,0=끔)'],['limit_lens','무료 렌즈/일'],['limit_render','무료 렌더/일'],
   ['limit_script','무료 대본/일'],['limit_lens_pro','pro 렌즈/일'],['limit_render_pro','pro 렌더/일'],
   ['global_cap_lens','전역 렌즈/일'],['contact_kakao','카톡 안내'],['contact_phone','전화 안내'],['pay_url','결제 링크(URL)'],
   ['bank_name','은행'],['bank_account','계좌번호'],['bank_holder','예금주'],['deposit_note','입금 안내문구'],
-  ['biz_name','[약관] 상호'],['biz_owner','[약관] 대표자'],['biz_regno','[약관] 사업자등록번호'],['biz_addr','[약관] 주소'],['biz_sales_no','[약관] 통신판매업신고번호'],['biz_email','[약관] 문의 이메일']];
+  ['biz_name','[약관] 상호'],['biz_owner','[약관] 대표자'],['biz_regno','[약관] 사업자등록번호'],['biz_addr','[약관] 주소'],['biz_sales_no','[약관] 통신판매업신고번호'],['biz_email','[약관] 문의 이메일'],
+  ['challenge_start','[챌린지] 시작일(YYYY-MM-DD)'],['challenge_end','[챌린지] 종료일(YYYY-MM-DD)'],['challenge_daily_goal','[챌린지] 하루 목표 영상 수']];
 let CURRENT={};
+// 상단 요약 — 처리할 게 남아 있으면 숫자가 스스로 눈에 띈다(0이면 조용하다).
+// 입금 신고 건수는 별도 API라 loadDepositClaims()가 채운 뒤 여기로 넘겨준다.
+function fillSummary(customers, pendCount, depCount){
+  const set=(id,v,need)=>{ const el=document.getElementById(id); if(!el) return;
+    el.textContent=v; el.classList.toggle('need', !!need && Number(v)>0); };
+  if(Array.isArray(customers)){
+    set('sum_all', customers.length);
+    set('sum_pro', customers.filter(c=>c.plan==='pro').length);
+    set('sum_trial', customers.filter(c=>c.plan==='trial').length);
+  }
+  if(pendCount!==undefined) set('sum_pend', pendCount, true);
+  if(depCount!==undefined) set('sum_dep', depCount, true);
+}
 async function load(){
   const r=await fetch('/api/admin/customers');
   if(r.status===403){document.body.innerHTML='<h2>관리자 전용입니다</h2>';return;}
@@ -80,9 +167,13 @@ async function load(){
   // 설정 폼
   document.getElementById('settings').innerHTML=SETTING_FIELDS.map(([k,label])=>
     `<div class=setfield><label>${label}</label><input id=set_${k} value="${(CURRENT[k]??'').toString().replace(/"/g,'&quot;')}"></div>`).join('');
+  loadDepositClaims();   // 입금 신고 목록(별도 API — 실패해도 이 화면은 계속 뜬다)
   // 미승인(approved_at null) = 순수대기 + 이벤트 체험중 → 모두 대기명단(사장님이 승인 가능해야 함).
   const pend=d.customers.filter(c=>c.approved_at==null);
   const rest=d.customers.filter(c=>c.approved_at!=null);
+  // 요약 채우기(2026-08-24) — 표를 훑기 전에 '처리할 게 있나'를 먼저 답한다.
+  // ★숫자는 아래 표와 **같은 배열**에서 뽑는다. 따로 세면 언젠가 어긋난다(0순위-B).
+  fillSummary(d.customers, pend.length);
   const esc=s=>(s||'').toString().replace(/</g,'&lt;').replace(/>/g,'&gt;');
   // 승인 대기 표
   document.getElementById('pcnt').textContent=pend.length;
@@ -93,7 +184,8 @@ async function load(){
     const trialBadge = trialLeft ? ` <span class="badge trial">🎁 체험중 ${trialLeft}h</span>` : '';
     return `<tr><td>${c.id}</td><td>${esc(c.name)}${trialBadge}</td><td>${esc(c.phone)}</td><td>${esc(c.email||c.username)}</td>
       <td style="font-size:12px;color:#8a8a92">${joined}</td>
-      <td><button class=bok onclick="approveCustomer(${c.id})">✅ 승인</button></td></tr>`;
+      <td><button class=bok onclick="ackCustomer(${c.id},this)" title="체험은 그대로 두고 대기실에서만 내립니다">✅ 확인</button>
+          <button class=bpro onclick="approveCustomer(${c.id})" title="결제받고 기간을 줄 때">💳 결제승인</button></td></tr>`;
   }).join('') : '<tr><td colspan=6 class=empty>대기 중인 가입 신청이 없어요</td></tr>';
   // 일반 고객표 — 검색·등급 필터 적용 렌더
   renderCustomers();
@@ -111,20 +203,49 @@ document.addEventListener('click', async (e)=>{
   alert('최근 활동\n\n'+lines);
 });
 
+// ── 고객 찾기: 퍼지(글자 순서만 맞으면) 매칭 — 2026-08-24 ───────────────
+// 사장님 요청: 이메일을 풀로 다 쳐야 걸리던 걸 몇 자만 쳐도 걸리게.
+// 'the' / 'tbk' / 'black001' 전부 theblackart001@gmail.com 에 걸린다.
+// ★한 칸(필드) 안에서만 순서를 잇는다 — 이름과 이메일을 가로질러 이어붙이면
+//   'sdw' 같은 입력에 무관한 고객이 우수수 걸린다(칸을 합쳐 검색하면 그렇게 된다).
+// 공백으로 띄어 치면 조각마다 각각 어느 칸에든 걸려야 통과(AND).
+function _subseq(hay, q){            // hay 안에서 q의 글자가 '순서대로' 나오나
+  let i=0;
+  for(let k=0;k<hay.length && i<q.length;k++) if(hay[k]===q[i]) i++;
+  return i===q.length;
+}
+function _custMatch(c, q){
+  const fields=[c.name,c.phone,c.email,c.username,c.gender,c.age_band]
+    .map(v=>(v||'').toString().toLowerCase()).filter(Boolean);
+  // 전화번호는 하이픈 유무가 제각각 → 숫자만 남긴 형태도 같이 본다(01012345678 로 쳐도 걸리게)
+  const digits=(c.phone||'').toString().replace(/\D/g,'');
+  if(digits) fields.push(digits);
+  return q.split(/\s+/).filter(Boolean).every(tok => fields.some(f => _subseq(f, tok)));
+}
+// 크레딧 차감 대 실제 영상 대조(2026-08-24). usage(가운데 숫자)는 **UTC 날짜** 버킷이라
+// 한국시간 00:00~09:00 제작분은 전날 칸으로 간다 — 그래서 한국시간 오늘 실측을 따로 붙인다.
+// 차감(charged) > 만든 영상(made)이면 빨갛게 띄운다: 중복 접수이거나 실패 환불 대기다.
+function _madeCell(c){
+  const m=c.made_today||{made:0,charged:0};
+  if(!m.charged && !m.made) return '';
+  const bad = m.charged > m.made;
+  return ` <span title="한국시간 오늘 실측 — 차감 ${m.charged}건 / 실제 영상 ${m.made}개"
+    style="color:${bad?'#ff6b6b':'#7ee787'};font-weight:${bad?'700':'400'}">(실제 ${m.made}${bad?' ⚠️':''})</span>`;
+}
 function renderCustomers(){
   const esc=s=>(s||'').toString().replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const q=((document.getElementById('custSearch')||{}).value||'').trim().toLowerCase();
   const tier=(document.getElementById('tierFilter')||{}).value||'';
   const rest=(window._CUST||[]).filter(c=>c.approved_at!=null).filter(c=>{
     if(tier && _tierOf(c)!==tier) return false;
-    if(q){ const hay=`${c.name||''} ${c.phone||''} ${c.email||''} ${c.username||''}`.toLowerCase();
-           if(hay.indexOf(q)<0) return false; }
+    if(q && !_custMatch(c,q)) return false;
     return true;
   });
   document.getElementById('cnt').textContent=rest.length;
   document.getElementById('rows').innerHTML= rest.length ? rest.map(c=>{
-    const lvl=c.level==='full'?(c.plan==='pro'?'<span class="badge pro">pro</span>':'<span class="badge trial">체험중</span>')
-              :'<span class="badge free">일반회원</span>';
+    const lvl=c.plan==='pro'?'<span class="badge pro">pro</span>'
+              :(c.plan==='trial'?'<span class="badge trial">체험판(랭킹만)</span>'
+              :(c.level==='full'?'<span class="badge trial">이용중(기간제)</span>':'<span class="badge free">일반회원</span>'));
     const u=c.usage||{};
     const acc=c.access_7d||{ips:0,devices:0};
     // 돌려쓰기 의심: 최근 7일 고유 IP 3개↑ 또는 기기 3종↑이면 빨간 강조(차단은 안 함, 사장님 눈으로 판단)
@@ -134,23 +255,85 @@ function renderCustomers(){
     const ls = c.last_seen||0, nowS=Math.floor(Date.now()/1000);
     const online = ls && (nowS-ls) < 300;   // 5분 내 활동 = 접속중
     const seenCell = `<span class=actlink data-actcid=${c.id} title="최근 활동 보기" style="cursor:pointer;color:${online?'#7ee787':'#8ab4f8'}">${online?'🟢 접속중':(ls?'⚪ '+_ago(nowS-ls):'-')}</span>`;
-    return `<tr><td>${c.id}</td><td>${esc(c.name)}${adminBadge}</td><td>${esc(c.phone)}</td><td>${esc(c.email||c.username)}</td><td>${c.plan}</td><td>${lvl}</td>
+    return `<tr><td>${c.id}</td><td>${esc(c.name)}${adminBadge}</td><td>${esc(c.phone)}</td>
+      <td class=mini style="color:${c.gender?'#e8eaed':'#5f6773'}">${esc(c.gender)||'—'}</td>
+      <td class=mini style="color:${c.age_band?'#e8eaed':'#5f6773'}">${esc(c.age_band)||'—'}</td>
+      <td>${esc(c.email||c.username)}</td><td>${c.plan}</td><td>${lvl}</td>
       <td style="color:#8a8a92">${c.approved_at? new Date(c.approved_at*1000).toLocaleDateString('ko-KR'):'-'}</td>
       <td style="color:#8a8a92">${c.full_access_until? new Date(c.full_access_until*1000).toLocaleDateString('ko-KR'):'-'}</td>
       <td>${c.last_payment? `<span class=paylink data-cid=${c.id} style="cursor:pointer;color:#8ab4f8">${c.last_payment.amount.toLocaleString()}원 · ${c.payment_count}건</span>` : '-'}</td>
-      <td>${u.lens||0}/${u.render||0}/${u.script||0}</td>
+      <td><span style="color:${(c.points||0)<=0?'#ff6b6b':'#7ee787'};font-weight:700">${c.points||0}P</span></td>
+      <td>${u.lens||0}/${u.render||0}/${u.script||0}${_madeCell(c)}</td>
       <td>${accCell}</td>
       <td>${seenCell}</td>
       <td><button class=bpay onclick="addPayment(${c.id})">결제추가</button>
           <button class=bedit onclick="editInfo(${c.id})">정보수정</button>
-          <button class=bfree onclick="setPlan(${c.id},'free')">일반회원</button>
-          <button class=btrial onclick="grantTrial(${c.id})">체험</button>
-          <button class=bpro onclick="setPlan(${c.id},'pro')">pro</button>
+          <button class=bfree onclick="setPlan(${c.id},'free',this)">일반회원</button>
+          <button class=btrial onclick="grantTrial(${c.id},this)">체험</button>
+          <button class=bpt onclick="grantPoints(${c.id})">포인트</button>
+          <button class=bkey onclick="openKeys(${c.id},this)">키</button>
+          <button class=bpro onclick="setPlan(${c.id},'pro',this)">pro</button>
           ${c.code_admin?'':(c.is_admin
             ? `<button class=badm onclick="setAdmin(${c.id},false)">관리자해제</button>`
             : `<button class=badm onclick="setAdmin(${c.id},true)">관리자지정</button>`)}
+          <button class=bchal onclick="setChallenge(${c.id},${c.challenge?'false':'true'})">${c.challenge?'🔥챌린지해제':'챌린지참가'}</button>
           ${c.is_admin?'':`<button class=bdel onclick="delCustomer(${c.id})">삭제</button>`}</td></tr>`;
-  }).join('') : '<tr><td colspan=13 class=empty>조건에 맞는 고객이 없어요</td></tr>';
+  }).join('') : '<tr><td colspan=16 class=empty>조건에 맞는 고객이 없어요</td></tr>';
+}
+// ── 입금 신고 (2026-08-23) ──────────────────────────────────
+// 고객이 /pay에서 '입금 완료했습니다'를 누른 것. 통장 확인은 그대로 하시고,
+// 확인이 끝나면 [확인함]을 눌러 목록에서 내린다(승인은 아래 고객표에서 따로).
+async function loadDepositClaims(){
+  try{
+    const r=await fetch('/api/admin/deposit_claims');
+    if(!r.ok) return;
+    const items=(await r.json()).items||[];
+    document.getElementById('dcnt').textContent=items.length;
+    fillSummary(null, undefined, items.length);   // 상단 요약에도 같은 숫자를 넘긴다
+    const esc=s=>(s||'').toString().replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    document.getElementById('drows').innerHTML= items.length ? items.map(c=>{
+      const t=c.created_at? new Date(c.created_at).toLocaleString('ko-KR'):'-';
+      return `<tr><td>${esc(t)}</td><td><b>${esc(c.name)}</b></td>`
+        +`<td style="color:#ffd479">${esc(c.depositor)}</td><td>${esc(c.contact)||'-'}</td>`
+        +`<td><button class=bok onclick="closeClaim(${Number(c.id)})">확인함</button></td></tr>`;
+    }).join('') : '<tr><td colspan=5 class=empty>새 입금 신고가 없습니다.</td></tr>';
+  }catch(e){}
+}
+async function closeClaim(id){
+  const m=document.getElementById('dMsg');
+  m.textContent='처리 중…';
+  try{
+    const r=await fetch('/api/admin/deposit_claim/done',{method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id})});
+    m.textContent = r.ok ? '처리했습니다.' : '실패했습니다.';
+  }catch(e){ m.textContent='실패했습니다.'; }
+  loadDepositClaims();
+}
+
+/* '확인' — 클릭 한 번(2026-08-25 사장님 "일일이 버튼 누르니 안 좋아").
+   남은 체험은 그대로 두고 대기실에서만 내린다 → 아래 고객표로 옮겨간다. */
+// ★연타 잠금(2026-08-25) — 사장님이 "포인트가 안 나온다"고 하신 실체는 두 번째 클릭이었다.
+//   포인트는 top-up이라 첫 클릭에 들어가고, 두 번째는 "이미 충분"이라 0P가 돌아온다.
+//   그 0P가 '안 나왔다'로 읽혔다. 그래서 처리 중에는 버튼을 잠가 두 번 눌리지 않게 한다.
+async function _lockWhile(btn, fn){
+  if(btn){ if(btn.disabled) return; btn.disabled=true; btn.style.opacity='.55'; }
+  try{ return await fn(); }
+  finally{ if(btn){ btn.disabled=false; btn.style.opacity=''; } }
+}
+
+async function ackCustomer(cid, btn){ return _lockWhile(btn, ()=>_ackCustomer(cid)); }
+async function _ackCustomer(cid){
+  const r = await fetch('/api/admin/ack',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({customer_id:cid})});
+  const m=document.getElementById('pMsg');
+  if(r.ok){const d=await r.json().catch(()=>({}));
+    // 포인트까지 들어갔는지 이 자리에서 보여준다 — 잔액 0이면 유료 작업이 402로 막힌다.
+    m.textContent='✅ 확인함 — 고객관리로 내려갔어요'
+      +(d.granted?' · 포인트 +'+d.granted+'P (잔액 '+d.balance+'P)'
+                 :(d.balance!=null?' · 포인트는 이미 충분 (잔액 '+d.balance+'P)':''));
+    m.className='msg';load();}
+  else{m.textContent='❌ 실패';m.className='msg err';}
+  setTimeout(()=>m.textContent='',2500);
 }
 async function approveCustomer(cid){
   const days = prompt('이용일수 (예: 30)', '');
@@ -207,11 +390,17 @@ document.addEventListener('click', async (e)=>{
   }).join('\n') || '결제 내역 없음';
   alert('결제 이력\n\n'+lines);
 });
-async function setPlan(cid,plan){
+async function setPlan(cid,plan,btn){ return _lockWhile(btn, ()=>_setPlan(cid,plan)); }
+async function _setPlan(cid,plan){
   const r=await fetch('/api/admin/set_plan',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({customer_id:cid,plan})});
   const m=document.getElementById('cMsg');
-  if(r.ok){m.textContent='✅ 변경됨';m.className='msg';load();}else{m.textContent='❌ 실패';m.className='msg err';}
+  // ★포인트 지급 결과까지 보여준다(2026-08-23). pro로 올려도 잔액이 0이면 유료 작업이
+  //   402로 막히므로, 사장님이 '연료가 들어갔나'를 이 자리에서 바로 알아야 한다.
+  if(r.ok){const d=await r.json().catch(()=>({}));
+    m.textContent='✅ 변경됨'+(d.granted?' · 포인트 +'+d.granted+'P (잔액 '+d.balance+'P)'
+                              :(d.balance!=null?' · 포인트는 이미 충분 (잔액 '+d.balance+'P)':''));
+    m.className='msg';load();}else{m.textContent='❌ 실패';m.className='msg err';}
   setTimeout(()=>m.textContent='',2000);
 }
 async function setAdmin(cid,flag){
@@ -225,14 +414,98 @@ async function setAdmin(cid,flag){
   if(r.ok){m.textContent=flag?'✅ 관리자 지정됨':'✅ 관리자 해제됨';m.className='msg';load();}else{m.textContent='❌ 실패';m.className='msg err';}
   setTimeout(()=>m.textContent='',2000);
 }
-async function grantTrial(cid){
+// 1기 챌린지 참가 토글(2026-08-24) — 참가자만 /challenge에서 영상을 제출할 수 있다.
+async function setChallenge(cid,flag){
+  const r=await fetch(`/api/challenge/member?customer_id=${cid}&active=${flag?1:0}`,{method:'POST'});
+  const m=document.getElementById('cMsg');
+  if(r.ok){m.textContent=flag?'✅ 챌린지 참가 등록':'✅ 챌린지 참가 해제';m.className='msg';load();}
+  else{m.textContent='❌ 실패';m.className='msg err';}
+}
+// ── 고객 키 켜기/끄기 + 포인트 면제 (2026-08-25) ─────────────────────────
+// ★왜: 종전엔 키를 끄려면 DB에서 service를 'vmake_paused'로 바꿔야 했다. 그러면
+//   시스템이 "키 없음"으로 보고 **사장님 키로 돌면서 포인트는 계속 깎았다**(cid 57 실사고).
+//   여기서 끄기와 면제를 **짝으로** 걸 수 있게 한다.
+// ★개행은 String.fromCharCode(10)으로 만든다 — 이 파일은 파이썬 문자열을 거쳐 쓰여서
+//   백슬래시 이스케이프가 한 겹 벗겨져 문법이 깨진 전례가 있다(같은 날 실측).
+const _NL = String.fromCharCode(10);
+
+async function openKeys(cid, btn){
+  return _lockWhile(btn, async ()=>{
+    let d={};
+    try{
+      const r = await fetch('/api/admin/customer/keys?customer_id='+cid);
+      d = await r.json();
+      if(!r.ok || !d.ok) throw new Error(d.error || ('HTTP '+r.status));
+    }catch(e){ alert('키 목록을 못 불러왔어요: '+e.message); return; }
+
+    const keys = d.keys || [], exempt = new Set(d.exempt || []);
+    const lines = keys.map(function(k){
+      const on = (k.status||'') !== 'off';
+      return k.id + '. ' + k.service + (on ? '' : ' (꺼짐)')
+           + (exempt.has(k.service) ? ' · 포인트면제' : '');
+    }).join(_NL) || '등록된 키 없음';
+    const svcs = [...new Set(keys.map(k=>k.service))];
+    const msg = '등록 키' + _NL + _NL + lines + _NL + _NL
+      + '무엇을 할까요?' + _NL
+      + '  1 = 키 끄기(사장님 키로 돌아감)' + _NL
+      + '  2 = 키 켜기' + _NL
+      + '  3 = 포인트 면제 켜기' + _NL
+      + '  4 = 포인트 면제 끄기' + _NL
+      + '(취소=닫기)';
+    const pick = prompt(msg, '');
+    if(!pick) return;
+
+    try{
+      if(pick==='1' || pick==='2'){
+        const kid = prompt('어느 키인가요? 앞의 번호를 넣으세요', keys.length?String(keys[0].id):'');
+        if(!kid) return;
+        const r = await fetch('/api/admin/customer/key_toggle',{method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({key_id:Number(kid), on: pick==='2'})});
+        if(!r.ok) throw new Error('HTTP '+r.status);
+        alert(pick==='2'
+          ? '✅ 키를 켰습니다 — 본인 키로 돌아갑니다(포인트 안 깎임)'
+          : '✅ 키를 껐습니다 — 사장님 키로 돌아갑니다.' + _NL
+            + '포인트가 나가지 않게 하려면 3(포인트 면제)도 켜세요');
+      }else if(pick==='3' || pick==='4'){
+        const svc = prompt('어느 서비스인가요? (예: vmake)', svcs[0]||'vmake');
+        if(!svc) return;
+        const r = await fetch('/api/admin/customer/key_exempt',{method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({customer_id:cid, service:svc.trim(), on: pick==='3'})});
+        const j = await r.json().catch(()=>({}));
+        if(!r.ok) throw new Error(j.error || ('HTTP '+r.status));
+        alert(pick==='3'
+          ? '✅ ' + svc + ' 포인트 면제 — 이제 이 고객은 그 작업에 포인트가 안 깎입니다'
+          : '✅ ' + svc + ' 포인트 면제 해제 — 다시 포인트가 깎입니다');
+      }
+    }catch(e){ alert('실패: '+e.message); }
+    load();
+  });
+}
+
+async function grantPoints(cid){
+  // 등급(체험·pro)은 게이트만 연다 — 유료 op는 포인트도 있어야 돈다(2026-08-20 402 사고).
+  const p=prompt('포인트 몇 P 줄까요? (음수=회수)', '1000');
+  if(p===null) return;
+  const r=await fetch('/api/admin/points',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({customer_id:cid, points:Number(p)||0})});
+  const m=document.getElementById('cMsg');
+  if(r.ok){const d=await r.json();m.textContent='✅ 지급됨 · 잔액 '+d.balance+'P';m.className='msg';load();}
+  else{m.textContent='❌ 실패';m.className='msg err';}
+  setTimeout(()=>m.textContent='',3000);
+}
+async function grantTrial(cid, btn){ return _lockWhile(btn, ()=>_grantTrial(cid)); }
+async function _grantTrial(cid){
   const def=(CURRENT.trial_days||'7');
-  const days=prompt('체험 며칠 줄까요? (전기능 열림)', def);
+  const days=prompt('체험 며칠 줄까요? (랭킹·즐겨찾기·렌즈 10회/일만 · 제작소는 미리보기)', def);
   if(days===null) return;
   const r=await fetch('/api/admin/set_plan',{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({customer_id:cid, plan:'free', days:Number(days)||0})});
+    body:JSON.stringify({customer_id:cid, plan:'trial', days:Number(days)||0})});
   const m=document.getElementById('cMsg');
-  if(r.ok){m.textContent='✅ 체험 부여됨';m.className='msg';load();}else{m.textContent='❌ 실패';m.className='msg err';}
+  if(r.ok){const d=await r.json();
+    m.textContent='✅ 체험 부여됨'+(d.granted?' · 포인트 +'+d.granted+'P (잔액 '+d.balance+'P)':' · 포인트는 이미 충분 (잔액 '+d.balance+'P)');
+    m.className='msg';load();}else{m.textContent='❌ 실패';m.className='msg err';}
   setTimeout(()=>m.textContent='',2000);
 }
 async function saveSettings(){
@@ -242,5 +515,111 @@ async function saveSettings(){
   if(r.ok){m.textContent='✅ 저장됨';m.className='msg';}else{m.textContent='❌ 실패';m.className='msg err';}
   setTimeout(()=>m.textContent='',2000);
 }
-load();
-</script></body></html>
+// ★첫 로드 — 실패하면 화면이 반드시 말한다.
+//   예전엔 예외가 나도 표가 "0명"으로 남아 '고객이 없는 것처럼' 보였다(2026-08-23).
+load().catch(e=>{
+  const msg = '목록을 불러오지 못했습니다 — ' + (e && e.message || e);
+  const pr=document.getElementById('prows'), rw=document.getElementById('rows');
+  if(pr) pr.innerHTML='<tr><td colspan=6 class=empty style="color:#f87171">'+msg+'</td></tr>';
+  if(rw) rw.innerHTML='<tr><td colspan=12 class=empty style="color:#f87171">'+msg+'</td></tr>';
+  console.error('[admin] load 실패', e);
+});
+
+
+/* ── 오류 신고함(2026-08-24) ─────────────────────────────────────────
+   신고를 받아만 두면 "말해도 반응 없네"가 된다 → 답장을 여기서 바로 쓴다.
+   답장은 고객 화면이 다음 접속 때 스스로 띄운다(카톡으로 따로 안 보내도 된다). */
+function _bugWhen(ts){
+  var d=new Date(ts*1000), n=Date.now()/1000, s=n-ts;
+  if(s<3600) return Math.max(1,Math.round(s/60))+'분 전';
+  if(s<86400) return Math.round(s/3600)+'시간 전';
+  return d.toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+}
+function loadBugs(){
+  /* ★status=open만 부르면 처리한 신고가 목록에서 통째로 사라져 "해결됐는지 아닌지"를
+     볼 수 없다(2026-08-25 사장님 지시). 전부 받아 **미해결을 위로** 올리고 상태를
+     배지로 구분한다. 머리글 숫자는 여전히 '미해결 건수'다 — 처리할 일의 개수니까. */
+  fetch('/api/admin/bug-reports').then(function(r){return r.json();}).then(function(d){
+    var rows=(d&&d.reports)||[];
+    rows.sort(function(a,b){
+      var ao=(a.status!=='done')?0:1, bo=(b.status!=='done')?0:1;
+      if(ao!==bo) return ao-bo;                       // 미해결 먼저
+      return (b.created_at||0)-(a.created_at||0);     // 그 안에서 최신순
+    });
+    document.getElementById('bcnt').textContent = rows.filter(function(b){return b.status!=='done';}).length;
+    var esc=function(x){return (x==null?'':String(x)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');};
+    document.getElementById('brows').innerHTML = rows.length ? rows.map(function(b){
+      var where=[];
+      if(b.step) where.push(esc(b.step)+'단계');
+      if(b.work_id) where.push('작업 '+esc(b.work_id));
+      if(b.job_id) where.push('job '+esc(b.job_id));
+      var url=b.page_url?('<div class=mini style="color:#5f6773">'+esc(b.page_url.slice(0,70))+'</div>'):'';
+      var errs=[];
+      try{ errs=JSON.parse(b.console_json||'[]'); }catch(e){ errs=[]; }
+      var errCell = errs.length
+        ? '<span style="color:#ff6b6b;cursor:pointer" title="'+esc(errs.join('\n'))+'">'+errs.length+'건 ⚠️</span>'
+        : '<span style="color:#5f6773">-</span>';
+      // 사진은 썸네일로 보여주고 누르면 원본을 새 탭에서 연다 — 대개 사진 한 장이면 즉시 갈린다.
+      var shot = b.shot_path
+        ? '<img src="/api/admin/bug-shot/'+encodeURIComponent(b.shot_path)+'" '+
+          'style="width:88px;height:60px;object-fit:cover;border-radius:6px;border:1px solid #2b3a3a;cursor:zoom-in" '+
+          'onclick="window.open(this.src)" title="눌러서 크게 보기">'
+        : '<span style="color:#5f6773">-</span>';
+      // 상태 배지 — 해결됐는지 한눈에. 답장을 보내면 서버가 자동으로 done이 된다.
+      var done = (b.status==='done');
+      var badge = done
+        ? '<span class="badge pro">✅ 해결됨</span>'
+        : '<span class="badge pending">🕓 미해결</span>';
+      var replied = b.reply
+        ? '<div class=mini style="color:#7ee787;margin-top:4px">💬 답장: '+esc(b.reply.slice(0,40))+(b.reply.length>40?'…':'')+'</div>'
+        : '';
+      // 해결된 줄은 눈에 덜 띄게 — 처리할 일(미해결)이 먼저 보여야 한다.
+      var dim = done ? ' style="opacity:.62"' : '';
+      var act = done
+        ? '<button class=bedit onclick="replyBug('+b.id+')">답장수정</button> '+
+          '<button class=btrial onclick="reopenBug('+b.id+')">다시 열기</button>'
+        : '<button class=bedit onclick="replyBug('+b.id+')">답장</button> '+
+          '<button class=bfree onclick="doneBug('+b.id+')">확인함</button>';
+      return '<tr'+dim+'><td class=mini>'+_bugWhen(b.created_at)+'<div style="margin-top:4px">'+badge+'</div></td>'+
+        '<td>'+esc(b.customer_name)+'<div class=mini style="color:#5f6773">cid '+b.customer_id+'</div></td>'+
+        '<td style="max-width:320px">'+esc(b.message)+url+replied+'</td>'+
+        '<td>'+shot+'</td>'+
+        '<td class=mini>'+(where.join('<br>')||'-')+'</td>'+
+        '<td>'+errCell+'</td>'+
+        '<td>'+act+'</td></tr>';
+    }).join('') : '<tr><td colspan=7 class=empty>신고 없음</td></tr>';
+  }).catch(function(e){
+    document.getElementById('bMsg').textContent='불러오기 실패: '+e.message;
+  });
+}
+function replyBug(id){
+  var t=prompt('고객에게 보낼 답장을 적어주세요.\n(고객이 다음 접속 때 화면에서 바로 봅니다)');
+  if(t==null) return;
+  t=t.trim();
+  if(!t){ alert('답장 내용이 비었습니다.'); return; }
+  fetch('/api/admin/bug-reports/'+id+'/reply',{method:'POST',
+    headers:{'Content-Type':'application/json'},body:JSON.stringify({reply:t})})
+    .then(function(r){return r.json();}).then(function(d){
+      if(!d||!d.ok) throw new Error((d&&d.error)||'실패');
+      document.getElementById('bMsg').textContent='답장 보냈습니다 (#'+id+')';
+      loadBugs();
+    }).catch(function(e){ alert('답장 실패: '+e.message); });
+}
+function doneBug(id){
+  fetch('/api/admin/bug-reports/'+id,{method:'POST',
+    headers:{'Content-Type':'application/json'},body:JSON.stringify({status:'done'})})
+    .then(function(){ loadBugs(); });
+}
+/* 다시 열기(2026-08-25) — 해결로 표시했는데 또 그러면 되돌린다.
+   서버는 status를 'open'|'done'만 받는다(app.py api_admin_bug_report_update). */
+function reopenBug(id){
+  fetch('/api/admin/bug-reports/'+id,{method:'POST',
+    headers:{'Content-Type':'application/json'},body:JSON.stringify({status:'open'})})
+    .then(function(){ loadBugs(); });
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',loadBugs);
+else loadBugs();
+</script>
+</div>
+<script src="/sidebar.js?v=2"></script>
+</body></html>

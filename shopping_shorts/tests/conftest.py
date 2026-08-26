@@ -24,3 +24,17 @@ def offline_dns(monkeypatch):
         return _PUBLIC_IP
 
     monkeypatch.setattr(socket, "gethostbyname", _fake_gethostbyname)
+
+
+@pytest.fixture(autouse=True)
+def _reset_gemini_key_cursor():
+    """키 라운드로빈 커서를 테스트마다 처음으로 되돌린다(2026-08-18).
+
+    _current_key_and_idx가 라운드로빈 페이서에 위임되면서 커서가 전역 상태가 됐다.
+    안 되돌리면 앞 테스트가 커서를 밀어놓아 "키1 소진 → 키2" 류 테스트가 순서에
+    따라 흔들린다(단독은 통과, 묶으면 실패).
+    """
+    from shopping_shorts import comment_gen as _cg
+    _cg._rr_cursor["i"] = 0
+    _cg._key_last_used.clear()
+    yield

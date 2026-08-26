@@ -1077,7 +1077,7 @@ git commit -m "refactor: report Gemini key status per key_vault group (adds embe
 
 ```python
 # scripts/generate_jh_images.py line 10, replace:
-API_KEY = os.environ.get("GEMINI_API_KEY") or "AIzaSyBnXfHkFh5YCOZdHYmKwqWXwVh7mrtF7U0"
+API_KEY = os.environ.get("GEMINI_API_KEY") or "AIza***폐기됨-2026-08-23-공개노출***"
 # with:
 API_KEY = os.environ.get("GEMINI_API_KEY")
 if not API_KEY:
@@ -1096,7 +1096,7 @@ git add scripts/generate_jh_images.py
 git commit -m "security: remove hardcoded Gemini API key literal from generate_jh_images.py"
 ```
 
-**Note:** the literal key `AIzaSyBnXfHkFh5YCOZdHYmKwqWXwVh7mrtF7U0` was committed to git history in this file. Removing it from the working copy does not remove it from history — flag to the user separately whether that key (a `YOUTUBE_API_KEY`-style key, unrelated to the `AQ.Ab8R...` Gemini keys) needs to be revoked in Google Cloud Console.
+**Note:** the literal key `AIza***폐기됨-2026-08-23-공개노출***` was committed to git history in this file. Removing it from the working copy does not remove it from history — flag to the user separately whether that key (a `YOUTUBE_API_KEY`-style key, unrelated to the `AQ.Ab8R...` Gemini keys) needs to be revoked in Google Cloud Console.
 
 ---
 

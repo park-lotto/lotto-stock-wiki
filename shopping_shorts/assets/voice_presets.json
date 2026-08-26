@@ -1092,5 +1092,383 @@
         ]
       }
     }
+  },
+  {
+    "preset_id": "tc-piljae-stable",
+    "group_id": "tc-piljae",
+    "variant": "stable",
+    "name": "필재",
+    "one_liner": "묵직하고 신뢰가는 남성",
+    "lang": "KR",
+    "archetype": "묵직하고 신뢰가는 남성",
+    "base_voice_id": "tc_68257f68bc6e3c161ab5078d",
+    "model_id": "ssfm-v30",
+    "voice_settings": {
+      "emotion": "normal",
+      "emotion_intensity": 1.0
+    },
+    "default_speed": 1.2,
+    "default_silence_trim": "mid",
+    "sample_file": "tc-piljae-stable.mp3",
+    "source_ref": "타입캐스트 지목 성우(2026-08-19)",
+    "origin": "curated",
+    "best": false
+  },
+  {
+    "preset_id": "tc-piljae-natural",
+    "group_id": "tc-piljae",
+    "variant": "natural",
+    "name": "필재",
+    "one_liner": "묵직하고 신뢰가는 남성",
+    "lang": "KR",
+    "archetype": "묵직하고 신뢰가는 남성",
+    "base_voice_id": "tc_68257f68bc6e3c161ab5078d",
+    "model_id": "ssfm-v30",
+    "voice_settings": {
+      "emotion": "normal",
+      "emotion_intensity": 1.3
+    },
+    "default_speed": 1.2,
+    "default_silence_trim": "mid",
+    "sample_file": "tc-piljae-natural.mp3",
+    "source_ref": "타입캐스트 지목 성우(2026-08-19)",
+    "origin": "curated",
+    "best": false
+  },
+  {
+    "preset_id": "tc-piljae-expressive",
+    "group_id": "tc-piljae",
+    "variant": "expressive",
+    "name": "필재",
+    "one_liner": "묵직하고 신뢰가는 남성",
+    "lang": "KR",
+    "archetype": "묵직하고 신뢰가는 남성",
+    "base_voice_id": "tc_68257f68bc6e3c161ab5078d",
+    "model_id": "ssfm-v30",
+    "voice_settings": {
+      "emotion": "toneup",
+      "emotion_intensity": 1.3
+    },
+    "default_speed": 1.2,
+    "default_silence_trim": "mid",
+    "sample_file": "tc-piljae-expressive.mp3",
+    "source_ref": "타입캐스트 지목 성우(2026-08-19)",
+    "origin": "curated",
+    "best": false
+  },
+  {
+    "preset_id": "tc-gunn-stable",
+    "group_id": "tc-gunn",
+    "variant": "stable",
+    "name": "김건",
+    "one_liner": "또렷하고 설득력 있는 남성",
+    "lang": "KR",
+    "archetype": "또렷하고 설득력 있는 남성",
+    "base_voice_id": "tc_61c2f7741330d213c238cba6",
+    "model_id": "ssfm-v30",
+    "voice_settings": {
+      "emotion": "normal",
+      "emotion_intensity": 1.0
+    },
+    "default_speed": 1.2,
+    "default_silence_trim": "mid",
+    "sample_file": "tc-gunn-stable.mp3",
+    "source_ref": "타입캐스트 지목 성우(2026-08-19)",
+    "origin": "curated",
+    "best": false
+  },
+  {
+    "preset_id": "tc-gunn-natural",
+    "group_id": "tc-gunn",
+    "variant": "natural",
+    "name": "김건",
+    "one_liner": "또렷하고 설득력 있는 남성",
+    "lang": "KR",
+    "archetype": "또렷하고 설득력 있는 남성",
+    "base_voice_id": "tc_61c2f7741330d213c238cba6",
+    "model_id": "ssfm-v30",
+    "voice_settings": {
+      "emotion": "normal",
+      "emotion_intensity": 1.3
+    },
+    "default_speed": 1.2,
+    "default_silence_trim": "mid",
+    "sample_file": "tc-gunn-natural.mp3",
+    "source_ref": "타입캐스트 지목 성우(2026-08-19)",
+    "origin": "curated",
+    "best": false
+  },
+  {
+    "preset_id": "tc-gunn-expressive",
+    "group_id": "tc-gunn",
+    "variant": "expressive",
+    "name": "김건",
+    "one_liner": "또렷하고 설득력 있는 남성",
+    "lang": "KR",
+    "archetype": "또렷하고 설득력 있는 남성",
+    "base_voice_id": "tc_61c2f7741330d213c238cba6",
+    "model_id": "ssfm-v30",
+    "voice_settings": {
+      "emotion": "toneup",
+      "emotion_intensity": 1.3
+    },
+    "default_speed": 1.2,
+    "default_silence_trim": "mid",
+    "sample_file": "tc-gunn-expressive.mp3",
+    "source_ref": "타입캐스트 지목 성우(2026-08-19)",
+    "origin": "curated",
+    "best": false
+  },
+  {
+    "preset_id": "tc-changsu-stable",
+    "group_id": "tc-changsu",
+    "variant": "stable",
+    "name": "박창수",
+    "one_liner": "친근하고 편안한 남성",
+    "lang": "KR",
+    "archetype": "친근하고 편안한 남성",
+    "base_voice_id": "tc_6059dad0b83880769a50502f",
+    "model_id": "ssfm-v30",
+    "voice_settings": {
+      "emotion": "normal",
+      "emotion_intensity": 1.0
+    },
+    "default_speed": 1.2,
+    "default_silence_trim": "mid",
+    "sample_file": "tc-changsu-stable.mp3",
+    "source_ref": "타입캐스트 지목 성우(2026-08-19)",
+    "origin": "curated",
+    "best": false
+  },
+  {
+    "preset_id": "tc-changsu-natural",
+    "group_id": "tc-changsu",
+    "variant": "natural",
+    "name": "박창수",
+    "one_liner": "친근하고 편안한 남성",
+    "lang": "KR",
+    "archetype": "친근하고 편안한 남성",
+    "base_voice_id": "tc_6059dad0b83880769a50502f",
+    "model_id": "ssfm-v30",
+    "voice_settings": {
+      "emotion": "normal",
+      "emotion_intensity": 1.3
+    },
+    "default_speed": 1.2,
+    "default_silence_trim": "mid",
+    "sample_file": "tc-changsu-natural.mp3",
+    "source_ref": "타입캐스트 지목 성우(2026-08-19)",
+    "origin": "curated",
+    "best": false
+  },
+  {
+    "preset_id": "tc-changsu-expressive",
+    "group_id": "tc-changsu",
+    "variant": "expressive",
+    "name": "박창수",
+    "one_liner": "친근하고 편안한 남성",
+    "lang": "KR",
+    "archetype": "친근하고 편안한 남성",
+    "base_voice_id": "tc_6059dad0b83880769a50502f",
+    "model_id": "ssfm-v30",
+    "voice_settings": {
+      "emotion": "toneup",
+      "emotion_intensity": 1.3
+    },
+    "default_speed": 1.2,
+    "default_silence_trim": "mid",
+    "sample_file": "tc-changsu-expressive.mp3",
+    "source_ref": "타입캐스트 지목 성우(2026-08-19)",
+    "origin": "curated",
+    "best": false
+  },
+  {
+    "preset_id": "tc-yongsik-stable",
+    "group_id": "tc-yongsik",
+    "variant": "stable",
+    "name": "용식이",
+    "one_liner": "능청스럽고 개성있는 남성",
+    "lang": "KR",
+    "archetype": "능청스럽고 개성있는 남성",
+    "base_voice_id": "tc_5feb2085cca1a479e73bac37",
+    "model_id": "ssfm-v30",
+    "voice_settings": {
+      "emotion": "normal",
+      "emotion_intensity": 1.0
+    },
+    "default_speed": 1.2,
+    "default_silence_trim": "mid",
+    "sample_file": "tc-yongsik-stable.mp3",
+    "source_ref": "타입캐스트 지목 성우(2026-08-19)",
+    "origin": "curated",
+    "best": false
+  },
+  {
+    "preset_id": "tc-yongsik-natural",
+    "group_id": "tc-yongsik",
+    "variant": "natural",
+    "name": "용식이",
+    "one_liner": "능청스럽고 개성있는 남성",
+    "lang": "KR",
+    "archetype": "능청스럽고 개성있는 남성",
+    "base_voice_id": "tc_5feb2085cca1a479e73bac37",
+    "model_id": "ssfm-v30",
+    "voice_settings": {
+      "emotion": "normal",
+      "emotion_intensity": 1.3
+    },
+    "default_speed": 1.2,
+    "default_silence_trim": "mid",
+    "sample_file": "tc-yongsik-natural.mp3",
+    "source_ref": "타입캐스트 지목 성우(2026-08-19)",
+    "origin": "curated",
+    "best": false
+  },
+  {
+    "preset_id": "tc-yongsik-expressive",
+    "group_id": "tc-yongsik",
+    "variant": "expressive",
+    "name": "용식이",
+    "one_liner": "능청스럽고 개성있는 남성",
+    "lang": "KR",
+    "archetype": "능청스럽고 개성있는 남성",
+    "base_voice_id": "tc_5feb2085cca1a479e73bac37",
+    "model_id": "ssfm-v30",
+    "voice_settings": {
+      "emotion": "toneup",
+      "emotion_intensity": 1.3
+    },
+    "default_speed": 1.2,
+    "default_silence_trim": "mid",
+    "sample_file": "tc-yongsik-expressive.mp3",
+    "source_ref": "타입캐스트 지목 성우(2026-08-19)",
+    "origin": "curated",
+    "best": false
+  },
+  {
+    "preset_id": "tc-moonjung-stable",
+    "group_id": "tc-moonjung",
+    "variant": "stable",
+    "name": "문정",
+    "one_liner": "차분하고 단정한 여성",
+    "lang": "KR",
+    "archetype": "차분하고 단정한 여성",
+    "base_voice_id": "tc_68f9c6a72f0f04a417bb136f",
+    "model_id": "ssfm-v30",
+    "voice_settings": {
+      "emotion": "normal",
+      "emotion_intensity": 1.0
+    },
+    "default_speed": 1.2,
+    "default_silence_trim": "mid",
+    "sample_file": "tc-moonjung-stable.mp3",
+    "source_ref": "타입캐스트 지목 성우(2026-08-19)",
+    "origin": "curated",
+    "best": false
+  },
+  {
+    "preset_id": "tc-moonjung-natural",
+    "group_id": "tc-moonjung",
+    "variant": "natural",
+    "name": "문정",
+    "one_liner": "차분하고 단정한 여성",
+    "lang": "KR",
+    "archetype": "차분하고 단정한 여성",
+    "base_voice_id": "tc_68f9c6a72f0f04a417bb136f",
+    "model_id": "ssfm-v30",
+    "voice_settings": {
+      "emotion": "normal",
+      "emotion_intensity": 1.3
+    },
+    "default_speed": 1.2,
+    "default_silence_trim": "mid",
+    "sample_file": "tc-moonjung-natural.mp3",
+    "source_ref": "타입캐스트 지목 성우(2026-08-19)",
+    "origin": "curated",
+    "best": false
+  },
+  {
+    "preset_id": "tc-moonjung-expressive",
+    "group_id": "tc-moonjung",
+    "variant": "expressive",
+    "name": "문정",
+    "one_liner": "차분하고 단정한 여성",
+    "lang": "KR",
+    "archetype": "차분하고 단정한 여성",
+    "base_voice_id": "tc_68f9c6a72f0f04a417bb136f",
+    "model_id": "ssfm-v30",
+    "voice_settings": {
+      "emotion": "toneup",
+      "emotion_intensity": 1.3
+    },
+    "default_speed": 1.2,
+    "default_silence_trim": "mid",
+    "sample_file": "tc-moonjung-expressive.mp3",
+    "source_ref": "타입캐스트 지목 성우(2026-08-19)",
+    "origin": "curated",
+    "best": false
+  },
+  {
+    "preset_id": "tc-valkyrie-stable",
+    "group_id": "tc-valkyrie",
+    "variant": "stable",
+    "name": "발키리",
+    "one_liner": "당차고 힘있는 여성",
+    "lang": "KR",
+    "archetype": "당차고 힘있는 여성",
+    "base_voice_id": "tc_60478557f12456064b353409",
+    "model_id": "ssfm-v30",
+    "voice_settings": {
+      "emotion": "normal",
+      "emotion_intensity": 1.0
+    },
+    "default_speed": 1.2,
+    "default_silence_trim": "mid",
+    "sample_file": "tc-valkyrie-stable.mp3",
+    "source_ref": "타입캐스트 지목 성우(2026-08-19)",
+    "origin": "curated",
+    "best": false
+  },
+  {
+    "preset_id": "tc-valkyrie-natural",
+    "group_id": "tc-valkyrie",
+    "variant": "natural",
+    "name": "발키리",
+    "one_liner": "당차고 힘있는 여성",
+    "lang": "KR",
+    "archetype": "당차고 힘있는 여성",
+    "base_voice_id": "tc_60478557f12456064b353409",
+    "model_id": "ssfm-v30",
+    "voice_settings": {
+      "emotion": "normal",
+      "emotion_intensity": 1.3
+    },
+    "default_speed": 1.2,
+    "default_silence_trim": "mid",
+    "sample_file": "tc-valkyrie-natural.mp3",
+    "source_ref": "타입캐스트 지목 성우(2026-08-19)",
+    "origin": "curated",
+    "best": false
+  },
+  {
+    "preset_id": "tc-valkyrie-expressive",
+    "group_id": "tc-valkyrie",
+    "variant": "expressive",
+    "name": "발키리",
+    "one_liner": "당차고 힘있는 여성",
+    "lang": "KR",
+    "archetype": "당차고 힘있는 여성",
+    "base_voice_id": "tc_60478557f12456064b353409",
+    "model_id": "ssfm-v30",
+    "voice_settings": {
+      "emotion": "toneup",
+      "emotion_intensity": 1.3
+    },
+    "default_speed": 1.2,
+    "default_silence_trim": "mid",
+    "sample_file": "tc-valkyrie-expressive.mp3",
+    "source_ref": "타입캐스트 지목 성우(2026-08-19)",
+    "origin": "curated",
+    "best": false
   }
 ]

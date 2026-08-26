@@ -54,6 +54,18 @@ STYLE_CHANNELS = [
     (54, "maison_homedino", "물건 발견형"),
 ]
 
+# ★축 단위로 뽑는 스파인(2026-08-21). 52·53·54는 **채널**에서 뽑았지만
+#   57·58·59는 채널이 아니라 **훅 문형 축**으로 만든 틀이라 근거도 축이어야 한다.
+#   실측으로 채널 단위가 안 맞는다는 걸 확인했다:
+#     사회증거축의 최다 채널은 2편뿐 · 금지경고축 최다 채널(homeditor_insta)은
+#     이미 53이 쓰고 있어 두 스파인이 같은 말버릇을 갖게 된다.
+#   축 이름은 `shopping_shorts.hook_axis.AXES`가 정본이다(여기서 새로 정의하지 않는다).
+STYLE_AXES = [
+    (57, "다이소지목", "다이소 내부인형"),
+    (58, "금지경고", "금지경고형"),
+    (59, "사회증거", "사회증거형"),
+]
+
 TOP_N = 12          # 시드가 쓴 표본과 같은 수 — 근거를 갈라 두지 않는다
 MAX_CHARS = 12000   # 프롬프트 상한(전사 12편이면 8~10천자 수준)
 
@@ -107,6 +119,40 @@ def _texts_for_channel(db_path, username, top_n=TOP_N):
         except Exception:      # noqa: BLE001 — 깨진 행 하나로 전체를 죽이지 않는다
             continue
         # 전사는 저장 시점에 따라 full_text 또는 segments[].text 로 들어 있다(둘 다 실재).
+        txt = (d.get("full_text") or "").strip()
+        if not txt:
+            txt = " ".join((s.get("text") or "").strip()
+                           for s in (d.get("segments") or [])).strip()
+        if txt:
+            out.append((shortcode, txt))
+    return out
+
+
+def _texts_for_axis(db_path, axis, top_n=TOP_N):
+    """그 **훅 문형 축**에 속한 전사 본문 — 조회수 상위 N편.
+
+    ★채널이 아니라 축으로 모으는 이유는 위 STYLE_AXES 주석 참고.
+    ★판정은 `hook_axis.axis_of` 하나만 쓴다 — 정규식을 여기 다시 적지 않는다(0순위-B).
+    """
+    from shopping_shorts.hook_axis import axis_of
+    con = sqlite3.connect(db_path)
+    try:
+        rows = con.execute(
+            "SELECT e.shortcode, e.script_json, COALESCE(a.views, 0) v "
+            "FROM script_extracts e LEFT JOIN channel_archive a ON a.shortcode = e.shortcode "
+            "ORDER BY v DESC").fetchall()
+    finally:
+        con.close()
+    out = []
+    for shortcode, raw, _v in rows:
+        if len(out) >= top_n:
+            break
+        try:
+            d = json.loads(raw) if raw else {}
+        except Exception:      # noqa: BLE001 — 깨진 행 하나로 전체를 죽이지 않는다
+            continue
+        if axis_of(d) != axis:
+            continue
         txt = (d.get("full_text") or "").strip()
         if not txt:
             txt = " ".join((s.get("text") or "").strip()
@@ -173,10 +219,11 @@ def extract_voice(texts):
     return clean_voice(raw) if raw else {}
 
 
-def run_one(store, db_path, spine_id, username, label, dry=False):
-    texts = _texts_for_channel(db_path, username)
+def run_one(store, db_path, spine_id, username, label, dry=False, axis=""):
+    # 축이 주어지면 축으로, 아니면 종전대로 채널로 모은다(기존 동작 보존).
+    texts = _texts_for_axis(db_path, axis) if axis else _texts_for_channel(db_path, username)
     if not texts:
-        print("  [건너뜀] %s — 쌓인 전사 0건 (새로 전사하지 않는다)" % username)
+        print("  [건너뜀] %s — 쌓인 전사 0건 (새로 전사하지 않는다)" % (axis or username))
         return False
     voice = extract_voice(texts)
     if not voice or not any(voice.get(k) for k in ("onomatopoeia", "intensifier", "endings")):
@@ -196,21 +243,29 @@ def main(argv):
     ap.add_argument("--spine", type=int)
     ap.add_argument("--channel")
     ap.add_argument("--all", action="store_true")
+    ap.add_argument("--axis", help="훅 문형 축 이름(채널 대신 축으로 모은다)")
+    ap.add_argument("--all-axes", action="store_true", help="STYLE_AXES 전부")
     ap.add_argument("--dry", action="store_true")
     a = ap.parse_args(argv)
 
     store = Store(DB_PATH)
-    if a.all:
+    axis_mode = False
+    if a.all_axes:
+        targets, axis_mode = STYLE_AXES, True
+    elif a.spine and a.axis:
+        targets, axis_mode = [(a.spine, a.axis, "")], True
+    elif a.all:
         targets = STYLE_CHANNELS
     elif a.spine and a.channel:
         targets = [(a.spine, a.channel, "")]
     else:
-        ap.error("--all 또는 (--spine N --channel 아이디)")
+        ap.error("--all / --all-axes / (--spine N --channel 아이디) / (--spine N --axis 축이름)")
 
     ok = 0
-    for spine_id, username, label in targets:
-        print("[%s] spine=%s" % (username, spine_id))
-        if run_one(store, DB_PATH, spine_id, username, label, dry=a.dry):
+    for spine_id, who, label in targets:
+        print("[%s] spine=%s%s" % (who, spine_id, " (축)" if axis_mode else ""))
+        if run_one(store, DB_PATH, spine_id, who, label, dry=a.dry,
+                   axis=(who if axis_mode else "")):
             ok += 1
     print("\n완료 %d/%d" % (ok, len(targets)))
     return 0 if ok else 1

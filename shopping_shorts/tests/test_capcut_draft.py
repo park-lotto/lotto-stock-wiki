@@ -162,3 +162,43 @@ def test_capcut_audio_reflects_head_trim():
     seg = aud_track["segments"][0]
     assert seg["source_timerange"]["start"] == _us(0.5)   # 앞트림이 source_start로
     assert seg["source_timerange"]["duration"] == _us(4.0)
+
+
+# ── 자막은 '캡션(subtitle)'으로 나가야 한다 (2026-08-26 고객 요청) ──────────────
+# ★고객 제보(진진님): "캡컷에 보내보니 자막이 **텍스트**로 붙더라. 캡션으로 붙게 해주시면
+#   좋겠다. 텍스트로 오니 (숏템에서 맞춘 게 틀어져) 일일이 조정해야 해서 시간이 걸린다."
+# ★기준값은 전부 **실측**이다 — 사장님 캡컷 프로젝트('곰팡이 방지 실리콘' 등 5개)에서
+#   캡컷이 직접 저장한 draft_content.json을 읽어 대조했다(추측한 값이 하나도 없다).
+#     캡션 : type='subtitle' · check_flag=31 · line_max_width=10.0 · border_width=0.24
+#     텍스트: type='text'    · check_flag=7  · line_max_width=0.82
+#   ★트랙 타입은 캡션도 'text'다 — 여기를 바꾸면 오히려 캡컷이 못 읽는다.
+def test_자막_머티리얼은_캡션타입이다():
+    draft, _ = _build()
+    texts = draft["materials"]["texts"]
+    assert texts, "자막 머티리얼이 없다"
+    for t in texts:
+        assert t["type"] == "subtitle", (
+            f"자막이 '{t['type']}'로 나간다 — 캡컷에서 텍스트로 붙어 일일이 고쳐야 한다")
+
+
+def test_캡션_판정필드가_실측값과_같다():
+    """캡컷이 자막 패널에서 다루려면 이 값들을 본다 — 하나만 어긋나도 텍스트로 취급된다."""
+    t = _build()[0]["materials"]["texts"][0]
+    assert t["check_flag"] == 31, f"check_flag={t['check_flag']} (캡컷 캡션은 31)"
+    assert t["line_max_width"] == 10.0
+    assert t["recognize_type"] == 0
+    assert "recognize_task_id" in t and "base_content" in t
+
+
+def test_트랙타입은_그대로_text다():
+    """★캡션이라고 트랙까지 subtitle로 바꾸면 안 된다 — 실측상 캡컷도 트랙은 text다."""
+    draft, _ = _build()
+    kinds = [tr["type"] for tr in draft["tracks"]]
+    assert "text" in kinds and "subtitle" not in kinds, kinds
+
+
+def test_세그먼트_렌더인덱스가_캡션기준이다():
+    draft, _ = _build()
+    seg = [tr for tr in draft["tracks"] if tr["type"] == "text"][0]["segments"][0]
+    assert seg["render_index"] == 0, "텍스트 관례(14000)가 남아 있다"
+    assert seg["track_render_index"] == 2

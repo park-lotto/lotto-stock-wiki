@@ -13,6 +13,7 @@ no-op으로 스텁해 **startPreview·pollPreview가 한 줄도 실행되지 않
 비동기 배선을 실제로 구동한다.
 """
 import pathlib
+import re
 import shutil
 import subprocess
 
@@ -80,6 +81,10 @@ function showPanel(){ refreshNextBtn(); }
 function saveWork(){}   // 상태유지(2026-07-19): jump/go/startProduceMix가 단계·job을 서버에 남긴다 — 슬라이스 밖 심볼
 function alert(){}
 function pollMix(){}                        // 슬라이스 밖 — 이 테스트는 미리보기 게이트만 본다
+// 3단계 상태줄 helper(2026-08-23). 슬라이스 밖 심볼 — 없으면 startProduceMix가
+// ReferenceError로 죽어 이 게이트 테스트가 통째로 빨간불이 된다(실측).
+function setMixStatusText(){}
+function drawMixStatus(){}   // #mixStatus를 그리는 유일한 함수 — 슬라이스 밖 심볼
 // startProduceMix가 소스 URL을 collectMixUrls()로 읽는다(2026-07-18 개편). 슬라이스 밖 심볼이라
 // 여기서 준다 — 실제 로직과 동일(영상풀 담긴 것 + 입력칸, 중복 제거). HANDOFF는 이 테스트에선 빈다.
 var HANDOFF = [];
@@ -139,6 +144,17 @@ _SCENARIO_GATE = r"""
   if (canGoNext() !== true) fails.push('미리보기가 나왔는데도 다음이 잠겨 있다 — 진행 불가');
   PREVIEW_STATUS = 'failed';
   if (canGoNext() !== true) fails.push('렌더 실패인데 탈출구가 없다 — ffmpeg 문제 하나로 갇힌다(스펙 §7.1)');
+  // ★전체재생 완주 통과(2026-08-17). 렌더 1분35초를 기다리는 대신 실제 재생만으로 연다 —
+  //   사장님이 확인하는 셋(조각이 튀나/자막이 장면당 맞나/TTS와 속도가 같나)이 전부 보이고,
+  //   자막 계산이 렌더와 같은 함수(app.py _lab_captions)라 싱크가 동일하기 때문이다.
+  PREVIEW_STATUS = null; WATCHED_ALL = false;
+  if (canGoNext() !== false) fails.push('아무것도 안 했는데 다음이 열려 있다');
+  onPlayAllFinished();
+  if (WATCHED_ALL !== true) fails.push('전체재생을 끝까지 봤는데 WATCHED_ALL이 안 섰다');
+  if (canGoNext() !== true) fails.push('전체재생을 끝까지 봤는데도 다음이 잠겨 있다 — 1분35초를 또 기다려야 한다');
+  // ★버튼만 눌러선 안 열린다: 완주 콜백이 오기 전엔 그대로 잠김(안 보고 열리면 게이트가 무의미).
+  WATCHED_ALL = false;
+  if (canGoNext() !== false) fails.push('완주 전인데 게이트가 열렸다 — 안 보고도 유료 단계로 간다');
   if (fails.length) { console.error('FAIL: ' + fails.join(' / ')); process.exit(1); }
   console.log('PASS');
 })();
@@ -153,10 +169,15 @@ _SCENARIO_BTN = r"""
   // btnNext 게이트도 cur===0에서 cur===7로 같이 옮겨왔다 — 게이트는 여전히 "매칭 리뷰+미리보기를
   // 하는 그 패널"에 걸린다, 다만 그 패널이 이제 7번이다.
   PREVIEW_STATUS = null;  cur = 7;  refreshNextBtn();
-  if (b.disabled !== true) fails.push('화면 붙이기(매칭)·미리보기 전인데 btnNext가 안 잠겼다');
+  // ★2026-08-18부터 게이트는 disabled(회색)가 아니라 **버튼 문구**로 알린다(사장님 지시).
+  //   막는 판정 자체는 go()가 한다 — 여기선 "왜 못 넘어가는지 화면에 보이나"를 본다.
+  if (!/확정하세요/.test(String(b.textContent || '')))
+    fails.push('화면 붙이기(매칭)·미리보기 전인데 [다음]이 이유를 안 알려준다');
   if (!String(b.title || '').trim()) fails.push('왜 잠겼는지 안내(title)가 없다');
   PREVIEW_STATUS = 'ready'; refreshNextBtn();
   if (b.disabled !== false) fails.push('미리보기 후에도 btnNext가 잠겨 있다');
+  if (/확정하세요/.test(String(b.textContent || '')))
+    fails.push('미리보기를 봤는데도 [다음]이 아직 안내 문구다');
   // 다른 단계에선 이 게이트가 끼어들면 안 된다
   PREVIEW_STATUS = null; cur = 2; refreshNextBtn();
   if (b.disabled !== false) fails.push('3단계인데 화면 붙이기 게이트가 다음을 잠갔다');
@@ -349,8 +370,8 @@ _SCENARIO_REMATCH_RELOCKS_GATE = r"""
     fails.push('재매칭했는데 옛 job의 미리보기 상태가 남았다(' + PREVIEW_STATUS + ') — 새 영상을 못 본 채 게이트가 열린다');
   if (canGoNext() !== false)
     fails.push('재매칭 중인데 canGoNext()가 true — [다음]을 누르면 J2를 한 번도 못 본 채 유료 자막제거로 넘어간다');
-  if (btn.disabled !== true)
-    fails.push('재매칭 중인데 btnNext가 열려 있다');
+  if (!/확정하세요/.test(String(btn.textContent || '')))
+    fails.push('재매칭 중인데 btnNext가 열려 있다(안내 문구가 없다)');
 
   // 4) 옛 **미리보기** 폴러가 죽어야 한다(안 죽이면 옛 job을 2.5초마다 계속 두드린다).
   //    ⚠️ _timers 전체를 세면 안 된다 — startProduceMix가 MIX_POLL(매칭 폴러)을 **정당하게** 만든다.
@@ -408,13 +429,26 @@ def test_preview_gate_scenarios(name, scenario, tmp_path):
 
 
 def test_preview_video_is_muted_by_default():
-    """★사장님 지시: 음소거가 기본값. 열면 조용하고, 원하면 켠다(스펙 §4.2)."""
+    """★사장님 지시: 음소거가 기본값. 열면 조용하고, 원하면 켠다(스펙 §4.2).
+
+    2026-08-22 조정: 예전엔 `mix/preview/`의 **첫 등장** 앞 300자를 봤는데, 확정 결과를
+    장면편집 안으로 옮기면서 그 첫 등장이 URL을 조립하는 `const src = ...` 줄이 됐다
+    (video 태그는 그 아래). 위치 대신 **_renderPreviewVideo가 실제로 그리는 태그**를
+    직접 집는다 — 위아래로 줄이 늘어도 안 깨지고, 검사하려던 것은 그대로다.
+    ★확정 결과 재생 자리가 장면편집(scene_lab)으로 옮겨졌으므로 **거기 태그도** 같이
+    본다(2026-08-22). 안 그러면 이제 사장님이 실제로 보는 쪽이 검사 밖에 남는다.
+    """
     html = PRODUCE_HTML.read_text(encoding="utf-8")
-    i = html.find("mix/preview/")
-    assert i != -1, "미리보기 <video>가 없다"
-    tag = html[max(0, i - 300): i + 100]
-    assert "muted" in tag, f"미리보기 video에 muted가 없다 — 열자마자 소리가 난다: {tag[-160:]!r}"
-    assert "controls" in tag, "controls가 없다 — 음소거 해제·탐색을 못 한다"
+    assert "mix/preview/" in html, "미리보기 URL이 없다"
+    body = html.split("function _renderPreviewVideo(")[1].split("\n// 편집안")[0]
+    checked = re.findall(r"<video [^>]*>", body)
+    lab = (PRODUCE_HTML.parent / "scene_lab.html").read_text(encoding="utf-8")
+    lab_body = lab.split("function showConfirmVideo(")[1].split("\nfunction ")[0]
+    checked += re.findall(r"<video [^>]*>", lab_body)
+    assert len(checked) >= 2, f"미리보기 video를 못 찾았다(찾은 것: {checked!r})"
+    for tag in checked:
+        assert "muted" in tag, f"미리보기 video에 muted가 없다 — 열자마자 소리가 난다: {tag!r}"
+        assert "controls" in tag, f"controls가 없다 — 음소거 해제·탐색을 못 한다: {tag!r}"
 
 
 def test_preview_url_has_cache_buster():
@@ -435,7 +469,13 @@ def test_go_has_gate_guard():
     html = PRODUCE_HTML.read_text(encoding="utf-8")
     i = html.find("function go(d){")
     assert i != -1, "go() 못 찾음"
-    body = html[i: i + 320]
+    # ★2026-08-22 조정 — 지우지 말고 읽어라(단언 자체는 그대로다).
+    #   종전엔 `html[i:i+320]`으로 **글자 수 320개**를 잘라 봤다. 이건 시한폭탄이다:
+    #   go() 안의 주석이나 안내 문구가 몇 글자만 길어져도 jump(가 창 밖으로 밀려나
+    #   기능은 멀쩡한데 테스트만 깨진다(실측: 확정 버튼 삭제로 토스트 문구가 길어지자
+    #   바로 FAIL). 창 크기가 아니라 **함수 본문**을 보게 바꾼다 — 지키려는 규약
+    #   ("go는 jump로 위임한다")은 하나도 안 느슨해졌다.
+    body = html[i:].split("\nfunction ", 1)[0]
     assert "jump(" in body, f"go()가 jump()로 위임하지 않는다 — 게이트 가드를 우회할 수 있다: {body[:180]!r}"
     # jump() 자체는 여전히 stepLocked로 게이트를 지킨다(위임 대상이 가드를 갖고 있는지 확인).
     j = html.find("function jump(")

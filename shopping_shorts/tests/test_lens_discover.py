@@ -371,3 +371,80 @@ def test_search_similar_videos_cuts_photo_posts(monkeypatch):
     assert [i["url"] for i in out] == ["https://www.instagram.com/reel/BBB222/"]
     assert [i["is_photo"] for i in out] == [False]
     assert st["cut_photo"] == 1
+
+
+# ── 검색 국가 고르기 (2026-08-22 사장님 "김밥 렌즈를 해외까지 돌릴 거 없잖아") ──
+# 왜: 지금은 로케일 4벌이 **무조건** 다 나간다. 국내 소재인 걸 아는데도 SerpApi를
+#     4회 쓴다. 부르는 쪽이 국가를 고르면 1회로 줄어든다(잔량 4배).
+# ★ 고른 국가만 도는가 / 안 고르면 종전대로 전부 도는가 — 둘 다 고정한다.
+
+def _locale_spy(monkeypatch):
+    """_lens_call이 어떤 로케일로 불렸는지 기록한다."""
+    seen = []
+    monkeypatch.setattr(lens_discover, "SERPAPI_KEYS", ["fake"])
+    monkeypatch.setattr(lens_discover, "SERPAPI_KEY", "fake")
+
+    def _spy(image_url, keys, hl, country, timeout, budget=None, dead=None):
+        seen.append((hl, country))
+        if budget is not None:
+            budget[0] -= 1
+        return []
+    monkeypatch.setattr(lens_discover, "_lens_call", _spy)
+    return seen
+
+
+def test_locales_인자가_없으면_종전대로_전부_돈다(monkeypatch):
+    """기존 호출부는 한 글자도 안 고쳐도 그대로 돌아야 한다(회귀 0)."""
+    seen = _locale_spy(monkeypatch)
+    lens_discover.search_similar_videos("https://ex.com/f.jpg")
+    assert seen == list(lens_discover._LENS_LOCALES)
+
+
+def test_locales_로_고른_나라만_돈다(monkeypatch):
+    """★한국만 고르면 SerpApi가 1회만 나간다 — 이게 이 기능의 전부다."""
+    seen = _locale_spy(monkeypatch)
+    lens_discover.search_similar_videos("https://ex.com/f.jpg", locales=[("ko", "kr")])
+    assert seen == [("ko", "kr")]
+
+
+def test_locales_두_나라를_고르면_그_둘만_돈다(monkeypatch):
+    """★설정에 실제로 있는 로케일로만 고른다 — ja:jp는 서버 env에만 있어서
+    로컬(_LENS_LOCALES = ko·en·zh 3벌)에서 쓰면 필터에 걸려 테스트가 환경을 탄다."""
+    seen = _locale_spy(monkeypatch)
+    pick = list(lens_discover._LENS_LOCALES)[:2]
+    assert len(pick) == 2, "설정 로케일이 2개 미만이면 이 테스트는 의미가 없다"
+    lens_discover.search_similar_videos("https://ex.com/f.jpg", locales=pick)
+    assert seen == pick
+
+
+def test_locales_가_비면_전부_돈다(monkeypatch):
+    """★빈 목록으로 렌즈가 빈손이 되는 사고를 막는다 — 0개면 종전 전체로 되돌린다.
+
+    프론트가 칩을 전부 끈 채 보내거나, 옛 화면이 빈 값을 보낼 수 있다."""
+    seen = _locale_spy(monkeypatch)
+    lens_discover.search_similar_videos("https://ex.com/f.jpg", locales=[])
+    assert seen == list(lens_discover._LENS_LOCALES)
+
+
+def test_locales_모르는_나라는_걸러낸다(monkeypatch):
+    """설정에 없는 로케일은 무시한다 — 아무 값이나 SerpApi로 흘려보내지 않는다."""
+    seen = _locale_spy(monkeypatch)
+    lens_discover.search_similar_videos(
+        "https://ex.com/f.jpg", locales=[("ko", "kr"), ("xx", "yy")])
+    assert seen == [("ko", "kr")]
+
+
+def test_locales_전부_모르는_값이면_전부_돈다(monkeypatch):
+    """걸러낸 결과가 0개여도 빈손이 되면 안 된다(위 빈 목록과 같은 안전핀)."""
+    seen = _locale_spy(monkeypatch)
+    lens_discover.search_similar_videos("https://ex.com/f.jpg", locales=[("xx", "yy")])
+    assert seen == list(lens_discover._LENS_LOCALES)
+
+
+def test_한_나라만_고르면_예산도_한_번만_쓴다(monkeypatch):
+    """비용 절감이 목적이다 — 고른 수만큼만 SerpApi를 쓴다."""
+    stats = {}
+    _locale_spy(monkeypatch)
+    lens_discover.search_similar_videos("https://ex.com/f.jpg",
+                                        locales=[("ko", "kr")], stats=stats)
+    assert stats["serpapi_calls"] == 1

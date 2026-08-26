@@ -10,6 +10,7 @@ Apify 또는 무료 Playwright, 2026-07-30 config.INSTAGRAM_SCRAPER로 분기 �
 프론트는 '중단됨'으로 처리한다."""
 import threading
 import time
+from datetime import datetime, timezone
 import re
 from concurrent.futures import ThreadPoolExecutor
 from shopping_shorts.config import DB_PATH
@@ -54,6 +55,18 @@ CATEGORIES = [
     "#뷰티꿀템", "#화장품추천", "#스킨케어", "#헤어템", "#다이어트템",
     # ── 생활 기타 ──
     "#육아꿀템", "#유아용품", "#반려묘용품", "#차량용품", "#여행템", "#사무용품",
+    # ── 신박템(2026-08-20 사장님 "신박템 이런쪽으로 많이 올라오면 좋겠다 / 레시피가 너무 많아") ──
+    # ★왜 이 축이 안 올라왔나: 입구를 세어보니 요리·레시피 8개(#자취요리 #밀프렙 #간편요리
+    #   #에어프라이어요리 #자취생요리 #집밥 #반찬레시피 #baking) vs 신박템 3개(#아이디어상품
+    #   #만능템 #유용한템)였다. 발굴은 **입구에 넣은 만큼만** 나온다 — 레시피가 많은 게 아니라
+    #   신박템을 찾으라고 시킨 적이 거의 없었던 것이다.
+    # 유튜브 쪽은 이미 score_sul이 제품정체형·오용형을 보고 있다(harvest_styles_forever.py).
+    #   인스타엔 그에 대응하는 입구가 없어 여기서 맞춘다.
+    # ⚠️죽은 태그는 그냥 0건이라 해롭지 않다(위 주석의 "태그 추가는 싸다" — 태그당 ~13s이고
+    #   회차 시간은 max_total이 지배한다). 어느 태그가 실제로 채널을 남기는지는 다음 회차
+    #   실측으로 가려낸다 — 지금 넣는 목록은 후보이지 검증된 값이 아니다.
+    "#신박템", "#신기한물건", "#아이디어템", "#신박한제품", "#꿀아이템",
+    "#생활발명품", "#발명품", "#신기템", "#희한한물건", "#이런것도있어요",
 ]
 
 # 누적 모드에서 채널을 며칠간 보존할지(마지막으로 발굴에 잡힌 시점 기준).
@@ -196,7 +209,9 @@ def _run(days, max_total, accumulate, auto_register=False):
             raise RuntimeError("발굴 0건 — 세션/차단 의심, 직전 피드 유지")
         store.save_discovery_feed(items)
         store.save_run(
-            time.strftime("%Y-%m-%d %H:%M"),
+            # UTC로 통일(2026-08-25) — 수집 경로(service.py)는 UTC로 저장하는데
+            # 여기만 로컬(KST)이라 같은 테이블에 9시간 어긋난 회차가 섞여 있었다.
+            datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M"),
             [{"shortcode": i["shortcode"], "username": i["username"],
               "comments": i["comments"], "delta": i["delta"]} for i in items],
         )

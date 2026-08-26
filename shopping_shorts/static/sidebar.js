@@ -31,22 +31,43 @@
   var NAV = [
     { label: "리서치", items: [
       { icon: "📊", text: "레퍼런스 랭킹",   href: "/", free: true },
-      { icon: "⭐", text: "영상 즐겨찾기",   href: "/collection" },
+      // ★free:true = 잠금(🔒) 대상에서 뺀다. 서버 화이트리스트(_FREE_EXACT_GET)와 짝이다 —
+      //   서버만 열고 여기를 안 열면 체험 사용자는 눌러도 페이월 모달만 보고 못 들어간다.
+      { icon: "⭐", text: "영상 즐겨찾기",   href: "/collection", free: true },
       { icon: "🔎", text: "신규채널 픽업",   href: "/discover" },
       { icon: "🎞️", text: "장면 라이브러리", href: "/scene_library" },
       { icon: "🏆", text: "역대 히트작",     href: "/archive", admin: true },
       { icon: "📋", text: "레퍼런스 채널 관리", href: "/refs", admin: true },
     ] },
     { label: "제작", items: [
-      { icon: "🎬", text: "숏템 제작소",     href: "/produce" },
+      // 제작소는 등급에 따라 서버가 다른 파일을 준다(full=진짜 / 그 외=얼린 미리보기).
+      // 그래서 잠그지 않는다 — 사장님 지시 "열어두되 사용 자체가 안 되게".
+
+      // ★go = 실제로 이동할 주소(2026-08-24 사장님 "그냥 새로운 작업하려면 빈 페이지").
+      //   href는 그대로 /produce로 둔다 — 위 active 판정(it.href === path)과
+      //   유료게이트 data-ss-href가 **쿼리 없는 경로**로 맞춰져 있어서,
+      //   href에 ?new=1을 붙이면 제작소에서 이 메뉴의 활성표시가 죽는다.
+      //   ?new=1 → produce.html _bootRestore가 clearWork() 후 빈 작업을 열어준다.
+      //   기존 작업은 아래 '내 작업'(?work=<id>) 목록에 그대로 남는다 — 유실 0.
+      //   ⚠ 랭킹의 '제작소로 보내기'는 재료를 sessionStorage에 담고 **쿼리 없는**
+      //      /produce로 가야 한다(_consumeProduceHandoff) — 그쪽은 안 건드린다.
+      { icon: "🎬", text: "숏템 제작소",     href: "/produce", go: "/produce?new=1", free: true },
+      // 1기 챌린지(2026-08-24) — 하루 2영상 업로드 챌린지.
+      // free:true는 서버 _FREE_EXACT_GET과 짝이다(챌린지 참가자격은 결제등급과 별개).
+      { icon: "🔥", text: "1기 챌린지",      href: "/challenge", free: true },
+      { icon: "🏁", text: "챌린지 관리",     href: "/challenge/admin", free: true, admin: true },
     ] },
     { label: "소통", items: [
       { icon: "💬", text: "인스타 소통공간", href: "/outreach" },
+      // 도움말(2026-08-23) — 반복 문의를 줄이는 자리. 로그인 없이도 열리므로 free.
+      { icon: "❓", text: "도움말·자주 묻는 질문", href: "/help", free: true },
+      // 오류 신고(2026-08-24 사장님 지시) — href 없이 클릭만 받는다(id로 잡는다).
+      // ★고객에게 "job_id 알려주세요"라고 물으면 못 받는다. 화면이 자동으로 담는다.
+      { icon: "🐞", text: "오류 신고", id: "ssBugBtn", free: true },
     ] },
-    // free:true — 포인트를 충전하려면 무료 등급도 들어올 수 있어야 한다(결제 게이트 제외).
-    { label: "설정", items: [
-      { icon: "⚙️", text: "내 설정",  href: "/settings", free: true },
-    ] },
+    // ★2026-08-17 '설정 > 내 설정' 그룹을 없앴다. 상단 계정 카드의 '마이페이지'와
+    //   같은 곳(/settings)인데 이름만 달라서, 사장님이 키 등록표를 못 찾으셨다.
+    //   진입점을 하나로 둔다 — 계정 카드(아래 _accountCard)와 모바일 메뉴뿐이다.
   ];
 
   // 현재 경로 정규화: '/index.html'·'/'→'/', '/mix.html'→'/mix'
@@ -119,10 +140,23 @@
     // 데스크톱: 상단 계정 카드에 '⚙️ 내 계정'이 있어 이 메뉴는 중복 → 숨김. 모바일은 카드가
     // 숨겨지므로(.ss-acct display:none) 이 메뉴를 노출한다(2026-07-24).
     "@media(min-width:761px){.ss-group-acct{display:none}}" +
+    // 모바일 전용 계정 버튼 — 기본은 숨김, 위 @media(max-width:760px)에서만 켠다.
+    ".ss-acct-mbtn{display:none;align-items:center;gap:6px;flex-shrink:0;cursor:pointer;" +
+      "min-height:44px;padding:0 10px;border:1px solid var(--line,#1e2735);border-radius:10px;" +
+      "background:var(--inset,#0c1412);font-family:inherit}" +
+    ".ss-acct-mbtn .ss-acct-av{width:26px;height:26px;font-size:13px}" +
+    ".ss-acct-mbtn .ss-acct-mtier{font-size:11.5px;font-weight:800}" +
+    ".ss-acct-mbtn .ss-acct-mcar{font-size:9px;color:var(--sub,#8b98a9)}" +
     "@media(max-width:760px){body{flex-direction:column}" +
       ".ss-nav{width:100%;border-right:none;border-bottom:1px solid var(--line,#1e2735);display:flex;gap:6px;" +
         "overflow-x:auto;align-items:center;white-space:nowrap;padding:10px 12px}" +
-      ".ss-acct{display:none}" +   // 모바일 가로바엔 계정카드 공간이 없다 → /account로
+      // ★모바일에서 카드를 통째로 숨기면 오늘 사용량·등급·로그아웃에 닿을 길이 없다
+      //   (2026-08-26 사장님 제보). 숨기는 대신 가로띠의 아바타 버튼으로 펼친다.
+      //   position:fixed = 가로띠가 overflow-x:auto라 그 안에 absolute로 두면 잘린다.
+      ".ss-acct{display:none;position:fixed;left:8px;right:8px;margin:0;z-index:9999;" +
+        "max-height:72vh;overflow:auto;box-shadow:0 14px 36px rgba(0,0,0,.6)}" +
+      ".ss-acct.ss-open{display:block}" +
+      ".ss-acct-mbtn{display:flex}" +
       // 모바일 가로바에선 가운데정렬을 되돌린다(옆으로 메뉴가 붙는 자리라 왼쪽 고정)
       ".ss-nav h1{margin:0 8px 0 0;flex-shrink:0;font-size:19px;justify-content:flex-start}" +
       ".ss-group{margin:0;padding:0;background:none;border:none;display:flex;gap:6px;align-items:center}" +
@@ -171,11 +205,20 @@
     g.items.forEach(function (it) {
       var active = !!it.href && (it.href === path || (it.href === "/" && path === "/"));
       // 관리자 전용 항목(admin:true)은 기본 숨김으로 렌더 → /api/me가 is_admin이면 아래에서 노출.
-      var cls = "ss-item" + (active ? " active" : "") + (it.href ? "" : " ss-disabled") + (it.admin ? " ss-admin-only" : "");
+      // id 항목(오류 신고 등)은 링크가 아니라 **그 자리에서 창을 여는 버튼**이다 —
+      // href가 없다고 ss-disabled(회색)로 만들면 눌리지 않는다(2026-08-24).
+      var isBtn = !it.href && !!it.id;
+      var cls = "ss-item" + (active ? " active" : "") + ((it.href || isBtn) ? "" : " ss-disabled") + (it.admin ? " ss-admin-only" : "");
       var hide = it.admin ? ' style="display:none"' : "";
-      var onclick = it.href && !active ? ' onclick="location.href=\'' + esc(it.href) + "'\"" : "";
+      // 클릭 목적지는 go가 있으면 go, 없으면 href(종전과 동일).
+      var target = it.go || it.href;
+      // ★active여도 go가 있으면 클릭을 살린다 — 제작소를 보고 있을 때도
+      //   이 버튼을 눌러 빈 작업으로 가야 한다(같은 경로라 종전엔 클릭이 죽어 있었다).
+      var onclick = isBtn ? ' onclick="ssOpenBugReport()"' :
+          target && (!active || it.go) ? ' onclick="location.href=\'' + esc(target) + "'\"" : "";
       var payAttr = (it.href ? ' data-ss-href="' + esc(it.href) + '"' : "") + (it.free ? ' data-ss-free="1"' : "");
-      html += '<div class="' + cls + '"' + payAttr + hide + onclick + ">" + it.icon + " " + it.text + "</div>";
+      var idAttr = it.id ? ' id="' + it.id + '"' : "";
+      html += '<div class="' + cls + '"' + idAttr + payAttr + hide + onclick + ">" + it.icon + " " + it.text + "</div>";
     });
     html += "</div>";
   });
@@ -183,8 +226,8 @@
   // 내 계정 메뉴 — 데스크톱에선 상단 계정 카드(_accountCard)의 '⚙️ 내 계정'과 중복이라 숨긴다.
   // 단 모바일(≤760px)에선 그 카드(.ss-acct)가 공간 부족으로 display:none이라, 이 메뉴가 /account·
   // 로그아웃에 닿는 유일한 통로다 → 모바일에만 노출(ss-item-acct + 아래 @media)(2026-07-24).
-  html += '<div class="ss-group ss-group-acct"><div class="ss-item ss-item-acct" data-ss-href="/account" data-ss-free="1"' +
-          ' onclick="location.href=\'/account\'">👤 내 계정</div></div>';
+  html += '<div class="ss-group ss-group-acct"><div class="ss-item ss-item-acct" data-ss-href="/settings" data-ss-free="1"' +
+          ' onclick="location.href=\'/settings\'">👤 마이페이지</div></div>';
 
   // 테마 토글(민트-블랙 ↔ 화이트-민트). data-theme + localStorage로 전 페이지 공유.
   // 최종 FOUC 방지는 각 페이지 <head> 인라인 스니펫이 하고(렌더 전 실행), 여기선 라벨 동기화만.
@@ -341,23 +384,44 @@
   // ── 유료게이트(2026-07-19): /api/me 등급으로 UI를 잠근다. sidebar.js는 6개 페이지 공유라
   //    여기 한 곳이면 전 페이지에 체험배너·🔒메뉴·만료안내가 걸린다. ──
   var _pw = { level: "full", contact: {} };
-  function _pwModal() {
+  // opts.title/opts.body가 오면 그 사유로 띄운다. 기본은 '체험 만료' 안내.
+  // ★402는 사유가 둘이다 — 등급부족(미들웨어)과 **포인트 부족**(_charge_or_402).
+  //   둘을 같은 문구로 띄우면 오진한다: 2026-08-20 체험 계정이 등급 full인데 잔액 0이라
+  //   402가 났는데 화면은 "무료 체험이 끝났어요"였다 → "체험 부여가 연동 안 됐다"로 읽혔다.
+  function _pwModal(opts) {
+    opts = opts || {};
     var ex = document.getElementById("ss-pw-modal");
-    if (ex) { ex.style.display = "flex"; return; }
+    if (ex) ex.remove();   // 사유가 다를 수 있으니 다시 그린다
     var k = _pw.contact.kakao || "", ph = _pw.contact.phone || "";
     var m = document.createElement("div");
     m.id = "ss-pw-modal";
     m.style.cssText = "position:fixed;inset:0;z-index:2147483647;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;font-family:'Malgun Gothic',system-ui,sans-serif";
     m.innerHTML = '<div style="background:#16161c;border:1px solid #2a2a30;border-radius:16px;padding:28px 26px;max-width:340px;text-align:center;color:#e8e8ea">' +
       '<div style="font-size:40px">🔒</div>' +
-      '<div style="font-size:18px;font-weight:800;margin:10px 0 6px">무료 체험이 끝났어요</div>' +
-      '<div style="font-size:14px;color:#b8b8c0;line-height:1.6">이 기능은 결제하시면 계속 쓸 수 있어요.<br>담아둔 영상·자료는 <b>그대로 보존</b>돼요.</div>' +
+      '<div style="font-size:18px;font-weight:800;margin:10px 0 6px">' + escHtml(opts.title || "무료 체험이 끝났어요") + '</div>' +
+      '<div style="font-size:14px;color:#b8b8c0;line-height:1.6">' +
+        // 줄바꿈(\n)은 <br>로 — escHtml 먼저 하고 바꾼다(순서 반대면 태그가 escape된다).
+        (opts.body ? escHtml(opts.body).replace(/\n/g, "<br>")
+                   : '이 기능은 결제하시면 계속 쓸 수 있어요.<br>담아둔 영상·자료는 <b>그대로 보존</b>돼요.') + '</div>' +
       '<div style="margin-top:14px;font-size:14px;color:#7db4ff">' +
         (k ? "카톡: " + escHtml(k) + "<br>" : "") +
         (ph ? "전화: " + escHtml(ph) : "") +
         (!k && !ph ? "결제를 원하시면 안내받으신 판매 채널로 문의해 주세요." : "") +
       "</div>" +
-      '<div style="margin-top:18px"><button id="ss-pw-close" style="background:#4f9dfa;color:#111;border:0;border-radius:8px;padding:10px 22px;font-weight:800;font-size:14px;cursor:pointer">닫기</button></div>' +
+      // 결제로 가는 길(2026-08-23). 예전엔 '카톡 문의'만 있어서, 계좌를 넣어놔도
+      // 기존 회원은 결제 안내 화면으로 갈 방법이 아예 없었다(사장님이 일일이 카톡으로
+      // 계좌를 알려줘야 했다). 주소·문구는 서버(/api/me pay_cta)가 정한 것을 그대로 쓴다.
+      (_pw.cta && _pw.cta.href
+        ? '<div style="margin-top:18px"><a id="ss-pw-pay" href="' + escHtml(_pw.cta.href) + '"' +
+          (/^https?:\/\//.test(_pw.cta.href) ? ' target="_blank" rel="noopener"' : "") +
+          ' style="display:block;background:linear-gradient(135deg,#6ff0d6,#1f9e7a);color:#08110e;' +
+          'border-radius:10px;padding:13px 20px;font-weight:800;font-size:15px;text-decoration:none">' +
+          escHtml(_pw.cta.label || "💳 결제 안내") + "</a></div>"
+        : "") +
+      '<div style="margin-top:' + (_pw.cta && _pw.cta.href ? "10px" : "18px") + '"><button id="ss-pw-close" style="background:' +
+      (_pw.cta && _pw.cta.href ? "transparent;color:#8a8a92;border:1px solid #2a2a30" : "#4f9dfa;color:#111;border:0") +
+      ';border-radius:8px;padding:10px 22px;font-weight:800;font-size:14px;cursor:pointer">' +
+      escHtml(opts.closeLabel || "닫기") + "</button></div>" +
       "</div>";
     document.body.appendChild(m);
     document.getElementById("ss-pw-close").onclick = function () { m.style.display = "none"; };
@@ -408,7 +472,10 @@
     if (admin) { tier = "관리자"; tierColor = "#ffd97a"; sub = "전 기능 · 무제한"; }
     else if (d.plan === "pro") { tier = "프로"; tierColor = "#6ff0d6"; sub = "전 기능 이용중"; }
     else if (d.level === "pending") { tier = "승인대기"; tierColor = "#ffa94d"; sub = "승인 후 이용 가능해요"; }
-    else if (typeof d.days_left === "number" && d.days_left > 0) { tier = "체험 D-" + d.days_left; tierColor = "#7db4ff"; sub = "만료 후엔 랭킹만 열려요"; }
+    else if (typeof d.days_left === "number" && d.days_left > 0) { tier = "체험 D-" + d.days_left; tierColor = "#7db4ff";
+      // 체험판(plan="trial")은 처음부터 랭킹전용이다 — 옛 문구("만료 후엔 랭킹만")는
+      // 지금 다 쓸 수 있다는 뜻으로 읽혀 오해를 준다.
+      sub = (d.plan === "trial") ? "랭킹·즐겨찾기·렌즈 10회/일" : "만료 후엔 랭킹만 열려요"; }
     else { tier = "무료"; tierColor = "#8b98a9"; sub = "랭킹 열람만 가능해요"; }
     var usage = "";
     if (d.usage && d.usage_limits) {
@@ -427,27 +494,156 @@
           '<div class="ss-acct-badge" style="color:' + tierColor + ";border-color:" + tierColor + '">' + escHtml(tier) + "</div></div></div>" +
       '<div class="ss-acct-sub">' + escHtml(sub) + "</div>" + usage + member +
       '<div class="ss-acct-links">' +
-        (admin ? '<a href="/admin" target="_blank" rel="noopener" class="ss-acct-link wide" style="color:#ffd97a;border-color:#5a4a1e">🔐 관리페이지</a>' : '') +
-        '<a href="/account" class="ss-acct-link">⚙️ 내 계정</a>' +
+        // ★새 탭(target=_blank)으로 열지 않는다(2026-08-24 사장님 "주소창 없이 따로 뜬다").
+        //   레퍼런스 랭킹 등 다른 메뉴처럼 **같은 창에서** 이어서 열려야 사이드바가
+        //   유지되고 뒤로가기도 자연스럽다.
+        (admin ? '<a href="/admin" class="ss-acct-link wide" style="color:#ffd97a;border-color:#5a4a1e">🔐 관리페이지</a>' : '') +
+        '<a href="/settings" class="ss-acct-link">👤 마이페이지</a>' +
         '<a href="#" class="ss-acct-link" onclick="window.__ssLogout();return false">↩ 로그아웃</a></div>';
+    // 모바일 전용 여는 버튼(2026-08-26) — 가로띠엔 카드를 펼칠 자리가 없다.
+    //   아바타+등급만 띄우고, 누르면 위 카드가 시트로 내려온다.
+    var mbtn = document.createElement("button");
+    mbtn.className = "ss-acct-mbtn"; mbtn.id = "ss-acct-mbtn";
+    mbtn.setAttribute("aria-label", "내 계정 · 오늘 사용량");
+    mbtn.innerHTML = '<span class="ss-acct-av">' + initial + "</span>" +
+      '<span class="ss-acct-mtier" style="color:' + tierColor + '">' + escHtml(tier) + "</span>" +
+      '<span class="ss-acct-mcar">▼</span>';
+    mbtn.onclick = function (e) { e.stopPropagation(); window.__ssAcctToggle(); };
+
     var h1 = nav.querySelector("h1");
-    if (h1 && h1.nextSibling) nav.insertBefore(card, h1.nextSibling);
-    else nav.insertBefore(card, nav.firstChild);
+    var after = (h1 && h1.nextSibling) ? h1.nextSibling : nav.firstChild;
+    if (after) { nav.insertBefore(mbtn, after); nav.insertBefore(card, after); }
+    else { nav.appendChild(mbtn); nav.appendChild(card); }
+  }
+  // 모바일 계정 시트 열고닫기. 가로띠 바로 아래에 붙도록 top을 그때그때 잰다
+  // (가로띠 높이가 페이지마다 다르다 — 상수로 박으면 어긋난다).
+  window.__ssAcctToggle = function (force) {
+    var c = document.getElementById("ss-acct");
+    if (!c || !c.classList) return;
+    var open = (force === false) ? false : (force === true ? true : !c.classList.contains("ss-open"));
+    if (open) {
+      var nav = document.querySelector(".ss-nav");
+      if (nav && nav.getBoundingClientRect) c.style.top = (nav.getBoundingClientRect().bottom + 6) + "px";
+      c.classList.add("ss-open");
+    } else {
+      c.classList.remove("ss-open");
+    }
+    var car = document.querySelector("#ss-acct-mbtn .ss-acct-mcar");
+    if (car) car.textContent = open ? "▲" : "▼";
+  };
+  // 바깥을 누르면 닫는다 — 시트가 화면을 덮은 채 남으면 앱이 멈춘 것처럼 보인다.
+  if (document.addEventListener) {
+    document.addEventListener("click", function (e) {
+      var c = document.getElementById("ss-acct");
+      if (!c || !c.classList || !c.classList.contains("ss-open")) return;
+      if (c.contains && c.contains(e.target)) return;
+      var b = document.getElementById("ss-acct-mbtn");
+      if (b && b.contains && b.contains(e.target)) return;
+      window.__ssAcctToggle(false);
+    });
   }
   function initPaywall() {
     fetch("/api/me").then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
       if (!d) return;
       _pw.level = d.level; _pw.contact = d.contact || {};
+      _pw.cta = d.pay_cta || null;
       _accountCard(d);   // 로고 아래 계정 패널
       if (d.level === "ranking_only") _pwLockSidebar();
       else if (typeof d.days_left === "number" && d.days_left >= 0 && d.plan !== "pro") _pwBanner(d.days_left);
+      _payPrompt(d);     // 미결제 회원에게 결제 안내 팝업(하루 1회)
     }).catch(function () {});
   }
+
+  // ── 결제 안내 팝업 (2026-08-23, 사장님 요청) ──────────────────────
+  // 무료·체험 회원이 로그인하면 하루 1회 결제 안내를 띄운다.
+  // ★안 뜨는 조건은 **등급으로만** 판정한다 — 사장님이 입금을 확인하고 승인하면
+  //   plan이 pro가 되고, 그 순간부터 자동으로 안 뜬다. 별도 '봤음' 처리가 필요 없다
+  //   (플래그를 따로 두면 승인했는데도 계속 뜨는 사고가 난다).
+  // 승인대기(pending)는 애초에 이 화면을 못 본다 — 서버가 전용 안내화면을 준다.
+  var _PAY_SEEN_KEY = "ss_pay_prompt_day";
+  function _payPrompt(d) {
+    if (!d || d.is_admin || d.plan === "pro") return;   // 결제한 사람·관리자에겐 안 뜬다
+    if (!(_pw.cta && _pw.cta.href)) return;             // 결제 안내가 준비 안 됐으면 조용히 넘긴다
+    var today = new Date().toISOString().slice(0, 10);  // YYYY-MM-DD
+    try { if (localStorage.getItem(_PAY_SEEN_KEY) === today) return; } catch (e) {}
+    try { localStorage.setItem(_PAY_SEEN_KEY, today); } catch (e) {}
+    setTimeout(function () {
+      _pwModal({
+        title: "가입 신청 감사합니다 🙏",
+        body: "숏템메이커 1기 · 1년 이용권 770,000원\n"
+            + "아래에서 결제 안내를 확인하실 수 있어요.\n"
+            + "입금 후 알려주시면 바로 열어드립니다.",
+        closeLabel: "나중에"
+      });
+    }, 900);   // 화면이 다 그려진 뒤에 띄운다(로딩 중 겹쳐 보이지 않게)
+  }
   // 유료 API가 402(등급부족)를 주면 만료 안내 모달 — 페이지 내 어떤 유료버튼이든 공통 처리.
+  //
+  // ★모달은 **사장님이 뭔가를 눌러서 난 402**에만 뜬다(2026-08-21 근본 수정).
+  //   실사고: 체험 D-7(사용량 0/10)인 랭킹 전용 계정이 랭킹 페이지를 열자마자
+  //   "무료 체험이 끝났어요"를 봤다. 아무것도 안 눌렀는데 떴다 — 페이지가 로드되며
+  //   스스로 부르는 배경 호출들이 402를 받았기 때문이다(서버 실측, 한 번의 접속에서
+  //   /api/produce/works · /api/admin/pending · /api/prune/removed · /api/discover/added
+  //   4개가 동시에 402). 이 계정 등급에서 그 API들이 402인 것 자체는 **정상**이다.
+  //   틀린 건 "402면 무조건 모달"이라는 판정이었다.
+  //
+  //   ⚠️ URL 목록으로 거르지 않는다. 위 4개는 오늘 걸린 것일 뿐이고, 배경 호출은
+  //      페이지마다 계속 늘어난다(index.html·discover.html에도 이미 있다) — 목록은
+  //      반드시 썩는다(CLAUDE.md: 손 관리 목록은 이미 3번 썩었다). 대신 **가른다**:
+  //      사용자의 조작에서 비롯됐는가. 배경 호출은 정의상 아무도 안 누른 순간에 난다.
+  //
+  //   판정은 여기 한 곳에서만 한다(0순위-B). 잠긴 메뉴를 눌렀을 때 뜨는 모달은
+  //   _pwLockSidebar가 __ssShowPaywall을 직접 부르므로 이 규칙과 무관하게 그대로 산다.
+  // 402의 **사유는 서버가 정한다**(2026-08-21). 화면이 사유를 다시 판단하면 어긋난다
+  // (0순위-B). 실사고: 체험판 계정이 마감일 8/28로 멀쩡히 남아 있는데 잠긴 기능을 누를
+  // 때마다 "무료 체험이 끝났어요"를 봤다 — 서버는 정확히 "유료 기능이에요"라고 보냈는데
+  // 화면이 그 문장을 버리고 만료 문구를 재사용한 탓이다.
+  //
+  // ★체험판(plan=trial)은 기간과 무관하게 랭킹 전용이다(app.py access_level, 2026-08-21
+  //   사장님 확정) — 즉 '막혔다'와 '끝났다'는 애초에 다른 말이다. 섞으면 사장님도
+  //   고객도 "결제했는데 왜 막히지 / 체험 중인데 왜 끝났대"로 읽는다.
+  function _pwReason(d) {
+    var msg = (d && d.error) || "";
+    var lvl = (d && d.level) || "";
+    if (/포인트/.test(msg)) return { title: "포인트가 부족해요", body: msg };
+    if (lvl === "ranking_only") {
+      return { title: "체험판에서는 잠긴 기능이에요",
+               body: (msg || "유료 기능이에요.") +
+                     " 체험 기간은 그대로 남아 있고, 레퍼런스 랭킹은 계속 쓰실 수 있어요." };
+    }
+    // 사유를 모르면 서버 문장이라도 그대로 보여준다. 기본 만료 문구는 마지막 수단이다.
+    return msg ? { body: msg } : {};
+  }
+
+  var _lastGesture = 0;
+  ["pointerdown", "keydown", "click", "submit"].forEach(function (ev) {
+    // capture 단계 — 페이지 핸들러가 stopPropagation을 걸어도 우리는 먼저 본다.
+    window.addEventListener(ev, function () { _lastGesture = Date.now(); }, true);
+  });
+  // 조작 → 요청 사이에 허용할 간격. 누른 뒤 곧바로 나가는 요청만 '사용자 것'으로 본다.
+  // 8초·30초로 도는 폴러는 이 창을 넘겨 자연히 배제된다(폴러 목록을 관리할 필요가 없다).
+  var _GESTURE_MS = 3000;
   var _origFetch = window.fetch;
   window.fetch = function () {
+    // ★판정 시각은 **응답이 아니라 요청**이다. 느린 API가 5초 뒤에 402를 줘도,
+    //   누르고 나간 요청이면 사장님에겐 방금 누른 그 버튼의 결과다.
+    var byUser = (Date.now() - _lastGesture) < _GESTURE_MS;
+    // ★url은 여기서 붙잡는다 — 아래 then 안의 arguments는 (resp)라 호출 주소가 아니다.
+    var _reqUrl = arguments[0];
     return _origFetch.apply(this, arguments).then(function (resp) {
-      if (resp && resp.status === 402) { try { _pwModal(); } catch (e) {} }
+      if (resp && resp.status === 402) {
+        if (!byUser) {
+          // 배경 호출의 402 — 정상 동작이다. 조용히 넘기되 흔적은 남긴다
+          // (조용히 삼키면 다음에 "왜 안 되지"가 된다).
+          try { console.debug("[paywall] 배경 호출 402 — 모달 생략:", _reqUrl); } catch (e) {}
+          return resp;
+        }
+        // 응답 본문을 복제해서 읽는다(원본은 호출부가 그대로 쓴다).
+        try {
+          resp.clone().json().then(function (d) { _pwModal(_pwReason(d)); })
+                             .catch(function () { _pwModal(); });
+        } catch (e) { try { _pwModal(); } catch (e2) {} }
+      }
       return resp;
     });
   };
@@ -456,6 +652,7 @@
   // /api/admin/pending 을 폴링한다. 관리자만 200 → 폴러 유지, 비관리자는 첫 응답이 비-200이라
   // 조용히 꺼진다(부하·노출 없음). 새 가입(newest_id 증가)이 감지되면 소리+토스트.
   var _SS_SEEN_KEY = "ss_signup_last_seen";     // 마지막으로 본 최신 가입 id(localStorage) — 새로고침 넘어 유지
+  var _SS_BUG_SEEN_KEY = "ss_bug_last_seen";    // 오류 신고도 같은 방식(2026-08-25)
   var _ssAudioCtx = null;
 
   function _ssDing() {
@@ -499,6 +696,39 @@
       '<div style="font-size:15px;font-weight:700">' + _ssEsc(who) + '</div>' +
       (sub ? '<div style="font-size:12px;color:#9db;margin-top:2px">' + _ssEsc(sub) + '</div>' : '') +
       '<div style="font-size:12px;color:#7fd6a8;margin-top:8px;font-weight:700">클릭 → 승인하러 가기 →</div>';
+    card.onclick = function () { location.href = "/admin"; };
+    box.appendChild(card);
+    setTimeout(function () { try { card.style.transition = "opacity .4s"; card.style.opacity = "0"; setTimeout(function () { card.remove(); }, 400); } catch (e) {} }, 12000);
+    if (!document.getElementById("ssSignupKf")) {
+      var st = document.createElement("style"); st.id = "ssSignupKf";
+      st.textContent = "@keyframes ssSlideIn{from{transform:translateX(30px);opacity:0}to{transform:none;opacity:1}}";
+      document.head.appendChild(st);
+    }
+  }
+
+  // 오류 신고 팝업(2026-08-25 사장님 "접수되면 가입·입금처럼 왼쪽 상단에 작은 팝업").
+  // 가입 토스트와 **같은 자리·같은 소리**를 쓰되 주황으로 구분한다 — 새 배선을 만들지
+  // 않는다(0순위-B). 클릭하면 관리페이지로 간다(가입 알림과 동일한 동작).
+  function _ssBugToast(newest, count) {
+    if (!document.body) return;
+    var box = document.getElementById("ssSignupToasts");
+    if (!box) {
+      box = document.createElement("div");
+      box.id = "ssSignupToasts";
+      box.style.cssText = "position:fixed;top:16px;right:16px;z-index:99999;display:flex;flex-direction:column;gap:10px;max-width:340px;font-family:system-ui,sans-serif";
+      document.body.appendChild(box);
+    }
+    var who = (newest && newest.customer_name) || "고객";
+    var msg = (newest && newest.message) || "";
+    var card = document.createElement("div");
+    card.style.cssText = "background:#181008;color:#f6ecdf;border:1px solid #7a4a12;border-left:4px solid #f0912b;border-radius:12px;padding:14px 16px;box-shadow:0 8px 28px rgba(0,0,0,.45);cursor:pointer;animation:ssSlideIn .25s ease";
+    card.innerHTML =
+      '<div style="font-size:13px;font-weight:800;color:#f0912b;margin-bottom:4px">🐞 새 오류 신고' +
+      (count > 1 ? ' <span style="color:#ffd9a8">· 미해결 ' + count + '건</span>' : '') + '</div>' +
+      '<div style="font-size:15px;font-weight:700">' + _ssEsc(who) + '</div>' +
+      (msg ? '<div style="font-size:12.5px;color:#d9c3a6;margin-top:3px;line-height:1.45">' +
+             _ssEsc(msg.length > 60 ? msg.slice(0, 60) + "…" : msg) + '</div>' : '') +
+      '<div style="font-size:12px;color:#f0b16b;margin-top:8px;font-weight:700">클릭 → 확인하러 가기 →</div>';
     card.onclick = function () { location.href = "/admin"; };
     box.appendChild(card);
     setTimeout(function () { try { card.style.transition = "opacity .4s"; card.style.opacity = "0"; setTimeout(function () { card.remove(); }, 400); } catch (e) {} }, 12000);
@@ -576,6 +806,19 @@
               _ssOpsToast(a);
             });
           } catch (e) { /* 사고 알림 실패가 승인 폴러를 죽이면 안 된다 */ }
+          // 오류 신고(2026-08-25) — 가입과 똑같은 규칙: 첫 방문엔 기준선만 잡고
+          // 조용히 있는다(기존 신고로 시끄럽게 울리지 않는다).
+          try {
+            var bugId = d.bug_newest_id || 0;
+            var bugSeen = parseInt(window.localStorage.getItem(_SS_BUG_SEEN_KEY) || "0", 10) || 0;
+            if (firstRun && bugSeen === 0) {
+              window.localStorage.setItem(_SS_BUG_SEEN_KEY, String(bugId));
+            } else if (bugId > bugSeen) {
+              _ssDing();
+              _ssBugToast(d.bug_newest, d.bug_open);
+              window.localStorage.setItem(_SS_BUG_SEEN_KEY, String(bugId));
+            }
+          } catch (e) { /* 신고 알림 실패가 승인 폴러를 죽이면 안 된다 */ }
           firstRun = false;
           setTimeout(tick, 25000);                  // 관리자면 25초마다 계속
         })
@@ -596,5 +839,249 @@
     mountWorks();
     initPaywall();
     initSignupAlert();
+  }
+})();
+
+/* ── 오류 신고 + 답장(쪽지) — 2026-08-24 사장님 지시 ─────────────────────────
+   "오류신고 버튼 만들기 / 내 관리페이지에 보이기 / 바로 버그 수정하고 쪽지를 남겨줄 수 있나"
+
+   ★고객에게 job_id·URL·콘솔오류를 물어보면 못 받는다. 실제로 김만기님 제작 4회 전패를
+     화면 캡처만으로는 못 찾았고 서버 DB를 뒤져서야 원인을 알았다(일레븐랩스 키 대신 키 ID).
+     그래서 고객은 **한 줄만 쓰고**, 진단 정보는 화면이 스스로 담아 보낸다.
+   ★자바스크립트 오류도 몰래 모아둔다 — "화면이 하얘요"의 진짜 원인이 대개 여기 있다. */
+(function () {
+  var ERRS = [];
+  window.addEventListener("error", function (e) {
+    ERRS.push(String((e && e.message) || e) + " @" + ((e && e.filename) || "?") + ":" + ((e && e.lineno) || 0));
+    if (ERRS.length > 20) ERRS.shift();
+  });
+  window.addEventListener("unhandledrejection", function (e) {
+    ERRS.push("promise: " + String((e && e.reason && e.reason.message) || (e && e.reason) || e));
+    if (ERRS.length > 20) ERRS.shift();
+  });
+
+  function q(name) {
+    var m = new RegExp("[?&]" + name + "=([^&]+)").exec(location.search);
+    return m ? decodeURIComponent(m[1]) : "";
+  }
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+  function css() {
+    if (document.getElementById("ssBugCss")) return;
+    var st = document.createElement("style");
+    st.id = "ssBugCss";
+    st.textContent =
+      ".ssbug-back{position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:99999;display:flex;" +
+      "align-items:center;justify-content:center;padding:16px}" +
+      ".ssbug{background:#141a1a;border:1px solid #2b3a3a;border-radius:14px;max-width:560px;width:100%;" +
+      "padding:24px;color:#e8eaed;font-size:16px;line-height:1.65;box-shadow:0 12px 40px rgba(0,0,0,.5);" +
+      "max-height:92vh;overflow:auto}" +
+      ".ssbug h3{margin:0 0 8px;font-size:21px;color:#6ff0d6}" +
+      ".ssbug p.sub{margin:0 0 16px;color:#9db2b2;font-size:15px}" +
+      ".ssbug textarea{width:100%;box-sizing:border-box;min-height:120px;background:#0e1414;color:#e8eaed;" +
+      "border:1px solid #2b3a3a;border-radius:10px;padding:13px;font:inherit;font-size:16.5px;resize:vertical}" +
+      ".ssbug .info{margin:12px 0 0;font-size:14px;color:#9db2b2;background:#0e1414;border-radius:8px;padding:11px 13px}" +
+      ".ssbug .info b{color:#c7d2d2;font-weight:600}" +
+      ".ssbug .drop{margin-top:12px;border:1px dashed #35494a;border-radius:10px;padding:14px;text-align:center;" +
+      "font-size:14.5px;color:#9db2b2;background:#0e1414}" +
+      ".ssbug .drop button{background:#1e2b2b;color:#cfe3e3;border:0;border-radius:9px;padding:9px 15px;" +
+      "font:inherit;font-size:14.5px;font-weight:600;cursor:pointer;flex:none}" +
+      ".ssbug .row{display:flex;gap:10px;margin-top:18px}" +
+      ".ssbug button{flex:1;padding:14px;border-radius:10px;border:0;font:inherit;font-size:16.5px;" +
+      "font-weight:700;cursor:pointer}" +
+      ".ssbug .ok{background:#6ff0d6;color:#062b25}.ssbug .no{background:#222c2c;color:#c7d2d2}" +
+      ".ssbug .msg{margin-top:14px;font-size:15.5px}";
+    document.head.appendChild(st);
+  }
+
+  /* 지금 화면이 무엇을 하고 있었나 — 고객이 몰라도 되는 것들을 화면이 대신 안다. */
+  function context() {
+    var job = "";
+    try { job = (window.JOB_ID || (window.MIX && window.MIX.job_id) || ""); } catch (e) { job = ""; }
+    var step = "";
+    try {
+      var on = document.querySelector(".step.active, .stepper .active, [data-step].active");
+      step = on ? (on.getAttribute("data-step") || (on.textContent || "").trim().slice(0, 30)) : "";
+    } catch (e) { step = ""; }
+    return {
+      page_url: location.href.slice(0, 500),
+      work_id: q("work"),
+      job_id: String(job || ""),
+      step: step,
+      console: ERRS.slice(-20)
+    };
+  }
+
+
+  /* ★2026-08-24 사장님: "지금 페이지 url을 첨부해야하는거 아닌가? 사진? 링크?
+        그 문제 장면도 같이 해줘야 판단이 쉽지 / 글자 잘보이게"
+     - URL은 원래도 자동으로 보내고 있었지만 **고객에게 안 보였다** → 눈에 보이게 적는다.
+     - 화면 사진을 붙일 수 있게 한다: [사진 고르기] · Ctrl+V 붙여넣기 · 끌어다 놓기 셋 다.
+       윈도우는 Win+Shift+S로 찍으면 클립보드에 들어가므로 **붙여넣기가 가장 빠른 길**이다.
+     - 글자를 키운다(시니어 타깃) — 본문 16px, 입력칸 16.5px. */
+  var SHOT = null;                       /* data:image/... 한 장 */
+
+  function shrink(file, cb) {
+    /* 화면 사진은 대개 2~4MB다. 1280px·JPEG로 줄여 보낸다 — 판독에는 충분하고
+       업로드가 빠르며 서버 6MB 상한에도 안 걸린다. 실패하면 원본을 그대로 쓴다. */
+    var fr = new FileReader();
+    fr.onload = function () {
+      var img = new Image();
+      img.onload = function () {
+        try {
+          var max = 1280, w = img.width, h = img.height;
+          var r = Math.min(1, max / Math.max(w, h));
+          var cv = document.createElement("canvas");
+          cv.width = Math.round(w * r); cv.height = Math.round(h * r);
+          cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
+          cb(cv.toDataURL("image/jpeg", 0.8));
+        } catch (e) { cb(fr.result); }
+      };
+      img.onerror = function () { cb(fr.result); };
+      img.src = fr.result;
+    };
+    fr.onerror = function () { cb(null); };
+    fr.readAsDataURL(file);
+  }
+
+  function setShot(file) {
+    if (!file || !/^image\//.test(file.type)) return;
+    var box = document.getElementById("ssBugShot");
+    if (box) box.innerHTML = '<span style="color:#8aa0a0">사진 줄이는 중…</span>';
+    shrink(file, function (d) {
+      SHOT = d;
+      if (!box) return;
+      box.innerHTML = d
+        ? '<img src="' + d + '" style="max-width:100%;max-height:190px;border-radius:8px;' +
+          'border:1px solid #2b3a3a">' +
+          '<div style="margin-top:6px"><button type="button" id="ssShotDel" ' +
+          'style="background:#2a2020;color:#ff9b9b;border:0;border-radius:8px;padding:7px 12px;' +
+          'font:inherit;cursor:pointer">사진 빼기</button></div>'
+        : '<span style="color:#ff9b9b">사진을 읽지 못했어요</span>';
+      var del = document.getElementById("ssShotDel");
+      if (del) del.onclick = function () { SHOT = null; box.innerHTML = ""; };
+    });
+  }
+
+  window.ssOpenBugReport = function () {
+    css();
+    var back = document.createElement("div");
+    back.className = "ssbug-back";
+    SHOT = null;
+    back.innerHTML =
+      '<div class="ssbug" role="dialog" aria-modal="true">' +
+        "<h3>🐞 오류 신고</h3>" +
+        '<p class="sub">어떤 문제인지 한 줄만 적어주세요.<br>' +
+          '<b style="color:#cfe3e3">문제가 보이는 화면 사진</b>을 같이 보내주시면 훨씬 빨리 찾습니다.</p>' +
+        '<textarea id="ssBugText" placeholder="예) 5단계에서 영상 만들기를 누르면 계속 실패해요"></textarea>' +
+        '<div class="drop" id="ssBugDrop">' +
+          '📷 <b>화면 사진</b> — <button type="button" id="ssShotPick">사진 고르기</button>' +
+          '<div style="margin-top:8px;font-size:13.5px;color:#7d8f8f">' +
+            '캡처하신 뒤 <b>Ctrl+V</b>로 붙여넣거나 여기에 끌어다 놓으셔도 됩니다' +
+            '<br>(윈도우는 <b>Win+Shift+S</b>, 맥은 <b>⌘⇧4</b>로 화면을 찍습니다)</div>' +
+          '<input type="file" id="ssShotFile" accept="image/*" style="display:none">' +
+          '<div id="ssBugShot" style="margin-top:10px"></div>' +
+        "</div>" +
+        // ★문구(2026-08-25 사장님): 무엇이 가고 **그 다음 무슨 일이 생기는지**까지 적는다.
+        //   "따로 적으실 것 없습니다"만으론 고객이 '내 얘기가 어디로 갔나' 모른 채 끝난다
+        //   — 실제로 사장님도 "URL을 붙여넣으라고 써야 하지 않나" 하고 되물었다(URL은
+        //   context()가 page_url로 이미 보낸다). 답장은 쪽지로 간다(구현·실측 확인됨:
+        //   reply_bug_report → my_bug_replies → 다음 접속 화면에 자동으로 뜬다).
+        '<div class="info"><b>함께 보내지는 것</b><br>' +
+          '지금 보고 계신 화면과 작업 정보가 숏템메이커 관리자에게 전송됩니다. ' +
+          '확인 후 쪽지로 답변이 전송됩니다.' +
+        "</div>" +
+        '<div class="msg" id="ssBugMsg"></div>' +
+        '<div class="row"><button class="no" id="ssBugNo">닫기</button>' +
+        '<button class="ok" id="ssBugGo">보내기</button></div>' +
+      "</div>";
+    document.body.appendChild(back);
+    var close = function () { back.remove(); };
+    back.addEventListener("click", function (e) { if (e.target === back) close(); });
+    document.getElementById("ssBugNo").onclick = close;
+    var ta = document.getElementById("ssBugText");
+    ta.focus();
+    /* 사진 넣는 길 세 가지 — 하나만 되면 못 쓰는 사람이 생긴다. */
+    var fileEl = document.getElementById("ssShotFile");
+    document.getElementById("ssShotPick").onclick = function () { fileEl.click(); };
+    fileEl.onchange = function () { if (this.files && this.files[0]) setShot(this.files[0]); };
+    back.addEventListener("paste", function (e) {          /* Ctrl+V (윈도우 캡처가 여기로 온다) */
+      var items = (e.clipboardData || {}).items || [];
+      for (var i = 0; i < items.length; i++) {
+        if (items[i].type && items[i].type.indexOf("image/") === 0) {
+          setShot(items[i].getAsFile());
+          e.preventDefault();
+          return;
+        }
+      }
+    });
+    var drop = document.getElementById("ssBugDrop");
+    drop.addEventListener("dragover", function (e) { e.preventDefault(); drop.style.borderColor = "#6ff0d6"; });
+    drop.addEventListener("dragleave", function () { drop.style.borderColor = "#35494a"; });
+    drop.addEventListener("drop", function (e) {
+      e.preventDefault();
+      drop.style.borderColor = "#35494a";
+      var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+      if (f) setShot(f);
+    });
+    document.getElementById("ssBugGo").onclick = function () {
+      var btn = this;
+      var text = (ta.value || "").trim();
+      var msg = document.getElementById("ssBugMsg");
+      if (!text) { msg.style.color = "#ff9b9b"; msg.textContent = "어떤 문제인지 한 줄만 적어주세요."; ta.focus(); return; }
+      btn.disabled = true; btn.textContent = "보내는 중…";
+      var body = context();
+      body.message = text;
+      body.shot = SHOT;                 /* 없으면 null — 서버가 그냥 건너뛴다 */
+      fetch("/api/bug-report", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      }).then(function (r) { return r.json(); }).then(function (d) {
+        if (!d || !d.ok) throw new Error((d && d.error) || "접수 실패");
+        msg.style.color = "#7ee787";
+        msg.textContent = d.message || "접수됐어요.";
+        ta.disabled = true; btn.style.display = "none";
+        document.getElementById("ssBugNo").textContent = "확인";
+      }).catch(function (e) {
+        msg.style.color = "#ff9b9b";
+        msg.textContent = "보내지 못했어요 — 잠시 후 다시 눌러주세요. (" + e.message + ")";
+        btn.disabled = false; btn.textContent = "보내기";
+      });
+    };
+  };
+
+  /* 답장(쪽지) — 신고만 받고 끝나면 "말해도 반응 없네"가 된다.
+     안 읽은 답장이 있으면 다음 화면에서 자동으로 뜬다(카톡으로 따로 안 보내도 된다). */
+  function showReplies() {
+    fetch("/api/bug-report/replies", { credentials: "same-origin" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (!d || !d.replies || !d.replies.length) return;
+        var rep = d.replies[0];
+        css();
+        var back = document.createElement("div");
+        back.className = "ssbug-back";
+        back.innerHTML =
+          '<div class="ssbug">' +
+            "<h3>📩 신고하신 건 답변드립니다</h3>" +
+            '<p class="sub">' + esc((rep.message || "").slice(0, 80)) + "</p>" +
+            '<div class="info" style="color:#d7e3e3;font-size:14px;white-space:pre-wrap">' +
+              esc(rep.reply) + "</div>" +
+            '<div class="row"><button class="ok" id="ssRepOk">확인했어요</button></div>' +
+          "</div>";
+        document.body.appendChild(back);
+        document.getElementById("ssRepOk").onclick = function () {
+          fetch("/api/bug-report/replies/" + rep.id + "/read", { method: "POST" })
+            .catch(function () {})
+            .then(function () { back.remove(); });
+        };
+      })
+      .catch(function () {});   /* 답장 확인 실패가 화면을 막으면 안 된다 */
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", showReplies);
+  } else {
+    showReplies();
   }
 })();

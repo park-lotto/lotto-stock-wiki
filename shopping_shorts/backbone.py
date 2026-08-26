@@ -9,6 +9,7 @@ import re
 from collections import Counter
 
 from shopping_shorts import action_dict
+from shopping_shorts import shot_roles as _shot_roles
 from shopping_shorts import pattern_bank
 
 _SYLLABLES_PER_SEC = 5.7      # edit_plan과 동일(한국어 초당 음절)
@@ -64,6 +65,8 @@ def _seg_dur(seg):
 
 # 비트 성격 ↔ 어울리는 shot_role(2026-08-01 실사고). 마무리 자리에 조리 과정이 다시
 # 나오면 "조리 재방송"이 된다 — 사장님 실측 제보: 완성품→조리→완성품→조리→완성품.
+# ⚠️ 여기 값도 `사용중` 하나로 적혀 있지만, 실제 매칭은 `shot_roles.expand`가 넓혀준다
+#    (설치·조작·도포·정리·실증). 새 갈래를 여기 다시 적지 마라 — 두 벌이 된다.
 _BEAT_ROLE_SHOTS = {
     "cta": ("완성", "after"),
     "결과": ("완성", "after"),
@@ -104,7 +107,9 @@ def _broll_segs(pool_sources, src_count, exclude_seg_ids, prefer_video=None, min
     #   ★버리지 않고 **순서만** 미룬다 — 이 함수가 채울 재료를 줄이면 렌더가 정지/슬로우로
     #   때우는 프리즈가 돌아온다(이 구역의 두더지잡기 이력). 맞는 계열이 없으면 종전대로
     #   전부 후보로 남는다.
-    segs.sort(key=lambda c: (bool(want_shots) and c.get("shot_role") not in want_shots,
+    # ★`not in want_shots` 직접 비교가 아니다 — 잘게 쪼갠 갈래도 같은 계열로 본다
+    #   (0순위-B: 넓히는 판단은 shot_roles 한 곳).
+    segs.sort(key=lambda c: (bool(want_shots) and not _shot_roles.matches(c.get("shot_role"), want_shots),
                              c.get("video_id") != prefer_video,      # 같은 소스 먼저(False<True)
                              src_count.get(c.get("video_id"), 0),
                              _seg_dur(c) < min_shot,                  # 너무 짧은 파편은 뒤로
@@ -221,6 +226,50 @@ def beat_action_mismatch(beat):
     n_act = action_dict.tag_action(beat.get("narration", ""))
     s_act = segment_action(beat.get("primary") or {})
     return bool(n_act and s_act and n_act != s_act)
+
+
+def beat_role_mismatch(beat):
+    """비트의 **역할**과 배정 화면의 **결(shot_role)**이 어긋나면 True.
+
+    ★왜 두 번째 축이 필요한가(2026-08-18 사장님 "장면매칭이 왜 이렇게 힘드냐"):
+      기존 판정축은 `beat_action_mismatch` 하나뿐인데 그건 **동사사전 30개**에 매달려 있다.
+      사전이 요리·살림 전용(자르다·붓다·섞다·굽다…)이라 스토리형 대사
+      ("전쟁 치를 뻔한 거 있죠?")엔 동사가 없어 판정이 통째로 보류된다.
+      라이브 실측(2026-08-18, 최근 잡 30개·비트 168건): **대사행위 None이 148건(88%)**.
+      → 어긋남 미검출 → `_verify_fits`가 fit을 못 깎음 → fit 5로 남음
+      → `_repick_weak_beats`(fit<=3 대상)에 안 걸림 → **아무도 안 고친다.**
+      실측 결과 훅·CTA 58건 중 **27건이 어긋났는데 fit>=4라 교정 대상에서 빠졌다**
+      (fit=5 자기신고 37건 중 26건 = 70%가 실제로는 결이 어긋남).
+
+    그래서 동사가 없어도 도는 축을 하나 더 세운다. 근거는 `shot_role`(라이브 실측 채움률
+    **100%**) — 훅·CTA엔 완성/after, 해결·결과엔 사용중/조리가 와야 한다.
+
+    ★판단표를 새로 만들지 않는다(0순위-B) — `edit_plan._ROLE_WANT_SHOTS` 한 곳만 쓴다.
+      그 표는 `scene_lab.html`의 useTags와도 짝이라, 여기서 또 적으면 세 벌이 된다.
+
+    보수적으로 판정한다(오탐이 나면 멀쩡한 화면을 갈아치운다):
+      · 역할을 모르면(표에 없는 역할) 보류
+      · 화면에 shot_role이 없으면 보류
+      · **1순위·차선 어디에도 안 들면** 그때만 어긋남
+        ★차선까지 봐주는 이유: 소재에 1순위 결이 아예 없어 정당하게 차선을 고른 경우가 있다
+          (레시피엔 before·문제가 0건 — `_ROLE_WANT_SHOTS` 주석의 실측). 그걸 어긋남으로
+          치면 고칠 수 없는 걸 계속 재픽하게 된다.
+    """
+    from shopping_shorts import edit_plan
+    role = (beat.get("role") or "").strip().lower()
+    if not role:
+        return False
+    sr = ((beat.get("primary") or {}).get("shot_role") or "").strip()
+    if not sr:
+        return False
+    from shopping_shorts import shot_roles as _shot_roles
+    for words, shots, alt, _why in edit_plan._ROLE_WANT_SHOTS:
+        if any(w in role for w in words):
+            # ★`사용중`을 요구하는 칸은 잘게 쪼갠 갈래(설치·조작·도포·정리·실증)도 맞는
+            #   것으로 본다(2026-08-20). 안 그러면 새 축으로 태깅된 멀쩡한 화면을
+            #   "어긋남"으로 보고 계속 갈아치운다 — 오탐이 곧 재픽이라 눈에 안 띈다.
+            return not _shot_roles.matches(sr, tuple(shots) + tuple(alt))
+    return False      # 표에 없는 역할 → 보류
 
 
 def reconcile_beat_by_action(beat, pool_sources, exclude_seg_ids=None):

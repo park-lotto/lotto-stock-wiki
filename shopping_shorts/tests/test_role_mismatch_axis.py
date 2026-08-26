@@ -1,0 +1,219 @@
+# -*- coding: utf-8 -*-
+"""두 번째 판정축(역할↔결) — 동사사전이 죽어도 어긋남을 잡는다.
+
+배경(2026-08-18 사장님 "장면매칭이 왜 이렇게 힘드냐 / 1단계 태깅이 문제냐"):
+  1단계 태깅은 멀쩡했다(라이브 실측 채움률 scene_desc·shot_role 100%).
+  문제는 **교정 장치가 통째로 꺼져 있던 것**이다:
+
+    동사사전 30개(요리 전용) → 스토리형 대사엔 동사 없음
+      → 대사행위 None 148/168건(88%)
+      → beat_action_mismatch가 "판정 보류"로 False
+      → _verify_fits가 fit을 못 깎음 → fit 5로 남음
+      → _repick_weak_beats(fit<=3)에 안 걸림 → 아무도 안 고침
+
+  라이브 실측: 훅·CTA 58건 중 27건이 어긋났는데 fit>=4라 교정 대상에서 빠졌다.
+  fit=5 자기신고 37건 중 26건(70%)이 실제로는 결이 어긋나 있었다.
+
+이 파일이 지키는 것:
+  1) 동사가 하나도 없어도(=기존 축 무력) 역할↔결 어긋남을 잡는다
+  2) 정당한 차선 선택은 어긋남으로 치지 않는다(오탐 = 멀쩡한 화면 교체)
+  3) 판정표는 _ROLE_WANT_SHOTS 한 곳만 쓴다(0순위-B) — 여기에 표를 복사하지 않는다
+"""
+import pytest
+
+from shopping_shorts import backbone, edit_plan
+
+
+def _beat(role, shot_role, narration="저 이거 때문에 전쟁 치를 뻔한 거 있죠?", fit=5):
+    """대사엔 사전 동사가 없다 — 기존 축(action)이 무력한 상황을 그대로 재현한다."""
+    return {"beat_idx": 0, "role": role, "narration": narration, "fit": fit,
+            "primary": {"seg_id": "s0-1", "shot_role": shot_role,
+                        "scene_desc": "화면 설명", "text": ""}}
+
+
+def test_동사없는_훅이_조리화면이면_어긋남으로_잡힌다():
+    """실측에서 가장 많았던 경우 — 훅에 '사용중'(조리)이 붙고 fit 5로 통과하던 것."""
+    b = _beat("훅", "사용중")
+    assert backbone.beat_action_mismatch(b) is False, "전제: 기존 축은 이 대사를 판정 못 한다"
+    assert backbone.beat_role_mismatch(b) is True
+
+
+def test_훅에_완성이_붙으면_정상():
+    for sr in ("완성", "after"):
+        b = _beat("훅", sr)
+        assert backbone.beat_role_mismatch(b) is False, sr
+
+
+def test_cta도_같은_기준():
+    assert backbone.beat_role_mismatch(_beat("cta", "사용중")) is True
+    assert backbone.beat_role_mismatch(_beat("cta", "완성")) is False
+
+
+def test_해결결과는_조리가_맞다():
+    """훅과 반대 — 여기는 '사용중'이 정답이고 '완성'은 차선이다."""
+    assert backbone.beat_role_mismatch(_beat("해결", "사용중")) is False
+    assert backbone.beat_role_mismatch(_beat("결과", "조리")) is False
+    assert backbone.beat_role_mismatch(_beat("해결", "before")) is True
+
+
+def test_정당한_차선은_어긋남이_아니다():
+    """레시피엔 before·문제 결이 0건이라 차선(조리)으로 내려가는 게 정상이다.
+
+    이걸 어긋남으로 치면 고칠 수 없는 걸 계속 재픽하게 된다(무한 헛돌기).
+    """
+    assert backbone.beat_role_mismatch(_beat("문제", "사용중")) is False
+    assert backbone.beat_role_mismatch(_beat("문제", "before")) is False
+    assert backbone.beat_role_mismatch(_beat("문제", "완성")) is True
+
+
+@pytest.mark.parametrize("role", ["", "심화", "추가", "unknown"])
+def test_표에_없는_역할은_판정보류(role):
+    """모르는 역할까지 깎으면 오탐이 난다 — 보수적으로 보류."""
+    assert backbone.beat_role_mismatch(_beat(role, "사용중")) is False
+
+
+def test_결이_없으면_판정보류():
+    """shot_role이 안 붙은 옛 추출본은 판정하지 않는다(fail-open)."""
+    assert backbone.beat_role_mismatch(_beat("훅", "")) is False
+    b = _beat("훅", "사용중")
+    b["primary"].pop("shot_role")
+    assert backbone.beat_role_mismatch(b) is False
+
+
+def test_verify_fits가_역할축으로도_깎는다():
+    """핵심 배선 — 이게 되어야 재픽(fit<=3)이 돌기 시작한다."""
+    beats = [_beat("훅", "사용중", fit=5)]
+    out = edit_plan._verify_fits(beats)
+    assert out[0]["fit"] == 2, "fit이 안 깎이면 재픽 문턱(<=3)을 못 넘는다"
+    assert out[0]["fit_evidence"] == "role_mismatch"
+
+
+def test_verify_fits가_맞는_비트는_안_건드린다():
+    beats = [_beat("훅", "완성", fit=5)]
+    out = edit_plan._verify_fits(beats)
+    assert out[0]["fit"] == 5
+    assert "fit_evidence" not in out[0]
+
+
+def test_두_축이_동시에_걸리면_증거에_둘_다():
+    """어느 축이 잡았는지 사후에 갈라볼 수 있어야 한다."""
+    b = _beat("훅", "사용중", narration="양파를 자르고 기름을 붓습니다")
+    b["primary"]["action"] = "뒤집다"
+    assert backbone.beat_action_mismatch(b) is True
+    out = edit_plan._verify_fits([b])
+    assert out[0]["fit_evidence"] == "action+role_mismatch"
+
+
+def test_옛경로도_fit을_검증한다():
+    """★build_edit_plan(generator="legacy")에도 _verify_fits가 있어야 한다.
+
+    실사고(2026-08-18): 새 판정축을 배포한 **뒤에** 돈 잡 a4e619328313이 훅에 '사용중'을
+    달고 fit=5·evidence 없음으로 나왔다. 원인은 축이 아니라 **경로**였다 —
+    _verify_fits가 scene_first 경로에만 있어, 옛 경로는 Gemini 자기신고 fit 5가 그대로
+    남고 바로 뒤 _repick_weak_beats(fit<=3)가 대상 0개로 헛돌았다.
+
+    순서까지 지킨다: 깎기가 재픽 **앞**이어야 재픽이 그 비트를 본다.
+    """
+    import inspect
+    src = inspect.getsource(edit_plan.build_edit_plan)
+    body = "\n".join(l for l in src.splitlines() if not l.strip().startswith("#"))
+    assert '_verify_fits(grounded["beats"])' in body, "옛 경로에서 fit 검증이 빠졌다"
+    assert (body.index('_verify_fits(grounded["beats"]')
+            < body.index('_repick_weak_beats(grounded["beats"]')), \
+        "_verify_fits가 _repick_weak_beats보다 뒤에 있으면 재픽이 깎인 비트를 못 본다"
+
+
+def test_화면배치_지시는_두_경로에_모두_실린다():
+    """★같은 병이 세 번째다 — "scene_first엔 있고 확정대본 경로엔 없다".
+
+    08-16 저녁부터 제작소는 확정 대본이 있으면 scene_first를 끄고 `build_edit_plan`으로
+    간다(`mix_pipeline.py:1024`, 사장님 "어이없게 대본을 또 쓰냐"). 그런데 화면 배치
+    지시가 `_scene_first_candidates` 안에만 인라인으로 있어, **사장님이 실제로 뽑는
+    영상은 그 지시를 한 번도 못 받았다** — "대사랑 어울리게 골라라" 한 줄뿐이었다.
+    실측(잡 a4e619328313, generator=legacy): 훅 "소리 질렀어요"에 세탁통 클로즈업.
+
+    두 경로가 **같은 상수**를 쓰는지 지킨다. 한쪽에 복사해 넣으면 이 테스트가 잡는다.
+    """
+    seen = {}
+
+    def _cap(prompt, schema):
+        seen.setdefault("all", []).append(prompt)
+        return {"candidates": []}
+
+    mark = "훅(첫 비트)은"
+    # ① 확정 대본 경로
+    scripted = edit_plan._SCRIPTED_PROMPT.format(
+        given_script="확정 대본", inventory="[S-1] 화면:x", n_alternates=2,
+        label_hint="", scene_placement=edit_plan._scene_placement_block())
+    assert mark in scripted, "확정 대본 경로에 화면 배치 지시가 없다"
+    # ② scene_first 경로
+    edit_plan._scene_first_candidates("[S-1] 화면:x", "ref", 20, n=1, call=_cap)
+    assert any(mark in p for p in seen["all"]), "scene_first 경로에 화면 배치 지시가 없다"
+    # ③ 두 경로가 같은 상수를 쓰는가 — 문장이 갈라지면 안 된다
+    assert edit_plan._SCENE_PLACEMENT_RULES.strip() in scripted
+
+
+def test_화면배치_스위치로_끌_수_있다(monkeypatch):
+    """A/B 비교용 스위치(관리자). 기본은 켜짐 — 끄면 08-17 이전 동작."""
+    monkeypatch.setenv("SCENE_GUIDE", "off")
+    assert edit_plan._scene_placement_block() == ""
+    monkeypatch.setenv("SCENE_GUIDE", "on")
+    assert "훅(첫 비트)은" in edit_plan._scene_placement_block()
+    monkeypatch.delenv("SCENE_GUIDE", raising=False)
+    assert "훅(첫 비트)은" in edit_plan._scene_placement_block(), "기본값이 꺼짐이면 안 된다"
+
+
+def test_사전지시와_사후판정이_같은_축을_가리킨다():
+    """★지시와 판정이 어긋나면 모델은 시킨 대로 하고 벌을 받는다.
+
+    사전 지시(화면배치)는 "훅=완성", 사후 판정(_ROLE_WANT_SHOTS)도 훅에 (완성, after).
+    한쪽만 고치면 이 테스트가 깨진다.
+    """
+    want, _ = edit_plan._want_shots_for_role("훅")
+    assert "완성" in want, f"판정축이 훅에 완성을 요구하지 않는다: {want}"
+    assert "완성" in edit_plan._SCENE_PLACEMENT_RULES, "지시문이 훅에 완성을 말하지 않는다"
+    cta, _ = edit_plan._want_shots_for_role("cta")
+    assert "완성" in cta
+
+
+def test_판정표를_복사하지_않았다():
+    """0순위-B — 표는 _ROLE_WANT_SHOTS 한 곳만. 여기서 shot_role 문자열을 하드코딩해
+    판정하면 표를 고쳐도 이 축은 옛 규칙으로 돈다."""
+    import inspect
+    src = inspect.getsource(backbone.beat_role_mismatch)
+    assert "_ROLE_WANT_SHOTS" in src, "표를 참조하지 않고 자체 판단을 만들었다"
+
+
+def test_옛경로도_화면길이를_보장한다():
+    """★같은 병이 네 번째다 — "scene_first엔 있고 확정대본 경로엔 없다"(전수감사 1순위).
+
+    `_fill_beat_screen_time`은 비트마다 화면 합 ≥ 대사 읽는 시간을 보장한다. 그런데
+    scene_first(`_ground_candidate`)와 단일소스 경로에만 있었고, 08-16 저녁부터 실제로
+    도는 확정 대본 경로(`build_edit_plan`)엔 없었다 — 프롬프트가 seg_ids를 **개수로만**
+    요구하므로 1.3초 컷 하나로도 통과하고, 모자란 화면을 렌더가 다음 클립으로 메우며
+    비트마다 밀림이 누적된다(함수 주석 실측: 말 31.9초 vs 화면 13.8초).
+
+    순서까지 지킨다: need는 target_seconds라, 그 재계산 **뒤**에 불러야 한다.
+    앞에 두면 Gemini 자기신고 초로 재는 셈이 돼 보장이 헛돈다.
+    """
+    import inspect
+    src = inspect.getsource(edit_plan.build_edit_plan)
+    body = "\n".join(l for l in src.splitlines() if not l.strip().startswith("#"))
+    assert '_fill_beat_screen_time(grounded["beats"]' in body, \
+        "옛 경로에서 화면 길이 보장이 빠졌다"
+    assert (body.index('_b["target_seconds"] =')
+            < body.index('_fill_beat_screen_time(grounded["beats"]')), \
+        "target_seconds 재계산보다 앞에서 채우면 need가 자기신고 초가 된다"
+
+
+def test_재픽_후보에_핵심표시가_실린다():
+    """★2026-08-18 사장님 "훅엔 완성샷 중 제일 눈에 들어오는 걸".
+
+    1단계가 is_key(이 장면이 핵심인가)를 이미 태깅해 둔다(채움률 62.9%). 슬롯 배치는
+    그 값을 쓰는데 **재픽만 안 썼다** — 그래서 완성샷 중 아무거나 골랐다(같은 형태의
+    누락이 반복된다, 0순위-B). 후보 목록에 표시해 주고 훅·CTA는 그것을 우선하게 한다.
+    """
+    import inspect
+    src = inspect.getsource(edit_plan._repick_weak_beats)
+    assert 'is_key' in src, "재픽 후보에 핵심 표시가 안 실린다"
+    assert '★핵심' in src, "표시가 후보 줄에 보이지 않으면 모델이 못 고른다"

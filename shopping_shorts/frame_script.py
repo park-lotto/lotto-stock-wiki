@@ -10,6 +10,10 @@ extract_script_frames)는 이 함수들을 쓴다.
 설계: docs/superpowers/specs/2026-07-29-프레임태깅-추출전환-design.md
 """
 
+# shot_role 어휘는 `shot_roles`가 혼자 정한다(0순위-B). 아래 프롬프트 문구와 JSON enum이
+# **같은 목록**에서 나오게 하려고 모듈 최상단에서 들여온다(_TAGS_SCHEMA가 로드 시점에 쓴다).
+from shopping_shorts import shot_roles as _shot_roles
+
 
 def segments_from_cuts_and_words(cuts, words):
     """컷 경계(오름차순 타임스탬프)와 워드 타임스탬프 → [{start,end,text}].
@@ -100,7 +104,7 @@ def _gemini_tag_frames(frame_paths, caption, segs):
     영상 통째 대신 이미지 파트만 보낸다(업로드/PROCESSING 급감). 실패 시 [](호출부 fail-open).
     반환: [{scene_desc, shot_role, is_key, product_benefits}, ...] (프레임 순서=구간 순서)."""
     import json
-    from shopping_shorts import comment_gen, script_extract
+    from shopping_shorts import comment_gen
     from shopping_shorts.video_analysis import _MODEL
     try:
         from google.genai import types
@@ -117,7 +121,7 @@ def _gemini_tag_frames(frame_paths, caption, segs):
         "아래는 한 영상을 장면전환마다 자른 대표 프레임들이다(순서=장면 순서). 각 프레임을 보고 "
         f"장면별 태그를 매겨라. 총 {len(frame_paths)}장.\n{seg_lines}\n\n"
         "각 장면마다: scene_desc(화면에 뭐가 보이나 짧게, 주 대상 정확히), "
-        "shot_role(before/사용중/after/완성/문제/기타 중 하나), is_key(제품 기능·효과를 화면으로 "
+        + _shot_roles.prompt_line() + ", is_key(제품 기능·효과를 화면으로 "
         "실증하면 true, 도입·인사·CTA면 false), product_benefits(자막 없어도 화면으로 보이는 특장점 "
         "한국어 1~2문장, 없으면 빈 배열). 프레임 순서대로 tags 배열로 출력."
         f"\n캡션(참고):{caption or '(없음)'}")
@@ -143,7 +147,9 @@ _TAGS_SCHEMA = {
     "type": "object",
     "properties": {"tags": {"type": "array", "items": {"type": "object", "properties": {
         "scene_desc": {"type": "string"},
-        "shot_role": {"type": "string", "enum": ["before", "사용중", "after", "완성", "문제", "기타"]},
+        # ★enum과 위 프롬프트 문구는 **같은 목록**(shot_roles.SHOT_ROLES)에서 나온다.
+        # 따로 적으면 모델이 프롬프트대로 답했는데 스키마가 거절하는 일이 생긴다.
+        "shot_role": {"type": "string", "enum": list(_shot_roles.SHOT_ROLES)},
         "is_key": {"type": "boolean"},
         "product_benefits": {"type": "array", "items": {"type": "string"}},
     }, "required": ["scene_desc", "shot_role"]}}},

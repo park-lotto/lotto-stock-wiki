@@ -1,0 +1,125 @@
+<!doctype html><html lang=ko><head><meta charset="utf-8">
+<meta name=viewport content="width=device-width,initial-scale=1">
+<title>제작소 도크 단계바 — 아이콘 3종</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--mint:#3ee0bf;--gold:#facc6b;--bg:#070b14;--panel:#0d1420;--line:#1a2436;
+  --txt:#e7ecf7;--sub:#5a6580}
+body{background:var(--bg);color:var(--txt);font-family:"Malgun Gothic",system-ui,sans-serif;
+  line-height:1.6;padding:26px 20px 90px}
+.wrap{max-width:1180px;margin:0 auto}
+h1{font-size:24px;font-weight:900;margin-bottom:6px}
+.desc{color:var(--sub);font-size:14px;margin-bottom:26px}
+.case{background:var(--panel);border:1px solid var(--line);border-radius:16px;
+  padding:24px 26px 30px;margin-bottom:22px}
+.case > h2{font-size:17px;font-weight:900;color:var(--mint);margin-bottom:4px}
+.case > .why{color:var(--sub);font-size:13px;margin-bottom:26px}
+.tag{display:inline-block;font-size:11px;font-weight:900;padding:3px 9px;border-radius:999px;
+  background:rgba(62,224,191,.14);color:var(--mint);margin-left:8px;vertical-align:middle}
+
+/* ── 도크 공통 ── */
+.dock{display:flex;align-items:flex-end;justify-content:space-between;gap:6px;padding:6px 4px 0}
+.dk{flex:1;display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer}
+.dk .ic{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;
+  transition:all .18s ease}
+.dk .ic svg{width:22px;height:22px;display:block}
+.dk .dl{font-size:11px;font-weight:800;text-align:center;line-height:1.25}
+.dk.cur .ic{width:60px;height:60px;border-radius:17px}
+.dk.cur .ic svg{width:31px;height:31px}
+.dk.cur .dl{font-size:13px;font-weight:900;color:#fff}
+
+/* 1) 라인 — 얇은 선, 배경 없음 */
+.s1 .ic{background:#0a1019;border:1px solid var(--line);color:#3b455e}
+.s1 .dl{color:#46506a}
+.s1 .dk.done .ic{border-color:rgba(250,204,107,.38);background:rgba(250,204,107,.06);color:var(--gold)}
+.s1 .dk.done .dl{color:#c9a44a}
+.s1 .dk.cur .ic{border-color:transparent;color:#04201b;
+  background:linear-gradient(135deg,#7df5db,#14b8a6);box-shadow:0 7px 24px rgba(62,224,191,.34)}
+.s1 svg{fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+
+/* 2) 듀오톤 — 채운 면 + 강조선 */
+.s2 .ic{background:#0d1524;border:1px solid #16202f;color:#2e394f}
+.s2 .dl{color:#46506a}
+.s2 .dk.done .ic{background:rgba(250,204,107,.1);border-color:rgba(250,204,107,.3);color:var(--gold)}
+.s2 .dk.done .dl{color:#c9a44a}
+.s2 .dk.cur .ic{border-color:transparent;color:#04201b;
+  background:linear-gradient(150deg,#8ff8e0,#0fb49f);box-shadow:0 8px 26px rgba(62,224,191,.4)}
+.s2 svg .f{fill:currentColor;opacity:.26;stroke:none}
+.s2 svg .l{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.s2 .dk.cur svg .f{opacity:.42}
+
+/* 3) 유리 배지 — 둥근 사각 + 안쪽 광택 */
+.s3 .ic{position:relative;overflow:hidden;color:#3b455e;
+  background:linear-gradient(160deg,#131d2e,#0a1019);border:1px solid #1b2637}
+.s3 .ic::after{content:"";position:absolute;inset:0;border-radius:inherit;
+  background:linear-gradient(180deg,rgba(255,255,255,.09),transparent 55%);pointer-events:none}
+.s3 .dl{color:#46506a}
+.s3 .dk.done .ic{color:#f0bd53;border-color:rgba(250,204,107,.32);
+  background:linear-gradient(160deg,rgba(250,204,107,.16),rgba(250,204,107,.04))}
+.s3 .dk.done .dl{color:#c9a44a}
+.s3 .dk.cur .ic{color:#04241e;border-color:rgba(255,255,255,.3);
+  background:linear-gradient(160deg,#9dfae4,#12b6a1);box-shadow:0 9px 28px rgba(62,224,191,.42)}
+.s3 svg{fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+
+.note{margin-top:26px;padding:16px 18px;border:1px solid #3a2f18;background:rgba(250,204,107,.05);
+  border-radius:12px;font-size:13px;color:#c9a44a;font-weight:700}
+.legend{margin-top:22px;font-size:12.5px;color:var(--sub);font-weight:700}
+.legend b{color:var(--txt)}
+</style></head><body><div class=wrap>
+
+<h1>제작소 도크 단계바 — 아이콘 3종</h1>
+<p class=desc>이모지를 버리고 <b>직접 그린 SVG</b>로 바꿨습니다. 이모지는 윈도우·맥·폰마다 다른 그림이 나오고 크기를 키우면 뭉툭해집니다. SVG는 어디서든 같고, 색이 상태(끝남=골드 / 지금=민트)를 그대로 따라갑니다. 전부 <b>5단계 목소리 고르기</b> 상태입니다.</p>
+
+<div class="case s1">
+<h2>1) 라인 — 얇고 단정하게<span class="tag">추천</span></h2>
+<p class=why>선만으로 그린 아이콘. 화면이 안 시끄럽고 글자와 결이 맞습니다. 지금 단계만 민트로 채워 확 뜹니다.</p>
+<div class=dock>
+  <div class="dk done"><div class=ic><svg viewBox="0 0 24 24"><rect x="2.5" y="5" width="13" height="11" rx="2"/><path d="M5.5 5v11M12.5 5v11M2.5 10.5h13"/><circle cx="17.5" cy="16" r="4"/><path d="M20.4 18.9 22.5 21"/></svg></div><div class=dl>영상추출</div></div>
+  <div class="dk done"><div class=ic><svg viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M9 12h6M9 16h4"/></svg></div><div class=dl>대본생성</div></div>
+  <div class="dk done"><div class=ic><svg viewBox="0 0 24 24"><path d="M3 7h4c3 0 3 10 6 10h8"/><path d="M3 17h4c3 0 3-10 6-10h8"/><path d="M18 4l3 3-3 3M18 14l3 3-3 3"/></svg></div><div class=dl>영상대본MIX</div></div>
+  <div class="dk done"><div class=ic><svg viewBox="0 0 24 24"><path d="M8 20h12"/><path d="M14.5 4.5 20 10l-8 8H6.5L4 15.5z"/><path d="M10.5 8.5 16 14"/></svg></div><div class=dl>자막제거</div></div>
+  <div class="dk cur"><div class=ic><svg viewBox="0 0 24 24"><rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0"/><path d="M12 17.5V21M9 21h6"/></svg></div><div class=dl>목소리 고르기</div></div>
+  <div class=dk><div class=ic><svg viewBox="0 0 24 24"><path d="M4 7h9M8.5 7v9"/><path d="M15 20l4.5-11 4.5 11" transform="translate(-2.5 0) scale(.92 1)"/><path d="M14 17h6"/></svg></div><div class=dl>자막꾸미기</div></div>
+  <div class=dk><div class=ic><svg viewBox="0 0 24 24"><rect x="2.5" y="4" width="19" height="16" rx="2.5"/><circle cx="8" cy="9.5" r="1.8"/><path d="M3 16.5 8.5 12l4 3.5L16 13l5 4.5"/></svg></div><div class=dl>썸네일</div></div>
+  <div class=dk><div class=ic><svg viewBox="0 0 24 24"><path d="M9 3.5 7 20.5M17 3.5 15 20.5M3.5 9h17M2.5 15h17"/></svg></div><div class=dl>SEO해시</div></div>
+  <div class=dk><div class=ic><svg viewBox="0 0 24 24"><path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5z"/><path d="M3.5 7.5 12 12l8.5-4.5M12 12v9"/></svg></div><div class=dl>최종렌더</div></div>
+</div>
+</div>
+
+<div class="case s2">
+<h2>2) 듀오톤 — 면을 채워 또렷하게</h2>
+<p class=why>같은 아이콘에 <b>반투명 면</b>을 깔아 무게를 줬습니다. 작게 줄여도 형태가 안 사라져 멀리서도 읽힙니다. 1번보다 살짝 무겁습니다.</p>
+<div class=dock>
+  <div class="dk done"><div class=ic><svg viewBox="0 0 24 24"><rect class=f x="2.5" y="5" width="13" height="11" rx="2"/><rect class=l x="2.5" y="5" width="13" height="11" rx="2"/><path class=l d="M5.5 5v11M12.5 5v11M2.5 10.5h13"/><circle class=f cx="17.5" cy="16" r="4"/><circle class=l cx="17.5" cy="16" r="4"/><path class=l d="M20.4 18.9 22.5 21"/></svg></div><div class=dl>영상추출</div></div>
+  <div class="dk done"><div class=ic><svg viewBox="0 0 24 24"><path class=f d="M6 3h8l4 4v14H6z"/><path class=l d="M6 3h8l4 4v14H6z"/><path class=l d="M14 3v4h4M9 12h6M9 16h4"/></svg></div><div class=dl>대본생성</div></div>
+  <div class="dk done"><div class=ic><svg viewBox="0 0 24 24"><path class=l d="M3 7h4c3 0 3 10 6 10h8"/><path class=l d="M3 17h4c3 0 3-10 6-10h8"/><path class=f d="M18 3.2 22.4 7 18 10.8zM18 13.2 22.4 17 18 20.8z"/></svg></div><div class=dl>영상대본MIX</div></div>
+  <div class="dk done"><div class=ic><svg viewBox="0 0 24 24"><path class=f d="M14.5 4.5 20 10l-8 8H6.5L4 15.5z"/><path class=l d="M8 20h12M14.5 4.5 20 10l-8 8H6.5L4 15.5zM10.5 8.5 16 14"/></svg></div><div class=dl>자막제거</div></div>
+  <div class="dk cur"><div class=ic><svg viewBox="0 0 24 24"><rect class=f x="9" y="2.5" width="6" height="11" rx="3"/><rect class=l x="9" y="2.5" width="6" height="11" rx="3"/><path class=l d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M9 21h6"/></svg></div><div class=dl>목소리 고르기</div></div>
+  <div class=dk><div class=ic><svg viewBox="0 0 24 24"><path class=l d="M4 7h9M8.5 7v9"/><path class=f d="M16.5 9 20 17h-7z"/><path class=l d="M16.5 9 20 17h-7zM14 19.5h6"/></svg></div><div class=dl>자막꾸미기</div></div>
+  <div class=dk><div class=ic><svg viewBox="0 0 24 24"><rect class=f x="2.5" y="4" width="19" height="16" rx="2.5"/><rect class=l x="2.5" y="4" width="19" height="16" rx="2.5"/><circle class=l cx="8" cy="9.5" r="1.8"/><path class=l d="M3 16.5 8.5 12l4 3.5L16 13l5 4.5"/></svg></div><div class=dl>썸네일</div></div>
+  <div class=dk><div class=ic><svg viewBox="0 0 24 24"><path class=f d="M3.5 9h17v6h-17z"/><path class=l d="M9 3.5 7 20.5M17 3.5 15 20.5M3.5 9h17M2.5 15h17"/></svg></div><div class=dl>SEO해시</div></div>
+  <div class=dk><div class=ic><svg viewBox="0 0 24 24"><path class=f d="M3.5 7.5 12 12v9l-8.5-4.5z"/><path class=l d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5zM3.5 7.5 12 12l8.5-4.5M12 12v9"/></svg></div><div class=dl>최종렌더</div></div>
+</div>
+</div>
+
+<div class="case s3">
+<h2>3) 유리 배지 — 광택 있는 타일</h2>
+<p class=why>타일에 <b>위쪽 광택</b>과 그라디언트를 넣어 앱 아이콘처럼 보이게 했습니다. 가장 화려하지만, 배경이 이미 오로라라 아래가 시끄러워질 수 있습니다.</p>
+<div class=dock>
+  <div class="dk done"><div class=ic><svg viewBox="0 0 24 24"><rect x="2.5" y="5" width="13" height="11" rx="2"/><path d="M5.5 5v11M12.5 5v11M2.5 10.5h13"/><circle cx="17.5" cy="16" r="4"/><path d="M20.4 18.9 22.5 21"/></svg></div><div class=dl>영상추출</div></div>
+  <div class="dk done"><div class=ic><svg viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M9 12h6M9 16h4"/></svg></div><div class=dl>대본생성</div></div>
+  <div class="dk done"><div class=ic><svg viewBox="0 0 24 24"><path d="M3 7h4c3 0 3 10 6 10h8"/><path d="M3 17h4c3 0 3-10 6-10h8"/><path d="M18 4l3 3-3 3M18 14l3 3-3 3"/></svg></div><div class=dl>영상대본MIX</div></div>
+  <div class="dk done"><div class=ic><svg viewBox="0 0 24 24"><path d="M8 20h12"/><path d="M14.5 4.5 20 10l-8 8H6.5L4 15.5z"/><path d="M10.5 8.5 16 14"/></svg></div><div class=dl>자막제거</div></div>
+  <div class="dk cur"><div class=ic><svg viewBox="0 0 24 24"><rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0"/><path d="M12 17.5V21M9 21h6"/></svg></div><div class=dl>목소리 고르기</div></div>
+  <div class=dk><div class=ic><svg viewBox="0 0 24 24"><path d="M4 7h9M8.5 7v9"/><path d="M16.5 9 20 17h-7z"/><path d="M14 19.5h6"/></svg></div><div class=dl>자막꾸미기</div></div>
+  <div class=dk><div class=ic><svg viewBox="0 0 24 24"><rect x="2.5" y="4" width="19" height="16" rx="2.5"/><circle cx="8" cy="9.5" r="1.8"/><path d="M3 16.5 8.5 12l4 3.5L16 13l5 4.5"/></svg></div><div class=dl>썸네일</div></div>
+  <div class=dk><div class=ic><svg viewBox="0 0 24 24"><path d="M9 3.5 7 20.5M17 3.5 15 20.5M3.5 9h17M2.5 15h17"/></svg></div><div class=dl>SEO해시</div></div>
+  <div class=dk><div class=ic><svg viewBox="0 0 24 24"><path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5z"/><path d="M3.5 7.5 12 12l8.5-4.5M12 12v9"/></svg></div><div class=dl>최종렌더</div></div>
+</div>
+</div>
+
+<p class=legend><b>아이콘이 뜻하는 것</b> — 필름+돋보기(영상 분석) · 대본 문서 · 두 줄기 합류(믹스) · 지우개(자막 제거) · 마이크(목소리) · 붓+글자(자막 꾸미기) · 사진틀(썸네일) · 해시(#) · 상자(최종 완성)</p>
+
+<div class=note>⚠️ 지금 오브 단계바는 <b>final-mock-v6.html</b>이 정본입니다(theme.css 주석). 바꾸면 목업도 같이 갱신할지 정해야 합니다.</div>
+
+</div></body></html>

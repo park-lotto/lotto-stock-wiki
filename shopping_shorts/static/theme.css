@@ -46,6 +46,44 @@
 .orb.locked{ cursor:not-allowed; opacity:.6; }
 @media(prefers-reduced-motion:reduce){ .orb.cur .ball, .orb.cur::after{ animation:none; } }
 
+/* ── 도크 단계바(2026-08-26, 사장님 확정: K3 색흐름 · 1단 절제) ──
+   정본 목업: out/제작소_단계바_최종안.html
+   구조: .dockflow(무지개 진행띠) + .dockbar(행) > .dk > .dkic(아이콘 타일) + .dkl(라벨)
+   ★위 .orbbar는 **지우지 않는다** — 문제가 생기면 renderSteps() 한 곳만 되돌리면 원상복구된다.
+   ★단계 색은 마크업에서 --c/--c2로 넣는다(produce.html STEP_COLORS 한 곳에서만 정한다). */
+.dockflow{ position:relative; height:4px; border-radius:999px; margin:0 10px 8px;
+  background:#131c2b; overflow:hidden; }
+.dockflow .dfull{ position:absolute; inset:0; border-radius:999px; opacity:.22;
+  background:linear-gradient(90deg,#38bdf8,#8c6ef0,#f472b6,#fb7185,#3ee0bf,#fb923c,#facc6b,#a3e635,#34d399); }
+.dockflow .drun{ position:absolute; left:0; top:0; bottom:0; border-radius:999px;
+  background:linear-gradient(90deg,#38bdf8,#8c6ef0,#f472b6,#fb7185,#3ee0bf);
+  box-shadow:0 0 14px rgba(62,224,191,.5); transition:width .3s ease; }
+.dockbar{ display:flex; align-items:flex-end; justify-content:space-between; gap:6px;
+  padding:10px 4px 0; margin:0 2px 6px; }
+.dk{ flex:1; display:flex; flex-direction:column; align-items:center; gap:8px; cursor:pointer;
+  position:relative; --c:#3b455e; --c2:#3b455e; transition:transform .18s ease; }
+.dk:hover{ transform:translateY(-3px); }
+.dkic{ position:relative; width:46px; height:46px; border-radius:14px; display:grid; place-items:center;
+  transition:all .2s ease; background:color-mix(in srgb,var(--c) 12%,#0a1019); color:var(--c);
+  border:1px solid color-mix(in srgb,var(--c) 38%,transparent); }
+.dkic svg{ width:24px; height:24px; display:block; fill:none; stroke:currentColor;
+  stroke-width:1.75; stroke-linecap:round; stroke-linejoin:round; }
+.dkl{ font-size:11px; font-weight:800; text-align:center; line-height:1.25;
+  color:color-mix(in srgb,var(--c) 60%,#46506a); }
+.dk.wait{ opacity:.5; }
+.dk.done .dkic::after{ content:"✓"; position:absolute; right:-4px; top:-4px; width:17px; height:17px;
+  border-radius:50%; background:var(--c); color:#08131a; font-size:10px; font-weight:900;
+  display:grid; place-items:center; border:2px solid #0d1420; }
+.dk.cur .dkic{ width:66px; height:66px; border-radius:19px; border-color:transparent; color:#04201b;
+  background:linear-gradient(150deg,var(--c),var(--c2));
+  box-shadow:0 10px 30px color-mix(in srgb,var(--c) 42%,transparent); }
+.dk.cur .dkic svg{ width:34px; height:34px; stroke-width:1.9; }
+.dk.cur .dkl{ color:#fff; font-size:13.5px; font-weight:900; }
+.dk.cur::before{ content:""; position:absolute; top:-5px; width:76px; height:76px; border-radius:22px;
+  border:2px solid color-mix(in srgb,var(--c) 55%,transparent); animation:dkRing 1.9s ease-out infinite; }
+@keyframes dkRing{ 0%{ transform:scale(.88); opacity:1 } 100%{ transform:scale(1.22); opacity:0 } }
+@media(prefers-reduced-motion:reduce){ .dk.cur::before{ animation:none; } }
+
 /* ── 카드 · CTA · 통계 타일 ── */
 .skm-card{ background:var(--panel); border:1px solid rgba(62,224,191,.4); border-radius:14px; padding:16px; }
 .cta-shine{ position:relative; overflow:hidden; font-weight:900;
@@ -165,6 +203,15 @@
 .pool-card .pickbadge{ position:absolute; top:-7px; left:-4px; font-size:9px; font-weight:900; color:#231a00; background:linear-gradient(135deg,#ffe29a,#f5b53f); border-radius:99px; padding:2px 7px; white-space:nowrap; }
 .pool-card .pool-x{ position:absolute; top:-7px; right:-6px; width:18px; height:18px; border-radius:50%; border:0; background:#243244; color:#cfe9ff; font-size:10px; font-weight:900; cursor:pointer; display:none; line-height:1; }
 .pool-card:hover .pool-x{ display:block; }
+/* ── ▶ 미리보기(2026-08-17) — 레퍼런스 랭킹 .play-badge와 같은 모양·같은 동작 ──
+   ★랭킹은 pointer-events:none(썸네일 전체가 재생)이지만 여기선 카드 클릭이 이미
+   pickFootage(메인 지정)를 쓴다 → 배지만 클릭을 받아야 두 기능이 안 부딪힌다.
+   크기는 랭킹의 52px을 카드 폭(96~168px)에 맞춰 줄인 값이다. */
+.pool-card .pool-play{ position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+  width:34px; height:34px; border-radius:50%; background:rgba(0,0,0,.5); color:#fff;
+  font-size:13px; display:flex; align-items:center; justify-content:center; cursor:pointer;
+  border:2px solid rgba(255,255,255,.85); z-index:2; line-height:1; }
+.pool-card .pool-play:hover{ background:rgba(0,0,0,.72); border-color:#fff; }
 
 /* ── ⚡ 매칭 진행중 피드백(2026-07-23 Task8) — 패널0(사용자가 보는 화면)용 미러 ── */
 @keyframes skmspin{ to{ transform:rotate(360deg); } }

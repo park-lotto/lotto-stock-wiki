@@ -6,12 +6,17 @@
 import json
 import pathlib
 import re
-import shutil
-import subprocess
 
 import pytest
 
 from shopping_shorts import seo_generate
+# ★node는 공용 하네스로 띄운다(2026-08-21). 직접 subprocess로 부르면 pytest가 stdin을
+#   캡처한 상태라 윈도우에서 WinError 6(핸들이 잘못됨)로 간헐 실패한다 —
+#   track finish 게이트가 이것 때문에 헛돌았다. 하네스가 stdin=DEVNULL과 임시파일
+#   실행(명령줄 32,767자 상한 회피)을 함께 처리한다.
+from shopping_shorts.tests.js_harness import requires_node, run_js_proc
+
+pytestmark = requires_node
 
 PRODUCE_HTML = pathlib.Path(__file__).resolve().parents[1] / "static" / "produce.html"
 
@@ -33,15 +38,11 @@ def test_insta_is_lockable():
 
 
 def _run_fallback(seo_js):
-    node = shutil.which("node")
-    if not node:
-        pytest.skip("node 없음")
     html = PRODUCE_HTML.read_text(encoding="utf-8")
     m = re.search(r"function _instaCaption\(\).*?\n}\n", html, re.S)
     assert m, "_instaCaption을 produce.html에서 찾지 못함"
     script = f"let SEO = {seo_js};\n{m.group(0)}\nconsole.log(JSON.stringify(_instaCaption()));"
-    out = subprocess.run([node, "-e", script], capture_output=True, text=True,
-                         encoding="utf-8", errors="replace", timeout=30)
+    out = run_js_proc(script)
     assert out.returncode == 0, out.stderr
     return json.loads(out.stdout.strip().splitlines()[-1])
 

@@ -16,6 +16,7 @@
 import pathlib
 import shutil
 import subprocess
+import tempfile
 
 import pytest
 
@@ -32,9 +33,23 @@ def _slice(src, start, end):
 
 
 def _run(js, body):
-    r = subprocess.run([NODE, "-e", js + "\n(async()=>{\n" + body + "\n})();"],
-                       capture_output=True, text=True, timeout=30,
-                       encoding="utf-8", errors="replace", stdin=subprocess.DEVNULL)
+    """★`node -e`로 넘기지 않는다 — 임시파일에 써서 실행한다(2026-08-18).
+
+    윈도우 명령줄 상한이 약 32,767자다. 슬라이스한 JS를 인자로 그대로 실어 보내다가
+    produce.html이 커지자 `WinError 206 파일 이름이나 확장명이 너무 깁니다`로 죽었다
+    (쿠팡 UI를 8단계로 옮기며 30줄 늘린 것이 계기 — 즉 **한 줄만 늘어도 다시 터지는**
+    시한폭탄이었다). 줄을 깎아 상한 밑으로 되돌리는 건 다음 사람이 또 밟는다 →
+    파일로 넘겨 상한 자체를 없앤다.
+    """
+    src = js + "\n(async()=>{\n" + body + "\n})();"
+    with tempfile.TemporaryDirectory() as td:
+        # 확장자는 .js — `node -e`와 같은 CommonJS 문맥을 유지한다(.mjs면 ESM이 되어
+        # 하네스의 최상위 선언·await 규칙이 달라진다).
+        f = pathlib.Path(td) / "harness.js"
+        f.write_text(src, encoding="utf-8")
+        r = subprocess.run([NODE, str(f)],
+                           capture_output=True, text=True, timeout=30,
+                           encoding="utf-8", errors="replace", stdin=subprocess.DEVNULL)
     assert r.returncode == 0, r.stderr
     return r.stdout.strip()
 
@@ -42,7 +57,7 @@ def _run(js, body):
 # ── 저장 side: 단계 이동이 서버에 남는가 ────────────────────────
 _NAV_HARNESS = r"""
 'use strict';
-let cur = 0, MIX_JOB = null, PREVIEW_STATUS = null, _saves = 0;
+let cur = 0, MIX_JOB = null, PREVIEW_STATUS = null, WATCHED_ALL = false, _saves = 0;
 // Task 2(2026-07-23): jump/go가 오브 표시축(STEP_LABELS)과 실제 패널축(ORB_TO_PANEL)을 나눠
 // 쓴다 — 슬라이스에 안 담기는 심볼이라 실제 소스와 같은 값으로 여기서 준다.
 const STEP_LABELS = ['대본','화면 붙이기','TTS','꾸미기','썸네일','SEO','최종'];
@@ -126,7 +141,7 @@ def test_start_mix_persists_job_id():
 # ── 복원 side: 새로고침이 미리보기 video·편집안·단계를 되살리는가 ──
 _RESTORE_HARNESS = r"""
 'use strict';
-let HANDOFF = [], cur = 0, MIX_JOB = null, WORK_ID = null, PREVIEW_STATUS = null;
+let HANDOFF = [], cur = 0, MIX_JOB = null, WORK_ID = null, PREVIEW_STATUS = null, WATCHED_ALL = false;
 let STYLE_TOUCHED = false, PENDING_STYLE_RESTORE = false, MIX_REVIEW_SUGGESTIONS = [];
 const STATE = { script:'', script_src_idx:null, script_from_wiki:null,
                 subtitleRemoval:false, headcopy:null, captionStyle:null,

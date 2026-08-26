@@ -11,9 +11,7 @@
 Apify 무료한도는 계정당 월 $5이며 **이월되지 않는다**(안 쓰면 소멸) —
 그래서 '0건이면 폴백'이 맞다. 돈 아끼려다 결과를 못 보는 쪽이 더 비싼 손해다.
 """
-from concurrent.futures import ThreadPoolExecutor
-
-from shopping_shorts import cn_backends
+from shopping_shorts import cn_backends, search_chain
 
 # 회당 비용(달러). meta에 실어 화면에 노출한다 — 비용이 조용히 새는 걸 막는다.
 _COST = {"apify_douyin": 0.04005, "apify_xiaohongshu": 0.098}
@@ -25,45 +23,16 @@ _CHAIN = {
 
 
 def _run_chain(chain, keyword, max_results):
-    """사슬을 순서대로 시도. **0건이면 다음으로 넘어간다**(A안).
+    """(호환용) 사슬 실행 — 실제 판단은 search_chain.run_chain 한 곳에 있다.
 
-    백엔드는 계약상 예외를 안 던지지만, 그래도 여기서 한 번 더 막는다 —
-    사슬이 백엔드 하나 때문에 통째로 죽으면 안 된다."""
-    for fn in chain:
-        try:
-            rows = fn(keyword, max_results) or []
-        except Exception:
-            continue
-        if rows:
-            name = getattr(fn, "__name__", "unknown")
-            return rows, {"backend": name, "n": len(rows),
-                          "cost_usd": _COST.get(name, 0)}
-    return [], {"backend": None, "n": 0, "cost_usd": 0}
+    2026-08-17: 인스타·틱톡·유튜브(kw_search)가 같은 규칙을 필요로 해서 엔진을
+    `search_chain`으로 뽑았다. 이 이름은 기존 호출·테스트를 위해 남겨둔 얇은 껍데기다."""
+    return search_chain.run_chain(chain, keyword, max_results, _COST)
 
 
 def search(keyword, max_results=10):
-    """키워드 → 샤오홍슈+도우인 결과(플랫폼 병렬).
+    """중국어 키워드 → 샤오홍슈+도우인 결과(플랫폼 병렬).
 
     반환: {"items": [...], "count": N, "keyword": kw, "meta": {플랫폼: {...}}}
     items의 각 dict는 기존 렌즈 카드와 같은 스키마다(프론트 재사용)."""
-    kw = (keyword or "").strip()
-    if not kw:
-        return {"items": [], "count": 0, "keyword": "", "meta": {}}
-    n = max(1, min(int(max_results or 10), 60))
-
-    with ThreadPoolExecutor(max_workers=2) as ex:
-        futures = {p: ex.submit(_run_chain, chain, kw, n)
-                   for p, chain in _CHAIN.items()}
-        results = {}
-        for platform, f in futures.items():
-            try:
-                results[platform] = f.result()
-            except Exception:
-                # 한 플랫폼이 통째로 죽어도 다른 플랫폼은 살린다
-                results[platform] = ([], {"backend": None, "n": 0, "cost_usd": 0})
-
-    items, meta = [], {}
-    for platform, (rows, m) in results.items():
-        items.extend(rows)
-        meta[platform] = m
-    return {"items": items, "count": len(items), "keyword": kw, "meta": meta}
+    return search_chain.search_many(_CHAIN, keyword, max_results, _COST)

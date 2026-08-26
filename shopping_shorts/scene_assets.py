@@ -11,6 +11,7 @@ from pathlib import Path
 from google.genai import types
 
 from . import edit_plan, frame_extract, scene_cut
+from shopping_shorts import config as _cfg
 
 # 페이즈2 concat이 -c copy(video_assemble.py:346)라 자산 클립도 비트 클립과
 # **같은 규격**이어야 붙는다. video_assemble._OUT_W/_OUT_H와 같은 값.
@@ -27,7 +28,8 @@ def probe_duration(path):
     cmd = ["ffprobe", "-v", "error", "-show_entries", "format=duration",
            "-of", "default=noprint_wrappers=1:nokey=1", str(path)]
     try:
-        r = subprocess.run(cmd, capture_output=True, check=False)
+        r = subprocess.run(cmd, capture_output=True, check=False,
+                           timeout=_cfg.FFMPEG_TIMEOUT_SEC)
     except OSError:
         return 0.0
     if r.returncode != 0:
@@ -67,7 +69,8 @@ def make_clip(src_path, start, end, out_path):
     ]
     # stdin=DEVNULL — pytest 기본 캡처(--capture=fd)가 fd 0을 무효화해서 이게
     # 없으면 OSError [WinError 6/50]으로 죽는다(scene_cut._ffprobe와 같은 이유).
-    r = subprocess.run(cmd, capture_output=True, check=False, stdin=subprocess.DEVNULL)
+    r = subprocess.run(cmd, capture_output=True, check=False, stdin=subprocess.DEVNULL,
+                       timeout=_cfg.MEDIA_CLIP_TIMEOUT_SEC)
     if r.returncode != 0:
         raise RuntimeError(f"ffmpeg 구간컷 실패: {r.stderr}")
     return out_path
@@ -79,7 +82,8 @@ def extract_audio(clip_path, out_path):
     out_path.parent.mkdir(parents=True, exist_ok=True)
     cmd = ["ffmpeg", "-y", "-i", str(clip_path), "-vn",
            "-c:a", "libmp3lame", "-q:a", "2", str(out_path)]
-    r = subprocess.run(cmd, capture_output=True, check=False)
+    r = subprocess.run(cmd, capture_output=True, check=False,
+                       timeout=_cfg.MEDIA_CLIP_TIMEOUT_SEC)
     if r.returncode != 0:
         raise RuntimeError(f"ffmpeg 오디오 추출 실패: {r.stderr}")
     return out_path
@@ -101,7 +105,8 @@ def make_poster(media_path, out_path):
     if media_path.suffix.lower() in _STILL_IMAGE_EXTS:
         out_path.parent.mkdir(parents=True, exist_ok=True)
         cmd = ["ffmpeg", "-y", "-i", str(media_path), "-frames:v", "1", str(out_path)]
-        r = subprocess.run(cmd, capture_output=True, check=False)
+        r = subprocess.run(cmd, capture_output=True, check=False,
+                           timeout=_cfg.MEDIA_CLIP_TIMEOUT_SEC)
         if r.returncode != 0 or not out_path.exists():
             return None
         return out_path

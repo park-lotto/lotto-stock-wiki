@@ -31,7 +31,8 @@ def env(tmp_path, monkeypatch):
     """job 하나 + 완성 영상(video_path) 실파일까지 갖춘 상태."""
     monkeypatch.setattr(app_module, "DB_PATH", tmp_path / "t.db")
     monkeypatch.setattr(app_module, "_THUMB_DIR", tmp_path / "thumbs")
-    monkeypatch.setattr(app_module, "_SHARE_STORE", {})   # 테스트 간 격리
+    # 단축링크는 DB(share_links)에 있다 — DB_PATH가 tmp라 테스트 간 격리는 자동이다
+    # (2026-08-19: 프로세스 메모리 dict였을 땐 여기서 손으로 비워야 했다).
     s = Store(tmp_path / "t.db")
     s.create_mix_job("j1", ["https://x/1"], 30, "template")
     vid = tmp_path / "final.mp4"
@@ -144,7 +145,9 @@ def test_selected_endpoint_null_when_none(env):
     c, _s, _tp = env
     r = c.get("/api/produce/thumb/selected/j1")
     assert r.status_code == 200
-    assert r.json() == {"ok": True, "name": None, "url": None}
+    # intro = 🖼 '썸네일을 영상 맨 앞에 넣기' 체크 상태(2026-08-18 신설). 안 골랐어도 함께 준다
+    # — 8단계가 이 응답 하나로 카드와 체크박스를 같이 복원한다.
+    assert r.json() == {"ok": True, "name": None, "url": None, "intro": False}
 
 
 def test_selected_endpoint_404_unknown_job(env):
@@ -173,3 +176,16 @@ def test_share_thumb_path_is_public_allowlisted():
     import inspect
     src = inspect.getsource(app_module)
     assert 'path.startswith("/api/share/t/")' in src
+
+
+def test_QR_링크는_서버가_재시작해도_산다(env):
+    """2026-08-19 사장님 "카톡 QR로 보내기 다시 살려줘"의 진짜 원인 — 단축 id가 프로세스
+    메모리에만 있어서, 자동배포(3분 크론)가 서비스를 재시작하면 발급된 QR이 전부 죽었다.
+    라이브 실측: 발급 직후 /s/{sid}·/api/share/v·/api/share/t 가 모두 403(만료).
+    저장소가 DB면 재시작(=새 Store 인스턴스)과 무관하게 그대로 살아 있어야 한다."""
+    import time
+    c, s, tmp = env
+    sid = app_module._share_put("j1")
+    fresh = Store(tmp / "t.db")                      # 재시작 흉내 — 새 연결로 조회
+    assert fresh.get_share_link(sid, int(time.time())) == "j1"
+    assert c.get(f"/s/{sid}").status_code == 200      # 폰이 여는 공유 페이지가 살아 있다

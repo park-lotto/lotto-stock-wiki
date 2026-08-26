@@ -87,10 +87,35 @@ class TestPrompt:
 
     def test_분량은_그_칸_길이에_맞춘다(self, spy):
         """★칸 평균(밀도÷칸수)을 주면 한 문장짜리 훅이 2~3문장으로 부푼다(실측).
-        한 칸만 다시 쓸 때 기준은 **지금 그 칸의 길이**다."""
+        한 칸만 다시 쓸 때 기준은 **지금 그 칸의 길이**다.
+
+        ★단위는 norm(공백 제외)이다(2026-08-24). 프롬프트가 "(공백 제외)"라고
+          적어놓고 실제로는 raw를 말해서, 모델은 26% 긴 문장을 써도 된다고 읽었고
+          판정은 norm으로 해서 떨어뜨렸다 — 지킨 문장이 벌받는 구조였다.
+        """
         spy["replies"] = [{"text": "새 문장이에요"}]
         sg.regen_one_beat(SRC, STYLE, "hook", BEATS)
-        assert ("%d자 안팎" % len(BEATS[0]["text"])) in spy["prompts"][0]
+        assert ("%d자 안팎" % sg.beat_len(BEATS[0]["text"])) in spy["prompts"][0]
+
+    def test_프롬프트가_말하는_수와_판정하는_수가_같다(self, spy):
+        """★프롬프트의 상한 = _beat_len_cap이 실제로 거부하는 값이어야 한다(0순위-B).
+
+        다르면 "시킨 대로 썼는데 반려"가 난다. 길이 수정이 5번 재발한 뿌리가 이것이다.
+        """
+        spy["replies"] = [{"text": "새 문장이에요"}]
+        sg.regen_one_beat(SRC, STYLE, "hook", BEATS)
+        per = sg.beat_len(BEATS[0]["text"])
+        assert ("많아도 %d자" % int(sg._beat_len_cap(per))) in spy["prompts"][0]
+
+    def test_길이_상한은_norm으로_잰다(self, spy):
+        """raw로 재면 상한이 26% 헐렁해져 게이트가 있으나 마나가 된다(실사고 재발 방지)."""
+        prev = BEATS[0]["text"]
+        assert sg.beat_len(prev) < len(prev)                 # 공백이 빠졌다
+        # 상한을 아슬아슬 넘는 문장은 거부돼야 한다(재시도 모두 실패 → None)
+        over = "가" * (int(sg._beat_len_cap(sg.beat_len(prev))) + 5)
+        spy["replies"] = [{"text": over}] * 5
+        assert sg.regen_one_beat(SRC, STYLE, "hook", BEATS) is None
+
 
     def test_틀을_하나_고르면_갈아끼우라고_못박는다(self, spy):
         """느슨하게 주면 모델이 지금 칸의 다른 틀을 유지하고 고른 틀을 무시한다(실측 2/4)."""

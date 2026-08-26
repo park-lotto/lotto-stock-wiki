@@ -21,6 +21,8 @@ import os
 from contextlib import contextmanager
 
 from shopping_shorts import config
+# 자산차단은 channel_archive에 한 벌만 둔다(0순위-B) — 여기서 가져다 쓴다.
+from shopping_shorts.channel_archive import block_heavy_assets
 from shopping_shorts.instagram_parse import (
     classify_channel_result, extract_follower_count, extract_hashtag_search_items,
     extract_reel_nodes, parse_hashtag_search_item, parse_reel_node,
@@ -28,7 +30,14 @@ from shopping_shorts.instagram_parse import (
 
 # 마지막 실행의 분류 집계 — 호출부(service/app)가 job 결과에 담아 화면·보고에 쓴다.
 # ★이 숫자가 부계정(B안) 도입 여부의 판단 근거다.
-LAST_TALLY = {"ok": 0, "login_wall": 0, "not_found": 0, "error": 0}
+LAST_TALLY = {"ok": 0, "login_wall": 0, "unknown": 0, "error": 0}
+
+# 마지막 실행의 **채널별** 판정 [(username, verdict, page_url), ...].
+# ★왜 필요한가(2026-08-17 실사고): 집계 숫자만 남기던 탓에 "61채널 실패"는 알아도
+# **어느 채널이었는지 복구할 방법이 없었다**. 원인 조사에서 실패 목록을 다시 만들려고
+# 등급 계산을 되돌려봤지만 329개가 나와 실제 런 110개와 맞지 않았다(=조사 불가).
+# 숫자가 아니라 목록을 남겨야 다음에 바로 재시도·확인할 수 있다.
+LAST_VERDICTS = []
 
 # 인스타가 릴스 목록을 채울 때 부르는 내부 API 경로 조각. 이 중 하나가 들어간
 # 응답만 JSON으로 읽는다(이미지·폰트 등 나머지는 무시).
@@ -93,6 +102,11 @@ def _scrape_one_playwright(username, session_path=None, proxy=None):
             ctx = browser.new_context(**ctx_kw)
             Stealth().apply_stealth_sync(ctx)
             page = ctx.new_page()
+            # ★프록시 대역폭 절감(2026-08-17) — 이미지·미디어·폰트는 우리가 안 쓴다
+            #   (데이터는 아래 _on_response graphql 후킹으로만 받는다).
+            #   8/09 로테이션 도입 뒤 293채널이 전부 유료 프록시로 나가 4일에 25.4GB를
+            #   태웠다(402 Payment Required). 판단은 channel_archive에 한 벌만 둔다.
+            block_heavy_assets(page)
 
             def _on_response(resp):
                 if not any(h in resp.url for h in _REEL_API_HINTS):
@@ -122,7 +136,21 @@ def _scrape_one_playwright(username, session_path=None, proxy=None):
             page.on("response", _on_response)
             page.goto(url, timeout=config.INSTAGRAM_PW_TIMEOUT_MS,
                       wait_until="domcontentloaded")
-            page.wait_for_timeout(2500)          # 릴스 목록 XHR이 도착할 여유
+            # ★잠들지 말고 지켜본다(2026-08-17 수리). 예전엔 wait_for_timeout(2500)으로
+            # **2.5초 자고 일어나 있으면 쓰고 없으면 빈손**으로 나갔다. 인스타 응답이
+            # 2.5초를 넘기는 순간 nodes=0 → classify가 "unknown"으로 떨어뜨리고,
+            # 그게 예전 이름 not_found여서 "채널이 없어졌다"로 오독됐다.
+            #   실측(같은 슬롯·같은 14채널): 2.5초 5/14 → 10초 14/14.
+            #   실측(수확 0이던 채널 30개, 15초): 30/30 전부 12건 회수.
+            # 이제 응답이 잡히면 **즉시** 진행하므로 빠른 채널은 2.5초도 안 기다린다
+            # (전체 시간은 느린 채널에서만 늘어난다).
+            _deadline_ms = config.INSTAGRAM_PW_LIST_WAIT_MS
+            _waited = 0
+            while _waited < _deadline_ms:
+                if captured:
+                    break
+                page.wait_for_timeout(250)
+                _waited += 250
             # 간헐 챌린지 재시도(2026-08-09): 같은 계정·프록시로 단독 방문은 정상인데
             # 수집 경로에서만 update_risky_contactpoint가 간헐적으로 뜬다(실측).
             # 챌린지면 잠깐 쉬고 최대 2회 재진입 — 대개 두 번째엔 정상 페이지가 온다.
@@ -183,12 +211,26 @@ def _detail_context():
     # 챌린지에 걸려 상세 조회가 통째로 None을 돌려주는 사고가 났다(발굴 0건과
     # 같은 뿌리, 0순위-B). 로테이션 풀(reference — 신선 계정)을 1순위로 쓰고,
     # 풀이 비어 있을 때만 기존 단일 세션으로 폴백한다 — 동작 불변.
+    # ★계정↔프록시는 **짝으로** 정한다(0순위-B, 2026-08-24 실사고).
+    # 예전엔 slots[0] 고정 + 프록시가 elif라, 0번 계정만 프록시 없이 AWS 서버
+    # 맨 IP(43.200.48.69)로 매일 119~125건씩 나갔다. 나머지 6개는 한국 가정회선
+    # (kr-11~)으로 나가는데 0번만 데이터센터 IP → 인스타가 세션을 회수했다
+    # (HTTP 302 + set-cookie: sessionid=deleted. 쿠키 만료일은 2027년이었다).
+    #
+    # ⚠️ 로테이션만 붙이면 7계정이 같은 서버IP를 돌려써 **전멸**한다.
+    # 계정을 고르면 그 계정의 짝 출구도 반드시 함께 건다.
     session_path = ""
+    _proxy_kw = None
     try:
-        from shopping_shorts.channel_archive import POOL_REFERENCE, session_slots
+        from shopping_shorts.channel_archive import (POOL_REFERENCE, live_slots,
+                                                     playwright_proxy_kw,
+                                                     session_slots, slot_proxy)
         slots = session_slots(POOL_REFERENCE)
         if slots:
-            session_path = slots[0]
+            # 죽은 슬롯은 건너뛰되 **원래 인덱스를 보존**한다(출구 IP가 인덱스에
+            # 매여 있어, 당겨지면 계정↔IP 1:1이 통째로 뒤바뀐다).
+            _i, session_path = live_slots(slots)[0]
+            _proxy_kw = playwright_proxy_kw(slot_proxy(_i, POOL_REFERENCE))
     except Exception:                       # noqa: BLE001 — 풀 조회 실패 시 기존 경로
         pass
     if not session_path and config.INSTAGRAM_SESSION_PATH \
@@ -196,6 +238,8 @@ def _detail_context():
         session_path = config.INSTAGRAM_SESSION_PATH
     if session_path:
         ctx_kw["storage_state"] = session_path
+    if _proxy_kw:
+        ctx_kw["proxy"] = _proxy_kw
     elif config.INSTAGRAM_PROXY:
         from shopping_shorts.channel_archive import playwright_proxy_kw
         _pk = playwright_proxy_kw(config.INSTAGRAM_PROXY)
@@ -268,6 +312,11 @@ def _reel_detail_via_page(ctx, code, timeout_ms=60000):
     갈아엎힘에 강하다."""
     found = {}
     page = ctx.new_page()
+    # ★프록시 대역폭 절감(2026-08-17) — 이미지·미디어·폰트는 우리가 안 쓴다
+    #   (데이터는 아래 _on_response graphql 후킹으로만 받는다).
+    #   8/09 로테이션 도입 뒤 293채널이 전부 유료 프록시로 나가 4일에 25.4GB를
+    #   태웠다(402 Payment Required). 판단은 channel_archive에 한 벌만 둔다.
+    block_heavy_assets(page)
 
     def _on_resp(res):
         if found:
@@ -370,6 +419,11 @@ def _search_hashtag_playwright(tag):
             ctx = browser.new_context(**ctx_kw)
             Stealth().apply_stealth_sync(ctx)
             page = ctx.new_page()
+            # ★프록시 대역폭 절감(2026-08-17) — 이미지·미디어·폰트는 우리가 안 쓴다
+            #   (데이터는 아래 _on_response graphql 후킹으로만 받는다).
+            #   8/09 로테이션 도입 뒤 293채널이 전부 유료 프록시로 나가 4일에 25.4GB를
+            #   태웠다(402 Payment Required). 판단은 channel_archive에 한 벌만 둔다.
+            block_heavy_assets(page)
 
             def _on_response(resp):
                 if "graphql" not in resp.url:
@@ -444,7 +498,8 @@ def fetch_reels(usernames, on_progress=None, _scrape_one=None):
     names = [(u or "").strip().lstrip("@") for u in (usernames or [])]
     names = [u for u in names if u]
     total = len(names)
-    tally = {"ok": 0, "login_wall": 0, "not_found": 0, "error": 0}
+    tally = {"ok": 0, "login_wall": 0, "unknown": 0, "error": 0}
+    verdicts = []
     items = []
     # 계정 로테이션(2026-08-09): 기본은 기존 단일 계정(서버 IP 직결) — 사장님 지시로
     # 아카이브 크롤이 끝나기 전까지 그 3계정을 수집에 돌려쓰지 않는다. 아카이브 종료 후
@@ -457,9 +512,16 @@ def fetch_reels(usernames, on_progress=None, _scrape_one=None):
     # reference 폴더가 없으면 기존처럼 상위 폴더 전체로 폴백한다(동작 불변).
     slots = []
     if _scrape_one is None and os.getenv("INSTAGRAM_COLLECT_ROTATION", "") == "1":
-        from shopping_shorts.channel_archive import (POOL_REFERENCE, session_slots,
-                                                     slot_proxy)
-        slots = [(gi, sp) for gi, sp in enumerate(session_slots(POOL_REFERENCE))]
+        from shopping_shorts.channel_archive import (POOL_REFERENCE, live_slots,
+                                                     session_slots, slot_proxy)
+        # ★죽은 계정을 빼고 돈다(2026-08-24). 종전엔 enumerate(session_slots(...))로
+        #   **전체**를 돌려서, 계정 절반이 인스타에 회수된 날엔 그 확률만큼 그대로
+        #   unknown이 됐다(실측 08-24: 10슬롯 중 5개 사망 → 42건, 기준 50 미달로
+        #   랭킹 캐시가 통째로 안 갱신). 같은 날 아침 히트작 쪽에만 붙여둔 live_slots를
+        #   레퍼런스 수집에도 붙인다 — 판정·인덱스 보존 규칙은 그 함수 한 곳에 있다.
+        #   ⚠️live_slots는 (원래 인덱스, 경로)를 준다. 인덱스를 보존해야 slot_proxy가
+        #   주는 출구 IP가 안 바뀐다(계정↔IP 1:1). 전멸 판정이면 원본을 그대로 준다.
+        slots = list(live_slots(session_slots(POOL_REFERENCE)))
     for i, uname in enumerate(names, start=1):
         if slots:
             gi, sp = slots[(i - 1) % len(slots)]
@@ -469,6 +531,8 @@ def fetch_reels(usernames, on_progress=None, _scrape_one=None):
             nodes, page_url, error = scrape(uname)
         verdict = classify_channel_result(nodes, page_url, error)
         tally[verdict] = tally.get(verdict, 0) + 1
+        # 채널별로 남긴다 — 숫자만 남기면 나중에 "어느 채널이 실패했나"를 못 되살린다.
+        verdicts.append((uname, verdict, page_url or ""))
         if verdict == "ok":
             for n in nodes[:config.RESULTS_PER_CHANNEL]:
                 d = parse_reel_node(n, uname)
@@ -478,6 +542,15 @@ def fetch_reels(usernames, on_progress=None, _scrape_one=None):
             on_progress(i, total, len(items), dict(tally))
     LAST_TALLY.clear()
     LAST_TALLY.update(tally)
+    LAST_VERDICTS[:] = verdicts
+    # 실패한 채널은 이름과 도달 URL을 그대로 찍는다 — 로그만 보면 바로 재시도할 수 있다.
+    _bad = [(u, v, url) for u, v, url in verdicts if v != "ok"]
+    if _bad:
+        print(f"[수집] 실패 {len(_bad)}채널: " +
+              ", ".join(f"{u}({v})" for u, v, _ in _bad[:40]) +
+              (" …" if len(_bad) > 40 else ""))
+        for u, v, url in _bad[:10]:
+            print(f"  - {u} {v} {url}")
     return items
 
 
@@ -534,6 +607,11 @@ def _fetch_profiles_playwright(usernames):
             for uname in usernames:
                 captured = {}
                 page = ctx.new_page()
+                # ★프록시 대역폭 절감(2026-08-17) — 이미지·미디어·폰트는 우리가 안 쓴다
+                #   (데이터는 아래 _on_response graphql 후킹으로만 받는다).
+                #   8/09 로테이션 도입 뒤 293채널이 전부 유료 프록시로 나가 4일에 25.4GB를
+                #   태웠다(402 Payment Required). 판단은 channel_archive에 한 벌만 둔다.
+                block_heavy_assets(page)
 
                 def _on_response(resp, captured=captured):
                     if "graphql" not in resp.url:

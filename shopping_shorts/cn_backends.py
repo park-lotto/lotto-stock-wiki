@@ -11,7 +11,7 @@
 import os
 
 from shopping_shorts import config, douyin_search, xiaohongshu_search
-from shopping_shorts.channel_archive import playwright_proxy_kw
+from shopping_shorts.channel_archive import block_heavy_assets, playwright_proxy_kw
 
 _SHORT_MAX_SECS = 90
 
@@ -125,6 +125,11 @@ def pw_xiaohongshu(keyword, max_results):
             browser = p.chromium.launch(headless=True)
             ctx = browser.new_context(storage_state=session)
             page = ctx.new_page()
+            # 샤오홍슈는 **직결**(프록시 없음)이라 과금 대상은 아니지만, 이미지를 안 받으면
+            # 그만큼 빨라진다. _XHS_EXTRACT는 img의 **src 속성 문자열**만 읽으므로
+            # 본체 로드와 무관하다 — 실측(2026-08-17 Playwright): 차단 ON에서도
+            # img의 src속성 1/1 유지, image·font 응답만 사라지고 xhr·document·CSS는 통과.
+            block_heavy_assets(page)
             page.goto(url, timeout=60000, wait_until="domcontentloaded")
             page.wait_for_timeout(9000)      # SSR 카드가 채워질 여유(서버 실측값)
             cards = page.evaluate(_XHS_EXTRACT)
@@ -219,6 +224,11 @@ def pw_douyin(keyword, max_results):
             ctx.add_init_script(
                 "Object.defineProperty(navigator,'webdriver',{get:()=>undefined});")
             page = ctx.new_page()
+            # ★프록시 대역폭 절감(2026-08-17) — 도우인은 CN 주거용 프록시로 나가는데
+            #   검색 결과는 아래 _on_response(API 응답)로만 받는다. 카드 썸네일·영상은
+            #   URL 문자열만 저장하므로 이미지·미디어 본체를 받을 이유가 없다.
+            #   판단은 channel_archive.block_heavy_assets 한 벌뿐이다(0순위-B).
+            block_heavy_assets(page)
             page.on("response", _on_response)
             page.goto(f"https://www.douyin.com/search/{quote(keyword)}",
                       timeout=70000, wait_until="domcontentloaded")

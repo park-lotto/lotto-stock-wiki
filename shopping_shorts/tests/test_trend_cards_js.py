@@ -5,6 +5,7 @@ import shutil
 import subprocess
 
 import pytest
+from shopping_shorts.tests.js_harness import run_js_proc
 
 INDEX_HTML = pathlib.Path(__file__).resolve().parents[1] / "static" / "index.html"
 NODE = shutil.which("node")
@@ -47,8 +48,7 @@ _DRIVER = r"""
 
 @pytest.mark.skipif(NODE is None, reason="node 미설치")
 def test_trend_card_functions():
-    proc = subprocess.run([NODE, "-e", _slice() + _DRIVER],
-                          capture_output=True, text=True, encoding="utf-8")
+    proc = run_js_proc(_slice() + _DRIVER, capture_output=True, text=True, encoding="utf-8")
     assert proc.returncode == 0, proc.stderr
     r = json.loads(proc.stdout)
     assert r["diso"]["platforms"] and len(r["diso"]["platforms"]) == 2

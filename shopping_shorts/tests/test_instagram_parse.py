@@ -134,9 +134,9 @@ def test_classify_error_takes_priority_over_empty():
     assert classify_channel_result([], "https://www.instagram.com/u/reels/", "Timeout") == "error"
 
 
-def test_classify_not_found_when_empty_without_error():
+def test_classify_unknown_when_empty_without_error():
     """비공개·삭제 계정 — 로그인벽과 구분해야 한다(부계정을 붙여도 안 되는 쪽)."""
-    assert classify_channel_result([], "https://www.instagram.com/u/reels/", None) == "not_found"
+    assert classify_channel_result([], "https://www.instagram.com/u/reels/", None) == "unknown"
 
 
 # ── 해시태그 탐색 발굴(2026-07-30) — 서버 실측: /explore/tags/{tag}/ 진입 시
@@ -227,7 +227,7 @@ def test_classify_gate_url_is_not_confused_with_missing_channel():
     gate = classify_channel_result(
         [], "https://www.instagram.com/accounts/update_risky_contactpoint/", None)
     gone = classify_channel_result([], "https://www.instagram.com/u/reels/", None)
-    assert gate == "login_wall" and gone == "not_found" and gate != gone
+    assert gate == "login_wall" and gone == "unknown" and gate != gone
 
 
 def test_extract_follower_count_graphql_user():
@@ -252,3 +252,48 @@ def test_parse_reel_node_carries_follower():
     from shopping_shorts.instagram_parse import parse_reel_node
     d = parse_reel_node({"code": "abc", "pk": "1", "_owner_follower_count": 6653}, "u")
     assert d["ownerFollowers"] == 6653
+
+
+def test_reel_node_keeps_real_owner_not_requested_account():
+    """남의 릴이 섞여 오면 **그 릴의 진짜 주인**으로 저장돼야 한다.
+
+    2026-08-18 실사고: 카드엔 maison_homedino인데 [영상보기]를 누르면 chuuchuu_tem
+    영상이 열렸다(og:url 실측 3/3). 요청한 계정을 무조건 박은 게 원인.
+    팔로워도 짝으로 따라가야 한다 — 안 그러면 남의 영상에 이 채널 팔로워가 붙는다.
+    """
+    node = {"code": "DcKIB8UTf2g", "user": {"username": "chuuchuu_tem", "full_name": "츄츄템"},
+            "_owner_follower_count": 47588}
+    d = parse_reel_node(node, "maison_homedino")
+    assert d["ownerUsername"] == "chuuchuu_tem"
+    assert d["ownerFollowers"] == 0        # 연 프로필(maison)의 팔로워를 물려주면 안 된다
+
+
+def test_reel_node_falls_back_to_requested_account_when_node_has_no_owner():
+    node = {"code": "AAA111", "_owner_follower_count": 1234}
+    d = parse_reel_node(node, "maison_homedino")
+    assert d["ownerUsername"] == "maison_homedino"
+    assert d["ownerFollowers"] == 1234     # 주인이 같으면 종전대로 프로필 팔로워를 쓴다
+
+
+def test_새_껍데기_fetch_XDTUserDict도_읽는다():
+    """2026-08-20 실사고: 인스타가 릴스 목록 경로를
+    xdt_api__v1__clips__user__connection_v2 → fetch__XDTUserDict.clips_connection 으로
+    바꾸자 104채널 전부 0건이 됐다. 속(code·play_count)은 그대로였다."""
+    payload = {"data": {"fetch__XDTUserDict": {"clips_connection": {"edges": [
+        {"node": {"media": {"code": "DbqByBlKdIh", "play_count": 1800000,
+                            "like_count": 12, "comment_count": 3}}},
+    ]}}}}
+    nodes = extract_reel_nodes(payload)
+    assert len(nodes) == 1
+    got = parse_reel_node(nodes[0], "bodlelog")
+    assert got["shortcode"] == "DbqByBlKdIh"
+    assert got["videoViewCount"] == 1800000
+
+
+def test_옛_껍데기도_계속_읽는다():
+    """새 경로를 더하면서 옛 경로를 지우지 않았는지 — 지우면 옛 응답 경로가 조용히 죽는다."""
+    payload = {"data": {"xdt_api__v1__clips__user__connection_v2": {"edges": [
+        {"node": {"media": {"code": "OLDCODE1234", "play_count": 7}}},
+    ]}}}
+    nodes = extract_reel_nodes(payload)
+    assert len(nodes) == 1 and nodes[0]["code"] == "OLDCODE1234"

@@ -106,7 +106,60 @@ v30에는 희귀 감정이 **하나도 없다**. 트레이드오프:
 
 ---
 
+## ✅ 타임스탬프(자막 싱크) 실측 완료 — 2026-08-19
+
+**결론: 붙일 수 있다. 자막 싱크는 안 밀린다.** 배선 최대 걸림돌이었던 항목이 해소됐다.
+
+`POST /v1/text-to-speech/with-timestamps` (200). ElevenLabs와 **같은 경로 이름**이다.
+`/v1/text-to-speech/{voice_id}/with-timestamps`는 404 — voice_id를 경로에 넣지 않는다(요청 본문으로).
+`with_timestamps: true` 같은 **요청 필드로는 안 된다** — 200이 오지만 그냥 wav다(0순위 함정3 재현).
+
+### 응답 구조 (실측)
+
+```jsonc
+{"audio": "<base64>", "audio_format": "mp3", "audio_duration": 3.683,
+ "words":      [{"text":"이거","start":0.261,"end":0.401}, ...],   // 6개
+ "characters": [{"text":"이","start":0.261,"end":0.321}, ...]}     // 23개
+```
+
+**원문 23자 = characters 23개 정확히 일치**(공백 포함). 우리처럼 보낸 문자열 자체의 정렬이라
+맞출 대상이 없다 = 어긋날 수가 없다. ElevenLabs와 같은 성질.
+
+### 우리 형식으로 변환 — 실제로 통과시킴
+
+`tts_timestamps.words_from_alignment`에 먹여 **단어 6개 정상 추출 확인**:
+`이거 / 수리 / 맡기면 / 30만원은 / 그냥 / 깨지죠.`
+
+필드명만 바꾸면 된다(리스트→평행배열):
+
+| 우리(ElevenLabs) | 타입캐스트 |
+|---|---|
+| `characters[]` | `characters[].text` |
+| `character_start_times_seconds[]` | `characters[].start` |
+| `character_end_times_seconds[]` | `characters[].end` |
+
+⚠️ **`end`까지 반드시 실어야 한다** — `words_from_alignment:117`이 셋 중 하나라도 없으면
+`None`을 반환하고 조용히 ASR 폴백으로 강등된다(비용·오차 부활). 실제로 이 실측 중에 밟았다.
+
+### 같이 확인한 것
+
+- **mp3 직접 지원**: `output.audio_format:"mp3"` → 200, 실제 mp3. 현행 mp3 사이드카 전제 그대로.
+- **audio_tempo 1.6 실동작**: 3.683초 → 2.406초. 프리셋 `default_speed`가 1.6인데 ElevenLabs는
+  1.2 clamp라 `audio_post` atempo로 되돌리던 것을 **API가 직접 처리**. 2.0도 200.
+- **크레딧 헤더 없음** → 타임스탬프 추가과금 여부는 헤더로 확인 불가. 대시보드에서 봐야 한다.
+
+### 하네스
+
+`docs/typecast/probe_ts.py`(엔드포인트 탐색) · `probe_ts2.py`(구조 해부 + 우리 함수 통과 검증).
+⚠️ `probe_ts`를 import하면 그쪽 본문이 다시 실행된다(실측: stdout 재래핑 충돌) — 복사해 쓸 것.
+
+---
+
 ## ⏭ 미완료
+
+### 0. 결제 전 확인 (사장님 손 필요)
+웹 에디터 구독(프로 39,000원)과 **API는 별개**다. 결제 전 API 크레딧 포함 여부를 확인할 것.
+지금은 무료 티어 키로 위 실측을 다 했다(30k 크레딧/월).
 
 ### 1. emotion_vector 정체 (막힘 — 사장님 손 필요)
 `emotion_type:"embedding"` + `emotion_vector`(1024/1280 실수)로 **합성 성공은 확인**.

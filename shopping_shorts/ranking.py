@@ -2,6 +2,7 @@
 from datetime import datetime, timezone
 from shopping_shorts.config import GRADE_THRESHOLDS
 from shopping_shorts.categorize import categorize
+from shopping_shorts.yt_style import yt_style as _yt_style
 
 
 def hours_since(ts_iso, now=None):
@@ -33,6 +34,23 @@ def _category_of(meta, reel):
     if guess == "기타":
         return (meta.get("category") or "").strip() or guess
     return guess
+
+
+def _style_of(meta, reel):
+    """유튜브 화법 스타일 — 캡션 우선, 없으면 **채널 스타일**(2026-08-19).
+
+    `_category_of`와 같은 구조다. 유튜브 제목은 후킹이 목적이라 밋밋할 때가 많고
+    (이븐쇼핑 실측: 제목만으론 12/12가 '기타'), 이 바닥은 **채널이 화법을 지킨다**
+    (살림킹왕짱 84편이 한 공식). 그래서 캡션으로 못 잡으면 채널 스타일로 폴백한다.
+
+    ★`category`(제품축)를 덮어쓰지 않고 **나란히** 산다 — 두 축은 서로 다른
+    질문이고 교차 조회가 목적이다("썰쇼핑 중 홈템").
+    빈 문자열은 '모른다'는 뜻이다 — '기타'라는 가짜 스타일을 만들지 않는다.
+    """
+    guess = _yt_style(meta.get("name"), reel.get("caption", ""))
+    if guess:
+        return guess
+    return (meta.get("yt_style") or "").strip()
 
 
 def build_items(reels, meta, prev_comments, prev_delta, now=None, window_hours=48):
@@ -100,6 +118,8 @@ def build_items(reels, meta, prev_comments, prev_delta, now=None, window_hours=4
             # 쓸 수 있게 됐으므로 죽이지 않고 별도 지표로 남긴다.
             "fan_density": (comments / followers) if followers else 0.0,
             "category": _category_of(meta, r),
+            # 화법축(2026-08-19) — category와 나란히 간다. 유튜브 탭 필터가 이걸 읽는다.
+            "yt_style": _style_of(meta, r),
             "caption": r.get("caption", ""),
         })
     return items
@@ -142,11 +162,20 @@ def sort_by(items, tab):
     return sorted(items, key=lambda i: (i.get(key) or 0), reverse=True)
 
 
-def build_youtube_items(raw, prev_base, prev_delta, now=None, window_hours=48):
+def build_youtube_items(raw, prev_base, prev_delta, now=None, window_hours=48,
+                        subs=None):
     """유튜브 원시 dict → 공통 item(조회수 기반 지표). 48h 이내만.
 
     prev_base(shortcode)->int|None: 직전 base_count(조회수). prev_delta 동일.
     speed=조회수/경과h, density=(좋아요+댓글)/조회수, accel=Δ−직전Δ.
+
+    subs {channel_id: 구독자수}|None (2026-08-24 사장님 "구독자대비로 해줘"):
+      넘기면 followers·fan_density를 채운다. **유튜브의 구독자 대비는 조회수 기준**
+      (조회수÷구독자) — 이 플랫폼의 다른 지표가 전부 조회수 축이라 여기만 댓글로
+      갈리면 같은 탭 안에서 뜻이 달라진다.
+    ★모르는 채널은 0이 아니라 **None**으로 남긴다. 0으로 채우면 "구독자 대비 0%"라는
+      거짓 정보가 되고 apply_grades 정규화에서 구조적 최하위가 된다(인스타 density가
+      실제로 밟은 함정 — 212/316건이 0으로 고착했다).
     """
     now = now or datetime.now(timezone.utc)
     items = []
@@ -166,13 +195,15 @@ def build_youtube_items(raw, prev_base, prev_delta, now=None, window_hours=48):
         accel = None if prev_d is None else delta - prev_d
         likes = int(r.get("likes") or 0)
         comments = int(r.get("comments") or 0)
+        # 구독자: 모르는 채널·0(비공개)은 None으로 떨어뜨린다(0 나눗셈·거짓 0% 방지)
+        _subs_n = int((subs or {}).get(r.get("channel_id")) or 0) or None
         items.append({
             "platform": "youtube",
             "shortcode": sc,
             "name": r.get("channel_title"),
             "username": r.get("channel_id"),
             "inpock": "",
-            "followers": None,
+            "followers": _subs_n,
             "thumbnail": r.get("thumbnail", ""),
             "video_url": "",                       # 인라인은 mix 다운로드 시 해석
             "url": f"https://www.youtube.com/watch?v={sc}",
@@ -186,6 +217,8 @@ def build_youtube_items(raw, prev_base, prev_delta, now=None, window_hours=48):
             "accel": accel,
             "speed": views / age if age > 0 else float(views),
             "density": (likes + comments) / views if views else 0.0,
+            # 구독자 대비 = 조회수 ÷ 구독자. 모르면 None(0 나눗셈·거짓 0% 방지).
+            "fan_density": (views / _subs_n) if _subs_n else None,
             "category": categorize(r.get("channel_title"), r.get("title", "")),
             "caption": r.get("title", ""),
         })
@@ -394,4 +427,51 @@ def build_overseas_items(raw, prev_base, prev_delta, now=None, window_hours=336)
             # 보여 정렬이 no-op이 된다(2026-07-29 Critical 2).
             "text_level": r.get("text_level"),
         })
+    return items
+
+
+def fill_intensity(items, now=None):
+    """강도 지표(시간당댓글·조회수당댓글·팔로워당댓글)가 없는 항목에 채워 넣는다.
+
+    ★왜 필요한가(2026-08-17 실사고): 기간 탭(hits_since)·역대 탭(archive_hits)은
+    build_items를 안 거치고 DB에서 바로 꺼내므로 speed/density가 없다. 그런데 화면은
+    `i.speed.toFixed(1)`을 무조건 부른다 → **첫 카드에서 render가 통째로 죽고**
+    화면이 이전 상태로 얼어붙었다. 증상은 "탭을 눌러도 안 넘어간다 / 지표·카테고리도
+    안 먹는다"로 나타나 버퍼 문제처럼 보였지만, 실제로는 그리는 단계의 예외 하나였다.
+
+    식은 build_items(:83, :97)와 같은 정의를 쓴다 — 이름이 같은데 값이 다르면
+    "저기선 왜 이렇고 여기선 왜 이러냐"가 된다(0순위-B).
+      시간당댓글  = 댓글 / 경과시간
+      조회수당댓글 = 댓글 / 조회수
+      팔로워당댓글 = 댓글 / 팔로워
+    이미 값이 있으면 건드리지 않는다(수집 경로의 값이 늘 우선).
+    """
+    for it in items or []:
+        # ★썸네일 이름 맞추기(2026-08-17): 화면은 i.thumbnail을 읽는데 기간(hits_since)·
+        # 역대(archive_hits)는 컬럼명 그대로 thumb으로 준다 → 카드가 전부 검게 빈다.
+        # 같은 것을 두 이름으로 부르면 반드시 한쪽이 빠진다(0순위-B). 여기서 한 번만 맞춘다.
+        if not it.get("thumbnail") and it.get("thumb"):
+            it["thumbnail"] = it["thumb"]
+        comments = int(it.get("comments") or 0)
+        views = int(it.get("views") or 0)
+        followers = int(it.get("followers") or 0)
+        if it.get("age_hours") is None:
+            # 발행시각이 없거나 모양이 깨진 항목이 섞여 있다(아카이브 20만 건 실측).
+            # 여기서 예외가 나면 또 화면 전체가 죽으므로 0으로 떨군다.
+            try:
+                it["age_hours"] = round(
+                    hours_since(it.get("upload_ts") or it.get("posted_at") or "", now), 1)
+            except Exception:      # noqa: BLE001
+                it["age_hours"] = 0
+        if it.get("speed") is None:
+            age = it.get("age_hours") or 0
+            it["speed"] = (comments / age) if age > 0 else float(comments)
+        if it.get("density") is None:
+            it["density"] = (comments / views) if views else 0.0
+        if it.get("fan_density") is None:
+            it["fan_density"] = (comments / followers) if followers else 0.0
+        for k, v in (("delta", 0), ("accel", 0.0), ("is_new", False),
+                     ("likes", 0), ("views", 0), ("followers", 0)):
+            if it.get(k) is None:
+                it[k] = v
     return items

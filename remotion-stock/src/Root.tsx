@@ -8,6 +8,11 @@ import { BannerComposition } from './BannerComposition';
 // 숏템메이커 VSL(2026-07-30, T1) — 배경 화면녹화를 구간별 배속으로 재생하는 뼈대.
 import { VslDemo, VSL_DEMO_FRAMES, VSL_FPS } from './vsl/VslDemo';
 import { VIDEO } from './theme';
+import { S01_Problem, ST2_S01_FRAMES } from './shottem2/S01_Problem';
+import { S02_Common, ST2_S02_FRAMES } from './shottem2/S02_Common';
+import { S03_Limit, ST2_S03_FRAMES } from './shottem2/S03_Limit';
+import { S04_Direction, ST2_S04_FRAMES, S05_Alternatives, ST2_S05_FRAMES } from './shottem2/S04_S05';
+import { S06_Intro, ST2_S06_FRAMES } from './shottem2/S06_Intro';
 import { AIStockVideo } from './AIStockVideo';
 import { BuyHighVideo } from './BuyHighVideo';
 import { LeadingStockVideo } from './LeadingStockVideo';
@@ -813,6 +818,54 @@ export const RemotionRoot: React.FC = () => {
         width={1920}
         height={1080}
       />
-    </>
+          <Composition
+        id="ST2-S01"
+        component={S01_Problem}
+        durationInFrames={ST2_S01_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="ST2-S02"
+        component={S02_Common}
+        durationInFrames={ST2_S02_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="ST2-S03"
+        component={S03_Limit}
+        durationInFrames={ST2_S03_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="ST2-S04"
+        component={S04_Direction}
+        durationInFrames={ST2_S04_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="ST2-S05"
+        component={S05_Alternatives}
+        durationInFrames={ST2_S05_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="ST2-S06"
+        component={S06_Intro}
+        durationInFrames={ST2_S06_FRAMES}
+        fps={30}
+        width={1920}
+        height={1080}
+      />
+</>
   );
 };

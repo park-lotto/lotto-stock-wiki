@@ -24,6 +24,11 @@ _IMGUR_ENDPOINT = "https://api.imgur.com/3/image"
 _IMGUR_CLIENT_ID = os.environ.get("IMGUR_CLIENT_ID", "546c25a59c58ad7")
 _IMGBB_ENDPOINT = "https://api.imgbb.com/1/upload"
 _IMGBB_API_KEY = os.environ.get("IMGBB_API_KEY", "")
+_ACCOUNT_ENDPOINT = "https://serpapi.com/account"
+# 실잔량 조회 캐시(초). 렌즈 호출마다 SerpApi를 한 번 더 왕복하면 체감지연이 늘어나므로
+# 캐시한다. 렌즈 1클릭이 최대 _MAX_CALLS(3)회를 태우니 TTL 동안 최대 그만큼만 어긋난다.
+_QUOTA_TTL_S = float(os.environ.get("LENS_QUOTA_TTL", "600"))
+_quota_cache = {"at": 0.0, "left": None}
 _MAX_ATTEMPTS = 3          # 일시적 'no results'에 대한 재시도 횟수
 _RETRY_SLEEP = 2.5         # 재시도 전 대기(초) — 갓 호스팅된 이미지가 인덱싱될 시간
 
@@ -35,6 +40,46 @@ _PLATFORM_DOMAINS = [
     ("xiaohongshu", ("xiaohongshu.com", "xhslink.com")),
     ("douyin", ("douyin.com", "iesdouyin.com")),
 ]
+
+
+def account_searches_left(force=False):
+    """SerpApi **실잔량**(모든 키의 total_searches_left 합). 못 읽으면 None.
+
+    왜 필요한가 — 우리 `lens_count`는 사장님 클릭 1회당 1만 올리는데 실제로는
+    로케일 3벌 × 재시도로 **최대 3회**가 나간다. 2026-08-17 서버 실측:
+    우리 카운터 196/500인데 실제 SerpApi는 369/500 소진(남은 131).
+    상수 × 키개수로는 이 어긋남을 영영 못 따라잡고, 키가 다 죽는 순간
+    렌즈는 '한도 초과' 안내도 없이 조용히 빈손이 된다.
+
+    조회 실패(네트워크·키 오류)는 **None**으로 돌려 호출부가 기존 상수 방식으로
+    폴백하게 한다 — 잔량을 못 읽었다고 렌즈를 막아버리면 더 나쁘다."""
+    now = time.time()
+    if not force and _quota_cache["left"] is not None \
+            and now - _quota_cache["at"] < _QUOTA_TTL_S:
+        return _quota_cache["left"]
+    keys = [k for k in (SERPAPI_KEYS or ([SERPAPI_KEY] if SERPAPI_KEY else [])) if k]
+    if not keys:
+        return None
+    total = 0
+    seen = False
+    for k in keys:
+        try:
+            r = requests.get(_ACCOUNT_ENDPOINT, params={"api_key": k}, timeout=15)
+            data = r.json() if r.status_code == 200 else None
+        except (requests.RequestException, ValueError):
+            continue
+        if not isinstance(data, dict):
+            continue
+        left = data.get("total_searches_left")
+        if isinstance(left, bool) or not isinstance(left, (int, float)):
+            continue       # 문자열·None을 숫자로 넘겨받아 0으로 뭉개지 않는다
+        total += max(0, int(left))
+        seen = True
+    if not seen:
+        return None        # 한 키도 못 읽었다 = 모른다 (0이 아니다)
+    _quota_cache["at"] = now
+    _quota_cache["left"] = total
+    return total
 
 
 def upload_to_imgur(image_bytes, client_id=None):
@@ -162,28 +207,48 @@ def is_photo_post(platform, link):
 # 틱톡·유튜브는 공식 oEmbed가 무료·무인증이라, 결과 URL을 실조회해 **실제로 열리는
 # 영상의 제목·썸네일로 교체**한다 → 보이는 것과 열리는 것이 항상 일치. 404(삭제·비공개)는
 # link_ok=False로 표시해 프론트가 숨긴다. 타임아웃·기타 실패는 원본 유지(no-op) —
-# 검증 불가가 회수율을 깎으면 안 된다. 인스타는 공개 oEmbed가 없어 대상 외.
+# 검증 불가가 회수율을 깎으면 안 된다.
+#
+# ★인스타도 대상이다(2026-08-18 사장님 "중국어 인스타는 썸네일과 영상이 다르다").
+#   여기 주석은 오래 "인스타는 공개 oEmbed가 없어 대상 외"라고 적혀 있었는데, 정작
+#   같은 저장소의 `app._thumb_via_oembed`가 **로그인 없이 되는** 인스타 oEmbed를
+#   이미 쓰고 있었다(만료 썸네일 자가복구, 2026-08-09). 즉 한쪽만 고쳐진 0순위-B였다.
+#   서버 실측(2026-08-18) 게시물 3건 전부 200 + 진짜 제목·썸네일 회수.
+#   ⚠️ 인스타만 `x-ig-app-id` 헤더를 요구한다 — 없으면 거절당한다.
 _OEMBED_TIMEOUT = 4
+# app._thumb_via_oembed와 같은 값. 인스타 웹앱이 공개적으로 쓰는 상수다.
+_IG_OEMBED_APP_ID = "936619743392459"
+_IG_OEMBED_HEADERS = {"User-Agent": "Mozilla/5.0", "x-ig-app-id": _IG_OEMBED_APP_ID}
 
 
 def _oembed_endpoint(platform, link):
+    """(url) — 헤더가 필요한 플랫폼은 _oembed_headers가 따로 준다."""
     if platform == "tiktok":
         return "https://www.tiktok.com/oembed?url=" + quote(link, safe="")
     if platform == "youtube":
         return "https://www.youtube.com/oembed?format=json&url=" + quote(link, safe="")
+    if platform == "instagram":
+        return "https://www.instagram.com/api/v1/oembed/?url=" + quote(link, safe="")
     return None
 
 
+def _oembed_headers(platform):
+    """인스타는 앱ID 헤더가 없으면 거절한다. 나머지는 헤더 불필요."""
+    return dict(_IG_OEMBED_HEADERS) if platform == "instagram" else None
+
+
 def verify_matches(items, keywords=None):
-    """틱톡·유튜브 항목을 oEmbed로 실조회해 제목·썸네일을 실제 값으로 교체(in-place).
+    """틱톡·유튜브·인스타 항목을 oEmbed로 실조회해 제목·썸네일을 실제 값으로 교체(in-place).
 
     제목이 바뀌면 match(키워드 일치)도 실제 제목 기준으로 다시 판정한다."""
     def _one(i):
-        ep = _oembed_endpoint(i.get("platform"), i.get("url") or "")
+        platform = i.get("platform")
+        ep = _oembed_endpoint(platform, i.get("url") or "")
         if not ep:
             return
         try:
-            r = requests.get(ep, timeout=_OEMBED_TIMEOUT)
+            r = requests.get(ep, timeout=_OEMBED_TIMEOUT,
+                             headers=_oembed_headers(platform))
         except requests.RequestException:
             return
         status = getattr(r, "status_code", None)   # 테스트 더블이 상태코드 없이 올 수 있다
@@ -210,7 +275,8 @@ def verify_matches(items, keywords=None):
             _one(i)
         except Exception:
             pass
-    targets = [i for i in items if i.get("platform") in ("tiktok", "youtube")]
+    targets = [i for i in items
+               if i.get("platform") in ("tiktok", "youtube", "instagram")]
     if not targets:
         return items
     with ThreadPoolExecutor(max_workers=8) as ex:
@@ -355,7 +421,25 @@ def _lens_call(image_url, keys, hl, country, timeout, budget=None, dead=None):
     return []
 
 
-def search_similar_videos(image_url, api_key=None, timeout=60, source_caption=None, stats=None):
+def _resolve_locales(locales):
+    """부르는 쪽이 고른 국가 → 실제로 돌릴 로케일 목록. 판정은 **여기 한 곳에서만**(0순위-B).
+
+    왜(2026-08-22 사장님 "김밥 렌즈를 해외까지 돌릴 거 없잖아"): 국내 소재인 걸 아는데도
+    로케일 4벌이 무조건 다 나가 SerpApi를 4회 썼다. 한국만 고르면 1회로 준다(잔량 4배).
+
+    ★안전핀 — 고른 게 0개면 **종전 전체**로 되돌린다. 프론트가 칩을 전부 끈 채 보내거나
+      옛 화면이 빈 값을 보낼 수 있는데, 그대로 두면 렌즈가 조용히 빈손이 된다.
+    ★설정(_LENS_LOCALES)에 없는 값은 버린다 — 아무 값이나 SerpApi로 흘려보내지 않는다."""
+    if not locales:
+        return list(_LENS_LOCALES)
+    allowed = list(_LENS_LOCALES)
+    want = {(str(hl), str(cc)) for hl, cc in locales}
+    picked = [loc for loc in allowed if loc in want]   # 설정 순서를 유지한다
+    return picked or allowed
+
+
+def search_similar_videos(image_url, api_key=None, timeout=60, source_caption=None,
+                          stats=None, locales=None):
     """공개 이미지 URL → [{platform, url, title, thumbnail, match}]. 5개 동영상 플랫폼만.
     키 없음·호출 실패 시 [].
 
@@ -364,7 +448,13 @@ def search_similar_videos(image_url, api_key=None, timeout=60, source_caption=No
     장르는 같지만 다른 주제인 결과가 섞이는 문제(2026-07-14 실측)를 프론트에서
     표시용으로 구분하기 위함 — 결과를 제거하진 않는다(교차언어 플랫폼은 매칭 불가라
     False가 나올 수 있어 하드 필터링하면 회수율이 떨어짐)."""
-    keys = [api_key] if api_key else (SERPAPI_KEYS or ([SERPAPI_KEY] if SERPAPI_KEY else []))
+    # api_key는 문자열 하나 또는 목록. ★사용자 등록키(BYOK)가 오면 그것만 쓴다 —
+    # 여기서 사장님 키를 섞으면 keyroute의 "폴백 없음"이 조용히 깨진다(0순위-B).
+    if api_key:
+        keys = list(api_key) if isinstance(api_key, (list, tuple)) else [api_key]
+        keys = [k for k in keys if k]
+    else:
+        keys = SERPAPI_KEYS or ([SERPAPI_KEY] if SERPAPI_KEY else [])
     if not keys:
         return []
     keywords = _extract_keywords(source_caption)
@@ -377,19 +467,28 @@ def search_similar_videos(image_url, api_key=None, timeout=60, source_caption=No
     #   겹침이 1건 남짓이라 합치면 결과가 두 배가 된다. 대신 SerpApi를 로케일당
     #   1회씩 쓴다(렌즈 1번 = 2회 차감). 아래 _LENS_LOCALES로 조절 가능.
     matches = []
+    # ★어느 나라를 돌릴지는 _resolve_locales가 정한다(0순위-B — 판정은 한 곳에서만).
+    run_locales = _resolve_locales(locales)
     # ★호출 예산 — 로케일들이 **공유**한다. 재시도까지 합쳐 총 _MAX_CALLS_PER_SEARCH회.
     #   리스트로 넘겨 _lens_call 안에서 깎는다(정수는 값 복사라 안 깎인다).
-    budget = [_MAX_CALLS_PER_SEARCH]
+    #   ★고른 나라가 적으면 예산도 **비례해서** 줄인다 — 안 줄이면 한국만 골라도 예산이
+    #     그대로라 재시도로 다 써버려 **비용이 하나도 안 준다**(이 기능의 목적이 죽는다).
+    #     ⚠️ 로케일 수로 그냥 자르면(min) 재시도 여유가 0이 돼 기존 재시도가 죽는다
+    #        (test_retries_when_lens_returns_no_results_then_succeeds가 이걸 잡았다).
+    #        그래서 '나라당 예산'을 유지하는 비례식으로 깎는다.
+    _per = _MAX_CALLS_PER_SEARCH / max(1, len(_LENS_LOCALES))     # 나라당 몫(재시도 포함)
+    start_budget = max(1, round(_per * len(run_locales)))
+    budget = [start_budget]
     # 이번 검색에서 소진으로 확인된 키 — 로케일마다 같은 죽은 키를 다시 찌르지 않는다
     # (라이브 실측: 로케일 3벌이면 죽은 키를 3번 찔러 왕복만 낭비했다).
     dead = set()
-    for i, (hl, country) in enumerate(_LENS_LOCALES):
+    for i, (hl, country) in enumerate(run_locales):
         if budget[0] <= 0:
             break                        # 예산 소진 → 남은 로케일은 건너뛴다
         # ★뒤 로케일 몫을 남겨둔다 — 앞 로케일의 재시도가 예산을 다 먹으면
         #   zh가 아예 안 돈다(사장님 "중국어가 얼마나 나올지 보고싶다").
         #   남은 로케일 수만큼 예약해두고, 이번 로케일은 나머지만 쓴다.
-        reserve = (len(_LENS_LOCALES) - i - 1) if _RESERVE_PER_LOCALE else 0
+        reserve = (len(run_locales) - i - 1) if _RESERVE_PER_LOCALE else 0
         allow = max(1, budget[0] - reserve)
         sub = [min(allow, budget[0])]
         got = _lens_call(image_url, keys, hl, country, timeout, sub, dead)
@@ -400,7 +499,9 @@ def search_similar_videos(image_url, api_key=None, timeout=60, source_caption=No
     if stats is not None and isinstance(stats, dict):
         # 실제로 '검색을 해준' 호출 수(소진 키 왕복은 환불되므로 여기 안 잡힌다).
         # 한도에 실제로 찍히는 건 이 숫자다.
-        stats["serpapi_calls"] = _MAX_CALLS_PER_SEARCH - budget[0]
+        # ★시작 예산에서 남은 것을 뺀다 — 상수를 쓰면 나라를 골랐을 때 틀린 수가 나온다
+        #   (한국만 골라 1회 썼는데 "4회 썼다"고 보고하게 된다).
+        stats["serpapi_calls"] = start_budget - budget[0]
     # ★인스타 편차 계측(2026-08-14 사장님 "인스타는 0건이거나 왕창이거나 편차가 심하다").
     #   추측하지 않으려면 어디서 사라지는지 세야 한다. 렌즈 원본(visual_matches) 중
     #   인스타 링크가 몇 개였고, 그중 몇 개가 개별 게시물이 아니라(프로필·/explore·

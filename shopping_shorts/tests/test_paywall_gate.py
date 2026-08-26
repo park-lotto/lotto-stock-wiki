@@ -26,14 +26,33 @@ def test_ranking_only_blocked_helper():
     assert appmod._ranking_only_blocked("/account", "GET") is False   # 무료 등급도 자기 계정 열람
     assert appmod._ranking_only_blocked("/pricing", "GET") is False   # 요금 페이지 공개
     assert appmod._ranking_only_blocked("/api/thumb", "GET") is False
+    # ★랭킹 열람에 필요한 조회 3종은 한 세트다(2026-08-21). /api/media만 빠져 있어
+    #   랭킹 화면에서 영상을 누르면 402가 났다 — 체험 계정 3명이 잠금 안내를 봤다.
+    assert appmod._ranking_only_blocked("/api/video", "GET") is False
+    assert appmod._ranking_only_blocked("/api/media", "GET") is False
+    assert appmod._ranking_only_blocked("/api/media", "POST") is True   # 조회만 무료
     assert appmod._ranking_only_blocked("/static/app.js", "GET") is False
+    # ★화면을 그리는 정적 자원은 등급과 무관하게 열려야 한다(2026-08-24 실사고).
+    #   sidebar.js만 예외 목록에 있고 theme.css·loader.js·scene_play.js는 빠져 있어
+    #   체험판 고객 전원이 스타일 깨진 화면을 봤다(라이브 로그: theme.css 402,
+    #   제작소 단계바가 세로로 늘어짐). 목록이 아니라 확장자로 판정한다.
+    for asset in ("/theme.css", "/loader.js", "/scene_play.js", "/x.woff2", "/logo.png"):
+        assert appmod._ranking_only_blocked(asset, "GET") is False, asset
+    assert appmod._ranking_only_blocked("/theme.css", "POST") is True   # 자원 요청이 아니다
     assert appmod._ranking_only_blocked("/api/login", "POST") is False      # 로그인 폼=무료
+    # ★가입 마무리는 등급과 무관하게 열려야 한다(2026-08-24 실사고).
+    #   막으면 막다른 길이 된다: 어느 화면을 열든 미들웨어가 /welcome으로 보내는데
+    #   그 /welcome이 402라 아무 데도 못 간다 — 체험판 고객이 실제로 갇혔다.
+    assert appmod._ranking_only_blocked("/welcome", "GET") is False
+    assert appmod._ranking_only_blocked("/api/welcome", "POST") is False
     # 차단돼야 하는 것들
     assert appmod._ranking_only_blocked("/api/reference", "POST") is True    # 같은 경로여도 POST=차단
     assert appmod._ranking_only_blocked("/api/reference/register", "GET") is True  # 등록=차단
     assert appmod._ranking_only_blocked("/api/collect", "POST") is True      # 수집=차단
-    assert appmod._ranking_only_blocked("/api/lens/search", "POST") is True
-    assert appmod._ranking_only_blocked("/api/mix/basket", "GET") is True
+    # ★2026-08-20 체험판 개방으로 정책이 바뀌었다 — 과금검사 있는 렌즈·즐겨찾기는 무료.
+    #   대신 과금검사 없는 렌즈가 계속 막히는지를 여기서 지킨다.
+    assert appmod._ranking_only_blocked("/api/lens/kw/search", "POST") is True
+    assert appmod._ranking_only_blocked("/api/mix/basket/reprobe", "POST") is True
 
 
 def test_free_user_blocked_from_paid_but_ranking_ok(tmp_path, monkeypatch):
@@ -42,7 +61,7 @@ def test_free_user_blocked_from_paid_but_ranking_ok(tmp_path, monkeypatch):
     s.set_plan(cid, "free", full_access_until=0)     # 체험 만료 → ranking_only
     c = TestClient(appmod.app, cookies={"dash_auth": _cookie(cid)})
     assert c.get("/api/reference?platform=instagram").status_code == 200   # 랭킹 조회 OK
-    assert c.get("/api/mix/basket").status_code == 402                     # 유료 차단
+    assert c.post("/api/collect").status_code == 402                       # 수집=유료 차단
     assert c.post("/api/collect?platform=instagram").status_code == 402    # 수집 차단
 
 
@@ -91,7 +110,10 @@ def test_anonymous_pricing_is_public(tmp_path, monkeypatch):
 def test_pending_gate_blocks_everything(tmp_path, monkeypatch):
     """미승인(pending) 세션은 API=403, 화면=대기실 HTML, /logout만 통과."""
     s = _setup(tmp_path, monkeypatch)
-    cid = s.create_customer("pend", "pw12", approved=False)
+    # 2026-08-24: 가입 정보(이름·전화·성별·연령)가 비면 대기실 대신 /welcome으로 보낸다.
+    # 이 테스트가 보려는 건 **대기실 화면**이므로 정보는 다 낸 상태로 만든다.
+    cid = s.create_customer("pend", "pw12", approved=False, name="대기", phone="010-0000-0000",
+                            gender="남성", age_band="30대")
     with s._conn() as conn:                      # 체험창 만료 강제 → 진짜 pending 상태로 검증
         conn.execute("UPDATE customers SET trial_ends_at=NULL WHERE id=?", (cid,))
     c = TestClient(appmod.app, cookies={"dash_auth": _cookie(cid)})

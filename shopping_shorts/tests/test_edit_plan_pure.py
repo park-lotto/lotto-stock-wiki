@@ -116,6 +116,9 @@ def test_build_inventory_keeps_short_source_alive():
         seg_map, _ = edit_plan._build_inventory([{"video_id": "cn", "segments": _segs(n)}])
         assert len(seg_map) == n, f"세그 {n}개 소스가 잘려나갔다: {len(seg_map)}개 생존"
 
-    # 5개 이상은 종전대로 첫·끝을 버린다(CTA·썸네일 박제 차단 유지)
-    seg_map, _ = edit_plan._build_inventory([{"video_id": "kr", "segments": _segs(5)}])
-    assert set(seg_map) == {"s-1", "s-2", "s-3"}
+    # 5개 이상은 첫·끝을 **자동 배치 재고에서** 뺀다(CTA·썸네일 박제 차단 유지).
+    # 2026-08-26부터 seg_map에는 edge 표식을 달아 남긴다(사람이 고를 수 있게) —
+    # 지켜야 할 축은 "AI가 안 집는다"이므로 non_edge_segs로 검사한다.
+    seg_map, block = edit_plan._build_inventory([{"video_id": "kr", "segments": _segs(5)}])
+    assert set(edit_plan.non_edge_segs(seg_map)) == {"s-1", "s-2", "s-3"}
+    assert "[s-0]" not in block and "[s-4]" not in block

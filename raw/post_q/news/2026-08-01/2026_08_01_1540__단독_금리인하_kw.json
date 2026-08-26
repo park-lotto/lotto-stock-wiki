@@ -1,0 +1,13 @@
+{
+  "target_kind": "market",
+  "market_direction": "중립",
+  "macro_events": [
+    {
+      "fact": "트럼프, 7월 FOMC 앞두고 연준 기준금리 인하 촉구",
+      "ts": "2026-07-27",
+      "quote": "트럼프, 7월 FOMC 앞두고 \"연준 기준금리 인하해야\""
+    }
+  ],
+  "sectors_mentioned": [],
+  "quote": "트럼프, 7월 FOMC 앞두고 \"연준 기준금리 인하해야\""
+}

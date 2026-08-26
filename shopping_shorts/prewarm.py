@@ -86,6 +86,37 @@ def _gate():
         return None, None, None, None
 
 
+def _is_transient(err):
+    """이 실패가 **서버·상대 사정(일시)**인가, **이 영상 자체의 문제(영구)**인가.
+
+    ★래치는 "이 영상은 아무리 시도해도 안 된다"를 기억하는 장치지,
+      "지금 잠깐 안 된다"를 기억하는 장치가 아니다(autoload_rollback_attempt 주석).
+      KeyPoolExhausted만 그렇게 다뤄지고 있었는데, **구글 5xx·타임아웃·429도 같은
+      성질**이다. 그것들이 attempts를 태우면 3회에 소진돼 **다시 담기 전엔 영영
+      재시도가 안 된다**(라이브 실측 2026-08-19: 시도소진 9건).
+
+    True면 attempts를 돌려주고(다음 크론이 재시도), False면 종전대로 래치한다.
+
+    ⚠️ 애매하면 **False**(래치)다 — 진짜 못 받는 영상을 무한 재시도하면 크레딧이 샌다.
+       여기서 True로 치는 건 '분명히 일시적'이라고 말할 수 있는 신호뿐이다.
+    """
+    e = str(err or "").lower()
+    # 서버측 5xx·게이트웨이·과부하
+    if any(s in e for s in ("500 ", "502", "503", "504", "internal error",
+                            "bad gateway", "service unavailable", "gateway timeout",
+                            "overloaded", "unavailable_error", "temporarily")):
+        return True
+    # 속도 제한
+    if "429" in e or "rate limit" in e or "too many requests" in e or "quota" in e:
+        return True
+    # 네트워크·타임아웃
+    if any(s in e for s in ("timed out", "timeout", "connection reset",
+                            "connection aborted", "connection error",
+                            "temporary failure", "econnreset", "read timeout")):
+        return True
+    return False
+
+
 def run_prewarm(shortcode, url, *, caption="", customer_id="0", video_url="",
                 category=None, db_path=None):
     """담긴 영상 1건을 미리 추출+구조분석해 캐시에 채운다. 상태 문자열을 돌려준다.
@@ -136,6 +167,12 @@ def run_prewarm(shortcode, url, *, caption="", customer_id="0", video_url="",
         try:
             video_path, dl_caption = download_any(src, str(_work_dir(code)))
         except Exception as e:  # noqa: BLE001 — 만료·비공개·차단
+            # ★일시 실패(5xx·타임아웃·429)는 래치하지 않는다(2026-08-19).
+            #   영상 탓이 아닌데 attempts를 태우면 3회에 소진돼 **다시 담기 전엔
+            #   영영 재시도가 안 된다**(라이브 실측: 시도소진 9건).
+            if _is_transient(e):
+                store.autoload_rollback_attempt(code, f"예열 다운로드 일시실패(재시도 예정): {e}")
+                return "deferred_transient"
             store.autoload_mark_error(code, f"예열 다운로드 실패: {e}")
             return "failed_download"
         try:
@@ -146,6 +183,11 @@ def run_prewarm(shortcode, url, *, caption="", customer_id="0", video_url="",
             store.autoload_rollback_attempt(code, f"예열 보류: {e}")
             return "deferred_nokey"
         except Exception as e:  # noqa: BLE001
+            # ★구글 5xx·타임아웃은 KeyPoolExhausted와 같은 성질이다 — 서버 사정이지
+            #   영상 탓이 아니다. 래치를 돌려주고 다음 크론이 다시 하게 둔다.
+            if _is_transient(e):
+                store.autoload_rollback_attempt(code, f"예열 추출 일시실패(재시도 예정): {e}")
+                return "deferred_transient"
             store.autoload_mark_error(code, f"예열 추출 실패: {e}")
             return "failed_error"
         # ③재료가 하나도 안 나왔을 때만 버린다(2026-08-16) — 말이 없어도 화면

@@ -27,7 +27,13 @@ def _real_deps():
     src = PRODUCE_HTML.read_text(encoding="utf-8")
     m = re.search(r"^function esc\(s\)\{.*\}$", src, re.M)
     assert m, "esc() 선언을 못 찾았다 — renderThumbLayers가 이걸 쓴다"
-    return m.group(0) + "\n"
+    # STATE도 같은 원칙으로 **파일에서 그대로** 가져온다(2026-08-23). suggestThumbTitles가
+    # STATE.script를 읽는데 슬라이스 밖이라, 없으면 ReferenceError가 catch로 삼켜져
+    # "연결 오류"만 뜨고 fetch는 0번 나간다 = 배선이 안 돌았는데 초록으로 보인다.
+    # ★여기서 {script:'x'}를 발명하면 위 주석의 2026-07-17 사고를 그대로 되풀이하는 것이다.
+    st = re.search(r"^const STATE = \{.*?\};", src, re.M)
+    assert st, "STATE 선언을 못 찾았다 — suggestThumbTitles가 STATE.script를 읽는다"
+    return m.group(0) + "\n" + st.group(0) + "\n"
 
 
 def _slice_source():
@@ -94,9 +100,14 @@ def _run(script):
     # ★encoding 명시 필수 — Windows 콘솔 기본(cp949)로 두면 Node의 UTF-8 stdout에
     # 한글이 섞였을 때 리더 스레드가 디코드 에러로 죽는다(발견: test_preset_applies_to_selected_layer,
     # '유지될 문구' 로그에서 실측). 베이스라인 결함 — 이 파일이 이번 작업 대상이라 여기서 같이 고친다.
-    r = subprocess.run([NODE, "--input-type=module", "-e", script],
-                       capture_output=True, text=True, encoding="utf-8",
-                       stdin=subprocess.DEVNULL, timeout=30)
+    #
+    # ★스크립트를 `-e` 인자가 아니라 **stdin**으로 넘긴다(2026-08-18). 윈도우 CreateProcess
+    # 명령줄 상한이 32,767자인데 슬라이스가 이미 31KB라, 화면에 몇 줄만 더해도 전부
+    # WinError 206으로 죽는다(이 프로젝트에서 07-29·08-18 세 번째 재발). stdin엔 상한이 없다.
+    # `-` 는 "stdin에서 읽어라"라는 뜻이고, --input-type=module 이 ESM 해석을 그대로 유지한다.
+    r = subprocess.run([NODE, "--input-type=module", "-"],
+                       input=script, capture_output=True, text=True,
+                       encoding="utf-8", errors="replace", timeout=30)
     assert r.returncode == 0, r.stderr
     return r.stdout
 
@@ -169,3 +180,40 @@ console.log(JSON.stringify(JSON.parse(f.opt.body)));
     body = json.loads(out)
     assert body["name"] == "thumb_1.png"
     assert body["job_id"] == "j1"
+
+
+STUB_OLD_PY = '  return {ok:true, json: async () => ({ok:true})};'
+STUB1 = "  if (url.includes('/thumb/titles'))\n    return {ok:true, json: async () => ({ok:true, titles:[{text:'매일 면도 상처\\n남편이 괴로워요', why:'w'}]})};\n  return {ok:true, json: async () => ({ok:true})};"
+STUB2 = "  if (url.includes('/thumb/titles'))\n    return {ok:true, json: async () => ({ok:true, titles:[{text:'윗줄\\n아랫줄', why:'w'}]})};\n  return {ok:true, json: async () => ({ok:true})};"
+TXT_A = '매일 면도 상처'
+TXT_B = '남편이 괴로워요'
+TXT_C = '윗줄'
+TXT_D = '아랫줄'
+
+
+# ── 추천 제목 목록 표시 (2026-08-23 사장님 지시: 슬래시 없애고 자동 두 줄) ──
+# 예전엔 목록을 그릴 때 줄바꿈을 ' / '로 바꿔 보여줬다. 그러면 그 슬래시가 제목의 일부처럼
+# 보여, 문구 칸에 그대로 옮겨 적으면 캔버스가 '/'를 글자로 그린다(thumbAutoLines는 줄바꿈만
+# 줄로 친다). 그래서 목록도 캔버스와 같은 thumbAutoLines로 두 줄을 그린다.
+
+def test_title_candidates_render_as_two_lines_not_slash():
+    out = _run(_HARNESS.replace(STUB_OLD_PY, STUB1) + _slice_source() + """
+await suggestThumbTitles();
+console.log(document.getElementById('thumbTitleSuggest').innerHTML);
+""")
+    assert TXT_A in out and TXT_B in out
+    assert "<br>" in out, "두 줄이 <br>로 나뉘어 그려져야 한다"
+    assert " / " not in out, "슬래시 표시가 다시 살아나면 안 된다"
+
+
+def test_applying_a_title_keeps_real_linebreak():
+    """후보를 누르면 레이어에 진짜 줄바꿈이 들어간다(슬래시 아니라)."""
+    out = _run(_HARNESS.replace(STUB_OLD_PY, STUB2) + _slice_source() + """
+await suggestThumbTitles();
+applyThumbTitle(0);
+const L = THUMB_STATE.layers[THUMB_STATE.sel];
+console.log(JSON.stringify({text: L.text, lines: thumbAutoLines(L.text)}));
+""")
+    res = json.loads(out)
+    assert res["lines"] == [TXT_C, TXT_D], "캔버스가 두 줄로 그려야 한다"
+    assert "/" not in res["text"]

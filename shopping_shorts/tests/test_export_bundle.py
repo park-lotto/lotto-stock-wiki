@@ -98,13 +98,15 @@ def test_full_zip_has_all_expected_entries(tmp_path, _job_assets):
     written = eb.build_export_zip(out, **_job_assets)
     names = set(zipfile.ZipFile(out).namelist())
     assert "final.mp4" in names
-    assert "sources/beat_00_훅.mp4" in names and "sources/beat_01_본문.mp4" in names
+    # ★파일명에 **조각 번호**가 붙는다(2026-08-23): beat_<비트>_<조각>_<역할>.mp4
+    #   비트 하나에 화면이 여러 개라 번호가 없으면 서로 덮어쓴다.
+    assert "sources/beat_00_0_훅.mp4" in names and "sources/beat_01_0_본문.mp4" in names
     assert "tts/beat_00.mp3" in names and "tts/beat_01.mp3" in names
     assert "captions.srt" in names and "script.txt" in names
     assert "seo.txt" in names and "README.txt" in names
     # 잘린 소스가 실제 재생 가능한 mp4인지(0바이트·깨진 파일 아님)
     with zipfile.ZipFile(out) as zf:
-        assert zf.getinfo("sources/beat_00_훅.mp4").file_size > 0
+        assert zf.getinfo("sources/beat_00_0_훅.mp4").file_size > 0
 
 
 def test_part_srt_only(tmp_path, _job_assets):

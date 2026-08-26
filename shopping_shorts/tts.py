@@ -16,6 +16,7 @@ import requests
 
 from shopping_shorts import config
 from shopping_shorts import tts_timestamps
+from shopping_shorts import typecast_tts
 
 _ENDPOINT = "https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
 # 같은 합성인데 응답에 문자단위 정렬이 얹혀 온다(추가 과금 없음, 2026-07-31).
@@ -76,6 +77,15 @@ def synthesize_tts(text, out_path, voice_id=None, voice_settings=None,
     # ★옛 정렬 먼저 지운다 — 같은 경로에 다른 대사를 재합성하는 길이 있다(비트 재합성·
     #   콘폼). 안 지우면 새 음성에 옛 타이밍이 씌워져 자막이 통째로 밀린다.
     tts_timestamps.clear(out_path)
+    # ★엔진 분기(2026-08-19). 프리셋의 model_id가 `ssfm-*`면 타입캐스트다 — 판단은
+    #   typecast_tts.is_typecast 한 곳뿐이다(0순위-B). 남자 성우 라인업이 일레븐랩스에
+    #   없어서 붙였고, 일레븐랩스 경로는 아래 그대로 남는다.
+    if typecast_tts.is_typecast(model_id):
+        return _synthesize_typecast(
+            text, out_path, voice_id=voice_id, voice_settings=voice_settings,
+            speed=speed, model_id=model_id, seed=seed,
+            previous_text=previous_text, next_text=next_text,
+            max_retries=max_retries)
     api_key = _api_key(customer_id)
     if not api_key:
         _write_silent_mp3(out_path, _estimate_seconds(text))
@@ -137,6 +147,44 @@ def synthesize_tts(text, out_path, voice_id=None, voice_settings=None,
                 continue
             raise
     return out_path
+
+
+def _synthesize_typecast(text, out_path, *, voice_id, voice_settings, speed,
+                         model_id, seed, previous_text, next_text, max_retries):
+    """타입캐스트 경로. 키 없으면 무음 mock(일레븐랩스 경로와 같은 계약).
+
+    감정은 프리셋 스냅샷의 `settings.emotion`/`emotion_intensity`에서 온다. 일레븐랩스의
+    stability·similarity_boost·style은 타입캐스트에 없는 축이라 **버린다** — 억지로
+    style을 감정 강도로 환산하면 두 엔진이 서로 다른 뜻의 숫자를 공유하게 돼, 한쪽을
+    고칠 때 다른 쪽이 조용히 틀어진다(0순위-B).
+
+    ★속도는 clamp하지 않는다. 일레븐랩스는 1.2가 상한이라 초과분을 audio_post의 atempo로
+      되돌렸는데(_SPEED_API_MIN/_MAX), 타입캐스트는 API가 2.0까지 직접 받는다. 다만
+      synthesize_line이 speed>1.2면 extra_tempo를 계산해 후처리로 **또** 당기므로,
+      호출부(mix_pipeline._voice_params)가 엔진을 보고 extra_tempo를 1.0으로 두어야
+      이중 가속이 안 난다 — 그쪽에 같이 반영돼 있다."""
+    if not typecast_tts.api_key():
+        _write_silent_mp3(out_path, _estimate_seconds(text))
+        return out_path
+    s = voice_settings or {}
+    emotion = s.get("emotion") or typecast_tts.DEFAULT_EMOTION
+    intensity = s.get("emotion_intensity")
+    attempt = 0
+    while True:
+        try:
+            alignment = typecast_tts.synthesize(
+                text, out_path, voice_id=voice_id, speed=speed, emotion=emotion,
+                intensity=intensity, model_id=model_id, seed=seed,
+                previous_text=previous_text, next_text=next_text)
+            if alignment:
+                tts_timestamps.save(out_path, alignment)
+            return out_path
+        except requests.RequestException:
+            attempt += 1
+            if attempt < max_retries:
+                time.sleep(attempt * 2)
+                continue
+            raise
 
 
 def _parse_ts_response(resp):

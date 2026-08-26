@@ -5,6 +5,8 @@ import logging
 import os
 import secrets
 import sqlite3
+import sys
+import time
 import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -65,6 +67,121 @@ def _normalize_canonical(text, bucket=None):
     return t
 
 
+def _apply_beat_sources(beats, structure, seg_map):
+    """2단계가 남긴 출처 장면(src_seg)을 비트 primary에 반영한다.
+
+    ★지어낸 번호는 무시한다 — seg_map에 실재하는 것만 쓴다(환각 방어).
+    ★이미 그 장면을 쓰고 있으면 그대로 둔다. 다른 장면이면 primary를 갈아끼우고
+      원래 primary는 alternates 맨 앞으로 살려 둔다(화면 재고를 버리지 않는다).
+    ★역할(role)이 맞는 것끼리만 짝짓는다 — 순서만 믿으면 비트 수가 다를 때 어긋난다.
+    """
+    srcs = (structure or {}).get("beat_sources")
+    if not srcs or not isinstance(srcs, list):
+        return beats
+    by_role = {}
+    for i, x in enumerate(srcs):
+        if isinstance(x, dict) and x.get("seg"):
+            by_role.setdefault(str(x.get("role") or "").lower(), []).append(x["seg"])
+    if not by_role:
+        return beats
+    from shopping_shorts import edit_plan as _ep
+    for b in beats:
+        role = str(b.get("role") or "").lower()
+        want = by_role.get(role)
+        if not want:
+            continue
+        sid = want.pop(0)
+        if sid not in seg_map:
+            continue                      # 지어낸 번호 — 무시하고 종전 화면을 쓴다
+        cur = (b.get("primary") or {}).get("seg_id")
+        if cur == sid:
+            continue
+        g = _ep._ground_ref({"seg_id": sid}, seg_map)
+        if not g:
+            continue
+        alts = list(b.get("alternates") or [])
+        if b.get("primary"):
+            alts.insert(0, b["primary"])
+        b["primary"] = g
+        b["alternates"] = [a for a in alts if (a or {}).get("seg_id") != sid]
+        b["src_seg_applied"] = sid        # 사후에 '출처를 따라갔는가'를 셀 수 있게 남긴다
+    return beats
+
+
+def _ensure_screen_time(plan, store, job_id):
+    """저장 직전 불변식: 비트마다 화면 길이 합 >= 대사 읽는 시간.
+
+    ★왜 store에 있나 — 여기가 **단일 출구**이기 때문이다. 계획을 만드는 경로는 여럿이고
+      (scene_first / 확정대본 / 단일소스) 앞으로 더 생길 수 있지만, 저장은 여기 하나를
+      지난다. 만드는 쪽마다 채우면 반드시 한 곳이 빠지고(오늘만 다섯 번 반복됐다),
+      채운 뒤 도는 후처리(재픽)가 되돌리면 그것도 못 잡는다.
+    ★실패해도 저장을 막지 않는다(fail-open) — 보장은 부가가치지 저장의 전제가 아니다.
+    """
+    try:
+        beats = (plan or {}).get("beats")
+        if not beats:
+            return plan
+        job = store.get_mix_job(job_id) or {}
+        extract = job.get("extract") or {}
+        if not extract:
+            return plan
+        from shopping_shorts import edit_plan as _ep
+        srcs = [{"video_id": vid, "segments": (ex or {}).get("segments") or []}
+                for vid, ex in extract.items() if isinstance(ex, dict)]
+        seg_map, _ = _ep._build_inventory(srcs)
+        if not seg_map:
+            return plan
+        # ★출처 장면 우선 적용(2026-08-18 사장님 "그 대본에 장면을 사용하면 좋다").
+        #   2단계가 문장마다 '어느 대목을 보고 썼는지'(src_seg)를 남기고, 그 값이
+        #   script_structure.beat_sources로 여기까지 온다. 짐작이 아니라 **원래 그 말이
+        #   나온 그림**이라 가장 정확하다. 화면 길이 채우기 **앞**에 둔다 — primary가
+        #   바뀌면 길이도 다시 재야 한다.
+        #   ⚠️여기(저장 출구)에 두는 이유는 화면길이와 같다: 계획을 만드는 경로가 여럿이라
+        #     만드는 쪽마다 적으면 반드시 한 곳이 빠진다(0순위-B).
+        beats = _apply_beat_sources(beats, (job.get("script_structure") or {}), seg_map)
+        # ★확정 대본을 지켰는지 여기서 검사한다(2026-08-18 사장님 "영상이랑 대본이랑 다르다").
+        #   프롬프트는 "그대로 써라"를 두 번 말하지만 지켰는지 보는 곳이 없었다 — 실측으로
+        #   훅·중간 비트가 장면 설명 말투로 창작돼 있었다. 화면길이·출처장면과 같은 이유로
+        #   저장 출구에 둔다(만드는 경로가 여럿, 0순위-B).
+        beats, _restored = _ep.enforce_scripted_narration(beats, job.get("given_script") or "")
+        # ★그리고 **순서·전량**도 지킨다(2026-08-24 사장님 "1" = 강하게).
+        #   위 검사는 '지어냈나'만 본다 — 실사고(잡 432d04a955bf)는 문장이 전부 진짜
+        #   대본 문장이라 fixed=0으로 통과했는데, 2번째 문장이 맨 끝 cta로 밀리고
+        #   CTA 문장은 통째로 빠져 있었다. 판정축이 하나면 교정이 통째로 죽는다.
+        #   ⚠️순서 배분이 대사를 바꾸므로 **창작 되돌림 뒤에** 온다(되돌린 문장도 제자리로).
+        beats, _reordered = _ep.enforce_script_order(beats, job.get("given_script") or "")
+        out = dict(plan)
+        out["beats"] = _ep._fill_beat_screen_time(beats, seg_map)
+        return out
+    except Exception:      # noqa: BLE001 — 보장 실패가 저장을 막으면 안 된다
+        return plan
+
+
+def style_spine_rank(sp):
+    """대본 스타일 추천 순서 — **이 함수 하나가 정본이다**(0순위-B).
+
+    ★2026-08-24 실사고: 같은 "추천 순서"가 두 군데에 다르게 적혀 있었다.
+        · 카드 목록(app `/api/produce/styles`)  = 검증 먼저 → perf_score → **source_count**
+        · 자동 선택(`auto_style`)               = `list_spines`의 `perf_score DESC, id DESC`
+      라이브 실측: 스타일 스파인 11개의 `perf_score`가 **전부 0.0**이라 첫 키가 죽고
+      자동 선택은 사실상 **id DESC = 최근에 만든 것 우선**으로 돌았다. 그래서
+      히트작 근거가 **0편**인 무지후회형(62)·정체의문형(61)이 1·2위로 추천되고,
+      23편(발명품형)·12편(단정 명령형)짜리가 아래에 깔렸다 — 순서가 정확히 거꾸로였다.
+      (사장님 제보: "ai추천도 너무 이상하게 추천을 한다 / 안 맞게")
+
+    정렬 키 = (perf_score 내림, source_count 내림, id 내림)
+      · `perf_score`  — 성과 되먹임. 지금은 전부 0이라 사실상 안 쓰인다(살아나면 자동으로 우선).
+      · `source_count`— **히트작 몇 편에서 뽑은 틀인가.** 지금 유일하게 실값이 있는 근거다.
+      · `id`          — 마지막 동점 처리(재현성 — 같은 입력에 같은 순서).
+
+    ⚠️거르지 않는다 — 정렬만 한다. 거르면 "고른 게 조용히 사라지는" 사고가 난다
+      (2026-08-17 실사고: 카테고리 잠금이 사장님이 고른 스타일 2개를 버렸다).
+    """
+    return (-(sp.get("perf_score") or 0),
+            -(sp.get("source_count") or 0),
+            -(sp.get("id") or 0))
+
+
 class Store:
     def __init__(self, db_path):
         self.db_path = Path(db_path)
@@ -110,6 +227,26 @@ class Store:
                 )
             """)
             c.execute("CREATE INDEX IF NOT EXISTS idx_shortcode ON snapshots(shortcode, id)")
+            # ── 도움말(2026-08-23 사장님 "자주하는 질문과 이미지 설명 / 반복되는 질문도 많고") ──
+            # 한 테이블에 두 종류를 담는다: kind='faq'(자주 묻는 질문) · kind='log'(오늘 있었던 일).
+            # 화면·정렬·미디어 처리가 같아서 테이블을 둘로 나누면 같은 코드가 두 벌이 된다(0순위-B).
+            #  media_json = [{"kind":"image|video","url":"/api/help/media/xxx.png","cap":"설명"}]
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS help_item (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    kind TEXT NOT NULL DEFAULT 'faq',
+                    title TEXT NOT NULL,
+                    body TEXT NOT NULL DEFAULT '',
+                    media_json TEXT NOT NULL DEFAULT '[]',
+                    category TEXT NOT NULL DEFAULT '',
+                    pinned INTEGER NOT NULL DEFAULT 0,
+                    sort INTEGER NOT NULL DEFAULT 0,
+                    hidden INTEGER NOT NULL DEFAULT 0,
+                    created_at TEXT,
+                    updated_at TEXT
+                )
+            """)
+            c.execute("CREATE INDEX IF NOT EXISTS idx_help_kind ON help_item(kind, hidden, pinned, sort, id)")
             c.execute("""
                 CREATE TABLE IF NOT EXISTS comment_drafts (
                     shortcode TEXT PRIMARY KEY,
@@ -183,6 +320,71 @@ class Store:
                     PRIMARY KEY (customer_id, shortcode)
                 )
             """)
+            # QR '폰으로 보내기' 단축링크(2026-08-19). 예전엔 프로세스 메모리 dict라
+            # **서버가 재시작되면 발급된 QR이 전부 죽었다**(자동배포가 3분마다 재시작한다).
+            # 실측: 발급 직후 /s/{sid}·/api/share/v·/api/share/t 전부 403(만료). DB로 옮긴다.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS share_links (
+                    sid TEXT PRIMARY KEY,
+                    job_id TEXT NOT NULL,
+                    expires_at INTEGER NOT NULL
+                )
+            """)
+            # 1기 사전신청(2026-08-23) — 구글폼을 사이트로 옮겼다. 제출 즉시 결제안내로
+            # 보내려면(구글폼은 자동이동이 원천 불가) 신청을 우리가 받아야 한다.
+            # ★비로그인도 낸다 — 아직 회원이 아닌 사람에게 뿌리는 폼이다.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS prereg (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    phone TEXT NOT NULL,
+                    email TEXT NOT NULL,
+                    channel TEXT,
+                    created_at TEXT NOT NULL
+                )
+            """)
+            # '입금 완료했습니다' 신고(2026-08-23) — 카톡을 놓쳐 입금하고 방치되는 걸 막는다.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS deposit_claim (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    depositor TEXT NOT NULL,
+                    contact TEXT,
+                    done INTEGER NOT NULL DEFAULT 0,
+                    created_at TEXT NOT NULL
+                )
+            """)
+            # 1기 챌린지(2026-08-24) — 하루 2영상 업로드 챌린지 참가자·제출물.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS challenge_member (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    customer_id INTEGER NOT NULL UNIQUE,
+                    cohort TEXT NOT NULL DEFAULT '1기',
+                    active INTEGER NOT NULL DEFAULT 1,
+                    created_at TEXT NOT NULL
+                )
+            """)
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS challenge_submission (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    customer_id INTEGER NOT NULL,
+                    url TEXT NOT NULL,
+                    platform TEXT NOT NULL,
+                    shortcode TEXT,
+                    dedup_key TEXT NOT NULL,
+                    submit_day TEXT NOT NULL,
+                    submitted_at TEXT NOT NULL,
+                    title TEXT, thumb TEXT, channel TEXT,
+                    views INTEGER, likes INTEGER, comments INTEGER,
+                    fetch_status TEXT NOT NULL DEFAULT 'pending'
+                )
+            """)
+            c.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_chal_sub_dedup "
+                      "ON challenge_submission(customer_id, dedup_key)")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_chal_sub_day "
+                      "ON challenge_submission(submit_day)")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_chal_sub_cust "
+                      "ON challenge_submission(customer_id, submit_day)")
             c.execute("""
                 CREATE TABLE IF NOT EXISTS last_run (
                     id INTEGER PRIMARY KEY CHECK (id = 1),
@@ -310,8 +512,15 @@ class Store:
             # 키워드 추측 정확도가 실측 54%(13건 중 7건)인데 학습 코퍼스의 다수를
             # 차지해(생활용품 79%·인테리어 80%가 추측) 통계가 오염된다. 출처를 남겨야
             # ①사용자 교정을 AI가 덮지 않고 ②나중에 추측만 골라 재분류·가중치 조정이 된다.
+            # hook_axis(2026-08-20): 이 영상의 **훅 문형 축**. 대본 스타일 자동선택이
+            # 이 값을 쓴다(`hook_axis.AXIS_TO_SPINE`). 종전 자동선택은 목록 앞 2개를
+            # 그냥 집어 영상 내용과 무관했다. 저장해 두면 화면이 담기 단계에서 미리
+            # 보여줄 수 있고, 매번 다시 판정하지 않는다.
+            # ⚠️판정 규칙이 바뀌면 이 값은 낡는다 — 재판정 스크립트로 다시 채워라
+            #   (scripts/backfill_hook_axis.py).
             for col, ddl in (("category", "TEXT"), ("structure_json", "TEXT"),
-                              ("structure_analyzed_at", "TEXT"), ("category_source", "TEXT")):
+                              ("structure_analyzed_at", "TEXT"), ("category_source", "TEXT"),
+                              ("hook_axis", "TEXT")):
                 try:
                     c.execute(f"ALTER TABLE script_extracts ADD COLUMN {col} {ddl}")
                 except sqlite3.OperationalError:
@@ -477,8 +686,12 @@ class Store:
             # (실측: 클레이 토끼 → "레진 파츠"). 재질을 물으면 맞히므로 따로 저장한다.
             # made_by는 '직접만들기 vs 완제품' — 만드는 영상과 파는 물건이 안 섞이게
             # 하는 결정적 신호다(사장님 제보 케이스의 핵심 오답이었다).
+            # shot_type·face_prominent(2026-08-19): 재료로 쓸 수 있는 화면인가.
+            # 직촬(리뷰어 얼굴이 주인공)은 쇼핑 얘기를 제대로 해도 재료로 못 쓴다 —
+            # 쇼핑비율만 보는 정리 규칙으로는 오히려 우량으로 살아남는다(C단계 실측 17%).
             for col, ddl in (("product", "TEXT"), ("product_at", "TEXT"),
-                             ("material", "TEXT"), ("made_by", "TEXT")):
+                             ("material", "TEXT"), ("made_by", "TEXT"),
+                             ("shot_type", "TEXT"), ("face_prominent", "INTEGER")):
                 try:
                     c.execute(f"ALTER TABLE vision_tags ADD COLUMN {col} {ddl}")
                 except sqlite3.OperationalError:
@@ -637,7 +850,13 @@ class Store:
             # recommended) "베스트인데 순서는 뒤"라는 모순 상태가 표현 가능해진다(설계 §4.1).
             for col, ddl in (("group_id", "TEXT"), ("variant", "TEXT NOT NULL DEFAULT 'stable'"),
                              ("naturalize_profile_json", "TEXT"),
-                             ("best", "INTEGER NOT NULL DEFAULT 0")):
+                             ("best", "INTEGER NOT NULL DEFAULT 0"),
+                             # owner_customer_id(2026-08-24): 이 성우를 **누가 담았나**.
+                             #   0 = 공용(사장님이 큐레이션한 것, 모두에게 보인다)
+                             #   N = 그 고객이 라이브러리에서 담은 것 — 본인에게만 보인다.
+                             # ★없으면 A가 담은 목소리가 B에게도 뜨는데, B의 키엔 그 음성이
+                             #   없어 합성이 통째로 실패한다(담기는 각자 계정에 되기 때문).
+                             ("owner_customer_id", "INTEGER NOT NULL DEFAULT 0")):
                 try:
                     c.execute(f"ALTER TABLE voice_presets ADD COLUMN {col} {ddl}")
                 except sqlite3.OperationalError:
@@ -657,6 +876,31 @@ class Store:
                     PRIMARY KEY (platform, value)
                 )
             """)
+            # 카톡 답변봇(2026-08-25) — 고객용 지식. status가 approved인 것만 봇이 쓴다.
+            # ★초안(draft)이 새어나가면 검수의 의미가 없다 — 조회는 반드시 status로 거른다.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS bot_qa (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    room TEXT NOT NULL DEFAULT '공통',
+                    question TEXT NOT NULL,
+                    answer TEXT NOT NULL,
+                    tags TEXT,
+                    status TEXT NOT NULL DEFAULT 'draft',
+                    source TEXT,
+                    updated_at TEXT
+                )
+            """)
+            # 못 답한 질문 = 다음에 채울 목록. 같은 질문은 count를 올린다.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS bot_unanswered (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    room TEXT NOT NULL,
+                    question TEXT NOT NULL,
+                    count INTEGER NOT NULL DEFAULT 1,
+                    asked_at TEXT,
+                    UNIQUE(room, question)
+                )
+            """)
             c.execute("""
                 CREATE TABLE IF NOT EXISTS platform_snapshots (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -668,6 +912,30 @@ class Store:
                 )
             """)
             c.execute("CREATE INDEX IF NOT EXISTS idx_psnap ON platform_snapshots(platform, shortcode, id)")
+            # 쓰레드 게시물(2026-08-17) — 인스타 표(channel_archive·reel_history)와
+            # 섞지 않는다. 저 표들은 플랫폼 컬럼 없이 인스타 전용이고, hits_since는
+            # platform 인자를 받으면서 SQL에서 쓰지 않는다 → 섞으면 인스타 랭킹이
+            # 조용히 오염된다. 씨앗·delta는 platform_seeds/platform_snapshots 재사용.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS threads_posts (
+                    code TEXT PRIMARY KEY,
+                    username TEXT NOT NULL,
+                    caption TEXT,
+                    tail_caption TEXT,
+                    coupang_url TEXT,
+                    media_kind TEXT,
+                    video_url TEXT,
+                    thumb TEXT,
+                    likes INTEGER, comments INTEGER, reposts INTEGER, shares INTEGER,
+                    views INTEGER,
+                    posted_at TEXT,
+                    first_seen TEXT, last_seen TEXT,
+                    quality INTEGER DEFAULT 0,
+                    source TEXT
+                )
+            """)
+            c.execute("CREATE INDEX IF NOT EXISTS idx_threads_quality "
+                      "ON threads_posts(quality DESC, first_seen DESC)")
             # 샤오홍슈 계정 발굴 누적 로그(2026-07-29) — 하루 1행/계정(같은날 재발굴은 덮어씀).
             # '며칠째 반복해서 뜨나'(appear_days)로 우연 1회를 검증된 계정과 구분한다.
             c.execute("""
@@ -800,6 +1068,18 @@ class Store:
                       "ON customer_keys(customer_id, service)")
             c.execute("CREATE UNIQUE INDEX IF NOT EXISTS ux_ck_dup "
                       "ON customer_keys(customer_id, service, key_hash)")
+            # 계정별 환경설정(2026-08-26) — 첫 용도는 폰트 즐겨찾기.
+            # settings는 key가 PK라 계정 축이 없어 재사용 불가(customer_keys와 같은 이유).
+            # value는 JSON 문자열 — 용도마다 표를 새로 만들지 않으려고 일부러 범용으로 뒀다.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS customer_prefs (
+                    customer_id INTEGER NOT NULL,
+                    key TEXT NOT NULL,
+                    value TEXT NOT NULL,
+                    updated_at TEXT DEFAULT (datetime('now')),
+                    PRIMARY KEY (customer_id, key)
+                )
+            """)
             # 픽로그(2026-07-18, 트랙1) — 사장님이 고른 것/버린 것을 append-only로 남긴다.
             # 트랙7 LLM 심사의 취향 예시 + B전환 승인률 지표의 원천. 수정·삭제 없음.
             c.execute("""
@@ -927,6 +1207,11 @@ class Store:
                 # 추적링크·인포크 등록여부). 링크는 영상에 안 들어가고 SEO 설명란·
                 # 인포크링크 등록에서만 꺼내 쓴다.
                 ("product_json", "TEXT"),
+                # ★실제로 깎은 영상제작 포인트(내부 100배 정수). 0=안 깎음, NULL=옛 job.
+                #   환불이 '환불 시점에 다시 판단'하면 차감과 어긋난다 — 개인 키로 0원
+                #   차감된 뒤 키를 지우고 일부러 실패시키면 없던 포인트가 생겼다
+                #   (2026-08-23 점검). 차감할 때 정한 값을 그대로 돌려주기 위한 칸이다.
+                ("mix_charged", "INTEGER"),
             ):
                 try:
                     c.execute(f"ALTER TABLE mix_jobs ADD COLUMN {col} {ddl}")
@@ -1004,7 +1289,22 @@ class Store:
                                #   재료로 주면 원본을 그대로 베낀다 — 사장님이 짚으신 지점.
                                #   3안 실측(2026-08-16): 사전 없음=말버릇 1개·게이트 실패·254자 /
                                #   사전 있음=말버릇 8개·통과·323자. 원본에 없던 "퐁신퐁신"을 새로 만들었다.
-                               ("voice_json", "TEXT")):          # {onomatopoeia,intensifier,exclaim,endings,tone_note}
+                               ("voice_json", "TEXT"),          # {onomatopoeia,intensifier,exclaim,endings,tone_note}
+                               # CTA를 쓰지 않는 스타일인가(2026-08-19). 유튜브 썰쇼핑
+                               # (이븐쇼핑·살림킹왕짱)은 CTA가 없는 게 정답이라 게이트의
+                               # CTA 검사를 건너뛰어야 한다. 기본 0 = 기존 동작(검사 O).
+                               ("no_cta", "INTEGER"),
+                               # 훅 3초 게이트(2026-08-19). 유튜브 썰쇼핑은 완시청
+                               # 장사라 3초를 서론에 쓰면 끝이다. 기본 0 = 검사 안 함
+                               # (오탐이 미탐보다 나쁘다 — 선언한 스타일만 돈다).
+                               ("hook_3s", "INTEGER"),
+                               # 은폐형인가 — 정체를 reveal 구간까지 숨긴다(실측 5~7초).
+                               # 오용형은 처음부터 밝히므로 이 검사를 걸면 안 된다.
+                               ("hook_conceal", "INTEGER"),
+                               # 나열형인가 — 항목(item) 칸을 편수만큼 반복해 조립한다
+                               # (2026-08-21). 구조가 다른 유일한 틀이라 게이트의 구간
+                               # 순서·고조 검사가 여기서 갈린다. 기본 0 = 기존 동작.
+                               ("is_list", "INTEGER")):
                 try:
                     c.execute(f"ALTER TABLE spine ADD COLUMN {_col} {_ddl}")
                 except sqlite3.OperationalError:
@@ -1129,6 +1429,47 @@ class Store:
                         action TEXT NOT NULL
                     )""")
         c.execute("CREATE INDEX IF NOT EXISTS idx_cust_act ON customer_activity(customer_id, at)")
+        # ── 제작 접수 선점표(2026-08-24): 같은 요청이 두 번 접수돼 render 크레딧이
+        #    **두 배로** 나가던 것을 원자적으로 막는다.
+        #    08-19에 넣은 recent_same_mix_job 가드는 "조회 → (과금) → 기록" 순서라
+        #    조회 시점엔 상대 요청이 아직 DB에 없었다. 0.03~0.17초 차이로 들어온 두 요청이
+        #    **둘 다 조회를 통과**해 각자 과금했다(실측 cid=57, 08-23 2쌍 · 08-24 5쌍 = 7쌍).
+        #    그래서 판단을 조회가 아니라 **INSERT 성공 여부**로 바꾼다 — PRIMARY KEY 충돌은
+        #    SQLite가 원자적으로 처리하므로 스레드·프로세스가 몇 개든 딱 하나만 이긴다. ──
+        c.execute("""CREATE TABLE IF NOT EXISTS mix_claims (
+                        fingerprint TEXT PRIMARY KEY,
+                        customer_id INTEGER NOT NULL,
+                        job_id TEXT,
+                        created_at REAL NOT NULL
+                    )""")
+        # ── 오류 신고(2026-08-24 사장님 "오류신고 버튼 만들기, 내 관리페이지에 보이기") ──
+        #    고객에게 물어서 받는 방식은 반드시 샌다 — job_id·URL·콘솔오류를 고객이 알 리 없다.
+        #    버튼 한 번에 진단 정보를 **자동으로** 담아 여기 쌓고, 관리자 페이지가 그대로 읽는다.
+        c.execute("""CREATE TABLE IF NOT EXISTS bug_reports (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        customer_id INTEGER NOT NULL,
+                        created_at INTEGER NOT NULL,
+                        message TEXT NOT NULL,
+                        page_url TEXT,
+                        job_id TEXT,
+                        work_id TEXT,
+                        step TEXT,
+                        user_agent TEXT,
+                        console_json TEXT,
+                        status TEXT NOT NULL DEFAULT 'open',
+                        handled_at INTEGER,
+                        note TEXT
+                    )""")
+        c.execute("CREATE INDEX IF NOT EXISTS idx_bugrep_open "
+                  "ON bug_reports(status, created_at DESC)")
+        # 답장(쪽지) — 신고한 고객이 자기 화면에서 바로 본다. read_at은 '고객이 봤나'.
+        # ★있는 컬럼인지 먼저 보고 없을 때만 붙인다 — try/except로 삼키면 진짜 오류까지
+        #   같이 묻힌다(매 기동마다 나는 '이미 있음'을 로그로 흘릴 수도 없다).
+        _have = {r[1] for r in c.execute("PRAGMA table_info(bug_reports)")}
+        for _col, _type in (("reply", "TEXT"), ("replied_at", "INTEGER"), ("read_at", "INTEGER"),
+                            ("shot_path", "TEXT")):
+            if _col not in _have:
+                c.execute("ALTER TABLE bug_reports ADD COLUMN %s %s" % (_col, _type))
         # ── 회원승인(2026-07-21): approved_at NULL=대기중 / 값(epoch초)=승인시각 ──
         try:
             c.execute("ALTER TABLE customers ADD COLUMN approved_at INTEGER")
@@ -1146,6 +1487,13 @@ class Store:
         except sqlite3.OperationalError:
             pass  # 이미 존재. 하위호환: 기존 행은 NULL(만료 취급)로 남아 동작 불변.
 
+        # ── 설치안내 자동노출(2026-08-25): 입금(pro 승격)한 분에게 /setup을 한 번 띄운다.
+        #    1=아직 안 봤다. 사장님 지시 "1번은 가입후 입금사람에게". 체험만 하는 분은 안 띄운다. ──
+        try:
+            c.execute("ALTER TABLE customers ADD COLUMN setup_due INTEGER NOT NULL DEFAULT 0")
+        except sqlite3.OperationalError:
+            pass  # 이미 존재
+
         # ── 관리자 지정(2026-07-22): admin=1이면 관리자(권한 관리자와 동일). 사장님이 UI로 부여/회수. ──
         try:
             c.execute("ALTER TABLE customers ADD COLUMN admin INTEGER NOT NULL DEFAULT 0")
@@ -1157,6 +1505,22 @@ class Store:
             c.execute("ALTER TABLE customers ADD COLUMN last_seen INTEGER")
         except sqlite3.OperationalError:
             pass  # 이미 존재
+
+        # ── 가입 마무리 대상 표시(2026-08-24): 1이면 로그인 시 이름·전화 입력화면을 한 번 띄운다. ──
+        #   구글 가입은 이메일만 들어와 이름·전화가 비어 있었다. 신규 가입에만 1을 켠다 —
+        #   기본 0이라 **기존 고객은 화면이 안 바뀐다**(이미 쓰고 계신 분을 갑자기 붙잡지 않는다).
+        try:
+            c.execute("ALTER TABLE customers ADD COLUMN welcome_due INTEGER NOT NULL DEFAULT 0")
+        except sqlite3.OperationalError:
+            pass  # 이미 존재
+
+        # ── 성별·연령대(2026-08-24): 가입 마무리 화면에서 이름·전화와 함께 받는다. ──
+        #   NULL=아직 안 받음. 기존 고객은 NULL로 남고 다음 접속 때 한 번 물어본다(백필).
+        for _col in ("gender", "age_band"):
+            try:
+                c.execute(f"ALTER TABLE customers ADD COLUMN {_col} TEXT")
+            except sqlite3.OperationalError:
+                pass  # 이미 존재
 
         # ── 회원관리(2026-07-22): 이름·전화 + 결제이력 ──
         #   ★같은 커서 c 사용 — 이 메서드는 _init_schema가 customers를 만드는 열린 트랜잭션
@@ -1368,6 +1732,18 @@ class Store:
             ).fetchall()
         return {r[0]: {"last": r[1] or "", "name": r[2] or ""} for r in rows}
 
+    def reel_history_rows(self):
+        """등급 산정용 원자료 — [{"username","comments","first_seen"}].
+
+        reel_history는 30일 롤링(prune_reel_history)이라 자연히 '최근 한 달 성적'만 남는다.
+        판정 자체는 하지 않는다 — 등급 기준이 두 군데에 적히면 언젠가 어긋난다(0순위-B).
+        기준은 channel_tier 한 곳에만 둔다."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT username, comments, first_seen FROM reel_history"
+            ).fetchall()
+        return [{"username": r[0], "comments": r[1], "first_seen": r[2]} for r in rows]
+
     def channel_name_map(self):
         """{username: 한글 표시명} — 아카이브(히트작) 카드가 @아이디 대신 한글 이름을 쓰려고 읽는다.
 
@@ -1444,6 +1820,35 @@ class Store:
         with self._conn() as c:
             rows = c.execute("SELECT username, category FROM channel_categories").fetchall()
         return {r[0]: r[1] for r in rows if r[1]}
+
+    def category_by_channel(self):
+        """{username(정규화): category} — 채널 하나가 어느 갈래인지 한 곳에서 정한다.
+
+        ★왜 여러 곳을 겹쳐 보나(2026-08-17): 역대 히트작 탭(channel_archive)은
+        category 컬럼이 아예 없어 카테고리를 누르면 **결과 0건**이 됐다. 20만 건을
+        Gemini로 태깅하는 안도 있었지만, 카테고리는 릴스보다 **채널의 성질**에
+        가까워서 채널 단위로 붙이면 충분하다(ranking._category_of가 이미 같은 판단을
+        한다 — 캡션이 없으면 채널 카테고리로 폴백). 실측 커버리지 79.5%
+        (아카이브 206,807건 중 164,513건), 추가 크롤·AI 비용 0.
+
+        우선순위: 손으로 지정한 것 > 발굴 채널 기록 > 수집 이력.
+        (앞의 것이 뒤를 덮는다 — 사람이 고친 값이 항상 이긴다)
+        """
+        m = {}
+        with self._conn() as c:
+            for sql in (
+                "SELECT username, category FROM reel_history",
+                "SELECT username, category FROM discovered_channels",
+                "SELECT username, category FROM channel_categories",
+            ):
+                try:
+                    rows = c.execute(sql).fetchall()
+                except Exception:      # noqa: BLE001 — 테이블이 없는 배포본도 있다
+                    continue
+                for u, cat in rows:
+                    if cat:
+                        m[self._norm_user(u)] = cat
+        return m
 
     # ── 채널 활동성(2026-07-22) — 센서스가 채우는 자동 선별 레이어 ──
     @staticmethod
@@ -1631,11 +2036,88 @@ class Store:
         with self._conn() as c:
             c.execute("DELETE FROM platform_seeds WHERE platform=? AND value=?", (platform, value))
 
+    def channel_style_map(self):
+        """channel_id → 발굴 스타일(썰쇼핑·신기템 등). 발굴 전 환경이면 빈 dict.
+
+        ★조회를 여기 한 곳에 둔다(0순위-B) — 시드 목록(list_seeds)과 랭킹(app)이
+          같은 표를 각자 읽으면 언젠가 한쪽만 고쳐진다.
+        """
+        with self._conn() as c:
+            try:
+                return {r[0]: r[1] for r in c.execute(
+                    "SELECT channel_id, style FROM channel_styles")}
+            except sqlite3.Error:
+                return {}
+
     def list_seeds(self, platform):
+        """플랫폼 시드 목록. 유튜브는 발굴 스타일(썰쇼핑·신기템 등)을 함께 준다.
+
+        ★왜 붙이나(2026-08-21 사장님 "신기템이 어디서 볼 수 있나"): 발굴이 축별로
+          채널을 모으는데 화면은 그걸 읽는 곳이 한 군데도 없었다 — channel_styles를
+          조회하는 API가 앱에 0건이었다. 모아만 놓고 못 보면 모은 적 없는 것과 같다.
+        ★조인 키: seeds.value는 채널 URL(.../channel/UC...)이고 styles는 channel_id다.
+          URL 안에 id가 들어 있어 그걸로 맞춘다(실측 558건 매칭). 파이썬에서 맞추는 이유는
+          SQL LIKE 조인이 인덱스를 못 타 시드가 늘수록 느려지기 때문이다.
+        """
         with self._conn() as c:
             rows = c.execute("SELECT kind, value, added_at FROM platform_seeds WHERE platform=? "
                              "ORDER BY added_at ASC, rowid ASC", (platform,)).fetchall()
-        return [{"kind": r[0], "value": r[1], "added_at": r[2] or ""} for r in rows]
+            styles = {}
+            if platform == "youtube":
+                try:
+                    styles = {r[0]: (r[1], r[2] or "") for r in c.execute(
+                        "SELECT channel_id, style, title FROM channel_styles")}
+                except sqlite3.Error:
+                    styles = {}      # 발굴을 한 번도 안 돌린 환경(테이블 없음) — 빈칸으로 둔다
+                    # 주: 스타일만 필요한 곳은 channel_style_map()을 쓴다. 여기는 채널명도
+                    #     함께 필요해 한 번의 조회로 둘을 가져온다(왕복 2회를 피한다).
+        out = []
+        for kind, value, added in rows:
+            item = {"kind": kind, "value": value, "added_at": added or ""}
+            if styles:
+                v = value or ""
+                # URL 꼬리가 곧 channel_id다. 전체를 훑지 않고 꼬리만 잘라 한 번에 찾는다.
+                cid = v.rstrip("/").rsplit("/", 1)[-1]
+                st, title = styles.get(cid, ("", ""))
+                item["style"] = st
+                # 채널명도 같이 준다 — 유튜브 시드는 값이 URL이라 화면에 ID만 보였다.
+                item["name"] = title
+            out.append(item)
+        return out
+
+    # ── 쓰레드 게시물 ──
+    _THREADS_COLS = ("code", "username", "caption", "tail_caption", "coupang_url",
+                     "media_kind", "video_url", "thumb", "likes", "comments",
+                     "reposts", "shares", "views", "posted_at", "quality", "source")
+
+    def threads_upsert(self, post):
+        """새로 넣었으면 True, 이미 있던 걸 갱신했으면 False."""
+        code = (post or {}).get("code")
+        if not code:
+            return False
+        vals = [post.get(k) if k != "quality" else int(post.get(k) or 0)
+                for k in self._THREADS_COLS]
+        with self._conn() as c:
+            row = c.execute("SELECT 1 FROM threads_posts WHERE code=?", (code,)).fetchone()
+            if row:
+                sets = ", ".join(f"{k}=?" for k in self._THREADS_COLS[1:])
+                c.execute(f"UPDATE threads_posts SET {sets}, last_seen=datetime('now') "
+                          "WHERE code=?", (*vals[1:], code))
+                return False
+            cols = ", ".join(self._THREADS_COLS)
+            qs = ",".join("?" * len(self._THREADS_COLS))
+            c.execute(f"INSERT INTO threads_posts({cols}, first_seen, last_seen) "
+                      f"VALUES({qs}, datetime('now'), datetime('now'))", vals)
+            return True
+
+    def threads_list(self, limit=200, min_quality=0):
+        cols = ", ".join(self._THREADS_COLS)
+        with self._conn() as c:
+            rows = c.execute(
+                f"SELECT {cols} FROM threads_posts WHERE quality >= ? "
+                "ORDER BY quality DESC, first_seen DESC LIMIT ?",
+                (int(min_quality), int(limit))).fetchall()
+        return [dict(zip(self._THREADS_COLS, r)) for r in rows]
 
     # ── 샤오홍슈 계정 발굴 블랙리스트(사장님이 쳐낸 계정 영구 제외) ──
     # platform_seeds 재사용: platform="xiaohongshu", kind="xhs_blacklist", value=userid.
@@ -1703,6 +2185,30 @@ class Store:
                 "VALUES(?,?,?,?,?)",
                 [(platform, run_date, r["shortcode"], r.get("base"), r.get("delta")) for r in rows])
 
+    def crawl_runs(self, days=7):
+        """크롤 회차 목록(관리페이지 '크롤현황' 탭, 2026-08-25).
+
+        인스타는 snapshots, 나머지 플랫폼은 platform_snapshots에 회차가 쌓인다.
+        두 테이블을 같은 모양으로 합쳐 **최근 회차부터** 돌려준다.
+        run_date는 UTC 문자열('YYYY-MM-DD HH:MM')이다 — KST 변환은 화면에서 한다.
+        (과거 일부 발굴 회차는 로컬시각으로 저장돼 있다. 2026-08-25에 UTC로 통일했다.)
+        """
+        cutoff = (datetime.now(timezone.utc) - timedelta(days=int(days))).strftime("%Y-%m-%d %H:%M")
+        runs = []
+        with self._conn() as c:
+            for run_date, cnt, accounts in c.execute(
+                    "SELECT run_date, COUNT(*), COUNT(DISTINCT username) FROM snapshots "
+                    "WHERE run_date>=? GROUP BY run_date", (cutoff,)):
+                runs.append({"platform": "instagram", "at": run_date,
+                             "count": cnt, "accounts": accounts})
+            for platform, run_date, cnt in c.execute(
+                    "SELECT platform, run_date, COUNT(*) FROM platform_snapshots "
+                    "WHERE run_date>=? GROUP BY platform, run_date", (cutoff,)):
+                runs.append({"platform": platform, "at": run_date,
+                             "count": cnt, "accounts": 0})
+        runs.sort(key=lambda r: r["at"], reverse=True)
+        return runs
+
     def prev_base_platform(self, platform, shortcode):
         with self._conn() as c:
             row = c.execute("SELECT base FROM platform_snapshots WHERE platform=? AND shortcode=? "
@@ -1716,7 +2222,32 @@ class Store:
         return row[0] if row else None
 
     # ── 플랫폼별 마지막 수집 결과(last_run 테이블에 platform 컬럼이 없어 settings 재사용) ──
+    #
+    # ★상한이 필요한 이유 (2026-08-24 실측)
+    #   '주소로 가져오기'는 새 1건을 앞에 붙이고 나머지를 그대로 둔다 — 지우는 쪽이 없어
+    #   계속 커졌다. 유튜브가 8,281건(4.47MB)까지 쌓여 /api/reference 한 번에 그걸 다
+    #   내려보냈고(실측 974ms), 관리자 목록 응답에도 통째로 딸려갔다.
+    #   랭킹은 최신순이라 뒤쪽 수천 건은 화면에서 볼 일이 없다.
+    #   ★2026-08-25 회귀 수정: 상한은 맞았지만 **자르는 기준이 틀렸다**.
+    #   "앞쪽이 최신"이라고 적어뒀는데 build_youtube_items는 정렬을 하지 않는다 —
+    #   수집한 순서(채널·키워드를 훑은 순서) 그대로다. 실측(08-25 목록):
+    #     앞 1500건 평균 176.0h vs 뒤 1500건 평균 162.7h → 앞쪽이 오히려 더 오래됐다.
+    #   그래서 8,580건 중 5,580건이 '뒤에서 수집됐다'는 이유만으로 잘렸고, 뒤쪽에서
+    #   훑는 채널은 통째로 사라졌다(사장님 제보: "어제까지 썰쇼핑 엄청 많았는데").
+    #   → 자르기 전에 **최신순으로 정렬**한다. 잘리는 건 오래된 뒤쪽뿐이다.
+    #   상한도 8000으로 올린다 — 어제(8,281건) 수준을 유지하면서 무한 증식만 막는다.
+    LAST_RUN_MAX_ITEMS = 8000
+
+    @staticmethod
+    def _newest_first(items):
+        """자르기 전 최신순 정렬. age_hours가 없는 항목은 뒤로 보낸다(정렬 불가).
+        ★정렬 없이 자르면 '수집 순서 뒤쪽' 채널이 통째로 사라진다(2026-08-25 회귀)."""
+        return sorted(items or [],
+                      key=lambda i: (i.get("age_hours") is None,
+                                     i.get("age_hours") if i.get("age_hours") is not None else 0))
+
     def save_last_run_platform(self, platform, items, collected_at):
+        items = self._newest_first(items)[: self.LAST_RUN_MAX_ITEMS]
         with self._conn() as c:
             c.execute("INSERT OR REPLACE INTO settings(key, value) VALUES(?,?)",
                       (f"last_run::{platform}", json.dumps({"items": items, "collected_at": collected_at}, ensure_ascii=False)))
@@ -2041,10 +2572,43 @@ class Store:
             ).fetchall()
         return {r[0]: r[1] for r in rows if r[1] is not None}
 
+    def latest_views(self, shortcodes, urls=None):
+        """shortcode/URL별 '지금' 조회수 → {키: views}. 없으면 키를 안 담는다.
+
+        ★조회수가 **두 곳에 나뉘어 있다**(2026-08-20 실측) — 한 곳만 보면 절반이 빈다:
+            reel_history       shortcode 키   인스타 6,364/6,367건
+            source_enrichment  url 키         유튜브 1,394/1,410건 · 인스타 23건
+          그래서 둘 다 본다. shortcode로 먼저 찾고, 없으면 URL로 채운다.
+
+        `latest_comments`와 같은 규약이다(오버레이용 — 없으면 호출부가 폴백한다).
+        ⚠️ 화면에 조회수를 띄우려면 이 값이 있어야 한다. 예전엔 호출부가 `views: None`을
+           **하드코딩**해서, DB에 6천 건이 있는데도 화면엔 조회수가 영영 안 떴다.
+        """
+        scs = [s for s in dict.fromkeys(shortcodes or []) if s]
+        us = [u for u in dict.fromkeys(urls or []) if u]
+        out = {}
+        with self._conn() as c:
+            if scs:
+                ph = ",".join("?" * len(scs))
+                for sc, v in c.execute(
+                    f"SELECT shortcode, views FROM reel_history WHERE shortcode IN ({ph})", scs
+                ).fetchall():
+                    if v:
+                        out[sc] = v
+            if us:
+                ph = ",".join("?" * len(us))
+                for u, v in c.execute(
+                    f"SELECT url, views FROM source_enrichment WHERE url IN ({ph})", us
+                ).fetchall():
+                    if v:
+                        out[u] = v
+        return out
+
     def save_last_run(self, items, collected_at):
         """마지막 수집 결과 전체(items + 시각)를 저장. 단일 행 덮어쓰기.
         + 수집분을 reel_history에 누적(shortcode upsert)해 48h 창에서 내려가도
         30일간 보존한다. 누적은 부가작업 — 실패해도 last_run 저장은 살린다."""
+        items = self._newest_first(items)[: self.LAST_RUN_MAX_ITEMS]   # 플랫폼별 저장과 같은 규칙
         with self._conn() as c:
             c.execute(
                 "INSERT INTO last_run(id, items_json, collected_at) VALUES(1, ?, ?) "
@@ -2172,26 +2736,102 @@ class Store:
             return [], None
         return json.loads(row[0]), row[1]
 
+    def hits_since(self, days, min_comments=500, limit=400, platform="instagram"):
+        """최근 N일 수집분 중 '터진 것'만 → 카드 items(마지막수집과 같은 모양).
+
+        ★추가 크롤 0 — 이미 받아둔 reel_history를 다시 보여줄 뿐이다. 상단(48시간 신규)이
+        등급제로 얇아져도 이 줄이 재고를 메운다(실측: 7일 댓글500+ 182건, 30일 1000+ 360건).
+
+        댓글 기준인 이유: 사장님이 실제 제작에 쓴 영상의 댓글 중앙값이 1,473(전체 P90 579)
+        이라 조회수보다 손이 가는 것을 잘 가른다(channel_tier 참고).
+        reel_history는 30일 롤링이라 days=30이 사실상 전체다."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT shortcode, username, name, category, url, thumb, caption, "
+                "       views, comments, first_seen, upload_ts "
+                "FROM reel_history "
+                "WHERE comments >= ? AND first_seen >= datetime('now', ?) "
+                "ORDER BY comments DESC LIMIT ?",
+                (min_comments, f"-{int(days)} day", int(limit))
+            ).fetchall()
+        return [{
+            "shortcode": r[0], "username": r[1], "name": r[2] or "",
+            "category": r[3] or "", "url": r[4] or "", "thumb": r[5] or "",
+            "caption": r[6] or "", "views": r[7] or 0, "comments": r[8] or 0,
+            "first_seen": r[9] or "", "upload_ts": r[10] or "",
+        } for r in rows]
+
+    def archive_hits(self, min_comments=10000, limit=400, max_comments=0):
+        """역대 히트작 — 누적 아카이브에서 크게 터진 것만. 추가 크롤 0.
+
+        hits_since(최근 N일, reel_history)와 소스가 다르다. 이쪽은 channel_archive
+        누적분(실측 2026-08-17: 206,672건, 댓글 1만+ 1,235건)이고 수집은 이미 끝나
+        크론도 꺼져 있다 — 그냥 갖고 있는 걸 보여줄 뿐이다.
+
+        ⚠️ category·표시명이 없다(아카이브 크롤이 안 저장했다) → 화면의 카테고리
+        걸러내기는 이 탭에서 안 걸린다. 20만 건 태깅은 Gemini 비용이라 보류했다.
+        컬럼명 thumbnail은 카드가 쓰는 thumb으로 바꿔서 넘긴다.
+
+        ★max_comments(2026-08-17 추가) — 문턱 버튼이 서로 겹치지 않게 하는 상한.
+        예전엔 문턱만 낮추는 구조라 1만+/3천+/1천+ 셋 다 **같은 400건**이 나왔다
+        (댓글 내림차순 상위 400을 자르니 문턱을 낮춰도 얼굴이 그대로다 — 실측:
+        세 버튼 모두 400건·1위 _miso.home 132,424로 동일해 눌러도 화면이 안 바뀌었다).
+        구간으로 끊으면 1만+ / 3천~9,999 / 1천~2,999가 서로 다른 것만 보여준다.
+        0이면 상한 없음(기존 동작)."""
+        with self._conn() as c:
+            sql = ("SELECT shortcode, username, url, thumbnail, views, likes,"
+                   "       comments, posted_at "
+                   "FROM channel_archive WHERE comments >= ? ")
+            args = [min_comments]
+            if max_comments:
+                sql += "AND comments <= ? "
+                args.append(int(max_comments))
+            sql += "ORDER BY comments DESC LIMIT ?"
+            args.append(int(limit))
+            rows = c.execute(sql, tuple(args)).fetchall()
+        # 아카이브엔 category 컬럼이 없다 → 채널 단위로 붙인다(추가 크롤·AI 0).
+        cats = self.category_by_channel()
+        return [{
+            "shortcode": r[0], "username": r[1], "name": "",
+            "category": cats.get(self._norm_user(r[1]), ""),
+            "url": r[2] or "", "thumb": r[3] or "",
+            "caption": "", "views": r[4] or 0, "likes": r[5] or 0,
+            "comments": r[6] or 0, "upload_ts": r[7] or "",
+        } for r in rows]
+
     def save_script(self, shortcode, script, category=None):
         """대본추출 결과({segments, full_text}) 저장(덮어쓰기). category가 오면
         같이 저장(학습소재 통계의 그룹핑 키, 2026-07-13). 구조분석은 별도
-        save_extract_structure()로 나중에 채워진다."""
+        save_extract_structure()로 나중에 채워진다.
+
+        ★훅 문형 축(2026-08-20)도 여기서 같이 남긴다 — 저장 **단일 출구**라
+          어느 경로로 전사가 들어와도 빠지지 않는다.
+
+        ★★SQL을 **한 벌로만** 쓴다(2026-08-20 리뷰 지적으로 고침). 처음엔 axis 유무·
+          category 유무로 INSERT문을 3벌 두었는데, 미판정 분기가 hook_axis를 안 건드려
+          **재추출로 축이 사라져도 옛 축이 DB에 남았다**(실측: 금지경고 → 미판정으로
+          바뀌었는데 DB엔 '금지경고'가 그대로, get_script도 그 낡은 값을 줬다).
+          같은 판단이 세 군데 적히면 반드시 한 곳이 어긋난다(0순위-B).
+          → axis는 **항상** 덮어쓴다(못 갈랐으면 NULL로). category는 넘어온 값이
+            있을 때만 바꾸고, 없으면 기존 값을 유지한다(COALESCE).
+        """
+        try:
+            from shopping_shorts.hook_axis import axis_of
+            axis = axis_of(script) or None
+        except Exception:      # noqa: BLE001 — 축 판정 실패가 전사 저장을 막으면 안 된다
+            axis = None
         with self._conn() as c:
-            if category is not None:
-                c.execute(
-                    "INSERT INTO script_extracts(shortcode, script_json, extracted_at, category) "
-                    "VALUES(?,?,datetime('now'),?) ON CONFLICT(shortcode) DO UPDATE SET "
-                    "script_json=excluded.script_json, extracted_at=excluded.extracted_at, "
-                    "category=excluded.category",
-                    (shortcode, json.dumps(script, ensure_ascii=False), category),
-                )
-            else:
-                c.execute(
-                    "INSERT INTO script_extracts(shortcode, script_json, extracted_at) "
-                    "VALUES(?,?,datetime('now')) ON CONFLICT(shortcode) DO UPDATE SET "
-                    "script_json=excluded.script_json, extracted_at=excluded.extracted_at",
-                    (shortcode, json.dumps(script, ensure_ascii=False)),
-                )
+            c.execute(
+                "INSERT INTO script_extracts(shortcode, script_json, extracted_at, "
+                "                            category, hook_axis) "
+                "VALUES(?,?,datetime('now'),?,?) ON CONFLICT(shortcode) DO UPDATE SET "
+                "script_json=excluded.script_json, extracted_at=excluded.extracted_at, "
+                # category는 넘어왔을 때만 바꾼다 — 안 넘어오면 기존 값 유지
+                "category=COALESCE(excluded.category, script_extracts.category), "
+                # ★hook_axis는 항상 덮어쓴다(NULL 포함) — 낡은 축이 남지 않게
+                "hook_axis=excluded.hook_axis",
+                (shortcode, json.dumps(script, ensure_ascii=False), category, axis),
+            )
 
     def update_extract_category(self, shortcode, category, source=None):
         """category만 UPDATE — script_json은 절대 안 건드린다(2026-07-15, C-1 재발방지).
@@ -2213,7 +2853,7 @@ class Store:
         with self._conn() as c:
             row = c.execute(
                 "SELECT script_json, extracted_at, category, structure_json, "
-                "structure_analyzed_at, category_source "
+                "structure_analyzed_at, category_source, hook_axis "
                 "FROM script_extracts WHERE shortcode=?",
                 (shortcode,),
             ).fetchone()
@@ -2225,7 +2865,9 @@ class Store:
         data["structure"] = json.loads(row[3]) if row[3] else None
         data["structure_analyzed_at"] = row[4]
         data["category_source"] = row[5]
-        return data
+        # ★제작소의 **캐시 분기**(app.py /api/produce/extract_from_url)가 이 함수를 쓴다 —
+        #   여기 빠뜨리면 **캐시 히트 때만** 화면에 축이 안 나온다(2026-08-20 라이브에서 실제로 그랬다).
+        return self._attach_hook_axis(data, row[6])
 
     def get_reel_meta(self, shortcode):
         """reel_history의 이 영상 최신 메타(name·category·url·thumb·comments·views).
@@ -2462,18 +3104,55 @@ class Store:
             cur = self.get_draft(cur["parent_draft_id"]) if cur["parent_draft_id"] else None
         return list(reversed(chain))
 
+    @staticmethod
+    def _attach_hook_axis(data, stored_axis):
+        """전사 dict에 훅 문형 축을 붙인다 — **읽는 출구가 둘이라 함수로 뽑았다**.
+
+        ★2026-08-20 실사고: `get_script`에만 축을 붙였는데 제작소 캐시 분기는
+          `get_extract`를 쓴다. 그래서 캐시 히트 때만 화면에 축이 안 나왔다
+          (라이브 브라우저에서 hook_axis 키 자체가 없는 걸로 잡았다).
+          같은 판단이 두 군데면 반드시 한 곳이 빠진다(0순위-B).
+          세 번째 읽기 경로가 생기면 그것도 이 함수를 부르게 하라.
+        ★DB에 값이 없으면 그 자리에서 판정하되 **쓰지는 않는다**(읽기 경로에서 쓰면
+          느려지고 잠금이 는다). 채우는 건 scripts/backfill_hook_axis.py가 한다.
+        """
+        axis = stored_axis or ""
+        if not axis:
+            try:
+                from shopping_shorts.hook_axis import axis_of
+                axis = axis_of(data) or ""
+            except Exception:      # noqa: BLE001 — 판정 실패가 조회를 막으면 안 된다
+                axis = ""
+        data["hook_axis"] = axis
+        try:
+            from shopping_shorts.hook_axis import AXIS_TO_SPINE
+            data["hook_spine"] = AXIS_TO_SPINE.get(axis, "")
+        except Exception:      # noqa: BLE001
+            data["hook_spine"] = ""
+        return data
+
     def get_script(self, shortcode):
-        """저장된 대본추출 결과. 없으면 None. 있으면 {segments, full_text, extracted_at}."""
+        """저장된 대본추출 결과. 없으면 None.
+        있으면 {segments, full_text, extracted_at, hook_axis, hook_spine}.
+
+        ★hook_axis/hook_spine(2026-08-20): 이 영상의 훅 문형 축과 그 축이 고르는 대본
+          스타일. **읽는 출구가 여기 하나**라 이 값을 쓰는 화면·API가 전부 같이 받는다
+          (부르는 쪽마다 조회하면 반드시 한 곳이 빠진다 = 0순위-B).
+        ★DB에 값이 없으면(옛 전사) 그 자리에서 판정해 채워 넣는다 — 백필을 아직 안 돌린
+          DB에서도 화면이 비지 않는다. 단 **DB에 쓰지는 않는다**(읽기 경로에서 쓰면
+          느려지고 잠금이 는다). 채우는 건 scripts/backfill_hook_axis.py가 한다.
+        """
         with self._conn() as c:
             row = c.execute(
-                "SELECT script_json, extracted_at FROM script_extracts WHERE shortcode=?",
+                "SELECT script_json, extracted_at, hook_axis FROM script_extracts "
+                "WHERE shortcode=?",
                 (shortcode,),
             ).fetchone()
         if not row:
             return None
         data = json.loads(row[0])
         data["extracted_at"] = row[1]
-        return data
+        return self._attach_hook_axis(data, row[2])
 
     # ── S급 대본 위키(도서관) — customer_id별로 독립(2026-07-13 멀티테넌시) ──
     def save_to_wiki(self, item, script, structure, customer_id=LEGACY_CUSTOMER_ID):
@@ -2703,14 +3382,24 @@ class Store:
                 "top_comments": json.loads(row[8] or "[]"), "caption": row[9],
                 "status": row[10]}
 
-    def save_vision_tags(self, shortcode, subject, keywords):
-        """썸네일 비전 주제태그 저장(덮어쓰기). keywords: [str]."""
+    def save_vision_tags(self, shortcode, subject, keywords,
+                         shot_type=None, face_prominent=None):
+        """썸네일 비전 주제태그 저장(덮어쓰기). keywords: [str].
+
+        shot_type/face_prominent는 **선택**이다(2026-08-19) — 안 주면 기존 값을 유지한다.
+        기존 3-인자 호출부(vision_tagging 등)를 그대로 두기 위함이다."""
         with self._conn() as c:
             c.execute(
-                "INSERT INTO vision_tags(shortcode, subject, keywords_json, created_at) "
-                "VALUES(?,?,?,datetime('now')) ON CONFLICT(shortcode) DO UPDATE SET "
-                "subject=excluded.subject, keywords_json=excluded.keywords_json, created_at=excluded.created_at",
-                (shortcode, subject or "", json.dumps(keywords or [], ensure_ascii=False)),
+                "INSERT INTO vision_tags(shortcode, subject, keywords_json, created_at, "
+                "shot_type, face_prominent) "
+                "VALUES(?,?,?,datetime('now'),?,?) ON CONFLICT(shortcode) DO UPDATE SET "
+                "subject=excluded.subject, keywords_json=excluded.keywords_json, "
+                "created_at=excluded.created_at, "
+                # ★안 준 값은 덮어쓰지 않는다 — 옛 호출부가 판정을 지우면 안 된다.
+                "shot_type=COALESCE(excluded.shot_type, vision_tags.shot_type), "
+                "face_prominent=COALESCE(excluded.face_prominent, vision_tags.face_prominent)",
+                (shortcode, subject or "", json.dumps(keywords or [], ensure_ascii=False),
+                 shot_type, None if face_prominent is None else int(bool(face_prominent))),
             )
 
     def save_product(self, shortcode, product, category="", material="", made_by=""):
@@ -2790,10 +3479,13 @@ class Store:
             # sqlite 변수 상한(999) 회피 — 청크로 조회.
             for i in range(0, len(codes), 400):
                 chunk = codes[i:i + 400]
-                q = "SELECT shortcode, subject, keywords_json FROM vision_tags WHERE shortcode IN (%s)" % \
+                q = ("SELECT shortcode, subject, keywords_json, shot_type, face_prominent "
+                     "FROM vision_tags WHERE shortcode IN (%s)") % \
                     ",".join("?" * len(chunk))
-                for sc, subj, kj in c.execute(q, chunk).fetchall():
-                    out[sc] = {"subject": subj or "", "keywords": json.loads(kj or "[]")}
+                for sc, subj, kj, shot, face in c.execute(q, chunk).fetchall():
+                    out[sc] = {"subject": subj or "", "keywords": json.loads(kj or "[]"),
+                               # 옛 행은 이 컬럼이 NULL이다 — 빈값/False로 읽어 호출부가 안 터진다.
+                               "shot_type": shot or "", "face_prominent": bool(face)}
         return out
 
     # --- 영상 길이 캐시(reel_durations, 2026-08-04) — 랭킹 카드 ⏱ 표시용 ---
@@ -3229,7 +3921,8 @@ class Store:
             return cur.lastrowid
 
     def set_spine_style(self, spine_id, beat_roles=None, templates=None, chars_per_30s=None,
-                        voice=None):
+                        voice=None, no_cta=None, hook_3s=None, hook_conceal=None,
+                        fit_categories=None, is_list=None):
         """스파인에 **기계가 검사할** 스타일 정보를 붙인다(2026-08-15).
 
         beat_roles = ["hook","before",...] · templates = {"hook":["...{가족}..."]} ·
@@ -3245,9 +3938,27 @@ class Store:
         if chars_per_30s is not None:
             sets.append("chars_per_30s=?")
             args.append(int(chars_per_30s))
+        if no_cta is not None:
+            sets.append("no_cta=?")
+            args.append(1 if no_cta else 0)
+        if is_list is not None:
+            sets.append("is_list=?")
+            args.append(1 if is_list else 0)
+        if hook_3s is not None:
+            sets.append("hook_3s=?")
+            args.append(1 if hook_3s else 0)
+        if hook_conceal is not None:
+            sets.append("hook_conceal=?")
+            args.append(1 if hook_conceal else 0)
         if voice is not None:
             sets.append("voice_json=?")
             args.append(json.dumps(voice, ensure_ascii=False))
+        # ★적합 카테고리도 여기서 고칠 수 있어야 한다(2026-08-20). 예전엔 `add_spine`에서만
+        #   정해져서, 이미 심긴 행의 카테고리를 바로잡을 방법이 아예 없었다 —
+        #   잘못 심으면 시드를 다시 돌려도 영영 안 고쳐졌다.
+        if fit_categories is not None:
+            sets.append("fit_categories_json=?")
+            args.append(json.dumps(fit_categories, ensure_ascii=False))
         if not sets:
             return
         sets.append("updated_at=?")
@@ -3260,7 +3971,7 @@ class Store:
         q = ("SELECT id, name, situation_type, character_roles_json, beat_chain_json, "
              "emotion_arc, appeal, fit_categories_json, source_count, perf_score, "
              "status, created_at, updated_at, beat_roles_json, templates_json, "
-             "chars_per_30s, voice_json FROM spine")
+             "chars_per_30s, voice_json, no_cta, hook_3s, hook_conceal, is_list FROM spine")
         args = []
         if status is not None:
             q += " WHERE status=?"
@@ -3279,12 +3990,20 @@ class Store:
              "beat_roles": json.loads(r[13]) if r[13] else None,
              "templates": json.loads(r[14]) if r[14] else None,
              "chars_per_30s": r[15],
-             "voice": json.loads(r[16]) if r[16] else None}
+             "voice": json.loads(r[16]) if r[16] else None,
+             # ★게이트에 그대로 넘어가는 dict다 — 여기서 안 실으면 no_cta가 영영 None이라
+             #   유튜브 스파인이 CTA 검사에 계속 걸린다(오류가 안 나는 조용한 실패).
+             "no_cta": bool(r[17]),
+             # ★여기서 안 실으면 게이트가 영영 안 켜진다 — 함수는 있는데 죽은 상태가
+             #   된다(2026-08-19 썰 재료 배선에서 똑같이 겪었다: 라이브에서만 죽었다).
+             "hook_3s": bool(r[18]), "hook_conceal": bool(r[19]),
+             # ★안 실으면 조립 경로가 나열형을 못 알아본다(no_cta와 같은 함정).
+             "is_list": bool(r[20])}
             for r in rows
         ]
 
     def list_style_spines(self, category=None, status="approved"):
-        """**스타일로 쓸 수 있는** 스파인만 — beat_roles가 붙은 것.
+        """**스타일로 쓸 수 있는** 스파인만 — beat_roles가 붙은 것. `style_spine_rank` 순으로 준다.
 
         ★카테고리 잠금(2026-08-15 실측 근거): 무선 이어폰 소재에 살림용 '시월드형'을 씌우니
           구조 검사는 6/6 통과했는데 읽으면 어색했다("남편한테 욕 바가지"+"음향 전문가 추천").
@@ -3298,6 +4017,7 @@ class Store:
             if category and fits and category not in fits:
                 continue
             out.append(sp)
+        out.sort(key=style_spine_rank)
         return out
 
     def set_spine_status(self, spine_id, status):
@@ -3389,9 +4109,201 @@ class Store:
                 counts[bucket][status] = n
         return counts
 
+    # ── 제작 접수 선점(2026-08-24) — 중복 과금 차단의 **단 하나뿐인 판단처**(0순위-B) ──
+    @staticmethod
+    def _mix_fingerprint(customer_id, urls, given_script):
+        """같은 요청인지 가르는 지문. urls·대본이 같으면 같은 지문이다."""
+        raw = json.dumps([int(customer_id or 0), list(urls or []), (given_script or "")],
+                         ensure_ascii=False, sort_keys=True)
+        return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:32]
+
+    def claim_mix_request(self, customer_id, urls, given_script, within_sec=30):
+        """이 제작 요청을 내가 맡는다고 원자적으로 선언한다.
+
+        반환: (fingerprint, won, existing_job_id)
+          won=True  → 내가 이겼다. 과금하고 job을 만든 뒤 attach_mix_claim으로 job_id를 붙인다.
+          won=False → 같은 요청이 within_sec 안에 이미 접수됐다. **과금하면 안 된다.**
+                      existing_job_id가 있으면 그 job을 그대로 쓰면 된다(아직 없을 수도 있다 —
+                      이긴 쪽이 job을 만들기 전이면 None. 호출부가 잠깐 기다린다).
+
+        ★판단을 조회가 아니라 INSERT 성공 여부로 한다. 조회는 "그 순간 없었다"만 말해줄 뿐
+          이라, 상대가 아직 기록하기 전이면 둘 다 통과한다(08-19 가드가 이래서 뚫렸다).
+          PRIMARY KEY 충돌 처리는 SQLite가 원자적으로 보장하므로 딱 하나만 이긴다.
+        ⚠️ 가드가 예외로 죽어도 제작을 막지는 않는다(fail-open) — 중복 과금보다 제작 실패가 나쁘다.
+        """
+        fp = self._mix_fingerprint(customer_id, urls, given_script)
+        now = time.time()
+        try:
+            with self._conn() as c:
+                c.execute("DELETE FROM mix_claims WHERE created_at < ?", (now - float(within_sec),))
+                cur = c.execute(
+                    "INSERT OR IGNORE INTO mix_claims(fingerprint, customer_id, job_id, created_at) "
+                    "VALUES(?,?,?,?)", (fp, int(customer_id or 0), None, now))
+                if cur.rowcount:
+                    return (fp, True, None)
+                row = c.execute("SELECT job_id FROM mix_claims WHERE fingerprint=?", (fp,)).fetchone()
+            return (fp, False, (row[0] if row else None))
+        except (sqlite3.Error, ValueError, TypeError):
+            return (fp, True, None)
+
+    def attach_mix_claim(self, fingerprint, job_id):
+        """이긴 요청이 job을 만든 뒤 job_id를 선점표에 붙인다 — 진 쪽이 이걸 읽어 같은 job을 쓴다.
+
+        실패해도 제작은 그대로 간다(이미 job이 있다). 다만 **진 쪽이 job을 못 찾아
+        409를 받는다** — 조용히 넘기면 "가끔 중복이라며 거절된다"로만 보이므로 남긴다.
+        """
+        try:
+            with self._conn() as c:
+                c.execute("UPDATE mix_claims SET job_id=? WHERE fingerprint=?", (job_id, fingerprint))
+        except sqlite3.Error as e:
+            print("[선점표] job_id 부착 실패(무해, 중복요청이 409를 받을 수 있음): %r" % (e,),
+                  file=sys.stderr)
+
+    def release_mix_claim(self, fingerprint):
+        """이겼지만 job을 못 만든 경우(과금 거절·상한 초과) 선점표를 놓아준다.
+        안 놓으면 within_sec 동안 그 고객이 같은 대본으로 **재시도조차 못 한다**."""
+        try:
+            with self._conn() as c:
+                c.execute("DELETE FROM mix_claims WHERE fingerprint=? AND job_id IS NULL",
+                          (fingerprint,))
+        except sqlite3.Error as e:
+            print("[선점표] 반납 실패 — 이 고객은 %d초간 같은 요청을 다시 못 보낸다: %r"
+                  % (30, e), file=sys.stderr)
+
+    def get_mix_claim_job(self, fingerprint):
+        """선점표에 붙은 job_id(없으면 None)."""
+        try:
+            with self._conn() as c:
+                row = c.execute("SELECT job_id FROM mix_claims WHERE fingerprint=?",
+                                (fingerprint,)).fetchone()
+            return row[0] if row else None
+        except sqlite3.Error as e:
+            print("[선점표] 조회 실패: %r" % (e,), file=sys.stderr)
+            return None
+
+    # ── 오류 신고(2026-08-24) ──────────────────────────────────────────
+    def add_bug_report(self, customer_id, message, **info):
+        """신고 1건 저장 → 새 id. info: page_url·job_id·work_id·step·user_agent·console(list)."""
+        console = info.get("console")
+        row = (
+            int(customer_id or 0), int(time.time()), (message or "")[:2000],
+            (info.get("page_url") or "")[:500], (info.get("job_id") or "")[:64],
+            (info.get("work_id") or "")[:64], (info.get("step") or "")[:64],
+            (info.get("user_agent") or "")[:300],
+            json.dumps(console[-20:], ensure_ascii=False)[:4000] if console else None,
+            (info.get("shot_path") or "") or None,
+        )
+        with self._conn() as c:
+            cur = c.execute(
+                "INSERT INTO bug_reports(customer_id, created_at, message, page_url, job_id, "
+                "work_id, step, user_agent, console_json, shot_path) "
+                "VALUES(?,?,?,?,?,?,?,?,?,?)", row)
+            return cur.lastrowid
+
+    def list_bug_reports(self, status=None, limit=200):
+        """신고 목록(최신 먼저). status=None이면 전부."""
+        q = ("SELECT id, customer_id, created_at, message, page_url, job_id, work_id, step, "
+             "user_agent, console_json, status, handled_at, IFNULL(note,''), "
+             "IFNULL(reply,''), replied_at, read_at, IFNULL(shot_path,'') FROM bug_reports")
+        args = []
+        if status:
+            q += " WHERE status=?"
+            args.append(status)
+        q += " ORDER BY created_at DESC, id DESC LIMIT ?"
+        args.append(int(limit))
+        keys = ("id", "customer_id", "created_at", "message", "page_url", "job_id", "work_id",
+                "step", "user_agent", "console_json", "status", "handled_at", "note",
+                "reply", "replied_at", "read_at", "shot_path")
+        with self._conn() as c:
+            return [dict(zip(keys, r)) for r in c.execute(q, args)]
+
+    def set_bug_report_status(self, report_id, status, note=None):
+        """처리 상태 변경(open/done). note는 주면 덮어쓴다."""
+        with self._conn() as c:
+            if note is None:
+                c.execute("UPDATE bug_reports SET status=?, handled_at=? WHERE id=?",
+                          (status, int(time.time()), int(report_id)))
+            else:
+                c.execute("UPDATE bug_reports SET status=?, handled_at=?, note=? WHERE id=?",
+                          (status, int(time.time()), note[:1000], int(report_id)))
+
+    def reply_bug_report(self, report_id, reply):
+        """답장을 남긴다(+처리완료 표시). 고객 화면이 이걸 읽어 띄운다."""
+        with self._conn() as c:
+            c.execute("UPDATE bug_reports SET reply=?, replied_at=?, status='done', "
+                      "read_at=NULL WHERE id=?",
+                      ((reply or "")[:2000], int(time.time()), int(report_id)))
+
+    def my_bug_replies(self, customer_id, unread_only=True):
+        """이 고객이 받은 답장 목록(최신 먼저). unread_only면 아직 안 본 것만."""
+        q = ("SELECT id, message, reply, replied_at FROM bug_reports "
+             "WHERE customer_id=? AND IFNULL(reply,'')<>''")
+        if unread_only:
+            q += " AND read_at IS NULL"
+        q += " ORDER BY replied_at DESC, id DESC LIMIT 20"
+        keys = ("id", "message", "reply", "replied_at")
+        with self._conn() as c:
+            return [dict(zip(keys, r)) for r in c.execute(q, (int(customer_id or 0),))]
+
+    def mark_bug_reply_read(self, report_id, customer_id):
+        """고객이 답장을 봤다고 표시. 남의 신고를 못 건드리게 customer_id를 함께 본다."""
+        with self._conn() as c:
+            c.execute("UPDATE bug_reports SET read_at=? WHERE id=? AND customer_id=?",
+                      (int(time.time()), int(report_id), int(customer_id or 0)))
+
+    def bad_key_services(self, customer_id):
+        """이 고객이 등록해 둔 키 중 **틀린 것으로 판정된** 서비스 목록.
+
+        status='bad' = 등록할 때 실제로 호출해보고 거절당한 키다. 개인 전용 서비스는
+        사장님 키로 폴백하지 않으므로, 이 상태로 제작을 시작하면 반드시 실패한다.
+        """
+        if not customer_id:
+            return []
+        with self._conn() as c:
+            return [r[0] for r in c.execute(
+                "SELECT DISTINCT service FROM customer_keys WHERE customer_id=? AND status='bad'",
+                (int(customer_id),))]
+
+    def open_bug_report_count(self):
+        """안 본 신고 수 — 관리자 화면 배지용."""
+        with self._conn() as c:
+            return c.execute("SELECT COUNT(*) FROM bug_reports WHERE status='open'").fetchone()[0]
+
+    def recent_same_mix_job(self, customer_id, urls, given_script, within_sec=30):
+        """방금(within_sec 안에) 같은 고객이 같은 대본·같은 소스로 만든 job이 있으면 그 id.
+
+        ★더블클릭·재전송으로 mix job이 **쌍으로** 생기던 것을 막는다(2026-08-19 실측:
+          최근 7일에만 7쌍. 30ms 간격으로 두 개가 생겨 둘 다 파이프라인을 완주했다).
+          단순히 화면이 헷갈리는 문제가 아니라 **render 크레딧이 두 번 나가고** Gemini·
+          ffmpeg가 두 벌 도는 낭비였다. 미리보기·자막제거 라우트엔 이미 같은 성격의
+          가드가 있었는데(중복예약 차단) 정작 job을 만드는 곳에만 없었다.
+        ⚠️ 판단은 여기 한 곳에서만 한다(0순위-B) — 호출부에서 또 세지 마라.
+        """
+        # ★시각 비교는 파이썬에서 한다 — created_at은 ISO('...T...+00:00')로 저장되는데
+        #   sqlite datetime('now')는 '... ...'(공백) 꼴이라 **문자열 비교가 늘 참**이 된다
+        #   ('T' > ' '). SQL로 자르려다 오래된 job까지 재사용할 뻔했다.
+        try:
+            key = json.dumps(list(urls or []), ensure_ascii=False)
+            with self._conn() as c:
+                row = c.execute(
+                    "SELECT job_id, created_at FROM mix_jobs WHERE customer_id=? AND urls_json=? "
+                    "AND IFNULL(given_script,'')=? ORDER BY created_at DESC LIMIT 1",
+                    (customer_id, key, (given_script or ""))
+                ).fetchone()
+            if not row:
+                return None
+            from datetime import datetime, timezone
+            born = datetime.fromisoformat(str(row[1]))
+            if born.tzinfo is None:
+                born = born.replace(tzinfo=timezone.utc)
+            age = (datetime.now(timezone.utc) - born).total_seconds()
+            return row[0] if 0 <= age <= within_sec else None
+        except (sqlite3.Error, ValueError, TypeError):
+            return None            # 가드가 실패해도 job 생성을 막지는 않는다
+
     def create_mix_job(self, job_id, urls, target_seconds, structure,
                        subtitle_removal=False, given_script=None, script_structure=None,
-                       customer_id=LEGACY_CUSTOMER_ID, render_charge_day=None,
+                       customer_id=LEGACY_CUSTOMER_ID, render_charge_day=None, mix_charged=None,
                        scene_first=False, backbone_main=None):
         """새 믹스 job 생성. 초기 status='downloading'.
         given_script: 영상제작 2단계 — 확정 대본을 그대로 쓸 때(나레이션 자동생성 대신).
@@ -3409,13 +4321,15 @@ class Store:
             c.execute(
                 "INSERT INTO mix_jobs(job_id, urls_json, target_seconds, structure, "
                 "status, created_at, updated_at, subtitle_removal, given_script, "
-                "script_structure_json, customer_id, render_charge_day, scene_first, backbone_main) "
-                "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                "script_structure_json, customer_id, render_charge_day, scene_first, backbone_main, "
+                "mix_charged) "
+                "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 (job_id, json.dumps(urls, ensure_ascii=False), target_seconds,
                  structure, "downloading", now, now, 1 if subtitle_removal else 0,
                  given_script or None,
                  json.dumps(script_structure, ensure_ascii=False) if script_structure else None,
-                 customer_id, render_charge_day, 1 if scene_first else 0, bb),
+                 customer_id, render_charge_day, 1 if scene_first else 0, bb,
+                 None if mix_charged is None else int(mix_charged)),
             )
 
     def get_mix_job(self, job_id):
@@ -3430,7 +4344,8 @@ class Store:
                 "preview_status, preview_path, preview_error, "
                 "thumbnail_json, seo_json, "
                 "clean_sources_json, clean_status, clean_error, customer_id, render_charge_day, "
-                "scene_first, backbone_main, clean_regions_json, product_json "
+                "scene_first, backbone_main, clean_regions_json, product_json, "
+                "mix_charged "
                 "FROM mix_jobs WHERE job_id=?", (job_id,),
             ).fetchone()
         if not row:
@@ -3461,6 +4376,8 @@ class Store:
             "backbone_main": row[33],
             "clean_regions": json.loads(row[34]) if row[34] else None,
             "product": json.loads(row[35]) if row[35] else None,
+            # 실제로 깎은 영상제작 포인트. None = 이 칸이 생기기 전의 옛 job.
+            "mix_charged": row[36],
         }
 
     def set_mix_product(self, job_id, product):
@@ -3519,6 +4436,18 @@ class Store:
             cols.append("clean_regions_json=?")
             vals.append(json.dumps(fields["clean_regions"], ensure_ascii=False)
                         if fields["clean_regions"] else None)
+        # ★화면 길이 불변식을 **저장 직전 한 곳**에서 보장한다(2026-08-18).
+        #   지금까지 `_fill_beat_screen_time`은 계획을 만드는 경로마다 따로 불렸다
+        #   (_ground_candidate / build_edit_plan / _single_source_candidates = 3곳).
+        #   그래서 경로가 갈릴 때마다 한쪽만 고쳐졌고, 같은 병이 오늘만 다섯 번 반복됐다
+        #   ("scene_first엔 있고 legacy엔 없다"). 게다가 scene_first는 fill **뒤에**
+        #   재픽이 화면을 갈아치워 길이가 다시 줄었다 — 만드는 쪽에서 아무리 채워도
+        #   그 뒤 단계가 되돌리면 소용이 없다.
+        #   ★edit_plan이 저장되려면 반드시 여기를 지난다 = 이게 단일 출구다.
+        #     여기서 보장하면 앞으로 어떤 경로·후처리가 생겨도 저장된 계획은 항상
+        #     '화면 길이 ≥ 대사 길이'를 만족한다. 실패해도 저장은 막지 않는다(fail-open).
+        if fields.get("edit_plan"):
+            fields = dict(fields, edit_plan=_ensure_screen_time(fields["edit_plan"], self, job_id))
         for k, col in (("extract", "extract_json"), ("edit_plan", "edit_plan_json")):
             if k in fields:
                 cols.append(f"{col}=?")
@@ -3788,8 +4717,8 @@ class Store:
                 INSERT INTO voice_presets(preset_id, name, one_liner, lang, archetype,
                     base_voice_id, model_id, voice_settings_json, default_speed,
                     default_silence_trim, sample_file, source_ref, origin, created_at,
-                    group_id, variant, naturalize_profile_json, best)
-                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                    group_id, variant, naturalize_profile_json, best, owner_customer_id)
+                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                 ON CONFLICT(preset_id) DO UPDATE SET
                     name=excluded.name, one_liner=excluded.one_liner, lang=excluded.lang,
                     archetype=excluded.archetype, base_voice_id=excluded.base_voice_id,
@@ -3798,7 +4727,7 @@ class Store:
                     default_silence_trim=excluded.default_silence_trim,
                     sample_file=excluded.sample_file, source_ref=excluded.source_ref,
                     origin=excluded.origin, group_id=excluded.group_id, variant=excluded.variant,
-                    best=excluded.best,
+                    best=excluded.best, owner_customer_id=excluded.owner_customer_id,
                     -- 동결 프로파일만은 COALESCE로 보존한다. 다른 컬럼과 달리 이 값의 소스오브
                     -- 트루스는 JSON 파일이 아니라 튜닝 작업대(DB)다. excluded로 덮으면 startup
                     -- seed_presets가 매 재기동마다 NULL로 지워버린다(2026-07-15 리뷰 S2).
@@ -3813,6 +4742,9 @@ class Store:
                 p.get("sample_file"), p.get("source_ref"), p.get("origin", "curated"), now,
                 p.get("group_id") or p["preset_id"], p.get("variant", "stable"), prof_json,
                 int(bool(p.get("best", False))),
+                # 0=공용(사장님 큐레이션) / N=그 고객이 라이브러리에서 담은 것.
+                # 기존 호출부는 이 키를 안 넘기므로 그대로 0 — 회귀 없음.
+                int(p.get("owner_customer_id", 0) or 0),
             ))
 
     def _row_to_preset(self, r):
@@ -3836,14 +4768,26 @@ class Store:
                           "WHERE preset_id=?", (preset_id,)).fetchone()
         return self._row_to_preset(r) if r else None
 
-    def list_voice_presets(self, lang=None):
+    def list_voice_presets(self, lang=None, customer_id=None):
+        """성우 프리셋 목록.
+
+        customer_id: 주면 **공용(owner 0) + 그 고객이 담은 것**만 준다(2026-08-24).
+          안 주면 전부 — 관리자 화면·배치처럼 소유자를 안 가리는 곳의 기존 동작이다.
+          ★남이 담은 성우를 보여주면 안 된다: 담기는 각자 일레븐랩스 계정에 되므로
+            내 키로는 그 voice_id가 없어 합성이 실패한다."""
         q = ("SELECT preset_id,name,one_liner,lang,archetype,base_voice_id,model_id,"
              "voice_settings_json,default_speed,default_silence_trim,sample_file,"
              "source_ref,origin,created_at,group_id,variant,naturalize_profile_json,"
              "best FROM voice_presets")
-        args = ()
+        where, args = [], []
         if lang:
-            q += " WHERE lang=?"; args = (lang,)
+            where.append("lang=?"); args.append(lang)
+        if customer_id is not None:
+            where.append("(owner_customer_id=0 OR owner_customer_id=?)")
+            args.append(int(customer_id))
+        if where:
+            q += " WHERE " + " AND ".join(where)
+        args = tuple(args)
         # 베스트가 앞, 그 안에선 기존 순서(삽입 시각) 유지. ★순서의 소스오브트루스는
         # 여기다 — assets/voice_presets.json의 배열 순서가 아니다(설계 §4.1의 실측).
         q += " ORDER BY best DESC, created_at"
@@ -3863,6 +4807,70 @@ class Store:
             c.execute(f"DELETE FROM voice_presets WHERE origin='curated' "
                       f"AND preset_id NOT IN ({placeholders})", keep)
 
+    def delete_voice_group(self, group_id, origin="library"):
+        """등록 성우 한 명(그룹=톤 4종)을 통째로 삭제. 지운 행 수 반환.
+
+        origin을 조건에 넣는다 — 관리자 화면의 삭제가 실수로 큐레이션 14그룹이나 튜닝
+        프리셋까지 지우지 못하게 막는다(기본 'library' = 일레븐랩스에서 등록한 것만)."""
+        with self._conn() as c:
+            cur = c.execute("DELETE FROM voice_presets WHERE group_id=? AND origin=?",
+                            (group_id, origin))
+            return cur.rowcount
+
+    # ── 카톡 답변봇(2026-08-25) ──────────────────────────────────────
+    def bot_qa_add(self, room, question, answer, tags="", source=""):
+        """새 Q&A. **항상 draft로 들어간다** — 검수를 거쳐야 봇이 쓴다."""
+        with self._conn() as c:
+            cur = c.execute(
+                "INSERT INTO bot_qa(room, question, answer, tags, status, source, updated_at) "
+                "VALUES(?,?,?,?,'draft',?, datetime('now'))",
+                (room, question, answer, tags, source))
+            return cur.lastrowid
+
+    def bot_qa_list(self, status=None, room=None):
+        """status를 주면 그것만(봇은 'approved'로 부른다)."""
+        sql = "SELECT id, room, question, answer, tags, status, source FROM bot_qa"
+        args, where = [], []
+        if status:
+            where.append("status=?"); args.append(status)
+        if room:
+            where.append("(room=? OR room='공통')"); args.append(room)
+        if where:
+            sql += " WHERE " + " AND ".join(where)
+        sql += " ORDER BY id DESC"
+        with self._conn() as c:
+            rows = c.execute(sql, args).fetchall()
+        return [{"id": r[0], "room": r[1], "question": r[2], "answer": r[3],
+                 "tags": r[4], "status": r[5], "source": r[6]} for r in rows]
+
+    def bot_qa_set_status(self, qa_id, status):
+        with self._conn() as c:
+            c.execute("UPDATE bot_qa SET status=?, updated_at=datetime('now') WHERE id=?",
+                      (status, qa_id))
+
+    def bot_qa_update(self, qa_id, question, answer, tags=""):
+        with self._conn() as c:
+            c.execute("UPDATE bot_qa SET question=?, answer=?, tags=?, "
+                      "updated_at=datetime('now') WHERE id=?",
+                      (question, answer, tags, qa_id))
+
+    def bot_unanswered_add(self, room, question):
+        """못 답한 질문 적재. 같은 질문이면 count를 올린다."""
+        with self._conn() as c:
+            c.execute(
+                "INSERT INTO bot_unanswered(room, question, count, asked_at) "
+                "VALUES(?,?,1, datetime('now')) "
+                "ON CONFLICT(room, question) DO UPDATE SET count=count+1, "
+                "asked_at=datetime('now')",
+                (room, question))
+
+    def bot_unanswered_list(self):
+        with self._conn() as c:
+            rows = c.execute("SELECT id, room, question, count, asked_at "
+                             "FROM bot_unanswered ORDER BY count DESC, id DESC").fetchall()
+        return [{"id": r[0], "room": r[1], "question": r[2],
+                 "count": r[3], "asked_at": r[4]} for r in rows]
+
     def get_setting(self, key, default=None):
         """전역 설정값 조회(예: vmake_api_key). 없으면 default."""
         with self._conn() as c:
@@ -3876,6 +4884,44 @@ class Store:
                 "INSERT INTO settings(key, value) VALUES(?,?) "
                 "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
                 (key, value),
+            )
+
+    def get_pref(self, key, customer_id=LEGACY_CUSTOMER_ID, default=None):
+        """계정별 환경설정 조회. 저장된 적 없으면 default를 그대로 돌려준다.
+
+        ★'없음'과 '비움'은 다르다(2026-08-26): 폰트 즐겨찾기에서 사용자가 별을
+          **전부 끄면** 빈 리스트가 저장되고, 그때 기본값으로 되돌리면 안 된다.
+          그래서 행이 없을 때만 default를 쓴다."""
+        with self._conn() as c:
+            row = c.execute(
+                "SELECT value FROM customer_prefs WHERE customer_id=? AND key=?",
+                (customer_id, key),
+            ).fetchone()
+        if not row:
+            return default
+        try:
+            return json.loads(row[0])
+        except Exception:
+            # 손상된 값이 화면을 통째로 막지 않게 한다(fail-open).
+            return default
+
+    def set_pref(self, key, value, customer_id=LEGACY_CUSTOMER_ID):
+        """계정별 환경설정 저장(upsert). value는 JSON 직렬화 가능한 값."""
+        with self._conn() as c:
+            c.execute(
+                "INSERT INTO customer_prefs(customer_id, key, value, updated_at) "
+                "VALUES(?,?,?, datetime('now')) "
+                "ON CONFLICT(customer_id, key) DO UPDATE SET "
+                "value=excluded.value, updated_at=excluded.updated_at",
+                (customer_id, key, json.dumps(value, ensure_ascii=False)),
+            )
+
+    def clear_pref(self, key, customer_id=LEGACY_CUSTOMER_ID):
+        """계정별 환경설정 삭제 → 다음 조회는 기본값으로 돌아간다('되돌리기')."""
+        with self._conn() as c:
+            c.execute(
+                "DELETE FROM customer_prefs WHERE customer_id=? AND key=?",
+                (customer_id, key),
             )
 
     def add_pron_report(self, text, comment, created_at):
@@ -4038,7 +5084,8 @@ class Store:
             "sha256", password.encode("utf-8"), bytes.fromhex(salt), Store._PBKDF2_ITERATIONS
         ).hex()
 
-    def create_customer(self, username, password, email=None, google_sub=None, approved=True, name=None, phone=None):
+    def create_customer(self, username, password, email=None, google_sub=None, approved=True,
+                        name=None, phone=None, welcome_due=False, gender=None, age_band=None):
         """신규 고객 계정 생성. username 중복이면 ValueError. 성공 시 customer_id 반환.
         approved=True(기본): 가입 즉시 승인+무료체험 시작(full_access_until=now+trial_days).
         approved=False: 대기중(approved_at=NULL) + 체험 미시작(full_access_until=0).
@@ -4057,22 +5104,28 @@ class Store:
         else:
             full_access_until = 0
             approved_at = None
-            # 무료체험 이벤트는 기본 OFF(2026-07-22 사장님 결정): 가입 직후 바로 대기실(잠김),
-            # 사장님이 체험/pro를 줘야 시작. 설정 trial_event_hours를 0보다 크게 주면 그 시간만큼
-            # 자동 맛보기(옛 이벤트)를 다시 켤 수 있다.
+            # ★가입 즉시 자동 체험 3일(2026-08-25 사장님 "가입되면 승인대기중 쪽에
+            #   체험3일로 자동으로 하고, 내가 확인을 누르면 고객관리로 내려줘").
+            #   기본값을 72시간으로 둔다 — 설정을 안 건드려도 켜진다(서버 settings는 미설정).
+            #   0으로 바꾸면 옛 동작(가입 직후 잠김, 사장님이 줘야 시작)으로 돌아간다.
+            #   ⚠️ 이 창은 approved_at이 비어 있을 때만 유효하다(access_level).
+            #      사장님이 '확인'을 누르면 ack_customer가 남은 시간을 full_access_until로
+            #      옮겨 체험이 끊기지 않게 한다.
             try:
-                trial_hours = int(self.get_setting("trial_event_hours", 0))
+                trial_hours = int(self.get_setting("trial_event_hours", 72))
             except (TypeError, ValueError):
-                trial_hours = 0
+                trial_hours = 72
             trial_ends_at = (now_ts + trial_hours * 3600) if trial_hours > 0 else None
         with self._conn() as c:
             try:
                 cur = c.execute(
                     "INSERT INTO customers(username, password_hash, salt, created_at, "
-                    "plan, full_access_until, email, google_sub, approved_at, name, phone, trial_ends_at) "
-                    "VALUES(?,?,?,datetime('now'),'free',?,?,?,?,?,?,?)",
+                    "plan, full_access_until, email, google_sub, approved_at, name, phone, "
+                    "trial_ends_at, welcome_due, gender, age_band) "
+                    "VALUES(?,?,?,datetime('now'),'free',?,?,?,?,?,?,?,?,?,?)",
                     (username, pw_hash, salt, full_access_until, email, google_sub,
-                     approved_at, name, phone, trial_ends_at),
+                     approved_at, name, phone, trial_ends_at, 1 if welcome_due else 0,
+                     gender, age_band),
                 )
             except sqlite3.IntegrityError:
                 raise ValueError(f"이미 존재하는 아이디: {username}")
@@ -4090,7 +5143,8 @@ class Store:
         username = "g_" + str(google_sub)               # username 유니크 제약 충족용(절단X — sub 전체가 dedup 키)
         try:
             cid = self.create_customer(username, secrets.token_hex(16),
-                                       email=email, google_sub=google_sub, approved=False)
+                                       email=email, google_sub=google_sub, approved=False,
+                                       welcome_due=True)   # 이름·전화를 못 받았다 → 로그인 후 한 번 물어본다
             return _ret(cid, True)                       # 방금 새로 만든 계정 = 신규가입
         except ValueError:
             with self._conn() as c:                     # 경합으로 방금 생성됐으면 재조회
@@ -4107,6 +5161,34 @@ class Store:
             ).fetchall()
         return [{"id": r[0], "username": r[1], "name": r[2], "phone": r[3],
                  "email": r[4], "created_at": r[5]} for r in rows]
+
+    def ack_customer(self, customer_id):
+        """'확인함' — 대기실에서만 내린다. 체험 기간은 **건드리지 않는다**(2026-08-25 사장님:
+        "가입되면 자동 체험3일, 내가 확인 누르면 고객관리로 내려줘. 일일이 버튼 누르니 안 좋아").
+
+        approve_customer와 다르다:
+          approve_customer  = 승인+기간 부여+결제 기록 (사장님이 돈을 받았을 때)
+          ack_customer      = 봤다는 표시만. 남은 체험은 그대로 흘러가고, 끝나면 알아서 잠긴다.
+
+        이미 승인된 고객이면 아무 것도 하지 않는다(연장 사고 방지).
+
+        ★full_access_until은 **건드리지 않는다**(2026-08-26 사장님 "체험중은 없애고
+          체험판 랭킹으로"). 종전엔 남은 체험을 full_access_until로 이관했는데,
+          그 필드는 **입금 승인으로 주는 유료 이용 기간**이라 확인 버튼 한 번에
+          결제도 안 한 계정이 전기능이 됐다(실측 cid 221~232, 12명 전원 결제기록 0).
+          이제 체험 자체가 랭킹만이므로 이관할 것도 없다 — approved_at만 채우면
+          체험(랭킹만) → 확인 후(랭킹만)로 권한이 그대로 이어진다.
+        """
+        now_ts = int(datetime.now(timezone.utc).timestamp())
+        with self._conn() as c:
+            row = c.execute("SELECT approved_at, trial_ends_at, full_access_until "
+                            "FROM customers WHERE id=?", (int(customer_id),)).fetchone()
+            if row is None or row[0] is not None:
+                return False                       # 없는 고객이거나 이미 내려간 고객
+            # ★full_access_until은 손대지 않는다(위 설명). 유료 기간 필드다.
+            c.execute("UPDATE customers SET approved_at=? WHERE id=?",
+                      (now_ts, int(customer_id)))
+        return True
 
     def verify_customer(self, username, password):
         """username/password 검증 → 성공 시 customer_id, 실패 시 None.
@@ -4128,7 +5210,8 @@ class Store:
         with self._conn() as c:
             row = c.execute(
                 "SELECT id, username, created_at, plan, full_access_until, google_sub, email, "
-                "approved_at, name, phone, trial_ends_at, admin "
+                "approved_at, name, phone, trial_ends_at, admin, welcome_due, "
+                "gender, age_band "
                 "FROM customers WHERE id=?", (customer_id,)
             ).fetchone()
         if not row:
@@ -4137,7 +5220,29 @@ class Store:
                 "plan": row[3] or "free", "full_access_until": row[4] or 0,
                 "google_sub": row[5], "email": row[6], "approved_at": row[7],
                 "name": row[8], "phone": row[9], "trial_ends_at": row[10],
-                "admin": bool(row[11])}
+                "admin": bool(row[11]), "welcome_due": bool(row[12]),
+                "gender": row[13], "age_band": row[14]}
+
+    def clear_welcome_due(self, customer_id):
+        """가입 마무리(이름·전화) 입력을 마쳤다 → 다시 묻지 않는다."""
+        with self._conn() as c:
+            c.execute("UPDATE customers SET welcome_due=0 WHERE id=?", (customer_id,))
+
+    def mark_setup_due(self, customer_id):
+        """입금(pro 승격)한 분에게 설치안내(/setup)를 다음 화면이동 때 한 번 띄운다."""
+        with self._conn() as c:
+            c.execute("UPDATE customers SET setup_due=1 WHERE id=?", (int(customer_id),))
+
+    def clear_setup_due(self, customer_id):
+        """설치안내를 봤다 → 다시 안 띄운다(메뉴 링크로는 언제든 다시 볼 수 있다)."""
+        with self._conn() as c:
+            c.execute("UPDATE customers SET setup_due=0 WHERE id=?", (int(customer_id),))
+
+    def is_setup_due(self, customer_id):
+        with self._conn() as c:
+            row = c.execute("SELECT setup_due FROM customers WHERE id=?",
+                            (int(customer_id),)).fetchone()
+        return bool(row and row[0])
 
     def set_customer_admin(self, customer_id, is_admin):
         """관리자 지정/회수(사장님 UI). admin=1이면 _is_admin이 관리자로 인정(권한 동일).
@@ -4148,14 +5253,20 @@ class Store:
             c.execute("UPDATE customers SET admin=? WHERE id=?",
                       (1 if is_admin else 0, customer_id))
 
-    def update_customer_info(self, customer_id, name, phone):
-        """관리자 정보수정: 이름·전화 갱신(구글 가입은 이름·전화가 비어 admin에서 채운다).
-        None이 아닌 값만 덮어쓴다 — 한쪽만 고칠 때 다른 쪽을 지우지 않게."""
+    def update_customer_info(self, customer_id, name, phone, gender=None, age_band=None):
+        """관리자 정보수정 + 가입 마무리 화면: 이름·전화·성별·연령대 갱신.
+        None이 아닌 값만 덮어쓴다 — 한쪽만 고칠 때 다른 쪽을 지우지 않게.
+        ★가입 마무리(/api/welcome)도 이 메서드를 쓴다. 저장 경로를 둘로 만들면
+          언젠가 어긋난다(0순위-B)."""
         sets, params = [], []
         if name is not None:
             sets.append("name=?"); params.append(name)
         if phone is not None:
             sets.append("phone=?"); params.append(phone)
+        if gender is not None:
+            sets.append("gender=?"); params.append(gender)
+        if age_band is not None:
+            sets.append("age_band=?"); params.append(age_band)
         if not sets:
             return
         params.append(customer_id)
@@ -4179,7 +5290,10 @@ class Store:
             c.execute("DELETE FROM customers WHERE id=?", (customer_id,))
 
     def set_plan(self, customer_id, plan, full_access_until=None):
-        """등급 변경. plan='pro'|'free'. full_access_until(epoch초)를 주면 함께 설정(체험창)."""
+        """등급 변경. plan='pro'|'free'|'trial'. full_access_until(epoch초)를 주면 함께 설정.
+
+        trial = 체험판(랭킹전용) — access_level이 ranking_only로 떨군다. 이때
+        full_access_until은 권한이 아니라 화면 'D-N' 표시용이다(app.access_level 참조)."""
         with self._conn() as c:
             if full_access_until is None:
                 c.execute("UPDATE customers SET plan=? WHERE id=?", (plan, customer_id))
@@ -4229,8 +5343,10 @@ class Store:
             base = fau if fau > now_ts else now_ts          # 연장 기준: 미래 만료면 그 뒤, 아니면 now
             new_until = base + add
             if approved_at is None:
-                c.execute("UPDATE customers SET approved_at=?, full_access_until=? WHERE id=?",
-                          (now_ts, now_ts + add, customer_id))
+                # ★최초 승인(=입금) 때만 설치안내를 띄운다(2026-08-25 사장님 "1번은 가입후
+                #   입금사람에게"). 연장 때마다 띄우면 이미 세팅을 끝낸 분에게 성가시다.
+                c.execute("UPDATE customers SET approved_at=?, full_access_until=?, setup_due=1 "
+                          "WHERE id=?", (now_ts, now_ts + add, customer_id))
             else:
                 c.execute("UPDATE customers SET full_access_until=? WHERE id=?",
                           (new_until, customer_id))
@@ -4246,7 +5362,7 @@ class Store:
         """관리자용 전체 고객 목록(사장님 cid0 제외). 최근 가입 먼저. 최근 결제 요약 포함."""
         with self._conn() as c:
             rows = c.execute(
-                "SELECT id, username, email, plan, full_access_until, created_at, approved_at, name, phone, trial_ends_at, admin, last_seen "
+                "SELECT id, username, email, plan, full_access_until, created_at, approved_at, name, phone, trial_ends_at, admin, last_seen, gender, age_band "
                 "FROM customers WHERE id != 0 ORDER BY id DESC"
             ).fetchall()
             out = []
@@ -4258,7 +5374,7 @@ class Store:
                 out.append({"id": cid, "username": r[1], "email": r[2], "plan": r[3] or "free",
                             "full_access_until": r[4] or 0, "created_at": r[5], "approved_at": r[6],
                             "name": r[7], "phone": r[8], "trial_ends_at": r[9], "admin": bool(r[10]),
-                            "last_seen": r[11],
+                            "last_seen": r[11], "gender": r[12], "age_band": r[13],
                             "last_payment": ({"amount": p[0], "paid_at": p[1]} if p else None),
                             "payment_count": cnt})
         return out
@@ -4315,6 +5431,59 @@ class Store:
                 "SELECT COUNT(DISTINCT ip), COUNT(DISTINCT ua) FROM customer_access "
                 "WHERE customer_id=? AND day>=?", (customer_id, since_day)).fetchone()
         return {"ips": (row[0] or 0), "devices": (row[1] or 0)}
+
+    # ── 관리자 목록용 일괄 조회 (2026-08-24) ──
+    #    ★고객 1명당 쿼리를 도는 구조(N+1)라 155명에서 775번을 돌았다.
+    #      목록이 뜨는 데 3.7초가 걸렸고, 그동안 화면은 비어 있다.
+    #      아래 세 함수는 **한 번의 쿼리로** 전원 몫을 가져온다.
+    def access_summary_all(self, since_day):
+        """{customer_id: {"ips": n, "devices": n}} — access_summary의 일괄판."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT customer_id, COUNT(DISTINCT ip), COUNT(DISTINCT ua) "
+                "FROM customer_access WHERE day>=? GROUP BY customer_id",
+                (since_day,)).fetchall()
+        return {r[0]: {"ips": (r[1] or 0), "devices": (r[2] or 0)} for r in rows}
+
+    def usage_all(self, day):
+        """{customer_id: {op: count}} — usage_get의 일괄판."""
+        out = {}
+        with self._conn() as c:
+            for cid, op, cnt in c.execute(
+                    "SELECT customer_id, op, count FROM usage WHERE day=?", (day,)):
+                out.setdefault(cid, {})[op] = cnt
+        return out
+
+    def made_and_charged_since_all(self, start_iso):
+        """start_iso(포함) 이후 고객별 (실제 만들어진 영상 수, 과금된 접수 건수).
+
+        → {customer_id: {"made": n, "charged": m}}
+
+        ★왜 필요한가(2026-08-24): 크레딧 카운터(usage)는 **UTC 날짜** 버킷이라 한국시간
+          00:00~09:00에 만든 건 전날 칸으로 간다. 게다가 중복 접수 사고까지 겹쳐
+          "7개 만들었는데 10개가 찍혔다"는 제보를 숫자로 확인할 방법이 없었다.
+          그래서 관리자 목록이 **실제 영상 수**를 나란히 보여준다 — 어긋나면 눈에 띈다.
+        - made    : video_path가 실제로 채워진 job (= 고객이 받은 영상)
+        - charged : render_charge_day가 찍힌 job (= 크레딧을 깎은 접수)
+          둘이 다르면 실패 환불 대기이거나 중복 접수다.
+        """
+        out = {}
+        with self._conn() as c:
+            for cid, made, charged in c.execute(
+                    "SELECT customer_id, "
+                    "SUM(CASE WHEN IFNULL(video_path,'')<>'' THEN 1 ELSE 0 END), "
+                    "SUM(CASE WHEN IFNULL(render_charge_day,'')<>'' THEN 1 ELSE 0 END) "
+                    "FROM mix_jobs WHERE created_at>=? GROUP BY customer_id", (start_iso,)):
+                out[cid] = {"made": made or 0, "charged": charged or 0}
+        return out
+
+    def points_balance_all(self):
+        """{customer_id: 잔액} — points_balance의 일괄판(내부 단위 그대로)."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT customer_id, COALESCE(SUM(delta), 0) FROM points_ledger "
+                "GROUP BY customer_id").fetchall()
+        return {r[0]: r[1] for r in rows}
 
     def prune_activity(self, keep_days=30, now_ts=None):
         """오래된 활동·접속 로그 정리(2026-07-24) — 두 테이블은 계속 append만 돼 무한증가한다.
@@ -4401,6 +5570,166 @@ class Store:
             return str(row[0]) if row and row[0] is not None else None
         except sqlite3.Error:
             return None
+
+    def add_prereg(self, name, phone, email, channel=""):
+        """1기 사전신청 한 건 저장 → id. 같은 이메일로 또 내면 최신 것으로 갱신한다
+        (오타 고쳐 다시 내는 사람이 있어 중복 행이 쌓이면 발송 명단이 더러워진다)."""
+        now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        with self._conn() as c:
+            c.execute("DELETE FROM prereg WHERE lower(email)=lower(?)", (email,))
+            cur = c.execute(
+                "INSERT INTO prereg(name, phone, email, channel, created_at) VALUES(?,?,?,?,?)",
+                (name, phone, email, channel or "", now))
+            return cur.lastrowid
+
+    def add_deposit_claim(self, name, depositor, contact=""):
+        """'입금 완료했습니다' 신고 저장 → id.
+        ★고객이 직접 누르는 것이라 **입금 사실을 증명하지 않는다** — 사장님이 통장을
+          보고 확인하는 절차는 그대로다. 이건 '연락을 놓치지 않기 위한 알림'이다."""
+        now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        with self._conn() as c:
+            cur = c.execute(
+                "INSERT INTO deposit_claim(name, depositor, contact, done, created_at) "
+                "VALUES(?,?,?,0,?)", (name, depositor, contact or "", now))
+            return cur.lastrowid
+
+    def list_deposit_claims(self, only_open=True):
+        """입금 신고 목록 — 최신순. only_open이면 아직 처리 안 한 것만."""
+        q = ("SELECT id, name, depositor, contact, done, created_at FROM deposit_claim "
+             + ("WHERE done=0 " if only_open else "") + "ORDER BY id DESC")
+        with self._conn() as c:
+            rows = c.execute(q).fetchall()
+        return [{"id": r[0], "name": r[1], "depositor": r[2], "contact": r[3],
+                 "done": r[4], "created_at": r[5]} for r in rows]
+
+    def close_deposit_claim(self, claim_id):
+        """처리 완료 표시(승인하고 나면 목록에서 내린다)."""
+        with self._conn() as c:
+            c.execute("UPDATE deposit_claim SET done=1 WHERE id=?", (int(claim_id),))
+
+    def list_prereg(self):
+        """사전신청 전체 — 최신순. 관리자 화면·발송 명단용."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT id, name, phone, email, channel, created_at "
+                "FROM prereg ORDER BY id DESC").fetchall()
+        return [{"id": r[0], "name": r[1], "phone": r[2], "email": r[3],
+                 "channel": r[4], "created_at": r[5]} for r in rows]
+
+    # ── 1기 챌린지 (2026-08-24) ────────────────────────────────────
+    def add_challenge_member(self, customer_id, cohort="1기"):
+        """참가자 등록 → id. 이미 있으면 다시 활성화만 하고 끝(idempotent)."""
+        now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        with self._conn() as c:
+            cur = c.execute(
+                "INSERT INTO challenge_member(customer_id, cohort, active, created_at) "
+                "VALUES(?,?,1,?) ON CONFLICT(customer_id) DO UPDATE SET active=1",
+                (int(customer_id), cohort, now))
+            return cur.lastrowid
+
+    def set_challenge_member_active(self, customer_id, active):
+        """참가 해제/재개. 행을 지우지 않는다 — 제출 이력은 남는다."""
+        with self._conn() as c:
+            c.execute("UPDATE challenge_member SET active=? WHERE customer_id=?",
+                      (1 if active else 0, int(customer_id)))
+
+    def is_challenge_member(self, customer_id):
+        with self._conn() as c:
+            r = c.execute("SELECT 1 FROM challenge_member "
+                          "WHERE customer_id=? AND active=1",
+                          (int(customer_id),)).fetchone()
+        return r is not None
+
+    def challenge_member_ids(self):
+        """활성 챌린지 참가자 id 집합 — is_challenge_member의 일괄판(관리자 목록용)."""
+        with self._conn() as c:
+            return {r[0] for r in c.execute(
+                "SELECT customer_id FROM challenge_member WHERE active=1")}
+
+    def list_challenge_members(self, active_only=True):
+        q = ("SELECT customer_id, cohort, active, created_at FROM challenge_member "
+             + ("WHERE active=1 " if active_only else "") + "ORDER BY id")
+        with self._conn() as c:
+            rows = c.execute(q).fetchall()
+        return [{"customer_id": r[0], "cohort": r[1], "active": r[2],
+                 "created_at": r[3]} for r in rows]
+
+    def add_challenge_submission(self, customer_id, url, platform, shortcode,
+                                 dedup_key, submit_day):
+        """제출 저장 → id. 같은 사람이 같은 영상을 또 내면 0을 돌려준다.
+
+        ★수집(썸네일·조회수)은 여기서 하지 않는다. 링크가 들어온 순간 행이
+        생기고 달성 카운트가 확정된다 — 수집 실패가 카운트를 갉아먹으면
+        '올렸는데 미달성' 사고가 난다.
+        """
+        now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        with self._conn() as c:
+            cur = c.execute(
+                "INSERT OR IGNORE INTO challenge_submission"
+                "(customer_id, url, platform, shortcode, dedup_key, submit_day,"
+                " submitted_at, fetch_status) VALUES(?,?,?,?,?,?,?,'pending')",
+                (int(customer_id), url, platform, shortcode or "",
+                 dedup_key, submit_day, now))
+            return cur.lastrowid if cur.rowcount else 0
+
+    def update_challenge_submission_meta(self, sub_id, *, title=None, thumb=None,
+                                         channel=None, views=None, likes=None,
+                                         comments=None, fetch_status=None):
+        """수집 결과를 나중에 채운다. None인 것은 건드리지 않는다."""
+        sets, args = [], []
+        for col, val in (("title", title), ("thumb", thumb), ("channel", channel),
+                         ("views", views), ("likes", likes), ("comments", comments),
+                         ("fetch_status", fetch_status)):
+            if val is not None:
+                sets.append(f"{col}=?")
+                args.append(val)
+        if not sets:
+            return
+        args.append(int(sub_id))
+        with self._conn() as c:
+            c.execute(f"UPDATE challenge_submission SET {', '.join(sets)} WHERE id=?",
+                      args)
+
+    def list_challenge_submissions(self, customer_id=None, start=None, end=None):
+        """제출 목록 — 최신순. customer_id를 주면 그 사람 것만."""
+        q = ("SELECT id, customer_id, url, platform, shortcode, submit_day,"
+             " submitted_at, title, thumb, channel, views, likes, comments,"
+             " fetch_status FROM challenge_submission")
+        where, args = [], []
+        if customer_id is not None:
+            where.append("customer_id=?")
+            args.append(int(customer_id))
+        if start:
+            where.append("submit_day>=?")
+            args.append(start)
+        if end:
+            where.append("submit_day<=?")
+            args.append(end)
+        if where:
+            q += " WHERE " + " AND ".join(where)
+        q += " ORDER BY id DESC"
+        with self._conn() as c:
+            rows = c.execute(q, args).fetchall()
+        return [{"id": r[0], "customer_id": r[1], "url": r[2], "platform": r[3],
+                 "shortcode": r[4], "submit_day": r[5], "submitted_at": r[6],
+                 "title": r[7], "thumb": r[8], "channel": r[9], "views": r[10],
+                 "likes": r[11], "comments": r[12], "fetch_status": r[13]}
+                for r in rows]
+
+    def put_share_link(self, sid, job_id, expires_at):
+        """QR 단축링크 저장 + 만료분 청소(누수 방지)."""
+        with self._conn() as c:
+            c.execute("DELETE FROM share_links WHERE expires_at < ?", (int(expires_at) - 86400 * 0,))
+            c.execute("INSERT OR REPLACE INTO share_links(sid, job_id, expires_at) VALUES(?,?,?)",
+                      (sid, job_id, int(expires_at)))
+
+    def get_share_link(self, sid, now_ts):
+        """살아있는 링크면 job_id, 없거나 지났으면 None."""
+        with self._conn() as c:
+            r = c.execute("SELECT job_id, expires_at FROM share_links WHERE sid=?", (sid,)).fetchone()
+        if not r:
+            return None
+        return r[0] if int(r[1]) > int(now_ts) else None
 
     def enqueue(self, task, args, owner=None, prio=None):
         """작업을 대기열에 넣고 큐 id를 반환한다.
@@ -4538,19 +5867,35 @@ class Store:
                 "UPDATE job_queue SET state=?, error=?, finished_at=datetime('now') WHERE id=?",
                 ("done" if ok else "failed", None if ok else (error or "알 수 없는 오류"), qid))
 
+    #: 배포 재시작으로 죽어도 **다음 크론이 다시 큐에 넣는** 배경작업(2026-08-19).
+    #  auto_deploy.sh가 이것들은 일부러 안 기다리고 죽인다("잃는 게 없다").
+    #  그래서 이 중단은 **고장이 아니다** — 같은 'failed'로 적으면 통계가 오염된다.
+    _BACKGROUND_TASKS = ("durfill", "prewarm", "overseas")
+
     def reap_stale(self, minutes=2):
-        """heartbeat가 minutes분 넘게 안 뛴 running을 failed로 정리하고 개수를 반환한다.
+        """heartbeat가 minutes분 넘게 안 뛴 running을 정리하고 개수를 반환한다.
 
         워커가 SIGKILL로 죽으면 heartbeat가 멈춘다 — 그걸 잡아 화면에 실패를 알린다.
-        (예전엔 조용히 멈춰 '되고 있나?'를 알 수 없었다, 2026-07-29 실사고)"""
+        (예전엔 조용히 멈춰 '되고 있나?'를 알 수 없었다, 2026-07-29 실사고)
+
+        ★사유를 갈라 적는다(2026-08-19 사장님 총점검 지시). 배경작업(durfill 등)은
+          배포 재시작에 일부러 희생시키는 것이라 중단이 **정상 동작**이다. 실측:
+          durfill done 248 / '중단' 33인데 길이 캐시는 24시간에 732건이 채워지고 있었다
+          = 일은 되고 있었다. 그런데 둘 다 'failed'로 적혀 오류표 1위(43건)로 올라와
+          진짜 고장(EDL 13건 등)을 가렸다. 상태는 그대로 두되 **문구로 구분**한다
+          — 화면·집계가 '중단(재시도됨)'을 고장으로 세지 않게."""
+        marks = ",".join("?" for _ in self._BACKGROUND_TASKS)
         with self._conn() as c:
             cur = c.execute(
-                "UPDATE job_queue SET state='failed', error='워커가 중단됐습니다', "
+                "UPDATE job_queue SET state='failed', "
+                "       error=CASE WHEN task IN (" + marks + ") "
+                "                  THEN '배포 재시작으로 중단됨(자동 재시도 대상 — 고장 아님)' "
+                "                  ELSE '워커가 중단됐습니다' END, "
                 "       finished_at=datetime('now') "
                 " WHERE state='running' "
                 "   AND (heartbeat_at IS NULL "
                 "        OR datetime(heartbeat_at) < datetime('now', ?))",
-                (f"-{int(minutes)} minutes",))
+                (*self._BACKGROUND_TASKS, f"-{int(minutes)} minutes"))
             return cur.rowcount
 
     def queue_status(self, task, args_match=None):
@@ -4575,6 +5920,39 @@ class Store:
                 " WHERE id < ? AND state IN ('queued','running')", (qid,)).fetchone()[0]
             return {"id": qid, "state": state, "position": ahead, "error": error,
                     "progress": progress, "claimed_at": claimed_at}
+
+    def task_is_alive(self, task, args_match, stale_minutes=3):
+        """이 task+args 작업이 **지금 워커에서 살아 돌고 있나**(하트비트 기준).
+
+        ★왜 필요한가(2026-08-19 실사고): 화면의 '진행중 → 실패' 판정이 `updated_at`
+        경과시간(_PREVIEW_STALE_SEC=10분)만 봤다. 그런데 워커는 도는 동안
+        `job_queue.heartbeat_at`만 찍고 `mix_jobs.updated_at`은 안 건드린다 —
+        즉 **10분 넘게 걸리는 정상 작업은 무조건 '실패'로 표시**됐다.
+        실측: 자막제거 25분 작업(15:52→16:17)이 10분 시점부터 빨간 실패 문구를 띄웠고,
+        정작 결과는 성공이었다(자막 3개 전부 제거 확인). 사장님이 "왜 실패?"로 본 그 화면이다.
+
+        `reap_stale(minutes=2)`이 죽은 running을 failed로 바꾸므로, 하트비트가 살아 있다면
+        그건 **진짜로 돌고 있는 것**이다. 여유를 둬 기본 3분으로 본다(reap 2분 > 폴링 지연).
+        queued(아직 차례 대기)도 살아있는 것으로 친다 — 실패가 아니다.
+        """
+        with self._conn() as c:
+            row = c.execute(
+                "SELECT state, heartbeat_at FROM job_queue "
+                " WHERE task=? AND args_json=? ORDER BY id DESC LIMIT 1",
+                (task, json.dumps(args_match, ensure_ascii=False))).fetchone()
+            if not row:
+                return False                      # 큐 기록이 없으면 판단 불가 → 기존 규칙에 맡긴다
+            state, hb = row
+            if state == "queued":
+                return True                       # 순번 대기 중 — 아직 시작도 안 했다
+            if state != "running":
+                return False                      # done/failed는 여기서 볼 게 없다
+            if not hb:
+                return False
+            alive = c.execute(
+                "SELECT datetime(?) > datetime('now', ?)",
+                (hb, f"-{int(stale_minutes)} minutes")).fetchone()[0]
+            return bool(alive)
 
     # ── 렌더 포인트 원장(2026-07-17, 자동매칭 고급효과 엔진 Task1) ──
     # 잔액 컬럼을 따로 두지 않고 delta 누적합으로 계산하는 원장(ledger) 방식.
@@ -4664,9 +6042,14 @@ class Store:
           실제로는 안 쓰이는' 상태가 생기고 아무도 이유를 모른다. 침묵 except가
           SQL 오류를 삼켜 라이브 0건이 된 2026-08-10 사고와 같은 모양이다."""
         with self._conn() as c:
+            # ★status='off'는 뺀다(2026-08-25) — 관리자가 끈 키다.
+            #   종전엔 status를 안 봐서, 껐다고 생각해도 그 키가 계속 쓰였다.
+            #   그래서 사장님이 service명을 'vmake_paused'로 바꾸는 편법을 써야 했고,
+            #   그러면 시스템이 "키 없음"으로 보고 **포인트를 계속 깎았다**(cid 57 실사고).
             rows = c.execute(
                 "SELECT id, key_enc FROM customer_keys WHERE customer_id=? AND service=? "
-                "ORDER BY id", (int(customer_id), service)).fetchall()
+                "AND COALESCE(status,'') != 'off' ORDER BY id",
+                (int(customer_id), service)).fetchall()
         return [plain for _kid, plain in self._decrypt_rows(rows, customer_id, service)]
 
     def get_customer_keys_with_id(self, customer_id, service):
@@ -4680,6 +6063,23 @@ class Store:
                 "SELECT id, key_enc FROM customer_keys WHERE customer_id=? AND service=? "
                 "ORDER BY id", (int(customer_id), service)).fetchall()
         return self._decrypt_rows(rows, customer_id, service)
+
+    def get_pooled_keys(self, service):
+        """**전 회원이 등록한 그 서비스의 키 전부**(공용 풀 합류분, 2026-08-24).
+
+        사장님 결정: 제미니·유튜브는 회원에게 1개씩만 받아 우리 풀에 합류시키고
+        회원은 무료로 쓴다(모자란 용량은 사장님이 키를 더 만들어 채운다).
+        그래서 이 목록은 '누구 것'을 따지지 않는다 — 풀에 들어온 순간 공용이다.
+
+        ★개인 전용 경로(keys_for·gemini_keys의 cid 분기)와는 **다른 축**이다.
+          저기는 "내 일은 내 키로", 여기는 "풀 전체". 섞지 마라.
+        ★복호 실패 행은 _decrypt_rows가 로그를 남기고 건너뛴다.
+        """
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT id, key_enc FROM customer_keys WHERE service=? ORDER BY id",
+                (service,)).fetchall()
+        return [plain for _kid, plain in self._decrypt_rows(rows, "pool", service)]
 
     def _decrypt_rows(self, rows, customer_id, service):
         """(id, key_enc) 행들을 복호해 [(id, 평문)]으로. 깨진 행은 로그 후 건너뛴다."""
@@ -4708,6 +6108,37 @@ class Store:
             c.execute("UPDATE customer_keys SET status=?, checked_at=? WHERE id=?",
                       (status, int(time.time()), int(key_id)))
 
+    # ── 포인트 면제(2026-08-25) — 사장님 키로 돌면서 과금만 면제한다 ──────────
+    #   왜: "내 키를 잠시 쓰게 해주되 포인트는 안 깎기"라는 상태가 없었다(cid 57 실사고).
+    #   키를 끄면 사장님 키로 돌아가지만 그건 **과금 대상**이라 잔액이 바닥났다.
+    #   키 끄기(A)와 이 면제(B)는 짝으로 걸어야 의도가 성립한다.
+    def _exempt_key(self, customer_id, service):
+        return f"point_exempt::{int(customer_id)}::{service}"
+
+    def set_point_exempt(self, customer_id, service, on=True):
+        """그 고객의 그 서비스만 과금 면제로 두거나 푼다."""
+        with self._conn() as c:
+            if on:
+                c.execute("INSERT OR REPLACE INTO settings(key, value) VALUES(?,?)",
+                          (self._exempt_key(customer_id, service), "1"))
+            else:
+                c.execute("DELETE FROM settings WHERE key=?",
+                          (self._exempt_key(customer_id, service),))
+
+    def is_point_exempt(self, customer_id, service):
+        with self._conn() as c:
+            row = c.execute("SELECT value FROM settings WHERE key=?",
+                            (self._exempt_key(customer_id, service),)).fetchone()
+        return bool(row and row[0] == "1")
+
+    def list_point_exempt(self, customer_id):
+        """그 고객이 면제받고 있는 서비스 목록 — 관리자 화면 표시용."""
+        pre = f"point_exempt::{int(customer_id)}::"
+        with self._conn() as c:
+            rows = c.execute("SELECT key FROM settings WHERE key LIKE ? AND value='1'",
+                             (pre + "%",)).fetchall()
+        return [r[0][len(pre):] for r in rows]
+
     def count_customer_keys(self, customer_id, service):
         with self._conn() as c:
             row = c.execute(
@@ -4724,3 +6155,80 @@ class Store:
                 (int(customer_id), int(limit)),
             ).fetchall()
         return [{"delta": r[0], "reason": r[1], "created_at": r[2]} for r in rows]
+
+    # ── 도움말(FAQ · 오늘 있었던 일) ─────────────────────────────────────────
+    # 2026-08-23 사장님: "자주하는 질문과 이미지 설명들을 보여둘 수 있는 페이지 / 사람들
+    # CS 해결 / 반복되는 질문도 많고 / 영상이나 이미지 텍스트로 쉽게 설명해주는".
+    # 읽기는 로그인 없이 누구나(공개), 쓰기는 관리자만 — 그 판정은 app.py 라우트에서 한다.
+    def help_list(self, kind=None, include_hidden=False):
+        """보여줄 순서 그대로 돌려준다: 고정(pinned) 먼저 → sort 작은 순 → 최신 순."""
+        q = "SELECT * FROM help_item WHERE 1=1"
+        args = []
+        if kind:
+            q += " AND kind=?"
+            args.append(kind)
+        if not include_hidden:
+            q += " AND hidden=0"
+        q += " ORDER BY pinned DESC, sort ASC, id DESC"
+        with self._conn() as c:
+            c.row_factory = sqlite3.Row
+            return [self._help_row(r) for r in c.execute(q, args).fetchall()]
+
+    def help_get(self, item_id):
+        with self._conn() as c:
+            c.row_factory = sqlite3.Row
+            r = c.execute("SELECT * FROM help_item WHERE id=?", (int(item_id),)).fetchone()
+            return self._help_row(r) if r else None
+
+    @staticmethod
+    def _help_row(r):
+        d = dict(r)
+        try:
+            d["media"] = json.loads(d.pop("media_json") or "[]")
+        except (ValueError, TypeError):
+            d["media"] = []
+        d["pinned"] = bool(d.get("pinned"))
+        d["hidden"] = bool(d.get("hidden"))
+        return d
+
+    def help_save(self, item_id=None, **f):
+        """새로 만들거나(item_id=None) 있는 것을 고친다. 준 항목만 바뀐다."""
+        now = datetime.now(timezone.utc).isoformat()
+        cols = {}
+        for k in ("kind", "title", "body", "category"):
+            if k in f:
+                cols[k] = str(f[k] or "")
+        for k in ("pinned", "hidden"):
+            if k in f:
+                cols[k] = 1 if f[k] else 0
+        if "sort" in f:
+            try:
+                cols["sort"] = int(f["sort"])
+            except (TypeError, ValueError):
+                cols["sort"] = 0
+        if "media" in f:
+            cols["media_json"] = json.dumps(f["media"] or [], ensure_ascii=False)
+        cols["updated_at"] = now
+        with self._conn() as c:
+            if item_id:
+                sets = ", ".join(f"{k}=?" for k in cols)
+                c.execute(f"UPDATE help_item SET {sets} WHERE id=?",
+                          list(cols.values()) + [int(item_id)])
+                return int(item_id)
+            cols.setdefault("kind", "faq")
+            cols.setdefault("title", "")
+            cols["created_at"] = now
+            keys = ", ".join(cols)
+            marks = ", ".join("?" for _ in cols)
+            cur = c.execute(f"INSERT INTO help_item ({keys}) VALUES ({marks})", list(cols.values()))
+            return int(cur.lastrowid)
+
+    def help_delete(self, item_id):
+        with self._conn() as c:
+            c.execute("DELETE FROM help_item WHERE id=?", (int(item_id),))
+
+    def help_reorder(self, ids):
+        """화면에서 끌어 옮긴 순서를 그대로 저장한다(앞에서부터 0,1,2…)."""
+        with self._conn() as c:
+            for i, iid in enumerate(ids or []):
+                c.execute("UPDATE help_item SET sort=? WHERE id=?", (i, int(iid)))

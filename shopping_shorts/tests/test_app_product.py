@@ -79,6 +79,41 @@ def test_unknown_job_is_404(monkeypatch, tmp_path):
     assert client.get("/api/mix/product/nope").status_code == 404
 
 
+# ── 상품 확정 UI가 8단계(SEO)로 이사(2026-08-18) ────────────────────────────
+# 그 화면은 무거운 /api/mix/result 대신 이 가벼운 경로로 검색어·검색URL까지 받는다.
+
+def test_product_get_exposes_target_and_search_url(monkeypatch, tmp_path):
+    """SEO 단계가 상품 확정 폼을 그리려면 검색어(affiliate_target)가 필요하다."""
+    client, store = _client(monkeypatch, tmp_path)
+    _ready(store, "j8", target="실리콘 집게")
+    got = client.get("/api/mix/product/j8").json()
+    assert got["affiliate_target"] == "실리콘 집게"
+    assert got["coupang_search_url"].startswith("https://www.coupang.com/np/search")
+    # /api/mix/result와 같은 값이어야 한다 — 검색URL 규칙이 두 곳에서 갈라지면 안 된다(0순위-B)
+    assert got["coupang_search_url"] == client.get("/api/mix/result/j8").json()["coupang_search_url"]
+
+
+def test_product_get_works_before_edit_plan_exists(monkeypatch, tmp_path):
+    """★매칭 전에도 200이어야 한다. /api/mix/result는 이 상태에서 404라서 못 쓴다 —
+    그게 이 필드를 여기로 옮긴 이유다. 검색어는 빈 문자열이고 화면은 폼을 그린다."""
+    client, store = _client(monkeypatch, tmp_path)
+    store.create_mix_job("j9", ["u0"], 20, "free")      # edit_plan 없음
+    assert client.get("/api/mix/result/j9").status_code == 404
+    got = client.get("/api/mix/product/j9")
+    assert got.status_code == 200
+    assert got.json()["affiliate_target"] == ""
+
+
+def test_product_get_keeps_inpock_keys(monkeypatch, tmp_path):
+    """인포크 등록 화면(9단계)이 읽는 key를 이사 과정에서 깨뜨리지 않았는지 못 박는다."""
+    client, store = _client(monkeypatch, tmp_path)
+    _ready(store, "j10")
+    got = client.get("/api/mix/product/j10").json()
+    for key in ("ok", "product", "final_link", "description_block",
+                "partners_link_page", "inpock_page"):
+        assert key in got, key
+
+
 def test_inpock_flag_survives_link_edit(monkeypatch, tmp_path):
     """링크만 고쳤을 때 '등록 완료'가 풀리면 사장님이 인포크에 중복 등록한다."""
     client, store = _client(monkeypatch, tmp_path)

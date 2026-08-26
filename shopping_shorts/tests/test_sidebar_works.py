@@ -54,7 +54,16 @@ async function fetch(url){
   if (WORKS_RESPONSE === 'throw') throw new Error('네트워크');
   return { json: async () => WORKS_RESPONSE };
 }
-const window = { location };
+// 실제 브라우저 window에는 addEventListener가 있다 — 스텁에 없어서
+// "window.addEventListener is not a function"으로 죽었다(2026-08-21). 계약을
+// 발명하는 게 아니라 빠져 있던 진짜 계약을 채운다. 핸들러를 모아두고 _gesture()로
+// 실제 조작을 흉내 낸다(유료게이트 402 판정이 이걸 본다).
+const _WIN_LISTENERS = [];
+const window = { location,
+  addEventListener(ev, fn){ _WIN_LISTENERS.push([ev, fn]); } };
+function _gesture(ev){
+  _WIN_LISTENERS.filter(([e]) => e === (ev || 'click')).forEach(([, fn]) => fn({}));
+}
 """
 
 
@@ -413,3 +422,111 @@ def test_rename_pencil_has_variation_selector():
     U+FE0F(VS16)를 붙여야 연필 모양이 된다 — 아이콘이 뭔지 모르면 아무도 안 누른다."""
     src = SIDEBAR_JS.read_text(encoding="utf-8")
     assert "\u270f\ufe0f" in src, "✏에 VS16(U+FE0F)이 빠졌다 — 막대기로 보인다"
+
+
+# ── 유료게이트 402 모달은 "사장님이 누른 요청"에만 뜬다(2026-08-21 오탐 수정) ──
+# 실사고: 체험 D-7·사용량 0/10인 랭킹 전용 계정이 페이지를 여는 것만으로
+# "무료 체험이 끝났어요"를 봤다. 페이지 로드 중 배경 호출 4개가 402였기 때문이다.
+
+_PW_HARNESS = """
+console.debug = () => {};   // 배경 402 흔적 로그가 판정 출력에 섞이지 않게
+window.fetch = async () => ({ status: 402, clone: () => ({ json: async () => ({ error: '등급 부족' }) }) });
+const _stub = { onclick: null, style: {}, remove(){}, appendChild(){} };
+const _origGet = document.getElementById.bind(document);
+document.getElementById = (id) => (id === 'ss-pw-close' ? _stub : _origGet(id));
+function _modalShown(){ return _created.some(o => o.id === 'ss-pw-modal'); }
+"""
+
+
+def test_background_402_does_not_show_expiry_modal():
+    """아무도 안 눌렀는데 난 402(배경 호출)로는 만료 모달이 뜨면 안 된다."""
+    out = _run("await window.fetch('/api/produce/works');"
+               " await new Promise(r=>setTimeout(r,0));"
+               " console.log(_modalShown() ? 'shown' : 'none');",
+               harness_override=_PW_HARNESS)
+    assert out == "none"
+
+
+def test_402_after_user_click_shows_modal():
+    """반대로 사장님이 누른 직후의 402는 반드시 안내해야 한다(잠긴 기능 안내가 죽으면 안 된다)."""
+    out = _run("_gesture('click'); await window.fetch('/api/lens/cn/keywords');"
+               " await new Promise(r=>setTimeout(r,0));"
+               " console.log(_modalShown() ? 'shown' : 'none');",
+               harness_override=_PW_HARNESS)
+    assert out == "shown"
+
+
+# ── 402 문구는 서버가 준 사유대로(2026-08-21) ──
+# 체험판은 기간과 무관하게 랭킹 전용이라(app.py access_level) '막혔다'와 '끝났다'는 다른 말이다.
+
+def _pw_harness_402(body_json):
+    return ("""
+console.debug = () => {};
+window.fetch = async () => ({ status: 402, clone: () => ({ json: async () => (%s) }) });
+const _stub = { onclick: null, style: {}, remove(){}, appendChild(){} };
+const _origGet = document.getElementById.bind(document);
+document.getElementById = (id) => (id === 'ss-pw-close' ? _stub : _origGet(id));
+function _modalHtml(){ const m = _created.find(o => o.id === 'ss-pw-modal'); return m ? m.innerHTML : ''; }
+""" % body_json)
+
+
+def _modal_html_after_click(body_json):
+    return _run("_gesture('click'); await window.fetch('/api/lens/cn/keywords');"
+                " await new Promise(r=>setTimeout(r,0)); console.log(_modalHtml());",
+                harness_override=_pw_harness_402(body_json))
+
+
+def test_ranking_only_402_does_not_say_trial_ended():
+    """체험 기간이 남은 랭킹 전용 계정에 '끝났어요'라고 하면 안 된다(오진의 근원)."""
+    html = _modal_html_after_click("{ error: '유료 기능이에요. 결제하면 열려요.', level: 'ranking_only' }")
+    assert "끝났어요" not in html
+    assert "잠긴 기능" in html
+
+
+def test_points_402_still_says_points():
+    """포인트 부족 분기는 그대로 살아 있어야 한다(2026-08-20 수정 회귀 방지)."""
+    html = _modal_html_after_click("{ error: '포인트가 부족합니다 (필요 10P, 보유 0P)' }")
+    assert "포인트가 부족해요" in html
+
+
+# ── 숏템 제작소 = 항상 빈 작업으로 (2026-08-24 사장님 "그냥 새로운 작업하려니
+#    마지막에 담긴 제작소 페이지가 뜬다 → 빈 페이지로 띄워줘") ──────────────
+# 쿼리 없는 /produce는 _bootAccountLatestOrLocal()이 직전/계정 최신작업을 이어받는다
+# (2026-07-26 크로스기기 싱크). 그 경로는 랭킹의 '제작소로 보내기'에 여전히 필요하므로
+# 남겨두고, **사이드바 메뉴만** ?new=1로 보낸다.
+
+# 제작 메뉴(data-ss-href="/produce") 한 줄만 뽑아 출력하는 JS.
+_GRAB_PRODUCE_ITEM = r"""
+const _re = new RegExp('<div class="ss-item[^>]*data-ss-href="/produce"[^>]*>');
+const _m = _nav.innerHTML.match(_re);
+console.log(_m ? _m[0] : 'NOTFOUND');
+"""
+
+def test_produce_menu_opens_a_blank_new_work():
+    """메뉴 클릭 = ?new=1 → produce.html이 clearWork() 후 빈 작업을 연다."""
+    out = _run(_GRAB_PRODUCE_ITEM)
+    assert "location.href='/produce?new=1'" in out, out
+
+
+def test_produce_menu_stays_highlighted_on_produce_page():
+    """★href에 ?new=1을 박으면 active 판정(it.href === path)이 깨져 활성표시가 죽는다.
+
+    그래서 href는 쿼리 없는 /produce로 두고 go로만 이동한다. 이 테스트가 그 실수를 막는다.
+    """
+    out = _run(_GRAB_PRODUCE_ITEM,
+               harness_override="location.pathname='/produce';location.href='/produce';")
+    assert "ss-item active" in out, out
+
+
+def test_produce_menu_is_clickable_even_while_on_produce():
+    """제작소를 보고 있을 때도 눌러서 빈 작업으로 갈 수 있어야 한다(종전엔 active라 죽어 있었다)."""
+    out = _run(_GRAB_PRODUCE_ITEM,
+               harness_override="location.pathname='/produce';location.href='/produce';")
+    assert "onclick=" in out, out
+
+
+def test_produce_menu_stays_free_of_the_paywall():
+    """data-ss-href는 쿼리 없는 경로여야 서버 화이트리스트(_FREE_EXACT_GET)와 짝이 맞는다."""
+    out = _run(_GRAB_PRODUCE_ITEM)
+    assert 'data-ss-href="/produce"' in out, out
+    assert 'data-ss-free="1"' in out, out

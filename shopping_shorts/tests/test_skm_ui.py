@@ -32,7 +32,7 @@ def test_theme_does_not_redefine_page_tokens():
 
 
 def test_theme_component_classes():
-    for cls in (".orbbar", ".orb", ".skm-card", ".cta-shine", ".stat-tile", ".strip", ".thea", ".aurora-bg"):
+    for cls in (".dockbar", ".dk", ".dkic", ".orbbar", ".orb", ".skm-card", ".cta-shine", ".stat-tile", ".strip", ".thea", ".aurora-bg"):
         assert cls in CSS, cls
 
 
@@ -45,7 +45,7 @@ def test_produce_links_theme_and_brands():
 # ── Task 2: 오브 단계바 — 라벨 rename + 매칭 단계 삽입 ──────────────
 # (v6 목업 정렬, 2026-07-23 후속) 자막제거가 헤드라인 오브로 복귀 — 8단계.
 def test_orb_labels_and_mapping():
-    assert '"영상추출/분석"' in HTML and '"영상대본MIX"' in HTML and '"최종렌더"' in HTML
+    assert '"영상추출/분석"' in HTML and '"영상대본MIX"' in HTML and '"완성본"' in HTML
     assert "ORB_TO_PANEL" in HTML and "STEP_LABELS" in HTML
     # 9단계 개편(2026-08-16, 사장님 "단계를 3개로 늘려서 대본쪽도 강화"):
     # 1단계에 뭉쳐 있던 '영상 고르기'와 'AI 대본 선택'을 갈라 대본이 자기 단계를 갖는다.
@@ -54,8 +54,11 @@ def test_orb_labels_and_mapping():
     labels = json.loads(m.group(1))
     # 2026-08-16 사장님 지시로 2번째 라벨 "대본" → "대본생성"(하는 일을 이름에 넣는다).
     # 패널 h3(data-steptitle="script")도 같이 바꿨다 — 한쪽만 고치면 오브와 제목이 어긋난다.
+    # 2026-08-26 사장님 지시로 8·9번째 이름 변경 — "SEO해시테크"는 실제로 제목·설명·태그를
+    # 만드는 단계라 이름이 하는 일과 어긋났고, "최종렌더"는 서비스 다른 곳에서 이미 쓰는
+    # "완성본"으로 통일했다(용어가 두 벌이면 어느 쪽이 진짜인지 알 수 없다).
     assert labels == ["영상추출/분석", "대본생성", "영상대본MIX", "고품질 자막제거", "TTS음성",
-                      "자막꾸미기", "썸네일", "SEO해시테크", "최종렌더"], labels
+                      "자막꾸미기", "썸네일", "제목·태그", "완성본"], labels
 
 
 def test_orb_to_panel_mapping_v6():
@@ -82,8 +85,10 @@ def test_대본_패널이_있다():
     assert 'data-step="8"' in HTML, "신설 대본 패널(data-step=8)이 없다"
 
 
-def test_orbbar_class_used():
-    assert 'class="orbbar"' in HTML or "'orbbar'" in HTML or '"orbbar"' in HTML
+def test_dockbar_class_used():
+    # 2026-08-26: 단계바를 도크형(K3 색흐름)으로 교체. 옛 .orbbar CSS는 theme.css에
+    # 그대로 남겨 뒀지만(되돌리기용), produce.html이 실제로 그리는 것은 .dockbar다.
+    assert 'class="dockbar"' in HTML or "'dockbar'" in HTML or '"dockbar"' in HTML
 
 
 def test_panel0_title_is_video_script_not_studio():
@@ -93,16 +98,35 @@ def test_panel0_title_is_video_script_not_studio():
     assert "1 · 제작소" not in HTML
 
 
-# ── v6 목업 정렬: renderSteps가 볼(숫자/✓)+라벨(항상 노출)+진행선(orbfill)을 그린다 ──
-def test_render_steps_emits_v6_orb_markup():
+# ── 도크 단계바: renderSteps가 아이콘 타일 + 라벨 + 무지개 진행띠를 그린다 ──
+# (2026-08-26 사장님 확정. 정본 목업 out/제작소_단계바_최종안.html)
+def test_render_steps_emits_dock_markup():
     start = HTML.index("function renderSteps(){")
-    end = HTML.index("// ── 오브바 끝 ──")
+    end = HTML.index("// ── 도크 단계바 끝 ──")
     body = HTML[start:end]
-    assert "orbline" in body
-    assert "orbfill" in body
-    assert '"ball"' in body or "'ball'" in body
-    assert '"lb"' in body or "'lb'" in body
-    assert "label" in body  # 라벨 텍스트를 실제로 넣는다(hover 전용 title이 아니라)
+    assert "dockflow" in body          # 무지개 진행띠
+    assert "drun" in body              # 지나온 만큼 채우는 부분
+    assert '"dkic"' in body or "'dkic'" in body      # 아이콘 타일
+    assert '"dkl"' in body or "'dkl'" in body        # 라벨
+    assert "STEP_ICONS" in body        # 아이콘을 실제로 넣는다
+    assert "STEP_COLORS" in body       # 단계 색을 실제로 넣는다
+
+
+# 단계 색·아이콘은 STEP_LABELS와 개수가 맞아야 한다 — 하나라도 모자라면 그 단계만
+# 회색으로 조용히 빠진다(색이 없는 단계가 생겨도 에러가 안 난다).
+def test_step_colors_and_icons_count_match_labels():
+    labels = json.loads(re.search(r"const STEP_LABELS\s*=\s*(\[[^\]]*\])", HTML).group(1))
+    colors = re.search(r"const STEP_COLORS\s*=\s*\[(.*?)\];", HTML, re.S).group(1)
+    icons  = re.search(r"const STEP_ICONS\s*=\s*\[(.*?)\];", HTML, re.S).group(1)
+    assert colors.count("[") == len(labels), f"STEP_COLORS {colors.count('[')} != 라벨 {len(labels)}"
+    assert icons.count("'<") == len(labels), f"STEP_ICONS {icons.count(chr(39)+chr(60))} != 라벨 {len(labels)}"
+
+
+# 도크 라벨 축약표도 라벨과 길이가 같아야 한다(빈 문자열이면 원래 이름을 쓴다).
+def test_step_short_count_matches_labels():
+    labels = json.loads(re.search(r"const STEP_LABELS\s*=\s*(\[[^\]]*\])", HTML).group(1))
+    short  = json.loads(re.search(r"const STEP_SHORT\s*=\s*(\[[^\]]*\])", HTML).group(1))
+    assert len(short) == len(labels), f"STEP_SHORT {len(short)} != STEP_LABELS {len(labels)}"
 
 
 @pytest.mark.skipif(not shutil.which("node"), reason="node 필요")
@@ -369,13 +393,27 @@ def test_match_progress_style_in_css():
     assert ".match-progress" in CSS
 
 
-def test_start_from_ai_pick_calls_set_matching_ui_before_theater():
-    # 버튼을 누른 즉시(playTheater보다 먼저) before/after 변화 + 스피너가 켜져야 한다.
+def test_start_from_ai_pick_hands_off_to_step2_without_matching():
+    """1단계는 **대본 확보까지만** 하고 2단계로 넘긴다(2026-08-18 계약 변경).
+
+    예전엔 여기서 매칭(startProduceMix)까지 걸었다. 그러면 2단계에서 대본을 새로 뽑아
+    확정해도 3단계엔 1단계에서 이미 돌아간 옛 job이 붙어 있어, 사장님 눈에는
+    "2번 대본과 3번 대본이 다르게 들어간다"로 보인다. 매칭 시작점은 3단계 한 곳뿐이다.
+    """
     start = HTML.index("async function startFromAiPick(){")
     end = HTML.index("// ── AI PICK 끝 ──")
     body = HTML[start:end]
-    assert "setMatchingUI(true" in body
-    assert body.index("setMatchingUI(true") < body.index("playTheater(")
+    assert "startProduceMix(" not in body, "1단계가 다시 매칭을 걸고 있다 — 어긋남이 재발한다"
+    assert "PANEL_TO_ORB[8]" in body, "대본 확보 후 2단계로 넘기지 않는다"
+
+
+def test_step3_entry_starts_match_when_no_job():
+    """매칭의 유일한 시작점 = 3단계 진입(붙은 job이 없을 때만). 이미 job이 있는데 대본만
+    바뀐 경우는 두 번째 과금이라 자동으로 돌지 않고 어긋남 배너로 사람이 누른다."""
+    start = HTML.index("function jump(o){")
+    end = HTML.index("function go(d){", start)
+    body = HTML[start:end]
+    assert "p===7" in body and "!MIX_JOB" in body and "startProduceMix(" in body
 
 
 def test_poll_mix_mirrors_stage_to_panel0_and_restores_button():

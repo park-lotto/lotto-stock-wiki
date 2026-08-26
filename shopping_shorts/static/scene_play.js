@@ -4,10 +4,64 @@ const SL = {
   server: false, job: '',
   thumb: sid => SL.server ? `/api/mix/seg_thumb/${SL.job}/${encodeURIComponent(sid)}` : `thumbs/${sid}.jpg`,
   src:   vid => SL.server ? `/api/mix/src/${SL.job}/${encodeURIComponent(vid)}` : `src/${vid}.mp4`,
-  tts:   i   => SL.server ? `/api/mix/tts/${SL.job}/${i}` : `tts/beat_${i}.mp3`,
+  // ★버전을 URL에 붙인다(2026-08-18 사장님 "대본 고치고 다시 뽑아도 옛 음성이 나온다").
+  //   mp3 경로가 늘 같아서 브라우저 캐시가 옛 파일을 계속 준다 — 재생성해도 소리가 안 바뀐다.
+  tts:   (i, ver) => SL.server ? `/api/mix/tts/${SL.job}/${i}?v=${ver||0}` : `tts/beat_${i}.mp3`,
   applyUrl: () => SL.server ? `/api/mix/scene_lab/${SL.job}/apply` : '/apply',
 };
 const MAX_SHOT = 2.2, MIN_CLIP = 0.8, EPS = 1e-3, LONG_CUT = MAX_SHOT + 0.05;   // 상한을 넘긴 컷 = 소재가 모자라 늘린 것
+
+// ★미리보기(9:16) 크기의 정의처는 여기 한 곳(2026-08-20 사장님 "미리보기 썸네일 크기
+//   고치면 자꾸 틀어지고 커지고 어디서 자꾸 만지는거다").
+//   실측: 같은 '장면 미리보기'가 장면편집 안(#playerhost 440px)과 제작소 레일
+//   (#mixPreviewRail 340px + vidbox max-height:520px 클램프) **두 군데**서 각자 크기를
+//   정하고 있었고, 레일은 열림/닫힘 상태에 따라 재생 위치가 바뀌므로(_outerPlayer)
+//   작업할 때마다 미리보기가 다른 크기·비율로 나왔다(0순위-B).
+//   두 화면 다 이 파일을 읽는다 → 숫자는 여기만 두고 CSS는 var(--shorts-pv-w/-ar)로
+//   받는다. CSS의 var() 폴백은 이 값과 같아야 하며 test_preview_size_single_source.py가
+//   짝을 강제한다. 크기를 바꾸려면 아래 두 줄만 고친다.
+const PV_W  = '440px';
+const PV_AR = '9/16';
+if (typeof document !== 'undefined' && document.documentElement){
+  document.documentElement.style.setProperty('--shorts-pv-w', PV_W);
+  document.documentElement.style.setProperty('--shorts-pv-ar', PV_AR);
+}
+
+// ── 미리보기를 칸 안에 맞춘다(2026-08-22 사장님 "미리보기창이 너무 크가 스크롤없이 맞춰봐")
+// 종전엔 영상칸이 `폭 100% × 9:16`이라 **폭이 세로를 정했다** — 폭 393px이면 세로가
+// 699px가 되는데 미리보기 영역은 361px뿐이라 338px이 넘쳐 안쪽 스크롤이 생겼다(실측).
+// ★CSS flex로는 못 푼다: `flex:1 1 0`을 줘도 aspect-ratio가 폭을 먼저 잡아 높이가
+//   안 줄어든다(min-height에 붙거나 0으로 사라진다 — 둘 다 실측 확인). 그래서 **남는
+//   높이를 재서 직접 준다.** 폭은 CSS의 aspect-ratio가 알아서 계산한다(높이만 준다).
+// 부르는 곳: 재생 시작·창 크기 변경·탭 전환. 재생 중이 아니면 아무것도 안 한다.
+const PV_MIN_H = 150;      // 이보다 작아지면 미리보기 구실을 못 한다 — 이때만 스크롤을 허용한다
+
+function fitPlayer(){
+  const host = document.getElementById('playerhost');
+  const pl = document.getElementById('player');
+  const vb = document.getElementById('vidbox');
+  if (!host || !pl || !vb || !pl.classList.contains('on')) return;
+  vb.style.height = '';                       // 재계산 전에 비운다(누적 방지)
+  let used = 0;
+  // 영상 말고 세로를 차지하는 것 전부 — 탭·라벨(host) + 진행바·자막·안내(player)
+  for (const c of host.children) if (c !== pl) used += c.getBoundingClientRect().height;
+  for (const c of pl.children) if (c !== vb) used += c.getBoundingClientRect().height;
+  const cs = getComputedStyle(pl), hs = getComputedStyle(host);
+  used += parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom)
+        + parseFloat(hs.paddingTop) + parseFloat(hs.paddingBottom)
+        + (parseFloat(hs.rowGap) || 0) * Math.max(0, host.children.length - 1)
+        + (parseFloat(cs.rowGap) || 0) * Math.max(0, pl.children.length - 1)
+        + 4;                                  // 테두리·반올림 여유
+  const h = Math.round(host.clientHeight - used);
+  vb.style.height = Math.max(PV_MIN_H, h) + 'px';
+}
+
+if (typeof window !== 'undefined'){
+  let _fitT = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(_fitT); _fitT = setTimeout(fitPlayer, 120);
+  });
+}
 
 // 소스 영상 길이를 넘는 구간인가 — 실측(job 409f894230c6): s1-10이 100~104초인데
 // s1.mp4는 78.5초였다. 렌더하면 그 컷은 실체가 없다. 눈에 보이게 표시한다.
@@ -37,6 +91,16 @@ function ttsEl(slot){
   return audioEl._alt;
 }
 function audio(){ return curAud || ttsEl(0); }
+// ★음성을 '시계'로 쓸 수 있는가 — 판단은 여기 한 곳(0순위-B, 2026-08-20 사장님
+//   "미리보기에는 여러분까지만 나오고 다음이 안나온다").
+//   미리보기의 시계가 두 벌이었다: 화면(컷)은 seqTimer로 돌고, 자막·시간·전체재생은
+//   audio를 봤다. 음성이 없으면(합성 전 404 · 대본 바뀜 409) audio는 영영 0초·ended
+//   없음 → 자막이 첫 구절에 얼어붙고 전체재생이 그 칸에서 멈췄다. 화면만 계속 돌아
+//   "대본이 적용 안 됐다"로 보였다. 음성이 시계 노릇을 못 하면 화면 시계로 폴백한다.
+function audioUsable(){
+  const a = audio();
+  return !!(a && a.src && !a.error && a.duration > 0);
+}
 function capsOf(i){ return (DATA.captions || {})[String(i)] || []; }
 // 구간 [a,b)에 걸치는 자막 구절들 — 자르지 않고 구절 통째로 돌려준다.
 function capsIn(i, a, b){
@@ -58,15 +122,113 @@ const chosen = new Set();    // 사람이 손으로 담은 seg_id
 
 
 const TRIMS = {};                  // sid → [a, b] (장면 시작 기준 초)
+// ── ✋ 컷 길이 수동 지정(2026-08-24 사장님 "2번") ────────────────────────────
+// FIXLEN["칸번호:조각id"] = 초. 사장님이 직접 정한 컷 길이.
+// ★칸 전체 길이는 음성에 매여 있어 바꿀 수 없다(자막이 t0 누적으로 자리를 잡는다).
+//   그래서 "정한 컷은 그대로, **나머지 컷이 비례로 줄어든다**"가 규칙이다(사장님 선택).
+const FIXLEN = {};
+function fixKey(i, sid){ return i + ':' + sid; }
+function getFix(i, sid){ const v = FIXLEN[fixKey(i, sid)]; return v > 0 ? v : 0; }
+function setFix(i, sid, sec){
+  const k = fixKey(i, sid);
+  if (!(sec > 0)) delete FIXLEN[k];
+  else FIXLEN[k] = Math.round(sec * 100) / 100;
+  (typeof render === 'function' && render());
+}
+// 지정 길이를 반영해 컷 길이를 다시 나눈다. 총합(ttsDur)은 **그대로 유지**한다.
+// ★planClips의 분배 규칙은 안 건드린다 — 만들어진 결과를 뒤에서 손본다(0순위-B:
+//   길이를 정하는 곳이 두 군데가 되면 어긋난다. 여기가 마지막 한 곳이다).
+function applyFixedLens(clips, beatIdx, ttsDur){
+  if (!clips.length || beatIdx == null) return clips;
+  const fixed = [], free = [];
+  clips.forEach(c => (getFix(beatIdx, c.seg_id) > 0 ? fixed : free).push(c));
+  if (!fixed.length) return clips;
+  // 지정분 합계. 칸을 넘기면 지정분끼리 비례로 눌러 담는다(넘쳐서 뒤가 밀리면 안 된다).
+  let want = fixed.reduce((a, c) => a + getFix(beatIdx, c.seg_id), 0);
+  const room = ttsDur - free.length * MIN_CLIP;      // 나머지 컷도 최소는 살려둔다
+  const cap = Math.max(MIN_CLIP, free.length ? room : ttsDur);
+  const k = want > cap ? cap / want : 1;
+  fixed.forEach(c => { c.dur = Math.max(MIN_CLIP * 0.5, getFix(beatIdx, c.seg_id) * k); });
+  want = fixed.reduce((a, c) => a + c.dur, 0);
+  // 나머지는 남은 시간을 **원래 비율대로** 나눠 갖는다.
+  const rest = Math.max(0, ttsDur - want);
+  const freeTotal = free.reduce((a, c) => a + c.dur, 0);
+  if (free.length){
+    if (freeTotal > EPS) free.forEach(c => { c.dur = c.dur / freeTotal * rest; });
+    else free.forEach(c => { c.dur = rest / free.length; });
+  } else if (fixed.length){
+    // 전부 지정이면 합계가 딱 맞도록 마지막 컷으로 보정(반올림 오차 흡수)
+    const diff = ttsDur - fixed.reduce((a, c) => a + c.dur, 0);
+    fixed[fixed.length - 1].dur += diff;
+  }
+  return clips;
+}
+// ★조각 합치기(2026-08-17 사장님 "0.5초 같은 건 못 쓰니까 짤리자나 3개 합쳐서 훅에 넣으려고").
+//   0.8초 미만 조각은 라운드로빈이 건너뛰어 담아도 화면에 안 나온다. 새 추출본은
+//   script_extract._merge_too_short가 자동으로 합치지만, **이미 뽑아 둔 잡**과 "자동으론
+//   안 합쳐졌는데 내가 보기엔 이어 붙여야 하는 것"은 사람이 손으로 합쳐야 한다.
+//   구간이 원본에서 **붙어 있으므로**(인접쌍 간격 0) 합치기 = 그냥 **한 개의 긴 구간**이다.
+//   → 새 자료구조·새 개념이 필요 없다. 대표 조각의 end만 마지막 멤버의 end까지 늘린다.
+//   ⚠️ 늘린 구간을 만드는 곳은 mergeSpan 한 곳뿐이다(0순위-B). 재생·계획(planClips)·
+//      길이 표시·너무짧음 판정이 전부 trimPieces/mergeSpan을 지나므로 판단이 한 벌이다.
+const MERGES = {};                 // 대표 sid → 뒤에 이어 붙일 sid 목록(같은 영상·시간순 인접)
+function mergeSpan(id){
+  const s = (DATA.segments || {})[id];
+  if (!s) return null;
+  const m = MERGES[id];
+  if (!m || !m.length) return s;
+  let end = s.end;
+  for (const x of m){
+    const t = (DATA.segments || {})[x];
+    if (t && t.end > end) end = t.end;
+  }
+  return {...s, end};
+}
+// 다른 조각에 합쳐져 **대표가 아닌** 조각인가 — 팔레트에서 감추는 판단도 여기 한 곳.
+function isMergedInto(id){
+  for (const lead of Object.keys(MERGES)){
+    if ((MERGES[lead] || []).indexOf(id) >= 0) return lead;
+  }
+  return null;
+}
 let trimA = null, trimSid = null;  // 첫 번째 체크 지점 / 지금 트림바가 보는 장면
+// ★합친 것을 다시 멤버 경계로 가른다(2026-08-17 사장님 "3장을 합쳤으면 3장 재생이 되야").
+//   mergeSpan은 합치기를 **한 개의 긴 구간**으로 만든다(그래야 길이·트림 판단이 한 벌).
+//   그런데 재생 계획(planClips)은 구간이 하나면 앞에서부터 칸 길이만큼만 쓰므로
+//   8초를 합쳐 5초 칸에 넣으면 **첫 조각만** 보였다(사장님 제보).
+//   여기서 멤버 경계로 되갈라 주면 planClips가 '여러 장'으로 보고 칸 시간을 나눈다
+//   — 분배 규칙은 손대지 않는다(0순위-B: 나누는 판단은 planClips 한 곳에만 있다).
+//   덤: 멤버 사이가 떨어져 있으면 그 공백이 자연히 빠진다(예전엔 통째로 포함됐다).
+function mergeParts(id){
+  const s = (DATA.segments || {})[id];
+  const m = MERGES[id];
+  if (!s || !m || !m.length) return [];
+  const arr = [s].concat(m.map(x => (DATA.segments || {})[x]).filter(Boolean));
+  return arr.map(x => [x.start, x.end]).sort((a, b) => a[0] - b[0]);
+}
+function splitByMembers(id, span){
+  const parts = mergeParts(id);
+  if (!parts.length) return [span];
+  const out = [];
+  for (const pr of parts){
+    const st = Math.max(span.start, pr[0]), en = Math.min(span.end, pr[1]);
+    if (en - st > EPS) out.push({...span, start: st, end: en});
+  }
+  return out.length ? out : [span];
+}
 function trimPieces(id){
-  const s = DATA.segments[id]; if (!s) return [];
+  const s = mergeSpan(id); if (!s) return [];
   const t = TRIMS[id];
-  if (!t) return [s];
-  const p = [];
-  if (t[0] > EPS) p.push({...s, end: s.start + t[0]});                 // 앞토막 [0 ~ a]
-  if (s.end - (s.start + t[1]) > EPS) p.push({...s, start: s.start + t[1]});  // 뒤토막 [b ~ 끝]
-  return p.length ? p : [s];       // 전부 잘려 나가면 트림 무시(원본)
+  const spans = [];
+  if (!t){
+    spans.push(s);
+  } else {
+    if (t[0] > EPS) spans.push({...s, end: s.start + t[0]});                 // 앞토막 [0 ~ a]
+    if (s.end - (s.start + t[1]) > EPS) spans.push({...s, start: s.start + t[1]});  // 뒤토막 [b ~ 끝]
+    if (!spans.length) spans.push(s);   // 전부 잘려 나가면 트림 무시(원본)
+  }
+  // 합친 것이면 멤버 경계로 되가른다(안 합쳤으면 그대로 1개)
+  return spans.reduce((acc, sp) => acc.concat(splitByMembers(id, sp)), []);
 }
 // '가진 시간'용 실제 가용 길이 — 0.8초 미만 토막은 어차피 안 나오므로 뺀다.
 function effLen(id){
@@ -122,7 +284,9 @@ function unTrim(sid){
 let onePerSeg = false;   
 const STRETCH = {};                 // beat_idx → true(늘려 채우기 켬)
 function toggleStretch(i, on){ if (on) STRETCH[i] = true; else delete STRETCH[i]; (typeof render === 'function' && render()); }
-function planClips(segIds, ttsDur, spread){
+// beatIdx는 **선택**이다 — 넘기면 그 칸의 수동 지정 길이(FIXLEN)를 반영한다.
+// 안 넘기는 옛 호출부는 종전과 똑같이 동작한다(하위호환).
+function planClips(segIds, ttsDur, spread, beatIdx){
   // ✂ 트림된 장면은 '구멍 뺀 두 토막'으로 갈라서 넣는다 — 아래 분배 규칙은 그대로다.
   const segments = segIds.flatMap(id => trimPieces(id).map(p => ({...p, seg_id: id})))
                          .filter(s => s.start != null);
@@ -151,7 +315,8 @@ function planClips(segIds, ttsDur, spread){
         filled += take;
       });
     }
-    return clips;
+    return (typeof applyFixedLens === 'function')
+    ? applyFixedLens(clips, beatIdx, ttsDur) : clips;
   }
   if (segments.length > 1){
     const pos = segments.map(s => s.start);
@@ -181,14 +346,62 @@ function planClips(segIds, ttsDur, spread){
     clips.push({seg_id: seg.seg_id, video_id: seg.video_id, start: seg.start, dur: take});
     filled += take;
   }
-  const short = ttsDur - filled;
+  let short = ttsDur - filled;
   if (short > EPS && clips.length){
     // spread(늘려 채우기 토글 ON): 부족분을 마지막 컷에 몰지 않고 전 컷에 비례로 나눈다.
     // 컷마다 조금씩 길어질 뿐 라운드로빈 결과(컷 수·순서·시작점)는 그대로다.
-    if (spread && filled > EPS) clips.forEach(c => { c.dur *= ttsDur / filled; });
-    else clips[clips.length - 1].dur += short;   // 그 장면이 계속 나온다
+    if (spread && filled > EPS){
+      clips.forEach(c => { c.dur *= ttsDur / filled; });
+    } else {
+      // ★부족분은 **소스 원본의 뒷부분 실프레임**으로 먼저 메운다(2026-08-23 사장님
+      //   "미리보기가 좀더 정확하게 보여야 조립을 하는데 헷갈리지 않는다").
+      //   종전엔 무조건 마지막 컷을 늘려서(=그 화면이 멈춘 듯) 보여줬는데,
+      //   실제 렌더(video_assemble._plan_beat_clips)는 릴에 남은 실프레임을 1배속으로
+      //   이어 붙인다. 그래서 미리보기만 어색하고 결과물은 멀쩡한 '거짓 경고'가 났다.
+      //   ★규칙을 새로 만들지 않는다 — 서버의 1·2순위를 그대로 옮긴다(0순위-B).
+      const srcDur = (typeof DATA === 'object' && DATA && DATA.src_duration) || {};
+      // 1순위: 마지막 컷이 쓰던 소스에 남은 뒷부분을 그 컷에 이어 붙인다.
+      const last = clips[clips.length - 1];
+      const lastTotal = +srcDur[last.video_id] || 0;
+      if (lastTotal > 0){
+        const room = Math.max(0, lastTotal - (last.start + last.dur));
+        const ext = Math.min(short, room);
+        if (ext > EPS){ last.dur += ext; short -= ext; }
+      }
+      // 2순위: 담긴 소스들의 '아직 안 튼 뒷부분'을 앞으로만 밀며 새 컷으로 붙인다.
+      //   같은 창을 다시 틀지 않으므로 되풀이가 아니라 새 화면이다.
+      if (short > EPS){
+        const head = {};
+        clips.forEach(c => {
+          const e = c.start + c.dur;
+          if (e > (head[c.video_id] || 0)) head[c.video_id] = e;
+        });
+        const chunk = MAX_SHOT > EPS ? MAX_SHOT : short;
+        let guard = 0;
+        while (short > EPS && guard++ < 500){
+          let moved = false;
+          for (const seg of segments){
+            if (short <= EPS) break;
+            const total = +srcDur[seg.video_id] || 0;
+            if (!total) continue;
+            const h = head[seg.video_id] != null ? head[seg.video_id] : seg.end;
+            const avail = total - h;
+            if (avail <= EPS) continue;
+            const take = Math.min(short, chunk, avail);
+            if (take <= EPS) continue;
+            clips.push({seg_id: seg.seg_id, video_id: seg.video_id, start: h, dur: take, tail: true});
+            head[seg.video_id] = h + take;
+            short -= take; moved = true;
+          }
+          if (!moved) break;
+        }
+      }
+      // 3순위: 쓸 실프레임이 아예 없으면 그때만 마지막 컷을 늘린다(=화면 정지).
+      if (short > EPS) clips[clips.length - 1].dur += short;
+    }
   }
-  return clips;
+  return (typeof applyFixedLens === 'function')
+    ? applyFixedLens(clips, beatIdx, ttsDur) : clips;
 }
 
 // 타임프레임 한 줄 — 실제 컷을 시간 순서대로. 계산은 planClips 하나만 쓴다(아래 필름과 동일).
@@ -220,9 +433,15 @@ function ttsWarn(msg){
 }
 // 칸 i의 음성을 슬롯에 **앉히기만** 한다(재생 안 함). 같은 파일이면 다시 받지 않는다.
 // 이걸 한 칸 앞서 불러두면 이음매에서 받을 게 없어 바로 시작한다.
+function ttsVer(i){
+  // 서버가 재생성할 때마다 올리는 값(mix_pipeline.resynth_one_beat). 이게 키와 URL에
+  // 같이 들어가야 "고쳤는데 옛 소리"가 안 난다.
+  const b = ((DATA && DATA.beats) || []).find(x => (x.beat_idx != null ? x.beat_idx : -1) === i);
+  return (b && b.tts_ver) || 0;
+}
 function seatTts(i, slot){
-  const a = ttsEl(slot), k = SL.job + '#' + i;     // 잡이 바뀌면 키도 바뀐다(옛 음성 재사용 방지)
-  if (a._ttsKey !== k){ a._ttsKey = k; a.src = SL.tts(i); a.load(); }
+  const a = ttsEl(slot), v = ttsVer(i), k = SL.job + '#' + i + '#' + v;   // 잡·칸·버전이 다르면 새로 받는다
+  if (a._ttsKey !== k){ a._ttsKey = k; a.src = SL.tts(i, v); a.load(); }
   return a;
 }
 function playTts(i, slot){
@@ -230,7 +449,20 @@ function playTts(i, slot){
   if (curAud && curAud !== a) curAud.pause();      // 앞 칸 음성은 여기서 확실히 끈다
   curAud = a;
   try { a.currentTime = 0; } catch(e){}
-  const warn = () => ttsWarn('🔇 이 칸은 음성이 없어요 — 위 🔊 음성 만들기를 눌러주세요');
+  // ★"왜 안 나오나"를 갈라서 알려준다(2026-08-19). <audio>는 응답 본문을 못 읽으므로
+  //   실패했을 때만 같은 주소를 한 번 물어 상태코드로 원인을 가른다.
+  //   409 = 대본이 바뀐 뒤 재합성이 안 된 칸(서버가 옛 소리를 **일부러** 안 준다).
+  //   그냥 '음성이 없어요'로 뭉뚱그리면 사장님이 "만들기를 눌렀는데 또 딴소리"로 겪는다.
+  const warn = () => {
+    if (a._warned) return;
+    a._warned = true;
+    fetch(SL.tts(i, ttsVer(i)), {method:'GET'})
+      .then(r => ttsWarn(r.status === 409
+        ? '⚠ 이 칸은 대본이 바뀐 뒤 음성을 다시 안 뽑았어요 — 🔊 음성 만들기를 눌러주세요'
+        : '🔇 이 칸은 음성이 없어요 — 위 🔊 음성 만들기를 눌러주세요'))
+      .catch(() => ttsWarn('🔇 이 칸은 음성이 없어요 — 위 🔊 음성 만들기를 눌러주세요'));
+  };
+  a._warned = false;
   a.onerror = warn;
   a.play().catch(warn);
   // 2.5초 안에 준비가 안 되면(파일 없음) 알린다.
@@ -303,7 +535,13 @@ function warmVideos(){
 
 function stopPlay(){
   clearTimeout(seqTimer); seqTimer = null; seq = [];
+  clearSfxTimers();                              // 예약된 효과음도 끈다 — 안 끄면 멈춘 뒤에 울린다
+  if (sfxAudio) { try{ sfxAudio.pause(); }catch(e){} }
   playKey = null; seqPaused = false;
+  // 재생을 멈추면 겹쳐뒀던 꾸미기도 걷는다 — 안 걷으면 멈춘 화면 위에 남는다.
+  // ★remove()가 없는 DOM 스텁도 있다(테스트 하네스) — 있는지 보고 부른다.
+  const _pd = document.getElementById('playDeco');
+  if (_pd && typeof _pd.remove === 'function') _pd.remove();
   // 전체 재생 체인 끊기 — 음성 재생기가 A/B 두 개이므로 **양쪽 다** 끊고 멈춘다.
   [ttsEl(0), ttsEl(1)].forEach(a => { if (a){ a.onended = null; a.pause(); } });
   clearInterval(subTimer); seqBeat = null;
@@ -311,6 +549,7 @@ function stopPlay(){
   const v = vid(); if (v) v.pause();
   clearInterval(posTimer);
   const sk = document.getElementById('seek'); if (sk) sk.value = 0;
+  const pt = document.getElementById('ptime'); if (pt) pt.textContent = '';
   document.querySelectorAll('.item.playing').forEach(el => el.classList.remove('playing'));
   updatePlayBtns();
   document.getElementById('player').classList.remove('on');
@@ -329,9 +568,32 @@ function playSeg(sid, ev){
   const sb0 = document.getElementById('subbox'); if (sb0) sb0.innerHTML = '';
   startSeq([{seg_id: sid, video_id: s.video_id, start: s.start, dur: s.end - s.start}]);
 }
+// ★조각 여러 개를 순서대로 이어 본다(2026-08-17 사장님 "여기서 전체 재생을 만들어서
+//   미리보기에서 재생을 할 수 있게"). 팔레트에서 '이 영상이 어떤 순서로 흘러가나'를
+//   담기 전에 확인하는 용도 — 담아서 보고 되돌리는 수고를 없앤다.
+//   새 재생기를 만들지 않는다: startSeq가 이미 clips 배열을 순차로 잇는다(0순위-B).
+//   ✂트림된 조각은 trimPieces로 갈라 넣어 편집 화면과 같은 그림이 나오게 한다.
+function playSegs(sids, label){
+  const clips = [];
+  for (const sid of (sids || [])){
+    for (const p of trimPieces(sid)){
+      const d = p.end - p.start;
+      if (d > EPS) clips.push({seg_id: sid, video_id: p.video_id, start: p.start, dur: d});
+    }
+  }
+  if (!clips.length) return;
+  const key = 'segs:' + (sids || []).join(',');
+  if (playKey === key && !vid().paused){ stopPlay(); return; }   // 같은 것 다시 누르면 정지
+  playKey = key;
+  seqLabel = label || `이어 보기 - 조각 ${clips.length}개`;
+  clearInterval(subTimer); seqBeat = null;
+  const a0 = audio(); if (a0) a0.pause();
+  const sb0 = document.getElementById('subbox'); if (sb0) sb0.innerHTML = '';
+  startSeq(clips);
+}
 function playBeat(i, ev){
   if (ev) ev.stopPropagation();
-  const clips = planClips(lists[i] || [], beatDur(i), STRETCH[i]);
+  const clips = planClips(lists[i] || [], beatDur(i), STRETCH[i], i);
   if (!clips.length) return;
   // ★재생 버튼을 다시 누르면 **일시정지/재개** 토글(2026-08-15 사장님 "누르면 일시정지").
   //   완전 정지는 미리보기 창의 닫기 ✕. 끝까지 다 돈 뒤에 누르면 처음부터 다시.
@@ -342,6 +604,7 @@ function playBeat(i, ev){
   startSeq(clips);
   // 음성은 화면과 별개 트랙 — 같이 0초부터 튼다(캡컷의 오디오 트랙과 같은 개념).
   playTts(i, 0);
+  armSfx(i);                       // 효과음도 같은 시각 기준으로 예약
   tickSub();
 }
 // 자막은 음성 시각을 따라간다(화면 컷이 몇 개로 쪼개지든 무관).
@@ -351,13 +614,27 @@ function tickSub(){
   const box = document.getElementById('subbox');
   if (seqBeat == null){ box.innerHTML = ''; return; }
   subTimer = setInterval(() => {
-    const a = audio(), t = a.currentTime || 0;
+    // ★시계는 curT() 하나만 본다(0순위-B, 2026-08-20). 예전엔 여기만 audio를 직접 봐서
+    //   음성 없는 칸에서 자막이 첫 구절("여러분")에 얼어붙었다 — 화면은 제 타이머로
+    //   계속 돌아 "대본이 적용 안 됐다"로 보였다.
+    const a = audio(), t = curT();
     const c = capAt(seqBeat, t);
     const k = seqBounds.findIndex(([a0, b0]) => t >= a0 - 1e-3 && t < b0);
     const tag = (subPerCut && k >= 0) ? `컷 ${k+1}/${seqBounds.length}` : '';
     box.innerHTML = (tag ? `<div class="subtag">${tag}</div>` : '')
       + `<span class="said">${esc(c ? c.text : '')}</span>`;
-    if (a.ended || a.paused) clearInterval(subTimer);
+    // ★재생 자막에 **실제 자막 스타일**을 입힌다(2026-08-23 사장님: 미리보기로 결과를
+    //   가늠할 수 있어야 조립이 된다). 스타일 규칙은 produce.html이 갖고 있고
+    //   (STATE.captionStyle = updateCaption이 정한 값) 여기선 부르기만 한다 — 0순위-B.
+    //   그 함수가 없는 화면(scene_lab 단독)에서는 조용히 넘어간다(옛 동작 그대로).
+    if (typeof applyPlaySubStyle === 'function'){ try{ applyPlaySubStyle(box); }catch(e){} }
+    // 꾸미기(헤드카피·틀·워터마크)도 재생 화면에 겹쳐 보인다 — 없는 화면에선 조용히 통과.
+    if (typeof syncPlayDeco === 'function'){ try{ syncPlayDeco(); }catch(e){} }
+    // 종료 판정도 시계와 같은 기준: 음성이 시계면 음성이 멎을 때,
+    // 화면이 시계면 컷이 다 끝났거나 일시정지일 때.
+    const dead = audioUsable() ? (a.ended || a.paused)
+                               : (seqPaused || seqI >= seq.length);
+    if (dead) clearInterval(subTimer);
   }, 60);
 }
 
@@ -372,8 +649,18 @@ function playAll(ev){
 }
 function runAllFrom(i){
   if (playKey !== 'all') return;
-  if (i >= DATA.beats.length){ stopPlay(); return; }
-  const clips = planClips(lists[i] || [], beatDur(i), STRETCH[i]);
+  if (i >= DATA.beats.length){
+    // ★끝까지 봤다 — 미리보기 게이트를 여는 신호(2026-08-17 사장님 지시).
+    //   렌더 1분35초를 기다리지 않아도 사장님이 확인하는 세 가지(조각이 튀나 / 자막이
+    //   장면당 적절히 붙나 / TTS와 자막 속도가 같나)는 전체재생으로 다 보인다 —
+    //   자막 계산이 렌더와 **같은 함수**(app.py _lab_captions)이고 TTS 실길이가 기준이라
+    //   싱크는 동일하기 때문이다. 다른 건 화면상 픽셀 위치뿐이고 그건 확인 대상이 아니다.
+    //   ※scene_lab.html 단독으로 열었을 땐 이 콜백이 없다 — optional call이라 그냥 지나간다.
+    // typeof는 미선언 식별자에도 에러가 안 난다 — window를 안 거치므로 node에서도 안전.
+    try{ if (typeof onPlayAllFinished === 'function') onPlayAllFinished(); }catch(e){}
+    stopPlay(); return;
+  }
+  const clips = planClips(lists[i] || [], beatDur(i), STRETCH[i], i);
   seqBeat = i; sel = i;
   seqLabel = `전체 재생 - 칸 ${i+1}/${DATA.beats.length} (${DATA.beats[i].role || ''})`;
   if (!clips.length){ runAllFrom(i + 1); return; }
@@ -385,11 +672,12 @@ function runAllFrom(i){
   //   그래서 칸 넘김 전용 슬롯을 따로 두고 칸마다 번갈아 쓴다(handoffSlot) → 절대 안 겹친다.
   const nx = DATA.beats[i + 1];
   if (nx){
-    const ncl = planClips(lists[i + 1] || [], beatDur(i + 1), STRETCH[i + 1]);
+    const ncl = planClips(lists[i + 1] || [], beatDur(i + 1), STRETCH[i + 1], i + 1);
     if (ncl[0]){ ncl[0]._slot = handoffSlot(i + 1); seat(ncl[0]); preSeated = i + 1; }
     seatTts(i + 1, (i + 1) % 2);      // ← 이음매의 버퍼를 없애는 핵심 한 줄
   }
   const a = playTts(i, i % 2);
+  armSfx(i);
   a.onended = () => { if (playKey === 'all') runAllFrom(i + 1); };
   tickSub();
 }
@@ -403,6 +691,8 @@ let preSeated = -1;
 // 안 주면 예전 그대로 0·1 번갈아 — 칸별 재생·장면 미리보기는 동작이 안 바뀐다.
 function startSeq(clips, slot0){
   clearTimeout(seqTimer);
+  // 재생을 켜는 순간 꾸미기를 얹는다(자막이 뜨기 전에도 틀·헤드카피가 보이게).
+  if (typeof syncPlayDeco === 'function'){ try{ syncPlayDeco(); }catch(e){} }
   seq = clips; seqI = 0; seqPaused = false;
   // 컷 경계 누적(자막을 컷 단위로 끊어 보여주려면 각 컷의 [시작,끝) 초가 필요하다)
   let off = 0;
@@ -413,12 +703,14 @@ function startSeq(clips, slot0){
   if (clips[0]) seat(clips[0]);
   if (clips[1]) seat(clips[1]);
   document.getElementById('player').classList.add('on');
+  fitPlayer();                     // 켜지는 순간 칸 높이에 맞춘다(스크롤 방지)
   // 진행바 갱신 — 끌고 있는 동안(seekDrag)은 안 덮어쓴다.
   clearInterval(posTimer);
   posTimer = setInterval(() => {
-    if (seekDrag) return;
+    if (seekDrag){ paintTime(); return; }   // 끌 때도 시간 글자는 따라온다(진행바만 안 덮어쓴다)
     const el = document.getElementById('seek'), tot = seqTotal();
     if (el && tot) el.value = Math.round(Math.min(1, curT() / tot) * 1000);
+    paintTime();
   }, 120);
   updatePlayBtns();
   step();
@@ -427,6 +719,14 @@ function step(){
   if (seqI >= seq.length){
     document.getElementById('pinfo').textContent = `${seqLabel} — 재생 끝 (${seq.length}컷)`;
     if (curVid) curVid.pause();
+    // ★전체 재생의 칸 넘김은 원래 audio.onended 뿐이다 — 음성 없는 칸(합성 전 404 ·
+    //   대본 바뀜 409)에선 ended가 영영 안 와 그 칸에서 멈췄다(2026-08-20 사장님
+    //   "다음이 안나온다"). 음성이 시계 노릇을 못 하면 화면(컷)이 다 끝난 여기서 넘긴다.
+    //   판단은 audioUsable() 한 곳 — 음성이 살아 있으면 예전 그대로 onended가 넘긴다.
+    if (playKey === 'all' && seqBeat != null && !audioUsable()){
+      const nx = seqBeat + 1;
+      seqTimer = setTimeout(() => { if (playKey === 'all') runAllFrom(nx); }, 250);
+    }
     return;
   }
   const c = seq[seqI];
@@ -473,7 +773,11 @@ function paintCut(){
              && !(seqI > 0 && seq[seqI - 1].seg_id === c.seg_id);
   document.getElementById('pinfo').innerHTML =
     `${seqLabel}<br>컷 ${seqI+1}/${seq.length} · ${c.dur.toFixed(1)}초` +
-    ((again && segIdx >= 0) ? ` · <b style="color:var(--warn)">${segIdx+1}번 장면이 또 나와요</b>` : '');
+    ((again && segIdx >= 0) ? ` · <b style="color:var(--warn)">${segIdx+1}번 장면이 또 나와요</b>` : '') +
+    // ★원본 자막 오해 방지(2026-08-20). 미리보기는 소스 mp4를 그대로 틀므로 원본에
+    //   구워진 자막이 화면에 그대로 보인다 — 사장님이 두 번("짜증 나더라고요",
+    //   "솔직히 기대 없이") "대본과 딴소리"로 읽으셨다. 내 자막은 subbox에만 얹힌다.
+    `<br><span style="opacity:.6">🎞 화면에 박힌 글자는 원본 영상의 자막이에요 — 내 대본 자막은 흰 글씨로 따로 떠요</span>`;
   document.querySelectorAll('.item.playing').forEach(el => el.classList.remove('playing'));
   if (seqBeat != null && segIdx >= 0){
     const be = document.querySelectorAll('#film .beat')[seqBeat];
@@ -514,9 +818,24 @@ let seekDrag = false, posTimer = null;
   window.addEventListener('pointerup', () => { seekDrag = false; });
 })();
 function seqTotal(){ return seqBounds.length ? seqBounds[seqBounds.length - 1][1] : 0; }
+// ── 재생 시간 표시(2026-08-17 사장님 "미리보기에 영상길이표시") ──────────────────────
+// 진행바만 있고 숫자가 없어 "지금 몇 초인지 / 이게 몇 초짜리인지"를 알 수 없었다.
+// #ptime 요소가 있는 화면에서만 그린다 — 없으면 조용히 아무것도 안 한다(옛 화면 무해).
+function fmtT(s){
+  s = Math.max(0, s || 0);
+  return Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0');
+}
+function paintTime(){
+  const el = document.getElementById('ptime'); if (!el) return;
+  const tot = seqTotal();
+  if (!seq.length || !tot){ el.textContent = ''; return; }
+  el.innerHTML = `<b>${fmtT(Math.min(curT(), tot))}</b> / ${fmtT(tot)}`;
+}
 function curT(){
   if (!seq.length) return 0;
-  if (seqBeat != null) return audio().currentTime || 0;   // 음성이 시계(자막과 같은 기준)
+  // 음성이 시계(자막과 같은 기준) — 단 음성이 살아 있을 때만(audioUsable).
+  // 음성이 없으면 아래 화면(컷 진행) 시계로 폴백한다 — 0:00에 얼어붙지 않게(2026-08-20).
+  if (seqBeat != null && audioUsable()) return audio().currentTime || 0;
   // ★재생이 끝난 뒤에도 **지금 화면이 서 있는 자리**를 돌려준다(2026-08-15 사장님
   //   "여기부터 여기까지 자르기를 했는데 뭐가 바뀌는거지?"). 예전엔 끝나면 무조건 총길이를
   //   돌려줘서, 다 본 뒤 진행바를 옮겨 잘라도 두 지점이 같은 값이 되어 조용히 취소됐다.
@@ -537,12 +856,28 @@ function seekTo(t){
   if (!seq.length) return;
   clearTimeout(seqTimer);
   const a = audio();
-  if (seqBeat != null && a.src){
+  // ★음성이 죽었을 때(404·409) a.currentTime은 항상 0이다 — 그걸 '실제 안착점'으로
+  //   되읽으면 어디로 끌든 0초로 튕긴다. 음성이 시계일 때만 음성을 맞춘다(2026-08-20).
+  if (seqBeat != null && audioUsable()){
     a.currentTime = t;
     // ★브라우저가 아직 버퍼 안 된 구간 시크를 조용히 당겨 앉힌다(첫 재생 직후 실측:
     //   6.5초 요청 → 5.7초 안착). 음성이 시계이므로 **실제 앉은 지점**을 다시 읽어
     //   그 시각 기준으로 컷·영상을 맞춘다 — 안 그러면 화면과 음성·자막이 어긋난다.
-    if (Math.abs(a.currentTime - t) > 0.05) t = a.currentTime;
+    // ★단 **시킹이 끝난 뒤에만** 읽는다(2026-08-17 사장님 "시간을 마우스로 이동시키는게
+    //   안된다"). currentTime을 넣은 **직후**엔 아직 seeking 중이라 브라우저가 옛 값을
+    //   그대로 돌려준다 — 그걸 t로 되받으면 방금 끈 위치가 통째로 버려지고 화면이
+    //   원래 자리로 돌아온다. 그래서 이동이 아예 안 먹는 것처럼 보였다.
+    if (!a.seeking && Math.abs(a.currentTime - t) > 0.05){
+      t = a.currentTime;
+    } else if (a.seeking){
+      // 시킹이 끝난 뒤 실제 안착점이 많이 다르면(버퍼 없음) 그때 한 번만 다시 맞춘다.
+      // 두 번째 호출은 seeking이 false라 여기로 다시 들어오지 않는다(무한루프 없음).
+      const want = t;
+      a.onseeked = () => {
+        a.onseeked = null;
+        if (!seekDrag && Math.abs(a.currentTime - want) > 0.25) seekTo(a.currentTime);
+      };
+    }
   }
   let k = seqBounds.findIndex(([x, y]) => t >= x && t < y);
   if (k < 0) k = seq.length - 1;
@@ -562,6 +897,7 @@ function seekTo(t){
   }
   if (seq[k + 1]) seat(seq[k + 1]);              // 다음 컷 미리 앉히기(step과 동일)
   paintCut();
+  paintTime();                                   // 끄는 동안에도 숫자가 바로 따라온다
 }
 
 // ── 미리보기 정지/재생·창 옮기기(2026-08-15 사장님 "화면 누르면 정지 재생 / 화면 이동") ──
@@ -573,6 +909,13 @@ function schedStep(ms){
   seqNextAt = Date.now() + ms;
   seqTimer = setTimeout(() => { seqI++; step(); }, ms);
 }
+// ⏸ **멈추기만** 한다(토글이 아니다). 필름 롤러의 스페이스처럼 바깥에서 "서라"만
+//   보내는 곳에 쓴다 — togglePause를 그대로 부르면 이미 멈춘 것을 다시 틀어버린다.
+//   ★stopPlay를 부르면 안 된다: 그건 '닫기'라 미리보기 자리가 통째로 사라진다
+//     (2026-08-26 사장님 "멈추면 미리보기가 없어진다"). 멈춤은 그 프레임에 서 있는 것.
+function pausePlayOnly(){
+  if (seq.length && !seqPaused) togglePause();
+}
 function togglePause(ev){
   if (ev) ev.stopPropagation();
   if (!seq.length) return;                       // 재생 중이 아니면 무시
@@ -580,6 +923,8 @@ function togglePause(ev){
     seqPaused = true;
     seqRemain = Math.max(50, seqNextAt - Date.now());   // 이 컷의 남은 시간
     clearTimeout(seqTimer);
+    clearSfxTimers();          // 멈춘 동안 울리지 않게. 재개하면 그 칸 기준으로 다시 잡는다
+                               // (남은 시간을 정밀 추적하진 않는다 — 미리듣기라 근사로 충분)
     if (curVid) curVid.pause();
     const a = audio(); if (a && !a.paused) a.pause();
     clearInterval(subTimer);
@@ -594,6 +939,58 @@ function togglePause(ev){
       paintCut();
     }
     if (seqBeat != null) tickSub();
+    if (seqBeat != null) armSfx(seqBeat);
   }
   updatePlayBtns();
+}
+
+
+// ── 🔊 효과음 재생(2026-08-21 사장님 "미리 들어볼 수 있게") ──────────────────
+// 종전엔 고르기만 하고 **최종 렌더까지 가야** 소리를 들을 수 있었다 — 마음에 안 들면
+// 렌더를 다시 돌려야 했다. 여기서 렌더와 같은 타점으로 미리 울린다.
+// ★렌더(video_assemble._burn_captions)와 **같은 규칙**을 쓴다:
+//     first      = 칸 시작(0초)
+//     transition = 칸 끝(= 다음 칸 시작)
+//     last       = 마지막 자막 직전까지의 합
+//   두 곳이 어긋나면 "미리듣기와 완성본이 다르다"가 된다. 여기 계산을 바꾸면 렌더도 봐라.
+// ⚠️미리보기는 어디까지나 근사다 — 볼륨(sfx_volume)은 렌더에서 정해지므로 여기선 기본 음량.
+let sfxAudio = null;
+const sfxTimers = [];
+
+function sfxUrl(assetId){ return '/api/scene/' + encodeURIComponent(assetId) + '/media'; }
+
+// 자산 하나를 지금 즉시 들려준다(드롭다운 옆 ▶ 미리듣기).
+function previewSfx(assetId){
+  try{
+    if (sfxAudio) sfxAudio.pause();
+    sfxAudio = new Audio(sfxUrl(assetId));
+    sfxAudio.play().catch(()=>{});
+  }catch(e){}
+}
+
+function clearSfxTimers(){
+  while (sfxTimers.length) clearTimeout(sfxTimers.pop());
+}
+
+// 이 칸을 지금 재생하기 시작했다 — 타점에 맞춰 효과음을 예약한다.
+function armSfx(i){
+  clearSfxTimers();
+  const b = (DATA.beats || [])[i];
+  const sfx = b && b.sfx;
+  if (!sfx || !sfx.asset_id || !SL.server) return;
+  const dur = beatDur(i);                      // 이 칸이 화면에 머무는 초
+  let at = 0;
+  if (sfx.position === 'transition') at = dur;
+  else if (sfx.position !== 'first'){
+    // last = 마지막 자막 구간이 시작하는 지점. 자막 구간 정보가 없으면 칸 끝 근처로 근사한다
+    // (렌더는 실제 자막 길이로 계산한다 — 여기선 들려주는 게 목적이라 근사로 충분하다).
+    const n = (b.caption_lines || []).length;
+    at = n > 1 ? dur * (n - 1) / n : 0;
+  }
+  sfxTimers.push(setTimeout(() => {
+    try{
+      const a = new Audio(sfxUrl(sfx.asset_id));
+      a.play().catch(()=>{});
+    }catch(e){}
+  }, Math.max(0, at * 1000)));
 }

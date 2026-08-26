@@ -1,0 +1,158 @@
+<meta charset="utf-8">
+<title>제작소 3단계 버그리뷰</title>
+<style>
+  :root{
+    --bg:#0f1115; --card:#161a21; --line:#2a3038; --tx:#e6eaf0; --sub:#9aa5b1;
+    --bad:#ff6b6b; --warn:#f0b429; --ok:#3ddc97; --accent:#6ee7c7;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--tx);
+       font:15px/1.7 -apple-system,"Malgun Gothic","맑은 고딕",sans-serif;padding:28px 20px 60px}
+  .wrap{max-width:1080px;margin:0 auto}
+  h1{font-size:26px;margin:0 0 4px}
+  .meta{color:var(--sub);font-size:13px;margin-bottom:22px}
+  h2{font-size:19px;margin:34px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:12px 0}
+  .card.p1{border-left:4px solid var(--bad)}
+  .card.p2{border-left:4px solid var(--warn)}
+  .card.p3{border-left:4px solid var(--sub)}
+  .tag{display:inline-block;font-size:12px;font-weight:700;padding:2px 8px;border-radius:6px;margin-right:8px}
+  .t1{background:#3a1a1a;color:var(--bad)} .t2{background:#3a2f14;color:var(--warn)} .t3{background:#22262c;color:var(--sub)}
+  .ttl{font-size:16px;font-weight:700}
+  .row{margin-top:10px}
+  .k{color:var(--sub);font-size:13px;font-weight:700;display:inline-block;min-width:76px;vertical-align:top}
+  code{background:#0b0d11;border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:13px;color:var(--accent)}
+  pre{background:#0b0d11;border:1px solid var(--line);border-radius:8px;padding:11px 13px;overflow-x:auto;
+      font-size:13px;line-height:1.55;margin:8px 0 0}
+  table{border-collapse:collapse;width:100%;margin-top:8px;font-size:14px}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left}
+  th{background:#1b2028;color:var(--sub);font-size:13px}
+  .done{color:var(--ok)}
+  .note{background:#12181a;border:1px solid #1f3b34;border-radius:10px;padding:14px 16px;margin:14px 0;font-size:14px}
+  .scroll{overflow-x:auto}
+</style>
+
+<div class="wrap">
+
+<h1>제작소 3단계(영상대본MIX) 버그 리뷰</h1>
+<div class="meta">2026-08-21 · 대상: <code>scene_lab.html</code>(2,202줄) · <code>scene_play.js</code>(789줄) · <code>produce.html</code> 3단계 · <code>edit_plan.apply_scene_lab</code><br>
+아래 7건은 전부 <b>코드에서 실제로 확인한 것</b>입니다(추측 아님). 브라우저 실동작 확인 여부는 항목마다 밝혔습니다.</div>
+
+<h2>요약</h2>
+<div class="scroll">
+<table>
+  <tr><th>#</th><th>증상</th><th>등급</th><th>확인 방법</th></tr>
+  <tr><td>1</td><td>브라우저 저장본이 서버 편성을 항상 이긴다 — 화면과 실제 렌더가 어긋난다</td><td>P1</td><td>코드 + 라이브 실측</td></tr>
+  <tr><td>2</td><td>담긴 조각을 다른 칸으로 옮길 수 없다(끌면 무반응)</td><td>P2</td><td>코드</td></tr>
+  <tr><td>3</td><td>모드 버튼을 누르면 조립한 편성이 확인 없이 전부 초기화</td><td>P2</td><td>코드</td></tr>
+  <tr><td>4</td><td>✨채우기의 AI 경로에 길이 상한이 없다 — 과적재 가능</td><td>P2</td><td>코드</td></tr>
+  <tr><td>5</td><td>순서 바꾸기가 같은 조각이 여러 번일 때 엉뚱한 자리로 간다</td><td>P3</td><td>코드</td></tr>
+  <tr><td>6</td><td>'처음으로'가 확인 없이 트림·합치기까지 전부 삭제</td><td>P3</td><td>코드</td></tr>
+  <tr><td>7</td><td>화면 열 때마다 음성 자동 생성 → 편집 중 새로고침이 일어날 수 있다</td><td>P3</td><td>코드</td></tr>
+</table>
+</div>
+
+<h2>P1 — 지금 바로 고칠 것</h2>
+
+<div class="card p1">
+  <div><span class="tag t1">P1</span><span class="ttl">1. 브라우저 저장본이 서버 편성을 항상 이긴다</span></div>
+  <div class="row"><span class="k">어디</span> <code>scene_lab.html:2118 boot()</code> / <code>loadWork()</code></div>
+  <div class="row"><span class="k">무슨 일</span> 화면을 열면 서버에서 편성(<code>scene_override</code>)을 받아옵니다. 그런데 브라우저에 저장본이 있으면 <b>그것으로 통째로 덮어씁니다.</b></div>
+<pre>if (loadWork()) render();            // ← localStorage가 먼저. 서버 편성은 버려진다
+else if (loadSaved()) render();
+else { initLists(); render(); }</pre>
+  <div class="row"><span class="k">왜 문제</span> 화면에 보이는 편성과 실제로 렌더되는 편성이 <b>서로 다른 상태가 계속 유지</b>됩니다. 사장님은 화면대로 나올 줄 알고 넘어갑니다.</div>
+  <div class="row"><span class="k">실측</span> job <code>14e75ac6024a</code>: 화면은 2번 칸 "장면 없음"인데 서버 편집안엔 3.2초짜리 조각이 그대로 남아 있었습니다. 그대로 확정하면 옛 장면이 렌더됩니다.<br>
+  또 다른 잡에선 hook 칸 표시가 12.1초인데 서버 편성은 7.0초였습니다 — 같은 뿌리입니다.</div>
+  <div class="row"><span class="k">파생</span> 다른 PC·다른 브라우저에서 같은 작업을 열면 편성이 다르게 보입니다. 서버가 재매칭으로 바뀌어도 로컬이 이깁니다.</div>
+  <div class="row"><span class="k">수정안</span> 어느 쪽이 최신인지 <b>시각으로 판정</b>합니다. 저장본에 이미 <code>at</code>(저장 시각)이 있고 서버엔 <code>updated_at</code>이 있으니, 새 쪽을 씁니다. 서버가 더 새로우면 "다른 곳에서 편집됐습니다 — 서버 편성을 불러왔어요"를 띄우고 로컬을 버립니다.</div>
+</div>
+
+<h2>P2 — 사장님이 자주 부딪힐 것</h2>
+
+<div class="card p2">
+  <div><span class="tag t2">P2</span><span class="ttl">2. 담긴 조각을 다른 칸으로 옮길 수 없다</span></div>
+  <div class="row"><span class="k">어디</span> <code>scene_lab.html:1472 dragDrop()</code> / <code>1516 beatDrop()</code></div>
+<pre>function dragDrop(i, k, ev){
+  if (!dragFrom || dragFrom.i !== i || ...){ dragFrom = null; return; }   // 같은 칸만 허용
+function beatDrop(i, ev){
+  if (!palDrag) return;        // 팔레트에서 온 것만 받는다 — 칸에서 온 것은 그냥 버려진다</pre>
+  <div class="row"><span class="k">무슨 일</span> 1번 칸의 조각을 2번 칸으로 끌면 <b>아무 일도 일어나지 않습니다.</b> 에러도 안내도 없습니다.</div>
+  <div class="row"><span class="k">왜 문제</span> "이 장면은 저 칸이 맞겠다"는 판단이 잦은데, 지금은 <b>빼고 → 팔레트에서 찾아 → 다시 담기</b> 3단계를 거쳐야 합니다. 무반응은 고장으로 느껴집니다.</div>
+  <div class="row"><span class="k">수정안</span> <code>beatDrop</code>이 <code>dragFrom</code>도 받게 합니다 — 원래 칸에서 빼고 새 칸에 담습니다(<code>delSeg</code> + <code>add</code>, 둘 다 기존 함수).</div>
+</div>
+
+<div class="card p2">
+  <div><span class="tag t2">P2</span><span class="ttl">3. 모드 버튼이 조립한 편성을 확인 없이 날린다</span></div>
+  <div class="row"><span class="k">어디</span> <code>scene_lab.html:2036 setMode()</code></div>
+<pre>function setMode(m){
+  mode = m; ...
+  initLists(); chosen.clear();     // ← 전 칸을 기본 배치로 되돌린다. 확인 없음</pre>
+  <div class="row"><span class="k">무슨 일</span> 상단 모드 버튼(라이브/1장=1컷/내가 편성/고른 배치)을 누르면 <b>지금까지 담고 뺀 것이 전부 사라집니다.</b> 되돌리기가 없습니다.</div>
+  <div class="row"><span class="k">수정안</span> 사람이 손댄 흔적(<code>chosen</code>·<code>AUTOADD</code>·저장본)이 있으면 확인을 받습니다. 같은 병이 <code>reset()</code>에도 있습니다(#6).</div>
+</div>
+
+<div class="card p2">
+  <div><span class="tag t2">P2</span><span class="ttl">4. ✨채우기의 AI 경로에 길이 상한이 없다</span></div>
+  <div class="row"><span class="k">어디</span> <code>scene_lab.html:1890 autoFill()</code></div>
+<pre>const ai = await aiPicks(i);
+if (ai && ai.length){
+  const fresh = ai.filter(sid => !lists.flat().includes(sid));
+  lists[i].push(...fresh);        // ← 몇 초짜리인지 안 본다. 그대로 전부 담는다
+
+// ↓ 규칙 기반 경로(아래)는 정교하게 need/have를 지킨다 — 두 경로의 기준이 다르다
+while (need - have >= MIN_CLIP - EPS && guard++ < 20){ ... have += addLen(pick); }</pre>
+  <div class="row"><span class="k">왜 문제</span> AI가 5장을 고르면 칸 대사가 2.7초여도 5장이 다 들어갑니다. 담긴 것의 대부분이 화면에 안 나옵니다. <b>같은 판단(얼마나 담을까)이 한 경로에만 있고 다른 경로엔 없습니다</b> — 프로젝트 0순위-B 위반입니다.</div>
+  <div class="row"><span class="k">수정안</span> 규칙 경로가 쓰는 <code>need/have/addLen</code> 계산을 AI 경로에도 통과시킵니다(AI는 <b>순서만</b> 정하고, 몇 장 담을지는 한 곳에서 정함).</div>
+</div>
+
+<h2>P3 — 놔둬도 되지만 언젠가 문다</h2>
+
+<div class="card p3">
+  <div><span class="tag t3">P3</span><span class="ttl">5. 순서 바꾸기가 엉뚱한 자리로 갈 수 있다</span></div>
+  <div class="row"><span class="k">어디</span> <code>scene_lab.html:940 bandDrop()</code></div>
+<pre>const k = (lists[i] || []).indexOf(segId);   // 같은 조각이 여러 번이면 항상 첫 번째</pre>
+  <div class="row"><span class="k">무슨 일</span> 어제 고친 <b>더블클릭 빼기와 똑같은 병</b>이 순서 바꾸기에 남아 있습니다. 담긴 목록에 같은 조각이 두 번 있으면 어느 것을 끌든 첫 번째가 움직입니다.</div>
+  <div class="row"><span class="k">수정안</span> 드롭 대상을 <code>seg_id</code>가 아니라 <b>자리(index)</b>로 넘깁니다.</div>
+</div>
+
+<div class="card p3">
+  <div><span class="tag t3">P3</span><span class="ttl">6. '처음으로'가 확인 없이 전부 삭제</span></div>
+  <div class="row"><span class="k">어디</span> <code>scene_lab.html:2045 reset()</code></div>
+  <div class="row"><span class="k">무슨 일</span> 편성뿐 아니라 <b>✂트림·🔗합치기·늘려채우기까지 전부</b> 지웁니다. <code>confirm</code>이 없습니다.</div>
+  <div class="row"><span class="k">수정안</span> 무엇이 지워지는지 밝히고 확인을 받습니다.</div>
+</div>
+
+<div class="card p3">
+  <div><span class="tag t3">P3</span><span class="ttl">7. 화면 열 때마다 음성 자동 생성 → 새로고침</span></div>
+  <div class="row"><span class="k">어디</span> <code>scene_lab.html:2137 autoMakeTts()</code> → <code>makeTts()</code> 끝의 <code>location.reload()</code></div>
+  <div class="row"><span class="k">무슨 일</span> 없는 칸의 음성을 자동으로 만들고, 만든 게 있으면 <b>페이지를 새로고침</b>합니다. 대본을 고치는 중에 완료되면 화면이 튑니다.</div>
+  <div class="row"><span class="k">완화됨</span> 편집 내용은 브라우저에 저장돼 복원되므로 손실은 없습니다. 다만 놀라게 됩니다.</div>
+  <div class="row"><span class="k">수정안</span> 대본 편집 중(<code>isNarrEditing()</code>)이면 새로고침을 미룹니다 — 이미 같은 장치가 <code>repaint()</code>에 있습니다.</div>
+</div>
+
+<h2>오늘 이미 고쳐서 배포한 것</h2>
+<div class="scroll">
+<table>
+  <tr><th>증상</th><th>뿌리</th><th>상태</th></tr>
+  <tr><td>자막↔TTS 어긋남 · 끝나고 반복</td><td>구어체 대본이 2덩이로만 잘려 칸에 꽂힘</td><td class="done">배포</td></tr>
+  <tr><td>초가 두 벌(화면 3초 / 음성 17초)</td><td><code>resynth_one_beat</code>이 <code>target_seconds</code> 미갱신</td><td class="done">배포</td></tr>
+  <tr><td>믹스확정 눌러도 원래대로</td><td><code>MIX_POLL</code> 고아 폴러가 매초 상태 리셋</td><td class="done">배포</td></tr>
+  <tr><td>장면 빼기가 안 되고 새 게 들어옴</td><td><code>indexOf</code> 첫 항목만 삭제 + 클릭이 담기 칸을 안 바꿈</td><td class="done">배포</td></tr>
+  <tr><td>빈 칸인 채로 확정 가능</td><td>빈 칸은 서버 미반영인데 확정을 막지 않음</td><td class="done">배포</td></tr>
+  <tr><td>담았는데 안 나오는 재료</td><td>남는 재료를 화면이 안 알려줌 + 과적재 차단이 경로 하나에만</td><td class="done">배포</td></tr>
+</table>
+</div>
+
+<div class="note">
+<b>한 줄로 말하면</b> — 이 화면의 버그는 대부분 <b>같은 판단이 여러 곳에 따로 적혀 있어서</b> 생깁니다.
+얼마나 담을까(AI 경로 vs 규칙 경로), 어느 편성이 진짜인가(브라우저 vs 서버), 조각을 어떻게 지목하나(자리 vs seg_id) —
+세 가지가 각각 두 벌씩이라 언젠가 반드시 어긋납니다. 오늘 고친 6건도 전부 같은 모양이었습니다.
+</div>
+
+<div class="meta" style="margin-top:26px">
+확인 못 한 것: 위 7건은 코드를 읽어 확인했고, <b>브라우저 실동작으로 재현한 것은 #1뿐</b>입니다(라이브 job 실측).
+나머지는 코드상 명백하지만 실제로 눌러본 것은 아닙니다. 고칠 때 각각 재현부터 하겠습니다.
+</div>
+
+</div>

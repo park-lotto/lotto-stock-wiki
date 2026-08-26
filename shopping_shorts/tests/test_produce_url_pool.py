@@ -14,6 +14,7 @@ import shutil
 import subprocess
 
 import pytest
+from shopping_shorts.tests.js_harness import run_js_proc
 
 PRODUCE_HTML = pathlib.Path(__file__).resolve().parents[1] / "static" / "produce.html"
 NODE = shutil.which("node")
@@ -68,7 +69,7 @@ function syncFootageToMixUrls(){}
 
 def _run(body):
     js = _HARNESS + _funcs() + "\n(async()=>{\n" + body + "\n})();"
-    r = subprocess.run([NODE, "-e", js], capture_output=True, text=True, timeout=30,
+    r = run_js_proc(js, capture_output=True, text=True, timeout=30,
                        encoding="utf-8", errors="replace", stdin=subprocess.DEVNULL)
     assert r.returncode == 0, r.stderr
     return r.stdout.strip()

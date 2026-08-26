@@ -61,3 +61,34 @@ def test_play_badge_shown_for_instagram_cards():
     dis = (pathlib.Path(media_download.__file__).parent / "static" / "discover.html").read_text(encoding="utf-8")
     assert "(i.platform||PLATFORM)==='instagram')?'<span class=\"play-badge\">" in idx
     assert "(i.video_url||i.shortcode)?'<span class=\"play-badge\">" in dis
+
+
+def test_yt_dlp_실패시_세션폴백으로_회수한다(monkeypatch):
+    """2026-08-18 사장님 제보: 카드를 누르면 인스타 새 탭이 뜬다.
+
+    yt-dlp가 'empty media response'로 죽는 게시물이 있고(실측 DcGsKVxyzPv),
+    그때 미리보기 경로엔 폴백이 없어 프론트가 새 탭을 열었다. 담기 경로가 이미
+    쓰던 세션 REST 폴백을 여기에도 붙였다.
+    """
+    class _R:
+        returncode = 1
+        stdout = ""
+
+    monkeypatch.setattr(media_download.subprocess, "run", lambda *a, **k: _R())
+    monkeypatch.setattr(media_download, "_cookies_arg", lambda page: [])
+    monkeypatch.setattr(media_download, "_ig_video_via_session",
+                        lambda code: f"https://cdn.example/{code}.mp4")
+    assert media_download.resolve_media_url("instagram", "DcGsKVxyzPv") \
+        == "https://cdn.example/DcGsKVxyzPv.mp4"
+
+
+def test_세션폴백은_인스타에만_적용된다(monkeypatch):
+    class _R:
+        returncode = 1
+        stdout = ""
+
+    monkeypatch.setattr(media_download.subprocess, "run", lambda *a, **k: _R())
+    monkeypatch.setattr(media_download, "_cookies_arg", lambda page: [])
+    monkeypatch.setattr(media_download, "_ig_video_via_session",
+                        lambda code: "https://cdn.example/nope.mp4")
+    assert media_download.resolve_media_url("tiktok", "123") == ""

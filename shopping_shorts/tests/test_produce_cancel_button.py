@@ -3,6 +3,9 @@
 장면이 대사와 안 맞거나 이상하게 나오면 매칭을 취소하고 처음부터 다시 할 수 있어야 한다.
 + produce.html 인라인 JS 구문 검증 — 제작소가 통째로 안 열리던 SyntaxError 사고(핸드오프) 방지.
 """
+# ★stdin=DEVNULL: pytest가 stdin을 캡처한 상태에서 node를 띄우면 윈도우에서
+#   WinError 6(핸들이 잘못됨)로 **간헐 실패**한다 — 묶어 돌릴 때만 터져서
+#   track finish 게이트가 헛돌던 원인이다(2026-08-22 일괄 수정).
 import pathlib
 import re
 import shutil
@@ -36,5 +39,5 @@ def test_produce_inline_js_syntax_ok(tmp_path):
     blocks = re.findall(r"<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>", html, re.S)
     js = tmp_path / "inline.js"
     js.write_text("\n;\n".join(blocks), encoding="utf-8")
-    r = subprocess.run([NODE, "--check", str(js)], capture_output=True, text=True)
+    r = subprocess.run([NODE, "--check", str(js)], stdin=subprocess.DEVNULL, capture_output=True, text=True)
     assert r.returncode == 0, r.stderr

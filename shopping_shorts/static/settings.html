@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>⚙️ 내 설정 · 숏템메이커</title>
+<title>👤 마이페이지 · 숏템메이커</title>
 <!-- FOUC 방지: 저장된 테마를 렌더 전에 즉시 반영(sidebar.js는 body 주입이라 늦음) -->
 <script>(function(){try{var t=localStorage.getItem('ssTheme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 <style>
@@ -102,6 +102,8 @@
   .keyDel:hover{border-color:var(--fire);color:var(--fire)}
   .svcFoot{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
   .svcFoot .btn{font-size:13px;padding:8px 14px;font-weight:600}
+  /* 매뉴얼은 <a>라 버튼 모양을 따로 맞춘다(밑줄 제거·inline-block) */
+  .svcFoot a.btn{display:inline-block;text-decoration:none}
   .msg{margin-top:12px;font-size:14px;font-weight:700;display:none}
   .msg.on{display:block}
   .msg.ok{color:var(--ok)}
@@ -113,7 +115,9 @@
   #noticeBg.on{display:flex}
   .noticeBox{background:var(--panel);border:1px solid var(--line);border-radius:16px;
     max-width:400px;width:100%;padding:24px;box-shadow:0 12px 40px rgba(0,0,0,.5)}
-  .noticeBox p{margin:0 0 20px;font-size:16px;line-height:1.7}
+  /* ★white-space:pre-line — 문구를 textContent로 넣으므로(XSS 방지) \n이 그냥 씹힌다.
+     팝업이 한 덩어리 글이면 시니어 타깃이 안 읽는다. 줄바꿈은 CSS로 살린다. */
+  .noticeBox p{margin:0 0 20px;font-size:16px;line-height:1.7;white-space:pre-line}
   .noticeBox .btn{width:100%}
 
   @media(max-width:640px){
@@ -121,23 +125,142 @@
     .balNum{font-size:36px}
     .tab{padding:10px 12px;font-size:15px}
   }
+
+  /* ── 설치와 준비 카드(2026-08-25) ── */
+  .setupIntro{
+    background:rgba(128,128,128,.10);border:1px solid rgba(128,128,128,.28);
+    border-radius:12px;padding:13px 15px;margin:0 0 16px;font-size:15px;line-height:1.6;
+  }
+  .cardGrid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+  .scard{
+    display:block;text-decoration:none;color:inherit;
+    border:1px solid rgba(128,128,128,.32);border-radius:14px;padding:16px 16px 14px;
+    background:rgba(128,128,128,.06);transition:transform .12s ease,border-color .12s ease;
+  }
+  .scard:hover{transform:translateY(-2px);border-color:currentColor}
+  .scard.must{border-color:rgba(255,138,91,.55)}
+  .scardTop{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  .scardNo{font-weight:900;font-size:15px;opacity:.55}
+  .scardTag{
+    font-size:11.5px;font-weight:700;letter-spacing:.02em;padding:2px 8px;border-radius:999px;
+    background:rgba(255,138,91,.18);color:#FF8A5B;
+  }
+  .scardTag.opt{background:rgba(128,128,128,.18);color:inherit;opacity:.75}
+  .scardTag.money{background:rgba(95,207,192,.18);color:#5FCFC0}
+  .scardTitle{font-weight:700;font-size:17px;margin-bottom:6px}
+  .scardDesc{font-size:14px;line-height:1.6;opacity:.78;min-height:44px}
+  .scardGo{margin-top:10px;font-size:13.5px;font-weight:700;opacity:.8}
+  .setupFoot{margin-top:16px;font-size:14px;opacity:.75}
 </style>
 </head>
 <body>
 <main class="main">
  <div class="wrap">
   <div class="head">
-    <h2>⚙️ 내 설정</h2>
-    <div class="desc">포인트 잔액을 확인하고, 원하시면 내 API 키를 등록해 포인트를 아낄 수 있습니다.</div>
+    <h2>👤 마이페이지</h2>
+    <div class="desc">내 이용권과 포인트를 확인하고, 원하시면 내 API 키를 등록해 포인트를 아낄 수 있습니다.</div>
   </div>
 
   <div class="tabs">
-    <button class="tab on" id="tabPoints" onclick="showTab('points')">💎 포인트</button>
+    <!-- ★설치안내를 맨 앞 탭으로(2026-08-25 사장님 "반드시 보라고 계정 앞으로 탭을 두고
+         제일 먼저 뜨게"). 처음 오신 분에겐 이 탭이 기본으로 열린다(아래 FIRST_KEY). -->
+    <button class="tab on" id="tabSetup" onclick="showTab('setup')">📖 설치와 준비</button>
+    <button class="tab" id="tabAccount" onclick="showTab('account')">👤 내 계정</button>
+    <button class="tab" id="tabPoints" onclick="showTab('points')">💎 포인트</button>
     <button class="tab" id="tabKeys" onclick="showTab('keys')">🔑 내 키 등록</button>
   </div>
 
+  <!-- ═══════ 👤 내 계정 ═══════
+       예전 /account 페이지(app.py _ACCOUNT_TMPL)를 그대로 흡수한 탭이다.
+       같은 데이터(/api/me)를 두 화면이 각자 그리면 언젠가 어긋난다(0순위-B) —
+       /account 는 여기로 넘긴다. -->
+  <!-- ═══════ 📖 설치와 준비 ═══════
+       본문은 /setup 한 곳만 쓴다 — 여기에 내용을 복사하면 두 벌이 되어 언젠가 어긋난다(0순위-B).
+       탭을 처음 열 때만 불러온다(lazy) — 마이페이지 첫 로딩을 무겁게 하지 않는다. -->
+  <section class="pane" id="paneSetup">
+    <!-- ★카드형(2026-08-25 사장님 "스크롤이 너무 길다") — 안내 전문을 통째로 얹으면
+         마이페이지 안에서 스크롤이 두 겹이 된다. 여기서는 **무엇을 해야 하는지만** 보이고,
+         실제 내용은 각 카드가 /setup 의 해당 대목으로 데려간다(내용은 여전히 한 곳). -->
+    <div class="setupIntro">
+      가입과 동시에 <b>체험이 시작되고 포인트 50P</b>가 들어가 있습니다.
+      아래 <b>①②</b>만 해두시면 바로 영상을 만드실 수 있어요. ③④는 원하실 때 하시면 됩니다.
+    </div>
+
+    <div class="cardGrid">
+      <a class="scard must" href="/setup#ready" target="_blank" rel="noopener">
+        <div class="scardTop"><span class="scardNo">①</span><span class="scardTag">먼저</span></div>
+        <div class="scardTitle">채널 준비</div>
+        <div class="scardDesc">유튜브 또는 인스타 채널과 구글 계정. 영상 올릴 곳이 있어야 합니다.</div>
+        <div class="scardGo">무엇이 필요한지 보기 →</div>
+      </a>
+
+      <a class="scard must" href="/grab" target="_blank" rel="noopener">
+        <div class="scardTop"><span class="scardNo">②</span><span class="scardTag">필수</span></div>
+        <div class="scardTitle">📥 담기 확장프로그램</div>
+        <div class="scardDesc">유튜브·틱톡·인스타 영상을 클릭 한 번으로 담습니다. PC 크롬·엣지에서 설치.</div>
+        <div class="scardGo">설치하러 가기 →</div>
+      </a>
+
+      <a class="scard" href="/setup#api" target="_blank" rel="noopener">
+        <div class="scardTop"><span class="scardNo">③</span><span class="scardTag opt">선택</span></div>
+        <div class="scardTitle">🔑 API 키 발급</div>
+        <div class="scardDesc">등록하면 그 작업은 포인트가 안 깎입니다. 안 하셔도 포인트로 그대로 쓰실 수 있어요.</div>
+        <div class="scardGo">어떤 키가 있는지 보기 →</div>
+      </a>
+
+      <a class="scard" href="/setup#capcut" target="_blank" rel="noopener">
+        <div class="scardTop"><span class="scardNo">④</span><span class="scardTag opt">선택</span></div>
+        <div class="scardTitle">🎬 캡컷 연동</div>
+        <div class="scardDesc">완성본을 캡컷에서 더 다듬고 싶은 분만. 최초 1회 설정으로 끝납니다.</div>
+        <div class="scardGo">연동 방법 보기 →</div>
+      </a>
+
+      <a class="scard" href="/coupang" target="_blank" rel="noopener">
+        <div class="scardTop"><span class="scardNo">⑤</span><span class="scardTag money">수익화</span></div>
+        <div class="scardTitle">🛒 쿠팡파트너스</div>
+        <div class="scardDesc">내 추적 링크가 있어야 수수료가 붙습니다. 가입부터 고지문구까지.</div>
+        <div class="scardGo">안내 보기 →</div>
+      </a>
+
+      <a class="scard" href="/setup#points" target="_blank" rel="noopener">
+        <div class="scardTop"><span class="scardNo">⑥</span><span class="scardTag">참고</span></div>
+        <div class="scardTitle">💎 포인트가 얼마나 드나</div>
+        <div class="scardDesc">영상 1편 3P · 자막 지우기 5P · 목소리 1P. 실패하면 자동 환불됩니다.</div>
+        <div class="scardGo">단가표 보기 →</div>
+      </a>
+    </div>
+
+    <div class="setupFoot">
+      전체 안내를 한 번에 읽으시려면 → <a href="/setup" target="_blank" rel="noopener">설치와 준비 전문 보기</a>
+    </div>
+  </section>
+
+  <section class="pane" id="paneAccount">
+    <div class="balCard">
+      <div class="lbl">현재 플랜</div>
+      <div class="balRow">
+        <div class="balNum" style="font-size:32px"><span id="acctPlan">–</span></div>
+      </div>
+      <div class="balSub" id="acctPlanSub">불러오는 중…</div>
+    </div>
+
+    <div class="secTitle">하루 이용 한도</div>
+    <div class="secDesc">서버를 지키기 위한 안전장치입니다. 내 키를 등록하셔도 이 한도는 그대로입니다.</div>
+    <div class="misc">
+      <div class="miscRow"><span>🎞️ 영상 제작</span><span class="miscCost"><span id="limRender">–</span><span id="limRenderUnit"> 회</span></span></div>
+      <div class="miscRow"><span>🔎 렌즈로 찾기</span><span class="miscCost"><span id="limLens">–</span><span id="limLensUnit"> 회</span></span></div>
+      <div class="miscRow"><span>📝 대본 뽑기</span><span class="miscCost"><span id="limScript">–</span><span id="limScriptUnit"> 회</span></span></div>
+    </div>
+
+    <div class="msg err" id="acctErr"></div>
+
+    <form method="post" action="/logout" style="margin-top:24px">
+      <button class="btn" type="submit" style="width:100%;padding:14px">↩ 로그아웃</button>
+    </form>
+  </section>
+
   <!-- ═══════ 💎 포인트 ═══════ -->
-  <section class="pane on" id="panePoints">
+  <section class="pane" id="panePoints">
     <div class="balCard">
       <div class="lbl">남은 포인트</div>
       <div class="balRow">
@@ -165,7 +288,9 @@
         <div class="priceCost"><span id="pMix">–</span> P</div>
       </div>
       <div class="priceWhy">대본 + 목소리 + 합성까지 한 번에</div>
-      <button class="freeBadge" onclick="showTab('keys')">🔑 구글 키 + 목소리 키 등록하면 0 P</button>
+      <!-- ★"구글·목소리 키 등록하면 0P"는 사실이 아니었다(2026-08-17). 그 키들은
+           저장만 되고 실제 호출엔 안 쓰여서, 면제만 해주면 회사 키로 돌면서 돈은
+           안 받는 구멍이 된다. 배선이 끝나면 그때 이 문구를 되살린다. -->
     </div>
 
     <div class="secTitle">그 밖에</div>
@@ -195,6 +320,13 @@
     <div class="hint">
       💡 등록하면 그 작업은 포인트가 안 깎입니다.<br/>
       <b>안 하셔도 포인트로 그냥 쓰실 수 있어요.</b>
+    </div>
+    <!-- ★관리자(cid 0) 세션 안내. keyroute가 이 세션의 등록 키를 조회조차 안 하므로
+         등록칸을 감추고 이유를 밝힌다 — 저장되는 척하면 안 된다(2026-08-17 실사고). -->
+    <div class="warnBox" id="adminNotice" style="display:none">
+      <b>관리자 계정으로 로그인하셨습니다.</b><br/>
+      이 계정은 서버에 설정된 회사 키를 그대로 씁니다 — 여기에 키를 등록해도 쓰이지 않아
+      등록칸을 감춰 두었습니다. 개인 키로 테스트하시려면 <b>구글 계정으로 로그인</b>해 주세요.
     </div>
     <div class="warnBox" id="keysDisabled" style="display:none">
       지금은 키 등록을 받을 수 없습니다. 잠시 후 다시 시도하시거나 관리자에게 문의해 주세요.
@@ -226,7 +358,8 @@ var GUIDE_VIDEO = {
   gemini: "",      // 구글(제미나이) 키 받는 법
   vmake: "",       // VMake 키 받는 법
   elevenlabs: "",  // ElevenLabs 키 받는 법
-  youtube: ""      // 유튜브 Data API 키 받는 법
+  youtube: "",     // 유튜브 Data API 키 받는 법
+  serpapi: ""      // SerpApi 키 받는 법(렌즈 검색)
 };
 
 /* 서비스 정의 — 이름·설명·복수허용 여부를 한 곳에서만 정한다(CLAUDE.md 0순위-B). */
@@ -239,17 +372,34 @@ var SERVICES = [
   { id: "elevenlabs", icon: "🔊", name: "목소리 (ElevenLabs)",
     desc: "영상에 넣을 목소리를 만듭니다", multi: false, ph: "키 붙여넣기" },
   { id: "youtube",    icon: "📺", name: "유튜브",
-    desc: "유튜브 영상 정보를 가져올 때 씁니다", multi: false, ph: "키 붙여넣기" }
+    desc: "유튜브 영상 정보를 가져올 때 씁니다", multi: false, ph: "키 붙여넣기" },
+  /* ★렌즈 검색은 클릭 1번에 SerpApi를 3회 씁니다 — 코드에 박힌 값입니다
+     (lens_discover.py: 로케일 ko/en/zh-cn 3벌, _MAX_CALLS_PER_SEARCH=3 하드캡).
+     그래서 무료 250회 = 실제 검색 약 83번입니다. 숫자를 부풀리지 않습니다. */
+  { id: "serpapi",    icon: "🔎", name: "렌즈 검색 (SerpApi)",
+    desc: "비슷한 영상 찾기에 씁니다. 검색 1번에 3회가 쓰입니다(한국어·영어·중국어로 각각 찾기)",
+    multi: true, ph: "여러 개를 한 번에 붙여넣어도 됩니다", freeOp: "lens",
+    note: "가입하면 <b>월 250회 무료</b>입니다 — 검색으로 치면 한 달에 약 83번. " +
+          "등록하셔도 <b>하루 10번</b> 제한은 그대로입니다(서버 보호)." }
 ];
 
 var STATUS = {
   ok:      { cls: "ok",      text: "● 정상" },
   bad:     { cls: "bad",     text: "● 키가 틀렸습니다" },
+  /* ★키는 멀쩡한데 이번 달 무료분을 다 쓴 상태. '정상'으로 두면 검색이 0건인데
+     이유를 모른다(라이브 실측 2026-08-17). '틀렸다'도 거짓이라 따로 표시한다. */
+  empty:   { cls: "bad",     text: "● 이번 달 무료분을 다 썼습니다" },
   unknown: { cls: "unknown", text: "● 확인 전" }
 };
 
 var PRICES = {};      // 포인트 탭에서 받은 단가(키 카드의 "1편당 N P가 0P로"에 쓴다)
 var KEYS_ENABLED = true;
+/* ★서버가 알려주는 사실 — 화면이 혼자 판단하지 않는다(0순위-B).
+   PERSONAL: 이 세션의 등록 키가 실제로 조회되는가(관리자 cid 0이면 false)
+   WIRED   : 등록 키가 실제 호출에 쓰이는 서비스 목록 */
+var PERSONAL = true;
+var WIRED = [];
+var POOLED = [];   /* 회원 키가 공용 풀에 합류하는 서비스(2026-08-24) */
 
 function esc(s){ return (s==null?"":String(s)).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 function el(id){ return document.getElementById(id); }
@@ -265,14 +415,34 @@ function askGuide(svc){
 }
 
 /* ── 탭 ─────────────────────────────────────────────── */
+/* 탭이 3개가 되면서 "isPoints ? A : B" 식 이분법은 못 쓴다 —
+   탭을 하나 더 늘렸을 때 조용히 어긋나지 않도록 목록으로 돈다(0순위-B). */
+var TABS = [
+  { key: "setup",   pane: "paneSetup",   tab: "tabSetup"   },
+  { key: "account", pane: "paneAccount", tab: "tabAccount" },
+  { key: "points",  pane: "panePoints",  tab: "tabPoints"  },
+  { key: "keys",    pane: "paneKeys",    tab: "tabKeys"    }
+];
 function showTab(which){
-  var isP = (which === "points");
-  el("panePoints").classList.toggle("on", isP);
-  el("paneKeys").classList.toggle("on", !isP);
-  el("tabPoints").classList.toggle("on", isP);
-  el("tabKeys").classList.toggle("on", !isP);
+  TABS.forEach(function(t){
+    var on = (t.key === which);
+    el(t.pane).classList.toggle("on", on);
+    el(t.tab).classList.toggle("on", on);
+  });
+  if (which === "setup") {
+    try { localStorage.setItem(FIRST_KEY, "1"); } catch (e) {}   // 봤다 → 다음부터 내 계정
+  }
   window.scrollTo(0, 0);
 }
+
+/* ★처음 오신 분은 '설치와 준비'가 먼저 뜬다. 한 번 보시면 다음부터 '내 계정'이 기본.
+   저장이 막힌 브라우저(시크릿 등)에서는 매번 안내가 먼저 뜬다 — 안 뜨는 것보다 낫다. */
+var FIRST_KEY = "ss_setup_seen";
+(function initTab(){
+  var seen = false;
+  try { seen = localStorage.getItem(FIRST_KEY) === "1"; } catch (e) {}
+  showTab(seen ? "account" : "setup");
+})();
 
 /* ── 에러 표시 — 침묵 금지. 실패는 사용자에게 보인다 ── */
 function showErr(id, text){
@@ -298,6 +468,8 @@ function postJSON(url, body){
 
 /* ── 💎 포인트 ──────────────────────────────────────── */
 function num(v){ return (v == null) ? "–" : Number(v).toLocaleString("ko-KR"); }
+// 하루 한도 표시 — null은 '무제한'이다(관리자). num()의 "–"와 뜻이 달라 따로 쓴다.
+function lim(v){ return (v == null) ? "무제한" : Number(v).toLocaleString("ko-KR"); }
 
 async function loadPoints(){
   clearErr("pointsErr");
@@ -332,6 +504,9 @@ async function loadKeys(){
   try {
     var d = await getJSON("/api/settings/keys");
     KEYS_ENABLED = (d.enabled !== false);
+    PERSONAL = (d.personal !== false);
+    WIRED = d.wired || [];
+    POOLED = d.pooled || [];
     KEYS = d.keys || [];
     renderKeys();
   } catch (e) {
@@ -343,17 +518,25 @@ function keysOf(svc){ return KEYS.filter(function(k){ return k.service === svc; 
 
 function renderKeys(){
   el("keysDisabled").style.display = KEYS_ENABLED ? "none" : "";
+  el("adminNotice").style.display = PERSONAL ? "none" : "";
   el("svcCards").innerHTML = SERVICES.map(function(s){
     var mine = keysOf(s.id);
     var badge = mine.length
       ? '<span class="svcBadge on">✓ ' + mine.length + '개 등록됨</span>'
       : '<span class="svcBadge off">포인트로 사용중</span>';
 
-    /* 설명 — vmake는 단가를 실제 값으로 보여준다(하드코딩하지 않는다). */
+    /* 설명 — 단가는 실제 값으로 보여준다(하드코딩하지 않는다).
+       ★예전엔 freeOp가 있으면 desc를 통째로 덮어썼다. 렌즈처럼 desc에 꼭 필요한
+         설명("검색 1번에 3회")이 있는 서비스가 생기면서 그 설명이 사라진다 —
+         덮어쓰지 말고 한 줄 더 붙인다(0순위-B: 조건부 값을 무조건 덮어쓰지 마라). */
     var desc = s.desc;
-    if (s.freeOp && PRICES[s.freeOp] != null) {
-      desc = "등록하면 1편당 " + num(PRICES[s.freeOp]) + "P가 0P로";
-    }
+    /* ★배선된 서비스에만 "0P가 된다"고 말한다 — 안 쓰이는 키로 공짜를 약속하면
+       거짓말이고, 서버도 그렇게 안 준다(keyroute.should_charge). */
+    var freeTxt = (s.freeOp && PRICES[s.freeOp] != null && WIRED.indexOf(s.id) >= 0)
+      ? "등록하면 " + num(PRICES[s.freeOp]) + "P → 0P" : "";
+    /* ★공용 풀 서비스는 "내 키로 돈다"가 아니다 — 키를 풀에 넣어주는 대신 무료로 쓴다.
+       사실대로 적는다: 내 키 1개만 내면 풀 전체를 쓰게 되고 포인트가 안 깎인다. */
+    var isPooled = POOLED.indexOf(s.id) >= 0;
 
     var rows = mine.map(function(k){
       var st = STATUS[k.status] || STATUS.unknown;
@@ -364,9 +547,11 @@ function renderKeys(){
       '</div>';
     }).join("");
 
-    /* enabled=false면 등록란을 아예 감춘다(눌러도 503만 나므로). */
+    /* enabled=false면 등록란을 아예 감춘다(눌러도 503만 나므로).
+       ★PERSONAL=false(관리자 세션)도 마찬가지다 — 저장은 되지만 keyroute가
+         조회조차 안 해서 절대 안 쓰인다. 등록칸을 주면 화면이 거짓말을 한다. */
     var form = "";
-    if (KEYS_ENABLED) {
+    if (KEYS_ENABLED && PERSONAL) {
       var input = s.multi
         ? '<textarea id="in_' + s.id + '" placeholder="' + esc(s.ph) + '"></textarea>'
         : '<input type="password" id="in_' + s.id + '" placeholder="' + esc(s.ph) + '" autocomplete="off"/>';
@@ -375,7 +560,11 @@ function renderKeys(){
              (s.multi ? "추가" : "저장") + '</button></div>';
     }
 
+    /* ★영상은 아직 URL이 없다(GUIDE_VIDEO 전부 빈 값) — 그동안 눌러도 안내문만 뜬다.
+       그림 매뉴얼(api_manual.html)은 지금 바로 있으므로 **먼저** 놓는다. 서비스별
+       앵커(#gemini 등)로 바로 그 항목에 떨어진다. */
     var foot = '<div class="svcFoot">' +
+      '<a class="btn" href="/api_manual.html#' + s.id + '" target="_blank" rel="noopener">📖 그림으로 보는 발급 방법</a>' +
       '<button class="btn" onclick="askGuide(\'' + s.id + '\')">▶ 받는 방법 영상</button>' +
       (mine.length ? '<button class="btn" onclick="verifyKeys(\'' + s.id + '\')">전체 확인</button>' : '') +
     '</div>';
@@ -383,6 +572,18 @@ function renderKeys(){
     return '<div class="svcCard">' +
       '<div class="svcHead"><div class="svcName">' + s.icon + ' ' + esc(s.name) + '</div>' + badge + '</div>' +
       (desc ? '<div class="svcDesc">' + esc(desc) + '</div>' : '') +
+      (freeTxt ? '<div class="svcDesc" style="color:var(--accent);font-weight:700">' + esc(freeTxt) + '</div>' : '') +
+      /* ★아직 배선 안 된 서비스는 사실대로 말한다. "등록하면 0P"만 띄우면
+         등록해도 아무 일이 안 일어나는데 된 줄 안다(2026-08-17 실사고). */
+      (WIRED.indexOf(s.id) < 0
+        ? '<div class="warnBox" style="display:block;margin:8px 0">준비 중입니다 — 지금 등록하시면 저장은 되지만 <b>아직 실제 작업에는 쓰이지 않습니다.</b> 그동안은 포인트로 그대로 쓰실 수 있습니다.</div>'
+        : '') +
+      (isPooled
+        ? '<div class="svcDesc" style="color:var(--accent);font-weight:700">키 <b>1개만</b> 등록하시면 이 기능을 <b>포인트 없이</b> 쓰실 수 있어요 — 등록하신 키는 공용 키 묶음에 함께 들어가고, 대신 묶음 전체를 쓰시게 됩니다.</div>'
+        : '') +
+      /* note는 우리가 SERVICES에 직접 적은 문구뿐이라 <b> 태그를 그대로 살린다.
+         ★사용자 입력을 여기 넣지 마라 — 넣는 순간 XSS 구멍이 된다. */
+      (s.note ? '<div class="hint" style="margin:8px 0">' + s.note + '</div>' : '') +
       form +
       (rows ? '<div class="keyList">' + rows + '</div>' : '') +
       foot +
@@ -411,10 +612,53 @@ async function addKey(svc){
     renderKeys();
     svcMsg(svc, "저장했습니다 (" + d.added + "개). 확인하는 중…", "ok");
     /* ★저장 즉시 verify — 사장님 확정. "등록은 됐는데 되는지 모름"을 없앤다. */
-    await verifyKeys(svc, true);
+    var res = await verifyKeys(svc, true);
+    /* ★결과를 팝업으로도 알린다(2026-08-17 사장님 지시). 카드 안 작은 글씨 한 줄은
+       시니어 타깃이 놓친다 — 등록은 자주 하는 일이 아니라 확실히 알려야 한다. */
+    notice(addResultText(svc, res));
   } catch (e) {
     svcMsg(svc, "⚠️ 저장하지 못했습니다: " + e.message, "err");
+    notice("키를 저장하지 못했습니다.\n\n" + e.message);
   }
+}
+
+/* 등록 직후 팝업 문구 — 상태를 사람 말로 옮기는 유일한 곳(0순위-B).
+   res는 verifyKeys가 돌려준 [{ok, status, label}, ...]. */
+function addResultText(svc, res){
+  var s = SERVICES.filter(function(x){ return x.id === svc; })[0] || {};
+  var name = s.name || svc;
+  if (!res || !res.length) {
+    /* 사장님 키를 쓰는 상태면 서버가 results를 빈 배열로 준다(남의 키 상태는 안 알려준다). */
+    return "✅ " + name + " 키를 저장했습니다.\n\n확인 결과를 받지 못했습니다 — 카드의 [전체 확인]을 눌러 다시 확인해 주세요.";
+  }
+  var bad   = res.filter(function(r){ return r.status === "bad"; }).length;
+  var empty = res.filter(function(r){ return r.status === "empty"; }).length;
+  var good  = res.filter(function(r){ return r.ok; }).length;
+
+  if (bad && !good) {
+    /* ★서버가 준 사유를 그대로 보여준다(2026-08-24 실사고).
+       종전엔 "다시 확인해 주세요"만 띄워 무엇이 틀렸는지 알 길이 없었다 —
+       실제로 고객이 키 대신 '키 ID'를 넣었는데, ElevenLabs가 정확히 알려준 그 말을
+       우리가 버리고 있었다(서버에서 직접 호출해보고서야 원인을 알았다). */
+    var why = (res.filter(function(r){ return r.reason; })[0] || {}).reason || "";
+    return "❌ 키가 맞지 않습니다.\n\n" +
+           (why ? why + "\n\n" : (name + " 키를 다시 확인해서 붙여넣어 주세요.\n")) +
+           "저장은 됐지만 이 상태로는 쓸 수 없습니다 — 틀린 키는 [삭제]해 주세요.";
+  }
+  if (empty && !good) {
+    return "⚠️ 키는 맞는데 이번 달 무료분을 다 썼습니다.\n\n" +
+           "다음 달에 다시 채워지고, 그때까지는 포인트로 그냥 쓰실 수 있습니다.";
+  }
+  var head = "✅ 테스트 통과 — " + name + " 키가 정상 작동합니다.\n\n";
+  var body = (s.freeOp && PRICES[s.freeOp] != null)
+    ? "이제 이 작업은 포인트가 안 깎입니다 (" + num(PRICES[s.freeOp]) + "P → 0P)."
+    : "이제 이 작업은 사장님 키 대신 내 키로 돕니다.";
+  if (bad || empty) {
+    body += "\n\n다만 " + res.length + "개 중 " + good + "개만 정상입니다" +
+            (empty ? " (" + empty + "개는 무료분 소진)" : "") +
+            (bad ? " (" + bad + "개는 키가 틀림)" : "") + ".";
+  }
+  return head + body;
 }
 
 async function delKey(id){
@@ -427,6 +671,7 @@ async function delKey(id){
   }
 }
 
+/* 결과 배열을 돌려준다 — 등록 직후 팝업이 같은 결과를 쓴다(두 번 확인하지 않는다). */
 async function verifyKeys(svc, quiet){
   if (!quiet) svcMsg(svc, "확인하는 중…", "ok");
   try {
@@ -442,11 +687,45 @@ async function verifyKeys(svc, quiet){
     } else {
       svcMsg(svc, "⚠️ " + res.length + "개 중 " + good + "개만 정상입니다. 틀린 키는 삭제하고 다시 등록해 주세요.", "err");
     }
+    /* 사용자가 [전체 확인]을 직접 눌렀을 때도 결과를 확실히 알린다. */
+    if (!quiet) notice(addResultText(svc, res));
+    return res;
   } catch (e) {
     svcMsg(svc, "⚠️ 확인하지 못했습니다: " + e.message, "err");
+    if (!quiet) notice("확인하지 못했습니다.\n\n" + e.message);
+    return null;
   }
 }
 
+/* ── 👤 내 계정 ─────────────────────────────────────────
+   예전 /account 페이지와 **같은 API(/api/me)**를 본다. 데이터를 두 곳에서
+   따로 만들면 어긋난다 — 화면만 옮겨온 것이다. */
+var PLAN_LABEL = { pro: "Pro 이용권", trial: "체험 중", free: "무료" };
+
+async function loadAccount(){
+  clearErr("acctErr");
+  try {
+    var d = await getJSON("/api/me");
+    var plan = String(d.plan || "free");
+    el("acctPlan").textContent = PLAN_LABEL[plan] || plan;
+    el("acctPlanSub").textContent = (d.days_left != null)
+      ? ("남은 기간 " + num(d.days_left) + "일")
+      : "전 기능 이용중";
+    var limits = d.limits || {};
+    // 무제한(관리자)이면 "무제한"만 남기고 뒤의 "회"를 지운다 — "무제한 회"는 말이 안 된다.
+    ["Render", "Lens", "Script"].forEach(function(k){
+      var v = limits[k.toLowerCase()];
+      el("lim" + k).textContent = lim(v);
+      var u = el("lim" + k + "Unit");
+      if (u) u.style.display = (v == null) ? "none" : "";
+    });
+  } catch (e) {
+    el("acctPlanSub").textContent = "";
+    showErr("acctErr", "계정 정보를 불러오지 못했습니다: " + e.message);
+  }
+}
+
+loadAccount();
 loadPoints();
 loadKeys();
 </script>

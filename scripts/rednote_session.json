@@ -1,0 +1,175 @@
+{
+  "cookies": [
+    {
+      "name": "acw_tc",
+      "value": "0a587ca717868921112872841e8d81ac56085c191fdf9911f51d065c1b94d4",
+      "domain": "www.rednote.com",
+      "path": "/",
+      "expires": 1786893910.2,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "abRequestId",
+      "value": "e061a676-1def-5945-9c8b-0a444eadd1ac",
+      "domain": ".rednote.com",
+      "path": "/",
+      "expires": 1818428110.2,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "ets",
+      "value": "1786892116273",
+      "domain": ".rednote.com",
+      "path": "/",
+      "expires": 1789484116.271,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "a1",
+      "value": "1a00b11e16072kcl1ecwf2c07carazn6vhjn7k4dw50000424823",
+      "domain": ".rednote.com",
+      "path": "/",
+      "expires": 1818428116.0,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "webId",
+      "value": "1e8cb803a8dd72f67b702e80f5b140ed",
+      "domain": ".rednote.com",
+      "path": "/",
+      "expires": 1818428116.0,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "gid",
+      "value": "y088DyyijJhdy088DyydyxT4K8WJTS1ydSEiVfEJS8WS0I28F0uIKW8884J4YJq8jS44i082",
+      "domain": ".rednote.com",
+      "path": "/",
+      "expires": 1821452711.09,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "web_session",
+      "value": "040069bb1068f5650c56a599b4384bc279a471",
+      "domain": ".rednote.com",
+      "path": "/",
+      "expires": 1818428747.14,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "id_token",
+      "value": "VjEAAIjL/2GsdHSAayNOA4wN0NY985XbpYt58GiVBaObuaWUC7f1wChdr3+w16BC78lqhc3PS0EcwSv3spmAMzqrXf0AAXeMeZv46Vcnei6YznVwlzxJ+1bCsWTyrw9hFOttnMbG",
+      "domain": ".rednote.com",
+      "path": "/",
+      "expires": 1818428747.14,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "x-rednote-datactry",
+      "value": "SG",
+      "domain": ".rednote.com",
+      "path": "/",
+      "expires": 1818428747.14,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "x-rednote-holderctry",
+      "value": "KR",
+      "domain": ".rednote.com",
+      "path": "/",
+      "expires": 1818428747.14,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "xsecappid",
+      "value": "ugc",
+      "domain": ".rednote.com",
+      "path": "/",
+      "expires": 1818428773.0,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "loadts",
+      "value": "1786892773919",
+      "domain": ".rednote.com",
+      "path": "/",
+      "expires": 1818428773.0,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "websectiga",
+      "value": "2a3d3ea002e7d92b5c9743590ebd24010cf3710ff3af8029153751e41a6af4a3",
+      "domain": ".rednote.com",
+      "path": "/",
+      "expires": 1787151974.0,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "sec_poison_id",
+      "value": "438a7286-a1cc-471e-b12f-2b15e6cbde80",
+      "domain": ".rednote.com",
+      "path": "/",
+      "expires": 1786893379.0,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "acw_tc",
+      "value": "0a587ca117868921178566926eaeac774bff96c88aa977c295377cc3fe1c7a",
+      "domain": "as.rednote.com",
+      "path": "/",
+      "expires": 1786893916.605,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "acw_tc",
+      "value": "0a587ca717868921181462115e8d8528e1694b444ac052e3643f3763258170",
+      "domain": "webapi.rednote.com",
+      "path": "/",
+      "expires": 1786893917.243,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "acw_tc",
+      "value": "0a587c9517868926981965206e84efe5aa1299d93f0d8f781df14acf4f107b",
+      "domain": "creator.rednote.com",
+      "path": "/",
+      "expires": 1786894496.934,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": []
+}

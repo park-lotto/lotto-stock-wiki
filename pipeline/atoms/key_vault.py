@@ -38,8 +38,24 @@ def _env(name: str, env_vals: dict[str, str]) -> str:
     return os.environ.get(name) or env_vals.get(name, "")
 
 
+# ★회원 키 합류분(2026-08-24, 쇼핑쇼츠 1기). 회원이 등록한 제미니 키를 여기에 담아두면
+#   get_keys가 **각 그룹 뒤에** 붙여준다. 쇼핑쇼츠 app이 기동·키등록/삭제 때 채운다.
+#   ⚠️소진 상태파일이 인덱스 기반이라 반드시 **뒤에만** 붙인다 — 앞에 끼면 인덱스가
+#     밀려 엉뚱한 키가 죽은 것으로 기록된다.
+#   ⚠️주식위키 파이프라인도 이 모듈을 쓴다 — 기본값이 비어 있어 안 부르면 종전과 같다.
+_member_keys: list[str] = []
+
+
+def set_member_keys(keys) -> int:
+    """회원 합류 키를 갈아끼운다(누적 아님 — 두 번 불러도 중복 안 쌓인다). 반환: 개수."""
+    global _member_keys
+    _member_keys = [k for k in (keys or []) if k]
+    return len(_member_keys)
+
+
 def get_keys(group: str) -> list[str]:
-    """그룹의 활성 키 전부(존재하는 _N 넘버링을 동적으로 스캔, 순서 보존)."""
+    """그룹의 활성 키 전부(존재하는 _N 넘버링을 동적으로 스캔, 순서 보존).
+    회원 합류 키(set_member_keys)가 있으면 **뒤에** 붙는다(중복 제거)."""
     prefix = _GROUP_ENV_PREFIX[group]
     env_vals = _read_env_file()
     keys = []
@@ -48,6 +64,11 @@ def get_keys(group: str) -> list[str]:
         v = _env(name, env_vals)
         if v:
             keys.append(v)
+    seen = set(keys)
+    for k in _member_keys:
+        if k not in seen:
+            seen.add(k)
+            keys.append(k)
     return keys
 
 

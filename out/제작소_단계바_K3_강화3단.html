@@ -1,0 +1,174 @@
+<!doctype html><html lang=ko><head><meta charset="utf-8">
+<meta name=viewport content="width=device-width,initial-scale=1">
+<title>제작소 도크 K3 — 장식 강화 3단</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--mint:#3ee0bf;--gold:#facc6b;--bg:#070b14;--panel:#0d1420;--line:#1a2436;
+  --txt:#e7ecf7;--sub:#5a6580}
+body{background:var(--bg);color:var(--txt);font-family:"Malgun Gothic",system-ui,sans-serif;
+  line-height:1.6;padding:26px 20px 90px}
+.wrap{max-width:1180px;margin:0 auto}
+h1{font-size:24px;font-weight:900;margin-bottom:6px}
+.desc{color:var(--sub);font-size:14px;margin-bottom:26px}
+.case{background:var(--panel);border:1px solid var(--line);border-radius:16px;
+  padding:26px 26px 32px;margin-bottom:22px;position:relative;overflow:hidden}
+.case > h2{font-size:17px;font-weight:900;color:var(--mint);margin-bottom:4px;position:relative;z-index:2}
+.case > .why{color:var(--sub);font-size:13px;margin-bottom:28px;position:relative;z-index:2}
+.tag{display:inline-block;font-size:11px;font-weight:900;padding:3px 9px;border-radius:999px;
+  background:rgba(62,224,191,.14);color:var(--mint);margin-left:8px;vertical-align:middle}
+.plus{background:rgba(250,204,107,.14);color:var(--gold)}
+
+/* ══ 공통 도크 ══ */
+.dock{display:flex;align-items:flex-end;justify-content:space-between;gap:6px;padding:10px 4px 0;
+  position:relative;z-index:2}
+.dk{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;position:relative;
+  --c:#3b455e;--c2:#3b455e;transition:transform .18s ease}
+.dk:hover{transform:translateY(-3px)}
+.dk .ic{position:relative;width:46px;height:46px;border-radius:14px;display:grid;place-items:center;
+  transition:all .2s ease;
+  background:color-mix(in srgb,var(--c) 12%,#0a1019);color:var(--c);
+  border:1px solid color-mix(in srgb,var(--c) 38%,transparent)}
+.dk .ic svg{width:24px;height:24px;display:block;fill:none;stroke:currentColor;
+  stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+.dk .dl{font-size:11px;font-weight:800;text-align:center;line-height:1.25;
+  color:color-mix(in srgb,var(--c) 60%,#46506a)}
+.dk.wait{opacity:.5}
+.dk.cur .ic{width:66px;height:66px;border-radius:19px;border-color:transparent;color:#04201b;
+  background:linear-gradient(150deg,var(--c),var(--c2));
+  box-shadow:0 10px 30px color-mix(in srgb,var(--c) 42%,transparent)}
+.dk.cur .ic svg{width:34px;height:34px;stroke-width:1.9}
+.dk.cur .dl{color:#fff;font-size:13.5px;font-weight:900}
+
+/* 무지개 띠 (공통 베이스) */
+.flow{position:relative;height:4px;border-radius:999px;margin:0 10px 6px;background:#131c2b;overflow:hidden}
+.flow .full{position:absolute;inset:0;border-radius:999px;opacity:.22;
+  background:linear-gradient(90deg,#38bdf8,#8c6ef0,#f472b6,#fb7185,#3ee0bf,#fb923c,#facc6b,#a3e635,#34d399)}
+.flow .run{position:absolute;left:0;top:0;bottom:0;width:50%;border-radius:999px;
+  background:linear-gradient(90deg,#38bdf8,#8c6ef0,#f472b6,#fb7185,#3ee0bf);
+  box-shadow:0 0 14px rgba(62,224,191,.5)}
+
+/* ══ 1단: 절제 ══ */
+.lv1 .dk.done .ic::after{content:"✓";position:absolute;right:-4px;top:-4px;width:17px;height:17px;
+  border-radius:50%;background:var(--c);color:#08131a;font-size:10px;font-weight:900;
+  display:grid;place-items:center;border:2px solid var(--panel)}
+.lv1 .dk.cur::before{content:"";position:absolute;top:-5px;width:76px;height:76px;border-radius:22px;
+  border:2px solid color-mix(in srgb,var(--c) 55%,transparent);animation:ring 1.9s ease-out infinite}
+@keyframes ring{0%{transform:scale(.88);opacity:1}100%{transform:scale(1.22);opacity:0}}
+
+/* ══ 2단: 풍부 ══ */
+.lv2 .dock{padding-top:14px}
+.lv2 .dk::after{content:"";position:absolute;top:23px;left:calc(50% + 34px);right:calc(-50% + 34px);
+  height:2px;background:repeating-linear-gradient(90deg,#1e2a3d 0 4px,transparent 4px 9px)}
+.lv2 .dk:last-child::after{display:none}
+.lv2 .dk.done::after,.lv2 .dk.cur::after{background:repeating-linear-gradient(90deg,
+  color-mix(in srgb,var(--c) 55%,transparent) 0 4px,transparent 4px 9px)}
+.lv2 .dk.cur::after{left:calc(50% + 44px)}
+.lv2 .dk.done .ic::after{content:"✓";position:absolute;right:-4px;top:-4px;width:17px;height:17px;
+  border-radius:50%;background:var(--c);color:#08131a;font-size:10px;font-weight:900;
+  display:grid;place-items:center;border:2px solid var(--panel)}
+.lv2 .sub{font-size:10px;font-weight:800;color:#39435c;margin-top:-3px}
+.lv2 .dk.done .sub{color:color-mix(in srgb,var(--c) 55%,#39435c)}
+.lv2 .dk.cur .sub{color:rgba(255,255,255,.7);font-size:11px}
+.lv2 .glow{position:absolute;left:50%;top:60px;width:520px;height:200px;transform:translateX(-50%);
+  background:radial-gradient(closest-side,rgba(62,224,191,.14),transparent 72%);pointer-events:none;z-index:1}
+
+/* ══ 3단: 최대 ══ */
+.lv3 .dock{padding-top:16px}
+.lv3 .flow{height:6px;margin-bottom:20px}
+.lv3 .flow .run::after{content:"";position:absolute;right:-5px;top:50%;width:12px;height:12px;
+  transform:translateY(-50%) rotate(45deg);border-radius:3px;background:#7df5db;
+  box-shadow:0 0 12px rgba(62,224,191,.9)}
+.lv3 .dk .ic{box-shadow:inset 0 1px 0 rgba(255,255,255,.09)}
+.lv3 .dk .ic::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:linear-gradient(180deg,rgba(255,255,255,.14),transparent 52%)}
+.lv3 .dk .num{position:absolute;left:-5px;top:-5px;width:18px;height:18px;border-radius:6px;
+  background:#0d1524;border:1px solid color-mix(in srgb,var(--c) 40%,transparent);color:var(--c);
+  font-size:10px;font-weight:900;display:grid;place-items:center;z-index:3}
+.lv3 .dk.done .num{background:var(--c);color:#08131a;border-color:transparent}
+.lv3 .dk.cur .num{background:#04201b;color:#7df5db;border-color:transparent;left:-6px;top:-6px;
+  width:21px;height:21px;font-size:11px}
+.lv3 .dk.cur::before{content:"";position:absolute;top:-5px;width:80px;height:80px;border-radius:23px;
+  border:2px solid color-mix(in srgb,var(--c) 55%,transparent);animation:ring 1.9s ease-out infinite}
+.lv3 .dk.cur .ic{animation:breathe 2.6s ease-in-out infinite}
+@keyframes breathe{0%,100%{box-shadow:0 10px 30px color-mix(in srgb,var(--c) 40%,transparent)}
+  50%{box-shadow:0 12px 40px color-mix(in srgb,var(--c) 62%,transparent)}}
+.lv3 .sub{font-size:10px;font-weight:800;color:#39435c;margin-top:-3px}
+.lv3 .dk.done .sub{color:color-mix(in srgb,var(--c) 55%,#39435c)}
+.lv3 .dk.cur .sub{color:rgba(255,255,255,.72);font-size:11px}
+.lv3 .caret{position:absolute;bottom:-13px;width:0;height:0;border-left:7px solid transparent;
+  border-right:7px solid transparent;border-top:8px solid var(--c)}
+.lv3 .aur{position:absolute;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(46% 62% at 18% 8%,rgba(56,189,248,.10),transparent 62%),
+             radial-gradient(42% 58% at 52% 4%,rgba(62,224,191,.13),transparent 62%),
+             radial-gradient(46% 60% at 86% 10%,rgba(163,230,53,.08),transparent 62%)}
+
+.legend{margin-top:24px;font-size:12.5px;color:var(--sub);font-weight:700;position:relative;z-index:2}
+.legend b{color:var(--txt)}
+.note{margin-top:26px;padding:16px 18px;border:1px solid #3a2f18;background:rgba(250,204,107,.05);
+  border-radius:12px;font-size:13px;color:#c9a44a;font-weight:700}
+</style></head><body><div class=wrap>
+
+<h1>K3 색 흐름 — 장식 강화 3단</h1>
+<p class=desc>K3를 그대로 두고 <b>장식만 단계별로 올렸습니다</b>. 위에서 아래로 갈수록 요소가 늘어납니다. 전부 <b>5단계 목소리 고르기</b> 상태입니다.</p>
+
+<!-- ══ 1단 ══ -->
+<div class="case lv1">
+<h2>1단 — 절제<span class="tag">더한 것 3개</span></h2>
+<p class=why>띠가 <b>진행바</b>가 됐습니다(지나온 곳만 진하고 남은 곳은 흐림). 끝난 단계엔 <b>체크 배지</b>, 지금 단계엔 <b>퍼지는 링</b>(기존 오브바의 맥박을 계승).</p>
+<div class=flow><i class=full></i><i class=run style="width:50%"></i></div>
+<div class=dock>
+  <div class="dk done" style="--c:#38bdf8"><div class=ic><svg viewBox="0 0 24 24"><rect x="2.5" y="5" width="13" height="11" rx="2"/><path d="M5.5 5v11M12.5 5v11M2.5 10.5h13"/><circle cx="17.5" cy="16" r="4"/><path d="M20.4 18.9 22.5 21"/></svg></div><div class=dl>영상추출</div></div>
+  <div class="dk done" style="--c:#8c6ef0"><div class=ic><svg viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h4"/></svg></div><div class=dl>대본생성</div></div>
+  <div class="dk done" style="--c:#f472b6"><div class=ic><svg viewBox="0 0 24 24"><path d="M3 7h4c3 0 3 10 6 10h8"/><path d="M3 17h4c3 0 3-10 6-10h8"/><path d="M18 4l3 3-3 3M18 14l3 3-3 3"/></svg></div><div class=dl>영상대본MIX</div></div>
+  <div class="dk done" style="--c:#fb7185"><div class=ic><svg viewBox="0 0 24 24"><path d="M8 20h12M14.5 4.5 20 10l-8 8H6.5L4 15.5zM10.5 8.5 16 14"/></svg></div><div class=dl>자막제거</div></div>
+  <div class="dk cur" style="--c:#7df5db;--c2:#14b8a6"><div class=ic><svg viewBox="0 0 24 24"><rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M9 21h6"/></svg></div><div class=dl>목소리 고르기</div></div>
+  <div class="dk wait" style="--c:#fb923c"><div class=ic><svg viewBox="0 0 24 24"><path d="M4 7h9M8.5 7v9M16.5 9 20 17h-7zM14 19.5h6"/></svg></div><div class=dl>자막꾸미기</div></div>
+  <div class="dk wait" style="--c:#facc6b"><div class=ic><svg viewBox="0 0 24 24"><rect x="2.5" y="4" width="19" height="16" rx="2.5"/><circle cx="8" cy="9.5" r="1.8"/><path d="M3 16.5 8.5 12l4 3.5L16 13l5 4.5"/></svg></div><div class=dl>썸네일</div></div>
+  <div class="dk wait" style="--c:#a3e635"><div class=ic><svg viewBox="0 0 24 24"><path d="M9 3.5 7 20.5M17 3.5 15 20.5M3.5 9h17M2.5 15h17"/></svg></div><div class=dl>SEO해시</div></div>
+  <div class="dk wait" style="--c:#34d399"><div class=ic><svg viewBox="0 0 24 24"><path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5zM3.5 7.5 12 12l8.5-4.5M12 12v9"/></svg></div><div class=dl>최종렌더</div></div>
+</div>
+</div>
+
+<!-- ══ 2단 ══ -->
+<div class="case lv2">
+<div class=glow></div>
+<h2>2단 — 풍부<span class="tag">+ 3개 더</span></h2>
+<p class=why>1단에 더해 아이콘 사이를 <b>점선으로 이었고</b>(지나온 구간만 색), 라벨 밑에 <b>그 단계 결과</b>를 한 줄씩 답니다. 지금 단계 뒤로 <b>은은한 빛</b>이 번집니다.</p>
+<div class=flow><i class=full></i><i class=run style="width:50%"></i></div>
+<div class=dock>
+  <div class="dk done" style="--c:#38bdf8"><div class=ic><svg viewBox="0 0 24 24"><rect x="2.5" y="5" width="13" height="11" rx="2"/><path d="M5.5 5v11M12.5 5v11M2.5 10.5h13"/><circle cx="17.5" cy="16" r="4"/><path d="M20.4 18.9 22.5 21"/></svg></div><div class=dl>영상추출</div><div class=sub>조각 18개</div></div>
+  <div class="dk done" style="--c:#8c6ef0"><div class=ic><svg viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h4"/></svg></div><div class=dl>대본생성</div><div class=sub>8칸</div></div>
+  <div class="dk done" style="--c:#f472b6"><div class=ic><svg viewBox="0 0 24 24"><path d="M3 7h4c3 0 3 10 6 10h8"/><path d="M3 17h4c3 0 3-10 6-10h8"/><path d="M18 4l3 3-3 3M18 14l3 3-3 3"/></svg></div><div class=dl>영상대본MIX</div><div class=sub>34.2초</div></div>
+  <div class="dk done" style="--c:#fb7185"><div class=ic><svg viewBox="0 0 24 24"><path d="M8 20h12M14.5 4.5 20 10l-8 8H6.5L4 15.5zM10.5 8.5 16 14"/></svg></div><div class=dl>자막제거</div><div class=sub>7컷</div></div>
+  <div class="dk cur" style="--c:#7df5db;--c2:#14b8a6"><div class=ic><svg viewBox="0 0 24 24"><rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M9 21h6"/></svg></div><div class=dl>목소리 고르기</div><div class=sub>고르는 중</div></div>
+  <div class="dk wait" style="--c:#fb923c"><div class=ic><svg viewBox="0 0 24 24"><path d="M4 7h9M8.5 7v9M16.5 9 20 17h-7zM14 19.5h6"/></svg></div><div class=dl>자막꾸미기</div><div class=sub>—</div></div>
+  <div class="dk wait" style="--c:#facc6b"><div class=ic><svg viewBox="0 0 24 24"><rect x="2.5" y="4" width="19" height="16" rx="2.5"/><circle cx="8" cy="9.5" r="1.8"/><path d="M3 16.5 8.5 12l4 3.5L16 13l5 4.5"/></svg></div><div class=dl>썸네일</div><div class=sub>—</div></div>
+  <div class="dk wait" style="--c:#a3e635"><div class=ic><svg viewBox="0 0 24 24"><path d="M9 3.5 7 20.5M17 3.5 15 20.5M3.5 9h17M2.5 15h17"/></svg></div><div class=dl>SEO해시</div><div class=sub>—</div></div>
+  <div class="dk wait" style="--c:#34d399"><div class=ic><svg viewBox="0 0 24 24"><path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5zM3.5 7.5 12 12l8.5-4.5M12 12v9"/></svg></div><div class=dl>최종렌더</div><div class=sub>—</div></div>
+</div>
+</div>
+
+<!-- ══ 3단 ══ -->
+<div class="case lv3">
+<div class=aur></div>
+<h2>3단 — 최대<span class="tag plus">+ 5개 더</span></h2>
+<p class=why>2단에 더해 타일에 <b>유리 광택</b>, 왼쪽 위 <b>단계 번호 배지</b>, 띠 끝에 <b>진행 마커(다이아)</b>, 지금 아이콘이 <b>숨쉬듯 밝아지고</b>, 아래 <b>삼각 포인터</b>가 붙습니다. 섹션 배경엔 단계 색을 딴 오로라가 깔립니다.</p>
+<div class=flow><i class=full></i><i class=run style="width:50%"></i></div>
+<div class=dock>
+  <div class="dk done" style="--c:#38bdf8"><div class=ic><span class=num>1</span><svg viewBox="0 0 24 24"><rect x="2.5" y="5" width="13" height="11" rx="2"/><path d="M5.5 5v11M12.5 5v11M2.5 10.5h13"/><circle cx="17.5" cy="16" r="4"/><path d="M20.4 18.9 22.5 21"/></svg></div><div class=dl>영상추출</div><div class=sub>조각 18개</div></div>
+  <div class="dk done" style="--c:#8c6ef0"><div class=ic><span class=num>2</span><svg viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h4"/></svg></div><div class=dl>대본생성</div><div class=sub>8칸</div></div>
+  <div class="dk done" style="--c:#f472b6"><div class=ic><span class=num>3</span><svg viewBox="0 0 24 24"><path d="M3 7h4c3 0 3 10 6 10h8"/><path d="M3 17h4c3 0 3-10 6-10h8"/><path d="M18 4l3 3-3 3M18 14l3 3-3 3"/></svg></div><div class=dl>영상대본MIX</div><div class=sub>34.2초</div></div>
+  <div class="dk done" style="--c:#fb7185"><div class=ic><span class=num>4</span><svg viewBox="0 0 24 24"><path d="M8 20h12M14.5 4.5 20 10l-8 8H6.5L4 15.5zM10.5 8.5 16 14"/></svg></div><div class=dl>자막제거</div><div class=sub>7컷</div></div>
+  <div class="dk cur" style="--c:#7df5db;--c2:#14b8a6"><div class=ic><span class=num>5</span><svg viewBox="0 0 24 24"><rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M9 21h6"/></svg></div><div class=dl>목소리 고르기</div><div class=sub>고르는 중</div><i class=caret></i></div>
+  <div class="dk wait" style="--c:#fb923c"><div class=ic><span class=num>6</span><svg viewBox="0 0 24 24"><path d="M4 7h9M8.5 7v9M16.5 9 20 17h-7zM14 19.5h6"/></svg></div><div class=dl>자막꾸미기</div><div class=sub>—</div></div>
+  <div class="dk wait" style="--c:#facc6b"><div class=ic><span class=num>7</span><svg viewBox="0 0 24 24"><rect x="2.5" y="4" width="19" height="16" rx="2.5"/><circle cx="8" cy="9.5" r="1.8"/><path d="M3 16.5 8.5 12l4 3.5L16 13l5 4.5"/></svg></div><div class=dl>썸네일</div><div class=sub>—</div></div>
+  <div class="dk wait" style="--c:#a3e635"><div class=ic><span class=num>8</span><svg viewBox="0 0 24 24"><path d="M9 3.5 7 20.5M17 3.5 15 20.5M3.5 9h17M2.5 15h17"/></svg></div><div class=dl>SEO해시</div><div class=sub>—</div></div>
+  <div class="dk wait" style="--c:#34d399"><div class=ic><span class=num>9</span><svg viewBox="0 0 24 24"><path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5zM3.5 7.5 12 12l8.5-4.5M12 12v9"/></svg></div><div class=dl>최종렌더</div><div class=sub>—</div></div>
+</div>
+</div>
+
+<p class=legend><b>더해진 요소 정리</b> — ①진행 반영 띠 ②완료 체크 배지 ③현재 퍼지는 링 ④단계 잇는 점선 ⑤단계별 결과 한 줄 ⑥현재 뒤 빛번짐 ⑦유리 광택 ⑧번호 배지 ⑨띠 진행 마커 ⑩숨쉬는 빛 ⑪삼각 포인터 ⑫섹션 오로라. <b>아이콘 위에 마우스를 올리면 살짝 떠오릅니다</b> — 직접 올려보십시오.</p>
+
+<div class=note>⚠️ 지금 오브 단계바는 <b>final-mock-v6.html</b>이 정본입니다(theme.css 주석). 바꾸면 목업도 같이 갱신할지 정해야 합니다.</div>
+
+</div></body></html>

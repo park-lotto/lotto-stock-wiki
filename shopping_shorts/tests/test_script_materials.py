@@ -38,9 +38,13 @@ class TestSourcesForGenerate:
         assert out and out[0]["full_text"] == "가 나"
 
     def test_상한을_넘지_않는다(self):
+        # ★숫자를 여기 다시 적지 않는다 — 상한은 script_generate.SOURCE_MAX 한 곳에서만
+        #   정한다(0순위-B). 예전엔 이 테스트가 3을 박아 둬, 상한을 올리면 코드가 맞는데
+        #   테스트가 틀리는 상태가 됐다(2026-08-20 게이트가 실제로 여기서 막았다).
+        from shopping_shorts.script_generate import SOURCE_MAX
         it = {"category": "", "full_text": "1", "structure": {}}
-        job = _job({"v%d" % i: {"full_text": str(i + 2)} for i in range(5)})
-        assert len(_sources_for_generate(it, job)) == 3
+        job = _job({"v%d" % i: {"full_text": str(i + 2)} for i in range(SOURCE_MAX + 3)})
+        assert len(_sources_for_generate(it, job)) == SOURCE_MAX
 
 
 class TestScenePointsBlock:
@@ -179,11 +183,27 @@ class TestAutoStyle:
     """
 
     def test_화면_요청에_auto_style이_실린다(self):
+        """★2026-08-26 갱신 — 첫 칸이 '픽업영상 대본'으로 바뀌었다.
+
+        스타일 미선택이면 이제 **씨앗 영상 구조**로 만든다(seed_hook+structure+elem_modes).
+        auto_style은 **씨앗 훅을 못 뽑았을 때의 폴백**으로 남는다.
+        어느 쪽이든 원래 이 테스트가 지키려던 것(옛 경로로 안 떨어진다 = beats를 받는다)은
+        그대로다 — 둘 다 스타일/구조 경로를 탄다.
+        """
         import pathlib
         import re
         p = pathlib.Path(__file__).resolve().parents[1] / "static" / "produce.html"
         src = p.read_text(encoding="utf-8")
         fn = src[src.index("async function s2Generate"):]
         fn = fn[:fn.index("\n}\n")]
-        assert re.search(r"else\s+body\.auto_style\s*=\s*true", fn)
-        assert "if(S2.picked.length) body.style_ids=S2.picked;" in fn
+        # 고른 스타일은 style_ids로 실린다(변수명은 바뀔 수 있으니 실리는지만 본다).
+        assert "style_ids" in fn and "S2.picked" in fn
+        # 폴백은 살아 있어야 한다(문형을 못 뽑는 씨앗도, 아무것도 안 고른 경우도 있다).
+        assert re.search(r"auto_style\s*[:=]\s*true", fn)
+        # 픽업 경로가 실제로 씨앗을 싣는가 — 이게 없으면 첫 칸이 예전과 같아진다.
+        assert "seed_hook" in fn, "씨앗 훅을 안 보낸다 — 문형을 물려받지 못한다"
+        assert "structure" in fn, "씨앗 구조를 안 보낸다"
+        assert "elem_modes" in fn, "요소 모드를 안 보낸다(스토리·CTA가 안 갈린다)"
+        # ★2026-08-26: 픽업과 스타일을 **함께** 고를 수 있다(사장님 "두개선택인데 1개밖에").
+        #   서버는 한 요청에 둘 중 하나만 처리하므로 요청을 나눠 보내고 결과를 합친다.
+        assert "usePickup" in fn, "픽업이 여전히 picked.length로 판정된다(배타 구조)"

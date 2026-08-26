@@ -10,6 +10,8 @@
 *.json  text eol=lf
 *.md    text eol=lf
 *.sh    text eol=lf
+# ★systemd 유닛은 CRLF면 서버에서 깨진다 — 윈도우에서 편집해도 LF로 박는다(2026-08-22)
+*.service text eol=lf
 *.txt   text eol=lf
 *.yml   text eol=lf
 *.yaml  text eol=lf
@@ -28,3 +30,6 @@
 *.ttf    binary
 *.otf    binary
 *.pyc    binary
+
+# ★배치파일은 CP949+CRLF 바이트 그대로 보존 — LF/UTF-8이면 한국 윈도우 cmd에서 통째로 깨진다(2026-08-25)
+*.bat    binary

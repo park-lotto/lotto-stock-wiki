@@ -1,0 +1,79 @@
+// 미리보기가 실제로 보이는 자리에 그려지는가 (2026-08-18)
+//   사장님: "미리보기 성공하면 재생되어야 하는데 그게 없네."
+//   실측(브라우저 직접 확인): 렌더 성공(preview_status=ready, preview.mp4 8.5MB)이고
+//   <video>도 만들어졌는데 getBoundingClientRect가 0×0이었다. 부모를 따라가니
+//   #mixPreviewRail이 display:none이었고, **그걸 여는 코드가 어디에도 없었다**(선언 1건뿐).
+//   2026-08-16에 미리보기를 장면 편집 안으로 옮기며 이 슬롯을 감췄는데, 그리는 코드는
+//   그대로 남아 결과가 영영 안 보이게 됐다.
+const fs = require('fs');
+const path = require('path');
+// ★원본 위치는 env로 덮어쓸 수 있다(2026-08-21). js_harness.run_js는 이 소스를
+//   **임시 .js 파일**로 옮겨 실행하므로 __dirname이 temp 폴더가 되고, 그러면
+//   '../static/produce.html'이 엉뚱한 곳(AppData\Local\static\...)을 가리켜 ENOENT로 죽는다.
+//   `node shopping_shorts/tests/test_preview_visible.js` 직접 실행은 종전 그대로 돈다.
+const src = fs.readFileSync(
+  process.env.PRODUCE_HTML || path.join(__dirname, '../static/produce.html'), 'utf8');
+const code = src.split('\n').filter(l => !l.trim().startsWith('//')).join('\n');
+
+let p = 0, f = 0;
+const t = (n, c) => { c ? (p++, console.log('  PASS', n)) : (f++, console.log('  FAIL', n)); };
+
+t('여닫기가 한 곳에 정의돼 있다', /function _pvOpen\(\)/.test(code) && /function _pvClose\(\)/.test(code));
+t('여는 쪽이 레일까지 연다', /_pvOpen[\s\S]{0,200}mixPreviewRail[\s\S]{0,120}display *= *''/.test(code));
+// ★2026-08-21: 자리 주인 판정처를 _pvShow 하나로 모으면서 여기서 부르는 이름이 바뀌었다.
+//   _pvShow는 첫 줄에서 _pvOpen()을 부르므로 "레일까지 연다"는 규약은 그대로고,
+//   거기에 더해 #mixPreview까지 켠다(가조립 재생 뒤 확정 결과가 안 보이던 것을 고친 부분).
+//   그래서 **둘 중 무엇을 부르든** 통과시킨다 — 이 단언이 지키려는 건 함수 이름이 아니라
+//   "그리기 전에 자리를 연다"는 규약이다(옛 이름만 고집하면 판정처 일원화를 막는다).
+// ★2026-08-22: 확정 결과가 가는 자리가 **장면편집(iframe) 안 확정본 탭**으로 옮겨졌다
+//   (사장님 "저걸 누르면 미리보기 재생했던 곳에서 하라니까"). 그래서 _renderPreviewVideo는
+//   ①_labCall('showConfirmVideo', src)를 먼저 부르고 ②실패했을 때만 옛 좌측 자리를 연다.
+//   규약은 그대로다 — **그리기 전에 보이는 자리를 확보한다**. 두 경로를 다 요구한다:
+//   ①만 있으면 iframe 없을 때 0×0, ②만 있으면 사장님 지시 회귀.
+t('영상 그릴 때 자리를 연다',
+  /function _renderPreviewVideo[\s\S]{0,600}_labCall\('showConfirmVideo'/.test(code) &&
+  /function _renderPreviewVideo[\s\S]{0,900}(_pvOpen\(\)|_pvShow\(')/.test(code));
+// ★이 단언은 원래 `_pvOpen()`이 2번 이상 나오는지 셌다. 판정처를 _pvShow로 모은 뒤엔
+//   실제 호출부가 전부 _pvShow로 옮겨가, **정의 1줄 + _pvShow 안의 1줄 = 2**로 우연히
+//   통과하게 됐다(2026-08-21 실측) — 즉 startPreview를 더는 검사하지 않는 빈 단언이었다.
+//   그래서 세는 것을 그만두고 **이름 그대로 "미리보기 시작할 때 자리를 여는가"**를 본다.
+//   2026-08-22: 여기도 자리가 옮겨졌다(위 주석 참고). 로더는 _labCall('showConfirmLoading')로
+//   장면편집 안에 띄우고, 못 넣었을 때만 _pvShow(...)로 옛 좌측 자리를 연다. 둘 다 요구한다.
+t('미리보기 시작할 때도 연다',
+  /async function startPreview\(\)[\s\S]{0,1600}_labCall\('showConfirmLoading'/.test(code) &&
+  /async function startPreview\(\)[\s\S]{0,1800}_pvShow\('/.test(code));
+// _pvOpen/_pvClose 정의 안은 당연히 패널을 직접 만진다 — 그 둘을 뺀 나머지에서
+// 직접 만지는 곳이 없어야 한다(있으면 레일을 안 열어 또 0x0이 된다).
+t('정의 밖에서 패널을 직접 만지지 않는다', (function(){
+  var stripped = code.split('function _pvOpen()')[0]
+                 + (code.split('function _renderPreviewVideo')[1] || '');
+  // ★한 줄짜리만 잡던 것을 고쳤다(2026-08-24). 실제 재발은 **두 줄로 갈라 쓴** 모양이었다:
+  //     const _pvPanel=document.getElementById('mixPreviewPanel'), ...
+  //     if(_pvPanel) _pvPanel.style.display='';
+  //   id와 style.display가 다른 줄이라 [^\n]* 가 넘지 못했고 이 단언은 **통과했다**.
+  //   그 사이 좌측 레일이 _RAIL_OFF를 우회해 다시 열렸다(사장님 "맨왼쪽 랜더된게
+  //   처음에는 없다가 뜬다"). 이제 ①한 줄형 ②변수에 담는 두 줄형을 둘 다 막는다.
+  if (/mixPreviewPanel'\)[^\n]*style\.display *=/.test(stripped)) return false;
+  var m = stripped.match(/(\w+)\s*=\s*document\.getElementById\('mixPreviewPanel'\)/);
+  if (m && new RegExp('\\b' + m[1] + '\\.style\\.display\\s*=').test(stripped)) return false;
+  return true;
+})());
+
+// ★iframe이 늦게 뜨는 것을 '못 뜬 것'으로 오판하면 좌측 레일이 다시 열린다(2026-08-24).
+//   복원 경로는 _syncSceneLab(true)로 iframe src를 막 세팅한 **직후**에 미리보기를
+//   그린다. src 세팅은 비동기라 그 순간 contentWindow에 showConfirmVideo가 없다
+//   → _labCall false → 'fallback'(_RAIL_OFF를 뚫는 유일한 값)이 레일을 열었다.
+//   사장님 제보: "다시 되돌아가면 맨왼쪽 랜더된게 처음에는 없다가 뜬다".
+t('iframe을 기다린 뒤에 폴백한다', (function(){
+  var body = code.split('function _renderPreviewVideo(')[1] || '';
+  body = body.split('\\nfunction ')[0];
+  if (!/set(Interval|Timeout)\s*\(/.test(body)) return false;
+  var retries = (body.match(/_labCall\('showConfirmVideo'/g) || []).length;
+  return retries >= 2;
+})());
+// 그래도 **영영 못 뜨면** 결과를 아예 못 보는 일은 없어야 한다.
+t('끝내 못 뜨면 좌측으로 폴백한다',
+  /function _renderPreviewVideoFallback\(/.test(code) &&
+  /function _renderPreviewVideoFallback[\s\S]{0,400}_pvShow\('fallback'\)/.test(code));
+console.log('\n결과: PASS ' + p + ' / FAIL ' + f);
+process.exit(f ? 1 : 0);

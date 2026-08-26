@@ -1,7 +1,8 @@
 """수집 오케스트레이션: 채널→Apify→랭킹→저장→CSV 아카이브."""
 import csv
+import sys as _sys
 from pathlib import Path
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone, timedelta, date
 from concurrent.futures import ThreadPoolExecutor
 from shopping_shorts.config import (DB_PATH, WINDOW_HOURS, DRAFT_BATCH_SIZE, MAX_CHANNELS,
                                     YOUTUBE_WINDOW_HOURS, YOUTUBE_MAX_PER_KW,
@@ -15,15 +16,19 @@ from shopping_shorts.instagram_playwright import LAST_TALLY as _PW_TALLY
 from shopping_shorts.ranking import (build_items, build_youtube_items, build_tiktok_items,
                                      build_overseas_items, apply_grades, aggregate_channels)
 from shopping_shorts.channel_fitness import channel_fitness
+from shopping_shorts import channel_tier
 from shopping_shorts.store import Store
 from shopping_shorts.comment_gen import generate as _gen_comments
 from shopping_shorts import ai_categorize, topic_grouper
-from shopping_shorts.youtube_client import search_shorts as yt_search, fetch_channel_shorts as yt_fetch_channel
+from shopping_shorts.youtube_client import (search_shorts as yt_search,
+                                           fetch_channel_shorts as yt_fetch_channel,
+                                           fetch_subscribers as yt_fetch_subscribers)
 from shopping_shorts.youtube_category_presets import preset_keywords
 from shopping_shorts.tiktok_client import fetch_account_videos as tt_fetch
 from shopping_shorts.tiktok_search import search_full as tt_search_full
 from shopping_shorts.xiaohongshu_playwright import fetch_notes as _xhs_fetch_notes
 from shopping_shorts import xiaohongshu_search, xiaohongshu_discovery, overseas_seeds
+from shopping_shorts import threads_playwright
 from shopping_shorts.instagram_playwright import search_hashtag as _ig_search_hashtag
 from shopping_shorts import instagram_discovery
 
@@ -188,11 +193,15 @@ def _collect_youtube(categories=None, seed_only=False):
             continue
         seen.add(vid)
         deduped.append(r)
+    # 구독자 대비 지표용(2026-08-24 사장님 "구독자대비로 해줘").
+    # 채널 단위로 중복제거해 부르므로 50채널당 1 unit — search.list(100u) 대비 무시할 수준.
+    # 실패해도 {}가 와서 fan_density만 None이 된다(랭킹 자체는 그대로 나간다).
+    subs = yt_fetch_subscribers([r.get("channel_id") for r in deduped])
     items = build_youtube_items(
         deduped,
         prev_base=lambda sc: store.prev_base_platform("youtube", sc),
         prev_delta=lambda sc: store.prev_delta_platform("youtube", sc),
-        now=now, window_hours=YOUTUBE_WINDOW_HOURS,
+        now=now, window_hours=YOUTUBE_WINDOW_HOURS, subs=subs,
     )
     apply_grades(items)
     run_date = now.strftime("%Y-%m-%d %H:%M")
@@ -264,6 +273,73 @@ def _collect_xiaohongshu():
     store.save_run_platform("xiaohongshu", run_date,
                             [{"shortcode": i["shortcode"], "base": i["base_count"], "delta": i["delta"]} for i in items])
     store.save_last_run_platform("xiaohongshu", items, now.isoformat())
+    return items
+
+
+THREADS_BASE_URL = "https://www.threads.com"
+
+
+def _threads_row_to_reel(row):
+    """threads_posts 한 줄 → ranking.build_items가 읽는 reel 모양으로 옮긴다.
+
+    ★이름이 어긋나는 곳이라 사고가 나기 쉽다(2026-08-17). build_items는
+      timestamp·shortcode·commentsCount를 읽는데 우리 표는 posted_at·code·comments다.
+      특히 timestamp가 비면 build_items가 그 항목을 통째로 건너뛰어(ranking.py:47)
+      "수집은 됐는데 카드가 0건"이 된다 — 조용해서 안 드러난다.
+    """
+    code = row.get("code") or ""
+    return {
+        "timestamp": row.get("posted_at"),
+        "shortcode": code,
+        "commentsCount": row.get("comments") or 0,
+        "likesCount": row.get("likes") or 0,
+        "videoViewCount": row.get("views") or 0,
+        "displayUrl": row.get("thumb") or "",
+        "videoUrl": row.get("video_url") or "",
+        "url": f"{THREADS_BASE_URL}/@{row.get('username') or ''}/post/{code}",
+        "caption": row.get("caption") or "",
+    }
+
+
+def _collect_threads():
+    """등록한 쓰레드 계정의 최근 48h 게시물 → 댓글기반 랭킹(무료 익명 GET).
+
+    사장님 결정(2026-08-17): 지표·창을 **인스타와 동일**하게(댓글 기준·48h) 본다.
+    그래서 참여합산식 build_overseas_items가 아니라 build_items를 재사용한다.
+
+    수집(HTTP)과 랭킹(DB 조회)을 나눈 이유: 계정 하나가 막혀도 이미 쌓인 게시물로
+    카드는 떠야 한다. 그래서 계정별 수집 실패를 격리하고, 랭킹은 표에서 다시 읽는다.
+    """
+    store = Store(DB_PATH)
+    usernames = [s["value"] for s in store.list_seeds("threads") if s["kind"] == "account"]
+    if not usernames:
+        return []
+    for u in usernames:
+        try:
+            threads_playwright.collect_account(u, store)
+        except Exception as e:
+            # 한 계정이 막혀도 나머지는 계속 — 통째로 0건이 되면 원인을 못 가른다.
+            print(f"[service] 쓰레드 수집 실패 username={u} {e!r}", file=_sys.stderr)
+    now = datetime.now(timezone.utc)
+    rows = store.threads_list(limit=500)
+    by_user = {}
+    for r in rows:
+        by_user.setdefault(r.get("username") or "", []).append(r)
+    items = []
+    for username, urows in by_user.items():
+        items += build_items(
+            [_threads_row_to_reel(r) for r in urows],
+            {"name": username, "username": username, "inpock": "", "followers": 0},
+            prev_comments=lambda sc: store.prev_base_platform("threads", sc),
+            prev_delta=lambda sc: store.prev_delta_platform("threads", sc),
+            now=now, window_hours=WINDOW_HOURS,
+        )
+    apply_grades(items)
+    run_date = now.strftime("%Y-%m-%d %H:%M")
+    store.save_run_platform("threads", run_date,
+                            [{"shortcode": i["shortcode"], "base": i["comments"],
+                              "delta": i["delta"]} for i in items])
+    store.save_last_run_platform("threads", items, now.isoformat())
     return items
 
 
@@ -459,6 +535,8 @@ def collect(platform="instagram", categories=None, limit_channels=None, on_progr
         return _collect_tiktok()
     if platform == "xiaohongshu":
         return _collect_xiaohongshu()
+    if platform == "threads":
+        return _collect_threads()
     if platform != "instagram":
         return []   # 미구현 플랫폼이 인스타 Apify 스크레이프로 흘러들지 않게
 
@@ -471,6 +549,24 @@ def collect(platform="instagram", categories=None, limit_channels=None, on_progr
     channels = select_tracked(channels, _store.discovered_channels(),
                               removed=_store.removed_usernames(),
                               dead=_store.dead_usernames())
+
+    # 등급제(2026-08-17): 오늘 안 돌 채널은 여기서 뺀다.
+    # ★비용은 '문을 여는 순간' 나간다(프록시=바이트, Apify=run당 고정) — 가져오는 개수를
+    # 줄여도 절감 0이라 안 여는 것만이 유일한 절감 수단이다. 실측: C등급 227채널은 26일간
+    # 히트 0건인데 매일 열고 있었다. 판정은 channel_tier 한 곳에서만 한다(0순위-B).
+    _tiers = {}
+    if config.REFERENCE_TIER:
+        _tiers = channel_tier.compute_tiers(
+            _store.reel_history_rows(),
+            hit_comments=config.REFERENCE_TIER_HIT_COMMENTS,
+            hit_min_count=config.REFERENCE_TIER_HIT_COUNT)
+        _due = channel_tier.due_today(_tiers, date.today().toordinal(),
+                                      known=[c["username"] for c in channels])
+        _before = len(channels)
+        channels = [c for c in channels
+                    if (c["username"] or "").strip().lstrip("@").lower() in _due]
+        print(f"[등급제] {_before} → {len(channels)}채널 "
+              f"(등급 {channel_tier.tier_counts(_tiers)})")
 
     if limit_channels:
         channels = channels[:limit_channels]

@@ -1,7 +1,7 @@
 """자막제거 과금 — 소스 개수만큼 깎고, 캐시된 건 안 깎는다."""
 import importlib
 import pytest
-from shopping_shorts import mix_pipeline as mp, keycrypt, points
+from shopping_shorts import mix_pipeline as mp, keycrypt, points, pricing
 from shopping_shorts.store import Store
 
 _KEY = "NZAowCs7o9LHVnJdZbxrVmYI7MHqyPFkydIUd1mc8To="   # 유효한 Fernet 키(44자). 테스트 전용
@@ -87,10 +87,20 @@ def test_mix_refund_skips_owner(store):
     assert points.balance(store, 0) == before
 
 
-def test_mix_refund_skips_user_key_holder(store):
-    """★자기 키를 쓰는 사람은 안 깎였으니 환불하면 없던 포인트가 생긴다."""
+def test_mix_refund_follows_the_same_judgement_as_the_charge(store):
+    """★핵심은 숫자가 아니라 **차감과 환불이 같은 판단(keyroute.should_charge)을
+    본다**는 것이다. 한쪽만 바뀌면 잔액이 조용히 갉히거나 부푼다.
+
+    이력: 2026-08-22 면제 → 08-23 되돌림(배선이 일부만 끝나 '회사 키로 돌면서 돈은
+    안 받는' 상태가 됐다) → **2026-08-24 공용 풀로 전환**(회원 키가 회사 풀에 합류하므로
+    그 전제가 깨졌다. 사장님: 키 1개 받고 무료로 쓰게 해준다).
+
+    ★그래서 여기선 '제미니가 과금이냐'를 박지 않는다 — 정책은 바뀔 수 있다.
+      바뀌면 안 되는 것은 **차감과 환불이 같은 판단을 본다**는 것뿐이다."""
     from shopping_shorts import keyroute
     store.add_customer_key(9, keyroute.SVC_GEMINI, "mykey")
+    charged = keyroute.should_charge(store, 9, keyroute.SVC_GEMINI)
     points.add(store, 9, 500)
-    mp._refund_mix_points(store, 9, "2026-08-17")
-    assert points.balance(store, 9) == 500
+    mp._refund_mix_points(store, 9, "2026-08-23")
+    expected = 500 + (pricing.cost(store, pricing.OP_MIX) if charged else 0)
+    assert points.balance(store, 9) == expected

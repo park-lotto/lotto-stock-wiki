@@ -31,9 +31,13 @@ def test_lens_charges_when_owner_key(store, monkeypatch):
 
 
 def test_script_free_with_user_key(store, monkeypatch):
+    """★2026-08-17 SVC_GEMINI → SVC_VMAKE로 바꿨다. 제미나이 키는 실제 호출에
+    안 쓰이는데(key_vault 경유) 면제만 해주고 있었다 = 회사 키로 돌면서 돈은
+    안 받는 구멍. 이 테스트가 그 구멍을 '정상'으로 박아두고 있었다.
+    면제는 **진짜 쓰이는 서비스**(keyroute.WIRED)에서만 성립한다."""
     monkeypatch.setattr(keyroute, "_owner_keys", lambda svc: ["사장님키"])
-    store.add_customer_key(4, keyroute.SVC_GEMINI, "내키")
-    assert keyroute.should_charge(store, 4, keyroute.SVC_GEMINI) is False
+    store.add_customer_key(4, keyroute.SVC_VMAKE, "내키")
+    assert keyroute.should_charge(store, 4, keyroute.SVC_VMAKE) is False
 
 
 # ── 일일 상한 기본값 (사장님 지시 2026-08-17) ─────────────────────────
@@ -133,9 +137,9 @@ def test_402_body_has_need_and_have(charge):
 def test_charge_free_with_user_key(charge):
     """★사용자 키가 있으면 None이고 잔액도 그대로다(잔액 0이어도 통과)."""
     _charge_or_402, st = charge
-    st.add_customer_key(4, keyroute.SVC_GEMINI, "내키")
+    st.add_customer_key(4, keyroute.SVC_SERPAPI, "내키")   # 렌즈는 serpapi 키를 실제로 쓴다
     assert points.balance(st, 4) == 0
-    assert _charge_or_402(4, pricing.OP_LENS, keyroute.SVC_GEMINI) is None
+    assert _charge_or_402(4, pricing.OP_LENS, keyroute.SVC_SERPAPI) is None
     assert points.balance(st, 4) == 0, "내 키를 쓰는데 포인트가 깎이면 안 된다"
 
 
@@ -153,8 +157,8 @@ def test_charge_owner_cid_zero_not_charged(charge):
 def test_charge_cid_string_normalized(charge):
     """cid가 문자열 "4"로 와도 같은 사람이다(2026-07-30 실사고 계열)."""
     _charge_or_402, st = charge
-    st.add_customer_key(4, keyroute.SVC_GEMINI, "내키")
-    assert _charge_or_402("4", pricing.OP_LENS, keyroute.SVC_GEMINI) is None
+    st.add_customer_key(4, keyroute.SVC_SERPAPI, "내키")
+    assert _charge_or_402("4", pricing.OP_LENS, keyroute.SVC_SERPAPI) is None
     assert points.balance(st, 4) == 0
 
 
@@ -191,9 +195,9 @@ def test_refund_restores_points(refund):
 def test_refund_noop_for_user_key(refund):
     """★안 깎은 사람에게 돈이 생기면 안 된다 — 사용자 키는 환불도 없다."""
     _charge, _refund_points, st = refund
-    st.add_customer_key(4, keyroute.SVC_GEMINI, "내키")
-    assert _charge(4, pricing.OP_LENS, keyroute.SVC_GEMINI) is None
-    _refund_points(4, pricing.OP_LENS, keyroute.SVC_GEMINI)
+    st.add_customer_key(4, keyroute.SVC_SERPAPI, "내키")
+    assert _charge(4, pricing.OP_LENS, keyroute.SVC_SERPAPI) is None
+    _refund_points(4, pricing.OP_LENS, keyroute.SVC_SERPAPI)
     assert points.balance(st, 4) == 0
 
 
@@ -228,14 +232,26 @@ def _app_src():
     return Path(app_mod.__file__).read_text(encoding="utf-8")
 
 
-def test_all_eight_sites_wired():
-    """★check_and_count 지점마다 과금이 붙었는지 — 하나라도 빠지면 공짜 구멍."""
+# 유료 작업 지점 수 — 늘어나면 여기도 같이 올린다.
+# 2026-08-17: 8곳 / 2026-08-23: 10곳(렌즈 cn·kw search가 과금 없이 열려 있던 것을 막음)
+_PAID_SITES = 10
+
+
+def test_every_paid_site_is_wired():
+    """★check_and_count 지점마다 과금이 붙었는지 — 하나라도 빠지면 공짜 구멍.
+
+    개수를 박아두는 이유: 새 유료 경로를 추가하면서 과금을 빠뜨리면 이 테스트가
+    깨져서 **의도한 증가인지 사람이 확인하게** 만든다. 실제로 렌즈 두 경로가
+    과금 없이 열려 있던 것을 2026-08-23에 발견했다."""
     src = _app_src()
     calls = [m for m in re.finditer(r"check_and_count\(", src)]
-    # 정의 1개 + 호출 8개
-    assert len(calls) == 9, f"check_and_count 등장 횟수가 9가 아니다: {len(calls)}"
-    assert src.count("_charge_or_402(") == 9, (
-        "_charge_or_402 정의 1 + 호출 8 = 9가 아니다: " f"{src.count('_charge_or_402(')}")
+    want = _PAID_SITES + 1                                   # 정의 1개 + 호출 N개
+    assert len(calls) == want, (
+        f"check_and_count 등장 횟수가 {want}가 아니다: {len(calls)} "
+        "— 유료 경로를 늘렸으면 _PAID_SITES도 올려라")
+    assert src.count("_charge_or_402(") == want, (
+        f"_charge_or_402 정의 1 + 호출 {_PAID_SITES} = {want}가 아니다: "
+        f"{src.count('_charge_or_402(')}")
 
 
 def test_wiring_uses_constants_not_literals():

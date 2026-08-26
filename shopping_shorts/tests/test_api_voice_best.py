@@ -19,7 +19,8 @@ def test_groups_carry_best_and_order(monkeypatch):
          "default_silence_trim": "mid", "sample_file": None, "best": False},
     ]
     monkeypatch.setattr("shopping_shorts.app.Store",
-                        lambda *_a, **_k: type("S", (), {"list_voice_presets": lambda s, lang=None: rows})())
+                        lambda *_a, **_k: type("S", (), {   # customer_id는 2026-08-24 추가 — 가짜도 실제 시그니처를 따른다
+                            "list_voice_presets": lambda s, lang=None, customer_id=None: rows})())
     d = TestClient(app).get("/api/voice-presets?lang=KR").json()
     assert [g["group_id"] for g in d["groups"]] == ["kr-mina", "kr-han"]
     assert [g["best"] for g in d["groups"]] == [True, False]
@@ -31,5 +32,6 @@ def test_best_defaults_false_when_absent(monkeypatch):
              "voice_settings": {}, "default_speed": 1.0, "default_silence_trim": "off",
              "sample_file": None}]
     monkeypatch.setattr("shopping_shorts.app.Store",
-                        lambda *_a, **_k: type("S", (), {"list_voice_presets": lambda s, lang=None: rows})())
+                        lambda *_a, **_k: type("S", (), {   # customer_id는 2026-08-24 추가 — 가짜도 실제 시그니처를 따른다
+                            "list_voice_presets": lambda s, lang=None, customer_id=None: rows})())
     assert TestClient(app).get("/api/voice-presets?lang=KR").json()["groups"][0]["best"] is False

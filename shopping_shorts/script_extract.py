@@ -18,6 +18,7 @@ from pipeline.atoms import key_vault
 from shopping_shorts import action_dict
 from shopping_shorts import comment_gen
 from shopping_shorts import scene_cut
+from shopping_shorts import shot_roles as _shot_roles
 from shopping_shorts import tag_qa
 from shopping_shorts.config import SHORTS_GEMINI_KEYS
 from shopping_shorts.video_analysis import _MODEL, _wait_until_active
@@ -73,8 +74,12 @@ _RESPONSE_SCHEMA = {
                     "use_point": {"type": "string"},
                     "has_effect": {"type": "boolean"},
                     "is_key": {"type": "boolean"},
-                    "shot_role": {"type": "string",
-                                  "enum": ["before", "사용중", "after", "완성", "문제", "기타"]},
+                    # ★어휘를 여기 다시 적지 않는다(0순위-B). 2026-08-21 실사고:
+                    #   `shot_roles` 모듈을 만들고 frame_script만 고쳤는데, **실제 태깅은
+                    #   이 경로**라 새 축(설치·조작·도포·정리·실증)이 하나도 안 나왔다.
+                    #   재태깅으로 5,015건을 갈라놨는데 **새로 분석되는 것은 전부 옛 어휘**로
+                    #   돌아왔다 — 축 확장이 통째로 무력화된 상태였다.
+                    "shot_role": {"type": "string", "enum": list(_shot_roles.SHOT_ROLES)},
                     "product_benefits": {"type": "array", "items": {"type": "string"}},
                 },
                 "required": ["start", "end", "text", "scene_desc"],
@@ -183,13 +188,7 @@ _PROMPT = """이 영상을 보고 시간 순서대로 세그먼트로 나눠 대
   구간이면 true. 단순 도입 상황·인물 등장·감상·완성 인사·CTA·링크유도면 false. (원본 제작자가
   "이 대사에 이 장면"으로 맞춰둔 실증 페어를 골라내려는 것 — 대사가 기능을 설명하며 화면이 그걸
   보여주면 true. 애매하면 false.)
-- shot_role: 화면의 성격을 하나 골라라(장면 스파인 슬롯 배치에 쓴다):
-  · "before" = 사용 전/문제 있는 상태(더러움·부스스한 룩·엉킴 등)
-  · "사용중" = 손이 재료/도구를 다루는 과정(조리·바르기·닦기·조립)
-  · "after"  = 사용 후 개선된 상태(before와 대비되는 깨끗/완성 룩)
-  · "완성"   = 완성된 결과물이 화면 주인공(완성 요리·완성품 클로즈업)
-  · "문제"   = 문제 상황을 보여주는 장면(불편·한계 부각)
-  · "기타"   = 그 외(인물 등장·배경·인사·CTA)
+{_SHOT_ROLE_GUIDE}
 - product_benefits: **자막도 나레이션도 없어도** 그 구간 화면만 보고 이 제품/도구의 **특장점을
   한국어 문장 1~2개**로 뽑아라(예: "터치 한 번에 자동으로 열린다", "좁은 틈에 쏙 들어가 공간을
   아낀다", "고급스러운 마감"). 요리·살림 소재면 방법 설명 대신 **결과의 매력**을 적어라(예:
@@ -215,16 +214,13 @@ def _norm_benefits(raw):
     return [s.strip() for s in raw if isinstance(s, str) and s.strip()]
 
 
-# 장면 스파인(2026-07-29): shot_role 확장어휘. 옛 추출본('조리')은 '사용중'으로 흡수하고,
-# 알 수 없는 값은 '기타'로 떨어뜨린다(fail-open — 스파인 배치가 크래시 없이 돈다).
-_SHOT_ROLE_VOCAB = {"before", "사용중", "after", "완성", "문제", "기타"}
-_SHOT_ROLE_ALIASES = {"조리": "사용중"}
+# 장면 스파인(2026-07-29): shot_role 어휘. **여기서 다시 적지 않는다** —
+# `shot_roles` 모듈 한 곳이 정한다(0순위-B). 임포트는 파일 맨 위에 있다 —
+# 위쪽 JSON 스키마(_SCHEMA)가 모듈 로드 시점에 그 목록을 쓰기 때문이다.
 
 
 def _norm_shot_role(raw):
-    if raw in _SHOT_ROLE_VOCAB:
-        return raw
-    return _SHOT_ROLE_ALIASES.get(raw, "기타")
+    return _shot_roles.normalize(raw)
 
 
 # 짧은 이름(2026-08-16). 카드 밑에 그대로 찍히므로 길이를 여기서 한 번만 통제한다
@@ -307,6 +303,86 @@ def _collect_benefits(segments):
             if b not in out:
                 out.append(b)
     return out
+
+
+def _merge_too_short(raw_segments, min_clip=None):
+    """0.8초 미만 구간을 인접 구간에 합친다 — 태어날 때부터 못 쓰는 조각을 안 만든다.
+
+    ★2026-08-17 사장님 지적("0.8초 미만은 안 되게 돼 있던데 조각낼 때부터 방지 못 하나").
+      실측: 최근 80영상 1,164구간 중 131개(11.3%)가 0.8초 미만이었다. 이 조각들은
+      라운드로빈이 건너뛰어 **화면에 안 나온다** — 담아도 사라지고, 그 몫을 메우느라
+      다른 컷이 길게 늘어난다(handoff/칸채우기.md 실사고).
+      원인은 태깅이 **대사 단위**로 쪼개는 것: "도자기라" 같은 짧은 말이 0.7초 구간이 된다.
+
+    왜 늘리지 않고 합치나: 구간이 빈틈없이 붙어 있다(실측 인접쌍 505개 전부 간격 0).
+    끝을 늘리면 옆 구간을 침범한다.
+
+    합치는 규칙 — 뜻이 덜 상하는 쪽으로:
+      1) 인접(앞·뒤) 중 **같은 shot_role**이 있으면 그쪽. 화면 성격이 같아야 설명이 안 어긋난다.
+      2) 없으면 **짧은 쪽**. 긴 구간을 더 부풀리지 않는다.
+      3) 대사는 이어붙이고, 설명·이름(scene_desc·label)은 **원래 길었던 쪽** 것을 남긴다
+         — 0.7초가 4초를 밀어내면 카드 설명이 실제 화면과 어긋난다.
+    min_clip 기본값은 video_assemble._MIN_CLIP을 그대로 쓴다(같은 판단을 두 군데 적지 않는다).
+    """
+    from shopping_shorts import video_assemble as _va
+    if min_clip is None:
+        min_clip = _va._MIN_CLIP
+    segs = [dict(s) for s in (raw_segments or [])]
+    if len(segs) < 2:
+        return segs                       # 합칠 상대가 없다(원본 그대로 — 회귀 0)
+
+    def _len(s):
+        try:
+            return float(s.get("end") or 0.0) - float(s.get("start") or 0.0)
+        except (TypeError, ValueError):
+            return 0.0
+
+    def _join(a, b):
+        """a·b를 하나로. 시간은 바깥쪽, 나머지는 '원래 길었던 쪽'을 대표로."""
+        big, small = (a, b) if _len(a) >= _len(b) else (b, a)
+        out = dict(big)
+        out["start"] = min(float(a.get("start") or 0.0), float(b.get("start") or 0.0))
+        out["end"] = max(float(a.get("end") or 0.0), float(b.get("end") or 0.0))
+        # 대사는 시간순으로 이어붙인다(둘 다 있으면 공백 하나로).
+        t1 = (a.get("text") or "").strip()
+        t2 = (b.get("text") or "").strip()
+        out["text"] = (t1 + " " + t2).strip() if (t1 and t2) else (t1 or t2)
+        # 실증·효과는 한쪽만 있어도 살린다(정보를 잃지 않는 방향).
+        out["is_key"] = bool(a.get("is_key")) or bool(b.get("is_key"))
+        out["has_effect"] = bool(a.get("has_effect")) or bool(b.get("has_effect"))
+        _pb = list(_norm_benefits(big.get("product_benefits")))
+        for x in _norm_benefits(small.get("product_benefits")):
+            if x not in _pb:
+                _pb.append(x)
+        out["product_benefits"] = _pb
+        return out
+
+    changed = True
+    while changed and len(segs) >= 2:
+        changed = False
+        for i, s in enumerate(segs):
+            if _len(s) >= min_clip - 1e-6:
+                continue
+            prev_s, next_s = (segs[i - 1] if i > 0 else None), (segs[i + 1] if i + 1 < len(segs) else None)
+            role = s.get("shot_role")
+            # ① 같은 역할 우선(앞을 먼저 본다 — 시간순 흐름이 덜 끊긴다)
+            pick = None
+            if prev_s is not None and prev_s.get("shot_role") == role:
+                pick = i - 1
+            elif next_s is not None and next_s.get("shot_role") == role:
+                pick = i + 1
+            else:
+                # ② 짧은 쪽
+                cands = [(j, _len(segs[j])) for j in (i - 1, i + 1) if 0 <= j < len(segs)]
+                if cands:
+                    pick = min(cands, key=lambda x: x[1])[0]
+            if pick is None:
+                continue
+            lo, hi = (pick, i) if pick < i else (i, pick)
+            segs[lo:hi + 1] = [_join(segs[lo], segs[hi])]
+            changed = True
+            break                          # 목록이 바뀌었으니 처음부터 다시 훑는다
+    return segs
 
 
 def _assign_seg_ids(video_id, raw_segments, motion_map=None):
@@ -521,8 +597,12 @@ def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=
     boundary_hint, _cuts, _fps = _boundary_hint(video_path)
     if not use_boundaries:
         boundary_hint = ""
-    base_prompt = _PROMPT.format(caption=caption or "(캡션 없음)",
-                                 boundaries=boundary_hint or "(감지 실패 — 화면·주제 변화로 판단)")
+    base_prompt = _PROMPT.format(
+        caption=caption or "(캡션 없음)",
+        boundaries=boundary_hint or "(감지 실패 — 화면·주제 변화로 판단)",
+        # ★설명 문구도 어휘 목록에서 만든다(0순위-B) — 여기 손으로 적어두면 축을 늘려도
+        #   모델은 옛 목록만 보고 답한다. 그게 2026-08-21에 실제로 일어난 일이다.
+        _SHOT_ROLE_GUIDE=_shot_roles.guide_block())
     prompt = base_prompt
     model = _MODEL
     primary_503 = 0
@@ -563,8 +643,12 @@ def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=
                 ),
             )
             data = json.loads(resp.text)
-            motion_map = _compute_motion_map(video_path, _cuts, _fps, data.get("segments", []), video_id)
-            segments = _assign_seg_ids(video_id, data.get("segments", []), motion_map=motion_map)
+            # ★못 쓰는 조각을 애초에 안 만든다(2026-08-17) — 0.8초 미만은 화면에 안 나온다.
+            #   ⚠️순서 주의: motion_map이 세그먼트 순번으로 seg_id를 만들므로 **병합을 먼저** 해야
+            #   한다. 뒤에 하면 모션레벨이 엉뚱한 조각에 붙는다.
+            _segs_raw = _merge_too_short(data.get("segments", []))
+            motion_map = _compute_motion_map(video_path, _cuts, _fps, _segs_raw, video_id)
+            segments = _assign_seg_ids(video_id, _segs_raw, motion_map=motion_map)
             # 소스 단위 특장점: 모델의 최상위 요약을 우선하고, 없으면 세그별 집계로 폴백.
             # 무자막 영상(full_text 0자)이 대본 생성에서 통째로 빠지던 것을 막는 재료다.
             benefits = _norm_benefits(data.get("product_benefits")) or _collect_benefits(segments)

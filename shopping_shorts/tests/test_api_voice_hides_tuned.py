@@ -24,7 +24,10 @@ def _row(pid, gid, origin, variant="stable", name=None):
 def _client(monkeypatch, rows):
     monkeypatch.setattr(
         "shopping_shorts.app.Store",
-        lambda *a, **k: type("S", (), {"list_voice_presets": lambda s, lang=None: rows})())
+        # customer_id는 2026-08-24에 생겼다(공용 + 내가 담은 성우만 보이게).
+        # 가짜도 실제 시그니처를 따라가야 한다 — 안 그러면 호출부가 늘 때마다 여기서 터진다.
+        lambda *a, **k: type("S", (), {
+            "list_voice_presets": lambda s, lang=None, customer_id=None: rows})())
     return TestClient(app)
 
 
