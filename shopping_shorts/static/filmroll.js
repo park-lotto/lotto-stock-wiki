@@ -365,9 +365,17 @@
       moveHead(pv.currentTime || 0);
     }
 
+    // ★같은 필름을 두 번 겹쳐 뽑으면 belt에 옛 칸이 남아 **눈금이 섞인다**
+    //   (2026-08-26 사장님 스샷: 9.3s 다음에 0.0s). 확대·재빌드가 겹칠 수 있으므로
+    //   한 번에 하나만 돌게 줄을 세운다.
+    let _stripSeq = 0;
     async function strip() {
+      const my = ++_stripSeq;
       loadEl.style.display = 'block';
-      belt.innerHTML = '';
+      // ★belt를 미리 비우고 한 칸씩 붙이면, 뽑는 데 시간이 걸리는 사이 다른 배율의
+      //   칸이 섞여 들어간다(2026-08-26 사장님 스샷: 9.3s 다음에 0.0s).
+      //   **다 만들어 한 번에 갈아 끼운다** — 중간 상태가 화면에 존재하지 않는다.
+      const frag = document.createDocumentFragment();
       STEP = calcStep(CW);
       N = Math.max(1, Math.ceil(DUR / STEP));
       host.querySelector('.frstep').textContent = `한 칸 ${STEP < 1 ? STEP.toFixed(2) : STEP.toFixed(0)}초`;
@@ -403,9 +411,12 @@
         const lab = (t0 % (STEP < 1 ? 1 : 5 * STEP) < STEP * 0.9)
           ? `<span class="s">${t0.toFixed(STEP < 1 ? 1 : 0)}s</span>` : '';
         c.innerHTML = (d ? `<img src="${d}">` : '') + lab;
-        belt.appendChild(c);
+        if (my !== _stripSeq) return;        // 그 사이 새로 뽑기 시작했다 — 이 결과는 버린다
+        frag.appendChild(c);
       }
       try { tmp.src = ''; } catch (_) {}
+      if (my !== _stripSeq) return;          // 그 사이 새로 뽑기 시작했다 — 이 결과는 버린다
+      belt.replaceChildren(frag);            // ← 여기서 한 번에 갈아 끼운다
       loadEl.style.display = 'none';
       // ★2026-08-26 3차 사장님 "펼치면 전체 영상이 나오네". 원본 전체를 펴는 건 맞다
       //   (조각 밖 구간을 잡으려면 원본이 다 보여야 한다) — 문제는 **0초에서 열려서**
@@ -619,8 +630,15 @@
         //   소리는 미리보기가, **위치 표시는 필름이** 맡는다: pv는 muted라 같이 돌려도
         //   소리가 겹치지 않는다. 같은 파일·같은 시작점이라 막대가 그림을 따라간다.
         if (playing) { stopHead(); return; }      // 두 번째 스페이스 = 멈춤
-        const s2 = bx ? bx.s : (pv.currentTime || 0);
-        const b2 = bx ? bx.e : Math.min(DUR, s2 + 3);
+        // ★박스가 없으면 **지금 쓰는 구간**을 본다(2026-08-26 사장님 "재생을 하면
+        //   미리보기에 짧은 초만큼 필름에서 재생된다"). 종전엔 3초로 못 박아 두어,
+        //   구간이 얼마든 늘 3초만 나왔다. 쓰는 구간을 모르면 그때만 3초로 간다.
+        const useFrom = (opt.from != null) ? +opt.from : null;
+        const useTo   = (opt.to   != null) ? +opt.to   : null;
+        const s2 = bx ? bx.s : (useFrom != null ? useFrom : (pv.currentTime || 0));
+        const b2 = bx ? bx.e
+                 : (useTo != null && useTo > s2 ? Math.min(DUR, useTo)
+                                                : Math.min(DUR, s2 + 3));
         // 멈춘 자리가 이 구간 안이면 거기서 이어서(끝까지 봤으면 RESUME이 비어 처음부터).
         const a2 = (RESUME != null && RESUME > s2 + 0.05 && RESUME < b2 - 0.05) ? RESUME : s2;
         opt.onPlay(a2, b2);
