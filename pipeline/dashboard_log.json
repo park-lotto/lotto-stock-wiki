@@ -663,5 +663,26 @@
     "track": "main·위키/조사",
     "summary": "git pull 실행 — c54eacc1a→26bdf89a5 fast-forward (48파일, +4408/-117). 필름롤 3단계, 폰트 일원화(TTF 15종+sync_fonts.py), pickup_script 신규, 테스트 8종 추가분 수신.",
     "next": "필름롤/폰트일원화 핸드오프 확인 후 이어갈 트랙 결정"
+  },
+  {
+    "date": "2026-08-26",
+    "category": "스탁브레인",
+    "track": "자막제거UI재설계",
+    "summary": "제보 '오늘도 자막제거 실패'(work=150ce692e1e1) 원인 확정: 고장 아님. job dec792143c04 clean_error='포인트가 부족합니다 (필요 5P, 보유 2.1P)', cid57(pro). 08-25~08-26 6회 재시도 전부 같은 사유. 진짜 문제는 안내 — clean_failure_kind()가 VMake 60002만 no_credit으로 가르고 자사 포인트 부족은 unknown으로 떨어져 '잠시 후 다시 시도' 오안내(08-25 김용덕 사고와 같은 모양의 재발).",
+    "next": "① cid57 포인트 충전 금액 사장님 확인 ② clean_failure_kind에 no_points 분류 추가 + produce.html cleanFailHtml에 잔액/필요액·충전안내 표시, 헛도는 재시도 버튼 제거"
+  },
+  {
+    "date": "2026-08-26",
+    "category": "스탁브레인",
+    "track": "카톡답변봇",
+    "summary": "핸드오프·트랙로그에 오늘 진행분 기록 후 커밋·main 병합·푸시 완료(6c7d8e832). 재부팅해도 유실 없음.",
+    "next": "재부팅 후 트랙.bat→카톡답변봇. ② 폰 메신저봇R 설치(jsoup 실기 미검증) → ③ 서버에서 bot_qa 본생성·bot_admin 검수 → 인코딩 방어 반영 확인"
+  },
+  {
+    "date": "2026-08-26",
+    "category": "스탁브레인",
+    "track": "렌즈키비례",
+    "summary": "렌즈 하루한도를 SerpApi 키 1개당 10회로 변경 배포(1개10/2개20/3개30 실측). 종전은 키 있으면 20회 고정이라 임영미님 요청과 어긋났음. 게이트와 마이페이지 표시가 _lens_limit_for 한 함수 공유. 잘못 넣었던 전역 limit_lens_pro=20 되돌림.",
+    "next": "키 1개 보유 20명이 20회에서 10회로 줄어든 건 문의 대응 필요 / 자막제거 구간청소 효과 실측 대기"
   }
 ]
