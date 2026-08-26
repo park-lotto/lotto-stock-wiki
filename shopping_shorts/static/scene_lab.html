@@ -1458,6 +1458,15 @@ function scrubPreviewHere(vidId, t){
   try{ previewFrameAt(vidId, t); }catch(e){}
 }
 
+// 지금 큰 미리보기가 보여주는 시각 — 바깥이 주인, 없으면 이 화면.
+function previewTimeHere(){
+  try{
+    const up = _outerPlayer();
+    if (up && typeof up.previewTimeNow === 'function') return up.previewTimeNow();
+  }catch(e){}
+  try{ return previewTimeNow(); }catch(e){ return null; }
+}
+
 function stopPlayHere(){
   try{
     const up = _outerPlayer();
@@ -1568,6 +1577,8 @@ function renderRollHosts(beatIdx){
     onStop(){ stopPlayHere(); },
     // 손잡이를 끄는 동안 큰 미리보기도 같은 프레임으로(재생 아님 — 정지 화면).
     onScrub(t){ scrubPreviewHere(vid, t); },
+    // 막대가 따라갈 '지금 미리보기 시각' — 이걸 주면 filmroll이 자기 시계 대신 이걸 쓴다.
+    getTime(){ return previewTimeHere(); },
     // ⬆ 주황 박스를 위 칸으로 끌어 담기 — **팔레트 드래그와 같은 계약**을 쓴다
     //   (palDrag → 칸의 beatDrop). 새 드롭 배선을 만들면 두 벌이 된다(0순위-B).
     onBoxDrag(r, ev){

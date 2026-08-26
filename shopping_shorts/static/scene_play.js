@@ -536,6 +536,12 @@ function previewFrameAt(videoId, t){
   }catch(e){ /* 미리보기는 부가기능 — 실패해도 필름 조작을 막지 않는다 */ }
 }
 
+// 지금 큰 미리보기가 실제로 보여주는 원본 시각(초). 없으면 null.
+// 필름 막대가 이걸 따라가면 화면과 막대가 어긋날 수 없다(2026-08-26 싱크 제보).
+function previewTimeNow(){
+  try{ const v = curVid; return v ? v.currentTime : null; }catch(e){ return null; }
+}
+
 let curVid = null;
 function showVid(v){
   if (curVid === v) return;

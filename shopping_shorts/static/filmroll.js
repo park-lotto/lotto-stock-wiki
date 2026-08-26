@@ -419,7 +419,24 @@
       scrubTo(t);
     });
     win.addEventListener('wheel', e => {
-      e.preventDefault(); off = clamp(off + ((e.deltaY || e.deltaX) > 0 ? pps() * 2 : -pps() * 2)); applyW();
+      e.preventDefault();
+      // ★Ctrl+휠 = 확대/축소(2026-08-26 사장님). 슬라이더까지 손을 옮기지 않고 그 자리에서
+      //   들여다본다. 확대는 **가리키는 지점을 축으로** 한다 — 안 그러면 보던 데를 놓친다.
+      if (e.ctrlKey || e.metaKey) {
+        const r = win.getBoundingClientRect();
+        const anchorT = xToSec(e.clientX - r.left);          // 마우스가 가리키던 시각
+        const z = host.querySelector('.frz');
+        const min = +z.min || 26, max = +z.max || 240;
+        const next = Math.max(min, Math.min(max, Math.round(CW * (e.deltaY > 0 ? 0.85 : 1.18))));
+        if (next === CW) return;
+        z.value = next;
+        const ns = calcStep(next);
+        CW = next;
+        const keep = () => { off = clamp(anchorT * pps() - (e.clientX - r.left)); applyW(); };
+        if (ns !== STEP) strip().then(keep); else keep();
+        return;
+      }
+      off = clamp(off + ((e.deltaY || e.deltaX) > 0 ? pps() * 2 : -pps() * 2)); applyW();
     }, { passive: false });
 
     win.addEventListener('pointerdown', e => {
@@ -500,6 +517,18 @@
         };
         raf = requestAnimationFrame(loop);
       };
+      // ★막대가 미리보기보다 먼저 갔다(2026-08-26 사장님 "빨간막대기 재생보다 미리보기가
+      //   약간 더 늦게 재생됨"). 필름 안 pv는 바로 도는데 큰 미리보기는 시크·디코드에
+      //   시간이 걸린다 — **부모의 실제 시각을 읽어** 그걸 따라가면 어긋날 수가 없다.
+      //   부모가 아직 그 구간에 못 왔으면 막대는 시작점에 머문다(앞서가지 않는다).
+      if (typeof opt.getTime === 'function') {
+        try { pv.currentTime = a; } catch (_) {}
+        tick(() => {
+          const t = opt.getTime();
+          return (typeof t === 'number' && isFinite(t) && t >= a - 0.5) ? t : a;
+        });
+        return;
+      }
       try { pv.currentTime = a; } catch (_) {}
       pv.play().then(() => tick(() => pv.currentTime)).catch(() => {
         // 자동재생 거부 — 시계로 간다(구간 길이만큼 균일하게).
