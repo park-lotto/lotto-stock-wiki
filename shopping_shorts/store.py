@@ -1068,6 +1068,18 @@ class Store:
                       "ON customer_keys(customer_id, service)")
             c.execute("CREATE UNIQUE INDEX IF NOT EXISTS ux_ck_dup "
                       "ON customer_keys(customer_id, service, key_hash)")
+            # 계정별 환경설정(2026-08-26) — 첫 용도는 폰트 즐겨찾기.
+            # settings는 key가 PK라 계정 축이 없어 재사용 불가(customer_keys와 같은 이유).
+            # value는 JSON 문자열 — 용도마다 표를 새로 만들지 않으려고 일부러 범용으로 뒀다.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS customer_prefs (
+                    customer_id INTEGER NOT NULL,
+                    key TEXT NOT NULL,
+                    value TEXT NOT NULL,
+                    updated_at TEXT DEFAULT (datetime('now')),
+                    PRIMARY KEY (customer_id, key)
+                )
+            """)
             # 픽로그(2026-07-18, 트랙1) — 사장님이 고른 것/버린 것을 append-only로 남긴다.
             # 트랙7 LLM 심사의 취향 예시 + B전환 승인률 지표의 원천. 수정·삭제 없음.
             c.execute("""
@@ -4872,6 +4884,44 @@ class Store:
                 "INSERT INTO settings(key, value) VALUES(?,?) "
                 "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
                 (key, value),
+            )
+
+    def get_pref(self, key, customer_id=LEGACY_CUSTOMER_ID, default=None):
+        """계정별 환경설정 조회. 저장된 적 없으면 default를 그대로 돌려준다.
+
+        ★'없음'과 '비움'은 다르다(2026-08-26): 폰트 즐겨찾기에서 사용자가 별을
+          **전부 끄면** 빈 리스트가 저장되고, 그때 기본값으로 되돌리면 안 된다.
+          그래서 행이 없을 때만 default를 쓴다."""
+        with self._conn() as c:
+            row = c.execute(
+                "SELECT value FROM customer_prefs WHERE customer_id=? AND key=?",
+                (customer_id, key),
+            ).fetchone()
+        if not row:
+            return default
+        try:
+            return json.loads(row[0])
+        except Exception:
+            # 손상된 값이 화면을 통째로 막지 않게 한다(fail-open).
+            return default
+
+    def set_pref(self, key, value, customer_id=LEGACY_CUSTOMER_ID):
+        """계정별 환경설정 저장(upsert). value는 JSON 직렬화 가능한 값."""
+        with self._conn() as c:
+            c.execute(
+                "INSERT INTO customer_prefs(customer_id, key, value, updated_at) "
+                "VALUES(?,?,?, datetime('now')) "
+                "ON CONFLICT(customer_id, key) DO UPDATE SET "
+                "value=excluded.value, updated_at=excluded.updated_at",
+                (customer_id, key, json.dumps(value, ensure_ascii=False)),
+            )
+
+    def clear_pref(self, key, customer_id=LEGACY_CUSTOMER_ID):
+        """계정별 환경설정 삭제 → 다음 조회는 기본값으로 돌아간다('되돌리기')."""
+        with self._conn() as c:
+            c.execute(
+                "DELETE FROM customer_prefs WHERE customer_id=? AND key=?",
+                (customer_id, key),
             )
 
     def add_pron_report(self, text, comment, created_at):

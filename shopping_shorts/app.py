@@ -44,6 +44,7 @@ from shopping_shorts import backbone
 from shopping_shorts.aipick import build_aipick
 from shopping_shorts.categorize import categorize, KEYWORDS as CATEGORY_KEYWORDS
 from shopping_shorts import script_generate
+from shopping_shorts import pickup_script        # 픽업영상 대본 — 씨앗 훅 문형·CTA 판정
 from shopping_shorts import caption_sync          # 장면별 줄 나누기 후 타이밍 재계산
 from shopping_shorts import tts_timestamps        # 위와 같은 용도(잘라낸 무음 보정)
 from shopping_shorts.apify_client import fetch_single_reel, fetch_reels, fetch_profiles
@@ -2852,16 +2853,37 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
                     # ★어떻게 골랐는지 화면이 말할 수 있게(조용한 폴백 금지).
                     "style_axis": _axis_pick or "",
                 }}
+    # ★픽업영상 대본(2026-08-26 사장님) — 씨앗 훅의 **문형만** 물려받고 문장은 새로 쓴다.
+    #   seed_hook이 오면 프롬프트의 훅 줄이 '문형 지정' 지시로 갈리고(script_generate),
+    #   생성 뒤 pickup_script가 판정해 어긴 안을 걸러낸다.
+    #   ⚠️프롬프트만으로는 안 된다 — 실측 4안 중 2안이 문형을 버렸다(지시는 강제가 아니다).
+    _seed_hook = (body.get("seed_hook") or "").strip()
+    _seed_cta = (body.get("seed_cta") or "").strip()
+    if _seed_hook:
+        _gen_kw["seed_hook"] = _seed_hook
     drafts = script_generate.generate_variations(
         it.get("structure") or {}, it.get("full_text") or "", elem_modes, category_lookup, **_gen_kw)
     if not drafts:
         return JSONResponse(status_code=502, content={"ok": False, "error": "생성 실패(Gemini 키 소진 또는 오류) — 잠시 후 재시도"})
+    _pickup_rejected = []
+    if _seed_hook:
+        _ok, _bad = pickup_script.filter_drafts(drafts, _seed_hook, _seed_cta)
+        _pickup_rejected = [b["reason"] for b in _bad]
+        # ★한 안도 안 남으면 **되돌리지 말고 그대로 낸다**(빈손보다 낫다).
+        #   판정은 '더 좋은 걸 고르는' 장치지 '아무것도 못 내게 하는' 장치가 아니다.
+        #   대신 화면이 왜 어겼는지 말할 수 있게 사유를 함께 올린다(조용한 폴백 금지).
+        if _ok:
+            drafts = _ok
     cid = _cid(request)
     for dr in drafts:
         draft_id = uuid.uuid4().hex[:12]
         store.save_draft(draft_id, cid, shortcode, None, dr.get("hook", ""), dr.get("script", ""), None, "generate")
         dr["draft_id"] = draft_id
-    return {"ok": True, "drafts": drafts}
+    _resp = {"ok": True, "drafts": drafts}
+    # ★어긴 안이 왜 걸러졌는지 화면이 말할 수 있게 올린다(조용한 폴백 금지).
+    if _pickup_rejected:
+        _resp["pickup_rejected"] = _pickup_rejected
+    return _resp
 
 
 @app.post("/api/wiki/draft/analyze")
@@ -4242,6 +4264,32 @@ def api_mix_segments(job_id: str):
     return {"ok": True, "segments": segs}
 
 
+
+def _film_seg_from_id(seg_id: str, job: dict):
+    """`film_<video_id>_<start>_<end>` → {video_id,start,end}. 아니면 None.
+
+    ★화면(scene_lab commitRoll)이 만드는 id와 짝이다. 형식이 어긋나면 조용히 None —
+      경로 조작을 막기 위해 video_id가 이 잡의 소스 목록에 있을 때만 통과시킨다.
+    """
+    import re as _re
+    if not isinstance(seg_id, str) or not seg_id.startswith("film_"):
+        return None
+    m = _re.match(r"^film_(.+)_([0-9]+\.[0-9]+)_([0-9]+\.[0-9]+)$", seg_id)
+    if not m:
+        return None
+    vid, a, b = m.group(1), float(m.group(2)), float(m.group(3))
+    if not (b > a >= 0):
+        return None
+    known = set()
+    for ex in (job.get("extract") or {}).values():
+        v = (ex or {}).get("video_id")
+        if v:
+            known.add(str(v))
+    if vid not in known:
+        return None
+    return {"video_id": vid, "start": a, "end": b, "seg_id": seg_id}
+
+
 @app.get("/api/mix/seg_thumb/{job_id}/{seg_id}")
 def api_mix_seg_thumb(job_id: str, seg_id: str):
     """[다른 화면으로] 피커용 seg 썸네일(중간지점 프레임 jpg, 캐시).
@@ -4251,6 +4299,10 @@ def api_mix_seg_thumb(job_id: str, seg_id: str):
         return JSONResponse(status_code=404, content={"ok": False, "error": "데이터 없음"})
     seg_map, _ = _edit_plan._build_inventory(list(job["extract"].values()))
     seg = seg_map.get(seg_id)
+    if not seg:
+        # ★필름에서 만든 조각(2026-08-26) — 화면이 즉석에서 만든 구간이라 인벤토리에 없다.
+        #   id에 영상·구간이 들어 있으니 그걸로 프레임을 뽑는다(없으면 위 훅 컷이 빈칸이 된다).
+        seg = _film_seg_from_id(seg_id, job)
     if not seg:
         return JSONResponse(status_code=404, content={"ok": False, "error": "없는 seg_id"})
     work = _MIX_WORK_DIR / job_id
@@ -4540,7 +4592,11 @@ def api_mix_scene_lab_fill(job_id: str, body: dict):
         return JSONResponse(status_code=422, content={"ok": False, "error": "이 칸엔 멘트가 없어요"})
     seg_map, _ = _edit_plan._build_inventory(list((job.get("extract") or {}).values()))
     taken = {str(s) for s in (body.get("taken") or [])}
-    pool = [sid for sid in seg_map if sid not in taken]
+    # ⚠ AI 자동 채우기 후보에서 첫·끝(CTA·썸네일) 조각을 뺀다(2026-08-26).
+    #   _build_inventory가 edge 표식만 달고 버리지 않게 바뀌었다 — 사람이 화면에서 골라
+    #   쓰는 건 되지만 **AI가 자동으로 집는 건 종전대로 막는다**(설계 ⑤).
+    pool = [sid for sid, _s in seg_map.items()
+            if sid not in taken and not _edit_plan._is_edge_seg(_s)]
     if not pool:
         return {"ok": True, "picks": [], "reason": "남은 장면이 없어요"}
     need = body.get("need")
@@ -4842,6 +4898,13 @@ def api_mix_scene_lab_narration(job_id: str, beat_idx: int, body: dict,
         return {"ok": True, "unchanged": True, "regen": True,
                 "tts_ver": beat.get("tts_ver") or 0}
     beat["narration"] = text
+    # ★사람이 직접 고쳤다는 표식 (2026-08-25 고객 오류신고 cid 110 "자막수정이 안되요").
+    #   저장 출구(store._ensure_screen_time → enforce_scripted_narration)가 1단계 확정
+    #   대본에 없는 문장을 "EDL이 지어낸 것"으로 보고 **원본으로 되돌리고 있었다.**
+    #   3단계 수정은 원본과 다른 게 당연하므로 고칠 때마다 되돌려졌다 — 저장 API는
+    #   {"ok":true,"saved":true}를 주는데 DB는 그대로라 "저장이 안 된다"로 보였다.
+    #   표식을 여기서만 단다(사람이 고치는 유일한 자리) → AI 창작 방어는 그대로 살아있다.
+    beat["narration_manual"] = True
     # ★대본이 바뀌면 옛 문장 기준으로 계산된 자막 타이밍은 **전부 무효**다. 지워야
     #   _lab_captions·렌더가 새 문장으로 다시 계산한다(안 지우면 옛 구절 수에 맞춰
     #   zip이 잘려 자막이 중간에서 끊긴다).
@@ -8880,6 +8943,14 @@ def _is_trial(customer_id, now=None):
 # 서버 보호 목적이라 포인트와 별개로 유지한다. admin 설정으로 조정 가능.
 _CREDIT_DEFAULTS = {"lens": 10, "render": 10, "script": 10}
 _CREDIT_PRO_DEFAULTS = {"lens": 10, "render": 10, "script": 200}  # 하루 영상 최대 10개(돌려쓰기 상한, 2026-07-22)
+# 🔑 BYOK(자기 SerpApi 키를 낸 회원) 전용 한도 — 렌즈만 올린다(2026-08-26 사장님 지시).
+#   검색 비용이 **그 회원 키**에서 나가는데 한도는 사장님 키 기준으로 걸려 있었다
+#   (실측: 회원 201이 SerpApi 키 2개를 냈는데도 하루 10회에서 막힘).
+#   ⚠️ render·script는 pro와 같은 값을 유지한다 — SerpApi 키는 렌즈에만 쓰인다.
+_CREDIT_BYOK_DEFAULTS = {"lens": 20, "render": 10, "script": 200}
+# 자기 SerpApi 키를 낸 회원 — **키 1개당** 하루 렌즈 회수(2026-08-26 사장님).
+#   키 1개=10회 · 2개=20회 · 3개=30회. 종전엔 개수와 무관하게 20회 고정이었다.
+_CREDIT_PER_KEY_DEFAULTS = {"lens": 10}
 _GLOBAL_CAP_DEFAULTS = {"lens": 200, "render": 100, "script": 400}
 
 
@@ -8935,14 +9006,21 @@ def check_and_count(customer_id, op):
     #   순간 담긴 영상의 대본 예열이 전부 skipped_limit로 조용히 스킵됐다(실측: 3개 담았는데
     #   유튜브 2개만 대본이 생기고 인스타·샤오홍슈는 0.03초 만에 done 처리).
     is_paid = (_as_cid(customer_id) == 0) or (st.get_customer(customer_id) or {}).get("plan") == "pro"
-    if is_paid:
+    if op == "lens" and _lens_key_count(customer_id):
+        # 자기 키로 검색하는 회원 — 비용을 본인이 내므로 **낸 키 개수만큼** 한도를 준다.
+        # (2026-08-26 사장님 지시로 '키 있으면 20회 고정' → '키 1개당 10회'로 바꿨다)
+        key, dflt = None, None
+    elif is_paid:
         key, dflt = f"limit_{op}_pro", _CREDIT_PRO_DEFAULTS.get(op, 100)
     else:
         key, dflt = f"limit_{op}", _CREDIT_DEFAULTS.get(op, 5)
-    try:
-        limit = int(st.get_setting(key, dflt))
-    except (TypeError, ValueError):
-        limit = dflt
+    if key is None:                       # 자기 키 회원 — 키 개수로 정한다
+        limit = _lens_limit_for(st, customer_id, _CREDIT_DEFAULTS["lens"])
+    else:
+        try:
+            limit = int(st.get_setting(key, dflt))
+        except (TypeError, ValueError):
+            limit = dflt
     day = _today_utc()
     if st.usage_get(customer_id, op, day) >= limit:
         return False
@@ -9079,6 +9157,56 @@ def _lens_api_keys(customer_id):
     return keys
 
 
+def _lens_key_count(customer_id):
+    """이 회원이 실제로 쓸 수 있는 **자기 SerpApi 키 개수**(2026-08-26 사장님
+    "api 2개 등록시 20회로 상향하는걸로 모두 그렇게 설정").
+
+    SerpApi는 키당 월 100회 무료다 — 2개 내면 쓸 수 있는 양도 2배라, 한도도 그만큼 준다.
+    ★꺼둔 키(status='off')는 안 센다: get_customer_keys_plain이 이미 걸러준다.
+      안 쓰는 키로 한도만 늘리면 실제 호출에서 그냥 실패한다.
+    ★못 세면 0 — 한도를 안 늘릴 뿐 기존 동작 그대로다(안전한 쪽으로 넘어진다).
+    """
+    try:
+        if not _lens_has_own_key(customer_id):
+            return 0            # 운영자 키로 도는 사람 — 남의 키로 더 달라고 할 수 없다
+        keys = Store(DB_PATH).get_customer_keys_plain(customer_id, keyroute.SVC_SERPAPI)
+        return len(keys or [])
+    except Exception as e:      # noqa: BLE001
+        print(f"[limit] SerpApi 키 세기 실패(한도 안 늘림): {e!r}", file=sys.stderr)
+        return 0
+
+
+def _lens_limit_for(store, customer_id, fallback):
+    """자기 키를 낸 회원의 렌즈 하루 한도 = **키 1개당 회수 × 키 개수**.
+    키가 없으면 fallback(등급별 기본 한도)을 그대로 돌려준다.
+
+    ★한도를 막는 쪽(게이트)과 보여주는 쪽(마이페이지)이 **이 함수 하나**를 쓴다 —
+      두 곳에 따로 적으면 "20회라더니 10회에서 막힌다"가 난다(0순위-B).
+    """
+    n = _lens_key_count(customer_id)
+    if not n:
+        return fallback
+    try:
+        per = int(store.get_setting("limit_lens_per_key", _CREDIT_PER_KEY_DEFAULTS["lens"]))
+    except (TypeError, ValueError):
+        per = _CREDIT_PER_KEY_DEFAULTS["lens"]
+    return per * n
+
+
+def _lens_has_own_key(customer_id):
+    """이 회원이 **자기 SerpApi 키**로 렌즈를 쓰는가.
+
+    ★판정을 새로 짜지 않는다 — 키를 고르는 keyroute.keys_for가 이미 정한 is_user를
+      그대로 빌린다(0순위-B). 여기서 customer_keys를 직접 조회하면 키 고르는 쪽과
+      한도 주는 쪽이 어긋나, "키 냈는데 한도가 안 늘었다"가 난다.
+    실패하면 False — 한도를 못 늘릴 뿐 기존 동작 그대로다(안전한 쪽으로 넘어진다)."""
+    try:
+        _keys, is_user = keyroute.keys_for(Store(DB_PATH), customer_id, keyroute.SVC_SERPAPI)
+        return bool(is_user)
+    except Exception:
+        return False
+
+
 def _global_over_cap(op):
     """전역 일일 사용량이 상한 이상이면 True(차단). cap<=0이면 무제한(False).
     ⚠️ global_incr_and_alert는 알림만 하고 안 막았다 — 다계정이 SerpApi·렌더를 태워도
@@ -9143,6 +9271,10 @@ def _api_me(request: Request):
         else:
             limits = {op: _lim(f"limit_{op}", _CREDIT_DEFAULTS.get(op, 5))
                       for op in ("lens", "render", "script")}
+        # 🔑 자기 SerpApi 키를 낸 회원은 렌즈 한도가 다르다 — check_and_count와 **같은 규칙**.
+        #   여기가 어긋나면 "20회라더니 10회에서 막힌다"가 된다(0순위-B).
+        if _lens_key_count(cid):
+            limits["lens"] = _lens_limit_for(store, cid, limits["lens"])
     # 가입 며칠째 — created_at은 UTC 문자열(datetime('now') 또는 ISO). 파싱 실패 시 None.
     member_days = None
     ca = (cust or {}).get("created_at") if cust else None
@@ -10460,6 +10592,60 @@ def api_produce_picks_remove(request: Request, body: dict):
         return JSONResponse(status_code=422, content={"ok": False, "error": "shortcode 필요"})
     Store(DB_PATH).produce_pick_remove(sc, customer_id=_cid(request))
     return {"ok": True}
+
+
+_FONT_FAV_KEY = "font_favorites"
+
+
+def _font_fav_default():
+    """기본 즐겨찾기 = fonts.json의 star. 사장님이 정해두는 자리(2026-08-26).
+
+    ★파일명을 여기 또 적지 않는다(0순위-B) — 정본은 fonts.json 하나뿐이고,
+      화면 목록(HC_FONTS)도 tools/sync_fonts.py가 같은 파일에서 만든다."""
+    try:
+        p = _STATIC / "fonts.json"
+        return [f["file"] for f in json.loads(p.read_text(encoding="utf-8"))
+                if f.get("star")]
+    except Exception:
+        return []      # 목록을 못 읽어도 화면은 떠야 한다(fail-open)
+
+
+@app.get("/api/fonts/favorites")
+def api_font_favorites(request: Request):
+    """계정별 폰트 즐겨찾기. 한 번도 안 고쳤으면 기본값(fonts.json의 star)을 준다.
+
+    is_default=True면 '아직 사장님 기본 그대로'라는 뜻 — 화면이 [기본으로 되돌리기]
+    버튼을 감추는 데 쓴다."""
+    saved = Store(DB_PATH).get_pref(_FONT_FAV_KEY, customer_id=_cid(request))
+    if saved is None:
+        return {"ok": True, "files": _font_fav_default(), "is_default": True}
+    # 지워진 폰트가 목록에 남아 별만 뜨는 일이 없게 실제 파일과 대조한다.
+    valid = {f["file"] for f in json.loads(
+        (_STATIC / "fonts.json").read_text(encoding="utf-8"))}
+    return {"ok": True, "files": [f for f in saved if f in valid], "is_default": False}
+
+
+@app.post("/api/fonts/favorites")
+def api_font_favorites_set(request: Request, body: dict):
+    """즐겨찾기 저장. body: {files:[...]} 전체 교체, 또는 {reset:true} 기본값 복귀.
+
+    ★전체 교체인 이유: 토글 한 건씩 보내면 빠르게 여러 번 누를 때 순서가 뒤집혀
+      화면과 서버가 어긋난다. 화면이 가진 최종 목록을 통째로 보낸다."""
+    store = Store(DB_PATH)
+    cid = _cid(request)
+    if body.get("reset"):
+        store.clear_pref(_FONT_FAV_KEY, customer_id=cid)
+        return {"ok": True, "files": _font_fav_default(), "is_default": True}
+    files = body.get("files")
+    if not isinstance(files, list):
+        return JSONResponse(status_code=422,
+                            content={"ok": False, "error": "files 배열 필요"})
+    valid = {f["file"] for f in json.loads(
+        (_STATIC / "fonts.json").read_text(encoding="utf-8"))}
+    # 없는 파일은 조용히 버린다 — 화면이 낡아도 서버가 쓰레기를 안 쌓는다.
+    clean = [f for f in dict.fromkeys(files) if f in valid]
+    store.set_pref(_FONT_FAV_KEY, clean, customer_id=cid)
+    return {"ok": True, "files": clean, "is_default": False}
 
 
 @app.get("/api/produce/picks")
@@ -12477,7 +12663,9 @@ def api_produce_mix_cappos(job_id: str, body: dict):
         return JSONResponse(status_code=422, content={"ok": False, "error": "pos=top|mid|bottom"})
     hit["cap_pos"] = pos if pos in ("top", "mid") else None   # bottom = 기본값 = 저장 안 함
     store.update_mix_job(job_id, edit_plan=plan)
-    return {"ok": True, "pos": hit["cap_pos"] or "bottom"}
+    # y_pct도 함께 준다 — 화면이 %를 스스로 계산하면 렌더와 두 벌이 된다(0순위-B).
+    return {"ok": True, "pos": hit["cap_pos"] or "bottom",
+            "y_pct": video_assemble._CAP_POS_PCT.get(hit["cap_pos"])}
 
 
 @app.post("/api/produce/mix/{job_id}/caplines")
@@ -12753,6 +12941,10 @@ def api_produce_mix_beats_preview(job_id: str):
             "durs": b.get("cap_durs"),                              # 구절별 실제 표시시간(없으면 None)
             "lead": b.get("cap_lead", 0.0),                         # 말 시작 전 무음(초) — 렌더와 같은 기준점
             "pos": b.get("cap_pos") or "bottom",                    # 장면별 자막 자리(기본=전체 설정)
+            # ★그 자리가 화면상 몇 %인지도 **서버가** 알려준다(2026-08-25).
+            #   미리보기가 %를 스스로 계산하면 렌더와 두 벌이 되어 언젠가 어긋난다(0순위-B).
+            #   None = 전체 설정 그대로(bottom) → 화면은 caption_style.y_pct를 쓴다.
+            "pos_y_pct": video_assemble._CAP_POS_PCT.get(b.get("cap_pos")),
             "beat_idx": b.get("beat_idx", idx),                     # 저장 API가 쓰는 진짜 번호(목록 순번과 다를 수 있다)
         })
     return {"beats": out}
@@ -14602,17 +14794,23 @@ def api_script_beat_regen(request: Request, body: dict):
     role = (body.get("role") or "").strip()
     if not role:
         return JSONResponse(status_code=422, content={"ok": False, "error": "role 필요"})
+    # ★style_id는 **선택**이다(2026-08-26 사장님 "픽업영상 대본은 바꾸기를 누르면
+    #   ai자동바꾸기가 왜안되나"). 픽업영상 대본은 스타일을 안 고르는 경로라 style_id가
+    #   없는데, 종전엔 무조건 422로 튕겨 **[바꾸기]가 통째로 막혀 있었다**.
+    #   스타일이 없으면 씨앗 구조(base_script/structure)로 대신 돌린다 — 아래 spines=None.
     try:
         style_id = int(body.get("style_id"))
     except (TypeError, ValueError):
-        return JSONResponse(status_code=422, content={"ok": False, "error": "style_id 필요"})
+        style_id = None
     beats = [b for b in (body.get("beats") or []) if isinstance(b, dict)]
     if not beats:
         return JSONResponse(status_code=422, content={"ok": False, "error": "beats 필요"})
 
-    style = next((s for s in store.list_style_spines(category=None) if s["id"] == style_id), None)
-    if not style:
-        return JSONResponse(status_code=404, content={"ok": False, "error": "없는 스타일"})
+    style = None
+    if style_id is not None:
+        style = next((s for s in store.list_style_spines(category=None) if s["id"] == style_id), None)
+        if not style:
+            return JSONResponse(status_code=404, content={"ok": False, "error": "없는 스타일"})
 
     # 재료 — 전체 생성과 같은 경로로 씨앗 항목을 찾는다(위키에 없으면 body 폴백도 동일).
     shortcode = (body.get("shortcode") or "").strip()
@@ -14624,8 +14822,9 @@ def api_script_beat_regen(request: Request, body: dict):
               "category": body.get("category") or ""}
     # ★고른 스파인을 넘긴다 — 썰 재료 주입 여부는 **스파인의 fit_categories**로 갈린다
     #   (항목 category로는 라이브에서 절대 안 켜졌다. 2026-08-19 실측).
+    #   ⚠️픽업 경로는 스파인이 없다 — [None]을 넘기면 그 아래에서 터진다.
     _src, _facts_block, _job, _jid, _scene_block = _materials_for_generate(
-        it, body, store, cid, spines=[style])
+        it, body, store, cid, spines=[style] if style else None)
 
     _bank_ctx = ""
     if store.get_setting("ping_pong_enabled", "") == "1":

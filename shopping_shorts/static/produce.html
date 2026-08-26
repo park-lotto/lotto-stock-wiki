@@ -185,6 +185,7 @@
     .eff-sparkle{animation:capSparkle 2.6s ease-in-out infinite}
     .cap-spark{position:absolute;font-size:.5em;color:#fff;pointer-events:none;text-shadow:0 0 4px #fff;animation:twinkle 1.3s ease-in-out infinite}
     /* 헤드카피 번들 폰트 22종(브라우저 미리보기 = 실제 렌더 일치, ttf/otf만) */
+/* @@FONTS:BEGIN — tools/sync_fonts.py가 생성. 직접 고치지 마라 */
     @font-face{font-family:'HCTmon';src:url('/fonts/TmonMonsori.ttf')}
     @font-face{font-family:'HCJua';src:url('/fonts/BMJUA.ttf')}
     @font-face{font-family:'HCDohyeon';src:url('/fonts/BMDOHYEON.ttf')}
@@ -207,6 +208,22 @@
     @font-face{font-family:'HCSuitR';src:url('/fonts/SUIT-Regular.otf')}
     @font-face{font-family:'HCSpoqaR';src:url('/fonts/SpoqaHanSansNeo-Regular.otf')}
     @font-face{font-family:'HCIBMR';src:url('/fonts/IBMPlexSansKR-Regular.otf')}
+    @font-face{font-family:'HCGaegu';src:url('/fonts/Gaegu-Bold.ttf')}
+    @font-face{font-family:'HCNanumPen';src:url('/fonts/NanumPenScript.ttf')}
+    @font-face{font-family:'HCNanumBrush';src:url('/fonts/NanumBrushScript.ttf')}
+    @font-face{font-family:'HCHiMelody';src:url('/fonts/HiMelody.ttf')}
+    @font-face{font-family:'HCSingleDay';src:url('/fonts/SingleDay.ttf')}
+    @font-face{font-family:'HCPoorStory';src:url('/fonts/PoorStory.ttf')}
+    @font-face{font-family:'HCDokdo';src:url('/fonts/Dokdo-Regular.ttf')}
+    @font-face{font-family:'HCEastSea';src:url('/fonts/EastSeaDokdo.ttf')}
+    @font-face{font-family:'HCGamja';src:url('/fonts/GamjaFlower.ttf')}
+    @font-face{font-family:'HCCute';src:url('/fonts/CuteFont.ttf')}
+    @font-face{font-family:'HCKirang';src:url('/fonts/KirangHaerang.ttf')}
+    @font-face{font-family:'HCSunflower';src:url('/fonts/Sunflower-Medium.ttf')}
+    @font-face{font-family:'HCBWPic';src:url('/fonts/BlackAndWhitePicture.ttf')}
+    @font-face{font-family:'HCBlackHan';src:url('/fonts/BlackHanSans.ttf')}
+    @font-face{font-family:'HCGugi';src:url('/fonts/Gugi-Regular.ttf')}
+    /* @@FONTS:END */
 
     /* 📝뽑기 생성 모달(도서관 library.html 이식, pm 네임스페이스) */
     .gen-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:flex-start;justify-content:center;padding:24px;overflow:auto}
@@ -647,7 +664,7 @@
       .chip{font-size:13px}
       /* ★theme.css가 뒤에 링크돼(504줄) 같은 특이도면 진다 — .main을 붙여 한 단 올린다.
          (.cmp-title/.stat-tile span/.stt .k/.cand p/.orb .lb/.cand는 전부 theme.css에도 있다) */
-      .main .cmp-title,.main .orbbar .orb .lb{font-size:12.5px}
+      .main .cmp-title,.main .orbbar .orb .lb,.main .dockbar .dkl{font-size:12.5px}
       .main .stat-tile span,.main .stt .k,.main .cand p{font-size:12.5px}
       .demotag{font-size:11px}
       .cp-lbl{font-size:11px}
@@ -664,6 +681,13 @@
            앞에 붙여 특이도를 한 단 올린다(!important 없이 이기는 정공법). */
       .orbbar .orb .ball{width:44px;height:44px;font-size:15px}
       .orbbar .orbline{top:24px}
+      /* 도크도 같은 이유로 키운다(theme.css를 이기려면 .dockbar를 앞에 붙여야 한다) */
+      .dockbar .dk .dkic{width:54px;height:54px;border-radius:16px}
+      .dockbar .dk .dkic svg{width:28px;height:28px}
+      .dockbar .dk.cur .dkic{width:76px;height:76px;border-radius:22px}
+      .dockbar .dk.cur .dkic svg{width:39px;height:39px}
+      .dockbar .dk.cur::before{width:88px;height:88px;border-radius:25px}
+      .dockbar .dk.cur .dkl{font-size:15px}
     }
 
     /* ══════════════════════════════════════════════════════════════════════
@@ -744,6 +768,22 @@
          오브 자체 색(done/cur)으로만 진척을 보인다 */
       .main .orbbar .orbline,.main .orbbar .orbfill{display:none}
       .main .orbbar .orb .ball{width:40px;height:40px}
+      /* 도크도 같은 처방 — 균등분배를 풀고 가로 스크롤 띠로.
+         ★오브바와 달리 진행띠(.dockflow)는 **살린다**: 스크롤 컨테이너(.dockbar) 바깥의
+           형제 요소라 스크롤해도 안 어긋난다(오브바는 .orbline이 안에 있어 숨겨야 했다). */
+      .main .dockbar{overflow-x:auto;overflow-y:hidden;justify-content:flex-start;
+        gap:4px;margin:0 0 12px;padding:8px 2px 8px;-webkit-overflow-scrolling:touch;
+        scrollbar-width:thin}
+      .main .dockbar .dk{flex:0 0 auto;min-width:64px;padding:0 2px}
+      .main .dockbar .dkl{font-size:11px;white-space:nowrap}
+      .main .dockbar .dk .dkic{width:40px;height:40px;border-radius:12px}
+      .main .dockbar .dk .dkic svg{width:21px;height:21px}
+      .main .dockbar .dk.cur .dkic{width:52px;height:52px;border-radius:15px}
+      .main .dockbar .dk.cur .dkic svg{width:27px;height:27px}
+      .main .dockbar .dk.cur::before{width:62px;height:62px;border-radius:18px}
+      .main .dockbar .dk.cur .dkl{font-size:12px}
+      /* 폰에서 hover 들림은 스크롤 중 덜컹거리게 보인다 */
+      .main .dockbar .dk:hover{transform:none}
       /* 옛 .step 진행바(쓰는 화면이 남아 있으면)도 같이 */
       .step .lbl{font-size:12px}
 
@@ -820,6 +860,11 @@
   .s2-sfoot button,.s2-sfoot .ghostbtn{font-size:11px;color:var(--s2-sub);background:none;border:1px solid var(--line);
     border-radius:6px;padding:4px 8px;white-space:nowrap}
   .s2-sfoot button:hover{border-color:var(--accent);color:var(--accent)}
+  /* 📄 원문 — 카드 아래로 접었다 편다(2026-08-26). alert은 4000자에서 잘리고 복사도 안 됐다.
+     길면 이 상자 안에서만 스크롤한다 — 카드가 세로로 늘어나 옆 카드와 어긋나지 않게. */
+  .s2-stext{margin-top:10px;padding:10px;border:1px solid var(--line);border-radius:8px;
+    background:rgba(255,255,255,.03);font-size:12px;line-height:1.75;color:var(--s2-sub);
+    white-space:pre-wrap;word-break:break-word;max-height:220px;overflow-y:auto}
   .s2-sfoot .ghostbtn{border-style:dashed;cursor:default}
   /* ① 씨앗 뼈대 상세 — 상시 밴드(펼침 없음 = 카드줄 높이가 안 흔들린다) */
   .s2-seedinfo{border:1px solid var(--accent2);border-radius:12px;background:var(--inset);padding:16px;margin-top:16px}
@@ -1951,7 +1996,7 @@
       <div id="thumbGallery" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px"></div>
     </section>
     <section class="panel" data-step="5">
-      <h3 data-steptitle="seo">8 · SEO해시테크</h3>
+      <h3 data-steptitle="seo">8 · 제목·태그</h3>
       <div class="sub">제목·설명·태그를 만들고, 키워드를 유튜브에서 실제로 재서 근거를 붙입니다.</div>
       <div class="seoBar">
         <button class="btn primary" id="seoGenAll" onclick="seoGenerate()">AI로 전체 생성</button>
@@ -1966,7 +2011,7 @@
       <div id="seoBody" class="seoBody"></div>
     </section>
     <section class="panel" data-step="6">
-      <h3 data-steptitle="final">9 · 최종렌더</h3>
+      <h3 data-steptitle="final">9 · 완성본</h3>
       <div class="sub">확정 대본·장면매칭·음성·자막제거 설정을 최종 영상으로 렌더합니다.</div>
       <div id="finalSummary" class="hint" style="margin-bottom:10px"></div>
       <!-- 인포크링크 등록 대기(2026-07-28) — 쿠팡 링크는 영상에 안 들어간다. 완성 후
@@ -2265,7 +2310,30 @@
 //   대본(신규 패널 8)을 2번째로 세우고, 장면 편집(패널 7)을 3번째로 민다.
 //   ★물리 패널 번호(data-step)는 그대로 두고 이 매핑만 바꾼다 — cur===n 분기가
 //   파일 곳곳에 박혀 있어 번호를 다시 매기면 전부 어긋난다.
-const STEP_LABELS = ["영상추출/분석","대본생성","영상대본MIX","고품질 자막제거","TTS음성","자막꾸미기","썸네일","SEO해시테크","최종렌더"];
+const STEP_LABELS = ["영상추출/분석","대본생성","영상대본MIX","고품질 자막제거","TTS음성","자막꾸미기","썸네일","제목·태그","완성본"];
+// ★도크 라벨은 11px이라 긴 이름이 두 줄로 접힌다 → 도크에서만 줄여 쓴다(패널 제목은 STEP_LABELS 그대로).
+//   빈 문자열이면 STEP_LABELS를 그대로 쓴다 — 두 벌을 다 적지 않기 위해서다(0순위-B).
+const STEP_SHORT = ["영상추출","","","자막제거","","","","",""];
+function stepShort(o){ return STEP_SHORT[o] || STEP_LABELS[o]; }
+// 단계 색(2026-08-26 사장님 확정 K3 색흐름). [선/기본색, 현재일 때 그라디언트 끝색]
+// ★여기가 색의 유일한 출처다 — theme.css는 var(--c)만 읽는다.
+const STEP_COLORS = [
+  ["#38bdf8","#0ea5e9"], ["#8c6ef0","#6d4df0"], ["#f472b6","#ec4899"],
+  ["#fb7185","#f43f5e"], ["#7df5db","#14b8a6"], ["#fb923c","#f97316"],
+  ["#facc6b","#f5b53f"], ["#a3e635","#84cc16"], ["#6ee7b7","#10b981"],
+];
+// 단계 아이콘(24x24 stroke 전용, fill 없음 — 색은 currentColor가 받는다)
+const STEP_ICONS = [
+  '<rect x="2.5" y="5" width="13" height="11" rx="2"/><path d="M5.5 5v11M12.5 5v11M2.5 10.5h13"/><circle cx="17.5" cy="16" r="4"/><path d="M20.4 18.9 22.5 21"/>',
+  '<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h4"/>',
+  '<path d="M3 7h4c3 0 3 10 6 10h8"/><path d="M3 17h4c3 0 3-10 6-10h8"/><path d="M18 4l3 3-3 3M18 14l3 3-3 3"/>',
+  '<path d="M8 20h12M14.5 4.5 20 10l-8 8H6.5L4 15.5zM10.5 8.5 16 14"/>',
+  '<rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M9 21h6"/>',
+  '<path d="M4 7h9M8.5 7v9M16.5 9 20 17h-7zM14 19.5h6"/>',
+  '<rect x="2.5" y="4" width="19" height="16" rx="2.5"/><circle cx="8" cy="9.5" r="1.8"/><path d="M3 16.5 8.5 12l4 3.5L16 13l5 4.5"/>',
+  '<path d="M3 4.6h9M3 8h6"/><path d="M21 13.6 13.6 21a1.4 1.4 0 0 1-2 0l-5.9-5.9a1.4 1.4 0 0 1-.4-1V8.4c0-.8.6-1.4 1.4-1.4h5.7c.4 0 .7.1 1 .4l5.6 5.6a1.4 1.4 0 0 1 0 2z"/><circle cx="9.6" cy="10.8" r="1.15"/>',
+  '<path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5zM3.5 7.5 12 12l8.5-4.5M12 12v9"/>',
+];
 // 표시 오브 → 실제 패널 data-step (대본=신규 8이 2번째, 매칭=7이 3번째)
 const ORB_TO_PANEL = [0, 8, 7, 1, 2, 3, 4, 5, 6];
 const PANEL_TO_ORB = Object.fromEntries(ORB_TO_PANEL.map((p,o)=>[p,o]));
@@ -2294,9 +2362,10 @@ function orbIndex(){ return PANEL_TO_ORB[cur] ?? 0; }
 const PANEL_COUNT = document.querySelectorAll('.panel').length;
 let cur = 0;
 
-// v6 목업(.orbbar > .orbline > .orbfill + .orb > .ball + .lb) 그대로 포팅 — 볼(숫자/✓)과
-// 라벨을 항상 같이 그린다(예전엔 title=hover 툴팁뿐이라 라벨이 안 보였다). 진행선(.orbfill)
-// 폭은 현재 오브 인덱스/전체 오브 수로 계산(마지막 오브에서 100%).
+// 도크 단계바(2026-08-26 사장님 확정 — 정본 목업 out/제작소_단계바_최종안.html).
+// 무지개 진행띠 + 단계별 고유색 아이콘. 끝난 단계는 체크 배지, 지금 단계만 크게 뜨며 링이 퍼진다.
+// 진행띠 폭은 현재 인덱스/전체로 계산(마지막에서 100%) — 오브바 때와 같은 식이다.
+// ★옛 오브바 마크업은 theme.css에 그대로 남아 있다 — 되돌리려면 이 함수만 되돌리면 된다.
 function renderSteps(){
   syncPanelTitles();          // 패널 제목의 번호·이름을 STEP_LABELS에 맞춘다(한 벌 원칙)
   const el = document.getElementById('steps');
@@ -2304,17 +2373,18 @@ function renderSteps(){
   const oi = orbIndex();
   const pct = STEP_LABELS.length > 1 ? Math.round(oi / (STEP_LABELS.length - 1) * 100) : 0;
   el.innerHTML =
-    '<div class="orbbar">'
-    + `<div class="orbline"><div class="orbfill" style="width:${pct}%"></div></div>`
+    `<div class="dockflow"><i class="dfull"></i><i class="drun" style="width:${pct}%"></i></div>`
+    + '<div class="dockbar">'
     + STEP_LABELS.map((label, o)=>{
-      const cls = o < oi ? 'orb done' : o === oi ? 'orb cur' : 'orb';
-      const dot = o < oi ? '✓' : (o+1);
-      return `<div class="${cls}" title="${label}" onclick="jump(${o})">`
-        + `<div class="ball">${dot}</div><div class="lb">${label}</div></div>`;
+      const cls = o < oi ? 'dk done' : o === oi ? 'dk cur' : 'dk wait';
+      const [c, c2] = STEP_COLORS[o] || ['#3b455e','#3b455e'];
+      return `<div class="${cls}" style="--c:${c};--c2:${c2}" title="${label}" onclick="jump(${o})">`
+        + `<div class="dkic"><svg viewBox="0 0 24 24">${STEP_ICONS[o]||''}</svg></div>`
+        + `<div class="dkl">${stepShort(o)}</div></div>`;
     }).join('')
     + '</div>';
 }
-// ── 오브바 끝 ──
+// ── 도크 단계바 끝 ──
 function showPanel(){
   document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('show', +p.dataset.step===cur));
   document.getElementById('btnPrev').disabled = cur===0;
@@ -2740,6 +2810,8 @@ async function loadHeadcopySuggest(force){
     }
     HC_COPY_LOADED_HASH=h;
     window._hcCopies=list;
+    // 후보가 막 도착한 순간에도 번호가 보이게 한다 — 이 전엔 후보가 0개라 빈칸이었다.
+    if(typeof frHcLabel==='function') frHcLabel();
     // ★썸네일 제목 추천(suggestThumbTitles)과 **같은 모양**으로 보여준다(2026-08-24 사장님
     //   "헤드카피도 템플릿 안에 들어가는 거니 흡수해서"). 두 줄은 두 줄로, 밑에 왜 먹히는지.
     //   줄바꿈을 그대로 두면 카드에서 한 줄로 붙어 보여 실제 결과와 달라진다.
@@ -3020,7 +3092,9 @@ function frPick(preset){
     //   된다(2026-08-25). 제미니가 실측 때 이미 읽어둔 값인데 소비처가 0곳이었다.
     if(meta.caption) applyCaptionSet(meta.caption);
   }
-  renderFramePresets(); renderTemplateCards(); renderTemplatePreview(); saveHeadcopy();
+  renderFramePresets(); renderTemplateCards(); renderTemplatePreview();
+  frHcLabel();          // 틀을 고른 순간에도 "지금 몇 번 문구인지" 보이게 한다
+  saveHeadcopy();
 }
 function frUpdate(){
   const f=STATE.deco&&STATE.deco.template&&STATE.deco.template.frame; if(!f) return;
@@ -3062,6 +3136,7 @@ function frUpdate(){
   if(g('frTtXV')) g('frTtXV').textContent=f.title_x+'%';
   if(g('frBarVal')) g('frBarVal').textContent=f.bar_h+'px';
   if(g('frBottomVal')) g('frBottomVal').textContent=f.bottom_h+'px';
+  frHcLabel();          // 제목칸을 직접 고치면 번호도 따라 바뀐다(안 그러면 거짓말이 된다)
   renderTemplatePreview(); saveHeadcopy();
 }
 function frBar(id, delta){
@@ -3282,7 +3357,7 @@ function fillFrameFontSelects(){
   ['frTtFont','frChFont'].forEach(id=>{
     const el=document.getElementById(id); if(!el||el.options.length) return;
     el.innerHTML='<option value="">자동(틀 기본)</option>'
-      + HC_FONTS.map(f=>`<option value="${f.file}">${f.name}</option>`).join('');
+      + fontList().map(f=>`<option value="${f.file}">${isFav(f.file)?'★ ':''}${f.name}</option>`).join('');
   });
 }
 function frFromHeadcopy(){
@@ -3296,6 +3371,21 @@ function frFromHeadcopy(){
 function _hcCopyList(){ return (window._hcCopies||[]).map(c=>(c&&c.text||'').trim()).filter(Boolean); }
 function _hcFirstCopy(){ return _hcCopyList()[0]||''; }
 let FR_HC_IDX=0;
+function frHcLabel(){
+  // 지금 제목칸이 몇 번 문구인지 표시한다(2026-08-26 사장님 "네" — 템플릿을 눌러
+  // 1번이 자동으로 들어갔을 때도 번호가 보여야 한다).
+  // ★번호를 정하는 곳은 여기 하나다(0순위-B). frPick·frSwapHeadcopy가 각자
+  //   문자열을 만들면 언젠가 서로 다른 말을 한다.
+  // ★상태를 만들지 않고 **제목칸을 읽어서** 매번 다시 센다 — 사장님이 칸을 직접
+  //   고치면 FR_HC_IDX는 옛 번호로 남아 거짓말이 된다.
+  const msg=document.getElementById('frHcMsg'); if(!msg) return;
+  const t=document.getElementById('frTitle');
+  const list=_hcCopyList();
+  if(!list.length){ msg.textContent=''; return; }   // 후보가 없으면 조용히(안내는 누를 때만)
+  const at=list.indexOf(((t||{}).value||'').trim());
+  msg.textContent = at>=0 ? `문구 ${at+1} / ${list.length}`
+                          : `직접 쓴 문구 · 후보 ${list.length}개`;
+}
 function frSwapHeadcopy(){
   // 제목칸의 문구를 다음 후보로 돌린다(2026-08-25 사장님 "교체는 헤드카피 바꾸기
   // 버튼을 만들어줘 템플릿쪽에서 하게"). 후보가 없으면 왜 없는지 알려준다.
@@ -3311,7 +3401,7 @@ function frSwapHeadcopy(){
   const at=list.indexOf(cur);
   FR_HC_IDX = at>=0 ? (at+1)%list.length : 0;
   t.value=list[FR_HC_IDX];
-  if(msg) msg.textContent=`문구 ${FR_HC_IDX+1} / ${list.length}`;
+  frHcLabel();          // 번호 문구를 만드는 곳은 frHcLabel 하나(0순위-B)
   frUpdate();
 }
 function renderTemplatePreview(){
@@ -3359,6 +3449,9 @@ function initHeadcopy(){
   // 대본 첫 문장으로 자동 채우지 않는다 — 지우고 뒤로갔다 와도 다시 채워지던 버그 차단.
   if(t && !t.value && STATE.headcopy) t.value=STATE.headcopy.text||'';
   renderFontSelect();
+  // 즐겨찾기는 서버 왕복이라 늦게 온다 — 먼저 원래 순서로 그려두고, 도착하면
+  // repaintFontLists()가 별 순서로 다시 그린다(한 번만·화면 깜빡임 없음).
+  if(FONT_FAV===null && typeof loadFontFavs==='function') loadFontFavs();
   renderPresets();
   renderFullPresets();
   renderMyPresets(); renderCapPresets();
@@ -3601,7 +3694,10 @@ async function setBeatCapPos(pos){
        body:JSON.stringify({beat_idx:_beatNo(b), pos})});
     const d=await r.json();
     if(!r.ok || !d.ok){ _capMsg(d.error||'저장 실패','var(--fire)'); return; }
-    b.pos=d.pos; renderBeatTools();
+    // ★저장 성공 → 화면도 그 자리로 즉시 옮긴다. %는 서버가 준 값을 쓴다(렌더와 같은 표).
+    b.pos=d.pos; b.pos_y_pct=(d.y_pct!=null?d.y_pct:null);
+    renderBeatTools();
+    if(typeof updateCaption==='function') updateCaption();
     _capMsg('이 장면 자막을 '+({top:'위',mid:'중간',bottom:'아래'}[d.pos]||d.pos)+'로 옮겼어요','var(--ok)');
   }catch(e){ _capMsg('네트워크 오류','var(--fire)'); }
 }
@@ -3640,7 +3736,7 @@ async function resetBeatCapLines(){
 }
 function renderCapFontSelect(){
   const s=document.getElementById('capFont');
-  if(s && !s.options.length) s.innerHTML=HC_FONTS.map(f=>`<option value="${f.file}"${f.file==='NanumGothic-Bold.ttf'?' selected':''}>${f.name}</option>`).join('');
+  if(s && !s.options.length) s.innerHTML=fontList().map(f=>`<option value="${f.file}"${f.file==='NanumGothic-Bold.ttf'?' selected':''}>${isFav(f.file)?'★ ':''}${f.name}</option>`).join('');
 }
 function setCapEffect(e){ CAP_EFFECT=e;
   document.querySelectorAll('.capEff').forEach(b=>b.classList.toggle('active', b.dataset.eff===e));
@@ -3664,7 +3760,13 @@ function updateCaption(){
   el.textContent=PREVIEW_CAP_TEXT;
   el.style.fontFamily=`'${fontCss(cs.font)}',sans-serif`;
   el.style.left=cs.x_pct+'%';   // 가로 드래그 반영(기본 50% 중앙)
-  el.style.top=cs.y_pct+'%'; el.style.transform='translate(-50%,-50%)';
+  // ★장면별 자막 자리(2026-08-25 사장님 제보 "1번에서 바꾸고 2번 가면 같은 위치").
+  //   종전엔 전체 설정(cs.y_pct)만 봐서, 장면마다 다르게 저장해도 미리보기는 늘 같은 자리였다.
+  //   저장·최종렌더는 정상이었고 **보이는 것만** 안 따라왔다 → "안 먹혔나"로 읽혔다.
+  //   %는 서버가 준 값(pos_y_pct)을 쓴다 — 렌더와 같은 표(_CAP_POS_PCT)에서 나온다.
+  const _b = (typeof BEATS_PREVIEW!=='undefined' && BEATS_PREVIEW[BEAT_IDX]) || null;
+  const _yp = (_b && _b.pos_y_pct != null) ? _b.pos_y_pct : cs.y_pct;
+  el.style.top=_yp+'%'; el.style.transform='translate(-50%,-50%)';
   el.style.color=cs.color; el.style.fontWeight=900;
   // 자막은 무조건 한 줄 — 줄바꿈 금지(nowrap). 폭(0.92) 넘으면 폰트 자동축소로 한 줄에 맞춘다.
   // 서버 _segmented_drawtext(single_line=True)와 동일 비율: shrink = maxW / textW.
@@ -4233,42 +4335,152 @@ function renderMyPresets(){
     : '<span class="hint" style="font-size:11px">지금 화면 전체를 저장해 두면 딸깍 한 번으로 불러와요.</span>';
 }
 // 번들 폰트 22종(ttf/otf만 — 미리보기=실제 렌더 일치). ⭐=쇼츠 헤드카피 추천 베스트5
+// @@FONTS:BEGIN — tools/sync_fonts.py가 생성. 직접 고치지 마라
 const HC_FONTS=[
-  {name:'⭐ 티몬 몬소리',       file:'TmonMonsori.ttf',          css:'HCTmon'},
-  {name:'⭐ 배민 주아',        file:'BMJUA.ttf',                css:'HCJua'},
-  {name:'⭐ 배민 도현',        file:'BMDOHYEON.ttf',            css:'HCDohyeon'},
-  {name:'⭐ 빙그레',           file:'Binggrae-Bold.otf',        css:'HCBinggrae'},
-  {name:'⭐ 꾸불림체',         file:'Kkubulim.ttf',             css:'HCKkubulim'},
-  {name:'지마켓 산스',         file:'GmarketSansBold.otf',      css:'HCGmarket'},
-  {name:'SUIT',                file:'SUIT-Bold.otf',            css:'HCSuit'},
-  {name:'프리텐다드',          file:'Pretendard-ExtraBold.otf', css:'HCPretendard'},
-  {name:'프리텐다드 Bold',     file:'Pretendard-Bold.otf',      css:'HCPretendardB'},
-  {name:'프리텐다드 SemiBold', file:'Pretendard-SemiBold.otf',  css:'HCPretendardS'},
-  {name:'스포카 한 산스',      file:'SpoqaHanSansNeo-Bold.otf', css:'HCSpoqa'},
-  {name:'IBM Plex Sans',       file:'IBMPlexSansKR-Bold.otf',   css:'HCIBM'},
-  {name:'노토 산스',           file:'NotoSansKR-Bold.otf',      css:'HCNoto'},
-  {name:'나눔고딕',            file:'NanumGothic-Bold.ttf',     css:'HCNanum'},
-  {name:'옥 말랑',             file:'OkMallangW.ttf',           css:'HCOkmallang'},
-  {name:'경기천년바탕',        file:'GBatang.otf',              css:'HCGBatang'},
-  {name:'고운바탕',            file:'GowunBatang.ttf',          css:'HCGowun'},
-  {name:'리디바탕',            file:'RIDIBatang.otf',           css:'HCRidi'},
-  {name:'프리텐다드 Reg',      file:'Pretendard-Regular.otf',   css:'HCPretendardR'},
-  {name:'SUIT Reg',            file:'SUIT-Regular.otf',         css:'HCSuitR'},
-  {name:'스포카 Reg',          file:'SpoqaHanSansNeo-Regular.otf',css:'HCSpoqaR'},
-  {name:'IBM Plex Reg',        file:'IBMPlexSansKR-Regular.otf',css:'HCIBMR'},
+  {name:'⭐ 티몬 몬소리',       file:'TmonMonsori.ttf',             css:'HCTmon'},
+  {name:'⭐ 배민 주아',        file:'BMJUA.ttf',                   css:'HCJua'},
+  {name:'배민 도현',          file:'BMDOHYEON.ttf',               css:'HCDohyeon'},
+  {name:'⭐ 빙그레',          file:'Binggrae-Bold.otf',           css:'HCBinggrae'},
+  {name:'꾸불림체',           file:'Kkubulim.ttf',                css:'HCKkubulim'},
+  {name:'⭐ 지마켓 산스',       file:'GmarketSansBold.otf',         css:'HCGmarket'},
+  {name:'SUIT',           file:'SUIT-Bold.otf',               css:'HCSuit'},
+  {name:'프리텐다드',          file:'Pretendard-ExtraBold.otf',    css:'HCPretendard'},
+  {name:'프리텐다드 Bold',     file:'Pretendard-Bold.otf',         css:'HCPretendardB'},
+  {name:'프리텐다드 SemiBold', file:'Pretendard-SemiBold.otf',     css:'HCPretendardS'},
+  {name:'스포카 한 산스',       file:'SpoqaHanSansNeo-Bold.otf',    css:'HCSpoqa'},
+  {name:'IBM Plex Sans',  file:'IBMPlexSansKR-Bold.otf',      css:'HCIBM'},
+  {name:'노토 산스',          file:'NotoSansKR-Bold.otf',         css:'HCNoto'},
+  {name:'나눔고딕',           file:'NanumGothic-Bold.ttf',        css:'HCNanum'},
+  {name:'옥 말랑',           file:'OkMallangW.ttf',              css:'HCOkmallang'},
+  {name:'경기천년바탕',         file:'GBatang.otf',                 css:'HCGBatang'},
+  {name:'고운바탕',           file:'GowunBatang.ttf',             css:'HCGowun'},
+  {name:'리디바탕',           file:'RIDIBatang.otf',              css:'HCRidi'},
+  {name:'프리텐다드 Reg',      file:'Pretendard-Regular.otf',      css:'HCPretendardR'},
+  {name:'SUIT Reg',       file:'SUIT-Regular.otf',            css:'HCSuitR'},
+  {name:'스포카 Reg',        file:'SpoqaHanSansNeo-Regular.otf', css:'HCSpoqaR'},
+  {name:'IBM Plex Reg',   file:'IBMPlexSansKR-Regular.otf',   css:'HCIBMR'},
+  {name:'손글씨 개구쟁이',       file:'Gaegu-Bold.ttf',              css:'HCGaegu'},
+  {name:'손글씨 나눔펜',        file:'NanumPenScript.ttf',          css:'HCNanumPen'},
+  {name:'손글씨 나눔붓',        file:'NanumBrushScript.ttf',        css:'HCNanumBrush'},
+  {name:'손글씨 하이멜로디',      file:'HiMelody.ttf',                css:'HCHiMelody'},
+  {name:'⭐ 손글씨 싱글데이',     file:'SingleDay.ttf',               css:'HCSingleDay'},
+  {name:'손글씨 포스터리',       file:'PoorStory.ttf',               css:'HCPoorStory'},
+  {name:'손글씨 독도',         file:'Dokdo-Regular.ttf',           css:'HCDokdo'},
+  {name:'손글씨 동해독도',       file:'EastSeaDokdo.ttf',            css:'HCEastSea'},
+  {name:'감자꽃',            file:'GamjaFlower.ttf',             css:'HCGamja'},
+  {name:'⭐ 귀여운체',         file:'CuteFont.ttf',                css:'HCCute'},
+  {name:'⭐ 레트로 킬사인',      file:'KirangHaerang.ttf',           css:'HCKirang'},
+  {name:'레트로 성실체',        file:'Sunflower-Medium.ttf',        css:'HCSunflower'},
+  {name:'레트로 흑백사진',       file:'BlackAndWhitePicture.ttf',    css:'HCBWPic'},
+  {name:'임팩트 검은고딕',       file:'BlackHanSans.ttf',            css:'HCBlackHan'},
+  {name:'임팩트 구기',         file:'Gugi-Regular.ttf',            css:'HCGugi'},
 ];
+// @@FONTS:END
 function fontCss(file){ const f=HC_FONTS.find(x=>x.file===file); return f?f.css:'HCTmon'; }
+
+// ── 폰트 즐겨찾기(2026-08-26) ────────────────────────────────────────────
+// 계정마다 별을 눌러 자주 쓰는 폰트를 맨 위로 올린다. 기본값은 사장님이 fonts.json의
+// star로 정해두고, 사용자가 바꾸면 서버(customer_prefs)에 그 계정 것으로 남는다.
+// ★목록 정렬은 이 파일에서 **fontList() 하나**만 정한다(0순위-B). 폰트 목록을 그리는
+//   곳이 5군데(hcFont·hcFontMenu·frTtFont/frChFont·capFont·레이어)라, 각자 정렬하면
+//   어떤 화면은 별이 위로 가고 어떤 화면은 안 가는 일이 반드시 생긴다.
+let FONT_FAV = null;           // null = 아직 서버에서 못 받음 → 원래 순서로 그린다
+let FONT_FAV_DEFAULT = true;   // 사장님 기본 그대로인가(되돌리기 버튼 노출 판단)
+
+function isFav(file){ return !!(FONT_FAV && FONT_FAV.includes(file)); }
+
+// 즐겨찾기를 맨 위로 올린 목록. 그 안에서는 원래 순서를 지킨다(위치가 널뛰지 않게).
+function fontList(){
+  if(!FONT_FAV || !FONT_FAV.length) return HC_FONTS;
+  const fav=[], rest=[];
+  HC_FONTS.forEach(f => (isFav(f.file) ? fav : rest).push(f));
+  return fav.concat(rest);
+}
+
+async function loadFontFavs(){
+  try{
+    const r = await fetch('/api/fonts/favorites');
+    const j = await r.json();
+    if(j && j.ok){ FONT_FAV = j.files || []; FONT_FAV_DEFAULT = !!j.is_default; }
+  }catch(e){ FONT_FAV = []; }   // 못 받아도 화면은 떠야 한다 — 원래 순서로 간다
+  repaintFontLists();
+}
+
+async function toggleFav(file, ev){
+  if(ev){ ev.stopPropagation(); ev.preventDefault(); }   // ★별을 눌렀는데 폰트가 선택되면 안 된다
+  if(!FONT_FAV) FONT_FAV=[];
+  const i = FONT_FAV.indexOf(file);
+  if(i>=0) FONT_FAV.splice(i,1); else FONT_FAV.push(file);
+  FONT_FAV_DEFAULT = false;
+  repaintFontLists();                                    // 화면은 즉시 — 서버는 뒤따라간다
+  try{
+    await fetch('/api/fonts/favorites', {method:'POST',
+      headers:{'Content-Type':'application/json'}, body: JSON.stringify({files: FONT_FAV})});
+  }catch(e){}
+}
+
+async function resetFavs(){
+  try{
+    const r = await fetch('/api/fonts/favorites', {method:'POST',
+      headers:{'Content-Type':'application/json'}, body: JSON.stringify({reset:true})});
+    const j = await r.json();
+    if(j && j.ok){ FONT_FAV = j.files || []; FONT_FAV_DEFAULT = true; }
+  }catch(e){}
+  repaintFontLists();
+}
+
+// 목록을 쓰는 화면을 전부 다시 그린다. 캐시 플래그(_built·options.length)를 풀어야
+// 다시 그려진다 — 안 풀면 별을 눌러도 순서가 그대로다.
+function repaintFontLists(){
+  const menu=document.getElementById('hcFontMenu');
+  if(menu) menu._built=false;
+  const qmenu=document.getElementById('hcFontQMenu');   // ⚡빠른 조절 메뉴도 같은 목록이다
+  if(qmenu){ qmenu._built=false; if(typeof buildQFontMenu==='function') buildQFontMenu(); }
+  ['hcFont','capFont','frTtFont','frChFont'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.innerHTML='';
+  });
+  if(typeof renderFontSelect==='function') renderFontSelect();
+  if(typeof renderCapFontSelect==='function') renderCapFontSelect();
+  if(typeof fillFrameFontSelects==='function') fillFrameFontSelects();
+  // 선택돼 있던 값은 유지한다(다시 그리면 select가 첫 항목으로 튄다)
+  if(typeof HC_FONT_COMMITTED!=='undefined') setFontVal(HC_FONT_COMMITTED);
+  if(typeof syncFontBtn==='function') syncFontBtn();
+}
 let HC_FONT_COMMITTED='TmonMonsori.ttf';
 function renderFontSelect(){
+  const list=fontList();
   const s=document.getElementById('hcFont');
-  if(s && !s.options.length) s.innerHTML=HC_FONTS.map(f=>`<option value="${f.file}">${f.name}</option>`).join('');
+  if(s && !s.options.length) s.innerHTML=list.map(f=>`<option value="${f.file}">${f.name}</option>`).join('');
   const menu=document.getElementById('hcFontMenu');
   if(menu && !menu._built){
     menu._built=true;
     // 각 항목을 실제 폰트로 렌더 + hover 시 프리뷰 즉시 변경
-    menu.innerHTML=HC_FONTS.map(f=>`<div class="fontItem" data-file="${f.file}"
-      style="padding:8px 13px;cursor:pointer;font-family:'${f.css}','Pretendard',sans-serif;font-size:17px;white-space:nowrap;border-bottom:1px solid rgba(255,255,255,.04)"
-      onmouseenter="hoverFont('${f.file}')" onclick="pickFont('${f.file}')">${f.name}</div>`).join('');
+    // ★별(☆/★)은 왼쪽에 따로 둔다 — 글자 자체는 그 폰트로 보여야 고를 수 있으니
+    //   별에까지 폰트를 입히면(손글씨체 등) 별 모양이 뭉개진다.
+    const favN = (FONT_FAV||[]).length;
+    let html='';
+    list.forEach((f,i)=>{
+      // 즐겨찾기 묶음이 끝나는 자리에 옅은 구분선 — 어디까지가 내 것인지 보이게
+      const sep = (favN && i===favN) ? 'border-top:1px solid rgba(255,255,255,.14);' : '';
+      html += `<div class="fontItem" data-file="${f.file}"
+        style="${sep}padding:8px 13px;cursor:pointer;font-size:17px;white-space:nowrap;
+               border-bottom:1px solid rgba(255,255,255,.04);display:flex;align-items:center;gap:9px"
+        onmouseenter="hoverFont('${f.file}')" onclick="pickFont('${f.file}')"
+        ><span class="favStar" onclick="toggleFav('${f.file}',event)"
+           title="${isFav(f.file)?'즐겨찾기 빼기':'즐겨찾기'}"
+           style="font-family:'Pretendard',sans-serif;font-size:14px;line-height:1;cursor:pointer;
+                  color:${isFav(f.file)?'#ffc83d':'#5a6470'};flex:0 0 auto"
+         >${isFav(f.file)?'★':'☆'}</span
+        ><span style="font-family:'${f.css}','Pretendard',sans-serif">${f.name}</span></div>`;
+    });
+    // 사장님 기본에서 바꾼 뒤에만 되돌리기를 보여준다(안 바꿨으면 누를 이유가 없다)
+    if(!FONT_FAV_DEFAULT){
+      html += `<div onclick="resetFavs()" style="padding:7px 13px;cursor:pointer;font-size:12px;
+        color:#8b95a1;font-family:'Pretendard',sans-serif;border-top:1px solid rgba(255,255,255,.08)"
+        >↩ 즐겨찾기 기본으로 되돌리기</div>`;
+    }
+    menu.innerHTML=html;
     menu.addEventListener('mouseleave', ()=>{ setFontVal(HC_FONT_COMMITTED); updateHC(); });
   }
   syncFontBtn();
@@ -4310,9 +4522,16 @@ var QFONT_BEFORE=null;   // 메뉴 열기 직전의 폰트(취소 시 여기로 
 function buildQFontMenu(){
   const m=document.getElementById('hcFontQMenu'); if(!m || m._built) return;
   m._built=true;
-  m.innerHTML=HC_FONTS.map(f=>`<div class="qFontItem" data-file="${f.file}"
-    style="padding:11px 16px;cursor:pointer;font-family:'${f.css}','Pretendard',sans-serif;font-size:20px;line-height:1.3;white-space:nowrap;border-bottom:1px solid rgba(255,255,255,.05)"
-    onmouseenter="hoverQFont('${f.file}')" onclick="pickQFont('${f.file}')">${f.name}</div>`).join('');
+  // ★별은 왼쪽에 따로 — 별에까지 그 폰트를 입히면(손글씨체 등) 별 모양이 뭉개진다.
+  const _qfav=(FONT_FAV||[]).length;
+  m.innerHTML=fontList().map((f,i)=>`<div class="qFontItem" data-file="${f.file}"
+    style="${(_qfav&&i===_qfav)?'border-top:1px solid rgba(255,255,255,.14);':''}padding:11px 16px;cursor:pointer;font-size:20px;line-height:1.3;white-space:nowrap;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:center;gap:10px"
+    onmouseenter="hoverQFont('${f.file}')" onclick="pickQFont('${f.file}')"
+    ><span class="favStar" onclick="toggleFav('${f.file}',event)"
+       title="${isFav(f.file)?'즐겨찾기 빼기':'즐겨찾기'}"
+       style="font-family:'Pretendard',sans-serif;font-size:15px;line-height:1;cursor:pointer;color:${isFav(f.file)?'#ffc83d':'#5a6470'};flex:0 0 auto"
+     >${isFav(f.file)?'★':'☆'}</span
+    ><span style="font-family:'${f.css}','Pretendard',sans-serif">${f.name}</span></div>`).join('');
   // 안 고르고 빠져나가면 원래 폰트로 복귀(미리보기였을 뿐이다).
   // ★되돌릴 값은 메뉴를 열 때 따로 적어둔다 — hover가 hcQuick으로 값을 이미 덮어써서
   //   현재값을 읽으면 '되돌리기'가 아니라 '그대로 두기'가 된다.
@@ -4353,7 +4572,7 @@ function hcQuickSync(hc){
   const fq=g('hcFontQ'), src=g('hcFont');
   if(fq && src && fq.options.length!==src.options.length){
     // 폰트 목록의 정본은 HC_FONTS 하나 — 각 줄을 그 폰트로 보여준다(고르기 전에 눈으로 확인).
-    fq.innerHTML=HC_FONTS.map(f=>`<option value="${f.file}" style="font-family:'${f.css}',sans-serif">${f.name}</option>`).join('');
+    fq.innerHTML=fontList().map(f=>`<option value="${f.file}" style="font-family:'${f.css}',sans-serif">${isFav(f.file)?'★ ':''}${f.name}</option>`).join('');
   }
   if(fq) fq.value=hc.font;
   buildQFontMenu(); syncQFontBtn(hc.font);
@@ -6469,10 +6688,23 @@ async function renderSourceAnalysis(){
   //   남은 시간은 실측 기준 1개당 1분으로 어림해 말한다(정확한 값이 아니라 '기다릴 만한지'를
   //   알려주는 용도 — 과장하지 않도록 넉넉히 잡는다).
   const pct = items.length ? Math.round((done + gaveUp) * 100 / items.length) : 0;
-  const eta = left > 0 ? `약 ${left}분쯤 남았어요` : '';
+  // ★ETA에서 '실패해서 재시도를 기다리는 것'을 뺀다(2026-08-26). 종전엔 남은 개수를
+  //   전부 1개당 1분으로 세어 "약 1분쯤 남았어요"라고 했는데, 그 1개가 이미 실패해
+  //   재시도 차례를 기다리는 중이면 1분이 아니라 몇 시간이 된다(실측 3시간 반).
+  //   기다리면 되는 것만 분으로 말하고, 재시도 중인 것은 개수로 따로 밝힌다.
+  const retrying = items.filter(it => {
+    const r = _SRC_BRIEF[it.shortcode] || {};
+    return !r.ok && !r.gave_up && r.reason;
+  }).length;
+  const running = Math.max(0, left - retrying);      // 순수하게 분석이 도는 중인 것
+  const eta = running > 0 ? `약 ${running}분쯤 남았어요` : '';
+  const retryTxt = retrying > 0 ? `${retrying}개는 실패해서 다시 시도 중이에요` : '';
   const busyTxt = _SRC_QUEUED
     ? `${_SRC_QUEUED}개가 순서를 기다리는 중 — 앞 영상이 끝나면 자동으로 이어서 합니다`
-    : (left > 0 ? `${left}개 분석 중 — ${eta}. 이 화면에 그대로 계셔도 됩니다` : '');
+    : (running > 0
+        ? `${running}개 분석 중 — ${eta}. 이 화면에 그대로 계셔도 됩니다`
+            + (retryTxt ? ` · ${retryTxt}` : '')
+        : (retryTxt ? `${retryTxt} — 계속 안 되면 그 영상은 빼고 진행하셔도 됩니다` : ''));
   box.innerHTML =
     `<div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px">
        <span style="font-size:13px;font-weight:800">🔎 담은 영상 뜯어보기</span>
@@ -6534,6 +6766,20 @@ function _srcCard(it, i){
     //   1단계는 담는 즉시 자동으로 분석한다 — 화면이 실제 동작과 다른 말을 하고 있었다.
     //   실패했다 다시 시도 중인 것도 그냥 '대기'로 보였으니 몇 번째인지도 밝힌다.
     const tryTxt = (r && r.attempts > 1) ? ` (${r.attempts}번째 시도)` : '';
+    // ★한 번이라도 실패한 것은 '분석 중'이라고 하지 않는다(2026-08-26 사장님 캡처).
+    //   서버는 pending일 때도 실패 사유(reason)를 실어 보내는데(app.py source_brief),
+    //   화면은 그걸 gave_up일 때만 읽었다 — 그래서 이미 403으로 실패해 재시도를
+    //   기다리는 영상이 "⏳ 분석 중 — 30초~1분쯤"으로 보였다. 실측(job 579f8645e232):
+    //   08:44에 실패했는데 3시간 반 뒤까지 같은 문구였다. 화면이 거짓말을 한 것이다.
+    //   재시도는 계속하되(일시적 실패일 수 있다) **무슨 일이 있었는지는 밝힌다.**
+    if (r && r.reason){
+      return `<div class="srcCard pend">${head}
+        <div class="srcPend" style="color:var(--warn,#c80)">⚠️ ${esc(r.reason)}
+          <div style="color:var(--sub);margin-top:4px">자동으로 다시 시도합니다${tryTxt} — 계속 안 되면
+            이 영상은 빼고 진행하셔도 됩니다.</div>
+        </div>
+      </div>`;
+    }
     return `<div class="srcCard pend">${head}
       <div class="srcPend">⏳ 분석 중이에요${tryTxt} — 30초~1분쯤 걸립니다
         <div style="color:var(--sub);margin-top:4px">담으면 자동으로 분석돼요. 이 화면에 그대로 계셔도 됩니다.</div>
@@ -6783,6 +7029,12 @@ function renderAiPick(d, hasFootage){
   // 자동선정 결과(bbMain 미지정 상태)를 왼쪽 레일에도 반영 — 사장님이 아직 안 골랐으면
   // 서버가 고른 완성도 1위 썸네일에 픽 표시가 붙는다(renderPool의 _anyPick 폴백 로직).
   if(typeof renderPool==='function') renderPool();
+  // ★2단계 씨앗도 다시 그린다(2026-08-26). AI PICK은 **비동기로 늦게** 도착하는데
+  //   s2RenderSeeds는 패널 진입(s2Enter) 때만 돌았다 — 이미 2단계에 들어와 있으면
+  //   대표 씨앗이 안 붙고 원문이 빈 카드만 남는다(브라우저 실측: 카드 3편 전부 원문 0자,
+  //   손으로 s2RenderSeeds()를 부르니 곧바로 342자 대표가 맨 앞에 붙었다).
+  //   ⚠️사장님이 직접 고른 선택은 s2RenderSeeds 안의 _handPicked 가드가 지킨다.
+  if(typeof s2RenderSeeds==='function' && document.getElementById('s2SeedRow')) s2RenderSeeds();
   const t = d.tiles || {}, stc = d.structure || {}, seg = (stc.segments) || [];
   const pm = d.pick_meta || {};
   // ★HANDOFF[d.pick_index] 폴백 제거(2026-08-14 사장님 제보 '상단은 한국어인데 메인은 중국어').
@@ -9880,6 +10132,18 @@ renderSteps(); showPanel(); setScriptMode('manual');
 // 좌표(x·y)는 0~1 비율, size는 1080 기준 px — 그래야 270px 프리뷰와 1080px 결과가 일치한다.
 const THUMB_W = 1080, THUMB_H = 1920;
 
+// 레이어 폰트 고르기 <option> — 즐겨찾기(★)가 위로 온다.
+// ★이 구간은 테스트가 **잘라서 단독 실행**한다(test_produce_thumb_ui/_wire의 슬라이스
+//   하네스). 그래서 바깥 함수(fontList·isFav)를 그대로 부르면 ReferenceError로 죽는다
+//   — 즐겨찾기를 붙이며 실제로 5건이 깨졌다. typeof 가드로 없으면 원래 목록으로 간다
+//   (메모리 reference_슬라이스하네스_window금지와 같은 함정).
+function thumbFontOptions(cur){
+  const list = (typeof fontList === 'function') ? fontList()
+             : (typeof HC_FONTS !== 'undefined' ? HC_FONTS : []);
+  const fav = (f) => (typeof isFav === 'function' && isFav(f)) ? '★ ' : '';
+  return list.map(f => `<option value="${f.file}" ${f.file === cur ? 'selected' : ''}>${fav(f.file)}${f.name}</option>`).join('');
+}
+
 function thumbPresetToLayer(p){
   return {
     text: '', font: p.font, size: p.size, color: p.color, color2: p.color2 || null,
@@ -10832,7 +11096,7 @@ function renderThumbLayers(){
       style="width:100%;padding:8px;margin-bottom:6px;resize:vertical;font-family:inherit;font-size:14px;line-height:1.3"
       placeholder="문구 — Enter로 줄바꿈 (안 나눠도 길면 자동으로 줄이 나뉘고 크기가 맞춰져요)">${esc(L.text || '')}</textarea>
     <select onchange="setThumbField('font', this.value)" style="width:100%;padding:6px;margin-bottom:6px">
-      ${HC_FONTS.map(f => `<option value="${f.file}" ${f.file === L.font ? 'selected' : ''}>${f.name}</option>`).join('')}
+      ${thumbFontOptions(L.font)}
     </select>
     <div style="font-size:11px;color:var(--sub);margin-bottom:3px">위치 — 눌러서 옮기기 (드래그도 됩니다)</div>
     <div style="display:flex;gap:6px;margin-bottom:8px">
@@ -11247,6 +11511,7 @@ function _s2Snapshot(){
   //   스냅샷에 work_id를 새겨 **남의 작업 것이면 복원하지 않는다**(_s2Hydrate).
   return {work_id:(typeof WORK_ID !== 'undefined' ? (WORK_ID || null) : null),
           drafts:S2.drafts, curDraft:S2.curDraft||0, picked:S2.picked||[],
+          usePickup:(S2.usePickup!==false),
           materials:S2.materials||null, seed:S2.seed||null};
 }
 // 되살리기. ★없으면 **지운다** — 다른 작업으로 갈아탔는데 앞 작업의 대본이 남아 있으면
@@ -11255,6 +11520,7 @@ function _s2Snapshot(){
 //   복원 실패 분기가 각자 적으면 한쪽만 고쳐져 어긋난다.
 function _s2Reset(){
   S2.drafts = []; S2.curDraft = 0; S2.picked = []; S2.materials = null; S2.seed = null;
+  S2.usePickup = true;      // 픽업영상 대본 기본 ON — seed·drafts와 한 작업의 짝이다
 }
 function _s2Hydrate(w){
   let s = (w && w.s2) || null;
@@ -11268,6 +11534,8 @@ function _s2Hydrate(w){
     S2.picked = Array.isArray(s.picked) ? s.picked : [];
     S2.materials = s.materials || null;
     S2.seed = s.seed || null;
+    // usePickup은 seed의 짝이다 — 함께 복원하고 함께 지운다(0순위-B, 아래 _s2Reset와 같은 이유).
+    S2.usePickup = (s.usePickup !== false);
   } else {
     // ★seed도 **함께** 지운다(2026-08-18 사장님 "왠 다이소청소쪽이 연결이 되나").
     //   drafts만 지우고 seed를 남겼더니, 새 작업에서 s2RenderSeeds()의
@@ -11395,6 +11663,10 @@ function s2RenderSeeds(){
   const row=document.getElementById('s2SeedRow'); if(!row) return;
   const d=window._aiPick;
   S2.seeds=[];
+  // ★1단계에 담긴 영상을 **전부** 후보로 올린다(2026-08-26 사장님 "여기에 1단계영상들을
+  //   다 넣어주고"). 종전엔 AI PICK 1편만 카드가 됐다 — 라벨이 "1편"이라 정직하긴 했지만
+  //   사장님이 다른 영상을 씨앗으로 고를 방법이 아예 없었다.
+  //   AI PICK을 **맨 앞**에 두고(대표), 나머지 담긴 영상을 뒤에 붙인다(중복은 shortcode로 제거).
   if(d && d.pick_id){
     const pm=d.pick_meta||{};
     // ★이름은 `name`이다 — 서버가 실어 보내는 필드가 그것이다(app.py pick_meta).
@@ -11405,13 +11677,40 @@ function s2RenderSeeds(){
       category:pm.category||'', followers:pm.followers, text:d.pick_text||'',
       structure:d.structure||{}, tiles:d.tiles||{}, pick:true});
   }
+  // 담긴 나머지 영상 — **AI PICK 응답의 candidates**를 쓴다.
+  // ★HANDOFF를 쓰면 안 된다(실측으로 배운 것): HANDOFF의 `pickScript`는 대본 텍스트가
+  //   아니라 **boolean 플래그**라 카드 원문이 전부 0자로 떴다. candidates에는 각 영상의
+  //   `text`·`structure`가 그대로 실려 있다(aipick.py "원문 보기" 주석) — 대표 카드와
+  //   **같은 출처**라 이름·대본이 어긋날 수도 없다(pick_meta를 쓰는 이유와 같다).
+  try{
+    const _cands=(d && d.candidates)||[];
+    const _seen=new Set(S2.seeds.map(s=>s.shortcode).filter(Boolean));
+    _cands.forEach(c=>{
+      if(!c) return;
+      // ★식별자는 **video_id**다(브라우저 실측: candidates 키 = video_id·score·name·
+      //   thumbnail·structure·text). shortcode로 읽었더니 전부 빈 값이 돼 3편이
+      //   통째로 걸러졌다 — 필드명을 짐작하면 조용히 0건이 된다.
+      const sc=c.video_id||c.shortcode||c.id||'';
+      if(!sc || _seen.has(sc)) return;
+      _seen.add(sc);
+      S2.seeds.push({shortcode:sc, title:c.name||c.title||'담은 영상', thumb:c.thumbnail||c.thumb||'',
+        category:c.category||'', followers:c.followers,
+        text:c.text||'', structure:c.structure||{}, tiles:c.tiles||{}, pick:false});
+    });
+  }catch(e){}
   // ★씨앗은 **지금 담긴 영상**을 따라간다(2026-08-18). 예전엔 `!S2.seed`일 때만
   //   채워서, 한 번 정해진 씨앗이 1단계에서 영상을 바꿔도 그대로 굳었다 —
   //   담긴 영상과 무관한 옛 영상이 대표로 남아 대본이 그쪽으로 끌려갔다.
   //   ⚠️ 사장님이 직접 쓴 대본(shortcode:'')은 AI PICK이 덮으면 안 된다 —
   //      그건 담긴 영상에서 나온 값이 아니라 손으로 넣은 것이다.
   const _manualSeed = S2.seed && !S2.seed.shortcode;
-  if(S2.seeds.length && !_manualSeed){
+  // ★사장님이 직접 고른 씨앗이 있으면 그것을 존중한다(2026-08-26).
+  //   종전엔 AI PICK이 무조건 덮어써서, 고르기를 붙여도 고른 게 바로 되돌아갔다.
+  //   판정: 지금 seed가 **이번 목록 안에 있으면** 사장님이 고른 것으로 본다
+  //   (담긴 영상이 바뀌어 목록에서 사라졌으면 옛 씨앗이므로 대표로 갈아탄다 — 다이소 사고 방지).
+  const _handPicked = !!(S2.seed && S2.seed.shortcode
+    && S2.seeds.some(x => x.shortcode === S2.seed.shortcode));
+  if(S2.seeds.length && !_manualSeed && !_handPicked){
     // 지금 AI PICK이 가리키는 영상과 다르면 갈아탄다(같으면 그대로 둔다).
     if(!S2.seed || S2.seed.shortcode !== S2.seeds[0].shortcode) S2.seed = S2.seeds[0];
   } else if(!S2.seed && S2.seeds.length){
@@ -11425,14 +11724,19 @@ function s2RenderSeeds(){
                 s.tiles.engagement_rate!=null?('참여밀도 '+s.tiles.engagement_rate+'%'):''].filter(Boolean).join(' · ');
     const th=s.thumb?`<img src="${s.thumb.includes('gstatic.com')?s.thumb:('/api/thumb?url='+encodeURIComponent(s.thumb))}" referrerpolicy="no-referrer" onerror="this.style.display='none'">`:'🎬';
     const sub=[s.category, (s.followers!=null?('팔로워 '+fmtNum(s.followers)):'')].filter(Boolean).join(' · ');
-    // ★클릭으로 고르지 않는다 — 담긴 것이 전부 재료다. 카드는 확인용.
-    return `<div class="s2-scard${s.pick?' sel':''}" title="담긴 영상은 전부 재료로 들어갑니다 — 고르지 않아도 됩니다">
+    // ★클릭으로 고른다(2026-08-26 사장님 "픽업영상을 하나 골라도 다른거 하나더 고를수있게").
+    //   종전엔 카드가 확인용이라 하나로 굳어 있었다 — 담긴 영상이 여럿이어도 못 바꿨다.
+    //   여러 편을 골라 **함께 재료로** 쓴다(대본은 담긴 것 전부를 이미 쓰지만,
+    //   **구조·훅 문형을 물려받을 대표**는 고른 것들 중 첫 번째다).
+    const on=s2SeedOn(i);
+    return `<div class="s2-scard${on?' sel':''}" onclick="s2PickSeed(${i})" title="이 영상의 대본 구조·훅 문형을 물려받습니다(한 편만 고릅니다)">
       ${s.pick?'<span class="s2-spick">🤖 대표 · 완성도 1위</span>':''}
       <div class="s2-swho"><div class="s2-sth">${th}</div>
-        <div><div class="s2-snm">${esc(s.title)}</div>${sub?`<div class="s2-ssub">${esc(sub)}</div>`:''}</div></div>
+        <div><div class="s2-snm">${on?'✅ ':''}${esc(s.title)}</div>${sub?`<div class="s2-ssub">${esc(sub)}</div>`:''}</div></div>
       ${strip}
       <div class="s2-stags">${tags||'&nbsp;'}</div>
       <div class="s2-sfoot"><button onclick="event.stopPropagation();s2ShowSeedText(${i})">📄 원문</button></div>
+      <div class="s2-stext" id="s2stext-${i}" style="display:none"></div>
     </div>`;
   });
   // 아직 분석이 안 끝난 상태 — 빈 화면 대신 "기다리면 나온다"를 그대로 보여준다.
@@ -11451,15 +11755,54 @@ function s2RenderSeeds(){
   row.innerHTML=cards.join('');
   // 재료가 몇 편인지 라벨이 말해준다 — "전부 쓴다"를 글로만 말하면 안 믿긴다.
   const lb=document.getElementById('s2SeedLabel');
-  if(lb) lb.textContent = S2.seeds.length
-    ? ('① 재료 — 담긴 영상 ' + S2.seeds.length + '편을 전부 씁니다 (고르지 않아도 됩니다)')
-    : '① 재료 — 1단계에서 영상을 담아주세요';
+  if(lb){
+    lb.textContent = S2.seeds.length
+      ? ('① 재료 — 담긴 영상 ' + S2.seeds.length + '편을 전부 씁니다 · '
+         + '대본 구조를 물려받을 씨앗은 카드를 눌러 1편만 고르세요')
+      : '① 재료 — 1단계에서 영상을 담아주세요';
+  }
   s2RenderSeedInfo();
 }
+// ★씨앗 원문 → 문장 목록. **여기 한 곳에서만 자른다**(0순위-B).
+//   전체 생성(s2Generate)과 [바꾸기](s2RegenBeat)가 같은 훅을 보게 하려면 규칙이 한 벌이어야 한다.
+//   한국어 구어체 대본은 마침표가 거의 없다(실측: 씨앗 320자에 물음표 1개뿐) — 마침표만
+//   보고 자르면 훅 한 문장이 아니라 **대본 대부분(240자)**이 훅으로 잡힌다. 그래서
+//   종결어미(요/죠 + 다.)까지 경계로 본다(서버 script_sentences와 같은 규약).
+//   ⚠️'요' 앞이 명사면 자르지 않는다(필요·중요·주요… — 2026-08-25 실사고와 같은 함정).
+function s2SeedSentences(text){
+  return String(text||'').trim()
+    .split(/(?<=[.!?])\s+|(?<=[가게고구군까나네데돼든래려서세아어에예와지해]요)\s+|(?<=죠)\s+|(?<=다)\.\s+|\n+/)
+    .map(s=>s.trim()).filter(Boolean);
+}
+// ── 씨앗 고르기(한 편) ───────────────────────────────────────
+// ★사장님 확정(2026-08-26): "씨앗은 1편만 고르게" — 라디오 버튼처럼 하나만 켜진다.
+//   내가 처음에 다중선택으로 만들었다가 되돌린 것이다. 구조·훅 문형을 물려받는 건
+//   어차피 **1편**이라(첫 번째만 쓰였다) 여러 개 켜두면 나머지는 표시만 되고 아무 일도
+//   안 했다 — 되는 것처럼 보이는 게 더 나쁘다.
+//   ⚠️대본 **재료**는 씨앗 선택과 무관하게 담긴 영상 전부를 쓴다(그건 그대로다).
+function s2SeedOn(i){
+  const s=S2.seeds[i]; if(!s) return false;
+  // 고른 게 있으면 그것, 없으면 대표(AI PICK)가 켜진 것으로 본다.
+  if(S2.seed && S2.seed.shortcode) return S2.seed.shortcode===s.shortcode;
+  return !!s.pick;
+}
+function s2PickSeed(i){
+  const s=S2.seeds[i]; if(!s) return;
+  S2.seed=s;                       // 구조·훅을 물려받을 씨앗 = 이 한 편
+  s2RenderSeeds(); saveWork();
+}
+// ★원문은 alert이 아니라 **카드 아래로 접었다 편다**(2026-08-26 사장님 "원문누르면
+//   아래로 접었다 폈다고 넣어줘"). alert은 4000자에서 잘리고 복사도 안 되고 화면을 막는다.
 function s2ShowSeedText(i){
   const s=S2.seeds[i]; if(!s) return;
-  if(!s.text){ toast('이 영상의 대본 원문이 아직 없습니다'); return; }
-  alert(s.text.slice(0,4000));
+  const box=document.getElementById('s2stext-'+i); if(!box) return;
+  if(box.style.display!=='none'){ box.style.display='none'; return; }
+  box.style.display='';
+  // 원문은 AI PICK 응답(candidates[].text)에 이미 실려 온다 — 따로 부르지 않는다.
+  // ⚠️`/api/produce/source_brief`에는 대본 원문이 없다(brief·segments뿐, 실측 확인).
+  //   거기서 가져오려다 응답 필드를 짐작하는 실수를 했다 — 없는 걸 부르면 조용히 빈다.
+  box.textContent = (s.text||'').trim()
+    || '이 영상의 대본 원문이 아직 없습니다(1단계 분석이 끝나면 보입니다)';
 }
 function s2ManualSeed(){
   const t=prompt('씨앗으로 쓸 대본을 붙여넣으세요');
@@ -11516,10 +11859,21 @@ async function s2LoadStyles(){
 }
 function s2RenderStyles(){
   const row=document.getElementById('s2StyleRow'); if(!row) return;
-  const auto=`<div class="s2-card${S2.picked.length?'':' sel'}" onclick="s2ClearStyles()" title="스타일 고르기까지 AI에게 맡깁니다 — 기존 생성 경로 그대로">
-    <div class="t">🤖 AI에게 맡김 <span class="sp"></span><span class="s2-badge ok">기본값</span></div>
-    <div class="s2-quote plain">${S2.styles.length?('추천: '+esc(S2.styles[0].name)):'AI가 알아서'}</div>
-    <div class="s2-meta"><span class="r">훅</span><span class="r">전개</span><span class="r">CTA</span><span class="d">자동 선택</span></div>
+  // ★픽업영상 대본(2026-08-26 사장님) — 종전 '🤖 AI에게 맡김'을 갈아끼웠다.
+  //   그 칸은 이름과 달리 **옆 카드 중에서 AI가 대신 골라주는 것**이었다(auto_style=true).
+  //   즉 담은 씨앗 영상의 구조를 전혀 안 써서 옆 카드들과 결국 같은 경로였다.
+  //   이제 이 칸은 **씨앗 영상의 대본 템플릿 구조·훅 문형**을 그대로 물려받고
+  //   스토리·등장인물·CTA만 새로 쓴다(사장님: "훅도 터지는 영상이니 변형해서").
+  const _sh=(S2.seed&&S2.seed.structure&&(S2.seed.structure.segments||[])).map(x=>x.label);
+  // ★픽업은 스타일과 **함께** 고를 수 있다(2026-08-26 사장님 "원래 대본 두개선택인데
+  //   픽업영상대본 선택후 다른거 누르면 1개밖에 안되는데?").
+  //   원인은 버그가 아니라 설계였다 — 종전엔 `S2.picked.length===0`일 때만 픽업이 켜지는
+  //   **배타 구조**라(픽업 = '스타일 0개'), 스타일을 하나 고르면 픽업이 자동으로 꺼졌다.
+  //   이제 별도 플래그(S2.usePickup)라 '픽업 + 스타일 1개 = 2안'이 나온다.
+  const auto=`<div class="s2-card${(S2.usePickup!==false)?' sel':''}" onclick="s2TogglePickup()" title="담은 씨앗 영상의 대본 구조·훅 문형을 그대로 쓰고, 스토리·등장인물·CTA만 새로 씁니다 (다른 스타일과 함께 고를 수 있어요)">
+    <div class="t">📌 픽업영상 대본 <span class="sp"></span><span class="s2-badge ok">기본값</span></div>
+    <div class="s2-quote plain">${_sh.length?esc(_sh.join(' → ')):'씨앗 영상 구조 그대로 · 내용은 새로'}</div>
+    <div class="s2-meta"><span class="r">훅 문형</span><span class="r">구조</span><span class="d">스토리·CTA는 새로</span></div>
   </div>`;
   // ★인스타 먼저, 유튜브 나중(2026-08-21 사장님 지시). 같은 판끼리 붙여놔야 눈이 안 튄다.
   //   그 안의 순서는 서버가 준 그대로 둔다(검증 먼저 → 실적순). 안정 정렬이라 안 뒤집힌다.
@@ -11609,11 +11963,25 @@ function s2RenderStyles(){
     : 'AI가 스타일까지 골라 2안을 만듭니다';
 }
 function s2ClearStyles(){ S2.picked=[]; s2RenderStyles(); }
+// ★안은 최대 2개다(종전 그대로). 픽업도 한 안을 차지하므로 **함께 세어** 상한을 건다 —
+//   따로 세면 픽업+스타일 2개 = 3안이 되어 종전 규칙이 조용히 깨진다.
+function s2AnCount(){ return (S2.picked||[]).length + ((S2.usePickup!==false)?1:0); }
+function s2TogglePickup(){
+  if(S2.usePickup===false){
+    if(s2AnCount()>=2){ toast('안은 2개까지 — 스타일 하나를 해제하고 고르세요'); return; }
+    S2.usePickup=true;
+  } else {
+    // 픽업을 끄려는데 스타일이 하나도 없으면 만들 안이 0개가 된다 — 막는다.
+    if(!(S2.picked||[]).length){ toast('스타일을 하나 고르면 픽업을 끌 수 있어요'); return; }
+    S2.usePickup=false;
+  }
+  s2RenderStyles(); saveWork();
+}
 function s2ToggleStyle(id){
   const i=S2.picked.indexOf(id);
   if(i>=0) S2.picked.splice(i,1);
   else{
-    if(S2.picked.length>=2){ toast('스타일은 2개까지 — 하나를 해제하고 고르세요'); return; }
+    if(s2AnCount()>=2){ toast('안은 2개까지 — 픽업이나 스타일 하나를 해제하고 고르세요'); return; }
     S2.picked.push(id);
   }
   s2RenderStyles();
@@ -11649,10 +12017,45 @@ async function s2Generate(){
     if(typeof WORK_ID!=='undefined' && WORK_ID) body.work_id=WORK_ID;
     // 스타일을 골랐으면 그대로, 안 골랐으면(=AI에게 맡김) 서버가 추천 상위에서 자동으로 집는다.
     // ★어느 쪽이든 스타일 경로를 타야 역할 칸·게이트·표현사전이 붙는다(2026-08-17).
-    if(S2.picked.length) body.style_ids=S2.picked;
-    else body.auto_style=true;
-    const d=await (await fetch('/api/wiki/generate?shortcode='+encodeURIComponent(s.shortcode),
-      {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();
+    // ★픽업과 스타일은 **함께** 고를 수 있다(2026-08-26). 서버는 한 요청에 둘 중 하나만
+    //   처리하므로(style_ids가 오면 스타일 경로) **요청을 나눠 보내고 결과를 합친다** —
+    //   서버를 건드리지 않는다(0순위-B: 생성 판정은 서버 한 곳에 그대로 둔다).
+    const _usePickup = (S2.usePickup!==false);
+    const _sents=s2SeedSentences((S2.seed&&S2.seed.text)||'');
+    const _hook=_sents[0]||'';
+    const _reqs=[];
+    if(_usePickup){
+      const b={...body};
+      if(_hook){
+        b.seed_hook=_hook;
+        // CTA는 씨앗 원문의 마지막 문장 — 키워드가 겹치는지 서버가 판정한다.
+        if(_sents.length>1) b.seed_cta=_sents[_sents.length-1];
+        if(S2.seed&&S2.seed.structure) b.structure=S2.seed.structure;
+        // 사장님 확정(2026-08-26): 훅·소재는 유지, 스토리·등장인물·CTA는 전부 다르게.
+        b.elem_modes={hook:'keep', tone:'keep', devices:'keep', appeal:'keep',
+                      characters:'free', development:'free', twist:'free', cta:'free'};
+      } else {
+        // 문형을 못 뽑는 씨앗도 있다 — 없는 기준으로 막지 않고 종전 경로로 보낸다.
+        b.auto_style=true;
+      }
+      b.n=1;
+      _reqs.push(b);
+    }
+    if(S2.picked.length) _reqs.push({...body, style_ids:S2.picked});
+    if(!_reqs.length) _reqs.push({...body, auto_style:true});   // 둘 다 없으면 종전 그대로
+    const _outs=await Promise.all(_reqs.map(b=>
+      fetch('/api/wiki/generate?shortcode='+encodeURIComponent(s.shortcode),
+        {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)})
+        .then(r=>r.json()).catch(()=>({ok:false,error:'네트워크 오류'}))));
+    // 하나만 실패해도 나머지는 살린다 — 둘 다 실패했을 때만 오류로 본다.
+    const _good=_outs.filter(x=>x&&x.ok);
+    const d = _good.length
+      ? {ok:true,
+         drafts:_good.flatMap(x=>x.drafts||[]),
+         materials:(_good.find(x=>x.materials)||{}).materials||null,
+         cps:(_good.find(x=>x.cps)||{}).cps||null,
+         pickup_rejected:_good.flatMap(x=>x.pickup_rejected||[])}
+      : (_outs[0]||{ok:false,error:'생성 실패'});
     if(!d.ok){
       if(hint) hint.innerHTML='<span style="color:var(--fire)">⚠️ '+esc(d.error||'생성 실패')+'</span>';
       toast('⚠️ '+(d.error||'생성 실패'));   // 화면 아래에서 눌렀어도 보이게
@@ -11665,6 +12068,14 @@ async function s2Generate(){
     if(S2.picked.length && S2.drafts.length < S2.picked.length && hint){
       hint.innerHTML='<span style="color:var(--gold)">⚠️ 스타일 '+S2.picked.length
         +'개 중 '+S2.drafts.length+'개만 만들어졌어요 — 나머지는 생성에 실패했습니다(다시 시도해 보세요)</span>';
+    }
+    // ★픽업영상 대본에서 걸러낸 안이 있으면 **왜** 걸렀는지 말한다(조용한 폴백 금지).
+    //   안이 줄어든 이유를 안 알려주면 "왜 2안만 나오지?"가 된다.
+    else if((d.pickup_rejected||[]).length && hint){
+      const _cnt={}; d.pickup_rejected.forEach(r=>{_cnt[r]=(_cnt[r]||0)+1;});
+      hint.innerHTML='<span style="color:var(--gold)">🔎 씨앗 훅·CTA와 어긋난 '
+        +d.pickup_rejected.length+'안을 걸렀어요 — '
+        +esc(Object.keys(_cnt).map(k=>k+(_cnt[k]>1?(' ×'+_cnt[k]):'')).join(' · '))+'</span>';
     }
     s2RenderDrafts();
     // ★만들자마자 남긴다(2026-08-17). 여기서 저장 안 하면 확정(s2Confirm) 전에 새로고침한
@@ -11956,6 +12367,14 @@ async function s2RegenBeat(i,j,tmpl){
     const s=S2.seed||{};
     const body={style_id:dr.style_id, role:role, beats:beats, template:tmpl||'',
       base_script:s.text||'', category:s.category||PM_CATEGORY||'', target_seconds:25};
+    // ★픽업영상 대본은 style_id가 없다(스타일을 안 고르는 경로) — 종전엔 서버가 422로
+    //   튕겨 **[바꾸기]가 통째로 막혀 있었다**(2026-08-26 사장님 제보).
+    //   스타일 대신 **씨앗 구조·훅 문형**을 실어 보낸다. 전체 생성과 같은 재료다(0순위-B).
+    if(!dr.style_id){
+      if(s.structure) body.structure=s.structure;
+      const _h=s2SeedSentences(s.text||'')[0]||'';
+      if(_h) body.seed_hook=_h;
+    }
     if(s.shortcode) body.shortcode=s.shortcode;
     if(typeof MIX_JOB!=='undefined' && MIX_JOB) body.job_id=MIX_JOB;
     if(typeof WORK_ID!=='undefined' && WORK_ID) body.work_id=WORK_ID;

@@ -5,10 +5,23 @@
 저장 당시)로 갈렸다. save_to_wiki가 저장 순간 comments를 박제해, 저장 후 댓글이 늘어도 AI PICK만
 옛 숫자를 보여줬다(참여밀도도 옛 기준). reel_history 최신값을 오버레이해 진짜 값으로 맞춘다.
 """
+from datetime import datetime, timezone
+
 import pytest
 
 from shopping_shorts import app as app_module
 from shopping_shorts.store import Store, LEGACY_CUSTOMER_ID
+
+
+def _now():
+    """수집 시각 = '지금'.
+
+    ★고정 날짜를 쓰면 안 된다(2026-08-26 실사고): reel_history는 last_seen이
+      30일 지난 행을 **저장하는 그 순간** 지운다(store._record_history 끝의 정리).
+      그래서 '2026-07-26T00:00:00'을 쓰던 이 파일은 **딱 30일 뒤인 08-26부터**
+      저장 즉시 삭제돼 조용히 깨졌다 — 어제까진 통과했다.
+      이 테스트가 보는 건 '최신 크롤값을 쓰는가'지 특정 날짜가 아니다."""
+    return datetime.now(timezone.utc).isoformat()
 
 
 def test_latest_comments_from_reel_history(tmp_path):
@@ -16,7 +29,7 @@ def test_latest_comments_from_reel_history(tmp_path):
     s.save_last_run(
         [{"shortcode": "AA", "username": "u", "comments": 15430},
          {"shortcode": "BB", "username": "u", "comments": 5}],
-        "2026-07-26T00:00:00",
+        _now(),
     )
     got = s.latest_comments(["AA", "BB", "ZZ"])
     assert got["AA"] == 15430
@@ -38,7 +51,7 @@ def test_aipick_source_uses_fresh_comments_over_snapshot(tmp_path, monkeypatch):
     s.produce_pick_toggle("SOCKS")   # 영상제작에 담기
     # 저장 뒤 크롤에서 댓글이 15,430으로 늘었다
     s.save_last_run([{"shortcode": "SOCKS", "username": "살림홈", "comments": 15430}],
-                    "2026-07-26T00:00:00")
+                    _now())
 
     sources = app_module._load_work_sources(None, LEGACY_CUSTOMER_ID)
     src = next(x for x in sources if x["video_id"] == "SOCKS")

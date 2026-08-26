@@ -1,0 +1,124 @@
+<!doctype html><html lang=ko><head><meta charset="utf-8">
+<meta name=viewport content="width=device-width,initial-scale=1">
+<title>제작소 도크 단계바 — 컬러 3종</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--mint:#3ee0bf;--gold:#facc6b;--bg:#070b14;--panel:#0d1420;--line:#1a2436;
+  --txt:#e7ecf7;--sub:#5a6580}
+body{background:var(--bg);color:var(--txt);font-family:"Malgun Gothic",system-ui,sans-serif;
+  line-height:1.6;padding:26px 20px 90px}
+.wrap{max-width:1180px;margin:0 auto}
+h1{font-size:24px;font-weight:900;margin-bottom:6px}
+.desc{color:var(--sub);font-size:14px;margin-bottom:26px}
+.case{background:var(--panel);border:1px solid var(--line);border-radius:16px;
+  padding:24px 26px 30px;margin-bottom:22px}
+.case > h2{font-size:17px;font-weight:900;color:var(--mint);margin-bottom:4px}
+.case > .why{color:var(--sub);font-size:13px;margin-bottom:26px}
+.tag{display:inline-block;font-size:11px;font-weight:900;padding:3px 9px;border-radius:999px;
+  background:rgba(62,224,191,.14);color:var(--mint);margin-left:8px;vertical-align:middle}
+
+/* ── 도크 공통 ── */
+.dock{display:flex;align-items:flex-end;justify-content:space-between;gap:6px;padding:8px 4px 0}
+.dk{flex:1;display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;
+  --c:#3b455e; --c2:#3b455e}
+.dk .ic{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;transition:all .18s ease}
+.dk .ic svg{width:23px;height:23px;display:block;fill:none;stroke:currentColor;
+  stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+.dk .dl{font-size:11px;font-weight:800;text-align:center;line-height:1.25;color:#46506a}
+.dk.cur .ic{width:62px;height:62px;border-radius:18px}
+.dk.cur .ic svg{width:32px;height:32px}
+.dk.cur .dl{font-size:13px;font-weight:900;color:#fff}
+.dk.wait{opacity:.38}
+
+/* ── K1. 단계별 고유색 — 선만 색 ── */
+.k1 .ic{background:#0a1019;border:1px solid var(--line);color:#3b455e}
+.k1 .dk.done .ic,.k1 .dk.cur .ic{color:var(--c);border-color:color-mix(in srgb,var(--c) 45%,transparent);
+  background:color-mix(in srgb,var(--c) 9%,#0a1019)}
+.k1 .dk.done .dl,.k1 .dk.cur .dl{color:var(--c)}
+.k1 .dk.cur .ic{border-width:2px;box-shadow:0 8px 26px color-mix(in srgb,var(--c) 32%,transparent)}
+.k1 .dk.cur .dl{color:#fff}
+
+/* ── K2. 그라디언트 타일 — 앱 아이콘풍 ── */
+.k2 .ic{background:linear-gradient(150deg,var(--c),var(--c2));color:#08131a;
+  border:0;box-shadow:0 4px 14px color-mix(in srgb,var(--c) 22%,transparent)}
+.k2 .ic svg{stroke-width:2}
+.k2 .dk.wait .ic{background:#0d1524;color:#2e394f;box-shadow:none;border:1px solid #16202f}
+.k2 .dk.done .dl{color:var(--c)}
+.k2 .dk.cur .ic{box-shadow:0 10px 30px color-mix(in srgb,var(--c) 45%,transparent)}
+.k2 .dk.cur::after{content:"";display:block;width:26px;height:3px;border-radius:999px;
+  background:linear-gradient(90deg,var(--c),var(--c2));margin-top:-2px}
+
+/* ── K3. 색 흐름 — 왼쪽 민트 → 오른쪽 골드 ── */
+.k3 .ic{background:color-mix(in srgb,var(--c) 12%,#0a1019);color:var(--c);
+  border:1px solid color-mix(in srgb,var(--c) 38%,transparent)}
+.k3 .dk .dl{color:color-mix(in srgb,var(--c) 62%,#46506a)}
+.k3 .dk.wait{opacity:.5}
+.k3 .dk.cur .ic{background:linear-gradient(150deg,var(--c),var(--c2));color:#04201b;border-color:transparent;
+  box-shadow:0 9px 28px color-mix(in srgb,var(--c) 40%,transparent)}
+.k3 .dk.cur .dl{color:#fff}
+.k3 .flowline{height:3px;border-radius:999px;margin:0 8px 14px;
+  background:linear-gradient(90deg,#38bdf8,#8c6ef0,#f472b6,#fb7185,#3ee0bf,#fb923c,#facc6b,#a3e635,#34d399)}
+
+.legend{margin-top:22px;font-size:12.5px;color:var(--sub);font-weight:700}
+.legend b{color:var(--txt)}
+.note{margin-top:26px;padding:16px 18px;border:1px solid #3a2f18;background:rgba(250,204,107,.05);
+  border-radius:12px;font-size:13px;color:#c9a44a;font-weight:700}
+</style></head><body><div class=wrap>
+
+<h1>제작소 도크 단계바 — 컬러 3종</h1>
+<p class=desc>단계마다 <b>고유색</b>을 줬습니다. 색이 곧 이름이 되어, 두세 번 쓰면 글자를 안 읽어도 "파란 게 첫 단계, 분홍이 믹스"로 기억됩니다. 전부 <b>5단계 목소리 고르기</b> 상태입니다.</p>
+
+<div class="case k1">
+<h2>K1 — 단계별 고유색 (선만 색)<span class="tag">추천</span></h2>
+<p class=why>아이콘 <b>선에만</b> 색을 씁니다. 배경은 거의 투명이라 화면이 안 시끄럽고, 지금 단계만 테두리가 굵어지며 빛납니다. 안 한 단계는 회색이라 어디까지 왔는지 색만으로 갈립니다.</p>
+<div class=dock>
+  <div class="dk done" style="--c:#38bdf8"><div class=ic><svg viewBox="0 0 24 24"><rect x="2.5" y="5" width="13" height="11" rx="2"/><path d="M5.5 5v11M12.5 5v11M2.5 10.5h13"/><circle cx="17.5" cy="16" r="4"/><path d="M20.4 18.9 22.5 21"/></svg></div><div class=dl>영상추출</div></div>
+  <div class="dk done" style="--c:#8c6ef0"><div class=ic><svg viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h4"/></svg></div><div class=dl>대본생성</div></div>
+  <div class="dk done" style="--c:#f472b6"><div class=ic><svg viewBox="0 0 24 24"><path d="M3 7h4c3 0 3 10 6 10h8"/><path d="M3 17h4c3 0 3-10 6-10h8"/><path d="M18 4l3 3-3 3M18 14l3 3-3 3"/></svg></div><div class=dl>영상대본MIX</div></div>
+  <div class="dk done" style="--c:#fb7185"><div class=ic><svg viewBox="0 0 24 24"><path d="M8 20h12M14.5 4.5 20 10l-8 8H6.5L4 15.5zM10.5 8.5 16 14"/></svg></div><div class=dl>자막제거</div></div>
+  <div class="dk cur" style="--c:#3ee0bf"><div class=ic><svg viewBox="0 0 24 24"><rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M9 21h6"/></svg></div><div class=dl>목소리 고르기</div></div>
+  <div class="dk wait"><div class=ic><svg viewBox="0 0 24 24"><path d="M4 7h9M8.5 7v9M16.5 9 20 17h-7zM14 19.5h6"/></svg></div><div class=dl>자막꾸미기</div></div>
+  <div class="dk wait"><div class=ic><svg viewBox="0 0 24 24"><rect x="2.5" y="4" width="19" height="16" rx="2.5"/><circle cx="8" cy="9.5" r="1.8"/><path d="M3 16.5 8.5 12l4 3.5L16 13l5 4.5"/></svg></div><div class=dl>썸네일</div></div>
+  <div class="dk wait"><div class=ic><svg viewBox="0 0 24 24"><path d="M9 3.5 7 20.5M17 3.5 15 20.5M3.5 9h17M2.5 15h17"/></svg></div><div class=dl>SEO해시</div></div>
+  <div class="dk wait"><div class=ic><svg viewBox="0 0 24 24"><path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5zM3.5 7.5 12 12l8.5-4.5M12 12v9"/></svg></div><div class=dl>최종렌더</div></div>
+</div>
+</div>
+
+<div class="case k2">
+<h2>K2 — 그라디언트 타일 (앱 아이콘풍)</h2>
+<p class=why>타일 전체를 <b>2색 그라디언트로 채웁니다</b>. 폰 홈화면 앱 아이콘 같은 인상이라 제일 화려하고 눈에 잘 띕니다. 안 한 단계만 회색으로 남겨 대비를 만들었습니다.</p>
+<div class=dock>
+  <div class="dk done" style="--c:#38bdf8;--c2:#0ea5e9"><div class=ic><svg viewBox="0 0 24 24"><rect x="2.5" y="5" width="13" height="11" rx="2"/><path d="M5.5 5v11M12.5 5v11M2.5 10.5h13"/><circle cx="17.5" cy="16" r="4"/><path d="M20.4 18.9 22.5 21"/></svg></div><div class=dl>영상추출</div></div>
+  <div class="dk done" style="--c:#a78bfa;--c2:#7c5cf0"><div class=ic><svg viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h4"/></svg></div><div class=dl>대본생성</div></div>
+  <div class="dk done" style="--c:#f9a8d4;--c2:#ec4899"><div class=ic><svg viewBox="0 0 24 24"><path d="M3 7h4c3 0 3 10 6 10h8"/><path d="M3 17h4c3 0 3-10 6-10h8"/><path d="M18 4l3 3-3 3M18 14l3 3-3 3"/></svg></div><div class=dl>영상대본MIX</div></div>
+  <div class="dk done" style="--c:#fda4af;--c2:#f43f5e"><div class=ic><svg viewBox="0 0 24 24"><path d="M8 20h12M14.5 4.5 20 10l-8 8H6.5L4 15.5zM10.5 8.5 16 14"/></svg></div><div class=dl>자막제거</div></div>
+  <div class="dk cur" style="--c:#7df5db;--c2:#14b8a6"><div class=ic><svg viewBox="0 0 24 24"><rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M9 21h6"/></svg></div><div class=dl>목소리 고르기</div></div>
+  <div class="dk wait"><div class=ic><svg viewBox="0 0 24 24"><path d="M4 7h9M8.5 7v9M16.5 9 20 17h-7zM14 19.5h6"/></svg></div><div class=dl>자막꾸미기</div></div>
+  <div class="dk wait"><div class=ic><svg viewBox="0 0 24 24"><rect x="2.5" y="4" width="19" height="16" rx="2.5"/><circle cx="8" cy="9.5" r="1.8"/><path d="M3 16.5 8.5 12l4 3.5L16 13l5 4.5"/></svg></div><div class=dl>썸네일</div></div>
+  <div class="dk wait"><div class=ic><svg viewBox="0 0 24 24"><path d="M9 3.5 7 20.5M17 3.5 15 20.5M3.5 9h17M2.5 15h17"/></svg></div><div class=dl>SEO해시</div></div>
+  <div class="dk wait"><div class=ic><svg viewBox="0 0 24 24"><path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5zM3.5 7.5 12 12l8.5-4.5M12 12v9"/></svg></div><div class=dl>최종렌더</div></div>
+</div>
+</div>
+
+<div class="case k3">
+<h2>K3 — 색 흐름 (무지개 띠)</h2>
+<p class=why>왼쪽에서 오른쪽으로 <b>색이 이어지는 띠</b>를 위에 깔고, 각 아이콘이 그 자리 색을 씁니다. 아홉 개가 <b>따로 노는 게 아니라 한 흐름</b>으로 읽힙니다. 색이 많아 화면이 가장 화사합니다.</p>
+<div class=flowline></div>
+<div class=dock>
+  <div class="dk done" style="--c:#38bdf8"><div class=ic><svg viewBox="0 0 24 24"><rect x="2.5" y="5" width="13" height="11" rx="2"/><path d="M5.5 5v11M12.5 5v11M2.5 10.5h13"/><circle cx="17.5" cy="16" r="4"/><path d="M20.4 18.9 22.5 21"/></svg></div><div class=dl>영상추출</div></div>
+  <div class="dk done" style="--c:#8c6ef0"><div class=ic><svg viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h4"/></svg></div><div class=dl>대본생성</div></div>
+  <div class="dk done" style="--c:#f472b6"><div class=ic><svg viewBox="0 0 24 24"><path d="M3 7h4c3 0 3 10 6 10h8"/><path d="M3 17h4c3 0 3-10 6-10h8"/><path d="M18 4l3 3-3 3M18 14l3 3-3 3"/></svg></div><div class=dl>영상대본MIX</div></div>
+  <div class="dk done" style="--c:#fb7185"><div class=ic><svg viewBox="0 0 24 24"><path d="M8 20h12M14.5 4.5 20 10l-8 8H6.5L4 15.5zM10.5 8.5 16 14"/></svg></div><div class=dl>자막제거</div></div>
+  <div class="dk cur" style="--c:#7df5db;--c2:#14b8a6"><div class=ic><svg viewBox="0 0 24 24"><rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M9 21h6"/></svg></div><div class=dl>목소리 고르기</div></div>
+  <div class="dk wait" style="--c:#fb923c"><div class=ic><svg viewBox="0 0 24 24"><path d="M4 7h9M8.5 7v9M16.5 9 20 17h-7zM14 19.5h6"/></svg></div><div class=dl>자막꾸미기</div></div>
+  <div class="dk wait" style="--c:#facc6b"><div class=ic><svg viewBox="0 0 24 24"><rect x="2.5" y="4" width="19" height="16" rx="2.5"/><circle cx="8" cy="9.5" r="1.8"/><path d="M3 16.5 8.5 12l4 3.5L16 13l5 4.5"/></svg></div><div class=dl>썸네일</div></div>
+  <div class="dk wait" style="--c:#a3e635"><div class=ic><svg viewBox="0 0 24 24"><path d="M9 3.5 7 20.5M17 3.5 15 20.5M3.5 9h17M2.5 15h17"/></svg></div><div class=dl>SEO해시</div></div>
+  <div class="dk wait" style="--c:#34d399"><div class=ic><svg viewBox="0 0 24 24"><path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5zM3.5 7.5 12 12l8.5-4.5M12 12v9"/></svg></div><div class=dl>최종렌더</div></div>
+</div>
+</div>
+
+<p class=legend><b>쓴 색</b> — 영상추출 하늘 · 대본 보라 · 믹스 분홍 · 자막제거 로즈 · <b>목소리 민트(브랜드색)</b> · 자막꾸미기 주황 · 썸네일 금 · SEO 라임 · 최종렌더 초록. 브랜드 민트와 골드가 그대로 살아 있어 기존 화면과 안 겉돕니다.</p>
+
+<div class=note>⚠️ 지금 오브 단계바는 <b>final-mock-v6.html</b>이 정본입니다(theme.css 주석). 바꾸면 목업도 같이 갱신할지 정해야 합니다.</div>
+
+</div></body></html>

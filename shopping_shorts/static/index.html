@@ -655,6 +655,13 @@ const CTYPES = [
 //   (test_ranking_style_filter.py가 이 짝을 검사한다)
 const TOPIC_CTYPE = {홈템:"홈템", 가전:"홈템", 레시피:"비법형", 뷰티:"혼합형", 기타:"기타",
                      제품정체형:"썰쇼핑", 오용형:"썰쇼핑", 장비템:"장비템"};
+// 플랫폼별로 **버튼만** 감춘다(2026-08-26 사장님 "인스타쪽 썰쇼핑과 장비공구는 없애").
+// 썰쇼핑(제품정체형·오용형)·장비템은 **유튜브 발굴에서 나온 축**이라 인스타에선 안 쓴다.
+// ★항목을 버리는 게 아니다 — 버튼만 안 보인다. 그 카테고리 영상은 '전체'에서 그대로 보인다.
+//   (거르는 코드 render()는 이 표를 쳐다보지 않는다. 거기서 쓰면 항목이 통째로 사라진다.)
+// ★유튜브에선 그대로 둔다 — 실측(2026-08-26) 유튜브 8,000건에 장비템 99·제품정체형 170·
+//   오용형 83건이 실재한다. 같이 숨기면 그 352건이 버튼으로는 못 찾게 된다.
+const CTYPE_HIDDEN = {instagram:["썰쇼핑", "장비템"], threads:["썰쇼핑", "장비템"]};
 let STATE = {items:[], tab:"comments", ctype:"전체", cat:"전체", q:"", style:"",
              filters:_loadFilters()};
 // 걸러내기 상태는 브라우저에 기억시킨다 — 새로고침마다 다시 켜게 하면 아무도 안 쓴다.
@@ -708,9 +715,21 @@ function togglePerChannel(){
 // ★칩 목록은 서버(/api/lens/locales)가 준다 — 프론트에 나라를 박으면 서버 env와 어긋난다.
 let LENS_LOCALES_ALL = [];     // [{key,label}] — 서버가 주는 전체 목록
 let LENS_LOCALES_OFF = new Set();   // 꺼둔 것만 저장한다(새 나라가 늘면 기본 켜짐이 되게)
+/* ★기본으로 켤 나라(2026-08-26 사장님 "한국/중국만 기본으로 켜두고 나머지는 누르면 활성화").
+   여기 없는 나라는 **처음 열 때 꺼진 상태**로 시작하고, 칩을 누르면 그때 켜진다.
+   ⚠️ 한 번이라도 칩을 만지면 그 선택(ss_lens_loc_off)이 저장돼 이 기본값보다 우선한다
+      — 사장님이 정한 조합을 우리가 매번 되돌리면 안 된다.
+   ⚠️ 나라 목록은 서버(/api/lens/locales)가 준다. 여기 **키만** 적는다 — 목록 자체를
+      하드코딩하면 서버 env를 바꿨을 때 어긋난다(0순위-B). 서버에 새 나라가 늘면
+      그 나라는 이 목록에 없으니 자동으로 '꺼짐'으로 시작한다(비용이 조용히 늘지 않는다). */
+const LENS_LOCALES_DEFAULT_ON = ['ko:kr', 'zh-cn:tw'];   // 한국·중국
 function _loadLensLocalesOff(){
-  try{ return new Set(JSON.parse(localStorage.getItem('ss_lens_loc_off')||'[]')); }
-  catch(e){ return new Set(); }
+  const raw = (()=>{ try{ return localStorage.getItem('ss_lens_loc_off'); }catch(e){ return null; } })();
+  if(raw !== null){
+    try{ return new Set(JSON.parse(raw||'[]')); }catch(e){ return new Set(); }
+  }
+  // 저장값이 없다 = 아직 한 번도 안 만졌다 → 기본 조합(한국·중국만)으로 시작한다.
+  return new Set(LENS_LOCALES_ALL.map(l=>l.key).filter(k=>!LENS_LOCALES_DEFAULT_ON.includes(k)));
 }
 function _saveLensLocalesOff(){
   try{ localStorage.setItem('ss_lens_loc_off', JSON.stringify([...LENS_LOCALES_OFF])); }catch(e){}
@@ -838,6 +857,9 @@ function switchPlatform(p, el){
   // ★축은 플랫폼마다 다르다 — 남겨두면 인스타에서 '신기템' 필터가 살아 목록이 통째로 빈다.
   STATE.style="";
   updatePlatformCopy(p);
+  // ★카테고리 줄도 다시 그린다(2026-08-26) — 플랫폼마다 숨기는 버튼이 다르다.
+  //   안 부르면 유튜브에서 인스타로 갈아타도 썰쇼핑·장비템 버튼이 그대로 남는다.
+  renderCtypes(); renderCats();
   document.querySelectorAll('#platformTabs .ctype').forEach(x=>x.classList.remove('active'));
   el.classList.add('active');
   const isTrend = (p==='douyin');
@@ -1298,8 +1320,11 @@ async function saveTtSettings(){
 }
 
 function renderCtypes(){
+  const hide = CTYPE_HIDDEN[PLATFORM] || [];
+  // 숨긴 버튼이 눌려 있던 채로 플랫폼을 갈아타면 **목록이 빈 채로** 남는다 → 전체로 되돌린다.
+  if (hide.includes(STATE.ctype)){ STATE.ctype = "전체"; STATE.cat = "전체"; }
   document.getElementById("ctypes").innerHTML =
-    '<span class="tab-grp">카테고리</span>' + CTYPES.map(c =>
+    '<span class="tab-grp">카테고리</span>' + CTYPES.filter(c => !hide.includes(c.key)).map(c =>
     `<div class="ctype ${c.key===STATE.ctype?'active':''}" onclick="setCtype('${c.key}')">${c.label}</div>`).join("");
 }
 // 발굴 스타일 줄(유튜브만). 라벨은 발굴이 실제로 매긴 이름 그대로 쓴다 — 화면에서만
@@ -1310,18 +1335,20 @@ function renderCtypes(){
 const STYLE_LABELS = {썰쇼핑:"🎬 썰쇼핑",
                       연예인결합:"⭐ 연예인", 레시피쇼핑:"🍳 레시피"};
 const STYLE_HIDDEN = {신기템:"🆕 신기템"};   // 되살리려면 위 목록으로 옮긴다
+// ★발굴 축 줄을 통째로 숨긴다(2026-08-26 사장님 "발굴축은 헷갈리니까 숨겨놔 카테고리만하고").
+//   왜 헷갈렸나: 같은 화면에 축이 둘이었다 — 카테고리는 **무엇을** 파는가(제품),
+//   발굴 축은 **어떻게** 말하는가(화법). 게다가 '썰쇼핑'이 **양쪽에 다 있어서**
+//   (카테고리 썰쇼핑 = 제품정체형+오용형 / 발굴 축 썰쇼핑 = 채널 화법) 특히 헷갈렸다.
+//   ★판정·수집 코드는 그대로 둔다 — 화면에서만 뺀다. 여기 return 한 줄을 지우면 돌아온다.
+//     지우지 않는 이유: 지우면 나중에 왜 없는지 아무도 모른다(2026-07-21 platformTabs 선례).
+//   ★STATE.style을 반드시 비운다 — 안 비우면 예전에 눌러둔 축이 살아남아
+//     render()의 필터에 계속 걸려 **목록이 조용히 빈 채로** 남는다.
 function renderStyles(){
   const el = document.getElementById("styles");
   if (!el) return;
-  if (PLATFORM !== "youtube"){ el.style.display="none"; el.innerHTML=""; return; }
-  // 이번 수집에 **실제로 있는 축만** 버튼으로 낸다 — 눌러도 0건인 버튼은 고장으로 보인다.
-  const have = new Set(STATE.items.map(i => i.style).filter(Boolean));
-  if (!have.size){ el.style.display="none"; el.innerHTML=""; return; }
-  const keys = Object.keys(STYLE_LABELS).filter(k => have.has(k));
-  el.style.display = "";
-  el.innerHTML = '<span class="tab-grp">발굴 축</span>'
-    + [["", "✨ 전체"], ...keys.map(k => [k, STYLE_LABELS[k]])].map(([k, lbl]) =>
-        `<div class="ctype ${k===STATE.style?'active':''}" onclick="setStyle('${k}')">${lbl}</div>`).join("");
+  STATE.style = "";                       // 숨기는 순간 이 축으로는 거르지 않는다
+  el.style.display = "none";
+  el.innerHTML = "";
 }
 function setStyle(k){ exitChannelView({silent:true}); STATE.style=k; renderStyles(); render(); }
 function renderCats(){
@@ -1857,7 +1884,7 @@ function render(opts){
   if(items.length > RENDER_CAP) items = items.slice(0, RENDER_CAP);
   el.innerHTML = _notice + items.map((i,idx)=>`
     <div class="card">
-      ${i.thumbnail?`<div class="thumb">
+      ${i.thumbnail?`<div class="thumb" data-thumb="${thumbURL(i.thumbnail, i.shortcode)}">
         <img src="${thumbURL(i.thumbnail, i.shortcode)}" data-vurl="${i.video_url?('/api/video?url='+encodeURIComponent(i.video_url)):''}" ${i.video_url?'onclick="playInline(this)"':(i.platform==='youtube'?`onclick="playYoutube(this,'${i.shortcode}')"`:(i.platform==='tiktok'?`onclick="playTiktok(this,'${i.shortcode}')"`:((i.platform||PLATFORM)==='instagram'?`onclick="playInstagram(this,'${i.shortcode}')"`:'')))} loading="lazy" onerror="this.style.visibility='hidden'">
         ${badgeHTML(i, _bctx)}
         ${(i.video_url||i.platform==='youtube'||i.platform==='tiktok'||(i.platform||PLATFORM)==='instagram')?'<span class="play-badge">▶</span>':''}
@@ -2494,6 +2521,13 @@ function _embedTiktok(el, videoId){
   f.allow='autoplay; encrypted-media; picture-in-picture'; f.allowFullscreen=true;
   el.replaceWith(f);
 }
+/* ★유튜브는 프록시를 못 쓴다(2026-08-25 실측 — 시도했다가 되돌린 기록).
+   googlevideo mp4 URL에는 **발급 IP가 박혀(ip= 파라미터)** 있고, 서버에서 받아
+   흘리려 하면 Referer·UA·Range를 무엇으로 줘도 **403**이다(실측 3가지 조합 전부).
+   그래서 /api/video 화이트리스트에 googlevideo를 넣어도 소용이 없다 — 넣지 마라.
+   → 유튜브는 CDN 직접 재생만 가능하고, 그 경우 canvas가 교차출처로 오염돼
+     **중간 프레임 캡처가 브라우저 보안상 불가능**하다. 썸네일로만 검색된다.
+   (인스타는 cdninstagram이 프록시를 허용해 same-origin이 되어 중간 장면이 된다) */
 function playYoutube(img, videoId){ _playViaMedia(img, videoId, 'youtube', _embedYoutube); }
 function playTiktok(img, videoId){ _playViaMedia(img, videoId, 'tiktok', _embedTiktok); }
 // 인스타 인라인 재생(2026-07-30 복구) — 수집이 직접 mp4를 안 담게 되면서(429 회피) 썸네일
@@ -2561,8 +2595,45 @@ function _captureFrame(shortcode){
   }
   return null;
 }
+
+/* ★재생 중이어도 렌즈가 되게 — 썸네일 주소를 기억해뒀다가 다시 받는다
+   (2026-08-25 사장님 "썸네일말고 중간에 두면 렌즈검색이 되게 안되나").
+
+   왜 필요한가: _playViaMedia가 `img.replaceWith(v)`로 썸네일을 **치워버린다**.
+   인스타·틱톡은 <video>가 남아 프레임을 뜨면 되지만, 유튜브가 mp4를 안 주면
+   iframe으로 폴백하는데 **iframe은 브라우저 보안상 캡처가 불가능**하다
+   → 캡처할 <img>도 <video>도 없어 "이미지를 준비하지 못했습니다"가 떴다.
+
+   해결: 카드를 그릴 때 썸네일 주소를 .thumb에 남겨두고(data-thumb),
+   재생 중이면 그 주소로 이미지를 새로 받아 캡처한다. 재생 화면은 안 건드린다.
+   ⚠️ /api/thumb 프록시라 same-origin → canvas 오염(taint) 없이 toBlob 된다.
+      원본 CDN 주소를 그대로 쓰면 여기서 막힌다. */
+function _captureFrameAsync(shortcode){
+  const sync=_captureFrame(shortcode);
+  if(sync) return Promise.resolve(sync);           // 썸네일·영상이 살아 있으면 그대로
+  const anchor=document.getElementById('save_'+shortcode);
+  const card=anchor && anchor.closest('.card');
+  const box=card && card.querySelector('.thumb');
+  const src=box && box.getAttribute('data-thumb');
+  if(!src) return Promise.resolve(null);
+  return new Promise(resolve=>{
+    const im=new Image();
+    im.crossOrigin='anonymous';
+    im.onload=()=>{
+      if(!im.naturalWidth) return resolve(null);
+      const cv=document.createElement('canvas');
+      cv.width=im.naturalWidth; cv.height=im.naturalHeight;
+      try{ cv.getContext('2d').drawImage(im,0,0); resolve(cv); }
+      catch(e){ resolve(null); }
+    };
+    im.onerror=()=>resolve(null);
+    im.src=src;
+  });
+}
 async function lensSearch(btn, shortcode){
-  const cv=_captureFrame(shortcode);
+  // 재생 중이면 현재 프레임(사장님이 고른 장면), 아니면 썸네일.
+  // 둘 다 없으면(유튜브 iframe 폴백 등) 기억해둔 썸네일 주소로 다시 받아 시도한다.
+  const cv=await _captureFrameAsync(shortcode);
   if(!cv){ openScript('<div style="padding:10px;color:var(--sub)">이미지를 준비하지 못했습니다. 썸네일이 로드된 뒤 다시 눌러주세요.</div>','🔍 렌즈 유사영상',true); return; }
   openScript('<div class="sm-loading">🔍 렌즈 검색 중… (5~15초)</div>','🔍 렌즈 유사영상',true);
   const blob=await new Promise(r=>cv.toBlob(r,'image/jpeg',0.85));

@@ -633,13 +633,18 @@ def regen_one_beat(sources, style, role, beats, template="", target_seconds=30,
     from shopping_shorts import bank_assemble, script_gate
 
     role = (role or "").strip()
-    if not role or not style:
+    if not role:
         return None
-    roles = list(style.get("beat_roles") or [])
-    if role not in roles:
+    # ★스파인이 없어도 돈다(2026-08-26 사장님 "픽업영상 대본은 바꾸기를 누르면
+    #   ai자동바꾸기가 왜안되나"). 픽업영상 대본은 **스타일을 안 고르는 경로**라
+    #   style이 None인데, 종전엔 여기서 곧장 None을 반환해 [바꾸기]가 통째로 막혔다.
+    #   스파인이 없으면 역할 검증·문장틀만 건너뛰고 나머지(앞뒤 문맥·재료·길이·판정)는
+    #   전체 생성과 **그대로 같은 경로**로 간다 — 여기서 따로 만들면 결이 어긋난다(0순위-B).
+    roles = list((style or {}).get("beat_roles") or [])
+    if roles and role not in roles:
         return None
     seconds = max(5, min(int(target_seconds or 30), 90))
-    templates = (style.get("templates") or {}).get(role) or []
+    templates = ((style or {}).get("templates") or {}).get(role) or []
     # 고른 틀이 그 칸 것이 아니면 무시한다(클라이언트 값을 믿지 않는다 — work_id 사고와 같은 유형).
     picked = (template or "").strip()
     want = [picked] if picked and picked in templates else list(templates)
@@ -885,8 +890,35 @@ def _elem_lines(structure, elem_modes, category_lookup):
     return "\n".join(lines)
 
 
+def _pickup_hook_directive(seed_hook, subject=""):
+    """픽업영상 대본 — 훅 지시문(2026-08-26 사장님 "훅도 터지는 영상이니 변형해서").
+
+    ★원본 훅 문장을 **그대로 보여준다**(사장님이 (B)안으로 확정). 문형 재현율이 가장 높다.
+      대신 메모리 `참고훅주입_베끼기숫자창작`의 교훈을 그대로 반영한다 —
+      "베끼지 마라" 한 줄로는 안 막히고 **실패 예시를 박아야** 걸린다.
+    ⚠️여기 문구와 판정(pickup_script.hook_ok)이 두 벌이 되면 어긋난다.
+      문구는 '무엇을 원하는지', 판정은 '지켰는지'다 — 어긴 결과는 호출부가 재작성을 건다.
+    """
+    subj = (subject or "").strip()
+    lines = [
+        "- 훅: **아래 원본 훅의 '문형'을 그대로 지켜라** — 문형이란 문장의 뼈대다.",
+        "    원본 훅: 「" + (seed_hook or "").strip() + "」",
+        "    ↳ 이 뼈대(호칭 + 대상 + 강조어 + ~하지 마세요 류)를 유지하되 **문장은 새로 써라.**",
+    ]
+    if subj:
+        lines.append("    ↳ 소재는 원본과 같은 '" + subj + "'를 유지한다(제품군을 바꾸지 마라).")
+    lines += [
+        "    ★금지(실패 예시 — 이대로 쓰면 반려된다):",
+        "      · 원본 훅을 그대로/거의 그대로 복사 → 「" + (seed_hook or "").strip() + "」 (X)",
+        "      · 문형을 버리고 다른 말투로 → 「세상에, 그거 끊은 우리 엄마가…」 (X)",
+        "      · 원본에 없는 숫자·통계 지어내기 → 「3주만에 30퍼센트 감소」 (X)",
+    ]
+    return "\n".join(lines)
+
+
 def generate_variations(structure, full_text, elem_modes, category_lookup, mode="remake",
-                        my_topic="", subject="", n=3, max_key_tries=3, bank_context=""):
+                        my_topic="", subject="", n=3, max_key_tries=3, bank_context="",
+                        seed_hook=""):
     """구조+대본을 재료로 요소별 모드 지시에 맞춰 초안 리스트 반환. 실패/무키면 [].
 
     mode: "remake"(원본 소재 고정, 표현만 재작성) 또는 "transplant"(구조만 빌려 내 주제로).
@@ -908,8 +940,17 @@ def generate_variations(structure, full_text, elem_modes, category_lookup, mode=
             "(중복 회피) 리라이트하라. 없던 내용이나 다른 제품을 지어내지 마라." + subj_line)
     seconds = 30
     words = max(15, round(seconds * 2.3))
+    _elems = _elem_lines(structure or {}, elem_modes, category_lookup)
+    # ★픽업영상 대본(2026-08-26) — seed_hook이 오면 훅 줄만 '문형 지정' 지시로 갈아끼운다.
+    #   안 오면 종전 그대로라 회귀 0(호출부가 안 보내면 아무 일도 없다).
+    #   _elem_lines가 만든 훅 줄("- 훅: 유지 → …[경고형]")은 **유형만** 전달해서
+    #   실측 4안 중 2안이 문형을 버렸다 — 그래서 원본 문장을 직접 싣는다.
+    if (seed_hook or "").strip():
+        _elems = "\n".join(
+            [l for l in _elems.split("\n") if not l.startswith("- 훅:")]
+            + [_pickup_hook_directive(seed_hook, subject)])
     prompt = (_GEN_PROMPT.format(
-        full_text=full_text[:3000], elems=_elem_lines(structure or {}, elem_modes, category_lookup),
+        full_text=full_text[:3000], elems=_elems,
         topic_line=topic_line, n=n, seconds=seconds, words=words,
         bank=("\n\n" + bank_context) if bank_context else "")
         + _style_extra())   # ★채널 스타일(2026-08-05)

@@ -152,6 +152,7 @@
     .eff-sparkle{animation:capSparkle 2.6s ease-in-out infinite}
     .cap-spark{position:absolute;font-size:.5em;color:#fff;pointer-events:none;text-shadow:0 0 4px #fff;animation:twinkle 1.3s ease-in-out infinite}
     /* 헤드카피 번들 폰트 22종(브라우저 미리보기 = 실제 렌더 일치, ttf/otf만) */
+/* @@FONTS:BEGIN — tools/sync_fonts.py가 생성. 직접 고치지 마라 */
     @font-face{font-family:'HCTmon';src:url('/fonts/TmonMonsori.ttf')}
     @font-face{font-family:'HCJua';src:url('/fonts/BMJUA.ttf')}
     @font-face{font-family:'HCDohyeon';src:url('/fonts/BMDOHYEON.ttf')}
@@ -174,6 +175,22 @@
     @font-face{font-family:'HCSuitR';src:url('/fonts/SUIT-Regular.otf')}
     @font-face{font-family:'HCSpoqaR';src:url('/fonts/SpoqaHanSansNeo-Regular.otf')}
     @font-face{font-family:'HCIBMR';src:url('/fonts/IBMPlexSansKR-Regular.otf')}
+    @font-face{font-family:'HCGaegu';src:url('/fonts/Gaegu-Bold.ttf')}
+    @font-face{font-family:'HCNanumPen';src:url('/fonts/NanumPenScript.ttf')}
+    @font-face{font-family:'HCNanumBrush';src:url('/fonts/NanumBrushScript.ttf')}
+    @font-face{font-family:'HCHiMelody';src:url('/fonts/HiMelody.ttf')}
+    @font-face{font-family:'HCSingleDay';src:url('/fonts/SingleDay.ttf')}
+    @font-face{font-family:'HCPoorStory';src:url('/fonts/PoorStory.ttf')}
+    @font-face{font-family:'HCDokdo';src:url('/fonts/Dokdo-Regular.ttf')}
+    @font-face{font-family:'HCEastSea';src:url('/fonts/EastSeaDokdo.ttf')}
+    @font-face{font-family:'HCGamja';src:url('/fonts/GamjaFlower.ttf')}
+    @font-face{font-family:'HCCute';src:url('/fonts/CuteFont.ttf')}
+    @font-face{font-family:'HCKirang';src:url('/fonts/KirangHaerang.ttf')}
+    @font-face{font-family:'HCSunflower';src:url('/fonts/Sunflower-Medium.ttf')}
+    @font-face{font-family:'HCBWPic';src:url('/fonts/BlackAndWhitePicture.ttf')}
+    @font-face{font-family:'HCBlackHan';src:url('/fonts/BlackHanSans.ttf')}
+    @font-face{font-family:'HCGugi';src:url('/fonts/Gugi-Regular.ttf')}
+    /* @@FONTS:END */
 
     /* 📝뽑기 생성 모달(도서관 library.html 이식, pm 네임스페이스) */
     .gen-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:flex-start;justify-content:center;padding:24px;overflow:auto}
@@ -1537,7 +1554,7 @@
       <div id="thumbGallery" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px"></div>
     </section>
     <section class="panel" data-step="5">
-      <h3 data-steptitle="seo">7 · SEO해시테크</h3>
+      <h3 data-steptitle="seo">7 · 제목·태그</h3>
       <div class="sub">제목·설명·태그를 만들고, 키워드를 유튜브에서 실제로 재서 근거를 붙입니다.</div>
       <div class="seoBar">
         <button class="btn primary" id="seoGenAll">AI로 전체 생성</button>
@@ -1550,7 +1567,7 @@
       <div id="seoBody" class="seoBody"></div>
     </section>
     <section class="panel" data-step="6">
-      <h3 data-steptitle="final">8 · 최종렌더</h3>
+      <h3 data-steptitle="final">8 · 완성본</h3>
       <div class="sub">확정 대본·장면매칭·음성·자막제거 설정을 최종 영상으로 렌더합니다.</div>
       <div id="finalSummary" class="hint" style="margin-bottom:10px"></div>
       
@@ -1781,7 +1798,7 @@
    fetch/XHR을 일절 쓰지 않는다(체험 등급은 제작 API가 전부 402라서). */
 (function(){
   var ORB_TO_PANEL = [0, 8, 7, 1, 2, 3, 4, 5, 6];
-  var STEP_LABELS  = ["영상추출/분석", "대본생성", "영상대본MIX", "고품질 자막제거", "TTS음성", "자막꾸미기", "썸네일", "SEO해시테크", "최종렌더"];
+  var STEP_LABELS  = ["영상추출/분석", "대본생성", "영상대본MIX", "고품질 자막제거", "TTS음성", "자막꾸미기", "썸네일", "제목·태그", "완성본"];
   var NOTES        = {"0": "담은 영상을 <b>전부 받아적고</b> 화면에 뭐가 나오는지까지 읽습니다. 카드마다 <b>말 있음 284자</b>처럼 받아적은 분량이 보이고, <b>자막이 아예 없는 영상도</b> 화면만 보고 알아냅니다(외국어도 그대로). 왼쪽 첫 칸 <b>AI PICK</b>이 대표로 뽑힌 영상이에요. 여기서 모인 게 대본의 재료가 됩니다.", "1": "잘 터진 채널들의 <b>말하는 방식</b>을 학습해둔 틀 중에서 고릅니다. 같은 제품이라도 틀을 바꾸면 완전히 다른 영상이 나와요. 결과 대본은 <b>미끼·찔림·반전·증거·약속</b> 다섯 토막으로 나뉘고 토막마다 길이(초)가 정해집니다. 마음에 안 드는 곳은 <b>그 줄만</b> 다시 뽑아요 — 전체를 새로 쓸 필요가 없습니다.", "2": "대사에 맞는 <b>장면을 붙이는</b> 단계입니다. 담은 영상에서 쓸 만한 장면을 찾아두고 \"주사기처럼 생겨서\"라고 말할 때 <b>실제로 그 장면이 나오게</b> 맞춥니다.", "3": "남의 영상에 박혀 있던 <b>자막을 지웁니다.</b> 지운 자리를 주변 화면으로 메워서 티가 안 나게 만들어요. 여기가 깔끔해야 내 자막을 새로 얹을 수 있습니다.", "4": "대본을 <b>성우 목소리로</b> 읽습니다. 목소리와 속도를 골라 미리 들어볼 수 있어요.", "5": "자막의 <b>글씨체·색·위치</b>를 꾸밉니다. 채널 분위기에 맞춰 한 번 정해두면 계속 씁니다.", "6": "영상 속 한 장면을 골라 <b>썸네일</b>을 만듭니다. 글자와 스티커를 얹을 수 있어요.", "7": "<b>제목·해시태그</b>를 만듭니다. 검색으로 들어오는 사람을 늘리는 자리예요.", "8": "여기까지가 <b>한 편</b>입니다. 완성 영상을 내려받거나 카톡으로 바로 보낼 수 있어요. 사람이 하는 건 '어떤 영상을 담을지' 고르기와 '마음에 안 드는 곳 바꾸기' 둘뿐입니다."};
   var cur = 0;
 

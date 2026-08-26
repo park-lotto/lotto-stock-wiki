@@ -1,0 +1,184 @@
+<!doctype html><html lang=ko><head><meta charset="utf-8">
+<meta name=viewport content="width=device-width,initial-scale=1">
+<title>제작소 단계바 — 대안 4안 비교</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--mint:#3ee0bf;--gold:#facc6b;--bg:#070b14;--panel:#0d1420;--line:#1a2436;
+  --txt:#e7ecf7;--sub:#5a6580}
+body{background:var(--bg);color:var(--txt);font-family:"Malgun Gothic",system-ui,sans-serif;
+  line-height:1.6;padding:26px 20px 80px}
+.wrap{max-width:1120px;margin:0 auto}
+h1{font-size:24px;font-weight:900;margin-bottom:6px}
+.desc{color:var(--sub);font-size:14px;margin-bottom:26px}
+.case{background:var(--panel);border:1px solid var(--line);border-radius:16px;
+  padding:22px 24px 26px;margin-bottom:24px}
+.case > h2{font-size:17px;font-weight:900;color:var(--mint);margin-bottom:4px}
+.case > .why{color:var(--sub);font-size:13px;margin-bottom:20px}
+.case.now{border-color:#3a2f18}
+.case.now > h2{color:var(--gold)}
+.tag{display:inline-block;font-size:11px;font-weight:900;padding:3px 9px;border-radius:999px;
+  background:rgba(62,224,191,.14);color:var(--mint);margin-left:8px;vertical-align:middle}
+.tag.g{background:rgba(250,204,107,.14);color:var(--gold)}
+
+/* 현재(오브바) — 라이브 theme.css 그대로 */
+.orbbar{position:relative;display:flex;align-items:flex-start;justify-content:space-between;margin:0 6px 6px;padding-top:4px}
+.orbline{position:absolute;top:20px;left:24px;right:24px;height:4px;background:#1a2436;border-radius:4px}
+.orbfill{position:absolute;left:0;top:0;bottom:0;border-radius:4px;width:28%;
+  background:linear-gradient(90deg,#facc6b,#3ee0bf);box-shadow:0 0 12px rgba(62,224,191,.6)}
+.orb{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:5px;flex:1}
+.orb .ball{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:900;
+  background:radial-gradient(circle at 32% 28%,#17222f,#0b111c 70%);border:2px solid #243244;color:#5a6580}
+.orb.done .ball{background:radial-gradient(circle at 32% 28%,#ffe29a,#f5b53f 75%);border-color:transparent;color:#3a2800}
+.orb.cur .ball{background:radial-gradient(circle at 32% 28%,#7df5db,#14b8a6 75%);border-color:transparent;color:#04201b}
+.orb .lb{font-size:11px;font-weight:800;color:#5a6580;text-align:center}
+.orb.cur .lb{color:#fff}
+.orb.done .lb{color:#c9a44a}
+
+/* A. 세로 타임라인 */
+.vt{display:grid;grid-template-columns:250px 1fr;gap:22px}
+.vlist{position:relative;padding-left:6px}
+.vlist::before{content:"";position:absolute;left:19px;top:14px;bottom:14px;width:2px;background:var(--line)}
+.vrow{position:relative;display:flex;gap:12px;align-items:flex-start;padding:7px 0}
+.vrow .vb{position:relative;z-index:2;width:28px;height:28px;border-radius:50%;flex:0 0 auto;
+  display:grid;place-items:center;font-size:12px;font-weight:900;
+  background:#0b111c;border:2px solid #243244;color:#5a6580}
+.vrow.done .vb{background:#f5b53f;border-color:transparent;color:#3a2800}
+.vrow.cur .vb{background:#14b8a6;border-color:transparent;color:#04201b;box-shadow:0 0 0 5px rgba(62,224,191,.16)}
+.vrow .vt2{font-size:13.5px;font-weight:800;color:var(--sub);padding-top:3px}
+.vrow.cur .vt2{color:#fff}
+.vrow.done .vt2{color:#c9a44a}
+.vrow .vsub{display:block;font-size:11.5px;font-weight:600;color:#3f4a60;margin-top:1px}
+.vbody{background:#0a1019;border:1px solid var(--line);border-radius:12px;padding:18px;color:var(--sub);font-size:13.5px}
+
+/* B. 묶음 3단계 */
+.grp{display:flex;gap:12px;margin-bottom:14px}
+.gcard{flex:1;background:#0a1019;border:1px solid var(--line);border-radius:14px;padding:14px 16px;text-align:center}
+.gcard.cur{border-color:var(--mint);background:rgba(62,224,191,.07)}
+.gcard.done{border-color:#4a3b1c;background:rgba(250,204,107,.06)}
+.gcard .gn{font-size:11px;font-weight:900;color:var(--sub);letter-spacing:.06em}
+.gcard.cur .gn{color:var(--mint)}
+.gcard.done .gn{color:var(--gold)}
+.gcard .gt{font-size:18px;font-weight:900;margin-top:3px}
+.gcard .gd{font-size:11.5px;color:#3f4a60;margin-top:3px;font-weight:700}
+.dots{display:flex;gap:7px;justify-content:center;margin-top:10px}
+.dots i{width:8px;height:8px;border-radius:50%;background:#243244;display:block}
+.dots i.done{background:var(--gold)}
+.dots i.cur{background:var(--mint);box-shadow:0 0 0 4px rgba(62,224,191,.18)}
+.inner{background:#0a1019;border:1px solid var(--line);border-radius:12px;padding:14px 16px;
+  font-size:13px;color:var(--sub);font-weight:700}
+.inner b{color:#fff}
+
+/* C. 게이지 + 현재 카드 */
+.gauge{height:10px;border-radius:999px;background:#141d2c;overflow:hidden;margin-bottom:8px}
+.gauge i{display:block;height:100%;width:44%;border-radius:999px;
+  background:linear-gradient(90deg,#facc6b,#3ee0bf)}
+.gmeta{display:flex;justify-content:space-between;font-size:12px;font-weight:800;color:var(--sub);margin-bottom:16px}
+.gmeta b{color:var(--mint)}
+.ccard{background:#0a1019;border:1px solid rgba(62,224,191,.35);border-radius:14px;padding:20px 22px}
+.ccard .cn{font-size:12px;font-weight:900;color:var(--mint);letter-spacing:.05em}
+.ccard .ct{font-size:26px;font-weight:900;margin:4px 0 6px}
+.ccard .cd{font-size:13.5px;color:var(--sub);font-weight:700}
+.foldbtn{margin-top:14px;background:transparent;border:1px solid var(--line);color:var(--sub);
+  border-radius:999px;padding:8px 16px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit}
+
+/* D. 체크리스트 */
+.ck{display:grid;grid-template-columns:290px 1fr;gap:22px}
+.cklist{background:#0a1019;border:1px solid var(--line);border-radius:12px;padding:10px}
+.ckrow{display:flex;align-items:center;gap:11px;padding:9px 11px;border-radius:9px;font-size:13.5px;font-weight:800}
+.ckrow .bx{width:20px;height:20px;border-radius:6px;flex:0 0 auto;display:grid;place-items:center;
+  border:2px solid #243244;font-size:12px;color:transparent}
+.ckrow.done{color:#55617a}
+.ckrow.done .bx{background:#f5b53f;border-color:transparent;color:#3a2800}
+.ckrow.cur{background:rgba(62,224,191,.09);color:#fff}
+.ckrow.cur .bx{border-color:var(--mint)}
+.ckrow.wait{color:#3f4a60}
+.note{margin-top:26px;padding:16px 18px;border:1px solid #3a2f18;background:rgba(250,204,107,.05);
+  border-radius:12px;font-size:13px;color:#c9a44a;font-weight:700}
+</style></head><body><div class=wrap>
+
+<h1>제작소 단계바 — 지금 것 + 대안 4안</h1>
+<p class=desc>전부 라이브 팔레트(theme.css) 그대로입니다. 예시는 <b>5단계 TTS음성 진행 중</b> 상태로 통일했습니다.</p>
+
+<div class="case now">
+<h2>지금 쓰는 것 — 오브 단계바<span class="tag g">라이브</span></h2>
+<p class=why>동그라미 9개 + 가로 진행선. 결제·회원가입 위저드의 기본 관용구라 어느 서비스든 이 모양이면 서로 닮습니다. 9개는 가로로 늘어놓기엔 많아 글자가 11px까지 작아집니다.</p>
+<div class=orbbar>
+  <div class=orbline><i class=orbfill></i></div>
+  <div class="orb done"><div class=ball>✓</div><div class=lb>영상추출/분석</div></div>
+  <div class="orb done"><div class=ball>✓</div><div class=lb>대본생성</div></div>
+  <div class="orb done"><div class=ball>✓</div><div class=lb>영상대본MIX</div></div>
+  <div class="orb done"><div class=ball>✓</div><div class=lb>고품질 자막제거</div></div>
+  <div class="orb cur"><div class=ball>5</div><div class=lb>TTS음성</div></div>
+  <div class=orb><div class=ball>6</div><div class=lb>자막꾸미기</div></div>
+  <div class=orb><div class=ball>7</div><div class=lb>썸네일</div></div>
+  <div class=orb><div class=ball>8</div><div class=lb>SEO해시태그</div></div>
+  <div class=orb><div class=ball>9</div><div class=lb>최종렌더</div></div>
+</div>
+</div>
+
+<div class=case>
+<h2>A안 — 세로 타임라인 (왼쪽 고정)</h2>
+<p class=why>단계를 왼쪽 세로줄에 쌓고 본문은 오른쪽. 9개가 안 눌리고 <b>끝난 단계에 결과 요약을 같이 얹을 수 있습니다</b>(대본 첫 줄, 장면 수, 고른 목소리). 넓은 화면이 필요하고 폰에서는 접어야 합니다.</p>
+<div class=vt>
+  <div class=vlist>
+    <div class="vrow done"><div class=vb>✓</div><div class=vt2>영상추출/분석<span class=vsub>조각 18개</span></div></div>
+    <div class="vrow done"><div class=vb>✓</div><div class=vt2>대본생성<span class=vsub>"노트북 파우치가…"</span></div></div>
+    <div class="vrow done"><div class=vb>✓</div><div class=vt2>영상대본MIX<span class=vsub>8칸 · 34.2초</span></div></div>
+    <div class="vrow done"><div class=vb>✓</div><div class=vt2>고품질 자막제거<span class=vsub>7컷 처리</span></div></div>
+    <div class="vrow cur"><div class=vb>5</div><div class=vt2>TTS음성<span class=vsub>목소리 고르는 중</span></div></div>
+    <div class=vrow><div class=vb>6</div><div class=vt2>자막꾸미기</div></div>
+    <div class=vrow><div class=vb>7</div><div class=vt2>썸네일</div></div>
+    <div class=vrow><div class=vb>8</div><div class=vt2>SEO해시태그</div></div>
+    <div class=vrow><div class=vb>9</div><div class=vt2>최종렌더</div></div>
+  </div>
+  <div class=vbody>여기에 지금 단계 화면(목소리 고르기)이 들어갑니다.<br><br>왼쪽 줄은 스크롤해도 따라옵니다.</div>
+</div>
+</div>
+
+<div class=case>
+<h2>B안 — 묶음 3단계 + 안쪽 진행<span class="tag">추천</span></h2>
+<p class=why>9개를 <b>재료 만들기 · 다듬기 · 내보내기</b>로 묶어 위엔 3개만 크게. 지금 묶음 안에서만 작은 점으로 표시합니다. 9라는 숫자가 주는 부담이 사라지고, 단계 정보는 하나도 안 버립니다. 지금 단계 인덱스를 그대로 쓰면 되어 손댈 곳이 제일 적습니다.</p>
+<div class=grp>
+  <div class="gcard done"><div class=gn>끝남</div><div class=gt>재료 만들기</div><div class=gd>영상 분석 · 대본 · 믹스</div></div>
+  <div class="gcard cur"><div class=gn>지금 여기</div><div class=gt>다듬기</div><div class=gd>자막제거 · 목소리 · 꾸미기 · 썸네일</div>
+    <div class=dots><i class=done></i><i class=cur></i><i></i><i></i></div></div>
+  <div class=gcard><div class=gn>남음</div><div class=gt>내보내기</div><div class=gd>해시태그 · 최종 완성</div></div>
+</div>
+<div class=inner>다듬기 <b>2/4</b> — 자막제거 끝 · <b>지금: 목소리 고르기</b> · 자막꾸미기 · 썸네일</div>
+</div>
+
+<div class=case>
+<h2>C안 — 진행 막대 + 현재 단계 카드</h2>
+<p class=why>위는 얇은 게이지 하나, 아래는 지금 단계만 큰 카드로. 나머지 목록은 접어두고 눌러야 펼칩니다. <b>가장 안 흔하고 폰에서 제일 강합니다</b>. 대신 전체 흐름이 한눈에 안 보여 "앞으로 뭐가 남았나"를 매번 눌러 확인해야 합니다.</p>
+<div class=gauge><i></i></div>
+<div class=gmeta><span>진행 <b>5 / 9</b></span><span>남은 단계 4개</span></div>
+<div class=ccard>
+  <div class=cn>5번째 할 일</div>
+  <div class=ct>목소리 고르기</div>
+  <div class=cd>사람과 구분이 어려운 성우 목소리를 고릅니다. 고르면 전체 생성 한 번.</div>
+  <button class=foldbtn>전체 단계 보기 ▾</button>
+</div>
+</div>
+
+<div class=case>
+<h2>D안 — 체크리스트형</h2>
+<p class=why>할 일 목록처럼 ☑︎로 쌓고 끝난 건 회색 처리. "딸깍하면 다음이 열린다"가 가장 직관적으로 보입니다. 다만 <b>모양이 A안과 비슷해</b> 둘 중 하나만 고르시면 됩니다.</p>
+<div class=ck>
+  <div class=cklist>
+    <div class="ckrow done"><span class=bx>✓</span>영상 가져와 분석하기</div>
+    <div class="ckrow done"><span class=bx>✓</span>대본 만들기</div>
+    <div class="ckrow done"><span class=bx>✓</span>영상에 대본 붙이기</div>
+    <div class="ckrow done"><span class=bx>✓</span>원본 자막 지우기</div>
+    <div class="ckrow cur"><span class=bx></span>목소리 고르기</div>
+    <div class="ckrow wait"><span class=bx></span>자막 꾸미기</div>
+    <div class="ckrow wait"><span class=bx></span>썸네일 만들기</div>
+    <div class="ckrow wait"><span class=bx></span>제목·해시태그</div>
+    <div class="ckrow wait"><span class=bx></span>완성본 뽑기</div>
+  </div>
+  <div class=vbody>여기에 지금 단계 화면이 들어갑니다.</div>
+</div>
+</div>
+
+<div class=note>⚠️ 먼저 아셔야 할 것 — 지금 오브 단계바는 <b>사장님이 정하신 목업(final-mock-v6.html)에서 그대로 옮겨온 것</b>입니다(theme.css 주석에 "정본"으로 박혀 있습니다). 바꾸면 그 목업과 어긋나므로, 목업 쪽도 같이 갱신할지 정해야 합니다.</div>
+
+</div></body></html>

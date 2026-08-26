@@ -133,6 +133,10 @@ def _build_scene_spine(seg_map, video_type):
     - 이미 쓴 seg는 재사용 안 함(중복 화면 방지). 슬롯에 맞는 게 없으면 그 슬롯은 건너뛴다
       (빈 슬롯로 렌더가 깨지지 않게 — 뒤 슬롯이 이어 채운다).
     - 빈 인벤토리·미지 카테고리는 안전 폴백(크래시 금지)."""
+    # ⚠ 자동 배치 — 첫·끝(CTA·썸네일) 조각은 재고에서 뺀다(2026-08-26).
+    #   _build_inventory가 이제 edge 표식만 달고 **버리지 않으므로**, 여기서
+    #   거르지 않으면 CTA 컷이 자동으로 붙는다(설계: AI 자동 배치는 종전대로 제외).
+    seg_map = non_edge_segs(seg_map)
     if not seg_map:
         return []
     vt = _normalize_video_type(video_type)
@@ -305,6 +309,10 @@ def _build_scene_blocks(seg_map, target_seconds):
 
     반환: [{"name": 훅|스토리|CTA, "segs": [seg,...], "secs": float}, ...]
     비면 [] (호출부가 옛 경로로 폴백)."""
+    # ⚠ 자동 배치 — 첫·끝(CTA·썸네일) 조각은 재고에서 뺀다(2026-08-26).
+    #   _build_inventory가 이제 edge 표식만 달고 **버리지 않으므로**, 여기서
+    #   거르지 않으면 CTA 컷이 자동으로 붙는다(설계: AI 자동 배치는 종전대로 제외).
+    seg_map = non_edge_segs(seg_map)
     if not seg_map:
         return []
     runs = _contiguous_runs(list(seg_map.values()))
@@ -375,6 +383,10 @@ def _pick_timeline(seg_map, target_seconds):
     - 목표에 못 미치면 다른 소스의 구간을 이어 붙인다(레퍼런스도 소스를 오간다).
     - 너무 짧은 구간은 옆과 합쳐 한 줄이 지나치게 짧아지지 않게 한다.
     반환: [[seg,...], ...] — 바깥 리스트가 '한 줄'이 붙을 단위."""
+    # ⚠ 자동 배치 — 첫·끝(CTA·썸네일) 조각은 재고에서 뺀다(2026-08-26).
+    #   _build_inventory가 이제 edge 표식만 달고 **버리지 않으므로**, 여기서
+    #   거르지 않으면 CTA 컷이 자동으로 붙는다(설계: AI 자동 배치는 종전대로 제외).
+    seg_map = non_edge_segs(seg_map)
     if not seg_map:
         return []
     by_vid = {}
@@ -452,6 +464,10 @@ def _build_source_sentence_sets(seg_map):
     반환: [{"set_id": str, "video_id": str, "segs": [seg,...], "secs": float}, ...]
     set_id는 세트의 첫 seg_id를 그대로 쓴다(Gemini 프롬프트에서 참조할 식별자로 충분하고,
     seg_id 자체가 이미 사람이 읽을 수 있는 값이라 별도 채번이 필요 없다)."""
+    # ⚠ 자동 배치 — 첫·끝(CTA·썸네일) 조각은 재고에서 뺀다(2026-08-26).
+    #   _build_inventory가 이제 edge 표식만 달고 **버리지 않으므로**, 여기서
+    #   거르지 않으면 CTA 컷이 자동으로 붙는다(설계: AI 자동 배치는 종전대로 제외).
+    seg_map = non_edge_segs(seg_map)
     by_vid = {}
     for s in seg_map.values():
         by_vid.setdefault(s.get("video_id"), []).append(s)
@@ -1607,28 +1623,63 @@ _INVENTORY_LABEL_HINT = (
 )
 
 
+def _is_edge_seg(seg):
+    """이 조각이 첫·끝(CTA·썸네일 자리)인가 — `_build_inventory`가 달아둔 표식만 본다.
+
+    ★판정을 여기 한 곳에만 둔다(0순위-B). 소비자마다 `sid.endswith("-0")` 같은 규칙을
+      새로 쓰면 반드시 어긋난다 — 표식은 만든 곳(_build_inventory)이 붙이고, 읽는 곳은
+      읽기만 한다."""
+    return bool((seg or {}).get("edge"))
+
+
+def non_edge_segs(seg_map):
+    """seg_map에서 첫·끝(edge)을 뺀 사본 — **AI 자동 배치가 쓰는 재고**.
+
+    ★왜 이 함수가 필요한가(2026-08-26): `_build_inventory`가 종전엔 첫·끝을 아예
+      **버렸기** 때문에, 그 뒤 seg_map을 통째로 훑는 자동 배치 코드(_fill_beat_screen_time·
+      _repick_weak_beats·_pick_timeline·_build_scene_blocks…)는 "여기 있는 건 전부 써도
+      되는 것"이라는 전제 위에 서 있었다. 필름 롤러(사람이 눈으로 고르는 화면)를 위해
+      첫·끝을 **표식만 달아 살려 보내기로** 바꾸면 그 전제가 조용히 깨져서, CTA·썸네일
+      컷이 자동으로 비트에 붙는다(설계 문서 "AI 자동 배치는 종전대로 제외" 위반).
+    → 그래서 사람이 고르는 경로는 seg_map 전체를, 자동 배치는 이 함수를 지나게 한다.
+      거르는 규칙을 소비자 7곳에 각각 적으면 언젠가 한 곳이 빠진다(0순위-B).
+    """
+    return {sid: s for sid, s in (seg_map or {}).items() if not _is_edge_seg(s)}
+
+
 def _build_inventory(source_scripts):
     """소스 대본들 → (seg_map, prompt_block).
 
-    seg_map: {seg_id: {video_id, seg_id, start, end, text, scene_desc, motion_level}}
-    prompt_block: 모델 프롬프트에 넣을 세그먼트 인벤토리 텍스트(seg_id로만 지목하게)."""
+    seg_map: {seg_id: {video_id, seg_id, start, end, text, scene_desc, motion_level, edge}}
+    prompt_block: 모델 프롬프트에 넣을 세그먼트 인벤토리 텍스트(seg_id로만 지목하게).
+
+    ★edge(2026-08-26): 첫·마지막 조각(CTA·썸네일 자리)은 종전에 **통째로 버렸는데**,
+      이제 버리지 않고 `edge=True` 표식만 달아 seg_map에 실어 보낸다. 사람이 화면에서
+      직접 고를 수 있게 하려는 것(필름 롤러 ⑤). **prompt_block에는 종전대로 안 싣는다**
+      → 모델이 보는 인벤토리는 한 글자도 안 변한다 = AI 자동 배치 회귀 0.
+      seg_map을 훑어 자동으로 컷을 고르는 코드는 `non_edge_segs()`를 지나게 한다."""
     seg_map = {}
     lines = []
     for script in source_scripts:
         vid = script.get("video_id", "")
         segs = script.get("segments", [])
-        # 첫·마지막 세그먼트 제외(CTA·썸네일 박제 차단).
+        # 첫·마지막 세그먼트는 프롬프트에서 제외(CTA·썸네일 박제 차단).
         # ★잘라낸 뒤 3개 이상 남을 때만 자른다(2026-08-14). 예전 기준(>=3)은 세그가 적은
         #   소스를 통째로 죽였다 — 실측(job 1e924608af83): 자막이 듬성한 샤오홍슈 소스가
         #   세그 3개뿐이라 첫·끝을 빼고 **1개만** 살아남았다(19개짜리 인스타는 17개가 남아
         #   티가 안 났다). 소스를 하나 통째로 잃는 손해가 CTA 한 컷 섞일 위험보다 크다.
-        usable = segs[1:-1] if len(segs) >= 5 else segs
-        for seg in usable:
+        # ★2026-08-26부터 '제외'는 **프롬프트 줄에만** 적용된다 — seg_map은 전부 싣되
+        #   edge 표식으로 갈라, 화면이 배지를 띄우고 사람이 골라 쓸 수 있게 한다.
+        trim = len(segs) >= 5
+        for i, seg in enumerate(segs):
+            is_edge = trim and (i == 0 or i == len(segs) - 1)
             sid = seg["seg_id"]
             length = round(seg["end"] - seg["start"], 2)
             seg_map[sid] = {
                 "video_id": vid, "seg_id": sid,
                 "start": seg["start"], "end": seg["end"],
+                # ⚠ 첫·끝 조각 표식(2026-08-26). 프롬프트에는 안 실리고 화면만 본다.
+                "edge": is_edge,
                 "text": seg.get("text", ""), "scene_desc": seg.get("scene_desc", ""),
                 # 짧은 이름(2026-08-16). 옛 추출본엔 없어 ""(fail-open) — 아래 라인 조립이
                 # 빈 값이면 그 칸을 통째로 생략하므로 기존 잡은 종전과 완전히 같은 줄을 받는다.
@@ -1643,6 +1694,10 @@ def _build_inventory(source_scripts):
                 "product_benefits": _seg_benefits(seg),
                 "motion_level": seg.get("motion_level"),
             }
+            # ★여기부터는 **프롬프트 줄 조립**이다 — 첫·끝 조각은 종전처럼 한 줄도 안 낸다.
+            #   (seg_map에는 위에서 이미 실었다. 모델이 보는 인벤토리 = 종전과 완전 동일)
+            if is_edge:
+                continue
             _act = seg.get("action")
             _act_s = f" | 행위:{_act}" if _act else ""
             # ★변화(2026-07-31): 사물이 주어인 상태변화·감각 한 줄. 손동작(행위)과 별개 칸이다 —
@@ -1926,6 +1981,11 @@ def _validate_and_ground(raw_plan, seg_map, n_alternates, respine=True, is_recip
 
     respine=True(기본): grounding 후 시각 세그먼트를 소스 시간순으로 재배치(2트랙 모델).
     화면이 요리 순서대로 흐르게 해 완성↔붓기 핑퐁을 없앤다. 나레이션 순서는 불변."""
+    # ⚠ 모델이 준 지목을 되붙이는 곳 — 재고에서 첫·끝(CTA·썸네일)을 뺀다(2026-08-26).
+    #   모델은 애초에 edge를 볼 수 없다(prompt_block에 안 실린다). 그런데 seg_map에
+    #   살아 들어오면서 **환각으로 edge id를 대도 그라운딩에 성공하게** 됐다 —
+    #   예전엔 None으로 걸러졌다. 여기서 빼야 종전 판정이 그대로 유지된다.
+    seg_map = non_edge_segs(seg_map)
     beats_out = []
     for beat in raw_plan.get("beats", []):
         primary = _ground_ref(beat.get("primary"), seg_map)
@@ -2610,6 +2670,11 @@ def _ground_candidate(cand, seg_map, structure="free", lead_hook=True):
     seg_ids[0]=primary, 나머지=alternates(연속재생). start/end/scene_desc는 코드가 되붙인다.
     primary 무효 비트는 드롭. 유효 비트 0개면 None.
     ★영상은 beats를 읽으므로 첫 비트가 밋밋하면 hook(강한 오프너)을 앞에 얹는다."""
+    # ⚠ 모델이 준 지목을 되붙이는 곳 — 재고에서 첫·끝(CTA·썸네일)을 뺀다(2026-08-26).
+    #   모델은 애초에 edge를 볼 수 없다(prompt_block에 안 실린다). 그런데 seg_map에
+    #   살아 들어오면서 **환각으로 edge id를 대도 그라운딩에 성공하게** 됐다 —
+    #   예전엔 None으로 걸러졌다. 여기서 빼야 종전 판정이 그대로 유지된다.
+    seg_map = non_edge_segs(seg_map)
     hook = cand.get("hook", "")
     beats_out = []
     dropped = []
@@ -2772,7 +2837,9 @@ def _fill_beat_screen_time(beats, seg_map, max_alts=None):
         #     같은 영상에서 이어 쓰면 결이 안 튀고, 사장님 안("영상당 2장면씩")이 자연히 된다.
         #   ②너무 짧은 조각은 뒤로 민다 — 막지는 않는다. 막으면 채울 게 동나 재사용
         #     폴백(같은 컷 반복)으로 떨어지는데 그게 더 나쁘다(위 주석과 같은 판단).
-        pool = sorted(seg_map.values(),
+        # ⚠ 첫·끝(CTA·썸네일) 조각은 자동으로 안 붙인다(2026-08-26) — edge 표식이
+        #   생기면서 seg_map에 살아 들어오므로 여기서 걸러야 종전 동작이 유지된다.
+        pool = sorted((s for s in seg_map.values() if not _is_edge_seg(s)),
                       key=lambda s: (s.get("video_id") != home,
                                      _seg_secs(s) < _MIN_CUT_SECONDS,
                                      _same_look(s), -_rel(s), s.get("start") or 0))
@@ -3699,7 +3766,12 @@ def _repick_weak_beats(beats, seg_map, call=_vault_call, min_fit=4):
     # 라운드로빈 여분이라 양보 가능).
     taken = {(b.get("primary") or {}).get("seg_id") for b in beats}
     weak_own = {(b.get("primary") or {}).get("seg_id") for b in weak}
-    pool = [sid for sid in seg_map if sid not in (taken - weak_own)]
+    # ⚠ 후보에서 첫·끝(CTA·썸네일) 조각을 뺀다(2026-08-26) — _build_inventory가 이제
+    #   edge 표식만 달고 버리지 않으므로, 안 거르면 자동 재픽이 CTA를 집는다.
+    #   ★seg_map 자체는 안 줄인다 — 사람이 손으로 꽂아둔 edge primary를 아래에서
+    #     조회해야 한다(줄이면 그 비트가 조용히 사라진다).
+    pool = [sid for sid, _s in seg_map.items()
+            if sid not in (taken - weak_own) and not _is_edge_seg(_s)]
     if not pool:
         return beats
     # 결(shot_role)을 함께 보여준다 — 아래 비트 줄의 '어울리는 결'과 대조할 수 있어야 한다.
@@ -5047,10 +5119,57 @@ def apply_scene_lab(plan, seg_map, edits):
     """실험실 편성 payload를 plan에 얹는다(제자리 수정, 반환 동일 객체).
 
     edits = {"beats": [{"beat_idx": int, "list": [seg_id...], "stretch": bool}, ...],
-             "trims": {seg_id: [a, b]}}
+             "trims": {seg_id: [a, b]},
+             "extra_segs": {seg_id: {video_id, start, end, scene_desc?, text?,
+                                     label?, shot_role?}, ...}}
     - list가 빈 칸은 건드리지 않는다(원본 유지 — 실수로 비운 칸이 렌더를 죽이지 않게).
     - seg_map에 없는 seg_id는 조용히 거른다(환각·옛 id 방어, _ground_ref와 같은 원칙).
+    - extra_segs(2026-08-26 필름 롤러 ④): **화면이 원본 필름에서 직접 오려낸 구간**이다.
+      서버 seg_map은 job["extract"]에서 매번 새로 만들어지므로 이런 id를 모른다 → 위
+      필터에 걸려 조용히 사라진다("화면엔 담겼는데 렌더엔 없다" = 최악의 실패).
+      그래서 여기서 seg_map **사본**에 병합한다. 규칙 셋:
+        ① 진짜 조각(추출본)을 절대 덮어쓰지 않는다 — 같은 id면 서버 것을 남긴다.
+        ② 클라이언트 입력이므로 방어적으로 검증한다(숫자 아님·end<=start·video_id 없음 → 버림).
+        ③ 호출자의 seg_map은 건드리지 않는다(다른 요청이 같은 dict를 쓸 수 있다).
     """
+    # ★사본에 병합 — 원본 seg_map을 제자리 수정하면 부르는 쪽(app.py)이 같은 dict를
+    #   다른 용도로 다시 쓸 때 클라이언트가 만든 조각이 새어 나간다.
+    seg_map = dict(seg_map or {})
+    # ★`or {}`만으로는 부족하다 — 문자열·리스트는 truthy라 그대로 통과해 .items()에서
+    #   AttributeError로 500이 난다(클라 입력이라 어떤 모양이든 올 수 있다).
+    _extra = edits.get("extra_segs")
+    if not isinstance(_extra, dict):
+        _extra = {}
+    for _sid, _s in _extra.items():
+        if not _sid or _sid in seg_map:
+            continue                       # ① 진짜 조각을 덮지 않는다
+        if not isinstance(_s, dict):
+            continue
+        try:                               # ② 클라이언트 입력 — 전부 의심한다
+            _st, _en = float(_s.get("start")), float(_s.get("end"))
+        except (TypeError, ValueError):
+            continue
+        # ★nan·inf도 막는다 — float()를 통과하고 `inf > 0`도 True라 아래 검사만으론
+        #   샌다(실측). 무한대 구간은 ffmpeg에서 통째로 깨진 컷이 된다.
+        if not (math.isfinite(_st) and math.isfinite(_en)):
+            continue
+        if not (_en > _st):                # 뒤집힌·0초 구간은 렌더에서 빈 컷이 된다
+            continue
+        # ★str()로 뭉개지 않는다 — dict를 주면 "{'a': 1}"이라는 그럴듯한 문자열이 되어
+        #   통과한다(실측). video_id는 원래 문자열이므로 문자열일 때만 받는다.
+        _vid = _s.get("video_id")
+        _vid = _vid.strip() if isinstance(_vid, str) else ""
+        if not _vid:                       # 어느 영상인지 모르면 자를 수가 없다
+            continue
+        seg_map[_sid] = {
+            "video_id": _vid, "seg_id": _sid, "start": _st, "end": _en,
+            "scene_desc": str(_s.get("scene_desc") or "")[:200],
+            "text": str(_s.get("text") or "")[:300],
+            "label": str(_s.get("label") or "")[:60],
+            # 사람이 직접 오린 구간이라 실증 표식은 안 준다(자동 로직이 앵커로 오해하면 안 된다).
+            "is_key": False,
+            "shot_role": _s.get("shot_role") or "기타",
+        }
     trims = edits.get("trims") or {}
     # 🔗 합친 조각(2026-08-17) — {대표 seg_id: [뒤에 이어 붙일 seg_id...]}.
     # 화면 mergeSpan과 같은 규칙: **대표의 end를 마지막 멤버의 end까지 늘린다.** 원본에서
@@ -5145,9 +5264,29 @@ def revert_scene_lab(plan):
 #   스파인이 뽑는 8칸 대본은 칸 사이가 "사오세요 / 스트레스였거든요"처럼 종결어미로만
 #   끊긴다 — 마침표만 보던 종전 정규식은 이 대본을 **2조각(141자·131자)으로만** 잘랐고,
 #   enforce_scripted_narration이 그 덩이를 2.9초짜리 hook 칸에 통째로 꽂았다.
-#   그래서 존대말 종결어미(요/죠)+공백도 문장 경계로 본다. 잘못 잘려 조각이 작아지는 쪽은
-#   피해가 없다(교체 매칭이 촌촌해질 뿐) — 안 잘리는 쪽이 칸을 통째로 망가뜨린다.
-_SENT_SPLIT = re.compile(r"(?<=[.!?。！？])\s+|(?<=[요죠])\s+|\n+")
+#   그래서 존대말 종결어미(요/죠)+공백도 문장 경계로 본다.
+#
+# ★단 '요/죠'는 **종결어미일 때만** 경계다 (2026-08-25 고객신고 #6 실사고).
+#   종전 `(?<=[요죠])\s+`는 글자만 보고 잘라 **명사 안의 '요'**에서도 끊었다:
+#     "소금도 필요 없이 딱 한 스푼…" → ["소금도 필요", "없이 딱 한 스푼…"]
+#     같은 병: 중요 부분 / 주요 기능 / 필요 없는 …  (전부 흔한 말이다)
+#   08-20 주석은 "작게 잘리는 쪽은 피해가 없다"고 봤지만, 그 뒤 생긴
+#   `enforce_script_order`가 조각을 **각각 다른 칸에 배분**하면서 실제 피해가 났다
+#   (라이브 job dce999992192: beat2="소금도 필요" / beat3="없이 딱 한 스푼…" — 한 문장이
+#    두 칸으로 쪼개져 음성·자막이 문장 중간에서 끊겼다. 규약 "문장은 쪼개지 않는다" 위반).
+#   → **'요' 앞 음절이 어미일 때만** 자른다(…어요/아요/에요/거든요/더라고요/네요/세요…).
+#     처음엔 명사 차단목록(필요·중요·주요…)으로 막으려 했는데 목록에 없는 말이 그대로 샜다
+#     (실측: 동요·고요). 새 단어가 나올 때마다 목록을 늘리는 구조라 반드시 또 샌다 —
+#     그래서 '무엇을 막을까'가 아니라 **'무엇이 종결어미인가'**로 뒤집었다.
+#     아래 집합은 실제 대본체 종결형 43개 + 명사 11개를 넣고 실측해 뽑았다(55건 전승).
+#     ⚠️'고'만 양쪽에 걸린다(더라고요 ↔ 고요). 대본에서 '더라고요'가 압도적으로 흔해
+#       허용 쪽에 뒀다 — '고요'가 문장 끝에 오는 대본은 사실상 없다.
+_SENT_SPLIT = re.compile(
+    r"(?<=[.!?。！？])\s+"
+    # 종결어미 '요'만 자른다(명사 안의 '요'는 안 자름 — 필요·중요·주요·수요·동요…)
+    r"|(?<=[가게고구군까나네데돼든래려서세아어에예와지해]요)\s+"
+    r"|(?<=죠)\s+"
+    r"|\n+")
 
 
 def _narr_key(s):
@@ -5168,15 +5307,27 @@ def enforce_scripted_narration(beats, given_script):
     - 교정: 창작 비트를 **아직 화면에 안 쓰인 대본 문장**으로 순서대로 갈아끼운다.
       남는 창작 비트는 그대로 둔다(지우면 화면 길이가 무너진다) — 대신 표시를 남긴다.
     반환: (고친 beats, 바꾼 개수)
+
+    ★`narration_manual`이 붙은 비트는 건드리지 않는다 (2026-08-25 고객 오류신고 cid 110).
+      이 검사는 "**EDL이** 지어냈나"를 보는 것인데, 3단계에서 **사람이 직접 고친** 문장도
+      given_script(1단계 원본)에 없으므로 똑같이 창작으로 몰려 매번 되돌려졌다.
+      실측: 저장 API는 {"ok":true,"saved":true}를 주는데 DB의 narration은 원본 그대로였다.
+      (고객 작업 253042206536 beat5도 tts_ver만 1로 오르고 파일명 해시는 그대로였다
+       = 글자는 안 바뀐 채 음성만 재합성)
+      표식은 사람이 고치는 그 자리(app의 3단계 저장 API)에서만 달린다 — AI 경로는 못 단다.
     """
     beats = beats or []
     if not (given_script or "").strip() or not beats:
         return beats, 0
     full = _narr_key(given_script)
     bad = [i for i, b in enumerate(beats)
-           if _narr_key(b.get("narration")) and _narr_key(b.get("narration")) not in full]
+           if not b.get("narration_manual")
+           and _narr_key(b.get("narration")) and _narr_key(b.get("narration")) not in full]
     if not bad:
         return beats, 0
+    # ⚠️`used`는 '이미 화면에 쓰인 대본 문장'이라 **되돌릴 재료에서 뺄 것**을 고른다.
+    #   사람이 고친 비트는 bad가 아니므로 자연히 여기 들어오는데, 그 문장은 대본에 없어
+    #   어느 대본 문장과도 안 겹친다 → missing 계산에 영향을 주지 않는다(의도한 동작).
     used = "".join(_narr_key(b.get("narration")) for i, b in enumerate(beats) if i not in bad)
     missing = [s for s in script_sentences(given_script)
                if _narr_key(s) and _narr_key(s)[:12] not in used]
@@ -5228,14 +5379,27 @@ def enforce_script_order(beats, given_script):
     if not sents:
         return beats, 0
 
-    n = len(beats)
+    # ★사람이 3단계에서 직접 고친 칸은 재배분 대상에서 **통째로 뺀다**
+    #   (2026-08-25 고객신고 cid 110). 이 함수는 given_script 문장만으로 칸을 다시 채우므로,
+    #   대본에 없는 '사람이 고친 문장'은 그냥 두면 덮여 사라진다.
+    #   ⚠️단순히 적용 단계에서 건너뛰기만 하면 **그 칸 몫의 대본 문장이 버려진다**
+    #     (실측: 3칸 중 가운데를 고치니 '둘째 문장'이 통째로 사라졌다). 이 함수의 규약은
+    #     '칸보다 문장이 많아도 버리지 않는다'이므로, 배분 계산 자체에서 빼서 남은 칸들이
+    #     그 몫까지 나눠 갖게 한다.
+    targets = [i for i, b in enumerate(beats) if not b.get("narration_manual")]
+    if not targets:
+        return beats, 0                   # 전부 사람이 고쳤다 — 손댈 게 없다
+
     # 이미 대본 순서를 지키고 있으면 손대지 않는다(멀쩡한 걸 흔들지 않는다).
-    joined = _narr_key("".join(b.get("narration") or "" for b in beats))
+    # 비교는 **재배분 대상 칸만** 이어붙여 본다 — 사람이 고친 칸의 문장은 대본에 없어서
+    # 통째로 이으면 절대 안 맞고, 그러면 멀쩡한 계획도 매번 흔들린다.
+    joined = _narr_key("".join(beats[i].get("narration") or "" for i in targets))
     if joined == _narr_key(given_script):
         return beats, 0
 
+    n = len(targets)
     # 칸 길이 비례로 문장을 나눈다 — 긴 칸에 더 많이. 길이 정보가 없으면 균등.
-    secs = [float(b.get("target_seconds") or 0) or 1.0 for b in beats]
+    secs = [float(beats[i].get("target_seconds") or 0) or 1.0 for i in targets]
     total_sec = sum(secs) or float(n)
     total_len = sum(len(x) for x in sents) or 1
     buckets, cur, budget_carry = [], [], 0.0
@@ -5260,7 +5424,11 @@ def enforce_script_order(beats, given_script):
         buckets[-1].extend(sents[si:])
 
     fixed = 0
-    for b, chunk in zip(beats, buckets):
+    # buckets는 **재배분 대상 칸(targets)** 순서로 만들어졌다 — 원래 인덱스로 되끼운다.
+    # (되돌림 enforce_scripted_narration만 막았을 때 증상이 그대로였던 이유가 여기다:
+    #  저장 출구의 관문은 **둘**이고, 양쪽 다 표식을 존중해야 한다.)
+    for bi, chunk in zip(targets, buckets):
+        b = beats[bi]
         text = " ".join(chunk).strip()
         if not text:
             continue                      # 채울 게 없으면 옛 대사를 지우지 않는다
