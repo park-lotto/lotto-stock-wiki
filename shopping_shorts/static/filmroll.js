@@ -265,8 +265,8 @@
       const total = BOXES.reduce((a, b) => a + (b.e - b.s), 0);
       barEl.innerHTML =
         (MA !== null
-          ? `<span class="frhint">시작 <b>${MA.toFixed(2)}초</b> — 빨간선을 옮기고 <b>손잡이 오른쪽 클릭</b> 한 번 더</span>`
-          : `<span class="frhint"><b>왼쪽 클릭</b>=빨간선 이동 · <b>손잡이 끌기</b>=훑어보기 · <b>손잡이 오른쪽 클릭</b> 2번=구간</span>`) +
+          ? `<span class="frhint">시작 <b>${MA.toFixed(2)}초</b> — 빨간선을 옮기고 <b>손잡이 클릭</b> 한 번 더</span>`
+          : `<span class="frhint"><b>왼쪽 클릭</b>=빨간선 이동 · <b>손잡이 끌기</b>=훑어보기 · <b>손잡이(빨간 막대) 클릭 2번</b>=구간</span>`) +
         `<span class="frmk"><button type="button" class="frbtn mk">＋ 구간</button>` +
         `<input type="number" class="frlen" step="0.1" min="0.1" value="2.4"><span class="frhint">초</span></span>` +
         (BOXES.length
@@ -392,18 +392,32 @@
     });
     win.addEventListener('pointerup', () => { down = false; setTimeout(() => dragged = false, 30); });
 
+    // ★손잡이를 끌었는지(=훑어보기) 눌렀다 뗐는지(=여기 찍기) 가른다.
+    //   끌고 난 뒤의 click까지 '찍기'로 받으면 훑을 때마다 구간이 생긴다.
+    let gripMoved = false, gripX = 0;
     gripEl.addEventListener('pointerdown', e => {
-      dg = true; e.stopPropagation(); e.preventDefault();
+      dg = true; gripMoved = false; gripX = e.clientX;
+      e.stopPropagation(); e.preventDefault();
       try { gripEl.setPointerCapture(e.pointerId); } catch (_) {}
     });
     gripEl.addEventListener('pointermove', e => {
       if (!dg) return;
+      if (Math.abs(e.clientX - gripX) > 4) gripMoved = true;
       const r = win.getBoundingClientRect();
       scrubTo(xToSec(e.clientX - r.left));
       e.stopPropagation();
     });
     gripEl.addEventListener('pointerup', e => { dg = false; e.stopPropagation(); });
-    gripEl.addEventListener('click', e => e.stopPropagation());
+    // ★2026-08-26 사장님 "빨간 막대 두번 누르면 시작점되고 주황박스 만들어지는 거
+    //   그거 왜 구현 안 되어 있나". 되어 있었는데 **오른쪽 클릭에만** 걸려 있었다
+    //   (왼쪽 클릭은 stopPropagation만 하고 아무 일도 안 했다) — 아무도 안 쓰는
+    //   조작이면 없는 기능이다. 왼쪽 클릭도 같은 markHere로 보낸다.
+    //   끌어서 훑은 직후의 click은 뺀다(안 그러면 훑을 때마다 구간이 찍힌다).
+    gripEl.addEventListener('click', e => {
+      e.stopPropagation();
+      if (gripMoved) { gripMoved = false; return; }
+      markHere();
+    });
     gripEl.addEventListener('contextmenu', e => { e.preventDefault(); e.stopPropagation(); markHere(); });
 
     host.querySelector('.frz').addEventListener('input', function () {
