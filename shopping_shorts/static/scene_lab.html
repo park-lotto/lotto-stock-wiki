@@ -192,6 +192,8 @@ h1{font-size:16px;margin:0;font-weight:700}
 .tbeat .h .d.dok{color:var(--good)}
 .tbeat .h .d.dwarn{color:#ffd08f}
 .tbeat .h .d.dbad{color:#ffb9b9;font-weight:700}
+/* ★컷 폭은 여기 한 곳에서만 정한다 — 칸 안 필름 높이가 이 값을 따라간다(9:16). */
+:root{--cutw:112px}
 .tbcuts{display:flex;gap:5px;flex-wrap:wrap;min-width:0}
 /* ★썸네일 폭 104 → 78(2026-08-22 사장님 "영상을 줄여줘" 후속). 9:16이라 폭이 곧
    칸 띠의 높이다(104면 185px, 78이면 139px) — 줄인 46px이 그대로 미리보기 몫이 된다.
@@ -199,7 +201,7 @@ h1{font-size:16px;margin:0;font-weight:700}
    78px로도 충분하다(실측: 번호·초·체크박스 전부 읽힌다). */
 /* 훅·칸 썸네일 — 78px는 옆 필름 칸보다 작아 무엇이 들어갔는지 안 보였다
    (2026-08-26 사장님 캡쳐 530). 필름 칸에 눈높이를 맞춘다. */
-.tbcut{position:relative;width:112px;flex:0 0 auto}
+.tbcut{position:relative;width:var(--cutw,112px);flex:0 0 auto}
 .tbcut img{width:100%;aspect-ratio:9/16;object-fit:cover;display:block;border-radius:5px;
   border:1px solid var(--line);background:#000}
 .tbcut .s{position:absolute;left:4px;top:4px;background:#000c;color:#fff;font-size:11px;
@@ -740,9 +742,16 @@ body.tight .frslot.inbeat .frwin{height:auto;flex:1;min-height:96px}
 .frslot.inbeat .frbar{flex-wrap:wrap}
 .frslot.inbeat .frbar > .frhint{flex:1 1 100%;white-space:normal;overflow:visible}
 .frslot.inbeat .frbtn{flex:0 0 auto}
-body.tight .frslot.inbeat .frbelt{top:4px;height:calc(100% - 30px)}
+/* ★훅 컷과 **같은 크기**로(2026-08-26 사장님 캡쳐 531). 종전엔 flex로 남는 높이를
+   받아 컷보다 작았고 위아래가 비었다. 컷 폭(--cutw)의 9:16을 그대로 못 박는다. */
+.frslot.inbeat .frwin{height:calc(var(--cutw,112px) * 16 / 9);min-height:0;flex:0 0 auto}
+body.tight .frslot.inbeat .frwin{height:calc(var(--cutw,112px) * 16 / 9);min-height:0;flex:0 0 auto}
+.frslot.inbeat .frbelt{top:0;height:100%}
+.frslot.inbeat .fc{height:100%}
+.frslot.inbeat .frboxes .bx{top:0;height:100%}
+body.tight .frslot.inbeat .frbelt{top:0;height:100%}
 body.tight .frslot.inbeat .fc{height:100%}
-body.tight .frslot.inbeat .frboxes .bx{top:4px;height:calc(100% - 30px)}
+body.tight .frslot.inbeat .frboxes .bx{top:0;height:100%}
 body.tight .frslot.inbeat .frcaps{top:auto;bottom:4px}
 body.tight .frslot.inbeat .frhead{top:4px;bottom:22px}
 
@@ -1438,7 +1447,7 @@ function toggleTight(){
   localStorage.setItem(TIGHT_KEY, document.body.classList.contains('tight') ? '0' : '1');
   _tightApply();
 }
-const BUILD_TAG = 'F16';   // 필름롤러 15차 — 도구줄 공백 제거·썸네일 112px
+const BUILD_TAG = 'F17';   // 필름롤러 16차 — 칸 안 필름을 훅 컷과 같은 크기로
 (function(){ const b=document.getElementById('buildtag'); if(b) b.textContent = BUILD_TAG; })();
 
 function toggleHints(){
