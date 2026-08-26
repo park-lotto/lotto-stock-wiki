@@ -5172,11 +5172,12 @@ class Store:
 
         이미 승인된 고객이면 아무 것도 하지 않는다(연장 사고 방지).
 
-        ★남은 체험을 반드시 옮겨야 한다(안 그러면 확인을 누르는 순간 체험이 끊긴다).
-          access_level은 체험창(trial_ends_at)을 **approved_at이 비어 있을 때만** 본다.
-          approved_at을 채우면 그 분기를 못 타므로, 남은 시간을 승인 고객이 쓰는
-          full_access_until로 이관한다 → 체험이 그대로 흘러가고 끝나면 알아서 잠긴다.
-          이미 full_access_until이 더 길면 그대로 둔다(줄이지 않는다).
+        ★full_access_until은 **건드리지 않는다**(2026-08-26 사장님 "체험중은 없애고
+          체험판 랭킹으로"). 종전엔 남은 체험을 full_access_until로 이관했는데,
+          그 필드는 **입금 승인으로 주는 유료 이용 기간**이라 확인 버튼 한 번에
+          결제도 안 한 계정이 전기능이 됐다(실측 cid 221~232, 12명 전원 결제기록 0).
+          이제 체험 자체가 랭킹만이므로 이관할 것도 없다 — approved_at만 채우면
+          체험(랭킹만) → 확인 후(랭킹만)로 권한이 그대로 이어진다.
         """
         now_ts = int(datetime.now(timezone.utc).timestamp())
         with self._conn() as c:
@@ -5184,11 +5185,9 @@ class Store:
                             "FROM customers WHERE id=?", (int(customer_id),)).fetchone()
             if row is None or row[0] is not None:
                 return False                       # 없는 고객이거나 이미 내려간 고객
-            trial_ends = row[1] or 0
-            fau = row[2] or 0
-            new_fau = max(fau, trial_ends)         # 남은 체험을 이어받는다(줄이지 않는다)
-            c.execute("UPDATE customers SET approved_at=?, full_access_until=? WHERE id=?",
-                      (now_ts, new_fau, int(customer_id)))
+            # ★full_access_until은 손대지 않는다(위 설명). 유료 기간 필드다.
+            c.execute("UPDATE customers SET approved_at=? WHERE id=?",
+                      (now_ts, int(customer_id)))
         return True
 
     def verify_customer(self, username, password):

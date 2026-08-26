@@ -245,7 +245,7 @@ function renderCustomers(){
   document.getElementById('rows').innerHTML= rest.length ? rest.map(c=>{
     const lvl=c.plan==='pro'?'<span class="badge pro">pro</span>'
               :(c.plan==='trial'?'<span class="badge trial">체험판(랭킹만)</span>'
-              :(c.level==='full'?'<span class="badge trial">체험중</span>':'<span class="badge free">일반회원</span>'));
+              :(c.level==='full'?'<span class="badge trial">이용중(기간제)</span>':'<span class="badge free">일반회원</span>'));
     const u=c.usage||{};
     const acc=c.access_7d||{ips:0,devices:0};
     // 돌려쓰기 의심: 최근 7일 고유 IP 3개↑ 또는 기기 3종↑이면 빨간 강조(차단은 안 함, 사장님 눈으로 판단)

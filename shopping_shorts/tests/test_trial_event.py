@@ -36,7 +36,8 @@ def test_default_signup_gets_3day_trial(tmp_path, monkeypatch):
     now = int(time.time())
     assert cust["approved_at"] is None                        # 아직 대기실 목록에 뜬다
     assert 71 * 3600 <= (cust["trial_ends_at"] - now) <= 72 * 3600   # 3일 창
-    assert app.access_level(cid) == "full"                    # 바로 써볼 수 있다
+    # ★2026-08-26 정책: 가입 체험도 **랭킹만**이다(사장님 "체험중은 없애고 체험판 랭킹으로").
+    assert app.access_level(cid) == "ranking_only"            # 랭킹은 바로 볼 수 있다
     assert app._is_trial(cid) is True
 
 
@@ -74,7 +75,7 @@ def test_access_level_full_during_trial_then_pending(tmp_path, monkeypatch):
     s = _evt_store(tmp_path)
     cid = s.create_customer("evt", "pw12", approved=False)
     tea = s.get_customer(cid)["trial_ends_at"]
-    assert app.access_level(cid, now=tea - 10) == "full"     # 창 안
+    assert app.access_level(cid, now=tea - 10) == "ranking_only"  # 창 안 = 랭킹만
     assert app.access_level(cid, now=tea + 10) == "pending"  # 창 밖
 
 
@@ -223,24 +224,26 @@ def test_pro_daily_render_limit_is_10(tmp_path, monkeypatch):
 
 # ── '확인함'(ack) — 대기실에서만 내리고 체험은 유지(2026-08-25) ──
 def test_ack_keeps_trial_and_removes_from_pending(tmp_path, monkeypatch):
-    """★사장님 지시의 핵심: 확인을 눌러도 체험 3일은 그대로 흘러가야 한다.
+    """★확인을 눌러도 권한이 올라가지 않는다(2026-08-26 사장님 "체험중은 없애고 랭킹으로").
 
-    access_level은 체험창(trial_ends_at)을 approved_at이 비어 있을 때만 본다.
-    ack가 approved_at만 채우고 끝내면 **그 순간 체험이 끊긴다** — 그래서
-    남은 시간을 full_access_until로 옮긴다. 이 테스트가 그걸 지킨다.
+    종전엔 남은 체험을 full_access_until로 이관했는데, 그 필드는 **입금 승인으로
+    주는 유료 이용 기간**이라 확인 한 번에 결제도 안 한 계정이 전기능이 됐다
+    (실측 cid 221~232, 12명 전원 결제기록 0). 이제 체험이 이미 랭킹만이라
+    이관할 것이 없고, 확인 전후 권한이 같아야 한다. 이 테스트가 그걸 지킨다.
     """
     import shopping_shorts.app as app
     monkeypatch.setattr(app, "DB_PATH", str(tmp_path / "t.db"))
     s = Store(str(tmp_path / "t.db"))
     cid = s.create_customer("acked", "pw12", approved=False)
-    assert app.access_level(cid) == "full"                    # 가입 즉시 체험
+    assert app.access_level(cid) == "ranking_only"            # 가입 즉시 체험(랭킹만)
     assert any(p["id"] == cid for p in s.pending_customers())  # 대기실에 있다
 
     assert s.ack_customer(cid) is True
     assert not any(p["id"] == cid for p in s.pending_customers())  # 대기실에서 내려감
-    assert app.access_level(cid) == "full"                    # ★체험이 살아 있다
-    now = int(time.time())
-    assert 71 * 3600 <= (s.get_customer(cid)["full_access_until"] - now) <= 72 * 3600
+    assert app.access_level(cid) == "ranking_only"            # ★확인 뒤에도 그대로 랭킹만
+    # ★유료 기간 필드는 손대지 않는다 — 여기가 채워지면 전기능이 열린다.
+    assert not s.get_customer(cid)["full_access_until"]
+    assert s.get_customer(cid)["approved_at"] is not None      # 대기실에서만 내려간다
 
 
 def test_ack_is_idempotent(tmp_path):
