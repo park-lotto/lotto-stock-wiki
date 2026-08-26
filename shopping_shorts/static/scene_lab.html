@@ -164,6 +164,23 @@ h1{font-size:16px;margin:0;font-weight:700}
 .tbsay.editing{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset;
   background:#0a1018;color:var(--txt);font-style:normal;cursor:text;
   max-height:none;outline:none}
+/* ══ 구절별 초(F21, 2026-08-27 사장님 "구절별 초를 알아야 장면이 딱딱 맞게 들어간다") ══
+   대사를 자막 구절로 갈라 각 구절이 몇 초인지 보여준다. 누르면 그 초가 필름 [+구간]
+   길이칸에 들어가 그 길이짜리 박스가 잡힌다 — 담을 자리를 눈으로 보고 고른다.
+   ★초는 서버가 이미 내려준 DATA.captions[i]의 start/end를 그대로 쓴다(새 계산 금지,
+     0순위-B: 자막 시간 정하는 곳은 서버 _caption_durations 하나다). */
+.tbsegs{margin-top:5px;display:flex;flex-wrap:wrap;gap:4px;max-width:380px}
+.tbseg{display:inline-flex;align-items:center;gap:5px;cursor:pointer;
+  font-size:11px;line-height:1.35;padding:3px 7px;border-radius:6px;
+  background:var(--panel2);border:1px solid var(--line);color:var(--ink);
+  max-width:100%;text-align:left}
+.tbseg:hover{border-color:var(--accent);color:var(--txt)}
+.tbseg.on{border-color:var(--accent);background:#0a1018;color:var(--txt)}
+.tbseg .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:210px}
+.tbseg .s{flex:none;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums}
+/* 너무 짧아 컷이 못 되는 구절(MIN_CLIP 0.8초 미만) — 막지 않고 눈에만 알린다 */
+.tbseg.tiny .s{color:var(--warn)}
+body.tight .tbsegs{display:none}          /* 촘촘히에선 글자를 걷는다(기존 규칙과 같은 결) */
 .tbedit{margin-top:5px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;max-width:380px}
 /* ⚠️.tbhint(위 40행)는 머리글 안내문이 이미 쓰는 클래스다 — 덮어쓰면 그쪽이 깨진다.
    편집칸 안내는 전용 클래스를 쓴다(같은 이름 두 벌 금지). */
@@ -1449,7 +1466,7 @@ function toggleTight(){
   localStorage.setItem(TIGHT_KEY, document.body.classList.contains('tight') ? '0' : '1');
   _tightApply();
 }
-const BUILD_TAG = 'F20';   // 필름롤러 19차 — 왼쪽 드래그 밀기 제거
+const BUILD_TAG = 'F21';   // 필름롤러 20차 — 대사 구절별 초 + 구간길이 자동
 (function(){ const b=document.getElementById('buildtag'); if(b) b.textContent = BUILD_TAG; })();
 
 function toggleHints(){
@@ -2231,6 +2248,7 @@ function renderBand(){
           NARR_EDIT[i] ? '' : `<button type="button" class="saymore" title="대본 펼치기/접기"
             onclick="event.stopPropagation();this.parentNode.classList.toggle('open')">⌄</button>`}${
           esc(narrOf(i)) || (NARR_EDIT[i] ? '' : '이 칸엔 멘트가 없어요')}</div>
+        ${NARR_EDIT[i] ? '' : segsHtml(i)}
         ${NARR_EDIT[i] ? `<div class="tbedit" onclick="event.stopPropagation()">
              <button class="act" style="border-color:var(--good);color:var(--good)"
                onclick="saveNarr(${i})">💾 저장 + 음성·자막 다시 뽑기</button>
@@ -2944,6 +2962,47 @@ function narrChanged(i){ return NARR[i] != null && NARR[i] !== (DATA.beats[i].na
 function estSec(t){
   const n = String(t || '').split(' ').join('').length;   // 공백 뺀 글자수
   return Math.max(1.5, n / (DATA.syll_per_sec || 5.7));
+}
+// ══ 구절별 초(F21) ═══════════════════════════════════════════════════════════
+// 서버가 이미 실어 보낸 자막 구절(DATA.captions[i] = [{text,start,end}…])을 그대로 쓴다.
+// ★여기서 문장을 다시 쪼개지 않는다 — 쪼개는 규칙은 서버 _caption_segments 한 곳이다
+//   (0순위-B). 두 벌이 되면 화면과 실제 영상 자막이 언젠가 반드시 어긋난다.
+// 대본을 고쳐(NARR) 아직 음성을 안 뽑았으면 옛 구절이라 시간이 안 맞는다 → 그때는 안 그린다.
+function capSegs(i){
+  if (narrChanged(i)) return [];                       // 고친 대본 ≠ 서버 구절
+  const rows = (DATA.captions || {})[String(i)] || (DATA.captions || {})[i] || [];
+  const out = [];
+  for (const r of rows){
+    const s = +r.start, e = +r.end;
+    if (!(e > s)) continue;
+    out.push({text: String(r.text || '').trim(),
+              sec: Math.round((e - s) * 100) / 100, start: s, end: e});
+  }
+  return out;
+}
+function segsHtml(i){
+  const segs = capSegs(i);
+  if (segs.length < 2) return '';        // 구절이 하나뿐이면 칸 길이와 같아 알려줄 게 없다
+  return `<div class="tbsegs" onclick="event.stopPropagation()">` + segs.map((g, k) =>
+    `<button type="button" class="tbseg${g.sec < 0.8 ? ' tiny' : ''}" data-i="${i}" data-k="${k}"
+       title="${esc(g.text)} — ${g.sec}초. 누르면 필름 [+구간] 길이가 ${g.sec}초로 맞춰집니다"
+       onclick="pickSeg(${i},${k})"><span class="t">${esc(g.text)}</span
+       ><span class="s">${g.sec.toFixed(1)}초</span></button>`).join('') + `</div>`;
+}
+// 구절을 누르면 → 그 초를 열려 있는 필름의 [+구간] 길이칸에 넣는다.
+// ★박스를 대신 만들어 주지는 않는다 — 어디에 담을지(빨간선 자리)는 사람이 정한다.
+function pickSeg(i, k){
+  const g = capSegs(i)[k];
+  if (!g) return;
+  let hit = 0;
+  for (const S of [ROLLB, ROLL, ROLLS]){
+    if (S && S.inst && typeof S.inst.setBoxLen === 'function'){ S.inst.setBoxLen(g.sec); hit++; }
+  }
+  document.querySelectorAll('.tbseg.on').forEach(el => el.classList.remove('on'));
+  const btn = document.querySelector(`.tbseg[data-i="${i}"][data-k="${k}"]`);
+  if (btn) btn.classList.add('on');
+  nsay(hit ? `구간 길이 ${g.sec}초 — "${g.text}" · 필름에서 자리를 찍고 [＋구간]`
+           : `"${g.text}" ${g.sec}초 — 먼저 🎞 필름을 펼치세요`);
 }
 function editNarr(i, el){
   if (SL.server) return;   // 임베드에선 잠금(위 주석)

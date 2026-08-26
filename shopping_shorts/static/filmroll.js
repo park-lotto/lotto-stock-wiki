@@ -732,6 +732,17 @@
         host.innerHTML = '';
       },
       boxes: () => BOXES.map(b => ({ s: b.s, e: b.e })),
+      // ★구절 길이를 밖에서 넣는다(F21) — 대사 구절을 누르면 그 초가 [+구간] 길이칸에
+      //   들어간다. 길이를 정하는 곳은 여전히 BOXLEN 하나다(0순위-B: 새 경로를 만들지
+      //   않고 사람이 손으로 치던 그 값을 대신 채운다).
+      setBoxLen(sec) {
+        const v = Math.max(0.1, +sec || 0);
+        if (!v) return BOXLEN;
+        BOXLEN = Math.round(v * 100) / 100;
+        const el = host.querySelector('.frlen');
+        if (el) el.value = BOXLEN;
+        return BOXLEN;
+      },
     };
   }
 
