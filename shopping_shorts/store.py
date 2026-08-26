@@ -5396,6 +5396,23 @@ class Store:
                             (customer_id, op, day)).fetchone()
         return row[0] if row else 0
 
+    def usage_reset(self, customer_id, op, day):
+        """(customer_id, op, day) 사용량을 0으로. **지워진 값**을 돌려준다.
+
+        관리자가 "오늘 렌즈 10회 다 썼는데 방금 입금하셨다" 같은 상황에서 되돌리는 용도.
+        ★행을 지우지 않고 0으로 둔다 — usage_all이 '오늘 0회'를 그대로 보여줘야
+          리셋했다는 사실이 화면에서 사라지지 않는다.
+        없는 행이면 아무 것도 안 하고 0(버튼 연타가 오류가 되면 안 된다).
+        """
+        with self._conn() as c:
+            row = c.execute("SELECT count FROM usage WHERE customer_id=? AND op=? AND day=?",
+                            (customer_id, op, day)).fetchone()
+            if not row:
+                return 0
+            c.execute("UPDATE usage SET count=0 WHERE customer_id=? AND op=? AND day=?",
+                      (customer_id, op, day))
+        return row[0]
+
     # ── 접속중·활동기록(2026-07-22) ──
     def touch_customer(self, customer_id, at):
         """마지막 활동 시각 갱신(미들웨어가 스로틀해서 호출). '접속중' 판정·마지막기록 표시용."""
