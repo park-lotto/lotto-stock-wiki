@@ -9017,6 +9017,17 @@ async function pollClean(gen,job){
 //   업체 이름과 충전 주소는 키를 등록하는 설정 화면에 있으므로 그리로 보낸다.
 function cleanFailHtml(kind){
   const redo = '<button class="cp-redo" onclick="startCleanPreview()">↻ 다시 시도</button>';
+  if(kind === 'no_points'){
+    // 우리 포인트가 모자란 경우다(app.py clean_failure_kind). 다시 눌러도 같은 결과라
+    // 재시도 버튼을 **일부러 안 준다** — 오늘 6번 헛누른 고객이 있었다(2026-08-26).
+    // 길은 둘: 본인 키를 등록해 차감 자체를 없애거나, 포인트를 충전하거나.
+    return '<div class="cp-fail"><b>보유 포인트가 모자라 자막 제거를 시작하지 못했습니다.</b><br>'
+      + '<span style="opacity:.85">다시 눌러도 같은 결과가 나옵니다.</span></div>'
+      + '<div class="cp-fail" style="margin-top:8px;opacity:.9">💡 <b>본인 자막제거 키를 등록하시면 포인트가 차감되지 않습니다.</b> '
+      + '등록하신 키로 바로 처리되고, 잔액은 키를 발급받으신 곳에서 충전해 쓰시면 됩니다.</div>'
+      + '<a class="cp-redo" href="/settings.html#keys" target="_blank" rel="noopener" '
+      + 'style="display:inline-block;text-decoration:none">🔑 내 키 등록하기</a>';
+  }
   if(kind === 'no_credit'){
     // ★2026-08-25: "소스 1편당 1회"는 더 이상 사실이 아니다. 소스를 이어붙여
     //   **영상 1편당 1회**로 바뀌었다(3a573e381, mix_pipeline._charge_clean은
