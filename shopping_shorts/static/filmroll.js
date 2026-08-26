@@ -630,15 +630,17 @@
         //   소리는 미리보기가, **위치 표시는 필름이** 맡는다: pv는 muted라 같이 돌려도
         //   소리가 겹치지 않는다. 같은 파일·같은 시작점이라 막대가 그림을 따라간다.
         if (playing) { stopHead(); return; }      // 두 번째 스페이스 = 멈춤
-        // ★박스가 없으면 **지금 쓰는 구간**을 본다(2026-08-26 사장님 "재생을 하면
-        //   미리보기에 짧은 초만큼 필름에서 재생된다"). 종전엔 3초로 못 박아 두어,
-        //   구간이 얼마든 늘 3초만 나왔다. 쓰는 구간을 모르면 그때만 3초로 간다.
+        // ★박스가 없으면 **빨간 막대가 있는 자리**에서 재생한다(2026-08-26 사장님
+        //   "스페이스바를 누르면 저 위치로만 이동이 된다" — 쓰는 구간으로 점프하게
+        //   고쳤더니 내가 놓은 자리를 무시했다. 그건 더 나빴다).
+        //   길이는 3초 고정이 아니라 **쓰는 구간 길이만큼**(모르면 3초) — 그게 이 조각을
+        //   판단하는 데 필요한 시간이다.
         const useFrom = (opt.from != null) ? +opt.from : null;
         const useTo   = (opt.to   != null) ? +opt.to   : null;
-        const s2 = bx ? bx.s : (useFrom != null ? useFrom : (pv.currentTime || 0));
-        const b2 = bx ? bx.e
-                 : (useTo != null && useTo > s2 ? Math.min(DUR, useTo)
-                                                : Math.min(DUR, s2 + 3));
+        const useLen  = (useFrom != null && useTo != null && useTo > useFrom)
+                      ? (useTo - useFrom) : 3;
+        const s2 = bx ? bx.s : (pv.currentTime || 0);
+        const b2 = bx ? bx.e : Math.min(DUR, s2 + useLen);
         // 멈춘 자리가 이 구간 안이면 거기서 이어서(끝까지 봤으면 RESUME이 비어 처음부터).
         const a2 = (RESUME != null && RESUME > s2 + 0.05 && RESUME < b2 - 0.05) ? RESUME : s2;
         opt.onPlay(a2, b2);
