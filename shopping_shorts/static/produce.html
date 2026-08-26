@@ -222,6 +222,10 @@
     @font-face{font-family:'HCBWPic';src:url('/fonts/BlackAndWhitePicture.ttf')}
     @font-face{font-family:'HCBlackHan';src:url('/fonts/BlackHanSans.ttf')}
     @font-face{font-family:'HCGugi';src:url('/fonts/Gugi-Regular.ttf')}
+    @font-face{font-family:'HCOhsquare';src:url('/fonts/Cafe24Ohsquare.ttf')}
+    @font-face{font-family:'HCDanjunghae';src:url('/fonts/Cafe24Danjunghae.ttf')}
+    @font-face{font-family:'HCGanpan';src:url('/fonts/KCCGanpan.otf')}
+    @font-face{font-family:'HCBunpil';src:url('/fonts/HakgyoansimBunpil.ttf')}
     /* @@FONTS:END */
 
     /* 📝뽑기 생성 모달(도서관 library.html 이식, pm 네임스페이스) */
@@ -4372,6 +4376,10 @@ const HC_FONTS=[
   {name:'레트로 흑백사진',       file:'BlackAndWhitePicture.ttf',    css:'HCBWPic'},
   {name:'임팩트 검은고딕',       file:'BlackHanSans.ttf',            css:'HCBlackHan'},
   {name:'임팩트 구기',         file:'Gugi-Regular.ttf',            css:'HCGugi'},
+  {name:'카페24 아네모네',      file:'Cafe24Ohsquare.ttf',          css:'HCOhsquare'},
+  {name:'카페24 단정해',       file:'Cafe24Danjunghae.ttf',        css:'HCDanjunghae'},
+  {name:'간판체',            file:'KCCGanpan.otf',               css:'HCGanpan'},
+  {name:'손글씨 분필',         file:'HakgyoansimBunpil.ttf',       css:'HCBunpil'},
 ];
 // @@FONTS:END
 function fontCss(file){ const f=HC_FONTS.find(x=>x.file===file); return f?f.css:'HCTmon'; }
