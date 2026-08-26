@@ -45,7 +45,9 @@ def test_check_and_count가_byok한도를_본다():
     m = re.search(r"def check_and_count\(.*?\n(?:.*?\n)*?    return True\n", APP)
     assert m, "check_and_count를 못 찾았다"
     body = m.group(0)
-    assert "_CREDIT_BYOK_DEFAULTS" in body, (
+    # 2026-08-26: 'BYOK면 20회 고정' → '키 1개당 10회'로 바뀌었다(사장님 지시).
+    #   판정이 _lens_limit_for 한 곳에 모였으므로 그 함수를 부르는지로 본다.
+    assert "_lens_limit_for" in body, (
         "check_and_count가 BYOK 한도를 안 본다 — 화면 표시만 바뀌고 실제로는 계속 막힌다")
 
 
@@ -53,7 +55,8 @@ def test_마이페이지도_같은_한도를_보여준다():
     """★표시와 실제가 어긋나면 '20회라더니 10회에서 막힌다'가 된다(0순위-B)."""
     i = APP.index("def _api_me(")          # 실제 함수명(2026-08-26 확인)
     seg = APP[i:i + 6000]
-    assert "_CREDIT_BYOK_DEFAULTS" in seg or "limit_lens_byok" in seg, (
+    assert ("_lens_limit_for" in seg or "_CREDIT_BYOK_DEFAULTS" in seg
+            or "limit_lens_byok" in seg), (
         "/api/me가 BYOK 한도를 반영하지 않는다")
 
 
