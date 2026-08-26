@@ -95,7 +95,12 @@ def test_admin_customers_shows_pending_level_and_approved_at(tmp_path, monkeypat
 def test_api_admin_approve_requires_admin(tmp_path, monkeypatch):
     s = _setup(tmp_path, monkeypatch)
     cid = s.create_customer("pend2", "pw12", approved=False)
-    other = TestClient(appmod.app, cookies={"dash_auth": _cookie(cid)})
+    # ★호출자는 **유료게이트를 통과하는** 일반 회원이어야 한다(2026-08-26).
+    #   랭킹만 등급으로 부르면 402(결제)가 403(권한)보다 먼저 나서, 정작 검사하려던
+    #   '관리자 가드'를 안 지나친다 — 가드를 지워도 테스트가 초록이 된다.
+    caller = s.create_customer("payer", "pw12")
+    s.set_plan(caller, "pro")
+    other = TestClient(appmod.app, cookies={"dash_auth": _cookie(caller)})
     body = {"customer_id": cid, "period_days": 30, "amount": 30000, "method": "계좌"}
     assert other.post("/api/admin/approve", json=body).status_code == 403
     owner = TestClient(appmod.app, cookies={"dash_auth": _cookie(0)})

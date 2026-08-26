@@ -8918,12 +8918,14 @@ def access_level(customer_id, now=None):
     if not cust:
         return "ranking_only"
     if cust.get("approved_at") is None:
-        # 🎁 무료체험 이벤트: 미승인이라도 가입 후 체험창(trial_ends_at) 안이면 full로 맛보기.
+        # 🎁 무료체험 이벤트: 미승인이라도 가입 후 체험창(trial_ends_at) 안이면 맛보기.
         #    창 밖이면 대기실 전면차단(pending). NULL(기존고객)은 0 취급 → 즉시 pending.
+        # ★2026-08-26 사장님 "체험중은 없애고 체험판 랭킹으로": 맛보기도 **랭킹만**이다.
+        #   종전엔 여기서 full을 줘서 가입만 하면 제작소가 통째로 열렸다(실측 6명).
         if now is None:
             now = int(datetime.now(timezone.utc).timestamp())
         if now < (cust.get("trial_ends_at") or 0):
-            return "full"
+            return "ranking_only"
         return "pending"
     if cust.get("plan") == "pro":
         return "full"
@@ -8936,8 +8938,12 @@ def access_level(customer_id, now=None):
         return "ranking_only"
     if now is None:
         now = int(datetime.now(timezone.utc).timestamp())
+    # ★full_access_until은 '체험 창'이 아니라 **입금 승인으로 부여한 이용 기간**이다
+    #   (store.approve_customer(period_days, amount, method)가 세운다).
+    #   여기를 지우면 돈 내고 승인받은 고객이 랭킹만으로 떨어진다 — 지우지 마라.
+    #   결제 없이 기간만 주던 '(구)체험중'은 _admin_set_plan 쪽에서 막는다.
     if now < (cust.get("full_access_until") or 0):
-        return "full"                       # 무료 체험 창
+        return "full"                       # 승인된 이용 기간 안
     return "ranking_only"
 
 
@@ -9843,11 +9849,9 @@ async def _admin_set_plan(request: Request):
         until = int(datetime.now(timezone.utc).timestamp()) + int(days or 0) * 86400
         st.set_plan(cid, "trial", full_access_until=until)
         granted = _trial_topup(st, cid)                 # 렌즈도 포인트를 쓴다 → 연료까지 준다
-    elif days:
-        until = int(datetime.now(timezone.utc).timestamp()) + int(days) * 86400
-        st.set_plan(cid, "free", full_access_until=until)   # (구)전기능 체험 창
-        granted = _trial_topup(st, cid)                 # ★등급만 열면 잔액 0으로 402가 난다
     else:
+        # ★(구)전기능 체험 창(free+days)은 폐지했다(2026-08-26 사장님).
+        #   기간을 주고 싶으면 plan="trial"을 쓴다 — 랭킹만이라는 뜻이 이름에 담긴다.
         st.set_plan(cid, "free", full_access_until=0)   # 즉시 무료(랭킹만)로 내림
     import sys as _s
     print(f"[admin] set_plan cid={cid} plan={plan} days={days} topup={granted}", file=_s.stderr)  # 변경 로그
