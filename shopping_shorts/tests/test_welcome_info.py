@@ -111,7 +111,8 @@ def test_new_google_user_is_routed_to_welcome_and_can_submit(tmp_path, monkeypat
     #   — 이 줄이 검증하던 '가입=잠김'은 더 이상 우리 정책이 아니다.
     #   잠김 동작 자체는 test_trial_event.py(체험 만료 → ranking_only)가 지킨다.
     from shopping_shorts import app as _appmod
-    assert _appmod.access_level(cid) == "full"                 # 체험 창 안 = 바로 써볼 수 있다
+    # ★2026-08-26: 체험 창 안이어도 **랭킹만**이다(사장님 "체험중은 없애고 체험판 랭킹으로").
+    assert _appmod.access_level(cid) == "ranking_only"         # 체험 창 안 = 랭킹은 바로 본다
 
     r = cl.post("/api/welcome",
                 data={"name": "홍길동", "phone": "010-1234-5678",
