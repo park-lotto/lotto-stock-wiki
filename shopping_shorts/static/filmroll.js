@@ -417,13 +417,21 @@
     /* ▶ 빨간 막대를 [a,b] 구간 동안 움직인다(소리는 미리보기 창이 낸다).
        pv는 muted라 자동재생이 막히지 않는다. 브라우저가 그래도 거부하면
        **시계로** 막대를 움직인다 — 막대가 멈춰 보이는 것보다 낫다. */
-    function stopHead() {
+    function stopHead(quiet) {
+      const was = playing;
       playing = false;
       if (raf) { cancelAnimationFrame(raf); raf = 0; }
       try { pv.pause(); } catch (_) {}
+      // ★2026-08-26 사장님 "멈춤하면 미리보기도 멈춰야지 싱크 맞게".
+      //   막대와 소리가 **한 번에** 서고 앉아야 한다 — 멈춤 신호도 재생과 같은 길로
+      //   부모에게 넘긴다(부품은 부모를 모른다: 배선은 준 쪽이 한다).
+      //   quiet=true는 다시 틀기 전 자기 정리라 부모에게 안 알린다(껐다 켜지 않게).
+      if (was && !quiet && typeof opt.onStop === 'function') {
+        try { opt.onStop(); } catch (_) {}
+      }
     }
     function runHead(a, b) {
-      stopHead();
+      stopHead(true);          // 다시 틀기 전 자기 정리 — 부모는 곧 새 구간을 받는다
       playing = true;
       const tick = (getT) => {
         const loop = () => {
@@ -488,6 +496,8 @@
 
     return {
       destroy() {
+        // 접는데 소리만 계속 나는 일이 없게 — 재생 중이었으면 미리보기도 세운다.
+        try { stopHead(); } catch (_) {}
         destroyed = true;
         document.removeEventListener('keydown', onKey);
         if (raf) cancelAnimationFrame(raf);
