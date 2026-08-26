@@ -49,13 +49,7 @@
     let CW = 40, STEP = 1, N = 0, off = 0;
     let _homed = false;      // 지금 쓰는 구간으로 한 번 옮겼나(처음 펼칠 때만)
     let MA = null;                     // 찍어둔 시작점
-    // ★열 때 **이미 쓰는 구간**을 주황 박스로 올린다(2026-08-26 사장님 "상단에 카드형으로
-    //   들어간걸 펼치면 … 해당 2.4초만 필름형으로 나오게"). 조각을 펼치면 그 조각이,
-    //   영상을 펼치면 그 영상에서 담긴 구간들이 바로 손에 잡힌다(늘리고 줄이고 지운다).
-    let BOXES = (opt.initBoxes || [])
-      .map(b => ({ s: Math.round(+b.s * 100) / 100, e: Math.round(+b.e * 100) / 100 }))
-      .filter(b => isFinite(b.s) && isFinite(b.e) && b.e - b.s >= 0.1)
-      .sort((x, y) => x.s - y.s);
+    let BOXES = [];                    // 확정 구간들
     let ACTBOX = null;
     let destroyed = false;
     let raf = 0, scrubWant = null, scrubBusy = false, playing = false;
@@ -64,10 +58,6 @@
       '<div class="fr">' +
         '<div class="frtop">' +
           '<span class="frname"></span>' +
-          // ★도구줄을 **머리줄 안**으로(2026-08-26 사장님 "왼쪽클릭 손잡이끌기등 글자를
-          //   영상1전체 옆으로 이동하게해서 넓게 / 구간박스 이것도 위쪽으로 이동
-          //   아래쪽까지 필름높이는 높여"). 별도 줄로 두면 그 한 줄만큼 필름이 낮아진다.
-          '<div class="frbar"></div>' +
           '<span class="frzoom">확대 <input type="range" class="frz" min="26" max="240" value="40"></span>' +
           '<span class="frstep"></span>' +
           '<button type="button" class="frclose" title="접기">◀ 접기</button>' +
@@ -81,6 +71,7 @@
           '<div class="frmark"></div>' +
           '<div class="frhead"><span class="frgrip"></span><span class="frdur"></span></div>' +
         '</div>' +
+        '<div class="frbar"></div>' +
         '<video class="frpv" muted playsinline preload="auto"></video>' +
         '<canvas class="frcv" style="display:none"></canvas>' +
       '</div>';
@@ -131,9 +122,6 @@
 
     /* 스크러빙 — 끄는 동안 미리보기가 따라온다. 마지막 요청만 처리한다. */
     function scrubTo(t) {
-      // ★큰 미리보기도 같은 시각으로 세운다 — 필름 안 작은 화면만 움직이면 어디를
-      //   보고 있는지 알기 어렵다(2026-08-26 사장님). 부품은 부모를 모른다: 콜백만 부른다.
-      if (typeof opt.onScrub === 'function') { try { opt.onScrub(t); } catch (_) {} }
       scrubWant = Math.max(0, Math.min(DUR - 0.03, t));
       moveHead(scrubWant);
       if (scrubBusy) return;
@@ -511,19 +499,6 @@
     /* 스페이스 = 재생/멈춤 (이 롤러가 열려 있을 때만) */
     function onKey(e) {
       if (destroyed) return;
-      const _tag = (e.target && e.target.tagName || '').toLowerCase();
-      const _typing = _tag === 'input' || _tag === 'textarea' || (e.target && e.target.isContentEditable);
-      // ★Esc = 구간 지우기(2026-08-26 사장님 "esc로 삭제되게"). 고른 게 있으면 그것,
-      //   없으면 마지막에 만든 것. ×를 정확히 누르지 않아도 손이 닿는다.
-      if (e.code === 'Escape' && !_typing) {
-        if (!BOXES.length) return;
-        const i = (ACTBOX != null && BOXES[ACTBOX]) ? ACTBOX : BOXES.length - 1;
-        BOXES.splice(i, 1);
-        ACTBOX = null; MA = null;
-        drawBoxes(); drawMark(); drawBar();
-        e.preventDefault();
-        return;
-      }
       if (e.code !== 'Space') return;
       const tag = (e.target && e.target.tagName || '').toLowerCase();
       if (tag === 'input' || tag === 'textarea' || (e.target && e.target.isContentEditable)) return;
