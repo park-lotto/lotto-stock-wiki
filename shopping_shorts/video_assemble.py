@@ -1393,17 +1393,68 @@ def _hex_to_ff(c, default="0xFFFFFF"):
     return f"0x{c.upper()}" if len(c) == 6 and all(ch in "0123456789ABCDEFabcdef" for ch in c) else default
 
 
-def _resolve_seg_font(base_style, work, key_prefix):
-    """세그먼트 폰트파일 경로(work에 복사된 실제 경로)와 ffmpeg fontfile 참조명을 함께 반환.
-    _fixed_drawtext/_caption_drawtexts의 폰트 해석 로직과 동일 규칙(있으면 그 폰트, 없으면 font.ttf)."""
-    fontref = "font.ttf"
-    fname = os.path.basename((base_style or {}).get("font") or "")
-    if fname:
-        fpath = _FONT_DIR / fname
-        if fpath.exists():
-            shutil.copy(fpath, work / f"font_{key_prefix}.ttf")
-            fontref = f"font_{key_prefix}.ttf"
-    real_path = work / fontref if (work / fontref).exists() else _FONT_DIR.parent.parent / fontref
+def _missing_glyphs(font_path, text):
+    """이 폰트 파일이 text에서 **못 그리는 글자**들. 두부(□·⊠) 예방용 — 2026-08-26.
+
+    ★왜 (실사고): 목록의 '옥 말랑'(OkMallangW.ttf)은 OKFont가 낸 **영문 전용** 폰트라
+      한글 글리프가 0자다(글리프 81개 = 영문·숫자·기호). 파일 자체는 정상 TTF여서
+      브라우저도 ffmpeg도 **아무 오류 없이 로드**하고, 최종 렌더에서 한글이 전부
+      네모X로 나왔다(사장님 제보). 파일 존재만 확인하던 종전 규칙으로는 못 잡는다.
+
+    판정: 폰트에 없는 글자는 모두 같은 .notdef 글리프로 그려진다. 사적사용영역
+      문자(어떤 한글 폰트에도 없다) 두 개의 마스크가 서로 같으면 그게 이 폰트의
+      .notdef이고, 어떤 글자의 마스크가 그것과 같으면 그 글자는 **없는 것**이다.
+      실측(2026-08-26): 옥말랑 '가/한/씨'=없음·'A/1'=있음, 나머지 5종은 전부 있음.
+    ⚠️폰트 이름·파일크기로 판정하지 마라 — 목록은 반드시 썩는다(_lacks_space_glyph와 같은 원칙).
+    ⚠️Pillow만 쓴다. fontTools는 서버 requirements에 없다(추가하지 않기로).
+    """
+    text = "".join(dict.fromkeys((text or "").replace(" ", "")))  # 공백 제외·중복 제거
+    if not text:
+        return ""
+    try:
+        f = ImageFont.truetype(str(font_path), 70)
+
+        def mask(c):
+            m = f.getmask(c)
+            return (m.size, bytes(m))
+
+        ref, ref2 = mask("\uF8FF"), mask("\uE05C")
+        if ref != ref2:
+            return ""  # 사적사용영역에 글리프가 있는 폰트 — 이 방법으로는 판정 못 한다
+        return "".join(c for c in text if mask(c) == ref)
+    except Exception as e:  # noqa: BLE001 — 판정 실패가 렌더를 막으면 안 된다
+        print(f"[폰트] 글리프 판정 실패(정상으로 간주) {font_path}: {e!r}", file=sys.stderr)
+        return ""
+
+
+def _font_ref(font_name, work, key, text=""):
+    """폰트 파일명 → work에 복사한 뒤 쓸 ffmpeg fontfile 참조명(상대경로).
+
+    폰트 해석 규칙의 **단일 출구**다(0순위-B) — _resolve_seg_font·_fixed_drawtext가
+    같은 판단을 따로 적고 있어서 한쪽만 고치면 어긋난다. 규칙:
+      ① 파일이 없으면        → 기본 자막폰트 font.ttf
+      ② 글자를 못 그리면     → 기본 자막폰트 font.ttf (두부 방지) + 경고 로그
+      ③ 그 외                → 그 폰트
+    """
+    fontref = "font.ttf"  # _burn_captions가 work에 복사해둔 기본폰트
+    fname = os.path.basename(font_name or "")
+    if not fname:
+        return fontref
+    fpath = _FONT_DIR / fname
+    if not fpath.exists():
+        return fontref
+    miss = _missing_glyphs(fpath, text)
+    if miss:
+        print(f"[폰트] {fname} 에 없는 글자 {len(miss)}자({miss[:12]}) — "
+              f"기본폰트로 대체한다(두부 방지)", file=sys.stderr)
+        return fontref
+    shutil.copy(fpath, work / f"font_{key}.ttf")
+    return f"font_{key}.ttf"
+
+
+def _resolve_seg_font(base_style, work, key_prefix, text=""):
+    """세그먼트 폰트파일 경로(work에 복사된 실제 경로)와 ffmpeg fontfile 참조명을 함께 반환."""
+    fontref = _font_ref((base_style or {}).get("font"), work, key_prefix, text)
     return fontref, str(work / fontref)
 
 
@@ -1533,7 +1584,7 @@ def _segmented_drawtext(text, base_style, work, key_prefix, x_pct, y_pct,
     lines = (text or "").split("\n")
     if not any(l.strip() for l in lines):
         return []
-    fontref, font_disk_path = _resolve_seg_font(base_style, work, key_prefix)
+    fontref, font_disk_path = _resolve_seg_font(base_style, work, key_prefix, text)
     size = max(8, _ui_px(base_style.get("size"), 96))
     try:
         pil_font = ImageFont.truetype(font_disk_path, size)
@@ -1631,13 +1682,7 @@ def _fixed_drawtext(spec, work, key, default_color="0xFFFFFF"):
     if not text:
         return None
     (work / f"txt_{key}.txt").write_text(text, encoding="utf-8")
-    fontref = "font.ttf"  # _burn_captions가 work에 복사해둔 기본폰트
-    fname = os.path.basename(spec.get("font") or "")
-    if fname:
-        fpath = _FONT_DIR / fname
-        if fpath.exists():
-            shutil.copy(fpath, work / f"font_{key}.ttf")
-            fontref = f"font_{key}.ttf"
+    fontref = _font_ref(spec.get("font"), work, key, text)
     size = max(8, _ui_px(spec.get("size"), 96))
     xf = min(1.0, max(0.0, (spec.get("x", 50)) / 100.0))
     yf = min(1.0, max(0.0, (spec.get("y", 14)) / 100.0))

@@ -76,7 +76,46 @@ def load_fonts():
             raise SystemExit(
                 f"[오류] 폰트 파일이 없다: static/fonts/{f['file']}\n"
                 f"       파일을 넣고 다시 실행해라. 목록에만 있으면 화면에서 기본체로 나온다.")
+        _check_hangul(f)
     return fonts
+
+
+def _check_hangul(f):
+    """한글 폰트라고 해놓고 실제로 한글 글리프가 없으면 여기서 막는다.
+
+    ★왜 (실사고 2026-08-26): '옥 말랑'(OkMallangW.ttf)은 OKFont가 낸 **영문 전용**
+      폰트인데 한글 폰트 목록에 들어 있었다. 파일은 정상 TTF라 브라우저도 ffmpeg도
+      오류 없이 로드했고, 최종 렌더에서 한글이 **전부 네모X**로 나왔다(사장님 제보).
+      "파일이 있는가"만 보던 종전 검사로는 못 잡는다 — 글리프를 직접 본다.
+      영문 전용인 걸 알고 넣는 폰트는 매니페스트에 "latin": true 를 적어라.
+
+    판정 원리는 video_assemble._missing_glyphs 와 같다(없는 글자 = .notdef 마스크).
+    """
+    if f.get("latin"):
+        return
+    try:
+        from PIL import ImageFont
+    except ImportError:
+        return  # Pillow 없는 환경에서는 검사를 건너뛴다(있으면 잡는다)
+    try:
+        font = ImageFont.truetype(str(FONT_DIR / f["file"]), 70)
+
+        def mask(c):
+            m = font.getmask(c)
+            return (m.size, bytes(m))
+
+        ref, ref2 = mask("\uF8FF"), mask("\uE05C")
+        if ref != ref2:
+            return  # 사적사용영역에 글리프가 있는 폰트 — 이 방법으로는 판정 못 한다
+        miss = [c for c in "가한글씨" if mask(c) == ref]
+    except Exception:  # noqa: BLE001 — 판정 실패가 배포를 막으면 안 된다
+        return
+    if miss:
+        raise SystemExit(
+            "[오류] {} 에 한글 글리프가 없다(없는 글자: {}).".format(
+                f["file"], "".join(miss))
+            + "\n       한글로 쓰면 화면·최종렌더에서 전부 네모X로 나온다."
+            + '\n       영문 전용 폰트라면 fonts.json 항목에 "latin": true 를 넣어라.')
 
 
 def render_css(fonts):
