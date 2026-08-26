@@ -9,6 +9,8 @@
  *     from, to,                     // 지금 쓰는 구간(하이라이트). 없으면 안 그린다
  *     caps,                         // [[초, "자막"], ...] (선택)
  *     onCommit(ranges)              // [{s,e}, ...] 담기 눌렀을 때
+ *     onReplace({s,e})              // (선택) 열려 있는 조각을 이 구간으로 바꿀 때.
+ *                                   //   주면 구간 1개일 때만 🔁 버튼이 나온다.
  *   });
  *   roll.destroy();                 // 접을 때 반드시 부른다(영상·타이머 정리)
  *
@@ -269,11 +271,20 @@
         (BOXES.length
           ? `<button type="button" class="frbtn" data-act="play">▶ 미리보기에서 듣기</button>` +
             `<button type="button" class="frbtn ok">⬆ 담기 (${BOXES.length}개 · ${total.toFixed(2)}초)</button>` +
+            // 🔁 이 조각을 이 구간으로 — 부모가 onReplace를 줬을 때만 나온다(부품은 부모를 모른다).
+            //   구간 하나일 때만 의미가 있다(무엇으로 바꿀지가 하나여야 한다).
+            (typeof opt.onReplace === 'function' && BOXES.length === 1
+              ? `<button type="button" class="frbtn rep">🔁 이 조각을 이 구간으로</button>` : '') +
             `<button type="button" class="frbtn" data-act="clr">비우기</button>`
           : '');
       const mk = barEl.querySelector('.mk'); if (mk) mk.onclick = makeBox;
       const ok = barEl.querySelector('.ok');
       if (ok) ok.onclick = () => { if (opt.onCommit) opt.onCommit(BOXES.map(b => ({ s: b.s, e: b.e }))); };
+      const rep = barEl.querySelector('.rep');
+      if (rep) rep.onclick = () => {
+        if (BOXES.length === 1 && typeof opt.onReplace === 'function')
+          opt.onReplace({ s: BOXES[0].s, e: BOXES[0].e });
+      };
       const clr = barEl.querySelector('[data-act="clr"]');
       if (clr) clr.onclick = () => { BOXES = []; ACTBOX = null; drawBoxes(); drawBar(); };
       const pl = barEl.querySelector('[data-act="play"]');

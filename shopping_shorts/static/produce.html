@@ -6640,10 +6640,23 @@ async function renderSourceAnalysis(){
   //   남은 시간은 실측 기준 1개당 1분으로 어림해 말한다(정확한 값이 아니라 '기다릴 만한지'를
   //   알려주는 용도 — 과장하지 않도록 넉넉히 잡는다).
   const pct = items.length ? Math.round((done + gaveUp) * 100 / items.length) : 0;
-  const eta = left > 0 ? `약 ${left}분쯤 남았어요` : '';
+  // ★ETA에서 '실패해서 재시도를 기다리는 것'을 뺀다(2026-08-26). 종전엔 남은 개수를
+  //   전부 1개당 1분으로 세어 "약 1분쯤 남았어요"라고 했는데, 그 1개가 이미 실패해
+  //   재시도 차례를 기다리는 중이면 1분이 아니라 몇 시간이 된다(실측 3시간 반).
+  //   기다리면 되는 것만 분으로 말하고, 재시도 중인 것은 개수로 따로 밝힌다.
+  const retrying = items.filter(it => {
+    const r = _SRC_BRIEF[it.shortcode] || {};
+    return !r.ok && !r.gave_up && r.reason;
+  }).length;
+  const running = Math.max(0, left - retrying);      // 순수하게 분석이 도는 중인 것
+  const eta = running > 0 ? `약 ${running}분쯤 남았어요` : '';
+  const retryTxt = retrying > 0 ? `${retrying}개는 실패해서 다시 시도 중이에요` : '';
   const busyTxt = _SRC_QUEUED
     ? `${_SRC_QUEUED}개가 순서를 기다리는 중 — 앞 영상이 끝나면 자동으로 이어서 합니다`
-    : (left > 0 ? `${left}개 분석 중 — ${eta}. 이 화면에 그대로 계셔도 됩니다` : '');
+    : (running > 0
+        ? `${running}개 분석 중 — ${eta}. 이 화면에 그대로 계셔도 됩니다`
+            + (retryTxt ? ` · ${retryTxt}` : '')
+        : (retryTxt ? `${retryTxt} — 계속 안 되면 그 영상은 빼고 진행하셔도 됩니다` : ''));
   box.innerHTML =
     `<div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px">
        <span style="font-size:13px;font-weight:800">🔎 담은 영상 뜯어보기</span>
@@ -6705,6 +6718,20 @@ function _srcCard(it, i){
     //   1단계는 담는 즉시 자동으로 분석한다 — 화면이 실제 동작과 다른 말을 하고 있었다.
     //   실패했다 다시 시도 중인 것도 그냥 '대기'로 보였으니 몇 번째인지도 밝힌다.
     const tryTxt = (r && r.attempts > 1) ? ` (${r.attempts}번째 시도)` : '';
+    // ★한 번이라도 실패한 것은 '분석 중'이라고 하지 않는다(2026-08-26 사장님 캡처).
+    //   서버는 pending일 때도 실패 사유(reason)를 실어 보내는데(app.py source_brief),
+    //   화면은 그걸 gave_up일 때만 읽었다 — 그래서 이미 403으로 실패해 재시도를
+    //   기다리는 영상이 "⏳ 분석 중 — 30초~1분쯤"으로 보였다. 실측(job 579f8645e232):
+    //   08:44에 실패했는데 3시간 반 뒤까지 같은 문구였다. 화면이 거짓말을 한 것이다.
+    //   재시도는 계속하되(일시적 실패일 수 있다) **무슨 일이 있었는지는 밝힌다.**
+    if (r && r.reason){
+      return `<div class="srcCard pend">${head}
+        <div class="srcPend" style="color:var(--warn,#c80)">⚠️ ${esc(r.reason)}
+          <div style="color:var(--sub);margin-top:4px">자동으로 다시 시도합니다${tryTxt} — 계속 안 되면
+            이 영상은 빼고 진행하셔도 됩니다.</div>
+        </div>
+      </div>`;
+    }
     return `<div class="srcCard pend">${head}
       <div class="srcPend">⏳ 분석 중이에요${tryTxt} — 30초~1분쯤 걸립니다
         <div style="color:var(--sub);margin-top:4px">담으면 자동으로 분석돼요. 이 화면에 그대로 계셔도 됩니다.</div>
