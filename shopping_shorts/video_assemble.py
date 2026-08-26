@@ -129,6 +129,8 @@ def preview_preset(preset="veryfast", crf=_PREVIEW_CRF):
                 del _preset_local.crf
         else:
             _preset_local.crf = prev_crf
+from . import font_glyphs as _fg
+
 _FONT_DIR = Path(__file__).parent / "static" / "fonts"
 # 고른 폰트를 버리고 기본폰트로 되돌리는 문턱(못 그리는 글자 비율).
 # 낮추면 희귀 글자 하나에 글꼴이 통째로 바뀌고, 1.0으로 두면 한 글자만 그려져도 통과한다.
@@ -1411,37 +1413,9 @@ def _hex_to_ff(c, default="0xFFFFFF"):
 
 
 def _missing_glyphs(font_path, text):
-    """이 폰트 파일이 text에서 **못 그리는 글자**들. 두부(□·⊠) 예방용 — 2026-08-26.
+    """→ font_glyphs.missing_glyphs (판정은 한 곳에서만 — 0순위-B)."""
+    return _fg.missing_glyphs(font_path, text)
 
-    ★왜 (실사고): 목록의 '옥 말랑'(OkMallangW.ttf)은 OKFont가 낸 **영문 전용** 폰트라
-      한글 글리프가 0자다(글리프 81개 = 영문·숫자·기호). 파일 자체는 정상 TTF여서
-      브라우저도 ffmpeg도 **아무 오류 없이 로드**하고, 최종 렌더에서 한글이 전부
-      네모X로 나왔다(사장님 제보). 파일 존재만 확인하던 종전 규칙으로는 못 잡는다.
-
-    판정: 폰트에 없는 글자는 모두 같은 .notdef 글리프로 그려진다. 사적사용영역
-      문자(어떤 한글 폰트에도 없다) 두 개의 마스크가 서로 같으면 그게 이 폰트의
-      .notdef이고, 어떤 글자의 마스크가 그것과 같으면 그 글자는 **없는 것**이다.
-      실측(2026-08-26): 옥말랑 '가/한/씨'=없음·'A/1'=있음, 나머지 5종은 전부 있음.
-    ⚠️폰트 이름·파일크기로 판정하지 마라 — 목록은 반드시 썩는다(_lacks_space_glyph와 같은 원칙).
-    ⚠️Pillow만 쓴다. fontTools는 서버 requirements에 없다(추가하지 않기로).
-    """
-    text = "".join(dict.fromkeys((text or "").replace(" ", "")))  # 공백 제외·중복 제거
-    if not text:
-        return ""
-    try:
-        f = ImageFont.truetype(str(font_path), 70)
-
-        def mask(c):
-            m = f.getmask(c)
-            return (m.size, bytes(m))
-
-        ref, ref2 = mask("\uF8FF"), mask("\uE05C")
-        if ref != ref2:
-            return ""  # 사적사용영역에 글리프가 있는 폰트 — 이 방법으로는 판정 못 한다
-        return "".join(c for c in text if mask(c) == ref)
-    except Exception as e:  # noqa: BLE001 — 판정 실패가 렌더를 막으면 안 된다
-        print(f"[폰트] 글리프 판정 실패(정상으로 간주) {font_path}: {e!r}", file=sys.stderr)
-        return ""
 
 
 def _font_ref(font_name, work, key, text=""):
@@ -1496,37 +1470,19 @@ def _match_highlight(word, highlight_rules):
 
 
 def _lacks_space_glyph(pil_font):
-    """이 폰트가 띄어쓰기를 '없는 글자 네모(⊠)'로 그리는가 — 2026-08-24 고객 제보 실측.
-
-    빙그레체(Binggrae-Bold)·리디바탕(RIDIBatang)은 U+0020 글리프가 아예 없어서,
-    이 폰트를 자막으로 고르면 **모든 띄어쓰기가 ⊠로** 나온다(고객 영상에서 확인:
-    "진짜⊠이렇게", "이거⊠한스푼만⊠넣고⊠볶으라는거에요"). 나머지 20종은 멀쩡하다.
-
-    판정: 정상 폰트는 공백 마스크 높이가 0이고, 없는 폰트는 글자 높이만큼(≈70px@70) 나온다.
-    ⚠️폰트 이름으로 판정하지 마라 — 폰트가 추가될 때마다 목록을 고쳐야 하고, 그 목록은 반드시
-      썩는다. 글리프 유무를 직접 본다.
-    """
-    try:
-        return pil_font.getmask(" ").size[1] > 0
-    except Exception as e:  # noqa: BLE001 — 판정 실패가 자막을 막으면 안 된다
-        print(f"[자막] 공백 글리프 판정 실패(정상으로 간주): {e!r}", file=sys.stderr)
-        return False
+    """→ font_glyphs.lacks_space_glyph (판정은 한 곳에서만 — 0순위-B)."""
+    return _fg.lacks_space_glyph(pil_font)
 
 
 def _space_px(pil_font, size):
-    """띄어쓰기 한 칸의 폭. 공백 글리프가 없는 폰트는 advance가 ⊠ 네모 폭(≈1em)이라
-    그대로 쓰면 어절이 과하게 벌어진다 → 흔한 비율 0.28em으로 대체한다."""
-    return size * 0.28 if _lacks_space_glyph(pil_font) else pil_font.getlength(" ")
+    """→ font_glyphs.space_px"""
+    return _fg.space_px(pil_font, size)
 
 
 def _text_px(pil_font, text, size):
-    """**실제로 그려질** 폭. 공백 없는 폰트에서도 맞다.
-    중앙정렬·자동축소가 이 값을 쓰므로 getlength를 직접 부르지 마라(0순위-B)."""
-    if not _lacks_space_glyph(pil_font):
-        return pil_font.getlength(text)
-    words = (text or "").split(" ")
-    return (sum(pil_font.getlength(w) for w in words)
-            + _space_px(pil_font, size) * max(0, len(words) - 1))
+    """→ font_glyphs.text_px"""
+    return _fg.text_px(pil_font, text, size)
+
 
 
 def _build_segments(line, base_color, highlight_rules):

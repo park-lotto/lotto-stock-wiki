@@ -148,3 +148,49 @@ def test_실사용_글자를_못_그리는_폰트가_없다():
         if miss:
             bad.append("{}({}) 없는글자={}".format(f["name"], f["file"], miss))
     assert not bad, "자막에 실제로 쓰는 글자를 못 그리는 폰트:\n  " + "\n  ".join(bad)
+
+
+def test_꾸미기틀도_띄어쓰기_우회를_쓴다():
+    """★2026-08-26 실측 사고: 공백 우회가 자막(video_assemble)에만 있고 꾸미기 틀
+    (deco_frame)에는 없어서, 빙그레·리디바탕으로 채널명·제목을 쓰면 띄어쓰기가
+    ⊠로 나갔다. 36종 전수 렌더를 눈으로 보고서야 찾았다 —
+    ⚠️판정기는 공백을 검사에서 빼므로 **이 사고를 못 잡는다.** 그리기 경로를 직접 본다."""
+    from PIL import Image, ImageDraw
+    from shopping_shorts import deco_frame as df
+    from shopping_shorts import font_glyphs as fg
+
+    for fname in ("Binggrae-Bold.otf", "RIDIBatang.otf"):
+        p = FONT_DIR / fname
+        if not p.exists():
+            continue
+        font = df._font("title", 44, fname)
+        assert fg.lacks_space_glyph(font), f"{fname} 이 공백 없는 폰트가 아니게 됐다"
+
+        # 어절을 따로 그리면 ⊠가 안 나온다 — 한 번에 그린 것과 그림이 달라야 한다.
+        def render(fn):
+            im = Image.new("L", (900, 90), 255)
+            fn(ImageDraw.Draw(im))
+            return im.tobytes()
+
+        one = render(lambda d: d.text((10, 10), "정말 맛있어요", font=font, fill=0))
+        fixed = render(lambda d: fg.draw_text(d, (10, 10), "정말 맛있어요", font, 0, "la", 44))
+        assert one != fixed, f"{fname}: 우회가 안 걸렸다 — 띄어쓰기가 ⊠로 나간다"
+
+
+def test_정상폰트는_그리는_방식이_바뀌지_않는다():
+    """회귀 감시 — 공백 글리프가 있는 폰트는 종전처럼 한 번에 그려야 한다."""
+    from PIL import Image, ImageDraw
+    from shopping_shorts import deco_frame as df
+    from shopping_shorts import font_glyphs as fg
+
+    font = df._font("title", 44, "BMJUA.ttf")
+    assert not fg.lacks_space_glyph(font)
+
+    def render(fn):
+        im = Image.new("L", (900, 90), 255)
+        fn(ImageDraw.Draw(im))
+        return im.tobytes()
+
+    one = render(lambda d: d.text((10, 10), "정말 맛있어요", font=font, fill=0))
+    same = render(lambda d: fg.draw_text(d, (10, 10), "정말 맛있어요", font, 0, "la", 44))
+    assert one == same, "정상 폰트인데 그림이 달라졌다(회귀)"
