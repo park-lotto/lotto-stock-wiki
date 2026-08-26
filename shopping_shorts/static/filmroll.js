@@ -30,7 +30,8 @@
 
   const PPS_BASE = 54;                 // 칸 폭 54px일 때 1초
   const LADDER = [0.1, 0.2, 0.25, 0.5, 1, 2, 5, 10];
-  const CH = 72;                       // 칸 높이(9:16 → 폭 약 40)
+  const CH = 139;   // 칸 기본 높이(px). 훅 칸(78×16/9)과 같다 — CSS --fr-cell 기본값과 짝.
+                    // ★끌어서 바꾸면 그 높이로 캔버스도 따라간다(안 그러면 그림이 눌린다).
 
   const CACHE = {};                    // "vid|step|i" → dataURL (전 롤러 공용)
 
@@ -49,7 +50,13 @@
     let CW = 40, STEP = 1, N = 0, off = 0;
     let _homed = false;      // 지금 쓰는 구간으로 한 번 옮겼나(처음 펼칠 때만)
     let MA = null;                     // 찍어둔 시작점
-    let BOXES = [];                    // 확정 구간들
+    // ★열 때 **이미 쓰는 구간**을 주황 박스로 올린다(2026-08-26 사장님 "상단에 카드형으로
+    //   들어간걸 펼치면 … 해당 2.4초만 필름형으로 나오게"). 조각을 펼치면 그 조각이,
+    //   영상을 펼치면 그 영상에서 담긴 구간들이 바로 손에 잡힌다(늘리고 줄이고 지운다).
+    let BOXES = (opt.initBoxes || [])
+      .map(b => ({ s: Math.round(+b.s * 100) / 100, e: Math.round(+b.e * 100) / 100 }))
+      .filter(b => isFinite(b.s) && isFinite(b.e) && b.e - b.s >= 0.1)
+      .sort((x, y) => x.s - y.s);
     let ACTBOX = null;
     let destroyed = false;
     let raf = 0, scrubWant = null, scrubBusy = false, playing = false;
@@ -58,6 +65,11 @@
       '<div class="fr">' +
         '<div class="frtop">' +
           '<span class="frname"></span>' +
+          // ★도구줄을 **머리줄 안**으로(2026-08-26 사장님 "왼쪽클릭 손잡이끌기등 글자를
+          //   영상1전체 옆으로 이동하게해서 넓게 / 구간박스 이것도 위쪽으로 이동
+          //   아래쪽까지 필름높이는 높여"). 별도 줄로 두면 그 한 줄만큼 필름이 낮아진다.
+          '<div class="frgrab" title="아래를 잡고 끌면 높이가 바뀝니다"></div>' +
+        '<div class="frbar"></div>' +
           '<span class="frzoom">확대 <input type="range" class="frz" min="26" max="240" value="40"></span>' +
           '<span class="frstep"></span>' +
           '<button type="button" class="frclose" title="접기">◀ 접기</button>' +
@@ -71,7 +83,6 @@
           '<div class="frmark"></div>' +
           '<div class="frhead"><span class="frgrip"></span><span class="frdur"></span></div>' +
         '</div>' +
-        '<div class="frbar"></div>' +
         '<video class="frpv" muted playsinline preload="auto"></video>' +
         '<canvas class="frcv" style="display:none"></canvas>' +
       '</div>';
@@ -95,13 +106,15 @@
     /* 그 시각의 썸네일 — 저장 키를 아는 유일한 곳(캐시키 불일치 방지) */
     function thumbAt(sec) {
       const i = Math.floor(sec / STEP);
-      const hit = CACHE[vid + '|' + STEP + '|' + i];
+      const box = host.querySelector('.fr');
+      const ch = Math.round((box && parseFloat(getComputedStyle(box).getPropertyValue('--fr-cell'))) || CH);
+      const hit = CACHE[vid + '|' + STEP + '|' + ch + '|' + i];
       if (hit) return hit;
       let best = '', bd = 1e9;
       for (const k in CACHE) {
         const p = k.split('|');
         if (p[0] !== vid) continue;
-        const st = parseFloat(p[1]), idx = parseInt(p[2], 10);
+        const st = parseFloat(p[1]), idx = parseInt(p[3] !== undefined ? p[3] : p[2], 10);
         if (!isFinite(st) || !isFinite(idx)) continue;
         const d = Math.abs(idx * st + st / 2 - sec);
         if (d < bd) { bd = d; best = CACHE[k]; }
@@ -122,6 +135,9 @@
 
     /* 스크러빙 — 끄는 동안 미리보기가 따라온다. 마지막 요청만 처리한다. */
     function scrubTo(t) {
+      // ★큰 미리보기도 같은 시각으로 세운다 — 필름 안 작은 화면만 움직이면 어디를
+      //   보고 있는지 알기 어렵다(2026-08-26 사장님). 부품은 부모를 모른다: 콜백만 부른다.
+      if (typeof opt.onScrub === 'function') { try { opt.onScrub(t); } catch (_) {} }
       scrubWant = Math.max(0, Math.min(DUR - 0.03, t));
       moveHead(scrubWant);
       if (scrubBusy) return;
@@ -357,12 +373,18 @@
       if (isFinite(tmp.duration) && tmp.duration > 0) DUR = tmp.duration;
       N = Math.max(1, Math.ceil(DUR / STEP));
       const w = Math.max(24, Math.round(CW)), x = cv.getContext('2d');
-      cv.width = w * 2; cv.height = CH * 2;
+      // ★실제 칸 높이로 뽑는다 — 고정값을 쓰면 늘렸을 때 그림이 세로로 눌린다
+      const cellH = (() => {
+        const box = host.querySelector('.fr');
+        const v = box && parseFloat(getComputedStyle(box).getPropertyValue('--fr-cell'));
+        return (v && isFinite(v)) ? v : CH;
+      })();
+      cv.width = Math.max(24, Math.round(w * 2)); cv.height = Math.max(40, Math.round(cellH * 2));
       for (let i = 0; i < N; i++) {
         if (destroyed) return;
         const t0 = i * STEP;
         const t = Math.min(DUR - 0.05, t0 + Math.min(STEP / 2, (DUR - t0) / 2));
-        const key = vid + '|' + STEP + '|' + i;
+        const key = vid + '|' + STEP + '|' + Math.round(cellH) + '|' + i;
         let d = CACHE[key];
         if (!d) {
           await seekRaw(tmp, t);
@@ -394,6 +416,43 @@
       }
       applyW(); drawBar();
     }
+
+    /* ★아래를 잡고 끌어 높이 조절(2026-08-27 사장님).
+       높이는 CSS 변수 --fr-cell 한 곳만 바꾼다 — 창·벨트·칸·박스·자막띠가 따라온다.
+       ★썸네일을 다시 뽑지 않는다: 칸 폭(CW)은 그대로라 시간축이 안 변한다. */
+    const MIN_H = 60, MAX_H = 420;
+    (function(){
+      const g = host.querySelector('.frgrab'); if (!g) return;
+      const box = host.querySelector('.fr');
+      let dragging = false, sy = 0, h0 = 0;
+      const cur = () => parseFloat(getComputedStyle(box).getPropertyValue('--fr-cell')) || 139;
+      g.addEventListener('pointerdown', e => {
+        dragging = true; sy = e.clientY; h0 = cur();
+        g.classList.add('on');
+        try { g.setPointerCapture(e.pointerId); } catch(_){}
+        e.preventDefault(); e.stopPropagation();
+      });
+      g.addEventListener('pointermove', e => {
+        if (!dragging) return;
+        const h = Math.max(MIN_H, Math.min(MAX_H, h0 + (e.clientY - sy)));
+        box.style.setProperty('--fr-cell', h + 'px');
+        e.stopPropagation();
+      });
+      const end = e => {
+        if (!dragging) return;
+        dragging = false; g.classList.remove('on');
+        try { localStorage.setItem('frCellH', cur()); } catch(_){}   // 다음에도 그 높이로
+        strip().then(() => applyW());        // 높이가 바뀌었으니 그 비율로 다시 뽑는다
+        e.stopPropagation();
+      };
+      g.addEventListener('pointerup', end);
+      g.addEventListener('pointercancel', end);
+      // 지난번 높이 복원
+      try {
+        const saved = parseFloat(localStorage.getItem('frCellH'));
+        if (saved >= MIN_H && saved <= MAX_H) box.style.setProperty('--fr-cell', saved + 'px');
+      } catch(_){}
+    })();
 
     /* ── 마우스 배선 ───────────────────────────────────────── */
     // ★상태 선언을 배선보다 먼저 — 아래 핸들러들이 참조한다(TDZ 예방)
@@ -499,6 +558,19 @@
     /* 스페이스 = 재생/멈춤 (이 롤러가 열려 있을 때만) */
     function onKey(e) {
       if (destroyed) return;
+      const _tag = (e.target && e.target.tagName || '').toLowerCase();
+      const _typing = _tag === 'input' || _tag === 'textarea' || (e.target && e.target.isContentEditable);
+      // ★Esc = 구간 지우기(2026-08-26 사장님 "esc로 삭제되게"). 고른 게 있으면 그것,
+      //   없으면 마지막에 만든 것. ×를 정확히 누르지 않아도 손이 닿는다.
+      if (e.code === 'Escape' && !_typing) {
+        if (!BOXES.length) return;
+        const i = (ACTBOX != null && BOXES[ACTBOX]) ? ACTBOX : BOXES.length - 1;
+        BOXES.splice(i, 1);
+        ACTBOX = null; MA = null;
+        drawBoxes(); drawMark(); drawBar();
+        e.preventDefault();
+        return;
+      }
       if (e.code !== 'Space') return;
       const tag = (e.target && e.target.tagName || '').toLowerCase();
       if (tag === 'input' || tag === 'textarea' || (e.target && e.target.isContentEditable)) return;
