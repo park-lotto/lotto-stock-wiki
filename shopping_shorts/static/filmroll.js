@@ -41,8 +41,16 @@
     return best;
   }
 
+  // ★필름이 두 개(가운데·칸 안) 열려 있을 수 있다. 키(스페이스·Esc)를 document에서
+  //   받으므로 **둘 다** 반응해 함께 재생되고 막대가 같이 움직였다(2026-08-26 사장님
+  //   "아래 빨간막대기를 움직이는데 훅 빨간막대기도 같이 움직이고"). 마지막으로 만진
+  //   필름 하나만 키를 받는다.
+  let ACTIVE = null;
+
   function filmroll(host, opt) {
     opt = opt || {};
+    const SELF = {};                    // 이 인스턴스의 표식
+    ACTIVE = SELF;                      // 새로 편 필름이 활성이 된다
     const vid = opt.videoId || '';
     const caps = opt.caps || [];
     let DUR = +opt.dur || 0;
@@ -363,6 +371,9 @@
       markEl.style.transform = 'none';
       drawCaps(); drawUse(); drawBoxes(); drawMark();
       moveHead(pv.currentTime || 0);
+      // 이번에 화면에 든 칸 중 아직 그림이 없는 것만 뽑는다(있는 건 건너뛴다).
+      clearTimeout(applyW._fill);
+      applyW._fill = setTimeout(() => { fillVisible(); }, 60);
     }
 
     // ★같은 필름을 두 번 겹쳐 뽑으면 belt에 옛 칸이 남아 **눈금이 섞인다**
@@ -391,33 +402,33 @@
       N = Math.max(1, Math.ceil(DUR / STEP));
       const w = Math.max(24, Math.round(CW)), x = cv.getContext('2d');
       cv.width = w * 2; cv.height = CH * 2;
+      // ★칸 **틀만** 먼저 만든다(그림 없이). 종전엔 여기서 칸마다 영상을 seek해
+      //   캡처하느라 확대하면 250칸 × seek가 돌아 브라우저가 통째로 버벅였다
+      //   (2026-08-26 사장님 "렉이 엄청 심한데"). 그림은 아래 fillVisible이
+      //   **보이는 칸만** 채운다 — 30초 영상이라도 실제로 뽑는 건 20~30칸이다.
       for (let i = 0; i < N; i++) {
         if (destroyed) return;
         const t0 = i * STEP;
         const t = Math.min(DUR - 0.05, t0 + Math.min(STEP / 2, (DUR - t0) / 2));
-        const key = vid + '|' + STEP + '|' + i;
-        let d = CACHE[key];
-        if (!d) {
-          await seekRaw(tmp, t);
-          if (destroyed) return;
-          try { x.drawImage(tmp, 0, 0, cv.width, cv.height); d = cv.toDataURL('image/jpeg', 0.6); CACHE[key] = d; }
-          catch (_) { d = ''; }
-        }
         const c = document.createElement('div');
         c.className = 'fc' + (((i + 1) % 5 === 0) ? ' tick' : '');
         const frac = Math.min(1, (DUR - t0) / STEP);
         c.style.width = (CW * frac) + 'px';
-        c.dataset.frac = frac; c.dataset.t = t.toFixed(3);
+        c.dataset.frac = frac; c.dataset.t = t.toFixed(3); c.dataset.i = i;
         const lab = (t0 % (STEP < 1 ? 1 : 5 * STEP) < STEP * 0.9)
           ? `<span class="s">${t0.toFixed(STEP < 1 ? 1 : 0)}s</span>` : '';
-        c.innerHTML = (d ? `<img src="${d}">` : '') + lab;
+        const key = vid + '|' + STEP + '|' + i;
+        const cached = CACHE[key];             // 전에 뽑아둔 게 있으면 바로 쓴다
+        c.innerHTML = (cached ? `<img src="${cached}">` : '') + lab;
         if (my !== _stripSeq) return;        // 그 사이 새로 뽑기 시작했다 — 이 결과는 버린다
         frag.appendChild(c);
       }
-      try { tmp.src = ''; } catch (_) {}
+      _shotVid = tmp;                          // 그림 뽑을 때 다시 쓴다(매번 새로 열지 않는다)
       if (my !== _stripSeq) return;          // 그 사이 새로 뽑기 시작했다 — 이 결과는 버린다
       belt.replaceChildren(frag);            // ← 여기서 한 번에 갈아 끼운다
       loadEl.style.display = 'none';
+      applyW();                              // 폭·위치를 잡고
+      fillVisible();                         // 보이는 칸부터 그림을 채운다
       // ★2026-08-26 3차 사장님 "펼치면 전체 영상이 나오네". 원본 전체를 펴는 건 맞다
       //   (조각 밖 구간을 잡으려면 원본이 다 보여야 한다) — 문제는 **0초에서 열려서**
       //   지금 쓰는 구간이 화면 밖에 있었다는 것이다. 처음 한 번만 그 구간으로 옮긴다
@@ -464,6 +475,41 @@
       }
       applyW(); drawBar();
     }
+
+    /* ── 보이는 칸만 그림 채우기 ─────────────────────────────
+       필름은 원본 전체를 그리지만 **화면에 든 칸만** 실제로 캡처한다.
+       스크롤·확대 때마다 다시 부르면 그때 필요한 것만 뽑힌다(캐시는 그대로 쓴다). */
+    let _shotVid = null, _filling = false;
+    async function fillVisible() {
+      if (_filling || destroyed || !_shotVid) return;
+      _filling = true;
+      try {
+        const x = cv.getContext('2d');
+        const my = _stripSeq;
+        const cells = belt.children;
+        const left = off - CW, right = off + winW() + CW;      // 화면 ±한 칸 여유
+        for (let k = 0; k < cells.length; k++) {
+          if (destroyed || my !== _stripSeq) break;
+          const c = cells[k];
+          if (c.querySelector('img')) continue;                // 이미 그림이 있다
+          const cl = c.offsetLeft, cw2 = c.offsetWidth;
+          if (cl + cw2 < left || cl > right) continue;          // 화면 밖 — 나중에
+          const i = +c.dataset.i, t = +c.dataset.t;
+          const key = vid + '|' + STEP + '|' + i;
+          let d = CACHE[key];
+          if (!d) {
+            await seekRaw(_shotVid, t);
+            if (destroyed || my !== _stripSeq) break;
+            try { x.drawImage(_shotVid, 0, 0, cv.width, cv.height); d = cv.toDataURL('image/jpeg', 0.6); CACHE[key] = d; }
+            catch (_) { d = ''; }
+          }
+          if (d) c.insertAdjacentHTML('afterbegin', `<img src="${d}">`);
+        }
+      } finally { _filling = false; }
+    }
+
+    host.addEventListener('pointerdown', () => { ACTIVE = SELF; }, true);
+    host.addEventListener('mouseenter', () => { ACTIVE = SELF; });
 
     /* ── 마우스 배선 ───────────────────────────────────────── */
     // ★상태 선언을 배선보다 먼저 — 아래 핸들러들이 참조한다(TDZ 예방)
@@ -604,6 +650,7 @@
     /* 스페이스 = 재생/멈춤 (이 롤러가 열려 있을 때만) */
     function onKey(e) {
       if (destroyed) return;
+      if (ACTIVE && ACTIVE !== SELF) return;      // 지금 만지는 필름만 받는다
       const _tag = (e.target && e.target.tagName || '').toLowerCase();
       const _typing = _tag === 'input' || _tag === 'textarea' || (e.target && e.target.isContentEditable);
       // ★Esc = 구간 지우기(2026-08-26 사장님 "esc로 삭제되게"). 고른 게 있으면 그것,
@@ -670,6 +717,8 @@
 
     return {
       destroy() {
+        if (ACTIVE === SELF) ACTIVE = null;
+        try { if (_shotVid) { _shotVid.src = ''; _shotVid = null; } } catch (_) {}
         // 접는데 소리만 계속 나는 일이 없게 — 재생 중이었으면 미리보기도 세운다.
         try { stopHead(); } catch (_) {}
         destroyed = true;
