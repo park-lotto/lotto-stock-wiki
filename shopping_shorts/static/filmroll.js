@@ -52,6 +52,10 @@
     // ★열 때 **이미 쓰는 구간**을 주황 박스로 올린다(2026-08-26 사장님 "상단에 카드형으로
     //   들어간걸 펼치면 … 해당 2.4초만 필름형으로 나오게"). 조각을 펼치면 그 조각이,
     //   영상을 펼치면 그 영상에서 담긴 구간들이 바로 손에 잡힌다(늘리고 줄이고 지운다).
+    let LASTTAP = { i: null, t: 0 };   // 두 번 누르기 판정용
+    // ★멈춘 지점(2026-08-26 사장님 "다시누르면 처음 재생한곳으로간다 => 마지막 멈춘
+    //   지점에서 이어서 재생으로"). 구간을 끝까지 보면 비워서 다음엔 처음부터 간다.
+    let RESUME = null;
     let BOXES = (opt.initBoxes || [])
       .map(b => ({ s: Math.round(+b.s * 100) / 100, e: Math.round(+b.e * 100) / 100 }))
       .filter(b => isFinite(b.s) && isFinite(b.e) && b.e - b.s >= 0.1)
@@ -215,6 +219,21 @@
         let mode = null, sx = 0, s0 = 0, e0 = 0, moved = false;
         el.addEventListener('pointerdown', ev => {
           const i = +el.dataset.i, b = BOXES[i]; if (!b) return;
+          // ★두 번 누르기 = 담기. dblclick 이벤트는 **실제 마우스에서 안 온다**
+          //   (pointerdown에서 preventDefault+setPointerCapture를 하기 때문 — 실측
+          //    2026-08-26: dispatchEvent로는 되는데 진짜 클릭은 안 됐다).
+          //   그래서 pointerdown에서 직접 간격을 재 판정한다.
+          if (ev.target.dataset.del === undefined && !ev.target.dataset.edge
+              && !ev.target.dataset.g) {
+            const now = (ev.timeStamp || 0);
+            if (LASTTAP.i === i && now - LASTTAP.t < 450) {
+              LASTTAP = { i: null, t: 0 };
+              ev.stopPropagation(); ev.preventDefault();
+              if (typeof opt.onBoxCommit === 'function') opt.onBoxCommit({ s: b.s, e: b.e });
+              return;
+            }
+            LASTTAP = { i, t: now };
+          }
           if (ev.target.dataset.del !== undefined) {      // × = 즉시 삭제
             ev.stopPropagation(); ev.preventDefault();
             BOXES.splice(+ev.target.dataset.del, 1);
@@ -253,12 +272,6 @@
         el.addEventListener('pointercancel', end);
         el.addEventListener('click', ev => ev.stopPropagation());
         el.addEventListener('contextmenu', ev => { ev.preventDefault(); ev.stopPropagation(); });
-        // 박스를 두 번 클릭 = 지금 담는 칸에 바로 담기(끌 자리가 없어도 되게).
-        el.addEventListener('dblclick', ev => {
-          ev.stopPropagation(); ev.preventDefault();
-          const b = BOXES[+el.dataset.i];
-          if (b && typeof opt.onBoxCommit === 'function') opt.onBoxCommit({ s: b.s, e: b.e });
-        });
         // ⬆ 손잡이 = 위 칸으로 끌어 담기. preventDefault를 하면 드래그가 시작을
         // 안 하므로 여기서는 **막지 않는다**(박스 이동 로직만 끊는다).
         const g = el.querySelector('.g');
@@ -400,7 +413,41 @@
       //   (확대·축소로 다시 그릴 때는 그 자리를 지킨다 — 아래 frz 핸들러가 정한다).
       if (!_homed && opt.from != null) {
         _homed = true;
-        const mid = opt.from + Math.max(0, ((opt.to != null ? opt.to : opt.from) - opt.from)) / 2;
+        // ★배율은 **레이아웃이 잡힌 뒤** 정한다. 여기서 바로 재면 win.clientWidth가 아직
+        //   0이라 winW()가 600 폴백을 쓰고, 그 폭 기준으로 엉뚱한 배율이 나온다
+        //   (실측 2026-08-26: 2.4초 구간인데 창의 32%밖에 안 찼다).
+        requestAnimationFrame(() => { try{ _fitToRange(); }catch(_){} });
+      }
+      applyW(); drawBar();
+    }
+
+    async function _fitToRange() {
+      {
+        const span = Math.max(0.2, (opt.to != null ? opt.to : opt.from) - opt.from);
+        // ★조각을 펼쳤으면 **그 구간이 창을 채우도록** 확대한다(2026-08-26 사장님
+        //   "필름은 전체 영상이 아니라 카드 한장 2.6초까지를 펼치는거다").
+        //   원본을 잘라 그리지 않고 배율만 맞춘다 — 밖으로 넓히려면 옆으로 끌면 된다
+        //   (구간 밖을 못 보게 잘라버리면 '조각 범위 넓히기'가 통째로 막힌다).
+        if (opt.fit) {
+          const z = host.querySelector('.frz');
+          const min = +z.min || 26, max = +z.max || 240;
+          // ★한 칸 초(STEP)가 칸 폭(CW)에 딸려 바뀌므로 식으로 풀면 값이 진동한다(실측:
+          //   목표가 240↔100을 오가며 엉뚱한 48로 끝났다). 후보를 훑어 **보이는 초가
+          //   구간에 가장 가까운** 칸 폭을 고른다 — 215개뿐이라 훑는 게 싸고 확실하다.
+          const W = winW() * 0.9;
+          let want = CW, best = Infinity;
+          for (let c = min; c <= max; c++) {
+            const seen = W * calcStep(c) / c;            // 그 배율에서 창에 보이는 초
+            const d = Math.abs(seen - span);
+            if (d < best) { best = d; want = c; }
+          }
+          if (want !== CW) {
+            z.value = want; CW = want;
+            const ns = calcStep(CW);
+            if (ns !== STEP) { await strip(); }           // 칸 간격이 바뀌면 다시 뽑는다
+          }
+        }
+        const mid = opt.from + span / 2;
         off = clamp(mid * pps() - winW() / 2);
         try { pv.currentTime = opt.from; } catch (_) {}
       }
@@ -493,6 +540,12 @@
        **시계로** 막대를 움직인다 — 막대가 멈춰 보이는 것보다 낫다. */
     function stopHead(quiet) {
       const was = playing;
+      if (was) {                                  // 어디서 멈췄는지 기억한다
+        let t = null;
+        try { t = (typeof opt.getTime === 'function') ? opt.getTime() : pv.currentTime; }
+        catch (_) { t = null; }
+        if (typeof t === 'number' && isFinite(t)) RESUME = t;
+      }
       playing = false;
       if (raf) { cancelAnimationFrame(raf); raf = 0; }
       try { pv.pause(); } catch (_) {}
@@ -511,7 +564,7 @@
         const loop = () => {
           if (!playing || destroyed) return;
           const t = getT();
-          if (t >= b - 0.02) { stopHead(); moveHead(b); return; }
+          if (t >= b - 0.02) { stopHead(); RESUME = null; moveHead(b); return; }
           moveHead(t);
           raf = requestAnimationFrame(loop);
         };
@@ -566,8 +619,10 @@
         //   소리는 미리보기가, **위치 표시는 필름이** 맡는다: pv는 muted라 같이 돌려도
         //   소리가 겹치지 않는다. 같은 파일·같은 시작점이라 막대가 그림을 따라간다.
         if (playing) { stopHead(); return; }      // 두 번째 스페이스 = 멈춤
-        const a2 = bx ? bx.s : (pv.currentTime || 0);
-        const b2 = bx ? bx.e : Math.min(DUR, a2 + 3);
+        const s2 = bx ? bx.s : (pv.currentTime || 0);
+        const b2 = bx ? bx.e : Math.min(DUR, s2 + 3);
+        // 멈춘 자리가 이 구간 안이면 거기서 이어서(끝까지 봤으면 RESUME이 비어 처음부터).
+        const a2 = (RESUME != null && RESUME > s2 + 0.05 && RESUME < b2 - 0.05) ? RESUME : s2;
         opt.onPlay(a2, b2);
         runHead(a2, b2);
         return;

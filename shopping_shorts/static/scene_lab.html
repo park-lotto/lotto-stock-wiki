@@ -1354,7 +1354,15 @@ function initLists(){
 // 사장님 지시: 카드/컷을 누르면 **오른쪽으로** 필름이 펼쳐지고 다시 접힌다.
 // 자르기 UI는 filmroll.js 하나만 쓴다(0순위-B — 위 훅·아래 카드·필름형이 같은 부품).
 // ★한 번에 하나만 펼친다 — 여럿 열면 폭이 감당 안 되고 영상 여러 개가 동시에 돈다.
-const ROLL = {key:'', inst:null, host:null};
+// ★필름 자리는 **둘**이다(2026-08-26 사장님 "아래꺼 필름으로 작업하다가 위쪽 훅에서
+//   필름을 펼치니까 있던 필름이 가운데 사라져있다"). 하나로 두면 한쪽을 열 때 다른 쪽이
+//   닫혀 하던 작업이 날아간다. 서로 독립이라 동시에 열어 둘 수 있다.
+//     ROLL  = 가운데 고정 자리(영상 통째 'src' · 아래 카드 'seg')
+//     ROLLB = 위 칸 안(그 칸의 컷 'cut')
+const ROLL  = {key:'', inst:null, host:null};
+const ROLLB = {key:'', inst:null, host:null};
+const rollSlot = kind => (kind === 'cut' ? ROLLB : ROLL);
+const rollSlotOfKey = key => rollSlot((key || '').split(':')[0]);
 
 function _rollSeg(sid){
   const s0 = DATA.segments[sid] || {};
@@ -1475,33 +1483,41 @@ function stopPlayHere(){
   try{ pausePlayOnly(); }catch(e){}
 }
 
-function closeRoll(){
-  if (ROLL.inst) { try { ROLL.inst.destroy(); } catch(_){} }
-  if (ROLL.host && ROLL.host.parentNode) ROLL.host.parentNode.removeChild(ROLL.host);
-  ROLL.key = ''; ROLL.inst = null; ROLL.host = null;
+function closeRoll(slot){
+  const S = slot || ROLL;
+  if (S.inst) { try { S.inst.destroy(); } catch(_){} }
+  if (S.host && S.host.parentNode) S.host.parentNode.removeChild(S.host);
+  S.key = ''; S.inst = null; S.host = null;
 }
 
 // kind: 'seg'(아래 카드) | 'cut'(위 훅 컷) | 'src'(필름형 — 영상 통째)
 function toggleRoll(kind, id, beatIdx){
   const key = kind + ':' + id + (beatIdx == null ? '' : ':' + beatIdx);
-  if (ROLL.key === key){
-    closeRoll(); renderRollHosts();
-    // 촘촘히에서는 자리가 고정이라 빈 칸으로 두지 않는다 — 첫 영상으로 돌아간다.
-    if (document.body.classList.contains('tight')) autoOpenRoll();
+  const S = rollSlot(kind);
+  if (S.key === key){
+    closeRoll(S); renderRollHosts(beatIdx, S);
+    // 가운데 자리는 고정이라 빈 칸으로 두지 않는다 — 첫 영상으로 돌아간다.
+    // (칸 안 필름은 접으면 그냥 닫힌다 — 그 칸에 늘 필름이 떠 있을 이유가 없다)
+    if (S === ROLL && document.body.classList.contains('tight')) autoOpenRoll();
     return;
   }
-  closeRoll();
-  ROLL.key = key;
-  renderRollHosts(beatIdx);
+  closeRoll(S);
+  S.key = key;
+  renderRollHosts(beatIdx, S);
 }
 
 // 펼침 자리를 실제 DOM에 끼운다. render()를 부르지 않는다 —
 // ★render()는 296줄 + saveWork + 1.2초 디바운스 서버푸시라, 펼칠 때마다 부르면
 //   자기 DOM을 지우고 서버를 두들긴다(0순위-B 주석의 경고 그대로).
-function renderRollHosts(beatIdx){
-  document.querySelectorAll('.frslot').forEach(e => e.remove());
-  if (!ROLL.key) { markRollBtns(); return; }
-  const [kind, id] = ROLL.key.split(':');
+function renderRollHosts(beatIdx, slot){
+  const S = slot || ROLL;
+  // ★내 슬롯의 자리만 지운다. 종전엔 .frslot을 통째로 지워서, 칸 안 필름을 열면
+  //   가운데 필름이 함께 사라졌다(2026-08-26 사장님 제보).
+  if (S.host && S.host.parentNode) S.host.parentNode.removeChild(S.host);
+  S.host = null;
+  if (S.inst) { try { S.inst.destroy(); } catch(_){} S.inst = null; }
+  if (!S.key) { markRollBtns(); return; }
+  const [kind, id] = S.key.split(':');
   let anchor = null, sid = id, vidOnly = false;
   if (kind === 'seg'){
     anchor = document.querySelector(`.seg[data-sid="${CSS.escape(id)}"]`);
@@ -1540,7 +1556,7 @@ function renderRollHosts(beatIdx){
   if (cutRow){ cutRow.appendChild(host); host.classList.add('inbeat'); }
   else if (inBeat){ inBeat.appendChild(host); host.classList.add('inbeat'); }
   else bay.appendChild(host);
-  ROLL.host = host;
+  S.host = host;
   try{ bay.scrollIntoView({block:'nearest', behavior:'smooth'}); }catch(_){}
 
   let vid, dur, from = null, to = null, name = '';
@@ -1558,11 +1574,14 @@ function renderRollHosts(beatIdx){
     markRollBtns(); return;
   }
 
-  ROLL.inst = filmroll(host, {
+  S.inst = filmroll(host, {
     videoId: vid, src: SL.src(vid), dur, from, to, name,
     initBoxes: rollInitBoxes(kind, sid, vid),
+    // 조각을 펼쳤으면 그 구간이 창을 채우게(영상 통째는 전체를 본다)
+    fit: (kind !== 'src'),
     caps: _rollCaps(vid),
-    onClose(){ closeRoll(); renderRollHosts(); },
+    onClose(){ closeRoll(S); renderRollHosts(beatIdx, S);
+               if (S === ROLL && document.body.classList.contains('tight')) autoOpenRoll(); },
     onCommit(ranges){ commitRoll(kind, sid, vid, ranges, beatIdx); },
     // 🔁 조각 범위 넓히기(2026-08-26 2차 남은 것). TRIMS[sid]=[a,b]는 **가운데를 버리는**
     //   방식이라 조각 밖으로는 못 넓힌다 — trimPieces·_lab_trim_pieces를 둘 다 고치면
@@ -2178,8 +2197,9 @@ function renderBand(){
   row.innerHTML = html;
   // ★칸을 다시 그리면 그 안에 펼쳐둔 필름도 함께 지워진다 — 곧바로 다시 붙인다.
   //   (담기·빼기 뒤에도 필름이 그 자리에 남아 이어서 편집할 수 있어야 한다)
-  if (typeof ROLL === 'object' && ROLL.key && ROLL.key.startsWith('cut:')){
-    setTimeout(() => { try{ renderRollHosts(); }catch(e){} }, 0);
+  if (ROLLB.key && ROLLB.key.startsWith('cut:')){
+    const _bi = +(ROLLB.key.split(':')[2]);
+    setTimeout(() => { try{ renderRollHosts(isFinite(_bi) ? _bi : undefined, ROLLB); }catch(e){} }, 0);
   }
   const t = document.getElementById('tbtot');
   // ★'안 나옴' 카드는 컷 수에서 뺀다(2026-08-23). .tbcut을 그대로 세면 화면에 안 나오는
