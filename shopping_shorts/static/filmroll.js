@@ -553,18 +553,12 @@
       off = clamp(off + ((e.deltaY || e.deltaX) > 0 ? pps() * 2 : -pps() * 2)); applyW();
     }, { passive: false });
 
-    win.addEventListener('pointerdown', e => {
-      if (e.button !== 0 || e.target.closest('.bx') || e.target.closest('.frgrip')) return;
-      down = true; dragged = false; sx = e.clientX; so = off;
-      try { win.setPointerCapture(e.pointerId); } catch (_) {}
-    });
-    win.addEventListener('pointermove', e => {
-      if (!down) return;
-      const dx = e.clientX - sx;
-      if (Math.abs(dx) > 4) dragged = true;
-      off = clamp(so - dx); applyW();
-    });
-    win.addEventListener('pointerup', () => { down = false; setTimeout(() => dragged = false, 30); });
+    // ★왼쪽 버튼으로 필름을 끌어 좌우로 미는 조작은 **없앴다**(2026-08-26 사장님 캡쳐 536
+    //   "마우스 왼쪽잡고 화면이동하는거 없애줘 빨간선 옮기는거랑 겹친다").
+    //   같은 왼쪽 버튼이 '빨간선 찍기'와 '밀기' 둘 다를 맡아, 조금만 손이 흔들려도
+    //   찍으려던 게 밀기로 새고 빨간선이 안 옮겨졌다. 한 버튼에 두 일을 주지 않는다.
+    //   좌우 이동은 **휠**, 확대는 **Ctrl+휠**로 그대로 된다(위 wheel 핸들러).
+    //   dragged는 이제 늘 false — win click이 조건 없이 '여기 찍기'로 간다.
 
     // ★손잡이를 끌었는지(=훑어보기) 눌렀다 뗐는지(=여기 찍기) 가른다.
     //   끌고 난 뒤의 click까지 '찍기'로 받으면 훑을 때마다 구간이 생긴다.
