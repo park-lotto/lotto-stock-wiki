@@ -760,6 +760,19 @@ def _strip_cap_tail(s):
     return s
 
 
+def cap_preset_key(txt):
+    """자막 줄 preset이 나레이션과 '같은 글자'인지 대조할 때 쓰는 정규화 키.
+
+    ★대조 기준을 여기 한 곳에서만 정한다(0순위-B). 예전엔 저장(app.py caplines의 _cmp_key)이
+      **끝 문장부호까지 무시**하고, 읽기(_caption_segments)는 **공백만** 무시해서 기준이 두 벌이었다.
+      화면에 보이는 줄은 _strip_cap_tail로 마침표가 떼여 있으므로, 사장님이 그 줄을 그대로
+      나눠 저장하면 저장은 통과하지만 렌더에서는 narration의 마침표 때문에 대조가 깨져
+      **조용히 규칙 폴백**으로 내려갔다 = "저장은 되는데 최종렌더에 반영 안 됨"(2026-08-26 제보).
+    """
+    drop = set(_CAP_TRIM_TAIL) | set(chr(32)+chr(9)+chr(10)+chr(13))
+    return "".join(ch for ch in (txt or "") if ch not in drop)
+
+
 def _wrap_long(segs):
     """구절 리스트에서 _CAP_WRAP를 크게 넘는 초장문만 줄바꿈으로 방어(대부분 그대로 1줄).
     각 줄은 표시용으로 끝 문장부호를 정리한다(2026-07-21 사장님 '봤잖아요.' 마침표 노출)."""
@@ -798,7 +811,7 @@ def _caption_segments(narration, preset=None):
         return []
     if preset and isinstance(preset, (list, tuple)):
         lines = [str(x).strip() for x in preset if str(x).strip()]
-        if lines and "".join(lines).replace(" ", "") == narr.replace(" ", ""):
+        if lines and cap_preset_key("".join(lines)) == cap_preset_key(narr):
             return _wrap_long(lines)
     words = narr.split()
     out, cur = [], []
