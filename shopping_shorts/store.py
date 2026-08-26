@@ -5916,8 +5916,11 @@ class Store:
                     for cid, nm, em in c.execute(
                             "SELECT id, COALESCE(name,''), COALESCE(email,'') FROM customers"):
                         names[str(cid)] = nm or em or ""
-                except sqlite3.Error:
-                    pass                      # 이름은 부가정보다 — 없어도 줄은 보여준다
+                except sqlite3.Error as e:
+                    # 이름은 부가정보다 — 없어도 줄은 보여준다. 단 **조용히 삼키지 않는다**
+                    # (메모리 `테스트_시한폭탄_침묵except`: except:pass가 SQL 오류를 삼켜
+                    #  라이브에서 0건이 된 실사고가 있었다).
+                    print(f"[작업라인] 고객 이름 조회 실패(무시): {e!r}", file=sys.stderr)
 
             out = {"running": [], "queued": [], "recent": []}
             for (qid, task, state, args, created, claimed, hb, fin, owner, err) in rows:
