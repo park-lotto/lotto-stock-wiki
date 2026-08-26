@@ -8943,6 +8943,11 @@ def _is_trial(customer_id, now=None):
 # 서버 보호 목적이라 포인트와 별개로 유지한다. admin 설정으로 조정 가능.
 _CREDIT_DEFAULTS = {"lens": 10, "render": 10, "script": 10}
 _CREDIT_PRO_DEFAULTS = {"lens": 10, "render": 10, "script": 200}  # 하루 영상 최대 10개(돌려쓰기 상한, 2026-07-22)
+# 🔑 BYOK(자기 SerpApi 키를 낸 회원) 전용 한도 — 렌즈만 올린다(2026-08-26 사장님 지시).
+#   검색 비용이 **그 회원 키**에서 나가는데 한도는 사장님 키 기준으로 걸려 있었다
+#   (실측: 회원 201이 SerpApi 키 2개를 냈는데도 하루 10회에서 막힘).
+#   ⚠️ render·script는 pro와 같은 값을 유지한다 — SerpApi 키는 렌즈에만 쓰인다.
+_CREDIT_BYOK_DEFAULTS = {"lens": 20, "render": 10, "script": 200}
 _GLOBAL_CAP_DEFAULTS = {"lens": 200, "render": 100, "script": 400}
 
 
@@ -8998,7 +9003,10 @@ def check_and_count(customer_id, op):
     #   순간 담긴 영상의 대본 예열이 전부 skipped_limit로 조용히 스킵됐다(실측: 3개 담았는데
     #   유튜브 2개만 대본이 생기고 인스타·샤오홍슈는 0.03초 만에 done 처리).
     is_paid = (_as_cid(customer_id) == 0) or (st.get_customer(customer_id) or {}).get("plan") == "pro"
-    if is_paid:
+    if op == "lens" and _lens_has_own_key(customer_id):
+        # 자기 키로 검색하는 회원 — 비용을 본인이 내므로 한도를 더 준다.
+        key, dflt = "limit_lens_byok", _CREDIT_BYOK_DEFAULTS["lens"]
+    elif is_paid:
         key, dflt = f"limit_{op}_pro", _CREDIT_PRO_DEFAULTS.get(op, 100)
     else:
         key, dflt = f"limit_{op}", _CREDIT_DEFAULTS.get(op, 5)
@@ -9142,6 +9150,20 @@ def _lens_api_keys(customer_id):
     return keys
 
 
+def _lens_has_own_key(customer_id):
+    """이 회원이 **자기 SerpApi 키**로 렌즈를 쓰는가.
+
+    ★판정을 새로 짜지 않는다 — 키를 고르는 keyroute.keys_for가 이미 정한 is_user를
+      그대로 빌린다(0순위-B). 여기서 customer_keys를 직접 조회하면 키 고르는 쪽과
+      한도 주는 쪽이 어긋나, "키 냈는데 한도가 안 늘었다"가 난다.
+    실패하면 False — 한도를 못 늘릴 뿐 기존 동작 그대로다(안전한 쪽으로 넘어진다)."""
+    try:
+        _keys, is_user = keyroute.keys_for(Store(DB_PATH), customer_id, keyroute.SVC_SERPAPI)
+        return bool(is_user)
+    except Exception:
+        return False
+
+
 def _global_over_cap(op):
     """전역 일일 사용량이 상한 이상이면 True(차단). cap<=0이면 무제한(False).
     ⚠️ global_incr_and_alert는 알림만 하고 안 막았다 — 다계정이 SerpApi·렌더를 태워도
@@ -9206,6 +9228,10 @@ def _api_me(request: Request):
         else:
             limits = {op: _lim(f"limit_{op}", _CREDIT_DEFAULTS.get(op, 5))
                       for op in ("lens", "render", "script")}
+        # 🔑 자기 SerpApi 키를 낸 회원은 렌즈 한도가 다르다 — check_and_count와 **같은 규칙**.
+        #   여기가 어긋나면 "20회라더니 10회에서 막힌다"가 된다(0순위-B).
+        if _lens_has_own_key(cid):
+            limits["lens"] = _lim("limit_lens_byok", _CREDIT_BYOK_DEFAULTS["lens"])
     # 가입 며칠째 — created_at은 UTC 문자열(datetime('now') 또는 ISO). 파싱 실패 시 None.
     member_days = None
     ca = (cust or {}).get("created_at") if cust else None
