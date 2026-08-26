@@ -79,6 +79,11 @@ h1{font-size:16px;margin:0;font-weight:700}
     background:rgba(0,0,0,.62);color:#ffb3b3;border-radius:3px;font-size:12px;line-height:17px;
     text-align:center;cursor:pointer;font-weight:700}
 .frboxes .bx .x:hover{background:#a03434;color:#fff}
+.frboxes .bx .g{position:absolute;top:1px;left:9px;width:17px;height:17px;z-index:3;
+  display:flex;align-items:center;justify-content:center;border-radius:3px;cursor:grab;
+  background:rgba(0,0,0,.55);color:#ffd24a;font-size:12px;line-height:1;user-select:none}
+.frboxes .bx .g:hover{background:#ffd24a;color:#3a2a08}
+.frboxes .bx .g:active{cursor:grabbing}
 /* 시작점 · 재생헤드 */
 .frmark{position:absolute;top:6px;bottom:20px;width:2px;background:#ff9614;display:none;
     pointer-events:none;z-index:7;box-shadow:0 0 6px rgba(255,150,20,.85)}
@@ -1240,6 +1245,16 @@ function renderRollHosts(beatIdx){
     onPlay(a, b){ playRange(vid, a, b); },
     // 필름에서 멈추면 미리보기도 같이 선다(싱크 — 2026-08-26 사장님).
     onStop(){ stopPlayHere(); },
+    // ⬆ 주황 박스를 위 칸으로 끌어 담기 — **팔레트 드래그와 같은 계약**을 쓴다
+    //   (palDrag → 칸의 beatDrop). 새 드롭 배선을 만들면 두 벌이 된다(0순위-B).
+    onBoxDrag(r, ev){
+      const a = Math.max(0, +r.s), b2 = Math.min(+r.e, (DATA.src_duration||{})[vid] || +r.e);
+      if (!(b2 - a >= 0.1)) return;
+      palDragStart(_makeFilmSeg(vid, a, b2), ev);
+    },
+    onBoxDragEnd(){ palDragEnd(); },
+    // 박스 두 번 클릭 = 지금 담는 칸에 바로 담기(담기 버튼과 같은 길).
+    onBoxCommit(r){ commitRoll(kind, sid, vid, [r], beatIdx); },
   });
   markRollBtns();
 }
