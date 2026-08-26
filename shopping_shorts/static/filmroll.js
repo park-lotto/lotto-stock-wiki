@@ -71,6 +71,10 @@
     let ACTBOX = null;
     let destroyed = false;
     let raf = 0, scrubWant = null, scrubBusy = false, playing = false;
+    // ★구간 길이는 **상태로 들고 있는다**(2026-08-26 사장님 "이거 안된다" 캡쳐 534).
+    //   종전엔 drawBar()가 innerHTML을 새로 그리며 value="2.4"를 다시 박아, 숫자를
+    //   고쳐도 구간을 하나 만드는 순간 2.4로 되돌아갔다.
+    let BOXLEN = 2.4;
 
     host.innerHTML =
       '<div class="fr">' +
@@ -320,7 +324,8 @@
 
     function makeBox() {
       const el = host.querySelector('.frlen');
-      const n = Math.max(0.1, parseFloat(el && el.value) || 2.4);
+      if (el) BOXLEN = Math.max(0.1, parseFloat(el.value) || BOXLEN);
+      const n = BOXLEN;
       const a = Math.max(0, Math.min(DUR - 0.1, pv.currentTime));
       addBox(a, Math.min(DUR, a + n));
     }
@@ -335,7 +340,7 @@
           //   '시작 N초' 같은 **작업 중 상태**는 그대로 남긴다(그건 지금 뭘 하는지다).
           : '') +
         `<span class="frmk"><button type="button" class="frbtn mk">＋ 구간</button>` +
-        `<input type="number" class="frlen" step="0.1" min="0.1" value="2.4"><span class="frhint">초</span></span>` +
+        `<input type="number" class="frlen" step="0.1" min="0.1" value="${BOXLEN}"><span class="frhint">초</span></span>` +
         (BOXES.length
           ? `<button type="button" class="frbtn" data-act="play">▶ 미리보기에서 듣기</button>` +
             `<button type="button" class="frbtn ok">⬆ 담기 (${BOXES.length}개 · ${total.toFixed(2)}초)</button>` +
@@ -346,6 +351,8 @@
             `<button type="button" class="frbtn" data-act="clr">비우기</button>`
           : '');
       const mk = barEl.querySelector('.mk'); if (mk) mk.onclick = makeBox;
+      const len = barEl.querySelector('.frlen');
+      if (len) len.oninput = () => { const v = parseFloat(len.value); if (v > 0) BOXLEN = v; };
       const ok = barEl.querySelector('.ok');
       if (ok) ok.onclick = () => { if (opt.onCommit) opt.onCommit(BOXES.map(b => ({ s: b.s, e: b.e }))); };
       const rep = barEl.querySelector('.rep');
@@ -685,12 +692,12 @@
         //   고쳤더니 내가 놓은 자리를 무시했다. 그건 더 나빴다).
         //   길이는 3초 고정이 아니라 **쓰는 구간 길이만큼**(모르면 3초) — 그게 이 조각을
         //   판단하는 데 필요한 시간이다.
-        const useFrom = (opt.from != null) ? +opt.from : null;
-        const useTo   = (opt.to   != null) ? +opt.to   : null;
-        const useLen  = (useFrom != null && useTo != null && useTo > useFrom)
-                      ? (useTo - useFrom) : 3;
+        // ★박스가 없으면 **그 자리부터 필름 끝까지** 돈다(2026-08-26 사장님 "이건 왜
+        //   재생이 파란구간만 되나" 캡쳐 535). 종전엔 '쓰는 구간 길이'(없으면 3초)만큼만
+        //   돌아서, 앞뒤를 이어 보려 해도 파란 구간 언저리에서 툭 끊겼다.
+        //   멈추는 건 스페이스 한 번이면 된다 — 길이를 미리 재단할 이유가 없다.
         const s2 = bx ? bx.s : (pv.currentTime || 0);
-        const b2 = bx ? bx.e : Math.min(DUR, s2 + useLen);
+        const b2 = bx ? bx.e : DUR;
         // 멈춘 자리가 이 구간 안이면 거기서 이어서(끝까지 봤으면 RESUME이 비어 처음부터).
         const a2 = (RESUME != null && RESUME > s2 + 0.05 && RESUME < b2 - 0.05) ? RESUME : s2;
         opt.onPlay(a2, b2);
