@@ -130,6 +130,10 @@ def preview_preset(preset="veryfast", crf=_PREVIEW_CRF):
         else:
             _preset_local.crf = prev_crf
 _FONT_DIR = Path(__file__).parent / "static" / "fonts"
+# 고른 폰트를 버리고 기본폰트로 되돌리는 문턱(못 그리는 글자 비율).
+# 낮추면 희귀 글자 하나에 글꼴이 통째로 바뀌고, 1.0으로 두면 한 글자만 그려져도 통과한다.
+# 0.5 = 절반 넘게 두부면 그 폰트는 이 문구에 못 쓰는 것으로 본다.
+_FONT_FALLBACK_RATIO = 0.5
 # 반중복탐지 회피(2026-07-14) — 말 안 해도 항상 적용. 화질 오염 없는(비가역 손상X)
 # 것만 자동화: ①전 비트 기본 크롭+줌(살짝 확대, 원본과 프레임 구도가 달라짐)
 # ②중요 비트(훅·반전)만 서서히 확대되는 켄번즈 줌(더 눈에 띄는 변형+시선 유도 효과 겸함).
@@ -1445,9 +1449,16 @@ def _font_ref(font_name, work, key, text=""):
 
     폰트 해석 규칙의 **단일 출구**다(0순위-B) — _resolve_seg_font·_fixed_drawtext가
     같은 판단을 따로 적고 있어서 한쪽만 고치면 어긋난다. 규칙:
-      ① 파일이 없으면        → 기본 자막폰트 font.ttf
-      ② 글자를 못 그리면     → 기본 자막폰트 font.ttf (두부 방지) + 경고 로그
-      ③ 그 외                → 그 폰트
+      ① 파일이 없으면              → 기본 자막폰트 font.ttf
+      ② 문구를 **거의 다** 못 그리면 → 기본 자막폰트 font.ttf (두부 방지) + 경고
+      ③ 그 외                      → 그 폰트 (몇 글자 빠져도 사장님이 고른 글꼴을 지킨다)
+
+    ★왜 '한 글자라도'가 아니라 '거의 다'인가 (2026-08-26 실측)
+      완성형 2350자 폰트 10종이 '뷁·똠·뎊'을 못 그린다. 한 글자만 없어도 폴백시키면
+      자막에 '똠양꿍'이 들어간 순간 배민 주아를 골라도 통째로 다른 글꼴이 된다 —
+      두부 한 글자보다 글꼴이 통째로 바뀌는 쪽이 더 큰 사고다.
+      막으려는 건 '옥 말랑'처럼 **한글이 아예 없는 폰트**다(그 경우 100% 누락).
+      실사용 글자 121자 점검에서 정상 폰트의 최대 누락은 3자(2.5%)였다.
     """
     fontref = "font.ttf"  # _burn_captions가 work에 복사해둔 기본폰트
     fname = os.path.basename(font_name or "")
@@ -1456,11 +1467,16 @@ def _font_ref(font_name, work, key, text=""):
     fpath = _FONT_DIR / fname
     if not fpath.exists():
         return fontref
+    body = "".join(dict.fromkeys((text or "").replace(" ", "")))
     miss = _missing_glyphs(fpath, text)
-    if miss:
-        print(f"[폰트] {fname} 에 없는 글자 {len(miss)}자({miss[:12]}) — "
-              f"기본폰트로 대체한다(두부 방지)", file=sys.stderr)
+    if miss and body and len(miss) / len(body) >= _FONT_FALLBACK_RATIO:
+        print(f"[폰트] {fname} 이 문구의 {len(miss)}/{len(body)}자를 못 그린다"
+              f"({miss[:12]}) — 기본폰트로 대체한다(두부 방지)", file=sys.stderr)
         return fontref
+    if miss:
+        # 몇 글자만 빠졌다 — 글꼴은 지키고 흔적만 남긴다(그 글자만 두부가 된다).
+        print(f"[폰트] {fname} 에 없는 글자 {len(miss)}자({miss[:12]}) — "
+              f"글꼴은 그대로 쓴다", file=sys.stderr)
     shutil.copy(fpath, work / f"font_{key}.ttf")
     return f"font_{key}.ttf"
 
