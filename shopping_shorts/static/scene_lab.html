@@ -1095,7 +1095,8 @@ function groupEmoji(k){
 // ── 묶는 기준(2026-08-17): 결별 / 소스별 ────────────────────────────────────
 // 사장님 지적: "장면 편집 아래가 결로만 묶여 있어 어느 영상에서 왔는지 모른다."
 // 카드 배지(srcNo)만으로는 **한 소스에 쏠렸는지**가 안 보인다 — 묶음 자체를 갈라야 보인다.
-let groupMode = 'role';
+let groupMode = 'src';   // ★기본은 소스별(F21, 사장님) — 영상 한 줄로 이어 봐야
+                         //   어느 영상의 어디를 담을지 눈에 들어온다(결별은 눌러서 전환)
 function setGroupMode(m){ if (groupMode === m) return; groupMode = m; render(); }
 // 소스 머리글 — source_brief.product가 있으면 제품명을 같이 찍는다.
 // 옛 추출본엔 source_brief가 없어 '소스 N'만 나온다(fail-open).
