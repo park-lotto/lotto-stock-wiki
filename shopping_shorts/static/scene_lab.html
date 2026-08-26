@@ -1449,6 +1449,15 @@ function unfoldPv(){ if (document.body.classList.contains('pvfold')) togglePvFol
 // ⏸ 미리보기를 **일시정지**한다 — playSegHere와 같은 모양(바깥이 주인, 없으면 이 화면).
 //   ★stopPlay(닫기)를 부르면 미리보기 자리가 통째로 사라진다(2026-08-26 사장님
 //     "멈추면 미리보기가 없어진다"). 멈춤은 그 그림에 서 있는 것이지 닫는 게 아니다.
+// ⏱ 큰 미리보기를 그 시각 프레임으로 — playSegHere와 같은 모양(바깥이 주인).
+function scrubPreviewHere(vidId, t){
+  try{
+    const up = _outerPlayer();
+    if (up && typeof up.previewFrameAt === 'function'){ up.previewFrameAt(vidId, t); return; }
+  }catch(e){ /* 조용히 이 화면에서 */ }
+  try{ previewFrameAt(vidId, t); }catch(e){}
+}
+
 function stopPlayHere(){
   try{
     const up = _outerPlayer();
@@ -1557,6 +1566,8 @@ function renderRollHosts(beatIdx){
     onPlay(a, b){ playRange(vid, a, b); },
     // 필름에서 멈추면 미리보기도 같이 선다(싱크 — 2026-08-26 사장님).
     onStop(){ stopPlayHere(); },
+    // 손잡이를 끄는 동안 큰 미리보기도 같은 프레임으로(재생 아님 — 정지 화면).
+    onScrub(t){ scrubPreviewHere(vid, t); },
     // ⬆ 주황 박스를 위 칸으로 끌어 담기 — **팔레트 드래그와 같은 계약**을 쓴다
     //   (palDrag → 칸의 beatDrop). 새 드롭 배선을 만들면 두 벌이 된다(0순위-B).
     onBoxDrag(r, ev){

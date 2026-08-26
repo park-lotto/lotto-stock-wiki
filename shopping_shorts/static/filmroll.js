@@ -131,6 +131,9 @@
 
     /* 스크러빙 — 끄는 동안 미리보기가 따라온다. 마지막 요청만 처리한다. */
     function scrubTo(t) {
+      // ★큰 미리보기도 같은 시각으로 세운다 — 필름 안 작은 화면만 움직이면 어디를
+      //   보고 있는지 알기 어렵다(2026-08-26 사장님). 부품은 부모를 모른다: 콜백만 부른다.
+      if (typeof opt.onScrub === 'function') { try { opt.onScrub(t); } catch (_) {} }
       scrubWant = Math.max(0, Math.min(DUR - 0.03, t));
       moveHead(scrubWant);
       if (scrubBusy) return;
