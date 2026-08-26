@@ -9295,7 +9295,10 @@ def _api_me(request: Request):
         # 🔑 자기 SerpApi 키를 낸 회원은 렌즈 한도가 다르다 — check_and_count와 **같은 규칙**.
         #   여기가 어긋나면 "20회라더니 10회에서 막힌다"가 된다(0순위-B).
         if _lens_key_count(cid):
-            limits["lens"] = _lens_limit_for(store, cid, limits["lens"])
+            # ★store가 아니라 st — 이 함수의 Store는 st다(모듈 전역 store는 없다).
+            #   2026-08-26까지 `store`를 넘겨 NameError→/api/me 500이 났고, 사이드바가
+            #   응답을 못 받아 계정 카드(오늘 사용량·로그아웃)가 통째로 안 떴다.
+            limits["lens"] = _lens_limit_for(st, cid, limits["lens"])
     # 가입 며칠째 — created_at은 UTC 문자열(datetime('now') 또는 ISO). 파싱 실패 시 None.
     member_days = None
     ca = (cust or {}).get("created_at") if cust else None
