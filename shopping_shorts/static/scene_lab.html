@@ -190,7 +190,7 @@ h1{font-size:16px;margin:0;font-weight:700}
 .tbeat .h .d.dok{color:var(--good)}
 .tbeat .h .d.dwarn{color:#ffd08f}
 .tbeat .h .d.dbad{color:#ffb9b9;font-weight:700}
-.tbcuts{display:flex;gap:5px}
+.tbcuts{display:flex;gap:5px;flex-wrap:wrap;min-width:0}
 /* ★썸네일 폭 104 → 78(2026-08-22 사장님 "영상을 줄여줘" 후속). 9:16이라 폭이 곧
    칸 띠의 높이다(104면 185px, 78이면 139px) — 줄인 46px이 그대로 미리보기 몫이 된다.
    미리보기가 스크롤 없이 들어가려면 어디선가 자리를 내줘야 했고, 조각을 알아보는 데는
@@ -723,11 +723,19 @@ body.tight .thumbs.oneline::-webkit-scrollbar{display:none;height:0}
 /* 칸 안에서 펼친 필름 — 칸 폭에 눌리지 않게 최소 폭을 준다(1차 교훈: 150px에 눌리면
    필름이 제구실을 못 한다). 칸은 flex:0 0 auto라 이만큼 넓어진다. */
 /* 컷 줄 오른쪽에 나란히 선다 — 컷 높이(썸네일)에 맞춰 눈높이를 맞춘다 */
-.frslot.inbeat{margin-top:0;min-width:560px;flex:1 1 auto;align-self:stretch}
+/* ★칸 안 필름 — 컷 줄에 자리가 모자라면 **아랫줄로 내려가고**, 절대 잘리지 않는다.
+   종전 min-width:560px 고정이라 좁은 칸에서 오른쪽 버튼(🔁·담기)이 화면 밖으로 잘렸다
+   (2026-08-26 사장님 캡쳐 526). 자리는 그대로 두되 넘치지만 않게 한다. */
+.frslot.inbeat{margin-top:0;flex:1 1 460px;min-width:0;max-width:100%;align-self:stretch}
 .frslot.inbeat .fr{height:100%;display:flex;flex-direction:column}
 .frslot.inbeat .frwin{height:auto;flex:1;min-height:96px}
 body.tight .frslot.inbeat .frwin{height:auto;flex:1;min-height:96px}
 .frslot.inbeat .frtop{margin-bottom:4px}
+/* 좁은 자리에서는 안내문이 **자기 줄**을 갖는다 — 종전엔 안내문이 버튼을 밀어
+   ⬆담기·🔁이 잘리거나 글자가 겹쳐 뭉갰다. 버튼은 늘 온전히 보여야 조작이 된다. */
+.frslot.inbeat .frbar{flex-wrap:wrap}
+.frslot.inbeat .frbar > .frhint{flex:1 1 100%;white-space:normal;overflow:visible}
+.frslot.inbeat .frbtn{flex:0 0 auto}
 body.tight .frslot.inbeat .frbelt{top:4px;height:calc(100% - 30px)}
 body.tight .frslot.inbeat .fc{height:100%}
 body.tight .frslot.inbeat .frboxes .bx{top:4px;height:calc(100% - 30px)}
@@ -1426,7 +1434,7 @@ function toggleTight(){
   localStorage.setItem(TIGHT_KEY, document.body.classList.contains('tight') ? '0' : '1');
   _tightApply();
 }
-const BUILD_TAG = 'F14';   // 필름롤러 13차 — 필름 자리 셋 분리
+const BUILD_TAG = 'F15';   // 필름롤러 14차 — 칸 안 필름 잘림·도구줄 겹침
 (function(){ const b=document.getElementById('buildtag'); if(b) b.textContent = BUILD_TAG; })();
 
 function toggleHints(){
