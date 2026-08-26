@@ -30,6 +30,11 @@ input{background:#0e0e12;border:1px solid #333;border-radius:7px;color:#eee;padd
 label{display:inline-block;min-width:120px;color:#a8a8b0;font-size:13px;margin:5px 0}
 .save{background:#4f9dfa;color:#111;padding:8px 16px;margin-top:10px}
 .msg{color:#7ee787;font-size:12px;margin-left:8px}
+/* 작업 라인(2026-08-26) — 지연·실패만 색을 준다. 다 칠하면 아무것도 안 보인다. */
+.wlnote{font-size:11px;color:#6a6a72;font-weight:500;margin-left:6px}
+.wlcap{font-size:12px;color:#8a8a92;margin:2px 0 10px}
+tr.wlslow td{background:rgba(248,113,113,.10);color:#fca5a5}
+tr.wlfail td{background:rgba(248,113,113,.06);color:#f0a0a0}
 .err{color:#ff9a8a}
 details.card>summary{cursor:pointer;font-size:15px;font-weight:600;color:#cfd2d6;list-style:none;user-select:none}
 details.card>summary::-webkit-details-marker{display:none}
@@ -125,6 +130,26 @@ tbody tr:hover{background:#1b1b22}
   <summary>⚙️ 설정 — 체험·크레딧·결제안내 (평소엔 접어둔다) <span id=setMsg class=msg></span></summary>
   <div id=settings class=setgrid></div>
   <button class=save onclick=saveSettings()>설정 저장</button>
+</details>
+
+<!-- 작업 라인(2026-08-26 사장님 "지금 작업중인 사람들 작업 라인을 라이브로 볼수있어?")
+     ★종전엔 큐 화면이 아예 없었다. /api/admin/capacity가 숫자(running·queued)는 줬지만
+       **누가 무엇을 하는지**를 몰라 사장님이 매번 물어봐야 했다.
+     ★실제 피해: 2026-08-25 VMake 크레딧 소진 때 고객이 9번 실패하고 신고할 때까지
+       아무도 몰랐다 — '오래 걸림' 경고만 있었어도 그때 바로 붉게 떴다. -->
+<h2 class=grouphead>🚦 작업 라인 <span class=wlnote>5초마다 자동 갱신</span></h2>
+
+<div class="card">
+  <h2>지금 <span id=wlnow>–</span> <span id=wlMsg class=msg></span></h2>
+  <div id=wlcap class=wlcap>불러오는 중…</div>
+  <table><thead><tr><th class=mini>상태</th><th>고객</th><th>작업</th><th class=mini>경과</th><th>작업번호</th><th>비고</th></tr></thead>
+  <tbody id=wlrows><tr><td colspan=6 class=empty>불러오는 중…</td></tr></tbody></table>
+</div>
+
+<details class=card>
+  <summary>🕘 최근 1시간 완료·실패 (<span id=wlrcnt>0</span>건)</summary>
+  <table><thead><tr><th class=mini>결과</th><th>고객</th><th>작업</th><th class=mini>걸린시간</th><th>끝난시각</th><th>오류</th></tr></thead>
+  <tbody id=wlrecent><tr><td colspan=6 class=empty>–</td></tr></tbody></table>
 </details>
 
 <h2 class=grouphead>🔔 오늘 처리할 일</h2>
@@ -673,6 +698,83 @@ load().catch(e=>{
   if(rw) rw.innerHTML='<tr><td colspan=12 class=empty style="color:#f87171">'+msg+'</td></tr>';
   console.error('[admin] load 실패', e);
 });
+
+
+/* ── 작업 라인(2026-08-26 사장님) ────────────────────────────────────
+   지금 도는 것 + 줄 서 있는 것 + 최근 완료·실패를 **한 번의 조회**로 그린다
+   (여러 번 부르면 목록끼리 시점이 어긋난다 — 서버가 한 덩어리로 준다).
+   ★사람이 읽는 화면이라 초를 '분'으로 바꿔 쓴다. 숫자만 있으면 아무도 안 본다. */
+// ★esc는 이 파일에서 **함수 안 지역변수**로 3번 선언돼 있다(232·305·352줄) — 밖에서 부르면
+//   ReferenceError다. 여기서 따로 둔다(같은 규칙, 한 줄이라 두 벌이어도 어긋날 여지가 없다).
+const wlEsc=s=>(s||'').toString().replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function wlAgo(sec){
+  if(sec==null) return '–';
+  if(sec<60) return sec+'초';
+  const m=Math.floor(sec/60);
+  return m<60 ? (m+'분') : (Math.floor(m/60)+'시간 '+(m%60)+'분');
+}
+function wlWho(r){
+  // ★모르면 지어내지 않는다 — 이름이 없으면 id를 그대로 보여준다(0순위: 추측 금지).
+  const nm=(r.owner_name||'').trim();
+  return nm ? wlEsc(nm) : (r.owner ? ('#'+wlEsc(r.owner)) : '–');
+}
+async function loadWorkLines(){
+  try{
+    const r=await fetch('/api/admin/work-lines');
+    if(r.status===403) return;              // 관리자 아님 — 조용히 넘어간다
+    const d=await r.json();
+    if(!d || !d.ok) throw new Error((d&&d.error)||'조회 실패');
+    const run=d.running||[], q=d.queued||[], rc=d.recent||[];
+    const now=document.getElementById('wlnow');
+    if(now) now.textContent='진행 '+run.length+'건 · 대기 '+q.length+'건';
+    // 서버 상태 한 줄(워커·부하) — capacity가 이미 세는 값을 그대로 쓴다.
+    const cap=d.capacity||null, capEl=document.getElementById('wlcap');
+    if(capEl){
+      capEl.textContent = cap
+        ? ('워커 '+(cap.workers!=null?cap.workers:'?')+'개 가동 · 부하 '
+           +(cap.load1!=null?cap.load1:'?')+' / '+(cap.cores!=null?cap.cores:'?')+'코어')
+        : '서버 상태를 못 읽었습니다';
+    }
+    const rows=[];
+    run.forEach(x=>{
+      // ★오래 걸리면 붉게 — 고객이 신고하기 전에 사장님이 먼저 본다.
+      const slow=!!x.slow;
+      rows.push('<tr'+(slow?' class=wlslow':'')+'>'
+        +'<td class=mini>'+(slow?'🔴 지연':'🟢 진행')+'</td>'
+        +'<td>'+wlWho(x)+'</td><td>'+wlEsc(x.label||x.task)+'</td>'
+        +'<td class=mini>'+wlAgo(x.elapsed_sec)+'</td>'
+        +'<td class=mini>'+wlEsc(x.job_id||'–')+'</td>'
+        +'<td>'+(slow?('평소 '+wlAgo(x.slow_limit_sec)+' 안에 끝납니다 — 확인 필요'):'')+'</td></tr>');
+    });
+    q.forEach((x,i)=>{
+      rows.push('<tr><td class=mini>⏳ 대기 '+(i+1)+'</td>'
+        +'<td>'+wlWho(x)+'</td><td>'+wlEsc(x.label||x.task)+'</td>'
+        +'<td class=mini>'+wlAgo(x.wait_sec)+' 대기</td>'
+        +'<td class=mini>'+wlEsc(x.job_id||'–')+'</td><td></td></tr>');
+    });
+    const tb=document.getElementById('wlrows');
+    if(tb) tb.innerHTML = rows.length ? rows.join('')
+      : '<tr><td colspan=6 class=empty>지금 도는 작업이 없습니다 — 한가합니다 👍</td></tr>';
+    // 최근 완료·실패
+    const rcEl=document.getElementById('wlrecent'), rcCnt=document.getElementById('wlrcnt');
+    if(rcCnt) rcCnt.textContent=rc.length;
+    if(rcEl) rcEl.innerHTML = rc.length ? rc.map(x=>
+        '<tr'+(x.state==='failed'?' class=wlfail':'')+'>'
+        +'<td class=mini>'+(x.state==='failed'?'❌ 실패':'✅ 완료')+'</td>'
+        +'<td>'+wlWho(x)+'</td><td>'+wlEsc(x.label||x.task)+'</td>'
+        +'<td class=mini>'+wlAgo(x.elapsed_sec)+'</td>'
+        +'<td class=mini>'+wlEsc((x.finished_at||'').slice(11,19)||'–')+'</td>'
+        +'<td>'+wlEsc((x.error||'').slice(0,120))+'</td></tr>').join('')
+      : '<tr><td colspan=6 class=empty>최근 1시간 내 완료된 작업이 없습니다</td></tr>';
+    const m=document.getElementById('wlMsg'); if(m) m.textContent='';
+  }catch(e){
+    // ★조용히 실패하지 않는다 — 빈 표는 '한가함'과 '고장'을 구별 못 한다.
+    const m=document.getElementById('wlMsg');
+    if(m) m.textContent='⚠️ 불러오지 못했습니다 — '+(e&&e.message||e);
+  }
+}
+loadWorkLines();
+setInterval(loadWorkLines, 5000);   // 라이브 — 관리자만 보는 화면이라 5초면 충분하다
 
 
 /* ── 오류 신고함(2026-08-24) ─────────────────────────────────────────

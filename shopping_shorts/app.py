@@ -10154,6 +10154,27 @@ def _ops_page(request: Request):
                         media_type="text/html; charset=utf-8")
 
 
+@app.get("/api/admin/work-lines")
+def _api_admin_work_lines(request: Request):
+    """관리자 작업라인 — **지금 누가 무엇을 하고 있나**(2026-08-26 사장님 지시).
+
+    capacity가 숫자만 주던 것을 사람이 읽는 줄로 바꾼다: 진행·대기·최근완료(실패 포함).
+    ★관리자 전용이다 — 고객 이름이 들어 있다.
+    """
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    store = Store(DB_PATH)
+    out = store.admin_work_lines()
+    # 워커·부하는 이미 capacity가 세는 곳이 있다(0순위-B: 여기서 다시 세지 않는다).
+    try:
+        from shopping_shorts import capacity_watch
+        out["capacity"] = capacity_watch.sample(DB_PATH)
+    except Exception:      # noqa: BLE001 — 관측이 서비스를 죽이면 안 된다
+        out["capacity"] = None
+    return {"ok": True, **out}
+
+
 @app.get("/api/admin/capacity")
 def _api_capacity(request: Request, days: int = 14):
     """관측판 데이터. 지금 상태(실시간 1회 표본) + 날짜별 최대치 + 판정 한 줄."""
