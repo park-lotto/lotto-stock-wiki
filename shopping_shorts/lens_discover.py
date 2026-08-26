@@ -456,6 +456,10 @@ def search_similar_videos(image_url, api_key=None, timeout=60, source_caption=No
     else:
         keys = SERPAPI_KEYS or ([SERPAPI_KEY] if SERPAPI_KEY else [])
     if not keys:
+        # ★키가 없으면 SerpApi를 **한 번도 안 때렸다** — 0으로 명시한다.
+        #   안 적으면 호출부의 기본값(1)이 걸려, 아무것도 안 했는데 한도가 깎인다.
+        if isinstance(stats, dict):
+            stats["serpapi_calls"] = 0
         return []
     keywords = _extract_keywords(source_caption)
 
