@@ -1426,7 +1426,7 @@ function toggleTight(){
   localStorage.setItem(TIGHT_KEY, document.body.classList.contains('tight') ? '0' : '1');
   _tightApply();
 }
-const BUILD_TAG = 'F13';   // 필름롤러 13차 — 필름 자리 셋 분리
+const BUILD_TAG = 'F14';   // 필름롤러 13차 — 필름 자리 셋 분리
 (function(){ const b=document.getElementById('buildtag'); if(b) b.textContent = BUILD_TAG; })();
 
 function toggleHints(){
@@ -1573,11 +1573,12 @@ function renderRollHosts(beatIdx, slot){
   //     그 칸에서 지금 쓰는 컷과 원본 필름이 한 눈에 들어온다.
   const inBeat = (kind === 'cut') ? anchor.closest('.tbeat') : null;
   const cutRow = inBeat && inBeat.querySelector('.tbcuts');
-  // 아래 소스 카드는 **그 카드가 속한 묶음 바로 아래**에 편다(가운데 자리를 뺏지 않는다).
-  const inGroup = (kind === 'seg') ? anchor.closest('.srcgroup') : null;
+  // ★아래 소스 카드 필름도 **가운데 자리**에 편다(2026-08-26 실측). 카드 옆(묶음 아래)에
+  //   두었더니 소스 영역이 274px밖에 안 돼 필름이 화면 밖에 숨었다 — 스크롤을 내려야
+  //   보이고 휠·확대가 손에 닿지 않았다("안 된다"의 진짜 이유).
+  //   슬롯은 이미 따로라(ROLL/ROLLS) 영상 필름과 **세로로 나란히** 동시에 뜬다.
   if (cutRow){ cutRow.appendChild(host); host.classList.add('inbeat'); }
   else if (inBeat){ inBeat.appendChild(host); host.classList.add('inbeat'); }
-  else if (inGroup){ inGroup.appendChild(host); host.classList.add('ingroup'); }
   else bay.appendChild(host);
   S.host = host;
   try{ bay.scrollIntoView({block:'nearest', behavior:'smooth'}); }catch(_){}
