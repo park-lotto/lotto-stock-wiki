@@ -909,6 +909,13 @@ function schedStep(ms){
   seqNextAt = Date.now() + ms;
   seqTimer = setTimeout(() => { seqI++; step(); }, ms);
 }
+// ⏸ **멈추기만** 한다(토글이 아니다). 필름 롤러의 스페이스처럼 바깥에서 "서라"만
+//   보내는 곳에 쓴다 — togglePause를 그대로 부르면 이미 멈춘 것을 다시 틀어버린다.
+//   ★stopPlay를 부르면 안 된다: 그건 '닫기'라 미리보기 자리가 통째로 사라진다
+//     (2026-08-26 사장님 "멈추면 미리보기가 없어진다"). 멈춤은 그 프레임에 서 있는 것.
+function pausePlayOnly(){
+  if (seq.length && !seqPaused) togglePause();
+}
 function togglePause(ev){
   if (ev) ev.stopPropagation();
   if (!seq.length) return;                       // 재생 중이 아니면 무시
