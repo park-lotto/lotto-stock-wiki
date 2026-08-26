@@ -280,3 +280,43 @@ def test_fixlen_accepts_extra_seg_id():
         "extra_segs": {"film_a": {"video_id": "v", "start": 0.0, "end": 4.0}},
     })
     assert plan["beats"][0]["fixed_lens"] == {"film_a": 1.75}
+
+
+# ── ④-끝 화면이 오려낸 구간이 **렌더 계획까지** 닿는가 ──────────────────────
+# 핸드오프(2026-08-26)가 "유일한 미검증"으로 남긴 축이다. apply_scene_lab까지는
+# 테스트가 있었지만, 거기서 만든 조각이 실제로 **잘리는 화면**이 되는지는 아무도 안 봤다.
+# 렌더·캡컷·ZIP이 전부 plan_beat_clips_for 하나를 쓰므로(video_assemble 주석) 여기까지
+# 닿으면 세 경로 모두 닿는다. seg_map을 다시 뒤지지 않고 scene_override의 좌표만 쓰는
+# 구조라 film_ id가 서버 seg_map에 없어도 안전하다 — 그 사실을 못으로 박아둔다.
+
+def test_extra_seg_reaches_render_clip_plan():
+    """film_ 조각이 실제 컷(video_id·start)으로 렌더 계획에 나온다."""
+    from shopping_shorts import video_assemble
+
+    plan = edit_plan.apply_scene_lab(_plan(), _base_map(), {
+        "beats": [{"beat_idx": 0, "list": ["film_v_7.5_9.25"]}],
+        "extra_segs": {"film_v_7.5_9.25": {
+            "video_id": "v", "start": 7.5, "end": 9.25, "label": "직접컷"}},
+    })
+    clips = video_assemble.plan_beat_clips_for(
+        plan["beats"][0], 1.5, {"v": 30.0})
+    assert clips, "화면엔 담겼는데 렌더 계획이 비었다 — 조용히 버려진 것"
+    for c in clips:
+        assert c["video_id"] == "v"
+        # 오려낸 구간 [7.5, 9.25] 밖으로 새지 않는다(유출 0 규약)
+        assert 7.5 - 1e-6 <= c["start"], c
+        assert c["start"] + c["src_dur"] <= 9.25 + 1e-6, c
+
+
+def test_extra_seg_render_plan_ignores_server_seg_map():
+    """서버 seg_map이 그 id를 몰라도 렌더 계획이 나온다(좌표만 쓰기 때문)."""
+    from shopping_shorts import video_assemble
+
+    plan = edit_plan.apply_scene_lab(_plan(), _base_map(), {
+        "beats": [{"beat_idx": 0, "list": ["v-1", "film_v_12.0_14.0"]}],
+        "extra_segs": {"film_v_12.0_14.0": {
+            "video_id": "v", "start": 12.0, "end": 14.0}},
+    })
+    clips = video_assemble.plan_beat_clips_for(plan["beats"][0], 4.0, {"v": 30.0})
+    starts = [round(c["start"], 2) for c in clips]
+    assert any(s >= 12.0 for s in starts), f"오려낸 구간이 안 쓰였다: {starts}"

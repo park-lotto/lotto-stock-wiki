@@ -1,0 +1,135 @@
+<!doctype html><html lang=ko><head><meta charset="utf-8">
+<meta name=viewport content="width=device-width,initial-scale=1">
+<title>제작소 단계바 — 최종안</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--mint:#3ee0bf;--gold:#facc6b;--bg:#070b14;--panel:#0d1420;--line:#1a2436;
+  --txt:#e7ecf7;--sub:#5a6580}
+body{background:var(--bg);color:var(--txt);font-family:"Malgun Gothic",system-ui,sans-serif;
+  line-height:1.6;padding:26px 20px 90px}
+.wrap{max-width:1180px;margin:0 auto}
+h1{font-size:24px;font-weight:900;margin-bottom:6px}
+.desc{color:var(--sub);font-size:14px;margin-bottom:26px}
+.case{background:var(--panel);border:1px solid var(--line);border-radius:16px;
+  padding:26px 26px 32px;margin-bottom:22px}
+.case > h2{font-size:17px;font-weight:900;color:var(--mint);margin-bottom:4px}
+.case > .why{color:var(--sub);font-size:13px;margin-bottom:26px}
+.tag{display:inline-block;font-size:11px;font-weight:900;padding:3px 9px;border-radius:999px;
+  background:rgba(62,224,191,.14);color:var(--mint);margin-left:8px;vertical-align:middle}
+
+/* ══ 도크 (K3 · 1단 절제) ══ */
+.dock{display:flex;align-items:flex-end;justify-content:space-between;gap:6px;padding:10px 4px 0}
+.dk{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;position:relative;
+  --c:#3b455e;--c2:#3b455e;transition:transform .18s ease}
+.dk:hover{transform:translateY(-3px)}
+.dk .ic{position:relative;width:46px;height:46px;border-radius:14px;display:grid;place-items:center;
+  transition:all .2s ease;
+  background:color-mix(in srgb,var(--c) 12%,#0a1019);color:var(--c);
+  border:1px solid color-mix(in srgb,var(--c) 38%,transparent)}
+.dk .ic svg{width:24px;height:24px;display:block;fill:none;stroke:currentColor;
+  stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+.dk .dl{font-size:11px;font-weight:800;text-align:center;line-height:1.25;
+  color:color-mix(in srgb,var(--c) 60%,#46506a)}
+.dk.wait{opacity:.5}
+.dk.cur .ic{width:66px;height:66px;border-radius:19px;border-color:transparent;color:#04201b;
+  background:linear-gradient(150deg,var(--c),var(--c2));
+  box-shadow:0 10px 30px color-mix(in srgb,var(--c) 42%,transparent)}
+.dk.cur .ic svg{width:34px;height:34px;stroke-width:1.9}
+.dk.cur .dl{color:#fff;font-size:13.5px;font-weight:900}
+.dk.done .ic::after{content:"✓";position:absolute;right:-4px;top:-4px;width:17px;height:17px;
+  border-radius:50%;background:var(--c);color:#08131a;font-size:10px;font-weight:900;
+  display:grid;place-items:center;border:2px solid var(--panel)}
+.dk.cur::before{content:"";position:absolute;top:-5px;width:76px;height:76px;border-radius:22px;
+  border:2px solid color-mix(in srgb,var(--c) 55%,transparent);animation:ring 1.9s ease-out infinite}
+@keyframes ring{0%{transform:scale(.88);opacity:1}100%{transform:scale(1.22);opacity:0}}
+@media(prefers-reduced-motion:reduce){.dk.cur::before{animation:none}}
+
+.flow{position:relative;height:4px;border-radius:999px;margin:0 10px 6px;background:#131c2b;overflow:hidden}
+.flow .full{position:absolute;inset:0;border-radius:999px;opacity:.22;
+  background:linear-gradient(90deg,#38bdf8,#8c6ef0,#f472b6,#fb7185,#3ee0bf,#fb923c,#facc6b,#a3e635,#34d399)}
+.flow .run{position:absolute;left:0;top:0;bottom:0;border-radius:999px;
+  background:linear-gradient(90deg,#38bdf8,#8c6ef0,#f472b6,#fb7185,#3ee0bf);
+  box-shadow:0 0 14px rgba(62,224,191,.5)}
+
+table{width:100%;border-collapse:collapse;margin-top:8px;font-size:13px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line)}
+th{color:var(--sub);font-size:11.5px;font-weight:900;letter-spacing:.04em}
+td.old{color:#6b7590;text-decoration:line-through}
+td.new{color:var(--mint);font-weight:900}
+td.same{color:#46506a}
+.note{margin-top:26px;padding:16px 18px;border:1px solid #3a2f18;background:rgba(250,204,107,.05);
+  border-radius:12px;font-size:13px;color:#c9a44a;font-weight:700}
+</style></head><body><div class=wrap>
+
+<h1>제작소 단계바 — 최종안</h1>
+<p class=desc><b>K3 색 흐름 · 1단(절제)</b> + 8·9단계 이름 변경 반영. 아래 세 상태는 같은 단계바가 진행에 따라 어떻게 변하는지 보여줍니다.</p>
+
+<div class=case>
+<h2>지금 5단계 진행 중<span class="tag">기본 상태</span></h2>
+<p class=why>띠는 지나온 만큼 진하고, 끝난 단계엔 체크 배지, 지금 단계는 크게 뜨며 링이 퍼집니다. 아이콘에 마우스를 올리면 살짝 떠오릅니다.</p>
+<div class=flow><i class=full></i><i class=run style="width:50%"></i></div>
+<div class=dock>
+  <div class="dk done" style="--c:#38bdf8"><div class=ic><svg viewBox="0 0 24 24"><rect x="2.5" y="5" width="13" height="11" rx="2"/><path d="M5.5 5v11M12.5 5v11M2.5 10.5h13"/><circle cx="17.5" cy="16" r="4"/><path d="M20.4 18.9 22.5 21"/></svg></div><div class=dl>영상추출</div></div>
+  <div class="dk done" style="--c:#8c6ef0"><div class=ic><svg viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h4"/></svg></div><div class=dl>대본생성</div></div>
+  <div class="dk done" style="--c:#f472b6"><div class=ic><svg viewBox="0 0 24 24"><path d="M3 7h4c3 0 3 10 6 10h8"/><path d="M3 17h4c3 0 3-10 6-10h8"/><path d="M18 4l3 3-3 3M18 14l3 3-3 3"/></svg></div><div class=dl>영상대본MIX</div></div>
+  <div class="dk done" style="--c:#fb7185"><div class=ic><svg viewBox="0 0 24 24"><path d="M8 20h12M14.5 4.5 20 10l-8 8H6.5L4 15.5zM10.5 8.5 16 14"/></svg></div><div class=dl>자막제거</div></div>
+  <div class="dk cur" style="--c:#7df5db;--c2:#14b8a6"><div class=ic><svg viewBox="0 0 24 24"><rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M9 21h6"/></svg></div><div class=dl>TTS음성</div></div>
+  <div class="dk wait" style="--c:#fb923c"><div class=ic><svg viewBox="0 0 24 24"><path d="M4 7h9M8.5 7v9M16.5 9 20 17h-7zM14 19.5h6"/></svg></div><div class=dl>자막꾸미기</div></div>
+  <div class="dk wait" style="--c:#facc6b"><div class=ic><svg viewBox="0 0 24 24"><rect x="2.5" y="4" width="19" height="16" rx="2.5"/><circle cx="8" cy="9.5" r="1.8"/><path d="M3 16.5 8.5 12l4 3.5L16 13l5 4.5"/></svg></div><div class=dl>썸네일</div></div>
+  <div class="dk wait" style="--c:#a3e635"><div class=ic><svg viewBox="0 0 24 24"><path d="M4 6.5h11M4 11h13M4 15.5h8"/><path d="M18.5 14.5v6M21.5 14.5v6M17 16.5h6M16.5 18.5h6" transform="translate(0 -12) scale(1 .62)"/><path d="M17.5 4.5 16.5 9M21 4.5 20 9M15.8 6h6M15.4 7.6h6"/></svg></div><div class=dl>제목·태그</div></div>
+  <div class="dk wait" style="--c:#34d399"><div class=ic><svg viewBox="0 0 24 24"><path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5zM3.5 7.5 12 12l8.5-4.5M12 12v9"/></svg></div><div class=dl>완성본</div></div>
+</div>
+</div>
+
+<div class=case>
+<h2>막 시작했을 때 (1단계)</h2>
+<div class=flow><i class=full></i><i class=run style="width:6%"></i></div>
+<div class=dock>
+  <div class="dk cur" style="--c:#7dd3fc;--c2:#0ea5e9"><div class=ic><svg viewBox="0 0 24 24"><rect x="2.5" y="5" width="13" height="11" rx="2"/><path d="M5.5 5v11M12.5 5v11M2.5 10.5h13"/><circle cx="17.5" cy="16" r="4"/><path d="M20.4 18.9 22.5 21"/></svg></div><div class=dl>영상추출</div></div>
+  <div class="dk wait" style="--c:#8c6ef0"><div class=ic><svg viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h4"/></svg></div><div class=dl>대본생성</div></div>
+  <div class="dk wait" style="--c:#f472b6"><div class=ic><svg viewBox="0 0 24 24"><path d="M3 7h4c3 0 3 10 6 10h8"/><path d="M3 17h4c3 0 3-10 6-10h8"/><path d="M18 4l3 3-3 3M18 14l3 3-3 3"/></svg></div><div class=dl>영상대본MIX</div></div>
+  <div class="dk wait" style="--c:#fb7185"><div class=ic><svg viewBox="0 0 24 24"><path d="M8 20h12M14.5 4.5 20 10l-8 8H6.5L4 15.5zM10.5 8.5 16 14"/></svg></div><div class=dl>자막제거</div></div>
+  <div class="dk wait" style="--c:#3ee0bf"><div class=ic><svg viewBox="0 0 24 24"><rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M9 21h6"/></svg></div><div class=dl>TTS음성</div></div>
+  <div class="dk wait" style="--c:#fb923c"><div class=ic><svg viewBox="0 0 24 24"><path d="M4 7h9M8.5 7v9M16.5 9 20 17h-7zM14 19.5h6"/></svg></div><div class=dl>자막꾸미기</div></div>
+  <div class="dk wait" style="--c:#facc6b"><div class=ic><svg viewBox="0 0 24 24"><rect x="2.5" y="4" width="19" height="16" rx="2.5"/><circle cx="8" cy="9.5" r="1.8"/><path d="M3 16.5 8.5 12l4 3.5L16 13l5 4.5"/></svg></div><div class=dl>썸네일</div></div>
+  <div class="dk wait" style="--c:#a3e635"><div class=ic><svg viewBox="0 0 24 24"><path d="M4 6.5h11M4 11h13M4 15.5h8"/><path d="M17.5 4.5 16.5 9M21 4.5 20 9M15.8 6h6M15.4 7.6h6"/></svg></div><div class=dl>제목·태그</div></div>
+  <div class="dk wait" style="--c:#34d399"><div class=ic><svg viewBox="0 0 24 24"><path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5zM3.5 7.5 12 12l8.5-4.5M12 12v9"/></svg></div><div class=dl>완성본</div></div>
+</div>
+</div>
+
+<div class=case>
+<h2>마지막 단계 (9단계 · 완성본)</h2>
+<div class=flow><i class=full></i><i class=run style="width:100%"></i></div>
+<div class=dock>
+  <div class="dk done" style="--c:#38bdf8"><div class=ic><svg viewBox="0 0 24 24"><rect x="2.5" y="5" width="13" height="11" rx="2"/><path d="M5.5 5v11M12.5 5v11M2.5 10.5h13"/><circle cx="17.5" cy="16" r="4"/><path d="M20.4 18.9 22.5 21"/></svg></div><div class=dl>영상추출</div></div>
+  <div class="dk done" style="--c:#8c6ef0"><div class=ic><svg viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h4"/></svg></div><div class=dl>대본생성</div></div>
+  <div class="dk done" style="--c:#f472b6"><div class=ic><svg viewBox="0 0 24 24"><path d="M3 7h4c3 0 3 10 6 10h8"/><path d="M3 17h4c3 0 3-10 6-10h8"/><path d="M18 4l3 3-3 3M18 14l3 3-3 3"/></svg></div><div class=dl>영상대본MIX</div></div>
+  <div class="dk done" style="--c:#fb7185"><div class=ic><svg viewBox="0 0 24 24"><path d="M8 20h12M14.5 4.5 20 10l-8 8H6.5L4 15.5zM10.5 8.5 16 14"/></svg></div><div class=dl>자막제거</div></div>
+  <div class="dk done" style="--c:#3ee0bf"><div class=ic><svg viewBox="0 0 24 24"><rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M9 21h6"/></svg></div><div class=dl>TTS음성</div></div>
+  <div class="dk done" style="--c:#fb923c"><div class=ic><svg viewBox="0 0 24 24"><path d="M4 7h9M8.5 7v9M16.5 9 20 17h-7zM14 19.5h6"/></svg></div><div class=dl>자막꾸미기</div></div>
+  <div class="dk done" style="--c:#facc6b"><div class=ic><svg viewBox="0 0 24 24"><rect x="2.5" y="4" width="19" height="16" rx="2.5"/><circle cx="8" cy="9.5" r="1.8"/><path d="M3 16.5 8.5 12l4 3.5L16 13l5 4.5"/></svg></div><div class=dl>썸네일</div></div>
+  <div class="dk done" style="--c:#a3e635"><div class=ic><svg viewBox="0 0 24 24"><path d="M4 6.5h11M4 11h13M4 15.5h8"/><path d="M17.5 4.5 16.5 9M21 4.5 20 9M15.8 6h6M15.4 7.6h6"/></svg></div><div class=dl>제목·태그</div></div>
+  <div class="dk cur" style="--c:#6ee7b7;--c2:#10b981"><div class=ic><svg viewBox="0 0 24 24"><path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5zM3.5 7.5 12 12l8.5-4.5M12 12v9"/></svg></div><div class=dl>완성본</div></div>
+</div>
+</div>
+
+<div class=case>
+<h2>바뀌는 이름</h2>
+<p class=why>도크 라벨은 11px이라 긴 이름은 두 줄로 접힙니다. 8·9는 사장님이 정하신 이름, 나머지는 <b>도크에서만</b> 짧게 줄인 것(패널 제목은 원래대로)입니다.</p>
+<table>
+<tr><th style="width:52px">단계</th><th>지금</th><th>도크 라벨</th><th>패널 제목(안 바뀜)</th></tr>
+<tr><td>1</td><td class=same>영상추출/분석</td><td class=new>영상추출</td><td class=same>1 · 영상추출/분석</td></tr>
+<tr><td>2</td><td class=same>대본생성</td><td class=same>대본생성</td><td class=same>2 · 대본생성</td></tr>
+<tr><td>3</td><td class=same>영상대본MIX</td><td class=same>영상대본MIX</td><td class=same>3 · 영상대본MIX</td></tr>
+<tr><td>4</td><td class=same>고품질 자막제거</td><td class=new>자막제거</td><td class=same>4 · 고품질 자막제거</td></tr>
+<tr><td>5</td><td class=same>TTS음성</td><td class=same>TTS음성</td><td class=same>5 · TTS음성</td></tr>
+<tr><td>6</td><td class=same>자막꾸미기</td><td class=same>자막꾸미기</td><td class=same>6 · 자막꾸미기</td></tr>
+<tr><td>7</td><td class=same>썸네일</td><td class=same>썸네일</td><td class=same>7 · 썸네일</td></tr>
+<tr><td>8</td><td class=old>SEO해시테크</td><td class=new>제목·태그</td><td class=new>8 · 제목·태그</td></tr>
+<tr><td>9</td><td class=old>최종렌더</td><td class=new>완성본</td><td class=new>9 · 완성본</td></tr>
+</table>
+</div>
+
+<div class=note>승인해 주시면 이렇게 손댑니다 — ①<b>theme.css</b>에 도크 스타일 추가(오브바는 남겨둠, 되돌릴 수 있게) ②<b>produce.html</b>의 <code>STEP_LABELS</code> 8·9 이름 교체 + 도크용 짧은 라벨 배열 추가 ③패널 제목은 <code>STEP_LABELS</code>에서 자동으로 따라옴 ④<b>final-mock-v6.html</b> 목업도 같이 갱신. 트랙을 새로 파서 작업하고, 게이트 통과 후 병합합니다.</div>
+
+</div></body></html>
