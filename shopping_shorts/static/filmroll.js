@@ -186,7 +186,15 @@
         `style="left:${secToX(b.s)}px;width:${Math.max(8, (b.e - b.s) * pps())}px">` +
         `<span class="t">${(b.e - b.s).toFixed(2)}초</span>` +
         `<span class="e l" data-edge="l"></span><span class="e r" data-edge="r"></span>` +
-        `<span class="x" data-del="${i}">×</span></div>`).join('');
+        `<span class="x" data-del="${i}">×</span>` +
+        // ★2026-08-26 사장님 "주황색 박스 만들면 위쪽 훅 있는 윗칸으로 더블클릭이나
+        //   드래그로 옮기기". 박스 본체는 pointerdown에서 preventDefault를 하므로
+        //   HTML5 dragstart가 안 뜬다(이동·양끝조절이 그 위에 서 있다) — 그래서
+        //   **끌기 전용 손잡이**를 따로 둔다. 부품은 어디로 가는지 모른다: 부모가
+        //   준 onBoxDrag에 넘길 뿐이다.
+        (typeof opt.onBoxDrag === 'function'
+          ? `<span class="g" draggable="true" data-g="${i}" title="위 칸으로 끌어다 놓으면 담깁니다">⬆</span>` : '') +
+        `</div>`).join('');
       wireBoxes();
     }
 
@@ -233,6 +241,29 @@
         el.addEventListener('pointercancel', end);
         el.addEventListener('click', ev => ev.stopPropagation());
         el.addEventListener('contextmenu', ev => { ev.preventDefault(); ev.stopPropagation(); });
+        // 박스를 두 번 클릭 = 지금 담는 칸에 바로 담기(끌 자리가 없어도 되게).
+        el.addEventListener('dblclick', ev => {
+          ev.stopPropagation(); ev.preventDefault();
+          const b = BOXES[+el.dataset.i];
+          if (b && typeof opt.onBoxCommit === 'function') opt.onBoxCommit({ s: b.s, e: b.e });
+        });
+        // ⬆ 손잡이 = 위 칸으로 끌어 담기. preventDefault를 하면 드래그가 시작을
+        // 안 하므로 여기서는 **막지 않는다**(박스 이동 로직만 끊는다).
+        const g = el.querySelector('.g');
+        if (g) {
+          g.addEventListener('pointerdown', ev => ev.stopPropagation());
+          g.addEventListener('click', ev => ev.stopPropagation());
+          g.addEventListener('dragstart', ev => {
+            ev.stopPropagation();
+            const b = BOXES[+el.dataset.i]; if (!b) return;
+            if (ev.dataTransfer) ev.dataTransfer.effectAllowed = 'copy';
+            opt.onBoxDrag({ s: b.s, e: b.e }, ev);
+          });
+          g.addEventListener('dragend', ev => {
+            ev.stopPropagation();
+            if (typeof opt.onBoxDragEnd === 'function') opt.onBoxDragEnd();
+          });
+        }
       });
     }
 
