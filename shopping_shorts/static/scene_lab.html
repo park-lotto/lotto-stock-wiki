@@ -1218,6 +1218,12 @@ function renderRollHosts(beatIdx){
     caps: _rollCaps(vid),
     onClose(){ closeRoll(); renderRollHosts(); },
     onCommit(ranges){ commitRoll(kind, sid, vid, ranges, beatIdx); },
+    // 🔁 조각 범위 넓히기(2026-08-26 2차 남은 것). TRIMS[sid]=[a,b]는 **가운데를 버리는**
+    //   방식이라 조각 밖으로는 못 넓힌다 — trimPieces·_lab_trim_pieces를 둘 다 고치면
+    //   같은 규칙이 두 벌이 된다(0순위-B). 그래서 넓히기는 **이미 있는 길**로 한다:
+    //   필름에서 원하는 구간을 그려 그 조각을 통째로 갈아 끼운다(film_ 새 조각).
+    //   영상 전체를 편 것(kind 'src')은 바꿀 대상이 없으니 안 준다.
+    onReplace: (kind === 'src') ? null : (r => replaceRoll(sid, vid, r)),
     // ★재생은 미리보기 창에서(2026-08-26 사장님). 임의 구간이라 seg_id가 없으니
     //   임시 조각을 만들어 **기존 경로**(playSegHere)로 넘긴다 — 새 배선을 안 만든다.
     onPlay(a, b){ playRange(vid, a, b); },
@@ -1280,15 +1286,7 @@ function commitRoll(kind, sid, vid, ranges, beatIdx){
   for (const r of ranges){
     const a = Math.max(0, +r.s), b = Math.min(+r.e, (DATA.src_duration||{})[vid] || +r.e);
     if (!(b - a >= 0.1)) continue;
-    const id = _extraId(vid, a, b);
-    if (!DATA.segments[id]){
-      const seg = {video_id: vid, start: a, end: b,
-                   scene_desc: '', text: _textBetween(vid, a, b),
-                   label: `필름 ${a.toFixed(1)}~${b.toFixed(1)}초`,
-                   shot_role: '기타', is_key: false, action: '', change: '', benefits: []};
-      DATA.segments[id] = seg;
-      EXTRA[id] = {video_id: vid, start: a, end: b, label: seg.label, text: seg.text};
-    }
+    const id = _makeFilmSeg(vid, a, b);   // 조각 만드는 규칙은 한 곳(0순위-B)
     const l = lists[target];
     if (!l) continue;
     if (l.includes(id)){ dup++; continue; }
@@ -1299,6 +1297,53 @@ function commitRoll(kind, sid, vid, ranges, beatIdx){
   nsay(added
     ? `${target+1}번 칸에 ${added}개 담았어요${dup?` (${dup}개는 이미 있어요)`:''}`
     : (dup ? '이미 담긴 구간이에요' : '담긴 게 없어요'));
+}
+
+// 🔁 열려 있는 조각을 필름에서 그린 구간으로 **갈아 끼운다**(범위를 넓히거나 옮긴다).
+//   담기(commitRoll)와 다른 점은 딱 하나 — 새 조각을 **더하지 않고 그 자리에 놓는다**.
+//   새 조각 만드는 규칙(id·자막 잇기·EXTRA 기록)은 commitRoll과 **같은 함수**를 쓴다.
+function _makeFilmSeg(vid, a, b){
+  const id = _extraId(vid, a, b);
+  if (!DATA.segments[id]){
+    const seg = {video_id: vid, start: a, end: b,
+                 scene_desc: '', text: _textBetween(vid, a, b),
+                 label: `필름 ${a.toFixed(1)}~${b.toFixed(1)}초`,
+                 shot_role: '기타', is_key: false, action: '', change: '', benefits: []};
+    DATA.segments[id] = seg;
+    EXTRA[id] = {video_id: vid, start: a, end: b, label: seg.label, text: seg.text};
+  }
+  return id;
+}
+function replaceRoll(sid, vid, r){
+  const a = Math.max(0, +r.s);
+  const b = Math.min(+r.e, (DATA.src_duration||{})[vid] || +r.e);
+  if (!(b - a >= 0.1)){ nsay('구간이 너무 짧아요'); return; }
+  // 그 조각이 놓인 칸을 전부 찾는다(같은 조각이 여러 칸에 있을 수 있다).
+  const where = [];
+  lists.forEach((l, i) => { if (l && l.includes(sid)) where.push(i); });
+  if (!where.length){
+    nsay('이 조각은 아직 어느 칸에도 없어요 — ⬆ 담기를 써주세요');
+    return;
+  }
+  const id = _makeFilmSeg(vid, a, b);
+  let n = 0;
+  for (const i of where){
+    const l = lists[i];
+    const at = l.indexOf(sid);
+    if (at < 0) continue;
+    if (l.includes(id)){ l.splice(at, 1); }      // 이미 있으면 자리만 비운다(중복 금지)
+    else { l[at] = id; }
+    n++;
+  }
+  chosen.add(id);
+  // 어디에도 안 남았으면 고른 표식·트림도 걷는다(찌꺼기가 화면에 남지 않게).
+  if (!lists.some(l => l && l.includes(sid))){
+    chosen.delete(sid);
+    delete TRIMS[sid];
+  }
+  closeRoll();
+  render();
+  nsay(`${n}개 칸의 조각을 ${a.toFixed(1)}~${b.toFixed(1)}초로 바꿨어요`);
 }
 
 // ── ✂ 가운데 잘라내기(2026-08-15 사장님 "1.2초에서 체크하고 1.8초에서 체크해서 가운데 없애기") ──
