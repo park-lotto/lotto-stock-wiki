@@ -54,7 +54,7 @@
     const vid = opt.videoId || '';
     const caps = opt.caps || [];
     let DUR = +opt.dur || 0;
-    let CW = 40, STEP = 1, N = 0, off = 0;
+    let CW = 150, STEP = 0.25, N = 0, off = 0;   // 기본 확대 = 한 칸 0.25초(F21, 사장님)
     let _homed = false;      // 지금 쓰는 구간으로 한 번 옮겼나(처음 펼칠 때만)
     let MA = null;                     // 찍어둔 시작점
     // ★열 때 **이미 쓰는 구간**을 주황 박스로 올린다(2026-08-26 사장님 "상단에 카드형으로
@@ -84,7 +84,7 @@
           //   영상1전체 옆으로 이동하게해서 넓게 / 구간박스 이것도 위쪽으로 이동
           //   아래쪽까지 필름높이는 높여"). 별도 줄로 두면 그 한 줄만큼 필름이 낮아진다.
           '<div class="frbar"></div>' +
-          '<span class="frzoom">확대 <input type="range" class="frz" min="26" max="240" value="40"></span>' +
+          '<span class="frzoom">확대 <input type="range" class="frz" min="26" max="240" value="150"></span>' +
           '<span class="frstep"></span>' +
           '<button type="button" class="frclose" title="접기">◀ 접기</button>' +
         '</div>' +
