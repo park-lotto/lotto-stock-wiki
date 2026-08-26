@@ -734,6 +734,16 @@ body.tight .frslot.inbeat .frboxes .bx{top:4px;height:calc(100% - 30px)}
 body.tight .frslot.inbeat .frcaps{top:auto;bottom:4px}
 body.tight .frslot.inbeat .frhead{top:4px;bottom:22px}
 
+/* 소스 카드 필름 — 그 묶음 아래에서 편다(가운데 자리와 별개) */
+.frslot.ingroup{margin:6px 0 4px;min-width:0}
+.frslot.ingroup .frwin{height:150px}
+body.tight .frslot.ingroup .frwin{height:170px}
+body.tight .frslot.ingroup .frbelt{top:4px;height:calc(100% - 30px)}
+body.tight .frslot.ingroup .fc{height:100%}
+body.tight .frslot.ingroup .frboxes .bx{top:4px;height:calc(100% - 30px)}
+body.tight .frslot.ingroup .frcaps{top:auto;bottom:4px}
+body.tight .frslot.ingroup .frhead{top:4px;bottom:22px}
+
 </style></head><body>
 
 <header style="display:none">
@@ -1361,7 +1371,10 @@ function initLists(){
 //     ROLLB = 위 칸 안(그 칸의 컷 'cut')
 const ROLL  = {key:'', inst:null, host:null};
 const ROLLB = {key:'', inst:null, host:null};
-const rollSlot = kind => (kind === 'cut' ? ROLLB : ROLL);
+const ROLLS = {key:'', inst:null, host:null};   // 아래 소스 카드('seg') — 그 카드 옆에서 편다
+// ★셋이 서로 다른 자리를 쓰므로 **동시에** 열어 둘 수 있다(2026-08-26 사장님 "하나만 뜬다").
+//   종전엔 seg와 src가 같은 가운데 자리를 써서 한쪽이 다른 쪽을 닫았다.
+const rollSlot = kind => (kind === 'cut' ? ROLLB : (kind === 'seg' ? ROLLS : ROLL));
 const rollSlotOfKey = key => rollSlot((key || '').split(':')[0]);
 
 function _rollSeg(sid){
@@ -1553,8 +1566,11 @@ function renderRollHosts(beatIdx, slot){
   //     그 칸에서 지금 쓰는 컷과 원본 필름이 한 눈에 들어온다.
   const inBeat = (kind === 'cut') ? anchor.closest('.tbeat') : null;
   const cutRow = inBeat && inBeat.querySelector('.tbcuts');
+  // 아래 소스 카드는 **그 카드가 속한 묶음 바로 아래**에 편다(가운데 자리를 뺏지 않는다).
+  const inGroup = (kind === 'seg') ? anchor.closest('.srcgroup') : null;
   if (cutRow){ cutRow.appendChild(host); host.classList.add('inbeat'); }
   else if (inBeat){ inBeat.appendChild(host); host.classList.add('inbeat'); }
+  else if (inGroup){ inGroup.appendChild(host); host.classList.add('ingroup'); }
   else bay.appendChild(host);
   S.host = host;
   try{ bay.scrollIntoView({block:'nearest', behavior:'smooth'}); }catch(_){}
@@ -2197,6 +2213,9 @@ function renderBand(){
   row.innerHTML = html;
   // ★칸을 다시 그리면 그 안에 펼쳐둔 필름도 함께 지워진다 — 곧바로 다시 붙인다.
   //   (담기·빼기 뒤에도 필름이 그 자리에 남아 이어서 편집할 수 있어야 한다)
+  if (ROLLS.key && ROLLS.key.startsWith('seg:')){
+    setTimeout(() => { try{ renderRollHosts(undefined, ROLLS); }catch(e){} }, 0);
+  }
   if (ROLLB.key && ROLLB.key.startsWith('cut:')){
     const _bi = +(ROLLB.key.split(':')[2]);
     setTimeout(() => { try{ renderRollHosts(isFinite(_bi) ? _bi : undefined, ROLLB); }catch(e){} }, 0);
