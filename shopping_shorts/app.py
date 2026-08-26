@@ -4682,10 +4682,25 @@ def clean_failure_kind(clean_error):
       다시 시도해도 영원히 안 된다. 고객(김용덕)은 그걸 모르고 재시도만 반복했다.
       사유는 이미 clean_error에 원문이 들어 있었는데 화면엔 console.warn으로만 찍혔다.
 
-    반환: 'no_credit' | 'interrupted' | 'unsupported' | 'unknown'
+    ★2026-08-26 재발: 같은 사고가 **문구만 바꿔** 또 났다(cid 57, 6회 재시도).
+      이번 실패는 VMake 크레딧이 아니라 **우리 포인트 부족**이었는데
+      (mix_pipeline._charge_clean → NotEnoughPoints, 원문 "포인트가 부족합니다 …"),
+      아래 어디에도 안 걸려 'unknown'으로 떨어져 또 "잠시 후 다시 시도"가 나갔다.
+      → 'no_points'를 가른다. 고객이 할 행동이 **완전히 다르다**:
+        no_credit  = 자기 키의 잔액 문제 → 그쪽에 충전
+        no_points  = 우리 포인트 문제   → 자기 키를 등록하면 차감 자체가 없어진다
+      ⚠️새 실패 사유를 만들 땐 여기도 같이 늘려라. 안 늘리면 'unknown'으로 새어
+        "다시 시도해 주세요"라는 **거짓 안내**가 나간다 — 그게 이 함수가 생긴 이유다.
+
+    반환: 'no_points' | 'no_credit' | 'interrupted' | 'unsupported' | 'unknown'
     """
     e = (clean_error or "")
     low = e.lower()
+    # 우리 포인트 부족(mix_pipeline._charge_clean). 재시도해도 영원히 안 된다.
+    # ★no_credit보다 **먼저** 본다 — 문구가 겹쳐도 우리 쪽 사유가 우선이라야
+    #   "남의 키에 충전하세요"라는 엉뚱한 안내가 안 나간다.
+    if "포인트가 부족" in e:
+        return "no_points"
     # VMake가 직접 주는 코드다(실측 원문:
     #   "[60002] You don't have enough credits for this API. Purchase a subscription...")
     if "60002" in e or "enough credits" in low:

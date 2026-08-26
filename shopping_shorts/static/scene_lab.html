@@ -1149,13 +1149,15 @@ function playRange(vid, a, b){
   playSegHere(id);
 }
 
-// ⏹ 미리보기를 멈춘다 — playSegHere와 **같은 모양**(바깥이 주인, 없으면 이 화면).
+// ⏸ 미리보기를 **일시정지**한다 — playSegHere와 같은 모양(바깥이 주인, 없으면 이 화면).
+//   ★stopPlay(닫기)를 부르면 미리보기 자리가 통째로 사라진다(2026-08-26 사장님
+//     "멈추면 미리보기가 없어진다"). 멈춤은 그 그림에 서 있는 것이지 닫는 게 아니다.
 function stopPlayHere(){
   try{
     const up = _outerPlayer();
-    if (up && typeof up.stopPlay === 'function'){ up.stopPlay(); playKey = null; renderBand(); return; }
-  }catch(e){ console.warn('바깥 정지 실패 — 이 화면에서 멈춥니다', e); }
-  try{ stopPlay(); }catch(e){}
+    if (up && typeof up.pausePlayOnly === 'function'){ up.pausePlayOnly(); return; }
+  }catch(e){ console.warn('바깥 일시정지 실패 — 이 화면에서 멈춥니다', e); }
+  try{ pausePlayOnly(); }catch(e){}
 }
 
 function closeRoll(){
