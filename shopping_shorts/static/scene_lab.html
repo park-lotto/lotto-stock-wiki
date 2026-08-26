@@ -776,6 +776,10 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:22px}
     <button type="button" id="ttsBtn" class="act" style="padding:3px 10px;font-size:11.5px"
             onclick="makeTts()" title="음성이 없는 칸의 음성을 만듭니다(1~2분)">🔊 음성 만들기</button>
     <button type="button" class="act" id="tightbtn" title="글자를 접고 화면(영상)을 크게 봅니다" onclick="toggleTight()">▦ 촘촘히</button>
+    <!-- ★지금 화면이 새 코드인지 눈으로 바로 알 수 있게(2026-08-26). 이게 없어서
+         '고쳤는데 안 된다'가 캐시 때문인지 진짜 버그인지 매번 헤맸다. -->
+    <span id="buildtag" title="이 화면의 코드 버전 — 새로고침해도 안 바뀌면 캐시입니다"
+          style="margin-left:8px;font-size:10.5px;color:var(--dim);opacity:.75">v?</span>
     <button type="button" id="hintbtn" title="조작 안내 보이기/숨기기" onclick="toggleHints()">?</button>
     <span class="tbhint" id="tbhint">조각을 누르면 그 조각만 · 아래 대본을 누르면 그 칸 전체가 재생됩니다 · 주황 = 재료가 모자라 늘어난 컷</span>
     <!-- ✋ 컷 길이 직접 정하기(2026-08-24) — 초 배지를 누르면 열린다.
@@ -1422,6 +1426,9 @@ function toggleTight(){
   localStorage.setItem(TIGHT_KEY, document.body.classList.contains('tight') ? '0' : '1');
   _tightApply();
 }
+const BUILD_TAG = 'F13';   // 필름롤러 13차 — 필름 자리 셋 분리
+(function(){ const b=document.getElementById('buildtag'); if(b) b.textContent = BUILD_TAG; })();
+
 function toggleHints(){
   document.body.classList.toggle('hintson');
   localStorage.setItem('sceneLab:hints', document.body.classList.contains('hintson') ? '1' : '0');
