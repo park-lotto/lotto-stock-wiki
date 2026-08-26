@@ -1895,6 +1895,65 @@ def _clean_joined(items, key, work, tag=""):
     return paths, regions
 
 
+# ── 완성본 1편만 청소(2026-08-26 사장님 "완성본 만들기 된 영상만 딱 자막제거") ──────
+# 실측: VMake는 보낸 영상 1초당 약 9초를 쓴다(69초→632초 / 100초→1,692초).
+#   소스 전체(100~150초)를 보내던 것을 완성본(30초)으로 바꾸면 **크레딧은 그대로 1콜**인데
+#   시간이 4분의 1이 된다. 다른 서비스가 빠른 이유도 최종 결과물 하나만 처리하기 때문이다.
+#
+# ★재과금을 막는 열쇠는 '편성 서명'이다 — 편성이 그대로면 완성본도 같으니 청소본을 재사용한다.
+#   장면을 진짜로 바꿨을 때만 다시 청소(=5P)한다.
+_FINAL_CLEAN = os.environ.get("SHORTS_CLEAN_FINAL", "0") == "1"   # ★기본 꺼짐 — 실측 후 켠다
+
+
+def _plan_signature(plan):
+    """편집안 → 완성본 **그림**을 결정하는 것만 뽑은 서명(sha1 앞 16자).
+
+    들어가는 것: 비트 순서 · 각 비트의 재료(video_id·start·end) · 컷 길이(target_seconds).
+    빠지는 것:  대사·음성·자막 — 화면 그림을 안 바꾸므로 다시 청소할 이유가 없다.
+
+    ★재료 판정은 video_assemble._beat_material과 같은 규칙이다(scene_override 우선).
+      여기가 어긋나면 장면을 바꿨는데 옛 청소본이 그대로 나간다.
+    """
+    import hashlib
+    beats = (plan or {}).get("beats") or []
+    parts = []
+    for b in beats:
+        over = b.get("scene_override")
+        mats = [dict(x) for x in over if x] if over else                [x for x in ([b.get("primary")] + list(b.get("alternates") or [])) if x]
+        for m in mats:
+            parts.append("%s:%s:%s" % (m.get("video_id"), m.get("start"), m.get("end")))
+        parts.append("t=%s" % b.get("target_seconds"))
+        parts.append("|")
+    return hashlib.sha1("".join(parts).encode("utf-8")).hexdigest()[:16]
+
+
+def _final_clean_fn(store, job, job_id, work, key, customer_id=0):
+    """assemble에 넘길 clean_fn — **조립된 완성본 1편**을 VMake로 청소한다.
+
+    assemble은 이미 3토막이다: _render_mix(조립) → clean_fn(청소) → _burn_captions(우리 자막).
+    그 가운데 자리에 이 함수를 꽂으면 완성본만 청소된다.
+
+    ★같은 편성이면 다시 안 청소한다(재과금 0) — 편성 서명으로 판단하고 파일을 남겨둔다.
+    ★과금은 **1콜**이다. 소스가 몇 개든 완성본은 하나다.
+    ★실패하면 예외를 올린다 — 호출부(run_render)가 환불하고 상태를 failed로 만든다.
+    """
+    def _clean(mix_raw):
+        sig = _plan_signature(job.get("edit_plan") or {})
+        out = Path(work) / f"final_clean_{sig}.mp4"
+        if out.exists() and out.stat().st_size > 1024:
+            print(f"[clean] 완성본 재사용(편성 그대로, 과금 0): {out.name}", file=sys.stderr)
+            return str(out)
+        charged = _charge_clean(store, customer_id, 1)
+        try:
+            print(f"[clean] 완성본 1편만 청소 시작 sig={sig}", file=sys.stderr)
+            return remove_subtitles(str(mix_raw), key, out_path=str(out))
+        except Exception:
+            if charged:
+                _refund_clean(store, customer_id, charged)
+            raise
+    return _clean
+
+
 def _ensure_clean_sources(store, job, job_id, work, key, customer_id=0):
     """clean_sources 맵을 채워 반환. 이미 있고 파일이 존재하면 스킵(재과금 0).
     각 스레드는 remove_subtitles만 하고 경로를 반환 → DB 저장은 취합 후 메인에서 1회(경합 없음).
@@ -2145,6 +2204,7 @@ def run_render(job_id, db_path, work_root):
 
         # 자막제거: 소스 원본을 미리(2단계) 또는 여기서(버튼 미사용 시) 청소해 그 소스로 조립한다.
         # mix_raw 위 clean_fn(구방식)은 폐기 — 소스단위여야 TTS/컷과 무관하게 캐시가 성립한다.
+        final_clean_fn = None
         if job.get("subtitle_removal"):
             # ★2단계 버튼을 안 거치고 바로 렌더로 오는 경로도 VMake를 탄다 — 여기도 과금해야
             #   구멍이 안 남는다(2단계에서 이미 청소됐으면 todo가 비어 자동으로 0원).
@@ -2152,10 +2212,18 @@ def run_render(job_id, db_path, work_root):
             key = _vmake_key(store, customer_id)
             if not key:
                 raise RuntimeError("자막 제거가 켜져 있으나 설정이 완료되지 않았습니다 (관리자 문의)")
-            clean_map = _ensure_clean_sources(store, job, job_id, work, key, customer_id)
-            store.update_mix_job(job_id, clean_status="ready", clean_error=None)
-            source_video_paths = {vid: clean_map.get(vid, p)
-                                  for vid, p in source_video_paths.items()}
+            already = bool(job.get("clean_sources"))
+            if _FINAL_CLEAN and not already:
+                # 완성본 1편만 청소한다(2026-08-26). 소스를 다 지우던 것보다 보내는 길이가
+                # 훨씬 짧아 같은 1콜로 몇 배 빠르다. 조립 뒤·우리 자막 앞에서 돈다.
+                # ★2단계에서 이미 소스를 청소했으면(already) 그 소스로 조립한다 — 두 번 안 낸다.
+                final_clean_fn = _final_clean_fn(store, job, job_id, work, key, customer_id)
+                store.update_mix_job(job_id, clean_status="ready", clean_error=None)
+            else:
+                clean_map = _ensure_clean_sources(store, job, job_id, work, key, customer_id)
+                store.update_mix_job(job_id, clean_status="ready", clean_error=None)
+                source_video_paths = {vid: clean_map.get(vid, p)
+                                      for vid, p in source_video_paths.items()}
 
         # deco의 BGM 파일(업로드 시 work/{file}에 저장)을 절대경로로 해석해 넘긴다.
         deco = job.get("deco") or {}
@@ -2196,7 +2264,7 @@ def run_render(job_id, db_path, work_root):
         # 저장위치(match_scene_assets가 쓴 beat["cutaway"]) = 읽기위치(여기) — seam 일치.
         cutaway_paths = _resolve_cutaway_paths(store, plan, job.get("customer_id", 0))
         sfx_paths = _resolve_sfx_paths(store, plan, job.get("customer_id", 0))
-        assemble(plan, tts_paths, source_video_paths, str(out_path), clean_fn=None,
+        assemble(plan, tts_paths, source_video_paths, str(out_path), clean_fn=final_clean_fn,
                  headcopy=job.get("headcopy"), caption_style=caption_style,
                  deco=deco, cutaway_paths=cutaway_paths, sfx_paths=sfx_paths)
         # 🖼 썸네일을 영상 맨 앞에 붙이기(2026-08-18 사장님 요청, 9단계 체크박스).
