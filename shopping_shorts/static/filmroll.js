@@ -47,7 +47,7 @@
     const vid = opt.videoId || '';
     const caps = opt.caps || [];
     let DUR = +opt.dur || 0;
-    let CW = 40, STEP = 1, N = 0, off = 0;
+    let CW = 163, STEP = 0.25, N = 0, off = 0;
     let _homed = false;      // 지금 쓰는 구간으로 한 번 옮겼나(처음 펼칠 때만)
     let MA = null;                     // 찍어둔 시작점
     // ★열 때 **이미 쓰는 구간**을 주황 박스로 올린다(2026-08-26 사장님 "상단에 카드형으로
@@ -70,7 +70,7 @@
           //   아래쪽까지 필름높이는 높여"). 별도 줄로 두면 그 한 줄만큼 필름이 낮아진다.
           '<div class="frgrab" title="아래를 잡고 끌면 높이가 바뀝니다"></div>' +
         '<div class="frbar"></div>' +
-          '<span class="frzoom">확대 <input type="range" class="frz" min="26" max="240" value="40"></span>' +
+          '<span class="frzoom">확대 <input type="range" class="frz" min="26" max="240" value="163"></span>' +
           '<span class="frstep"></span>' +
           '<button type="button" class="frclose" title="접기">◀ 접기</button>' +
         '</div>' +
