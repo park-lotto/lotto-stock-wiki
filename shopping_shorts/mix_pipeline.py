@@ -2475,6 +2475,18 @@ def run_clean_sources(job_id, db_path, work_root):
                 _synthesize_beats(plan_for_tts["beats"], work / "tts", voice=job.get("voice"),
                                   skip_existing=True, global_pron=_gpron,
                                   customer_id=job.get("customer_id", 0))
+                # ★훅 시작점도 여기서 확정한다 — 조립(_render_mix)이 첫 장면 start를
+                #   피크 시점으로 **in-place로 옮긴다**(video_assemble._apply_hook_inpoint).
+                #   그게 청소 뒤에 일어나면 서명이 또 바뀌어 렌더에서 재청소된다.
+                #   실측 job 579c86e58b4f: clean 때 b0=('s3',0.0,1.8) → render 때 0.1.
+                #   그 소수점 한 자리 때문에 VMake가 두 번 돌았다.
+                #   렌더가 쓰는 함수를 그대로 부른다(0순위-B — 따로 계산하면 또 갈린다).
+                try:
+                    from shopping_shorts import video_assemble as _va2
+                    _va2._apply_hook_inpoint(
+                        plan_for_tts, _resolve_sources(job, work), work)
+                except Exception as e2:      # noqa: BLE001 — 훅 이동 실패는 무해
+                    print("[clean] 훅 시작점 선확정 건너뜀: %s" % e2, file=sys.stderr)
                 store.update_mix_job(job_id, edit_plan=plan_for_tts)
                 job = store.get_mix_job(job_id)      # 갱신된 편성으로 아래를 진행
             except Exception as e:      # noqa: BLE001 — TTS 실패가 자막제거를 막지 않는다

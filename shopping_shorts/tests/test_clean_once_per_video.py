@@ -76,3 +76,59 @@ class Test청소_전에_TTS를_확정한다:
         src = inspect.getsource(mp.run_clean_sources)
         i = src.find("_synthesize_beats(")
         assert "except Exception" in src[i:i + 900], "TTS 실패를 삼키지 않는다"
+
+
+class Test훅_시작점은_멱등이다:
+    """★두 번 불러도 같은 값이어야 한다 (2026-08-27 실측으로 잡은 진짜 뿌리).
+
+    _apply_hook_inpoint는 첫 장면 start를 영상 피크로 옮긴다. 그런데 **현재 start를
+    기준**으로 피크를 다시 찾아서, 부를 때마다 더 밀렸다:
+        1회 0.0 → 0.1,  2회 0.1 → 0.8
+    깨지는 것 둘:
+      · 렌더를 두 번 하면 훅이 계속 뒤로 밀린다.
+      · 편성 서명이 매번 달라져 **자막제거가 다시 돈다**(VMake 2콜 = 100크레딧).
+    → 처음 값을 hook_orig_start에 남기고 항상 그것으로 계산한다.
+    """
+
+    def _plan(self):
+        return {"beats": [{"beat_idx": 0, "target_seconds": 3.0,
+                           "primary": {"video_id": "s0", "start": 0.0, "end": 5.0},
+                           "alternates": []}]}
+
+    def test_두_번_불러도_같은_start(self, monkeypatch, tmp_path):
+        from shopping_shorts import video_assemble as va
+        from shopping_shorts import scene_cut as sc
+        # 피크는 '현재 윈도우의 가운데'라고 두면, 기준이 밀릴 때 결과도 밀린다 —
+        # 멱등하지 않으면 이 테스트가 잡는다.
+        monkeypatch.setattr(sc, "peak_time_in_window", lambda p, a, b: (a + b) / 2)
+        monkeypatch.setattr(va, "_hook_delta", lambda w: 0.0)
+        plan = self._plan()
+        srcs = {"s0": str(tmp_path / "s0.mp4")}
+        va._apply_hook_inpoint(plan, srcs, tmp_path)
+        first = plan["beats"][0]["primary"]["start"]
+        va._apply_hook_inpoint(plan, srcs, tmp_path)
+        second = plan["beats"][0]["primary"]["start"]
+        assert first == second, f"두 번째 호출이 훅을 또 옮겼다: {first} → {second}"
+
+    def test_원본_시작점을_기억한다(self, monkeypatch, tmp_path):
+        from shopping_shorts import video_assemble as va
+        from shopping_shorts import scene_cut as sc
+        monkeypatch.setattr(sc, "peak_time_in_window", lambda p, a, b: (a + b) / 2)
+        monkeypatch.setattr(va, "_hook_delta", lambda w: 0.0)
+        plan = self._plan()
+        va._apply_hook_inpoint(plan, {"s0": str(tmp_path / "s0.mp4")}, tmp_path)
+        assert plan["beats"][0]["primary"].get("hook_orig_start") == 0.0
+
+    def test_서명이_두_번째에도_안_바뀐다(self, monkeypatch, tmp_path):
+        """★이게 곧 'VMake 1콜'이다."""
+        from shopping_shorts import video_assemble as va
+        from shopping_shorts import scene_cut as sc
+        from shopping_shorts import mix_pipeline as mp
+        monkeypatch.setattr(sc, "peak_time_in_window", lambda p, a, b: (a + b) / 2)
+        monkeypatch.setattr(va, "_hook_delta", lambda w: 0.0)
+        plan = self._plan()
+        srcs = {"s0": str(tmp_path / "s0.mp4")}
+        va._apply_hook_inpoint(plan, srcs, tmp_path)
+        sig1 = mp._plan_signature(plan)
+        va._apply_hook_inpoint(plan, srcs, tmp_path)
+        assert mp._plan_signature(plan) == sig1, "서명이 바뀌면 자막제거가 또 돈다"
