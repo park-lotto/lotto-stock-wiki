@@ -5103,6 +5103,8 @@ function openGenFromWiki(){
 
 // ── 1단계 제작소: 영상믹스(given_script 매칭) ──────────────
 let MIX_JOB=null, MIX_POLL=null;
+// 폴링 연속 실패 횟수 — 삼킨 예외 때문에 화면이 조용히 굳는 걸 막는다(2026-08-27).
+let _mixPollFails = 0;
 // ── 3단계 경과시간(2026-08-23 사장님 "되고 있는지 모름") ──
 // 진행바를 없앤 뒤 상태가 글자 한 줄이라 멈춘 건지 도는 건지 구분이 안 됐다.
 // ★job이 언제 바뀌든 여기 한 곳에서 시계를 리셋한다 — MIX_JOB에 대입하는 곳이 3군데라
@@ -5446,7 +5448,19 @@ async function _restoreWork(workId){
   let d = null;
   try{ d = await (await fetch('/api/produce/works/'+encodeURIComponent(workId))).json(); }catch(e){}
   // 지워진 작업 링크를 눌러도 빈 화면이 되면 안 된다 — 기존 경로로 떨어진다.
-  if(!d || !d.ok){ _consumeProduceHandoff(); return; }
+  if(!d || !d.ok){
+    _consumeProduceHandoff();
+    // ★조용히 돌아가면 화면이 영원히 굳는다(2026-08-27 실사고). 이 return 아래에
+    //   MIX_JOB 대입도 폴러 재기동도 있는데 전부 안 탄다 — 그래서 브라우저에 남아 있던
+    //   "순서 대기 중… 내 앞 작업 13개"가 **새로고침을 해도** 그대로 다시 그려졌다.
+    //   서버 큐는 그때 완전히 비어 있었다. 진행 중처럼 보이는 표시를 걷어내고 사실을 알린다.
+    try{ if(typeof setMatchingUI==='function') setMatchingUI(false); }catch(e){}
+    try{
+      setMixStatusText('이 작업을 서버에서 찾지 못했습니다 — 화면에 남아 있던 예전 표시입니다. '
+                     + '왼쪽 「내 작업목록」에서 다시 열거나 새 작업으로 시작하세요.');
+    }catch(e){}
+    return;
+  }
   const w = d.state || {};
   WORK_ID = workId;
   // ★서버 단계를 **복원 첫 줄에서** 붙든다(2026-08-11, 2중 방어). 아래 refreshStep0 등
@@ -7961,7 +7975,17 @@ async function pollMix(){
         st.appendChild(dt);
       }
       clearInterval(MIX_POLL); }
-  }catch(e){}
+    _mixPollFails = 0;      // 한 번이라도 제대로 돌면 초기화
+  }catch(e){
+    // ★예외를 통째로 삼키면 안 된다(2026-08-27). 삼킨 자리에서 화면은 마지막 문구가
+    //   그대로 굳고, 사용자는 "되고 있다"고 믿는다. 콘솔에 남기고 — 연달아 실패하면
+    //   화면에도 알린다(한두 번은 네트워크 딸꾹질일 수 있으니 바로 겁주지 않는다).
+    console.error('[pollMix] 상태 조회 실패', e);
+    if(++_mixPollFails >= 3){
+      try{ setMixStatusText('상태를 확인하지 못하고 있습니다 — 새로고침(F5) 해보세요. '
+                          + '계속되면 화면의 표시가 실제와 다를 수 있습니다.'); }catch(_){}
+    }
+  }
 }
 // ② 장면실험실 iframe 동기화(2026-08-15 B안). on=true면 지금 MIX_JOB으로 띄우고,
 // false(취소·새 매칭·잡 없음)면 숨긴다. src는 잡이 같으면 다시 안 건드린다 —
