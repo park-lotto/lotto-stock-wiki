@@ -1088,6 +1088,10 @@
      색 칸이 화면 23곳에 흩어져 있다. 각자 팔레트를 달면 반드시 어긋나므로
      (0순위-B) **한 곳**에서 만들어 전부에 자동으로 붙인다(_swAttachAll).
      기본 색선택기는 그대로 둔다 — 세밀한 색이 필요할 때 쓴다. */
+  /* 가로형(롱폼) 표시 — 담긴 카드에서 바로 눈에 걸려야 한다(2026-08-27). */
+  .pool-lscape{display:inline-block;margin-left:7px;padding:1px 7px;border-radius:999px;
+               background:#4a1414;color:#ff8a8a;border:1px solid #7a2b2b;
+               font-size:11px;font-weight:700;vertical-align:middle}
   .sw-btn{width:22px;height:22px;border-radius:50%;border:2px solid rgba(255,255,255,.35);
           cursor:pointer;padding:0;flex:none;background:
           conic-gradient(#ff2d2d,#ffd400,#3ddc57,#00b3ff,#b14cff,#ff2d8f,#ff2d2d);
@@ -6445,8 +6449,14 @@ function _poolMore(it, i){
   if(!parts.length) return '';
   // 요약 한 줄엔 캡션 앞머리를 보여준다 — 펴기 전에도 어떤 영상인지 짐작이 간다.
   const head=esc((br&&br.product) || cap.replace(/\s+/g,' ').slice(0,40) || '내용 보기');
+  // ★가로형(롱폼)은 담자마자 알린다(2026-08-27 사장님 지시). 세로 숏폼에 넣으면 좌우가
+  //   잘려 원본과 다르게 확대된 것처럼 나오고, 제작은 실제로 실패한다(_block_landscape).
+  //   판정은 서버가 준 landscape 그대로 쓴다 — 여기서 다시 계산하면 판단이 두 벌이 된다.
+  const lscape = b.landscape
+    ? `<span class="pool-lscape" title="가로 영상은 세로 숏폼에 못 씁니다">가로형(롱폼)`
+      + (b.video_w ? ` ${b.video_w}x${b.video_h}` : '') + `</span>` : '';
   return `<details class="pool-more" onclick="event.stopPropagation()">`
-    + `<summary title="눌러서 펴기">▾ ${head}</summary>`
+    + `<summary title="눌러서 펴기">▾ ${head}${lscape}</summary>`
     + `<div class="pm-body">${parts.join('')}</div></details>`;
 }
 function renderPool(){

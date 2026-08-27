@@ -661,6 +661,50 @@ def _prepare_sources(urls, work, store=None):
     return video_paths, captions, skipped
 
 
+def _is_landscape(path):
+    """가로형인가 — 가로가 세로보다 길면 True. 못 재면 None(모르면 막지 않는다).
+
+    정사각(1:1)은 가로형으로 치지 않는다. 세로 화면에 넣어도 위아래만 남지
+    좌우가 잘려 나가지 않는다.
+    """
+    try:
+        w, h, _dur = _probe_wh_dur(path)
+    except Exception:      # noqa: BLE001 — 못 재는 걸 막을 근거로 쓰지 않는다
+        return None
+    if not (w and h):
+        return None
+    return w > h
+
+
+def _block_landscape(video_paths, url_of=None):
+    """가로형 소스가 하나라도 있으면 사람이 읽을 수 있는 사유로 실패시킨다.
+
+    2026-08-27 실사고(job 6070eddd8a73): 세로 3편에 유튜브 롱폼 가로 4K 1편이 섞였다.
+    붙임 캔버스가 그 한 편에 끌려가 세로 영상들이 가로로 늘어났고, 최종 세로 렌더에서
+    크게 잘려 고객에겐 "원본은 일반영상인데 결과물이 줌한 것처럼 크다"로 보였다.
+
+    비율 보존(_join_sources)은 그 왜곡을 없앴지만, **가로 영상 자체가 세로 숏폼에
+    안 맞는다** — 세로 화면에 채우려면 좌우를 잘라내야 하고 그건 원본과 다른 그림이다.
+    그래서 만들다 이상해지는 대신 **시작할 때 분명히 실패**시킨다(사장님 지시).
+    """
+    bad = []
+    for vid, path in sorted((video_paths or {}).items()):
+        if _is_landscape(path):
+            try:
+                w, h, _d = _probe_wh_dur(path)
+            except Exception:      # noqa: BLE001
+                w = h = 0
+            bad.append((vid, (url_of or {}).get(vid, ""), w, h))
+    if not bad:
+        return
+    lines = [f"· {u or vid} ({w}x{h} 가로)" for vid, u, w, h in bad]
+    raise RuntimeError(
+        f"가로형(롱폼) 영상이 {len(bad)}개 섞여 있어요 — 세로 숏폼으로 만들면 "
+        "좌우가 잘려 원본과 다르게 확대된 것처럼 나옵니다. "
+        "아래 영상을 빼고 다시 만들어 주세요:\n"
+        + "\n".join(lines))
+
+
 def _job_customer_id(db_path, job_id):
     try:
         job = Store(db_path).get_mix_job(job_id) or {}
@@ -795,6 +839,12 @@ def run_mix_job(job_id, db_path, work_root):
             if skipped:
                 print(f"run_mix_job[{job_id}]: {len(skipped)}개 소스 스킵 "
                       f"(불량 URL) — {[u for u, _ in skipped]}", file=sys.stderr)
+            # ★가로형(롱폼) 소스는 여기서 막는다(2026-08-27 사장님 지시).
+            #   숏폼 세로 화면에 가로 영상을 넣으면 좌우가 크게 잘려 "줌한 것처럼" 나온다.
+            #   ⚠️ 여기가 유일한 관문이다 — 화면에서도 미리 알리지만, 화면 경고는
+            #   지나칠 수 있으므로 **실제 차단은 이 한 곳**에서만 한다(0순위-B).
+            _block_landscape(video_paths, {_source_video_id(i): u
+                                           for i, u in enumerate(job["urls"])})
 
             # 2) 대본 추출(병렬)
             store.update_mix_job(job_id, status="extracting")
@@ -1709,7 +1759,11 @@ def _restore_span(orig, cleaned, lo, hi, out_path):
         cmd += ["-i", str(src)]
         if to is not None:
             cmd += ["-t", f"{to:.3f}"]
-        cmd += ["-vf", f"scale={W}:{H}:flags=lanczos,setsar=1,fps=30",
+        # ★여기도 비율을 지킨다(2026-08-27, _join_sources와 같은 함정).
+        #   W·H는 **원본** 크기다. 청소본이 다른 비율로 돌아오면 강제 스케일은 그림을
+        #   늘려버린다 — 비율이 같으면 pad는 아무 일도 안 하고, 다를 때만 검게 채운다.
+        cmd += ["-vf", (f"scale={W}:{H}:force_original_aspect_ratio=decrease:flags=lanczos,"
+                        f"pad={W}:{H}:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1,fps=30"),
                 "-c:v", "libx264", "-preset", "veryfast", "-crf", "18",
                 "-pix_fmt", "yuv420p", "-c:a", "aac", "-ar", "48000", "-ac", "2", dst]
         subprocess.run(cmd, check=True)
@@ -1789,22 +1843,61 @@ def _restore_all(done, cuts, source_map, work):
     return out
 
 
+# 붙임 캔버스 한 변의 상한. 최종 출력이 1080x1920이라 1920이면 충분하다.
+_JOIN_CANVAS_MAX = 1920
+
+
+def _fit_box(w, h, W, H):
+    """(w,h)를 비율 유지로 (W,H) 안에 넣었을 때 실제 그림이 차지하는 자리.
+
+    반환 (cw, ch, cx, cy, w, h) — 잘라낼 크기·위치와 **되돌릴 원본 크기**.
+    ffmpeg의 scale/pad와 **같은 계산**이어야 한다(짝은 함께 정한다). 짝수로 맞추는 것도
+    같은 이유다 — libx264(yuv420p)는 홀수 크기를 못 받아 1px씩 어긋난다.
+    """
+    if not (w and h and W and H):
+        return (W or 0, H or 0, 0, 0, w or 0, h or 0)
+    f = min(W / w, H / h)
+    cw = max(2, int(round(w * f)) // 2 * 2)
+    ch = max(2, int(round(h * f)) // 2 * 2)
+    return (cw, ch, (W - cw) // 2, (H - ch) // 2, w, h)
+
+
 def _join_sources(items, work):
     """[(vid, src)] → (합본경로, [(vid, 시작초, 길이초)]). 실패하면 예외.
 
     ★규격을 통일하지 않으면 concat이 깨진다 — 해상도·fps·SAR을 맞춘다.
-      해상도는 **최대값** 기준(업스케일 방향이라 원본 손실 없음).
+
+    ⚠️ **비율을 지키며** 맞춘다(2026-08-27 실사고). 전엔 `scale=W:H`로 최대 해상도에
+      **강제로 늘렸다** — "업스케일 방향이라 원본 손실 없음"이라는 주석이 붙어 있었지만,
+      그 가정은 **모든 소스의 비율이 같을 때만** 참이다. 세로와 가로가 섞이면 깨진다.
+
+      실사고(job 6070eddd8a73): 세로 720x1280 · 1080x1920 · 720x1280에 유튜브 가로
+      3840x2160이 섞였다. W·H가 3840x2160이 되어 세로 영상이 **가로로 5.3배 늘어난 채**
+      청소를 거쳐 돌아왔고, 그걸 세로 1080x1920으로 렌더하니 크게 잘려 나갔다 —
+      고객에겐 "원본은 일반영상인데 결과물이 줌한 것처럼 크다"로 보였다.
+
+      그래서 **비율을 지켜 축소·확대하고 남는 곳은 검게 채운다(레터박스)**. 청소는
+      화면 내용만 보므로 검은 여백은 무해하다. 그리고 자른 뒤 **원래 크기로 되돌린다**
+      (아래 spans의 box) — 여백을 달고 돌아가면 렌더가 그 여백까지 화면으로 친다.
     """
     work = Path(work)
     info = [(vid, src) + _probe_wh_dur(src) for vid, src in items]
-    W = max(i[2] for i in info)
-    H = max(i[3] for i in info)
+    # 세로와 가로를 함께 담으려면 캔버스가 정사각에 가까워진다(예: 1920x1920).
+    # ★상한을 둔다 — 4K가 섞이면 3840x3840이 되어 청소 한 번에 수백 MB가 오간다.
+    #   최종 결과물은 1080x1920이고, 아래 _split_cleaned가 각 소스를 **원래 크기로**
+    #   되돌리므로 캔버스를 키워봐야 최종 화질에 보탬이 없다(디스크·인코딩만 먹는다).
+    W = min(max(i[2] for i in info), _JOIN_CANVAS_MAX)
+    H = min(max(i[3] for i in info), _JOIN_CANVAS_MAX)
     parts, spans, t = [], [], 0.0
-    for idx, (vid, src, _w, _h, dur) in enumerate(info):
+    for idx, (vid, src, w0, h0, dur) in enumerate(info):
         norm = str(work / f"join_norm_{idx}.mp4")
+        # 되돌릴 자리(여백을 뺀 실제 그림의 위치·크기)를 **여기서 함께** 정한다.
+        # 짝으로 움직이는 값을 따로 계산하면 반드시 어긋난다(0순위-B).
+        box = _fit_box(w0, h0, W, H)
         subprocess.run(
             ["ffmpeg", "-y", "-v", "error", "-i", str(src),
-             "-vf", f"scale={W}:{H}:flags=lanczos,setsar=1,fps=30",
+             "-vf", (f"scale={W}:{H}:force_original_aspect_ratio=decrease:flags=lanczos,"
+                     f"pad={W}:{H}:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1,fps=30"),
              "-c:v", "libx264", "-preset", "veryfast", "-crf", "18",
              "-pix_fmt", "yuv420p",
              "-c:a", "aac", "-ar", "48000", "-ac", "2", norm], check=True)
@@ -1812,7 +1905,7 @@ def _join_sources(items, work):
         #   뒤 소스들의 시작점이 통째로 어긋난다(짝은 함께 정한다).
         _w2, _h2, dur2 = _probe_wh_dur(norm)
         parts.append(norm)
-        spans.append((vid, t, dur2))
+        spans.append((vid, t, dur2, box))
         t += dur2
     lst = work / "join_list.txt"
     lst.write_text("".join("file " + chr(39) + x + chr(39) + chr(10) for x in parts), encoding="utf-8")
@@ -1826,11 +1919,25 @@ def _split_cleaned(cleaned, spans, work):
     """청소된 합본을 구간별로 잘라 {vid: 경로}. 잘라낸 파일이 비면 예외."""
     work = Path(work)
     out = {}
-    for vid, start, dur in spans:
+    for span in spans:
+        vid, start, dur = span[0], span[1], span[2]
+        box = span[3] if len(span) > 3 else None
         dst = str(work / f"clean_src_{vid}.mp4")
+        # ★붙일 때 넣은 검은 여백을 잘라내고 **원래 크기로 되돌린다**(2026-08-27).
+        #   여백을 달고 돌려보내면 렌더가 그 여백까지 그림으로 쳐서, 세로 영상이
+        #   가로 화면 한가운데 작게 박히거나 반대로 크게 잘린다.
+        vf = []
+        if box:
+            cw, ch, cx, cy, ow, oh = box
+            vf.append(f"crop={cw}:{ch}:{cx}:{cy}")
+            if (cw, ch) != (ow, oh):
+                vf.append(f"scale={ow}:{oh}:flags=lanczos")
+            vf.append("setsar=1")
         subprocess.run(
             ["ffmpeg", "-y", "-v", "error", "-ss", f"{start:.3f}", "-i", str(cleaned),
-             "-t", f"{dur:.3f}", "-c:v", "libx264", "-preset", "veryfast", "-crf", "18",
+             "-t", f"{dur:.3f}"]
+            + (["-vf", ",".join(vf)] if vf else [])
+            + ["-c:v", "libx264", "-preset", "veryfast", "-crf", "18",
              "-pix_fmt", "yuv420p", "-c:a", "aac", "-ar", "48000", "-ac", "2", dst],
             check=True)
         if not Path(dst).exists() or Path(dst).stat().st_size < 1024:

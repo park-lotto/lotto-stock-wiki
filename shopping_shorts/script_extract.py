@@ -574,7 +574,12 @@ def storable(result):
             # 영상 단위 요약(2026-08-16) — 1단계 화면이 소스별로 이걸 보여주고,
             # 대본 생성이 "이 소스가 맡은 몫"으로 읽는다. 여기 안 넣으면 저장 순간 버려진다
             # (2026-08-01 tag_qa가 정확히 그렇게 사라졌던 자리다).
-            "source_brief": _norm_brief(r.get("source_brief"))}
+            "source_brief": _norm_brief(r.get("source_brief")),
+            # 화면 방향(2026-08-27) — 1단계가 "이건 가로형(롱폼)"이라고 미리 알리는 근거.
+            # 가로 영상을 세로 숏폼에 넣으면 좌우가 잘려 확대된 것처럼 나오고, 제작은
+            # mix_pipeline._block_landscape가 막는다. 여기 없으면 담을 때 알릴 방법이 없다.
+            "video_w": int(r.get("video_w") or 0) or None,
+            "video_h": int(r.get("video_h") or 0) or None}
 
 
 def _pick_better_extract(first, second, duration):

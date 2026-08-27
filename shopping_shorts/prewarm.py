@@ -229,6 +229,18 @@ def run_prewarm(shortcode, url, *, caption="", customer_id="0", video_url="",
                 return "deferred_transient"
             store.autoload_mark_error(code, "예열: 쓸 만한 재료가 안 나왔어요(화면·말 모두 비어 있음)")
             return "failed_empty"
+        # ★화면 방향을 여기서 재둔다(2026-08-27) — 담긴 영상 파일이 손에 있는 자리는
+        #   여기뿐이다. 가로형이면 1단계 화면이 담자마자 "가로형(롱폼)"이라고 알린다.
+        #   못 재도 그냥 넘어간다 — 예열은 보조작업이라 이걸로 실패하면 안 된다.
+        try:
+            from shopping_shorts.mix_pipeline import _probe_wh_dur
+            _w, _h, _d = _probe_wh_dur(video_path)
+            result["video_w"], result["video_h"] = _w, _h
+        except Exception as _pe:      # noqa: BLE001
+            # ★log를 쓴다 — 이 모듈엔 sys import가 없다(넣었다가 예외 처리 안에서
+            #   NameError가 나 예열이 통째로 죽을 뻔했다, 테스트가 잡았다).
+            log.warning("예열 해상도 측정 실패(무해) %s: %r", code, _pe)
+
         # 구조분석은 '말'을 읽는 것이라 여전히 full_text가 필요하다(아래 _fill_structure).
         # 무자막 영상은 빈 문자열 → 구조분석만 조용히 건너뛴다(추출·태깅은 이미 저장됐다).
         full_text = (result.get("full_text") or "").strip()
