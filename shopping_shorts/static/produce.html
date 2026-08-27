@@ -1118,6 +1118,13 @@
   .sw-more{margin-top:11px;width:100%;padding:7px;border-radius:9px;cursor:pointer;
            background:var(--inset,#1c202a);color:var(--txt,#e8eaf0);
            border:1px solid var(--line,#2a2f3a);font-size:12px}
+    /* ★썸네일 배경 후보 그리드 — 8개씩 2줄(=16장, 2026-08-27 사장님).
+       폰에서 8칸을 억지로 유지하면 한 칸이 40px대가 돼 무엇인지 안 보인다 → 단계적으로 줄인다. */
+    .thumbFrameGrid{display:grid;grid-template-columns:repeat(8,1fr);gap:8px}
+    @media (max-width:1100px){ .thumbFrameGrid{grid-template-columns:repeat(6,1fr)} }
+    @media (max-width:820px){  .thumbFrameGrid{grid-template-columns:repeat(4,1fr);gap:6px} }
+    @media (max-width:520px){  .thumbFrameGrid{grid-template-columns:repeat(3,1fr);gap:5px} }
+
   </style>
   <link rel="stylesheet" href="theme.css?v=1">
 </head>
@@ -1992,8 +1999,21 @@
       <h3 data-steptitle="thumb">7 · 썸네일</h3>
       <div class="sub">영상에서 프레임을 고르고 텍스트를 올려 썸네일을 만드세요.</div>
 
-      <div style="font-size:12px;color:var(--sub);margin:10px 0 6px">배경 프레임 선택 <span id="thumbFrameCount"></span></div>
-      <div id="thumbFrames" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin:10px 0 6px;gap:8px;flex-wrap:wrap">
+        <span style="font-size:12px;color:var(--sub)">배경 프레임 선택 <span id="thumbFrameCount"></span></span>
+        <!-- ★[다른 장면 더 뽑기](2026-08-27 사장님) — 같은 영상에서 찍는 지점만 어긋나게 해
+             새 16장을 준다. 누를수록 아직 안 본 지점이 나온다(_grid_phase). -->
+        <!-- ★flex:0 0 auto 필수 — .tab은 flex:1이라 그냥 두면 버튼이 **화면 폭 전체로 늘어난다**
+             (2026-08-27 로컬 실측). min-width:auto만으로는 안 잡힌다.
+             아이콘 🔄는 이 페이지가 이미 14곳에서 쓰는 글자다(컬러 이모지로 정상 렌더 —
+             캔버스 픽셀로 확인: 컬러픽셀 1913. 작게 보면 파란 네모 같지만 두부가 아니다). -->
+        <button id="thumbMoreBtn" class="tab"
+                style="flex:0 0 auto;min-width:auto;padding:5px 12px;font-size:12px"
+                onclick="loadThumbFrames({more:true})">🔄 다른 장면 더 뽑기</button>
+      </div>
+      <!-- 8개씩 2줄(=16장). 좁은 화면에선 자동으로 줄어든다 — 8칸을 억지로 유지하면 폰에서
+           한 칸이 40px이 돼 무엇인지 안 보인다. -->
+      <div id="thumbFrames" class="thumbFrameGrid"></div>
       <div id="thumbFramesHint" class="hint" style="margin-top:6px">프레임을 불러오는 중…</div>
 
       <div style="display:flex;gap:14px;margin-top:14px;flex-wrap:wrap">
@@ -10891,11 +10911,20 @@ const THUMB_STATE = {frames: [], frame_ts: null, frame_url: null, img: null,
 // 대기 중 단계를 오갈 때마다 요청이 겹쳐 ffmpeg가 같은 폴더에 동시에 쓴다(실측: 3벌).
 // ★finally로 반드시 푼다 — 실패한 채 잠기면 재시도가 영영 막혀 지금보다 나빠진다.
 let THUMB_LOADING = false;
-async function loadThumbFrames(){
+async function loadThumbFrames(opt){
   if (THUMB_LOADING) return;
   THUMB_LOADING = true;
+  // ★[다른 장면 더 뽑기]는 ffmpeg가 16장을 다시 뽑는 동안 몇 초 걸린다. 버튼을 잠그고
+  //   무슨 일이 일어나는지 말해준다 — 안 그러면 사장님이 여러 번 누르고 "안 된다"고 본다.
+  const _more = !!(opt && opt.more);
+  const _btn = document.getElementById('thumbMoreBtn');
+  if (_more && _btn){ _btn.disabled = true; _btn.textContent = '🔄 뽑는 중…'; }
+  if (_more){
+    const h = document.getElementById('thumbFramesHint');
+    if (h) h.textContent = '다른 장면을 뽑는 중… (몇 초 걸려요)';
+  }
   try {
-    await _loadThumbFrames();
+    await _loadThumbFrames(_more);
   } catch (e) {
     // ★"프레임을 가끔 못 불러온다"의 뿌리(2026-07-30 실측). 예전엔 catch가 없어서 fetch가
     // reject되면 예외가 그냥 위로 던져지고 안내문이 초기 정적 문구 '프레임을 불러오는 중…'에
@@ -10910,9 +10939,10 @@ async function loadThumbFrames(){
       + '<a href="#" onclick="loadThumbFrames();return false" style="color:var(--accent2);font-weight:700">↻ 다시 시도</a>';
   } finally {
     THUMB_LOADING = false;
+    if (_more && _btn){ _btn.disabled = false; _btn.textContent = '🔄 다른 장면 더 뽑기'; }
   }
 }
-async function _loadThumbFrames(){
+async function _loadThumbFrames(more){
   const hintEl = document.getElementById('thumbFramesHint');
   // ★믹스 영상이 없으면 뽑을 프레임이 없다. 예전엔 서버가 준 "job 없음"만 떠서 사장님이 왜 막혔는지
   // 몰랐다(실측: 영상 매칭 안 한 작업을 열어 5단계로 오면 이 상태). 무엇을 해야 하는지 알려준다.
@@ -10935,7 +10965,7 @@ async function _loadThumbFrames(){
     try {
       const r = await fetch('/api/produce/thumb/frames', {
         method: 'POST', headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({job_id: MIX_JOB}),
+        body: JSON.stringify({job_id: MIX_JOB, more: !!more}),
       });
       // JSON 파싱 실패도 재시도 사유다 — 재시작 중엔 프록시가 HTML 에러페이지를 준다.
       // (예전엔 .catch(()=>({ok:false}))로 삼켜 '프레임 추출 실패'라는 엉뚱한 안내가 떴다.)
@@ -10963,7 +10993,7 @@ async function _loadThumbFrames(){
   const _prevUrls = (THUMB_STATE.frames || []).map(f => f.url).join('|');
   const _nextUrls = d.frames.map(f => f.url).join('|');
   const _box = document.getElementById('thumbFrames');
-  if (_prevUrls && _prevUrls === _nextUrls && _box && _box.children.length){
+  if (!more && _prevUrls && _prevUrls === _nextUrls && _box && _box.children.length){
     THUMB_STATE.frames = d.frames;
     document.getElementById('thumbFrameCount').textContent = `(${d.frames.length}개)`;
     hintEl.textContent = '';
