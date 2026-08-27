@@ -197,7 +197,7 @@ def _lens_month_limit(store):
     return _LENS_MONTH_LIMIT_PER_KEY * max(1, len(SERPAPI_KEYS))
 
 
-def _lens_quota_guard(store, month, customer_id=None):
+def _lens_quota_guard(store, month, customer_id=0):
     """렌즈 월 가드 — 막아야 하면 429 JSONResponse, 통과면 None.
 
     ★판정을 여기 한 곳에서만 한다(0순위-B). /api/lens/search와 /api/lens/trace_url
@@ -215,27 +215,48 @@ def _lens_quota_guard(store, month, customer_id=None):
     ★우리 카운터(②)는 **공용 키를 쓸 때만** 본다. 자기 키를 낸 회원에게 공용 예산을
       들이대면 남의 사용량 때문에 막힌다 — 그 사람 한도는 자기 SerpApi 잔량이다."""
     from shopping_shorts import lens_discover, keyroute
+    # ★None은 0(관리자·서버 내부 호출)으로 본다 — _as_cid는 못 읽으면 **원값을 그대로**
+    #   돌려주므로(app.py:9186) None이 그대로 흘러 `cid != 0`이 참이 되고, 정회원처럼
+    #   "키를 등록하세요"로 막힌다. 라이브 호출부는 늘 값을 넘기지만 기본값이 안전해야 한다.
+    cid = _as_cid(customer_id if customer_id is not None else 0)
+    # ★체험 중에는 렌즈를 안 준다(2026-08-27 사장님 지시). 렌즈 1회는 SerpApi 실비가
+    #   나가는데 체험 계정에까지 열어주면 공용 키가 순식간에 마른다(이번 달 1,250회가
+    #   그렇게 소진됐다). 판정은 _is_trial 한 곳에서만 한다 — 여기서 다시 세면
+    #   "체험과 유료가 같은 필드를 쓰는" 함정에 또 걸린다(2026-08-25 실사고).
+    if _is_trial(cid):
+        return JSONResponse(status_code=429, content={
+            "ok": False, "error_code": "lens_trial",
+            "error": "체험 기간에는 렌즈 검색을 쓸 수 없어요 — "
+                     "정식 가입 후 내 SerpApi 키를 등록하면 바로 쓸 수 있습니다"})
     keys, is_user = [], False
     try:
-        keys, is_user = keyroute.keys_for(store, customer_id, keyroute.SVC_SERPAPI)
+        keys, is_user = keyroute.keys_for(store, cid, keyroute.SVC_SERPAPI)
     except Exception as e:      # noqa: BLE001 — 키 조회 실패로 렌즈를 막지 않는다
         print(f"[lens] 키 조회 실패(공용 기준으로 판정): {e!r}", file=sys.stderr)
+    # ★정회원은 **자기 키로만** 렌즈를 쓴다(2026-08-27 사장님 "가입한 프로는 개인꺼 쓰는거야").
+    #   공용 키로 태우면 한 사람이 몰아 써도 다른 사람이 막히고, 매달 무료 키를
+    #   늘려가며 버티는 구조가 된다. 사장님(cid 0)만 공용 폴백을 남긴다.
+    #   ⚠️ 잔량 조회보다 **먼저** 본다 — 뒤에 두면 공용이 0일 때 "공용 한도 소진"이
+    #      먼저 걸려 정작 필요한 "키를 등록하세요" 안내가 안 나간다(쓸데없는 왕복도 준다).
+    if not is_user and cid != 0:
+        return JSONResponse(status_code=429, content={
+            "ok": False, "error_code": "lens_need_key",
+            "error": "렌즈 검색은 내 SerpApi 키로 동작해요 — "
+                     "키를 등록하면 바로 쓸 수 있습니다(무료 월 250회)"})
     left = lens_discover.account_searches_left(keys=keys or None)
     if left is not None and left <= 0:
         return JSONResponse(status_code=429, content={
             "ok": False, "error_code": "lens_limit",
             "error": ("등록하신 SerpApi 키의 이번 달 검색 한도를 다 썼습니다"
                       if is_user else
-                      "이번 달 공용 렌즈 검색 한도를 다 썼습니다 — "
-                      "내 API 키를 등록하면 바로 쓸 수 있어요")})
+                      "이번 달 공용 렌즈 검색 한도를 다 썼습니다")})
     if is_user:
         return None            # 자기 키를 쓰는 사람에게 공용 예산을 들이대지 않는다
     limit = _lens_month_limit(store)
     if store.lens_month_count(month) >= limit:
         return JSONResponse(status_code=429, content={
             "ok": False, "error_code": "lens_limit",
-            "error": f"이번 달 공용 렌즈 검색 한도({limit}회)를 다 썼습니다 — "
-                     f"내 API 키를 등록하면 바로 쓸 수 있어요"})
+            "error": f"이번 달 공용 렌즈 검색 한도({limit}회)를 다 썼습니다"})
     return None
 
 
