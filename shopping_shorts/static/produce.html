@@ -1891,6 +1891,23 @@
                         <span>가로 <b id="frTtXV" style="color:var(--sub)">50%</b></span>
                         <input id="frTtX" type="range" min="0" max="100" value="50" oninput="frUpdate()" style="width:110px">
                       </div>
+                      <!-- 제목 색·테두리(2026-08-28 사장님 "폰트쪽 꾸미는것 추가").
+                           ★색 칸은 빈값이 없어 '자동'을 값으로 못 담는다 → FR_TOUCHED 규약
+                           (틀 색·구성과 동일). ↩ 자동 = 이 줄만 물린다(틀 색은 안 건드림). -->
+                      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:12px;margin-top:8px">
+                        <span style="min-width:44px"></span>
+                        <label style="display:flex;align-items:center;gap:5px">글자 색
+                          <input id="frTtColor" type="color" value="#141414" oninput="frTouch('ttcolor')"
+                                 style="width:34px;height:26px;padding:0;border:1px solid var(--line);border-radius:5px;background:none;cursor:pointer"></label>
+                        <label style="display:flex;align-items:center;gap:5px">테두리 색
+                          <input id="frTtOlC" type="color" value="#000000" oninput="frTouch('ttol')"
+                                 style="width:34px;height:26px;padding:0;border:1px solid var(--line);border-radius:5px;background:none;cursor:pointer"></label>
+                        <span>테두리 <b id="frTtOlWV" style="color:var(--sub)">없음</b></span>
+                        <input id="frTtOlW" type="range" min="0" max="12" step="1" value="0" oninput="frUpdate()" style="width:90px">
+                        <button type="button" onclick="frTtDecoReset()"
+                          style="background:none;border:1px solid var(--line);color:var(--sub);
+                                 border-radius:6px;padding:3px 8px;font-size:11px;cursor:pointer">↩ 자동</button>
+                      </div>
                       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:12px;margin-top:8px">
                         <span style="min-width:44px">채널명</span>
                         <select id="frChFont" onchange="frUpdate()" style="background:#0a1017;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:5px 8px;font-size:12px"></select>
@@ -3024,8 +3041,17 @@ let FR_PRESETS=[];
 // ★색 입력칸(<input type=color>)은 **빈값을 가질 수 없다** — 항상 #RRGGBB다.
 //   그래서 "안 정했음"을 값으로는 표현 못 한다. 만졌는지를 따로 기억한다.
 //   (헤드카피 HC_Y_TOUCHED·자막 CAP_POS_TOUCHED와 같은 규약)
-let FR_TOUCHED={bar:false,onbar:false,subbg:false,subtext:false};
+let FR_TOUCHED={bar:false,onbar:false,subbg:false,subtext:false,ttcolor:false,ttol:false};
 function frTouch(k){ FR_TOUCHED[k]=true; frUpdate(); }
+// 제목 색·테두리만 물린다(2026-08-28). 틀 색·구성의 ↩ 틀 그대로와는 별개 —
+// 제목 꾸미기를 되돌리려고 띠 색까지 날아가면 안 된다.
+function frTtDecoReset(){
+  const f=STATE.deco&&STATE.deco.template&&STATE.deco.template.frame;
+  if(f){ f.title_color=''; f.title_ol_c=''; f.title_ol_w=0; }
+  FR_TOUCHED.ttcolor=false; FR_TOUCHED.ttol=false;
+  const w=document.getElementById('frTtOlW'); if(w) w.value=0;
+  frUpdate();
+}
 function frResetCustom(){
   // 손본 것을 전부 물린다 → 서버가 실측(프리셋) 값으로 되돌린다.
   // ★값(f.*)을 **먼저** 비운다. frFill이 f를 보고 FR_TOUCHED를 되살리므로,
@@ -3051,6 +3077,8 @@ function frameUrl(f){
     // 글자 꾸미기(2026-08-22) — 빈값/0이면 서버가 프리셋 기본으로 되돌린다
     ch_font:f.ch_font||'', ch_size:f.ch_size??0, ch_x:f.ch_x??50,
     title_font:f.title_font||'', title_size:f.title_size??0, title_x:f.title_x??50,
+    // 제목 색·테두리(2026-08-28) — 빈값/0이면 서버가 자동 규칙(흑/백·테두리 없음)
+    title_color:f.title_color||'', title_ol_c:f.title_ol_c||'', title_ol_w:f.title_ol_w??0,
     // [광고] 다듬기(2026-08-22) — 0이면 서버가 지금까지의 자리·크기를 그대로 쓴다
     ad_size:f.ad_size??0, ad_x:f.ad_x??0, ad_y:f.ad_y??0, ad_alpha:f.ad_alpha??100,
     // 틀 색·구성 손보기(2026-08-25) — 빈값이면 서버가 실측(프리셋)으로 되돌린다.
@@ -3143,12 +3171,18 @@ function frFill(f){
   setC('frOnBarColor', f.on_bar_color||pr.on_bar);
   setC('frSubBg', f.sub_bg_c||pr.sub_bg);
   setC('frSubText', f.sub_text_c||pr.sub_text);
+  // 제목 색·테두리 — 값이 있을 때만 칸에 싣는다(없으면 '자동' 상태 그대로)
+  setC('frTtColor', f.title_color);
+  setC('frTtOlC', f.title_ol_c);
+  if(g('frTtOlW')) g('frTtOlW').value=f.title_ol_w??0;
+  if(g('frTtOlWV')) g('frTtOlWV').textContent=(f.title_ol_w?f.title_ol_w+'px':'없음');
   if(g('frLeftIcon')) g('frLeftIcon').value=f.left_icon||'';
   if(g('frRightIcon')) g('frRightIcon').value=f.right_icon||'';
   if(g('frCenter')) g('frCenter').value=f.center_kind||'';
   // 저장된 작업을 다시 열었을 때: 값이 있으면 '만진 것'으로 되살린다(안 그러면 그림이 튄다)
   FR_TOUCHED={bar:!!f.bar_color, onbar:!!f.on_bar_color,
-              subbg:!!f.sub_bg_c, subtext:!!f.sub_text_c};
+              subbg:!!f.sub_bg_c, subtext:!!f.sub_text_c,
+              ttcolor:!!f.title_color, ttol:!!f.title_ol_c};
   if(g('frChXV')) g('frChXV').textContent=(f.ch_x??50)+'%';
   if(g('frTtXV')) g('frTtXV').textContent=(f.title_x??50)+'%';
   fillFrameFontSelects(); syncAdBadge();
@@ -3216,6 +3250,11 @@ function frUpdate(){
   f.title_font=(g('frTtFont')||{}).value||'';
   f.title_size=parseInt((g('frTtSize')||{}).value||0,10);
   f.title_x=parseInt((g('frTtX')||{}).value||50,10);
+  // 제목 색·테두리 — 색은 만졌을 때만 값(아래 틀 색과 같은 FR_TOUCHED 규약)
+  f.title_color=FR_TOUCHED.ttcolor?((g('frTtColor')||{}).value||''):'';
+  f.title_ol_c=FR_TOUCHED.ttol?((g('frTtOlC')||{}).value||''):'';
+  f.title_ol_w=parseInt((g('frTtOlW')||{}).value||0,10);
+  if(g('frTtOlWV')) g('frTtOlWV').textContent=f.title_ol_w?f.title_ol_w+'px':'없음';
   // 틀 색·구성 — ★색은 **만졌을 때만** 값이 된다(FR_TOUCHED). 안 그러면 '틀 그대로'가 안 된다.
   f.bar_color=FR_TOUCHED.bar?((g('frBarColor')||{}).value||''):'';
   f.on_bar_color=FR_TOUCHED.onbar?((g('frOnBarColor')||{}).value||''):'';
@@ -5269,6 +5308,9 @@ function _swClose(){ if(_swPop){ _swPop.remove(); _swPop = null; _swInput = null
 function _swReposition(){
   if(!_swPop || !_swBtn) return;
   const r = _swBtn.getBoundingClientRect();
+  // ★단추가 숨거나(패널 전환·재렌더로 display:none/분리) rect가 전부 0이면 **닫는다**.
+  //   0,0을 기준으로 배치하면 팝업이 화면 왼쪽 상단으로 도망간다(같은 증상 2호).
+  if(r.width === 0 && r.height === 0){ _swClose(); return; }
   if(r.bottom < 0 || r.top > innerHeight){ _swClose(); return; }   // 단추가 화면을 벗어나면 그때 닫는다
   const w = _swPop.offsetWidth, h = _swPop.offsetHeight;
   _swPop.style.left = Math.max(8, Math.min(r.left, innerWidth - w - 8)) + 'px';
@@ -5318,6 +5360,11 @@ function _swOpen(input, btn){
     + '<button type="button" class="sw-more">직접 고르기 (세밀한 색)</button>';
   document.body.appendChild(pop);
 
+  // ★_swPop 대입이 _swReposition보다 **먼저**여야 한다(2026-08-28 실사고).
+  //   뒤에 두면 _swReposition 첫 줄 가드(!_swPop)에 걸려 첫 배치가 통째로 안 되고,
+  //   팝업이 CSS 기본 자리 = 화면 왼쪽 상단(0,0)에 떠 있다가 스크롤이 와야 제자리로
+  //   갔다(실측: 클릭 직후 rect(0,0) → scroll 이벤트 후 (843,424)).
+  _swPop = pop;
   _swBtn = btn;
   _swReposition();
 
@@ -5326,7 +5373,6 @@ function _swOpen(input, btn){
     if(i){ _swPick(i.dataset.c); return; }
     if(e.target.closest('.sw-more')){ const el = _swInput; _swClose(); el.click(); }  // 기본 색선택기
   });
-  _swPop = pop;
 }
 
 // 색 칸 하나에 단추를 붙인다. 이미 붙었으면 아무 일도 안 한다.

@@ -59,6 +59,50 @@ def test_legacy_color_bar_templates_still_work():
     assert mp._template_layer({}) is None
 
 
+def test_title_deco_normalize():
+    """제목 색·테두리(2026-08-28) — 검사도 normalize 한 곳에서(다른 색 축과 같은 규약)."""
+    s = df.normalize({"title_color": "ff0000", "title_ol_c": "#00FF00",
+                      "title_ol_w": 99})
+    assert s["title_color"] == "#FF0000"      # # 없이 와도 붙여서 받는다
+    assert s["title_ol_c"] == "#00FF00"
+    assert s["title_ol_w"] == 20              # 상한 20으로 잘린다
+    # 이상한 값은 빈값(=자동)으로 — 예외로 죽으면 미리보기가 통째로 안 나온다
+    bad = df.normalize({"title_color": "빨강", "title_ol_c": "#12", "title_ol_w": "x"})
+    assert bad["title_color"] == "" and bad["title_ol_c"] == ""
+    assert bad["title_ol_w"] == 0
+
+
+def test_title_color_overrides_auto():
+    """사장님이 고른 제목색이 자동(흑/백)을 이긴다 — 안 정하면 기존 그림 그대로."""
+    base = {"preset": "news_coral", "title": "제목색 테스트", "bar_h": 190}
+    # 안 정했으면: 새 키를 빈값으로 보낸 spec == 아예 안 보낸 spec (기존 무변경 계약)
+    assert df.cache_key(base) == df.cache_key(
+        {**base, "title_color": "", "title_ol_c": "", "title_ol_w": 0})
+    im_auto = df.render(base)
+    im_red = df.render({**base, "title_color": "#FF0000"})
+    assert im_auto.tobytes() != im_red.tobytes()
+    # 빨간 픽셀이 실제로 생겼는지 — 제목 블록 영역(띠 아래)에서 찾는다
+    found = any(im_red.getpixel((x, y))[:3] == (255, 0, 0)
+                for y in range(190, 400, 4) for x in range(300, 780, 4))
+    assert found, "title_color를 보냈는데 빨간 글자가 안 그려졌다"
+
+
+def test_title_outline_draws_only_with_width():
+    """테두리는 두께>0일 때만. 색만 정하고 두께 0이면 아무 일도 없다."""
+    base = {"preset": "news_coral", "title": "테두리 테스트", "bar_h": 190}
+    im_none = df.render(base)
+    im_c_only = df.render({**base, "title_ol_c": "#00FF00"})
+    assert im_none.tobytes() == im_c_only.tobytes()   # 두께 없으면 무변경
+    im_ol = df.render({**base, "title_ol_c": "#00FF00", "title_ol_w": 6})
+    assert im_ol.tobytes() != im_none.tobytes()
+    found = any(im_ol.getpixel((x, y))[:3] == (0, 255, 0)
+                for y in range(190, 400, 4) for x in range(300, 780, 4))
+    assert found, "테두리 두께·색을 보냈는데 초록 외곽선이 안 그려졌다"
+    # 색을 안 정하고 두께만 밀어도 그려진다(자동 반대색) — 슬라이더만 만져도 동작
+    im_w_only = df.render({**base, "title_ol_w": 6})
+    assert im_w_only.tobytes() != im_none.tobytes()
+
+
 def test_bottom_bar_independent_of_top():
     """위·아래 띠는 따로 조절된다. 같은 규칙으로 잘리는지도 함께 잠근다."""
     im = df.render({"preset": "news_coral", "bar_h": 0, "bottom_h": 160})
