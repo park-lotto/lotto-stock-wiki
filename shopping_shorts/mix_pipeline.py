@@ -2195,10 +2195,23 @@ def final_clip_pairs(plan, tts_paths, src_durs):
             d = float(cclip.get("out_dur") or 0.0)
             if d > 0:
                 out.append({"video_id": cclip.get("video_id"),
+                            "beat_idx": b.get("beat_idx"),
                             "src": float(cclip.get("start") or 0.0),
                             "fin": t, "dur": d})
             t += d
     return out
+
+
+def final_time_of_beat(plan, beat_idx, tts_paths=None, src_durs=None):
+    """완성본에서 **그 칸의 첫 컷** 한가운데 시각(초). 없으면 None.
+
+    ★비트 단위 근사를 쓰지 않는다(2026-08-27) — 비트에 재료가 여럿 섞이면
+      비트 한가운데가 다른 소스 자리다. 화면에 나가는 최소 단위는 컷이다.
+    """
+    for cclip in final_clip_pairs(plan, tts_paths, src_durs):
+        if cclip.get("beat_idx") == beat_idx:
+            return cclip["fin"] + cclip["dur"] * 0.5
+    return None
 
 
 def final_pair_for_source(plan, vid, pos=0.5, tts_paths=None, src_durs=None):
