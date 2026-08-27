@@ -86,10 +86,12 @@ def _probe_duration(video_path):
         return None
 
 
-# ★기본 후보 장수(2026-08-27 사장님 "16장으로"). 화면은 8개씩 2줄로 보여준다.
+# ★기본 후보 장수. 10 → 16 → **12**(2026-08-27 사장님이 화면에서 직접 범위를 그어 주셨다).
+#   16은 한 칸이 너무 작아졌다 — 화면은 **6개씩 2줄**로 보여준다.
 #   10장이던 것을 늘린 이유: 사장님이 고른 것은 케이크가 또렷한 몇 장뿐이었고, 나머지는
 #   흐릿한 배너·빈 벽이었다 — 후보가 적으면 고를 게 없다.
-GRID_FRAMES_DEFAULT = 16
+#   ⚠️이 값을 바꾸면 화면 열 수(.thumbFrameGrid)도 같이 봐야 한다: 12=6×2, 16=8×2.
+GRID_FRAMES_DEFAULT = 12
 
 
 def extract_grid_frames(video_path, dest_dir, n=GRID_FRAMES_DEFAULT, phase=0.5):
