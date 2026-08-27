@@ -36,7 +36,8 @@ from shopping_shorts import config
 from shopping_shorts.config import DB_PATH, DRAFT_BATCH_SIZE, PUBLIC_BASE_URL
 from shopping_shorts.config import GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI
 from shopping_shorts.frame_extract import (download_video, extract_frames,
-                                           extract_frame_at, extract_grid_frames)
+                                           extract_frame_at, extract_grid_frames,
+                                           GRID_FRAMES_DEFAULT)
 from shopping_shorts.script_extract import (extract_script, extract_auto, storable,
                                             KeyPoolExhausted, has_usable_result,
                                             empty_reason)
@@ -5772,14 +5773,43 @@ def _thumb_dir(job_id: str):
     return _THUMB_DIR / safe
 
 
+def _grid_phase(round_no):
+    """라운드 → 구간 안에서 찍을 지점(0~1). 라운드마다 격자를 **반씩 어긋나게** 한다.
+
+    0.5 → 0.25 → 0.75 → 0.125 → 0.625 … (van der Corput 수열, 밑 2). 이렇게 하면
+    [다른 장면 더 뽑기]를 누를수록 **아직 안 본 지점**이 나온다 — 난수로 하면 같은 자리가
+    다시 걸려 "눌러도 그대로"가 된다(사장님이 겪을 그 증상).
+    """
+    try:
+        r = max(0, int(round_no))
+    except (TypeError, ValueError):
+        return 0.5
+    if r == 0:
+        return 0.5
+    v, denom = 0.0, 1.0
+    n = r + 1                       # 1번째 항이 0.5가 되게 맞춘다
+    while n > 0:
+        denom *= 2
+        v += (n % 2) / denom
+        n //= 2
+    return min(0.95, max(0.05, v))
+
+
 @app.post("/api/produce/thumb/frames")
 def api_thumb_frames(body: dict):
-    """5단계 썸네일 — 믹스 결과 영상을 등분해 후보 프레임 10장.
+    """7단계 썸네일 — 믹스 결과 영상을 등분해 후보 프레임(기본 16장).
 
     자막이 박히지 않은 배경(자막제거본·미리보기)에서 뽑는다(설계 Q1) — 썸네일 텍스트는
     위에 새로 얹으므로 배경 자막은 방해다. 이미 뽑아뒀으면 재추출하지 않는다.
+
+    body.more=true — **[다른 장면 더 뽑기]**(2026-08-27 사장님). 같은 등분에서 찍는 지점만
+    어긋나게 해 새 16장을 준다. 라운드는 DB(thumb.grid_round)에 남아 새로고침해도 이어진다.
+    ⚠️원본 영상에서 뽑지 않는다 — 원본은 자막이 안 지워져 글자가 남는다. 글자 유무를
+      자동 판별하려면 OCR이 필요한데 이 프로젝트엔 없다(sub_region은 '지워진 자리' 감지용이라
+      원본 단독 판정은 못 한다). 그래서 자막 없는 완성본에서 **더 많이** 뽑는 쪽으로 간다.
     """
     job_id = str(body.get("job_id") or "")
+    want_more = bool(body.get("more"))
     job = Store(DB_PATH).get_mix_job(job_id)
     if not job:
         return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
@@ -5827,9 +5857,14 @@ def api_thumb_frames(body: dict):
     # 그래서 추출 시점 영상의 mtime_ns+size를 서명으로 같이 저장해두고 비교한다.
     # (해시는 과하다 — 영상이 수십 MB.)
     vstat = Path(video).stat()
-    video_sig = f"{vstat.st_mtime_ns}:{vstat.st_size}"
-
     thumb = job.get("thumbnail") or {}
+    # ★라운드를 서명에 넣는다 — 안 넣으면 [더 뽑기]로 그림이 바뀌어도 URL이 같아
+    #   브라우저가 옛 이미지를 그대로 보여준다(2026-07-30에 이미 겪은 캐시 함정).
+    grid_round = int(thumb.get("grid_round") or 0)
+    if want_more:
+        grid_round += 1
+        thumb["grid_round"] = grid_round
+    video_sig = f"{vstat.st_mtime_ns}:{vstat.st_size}:r{grid_round}"
 
     # ★이전 배경으로 만든 결과 표시(2026-08-03): 자막제거 전(preview 배경)에 생성한 썸네일이
     # 자막제거 후에도 갤러리에 남는다 — 데이터는 사장님 소유라 안 지우고, 어떤 결과가 지금
@@ -5840,7 +5875,7 @@ def api_thumb_frames(body: dict):
         return [n for n in (thumb.get("results") or []) if rs.get(n) != video_sig]
 
     existing = sorted(out_dir.glob("grid_*.jpg")) if out_dir.exists() else []
-    if existing and thumb.get("video_sig") == video_sig:
+    if not want_more and existing and thumb.get("video_sig") == video_sig:
         meta = thumb.get("frames") or []
         if len(meta) == len(existing):
             return {"ok": True, "frames": meta, "stale_results": _stale_results()}
@@ -5854,7 +5889,8 @@ def api_thumb_frames(body: dict):
     # 추출이 RuntimeError로 실패하면(ffmpeg 일시 오류 등) 폴더는 이미 비었는데 DB의
     # frames는 죽은 URL 10개를 그대로 들고 있어 "실패하면 이전보다 나빠짐"이 됐다.
     try:
-        pairs = extract_grid_frames(video, out_dir, n=10)
+        pairs = extract_grid_frames(video, out_dir, n=GRID_FRAMES_DEFAULT,
+                                    phase=_grid_phase(grid_round))
     except RuntimeError as e:
         return JSONResponse(status_code=502, content={"ok": False, "error": str(e)})
 

@@ -9,6 +9,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from shopping_shorts import app as app_module
+from shopping_shorts import frame_extract
 from shopping_shorts.store import Store
 
 
@@ -31,7 +32,7 @@ def _job_with_video(tmp_path, job_id="j1"):
 def test_frames_extracts_and_returns_ts(client, tmp_path, monkeypatch):
     _job_with_video(tmp_path)
 
-    def fake_grid(video_path, dest_dir, n=10):
+    def fake_grid(video_path, dest_dir, n=16, phase=0.5):
         dest = Path(dest_dir)
         dest.mkdir(parents=True, exist_ok=True)
         out = []
@@ -48,7 +49,7 @@ def test_frames_extracts_and_returns_ts(client, tmp_path, monkeypatch):
     r = client.post("/api/produce/thumb/frames", json={"job_id": "j1"})
     assert r.status_code == 200
     frames = r.json()["frames"]
-    assert len(frames) == 10
+    assert len(frames) == frame_extract.GRID_FRAMES_DEFAULT
     for i, f in enumerate(frames):
         expected = round(i * 2.3456789 + 1.1734567, 2)
         assert f["ts"] == pytest.approx(expected)
@@ -69,7 +70,7 @@ def test_frames_prefer_caption_free_source(client, tmp_path, monkeypatch):
 
     used = {}
 
-    def fake_grid(video_path, dest_dir, n=10):
+    def fake_grid(video_path, dest_dir, n=16, phase=0.5):
         used["path"] = video_path
         dest = Path(dest_dir); dest.mkdir(parents=True, exist_ok=True)
         p = dest / "grid_00.jpg"; p.write_bytes(b"img")
@@ -86,7 +87,7 @@ def test_frames_reuses_existing(client, tmp_path, monkeypatch):
     _job_with_video(tmp_path)
     calls = {"n": 0}
 
-    def counting(video_path, dest_dir, n=10):
+    def counting(video_path, dest_dir, n=16, phase=0.5):
         calls["n"] += 1
         dest = Path(dest_dir); dest.mkdir(parents=True, exist_ok=True)
         out = []
@@ -112,7 +113,7 @@ def test_frames_re_extracts_after_rerender(client, tmp_path, monkeypatch):
     _job_with_video(tmp_path)
     calls = {"n": 0}
 
-    def counting(video_path, dest_dir, n=10):
+    def counting(video_path, dest_dir, n=16, phase=0.5):
         calls["n"] += 1
         dest = Path(dest_dir); dest.mkdir(parents=True, exist_ok=True)
         out = []
@@ -141,7 +142,7 @@ def test_frames_no_reextract_when_video_unchanged(client, tmp_path, monkeypatch)
     _job_with_video(tmp_path)
     calls = {"n": 0}
 
-    def counting(video_path, dest_dir, n=10):
+    def counting(video_path, dest_dir, n=16, phase=0.5):
         calls["n"] += 1
         dest = Path(dest_dir); dest.mkdir(parents=True, exist_ok=True)
         out = []
@@ -164,7 +165,7 @@ def test_rerender_preserves_user_thumbnail(client, tmp_path, monkeypatch):
     이미지가 남았다). grid_*.jpg(우리 소유)만 정리 대상이어야 한다."""
     _job_with_video(tmp_path)
 
-    def fake_grid(video_path, dest_dir, n=10):
+    def fake_grid(video_path, dest_dir, n=16, phase=0.5):
         dest = Path(dest_dir); dest.mkdir(parents=True, exist_ok=True)
         out = []
         for i in range(n):
@@ -209,7 +210,7 @@ def test_rerender_extract_failure_keeps_old_frames(client, tmp_path, monkeypatch
     DB의 frames는 죽은 URL을 그대로 들고 있었다(클릭하면 전부 404)."""
     _job_with_video(tmp_path)
 
-    def fake_grid_ok(video_path, dest_dir, n=10):
+    def fake_grid_ok(video_path, dest_dir, n=16, phase=0.5):
         dest = Path(dest_dir); dest.mkdir(parents=True, exist_ok=True)
         out = []
         for i in range(n):
@@ -222,9 +223,9 @@ def test_rerender_extract_failure_keeps_old_frames(client, tmp_path, monkeypatch
     assert r1.status_code == 200
     out_dir = tmp_path / "thumbs" / "j1"
     old_files = sorted(p.name for p in out_dir.glob("grid_*.jpg"))
-    assert len(old_files) == 10
+    assert len(old_files) == frame_extract.GRID_FRAMES_DEFAULT
 
-    def fake_grid_fail(video_path, dest_dir, n=10):
+    def fake_grid_fail(video_path, dest_dir, n=16, phase=0.5):
         raise RuntimeError("ffmpeg 일시 오류")
 
     monkeypatch.setattr(app_module, "extract_grid_frames", fake_grid_fail)
@@ -240,13 +241,19 @@ def test_rerender_extract_failure_keeps_old_frames(client, tmp_path, monkeypatch
 
 
 def test_partial_extraction_cleans_orphan_and_no_reextract(client, tmp_path, monkeypatch):
-    """부분 실패(9장만 추출)면 옛 grid_09.jpg 고아를 정리하고, 다음 요청은 재추출을
+    """부분 실패(마지막 1장 실패)면 옛 고아 파일을 정리하고, 다음 요청은 재추출을
     또 돌리지 않는다(existing(glob) vs meta(frames) 개수가 영영 안 맞으면 매 요청마다
-    재추출이 도는 문제를 막는다)."""
+    재추출이 도는 문제를 막는다).
+
+    ★장수를 여기 박지 않는다(0순위-B) — 기본 장수는 frame_extract가 정한다.
+      10 → 16으로 바꿀 때(2026-08-27) 숫자를 박아둔 테스트가 전부 깨졌다.
+    """
     _job_with_video(tmp_path)
     calls = {"n": 0}
+    _n = frame_extract.GRID_FRAMES_DEFAULT
+    _last = f"grid_{_n - 1:02d}.jpg"          # 부분 실패로 고아가 될 마지막 장
 
-    def full_grid(video_path, dest_dir, n=10):
+    def full_grid(video_path, dest_dir, n=16, phase=0.5):
         calls["n"] += 1
         dest = Path(dest_dir); dest.mkdir(parents=True, exist_ok=True)
         out = []
@@ -259,13 +266,13 @@ def test_partial_extraction_cleans_orphan_and_no_reextract(client, tmp_path, mon
     r1 = client.post("/api/produce/thumb/frames", json={"job_id": "j1"})
     assert r1.status_code == 200
     out_dir = tmp_path / "thumbs" / "j1"
-    assert (out_dir / "grid_09.jpg").exists()
+    assert (out_dir / _last).exists()
 
-    def partial_grid(video_path, dest_dir, n=10):
+    def partial_grid(video_path, dest_dir, n=16, phase=0.5):
         calls["n"] += 1
         dest = Path(dest_dir); dest.mkdir(parents=True, exist_ok=True)
         out = []
-        for i in range(n - 1):  # 9장만(마지막 1장 추출 실패 시뮬레이션)
+        for i in range(n - 1):  # 마지막 1장 추출 실패 시뮬레이션
             p = dest / f"grid_{i:02d}.jpg"; p.write_bytes(f"img{calls['n']}".encode())
             out.append((p, float(i) + calls["n"]))
         return out
@@ -278,10 +285,10 @@ def test_partial_extraction_cleans_orphan_and_no_reextract(client, tmp_path, mon
 
     r2 = client.post("/api/produce/thumb/frames", json={"job_id": "j1"})
     assert r2.status_code == 200
-    assert len(r2.json()["frames"]) == 9
-    assert not (out_dir / "grid_09.jpg").exists(), "옛 고아 grid_09.jpg가 정리돼야 한다"
+    assert len(r2.json()["frames"]) == _n - 1
+    assert not (out_dir / _last).exists(), f"옛 고아 {_last}가 정리돼야 한다"
 
-    # 다음 요청은 재추출 없이 재사용해야 한다(existing(9) == meta(9)).
+    # 다음 요청은 재추출 없이 재사용해야 한다(existing == meta 개수).
     r3 = client.post("/api/produce/thumb/frames", json={"job_id": "j1"})
     assert r3.status_code == 200
     assert calls["n"] == 2, "부분추출 후에도 매번 재추출이 돌면 안 된다"
@@ -296,7 +303,7 @@ def test_rerender_same_size_different_content_detected(client, tmp_path, monkeyp
     _job_with_video(tmp_path)
     calls = {"n": 0}
 
-    def counting(video_path, dest_dir, n=10):
+    def counting(video_path, dest_dir, n=16, phase=0.5):
         calls["n"] += 1
         dest = Path(dest_dir); dest.mkdir(parents=True, exist_ok=True)
         out = []
@@ -440,7 +447,7 @@ def test_frames_falls_back_to_preview_when_no_final_video(client, tmp_path, monk
 
     seen = {}
 
-    def fake_grid(video_path, dest_dir, n=10):
+    def fake_grid(video_path, dest_dir, n=16, phase=0.5):
         seen["path"] = video_path                        # 어느 영상으로 뽑았나 기록
         dest = Path(dest_dir); dest.mkdir(parents=True, exist_ok=True)
         out = []
@@ -452,7 +459,7 @@ def test_frames_falls_back_to_preview_when_no_final_video(client, tmp_path, monk
     monkeypatch.setattr(app_module, "extract_grid_frames", fake_grid)
     r = client.post("/api/produce/thumb/frames", json={"job_id": "j1"})
     assert r.status_code == 200, r.text
-    assert len(r.json()["frames"]) == 10
+    assert len(r.json()["frames"]) == frame_extract.GRID_FRAMES_DEFAULT
     assert seen["path"] == str(preview)                  # preview로 뽑았다(video_path 아님)
 
 
@@ -470,7 +477,7 @@ def test_frames_still_404_when_no_video_at_all(client, tmp_path):
 # grid_{i:02d}.jpg는 결정적 파일명이라 재추출이 같은 파일을 덮어쓴다. URL이 똑같으면
 # 브라우저가 옛 이미지를 재검증 없이 그대로 보여준다(FileResponse는 Cache-Control 미설정).
 def _stub_grid(monkeypatch):
-    def fake_grid(video_path, dest_dir, n=10):
+    def fake_grid(video_path, dest_dir, n=16, phase=0.5):
         dest = Path(dest_dir); dest.mkdir(parents=True, exist_ok=True)
         out = []
         for i in range(n):
