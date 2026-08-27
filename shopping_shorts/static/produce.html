@@ -1083,6 +1083,29 @@
     #s2Root.mode-side .s2-draft{display:block}
     #s2Root.mode-side .s2-row.bank-open .s2-bank{position:static;box-shadow:none;margin-bottom:16px}
   }
+
+  /* ── 🎨 색 팔레트(2026-08-27 사장님 "이런 파레트로 편의성있게") ──────────────
+     색 칸이 화면 23곳에 흩어져 있다. 각자 팔레트를 달면 반드시 어긋나므로
+     (0순위-B) **한 곳**에서 만들어 전부에 자동으로 붙인다(_swAttachAll).
+     기본 색선택기는 그대로 둔다 — 세밀한 색이 필요할 때 쓴다. */
+  .sw-btn{width:22px;height:22px;border-radius:50%;border:2px solid rgba(255,255,255,.35);
+          cursor:pointer;padding:0;flex:none;background:
+          conic-gradient(#ff2d2d,#ffd400,#3ddc57,#00b3ff,#b14cff,#ff2d8f,#ff2d2d);
+          box-shadow:0 1px 3px rgba(0,0,0,.4)}
+  .sw-btn:hover{transform:scale(1.12)}
+  .sw-pop{position:fixed;z-index:9999;background:var(--panel,#171a21);
+          border:1px solid var(--line,#2a2f3a);border-radius:14px;padding:12px;
+          box-shadow:0 12px 32px rgba(0,0,0,.55);width:274px}
+  .sw-pop .sw-t{font-size:11px;color:var(--sub,#98a0b3);margin:0 0 7px 2px}
+  .sw-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:9px}
+  /* 검정·남색처럼 어두운 색은 패널 바탕에 묻힌다 — 테두리로 원의 윤곽을 세운다. */
+  .sw-grid i{width:30px;height:30px;border-radius:50%;cursor:pointer;display:block;
+             border:2px solid rgba(255,255,255,.38);transition:transform .08s}
+  .sw-grid i:hover{transform:scale(1.15);border-color:#fff}
+  .sw-grid i.on{border-color:#fff;box-shadow:0 0 0 2px var(--accent,#5aa9ff)}
+  .sw-more{margin-top:11px;width:100%;padding:7px;border-radius:9px;cursor:pointer;
+           background:var(--inset,#1c202a);color:var(--txt,#e8eaf0);
+           border:1px solid var(--line,#2a2f3a);font-size:12px}
   </style>
   <link rel="stylesheet" href="theme.css?v=1">
 </head>
@@ -5102,6 +5125,122 @@ function openGenFromWiki(){
 // 밖(호출부만 제거, 엔드포인트는 남음).
 
 // ── 1단계 제작소: 영상믹스(given_script 매칭) ──────────────
+
+// ── 🎨 색 팔레트 ────────────────────────────────────────────────────────────
+// 2026-08-27 사장님: "폰트나 외곽선 배경박스 등 꾸미기할 때 이런 파레트로 편의성있게".
+// 전엔 색 칸이 전부 브라우저 기본 색선택기라, 한 색 고르는 데 창을 열고 다시 닫아야 했다.
+//
+// ★색 칸은 이 화면에 23곳 있다. 각 자리에 팔레트를 따로 달면 언젠가 반드시
+//   어긋난다(0순위-B) — 색 목록도, 고른 값을 반영하는 방법도 **여기 한 곳**에만 있다.
+//   붙이는 것도 자동이다: 화면에 색 칸이 새로 생기면(템플릿으로 그려지는 자막 규칙·
+//   썸네일 글자 등) MutationObserver가 알아서 단추를 붙인다. 즉 **호출부 수정 0곳**.
+const SW_COLORS = [
+  '#FFFFFF','#000000','#8E8E93','#FFF200','#FFD400','#FF9500',   // 흰·검·회 + 노랑/주황
+  '#FF6B00','#FF3B30','#E11F26','#B00020','#FFC9E3','#FF8FCB',   // 주황~빨강 + 연핑크
+  '#FF5FB0','#FF2D8F','#E6007E','#B14CFF','#7C4DFF','#5856D6',   // 핑크~보라
+  '#00B3FF','#0A84FF','#0047B3','#00C7BE','#34C759','#1DB954',   // 파랑~초록
+];
+let _swPop = null, _swInput = null, _swBtn = null;
+
+function _swClose(){ if(_swPop){ _swPop.remove(); _swPop = null; _swInput = null; _swBtn = null; } }
+
+// 단추 아래에 붙이되 화면 밖으로 나가지 않게 — 자리가 없으면 위로 띄운다.
+// ★스크롤에 **닫지 않고 따라간다**(2026-08-27 수정). 처음엔 스크롤이면 무조건 닫게 했는데,
+//   capture 단계라 화면 안 어느 목록이 조금만 움직여도 팔레트가 사라졌다(실측: 스크린샷을
+//   찍는 것만으로도 닫혔다). 열어둔 것을 남이 닫는 건 사용자가 한 일이 아니다.
+function _swReposition(){
+  if(!_swPop || !_swBtn) return;
+  const r = _swBtn.getBoundingClientRect();
+  if(r.bottom < 0 || r.top > innerHeight){ _swClose(); return; }   // 단추가 화면을 벗어나면 그때 닫는다
+  const w = _swPop.offsetWidth, h = _swPop.offsetHeight;
+  _swPop.style.left = Math.max(8, Math.min(r.left, innerWidth - w - 8)) + 'px';
+  _swPop.style.top  = (r.bottom + h + 8 < innerHeight ? r.bottom + 6 : Math.max(8, r.top - h - 6)) + 'px';
+}
+
+// 최근 쓴 색 — 사장님이 쓰는 색은 정해져 있다. 매번 24개에서 찾게 하지 않는다.
+function _swRecent(){
+  try{ return (JSON.parse(localStorage.getItem('sw_recent') || '[]') || []).slice(0, 6); }
+  catch(e){ return []; }
+}
+function _swRemember(hex){
+  try{
+    const r = [hex.toUpperCase()].concat(_swRecent().filter(c => c !== hex.toUpperCase()));
+    localStorage.setItem('sw_recent', JSON.stringify(r.slice(0, 6)));
+  }catch(e){}      // 시크릿 창 등 저장이 막혀도 색 고르기는 되어야 한다
+}
+
+// ★고른 색을 반영하는 방법도 한 곳뿐이다. 각 칸의 oninput/onchange가 그대로 돌도록
+//   input·change 이벤트를 둘 다 쏜다 — 그래야 23곳 배선을 하나도 안 고쳐도 된다.
+function _swPick(hex){
+  if(!_swInput) return;
+  _swInput.value = hex;
+  _swRemember(hex);
+  _swInput.dispatchEvent(new Event('input',  {bubbles:true}));
+  _swInput.dispatchEvent(new Event('change', {bubbles:true}));
+  _swClose();
+}
+
+function _swOpen(input, btn){
+  const same = (_swInput === input);
+  _swClose();
+  if(same) return;          // 같은 단추를 다시 누르면 닫기
+  _swInput = input;
+  const cur = (input.value || '').toUpperCase();
+  const dot = c => `<i style="background:${c}" data-c="${c}" title="${c}"`
+                 + (c === cur ? ' class="on"' : '') + '></i>';
+  const recent = _swRecent();
+  const pop = document.createElement('div');
+  pop.className = 'sw-pop';
+  pop.innerHTML =
+    (recent.length ? '<div class="sw-t">최근 쓴 색</div><div class="sw-grid" style="margin-bottom:11px">'
+                     + recent.map(dot).join('') + '</div>' : '')
+    + '<div class="sw-t">색 고르기</div><div class="sw-grid">' + SW_COLORS.map(dot).join('') + '</div>'
+    // ★이모지를 넣지 않는다 — 🎚는 이 화면 폰트에 없어 네모(두부)로 나왔다(실측 확대 확인).
+    //   화면에 이미 쓰는 것만 쓰거나, 글자만 쓴다.
+    + '<button type="button" class="sw-more">직접 고르기 (세밀한 색)</button>';
+  document.body.appendChild(pop);
+
+  _swBtn = btn;
+  _swReposition();
+
+  pop.addEventListener('click', e => {
+    const i = e.target.closest('i[data-c]');
+    if(i){ _swPick(i.dataset.c); return; }
+    if(e.target.closest('.sw-more')){ const el = _swInput; _swClose(); el.click(); }  // 기본 색선택기
+  });
+  _swPop = pop;
+}
+
+// 색 칸 하나에 단추를 붙인다. 이미 붙었으면 아무 일도 안 한다.
+function _swAttach(input){
+  if(!input || input.dataset.sw) return;
+  input.dataset.sw = '1';
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'sw-btn'; b.title = '색 팔레트';
+  b.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); _swOpen(input, b); });
+  if(input.parentNode) input.parentNode.insertBefore(b, input.nextSibling);
+}
+function _swAttachAll(root){
+  try{ (root || document).querySelectorAll('input[type="color"]').forEach(_swAttach); }catch(e){}
+}
+
+document.addEventListener('click', e => {          // 바깥을 누르면 닫는다
+  if(_swPop && !e.target.closest('.sw-pop') && !e.target.closest('.sw-btn')) _swClose();
+});
+document.addEventListener('keydown', e => { if(e.key === 'Escape') _swClose(); });
+addEventListener('scroll', _swReposition, true);   // 스크롤하면 따라간다(닫지 않는다)
+addEventListener('resize', _swReposition);
+
+// 나중에 그려지는 색 칸(자막 규칙·추가 글자·썸네일 등)까지 자동으로 붙는다.
+try{
+  new MutationObserver(ms => {
+    for(const m of ms) for(const n of m.addedNodes)
+      if(n.nodeType === 1){ if(n.matches && n.matches('input[type="color"]')) _swAttach(n); _swAttachAll(n); }
+  }).observe(document.documentElement, {childList:true, subtree:true});
+}catch(e){}
+if(document.readyState === 'loading') addEventListener('DOMContentLoaded', () => _swAttachAll());
+else _swAttachAll();
+
 let MIX_JOB=null, MIX_POLL=null;
 // 폴링 연속 실패 횟수 — 삼킨 예외 때문에 화면이 조용히 굳는 걸 막는다(2026-08-27).
 let _mixPollFails = 0;
