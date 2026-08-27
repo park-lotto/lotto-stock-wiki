@@ -13182,8 +13182,26 @@ def _clean_frame_src(job, work, beat_idx):
     cvp = job.get("clean_video_path")
     if not cvp or not Path(cvp).exists():
         return {}, None, None, ""
-    at = mix_pipeline._final_time_of_beat(job.get("edit_plan") or {}, beat_idx)
-    return {}, cvp, at, "_clean"
+    # ★컷 단위로 찾는다(2026-08-27) — 비트에 재료가 여럿이면 비트 한가운데는
+    #   다른 소스 자리다. 화면에 나가는 최소 단위는 컷이다(clean_thumb과 같은 기준).
+    _plan = job.get("edit_plan") or {}
+    _tts = {b["beat_idx"]: b["tts_path"] for b in (_plan.get("beats") or [])
+            if b.get("tts_path")}
+    try:
+        _sd = {v: (frame_extract._probe_duration(pth) or 0.0)
+               for v, pth in _resolve_sources(job, work).items()}
+    except Exception:      # noqa: BLE001
+        _sd = {}
+    sec = mix_pipeline.final_time_of_beat(_plan, beat_idx, tts_paths=_tts, src_durs=_sd)
+    if sec is None:
+        # ★컷 계획을 못 세워도(소스 길이 조회 실패 등) **원본으로 떨어지면 안 된다** —
+        #   그러면 자막·워터마크가 화면에 그대로 나온다(08-27 회귀의 정체).
+        #   비트 근사로라도 청소본을 가리킨다. 정확도는 떨어져도 '지워진 그림'이다.
+        r = mix_pipeline._final_time_of_beat(_plan, beat_idx)
+        return {}, cvp, (r if r is not None else 0.5), "_clean"
+    _d = frame_extract._probe_duration(cvp) or 0.0
+    # 호출부는 '비율'을 받는다 — 파일 길이가 계획 합과 달라도 초를 비율로 환산해 넘긴다.
+    return {}, cvp, (min(0.98, max(0.02, sec / _d)) if _d > 0 else 0.5), "_clean"
 
 
 def _extract_beat_frame(work, beat, out_path, clean_sources=None,
