@@ -5864,7 +5864,13 @@ def api_thumb_frames(body: dict):
     if want_more:
         grid_round += 1
         thumb["grid_round"] = grid_round
-    video_sig = f"{vstat.st_mtime_ns}:{vstat.st_size}:r{grid_round}"
+    # ★장수(n)도 서명에 넣는다(2026-08-27 사장님 "아직 그대로 아닌가").
+    #   프레임 목록은 DB(thumbnail.frames)에 남아 **video_sig가 같으면 그대로 재사용**한다.
+    #   그래서 GRID_FRAMES_DEFAULT를 16 → 12로 바꿔도 **이미 만든 작업은 옛 장수 그대로**였다
+    #   — 배포는 됐는데 화면은 안 바뀌니 "아직 그대로"로 보인다. 장수가 바뀌면 서명이 달라져
+    #   자동으로 다시 뽑는다(사장님이 [다른 장면 더 뽑기]를 눌러야만 바뀌던 것 제거).
+    video_sig = (f"{vstat.st_mtime_ns}:{vstat.st_size}:r{grid_round}"
+                 f":n{GRID_FRAMES_DEFAULT}")
 
     # ★이전 배경으로 만든 결과 표시(2026-08-03): 자막제거 전(preview 배경)에 생성한 썸네일이
     # 자막제거 후에도 갤러리에 남는다 — 데이터는 사장님 소유라 안 지우고, 어떤 결과가 지금
