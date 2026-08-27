@@ -1,7 +1,8 @@
-"""썸네일 배경 후보 16장 + [다른 장면 더 뽑기](2026-08-27 사장님).
+"""썸네일 배경 후보 12장(6×2) + [다른 장면 더 뽑기](2026-08-27 사장님).
 
 사장님 제보: 후보 10장 중 고를 만한 건 케이크가 또렷한 몇 장뿐이고 나머지는 흐릿한
-배너·빈 벽이었다. "16장으로 하고 새로고침으로 더 나오게" → 기본 16장 + 라운드마다
+배너·빈 벽이었다. "16장으로 하고 새로고침으로 더 나오게" → 뒤이어 화면에 범위를 그어
+"이만큼만 12개" → 기본 12장(6×2) + 라운드마다
 찍는 지점을 어긋나게 해 새 16장을 준다.
 
 ★원본 영상에서 뽑지 않는 이유(사장님 "원본 썸네일쪽 제목없는장면은 캡쳐가 힘드나"):
@@ -13,9 +14,13 @@ from shopping_shorts import frame_extract
 from shopping_shorts.app import _grid_phase
 
 
-def test_default_is_16():
-    """기본 장수는 16 — 화면이 8개씩 2줄로 보여주는 수와 같아야 한다."""
-    assert frame_extract.GRID_FRAMES_DEFAULT == 16
+def test_default_is_12():
+    """기본 장수는 12 — 화면이 6개씩 2줄로 보여주는 수와 같아야 한다.
+
+    10 → 16 → 12(2026-08-27 사장님이 화면에 직접 범위를 그어 주셨다). 16은 한 칸이
+    너무 작았다. ★이 값을 바꾸면 .thumbFrameGrid 열 수도 같이 봐야 한다(12=6×2).
+    """
+    assert frame_extract.GRID_FRAMES_DEFAULT == 12
 
 
 def test_phase_first_round_is_center():
@@ -61,5 +66,5 @@ def test_extract_grid_frames_signature():
     """호출부가 phase를 넘길 수 있어야 한다(안 넘기면 종전대로 중앙)."""
     import inspect
     sig = inspect.signature(frame_extract.extract_grid_frames)
-    assert sig.parameters["n"].default == 16
+    assert sig.parameters["n"].default == frame_extract.GRID_FRAMES_DEFAULT
     assert sig.parameters["phase"].default == 0.5
