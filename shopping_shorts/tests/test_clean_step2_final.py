@@ -206,3 +206,66 @@ class Test판단은한곳:
             import inspect
             body = inspect.getsource(fn)
             assert "_FINAL_CLEAN" not in body, f"{fn.__name__}이 판단을 또 적고 있다"
+
+
+class Test완성본에서_소스위치찾기:
+    """AFTER 썸네일을 완성본에서 뽑기 위한 위치 계산 (2026-08-27 회귀 수정).
+
+    ★왜 생겼나: 2단계가 완성본 1편만 청소하게 되면서 소스별 청소본이 사라졌는데,
+      clean_thumb이 여전히 clean_sources에서만 찾아 kind=clean이 전부 404였다
+      (서버 로그 실측: original 200 / clean 404). 화면의 AFTER 칸이 검게 나왔다.
+    """
+
+    def _plan(self, *ids):
+        return {"beats": [{"beat_idx": i, "target_seconds": 10.0,
+                           "primary": {"video_id": v, "start": 0.0, "end": 10.0},
+                           "alternates": []} for i, v in enumerate(ids)]}
+
+    def test_첫_비트는_앞쪽_비율(self):
+        at = mp._final_time_of_source(self._plan("s0", "s1", "s2"), "s0")
+        assert 0.1 < at < 0.25, at          # 30초 중 0~10초 구간의 중간 = 5/30
+
+    def test_마지막_비트는_뒤쪽_비율(self):
+        at = mp._final_time_of_source(self._plan("s0", "s1", "s2"), "s2")
+        assert 0.75 < at < 0.95, at         # 20~30초의 중간 = 25/30
+
+    def test_안_쓰인_소스는_None(self):
+        assert mp._final_time_of_source(self._plan("s0", "s1"), "s9") is None
+
+    def test_빈_편집안은_None(self):
+        assert mp._final_time_of_source({}, "s0") is None
+
+    def test_장면편집한_재료도_찾는다(self):
+        """scene_override가 진짜 화면이다 — 이걸 놓치면 엉뚱한 장면을 보여준다."""
+        plan = self._plan("s0", "s1")
+        plan["beats"][1]["scene_override"] = [{"video_id": "s7", "start": 0.0, "end": 5.0}]
+        assert mp._final_time_of_source(plan, "s7") is not None
+        assert mp._final_time_of_source(plan, "s1") is None, "덮어써진 재료를 쓰면 안 된다"
+
+    def test_비율은_항상_안전범위(self):
+        for vid in ("s0", "s1", "s2"):
+            at = mp._final_time_of_source(self._plan("s0", "s1", "s2"), vid)
+            assert 0.02 <= at <= 0.98
+
+
+class Test재료판정도_한곳:
+    """★0순위-B: 재료 판정(scene_override 우선 + alternates 포함)이 세 벌이었다."""
+
+    def test_scene_override가_우선(self):
+        b = {"primary": {"video_id": "s0"}, "alternates": [{"video_id": "s1"}],
+             "scene_override": [{"video_id": "s9"}]}
+        assert [m["video_id"] for m in mp._beat_materials(b)] == ["s9"]
+
+    def test_override_없으면_primary와_alternates(self):
+        b = {"primary": {"video_id": "s0"}, "alternates": [{"video_id": "s1"}]}
+        assert [m["video_id"] for m in mp._beat_materials(b)] == ["s0", "s1"]
+
+    def test_판정코드가_흩어지지_않았나(self):
+        """이 규칙을 또 손으로 적으면 어긋난다 — 쓰는 곳은 전부 _beat_materials를 부른다."""
+        import inspect
+        src = inspect.getsource(mp)
+        # 설명문·주석이 아니라 **실제로 값을 꺼내는 코드**만 센다.
+        needle = ".get(" + chr(34) + "scene_override" + chr(34) + ")"
+        reads = [ln.strip() for ln in src.splitlines()
+                 if needle in ln and not ln.strip().startswith("#")]
+        assert len(reads) == 1, "재료 판정이 또 손으로 적혔다: %s" % (reads,)

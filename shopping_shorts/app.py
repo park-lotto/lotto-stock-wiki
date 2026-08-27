@@ -4801,9 +4801,20 @@ def api_produce_mix_clean_thumb(job_id: str, kind: str = "original",
     pos = min(0.98, max(0.02, float(pos)))
     vid = _source_video_id(si)
     if kind == "clean":
-        src = (job.get("clean_sources") or {}).get(vid)
-        if job.get("clean_status") != "ready" or not src or not Path(src).exists():
+        if job.get("clean_status") != "ready":
             return JSONResponse(status_code=404, content={"ok": False, "error": "클린 소스 없음"})
+        src = (job.get("clean_sources") or {}).get(vid)
+        if not src or not Path(src).exists():
+            # ★소스별 청소본이 없다 = 완성본 1편만 청소하는 경로다(2026-08-27).
+            #   청소 결과는 조립된 완성본 하나뿐이라, 그 안에서 이 소스가 나오는
+            #   지점을 찾아 프레임을 뽑는다. 못 찾으면 원본과 같은 pos 비율로 뽑는다.
+            #   (안 고치면 AFTER 칸이 통째로 404 — 화면이 검게 나온다)
+            src = job.get("clean_video_path")
+            if not src or not Path(src).exists():
+                return JSONResponse(status_code=404, content={"ok": False, "error": "클린 소스 없음"})
+            at = mix_pipeline._final_time_of_source(job.get("edit_plan") or {}, vid)
+            if at is not None:
+                pos = at
     else:
         try:
             src = _resolve_sources(job, work)[vid]

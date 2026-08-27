@@ -1659,9 +1659,7 @@ def _used_spans(plan):
         return None
     out = {}
     for b in beats:
-        over = b.get("scene_override")
-        mats = [dict(s) for s in over if s] if over else                [s for s in ([b.get("primary")] + list(b.get("alternates") or [])) if s]
-        for m in mats:
+        for m in _beat_materials(b):
             vid = m.get("video_id")
             try:
                 st, en = float(m.get("start")), float(m.get("end"))
@@ -1905,6 +1903,53 @@ def _clean_joined(items, key, work, tag=""):
 _FINAL_CLEAN = os.environ.get("SHORTS_CLEAN_FINAL", "0") == "1"   # ★기본 꺼짐 — 실측 후 켠다
 
 
+def _beat_materials(b):
+    """비트 하나가 **화면에 쓰는 재료** 목록. video_assemble._beat_material과 같은 규칙.
+
+    사람이 편성한 scene_override가 있으면 그것, 없으면 primary + alternates.
+    alternates를 빼면 안 된다 — 나레이션이 길면 실제로 화면에 나온다.
+
+    ★같은 판단을 여러 곳에 적으면 어긋난다(0순위-B) — _used_spans·_plan_signature·
+      _final_time_of_source가 전부 이 함수를 쓴다.
+    """
+    over = b.get("scene_override")
+    if over:
+        return [dict(x) for x in over if x]
+    return [x for x in ([b.get("primary")] + list(b.get("alternates") or [])) if x]
+
+
+def _final_time_of_source(plan, vid):
+    """완성본 타임라인에서 소스 vid가 처음 나오는 지점의 **비율**(0~1). 없으면 None.
+
+    ★왜 비율인가: 실제 조립 길이는 TTS 길이에 따라 target_seconds와 달라진다.
+      비율로 주고 호출부가 실제 영상 길이에 곱하면 위치가 맞는다.
+
+    (2026-08-27) 2단계가 완성본 1편만 청소하게 되면서 소스별 청소본이 없어졌다.
+    AFTER 썸네일을 완성본에서 뽑아야 하는데, 그러려면 그 소스가 완성본 어디에
+    있는지 알아야 한다.
+    """
+    beats = (plan or {}).get("beats") or []
+    if not beats:
+        return None
+    spans, t = [], 0.0
+    for b in beats:
+        try:
+            dur = float(b.get("target_seconds") or 0) or 0.0
+        except (TypeError, ValueError):
+            dur = 0.0
+        if dur <= 0:
+            dur = 2.0                     # 값이 없으면 평균치로 자리만 잡는다
+        hit = any((m or {}).get("video_id") == vid for m in _beat_materials(b))
+        spans.append((t, t + dur, hit))
+        t += dur
+    if t <= 0:
+        return None
+    for st, en, hit in spans:
+        if hit:
+            return min(0.98, max(0.02, ((st + en) / 2.0) / t))
+    return None
+
+
 def _clean_strategy(job):
     """자막제거를 **어떤 단위로** 할지 정하는 유일한 자리 (2026-08-27).
 
@@ -1938,9 +1983,7 @@ def _plan_signature(plan):
     beats = (plan or {}).get("beats") or []
     parts = []
     for b in beats:
-        over = b.get("scene_override")
-        mats = [dict(x) for x in over if x] if over else                [x for x in ([b.get("primary")] + list(b.get("alternates") or [])) if x]
-        for m in mats:
+        for m in _beat_materials(b):
             parts.append("%s:%s:%s" % (m.get("video_id"), m.get("start"), m.get("end")))
         parts.append("t=%s" % b.get("target_seconds"))
         parts.append("|")
