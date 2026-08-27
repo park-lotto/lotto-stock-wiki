@@ -31,12 +31,15 @@ def test_저장_대상_밖의_필드는_안_담는다():
     out = storable({"full_text": "말", "segments": [], "tag_qa": {},
                     "video_path": "/tmp/x.mp4", "raw_response": "…"})
     # source_brief 추가(2026-08-16) — 1단계 화면·대본 생성이 읽는 영상 단위 요약.
-    assert set(out) == {"full_text", "segments", "tag_qa", "source_brief"}
+    # video_w/h 추가(2026-08-27) — 1단계가 "가로형(롱폼)"을 담자마자 알리는 근거.
+    assert set(out) == {"full_text", "segments", "tag_qa", "source_brief",
+                        "video_w", "video_h"}
+    assert out["video_w"] is None and out["video_h"] is None   # 없으면 None(0 아님)
 
 
 def test_None이나_빈_입력도_안전하다():
     assert storable(None) == {"full_text": "", "segments": [], "tag_qa": {},
-                              "source_brief": {}}
+                              "source_brief": {}, "video_w": None, "video_h": None}
 
 
 def test_source_brief는_정규화돼_담긴다():

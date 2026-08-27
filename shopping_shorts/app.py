@@ -11892,7 +11892,13 @@ def api_produce_source_brief(request: Request, shortcode: str):
             "shot_role": s.get("shot_role") or "기타",
             "chars": len((s.get("text") or "").strip()),
         })
-    return {"ok": True, "brief": data.get("source_brief") or {}, "segments": segs}
+    # ★가로형(롱폼) 여부는 **서버가 판정해서** 내려준다(2026-08-27 사장님 지시).
+    #   프론트가 w>h를 다시 계산하면 판단이 두 곳이 된다(0순위-B) — 실제 차단을 하는
+    #   mix_pipeline._block_landscape와 어긋나면 "화면은 괜찮다는데 제작은 실패"가 된다.
+    _w, _h = data.get("video_w"), data.get("video_h")
+    return {"ok": True, "brief": data.get("source_brief") or {}, "segments": segs,
+            "video_w": _w, "video_h": _h,
+            "landscape": bool(_w and _h and _w > _h)}
 
 
 @app.get("/api/produce/aipick")
