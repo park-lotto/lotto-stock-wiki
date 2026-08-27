@@ -147,7 +147,15 @@ def keys_for(store, customer_id, service):
     #   ⚠️ as_cid는 None을 안 준다(못 읽으면 0으로 떨어뜨린다) — 그래서 조건을 걸지
     #      않고 **누구든 자기 키를 먼저 본다**. cid만 특별 취급하는 갈래를 없앤 것이
     #      이 수정의 핵심이다(0순위-B: 같은 판단을 두 갈래로 두지 않는다).
-    mine = store.get_customer_keys_plain(cid, service)
+    #   ⚠️ store가 이 메서드를 안 가진 경로가 있다(과금·정리 코드가 넘기는 가벼운
+    #      스텁 등). 전엔 cid 0이면 호출 자체를 건너뛰어 드러나지 않던 자리다 —
+    #      없으면 **조용히 넘기지 말고 로그를 남기고** 공용 키로 간다(종전 동작).
+    try:
+        mine = store.get_customer_keys_plain(cid, service)
+    except AttributeError:
+        logging.warning("keys_for: store에 get_customer_keys_plain이 없다"
+                        "(cid=%r, service=%r) — 공용 키로 처리한다", cid, service)
+        mine = None
     if mine:
         if not is_pooled(service):
             return mine, True             # ★개인 전용: 여기서 끝. 공용 키를 안 섞는다
