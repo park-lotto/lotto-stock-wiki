@@ -171,7 +171,104 @@ def _daily_tx(conn, days):
     return out
 
 
-def verdict(db_path, cores=None):
+def waiting(db_path, limit=40):
+    """지금 줄에 서 있는 작업을 **사람 단위로** 보여준다(2026-08-27).
+
+    왜: "대기 8개"라는 숫자만으론 아무 판단도 못 한다. 한 사람이 8개를 몰아넣은
+    것과 8명이 한 개씩 기다리는 것은 전혀 다른 상황이고, 처방(워커 증설 vs
+    1인 동시 제한)도 반대다. **누가 · 몇 개 · 얼마나 기다렸는지**를 봐야 한다.
+
+    ★대기시간은 `created_at`(줄 선 시각) 기준이다. `claimed_at`이 있으면 이미
+      일을 물었으니 그때까지가 대기, 아니면 지금까지가 대기다.
+    """
+    conn = sqlite3.connect(str(db_path), timeout=10)
+    try:
+        tabs = {r[0] for r in conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table'")}
+        if "job_queue" not in tabs:
+            return {"rows": [], "by_customer": []}
+
+        # 고객 이름은 mix_jobs를 거쳐야 나온다(job_queue엔 없다). 없으면 빈칸으로 둔다 —
+        # 이름을 못 찾는다고 줄 서 있는 사실 자체를 숨기면 안 된다.
+        has_mix = "mix_jobs" in tabs and "customers" in tabs
+        # ★있는 컬럼만 고른다. job_queue는 자리마다 컬럼이 조금씩 다르고(테스트용
+        #   축약본도 있다), 없는 컬럼 하나 때문에 대기 목록이 통째로 안 나오면
+        #   정작 밀렸을 때 못 본다.
+        cols = {r[1] for r in conn.execute("PRAGMA table_info(job_queue)")}
+
+        def col(name, default="NULL"):
+            return f"q.{name}" if name in cols else default
+        sel = ("SELECT q.id, " + col("task", "''") + ", q.state, "
+               + col("created_at") + ", " + col("claimed_at") + ", "
+               + col("prio", "0") + ", " + col("args_json", "''") + ", "
+               + ("COALESCE(NULLIF(c.name,''), NULLIF(c.email,''), c.username, ''), "
+                  "m.customer_id "
+                  if has_mix else "'', NULL ")
+               + "  FROM job_queue q "
+               + ("  LEFT JOIN mix_jobs m "
+                  "    ON m.job_id = json_extract(q.args_json, '$.job_id') "
+                  "  LEFT JOIN customers c ON c.id = m.customer_id "
+                  if has_mix and "args_json" in cols else "")
+               + " WHERE q.state IN ('queued','running') "
+               " ORDER BY CASE q.state WHEN 'running' THEN 0 ELSE 1 END, "
+               "          q.prio DESC, q.created_at ASC LIMIT ?")
+        try:
+            raw = conn.execute(sel, (int(limit),)).fetchall()
+        except sqlite3.OperationalError:
+            # json_extract이 없는 빌드 — 이름 없이라도 줄은 보여준다.
+            raw = [(r[0], r[1], r[2], r[3], r[4], r[5], r[6], "", None)
+                   for r in conn.execute(
+                       "SELECT id, " + col("task", "''").replace("q.", "") + ", state, "
+                       + col("created_at").replace("q.", "") + ", "
+                       + col("claimed_at").replace("q.", "") + ", "
+                       + col("prio", "0").replace("q.", "") + ", "
+                       + col("args_json", "''").replace("q.", "") +
+                       "  FROM job_queue WHERE state IN ('queued','running') "
+                       " ORDER BY id ASC LIMIT ?", (int(limit),))]
+
+        now = datetime.now(timezone.utc)
+        rows = []
+        for jid, task, state, created, claimed, prio, _args, cname, cid in raw:
+            waited = None
+            if created:
+                try:
+                    t0 = datetime.strptime(created, "%Y-%m-%d %H:%M:%S").replace(
+                        tzinfo=timezone.utc)
+                    end = now
+                    if claimed:
+                        end = datetime.strptime(claimed, "%Y-%m-%d %H:%M:%S").replace(
+                            tzinfo=timezone.utc)
+                    waited = max(0, int((end - t0).total_seconds()))
+                except ValueError:
+                    pass
+            # ★cid 0 = 관리자(사장님) 계정. customers 테이블에 행이 없어 이름이 안 나온다.
+            #   "(모름)"으로 두면 남의 고객이 밀린 줄 알고 엉뚱한 처방을 한다.
+            if not cname and cid == 0:
+                cname = "관리자(사장님)"
+            rows.append({"id": jid, "task": task, "state": state,
+                         "created_at": created, "prio": prio,
+                         "customer": cname or "", "customer_id": cid,
+                         "waited_sec": waited})
+
+        # 사람 단위 요약 — 한 명이 몰아넣었는지 여러 명이 한 개씩인지가 여기서 갈린다.
+        agg = {}
+        for r in rows:
+            key = r["customer_id"] if r["customer_id"] is not None else "-"
+            a = agg.setdefault(key, {"customer": r["customer"] or "(모름)",
+                                     "customer_id": r["customer_id"],
+                                     "queued": 0, "running": 0, "max_wait_sec": 0})
+            a["queued" if r["state"] == "queued" else "running"] += 1
+            if r["waited_sec"]:
+                a["max_wait_sec"] = max(a["max_wait_sec"], r["waited_sec"])
+        by_customer = sorted(agg.values(),
+                             key=lambda a: (-(a["queued"] + a["running"]),
+                                            -a["max_wait_sec"]))
+        return {"rows": rows, "by_customer": by_customer}
+    finally:
+        conn.close()
+
+
+def verdict(db_path, cores=None, now_queued=None):
     """지금 서버를 늘려야 하나 — 숫자로 답한다. 화면 맨 위에 한 줄로 띄운다.
 
     판단 기준(2026-08-22 실측에서 나온 것)
@@ -179,13 +276,18 @@ def verdict(db_path, cores=None):
       · 줄이 계속 서 있다 → 상한이 부족하다
       · 디스크 여유 50GB 미만 → 정리로 못 버틴다, 스토리지가 필요하다
       · 월 송신이 6TB(=무료한도)의 80%를 넘본다 → 초과요금이 붙기 시작한다
+
+    ★문구는 **언제의 숫자인지** 반드시 밝힌다(2026-08-27). 판정은 7일 최대치로
+      보는데 문장이 "밀렸습니다"라 현재형으로 읽혀, 이미 지나간 이틀 전 최대치를
+      지금 사고로 오해했다(실사고). 최대치가 난 **날짜**와 **지금 값**을 같이 박는다.
     """
     d = daily(db_path, days=7)
     cores = cores or (os.cpu_count() or 4)
     if not d:
         return {"level": "unknown", "msg": "아직 표본이 없습니다 — 5분마다 쌓입니다."}
     max_run = max((x["max_running"] or 0) for x in d)
-    max_q = max((x["max_queued"] or 0) for x in d)
+    q_day = max(d, key=lambda x: (x["max_queued"] or 0))
+    max_q = q_day["max_queued"] or 0
     min_free = min((x["min_disk_free_gb"] or 9999) for x in d)
     tx_month = sum(x["tx_gb"] for x in d) / max(len(d), 1) * 30
 
@@ -201,8 +303,11 @@ def verdict(db_path, cores=None):
                 "msg": f"월 송신 추정 {tx_month / 1024:.1f}TB — 무료 6TB에 근접. "
                        f"초과분은 GB당 $0.09입니다."}
     if max_q >= 3:
+        now_txt = ("지금은 대기 없습니다." if now_queued == 0
+                   else f"지금은 {now_queued}개." if now_queued is not None else "")
         return {"level": "warn",
-                "msg": f"대기가 최대 {max_q}개까지 밀렸습니다 — 워커를 늘릴 여지가 있는지 보세요."}
+                "msg": f"대기가 {q_day['date']}에 최대 {max_q}개까지 밀렸습니다"
+                       f"(최근 7일 최대치). {now_txt} 워커를 늘릴 여지가 있는지 보세요."}
     return {"level": "ok",
             "msg": f"여유 있습니다 (동시 렌더 최대 {max_run}/{cores}코어 · "
                    f"디스크 여유 {min_free:.0f}GB · 월 송신 추정 {tx_month / 1024:.1f}TB)"}

@@ -10186,9 +10186,15 @@ def _api_capacity(request: Request, days: int = 14):
         now = capacity_watch.sample(DB_PATH)     # 열 때마다 한 점 더 찍는다(공짜에 가깝다)
     except Exception as e:      # noqa: BLE001 — 관측이 서비스를 죽이면 안 된다
         return {"ok": False, "error": str(e)}
+    try:
+        wait = capacity_watch.waiting(DB_PATH)
+    except Exception:      # noqa: BLE001 — 대기 목록이 없다고 관측판이 죽으면 안 된다
+        wait = {"rows": [], "by_customer": []}
     return {"ok": True, "now": now,
             "daily": capacity_watch.daily(DB_PATH, days=max(1, min(days, 60))),
-            "verdict": capacity_watch.verdict(DB_PATH, cores=now.get("cores"))}
+            "waiting": wait,
+            "verdict": capacity_watch.verdict(DB_PATH, cores=now.get("cores"),
+                                              now_queued=now.get("queued"))}
 
 
 @app.get("/insta_fill_comment.user.js", include_in_schema=False)
