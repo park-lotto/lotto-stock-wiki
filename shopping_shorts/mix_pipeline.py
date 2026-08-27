@@ -2031,11 +2031,15 @@ def _ensure_clean_sources(store, job, job_id, work, key, customer_id=0):
 
 
 @_owned_job
-def assemble_clean_video(job_id, db_path, work_root):
+def assemble_clean_video(job_id, db_path, work_root, clean_fn=None):
     """자막제거(2단계) 후 '자막 없는 조립본'(clean_video_path)을 만들어 DB에 저장하고 경로 반환.
-    VMake는 이미 탔으므로 clean_fn=None으로 청소된 소스를 재조립만 한다(추가과금 0). edit_plan·
-    clean_sources가 없거나 조립 실패면 None. run_clean_sources(2단계)와 썸네일(5단계) 자가치유가
+    edit_plan이 없거나 조립 실패면 None. run_clean_sources(2단계)와 썸네일(5단계) 자가치유가
     공유한다 — 이전 조립이 재렌더/재매칭 레이스로 유실돼도 썸네일에서 다시 만들 수 있게(2026-07-21).
+
+    두 가지로 쓰인다:
+      clean_fn=None  — 소스가 이미 청소돼 있다(clean_sources). 재조립만 한다(추가과금 0).
+      clean_fn 있음  — **원본 소스로 조립한 완성본 1편을 여기서 청소한다**(2026-08-27).
+                       소스를 통째로 보내던 것(100~150초)을 완성본(30초)으로 줄이는 경로다.
     """
     store = Store(db_path)
     job = store.get_mix_job(job_id)
@@ -2043,8 +2047,15 @@ def assemble_clean_video(job_id, db_path, work_root):
         return None
     plan = job.get("edit_plan")
     clean_map = job.get("clean_sources") or {}
-    if not plan or not clean_map:
+    if not plan:
         return None
+    if not clean_map:
+        # 청소된 소스가 없다 — clean_fn(완성본 1편 청소)이 있으면 **원본**으로 조립해 그걸 청소한다.
+        if clean_fn is None:
+            return None
+        clean_map = _resolve_sources(job, Path(work_root) / job_id)
+        if not clean_map:
+            return None
     try:
         tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan["beats"] if b.get("tts_path")}
         out_path = Path(work_root) / job_id / "clean_preview.mp4"
@@ -2053,7 +2064,7 @@ def assemble_clean_video(job_id, db_path, work_root):
         # 자막을 구우면 썸네일 배경에 글자가 박혀 그 위에 제목을 얹을 수 없다(2026-07-22 사장님
         # 제보: clean_preview.mp4에 나레이션 자막이 박혀 나왔다). 원본 자막은 clean_map(자막제거
         # 소스)이 이미 없앴고, 여기선 우리 자막만 생략한다. 캡션 패스가 빠져 더 빠르기도 하다.
-        assemble(plan, tts_paths, clean_map, str(out_path), clean_fn=None, deco={},
+        assemble(plan, tts_paths, clean_map, str(out_path), clean_fn=clean_fn, deco={},
                  cutaway_paths=_resolve_cutaway_paths(store, plan, job.get("customer_id", 0)),
                  sfx_paths=_resolve_sfx_paths(store, plan, job.get("customer_id", 0)),
                  burn_captions=False)
@@ -2061,6 +2072,8 @@ def assemble_clean_video(job_id, db_path, work_root):
         return str(out_path)
     except Exception:
         traceback.print_exc(file=sys.stderr)
+        if clean_fn is not None:
+            raise      # ★유료 청소가 이 안에서 돈다 — 삼키면 실패 사유가 사라진다(08-26 참조)
         return None
 
 
@@ -2072,6 +2085,7 @@ def run_clean_sources(job_id, db_path, work_root):
     job = store.get_mix_job(job_id)
     if not job:
         return
+    final_fn = None
     try:
         work = Path(work_root) / job_id
         work.mkdir(parents=True, exist_ok=True)
@@ -2082,8 +2096,18 @@ def run_clean_sources(job_id, db_path, work_root):
             store.update_mix_job(job_id, clean_status="failed",
                                  clean_error="AI 자막 제거 설정이 완료되지 않았습니다 (관리자 문의)")
             return
-        clean_map = _ensure_clean_sources(store, job, job_id, work, key, customer_id)
-        store.update_mix_job(job_id, clean_status="ready", clean_error=None)
+        # ★완성본 1편만 청소한다(2026-08-27 사장님 "3단계 완성본 30초만 잘라서 돌리는건데
+        #   소스별로 안하고"). 소스를 통째로 보내면 100~150초 → 15~22분인데, 완성본은 30초라
+        #   같은 1콜로 4~5분이다(VMake 실측: 보낸 1초당 약 9초).
+        #   ★실제 청소는 아래 조립의 clean_fn 자리에서 돈다 — assemble이 이미
+        #     _render_mix(조립) → clean_fn(청소) → 자막 3토막이라 가운데에 꽂기만 하면 된다.
+        #   ★clean_sources는 일부러 비워 둔다 — 그래야 3단계(run_render)가 already=False로
+        #     같은 완성본 경로를 타고, 편성이 그대로면 final_clean_{sig}.mp4를 재사용해 과금 0.
+        if _FINAL_CLEAN:
+            final_fn = _final_clean_fn(store, job, job_id, work, key, customer_id)
+        else:
+            _ensure_clean_sources(store, job, job_id, work, key, customer_id)
+            store.update_mix_job(job_id, clean_status="ready", clean_error=None)
     except NotEnoughPoints as e:
         store.update_mix_job(job_id, clean_status="failed", clean_error=str(e))
         return
@@ -2098,7 +2122,24 @@ def run_clean_sources(job_id, db_path, work_root):
     # VMake는 위에서 이미 탔으니 clean_fn 없이 청소된 소스로 재조립만 한다(추가과금 0). 실패해도
     # clean_status는 안 되돌린다 — 소스청소(유료)는 이미 성공, 조립만 실패했다고 "실패"로 보이면
     # 재시도 혼란만 커진다. 조립 실패/유실 시엔 썸네일(5단계)이 자가치유로 다시 만든다(공유 헬퍼).
-    assemble_clean_video(job_id, db_path, work_root)
+    if final_fn is None:
+        assemble_clean_video(job_id, db_path, work_root)
+        return
+    # 완성본 1편 청소 경로 — 유료 청소가 이 조립 안에서 돈다. 실패를 'ready'로 두면 안 된다.
+    try:
+        out = assemble_clean_video(job_id, db_path, work_root, clean_fn=final_fn)
+    except NotEnoughPoints as e:
+        store.update_mix_job(job_id, clean_status="failed", clean_error=str(e))
+        return
+    except Exception as e:  # noqa: BLE001 — BackgroundTasks라 밖에서 아무도 안 받는다
+        traceback.print_exc(file=sys.stderr)
+        store.update_mix_job(job_id, clean_status="failed", clean_error=str(e))
+        return
+    if not out:
+        store.update_mix_job(job_id, clean_status="failed",
+                             clean_error="자막 제거 결과를 만들지 못했습니다")
+        return
+    store.update_mix_job(job_id, clean_status="ready", clean_error=None)
 
 
 @_owned_job
