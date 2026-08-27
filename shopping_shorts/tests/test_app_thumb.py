@@ -518,3 +518,65 @@ def test_thumb_file_sets_no_cache(client, tmp_path, monkeypatch):
     r = client.get("/api/produce/thumb/file/j1/grid_00.jpg")
     assert r.status_code == 200
     assert "no-cache" in r.headers.get("cache-control", "")
+
+
+# ── [다른 장면 더 뽑기] API 왕복(2026-08-27) ─────────────────────────────────
+# ★버튼이 실제로 서버를 태워 **새 프레임**을 주는지 못 박는다. phase 계산만 맞고
+#   API가 라운드를 안 올리면 사장님 눈엔 "눌러도 그대로"다 — 거기가 진짜 실패 지점이다.
+def test_more_bumps_round_and_reextracts(client, tmp_path, monkeypatch):
+    """more=true면 재추출하고, 찍는 지점(phase)이 매번 달라진다."""
+    s = _job_with_video(tmp_path)
+    seen = []
+
+    def grid(video_path, dest_dir, n=16, phase=0.5):
+        seen.append(phase)
+        dest = Path(dest_dir); dest.mkdir(parents=True, exist_ok=True)
+        out = []
+        for i in range(n):
+            p = dest / f"grid_{i:02d}.jpg"; p.write_bytes(f"r{len(seen)}".encode())
+            out.append((p, round(float(i) + phase, 2)))
+        return out
+
+    monkeypatch.setattr(app_module, "extract_grid_frames", grid)
+
+    first = client.post("/api/produce/thumb/frames", json={"job_id": "j1"}).json()
+    assert first["ok"] and len(seen) == 1 and seen[0] == 0.5
+
+    # 그냥 다시 부르면 캐시 재사용 — 추출이 또 돌면 안 된다(회귀 0).
+    again = client.post("/api/produce/thumb/frames", json={"job_id": "j1"}).json()
+    assert len(seen) == 1, "more 없이 부르면 재추출하지 않는다"
+    assert again["frames"] == first["frames"]
+
+    # [다른 장면 더 뽑기] — 재추출하고 지점이 달라진다.
+    more = client.post("/api/produce/thumb/frames",
+                       json={"job_id": "j1", "more": True}).json()
+    assert more["ok"] and len(seen) == 2, "more=true면 다시 뽑아야 한다"
+    assert seen[1] != seen[0], f"라운드가 안 올라 같은 지점을 찍었다: {seen}"
+    assert s.get_mix_job("j1")["thumbnail"]["grid_round"] == 1
+
+    # ★URL이 바뀌어야 브라우저가 새 그림을 받는다(파일명이 grid_00.jpg로 고정이라
+    #   캐시버스터가 라운드를 반영 못 하면 사장님은 옛 그림을 계속 본다).
+    assert more["frames"][0]["url"] != first["frames"][0]["url"], "캐시버스터가 라운드를 안 담았다"
+    assert ":r1" in more["frames"][0]["url"].replace("-", ":") or "r1" in more["frames"][0]["url"]
+
+
+def test_more_rounds_keep_diverging(client, tmp_path, monkeypatch):
+    """여러 번 눌러도 계속 새 지점 — 눌러도 그대로가 되면 안 된다."""
+    _job_with_video(tmp_path)
+    seen = []
+
+    def grid(video_path, dest_dir, n=16, phase=0.5):
+        seen.append(phase)
+        dest = Path(dest_dir); dest.mkdir(parents=True, exist_ok=True)
+        out = []
+        for i in range(n):
+            p = dest / f"grid_{i:02d}.jpg"; p.write_bytes(b"x")
+            out.append((p, float(i)))
+        return out
+
+    monkeypatch.setattr(app_module, "extract_grid_frames", grid)
+    client.post("/api/produce/thumb/frames", json={"job_id": "j1"})
+    for _ in range(5):
+        client.post("/api/produce/thumb/frames", json={"job_id": "j1", "more": True})
+    assert len(seen) == 6
+    assert len(set(seen)) == 6, f"같은 지점이 다시 나왔다: {seen}"
