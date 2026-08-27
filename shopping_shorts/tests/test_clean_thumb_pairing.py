@@ -1,77 +1,89 @@
 # -*- coding: utf-8 -*-
-"""자막제거 전/후 비교는 **같은 장면**이어야 한다 (2026-08-27).
+"""자막제거 전/후 비교는 **같은 장면**이어야 한다 — 컷(clip) 단위로 짝을 맞춘다.
 
-★사장님 제보 "이거 자막제거 한건데 영상 좌우가 달라".
-  실측 job 16f1b398f7cd — s3은 완성본에 원본 5.4~11.1초만 쓰였는데:
-      BEFORE = 원본 파일의 50% 지점 (번호판 걸린 벽)
-      AFTER  = 완성본에서 s3이 쓰인 지점 (흰 벽에 도구질)
-  전혀 다른 그림이 나란히 떴다.
+★2026-08-27, 사장님 제보 "영상 좌우가 달라"를 **세 번 틀리고 네 번째에** 잡았다.
+  기록으로 남긴다 — 같은 함정을 또 밟지 않기 위해:
 
-★왜 생겼나: 옛 방식(소스별 청소본)은 좌우가 **같은 길이의 파일**이라 pos만 맞으면
-  대응됐다. 완성본 1편 청소로 바뀌며 좌우 시간축이 갈렸는데 pos는 그대로 썼다.
+  1) pos = 소스 파일 전체의 비율
+       → 원본 60초의 50%는 완성본에 안 쓰인 딴 장면.
+  2) pos = 재료 구간(start~end) 안의 비율
+       → 실측 job 16f1b398f7cd: 구간 5.4~11.1(5.7초)인데 **실제 컷은 2.69초**.
+         컷은 구간 앞에서 dur만큼만 쓴다 → 뒷부분을 짚었다.
+  3) pos = 비트(beat) 전체 안의 비율
+       → 실측 job 9a3ff19fbceb beat9: [s0, s4, s0, s4] **4조각이 시간을 나눠 갖는다**.
+         비트 한가운데는 s4가 아니라 s0 자리였다.
+  4) **컷 단위** — 화면에 실제로 나가는 최소 단위. 이제야 맞는다.
+
+★계획은 video_assemble.plan_beat_clips_for 한 곳에서 온다(렌더·캡컷·ZIP이 쓰는 그것).
+  여기서 따로 계산하면 또 어긋난다(0순위-B).
 """
 import pytest
 
 from shopping_shorts import mix_pipeline as mp
 
 
+def _beat(idx, secs, mats):
+    """mats = [(vid, start, end), ...]"""
+    m = [{"video_id": v, "seg_id": f"{v}-{i}", "start": s, "end": e}
+         for i, (v, s, e) in enumerate(mats)]
+    return {"beat_idx": idx, "target_seconds": secs,
+            "primary": m[0], "alternates": m[1:]}
+
+
 def _plan():
-    """실측 job 16f1b398f7cd의 편성 모양."""
+    """실측 job 9a3ff19fbceb의 모양 — 마지막 비트에 재료 4개가 섞인다."""
     return {"beats": [
-        {"beat_idx": 0, "target_seconds": 7.0,
-         "primary": {"video_id": "s0", "start": 2.6, "end": 3.9},
-         "alternates": [{"video_id": "s1", "start": 6.1, "end": 8.8}]},
-        {"beat_idx": 1, "target_seconds": 3.0,
-         "primary": {"video_id": "s3", "start": 5.4, "end": 11.1}, "alternates": []},
+        _beat(0, 6.0, [("s0", 1.0, 3.0), ("s1", 0.0, 12.9)]),
+        _beat(1, 8.0, [("s0", 17.0, 19.0), ("s4", 5.7, 8.2),
+                       ("s0", 0.0, 1.0), ("s4", 1.1, 2.8)]),
     ]}
 
 
-def _tl():
-    """실제 타임라인 — ★재료 구간(5.4~11.1=5.7초)보다 컷이 짧다(2.69초)."""
-    return [{"beat_idx": 0, "t0": 0.0, "dur": 7.01},
-            {"beat_idx": 1, "t0": 7.01, "dur": 2.69}]
+_SD = {"s0": 20.0, "s1": 13.0, "s4": 10.0}
 
 
-class Test좌우_같은_장면:
-    def test_원본은_실제_컷_길이_안에서(self):
-        """★1차 오진 재발 방지 — 재료 구간이 5.7초여도 화면에 나오는 건 앞 2.69초뿐이다."""
-        sec, _ = mp.final_pair_for_source(_plan(), "s3", 0.5, timeline=_tl())
-        assert sec == pytest.approx(5.4 + 2.69 * 0.5)
-        assert sec < 5.4 + 2.69, "안 쓰이는 뒷부분을 가리킨다"
+class Test컷단위_짝맞춤:
+    def test_섞인_비트에서_그_소스의_컷을_짚는다(self):
+        """★3차 오진 재발 방지 — 비트 한가운데는 s0 자리다. s4를 물으면 s4 컷이어야 한다."""
+        src, fin = mp.final_pair_for_source(_plan(), "s4", 0.5, src_durs=_SD)
+        assert src is not None
+        assert 5.7 <= src <= 8.2, f"s4 재료 구간 밖을 짚었다: {src}"
 
-    def test_완성본은_초로_직접_짚는다(self):
-        """비율이면 조립본 길이가 계획과 다를 때 어긋난다(실측 24.19 vs 25.4초)."""
-        _, fin = mp.final_pair_for_source(_plan(), "s3", 0.5, timeline=_tl())
-        assert fin == pytest.approx(7.01 + 2.69 * 0.5)
+    def test_좌우가_같은_컷_안에서_같은_비율(self):
+        a = mp.final_pair_for_source(_plan(), "s4", 0.0, src_durs=_SD)
+        b = mp.final_pair_for_source(_plan(), "s4", 1.0, src_durs=_SD)
+        assert (b[0] - a[0]) == pytest.approx(b[1] - a[1]), "좌우 이동폭이 다르면 어긋난다"
 
-    def test_좌우가_같은_비율만큼_움직인다(self):
-        a_s, a_f = mp.final_pair_for_source(_plan(), "s3", 0.0, timeline=_tl())
-        b_s, b_f = mp.final_pair_for_source(_plan(), "s3", 1.0, timeline=_tl())
-        assert (b_s - a_s) == pytest.approx(b_f - a_f), "좌우 이동폭이 다르면 다시 어긋난다"
+    def test_컷_목록이_시간순(self):
+        cl = mp.final_clip_pairs(_plan(), {}, _SD)
+        assert cl, "컷이 하나도 안 나왔다"
+        fins = [c["fin"] for c in cl]
+        assert fins == sorted(fins)
 
-    def test_앞_가운데_뒤(self):
-        xs = [mp.final_pair_for_source(_plan(), "s3", p, timeline=_tl())[0]
-              for p in (0.0, 0.5, 1.0)]
-        assert xs[0] < xs[1] < xs[2]
-        assert xs[0] == pytest.approx(5.4)
+    def test_컷_길이_합이_비트_길이_합과_맞는다(self):
+        cl = mp.final_clip_pairs(_plan(), {}, _SD)
+        total = sum(c["dur"] for c in cl)
+        assert total == pytest.approx(6.0 + 8.0, abs=0.2)
 
-    def test_타임라인이_없으면_근사로라도_준다(self):
-        sec, fin = mp.final_pair_for_source(_plan(), "s3", 0.5)
-        assert sec is not None and fin is not None
-
-    def test_alternates로만_쓰인_소스도_찾는다(self):
-        sec, _ = mp.final_pair_for_source(_plan(), "s1", 0.5, timeline=_tl())
-        assert sec is not None and sec >= 6.1
+    def test_각_컷은_자기_재료_구간에서_시작(self):
+        """컷이 남의 구간을 읽으면 화면이 튄다."""
+        ranges = {}
+        for b in _plan()["beats"]:
+            for m in mp._beat_materials(b):
+                ranges.setdefault(m["video_id"], []).append((m["start"], m["end"]))
+        for c in mp.final_clip_pairs(_plan(), {}, _SD):
+            assert any(lo - 0.01 <= c["src"] <= hi + 0.01
+                       for lo, hi in ranges[c["video_id"]]), c
 
     def test_안_쓰인_소스는_None(self):
-        assert mp.final_pair_for_source(_plan(), "s9", 0.5, timeline=_tl()) == (None, None)
+        assert mp.final_pair_for_source(_plan(), "s9", 0.5, src_durs=_SD) == (None, None)
 
-    def test_길이가_0이면_None(self):
-        bad = [{"beat_idx": 1, "t0": 7.0, "dur": 0.0}]
-        p = {"beats": [_plan()["beats"][1]]}
-        assert mp.final_pair_for_source(p, "s3", 0.5, timeline=bad) == (None, None)
+    def test_소스길이를_모르면_비트기준으로_물러선다(self):
+        """★목록(비트 기준)보다 엄격하면 '목록엔 있는데 404'가 난다."""
+        src, fin = mp.final_pair_for_source(_plan(), "s4", 0.5)
+        assert src is not None and fin is not None
 
     def test_pos가_이상해도_안전(self):
-        for b in (-1, 2, None, "x"):
-            sec, _ = mp.final_pair_for_source(_plan(), "s3", b, timeline=_tl())
-            assert sec is None or 5.4 <= sec <= 5.4 + 2.69
+        for bad in (-1, 2, None, "x"):
+            src, _ = mp.final_pair_for_source(_plan(), "s4", bad, src_durs=_SD)
+            assert src is None or 5.7 <= src <= 8.2

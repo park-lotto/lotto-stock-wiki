@@ -4837,16 +4837,19 @@ def api_produce_mix_clean_thumb(job_id: str, kind: str = "original",
     #   소스별 청소본이 있던 옛 경로는 좌우 길이가 같아 종전대로 pos를 쓴다.
     _src_sec = _final_sec = None
     if not (job.get("clean_sources") or {}):
-        # ★길이의 근거는 **실제 타임라인**이다(계획값 target_seconds가 아니라).
-        #   재료 구간(start~end)이 5.7초여도 실제 컷이 2.69초면 앞 2.69초만 화면에 나온다.
+        # ★짝은 **컷(clip) 단위**로 맞춘다 — 비트 하나에 재료가 여럿 섞이므로
+        #   비트 전체를 그 소스 자리로 보면 다른 소스 구간을 짚는다(실측 job 9a3ff19fbceb
+        #   beat9: s0·s4·s0·s4 4조각). 계획은 렌더가 쓰는 plan_beat_clips_for에서 온다.
         _plan = job.get("edit_plan") or {}
         _tts = {b["beat_idx"]: b["tts_path"] for b in (_plan.get("beats") or [])
                 if b.get("tts_path")}
         try:
-            _tl = video_assemble._beat_timeline(_plan, _tts)
-        except Exception:      # noqa: BLE001 — 못 구하면 근사로(그래도 종전보단 맞다)
-            _tl = None
-        _src_sec, _final_sec = mix_pipeline.final_pair_for_source(_plan, vid, pos, timeline=_tl)
+            _sd = {v: (frame_extract._probe_duration(pth) or 0.0)
+                   for v, pth in _resolve_sources(job, work).items()}
+        except Exception:      # noqa: BLE001
+            _sd = {}
+        _src_sec, _final_sec = mix_pipeline.final_pair_for_source(
+            _plan, vid, pos, tts_paths=_tts, src_durs=_sd)
     if kind == "clean":
         if job.get("clean_status") != "ready":
             return JSONResponse(status_code=404, content={"ok": False, "error": "클린 소스 없음"})
@@ -4859,21 +4862,14 @@ def api_produce_mix_clean_thumb(job_id: str, kind: str = "original",
             src = job.get("clean_video_path")
             if not src or not Path(src).exists():
                 return JSONResponse(status_code=404, content={"ok": False, "error": "클린 소스 없음"})
-            _at = mix_pipeline._final_time_of_source(job.get("edit_plan") or {}, vid)
-            # ★못 찾으면 **주지 않는다**(2026-08-27 사장님 제보: "다른 영상이 나옴").
-            #   None = 이 소스가 완성본에 안 쓰였다는 뜻이다. 그런데 종전엔 그냥 넘어가
-            #   원본 기준 pos(예: 가운데 0.5)를 **완성본 전체**에 그대로 적용했다 →
-            #   BEFORE는 원본 1번의 가운데(벽 페인트칠), AFTER는 완성본의 가운데(전혀
-            #   다른 소스 구간)가 나와 "자막제거가 엉뚱한 영상을 뱉는다"로 보였다.
+            # ★자리를 못 찾으면 **주지 않는다**(사장님 "다른 영상이 나옴" 제보 2건).
+            #   None = 이 소스가 완성본 컷 어디에도 안 들어갔다는 뜻이다. 종전엔 그냥
+            #   넘어가 원본 기준 pos를 완성본 전체에 적용해 **딴 그림**을 보여줬다.
             #   조용한 폴백이 틀린 그림을 그리느니 404로 사실을 알린다(0순위 규칙).
-            if _at is None:
+            if _final_sec is None:
                 return JSONResponse(status_code=404,
                                     content={"ok": False, "error": "완성본에 안 쓰인 소스",
                                              "reason": "not_in_final"})
-            # 완성본 쪽도 **초**로 직접 짚는다(BEFORE와 짝).
-            #   비율은 조립본 길이가 계획 합과 다르면 어긋난다(실측 24.19 vs 25.4초).
-            if _final_sec is None:
-                pos = _at
     else:
         try:
             src = _resolve_sources(job, work)[vid]
