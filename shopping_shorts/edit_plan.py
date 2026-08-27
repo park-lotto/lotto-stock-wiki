@@ -1531,7 +1531,11 @@ def _blocks_order_block(blocks):
     # 2026-07-31 사장님: "액션 있는 장면 부분은 원대본과 다른 대사로 써라."
     lines.append("★액션(변화)이 있는 컷에는 **원본이 하던 말을 그대로 옮기지 말고** 그 동작을 "
                  "네 말로 새로 살려 써라. 무슨 일이 일어나는지는 화면 그대로, 표현만 새로.")
-    lines.append("★한 컷을 여러 문장으로 잘게 쪼개지 마라 — 컷 하나에 한 호흡으로 간다.")
+    # ★"잘게 쪼개지 마라"가 **너무 긴 칸**의 빌미가 됐다(2026-08-27 사장님: 6.7초·10.4초
+    #   짜리 칸). 한 호흡으로 가되 그 한 호흡이 얼마인지 못 박는다 — 기준은 사장님 예시
+    #   "여러분 다이소 가시면 이건 꼭 사야 해요"(16자·2.2초)다.
+    lines.append("★컷 하나는 한 호흡이다 — 20자 안팎으로 쓰고 29자를 넘기지 마라. "
+                 "사연이 길면 끊어서 다음 컷으로 넘겨라(칸이 많은 건 괜찮다).")
     return "\n".join(lines)
 
 
@@ -2104,6 +2108,11 @@ _PROMPT = """너는 숏폼 쇼핑 영상 편집 감독이다. 아래 여러 소�
   지나가서 시청자가 못 읽는다 — {char_target}자를 크게 넘기지 마라. 반대로 너무 짧아도
   안 되니 {char_target}자에 가깝게 채워라. 각 비트에 글자수를 고르게 분배해라(예: 비트가
   5개면 비트당 약 {char_target}÷5자).
+- **[한 칸 길이 — 매우 중요] 비트 하나(자막 한 칸)는 짧은 한 호흡이다. 기준 예시:
+  "여러분 다이소 가시면 이건 꼭 사야 해요"(16자·약 2.2초). **한 비트는 20자 안팎,
+  아무리 길어도 29자를 넘기지 마라.** 한 문장에 사연을 다 담지 말고 끊어서 다음
+  비트로 넘겨라 — 길게 쓰면 자막이 화면을 덮고 시청자가 못 읽는다. 그래서 30초면
+  비트가 10~13개쯤 나오는 게 정상이다(3~5개면 너무 적다).**
 - **[두 영상 모두 사용 — 필수] primary 구간을 한 영상에만 몰지 마라. 제공된 소스
   영상이 여러 개면 반드시 그 영상들 모두에서 고르게 구간을 가져와 진짜로 섞어라
   (예: 소스가 2개면 둘 다 최소 한 번씩 이상 써라). 한 영상만 쓰면 믹스가 아니다.**
@@ -2222,6 +2231,15 @@ def _is_dead_key_error(e):
                                 "API_KEY_INVALID", "API key not valid"))
 
 
+def _is_transient_api_error(msg):
+    """모델·네트워크 일시 장애인가. 판정 목록은 script_extract가 단독으로 갖는다."""
+    try:
+        from shopping_shorts.script_extract import is_transient_api_error
+    except Exception:      # noqa: BLE001 — 임포트가 깨져도 대본 생성은 돌아야 한다
+        return any(c in str(msg) for c in ("503", "UNAVAILABLE", "overloaded"))
+    return is_transient_api_error(msg)
+
+
 def _vault_call(prompt, schema, max_tries=8, key_offset=0):
     """key_vault 캐스케이드 예비키풀로 JSON 생성 호출 → raw dict. 무키/실패면 None.
 
@@ -2257,6 +2275,7 @@ def _vault_call(prompt, schema, max_tries=8, key_offset=0):
     if key_offset:
         _o = int(key_offset) % len(keys)
         keys = keys[_o:] + keys[:_o]
+    _last_err = ""
     for key in keys[:max_tries]:
         try:
             resp = key_vault.get_client_for_key(key).models.generate_content(
@@ -2273,9 +2292,11 @@ def _vault_call(prompt, schema, max_tries=8, key_offset=0):
             #   재시도는 다른 키로 나가므로 429·일시 장애와도 자연히 갈린다.
             if not (resp.text or "").strip():
                 print("edit_plan._vault_call: 빈 응답 → 다음 키로 재시도", file=sys.stderr)
+                _last_err = "모델이 빈 응답을 돌려줌"
                 continue
             return json.loads(resp.text)
         except Exception as e:  # noqa: BLE001
+            _last_err = repr(e)[:200]
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
                 key_vault.mark_exhausted(key_vault._owner_group(key) or "general", key)
                 continue
@@ -2296,11 +2317,20 @@ def _vault_call(prompt, schema, max_tries=8, key_offset=0):
             # ★503/과부하는 일시적(2026-07-24 실측: scene_first가 이걸로 죽어 옛 대본으로 폴백,
             # 30초·7~8컷·대화 개선이 통째로 안 탔다). 포기 대신 잠깐 쉬고 다음 키로 재시도한다.
             m = str(e)
-            if any(c in m for c in ("503", "UNAVAILABLE", "overloaded", "high demand")):
+            # ★일시장애 판정은 script_extract 한 곳에서 정한다(0순위-B, 2026-08-27).
+            #   여기 503만 적혀 있어서 **504 DEADLINE_EXCEEDED·499 CANCELLED가 "미분류"로
+            #   떨어져 즉시 return None** 이 됐고 → beats 0 → 운영사고 "편집안(EDL)이
+            #   비었습니다 [생성기=legacy]"로 올라왔다(실측 08-26 14:39·08-27 14:08).
+            #   같은 판단을 두 곳에 적으면 반드시 어긋난다 — 어휘 목록을 빌려 쓴다.
+            if _is_transient_api_error(m) or "high demand" in m:
                 time.sleep(2)
                 continue
             print(f"edit_plan._vault_call: {e!r}", file=sys.stderr)
             return None
+    # ★키를 다 돌고도 못 받았으면 **왜**인지 남긴다(2026-08-27). 종전엔 조용히 None이라
+    #   운영사고엔 "편집안이 비었습니다"만 뜨고 로그엔 아무것도 없어 원인을 못 짚었다.
+    print(f"edit_plan._vault_call: 키 {min(len(keys), max_tries)}개를 다 돌았는데 결과 없음 "
+          f"— 마지막 사유 {(_last_err or '빈 응답')!r}", file=sys.stderr)
     return None
 
 
