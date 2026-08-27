@@ -3892,10 +3892,13 @@ def api_mix_status(job_id: str, request: Request):
             # 자막제거 확인용 소스 개수(2026-08-18) — 3단계가 "소스 1/N"으로 넘겨보는 데만 쓴다.
             # 경로는 안 내보내고 개수만. 청소본이 있으면 그 개수, 없으면 담은 URL 개수.
             "clean_source_count": len(job.get("clean_sources") or {}) or len(job.get("urls") or []),
+            # 완성본 1편 청소(2026-08-27)에선 소스별 파일이 안 생긴다 — 소스 수로 세면
+            # 끝나도 "0/5"라 멈춘 것처럼 보인다. 완료 여부는 clean_status가 정본이다.
             # 진행 표시용(2026-08-19): 자막제거는 소스 1편당 수 분씩 걸려 전체 25분도 정상이다.
             # 그동안 화면에 아무 변화가 없어 "멈췄나"로 읽혔다(사장님 제보의 절반이 이것).
             # 끝난 소스 수 / 전체를 내려보내 "2/5 완료"로 움직이는 걸 보이게 한다.
-            "clean_done": len(job.get("clean_sources") or {}),
+            "clean_done": (len(job.get("clean_sources") or {})
+                           or (len(job.get("urls") or []) if clean_status == "ready" else 0)),
             "clean_total": len(job.get("urls") or []),
             # 지워진 자막 위치(2026-07-25): 5단계 꾸미기가 자막 자동정렬·'원본 자막 있던 자리' 마커에 쓴다.
             # 좌표(%)뿐이라 안전 — 소스 경로 등 내부정보는 안 실린다.
@@ -4813,9 +4816,9 @@ def api_produce_mix_clean_thumb(job_id: str, kind: str = "original",
             src = job.get("clean_video_path")
             if not src or not Path(src).exists():
                 return JSONResponse(status_code=404, content={"ok": False, "error": "클린 소스 없음"})
-            at = mix_pipeline._final_time_of_source(job.get("edit_plan") or {}, vid)
-            if at is not None:
-                pos = at
+            _at = mix_pipeline._final_time_of_source(job.get("edit_plan") or {}, vid)
+            if _at is not None:
+                pos = _at
     else:
         try:
             src = _resolve_sources(job, work)[vid]
@@ -13022,19 +13025,47 @@ def api_produce_mix_poster(job_id: str):
     #      — beatframe은 2026-07-21에 이미 고친 버그가 여기만 남아 있었다.
     #   ③ 캐시가 poster.jpg 한 이름이라 편성·청소를 바꿔도 옛 그림이 그대로였다.
     #   그래서 계산을 새로 하지 않고 _extract_beat_frame 한 곳에 맡긴다(0순위-B).
-    clean_map = job.get("clean_sources") or {}
+    clean_map, _cfin, _crat, _ctag = _clean_frame_src(job, work, 0)
     _seg0 = (video_assemble._beat_material(beats[0]) or [beats[0].get("primary") or {}])[0] or {}
     _key = f"{_seg0.get('video_id') or '-'}@{round(float(_seg0.get('start') or 0), 2)}"
     _key = re.sub(r"[^0-9a-zA-Z@.\-]", "_", _key)
-    poster = work / f"poster_{_key}{'_clean' if clean_map else ''}.jpg"
+    poster = work / f"poster_{_key}{_ctag}.jpg"
     if not poster.exists():
-        _extract_beat_frame(work, beats[0], poster, clean_sources=clean_map)
+        _extract_beat_frame(work, beats[0], poster, clean_sources=clean_map,
+                            clean_final=_cfin, final_ratio=_crat)
     if not poster.exists():
         return JSONResponse(status_code=404, content={"ok": False, "error": "소스 영상 없음"})
     return FileResponse(str(poster), media_type="image/jpeg")
 
 
-def _extract_beat_frame(work, beat, out_path, clean_sources=None):
+def _clean_frame_src(job, work, beat_idx):
+    """**청소된 화면을 어디서 뜰지** 정하는 유일한 자리 (2026-08-27).
+
+    returns (clean_sources, clean_final, final_ratio, cache_tag)
+
+    두 경로가 있다:
+      소스별 청소본(clean_sources)  — 옛 방식. 그 소스에서 바로 뜬다.
+      완성본 1편 청소(clean_video_path) — 지금 기본. 소스별 파일이 없으므로
+        완성본에서 그 칸에 해당하는 지점을 뜬다.
+
+    ★왜 함수로 뽑았나(0순위-B): 08-27에 2단계를 완성본 청소로 바꾸면서 clean_sources가
+      비게 됐는데, 그걸 '자막제거 했나'의 판정으로 쓰던 화면들이 조용히 원본을 보여줬다
+      (poster·beatframe·clean_thumb). 판단이 흩어져 있어 한 곳을 고쳐도 나머지가 남았다.
+    """
+    clean_map = job.get("clean_sources") or {}
+    if clean_map:
+        return clean_map, None, None, "_clean"
+    if job.get("clean_status") != "ready":
+        return {}, None, None, ""
+    cvp = job.get("clean_video_path")
+    if not cvp or not Path(cvp).exists():
+        return {}, None, None, ""
+    at = mix_pipeline._final_time_of_beat(job.get("edit_plan") or {}, beat_idx)
+    return {}, cvp, at, "_clean"
+
+
+def _extract_beat_frame(work, beat, out_path, clean_sources=None,
+                        clean_final=None, final_ratio=None):
     """beat.primary 클립의 start 시각 프레임 1장을 9:16(1080x1920)로 out_path에 저장.
     소스 영상이 없으면 False(파일 안 만듦). 프로덕션 poster 로직을 비트 단위로 일반화.
 
@@ -13054,7 +13085,14 @@ def _extract_beat_frame(work, beat, out_path, clean_sources=None):
     vid = pr.get("video_id")
     ss = float(pr.get("start") or 0)
     src = None
-    if vid and clean_sources:
+    if clean_final and Path(clean_final).exists():
+        # 완성본 1편만 청소한 경로 — 소스별 파일이 없다. 완성본에서 그 칸 지점을 뜬다.
+        src = Path(clean_final)
+        if final_ratio is not None:
+            _d = frame_extract._probe_duration(str(src)) or 0.0
+            if _d > 0:
+                ss = _d * float(final_ratio)
+    if src is None and vid and clean_sources:
         _cp = clean_sources.get(vid)
         if _cp and Path(_cp).exists():
             src = Path(_cp)
@@ -13114,15 +13152,16 @@ def api_produce_mix_beatframe(job_id: str, i: int):
     # 2단계 자막제거를 밟았으면(clean_sources 존재) 청소본에서 프레임을 뜬다. 캐시 파일명도
     # 분리(_clean)해, 자막제거 전에 캐시된 원본 프레임이 남아 미리보기에 지운 자막이 살아
     # 있는 것처럼 보이는 캐시 오염을 막는다(2026-07-21 제보).
-    clean_map = job.get("clean_sources") or {}
+    clean_map, _cfin, _crat, _ctag = _clean_frame_src(job, work, i)
     # ★캐시 이름에 **그 칸이 실제로 쓰는 소스·시각**을 넣는다(2026-08-21). 종전엔 칸 번호만
     #   써서, 3단계에서 편성을 바꿔도 옛 프레임이 그대로 나왔다(조용한 어긋남).
     _seg0 = (video_assemble._beat_material(beats[i]) or [beats[i].get("primary") or {}])[0] or {}
     _key = f"{_seg0.get('video_id') or '-'}@{round(float(_seg0.get('start') or 0), 2)}"
     _key = re.sub(r"[^0-9a-zA-Z@.\-]", "_", _key)
-    out = work / "beatframes" / f"{i}_{_key}{'_clean' if clean_map else ''}.jpg"
+    out = work / "beatframes" / f"{i}_{_key}{_ctag}.jpg"
     if not out.exists():
-        _extract_beat_frame(work, beats[i], out, clean_sources=clean_map)
+        _extract_beat_frame(work, beats[i], out, clean_sources=clean_map,
+                            clean_final=_cfin, final_ratio=_crat)
     if not out.exists():
         return JSONResponse(status_code=404, content={"ok": False})
     return FileResponse(str(out), media_type="image/jpeg")
