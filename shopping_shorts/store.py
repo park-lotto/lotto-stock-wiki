@@ -5971,9 +5971,17 @@ class Store:
                     (f'%"{job_id}"%',)).fetchone()
                 if not row:
                     return None
+                # ★같은 task(mix)만 센다(2026-08-27 사장님 "진짜 13개가 앞에 있어?").
+                #   전엔 종류를 안 가려 `prewarm`(영상 미리받기, 보통 1초 안에 끝난다)까지
+                #   전부 셌다 — 실측 큐의 대부분이 prewarm이라 "내 앞 13개"가 실제 기다림과
+                #   전혀 안 맞았다. 그리고 워커는 **prio가 높은 것부터** 집으므로
+                #   집는 순서(prio DESC, id ASC)와 같은 기준으로 앞에 선 것만 센다.
                 ahead = c.execute(
-                    "SELECT COUNT(*) FROM job_queue "
-                    " WHERE state='queued' AND id < ?", (row[0],)).fetchone()[0]
+                    "SELECT COUNT(*) FROM job_queue q, "
+                    "       (SELECT prio FROM job_queue WHERE id=?) me "
+                    " WHERE q.state='queued' AND q.task='mix' "
+                    "   AND (q.prio > me.prio OR (q.prio = me.prio AND q.id < ?))",
+                    (row[0], row[0])).fetchone()[0]
             return int(ahead)
         except sqlite3.Error:
             return None
