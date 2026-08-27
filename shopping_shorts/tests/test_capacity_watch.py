@@ -127,3 +127,95 @@ def test_verdict_without_samples_says_so(db):
     """표본이 없으면 '괜찮다'가 아니라 '아직 모른다'라고 해야 한다."""
     v = cw.verdict(db, cores=8)
     assert v["level"] == "unknown"
+
+
+# ── 대기 배너 문구 · 지금 줄 서 있는 사람 (2026-08-27) ────────────────────────
+
+def test_verdict_queue_msg_names_the_day_and_now(db):
+    """★배너는 7일 최대치인데 "밀렸습니다"라 현재형으로 읽힌다 — 실제로 이틀 전
+    최대치를 오늘 사고로 오해했다. 날짜와 지금 값이 문장에 있어야 한다."""
+    _put(db, "2026-08-25 01:00", running=2, queued=18, disk_free_gb=200.0)
+    _put(db, "2026-08-26 01:00", running=1, queued=0, disk_free_gb=200.0)
+    v = cw.verdict(db, cores=8, now_queued=0)
+    assert v["level"] == "warn"
+    assert "2026-08-25" in v["msg"]          # 언제의 숫자인지
+    assert "지금은 대기 없습니다" in v["msg"]   # 지금은 어떤지
+
+
+def _queue(db, rows):
+    """job_queue를 만들어 행을 넣는다(운영 스키마와 같은 컬럼만 쓴다)."""
+    conn = sqlite3.connect(db)
+    conn.execute("DROP TABLE IF EXISTS job_queue")   # 픽스처의 축약본을 운영 스키마로 갈아끼운다
+    conn.execute("""CREATE TABLE job_queue(
+        id INTEGER PRIMARY KEY, task TEXT, args_json TEXT, state TEXT,
+        error TEXT, created_at TEXT, claimed_at TEXT, heartbeat_at TEXT,
+        finished_at TEXT, progress TEXT, owner TEXT, prio INTEGER)""")
+    conn.executemany(
+        "INSERT INTO job_queue(id,task,args_json,state,created_at,claimed_at,prio)"
+        " VALUES(?,?,?,?,?,?,?)", rows)
+    conn.commit()
+    conn.close()
+
+
+def _mix(db, rows, customers):
+    conn = sqlite3.connect(db)
+    conn.execute("CREATE TABLE IF NOT EXISTS mix_jobs(job_id TEXT, customer_id INTEGER)")
+    conn.execute("CREATE TABLE IF NOT EXISTS customers("
+                 "id INTEGER, username TEXT, name TEXT, email TEXT)")
+    conn.executemany("INSERT INTO mix_jobs(job_id,customer_id) VALUES(?,?)", rows)
+    conn.executemany("INSERT INTO customers(id,username,name,email) VALUES(?,?,?,?)",
+                     customers)
+    conn.commit()
+    conn.close()
+
+
+def test_waiting_groups_by_person(db):
+    """★"대기 8개"만으론 처방이 안 나온다 — 한 명이 몰아넣었는지 여러 명이
+    한 개씩인지에 따라 1인 제한 vs 워커 증설로 갈린다."""
+    _queue(db, [
+        (1, "mix", '{"job_id": "a"}', "queued", "2026-08-27 00:00:00", None, 0),
+        (2, "mix", '{"job_id": "a"}', "queued", "2026-08-27 00:00:00", None, 0),
+        (3, "mix", '{"job_id": "b"}', "running", "2026-08-27 00:00:00",
+         "2026-08-27 00:01:00", 0),
+        (4, "mix", '{"job_id": "c"}', "done", "2026-08-27 00:00:00", None, 0),
+    ])
+    _mix(db, [("a", 12), ("b", 11), ("c", 12)],
+         [(12, "g_1", "박2", None), (11, "g_2", None, "lee@example.com")])
+
+    w = cw.waiting(db)
+    assert len(w["rows"]) == 3               # done은 줄이 아니다
+    by = {a["customer"]: a for a in w["by_customer"]}
+    assert by["박2"]["queued"] == 2 and by["박2"]["running"] == 0
+    assert by["lee@example.com"]["running"] == 1   # 이름이 없으면 이메일로
+    # 이미 물린 작업은 claimed_at까지가 대기 시간이다(지금까지가 아니라).
+    assert by["lee@example.com"]["max_wait_sec"] == 60
+
+
+def test_waiting_names_the_admin_account(db):
+    """cid 0은 customers에 행이 없다 — "(모름)"으로 두면 남의 고객이 밀린 줄 안다."""
+    _queue(db, [(1, "mix", '{"job_id": "a"}', "queued",
+                 "2026-08-27 00:00:00", None, 0)])
+    _mix(db, [("a", 0)], [])
+    assert cw.waiting(db)["by_customer"][0]["customer"] == "관리자(사장님)"
+
+
+def test_waiting_without_job_queue_is_quiet(db):
+    """관측이 서비스를 죽이면 안 된다 — 테이블이 없어도 빈 목록으로 답한다."""
+    conn = sqlite3.connect(db)
+    conn.execute("DROP TABLE job_queue")
+    conn.commit()
+    conn.close()
+    assert cw.waiting(db) == {"rows": [], "by_customer": []}
+
+
+def test_waiting_survives_a_slim_job_queue(db):
+    """★컬럼이 몇 개 없는 job_queue에서도 '줄 서 있다'는 사실은 나와야 한다 —
+    없는 컬럼 하나 때문에 목록이 통째로 비면 정작 밀렸을 때 못 본다."""
+    conn = sqlite3.connect(db)     # 픽스처의 축약본(id, state, owner)을 그대로 쓴다
+    conn.execute("INSERT INTO job_queue (state, owner) VALUES ('queued', NULL)")
+    conn.execute("INSERT INTO job_queue (state, owner) VALUES ('running', 'w1')")
+    conn.commit()
+    conn.close()
+    w = cw.waiting(db)
+    assert len(w["rows"]) == 2
+    assert w["by_customer"][0]["queued"] == 1

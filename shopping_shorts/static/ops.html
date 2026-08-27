@@ -43,6 +43,7 @@
   .foot{color:var(--sub);font-size:12px;margin-top:16px;line-height:1.7}
   .foot code{background:#1c202a;padding:1px 5px;border-radius:4px}
   a{color:var(--accent)}
+  h2.sec{font-size:15px;margin:0 0 8px;font-weight:700}
 </style>
 </head>
 <body>
@@ -51,6 +52,29 @@
 
 <div id="verdict" class="verdict">불러오는 중…</div>
 <div id="cards" class="cards"></div>
+
+<!-- 지금 줄 서 있는 사람들. "대기 8개"라는 숫자만으론 처방이 안 나온다 —
+     한 명이 8개를 몰아넣었으면 1인 동시 제한, 8명이 한 개씩이면 워커 증설이다. -->
+<h2 class="sec">🚦 지금 줄 서 있는 사람</h2>
+<div id="waitsum" class="sub" style="margin-bottom:10px">불러오는 중…</div>
+<div class="wrap" style="margin-bottom:20px"><table id="wtbl">
+  <thead><tr>
+    <th>고객</th><th>대기</th><th>작업 중</th><th>가장 오래 기다린 시간</th>
+  </tr></thead>
+  <tbody><tr><td colspan="4">불러오는 중…</td></tr></tbody>
+</table></div>
+
+<details id="wdetail" style="margin-bottom:22px">
+  <summary style="cursor:pointer;color:var(--sub);font-size:13px">작업 하나하나 보기</summary>
+  <div class="wrap" style="margin-top:10px"><table id="wrows">
+    <thead><tr>
+      <th>고객</th><th>작업</th><th>상태</th><th>줄 선 시각(UTC)</th><th>기다린 시간</th>
+    </tr></thead>
+    <tbody></tbody>
+  </table></div>
+</details>
+
+<h2 class="sec">📅 날짜별 최대치</h2>
 
 <div class="wrap"><table id="tbl">
   <thead><tr>
@@ -67,6 +91,8 @@
   · <b>대기 최대</b>가 계속 3 이상이면 워커를 늘릴 여지가 있다(코어가 남을 때만).<br>
   · <b>디스크 여유</b>가 50GB 밑으로 내려가면 자동 정리로는 못 버틴다 → 블록스토리지($10/100GB).<br>
   · <b>송신</b>은 요금이 붙는 쪽이다. 월 6TB까지 무료, 넘으면 GB당 $0.09.<br>
+  · 맨 위 배너는 <b>최근 7일 최대치</b>다 — 날짜가 같이 적혀 있다. 지금 상황은 <b>지금 줄 서 있는 사람</b> 표를 봐라.<br>
+  · 한 사람이 몰아넣었으면 <b>1인 동시 제한</b>, 여러 명이 한 개씩 기다리면 <b>워커 증설</b>이다 — 처방이 반대다.<br>
   · 평균이 아니라 <b>최대치</b>로 본다 — 평균은 위험한 순간을 숨긴다.
 </div>
 
@@ -77,6 +103,49 @@ const n1 = v => (v === null || v === undefined) ? '–' : (Math.round(v * 10) / 
 function card(k, v, note){
   return `<div class="card"><div class="k">${k}</div><div class="v">${v}</div>` +
          (note ? `<div class="n">${note}</div>` : '') + `</div>`;
+}
+
+// 초 → "3분 12초" / "1시간 4분". 숫자만 던지면 사장님이 암산해야 한다.
+function dur(sec){
+  if (sec === null || sec === undefined) return '–';
+  if (sec < 60) return sec + '초';
+  const m = Math.floor(sec / 60), s2 = sec % 60;
+  if (m < 60) return m + '분' + (s2 ? ' ' + s2 + '초' : '');
+  const h = Math.floor(m / 60);
+  return h + '시간' + (m % 60 ? ' ' + (m % 60) + '분' : '');
+}
+
+function renderWaiting(w){
+  const by = w.by_customer || [], rows = w.rows || [];
+  // ★개수는 by_customer 합으로 센다 — rows는 상세 목록이라 limit에 잘린다.
+  //   잘린 목록으로 세면 "3명이 3개"처럼 표 합계(8개)와 어긋난 문장이 나온다.
+  const nq = by.reduce((a, x) => a + (x.queued || 0), 0);
+  const nr = by.reduce((a, x) => a + (x.running || 0), 0);
+  const people = by.length;
+
+  $('#waitsum').textContent = nq === 0
+    ? (nr ? `줄 선 사람 없습니다 — ${nr}개가 지금 처리 중입니다.` : '줄 선 사람 없습니다.')
+    : `${people}명이 ${nq}개를 기다리고 있습니다 (처리 중 ${nr}개).`;
+
+  $('#wtbl tbody').innerHTML = by.length ? by.map(a => {
+    // 10분 넘게 기다렸으면 눈에 걸려야 한다 — 그게 고객이 느끼는 '느리다'다.
+    const cls = a.max_wait_sec >= 600 ? 'hot' : (a.max_wait_sec >= 180 ? 'mid' : '');
+    return `<tr><td>${esc(a.customer)}${a.customer_id !== null && a.customer_id !== undefined
+              ? ` <span style="color:var(--sub)">#${a.customer_id}</span>` : ''}</td>
+      <td>${a.queued}</td><td>${a.running}</td>
+      <td class="${cls}">${dur(a.max_wait_sec)}</td></tr>`;
+  }).join('') : '<tr><td colspan="4">지금은 아무도 안 기다립니다.</td></tr>';
+
+  $('#wrows tbody').innerHTML = rows.length ? rows.map(r =>
+    `<tr><td>${esc(r.customer) || '<span style="color:var(--sub)">(모름)</span>'}</td>
+      <td>${esc(r.task)}</td><td>${r.state === 'running' ? '처리 중' : '대기'}</td>
+      <td>${esc(r.created_at || '')}</td><td>${dur(r.waited_sec)}</td></tr>`
+  ).join('') : '<tr><td colspan="5">없음</td></tr>';
+}
+
+function esc(v){
+  return String(v === null || v === undefined ? '' : v)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 async function load(){
@@ -107,6 +176,8 @@ async function load(){
     card('부하(1분)', n1(now.load1), `코어 ${now.cores ?? '–'}개 기준`) +
     card('디스크 여유', n1(now.disk_free_gb) + 'GB', `사용 ${n1(now.disk_used_gb)}GB`) +
     card('누적 송신', n1(now.net_tx_gb) + 'GB', '부팅 후 · 월 6TB 무료');
+
+  renderWaiting(d.waiting || {rows:[], by_customer:[]});
 
   const rows = d.daily || [];
   const cores = now.cores || 4;
