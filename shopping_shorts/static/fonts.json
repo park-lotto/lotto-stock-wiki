@@ -98,13 +98,6 @@
   "star": false
  },
  {
-  "name": "옥 말랑",
-  "file": "OkMallangW.ttf",
-  "css": "HCOkmallang",
-  "group": "cute",
-  "star": false
- },
- {
   "name": "경기천년바탕",
   "file": "GBatang.otf",
   "css": "HCGBatang",
@@ -256,6 +249,34 @@
   "file": "Gugi-Regular.ttf",
   "css": "HCGugi",
   "group": "impact",
+  "star": false
+ },
+ {
+  "name": "카페24 아네모네",
+  "file": "Cafe24Ohsquare.ttf",
+  "css": "HCOhsquare",
+  "group": "impact",
+  "star": false
+ },
+ {
+  "name": "카페24 단정해",
+  "file": "Cafe24Danjunghae.ttf",
+  "css": "HCDanjunghae",
+  "group": "gothic",
+  "star": false
+ },
+ {
+  "name": "간판체",
+  "file": "KCCGanpan.otf",
+  "css": "HCGanpan",
+  "group": "retro",
+  "star": false
+ },
+ {
+  "name": "손글씨 분필",
+  "file": "HakgyoansimBunpil.ttf",
+  "css": "HCBunpil",
+  "group": "hand",
   "star": false
  }
 ]

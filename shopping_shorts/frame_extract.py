@@ -86,8 +86,20 @@ def _probe_duration(video_path):
         return None
 
 
-def extract_grid_frames(video_path, dest_dir, n=10):
-    """영상을 n등분해 각 구간 중앙의 프레임을 뽑는다 → [(Path, ts), ...].
+# ★기본 후보 장수. 10 → 16 → **12**(2026-08-27 사장님이 화면에서 직접 범위를 그어 주셨다).
+#   16은 한 칸이 너무 작아졌다 — 화면은 **6개씩 2줄**로 보여준다.
+#   10장이던 것을 늘린 이유: 사장님이 고른 것은 케이크가 또렷한 몇 장뿐이었고, 나머지는
+#   흐릿한 배너·빈 벽이었다 — 후보가 적으면 고를 게 없다.
+#   ⚠️이 값을 바꾸면 화면 열 수(.thumbFrameGrid)도 같이 봐야 한다: 12=6×2, 16=8×2.
+GRID_FRAMES_DEFAULT = 12
+
+
+def extract_grid_frames(video_path, dest_dir, n=GRID_FRAMES_DEFAULT, phase=0.5):
+    """영상을 n등분해 각 구간의 프레임을 뽑는다 → [(Path, ts), ...].
+
+    phase — 구간 안 어디를 찍을지(0~1). 기본 0.5 = 구간 중앙. **[다른 장면 더 뽑기]가
+    이 값을 바꿔** 같은 등분에서 서로 다른 시점을 준다(2026-08-27). 라운드마다 격자를
+    어긋나게 하면 같은 장면이 또 나오지 않는다.
 
     장면전환 감지(extract_frames)와 갈리는 지점(2026-07-17 썸네일 설계):
     장면전환은 ①감지가 적으면 빈 리스트고 ②ts를 안 주며 ③위 extract_frame_at의
@@ -106,8 +118,12 @@ def extract_grid_frames(video_path, dest_dir, n=10):
     if not duration or duration <= 0:
         raise RuntimeError(f"영상 길이를 구할 수 없다: {video_path}")
     out = []
+    try:
+        ph = min(0.95, max(0.05, float(phase)))     # 0초(검은 첫 프레임)·정각(범위 밖) 회피
+    except (TypeError, ValueError):
+        ph = 0.5
     for i in range(n):
-        ts = duration * (i + 0.5) / n
+        ts = duration * (i + ph) / n
         path = extract_frame_at(video_path, dest_dir, ts, filename=f"grid_{i:02d}.jpg")
         if path is not None:          # 실패는 조용히 건너뛴다(extract_frame_at 기존 계약)
             out.append((path, ts))

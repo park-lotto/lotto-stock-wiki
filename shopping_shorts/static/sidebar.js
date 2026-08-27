@@ -140,10 +140,23 @@
     // 데스크톱: 상단 계정 카드에 '⚙️ 내 계정'이 있어 이 메뉴는 중복 → 숨김. 모바일은 카드가
     // 숨겨지므로(.ss-acct display:none) 이 메뉴를 노출한다(2026-07-24).
     "@media(min-width:761px){.ss-group-acct{display:none}}" +
+    // 모바일 전용 계정 버튼 — 기본은 숨김, 위 @media(max-width:760px)에서만 켠다.
+    ".ss-acct-mbtn{display:none;align-items:center;gap:6px;flex-shrink:0;cursor:pointer;" +
+      "min-height:44px;padding:0 10px;border:1px solid var(--line,#1e2735);border-radius:10px;" +
+      "background:var(--inset,#0c1412);font-family:inherit}" +
+    ".ss-acct-mbtn .ss-acct-av{width:26px;height:26px;font-size:13px}" +
+    ".ss-acct-mbtn .ss-acct-mtier{font-size:11.5px;font-weight:800}" +
+    ".ss-acct-mbtn .ss-acct-mcar{font-size:9px;color:var(--sub,#8b98a9)}" +
     "@media(max-width:760px){body{flex-direction:column}" +
       ".ss-nav{width:100%;border-right:none;border-bottom:1px solid var(--line,#1e2735);display:flex;gap:6px;" +
         "overflow-x:auto;align-items:center;white-space:nowrap;padding:10px 12px}" +
-      ".ss-acct{display:none}" +   // 모바일 가로바엔 계정카드 공간이 없다 → /account로
+      // ★모바일에서 카드를 통째로 숨기면 오늘 사용량·등급·로그아웃에 닿을 길이 없다
+      //   (2026-08-26 사장님 제보). 숨기는 대신 가로띠의 아바타 버튼으로 펼친다.
+      //   position:fixed = 가로띠가 overflow-x:auto라 그 안에 absolute로 두면 잘린다.
+      ".ss-acct{display:none;position:fixed;left:8px;right:8px;margin:0;z-index:9999;" +
+        "max-height:72vh;overflow:auto;box-shadow:0 14px 36px rgba(0,0,0,.6)}" +
+      ".ss-acct.ss-open{display:block}" +
+      ".ss-acct-mbtn{display:flex}" +
       // 모바일 가로바에선 가운데정렬을 되돌린다(옆으로 메뉴가 붙는 자리라 왼쪽 고정)
       ".ss-nav h1{margin:0 8px 0 0;flex-shrink:0;font-size:19px;justify-content:flex-start}" +
       ".ss-group{margin:0;padding:0;background:none;border:none;display:flex;gap:6px;align-items:center}" +
@@ -487,9 +500,47 @@
         (admin ? '<a href="/admin" class="ss-acct-link wide" style="color:#ffd97a;border-color:#5a4a1e">🔐 관리페이지</a>' : '') +
         '<a href="/settings" class="ss-acct-link">👤 마이페이지</a>' +
         '<a href="#" class="ss-acct-link" onclick="window.__ssLogout();return false">↩ 로그아웃</a></div>';
+    // 모바일 전용 여는 버튼(2026-08-26) — 가로띠엔 카드를 펼칠 자리가 없다.
+    //   아바타+등급만 띄우고, 누르면 위 카드가 시트로 내려온다.
+    var mbtn = document.createElement("button");
+    mbtn.className = "ss-acct-mbtn"; mbtn.id = "ss-acct-mbtn";
+    mbtn.setAttribute("aria-label", "내 계정 · 오늘 사용량");
+    mbtn.innerHTML = '<span class="ss-acct-av">' + initial + "</span>" +
+      '<span class="ss-acct-mtier" style="color:' + tierColor + '">' + escHtml(tier) + "</span>" +
+      '<span class="ss-acct-mcar">▼</span>';
+    mbtn.onclick = function (e) { e.stopPropagation(); window.__ssAcctToggle(); };
+
     var h1 = nav.querySelector("h1");
-    if (h1 && h1.nextSibling) nav.insertBefore(card, h1.nextSibling);
-    else nav.insertBefore(card, nav.firstChild);
+    var after = (h1 && h1.nextSibling) ? h1.nextSibling : nav.firstChild;
+    if (after) { nav.insertBefore(mbtn, after); nav.insertBefore(card, after); }
+    else { nav.appendChild(mbtn); nav.appendChild(card); }
+  }
+  // 모바일 계정 시트 열고닫기. 가로띠 바로 아래에 붙도록 top을 그때그때 잰다
+  // (가로띠 높이가 페이지마다 다르다 — 상수로 박으면 어긋난다).
+  window.__ssAcctToggle = function (force) {
+    var c = document.getElementById("ss-acct");
+    if (!c || !c.classList) return;
+    var open = (force === false) ? false : (force === true ? true : !c.classList.contains("ss-open"));
+    if (open) {
+      var nav = document.querySelector(".ss-nav");
+      if (nav && nav.getBoundingClientRect) c.style.top = (nav.getBoundingClientRect().bottom + 6) + "px";
+      c.classList.add("ss-open");
+    } else {
+      c.classList.remove("ss-open");
+    }
+    var car = document.querySelector("#ss-acct-mbtn .ss-acct-mcar");
+    if (car) car.textContent = open ? "▲" : "▼";
+  };
+  // 바깥을 누르면 닫는다 — 시트가 화면을 덮은 채 남으면 앱이 멈춘 것처럼 보인다.
+  if (document.addEventListener) {
+    document.addEventListener("click", function (e) {
+      var c = document.getElementById("ss-acct");
+      if (!c || !c.classList || !c.classList.contains("ss-open")) return;
+      if (c.contains && c.contains(e.target)) return;
+      var b = document.getElementById("ss-acct-mbtn");
+      if (b && b.contains && b.contains(e.target)) return;
+      window.__ssAcctToggle(false);
+    });
   }
   function initPaywall() {
     fetch("/api/me").then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {

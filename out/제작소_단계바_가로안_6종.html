@@ -1,0 +1,200 @@
+<!doctype html><html lang=ko><head><meta charset="utf-8">
+<meta name=viewport content="width=device-width,initial-scale=1">
+<title>제작소 단계바 — 가로 배치 6종</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--mint:#3ee0bf;--gold:#facc6b;--bg:#070b14;--panel:#0d1420;--line:#1a2436;
+  --txt:#e7ecf7;--sub:#5a6580}
+body{background:var(--bg);color:var(--txt);font-family:"Malgun Gothic",system-ui,sans-serif;
+  line-height:1.6;padding:26px 20px 90px}
+.wrap{max-width:1180px;margin:0 auto}
+h1{font-size:24px;font-weight:900;margin-bottom:6px}
+.desc{color:var(--sub);font-size:14px;margin-bottom:26px}
+.case{background:var(--panel);border:1px solid var(--line);border-radius:16px;
+  padding:22px 24px 26px;margin-bottom:22px}
+.case > h2{font-size:17px;font-weight:900;color:var(--mint);margin-bottom:4px}
+.case > .why{color:var(--sub);font-size:13px;margin-bottom:22px}
+.case.now{border-color:#3a2f18}
+.case.now > h2{color:var(--gold)}
+.tag{display:inline-block;font-size:11px;font-weight:900;padding:3px 9px;border-radius:999px;
+  background:rgba(62,224,191,.14);color:var(--mint);margin-left:8px;vertical-align:middle}
+.tag.g{background:rgba(250,204,107,.14);color:var(--gold)}
+
+/* ── 지금 (오브바) — 라이브 theme.css 그대로 ── */
+.orbbar{position:relative;display:flex;align-items:flex-start;justify-content:space-between;margin:0 6px 6px;padding-top:4px}
+.orbline{position:absolute;top:20px;left:24px;right:24px;height:4px;background:#1a2436;border-radius:4px}
+.orbfill{position:absolute;left:0;top:0;bottom:0;border-radius:4px;width:28%;
+  background:linear-gradient(90deg,#facc6b,#3ee0bf);box-shadow:0 0 12px rgba(62,224,191,.6)}
+.orb{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:5px;flex:1}
+.orb .ball{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:900;
+  background:radial-gradient(circle at 32% 28%,#17222f,#0b111c 70%);border:2px solid #243244;color:#5a6580}
+.orb.done .ball{background:radial-gradient(circle at 32% 28%,#ffe29a,#f5b53f 75%);border-color:transparent;color:#3a2800}
+.orb.cur .ball{background:radial-gradient(circle at 32% 28%,#7df5db,#14b8a6 75%);border-color:transparent;color:#04201b}
+.orb .lb{font-size:11px;font-weight:800;color:#5a6580;text-align:center}
+.orb.cur .lb{color:#fff}
+.orb.done .lb{color:#c9a44a}
+
+/* ── E. 알약 탭 (동그라미·선 없음) ── */
+.pills{display:flex;gap:8px;flex-wrap:wrap}
+.pill{padding:9px 15px;border-radius:999px;font-size:13px;font-weight:800;
+  background:#0a1019;border:1px solid var(--line);color:#46506a;white-space:nowrap}
+.pill.done{border-color:rgba(250,204,107,.4);color:#c9a44a;background:rgba(250,204,107,.05)}
+.pill.done::before{content:"✓ ";font-weight:900}
+.pill.cur{background:linear-gradient(135deg,#7df5db,#14b8a6);border-color:transparent;color:#04201b;
+  font-size:14px;padding:10px 20px;box-shadow:0 4px 18px rgba(62,224,191,.28)}
+
+/* ── F. 세그먼트 막대 (한 덩어리) ── */
+.seg{display:flex;height:44px;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:#0a1019}
+.seg > div{flex:1;display:grid;place-items:center;font-size:11.5px;font-weight:800;color:#46506a;
+  border-right:1px solid #131c2b;padding:0 4px;text-align:center;line-height:1.25}
+.seg > div:last-child{border-right:0}
+.seg .d{background:rgba(250,204,107,.16);color:#c9a44a}
+.seg .c{background:linear-gradient(135deg,#7df5db,#14b8a6);color:#04201b;font-size:13px;flex:1.5}
+.segcap{display:flex;justify-content:space-between;font-size:12px;font-weight:800;color:var(--sub);margin-top:9px}
+.segcap b{color:var(--mint)}
+
+/* ── G. 화살표 브레드크럼 ── */
+.chev{display:flex;gap:0;overflow:hidden;border-radius:10px}
+.chev > div{position:relative;flex:1;padding:12px 8px 12px 22px;font-size:11.5px;font-weight:800;
+  background:#0a1019;color:#46506a;text-align:center;clip-path:polygon(0 0,calc(100% - 14px) 0,100% 50%,calc(100% - 14px) 100%,0 100%,14px 50%);
+  margin-right:-10px;line-height:1.25}
+.chev > div:first-child{clip-path:polygon(0 0,calc(100% - 14px) 0,100% 50%,calc(100% - 14px) 100%,0 100%)}
+.chev > div:last-child{clip-path:polygon(0 0,100% 0,100% 100%,0 100%,14px 50%);margin-right:0}
+.chev .d{background:rgba(250,204,107,.18);color:#c9a44a}
+.chev .c{background:linear-gradient(135deg,#7df5db,#14b8a6);color:#04201b;font-size:13px;z-index:2}
+
+/* ── H. 도크 (현재만 확대) ── */
+.dock{display:flex;align-items:flex-end;justify-content:space-between;gap:6px;padding:0 4px}
+.dk{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px}
+.dk .ic{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;font-size:17px;
+  background:#0a1019;border:1px solid var(--line);filter:grayscale(1);opacity:.5}
+.dk .dl{font-size:11px;font-weight:800;color:#46506a;text-align:center;line-height:1.25}
+.dk.done .ic{border-color:rgba(250,204,107,.4);background:rgba(250,204,107,.07);filter:none;opacity:1}
+.dk.done .dl{color:#c9a44a}
+.dk.cur .ic{width:58px;height:58px;font-size:26px;border-color:transparent;filter:none;opacity:1;
+  background:linear-gradient(135deg,#7df5db,#14b8a6);box-shadow:0 6px 22px rgba(62,224,191,.35)}
+.dk.cur .dl{color:#fff;font-size:13px;font-weight:900}
+
+/* ── I. 미니 점 + 현재 제목 ── */
+.mini{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.mini i{height:5px;flex:1;border-radius:999px;background:#1a2436;display:block}
+.mini i.d{background:var(--gold)}
+.mini i.c{background:var(--mint);height:8px;box-shadow:0 0 10px rgba(62,224,191,.6)}
+.minihd{display:flex;align-items:baseline;gap:12px}
+.minihd .n{font-size:12px;font-weight:900;color:var(--mint);letter-spacing:.06em}
+.minihd .t{font-size:24px;font-weight:900}
+.minihd .r{margin-left:auto;font-size:12px;font-weight:800;color:var(--sub)}
+
+/* ── J. 결과 카드 스트립 ── */
+.strip{display:flex;gap:8px}
+.sc{flex:1;background:#0a1019;border:1px solid var(--line);border-radius:11px;padding:10px 9px;text-align:center}
+.sc .sn{font-size:10px;font-weight:900;color:#3a445c;letter-spacing:.05em}
+.sc .st{font-size:11.5px;font-weight:800;color:#46506a;margin-top:2px;line-height:1.25}
+.sc .sv{font-size:10.5px;font-weight:700;color:#2f3850;margin-top:5px}
+.sc.done{border-color:rgba(250,204,107,.35);background:rgba(250,204,107,.05)}
+.sc.done .sn,.sc.done .st{color:#c9a44a}
+.sc.done .sv{color:#8a7333}
+.sc.cur{border-color:transparent;background:linear-gradient(135deg,#7df5db,#14b8a6)}
+.sc.cur .sn{color:rgba(4,32,27,.6)}
+.sc.cur .st{color:#04201b;font-size:13px;font-weight:900}
+.sc.cur .sv{color:rgba(4,32,27,.75)}
+
+.note{margin-top:26px;padding:16px 18px;border:1px solid #3a2f18;background:rgba(250,204,107,.05);
+  border-radius:12px;font-size:13px;color:#c9a44a;font-weight:700}
+</style></head><body><div class=wrap>
+
+<h1>제작소 단계바 — 가로 배치 6종</h1>
+<p class=desc>가로는 그대로 두고 <b>동그라미+선</b>이라는 흔한 모양에서만 벗어난 안들입니다. 전부 <b>5단계 TTS음성 진행 중</b>으로 통일했습니다.</p>
+
+<div class="case now">
+<h2>지금 쓰는 것 — 오브 단계바<span class="tag g">라이브</span></h2>
+<p class=why>비교 기준입니다.</p>
+<div class=orbbar>
+  <div class=orbline><i class=orbfill></i></div>
+  <div class="orb done"><div class=ball>✓</div><div class=lb>영상추출/분석</div></div>
+  <div class="orb done"><div class=ball>✓</div><div class=lb>대본생성</div></div>
+  <div class="orb done"><div class=ball>✓</div><div class=lb>영상대본MIX</div></div>
+  <div class="orb done"><div class=ball>✓</div><div class=lb>고품질 자막제거</div></div>
+  <div class="orb cur"><div class=ball>5</div><div class=lb>TTS음성</div></div>
+  <div class=orb><div class=ball>6</div><div class=lb>자막꾸미기</div></div>
+  <div class=orb><div class=ball>7</div><div class=lb>썸네일</div></div>
+  <div class=orb><div class=ball>8</div><div class=lb>SEO해시태그</div></div>
+  <div class=orb><div class=ball>9</div><div class=lb>최종렌더</div></div>
+</div>
+</div>
+
+<div class=case>
+<h2>E안 — 알약 탭</h2>
+<p class=why>동그라미와 선을 통째로 없애고 <b>라벨 알약만</b> 가로로 늘어놓습니다. 지금 단계만 크게 채워 눈에 박힙니다. 숫자가 안 보이니 "9개나 되네" 부담도 없습니다.</p>
+<div class=pills>
+  <span class="pill done">영상추출/분석</span><span class="pill done">대본생성</span>
+  <span class="pill done">영상대본MIX</span><span class="pill done">고품질 자막제거</span>
+  <span class="pill cur">TTS음성</span>
+  <span class=pill>자막꾸미기</span><span class=pill>썸네일</span>
+  <span class=pill>SEO해시태그</span><span class=pill>최종렌더</span>
+</div>
+</div>
+
+<div class=case>
+<h2>F안 — 세그먼트 막대</h2>
+<p class=why>9칸이 <b>붙은 막대 하나</b>. 진행이 면적으로 보여 "얼마나 왔나"가 즉각 읽힙니다. 현재 칸만 넓혀 글자를 키웠습니다.</p>
+<div class=seg>
+  <div class=d>영상추출</div><div class=d>대본생성</div><div class=d>영상대본MIX</div><div class=d>자막제거</div>
+  <div class=c>TTS음성</div>
+  <div>자막꾸미기</div><div>썸네일</div><div>SEO해시</div><div>최종렌더</div>
+</div>
+<div class=segcap><span>지금 <b>목소리 고르기</b></span><span>4개 끝 · 4개 남음</span></div>
+</div>
+
+<div class=case>
+<h2>G안 — 화살표 브레드크럼</h2>
+<p class=why>칸이 <b>화살표로 물려</b> 흐름의 방향이 모양 자체로 보입니다. 위저드 동그라미와 가장 다른 인상입니다.</p>
+<div class=chev>
+  <div class=d>영상추출</div><div class=d>대본생성</div><div class=d>영상대본MIX</div><div class=d>자막제거</div>
+  <div class=c>TTS음성</div>
+  <div>자막꾸미기</div><div>썸네일</div><div>SEO해시</div><div>최종렌더</div>
+</div>
+</div>
+
+<div class=case>
+<h2>H안 — 도크 (현재만 크게)<span class="tag">추천</span></h2>
+<p class=why>숫자 대신 <b>그림</b>을 쓰고, 지금 단계만 크게 띄웁니다(맥 독처럼). 끝난 건 색이 돌아오고 안 한 건 흐립니다. 글을 안 읽어도 어디쯤인지 보여 <b>시니어에게 제일 편합니다</b>.</p>
+<div class=dock>
+  <div class="dk done"><div class=ic>🎬</div><div class=dl>영상추출</div></div>
+  <div class="dk done"><div class=ic>📝</div><div class=dl>대본생성</div></div>
+  <div class="dk done"><div class=ic>🔀</div><div class=dl>영상대본MIX</div></div>
+  <div class="dk done"><div class=ic>🧽</div><div class=dl>자막제거</div></div>
+  <div class="dk cur"><div class=ic>🎙</div><div class=dl>목소리 고르기</div></div>
+  <div class=dk><div class=ic>✨</div><div class=dl>자막꾸미기</div></div>
+  <div class=dk><div class=ic>🖼</div><div class=dl>썸네일</div></div>
+  <div class=dk><div class=ic>🏷</div><div class=dl>SEO해시</div></div>
+  <div class=dk><div class=ic>📦</div><div class=dl>최종렌더</div></div>
+</div>
+</div>
+
+<div class=case>
+<h2>I안 — 미니 점 + 현재 제목</h2>
+<p class=why>단계바를 <b>얇은 칸 9개</b>로 줄이고, 그 아래 지금 할 일만 크게 씁니다. 화면 위쪽을 거의 안 먹어 본문이 넓어집니다. 대신 각 단계 이름은 눌러야 보입니다.</p>
+<div class=mini><i class=d></i><i class=d></i><i class=d></i><i class=d></i><i class=c></i><i></i><i></i><i></i><i></i></div>
+<div class=minihd><span class=n>5 / 9</span><span class=t>목소리 고르기</span><span class=r>다음 · 자막꾸미기</span></div>
+</div>
+
+<div class=case>
+<h2>J안 — 결과 카드 스트립</h2>
+<p class=why>각 칸이 작은 카드가 되어 <b>그 단계에서 뭐가 나왔는지</b>를 같이 답니다. 단계바가 곧 작업 요약이 됩니다. 정보가 많아 폰에서는 옆으로 밀어 봐야 합니다.</p>
+<div class=strip>
+  <div class="sc done"><div class=sn>1</div><div class=st>영상추출</div><div class=sv>조각 18개</div></div>
+  <div class="sc done"><div class=sn>2</div><div class=st>대본생성</div><div class=sv>8칸</div></div>
+  <div class="sc done"><div class=sn>3</div><div class=st>영상대본MIX</div><div class=sv>34.2초</div></div>
+  <div class="sc done"><div class=sn>4</div><div class=st>자막제거</div><div class=sv>7컷</div></div>
+  <div class="sc cur"><div class=sn>5</div><div class=st>목소리 고르기</div><div class=sv>고르는 중</div></div>
+  <div class=sc><div class=sn>6</div><div class=st>자막꾸미기</div><div class=sv>—</div></div>
+  <div class=sc><div class=sn>7</div><div class=st>썸네일</div><div class=sv>—</div></div>
+  <div class=sc><div class=sn>8</div><div class=st>SEO해시</div><div class=sv>—</div></div>
+  <div class=sc><div class=sn>9</div><div class=st>최종렌더</div><div class=sv>—</div></div>
+</div>
+</div>
+
+<div class=note>⚠️ 지금 오브 단계바는 <b>final-mock-v6.html</b>이 정본입니다(theme.css 주석). 바꾸면 목업도 같이 갱신할지 정해야 합니다.</div>
+
+</div></body></html>

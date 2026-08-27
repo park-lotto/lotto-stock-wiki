@@ -12,15 +12,26 @@ def _seg(sid, txt, key=False):
             "scene_desc": txt, "action": None, "is_key": key, "shot_role": "기타"}
 
 
-def test_first_and_last_excluded_when_enough():
-    """세그가 넉넉하면(5개↑) 종전대로 썸네일·CTA 자리를 버린다."""
+def test_first_and_last_excluded_from_prompt_when_enough():
+    """세그가 넉넉하면(5개↑) 썸네일·CTA 자리를 **프롬프트에서** 뺀다.
+
+    ★계약 변경(2026-08-26 필름 롤러 ⑤): 종전엔 seg_map에서도 통째로 버렸는데, 이제
+      `edge=True` 표식만 달아 seg_map에는 싣는다(사람이 화면에서 골라 쓸 수 있게).
+      **모델이 보는 인벤토리(prompt_block)는 종전과 똑같이 첫·끝이 없다** — 이게
+      원래 이 규칙이 지키려던 것(CTA·썸네일 박제 차단)이고, 여기서 검사하는 축이다.
+    """
     script = {"video_id": "v", "segments": [
         _seg("v-0", "썸네일"), _seg("v-1", "본문A"), _seg("v-2", "본문B"),
         _seg("v-3", "본문C"), _seg("v-4", "CTA")]}
-    seg_map, _ = edit_plan._build_inventory([script])
-    assert "v-0" not in seg_map      # 첫 제외
-    assert "v-4" not in seg_map      # 마지막 제외
-    assert {"v-1", "v-2", "v-3"} <= set(seg_map)
+    seg_map, block = edit_plan._build_inventory([script])
+    # 프롬프트: 종전 그대로 첫·끝 없음 (= AI 자동 배치 회귀 0)
+    assert "[v-0]" not in block and "[v-4]" not in block
+    assert all(f"[{s}]" in block for s in ("v-1", "v-2", "v-3"))
+    # seg_map: 전부 살아 있되 첫·끝만 edge 표식
+    assert seg_map["v-0"]["edge"] is True and seg_map["v-4"]["edge"] is True
+    assert all(seg_map[s]["edge"] is False for s in ("v-1", "v-2", "v-3"))
+    # 자동 배치용 재고에서는 종전과 동일하게 빠진다
+    assert set(edit_plan.non_edge_segs(seg_map)) == {"v-1", "v-2", "v-3"}
 
 
 def test_short_source_not_trimmed():

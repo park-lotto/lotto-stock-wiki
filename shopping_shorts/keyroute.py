@@ -65,6 +65,22 @@ WIRED = (SVC_VMAKE, SVC_SERPAPI, SVC_ELEVENLABS, SVC_GEMINI, SVC_YOUTUBE)
 #   서비스라 남의 키를 쓰면 안 되고, 자기 키만 쓴다(폴백 없음).
 POOLED = (SVC_GEMINI, SVC_YOUTUBE)
 
+# ★호출부가 **키 하나만** 쓰는 서비스(mix_pipeline._vmake_key·tts._api_key가
+#   둘 다 keys[0]만 집는다). 여기서만 **나중에 등록한 키를 앞에** 둔다.
+#   왜: get_customer_keys_plain은 ORDER BY id라 가장 오래된 키가 keys[0]이다.
+#   그래서 키를 갈아끼우려고 새로 등록해도 옛 키가 계속 쓰인다.
+#   실사고(2026-08-28 cid 57): 크레딧 떨어진 Vmake 계정을 버리고 새 계정
+#   키를 등록했는데, 옛 키(id=45)가 먼저라 자막제거가 계속 빈 계정을
+#   때려 [60002]로 실패했다. 화면엔 두 키가 다 'ok'라 고객은 이유를 모른다.
+#   ⚠️ serpapi는 **넣지 마라** — 거긴 키 개수만큼 한도를 주고(_lens_key_count)
+#     목록 전체를 쓴다. 순서를 뒤집을 이유가 없다.
+SINGLE_KEY = (SVC_VMAKE, SVC_ELEVENLABS)
+
+
+def uses_single_key(service):
+    """호출부가 keys[0] 하나만 쓰는 서비스인가. 판단은 여기 한 곳(0순위-B)."""
+    return service in SINGLE_KEY
+
 
 def is_pooled(service):
     """회원 키가 공용 풀에 합류하는 서비스인가. 판단은 여기 한 곳(0순위-B)."""
@@ -140,16 +156,34 @@ def keys_for(store, customer_id, service):
             f"모르는 service: {service!r}. keyroute.SVC_* 상수를 써라 "
             f"(가능한 값: {', '.join(SERVICES)})")
     cid = as_cid(customer_id)
-    if cid:                                   # cid 0 = 사장님 본인이라 조회 안 함
+    # ★cid 0(관리자 비번 로그인)도 자기 키를 쓴다(2026-08-27 사장님 "내꺼 전용으로").
+    #   전엔 `if cid:`라 0이 falsy로 걸려 **개인 키 조회를 통째로 건너뛰고** 항상
+    #   공용 env 풀을 썼다. 그래서 사장님이 개인 키를 등록해도 안 쓰였고, 반대로
+    #   env에 넣으면 전 회원이 같이 썼다 — "내 전용"이 성립할 자리가 없었다.
+    #   ⚠️ as_cid는 None을 안 준다(못 읽으면 0으로 떨어뜨린다) — 그래서 조건을 걸지
+    #      않고 **누구든 자기 키를 먼저 본다**. cid만 특별 취급하는 갈래를 없앤 것이
+    #      이 수정의 핵심이다(0순위-B: 같은 판단을 두 갈래로 두지 않는다).
+    #   ⚠️ store가 이 메서드를 안 가진 경로가 있다(과금·정리 코드가 넘기는 가벼운
+    #      스텁 등). 전엔 cid 0이면 호출 자체를 건너뛰어 드러나지 않던 자리다 —
+    #      없으면 **조용히 넘기지 말고 로그를 남기고** 공용 키로 간다(종전 동작).
+    try:
         mine = store.get_customer_keys_plain(cid, service)
-        if mine and not is_pooled(service):
-            return mine, True                 # ★개인 전용: 여기서 끝. 사장님 키를 안 섞는다
-        if mine:
-            # ★공용 풀 모델(gemini·youtube): 자기 키를 냈으면 **풀 전체**를 쓴다.
-            #   is_user=True를 그대로 돌려주므로 should_charge가 면제로 이어진다
-            #   ("키 1개 내고 무료로 쓴다"는 거래). 풀은 사장님 키 + 전 회원 키.
-            pooled = _owner_keys(service)     # 이미 회원 키가 합류돼 있는 목록
-            return (pooled or mine), True
+    except AttributeError:
+        logging.warning("keys_for: store에 get_customer_keys_plain이 없다"
+                        "(cid=%r, service=%r) — 공용 키로 처리한다", cid, service)
+        mine = None
+    if mine:
+        if not is_pooled(service):
+            # 키 하나만 쓰는 서비스는 **최신 키를 앞에** 둔다(SINGLE_KEY 주석 참조).
+            #   목록은 그대로 다 돌려준다 — 순회하는 호출부가 생겨도 안 깨진다.
+            if uses_single_key(service):
+                return list(reversed(mine)), True
+            return mine, True             # ★개인 전용: 여기서 끝. 공용 키를 안 섞는다
+        # ★공용 풀 모델(gemini·youtube): 자기 키를 냈으면 **풀 전체**를 쓴다.
+        #   is_user=True를 그대로 돌려주므로 should_charge가 면제로 이어진다
+        #   ("키 1개 내고 무료로 쓴다"는 거래). 풀은 사장님 키 + 전 회원 키.
+        pooled = _owner_keys(service)     # 이미 회원 키가 합류돼 있는 목록
+        return (pooled or mine), True
     owner = _owner_keys(service)
     if not owner and service == SVC_VMAKE:
         owner = _owner_vmake_key(store)

@@ -45,11 +45,11 @@ class _FakeRequests:
 
 @pytest.fixture(autouse=True)
 def _clear_cache():
-    lens_discover._quota_cache["at"] = 0.0
-    lens_discover._quota_cache["left"] = None
+    # 캐시는 **키 조합별**로 나뉜다(2026-08-27) — 공용(0회)으로 채워진 값이 개인 키
+    # 판정을 오염시키면 자기 키가 멀쩡한 회원이 계속 막힌다. 그래서 통째로 비운다.
+    lens_discover._quota_cache.clear()
     yield
-    lens_discover._quota_cache["at"] = 0.0
-    lens_discover._quota_cache["left"] = None
+    lens_discover._quota_cache.clear()
 
 
 def _patch(monkeypatch, keys, by_key):
@@ -99,7 +99,8 @@ def test_cached_within_ttl_then_refetched(monkeypatch):
     assert lens_discover.account_searches_left() == 7
     assert lens_discover.account_searches_left() == 7
     assert len(fake.calls) == 1, "TTL 안인데 두 번 왕복했다"
-    lens_discover._quota_cache["at"] -= (lens_discover._QUOTA_TTL_S + 1)
+    for _e in lens_discover._quota_cache.values():
+        _e["at"] -= (lens_discover._QUOTA_TTL_S + 1)
     assert lens_discover.account_searches_left() == 7
     assert len(fake.calls) == 2, "TTL이 지났는데 갱신하지 않았다"
 
@@ -151,3 +152,30 @@ def test_guard_falls_back_to_counter_when_quota_unknown(monkeypatch):
     """실잔량을 못 읽어도 기존 카운터 가드는 살아 있어야 한다."""
     assert _guard(monkeypatch, None, _Store(count=999999)) is not None
     assert _guard(monkeypatch, None, _Store(count=0)) is None
+
+
+# ── 회원은 자기 키 잔량으로 판정한다 — 2026-08-27 실사고 ────────────────────────
+
+def test_keys_arg_overrides_owner_pool(monkeypatch):
+    """★공용이 0이어도 자기 키가 남았으면 그 값을 봐야 한다.
+
+    실사고: 공용 env 키 5개가 전부 소진되자, 자기 키에 200회씩 남은 회원 24명이
+    통째로 429로 막혔다("렌즈 끝났다" 문의가 몰린 진짜 원인). 게이트가 누가
+    요청했는지를 안 보고 공용 키만 조회한 탓이다.
+    """
+    _patch(monkeypatch, ["공용1"], {"공용1": _Resp({"total_searches_left": 0}),
+                                    "내키": _Resp({"total_searches_left": 201})})
+    assert lens_discover.account_searches_left() == 0            # 공용 기준
+    assert lens_discover.account_searches_left(keys=["내키"]) == 201   # 내 키 기준
+
+
+def test_cache_is_per_key_set(monkeypatch):
+    """★캐시를 한 통에 담으면 공용(0)이 개인 판정을 오염시켜 고친 게 도로 막힌다."""
+    fake = _patch(monkeypatch, ["공용1"], {"공용1": _Resp({"total_searches_left": 0}),
+                                           "내키": _Resp({"total_searches_left": 201})})
+    assert lens_discover.account_searches_left() == 0
+    assert lens_discover.account_searches_left(keys=["내키"]) == 201
+    # 각자 캐시를 타므로 재조회 없이도 값이 유지된다
+    assert lens_discover.account_searches_left() == 0
+    assert lens_discover.account_searches_left(keys=["내키"]) == 201
+    assert len(fake.calls) == 2, "키 조합별로 한 번씩만 왕복해야 한다"

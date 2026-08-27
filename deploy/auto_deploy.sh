@@ -51,6 +51,7 @@ LOG=/tmp/auto_deploy.log
 PENDING=/tmp/ss_pending_restart      # 한 줄에 유닛 하나: stockbrain|shopping-shorts|shopping-shorts-worker
 SINCE=/tmp/ss_pending_since          # 최초 연기 시각(epoch) — 강제 재시작 판정 기준
 MAX_DEFER_SEC=1800                   # 30분 넘게 못 재시작하면 웹은 강제 재시작
+WEB_HARD_MAX_SEC=2400                # 강제여도 렌더가 도는 중이면 여기까지는 더 봐준다(2026-08-27)
 PREWARM_MAX_DEFER_SEC=900            # 담기 분석 때문에 워커를 미루는 상한(15분). 넘으면 진행
 DB="$REPO/shopping_shorts/data/reference.db"
 ACTIVE_WINDOW_SEC=300                # 이 시간 안에 활동한 고객이 있으면 '접속 중'으로 본다
@@ -95,10 +96,18 @@ try:
         # ★고객 작업일 때만 미룬다(2026-08-06). 배경작업(prewarm·durfill·overseas)은
         #   재시작으로 죽어도 다음 크론이 다시 큐에 넣으므로 잃는 게 없다. 반면 이걸
         #   세면 배경작업이 끊임없이 이어질 때 배포가 **영원히** 안 나간다(실측 사고).
+        # ★2분 → 5분(2026-08-27 실사고). cid204 job 261ed17263ec: 렌더가 돌고 있는데
+        #   마지막 하트비트가 **2분 1초** 전이라 "안 바쁨"으로 오판 → 워커를 재시작해
+        #   만들던 영상이 죽었다(화면은 13분간 "렌더 중"으로 굳었다).
+        #   실측(최근 200건): 하트비트 간격은 보통 30초 이내인데 **렌더만 최대 121초**
+        #   침묵한다(긴 ffmpeg 구간). 2분 기준은 그 경계에 정확히 걸린다.
+        #   5분이면 실측 최대치의 2.5배 여유 — 살아 있는 작업을 죽일 일이 없다.
+        #   ⚠️ store.reap_stale(4분)과 짝이다. 여기가 더 보수적이어야
+        #      "죽었다고 판정된 것을 배포가 또 건드리는" 겹침이 안 난다.
         "SELECT COUNT(*) FROM job_queue "
         "WHERE state='running' "
         "AND task IN ('mix','render','retype','preview','clean') "
-        "AND datetime(heartbeat_at) > datetime('now','-2 minutes')").fetchone()[0]
+        "AND datetime(heartbeat_at) > datetime('now','-5 minutes')").fetchone()[0]
     sys.exit(0 if n > 0 else 1)   # exit 0 = 진행 중 → 연기
 except Exception as e:
     print("queue_check 오류(배포진행): %r" % e)
@@ -196,12 +205,22 @@ fi
 
 # 웹 앱: 고객이 접속 중이면 연기. 단 $MAX_DEFER_SEC 넘기면 강제(배포가 영영 안 가는 게 더 위험).
 if _pending_has shopping-shorts; then
-  if [ "$FORCE" = "1" ] || ! _users_online; then
+  # ★강제 재시작이어도 **렌더가 도는 중이면 조금 더 미룬다**(2026-08-27 실사고).
+  #   렌더 자체는 워커가 하므로 웹이 죽어도 완성된다. 문제는 6초짜리 재시작 창에 걸린
+  #   브라우저 요청이 끊겨 **사장님·고객 화면에만 '실패'로 보이는** 것이다
+  #   (실측: 10:00:58 예약분이 10:03:02 정상 done인데 화면은 실패였다).
+  #   무한연기는 안 된다 — $WEB_HARD_MAX_SEC까지만 봐주고 그 뒤엔 그냥 재시작한다.
+  WEB_RENDER_HOLD=0
+  if [ "$FORCE" = "1" ] && [ "$AGE" -lt "$WEB_HARD_MAX_SEC" ] && _worker_busy; then
+    WEB_RENDER_HOLD=1
+    echo "$(date '+%F %T') 웹 강제 재시작 보류(렌더 진행 중, ${AGE}초 경과/상한 ${WEB_HARD_MAX_SEC}초) $HEADSHORT" >>"$LOG"
+  fi
+  if [ "$WEB_RENDER_HOLD" = "0" ] && { [ "$FORCE" = "1" ] || ! _users_online; }; then
     [ "$FORCE" = "1" ] && echo "$(date '+%F %T') 연기 ${AGE}초 초과 → 웹 강제 재시작" >>"$LOG"
     sudo systemctl restart shopping-shorts >>"$LOG" 2>&1 \
       && echo "$(date '+%F %T') shopping-shorts 재시작완료 $HEADSHORT" >>"$LOG"
     _pending_del shopping-shorts
-  else
+  elif [ "$WEB_RENDER_HOLD" = "0" ]; then
     echo "$(date '+%F %T') 웹 재시작 연기(고객 접속 중, ${AGE}초 경과) $HEADSHORT" >>"$LOG"
   fi
 fi

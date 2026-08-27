@@ -197,6 +197,24 @@ def _merge_pool(owner_keys, pooled):
     return keys
 
 
+# 이 목록을 `from ... import SHORTS_GEMINI_KEYS`로 복사해 가는 모듈들.
+# 새 모듈이 같은 import를 쓰면 여기에 이름을 더해야 한다 — 아래 테스트가 강제한다.
+_POOL_IMPORTERS = ("comment_gen", "edit_plan", "product_identify",
+                   "script_extract", "similarity", "video_analysis")
+
+
+def _push_pool_to_importers(keys):
+    """복사본을 들고 있는 모듈들의 SHORTS_GEMINI_KEYS를 갱신한다.
+
+    이미 import된 모듈만 건드린다(sys.modules) — 여기서 새로 import하면 순환이 난다.
+    """
+    import sys
+    for name in _POOL_IMPORTERS:
+        mod = sys.modules.get("shopping_shorts." + name)
+        if mod is not None and hasattr(mod, "SHORTS_GEMINI_KEYS"):
+            mod.SHORTS_GEMINI_KEYS = keys
+
+
 def refresh_member_gemini_keys(pooled):
     """회원 제미니 키를 공용 풀에 합류시킨다. pooled = 평문 키 목록.
 
@@ -205,6 +223,14 @@ def refresh_member_gemini_keys(pooled):
       회원이 키를 넣고 빼도 앞쪽 인덱스의 의미가 안 변한다."""
     global SHORTS_GEMINI_KEYS
     SHORTS_GEMINI_KEYS = _merge_pool(_OWNER_GEMINI_KEYS, pooled)
+    # ★값을 복사해 간 모듈들에도 밀어 넣는다 (2026-08-27 실사고).
+    #   `from shopping_shorts.config import SHORTS_GEMINI_KEYS`는 **값 복사**라,
+    #   여기서 재할당해도 그 모듈들은 옛 목록을 계속 본다.
+    #   실측: 회원 키 2개 합류 후 config=21인데 comment_gen=19 — 회원 키가
+    #   로테이션(_current_key_and_idx)에 아예 안 들어갔다. 모든 모듈이 그 함수로
+    #   키를 받으므로 **등록해도 어느 경로에서도 안 쓰였다**.
+    #   사장님이 고객들에게 키 등록을 요청한 참이라 조용히 새면 안 된다.
+    _push_pool_to_importers(SHORTS_GEMINI_KEYS)
     # ★제미니 풀은 **두 벌**이다 — 여기(SHORTS_GEMINI_KEY*, 태깅·댓글·카테고리)와
     #   key_vault(GEMINI_API_KEY*, 제작소 대본·SEO·썸네일). 한쪽만 채우면 회원 키가
     #   절반의 경로에서만 쓰여 "등록했는데 왜 그대로냐"가 된다. 짝은 함께 정한다(0순위-B).

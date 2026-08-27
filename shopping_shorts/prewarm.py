@@ -29,7 +29,10 @@ from shopping_shorts.store import Store
 log = logging.getLogger("prewarm")
 
 # 담기 남발 방어 — 하루에 이만큼만 예열한다(넘으면 조용히 스킵, 제작소 진입 시 그때 추출).
-_PREWARM_DAILY_CAP = 40
+# 하루 예열 상한(전 고객 합산). 1건당 Gemini 호출은 최대 2회(추출 + 구조분석)다.
+# 2026-08-27 사장님 "100건으로 올려봐 상황보게" — 40에선 낮에 소진돼 밤 담기가 통째로
+# 스킵됐다(실측: KST 00~08시 44건 전부 skipped_cap / 09시 이후 done).
+_PREWARM_DAILY_CAP = 100
 # 1 → 3 (2026-08-04 실사고): 인스타 다운로드는 일시 실패가 흔한데 1회 실패로 영구
 # 래치돼 재담기해도 예열이 조용히 스킵됐다(DQohOUqgdRt — 수동 대본뽑기는 즉시 성공
 # = 경로는 멀쩡, 래치만 스테일). 어제 '래치 7건 삭제' 사고와 같은 계보.
@@ -61,16 +64,40 @@ def _work_dir(shortcode: str) -> Path:
     return base / hashlib.sha1(shortcode.encode()).hexdigest()[:16]
 
 
-def _daily_take(store: Store) -> bool:
-    """오늘 예열 카운터를 1 올리고 상한 내인지 돌려준다. 날짜가 바뀌면 리셋."""
-    from datetime import datetime, timezone
-    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+def _today_kst() -> str:
+    """예열 상한이 쓰는 '오늘' — **한국 날짜**다.
+
+    ★2026-08-27 수리: UTC를 쓰던 탓에 리셋이 **한국 오전 9시**였다. 낮에 상한을 다 쓰면
+      그날 저녁부터 다음날 아침 9시까지 담는 건 전부 조용히 건너뛰어졌다
+      (실측: KST 00~08시 44건 skipped_cap → 09시 정각부터 done).
+      쓰는 사람이 한국에 있으니 하루의 경계도 한국 자정이어야 한다.
+    """
+    from datetime import datetime, timedelta, timezone
+    return datetime.now(timezone(timedelta(hours=9))).strftime("%Y-%m-%d")
+
+
+def _daily_used(store: Store) -> int:
+    """오늘(한국 날짜) 쓴 예열 건수. 날짜가 바뀌었으면 0."""
     raw = store.get_setting(_DAILY_KEY, "") or ""
     day, _, n = raw.partition("|")
-    used = int(n) if (day == today and n.isdigit()) else 0
+    return int(n) if (day == _today_kst() and n.isdigit()) else 0
+
+
+def daily_remaining(store: Store) -> int:
+    """오늘 남은 예열 건수. **세기만 하고 쓰지는 않는다** — 화면 안내용(2026-08-27).
+
+    담는 시점엔 워커가 아직 판정을 안 했으므로, 여기서 남은 몫을 미리 보고
+    0이면 "미리분석은 내일" 이라고 알려 준다. 조용히 건너뛰면 사장님이 이유를 모른다.
+    """
+    return max(0, _PREWARM_DAILY_CAP - _daily_used(store))
+
+
+def _daily_take(store: Store) -> bool:
+    """오늘 예열 카운터를 1 올리고 상한 내인지 돌려준다. 날짜가 바뀌면 리셋."""
+    used = _daily_used(store)
     if used >= _PREWARM_DAILY_CAP:
         return False
-    store.set_setting(_DAILY_KEY, f"{today}|{used + 1}")
+    store.set_setting(_DAILY_KEY, f"{_today_kst()}|{used + 1}")
     return True
 
 
@@ -126,7 +153,7 @@ def run_prewarm(shortcode, url, *, caption="", customer_id="0", video_url="",
     예외를 밖으로 던지지 않는다 — 예열은 보조작업이라 실패해도 무해해야 한다."""
     from shopping_shorts.media_download import download_any
     from shopping_shorts.script_extract import (extract_auto, storable, KeyPoolExhausted,
-                                                has_usable_result)
+                                                has_usable_result, empty_reason)
     from shopping_shorts.structure_analyze import analyze_structure
 
     code = (shortcode or "").strip()
@@ -193,8 +220,27 @@ def run_prewarm(shortcode, url, *, caption="", customer_id="0", video_url="",
         # ③재료가 하나도 안 나왔을 때만 버린다(2026-08-16) — 말이 없어도 화면
         #   태깅이 나왔으면 쓸 수 있다. 판정은 script_extract 한 곳에서만 한다.
         if not has_usable_result(result):
+            # ★빈 결과라도 이유가 'API 장애'면 영상 탓이 아니다(2026-08-27) — 추출기는
+            #   504/499를 예외로 던지지 않고 **빈 결과로** 돌려주므로 위 except가 못 잡는다.
+            #   래치를 돌려주고 다음 크론이 다시 하게 둔다(deferred_transient와 같은 취급).
+            if empty_reason(result) == "api":
+                store.autoload_rollback_attempt(
+                    code, "예열 추출 일시실패(AI 서버 무응답 — 재시도 예정)")
+                return "deferred_transient"
             store.autoload_mark_error(code, "예열: 쓸 만한 재료가 안 나왔어요(화면·말 모두 비어 있음)")
             return "failed_empty"
+        # ★화면 방향을 여기서 재둔다(2026-08-27) — 담긴 영상 파일이 손에 있는 자리는
+        #   여기뿐이다. 가로형이면 1단계 화면이 담자마자 "가로형(롱폼)"이라고 알린다.
+        #   못 재도 그냥 넘어간다 — 예열은 보조작업이라 이걸로 실패하면 안 된다.
+        try:
+            from shopping_shorts.mix_pipeline import _probe_wh_dur
+            _w, _h, _d = _probe_wh_dur(video_path)
+            result["video_w"], result["video_h"] = _w, _h
+        except Exception as _pe:      # noqa: BLE001
+            # ★log를 쓴다 — 이 모듈엔 sys import가 없다(넣었다가 예외 처리 안에서
+            #   NameError가 나 예열이 통째로 죽을 뻔했다, 테스트가 잡았다).
+            log.warning("예열 해상도 측정 실패(무해) %s: %r", code, _pe)
+
         # 구조분석은 '말'을 읽는 것이라 여전히 full_text가 필요하다(아래 _fill_structure).
         # 무자막 영상은 빈 문자열 → 구조분석만 조용히 건너뛴다(추출·태깅은 이미 저장됐다).
         full_text = (result.get("full_text") or "").strip()

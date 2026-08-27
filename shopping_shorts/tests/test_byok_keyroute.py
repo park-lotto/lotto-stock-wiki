@@ -68,6 +68,36 @@ def test_users_do_not_share(store, monkeypatch):
     assert is_user is False
 
 
+def test_single_key_service_prefers_newest(store, monkeypatch):
+    """★키를 갈아끼우면 **새 키**가 쓰여야 한다(2026-08-28 cid 57 실사고).
+
+    vmake·elevenlabs는 호출부가 keys[0] 하나만 집는다(_vmake_key·_api_key).
+    그런데 DB 조회가 ORDER BY id라 그대로 두면 **가장 오래된 키**가 잡힌다.
+    실제로 크레딧 떨어진 계정을 버리고 새 키를 등록했는데 옛 키가 계속 쓰여
+    자막제거가 [60002]로 계속 실패했다. 순서를 되돌리면 그 사고가 그대로 재발한다.
+    """
+    monkeypatch.setattr(keyroute, "_owner_keys", lambda svc: ["사장님키"])
+    store.add_customer_key(7, "vmake", "옛키")
+    store.add_customer_key(7, "vmake", "새키")
+    keys, is_user = keyroute.keys_for(store, 7, "vmake")
+    assert keys[0] == "새키"          # ★나중에 등록한 것이 먼저
+    assert set(keys) == {"옛키", "새키"}   # 버리지는 않는다
+    assert is_user is True
+
+
+def test_pooled_service_keeps_order(store, monkeypatch):
+    """★POOLED·목록전체 서비스는 순서를 건드리지 않는다 — 위 수정의 범위 보증.
+
+    serpapi는 키 개수만큼 한도를 주며(_lens_key_count) 목록 전체를 쓴다.
+    여기까지 뒤집으면 이유 없이 동작이 바뀐다.
+    """
+    monkeypatch.setattr(keyroute, "_owner_keys", lambda svc: ["사장님키"])
+    for k in ("s1", "s2", "s3"):
+        store.add_customer_key(8, "serpapi", k)
+    keys, _ = keyroute.keys_for(store, 8, "serpapi")
+    assert keys == ["s1", "s2", "s3"]
+
+
 def test_serpapi_returns_all_user_keys(store, monkeypatch):
     """개인 전용 중 여러 개를 받는 서비스 — 등록한 만큼 전부 준다."""
     monkeypatch.setattr(keyroute, "_owner_keys", lambda svc: ["사장님키"])
@@ -91,3 +121,37 @@ def test_should_charge_is_inverse_of_user_key(store, monkeypatch):
     assert keyroute.should_charge(store, 7, "vmake") is True     # 사장님 키 → 과금
     store.add_customer_key(7, "vmake", "내키")
     assert keyroute.should_charge(store, 7, "vmake") is False    # 내 키 → 무료
+
+
+# ── 관리자(cid 0)도 자기 키를 쓴다 — 2026-08-27 사장님 "내꺼 전용으로" ──────────
+
+def test_cid0_uses_own_key(store, monkeypatch):
+    """★전엔 `if cid:`라 0이 falsy로 걸려 개인 키 조회를 통째로 건너뛰었다.
+
+    그래서 사장님이 개인 키를 등록해도 안 쓰였고(공용 env 풀로 갔다), 반대로 env에
+    넣으면 전 회원이 같이 썼다 — "내 전용"이 성립할 자리 자체가 없었다.
+    """
+    monkeypatch.setattr(keyroute, "_owner_keys", lambda svc: ["공용1", "공용2"])
+    store.add_customer_key(0, keyroute.SVC_SERPAPI, "관리자전용키")
+    keys, is_user = keyroute.keys_for(store, 0, keyroute.SVC_SERPAPI)
+    assert keys == ["관리자전용키"]          # 공용 키가 섞이지 않는다
+    assert "공용1" not in keys
+    assert is_user is True
+
+
+def test_cid0_without_own_key_still_uses_owner(store, monkeypatch):
+    """등록 안 했으면 예전처럼 공용 키로 간다 — 회귀가 없어야 한다."""
+    monkeypatch.setattr(keyroute, "_owner_keys", lambda svc: ["공용1", "공용2"])
+    keys, is_user = keyroute.keys_for(store, 0, keyroute.SVC_SERPAPI)
+    assert keys == ["공용1", "공용2"]
+    assert is_user is False
+
+
+def test_cid0_pooled_service_still_pools(store, monkeypatch):
+    """공용 풀 서비스(gemini)는 종전 그대로 — 자기 키를 내도 풀 전체를 쓴다.
+    관리자 예외를 없앤 것이 풀 모델까지 바꿔버리면 안 된다."""
+    monkeypatch.setattr(keyroute, "_owner_keys", lambda svc: ["풀1", "풀2"])
+    store.add_customer_key(0, keyroute.SVC_GEMINI, "관리자제미니")
+    keys, is_user = keyroute.keys_for(store, 0, keyroute.SVC_GEMINI)
+    assert keys == ["풀1", "풀2"]
+    assert is_user is True

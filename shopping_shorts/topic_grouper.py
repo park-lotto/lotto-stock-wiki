@@ -70,7 +70,7 @@ def _group_batch(batch, max_key_tries=3):
         except Exception as e:  # noqa: BLE001 — 그룹핑 실패는 치명적이지 않다(부가기능)
             if (comment_gen.key_vault.is_daily_exhausted_error(e)
                     or comment_gen.key_vault.is_account_disabled_error(e)):
-                comment_gen._mark_key_exhausted(ki)
+                comment_gen._mark_key_exhausted(ki, comment_gen.key_vault.retry_delay_seconds(e))
                 continue
             return {}
     return {}

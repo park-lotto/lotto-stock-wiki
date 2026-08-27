@@ -5068,8 +5068,21 @@ class Store:
         except (TypeError, ValueError):
             return 0
 
-    def bump_lens(self, month):
-        n = self.lens_month_count(month) + 1
+    def bump_lens(self, month, calls=1):
+        """이번 달 렌즈 카운터를 **실제 SerpApi 호출 수(calls)만큼** 올린다.
+
+        ★종전엔 클릭 1회당 무조건 +1이었다. 그런데 검색 1번이 로케일 수만큼
+          SerpApi를 쓴다(2026-08-27 실측: 우리 카운터 664 / 실제 소진 1,116 —
+          452회를 적게 셌다. 키 5개 중 3개가 이미 소진돼 잔량 134회였는데
+          화면은 664/1250이라 '아직 여유'로 보였다).
+          월 가드가 이 값으로 판정하므로 적게 세면 잔량이 조용히 마른다.
+        ★calls가 0·None·음수여도 **최소 1** — 검색을 했는데 0으로 세면 카운터가 멈춘다.
+        """
+        try:
+            n_calls = max(1, int(calls))
+        except (TypeError, ValueError):
+            n_calls = 1
+        n = self.lens_month_count(month) + n_calls
         self.set_setting(f"lens_count:{month}", str(n))
         return n
 
@@ -5172,11 +5185,12 @@ class Store:
 
         이미 승인된 고객이면 아무 것도 하지 않는다(연장 사고 방지).
 
-        ★남은 체험을 반드시 옮겨야 한다(안 그러면 확인을 누르는 순간 체험이 끊긴다).
-          access_level은 체험창(trial_ends_at)을 **approved_at이 비어 있을 때만** 본다.
-          approved_at을 채우면 그 분기를 못 타므로, 남은 시간을 승인 고객이 쓰는
-          full_access_until로 이관한다 → 체험이 그대로 흘러가고 끝나면 알아서 잠긴다.
-          이미 full_access_until이 더 길면 그대로 둔다(줄이지 않는다).
+        ★full_access_until은 **건드리지 않는다**(2026-08-26 사장님 "체험중은 없애고
+          체험판 랭킹으로"). 종전엔 남은 체험을 full_access_until로 이관했는데,
+          그 필드는 **입금 승인으로 주는 유료 이용 기간**이라 확인 버튼 한 번에
+          결제도 안 한 계정이 전기능이 됐다(실측 cid 221~232, 12명 전원 결제기록 0).
+          이제 체험 자체가 랭킹만이므로 이관할 것도 없다 — approved_at만 채우면
+          체험(랭킹만) → 확인 후(랭킹만)로 권한이 그대로 이어진다.
         """
         now_ts = int(datetime.now(timezone.utc).timestamp())
         with self._conn() as c:
@@ -5184,11 +5198,9 @@ class Store:
                             "FROM customers WHERE id=?", (int(customer_id),)).fetchone()
             if row is None or row[0] is not None:
                 return False                       # 없는 고객이거나 이미 내려간 고객
-            trial_ends = row[1] or 0
-            fau = row[2] or 0
-            new_fau = max(fau, trial_ends)         # 남은 체험을 이어받는다(줄이지 않는다)
-            c.execute("UPDATE customers SET approved_at=?, full_access_until=? WHERE id=?",
-                      (now_ts, new_fau, int(customer_id)))
+            # ★full_access_until은 손대지 않는다(위 설명). 유료 기간 필드다.
+            c.execute("UPDATE customers SET approved_at=? WHERE id=?",
+                      (now_ts, int(customer_id)))
         return True
 
     def verify_customer(self, username, password):
@@ -5396,6 +5408,23 @@ class Store:
             row = c.execute("SELECT count FROM usage WHERE customer_id=? AND op=? AND day=?",
                             (customer_id, op, day)).fetchone()
         return row[0] if row else 0
+
+    def usage_reset(self, customer_id, op, day):
+        """(customer_id, op, day) 사용량을 0으로. **지워진 값**을 돌려준다.
+
+        관리자가 "오늘 렌즈 10회 다 썼는데 방금 입금하셨다" 같은 상황에서 되돌리는 용도.
+        ★행을 지우지 않고 0으로 둔다 — usage_all이 '오늘 0회'를 그대로 보여줘야
+          리셋했다는 사실이 화면에서 사라지지 않는다.
+        없는 행이면 아무 것도 안 하고 0(버튼 연타가 오류가 되면 안 된다).
+        """
+        with self._conn() as c:
+            row = c.execute("SELECT count FROM usage WHERE customer_id=? AND op=? AND day=?",
+                            (customer_id, op, day)).fetchone()
+            if not row:
+                return 0
+            c.execute("UPDATE usage SET count=0 WHERE customer_id=? AND op=? AND day=?",
+                      (customer_id, op, day))
+        return row[0]
 
     # ── 접속중·활동기록(2026-07-22) ──
     def touch_customer(self, customer_id, at):
@@ -5774,15 +5803,28 @@ class Store:
     # 워커를 여러 개 띄울 때 같은 계정으로 동시 접속해 플래그되는 걸 막는다.
     _EXCLUSIVE_TASKS = ("durfill", "prewarm")
 
+    # 하트비트가 이만큼 끊긴 running은 '살아있는 렌더'로 치지 않는다(2026-08-27).
+    _HEAVY_STALE_MINUTES = 15
+
     def heavy_job_active(self):
         """렌더 계열 작업이 지금 돌고 있거나 대기 중이면 True.
         queued까지 보는 이유: 곧 시작할 렌더 앞에서 크롤이 먼저 자리를 잡으면
-        렌더가 그 크롤이 끝날 때까지 밀린다(양보의 취지가 사라진다)."""
+        렌더가 그 크롤이 끝날 때까지 밀린다(양보의 취지가 사라진다).
+
+        ★좀비 제외(2026-08-27 실사고): clean 작업 1건이 02:07 하트비트 뒤 멈춘 채
+          state='running'으로 9시간 남아 있었고, 09:00 인스타 수집 타이머가 이 가드에
+          걸려 2초 만에 스킵됐다 — 타이머는 하루 1회라 **그날 수집이 통째로 비었다**
+          (snapshots 08-27 0건 실측). 워커가 죽으면 상태가 고착되므로, 하트비트가
+          _HEAVY_STALE_MINUTES 넘게 끊긴 running은 '안 도는 것'으로 본다.
+          queued는 하트비트가 없는 게 정상이라 그대로 센다."""
         ph = ",".join("?" * len(self._HEAVY_TASKS))
         with self._conn() as c:
             n = c.execute(
-                f"SELECT COUNT(*) FROM job_queue WHERE task IN ({ph}) "
-                "AND state IN ('queued','running')", self._HEAVY_TASKS).fetchone()[0]
+                f"SELECT COUNT(*) FROM job_queue WHERE task IN ({ph}) AND ("
+                "     state='queued'"
+                "  OR (state='running' AND heartbeat_at IS NOT NULL"
+                "      AND datetime(heartbeat_at) >= datetime('now', ?))"
+                ")", (*self._HEAVY_TASKS, f"-{self._HEAVY_STALE_MINUTES} minutes")).fetchone()[0]
         return n > 0
 
     def claim_next(self):
@@ -5828,6 +5870,107 @@ class Store:
                 return None
             return {"id": row[0], "task": row[1], "args": json.loads(row[2])}
 
+    #: 작업별 '평소 이 정도면 오래 걸린 것'(초). 화면이 붉게 표시하는 기준.
+    #  라이브 실측(2026-08-26 job_queue 완료분): mix·preview·clean은 1~3분에 끝난다.
+    #  ⚠️여기 없는 task는 _WORK_SLOW_DEFAULT를 쓴다 — 새 작업이 생겨도 경고는 계속 돈다.
+    _WORK_SLOW_SEC = {"mix": 300, "preview": 300, "clean": 600, "render": 900,
+                      "durfill": 1800, "prewarm": 1800, "overseas": 1800}
+    _WORK_SLOW_DEFAULT = 600
+
+    #: 화면에 뜨는 작업 이름(영문 task → 사장님이 읽는 말).
+    _WORK_LABEL = {"mix": "영상대본MIX", "preview": "미리보기", "clean": "자막제거",
+                   "render": "최종렌더", "durfill": "길이보정", "prewarm": "담기분석",
+                   "overseas": "해외수집", "census": "전수조사"}
+
+    def admin_work_lines(self, recent=12):
+        """관리자 관측판 — **지금 누가 무엇을 하고 있나**(2026-08-26 사장님 지시).
+
+        종전엔 `/api/admin/capacity`가 숫자(running·queued)만 줬다. 그래서 "3건 대기"까지만
+        보이고 **누구의 무슨 작업인지**를 몰랐다 — 사장님이 매번 물어봐야 했다.
+        ★실제 피해: 2026-08-25 VMake 크레딧 소진 때 고객이 9번 실패하고 신고할 때까지
+          아무도 몰랐다. `elapsed_sec`·`slow`가 있으면 그때 바로 붉게 떴을 것이다.
+
+        반환: {running:[...], queued:[...], recent:[...]}  — **한 번에** 준다.
+              화면이 API를 여러 번 부르면 목록끼리 시점이 어긋난다.
+        ⚠️실패해도 관측이 서비스를 죽이면 안 된다 → 예외는 빈 목록으로 삼킨다
+          (capacity API와 같은 규약).
+        """
+        import json as _json
+
+        def _epoch(s):
+            """'YYYY-MM-DD HH:MM:SS'(UTC) → epoch. 못 읽으면 None."""
+            if not s:
+                return None
+            try:
+                return datetime.strptime(str(s)[:19], "%Y-%m-%d %H:%M:%S").replace(
+                    tzinfo=timezone.utc).timestamp()
+            except (ValueError, TypeError):
+                return None
+
+        def _job_id(args):
+            try:
+                return (_json.loads(args or "{}") or {}).get("job_id") or ""
+            except (ValueError, TypeError):
+                return ""
+
+        try:
+            now = datetime.now(timezone.utc).timestamp()
+            with self._conn() as c:
+                rows = c.execute(
+                    "SELECT id, task, state, args_json, created_at, claimed_at, "
+                    "       heartbeat_at, finished_at, owner, error "
+                    "  FROM job_queue "
+                    " WHERE state IN ('queued','running') "
+                    "    OR (finished_at IS NOT NULL "
+                    "        AND finished_at > datetime('now','-60 minutes')) "
+                    " ORDER BY id").fetchall()
+                names = {}
+                try:
+                    for cid, nm, em in c.execute(
+                            "SELECT id, COALESCE(name,''), COALESCE(email,'') FROM customers"):
+                        names[str(cid)] = nm or em or ""
+                except sqlite3.Error as e:
+                    # 이름은 부가정보다 — 없어도 줄은 보여준다. 단 **조용히 삼키지 않는다**
+                    # (메모리 `테스트_시한폭탄_침묵except`: except:pass가 SQL 오류를 삼켜
+                    #  라이브에서 0건이 된 실사고가 있었다).
+                    print(f"[작업라인] 고객 이름 조회 실패(무시): {e!r}", file=sys.stderr)
+
+            out = {"running": [], "queued": [], "recent": []}
+            for (qid, task, state, args, created, claimed, hb, fin, owner, err) in rows:
+                # 경과: 진행 중이면 '집은 때부터 지금까지', 끝났으면 '집은 때부터 끝까지'.
+                # ⚠️created가 아니라 claimed 기준이다 — 줄 서 있던 시간을 '오래 걸림'으로
+                #   세면 워커가 바쁠 때 전부 빨개진다(경보가 무의미해진다).
+                base = _epoch(claimed) or _epoch(created)
+                end = _epoch(fin) if fin else now
+                elapsed = int(end - base) if (base and end and end >= base) else None
+                item = {
+                    "id": qid, "task": task, "state": state,
+                    "label": self._WORK_LABEL.get(task, task),
+                    "job_id": _job_id(args),
+                    "owner": str(owner or ""),
+                    "owner_name": names.get(str(owner or ""), ""),
+                    "created_at": created, "claimed_at": claimed,
+                    "heartbeat_at": hb, "finished_at": fin,
+                    "error": err or "",
+                    "elapsed_sec": elapsed,
+                }
+                if state == "running":
+                    lim = self._WORK_SLOW_SEC.get(task, self._WORK_SLOW_DEFAULT)
+                    item["slow"] = bool(elapsed is not None and elapsed > lim)
+                    item["slow_limit_sec"] = lim
+                    out["running"].append(item)
+                elif state == "queued":
+                    # 대기는 '줄 선 시간'을 보여준다(집힌 적이 없으니 created 기준).
+                    w = _epoch(created)
+                    item["wait_sec"] = int(now - w) if w else None
+                    out["queued"].append(item)
+                else:
+                    out["recent"].append(item)
+            out["recent"] = sorted(out["recent"], key=lambda x: x["id"], reverse=True)[:recent]
+            return out
+        except sqlite3.Error:
+            return {"running": [], "queued": [], "recent": []}
+
     def mix_queue_ahead(self, job_id):
         """이 잡의 mix 큐 항목이 아직 'queued'면 앞에 선 queued 개수를 반환, 아니면 None.
 
@@ -5841,9 +5984,17 @@ class Store:
                     (f'%"{job_id}"%',)).fetchone()
                 if not row:
                     return None
+                # ★같은 task(mix)만 센다(2026-08-27 사장님 "진짜 13개가 앞에 있어?").
+                #   전엔 종류를 안 가려 `prewarm`(영상 미리받기, 보통 1초 안에 끝난다)까지
+                #   전부 셌다 — 실측 큐의 대부분이 prewarm이라 "내 앞 13개"가 실제 기다림과
+                #   전혀 안 맞았다. 그리고 워커는 **prio가 높은 것부터** 집으므로
+                #   집는 순서(prio DESC, id ASC)와 같은 기준으로 앞에 선 것만 센다.
                 ahead = c.execute(
-                    "SELECT COUNT(*) FROM job_queue "
-                    " WHERE state='queued' AND id < ?", (row[0],)).fetchone()[0]
+                    "SELECT COUNT(*) FROM job_queue q, "
+                    "       (SELECT prio FROM job_queue WHERE id=?) me "
+                    " WHERE q.state='queued' AND q.task='mix' "
+                    "   AND (q.prio > me.prio OR (q.prio = me.prio AND q.id < ?))",
+                    (row[0], row[0])).fetchone()[0]
             return int(ahead)
         except sqlite3.Error:
             return None
@@ -5873,8 +6024,15 @@ class Store:
     #  그래서 이 중단은 **고장이 아니다** — 같은 'failed'로 적으면 통계가 오염된다.
     _BACKGROUND_TASKS = ("durfill", "prewarm", "overseas")
 
-    def reap_stale(self, minutes=2):
+    def reap_stale(self, minutes=4):
         """heartbeat가 minutes분 넘게 안 뛴 running을 정리하고 개수를 반환한다.
+
+        ★기본 2분 → 4분(2026-08-27). 하트비트는 보통 30초마다 뛰지만 **렌더는 예외**다 —
+          긴 ffmpeg 구간에서 실측 최대 **121초** 침묵했다(최근 200건 중 1건, render).
+          2분 기준은 그 경계에 딱 걸려 **살아 있는 렌더를 죽은 것으로 오판**할 수 있다.
+          4분이면 실측 최대치의 2배 여유다. 진짜 죽은 워커도 4분이면 충분히 걸린다.
+          ⚠️ deploy/auto_deploy.sh의 _worker_busy(5분)와 짝이다 — 한쪽만 바꾸면
+             "배포는 죽었다고 보고 재시작하는데 여기선 살았다고 보는" 어긋남이 난다.
 
         워커가 SIGKILL로 죽으면 heartbeat가 멈춘다 — 그걸 잡아 화면에 실패를 알린다.
         (예전엔 조용히 멈춰 '되고 있나?'를 알 수 없었다, 2026-07-29 실사고)
@@ -5887,6 +6045,15 @@ class Store:
           — 화면·집계가 '중단(재시도됨)'을 고장으로 세지 않게."""
         marks = ",".join("?" for _ in self._BACKGROUND_TASKS)
         with self._conn() as c:
+            # ★죽은 행을 **먼저 집어둔다**(2026-08-27). 아래 UPDATE로 state가 바뀌면
+            #   어떤 job이 죽었는지 알 수 없게 된다 — 화면에 전파하려면 job_id가 필요하다.
+            dead = c.execute(
+                "SELECT id, task, args_json FROM job_queue "
+                " WHERE state='running' "
+                "   AND (heartbeat_at IS NULL "
+                "        OR datetime(heartbeat_at) < datetime('now', ?))",
+                (f"-{int(minutes)} minutes",)).fetchall()
+
             cur = c.execute(
                 "UPDATE job_queue SET state='failed', "
                 "       error=CASE WHEN task IN (" + marks + ") "
@@ -5897,7 +6064,54 @@ class Store:
                 "   AND (heartbeat_at IS NULL "
                 "        OR datetime(heartbeat_at) < datetime('now', ?))",
                 (*self._BACKGROUND_TASKS, f"-{int(minutes)} minutes"))
+
+            # ★★여기가 이번에 뚫려 있던 자리 — 큐만 실패로 적고 **화면에는 안 알렸다**.
+            #   2026-08-27 실사고(cid204 job 261ed17263ec): 배포가 렌더 중 워커를 죽여
+            #   큐는 failed가 됐는데 mix_jobs.status는 'rendering'에 그대로 남았다.
+            #   화면은 계속 "최종 렌더 중…"을 돌렸고 고객은 13분을 기다리다 제보했다.
+            #   실패를 알릴 길이 없으면 "다시 시도" 버튼도 안 뜬다 — 영원히 멈춘다.
+            #   실측: 이 구멍 때문에 extracting 6 / downloading 5 / planning 3 / tts 1건이
+            #   진행중인 채로 굳어 있었다(2026-08-27 라이브 집계).
+            self._propagate_dead_to_jobs(c, dead)
             return cur.rowcount
+
+    # task별로 화면이 읽는 상태 칸이 다르다. 한 군데서만 정한다(0순위-B) —
+    # 여기가 갈리면 어떤 단계는 실패가 안 뜨고 또 멈춘 것처럼 보인다.
+    #   (진행중 상태칸, 사유칸, 이미 끝난 값들 — 이 값이면 건드리지 않는다)
+    _TASK_JOB_FIELDS = {
+        "mix":     ("status", "error", ("done", "failed", "ready_for_review")),
+        "retype":  ("status", "error", ("done", "failed", "ready_for_review")),
+        "render":  ("status", "error", ("done", "failed", "ready_for_review")),
+        "clean":   ("clean_status", "clean_error", ("ready", "failed")),
+        "preview": ("preview_status", "preview_error", ("ready", "failed")),
+    }
+    _DEAD_MSG = "작업 도중 중단됐습니다 — 다시 시도해 주세요"
+
+    def _propagate_dead_to_jobs(self, c, dead_rows):
+        """죽은 큐 항목의 실패를 **화면이 읽는 자리**(mix_jobs)까지 전파한다.
+
+        배경작업(durfill·prewarm·overseas)은 job과 무관하므로 건너뛴다.
+        이미 끝난 값(done/failed/ready 등)은 덮어쓰지 않는다 — 워커가 죽은 뒤
+        재시도가 먼저 성공했을 수 있고, 그걸 실패로 되돌리면 더 나쁘다.
+        """
+        for _id, task, args in dead_rows or []:
+            spec = self._TASK_JOB_FIELDS.get(task)
+            if not spec:
+                continue                       # 배경작업 등 — 화면에 알릴 자리가 없다
+            col, errcol, done_values = spec
+            try:
+                job_id = (json.loads(args or "{}") or {}).get("job_id")
+            except (ValueError, TypeError):
+                job_id = None
+            if not job_id:
+                continue
+            marks = ",".join("?" for _ in done_values)
+            c.execute(
+                f"UPDATE mix_jobs SET {col}='failed', {errcol}=?, "
+                "       updated_at=datetime('now') "
+                " WHERE job_id=? "
+                f"   AND ({col} IS NULL OR {col} NOT IN ({marks}))",
+                (self._DEAD_MSG, job_id, *done_values))
 
     def queue_status(self, task, args_match=None):
         """이 작업의 큐 상태. position=내 앞에 있는 queued/running 개수(화면 대기순번).

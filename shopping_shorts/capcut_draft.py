@@ -125,14 +125,48 @@ def _text_content(text, font_path, color=(1.0, 1.0, 1.0), size=15.0):
 
 
 def _text_material(text, font_path):
-    return {"id": _uid(), "type": "text", "content": _text_content(text, font_path),
-            "name": "", "font_path": font_path, "font_size": 15.0, "text_color": "#FFFFFF",
+    """자막 머티리얼 — **캡션(subtitle)** 으로 만든다(2026-08-26 고객 요청).
+
+    ★고객 제보(진진님): "캡컷에 보내보니 자막이 **텍스트**로 붙더라. 캡션으로 붙게
+      해주시면 좋겠다. 텍스트로 오니 (숏템에서 맞춘 게 틀어져) 일일이 조정해야 해서
+      시간이 걸린다."
+
+    ★실측(사장님 캡컷 프로젝트 '곰팡이 방지 실리콘' 등 5개, 2026-08-26):
+        캡컷이 만든 캡션도 **트랙 타입은 text**다 — 갈리는 곳은 머티리얼의 type이다.
+          캡션: type='subtitle' · check_flag=31 · line_max_width=10.0 · border_width=0.24
+          텍스트: type='text'   · check_flag=7  · line_max_width=0.82
+        캡션에만 있는 키(recognize_type·recognize_task_id·base_content 등)도 함께 넣는다 —
+        캡컷이 자막 패널에서 다루려면 이 필드들을 본다.
+    ★추측하지 않았다. 실제 캡컷이 저장한 파일에서 그대로 가져온 값이다.
+    """
+    content = _text_content(text, font_path)
+    return {"id": _uid(), "type": "subtitle", "content": content,
+            "base_content": "", "recognize_type": 0, "recognize_task_id": "",
+            "recognize_text": "", "recognize_model": "", "punc_model": "",
+            "name": "", "font_path": font_path, "font_size": 16.0, "text_color": "#ffffff",
             "text_alpha": 1.0, "alignment": 1, "line_feed": 1, "letter_spacing": 0.0,
-            "line_spacing": 0.02, "text_size": 30, "border_width": 0.08, "border_alpha": 1.0,
-            "has_shadow": False, "background_alpha": 1.0, "layer_weight": 1,
-            "line_max_width": 0.82, "use_effect_default_color": True,
+            "line_spacing": 0.02, "text_size": 16, "border_width": 0.24, "border_alpha": 1.0,
+            "border_color": "", "border_mode": 0, "bold_width": 0.0,
+            "has_shadow": False, "background_alpha": 0.0, "background_color": "",
+            "background_style": 0, "background_round_radius": 0.0,
+            "background_height": 0.14, "background_width": 0.14,
+            "background_horizontal_offset": 0.0, "background_vertical_offset": 0.0,
+            "layer_weight": 1, "line_max_width": 10.0,
+            "use_effect_default_color": False,
+            "fixed_width": -1.0, "fixed_height": -1.0,
+            "force_apply_line_max_width": False, "global_alpha": 1.0,
+            "group_id": "", "initial_scale": 1.0, "is_rich_text": False,
+            "italic_degree": 0, "language": "", "shadow_alpha": 0.9,
+            "shadow_angle": -45.0, "shadow_color": "", "shadow_distance": 5.0,
+            "shadow_smoothing": 1.0, "typesetting": 0, "underline": False,
+            "underline_offset": 0.22, "underline_width": 0.05,
             "words": {"start_time": [], "end_time": [], "text": []},
-            "combo_info": {"text_templates": []}, "sub_type": 0, "check_flag": 7}
+            "current_words": {"end_time": [], "start_time": [], "text": []},
+            "caption_template_info": {"category_id": "", "category_name": "",
+                                      "effect_id": "", "is_new": False, "path": "",
+                                      "request_id": "", "resource_id": "",
+                                      "resource_name": "", "source_platform": 0},
+            "combo_info": {"text_templates": []}, "sub_type": 0, "check_flag": 31}
 
 
 _DEFAULT_FONT = ("C:/Users/TheRose/AppData/Local/CapCut/Apps/8.9.1.3802/"
@@ -275,8 +309,11 @@ def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
             mats["material_animations"].append(anim)
             tm = _text_material(text, font_path)
             mats["texts"].append(tm)
+            # ★실측(캡컷이 만든 캡션 세그먼트): render_index=0 · track_render_index=2.
+            #   종전엔 render_index=14000(텍스트 관례)이라 자막 패널에서 다르게 다뤄졌다.
             seg = _base_segment(tm["id"], t0, dur, source_timerange=False,
-                                render_index=14000, extra_refs=[anim["id"]])
+                                render_index=0, extra_refs=[anim["id"]])
+            seg["track_render_index"] = 2
             txt_track["segments"].append(seg)
 
     tracks = [t for t in (vid_track, aud_track, txt_track) if t["segments"]]

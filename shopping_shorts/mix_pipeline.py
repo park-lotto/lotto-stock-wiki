@@ -661,6 +661,50 @@ def _prepare_sources(urls, work, store=None):
     return video_paths, captions, skipped
 
 
+def _is_landscape(path):
+    """가로형인가 — 가로가 세로보다 길면 True. 못 재면 None(모르면 막지 않는다).
+
+    정사각(1:1)은 가로형으로 치지 않는다. 세로 화면에 넣어도 위아래만 남지
+    좌우가 잘려 나가지 않는다.
+    """
+    try:
+        w, h, _dur = _probe_wh_dur(path)
+    except Exception:      # noqa: BLE001 — 못 재는 걸 막을 근거로 쓰지 않는다
+        return None
+    if not (w and h):
+        return None
+    return w > h
+
+
+def _block_landscape(video_paths, url_of=None):
+    """가로형 소스가 하나라도 있으면 사람이 읽을 수 있는 사유로 실패시킨다.
+
+    2026-08-27 실사고(job 6070eddd8a73): 세로 3편에 유튜브 롱폼 가로 4K 1편이 섞였다.
+    붙임 캔버스가 그 한 편에 끌려가 세로 영상들이 가로로 늘어났고, 최종 세로 렌더에서
+    크게 잘려 고객에겐 "원본은 일반영상인데 결과물이 줌한 것처럼 크다"로 보였다.
+
+    비율 보존(_join_sources)은 그 왜곡을 없앴지만, **가로 영상 자체가 세로 숏폼에
+    안 맞는다** — 세로 화면에 채우려면 좌우를 잘라내야 하고 그건 원본과 다른 그림이다.
+    그래서 만들다 이상해지는 대신 **시작할 때 분명히 실패**시킨다(사장님 지시).
+    """
+    bad = []
+    for vid, path in sorted((video_paths or {}).items()):
+        if _is_landscape(path):
+            try:
+                w, h, _d = _probe_wh_dur(path)
+            except Exception:      # noqa: BLE001
+                w = h = 0
+            bad.append((vid, (url_of or {}).get(vid, ""), w, h))
+    if not bad:
+        return
+    lines = [f"· {u or vid} ({w}x{h} 가로)" for vid, u, w, h in bad]
+    raise RuntimeError(
+        f"가로형(롱폼) 영상이 {len(bad)}개 섞여 있어요 — 세로 숏폼으로 만들면 "
+        "좌우가 잘려 원본과 다르게 확대된 것처럼 나옵니다. "
+        "아래 영상을 빼고 다시 만들어 주세요:\n"
+        + "\n".join(lines))
+
+
 def _job_customer_id(db_path, job_id):
     try:
         job = Store(db_path).get_mix_job(job_id) or {}
@@ -795,6 +839,12 @@ def run_mix_job(job_id, db_path, work_root):
             if skipped:
                 print(f"run_mix_job[{job_id}]: {len(skipped)}개 소스 스킵 "
                       f"(불량 URL) — {[u for u, _ in skipped]}", file=sys.stderr)
+            # ★가로형(롱폼) 소스는 여기서 막는다(2026-08-27 사장님 지시).
+            #   숏폼 세로 화면에 가로 영상을 넣으면 좌우가 크게 잘려 "줌한 것처럼" 나온다.
+            #   ⚠️ 여기가 유일한 관문이다 — 화면에서도 미리 알리지만, 화면 경고는
+            #   지나칠 수 있으므로 **실제 차단은 이 한 곳**에서만 한다(0순위-B).
+            _block_landscape(video_paths, {_source_video_id(i): u
+                                           for i, u in enumerate(job["urls"])})
 
             # 2) 대본 추출(병렬)
             store.update_mix_job(job_id, status="extracting")
@@ -1659,9 +1709,7 @@ def _used_spans(plan):
         return None
     out = {}
     for b in beats:
-        over = b.get("scene_override")
-        mats = [dict(s) for s in over if s] if over else                [s for s in ([b.get("primary")] + list(b.get("alternates") or [])) if s]
-        for m in mats:
+        for m in _beat_materials(b):
             vid = m.get("video_id")
             try:
                 st, en = float(m.get("start")), float(m.get("end"))
@@ -1711,7 +1759,11 @@ def _restore_span(orig, cleaned, lo, hi, out_path):
         cmd += ["-i", str(src)]
         if to is not None:
             cmd += ["-t", f"{to:.3f}"]
-        cmd += ["-vf", f"scale={W}:{H}:flags=lanczos,setsar=1,fps=30",
+        # ★여기도 비율을 지킨다(2026-08-27, _join_sources와 같은 함정).
+        #   W·H는 **원본** 크기다. 청소본이 다른 비율로 돌아오면 강제 스케일은 그림을
+        #   늘려버린다 — 비율이 같으면 pad는 아무 일도 안 하고, 다를 때만 검게 채운다.
+        cmd += ["-vf", (f"scale={W}:{H}:force_original_aspect_ratio=decrease:flags=lanczos,"
+                        f"pad={W}:{H}:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1,fps=30"),
                 "-c:v", "libx264", "-preset", "veryfast", "-crf", "18",
                 "-pix_fmt", "yuv420p", "-c:a", "aac", "-ar", "48000", "-ac", "2", dst]
         subprocess.run(cmd, check=True)
@@ -1791,22 +1843,61 @@ def _restore_all(done, cuts, source_map, work):
     return out
 
 
+# 붙임 캔버스 한 변의 상한. 최종 출력이 1080x1920이라 1920이면 충분하다.
+_JOIN_CANVAS_MAX = 1920
+
+
+def _fit_box(w, h, W, H):
+    """(w,h)를 비율 유지로 (W,H) 안에 넣었을 때 실제 그림이 차지하는 자리.
+
+    반환 (cw, ch, cx, cy, w, h) — 잘라낼 크기·위치와 **되돌릴 원본 크기**.
+    ffmpeg의 scale/pad와 **같은 계산**이어야 한다(짝은 함께 정한다). 짝수로 맞추는 것도
+    같은 이유다 — libx264(yuv420p)는 홀수 크기를 못 받아 1px씩 어긋난다.
+    """
+    if not (w and h and W and H):
+        return (W or 0, H or 0, 0, 0, w or 0, h or 0)
+    f = min(W / w, H / h)
+    cw = max(2, int(round(w * f)) // 2 * 2)
+    ch = max(2, int(round(h * f)) // 2 * 2)
+    return (cw, ch, (W - cw) // 2, (H - ch) // 2, w, h)
+
+
 def _join_sources(items, work):
     """[(vid, src)] → (합본경로, [(vid, 시작초, 길이초)]). 실패하면 예외.
 
     ★규격을 통일하지 않으면 concat이 깨진다 — 해상도·fps·SAR을 맞춘다.
-      해상도는 **최대값** 기준(업스케일 방향이라 원본 손실 없음).
+
+    ⚠️ **비율을 지키며** 맞춘다(2026-08-27 실사고). 전엔 `scale=W:H`로 최대 해상도에
+      **강제로 늘렸다** — "업스케일 방향이라 원본 손실 없음"이라는 주석이 붙어 있었지만,
+      그 가정은 **모든 소스의 비율이 같을 때만** 참이다. 세로와 가로가 섞이면 깨진다.
+
+      실사고(job 6070eddd8a73): 세로 720x1280 · 1080x1920 · 720x1280에 유튜브 가로
+      3840x2160이 섞였다. W·H가 3840x2160이 되어 세로 영상이 **가로로 5.3배 늘어난 채**
+      청소를 거쳐 돌아왔고, 그걸 세로 1080x1920으로 렌더하니 크게 잘려 나갔다 —
+      고객에겐 "원본은 일반영상인데 결과물이 줌한 것처럼 크다"로 보였다.
+
+      그래서 **비율을 지켜 축소·확대하고 남는 곳은 검게 채운다(레터박스)**. 청소는
+      화면 내용만 보므로 검은 여백은 무해하다. 그리고 자른 뒤 **원래 크기로 되돌린다**
+      (아래 spans의 box) — 여백을 달고 돌아가면 렌더가 그 여백까지 화면으로 친다.
     """
     work = Path(work)
     info = [(vid, src) + _probe_wh_dur(src) for vid, src in items]
-    W = max(i[2] for i in info)
-    H = max(i[3] for i in info)
+    # 세로와 가로를 함께 담으려면 캔버스가 정사각에 가까워진다(예: 1920x1920).
+    # ★상한을 둔다 — 4K가 섞이면 3840x3840이 되어 청소 한 번에 수백 MB가 오간다.
+    #   최종 결과물은 1080x1920이고, 아래 _split_cleaned가 각 소스를 **원래 크기로**
+    #   되돌리므로 캔버스를 키워봐야 최종 화질에 보탬이 없다(디스크·인코딩만 먹는다).
+    W = min(max(i[2] for i in info), _JOIN_CANVAS_MAX)
+    H = min(max(i[3] for i in info), _JOIN_CANVAS_MAX)
     parts, spans, t = [], [], 0.0
-    for idx, (vid, src, _w, _h, dur) in enumerate(info):
+    for idx, (vid, src, w0, h0, dur) in enumerate(info):
         norm = str(work / f"join_norm_{idx}.mp4")
+        # 되돌릴 자리(여백을 뺀 실제 그림의 위치·크기)를 **여기서 함께** 정한다.
+        # 짝으로 움직이는 값을 따로 계산하면 반드시 어긋난다(0순위-B).
+        box = _fit_box(w0, h0, W, H)
         subprocess.run(
             ["ffmpeg", "-y", "-v", "error", "-i", str(src),
-             "-vf", f"scale={W}:{H}:flags=lanczos,setsar=1,fps=30",
+             "-vf", (f"scale={W}:{H}:force_original_aspect_ratio=decrease:flags=lanczos,"
+                     f"pad={W}:{H}:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1,fps=30"),
              "-c:v", "libx264", "-preset", "veryfast", "-crf", "18",
              "-pix_fmt", "yuv420p",
              "-c:a", "aac", "-ar", "48000", "-ac", "2", norm], check=True)
@@ -1814,7 +1905,7 @@ def _join_sources(items, work):
         #   뒤 소스들의 시작점이 통째로 어긋난다(짝은 함께 정한다).
         _w2, _h2, dur2 = _probe_wh_dur(norm)
         parts.append(norm)
-        spans.append((vid, t, dur2))
+        spans.append((vid, t, dur2, box))
         t += dur2
     lst = work / "join_list.txt"
     lst.write_text("".join("file " + chr(39) + x + chr(39) + chr(10) for x in parts), encoding="utf-8")
@@ -1828,11 +1919,25 @@ def _split_cleaned(cleaned, spans, work):
     """청소된 합본을 구간별로 잘라 {vid: 경로}. 잘라낸 파일이 비면 예외."""
     work = Path(work)
     out = {}
-    for vid, start, dur in spans:
+    for span in spans:
+        vid, start, dur = span[0], span[1], span[2]
+        box = span[3] if len(span) > 3 else None
         dst = str(work / f"clean_src_{vid}.mp4")
+        # ★붙일 때 넣은 검은 여백을 잘라내고 **원래 크기로 되돌린다**(2026-08-27).
+        #   여백을 달고 돌려보내면 렌더가 그 여백까지 그림으로 쳐서, 세로 영상이
+        #   가로 화면 한가운데 작게 박히거나 반대로 크게 잘린다.
+        vf = []
+        if box:
+            cw, ch, cx, cy, ow, oh = box
+            vf.append(f"crop={cw}:{ch}:{cx}:{cy}")
+            if (cw, ch) != (ow, oh):
+                vf.append(f"scale={ow}:{oh}:flags=lanczos")
+            vf.append("setsar=1")
         subprocess.run(
             ["ffmpeg", "-y", "-v", "error", "-ss", f"{start:.3f}", "-i", str(cleaned),
-             "-t", f"{dur:.3f}", "-c:v", "libx264", "-preset", "veryfast", "-crf", "18",
+             "-t", f"{dur:.3f}"]
+            + (["-vf", ",".join(vf)] if vf else [])
+            + ["-c:v", "libx264", "-preset", "veryfast", "-crf", "18",
              "-pix_fmt", "yuv420p", "-c:a", "aac", "-ar", "48000", "-ac", "2", dst],
             check=True)
         if not Path(dst).exists() or Path(dst).stat().st_size < 1024:
@@ -1893,6 +1998,328 @@ def _clean_joined(items, key, work, tag=""):
         if r:
             regions[vid] = r
     return paths, regions
+
+
+# ── 완성본 1편만 청소(2026-08-26 사장님 "완성본 만들기 된 영상만 딱 자막제거") ──────
+# 실측: VMake는 보낸 영상 1초당 약 9초를 쓴다(69초→632초 / 100초→1,692초).
+#   소스 전체(100~150초)를 보내던 것을 완성본(30초)으로 바꾸면 **크레딧은 그대로 1콜**인데
+#   시간이 4분의 1이 된다. 다른 서비스가 빠른 이유도 최종 결과물 하나만 처리하기 때문이다.
+#
+# ★재과금을 막는 열쇠는 '편성 서명'이다 — 편성이 그대로면 완성본도 같으니 청소본을 재사용한다.
+#   장면을 진짜로 바꿨을 때만 다시 청소(=5P)한다.
+_FINAL_CLEAN = os.environ.get("SHORTS_CLEAN_FINAL", "0") == "1"   # ★기본 꺼짐 — 실측 후 켠다
+
+
+def _beat_materials(b):
+    """비트 하나가 **화면에 쓰는 재료** 목록. video_assemble._beat_material과 같은 규칙.
+
+    사람이 편성한 scene_override가 있으면 그것, 없으면 primary + alternates.
+    alternates를 빼면 안 된다 — 나레이션이 길면 실제로 화면에 나온다.
+
+    ★같은 판단을 여러 곳에 적으면 어긋난다(0순위-B) — _used_spans·_plan_signature·
+      _final_time_of_source가 전부 이 함수를 쓴다.
+    """
+    over = b.get("scene_override")
+    if over:
+        return [dict(x) for x in over if x]
+    return [x for x in ([b.get("primary")] + list(b.get("alternates") or [])) if x]
+
+
+def _final_beat_ratios(plan):
+    """완성본 타임라인에서 비트마다 차지하는 **비율 구간** [(lo, hi), ...].
+
+    ★왜 초가 아니라 비율인가: 실제 조립 길이는 TTS 길이에 따라 target_seconds와
+      달라진다. 비율로 주고 호출부가 실제 영상 길이에 곱하면 위치가 맞는다.
+    """
+    beats = (plan or {}).get("beats") or []
+    if not beats:
+        return []
+    durs = []
+    for b in beats:
+        try:
+            d = float(b.get("target_seconds") or 0) or 0.0
+        except (TypeError, ValueError):
+            d = 0.0
+        durs.append(d if d > 0 else 2.0)      # 값이 없으면 평균치로 자리만 잡는다
+    total = sum(durs)
+    if total <= 0:
+        return []
+    out, t = [], 0.0
+    for d in durs:
+        out.append((t / total, (t + d) / total))
+        t += d
+    return out
+
+
+def _clamp_ratio(v):
+    return min(0.98, max(0.02, float(v)))
+
+
+def _final_time_of_beat(plan, i):
+    """완성본에서 **i번째 비트** 한가운데의 비율(0~1). 범위 밖이면 None."""
+    rs = _final_beat_ratios(plan)
+    if not rs or i < 0 or i >= len(rs):
+        return None
+    lo, hi = rs[i]
+    return _clamp_ratio((lo + hi) / 2.0)
+
+
+def _final_time_of_source(plan, vid):
+    """완성본에서 소스 vid가 **처음 나오는** 지점의 비율(0~1). 없으면 None.
+
+    (2026-08-27) 2단계가 완성본 1편만 청소하게 되면서 소스별 청소본이 없어졌다.
+    화면(AFTER 썸네일·꾸미기 배경)을 완성본에서 뽑아야 하는데, 그러려면 그 소스가
+    완성본 어디에 있는지 알아야 한다.
+    """
+    beats = (plan or {}).get("beats") or []
+    rs = _final_beat_ratios(plan)
+    if not rs:
+        return None
+    for b, (lo, hi) in zip(beats, rs):
+        if any((m or {}).get("video_id") == vid for m in _beat_materials(b)):
+            return _clamp_ratio((lo + hi) / 2.0)
+    return None
+
+
+def _final_source_indices(plan, n_sources):
+    """완성본에 **실제로 쓰인** 소스의 si 목록(오름차순). 2026-08-27.
+
+    왜 필요한가: 담은 영상이 5개여도 편성에 3개만 들어갈 수 있다. 안 들어간 소스는
+    완성본 어디에도 없으므로 AFTER 프레임을 뽑을 수 없다. 그런데 화면은 "영상 1/5"로
+    5개를 다 넘겨보게 해서, 안 쓰인 것을 넘기는 순간 엉뚱한 구간이 나왔다
+    (사장님 제보 "다른 영상이 나옴" — BEFORE 벽 페인트칠 / AFTER 보라색 매트).
+
+    ★판정을 새로 짜지 않고 _final_time_of_source를 그대로 부른다(0순위-B).
+      "완성본에 있나"를 두 군데서 각자 계산하면 언젠가 반드시 어긋난다 —
+      목록엔 있는데 시각은 None인 소스가 생기면 증상이 그대로 재발한다.
+    """
+    out = []
+    for i in range(max(0, int(n_sources or 0))):
+        if _final_time_of_source(plan, _source_video_id(i)) is not None:
+            out.append(i)
+    return out
+
+
+def split_final_into_beat_clips(clean_final, timeline, work, prefix="cc"):
+    """청소된 **완성본 1편**을 비트 경계로 잘라 {가상 video_id: 경로} (2026-08-27).
+
+    캡컷 내보내기용이다. 캡컷은 소스 파일 + 타임라인 트림 구조라 소스별 청소본이
+    필요한데, 완성본 1편만 청소하면 그게 없다. 그래서 **완성본을 컷별로 나눠** 준다.
+      - VMake를 다시 부르지 않는다 → 추가 과금 0, 대기 0
+      - 대신 컷을 원본 범위 **밖으로 늘리는 편집**은 못 한다(조각 뒤에 여분이 없다)
+
+    경계는 _beat_timeline이 준 t0·dur을 그대로 쓴다 — 렌더가 쓰는 것과 같은 값이라
+    조각이 화면과 어긋나지 않는다(여기서 따로 계산하면 어긋난다, 0순위-B).
+    """
+    work = Path(work)
+    out = {}
+    for row in timeline or []:
+        idx = row.get("beat_idx")
+        t0 = float(row.get("t0") or 0.0)
+        dur = float(row.get("dur") or 0.0)
+        if dur <= 0:
+            continue
+        vid = f"{prefix}{idx}"
+        dst = work / f"capcut_clean_{vid}.mp4"
+        if dst.exists() and dst.stat().st_size > 1024:
+            out[vid] = str(dst)                     # 같은 편성이면 다시 안 자른다
+            continue
+        subprocess.run(
+            ["ffmpeg", "-y", "-v", "error", "-ss", f"{t0:.3f}", "-i", str(clean_final),
+             "-t", f"{dur:.3f}", "-c:v", "libx264", "-preset", "veryfast", "-crf", "18",
+             "-pix_fmt", "yuv420p", "-c:a", "aac", "-ar", "48000", "-ac", "2", str(dst)],
+            check=True)
+        if not dst.exists() or dst.stat().st_size < 1024:
+            raise RuntimeError(f"완성본 분할 결과가 비었습니다: {vid}")
+        out[vid] = str(dst)
+    return out
+
+
+def plan_using_beat_clips(plan, clips, timeline, prefix="cc"):
+    """편집안을 **조각 기준**으로 바꾼 사본. 각 비트가 자기 조각을 통째로(0~끝) 쓴다.
+
+    조각은 그 비트의 화면을 이미 담고 있으므로 재료를 하나로 접는다 —
+    alternates·scene_override를 남기면 캡컷이 없는 파일을 찾는다.
+
+    ★end는 **조각의 실제 길이**(timeline의 dur)다. target_seconds를 쓰면 안 된다 —
+      실제 컷 길이는 TTS에 맞춰 달라지므로 조각보다 길거나 짧아 화면이 어긋난다.
+    """
+    import copy
+    durs = {r.get("beat_idx"): float(r.get("dur") or 0.0) for r in (timeline or [])}
+    out = copy.deepcopy(plan or {})
+    for b in out.get("beats") or []:
+        idx = b.get("beat_idx")
+        vid = f"{prefix}{idx}"
+        if vid not in clips:
+            continue
+        d = durs.get(idx) or 0.0
+        b["primary"] = {"video_id": vid, "seg_id": f"{vid}-0", "start": 0.0,
+                        "end": d if d > 0 else None}
+        b["alternates"] = []
+        b.pop("scene_override", None)
+    return out
+
+
+def final_clip_pairs(plan, tts_paths, src_durs):
+    """완성본의 **컷 하나하나**를 (video_id, 원본 시각, 완성본 시각, 길이)로 편다.
+
+    화면 조각 계획은 video_assemble.plan_beat_clips_for **한 곳**에서 온다 —
+    렌더·캡컷·ZIP이 쓰는 그 함수다. 여기서 따로 계산하면 또 어긋난다(0순위-B).
+
+    ★왜 필요한가 (2026-08-27, 세 번째 수정):
+      비트 하나에 재료가 여럿 섞인다. 실측 job 9a3ff19fbceb의 beat 9는
+        [s0 17.0~19.0, s4 5.7~8.2, s0 0.0~1.0, s4 1.1~2.8]
+      4조각이 비트 시간을 나눠 갖는다. 그런데 앞선 수정은 '비트 전체'를 그 소스의
+      구간으로 취급해, 비트 한가운데(pos=0.5)가 실제로는 **다른 소스** 자리였다.
+      → 좌우에 딴 그림이 계속 떴다.
+    """
+    from shopping_shorts import video_assemble as _va
+    out, t = [], 0.0
+    for b in (plan or {}).get("beats") or []:
+        tts = (tts_paths or {}).get(b.get("beat_idx"))
+        try:
+            tts_dur = _va._beat_effective_dur(b, tts) if tts else float(
+                b.get("target_seconds") or 0) or 0.0
+        except Exception:      # noqa: BLE001
+            tts_dur = float(b.get("target_seconds") or 0) or 0.0
+        if tts_dur <= 0:
+            continue
+        try:
+            clips = _va.plan_beat_clips_for(b, tts_dur, src_durs or {})
+        except Exception:      # noqa: BLE001 — 계획을 못 세우면 이 비트는 건너뛴다
+            clips = []
+        if not clips:
+            t += tts_dur
+            continue
+        for cclip in clips:
+            d = float(cclip.get("out_dur") or 0.0)
+            if d > 0:
+                out.append({"video_id": cclip.get("video_id"),
+                            "beat_idx": b.get("beat_idx"),
+                            "src": float(cclip.get("start") or 0.0),
+                            "fin": t, "dur": d})
+            t += d
+    return out
+
+
+def final_time_of_beat(plan, beat_idx, tts_paths=None, src_durs=None):
+    """완성본에서 **그 칸의 첫 컷** 한가운데 시각(초). 없으면 None.
+
+    ★비트 단위 근사를 쓰지 않는다(2026-08-27) — 비트에 재료가 여럿 섞이면
+      비트 한가운데가 다른 소스 자리다. 화면에 나가는 최소 단위는 컷이다.
+    """
+    for cclip in final_clip_pairs(plan, tts_paths, src_durs):
+        if cclip.get("beat_idx") == beat_idx:
+            return cclip["fin"] + cclip["dur"] * 0.5
+    return None
+
+
+def final_pair_for_source(plan, vid, pos=0.5, tts_paths=None, src_durs=None):
+    """자막제거 전/후 비교용 — **같은 장면**을 가리키는 (원본 시각, 완성본 시각).
+
+    그 소스가 **처음 나오는 컷** 안의 pos 위치. 없으면 (None, None).
+
+    ★세 번 틀리고 네 번째가 맞았다 — 기록으로 남긴다:
+      1) pos를 소스 파일 전체의 비율로 → 원본 50%는 안 쓰인 딴 장면.
+      2) pos를 재료 구간(start~end) 안 비율로 → 구간 5.7초인데 컷은 2.69초라
+         뒷부분을 짚었다.
+      3) pos를 비트 전체 안 비율로 → 비트에 재료가 4개 섞여 다른 소스 자리를 짚었다.
+      4) **컷(clip) 단위**로 편다 → 이제야 맞는다. 컷은 화면에 실제로 나가는 최소 단위다.
+    """
+    try:
+        pos = min(1.0, max(0.0, float(pos)))
+    except (TypeError, ValueError):
+        pos = 0.5
+    for cclip in final_clip_pairs(plan, tts_paths, src_durs):
+        if cclip["video_id"] == vid:
+            d = cclip["dur"]
+            return cclip["src"] + d * pos, cclip["fin"] + d * pos
+    # ★컷 계획을 못 세웠을 때만 비트 기준으로 물러선다(소스 길이를 못 재는 등).
+    #   판정이 목록(_final_source_indices, 비트 기준)보다 엄격하면 "목록엔 있는데 404"가
+    #   나서 사장님이 또 헤맨다. 정확도는 떨어져도 같은 장면 근처는 잡는다.
+    rs = _final_beat_ratios(plan)
+    beats = (plan or {}).get("beats") or []
+    if not rs:
+        return None, None
+    total = sum((float(b.get("target_seconds") or 0) or 2.0) for b in beats)
+    for b, (lo, hi) in zip(beats, rs):
+        for m in _beat_materials(b):
+            if (m or {}).get("video_id") != vid:
+                continue
+            try:
+                st = float(m.get("start"))
+            except (TypeError, ValueError):
+                return None, None
+            d = (hi - lo) * total
+            return st + d * pos, lo * total + d * pos
+    return None, None
+
+
+def _clean_strategy(job):
+    """자막제거를 **어떤 단위로** 할지 정하는 유일한 자리 (2026-08-27).
+
+      "final"   — 조립된 완성본 1편만 청소한다(기본). 보내는 길이가 30초라 가장 빠르다.
+      "sources" — 옛 소스별/합본 청소. 되돌림 스위치가 내려갔거나, 이미 청소된 소스가
+                  있어 그걸 그대로 쓰는 게 맞을 때(두 번 과금하지 않는다).
+
+    ★왜 함수로 뽑았나 (0순위-B, 실사고):
+      08-26에 완성본 경로를 만들면서 이 판단을 run_render에만 적었다. run_clean_sources
+      (2단계 버튼)는 검사하지도 않고 늘 소스별로 청소해, 2단계를 누르는 순간
+      clean_sources가 채워지고 3단계는 already=True로 완성본 경로를 건너뛰었다.
+      → **2단계를 쓰는 사람에겐 개선이 통째로 없던 것과 같았다**(08-27 로그 실측:
+        569MB를 보내 595초). 같은 판단이 두 군데 적히면 반드시 어긋난다.
+      호출부는 이 함수만 부른다 — 새 진입 경로가 생겨도 여기 하나만 보면 된다.
+    """
+    if job.get("clean_sources"):
+        return "sources"        # 이미 청소된 소스가 있다 — 재사용한다(재과금 0)
+    return "final" if _FINAL_CLEAN else "sources"
+
+
+def _plan_signature(plan):
+    """편집안 → 완성본 **그림**을 결정하는 것만 뽑은 서명(sha1 앞 16자).
+
+    들어가는 것: 비트 순서 · 각 비트의 재료(video_id·start·end) · 컷 길이(target_seconds).
+    빠지는 것:  대사·음성·자막 — 화면 그림을 안 바꾸므로 다시 청소할 이유가 없다.
+
+    ★재료 판정은 video_assemble._beat_material과 같은 규칙이다(scene_override 우선).
+      여기가 어긋나면 장면을 바꿨는데 옛 청소본이 그대로 나간다.
+    """
+    import hashlib
+    beats = (plan or {}).get("beats") or []
+    parts = []
+    for b in beats:
+        for m in _beat_materials(b):
+            parts.append("%s:%s:%s" % (m.get("video_id"), m.get("start"), m.get("end")))
+        parts.append("t=%s" % b.get("target_seconds"))
+        parts.append("|")
+    return hashlib.sha1("".join(parts).encode("utf-8")).hexdigest()[:16]
+
+
+def _final_clean_fn(store, job, job_id, work, key, customer_id=0):
+    """assemble에 넘길 clean_fn — **조립된 완성본 1편**을 VMake로 청소한다.
+
+    assemble은 이미 3토막이다: _render_mix(조립) → clean_fn(청소) → _burn_captions(우리 자막).
+    그 가운데 자리에 이 함수를 꽂으면 완성본만 청소된다.
+
+    ★같은 편성이면 다시 안 청소한다(재과금 0) — 편성 서명으로 판단하고 파일을 남겨둔다.
+    ★과금은 **1콜**이다. 소스가 몇 개든 완성본은 하나다.
+    ★실패하면 예외를 올린다 — 호출부(run_render)가 환불하고 상태를 failed로 만든다.
+    """
+    def _clean(mix_raw):
+        sig = _plan_signature(job.get("edit_plan") or {})
+        out = Path(work) / f"final_clean_{sig}.mp4"
+        if out.exists() and out.stat().st_size > 1024:
+            print(f"[clean] 완성본 재사용(편성 그대로, 과금 0): {out.name}", file=sys.stderr)
+            return str(out)
+        charged = _charge_clean(store, customer_id, 1)
+        try:
+            print(f"[clean] 완성본 1편만 청소 시작 sig={sig}", file=sys.stderr)
+            return remove_subtitles(str(mix_raw), key, out_path=str(out))
+        except Exception:
+            if charged:
+                _refund_clean(store, customer_id, charged)
+            raise
+    return _clean
 
 
 def _ensure_clean_sources(store, job, job_id, work, key, customer_id=0):
@@ -1972,11 +2399,15 @@ def _ensure_clean_sources(store, job, job_id, work, key, customer_id=0):
 
 
 @_owned_job
-def assemble_clean_video(job_id, db_path, work_root):
+def assemble_clean_video(job_id, db_path, work_root, clean_fn=None):
     """자막제거(2단계) 후 '자막 없는 조립본'(clean_video_path)을 만들어 DB에 저장하고 경로 반환.
-    VMake는 이미 탔으므로 clean_fn=None으로 청소된 소스를 재조립만 한다(추가과금 0). edit_plan·
-    clean_sources가 없거나 조립 실패면 None. run_clean_sources(2단계)와 썸네일(5단계) 자가치유가
+    edit_plan이 없거나 조립 실패면 None. run_clean_sources(2단계)와 썸네일(5단계) 자가치유가
     공유한다 — 이전 조립이 재렌더/재매칭 레이스로 유실돼도 썸네일에서 다시 만들 수 있게(2026-07-21).
+
+    두 가지로 쓰인다:
+      clean_fn=None  — 소스가 이미 청소돼 있다(clean_sources). 재조립만 한다(추가과금 0).
+      clean_fn 있음  — **원본 소스로 조립한 완성본 1편을 여기서 청소한다**(2026-08-27).
+                       소스를 통째로 보내던 것(100~150초)을 완성본(30초)으로 줄이는 경로다.
     """
     store = Store(db_path)
     job = store.get_mix_job(job_id)
@@ -1984,8 +2415,15 @@ def assemble_clean_video(job_id, db_path, work_root):
         return None
     plan = job.get("edit_plan")
     clean_map = job.get("clean_sources") or {}
-    if not plan or not clean_map:
+    if not plan:
         return None
+    if not clean_map:
+        # 청소된 소스가 없다 — clean_fn(완성본 1편 청소)이 있으면 **원본**으로 조립해 그걸 청소한다.
+        if clean_fn is None:
+            return None
+        clean_map = _resolve_sources(job, Path(work_root) / job_id)
+        if not clean_map:
+            return None
     try:
         tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan["beats"] if b.get("tts_path")}
         out_path = Path(work_root) / job_id / "clean_preview.mp4"
@@ -1994,7 +2432,7 @@ def assemble_clean_video(job_id, db_path, work_root):
         # 자막을 구우면 썸네일 배경에 글자가 박혀 그 위에 제목을 얹을 수 없다(2026-07-22 사장님
         # 제보: clean_preview.mp4에 나레이션 자막이 박혀 나왔다). 원본 자막은 clean_map(자막제거
         # 소스)이 이미 없앴고, 여기선 우리 자막만 생략한다. 캡션 패스가 빠져 더 빠르기도 하다.
-        assemble(plan, tts_paths, clean_map, str(out_path), clean_fn=None, deco={},
+        assemble(plan, tts_paths, clean_map, str(out_path), clean_fn=clean_fn, deco={},
                  cutaway_paths=_resolve_cutaway_paths(store, plan, job.get("customer_id", 0)),
                  sfx_paths=_resolve_sfx_paths(store, plan, job.get("customer_id", 0)),
                  burn_captions=False)
@@ -2002,6 +2440,8 @@ def assemble_clean_video(job_id, db_path, work_root):
         return str(out_path)
     except Exception:
         traceback.print_exc(file=sys.stderr)
+        if clean_fn is not None:
+            raise      # ★유료 청소가 이 안에서 돈다 — 삼키면 실패 사유가 사라진다(08-26 참조)
         return None
 
 
@@ -2010,12 +2450,47 @@ def run_clean_sources(job_id, db_path, work_root):
     """2단계: 각 소스 원본을 VMake로 자막제거해 clean_sources에 캐시.
     BackgroundTasks로 불리므로 예외를 밖으로 안 던진다(clean_status로만 알린다)."""
     store = Store(db_path)
+    _gpron = pron_corrections.load(store)
     job = store.get_mix_job(job_id)
     if not job:
         return
+    final_fn = None
     try:
         work = Path(work_root) / job_id
         work.mkdir(parents=True, exist_ok=True)
+        # ★★청소 전에 TTS를 확정한다 (2026-08-27, 사장님 "장면도 안바꾸고 클릭만 한번씩").
+        #   왜: _synthesize_beats는 TTS 실측 발화초로 beat["target_seconds"]를 덮어쓴다
+        #   (:552). 그런데 편성 서명(_plan_signature)에 target_seconds가 들어간다.
+        #   자막제거가 TTS 확정보다 **먼저**라, 렌더 직전 run_render가 TTS를 보장하는 순간
+        #   서명이 바뀌어 **캐시가 무효 → 같은 영상을 두 번 청소**했다.
+        #     실측 job 1e6c1e1c8b28: 11:58 clean(sig=b2b36f3d) → 12:05 render(sig=73ab50ef).
+        #     그 사이 사용자 조작·다른 작업 0. 3개 job 전부 청소본이 2개씩 남았다.
+        #   → 자막제거 쓰는 **모든 고객이 편당 2콜**(VMake 100크레딧)을 쓰고 있었다.
+        #   TTS는 어차피 다음 단계에서 필요하니 앞당기는 것뿐 — 추가 비용은 없다.
+        #   덤: 2단계 미리보기가 실제 결과와 컷 길이까지 같아진다.
+        #   호출 형태는 run_render와 **동일**하게 둔다(0순위-B — 갈리면 서명이 또 어긋난다).
+        plan_for_tts = job.get("edit_plan")
+        if plan_for_tts and plan_for_tts.get("beats"):
+            try:
+                _synthesize_beats(plan_for_tts["beats"], work / "tts", voice=job.get("voice"),
+                                  skip_existing=True, global_pron=_gpron,
+                                  customer_id=job.get("customer_id", 0))
+                # ★훅 시작점도 여기서 확정한다 — 조립(_render_mix)이 첫 장면 start를
+                #   피크 시점으로 **in-place로 옮긴다**(video_assemble._apply_hook_inpoint).
+                #   그게 청소 뒤에 일어나면 서명이 또 바뀌어 렌더에서 재청소된다.
+                #   실측 job 579c86e58b4f: clean 때 b0=('s3',0.0,1.8) → render 때 0.1.
+                #   그 소수점 한 자리 때문에 VMake가 두 번 돌았다.
+                #   렌더가 쓰는 함수를 그대로 부른다(0순위-B — 따로 계산하면 또 갈린다).
+                try:
+                    from shopping_shorts import video_assemble as _va2
+                    _va2._apply_hook_inpoint(
+                        plan_for_tts, _resolve_sources(job, work), work)
+                except Exception as e2:      # noqa: BLE001 — 훅 이동 실패는 무해
+                    print("[clean] 훅 시작점 선확정 건너뜀: %s" % e2, file=sys.stderr)
+                store.update_mix_job(job_id, edit_plan=plan_for_tts)
+                job = store.get_mix_job(job_id)      # 갱신된 편성으로 아래를 진행
+            except Exception as e:      # noqa: BLE001 — TTS 실패가 자막제거를 막지 않는다
+                print("[clean] TTS 선확정 실패(계속 진행): %s" % e, file=sys.stderr)
         # ★워커는 HTTP 요청이 없어 request.state가 없다 — job 레코드에서 읽는다.
         customer_id = job.get("customer_id") or 0
         key = _vmake_key(store, customer_id)
@@ -2023,8 +2498,18 @@ def run_clean_sources(job_id, db_path, work_root):
             store.update_mix_job(job_id, clean_status="failed",
                                  clean_error="AI 자막 제거 설정이 완료되지 않았습니다 (관리자 문의)")
             return
-        clean_map = _ensure_clean_sources(store, job, job_id, work, key, customer_id)
-        store.update_mix_job(job_id, clean_status="ready", clean_error=None)
+        # ★완성본 1편만 청소한다(2026-08-27 사장님 "3단계 완성본 30초만 잘라서 돌리는건데
+        #   소스별로 안하고"). 소스를 통째로 보내면 100~150초 → 15~22분인데, 완성본은 30초라
+        #   같은 1콜로 4~5분이다(VMake 실측: 보낸 1초당 약 9초).
+        #   ★실제 청소는 아래 조립의 clean_fn 자리에서 돈다 — assemble이 이미
+        #     _render_mix(조립) → clean_fn(청소) → 자막 3토막이라 가운데에 꽂기만 하면 된다.
+        #   ★clean_sources는 일부러 비워 둔다 — 그래야 3단계(run_render)가 already=False로
+        #     같은 완성본 경로를 타고, 편성이 그대로면 final_clean_{sig}.mp4를 재사용해 과금 0.
+        if _clean_strategy(job) == "final":
+            final_fn = _final_clean_fn(store, job, job_id, work, key, customer_id)
+        else:
+            _ensure_clean_sources(store, job, job_id, work, key, customer_id)
+            store.update_mix_job(job_id, clean_status="ready", clean_error=None)
     except NotEnoughPoints as e:
         store.update_mix_job(job_id, clean_status="failed", clean_error=str(e))
         return
@@ -2039,7 +2524,24 @@ def run_clean_sources(job_id, db_path, work_root):
     # VMake는 위에서 이미 탔으니 clean_fn 없이 청소된 소스로 재조립만 한다(추가과금 0). 실패해도
     # clean_status는 안 되돌린다 — 소스청소(유료)는 이미 성공, 조립만 실패했다고 "실패"로 보이면
     # 재시도 혼란만 커진다. 조립 실패/유실 시엔 썸네일(5단계)이 자가치유로 다시 만든다(공유 헬퍼).
-    assemble_clean_video(job_id, db_path, work_root)
+    if final_fn is None:
+        assemble_clean_video(job_id, db_path, work_root)
+        return
+    # 완성본 1편 청소 경로 — 유료 청소가 이 조립 안에서 돈다. 실패를 'ready'로 두면 안 된다.
+    try:
+        out = assemble_clean_video(job_id, db_path, work_root, clean_fn=final_fn)
+    except NotEnoughPoints as e:
+        store.update_mix_job(job_id, clean_status="failed", clean_error=str(e))
+        return
+    except Exception as e:  # noqa: BLE001 — BackgroundTasks라 밖에서 아무도 안 받는다
+        traceback.print_exc(file=sys.stderr)
+        store.update_mix_job(job_id, clean_status="failed", clean_error=str(e))
+        return
+    if not out:
+        store.update_mix_job(job_id, clean_status="failed",
+                             clean_error="자막 제거 결과를 만들지 못했습니다")
+        return
+    store.update_mix_job(job_id, clean_status="ready", clean_error=None)
 
 
 @_owned_job
@@ -2145,6 +2647,7 @@ def run_render(job_id, db_path, work_root):
 
         # 자막제거: 소스 원본을 미리(2단계) 또는 여기서(버튼 미사용 시) 청소해 그 소스로 조립한다.
         # mix_raw 위 clean_fn(구방식)은 폐기 — 소스단위여야 TTS/컷과 무관하게 캐시가 성립한다.
+        final_clean_fn = None
         if job.get("subtitle_removal"):
             # ★2단계 버튼을 안 거치고 바로 렌더로 오는 경로도 VMake를 탄다 — 여기도 과금해야
             #   구멍이 안 남는다(2단계에서 이미 청소됐으면 todo가 비어 자동으로 0원).
@@ -2152,10 +2655,18 @@ def run_render(job_id, db_path, work_root):
             key = _vmake_key(store, customer_id)
             if not key:
                 raise RuntimeError("자막 제거가 켜져 있으나 설정이 완료되지 않았습니다 (관리자 문의)")
-            clean_map = _ensure_clean_sources(store, job, job_id, work, key, customer_id)
-            store.update_mix_job(job_id, clean_status="ready", clean_error=None)
-            source_video_paths = {vid: clean_map.get(vid, p)
-                                  for vid, p in source_video_paths.items()}
+            if _clean_strategy(job) == "final":
+                # 완성본 1편만 청소한다(2026-08-26). 소스를 다 지우던 것보다 보내는 길이가
+                # 훨씬 짧아 같은 1콜로 몇 배 빠르다. 조립 뒤·우리 자막 앞에서 돈다.
+                # 실측(08-27): 완성본 30.5초 → 130초. 합본 569MB를 보내던 것은 595초였다.
+                # ★이미 청소된 소스가 있으면 _clean_strategy가 "sources"를 준다 — 두 번 안 낸다.
+                final_clean_fn = _final_clean_fn(store, job, job_id, work, key, customer_id)
+                store.update_mix_job(job_id, clean_status="ready", clean_error=None)
+            else:
+                clean_map = _ensure_clean_sources(store, job, job_id, work, key, customer_id)
+                store.update_mix_job(job_id, clean_status="ready", clean_error=None)
+                source_video_paths = {vid: clean_map.get(vid, p)
+                                      for vid, p in source_video_paths.items()}
 
         # deco의 BGM 파일(업로드 시 work/{file}에 저장)을 절대경로로 해석해 넘긴다.
         deco = job.get("deco") or {}
@@ -2196,7 +2707,7 @@ def run_render(job_id, db_path, work_root):
         # 저장위치(match_scene_assets가 쓴 beat["cutaway"]) = 읽기위치(여기) — seam 일치.
         cutaway_paths = _resolve_cutaway_paths(store, plan, job.get("customer_id", 0))
         sfx_paths = _resolve_sfx_paths(store, plan, job.get("customer_id", 0))
-        assemble(plan, tts_paths, source_video_paths, str(out_path), clean_fn=None,
+        assemble(plan, tts_paths, source_video_paths, str(out_path), clean_fn=final_clean_fn,
                  headcopy=job.get("headcopy"), caption_style=caption_style,
                  deco=deco, cutaway_paths=cutaway_paths, sfx_paths=sfx_paths)
         # 🖼 썸네일을 영상 맨 앞에 붙이기(2026-08-18 사장님 요청, 9단계 체크박스).

@@ -30,6 +30,27 @@ _FALLBACK_MODEL = "gemini-3.1-flash-lite"
 
 _EMPTY = {"segments": [], "full_text": ""}
 
+# ★일시적 서버 오류 = 영상 탓이 아니다(2026-08-27 실사고).
+#   실측 로그: 504 DEADLINE_EXCEEDED 5회·499 CANCELLED 1회가 **재시도 분기 어디에도
+#   안 걸려** 그대로 빈 결과가 됐고, 화면엔 "쓸 만한 재료가 안 나왔어요(화면·말 모두
+#   비어 있음)"로 떴다 — 사장님 눈엔 영상이 못 쓸 물건으로 보인다. 503만 다루던
+#   분기를 어휘 목록 하나로 모아 놓는다(0순위-B: 같은 판단을 두 번 적지 않는다).
+_TRANSIENT_MARKS = ("503", "UNAVAILABLE", "overloaded",
+                    "504", "DEADLINE_EXCEEDED", "Deadline expired",
+                    "499", "CANCELLED", "500", "INTERNAL")
+
+
+def is_transient_api_error(msg):
+    """모델·네트워크의 일시 장애인가(=재시도·폴백할 값어치가 있나)."""
+    return any(c in str(msg) for c in _TRANSIENT_MARKS)
+
+
+def empty_reason(result):
+    """빈 결과가 '영상이 비어서'인지 'API가 죽어서'인지. 없으면 ''(옛 결과 호환)."""
+    if not isinstance(result, dict):
+        return ""
+    return (result.get("empty_reason") or "").strip()
+
 
 class KeyPoolExhausted(RuntimeError):
     """전용 Gemini 키 풀이 통째로 잠겨 **호출조차 못 한** 상태.
@@ -553,7 +574,12 @@ def storable(result):
             # 영상 단위 요약(2026-08-16) — 1단계 화면이 소스별로 이걸 보여주고,
             # 대본 생성이 "이 소스가 맡은 몫"으로 읽는다. 여기 안 넣으면 저장 순간 버려진다
             # (2026-08-01 tag_qa가 정확히 그렇게 사라졌던 자리다).
-            "source_brief": _norm_brief(r.get("source_brief"))}
+            "source_brief": _norm_brief(r.get("source_brief")),
+            # 화면 방향(2026-08-27) — 1단계가 "이건 가로형(롱폼)"이라고 미리 알리는 근거.
+            # 가로 영상을 세로 숏폼에 넣으면 좌우가 잘려 확대된 것처럼 나오고, 제작은
+            # mix_pipeline._block_landscape가 막는다. 여기 없으면 담을 때 알릴 방법이 없다.
+            "video_w": int(r.get("video_w") or 0) or None,
+            "video_h": int(r.get("video_h") or 0) or None}
 
 
 def _pick_better_extract(first, second, duration):
@@ -675,13 +701,13 @@ def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=
         except Exception as e:
             m = str(e)
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
-                comment_gen._mark_key_exhausted(idx)
+                comment_gen._mark_key_exhausted(idx, key_vault.retry_delay_seconds(e))
                 continue  # ★죽은 키 우회는 attempt를 안 올린다 — 살아있는 키까지 걸어간다
             if key_vault.is_quota_error(e):
                 time.sleep(quota_sleep)
                 attempt += 1
                 continue
-            if any(c in m for c in ("503", "UNAVAILABLE", "overloaded")):
+            if is_transient_api_error(m):
                 if model == _MODEL:
                     primary_503 += 1
                     # 첫 503에서 바로 폴백(2026-07-24). 기존엔 2번 겪은 뒤 내려갔으나(spike면 곧
@@ -704,7 +730,9 @@ def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=
                 print(f"script_extract: QA 재시도 실패 — 첫 결과 유지 ({e!r})", file=sys.stderr)
                 return _attach_qa(qa_first, duration, qa_retried, video_path)
             print(f"script_extract: 빈 결과 반환(재시도 소진 또는 미분류 오류) — {e!r}", file=sys.stderr)
-            return dict(_EMPTY)
+            # ★사유를 실어 보낸다 — 호출부가 "영상이 비었다"로 오표기하지 않게 한다.
+            return dict(_EMPTY, empty_reason=("api" if is_transient_api_error(m) else "unknown"),
+                        empty_detail=repr(e)[:300])
         finally:
             if file_obj is not None:
                 try:
@@ -713,7 +741,7 @@ def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=
                     pass
     if qa_first is not None:                     # 재시도가 루프를 소진한 경우도 마찬가지
         return _attach_qa(qa_first, duration, qa_retried, video_path)
-    return dict(_EMPTY)
+    return dict(_EMPTY, empty_reason="api", empty_detail="재시도 예산 소진")
 
 
 def _frame_flag_on():
