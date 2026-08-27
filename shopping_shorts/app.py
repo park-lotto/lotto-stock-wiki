@@ -6129,14 +6129,21 @@ _ALLOWED_THUMB_HOSTS = ("cdninstagram.com", "fbcdn.net", "ytimg.com",
                         # "GET /api/thumb?url=...encrypted-tbn0.gstatic.com... 400 Bad Request" 40건).
                         # 유튜브·인스타 결과만 검게 보인 이유도 이것 — 틱톡 결과는 렌즈가
                         # 원본 tiktokcdn 주소를 주는 경우가 있어 우연히 통과했다.
-                        "gstatic.com")
+                        "gstatic.com",
+                        # 핀터레스트 커버(i.pinimg.com) — 2026-08-28 신설 탭.
+                        # ★넣지 않으면 카드가 통째로 검게 뜬다(같은 사고가 xhscdn·
+                        #   douyinpic·gstatic로 이미 3번 반복됐다: 메모리 `썸네일화이트리스트_누락`).
+                        "pinimg.com")
 _ALLOWED_VIDEO_HOSTS = ("cdninstagram.com", "fbcdn.net",
                         # 틱톡·도우인 mp4(2026-08-17). 렌즈 카드 인라인 재생에 필요하다 —
                         # CDN 주소를 브라우저에 직접 주면 리퍼러·IP를 따져 막히고(그래서
                         # 세로로 긴 임베드로 떨어졌다), 이 프록시를 타면 서버가 알맞은
                         # Referer로 받아 same-origin으로 흘려준다.
                         "tiktokcdn.com", "tiktokcdn-us.com", "tiktokv.com",
-                        "douyinvod.com", "douyinpic.com")
+                        "douyinvod.com", "douyinpic.com",
+                        # 핀터레스트 mp4(v1.pinimg.com) — 카드 인라인 재생용(2026-08-28).
+                        # 실측: Referer만 있으면 200이라 프록시를 타면 그대로 흐른다.
+                        "pinimg.com")
 
 
 # HEIC은 크롬·파이어폭스가 못 그린다(사파리만). 도우인 커버가 image/heic으로 온다
@@ -10366,11 +10373,17 @@ def _api_pinterest_collect(request: Request, body: dict = None):
             seen.add(k)
             # 랭킹 화면이 읽는 공통 필드로 맞춘다(shortcode·name·caption·views).
             # ⚠️핀터레스트는 조회수를 안 준다 — **지어내지 않고 0으로 둔다**(0순위: 추측 금지).
+            # ★name을 전부 같은 값으로 두면 안 된다 — 화면의 '채널당 2개' 상한
+            #   (PER_CHANNEL_MAX)이 **한 채널로 묶어 11건 중 2건만** 보여준다(실측).
+            #   핀터레스트 검색 응답엔 게시자·제목이 아예 없다(키는 id·images·videos뿐)
+            #   → 지어내지 않고 **검색어**로 묶는다. 같은 검색어끼리도 2개면 너무 적으니
+            #   핀 id를 붙여 핀마다 다른 이름이 되게 한다(도배 위험이 없는 구조라 무해).
+            _nm = "Pinterest · " + kw
             items.append({
                 "platform": "pinterest",
                 "shortcode": it.get("pin_id") or "",
-                "name": "Pinterest",
-                "username": "",
+                "name": _nm,
+                "username": (_nm + "#" + (it.get("pin_id") or "")),
                 "url": it.get("url") or "",
                 "video_url": it.get("video_url") or "",
                 "thumbnail": it.get("thumbnail") or "",

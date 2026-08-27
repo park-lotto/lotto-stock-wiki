@@ -116,6 +116,31 @@ def test_탭은_관리자만_보인다():
         "관리자 전용 표시가 없다 — 고객에게 보인다"
 
 
+def test_썸네일_영상_호스트가_허용목록에_있다():
+    """★없으면 카드가 통째로 **검게** 뜬다(실측). 같은 사고가 xhscdn·douyinpic·gstatic로
+    이미 3번 반복됐다 — 메모리 `썸네일화이트리스트_누락`."""
+    import pathlib
+    p = pathlib.Path(__file__).resolve().parents[1] / "app.py"
+    src = p.read_text(encoding="utf-8")
+    i = src.index("_ALLOWED_THUMB_HOSTS")
+    j = src.index("_ALLOWED_VIDEO_HOSTS")
+    assert "pinimg.com" in src[i:j], "썸네일 허용목록에 pinimg가 없다 — 카드가 검게 뜬다"
+    assert "pinimg.com" in src[j:j + 900], "영상 허용목록에 pinimg가 없다 — 인라인 재생이 막힌다"
+
+
+def test_핀마다_username이_달라야_한다():
+    """★화면의 '채널당 2개' 상한(PER_CHANNEL_MAX)은 **username**으로 묶는다.
+    전부 같은 값이면 11건 중 2건만 보인다(실측으로 겪었다).
+    핀터레스트 검색 응답엔 게시자가 아예 없으므로(키: id·images·videos뿐)
+    지어내지 않고 검색어+핀id로 갈라 준다."""
+    import pathlib
+    p = pathlib.Path(__file__).resolve().parents[1] / "app.py"
+    src = p.read_text(encoding="utf-8")
+    i = src.index('"platform": "pinterest"')
+    blk = src[i:i + 600]
+    assert '"username": (' in blk or 'pin_id' in blk, "username이 핀마다 갈리지 않는다"
+
+
 def test_서버에_수집_엔드포인트가_있고_관리자_전용():
     import pathlib
     p = pathlib.Path(__file__).resolve().parents[1] / "app.py"
