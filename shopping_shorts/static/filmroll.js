@@ -29,20 +29,31 @@
   'use strict';
 
   const PPS_BASE = 54;                 // 칸 폭 54px일 때 1초
-  const LADDER = [0.1, 0.2, 0.25, 0.5, 1, 2, 5, 10];
+  const LADDER = [0.1, 0.2, 0.25, 0.5, 1, 2, 5];   // 확대 단계(오른쪽일수록 확대)
   const CH = 72;                       // 칸 높이(9:16 → 폭 약 40)
   // ★기본 확대 = 한 칸 0.25초(F21, 사장님). 자동확대(_fitToRange)도 이보다
   //   성기게는 못 간다 — 기본값과 하한을 여기 한 곳에서만 정한다(0순위-B).
-  const ZOOM_CW = 150, ZOOM_MAX_STEP = 0.25;
+  const ZOOM_MAX_STEP = 0.25;
+
+  // ★확대 슬라이더는 **한 칸 초(사다리 단계)**를 직접 고른다(2026-08-27 사장님
+  //   "3단계가 0.25에서 조정이 안된다"). 종전엔 슬라이더가 칸 폭(px 26~240)이고
+  //   초는 STEP=54/폭을 사다리에서 내림해 정했다 — 그러면 0.25초가 나오는 폭이
+  //   109~216px, 즉 **트랙의 절반(108칸)**이라 손잡이를 한참 밀어도 숫자가 그대로였다.
+  //   (아래 '영상 전체' 필름은 0.5초 구간이 54칸으로 좁아 잘 바뀌었다 — 같은 코드인데
+  //    한쪽만 안 듣는 것처럼 보인 이유다.) 이제 한 칸 밀면 한 단계씩 확실히 바뀐다.
+  //   칸 폭은 초에서 자동으로 나온다 — 폭과 초를 따로 두면 언젠가 어긋난다(0순위-B).
+  const CW_MIN = 26, CW_MAX = 540;   // 칸 폭 한계 — 0.1초(540px)까지 실제로 벌어진다
+  const SMAX = LADDER.length - 1;
+  const stepFromSlider = v => LADDER[SMAX - Math.max(0, Math.min(SMAX, Math.round(+v)))];
+  const sliderFromStep = s => {                 // 오른쪽으로 갈수록 확대(초가 작아진다)
+    let bi = 0, bd = Infinity;
+    LADDER.forEach((v, i) => { const d = Math.abs(v - s); if (d < bd) { bd = d; bi = i; } });
+    return SMAX - bi;
+  };
+  const cwFor = s => Math.max(CW_MIN, Math.min(CW_MAX, Math.round(PPS_BASE / s)));
 
   const CACHE = {};                    // "vid|step|i" → dataURL (전 롤러 공용)
 
-  function calcStep(cw) {
-    const raw = PPS_BASE / cw;
-    let best = LADDER[0];
-    for (const v of LADDER) if (v <= raw) best = v;
-    return best;
-  }
 
   // ★필름이 두 개(가운데·칸 안) 열려 있을 수 있다. 키(스페이스·Esc)를 document에서
   //   받으므로 **둘 다** 반응해 함께 재생되고 막대가 같이 움직였다(2026-08-26 사장님
@@ -57,7 +68,7 @@
     const vid = opt.videoId || '';
     const caps = opt.caps || [];
     let DUR = +opt.dur || 0;
-    let CW = ZOOM_CW, STEP = ZOOM_MAX_STEP, N = 0, off = 0;   // 기본 확대(위 상수)
+    let CW = cwFor(ZOOM_MAX_STEP), STEP = ZOOM_MAX_STEP, N = 0, off = 0;  // 기본 확대(위 상수)
     let _homed = false;      // 지금 쓰는 구간으로 한 번 옮겼나(처음 펼칠 때만)
     let MA = null;                     // 찍어둔 시작점
     // ★열 때 **이미 쓰는 구간**을 주황 박스로 올린다(2026-08-26 사장님 "상단에 카드형으로
@@ -87,7 +98,7 @@
           //   영상1전체 옆으로 이동하게해서 넓게 / 구간박스 이것도 위쪽으로 이동
           //   아래쪽까지 필름높이는 높여"). 별도 줄로 두면 그 한 줄만큼 필름이 낮아진다.
           '<div class="frbar"></div>' +
-          '<span class="frzoom">확대 <input type="range" class="frz" min="26" max="240" value="' + ZOOM_CW + '"></span>' +
+          '<span class="frzoom">확대 <input type="range" class="frz" min="0" max="' + SMAX + '" step="1" value="' + sliderFromStep(ZOOM_MAX_STEP) + '"></span>' +
           '<span class="frstep"></span>' +
           '<button type="button" class="frclose" title="접기">◀ 접기</button>' +
         '</div>' +
@@ -400,9 +411,9 @@
       //   칸이 섞여 들어간다(2026-08-26 사장님 스샷: 9.3s 다음에 0.0s).
       //   **다 만들어 한 번에 갈아 끼운다** — 중간 상태가 화면에 존재하지 않는다.
       const frag = document.createDocumentFragment();
-      STEP = calcStep(CW);
+      CW = cwFor(STEP);          // ★초가 주인, 칸 폭은 거기서 나온다(한 곳에서만 정한다)
       N = Math.max(1, Math.ceil(DUR / STEP));
-      host.querySelector('.frstep').textContent = `한 칸 ${STEP < 1 ? STEP.toFixed(2) : STEP.toFixed(0)}초`;
+      host.querySelector('.frstep').textContent = `한 칸 ${STEP}초`;
       const tmp = document.createElement('video');
       tmp.muted = true; tmp.preload = 'auto'; tmp.src = opt.src;
       await new Promise(r => {
@@ -465,26 +476,22 @@
         //   (구간 밖을 못 보게 잘라버리면 '조각 범위 넓히기'가 통째로 막힌다).
         if (opt.fit) {
           const z = host.querySelector('.frz');
-          const min = +z.min || 26, max = +z.max || 240;
-          // ★한 칸 초(STEP)가 칸 폭(CW)에 딸려 바뀌므로 식으로 풀면 값이 진동한다(실측:
-          //   목표가 240↔100을 오가며 엉뚱한 48로 끝났다). 후보를 훑어 **보이는 초가
-          //   구간에 가장 가까운** 칸 폭을 고른다 — 215개뿐이라 훑는 게 싸고 확실하다.
+          // ★후보는 사다리 단계뿐(8개)이다. '보이는 초'가 구간에 가장 가까운 단계를 고른다.
+          //   ★0.25초보다 성긴 단계는 뺀다(F21, 사장님 "0.25로 기본세팅") — 구간이 길면
+          //     '다 보이게' 맞추다 한 칸 1초까지 벌어져 기본 확대가 도로 풀렸다.
+          //     여기는 **열 때 기본값**일 뿐, 슬라이더는 어느 단계든 자유롭게 간다.
           const W = winW() * 0.9;
-          let want = CW, best = Infinity;
-          for (let c = min; c <= max; c++) {
-            // ★한 칸이 0.25초보다 성기면 후보에서 뺀다(F21, 사장님 "0.25로 기본세팅").
-            //   구간이 길면(영상 통째=25초) '다 보이게' 맞추다 한 칸 1초까지 벌어져
-            //   기본 확대가 도로 풀렸다 — 구절(1~2초)을 찍으려면 0.25초가 바닥이다.
-            //   기본값과 하한을 같은 상수(ZOOM_MAX_STEP) 하나로 묶는다(0순위-B).
-            if (calcStep(c) > ZOOM_MAX_STEP) continue;
-            const seen = W * calcStep(c) / c;            // 그 배율에서 창에 보이는 초
+          let want = STEP, best = Infinity;
+          for (const st of LADDER) {
+            if (st > ZOOM_MAX_STEP) continue;
+            const seen = W * st / cwFor(st);             // 그 배율에서 창에 보이는 초
             const d = Math.abs(seen - span);
-            if (d < best) { best = d; want = c; }
+            if (d < best) { best = d; want = st; }
           }
-          if (want !== CW) {
-            z.value = want; CW = want;
-            const ns = calcStep(CW);
-            if (ns !== STEP) { await strip(); }           // 칸 간격이 바뀌면 다시 뽑는다
+          if (want !== STEP) {
+            STEP = want; CW = cwFor(STEP);
+            z.value = sliderFromStep(STEP);
+            await strip();                                // 칸 간격이 바뀌면 다시 뽑는다
           }
         }
         const mid = opt.from + span / 2;
@@ -548,14 +555,13 @@
         const r = win.getBoundingClientRect();
         const anchorT = xToSec(e.clientX - r.left);          // 마우스가 가리키던 시각
         const z = host.querySelector('.frz');
-        const min = +z.min || 26, max = +z.max || 240;
-        const next = Math.max(min, Math.min(max, Math.round(CW * (e.deltaY > 0 ? 0.85 : 1.18))));
-        if (next === CW) return;
-        z.value = next;
-        const ns = calcStep(next);
-        CW = next;
+        // 휠 한 번 = 사다리 한 단계(슬라이더 한 칸과 같은 길 — 두 벌로 두지 않는다).
+        const nv = Math.max(0, Math.min(SMAX, (+z.value || 0) + (e.deltaY > 0 ? -1 : 1)));
+        const ns = stepFromSlider(nv);
+        if (ns === STEP) return;
+        z.value = nv; STEP = ns; CW = cwFor(STEP);
         const keep = () => { off = clamp(anchorT * pps() - (e.clientX - r.left)); applyW(); };
-        if (ns !== STEP) strip().then(keep); else keep();
+        strip().then(keep);
         return;
       }
       off = clamp(off + ((e.deltaY || e.deltaX) > 0 ? pps() * 2 : -pps() * 2)); applyW();
@@ -598,10 +604,10 @@
 
     host.querySelector('.frz').addEventListener('input', function () {
       const centerT = xToSec(winW() / 2);
-      CW = +this.value;
-      const ns = calcStep(CW);
-      if (ns !== STEP) { strip().then(() => { off = clamp(centerT * pps() - winW() / 2); applyW(); }); }
-      else { off = clamp(centerT * pps() - winW() / 2); applyW(); }
+      const ns = stepFromSlider(this.value);               // 한 칸 = 한 단계
+      if (ns === STEP) return;
+      STEP = ns; CW = cwFor(STEP);
+      strip().then(() => { off = clamp(centerT * pps() - winW() / 2); applyW(); });
     });
 
     /* ▶ 빨간 막대를 [a,b] 구간 동안 움직인다(소리는 미리보기 창이 낸다).
