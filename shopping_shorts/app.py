@@ -1247,6 +1247,36 @@ def api_bot_unanswered(request: Request):
 
 # ★정적 파일은 인라인 Path로 연다 — `_STATIC`은 app.py 아래쪽(14107줄 부근)에 있어
 #   여기선 그 이름이 아직 없다. /help·/challenge 라우트가 쓰는 방식과 같게 맞춘다.
+# ── 화면 스크립트 캐시 무효화(2026-08-26) ─────────────────────────────────
+# 사장님 제보: 고친 게 안 보인다 → 브라우저가 **옛 filmroll.js를 캐시**하고 있었다.
+# F5로는 스크립트 캐시가 안 지워져, 새 코드를 올려도 옛 화면이 돈다(실측).
+# 파일이 바뀌면 URL도 바뀌게 mtime을 붙여준다 — 사람이 기억해서 눌러야 하는 구조를 없앤다.
+# ★목록으로 파일명을 나열하지 않는다: HTML 안의 `src="/xxx.js"`를 전부 훑어 붙인다
+#   (새 스크립트가 늘어도 저절로 따라온다 — _ASSET_SUFFIXES 교훈과 같은 이유).
+_SCRIPT_SRC_RE = re.compile(r'src="/([A-Za-z0-9_./-]+\.js)"')
+
+
+def _html_with_versioned_scripts(name: str) -> HTMLResponse:
+    base = Path(__file__).parent / "static"
+    html = (base / name).read_text(encoding="utf-8")
+
+    def _stamp(m):
+        f = m.group(1)
+        try:
+            v = int((base / f).stat().st_mtime)
+        except OSError:
+            return m.group(0)
+        return f'src="/{f}?v={v}"'
+
+    return HTMLResponse(_SCRIPT_SRC_RE.sub(_stamp, html),
+                        headers={"Cache-Control": "no-cache, must-revalidate"})
+
+
+@app.get("/scene_lab.html", response_class=HTMLResponse)
+async def _scene_lab_html():
+    return _html_with_versioned_scripts("scene_lab.html")
+
+
 @app.get("/bot_admin.html", include_in_schema=False)
 def bot_admin_page():
     return FileResponse(str(Path(__file__).parent / "static" / "bot_admin.html"),
