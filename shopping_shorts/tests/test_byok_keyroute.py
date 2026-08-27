@@ -68,6 +68,36 @@ def test_users_do_not_share(store, monkeypatch):
     assert is_user is False
 
 
+def test_single_key_service_prefers_newest(store, monkeypatch):
+    """★키를 갈아끼우면 **새 키**가 쓰여야 한다(2026-08-28 cid 57 실사고).
+
+    vmake·elevenlabs는 호출부가 keys[0] 하나만 집는다(_vmake_key·_api_key).
+    그런데 DB 조회가 ORDER BY id라 그대로 두면 **가장 오래된 키**가 잡힌다.
+    실제로 크레딧 떨어진 계정을 버리고 새 키를 등록했는데 옛 키가 계속 쓰여
+    자막제거가 [60002]로 계속 실패했다. 순서를 되돌리면 그 사고가 그대로 재발한다.
+    """
+    monkeypatch.setattr(keyroute, "_owner_keys", lambda svc: ["사장님키"])
+    store.add_customer_key(7, "vmake", "옛키")
+    store.add_customer_key(7, "vmake", "새키")
+    keys, is_user = keyroute.keys_for(store, 7, "vmake")
+    assert keys[0] == "새키"          # ★나중에 등록한 것이 먼저
+    assert set(keys) == {"옛키", "새키"}   # 버리지는 않는다
+    assert is_user is True
+
+
+def test_pooled_service_keeps_order(store, monkeypatch):
+    """★POOLED·목록전체 서비스는 순서를 건드리지 않는다 — 위 수정의 범위 보증.
+
+    serpapi는 키 개수만큼 한도를 주며(_lens_key_count) 목록 전체를 쓴다.
+    여기까지 뒤집으면 이유 없이 동작이 바뀐다.
+    """
+    monkeypatch.setattr(keyroute, "_owner_keys", lambda svc: ["사장님키"])
+    for k in ("s1", "s2", "s3"):
+        store.add_customer_key(8, "serpapi", k)
+    keys, _ = keyroute.keys_for(store, 8, "serpapi")
+    assert keys == ["s1", "s2", "s3"]
+
+
 def test_serpapi_returns_all_user_keys(store, monkeypatch):
     """개인 전용 중 여러 개를 받는 서비스 — 등록한 만큼 전부 준다."""
     monkeypatch.setattr(keyroute, "_owner_keys", lambda svc: ["사장님키"])
