@@ -62,9 +62,16 @@ class Test만료되면_풀린다:
 
 class Test하위호환:
     def test_옛_형식_리스트도_읽는다(self, st):
-        """배포 순간 파일이 옛 모양(list)일 수 있다 — 그때 터지면 안 된다."""
-        assert st._exhausted_map({"exhausted": [1, 2, 3]}) == {
-            1: float("inf"), 2: float("inf"), 3: float("inf")}
+        """배포 순간 파일이 옛 모양(list)일 수 있다 — 그때 터지면 안 된다.
+
+        ★옛 항목도 **만료가 붙어야** 한다. 영구로 두면 배포 직후 하루는
+          종전 증상(하루짜리 낙인)이 그대로다.
+        """
+        m = st._exhausted_map({"exhausted": [1, 2, 3]})
+        assert set(m) == {1, 2, 3}
+        for t in m.values():
+            assert t != float("inf"), "옛 항목이 영구 낙인으로 남았다"
+            assert (t - time.time()) == pytest.approx(cg._EXHAUST_TTL_S, abs=5)
 
     def test_빈_상태도_안전(self, st):
         assert st._exhausted_map({}) == {}

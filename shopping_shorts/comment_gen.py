@@ -64,8 +64,9 @@ def _exhausted_map(state):
     """state의 exhausted를 {idx: 만료 timestamp}로 읽는다.
 
     옛 형식(list[int])도 그대로 받는다 — 배포 순간에 파일이 옛 모양일 수 있다.
-    옛 항목은 만료시각이 없으므로 기본 TTL이 지난 것으로 보지 않고 '오늘 내내'로 둔다
-    (하위호환: 종전 동작).
+    ★옛 항목엔 만료시각이 없다. '오늘 내내'로 두면 **바로 그 영구 낙인**이라
+      배포 직후 하루는 종전 증상이 그대로다. 그래서 기본 TTL이 붙은 것으로 본다
+      (2026-08-27: 실제로 배포 후 exhausted=[0,1,2,3,18]이 만료 없이 남아 있었다).
     """
     raw = state.get("exhausted")
     if isinstance(raw, dict):
@@ -76,7 +77,8 @@ def _exhausted_map(state):
             except (TypeError, ValueError):
                 continue
         return out
-    return {int(i): float("inf") for i in (raw or []) if isinstance(i, (int, float))}
+    fallback = time.time() + _EXHAUST_TTL_S
+    return {int(i): fallback for i in (raw or []) if isinstance(i, (int, float))}
 
 
 def _live_exhausted(state=None):
