@@ -51,6 +51,7 @@ LOG=/tmp/auto_deploy.log
 PENDING=/tmp/ss_pending_restart      # 한 줄에 유닛 하나: stockbrain|shopping-shorts|shopping-shorts-worker
 SINCE=/tmp/ss_pending_since          # 최초 연기 시각(epoch) — 강제 재시작 판정 기준
 MAX_DEFER_SEC=1800                   # 30분 넘게 못 재시작하면 웹은 강제 재시작
+WEB_HARD_MAX_SEC=2400                # 강제여도 렌더가 도는 중이면 여기까지는 더 봐준다(2026-08-27)
 PREWARM_MAX_DEFER_SEC=900            # 담기 분석 때문에 워커를 미루는 상한(15분). 넘으면 진행
 DB="$REPO/shopping_shorts/data/reference.db"
 ACTIVE_WINDOW_SEC=300                # 이 시간 안에 활동한 고객이 있으면 '접속 중'으로 본다
@@ -196,12 +197,22 @@ fi
 
 # 웹 앱: 고객이 접속 중이면 연기. 단 $MAX_DEFER_SEC 넘기면 강제(배포가 영영 안 가는 게 더 위험).
 if _pending_has shopping-shorts; then
-  if [ "$FORCE" = "1" ] || ! _users_online; then
+  # ★강제 재시작이어도 **렌더가 도는 중이면 조금 더 미룬다**(2026-08-27 실사고).
+  #   렌더 자체는 워커가 하므로 웹이 죽어도 완성된다. 문제는 6초짜리 재시작 창에 걸린
+  #   브라우저 요청이 끊겨 **사장님·고객 화면에만 '실패'로 보이는** 것이다
+  #   (실측: 10:00:58 예약분이 10:03:02 정상 done인데 화면은 실패였다).
+  #   무한연기는 안 된다 — $WEB_HARD_MAX_SEC까지만 봐주고 그 뒤엔 그냥 재시작한다.
+  WEB_RENDER_HOLD=0
+  if [ "$FORCE" = "1" ] && [ "$AGE" -lt "$WEB_HARD_MAX_SEC" ] && _worker_busy; then
+    WEB_RENDER_HOLD=1
+    echo "$(date '+%F %T') 웹 강제 재시작 보류(렌더 진행 중, ${AGE}초 경과/상한 ${WEB_HARD_MAX_SEC}초) $HEADSHORT" >>"$LOG"
+  fi
+  if [ "$WEB_RENDER_HOLD" = "0" ] && { [ "$FORCE" = "1" ] || ! _users_online; }; then
     [ "$FORCE" = "1" ] && echo "$(date '+%F %T') 연기 ${AGE}초 초과 → 웹 강제 재시작" >>"$LOG"
     sudo systemctl restart shopping-shorts >>"$LOG" 2>&1 \
       && echo "$(date '+%F %T') shopping-shorts 재시작완료 $HEADSHORT" >>"$LOG"
     _pending_del shopping-shorts
-  else
+  elif [ "$WEB_RENDER_HOLD" = "0" ]; then
     echo "$(date '+%F %T') 웹 재시작 연기(고객 접속 중, ${AGE}초 경과) $HEADSHORT" >>"$LOG"
   fi
 fi
