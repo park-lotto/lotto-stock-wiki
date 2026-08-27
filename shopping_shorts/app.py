@@ -10333,6 +10333,59 @@ def _ops_page(request: Request):
                         media_type="text/html; charset=utf-8")
 
 
+@app.post("/api/pinterest/collect")
+def _api_pinterest_collect(request: Request, body: dict = None):
+    """핀터레스트 영상 수집 — **관리자 전용·무료**(2026-08-28 사장님 "나만보게 비공개탭").
+
+    실측으로 확정한 경로: 검색 페이지 HTML엔 핀이 0개이고 `BaseSearchResource/get`
+    응답에 들어 있다. 로그인·프록시 없이 브라우저만 띄우면 된다(pinterest_crawl 참고).
+    ★랭킹 저장은 기존 플랫폼과 **같은 계약**을 쓴다(save_last_run_platform) —
+      화면·API가 이미 platform 파라미터로 갈리므로 새 배선이 필요 없다(0순위-B).
+    """
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import pinterest_crawl
+    body = body or {}
+    kws = [k.strip() for k in (body.get("keywords") or []) if str(k).strip()]
+    if not kws:
+        kws = list(pinterest_crawl.DEFAULT_KEYWORDS)
+    kws = kws[:8]                      # 폭주 방지 — 한 번에 8개까지
+    try:
+        per = max(5, min(int(body.get("per_keyword") or 40), 80))
+        scrolls = max(1, min(int(body.get("scrolls") or 5), 12))
+    except (TypeError, ValueError):
+        per, scrolls = 40, 5
+
+    items, seen = [], set()
+    for kw in kws:
+        for it in pinterest_crawl.search_videos(kw, max_results=per, scrolls=scrolls):
+            k = it.get("pin_id") or it.get("video_url")
+            if not k or k in seen:
+                continue
+            seen.add(k)
+            # 랭킹 화면이 읽는 공통 필드로 맞춘다(shortcode·name·caption·views).
+            # ⚠️핀터레스트는 조회수를 안 준다 — **지어내지 않고 0으로 둔다**(0순위: 추측 금지).
+            items.append({
+                "platform": "pinterest",
+                "shortcode": it.get("pin_id") or "",
+                "name": "Pinterest",
+                "username": "",
+                "url": it.get("url") or "",
+                "video_url": it.get("video_url") or "",
+                "thumbnail": it.get("thumbnail") or "",
+                "caption": (it.get("title") or it.get("desc") or "")[:200],
+                "views": 0, "likes": 0, "comments": 0,
+                "duration": it.get("duration") or 0,
+                "width": it.get("width") or 0, "height": it.get("height") or 0,
+                "keyword": kw,
+                "category": "장비템",     # 이 탭은 장비템·신박템 컨셉 전용이다
+            })
+    now = datetime.now(timezone.utc).isoformat()
+    Store(DB_PATH).save_last_run_platform("pinterest", items, now)
+    return {"ok": True, "count": len(items), "keywords": kws, "collected_at": now}
+
+
 @app.get("/api/admin/work-lines")
 def _api_admin_work_lines(request: Request):
     """관리자 작업라인 — **지금 누가 무엇을 하고 있나**(2026-08-26 사장님 지시).

@@ -368,6 +368,10 @@ body.is-admin .admin-only{display:block}
       <div class="ctype active" data-platform="instagram" onclick="switchPlatform('instagram',this)">📷 인스타</div>
       <div class="ctype" data-platform="youtube" onclick="switchPlatform('youtube',this)">▶️ 유튜브</div>
       <div class="ctype" data-platform="threads" onclick="switchPlatform('threads',this)">🧵 쓰레드</div>
+      <!-- 핀터레스트(2026-08-28 사장님 "깨끗한 영상들이 많아서 / 나만보게 비공개탭").
+           ★관리자 전용 — admin-only 클래스가 body.is-admin일 때만 보이게 한다(기존 방식 그대로).
+             고객 화면엔 아예 안 뜬다. 새 방식을 만들지 않는다(0순위-B). -->
+      <div class="ctype admin-only" data-platform="pinterest" onclick="switchPlatform('pinterest',this)">📌 핀터레스트</div>
       <div class="ctype" data-platform="tiktok" onclick="switchPlatform('tiktok',this)" style="display:none">🎵 틱톡</div>
       <div class="ctype" data-platform="xiaohongshu" onclick="switchPlatform('xiaohongshu',this)" style="display:none">📕 샤오홍슈</div>
       <div class="ctype" data-platform="douyin" onclick="switchPlatform('douyin',this)" style="display:none">🎬 도우인</div>
@@ -393,6 +397,18 @@ body.is-admin .admin-only{display:block}
         <label style="font-size:12px;color:var(--sub);margin-left:10px">월 예산($) <input id="ttBudget" type="number" min="0" step="0.5" style="width:64px;padding:4px;border-radius:6px;border:1px solid var(--line);background:var(--inset);color:var(--txt)"></label>
         <button onclick="saveTtSettings()" style="margin-left:8px">저장</button>
         <div id="ttStatus" style="margin-top:6px;font-size:11px;color:var(--sub)"></div>
+      </div>
+    </div>
+    <!-- 핀터레스트 수집(2026-08-28) — 관리자 전용. switchPlatform이 켜고 끈다. -->
+    <div id="pinPanel" style="display:none;margin-bottom:12px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--inset)">
+      <input id="pinKw" placeholder="검색어(영어, 쉼표로 여러 개) — 비우면 기본 장비템 키워드"
+             style="width:min(560px,72%);padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--txt);font-size:13px">
+      <button onclick="pinCollect(this)" style="margin-left:8px">📌 핀터레스트 수집</button>
+      <span id="pinMsg" style="font-size:12px;color:var(--sub);margin-left:8px"></span>
+      <div style="font-size:11px;color:var(--sub);margin-top:5px">
+        자막·워터마크 없는 <b>깨끗한 원본</b>이 많아 자막제거 없이 바로 씁니다(실측 720×1280 세로).
+        로그인·비용 없이 긁습니다. ⚠️워터마크가 박힌 것도 섞여 오니 <b>눈으로 골라</b> 담으세요.
+        검색어 1개당 30초쯤 걸립니다.
       </div>
     </div>
     <div id="xhsDiscoverPanel" style="display:none;margin-bottom:12px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--inset)">
@@ -795,6 +811,9 @@ const DESC_BY_PLATFORM = {
   youtube:   '<b>키워드 시드</b>로 발굴한 최근 <b>14일</b> Shorts를 조회수 기반 강도로 랭킹합니다.',
   xiaohongshu: '등록한 <b>샤오홍슈 채널</b>의 최근 <b>48시간</b> 이내 노트를 참여도 기반 강도로 랭킹합니다. (무료 수집)',
   threads:   '등록한 <b>쓰레드 계정</b>의 최근 <b>48시간</b> 이내 게시물을 댓글 기반 강도로 랭킹합니다. (무료 수집)',
+  // ★핀터레스트는 조회수·좋아요를 안 준다 — 지표가 없으니 **없다고 말한다**(지어내지 않는다).
+  //   깨끗한 원본(자막·워터마크 없음)을 찾는 게 목적이라 순위보다 '무엇이 있나'가 중요하다.
+  pinterest: '검색어로 모은 <b>영상 핀</b>입니다. 자막·워터마크 없는 <b>깨끗한 원본</b>이 많아 자막제거 없이 바로 씁니다. (무료 수집 · 관리자 전용)',
 };
 const TAB_TIP = {
   instagram: {speed:'댓글 ÷ 경과시간', density:'댓글 ÷ 조회수', fan_density:'댓글 ÷ 팔로워수'},
@@ -803,6 +822,7 @@ const TAB_TIP = {
               fan_density:'조회수 ÷ 구독자수 — 채널 규모 대비 얼마나 터졌는지(작은 채널의 대박을 잡는 눈)'},
   xiaohongshu: {speed:'(좋아요+댓글+수집+공유) ÷ 경과시간', density:'(수집+공유) ÷ (좋아요+댓글+수집+공유)'},
   threads:   {speed:'댓글 ÷ 경과시간', density:'댓글 ÷ 조회수'},
+  pinterest: {},          // 지표 없음 — 핀터레스트가 조회수·좋아요를 안 준다
 };
 // ── 지표 '이름'도 플랫폼마다 다르다(2026-08-24 사장님 "이름고치고") ──────────────
 // 여태 툴팁(TAB_TIP)만 갈리고 **글자는 한 벌**이라, 유튜브에서 조회수÷시간으로
@@ -815,6 +835,7 @@ const METRIC_LABELS = {
   tiktok:      {speed:'시간당조회수', density:'반응률'},
   xiaohongshu: {speed:'시간당반응', density:'저장·공유율'},
   threads:     {speed:'시간당댓글', density:'조회수당댓글'},
+  pinterest:   {},        // 비워 두면 정렬 탭이 자동으로 숨는다(위 주석 규약)
 };
 // 지표 이름 하나 — 모르는 플랫폼·지표는 인스타 이름으로 떨어진다(빈 화면보다 낫다).
 // 카드 툴팁 = 그 플랫폼의 실제 식(TAB_TIP). 이름과 식을 한 곳에서 짝지어 준다.
@@ -897,6 +918,9 @@ function switchPlatform(p, el){
   document.getElementById('ytCatBox').style.display = (p==='youtube')?'inline':'none';
   document.getElementById('ttPanel').style.display = (p==='tiktok' && ttMode()==='keyword')?'block':'none';
   if(p==='tiktok') loadTtSettings();
+  // 핀터레스트 수집 패널 — 관리자 + 그 탭일 때만(샤오홍슈와 같은 방식, 0순위-B).
+  const _pp=document.getElementById('pinPanel');
+  if(_pp) _pp.style.display = (p==='pinterest' && window.IS_ADMIN) ? 'block' : 'none';
   const _xd=document.getElementById('xhsDiscoverPanel');
   if(_xd){
     const showXhs = (p==='xiaohongshu' && window.IS_ADMIN);
@@ -925,6 +949,29 @@ async function xhsLoadLatest(){   // 페이지 재진입 시 마지막 결과(�
       renderXhsList();
     }
   }catch(e){}
+}
+// 핀터레스트 수집(2026-08-28 사장님) — 무료·로그인 없음. 관리자 전용.
+// ★검색어 1개당 브라우저를 띄워 스크롤하므로 30초쯤 걸린다. 버튼을 잠가 중복 실행을 막고,
+//   끝나면 그 탭을 다시 그린다(수집만 하고 화면이 그대로면 "된 건지" 알 수 없다).
+async function pinCollect(btn){
+  const kwEl=document.getElementById('pinKw'), msg=document.getElementById('pinMsg');
+  const kws=(kwEl&&kwEl.value||'').split(',').map(s=>s.trim()).filter(Boolean);
+  const orig=btn?btn.textContent:'';
+  if(btn){ btn.disabled=true; btn.textContent='수집 중…'; }
+  if(msg) msg.textContent = '브라우저를 띄워 긁는 중… (검색어 '+(kws.length||5)+'개 × 30초쯤)';
+  try{
+    const r=await fetch('/api/pinterest/collect',{method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify({keywords:kws})});
+    const d=await r.json();
+    if(!d||!d.ok) throw new Error((d&&d.error)||('실패 '+r.status));
+    if(msg) msg.textContent = '✅ '+d.count+'건 수집 — 아래 목록이 갱신됐습니다';
+    if(PLATFORM==='pinterest') load();     // 그 탭이면 즉시 다시 그린다
+  }catch(e){
+    // ★조용히 실패하지 않는다 — 0건이 '없음'인지 '고장'인지 화면이 말해야 한다.
+    if(msg) msg.textContent = '⚠️ '+(e&&e.message||e);
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent=orig; }
+  }
 }
 async function xhsDiscover(btn, silent){
   const box=document.getElementById('xhsDiscoverList');
