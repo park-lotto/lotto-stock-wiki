@@ -2160,41 +2160,54 @@ def plan_using_beat_clips(plan, clips, timeline, prefix="cc"):
     return out
 
 
-def final_pair_for_source(plan, vid, pos=0.5):
-    """자막제거 전/후 비교용 — **같은 장면**을 가리키는 (원본 시각 초, 완성본 비율).
+def final_pair_for_source(plan, vid, pos=0.5, timeline=None):
+    """자막제거 전/후 비교용 — **같은 장면**을 가리키는 (원본 시각 초, 완성본 시각 초).
 
-    없으면 (None, None).
+    없으면 (None, None). timeline은 video_assemble._beat_timeline 결과(실제 컷 길이).
 
-    ★2026-08-27 사장님 제보 "영상 좌우가 달라": BEFORE는 소스 원본의 pos 지점,
-      AFTER는 완성본에서 그 소스가 쓰인 지점을 보고 있어 **다른 장면**이 나란히 떴다.
-      실측 job 16f1b398f7cd: s3은 원본 5.4~11.1초만 쓰였는데 BEFORE는 원본 50% 지점을
-      보여줬다(번호판 벽 vs 흰 벽 — 전혀 다른 화면).
+    ★2026-08-27 사장님 제보 "영상 좌우가 달라". 두 번 틀렸고, 두 번째가 진짜였다.
 
-      옛 방식(소스별 청소본)에선 좌우가 같은 길이 파일이라 pos만 맞으면 대응됐다.
-      완성본 1편 청소로 바뀌며 기준이 갈렸다.
+      1차 오진: pos를 재료 구간(start~end) 안의 상대 위치로 봤다.
+        → 실측 job 16f1b398f7cd: s3의 재료 구간은 5.4~11.1(5.7초)인데 **실제 컷은 2.69초**다.
+          컷은 구간 앞에서 dur만큼만 쓴다. 5.4+5.7*0.5=8.25초는 **화면에 안 나오는 뒷부분**이라
+          여전히 딴 그림이 나왔다.
 
-    그래서 pos를 **"완성본에 실제로 쓰인 구간 안의 상대 위치"**로 해석한다.
-    앞/가운데/뒷부분 버튼도 그 장면 안에서 움직인다.
+      진짜: 원본 시각 = start + **dur** * pos,  완성본 시각 = t0 + dur * pos.
+        길이의 근거를 재료 구간이 아니라 **실제 타임라인(dur)**으로 통일한다.
+        완성본 쪽도 비율이 아니라 초(t0)로 직접 준다 — 조립본 길이가 계획 합과 달라도
+        어긋나지 않는다(실측: 계획 24.19초 vs 파일 25.4초).
     """
     beats = (plan or {}).get("beats") or []
-    rs = _final_beat_ratios(plan)
-    if not rs:
+    if not beats:
         return None, None
     try:
         pos = min(1.0, max(0.0, float(pos)))
     except (TypeError, ValueError):
         pos = 0.5
-    for b, (lo, hi) in zip(beats, rs):
+    rows = {r.get("beat_idx"): r for r in (timeline or [])}
+    ratios = None if timeline else _final_beat_ratios(plan)   # 타임라인이 없을 때만 근사
+    total = None
+    if ratios:
+        total = sum((float(b.get("target_seconds") or 0) or 2.0) for b in beats)
+    for n, b in enumerate(beats):
         for m in _beat_materials(b):
             if (m or {}).get("video_id") != vid:
                 continue
             try:
-                st, en = float(m.get("start")), float(m.get("end"))
+                st = float(m.get("start"))
             except (TypeError, ValueError):
                 return None, None
-            if en <= st:
+            row = rows.get(b.get("beat_idx"))
+            if row:
+                t0, dur = float(row.get("t0") or 0.0), float(row.get("dur") or 0.0)
+            elif ratios and total:
+                lo, hi = ratios[n]
+                t0, dur = lo * total, (hi - lo) * total
+            else:
                 return None, None
-            return st + (en - st) * pos, _clamp_ratio(lo + (hi - lo) * pos)
+            if dur <= 0:
+                return None, None
+            return st + dur * pos, t0 + dur * pos
     return None, None
 
 
