@@ -11870,9 +11870,16 @@ async function s2LoadStyles(){
     const d=await (await fetch('/api/script/styles'+(cat?('?category='+encodeURIComponent(cat)):''))).json();
     if(!d.ok){ row.innerHTML='<div class="hint" style="color:var(--fire)">스타일을 불러오지 못했습니다</div>'; return; }
     S2.styles=d.styles||[]; S2.category=d.category||''; S2.loadedStyles=true;
-    // 기본 = AI에게 맡김(고른 스타일 0개). 사장님이 고른 만큼 안이 나온다.
-    s2RenderStyles();
-  }catch(e){ row.innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; }
+  }catch(e){ row.innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; return; }
+  // ★렌더는 try 밖에서 부른다(2026-08-27 사장님 "대본스타일 안 나옴").
+  //   종전엔 이 호출이 위 try 안에 있어서, **화면 그리다 난 예외**까지 catch가 삼켜
+  //   '네트워크 오류'로 찍혔다. 실제 원인은 씨앗 영상의 structure가 아직 없을 때
+  //   `.segments.map`이 터진 것이라, 분석이 끝나면 "갑자기 또 되는" 모양이 됐다.
+  try{ s2RenderStyles(); }
+  catch(e){
+    console.error('s2RenderStyles 실패', e);
+    row.innerHTML='<div class="hint" style="color:var(--fire)">스타일 표시 중 오류 — '+esc(String(e&&e.message||e))+'</div>';
+  }
 }
 function s2RenderStyles(){
   const row=document.getElementById('s2StyleRow'); if(!row) return;
@@ -11881,7 +11888,9 @@ function s2RenderStyles(){
   //   즉 담은 씨앗 영상의 구조를 전혀 안 써서 옆 카드들과 결국 같은 경로였다.
   //   이제 이 칸은 **씨앗 영상의 대본 템플릿 구조·훅 문형**을 그대로 물려받고
   //   스토리·등장인물·CTA만 새로 쓴다(사장님: "훅도 터지는 영상이니 변형해서").
-  const _sh=(S2.seed&&S2.seed.structure&&(S2.seed.structure.segments||[])).map(x=>x.label);
+  // ★씨앗이 없거나 아직 분석 전이면 structure가 통째로 없다 — 옵셔널 체이닝으로 막는다.
+  //   여기서 터지면 스타일 목록이 통째로 안 나온다(2026-08-27 실사고).
+  const _sh=((S2.seed&&S2.seed.structure&&S2.seed.structure.segments)||[]).map(x=>x&&x.label);
   // ★픽업은 스타일과 **함께** 고를 수 있다(2026-08-26 사장님 "원래 대본 두개선택인데
   //   픽업영상대본 선택후 다른거 누르면 1개밖에 안되는데?").
   //   원인은 버그가 아니라 설계였다 — 종전엔 `S2.picked.length===0`일 때만 픽업이 켜지는
