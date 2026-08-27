@@ -1905,6 +1905,26 @@ def _clean_joined(items, key, work, tag=""):
 _FINAL_CLEAN = os.environ.get("SHORTS_CLEAN_FINAL", "0") == "1"   # ★기본 꺼짐 — 실측 후 켠다
 
 
+def _clean_strategy(job):
+    """자막제거를 **어떤 단위로** 할지 정하는 유일한 자리 (2026-08-27).
+
+      "final"   — 조립된 완성본 1편만 청소한다(기본). 보내는 길이가 30초라 가장 빠르다.
+      "sources" — 옛 소스별/합본 청소. 되돌림 스위치가 내려갔거나, 이미 청소된 소스가
+                  있어 그걸 그대로 쓰는 게 맞을 때(두 번 과금하지 않는다).
+
+    ★왜 함수로 뽑았나 (0순위-B, 실사고):
+      08-26에 완성본 경로를 만들면서 이 판단을 run_render에만 적었다. run_clean_sources
+      (2단계 버튼)는 검사하지도 않고 늘 소스별로 청소해, 2단계를 누르는 순간
+      clean_sources가 채워지고 3단계는 already=True로 완성본 경로를 건너뛰었다.
+      → **2단계를 쓰는 사람에겐 개선이 통째로 없던 것과 같았다**(08-27 로그 실측:
+        569MB를 보내 595초). 같은 판단이 두 군데 적히면 반드시 어긋난다.
+      호출부는 이 함수만 부른다 — 새 진입 경로가 생겨도 여기 하나만 보면 된다.
+    """
+    if job.get("clean_sources"):
+        return "sources"        # 이미 청소된 소스가 있다 — 재사용한다(재과금 0)
+    return "final" if _FINAL_CLEAN else "sources"
+
+
 def _plan_signature(plan):
     """편집안 → 완성본 **그림**을 결정하는 것만 뽑은 서명(sha1 앞 16자).
 
@@ -2103,7 +2123,7 @@ def run_clean_sources(job_id, db_path, work_root):
         #     _render_mix(조립) → clean_fn(청소) → 자막 3토막이라 가운데에 꽂기만 하면 된다.
         #   ★clean_sources는 일부러 비워 둔다 — 그래야 3단계(run_render)가 already=False로
         #     같은 완성본 경로를 타고, 편성이 그대로면 final_clean_{sig}.mp4를 재사용해 과금 0.
-        if _FINAL_CLEAN:
+        if _clean_strategy(job) == "final":
             final_fn = _final_clean_fn(store, job, job_id, work, key, customer_id)
         else:
             _ensure_clean_sources(store, job, job_id, work, key, customer_id)
@@ -2253,11 +2273,11 @@ def run_render(job_id, db_path, work_root):
             key = _vmake_key(store, customer_id)
             if not key:
                 raise RuntimeError("자막 제거가 켜져 있으나 설정이 완료되지 않았습니다 (관리자 문의)")
-            already = bool(job.get("clean_sources"))
-            if _FINAL_CLEAN and not already:
+            if _clean_strategy(job) == "final":
                 # 완성본 1편만 청소한다(2026-08-26). 소스를 다 지우던 것보다 보내는 길이가
                 # 훨씬 짧아 같은 1콜로 몇 배 빠르다. 조립 뒤·우리 자막 앞에서 돈다.
-                # ★2단계에서 이미 소스를 청소했으면(already) 그 소스로 조립한다 — 두 번 안 낸다.
+                # 실측(08-27): 완성본 30.5초 → 130초. 합본 569MB를 보내던 것은 595초였다.
+                # ★이미 청소된 소스가 있으면 _clean_strategy가 "sources"를 준다 — 두 번 안 낸다.
                 final_clean_fn = _final_clean_fn(store, job, job_id, work, key, customer_id)
                 store.update_mix_job(job_id, clean_status="ready", clean_error=None)
             else:

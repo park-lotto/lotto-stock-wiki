@@ -166,3 +166,43 @@ def test_플래그가_꺼지면_옛경로_그대로(monkeypatch, env):
     mp.run_clean_sources("j", "db", str(tmp))
     assert called == [1], "옛 경로(소스별)가 돌아야 한다"
     assert seen["clean_fn"] is None, "옛 경로에서 완성본을 또 청소하면 이중과금이다"
+
+
+class Test판단은한곳:
+    """★0순위-B: 같은 판단이 두 군데 적히면 반드시 어긋난다.
+
+    이번 사고가 그 실례였다 — 08-26에 완성본 경로를 run_render에만 달고
+    run_clean_sources를 빠뜨려, 2단계를 쓰는 사람에겐 개선이 통째로 없었다.
+    두 호출부가 _clean_strategy 하나만 보게 묶었고, 여기서 그 계약을 고정한다.
+    """
+
+    def test_기본은_완성본(self, monkeypatch):
+        monkeypatch.setattr(mp, "_FINAL_CLEAN", True)
+        assert mp._clean_strategy({}) == "final"
+
+    def test_되돌림스위치가_내려가면_소스별(self, monkeypatch):
+        monkeypatch.setattr(mp, "_FINAL_CLEAN", False)
+        assert mp._clean_strategy({}) == "sources"
+
+    def test_이미_청소된_소스가_있으면_그걸_쓴다(self, monkeypatch):
+        """두 번 과금하지 않는다 — 옛 경로로 청소해 둔 job이 그대로 살아 있어야 한다."""
+        monkeypatch.setattr(mp, "_FINAL_CLEAN", True)
+        assert mp._clean_strategy({"clean_sources": {"s0": "/clean/s0.mp4"}}) == "sources"
+
+    def test_두_호출부가_같은_함수를_쓴다(self):
+        """★grep 계약 — 새 진입 경로가 생겨도 _FINAL_CLEAN을 직접 읽으면 안 된다.
+
+        판단이 흩어지는 순간 이번 사고가 재발한다. _FINAL_CLEAN을 읽는 곳은
+        정의 한 줄과 _clean_strategy 안뿐이어야 한다.
+        """
+        import inspect
+        src = inspect.getsource(mp)
+        hits = [ln.strip() for ln in src.splitlines()
+                if "_FINAL_CLEAN" in ln and not ln.strip().startswith("#")]
+        assert len(hits) == 2, f"_FINAL_CLEAN을 직접 읽는 곳이 늘었다: {hits}"
+
+    def test_호출부는_전략함수로만_갈린다(self):
+        for fn in (mp.run_clean_sources, mp.run_render):
+            import inspect
+            body = inspect.getsource(fn)
+            assert "_FINAL_CLEAN" not in body, f"{fn.__name__}이 판단을 또 적고 있다"
