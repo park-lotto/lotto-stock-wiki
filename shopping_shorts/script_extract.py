@@ -30,6 +30,27 @@ _FALLBACK_MODEL = "gemini-3.1-flash-lite"
 
 _EMPTY = {"segments": [], "full_text": ""}
 
+# ★일시적 서버 오류 = 영상 탓이 아니다(2026-08-27 실사고).
+#   실측 로그: 504 DEADLINE_EXCEEDED 5회·499 CANCELLED 1회가 **재시도 분기 어디에도
+#   안 걸려** 그대로 빈 결과가 됐고, 화면엔 "쓸 만한 재료가 안 나왔어요(화면·말 모두
+#   비어 있음)"로 떴다 — 사장님 눈엔 영상이 못 쓸 물건으로 보인다. 503만 다루던
+#   분기를 어휘 목록 하나로 모아 놓는다(0순위-B: 같은 판단을 두 번 적지 않는다).
+_TRANSIENT_MARKS = ("503", "UNAVAILABLE", "overloaded",
+                    "504", "DEADLINE_EXCEEDED", "Deadline expired",
+                    "499", "CANCELLED", "500", "INTERNAL")
+
+
+def is_transient_api_error(msg):
+    """모델·네트워크의 일시 장애인가(=재시도·폴백할 값어치가 있나)."""
+    return any(c in str(msg) for c in _TRANSIENT_MARKS)
+
+
+def empty_reason(result):
+    """빈 결과가 '영상이 비어서'인지 'API가 죽어서'인지. 없으면 ''(옛 결과 호환)."""
+    if not isinstance(result, dict):
+        return ""
+    return (result.get("empty_reason") or "").strip()
+
 
 class KeyPoolExhausted(RuntimeError):
     """전용 Gemini 키 풀이 통째로 잠겨 **호출조차 못 한** 상태.
@@ -681,7 +702,7 @@ def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=
                 time.sleep(quota_sleep)
                 attempt += 1
                 continue
-            if any(c in m for c in ("503", "UNAVAILABLE", "overloaded")):
+            if is_transient_api_error(m):
                 if model == _MODEL:
                     primary_503 += 1
                     # 첫 503에서 바로 폴백(2026-07-24). 기존엔 2번 겪은 뒤 내려갔으나(spike면 곧
@@ -704,7 +725,9 @@ def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=
                 print(f"script_extract: QA 재시도 실패 — 첫 결과 유지 ({e!r})", file=sys.stderr)
                 return _attach_qa(qa_first, duration, qa_retried, video_path)
             print(f"script_extract: 빈 결과 반환(재시도 소진 또는 미분류 오류) — {e!r}", file=sys.stderr)
-            return dict(_EMPTY)
+            # ★사유를 실어 보낸다 — 호출부가 "영상이 비었다"로 오표기하지 않게 한다.
+            return dict(_EMPTY, empty_reason=("api" if is_transient_api_error(m) else "unknown"),
+                        empty_detail=repr(e)[:300])
         finally:
             if file_obj is not None:
                 try:
@@ -713,7 +736,7 @@ def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=
                     pass
     if qa_first is not None:                     # 재시도가 루프를 소진한 경우도 마찬가지
         return _attach_qa(qa_first, duration, qa_retried, video_path)
-    return dict(_EMPTY)
+    return dict(_EMPTY, empty_reason="api", empty_detail="재시도 예산 소진")
 
 
 def _frame_flag_on():
