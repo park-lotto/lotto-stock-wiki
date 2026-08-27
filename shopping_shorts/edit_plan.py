@@ -3374,108 +3374,6 @@ def _trim_to_budget(narration, char_target):
     return new if (new and new != narration) else None
 
 
-# ── 한 칸(비트)의 길이 상한 ────────────────────────────────────────────────
-# ★기준은 사장님이 직접 준 문장이다(2026-08-27): "여러분 다이소 가시면 이건 꼭 사야 해요"
-#   = 16자 · 2.2초. 이게 숏폼 한 호흡이다. 종전엔 **총 길이(30초)만 맞추고 한 칸이
-#   몇 초인지는 아무도 안 봤다** — 그래서 3~4칸으로 뭉치면 칸마다 6.7초·10.4초가 나왔다
-#   (실측, 사장님 화면 캡처). 상한은 여기 한 곳에서만 정한다(0순위-B).
-BEAT_TARGET_SECONDS = 2.5        # 한 칸이 지향하는 길이(≈20자)
-BEAT_MAX_SECONDS = 3.6           # 이걸 넘으면 쪼갠다(≈29자)
-
-# 쪼갤 수 있는 자리 — 한국어 연결어미·쉼표 뒤. 문장이 여기서 끊겨도 말이 산다.
-_BEAT_CUT_RE = re.compile(
-    r"(?<=[,‚،])\s*"
-    r"|(?<=는데)\s+|(?<=은데)\s+|(?<=인데)\s+|(?<=한데)\s+"
-    r"|(?<=길래)\s+|(?<=니까)\s+|(?<=거든요)\s+|(?<=더니)\s+"
-    r"|(?<=아서)\s+|(?<=어서)\s+|(?<=해서)\s+|(?<=라서)\s+"
-    r"|(?<=지만)\s+|(?<=면서)\s+|(?<=으면)\s+|(?<=다가)\s+"
-    r"|(?<=[.!?])\s+")
-
-# 2차(더 공격적) — 1차로도 상한을 못 맞춘 조각에만 쓴다. 연결어미 -고/-서/-며/-어/-아.
-# ★1차보다 위험하다: '창고 안에'처럼 명사 끝이 걸릴 수 있다. 그래서 **필요할 때만** 쓴다.
-#   조사(은·는·이·가·을·를·의·에) 뒤는 자르지 않는다 — 거기서 끊으면 말이 확실히 깨진다.
-# ★반드시 **룩비하인드**로 쓴다 — 어미를 매칭 대상에 넣으면 re.split이 그 글자를
-#   통째로 버린다(실측: "늘어나서 속상해" → "늘어나" + "속상해", 어미 '서'가 사라졌다).
-_BEAT_CUT_RE2 = re.compile(
-    r"(?<=[가-힣]고)\s+(?=[가-힣])|(?<=[가-힣]서)\s+(?=[가-힣])"
-    r"|(?<=[가-힣]며)\s+(?=[가-힣])|(?<=[가-힣]어)\s+(?=[가-힣])"
-    r"|(?<=[가-힣]아)\s+(?=[가-힣])|(?<=[가-힣]자)\s+(?=[가-힣])")
-
-
-def _beat_seconds(text):
-    """이 대사가 우리 보이스로 몇 초인가. 상수는 _SYLLABLES_PER_SEC 한 곳에서 온다."""
-    n = len("".join((text or "").split()))
-    sec = _speech_speed() * _SYLLABLES_PER_SEC
-    return (n / sec) if (n and sec > 0) else 0.0
-
-
-def _split_text_for_beats(text, max_sec=BEAT_MAX_SECONDS):
-    """긴 대사를 연결어미·쉼표에서 쪼갠다. 못 쪼개면 원문 그대로 한 조각.
-
-    ★프롬프트로 "짧게 써라"만 시키면 안 지켜진다(이미 여러 번 겪었다) — 저장 직전에
-      실제로 쪼갠다. 다만 **자를 데가 없으면 억지로 자르지 않는다**: 말이 깨지는 것보다
-      한 칸이 긴 게 낫다.
-    """
-    t = " ".join((text or "").split())
-    if not t or _beat_seconds(t) <= max_sec:
-        return [t] if t else []
-    parts = [p.strip() for p in _BEAT_CUT_RE.split(t) if p and p.strip()]
-    # ★1차로도 상한을 못 맞춘 조각은 2차 규칙으로 한 번 더 쪼갠다(2026-08-27 실측:
-    #   "…목이 다 늘어나서 속상해하길래"가 4.7초로 남았다 — '늘어나서'의 끝 두 글자는
-    #   '나서'라 1차 목록(-어서)에 안 걸린다). 2차는 위험하므로 긴 조각에만 댄다.
-    parts2 = []
-    for p in parts:
-        if _beat_seconds(p) <= max_sec:
-            parts2.append(p)
-            continue
-        parts2.extend(q.strip() for q in _BEAT_CUT_RE2.split(p) if q and q.strip())
-    parts = parts2
-    if len(parts) <= 1:
-        return [t]                                  # 자를 자리가 없다 — 그대로 둔다
-    # 조각이 너무 잘아지지 않게 다시 뭉친다(상한을 넘지 않는 선에서 최대한 붙인다).
-    out, cur = [], ""
-    for p in parts:
-        cand = (cur + " " + p).strip() if cur else p
-        if cur and _beat_seconds(cand) > max_sec:
-            out.append(cur)
-            cur = p
-        else:
-            cur = cand
-    if cur:
-        out.append(cur)
-    return out or [t]
-
-
-def _split_long_beats(beats, max_sec=BEAT_MAX_SECONDS):
-    """상한을 넘는 칸을 여러 칸으로 쪼갠다. 화면(primary·alternates)은 그대로 물려준다.
-
-    화면은 어차피 컷당 2.2초 단위로 다시 채워지므로(_pick_shots의 max_shot) 같은 구간을
-    물려줘도 그림이 모자라지 않는다. target_seconds는 조각 길이대로 다시 나눈다.
-    """
-    if not beats:
-        return beats
-    out = []
-    for b in beats:
-        if not isinstance(b, dict):
-            out.append(b)
-            continue
-        pieces = _split_text_for_beats(b.get("narration") or "", max_sec)
-        if len(pieces) <= 1:
-            out.append(b)
-            continue
-        for k, piece in enumerate(pieces):
-            nb = dict(b)
-            nb["narration"] = piece
-            nb["target_seconds"] = round(_beat_seconds(piece), 1)
-            if k:
-                nb["split_from"] = b.get("beat_id") or b.get("id") or ""
-                nb.pop("beat_id", None)             # 새 칸이므로 id는 비운다
-            out.append(nb)
-    if len(out) != len(beats):
-        print(f"_split_long_beats: 긴 칸을 쪼갰다 {len(beats)} → {len(out)}칸", file=sys.stderr)
-    return out
-
-
 def _conform_overflow_beats(beats, target_seconds, conform=None):
     """후보 총 나레이션이 목표초를 넘으면(>1.15배) 각 비트를 목표 발화초에 맞게 압축한다.
     _length_penalty 주석이 약속한 'conform 흡수'의 실제 배선(2026-07-26). conform은 주입
@@ -4908,10 +4806,6 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         # 초과 흡수(Task11): 총 나레이션이 목표초를 넘으면 각 비트를 conform으로 줄인다.
         # _length_penalty 주석이 약속한 실제 배선 — 채점 전에 적용해 감점이 콘폼된 길이를 본다.
         plan["beats"] = _conform_overflow_beats(plan["beats"], target_seconds)
-        # ★총 길이를 맞춘 뒤 **한 칸이 너무 긴 것**을 쪼갠다(2026-08-27 사장님 기준
-        #   "여러분 다이소 가시면 이건 꼭 사야 해요" = 2.2초). 순서 주의: conform이
-        #   먼저다 — 쪼갠 뒤 압축하면 조각마다 다시 길어진다.
-        plan["beats"] = _split_long_beats(plan["beats"])
         # ★압축 뒤에 구조 교정을 한 번 더(2026-07-30). conform_narration이 길이를 줄이면서
         #   존댓말을 반말로 압축한다 — 실측: CTA "…남겨주세요"가 "…남겨줘"로 바뀌어 나갔다
         #   (_ground_candidate에서 이미 교정했는데 그 뒤 conform이 되돌린 것). 멱등이라
@@ -5043,10 +4937,6 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
         #   문장을 만지는 모든 단계(리라이트·서명보장·날조교정) 뒤에서 한 번 더 잰다 —
         #   예산 이내면 무변경(회귀0), covers·화면 배정은 conform이 안 건드린다.
         plan["beats"] = _conform_overflow_beats(plan["beats"], target_seconds)
-        # ★총 길이를 맞춘 뒤 **한 칸이 너무 긴 것**을 쪼갠다(2026-08-27 사장님 기준
-        #   "여러분 다이소 가시면 이건 꼭 사야 해요" = 2.2초). 순서 주의: conform이
-        #   먼저다 — 쪼갠 뒤 압축하면 조각마다 다시 길어진다.
-        plan["beats"] = _split_long_beats(plan["beats"])
         story = {k: r.get(k, "") for k in
                  ("hook", "story_person", "story_event", "story_resolution", "cta_line", "cta_keyword")}
         rule_score = _score_candidate(plan, avoid_hooks=avoid_hooks, target_seconds=target_seconds,
