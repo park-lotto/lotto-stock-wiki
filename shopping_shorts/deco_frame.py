@@ -367,6 +367,11 @@ DEFAULTS = {
     "title_font": "",      # 제목 폰트(빈값=Pretendard-ExtraBold)
     "title_size": 0,       # 제목 크기(0=62, 기존 값)
     "title_x": 50,         # 제목 가로 위치 %
+    # ── 제목 글자 꾸미기 확장(2026-08-28 사장님 "폰트쪽 꾸미는것 추가") ──────
+    # ★빈값/0 = "안 정했음" → 지금까지의 자동 규칙 그대로(기존 그림 무변경).
+    "title_color": "",     # 제목 글자색(빈값=바탕 밝기로 흑/백 자동)
+    "title_ol_c": "",      # 제목 외곽선 색(빈값인데 두께>0이면 글자색 반대색 자동)
+    "title_ol_w": 0,       # 제목 외곽선 두께 px(0=외곽선 없음)
     # ── 틀 커스텀(2026-08-25 사장님 "거기서 커스텀해서 수정할 수 있게") ──────
     # ★실측은 근사치다 — 폰트는 견본에서 고른 것이고, 색도 프레임 한 장에서 읽었다.
     #   "똑같이" 맞추는 마지막 한 뼘은 **사람 손**이어야 한다. 그런데 여기까지는
@@ -471,6 +476,7 @@ def normalize(spec):
     # ★0은 "안 정했음"이라 살려둔다 — 그림 그릴 때 프리셋 기본으로 되돌아간다.
     for k, lo, hi in (("ch_size", 0, 200), ("title_size", 0, 200),
                       ("ch_x", 0, 100), ("title_x", 0, 100),
+                      ("title_ol_w", 0, 20),
                       ("ad_size", 0, 200), ("ad_x", 0, 100), ("ad_y", 0, 100),
                       ("ad_alpha", 0, 100)):
         try:
@@ -485,7 +491,8 @@ def normalize(spec):
     # ── 틀 커스텀 값 검사도 **여기 한 곳** ────────────────────────────
     # 색은 #RRGGBB만 받는다. 이상한 값이 오면 빈값(= 프리셋 그대로)으로 떨어뜨린다
     # — 예외로 죽으면 미리보기가 통째로 안 나온다(그림 한 장이 화면 전체를 막는다).
-    for k in ("bar_color", "on_bar_color", "sub_bg_c", "sub_text_c"):
+    for k in ("bar_color", "on_bar_color", "sub_bg_c", "sub_text_c",
+              "title_color", "title_ol_c"):
         v = str(s[k] or "").strip()
         if not v.startswith("#"):
             v = "#" + v if v else ""
@@ -702,7 +709,12 @@ def render(spec):
         # 글자색: 실측 sub_text. 없으면 지금까지의 값. 바탕이 어두우면 검은 글자가 안 보이므로
         # 바탕 밝기로 갈라준다(지어내는 게 아니라 **안 보이는 걸 막는** 규칙 — box_color와 같다).
         dark_bg = _lum(bg) < 128
-        title_fill = (245, 245, 245, 255) if dark_bg else (20, 20, 20, 255)
+        # ★사장님이 직접 고른 제목색이 먼저다(사람 손 > 자동 — sub_text_c와 같은 규약).
+        #   일부러 바탕과 같은 색을 쓸 수도 있으니 자동 대비 보정도 안 건다.
+        if s["title_color"]:
+            title_fill = _rgb(s["title_color"])
+        else:
+            title_fill = (245, 245, 245, 255) if dark_bg else (20, 20, 20, 255)
         _fallback_meta = (190, 190, 190, 255) if dark_bg else (120, 120, 120, 255)
         _meta_src = s["sub_text_c"] or p.get("sub_text")
         meta_fill = _rgb(_meta_src) if _meta_src else _fallback_meta
@@ -715,8 +727,17 @@ def render(spec):
         rule_fill = (210, 210, 210, 255) if dark_bg else (30, 30, 30, 255)
         d.rectangle([0, y, W, y + block_h - 1], fill=bg)
         ty = y + 36
+        # 외곽선(2026-08-28): 두께>0일 때만. 색을 안 정했으면 **바탕**과 대비되는 쪽
+        # (밝은 바탕→검정, 어두운 바탕→흰색). ★글자색 기준으로 뒤집으면 흰 바탕에서
+        # 흰 테두리가 나와 바탕에 묻힌다(실측 — 안 보이는 값은 값이 아니다).
+        ol_w = s["title_ol_w"]
+        ol_c = None
+        if ol_w > 0:
+            ol_c = _rgb(s["title_ol_c"]) if s["title_ol_c"] else (
+                (255, 255, 255, 255) if dark_bg else (0, 0, 0, 255))
         for ln in lines:
-            _fg.draw_text(d, (tx, ty), ln, ft, title_fill, "ma", tsize)
+            _fg.draw_text(d, (tx, ty), ln, ft, title_fill, "ma", tsize,
+                          stroke_width=ol_w if ol_c else 0, stroke_fill=ol_c)
             ty += line_h
         if meta:
             d.text((60, ty + 6), meta, font=fm, fill=meta_fill, anchor="la")

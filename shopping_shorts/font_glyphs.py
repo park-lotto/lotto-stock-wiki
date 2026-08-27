@@ -126,15 +126,19 @@ def text_px(pil_font, text, size):
             + space_px(pil_font, size) * max(0, len(words) - 1))
 
 
-def draw_text(d, xy, text, font, fill, anchor="la", size=None):
+def draw_text(d, xy, text, font, fill, anchor="la", size=None,
+              stroke_width=0, stroke_fill=None):
     """PIL 그리기 — 공백 글리프가 없는 폰트면 어절을 따로 그리고 사이를 좌표로 벌린다.
 
     anchor는 두 글자(가로,세로). 가로 'l'(왼쪽)·'m'(중앙)만 쓰며, 세로는 그대로 넘긴다.
     정상 폰트는 **종전 그대로 한 번에** 그린다(회귀 0).
+    stroke_*는 외곽선(2026-08-28) — 둘 다 있어야만 넘긴다(안 주면 기존과 동일).
     """
     text = text or ""
+    sk = ({"stroke_width": stroke_width, "stroke_fill": stroke_fill}
+          if (stroke_width and stroke_fill) else {})
     if not lacks_space_glyph(font) or " " not in text:
-        d.text(xy, text, font=font, fill=fill, anchor=anchor)
+        d.text(xy, text, font=font, fill=fill, anchor=anchor, **sk)
         return
     size = size or getattr(font, "size", 40)
     x, y = xy
@@ -144,6 +148,6 @@ def draw_text(d, xy, text, font, fill, anchor="la", size=None):
     gap = space_px(font, size)
     for w in text.split(" "):
         if w:
-            d.text((start, y), w, font=font, fill=fill, anchor="l" + va)
+            d.text((start, y), w, font=font, fill=fill, anchor="l" + va, **sk)
             start += font.getlength(w)
         start += gap
