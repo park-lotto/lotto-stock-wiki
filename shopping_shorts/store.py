@@ -5803,15 +5803,28 @@ class Store:
     # 워커를 여러 개 띄울 때 같은 계정으로 동시 접속해 플래그되는 걸 막는다.
     _EXCLUSIVE_TASKS = ("durfill", "prewarm")
 
+    # 하트비트가 이만큼 끊긴 running은 '살아있는 렌더'로 치지 않는다(2026-08-27).
+    _HEAVY_STALE_MINUTES = 15
+
     def heavy_job_active(self):
         """렌더 계열 작업이 지금 돌고 있거나 대기 중이면 True.
         queued까지 보는 이유: 곧 시작할 렌더 앞에서 크롤이 먼저 자리를 잡으면
-        렌더가 그 크롤이 끝날 때까지 밀린다(양보의 취지가 사라진다)."""
+        렌더가 그 크롤이 끝날 때까지 밀린다(양보의 취지가 사라진다).
+
+        ★좀비 제외(2026-08-27 실사고): clean 작업 1건이 02:07 하트비트 뒤 멈춘 채
+          state='running'으로 9시간 남아 있었고, 09:00 인스타 수집 타이머가 이 가드에
+          걸려 2초 만에 스킵됐다 — 타이머는 하루 1회라 **그날 수집이 통째로 비었다**
+          (snapshots 08-27 0건 실측). 워커가 죽으면 상태가 고착되므로, 하트비트가
+          _HEAVY_STALE_MINUTES 넘게 끊긴 running은 '안 도는 것'으로 본다.
+          queued는 하트비트가 없는 게 정상이라 그대로 센다."""
         ph = ",".join("?" * len(self._HEAVY_TASKS))
         with self._conn() as c:
             n = c.execute(
-                f"SELECT COUNT(*) FROM job_queue WHERE task IN ({ph}) "
-                "AND state IN ('queued','running')", self._HEAVY_TASKS).fetchone()[0]
+                f"SELECT COUNT(*) FROM job_queue WHERE task IN ({ph}) AND ("
+                "     state='queued'"
+                "  OR (state='running' AND heartbeat_at IS NOT NULL"
+                "      AND datetime(heartbeat_at) >= datetime('now', ?))"
+                ")", (*self._HEAVY_TASKS, f"-{self._HEAVY_STALE_MINUTES} minutes")).fetchone()[0]
         return n > 0
 
     def claim_next(self):
