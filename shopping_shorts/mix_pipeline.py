@@ -2450,6 +2450,7 @@ def run_clean_sources(job_id, db_path, work_root):
     """2단계: 각 소스 원본을 VMake로 자막제거해 clean_sources에 캐시.
     BackgroundTasks로 불리므로 예외를 밖으로 안 던진다(clean_status로만 알린다)."""
     store = Store(db_path)
+    _gpron = pron_corrections.load(store)
     job = store.get_mix_job(job_id)
     if not job:
         return
@@ -2457,6 +2458,27 @@ def run_clean_sources(job_id, db_path, work_root):
     try:
         work = Path(work_root) / job_id
         work.mkdir(parents=True, exist_ok=True)
+        # ★★청소 전에 TTS를 확정한다 (2026-08-27, 사장님 "장면도 안바꾸고 클릭만 한번씩").
+        #   왜: _synthesize_beats는 TTS 실측 발화초로 beat["target_seconds"]를 덮어쓴다
+        #   (:552). 그런데 편성 서명(_plan_signature)에 target_seconds가 들어간다.
+        #   자막제거가 TTS 확정보다 **먼저**라, 렌더 직전 run_render가 TTS를 보장하는 순간
+        #   서명이 바뀌어 **캐시가 무효 → 같은 영상을 두 번 청소**했다.
+        #     실측 job 1e6c1e1c8b28: 11:58 clean(sig=b2b36f3d) → 12:05 render(sig=73ab50ef).
+        #     그 사이 사용자 조작·다른 작업 0. 3개 job 전부 청소본이 2개씩 남았다.
+        #   → 자막제거 쓰는 **모든 고객이 편당 2콜**(VMake 100크레딧)을 쓰고 있었다.
+        #   TTS는 어차피 다음 단계에서 필요하니 앞당기는 것뿐 — 추가 비용은 없다.
+        #   덤: 2단계 미리보기가 실제 결과와 컷 길이까지 같아진다.
+        #   호출 형태는 run_render와 **동일**하게 둔다(0순위-B — 갈리면 서명이 또 어긋난다).
+        plan_for_tts = job.get("edit_plan")
+        if plan_for_tts and plan_for_tts.get("beats"):
+            try:
+                _synthesize_beats(plan_for_tts["beats"], work / "tts", voice=job.get("voice"),
+                                  skip_existing=True, global_pron=_gpron,
+                                  customer_id=job.get("customer_id", 0))
+                store.update_mix_job(job_id, edit_plan=plan_for_tts)
+                job = store.get_mix_job(job_id)      # 갱신된 편성으로 아래를 진행
+            except Exception as e:      # noqa: BLE001 — TTS 실패가 자막제거를 막지 않는다
+                print("[clean] TTS 선확정 실패(계속 진행): %s" % e, file=sys.stderr)
         # ★워커는 HTTP 요청이 없어 request.state가 없다 — job 레코드에서 읽는다.
         customer_id = job.get("customer_id") or 0
         key = _vmake_key(store, customer_id)
