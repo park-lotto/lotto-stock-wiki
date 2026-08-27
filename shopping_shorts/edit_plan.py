@@ -3252,6 +3252,58 @@ def _length_penalty(beats, target_seconds):
     return round(min(0.3, dev), 3)
 
 
+# ★한 칸(비트)이 얼마나 길어도 되나 — 기준은 사장님이 준 문장이다(2026-08-27):
+#   "여러분 다이소 가시면 이건 꼭 사야 해요" = 공백 제외 16자 · 약 2.2초. 이게 한 호흡이다.
+#   ⚠️ _LONG_BEAT_CHARS(55)와 **목적이 다르다**: 그건 "자막줄을 다시 끊어라"는 표시용
+#      임계고, 이건 "이 후보를 강등해라"는 채점용 기준이다. 값을 합치지 않는 이유는
+#      55를 낮추면 caption_lines 무효화가 훨씬 자주 일어나 자막 회귀 위험이 있어서다.
+BEAT_SOFT_MAX_CHARS = 29        # 이보다 긴 칸이 많은 후보를 강등한다(≈3.6초)
+# ★감점 상한. 총 길이 감점(_length_penalty, 0.3)보다 **훨씬 작아야** 한다.
+#   실측(2026-08-27): 0.15로 두니 "전부 짧으면 늘려 다시 만드는" 장치가 무력해졌다 —
+#   늘린 긴 후보를 이 감점이 도로 깎아 총 0.9초짜리가 추천으로 뽑혔다
+#   (test_scene_first_lengthen 2건이 잡았다). 0.10부터 통과하지만 경계라 0.08로 둔다.
+#   대본이 목표보다 짧은 것이 칸이 긴 것보다 나쁘다 — 이 축은 **총 길이가 비슷한
+#   후보끼리** 고를 때만 갈라주면 된다(그때 0.08은 충분한 차이다).
+_BEAT_LEN_PENALTY_CAP = 0.08
+
+
+def _beat_length_penalty(beats, target_seconds=None, soft_max=BEAT_SOFT_MAX_CHARS):
+    """**칸별** 길이 감점(0~0.3). _length_penalty는 후보 **총** 길이만 봐서, 30초를 3칸에
+    몰아넣은 후보(칸당 10초)와 12칸에 고르게 나눈 후보가 같은 점수를 받았다 — 사장님이
+    화면에서 본 6.7초·10.4초짜리 칸이 그렇게 뽑혔다(2026-08-27 실측).
+
+    ★칸 개수는 여기서 **절대 안 건드린다**(2026-08-01 불변식 — 나누면 _assign_timeline의
+      세트 수를 넘겨 화면이 중복된다). 대신 짧게 쓴 후보가 뽑히게 **고르기만** 한다.
+      프롬프트로 "짧게 써라"만 시키면 안 지켜진다는 건 이미 여러 번 겪었다.
+
+    감점 = (상한 초과 글자수의 합 ÷ 전체 글자수), 최대 _BEAT_LEN_PENALTY_CAP. 이내면 0(회귀 0).
+    target_seconds를 주면 **목표초에 미달인 후보는 면제**한다(아래 참조).
+    """
+    beats = beats or []
+    if not beats:
+        return 0.0
+    # ★대본이 목표초에 **미달**이면 이 감점을 걸지 않는다(2026-08-27 실측).
+    #   짧은 것이 칸이 긴 것보다 나쁜 문제고, 이미 _length_penalty(상한 0.3)가 그걸 다룬다.
+    #   그 감점은 미달이 심하면 **포화**돼 "9.9초 후보와 0.9초 후보"를 구분 못 하는데,
+    #   거기에 칸 감점까지 얹으면 긴 쪽만 깎여 **총 0.9초짜리가 추천으로 뽑혔다**
+    #   (test_scene_first_lengthen 2건이 잡았다 — "너무 짧으면 늘리는" 장치가 무력해진다).
+    if target_seconds and target_seconds > 0:
+        total_sec = sum(float(b.get("target_seconds") or 0.0)
+                        for b in beats if isinstance(b, dict))
+        if total_sec > 0 and total_sec < target_seconds * 0.9:
+            return 0.0
+    total = over = 0
+    for b in beats:
+        if not isinstance(b, dict):
+            continue
+        n = len("".join((b.get("narration") or "").split()))
+        total += n
+        over += max(0, n - soft_max)
+    if total <= 0:
+        return 0.0
+    return round(min(_BEAT_LEN_PENALTY_CAP, over / total), 3)
+
+
 def _plagiarism_penalty(beats, source_full_texts, threshold=0.5, n=6):
     """표절 감점(2026-07-30): _plagiarism_flags와 같은 n-gram 겹침 계산을 채점에도 반영한다.
     이제까지는 겹침을 감지해 리뷰 화면에 경고 배지만 띄우고(app.py) 점수에는 안 반영했다 —
@@ -3295,6 +3347,7 @@ def _score_candidate(plan, avoid_hooks=None, target_seconds=None, source_full_te
     score = 0.75 * match + 0.25 * quality
     score -= _cut_rhythm_penalty(beats)          # T6: 파편·반복 후보 강등(안전망)
     score -= _length_penalty(beats, target_seconds)  # 세션#2: 목표초 벗어난 후보 강등
+    score -= _beat_length_penalty(beats, target_seconds)  # 2026-08-27: 한 칸이 긴 후보 강등(칸 수는 불변)
     score -= _plagiarism_penalty(beats, source_full_texts)  # 2026-07-30: 원문 베끼기 강등
     if avoid_hooks:
         hook = beats[0].get("narration") or ""
