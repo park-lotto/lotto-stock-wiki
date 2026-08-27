@@ -2078,6 +2078,7 @@ async function archiveSimilar(sc){
 async function archiveSave(sc,url,thumb,ch,btn){
   const d=await (await fetch('/api/mix/basket/toggle',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({shortcode:sc,url:url,thumbnail:thumb,name:'@'+ch,caption:'',meta:{platform:'instagram',source:'archive'}})})).json();
+  notePrewarm(d);
   if(d.in){btn.textContent='🎬 담김✓';btn.classList.add('saved');}
   else{btn.textContent='📥 담기';btn.classList.remove('saved');}
 }
@@ -3033,6 +3034,7 @@ async function lensBulkSave(shortcode){
     try{
       const d=await (await fetch('/api/mix/basket/toggle',{method:'POST',headers:{'Content-Type':'application/json'},
         body:JSON.stringify({shortcode:it.savesc, url:it.url||'', thumbnail:it.thumbnail||'', name:it.title||'', caption:it.title||'', meta:_lensMeta(it)})})).json();
+      notePrewarm(d);
       if(d.in) st.saved.add(it.savesc);
     }catch(e){}
   }
@@ -3502,6 +3504,7 @@ async function toggleLensSave(shortcode, savesc, btn){
   try{
     const d=await (await fetch('/api/mix/basket/toggle',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({shortcode:savesc, url:it.url||'', thumbnail:it.thumbnail||'', name:it.title||'', caption:it.title||'', meta:_lensMeta(it)})})).json();
+    notePrewarm(d);
     d.in?st.saved.add(savesc):st.saved.delete(savesc);
     if(btn){ btn.textContent=d.in?'🎬 담김✓':'📥 담기'; btn.classList.toggle('saved', !!d.in); }
     if(d.in) showToast('✅ 담았음 <a href="/collection" style="color:var(--sel-fg);margin-left:6px">모음집 보기 →</a>');
@@ -3706,6 +3709,14 @@ async function copyFullText(btn){
   setTimeout(()=>{ btn.textContent='📋 전체 복사'; btn.classList.remove('done'); }, 1200);
 }
 // 화면 우하단 잠깐 뜨는 알림 — 링크 등 HTML 포함 가능. 3.5초 후 자동 사라짐.
+// 담기 응답의 미리분석 안내 — 판단은 서버가 하고 여기선 보여주기만 한다(2026-08-27).
+// 하루에 한 번만 띄운다: 담을 때마다 뜨면 잔소리가 된다.
+let _pwNoted = false;
+function notePrewarm(d){
+  if(!d || !d.prewarm_note || _pwNoted) return;
+  _pwNoted = true;
+  showToast(d.prewarm_note);
+}
 function showToast(html){
   let t=document.getElementById('ssToast');
   if(!t){
@@ -3729,6 +3740,7 @@ async function toggleMix(sc, btn){
                             name: it.name||it.username||'', caption: it.caption||''})
     });
     const d = await r.json();
+    notePrewarm(d);
     setMixBtn(btn, d.in);
     const st = document.getElementById("status");
     if(st) st.textContent = d.in ? `🎬 영상 믹싱에 담김 (총 ${d.count}개)` : `담기취소됨 (총 ${d.count}개)`;
