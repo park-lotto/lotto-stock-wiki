@@ -1,5 +1,5 @@
 """인스타 레퍼런스랭킹 자동수집(무료 Playwright 경로) — systemd 타이머가
-하루 3회(09/15/21시 KST) 실행(2026-07-29).
+하루 1회(09:00 KST) 실행(2026-08-09 계정 보호 결정으로 3회→1회 축소. 서버 실측).
 
 앱 HTTP를 거치지 않고 service.collect(platform="instagram")를 직접 호출한다.
 - 인증/페이월 우회(관리자 세션 불필요)
@@ -25,14 +25,39 @@ from shopping_shorts.config import DB_PATH
 from shopping_shorts.store import Store
 
 
+# ── 스킵되면 그날 통째로 비는 문제(2026-08-27 사장님 지시로 수정) ──
+# 타이머는 하루 1회(09:00 KST, 2026-08-09 계정 보호 결정)라 "이번 회차 스킵"이
+# 곧 "오늘 수집 0건"이었다(실측: 08-27 09:00:02 스킵 → snapshots 08-27 0건,
+# 유튜브는 같은 날 9,403건 정상). 렌더 양보 자체는 그대로 지키되, 포기하지 않고
+# 렌더가 끝날 때까지 기다렸다가 돌린다. 실제 수집은 여전히 하루 1회다.
+RETRY_EVERY_MIN = 15
+RETRY_MAX = 16          # 최대 4시간까지 기다린다
+
+
+def _wait_until_idle():
+    """렌더/믹스가 끝나길 기다린다. 비었으면 True, 끝내 안 비면 False."""
+    store = Store(DB_PATH)
+    for i in range(RETRY_MAX + 1):
+        if not store.heavy_job_active():
+            if i:
+                print(f"[daily_instagram_collect] 렌더 종료 확인 — {i * RETRY_EVERY_MIN}분 대기 후 수집 시작")
+            return True
+        print(f"[daily_instagram_collect] 렌더/믹스 진행 중 — {RETRY_EVERY_MIN}분 뒤 재시도 "
+              f"({i + 1}/{RETRY_MAX})", flush=True)
+        if i < RETRY_MAX:
+            time.sleep(RETRY_EVERY_MIN * 60)
+    return False
+
+
 def main():
     t0 = time.time()
     # ★렌더 양보(2026-07-30): 최종렌더가 도는 중이면 이번 회차를 건너뛴다.
     # 1GB·2vCPU 서버에서 ffmpeg와 Playwright가 겹치면 swap으로 밀려 렌더가 8분+로
     # 기어간다(실측 load average 11.76 / swap 1204MB). 다음 회차(6시간 뒤)에 돌면 되고,
     # 수집은 누적이라 한 번 건너뛰어도 데이터가 사라지지 않는다.
-    if Store(DB_PATH).heavy_job_active():
-        print("[daily_instagram_collect] 렌더/믹스 진행 중 — 이번 회차 스킵(다음 타이머에 수집)")
+    if not _wait_until_idle():
+        print("[daily_instagram_collect] 렌더/믹스가 계속 진행 중 — 이번 회차 포기"
+              f"(대기 {RETRY_MAX * RETRY_EVERY_MIN}분 초과)")
         return 0
     try:
         items = service.collect(platform="instagram")
