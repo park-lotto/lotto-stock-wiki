@@ -4827,6 +4827,17 @@ def api_produce_mix_clean_thumb(job_id: str, kind: str = "original",
     si = max(0, int(si))
     pos = min(0.98, max(0.02, float(pos)))
     vid = _source_video_id(si)
+    # ★전/후는 **같은 장면**이어야 한다(2026-08-27 사장님 "영상 좌우가 달라").
+    #   완성본 1편만 청소하면 좌우 파일의 시간축이 서로 다르다. pos를 그대로 쓰면
+    #   BEFORE는 원본 50% 지점, AFTER는 완성본에서 쓰인 지점이라 딴 화면이 나란히 뜬다.
+    #   실측 job 16f1b398f7cd: s3은 원본 5.4~11.1초만 쓰였는데 BEFORE는 원본 50%(번호판 벽),
+    #   AFTER는 완성본 34.5%(흰 벽) — 전혀 다른 그림이었다.
+    #   그래서 pos를 '완성본에 실제로 쓰인 구간 안의 상대 위치'로 해석한다
+    #   (앞/가운데/뒷부분 버튼도 그 장면 안에서 움직인다).
+    #   소스별 청소본이 있던 옛 경로는 좌우 길이가 같아 종전대로 pos를 쓴다.
+    _src_sec = None
+    if not (job.get("clean_sources") or {}):
+        _src_sec, _ = mix_pipeline.final_pair_for_source(job.get("edit_plan") or {}, vid, pos)
     if kind == "clean":
         if job.get("clean_status") != "ready":
             return JSONResponse(status_code=404, content={"ok": False, "error": "클린 소스 없음"})
@@ -4850,15 +4861,21 @@ def api_produce_mix_clean_thumb(job_id: str, kind: str = "original",
                 return JSONResponse(status_code=404,
                                     content={"ok": False, "error": "완성본에 안 쓰인 소스",
                                              "reason": "not_in_final"})
-            pos = _at
+            # 구간 안 상대 위치(BEFORE와 짝) — 못 구하면 종전처럼 첫 등장 지점.
+            _, _pair_ratio = mix_pipeline.final_pair_for_source(
+                job.get("edit_plan") or {}, vid, pos)
+            pos = _pair_ratio if _pair_ratio is not None else _at
     else:
         try:
             src = _resolve_sources(job, work)[vid]
         except Exception:
             return JSONResponse(status_code=404, content={"ok": False, "error": "소스 없음"})
     dur = frame_extract._probe_duration(src) or 2.0
-    frame = frame_extract.extract_frame_at(src, work / "clean_thumb", dur * pos,
-                                           filename=f"{kind}_{si}_{int(pos * 100)}.jpg")
+    # 원본은 **완성본에 쓰인 시각**을 초로 직접 안다 → 그 지점을 뽑아 AFTER와 짝을 맞춘다.
+    at = _src_sec if (kind != "clean" and _src_sec is not None) else dur * pos
+    at = min(max(float(at), 0.0), max(dur - 0.05, 0.0))
+    frame = frame_extract.extract_frame_at(src, work / "clean_thumb", at,
+                                           filename=f"{kind}_{si}_{int(pos * 100)}_{int(at * 100)}.jpg")
     if not frame:
         return JSONResponse(status_code=404, content={"ok": False, "error": "프레임 추출 실패"})
     return FileResponse(str(frame), media_type="image/jpeg")
