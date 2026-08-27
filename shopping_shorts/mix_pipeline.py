@@ -1974,6 +1974,25 @@ def _final_time_of_source(plan, vid):
     return None
 
 
+def _final_source_indices(plan, n_sources):
+    """완성본에 **실제로 쓰인** 소스의 si 목록(오름차순). 2026-08-27.
+
+    왜 필요한가: 담은 영상이 5개여도 편성에 3개만 들어갈 수 있다. 안 들어간 소스는
+    완성본 어디에도 없으므로 AFTER 프레임을 뽑을 수 없다. 그런데 화면은 "영상 1/5"로
+    5개를 다 넘겨보게 해서, 안 쓰인 것을 넘기는 순간 엉뚱한 구간이 나왔다
+    (사장님 제보 "다른 영상이 나옴" — BEFORE 벽 페인트칠 / AFTER 보라색 매트).
+
+    ★판정을 새로 짜지 않고 _final_time_of_source를 그대로 부른다(0순위-B).
+      "완성본에 있나"를 두 군데서 각자 계산하면 언젠가 반드시 어긋난다 —
+      목록엔 있는데 시각은 None인 소스가 생기면 증상이 그대로 재발한다.
+    """
+    out = []
+    for i in range(max(0, int(n_sources or 0))):
+        if _final_time_of_source(plan, _source_video_id(i)) is not None:
+            out.append(i)
+    return out
+
+
 def _clean_strategy(job):
     """자막제거를 **어떤 단위로** 할지 정하는 유일한 자리 (2026-08-27).
 

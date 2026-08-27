@@ -3892,6 +3892,13 @@ def api_mix_status(job_id: str, request: Request):
             # 자막제거 확인용 소스 개수(2026-08-18) — 3단계가 "소스 1/N"으로 넘겨보는 데만 쓴다.
             # 경로는 안 내보내고 개수만. 청소본이 있으면 그 개수, 없으면 담은 URL 개수.
             "clean_source_count": len(job.get("clean_sources") or {}) or len(job.get("urls") or []),
+            # ★넘겨볼 수 있는 소스의 **실제 번호 목록**(2026-08-27). 개수만 주면
+            #   쓰인 소스가 [0,2,4]인데 화면은 0,1,2를 요청해 또 어긋난다 — 번호를 준다.
+            #   완성본 1편 청소일 때만 의미가 있다(소스별 청소본이 있으면 전부 볼 수 있다).
+            "clean_source_indices": (
+                None if (job.get("clean_sources") or {})
+                else mix_pipeline._final_source_indices(job.get("edit_plan") or {},
+                                                        len(job.get("urls") or []))),
             # 완성본 1편 청소(2026-08-27)에선 소스별 파일이 안 생긴다 — 소스 수로 세면
             # 끝나도 "0/5"라 멈춘 것처럼 보인다. 완료 여부는 clean_status가 정본이다.
             # 진행 표시용(2026-08-19): 자막제거는 소스 1편당 수 분씩 걸려 전체 25분도 정상이다.
@@ -4817,8 +4824,17 @@ def api_produce_mix_clean_thumb(job_id: str, kind: str = "original",
             if not src or not Path(src).exists():
                 return JSONResponse(status_code=404, content={"ok": False, "error": "클린 소스 없음"})
             _at = mix_pipeline._final_time_of_source(job.get("edit_plan") or {}, vid)
-            if _at is not None:
-                pos = _at
+            # ★못 찾으면 **주지 않는다**(2026-08-27 사장님 제보: "다른 영상이 나옴").
+            #   None = 이 소스가 완성본에 안 쓰였다는 뜻이다. 그런데 종전엔 그냥 넘어가
+            #   원본 기준 pos(예: 가운데 0.5)를 **완성본 전체**에 그대로 적용했다 →
+            #   BEFORE는 원본 1번의 가운데(벽 페인트칠), AFTER는 완성본의 가운데(전혀
+            #   다른 소스 구간)가 나와 "자막제거가 엉뚱한 영상을 뱉는다"로 보였다.
+            #   조용한 폴백이 틀린 그림을 그리느니 404로 사실을 알린다(0순위 규칙).
+            if _at is None:
+                return JSONResponse(status_code=404,
+                                    content={"ok": False, "error": "완성본에 안 쓰인 소스",
+                                             "reason": "not_in_final"})
+            pos = _at
     else:
         try:
             src = _resolve_sources(job, work)[vid]
