@@ -2160,36 +2160,76 @@ def plan_using_beat_clips(plan, clips, timeline, prefix="cc"):
     return out
 
 
-def final_pair_for_source(plan, vid, pos=0.5, timeline=None):
-    """자막제거 전/후 비교용 — **같은 장면**을 가리키는 (원본 시각 초, 완성본 시각 초).
+def final_clip_pairs(plan, tts_paths, src_durs):
+    """완성본의 **컷 하나하나**를 (video_id, 원본 시각, 완성본 시각, 길이)로 편다.
 
-    없으면 (None, None). timeline은 video_assemble._beat_timeline 결과(실제 컷 길이).
+    화면 조각 계획은 video_assemble.plan_beat_clips_for **한 곳**에서 온다 —
+    렌더·캡컷·ZIP이 쓰는 그 함수다. 여기서 따로 계산하면 또 어긋난다(0순위-B).
 
-    ★2026-08-27 사장님 제보 "영상 좌우가 달라". 두 번 틀렸고, 두 번째가 진짜였다.
-
-      1차 오진: pos를 재료 구간(start~end) 안의 상대 위치로 봤다.
-        → 실측 job 16f1b398f7cd: s3의 재료 구간은 5.4~11.1(5.7초)인데 **실제 컷은 2.69초**다.
-          컷은 구간 앞에서 dur만큼만 쓴다. 5.4+5.7*0.5=8.25초는 **화면에 안 나오는 뒷부분**이라
-          여전히 딴 그림이 나왔다.
-
-      진짜: 원본 시각 = start + **dur** * pos,  완성본 시각 = t0 + dur * pos.
-        길이의 근거를 재료 구간이 아니라 **실제 타임라인(dur)**으로 통일한다.
-        완성본 쪽도 비율이 아니라 초(t0)로 직접 준다 — 조립본 길이가 계획 합과 달라도
-        어긋나지 않는다(실측: 계획 24.19초 vs 파일 25.4초).
+    ★왜 필요한가 (2026-08-27, 세 번째 수정):
+      비트 하나에 재료가 여럿 섞인다. 실측 job 9a3ff19fbceb의 beat 9는
+        [s0 17.0~19.0, s4 5.7~8.2, s0 0.0~1.0, s4 1.1~2.8]
+      4조각이 비트 시간을 나눠 갖는다. 그런데 앞선 수정은 '비트 전체'를 그 소스의
+      구간으로 취급해, 비트 한가운데(pos=0.5)가 실제로는 **다른 소스** 자리였다.
+      → 좌우에 딴 그림이 계속 떴다.
     """
-    beats = (plan or {}).get("beats") or []
-    if not beats:
-        return None, None
+    from shopping_shorts import video_assemble as _va
+    out, t = [], 0.0
+    for b in (plan or {}).get("beats") or []:
+        tts = (tts_paths or {}).get(b.get("beat_idx"))
+        try:
+            tts_dur = _va._beat_effective_dur(b, tts) if tts else float(
+                b.get("target_seconds") or 0) or 0.0
+        except Exception:      # noqa: BLE001
+            tts_dur = float(b.get("target_seconds") or 0) or 0.0
+        if tts_dur <= 0:
+            continue
+        try:
+            clips = _va.plan_beat_clips_for(b, tts_dur, src_durs or {})
+        except Exception:      # noqa: BLE001 — 계획을 못 세우면 이 비트는 건너뛴다
+            clips = []
+        if not clips:
+            t += tts_dur
+            continue
+        for cclip in clips:
+            d = float(cclip.get("out_dur") or 0.0)
+            if d > 0:
+                out.append({"video_id": cclip.get("video_id"),
+                            "src": float(cclip.get("start") or 0.0),
+                            "fin": t, "dur": d})
+            t += d
+    return out
+
+
+def final_pair_for_source(plan, vid, pos=0.5, tts_paths=None, src_durs=None):
+    """자막제거 전/후 비교용 — **같은 장면**을 가리키는 (원본 시각, 완성본 시각).
+
+    그 소스가 **처음 나오는 컷** 안의 pos 위치. 없으면 (None, None).
+
+    ★세 번 틀리고 네 번째가 맞았다 — 기록으로 남긴다:
+      1) pos를 소스 파일 전체의 비율로 → 원본 50%는 안 쓰인 딴 장면.
+      2) pos를 재료 구간(start~end) 안 비율로 → 구간 5.7초인데 컷은 2.69초라
+         뒷부분을 짚었다.
+      3) pos를 비트 전체 안 비율로 → 비트에 재료가 4개 섞여 다른 소스 자리를 짚었다.
+      4) **컷(clip) 단위**로 편다 → 이제야 맞는다. 컷은 화면에 실제로 나가는 최소 단위다.
+    """
     try:
         pos = min(1.0, max(0.0, float(pos)))
     except (TypeError, ValueError):
         pos = 0.5
-    rows = {r.get("beat_idx"): r for r in (timeline or [])}
-    ratios = None if timeline else _final_beat_ratios(plan)   # 타임라인이 없을 때만 근사
-    total = None
-    if ratios:
-        total = sum((float(b.get("target_seconds") or 0) or 2.0) for b in beats)
-    for n, b in enumerate(beats):
+    for cclip in final_clip_pairs(plan, tts_paths, src_durs):
+        if cclip["video_id"] == vid:
+            d = cclip["dur"]
+            return cclip["src"] + d * pos, cclip["fin"] + d * pos
+    # ★컷 계획을 못 세웠을 때만 비트 기준으로 물러선다(소스 길이를 못 재는 등).
+    #   판정이 목록(_final_source_indices, 비트 기준)보다 엄격하면 "목록엔 있는데 404"가
+    #   나서 사장님이 또 헤맨다. 정확도는 떨어져도 같은 장면 근처는 잡는다.
+    rs = _final_beat_ratios(plan)
+    beats = (plan or {}).get("beats") or []
+    if not rs:
+        return None, None
+    total = sum((float(b.get("target_seconds") or 0) or 2.0) for b in beats)
+    for b, (lo, hi) in zip(beats, rs):
         for m in _beat_materials(b):
             if (m or {}).get("video_id") != vid:
                 continue
@@ -2197,17 +2237,8 @@ def final_pair_for_source(plan, vid, pos=0.5, timeline=None):
                 st = float(m.get("start"))
             except (TypeError, ValueError):
                 return None, None
-            row = rows.get(b.get("beat_idx"))
-            if row:
-                t0, dur = float(row.get("t0") or 0.0), float(row.get("dur") or 0.0)
-            elif ratios and total:
-                lo, hi = ratios[n]
-                t0, dur = lo * total, (hi - lo) * total
-            else:
-                return None, None
-            if dur <= 0:
-                return None, None
-            return st + dur * pos, t0 + dur * pos
+            d = (hi - lo) * total
+            return st + d * pos, lo * total + d * pos
     return None, None
 
 

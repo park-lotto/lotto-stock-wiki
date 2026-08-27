@@ -73,11 +73,12 @@ class TestCallerHandlesNone:
         import pathlib
         src = pathlib.Path(__file__).resolve().parents[1] / "app.py"
         text = src.read_text(encoding="utf-8")
-        i = text.find("_final_time_of_source")
-        assert i > 0, "호출부가 사라졌다 — 이 테스트를 갱신하라"
-        window = text[i:i + 700]
+        # 2026-08-27: 판정이 비트 단위 -> **컷 단위**(final_pair_for_source)로 바뀌었다.
+        #   이름이 아니라 **모양**을 검사한다 — 조용한 폴백이 되돌아오면 증상 재발이다.
+        i = text.find("final_pair_for_source")
+        assert i > 0, "자리 판정 호출부가 사라졌다 — 이 테스트를 갱신하라"
+        window = text[i:i + 1400]
         assert "not_in_final" in window, \
-            "None일 때 404로 빠지지 않는다 — 엉뚱한 프레임이 나간다"
-        # ★옛 버그 모양: if _at is not None: pos = _at  (else 없음)
-        assert "if _at is not None:" not in window, \
-            "조용한 폴백이 되돌아왔다 — None이면 반드시 거부해야 한다"
+            "자리를 못 찾을 때 404로 빠지지 않는다 — 엉뚱한 프레임이 나간다"
+        assert "if _final_sec is None:" in window, \
+            "조용한 폴백이 되돌아왔다 — 못 찾으면 반드시 거부해야 한다"
