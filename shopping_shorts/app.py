@@ -36,9 +36,11 @@ from shopping_shorts import config
 from shopping_shorts.config import DB_PATH, DRAFT_BATCH_SIZE, PUBLIC_BASE_URL
 from shopping_shorts.config import GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI
 from shopping_shorts.frame_extract import (download_video, extract_frames,
-                                           extract_frame_at, extract_grid_frames)
+                                           extract_frame_at, extract_grid_frames,
+                                           GRID_FRAMES_DEFAULT)
 from shopping_shorts.script_extract import (extract_script, extract_auto, storable,
-                                            KeyPoolExhausted, has_usable_result)
+                                            KeyPoolExhausted, has_usable_result,
+                                            empty_reason)
 from shopping_shorts.structure_analyze import analyze_structure
 from shopping_shorts import backbone
 from shopping_shorts.aipick import build_aipick
@@ -195,7 +197,7 @@ def _lens_month_limit(store):
     return _LENS_MONTH_LIMIT_PER_KEY * max(1, len(SERPAPI_KEYS))
 
 
-def _lens_quota_guard(store, month):
+def _lens_quota_guard(store, month, customer_id=0):
     """렌즈 월 가드 — 막아야 하면 429 JSONResponse, 통과면 None.
 
     ★판정을 여기 한 곳에서만 한다(0순위-B). /api/lens/search와 /api/lens/trace_url
@@ -203,18 +205,58 @@ def _lens_quota_guard(store, month):
 
     순서: ① SerpApi **실잔량**(있으면 이게 진실) → ② 못 읽으면 우리 카운터 × 상수.
     ①이 필요한 이유는 `lens_discover.account_searches_left` 독스트링 참조 —
-    우리 카운터는 클릭당 1인데 실제로는 최대 3회가 나가 어긋난다."""
-    from shopping_shorts import lens_discover
-    left = lens_discover.account_searches_left()
+    우리 카운터는 클릭당 1인데 실제로는 최대 3회가 나가 어긋난다.
+
+    ★잔량은 **그 사람이 실제로 쓸 키**로 잰다(2026-08-27 실사고). 전엔 누가
+      요청했든 공용 env 키만 봤다 — 공용이 0이 되는 순간 자기 키에 200회씩 남은
+      회원 24명이 통째로 429로 막혔다("렌즈 끝났다" 문의가 몰린 진짜 원인).
+      쓸 키를 정하는 곳은 keyroute.keys_for 하나뿐이므로 그걸 그대로 쓴다.
+
+    ★우리 카운터(②)는 **공용 키를 쓸 때만** 본다. 자기 키를 낸 회원에게 공용 예산을
+      들이대면 남의 사용량 때문에 막힌다 — 그 사람 한도는 자기 SerpApi 잔량이다."""
+    from shopping_shorts import lens_discover, keyroute
+    # ★None은 0(관리자·서버 내부 호출)으로 본다 — _as_cid는 못 읽으면 **원값을 그대로**
+    #   돌려주므로(app.py:9186) None이 그대로 흘러 `cid != 0`이 참이 되고, 정회원처럼
+    #   "키를 등록하세요"로 막힌다. 라이브 호출부는 늘 값을 넘기지만 기본값이 안전해야 한다.
+    cid = _as_cid(customer_id if customer_id is not None else 0)
+    # ★체험 중에는 렌즈를 안 준다(2026-08-27 사장님 지시). 렌즈 1회는 SerpApi 실비가
+    #   나가는데 체험 계정에까지 열어주면 공용 키가 순식간에 마른다(이번 달 1,250회가
+    #   그렇게 소진됐다). 판정은 _is_trial 한 곳에서만 한다 — 여기서 다시 세면
+    #   "체험과 유료가 같은 필드를 쓰는" 함정에 또 걸린다(2026-08-25 실사고).
+    if _is_trial(cid):
+        return JSONResponse(status_code=429, content={
+            "ok": False, "error_code": "lens_trial",
+            "error": "체험 기간에는 렌즈 검색을 쓸 수 없어요 — "
+                     "정식 가입 후 내 SerpApi 키를 등록하면 바로 쓸 수 있습니다"})
+    keys, is_user = [], False
+    try:
+        keys, is_user = keyroute.keys_for(store, cid, keyroute.SVC_SERPAPI)
+    except Exception as e:      # noqa: BLE001 — 키 조회 실패로 렌즈를 막지 않는다
+        print(f"[lens] 키 조회 실패(공용 기준으로 판정): {e!r}", file=sys.stderr)
+    # ★정회원은 **자기 키로만** 렌즈를 쓴다(2026-08-27 사장님 "가입한 프로는 개인꺼 쓰는거야").
+    #   공용 키로 태우면 한 사람이 몰아 써도 다른 사람이 막히고, 매달 무료 키를
+    #   늘려가며 버티는 구조가 된다. 사장님(cid 0)만 공용 폴백을 남긴다.
+    #   ⚠️ 잔량 조회보다 **먼저** 본다 — 뒤에 두면 공용이 0일 때 "공용 한도 소진"이
+    #      먼저 걸려 정작 필요한 "키를 등록하세요" 안내가 안 나간다(쓸데없는 왕복도 준다).
+    if not is_user and cid != 0:
+        return JSONResponse(status_code=429, content={
+            "ok": False, "error_code": "lens_need_key",
+            "error": "렌즈 검색은 내 SerpApi 키로 동작해요 — "
+                     "키를 등록하면 바로 쓸 수 있습니다(무료 월 250회)"})
+    left = lens_discover.account_searches_left(keys=keys or None)
     if left is not None and left <= 0:
         return JSONResponse(status_code=429, content={
             "ok": False, "error_code": "lens_limit",
-            "error": "이번 달 렌즈 검색 한도를 다 썼습니다(SerpApi 잔량 0)"})
+            "error": ("등록하신 SerpApi 키의 이번 달 검색 한도를 다 썼습니다"
+                      if is_user else
+                      "이번 달 공용 렌즈 검색 한도를 다 썼습니다")})
+    if is_user:
+        return None            # 자기 키를 쓰는 사람에게 공용 예산을 들이대지 않는다
     limit = _lens_month_limit(store)
     if store.lens_month_count(month) >= limit:
         return JSONResponse(status_code=429, content={
             "ok": False, "error_code": "lens_limit",
-            "error": f"이번 달 렌즈 검색 한도({limit}회)를 다 썼습니다"})
+            "error": f"이번 달 공용 렌즈 검색 한도({limit}회)를 다 썼습니다"})
     return None
 
 
@@ -1324,7 +1366,23 @@ def api_mix_basket_toggle(request: Request, body: dict, background_tasks: Backgr
                 background_tasks.add_task(_enrich_grab, url, sc, cid)
             _enqueue_prewarm(store, sc, url, caption=body.get("caption") or "",
                              customer_id=cid)
-    return {"ok": True, "in": in_basket, "count": len(store.mix_basket_shortcodes(customer_id=cid))}
+    # ★오늘 미리분석 몫이 남았는지 알려준다(2026-08-27 사장님 "담아둔것도 분석이 안되고").
+    #   상한에 걸리면 워커가 **조용히** 건너뛰어서, 담은 사람은 이유를 모른 채 기다렸다.
+    #   기능이 죽는 건 아니다 — 제작소에서 쓸 때 그때 추출한다. 그걸 말해 주는 것뿐이다.
+    _left = None
+    try:
+        if in_basket and access_level(cid) == "full":
+            from shopping_shorts import prewarm as _pw
+            _left = _pw.daily_remaining(store)
+    except Exception:      # noqa: BLE001 — 안내가 담기를 막으면 안 된다
+        _left = None
+    out = {"ok": True, "in": in_basket,
+           "count": len(store.mix_basket_shortcodes(customer_id=cid))}
+    if _left is not None:
+        out["prewarm_left"] = _left
+        if _left <= 0:
+            out["prewarm_note"] = "오늘 미리분석 한도를 다 썼어요 — 담기는 됐고, 제작소에서 쓸 때 바로 분석합니다(자정 초기화)"
+    return out
 
 
 @app.post("/api/mix/basket/remove")
@@ -3921,10 +3979,20 @@ def api_mix_status(job_id: str, request: Request):
             # 자막제거 확인용 소스 개수(2026-08-18) — 3단계가 "소스 1/N"으로 넘겨보는 데만 쓴다.
             # 경로는 안 내보내고 개수만. 청소본이 있으면 그 개수, 없으면 담은 URL 개수.
             "clean_source_count": len(job.get("clean_sources") or {}) or len(job.get("urls") or []),
+            # ★넘겨볼 수 있는 소스의 **실제 번호 목록**(2026-08-27). 개수만 주면
+            #   쓰인 소스가 [0,2,4]인데 화면은 0,1,2를 요청해 또 어긋난다 — 번호를 준다.
+            #   완성본 1편 청소일 때만 의미가 있다(소스별 청소본이 있으면 전부 볼 수 있다).
+            "clean_source_indices": (
+                None if (job.get("clean_sources") or {})
+                else mix_pipeline._final_source_indices(job.get("edit_plan") or {},
+                                                        len(job.get("urls") or []))),
+            # 완성본 1편 청소(2026-08-27)에선 소스별 파일이 안 생긴다 — 소스 수로 세면
+            # 끝나도 "0/5"라 멈춘 것처럼 보인다. 완료 여부는 clean_status가 정본이다.
             # 진행 표시용(2026-08-19): 자막제거는 소스 1편당 수 분씩 걸려 전체 25분도 정상이다.
             # 그동안 화면에 아무 변화가 없어 "멈췄나"로 읽혔다(사장님 제보의 절반이 이것).
             # 끝난 소스 수 / 전체를 내려보내 "2/5 완료"로 움직이는 걸 보이게 한다.
-            "clean_done": len(job.get("clean_sources") or {}),
+            "clean_done": (len(job.get("clean_sources") or {})
+                           or (len(job.get("urls") or []) if clean_status == "ready" else 0)),
             "clean_total": len(job.get("urls") or []),
             # 지워진 자막 위치(2026-07-25): 5단계 꾸미기가 자막 자동정렬·'원본 자막 있던 자리' 마커에 쓴다.
             # 좌표(%)뿐이라 안전 — 소스 경로 등 내부정보는 안 실린다.
@@ -4830,18 +4898,63 @@ def api_produce_mix_clean_thumb(job_id: str, kind: str = "original",
     si = max(0, int(si))
     pos = min(0.98, max(0.02, float(pos)))
     vid = _source_video_id(si)
+    # ★전/후는 **같은 장면**이어야 한다(2026-08-27 사장님 "영상 좌우가 달라").
+    #   완성본 1편만 청소하면 좌우 파일의 시간축이 서로 다르다. pos를 그대로 쓰면
+    #   BEFORE는 원본 50% 지점, AFTER는 완성본에서 쓰인 지점이라 딴 화면이 나란히 뜬다.
+    #   실측 job 16f1b398f7cd: s3은 원본 5.4~11.1초만 쓰였는데 BEFORE는 원본 50%(번호판 벽),
+    #   AFTER는 완성본 34.5%(흰 벽) — 전혀 다른 그림이었다.
+    #   그래서 pos를 '완성본에 실제로 쓰인 구간 안의 상대 위치'로 해석한다
+    #   (앞/가운데/뒷부분 버튼도 그 장면 안에서 움직인다).
+    #   소스별 청소본이 있던 옛 경로는 좌우 길이가 같아 종전대로 pos를 쓴다.
+    _src_sec = _final_sec = None
+    if not (job.get("clean_sources") or {}):
+        # ★짝은 **컷(clip) 단위**로 맞춘다 — 비트 하나에 재료가 여럿 섞이므로
+        #   비트 전체를 그 소스 자리로 보면 다른 소스 구간을 짚는다(실측 job 9a3ff19fbceb
+        #   beat9: s0·s4·s0·s4 4조각). 계획은 렌더가 쓰는 plan_beat_clips_for에서 온다.
+        _plan = job.get("edit_plan") or {}
+        _tts = {b["beat_idx"]: b["tts_path"] for b in (_plan.get("beats") or [])
+                if b.get("tts_path")}
+        try:
+            _sd = {v: (frame_extract._probe_duration(pth) or 0.0)
+                   for v, pth in _resolve_sources(job, work).items()}
+        except Exception:      # noqa: BLE001
+            _sd = {}
+        _src_sec, _final_sec = mix_pipeline.final_pair_for_source(
+            _plan, vid, pos, tts_paths=_tts, src_durs=_sd)
     if kind == "clean":
-        src = (job.get("clean_sources") or {}).get(vid)
-        if job.get("clean_status") != "ready" or not src or not Path(src).exists():
+        if job.get("clean_status") != "ready":
             return JSONResponse(status_code=404, content={"ok": False, "error": "클린 소스 없음"})
+        src = (job.get("clean_sources") or {}).get(vid)
+        if not src or not Path(src).exists():
+            # ★소스별 청소본이 없다 = 완성본 1편만 청소하는 경로다(2026-08-27).
+            #   청소 결과는 조립된 완성본 하나뿐이라, 그 안에서 이 소스가 나오는
+            #   지점을 찾아 프레임을 뽑는다. 못 찾으면 원본과 같은 pos 비율로 뽑는다.
+            #   (안 고치면 AFTER 칸이 통째로 404 — 화면이 검게 나온다)
+            src = job.get("clean_video_path")
+            if not src or not Path(src).exists():
+                return JSONResponse(status_code=404, content={"ok": False, "error": "클린 소스 없음"})
+            # ★자리를 못 찾으면 **주지 않는다**(사장님 "다른 영상이 나옴" 제보 2건).
+            #   None = 이 소스가 완성본 컷 어디에도 안 들어갔다는 뜻이다. 종전엔 그냥
+            #   넘어가 원본 기준 pos를 완성본 전체에 적용해 **딴 그림**을 보여줬다.
+            #   조용한 폴백이 틀린 그림을 그리느니 404로 사실을 알린다(0순위 규칙).
+            if _final_sec is None:
+                return JSONResponse(status_code=404,
+                                    content={"ok": False, "error": "완성본에 안 쓰인 소스",
+                                             "reason": "not_in_final"})
     else:
         try:
             src = _resolve_sources(job, work)[vid]
         except Exception:
             return JSONResponse(status_code=404, content={"ok": False, "error": "소스 없음"})
     dur = frame_extract._probe_duration(src) or 2.0
-    frame = frame_extract.extract_frame_at(src, work / "clean_thumb", dur * pos,
-                                           filename=f"{kind}_{si}_{int(pos * 100)}.jpg")
+    # 좌우 모두 **초**를 직접 안다 → 같은 장면이 나란히 선다.
+    if kind == "clean":
+        at = _final_sec if _final_sec is not None else dur * pos
+    else:
+        at = _src_sec if _src_sec is not None else dur * pos
+    at = min(max(float(at), 0.0), max(dur - 0.05, 0.0))
+    frame = frame_extract.extract_frame_at(src, work / "clean_thumb", at,
+                                           filename=f"{kind}_{si}_{int(pos * 100)}_{int(at * 100)}.jpg")
     if not frame:
         return JSONResponse(status_code=404, content={"ok": False, "error": "프레임 추출 실패"})
     return FileResponse(str(frame), media_type="image/jpeg")
@@ -5664,6 +5777,29 @@ def api_mix_capcut(job_id: str, base: str = ""):
         if _cp and Path(_cp).exists():
             source_video_paths[_vid] = _cp
     timeline = _beat_timeline(plan, tts_paths)
+    # ★소스별 청소본이 없다 = 완성본 1편만 청소한 경로다(2026-08-27 사장님 B안 확정).
+    #   그대로 두면 원본이 나가 **자막이 살아난다**. 완성본을 컷별로 잘라 그 조각을 쓴다.
+    #     - VMake를 다시 안 부른다 → 추가 과금 0, 대기 0
+    #     - 대신 캡컷에서 컷을 원본 범위 밖으로 **늘리는** 편집은 못 한다(조각 뒤가 없다)
+    #   자르기가 실패하면 원본으로 두지 않고 **막는다** — 자막 남은 결과물을 조용히 내보내는
+    #   것이 더 나쁘다(사장님이 캡컷에서야 알게 된다).
+    if job.get("subtitle_removal") and not (job.get("clean_sources") or {}):
+        _cf = job.get("clean_video_path")
+        if _cf and Path(_cf).exists():
+            try:
+                _clips = mix_pipeline.split_final_into_beat_clips(_cf, timeline, work)
+            except Exception as e:      # noqa: BLE001
+                import traceback as _tb
+                _tb.print_exc(file=sys.stderr)
+                return JSONResponse(status_code=500, content={
+                    "ok": False, "error": "자막 없는 조각을 만들지 못했습니다: %s" % e})
+            if _clips:
+                source_video_paths = dict(_clips)
+                plan = mix_pipeline.plan_using_beat_clips(plan, _clips, timeline)
+                timeline = _beat_timeline(plan, tts_paths)
+        elif job.get("clean_status") == "ready":
+            return JSONResponse(status_code=409, content={
+                "ok": False, "error": "자막 없는 완성본이 아직 없어요 — 3단계 완성본 만들기를 먼저 해주세요"})
     out_root = work / "capcut"
     out_root.mkdir(parents=True, exist_ok=True)
     # ★완성본도 함께 보낸다(2026-08-23 사장님 "완성본 조각들이 그대로 옮겨지고").
@@ -5707,14 +5843,43 @@ def _thumb_dir(job_id: str):
     return _THUMB_DIR / safe
 
 
+def _grid_phase(round_no):
+    """라운드 → 구간 안에서 찍을 지점(0~1). 라운드마다 격자를 **반씩 어긋나게** 한다.
+
+    0.5 → 0.25 → 0.75 → 0.125 → 0.625 … (van der Corput 수열, 밑 2). 이렇게 하면
+    [다른 장면 더 뽑기]를 누를수록 **아직 안 본 지점**이 나온다 — 난수로 하면 같은 자리가
+    다시 걸려 "눌러도 그대로"가 된다(사장님이 겪을 그 증상).
+    """
+    try:
+        r = max(0, int(round_no))
+    except (TypeError, ValueError):
+        return 0.5
+    if r == 0:
+        return 0.5
+    v, denom = 0.0, 1.0
+    n = r + 1                       # 1번째 항이 0.5가 되게 맞춘다
+    while n > 0:
+        denom *= 2
+        v += (n % 2) / denom
+        n //= 2
+    return min(0.95, max(0.05, v))
+
+
 @app.post("/api/produce/thumb/frames")
 def api_thumb_frames(body: dict):
-    """5단계 썸네일 — 믹스 결과 영상을 등분해 후보 프레임 10장.
+    """7단계 썸네일 — 믹스 결과 영상을 등분해 후보 프레임(기본 16장).
 
     자막이 박히지 않은 배경(자막제거본·미리보기)에서 뽑는다(설계 Q1) — 썸네일 텍스트는
     위에 새로 얹으므로 배경 자막은 방해다. 이미 뽑아뒀으면 재추출하지 않는다.
+
+    body.more=true — **[다른 장면 더 뽑기]**(2026-08-27 사장님). 같은 등분에서 찍는 지점만
+    어긋나게 해 새 16장을 준다. 라운드는 DB(thumb.grid_round)에 남아 새로고침해도 이어진다.
+    ⚠️원본 영상에서 뽑지 않는다 — 원본은 자막이 안 지워져 글자가 남는다. 글자 유무를
+      자동 판별하려면 OCR이 필요한데 이 프로젝트엔 없다(sub_region은 '지워진 자리' 감지용이라
+      원본 단독 판정은 못 한다). 그래서 자막 없는 완성본에서 **더 많이** 뽑는 쪽으로 간다.
     """
     job_id = str(body.get("job_id") or "")
+    want_more = bool(body.get("more"))
     job = Store(DB_PATH).get_mix_job(job_id)
     if not job:
         return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
@@ -5762,9 +5927,20 @@ def api_thumb_frames(body: dict):
     # 그래서 추출 시점 영상의 mtime_ns+size를 서명으로 같이 저장해두고 비교한다.
     # (해시는 과하다 — 영상이 수십 MB.)
     vstat = Path(video).stat()
-    video_sig = f"{vstat.st_mtime_ns}:{vstat.st_size}"
-
     thumb = job.get("thumbnail") or {}
+    # ★라운드를 서명에 넣는다 — 안 넣으면 [더 뽑기]로 그림이 바뀌어도 URL이 같아
+    #   브라우저가 옛 이미지를 그대로 보여준다(2026-07-30에 이미 겪은 캐시 함정).
+    grid_round = int(thumb.get("grid_round") or 0)
+    if want_more:
+        grid_round += 1
+        thumb["grid_round"] = grid_round
+    # ★장수(n)도 서명에 넣는다(2026-08-27 사장님 "아직 그대로 아닌가").
+    #   프레임 목록은 DB(thumbnail.frames)에 남아 **video_sig가 같으면 그대로 재사용**한다.
+    #   그래서 GRID_FRAMES_DEFAULT를 16 → 12로 바꿔도 **이미 만든 작업은 옛 장수 그대로**였다
+    #   — 배포는 됐는데 화면은 안 바뀌니 "아직 그대로"로 보인다. 장수가 바뀌면 서명이 달라져
+    #   자동으로 다시 뽑는다(사장님이 [다른 장면 더 뽑기]를 눌러야만 바뀌던 것 제거).
+    video_sig = (f"{vstat.st_mtime_ns}:{vstat.st_size}:r{grid_round}"
+                 f":n{GRID_FRAMES_DEFAULT}")
 
     # ★이전 배경으로 만든 결과 표시(2026-08-03): 자막제거 전(preview 배경)에 생성한 썸네일이
     # 자막제거 후에도 갤러리에 남는다 — 데이터는 사장님 소유라 안 지우고, 어떤 결과가 지금
@@ -5775,7 +5951,7 @@ def api_thumb_frames(body: dict):
         return [n for n in (thumb.get("results") or []) if rs.get(n) != video_sig]
 
     existing = sorted(out_dir.glob("grid_*.jpg")) if out_dir.exists() else []
-    if existing and thumb.get("video_sig") == video_sig:
+    if not want_more and existing and thumb.get("video_sig") == video_sig:
         meta = thumb.get("frames") or []
         if len(meta) == len(existing):
             return {"ok": True, "frames": meta, "stale_results": _stale_results()}
@@ -5789,7 +5965,8 @@ def api_thumb_frames(body: dict):
     # 추출이 RuntimeError로 실패하면(ffmpeg 일시 오류 등) 폴더는 이미 비었는데 DB의
     # frames는 죽은 URL 10개를 그대로 들고 있어 "실패하면 이전보다 나빠짐"이 됐다.
     try:
-        pairs = extract_grid_frames(video, out_dir, n=10)
+        pairs = extract_grid_frames(video, out_dir, n=GRID_FRAMES_DEFAULT,
+                                    phase=_grid_phase(grid_round))
     except RuntimeError as e:
         return JSONResponse(status_code=502, content={"ok": False, "error": str(e)})
 
@@ -6450,7 +6627,8 @@ async def api_lens_search(request: Request, frame: UploadFile = File(...),
     store = Store(DB_PATH)
     now = datetime.now(timezone.utc)
     month = now.strftime("%Y-%m")
-    _over = _lens_quota_guard(store, month)
+    _over = _lens_quota_guard(store, month,
+                              getattr(request.state, "customer_id", 0))
     if _over:
         return _over
     # 유료게이트: 전역 상한(다계정이 SerpApi를 태우는 것 실차단) → 계정별 일일 상한.
@@ -6495,7 +6673,11 @@ async def api_lens_search(request: Request, frame: UploadFile = File(...),
         #   caption=None으로 넘겨 **두 번 채점하지 않는다**.
         await asyncio.to_thread(_lens_judge, rows, source_caption)
         items = _lens_finalize(rows, store, caption=None)
-        store.bump_lens(month)
+        # ★실제 SerpApi 호출 수만큼 센다(로케일 수만큼 나간다). 1로 세면 잔량이
+        #   조용히 마른다 — 2026-08-27 실측 452회 과소집계.
+        _n = diag.get("serpapi_calls", 1)
+        if _n:                      # 0 = 키가 없어 아예 못 때렸다 → 한도를 깎지 않는다
+            store.bump_lens(month, _n)
         # diag: 인스타 결과가 0/왕창으로 튀는 이유를 화면에서 갈라 보기 위한 계측(2026-08-14).
         return {"ok": True, "items": items, "count": len(items), "diag": diag}
     except Exception:
@@ -6648,7 +6830,8 @@ def api_lens_trace_url(request: Request, body: dict):
         return blocked
     store = Store(DB_PATH)
     month = datetime.now(timezone.utc).strftime("%Y-%m")
-    _over = _lens_quota_guard(store, month)
+    _over = _lens_quota_guard(store, month,
+                              getattr(request.state, "customer_id", 0))
     if _over:
         return _over
     # 유료게이트: trace_url도 /api/lens/search와 같은 SerpApi 비용 → 같은 lens 크레딧을 건다
@@ -6680,9 +6863,11 @@ def api_lens_trace_url(request: Request, body: dict):
         if not image_url:
             return JSONResponse(status_code=502, content={
                 "ok": False, "error": "영상/썸네일을 가져오지 못했습니다(봇차단·만료·미지원 URL)"})
+        _diag = {}      # SerpApi 실제 호출 수를 받아 카운터에 그대로 반영한다
         items = _lens_finalize(
             search_similar_videos(image_url, api_key=_lens_api_keys(cid),
-                                  source_caption=caption), store, caption=caption)
+                                  source_caption=caption, stats=_diag),
+            store, caption=caption)
         # 📕🎬 중국앱 키워드 후보(비전). 렌즈 유사영상은 프론트가 프레임으로 뽑지만 trace는
         # 프레임이 서버에만 있다(유튜브는 아예 썸네일 URL·caption 없음) → 서버가 image_url에서
         # 바이트를 받아 직접 만든다. cn_search_candidates는 image_bytes가 없으면 빈 리스트라
@@ -6693,7 +6878,9 @@ def api_lens_trace_url(request: Request, body: dict):
             cn_cands = (cn_search_candidates(img_bytes, caption) or {}).get("candidates", [])
         except Exception:
             pass
-        store.bump_lens(month)
+        _n = _diag.get("serpapi_calls", 1)
+        if _n:                      # 0 = 키가 없어 아예 못 때렸다 → 한도를 깎지 않는다
+            store.bump_lens(month, _n)
         ok = True
         return {"ok": True, "items": items, "count": len(items), "source_url": url,
                 "caption": caption, "cn_candidates": cn_cands}
@@ -8948,12 +9135,14 @@ def access_level(customer_id, now=None):
     if not cust:
         return "ranking_only"
     if cust.get("approved_at") is None:
-        # 🎁 무료체험 이벤트: 미승인이라도 가입 후 체험창(trial_ends_at) 안이면 full로 맛보기.
+        # 🎁 무료체험 이벤트: 미승인이라도 가입 후 체험창(trial_ends_at) 안이면 맛보기.
         #    창 밖이면 대기실 전면차단(pending). NULL(기존고객)은 0 취급 → 즉시 pending.
+        # ★2026-08-26 사장님 "체험중은 없애고 체험판 랭킹으로": 맛보기도 **랭킹만**이다.
+        #   종전엔 여기서 full을 줘서 가입만 하면 제작소가 통째로 열렸다(실측 6명).
         if now is None:
             now = int(datetime.now(timezone.utc).timestamp())
         if now < (cust.get("trial_ends_at") or 0):
-            return "full"
+            return "ranking_only"
         return "pending"
     if cust.get("plan") == "pro":
         return "full"
@@ -8966,8 +9155,12 @@ def access_level(customer_id, now=None):
         return "ranking_only"
     if now is None:
         now = int(datetime.now(timezone.utc).timestamp())
+    # ★full_access_until은 '체험 창'이 아니라 **입금 승인으로 부여한 이용 기간**이다
+    #   (store.approve_customer(period_days, amount, method)가 세운다).
+    #   여기를 지우면 돈 내고 승인받은 고객이 랭킹만으로 떨어진다 — 지우지 마라.
+    #   결제 없이 기간만 주던 '(구)체험중'은 _admin_set_plan 쪽에서 막는다.
     if now < (cust.get("full_access_until") or 0):
-        return "full"                       # 무료 체험 창
+        return "full"                       # 승인된 이용 기간 안
     return "ranking_only"
 
 
@@ -9050,15 +9243,10 @@ def check_and_count(customer_id, op):
     #   → limit_script 10건. 예열(prewarm)은 customer_id를 문자열로 넘기므로, 하루 10건을 넘는
     #   순간 담긴 영상의 대본 예열이 전부 skipped_limit로 조용히 스킵됐다(실측: 3개 담았는데
     #   유튜브 2개만 대본이 생기고 인스타·샤오홍슈는 0.03초 만에 done 처리).
-    is_paid = (_as_cid(customer_id) == 0) or (st.get_customer(customer_id) or {}).get("plan") == "pro"
-    if op == "lens" and _lens_key_count(customer_id):
-        # 자기 키로 검색하는 회원 — 비용을 본인이 내므로 **낸 키 개수만큼** 한도를 준다.
-        # (2026-08-26 사장님 지시로 '키 있으면 20회 고정' → '키 1개당 10회'로 바꿨다)
-        key, dflt = None, None
-    elif is_paid:
-        key, dflt = f"limit_{op}_pro", _CREDIT_PRO_DEFAULTS.get(op, 100)
-    else:
-        key, dflt = f"limit_{op}", _CREDIT_DEFAULTS.get(op, 5)
+    # ★등급 판정과 한도 설정키를 _limit_tier 한 곳에서 가져온다 — 관리페이지가
+    #   보여주는 한도(_effective_limits)와 여기서 막는 한도가 갈라지면
+    #   "pro인데 10회에서 막힌다"를 아무도 못 찾는다(0순위-B, 2026-08-27 실사고).
+    key, dflt, _tier = _limit_tier(st, customer_id, op)
     if key is None:                       # 자기 키 회원 — 키 개수로 정한다
         limit = _lens_limit_for(st, customer_id, _CREDIT_DEFAULTS["lens"])
     else:
@@ -9238,6 +9426,51 @@ def _lens_limit_for(store, customer_id, fallback):
     return per * n
 
 
+def _limit_tier(store, customer_id, op):
+    """이 회원의 op 한도가 **어느 규칙에서** 나오는지 한 곳에서 정한다.
+    → (setting_key, default, tier_label). setting_key=None이면 '키 개수로 계산'.
+
+    ★check_and_count가 이 함수를 쓴다 — 막는 쪽과 보여주는 쪽이 같은 판단을 두 번
+      적으면 반드시 어긋난다(0순위-B). 실제로 그래서 사고가 났다:
+      화면은 "pro"라는데 게이트는 무료와 같은 10회를 걸고 있었다.
+    """
+    if op == "lens" and _lens_key_count(customer_id):
+        return None, None, "byok"          # 자기 키 — 키 개수 × per_key
+    is_paid = ((_as_cid(customer_id) == 0)
+               or (store.get_customer(customer_id) or {}).get("plan") == "pro")
+    if is_paid:
+        return f"limit_{op}_pro", _CREDIT_PRO_DEFAULTS.get(op, 100), "pro"
+    return f"limit_{op}", _CREDIT_DEFAULTS.get(op, 5), "free"
+
+
+def _effective_limits(store, customer_id):
+    """이 회원에게 **실제로 걸려 있는** 하루 한도. 화면이 근거까지 같이 보여주도록
+    {op: {limit, tier, source, fallback}}를 돌려준다.
+
+    ★fallback=True는 "설정칸이 비었거나 숫자가 아니라서 코드 기본값으로 떨어졌다"는 뜻.
+      2026-08-27 실사고가 바로 이것이다 — limit_lens_pro가 빈 문자열('')이라
+      int('')가 ValueError로 터지고 조용히 10회가 적용돼, pro 회원이 무료와 같은
+      한도에서 막혔다. 아무 데도 안 드러나 사장님이 SSH로 DB를 뒤져야 원인을 알았다.
+      그래서 화면에 ⚠️로 띄운다 — 조용한 기본값이 다시 생기지 않게.
+    """
+    out = {}
+    for op in ("lens", "render", "script"):
+        key, dflt, tier = _limit_tier(store, customer_id, op)
+        if key is None:                       # BYOK — 키 개수로 계산, 설정칸 없음
+            out[op] = {"limit": _lens_limit_for(store, customer_id,
+                                                _CREDIT_DEFAULTS["lens"]),
+                       "tier": tier, "source": f"SerpApi 키 {_lens_key_count(customer_id)}개",
+                       "fallback": False}
+            continue
+        raw = store.get_setting(key, None)
+        try:
+            limit, fell = int(raw), False
+        except (TypeError, ValueError):        # 빈칸·공백·글자 → 코드 기본값
+            limit, fell = dflt, True
+        out[op] = {"limit": limit, "tier": tier, "source": key, "fallback": fell}
+    return out
+
+
 def _lens_has_own_key(customer_id):
     """이 회원이 **자기 SerpApi 키**로 렌즈를 쓰는가.
 
@@ -9319,7 +9552,10 @@ def _api_me(request: Request):
         # 🔑 자기 SerpApi 키를 낸 회원은 렌즈 한도가 다르다 — check_and_count와 **같은 규칙**.
         #   여기가 어긋나면 "20회라더니 10회에서 막힌다"가 된다(0순위-B).
         if _lens_key_count(cid):
-            limits["lens"] = _lens_limit_for(store, cid, limits["lens"])
+            # ★store가 아니라 st — 이 함수의 Store는 st다(모듈 전역 store는 없다).
+            #   2026-08-26까지 `store`를 넘겨 NameError→/api/me 500이 났고, 사이드바가
+            #   응답을 못 받아 계정 카드(오늘 사용량·로그아웃)가 통째로 안 떴다.
+            limits["lens"] = _lens_limit_for(st, cid, limits["lens"])
     # 가입 며칠째 — created_at은 UTC 문자열(datetime('now') 또는 ISO). 파싱 실패 시 None.
     member_days = None
     ca = (cust or {}).get("created_at") if cust else None
@@ -9555,6 +9791,9 @@ def _admin_customers(request: Request):
         cu["level"] = access_level(_cid)
         _u = usage_map.get(_cid, {})
         cu["usage"] = {op: _u.get(op, 0) for op in ("lens", "render", "script")}
+        # 이 회원에게 **실제로 걸린** 한도 + 그 근거. 화면이 "10/10"만 보여주면
+        # 10이 어디서 온 값인지 알 수 없다(2026-08-27 pro가 조용히 10회로 떨어진 사고).
+        cu["limits"] = _effective_limits(st, _cid)
         cu["made_today"] = made_map.get(_cid, {"made": 0, "charged": 0})   # 한국시간 오늘 실측
         cu["access_7d"] = access_map.get(_cid, {"ips": 0, "devices": 0})  # 최근 7일 고유 수
         cu["is_admin"] = _is_admin(_cid)                        # 관리자 배지용
@@ -9873,11 +10112,9 @@ async def _admin_set_plan(request: Request):
         until = int(datetime.now(timezone.utc).timestamp()) + int(days or 0) * 86400
         st.set_plan(cid, "trial", full_access_until=until)
         granted = _trial_topup(st, cid)                 # 렌즈도 포인트를 쓴다 → 연료까지 준다
-    elif days:
-        until = int(datetime.now(timezone.utc).timestamp()) + int(days) * 86400
-        st.set_plan(cid, "free", full_access_until=until)   # (구)전기능 체험 창
-        granted = _trial_topup(st, cid)                 # ★등급만 열면 잔액 0으로 402가 난다
     else:
+        # ★(구)전기능 체험 창(free+days)은 폐지했다(2026-08-26 사장님).
+        #   기간을 주고 싶으면 plan="trial"을 쓴다 — 랭킹만이라는 뜻이 이름에 담긴다.
         st.set_plan(cid, "free", full_access_until=0)   # 즉시 무료(랭킹만)로 내림
     import sys as _s
     print(f"[admin] set_plan cid={cid} plan={plan} days={days} topup={granted}", file=_s.stderr)  # 변경 로그
@@ -9974,6 +10211,35 @@ async def _admin_points(request: Request):
     import sys as _s
     print(f"[admin] points cid={cid} delta={delta} balance={bal}", file=_s.stderr)
     return {"ok": True, "balance": pricing.to_display(bal)}
+
+
+@app.post("/api/admin/usage/reset")
+async def _admin_usage_reset(request: Request):
+    """오늘 일일 사용횟수를 0으로 되돌린다 (2026-08-27).
+
+    ★왜 필요한가: 등급(set_plan)·포인트(admin/points)는 버튼이 있는데 **일일 사용횟수만**
+      되돌릴 방법이 UI에도 API에도 없었다. 실제로 김데릭님(cid 241)이 렌즈 10/10을 쓴 뒤
+      입금하셨을 때, 사장님이 서버에 SSH로 붙어 sqlite를 직접 UPDATE해야 했다.
+      운영 중 흔한 일인데 매번 DB를 손으로 만지는 건 위험하다.
+    body: {customer_id, op}  op 생략 시 lens/render/script 전부."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    body = await request.json()
+    try:
+        cid = int(body.get("customer_id"))
+    except (TypeError, ValueError):
+        return JSONResponse({"error": "customer_id 필요"}, status_code=422)
+    ops = [body["op"]] if body.get("op") else ["lens", "render", "script"]
+    bad = [o for o in ops if o not in ("lens", "render", "script")]
+    if bad:
+        return JSONResponse({"error": f"모르는 작업: {bad[0]}"}, status_code=422)
+    st = Store(DB_PATH)
+    day = _today_utc()
+    cleared = {o: st.usage_reset(cid, o, day) for o in ops}
+    print(f"[admin] usage reset cid={cid} day={day} cleared={cleared}", file=sys.stderr)
+    return {"ok": True, "cleared": cleared, "day": day,
+            "usage": {o: st.usage_get(cid, o, day) for o in ("lens", "render", "script")}}
 
 
 @app.post("/api/admin/approve")
@@ -10097,6 +10363,27 @@ def _ops_page(request: Request):
                         media_type="text/html; charset=utf-8")
 
 
+@app.get("/api/admin/work-lines")
+def _api_admin_work_lines(request: Request):
+    """관리자 작업라인 — **지금 누가 무엇을 하고 있나**(2026-08-26 사장님 지시).
+
+    capacity가 숫자만 주던 것을 사람이 읽는 줄로 바꾼다: 진행·대기·최근완료(실패 포함).
+    ★관리자 전용이다 — 고객 이름이 들어 있다.
+    """
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    store = Store(DB_PATH)
+    out = store.admin_work_lines()
+    # 워커·부하는 이미 capacity가 세는 곳이 있다(0순위-B: 여기서 다시 세지 않는다).
+    try:
+        from shopping_shorts import capacity_watch
+        out["capacity"] = capacity_watch.sample(DB_PATH)
+    except Exception:      # noqa: BLE001 — 관측이 서비스를 죽이면 안 된다
+        out["capacity"] = None
+    return {"ok": True, **out}
+
+
 @app.get("/api/admin/capacity")
 def _api_capacity(request: Request, days: int = 14):
     """관측판 데이터. 지금 상태(실시간 1회 표본) + 날짜별 최대치 + 판정 한 줄."""
@@ -10108,9 +10395,15 @@ def _api_capacity(request: Request, days: int = 14):
         now = capacity_watch.sample(DB_PATH)     # 열 때마다 한 점 더 찍는다(공짜에 가깝다)
     except Exception as e:      # noqa: BLE001 — 관측이 서비스를 죽이면 안 된다
         return {"ok": False, "error": str(e)}
+    try:
+        wait = capacity_watch.waiting(DB_PATH)
+    except Exception:      # noqa: BLE001 — 대기 목록이 없다고 관측판이 죽으면 안 된다
+        wait = {"rows": [], "by_customer": []}
     return {"ok": True, "now": now,
             "daily": capacity_watch.daily(DB_PATH, days=max(1, min(days, 60))),
-            "verdict": capacity_watch.verdict(DB_PATH, cores=now.get("cores"))}
+            "waiting": wait,
+            "verdict": capacity_watch.verdict(DB_PATH, cores=now.get("cores"),
+                                              now_queued=now.get("queued"))}
 
 
 @app.get("/insta_fill_comment.user.js", include_in_schema=False)
@@ -11738,7 +12031,13 @@ def api_produce_source_brief(request: Request, shortcode: str):
             "shot_role": s.get("shot_role") or "기타",
             "chars": len((s.get("text") or "").strip()),
         })
-    return {"ok": True, "brief": data.get("source_brief") or {}, "segments": segs}
+    # ★가로형(롱폼) 여부는 **서버가 판정해서** 내려준다(2026-08-27 사장님 지시).
+    #   프론트가 w>h를 다시 계산하면 판단이 두 곳이 된다(0순위-B) — 실제 차단을 하는
+    #   mix_pipeline._block_landscape와 어긋나면 "화면은 괜찮다는데 제작은 실패"가 된다.
+    _w, _h = data.get("video_w"), data.get("video_h")
+    return {"ok": True, "brief": data.get("source_brief") or {}, "segments": segs,
+            "video_w": _w, "video_h": _h,
+            "landscape": bool(_w and _h and _w > _h)}
 
 
 @app.get("/api/produce/aipick")
@@ -11819,6 +12118,10 @@ def _autoload_reason_ko(err):
     if not e:
         return ""
     low = e.lower()
+    # ★AI 서버 무응답(504/499)은 이미 사장님 말로 적혀 나온다 — 다시 감싸면
+    #   "영상 분석에 실패했습니다"가 앞에 붙어 또 영상 탓처럼 읽힌다(2026-08-27).
+    if "AI 분석 서버" in e or "AI 서버" in e:
+        return e
     if "cookie" in low or "login" in low or "sign in" in low:
         return "이 사이트가 로그인을 요구해 영상을 받지 못했습니다"
     if "private" in low or "unavailable" in low or "removed" in low:
@@ -11881,7 +12184,8 @@ def api_produce_autoload(request: Request, body: dict):
     body: {items:[{url, shortcode?, video_url?, name?, thumbnail?, caption?, category?,
                    followers?, comments?}]}
     반환: {ok, results:[{shortcode, status}], added} — status: already|added|skipped_latched|
-          failed_download|failed_empty|failed_limit|failed_points(포인트 부족).
+          failed_download|failed_empty|failed_limit|failed_points(포인트 부족)|
+          deferred_api(AI 서버 무응답 — 영상 탓이 아니라 래치를 되돌리고 다음에 재시도).
     ⚠️ 이 엔드포인트는 **자기 자신이나 프론트 재귀를 유발하지 않는다**. 프론트는 페이지
        로드당 1회만 부르고, 응답 뒤 aipick을 딱 한 번 다시 조회한다."""
     cid = _cid(request)
@@ -12000,6 +12304,20 @@ def api_produce_autoload(request: Request, body: dict):
             #   제품 영상이 여기 걸렸다. 화면 태깅만 나와도 쓸 수 있는 재료다.
             #   빈 대본이 캐시로 굳는 것은 has_usable_result가 그대로 막는다.
             if not has_usable_result(result):
+                # ★빈 결과의 이유를 갈라서 말한다(2026-08-27). 예전엔 무조건 "영상이
+                #   비었다"로 적어 **AI 서버가 죽은 것을 영상 탓으로 돌렸다**
+                #   (실측: 504 DEADLINE_EXCEEDED·499 CANCELLED). API 장애면 영상은
+                #   멀쩡하므로 래치를 되돌려 다음에 온전히 다시 시도하게 한다
+                #   — deferred_nokey·busy와 같은 모양.
+                if empty_reason(result) == "api":
+                    e["status"] = "deferred_api"
+                    e["error"] = ("AI 분석 서버가 제때 응답하지 못했어요 — 영상 문제가 "
+                                  "아니니 잠시 후 다시 시도해 주세요")
+                    e["rollback_latch"] = True
+                    e["result"] = result
+                    e["category"] = item.get("category") or categorize(
+                        item.get("name") or "", item.get("caption") or "") or None
+                    return e
                 e["status"] = "failed_empty"
                 e["error"] = "쓸 만한 재료가 안 나왔어요(화면·말 모두 비어 있음)"
                 # ★분석 결과는 남긴다(2026-08-17, 쿠팡선수집 세션) — 저장(캐시)은 안 한다.
@@ -12728,17 +13046,10 @@ def api_produce_mix_caplines(job_id: str, body: dict):
         return err
     narr = hit.get("narration", "")
 
-    def _cmp_key(txt):
-        """비교용 정규화 — 공백과 **줄 끝에서 떼는 문장부호**를 무시한다.
-
-        ★실측(2026-08-25 라이브): _caption_segments가 마침표를 떼기 때문에
-          narration "여러분 고등어구이 무조건 하세요." 와 줄들을 그대로 이어붙인
-          "여러분고등어구이 무조건 하세요" 가 절대 같아질 수 없었다 → 어떤 장면도
-          저장이 안 됐다. 화면에서 직접 눌러보지 않았으면 못 봤을 결함이다.
-        ★떼는 기준을 여기서 새로 정하지 않고 video_assemble의 목록을 그대로 빌린다
-          (두 벌로 두면 자막 규칙이 바뀔 때 여기만 남아 어긋난다)."""
-        drop = set(video_assemble._CAP_TRIM_TAIL) | set(chr(32)+chr(9)+chr(10)+chr(13))
-        return "".join(ch for ch in (txt or "") if ch not in drop)
+    # 대조 기준은 렌더가 쓰는 그 함수 한 곳에서만 정한다(0순위-B).
+    # ★2026-08-26: 여기(저장)와 _caption_segments(렌더)가 기준이 달라, 저장은 통과하는데
+    #   렌더는 preset을 버리고 규칙 폴백으로 내려갔다 = "줄 저장했는데 최종렌더 반영 안 됨".
+    _cmp_key = video_assemble.cap_preset_key
 
     if body.get("reset"):
         # '↩ 자동으로' — 사람이 정한 줄을 지우고 규칙/AI 분할로 돌아간다.
@@ -12914,19 +13225,65 @@ def api_produce_mix_poster(job_id: str):
     #      — beatframe은 2026-07-21에 이미 고친 버그가 여기만 남아 있었다.
     #   ③ 캐시가 poster.jpg 한 이름이라 편성·청소를 바꿔도 옛 그림이 그대로였다.
     #   그래서 계산을 새로 하지 않고 _extract_beat_frame 한 곳에 맡긴다(0순위-B).
-    clean_map = job.get("clean_sources") or {}
+    clean_map, _cfin, _crat, _ctag = _clean_frame_src(job, work, 0)
     _seg0 = (video_assemble._beat_material(beats[0]) or [beats[0].get("primary") or {}])[0] or {}
     _key = f"{_seg0.get('video_id') or '-'}@{round(float(_seg0.get('start') or 0), 2)}"
     _key = re.sub(r"[^0-9a-zA-Z@.\-]", "_", _key)
-    poster = work / f"poster_{_key}{'_clean' if clean_map else ''}.jpg"
+    poster = work / f"poster_{_key}{_ctag}.jpg"
     if not poster.exists():
-        _extract_beat_frame(work, beats[0], poster, clean_sources=clean_map)
+        _extract_beat_frame(work, beats[0], poster, clean_sources=clean_map,
+                            clean_final=_cfin, final_ratio=_crat)
     if not poster.exists():
         return JSONResponse(status_code=404, content={"ok": False, "error": "소스 영상 없음"})
     return FileResponse(str(poster), media_type="image/jpeg")
 
 
-def _extract_beat_frame(work, beat, out_path, clean_sources=None):
+def _clean_frame_src(job, work, beat_idx):
+    """**청소된 화면을 어디서 뜰지** 정하는 유일한 자리 (2026-08-27).
+
+    returns (clean_sources, clean_final, final_ratio, cache_tag)
+
+    두 경로가 있다:
+      소스별 청소본(clean_sources)  — 옛 방식. 그 소스에서 바로 뜬다.
+      완성본 1편 청소(clean_video_path) — 지금 기본. 소스별 파일이 없으므로
+        완성본에서 그 칸에 해당하는 지점을 뜬다.
+
+    ★왜 함수로 뽑았나(0순위-B): 08-27에 2단계를 완성본 청소로 바꾸면서 clean_sources가
+      비게 됐는데, 그걸 '자막제거 했나'의 판정으로 쓰던 화면들이 조용히 원본을 보여줬다
+      (poster·beatframe·clean_thumb). 판단이 흩어져 있어 한 곳을 고쳐도 나머지가 남았다.
+    """
+    clean_map = job.get("clean_sources") or {}
+    if clean_map:
+        return clean_map, None, None, "_clean"
+    if job.get("clean_status") != "ready":
+        return {}, None, None, ""
+    cvp = job.get("clean_video_path")
+    if not cvp or not Path(cvp).exists():
+        return {}, None, None, ""
+    # ★컷 단위로 찾는다(2026-08-27) — 비트에 재료가 여럿이면 비트 한가운데는
+    #   다른 소스 자리다. 화면에 나가는 최소 단위는 컷이다(clean_thumb과 같은 기준).
+    _plan = job.get("edit_plan") or {}
+    _tts = {b["beat_idx"]: b["tts_path"] for b in (_plan.get("beats") or [])
+            if b.get("tts_path")}
+    try:
+        _sd = {v: (frame_extract._probe_duration(pth) or 0.0)
+               for v, pth in _resolve_sources(job, work).items()}
+    except Exception:      # noqa: BLE001
+        _sd = {}
+    sec = mix_pipeline.final_time_of_beat(_plan, beat_idx, tts_paths=_tts, src_durs=_sd)
+    if sec is None:
+        # ★컷 계획을 못 세워도(소스 길이 조회 실패 등) **원본으로 떨어지면 안 된다** —
+        #   그러면 자막·워터마크가 화면에 그대로 나온다(08-27 회귀의 정체).
+        #   비트 근사로라도 청소본을 가리킨다. 정확도는 떨어져도 '지워진 그림'이다.
+        r = mix_pipeline._final_time_of_beat(_plan, beat_idx)
+        return {}, cvp, (r if r is not None else 0.5), "_clean"
+    _d = frame_extract._probe_duration(cvp) or 0.0
+    # 호출부는 '비율'을 받는다 — 파일 길이가 계획 합과 달라도 초를 비율로 환산해 넘긴다.
+    return {}, cvp, (min(0.98, max(0.02, sec / _d)) if _d > 0 else 0.5), "_clean"
+
+
+def _extract_beat_frame(work, beat, out_path, clean_sources=None,
+                        clean_final=None, final_ratio=None):
     """beat.primary 클립의 start 시각 프레임 1장을 9:16(1080x1920)로 out_path에 저장.
     소스 영상이 없으면 False(파일 안 만듦). 프로덕션 poster 로직을 비트 단위로 일반화.
 
@@ -12946,7 +13303,14 @@ def _extract_beat_frame(work, beat, out_path, clean_sources=None):
     vid = pr.get("video_id")
     ss = float(pr.get("start") or 0)
     src = None
-    if vid and clean_sources:
+    if clean_final and Path(clean_final).exists():
+        # 완성본 1편만 청소한 경로 — 소스별 파일이 없다. 완성본에서 그 칸 지점을 뜬다.
+        src = Path(clean_final)
+        if final_ratio is not None:
+            _d = frame_extract._probe_duration(str(src)) or 0.0
+            if _d > 0:
+                ss = _d * float(final_ratio)
+    if src is None and vid and clean_sources:
         _cp = clean_sources.get(vid)
         if _cp and Path(_cp).exists():
             src = Path(_cp)
@@ -13006,15 +13370,16 @@ def api_produce_mix_beatframe(job_id: str, i: int):
     # 2단계 자막제거를 밟았으면(clean_sources 존재) 청소본에서 프레임을 뜬다. 캐시 파일명도
     # 분리(_clean)해, 자막제거 전에 캐시된 원본 프레임이 남아 미리보기에 지운 자막이 살아
     # 있는 것처럼 보이는 캐시 오염을 막는다(2026-07-21 제보).
-    clean_map = job.get("clean_sources") or {}
+    clean_map, _cfin, _crat, _ctag = _clean_frame_src(job, work, i)
     # ★캐시 이름에 **그 칸이 실제로 쓰는 소스·시각**을 넣는다(2026-08-21). 종전엔 칸 번호만
     #   써서, 3단계에서 편성을 바꿔도 옛 프레임이 그대로 나왔다(조용한 어긋남).
     _seg0 = (video_assemble._beat_material(beats[i]) or [beats[i].get("primary") or {}])[0] or {}
     _key = f"{_seg0.get('video_id') or '-'}@{round(float(_seg0.get('start') or 0), 2)}"
     _key = re.sub(r"[^0-9a-zA-Z@.\-]", "_", _key)
-    out = work / "beatframes" / f"{i}_{_key}{'_clean' if clean_map else ''}.jpg"
+    out = work / "beatframes" / f"{i}_{_key}{_ctag}.jpg"
     if not out.exists():
-        _extract_beat_frame(work, beats[i], out, clean_sources=clean_map)
+        _extract_beat_frame(work, beats[i], out, clean_sources=clean_map,
+                            clean_final=_cfin, final_ratio=_crat)
     if not out.exists():
         return JSONResponse(status_code=404, content={"ok": False})
     return FileResponse(str(out), media_type="image/jpeg")

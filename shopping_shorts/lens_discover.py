@@ -28,7 +28,18 @@ _ACCOUNT_ENDPOINT = "https://serpapi.com/account"
 # 실잔량 조회 캐시(초). 렌즈 호출마다 SerpApi를 한 번 더 왕복하면 체감지연이 늘어나므로
 # 캐시한다. 렌즈 1클릭이 최대 _MAX_CALLS(3)회를 태우니 TTL 동안 최대 그만큼만 어긋난다.
 _QUOTA_TTL_S = float(os.environ.get("LENS_QUOTA_TTL", "600"))
-_quota_cache = {"at": 0.0, "left": None}
+# 키 조합별 잔량 캐시 {캐시키: {"at":…, "left":…}}.
+# ★한 통에 담으면 안 된다(2026-08-27) — 공용(0회)으로 채워진 값이 개인 키 판정에
+#   그대로 쓰여, 자기 키가 멀쩡한 회원이 계속 막힌다.
+_quota_cache = {}
+
+
+def _cache_key(keys):
+    """키 조합을 캐시 칸 이름으로. 키 원문은 남기지 않는다(로그·덤프 유출 방지)."""
+    import hashlib
+    if not keys:
+        return "owner"
+    return hashlib.sha256("|".join(sorted(keys)).encode()).hexdigest()[:16]
 _MAX_ATTEMPTS = 3          # 일시적 'no results'에 대한 재시도 횟수
 _RETRY_SLEEP = 2.5         # 재시도 전 대기(초) — 갓 호스팅된 이미지가 인덱싱될 시간
 
@@ -42,8 +53,13 @@ _PLATFORM_DOMAINS = [
 ]
 
 
-def account_searches_left(force=False):
-    """SerpApi **실잔량**(모든 키의 total_searches_left 합). 못 읽으면 None.
+def account_searches_left(force=False, keys=None):
+    """SerpApi **실잔량**(주어진 키들의 total_searches_left 합). 못 읽으면 None.
+
+    ★keys를 받는다(2026-08-27 실사고). 전엔 **공용 env 키만** 봤다 — 그래서 공용이
+      0이 되는 순간, 자기 키에 200회씩 남은 회원들까지 문지기가 429로 막았다
+      (실측: cid193 자기 키 201회 남았는데 검색이 시작 전에 잘렸다). 누가 요청했는지에
+      따라 **실제로 쓸 키**를 넘겨야 한다 — 그 판단은 keyroute.keys_for 한 곳에 있다.
 
     왜 필요한가 — 우리 `lens_count`는 사장님 클릭 1회당 1만 올리는데 실제로는
     로케일 3벌 × 재시도로 **최대 3회**가 나간다. 2026-08-17 서버 실측:
@@ -54,10 +70,12 @@ def account_searches_left(force=False):
     조회 실패(네트워크·키 오류)는 **None**으로 돌려 호출부가 기존 상수 방식으로
     폴백하게 한다 — 잔량을 못 읽었다고 렌즈를 막아버리면 더 나쁘다."""
     now = time.time()
-    if not force and _quota_cache["left"] is not None \
-            and now - _quota_cache["at"] < _QUOTA_TTL_S:
-        return _quota_cache["left"]
-    keys = [k for k in (SERPAPI_KEYS or ([SERPAPI_KEY] if SERPAPI_KEY else [])) if k]
+    ck = _cache_key(keys)
+    ent = _quota_cache.get(ck)
+    if not force and ent and ent["left"] is not None and (now - ent["at"]) < _QUOTA_TTL_S:
+        return ent["left"]
+    keys = [k for k in (keys or SERPAPI_KEYS
+                        or ([SERPAPI_KEY] if SERPAPI_KEY else [])) if k]
     if not keys:
         return None
     total = 0
@@ -77,8 +95,7 @@ def account_searches_left(force=False):
         seen = True
     if not seen:
         return None        # 한 키도 못 읽었다 = 모른다 (0이 아니다)
-    _quota_cache["at"] = now
-    _quota_cache["left"] = total
+    _quota_cache[ck] = {"at": now, "left": total}
     return total
 
 
@@ -456,6 +473,10 @@ def search_similar_videos(image_url, api_key=None, timeout=60, source_caption=No
     else:
         keys = SERPAPI_KEYS or ([SERPAPI_KEY] if SERPAPI_KEY else [])
     if not keys:
+        # ★키가 없으면 SerpApi를 **한 번도 안 때렸다** — 0으로 명시한다.
+        #   안 적으면 호출부의 기본값(1)이 걸려, 아무것도 안 했는데 한도가 깎인다.
+        if isinstance(stats, dict):
+            stats["serpapi_calls"] = 0
         return []
     keywords = _extract_keywords(source_caption)
 

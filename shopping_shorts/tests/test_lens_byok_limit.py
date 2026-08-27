@@ -68,3 +68,49 @@ def test_렌즈만_올린다_다른_op는_그대로():
         mm = re.search(rf'"{op}":\s*(\d+)', body)
         assert mm and int(mm.group(1)) == val, (
             f"{op} 한도가 pro 기본값({val})과 달라졌다 — 렌즈만 올려야 한다")
+
+
+# ── 체험 차단 / 프로는 개인 키 — 2026-08-27 사장님 지시 ─────────────────────────
+
+def _guard(monkeypatch, *, trial=False, my_keys=None, owner_left=0, cid=7):
+    """게이트를 호출부 형태 그대로 부른다(app._lens_quota_guard(store, month, cid))."""
+    from shopping_shorts import app as A, keyroute, lens_discover
+    monkeypatch.setattr(A, "_is_trial", lambda c, now=None: trial)
+    monkeypatch.setattr(keyroute, "keys_for",
+                        lambda st, c, svc: ((my_keys, True) if my_keys else (["공용"], False)))
+    monkeypatch.setattr(lens_discover, "account_searches_left",
+                        lambda force=False, keys=None: (250 if keys and keys == my_keys
+                                                        else owner_left))
+    class _St:
+        def lens_month_count(self, m): return 0
+        def get_setting(self, k, d=None): return d
+    return A._lens_quota_guard(_St(), "2026-08", cid)
+
+
+def _body(resp):
+    import json
+    return json.loads(bytes(resp.body).decode())
+
+
+def test_체험중이면_렌즈를_막는다(monkeypatch):
+    """렌즈 1회는 SerpApi 실비다 — 체험에까지 열어주면 공용 키가 순식간에 마른다."""
+    r = _guard(monkeypatch, trial=True, my_keys=["내키"])   # 키가 있어도 체험이면 막는다
+    assert r is not None
+    assert _body(r)["error_code"] == "lens_trial"
+
+
+def test_정회원은_자기키가_없으면_등록안내(monkeypatch):
+    """★공용으로 폴백하지 않는다. 공용 잔량이 남아 있어도 마찬가지다 —
+    안 그러면 한 사람이 몰아 써서 다른 사람이 막힌다."""
+    r = _guard(monkeypatch, my_keys=None, owner_left=999)
+    assert r is not None
+    assert _body(r)["error_code"] == "lens_need_key"
+
+
+def test_정회원은_자기키가_있으면_통과(monkeypatch):
+    assert _guard(monkeypatch, my_keys=["내키"], owner_left=0) is None
+
+
+def test_사장님은_공용으로_계속_쓴다(monkeypatch):
+    """cid 0만 공용 폴백을 남긴다 — 관리자까지 막으면 점검을 못 한다."""
+    assert _guard(monkeypatch, my_keys=None, owner_left=100, cid=0) is None

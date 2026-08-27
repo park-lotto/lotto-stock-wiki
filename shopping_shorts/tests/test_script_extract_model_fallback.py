@@ -145,7 +145,7 @@ def test_quota_error_still_rotates_keys_not_model(harness, monkeypatch):
     box["raise_all"] = ("429 RESOURCE_EXHAUSTED. {'error': {'code': 429, "
                         "'message': 'Quota exceeded', 'status': 'RESOURCE_EXHAUSTED'}}")
     marked = []
-    monkeypatch.setattr(comment_gen, "_mark_key_exhausted", lambda i: marked.append(i))
+    monkeypatch.setattr(comment_gen, "_mark_key_exhausted", lambda i, retry_after=None: marked.append(i))
     monkeypatch.setattr(script_extract.key_vault, "is_daily_exhausted_error", lambda e: True)
     script_extract.extract_script(vid, "vid1")
     assert marked, "429인데 키를 소진 처리하지 않았다"

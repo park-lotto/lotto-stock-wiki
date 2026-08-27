@@ -62,10 +62,35 @@ _FINAL_PRESET = "medium"
 #   ★하한 2: 코어÷워커를 그대로 쓰면 4코어/3워커 = 1스레드가 되는데, **셋이 동시에
 #   렌더하는 건 드문 일**이라 평소 렌더까지 1스레드로 기어가면 손해가 더 크다. x264는
 #   스레드 2개만 돼도 1개보다 확연히 빠르고, 겹칠 때의 과점유는 2 상한으로 충분히 막힌다.
+#   ★2026-08-27 이름 어긋남 수정 — **워커 수를 정하는 곳과 읽는 곳이 달랐다.**
+#   워커 개수를 실제로 정하는 건 deploy/worker_autoscale.sh이고 그건 SHORTS_WORKERS를
+#   본다. 그런데 여기선 WORKER_COUNT를 봤다 — 서버 env에 그 이름은 없으므로 **워커가
+#   8개인데 계속 3개인 줄 알고** 스레드를 산정했다(8÷3=2 → 8워커×2 = 16스레드 요구 vs
+#   8코어 = 2배 과점유). 자동조정 스크립트와 **같은 이름을 같은 순서로** 읽어 한 군데서만
+#   정해지게 한다(CLAUDE.md 0순위-B: 같은 결정을 두 번 적지 마라).
+#   폴백 순서도 worker_autoscale.sh와 맞춘다: SHORTS_WORKERS → 없으면 코어-2(3~6로 묶음).
+def _worker_count():
+    """지금 서버에 떠 있을 워커 수 — deploy/worker_autoscale.sh와 **같은 규칙**으로 센다.
+
+    우선순위: SHORTS_WORKERS(사람이 명시) → WORKER_COUNT(옛 이름, 하위호환)
+              → 자동계산(코어-2, 3~6). 스크립트가 바뀌면 여기도 같이 고쳐야 한다."""
+    for name in ("SHORTS_WORKERS", "WORKER_COUNT"):
+        raw = os.getenv(name, "")
+        if raw:
+            try:
+                n = int(raw)
+            except ValueError:            # 오타는 무시하고 다음 후보로
+                continue
+            if n >= 1:
+                return min(12, n)         # 스크립트의 오타 안전선(1~12)과 동일
+    cores = os.cpu_count() or 1
+    return max(3, min(6, cores - 2))      # 스크립트의 자동 정책과 동일
+
+
 def _default_ffmpeg_threads():
     try:
         cores = os.cpu_count() or 1
-        workers = int(os.getenv("WORKER_COUNT", "3") or 3)
+        workers = _worker_count()
         return max(2, cores // max(1, workers))
     except Exception:                     # noqa: BLE001 — 산정 실패는 무제한으로(종전 동작)
         return 0
@@ -129,7 +154,13 @@ def preview_preset(preset="veryfast", crf=_PREVIEW_CRF):
                 del _preset_local.crf
         else:
             _preset_local.crf = prev_crf
+from . import font_glyphs as _fg
+
 _FONT_DIR = Path(__file__).parent / "static" / "fonts"
+# 고른 폰트를 버리고 기본폰트로 되돌리는 문턱(못 그리는 글자 비율).
+# 낮추면 희귀 글자 하나에 글꼴이 통째로 바뀌고, 1.0으로 두면 한 글자만 그려져도 통과한다.
+# 0.5 = 절반 넘게 두부면 그 폰트는 이 문구에 못 쓰는 것으로 본다.
+_FONT_FALLBACK_RATIO = 0.5
 # 반중복탐지 회피(2026-07-14) — 말 안 해도 항상 적용. 화질 오염 없는(비가역 손상X)
 # 것만 자동화: ①전 비트 기본 크롭+줌(살짝 확대, 원본과 프레임 구도가 달라짐)
 # ②중요 비트(훅·반전)만 서서히 확대되는 켄번즈 줌(더 눈에 띄는 변형+시선 유도 효과 겸함).
@@ -760,6 +791,19 @@ def _strip_cap_tail(s):
     return s
 
 
+def cap_preset_key(txt):
+    """자막 줄 preset이 나레이션과 '같은 글자'인지 대조할 때 쓰는 정규화 키.
+
+    ★대조 기준을 여기 한 곳에서만 정한다(0순위-B). 예전엔 저장(app.py caplines의 _cmp_key)이
+      **끝 문장부호까지 무시**하고, 읽기(_caption_segments)는 **공백만** 무시해서 기준이 두 벌이었다.
+      화면에 보이는 줄은 _strip_cap_tail로 마침표가 떼여 있으므로, 사장님이 그 줄을 그대로
+      나눠 저장하면 저장은 통과하지만 렌더에서는 narration의 마침표 때문에 대조가 깨져
+      **조용히 규칙 폴백**으로 내려갔다 = "저장은 되는데 최종렌더에 반영 안 됨"(2026-08-26 제보).
+    """
+    drop = set(_CAP_TRIM_TAIL) | set(chr(32)+chr(9)+chr(10)+chr(13))
+    return "".join(ch for ch in (txt or "") if ch not in drop)
+
+
 def _wrap_long(segs):
     """구절 리스트에서 _CAP_WRAP를 크게 넘는 초장문만 줄바꿈으로 방어(대부분 그대로 1줄).
     각 줄은 표시용으로 끝 문장부호를 정리한다(2026-07-21 사장님 '봤잖아요.' 마침표 노출)."""
@@ -798,7 +842,7 @@ def _caption_segments(narration, preset=None):
         return []
     if preset and isinstance(preset, (list, tuple)):
         lines = [str(x).strip() for x in preset if str(x).strip()]
-        if lines and "".join(lines).replace(" ", "") == narr.replace(" ", ""):
+        if lines and cap_preset_key("".join(lines)) == cap_preset_key(narr):
             return _wrap_long(lines)
     words = narr.split()
     out, cur = [], []
@@ -1100,7 +1144,14 @@ def _apply_hook_inpoint(edit_plan, source_video_paths, work):
         prim = (beats[0] or {}).get("primary")
         if not prim or prim.get("video_id") not in source_video_paths:
             return
-        a, b = float(prim["start"]), float(prim["end"])
+        # ★기준은 **원본 시작점**이다 — 현재 start를 기준으로 삼으면 부를 때마다 더 밀린다
+        #   (2026-08-27 실측: 0.0 → 0.1 → 0.8). 멱등하지 않으면 두 가지가 깨진다:
+        #     · 렌더를 두 번 하면 훅이 계속 뒤로 밀린다.
+        #     · 편성 서명(_plan_signature)이 매번 달라져 **자막제거가 다시 돈다**(VMake 2콜).
+        #   그래서 처음 값을 hook_orig_start에 남기고 항상 그것으로 계산한다.
+        if prim.get("hook_orig_start") is None:
+            prim["hook_orig_start"] = round(float(prim["start"]), 3)
+        a, b = float(prim["hook_orig_start"]), float(prim["end"])
         peak_t = _sc.peak_time_in_window(source_video_paths[prim["video_id"]], a, b)
         delta = _hook_delta(work)
         prim["hook_peak_at"] = round(peak_t, 3)
@@ -1393,17 +1444,52 @@ def _hex_to_ff(c, default="0xFFFFFF"):
     return f"0x{c.upper()}" if len(c) == 6 and all(ch in "0123456789ABCDEFabcdef" for ch in c) else default
 
 
-def _resolve_seg_font(base_style, work, key_prefix):
-    """세그먼트 폰트파일 경로(work에 복사된 실제 경로)와 ffmpeg fontfile 참조명을 함께 반환.
-    _fixed_drawtext/_caption_drawtexts의 폰트 해석 로직과 동일 규칙(있으면 그 폰트, 없으면 font.ttf)."""
-    fontref = "font.ttf"
-    fname = os.path.basename((base_style or {}).get("font") or "")
-    if fname:
-        fpath = _FONT_DIR / fname
-        if fpath.exists():
-            shutil.copy(fpath, work / f"font_{key_prefix}.ttf")
-            fontref = f"font_{key_prefix}.ttf"
-    real_path = work / fontref if (work / fontref).exists() else _FONT_DIR.parent.parent / fontref
+def _missing_glyphs(font_path, text):
+    """→ font_glyphs.missing_glyphs (판정은 한 곳에서만 — 0순위-B)."""
+    return _fg.missing_glyphs(font_path, text)
+
+
+
+def _font_ref(font_name, work, key, text=""):
+    """폰트 파일명 → work에 복사한 뒤 쓸 ffmpeg fontfile 참조명(상대경로).
+
+    폰트 해석 규칙의 **단일 출구**다(0순위-B) — _resolve_seg_font·_fixed_drawtext가
+    같은 판단을 따로 적고 있어서 한쪽만 고치면 어긋난다. 규칙:
+      ① 파일이 없으면              → 기본 자막폰트 font.ttf
+      ② 문구를 **거의 다** 못 그리면 → 기본 자막폰트 font.ttf (두부 방지) + 경고
+      ③ 그 외                      → 그 폰트 (몇 글자 빠져도 사장님이 고른 글꼴을 지킨다)
+
+    ★왜 '한 글자라도'가 아니라 '거의 다'인가 (2026-08-26 실측)
+      완성형 2350자 폰트 10종이 '뷁·똠·뎊'을 못 그린다. 한 글자만 없어도 폴백시키면
+      자막에 '똠양꿍'이 들어간 순간 배민 주아를 골라도 통째로 다른 글꼴이 된다 —
+      두부 한 글자보다 글꼴이 통째로 바뀌는 쪽이 더 큰 사고다.
+      막으려는 건 '옥 말랑'처럼 **한글이 아예 없는 폰트**다(그 경우 100% 누락).
+      실사용 글자 121자 점검에서 정상 폰트의 최대 누락은 3자(2.5%)였다.
+    """
+    fontref = "font.ttf"  # _burn_captions가 work에 복사해둔 기본폰트
+    fname = os.path.basename(font_name or "")
+    if not fname:
+        return fontref
+    fpath = _FONT_DIR / fname
+    if not fpath.exists():
+        return fontref
+    body = "".join(dict.fromkeys((text or "").replace(" ", "")))
+    miss = _missing_glyphs(fpath, text)
+    if miss and body and len(miss) / len(body) >= _FONT_FALLBACK_RATIO:
+        print(f"[폰트] {fname} 이 문구의 {len(miss)}/{len(body)}자를 못 그린다"
+              f"({miss[:12]}) — 기본폰트로 대체한다(두부 방지)", file=sys.stderr)
+        return fontref
+    if miss:
+        # 몇 글자만 빠졌다 — 글꼴은 지키고 흔적만 남긴다(그 글자만 두부가 된다).
+        print(f"[폰트] {fname} 에 없는 글자 {len(miss)}자({miss[:12]}) — "
+              f"글꼴은 그대로 쓴다", file=sys.stderr)
+    shutil.copy(fpath, work / f"font_{key}.ttf")
+    return f"font_{key}.ttf"
+
+
+def _resolve_seg_font(base_style, work, key_prefix, text=""):
+    """세그먼트 폰트파일 경로(work에 복사된 실제 경로)와 ffmpeg fontfile 참조명을 함께 반환."""
+    fontref = _font_ref((base_style or {}).get("font"), work, key_prefix, text)
     return fontref, str(work / fontref)
 
 
@@ -1416,37 +1502,19 @@ def _match_highlight(word, highlight_rules):
 
 
 def _lacks_space_glyph(pil_font):
-    """이 폰트가 띄어쓰기를 '없는 글자 네모(⊠)'로 그리는가 — 2026-08-24 고객 제보 실측.
-
-    빙그레체(Binggrae-Bold)·리디바탕(RIDIBatang)은 U+0020 글리프가 아예 없어서,
-    이 폰트를 자막으로 고르면 **모든 띄어쓰기가 ⊠로** 나온다(고객 영상에서 확인:
-    "진짜⊠이렇게", "이거⊠한스푼만⊠넣고⊠볶으라는거에요"). 나머지 20종은 멀쩡하다.
-
-    판정: 정상 폰트는 공백 마스크 높이가 0이고, 없는 폰트는 글자 높이만큼(≈70px@70) 나온다.
-    ⚠️폰트 이름으로 판정하지 마라 — 폰트가 추가될 때마다 목록을 고쳐야 하고, 그 목록은 반드시
-      썩는다. 글리프 유무를 직접 본다.
-    """
-    try:
-        return pil_font.getmask(" ").size[1] > 0
-    except Exception as e:  # noqa: BLE001 — 판정 실패가 자막을 막으면 안 된다
-        print(f"[자막] 공백 글리프 판정 실패(정상으로 간주): {e!r}", file=sys.stderr)
-        return False
+    """→ font_glyphs.lacks_space_glyph (판정은 한 곳에서만 — 0순위-B)."""
+    return _fg.lacks_space_glyph(pil_font)
 
 
 def _space_px(pil_font, size):
-    """띄어쓰기 한 칸의 폭. 공백 글리프가 없는 폰트는 advance가 ⊠ 네모 폭(≈1em)이라
-    그대로 쓰면 어절이 과하게 벌어진다 → 흔한 비율 0.28em으로 대체한다."""
-    return size * 0.28 if _lacks_space_glyph(pil_font) else pil_font.getlength(" ")
+    """→ font_glyphs.space_px"""
+    return _fg.space_px(pil_font, size)
 
 
 def _text_px(pil_font, text, size):
-    """**실제로 그려질** 폭. 공백 없는 폰트에서도 맞다.
-    중앙정렬·자동축소가 이 값을 쓰므로 getlength를 직접 부르지 마라(0순위-B)."""
-    if not _lacks_space_glyph(pil_font):
-        return pil_font.getlength(text)
-    words = (text or "").split(" ")
-    return (sum(pil_font.getlength(w) for w in words)
-            + _space_px(pil_font, size) * max(0, len(words) - 1))
+    """→ font_glyphs.text_px"""
+    return _fg.text_px(pil_font, text, size)
+
 
 
 def _build_segments(line, base_color, highlight_rules):
@@ -1533,7 +1601,7 @@ def _segmented_drawtext(text, base_style, work, key_prefix, x_pct, y_pct,
     lines = (text or "").split("\n")
     if not any(l.strip() for l in lines):
         return []
-    fontref, font_disk_path = _resolve_seg_font(base_style, work, key_prefix)
+    fontref, font_disk_path = _resolve_seg_font(base_style, work, key_prefix, text)
     size = max(8, _ui_px(base_style.get("size"), 96))
     try:
         pil_font = ImageFont.truetype(font_disk_path, size)
@@ -1631,13 +1699,7 @@ def _fixed_drawtext(spec, work, key, default_color="0xFFFFFF"):
     if not text:
         return None
     (work / f"txt_{key}.txt").write_text(text, encoding="utf-8")
-    fontref = "font.ttf"  # _burn_captions가 work에 복사해둔 기본폰트
-    fname = os.path.basename(spec.get("font") or "")
-    if fname:
-        fpath = _FONT_DIR / fname
-        if fpath.exists():
-            shutil.copy(fpath, work / f"font_{key}.ttf")
-            fontref = f"font_{key}.ttf"
+    fontref = _font_ref(spec.get("font"), work, key, text)
     size = max(8, _ui_px(spec.get("size"), 96))
     xf = min(1.0, max(0.0, (spec.get("x", 50)) / 100.0))
     yf = min(1.0, max(0.0, (spec.get("y", 14)) / 100.0))

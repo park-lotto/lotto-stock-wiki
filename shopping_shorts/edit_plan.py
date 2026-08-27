@@ -1531,7 +1531,11 @@ def _blocks_order_block(blocks):
     # 2026-07-31 사장님: "액션 있는 장면 부분은 원대본과 다른 대사로 써라."
     lines.append("★액션(변화)이 있는 컷에는 **원본이 하던 말을 그대로 옮기지 말고** 그 동작을 "
                  "네 말로 새로 살려 써라. 무슨 일이 일어나는지는 화면 그대로, 표현만 새로.")
-    lines.append("★한 컷을 여러 문장으로 잘게 쪼개지 마라 — 컷 하나에 한 호흡으로 간다.")
+    # ★"잘게 쪼개지 마라"가 **너무 긴 칸**의 빌미가 됐다(2026-08-27 사장님: 6.7초·10.4초
+    #   짜리 칸). 한 호흡으로 가되 그 한 호흡이 얼마인지 못 박는다 — 기준은 사장님 예시
+    #   "여러분 다이소 가시면 이건 꼭 사야 해요"(16자·2.2초)다.
+    lines.append("★컷 하나는 한 호흡이다 — 20자 안팎으로 쓰고 29자를 넘기지 마라. "
+                 "사연이 길면 끊어서 다음 컷으로 넘겨라(칸이 많은 건 괜찮다).")
     return "\n".join(lines)
 
 
@@ -2104,6 +2108,11 @@ _PROMPT = """너는 숏폼 쇼핑 영상 편집 감독이다. 아래 여러 소�
   지나가서 시청자가 못 읽는다 — {char_target}자를 크게 넘기지 마라. 반대로 너무 짧아도
   안 되니 {char_target}자에 가깝게 채워라. 각 비트에 글자수를 고르게 분배해라(예: 비트가
   5개면 비트당 약 {char_target}÷5자).
+- **[한 칸 길이 — 매우 중요] 비트 하나(자막 한 칸)는 짧은 한 호흡이다. 기준 예시:
+  "여러분 다이소 가시면 이건 꼭 사야 해요"(16자·약 2.2초). **한 비트는 20자 안팎,
+  아무리 길어도 29자를 넘기지 마라.** 한 문장에 사연을 다 담지 말고 끊어서 다음
+  비트로 넘겨라 — 길게 쓰면 자막이 화면을 덮고 시청자가 못 읽는다. 그래서 30초면
+  비트가 10~13개쯤 나오는 게 정상이다(3~5개면 너무 적다).**
 - **[두 영상 모두 사용 — 필수] primary 구간을 한 영상에만 몰지 마라. 제공된 소스
   영상이 여러 개면 반드시 그 영상들 모두에서 고르게 구간을 가져와 진짜로 섞어라
   (예: 소스가 2개면 둘 다 최소 한 번씩 이상 써라). 한 영상만 쓰면 믹스가 아니다.**
@@ -2222,6 +2231,15 @@ def _is_dead_key_error(e):
                                 "API_KEY_INVALID", "API key not valid"))
 
 
+def _is_transient_api_error(msg):
+    """모델·네트워크 일시 장애인가. 판정 목록은 script_extract가 단독으로 갖는다."""
+    try:
+        from shopping_shorts.script_extract import is_transient_api_error
+    except Exception:      # noqa: BLE001 — 임포트가 깨져도 대본 생성은 돌아야 한다
+        return any(c in str(msg) for c in ("503", "UNAVAILABLE", "overloaded"))
+    return is_transient_api_error(msg)
+
+
 def _vault_call(prompt, schema, max_tries=8, key_offset=0):
     """key_vault 캐스케이드 예비키풀로 JSON 생성 호출 → raw dict. 무키/실패면 None.
 
@@ -2257,6 +2275,7 @@ def _vault_call(prompt, schema, max_tries=8, key_offset=0):
     if key_offset:
         _o = int(key_offset) % len(keys)
         keys = keys[_o:] + keys[:_o]
+    _last_err = ""
     for key in keys[:max_tries]:
         try:
             resp = key_vault.get_client_for_key(key).models.generate_content(
@@ -2273,9 +2292,11 @@ def _vault_call(prompt, schema, max_tries=8, key_offset=0):
             #   재시도는 다른 키로 나가므로 429·일시 장애와도 자연히 갈린다.
             if not (resp.text or "").strip():
                 print("edit_plan._vault_call: 빈 응답 → 다음 키로 재시도", file=sys.stderr)
+                _last_err = "모델이 빈 응답을 돌려줌"
                 continue
             return json.loads(resp.text)
         except Exception as e:  # noqa: BLE001
+            _last_err = repr(e)[:200]
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
                 key_vault.mark_exhausted(key_vault._owner_group(key) or "general", key)
                 continue
@@ -2296,11 +2317,20 @@ def _vault_call(prompt, schema, max_tries=8, key_offset=0):
             # ★503/과부하는 일시적(2026-07-24 실측: scene_first가 이걸로 죽어 옛 대본으로 폴백,
             # 30초·7~8컷·대화 개선이 통째로 안 탔다). 포기 대신 잠깐 쉬고 다음 키로 재시도한다.
             m = str(e)
-            if any(c in m for c in ("503", "UNAVAILABLE", "overloaded", "high demand")):
+            # ★일시장애 판정은 script_extract 한 곳에서 정한다(0순위-B, 2026-08-27).
+            #   여기 503만 적혀 있어서 **504 DEADLINE_EXCEEDED·499 CANCELLED가 "미분류"로
+            #   떨어져 즉시 return None** 이 됐고 → beats 0 → 운영사고 "편집안(EDL)이
+            #   비었습니다 [생성기=legacy]"로 올라왔다(실측 08-26 14:39·08-27 14:08).
+            #   같은 판단을 두 곳에 적으면 반드시 어긋난다 — 어휘 목록을 빌려 쓴다.
+            if _is_transient_api_error(m) or "high demand" in m:
                 time.sleep(2)
                 continue
             print(f"edit_plan._vault_call: {e!r}", file=sys.stderr)
             return None
+    # ★키를 다 돌고도 못 받았으면 **왜**인지 남긴다(2026-08-27). 종전엔 조용히 None이라
+    #   운영사고엔 "편집안이 비었습니다"만 뜨고 로그엔 아무것도 없어 원인을 못 짚었다.
+    print(f"edit_plan._vault_call: 키 {min(len(keys), max_tries)}개를 다 돌았는데 결과 없음 "
+          f"— 마지막 사유 {(_last_err or '빈 응답')!r}", file=sys.stderr)
     return None
 
 
@@ -3222,6 +3252,58 @@ def _length_penalty(beats, target_seconds):
     return round(min(0.3, dev), 3)
 
 
+# ★한 칸(비트)이 얼마나 길어도 되나 — 기준은 사장님이 준 문장이다(2026-08-27):
+#   "여러분 다이소 가시면 이건 꼭 사야 해요" = 공백 제외 16자 · 약 2.2초. 이게 한 호흡이다.
+#   ⚠️ _LONG_BEAT_CHARS(55)와 **목적이 다르다**: 그건 "자막줄을 다시 끊어라"는 표시용
+#      임계고, 이건 "이 후보를 강등해라"는 채점용 기준이다. 값을 합치지 않는 이유는
+#      55를 낮추면 caption_lines 무효화가 훨씬 자주 일어나 자막 회귀 위험이 있어서다.
+BEAT_SOFT_MAX_CHARS = 29        # 이보다 긴 칸이 많은 후보를 강등한다(≈3.6초)
+# ★감점 상한. 총 길이 감점(_length_penalty, 0.3)보다 **훨씬 작아야** 한다.
+#   실측(2026-08-27): 0.15로 두니 "전부 짧으면 늘려 다시 만드는" 장치가 무력해졌다 —
+#   늘린 긴 후보를 이 감점이 도로 깎아 총 0.9초짜리가 추천으로 뽑혔다
+#   (test_scene_first_lengthen 2건이 잡았다). 0.10부터 통과하지만 경계라 0.08로 둔다.
+#   대본이 목표보다 짧은 것이 칸이 긴 것보다 나쁘다 — 이 축은 **총 길이가 비슷한
+#   후보끼리** 고를 때만 갈라주면 된다(그때 0.08은 충분한 차이다).
+_BEAT_LEN_PENALTY_CAP = 0.08
+
+
+def _beat_length_penalty(beats, target_seconds=None, soft_max=BEAT_SOFT_MAX_CHARS):
+    """**칸별** 길이 감점(0~0.3). _length_penalty는 후보 **총** 길이만 봐서, 30초를 3칸에
+    몰아넣은 후보(칸당 10초)와 12칸에 고르게 나눈 후보가 같은 점수를 받았다 — 사장님이
+    화면에서 본 6.7초·10.4초짜리 칸이 그렇게 뽑혔다(2026-08-27 실측).
+
+    ★칸 개수는 여기서 **절대 안 건드린다**(2026-08-01 불변식 — 나누면 _assign_timeline의
+      세트 수를 넘겨 화면이 중복된다). 대신 짧게 쓴 후보가 뽑히게 **고르기만** 한다.
+      프롬프트로 "짧게 써라"만 시키면 안 지켜진다는 건 이미 여러 번 겪었다.
+
+    감점 = (상한 초과 글자수의 합 ÷ 전체 글자수), 최대 _BEAT_LEN_PENALTY_CAP. 이내면 0(회귀 0).
+    target_seconds를 주면 **목표초에 미달인 후보는 면제**한다(아래 참조).
+    """
+    beats = beats or []
+    if not beats:
+        return 0.0
+    # ★대본이 목표초에 **미달**이면 이 감점을 걸지 않는다(2026-08-27 실측).
+    #   짧은 것이 칸이 긴 것보다 나쁜 문제고, 이미 _length_penalty(상한 0.3)가 그걸 다룬다.
+    #   그 감점은 미달이 심하면 **포화**돼 "9.9초 후보와 0.9초 후보"를 구분 못 하는데,
+    #   거기에 칸 감점까지 얹으면 긴 쪽만 깎여 **총 0.9초짜리가 추천으로 뽑혔다**
+    #   (test_scene_first_lengthen 2건이 잡았다 — "너무 짧으면 늘리는" 장치가 무력해진다).
+    if target_seconds and target_seconds > 0:
+        total_sec = sum(float(b.get("target_seconds") or 0.0)
+                        for b in beats if isinstance(b, dict))
+        if total_sec > 0 and total_sec < target_seconds * 0.9:
+            return 0.0
+    total = over = 0
+    for b in beats:
+        if not isinstance(b, dict):
+            continue
+        n = len("".join((b.get("narration") or "").split()))
+        total += n
+        over += max(0, n - soft_max)
+    if total <= 0:
+        return 0.0
+    return round(min(_BEAT_LEN_PENALTY_CAP, over / total), 3)
+
+
 def _plagiarism_penalty(beats, source_full_texts, threshold=0.5, n=6):
     """표절 감점(2026-07-30): _plagiarism_flags와 같은 n-gram 겹침 계산을 채점에도 반영한다.
     이제까지는 겹침을 감지해 리뷰 화면에 경고 배지만 띄우고(app.py) 점수에는 안 반영했다 —
@@ -3265,6 +3347,7 @@ def _score_candidate(plan, avoid_hooks=None, target_seconds=None, source_full_te
     score = 0.75 * match + 0.25 * quality
     score -= _cut_rhythm_penalty(beats)          # T6: 파편·반복 후보 강등(안전망)
     score -= _length_penalty(beats, target_seconds)  # 세션#2: 목표초 벗어난 후보 강등
+    score -= _beat_length_penalty(beats, target_seconds)  # 2026-08-27: 한 칸이 긴 후보 강등(칸 수는 불변)
     score -= _plagiarism_penalty(beats, source_full_texts)  # 2026-07-30: 원문 베끼기 강등
     if avoid_hooks:
         hook = beats[0].get("narration") or ""
@@ -3419,7 +3502,7 @@ def detect_video_type(source_scripts, max_retries=3, quota_sleep=8):
         except Exception as e:
             m = str(e)
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
-                comment_gen._mark_key_exhausted(idx)
+                comment_gen._mark_key_exhausted(idx, key_vault.retry_delay_seconds(e))
                 continue
             if key_vault.is_quota_error(e):
                 time.sleep(quota_sleep)
