@@ -38,8 +38,10 @@ def _load_state():
         except (FileNotFoundError, json.JSONDecodeError, ValueError):
             data = {}
         if data.get("date") != _today_str():
-            return {"date": _today_str(), "exhausted": []}
+            return {"date": _today_str(), "exhausted": {}, "revived_once": []}
         data.setdefault("exhausted", [])
+        # 오늘 한 번 되살아났던 키 — 두 번째 소진부터는 프로브를 믿지 않는다(아래 참조).
+        data.setdefault("revived_once", [])
         return data
 
 
@@ -49,11 +51,55 @@ def _save_state(state):
         _STATE_PATH.write_text(json.dumps(state), encoding="utf-8")
 
 
-def _mark_key_exhausted(idx):
+# 소진 잠금 기본 유효시간(초). 만료되면 자동으로 풀린다.
+# ★2026-08-27 실사고: 종전엔 한 번 잠기면 **그날이 끝날 때까지** 배제였다(날짜가 바뀔 때만
+#   리셋). 그런데 실측하니 오전에 429였던 키가 오후엔 전부 200이었다 — 쿼터는 시간이
+#   지나면 회복되는데 우리 낙인만 하루를 갔다. 아침 크론(태거·백필)이 한 바퀴 돌며 키를
+#   잠그면 낮에 제작소가 쓸 키가 없었다(사장님 "왜 실패하나 계속").
+#   서버가 'Please retry in 45.5s'로 알려주면 그 값을 쓰고, 없으면 이 기본값.
+_EXHAUST_TTL_S = float(os.environ.get("SHORTS_KEY_EXHAUST_TTL", "1800"))
+
+
+def _exhausted_map(state):
+    """state의 exhausted를 {idx: 만료 timestamp}로 읽는다.
+
+    옛 형식(list[int])도 그대로 받는다 — 배포 순간에 파일이 옛 모양일 수 있다.
+    옛 항목은 만료시각이 없으므로 기본 TTL이 지난 것으로 보지 않고 '오늘 내내'로 둔다
+    (하위호환: 종전 동작).
+    """
+    raw = state.get("exhausted")
+    if isinstance(raw, dict):
+        out = {}
+        for k, v in raw.items():
+            try:
+                out[int(k)] = float(v)
+            except (TypeError, ValueError):
+                continue
+        return out
+    return {int(i): float("inf") for i in (raw or []) if isinstance(i, (int, float))}
+
+
+def _live_exhausted(state=None):
+    """아직 유효한 잠금만 남긴 {idx: 만료ts}. 만료된 것은 여기서 걸러진다."""
+    st = state if state is not None else _load_state()
+    now = time.time()
+    return {i: t for i, t in _exhausted_map(st).items() if t > now}
+
+
+def _mark_key_exhausted(idx, retry_after=None):
+    """키를 **한시적으로** 잠근다. retry_after(초)를 주면 그만큼, 없으면 기본 TTL."""
+    try:
+        ttl = float(retry_after) if retry_after else _EXHAUST_TTL_S
+    except (TypeError, ValueError):
+        ttl = _EXHAUST_TTL_S
+    ttl = max(30.0, min(ttl, 6 * 3600.0))     # 30초~6시간 — 영구 낙인을 만들지 않는다
     with _STATE_LOCK:
         state = _load_state()
-        if idx not in state["exhausted"]:
-            state["exhausted"].append(idx)
+        cur = _exhausted_map(state)
+        until = time.time() + ttl
+        if cur.get(int(idx), 0.0) < until:
+            cur[int(idx)] = until
+            state["exhausted"] = {str(k): v for k, v in cur.items()}
             _save_state(state)
 
 
@@ -64,7 +110,7 @@ _REVIVE_BELOW_RATIO = float(os.environ.get("SHORTS_KEY_REVIVE_RATIO", "0.2"))
 
 
 def _live_key_indices():
-    exhausted = set(_load_state()["exhausted"])
+    exhausted = set(_live_exhausted())      # 만료된 잠금은 자동 해제된다
     live = [i for i in range(len(SHORTS_GEMINI_KEYS)) if i not in exhausted]
     scarce = len(live) <= max(1, int(len(SHORTS_GEMINI_KEYS) * _REVIVE_BELOW_RATIO))
     if scarce and exhausted and SHORTS_GEMINI_KEYS:
@@ -100,6 +146,19 @@ def _probe_key_alive(key, timeout=15):
       그대로 뒀으면 오탐 해제가 **한 건도 안 되는** 가짜 수리가 될 뻔했다.
       그래서 판정 근거는 실제 HTTP 응답으로 둔다(라이브 실측: 소진표시 키가 200).
 
+    ★★ 이 프로브는 '가벼운 요청'만 대표한다 (2026-08-27 실사고).
+      Gemini 무료 티어는 **하루 요청 수(RPD)와 하루 토큰 수(TPD)가 따로**다.
+      maxOutputTokens=1짜리 "hi"는 토큰을 거의 안 먹어 TPD가 바닥나도 200이 나온다.
+      그런데 실제 작업은 **영상 업로드 + 긴 분석**이라 같은 키가 429다.
+      실측: 되살림이 "키 [0~11] 되살림(실호출 200 확인)"을 찍은 직후 12연속 429 →
+            제작소 1단계가 5/5 실패("Gemini 키 풀이 전부 소진").
+      죽은 키가 되살아나 앞줄에 서면 로테이션이 재시도 한도를 다 쓰고 **진짜 살아있는
+      키에 도달하지 못한다** — 키를 더 넣어도 소용이 없었다.
+
+      그래서 프로브 결과를 **한 번만** 믿는다: 되살린 키가 오늘 또 소진되면
+      `revived_once`에 남아 다시는 되살아나지 않는다(경험으로 학습).
+      프로브 자체를 무겁게 만들면(영상 업로드) 그 비용이 더 크다.
+
     비용: 최소 프롬프트 1회. RPD를 1 먹지만 '전 키 잠김'일 때만·쿨다운을 두고 돈다."""
     body = json.dumps({"contents": [{"parts": [{"text": "hi"}]}],
                        "generationConfig": {"maxOutputTokens": 1}}).encode()
@@ -122,17 +181,28 @@ def _recheck_exhausted_keys():
         if time.monotonic() - _last_recheck["t"] < _RECHECK_COOLDOWN_S:
             return []
         _last_recheck["t"] = time.monotonic()
-        marked = list(_load_state()["exhausted"])
+        marked = sorted(_live_exhausted())
+    with _STATE_LOCK:
+        burned = set(_load_state().get("revived_once") or [])
     revived = []
     for idx in marked:
         if idx >= len(SHORTS_GEMINI_KEYS):
+            continue
+        if idx in burned:
+            # ★한 번 되살렸는데 또 소진됐다 = 프로브가 이 키를 잘못 읽고 있다.
+            #   오늘은 더 안 믿는다(2026-08-27 실사고, 아래 _probe_key_alive 주석 참조).
             continue
         if _probe_key_alive(SHORTS_GEMINI_KEYS[idx]):
             revived.append(idx)
     if revived:
         with _STATE_LOCK:
             state = _load_state()
-            state["exhausted"] = [i for i in state["exhausted"] if i not in revived]
+            cur = _exhausted_map(state)
+            for i in revived:
+                cur.pop(int(i), None)
+            state["exhausted"] = {str(k): v for k, v in cur.items()}
+            # ★되살린 이력을 남긴다 — 이 키가 오늘 또 소진되면 다시는 안 되살린다.
+            state["revived_once"] = sorted(set(state.get("revived_once") or []) | set(revived))
             _save_state(state)
         print(f"comment_gen: 소진표시 오탐 해제 — 키 {revived} 되살림(실호출 200 확인)",
               file=sys.stderr)

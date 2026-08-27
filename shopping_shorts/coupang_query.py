@@ -88,7 +88,7 @@ def suggest(target, script="", limit=3):
         except Exception as e:  # noqa: BLE001 — 검색어 제안 실패가 기능을 죽이면 안 된다
             if (comment_gen.key_vault.is_daily_exhausted_error(e)
                     or comment_gen.key_vault.is_account_disabled_error(e)):
-                comment_gen._mark_key_exhausted(ki)
+                comment_gen._mark_key_exhausted(ki, comment_gen.key_vault.retry_delay_seconds(e))
                 continue
             return fallback
     return fallback
