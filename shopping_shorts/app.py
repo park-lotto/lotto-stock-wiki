@@ -10403,7 +10403,10 @@ def _api_pinterest_collect(request: Request, body: dict = None):
     store = Store(DB_PATH)
     added = len(items)
     if not body.get("reset"):
-        prev = (store.load_last_run_platform("pinterest") or {}).get("items") or []
+        # ⚠️load_last_run_platform은 **(items, collected_at) 튜플**을 준다(dict 아님).
+        #   dict로 읽으면 AttributeError로 수집이 통째로 죽는다(실측으로 밟았다).
+        prev, _prev_at = store.load_last_run_platform("pinterest")
+        prev = prev or []
         have = {(x.get("shortcode") or x.get("video_url")) for x in prev}
         fresh = [x for x in items
                  if (x.get("shortcode") or x.get("video_url")) not in have]
