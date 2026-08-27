@@ -403,12 +403,15 @@ body.is-admin .admin-only{display:block}
     <div id="pinPanel" style="display:none;margin-bottom:12px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--inset)">
       <input id="pinKw" placeholder="검색어(영어, 쉼표로 여러 개) — 비우면 기본 장비템 키워드"
              style="width:min(560px,72%);padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--txt);font-size:13px">
-      <button onclick="pinCollect(this)" style="margin-left:8px">📌 핀터레스트 수집</button>
+      <button onclick="pinCollect(this)" style="margin-left:8px">📌 수집해서 쌓기</button>
+      <button onclick="pinCollect(this,true)" style="margin-left:4px" title="지금까지 쌓은 것을 비우고 새로 시작합니다">🗑 비우고 새로</button>
       <span id="pinMsg" style="font-size:12px;color:var(--sub);margin-left:8px"></span>
       <div style="font-size:11px;color:var(--sub);margin-top:5px">
         자막·워터마크 없는 <b>깨끗한 원본</b>이 많아 자막제거 없이 바로 씁니다(실측 720×1280 세로).
         로그인·비용 없이 긁습니다. ⚠️워터마크가 박힌 것도 섞여 오니 <b>눈으로 골라</b> 담으세요.
-        검색어 1개당 30초쯤 걸립니다.
+        검색어 1개당 30초쯤 걸립니다. <b>누를 때마다 쌓입니다</b> — 조금씩 여러 번 돌려 모으세요.
+        <br>⚠️로그인 없이 긁으므로 <b>검색어 1개당 10~27개</b>가 한계입니다(스크롤을 늘려도 안 늘어납니다).
+        많이 모으려면 <b>검색어를 바꿔가며</b> 여러 번 누르세요.
       </div>
     </div>
     <div id="xhsDiscoverPanel" style="display:none;margin-bottom:12px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--inset)">
@@ -953,18 +956,22 @@ async function xhsLoadLatest(){   // 페이지 재진입 시 마지막 결과(�
 // 핀터레스트 수집(2026-08-28 사장님) — 무료·로그인 없음. 관리자 전용.
 // ★검색어 1개당 브라우저를 띄워 스크롤하므로 30초쯤 걸린다. 버튼을 잠가 중복 실행을 막고,
 //   끝나면 그 탭을 다시 그린다(수집만 하고 화면이 그대로면 "된 건지" 알 수 없다).
-async function pinCollect(btn){
+async function pinCollect(btn, reset){
   const kwEl=document.getElementById('pinKw'), msg=document.getElementById('pinMsg');
   const kws=(kwEl&&kwEl.value||'').split(',').map(s=>s.trim()).filter(Boolean);
+  if(reset && !confirm('지금까지 쌓은 핀터레스트 목록을 비우고 새로 시작할까요?')) return;
   const orig=btn?btn.textContent:'';
   if(btn){ btn.disabled=true; btn.textContent='수집 중…'; }
   if(msg) msg.textContent = '브라우저를 띄워 긁는 중… (검색어 '+(kws.length||5)+'개 × 30초쯤)';
   try{
     const r=await fetch('/api/pinterest/collect',{method:'POST',
-      headers:{'Content-Type':'application/json'},body:JSON.stringify({keywords:kws})});
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({keywords:kws, reset:!!reset})});
     const d=await r.json();
     if(!d||!d.ok) throw new Error((d&&d.error)||('실패 '+r.status));
-    if(msg) msg.textContent = '✅ '+d.count+'건 수집 — 아래 목록이 갱신됐습니다';
+    // ★새로 담긴 게 몇 개인지 말해준다 — 같은 검색어를 또 돌리면 0개일 수 있는데
+    //   총계만 보여주면 "왜 안 늘지"가 된다(조용한 무변화 금지).
+    if(msg) msg.textContent = '✅ 새로 '+(d.added!=null?d.added:d.count)+'개 추가 · 지금까지 '+d.count+'개';
     if(PLATFORM==='pinterest') load();     // 그 탭이면 즉시 다시 그린다
   }catch(e){
     // ★조용히 실패하지 않는다 — 0건이 '없음'인지 '고장'인지 화면이 말해야 한다.

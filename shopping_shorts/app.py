@@ -10394,9 +10394,25 @@ def _api_pinterest_collect(request: Request, body: dict = None):
                 "keyword": kw,
                 "category": "장비템",     # 이 탭은 장비템·신박템 컨셉 전용이다
             })
+    # ★누적한다(2026-08-28 사장님 "한번에 다해서 올리는게 아니라 10개씩 하고 올리고").
+    #   익명 수집은 **검색어당 첫 묶음에서 잘린다**(실측: 스크롤 4→15회로 늘려도
+    #   BaseSearchResource가 1회만 호출돼 5개 그대로 / 관련핀 경로는 0개).
+    #   그래서 키워드를 조금씩 여러 번 돌려 쌓는 게 유일한 길인데, 덮어쓰기면
+    #   앞서 모은 게 매번 사라진다.
+    #   reset=true를 주면 비우고 새로 시작한다(쌓이기만 하면 정리를 못 한다).
+    store = Store(DB_PATH)
+    added = len(items)
+    if not body.get("reset"):
+        prev = (store.load_last_run_platform("pinterest") or {}).get("items") or []
+        have = {(x.get("shortcode") or x.get("video_url")) for x in prev}
+        fresh = [x for x in items
+                 if (x.get("shortcode") or x.get("video_url")) not in have]
+        added = len(fresh)
+        items = fresh + prev          # 새 것을 앞에 — 방금 담은 게 위로 온다
     now = datetime.now(timezone.utc).isoformat()
-    Store(DB_PATH).save_last_run_platform("pinterest", items, now)
-    return {"ok": True, "count": len(items), "keywords": kws, "collected_at": now}
+    store.save_last_run_platform("pinterest", items, now)
+    return {"ok": True, "count": len(items), "added": added,
+            "keywords": kws, "collected_at": now}
 
 
 @app.get("/api/admin/work-lines")

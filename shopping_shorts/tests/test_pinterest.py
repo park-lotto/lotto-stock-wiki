@@ -141,6 +141,23 @@ def test_핀마다_username이_달라야_한다():
     assert '"username": (' in blk or 'pin_id' in blk, "username이 핀마다 갈리지 않는다"
 
 
+def test_수집은_누적된다():
+    """★사장님 지시(2026-08-28): "한번에 다해서 올리는게 아니라 10개씩 하고 올리고 그런식으로".
+
+    익명 수집은 **검색어당 첫 묶음(10~27개)에서 잘린다**(실측: 스크롤 4→15회로 늘려도
+    BaseSearchResource가 1회만 호출돼 5개 그대로). 그래서 키워드를 조금씩 여러 번 돌려
+    쌓는 방식이 유일한 길인데, 덮어쓰기면 **앞서 모은 게 매번 사라진다**.
+    → 기존 것과 합치고 pin_id로 중복 제거한다.
+    """
+    import pathlib
+    p = pathlib.Path(__file__).resolve().parents[1] / "app.py"
+    src = p.read_text(encoding="utf-8")
+    i = src.index('/api/pinterest/collect')
+    fn = src[i:i + 3500]
+    assert "load_last_run_platform" in fn, "기존 수집분을 안 읽는다 — 매번 덮어쓴다"
+    assert "reset" in fn, "비우기 수단이 없다 — 쌓이기만 하면 정리를 못 한다"
+
+
 def test_서버에_수집_엔드포인트가_있고_관리자_전용():
     import pathlib
     p = pathlib.Path(__file__).resolve().parents[1] / "app.py"
