@@ -1144,7 +1144,14 @@ def _apply_hook_inpoint(edit_plan, source_video_paths, work):
         prim = (beats[0] or {}).get("primary")
         if not prim or prim.get("video_id") not in source_video_paths:
             return
-        a, b = float(prim["start"]), float(prim["end"])
+        # ★기준은 **원본 시작점**이다 — 현재 start를 기준으로 삼으면 부를 때마다 더 밀린다
+        #   (2026-08-27 실측: 0.0 → 0.1 → 0.8). 멱등하지 않으면 두 가지가 깨진다:
+        #     · 렌더를 두 번 하면 훅이 계속 뒤로 밀린다.
+        #     · 편성 서명(_plan_signature)이 매번 달라져 **자막제거가 다시 돈다**(VMake 2콜).
+        #   그래서 처음 값을 hook_orig_start에 남기고 항상 그것으로 계산한다.
+        if prim.get("hook_orig_start") is None:
+            prim["hook_orig_start"] = round(float(prim["start"]), 3)
+        a, b = float(prim["hook_orig_start"]), float(prim["end"])
         peak_t = _sc.peak_time_in_window(source_video_paths[prim["video_id"]], a, b)
         delta = _hook_delta(work)
         prim["hook_peak_at"] = round(peak_t, 3)

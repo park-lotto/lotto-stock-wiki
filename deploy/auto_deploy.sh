@@ -96,10 +96,18 @@ try:
         # ★고객 작업일 때만 미룬다(2026-08-06). 배경작업(prewarm·durfill·overseas)은
         #   재시작으로 죽어도 다음 크론이 다시 큐에 넣으므로 잃는 게 없다. 반면 이걸
         #   세면 배경작업이 끊임없이 이어질 때 배포가 **영원히** 안 나간다(실측 사고).
+        # ★2분 → 5분(2026-08-27 실사고). cid204 job 261ed17263ec: 렌더가 돌고 있는데
+        #   마지막 하트비트가 **2분 1초** 전이라 "안 바쁨"으로 오판 → 워커를 재시작해
+        #   만들던 영상이 죽었다(화면은 13분간 "렌더 중"으로 굳었다).
+        #   실측(최근 200건): 하트비트 간격은 보통 30초 이내인데 **렌더만 최대 121초**
+        #   침묵한다(긴 ffmpeg 구간). 2분 기준은 그 경계에 정확히 걸린다.
+        #   5분이면 실측 최대치의 2.5배 여유 — 살아 있는 작업을 죽일 일이 없다.
+        #   ⚠️ store.reap_stale(4분)과 짝이다. 여기가 더 보수적이어야
+        #      "죽었다고 판정된 것을 배포가 또 건드리는" 겹침이 안 난다.
         "SELECT COUNT(*) FROM job_queue "
         "WHERE state='running' "
         "AND task IN ('mix','render','retype','preview','clean') "
-        "AND datetime(heartbeat_at) > datetime('now','-2 minutes')").fetchone()[0]
+        "AND datetime(heartbeat_at) > datetime('now','-5 minutes')").fetchone()[0]
     sys.exit(0 if n > 0 else 1)   # exit 0 = 진행 중 → 연기
 except Exception as e:
     print("queue_check 오류(배포진행): %r" % e)
