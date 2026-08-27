@@ -65,6 +65,22 @@ WIRED = (SVC_VMAKE, SVC_SERPAPI, SVC_ELEVENLABS, SVC_GEMINI, SVC_YOUTUBE)
 #   서비스라 남의 키를 쓰면 안 되고, 자기 키만 쓴다(폴백 없음).
 POOLED = (SVC_GEMINI, SVC_YOUTUBE)
 
+# ★호출부가 **키 하나만** 쓰는 서비스(mix_pipeline._vmake_key·tts._api_key가
+#   둘 다 keys[0]만 집는다). 여기서만 **나중에 등록한 키를 앞에** 둔다.
+#   왜: get_customer_keys_plain은 ORDER BY id라 가장 오래된 키가 keys[0]이다.
+#   그래서 키를 갈아끼우려고 새로 등록해도 옛 키가 계속 쓰인다.
+#   실사고(2026-08-28 cid 57): 크레딧 떨어진 Vmake 계정을 버리고 새 계정
+#   키를 등록했는데, 옛 키(id=45)가 먼저라 자막제거가 계속 빈 계정을
+#   때려 [60002]로 실패했다. 화면엔 두 키가 다 'ok'라 고객은 이유를 모른다.
+#   ⚠️ serpapi는 **넣지 마라** — 거긴 키 개수만큼 한도를 주고(_lens_key_count)
+#     목록 전체를 쓴다. 순서를 뒤집을 이유가 없다.
+SINGLE_KEY = (SVC_VMAKE, SVC_ELEVENLABS)
+
+
+def uses_single_key(service):
+    """호출부가 keys[0] 하나만 쓰는 서비스인가. 판단은 여기 한 곳(0순위-B)."""
+    return service in SINGLE_KEY
+
 
 def is_pooled(service):
     """회원 키가 공용 풀에 합류하는 서비스인가. 판단은 여기 한 곳(0순위-B)."""
@@ -158,6 +174,10 @@ def keys_for(store, customer_id, service):
         mine = None
     if mine:
         if not is_pooled(service):
+            # 키 하나만 쓰는 서비스는 **최신 키를 앞에** 둔다(SINGLE_KEY 주석 참조).
+            #   목록은 그대로 다 돌려준다 — 순회하는 호출부가 생겨도 안 깨진다.
+            if uses_single_key(service):
+                return list(reversed(mine)), True
             return mine, True             # ★개인 전용: 여기서 끝. 공용 키를 안 섞는다
         # ★공용 풀 모델(gemini·youtube): 자기 키를 냈으면 **풀 전체**를 쓴다.
         #   is_user=True를 그대로 돌려주므로 should_charge가 면제로 이어진다
