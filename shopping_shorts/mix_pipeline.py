@@ -2160,6 +2160,44 @@ def plan_using_beat_clips(plan, clips, timeline, prefix="cc"):
     return out
 
 
+def final_pair_for_source(plan, vid, pos=0.5):
+    """자막제거 전/후 비교용 — **같은 장면**을 가리키는 (원본 시각 초, 완성본 비율).
+
+    없으면 (None, None).
+
+    ★2026-08-27 사장님 제보 "영상 좌우가 달라": BEFORE는 소스 원본의 pos 지점,
+      AFTER는 완성본에서 그 소스가 쓰인 지점을 보고 있어 **다른 장면**이 나란히 떴다.
+      실측 job 16f1b398f7cd: s3은 원본 5.4~11.1초만 쓰였는데 BEFORE는 원본 50% 지점을
+      보여줬다(번호판 벽 vs 흰 벽 — 전혀 다른 화면).
+
+      옛 방식(소스별 청소본)에선 좌우가 같은 길이 파일이라 pos만 맞으면 대응됐다.
+      완성본 1편 청소로 바뀌며 기준이 갈렸다.
+
+    그래서 pos를 **"완성본에 실제로 쓰인 구간 안의 상대 위치"**로 해석한다.
+    앞/가운데/뒷부분 버튼도 그 장면 안에서 움직인다.
+    """
+    beats = (plan or {}).get("beats") or []
+    rs = _final_beat_ratios(plan)
+    if not rs:
+        return None, None
+    try:
+        pos = min(1.0, max(0.0, float(pos)))
+    except (TypeError, ValueError):
+        pos = 0.5
+    for b, (lo, hi) in zip(beats, rs):
+        for m in _beat_materials(b):
+            if (m or {}).get("video_id") != vid:
+                continue
+            try:
+                st, en = float(m.get("start")), float(m.get("end"))
+            except (TypeError, ValueError):
+                return None, None
+            if en <= st:
+                return None, None
+            return st + (en - st) * pos, _clamp_ratio(lo + (hi - lo) * pos)
+    return None, None
+
+
 def _clean_strategy(job):
     """자막제거를 **어떤 단위로** 할지 정하는 유일한 자리 (2026-08-27).
 
