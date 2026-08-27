@@ -580,3 +580,41 @@ def test_more_rounds_keep_diverging(client, tmp_path, monkeypatch):
         client.post("/api/produce/thumb/frames", json={"job_id": "j1", "more": True})
     assert len(seen) == 6
     assert len(set(seen)) == 6, f"같은 지점이 다시 나왔다: {seen}"
+
+
+def test_changing_default_count_reextracts(client, tmp_path, monkeypatch):
+    """★뿌리 회귀(2026-08-27 사장님 "아직 그대로 아닌가"): 기본 장수를 바꾸면
+    **이미 만든 작업도** 새 장수로 다시 뽑아야 한다.
+
+    프레임 목록은 DB(thumbnail.frames)에 남고 video_sig가 같으면 그대로 재사용한다.
+    종전엔 서명에 장수가 없어서, 16 → 12로 바꿔 배포해도 **기존 작업은 옛 16장 그대로**였다
+    — 배포는 됐는데 화면이 안 바뀌니 "아직 그대로"로 보인다.
+    """
+    _job_with_video(tmp_path)
+    seen = []
+
+    def grid(video_path, dest_dir, n=None, phase=0.5):
+        n = n or frame_extract.GRID_FRAMES_DEFAULT
+        seen.append(n)
+        dest = Path(dest_dir); dest.mkdir(parents=True, exist_ok=True)
+        out = []
+        for i in range(n):
+            p = dest / f"grid_{i:02d}.jpg"; p.write_bytes(b"x")
+            out.append((p, float(i)))
+        return out
+
+    monkeypatch.setattr(app_module, "extract_grid_frames", grid)
+    first = client.post("/api/produce/thumb/frames", json={"job_id": "j1"}).json()
+    assert len(seen) == 1 and len(first["frames"]) == frame_extract.GRID_FRAMES_DEFAULT
+
+    # 같은 장수로 다시 부르면 재추출하지 않는다(회귀 0)
+    client.post("/api/produce/thumb/frames", json={"job_id": "j1"})
+    assert len(seen) == 1, "장수가 그대로면 재추출하지 않는다"
+
+    # 기본 장수를 바꾸면(=배포로 상수가 바뀐 상황) 자동으로 다시 뽑는다
+    new_n = frame_extract.GRID_FRAMES_DEFAULT + 4
+    monkeypatch.setattr(frame_extract, "GRID_FRAMES_DEFAULT", new_n)
+    monkeypatch.setattr(app_module, "GRID_FRAMES_DEFAULT", new_n)
+    after = client.post("/api/produce/thumb/frames", json={"job_id": "j1"}).json()
+    assert len(seen) == 2, "장수를 바꿨는데 재추출하지 않았다(옛 프레임이 그대로 남는다)"
+    assert len(after["frames"]) == new_n
