@@ -3502,7 +3502,7 @@ def detect_video_type(source_scripts, max_retries=3, quota_sleep=8):
         except Exception as e:
             m = str(e)
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
-                comment_gen._mark_key_exhausted(idx)
+                comment_gen._mark_key_exhausted(idx, key_vault.retry_delay_seconds(e))
                 continue
             if key_vault.is_quota_error(e):
                 time.sleep(quota_sleep)

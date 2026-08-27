@@ -41,7 +41,9 @@ def test_all_keys_locked_but_alive_are_revived(state_file, monkeypatch):
     live = comment_gen._live_key_indices()
 
     assert live == [0, 1, 2], "실호출 200인 키는 표시를 해제해야 한다"
-    assert json.loads(state_file.read_text(encoding="utf-8"))["exhausted"] == [], \
+    # 2026-08-27: exhausted가 {idx: 만료ts} dict로 바뀌었다(한시적 잠금).
+    #   형식과 무관하게 "남아 있지 않다"를 본다.
+    assert not json.loads(state_file.read_text(encoding="utf-8"))["exhausted"], \
         "되살린 키는 상태파일에서도 빠져야 한다(다음 호출이 또 재검증하면 낭비)"
 
 

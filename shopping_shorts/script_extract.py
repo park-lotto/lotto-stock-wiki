@@ -701,7 +701,7 @@ def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=
         except Exception as e:
             m = str(e)
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
-                comment_gen._mark_key_exhausted(idx)
+                comment_gen._mark_key_exhausted(idx, key_vault.retry_delay_seconds(e))
                 continue  # ★죽은 키 우회는 attempt를 안 올린다 — 살아있는 키까지 걸어간다
             if key_vault.is_quota_error(e):
                 time.sleep(quota_sleep)
