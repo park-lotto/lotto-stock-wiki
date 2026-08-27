@@ -38,7 +38,8 @@ from shopping_shorts.config import GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGL
 from shopping_shorts.frame_extract import (download_video, extract_frames,
                                            extract_frame_at, extract_grid_frames)
 from shopping_shorts.script_extract import (extract_script, extract_auto, storable,
-                                            KeyPoolExhausted, has_usable_result)
+                                            KeyPoolExhausted, has_usable_result,
+                                            empty_reason)
 from shopping_shorts.structure_analyze import analyze_structure
 from shopping_shorts import backbone
 from shopping_shorts.aipick import build_aipick
@@ -11903,6 +11904,10 @@ def _autoload_reason_ko(err):
     if not e:
         return ""
     low = e.lower()
+    # ★AI 서버 무응답(504/499)은 이미 사장님 말로 적혀 나온다 — 다시 감싸면
+    #   "영상 분석에 실패했습니다"가 앞에 붙어 또 영상 탓처럼 읽힌다(2026-08-27).
+    if "AI 분석 서버" in e or "AI 서버" in e:
+        return e
     if "cookie" in low or "login" in low or "sign in" in low:
         return "이 사이트가 로그인을 요구해 영상을 받지 못했습니다"
     if "private" in low or "unavailable" in low or "removed" in low:
@@ -11965,7 +11970,8 @@ def api_produce_autoload(request: Request, body: dict):
     body: {items:[{url, shortcode?, video_url?, name?, thumbnail?, caption?, category?,
                    followers?, comments?}]}
     반환: {ok, results:[{shortcode, status}], added} — status: already|added|skipped_latched|
-          failed_download|failed_empty|failed_limit|failed_points(포인트 부족).
+          failed_download|failed_empty|failed_limit|failed_points(포인트 부족)|
+          deferred_api(AI 서버 무응답 — 영상 탓이 아니라 래치를 되돌리고 다음에 재시도).
     ⚠️ 이 엔드포인트는 **자기 자신이나 프론트 재귀를 유발하지 않는다**. 프론트는 페이지
        로드당 1회만 부르고, 응답 뒤 aipick을 딱 한 번 다시 조회한다."""
     cid = _cid(request)
@@ -12084,6 +12090,20 @@ def api_produce_autoload(request: Request, body: dict):
             #   제품 영상이 여기 걸렸다. 화면 태깅만 나와도 쓸 수 있는 재료다.
             #   빈 대본이 캐시로 굳는 것은 has_usable_result가 그대로 막는다.
             if not has_usable_result(result):
+                # ★빈 결과의 이유를 갈라서 말한다(2026-08-27). 예전엔 무조건 "영상이
+                #   비었다"로 적어 **AI 서버가 죽은 것을 영상 탓으로 돌렸다**
+                #   (실측: 504 DEADLINE_EXCEEDED·499 CANCELLED). API 장애면 영상은
+                #   멀쩡하므로 래치를 되돌려 다음에 온전히 다시 시도하게 한다
+                #   — deferred_nokey·busy와 같은 모양.
+                if empty_reason(result) == "api":
+                    e["status"] = "deferred_api"
+                    e["error"] = ("AI 분석 서버가 제때 응답하지 못했어요 — 영상 문제가 "
+                                  "아니니 잠시 후 다시 시도해 주세요")
+                    e["rollback_latch"] = True
+                    e["result"] = result
+                    e["category"] = item.get("category") or categorize(
+                        item.get("name") or "", item.get("caption") or "") or None
+                    return e
                 e["status"] = "failed_empty"
                 e["error"] = "쓸 만한 재료가 안 나왔어요(화면·말 모두 비어 있음)"
                 # ★분석 결과는 남긴다(2026-08-17, 쿠팡선수집 세션) — 저장(캐시)은 안 한다.

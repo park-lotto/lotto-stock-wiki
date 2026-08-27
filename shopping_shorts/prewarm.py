@@ -126,7 +126,7 @@ def run_prewarm(shortcode, url, *, caption="", customer_id="0", video_url="",
     예외를 밖으로 던지지 않는다 — 예열은 보조작업이라 실패해도 무해해야 한다."""
     from shopping_shorts.media_download import download_any
     from shopping_shorts.script_extract import (extract_auto, storable, KeyPoolExhausted,
-                                                has_usable_result)
+                                                has_usable_result, empty_reason)
     from shopping_shorts.structure_analyze import analyze_structure
 
     code = (shortcode or "").strip()
@@ -193,6 +193,13 @@ def run_prewarm(shortcode, url, *, caption="", customer_id="0", video_url="",
         # ③재료가 하나도 안 나왔을 때만 버린다(2026-08-16) — 말이 없어도 화면
         #   태깅이 나왔으면 쓸 수 있다. 판정은 script_extract 한 곳에서만 한다.
         if not has_usable_result(result):
+            # ★빈 결과라도 이유가 'API 장애'면 영상 탓이 아니다(2026-08-27) — 추출기는
+            #   504/499를 예외로 던지지 않고 **빈 결과로** 돌려주므로 위 except가 못 잡는다.
+            #   래치를 돌려주고 다음 크론이 다시 하게 둔다(deferred_transient와 같은 취급).
+            if empty_reason(result) == "api":
+                store.autoload_rollback_attempt(
+                    code, "예열 추출 일시실패(AI 서버 무응답 — 재시도 예정)")
+                return "deferred_transient"
             store.autoload_mark_error(code, "예열: 쓸 만한 재료가 안 나왔어요(화면·말 모두 비어 있음)")
             return "failed_empty"
         # 구조분석은 '말'을 읽는 것이라 여전히 full_text가 필요하다(아래 _fill_structure).
