@@ -1918,35 +1918,59 @@ def _beat_materials(b):
     return [x for x in ([b.get("primary")] + list(b.get("alternates") or [])) if x]
 
 
-def _final_time_of_source(plan, vid):
-    """완성본 타임라인에서 소스 vid가 처음 나오는 지점의 **비율**(0~1). 없으면 None.
+def _final_beat_ratios(plan):
+    """완성본 타임라인에서 비트마다 차지하는 **비율 구간** [(lo, hi), ...].
 
-    ★왜 비율인가: 실제 조립 길이는 TTS 길이에 따라 target_seconds와 달라진다.
-      비율로 주고 호출부가 실제 영상 길이에 곱하면 위치가 맞는다.
-
-    (2026-08-27) 2단계가 완성본 1편만 청소하게 되면서 소스별 청소본이 없어졌다.
-    AFTER 썸네일을 완성본에서 뽑아야 하는데, 그러려면 그 소스가 완성본 어디에
-    있는지 알아야 한다.
+    ★왜 초가 아니라 비율인가: 실제 조립 길이는 TTS 길이에 따라 target_seconds와
+      달라진다. 비율로 주고 호출부가 실제 영상 길이에 곱하면 위치가 맞는다.
     """
     beats = (plan or {}).get("beats") or []
     if not beats:
-        return None
-    spans, t = [], 0.0
+        return []
+    durs = []
     for b in beats:
         try:
-            dur = float(b.get("target_seconds") or 0) or 0.0
+            d = float(b.get("target_seconds") or 0) or 0.0
         except (TypeError, ValueError):
-            dur = 0.0
-        if dur <= 0:
-            dur = 2.0                     # 값이 없으면 평균치로 자리만 잡는다
-        hit = any((m or {}).get("video_id") == vid for m in _beat_materials(b))
-        spans.append((t, t + dur, hit))
-        t += dur
-    if t <= 0:
+            d = 0.0
+        durs.append(d if d > 0 else 2.0)      # 값이 없으면 평균치로 자리만 잡는다
+    total = sum(durs)
+    if total <= 0:
+        return []
+    out, t = [], 0.0
+    for d in durs:
+        out.append((t / total, (t + d) / total))
+        t += d
+    return out
+
+
+def _clamp_ratio(v):
+    return min(0.98, max(0.02, float(v)))
+
+
+def _final_time_of_beat(plan, i):
+    """완성본에서 **i번째 비트** 한가운데의 비율(0~1). 범위 밖이면 None."""
+    rs = _final_beat_ratios(plan)
+    if not rs or i < 0 or i >= len(rs):
         return None
-    for st, en, hit in spans:
-        if hit:
-            return min(0.98, max(0.02, ((st + en) / 2.0) / t))
+    lo, hi = rs[i]
+    return _clamp_ratio((lo + hi) / 2.0)
+
+
+def _final_time_of_source(plan, vid):
+    """완성본에서 소스 vid가 **처음 나오는** 지점의 비율(0~1). 없으면 None.
+
+    (2026-08-27) 2단계가 완성본 1편만 청소하게 되면서 소스별 청소본이 없어졌다.
+    화면(AFTER 썸네일·꾸미기 배경)을 완성본에서 뽑아야 하는데, 그러려면 그 소스가
+    완성본 어디에 있는지 알아야 한다.
+    """
+    beats = (plan or {}).get("beats") or []
+    rs = _final_beat_ratios(plan)
+    if not rs:
+        return None
+    for b, (lo, hi) in zip(beats, rs):
+        if any((m or {}).get("video_id") == vid for m in _beat_materials(b)):
+            return _clamp_ratio((lo + hi) / 2.0)
     return None
 
 
