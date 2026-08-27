@@ -33,7 +33,12 @@ def _real_deps():
     src = PRODUCE_HTML.read_text(encoding="utf-8")
     m = re.search(r"^const HC_PRESETS=\[.*?^\];", src, re.M | re.S)
     assert m, "HC_PRESETS 선언을 못 찾았다 — applyThumbPreset이 이걸 쓴다"
-    return m.group(0) + chr(10)
+    # ★HC_FONTS도 진짜를 가져온다(2026-08-27). 없으면 thumbFontCss가 늘 'sans-serif'를
+    #   돌려줘서 **폰트를 골라도 안 바뀌는 것을 테스트가 못 잡는다** — 하네스가 계약을
+    #   발명하면 0% 동작도 초록이 된다(메모리 feedback_harness_invented_contract).
+    f = re.search(r"^const HC_FONTS=\[.*?^\];", src, re.M | re.S)
+    assert f, "HC_FONTS 선언을 못 찾았다 — thumbFontCss가 이걸 쓴다"
+    return m.group(0) + chr(10) + f.group(0) + chr(10)
 
 
 def _slice_source():
@@ -247,3 +252,79 @@ console.log(JSON.stringify({short: pillWidth('충격'), long: pillWidth('진짜 
 """
     d = json.loads(_run_node(script))
     assert d["long"] > d["short"], "긴 문구인데 알약이 안 넓어졌다"
+
+
+# ── 배지 폰트 · 빼기(2026-08-27 사장님 "폰트 수정있어야하고 / 배지넣고 취소하는거 없어") ──
+def test_badge_gets_handles_so_it_can_be_deleted_on_canvas():
+    """★뿌리 회귀: 배지에도 캔버스 손잡이(✕ 삭제)가 떠야 한다.
+
+    종전엔 renderThumbHandles가 sticker·shape만 허용해 **배지를 얹으면 캔버스에 ✕가
+    안 떴다**. 지우려면 왼쪽 레이어 목록의 작은 ✕를 찾아야 했고, 사장님 눈엔
+    "배지 넣고 취소하는 게 없다"였다.
+    """
+    script = _slice_source() + """
+const seen = {html: null};
+document = {getElementById: id => id === 'thumbHandles'
+  ? {set innerHTML(v){ seen.html = v; }, get innerHTML(){ return seen.html; }}
+  : null};
+THUMB_STATE.layers = [{kind:'badge', text:'충격', size:5, x:0.3, y:0.08, dot:true}];
+THUMB_STATE.sel = 0;
+renderThumbHandles();
+console.log(JSON.stringify({
+  html: seen.html || '',
+  hasDel: /data-h="del"/.test(seen.html || ''),
+  buttons: ((seen.html || '').match(/<button/g) || []).length,
+}));
+"""
+    d = json.loads(_run_node(script))
+    assert d["hasDel"], "배지에 ✕ 삭제 손잡이가 안 뜬다"
+    assert d["buttons"] == 4, f"손잡이는 삭제 1 + 크기·방향 3 = 4개여야 한다: {d['buttons']}"
+
+
+def test_badge_handle_box_matches_pill_width():
+    """손잡이 점선 박스가 **실제 알약 크기**와 맞아야 한다.
+
+    배지는 글자 길이만큼 옆으로 길다 — 스티커·도형의 정사각 식(size/200)으로 재면
+    ✕가 엉뚱한 곳에 뜬다. 크기는 badgeBox 한 곳에서만 온다(0순위-B).
+    """
+    script = _slice_source() + """
+document = {createElement: () => ({})};      // measureText 못 씀 → 어림식으로 폴백
+const short = _thumbHalf({kind:'badge', text:'충격', size:5, dot:true});
+const long  = _thumbHalf({kind:'badge', text:'진짜 봐야할 것 정말로', size:5, dot:true});
+const sticker = _thumbHalf({kind:'sticker', size:18});
+console.log(JSON.stringify({short, long, sticker}));
+"""
+    d = json.loads(_run_node(script))
+    assert d["long"]["hx"] > d["short"]["hx"], "긴 문구 배지가 더 넓어야 한다"
+    assert d["short"]["hy"] < d["short"]["hx"], "알약은 옆으로 길다(높이 < 폭)"
+    assert d["sticker"]["hx"] == 18 / 200, "스티커 계산은 종전 그대로여야 한다(회귀 0)"
+
+
+def test_badge_font_is_used_when_drawing():
+    """배지가 L.font를 실제로 쓴다 — 고른 폰트가 그림에 반영되는지."""
+    script = _slice_source() + _FAKE_CTX + """
+const a = mkCtx(), b = mkCtx();
+const base = {kind:'badge', text:'충격', x:0.3, y:0.08, size:5, color:'#F00'};
+drawBadge(a, Object.assign({}, base), 1080, 1920);
+drawBadge(b, Object.assign({}, base, {font:'BMJUA.ttf'}), 1080, 1920);
+console.log(JSON.stringify({basic: a._font || a.font, picked: b._font || b.font}));
+"""
+    d = json.loads(_run_node(script))
+    assert d["basic"] != d["picked"], "폰트를 골라도 그리기가 같은 폰트를 쓴다"
+    # 파일명(BMJUA.ttf)이 아니라 **CSS family 이름**(HCJua)이 실린다 — thumbFontCss가 옮긴다.
+    assert "HCJua" in d["picked"], f"고른 폰트가 안 실렸다: {d['picked']}"
+    assert "sans-serif" not in d["picked"], "폴백 폰트로 떨어졌다(HC_FONTS를 못 읽었다)"
+
+
+def test_badge_box_shared_by_draw_and_handles():
+    """★같은 알약을 그리기와 손잡이가 **같은 크기**로 본다(두 벌이 되면 어긋난다)."""
+    script = _slice_source() + _FAKE_CTX + """
+const L = {kind:'badge', text:'진짜 봐야할 것', x:0.5, y:0.1, size:5, dot:true};
+const ctx = mkCtx();
+const box = badgeBox(ctx, L, 1080);
+console.log(JSON.stringify({bw: box.bw, bh: box.bh, positive: box.bw > 0 && box.bh > 0,
+                            widerThanTall: box.bw > box.bh}));
+"""
+    d = json.loads(_run_node(script))
+    assert d["positive"], "알약 크기가 0 이하다"
+    assert d["widerThanTall"], "알약은 옆으로 길어야 한다"
