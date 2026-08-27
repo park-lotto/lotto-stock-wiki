@@ -6204,7 +6204,7 @@ async function coupangCrawl(forced){
     if(box) box.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-bottom:10px;max-height:340px;overflow-y:auto">`
       + d.items.map((it,i)=>`<div onclick="coupangPick(${i})" title="${esc(it.name)}"
            style="cursor:pointer;border:1px solid var(--line);border-radius:8px;padding:6px;background:var(--bg)">
-          <img src="${esc(it.image)}" loading="lazy" style="width:100%;aspect-ratio:1;object-fit:contain;border-radius:6px;background:#fff">
+          <img src="${esc(it.image)}" style="width:100%;aspect-ratio:1;object-fit:contain;border-radius:6px;background:#fff">
           <div style="font-size:11px;line-height:1.35;margin-top:4px;max-height:44px;overflow:hidden">${esc(it.name)}</div>
           <div style="font-size:12px;font-weight:700;margin-top:3px">${esc(it.price||'')}</div>
           <div class="hint" style="font-size:10px">${esc(it.rating||'')}${it.is_ad?' · 광고':''}</div>
@@ -6645,7 +6645,7 @@ function renderPool(){
     const canPlay = _poolCanPlay(it);
     return `<div class="pool-cell">`
       + `<div class="pool-card${it.useFootage?' on':''}${isPick?' pick':''}" onclick="pickFootage(${i})" title="${esc(it.name||('영상 '+(i+1)))}">`
-      + (it.thumbnail?`<img src="${it.thumbnail.includes('gstatic.com')?it.thumbnail:('/api/thumb?url='+encodeURIComponent(it.thumbnail))}" referrerpolicy="no-referrer" loading="lazy" onerror="this.style.visibility='hidden'">`:'')
+      + (it.thumbnail?`<img src="${it.thumbnail.includes('gstatic.com')?it.thumbnail:('/api/thumb?url='+encodeURIComponent(it.thumbnail))}" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'">`:'')
       + (canPlay?`<span class="pool-play" title="미리보기 재생" onclick="event.stopPropagation();poolPlay(this,${i})">▶</span>`:'')
       + (isPick?'<span class="pickbadge">🤖 AI PICK</span>':'<span class="badge">'+(it.useFootage?'✓':'')+'</span>')
       + `<button class="pool-x" title="빼기" onclick="event.stopPropagation();dropFootage(${i})">✕</button>`
@@ -7301,7 +7301,7 @@ function renderCompareCards(d){
       const pth = c.thumbnail || hf.thumbnail || '';
       return `<div class="cmp-card" style="opacity:.65" title="${esc(c.name||'영상')}">
           <span class="cmp-pickhint">⏳ 분석 중</span>
-          <div class="cmp-top"><div class="cmp-thumbwrap">${pth?`<img src="${pth.includes('gstatic.com')?pth:('/api/thumb?url='+encodeURIComponent(pth))}" referrerpolicy="no-referrer" loading="lazy" onerror="this.style.visibility='hidden'">`:'<div class="cmp-th-ph"></div>'}</div>
+          <div class="cmp-top"><div class="cmp-thumbwrap">${pth?`<img src="${pth.includes('gstatic.com')?pth:('/api/thumb?url='+encodeURIComponent(pth))}" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'">`:'<div class="cmp-th-ph"></div>'}</div>
             <div class="cmp-nm">${esc(c.name || hf.name || '영상')}</div></div>
           <div class="cmp-nostruct">대본 분석이 끝나면 후보가 됩니다</div>
         </div>`;
@@ -7325,7 +7325,7 @@ function renderCompareCards(d){
     return `<div class="cmp-card${isPick?' pick':''}" ${hi>=0?`onclick="pickFootage(${hi})"`:''} title="${esc(name)}">
         ${isPick?'<span class="cmp-badge">⭐ 메인</span>':'<span class="cmp-pickhint">⭐ 이걸로 선택</span>'}
         <div class="cmp-top"${canPreview?` onclick="event.stopPropagation();previewMaterial(${hi})" style="cursor:pointer"`:''}>
-          <div class="cmp-thumbwrap">${thumb?`<img src="${thumb.includes('gstatic.com')?thumb:('/api/thumb?url='+encodeURIComponent(thumb))}" referrerpolicy="no-referrer" loading="lazy" onerror="this.style.visibility='hidden'">`:'<div class="cmp-th-ph"></div>'}${canPreview?'<span class="cmp-play">▶</span>':''}</div>
+          <div class="cmp-thumbwrap">${thumb?`<img src="${thumb.includes('gstatic.com')?thumb:('/api/thumb?url='+encodeURIComponent(thumb))}" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'">`:'<div class="cmp-th-ph"></div>'}${canPreview?'<span class="cmp-play">▶</span>':''}</div>
           <div class="cmp-nm">${esc(name)}</div>
         </div>
         ${strip}

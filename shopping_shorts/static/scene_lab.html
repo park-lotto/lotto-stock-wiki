@@ -2084,7 +2084,7 @@ function renderBand(){
              onclick="bandCutClick(${i}, '${c.seg_id}', event)"
              ondblclick="event.stopPropagation();clearTimeout(clickTimer);dropCutFromBand(${i}, '${c.seg_id}')"
              title="${segMark(c.seg_id)} = 영상 ${srcNo(c.seg_id)}의 ${segNo(c.seg_id)}번째 조각 · ${(DATA.segments[c.seg_id]||{}).label || c.video_id} · ${c.start.toFixed(1)}초부터 ${c.dur.toFixed(2)}초 · 누르면 이 조각만 미리보기 · 끌어서 순서 바꾸기 · 아래 소스로 끌면 빼기 · 두 번 클릭도 빼기">
-             <img src="${SL.thumb(c.seg_id)}" loading="lazy"><span class="n">${segMark(c.seg_id)}</span><span class="s ${getFix(i, c.seg_id) ? 'fixed' : ''}" title="${getFix(i, c.seg_id) ? '내가 정한 길이 — 누르면 자동으로 되돌립니다' : '누르면 이 컷의 길이를 직접 정합니다'}" onclick="event.stopPropagation();askCutLen(${i}, '${c.seg_id}')">${getFix(i, c.seg_id) ? '✋' : ''}${c.dur.toFixed(1)}</span
+             <img src="${SL.thumb(c.seg_id)}"><span class="n">${segMark(c.seg_id)}</span><span class="s ${getFix(i, c.seg_id) ? 'fixed' : ''}" title="${getFix(i, c.seg_id) ? '내가 정한 길이 — 누르면 자동으로 되돌립니다' : '누르면 이 컷의 길이를 직접 정합니다'}" onclick="event.stopPropagation();askCutLen(${i}, '${c.seg_id}')">${getFix(i, c.seg_id) ? '✋' : ''}${c.dur.toFixed(1)}</span
              ><input type="checkbox" class="pk" title="빼려면 체크 — 여러 장 고르고 위 [고른 것 빼기]를 누르세요"
                     ${isPicked(i, c.seg_id) ? 'checked' : ''}
                     onclick="event.stopPropagation();togglePick(${i}, '${c.seg_id}', this.checked)"
@@ -2107,7 +2107,7 @@ function renderBand(){
              ondrop="bandDrop(${i}, '${id}', event)"
              ondblclick="event.stopPropagation();dropCutFromBand(${i}, '${id}')"
              title="${segMark(id)} · ${seg.label || ''} — 담겨 있지만 이 칸에서는 화면에 안 나옵니다(${why}). 두 번 클릭하면 뺍니다. 다른 칸으로 끌어 옮길 수도 있어요.">
-             <img src="${SL.thumb(id)}" loading="lazy"><span class="n">${segMark(id)}</span
+             <img src="${SL.thumb(id)}"><span class="n">${segMark(id)}</span
              ><span class="s">${effLen(id).toFixed(1)}</span><span class="off">안 나옴</span
              ><input type="checkbox" class="pk" title="빼려면 체크"
                     ${isPicked(i, id) ? 'checked' : ''}
@@ -2280,7 +2280,7 @@ function render(){
              ondblclick="event.stopPropagation();clearTimeout(clickTimer);add('${s.sid}')"
              title="끌어다 오른쪽 칸에 놓으면 담깁니다 · 클릭 = 재생 · 두 번 클릭 = 선택된 칸에 담기">
           <div class="segthumb">
-            <img src="${SL.thumb(s.sid)}" loading="lazy">
+            <img src="${SL.thumb(s.sid)}">
             <span class="dur">${(mergeSpan(s.sid).end-s.start).toFixed(1)}초${TRIMS[s.sid]?' ✂':''}${MERGES[s.sid]?' 🔗':''}</span>
             ${/* 촘촘히 보기에서 카드 밑 글자가 접히면 이 한 줄이 대신 선다(번호·이름·경고).
                  설명은 카드 title에 이미 있다 — 마우스를 올리면 그대로 보인다. */''}
@@ -2455,7 +2455,7 @@ function render(){
                 return `<span class="n" title="이 칸에서 나오는 초 / 이 장면이 가진 초">${chosen.has(id)?'✓ ':''}${k+1}${sh}</span>`;
               })()}
               ${badge}${trm}
-              <img src="${SL.thumb(id)}" loading="lazy">
+              <img src="${SL.thumb(id)}">
               <div class="cap"><span class="captag sub">💬 이때 나오는 자막</span><div class="c2">${outOfRange(id)?'<span class="oorbadge">⚠ 화면이 안 나오는 장면</span><br>':''}${caps || '&nbsp;'}</div></div>
             </div>`;}).join('');})()}</div>`
           : '<div class="empty">왼쪽 장면을 끌어다 여기에 놓아주세요</div>'}
