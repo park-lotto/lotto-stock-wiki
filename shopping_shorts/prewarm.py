@@ -29,7 +29,10 @@ from shopping_shorts.store import Store
 log = logging.getLogger("prewarm")
 
 # 담기 남발 방어 — 하루에 이만큼만 예열한다(넘으면 조용히 스킵, 제작소 진입 시 그때 추출).
-_PREWARM_DAILY_CAP = 40
+# 하루 예열 상한(전 고객 합산). 1건당 Gemini 호출은 최대 2회(추출 + 구조분석)다.
+# 2026-08-27 사장님 "100건으로 올려봐 상황보게" — 40에선 낮에 소진돼 밤 담기가 통째로
+# 스킵됐다(실측: KST 00~08시 44건 전부 skipped_cap / 09시 이후 done).
+_PREWARM_DAILY_CAP = 100
 # 1 → 3 (2026-08-04 실사고): 인스타 다운로드는 일시 실패가 흔한데 1회 실패로 영구
 # 래치돼 재담기해도 예열이 조용히 스킵됐다(DQohOUqgdRt — 수동 대본뽑기는 즉시 성공
 # = 경로는 멀쩡, 래치만 스테일). 어제 '래치 7건 삭제' 사고와 같은 계보.
@@ -61,16 +64,40 @@ def _work_dir(shortcode: str) -> Path:
     return base / hashlib.sha1(shortcode.encode()).hexdigest()[:16]
 
 
-def _daily_take(store: Store) -> bool:
-    """오늘 예열 카운터를 1 올리고 상한 내인지 돌려준다. 날짜가 바뀌면 리셋."""
-    from datetime import datetime, timezone
-    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+def _today_kst() -> str:
+    """예열 상한이 쓰는 '오늘' — **한국 날짜**다.
+
+    ★2026-08-27 수리: UTC를 쓰던 탓에 리셋이 **한국 오전 9시**였다. 낮에 상한을 다 쓰면
+      그날 저녁부터 다음날 아침 9시까지 담는 건 전부 조용히 건너뛰어졌다
+      (실측: KST 00~08시 44건 skipped_cap → 09시 정각부터 done).
+      쓰는 사람이 한국에 있으니 하루의 경계도 한국 자정이어야 한다.
+    """
+    from datetime import datetime, timedelta, timezone
+    return datetime.now(timezone(timedelta(hours=9))).strftime("%Y-%m-%d")
+
+
+def _daily_used(store: Store) -> int:
+    """오늘(한국 날짜) 쓴 예열 건수. 날짜가 바뀌었으면 0."""
     raw = store.get_setting(_DAILY_KEY, "") or ""
     day, _, n = raw.partition("|")
-    used = int(n) if (day == today and n.isdigit()) else 0
+    return int(n) if (day == _today_kst() and n.isdigit()) else 0
+
+
+def daily_remaining(store: Store) -> int:
+    """오늘 남은 예열 건수. **세기만 하고 쓰지는 않는다** — 화면 안내용(2026-08-27).
+
+    담는 시점엔 워커가 아직 판정을 안 했으므로, 여기서 남은 몫을 미리 보고
+    0이면 "미리분석은 내일" 이라고 알려 준다. 조용히 건너뛰면 사장님이 이유를 모른다.
+    """
+    return max(0, _PREWARM_DAILY_CAP - _daily_used(store))
+
+
+def _daily_take(store: Store) -> bool:
+    """오늘 예열 카운터를 1 올리고 상한 내인지 돌려준다. 날짜가 바뀌면 리셋."""
+    used = _daily_used(store)
     if used >= _PREWARM_DAILY_CAP:
         return False
-    store.set_setting(_DAILY_KEY, f"{today}|{used + 1}")
+    store.set_setting(_DAILY_KEY, f"{_today_kst()}|{used + 1}")
     return True
 
 

@@ -1295,7 +1295,23 @@ def api_mix_basket_toggle(request: Request, body: dict, background_tasks: Backgr
                 background_tasks.add_task(_enrich_grab, url, sc, cid)
             _enqueue_prewarm(store, sc, url, caption=body.get("caption") or "",
                              customer_id=cid)
-    return {"ok": True, "in": in_basket, "count": len(store.mix_basket_shortcodes(customer_id=cid))}
+    # ★오늘 미리분석 몫이 남았는지 알려준다(2026-08-27 사장님 "담아둔것도 분석이 안되고").
+    #   상한에 걸리면 워커가 **조용히** 건너뛰어서, 담은 사람은 이유를 모른 채 기다렸다.
+    #   기능이 죽는 건 아니다 — 제작소에서 쓸 때 그때 추출한다. 그걸 말해 주는 것뿐이다.
+    _left = None
+    try:
+        if in_basket and access_level(cid) == "full":
+            from shopping_shorts import prewarm as _pw
+            _left = _pw.daily_remaining(store)
+    except Exception:      # noqa: BLE001 — 안내가 담기를 막으면 안 된다
+        _left = None
+    out = {"ok": True, "in": in_basket,
+           "count": len(store.mix_basket_shortcodes(customer_id=cid))}
+    if _left is not None:
+        out["prewarm_left"] = _left
+        if _left <= 0:
+            out["prewarm_note"] = "오늘 미리분석 한도를 다 썼어요 — 담기는 됐고, 제작소에서 쓸 때 바로 분석합니다(자정 초기화)"
+    return out
 
 
 @app.post("/api/mix/basket/remove")
