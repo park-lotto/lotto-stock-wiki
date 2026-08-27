@@ -1944,10 +1944,16 @@ function render(opts){
   // '상위 N장'이 곧 사장님이 보려던 것이다. 더 보고 싶으면 [더 보기]로 이어붙인다.
   const _total = items.length;
   if(items.length > RENDER_CAP) items = items.slice(0, RENDER_CAP);
+  // ★loading="lazy" 금지(2026-08-28 실측 — 2026-08-04 모달 카드와 **같은 함정**).
+  //   이 화면에서도 lazy 로더가 요청을 **아예 안 보낸다**: 카드 99장이 전부
+  //   complete=false·naturalWidth=0이고, 스크롤해 화면 안에 18장이 들어와도 0장이었다.
+  //   lazy를 떼고 같은 URL을 강제 로드하니 540x960으로 **즉시** 떴다.
+  //   ⚠️핀터레스트만의 문제가 아니었다 — 유튜브 탭도 200장 전부 0장이었다(전 플랫폼).
+  //   RENDER_CAP(상한)이 이미 걸려 있어 한 번에 부르는 장수는 제한된다.
   el.innerHTML = _notice + items.map((i,idx)=>`
     <div class="card">
       ${i.thumbnail?`<div class="thumb" data-thumb="${thumbURL(i.thumbnail, i.shortcode)}">
-        <img src="${thumbURL(i.thumbnail, i.shortcode)}" data-vurl="${i.video_url?('/api/video?url='+encodeURIComponent(i.video_url)):''}" ${i.video_url?'onclick="playInline(this)"':(i.platform==='youtube'?`onclick="playYoutube(this,'${i.shortcode}')"`:(i.platform==='tiktok'?`onclick="playTiktok(this,'${i.shortcode}')"`:((i.platform||PLATFORM)==='instagram'?`onclick="playInstagram(this,'${i.shortcode}')"`:'')))} loading="lazy" onerror="this.style.visibility='hidden'">
+        <img src="${thumbURL(i.thumbnail, i.shortcode)}" data-vurl="${i.video_url?('/api/video?url='+encodeURIComponent(i.video_url)):''}" ${i.video_url?'onclick="playInline(this)"':(i.platform==='youtube'?`onclick="playYoutube(this,'${i.shortcode}')"`:(i.platform==='tiktok'?`onclick="playTiktok(this,'${i.shortcode}')"`:((i.platform||PLATFORM)==='instagram'?`onclick="playInstagram(this,'${i.shortcode}')"`:'')))} onerror="this.style.visibility='hidden'">
         ${badgeHTML(i, _bctx)}
         ${(i.video_url||i.platform==='youtube'||i.platform==='tiktok'||(i.platform||PLATFORM)==='instagram')?'<span class="play-badge">▶</span>':''}
       </div>`:''}
