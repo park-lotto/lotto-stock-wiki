@@ -1993,6 +1993,66 @@ def _final_source_indices(plan, n_sources):
     return out
 
 
+def split_final_into_beat_clips(clean_final, timeline, work, prefix="cc"):
+    """청소된 **완성본 1편**을 비트 경계로 잘라 {가상 video_id: 경로} (2026-08-27).
+
+    캡컷 내보내기용이다. 캡컷은 소스 파일 + 타임라인 트림 구조라 소스별 청소본이
+    필요한데, 완성본 1편만 청소하면 그게 없다. 그래서 **완성본을 컷별로 나눠** 준다.
+      - VMake를 다시 부르지 않는다 → 추가 과금 0, 대기 0
+      - 대신 컷을 원본 범위 **밖으로 늘리는 편집**은 못 한다(조각 뒤에 여분이 없다)
+
+    경계는 _beat_timeline이 준 t0·dur을 그대로 쓴다 — 렌더가 쓰는 것과 같은 값이라
+    조각이 화면과 어긋나지 않는다(여기서 따로 계산하면 어긋난다, 0순위-B).
+    """
+    work = Path(work)
+    out = {}
+    for row in timeline or []:
+        idx = row.get("beat_idx")
+        t0 = float(row.get("t0") or 0.0)
+        dur = float(row.get("dur") or 0.0)
+        if dur <= 0:
+            continue
+        vid = f"{prefix}{idx}"
+        dst = work / f"capcut_clean_{vid}.mp4"
+        if dst.exists() and dst.stat().st_size > 1024:
+            out[vid] = str(dst)                     # 같은 편성이면 다시 안 자른다
+            continue
+        subprocess.run(
+            ["ffmpeg", "-y", "-v", "error", "-ss", f"{t0:.3f}", "-i", str(clean_final),
+             "-t", f"{dur:.3f}", "-c:v", "libx264", "-preset", "veryfast", "-crf", "18",
+             "-pix_fmt", "yuv420p", "-c:a", "aac", "-ar", "48000", "-ac", "2", str(dst)],
+            check=True)
+        if not dst.exists() or dst.stat().st_size < 1024:
+            raise RuntimeError(f"완성본 분할 결과가 비었습니다: {vid}")
+        out[vid] = str(dst)
+    return out
+
+
+def plan_using_beat_clips(plan, clips, timeline, prefix="cc"):
+    """편집안을 **조각 기준**으로 바꾼 사본. 각 비트가 자기 조각을 통째로(0~끝) 쓴다.
+
+    조각은 그 비트의 화면을 이미 담고 있으므로 재료를 하나로 접는다 —
+    alternates·scene_override를 남기면 캡컷이 없는 파일을 찾는다.
+
+    ★end는 **조각의 실제 길이**(timeline의 dur)다. target_seconds를 쓰면 안 된다 —
+      실제 컷 길이는 TTS에 맞춰 달라지므로 조각보다 길거나 짧아 화면이 어긋난다.
+    """
+    import copy
+    durs = {r.get("beat_idx"): float(r.get("dur") or 0.0) for r in (timeline or [])}
+    out = copy.deepcopy(plan or {})
+    for b in out.get("beats") or []:
+        idx = b.get("beat_idx")
+        vid = f"{prefix}{idx}"
+        if vid not in clips:
+            continue
+        d = durs.get(idx) or 0.0
+        b["primary"] = {"video_id": vid, "seg_id": f"{vid}-0", "start": 0.0,
+                        "end": d if d > 0 else None}
+        b["alternates"] = []
+        b.pop("scene_override", None)
+    return out
+
+
 def _clean_strategy(job):
     """자막제거를 **어떤 단위로** 할지 정하는 유일한 자리 (2026-08-27).
 

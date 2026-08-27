@@ -5665,6 +5665,29 @@ def api_mix_capcut(job_id: str, base: str = ""):
         if _cp and Path(_cp).exists():
             source_video_paths[_vid] = _cp
     timeline = _beat_timeline(plan, tts_paths)
+    # ★소스별 청소본이 없다 = 완성본 1편만 청소한 경로다(2026-08-27 사장님 B안 확정).
+    #   그대로 두면 원본이 나가 **자막이 살아난다**. 완성본을 컷별로 잘라 그 조각을 쓴다.
+    #     - VMake를 다시 안 부른다 → 추가 과금 0, 대기 0
+    #     - 대신 캡컷에서 컷을 원본 범위 밖으로 **늘리는** 편집은 못 한다(조각 뒤가 없다)
+    #   자르기가 실패하면 원본으로 두지 않고 **막는다** — 자막 남은 결과물을 조용히 내보내는
+    #   것이 더 나쁘다(사장님이 캡컷에서야 알게 된다).
+    if job.get("subtitle_removal") and not (job.get("clean_sources") or {}):
+        _cf = job.get("clean_video_path")
+        if _cf and Path(_cf).exists():
+            try:
+                _clips = mix_pipeline.split_final_into_beat_clips(_cf, timeline, work)
+            except Exception as e:      # noqa: BLE001
+                import traceback as _tb
+                _tb.print_exc(file=sys.stderr)
+                return JSONResponse(status_code=500, content={
+                    "ok": False, "error": "자막 없는 조각을 만들지 못했습니다: %s" % e})
+            if _clips:
+                source_video_paths = dict(_clips)
+                plan = mix_pipeline.plan_using_beat_clips(plan, _clips, timeline)
+                timeline = _beat_timeline(plan, tts_paths)
+        elif job.get("clean_status") == "ready":
+            return JSONResponse(status_code=409, content={
+                "ok": False, "error": "자막 없는 완성본이 아직 없어요 — 3단계 완성본 만들기를 먼저 해주세요"})
     out_root = work / "capcut"
     out_root.mkdir(parents=True, exist_ok=True)
     # ★완성본도 함께 보낸다(2026-08-23 사장님 "완성본 조각들이 그대로 옮겨지고").
