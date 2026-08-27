@@ -4835,9 +4835,18 @@ def api_produce_mix_clean_thumb(job_id: str, kind: str = "original",
     #   그래서 pos를 '완성본에 실제로 쓰인 구간 안의 상대 위치'로 해석한다
     #   (앞/가운데/뒷부분 버튼도 그 장면 안에서 움직인다).
     #   소스별 청소본이 있던 옛 경로는 좌우 길이가 같아 종전대로 pos를 쓴다.
-    _src_sec = None
+    _src_sec = _final_sec = None
     if not (job.get("clean_sources") or {}):
-        _src_sec, _ = mix_pipeline.final_pair_for_source(job.get("edit_plan") or {}, vid, pos)
+        # ★길이의 근거는 **실제 타임라인**이다(계획값 target_seconds가 아니라).
+        #   재료 구간(start~end)이 5.7초여도 실제 컷이 2.69초면 앞 2.69초만 화면에 나온다.
+        _plan = job.get("edit_plan") or {}
+        _tts = {b["beat_idx"]: b["tts_path"] for b in (_plan.get("beats") or [])
+                if b.get("tts_path")}
+        try:
+            _tl = video_assemble._beat_timeline(_plan, _tts)
+        except Exception:      # noqa: BLE001 — 못 구하면 근사로(그래도 종전보단 맞다)
+            _tl = None
+        _src_sec, _final_sec = mix_pipeline.final_pair_for_source(_plan, vid, pos, timeline=_tl)
     if kind == "clean":
         if job.get("clean_status") != "ready":
             return JSONResponse(status_code=404, content={"ok": False, "error": "클린 소스 없음"})
@@ -4861,18 +4870,21 @@ def api_produce_mix_clean_thumb(job_id: str, kind: str = "original",
                 return JSONResponse(status_code=404,
                                     content={"ok": False, "error": "완성본에 안 쓰인 소스",
                                              "reason": "not_in_final"})
-            # 구간 안 상대 위치(BEFORE와 짝) — 못 구하면 종전처럼 첫 등장 지점.
-            _, _pair_ratio = mix_pipeline.final_pair_for_source(
-                job.get("edit_plan") or {}, vid, pos)
-            pos = _pair_ratio if _pair_ratio is not None else _at
+            # 완성본 쪽도 **초**로 직접 짚는다(BEFORE와 짝).
+            #   비율은 조립본 길이가 계획 합과 다르면 어긋난다(실측 24.19 vs 25.4초).
+            if _final_sec is None:
+                pos = _at
     else:
         try:
             src = _resolve_sources(job, work)[vid]
         except Exception:
             return JSONResponse(status_code=404, content={"ok": False, "error": "소스 없음"})
     dur = frame_extract._probe_duration(src) or 2.0
-    # 원본은 **완성본에 쓰인 시각**을 초로 직접 안다 → 그 지점을 뽑아 AFTER와 짝을 맞춘다.
-    at = _src_sec if (kind != "clean" and _src_sec is not None) else dur * pos
+    # 좌우 모두 **초**를 직접 안다 → 같은 장면이 나란히 선다.
+    if kind == "clean":
+        at = _final_sec if _final_sec is not None else dur * pos
+    else:
+        at = _src_sec if _src_sec is not None else dur * pos
     at = min(max(float(at), 0.0), max(dur - 0.05, 0.0))
     frame = frame_extract.extract_frame_at(src, work / "clean_thumb", at,
                                            filename=f"{kind}_{si}_{int(pos * 100)}_{int(at * 100)}.jpg")

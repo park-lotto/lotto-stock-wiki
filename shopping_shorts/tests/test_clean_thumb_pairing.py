@@ -26,45 +26,52 @@ def _plan():
     ]}
 
 
+def _tl():
+    """실제 타임라인 — ★재료 구간(5.4~11.1=5.7초)보다 컷이 짧다(2.69초)."""
+    return [{"beat_idx": 0, "t0": 0.0, "dur": 7.01},
+            {"beat_idx": 1, "t0": 7.01, "dur": 2.69}]
+
+
 class Test좌우_같은_장면:
-    def test_원본_시각은_쓰인_구간_안(self):
-        """★핵심 — 원본 전체의 pos가 아니라 5.4~11.1 안이어야 한다."""
-        sec, _ = mp.final_pair_for_source(_plan(), "s3", 0.5)
-        assert 5.4 <= sec <= 11.1, sec
-        assert sec == pytest.approx(5.4 + (11.1 - 5.4) * 0.5)
+    def test_원본은_실제_컷_길이_안에서(self):
+        """★1차 오진 재발 방지 — 재료 구간이 5.7초여도 화면에 나오는 건 앞 2.69초뿐이다."""
+        sec, _ = mp.final_pair_for_source(_plan(), "s3", 0.5, timeline=_tl())
+        assert sec == pytest.approx(5.4 + 2.69 * 0.5)
+        assert sec < 5.4 + 2.69, "안 쓰이는 뒷부분을 가리킨다"
 
-    def test_앞_가운데_뒤가_구간_안에서_움직인다(self):
-        a, _ = mp.final_pair_for_source(_plan(), "s3", 0.0)
-        b, _ = mp.final_pair_for_source(_plan(), "s3", 0.5)
-        c, _ = mp.final_pair_for_source(_plan(), "s3", 1.0)
-        assert a < b < c
-        assert a == pytest.approx(5.4) and c == pytest.approx(11.1)
+    def test_완성본은_초로_직접_짚는다(self):
+        """비율이면 조립본 길이가 계획과 다를 때 어긋난다(실측 24.19 vs 25.4초)."""
+        _, fin = mp.final_pair_for_source(_plan(), "s3", 0.5, timeline=_tl())
+        assert fin == pytest.approx(7.01 + 2.69 * 0.5)
 
-    def test_완성본_비율도_같은_비율로_움직인다(self):
-        """좌우가 짝이어야 한다 — 한쪽만 움직이면 다시 어긋난다."""
-        _, r0 = mp.final_pair_for_source(_plan(), "s3", 0.0)
-        _, r1 = mp.final_pair_for_source(_plan(), "s3", 1.0)
-        assert r0 < r1
+    def test_좌우가_같은_비율만큼_움직인다(self):
+        a_s, a_f = mp.final_pair_for_source(_plan(), "s3", 0.0, timeline=_tl())
+        b_s, b_f = mp.final_pair_for_source(_plan(), "s3", 1.0, timeline=_tl())
+        assert (b_s - a_s) == pytest.approx(b_f - a_f), "좌우 이동폭이 다르면 다시 어긋난다"
 
-    def test_두_비트_중_뒤쪽_소스는_완성본_뒤쪽(self):
-        _, r_first = mp.final_pair_for_source(_plan(), "s0", 0.5)
-        _, r_last = mp.final_pair_for_source(_plan(), "s3", 0.5)
-        assert r_first < r_last, "순서가 뒤집혔다"
+    def test_앞_가운데_뒤(self):
+        xs = [mp.final_pair_for_source(_plan(), "s3", p, timeline=_tl())[0]
+              for p in (0.0, 0.5, 1.0)]
+        assert xs[0] < xs[1] < xs[2]
+        assert xs[0] == pytest.approx(5.4)
+
+    def test_타임라인이_없으면_근사로라도_준다(self):
+        sec, fin = mp.final_pair_for_source(_plan(), "s3", 0.5)
+        assert sec is not None and fin is not None
 
     def test_alternates로만_쓰인_소스도_찾는다(self):
-        """alternates도 실제로 화면에 나온다 — 빼면 그 소스가 '안 쓰임'이 된다."""
-        sec, ratio = mp.final_pair_for_source(_plan(), "s1", 0.5)
-        assert sec is not None and 6.1 <= sec <= 8.8
+        sec, _ = mp.final_pair_for_source(_plan(), "s1", 0.5, timeline=_tl())
+        assert sec is not None and sec >= 6.1
 
     def test_안_쓰인_소스는_None(self):
-        assert mp.final_pair_for_source(_plan(), "s9", 0.5) == (None, None)
+        assert mp.final_pair_for_source(_plan(), "s9", 0.5, timeline=_tl()) == (None, None)
 
-    def test_뒤집힌_구간은_None(self):
-        p = _plan()
-        p["beats"][1]["primary"] = {"video_id": "s3", "start": 9.0, "end": 3.0}
-        assert mp.final_pair_for_source(p, "s3", 0.5) == (None, None)
+    def test_길이가_0이면_None(self):
+        bad = [{"beat_idx": 1, "t0": 7.0, "dur": 0.0}]
+        p = {"beats": [_plan()["beats"][1]]}
+        assert mp.final_pair_for_source(p, "s3", 0.5, timeline=bad) == (None, None)
 
     def test_pos가_이상해도_안전(self):
-        for bad in (-1, 2, None, "x"):
-            sec, _ = mp.final_pair_for_source(_plan(), "s3", bad)
-            assert sec is None or 5.4 <= sec <= 11.1
+        for b in (-1, 2, None, "x"):
+            sec, _ = mp.final_pair_for_source(_plan(), "s3", b, timeline=_tl())
+            assert sec is None or 5.4 <= sec <= 5.4 + 2.69
