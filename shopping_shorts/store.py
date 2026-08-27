@@ -6024,8 +6024,15 @@ class Store:
     #  그래서 이 중단은 **고장이 아니다** — 같은 'failed'로 적으면 통계가 오염된다.
     _BACKGROUND_TASKS = ("durfill", "prewarm", "overseas")
 
-    def reap_stale(self, minutes=2):
+    def reap_stale(self, minutes=4):
         """heartbeat가 minutes분 넘게 안 뛴 running을 정리하고 개수를 반환한다.
+
+        ★기본 2분 → 4분(2026-08-27). 하트비트는 보통 30초마다 뛰지만 **렌더는 예외**다 —
+          긴 ffmpeg 구간에서 실측 최대 **121초** 침묵했다(최근 200건 중 1건, render).
+          2분 기준은 그 경계에 딱 걸려 **살아 있는 렌더를 죽은 것으로 오판**할 수 있다.
+          4분이면 실측 최대치의 2배 여유다. 진짜 죽은 워커도 4분이면 충분히 걸린다.
+          ⚠️ deploy/auto_deploy.sh의 _worker_busy(5분)와 짝이다 — 한쪽만 바꾸면
+             "배포는 죽었다고 보고 재시작하는데 여기선 살았다고 보는" 어긋남이 난다.
 
         워커가 SIGKILL로 죽으면 heartbeat가 멈춘다 — 그걸 잡아 화면에 실패를 알린다.
         (예전엔 조용히 멈춰 '되고 있나?'를 알 수 없었다, 2026-07-29 실사고)
@@ -6038,6 +6045,15 @@ class Store:
           — 화면·집계가 '중단(재시도됨)'을 고장으로 세지 않게."""
         marks = ",".join("?" for _ in self._BACKGROUND_TASKS)
         with self._conn() as c:
+            # ★죽은 행을 **먼저 집어둔다**(2026-08-27). 아래 UPDATE로 state가 바뀌면
+            #   어떤 job이 죽었는지 알 수 없게 된다 — 화면에 전파하려면 job_id가 필요하다.
+            dead = c.execute(
+                "SELECT id, task, args_json FROM job_queue "
+                " WHERE state='running' "
+                "   AND (heartbeat_at IS NULL "
+                "        OR datetime(heartbeat_at) < datetime('now', ?))",
+                (f"-{int(minutes)} minutes",)).fetchall()
+
             cur = c.execute(
                 "UPDATE job_queue SET state='failed', "
                 "       error=CASE WHEN task IN (" + marks + ") "
@@ -6048,7 +6064,54 @@ class Store:
                 "   AND (heartbeat_at IS NULL "
                 "        OR datetime(heartbeat_at) < datetime('now', ?))",
                 (*self._BACKGROUND_TASKS, f"-{int(minutes)} minutes"))
+
+            # ★★여기가 이번에 뚫려 있던 자리 — 큐만 실패로 적고 **화면에는 안 알렸다**.
+            #   2026-08-27 실사고(cid204 job 261ed17263ec): 배포가 렌더 중 워커를 죽여
+            #   큐는 failed가 됐는데 mix_jobs.status는 'rendering'에 그대로 남았다.
+            #   화면은 계속 "최종 렌더 중…"을 돌렸고 고객은 13분을 기다리다 제보했다.
+            #   실패를 알릴 길이 없으면 "다시 시도" 버튼도 안 뜬다 — 영원히 멈춘다.
+            #   실측: 이 구멍 때문에 extracting 6 / downloading 5 / planning 3 / tts 1건이
+            #   진행중인 채로 굳어 있었다(2026-08-27 라이브 집계).
+            self._propagate_dead_to_jobs(c, dead)
             return cur.rowcount
+
+    # task별로 화면이 읽는 상태 칸이 다르다. 한 군데서만 정한다(0순위-B) —
+    # 여기가 갈리면 어떤 단계는 실패가 안 뜨고 또 멈춘 것처럼 보인다.
+    #   (진행중 상태칸, 사유칸, 이미 끝난 값들 — 이 값이면 건드리지 않는다)
+    _TASK_JOB_FIELDS = {
+        "mix":     ("status", "error", ("done", "failed", "ready_for_review")),
+        "retype":  ("status", "error", ("done", "failed", "ready_for_review")),
+        "render":  ("status", "error", ("done", "failed", "ready_for_review")),
+        "clean":   ("clean_status", "clean_error", ("ready", "failed")),
+        "preview": ("preview_status", "preview_error", ("ready", "failed")),
+    }
+    _DEAD_MSG = "작업 도중 중단됐습니다 — 다시 시도해 주세요"
+
+    def _propagate_dead_to_jobs(self, c, dead_rows):
+        """죽은 큐 항목의 실패를 **화면이 읽는 자리**(mix_jobs)까지 전파한다.
+
+        배경작업(durfill·prewarm·overseas)은 job과 무관하므로 건너뛴다.
+        이미 끝난 값(done/failed/ready 등)은 덮어쓰지 않는다 — 워커가 죽은 뒤
+        재시도가 먼저 성공했을 수 있고, 그걸 실패로 되돌리면 더 나쁘다.
+        """
+        for _id, task, args in dead_rows or []:
+            spec = self._TASK_JOB_FIELDS.get(task)
+            if not spec:
+                continue                       # 배경작업 등 — 화면에 알릴 자리가 없다
+            col, errcol, done_values = spec
+            try:
+                job_id = (json.loads(args or "{}") or {}).get("job_id")
+            except (ValueError, TypeError):
+                job_id = None
+            if not job_id:
+                continue
+            marks = ",".join("?" for _ in done_values)
+            c.execute(
+                f"UPDATE mix_jobs SET {col}='failed', {errcol}=?, "
+                "       updated_at=datetime('now') "
+                " WHERE job_id=? "
+                f"   AND ({col} IS NULL OR {col} NOT IN ({marks}))",
+                (self._DEAD_MSG, job_id, *done_values))
 
     def queue_status(self, task, args_match=None):
         """이 작업의 큐 상태. position=내 앞에 있는 queued/running 개수(화면 대기순번).
