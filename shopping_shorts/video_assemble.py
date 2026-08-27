@@ -62,10 +62,35 @@ _FINAL_PRESET = "medium"
 #   ★하한 2: 코어÷워커를 그대로 쓰면 4코어/3워커 = 1스레드가 되는데, **셋이 동시에
 #   렌더하는 건 드문 일**이라 평소 렌더까지 1스레드로 기어가면 손해가 더 크다. x264는
 #   스레드 2개만 돼도 1개보다 확연히 빠르고, 겹칠 때의 과점유는 2 상한으로 충분히 막힌다.
+#   ★2026-08-27 이름 어긋남 수정 — **워커 수를 정하는 곳과 읽는 곳이 달랐다.**
+#   워커 개수를 실제로 정하는 건 deploy/worker_autoscale.sh이고 그건 SHORTS_WORKERS를
+#   본다. 그런데 여기선 WORKER_COUNT를 봤다 — 서버 env에 그 이름은 없으므로 **워커가
+#   8개인데 계속 3개인 줄 알고** 스레드를 산정했다(8÷3=2 → 8워커×2 = 16스레드 요구 vs
+#   8코어 = 2배 과점유). 자동조정 스크립트와 **같은 이름을 같은 순서로** 읽어 한 군데서만
+#   정해지게 한다(CLAUDE.md 0순위-B: 같은 결정을 두 번 적지 마라).
+#   폴백 순서도 worker_autoscale.sh와 맞춘다: SHORTS_WORKERS → 없으면 코어-2(3~6로 묶음).
+def _worker_count():
+    """지금 서버에 떠 있을 워커 수 — deploy/worker_autoscale.sh와 **같은 규칙**으로 센다.
+
+    우선순위: SHORTS_WORKERS(사람이 명시) → WORKER_COUNT(옛 이름, 하위호환)
+              → 자동계산(코어-2, 3~6). 스크립트가 바뀌면 여기도 같이 고쳐야 한다."""
+    for name in ("SHORTS_WORKERS", "WORKER_COUNT"):
+        raw = os.getenv(name, "")
+        if raw:
+            try:
+                n = int(raw)
+            except ValueError:            # 오타는 무시하고 다음 후보로
+                continue
+            if n >= 1:
+                return min(12, n)         # 스크립트의 오타 안전선(1~12)과 동일
+    cores = os.cpu_count() or 1
+    return max(3, min(6, cores - 2))      # 스크립트의 자동 정책과 동일
+
+
 def _default_ffmpeg_threads():
     try:
         cores = os.cpu_count() or 1
-        workers = int(os.getenv("WORKER_COUNT", "3") or 3)
+        workers = _worker_count()
         return max(2, cores // max(1, workers))
     except Exception:                     # noqa: BLE001 — 산정 실패는 무제한으로(종전 동작)
         return 0
