@@ -1088,6 +1088,14 @@
      색 칸이 화면 23곳에 흩어져 있다. 각자 팔레트를 달면 반드시 어긋나므로
      (0순위-B) **한 곳**에서 만들어 전부에 자동으로 붙인다(_swAttachAll).
      기본 색선택기는 그대로 둔다 — 세밀한 색이 필요할 때 쓴다. */
+  /* 워터마크 크기·투명도 버튼(2026-08-27) — 슬라이더보다 누르기 쉽다. */
+  .wm-step{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--sub)}
+  .wm-step button{width:26px;height:26px;border-radius:8px;cursor:pointer;font-size:14px;
+                  line-height:1;background:var(--inset);color:var(--txt);
+                  border:1px solid var(--line);padding:0}
+  .wm-step button:hover{background:var(--line)}
+  .wm-step b{min-width:38px;text-align:center;color:var(--txt);font-size:12.5px}
+
   /* 가로형(롱폼) 표시 — 담긴 카드에서 바로 눈에 걸려야 한다(2026-08-27). */
   .pool-lscape{display:inline-block;margin-left:7px;padding:1px 7px;border-radius:999px;
                background:#4a1414;color:#ff8a8a;border:1px solid #7a2b2b;
@@ -1729,7 +1737,22 @@
                     <select id="wmPos" onchange="WM_MANUAL_Y=null;updateDeco()" style="background:var(--inset);color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:4px">
                       <option value="bc" selected>하단중앙</option><option value="br">우하단</option><option value="bl">좌하단</option><option value="tr">우상단</option><option value="tl">좌상단</option>
                     </select></label>
-                  <label style="font-size:12px;color:var(--sub)">투명도 <input id="wmAlpha" type="range" min="20" max="100" value="60" oninput="updateDeco()"></label>
+                  <!-- 크기·투명도(2026-08-27 사장님 지시). 슬라이더 대신 버튼 —
+                       손이 미끄러지지 않고 몇 번 눌렀는지가 눈에 남는다(시니어 타깃).
+                       ★값의 주인은 숨은 wmSize/wmAlpha 하나다. 버튼은 그 칸에 써넣고
+                         updateDeco()를 부를 뿐이다(0순위-B). -->
+                  <span class="wm-step">크기
+                    <button type="button" onclick="wmNudge('size',-4)" title="작게">−</button>
+                    <b id="wmSizeV">30</b>
+                    <button type="button" onclick="wmNudge('size',4)" title="크게">＋</button>
+                  </span>
+                  <span class="wm-step">투명도
+                    <button type="button" onclick="wmNudge('alpha',-10)" title="더 흐리게">−</button>
+                    <b id="wmAlphaV">60%</b>
+                    <button type="button" onclick="wmNudge('alpha',10)" title="더 진하게">＋</button>
+                  </span>
+                  <label hidden style="display:none"><input id="wmSize" type="number" value="30" onchange="updateDeco()"></label>
+                  <label hidden style="display:none"><input id="wmAlpha" type="range" min="20" max="100" value="60" oninput="updateDeco()"></label>
                 </div>
                 <!-- 🔴 [광고] 표시 — 틀(템플릿)에 들어가는 값이지만 공통 기능이라 여기 둔다
                      (2026-08-22 사장님 지시). ★값의 주인은 숨은 frAd 하나 —
@@ -3498,6 +3521,10 @@ function initHeadcopy(){
     STYLE_TOUCHED = true;
     renderCapFontSelect();   // capFont 옵션을 먼저 채워야 applyConfig의 capFont value가 먹는다
     applyConfig(STATE.headcopy, STATE.captionStyle);   // DOM 입력칸 채움(+updateHC/updateCaption 내부호출)
+    // ★워터마크도 같은 이유로 여기서 채운다(2026-08-27). 아래 updateDeco()가 먼저 돌면
+    //   빈 칸을 읽어 저장된 워터마크를 기본값으로 덮는다 — 헤드카피 색이 죽었던 것과
+    //   똑같은 모양의 사고다(위 주석 참조).
+    try{ applyWatermark((STATE.deco || {}).watermark); }catch(e){}
   }
   updateHC();
   renderCapFontSelect();
@@ -4196,13 +4223,51 @@ function renderCapPresets(){
 // ── 🏷 워터마크 · 추가 텍스트(deco) ──────────────
 const WM_POS={bc:{x:50,y:88},br:{x:82,y:94},bl:{x:18,y:94},tr:{x:82,y:8},tl:{x:18,y:8}};
 let WM_MANUAL_Y=null;   // 워터마크를 미리보기에서 세로로 드래그해 잡은 y%(없으면 프리셋 사용)
+// 크기 한계 — 렌더(video_assemble)가 이 값을 drawtext 글자크기로 그대로 쓴다.
+// 1080 폭 기준: 16이면 거의 안 보이고, 90이면 화면을 가로지른다.
+const WM_SIZE_MIN = 16, WM_SIZE_MAX = 90;
+
+// 크기·투명도 버튼 — 숨은 칸에 써넣고 updateDeco()를 부른다(값의 주인은 그 칸 하나).
+function wmNudge(what, d){
+  const el = document.getElementById(what === 'size' ? 'wmSize' : 'wmAlpha');
+  if(!el) return;
+  const lo = what === 'size' ? WM_SIZE_MIN : 20;
+  const hi = what === 'size' ? WM_SIZE_MAX : 100;
+  el.value = Math.min(hi, Math.max(lo, (+el.value || (what === 'size' ? 30 : 60)) + d));
+  updateDeco();
+}
+
+// ★저장된 워터마크를 화면 칸에 되살린다(2026-08-27). 전엔 복원 경로가 아예 없어,
+//   작업을 다시 열면 칸은 초기값인데 updateDeco()가 그 초기값으로 STATE를 덮어써
+//   어제 맞춰둔 워터마크가 조용히 사라졌다(크기를 조절할 수 있게 되면 더 커질 문제다).
+function applyWatermark(wm){
+  const g = id => document.getElementById(id);
+  if(!g('wmOn')) return;
+  if(!wm || !wm.text){ return; }        // 없으면 칸을 건드리지 않는다(끄기는 사용자 몫)
+  g('wmOn').checked = true;
+  g('wmText').value = wm.text;
+  if(wm.color) g('wmColor').value = wm.color;
+  if(wm.size) g('wmSize').value = wm.size;
+  if(typeof wm.alpha === 'number') g('wmAlpha').value = Math.round(wm.alpha * 100);
+  // 위치: 프리셋에 없는 y는 드래그로 잡은 값이므로 그대로 되살린다.
+  if(typeof wm.y === 'number'){
+    const pre = WM_POS[g('wmPos').value];
+    if(!pre || Math.abs(pre.y - wm.y) > 0.5) WM_MANUAL_Y = wm.y;
+  }
+  updateDeco();
+}
 function updateDeco(){
   const g=id=>document.getElementById(id); if(!g('wmOn')) return;
   STATE.deco=STATE.deco||{extra_texts:[]};
   const on=g('wmOn').checked, text=(g('wmText').value||'').trim();
   const pos=WM_POS[g('wmPos').value]||WM_POS.bc, alpha=+g('wmAlpha').value/100;
   const wmY=(WM_MANUAL_Y!=null?WM_MANUAL_Y:pos.y);
-  STATE.deco.watermark=(on&&text)?{text, color:g('wmColor').value, x:pos.x, y:wmY, size:30, alpha, float:true,
+  // ★크기는 이제 사용자가 정한다(2026-08-27). 전엔 30 고정이라 1080 폭에서 너무 작았다.
+  const wmSize=Math.min(WM_SIZE_MAX, Math.max(WM_SIZE_MIN, +g('wmSize').value || 30));
+  const _sv=g('wmSizeV'), _av=g('wmAlphaV');
+  if(_sv) _sv.textContent=wmSize;
+  if(_av) _av.textContent=Math.round(alpha*100)+'%';
+  STATE.deco.watermark=(on&&text)?{text, color:g('wmColor').value, x:pos.x, y:wmY, size:wmSize, alpha, float:true,
     font:'Pretendard-ExtraBold.otf', outline:true, outline_color:'#000000', outline_w:3}:null;
   const wp=g('wmPreview'), scale=PREVIEW_W/VIDEO_W, w=STATE.deco.watermark;
   if(w){ wp.style.display='block'; wp.textContent=w.text; wp.style.left=w.x+'%'; wp.style.top=w.y+'%';
