@@ -1335,7 +1335,7 @@ async function renderChannelBoard(){
     const fitColor = fitPct>=80 ? '#3fb950' : (fitPct>=40 ? '#d29922' : '#f85149');
     return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line)">
       <span style="width:26px;color:var(--sub);font-size:12px">${idx+1}</span>
-      <img src="${r.thumbnail||''}" referrerpolicy="no-referrer" loading="lazy" onerror="this.style.visibility='hidden'" style="width:44px;height:44px;object-fit:cover;border-radius:6px;background:#1a2230">
+      <img src="${r.thumbnail||''}" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'" style="width:44px;height:44px;object-fit:cover;border-radius:6px;background:#1a2230">
       <div style="flex:1;min-width:0">
         <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.grade||''} <a href="${r.channel_url}" target="_blank" style="color:inherit;text-decoration:none">${esc(r.name||r.channel_id||'')}</a> ${wait}</div>
         <div style="font-size:11px;color:var(--sub)"><span style="color:${fitColor};font-weight:700">🛒 적합도 ${fitPct}%</span> · 👁 ${fmt(r.views)} · ⚡속도 ${fmt(r.speed)} · 💬참여 ${(r.density*100||0).toFixed(1)}% · 📈가속 ${fmt(r.accel)} · 🎬${r.video_count}</div>
@@ -1760,7 +1760,7 @@ function renderOverseas(){
         ? ('조회 ' + ((i.views>=10000)?(Math.round(i.views/1000)/10)+'만':i.views))
         : ('반응 ' + (i.base_count||0));
       const thumb = i.thumbnail
-        ? `<img src="${thumbURL(i.thumbnail, i.shortcode)}" loading="lazy">`
+        ? `<img src="${thumbURL(i.thumbnail, i.shortcode)}">`
         : '<div class="ov-noimg">▶</div>';
       const title = (i.caption||i.title||'').replace(/</g,'&lt;');
       return `<a class="ov-card" href="${i.url||'#'}" target="_blank" rel="noopener">
@@ -2057,7 +2057,7 @@ async function _renderChannelHistory(username, liveShortcodes){
 }
 function _historyCard(h){
   return `<div class="card">
-    <div class="thumb"><img src="${thumbURL(h.thumb, h.shortcode)}" loading="lazy" onerror="this.style.visibility='hidden'"></div>
+    <div class="thumb"><img src="${thumbURL(h.thumb, h.shortcode)}" onerror="this.style.visibility='hidden'"></div>
     <div class="body">
       <div class="rank">${esc(h.category||'')} · ${fmtTime(h.last_seen)}</div>
       <div class="ch"><span class="chname">${esc(h.name||h.username||'')}</span></div>
@@ -3263,7 +3263,7 @@ async function renderTrendCards(){
     const thumb = thumbURL(rep.thumbnail, rep.shortcode);
     return `
     <div class="card trend-card">
-      <div class="thumb"><img src="${thumb}" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'"></div>
+      <div class="thumb"><img src="${thumb}" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'"></div>
       <div class="body" style="padding:8px">
         <div style="font-weight:600">${esc(g.subjectKo)}${zh?` <span style="color:var(--sub);font-weight:400">· ${esc(zh)}</span>`:''}</div>
         <div style="font-size:11px;color:var(--sub);margin:4px 0">🔥 ${g.count}개 영상에서 터짐 ${pbadges}${zh?'':' · <span title="중국 검색은 중국어 번역이 필요합니다">번역 대기</span>'}</div>
@@ -3479,7 +3479,7 @@ function renderLens(shortcode, mountId){
              걸면 검은 칸이 된다. 랭킹 카드는 원래 이 프록시(thumbURL)를 쓰는데 렌즈만
              직접 걸고 있었다 — 같은 일이 두 군데인 0순위-B 사례.
              실패하면 예전 방식(직접 URL·no-referrer)으로 한 번 더 시도한다(회귀 방지). -->
-        <img src="${thumbURL(i.thumbnail)}" data-raw="${esc(i.thumbnail||'')}" referrerpolicy="no-referrer" loading="lazy"
+        <img src="${thumbURL(i.thumbnail)}" data-raw="${esc(i.thumbnail||'')}" referrerpolicy="no-referrer"
              onerror="if(this.dataset.raw&&this.src!==this.dataset.raw){this.src=this.dataset.raw;}else{this.style.visibility='hidden';}"
              onclick="lensPlayInline('${shortcode}','${i.savesc}',this)" style="cursor:pointer">
         <span style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.65);color:#fff;font-size:11px;padding:2px 8px;border-radius:10px">${plabel}</span>
@@ -3929,7 +3929,7 @@ async function runSceneSplit(){
     listEl.innerHTML = '<div class="cut-grid">' + SPLIT.cuts.map(c => `
       <label class="cut">
         <input type="checkbox" data-i="${c.i}">
-        <img src="${esc(c.poster_url)}" loading="lazy">
+        <img src="${esc(c.poster_url)}">
         <span>${c.i+1} · ${c.duration.toFixed(2)}s</span>
       </label>`).join('') + '</div>';
     listEl.querySelectorAll('input[type=checkbox]').forEach(cb=>{

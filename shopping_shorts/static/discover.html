@@ -451,7 +451,7 @@ function _renderDiscoverCards(list){
     <div class="card">
       <div class="badges">${isHot(i)?'<span class="badge hot">🔥 핫</span>':''}${isNew(i)?'<span class="badge new">🆕 뉴</span>':''}</div>
       <div class="thumb">
-        <img src="${thumb(i.thumbnail)}" data-vurl="${i.video_url?('/api/video?url='+encodeURIComponent(i.video_url)):''}" ${i.video_url?'onclick="playInline(this)"':(i.shortcode?`onclick="playInstagram(this,'${i.shortcode}')"`:'')} loading="lazy" onerror="this.style.visibility='hidden'">
+        <img src="${thumb(i.thumbnail)}" data-vurl="${i.video_url?('/api/video?url='+encodeURIComponent(i.video_url)):''}" ${i.video_url?'onclick="playInline(this)"':(i.shortcode?`onclick="playInstagram(this,'${i.shortcode}')"`:'')} onerror="this.style.visibility='hidden'">
         ${badgeHTML(i, ctx)}
         ${(i.video_url||i.shortcode)?'<span class="play-badge">▶</span>':''}
         ${i.duration!=null?`<span style="position:absolute;left:6px;bottom:6px;z-index:2;background:rgba(0,0,0,.65);color:#fff;font-size:11px;padding:2px 7px;border-radius:10px">⏱ ${_dFmtDur(i.duration)}</span>`:''}

@@ -169,7 +169,7 @@ function badge(a){
 function renderCard(a){
   const thumb = a.asset_type==='sfx'
     ? `<div class="sfx-thumb" onclick="preview(${a.id},'sfx')">🔊</div>`
-    : `<img class="thumb" src="/api/scene/${a.id}/poster" loading="lazy"
+    : `<img class="thumb" src="/api/scene/${a.id}/poster"
             onclick="preview(${a.id},'${esc(a.asset_type)}')"
             onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'sfx-thumb',textContent:'🎞'}))">`;
   const meta = [a.category, a.role, a.subject].filter(Boolean).map(esc).join(' · ');

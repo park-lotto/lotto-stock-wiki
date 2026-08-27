@@ -215,7 +215,7 @@ async function loadBoard() {
 function cardHtml(it, idx) {
   // ★썸네일 프록시 파라미터는 ?url= 이다(app.py:5579). ?u=로 쓰면 422.
   const th = it.thumb
-    ? `<img class="th" src="/api/thumb?url=${encodeURIComponent(it.thumb)}" alt="" loading="lazy">`
+    ? `<img class="th" src="/api/thumb?url=${encodeURIComponent(it.thumb)}" alt="">`
     : `<div class="no-th">🎬</div>`;
   let meta;
   if (it.fetch_status === 'ok' && (it.views || it.views === 0)) {
