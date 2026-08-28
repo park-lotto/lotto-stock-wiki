@@ -822,10 +822,7 @@ body.tight .thumbs.oneline::-webkit-scrollbar{display:none;height:0}
 /* ★칸 안 필름 — 컷 줄에 자리가 모자라면 **아랫줄로 내려가고**, 절대 잘리지 않는다.
    종전 min-width:560px 고정이라 좁은 칸에서 오른쪽 버튼(🔁·담기)이 화면 밖으로 잘렸다
    (2026-08-26 사장님 캡쳐 526). 자리는 그대로 두되 넘치지만 않게 한다. */
-/* ★칸 안 필름은 **내용 폭만큼만** 차지한다(2026-08-28 사장님 "2.3초면 저 연두색
-   부분 정도만 늘어날 거잖아"). flex:1이면 남는 자리를 다 먹어 2.3초짜리가
-   화면을 가로질렀다. 폭은 filmroll이 조각 길이로 잡는다(applyW). */
-.frslot.inbeat{margin-top:0;flex:0 0 auto;min-width:0;max-width:100%;align-self:stretch}
+.frslot.inbeat{margin-top:0;flex:1 1 460px;min-width:0;max-width:100%;align-self:stretch}
 .frslot.inbeat .fr{height:100%;display:flex;flex-direction:column}
 .frslot.inbeat .frwin{height:auto;flex:1;min-height:96px}
 body.tight .frslot.inbeat .frwin{height:auto;flex:1;min-height:96px}
