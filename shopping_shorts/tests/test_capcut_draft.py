@@ -272,3 +272,58 @@ def test_size_is_clamped():
                              caption_style={"size": 1})
     assert _texts(big)[0]["font_size"] <= 16.0 * 3
     assert _texts(tiny)[0]["font_size"] >= 16.0 * 0.3
+
+
+# ── 워터마크(채널 닉네임)도 따라간다 — 고객 제보 2단계 ─────────────────────
+_WM = {"watermark": {"text": "캡틴살림꾼", "color": "#ffffff", "size": 30,
+                     "alpha": 0.6, "outline": True, "outline_color": "#000000",
+                     "outline_w": 3}}
+
+
+def _wm_mats(draft):
+    return [m for m in draft["materials"]["texts"] if m["type"] == "text"]
+
+
+def test_watermark_reaches_draft():
+    """★워터마크가 캡컷에 실린다(종전엔 아예 안 갔다)."""
+    draft, _ = cd.build_draft(plan=_PLAN, timeline=_TIMELINE, source_video_paths=_SRC,
+                              tts_paths=_TTS, asset_paths=_ASSET, project_name="t", deco=_WM)
+    wm = _wm_mats(draft)
+    assert len(wm) == 1, f"워터마크가 없거나 여러 개다: {len(wm)}"
+    assert "캡틴살림꾼" in wm[0]["content"]
+    assert abs(wm[0]["text_alpha"] - 0.6) < 0.01, "투명도가 안 갔다"
+
+
+def test_watermark_is_text_not_caption():
+    """★워터마크는 **텍스트**다 — 캡션으로 넣으면 자막 패널에서 대사와 섞인다."""
+    draft, _ = cd.build_draft(plan=_PLAN, timeline=_TIMELINE, source_video_paths=_SRC,
+                              tts_paths=_TTS, asset_paths=_ASSET, project_name="t", deco=_WM)
+    wm = _wm_mats(draft)[0]
+    assert wm["type"] == "text" and wm["check_flag"] == 7 and wm["line_max_width"] == 0.82
+    # 대사 자막은 그대로 캡션이어야 한다
+    caps = [m for m in draft["materials"]["texts"] if m["type"] == "subtitle"]
+    assert caps and caps[0]["check_flag"] == 31
+
+
+def test_watermark_gets_its_own_track():
+    """★자막과 **다른 트랙**이어야 한다 — 같은 트랙이면 시간이 겹쳐 하나가 밀려난다."""
+    draft, _ = cd.build_draft(plan=_PLAN, timeline=_TIMELINE, source_video_paths=_SRC,
+                              tts_paths=_TTS, asset_paths=_ASSET, project_name="t", deco=_WM)
+    text_tracks = [t for t in draft["tracks"] if t["type"] == "text"]
+    assert len(text_tracks) == 2, f"텍스트 트랙이 {len(text_tracks)}개다(자막+워터마크=2)"
+    # 워터마크는 영상 전체 길이를 덮는다
+    total = draft["duration"]
+    wm_track = [t for t in text_tracks if len(t["segments"]) == 1
+                and t["segments"][0]["target_timerange"]["duration"] == total]
+    assert wm_track, "워터마크가 영상 전체에 안 깔린다"
+
+
+def test_no_watermark_keeps_old_tracks():
+    """★회귀 0: 워터마크가 없으면 트랙 구성이 종전 그대로다."""
+    draft, _ = cd.build_draft(plan=_PLAN, timeline=_TIMELINE, source_video_paths=_SRC,
+                              tts_paths=_TTS, asset_paths=_ASSET, project_name="t")
+    assert [t["type"] for t in draft["tracks"]] == ["video", "audio", "text"]
+    for bad in (None, {}, {"watermark": None}, {"watermark": {"text": "  "}}):
+        d2, _ = cd.build_draft(plan=_PLAN, timeline=_TIMELINE, source_video_paths=_SRC,
+                               tts_paths=_TTS, asset_paths=_ASSET, project_name="t", deco=bad)
+        assert [t["type"] for t in d2["tracks"]] == ["video", "audio", "text"], bad

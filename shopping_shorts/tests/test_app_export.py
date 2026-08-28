@@ -152,3 +152,16 @@ def test_capcut_without_style_still_exports(monkeypatch, tmp_path):
     draft = __import__("json").loads(r.json()["texts"]["draft_content.json"])
     t = draft["materials"]["texts"][0]
     assert t["text_color"] == "#ffffff" and t["font_size"] == 16.0
+
+
+def test_capcut_carries_watermark(monkeypatch, tmp_path):
+    """★고객 제보 2단계: 꾸미기 워터마크(채널 닉네임)가 캡컷까지 간다."""
+    client = _seed(monkeypatch, tmp_path)
+    Store(app_module.DB_PATH).update_mix_job("j1", deco={
+        "watermark": {"text": "캡틴살림꾼", "color": "#ffffff", "size": 30, "alpha": 0.6}})
+    r = client.get("/api/mix/capcut/j1", params={"base": "C:/capcutproject/CapCut Drafts"})
+    assert r.status_code == 200, r.text
+    draft = __import__("json").loads(r.json()["texts"]["draft_content.json"])
+    wm = [m for m in draft["materials"]["texts"] if m["type"] == "text"]
+    assert wm and "캡틴살림꾼" in wm[0]["content"], "워터마크가 캡컷까지 안 갔다"
+    assert len([t for t in draft["tracks"] if t["type"] == "text"]) == 2, "자막과 같은 트랙에 섞였다"

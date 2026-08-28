@@ -5831,10 +5831,20 @@ def api_mix_capcut(job_id: str, base: str = ""):
             _cap_style = None
     if not isinstance(_cap_style, dict):
         _cap_style = None
+    # 꾸미기(워터마크·템플릿)도 같은 규칙으로 꺼낸다 — 형식이 흔들려도 내보내기는 된다.
+    _deco = job.get("deco")
+    if isinstance(_deco, str):
+        try:
+            import json as _json2
+            _deco = _json2.loads(_deco)
+        except (ValueError, TypeError):
+            _deco = None
+    if not isinstance(_deco, dict):
+        _deco = None
     proj, project, files = capcut_draft.assemble_draft_folder(
         out_root, base, plan=plan, timeline=timeline, source_video_paths=source_video_paths,
         tts_paths=tts_paths, project_name=_capcut_project_name(job_id, job, plan),
-        final_video=_final, caption_style=_cap_style)
+        final_video=_final, caption_style=_cap_style, deco=_deco)
     texts, assets = {}, []
     for name in files:
         if name.endswith(".json"):

@@ -305,9 +305,47 @@ def _beat_clips(beat, beat_dur, src_durs):
     return []
 
 
+def _watermark_material(wm, font_path):
+    """꾸미기 워터마크(채널 닉네임) → 캡컷 **텍스트** 머티리얼.
+
+    ★고객 제보(2026-08-28 "캡컷으로 보내니 템플릿은 안 따라온다")의 2단계.
+      자막(캡션)과 달리 이건 **텍스트**로 넣는다 — 자막 패널에 섞이면 대사 자막을
+      다룰 때 워터마크까지 함께 잡혀 오히려 불편하다(캡션 type='subtitle'은 자막 전용).
+
+    ⚠️**위치는 못 맞춘다.** 캡컷 clip.transform 좌표계를 실측한 근거가 없어(부호·스케일)
+      짐작해 넣으면 화면 밖으로 날아간다. 캡컷 기본 위치(가운데)로 들어가니
+      사장님·고객이 한 번 끌어서 옮기면 된다 — 안 오는 것보다 낫다.
+      좌표계를 실측하면 여기와 자막 위치를 함께 붙일 것.
+    """
+    text = str((wm or {}).get("text") or "").strip()
+    if not text:
+        return None
+    st = {"color": (wm or {}).get("color") or "#ffffff",
+          "size": (wm or {}).get("size") or 30,
+          "outline": (wm or {}).get("outline", True),
+          "outline_color": (wm or {}).get("outline_color") or "#000000",
+          "outline_w": (wm or {}).get("outline_w") or 3,
+          "shadow": False}
+    cc = _caption_style_to_cc(st)
+    m = _text_material(text, font_path, st)
+    # ★캡션이 아니라 **텍스트**로 되돌린다(실측값: type='text' · check_flag=7 ·
+    #   line_max_width=0.82). 이 셋이 캡션과 텍스트를 가르는 자리다.
+    m["type"] = "text"
+    m["check_flag"] = 7
+    m["line_max_width"] = 0.82
+    # 투명도(alpha) — 워터마크는 보통 반투명이다.
+    try:
+        a = float((wm or {}).get("alpha", 0.6))
+    except (TypeError, ValueError):
+        a = 0.6
+    m["text_alpha"] = max(0.05, min(1.0, a))
+    m["global_alpha"] = m["text_alpha"]
+    return m
+
+
 def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
                 project_name, canvas=(1080, 1920), font_path=_DEFAULT_FONT, video_durs=None,
-                caption_style=None):
+                caption_style=None, deco=None):
     """편집안 → (draft_content_dict, assets_to_copy).
 
     asset_paths: {real_path: 캡컷이 볼 절대경로} — 호출부가 파일을 그 절대경로에 두고 넘긴다.
@@ -406,7 +444,20 @@ def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
             seg["track_render_index"] = 2
             txt_track["segments"].append(seg)
 
-    tracks = [t for t in (vid_track, aud_track, txt_track) if t["segments"]]
+    # ── 워터마크(채널 닉네임) — 영상 전체에 한 칸(2026-08-28 고객 제보 2단계) ──
+    #   ★자막 트랙과 **따로** 둔다: 같은 트랙에 넣으면 대사 자막과 시간이 겹쳐
+    #     캡컷이 하나를 밀어낸다(둘 다 전 구간에 있을 수 없다).
+    wm_track = {"id": _uid(), "type": "text", "attribute": 0, "flag": 0,
+                "name": "", "is_default_name": True, "segments": []}
+    wm_mat = _watermark_material((deco or {}).get("watermark"), font_path)
+    if wm_mat and total_us > 0:
+        mats["texts"].append(wm_mat)
+        wseg = _base_segment(wm_mat["id"], 0, total_us, source_timerange=False,
+                             render_index=0)
+        wseg["track_render_index"] = 3        # 자막(2)보다 위
+        wm_track["segments"].append(wseg)
+
+    tracks = [t for t in (vid_track, aud_track, txt_track, wm_track) if t["segments"]]
     draft = _skeleton(project_name, cw, ch, total_us)
     draft["materials"].update(mats)
     draft["tracks"] = tracks
@@ -455,7 +506,7 @@ def _skeleton(name, cw, ch, duration_us):
 
 def assemble_draft_folder(out_root, base_abs, *, plan, timeline, source_video_paths,
                           tts_paths, project_name, canvas=(1080, 1920), font_path=_DEFAULT_FONT,
-                          probe=None, final_video=None, caption_style=None):
+                          probe=None, final_video=None, caption_style=None, deco=None):
     """draft 폴더를 out_root/<project>/ 에 실제로 조립한다(에셋 복사 + draft_content.json + meta).
 
     base_abs: 캡컷이 이 draft 폴더를 볼 **절대경로**(예: C:/capcutproject/CapCut Drafts). draft가
@@ -499,7 +550,7 @@ def assemble_draft_folder(out_root, base_abs, *, plan, timeline, source_video_pa
             shutil.copy(real, proj / name)
             asset_paths[real] = f"{base_abs}/{project}/{name}"
 
-    draft, _ = build_draft(caption_style=caption_style,
+    draft, _ = build_draft(caption_style=caption_style, deco=deco,
                            plan=plan, timeline=timeline, source_video_paths=source_video_paths,
                            tts_paths=tts_paths, asset_paths=asset_paths, project_name=project,
                            canvas=canvas, font_path=font_path, video_durs=video_durs)
