@@ -186,7 +186,7 @@ tbody tr:hover{background:#1b1b22}
 <div class=card>
   <h2>고객 (<span id=cnt>0</span>명) <span id=cMsg class=msg></span></h2>
   <div class=filterbar>
-    <input id=custSearch placeholder="🔍 이름·전화·이메일·성별·연령으로 찾기" oninput="renderCustomers()">
+    <input id=custSearch placeholder="🔍 이름·전화·이메일·성별·연령으로 찾기 (승인 대기도 함께 찾습니다)" oninput="renderCustomers()">
     <select id=tierFilter onchange="renderCustomers()">
       <option value="">전체 등급</option>
       <option value="pro">pro</option>
@@ -194,6 +194,7 @@ tbody tr:hover{background:#1b1b22}
       <option value="free">일반회원</option>
     </select>
   </div>
+  <div id=custHint style="display:none;margin:8px 0 0;padding:9px 12px;border-radius:8px;background:#2a2416;border:1px solid #6b5a1e;color:#f0d98a;font-size:13px;line-height:1.6"></div>
   <table><thead><tr><th>ID</th><th>이름</th><th>전화</th><th class=mini>성별</th><th class=mini>연령</th><th>이메일/아이디</th><th>등급</th><th>상태</th><th>시작일</th><th>마감일</th><th>결제</th><th>포인트</th><th>오늘 사용(렌즈/렌더/대본)</th><th>접속7일(IP/기기)</th><th>접속/활동</th><th>조작</th></tr></thead>
   <tbody id=rows><tr><td colspan=16 class=empty>불러오는 중…</td></tr></tbody></table>
 </div>
@@ -231,14 +232,22 @@ async function load(){
   // 미승인(approved_at null) = 순수대기 + 이벤트 체험중 → 모두 대기명단(사장님이 승인 가능해야 함).
   const pend=d.customers.filter(c=>c.approved_at==null);
   const rest=d.customers.filter(c=>c.approved_at!=null);
+  // ★대기 명단을 renderCustomers가 볼 수 있게 남긴다(2026-08-28 사장님 제보:
+  //   "입금까지 한 사람인데 조회가 안 돼"). 종전엔 검색이 승인된 회원(rest)만
+  //   훑어서, 미승인은 이메일을 정확히 넣어도 **한 건도 안 나왔다**. 실측 당시
+  //   승인 대기가 18명이라 눈으로 찾을 수 있었지만 늘어나면 못 찾는다.
+  window._PEND = pend;
   // 요약 채우기(2026-08-24) — 표를 훑기 전에 '처리할 게 있나'를 먼저 답한다.
   // ★숫자는 아래 표와 **같은 배열**에서 뽑는다. 따로 세면 언젠가 어긋난다(0순위-B).
   fillSummary(d.customers, pend.length);
   const esc=s=>(s||'').toString().replace(/</g,'&lt;').replace(/>/g,'&gt;');
   // 승인 대기 표
-  document.getElementById('pcnt').textContent=pend.length;
+  const _pq=((document.getElementById('custSearch')||{}).value||'').trim().toLowerCase();
+  const pendView = _pq ? pend.filter(c=>_custMatch(c,_pq)) : pend;
+  document.getElementById('pcnt').textContent=
+    _pq ? (pendView.length+' / '+pend.length) : pend.length;
   const nowSec=Math.floor(Date.now()/1000);
-  document.getElementById('prows').innerHTML= pend.length ? pend.map(c=>{
+  document.getElementById('prows').innerHTML= pendView.length ? pendView.map(c=>{
     const joined=c.created_at? new Date((''+c.created_at).length>10?c.created_at:c.created_at*1000).toLocaleString('ko-KR'):'-';
     const trialLeft = c.trial_ends_at && c.trial_ends_at>nowSec ? Math.ceil((c.trial_ends_at-nowSec)/3600) : 0;
     const trialBadge = trialLeft ? ` <span class="badge trial">🎁 체험중 ${trialLeft}h</span>` : '';
@@ -246,7 +255,9 @@ async function load(){
       <td style="font-size:12px;color:#8a8a92">${joined}</td>
       <td><button class=bok onclick="ackCustomer(${c.id},this)" title="체험은 그대로 두고 대기실에서만 내립니다">✅ 확인</button>
           <button class=bpro onclick="approveCustomer(${c.id})" title="결제받고 기간을 줄 때">💳 결제승인</button></td></tr>`;
-  }).join('') : '<tr><td colspan=6 class=empty>대기 중인 가입 신청이 없어요</td></tr>';
+  }).join('') : ('<tr><td colspan=6 class=empty>'
+      + (_pq ? '검색 결과가 대기 명단에 없어요' : '대기 중인 가입 신청이 없어요')
+      + '</td></tr>');
   // 일반 고객표 — 검색·등급 필터 적용 렌더
   renderCustomers();
 }
@@ -316,6 +327,20 @@ function renderCustomers(){
     return true;
   });
   document.getElementById('cnt').textContent=rest.length;
+  // ★"조회가 안 된다"의 정체를 화면이 직접 말한다(2026-08-28). 승인된 목록에서
+  //   0건인데 대기 명단에 있으면, 없는 게 아니라 **아직 승인 전**인 것이다.
+  try{
+    const box=document.getElementById('custHint');
+    if(box){
+      const hit = q ? (window._PEND||[]).filter(c=>_custMatch(c,q)) : [];
+      box.innerHTML = (q && rest.length===0 && hit.length)
+        ? ('⚠️ 이 검색어는 <b>승인 대기</b> 명단에 ' + hit.length + '명 있습니다 — '
+           + hit.map(c=>esc(c.name||c.email||c.username)).join(', ')
+           + ' <span style="color:#8a8a92">(위 «승인 대기중» 표에서 승인하세요)</span>')
+        : '';
+      box.style.display = box.innerHTML ? 'block' : 'none';
+    }
+  }catch(e){}
   document.getElementById('rows').innerHTML= rest.length ? rest.map(c=>{
     const lvl=c.plan==='pro'?'<span class="badge pro">pro</span>'
               :(c.plan==='trial'?'<span class="badge trial">체험판(랭킹만)</span>'
