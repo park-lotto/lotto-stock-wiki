@@ -214,7 +214,23 @@ def pin_video_info(url, timeout=8):
       예외 = 판정불가(렌즈: 자르면 안 된다 — 검증 불가가 회수율을 깎으면 안 됨)"""
     import json
     import requests
-    r = requests.get(url, headers={"User-Agent": _PIN_PAGE_UA}, timeout=timeout)
+    # ★두 가지를 함께 고쳐야 한다(2026-08-29 라이브 버그, 실측 표본 10개).
+    #
+    #   ①Accept-Encoding 명시 — 서버에 brotli 1.2.0이 깔려 있어 requests가 br을
+    #     자동 광고하는데 urllib3 2.0.7과의 조합에서 디코딩이 깨진다
+    #     (ContentDecodingError, 영상핀 8/8 전부 예외였다).
+    #   ②주거용 프록시 경유 — **진짜 원인은 IP였다.** 데이터센터 IP엔 핀터레스트가
+    #     SEO용 JSON-LD를 아예 안 내려준다:  직접 None 10/10 / 프록시 dict 10/10.
+    #     헤더를 브라우저처럼 갖춰도 안 되고 IP만 바꾸면 된다(둘 다 실측).
+    #
+    #   ⚠️①만 고치면 **오히려 나빠진다**: 예외(판정불가 → 렌즈가 안 자름)가
+    #     None(영상 아님 확정 → 렌즈가 잘라냄)으로 바뀌어 멀쩡한 영상이 사라진다.
+    #   프록시 dict는 reddit_source._proxies()를 재사용한다(0순위-B) — 미설정이면
+    #   None을 주므로 로컬·테스트에서도 안 깨진다.
+    from shopping_shorts.reddit_source import _proxies
+    r = requests.get(url, headers={"User-Agent": _PIN_PAGE_UA,
+                                   "Accept-Encoding": "gzip, deflate"},
+                     proxies=_proxies(), timeout=timeout)
     if r.status_code != 200:
         raise RuntimeError(f"핀 페이지 HTTP {r.status_code}: {url}")
     for m in _LD_JSON_RE.finditer(r.text):
