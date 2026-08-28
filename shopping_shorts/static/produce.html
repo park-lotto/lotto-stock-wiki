@@ -3504,7 +3504,10 @@ function mkSet(i,k,v){
   const a=mkEnsure(); if(!a) return;
   if(!a[i]) i=MK_SEL;              // 아직 없던 도형을 방금 만들었다
   if(!a[i]) return;
-  a[i][k]=(k==='shape'||k==='fx'||k==='color')?v:Math.round(parseFloat(v)||0);
+  // ★문자열 칸을 여기 빠뜨리면 Math.round(parseFloat(...))가 0으로 만든다 —
+  //   뱃지 글자가 '0'이 된다(2026-08-28에 kind·ch·text를 늘리며 실제로 걸릴 뻔했다).
+  const MK_STR=['shape','fx','color','kind','ch','text'];
+  a[i][k]=MK_STR.includes(k)?v:Math.round(parseFloat(v)||0);
   MK_SEL=i;
   renderTemplatePreview(); saveHeadcopy();
   const lab=document.getElementById('mkV'+k+i); if(lab) lab.textContent=mkLabel(k,a[i][k]);
@@ -3649,21 +3652,40 @@ function mkRender(){
       +'oninput="mkSet(MK_SEL,&quot;'+key+'&quot;,this.value)" style="flex:1">'
       +'<b id="mkV'+key+MK_SEL+'" style="width:52px;text-align:right">'+mkLabel(key,v)+'</b></div>';
   };
-  ed.innerHTML=
-     '<div style="'+lab+'">모양</div>'
-    +mkChoice(MK_SHAPES, m.shape, 'mkShape')
-    +'<div style="'+lab+'">효과</div>'
-    +mkChoice(MK_FX, m.fx, 'mkFx')
-    +'<div style="'+lab+'">색</div>'
+  // ★종류에 따라 쓸모없는 칸은 안 보여준다(2026-08-28). 이모지에 '모양·효과·가장자리'를
+  //   띄우면 눌러도 아무 일이 없어 "고장났다"로 읽힌다. 색은 뱃지만 쓴다(이모지는 제 색이 있다).
+  const kind = m.kind || 'shape';
+  const isEmoji = kind === 'emoji', isBadge = kind === 'badge';
+  const colorBlock =
+     '<div style="'+lab+'">색</div>'
     +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'
     +'<input id="mkC" type="color" value="'+(m.color||'#000000')+'" oninput="mkPick(this.value)" '
     +'style="width:44px;height:28px;padding:0;border:1px solid var(--line);border-radius:6px;background:none;cursor:pointer">'
     +'<span style="font-size:12px;color:var(--sub)">'+(m.color||'#000000')+'</span></div>'
     // 12색 한 줄 — 위 팔레트와 같은 규칙(0순위-B: 한쪽만 고치면 어긋난다).
-    +'<div style="display:grid;grid-template-columns:repeat(12,1fr);gap:6px">'+pal+'</div>'
+    +'<div style="display:grid;grid-template-columns:repeat(12,1fr);gap:6px">'+pal+'</div>';
+  ed.innerHTML=
+     (isEmoji
+        ? '<div style="'+lab+'">스티커</div><div style="font-size:30px;line-height:1.1;margin-bottom:4px">'
+          + (m.ch||'') + '</div>'
+        : '')
+    +(isBadge
+        ? '<div style="'+lab+'">글자</div>'
+          +'<input value="'+String(m.text||'').replace(/"/g,'&quot;')+'" maxlength="8" '
+          +'oninput="mkSet(MK_SEL,&quot;text&quot;,this.value)" '
+          +'style="width:100%;box-sizing:border-box;background:var(--inset);border:1px solid var(--line);'
+          +'color:var(--txt);border-radius:8px;padding:8px 10px;font-size:13px;margin-bottom:4px">'
+        : '')
+    +(isEmoji||isBadge ? '' :
+        '<div style="'+lab+'">모양</div>'
+        +mkChoice(MK_SHAPES, m.shape, 'mkShape')
+        +'<div style="'+lab+'">효과</div>'
+        +mkChoice(MK_FX, m.fx, 'mkFx'))
+    +(isEmoji ? '' : colorBlock)
     +'<div style="'+lab+'">세부</div>'
     +row('진하기','op',10,100)
-    +row(MK_BLUR_FX.includes(m.fx)?'흐림 세기':'가장자리','soft',0,100)
+    +(isEmoji||isBadge ? '' :
+        row(MK_BLUR_FX.includes(m.fx)?'흐림 세기':'가장자리','soft',0,100))
     +row('회전','rot',-45,45);
   syncMaskBoxes();
 }
