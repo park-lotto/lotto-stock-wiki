@@ -1478,6 +1478,23 @@ function playRange(vid, a, b){
 // 판단은 body의 class 하나로만 한다 — 무엇을 접을지는 전부 CSS(body.tight)에 있다.
 // JS가 요소를 하나씩 숨기기 시작하면 켜고 끄는 규칙이 두 벌이 된다(0순위-B).
 const TIGHT_KEY = 'sceneLab:tight';
+// ★한 번만 기본값으로 되돌린다(2026-08-28 사장님 "고객들은 필름 펼치기 자리도 없고
+//   미리보기가 수정 전 버전이잖아").
+//   무슨 일이 있었나: 2026-08-26 16:18 `a6a5b95f0`이 필름롤러 병합을 통째로 Revert해
+//   고객 화면이 옛 배치로 되돌아갔고, 그 기간에 [▤ 넓게]를 누른 브라우저에는
+//   sceneLab:tight='0'이 **남는다**. 코드를 다시 올려도(2026-08-28 09:00 fc67c8460)
+//   그 저장값이 이겨서 계속 옛 배치로 보인다 — 새로고침으로도 안 풀린다.
+//   ★localStorage는 브라우저에 남으므로 코드 배포만으로는 못 지운다. 그래서 여기서
+//     **딱 한 번** 걷어낸다(도장을 찍어 두 번 하지 않는다 — 그 뒤 사용자가 직접 끈
+//     것은 존중해야 한다).
+const TIGHT_RESET_KEY = 'sceneLab:tightReset:2026-08-28';
+(function _tightResetOnce(){
+  try{
+    if (localStorage.getItem(TIGHT_RESET_KEY)) return;        // 이미 했다
+    localStorage.setItem(TIGHT_RESET_KEY, '1');               // 먼저 찍는다(두 번 방지)
+    if (localStorage.getItem(TIGHT_KEY) === '0') localStorage.removeItem(TIGHT_KEY);
+  }catch(e){}
+})();
 function _tightApply(){
   const on = localStorage.getItem(TIGHT_KEY) !== '0';        // 기본 켜짐
   document.body.classList.toggle('tight', on);
