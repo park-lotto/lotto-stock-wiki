@@ -12092,10 +12092,10 @@ def api_basket_analyze(request: Request, body: dict):
             out[c] = "no_url"
             skipped += 1
             continue
-        ok = _enqueue_prewarm(store, c, url, caption=it.get("caption") or "",
-                              customer_id=str(cid), manual=True)
-        out[c] = "queued" if ok else "already_queued"
-        queued += 1 if ok else 0
+        _enqueue_prewarm(store, c, url, caption=it.get("caption") or "",
+                         customer_id=str(cid), manual=True)
+        out[c] = "queued"
+        queued += 1
     return {"ok": True, "queued": queued, "skipped": skipped, "items": out,
             # 화면이 "왜 아무 일도 안 났는지" 말할 수 있게(조율가 제보 2026-08-28).
             "note": ("고른 항목에 영상 주소가 없어 분석을 걸 수 없었어요 — 다시 담아 주세요"
