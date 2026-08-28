@@ -214,7 +214,14 @@ def pin_video_info(url, timeout=8):
       예외 = 판정불가(렌즈: 자르면 안 된다 — 검증 불가가 회수율을 깎으면 안 됨)"""
     import json
     import requests
-    r = requests.get(url, headers={"User-Agent": _PIN_PAGE_UA}, timeout=timeout)
+    # ★Accept-Encoding을 **명시**한다(2026-08-29 라이브 버그 수정).
+    #   서버에 brotli 1.2.0이 깔려 있어 requests가 br을 자동 광고하는데,
+    #   urllib3 2.0.7과의 조합에서 핀터레스트 응답 디코딩이 깨져
+    #   ContentDecodingError로 죽는다 — 실측 영상핀 **8/8 전부 예외**였다.
+    #   같은 URL도 gzip/deflate만 요청하면 200으로 열린다(실측).
+    r = requests.get(url, headers={"User-Agent": _PIN_PAGE_UA,
+                                   "Accept-Encoding": "gzip, deflate"},
+                     timeout=timeout)
     if r.status_code != 200:
         raise RuntimeError(f"핀 페이지 HTTP {r.status_code}: {url}")
     for m in _LD_JSON_RE.finditer(r.text):

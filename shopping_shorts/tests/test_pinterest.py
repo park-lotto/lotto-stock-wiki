@@ -305,3 +305,28 @@ def test_pin_video_info_비200은_예외(monkeypatch):
     monkeypatch.setattr(requests, "get", lambda *a, **k: _PageResp("", status=503))
     with pytest.raises(Exception):
         pc.pin_video_info("https://www.pinterest.com/pin/123456/")
+
+
+def test_핀_상세요청은_brotli를_광고하지_않는다():
+    """★라이브 버그(2026-08-29 실측): 영상핀 8/8이 ContentDecodingError로 죽었다.
+
+    서버에 brotli 1.2.0이 깔려 있어 requests가 `Accept-Encoding: br`을 자동으로
+    광고하는데, urllib3 2.0.7과의 조합에서 핀터레스트 응답 디코딩이 깨진다:
+      'Received response with content-encoding: br, but failed to decode it'
+    → `Accept-Encoding: gzip, deflate`를 **명시**하면 같은 URL이 200으로 열린다(실측).
+
+    ⚠️이 버그는 조용하지 않다 — pin_video_info의 계약상 예외는 '판정불가'라
+    렌즈가 자르지 않는다. 그래서 **영상이 사라지진 않지만 보강이 100% 실패**한다.
+    """
+    from shopping_shorts import pinterest_crawl
+    src = __import__("inspect").getsource(pinterest_crawl.pin_video_info)
+    assert "Accept-Encoding" in src, \
+        "br을 광고한다 — 서버에서 ContentDecodingError로 전부 죽는다"
+
+
+def test_핀_상세는_HTML을_못_읽어도_조용히_None이_아니다():
+    """★None(영상 아님 확정)과 예외(판정불가)를 뭉개면 렌즈가 멀쩡한 영상을 잘라낸다.
+    HTTP 200이 아니면 예외여야 한다 — 기존 계약을 지킨다."""
+    from shopping_shorts import pinterest_crawl
+    src = __import__("inspect").getsource(pinterest_crawl.pin_video_info)
+    assert "raise" in src, "비200을 None으로 뭉개면 안 된다"
