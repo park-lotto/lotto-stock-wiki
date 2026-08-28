@@ -86,13 +86,20 @@ button{border:0;border-radius:7px;padding:7px 13px;font-weight:700;font-size:13p
   <span class=who id=who>불러오는 중…</span>
   <span class=cid id=cid></span>
   <span id=badges></span>
-  <select id=win onchange="load()" style="margin-left:auto;background:#0e0e12;border:1px solid #333;border-radius:7px;color:#eee;font-size:13px;padding:7px 11px;cursor:pointer">
-    <option value=30>최근 30일</option>
-    <option value=60 selected>최근 60일</option>
-    <option value=90>최근 90일</option>
-    <option value=365>1년</option>
-  </select>
+  <!-- 상세를 보다가 바로 손보게 한다 — 종전엔 포인트 하나 주려고 목록으로 돌아가야 했다.
+       ★조작은 기존 API를 그대로 쓴다(새 엔드포인트를 만들면 판단이 두 벌 — 0순위-B). -->
+  <span style="margin-left:auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+    <button class=bpt onclick="givePoints()" title="포인트 지급·회수">🪙 포인트</button>
+    <button class=bpro onclick="addPay()" title="결제 기록 추가·기간 연장">💳 결제추가</button>
+    <select id=win onchange="load()" style="background:#0e0e12;border:1px solid #333;border-radius:7px;color:#eee;font-size:13px;padding:7px 11px;cursor:pointer">
+      <option value=30>최근 30일</option>
+      <option value=60 selected>최근 60일</option>
+      <option value=90>최근 90일</option>
+      <option value=365>1년</option>
+    </select>
+  </span>
 </div>
+<div id=msg class=sub style="min-height:18px;color:#7ee787"></div>
 <div class=sub id=sub></div>
 
 <div id=notes></div>
@@ -371,6 +378,46 @@ function drawPerf(){
       <td><span class="st ${x.state==='done'?'done':(x.state==='failed'?'failed':'other')}">${esc(x.state)}</span></td>
       <td class=right>${dur(x.sec)}</td><td class=err>${esc(String(x.error||'').slice(0,60))}</td></tr>`).join('')}
     </tbody></table>`;
+}
+
+// ── 이 화면에서 바로 손보기 ─────────────────────────────────────────────
+// ★API는 관리 화면(admin.html)이 쓰는 것과 **같은 것**을 쓴다. 새로 만들면
+//   포인트·결제 판단이 두 벌이 된다(0순위-B).
+function say(t, bad){
+  const m=document.getElementById('msg');
+  m.textContent=t; m.style.color = bad ? '#ff9a8a' : '#7ee787';
+  setTimeout(()=>{ if(m.textContent===t) m.textContent=''; }, 4000);
+}
+async function givePoints(){
+  const p = prompt('포인트 몇 P 줄까요? (음수 = 회수)', '100');
+  if(p===null) return;
+  const n = Number(p);
+  if(!n){ say('숫자를 넣어주세요', true); return; }
+  try{
+    const r = await fetch('/api/admin/points',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({customer_id:CID, points:n})});
+    const d = await r.json().catch(()=>({}));
+    if(!r.ok) throw new Error(d.error||('HTTP '+r.status));
+    say(`✅ ${n>0?'+':''}${n}P 반영 · 잔액 ${d.balance}P`);
+    load();
+  }catch(e){ say('실패: '+e.message, true); }
+}
+async function addPay(){
+  const days = prompt('이용일수 (예: 30)', '30');
+  if(days===null) return;
+  const amount = prompt('결제 금액(원) — ★비워두면 0원으로 남아 수익성 계산이 안 됩니다', '');
+  if(amount===null) return;
+  const method = prompt('결제 수단', '계좌이체') || '';
+  try{
+    const r = await fetch('/api/admin/payment',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({customer_id:CID, period_days:Number(days)||0,
+                           amount:Number(amount)||0, method})});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    say('✅ 결제 기록 추가됨');
+    load();
+  }catch(e){ say('실패: '+e.message, true); }
 }
 
 load();
