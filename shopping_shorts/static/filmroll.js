@@ -558,6 +558,7 @@
       //   (조각 밖 구간을 잡으려면 원본이 다 보여야 한다) — 문제는 **0초에서 열려서**
       //   지금 쓰는 구간이 화면 밖에 있었다는 것이다. 처음 한 번만 그 구간으로 옮긴다
       //   (확대·축소로 다시 그릴 때는 그 자리를 지킨다 — 아래 frz 핸들러가 정한다).
+      try{ (window.__FRLOG=window.__FRLOG||[]).push('strip끝 _homed='+_homed+' from='+opt.from+' fit='+opt.fit); }catch(_){}
       if (!_homed && opt.from != null) {
         _homed = true;
         // ★배율은 **레이아웃이 잡힌 뒤** 정한다. 여기서 바로 재면 win.clientWidth가 아직
@@ -575,6 +576,7 @@
     }
 
     async function _fitToRange() {
+      try{ (window.__FRLOG=window.__FRLOG||[]).push('fit진입 from='+opt.from+' to='+opt.to); }catch(_){}
       {
         const span = Math.max(0.2, (opt.to != null ? opt.to : opt.from) - opt.from);
         // ★조각을 펼쳤으면 **그 구간이 창을 채우도록** 확대한다(2026-08-26 사장님
@@ -607,6 +609,7 @@
           z.value = sliderFromStep(STEP);
           if (restrip) await strip();
           // 슬롯이 조각 길이만큼만 차지하게 한다 — 폭 자체를 박지 않고 **상한**만 준다.
+          try{ (window.__FRLOG=window.__FRLOG||[]).push('maxWidth='+Math.ceil(span*pps()+4)+' STEP='+STEP+' CW='+CW); }catch(_){}
           host.style.maxWidth = Math.ceil(span * pps() + 4) + 'px';
           requestAnimationFrame(() => { applyW(); fillVisible(); });   // 폭이 반영된 뒤 채운다
         }
