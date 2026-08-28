@@ -5112,6 +5112,67 @@ def api_mix_scene_lab_narration(job_id: str, beat_idx: int, body: dict,
             "tts_ver": beat.get("tts_ver") or 0}
 
 
+@app.post("/api/mix/scene_lab/{job_id}/caption_lines/{beat_idx}")
+def api_mix_scene_lab_caption_lines(job_id: str, beat_idx: int, body: dict):
+    """칸 타임라인 ⑥(2026-08-29 설계) — 사용자가 고른 구절 경계 저장 + 초 재계산.
+
+    사용자가 자막 어절을 어디서 끊든, 그 경계의 표시시간을 **이미 저장된 워드
+    타임스탬프**(mp3 사이드카 align.json)로 다시 계산한다 — 재합성 없음, 비용 0.
+    경계는 AI가 끊는 것과 같은 통로(beat["caption_lines"] preset)에 저장되므로
+    연구소·타임라인·최종 렌더가 전부 같은 경계·같은 초를 쓴다(0순위-B).
+
+    허용 범위: **어절 재배열만**(끊기/합치기). 글자가 하나라도 다르면 422 —
+    _caption_segments의 preset 대조와 같은 기준(cap_preset_key)이다. 다르게 받으면
+    저장은 되는데 렌더가 조용히 규칙 폴백으로 내려가 "저장했는데 안 먹는" 상태가 된다.
+    정밀 타임스탬프가 없으면(사이드카 없음 — 옛 job·타 엔진) 409로 알린다:
+    🔊 다시 뽑기 한 번이면 사이드카가 생겨 이 편집이 열린다.
+    """
+    lines = [str(x).strip() for x in (body.get("lines") or []) if str(x).strip()]
+    if not lines:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "구절이 비었어요"})
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job or not job.get("edit_plan"):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    if job.get("status") in _MIX_ACTIVE_STAGES + ("rendering", "removing_subtitles"):
+        return JSONResponse(status_code=409,
+                            content={"ok": False, "error": "생성·렌더 중에는 자막을 고칠 수 없어요"})
+    plan = job["edit_plan"]
+    beat = next((b for b in plan["beats"] if b["beat_idx"] == beat_idx), None)
+    if beat is None:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "비트 없음"})
+    narr = (beat.get("narration") or "").strip()
+    if video_assemble.cap_preset_key("".join(lines)) != video_assemble.cap_preset_key(narr):
+        return JSONResponse(status_code=422, content={
+            "ok": False, "error": "구절을 이어붙이면 대본과 같아야 해요 — 글자 수정은 ✏ 대본수정으로"})
+    tp = beat.get("tts_path")
+    if not tp or not Path(tp).exists():
+        return JSONResponse(status_code=409, content={
+            "ok": False, "error": "이 칸은 음성이 없어요 — 🔊 음성 만들기 먼저"})
+    dur = video_assemble._probe_duration(tp) or 0.0
+    # 정밀 시각만 쓴다 — ASR 폴백은 느리고(외부 호출) 오차가 커서, 없으면 솔직히 알린다.
+    words = tts_timestamps.words_from_mp3(tp)
+    if words:
+        words = tts_timestamps.rescale(words, dur or None,
+                                       removed=tts_timestamps.load_removed(tp))
+    if not words:
+        return JSONResponse(status_code=409, content={
+            "ok": False, "error": "이 음성엔 정밀 타임스탬프가 없어요 — 🔊 음성·자막 다시 뽑기 한 번이면 생깁니다"})
+    timing = caption_sync.phrase_durs_from_words(narr, words, dur or 0.0, preset=lines)
+    if not timing:
+        return JSONResponse(status_code=409, content={
+            "ok": False, "error": "음성과 대본 정렬에 실패했어요 — 🔊 음성·자막 다시 뽑기를 눌러주세요"})
+    beat["caption_lines"] = lines
+    beat["cap_durs"] = timing.durs
+    beat["cap_lead"] = timing.lead_in
+    store.update_mix_job(job_id, edit_plan=plan)
+    # 응답 시간표는 GET과 **같은 함수**로 만든다 — 화면·렌더가 보는 값과 같아야 한다.
+    caps, tts_dur = _lab_captions(plan)
+    return {"ok": True, "captions": caps.get(str(beat_idx)) or [],
+            "tts_dur": tts_dur.get(str(beat_idx)),
+            "cap_durs": timing.durs, "cap_lead": timing.lead_in}
+
+
 @app.post("/api/mix/caption_offset/{job_id}/{beat_idx}")
 def api_mix_caption_offset(job_id: str, beat_idx: int, body: dict):
     """비트 자막의 수동 시각 보정값(초)을 저장. 최종 _burn_captions가 읽어 반영."""
