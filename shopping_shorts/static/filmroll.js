@@ -762,6 +762,7 @@
         if (ns === STEP) return;
         z.value = nv; STEP = ns; CW = cwFor(STEP);
         const keep = () => { off = clamp(anchorT * pps() - (e.clientX - r.left)); applyW(); };
+        keep();                      // 다시 뽑기 **전에** 자리부터 잡는다(위 setStep과 같은 이유)
         strip().then(keep);
         return;
       }
@@ -811,6 +812,12 @@
       if (ns === STEP) { z.value = v; return; }
       const centerT = xToSec(winW() / 2);                  // 보던 자리를 지킨다
       z.value = v; STEP = ns; CW = cwFor(STEP);
+      // ★스크롤 위치를 **다시 뽑기 전에** 정한다(2026-08-28 실측).
+      //   종전엔 strip().then 안에서 정했는데, 0.2초처럼 칸이 많은 단계는 다시 뽑는 데
+      //   시간이 걸린다. 그 사이에 찍으면 off가 아직 옛 값이라 좌표가 통째로 어긋났다
+      //   (실측: 길이는 0.30초로 정확한데 위치만 380px÷1350=0.28초 앞으로 밀렸다).
+      //   off는 숫자일 뿐이라 칸이 아직 없어도 먼저 정할 수 있다.
+      off = clamp(centerT * pps() - winW() / 2);
       strip().then(() => { off = clamp(centerT * pps() - winW() / 2); applyW(); });
     }
     host.querySelector('.frz').addEventListener('input', function () { setStep(this.value); });
