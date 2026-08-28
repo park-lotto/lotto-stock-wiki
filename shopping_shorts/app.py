@@ -10556,20 +10556,18 @@ def _api_pinterest_collect(request: Request, body: dict = None):
     #   앞서 모은 게 매번 사라진다.
     #   reset=true를 주면 비우고 새로 시작한다(쌓이기만 하면 정리를 못 한다).
     store = Store(DB_PATH)
-    added = len(items)
-    if not body.get("reset"):
-        # ⚠️load_last_run_platform은 **(items, collected_at) 튜플**을 준다(dict 아님).
-        #   dict로 읽으면 AttributeError로 수집이 통째로 죽는다(실측으로 밟았다).
-        prev, _prev_at = store.load_last_run_platform("pinterest")
-        prev = prev or []
-        have = {(x.get("shortcode") or x.get("video_url")) for x in prev}
-        fresh = [x for x in items
-                 if (x.get("shortcode") or x.get("video_url")) not in have]
-        added = len(fresh)
-        items = fresh + prev          # 새 것을 앞에 — 방금 담은 게 위로 온다
     now = datetime.now(timezone.utc).isoformat()
-    store.save_last_run_platform("pinterest", items, now)
-    return {"ok": True, "count": len(items), "added": added,
+    if body.get("reset"):
+        # 비우고 새로 시작 — 쌓이기만 하면 정리를 못 한다.
+        store.save_last_run_platform("pinterest", items, now)
+        added, total = len(items), len(items)
+    else:
+        # ★읽기~쓰기를 **한 트랜잭션으로** 묶는다(2026-08-29). 예전처럼 load →
+        #   파이썬 병합 → save 로 하면 두 수집이 겹칠 때 나중 것이 앞 것을 통째로
+        #   덮는다 — 재현 실측: 각 50개를 담았는데 **저장된 건 50개**(한쪽 전멸).
+        #   오류가 안 나서 '덜 담겼네'로만 보이는 조용한 유실이다.
+        added, total = store.merge_last_run_platform("pinterest", items, now)
+    return {"ok": True, "count": total, "added": added,
             "keywords": kws, "collected_at": now}
 
 
