@@ -280,10 +280,15 @@
     }
 
     function drawBoxes() {
+      // ★자식 좌표는 **절대(t×pps)**다 — frboxes 층 자체가 applyW에서 translateX(-off)로
+      //   밀리므로, 여기서 secToX(off를 또 빼는 함수)를 쓰면 off가 **이중 차감**돼
+      //   박스만 왼쪽으로 스크롤량만큼 밀린다(2026-08-29 사장님 "1초 빼고 다 안 찍힌다"
+      //   — 실측: 어긋난 거리가 각 단계에서 정확히 off와 일치. 1·2·5초는 필름이 창보다
+      //   좁아 off=0이라 안 드러났을 뿐). caps·use 층과 같은 규약: 층은 translate, 자식은 절대.
       boxesEl.style.width = (DUR * pps()) + 'px';
       boxesEl.innerHTML = BOXES.map((b, i) =>
         `<div class="bx${ACTBOX === i ? ' act' : ''}" data-i="${i}" ` +
-        `style="left:${secToX(b.s)}px;width:${Math.max(8, (b.e - b.s) * pps())}px">` +
+        `style="left:${b.s * pps()}px;width:${Math.max(8, (b.e - b.s) * pps())}px">` +
         `<span class="t">${(b.e - b.s).toFixed(2)}초</span>` +
         // ★키 안내(2026-08-28 사장님 "시작Q 종료W 담기E 이렇게 써줘").
         //   기능은 이미 있었지만 화면에 없으니 아무도 몰랐다 — 없는 기능과 같다.
@@ -341,7 +346,7 @@
           else if (mode === 'r') b.e = Math.min(DUR, Math.max(s0 + 0.1, e0 + d));
           else { const len = e0 - s0, ns = Math.max(0, Math.min(DUR - len, s0 + d)); b.s = ns; b.e = ns + len; }
           b.s = Math.round(b.s * 100) / 100; b.e = Math.round(b.e * 100) / 100;
-          el.style.left = secToX(b.s) + 'px';
+          el.style.left = (b.s * pps()) + 'px';   // 절대좌표 — drawBoxes와 같은 규약
           el.style.width = Math.max(8, (b.e - b.s) * pps()) + 'px';
           const lab = el.querySelector('.t'); if (lab) lab.textContent = (b.e - b.s).toFixed(2) + '초';
           ev.stopPropagation();
@@ -443,8 +448,30 @@
       const el = host.querySelector('.frlen');
       if (el) BOXLEN = Math.max(0.1, parseFloat(el.value) || BOXLEN);
       const n = BOXLEN;
-      const a = Math.max(0, Math.min(DUR - 0.1, headTime()));
+      // ★빨간선이 화면 밖이면 **보이는 왼쪽 끝**에 만든다(2026-08-29). 조각 필름은
+      //   펼치면 그 조각 자리로 스크롤돼 있는데 HEAD_T 초기값은 0이라, 그대로 만들면
+      //   박스가 화면 밖(0초)에 생겨 "＋구간이 안 된다"로 보였다.
+      //   화면에 생겨야 기능이 있는 것이다 — 박스 규칙 자체는 addBox 하나 그대로다.
+      const base = (headEl && headEl.classList.contains('on')) ? headTime() : xToSec(8);
+      const a = Math.max(0, Math.min(DUR - 0.1, base));
       addBox(a, Math.min(DUR, a + n));
+    }
+
+    /* ✂ 지금 쓰는 구간을 그대로 주황 박스로 올린다(2026-08-29 사장님 "훅쪽 짧은 카드를
+       펼치고 끝에 다른 장면으로 이어지는 남는 부분을 잘라내려고").
+       꼬리를 자르려면 쓰는 구간이 손에 잡혀야 한다 — 박스로 올린 뒤 끝을 당기고
+       🔁(이 조각을 이 구간으로)로 확정하면 된다. 펼칠 때 미리 올리진 않는다
+       (08-29 "노란박스 아예없이" 결정 유지) — **누를 때만** 만든다.
+       박스를 만드는 규칙은 addBox 하나다(0순위-B). */
+    function useToBox() {
+      if (opt.from == null || opt.to == null) return;
+      const s = Math.round(Math.max(0, +opt.from) * 100) / 100;
+      const e = Math.round(Math.min(DUR || +opt.to, +opt.to) * 100) / 100;
+      if (!(e - s >= 0.1)) return;
+      const same = b => Math.abs(b.s - s) < 0.01 && Math.abs(b.e - e) < 0.01;
+      if (!BOXES.some(same)) addBox(s, e);          // 이미 있으면 또 안 만든다
+      ACTBOX = BOXES.findIndex(same);
+      drawBoxes(); drawBar();
     }
 
     function drawBar() {
