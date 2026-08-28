@@ -5173,6 +5173,33 @@ def api_mix_scene_lab_caption_lines(job_id: str, beat_idx: int, body: dict):
             "cap_durs": timing.durs, "cap_lead": timing.lead_in}
 
 
+@app.post("/api/mix/scene_lab/{job_id}/swap_log")
+def api_mix_scene_lab_swap_log(job_id: str, body: dict):
+    """칸 타임라인 ⑧ 교체 로그 — "AI 픽 → 사람이 바꾼 장면" 쌍을 기록만 한다.
+
+    픽 로직·프롬프트에는 절대 주입하지 않는다(2026-08-29 사장님 확정 — 잘 되는 매칭을
+    건드리면 회귀 위험). 어디서 반복적으로 손이 가는지 숫자가 쌓인 뒤에만 다음을 정한다.
+    """
+    store = Store(DB_PATH)
+    if not store.get_mix_job(job_id):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    row = {
+        "ts": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "beat": body.get("beat"), "old_seg": str(body.get("old_seg") or ""),
+        "new_video": str(body.get("new_video") or ""),
+        "new_start": body.get("new_start"), "new_end": body.get("new_end"),
+        "cap_text": str(body.get("cap_text") or "")[:200], "cap_sec": body.get("cap_sec"),
+    }
+    try:
+        d = Path(_MIX_WORK_DIR) / job_id
+        d.mkdir(parents=True, exist_ok=True)
+        with open(d / "swap_log.jsonl", "a", encoding="utf-8") as f:
+            f.write(json.dumps(row, ensure_ascii=False) + "\n")
+    except OSError as e:
+        return JSONResponse(status_code=500, content={"ok": False, "error": str(e)})
+    return {"ok": True}
+
+
 @app.post("/api/mix/caption_offset/{job_id}/{beat_idx}")
 def api_mix_caption_offset(job_id: str, beat_idx: int, body: dict):
     """비트 자막의 수동 시각 보정값(초)을 저장. 최종 _burn_captions가 읽어 반영."""

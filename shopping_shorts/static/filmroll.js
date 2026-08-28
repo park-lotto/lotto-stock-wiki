@@ -84,6 +84,16 @@
       .map(b => ({ s: Math.round(+b.s * 100) / 100, e: Math.round(+b.e * 100) / 100 }))
       .filter(b => isFinite(b.s) && isFinite(b.e) && b.e - b.s >= 0.1)
       .sort((x, y) => x.s - y.s);
+    // ★길이 잠금 모드(2026-08-29 설계 ⑧ — "오렌지박스를 필름 위에 고정시켜놓고 마우스로만
+    //   옮기면서 맞는 장면을 찾는다"). 바꿀 컷의 길이로 박스 하나가 처음부터 떠 있고,
+    //   늘리고 줄이고 지우는 조작은 전부 잠긴다 — 옮기기와 🔁(교체)만 남는다.
+    //   그래야 올리는 순간 초가 항상 딱 맞는다.
+    const LOCK = +opt.lockLen > 0;
+    if (LOCK) {
+      const a = Math.max(0, +opt.lockFrom || 0);
+      BOXES = [{ s: Math.round(a * 100) / 100,
+                 e: Math.round((a + +opt.lockLen) * 100) / 100 }];
+    }
     let ACTBOX = null;
     let destroyed = false;
     let raf = 0, scrubWant = null, scrubBusy = false, playing = false;
@@ -289,18 +299,21 @@
       boxesEl.innerHTML = BOXES.map((b, i) =>
         `<div class="bx${ACTBOX === i ? ' act' : ''}" data-i="${i}" ` +
         `style="left:${b.s * pps()}px;width:${Math.max(8, (b.e - b.s) * pps())}px">` +
-        `<span class="t">${(b.e - b.s).toFixed(2)}초</span>` +
+        `<span class="t">${(b.e - b.s).toFixed(2)}초${LOCK ? ' 🔒' : ''}</span>` +
         // ★키 안내(2026-08-28 사장님 "시작Q 종료W 담기E 이렇게 써줘").
         //   기능은 이미 있었지만 화면에 없으니 아무도 몰랐다 — 없는 기능과 같다.
-        `<span class="k">시작 <b>Q</b> · 종료 <b>W</b> · 담기 <b>E</b></span>` +
-        `<span class="e l" data-edge="l"></span><span class="e r" data-edge="r"></span>` +
-        `<span class="x" data-del="${i}">×</span>` +
+        //   잠금 모드에선 만들기·지우기 키가 다 잠기므로 안내도 옮기기 안내로 바뀐다.
+        (LOCK
+          ? `<span class="k">길이 고정 — 끌어서 맞는 장면 위에 놓고 <b>🔁 교체</b></span>`
+          : `<span class="k">시작 <b>Q</b> · 종료 <b>W</b> · 담기 <b>E</b></span>` +
+            `<span class="e l" data-edge="l"></span><span class="e r" data-edge="r"></span>` +
+            `<span class="x" data-del="${i}">×</span>`) +
         // ★2026-08-26 사장님 "주황색 박스 만들면 위쪽 훅 있는 윗칸으로 더블클릭이나
         //   드래그로 옮기기". 박스 본체는 pointerdown에서 preventDefault를 하므로
         //   HTML5 dragstart가 안 뜬다(이동·양끝조절이 그 위에 서 있다) — 그래서
         //   **끌기 전용 손잡이**를 따로 둔다. 부품은 어디로 가는지 모른다: 부모가
         //   준 onBoxDrag에 넘길 뿐이다.
-        (typeof opt.onBoxDrag === 'function'
+        (!LOCK && typeof opt.onBoxDrag === 'function'
           ? `<span class="g" draggable="true" data-g="${i}" title="누르면 바로 위 칸에 담깁니다 (끌어다 놓아도 됩니다)">⬆ 위로 담기</span>` : '') +
         `</div>`).join('');
       wireBoxes();
@@ -332,7 +345,7 @@
             ACTBOX = null; drawBoxes(); drawBar(); return;
           }
           ev.stopPropagation(); ev.preventDefault();
-          mode = ev.target.dataset.edge || 'move';
+          mode = LOCK ? 'move' : (ev.target.dataset.edge || 'move');   // 잠금 = 옮기기만
           sx = ev.clientX; s0 = b.s; e0 = b.e; moved = false;
           ACTBOX = i; el.classList.add('dragging');
           try { el.setPointerCapture(ev.pointerId); } catch (_) {}
@@ -445,6 +458,7 @@
     }
 
     function makeBox() {
+      if (LOCK) return;                       // 길이 잠금 — 새 박스 금지
       const el = host.querySelector('.frlen');
       if (el) BOXLEN = Math.max(0.1, parseFloat(el.value) || BOXLEN);
       const n = BOXLEN;
@@ -454,6 +468,26 @@
 
     function drawBar() {
       const total = BOXES.reduce((a, b) => a + (b.e - b.s), 0);
+      // ★길이 잠금(⑧) — 만들기·담기·비우기 없이 [▶듣기]와 [🔁 교체]만.
+      //   영상을 갈아 끼워도 이 줄 모양이 그대로라 "박스가 고정돼 있다"가 화면에서 읽힌다.
+      if (LOCK) {
+        barEl.innerHTML =
+          `<span class="frhint">🔒 ${(+opt.lockLen).toFixed(2)}초 고정 — 박스를 끌어 맞는 장면 위에 놓으세요</span>` +
+          `<button type="button" class="frbtn" data-act="play">▶ 미리보기에서 듣기</button>` +
+          (typeof opt.onReplace === 'function'
+            ? `<button type="button" class="frbtn rep">🔁 이 장면으로 교체</button>` : '');
+        const rep2 = barEl.querySelector('.rep');
+        if (rep2) rep2.onclick = () => {
+          if (BOXES.length === 1 && typeof opt.onReplace === 'function')
+            opt.onReplace({ s: BOXES[0].s, e: BOXES[0].e });
+        };
+        const pl2 = barEl.querySelector('[data-act="play"]');
+        if (pl2) pl2.onclick = () => {
+          const b = BOXES[0];
+          if (b && typeof opt.onPlay === 'function') opt.onPlay(b.s, b.e);
+        };
+        return;
+      }
       barEl.innerHTML =
         (MA !== null
           ? `<span class="frhint">시작 <b>${MA.toFixed(2)}초</b> — 빨간선을 옮기고 <b>W</b>(또는 손잡이 클릭)</span>`
@@ -911,6 +945,7 @@
       // ★Esc = 구간 지우기(2026-08-26 사장님 "esc로 삭제되게"). 고른 게 있으면 그것,
       //   없으면 마지막에 만든 것. ×를 정확히 누르지 않아도 손이 닿는다.
       if (e.code === 'Escape' && !_typing) {
+        if (LOCK) return;                     // 길이 잠금 — 지우기 금지
         if (!BOXES.length) return;
         const i = (ACTBOX != null && BOXES[ACTBOX]) ? ACTBOX : BOXES.length - 1;
         BOXES.splice(i, 1);
@@ -922,6 +957,7 @@
       // ★Q/W = 주황 박스 만들기(2026-08-28 사장님). Space(재생)와 같은 자리에서 처리해
       //   '지금 만지는 필름만 받는다'(ACTIVE)와 입력칸 회피가 그대로 적용된다.
       if (!_typing && (e.code === 'KeyQ' || e.code === 'KeyW' || e.code === 'KeyE')) {
+        if (LOCK) return;                     // 길이 잠금 — 만들기·담기 금지(옮기기·🔁만)
         if (e.ctrlKey || e.metaKey || e.altKey) return;   // Ctrl+W(창 닫기) 등은 건드리지 않는다
         e.preventDefault();
         if (e.code === 'KeyQ') { markStart(); return; }

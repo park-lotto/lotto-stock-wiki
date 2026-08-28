@@ -911,6 +911,12 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
     padding:2px 3px;line-height:1}
 .tl-gapbtn:hover{color:#ffd24a;transform:scale(1.3)}
 .tl-gapbtn.b{color:#4ac1ff;font-weight:800}
+/* 🔁 컷 교체(⑧) */
+.tl-repbtn{position:absolute;top:2px;right:3px;z-index:3;background:rgba(0,0,0,.62);
+    color:#ffd24a;border:none;border-radius:3px;font-size:11px;cursor:pointer;padding:1px 4px}
+.tl-repbtn:hover{background:#ffd24a;color:#3a2a08}
+.tl-repbtn.on{background:#ffd24a;color:#3a2a08}
+.tl-cut.rep{border-color:#ffd24a;box-shadow:0 0 8px rgba(255,210,74,.5)}
 </style></head><body>
 
 <header style="display:none">
@@ -1832,6 +1838,9 @@ function renderRollHosts(beatIdx, slot){
     onGoBeat: (beatIdx == null) ? null : (dir => goBeatRoll(beatIdx, dir)),
     // 박스 두 번 클릭 = 지금 담는 칸에 바로 담기(담기 버튼과 같은 길).
     onBoxCommit(r){ commitRoll(kind, sid, vid, [r], beatIdx); },
+    // ★타임라인 🔁 교체 모드(2026-08-29 설계 ⑧)면 여기서 잠금 옵션이 덮인다:
+    //   lockLen(고정길이 박스)+onReplace(그 컷 교체). 마지막에 펼쳐야 위 onReplace를 이긴다.
+    ...(typeof tlLockOpts === 'function' ? tlLockOpts(kind, vid) : {}),
   });
   markRollBtns();
 }

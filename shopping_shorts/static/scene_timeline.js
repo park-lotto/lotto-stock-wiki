@@ -39,12 +39,16 @@
       const isLast = k === clips.length - 1;
       const stretchPx = (isLast && f.lack > 0.1 && !f.stretching)
         ? Math.min(f.lack, c.dur) * pps : 0;
-      return `<div class="tl-cut" data-k="${k}" data-seg="${c.seg_id}"
+      const inRep = REPLACE && REPLACE.i === i && REPLACE.k === k;
+      return `<div class="tl-cut${inRep ? ' rep' : ''}" data-k="${k}" data-seg="${c.seg_id}"
         style="left:${left.toFixed(1)}px;width:${wd.toFixed(1)}px"
         title="${esc((DATA.segments[c.seg_id] || {}).label || c.seg_id)} · ${c.dur.toFixed(2)}초 — 누르면 필름식으로 펼쳐집니다"
         onclick="event.stopPropagation();tlToggleCut(${i},${k})">
         <img class="tl-thumb" src="${SL.thumb(c.seg_id)}" loading="lazy">
         <span class="tl-len">${c.dur.toFixed(1)}s</span>
+        <button type="button" class="tl-repbtn${inRep ? ' on' : ''}"
+          title="${inRep ? '교체 모드 끄기' : `이 컷을 바꿉니다 — ${c.dur.toFixed(2)}초 고정 박스가 아래 소스 필름에 뜹니다`}"
+          onclick="event.stopPropagation();tlReplaceToggle(${i},${k})">🔁</button>
         ${stretchPx > 4 ? `<span class="tl-stretch" style="width:${stretchPx.toFixed(1)}px"
            title="재료가 ${f.lack.toFixed(1)}초 모자라 이 컷이 그만큼 늘어납니다"></span>` : ''}
       </div>`;
@@ -89,6 +93,53 @@
       ${editBtn}
       <div class="tl-head"></div>
     </div>`;
+  }
+
+  // ── ⑧ 고정길이 박스 교체 ─────────────────────────────────────────────
+  // 컷의 🔁를 누르면 그 컷 길이로 잠긴 박스가 **아래 소스 필름 어디를 펼치든** 떠 있고,
+  // 영상1→2→3 갈아 끼워도 유지된다. 박스를 옮겨 맞는 장면에 놓고 [🔁 교체]를 누르면
+  // 그 자리 컷이 바뀐다 — 길이가 잠겨 있어 초가 항상 딱 맞는다.
+  let REPLACE = null;              // {i, k, len, oldSeg} | null
+
+  g.tlReplaceToggle = function (i, k) {
+    if (REPLACE && REPLACE.i === i && REPLACE.k === k) { REPLACE = null; render(); return; }
+    const clips = planClips(lists[i] || [], beatDur(i), STRETCH[i], i);
+    const c = clips[k];
+    if (!c) return;
+    REPLACE = { i, k, len: Math.round(c.dur * 100) / 100, oldSeg: c.seg_id };
+    render();
+    nsay(`🔁 교체 모드 — 아래 소스 필름을 펼치면 ${REPLACE.len.toFixed(2)}초 고정 박스가 떠 있습니다. 옮겨 놓고 [🔁 이 장면으로 교체]`);
+  };
+
+  /* 필름롤을 여는 쪽(scene_lab openRoll)이 부른다 — 교체 모드면 잠금 옵션을 준다.
+     영상 통째 필름(src)에서만 잠근다: 조각 필름은 원래의 🔁(replaceRoll)이 이미 있다. */
+  g.tlLockOpts = function (kind, vid) {
+    if (!REPLACE || kind !== 'src') return {};
+    return {
+      lockLen: REPLACE.len,
+      onReplace: r => tlReplaceApply(vid, r),
+    };
+  };
+
+  async function tlReplaceApply(vid, r) {
+    if (!REPLACE) return;
+    const rep = REPLACE;
+    // 컷 교체는 **기존 replaceRoll 경로 하나**로 — 새 조각 만들기·칸 갈아끼우기 규칙을
+    // 여기서 다시 적지 않는다(0순위-B).
+    try { replaceRoll(rep.oldSeg, vid, { s: r.s, e: r.e }); }
+    catch (e) { nsay('⚠ 교체 실패 — ' + e.message); return; }
+    REPLACE = null;
+    // 교체 로그(⑩ 축소판 — 기록만, 픽 로직 무변경). 실패해도 조용히 넘어간다(부가 기능).
+    try {
+      const cap = (capsOf(rep.i) || [])[rep.k] || {};
+      fetch(`/api/mix/scene_lab/${SL.job}/swap_log`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ beat: rep.i, old_seg: rep.oldSeg,
+          new_video: vid, new_start: r.s, new_end: r.e,
+          cap_text: cap.text || '', cap_sec: rep.len }) });
+    } catch (e) {}
+    render();
+    nsay(`🔁 교체 완료 — ${rep.len.toFixed(2)}초 그대로 새 장면이 들어갔습니다`);
   }
 
   // ── ⑥ 구절 경계 편집 ────────────────────────────────────────────────
