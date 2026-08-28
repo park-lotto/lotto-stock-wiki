@@ -487,7 +487,13 @@
       boxesEl.style.transform = `translateX(${-off}px)`;
       markEl.style.transform = 'none';
       drawCaps(); drawUse(); drawBoxes(); drawMark();
-      moveHead(pv.currentTime || 0);
+      // ★빨간선은 **자기 시각 그대로** 다시 그린다(2026-08-28 사장님 "0.5·0.2는 안 된다").
+      //   종전엔 pv.currentTime을 넣었는데, applyW는 확대·스크롤마다 불리므로
+      //   그때마다 HEAD_T가 **영상 요소의 실제 시각**으로 덮어써졌다.
+      //   seek는 비동기고 키프레임으로 스냅되므로 내가 찍은 자리와 다르다 —
+      //   실측(0.2초 단계): 0.30초 간격으로 Q/W를 찍었는데 1.75초짜리 박스가 생겼다.
+      //   재생 중에는 tick이 moveHead(t)를 계속 불러 최신 위치가 들어온다.
+      moveHead(HEAD_T);
       // 이번에 화면에 든 칸 중 아직 그림이 없는 것만 뽑는다(있는 건 건너뛴다).
       clearTimeout(applyW._fill);
       applyW._fill = setTimeout(() => { fillVisible(); }, 60);
@@ -552,7 +558,6 @@
       //   (조각 밖 구간을 잡으려면 원본이 다 보여야 한다) — 문제는 **0초에서 열려서**
       //   지금 쓰는 구간이 화면 밖에 있었다는 것이다. 처음 한 번만 그 구간으로 옮긴다
       //   (확대·축소로 다시 그릴 때는 그 자리를 지킨다 — 아래 frz 핸들러가 정한다).
-      console.log('[filmroll] strip 끝 · _homed=', _homed, '· from=', opt.from, '· fit=', opt.fit);
       if (!_homed && opt.from != null) {
         _homed = true;
         // ★배율은 **레이아웃이 잡힌 뒤** 정한다. 여기서 바로 재면 win.clientWidth가 아직
