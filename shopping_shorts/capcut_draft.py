@@ -113,6 +113,30 @@ def _audio_material(path, name, dur_us):
             "check_flag": 1, "copyright_limit_type": "none"}
 
 
+def _hex_rgb(h, default=(1.0, 1.0, 1.0)):
+    """'#ffcc00' → (1.0, 0.8, 0.0). 캡컷 content는 0~1 실수 RGB를 쓴다.
+    이상한 값이면 기본색 — 자막이 안 나가는 것보다 흰색이라도 나가는 게 낫다."""
+    try:
+        t = str(h or "").strip().lstrip("#")
+        if len(t) == 3:
+            t = "".join(c * 2 for c in t)
+        if len(t) != 6:
+            return default
+        return tuple(int(t[i:i + 2], 16) / 255.0 for i in (0, 2, 4))
+    except (TypeError, ValueError):
+        return default
+
+
+def _hex_norm(h, default="#ffffff"):
+    """'ffcc00'/'#FFCC00' → '#ffcc00'. 캡컷 머티리얼은 '#rrggbb' 문자열을 쓴다."""
+    t = str(h or "").strip()
+    if not t:
+        return default
+    if not t.startswith("#"):
+        t = "#" + t
+    return t.lower() if len(t) == 7 else default
+
+
 def _text_content(text, font_path, color=(1.0, 1.0, 1.0), size=15.0):
     import json
     r, g, b = color
@@ -124,7 +148,68 @@ def _text_content(text, font_path, color=(1.0, 1.0, 1.0), size=15.0):
         "text": text}, ensure_ascii=False)
 
 
-def _text_material(text, font_path):
+# 캡컷 캡션의 기본 글자 크기(실측: 캡컷이 만든 캡션 머티리얼의 font_size).
+_CC_BASE_FONT_SIZE = 16.0
+# 우리 화면(제작소 자막꾸미기)의 기본 글자 크기 — caption_style_json의 size 기본값.
+_UI_BASE_FONT_SIZE = 50.0
+
+
+def _caption_style_to_cc(style):
+    """제작소 자막 스타일(caption_style_json) → 캡컷 캡션 머티리얼에 넣을 값들.
+
+    ★고객 제보(2026-08-28 "캡컷으로 보내니 템플릿은 안 따라온다"): 종전엔 색·크기·
+      외곽선·그림자가 **전부 고정값**이라 캡컷엔 늘 흰색 기본 자막만 갔다
+      (caption_style_json 참조 0건 — grep으로 확인).
+
+    ⚠️**위치(x_pct·y_pct)는 여기서 다루지 않는다.** 캡컷 clip.transform의 좌표계
+      (부호·스케일)를 실측한 근거가 없다. 짐작해서 넣으면 자막이 화면 밖으로 날아간다 —
+      안 옮기면 캡컷 기본 위치라 최소한 보이기는 한다. 실측 뒤에 붙일 것.
+    ⚠️폰트 파일도 아직 안 보낸다 — 고객 PC엔 우리 폰트가 없어 경로만 넣으면 깨진다.
+      draft 폴더에 동봉하는 작업이 따로 필요하다(다음 단계).
+    """
+    st = style if isinstance(style, dict) else {}
+    out = {}
+    # 글자색 — content(0~1 RGB)와 머티리얼(#rrggbb) 둘 다 캡컷이 본다.
+    out["rgb"] = _hex_rgb(st.get("color"), (1.0, 1.0, 1.0))
+    out["text_color"] = _hex_norm(st.get("color"))
+    # 크기 — 캡컷 단위로 환산(우리 50 = 캡컷 16 기준 비례).
+    #   ⚠️이 비율은 **추정**이다(캡컷 size 단위를 실측한 자료가 없다). 사장님이 실물에서
+    #     보고 조정할 수 있게 한 곳(_CC_BASE_FONT_SIZE/_UI_BASE_FONT_SIZE)에만 적는다.
+    try:
+        ui = float(st.get("size") or _UI_BASE_FONT_SIZE)
+    except (TypeError, ValueError):
+        ui = _UI_BASE_FONT_SIZE
+    ratio = max(0.3, min(3.0, ui / _UI_BASE_FONT_SIZE))       # 과한 값은 잘라 안전하게
+    out["font_size"] = round(_CC_BASE_FONT_SIZE * ratio, 2)
+    # 외곽선 — 캡컷 캡션 기본 border_width=0.24(실측). 우리 outline_w(px)를 그 비율로.
+    if st.get("outline"):
+        try:
+            w = float(st.get("outline_w") or 0)
+        except (TypeError, ValueError):
+            w = 0
+        out["border_color"] = _hex_norm(st.get("outline_color"), "#000000")
+        out["border_width"] = round(0.24 * max(0.5, min(3.0, (w or 6) / 6.0)), 3)
+        out["border_alpha"] = 1.0
+    else:
+        out["border_color"] = ""
+        out["border_width"] = 0.0
+        out["border_alpha"] = 0.0
+    # 그림자
+    if st.get("shadow"):
+        out["has_shadow"] = True
+        out["shadow_color"] = _hex_norm(st.get("shadow_color"), "#000000")
+        try:
+            d = float(st.get("shadow_d") or 3)
+        except (TypeError, ValueError):
+            d = 3
+        out["shadow_distance"] = round(max(1.0, min(20.0, d * 1.7)), 2)   # 5.0(기본) ≈ 3×1.7
+    else:
+        out["has_shadow"] = False
+        out["shadow_color"] = ""
+    return out
+
+
+def _text_material(text, font_path, style=None):
     """자막 머티리얼 — **캡션(subtitle)** 으로 만든다(2026-08-26 고객 요청).
 
     ★고객 제보(진진님): "캡컷에 보내보니 자막이 **텍스트**로 붙더라. 캡션으로 붙게
@@ -139,15 +224,18 @@ def _text_material(text, font_path):
         캡컷이 자막 패널에서 다루려면 이 필드들을 본다.
     ★추측하지 않았다. 실제 캡컷이 저장한 파일에서 그대로 가져온 값이다.
     """
-    content = _text_content(text, font_path)
+    cc = _caption_style_to_cc(style)
+    content = _text_content(text, font_path, color=cc["rgb"], size=cc["font_size"])
     return {"id": _uid(), "type": "subtitle", "content": content,
             "base_content": "", "recognize_type": 0, "recognize_task_id": "",
             "recognize_text": "", "recognize_model": "", "punc_model": "",
-            "name": "", "font_path": font_path, "font_size": 16.0, "text_color": "#ffffff",
+            "name": "", "font_path": font_path,
+            "font_size": cc["font_size"], "text_color": cc["text_color"],
             "text_alpha": 1.0, "alignment": 1, "line_feed": 1, "letter_spacing": 0.0,
-            "line_spacing": 0.02, "text_size": 16, "border_width": 0.24, "border_alpha": 1.0,
-            "border_color": "", "border_mode": 0, "bold_width": 0.0,
-            "has_shadow": False, "background_alpha": 0.0, "background_color": "",
+            "line_spacing": 0.02, "text_size": int(round(cc["font_size"])),
+            "border_width": cc["border_width"], "border_alpha": cc["border_alpha"],
+            "border_color": cc["border_color"], "border_mode": 0, "bold_width": 0.0,
+            "has_shadow": cc["has_shadow"], "background_alpha": 0.0, "background_color": "",
             "background_style": 0, "background_round_radius": 0.0,
             "background_height": 0.14, "background_width": 0.14,
             "background_horizontal_offset": 0.0, "background_vertical_offset": 0.0,
@@ -157,7 +245,8 @@ def _text_material(text, font_path):
             "force_apply_line_max_width": False, "global_alpha": 1.0,
             "group_id": "", "initial_scale": 1.0, "is_rich_text": False,
             "italic_degree": 0, "language": "", "shadow_alpha": 0.9,
-            "shadow_angle": -45.0, "shadow_color": "", "shadow_distance": 5.0,
+            "shadow_angle": -45.0, "shadow_color": cc["shadow_color"],
+            "shadow_distance": cc.get("shadow_distance", 5.0),
             "shadow_smoothing": 1.0, "typesetting": 0, "underline": False,
             "underline_offset": 0.22, "underline_width": 0.05,
             "words": {"start_time": [], "end_time": [], "text": []},
@@ -217,7 +306,8 @@ def _beat_clips(beat, beat_dur, src_durs):
 
 
 def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
-                project_name, canvas=(1080, 1920), font_path=_DEFAULT_FONT, video_durs=None):
+                project_name, canvas=(1080, 1920), font_path=_DEFAULT_FONT, video_durs=None,
+                caption_style=None):
     """편집안 → (draft_content_dict, assets_to_copy).
 
     asset_paths: {real_path: 캡컷이 볼 절대경로} — 호출부가 파일을 그 절대경로에 두고 넘긴다.
@@ -307,7 +397,7 @@ def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
         if text:
             anim = _sticker_animation()
             mats["material_animations"].append(anim)
-            tm = _text_material(text, font_path)
+            tm = _text_material(text, font_path, caption_style)
             mats["texts"].append(tm)
             # ★실측(캡컷이 만든 캡션 세그먼트): render_index=0 · track_render_index=2.
             #   종전엔 render_index=14000(텍스트 관례)이라 자막 패널에서 다르게 다뤄졌다.
@@ -365,7 +455,7 @@ def _skeleton(name, cw, ch, duration_us):
 
 def assemble_draft_folder(out_root, base_abs, *, plan, timeline, source_video_paths,
                           tts_paths, project_name, canvas=(1080, 1920), font_path=_DEFAULT_FONT,
-                          probe=None, final_video=None):
+                          probe=None, final_video=None, caption_style=None):
     """draft 폴더를 out_root/<project>/ 에 실제로 조립한다(에셋 복사 + draft_content.json + meta).
 
     base_abs: 캡컷이 이 draft 폴더를 볼 **절대경로**(예: C:/capcutproject/CapCut Drafts). draft가
@@ -409,7 +499,8 @@ def assemble_draft_folder(out_root, base_abs, *, plan, timeline, source_video_pa
             shutil.copy(real, proj / name)
             asset_paths[real] = f"{base_abs}/{project}/{name}"
 
-    draft, _ = build_draft(plan=plan, timeline=timeline, source_video_paths=source_video_paths,
+    draft, _ = build_draft(caption_style=caption_style,
+                           plan=plan, timeline=timeline, source_video_paths=source_video_paths,
                            tts_paths=tts_paths, asset_paths=asset_paths, project_name=project,
                            canvas=canvas, font_path=font_path, video_durs=video_durs)
 

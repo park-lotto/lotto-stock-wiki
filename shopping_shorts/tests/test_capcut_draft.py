@@ -202,3 +202,73 @@ def test_세그먼트_렌더인덱스가_캡션기준이다():
     seg = [tr for tr in draft["tracks"] if tr["type"] == "text"][0]["segments"][0]
     assert seg["render_index"] == 0, "텍스트 관례(14000)가 남아 있다"
     assert seg["track_render_index"] == 2
+
+
+# ── 자막 스타일이 캡컷으로 따라간다(2026-08-28 고객 제보) ────────────────────
+# 제보: "캡컷으로 보내니 템플릿은 안 따라온다"
+# 실측 원인: capcut_draft가 caption_style_json을 **한 번도 참조하지 않았다**(grep 0건).
+#   색·크기·외곽선·그림자가 전부 고정값이라 캡컷엔 늘 흰색 기본 자막만 갔다.
+_STYLE = {"font": "GmarketSansBold.otf", "color": "#ffcc00", "size": 70,
+          "outline": True, "outline_color": "#000000", "outline_w": 9,
+          "shadow": True, "shadow_color": "#111111", "shadow_d": 4,
+          "y_pct": 32, "x_pct": 50}
+
+
+def _texts(draft):
+    return draft["materials"]["texts"]
+
+
+def test_caption_style_reaches_draft():
+    """★뿌리: 고른 색·크기·외곽선·그림자가 draft에 실제로 실린다."""
+    draft, _ = cd.build_draft(plan=_PLAN, timeline=_TIMELINE, source_video_paths=_SRC,
+                              tts_paths=_TTS, asset_paths=_ASSET, project_name="t",
+                              caption_style=_STYLE)
+    t = _texts(draft)[0]
+    assert t["text_color"] == "#ffcc00", f"글자색이 안 갔다: {t['text_color']}"
+    assert t["font_size"] > 16.0, f"크기(70)가 기본(16) 그대로다: {t['font_size']}"
+    assert t["border_color"] == "#000000" and t["border_width"] > 0, "외곽선이 안 갔다"
+    assert t["has_shadow"] is True and t["shadow_color"] == "#111111", "그림자가 안 갔다"
+    # content(0~1 RGB)에도 같은 색이 들어가야 한다 — 캡컷은 둘 다 본다
+    rgb = json.loads(t["content"])["styles"][0]["fill"]["content"]["solid"]["color"]
+    assert rgb[0] == 1.0 and abs(rgb[1] - 0.8) < 0.01 and rgb[2] == 0.0, rgb
+
+
+def test_no_style_keeps_old_output():
+    """★회귀 0: 스타일을 안 주면 종전과 똑같은 기본 자막이다."""
+    draft, _ = cd.build_draft(plan=_PLAN, timeline=_TIMELINE, source_video_paths=_SRC,
+                              tts_paths=_TTS, asset_paths=_ASSET, project_name="t")
+    t = _texts(draft)[0]
+    assert t["text_color"] == "#ffffff" and t["font_size"] == 16.0
+    assert t["border_color"] == "" and t["has_shadow"] is False
+
+
+def test_caption_stays_subtitle_type():
+    """★스타일을 넣어도 **캡션(subtitle)**이어야 한다 — 텍스트로 바뀌면 2026-08-26 제보가 재발한다."""
+    draft, _ = cd.build_draft(plan=_PLAN, timeline=_TIMELINE, source_video_paths=_SRC,
+                              tts_paths=_TTS, asset_paths=_ASSET, project_name="t",
+                              caption_style=_STYLE)
+    t = _texts(draft)[0]
+    assert t["type"] == "subtitle" and t["check_flag"] == 31, "캡션이 아니라 텍스트가 됐다"
+
+
+def test_junk_style_does_not_break_export():
+    """★이상한 값이 와도 내보내기는 된다 — 스타일은 부가물이지 관문이 아니다."""
+    for bad in (None, {}, {"color": "zzz", "size": "많이", "outline_w": None},
+                {"color": None, "shadow": True, "shadow_d": "x"}):
+        draft, _ = cd.build_draft(plan=_PLAN, timeline=_TIMELINE, source_video_paths=_SRC,
+                                  tts_paths=_TTS, asset_paths=_ASSET, project_name="t",
+                                  caption_style=bad)
+        t = _texts(draft)[0]
+        assert t["text_color"].startswith("#") and t["font_size"] > 0, bad
+
+
+def test_size_is_clamped():
+    """터무니없는 크기는 잘라낸다 — 캡컷에서 글자가 화면을 덮으면 못 쓴다."""
+    big, _ = cd.build_draft(plan=_PLAN, timeline=_TIMELINE, source_video_paths=_SRC,
+                            tts_paths=_TTS, asset_paths=_ASSET, project_name="t",
+                            caption_style={"size": 99999})
+    tiny, _ = cd.build_draft(plan=_PLAN, timeline=_TIMELINE, source_video_paths=_SRC,
+                             tts_paths=_TTS, asset_paths=_ASSET, project_name="t",
+                             caption_style={"size": 1})
+    assert _texts(big)[0]["font_size"] <= 16.0 * 3
+    assert _texts(tiny)[0]["font_size"] >= 16.0 * 0.3

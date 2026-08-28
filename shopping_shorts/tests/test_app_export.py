@@ -120,3 +120,35 @@ def test_video_download_attachment(monkeypatch, tmp_path):
     # dl 없으면 인라인(첨부 아님)
     r2 = client.get("/api/mix/video/j1")
     assert "attachment" not in r2.headers.get("content-disposition", "")
+
+
+def test_capcut_carries_caption_style(monkeypatch, tmp_path):
+    """★고객 제보(2026-08-28) "캡컷으로 보내니 템플릿은 안 따라온다".
+
+    DB에 저장된 자막 스타일이 **API 왕복을 거쳐** draft에 실리는지 못 박는다.
+    생성기만 고치고 호출부에서 안 넘기면 화면은 그대로다 —
+    실제로 종전엔 app.py가 caption_style을 넘기지 않았다(참조 0건).
+    """
+    client = _seed(monkeypatch, tmp_path)
+    Store(app_module.DB_PATH).update_mix_job("j1", caption_style={
+        "color": "#ffcc00", "size": 70, "outline": True, "outline_color": "#000000",
+        "outline_w": 9, "shadow": True, "shadow_color": "#111111", "shadow_d": 4})
+    r = client.get("/api/mix/capcut/j1", params={"base": "C:/capcutproject/CapCut Drafts"})
+    assert r.status_code == 200, r.text
+    draft = __import__("json").loads(r.json()["texts"]["draft_content.json"])
+    t = draft["materials"]["texts"][0]
+    assert t["text_color"] == "#ffcc00", f"글자색이 캡컷까지 안 갔다: {t['text_color']}"
+    assert t["font_size"] > 16.0, f"크기가 기본 그대로다: {t['font_size']}"
+    assert t["border_color"] == "#000000", "외곽선이 안 갔다"
+    assert t["has_shadow"] is True, "그림자가 안 갔다"
+    assert t["type"] == "subtitle", "캡션이 아니라 텍스트가 됐다"
+
+
+def test_capcut_without_style_still_exports(monkeypatch, tmp_path):
+    """스타일이 없어도 내보내기는 종전대로 된다(회귀 0)."""
+    client = _seed(monkeypatch, tmp_path)
+    r = client.get("/api/mix/capcut/j1", params={"base": "C:/capcutproject/CapCut Drafts"})
+    assert r.status_code == 200
+    draft = __import__("json").loads(r.json()["texts"]["draft_content.json"])
+    t = draft["materials"]["texts"][0]
+    assert t["text_color"] == "#ffffff" and t["font_size"] == 16.0

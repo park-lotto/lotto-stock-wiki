@@ -5818,10 +5818,23 @@ def api_mix_capcut(job_id: str, base: str = ""):
     #   아직 렌더 전이면 None → 그 항목만 빠진다(내보내기는 그대로 된다).
     _final = job.get("video_path") if (job.get("video_path")
                                        and Path(job["video_path"]).exists()) else None
+    # ★제작소에서 고른 자막 스타일을 함께 보낸다(2026-08-28 고객 제보 "캡컷으로 보내니
+    #   템플릿은 안 따라온다"). 종전엔 capcut_draft가 caption_style_json을 **한 번도**
+    #   참조하지 않아 캡컷엔 늘 흰색 기본 자막만 갔다(grep 0건으로 확인).
+    #   ⚠️저장 형식이 흔들려도 내보내기 자체는 되게 한다 — 스타일은 부가물이다.
+    _cap_style = job.get("caption_style")
+    if isinstance(_cap_style, str):
+        try:
+            import json as _json
+            _cap_style = _json.loads(_cap_style)
+        except (ValueError, TypeError):
+            _cap_style = None
+    if not isinstance(_cap_style, dict):
+        _cap_style = None
     proj, project, files = capcut_draft.assemble_draft_folder(
         out_root, base, plan=plan, timeline=timeline, source_video_paths=source_video_paths,
         tts_paths=tts_paths, project_name=_capcut_project_name(job_id, job, plan),
-        final_video=_final)
+        final_video=_final, caption_style=_cap_style)
     texts, assets = {}, []
     for name in files:
         if name.endswith(".json"):
