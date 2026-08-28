@@ -5013,6 +5013,20 @@ def api_mix_tts_regen(job_id: str, beat_idx: int, body: dict, background_tasks: 
     for k in ("voice_id", "settings", "speed"):
         if body.get(k) is not None:
             override[k] = body.get(k)
+    # ★어느 톤으로 뽑았는지 비트에 남긴다 (2026-08-28 사장님 제보 "tts 속삭임 누르고
+    #   톤바꿔서 다시 눌러도 다시 안정으로 돌아오는데").
+    #   화면의 톤 고르개는 다시 그릴 때마다 첫 옵션(안정)으로 리셋됐다 — 기억하는 곳이
+    #   어디에도 없었기 때문이다. voice_override에는 voice_id·settings·speed만 담겨
+    #   **어느 톤이었는지 되짚을 방법이 없다**(같은 성우의 톤끼리 voice_id가 다르지만
+    #   화면이 그걸 이름으로 되돌리려면 판단이 두 벌이 된다).
+    #   ⚠️override에 섞지 않는다 — 그건 그대로 synthesize_line으로 흘러간다.
+    tone = (body.get("variant") or "").strip()
+    if tone:
+        plan = job["edit_plan"]
+        _b = next((x for x in plan["beats"] if x["beat_idx"] == beat_idx), None)
+        if _b is not None:
+            _b["tts_tone"] = tone
+            store.update_mix_job(job_id, edit_plan=plan)
     background_tasks.add_task(resynth_one_beat, job_id, beat_idx, override, DB_PATH, _MIX_WORK_DIR)
     return {"ok": True}
 
