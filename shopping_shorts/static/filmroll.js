@@ -123,7 +123,10 @@
           '<div class="fruse"></div>' +
           '<div class="frboxes"></div>' +
           '<div class="frmark"></div>' +
-          '<div class="frhead"><span class="frgrip"></span><span class="frdur"></span></div>' +
+          // ★조작법을 손잡이에 적어둔다(2026-08-28) — 도움말 버튼이 따로 없어서
+          //   우클릭 찍기가 있는 줄 모르고 쓰던 기능이다.
+          '<div class="frhead"><span class="frgrip" title="끌어서 이동 · 우클릭 = 구간 찍기 · ' +
+            'Q 시작 / W 끝 · 스페이스 재생"></span><span class="frdur"></span></div>' +
         '</div>' +
         (typeof opt.onGoBeat === 'function'
           ? '<button type="button" class="frgo down" data-go="1" title="다음 장면의 필름으로">▼ 다음 장면</button>' : '') +
@@ -384,6 +387,28 @@
       return true;
     }
 
+    /* Q = 시작 찍기 · W = 끝 찍기 (2026-08-28 사장님 "단축키는 시작=Q 끝=W").
+       markHere(우클릭)는 한 번에 시작·끝을 번갈아 찍는 토글이라, 어느 쪽을 찍는
+       중인지 헷갈릴 때가 있다. Q/W는 **무엇을 찍는지 손가락이 정한다**.
+       ★박스를 만드는 규칙은 addBox 하나뿐이다 — 여기서 BOXES를 직접 건드리면
+         정렬·중복·최소길이 규칙이 두 벌이 된다(0순위-B). */
+    function headTime() {
+      return Math.round((pv.currentTime || 0) * 100) / 100;
+    }
+    function markStart() {
+      MA = headTime();
+      drawMark(); drawBar(); moveHead(MA);
+    }
+    function markEnd() {
+      const t = headTime();
+      if (MA === null) {            // 시작을 안 찍었으면 여기를 시작으로 삼는다
+        MA = t; drawMark(); drawBar(); moveHead(t); return;
+      }
+      const a = Math.min(MA, t), b = Math.max(MA, t);
+      if (b - a < 0.15) { MA = null; drawMark(); drawBar(); moveHead(t); return; }
+      addBox(a, b); moveHead(t);
+    }
+
     /* 손잡이 우클릭 = 여기 찍기(시작 → 끝) */
     function markHere() {
       const t = Math.round(pv.currentTime * 100) / 100;
@@ -405,7 +430,7 @@
       const total = BOXES.reduce((a, b) => a + (b.e - b.s), 0);
       barEl.innerHTML =
         (MA !== null
-          ? `<span class="frhint">시작 <b>${MA.toFixed(2)}초</b> — 빨간선을 옮기고 <b>손잡이 클릭</b> 한 번 더</span>`
+          ? `<span class="frhint">시작 <b>${MA.toFixed(2)}초</b> — 빨간선을 옮기고 <b>W</b>(또는 손잡이 클릭)</span>`
           // ★상시 안내문은 뺐다(2026-08-26 사장님 캡쳐 532) — 한 줄을 통째로 먹으면서
           //   그만큼 필름이 낮아졌다. 조작법은 오른쪽 위 [?] 도움말에 있다.
           //   '시작 N초' 같은 **작업 중 상태**는 그대로 남긴다(그건 지금 뭘 하는지다).
@@ -812,6 +837,14 @@
         ACTBOX = null; MA = null;
         drawBoxes(); drawMark(); drawBar();
         e.preventDefault();
+        return;
+      }
+      // ★Q/W = 주황 박스 만들기(2026-08-28 사장님). Space(재생)와 같은 자리에서 처리해
+      //   '지금 만지는 필름만 받는다'(ACTIVE)와 입력칸 회피가 그대로 적용된다.
+      if (!_typing && (e.code === 'KeyQ' || e.code === 'KeyW')) {
+        if (e.ctrlKey || e.metaKey || e.altKey) return;   // Ctrl+W(창 닫기) 등은 건드리지 않는다
+        e.preventDefault();
+        if (e.code === 'KeyQ') markStart(); else markEnd();
         return;
       }
       if (e.code !== 'Space') return;
