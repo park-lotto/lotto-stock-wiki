@@ -2653,7 +2653,11 @@ function playInstagram(img, shortcode){ _playViaMedia(img, shortcode, 'instagram
 const LENS_PLATFORMS=[
   {k:'instagram',label:'📷 인스타'},{k:'tiktok',label:'🎵 틱톡'},
   {k:'xiaohongshu',label:'📕 샤오홍슈'},{k:'douyin',label:'🎶 도우인'},
-  {k:'youtube',label:'▶️ 유튜브'}];
+  {k:'youtube',label:'▶️ 유튜브'},
+  // 핀터레스트(2026-08-29 사장님 "핀터레스트 검색결과도 노출 / 숏폼영상만").
+  // 서버(lens_discover)가 핀 페이지를 실조회해 **영상 핀만** 보내준다(이미지 핀은 서버컷).
+  // play_url(mp4 직링크)이 실려 와 기존 인라인 재생 경로(/api/video 프록시)로 바로 재생된다.
+  {k:'pinterest',label:'📌 핀터레스트'}];
 // 카드 정렬용 우선순위 — ★위 배열에서 자동 생성한다(손으로 또 적지 않는다).
 const _LENS_ORDER=Object.fromEntries(LENS_PLATFORMS.map((p,i)=>[p.k,i]));
 let LENS_STATE={};   // shortcode → {items, on:Set, saved:Set}
@@ -3408,7 +3412,7 @@ function renderLens(shortcode, mountId){
       <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="영상 길이 90초 이하(또는 길이 불명)만 표시"><input type="checkbox" ${st.shortsOnly?'checked':''} onclick="toggleLensShorts('${shortcode}')"> 숏폼만</label>
       <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="제목에 한글이 없는 결과만 표시 — 원본(해외) 영상 찾을 때. 채널명이 아닌 제목 기준 근사치라 완벽하진 않음"><input type="checkbox" ${st.foreignOnly?'checked':''} onclick="toggleLensForeign('${shortcode}')"> 🌍 해외만</label>
       <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="제목에 한글이 있는 결과만 표시 — 국내 레퍼런스를 볼 때. '해외만'과 반대라 둘은 함께 켜지지 않습니다(제목 기준 근사치)"><input type="checkbox" ${st.koreanOnly?'checked':''} onclick="toggleLensKorean('${shortcode}')"> 🇰🇷 한국만</label>
-      <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="인스타 카드뉴스(사진·카러셀 게시물)를 가립니다. URL이 /p/면 사진으로 봅니다 — 렌즈 응답에 동영상 여부가 없어서 쓰는 근사치라, 드물게 /p/로 올라간 옛 동영상도 같이 가려집니다(끄면 다시 보임)"><input type="checkbox" ${st.videoOnly!==false?'checked':''} onclick="toggleLensVideoOnly('${shortcode}')"> 🎬 영상만${nPhoto?` <span style="color:var(--sub)">(카드뉴스 ${nPhoto})</span>`:''}</label>
+      <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="인스타 카드뉴스(사진·카러셀 게시물)와 영상인지 확인 못 한 핀터레스트 핀을 가립니다. 인스타는 URL이 /p/면 사진으로 보는 근사치라 드물게 옛 동영상도 같이 가려집니다(끄면 다시 보임). 핀터레스트 이미지 핀은 서버가 확인해 아예 빼고, 확인 실패분만 여기서 가립니다"><input type="checkbox" ${st.videoOnly!==false?'checked':''} onclick="toggleLensVideoOnly('${shortcode}')"> 🎬 영상만${nPhoto?` <span style="color:var(--sub)">(카드뉴스 ${nPhoto})</span>`:''}</label>
       <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="소재 키워드가 제목에 하나도 없는 결과(⚠️다른주제?)를 가립니다. 렌즈는 시각 유사도만 보기 때문에 엉뚱한 게시물이 섞입니다. ⚠️중국어·영어 제목은 키워드가 안 맞아 원본(해외) 후보까지 사라질 수 있어 기본 꺼짐"><input type="checkbox" ${st.hideOfftopic?'checked':''} onclick="toggleLensOfftopic('${shortcode}')"> ⚠️ 다른주제 숨기기${nOff?` <span style="color:var(--sub)">(${nOff})</span>`:''}</label>
       <button onclick="lensBulkSave('${shortcode}')" ${selCount?'':'disabled'} style="${btnCss}">📥 선택 담기(${selCount})</button>
       <button onclick="lensBulkDelete('${shortcode}')" ${selCount?'':'disabled'} style="${btnCss}">🗑 선택 삭제(${selCount})</button>

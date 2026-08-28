@@ -9,7 +9,7 @@ import time
 import requests
 from concurrent.futures import ThreadPoolExecutor
 from urllib.parse import urlparse, quote, parse_qs
-from shopping_shorts import serpapi_client
+from shopping_shorts import pinterest_crawl, serpapi_client
 from shopping_shorts.config import SERPAPI_KEY, SERPAPI_KEYS
 
 _LENS_ENDPOINT = "https://serpapi.com/search"
@@ -50,6 +50,10 @@ _PLATFORM_DOMAINS = [
     ("instagram", ("instagram.com",)),
     ("xiaohongshu", ("xiaohongshu.com", "xhslink.com")),
     ("douyin", ("douyin.com", "iesdouyin.com")),
+    # 핀터레스트(2026-08-29 사장님 "핀터레스트 검색결과도 노출해줘 / 숏폼영상만").
+    # 렌즈 visual_matches에 핀 링크가 원래 많이 오는데 여기 없어서 전부 버려지고 있었다.
+    # 이미지 핀이 대부분이라 verify_matches에서 핀 페이지를 실조회해 **영상 핀만** 남긴다.
+    ("pinterest", ("pinterest.com",)),
 ]
 
 
@@ -180,6 +184,9 @@ def _title_matches(keywords, title):
 
 
 _IG_PERMALINK_RE = re.compile(r"/(?:p|reel|reels|tv)/[A-Za-z0-9_-]+")
+# 핀터레스트 핀 id — /pin/18295942229438860/ 와 /pin/stylish-gadgets--18295942229438860/
+# 둘 다 온다(실측: 렌즈 결과와 페이지 @id가 각각 이 모양). 끝의 숫자가 id다.
+_PIN_ID_RE = re.compile(r"/pin/(?:.*?--)?(\d{5,})/?$")
 
 
 def _is_watchable(platform, link):
@@ -196,6 +203,9 @@ def _is_watchable(platform, link):
         return "/video/" in path
     if platform == "instagram":
         return bool(_IG_PERMALINK_RE.search(path))
+    if platform == "pinterest":
+        # 개별 핀만(/pin/<슬러그-혹은-id>). 검색·보드·프로필·아이디어 모음은 배제.
+        return "/pin/" in path
     return True   # 유튜브·중국플랫폼은 그대로(대부분 개별 콘텐츠)
 
 
@@ -233,6 +243,10 @@ def is_photo_post(platform, link):
 #   서버 실측(2026-08-18) 게시물 3건 전부 200 + 진짜 제목·썸네일 회수.
 #   ⚠️ 인스타만 `x-ig-app-id` 헤더를 요구한다 — 없으면 거절당한다.
 _OEMBED_TIMEOUT = 4
+# 핀터레스트 실조회 — 핀 페이지가 1.3MB HTML이라(실측) oEmbed보다 넉넉히.
+_PIN_TIMEOUT = float(os.environ.get("LENS_PIN_TIMEOUT", "8"))
+# 렌즈 1회가 물어오는 핀이 수십 개일 수 있어 실조회 개수에 뚜껑을 씌운다.
+_PIN_VERIFY_MAX = int(os.environ.get("LENS_PIN_VERIFY_MAX", "20"))
 # app._thumb_via_oembed와 같은 값. 인스타 웹앱이 공개적으로 쓰는 상수다.
 _IG_OEMBED_APP_ID = "936619743392459"
 _IG_OEMBED_HEADERS = {"User-Agent": "Mozilla/5.0", "x-ig-app-id": _IG_OEMBED_APP_ID}
@@ -257,9 +271,45 @@ def _oembed_headers(platform):
 def verify_matches(items, keywords=None):
     """틱톡·유튜브·인스타 항목을 oEmbed로 실조회해 제목·썸네일을 실제 값으로 교체(in-place).
 
-    제목이 바뀌면 match(키워드 일치)도 실제 제목 기준으로 다시 판정한다."""
+    제목이 바뀌면 match(키워드 일치)도 실제 제목 기준으로 다시 판정한다.
+
+    ★핀터레스트(2026-08-29)도 여기서 실조회한다 — 단 목적이 다르다. 렌즈가 주는 핀
+    링크는 대부분 **이미지 핀**인데 응답엔 영상 여부가 없다(oEmbed도 안 알려준다).
+    핀 상세 페이지의 JSON-LD VideoObject(pinterest_crawl.pin_video_info, 무료·무로그인)로
+      영상 확정 → mp4(play_url)·길이·제목·썸네일 보강해 남긴다
+      이미지 확정 → **잘라낸다**(2026-08-16 "사진·롱폼 자체 커트"와 같은 원칙 — 반환이 걸러진 리스트)
+      판정불가(네트워크 실패·상한 초과) → is_photo=True로만 표시(기본 가림, '🎬 영상만' 끄면 보임)
+    그래서 이 함수는 이제 **걸러진 리스트를 반환**한다(핀터레스트 외 항목은 절대 안 지운다)."""
+    def _one_pinterest(i):
+        try:
+            info = pinterest_crawl.pin_video_info(i.get("url") or "",
+                                                  timeout=_PIN_TIMEOUT)
+        except Exception:               # noqa: BLE001 — 판정불가 ≠ 이미지 확정
+            i["is_photo"] = True        # 자르지 않는다(회수율) — 기본 가림으로만
+            return
+        if info is None:
+            i["_pin_drop"] = True       # 영상 아님 확정 — 렌즈는 숏폼 소재 자리다
+            return
+        dur = info.get("duration")
+        if dur is not None and dur > _LONGFORM_MAX_SECS:
+            i["_pin_drop"] = True       # 본검색의 롱폼 컷과 같은 기준
+            return
+        # CDN 직링크는 핫링크 차단이 없다(실측 Referer 없이 200) — 프론트의 기존
+        # play_url 경로(/api/video 프록시, pinimg 화이트리스트 등록됨)로 바로 재생된다.
+        i["play_url"] = info["video_url"]
+        if info.get("thumbnail"):
+            i["thumbnail"] = info["thumbnail"]
+        if info.get("title"):
+            i["title"] = info["title"]
+            i["match"] = _title_matches(keywords or set(), info["title"])
+        i["duration"] = dur
+        i["is_short"] = True if dur is None else dur <= _SHORT_MAX_SECS
+        i["verified"] = True
+
     def _one(i):
         platform = i.get("platform")
+        if platform == "pinterest":
+            return _one_pinterest(i)
         ep = _oembed_endpoint(platform, i.get("url") or "")
         if not ep:
             return
@@ -292,13 +342,19 @@ def verify_matches(items, keywords=None):
             _one(i)
         except Exception:
             pass
+    pins = [i for i in items if i.get("platform") == "pinterest"]
+    # 핀 페이지는 1.3MB짜리 HTML이라(실측) 무한정 다 볼 수 없다 — 상한 밖은
+    # 판정불가 취급(기본 가림·미삭제). 렌즈 유사도순이라 앞쪽이 더 닮은 것들이다.
+    for i in pins[_PIN_VERIFY_MAX:]:
+        i["is_photo"] = True
     targets = [i for i in items
                if i.get("platform") in ("tiktok", "youtube", "instagram")]
-    if not targets:
-        return items
-    with ThreadPoolExecutor(max_workers=8) as ex:
-        list(ex.map(_safe, targets))
-    return items
+    targets += pins[:_PIN_VERIFY_MAX]
+    if targets:
+        with ThreadPoolExecutor(max_workers=8) as ex:
+            list(ex.map(_safe, targets))
+    # 이미지 확정 핀만 걸러낸다 — 다른 플랫폼 항목은 이 필터에 절대 안 걸린다.
+    return [i for i in items if not i.pop("_pin_drop", False)]
 
 
 # 렌즈 호출 로케일. ko=한국어 자막판, en=자막 없는 해외 원본(2026-08-16 실측).
@@ -370,11 +426,19 @@ def _dedup_key(link):
         return ""
     parsed = urlparse(link)
     base = f"{parsed.netloc}{parsed.path}".rstrip("/").lower()
-    if _platform_of(link) == "youtube":
+    platform = _platform_of(link)
+    if platform == "youtube":
         vid = parse_qs(parsed.query).get("v", [""])[0]
         if vid:
             return f"{base}?v={vid}"
         # youtu.be/XXX·/shorts/XXX 는 경로에 ID가 있어 base로 충분
+    if platform == "pinterest":
+        # 같은 핀이 kr.pinterest.com / www.pinterest.com / 슬러그 유무로 제각각 온다
+        # (실측: /pin/<숫자id>/ 와 /pin/<슬러그>--<숫자id>/ 가 같은 핀).
+        # netloc+path로는 전부 다른 키가 돼 중복 카드가 뜬다 → 핀 id로 뭉갠다.
+        m = _PIN_ID_RE.search(parsed.path)
+        if m:
+            return f"pinterest.com/pin/{m.group(1)}"
     return base
 
 
@@ -584,4 +648,14 @@ def search_similar_videos(image_url, api_key=None, timeout=60, source_caption=No
         })
     st["merged_total"] = len(matches)
     st["after_dedup"] = len(out)
-    return verify_matches(out, keywords=keywords)
+    # ⚠️ verify_matches 시그니처는 (items, keywords)로 유지한다 — 테스트 9곳이 이 모양의
+    #   람다로 갈아끼운다. 핀터레스트 계측은 앞뒤 개수 차이로 여기서 센다(diag용:
+    #   "핀터레스트 0건"이 렌즈가 안 물어온 건지 우리가 거른 건지 화면에서 갈린다).
+    pin_raw = sum(1 for i in out if i.get("platform") == "pinterest")
+    out = verify_matches(out, keywords=keywords)
+    if pin_raw:
+        pins_left = [i for i in out if i.get("platform") == "pinterest"]
+        st["pin_raw"] = pin_raw
+        st["pin_video"] = sum(1 for i in pins_left if i.get("play_url"))
+        st["pin_dropped"] = pin_raw - len(pins_left)
+    return out
