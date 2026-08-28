@@ -365,6 +365,11 @@ DEFAULTS = {
     "masks": [],
     "preset": "news_coral",
     "bar_h": 190,          # 상단 띠 높이(px)
+    # 띠 끝부분 처리(2026-08-28 사장님 시안 "끝부분 효과").
+    #   solid=딱 자름(지금까지의 그림) / grad=투명으로 흘림 / blur=경계 뭉갬 /
+    #   blurdark=뭉갬+띠를 어둡게. ★기본이 solid라 옛 그림은 하나도 안 바뀐다.
+    "bar_fx": "solid",
+    "bar_soft": 0,         # 번지는 정도 %(띠 높이 대비). 0이면 효과 없음
     "bottom_h": 0,         # 하단 띠 높이(px) — 0이면 없음
     "channel": "",         # 가짜 채널명
     "ad_badge": False,     # [광고] 뱃지
@@ -462,6 +467,7 @@ def _fade(color, pct):
     return (color[0], color[1], color[2], int(a * max(0, min(100, pct)) / 100))
 
 
+_BAR_FX = ("solid", "grad", "blur", "blurdark")
 _MASK_SHAPES = ("rect", "round", "pill", "ellipse")
 _MASK_FX = ("solid", "fade")          # 흐림 계열은 PNG로 못 그린다(위 DEFAULTS 주석)
 _MASK_MAX = 12                        # 화면에서 실수로 수백 개를 만들어도 렌더가 안 죽게
@@ -528,6 +534,15 @@ def normalize(spec):
     #   190px 띠를 뒤집어쓴다. 있고 없고는 `is not None`으로 갈라야 한다.
     if "bar_h" not in (spec or {}) and p.get("bar_h") is not None:
         s["bar_h"] = p["bar_h"]
+    # 띠 끝부분 처리도 **여기 한 곳에서만** 자른다(위 bar_h와 같은 원칙).
+    # 모르는 값은 solid로 — 이름이 틀렸는데 조용히 다른 효과가 나가면 더 나쁘다.
+    v = str(s.get("bar_fx") or "solid").strip()
+    s["bar_fx"] = v if v in _BAR_FX else "solid"
+    try:
+        s["bar_soft"] = int(s.get("bar_soft") or 0)
+    except (TypeError, ValueError):
+        s["bar_soft"] = 0
+    s["bar_soft"] = max(0, min(100, s["bar_soft"]))
     # 위·아래 띠는 **같은 규칙**으로 자른다 — 한쪽만 다르게 자르면 언젠가 어긋난다
     for k in ("bar_h", "bottom_h"):
         try:
@@ -674,6 +689,51 @@ _CENTER = {"검색창": "search", "search": "search",
            "없음": "none", "none": "none", "": "none", None: "name"}
 
 
+def _bar_layer(col, bar_h, fx, soft, top=True):
+    """띠 한 장(RGBA, W x H)을 만들어 돌려준다.
+
+    ★띠의 **끝부분 처리**를 정하는 유일한 자리다(0순위-B) — 위 띠와 아래 띠가
+      각자 다르게 잘리면 언젠가 어긋난다. 두 곳 다 이 함수를 부른다.
+
+    fx  solid    딱 잘린 띠(지금까지의 그림 — 기본값이라 회귀가 없다)
+        grad     안쪽 끝에서 투명으로 선형으로 흘린다
+        blur     경계를 가우시안으로 뭉갠다
+        blurdark 뭉갠 경계 + 띠 자체를 어둡게(배경이 밝을 때 글자가 산다)
+    soft 0~100   번지는 정도. 띠 높이에 대한 비율이라 띠를 키우면 같이 커진다.
+    """
+    layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    if bar_h <= 0:
+        return layer
+    if fx == "blurdark":
+        col = tuple([int(c * 0.55) for c in col[:3]] + [col[3] if len(col) > 3 else 255])
+    d = ImageDraw.Draw(layer)
+    y0, y1 = (0, bar_h - 1) if top else (H - bar_h, H - 1)
+    d.rectangle([0, y0, W, y1], fill=col)
+    if fx == "solid" or soft <= 0:
+        return layer
+    span = max(1, int(bar_h * soft / 100.0))
+    # 알파만 손본다 — 색은 그대로 두고 '얼마나 비치나'만 바꾼다.
+    a = layer.split()[3]
+    if fx == "grad":
+        da = ImageDraw.Draw(a)
+        for i in range(span):
+            v = int(255 * (1.0 - (i + 1) / float(span)))
+            y = (bar_h - span + i) if top else (H - bar_h + span - 1 - i)
+            da.line([(0, y), (W, y)], fill=v)
+    else:                                   # blur / blurdark
+        # ★그냥 블러하면 **화면 바깥쪽 끝까지 옅어진다**(위 띠의 맨 위가 반투명이 됨).
+        #   바깥으로 늘려서 블러한 뒤 잘라내면 안쪽 경계만 뭉개진다.
+        pad = span * 2
+        big = Image.new("L", (W, H + pad * 2), 0)
+        ImageDraw.Draw(big).rectangle(
+            [0, (0 if top else H - bar_h + pad), W, (bar_h + pad - 1 if top else H + pad * 2 - 1)],
+            fill=255)
+        big = big.filter(ImageFilter.GaussianBlur(max(1, span // 2)))
+        a = big.crop((0, pad, W, H + pad))
+    layer.putalpha(a)
+    return layer
+
+
 def render(spec):
     """spec → 1080x1920 RGBA 이미지. 가운데는 투명(영상이 비쳐야 한다)."""
     s = normalize(spec)
@@ -688,7 +748,7 @@ def render(spec):
 
     bar_h = s["bar_h"]
     if bar_h > 0:
-        d.rectangle([0, 0, W, bar_h - 1], fill=bar_col)   # PIL은 끝점 포함 → -1
+        im.alpha_composite(_bar_layer(bar_col, bar_h, s["bar_fx"], s["bar_soft"], True))
         cy = bar_h // 2
         if s["icons"]:
             # ★어느 아이콘인지도 채널마다 다르다(실측: 햄버거·돋보기·⋮·←·북마크).
@@ -745,7 +805,7 @@ def render(spec):
             d.text((ax, ay), "[광고]", font=fb, fill=fill, anchor="mm")
 
     if s["bottom_h"] > 0:
-        d.rectangle([0, H - s["bottom_h"], W, H - 1], fill=bar_col)
+        im.alpha_composite(_bar_layer(bar_col, s["bottom_h"], s["bar_fx"], s["bar_soft"], False))
 
     # 제목·메타가 얹히는 흰 블록 — 내용이 있을 때만 그린다(빈 블록이 영상을 가리면 손해).
     y = bar_h

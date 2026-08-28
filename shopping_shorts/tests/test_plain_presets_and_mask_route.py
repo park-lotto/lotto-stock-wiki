@@ -78,3 +78,63 @@ def test_mask_actually_covers_pixels():
     im = deco_frame.render(spec)
     assert im.getpixel((540, 960)) == (0, 0, 0, 255)   # 막 안쪽 = 검게 덮임
     assert im.getpixel((30, 960))[3] == 0              # 막 바깥 = 그대로 투명
+
+
+# ── 띠 끝부분 효과(2026-08-28 사장님 시안 ②) ─────────────────────────────────
+BAR_FX = ("solid", "grad", "blur", "blurdark")
+
+
+def _alpha_col(spec, xs=540):
+    im = deco_frame.render(spec)
+    return [im.getpixel((xs, y))[3] for y in (0, 150, 190, 260, 400)]
+
+
+def test_bar_fx_default_does_not_change_old_frames():
+    """★기본이 solid라 지금까지의 그림은 **하나도** 안 바뀌어야 한다(회귀 차단)."""
+    base = {"preset": "news_coral", "bar_h": 190, "bottom_h": 160}
+    assert (deco_frame.cache_key(base)
+            == deco_frame.cache_key(dict(base, bar_fx="solid", bar_soft=0)))
+
+
+@pytest.mark.parametrize("fx", BAR_FX)
+def test_bar_fx_is_accepted(fx):
+    s = deco_frame.normalize({"preset": "news_coral", "bar_fx": fx, "bar_soft": 40})
+    assert s["bar_fx"] == fx and s["bar_soft"] == 40
+
+
+def test_unknown_bar_fx_falls_back_to_solid():
+    """이름이 틀렸는데 조용히 딴 효과가 나가면 더 나쁘다."""
+    assert deco_frame.normalize({"preset": "news_coral", "bar_fx": "없는효과"})["bar_fx"] == "solid"
+
+
+def test_grad_fades_the_inner_edge():
+    base = {"preset": "plain_black", "bar_h": 190, "bar_soft": 40, "bar_color": "#2b2b2b"}
+    a = _alpha_col(dict(base, bar_fx="solid"))
+    g = _alpha_col(dict(base, bar_fx="grad"))
+    assert a[1] == 255 and 0 < g[1] < 255, "안쪽이 흘러야 한다"
+    assert a[0] == g[0] == 255, "바깥쪽 끝(화면 맨 위)은 그대로 진해야 한다"
+
+
+def test_blur_softens_past_the_edge_but_keeps_outer_edge():
+    """★블러는 바깥으로도 번진다 — 화면 맨 위까지 옅어지면 띠가 통째로 흐려진다."""
+    base = {"preset": "plain_black", "bar_h": 190, "bar_soft": 40, "bar_color": "#2b2b2b"}
+    b = _alpha_col(dict(base, bar_fx="blur"))
+    assert b[0] == 255, "맨 위는 불투명이어야 한다"
+    assert 0 < b[3] < 255, "경계 바깥(y=260)까지 부드럽게 이어져야 한다"
+
+
+def test_blurdark_is_darker_than_blur():
+    base = {"preset": "plain_black", "bar_h": 190, "bar_soft": 40, "bar_color": "#808080"}
+    b = deco_frame.render(dict(base, bar_fx="blur")).getpixel((540, 50))
+    d = deco_frame.render(dict(base, bar_fx="blurdark")).getpixel((540, 50))
+    assert d[0] < b[0], "어둡게가 더 어두워야 한다"
+
+
+def test_bottom_bar_uses_the_same_rule():
+    """위·아래가 다른 규칙으로 잘리면 언젠가 어긋난다(0순위-B)."""
+    base = {"preset": "plain_black", "bar_h": 200, "bottom_h": 200,
+            "bar_soft": 40, "bar_fx": "grad", "bar_color": "#2b2b2b"}
+    im = deco_frame.render(base)
+    top = [im.getpixel((540, y))[3] for y in (0, 150, 199)]
+    bot = [im.getpixel((540, 1919 - y))[3] for y in (0, 150, 199)]
+    assert top == bot
