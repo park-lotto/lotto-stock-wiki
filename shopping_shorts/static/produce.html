@@ -2054,6 +2054,20 @@
               <b>가장자리</b>를 올리면 경계가 부드럽게 풀려 덮은 티가 덜 납니다.
             </div>
           </div>
+          <!-- 🧱 빈 틀(2026-08-28 사장님 시안 ②) — 글자·아이콘 없는 위아래 띠.
+               ★띠 끝부분 처리는 deco_frame._bar_layer 한 곳에서 정한다(0순위-B).
+                 여기 슬라이더는 그 값을 담는 그릇일 뿐이다. -->
+          <div id="pbBox" style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:12px">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+              <div style="font-size:13px;font-weight:800">🧱 빈 틀 <span style="font-size:11px;color:var(--accent2);font-weight:600">— 글자 없는 위아래 띠</span></div>
+              <button type="button" class="mkbtn" onclick="pbApply()" style="margin-left:auto">이 틀로 바꾸기</button>
+            </div>
+            <div id="pbBody"></div>
+            <div class="hint" style="font-size:11px;margin-top:10px;line-height:1.7">
+              <b>글자·아이콘이 하나도 없는 틀입니다</b> — 인스타처럼 썰 스타일이 안 맞는 곳에 씁니다.<br>
+              지금 템플릿 24종은 전부 채널명·검색창·제목이 들어갑니다.
+            </div>
+          </div>
           <!-- ✨ 고급효과(리모션) — 항상 보이는 자리·선택·프리미엄. 켜면 자동 추천 → 렌더 -->
           <div id="fxAdvBox" style="background:linear-gradient(135deg,#1c1436,var(--inset));border:1px solid #6b4fa0;border-radius:10px;padding:10px 12px;margin-bottom:12px">
             <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;cursor:pointer">
@@ -3160,7 +3174,9 @@ function frameUrl(f){
     //   그냥 보내면 "틀 그대로"가 영영 불가능해진다. 만진 것만 보낸다.
     bar_color:f.bar_color||'', on_bar_color:f.on_bar_color||'',
     sub_bg_c:f.sub_bg_c||'', sub_text_c:f.sub_text_c||'',
-    left_icon:f.left_icon||'', right_icon:f.right_icon||'', center_kind:f.center_kind||''});
+    left_icon:f.left_icon||'', right_icon:f.right_icon||'', center_kind:f.center_kind||'',
+    // 띠 끝부분 처리(2026-08-28) — solid/0이면 서버가 지금까지의 그림 그대로
+    bar_fx:f.bar_fx||'solid', bar_soft:f.bar_soft??0});
   // 가림막(2026-08-28) — 배열이라 JSON으로 싣는다. 없으면 아예 안 보낸다(옛 그림 캐시를 그대로 쓰게).
   if(Array.isArray(f.masks) && f.masks.length) q.set('masks', JSON.stringify(f.masks));
   return '/api/produce/frame.png?'+q.toString();
@@ -3217,6 +3233,7 @@ function renderFramePresets(){
 function frFill(f){
   const g=id=>document.getElementById(id);
   try{ mkRender(); }catch(e){}
+  try{ pbRender(); }catch(e){}
   if(g('frChannel')) g('frChannel').value=f.channel||'';
   if(g('frTitle')) g('frTitle').value=f.title||'';
   if(g('frViews')) g('frViews').value=f.views||'';
@@ -3411,6 +3428,80 @@ function mkLabel(k,v){
   return String(v);
 }
 function mkPick(c){ mkSet(MK_SEL,'color',c); mkRender(); }
+// ── 🧱 빈 틀(2026-08-28 사장님 시안 ②) ────────────────────────────────────────
+// 값의 주인은 f(=STATE.deco.template.frame) 하나다 — 여기 UI는 그 값을 보여주고
+// 고칠 뿐이고, 그림은 서버(deco_frame)가 같은 값으로 그린다(0순위-B).
+// ★띠 높이는 화면에 **%**로 보이지만 저장은 px다(1920 기준) — 그림 쪽 단위가 px라
+//   여기서 %로 바꿔 저장하면 두 벌이 된다.
+const PB_FX=[['solid','단색'],['grad','그라데이션'],['blur','흐림'],['blurdark','흐림+어둡게']];
+const PB_MAXPCT=25;          // 400px / 1920 ≈ 20.8% — 슬라이더 상한과 짝
+function pbFrame(){ return STATE.deco&&STATE.deco.template&&STATE.deco.template.frame; }
+function pbPct(px){ return Math.round((px||0)/1920*100); }
+function pbPx(pct){ return Math.round(pct/100*1920); }
+function pbApply(){
+  // 지금 틀을 '빈 틀'로 갈아끼운다 — 글자·아이콘이 통째로 빠진다.
+  const f=pbFrame(); if(!f) return;
+  f.preset='plain_black'; f.channel=''; f.title=''; f.views=''; f.comments='';
+  f.icons=false; f.ad_badge=false;
+  f.left_icon='none'; f.right_icon='none'; f.center_kind='없음';
+  if(!f.bar_h) f.bar_h=326;
+  if(!f.bottom_h) f.bottom_h=326;
+  try{ frFill(f); }catch(e){}
+  renderTemplatePreview(); saveHeadcopy(); pbRender();
+}
+function pbSet(k,v){
+  const f=pbFrame(); if(!f) return;
+  if(k==='bar_pct')      f.bar_h=pbPx(parseInt(v,10)||0);
+  else if(k==='bot_pct') f.bottom_h=pbPx(parseInt(v,10)||0);
+  else if(k==='bar_soft')f.bar_soft=parseInt(v,10)||0;
+  else                   f[k]=v;
+  // 숨은 입력칸도 같이 맞춘다 — frUpdate()가 그 칸을 읽어 f를 다시 쓴다(안 맞추면 되돌아간다)
+  const g=id=>document.getElementById(id);
+  if(g('frBar'))    g('frBar').value=f.bar_h;
+  if(g('frBottom')) g('frBottom').value=f.bottom_h;
+  const lab={bar_pct:'pbVbar', bot_pct:'pbVbot', bar_soft:'pbVsoft'}[k];
+  if(lab && document.getElementById(lab)){
+    document.getElementById(lab).textContent =
+      (k==='bar_soft'? (f.bar_soft||0) : pbPct(k==='bar_pct'?f.bar_h:f.bottom_h))+'%';
+  }
+  renderTemplatePreview(); saveHeadcopy();
+  try{ syncFrameHandles(); }catch(e){}
+}
+function pbFx(v){ pbSet('bar_fx',v); pbRender(); }
+function pbColor(c){ pbSet('bar_color',c); FR_TOUCHED.bar=true;
+  const g=document.getElementById('frBarColor'); if(g) g.value=c; pbRender(); }
+function pbRender(){
+  const box=document.getElementById('pbBody'); if(!box) return;
+  const f=pbFrame();
+  if(!f){ box.innerHTML='<div class="hint" style="font-size:12px">틀을 먼저 고르세요.</div>'; return; }
+  const fx=f.bar_fx||'solid';
+  const cur=(f.bar_color||'#000000').toUpperCase();
+  const lab='font-size:11px;color:var(--sub);margin:12px 0 6px';
+  const pal=MK_PAL.map(function(c){
+    return '<button type="button" title="'+c+'" onclick="pbColor(&quot;'+c+'&quot;)" '
+      +'style="height:44px;border-radius:8px;cursor:pointer;background:'+c+';'
+      +'border:2px solid '+(cur===c?'#2FBF71':'rgba(255,255,255,.18)')+'"></button>';
+  }).join('');
+  const row=function(name,key,val,max){
+    return '<div style="display:flex;align-items:center;gap:10px;margin-top:8px;font-size:12px">'
+      +'<span style="width:76px;color:var(--sub)">'+name+'</span>'
+      +'<input type="range" min="0" max="'+max+'" value="'+val+'" '
+      +'oninput="pbSet(&quot;'+key+'&quot;,this.value)" style="flex:1">'
+      +'<b id="pbV'+key.split('_')[0]+'" style="width:44px;text-align:right">'+val+'%</b></div>';
+  };
+  box.innerHTML=
+     '<div style="'+lab+'">끝부분 효과</div>'
+    +mkChoice(PB_FX, fx, 'pbFx')
+    +row('위 띠 높이','bar_pct',pbPct(f.bar_h),PB_MAXPCT)
+    +row('아래 띠 높이','bot_pct',pbPct(f.bottom_h),PB_MAXPCT)
+    +row('번지는 정도','bar_soft',(f.bar_soft||0),100)
+    +'<div style="'+lab+'">색</div>'
+    +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'
+    +'<input type="color" value="'+(f.bar_color||'#000000')+'" oninput="pbColor(this.value)" '
+    +'style="width:44px;height:28px;padding:0;border:1px solid var(--line);border-radius:6px;background:none;cursor:pointer">'
+    +'<span style="font-size:12px;color:var(--sub)">'+(f.bar_color||'(틀 기본)')+'</span></div>'
+    +'<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px">'+pal+'</div>';
+}
 function mkDelSel(){
   const a=mkArr(); if(!a||!a.length) return;
   if(MK_SEL<0||MK_SEL>=a.length) MK_SEL=a.length-1;
