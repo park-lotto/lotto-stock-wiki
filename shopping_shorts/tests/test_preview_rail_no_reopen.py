@@ -44,11 +44,16 @@ function clearInterval(t){ if (t) t.dead = true; }
 function _tick(n){ for (let k=0;k<n;k++) for (const t of _timers) if (!t.dead) t.fn(); }
 // ★호출부 형태 그대로 받는다 — _renderPreviewVideo는 job **객체**를 넘긴다.
 //   'j1' 문자열을 기대하면 하네스가 계약을 발명하는 셈이라 초록이 거짓이 된다.
+// ★호출부 형태 그대로 — _renderPreviewVideo(job)의 job은 **문자열 job_id**다.
+//   객체를 넘기면 _PV_LAB_WAITED[job] 키가 "[object Object]"가 돼 모든 job이 한 칸을
+//   공유한다(실측 2026-08-28: 브라우저에서 그 키가 실제로 생겨 있었다).
 function _renderPreviewVideoFallback(job, src){
-  _calls.push({fallback: true, job: (job && job.job_id) || job});
+  _calls.push({fallback: true, job});
   _mkEl('mixPreviewRail').style.display=''; _mkEl('mixPreviewPanel').style.display='';
 }
 const MIX_JOB = 'j1';
+const encodeURIComponent = s => String(s);
+const Date = {now: () => 1};
 """
     tail = """
 // ★반드시 boolean으로 — undefined를 돌려주면 JSON.stringify가 그 키를 통째로 빼서
@@ -73,7 +78,7 @@ def test_second_visit_does_not_reopen_rail():
     d = _run("""
 _lab.exists = true;
 _lab.win = {};                       // iframe은 있지만 아직 함수가 없다(로딩 중)
-_renderPreviewVideo({job_id:'j1'}, 'a.mp4');     // 첫 진입 → 기다리기 시작
+_renderPreviewVideo('j1');     // 첫 진입 → 기다리기 시작
 _lab.win.showConfirmVideo = () => {};            // 곧 준비됨
 _tick(1);                                        // 타이머가 한 번 돌아 제자리에 넣는다
 const afterFirst = _railOpen();
@@ -82,7 +87,7 @@ const afterFirst = _railOpen();
 //   (실측 2026-08-28: 그래서 옛 동작으로 되돌려도 테스트가 초록이었다 —
 //    하네스가 계약을 발명하면 0% 동작도 통과한다).
 _lab.win = {};
-_renderPreviewVideo({job_id:'j1'}, 'a.mp4');     // 다른 페이지 갔다 돌아옴
+_renderPreviewVideo('j1');     // 다른 페이지 갔다 돌아옴
 console.log(JSON.stringify({afterFirst, afterSecond: _railOpen(), calls: _calls}));
 """)
     assert d["afterFirst"] is False, "첫 진입에서 이미 레일이 열렸다"
@@ -95,7 +100,7 @@ def test_ready_iframe_goes_straight_in():
     d = _run("""
 _lab.exists = true;
 _lab.win = {showConfirmVideo: () => {}};
-_renderPreviewVideo({job_id:'j1'}, 'a.mp4');
+_renderPreviewVideo('j1');
 console.log(JSON.stringify({rail: _railOpen(), calls: _calls,
                             btn: _els.btnPreview ? _els.btnPreview.disabled : null}));
 """)
@@ -107,7 +112,7 @@ def test_real_failure_still_falls_back():
     d = _run("""
 _lab.exists = true;
 _lab.win = {};                        // 끝까지 준비 안 됨
-_renderPreviewVideo({job_id:'j1'}, 'a.mp4');
+_renderPreviewVideo('j1');
 _tick(25);                            // 20회 넘게 돌린다
 console.log(JSON.stringify({calls: _calls, rail: _railOpen()}));
 """)
@@ -119,7 +124,44 @@ def test_no_iframe_at_all_falls_back_immediately():
     """iframe이 아예 없는 화면(구형·스텁)에선 종전대로 바로 폴백."""
     d = _run("""
 _lab.exists = false;
-_renderPreviewVideo({job_id:'j1'}, 'a.mp4');
+_renderPreviewVideo('j1');
 console.log(JSON.stringify({calls: _calls}));
 """)
     assert any(c.get("fallback") for c in d["calls"]), d
+
+
+def test_restore_closes_rail_first():
+    """★안전벨트: 복원(_restoreMixContext)은 **시작하자마자** 폴백 레일을 닫는다.
+
+    레일을 여는 입구는 3곳(_pvFail · _renderPreviewVideoFallback · 렌더 로더)인데
+    닫는 보장은 '제자리에 정상으로 들어갔을 때'뿐이었다. 어느 입구로든 한 번 열리면
+    다른 페이지 갔다 돌아와도 그대로 남는다 — 사장님이 본 그 화면이다.
+
+    _restoreMixContext는 fetch를 쓰는 async 함수라 node 하네스로 통째로 돌리기 어렵다.
+    그래서 **소스에서 그 한 줄이 함수 맨 앞에 있는지**를 지킨다(누가 지우면 잡힌다).
+    실제 동작은 브라우저에서 확인했다(레일 열림 → 복원 호출 → 닫힘).
+    """
+    src = PRODUCE_HTML.read_text(encoding="utf-8")
+    i = src.index("async function _restoreMixContext(){")
+    head = src[i:i + 1200]                      # 함수 앞부분
+    assert "_pvClose()" in head, "복원이 폴백 레일을 안 닫는다(안전벨트가 사라졌다)"
+    # 다른 무거운 작업(fetch)보다 **먼저** 닫아야 한다 — 늦게 닫으면 그 사이 화면에 남는다
+    assert head.index("_pvClose()") < head.index("fetch("), \
+        "_pvClose가 fetch보다 뒤에 있다 — 복원 중에 레일이 그대로 보인다"
+
+
+def test_rail_open_entrances_are_known():
+    """★레일을 여는 입구가 늘어나면 알아차린다.
+
+    'fallback'은 _RAIL_OFF를 뚫는 유일한 값이다. 입구가 새로 생기면 닫는 경로도
+    같이 만들어야 하는데, 조용히 늘면 이 버그가 그대로 재발한다.
+    """
+    src = PRODUCE_HTML.read_text(encoding="utf-8")
+    # ★주석 줄은 빼고 센다 — 주석 속 호출 표기까지 세면 문구만 고쳐도 깨진다.
+    code = chr(10).join(ln for ln in src.splitlines() if not ln.lstrip().startswith("//"))
+    opens = re.findall(r"_pvShow\('fallback'\)", code)
+    closes = re.findall(r"_pvClose\(\)", code)
+    assert len(opens) == 3, (
+        f"레일을 여는 입구가 {len(opens)}곳이 됐다(알던 건 3곳). "
+        "새 입구를 만들었으면 닫는 경로도 함께 넣고 이 숫자를 갱신하라")
+    assert len(closes) >= 4, f"닫는 곳이 {len(closes)}곳뿐이다 — 안전벨트가 빠졌는지 확인하라"
