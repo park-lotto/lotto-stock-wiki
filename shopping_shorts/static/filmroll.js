@@ -563,41 +563,32 @@
         //   (구간 밖을 못 보게 잘라버리면 '조각 범위 넓히기'가 통째로 막힌다).
         if (opt.fit) {
           const z = host.querySelector('.frz');
-          // ★후보는 사다리 단계뿐(8개)이다. '보이는 초'가 구간에 가장 가까운 단계를 고른다.
-          //   ★0.25초보다 성긴 단계는 뺀다(F21, 사장님 "0.25로 기본세팅") — 구간이 길면
-          //     '다 보이게' 맞추다 한 칸 1초까지 벌어져 기본 확대가 도로 풀렸다.
-          //     여기는 **열 때 기본값**일 뿐, 슬라이더는 어느 단계든 자유롭게 간다.
-          const W = winW() * 0.9;
-          const seenAt = st => W * st / cwFor(st);       // 그 배율에서 창에 보이는 초
-          // ★기본 하한은 0.25초다(F21). 다만 **조각이 그보다 길면 하한을 푼다**
-          //   (2026-08-28 사장님 "전체영상이 다 열릴 필요 없이 원래 잘려 있는 만큼의
-          //   영상 길이만 펼치면 된다"). 8.6초 조각을 0.25초 배율로 열면 창에는 그 일부만
-          //   담기고 나머지 자리를 원본이 채운다 — 사장님이 본 그 화면이다.
-          //   0.25로도 조각이 다 들어오면 종전대로 0.25를 지킨다(기본 확대가 안 풀린다).
-          // ★칸 폭을 **조각이 창을 꽉 채우도록** 직접 잡는다(2026-08-28 사장님 "전체영상이
-          //   다 열릴 필요 없이 원래 잘려 있는 만큼의 영상 길이만 펼치면 된다").
-          //   종전엔 폭도 사다리에서 나왔는데(cwFor), 단계가 0.5→1로 건너뛰어 8.6초 조각에
-          //   4.6초만 보이거나 18.3초가 보였다 — 어느 쪽도 '잘려 있는 만큼'이 아니다.
-          //   ★한 칸 초는 0.25를 그대로 지킨다(F21 사장님 "0.25로 기본세팅").
-          //     조각이 길어 칸이 실오라기가 될 때만 한 단계씩 성기게 한다.
-          //   ★캐시키는 STEP과 칸 높이로 만든다(폭은 안 들어간다 — ckey 참조).
-          //     그래서 폭만 조정할 때는 썸네일을 다시 뽑지 않는다.
+          // ★조각을 펼치면 **그 길이만큼만** 옆으로 늘어난다(2026-08-28 사장님
+          //   "2.3초면 저 연두색 부분 정도만 늘어날 거잖아").
+          //
+          //   ⚠️앞서 두 번 실패했다. 되풀이하지 마라:
+          //     ① win.style.width를 직접 잡았다 → 보이는 칸 계산(fillVisible)이 레이아웃보다
+          //        먼저 돌아 **칸이 빈 검은색**으로 남았다.
+          //     ② clamp를 조각 구간으로 묶었다 → 주황 박스는 원본 시각으로 그려지므로
+          //        **볼 수 없는 자리**에 생겼다.
+          //   그래서 여기서는 **슬롯의 최대 폭만** 정하고(레이아웃은 브라우저가 잡는다),
+          //   폭이 반영된 **다음 프레임에** 다시 채운다. 스크롤 범위는 건드리지 않는다.
           const MIN_CELL = 34;                            // 이보다 좁으면 그림이 안 읽힌다
-          const fitCW = st => Math.round(W / (span / st));
-          let want = ZOOM_MAX_STEP;
-          for (const st of LADDER) {                      // 사다리는 촘촘→성긴 순서다
+          const room = winW();
+          let want = ZOOM_MAX_STEP;                       // 한 칸 초는 0.25 기본을 지킨다(F21)
+          for (const st of LADDER) {
             if (st < ZOOM_MAX_STEP) continue;             // 기본보다 촘촘하게는 안 간다
             want = st;
-            if (fitCW(st) >= MIN_CELL) break;             // 칸이 읽힐 만큼 넓어지면 그만
+            if (Math.round(room / (span / st)) >= MIN_CELL) break;   // 칸이 읽히면 그만
           }
-          const wantCW = Math.max(CW_MIN, Math.min(CW_MAX, fitCW(want)));
-          if (want !== STEP || wantCW !== CW) {
-            const restrip = (want !== STEP);
-            STEP = want; CW = wantCW;
-            z.value = sliderFromStep(STEP);
-            if (restrip) await strip();                   // 칸 간격이 바뀌면 다시 뽑는다
-            else applyW();
-          }
+          const wantCW = Math.max(MIN_CELL, Math.min(CW_MAX, Math.round(room / (span / want))));
+          const restrip = (want !== STEP);
+          STEP = want; CW = wantCW;
+          z.value = sliderFromStep(STEP);
+          if (restrip) await strip();
+          // 슬롯이 조각 길이만큼만 차지하게 한다 — 폭 자체를 박지 않고 **상한**만 준다.
+          host.style.maxWidth = Math.ceil(span * pps() + 4) + 'px';
+          requestAnimationFrame(() => { applyW(); fillVisible(); });   // 폭이 반영된 뒤 채운다
         }
         const mid = opt.from + span / 2;
         off = clamp(mid * pps() - winW() / 2);
