@@ -468,6 +468,14 @@ def _fade(color, pct):
 
 
 _BAR_FX = ("solid", "grad", "blur", "blurdark")
+# 가림막의 **종류**(2026-08-28 사장님 "이모티콘이나 뱃지같은거 … 가릴것들 가리게").
+#   shape = 색 도형(지금까지의 가림막)  ·  emoji = 이모지 스티커  ·  badge = 글자 뱃지
+# ★새 기계를 만들지 않고 masks에 종류를 얹었다. 위치·크기·회전·드래그·저장이 이미
+#   여기 다 있다 — 스티커용 배관을 따로 파면 그 규칙이 두 벌이 된다(0순위-B).
+_MASK_KINDS = ("shape", "emoji", "badge")
+_EMOJI_FONT = "/usr/share/fonts/truetype/noto/NotoColorEmoji.ttf"
+_EMOJI_PX = 109          # Noto Color Emoji는 109px 고정 비트맵만 있다(실측)
+
 _MASK_SHAPES = ("rect", "round", "pill", "ellipse")
 # 흐림 계열은 **그림으로는 못 그린다** — 뒤에 있는 영상을 흐리게 하는 것이라
 # 렌더(ffmpeg)가 처리한다. PNG에는 안 그리고 마스크만 넘긴다(render_blur_mask).
@@ -509,7 +517,16 @@ def _norm_masks(raw):
                 return max(lo, min(hi, int(float(m.get(k, d)))))
             except (TypeError, ValueError):
                 return d
+        kind = m.get("kind") if m.get("kind") in _MASK_KINDS else "shape"
+        # 이모지 1~2자 · 뱃지 글자는 8자까지(그 이상은 뱃지가 아니라 자막이다).
+        ch = str(m.get("ch") or "")[:2]
+        text = " ".join(str(m.get("text") or "").split())[:8]
+        if kind == "emoji" and not ch:
+            continue                       # 그릴 글자가 없으면 버린다(빈 자리를 남기지 않는다)
+        if kind == "badge" and not text:
+            continue
         out.append({"l": round(l, 3), "t": round(t, 3), "w": round(w, 3), "h": round(h, 3),
+                    "kind": kind, "ch": ch, "text": text,
                     "shape": shape, "fx": fx, "color": col,
                     "op": _i("op", 100, 0, 100), "soft": _i("soft", 0, 0, 100),
                     "rot": _i("rot", 0, -45, 45)})
@@ -886,6 +903,14 @@ def _draw_masks(im, masks):
       렌더가 마스크를 받아 처리한다. 흐림+어둡게(blurdark)는 '어둡게'만 여기서 얹는다.
     """
     for m in masks or []:
+        # ★이모지·뱃지는 '덮는 것'이 아니라 '얹는 것'이라 흐림 분기를 안 탄다.
+        #   자리·크기·회전 규칙은 도형과 똑같이 _mask_shape_layer 계열을 쓴다.
+        if m.get("kind") == "emoji":
+            _draw_emoji_mask(im, m)
+            continue
+        if m.get("kind") == "badge":
+            _draw_badge_mask(im, m)
+            continue
         if m["fx"] == "blur":
             continue
         if m["fx"] == "blurdark":
@@ -895,6 +920,84 @@ def _draw_masks(im, masks):
             rgb, alpha = _rgb(m["color"])[:3], int(255 * m["op"] / 100.0)
         layer, x, y = _mask_shape_layer(m, rgb, alpha)
         im.alpha_composite(layer, (x, y))
+
+
+def _mask_box(im, m):
+    """masks의 %좌표를 픽셀 상자로. 자리 계산은 도형과 **같은 식**을 쓴다(0순위-B)."""
+    W, H = im.size
+    x = int(W * m["l"] / 100.0)
+    y = int(H * m["t"] / 100.0)
+    w = max(1, int(W * m["w"] / 100.0))
+    h = max(1, int(H * m["h"] / 100.0))
+    return x, y, w, h
+
+
+def _draw_emoji_mask(im, m):
+    """이모지 스티커 한 장. 컬러 이모지는 Noto Color Emoji로만 그려진다.
+
+    ★109px 고정 비트맵이다(실측) — 다른 크기로 truetype()을 열면 예외가 난다.
+      그래서 **109로 그린 뒤 상자에 맞춰 줄인다**. 폰트가 없거나 실패하면 아무것도
+      안 그린다 — 두부(⊠)를 그리는 것보다 낫다(영문전용 폰트 사고와 같은 판단).
+    """
+    x, y, w, h = _mask_box(im, m)
+    try:
+        f = ImageFont.truetype(_EMOJI_FONT, _EMOJI_PX)
+    except Exception:                      # noqa: BLE001 — 폰트가 없는 환경(개발 PC)
+        return
+    pad = _EMOJI_PX // 4
+    n = max(1, len(m.get("ch") or ""))
+    tile = Image.new("RGBA", (_EMOJI_PX * n + pad * 2, _EMOJI_PX + pad * 2), (0, 0, 0, 0))
+    try:
+        ImageDraw.Draw(tile).text((pad, pad), m["ch"], font=f, embedded_color=True)
+    except Exception:                      # noqa: BLE001 — 지원 안 하는 글자
+        return
+    bb = tile.getbbox()
+    if not bb:
+        return
+    tile = tile.crop(bb)
+    tile = tile.resize((w, h), Image.LANCZOS)
+    if m["rot"]:
+        tile = tile.rotate(m["rot"], expand=True, resample=Image.BICUBIC)
+        x -= (tile.width - w) // 2
+        y -= (tile.height - h) // 2
+    if m["op"] < 100:
+        a = tile.getchannel("A").point(lambda v: int(v * m["op"] / 100.0))
+        tile.putalpha(a)
+    im.alpha_composite(tile, (max(0, x), max(0, y)))
+
+
+def _draw_badge_mask(im, m):
+    """글자 뱃지(SALE·NEW·인기…) 한 장 — 둥근 사각 + 가운데 글자.
+
+    색은 가림막과 같은 `color`를 쓰고, 글자색은 배경 밝기로 정한다(어두우면 흰 글자).
+    한 곳에서 정해야 화면 미리보기와 결과가 안 갈린다.
+    """
+    x, y, w, h = _mask_box(im, m)
+    rgb = _rgb(m["color"])[:3]
+    alpha = int(255 * m["op"] / 100.0)
+    tile = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    d = ImageDraw.Draw(tile)
+    r = int(min(w, h) * 0.28)
+    d.rounded_rectangle([0, 0, w - 1, h - 1], radius=r, fill=rgb + (alpha,))
+    # 밝은 바탕엔 검은 글자 — 흰 뱃지에 흰 글자가 되는 걸 막는다.
+    lum = 0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]
+    fg = (17, 17, 17, 255) if lum > 150 else (255, 255, 255, 255)
+    txt = m.get("text") or ""
+    size = max(10, int(h * 0.52))
+    for _ in range(12):                    # 상자에 들어갈 때까지 줄인다
+        f = _font("title", size)
+        bb = d.textbbox((0, 0), txt, font=f)
+        if bb[2] - bb[0] <= w * 0.84 or size <= 10:
+            break
+        size = int(size * 0.9)
+    bb = d.textbbox((0, 0), txt, font=f)
+    d.text(((w - (bb[2] - bb[0])) / 2 - bb[0], (h - (bb[3] - bb[1])) / 2 - bb[1]),
+           txt, font=f, fill=fg)
+    if m["rot"]:
+        tile = tile.rotate(m["rot"], expand=True, resample=Image.BICUBIC)
+        x -= (tile.width - w) // 2
+        y -= (tile.height - h) // 2
+    im.alpha_composite(tile, (max(0, x), max(0, y)))
 
 
 def _mask_shape_layer(m, rgb, alpha, feather=None):
