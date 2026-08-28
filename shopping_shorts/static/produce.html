@@ -281,6 +281,9 @@
     .seoBody{display:flex;flex-direction:column;gap:12px}
     .seoCard{border:1px solid #8884;border-radius:8px;padding:12px}
     .seoCardHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+    /* 해시태그 줄머리 — 플랫폼 이름과 그 줄만 복사하는 버튼(2026-08-28) */
+    .seoHashRow{display:flex;align-items:center;gap:8px;margin-top:6px}
+    .seoHashRow .sub{margin:0}
     .seoCard input,.seoCard textarea{width:100%;box-sizing:border-box}
     .seoCard .cnt{text-align:right;font-size:12px;opacity:.6}
     .seoCard .cands{margin:4px 0 0;padding-left:20px}
@@ -2725,13 +2728,31 @@ function seoStatBadge(kw){
 //   예전엔 '유튜브 전체 복사'와 인스타 캡션만 있어서, 제목만 / 설명만 올릴 땐 손으로 긁어야 했다.
 //   특히 폰에서는 긴 글을 손가락으로 끄는 게 사실상 불가능하다.
 //   ⚠️ 어느 칸이 무슨 글자인지는 여기 한 곳에서만 정한다(0순위-B) — 화면과 복사가 어긋나지 않게.
+// ★플랫폼 목록은 여기 하나뿐이다(0순위-B). 서버 seo_generate._PLATFORMS와 같은 순서로 둔다.
+//   인스타 추가(2026-08-28 사장님 "인스타 유튜브 틱톡 쓰레드 나눠서").
+const SEO_PLATS = [['instagram','인스타'],['youtube','유튜브'],['tiktok','틱톡'],['threads','쓰레드']];
+
+// 해시태그 한 줄 만들기 — **쉼표로 잇는다**(2026-08-28 사장님 "컴마 붙여서").
+//   '#'이 없는 태그도 오므로 여기서 붙인다 — 붙이는 곳도 화면·복사 통틀어 여기 하나뿐이다.
+function seoHashLine(k){
+  const hs = (SEO && SEO.hashtags) || {};
+  let arr = hs[k] || [];
+  // 옛 job엔 instagram 키가 없다 — 인스타 캡션 끝의 해시태그 줄에서 주워 온다(빈 칸을 안 보여준다).
+  if(k === 'instagram' && !arr.length){
+    arr = (_instaCaption().match(/#[^\s#]+/g)) || [];
+  }
+  return arr.map(t=>String(t).trim()).filter(Boolean)
+            .map(t=>t.startsWith('#')?t:'#'+t).join(', ');
+}
+function seoCopyHash(btn, k){ dmCopy(btn, seoHashLine(k)); }
+
 function seoFieldText(id){
-  const hs = (SEO && SEO.hashtags) || {}, cta = (SEO && SEO.cta) || {};
-  const plat = [['youtube','유튜브'],['tiktok','틱톡'],['threads','쓰레드']];
+  const cta = (SEO && SEO.cta) || {};
+  const plat = SEO_PLATS;
   if(id==='title')       return (SEO && SEO.title) || '';
   if(id==='description') return (SEO && SEO.description) || '';
   if(id==='tags')        return ((SEO && SEO.tags) || []).join(', ');
-  if(id==='hashtags')    return plat.map(([k,l])=>l+': '+((hs[k]||[]).join(' '))).join('\n');
+  if(id==='hashtags')    return plat.map(([k,l])=>l+': '+seoHashLine(k)).join('\n');
   if(id==='hook')        return [(SEO&&SEO.hook_line)||'', (SEO&&SEO.comment_bait)||''].filter(Boolean).join('\n');
   if(id==='insta')       return _instaCaption();
   if(id==='cta')         return plat.map(([k,l])=>l+':\n'+(cta[k]||'')).join('\n\n');
@@ -2770,9 +2791,8 @@ function renderSeo(){
     </li>`).join('');
   const tags = (SEO.tags||[]).map((t,i)=>
     `<span class="chip">${seoEsc(t)}<b class="chipX" onclick="seoTagDel(${i})">×</b></span>`).join('');
-  const hs = SEO.hashtags||{};
   const cta = SEO.cta||{};
-  const plat = [['youtube','유튜브'],['tiktok','틱톡'],['threads','쓰레드']];
+  const plat = SEO_PLATS;
   el.innerHTML =
     seoCard('title','영상 제목',
       `<input id="seoTitle" maxlength="100" value="${seoEsc(SEO.title)}"
@@ -2793,9 +2813,17 @@ function renderSeo(){
                 onkeydown="if(event.key==='Enter'){seoTagAdd();event.preventDefault();}">
          <button class="mini" onclick="seoTagAdd()">추가</button>
        </div>`) +
+    // ★플랫폼마다 복사 버튼(2026-08-28 사장님). 카드 전체 복사는 네 줄이 한꺼번에 와서
+    //   인스타에 붙이려면 유튜브·틱톡 태그까지 딸려 들어갔다 — 이제 그 줄만 쉼표로 이어 복사한다.
     seoCard('hashtags','해시태그',
-      plat.map(([k,l])=>`<div class="sub">${l}</div><div class="chips">`
-        + (hs[k]||[]).map(t=>`<span class="chip">${seoEsc(t)}</span>`).join('') + '</div>').join('')) +
+      plat.map(([k,l])=>{
+        const line = seoHashLine(k);
+        const chips = line ? line.split(', ').map(t=>`<span class="chip">${seoEsc(t)}</span>`).join('')
+                           : '<span class="sub">아직 없음</span>';
+        return `<div class="seoHashRow"><span class="sub">${l}</span>`
+             + `<button class="mini" onclick="seoCopyHash(this,'${k}')" title="${seoEsc(l)} 해시태그만 복사">📋 복사</button></div>`
+             + `<div class="chips">${chips}</div>`;
+      }).join('')) +
     seoCard('hook','후킹 · 댓글 유도',
       `<input value="${seoEsc(SEO.hook_line)}" oninput="SEO.hook_line=this.value; seoSave()">
        <input value="${seoEsc(SEO.comment_bait)}" oninput="SEO.comment_bait=this.value; seoSave()">`) +
