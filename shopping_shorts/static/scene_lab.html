@@ -1514,9 +1514,17 @@ function _rollCaps(vid){
 // ★필름 구간을 큰 미리보기에서 듣기. seg_id가 필요한 기존 경로를 그대로 쓰기 위해
 //   '_pv_' 임시 조각을 만든다. EXTRA에는 넣지 않는다 — 담은 게 아니라 미리 듣는 것뿐이라
 //   저장·전송에 섞이면 안 된다(담기는 commitRoll만 한다).
+// ★'_pv_인가'는 이 판정 하나로만 한다(0순위-B) — 팔레트·개수 표시가 같은 함수를 쓴다.
+function isPvSeg(sid){ return typeof sid === 'string' && sid.startsWith('_pv_'); }
 function playRange(vid, a, b){
   if (!(b > a)) return;
   const id = `_pv_${vid}_${a.toFixed(2)}_${b.toFixed(2)}`.replace(/[^\w.]+/g, '_');
+  // ★이전 미리듣기 조각을 지우고 만든다(2026-08-29 사장님 "가만있으면 썸네일이 만료되듯
+  //   검정색으로 변한다"). 재생할 때마다 _pv_가 DATA.segments에 **쌓이기만** 했고,
+  //   pollPhash가 4초마다 render()를 불러 그 조각들이 팔레트에 '미리듣기' 카드로 떠올랐다.
+  //   서버 seg_thumb은 film_만 알아 _pv_는 404 → 깨진 이미지 = 검은 칸이 하나씩 늘었다.
+  //   지금 재생할 것 하나만 남긴다(재생 중인 조각은 부모가 읽고 있을 수 있어 남겨야 한다).
+  for (const k of Object.keys(DATA.segments)) if (isPvSeg(k) && k !== id) delete DATA.segments[k];
   DATA.segments[id] = {video_id: vid, start: a, end: b, scene_desc: '',
     text: '', label: `미리듣기 ${a.toFixed(1)}~${b.toFixed(1)}초`,
     shot_role: '기타', is_key: false, action: '', change: '', benefits: []};
@@ -2376,7 +2384,7 @@ function renderBand(){
 
 function render(){
   document.getElementById('jobline').textContent =
-    `멘트 칸 ${DATA.beats.length}개 · 고를 수 있는 장면 ${Object.keys(DATA.segments).length}개`;
+    `멘트 칸 ${DATA.beats.length}개 · 고를 수 있는 장면 ${Object.keys(DATA.segments).filter(k => !isPvSeg(k)).length}개`;
   renderBand();
 
   // 팔레트
@@ -2385,6 +2393,7 @@ function render(){
   for (const [sid, s] of Object.entries(DATA.segments)){
     // ★소스 밖 구간은 아예 빼 놓는다(2026-08-14 사장님 "소스 밖 구간은 빼라").
     //   실체가 없는 화면이라 후보로 보일 이유가 없다. 몇 개 뺐는지는 위에 알린다.
+    if (isPvSeg(sid)) continue;                           // 미리듣기 임시 조각 — 후보가 아니다(검은 카드의 정체)
     if (outOfRange(sid)){ dropped++; continue; }
     if (hideDup && isDupOf(sid)){ folded++; continue; }   // 비슷한 것은 대표만 보인다
     if (isMergedInto(sid)) continue;                      // 🔗 합쳐진 조각은 대표 카드에 들어갔다
