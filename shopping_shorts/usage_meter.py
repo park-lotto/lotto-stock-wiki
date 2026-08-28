@@ -162,16 +162,23 @@ def _op_from_stack():
     ⚠️ 계측이 본작업을 죽이면 안 되므로 실패는 전부 삼킨다.
     """
     try:
-        import inspect
-        for fr in inspect.stack()[1:12]:
-            mod = Path(fr.filename).stem
-            if mod in ("usage_meter", "key_vault", "keyroute", "keyctx"):
-                continue
-            if mod in _OP_BY_MODULE:
-                return _OP_BY_MODULE[mod]
-            # shopping_shorts 안의 모듈이면 이름 그대로 남긴다(표에 없어도 '미지정'보단 낫다)
-            if "shopping_shorts" in fr.filename.replace("\\", "/"):
-                return mod
+        # ★inspect.stack()을 쓰지 마라 — 프레임마다 소스 파일을 읽어 컨텍스트 줄까지
+        #   만든다(느리고, Gemini 콜마다 돈다). sys._getframe으로 파일명만 훑는다.
+        #   실측 2026-08-29: 이 차이로 pytest-xdist 워커가 죽기도 했다.
+        import sys as _sys
+        fr = _sys._getframe(1)
+        for _ in range(12):
+            if fr is None:
+                break
+            fn = fr.f_code.co_filename
+            mod = Path(fn).stem
+            if mod not in ("usage_meter", "key_vault", "keyroute", "keyctx"):
+                if mod in _OP_BY_MODULE:
+                    return _OP_BY_MODULE[mod]
+                # shopping_shorts 안의 모듈이면 이름 그대로 남긴다(표에 없어도 '미지정'보단 낫다)
+                if "shopping_shorts" in fn.replace("\\", "/"):
+                    return mod
+            fr = fr.f_back
     except Exception:                  # noqa: BLE001
         pass
     return None

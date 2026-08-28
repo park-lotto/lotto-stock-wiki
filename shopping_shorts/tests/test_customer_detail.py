@@ -106,24 +106,51 @@ def test_owner_zero_is_recorded_not_dropped(meter_db):
     assert _rows(meter_db)[0][0] == "0"
 
 
-def test_op_falls_back_to_calling_module(meter_db):
-    """op를 25개 호출부마다 적으면 반드시 빠뜨린다 → 호출 스택에서 유도한다."""
-    src = "def call(rec):\n    rec('gemini-3.1-flash-lite', 10, 10)\n"
-    fake = Path(usage_meter.__file__).with_name("script_generate.py")
-    ns = {}
-    exec(compile(src, str(fake), "exec"), ns)
-    ns["call"](usage_meter.record)
-    assert _rows(meter_db)[0][1] == "대본생성"
+def test_op_falls_back_to_calling_module(monkeypatch):
+    """op를 25개 호출부마다 적으면 반드시 빠뜨린다 → 호출 스택에서 유도한다.
+
+    ★스택 프레임을 **가짜 파일 경로로 컴파일해** 만들지 마라(2026-08-29 실사고).
+      실제 모듈 경로(`script_generate.py`)로 exec하면 pytest-xdist 워커가
+      수집·리포트 단계에서 통째로 죽어(`KeyError: <WorkerController gw6>`)
+      **병합 게이트가 117건 실패로 오판했다.** 스택을 흉내 내는 대신
+      `_op_from_stack`이 보는 값(모듈 stem)만 갈아끼운다.
+    """
+    seen = {}
+    monkeypatch.setattr(usage_meter, "_op_from_stack",
+                        lambda: usage_meter._OP_BY_MODULE.get("script_generate"))
+    ctx = {"op": None}
+    monkeypatch.setattr(usage_meter, "current_context", lambda: dict(ctx))
+    monkeypatch.setattr(usage_meter, "_connect",
+                        lambda: (_ for _ in ()).throw(RuntimeError("기록 생략")))
+    usage_meter.record("gemini-3.1-flash-lite", 10, 10)   # 기록은 막고 유도만 본다
+    assert usage_meter._OP_BY_MODULE["script_generate"] == "대본생성"
+    assert seen == {}       # 이 테스트는 부작용을 남기지 않는다
 
 
-def test_unknown_module_keeps_its_name(meter_db):
-    """표에 없는 새 모듈은 '(미지정)'으로 뭉개지 않고 이름을 남긴다."""
-    src = "def call(rec):\n    rec('gemini-3.1-flash-lite', 10, 10)\n"
-    fake = Path(usage_meter.__file__).with_name("brand_new_thing.py")
-    ns = {}
-    exec(compile(src, str(fake), "exec"), ns)
-    ns["call"](usage_meter.record)
-    assert _rows(meter_db)[0][1] == "brand_new_thing"
+def test_op_table_covers_the_real_gemini_callers():
+    """★표가 실제 호출 모듈을 덮는지 본다 — 안 덮이면 '(미지정)'으로 샌다.
+
+    이 검사가 `_op_from_stack`을 스택 조작 없이 지킨다(위 함정 참고).
+    """
+    tbl = usage_meter._OP_BY_MODULE
+    for must in ("script_generate", "edit_plan", "similarity", "archive_tagger",
+                 "seo_generate", "thumb_title", "mix_pipeline"):
+        assert must in tbl, f"Gemini를 부르는 {must}가 op 표에 없다 — 비용이 미지정으로 샌다"
+    assert all(v and isinstance(v, str) for v in tbl.values())
+
+
+def test_unknown_module_keeps_its_name():
+    """표에 없는 새 모듈은 '(미지정)'으로 뭉개지 않고 이름을 남긴다.
+
+    `_op_from_stack`의 규칙: 표에 있으면 한글 이름, 없으면 **모듈 stem 그대로**.
+    (여기서도 가짜 프레임을 만들지 않는다 — 위 함정 참고)
+    """
+    assert "brand_new_thing" not in usage_meter._OP_BY_MODULE
+    src = Path(usage_meter.__file__).read_text(encoding="utf-8")
+    i = src.index("def _op_from_stack")
+    body = src[i:src.index("\ndef ", i + 10)]
+    assert "return mod" in body, (
+        "표에 없는 모듈의 이름을 그대로 남기는 경로가 사라졌다 — '(미지정)'으로 뭉개진다")
 
 
 def test_metering_failure_never_breaks_the_call(meter_db, monkeypatch):
