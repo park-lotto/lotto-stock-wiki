@@ -480,6 +480,14 @@
     }
 
     function applyW() {
+      // ★조각을 펼쳤으면 창이 **그 길이만큼만** 넓어진다(2026-08-28 사장님).
+      //   남는 자리를 다 먹지 않는다 — 옆 칸·다음 카드가 그대로 보여야 한다.
+      if (opt.fit && opt.from != null && opt.to != null) {
+        const need = Math.ceil((opt.to - opt.from) * pps()) + 2;
+        const room = (host.parentElement ? host.parentElement.clientWidth : 0) || need;
+        win.style.width = Math.max(120, Math.min(need, room)) + 'px';
+        host.style.width = win.style.width;               // 슬롯도 그만큼만 차지한다
+      }
       off = clamp(off);
       belt.style.transform = `translateX(${-off}px)`;
       belt.querySelectorAll('.fc').forEach(c => {
@@ -592,15 +600,20 @@
           //     조각이 길어 칸이 실오라기가 될 때만 한 단계씩 성기게 한다.
           //   ★캐시키는 STEP과 칸 높이로 만든다(폭은 안 들어간다 — ckey 참조).
           //     그래서 폭만 조정할 때는 썸네일을 다시 뽑지 않는다.
-          const MIN_CELL = 34;                            // 이보다 좁으면 그림이 안 읽힌다
-          const fitCW = st => Math.round(W / (span / st));
+          // ★칸 폭은 **읽을 만한 크기로 고정**하고, 대신 **필름 자체가 조각 길이만큼만
+          //   옆으로 늘어난다**(2026-08-28 사장님 "2.3초면 저 연두색 부분 정도만
+          //   늘어날 거잖아"). 종전엔 반대로 했다 — 창은 남는 폭을 다 먹고 칸 폭을
+          //   거기 맞춰 늘렸다. 그래서 2.3초짜리가 화면을 가로질렀다.
+          //   창 폭은 아래 applyW가 잡는다(FITW). 여기서는 한 칸 초만 정한다:
+          //   0.25초를 지키되(F21), 조각이 길어 남는 폭을 넘으면 한 단계씩 성기게.
+          const FIT_CELL = 46;                            // 조각을 펼칠 때 칸 폭(px)
           let want = ZOOM_MAX_STEP;
-          for (const st of LADDER) {                      // 사다리는 촘촘→성긴 순서다
+          for (const st of LADDER) {
             if (st < ZOOM_MAX_STEP) continue;             // 기본보다 촘촘하게는 안 간다
             want = st;
-            if (fitCW(st) >= MIN_CELL) break;             // 칸이 읽힐 만큼 넓어지면 그만
+            if ((span / st) * FIT_CELL <= W) break;       // 남는 폭 안에 들어오면 그만
           }
-          const wantCW = Math.max(CW_MIN, Math.min(CW_MAX, fitCW(want)));
+          const wantCW = FIT_CELL;
           if (want !== STEP || wantCW !== CW) {
             const restrip = (want !== STEP);
             STEP = want; CW = wantCW;
