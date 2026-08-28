@@ -330,3 +330,26 @@ def test_핀_상세는_HTML을_못_읽어도_조용히_None이_아니다():
     from shopping_shorts import pinterest_crawl
     src = __import__("inspect").getsource(pinterest_crawl.pin_video_info)
     assert "raise" in src, "비200을 None으로 뭉개면 안 된다"
+
+
+def test_핀_상세는_주거용_프록시로_간다():
+    """★진짜 원인은 brotli가 아니라 **서버 IP**였다(2026-08-29 실측, 표본 10개).
+
+        직접  → None 10/10   (ld+json이 아예 안 내려온다)
+        프록시 → dict 10/10   (VideoObject 정상)
+
+    데이터센터 IP엔 핀터레스트가 SEO용 JSON-LD를 안 준다. 헤더를 아무리 사람처럼
+    갖춰도 안 되고(브라우저 헤더 시도 실패), **IP만 바꾸면 된다**.
+
+    ⚠️이걸 안 고치면 brotli만 고쳤을 때 **오히려 더 나빠진다**:
+      수정 전 = 예외(판정불가 → 렌즈가 안 자름)
+      brotli만 고침 = None(**영상 아님 확정 → 렌즈가 잘라낸다**)
+    즉 멀쩡한 핀 영상이 통째로 사라진다.
+
+    ★프록시 dict는 reddit_source._proxies()를 **재사용**한다(0순위-B: 같은 판단을
+    두 번 적지 않는다). 없으면 None을 주므로 미설정 환경에서도 안 깨진다.
+    """
+    from shopping_shorts import pinterest_crawl
+    src = __import__("inspect").getsource(pinterest_crawl.pin_video_info)
+    assert "proxies" in src, "프록시를 안 태운다 — 데이터센터 IP는 JSON-LD를 못 받는다"
+    assert "_proxies" in src, "프록시 dict를 새로 짜지 마라 — reddit_source._proxies() 재사용"
