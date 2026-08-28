@@ -158,7 +158,11 @@ tbody tr:hover{background:#1b1b22}
      ★고객은 한 줄만 쓴다. 페이지·작업번호·단계·화면오류는 화면이 자동으로 담아 보낸다
        (고객에게 job_id를 물어보면 못 받는다 — 실제로 그래서 원인 찾는 데 오래 걸렸다). -->
 <div class="card wait">
-  <h2>🐞 오류 신고 (<span id=bcnt>0</span>건) <span id=bMsg class=msg></span></h2>
+  <h2>🐞 오류 신고 (<span id=bcnt>0</span>건) <span id=bMsg class=msg></span>
+    <label style="float:right;font-size:13px;font-weight:400;color:#8a8a92;cursor:pointer">
+      <input type=checkbox id=bugShowDone onchange="loadBugReports()" style="vertical-align:middle">
+      해결된 것도 보기 (<span id=bdone>0</span>)
+    </label></h2>
   <table><thead><tr><th>시각</th><th>고객</th><th>내용</th><th>사진</th><th>어디서</th><th>화면오류</th><th>처리</th></tr></thead>
   <tbody id=brows><tr><td colspan=7 class=empty>불러오는 중…</td></tr></tbody></table>
 </div>
@@ -747,7 +751,14 @@ async function loadWorkLines(){
   try{
     const r=await fetch('/api/admin/work-lines');
     if(r.status===403) return;              // 관리자 아님 — 조용히 넘어간다
-    const d=await r.json();
+    // ★상태코드를 뭉뚱그리지 않는다(2026-08-28 사장님 "조회 실패" 제보).
+    //   종전엔 401(로그인 풀림)도 그냥 '조회 실패'로 나와, 새로고침하면 될 일인지
+    //   서버가 고장인지 구분할 수 없었다. 무엇을 하면 되는지까지 말한다.
+    if(r.status===401) throw new Error('로그인이 풀렸습니다 — 새로고침 후 다시 로그인하세요');
+    if(!r.ok) throw new Error('서버 응답 ' + r.status + ' — 잠시 후 다시 시도하세요');
+    let d=null;
+    try{ d = await r.json(); }
+    catch(e){ throw new Error('응답을 읽지 못했습니다(형식 오류)'); }
     if(!d || !d.ok) throw new Error((d&&d.error)||'조회 실패');
     const run=d.running||[], q=d.queued||[], rc=d.recent||[];
     const now=document.getElementById('wlnow');
@@ -822,8 +833,21 @@ function loadBugs(){
       if(ao!==bo) return ao-bo;                       // 미해결 먼저
       return (b.created_at||0)-(a.created_at||0);     // 그 안에서 최신순
     });
-    document.getElementById('bcnt').textContent = rows.filter(function(b){return b.status!=='done';}).length;
+    // ★해결된 건은 기본으로 숨긴다(2026-08-28 사장님 "처리된 거 숨기고").
+    //   종전엔 전부 뿌려서 제목이 "(0건)"인데 표에는 6줄이 보였다 — 숫자와 표가
+    //   서로 다른 말을 하니 "처리할 일이 있나?"를 한눈에 못 읽는다.
+    //   ★다만 지우지는 않는다 — 2026-08-25에 "처리한 신고가 통째로 사라져
+    //     해결됐는지 아닌지를 볼 수 없다"고 하셨다. 체크박스로 되살릴 수 있게 둔다.
+    var doneRows = rows.filter(function(b){ return b.status==='done'; });
+    var openRows = rows.filter(function(b){ return b.status!=='done'; });
+    document.getElementById('bcnt').textContent = openRows.length;
+    var dEl=document.getElementById('bdone'); if(dEl) dEl.textContent = doneRows.length;
+    var showDone = !!(document.getElementById('bugShowDone')||{}).checked;
+    if(!showDone) rows = openRows;
     var esc=function(x){return (x==null?'':String(x)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');};
+    window._BUG_EMPTY_MSG = showDone ? '신고가 없어요'
+      : (doneRows.length ? '처리할 신고가 없어요 (해결된 '+doneRows.length+'건은 위 체크박스로 보기)'
+                         : '신고가 없어요');
     document.getElementById('brows').innerHTML = rows.length ? rows.map(function(b){
       var where=[];
       if(b.step) where.push(esc(b.step)+'단계');
@@ -863,7 +887,8 @@ function loadBugs(){
         '<td class=mini>'+(where.join('<br>')||'-')+'</td>'+
         '<td>'+errCell+'</td>'+
         '<td>'+act+'</td></tr>';
-    }).join('') : '<tr><td colspan=7 class=empty>신고 없음</td></tr>';
+    }).join('') : ('<tr><td colspan=7 class=empty>'
+      + (window._BUG_EMPTY_MSG || '신고 없음') + '</td></tr>');
   }).catch(function(e){
     document.getElementById('bMsg').textContent='불러오기 실패: '+e.message;
   });
