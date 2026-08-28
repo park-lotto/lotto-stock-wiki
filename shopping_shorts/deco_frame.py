@@ -338,6 +338,19 @@ PRESETS = {
     "news_lime":   {"name": "커뮤니티 · 연두", "bar": "#B5D46A", "on_bar": "#1A1A1A"},
     "news_gray":   {"name": "커뮤니티 · 그레이", "bar": "#6E6E6E", "on_bar": "#FFFFFF"},
     "news_navy":   {"name": "커뮤니티 · 네이비", "bar": "#2B3A67", "on_bar": "#FFFFFF"},
+    # ── 🧱 빈 틀(2026-08-28) — 글자·아이콘 없는 **색띠만**.
+    #   왜 필요한가: 지금 20종은 전부 가짜 채널 UI(☰·🔍·채널명)가 박혀 있어
+    #   "위아래 띠만 깔고 싶다"가 불가능했다. 아이콘을 하나씩 '없음'으로 돌리는
+    #   길은 있었지만 세 칸을 매번 만져야 했다 — 골라서 끝나게 한다.
+    #   ★띠 색은 화면에서 바꾼다(bar_color) — 여기 4종은 흔한 출발점일 뿐이다.
+    "plain_black": {"name": "빈 틀 · 검정", "bar": "#000000", "on_bar": "#FFFFFF",
+                    "left_icon": "none", "right_icon": "none", "center_kind": "없음"},
+    "plain_white": {"name": "빈 틀 · 흰색", "bar": "#FFFFFF", "on_bar": "#111111",
+                    "left_icon": "none", "right_icon": "none", "center_kind": "없음"},
+    "plain_coral": {"name": "빈 틀 · 살구", "bar": "#F08080", "on_bar": "#FFFFFF",
+                    "left_icon": "none", "right_icon": "none", "center_kind": "없음"},
+    "plain_navy":  {"name": "빈 틀 · 네이비", "bar": "#2B3A67", "on_bar": "#FFFFFF",
+                    "left_icon": "none", "right_icon": "none", "center_kind": "없음"},
 }
 
 # 기본 치수(1080x1920 기준). 사장님이 화면에서 바 높이를 조절하면 bar_h만 바뀐다.

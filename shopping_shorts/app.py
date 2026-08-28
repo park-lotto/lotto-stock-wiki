@@ -12996,6 +12996,12 @@ def api_produce_frame_png(request: Request):
     for b in ("ad_badge", "icons"):
         if b in spec:
             spec[b] = str(spec[b]).lower() in ("1", "true", "on", "yes")
+    # ★masks는 배열이라 쿼리에 JSON 문자열로 실려 온다 — 여기서만 푼다
+    if "masks" in spec:
+        try:
+            spec["masks"] = json.loads(spec["masks"] or "[]")
+        except Exception:
+            spec["masks"] = []
     out = deco_frame.render_to(spec, deco_frame.cache_path(spec))
     return FileResponse(str(out), media_type="image/png",
                         headers={"Cache-Control": "public, max-age=31536000"})
