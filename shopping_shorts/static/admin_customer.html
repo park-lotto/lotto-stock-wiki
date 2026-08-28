@@ -1,0 +1,377 @@
+<!doctype html><html lang=ko><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<title>고객 상세 · 숏템메이커</title>
+<style>
+/* 색·간격은 admin.html과 같은 값을 쓴다 — 두 화면이 이어져 보여야 한다.
+   (별도 토큰 파일을 만들면 두 벌이 되어 언젠가 어긋난다 — 0순위-B) */
+body{margin:0;background:#0b0b0e;color:#e8e8ea;font-family:system-ui,'Noto Sans KR',sans-serif}
+.main{flex:1;min-width:0;padding:16px 20px 60px;overflow-x:auto}
+a{color:#8ab4f8}
+h1{font-size:20px;margin:0 0 4px}
+.sub{color:#8a8a92;font-size:13px;margin-bottom:16px}
+.card{background:#16161c;border:1px solid #2a2a30;border-radius:12px;padding:16px;margin-bottom:16px;overflow-x:auto}
+h2{font-size:15px;margin:0 0 12px;color:#cfd2d6}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:9px 11px;border-bottom:1px solid #23232a;white-space:nowrap}
+th{color:#9a9aa2;font-weight:600;font-size:13px}
+tbody tr:hover{background:#1b1b22}
+.badge{padding:3px 9px;border-radius:10px;font-size:13px;font-weight:700}
+.pro{background:#1c3d1f;color:#7ee787}.free{background:#3d1c1c;color:#ff9a8a}
+.trial{background:#1c2f3d;color:#7db4ff}.admin{background:#3a1c3d;color:#e59aff}
+.empty{color:#6a6a72;font-size:13px;padding:10px 2px}
+.err{color:#ff9a8a}
+button{border:0;border-radius:7px;padding:7px 13px;font-weight:700;font-size:13px;cursor:pointer;margin-right:4px}
+.bback{background:#2a2a33;color:#e8e8ea}
+.bpro{background:#2ea043;color:#fff}.bpt{background:#7a4bd0;color:#fff}
+
+/* ── 머리: 누구인지 + 지금 상태 ───────────────────────────────────── */
+.head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.head .who{font-size:22px;font-weight:800;letter-spacing:-.4px}
+.head .cid{color:#8a8a92;font-size:13px}
+/* 지표 상자 — 표를 읽기 전에 '이 사람이 어떤 고객인가'를 먼저 답한다 */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px}
+.kpi{background:#16161c;border:1px solid #2a2a30;border-radius:10px;padding:11px 13px}
+.kk{color:#8a8a92;font-size:12px;margin-bottom:4px}
+.kv{font-size:20px;font-weight:800;letter-spacing:-.5px}
+.kv small{font-size:12px;font-weight:400;color:#8a8a92;margin-left:3px}
+.kv.warn{color:#ffd479}.kv.bad{color:#ff6b6b}.kv.good{color:#7ee787}
+.kn{color:#6a6a72;font-size:11px;margin-top:3px}
+
+/* 안내 — 숫자가 왜 이런지 화면이 스스로 말한다 */
+.note{background:#241c10;border:1px solid #5a4a1e;color:#ffd479;border-radius:8px;
+      padding:10px 13px;font-size:12.5px;line-height:1.65;margin:0 0 16px}
+.note b{color:#ffe9ad}
+
+/* ── 날짜별 타임라인 ─────────────────────────────────────────────── */
+.day{border:1px solid #23232a;border-radius:10px;margin-bottom:10px;background:#14141a}
+.dhead{display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;user-select:none}
+.dhead:hover{background:#1a1a21}
+.dhead .dt{font-weight:800;font-size:15px;min-width:104px}
+.dhead .dow{color:#6a6a72;font-size:12px;margin-left:-6px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}
+.chip{background:#1e1e26;border:1px solid #2f2f38;border-radius:20px;padding:3px 10px;font-size:12px;color:#b8b8c0}
+.chip.v{border-color:#2b5f34;color:#7ee787}
+.chip.a{border-color:#2b4a6f;color:#8ab4f8}
+.chip.p{border-color:#5a3f8a;color:#c4a6ff}
+.chip.c{border-color:#6f5a2b;color:#ffd479}
+.dbody{display:none;padding:4px 14px 14px;border-top:1px solid #23232a}
+.day.open .dbody{display:block}
+.dhead .caret{color:#6a6a72;font-size:12px;width:12px}
+.day.open .dhead .caret{transform:rotate(90deg)}
+.sect{margin:12px 0 0}
+.sect h4{margin:0 0 6px;font-size:12px;color:#8a8a92;font-weight:700;letter-spacing:.3px}
+.jl{display:flex;gap:9px;align-items:baseline;font-size:13px;padding:4px 0;flex-wrap:wrap}
+.jl .tm{color:#6a6a72;font-variant-numeric:tabular-nums;min-width:44px}
+.st{font-size:11.5px;font-weight:700;padding:2px 7px;border-radius:6px}
+.st.done{background:#1c3d1f;color:#7ee787}
+.st.failed{background:#3d1c1c;color:#ff9a8a}
+.st.other{background:#2a2a33;color:#a8a8b0}
+.mono{font-family:ui-monospace,Consolas,monospace;font-size:12px;color:#8a8a92}
+.tag{display:inline-block;background:#1e1e26;border-radius:6px;padding:2px 8px;font-size:12px;margin:2px 4px 2px 0;color:#b8b8c0}
+
+.tabs{display:flex;gap:6px;margin:0 0 14px;flex-wrap:wrap}
+.tab{background:#16161c;border:1px solid #2a2a30;border-radius:8px;padding:8px 14px;
+     font-size:13.5px;font-weight:700;color:#a8a8b0;cursor:pointer}
+.tab.on{background:#1c2f3d;border-color:#3a5bd0;color:#cfe0ff}
+.pane{display:none}.pane.on{display:block}
+.mini{font-size:11.5px;color:#6a6a72}
+.right{text-align:right}
+.bar{height:6px;border-radius:4px;background:#24242c;overflow:hidden;min-width:60px}
+.bar i{display:block;height:100%;background:#4f9dfa}
+</style></head><body>
+<div class="main">
+
+<div class=head>
+  <button class=bback onclick="location.href='/admin'">← 고객 목록</button>
+  <span class=who id=who>불러오는 중…</span>
+  <span class=cid id=cid></span>
+  <span id=badges></span>
+  <select id=win onchange="load()" style="margin-left:auto;background:#0e0e12;border:1px solid #333;border-radius:7px;color:#eee;font-size:13px;padding:7px 11px;cursor:pointer">
+    <option value=30>최근 30일</option>
+    <option value=60 selected>최근 60일</option>
+    <option value=90>최근 90일</option>
+    <option value=365>1년</option>
+  </select>
+</div>
+<div class=sub id=sub></div>
+
+<div id=notes></div>
+<div class=kpis id=kpis></div>
+
+<div class=tabs>
+  <div class="tab on" data-p=timeline onclick="tab(this)">📅 날짜별 활동</div>
+  <div class=tab data-p=videos onclick="tab(this)">🎬 만든 영상</div>
+  <div class=tab data-p=cost onclick="tab(this)">💸 API 원가</div>
+  <div class=tab data-p=points onclick="tab(this)">🪙 포인트·결제</div>
+  <div class=tab data-p=access onclick="tab(this)">🌐 접속</div>
+  <div class=tab data-p=perf onclick="tab(this)">⏱ 작업 소요시간</div>
+</div>
+
+<div class="pane on" id=p_timeline><div id=timeline class=empty>불러오는 중…</div></div>
+<div class=pane id=p_videos><div class=card><h2>만든 영상 <span class=mini id=vcnt></span></h2><div id=videos></div></div></div>
+<div class=pane id=p_cost><div class=card><h2>기능별 API 원가</h2><div id=costops></div></div>
+  <div class=card><h2>날짜별 API 원가</h2><div id=costdays></div></div></div>
+<div class=pane id=p_points><div class=card><h2>결제 이력</h2><div id=pays></div></div>
+  <div class=card><h2>포인트 내역</h2><div id=ledger></div></div></div>
+<div class=pane id=p_access><div class=card><h2>접속 기록 <span class=mini>(30일 넘으면 자동 삭제)</span></h2><div id=access></div></div></div>
+<div class=pane id=p_perf><div class=card><h2>작업 소요시간 <span class=mini>(큐 기준 실측)</span></h2><div id=perf></div></div></div>
+
+</div>
+<script src="/sidebar.js?v=2"></script>
+<script>
+const CID = Number(location.pathname.split('/').pop()) || 0;
+let D = null;
+const esc = s => (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const won = n => (Math.round((n||0)*10)/10).toLocaleString('ko-KR');
+const DOW = ['일','월','화','수','목','금','토'];
+
+function tab(el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on', t===el));
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('on'));
+  document.getElementById('p_'+el.dataset.p).classList.add('on');
+}
+
+// 시간 표기는 여기 한 곳에서만 만든다. 서버가 형식을 4가지로 주므로(epoch초·ISO·
+// 공백형·날짜만) 화면 곳곳에서 각자 파싱하면 반드시 어긋난다.
+function toDate(v){
+  if(v==null||v==='') return null;
+  if(typeof v==='number') return new Date(v*1000);
+  const s=String(v).trim();
+  if(/^\d+$/.test(s)) return new Date(Number(s)*1000);
+  if(/^\d{4}-\d{2}-\d{2}$/.test(s)) return new Date(s+'T00:00:00+09:00');
+  // 공백형(UTC)엔 타임존이 없다 → Z를 붙여 UTC로 읽는다. 안 붙이면 브라우저가
+  // 로컬시간으로 읽어 9시간이 밀린다.
+  const iso = s.includes('T') ? s : s.replace(' ','T')+(/[+Z]/.test(s)?'':'Z');
+  const d=new Date(iso);
+  return isNaN(d) ? null : d;
+}
+const hhmm = v => { const d=toDate(v); return d? d.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false}) : '-'; };
+const ymd  = v => { const d=toDate(v); return d? d.toLocaleDateString('ko-KR') : '-'; };
+const dur  = s => { s=Math.max(0,Math.round(s||0)); return s<60? s+'초' : Math.floor(s/60)+'분 '+(s%60)+'초'; };
+
+async function load(){
+  const days = document.getElementById('win').value;
+  const r = await fetch(`/api/admin/customer/detail?customer_id=${CID}&days=${days}`);
+  if(r.status===403){ document.body.innerHTML='<h2 style="padding:24px">관리자 전용입니다</h2>'; return; }
+  if(!r.ok){ document.getElementById('who').textContent='불러오지 못했습니다 ('+r.status+')'; return; }
+  D = await r.json();
+  draw();
+}
+
+function draw(){
+  const c=D.customer, s=D.sheet;
+  document.getElementById('who').textContent = c.name || c.email || c.username || ('고객 '+c.id);
+  document.getElementById('cid').textContent = 'cid '+c.id+' · '+(c.email||c.username||'');
+  document.title = (c.name||c.email||('고객'+c.id)) + ' · 고객 상세';
+
+  const tier = c.plan==='pro'?'pro':(c.plan==='trial'?'trial':'free');
+  const label = c.plan==='pro'?'pro':(c.plan==='trial'?'체험':'일반회원');
+  let b = `<span class="badge ${tier}">${label}</span>`;
+  if(c.is_admin) b += ' <span class="badge admin">관리자</span>';
+  if(c.challenge) b += ' <span class="badge trial">🔥챌린지</span>';
+  document.getElementById('badges').innerHTML = b;
+
+  document.getElementById('sub').innerHTML =
+    `가입 ${esc(ymd(c.created_at))} · 승인 ${c.approved_at?esc(ymd(c.approved_at)):'—'}`
+    + ` · 이용기한 ${c.full_access_until?esc(ymd(c.full_access_until)):'—'}`
+    + ` · 등급판정 <b>${esc(c.level||'')}</b> · 전화 ${esc(c.phone)||'—'}`;
+
+  drawNotes(); drawKpis(); drawTimeline(); drawVideos(); drawCost(); drawPoints(); drawAccess(); drawPerf();
+}
+
+// ★화면이 스스로 한계를 밝힌다. 숫자만 보여주고 "왜 0인지"를 사람이 추측하게 두면
+//   반드시 오해가 생긴다(0원 = 안 썼다 가 아니라 = 기록이 없다).
+function drawNotes(){
+  const s=D.sheet, un=D.ai_unattributed, out=[];
+  if(un && un.krw>0){
+    out.push(`<div class=note>💸 <b>주인이 안 적힌 API 원가가 이 기간에 ${won(un.krw)}원</b> (${un.calls.toLocaleString()}콜) 있습니다.
+      ${esc(s.ai_since)} 이전에는 어느 고객이 태운 비용인지 기록하지 않았습니다 —
+      그래서 이 날 이전 구간은 고객별 원가가 <b>0으로 보입니다(안 썼다는 뜻이 아닙니다)</b>.
+      오늘부터 쌓이는 것은 고객별로 정확히 붙습니다.</div>`);
+  }
+  if(s.paid && s.amount_missing){
+    out.push(`<div class=note>🧾 결제 <b>${s.payment_count}건이 기록돼 있지만 금액이 모두 0원</b>입니다.
+      승인할 때 금액 칸을 비우고 넘기면 이렇게 됩니다 → 수익성·마진 계산을 할 수 없어 그 칸을 비워 뒀습니다.
+      «포인트·결제» 탭에서 금액을 채우시면 바로 계산됩니다.</div>`);
+  }
+  document.getElementById('notes').innerHTML = out.join('');
+}
+
+function drawKpis(){
+  const c=D.customer, s=D.sheet, ai=D.ai.total;
+  const made = D.jobs.filter(j=>j.made).length;
+  const K=[];
+  K.push(['포인트 잔액', (c.points||0)+'<small>P</small>', (c.points||0)<=0?'bad':'good',
+          (c.points||0)<=0 ? '0이면 유료 작업이 402로 막힙니다' : '']);
+  K.push(['만든 영상', made+'<small>편</small>', '', '접수 '+D.jobs.length+'건 중 실제 완성']);
+
+  if(s.paid){
+    K.push(['결제', s.payment_count+'<small>건</small>',
+            s.amount_missing?'warn':'', s.amount_missing? '금액 미기재' : won(s.total_paid)+'원']);
+    K.push(['결제 후 경과', s.days_since_first+'<small>일</small>', '',
+            '첫 결제 '+ymd(s.first_paid_at)]);
+    K.push(['주당 제작', s.videos_per_week+'<small>편</small>', '',
+            s.days_per_video!=null ? s.days_per_video+'일에 1편꼴' : '아직 없음']);
+  }else{
+    K.push(['결제', '없음', '', '체험·무료 — 시트 지표는 결제 후에 계산됩니다']);
+  }
+
+  K.push(['API 원가', won(ai.krw)+'<small>원</small>', ai.krw>0?'':'warn',
+          ai.krw>0 ? ai.calls.toLocaleString()+'콜 · '+((ai.in+ai.out)/1000).toFixed(0)+'K토큰'
+                   : s.ai_since+' 이전은 기록 없음']);
+  if(s.paid && s.ai_krw_per_video!=null)
+    K.push(['영상 1편 원가', won(s.ai_krw_per_video)+'<small>원</small>', '', 'AI 호출분만(서버·TTS 제외)']);
+  if(s.paid && s.cost_ratio!=null)
+    K.push(['원가율', s.cost_ratio+'<small>%</small>', s.cost_ratio>30?'bad':'good',
+            '마진 '+won(s.margin_krw)+'원']);
+
+  const acc=c.access_7d||{};
+  document.getElementById('kpis').innerHTML = K.map(([k,v,cls,n])=>
+    `<div class=kpi><div class=kk>${k}</div><div class="kv ${cls||''}">${v}</div>`
+    + (n?`<div class=kn>${esc(n)}</div>`:'') + `</div>`).join('');
+}
+
+function drawTimeline(){
+  const T=D.timeline||[];
+  if(!T.length){ document.getElementById('timeline').innerHTML='<div class=empty>이 기간에 기록된 활동이 없어요.</div>'; return; }
+  document.getElementById('timeline').innerHTML = T.map((d,i)=>{
+    const dt=toDate(d.day), dow=dt?DOW[dt.getDay()]:'';
+    const made=d.jobs.filter(j=>j.made).length, fail=d.jobs.filter(j=>j.status==='failed').length;
+    const acts=Object.entries(d.actions||{});
+    const ch=[];
+    if(d.jobs.length) ch.push(`<span class="chip v">🎬 영상 ${made}편${fail?' · 실패 '+fail:''}</span>`);
+    if(acts.length)   ch.push(`<span class="chip a">✋ 활동 ${acts.length}종</span>`);
+    if(d.ai_krw)      ch.push(`<span class="chip c">💸 ${won(d.ai_krw)}원</span>`);
+    if(d.points_out)  ch.push(`<span class="chip p">🪙 -${d.points_out}P</span>`);
+    if(d.access.length) ch.push(`<span class=chip>🌐 ${d.access.length}IP</span>`);
+    const u=d.usage||{};
+    const useTxt=['lens','render','script'].filter(k=>u[k]).map(k=>({lens:'렌즈',render:'렌더',script:'대본'})[k]+' '+u[k]).join(' · ');
+
+    return `<div class="day${i===0?' open':''}"><div class=dhead onclick="this.parentNode.classList.toggle('open')">
+        <span class=caret>▶</span><span class=dt>${esc(d.day)}</span><span class=dow>(${dow})</span>
+        <span class=chips>${ch.join('')}</span></div>
+      <div class=dbody>
+        ${d.jobs.length? `<div class=sect><h4>영상 작업</h4>${d.jobs.map(j=>{
+            const cls = j.status==='done'?'done':(j.status==='failed'?'failed':'other');
+            return `<div class=jl><span class=tm>${hhmm(j.created_at)}</span>
+              <span class="st ${cls}">${esc(j.status)}</span>
+              <span>소스 ${j.sources}개 · ${j.target_seconds||0}초 ${j.made?'· <b style="color:#7ee787">완성</b>':''}</span>
+              <span class=mono>${esc(j.job_id)}</span>
+              ${j.error?`<span class=err>${esc(String(j.error).slice(0,90))}</span>`:''}</div>`;
+          }).join('')}</div>`:''}
+        ${acts.length? `<div class=sect><h4>한 일 <span class=mini>(같은 동작은 60초에 1번만 기록 — 횟수가 아니라 흔적입니다)</span></h4>
+            ${acts.map(([a,n])=>`<span class=tag>${esc(a)}${n>1?' ×'+n:''}</span>`).join('')}</div>`:''}
+        ${useTxt? `<div class=sect><h4>사용량 카운터 <span class=mini>(UTC 날짜 기준이라 오전 9시 이전 건은 전날 칸입니다)</span></h4>
+            <span class=tag>${esc(useTxt)}</span></div>`:''}
+        ${(d.points_in||d.points_out)? `<div class=sect><h4>포인트</h4>
+            <span class=tag>${d.points_in?'+'+d.points_in+'P 지급':''}${d.points_in&&d.points_out?' / ':''}${d.points_out?'-'+d.points_out+'P 사용':''}</span></div>`:''}
+        ${d.ai_calls? `<div class=sect><h4>API</h4><span class=tag>${d.ai_calls.toLocaleString()}콜 · ${won(d.ai_krw)}원</span></div>`:''}
+        ${d.access.length? `<div class=sect><h4>접속 IP</h4>${d.access.map(a=>
+            `<span class=tag title="${esc(a.ua)}">${esc(a.ip)}</span>`).join('')}</div>`:''}
+      </div></div>`;
+  }).join('');
+}
+
+function drawVideos(){
+  const J=D.jobs||[];
+  document.getElementById('vcnt').textContent = `— 완성 ${J.filter(j=>j.made).length}편 / 접수 ${J.length}건`;
+  document.getElementById('videos').innerHTML = J.length ? `<table><thead><tr>
+    <th>접수</th><th>상태</th><th>완성</th><th>소스</th><th>길이</th><th>차감</th><th>작업번호</th><th>오류</th>
+    </tr></thead><tbody>${J.map(j=>`<tr>
+      <td>${esc(ymd(j.created_at))} ${esc(hhmm(j.created_at))}</td>
+      <td><span class="st ${j.status==='done'?'done':(j.status==='failed'?'failed':'other')}">${esc(j.status)}</span></td>
+      <td>${j.made?'<b style="color:#7ee787">✓</b>':'—'}</td>
+      <td>${j.sources}</td><td>${j.target_seconds||0}초</td>
+      <td>${j.charged? (j.charged/100)+'P':'—'}</td>
+      <td class=mono>${esc(j.job_id)}</td>
+      <td class=err>${esc(String(j.error||'').slice(0,70))}</td></tr>`).join('')}</tbody></table>`
+    : '<div class=empty>제작 기록이 없어요.</div>';
+}
+
+function drawCost(){
+  const ops=D.ai.ops||[], days=D.ai.days||[], tot=D.ai.total.krw||0;
+  document.getElementById('costops').innerHTML = ops.length ? `<table><thead><tr>
+    <th>기능</th><th class=right>호출</th><th class=right>원가</th><th>비중</th></tr></thead><tbody>
+    ${ops.map(o=>`<tr><td>${esc(o.op)}</td><td class=right>${o.calls.toLocaleString()}</td>
+      <td class=right>${won(o.krw)}원</td>
+      <td><span class=bar style="display:inline-block;width:140px;vertical-align:middle"><i style="width:${tot?Math.round(o.krw/tot*100):0}%"></i></span>
+      <span class=mini> ${tot?Math.round(o.krw/tot*100):0}%</span></td></tr>`).join('')}</tbody></table>`
+    : `<div class=empty>이 고객 몫으로 기록된 API 호출이 없어요. (${esc(D.sheet.ai_since)} 이전 호출은 주인이 기록되지 않았습니다)</div>`;
+
+  document.getElementById('costdays').innerHTML = days.length ? `<table><thead><tr>
+    <th>날짜</th><th class=right>호출</th><th class=right>입력토큰</th><th class=right>출력토큰</th><th class=right>원가</th>
+    </tr></thead><tbody>${days.slice().reverse().map(d=>`<tr><td>${esc(d.day)}</td>
+      <td class=right>${d.calls.toLocaleString()}</td><td class=right>${d.in.toLocaleString()}</td>
+      <td class=right>${d.out.toLocaleString()}</td><td class=right>${won(d.krw)}원</td></tr>`).join('')}
+      <tr style="font-weight:800"><td>합계</td><td class=right>${D.ai.total.calls.toLocaleString()}</td>
+      <td class=right>${D.ai.total.in.toLocaleString()}</td><td class=right>${D.ai.total.out.toLocaleString()}</td>
+      <td class=right>${won(tot)}원</td></tr></tbody></table>`
+    : '<div class=empty>기록 없음</div>';
+}
+
+function drawPoints(){
+  const P=D.payments||[];
+  document.getElementById('pays').innerHTML = P.length ? `<table><thead><tr>
+    <th>결제일</th><th class=right>금액</th><th>수단</th><th class=right>기간</th><th>메모</th></tr></thead><tbody>
+    ${P.map(p=>`<tr><td>${esc(ymd(p.paid_at))}</td>
+      <td class=right>${p.amount? Number(p.amount).toLocaleString()+'원' : '<span class=err>미기재</span>'}</td>
+      <td>${esc(p.method)||'—'}</td><td class=right>${p.period_days||0}일</td>
+      <td class=mini>${esc(p.note)||''}</td></tr>`).join('')}</tbody></table>`
+    : '<div class=empty>결제 기록이 없어요.</div>';
+
+  const L=D.ledger||[];
+  document.getElementById('ledger').innerHTML = L.length ? `<table><thead><tr>
+    <th>시각</th><th>사유</th><th class=right>변동</th></tr></thead><tbody>
+    ${L.map(x=>{ const p=x.delta/100; return `<tr><td>${esc(ymd(x.at))} ${esc(hhmm(x.at))}</td>
+      <td>${esc(x.reason)||'—'}</td>
+      <td class=right style="color:${p>=0?'#7ee787':'#ff9a8a'};font-weight:700">${p>=0?'+':''}${p}P</td></tr>`;
+    }).join('')}</tbody></table>` : '<div class=empty>포인트 내역이 없어요.</div>';
+}
+
+function drawAccess(){
+  const byDay={};
+  (D.timeline||[]).forEach(d=>{ if(d.access.length) byDay[d.day]=d.access; });
+  const ks=Object.keys(byDay).sort().reverse();
+  const ips=new Set(), uas=new Set();
+  ks.forEach(k=>byDay[k].forEach(a=>{ips.add(a.ip);uas.add(a.ua);}));
+  document.getElementById('access').innerHTML = ks.length ? `
+    <div class=sub>고유 IP <b>${ips.size}</b>개 · 고유 기기 <b>${uas.size}</b>종
+      ${(ips.size>=3||uas.size>=3)?'<span class=err> ⚠️ 계정 공유가 의심되면 눈으로 확인해 주세요(자동 차단은 안 합니다)</span>':''}</div>
+    <table><thead><tr><th>날짜</th><th>IP</th><th>기기(브라우저)</th></tr></thead><tbody>
+    ${ks.map(k=>byDay[k].map((a,i)=>`<tr><td>${i?'':esc(k)}</td><td class=mono>${esc(a.ip)}</td>
+      <td class=mini>${esc(String(a.ua).slice(0,110))}</td></tr>`).join('')).join('')}</tbody></table>`
+    : '<div class=empty>접속 기록이 없어요. (30일이 지나면 자동으로 지워집니다)</div>';
+}
+
+function drawPerf(){
+  const U=D.durations||[];
+  if(!U.length){ document.getElementById('perf').innerHTML='<div class=empty>큐 기록이 없어요.</div>'; return; }
+  const LAB={mix:'영상대본MIX',preview:'미리보기',clean:'자막제거',render:'최종렌더',
+             durfill:'길이보정',prewarm:'담기분석',overseas:'해외수집',census:'전수조사'};
+  const g={};
+  U.forEach(x=>{ const k=x.task; (g[k]=g[k]||[]).push(x); });
+  const rows=Object.entries(g).map(([k,v])=>{
+    const ok=v.filter(x=>x.state==='done').map(x=>x.sec).filter(s=>s>0).sort((a,b)=>a-b);
+    const avg=ok.length? Math.round(ok.reduce((a,b)=>a+b,0)/ok.length):0;
+    const med=ok.length? ok[Math.floor(ok.length/2)] : 0;
+    const fail=v.filter(x=>x.state==='failed').length;
+    return {k, n:v.length, avg, med, max:ok.length?ok[ok.length-1]:0, fail};
+  }).sort((a,b)=>b.n-a.n);
+  document.getElementById('perf').innerHTML = `<table><thead><tr>
+    <th>작업</th><th class=right>건수</th><th class=right>평균</th><th class=right>중간값</th><th class=right>최장</th><th class=right>실패</th>
+    </tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(LAB[r.k]||r.k)}</td>
+      <td class=right>${r.n}</td><td class=right>${dur(r.avg)}</td><td class=right>${dur(r.med)}</td>
+      <td class=right>${dur(r.max)}</td>
+      <td class=right ${r.fail?'style="color:#ff9a8a;font-weight:700"':''}>${r.fail||'—'}</td></tr>`).join('')}
+    </tbody></table>
+    <div class=sub style="margin-top:10px">최근 작업 ${Math.min(U.length,12)}건</div>
+    <table><thead><tr><th>끝난 시각</th><th>작업</th><th>결과</th><th class=right>걸린시간</th><th>오류</th></tr></thead><tbody>
+    ${U.slice(0,12).map(x=>`<tr><td>${esc(ymd(x.finished_at))} ${esc(hhmm(x.finished_at))}</td>
+      <td>${esc(LAB[x.task]||x.task)}</td>
+      <td><span class="st ${x.state==='done'?'done':(x.state==='failed'?'failed':'other')}">${esc(x.state)}</span></td>
+      <td class=right>${dur(x.sec)}</td><td class=err>${esc(String(x.error||'').slice(0,60))}</td></tr>`).join('')}
+    </tbody></table>`;
+}
+
+load();
+</script></body></html>

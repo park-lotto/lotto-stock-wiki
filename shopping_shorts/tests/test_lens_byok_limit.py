@@ -30,14 +30,42 @@ def test_byok_한도_상수가_있다():
 
 
 def test_한도판정이_keyroute를_쓴다():
-    """★'내 키인가'를 여기서 새로 판정하면 안 된다 — keys_for의 is_user를 빌려 쓴다."""
-    m = re.search(r"def _lens_has_own_key\(.*?\n(?:.*?\n)*?\n\n", APP)
-    assert m, "_lens_has_own_key 함수가 없다"
+    """★'내 키인가'를 여기서 새로 판정하면 안 된다 — keys_for의 is_user를 빌려 쓴다.
+
+    2026-08-29: 판정 본체가 `_lens_key_info`로 옮겨졌다(has_own과 키 개수를 한 번의
+    keys_for 호출로 **함께** 정해, 고객마다 복호화를 두 번 돌던 것을 없앴다 —
+    관리자 목록 18.2초의 원인). `_lens_has_own_key`는 그 결과를 받아쓰는 얇은 껍데기다.
+    검사 대상은 **판정이 실제로 사는 곳**이어야 하므로 `_lens_key_info`를 본다.
+    """
+    m = re.search(r"def _lens_key_info\(.*?\n(?:.*?\n)*?\n\n", APP)
+    assert m, "_lens_key_info 함수가 없다"
     body = m.group(0)
     assert "keys_for" in body and "SVC_SERPAPI" in body, (
         "BYOK 판정이 keyroute.keys_for를 안 쓴다 — 판단이 두 곳에 생긴다")
     # customer_keys를 직접 SELECT하는 식의 자체 판정은 금지
     assert "get_customer_keys" not in body, "keyroute를 우회해 직접 조회하고 있다"
+
+    # 껍데기는 판정을 스스로 하지 말고 위임만 해야 한다
+    m2 = re.search(r"def _lens_has_own_key\(.*?\n(?:.*?\n)*?\n\n", APP)
+    assert m2, "_lens_has_own_key 함수가 없다"
+    assert "_lens_key_info" in m2.group(0), (
+        "_lens_has_own_key가 판정을 위임하지 않는다 — 판단이 두 곳에 생긴다")
+
+
+def test_한도게이트는_캐시를_쓰지_않는다():
+    """★막는 쪽은 항상 지금 값을 본다(2026-08-29).
+
+    목록을 빠르게 하려고 키 조회에 캐시를 넣었는데, 그게 게이트에도 걸리면 키를
+    등록·삭제한 직후 TTL 동안 **옛 한도**로 막히거나 통과한다. 실제로 그렇게 만들었다가
+    렌즈 한도 테스트 10건이 깨졌다. 캐시는 기본 꺼짐이어야 한다.
+    """
+    m = re.search(r"def _lens_key_info\(([^)]*)\)", APP)
+    assert m, "_lens_key_info 시그니처를 못 찾았다"
+    assert re.search(r"cache\s*=\s*False", m.group(1)), (
+        "_lens_key_info의 cache 기본값이 False가 아니다 — 게이트가 옛 한도를 볼 수 있다")
+    m2 = re.search(r"def _lens_key_count\(([^)]*)\)", APP)
+    assert m2 and re.search(r"cache\s*=\s*False", m2.group(1)), (
+        "_lens_key_count의 cache 기본값이 False가 아니다")
 
 
 def test_check_and_count가_byok한도를_본다():

@@ -122,6 +122,90 @@ def current_context() -> dict:
     return dict(getattr(_ctx, "cur", None) or {})
 
 
+# ── op(어떤 기능이 태운 비용인가) 자동 판별 ────────────────────────────────
+# ★왜 자동인가: Gemini를 부르는 곳이 25개 모듈에 흩어져 있다(2026-08-29 grep 실측).
+#   거기마다 track(op=...)를 적으면 25벌이 되고, 새 모듈이 생길 때마다 반드시
+#   빠뜨린다(0순위-B). 호출 스택에서 **모듈 이름**을 읽어 여기 표 하나로 옮긴다.
+#   표에 없는 모듈은 모듈명 그대로 남는다 — '(미지정)'으로 뭉뚱그리지 않는다.
+_OP_BY_MODULE = {
+    "script_generate": "대본생성",
+    "script_extract": "대본추출",
+    "bank_assemble": "대본조립",
+    "pattern_bank": "패턴은행",
+    "edit_plan": "장면배치",
+    "similarity": "장면매칭",
+    "video_analysis": "영상분석",
+    "archive_tagger": "태깅",
+    "tag_qa_frames": "태깅검수",
+    "seo_generate": "SEO",
+    "thumb_title": "썸네일문구",
+    "comment_gen": "댓글생성",
+    "ai_categorize": "카테고리",
+    "coupang_query": "쿠팡검색",
+    "product_identify": "제품식별",
+    "product_name": "제품이름",
+    "product_facts": "제품정보",
+    "insta_facts": "인스타분석",
+    "sul_facts": "썰추출",
+    "frame_script": "프레임대본",
+    "structure_analyze": "구조분석",
+    "element_stats": "요소통계",
+    "longform_shorts": "롱폼분할",
+    "mix_pipeline": "제작",
+}
+
+
+def _op_from_stack():
+    """호출 스택을 거슬러 올라가 '어느 기능이 부른 콜인가'를 알아낸다.
+
+    usage_meter 자신과 SDK 래퍼 프레임은 건너뛴다. 못 찾으면 None(=옛 동작 그대로).
+    ⚠️ 계측이 본작업을 죽이면 안 되므로 실패는 전부 삼킨다.
+    """
+    try:
+        import inspect
+        for fr in inspect.stack()[1:12]:
+            mod = Path(fr.filename).stem
+            if mod in ("usage_meter", "key_vault", "keyroute", "keyctx"):
+                continue
+            if mod in _OP_BY_MODULE:
+                return _OP_BY_MODULE[mod]
+            # shopping_shorts 안의 모듈이면 이름 그대로 남긴다(표에 없어도 '미지정'보단 낫다)
+            if "shopping_shorts" in fr.filename.replace("\\", "/"):
+                return mod
+    except Exception:                  # noqa: BLE001
+        pass
+    return None
+
+
+def _resolve_cid(ctx: dict):
+    """이 콜의 주인(customer_id)을 정하는 **유일한 곳**.
+
+    ★왜 폴백이 필요한가 (2026-08-29 서버 실측)
+      `track(customer_id=...)`를 넘기는 곳은 `mix_pipeline.run_mix_job` 하나뿐이라,
+      라이브 28,314건 중 **27,079건(96%, 86,580원)이 customer_id NULL**이었다.
+      대본·렌즈·태깅·썸네일 등 나머지 경로가 전부 '누가 썼는지 모르는 비용'으로
+      쌓여, 고객별 원가를 낼 수 없었다(하루 12,000원 중 식별 462원).
+
+    ★왜 keyctx인가
+      "지금 작업이 누구 것인가"는 이미 keyctx가 알고 있다 — HTTP 요청은 미들웨어
+      `_auth_guard`가, 워커는 `_owned_job` 데코레이터가 채운다. 같은 판단을 여기서
+      다시 만들면 두 벌이 되어 언젠가 어긋난다(0순위-B). **읽기만 한다.**
+
+    우선순위: track(customer_id=) 명시값 > keyctx 주인 > None.
+      - 명시값이 이기는 이유: 워커가 job 주인을 아는 경우가 더 정확하다.
+      - **0(사장님)은 기록한다.** 회사 부담분도 원가라 빼면 합이 안 맞는다.
+      - keyctx를 못 읽으면(임포트 실패 등) None — 계측이 본작업을 죽이면 안 된다.
+    """
+    cid = ctx.get("customer_id")
+    if cid is not None:
+        return cid
+    try:
+        from shopping_shorts import keyctx
+        return keyctx.owner_cid()
+    except Exception:                  # noqa: BLE001 — 계측이 본작업을 죽이면 안 된다
+        return None
+
+
 def record(model: str, in_tokens: int, out_tokens: int, auth: str = "apikey", **over) -> float:
     """1콜 기록 → 원화 비용 반환. 실패해도 예외를 올리지 않는다."""
     price = _price_for(model)
@@ -129,6 +213,14 @@ def record(model: str, in_tokens: int, out_tokens: int, auth: str = "apikey", **
     krw = usd * USD_KRW
     ctx = current_context()
     ctx.update({k: v for k, v in over.items() if v is not None})
+    # ★컬럼은 TEXT인데 넘어오는 값은 int라 섞여 저장된다. 조회할 때 '57'과 57이
+    #   서로 안 잡히므로 **쓰는 순간 문자열로 통일**한다(조회부에 CAST를 흩뿌리지 않는다).
+    cid = _resolve_cid(ctx)
+    ctx["customer_id"] = None if cid is None else str(cid)
+    # op도 같은 이유로 96%가 비어 있었다 — track(op=)로 명시한 게 있으면 그게 이기고,
+    # 없으면 호출 스택에서 유도한다(0순위-B: 판단은 _op_from_stack 한 곳).
+    if not ctx.get("op"):
+        ctx["op"] = _op_from_stack()
     now = datetime.now(timezone.utc)
     try:
         conn = _connect()
