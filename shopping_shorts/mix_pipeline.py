@@ -1570,6 +1570,11 @@ def _template_layer(tpl, first_beat_dur=0):
         from shopping_shorts import deco_frame
         p = deco_frame.render_to(frame, deco_frame.cache_path(frame))
         tid = "frame:" + deco_frame.cache_key(frame)
+        # 🩹 가림막의 **흐림**은 그림으로 못 한다(뒤 영상을 흐리게 하는 일이라).
+        #   모양만 마스크로 넘기고, 실제 블러는 렌더(video_assemble)가 먹인다.
+        #   ★모양은 미리보기와 **같은 함수**가 그린다 — 보이는 자리와 흐려지는 자리가 같다.
+        _bm = deco_frame.render_blur_mask_to(frame)
+        _bsig = deco_frame.blur_sigma(deco_frame.normalize(frame)["masks"])
     else:
         tid = tpl.get("id")
         if not tid:
@@ -1578,6 +1583,9 @@ def _template_layer(tpl, first_beat_dur=0):
     if not p or not p.exists():
         return None
     out = {"_abspath": str(p), "id": tid, "alpha": tpl.get("alpha", 1)}
+    if frame and _bm and _bsig > 0:
+        out["blur_mask"] = str(_bm)
+        out["blur_sigma"] = _bsig
     # 'first'인데 비트 길이를 모르면 전체로 둔다 — dur=0을 주면 화면에서 아예 안 보인다.
     if tpl.get("span") == "first" and first_beat_dur and first_beat_dur > 0:
         out["dur"] = float(first_beat_dur)

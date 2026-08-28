@@ -3383,12 +3383,12 @@ function frUpdate(){
 const MK_PAL=['#000000','#1B2130','#332F2C','#4A5568','#8E99A6','#FFFFFF',
               '#F3EDE3','#FBE38E','#F4A6A0','#9FE3B4','#A8CBF5','#1E3A2B'];
 const MK_SHAPES=[['rect','■ 사각'],['round','□ 둥근사각'],['pill','▭ 알약'],['ellipse','● 원·타원']];
-// ★흐림 계열은 **아직 못 만든다** — 그림 한 장(PNG)은 알파로 덮는 것이라
-//   "뒤에 있는 영상을 흐리게"가 원리적으로 불가능하다(영상 필터=ffmpeg 작업).
-//   버튼은 시안대로 두되 **비활성**으로 둔다 — 눌려도 아무 일 없으면
-//   "골랐는데 안 먹힌다"가 되고, 그게 제일 나쁜 실패다(조용한 폴백).
-const MK_FX=[['solid','단색'],['fade','그라데이션'],['blur','흐림',true],['blurdark','흐림+어둡게',true]];
+// ★흐림 계열은 그림(PNG)이 아니라 **렌더가 영상에 직접** 먹인다(2026-08-28).
+//   deco_frame이 모양만 마스크로 넘기고 ffmpeg gblur가 그 자리를 흐린다.
+//   미리보기는 CSS backdrop-filter로 **근사**해 보여준다 — 세기는 조금 다를 수 있다.
+const MK_FX=[['solid','단색'],['fade','그라데이션'],['blur','흐림'],['blurdark','흐림+어둡게']];
 const MK_MAX=12;
+const MK_BLUR_FX=['blur','blurdark'];   // 그림이 아니라 렌더가 처리하는 효과
 let MK_SEL=-1;
 // 아직 도형이 없을 때 화면에 보여주는 **기본값**. 값을 만지면 이 모양으로 하나 생긴다.
 const MK_DRAFT={l:6,t:44,w:88,h:12,shape:'round',fx:'fade',color:'#000000',op:100,soft:30,rot:0};
@@ -3582,7 +3582,7 @@ function mkRender(){
     +'<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px">'+pal+'</div>'
     +'<div style="'+lab+'">세부</div>'
     +row('진하기','op',10,100)
-    +row('가장자리','soft',0,100)
+    +row(MK_BLUR_FX.includes(m.fx)?'흐림 세기':'가장자리','soft',0,100)
     +row('회전','rot',-45,45);
   syncMaskBoxes();
 }
@@ -3604,9 +3604,20 @@ function syncMaskBoxes(){
   const a=mkArr()||[];
   a.forEach(function(m,i){
     const b=document.createElement('div');
+    // ★흐림 계열은 틀 그림(PNG)에 안 들어간다 — 렌더가 영상에 직접 먹인다.
+    //   화면에선 backdrop-filter로 **근사**해 보여준다. 안 그리면 사장님이 자리를
+    //   못 잡는다(보이지도 않는 걸 끌 수는 없다). 세기는 렌더와 조금 다를 수 있다.
+    let fxCss='';
+    if(MK_BLUR_FX.includes(m.fx)){
+      const px=Math.max(2, Math.round((25+(m.soft||0)/100*55)*(pv.clientWidth/1080)));
+      fxCss='backdrop-filter:blur('+px+'px);-webkit-backdrop-filter:blur('+px+'px);'
+        +(m.fx==='blurdark'?'background:rgba(0,0,0,'+((m.op==null?100:m.op)/100*0.45).toFixed(2)+');':'')
+        +'border-radius:'+mkRadiusCss(m)+';';
+    }
     b.style.cssText='position:absolute;pointer-events:auto;cursor:move;'
       +'border:1px dashed '+(i===MK_SEL?'#77CCFF':'rgba(255,255,255,.55)')+';'
-      +'left:'+m.l+'%;top:'+m.t+'%;width:'+m.w+'%;height:'+m.h+'%';
+      +'left:'+m.l+'%;top:'+m.t+'%;width:'+m.w+'%;height:'+m.h+'%;'
+      +(m.rot?'transform:rotate('+(-m.rot)+'deg);':'')+fxCss;
     b.title='끌어서 옮기기 · 오른쪽아래 모서리로 크기';
     const gr=document.createElement('div');
     gr.style.cssText='position:absolute;right:-6px;bottom:-6px;width:14px;height:14px;'
@@ -3615,6 +3626,14 @@ function syncMaskBoxes(){
     bindMaskDrag(b, i, false); bindMaskDrag(gr, i, true);
     wrap.appendChild(b);
   });
+}
+// 미리보기용 모서리 반경 — 서버(_mask_shape_layer)와 **같은 규칙**을 CSS로 옮긴 것.
+// ★규칙이 갈리면 화면과 결과가 다른 모양이 된다(0순위-B). 여기 고치면 저기도 본다.
+function mkRadiusCss(m){
+  if(m.shape==='ellipse') return '50%';
+  if(m.shape==='pill')    return '999px';
+  if(m.shape==='round')   return 'clamp(6px, 12%, 40px)';
+  return '0';
 }
 function bindMaskDrag(el, i, resize){
   el.addEventListener('pointerdown', function(ev){

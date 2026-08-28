@@ -42,9 +42,15 @@ class Test정규화:
         m = df.normalize(_spec([{"l": 1, "t": 1, "w": 5, "h": 5, "shape": "별"}]))["masks"][0]
         assert m["shape"] == "rect"
 
-    def test_흐림은_받지_않는다(self):
-        """★PNG로 못 그린다 — 조용히 통과시키면 '흐림을 골랐는데 단색이 나온다'가 된다."""
-        m = df.normalize(_spec([{"l": 1, "t": 1, "w": 5, "h": 5, "fx": "blur"}]))["masks"][0]
+    def test_흐림도_이제_받는다(self):
+        """2026-08-28: 렌더(ffmpeg)가 영역 블러를 먹인다 — 값은 살려서 넘겨야 한다.
+        ★단 PNG에는 안 그린다(아래 test_흐림은_그림에_안_그린다)."""
+        for fx in ("blur", "blurdark"):
+            m = df.normalize(_spec([{"l": 1, "t": 1, "w": 5, "h": 5, "fx": fx}]))["masks"][0]
+            assert m["fx"] == fx
+
+    def test_모르는_효과는_단색(self):
+        m = df.normalize(_spec([{"l": 1, "t": 1, "w": 5, "h": 5, "fx": "반짝"}]))["masks"][0]
         assert m["fx"] == "solid"
 
     def test_이상한_색은_검정(self):

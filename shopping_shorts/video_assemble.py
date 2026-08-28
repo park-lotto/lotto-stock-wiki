@@ -1951,6 +1951,21 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
     inputs = ["-i", str(in_video)]
     fc = [f"[0:v]{vf}[v0]"]
     vcur, idx = "v0", 1
+    # 🩹 가림막의 **흐림** — 그림으로는 못 하는 일이라 여기서 영상에 직접 먹인다.
+    #   ★자리는 deco_frame이 그린 마스크가 정한다(미리보기와 같은 모양 함수) — 여기서
+    #     좌표를 다시 계산하면 화면과 어긋난다(0순위-B).
+    #   ★틀 그림(가림막 색 막)보다 **먼저** 걸어야 한다. 색 막은 틀 안에 있고
+    #     흐림은 그 아래 영상에 먹는 것이라 순서가 뒤집히면 흐림이 색 막을 흐린다.
+    _bmask = tpl.get("blur_mask")
+    _bsig = float(tpl.get("blur_sigma") or 0)
+    if _bmask and _bsig > 0 and os.path.exists(_bmask):
+        inputs += ["-i", _bmask]
+        fc.append(f"[{vcur}]split[bb0][bb1]")
+        fc.append(f"[bb1]gblur=sigma={_bsig}[bbl]")
+        fc.append(f"[{idx}:v]scale={_OUT_W}:{_OUT_H},format=rgba,alphaextract[bmk]")
+        fc.append("[bbl][bmk]alphamerge[bblm]")
+        fc.append("[bb0][bblm]overlay=0:0[vblur]")
+        vcur, idx = "vblur", idx + 1
     if has_overlay:                                   # 이미지 오버레이(로고·뱃지 등)
         inputs += ["-i", ov_path]
         w = overlay.get("width")                      # 1080px 기준 폭(없으면 원본)
