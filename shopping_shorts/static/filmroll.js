@@ -646,9 +646,15 @@
     /* ── 보이는 칸만 그림 채우기 ─────────────────────────────
        필름은 원본 전체를 그리지만 **화면에 든 칸만** 실제로 캡처한다.
        스크롤·확대 때마다 다시 부르면 그때 필요한 것만 뽑힌다(캐시는 그대로 쓴다). */
-    let _shotVid = null, _filling = false;
+    let _shotVid = null, _filling = false, _fillWant = false;
     async function fillVisible() {
-      if (_filling || destroyed || !_shotVid) return;
+      // ★도는 중에 온 요청을 **기억한다**(2026-08-29 사장님 "칸이 검게 빈다").
+      //   칸마다 영상을 seek해 캡처하므로 한 번 도는 데 오래 걸린다. 그 사이
+      //   자동확대가 폭·스크롤을 바꿔 다시 채워달라고 불러도 여기서 그냥 return했고,
+      //   앞의 것이 끝난 뒤엔 아무도 다시 부르지 않아 **보이는 칸이 영영 빈 채** 남았다
+      //   (실측: 보이는 칸 6개 중 그림 0개, 채워진 11개는 전부 맨 앞 0~1초 자리).
+      if (_filling) { _fillWant = true; return; }
+      if (destroyed || !_shotVid) return;
       _filling = true;
       try {
         const x = cv.getContext('2d');
@@ -672,7 +678,11 @@
           }
           if (d) c.insertAdjacentHTML('afterbegin', `<img src="${d}">`);
         }
-      } finally { _filling = false; }
+      } finally {
+        _filling = false;
+        // 도는 동안 화면이 바뀌었으면 그 자리를 다시 채운다(놓친 요청을 갚는다).
+        if (_fillWant && !destroyed) { _fillWant = false; setTimeout(fillVisible, 0); }
+      }
     }
 
     host.addEventListener('pointerdown', () => { ACTIVE = SELF; }, true);
