@@ -567,10 +567,20 @@
         // ★async 함수의 예외는 try/catch로 안 잡힌다(Promise rejection이 된다).
         //   그래서 여기가 실패해도 화면만 이상하고 아무 흔적이 없었다 — 실제로
         //   2026-08-28에 '왜 안 도는지' 찾는 데 한참 걸렸다. 반드시 남긴다.
-        requestAnimationFrame(() => {
+        // ★requestAnimationFrame에 맡기면 **안 돌 때가 있다**(2026-08-28 실측:
+        //   iframe 문서가 visibilityState='hidden'이면 rAF 콜백이 아예 실행되지 않는다.
+        //   탭이 뒤에 있거나 브라우저가 절전으로 판단하면 그 상태가 된다).
+        //   그래서 자동확대가 통째로 안 걸렸다 — 예외도 없이 조용히.
+        //   setTimeout은 숨은 문서에서도 돈다(느려질 뿐). 레이아웃이 잡혔는지는
+        //   **창 폭이 잡혔는가**로 직접 확인한다(rAF의 원래 목적이 그것이었다).
+        let _fitTry = 0;
+        const _runFit = () => {
+          if (destroyed) return;
+          if ((win.clientWidth || 0) < 50 && _fitTry++ < 40) { setTimeout(_runFit, 50); return; }
           Promise.resolve().then(_fitToRange)
             .catch(e => console.error('[filmroll] 자동확대(_fitToRange) 실패', e));
-        });
+        };
+        setTimeout(_runFit, 0);
       }
       applyW(); drawBar();
     }
