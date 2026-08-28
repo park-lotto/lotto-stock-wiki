@@ -12,7 +12,7 @@ import json
 import pathlib
 import re
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 W, H = 1080, 1920
 _FONT_DIR = pathlib.Path(__file__).resolve().parent / "static" / "fonts"
@@ -338,10 +338,31 @@ PRESETS = {
     "news_lime":   {"name": "커뮤니티 · 연두", "bar": "#B5D46A", "on_bar": "#1A1A1A"},
     "news_gray":   {"name": "커뮤니티 · 그레이", "bar": "#6E6E6E", "on_bar": "#FFFFFF"},
     "news_navy":   {"name": "커뮤니티 · 네이비", "bar": "#2B3A67", "on_bar": "#FFFFFF"},
+    # ── 🧱 빈 틀(2026-08-28) — 글자·아이콘 없는 **색띠만**.
+    #   왜 필요한가: 지금 20종은 전부 가짜 채널 UI(☰·🔍·채널명)가 박혀 있어
+    #   "위아래 띠만 깔고 싶다"가 불가능했다. 아이콘을 하나씩 '없음'으로 돌리는
+    #   길은 있었지만 세 칸을 매번 만져야 했다 — 골라서 끝나게 한다.
+    #   ★띠 색은 화면에서 바꾼다(bar_color) — 여기 4종은 흔한 출발점일 뿐이다.
+    "plain_black": {"name": "빈 틀 · 검정", "bar": "#000000", "on_bar": "#FFFFFF",
+                    "left_icon": "none", "right_icon": "none", "center_kind": "없음"},
+    "plain_white": {"name": "빈 틀 · 흰색", "bar": "#FFFFFF", "on_bar": "#111111",
+                    "left_icon": "none", "right_icon": "none", "center_kind": "없음"},
+    "plain_coral": {"name": "빈 틀 · 살구", "bar": "#F08080", "on_bar": "#FFFFFF",
+                    "left_icon": "none", "right_icon": "none", "center_kind": "없음"},
+    "plain_navy":  {"name": "빈 틀 · 네이비", "bar": "#2B3A67", "on_bar": "#FFFFFF",
+                    "left_icon": "none", "right_icon": "none", "center_kind": "없음"},
 }
 
 # 기본 치수(1080x1920 기준). 사장님이 화면에서 바 높이를 조절하면 bar_h만 바뀐다.
 DEFAULTS = {
+    # ── 가림막(2026-08-28 고객 요청 "자막이 안 지워졌을때 가릴수 있는 네모 도형") ──
+    # ★VMake가 못 지운 자막·워터마크·스티커를 덮는다(반투명 대형 워터마크는 구조적으로
+    #   못 지운다는 걸 08-27에 확정했다 — eraser_watermark는 이미지 전용, 두 번 태워도 무효).
+    # 각 항목: {l,t,w,h}=% 좌표, shape=rect|round|pill|ellipse,
+    #          fx=solid|fade, color=#RRGGBB, op=0~100, soft=0~100(가장자리), rot=-45~45
+    # ★흐림 계열(blur/blurdark)은 여기서 못 그린다 — 배경을 흐리게 하는 건 영상 필터다.
+    #   PNG는 '위에 얹는 그림'이라 뒤를 못 만진다. 흐림은 렌더 쪽에서 따로 붙인다(2차).
+    "masks": [],
     "preset": "news_coral",
     "bar_h": 190,          # 상단 띠 높이(px)
     "bottom_h": 0,         # 하단 띠 높이(px) — 0이면 없음
@@ -441,6 +462,51 @@ def _fade(color, pct):
     return (color[0], color[1], color[2], int(a * max(0, min(100, pct)) / 100))
 
 
+_MASK_SHAPES = ("rect", "round", "pill", "ellipse")
+_MASK_FX = ("solid", "fade")          # 흐림 계열은 PNG로 못 그린다(위 DEFAULTS 주석)
+_MASK_MAX = 12                        # 화면에서 실수로 수백 개를 만들어도 렌더가 안 죽게
+
+
+def _norm_masks(raw):
+    """가림막 목록을 정규화한다 — 범위 검사도 **여기 한 곳**(normalize와 같은 규약).
+
+    화면과 서버가 각자 자르면 미리보기와 결과가 갈린다. 이상한 항목은 통째로 버린다
+    (조용히 엉뚱한 자리에 그리는 것보다 안 그리는 게 낫다).
+    """
+    out = []
+    for m in (raw or [])[:_MASK_MAX]:
+        if not isinstance(m, dict):
+            continue
+        try:
+            l, t = float(m.get("l", 0)), float(m.get("t", 0))
+            w, h = float(m.get("w", 0)), float(m.get("h", 0))
+        except (TypeError, ValueError):
+            continue
+        if w <= 0 or h <= 0:
+            continue
+        l = max(0.0, min(100.0, l)); t = max(0.0, min(100.0, t))
+        # ★남은 자리보다 크면 줄인다. 자리 자체가 없으면(가장자리에 딱 붙었다) 버린다 —
+        #   하한(0.5%)을 억지로 붙이면 화면 밖으로 삐져나간다(테스트가 잡았다).
+        w = min(100.0 - l, w); h = min(100.0 - t, h)
+        if w < 0.5 or h < 0.5:
+            continue
+        shape = m.get("shape") if m.get("shape") in _MASK_SHAPES else "rect"
+        fx = m.get("fx") if m.get("fx") in _MASK_FX else "solid"
+        col = str(m.get("color") or "#000000")
+        if not (len(col) == 7 and col.startswith("#")):
+            col = "#000000"
+        def _i(k, d, lo, hi):
+            try:
+                return max(lo, min(hi, int(float(m.get(k, d)))))
+            except (TypeError, ValueError):
+                return d
+        out.append({"l": round(l, 3), "t": round(t, 3), "w": round(w, 3), "h": round(h, 3),
+                    "shape": shape, "fx": fx, "color": col,
+                    "op": _i("op", 100, 0, 100), "soft": _i("soft", 0, 0, 100),
+                    "rot": _i("rot", 0, -45, 45)})
+    return out
+
+
 def normalize(spec):
     """화면이 준 값에 기본값을 채우고 범위를 자른다.
 
@@ -452,6 +518,7 @@ def normalize(spec):
             s[k] = v
     if s["preset"] not in PRESETS:
         s["preset"] = DEFAULTS["preset"]
+    s["masks"] = _norm_masks(s.get("masks"))
     # ★프리셋이 자기 띠 높이를 갖고 있으면 그게 기본이다(실측한 원본 비율).
     #   화면이 bar_h를 직접 보내오면 그건 사장님이 손으로 민 것이므로 존중한다.
     #   이 분기가 없으면 20종이 전부 같은 190px 띠가 돼 "비율이 원본과 다르다"가 된다.
@@ -743,7 +810,48 @@ def render(spec):
             d.text((60, ty + 6), meta, font=fm, fill=meta_fill, anchor="la")
             ty += 46
             d.rectangle([60, ty + 8, W - 60, ty + 11], fill=rule_fill)
+
+    # ★가림막은 **맨 마지막**에 얹는다 — 띠·글자보다 위여야 원본 자막을 확실히 덮는다.
+    _draw_masks(im, s["masks"])
     return im
+
+
+def _draw_masks(im, masks):
+    """가림막을 그림 위에 얹는다. 각 막은 자기 레이어에 그려 회전·가장자리를 따로 먹인다."""
+    for m in masks or []:
+        x, y = int(W * m["l"] / 100.0), int(H * m["t"] / 100.0)
+        w, h = max(1, int(W * m["w"] / 100.0)), max(1, int(H * m["h"] / 100.0))
+        # 가장자리 흐림 크기를 먼저 정한다 — 레이어에 그만큼 여백이 있어야 **바깥으로 번진다**.
+        # ★여백 없이 흐리면 레이어 경계에서 잘려 안쪽만 흐려진다(테스트가 잡은 버그).
+        blur_px = 0
+        if m["fx"] == "fade":
+            blur_px = max(2, int(min(w, h) * (0.12 + m["soft"] / 100.0 * 0.38)))
+        elif m["soft"] > 0:
+            blur_px = max(1, int(min(w, h) * m["soft"] / 100.0 * 0.30))
+        pad = blur_px * 3                                   # 가우시안이 사실상 사라지는 거리
+        if m["rot"]:
+            pad = max(pad, int(max(w, h) * 0.5))            # 회전하면 모서리가 잘린다
+        lw, lh = w + pad * 2, h + pad * 2
+        layer = Image.new("RGBA", (lw, lh), (0, 0, 0, 0))
+        ld = ImageDraw.Draw(layer)
+        rgb = _rgb(m["color"])[:3]
+        alpha = int(255 * m["op"] / 100.0)
+        box = [pad, pad, pad + w - 1, pad + h - 1]
+        if m["shape"] == "ellipse":
+            ld.ellipse(box, fill=rgb + (alpha,))
+        elif m["shape"] == "pill":
+            ld.rounded_rectangle(box, radius=h // 2, fill=rgb + (alpha,))
+        elif m["shape"] == "round":
+            ld.rounded_rectangle(box, radius=max(6, min(w, h) // 8), fill=rgb + (alpha,))
+        else:
+            ld.rectangle(box, fill=rgb + (alpha,))
+        # 가장자리 부드럽게(soft) / 그라데이션(fade) — 알파만 흐리면 색은 그대로다.
+        if blur_px:
+            a = layer.split()[3].filter(ImageFilter.GaussianBlur(blur_px))
+            layer.putalpha(a)
+        if m["rot"]:
+            layer = layer.rotate(m["rot"], resample=Image.BICUBIC, expand=False)
+        im.alpha_composite(layer, (x - pad, y - pad))
 
 
 def cache_path(spec):

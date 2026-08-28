@@ -1987,6 +1987,26 @@
                         여기서 실제 채널과 똑같이 맞출 수 있어요. 되돌리려면 <b>↩ 틀 그대로</b>.
                       </div>
                     </div>
+                    <!-- 🩹 가림막(2026-08-28 사장님 "자막 남는것 가운데나 이런거 가릴때 …
+                         도형이나 모양변경 가능하게해서 배치할수있게 … 워터마크도 가리고")
+                         ★그림 한 장(deco_frame)에 함께 얹는다 — 미리보기와 렌더가 같은 파일이라
+                           "화면엔 보이는데 완성본엔 없다"가 구조적으로 안 생긴다(0순위-B). -->
+                    <div style="border-top:1px dashed var(--line);margin-top:10px;padding-top:10px">
+                      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
+                        <div style="font-size:12px;font-weight:700;color:var(--sub)">🩹 가림막 <span style="font-size:11px;color:var(--accent2)">— 남은 자막·워터마크 덮기</span></div>
+                        <button type="button" class="tab" onclick="mkAdd()" style="flex:none;min-width:auto;padding:4px 10px;font-size:11px">+ 추가</button>
+                        <span class="hint" style="font-size:11px">빠르게: </span>
+                        <button type="button" onclick="mkAdd('sub')" style="background:none;border:1px solid var(--line);color:var(--sub);border-radius:6px;padding:3px 8px;font-size:11px;cursor:pointer">가운데 자막</button>
+                        <button type="button" onclick="mkAdd('subbot')" style="background:none;border:1px solid var(--line);color:var(--sub);border-radius:6px;padding:3px 8px;font-size:11px;cursor:pointer">아래 자막</button>
+                        <button type="button" onclick="mkAdd('wmr')" style="background:none;border:1px solid var(--line);color:var(--sub);border-radius:6px;padding:3px 8px;font-size:11px;cursor:pointer">오른쪽 워터마크</button>
+                        <button type="button" onclick="mkAdd('wml')" style="background:none;border:1px solid var(--line);color:var(--sub);border-radius:6px;padding:3px 8px;font-size:11px;cursor:pointer">왼쪽 로고</button>
+                      </div>
+                      <div id="mkList"></div>
+                      <div class="hint" style="font-size:11px;margin-top:6px">
+                        미리보기에서 <b>끌어 옮기고</b>, 오른쪽아래 모서리를 <b>끌어 크기</b>를 바꿔요.
+                        <b>부드럽게</b>를 올리면 가장자리가 번져 티가 덜 납니다.
+                      </div>
+                    </div>
                     <!-- 🖼 내 템플릿(2026-08-25) — 손본 틀을 통째로 저장해 다음 영상에서 딸깍.
                          ★기존 '내 프리셋'은 헤드카피+자막만 담아서 틀이 안 담겼다. -->
                     <div style="border-top:1px dashed var(--line);margin-top:10px;padding-top:10px">
@@ -3130,6 +3150,8 @@ function frameUrl(f){
     bar_color:f.bar_color||'', on_bar_color:f.on_bar_color||'',
     sub_bg_c:f.sub_bg_c||'', sub_text_c:f.sub_text_c||'',
     left_icon:f.left_icon||'', right_icon:f.right_icon||'', center_kind:f.center_kind||''});
+  // 가림막(2026-08-28) — 배열이라 JSON으로 싣는다. 없으면 아예 안 보낸다(옛 그림 캐시를 그대로 쓰게).
+  if(Array.isArray(f.masks) && f.masks.length) q.set('masks', JSON.stringify(f.masks));
   return '/api/produce/frame.png?'+q.toString();
 }
 async function loadFramePresets(){
@@ -3183,6 +3205,7 @@ function renderFramePresets(){
 }
 function frFill(f){
   const g=id=>document.getElementById(id);
+  try{ mkRender(); }catch(e){}
   if(g('frChannel')) g('frChannel').value=f.channel||'';
   if(g('frTitle')) g('frTitle').value=f.title||'';
   if(g('frViews')) g('frViews').value=f.views||'';
@@ -3323,6 +3346,162 @@ function frUpdate(){
   frHcLabel();          // 제목칸을 직접 고치면 번호도 따라 바뀐다(안 그러면 거짓말이 된다)
   renderTemplatePreview(); saveHeadcopy();
 }
+// ── 🩹 가림막(2026-08-28) ─────────────────────────────────────────────────────
+// 남은 자막·워터마크를 **틀 그림 위에** 덮는다. 값의 주인은 f.masks 배열 하나(0순위-B) —
+// 미리보기 상자도 편집 줄도 여기만 읽고 쓴다. 서버(deco_frame)가 같은 배열로 그린다.
+const MK_PAL=['#000000','#FFFFFF','#111827','#1F2937','#374151','#6B7280',
+              '#E11F26','#F97316','#FACC15','#22C55E','#3B82F6','#A855F7'];
+const MK_SHAPES=[['rect','네모'],['round','둥근네모'],['pill','알약'],['ellipse','타원']];
+const MK_FX=[['solid','꽉 채움'],['fade','가장자리 번짐']];
+const MK_MAX=12;
+let MK_SEL=-1;
+// 빠른 자리 — 흔한 자막·워터마크 위치. %(왼쪽,위,너비,높이)
+const MK_QUICK={
+  sub:    {l:6,  t:44, w:88, h:12, shape:'round', fx:'fade', soft:35},
+  subbot: {l:6,  t:76, w:88, h:11, shape:'round', fx:'fade', soft:35},
+  wmr:    {l:74, t:6,  w:22, h:7,  shape:'round', fx:'fade', soft:45},
+  wml:    {l:4,  t:84, w:24, h:8,  shape:'round', fx:'fade', soft:45}
+};
+function mkArr(){
+  const f=STATE.deco&&STATE.deco.template&&STATE.deco.template.frame; if(!f) return null;
+  if(!Array.isArray(f.masks)) f.masks=[];
+  return f.masks;
+}
+function mkAdd(kind){
+  const a=mkArr(); if(!a) return;
+  if(a.length>=MK_MAX){ alert('가림막은 최대 '+MK_MAX+'개까지예요.'); return; }
+  const q=MK_QUICK[kind]||{l:30,t:44,w:40,h:10};
+  a.push(Object.assign({shape:'round',fx:'fade',color:'#000000',op:100,soft:30,rot:0}, q));
+  MK_SEL=a.length-1;
+  renderTemplatePreview(); saveHeadcopy(); mkRender();
+}
+function mkDel(i){
+  const a=mkArr(); if(!a||!a[i]) return;
+  a.splice(i,1); if(MK_SEL>=a.length) MK_SEL=a.length-1;
+  renderTemplatePreview(); saveHeadcopy(); mkRender();
+}
+function mkSet(i,k,v){
+  const a=mkArr(); if(!a||!a[i]) return;
+  a[i][k]=(k==='shape'||k==='fx'||k==='color')?v:Math.round(parseFloat(v)||0);
+  MK_SEL=i;
+  renderTemplatePreview(); saveHeadcopy();
+  const lab=document.getElementById('mkV'+k+i); if(lab) lab.textContent=mkLabel(k,a[i][k]);
+  syncMaskBoxes();
+}
+function mkLabel(k,v){
+  if(k==='op')   return v>=100?'또렷':v+'%';
+  if(k==='soft') return v?v+'%':'없음';
+  if(k==='rot')  return (v||0)+'°';
+  return String(v);
+}
+function mkPick(i,c){
+  const el=document.getElementById('mkC'+i); if(el) el.value=c;
+  mkSet(i,'color',c); mkRender();
+}
+function mkRender(){
+  const box=document.getElementById('mkList'); if(!box) return;
+  const a=mkArr()||[];
+  if(!a.length){
+    box.innerHTML='<div class="hint" style="font-size:11px">아직 없어요. <b>+ 추가</b>나 빠른 버튼을 누르세요.</div>';
+    syncMaskBoxes(); return;
+  }
+  const SS='background:#0a1017;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:4px 6px;font-size:11px';
+  const rows=a.map(function(m,i){
+    const on=(i===MK_SEL);
+    const cur=String(m.color||'').toUpperCase();
+    const pal=MK_PAL.map(function(c){
+      return '<button type="button" title="'+c+'" onclick="mkPick('+i+',&quot;'+c+'&quot;)" '
+        +'style="width:16px;height:16px;border-radius:4px;cursor:pointer;background:'+c+';'
+        +'border:1px solid '+(cur===c?'var(--accent2)':'rgba(255,255,255,.25)')+'"></button>';
+    }).join('');
+    const shapeSel='<select onchange="mkSet('+i+',&quot;shape&quot;,this.value);mkRender()" style="'+SS+'">'
+      +MK_SHAPES.map(function(s){return '<option value="'+s[0]+'"'+(m.shape===s[0]?' selected':'')+'>'+s[1]+'</option>';}).join('')
+      +'</select>';
+    const fxSel='<select onchange="mkSet('+i+',&quot;fx&quot;,this.value);mkRender()" style="'+SS+'">'
+      +MK_FX.map(function(s){return '<option value="'+s[0]+'"'+(m.fx===s[0]?' selected':'')+'>'+s[1]+'</option>';}).join('')
+      +'</select>';
+    return '<div onclick="MK_SEL='+i+';mkRender()" style="border:1px solid '+(on?'var(--accent2)':'var(--line)')+';'
+      +'border-radius:8px;padding:7px 8px;margin-bottom:6px;font-size:11px;cursor:pointer">'
+      +'<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">'
+      +'<b style="color:var(--sub)">'+(i+1)+'</b>'+shapeSel+fxSel
+      +'<input id="mkC'+i+'" type="color" value="'+(m.color||'#000000')+'" oninput="mkSet('+i+',&quot;color&quot;,this.value)" '
+      +'style="width:30px;height:24px;padding:0;border:1px solid var(--line);border-radius:5px;background:none;cursor:pointer">'
+      +'<span style="display:flex;gap:2px;align-items:center">'+pal+'</span>'
+      +'<button type="button" onclick="event.stopPropagation();mkDel('+i+')" '
+      +'style="margin-left:auto;background:none;border:1px solid var(--line);color:var(--fire);'
+      +'border-radius:6px;padding:2px 7px;font-size:11px;cursor:pointer">삭제</button>'
+      +'</div>'
+      +'<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:5px;color:var(--sub)">'
+      +'<span>진하기 <b id="mkVop'+i+'" style="color:var(--txt)">'+mkLabel('op',m.op)+'</b></span>'
+      +'<input type="range" min="10" max="100" value="'+(m.op==null?100:m.op)+'" oninput="mkSet('+i+',&quot;op&quot;,this.value)" style="width:80px">'
+      +'<span>부드럽게 <b id="mkVsoft'+i+'" style="color:var(--txt)">'+mkLabel('soft',m.soft)+'</b></span>'
+      +'<input type="range" min="0" max="100" value="'+(m.soft==null?0:m.soft)+'" oninput="mkSet('+i+',&quot;soft&quot;,this.value)" style="width:80px">'
+      +'<span>기울기 <b id="mkVrot'+i+'" style="color:var(--txt)">'+mkLabel('rot',m.rot)+'</b></span>'
+      +'<input type="range" min="-45" max="45" value="'+(m.rot==null?0:m.rot)+'" oninput="mkSet('+i+',&quot;rot&quot;,this.value)" style="width:80px">'
+      +'</div></div>';
+  });
+  box.innerHTML=rows.join('');
+  syncMaskBoxes();
+}
+// 미리보기 위의 편집 상자 — 서버 그림은 pointer-events:none이라 그 위를 잡을 수 없다.
+// 띠·[광고] 손잡이와 같은 방식(투명 상자를 얹고, 끌면 배열에 써넣고 다시 그린다).
+function syncMaskBoxes(){
+  const pv=document.getElementById('hcPreview'); if(!pv) return;
+  let wrap=document.getElementById('mkBoxes');
+  if(!wrap){
+    wrap=document.createElement('div'); wrap.id='mkBoxes';
+    wrap.style.cssText='position:absolute;inset:0;z-index:7;pointer-events:none';
+    pv.appendChild(wrap);
+  }
+  wrap.innerHTML='';
+  const t=STATE.deco&&STATE.deco.template;
+  if(!(t&&t.frame)) return;               // 틀이 없으면 가림막도 없다
+  const a=mkArr()||[];
+  a.forEach(function(m,i){
+    const b=document.createElement('div');
+    b.style.cssText='position:absolute;pointer-events:auto;cursor:move;'
+      +'border:1px dashed '+(i===MK_SEL?'#77CCFF':'rgba(255,255,255,.55)')+';'
+      +'left:'+m.l+'%;top:'+m.t+'%;width:'+m.w+'%;height:'+m.h+'%';
+    b.title='끌어서 옮기기 · 오른쪽아래 모서리로 크기';
+    const gr=document.createElement('div');
+    gr.style.cssText='position:absolute;right:-6px;bottom:-6px;width:14px;height:14px;'
+      +'border-radius:3px;background:#77CCFF;box-shadow:0 0 0 1px rgba(0,0,0,.5);cursor:nwse-resize';
+    b.appendChild(gr);
+    bindMaskDrag(b, i, false); bindMaskDrag(gr, i, true);
+    wrap.appendChild(b);
+  });
+}
+function bindMaskDrag(el, i, resize){
+  el.addEventListener('pointerdown', function(ev){
+    ev.preventDefault(); ev.stopPropagation();
+    const pv=document.getElementById('hcPreview'); if(!pv) return;
+    const a=mkArr(); if(!a||!a[i]) return;
+    const r=pv.getBoundingClientRect();
+    const st={x:ev.clientX,y:ev.clientY,l:a[i].l,t:a[i].t,w:a[i].w,h:a[i].h};
+    MK_SEL=i; mkRender();
+    const move=function(e){
+      const dx=(e.clientX-st.x)/r.width*100, dy=(e.clientY-st.y)/r.height*100;
+      const m=a[i];
+      if(resize){
+        m.w=Math.max(1, Math.min(100-m.l, st.w+dx));
+        m.h=Math.max(1, Math.min(100-m.t, st.h+dy));
+      }else{
+        m.l=Math.max(0, Math.min(100-m.w, st.l+dx));
+        m.t=Math.max(0, Math.min(100-m.h, st.t+dy));
+      }
+      m.l=Math.round(m.l*10)/10; m.t=Math.round(m.t*10)/10;
+      m.w=Math.round(m.w*10)/10; m.h=Math.round(m.h*10)/10;
+      syncMaskBoxes();
+    };
+    const up=function(){
+      window.removeEventListener('pointermove',move);
+      window.removeEventListener('pointerup',up);
+      renderTemplatePreview(); saveHeadcopy();   // ★그림 다시 그리기는 손을 뗀 뒤 한 번만
+    };
+    window.addEventListener('pointermove',move);
+    window.addEventListener('pointerup',up);
+  });
+}
 function frBar(id, delta){
   const el=document.getElementById(id); if(!el) return;
   el.value=Math.max(0, Math.min(400, parseInt(el.value||0,10)+delta));
@@ -3343,6 +3522,7 @@ function frDragScale(){
 function syncFrameHandles(){
   const pv=document.getElementById('hcPreview'); if(!pv) return;
   try{ syncAdHandle(); }catch(e){}   // [광고] 손잡이도 같은 시점에 맞춘다
+  try{ syncMaskBoxes(); }catch(e){}  // 가림막 편집 상자도 같은 시점에
   const t=STATE.deco&&STATE.deco.template;
   const on=!!(t&&t.frame);
   ['frHandleTop','frHandleBottom'].forEach(id=>{
