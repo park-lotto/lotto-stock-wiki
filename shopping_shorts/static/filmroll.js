@@ -565,17 +565,35 @@
           //     '다 보이게' 맞추다 한 칸 1초까지 벌어져 기본 확대가 도로 풀렸다.
           //     여기는 **열 때 기본값**일 뿐, 슬라이더는 어느 단계든 자유롭게 간다.
           const W = winW() * 0.9;
-          let want = STEP, best = Infinity;
-          for (const st of LADDER) {
-            if (st > ZOOM_MAX_STEP) continue;
-            const seen = W * st / cwFor(st);             // 그 배율에서 창에 보이는 초
-            const d = Math.abs(seen - span);
-            if (d < best) { best = d; want = st; }
+          const seenAt = st => W * st / cwFor(st);       // 그 배율에서 창에 보이는 초
+          // ★기본 하한은 0.25초다(F21). 다만 **조각이 그보다 길면 하한을 푼다**
+          //   (2026-08-28 사장님 "전체영상이 다 열릴 필요 없이 원래 잘려 있는 만큼의
+          //   영상 길이만 펼치면 된다"). 8.6초 조각을 0.25초 배율로 열면 창에는 그 일부만
+          //   담기고 나머지 자리를 원본이 채운다 — 사장님이 본 그 화면이다.
+          //   0.25로도 조각이 다 들어오면 종전대로 0.25를 지킨다(기본 확대가 안 풀린다).
+          // ★칸 폭을 **조각이 창을 꽉 채우도록** 직접 잡는다(2026-08-28 사장님 "전체영상이
+          //   다 열릴 필요 없이 원래 잘려 있는 만큼의 영상 길이만 펼치면 된다").
+          //   종전엔 폭도 사다리에서 나왔는데(cwFor), 단계가 0.5→1로 건너뛰어 8.6초 조각에
+          //   4.6초만 보이거나 18.3초가 보였다 — 어느 쪽도 '잘려 있는 만큼'이 아니다.
+          //   ★한 칸 초는 0.25를 그대로 지킨다(F21 사장님 "0.25로 기본세팅").
+          //     조각이 길어 칸이 실오라기가 될 때만 한 단계씩 성기게 한다.
+          //   ★캐시키는 STEP과 칸 높이로 만든다(폭은 안 들어간다 — ckey 참조).
+          //     그래서 폭만 조정할 때는 썸네일을 다시 뽑지 않는다.
+          const MIN_CELL = 34;                            // 이보다 좁으면 그림이 안 읽힌다
+          const fitCW = st => Math.round(W / (span / st));
+          let want = ZOOM_MAX_STEP;
+          for (const st of LADDER) {                      // 사다리는 촘촘→성긴 순서다
+            if (st < ZOOM_MAX_STEP) continue;             // 기본보다 촘촘하게는 안 간다
+            want = st;
+            if (fitCW(st) >= MIN_CELL) break;             // 칸이 읽힐 만큼 넓어지면 그만
           }
-          if (want !== STEP) {
-            STEP = want; CW = cwFor(STEP);
+          const wantCW = Math.max(CW_MIN, Math.min(CW_MAX, fitCW(want)));
+          if (want !== STEP || wantCW !== CW) {
+            const restrip = (want !== STEP);
+            STEP = want; CW = wantCW;
             z.value = sliderFromStep(STEP);
-            await strip();                                // 칸 간격이 바뀌면 다시 뽑는다
+            if (restrip) await strip();                   // 칸 간격이 바뀌면 다시 뽑는다
+            else applyW();
           }
         }
         const mid = opt.from + span / 2;
