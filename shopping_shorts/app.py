@@ -3745,6 +3745,12 @@ def api_add_keys(request: Request, body: dict):
     if not raw:
         return JSONResponse(status_code=422,
                             content={"ok": False, "error": "키를 입력하세요"})
+    # ★가려진 키는 받지 않는다(2026-08-28 실사고, keyroute.masked_key_reason 참고).
+    #   종전엔 그대로 저장돼 status=ok로 "등록 완료"가 떴고, 쓸 때만 서명이 안 맞아
+    #   실패했다 — 고객은 잘 된 줄 알고 있다가 자막제거를 눌러야 알았다(6회 재시도).
+    _masked = keyroute.masked_key_reason(raw)
+    if _masked:
+        return JSONResponse(status_code=422, content={"ok": False, "error": _masked})
 
     if service == keyroute.SVC_GEMINI:
         parts = [p.strip() for p in re.split(r"[\s,]+", raw) if p.strip()]
