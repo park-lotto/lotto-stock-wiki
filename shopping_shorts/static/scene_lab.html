@@ -67,10 +67,13 @@ h1{font-size:16px;margin:0;font-weight:700}
 .fc .s{position:absolute;bottom:0;left:0;right:0;text-align:center;font-size:9px;
     color:#aab1ba;background:rgba(0,0,0,.72);font-variant-numeric:tabular-nums}
 /* 자막 띠 */
-.frcaps{position:absolute;top:calc(var(--fr-cell) + 8px);left:0;height:17px;pointer-events:none}
-.frcaps .cp{position:absolute;height:17px;background:rgba(20,24,30,.92);color:#cfd4da;
-    font-size:10px;padding:2px 4px 0;white-space:nowrap;overflow:hidden;
-    text-overflow:ellipsis;border-left:1px solid rgba(255,255,255,.16);border-radius:2px}
+/* ★자막 띠를 읽을 수 있게 키운다(2026-08-28 사장님 "캡션설명 안보임").
+   종전: 높이 17px에 글자 10px — 칸 눈금(0.0s)과 겹쳐 무슨 말인지 안 읽혔다.
+   글자를 키우고 띠도 그만큼 높이며, 칸 위에 확실히 얹히도록 z를 준다. */
+.frcaps{position:absolute;top:calc(var(--fr-cell) + 8px);left:0;height:24px;pointer-events:none;z-index:4}
+.frcaps .cp{position:absolute;height:24px;line-height:20px;background:rgba(12,15,20,.96);color:#e6eaef;
+    font-size:12.5px;padding:2px 6px 0;white-space:nowrap;overflow:hidden;
+    text-overflow:ellipsis;border-left:2px solid rgba(255,255,255,.28);border-radius:3px}
 /* 지금 쓰는 구간 */
 .fruse{position:absolute;top:0;left:0;height:5px;pointer-events:none;z-index:5}
 .fruse .u{position:absolute;height:5px;background:var(--accent);border-radius:3px}
@@ -112,9 +115,13 @@ h1{font-size:16px;margin:0;font-weight:700}
    left = -(width/2) = -22px 로 가운데를 막대에 맞춘다.
    top은 -(height)가 아니라 -19px — 5px을 필름 안에 걸쳐 둔다. 완전히 위로 빼면
    필름 위에 여유가 없는 화면에서 손잡이가 잘린다(실측: 하네스에서 윗부분이 잘렸다). */
-.frgrip{display:block;position:absolute;top:-19px;left:-22px;width:44px;height:24px;
-    background:#ff4d4d;border-radius:7px;cursor:grab;pointer-events:auto;
-    box-shadow:0 2px 8px rgba(0,0,0,.75);z-index:9;touch-action:none}
+/* ★손잡이를 선의 **세로 가운데**로(2026-08-28 사장님 "손잡이가 위에 작아서 가운데로
+   잘 잡히게"). 맨 위 끝에 있으면 필름을 보다가 눈을 위로 올려 조준해야 했다.
+   가운데면 선의 어느 높이에서 손이 와도 바로 닿는다. 크기도 키웠다(44×24 → 52×34). */
+.frgrip{display:block;position:absolute;top:50%;left:-26px;width:52px;height:34px;
+    transform:translateY(-50%);
+    background:#ff4d4d;border-radius:9px;cursor:grab;pointer-events:auto;
+    box-shadow:0 2px 10px rgba(0,0,0,.8);z-index:9;touch-action:none}
 /* 잡는 곳임을 보이게 — 가로줄 두 개(다른 손잡이와 같은 표시). */
 .frgrip::after{content:'';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
     width:16px;height:8px;border-top:2px solid rgba(255,255,255,.75);
@@ -784,7 +791,7 @@ body.tight #rollbay .frbelt{top:4px;height:calc(100% - 30px)}
 body.tight #rollbay .fc{height:100%}
 /* ★.frcaps는 top:80px 고정이라 belt가 커지면 그 위에 겹친다 — top을 풀고 아래에 붙인다. */
 body.tight #rollbay .frcaps{top:auto;bottom:4px}
-body.tight #rollbay .frhead{top:4px;bottom:22px}
+body.tight #rollbay .frhead{top:4px;bottom:28px}
 
 /* 주황 구간 박스도 필름 높이에 맞춘다 — 72px 고정이라 아래가 비어 있었다 */
 body.tight #rollbay .frboxes .bx{top:4px;height:calc(100% - 30px)}
@@ -827,7 +834,7 @@ body.tight .frslot.inbeat .frbelt{top:0;height:100%}
 body.tight .frslot.inbeat .fc{height:100%}
 body.tight .frslot.inbeat .frboxes .bx{top:0;height:100%}
 body.tight .frslot.inbeat .frcaps{top:auto;bottom:4px}
-body.tight .frslot.inbeat .frhead{top:4px;bottom:22px}
+body.tight .frslot.inbeat .frhead{top:4px;bottom:28px}
 
 /* 소스 카드 필름 — 그 묶음 아래에서 편다(가운데 자리와 별개) */
 .frslot.ingroup{margin:6px 0 4px;min-width:0}
@@ -837,7 +844,7 @@ body.tight .frslot.ingroup .frbelt{top:4px;height:calc(100% - 30px)}
 body.tight .frslot.ingroup .fc{height:100%}
 body.tight .frslot.ingroup .frboxes .bx{top:4px;height:calc(100% - 30px)}
 body.tight .frslot.ingroup .frcaps{top:auto;bottom:4px}
-body.tight .frslot.ingroup .frhead{top:4px;bottom:22px}
+body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
 
 </style></head><body>
 
