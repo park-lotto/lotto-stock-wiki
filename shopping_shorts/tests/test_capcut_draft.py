@@ -327,3 +327,72 @@ def test_no_watermark_keeps_old_tracks():
         d2, _ = cd.build_draft(plan=_PLAN, timeline=_TIMELINE, source_video_paths=_SRC,
                                tts_paths=_TTS, asset_paths=_ASSET, project_name="t", deco=bad)
         assert [t["type"] for t in d2["tracks"]] == ["video", "audio", "text"], bad
+
+
+# ── 🖼 꾸미기 틀(템플릿)도 따라간다 — 고객 제보 3단계 ──────────────────────
+def _tpl_deco(span="full", alpha=1):
+    return {"template": {"_capcut_path": "C:/cap/p/deco_frame.png",
+                         "span": span, "alpha": alpha}}
+
+
+def _photos(draft):
+    return [m for m in draft["materials"]["videos"] if m["type"] == "photo"]
+
+
+def test_template_frame_reaches_draft():
+    """★뿌리: 꾸미기 틀 PNG가 캡컷 타임라인에 실제로 얹힌다(종전엔 아예 안 갔다)."""
+    draft, _ = cd.build_draft(plan=_PLAN, timeline=_TIMELINE, source_video_paths=_SRC,
+                              tts_paths=_TTS, asset_paths=_ASSET, project_name="t",
+                              deco=_tpl_deco())
+    ph = _photos(draft)
+    assert len(ph) == 1, f"틀 이미지가 없거나 여러 개다: {len(ph)}"
+    assert ph[0]["path"].endswith("deco_frame.png")
+    assert ph[0]["has_audio"] is False, "이미지에 오디오가 붙으면 캡컷이 이상하게 다룬다"
+
+
+def test_template_is_above_video_below_caption():
+    """★쌓임 순서: 소스 영상 위 · 자막 아래. 자막을 덮으면 글자가 안 보인다."""
+    draft, _ = cd.build_draft(plan=_PLAN, timeline=_TIMELINE, source_video_paths=_SRC,
+                              tts_paths=_TTS, asset_paths=_ASSET, project_name="t",
+                              deco=_tpl_deco())
+    vid_tracks = [t for t in draft["tracks"] if t["type"] == "video"]
+    assert len(vid_tracks) == 2, "틀이 별도 영상 트랙으로 안 올라갔다"
+    tpl_seg = vid_tracks[1]["segments"][0]
+    src_seg = vid_tracks[0]["segments"][0]
+    cap_seg = [t for t in draft["tracks"] if t["type"] == "text"][0]["segments"][0]
+    assert src_seg["track_render_index"] < tpl_seg["track_render_index"] < \
+        cap_seg["track_render_index"], "쌓임 순서가 어긋났다(영상 < 틀 < 자막)"
+
+
+def test_template_span_first_covers_only_first_beat():
+    """★span='first'는 첫 비트만 덮는다 — 우리 렌더와 같은 규칙이어야 한다."""
+    full, _ = cd.build_draft(plan=_PLAN, timeline=_TIMELINE, source_video_paths=_SRC,
+                             tts_paths=_TTS, asset_paths=_ASSET, project_name="t",
+                             deco=_tpl_deco("full"))
+    first, _ = cd.build_draft(plan=_PLAN, timeline=_TIMELINE, source_video_paths=_SRC,
+                              tts_paths=_TTS, asset_paths=_ASSET, project_name="t",
+                              deco=_tpl_deco("first"))
+    dur_full = [t for t in full["tracks"] if t["type"] == "video"][1]["segments"][0]
+    dur_first = [t for t in first["tracks"] if t["type"] == "video"][1]["segments"][0]
+    assert dur_full["target_timerange"]["duration"] == full["duration"]
+    assert dur_first["target_timerange"]["duration"] == cd._us(_TIMELINE[0]["dur"])
+    assert dur_first["target_timerange"]["duration"] < dur_full["target_timerange"]["duration"]
+
+
+def test_template_alpha_applies():
+    """투명도를 주면 그대로 반영된다."""
+    draft, _ = cd.build_draft(plan=_PLAN, timeline=_TIMELINE, source_video_paths=_SRC,
+                              tts_paths=_TTS, asset_paths=_ASSET, project_name="t",
+                              deco=_tpl_deco(alpha=0.5))
+    seg = [t for t in draft["tracks"] if t["type"] == "video"][1]["segments"][0]
+    assert abs(seg["clip"]["alpha"] - 0.5) < 0.01
+
+
+def test_no_template_keeps_old_tracks():
+    """★회귀 0: 틀이 없으면 트랙 구성이 종전 그대로다."""
+    for bad in (None, {}, {"template": None}, {"template": {}},
+                {"template": {"span": "full"}}):        # _capcut_path 없음
+        d, _ = cd.build_draft(plan=_PLAN, timeline=_TIMELINE, source_video_paths=_SRC,
+                              tts_paths=_TTS, asset_paths=_ASSET, project_name="t", deco=bad)
+        assert [t["type"] for t in d["tracks"]] == ["video", "audio", "text"], bad
+        assert not _photos(d)

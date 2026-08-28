@@ -305,6 +305,23 @@ def _beat_clips(beat, beat_dur, src_durs):
     return []
 
 
+def _photo_material(path, name, width, height):
+    """정지 이미지(꾸미기 틀 PNG) 머티리얼.
+
+    ★캡컷은 사진도 **materials.videos** 배열에 넣고 type으로 가른다(video ↔ photo).
+      images 배열은 스켈레톤에 있지만 캡컷이 실제로 쓰는 자리가 아니다.
+    ★duration은 캡컷이 사진에 쓰는 관례값(10분)을 넣는다 — 세그먼트가 실제 표시 길이를
+      정하므로 이 값은 상한 역할만 한다.
+    """
+    return {"id": _uid(), "type": "photo", "path": path, "material_name": name,
+            "duration": 10800000000, "width": width, "height": height, "has_audio": False,
+            "category_name": "local", "source": 0, "source_platform": 0,
+            "crop": {"lower_left_x": 0.0, "lower_left_y": 1.0, "lower_right_x": 1.0,
+                     "lower_right_y": 1.0, "upper_left_x": 0.0, "upper_left_y": 0.0,
+                     "upper_right_x": 1.0, "upper_right_y": 0.0},
+            "crop_ratio": "free", "crop_scale": 1.0, "media_path": "", "aigc_type": "none"}
+
+
 def _watermark_material(wm, font_path):
     """꾸미기 워터마크(채널 닉네임) → 캡컷 **텍스트** 머티리얼.
 
@@ -444,6 +461,37 @@ def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
             seg["track_render_index"] = 2
             txt_track["segments"].append(seg)
 
+    # ── 🖼 꾸미기 틀(템플릿) — 영상 위에 얹는 투명 PNG (2026-08-28 고객 제보 3단계) ──
+    #   ★이미 그림 파일로 존재한다: deco_frame이 미리보기·렌더와 **같은 함수**로 굽는다
+    #     (mix_pipeline._template_layer). 캡컷에도 그 PNG를 그대로 올린다 — 채널명 바·제목·
+    #     아이콘을 캡컷에서 다시 만들 필요가 없다.
+    #   ★전체 화면(1080x1920)이라 **위치를 옮길 필요가 없다** — 자막·워터마크와 달리
+    #     좌표계 문제가 없다(clip.transform 기본 0,0이 곧 정확한 자리다).
+    #   ★span: 'first'면 첫 비트만, 아니면 영상 전체 — 우리 렌더와 같은 규칙.
+    tpl_track = {"id": _uid(), "type": "video", "attribute": 0, "flag": 0,
+                 "name": "", "is_default_name": True, "segments": []}
+    _tpl = (deco or {}).get("template") or {}
+    _tpl_abs = _tpl.get("_capcut_path")        # 호출부가 캡컷 절대경로로 채워 준다
+    if _tpl_abs and total_us > 0:
+        _tdur = total_us
+        if _tpl.get("span") == "first" and timeline:
+            try:
+                _tdur = min(total_us, _us(float(timeline[0].get("dur") or 0)))
+            except (TypeError, ValueError):
+                _tdur = total_us
+        if _tdur > 0:
+            pm = _photo_material(_tpl_abs, _tpl_abs.rsplit("/", 1)[-1], cw, ch)
+            mats["videos"].append(pm)
+            tseg = _base_segment(pm["id"], 0, _tdur, source_start=0, source_dur=_tdur,
+                                 render_index=0, volume=0.0)
+            tseg["track_render_index"] = 1     # 소스 영상(0) 위, 자막(2) 아래
+            try:
+                a = float(_tpl.get("alpha", 1))
+            except (TypeError, ValueError):
+                a = 1.0
+            tseg["clip"]["alpha"] = max(0.05, min(1.0, a))
+            tpl_track["segments"].append(tseg)
+
     # ── 워터마크(채널 닉네임) — 영상 전체에 한 칸(2026-08-28 고객 제보 2단계) ──
     #   ★자막 트랙과 **따로** 둔다: 같은 트랙에 넣으면 대사 자막과 시간이 겹쳐
     #     캡컷이 하나를 밀어낸다(둘 다 전 구간에 있을 수 없다).
@@ -457,7 +505,8 @@ def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
         wseg["track_render_index"] = 3        # 자막(2)보다 위
         wm_track["segments"].append(wseg)
 
-    tracks = [t for t in (vid_track, aud_track, txt_track, wm_track) if t["segments"]]
+    tracks = [t for t in (vid_track, tpl_track, aud_track, txt_track, wm_track)
+              if t["segments"]]
     draft = _skeleton(project_name, cw, ch, total_us)
     draft["materials"].update(mats)
     draft["tracks"] = tracks
@@ -550,6 +599,16 @@ def assemble_draft_folder(out_root, base_abs, *, plan, timeline, source_video_pa
             shutil.copy(real, proj / name)
             asset_paths[real] = f"{base_abs}/{project}/{name}"
 
+    # ★꾸미기 틀 PNG를 draft 폴더로 복사하고 **캡컷이 볼 절대경로**를 심는다
+    #   (2026-08-28 고객 제보 3단계). 에셋은 절대경로여야 캡컷이 찾는다 —
+    #   상대경로는 2026-07-20에 Media Not Found로 확정 기각됐다.
+    deco = dict(deco or {})
+    _tpl_src = (deco.get("template") or {}).get("_abspath")
+    if _tpl_src and Path(_tpl_src).exists():
+        _tpl_name = "deco_frame.png"
+        shutil.copy(_tpl_src, proj / _tpl_name)
+        deco["template"] = {**deco["template"],
+                            "_capcut_path": f"{base_abs}/{project}/{_tpl_name}"}
     draft, _ = build_draft(caption_style=caption_style, deco=deco,
                            plan=plan, timeline=timeline, source_video_paths=source_video_paths,
                            tts_paths=tts_paths, asset_paths=asset_paths, project_name=project,

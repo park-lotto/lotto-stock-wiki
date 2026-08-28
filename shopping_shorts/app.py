@@ -5841,6 +5841,21 @@ def api_mix_capcut(job_id: str, base: str = ""):
             _deco = None
     if not isinstance(_deco, dict):
         _deco = None
+    # ★꾸미기 틀(템플릿)을 **그림 파일로** 만들어 둔다(2026-08-28 고객 제보 3단계).
+    #   PNG를 굽는 곳은 mix_pipeline._template_layer 한 곳이다 — 미리보기·렌더·캡컷이
+    #   같은 그림을 쓴다(0순위-B). 여기서 따로 그리면 화면과 캡컷이 갈린다.
+    #   실패해도 내보내기는 그대로 된다(틀만 빠진다).
+    if _deco and _deco.get("template"):
+        try:
+            _first = float((timeline[0].get("dur") if timeline else 0) or 0)
+            _lay = mix_pipeline._template_layer(_deco["template"], first_beat_dur=_first)
+            if _lay and _lay.get("_abspath"):
+                _deco = {**_deco, "template": {**_deco["template"],
+                                               "_abspath": _lay["_abspath"],
+                                               "alpha": _lay.get("alpha", 1)}}
+        except Exception:      # noqa: BLE001 — 틀 하나 때문에 내보내기가 막히면 안 된다
+            import traceback as _tb2
+            _tb2.print_exc(file=sys.stderr)
     proj, project, files = capcut_draft.assemble_draft_folder(
         out_root, base, plan=plan, timeline=timeline, source_video_paths=source_video_paths,
         tts_paths=tts_paths, project_name=_capcut_project_name(job_id, job, plan),
