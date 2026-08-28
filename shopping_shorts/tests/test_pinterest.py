@@ -219,6 +219,26 @@ def test_pin_video_info_이미지핀은_None(monkeypatch):
     assert pc.pin_video_info("https://www.pinterest.com/pin/123456/") is None
 
 
+def test_search_videos_tab이_기본크롤에_전달된다(monkeypatch):
+    """tab="videos"(렌즈용 영상탭)가 실제 크롤 URL 선택까지 닿아야 한다.
+    ⚠️ 주입 크롤러(_crawler) 계약은 3인자 그대로 — 기존 테스트·수집이 그 모양을 쓴다."""
+    from shopping_shorts import pinterest_crawl as pc
+    seen = {}
+
+    def fake_crawl(keyword, scrolls, timeout_ms, tab="pins"):
+        seen["tab"] = tab
+        return []
+    monkeypatch.setattr(pc, "_crawl", fake_crawl)
+    pc.search_videos("camping table", tab="videos")
+    assert seen["tab"] == "videos"
+    pc.search_videos("camping table")           # 기본은 종전 그대로 pins
+    assert seen["tab"] == "pins"
+    # 주입 크롤러는 tab 없이 3인자로 불린다(하위호환)
+    calls = []
+    pc.search_videos("x", _crawler=lambda k, s, t: calls.append((k, s, t)) or [])
+    assert len(calls) == 1
+
+
 def test_pin_video_info_비200은_예외(monkeypatch):
     """판정불가는 예외로 갈라 준다 — None(이미지 확정)과 섞이면 렌즈가
     멀쩡한 영상 핀을 '이미지'로 잘라버린다(회수율 사고)."""
