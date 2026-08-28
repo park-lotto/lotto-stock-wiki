@@ -162,8 +162,21 @@
 
     const winW = () => win.clientWidth || 600;
     const pps = () => CW / STEP;
+    // ★조각을 펼쳤으면 **그 구간 밖으로 못 나간다**(2026-08-28 사장님 "이게 2.3초잖아
+    //   그럼 2.3초 부분만 펼쳐달라고"). 종전엔 배율만 구간에 맞추고 원본 전체를 그려서,
+    //   옆으로 밀면 조각 밖 영상이 계속 나왔다.
+    //   ★그리는 것은 그대로 원본 전체다 — 좌표계(빨간선·구간 박스·담기 초)가 원본
+    //     시각 기준이라, 잘라 그리면 그 전부를 함께 고쳐야 한다. 여기서는 **볼 수 있는
+    //     범위만** 막는다(한 곳에서: clamp).
+    //   ⚠️이 때문에 '조각 범위 넓히기'(🔁)로 조각 밖을 잡는 길은 막힌다 — 사장님 지시가
+    //     그쪽이므로 그렇게 둔다. 되살리려면 panLo/panHi에 여유(±초)를 주면 된다.
     const maxOff = () => Math.max(0, DUR * pps() - winW());
-    const clamp = v => Math.max(0, Math.min(maxOff(), v));
+    const panLo = () => (opt.fit && opt.from != null) ? Math.min(maxOff(), Math.max(0, opt.from * pps())) : 0;
+    const panHi = () => {
+      if (!(opt.fit && opt.to != null)) return maxOff();
+      return Math.max(panLo(), Math.min(maxOff(), opt.to * pps() - winW()));
+    };
+    const clamp = v => Math.max(panLo(), Math.min(panHi(), v));
     const secToX = t => t * pps() - off;
     const xToSec = x => (x + off) / pps();
 
