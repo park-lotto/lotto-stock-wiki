@@ -10489,16 +10489,39 @@ def _api_pinterest_collect(request: Request, body: dict = None):
     kws = [k.strip() for k in (body.get("keywords") or []) if str(k).strip()]
     if not kws:
         kws = list(pinterest_crawl.DEFAULT_KEYWORDS)
-    kws = kws[:8]                      # 폭주 방지 — 한 번에 8개까지
+    kws = kws[:12]                     # 폭주 방지 — 한 번에 12개까지(병렬 폭과 맞춘다)
     try:
         per = max(5, min(int(body.get("per_keyword") or 40), 80))
         scrolls = max(1, min(int(body.get("scrolls") or 5), 12))
     except (TypeError, ValueError):
         per, scrolls = 40, 5
 
+    # ★병렬로 돈다(2026-08-29). 병목은 IP가 아니라 **브라우저 기동 + 고정 sleep**이다:
+    #   pinterest_crawl._crawl()은 키워드마다 chromium.launch()를 새로 열고
+    #   `for _ in range(scrolls): wait_for_timeout(1500)` + 끝에 2000ms를 쉰다
+    #   = 키워드당 약 9.5초가 순수 대기. 12키워드 순차 70.1초 → 병렬 18.1초(손실 0).
+    # ★프로세스풀이 아니라 **스레드풀**이다 — 웹서버(uvicorn) 안에서 fork하면 소켓·
+    #   시그널 핸들러가 상속돼 위험한데 실측 속도가 같다(스레드 12.8초/프로세스 12.5초).
+    # ⚠️scrolls를 줄여 아끼려 하지 마라 — scrolls=1로 낮췄더니 결과가 34% 날아갔다
+    #   (`diy tool invention` 15개→0개). 대기는 낭비가 아니라 로딩 시간이다.
+    def _one(kw):
+        # ★예외 격리: 키워드 하나가 죽어도 나머지는 살아야 한다.
+        #   (0개가 나오는 건 정상이다 — 핀터레스트가 안 주는 검색어가 실제로 있다)
+        try:
+            return kw, pinterest_crawl.search_videos(
+                kw, max_results=per, scrolls=scrolls)
+        except Exception as e:            # noqa: BLE001 — 한 건 실패로 수집 전체를 죽이지 않는다
+            logging.warning("pinterest 수집 실패(%s): %s", kw, type(e).__name__)
+            return kw, []
+
+    # map은 **순서를 보존한다** — as_completed로 바꾸지 마라(방금 담은 게 위로 오는
+    # 규칙이 뒤섞인다). 폭은 키워드 수만큼만 연다(서버 8코어, 대기가 대부분이라 안전).
+    with ThreadPoolExecutor(max_workers=max(1, min(len(kws), 12))) as _ex:
+        _per_kw = list(_ex.map(_one, kws))
+
     items, seen = [], set()
-    for kw in kws:
-        for it in pinterest_crawl.search_videos(kw, max_results=per, scrolls=scrolls):
+    for kw, _found in _per_kw:
+        for it in _found:
             k = it.get("pin_id") or it.get("video_url")
             if not k or k in seen:
                 continue

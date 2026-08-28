@@ -94,6 +94,35 @@ def test_워터마크를_자동으로_거르지_않는다():
     assert "watermark_filter" not in src
 
 
+def _collect_fn():
+    """수집 엔드포인트 본문만 정확히 떠 온다.
+
+    ★고정 길이(src[i:i+3500])로 자르면 **함수가 길어질 때 조용히 뒷부분을 놓친다**
+    (실제로 병렬화 후 load_last_run_platform 검사가 가짜로 실패했다).
+    다음 라우트 데코레이터까지를 본문으로 본다.
+    """
+    import pathlib
+    p = pathlib.Path(__file__).resolve().parents[1] / "app.py"
+    src = p.read_text(encoding="utf-8")
+    i = src.index('/api/pinterest/collect')
+    j = src.find(chr(10) + "@app.", i + 10)
+    return src[i:j if j > 0 else len(src)]
+
+
+def _code_only(fn):
+    """주석·독스트링을 뺀 **실행되는 코드**만 남긴다.
+
+    ★주석에 'as_completed로 바꾸지 마라'라고 적었더니 그 글자를 테스트가 잡아
+    가짜로 실패했다 — 금지어 검사는 반드시 코드에서만 해야 한다."""
+    out = []
+    for line in fn.splitlines():
+        t = line.strip()
+        if t.startswith("#"):
+            continue
+        out.append(line.split("  # ")[0])
+    return chr(10).join(out)
+
+
 # ── 화면 ────────────────────────────────────────────────────────────────
 def _index_html():
     import pathlib
@@ -149,11 +178,7 @@ def test_수집은_누적된다():
     쌓는 방식이 유일한 길인데, 덮어쓰기면 **앞서 모은 게 매번 사라진다**.
     → 기존 것과 합치고 pin_id로 중복 제거한다.
     """
-    import pathlib
-    p = pathlib.Path(__file__).resolve().parents[1] / "app.py"
-    src = p.read_text(encoding="utf-8")
-    i = src.index('/api/pinterest/collect')
-    fn = src[i:i + 3500]
+    fn = _collect_fn()
     assert "load_last_run_platform" in fn, "기존 수집분을 안 읽는다 — 매번 덮어쓴다"
     assert "reset" in fn, "비우기 수단이 없다 — 쌓이기만 하면 정리를 못 한다"
 
@@ -167,6 +192,38 @@ def test_서버에_수집_엔드포인트가_있고_관리자_전용():
     assert "_require_admin" in fn, "관리자 권한 검사가 없다"
 
 
+# ── 병렬 수집 (2026-08-29) ──────────────────────────────────────────────
+def test_수집이_병렬로_돈다():
+    """★화면 버튼이 순차라 느렸다. 병목은 IP가 아니라 **브라우저 기동+고정 sleep**이다.
+
+    실측(서버 8코어): 키워드마다 chromium.launch()를 새로 열고
+    `for _ in range(scrolls): wait_for_timeout(1500)` + 끝에 2000ms
+    = 키워드당 약 9.5초가 순수 대기. 12키워드 순차 70.1초 → 병렬 18.1초(결과 손실 0).
+
+    ★프로세스풀이 아니라 **스레드풀**이다 — 웹서버(uvicorn) 안에서 fork하면
+    소켓·시그널 핸들러가 상속돼 위험한데, 실측상 속도가 같아(스레드 12.8초 /
+    프로세스 12.5초) 위험을 살 이유가 없다.
+    """
+    fn = _code_only(_collect_fn())
+    assert "ThreadPoolExecutor" in fn, "순차 루프다 — 화면 버튼이 느리다"
+    assert "ProcessPoolExecutor" not in fn, \
+        "웹서버 안에서 fork하면 안 된다(스레드풀로 충분하다 — 실측 속도 동일)"
+
+
+def test_병렬이어도_순서가_보존된다():
+    """★결과 순서가 뒤섞이면 '방금 담은 게 위로' 규칙이 깨진다.
+    executor.map은 순서를 보존한다 — as_completed로 바꾸지 마라."""
+    fn = _code_only(_collect_fn())
+    assert "as_completed" not in fn, "순서가 뒤섞인다 — map을 써라"
+
+
+def test_키워드_하나가_죽어도_나머지는_산다():
+    """★병렬에서 예외 격리가 없으면 키워드 하나가 통째로 수집을 죽인다.
+    실측: 'car tool emergency kit'는 정상인데도 0개가 나온다(핀터레스트 사정).
+    0개는 괜찮지만 **예외**는 나머지를 죽이면 안 된다."""
+    fn = _collect_fn()
+    j = fn.index("ThreadPoolExecutor")
+    assert "except" in fn[max(0, j - 700):j + 700], "예외 격리가 없다"
 # ── pin_video_info: 핀 1개 실조회(렌즈·다운로드 공용, 2026-08-29) ────────────
 # 실측 근거: 익명 requests로 핀 상세 페이지가 200으로 열리고, 영상 핀에만
 # JSON-LD VideoObject가 있다(영상 2/2 있음 / 이미지 4/4 없음).
