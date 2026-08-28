@@ -72,14 +72,79 @@
         <span class="tl-aud-l">${ttsReal ? `beat_${i}.mp3 · ${(+ttsReal).toFixed(2)}s`
                                          : '🔇 음성 없음 — 추정 길이'}</span></div>`;
 
+    // 자막 레인은 두 얼굴: 보기(시간축 블록) / ✂편집(어절 칩 + 경계 클릭 — ⑥).
+    // 레인 자리는 하나고 내용물만 바뀐다 — 래퍼를 두 벌 만들지 않는다(0순위-B).
+    const capLane = TL_EDIT[i]
+      ? `<div class="tl-lane tl-capedit"><span class="tl-name">자막</span>${tlCapEditHtml(i)}</div>`
+      : `<div class="tl-lane tl-caps"><span class="tl-name">자막</span>${capHtml}</div>`;
+    const editBtn = `<button type="button" class="tl-editbtn${TL_EDIT[i] ? ' on' : ''}"
+        title="${TL_EDIT[i] ? '경계 편집 끝내기' : '자막 구절 경계 고치기 — 어절 사이를 눌러 끊고 합칩니다 (초는 실제 발화 시각으로 자동 재계산)'}"
+        onclick="event.stopPropagation();tlEditToggle(${i})">${TL_EDIT[i] ? '✔ 끝내기' : '✂ 경계'}</button>`;
+
     return `<div class="tlwrap" data-i="${i}" data-pps="${pps.toFixed(3)}"
                  onclick="event.stopPropagation()">
       <div class="tl-lane tl-cuts"><span class="tl-name">컷</span>${cutHtml}${emptyHtml}${stretchBadge}</div>
-      <div class="tl-lane tl-caps"><span class="tl-name">자막</span>${capHtml}</div>
+      ${capLane}
       <div class="tl-lane tl-auds"><span class="tl-name">음성</span>${audHtml}</div>
+      ${editBtn}
       <div class="tl-head"></div>
     </div>`;
   }
+
+  // ── ⑥ 구절 경계 편집 ────────────────────────────────────────────────
+  const TL_EDIT = {};              // beat_idx → 편집 모드 켜짐
+
+  /* 어절 칩 + 사이 경계. 현재 경계는 capsOf(i)의 구절 나눔 그대로다(그게 진실). */
+  function tlCapEditHtml(i) {
+    const caps = capsOf(i);
+    const items = [];               // {w, ci} — 어절과 그 어절이 속한 구절 번호
+    caps.forEach((c, ci) => String(c.text).split(/\s+/).filter(Boolean)
+      .forEach(w => items.push({ w, ci })));
+    if (!items.length) return '<span class="tl-loading">자막 없음</span>';
+    let h = '<div class="tl-chips">';
+    items.forEach((it, j) => {
+      h += `<span class="tl-word">${esc(it.w)}</span>`;
+      if (j < items.length - 1) {
+        const isB = items[j + 1].ci !== it.ci;
+        h += `<button type="button" class="tl-gapbtn${isB ? ' b' : ''}"
+          title="${isB ? '경계 지우기(앞 구절과 합치기)' : '여기서 끊기'}"
+          onclick="event.stopPropagation();tlGapClick(${i},${j})">${isB ? '‖' : '·'}</button>`;
+      }
+    });
+    return h + '</div>';
+  }
+
+  g.tlEditToggle = function (i) {
+    TL_EDIT[i] = !TL_EDIT[i];
+    g.tlMount();
+  };
+
+  /* 어절 j 뒤의 경계를 토글 → 새 구절 목록을 서버에 저장(초 재계산) → 화면 연쇄 갱신(⑨). */
+  g.tlGapClick = async function (i, j) {
+    const caps = capsOf(i);
+    const words = [];               // 전체 어절(순서 보존)
+    const bset = new Set();         // 경계 = "이 어절 뒤에서 끊김"인 어절 인덱스
+    caps.forEach((c, ci) => {
+      String(c.text).split(/\s+/).filter(Boolean).forEach(w => words.push(w));
+      if (ci < caps.length - 1) bset.add(words.length - 1);
+    });
+    if (bset.has(j)) bset.delete(j); else bset.add(j);
+    const lines = []; let cur = [];
+    words.forEach((w, k) => { cur.push(w); if (bset.has(k)) { lines.push(cur.join(' ')); cur = []; } });
+    if (cur.length) lines.push(cur.join(' '));
+    try {
+      const r = await fetch(`/api/mix/scene_lab/${SL.job}/caption_lines/${i}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lines }) });
+      const d = await r.json();
+      if (!r.ok || !d.ok) { nsay('⚠ ' + (d.error || '경계 저장 실패')); return; }
+      // ⑨ 연쇄 갱신 — 진실(구절 시간표)만 바꾸고 나머지는 render()가 파생으로 다시 그린다.
+      DATA.captions[String(i)] = d.captions;
+      const b = (DATA.beats || [])[i];
+      if (b) { b.caption_lines = lines; b.cap_durs = d.cap_durs; b.cap_lead = d.cap_lead; }
+      render();
+    } catch (e) { nsay('⚠ 경계 저장 실패 — 네트워크'); }
+  };
 
   /* 자막 블록 클릭 → 기존 F21(pickSeg) 경로. 하이라이트만 타임라인에도 얹는다. */
   g.tlPickCap = function (i, k) {

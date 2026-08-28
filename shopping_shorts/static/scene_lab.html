@@ -898,6 +898,19 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
 .tl-head.on{display:block}
 .tl-head::before{content:'';position:absolute;top:-4px;left:-4px;border:5px solid transparent;
     border-top-color:#ff4a4a}
+/* ✂ 구절 경계 편집(⑥) */
+.tl-editbtn{position:absolute;right:6px;bottom:6px;z-index:7;background:#22262c;color:#cfd4da;
+    border:1px solid #3a404a;border-radius:6px;padding:2px 8px;font-size:11px;cursor:pointer}
+.tl-editbtn:hover{background:#2c313a}
+.tl-editbtn.on{border-color:var(--good,#7fe0a8);color:var(--good,#7fe0a8)}
+.tl-capedit{height:auto;min-height:30px}
+.tl-chips{display:flex;flex-wrap:wrap;align-items:center;gap:1px;padding:2px 0}
+.tl-word{background:#141a22;border:1px solid #2a3340;border-radius:4px;color:#dbe4ee;
+    font-size:12px;padding:2px 6px}
+.tl-gapbtn{background:none;border:none;color:#5a6472;font-size:13px;cursor:pointer;
+    padding:2px 3px;line-height:1}
+.tl-gapbtn:hover{color:#ffd24a;transform:scale(1.3)}
+.tl-gapbtn.b{color:#4ac1ff;font-weight:800}
 </style></head><body>
 
 <header style="display:none">
