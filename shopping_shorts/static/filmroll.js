@@ -485,6 +485,10 @@
           : '') +
         `<span class="frmk"><button type="button" class="frbtn mk">＋ 구간</button>` +
         `<input type="number" class="frlen" step="0.1" min="0.1" value="${BOXLEN}"><span class="frhint">초</span></span>` +
+        // ✂ 조각 하나를 펼친 필름에만 나온다(쓰는 구간 + 바꿀 대상이 있어야 하므로
+        //   from/to·onReplace 둘 다 필요 — 영상 통째 필름엔 안 나온다).
+        (opt.from != null && opt.to != null && typeof opt.onReplace === 'function'
+          ? `<button type="button" class="frbtn use" title="지금 쓰는 구간을 주황 박스로 올립니다 — 끝을 당겨 자르고 🔁로 확정">✂ 쓰는 구간 다듬기</button>` : '') +
         (BOXES.length
           ? `<button type="button" class="frbtn" data-act="play">▶ 미리보기에서 듣기</button>` +
             `<button type="button" class="frbtn ok">⬆ 담기 (${BOXES.length}개 · ${total.toFixed(2)}초)</button>` +
@@ -495,6 +499,7 @@
             `<button type="button" class="frbtn" data-act="clr">비우기</button>`
           : '');
       const mk = barEl.querySelector('.mk'); if (mk) mk.onclick = makeBox;
+      const use = barEl.querySelector('.use'); if (use) use.onclick = useToBox;
       const len = barEl.querySelector('.frlen');
       if (len) len.oninput = () => { const v = parseFloat(len.value); if (v > 0) BOXLEN = v; };
       const ok = barEl.querySelector('.ok');
