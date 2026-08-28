@@ -618,3 +618,37 @@ def test_changing_default_count_reextracts(client, tmp_path, monkeypatch):
     after = client.post("/api/produce/thumb/frames", json={"job_id": "j1"}).json()
     assert len(seen) == 2, "장수를 바꿨는데 재추출하지 않았다(옛 프레임이 그대로 남는다)"
     assert len(after["frames"]) == new_n
+
+
+def test_frames_report_which_background_was_used(client, tmp_path, monkeypatch):
+    """★고객 제보(2026-08-28) "썸네일에 원본 자막이 남는다"의 처방.
+
+    실측: clean_preview.mp4는 16:11에 생겼는데 제보 화면은 15:35였다 — 자막제거가 끝나기
+    전에 썸네일을 열어 preview로 **조용히 폴백**한 것이다. 배경은 규칙대로 골랐지만
+    그 사실을 아무도 말해주지 않아 "지웠는데 왜 남아있지"가 된다.
+    응답이 어떤 배경을 썼는지(bg) 알려줘야 화면이 안내할 수 있다.
+    """
+    s = _job_with_video(tmp_path)
+
+    def grid(video_path, dest_dir, n=None, phase=0.5):
+        n = n or frame_extract.GRID_FRAMES_DEFAULT
+        dest = Path(dest_dir); dest.mkdir(parents=True, exist_ok=True)
+        out = []
+        for i in range(n):
+            p = dest / f"grid_{i:02d}.jpg"; p.write_bytes(b"x")
+            out.append((p, float(i)))
+        return out
+
+    monkeypatch.setattr(app_module, "extract_grid_frames", grid)
+
+    # ① 자막제거본이 없으면 final로 떨어지고 그 사실을 알린다
+    d = client.post("/api/produce/thumb/frames", json={"job_id": "j1"}).json()
+    assert d["ok"] and d["bg"] == "final", f"어떤 배경인지 안 알려준다: {d.get('bg')!r}"
+
+    # ② 자막제거본이 생기면 그걸 쓰고 bg=clean
+    clean = tmp_path / "clean.mp4"; clean.write_bytes(b"clean-and-longer")
+    s.update_mix_job("j1", clean_video_path=str(clean), clean_status="ready",
+                     subtitle_removal=1)
+    d2 = client.post("/api/produce/thumb/frames", json={"job_id": "j1"}).json()
+    assert d2["bg"] == "clean", f"자막제거본이 있는데 안 쓴다: {d2.get('bg')!r}"
+    assert d2["clean_status"] == "ready"
