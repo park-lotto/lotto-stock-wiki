@@ -469,7 +469,10 @@ def _fade(color, pct):
 
 _BAR_FX = ("solid", "grad", "blur", "blurdark")
 _MASK_SHAPES = ("rect", "round", "pill", "ellipse")
-_MASK_FX = ("solid", "fade")          # 흐림 계열은 PNG로 못 그린다(위 DEFAULTS 주석)
+# 흐림 계열은 **그림으로는 못 그린다** — 뒤에 있는 영상을 흐리게 하는 것이라
+# 렌더(ffmpeg)가 처리한다. PNG에는 안 그리고 마스크만 넘긴다(render_blur_mask).
+_MASK_BLUR_FX = ("blur", "blurdark")
+_MASK_FX = ("solid", "fade") + _MASK_BLUR_FX          # 흐림 계열은 PNG로 못 그린다(위 DEFAULTS 주석)
 _MASK_MAX = 12                        # 화면에서 실수로 수백 개를 만들어도 렌더가 안 죽게
 
 
@@ -877,41 +880,115 @@ def render(spec):
 
 
 def _draw_masks(im, masks):
-    """가림막을 그림 위에 얹는다. 각 막은 자기 레이어에 그려 회전·가장자리를 따로 먹인다."""
+    """가림막을 그림 위에 얹는다. 모양은 _mask_shape_layer 한 곳에서 정한다.
+
+    ★흐림(blur)은 여기서 **안 그린다** — 그림 한 장으로는 뒤 영상을 흐리게 못 한다.
+      렌더가 마스크를 받아 처리한다. 흐림+어둡게(blurdark)는 '어둡게'만 여기서 얹는다.
+    """
     for m in masks or []:
-        x, y = int(W * m["l"] / 100.0), int(H * m["t"] / 100.0)
-        w, h = max(1, int(W * m["w"] / 100.0)), max(1, int(H * m["h"] / 100.0))
-        # 가장자리 흐림 크기를 먼저 정한다 — 레이어에 그만큼 여백이 있어야 **바깥으로 번진다**.
-        # ★여백 없이 흐리면 레이어 경계에서 잘려 안쪽만 흐려진다(테스트가 잡은 버그).
+        if m["fx"] == "blur":
+            continue
+        if m["fx"] == "blurdark":
+            # 진하기 100%를 그대로 검정으로 쓰면 완전히 까매져 흐림이 무의미해진다.
+            rgb, alpha = (0, 0, 0), int(255 * m["op"] / 100.0 * 0.45)
+        else:
+            rgb, alpha = _rgb(m["color"])[:3], int(255 * m["op"] / 100.0)
+        layer, x, y = _mask_shape_layer(m, rgb, alpha)
+        im.alpha_composite(layer, (x, y))
+
+
+def _mask_shape_layer(m, rgb, alpha, feather=None):
+    """가림막 한 장을 자기 레이어에 그린다 — 모양·회전·가장자리 규칙의 **유일한 자리**.
+
+    ★색 막(_draw_masks)과 흐림 마스크(render_blur_mask)가 **같은 함수**를 쓴다.
+      두 벌로 그리면 "화면의 막"과 "실제로 흐려지는 자리"가 언젠가 어긋난다(0순위-B).
+    돌려주는 값: (레이어, 붙일 좌표 x, y)
+    """
+    x, y = int(W * m["l"] / 100.0), int(H * m["t"] / 100.0)
+    w, h = max(1, int(W * m["w"] / 100.0)), max(1, int(H * m["h"] / 100.0))
+    # 가장자리 흐림 크기를 먼저 정한다 — 레이어에 그만큼 여백이 있어야 **바깥으로 번진다**.
+    # ★여백 없이 흐리면 레이어 경계에서 잘려 안쪽만 흐려진다(테스트가 잡은 버그).
+    if feather is None:
         blur_px = 0
         if m["fx"] == "fade":
             blur_px = max(2, int(min(w, h) * (0.12 + m["soft"] / 100.0 * 0.38)))
-        elif m["soft"] > 0:
+        elif m["soft"] > 0 and m["fx"] not in _MASK_BLUR_FX:
             blur_px = max(1, int(min(w, h) * m["soft"] / 100.0 * 0.30))
-        pad = blur_px * 3                                   # 가우시안이 사실상 사라지는 거리
-        if m["rot"]:
-            pad = max(pad, int(max(w, h) * 0.5))            # 회전하면 모서리가 잘린다
-        lw, lh = w + pad * 2, h + pad * 2
-        layer = Image.new("RGBA", (lw, lh), (0, 0, 0, 0))
-        ld = ImageDraw.Draw(layer)
-        rgb = _rgb(m["color"])[:3]
-        alpha = int(255 * m["op"] / 100.0)
-        box = [pad, pad, pad + w - 1, pad + h - 1]
-        if m["shape"] == "ellipse":
-            ld.ellipse(box, fill=rgb + (alpha,))
-        elif m["shape"] == "pill":
-            ld.rounded_rectangle(box, radius=h // 2, fill=rgb + (alpha,))
-        elif m["shape"] == "round":
-            ld.rounded_rectangle(box, radius=max(6, min(w, h) // 8), fill=rgb + (alpha,))
-        else:
-            ld.rectangle(box, fill=rgb + (alpha,))
-        # 가장자리 부드럽게(soft) / 그라데이션(fade) — 알파만 흐리면 색은 그대로다.
-        if blur_px:
-            a = layer.split()[3].filter(ImageFilter.GaussianBlur(blur_px))
-            layer.putalpha(a)
-        if m["rot"]:
-            layer = layer.rotate(m["rot"], resample=Image.BICUBIC, expand=False)
-        im.alpha_composite(layer, (x - pad, y - pad))
+    else:
+        blur_px = feather
+    pad = blur_px * 3                                   # 가우시안이 사실상 사라지는 거리
+    if m["rot"]:
+        pad = max(pad, int(max(w, h) * 0.5))            # 회전하면 모서리가 잘린다
+    layer = Image.new("RGBA", (w + pad * 2, h + pad * 2), (0, 0, 0, 0))
+    ld = ImageDraw.Draw(layer)
+    box = [pad, pad, pad + w - 1, pad + h - 1]
+    fill = tuple(rgb) + (alpha,)
+    if m["shape"] == "ellipse":
+        ld.ellipse(box, fill=fill)
+    elif m["shape"] == "pill":
+        ld.rounded_rectangle(box, radius=h // 2, fill=fill)
+    elif m["shape"] == "round":
+        ld.rounded_rectangle(box, radius=max(6, min(w, h) // 8), fill=fill)
+    else:
+        ld.rectangle(box, fill=fill)
+    # 가장자리 부드럽게(soft) / 그라데이션(fade) — 알파만 흐리면 색은 그대로다.
+    if blur_px:
+        layer.putalpha(layer.split()[3].filter(ImageFilter.GaussianBlur(blur_px)))
+    if m["rot"]:
+        layer = layer.rotate(m["rot"], resample=Image.BICUBIC, expand=False)
+    return layer, x - pad, y - pad
+
+
+def blur_sigma(masks):
+    """흐림 세기(ffmpeg gblur sigma). 막마다 다르게 줄 수 없어 **가장 센 것**으로 맞춘다.
+
+    ★'가장자리' 슬라이더(soft)가 흐림 계열에서는 세기를 겸한다 — 슬라이더를 하나 더
+      만들면 안 쓰는 칸이 늘고, 흐림에선 어차피 가장자리 값이 놀고 있었다.
+    """
+    best = 0.0
+    for m in masks or []:
+        if m.get("fx") in _MASK_BLUR_FX:
+            best = max(best, 25.0 + (m.get("soft", 0) / 100.0) * 55.0)
+    return round(best, 1)
+
+
+def render_blur_mask(spec):
+    """흐림을 먹일 영역만 **알파에** 칠한 마스크(RGBA). 흐림 막이 없으면 None.
+
+    렌더는 이 알파를 뽑아(alphaextract) 흐린 영상에 붙이고 원본 위에 얹는다.
+    ★모양은 색 막과 같은 함수로 그린다 — 보이는 자리와 흐려지는 자리가 같아야 한다.
+    """
+    masks = [m for m in _norm_masks(spec.get("masks")) if m["fx"] in _MASK_BLUR_FX]
+    if not masks:
+        return None
+    im = Image.new("RGBA", (W, H), (255, 255, 255, 0))
+    for m in masks:
+        # 경계가 칼로 자른 듯하면 흐림 티가 난다 — 늘 조금 부드럽게(soft와 별개).
+        w = max(1, int(W * m["w"] / 100.0))
+        h = max(1, int(H * m["h"] / 100.0))
+        feather = max(4, int(min(w, h) * 0.06))
+        layer, x, y = _mask_shape_layer(m, (255, 255, 255), 255, feather=feather)
+        im.alpha_composite(layer, (x, y))
+    return im
+
+
+def blur_mask_path(spec):
+    """흐림 마스크 파일 자리. 틀 그림과 **같은 규약**(cache_key + 접미사)."""
+    return (pathlib.Path(__file__).resolve().parent / "data" / "frame_cache"
+            / f"{cache_key(spec)}_blurmask.png")
+
+
+def render_blur_mask_to(spec, out_path=None):
+    """마스크를 파일로 저장하고 경로를 돌려준다. 흐림 막이 없으면 None."""
+    out_path = pathlib.Path(out_path or blur_mask_path(spec))
+    if out_path.exists():
+        return out_path
+    im = render_blur_mask(spec)
+    if im is None:
+        return None
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    im.save(out_path, "PNG")
+    return out_path
 
 
 def cache_path(spec):
