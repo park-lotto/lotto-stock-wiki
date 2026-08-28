@@ -130,6 +130,9 @@ def test_capcut_carries_caption_style(monkeypatch, tmp_path):
     실제로 종전엔 app.py가 caption_style을 넘기지 않았다(참조 0건).
     """
     client = _seed(monkeypatch, tmp_path)
+    # ★스타일 전달은 기본 꺼짐이다(2026-08-28 "캡컷 파일이 안 열린다" 긴급 차단).
+    #   켠 상태의 동작을 보는 테스트이므로 여기서 스위치를 올린다.
+    Store(app_module.DB_PATH).set_setting("capcut_style_on", "1")
     Store(app_module.DB_PATH).update_mix_job("j1", caption_style={
         "color": "#ffcc00", "size": 70, "outline": True, "outline_color": "#000000",
         "outline_w": 9, "shadow": True, "shadow_color": "#111111", "shadow_d": 4})
@@ -157,6 +160,9 @@ def test_capcut_without_style_still_exports(monkeypatch, tmp_path):
 def test_capcut_carries_watermark(monkeypatch, tmp_path):
     """★고객 제보 2단계: 꾸미기 워터마크(채널 닉네임)가 캡컷까지 간다."""
     client = _seed(monkeypatch, tmp_path)
+    # ★스타일 전달은 기본 꺼짐이다(2026-08-28 "캡컷 파일이 안 열린다" 긴급 차단).
+    #   켠 상태의 동작을 보는 테스트이므로 여기서 스위치를 올린다.
+    Store(app_module.DB_PATH).set_setting("capcut_style_on", "1")
     Store(app_module.DB_PATH).update_mix_job("j1", deco={
         "watermark": {"text": "캡틴살림꾼", "color": "#ffffff", "size": 30, "alpha": 0.6}})
     r = client.get("/api/mix/capcut/j1", params={"base": "C:/capcutproject/CapCut Drafts"})
@@ -174,6 +180,9 @@ def test_capcut_carries_deco_frame(monkeypatch, tmp_path):
     여기서는 그 함수를 가짜 PNG로 대신해 **배관**(굽기 → 복사 → 절대경로 → 트랙)을 본다.
     """
     client = _seed(monkeypatch, tmp_path)
+    # ★스타일 전달은 기본 꺼짐이다(2026-08-28 "캡컷 파일이 안 열린다" 긴급 차단).
+    #   켠 상태의 동작을 보는 테스트이므로 여기서 스위치를 올린다.
+    Store(app_module.DB_PATH).set_setting("capcut_style_on", "1")
     png = tmp_path / "frame_src.png"
     png.write_bytes(b"\x89PNG\r\n\x1a\n" + b"0" * 40)     # 내용은 안 본다(복사만 확인)
     monkeypatch.setattr(app_module.mix_pipeline, "_template_layer",
@@ -206,3 +215,22 @@ def test_capcut_survives_broken_template(monkeypatch, tmp_path):
     assert r.status_code == 200, "틀이 깨졌다고 내보내기가 통째로 막혔다"
     draft = __import__("json").loads(r.json()["texts"]["draft_content.json"])
     assert {t["type"] for t in draft["tracks"]} == {"video", "audio", "text"}
+
+
+def test_capcut_style_is_off_by_default(monkeypatch, tmp_path):
+    """★긴급 차단(2026-08-28) — 스타일·꾸미기 전달은 **기본 꺼짐**이다.
+
+    고객 제보: "캡컷으로 보내니 파일이 열리지 않습니다. 다른 영상은 다 열리는데
+    숏템파일만 안 열려요." 오늘 넣은 전달이 draft를 깨뜨렸다.
+    캡컷이 못 여는 draft는 고객이 손쓸 방법이 없다 — 원인을 가릴 때까지 꺼둔다.
+    """
+    client = _seed(monkeypatch, tmp_path)
+    Store(app_module.DB_PATH).update_mix_job("j1", caption_style={"color": "#ffcc00", "size": 70},
+                                             deco={"watermark": {"text": "채널"}})
+    r = client.get("/api/mix/capcut/j1", params={"base": "C:/capcutproject/CapCut Drafts"})
+    assert r.status_code == 200
+    draft = __import__("json").loads(r.json()["texts"]["draft_content.json"])
+    t = draft["materials"]["texts"][0]
+    assert t["text_color"] == "#ffffff" and t["font_size"] == 16.0, "꺼져 있어야 하는데 스타일이 갔다"
+    assert [tr["type"] for tr in draft["tracks"]] == ["video", "audio", "text"], \
+        "꺼져 있어야 하는데 트랙이 늘었다"
