@@ -204,6 +204,54 @@ def iso_duration_secs(raw):
     return int(h or 0) * 3600 + int(mi or 0) * 60 + float(s or 0)
 
 
+_PIN_DOMAIN_RE = re.compile(r'"domain":"([^"]{2,60})"')
+_PIN_LINK_RE = re.compile(r'"link":"(https?://[^"]{5,300})"')
+
+
+def pin_destination(url, timeout=15):
+    """핀 상세 URL → (domain, link). 못 읽으면 (None, None) — 지어내지 않는다.
+
+    ★사장님 "알리 테무에서 나오는 상품들을 중점으로 어떻게 찾을수있나"(2026-08-29)에
+      대한 답이다. **검색 응답엔 링크가 없다**(핀 키는 id·images·videos뿐, 25개 전수
+      확인). 상세 페이지에만 있고, 주거용 프록시로 열어야 나온다:
+          "link":"https://temu.to/m/u9c4kk5ldcu"   "domain":"temu.to"
+
+    ★판정은 `"domain":` 필드로만 한다 — 문자열 검색은 오탐이다(실측: `amazon` 히트
+      하나가 CSP 헤더의 `m.media-amazon.com`이었다).
+
+    ⚠️목적지는 **덤**이다. 프록시가 죽거나 핀터레스트가 막아도 영상 수집 자체는
+      살아야 하므로 실패를 삼키고 빈 값을 준다(pin_video_info와 계약이 다르다 —
+      저쪽은 렌즈가 자를지 말지를 결정해야 해서 예외를 살려 보낸다).
+
+    전량 실측(624개·262초·실패0): Uploaded by user 234 · instagram 212 ·
+    amzn.to 34 · temu.to 20 · amazon 19 → 쇼핑몰 핀 85개(전부 영상 있음, 중앙값 15.8초).
+    """
+    import requests
+    from shopping_shorts.reddit_source import _proxies
+    try:
+        r = requests.get(url, headers={"User-Agent": _PIN_PAGE_UA,
+                                       "Accept-Encoding": "gzip, deflate"},
+                         proxies=_proxies(), timeout=timeout)
+        if r.status_code != 200:
+            return None, None
+        doms = [d for d in _PIN_DOMAIN_RE.findall(r.text) if d and d != "null"]
+        links = _PIN_LINK_RE.findall(r.text)
+        return (doms[0] if doms else None), (links[0] if links else None)
+    except Exception:                  # noqa: BLE001 — 덤이 본업을 죽이면 안 된다
+        return None, None
+
+
+# 쇼핑몰 판정용 — 화면 필터와 **같은 목록을 두 번 적지 않는다**(0순위-B).
+SHOP_DOMAINS = ("aliexpress", "temu", "amzn", "amazon", "alibaba", "shopee",
+                "lightinthebox", "banggood", "shein", "etsy", "ebay", "coupang")
+
+
+def is_shop_domain(domain):
+    """목적지가 쇼핑몰인가. None·빈값은 False(모름은 아님으로 친다)."""
+    d = (domain or "").lower()
+    return any(k in d for k in SHOP_DOMAINS)
+
+
 def pin_video_info(url, timeout=8):
     """핀 상세 페이지 URL → 영상 정보 dict / 영상 아님 None. 네트워크 실패는 예외.
 

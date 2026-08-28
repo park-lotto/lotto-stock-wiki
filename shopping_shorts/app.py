@@ -10548,6 +10548,9 @@ def _api_pinterest_collect(request: Request, body: dict = None):
                 "width": it.get("width") or 0, "height": it.get("height") or 0,
                 "keyword": kw,
                 "category": "장비템",     # 이 탭은 장비템·신박템 컨셉 전용이다
+                # 목적지는 아래에서 한꺼번에 채운다(핀마다 상세 페이지 1회 왕복이라
+                # 순차로 하면 느리다). 못 읽으면 빈 값 — 지어내지 않는다.
+                "pin_dest": "", "pin_link": "",
             })
     # ★누적한다(2026-08-28 사장님 "한번에 다해서 올리는게 아니라 10개씩 하고 올리고").
     #   익명 수집은 **검색어당 첫 묶음에서 잘린다**(실측: 스크롤 4→15회로 늘려도
@@ -10555,6 +10558,18 @@ def _api_pinterest_collect(request: Request, body: dict = None):
     #   그래서 키워드를 조금씩 여러 번 돌려 쌓는 게 유일한 길인데, 덮어쓰기면
     #   앞서 모은 게 매번 사라진다.
     #   reset=true를 주면 비우고 새로 시작한다(쌓이기만 하면 정리를 못 한다).
+    # ★목적지(쇼핑몰) 채우기 — 사장님 "알리 테무 상품 중점으로"(2026-08-29).
+    #   검색 응답엔 링크가 없어 **핀마다 상세 페이지를 1회 왕복**해야 한다.
+    #   비용은 싸다: 병렬16이면 40건 7.8초(건당 0.19초)·판별성공 39/40 실측.
+    #   ⚠️덤이므로 실패해도 수집은 그대로 산다(pin_destination이 빈 값을 준다).
+    if items and body.get("with_dest", True):
+        def _dest(it):
+            d, l = pinterest_crawl.pin_destination(it.get("url") or "")
+            it["pin_dest"], it["pin_link"] = d or "", l or ""
+            return it
+        with ThreadPoolExecutor(max_workers=16) as _ex:
+            items = list(_ex.map(_dest, items))
+
     store = Store(DB_PATH)
     now = datetime.now(timezone.utc).isoformat()
     if body.get("reset"):
