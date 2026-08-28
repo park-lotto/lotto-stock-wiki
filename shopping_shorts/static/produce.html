@@ -2035,7 +2035,7 @@
                ★버튼식이다(슬라이더 대신) — 딸깍·시니어 북극성. -->
           <div id="mkBox" style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:12px">
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
-              <div style="font-size:13px;font-weight:800">🩹 가림막 <span style="font-size:11px;color:var(--accent2);font-weight:600">— 남은 자막·워터마크 덮기</span></div>
+              <div style="font-size:17px;font-weight:900;letter-spacing:-.3px">🩹 <span style="color:#7CE8B0">가림막</span> <span style="font-size:12px;color:var(--sub);font-weight:600">— 남은 자막·워터마크 덮기</span></div>
             </div>
             <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
               <button type="button" onclick="mkAdd()" class="mkbtn">+ 가림막 추가</button>
@@ -2054,12 +2054,12 @@
               <b>가장자리</b>를 올리면 경계가 부드럽게 풀려 덮은 티가 덜 납니다.
             </div>
           </div>
-          <!-- 🧱 빈 틀(2026-08-28 사장님 시안 ②) — 글자·아이콘 없는 위아래 띠.
+          <!-- 🧱 위아래띠(2026-08-28 사장님 시안 ② · 옛 이름 "빈 틀") — 글자·아이콘 없는 위아래 띠.
                ★띠 끝부분 처리는 deco_frame._bar_layer 한 곳에서 정한다(0순위-B).
                  여기 슬라이더는 그 값을 담는 그릇일 뿐이다. -->
           <div id="pbBox" style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:12px">
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
-              <div style="font-size:13px;font-weight:800">🧱 빈 틀 <span style="font-size:11px;color:var(--accent2);font-weight:600">— 글자 없는 위아래 띠</span></div>
+              <div style="font-size:17px;font-weight:900;letter-spacing:-.3px">🧱 <span style="color:#7CE8B0">위아래띠</span> <span style="font-size:12px;color:var(--sub);font-weight:600">— 글자 없는 위아래 띠</span></div>
               <button type="button" class="mkbtn" onclick="pbApply()" style="margin-left:auto">이 틀로 바꾸기</button>
             </div>
             <div id="pbBody"></div>
@@ -3390,6 +3390,14 @@ const MK_SHAPES=[['rect','■ 사각'],['round','□ 둥근사각'],['pill','▭
 const MK_FX=[['solid','단색'],['fade','그라데이션'],['blur','흐림',true],['blurdark','흐림+어둡게',true]];
 const MK_MAX=12;
 let MK_SEL=-1;
+// 아직 도형이 없을 때 화면에 보여주는 **기본값**. 값을 만지면 이 모양으로 하나 생긴다.
+const MK_DRAFT={l:6,t:44,w:88,h:12,shape:'round',fx:'fade',color:'#000000',op:100,soft:30,rot:0};
+function mkEnsure(){
+  const a=mkArr(); if(!a) return null;
+  if(!a.length){ a.push(Object.assign({},MK_DRAFT)); MK_SEL=0; }
+  if(MK_SEL<0||MK_SEL>=a.length) MK_SEL=a.length-1;
+  return a;
+}
 // 빠른 자리 — 흔한 자막·워터마크 위치. %(왼쪽,위,너비,높이)
 const MK_QUICK={
   sub:    {l:6,  t:44, w:88, h:12, shape:'round', fx:'fade', soft:35},
@@ -3417,7 +3425,9 @@ function mkDel(i){
   renderTemplatePreview(); saveHeadcopy(); mkRender();
 }
 function mkSet(i,k,v){
-  const a=mkArr(); if(!a||!a[i]) return;
+  const a=mkEnsure(); if(!a) return;
+  if(!a[i]) i=MK_SEL;              // 아직 없던 도형을 방금 만들었다
+  if(!a[i]) return;
   a[i][k]=(k==='shape'||k==='fx'||k==='color')?v:Math.round(parseFloat(v)||0);
   MK_SEL=i;
   renderTemplatePreview(); saveHeadcopy();
@@ -3430,8 +3440,8 @@ function mkLabel(k,v){
   if(k==='rot')  return (v||0)+'°';
   return String(v);
 }
-function mkPick(c){ mkSet(MK_SEL,'color',c); mkRender(); }
-// ── 🧱 빈 틀(2026-08-28 사장님 시안 ②) ────────────────────────────────────────
+function mkPick(c){ mkEnsure(); mkSet(MK_SEL,'color',c); mkRender(); }
+// ── 🧱 위아래띠(2026-08-28 사장님 시안 ② · 옛 이름 "빈 틀") ────────────────────────────────────────
 // 값의 주인은 f(=STATE.deco.template.frame) 하나다 — 여기 UI는 그 값을 보여주고
 // 고칠 뿐이고, 그림은 서버(deco_frame)가 같은 값으로 그린다(0순위-B).
 // ★띠 높이는 화면에 **%**로 보이지만 저장은 px다(1920 기준) — 그림 쪽 단위가 px라
@@ -3530,13 +3540,11 @@ function mkRender(){
   const ed=document.getElementById('mkEditor');
   if(!ed||!pills) return;
   const a=mkArr()||[];
-  if(!a.length){
-    pills.innerHTML='';
-    ed.innerHTML='<div class="hint" style="font-size:12px">아직 없어요. 위 버튼으로 가림막을 얹으세요.</div>';
-    syncMaskBoxes(); return;
-  }
-  if(MK_SEL<0||MK_SEL>=a.length) MK_SEL=a.length-1;
-  pills.innerHTML=a.map(function(_m,i){
+  // ★도형이 하나도 없어도 **편집 화면은 펼쳐 둔다**(2026-08-28 사장님 "기본으로 펼쳐지게").
+  //   빈 안내문만 띄우면 뭘 할 수 있는지 안 보인다. 값을 만지는 순간 mkEnsure()가
+  //   도형을 하나 얹는다 — 안 만지면 안 생기므로 안 쓰는 사람 영상은 그대로다.
+  const empty=!a.length;
+  pills.innerHTML = empty ? '' : a.map(function(_m,i){
     const on=(i===MK_SEL);
     return '<button type="button" onclick="mkSelect('+i+')" '
       +'style="padding:5px 14px;border-radius:999px;font-size:12px;cursor:pointer;'
@@ -3544,7 +3552,8 @@ function mkRender(){
       +'color:'+(on?'#7CE8B0':'var(--sub)')+';'
       +'border:1px solid '+(on?'#2FBF71':'var(--line)')+'">'+(i+1)+'번</button>';
   }).join('');
-  const m=a[MK_SEL];
+  if(MK_SEL<0||MK_SEL>=a.length) MK_SEL=Math.max(0,a.length-1);
+  const m=empty ? Object.assign({},MK_DRAFT) : a[MK_SEL];
   const lab='font-size:11px;color:var(--sub);margin:12px 0 6px';
   const pal=MK_PAL.map(function(c){
     const on=String(m.color||'').toUpperCase()===c;
@@ -3577,8 +3586,8 @@ function mkRender(){
     +row('회전','rot',-45,45);
   syncMaskBoxes();
 }
-function mkShape(v){ mkSet(MK_SEL,'shape',v); mkRender(); }
-function mkFx(v){ mkSet(MK_SEL,'fx',v); mkRender(); }
+function mkShape(v){ mkEnsure(); mkSet(MK_SEL,'shape',v); mkRender(); }
+function mkFx(v){ mkEnsure(); mkSet(MK_SEL,'fx',v); mkRender(); }
 // 미리보기 위의 편집 상자 — 서버 그림은 pointer-events:none이라 그 위를 잡을 수 없다.
 // 띠·[광고] 손잡이와 같은 방식(투명 상자를 얹고, 끌면 배열에 써넣고 다시 그린다).
 function syncMaskBoxes(){
@@ -3586,7 +3595,7 @@ function syncMaskBoxes(){
   let wrap=document.getElementById('mkBoxes');
   if(!wrap){
     wrap=document.createElement('div'); wrap.id='mkBoxes';
-    wrap.style.cssText='position:absolute;inset:0;z-index:7;pointer-events:none';
+    wrap.style.cssText='position:absolute;inset:0;z-index:10;pointer-events:none';
     pv.appendChild(wrap);
   }
   wrap.innerHTML='';
@@ -3668,7 +3677,7 @@ function syncFrameHandles(){
       el=document.createElement('div');
       el.id=id;
       // z-index는 틀 그림(4)보다 위. 높이 14px의 얇은 띠 — 손이 닿되 화면은 안 가린다.
-      el.style.cssText='position:absolute;left:0;width:100%;height:14px;cursor:ns-resize;z-index:6;'
+      el.style.cssText='position:absolute;left:0;width:100%;height:14px;cursor:ns-resize;z-index:11;'
         +'display:flex;align-items:center;justify-content:center';
       el.innerHTML='<div style="width:44px;height:4px;border-radius:3px;background:rgba(255,255,255,.85);'
         +'box-shadow:0 0 0 1px rgba(0,0,0,.45)"></div>';
@@ -3709,8 +3718,8 @@ function syncAdHandle(){
   if(!el){
     el=document.createElement('div');
     el.id='frHandleAd';
-    // 틀 그림(z-index 4)보다 위. 반투명 테두리만 — [광고] 글자 자체는 서버 그림이 그린다.
-    el.style.cssText='position:absolute;cursor:move;z-index:7;'
+    // 틀 그림(z-index 8)보다 위. 반투명 테두리만 — [광고] 글자 자체는 서버 그림이 그린다.
+    el.style.cssText='position:absolute;cursor:move;z-index:11;'
       +'border:1px dashed rgba(255,255,255,.75);border-radius:6px;background:rgba(0,0,0,.12)';
     el.title='끌어서 [광고] 위치 옮기기 · 모서리를 끌면 크기';
     // ★모서리 잡이(2026-08-25 사장님 "광고도 모서리 잡고 크기 늘릴수있게").
@@ -3719,7 +3728,7 @@ function syncAdHandle(){
     grip.id='frHandleAdGrip';
     grip.style.cssText='position:absolute;right:-6px;bottom:-6px;width:13px;height:13px;'
       +'background:var(--accent2,#4ade80);border:1px solid #0a1017;border-radius:3px;'
-      +'cursor:nwse-resize;z-index:8';
+      +'cursor:nwse-resize;z-index:12';
     grip.title='끌어서 [광고] 크기 조절';
     el.appendChild(grip);
     pv.appendChild(el);
@@ -3916,7 +3925,7 @@ function renderTemplatePreview(){
   if(t.frame){
     if(!el){
       el=document.createElement('img'); el.id='tplPreview';
-      el.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;z-index:4';
+      el.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;z-index:8';
       pv.appendChild(el);
     }
     el.src=frameUrl(t.frame); el.style.display='';
@@ -3927,7 +3936,7 @@ function renderTemplatePreview(){
   const meta=TPL_LIST.find(x=>x.id===t.id); if(!meta) return;
   if(!el){
     el=document.createElement('img'); el.id='tplPreview';
-    el.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;z-index:4';
+    el.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;z-index:8';
     pv.appendChild(el);
   }
   el.src=meta.url; el.style.display='';
