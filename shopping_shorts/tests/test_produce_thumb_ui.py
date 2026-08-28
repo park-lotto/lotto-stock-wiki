@@ -691,11 +691,24 @@ def test_handles_show_for_sticker_with_delete_size_rotate():
         assert f'data-h="{h}"' in html, f"{h} 손잡이가 없다"
 
 
-def test_handles_hidden_for_text_layer():
-    """글자 레이어엔 손잡이를 안 띄운다 — 글자는 편집창에서 다룬다(범위 고정)."""
+def test_handles_show_for_text_layer():
+    """글자 레이어에도 손잡이를 띄운다(2026-08-28 사장님 "전체잡고 늘려서 글씨 크게 작게").
+
+    ★뒤집힌 계약이다 — 2026-08-18엔 "글자는 편집창에서 다룬다(범위 고정)"로 일부러
+      막아 뒀다. 기술적 이유가 아니라 그때의 작업 범위였고, 사장님이 직접 요청해 열었다.
+      그래서 이 테스트는 옛 test_handles_hidden_for_text_layer를 대체한다.
+    """
     html = _handles_html({"text": "A", "font": "X.ttf", "size": 78, "color": "#fff",
                           "outline": None, "box": None, "rot": 0, "x": 0.5, "y": 0.2})
-    assert html == "", "글자 레이어에 손잡이가 떴다"
+    for h in ("del", "g-45", "g45", "g135"):
+        assert f'data-h="{h}"' in html, f"글자 레이어에 {h} 손잡이가 없다"
+
+
+def test_handles_hidden_for_empty_text_layer():
+    """문구가 비어 있으면 손잡이를 띄우지 않는다 — 잡을 글자가 없는데 점선만 뜬다."""
+    html = _handles_html({"text": "", "font": "X.ttf", "size": 78, "color": "#fff",
+                          "outline": None, "box": None, "rot": 0, "x": 0.5, "y": 0.2})
+    assert html == "", "빈 글자 레이어에 손잡이가 떴다"
 
 
 def test_handle_positions_follow_size():

@@ -10715,6 +10715,30 @@ function thumbAutoLines(text){
 //   L에 필드를 심으면 저장 데이터가 오염되고, 인덱스로 담으면 순서가 바뀔 때 어긋난다.
 const THUMB_FIT_HOLD = new WeakMap();   // 레이어 → {ratio} (캔버스 폭 대비 글자 크기)
 
+// ── 자간(letter-spacing) ─────────────────────────────────────────────
+// L.tracking = 글자 크기 대비 % (0 = 종전 그대로). 없으면 0 → 옛 저장본도 그림이 안 바뀐다.
+// ★px가 아니라 **글자 크기 비율**로 담는다 — 미리보기(270)와 저장(1080)이 같은 그림이어야
+//   하는데(썸네일 전체가 지키는 계약), px로 담으면 배율이 다른 두 캔버스에서 어긋난다.
+// ★ctx.letterSpacing은 measureText에도 반영된다 → 자동 줄맞춤(thumbFit)이 저절로 따라온다.
+//   그래서 재는 곳과 그리는 곳 **둘 다** 같은 값을 걸어야 한다(한쪽만 걸면 글자가 넘친다).
+function _thumbTrackCss(L, size){
+  const t = Number((L && L.tracking) || 0);
+  return t ? `${(size * t / 100).toFixed(2)}px` : '0px';
+}
+// 구형 브라우저(letterSpacing 미지원)에서도 죽지 않게 — 있으면 걸고 없으면 종전 그림.
+function _setTrack(ctx, L, size){
+  try { if ('letterSpacing' in ctx) ctx.letterSpacing = _thumbTrackCss(L, size); } catch (e) {}
+}
+// ★가운데 정렬 보정(2026-08-28 실브라우저 실측). Chrome은 **마지막 글자 뒤에도** 자간을
+//   붙여 폭에 넣는다 — 실측: '가나다' 100px, 자간 40px → 276 → 396 (=+3×40, 2칸이 아니라 3칸).
+//   그래서 textAlign='center'로 그리면 글자가 자간 절반만큼 왼쪽으로 밀리고, 박스·형광펜·
+//   밑줄도 오른쪽으로 한 칸 길어진다. 그리는 x를 +ls/2 옮기고 폭은 −ls 해서 바로잡는다.
+function _trackPx(ctx, L, size){
+  if (!L || !L.tracking) return 0;
+  try { if (!('letterSpacing' in ctx)) return 0; } catch (e) { return 0; }
+  return parseFloat(_thumbTrackCss(L, size)) || 0;
+}
+
 function thumbFit(ctx, L, W, H){
   const family = thumbFontCss(L.font);
   const maxW = W * 0.92, maxH = H * 0.44;
@@ -10722,7 +10746,9 @@ function thumbFit(ctx, L, W, H){
   const lines = thumbAutoLines(L.text);
   if (!lines.some(l => (l || '').trim())) return {lines: [''], size: W * 0.06, family};
   ctx.font = `900 100px ${family}`;
+  _setTrack(ctx, L, 100);          // 100px 기준으로 재므로 자간도 그 기준으로 건다
   const widest = Math.max(1, ...lines.map(l => ctx.measureText(l).width));
+  _setTrack(ctx, {tracking: 0}, 0);   // 잰 뒤엔 원상복구 — 다른 레이어 측정에 새면 안 된다
   let size = 100 * (maxW / widest) * scale;                       // 폭 꽉 채우기 × 미세조정
   // ★이 레이어에 붙잡아 둔 크기가 있으면 그걸 쓴다(글자 수가 바뀌어도 안 흔들린다).
   //   비율(size/W)로 담아 두므로 미리보기(270)와 저장(1080)이 같은 그림이 된다.
@@ -10765,9 +10791,9 @@ function thumbReleaseFitHold(L){
 //
 // ★그리는 순서가 곧 쌓임 순서다: 형광펜(글자 뒤) → 외곽선 → 글자 → 밑줄(글자 아래 획).
 //   형광펜을 글자 뒤에 깔지 않으면 글자를 덮어 못 읽는다.
-function _fxMarker(ctx, line, y, size, fx){
+function _fxMarker(ctx, line, y, size, fx, ls){
   if (!fx || !fx.marker) return;
-  const w = ctx.measureText(line).width;
+  const w = ctx.measureText(line).width - (ls || 0);   // 뒤에 붙은 자간 한 칸을 뺀다
   ctx.save();
   // 실제 형광펜처럼 글자 아래쪽 절반만 덮고, 곱하기 합성으로 글자가 비쳐 보이게 한다.
   ctx.globalCompositeOperation = 'multiply';
@@ -10778,9 +10804,9 @@ function _fxMarker(ctx, line, y, size, fx){
   ctx.restore();
 }
 
-function _fxUnderline(ctx, line, y, size, fx, color){
+function _fxUnderline(ctx, line, y, size, fx, color, ls){
   if (!fx || !fx.underline || fx.underline === 'none') return;
-  const w = ctx.measureText(line).width;
+  const w = ctx.measureText(line).width - (ls || 0);   // 뒤에 붙은 자간 한 칸을 뺀다
   // ★형광펜을 같이 켜면 밑줄을 그 아래로 내린다(2026-08-18 실측). 형광펜 띠가 y+0.06~+0.58을
   //   덮는데 밑줄 기본 위치가 +0.46이라 띠 **안**에 그어져, 색이 달라도 묻혀 안 보였다.
   //   색을 바꾸는 걸로는 못 고친다 — 자리를 띠 바깥으로 옮겨야 한다.
@@ -11097,19 +11123,22 @@ function drawThumb(ctx, img, layers, W, H){
     ctx.translate(L.x * W, L.y * H);                            // 앵커 = 여러 줄 블록의 세로 중앙
     if (L.rot) ctx.rotate(L.rot * Math.PI / 180);
     ctx.font = `900 ${size}px ${family}`;
+    _setTrack(ctx, L, size);        // ★자간 — 재는 곳(thumbFit)과 같은 값이어야 한다
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     const startY = -((lines.length - 1) * lh) / 2;             // 블록을 앵커 기준 세로 중앙 정렬
+    const ls = _trackPx(ctx, L, size);          // 자간 한 칸(가운데 정렬 보정용, 없으면 0)
+    const tx = ls / 2;                          // 글자를 오른쪽으로 반 칸 — 위 주석 참고
     lines.forEach((line, li) => {
       const y = startY + li * lh;
       if (L.box){
-        const w = ctx.measureText(line).width, pad = L.box.pad * s;
+        const w = ctx.measureText(line).width - ls, pad = L.box.pad * s;
         ctx.globalAlpha = (L.box.opacity != null ? L.box.opacity : 80) / 100;
         ctx.fillStyle = L.box.color;
         ctx.fillRect(-w/2 - pad, y - size/2 - pad*0.6, w + pad*2, size + pad*1.2);
         ctx.globalAlpha = 1;
       }
-      _fxMarker(ctx, line, y, size, L.fx);        // ✨형광펜은 글자 뒤 — 먼저 깐다
+      _fxMarker(ctx, line, y, size, L.fx, ls);        // ✨형광펜은 글자 뒤 — 먼저 깐다
       // 레퍼런스 룩: 은은한 그림자 + 폰트 크기에 비례한 두꺼운 외곽선(작아도 커도 비율 유지).
       // fixed px(외곽선 슬라이더)보다 얇아지지 않게 max로 바닥을 깐다 — 큰 글자에 얇은 테두리 방지.
       if (L.outline && L.outline.w){
@@ -11118,7 +11147,7 @@ function drawThumb(ctx, img, layers, W, H){
         ctx.lineWidth = Math.max(L.outline.w * s, size * 0.085);
         ctx.strokeStyle = L.outline.color;
         ctx.lineJoin = 'round';
-        ctx.strokeText(line, 0, y);
+        ctx.strokeText(line, tx, y);
         ctx.restore();
       }
       const _fill = (li > 0 && L.color2) ? L.color2 : L.color;     // 1줄=color, 2줄부터=color2(2색 룩)
@@ -11128,12 +11157,12 @@ function drawThumb(ctx, img, layers, W, H){
         ctx.shadowColor = L.fx.glow.color || '#2EE6C5';
         ctx.shadowBlur = size * 0.35;
         ctx.fillStyle = _fill;
-        for (let g = 0; g < 3; g++) ctx.fillText(line, 0, y);      // 겹쳐야 눈에 띄게 빛난다
+        for (let g = 0; g < 3; g++) ctx.fillText(line, tx, y);      // 겹쳐야 눈에 띄게 빛난다
         ctx.restore();
       }
       ctx.fillStyle = _fill;
-      ctx.fillText(line, 0, y);
-      _fxUnderline(ctx, line, y, size, L.fx, _fill);   // ✨밑줄은 글자 위 획 — 마지막
+      ctx.fillText(line, tx, y);
+      _fxUnderline(ctx, line, y, size, L.fx, _fill, ls);   // ✨밑줄은 글자 위 획 — 마지막
     });
     ctx.restore();
   });
@@ -11301,6 +11330,24 @@ function _thumbHalf(L){
     const B = badgeBox(null, L, THUMB_W);
     return {hx: (B.bw / 2) / THUMB_W, hy: (B.bh / 2) / THUMB_H};
   }
+  // ★글자는 정사각이 아니다 — 여러 줄 블록이라 가로로 넓고 세로는 줄 수만큼이다(2026-08-28).
+  //   스티커 식(size/200 정사각)으로 재면 점선 박스가 글자와 안 맞고 ✕가 허공에 뜬다.
+  //   실제 그리는 값(thumbFit)을 그대로 빌려 쓴다 — 같은 계산을 두 번 적지 않는다(0순위-B).
+  if (!L.kind && L.text){
+    try {
+      const ctx = document.getElementById('thumbCanvas').getContext('2d');
+      const {lines, size, family} = thumbFit(ctx, L, THUMB_W, THUMB_H);
+      ctx.save();
+      ctx.font = `900 ${size}px ${family}`;
+      _setTrack(ctx, L, size);
+      const ls = _trackPx(ctx, L, size);
+      const w = Math.max(1, ...lines.map(l => ctx.measureText(l).width - ls));
+      ctx.restore();
+      const h = lines.length * size * 1.16;
+      const pad = size * 0.16;                       // 손잡이가 글자에 붙지 않게 약간 띄운다
+      return {hx: (w / 2 + pad) / THUMB_W, hy: (h / 2 + pad) / THUMB_H};
+    } catch (e) { /* 못 재면 아래 기본식 — 손잡이가 조금 어긋날 뿐 기능은 산다 */ }
+  }
   const hx = (L.size != null ? L.size : 18) / 200;   // x축 정규화 반각
   return {hx, hy: hx * (THUMB_W / THUMB_H)};          // 캔버스가 세로로 길어 y는 비율만큼 작다
 }
@@ -11310,7 +11357,12 @@ function renderThumbHandles(){
   // ★배지도 손잡이를 받는다(2026-08-27 사장님 "배지 넣고 취소하는거 없어").
   //   종전엔 sticker·shape만 허용해 **배지를 얹으면 캔버스에 ✕가 안 떴다** — 지우려면
   //   왼쪽 레이어 목록의 작은 ✕를 찾아야 했는데 사장님 눈엔 "취소가 없다"였다.
-  if (!L || !['sticker', 'shape', 'badge'].includes(L.kind)){ box.innerHTML = ''; return; }
+  // ★글자 레이어에도 손잡이를 준다(2026-08-28 사장님 "전체잡고 늘려서 글씨 크게 작게").
+  //   손잡이 자체는 2026-08-18부터 있었는데 kind 필터가 **글자만 빼놓고** 있었다 —
+  //   그래서 글자는 [크기 미세조정] 슬라이더로만 조절해야 했다.
+  if (!L){ box.innerHTML = ''; return; }
+  const isText = !L.kind && !!L.text;
+  if (!isText && !['sticker', 'shape', 'badge'].includes(L.kind)){ box.innerHTML = ''; return; }
   const {hx, hy} = _thumbHalf(L);
   const pos = (x, y) => `left:${(x * 100).toFixed(2)}%;top:${(y * 100).toFixed(2)}%`;
   const btn = (id, x, y, label, title, cur) =>
@@ -11333,7 +11385,7 @@ function renderThumbHandles(){
 function initThumbHandleDrag(){
   const box = document.getElementById('thumbHandles'); if (!box || !box.addEventListener) return;
   const cv = document.getElementById('thumbCanvas');
-  let mode = null;
+  let mode = null, grab = null;   // grab = 글자 레이어를 잡은 순간의 기준(아래 설명)
   const to = e => {
     const r = cv.getBoundingClientRect();
     return {x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height};
@@ -11344,8 +11396,19 @@ function initThumbHandleDrag(){
     const h = b.getAttribute('data-h');
     if (h === 'del'){ removeThumbLayer(THUMB_STATE.sel); return; }
     mode = h;
+    // ★글자는 스티커와 크기 단위가 다르다(2026-08-28). 스티커의 size는 '반각 × 200'이라
+    //   끈 거리를 그대로 크기로 쓸 수 있지만, 글자의 size는 [크기 미세조정] 슬라이더 값
+    //   (30~200, 기준 90)이고 실제 픽셀은 thumbFit이 문구 길이까지 봐서 정한다.
+    //   그래서 글자는 **끈 거리의 비율**로 키운다 — 잡은 순간의 거리·크기를 기준으로 삼는다.
+    grab = null;
+    const L = THUMB_STATE.layers[THUMB_STATE.sel];
+    if (L && !L.kind && L.text){
+      const p = to(e);
+      const d = Math.hypot((p.x - L.x) * THUMB_W, (p.y - L.y) * THUMB_H);
+      grab = {d: Math.max(1, d), size: L.size || 90};
+    }
   });
-  window.addEventListener('mouseup', () => { mode = null; });
+  window.addEventListener('mouseup', () => { mode = null; grab = null; });
   window.addEventListener('mousemove', e => {
     if (!mode) return;
     const L = THUMB_STATE.layers[THUMB_STATE.sel]; if (!L) return;
@@ -11354,9 +11417,16 @@ function initThumbHandleDrag(){
     // 세 모서리 손잡이는 이름이 곧 '원래 각도'다(g-45=우상, g45=우하, g135=좌하).
     // 크기는 끈 거리, 방향은 그 각도에서 얼마나 돌았나 — 한 번의 드래그로 둘 다 잡힌다.
     const base = Number(mode.slice(1));
-    const s = Math.max(Math.abs(dx), Math.abs(dy)) / THUMB_W * 200;
-    L.size = Math.min(120, Math.max(4, Math.round(s)));
-    L.rot = Math.round(Math.atan2(dy, dx) * 180 / Math.PI - base);
+    if (grab){
+      // 글자 — 비율로 키우고, 회전은 슬라이더와 같은 범위(-45~45)로 묶는다.
+      const d = Math.hypot(dx, dy);
+      L.size = Math.min(200, Math.max(30, Math.round(grab.size * d / grab.d)));
+      L.rot = Math.max(-45, Math.min(45, Math.round(Math.atan2(dy, dx) * 180 / Math.PI - base)));
+    } else {
+      const s = Math.max(Math.abs(dx), Math.abs(dy)) / THUMB_W * 200;
+      L.size = Math.min(120, Math.max(4, Math.round(s)));
+      L.rot = Math.round(Math.atan2(dy, dx) * 180 / Math.PI - base);
+    }
     renderThumbCanvas(); renderThumbLayers();
   });
 }
@@ -11487,10 +11557,14 @@ function setThumbField(key, val){
   if (key === 'outline_w'){ L.outline = L.outline || {color: '#000000', w: 0}; L.outline.w = +val; }
   else if (key === 'outline_color'){ L.outline = L.outline || {color: '#000000', w: 4}; L.outline.color = val; }
   else if (key === 'box'){ L.box = val ? {color: '#000000', pad: 16, opacity: 80} : null; }
-  else if (key === 'size' || key === 'rot'){ L[key] = +val; }
+  else if (key === 'size' || key === 'rot' || key === 'tracking'){ L[key] = +val; }
   else L[key] = val;
   if (key === 'text') thumbHoldSizeWhileTyping();   // 치는 동안 크기 고정(2026-08-27 고객 제보)
   renderThumbCanvas();
+  // 글자에도 손잡이가 생겼으니(2026-08-28) 슬라이더로 바꿔도 점선 박스가 따라와야 한다.
+  // ★#thumbHandles만 다시 그린다 — 편집칸(#thumbEdit)을 다시 그리면 끌던 슬라이더가
+  //   교체돼 드래그가 끊긴다.
+  try { renderThumbHandles(); } catch (e) {}
 }
 
 // 위치 = 큰 버튼 3개(⬆위/⏺가운데/⬇아래). 시니어가 드래그 없이 클릭 한 번으로 배치한다.
@@ -11745,6 +11819,10 @@ function renderThumbLayers(){
     </div>
     <label style="font-size:11px;color:var(--sub)">크기 미세조정 <span style="color:var(--sub);opacity:.7">(자동으로 화면 폭을 꽉 채워요 · 필요하면 조절)</span></label>
     <input type="range" min="30" max="200" value="${L.size}" oninput="setThumbField('size', this.value)" style="width:100%">
+    <label style="font-size:11px;color:var(--sub)">자간 ${Number(L.tracking || 0) > 0 ? '+' : ''}${Number(L.tracking || 0)}
+      <span style="color:var(--sub);opacity:.7">(글자 사이 간격 · 0이 기본)</span></label>
+    <input type="range" min="-10" max="40" value="${Number(L.tracking || 0)}"
+           oninput="setThumbField('tracking', this.value)" style="width:100%">
     <label style="font-size:11px;color:var(--sub)">회전 ${L.rot}°</label>
     <input type="range" min="-45" max="45" value="${L.rot}" oninput="setThumbField('rot', this.value)" style="width:100%">
     <div style="display:flex;gap:8px;align-items:center;margin-top:6px">
