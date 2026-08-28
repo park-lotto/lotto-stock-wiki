@@ -4074,15 +4074,20 @@ def api_mix_product(body: dict):
     prev = job.get("product") or {}
     product["inpock_registered"] = bool(
         body.get("inpock_registered", prev.get("inpock_registered", False)))
-    # ── 인포크 번호 자동 부여 (2026-08-18, 사장님 "마지막번호 다음으로") ──
-    # 8단계에서 저장이 끝나는 순간 번호가 붙어, 인포크에 넣을 문구가 이미 완성돼 있다.
-    # ★한 번 받은 번호는 고정이다 — 링크를 고칠 때마다 번호가 바뀌면 이미 인포크에
-    #   등록해둔 것과 어긋나 사장님이 찾지 못한다(등록완료 플래그와 같은 이유).
-    num = prev.get("inpock_number") or body.get("inpock_number")
-    if not num:
-        num = coupang_partners.next_number(store.get_setting("inpock_last_number"))
-        store.set_setting("inpock_last_number", str(num))
-    product["inpock_number"] = str(num)
+    # ── 인포크 번호는 **사람이 넣는다** (2026-08-28 사장님 "수정버튼만 만들어주고
+    #    번호는 공란으로 표시해줘") ──
+    # 전엔 next_number로 자동 부여했는데, 그 카운터가 `settings`(전역)라 **전 고객이
+    # 하나를 나눠 썼다** — settings는 key가 PK라 계정 축이 없다(store.py:1072).
+    # 실측: cid174=30 · cid110=29 · cid201=28 … 각자 다른 사람인데 번호가 이어졌고,
+    # 고객 눈엔 "무작위로 29번"으로 보였다. 그래서 자동 부여를 걷어냈다.
+    #
+    # ★body에 번호가 오면 **그게 이긴다** — 수정 버튼이 그 경로다. 전엔 prev가 먼저라
+    #   한 번 붙은 번호를 영영 못 고쳤다. 빈 문자열을 보내면 지운다(공란으로 되돌리기).
+    if "inpock_number" in body:
+        num = str(body.get("inpock_number") or "").strip()
+    else:
+        num = str(prev.get("inpock_number") or "").strip()
+    product["inpock_number"] = num
     store.set_mix_product(job_id, product)
     return {"ok": True, "product": product,
             "final_link": coupang_partners.final_link(product),
