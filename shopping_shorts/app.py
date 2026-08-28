@@ -5920,9 +5920,12 @@ def api_thumb_frames(body: dict):
         except Exception:
             pass   # 자막 없는 배경을 못 만들면 자막 있는 preview/최종으로라도 프레임을 낸다
     video = None
-    for cand in (job.get("clean_video_path"), job.get("preview_path"), job.get("video_path")):
+    bg_kind = ""          # 어떤 배경을 썼나 — 화면이 사장님·고객에게 알린다(아래 참조)
+    for cand, kind in ((job.get("clean_video_path"), "clean"),
+                       (job.get("preview_path"), "preview"),
+                       (job.get("video_path"), "final")):
         if cand and Path(cand).exists():
-            video = cand
+            video, bg_kind = cand, kind
             break
     if not video:
         return JSONResponse(status_code=404, content={"ok": False, "error": "믹스 영상 없음"})
@@ -5964,7 +5967,9 @@ def api_thumb_frames(body: dict):
     if not want_more and existing and thumb.get("video_sig") == video_sig:
         meta = thumb.get("frames") or []
         if len(meta) == len(existing):
-            return {"ok": True, "frames": meta, "stale_results": _stale_results()}
+            return {"ok": True, "frames": meta, "stale_results": _stale_results(),
+                    "bg": bg_kind, "subtitle_removal": bool(job.get("subtitle_removal")),
+                    "clean_status": job.get("clean_status") or ""}
 
     # 재추출(재재조사 픽스1·2, 2026-07-17): 여기서 rmtree(out_dir)를 돌리면 안 된다.
     # 같은 out_dir을 T4(썸네일 저장, task-4-brief.md)가 써서 사용자가 고른
@@ -6002,7 +6007,13 @@ def api_thumb_frames(body: dict):
     thumb["frames"] = frames
     thumb["video_sig"] = video_sig
     Store(DB_PATH).update_mix_job(job_id, thumbnail=thumb)
-    return {"ok": True, "frames": frames, "stale_results": _stale_results()}
+    # ★어떤 배경으로 뽑았는지 함께 알린다(2026-08-28 고객 제보 "썸네일에 원본 자막이 남는다").
+    #   실측: clean_preview.mp4는 16:11에 생겼는데 제보 화면은 15:35였다 — 즉 **자막제거가
+    #   끝나기 전에** 썸네일을 열어 preview로 조용히 폴백한 것이다. 배경 자체는 규칙대로
+    #   골랐지만, 그 사실을 아무도 말해주지 않아 "지웠는데 왜 남아있지"가 된다.
+    return {"ok": True, "frames": frames, "stale_results": _stale_results(),
+            "bg": bg_kind, "subtitle_removal": bool(job.get("subtitle_removal")),
+            "clean_status": job.get("clean_status") or ""}
 
 
 @app.get("/api/produce/thumb/file/{job_id}/{name}")
