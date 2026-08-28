@@ -70,11 +70,19 @@
       </div>`;
     }).join('');
 
-    // ── 음성 레인 + 재생선
+    // ── 음성 레인 + 재생선. cap_src(⑦a) = 이 칸 구절 초가 어느 단에서 나왔나.
     const ttsReal = ((DATA.tts_dur || {})[String(i)]);
+    const capSrc = ((DATA.beats || [])[i] || {}).cap_src;
+    const srcBadge = capSrc === 'precise'
+        ? '<span class="tl-src ok" title="TTS가 준 정밀 타임스탬프로 계산된 초입니다">🎯 정밀싱크</span>'
+      : capSrc === 'asr'
+        ? '<span class="tl-src mid" title="받아쓰기(ASR)로 맞춘 초 — 대체로 정확하지만 오인식만큼 어긋날 수 있어요">👂 받아쓰기</span>'
+      : capSrc === 'estimate'
+        ? '<span class="tl-src bad" title="구절 초가 글자수 추정입니다 — 🔊 음성·자막 다시 뽑기 한 번이면 정밀로 올라갑니다">≈ 추정</span>'
+      : '';    // 옛 작업은 기록이 없다 — 아무것도 안 단다(모르는 걸 아는 척하지 않는다)
     const audHtml = `<div class="tl-aud-bar" style="left:0;width:${(dur * pps).toFixed(1)}px">
-        <span class="tl-aud-l">${ttsReal ? `beat_${i}.mp3 · ${(+ttsReal).toFixed(2)}s`
-                                         : '🔇 음성 없음 — 추정 길이'}</span></div>`;
+        <span class="tl-aud-l">${srcBadge}${ttsReal ? ` beat_${i}.mp3 · ${(+ttsReal).toFixed(2)}s`
+                                         : ' 🔇 음성 없음 — 추정 길이'}</span></div>`;
 
     // 자막 레인은 두 얼굴: 보기(시간축 블록) / ✂편집(어절 칩 + 경계 클릭 — ⑥).
     // 레인 자리는 하나고 내용물만 바뀐다 — 래퍼를 두 벌 만들지 않는다(0순위-B).
@@ -184,15 +192,18 @@
     words.forEach((w, k) => { cur.push(w); if (bset.has(k)) { lines.push(cur.join(' ')); cur = []; } });
     if (cur.length) lines.push(cur.join(' '));
     try {
-      const r = await fetch(`/api/mix/scene_lab/${SL.job}/caption_lines/${i}`, {
+      // 저장은 **이미 있는** 자막 줄나눔 API 하나로(0순위-B — 2026-08-25 caplines).
+      const r = await fetch(`/api/produce/mix/${SL.job}/caplines`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lines }) });
+        body: JSON.stringify({ beat_idx: i, lines }) });
       const d = await r.json();
       if (!r.ok || !d.ok) { nsay('⚠ ' + (d.error || '경계 저장 실패')); return; }
       // ⑨ 연쇄 갱신 — 진실(구절 시간표)만 바꾸고 나머지는 render()가 파생으로 다시 그린다.
-      DATA.captions[String(i)] = d.captions;
+      if (d.captions) DATA.captions[String(i)] = d.captions;
       const b = (DATA.beats || [])[i];
-      if (b) { b.caption_lines = lines; b.cap_durs = d.cap_durs; b.cap_lead = d.cap_lead; }
+      if (b) { b.caption_lines = lines; b.cap_durs = d.cap_durs;
+               b.cap_lead = d.cap_lead; b.cap_src = d.cap_src; }
+      if (!d.timed) nsay('⚠ 이 칸은 정밀 타임스탬프가 없어 초가 추정입니다 — 🔊 음성·자막 다시 뽑기를 권장');
       render();
     } catch (e) { nsay('⚠ 경계 저장 실패 — 네트워크'); }
   };

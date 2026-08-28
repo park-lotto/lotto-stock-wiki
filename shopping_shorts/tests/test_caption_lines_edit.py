@@ -1,7 +1,9 @@
-"""칸 타임라인 ⑥ — 사용자 구절 경계 편집: caption_lines 저장 + 워드 타임스탬프 재계산.
+"""칸 타임라인 ⑥⑦a — 구절 경계 편집은 **기존** caplines API 한 벌로(0순위-B).
 
-재TTS 없이, mp3 옆 사이드카(align.json)의 실제 발화 시각으로 구절 초를 다시 계산한다.
-어절 재배열(끊기/합치기)만 허용 — 글자가 바뀌면 422(대본 수정은 narration POST의 일).
+2026-08-29: 처음엔 별도 라우트를 만들었다가 `/api/produce/mix/{job}/caplines`(08-25)가
+같은 일(경계 검증→저장→타이밍 재계산)을 이미 하는 걸 발견하고 그쪽을 확장했다.
+여기서 검증하는 확장분: ①응답에 새 시간표(captions — GET과 같은 _lab_captions)
+②cap_src(정밀/받아쓰기/추정) 기록.
 """
 import json
 
@@ -10,7 +12,6 @@ from fastapi.testclient import TestClient
 from shopping_shorts import app as appmod
 
 NARR = "마침 파티플래너인 친구가 추천해 주는데"
-# 단어별 실제 발화 시각(초): 마침0.0 파티플래너인0.5 친구가1.5 추천해2.0 주는데2.6~3.2
 _WORD_TIMES = [("마침", 0.0, 0.4), ("파티플래너인", 0.5, 1.4), ("친구가", 1.5, 1.9),
                ("추천해", 2.0, 2.5), ("주는데", 2.6, 3.2)]
 
@@ -30,8 +31,10 @@ def _alignment():
 
 def _client(tmp_path, monkeypatch):
     monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
-    # mp3 실파일 대신 길이만 고정 — 시각 계산은 사이드카가 진실이라 probe는 총길이만 준다
     monkeypatch.setattr(appmod.video_assemble, "_probe_duration", lambda p: 3.4)
+    monkeypatch.setattr(appmod.mix_pipeline, "_probe_duration", lambda p: 3.4)
+    # ASR 폴백이 외부 호출로 새지 않게 — 사이드카 없으면 estimate로 떨어져야 한다
+    monkeypatch.setattr(appmod.mix_pipeline.asr_check, "transcribe_words", lambda p: None)
     return TestClient(appmod.app)
 
 
@@ -43,7 +46,7 @@ def _job(tmp_path, with_align=True):
             json.dumps(_alignment()), encoding="utf-8")
     s = appmod.Store(appmod.DB_PATH)
     s.create_mix_job("j", ["u"], 30, "free")
-    s.update_mix_job("j", status="done")   # 진행 중 가드(409)에 안 걸리게
+    s.update_mix_job("j", status="done")
     s.update_mix_job("j", edit_plan={"beats": [{
         "beat_idx": 0, "role": "hook", "narration": NARR,
         "target_seconds": 3.4, "tts_path": str(mp3),
@@ -51,34 +54,50 @@ def _job(tmp_path, with_align=True):
     return s
 
 
-def test_split_recomputes_durs_from_words(tmp_path, monkeypatch):
+def test_split_recomputes_and_returns_timetable(tmp_path, monkeypatch):
     c = _client(tmp_path, monkeypatch)
     _job(tmp_path)
-    r = c.post("/api/mix/scene_lab/j/caption_lines/0",
-               json={"lines": ["마침 파티플래너인", "친구가 추천해 주는데"]})
+    r = c.post("/api/produce/mix/j/caplines",
+               json={"beat_idx": 0, "lines": ["마침 파티플래너인", "친구가 추천해 주는데"]})
     assert r.status_code == 200, r.text
     d = r.json()
-    assert d["ok"] and len(d["captions"]) == 2
-    # 경계는 실제 발화 시각: 구절1 = 마침(0.0)~친구가 직전 → 표시시간 ≈ 1.5초
+    assert d["ok"] and d["timed"] and d["cap_src"] == "precise"
+    assert len(d["captions"]) == 2
     g1 = d["captions"][0]
+    # 경계 = 친구가의 실제 시작(1.5초) 언저리
     assert abs((g1["end"] - g1["start"]) - 1.5) < 0.35
-    # 저장까지 됐나 — 다음 로드·렌더가 같은 경계를 쓴다
     beat = appmod.Store(appmod.DB_PATH).get_mix_job("j")["edit_plan"]["beats"][0]
     assert beat["caption_lines"] == ["마침 파티플래너인", "친구가 추천해 주는데"]
-    assert beat["cap_durs"] and len(beat["cap_durs"]) == 2
+    assert beat["cap_src"] == "precise" and len(beat["cap_durs"]) == 2
 
 
 def test_text_change_rejected(tmp_path, monkeypatch):
     c = _client(tmp_path, monkeypatch)
     _job(tmp_path)
-    r = c.post("/api/mix/scene_lab/j/caption_lines/0",
-               json={"lines": ["대본에 없는 문장"]})
+    r = c.post("/api/produce/mix/j/caplines",
+               json={"beat_idx": 0, "lines": ["대본에 없는 문장"]})
     assert r.status_code == 422
 
 
-def test_no_alignment_409(tmp_path, monkeypatch):
+def test_no_alignment_falls_to_estimate(tmp_path, monkeypatch):
     c = _client(tmp_path, monkeypatch)
     _job(tmp_path, with_align=False)
-    r = c.post("/api/mix/scene_lab/j/caption_lines/0",
-               json={"lines": ["마침 파티플래너인", "친구가 추천해 주는데"]})
-    assert r.status_code == 409
+    r = c.post("/api/produce/mix/j/caplines",
+               json={"beat_idx": 0, "lines": ["마침 파티플래너인", "친구가 추천해 주는데"]})
+    assert r.status_code == 200
+    d = r.json()
+    # 조용히 실패하던 자리 — 이제 단계가 보인다: 추정 폴백 + timed False
+    assert d["ok"] and d["timed"] is False and d["cap_src"] == "estimate"
+    # 시간표는 글자수 폴백으로라도 나온다(화면이 비지 않게)
+    assert len(d["captions"]) == 2
+
+
+def test_asr_fallback_marks_cap_src(tmp_path, monkeypatch):
+    c = _client(tmp_path, monkeypatch)
+    _job(tmp_path, with_align=False)
+    words = [{"word": w, "start": a, "end": b} for w, a, b in _WORD_TIMES]
+    monkeypatch.setattr(appmod.mix_pipeline.asr_check, "transcribe_words", lambda p: words)
+    r = c.post("/api/produce/mix/j/caplines",
+               json={"beat_idx": 0, "lines": ["마침 파티플래너인", "친구가 추천해 주는데"]})
+    d = r.json()
+    assert r.status_code == 200 and d["ok"] and d["timed"] and d["cap_src"] == "asr"
