@@ -88,7 +88,8 @@ def test_일시실패는_attempts를_안_태운다(monkeypatch, tmp_path):
         def set_setting(self, *a, **k): pass
 
     monkeypatch.setattr(pw, "Store", lambda *a, **k: FakeStore())
-    monkeypatch.setattr(pw, "_daily_take", lambda s: True)
+    # 호출부 형태 그대로 받는다 — run_prewarm은 manual= 키워드로 부른다(2026-08-28).
+    monkeypatch.setattr(pw, "_daily_take", lambda s, **kw: True)
     monkeypatch.setattr(pw, "_gate", lambda: (lambda cid, kind: True,
                                               lambda cid, kind: None,
                                               lambda kind: None,

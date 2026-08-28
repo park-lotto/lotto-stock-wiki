@@ -1298,7 +1298,8 @@ def api_saved(request: Request):
     return {"ok": True, "saved": sorted(store.saved_set(customer_id=_cid(request)))}
 
 
-def _enqueue_prewarm(store, shortcode, url, *, caption="", customer_id="0", category=None):
+def _enqueue_prewarm(store, shortcode, url, *, caption="", customer_id="0", category=None,
+                     manual=False):
     """담긴 영상의 사전분석(추출+구조분석)을 워커 큐에 걸어 제작소 1단계 로딩을 없앤다
     (2026-07-30, 설계 `2026-07-29-추출속도-3종묶음-design.md` §2①).
 
@@ -1307,6 +1308,8 @@ def _enqueue_prewarm(store, shortcode, url, *, caption="", customer_id="0", cate
       · 이미 유효 캐시 — 예열할 이유가 없다(제미니 재과금 방지).
       · 같은 shortcode가 이미 큐에 있음 — 담기취소·재담기 연타로 중복 적재 방지.
     래치·크레딧·일일상한은 워커 쪽 `prewarm.run_prewarm`이 최종 판단한다(서버는 얇게).
+    manual=True(사람이 '분석' 버튼을 누른 것)는 그 상한을 건너뛴다 — 인자로만 실어 보내고
+    판단은 워커가 한다(같은 판단을 두 곳에 적지 않는다, 0순위-B).
     실패는 조용히 — 예열이 안 걸려도 제작소가 그때 추출하므로 기능은 그대로다."""
     try:
         if not (shortcode and (url or "").strip()):
@@ -1320,7 +1323,9 @@ def _enqueue_prewarm(store, shortcode, url, *, caption="", customer_id="0", cate
         if store.queue_has_pending("prewarm", "shortcode", shortcode):
             return False
         store.enqueue("prewarm", {"shortcode": shortcode, "url": url, "caption": caption,
-                                  "customer_id": str(customer_id), "category": category})
+                                  "customer_id": str(customer_id), "category": category,
+                                  # 사람이 직접 누른 분석은 일일 상한을 건너뛴다(2026-08-28).
+                                  "manual": bool(manual)})
         return True
     except Exception as e:  # noqa: BLE001 — 예열 실패는 담기를 막지 않는다
         print(f"prewarm enqueue 실패(무해) {shortcode}: {e}", file=sys.stderr)
@@ -12080,11 +12085,21 @@ def api_basket_analyze(request: Request, body: dict):
             skipped += 1
             continue
         it = basket.get(c) or {}
-        _enqueue_prewarm(store, c, it.get("url") or "",
-                         caption=it.get("caption") or "", customer_id=str(cid))
+        url = (it.get("url") or "").strip()
+        if not url:
+            # ★조용히 실패하지 않는다(2026-08-28). URL이 없으면 워커가 받을 게 없어
+            #   큐에 아무것도 안 남고, 화면은 몇 초 뒤 '분석 전'으로 되돌아간다.
+            out[c] = "no_url"
+            skipped += 1
+            continue
+        _enqueue_prewarm(store, c, url, caption=it.get("caption") or "",
+                         customer_id=str(cid), manual=True)
         out[c] = "queued"
         queued += 1
-    return {"ok": True, "queued": queued, "skipped": skipped, "items": out}
+    return {"ok": True, "queued": queued, "skipped": skipped, "items": out,
+            # 화면이 "왜 아무 일도 안 났는지" 말할 수 있게(조율가 제보 2026-08-28).
+            "note": ("고른 항목에 영상 주소가 없어 분석을 걸 수 없었어요 — 다시 담아 주세요"
+                     if all(v == "no_url" for v in out.values()) and out else "")}
 
 
 @app.get("/api/produce/source_brief")
