@@ -179,6 +179,10 @@
     /* 탭(대본 3모드 등 공용) */
     .tabs{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
     .tab{background:var(--inset);border:1px solid var(--line);color:var(--txt);padding:12px 18px;border-radius:9px;cursor:pointer;font-size:14px;flex:1;min-width:150px;text-align:center}
+    /* 🩹 가림막 버튼(2026-08-28) — .tab은 flex:1이라 줄 전체로 늘어난다. 내용만큼만. */
+    .mkbtn{background:var(--inset);border:1px solid var(--line);color:var(--txt);
+           padding:8px 14px;border-radius:8px;cursor:pointer;font-size:12px}
+    .mkbtn:hover{border-color:var(--accent2)}
     .tab.active{background:var(--sel-bg);border-color:var(--accent);color:var(--sel-fg)}
     textarea{width:100%;min-height:160px;background:var(--inset);border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:12px;font-size:14px;resize:vertical;font-family:inherit}
     .hint{color:var(--sub);font-size:12px;margin-top:6px}
@@ -281,6 +285,9 @@
     .seoBody{display:flex;flex-direction:column;gap:12px}
     .seoCard{border:1px solid #8884;border-radius:8px;padding:12px}
     .seoCardHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+    /* 해시태그 줄머리 — 플랫폼 이름과 그 줄만 복사하는 버튼(2026-08-28) */
+    .seoHashRow{display:flex;align-items:center;gap:8px;margin-top:6px}
+    .seoHashRow .sub{margin:0}
     .seoCard input,.seoCard textarea{width:100%;box-sizing:border-box}
     .seoCard .cnt{text-align:right;font-size:12px;opacity:.6}
     .seoCard .cands{margin:4px 0 0;padding-left:20px}
@@ -1398,7 +1405,13 @@
         <!-- ② 미리듣기·설정 (성우를 고르면 나타난다) -->
         <div>
           <div id="voiceControls" style="display:none">
-          <div style="font-size:12px;color:var(--sub)">속도</div>
+          <!-- ★현재 속도를 숫자로 보여준다(2026-08-28 고객 제보 "속도 조절이 안 먹는다").
+               성우 67명 중 24명의 기본 속도가 1.42·1.48·1.52처럼 버튼(0.1 단위)에 **없는 값**이라
+               활성 버튼이 하나도 안 떴다 — 사용자에겐 "안 걸린" 것으로 보였다. -->
+          <div style="font-size:12px;color:var(--sub);display:flex;align-items:center;gap:6px">
+            속도 <b id="speedNow" style="color:var(--txt)">–</b>
+            <span id="speedOff" class="hint" style="display:none;font-size:11px"></span>
+          </div>
           <div id="speedBtns" style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 10px"></div>
           <div style="font-size:12px;color:var(--sub)">무음 삭제</div>
           <div id="silenceBtns" style="display:flex;gap:6px;margin:4px 0 10px"></div>
@@ -1420,6 +1433,15 @@
               <label style="display:flex;align-items:center;gap:6px;min-height:44px;cursor:pointer"><input type="checkbox" id="advBoost" onchange="onAdv()"> Speaker boost</label>
             </div>
           </details>
+          <!-- ★설정을 바꾸면 전체 음성은 **다시 만들어야** 바뀐다(2026-08-28 고객 제보:
+               "미리듣기 하고 전체 재생 누르면 조절 전 속도가 나와요"). 미리듣기는 즉석
+               합성이라 바로 반영되지만, 완성본은 이미 만들어둔 파일을 튼다 — 그 사실을
+               화면이 말해주지 않아 고장으로 읽혔다. -->
+          <div id="voiceDirty" style="display:none;margin:2px 0 8px;padding:8px 10px;border-radius:8px;
+               background:#3a2f12;border:1px solid #7a5f1c;color:#ffc75a;font-size:12.5px;line-height:1.5">
+            ⚠️ 설정을 바꿨어요 — <b>아래 「이 음성으로 전체 생성」</b>을 눌러야 완성본에 반영됩니다.
+            (미리듣기는 지금 설정으로 바로 들려줍니다)
+          </div>
           <button onclick="previewVoice()" class="btn-prev" style="padding:8px 14px;margin-right:8px" title="이 성우·설정으로 대본 일부만 짧게 들어봅니다 (완성본 아님)">🎧 목소리만 미리듣기</button>
           <button onclick="applyVoice()" class="btn-next" style="padding:8px 16px" title="이 성우로 대본 전체 음성을 만듭니다 — 완성되면 왼쪽에서 ▶ 완성본 전체 듣기">이 음성으로 전체 생성</button>
           <div id="voicePreview" style="margin-top:8px"></div>
@@ -2005,8 +2027,70 @@
                 </div>
           </div>
           <div id="decoPaneFx" style="display:none">
-          <!-- ✨ 고급효과(리모션) — 항상 보이는 자리·선택·프리미엄. 켜면 자동 추천 → 렌더 -->
-          <div id="fxAdvBox" style="background:linear-gradient(135deg,#1c1436,var(--inset));border:1px solid #6b4fa0;border-radius:10px;padding:10px 12px;margin-bottom:12px">
+          <!-- 🩹 가림막(2026-08-28 사장님 시안 그대로 · "효과" 탭으로) ────────────────
+               "자막 남는것 가운데나 이런거 가릴때 … 도형이나 모양변경 가능하게해서
+                배치할수있게 … 워터마크도 가리고" + "색 쪽에 파레트 배치"
+               ★그림 한 장(deco_frame)에 함께 얹는다 — 미리보기와 렌더가 같은 파일이라
+                 "화면엔 보이는데 완성본엔 없다"가 구조적으로 안 생긴다(0순위-B).
+               ★버튼식이다(슬라이더 대신) — 딸깍·시니어 북극성. -->
+          <div id="mkBox" style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:12px">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+              <div style="font-size:17px;font-weight:900;letter-spacing:-.3px">🩹 <span style="color:#7CE8B0">가림막</span> <span style="font-size:12px;color:var(--sub);font-weight:600">— 남은 자막·워터마크 덮기</span></div>
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+              <button type="button" onclick="mkAdd()" class="mkbtn">+ 가림막 추가</button>
+              <button type="button" onclick="mkDelSel()" class="mkbtn">✕ 선택 삭제</button>
+              <span style="width:10px"></span>
+              <button type="button" onclick="mkAdd('subbot')" class="mkbtn">↓ 하단 자막</button>
+              <button type="button" onclick="mkAdd('top')" class="mkbtn">↑ 상단 스티커</button>
+              <button type="button" onclick="mkAdd('wmr')" class="mkbtn">⊡ 구석 워터마크</button>
+              <button type="button" onclick="mkAdd('sub')" class="mkbtn">◎ 가운데</button>
+            </div>
+            <!-- 😀 스티커·뱃지(2026-08-28 사장님 지시로 고급효과 자리를 대체).
+                 ★가림막과 **같은 목록**에 들어간다 — 아래 알약/편집기/드래그가 그대로 쓰인다. -->
+            <details id="mkStickerBox" style="margin-bottom:10px;border:1px solid var(--line);
+                     border-radius:10px;background:var(--panel)">
+              <summary style="cursor:pointer;padding:9px 12px;font-size:13px;font-weight:800;
+                       display:flex;align-items:center;gap:6px;min-height:44px">
+                😀 스티커 · 뱃지 <span style="font-size:11px;color:var(--sub);font-weight:600">— 눌러서 얹고, 끌어서 옮깁니다</span>
+              </summary>
+              <div style="padding:2px 12px 12px">
+                <div id="mkEmojiTabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px"></div>
+                <!-- ★칸 수를 고정하지 않는다(auto-fill) — 12열로 박으면 좁은 화면에서
+                     마지막 칸이 밖으로 밀려 잘린다(실측: 그리드 밖 228px). -->
+                <div id="mkEmojiGrid" style="display:grid;
+                     grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:6px"></div>
+                <div style="font-size:11px;color:var(--sub);margin:12px 0 6px">🏷 글자 뱃지 — 색은 아래 <b>색</b>에서 바꿉니다</div>
+                <div id="mkBadgeGrid" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+              </div>
+            </details>
+            <div id="mkPills" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
+            <div id="mkEditor"></div>
+            <div class="hint" style="font-size:11px;margin-top:10px;line-height:1.7">
+              <b>쓰는 법</b> — [+ 가림막 추가]로 여러 개를 얹고, 도형을 <b>끌어서</b> 옮기고
+              파란 손잡이로 <b>크기</b>를 바꿉니다. 위 알약(1번·2번…)을 눌러 편집할 도형을 고릅니다.<br>
+              <b>가장자리</b>를 올리면 경계가 부드럽게 풀려 덮은 티가 덜 납니다.
+            </div>
+          </div>
+          <!-- 🧱 위아래띠(2026-08-28 사장님 시안 ② · 옛 이름 "빈 틀") — 글자·아이콘 없는 위아래 띠.
+               ★띠 끝부분 처리는 deco_frame._bar_layer 한 곳에서 정한다(0순위-B).
+                 여기 슬라이더는 그 값을 담는 그릇일 뿐이다. -->
+          <div id="pbBox" style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:12px">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+              <div style="font-size:17px;font-weight:900;letter-spacing:-.3px">🧱 <span style="color:#7CE8B0">위아래띠</span> <span style="font-size:12px;color:var(--sub);font-weight:600">— 글자 없는 위아래 띠</span></div>
+              <button type="button" class="mkbtn" onclick="pbApply()" style="margin-left:auto">이 틀로 바꾸기</button>
+            </div>
+            <div id="pbBody"></div>
+            <div class="hint" style="font-size:11px;margin-top:10px;line-height:1.7">
+              <b>글자·아이콘이 하나도 없는 틀입니다</b> — 인스타처럼 썰 스타일이 안 맞는 곳에 씁니다.<br>
+              지금 템플릿 24종은 전부 채널명·검색창·제목이 들어갑니다.
+            </div>
+          </div>
+          <!-- ✨ 고급효과(리모션) — 사장님 지시로 화면에서 뺌(2026-08-28 "고급효과는 없애고").
+               ★배선은 남긴다: toggleFxAdv·fxSuggest·fxRender가 이 안의 id들을 널가드 없이
+                 만진다(이 파일의 추가텍스트·BGM을 뺄 때와 같은 방식). 옛 작업에 저장된
+                 fx_plan도 서버 쪽 렌더 경로에 그대로 살아 있다. -->
+          <div id="fxAdvBox" hidden style="display:none;background:linear-gradient(135deg,#1c1436,var(--inset));border:1px solid #6b4fa0;border-radius:10px;padding:10px 12px;margin-bottom:12px">
             <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;cursor:pointer">
               <input id="fxAdvOn" type="checkbox" onchange="toggleFxAdv()">
               ✨ 고급효과 <span style="font-size:11px;color:var(--accent2);font-weight:600">— 대본에 맞춰 움직이는 효과 자동 배치 · 렌더당 10P</span>
@@ -2061,14 +2145,17 @@
           <div style="font-size:12px;color:var(--sub);margin:10px 0 4px">😀 스티커 — 누르면 썸네일에 얹혀요 (드래그로 옮기고, 크기 조절)</div>
           <div id="thumbStickers" style="display:flex;gap:4px;flex-wrap:wrap"></div>
           <div style="display:flex;gap:6px;align-items:center;margin-top:6px">
-            <input id="thumbStickerInput" maxlength="8" placeholder="직접 입력 — 원하는 이모지 붙여넣기 😀"
+            <!-- ★maxlength 8 → 40 (2026-08-28 사장님 "고쳐"). 8글자면 "아이 생일 엄마들 다
+                 이거 쓰네요" 같은 썸네일 문구가 통째로 잘려 **안 얹힌 것처럼** 보였다.
+                 이모지는 어차피 firstGrapheme으로 첫 덩어리만 쓰므로 길이를 풀어도 무해하다. -->
+            <input id="thumbStickerInput" maxlength="40" placeholder="직접 입력 — 이모지 😀 또는 넣고 싶은 글자"
                    onkeydown="if(event.key==='Enter'){addThumbStickerFromInput();return false}"
                    style="flex:1;padding:7px 9px;font-size:15px">
             <button class="tab" style="flex:0 0 auto;min-width:auto;padding:7px 13px"
                     onclick="addThumbStickerFromInput()">얹기</button>
           </div>
           <div id="thumbStickerInputHint" class="hint" style="font-size:10px;opacity:.7;margin-top:3px">
-            휴대폰·윈도우 이모지판(⊞+마침표)에서 골라 붙여넣으면 돼요</div>
+            이모지는 스티커로, 글자는 글자 레이어로 얹혀요 (윈도우 이모지판 ⊞+마침표)</div>
 
           <div style="font-size:12px;color:var(--sub);margin:12px 0 4px">🎨 고급 도형 — 화살표·강조 (색·크기·각도 조절돼요)</div>
           <div id="thumbShapes" style="display:flex;gap:6px;flex-wrap:wrap"></div>
@@ -2725,13 +2812,31 @@ function seoStatBadge(kw){
 //   예전엔 '유튜브 전체 복사'와 인스타 캡션만 있어서, 제목만 / 설명만 올릴 땐 손으로 긁어야 했다.
 //   특히 폰에서는 긴 글을 손가락으로 끄는 게 사실상 불가능하다.
 //   ⚠️ 어느 칸이 무슨 글자인지는 여기 한 곳에서만 정한다(0순위-B) — 화면과 복사가 어긋나지 않게.
+// ★플랫폼 목록은 여기 하나뿐이다(0순위-B). 서버 seo_generate._PLATFORMS와 같은 순서로 둔다.
+//   인스타 추가(2026-08-28 사장님 "인스타 유튜브 틱톡 쓰레드 나눠서").
+const SEO_PLATS = [['instagram','인스타'],['youtube','유튜브'],['tiktok','틱톡'],['threads','쓰레드']];
+
+// 해시태그 한 줄 만들기 — **쉼표로 잇는다**(2026-08-28 사장님 "컴마 붙여서").
+//   '#'이 없는 태그도 오므로 여기서 붙인다 — 붙이는 곳도 화면·복사 통틀어 여기 하나뿐이다.
+function seoHashLine(k){
+  const hs = (SEO && SEO.hashtags) || {};
+  let arr = hs[k] || [];
+  // 옛 job엔 instagram 키가 없다 — 인스타 캡션 끝의 해시태그 줄에서 주워 온다(빈 칸을 안 보여준다).
+  if(k === 'instagram' && !arr.length){
+    arr = (_instaCaption().match(/#[^\s#]+/g)) || [];
+  }
+  return arr.map(t=>String(t).trim()).filter(Boolean)
+            .map(t=>t.startsWith('#')?t:'#'+t).join(', ');
+}
+function seoCopyHash(btn, k){ dmCopy(btn, seoHashLine(k)); }
+
 function seoFieldText(id){
-  const hs = (SEO && SEO.hashtags) || {}, cta = (SEO && SEO.cta) || {};
-  const plat = [['youtube','유튜브'],['tiktok','틱톡'],['threads','쓰레드']];
+  const cta = (SEO && SEO.cta) || {};
+  const plat = SEO_PLATS;
   if(id==='title')       return (SEO && SEO.title) || '';
   if(id==='description') return (SEO && SEO.description) || '';
   if(id==='tags')        return ((SEO && SEO.tags) || []).join(', ');
-  if(id==='hashtags')    return plat.map(([k,l])=>l+': '+((hs[k]||[]).join(' '))).join('\n');
+  if(id==='hashtags')    return plat.map(([k,l])=>l+': '+seoHashLine(k)).join('\n');
   if(id==='hook')        return [(SEO&&SEO.hook_line)||'', (SEO&&SEO.comment_bait)||''].filter(Boolean).join('\n');
   if(id==='insta')       return _instaCaption();
   if(id==='cta')         return plat.map(([k,l])=>l+':\n'+(cta[k]||'')).join('\n\n');
@@ -2770,9 +2875,8 @@ function renderSeo(){
     </li>`).join('');
   const tags = (SEO.tags||[]).map((t,i)=>
     `<span class="chip">${seoEsc(t)}<b class="chipX" onclick="seoTagDel(${i})">×</b></span>`).join('');
-  const hs = SEO.hashtags||{};
   const cta = SEO.cta||{};
-  const plat = [['youtube','유튜브'],['tiktok','틱톡'],['threads','쓰레드']];
+  const plat = SEO_PLATS;
   el.innerHTML =
     seoCard('title','영상 제목',
       `<input id="seoTitle" maxlength="100" value="${seoEsc(SEO.title)}"
@@ -2793,9 +2897,17 @@ function renderSeo(){
                 onkeydown="if(event.key==='Enter'){seoTagAdd();event.preventDefault();}">
          <button class="mini" onclick="seoTagAdd()">추가</button>
        </div>`) +
+    // ★플랫폼마다 복사 버튼(2026-08-28 사장님). 카드 전체 복사는 네 줄이 한꺼번에 와서
+    //   인스타에 붙이려면 유튜브·틱톡 태그까지 딸려 들어갔다 — 이제 그 줄만 쉼표로 이어 복사한다.
     seoCard('hashtags','해시태그',
-      plat.map(([k,l])=>`<div class="sub">${l}</div><div class="chips">`
-        + (hs[k]||[]).map(t=>`<span class="chip">${seoEsc(t)}</span>`).join('') + '</div>').join('')) +
+      plat.map(([k,l])=>{
+        const line = seoHashLine(k);
+        const chips = line ? line.split(', ').map(t=>`<span class="chip">${seoEsc(t)}</span>`).join('')
+                           : '<span class="sub">아직 없음</span>';
+        return `<div class="seoHashRow"><span class="sub">${l}</span>`
+             + `<button class="mini" onclick="seoCopyHash(this,'${k}')" title="${seoEsc(l)} 해시태그만 복사">📋 복사</button></div>`
+             + `<div class="chips">${chips}</div>`;
+      }).join('')) +
     seoCard('hook','후킹 · 댓글 유도',
       `<input value="${seoEsc(SEO.hook_line)}" oninput="SEO.hook_line=this.value; seoSave()">
        <input value="${seoEsc(SEO.comment_bait)}" oninput="SEO.comment_bait=this.value; seoSave()">`) +
@@ -3086,7 +3198,11 @@ function frameUrl(f){
     //   그냥 보내면 "틀 그대로"가 영영 불가능해진다. 만진 것만 보낸다.
     bar_color:f.bar_color||'', on_bar_color:f.on_bar_color||'',
     sub_bg_c:f.sub_bg_c||'', sub_text_c:f.sub_text_c||'',
-    left_icon:f.left_icon||'', right_icon:f.right_icon||'', center_kind:f.center_kind||''});
+    left_icon:f.left_icon||'', right_icon:f.right_icon||'', center_kind:f.center_kind||'',
+    // 띠 끝부분 처리(2026-08-28) — solid/0이면 서버가 지금까지의 그림 그대로
+    bar_fx:f.bar_fx||'solid', bar_soft:f.bar_soft??0});
+  // 가림막(2026-08-28) — 배열이라 JSON으로 싣는다. 없으면 아예 안 보낸다(옛 그림 캐시를 그대로 쓰게).
+  if(Array.isArray(f.masks) && f.masks.length) q.set('masks', JSON.stringify(f.masks));
   return '/api/produce/frame.png?'+q.toString();
 }
 async function loadFramePresets(){
@@ -3140,6 +3256,8 @@ function renderFramePresets(){
 }
 function frFill(f){
   const g=id=>document.getElementById(id);
+  try{ mkRender(); }catch(e){}
+  try{ pbRender(); }catch(e){}
   if(g('frChannel')) g('frChannel').value=f.channel||'';
   if(g('frTitle')) g('frTitle').value=f.title||'';
   if(g('frViews')) g('frViews').value=f.views||'';
@@ -3280,6 +3398,377 @@ function frUpdate(){
   frHcLabel();          // 제목칸을 직접 고치면 번호도 따라 바뀐다(안 그러면 거짓말이 된다)
   renderTemplatePreview(); saveHeadcopy();
 }
+// ── 🩹 가림막(2026-08-28) ─────────────────────────────────────────────────────
+// 남은 자막·워터마크를 **틀 그림 위에** 덮는다. 값의 주인은 f.masks 배열 하나(0순위-B) —
+// 미리보기 상자도 편집 줄도 여기만 읽고 쓴다. 서버(deco_frame)가 같은 배열로 그린다.
+const MK_PAL=['#000000','#1B2130','#332F2C','#4A5568','#8E99A6','#FFFFFF',
+              '#F3EDE3','#FBE38E','#F4A6A0','#9FE3B4','#A8CBF5','#1E3A2B'];
+const MK_SHAPES=[['rect','■ 사각'],['round','□ 둥근사각'],['pill','▭ 알약'],['ellipse','● 원·타원']];
+// ★흐림 계열은 그림(PNG)이 아니라 **렌더가 영상에 직접** 먹인다(2026-08-28).
+//   deco_frame이 모양만 마스크로 넘기고 ffmpeg gblur가 그 자리를 흐린다.
+//   미리보기는 CSS backdrop-filter로 **근사**해 보여준다 — 세기는 조금 다를 수 있다.
+const MK_FX=[['solid','단색'],['fade','그라데이션'],['blur','흐림'],['blurdark','흐림+어둡게']];
+const MK_MAX=12;
+const MK_BLUR_FX=['blur','blurdark'];   // 그림이 아니라 렌더가 처리하는 효과
+let MK_SEL=-1;
+// 아직 도형이 없을 때 화면에 보여주는 **기본값**. 값을 만지면 이 모양으로 하나 생긴다.
+const MK_DRAFT={l:6,t:44,w:88,h:12,shape:'round',fx:'fade',color:'#000000',op:100,soft:30,rot:0};
+function mkEnsure(){
+  const a=mkArr(); if(!a) return null;
+  if(!a.length){ a.push(Object.assign({},MK_DRAFT)); MK_SEL=0; }
+  if(MK_SEL<0||MK_SEL>=a.length) MK_SEL=a.length-1;
+  return a;
+}
+// 빠른 자리 — 흔한 자막·워터마크 위치. %(왼쪽,위,너비,높이)
+// ★스티커·뱃지(2026-08-28 사장님 "이모티콘이나 뱃지같은거 다양하고 예쁘고 유료급으로").
+//   가림막(masks)에 kind로 얹는다 — 위치·크기·회전·드래그·저장이 이미 거기 다 있다.
+//   새 배관을 파면 그 규칙이 두 벌이 된다(0순위-B).
+const MK_EMOJI=[
+  ['시선', ['🔥','✨','💥','⚡','🚨','❗','❓','👀','📌','🎯','💯','🆕']],
+  ['감정', ['😍','🤩','😱','🥹','😳','🤔','😮','🥰','👍','👏','🙌','🫶']],
+  ['쇼핑', ['🛒','🎁','💰','💸','🏷️','✅','⭐','💎','🧾','📦','🚚','🔖']],
+  ['살림', ['🏠','🧹','🧼','🍳','🧴','🧺','☕','🌿','🐾','🛁','🪥','🧊']],
+];
+// 뱃지 = 글자 + 색. 색은 12색 팔레트에서 고른 것을 그대로 쓴다(따로 색을 두지 않는다).
+const MK_BADGE=['SALE','NEW','인기','추천','필수','1위','할인','품절임박','재구매','강추'];
+
+const MK_QUICK={
+  sub:    {l:6,  t:44, w:88, h:12, shape:'round', fx:'fade', soft:35},
+  subbot: {l:6,  t:76, w:88, h:11, shape:'round', fx:'fade', soft:35},
+  wmr:    {l:74, t:6,  w:22, h:7,  shape:'round', fx:'fade', soft:45},
+  wml:    {l:4,  t:84, w:24, h:8,  shape:'round', fx:'fade', soft:45},
+  top:    {l:6,  t:8,  w:88, h:11, shape:'round', fx:'fade', soft:35}
+};
+function mkArr(){
+  const f=STATE.deco&&STATE.deco.template&&STATE.deco.template.frame; if(!f) return null;
+  if(!Array.isArray(f.masks)) f.masks=[];
+  return f.masks;
+}
+function mkAdd(kind){
+  const a=mkArr(); if(!a) return;
+  if(a.length>=MK_MAX){ alert('가림막은 최대 '+MK_MAX+'개까지예요.'); return; }
+  const q=MK_QUICK[kind]||{l:30,t:44,w:40,h:10};
+  a.push(Object.assign({shape:'round',fx:'fade',color:'#000000',op:100,soft:30,rot:0}, q));
+  MK_SEL=a.length-1;
+  renderTemplatePreview(); saveHeadcopy(); mkRender();
+}
+// 이모지 스티커 추가 — 자리는 가운데 위쪽, 크기는 화면 폭의 14%(정사각에 가깝게).
+let MK_EMO_TAB=0;
+function renderStickerPicker(){
+  const tabs=document.getElementById('mkEmojiTabs');
+  const grid=document.getElementById('mkEmojiGrid');
+  const bg=document.getElementById('mkBadgeGrid');
+  if(!tabs||!grid||!bg) return;
+  tabs.innerHTML=MK_EMOJI.map(function(g,i){
+    return '<button type="button" class="tab'+(i===MK_EMO_TAB?' active':'')+'" '
+      +'onclick="MK_EMO_TAB='+i+';renderStickerPicker()" '
+      +'style="flex:0 0 auto;min-width:auto;padding:6px 14px;font-size:12px">'+g[0]+'</button>';
+  }).join('');
+  grid.innerHTML=(MK_EMOJI[MK_EMO_TAB]||['',[]])[1].map(function(ch){
+    return '<button type="button" title="'+ch+' 얹기" onclick="mkAddEmoji(&quot;'+ch+'&quot;)" '
+      +'style="height:44px;font-size:22px;line-height:1;border-radius:8px;cursor:pointer;'
+      +'background:var(--inset);border:1px solid var(--line)">'+ch+'</button>';
+  }).join('');
+  bg.innerHTML=MK_BADGE.map(function(t){
+    return '<button type="button" onclick="mkAddBadge(&quot;'+t+'&quot;)" '
+      +'style="min-height:38px;padding:6px 14px;font-size:12.5px;font-weight:800;border-radius:999px;'
+      +'cursor:pointer;background:var(--inset);color:var(--txt);border:1px solid var(--line)">'+t+'</button>';
+  }).join('');
+}
+function mkAddEmoji(ch){
+  const a=mkArr(); if(!a) return;
+  if(a.length>=MK_MAX){ alert('가림막·스티커는 최대 '+MK_MAX+'개까지예요.'); return; }
+  // 9:16 화면이라 같은 %라도 세로가 훨씬 길다 — 정사각으로 보이려면 h = w*(1080/1920).
+  const w=14;
+  a.push({kind:'emoji', ch:ch, l:43, t:26, w:w, h:+(w*1080/1920).toFixed(2),
+          shape:'round', fx:'solid', color:'#000000', op:100, soft:0, rot:0});
+  MK_SEL=a.length-1;
+  renderTemplatePreview(); saveHeadcopy(); mkRender();
+}
+// 글자 뱃지 추가 — 색은 지금 고른 색(없으면 눈에 띄는 빨강)을 쓴다.
+function mkAddBadge(text){
+  const a=mkArr(); if(!a) return;
+  if(a.length>=MK_MAX){ alert('가림막·스티커는 최대 '+MK_MAX+'개까지예요.'); return; }
+  const w=Math.min(46, 12 + text.length*7);
+  a.push({kind:'badge', text:text, l:6, t:14, w:w, h:6.5,
+          shape:'round', fx:'solid', color:'#FF2D5E', op:100, soft:0, rot:0});
+  MK_SEL=a.length-1;
+  renderTemplatePreview(); saveHeadcopy(); mkRender();
+}
+function mkDel(i){
+  const a=mkArr(); if(!a||!a[i]) return;
+  a.splice(i,1); if(MK_SEL>=a.length) MK_SEL=a.length-1;
+  renderTemplatePreview(); saveHeadcopy(); mkRender();
+}
+function mkSet(i,k,v){
+  const a=mkEnsure(); if(!a) return;
+  if(!a[i]) i=MK_SEL;              // 아직 없던 도형을 방금 만들었다
+  if(!a[i]) return;
+  // ★문자열 칸을 여기 빠뜨리면 Math.round(parseFloat(...))가 0으로 만든다 —
+  //   뱃지 글자가 '0'이 된다(2026-08-28에 kind·ch·text를 늘리며 실제로 걸릴 뻔했다).
+  const MK_STR=['shape','fx','color','kind','ch','text'];
+  a[i][k]=MK_STR.includes(k)?v:Math.round(parseFloat(v)||0);
+  MK_SEL=i;
+  renderTemplatePreview(); saveHeadcopy();
+  const lab=document.getElementById('mkV'+k+i); if(lab) lab.textContent=mkLabel(k,a[i][k]);
+  syncMaskBoxes();
+}
+function mkLabel(k,v){
+  if(k==='op')   return v>=100?'또렷':v+'%';
+  if(k==='soft') return v?v+'%':'없음';
+  if(k==='rot')  return (v||0)+'°';
+  return String(v);
+}
+function mkPick(c){ mkEnsure(); mkSet(MK_SEL,'color',c); mkRender(); }
+// ── 🧱 위아래띠(2026-08-28 사장님 시안 ② · 옛 이름 "빈 틀") ────────────────────────────────────────
+// 값의 주인은 f(=STATE.deco.template.frame) 하나다 — 여기 UI는 그 값을 보여주고
+// 고칠 뿐이고, 그림은 서버(deco_frame)가 같은 값으로 그린다(0순위-B).
+// ★띠 높이는 화면에 **%**로 보이지만 저장은 px다(1920 기준) — 그림 쪽 단위가 px라
+//   여기서 %로 바꿔 저장하면 두 벌이 된다.
+const PB_FX=[['solid','단색'],['grad','그라데이션'],['blur','흐림'],['blurdark','흐림+어둡게']];
+const PB_MAXPCT=25;          // 400px / 1920 ≈ 20.8% — 슬라이더 상한과 짝
+function pbFrame(){ return STATE.deco&&STATE.deco.template&&STATE.deco.template.frame; }
+function pbPct(px){ return Math.round((px||0)/1920*100); }
+function pbPx(pct){ return Math.round(pct/100*1920); }
+function pbApply(){
+  // 지금 틀을 '빈 틀'로 갈아끼운다 — 글자·아이콘이 통째로 빠진다.
+  const f=pbFrame(); if(!f) return;
+  f.preset='plain_black'; f.channel=''; f.title=''; f.views=''; f.comments='';
+  f.icons=false; f.ad_badge=false;
+  f.left_icon='none'; f.right_icon='none'; f.center_kind='없음';
+  if(!f.bar_h) f.bar_h=326;
+  if(!f.bottom_h) f.bottom_h=326;
+  try{ frFill(f); }catch(e){}
+  renderTemplatePreview(); saveHeadcopy(); pbRender();
+}
+function pbSet(k,v){
+  const f=pbFrame(); if(!f) return;
+  if(k==='bar_pct')      f.bar_h=pbPx(parseInt(v,10)||0);
+  else if(k==='bot_pct') f.bottom_h=pbPx(parseInt(v,10)||0);
+  else if(k==='bar_soft')f.bar_soft=parseInt(v,10)||0;
+  else                   f[k]=v;
+  // 숨은 입력칸도 같이 맞춘다 — frUpdate()가 그 칸을 읽어 f를 다시 쓴다(안 맞추면 되돌아간다)
+  const g=id=>document.getElementById(id);
+  if(g('frBar'))    g('frBar').value=f.bar_h;
+  if(g('frBottom')) g('frBottom').value=f.bottom_h;
+  const lab={bar_pct:'pbVbar', bot_pct:'pbVbot', bar_soft:'pbVsoft'}[k];
+  if(lab && document.getElementById(lab)){
+    document.getElementById(lab).textContent =
+      (k==='bar_soft'? (f.bar_soft||0) : pbPct(k==='bar_pct'?f.bar_h:f.bottom_h))+'%';
+  }
+  renderTemplatePreview(); saveHeadcopy();
+  try{ syncFrameHandles(); }catch(e){}
+}
+function pbFx(v){ pbSet('bar_fx',v); pbRender(); }
+function pbColor(c){ pbSet('bar_color',c); FR_TOUCHED.bar=true;
+  const g=document.getElementById('frBarColor'); if(g) g.value=c; pbRender(); }
+function pbRender(){
+  const box=document.getElementById('pbBody'); if(!box) return;
+  const f=pbFrame();
+  if(!f){ box.innerHTML='<div class="hint" style="font-size:12px">틀을 먼저 고르세요.</div>'; return; }
+  const fx=f.bar_fx||'solid';
+  const cur=(f.bar_color||'#000000').toUpperCase();
+  const lab='font-size:11px;color:var(--sub);margin:12px 0 6px';
+  const pal=MK_PAL.map(function(c){
+    return '<button type="button" title="'+c+'" onclick="pbColor(&quot;'+c+'&quot;)" '
+      +'style="height:36px;border-radius:7px;cursor:pointer;background:'+c+';'
+      +'border:2px solid '+(cur===c?'#2FBF71':'rgba(255,255,255,.18)')+'"></button>';
+  }).join('');
+  const row=function(name,key,val,max){
+    return '<div style="display:flex;align-items:center;gap:10px;margin-top:8px;font-size:12px">'
+      +'<span style="width:76px;color:var(--sub)">'+name+'</span>'
+      +'<input type="range" min="0" max="'+max+'" value="'+val+'" '
+      +'oninput="pbSet(&quot;'+key+'&quot;,this.value)" style="flex:1">'
+      +'<b id="pbV'+key.split('_')[0]+'" style="width:44px;text-align:right">'+val+'%</b></div>';
+  };
+  box.innerHTML=
+     '<div style="'+lab+'">끝부분 효과</div>'
+    +mkChoice(PB_FX, fx, 'pbFx')
+    +row('위 띠 높이','bar_pct',pbPct(f.bar_h),PB_MAXPCT)
+    +row('아래 띠 높이','bot_pct',pbPct(f.bottom_h),PB_MAXPCT)
+    +row('번지는 정도','bar_soft',(f.bar_soft||0),100)
+    +'<div style="'+lab+'">색</div>'
+    +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'
+    +'<input type="color" value="'+(f.bar_color||'#000000')+'" oninput="pbColor(this.value)" '
+    +'style="width:44px;height:28px;padding:0;border:1px solid var(--line);border-radius:6px;background:none;cursor:pointer">'
+    +'<span style="font-size:12px;color:var(--sub)">'+(f.bar_color||'(틀 기본)')+'</span></div>'
+    // ★12색을 **한 줄**로(2026-08-28 사장님 "이건 12색을 한줄로하면된다").
+    //   6열 2줄은 세로를 두 배로 먹어 아래 세부 설정이 화면 밖으로 밀렸다.
+    +'<div style="display:grid;grid-template-columns:repeat(12,1fr);gap:6px">'+pal+'</div>';
+}
+function mkDelSel(){
+  const a=mkArr(); if(!a||!a.length) return;
+  if(MK_SEL<0||MK_SEL>=a.length) MK_SEL=a.length-1;
+  mkDel(MK_SEL);
+}
+function mkSelect(i){ MK_SEL=i; mkRender(); }
+// 버튼 한 줄 만들기 — 고른 것만 초록 테두리(시안 그대로)
+function mkChoice(opts, cur, fn){
+  return '<div style="display:grid;grid-template-columns:repeat('+opts.length+',1fr);gap:8px">'
+    +opts.map(function(o){
+      const on=(cur===o[0]);
+      const dis=!!o[2];
+      return '<button type="button"'+(dis?' disabled title="아직 준비 중이에요"':'')
+        +' onclick="'+(dis?'':fn+'(&quot;'+o[0]+'&quot;)')+'" '
+        +'style="padding:9px 6px;font-size:12px;border-radius:8px;cursor:'+(dis?'not-allowed':'pointer')+';'
+        +'background:'+(on?'#0d2a1c':'var(--inset2,#131c26)')+';'
+        +'color:'+(dis?'#5a6672':(on?'#7CE8B0':'var(--txt)'))+';'
+        +'border:1px solid '+(on?'#2FBF71':'var(--line)')+'">'+o[1]+'</button>';
+    }).join('')+'</div>';
+}
+function mkRender(){
+  const pills=document.getElementById('mkPills');
+  const ed=document.getElementById('mkEditor');
+  // 스티커 목록도 여기서 같이 그린다 — 그리는 자리를 따로 두면 한쪽만 갱신된다(0순위-B).
+  try{ renderStickerPicker(); }catch(e){}
+  if(!ed||!pills) return;
+  const a=mkArr()||[];
+  // ★도형이 하나도 없어도 **편집 화면은 펼쳐 둔다**(2026-08-28 사장님 "기본으로 펼쳐지게").
+  //   빈 안내문만 띄우면 뭘 할 수 있는지 안 보인다. 값을 만지는 순간 mkEnsure()가
+  //   도형을 하나 얹는다 — 안 만지면 안 생기므로 안 쓰는 사람 영상은 그대로다.
+  const empty=!a.length;
+  pills.innerHTML = empty ? '' : a.map(function(_m,i){
+    const on=(i===MK_SEL);
+    return '<button type="button" onclick="mkSelect('+i+')" '
+      +'style="padding:5px 14px;border-radius:999px;font-size:12px;cursor:pointer;'
+      +'background:'+(on?'#0d2a1c':'transparent')+';'
+      +'color:'+(on?'#7CE8B0':'var(--sub)')+';'
+      +'border:1px solid '+(on?'#2FBF71':'var(--line)')+'">'+(i+1)+'번</button>';
+  }).join('');
+  if(MK_SEL<0||MK_SEL>=a.length) MK_SEL=Math.max(0,a.length-1);
+  const m=empty ? Object.assign({},MK_DRAFT) : a[MK_SEL];
+  const lab='font-size:11px;color:var(--sub);margin:12px 0 6px';
+  const pal=MK_PAL.map(function(c){
+    const on=String(m.color||'').toUpperCase()===c;
+    return '<button type="button" title="'+c+'" onclick="mkPick(&quot;'+c+'&quot;)" '
+      +'style="height:36px;border-radius:7px;cursor:pointer;background:'+c+';'
+      +'border:2px solid '+(on?'#2FBF71':'rgba(255,255,255,.18)')+'"></button>';
+  }).join('');
+  const row=function(name, key, min, max, suf){
+    const v=(m[key]==null?0:m[key]);
+    return '<div style="display:flex;align-items:center;gap:10px;margin-top:8px;font-size:12px">'
+      +'<span style="width:70px;color:var(--sub)">'+name+'</span>'
+      +'<input type="range" min="'+min+'" max="'+max+'" value="'+v+'" '
+      +'oninput="mkSet(MK_SEL,&quot;'+key+'&quot;,this.value)" style="flex:1">'
+      +'<b id="mkV'+key+MK_SEL+'" style="width:52px;text-align:right">'+mkLabel(key,v)+'</b></div>';
+  };
+  // ★종류에 따라 쓸모없는 칸은 안 보여준다(2026-08-28). 이모지에 '모양·효과·가장자리'를
+  //   띄우면 눌러도 아무 일이 없어 "고장났다"로 읽힌다. 색은 뱃지만 쓴다(이모지는 제 색이 있다).
+  const kind = m.kind || 'shape';
+  const isEmoji = kind === 'emoji', isBadge = kind === 'badge';
+  const colorBlock =
+     '<div style="'+lab+'">색</div>'
+    +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'
+    +'<input id="mkC" type="color" value="'+(m.color||'#000000')+'" oninput="mkPick(this.value)" '
+    +'style="width:44px;height:28px;padding:0;border:1px solid var(--line);border-radius:6px;background:none;cursor:pointer">'
+    +'<span style="font-size:12px;color:var(--sub)">'+(m.color||'#000000')+'</span></div>'
+    // 12색 한 줄 — 위 팔레트와 같은 규칙(0순위-B: 한쪽만 고치면 어긋난다).
+    +'<div style="display:grid;grid-template-columns:repeat(12,1fr);gap:6px">'+pal+'</div>';
+  ed.innerHTML=
+     (isEmoji
+        ? '<div style="'+lab+'">스티커</div><div style="font-size:30px;line-height:1.1;margin-bottom:4px">'
+          + (m.ch||'') + '</div>'
+        : '')
+    +(isBadge
+        ? '<div style="'+lab+'">글자</div>'
+          +'<input value="'+String(m.text||'').replace(/"/g,'&quot;')+'" maxlength="8" '
+          +'oninput="mkSet(MK_SEL,&quot;text&quot;,this.value)" '
+          +'style="width:100%;box-sizing:border-box;background:var(--inset);border:1px solid var(--line);'
+          +'color:var(--txt);border-radius:8px;padding:8px 10px;font-size:13px;margin-bottom:4px">'
+        : '')
+    +(isEmoji||isBadge ? '' :
+        '<div style="'+lab+'">모양</div>'
+        +mkChoice(MK_SHAPES, m.shape, 'mkShape')
+        +'<div style="'+lab+'">효과</div>'
+        +mkChoice(MK_FX, m.fx, 'mkFx'))
+    +(isEmoji ? '' : colorBlock)
+    +'<div style="'+lab+'">세부</div>'
+    +row('진하기','op',10,100)
+    +(isEmoji||isBadge ? '' :
+        row(MK_BLUR_FX.includes(m.fx)?'흐림 세기':'가장자리','soft',0,100))
+    +row('회전','rot',-45,45);
+  syncMaskBoxes();
+}
+function mkShape(v){ mkEnsure(); mkSet(MK_SEL,'shape',v); mkRender(); }
+function mkFx(v){ mkEnsure(); mkSet(MK_SEL,'fx',v); mkRender(); }
+// 미리보기 위의 편집 상자 — 서버 그림은 pointer-events:none이라 그 위를 잡을 수 없다.
+// 띠·[광고] 손잡이와 같은 방식(투명 상자를 얹고, 끌면 배열에 써넣고 다시 그린다).
+function syncMaskBoxes(){
+  const pv=document.getElementById('hcPreview'); if(!pv) return;
+  let wrap=document.getElementById('mkBoxes');
+  if(!wrap){
+    wrap=document.createElement('div'); wrap.id='mkBoxes';
+    wrap.style.cssText='position:absolute;inset:0;z-index:10;pointer-events:none';
+    pv.appendChild(wrap);
+  }
+  wrap.innerHTML='';
+  const t=STATE.deco&&STATE.deco.template;
+  if(!(t&&t.frame)) return;               // 틀이 없으면 가림막도 없다
+  const a=mkArr()||[];
+  a.forEach(function(m,i){
+    const b=document.createElement('div');
+    // ★흐림 계열은 틀 그림(PNG)에 안 들어간다 — 렌더가 영상에 직접 먹인다.
+    //   화면에선 backdrop-filter로 **근사**해 보여준다. 안 그리면 사장님이 자리를
+    //   못 잡는다(보이지도 않는 걸 끌 수는 없다). 세기는 렌더와 조금 다를 수 있다.
+    let fxCss='';
+    if(MK_BLUR_FX.includes(m.fx)){
+      const px=Math.max(2, Math.round((25+(m.soft||0)/100*55)*(pv.clientWidth/1080)));
+      fxCss='backdrop-filter:blur('+px+'px);-webkit-backdrop-filter:blur('+px+'px);'
+        +(m.fx==='blurdark'?'background:rgba(0,0,0,'+((m.op==null?100:m.op)/100*0.45).toFixed(2)+');':'')
+        +'border-radius:'+mkRadiusCss(m)+';';
+    }
+    b.style.cssText='position:absolute;pointer-events:auto;cursor:move;'
+      +'border:1px dashed '+(i===MK_SEL?'#77CCFF':'rgba(255,255,255,.55)')+';'
+      +'left:'+m.l+'%;top:'+m.t+'%;width:'+m.w+'%;height:'+m.h+'%;'
+      +(m.rot?'transform:rotate('+(-m.rot)+'deg);':'')+fxCss;
+    b.title='끌어서 옮기기 · 오른쪽아래 모서리로 크기';
+    const gr=document.createElement('div');
+    gr.style.cssText='position:absolute;right:-6px;bottom:-6px;width:14px;height:14px;'
+      +'border-radius:3px;background:#77CCFF;box-shadow:0 0 0 1px rgba(0,0,0,.5);cursor:nwse-resize';
+    b.appendChild(gr);
+    bindMaskDrag(b, i, false); bindMaskDrag(gr, i, true);
+    wrap.appendChild(b);
+  });
+}
+// 미리보기용 모서리 반경 — 서버(_mask_shape_layer)와 **같은 규칙**을 CSS로 옮긴 것.
+// ★규칙이 갈리면 화면과 결과가 다른 모양이 된다(0순위-B). 여기 고치면 저기도 본다.
+function mkRadiusCss(m){
+  if(m.shape==='ellipse') return '50%';
+  if(m.shape==='pill')    return '999px';
+  if(m.shape==='round')   return 'clamp(6px, 12%, 40px)';
+  return '0';
+}
+function bindMaskDrag(el, i, resize){
+  el.addEventListener('pointerdown', function(ev){
+    ev.preventDefault(); ev.stopPropagation();
+    const pv=document.getElementById('hcPreview'); if(!pv) return;
+    const a=mkArr(); if(!a||!a[i]) return;
+    const r=pv.getBoundingClientRect();
+    const st={x:ev.clientX,y:ev.clientY,l:a[i].l,t:a[i].t,w:a[i].w,h:a[i].h};
+    MK_SEL=i; mkRender();
+    const move=function(e){
+      const dx=(e.clientX-st.x)/r.width*100, dy=(e.clientY-st.y)/r.height*100;
+      const m=a[i];
+      if(resize){
+        m.w=Math.max(1, Math.min(100-m.l, st.w+dx));
+        m.h=Math.max(1, Math.min(100-m.t, st.h+dy));
+      }else{
+        m.l=Math.max(0, Math.min(100-m.w, st.l+dx));
+        m.t=Math.max(0, Math.min(100-m.h, st.t+dy));
+      }
+      m.l=Math.round(m.l*10)/10; m.t=Math.round(m.t*10)/10;
+      m.w=Math.round(m.w*10)/10; m.h=Math.round(m.h*10)/10;
+      syncMaskBoxes();
+    };
+    const up=function(){
+      window.removeEventListener('pointermove',move);
+      window.removeEventListener('pointerup',up);
+      renderTemplatePreview(); saveHeadcopy();   // ★그림 다시 그리기는 손을 뗀 뒤 한 번만
+    };
+    window.addEventListener('pointermove',move);
+    window.addEventListener('pointerup',up);
+  });
+}
 function frBar(id, delta){
   const el=document.getElementById(id); if(!el) return;
   el.value=Math.max(0, Math.min(400, parseInt(el.value||0,10)+delta));
@@ -3300,6 +3789,7 @@ function frDragScale(){
 function syncFrameHandles(){
   const pv=document.getElementById('hcPreview'); if(!pv) return;
   try{ syncAdHandle(); }catch(e){}   // [광고] 손잡이도 같은 시점에 맞춘다
+  try{ syncMaskBoxes(); }catch(e){}  // 가림막 편집 상자도 같은 시점에
   const t=STATE.deco&&STATE.deco.template;
   const on=!!(t&&t.frame);
   ['frHandleTop','frHandleBottom'].forEach(id=>{
@@ -3309,7 +3799,7 @@ function syncFrameHandles(){
       el=document.createElement('div');
       el.id=id;
       // z-index는 틀 그림(4)보다 위. 높이 14px의 얇은 띠 — 손이 닿되 화면은 안 가린다.
-      el.style.cssText='position:absolute;left:0;width:100%;height:14px;cursor:ns-resize;z-index:6;'
+      el.style.cssText='position:absolute;left:0;width:100%;height:14px;cursor:ns-resize;z-index:11;'
         +'display:flex;align-items:center;justify-content:center';
       el.innerHTML='<div style="width:44px;height:4px;border-radius:3px;background:rgba(255,255,255,.85);'
         +'box-shadow:0 0 0 1px rgba(0,0,0,.45)"></div>';
@@ -3350,8 +3840,8 @@ function syncAdHandle(){
   if(!el){
     el=document.createElement('div');
     el.id='frHandleAd';
-    // 틀 그림(z-index 4)보다 위. 반투명 테두리만 — [광고] 글자 자체는 서버 그림이 그린다.
-    el.style.cssText='position:absolute;cursor:move;z-index:7;'
+    // 틀 그림(z-index 8)보다 위. 반투명 테두리만 — [광고] 글자 자체는 서버 그림이 그린다.
+    el.style.cssText='position:absolute;cursor:move;z-index:11;'
       +'border:1px dashed rgba(255,255,255,.75);border-radius:6px;background:rgba(0,0,0,.12)';
     el.title='끌어서 [광고] 위치 옮기기 · 모서리를 끌면 크기';
     // ★모서리 잡이(2026-08-25 사장님 "광고도 모서리 잡고 크기 늘릴수있게").
@@ -3360,7 +3850,7 @@ function syncAdHandle(){
     grip.id='frHandleAdGrip';
     grip.style.cssText='position:absolute;right:-6px;bottom:-6px;width:13px;height:13px;'
       +'background:var(--accent2,#4ade80);border:1px solid #0a1017;border-radius:3px;'
-      +'cursor:nwse-resize;z-index:8';
+      +'cursor:nwse-resize;z-index:12';
     grip.title='끌어서 [광고] 크기 조절';
     el.appendChild(grip);
     pv.appendChild(el);
@@ -3557,7 +4047,7 @@ function renderTemplatePreview(){
   if(t.frame){
     if(!el){
       el=document.createElement('img'); el.id='tplPreview';
-      el.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;z-index:4';
+      el.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;z-index:8';
       pv.appendChild(el);
     }
     el.src=frameUrl(t.frame); el.style.display='';
@@ -3568,7 +4058,7 @@ function renderTemplatePreview(){
   const meta=TPL_LIST.find(x=>x.id===t.id); if(!meta) return;
   if(!el){
     el=document.createElement('img'); el.id='tplPreview';
-    el.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;z-index:4';
+    el.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;z-index:8';
     pv.appendChild(el);
   }
   el.src=meta.url; el.style.display='';
@@ -5951,22 +6441,41 @@ function _renderPreviewVideo(job){
   //     화면(및 스텁 하네스)에서 오지 않을 것을 2초 기다리다 결과를 늦게 그린다.
   const _frame = document.getElementById('sceneLabFrame');
   const _frameReal = !!(_frame && 'contentWindow' in _frame);
-  if (_frameReal && !(typeof _PV_LAB_WAITED !== 'undefined' && _PV_LAB_WAITED[job])){
-    try{ _PV_LAB_WAITED[job] = 1; }catch(e){}
-    let _tries = 0;
-    const _timer = setInterval(function(){
-      _tries++;
-      if (typeof _labCall==='function' && _labCall('showConfirmVideo', src)){
-        clearInterval(_timer);
-        const b2 = document.getElementById('btnPreview'); if(b2) b2.disabled = false;
-        return;
-      }
-      if (_tries >= 20){            // 20 x 100ms = 2초. 그래도 없으면 진짜 폴백.
-        clearInterval(_timer);
-        _renderPreviewVideoFallback(job, src);
-      }
-    }, 100);
-    return;
+  if (_frameReal){
+    // ★① 이미 iframe이 떠 있으면 **곧장** 제자리에 넣는다.
+    //   종전엔 이 시도를 건너뛰고 _PV_LAB_WAITED[job]만 봤다 → 아래 ②의 사고.
+    if (typeof _labCall==='function' && _labCall('showConfirmVideo', src)){
+      const b0 = document.getElementById('btnPreview'); if(b0) b0.disabled = false;
+      if (typeof _pvClose==='function') _pvClose();   // 폴백으로 열렸던 레일은 닫는다
+      return;
+    }
+    // ★② "이미 기다린 적 있다"고 **폴백하면 안 된다**(2026-08-28 사장님 제보:
+    //   "저 미리보기는 없던 건데 완성을 만든 뒤 다른 페이지 갔다가 다시 돌아오면
+    //    저 자리에 남아있다").
+    //   _PV_LAB_WAITED는 job당 **타이머를 하나만** 두려는 장치였는데, 두 번째 호출이
+    //   그 플래그를 보고 곧바로 _renderPreviewVideoFallback으로 떨어졌다 →
+    //   _RAIL_OFF를 뚫는 유일한 값('fallback')이라 **꺼둔 좌측 레일이 되살아났다.**
+    //   (그 레일은 align-self:stretch라 자리를 크게 먹어 [다음] 버튼을 아래로 민다)
+    //   → 타이머 중복만 막고, 폴백은 하지 않는다. iframe은 곧 뜬다.
+    if (!(typeof _PV_LAB_WAITED !== 'undefined' && _PV_LAB_WAITED[job])){
+      try{ _PV_LAB_WAITED[job] = 1; }catch(e){}
+      let _tries = 0;
+      const _timer = setInterval(function(){
+        _tries++;
+        if (typeof _labCall==='function' && _labCall('showConfirmVideo', src)){
+          clearInterval(_timer);
+          const b2 = document.getElementById('btnPreview'); if(b2) b2.disabled = false;
+          if (typeof _pvClose==='function') _pvClose();   // 늦게 떴어도 레일은 닫는다
+          return;
+        }
+        if (_tries >= 20){            // 20 x 100ms = 2초. 그래도 없으면 진짜 폴백.
+          clearInterval(_timer);
+          try{ delete _PV_LAB_WAITED[job]; }catch(e){}   // 다음 진입 땐 다시 기다린다
+          _renderPreviewVideoFallback(job, src);
+        }
+      }, 100);
+    }
+    return;                          // ★기다리는 중 — 여기서 폴백으로 새지 않는다
   }
   _renderPreviewVideoFallback(job, src);
 }
@@ -6075,7 +6584,9 @@ function coupangInner(){
   return head+coupangForm();
 }
 // 📦 인포크에 붙여넣을 세 줄(2026-08-18) — 저장이 끝나면 이미 완성돼 있다.
-// 번호는 서버가 "마지막 번호 다음"으로 자동 부여하고, 한 번 받으면 고정이다.
+// ★번호는 **사람이 넣는다**(2026-08-28). 전엔 서버가 "마지막 번호 다음"으로 자동
+// 부여했는데 그 카운터가 전역이라 전 고객이 나눠 썼다 — 내 두 번째 영상이 29번을
+// 받았다. 이제 아래 '번호 저장'으로 직접 넣고, 비워두면 번호 없이 나간다.
 // 이름은 지어내지 않는다 — 쿠팡 검색 카드를 고를 때 들어온 **실제 상품명**을 쓴다.
 function coupangDmSet(){
   const d=COUPANG.dm_set; if(!d) return '';
@@ -6093,14 +6604,50 @@ function coupangDmSet(){
       <button class="btn-prev" style="padding:5px 9px;font-size:11px"
               onclick="dmCopy(this,'${esc(val).replace(/'/g,"\\'")}')">복사</button>
     </div>`;
+  // ★번호는 **사람이 넣는다**(2026-08-28 사장님 지시). 전엔 자동으로 매겼는데 그
+  //   카운터가 전역이라 전 고객이 나눠 썼다 — 내 두 번째 영상이 29번을 받았다.
+  const numTxt = (d.number || '').trim();
   return `<div style="margin-top:12px;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--inset)">
-    <div style="font-weight:600;font-size:13px">📦 인포크에 넣을 문구 <span class="hint">— ${esc(d.number)}번</span></div>
+    <div style="font-weight:600;font-size:13px">📦 인포크에 넣을 문구
+      ${numTxt ? `<span class="hint">— ${esc(numTxt)}번</span>` : '<span class="hint">— 번호 없음</span>'}</div>
+    <div style="display:flex;gap:6px;align-items:center;margin-top:7px">
+      <span class="hint" style="min-width:74px">번호</span>
+      <input id="inpockNum" value="${esc(numTxt)}" placeholder="예) 29 — 비워두면 번호 없이 나갑니다"
+             inputmode="numeric" onkeydown="if(event.key==='Enter')saveInpockNumber()"
+             style="flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);
+                    border-radius:6px;padding:6px 8px;color:var(--txt);font-size:12px">
+      <button class="btn-next" style="padding:5px 11px;font-size:11px"
+              onclick="saveInpockNumber()">번호 저장</button>
+    </div>
     ${row('등록 이름', d.listing_name)}
     ${row('DM 타이틀', d.dm_title)}
     ${row('버튼 이름', d.dm_button)}
     ${row('설명(고지)', d.dm_desc)}
-    <div class="hint" style="margin-top:8px">번호는 자동으로 매겨집니다(마지막 번호 다음). 인포크에 이 이름으로 올리면 시청자가 <b>${esc(d.number)}</b>을 검색해 찾습니다.</div>
+    <div class="hint" style="margin-top:8px">${numTxt
+      ? `인포크에 이 이름으로 올리면 시청자가 <b>${esc(numTxt)}</b>을 검색해 찾습니다.`
+      : '번호를 넣고 <b>번호 저장</b>을 누르면 위 문구에 번호가 붙습니다. 비워두면 번호 없이 나갑니다.'}</div>
   </div>`;
+}
+// 번호만 고쳐 저장한다. ★기존 상품 저장(/api/mix/product)과 **같은 출구**를 쓴다 —
+//   번호 전용 API를 새로 파면 저장 규칙이 두 벌이 된다(0순위-B).
+async function saveInpockNumber(){
+  const el = document.getElementById('inpockNum');
+  if(!el || !MIX_JOB) return;
+  const v = (el.value || '').trim();
+  if(v && !/^\d+$/.test(v)){ toast('번호는 숫자만 넣어주세요'); return; }
+  const p = COUPANG.product || {};
+  try{
+    const r = await fetch('/api/mix/product', {method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({job_id: MIX_JOB, url: p.url || '', name: p.name || '',
+                            partner_url: p.partner_url || '', keyword: COUPANG.target,
+                            inpock_number: v})});
+    const d = await r.json().catch(()=>({ok:false}));
+    if(!r.ok || !d.ok){ toast(d.error || '번호 저장 실패'); return; }
+    COUPANG.product = d.product; COUPANG.dm_set = d.dm_set || null;
+    redrawCoupang();
+    toast(v ? v + '번으로 저장했어요' : '번호를 비웠어요');
+  }catch(e){ toast('네트워크 오류'); }
 }
 async function dmCopy(btn, text){
   // ★writeText는 Promise다 — 동기 try/catch로는 거부를 못 잡아 unhandled rejection이
@@ -6390,6 +6937,16 @@ function cancelMixReview(){
 // 새로고침 복원: 편집안+미리보기를 다시 그린다. 매칭 결과가 없으면(만들다 만 job) 조용히 빠진다 —
 // 저장된 단계/게이트는 위에서 이미 맞춰졌다.
 async function _restoreMixContext(){
+  // ★안전벨트(2026-08-28): 복원을 시작할 때 폴백 레일을 **일단 닫는다.**
+  //   레일을 여는 입구는 3곳(_pvFail · _renderPreviewVideoFallback · 렌더 로더)인데
+  //   닫는 보장은 '제자리에 정상으로 들어갔을 때'뿐이었다. 어느 입구로든 한 번 열리면
+  //   다른 페이지 갔다 돌아와도 그대로 남는다 — 사장님이 본 그 화면이다.
+  //   복원은 "화면을 처음부터 다시 그리는" 자리이므로 여기서 닫아 두면, 정말 필요할 때만
+  //   아래 그리기 경로가 다시 연다(닫아서 잃는 것은 없다 — 필요하면 곧 다시 열린다).
+  //   ⚠️try로 감싼다 — 이 함수를 잘라 node로 돌리는 하네스엔 document가 없다.
+  //     안 감싸면 복원 테스트 7건이 ReferenceError로 죽는다(2026-08-28 실측).
+  //     이 파일의 다른 복원 단계도 같은 관례를 쓴다(try{...}catch(_){}).
+  try{ if (typeof _pvClose === 'function') _pvClose(); }catch(_){ }
   // ★대본 후보 카드 복원(2026-07-30 사장님 "완료까지 갔다 오면 대본 생성된 게 다 리셋된다").
   //   리셋이 아니라 **표시 누락**이었다: 후보는 job_id별로 DB에 그대로 남아 있는데(mix_pipeline의
   //   set_mix_candidates), 새 매칭 경로(pollMix)만 renderCandidates를 부르고 이 복원 경로엔
@@ -8350,10 +8907,46 @@ function _applySceneLabFrameSize(f, wide){
   if(wide){
     f.style.height = 'calc(100vh - 46px)';
     f.style.minHeight = '0';            // 전체화면에선 하한이 오히려 스크롤을 만든다
+    _sceneLabGrow(f, false);            // 넓게 보기는 화면에 딱 맞춘다(안쪽 스크롤이 맞다)
   }else{
     f.style.height = _SL_FRAME_H;
     f.style.minHeight = _SL_FRAME_MINH;
+    _sceneLabGrow(f, true);             // 일반 모드는 내용만큼 늘려 아래로 다 보이게
   }
+}
+
+// ★장면편집을 **내용 높이만큼** 늘린다 (2026-08-28 사장님 "3단계에서 아랫부분
+//   스크롤말고 아래로 다 보이게"). iframe이 100vh에 갇혀 있어 그 안에서 또 스크롤이
+//   생겼다 — 조각이 많은 칸은 두 번 스크롤해야 끝까지 봤다.
+//   같은 출처라 contentDocument를 그대로 읽는다(postMessage 배선 불필요 — 위
+//   _callSceneLab도 contentWindow를 직접 부른다).
+//   ※2026-08-16의 "안에서만 스크롤"과 반대 방향이다. 그때는 iframe이 화면에 갇혀
+//     있었고, 지금은 iframe 자체가 늘어난다 — 페이지가 길어지는 건 같지만 스크롤이
+//     한 겹이라 끝까지 훑기 쉽다.
+let _slGrowTimer = null;
+function _sceneLabGrow(f, on){
+  if(_slGrowTimer){ clearInterval(_slGrowTimer); _slGrowTimer = null; }
+  if(!on){
+    try{ f.contentDocument.body.classList.remove('grow'); }catch(e){}
+    return;
+  }
+  const fit = () => {
+    try{
+      const d = f.contentDocument;
+      if(!d || !d.body) return;
+      d.body.classList.add('grow');
+      const h = Math.max(d.body.scrollHeight, d.documentElement.scrollHeight);
+      // 하한을 지켜 짧은 내용에서 칸이 찌그러지지 않게 한다.
+      const want = Math.max(h + 8, parseInt(_SL_FRAME_MINH, 10) || 560);
+      if(Math.abs((parseInt(f.style.height, 10) || 0) - want) > 4){
+        f.style.height = want + 'px';
+        f.style.minHeight = '0';
+      }
+    }catch(e){}      // 아직 로드 전이면 다음 주기에 다시 잰다
+  };
+  fit();
+  // 조각을 접었다 펴거나 담으면 높이가 바뀐다 — 주기적으로 맞춘다(가볍다: 읽기 2번).
+  _slGrowTimer = setInterval(fit, 700);
 }
 function toggleSceneLabWide(){
   const box=document.getElementById('sceneLabBox'), f=document.getElementById('sceneLabFrame');
@@ -9820,6 +10413,7 @@ function pickPreset(gid){
   document.getElementById('voiceControls').style.display='block';
   { const _vh=document.getElementById('voiceHint'); if(_vh) _vh.style.display='none'; }  // 성우 고르면 안내문 → 컨트롤
   syncCurVoiceName();     // 접힌 '🎙 목소리 바꾸기' 줄에 지금 성우를 띄운다(2026-08-18)
+  markVoiceDirty(true);   // 성우가 바뀌면 완성본도 다시 만들어야 한다(속도와 같은 이유)
   pickHighlight();
   renderPresetCards();  // whisper role 선택도 이 안에서 카드와 같이 그려진다(결함① 수정, 별도 호출 불필요)
   const vs=VOICE.settings||{};
@@ -9831,9 +10425,15 @@ function pickPreset(gid){
   syncAdvLabels();
   renderTtsBeats();
 }
-function setSpeed(s){ VOICE.speed=s; pickHighlight(); }
-function setSil(v){ VOICE.silence_trim=v; pickHighlight(); }
-function setPace(v){ VOICE.pace_mode=v; }
+// ★완성본과 지금 설정이 어긋났음을 화면에 띄운다(2026-08-28). 판단은 이 함수 한 곳에서만
+//   한다 — 설정을 바꾸는 자리가 여럿이라 각자 배너를 켜고 끄면 반드시 어긋난다(0순위-B).
+function markVoiceDirty(on){
+  const el = document.getElementById('voiceDirty');
+  if(el) el.style.display = on ? '' : 'none';
+}
+function setSpeed(s){ VOICE.speed=s; markVoiceDirty(true); pickHighlight(); }
+function setSil(v){ VOICE.silence_trim=v; markVoiceDirty(true); pickHighlight(); }
+function setPace(v){ VOICE.pace_mode=v; markVoiceDirty(true); }
 // 카드 안 role 버튼을 고르면 카드 전체를 다시 그린다(WHISPER_PICK은 renderPresetCards()가 읽는다) —
 // 예전엔 #whisperRoleControls 하나만 갱신하는 renderWhisperRoleBtns()가 따로 있었지만, 그 div가
 // 이제 카드 마크업 안에서만 존재하므로(결함① 수정) 카드 재렌더가 곧 role 버튼 재렌더다.
@@ -9845,7 +10445,21 @@ function _whisperRolesForBody(){
   return w ? w.roles : null;
 }
 function pickHighlight(){
-  document.getElementById('speedBtns').innerHTML=SPEEDS.map(s=>`<button onclick="setSpeed(${s})" class="tab${VOICE.speed===s?' active':''}" style="flex:0 0 auto;min-width:auto;padding:6px 12px;font-size:13px">${s}x</button>`).join('');
+  // ★버튼에 없는 속도(성우 기본값 1.42·1.48·1.52…)도 "지금 이 속도"가 보이게 한다.
+  //   전엔 `VOICE.speed===s` 완전일치라 그런 값이면 활성 버튼이 하나도 없었고,
+  //   사용자는 속도가 안 걸린 줄 알았다(2026-08-28 고객 제보).
+  const cur = +VOICE.speed;
+  const near = SPEEDS.reduce((a, b) => Math.abs(b - cur) < Math.abs(a - cur) ? b : a, SPEEDS[0]);
+  const exact = SPEEDS.some(s => s === cur);
+  const _sn = document.getElementById('speedNow');
+  if(_sn) _sn.textContent = isFinite(cur) ? cur + 'x' : '–';
+  const _so = document.getElementById('speedOff');
+  if(_so){
+    // 버튼에 없는 값이면 그 사실을 밝힌다 — 활성 버튼(가장 가까운 것)과 실제 값이 다르니까.
+    _so.style.display = (isFinite(cur) && !exact) ? '' : 'none';
+    _so.textContent = (isFinite(cur) && !exact) ? `(성우 기본값 — 버튼을 누르면 ${near}x로 바뀝니다)` : '';
+  }
+  document.getElementById('speedBtns').innerHTML=SPEEDS.map(s=>`<button onclick="setSpeed(${s})" class="tab${(exact ? VOICE.speed===s : s===near)?' active':''}" style="flex:0 0 auto;min-width:auto;padding:6px 12px;font-size:13px">${s}x</button>`).join('');
   document.getElementById('silenceBtns').innerHTML=SIL.map(([v,l])=>`<button onclick="setSil('${v}')" class="tab${VOICE.silence_trim===v?' active':''}" style="flex:0 0 auto;min-width:auto;padding:6px 12px;font-size:13px">${l}</button>`).join('');
   const _pm=document.getElementById('paceMode'); if(_pm) _pm.checked=VOICE.pace_mode!==false;
 }
@@ -9856,6 +10470,7 @@ function syncAdvLabels(){
   g('advStyleV').textContent=(+g('advStyle').value).toFixed(2);
 }
 function onAdv(){
+  markVoiceDirty(true);   // 고급값(안정성·유사도·스타일)도 완성본에 반영되려면 재생성이 필요하다
   const g=id=>document.getElementById(id);
   VOICE.settings={stability:+g('advStability').value, similarity_boost:+g('advSimilarity').value,
                   style:+g('advStyle').value, use_speaker_boost:g('advBoost').checked};
@@ -9891,6 +10506,7 @@ async function applyVoice(){
       const d=await (await fetch('/api/mix/status/'+MIX_JOB)).json();
       if(d.status==='ready_for_review'){
         clearInterval(poll); el.innerHTML='✅ 완료 — 아래 <b>▶ 완성본 전체 듣기</b>로 확인하세요';
+        markVoiceDirty(false);        // 이제 완성본이 지금 설정과 같다
         await renderTtsBeats();
         // 완성되자마자 재생기가 보이도록 스크롤 — 버튼이 화면 밖이라 못 찾던 문제 보강
         try{ document.getElementById('ttsBeats').scrollIntoView({behavior:'smooth', block:'nearest'}); }catch(e){}
@@ -9899,7 +10515,83 @@ async function applyVoice(){
     }catch(e){ clearInterval(poll); el.textContent='❌ 상태 확인 실패'; }
   },2500);
 }
+// ── ✏ 5단계 대본수정(2026-08-28 사장님 "TTS에서 대본수정") ──────────────────
+// 들어보다 어색한 문장을 **그 자리에서** 고친다. 3단계까지 돌아갈 필요가 없다.
+// ★3단계(scene_lab)와 **같은 저장구멍**을 쓴다(0순위-B):
+//     POST /api/mix/scene_lab/{job}/narration/{beat}  {text, regen:true}
+//   서버가 resynth_one_beat을 부르고, 그 안에서 target_seconds·cap_durs·sync_gap까지
+//   렌더와 같은 규칙(_conform_beats)으로 맞춘다. 여기서 자막을 다시 나누지 않는다 —
+//   2026-08-20 실사고(초가 두 벌 → 화면이 앞 장면을 되풀이)가 그렇게 났다.
+const VP_NARR_EDIT = {};      // beat_idx → 편집칸 열림
+// ★편집 중에는 목록을 다시 그리지 않는다(2026-08-19 사장님 "아까 분명히 고쳤는데 안 된다").
+//   renderTtsBeats는 목록을 통째로 갈아끼우므로, 폴러가 끼어들면 입력 중이던 글자와
+//   커서가 그대로 날아간다. 저장까지 못 가니 "안 고쳐진다"로 보인다.
+function vpIsEditing(){ return Object.keys(VP_NARR_EDIT).length > 0; }
+function vpEditNarr(i){
+  const row=document.getElementById('beatRow'+i), say=document.getElementById('vpSay'+i);
+  if(!row || !say || VP_NARR_EDIT[i]) return;
+  const b=VP_BEATS[i]; if(!b) return;
+  VP_NARR_EDIT[i]=true;
+  const cur=(b.narration||'');
+  say.innerHTML='<textarea id="vpNarrEd'+i+'" rows="3" '
+    +'style="width:100%;box-sizing:border-box;padding:7px 9px;border:2px solid var(--accent);'
+    +'border-radius:8px;background:var(--bg);color:var(--txt);font-size:13px;line-height:1.55;'
+    +'resize:vertical"></textarea>'
+    +'<div style="margin-top:5px;display:flex;gap:6px;align-items:center;flex-wrap:wrap">'
+    +'<button class="btn-prev" style="padding:3px 10px" onclick="vpSaveNarr('+i+')">저장하고 다시 뽑기</button>'
+    +'<button class="btn-prev" style="padding:3px 10px" onclick="vpCancelNarr('+i+')">취소</button>'
+    +'<span class="hint">Ctrl+Enter 저장 · Esc 취소</span></div>';
+  const ed=document.getElementById('vpNarrEd'+i);
+  ed.value=cur;                                  // ★value로 넣는다(HTML 이스케이프 사고 방지)
+  ed.onkeydown=(ev)=>{
+    ev.stopPropagation();
+    if(ev.key==='Escape'){ ev.preventDefault(); vpCancelNarr(i); }
+    else if(ev.key==='Enter' && (ev.ctrlKey||ev.metaKey)){ ev.preventDefault(); vpSaveNarr(i); }
+  };
+  ed.focus(); ed.setSelectionRange(cur.length, cur.length);
+}
+function vpCancelNarr(i){ delete VP_NARR_EDIT[i]; renderTtsBeats(); }
+async function vpSaveNarr(i){
+  const ed=document.getElementById('vpNarrEd'+i), m=document.getElementById('vpMsg'+i);
+  const b=VP_BEATS[i]; if(!ed || !b) return;
+  const text=(ed.value||'').trim();
+  if(!text){ if(m) m.textContent='대본이 비었어요 — 취소하거나 문장을 넣어주세요'; return; }
+  if(!MIX_JOB){ if(m) m.textContent='작업 ID를 몰라 저장할 수 없어요'; return; }
+  const prevVer=(+b.tts_ver||0);
+  delete VP_NARR_EDIT[i];                        // 저장 시작 = 편집 종료(폴러 재개)
+  if(m) m.textContent='✏ 저장 중…';
+  try{
+    const r=await fetch('/api/mix/scene_lab/'+MIX_JOB+'/narration/'+b.beat_idx,{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({text, regen:true})});
+    const j=await r.json().catch(()=>null);
+    if(!r.ok || !j || !j.ok){
+      if(m) m.textContent = (r.status===409)
+        ? '⏳ 생성 중엔 못 바꿔요 — 전체 생성이 끝나고 다시 눌러요'
+        : ('❌ 저장 실패' + (j&&j.error?(' — '+j.error):''));
+      renderTtsBeats(); return;
+    }
+    // 글자가 같으면 서버가 unchanged로 알려준다 — 헛되이 기다리지 않는다.
+    if(j.unchanged && !j.regen){ if(m) m.textContent='그대로예요(바뀐 글자 없음)'; renderTtsBeats(); return; }
+    if(m) m.textContent='🔊 음성·자막 다시 뽑는 중… (10~20초)';
+    // 완료 감지는 tts_ver — mp3는 같은 경로라 겉으론 구분이 안 된다(vpRegenTone과 같은 방식).
+    const started=Date.now();
+    const poll=setInterval(async()=>{
+      try{
+        const d=await (await fetch('/api/mix/result/'+MIX_JOB,{cache:'no-store'})).json();
+        const nb=(d.beats||[]).find(x=>x.beat_idx===b.beat_idx);
+        if(nb && (+nb.tts_ver||0)>prevVer){ clearInterval(poll); renderTtsBeats(); return; }
+        if(Date.now()-started>60000){ clearInterval(poll); if(m) m.textContent='❌ 시간 초과 — 다시 시도해 주세요'; }
+      }catch(e){}
+    }, 1500);
+  }catch(e){
+    if(m) m.textContent='❌ 저장 실패: '+(e.message||e);
+    renderTtsBeats();
+  }
+}
+
 async function renderTtsBeats(){
+  if(vpIsEditing()) return;      // ★고치는 중엔 갈아끼우지 않는다(입력이 날아간다)
   const el=document.getElementById('ttsBeats');
   // 매칭 전에도 큰 미리보기 자리는 유지한다(처음 상태에서 자리 예약 — 2026-07-25 사장님 요청).
   // ★대기 화면 모양은 HTML 초기값(#ttsBeats 안)과 **같은 틀**을 쓴다(2026-08-18).
@@ -9926,14 +10618,15 @@ async function renderTtsBeats(){
       const badgeTip = synced ? '자막 자동맞춤 됨' : '자막 자동맞춤 불확실 — 들어보세요';
       return `
       <div id="beatRow${i}" data-idx="${i}" style="border:1px solid var(--line);border-radius:9px;padding:9px;margin-bottom:6px;background:var(--inset);transition:background .15s">
-        <div style="font-size:13px;margin-bottom:4px"><span title="${badgeTip}">${badge}</span> <b>${i+1}.</b> ${esc(b.narration||'')}</div>
+        <div id="vpSay${i}" style="font-size:13px;margin-bottom:4px"><span title="${badgeTip}">${badge}</span> <b>${i+1}.</b> <span class="vpNarr">${esc(b.narration||'')}</span></div>
         ${b.tts_preview_url?`<audio id="beatAudio${i}" preload="metadata" src="${esc(b.tts_preview_url)}?t=${Date.now()}" style="display:none"></audio><button class="btn-prev" style="padding:4px 10px" onclick="vpPlayBeat(${i})">▶ 이 장면</button>
         <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">
           <button class="btn-prev" style="padding:3px 8px" onclick="vpNudge(${i},-1)">◀ 자막 당기기</button>
           <button class="btn-prev" style="padding:3px 8px" onclick="vpNudge(${i},1)">자막 밀기 ▶</button>
           <button class="btn-prev" style="padding:3px 8px" onclick="vpResetOffset(${i})">↩︎ 되돌리기</button>
-          <select id="vpTone${i}" style="padding:3px"><option value="stable">안정</option><option value="natural">자연</option><option value="expressive">표현</option><option value="whisper">속삭임</option></select>
+          <select id="vpTone${i}" style="padding:3px">${Object.entries(VARIANT_LABELS).map(([k,lab])=>`<option value="${k}"${(b.tts_tone||'stable')===k?' selected':''}>${lab}</option>`).join('')}</select>
           <button class="btn-prev" style="padding:3px 8px" onclick="vpRegenTone(${i})">🔁 톤 바꿔 다시</button>
+          <button class="btn-prev" style="padding:3px 8px" onclick="vpEditNarr(${i})" title="이 문장을 고치고 음성·자막을 다시 뽑습니다">✏ 대본수정</button>
           ${window.IS_ADMIN?`<button class="btn-prev" style="padding:3px 8px" onclick="pronReport(this,${i})">🩺 발음 이상해요</button>`:''}
           <span id="vpMsg${i}" class="hint"></span>
         </div>`:'<span class="hint">음성 없음</span>'}
@@ -10040,7 +10733,10 @@ function _voiceForTone(tone){
   const g=(typeof VOICE_GROUPS!=='undefined'?VOICE_GROUPS:[]).find(x=>x.group_id===(VOICE&&VOICE.group_id));
   const v=g && g.variants && g.variants[tone];
   if(!v) return null;
-  return {voice_id:v.voice_id, settings:Object.assign({}, v.voice_settings), speed:v.default_speed};
+  // variant(톤 이름)는 **서버가 비트에 기록만** 한다 — 합성 인자로는 안 쓴다.
+  // 이게 없으면 화면이 '지금 무슨 톤인지'를 되짚을 수 없어 늘 안정으로 리셋된다.
+  return {voice_id:v.voice_id, settings:Object.assign({}, v.voice_settings),
+          speed:v.default_speed, variant:tone};
 }
 async function vpRegenTone(i){
   const b=VP_BEATS[i]; if(!b) return;
@@ -10596,6 +11292,47 @@ function thumbAutoLines(text){
 // 2026-07-19 사장님 레퍼런스 실측 반영). 예전엔 줄이기만 해서 짧은 제목이 작게 남았다.
 // 슬라이더(L.size)는 미세조정(90=꽉 채움). 높이 상한(44%)으로 2줄이 화면을 안 넘게.
 // ★크기가 캔버스 폭에 비례하므로 270 프리뷰와 1080 결과가 같은 비율(계약 유지).
+// ★타이핑 중에는 글자 크기를 **붙잡아 둔다**(2026-08-27 고객 제보 "썸네일 글씨가 원래
+//   저렇게 크기가 왔다갔다 하는 게 맞아요?"). 아래 grow-to-fill은 글자 수에 맞춰 매번
+//   폰트를 다시 재므로, 한 글자씩 칠 때마다 크기가 출렁인다 —
+//   실측: "어" 422px → "얼린고기" 248px → "얼린고기 보관은 이렇게 하세요" 135px (3배 차이).
+//   결과물은 정상인데 **치는 과정이 고장난 것처럼 보인다**.
+//   그래서 입력이 멈출 때까지(THUMB_TYPE_MS) 직전 비율을 유지하고, 멈추면 한 번만 맞춘다.
+//   ⚠️비율(size/W)로 잡아둔다 — 미리보기(270)와 저장(1080)이 같은 그림이어야 한다.
+//   작으면 사장님·고객이 [크기 미세조정] 슬라이더로 조절한다(종전 그대로).
+// ★사장님 지시(2026-08-27): "1로 해주고 작으면 각자 크기조정으로".
+//   → 문구를 치는 동안은 물론이고 **다 친 뒤에도 크기를 도로 줄이지 않는다.**
+//     처음 잡은 크기를 그 레이어의 기준으로 계속 쓰고, 작다 싶으면 사람이
+//     [크기 미세조정] 슬라이더로 올린다. 자동으로 오르내리는 게 제보의 핵심이었다.
+//   ⚠️단 폭·높이 상한은 그대로 건다 — 안 그러면 긴 문구가 캔버스를 넘친다.
+//   WeakMap에 담는 이유: 레이어 객체는 그대로 서버에 저장된다(썸네일 meta).
+//   L에 필드를 심으면 저장 데이터가 오염되고, 인덱스로 담으면 순서가 바뀔 때 어긋난다.
+const THUMB_FIT_HOLD = new WeakMap();   // 레이어 → {ratio} (캔버스 폭 대비 글자 크기)
+
+// ── 자간(letter-spacing) ─────────────────────────────────────────────
+// L.tracking = 글자 크기 대비 % (0 = 종전 그대로). 없으면 0 → 옛 저장본도 그림이 안 바뀐다.
+// ★px가 아니라 **글자 크기 비율**로 담는다 — 미리보기(270)와 저장(1080)이 같은 그림이어야
+//   하는데(썸네일 전체가 지키는 계약), px로 담으면 배율이 다른 두 캔버스에서 어긋난다.
+// ★ctx.letterSpacing은 measureText에도 반영된다 → 자동 줄맞춤(thumbFit)이 저절로 따라온다.
+//   그래서 재는 곳과 그리는 곳 **둘 다** 같은 값을 걸어야 한다(한쪽만 걸면 글자가 넘친다).
+function _thumbTrackCss(L, size){
+  const t = Number((L && L.tracking) || 0);
+  return t ? `${(size * t / 100).toFixed(2)}px` : '0px';
+}
+// 구형 브라우저(letterSpacing 미지원)에서도 죽지 않게 — 있으면 걸고 없으면 종전 그림.
+function _setTrack(ctx, L, size){
+  try { if ('letterSpacing' in ctx) ctx.letterSpacing = _thumbTrackCss(L, size); } catch (e) {}
+}
+// ★가운데 정렬 보정(2026-08-28 실브라우저 실측). Chrome은 **마지막 글자 뒤에도** 자간을
+//   붙여 폭에 넣는다 — 실측: '가나다' 100px, 자간 40px → 276 → 396 (=+3×40, 2칸이 아니라 3칸).
+//   그래서 textAlign='center'로 그리면 글자가 자간 절반만큼 왼쪽으로 밀리고, 박스·형광펜·
+//   밑줄도 오른쪽으로 한 칸 길어진다. 그리는 x를 +ls/2 옮기고 폭은 −ls 해서 바로잡는다.
+function _trackPx(ctx, L, size){
+  if (!L || !L.tracking) return 0;
+  try { if (!('letterSpacing' in ctx)) return 0; } catch (e) { return 0; }
+  return parseFloat(_thumbTrackCss(L, size)) || 0;
+}
+
 function thumbFit(ctx, L, W, H){
   const family = thumbFontCss(L.font);
   const maxW = W * 0.92, maxH = H * 0.44;
@@ -10603,11 +11340,40 @@ function thumbFit(ctx, L, W, H){
   const lines = thumbAutoLines(L.text);
   if (!lines.some(l => (l || '').trim())) return {lines: [''], size: W * 0.06, family};
   ctx.font = `900 100px ${family}`;
+  _setTrack(ctx, L, 100);          // 100px 기준으로 재므로 자간도 그 기준으로 건다
   const widest = Math.max(1, ...lines.map(l => ctx.measureText(l).width));
+  _setTrack(ctx, {tracking: 0}, 0);   // 잰 뒤엔 원상복구 — 다른 레이어 측정에 새면 안 된다
   let size = 100 * (maxW / widest) * scale;                       // 폭 꽉 채우기 × 미세조정
+  // ★이 레이어에 붙잡아 둔 크기가 있으면 그걸 쓴다(글자 수가 바뀌어도 안 흔들린다).
+  //   비율(size/W)로 담아 두므로 미리보기(270)와 저장(1080)이 같은 그림이 된다.
+  const _hold = (typeof THUMB_FIT_HOLD !== 'undefined' && THUMB_FIT_HOLD.get)
+    ? THUMB_FIT_HOLD.get(L) : null;
+  if (_hold) size = _hold.ratio * W * scale;
   if (lines.length * size * 1.16 > maxH) size *= maxH / (lines.length * size * 1.16);  // 높이 상한
   size = Math.max(W * 0.02, Math.min(size, H * 0.22));            // 안전 하한·상한
   return {lines, size, family};
+}
+
+// 문구를 처음 칠 때 **그 순간의 크기**를 이 레이어의 기준으로 붙잡는다.
+// 한 번 잡히면 글자를 더 치거나 지워도 안 흔들린다. 작으면 슬라이더로 올린다(사장님 지시).
+function thumbHoldSizeWhileTyping(){
+  const L = (THUMB_STATE.layers || [])[THUMB_STATE.sel];
+  if (!L || L.kind) return;                       // 글자 레이어만(배지·스티커·도형 제외)
+  if (THUMB_FIT_HOLD.get(L)) return;              // 이미 잡아 뒀다
+  if (!String(L.text || '').trim()) return;       // 빈 칸에선 잡지 않는다(0으로 굳는다)
+  try {
+    const cv = document.getElementById('thumbCanvas');
+    // ★기준을 잡을 땐 홀드 없이 원래 식으로 잰다 — 지금 막 잡으려는 참이라 get은 비어 있다.
+    const f = thumbFit(cv.getContext('2d'), L, THUMB_W, THUMB_H);
+    const scale = Math.max(0.35, (L.size || 90) / 90);
+    // 슬라이더 몫(scale)은 빼고 담는다 — 쓸 때 다시 곱하므로 두 번 곱하면 커진다.
+    THUMB_FIT_HOLD.set(L, {ratio: (f.size / THUMB_W) / scale});
+  } catch (e) { /* 못 재면 종전대로(매번 맞춤) — 기능이 죽지는 않는다 */ }
+}
+
+// 새 문구 레이어·프리셋 적용처럼 **판을 새로 짜는** 경우엔 기준을 놓아준다.
+function thumbReleaseFitHold(L){
+  try { if (L) THUMB_FIT_HOLD.delete(L); } catch (e) {}
 }
 
 // ── ✨ 강조 효과(2026-08-18) — 눈에 확 들어오는 '포인트'를 글자에 얹는다 ──────────────
@@ -10619,9 +11385,9 @@ function thumbFit(ctx, L, W, H){
 //
 // ★그리는 순서가 곧 쌓임 순서다: 형광펜(글자 뒤) → 외곽선 → 글자 → 밑줄(글자 아래 획).
 //   형광펜을 글자 뒤에 깔지 않으면 글자를 덮어 못 읽는다.
-function _fxMarker(ctx, line, y, size, fx){
+function _fxMarker(ctx, line, y, size, fx, ls){
   if (!fx || !fx.marker) return;
-  const w = ctx.measureText(line).width;
+  const w = ctx.measureText(line).width - (ls || 0);   // 뒤에 붙은 자간 한 칸을 뺀다
   ctx.save();
   // 실제 형광펜처럼 글자 아래쪽 절반만 덮고, 곱하기 합성으로 글자가 비쳐 보이게 한다.
   ctx.globalCompositeOperation = 'multiply';
@@ -10632,9 +11398,9 @@ function _fxMarker(ctx, line, y, size, fx){
   ctx.restore();
 }
 
-function _fxUnderline(ctx, line, y, size, fx, color){
+function _fxUnderline(ctx, line, y, size, fx, color, ls){
   if (!fx || !fx.underline || fx.underline === 'none') return;
-  const w = ctx.measureText(line).width;
+  const w = ctx.measureText(line).width - (ls || 0);   // 뒤에 붙은 자간 한 칸을 뺀다
   // ★형광펜을 같이 켜면 밑줄을 그 아래로 내린다(2026-08-18 실측). 형광펜 띠가 y+0.06~+0.58을
   //   덮는데 밑줄 기본 위치가 +0.46이라 띠 **안**에 그어져, 색이 달라도 묻혀 안 보였다.
   //   색을 바꾸는 걸로는 못 고친다 — 자리를 띠 바깥으로 옮겨야 한다.
@@ -10951,19 +11717,22 @@ function drawThumb(ctx, img, layers, W, H){
     ctx.translate(L.x * W, L.y * H);                            // 앵커 = 여러 줄 블록의 세로 중앙
     if (L.rot) ctx.rotate(L.rot * Math.PI / 180);
     ctx.font = `900 ${size}px ${family}`;
+    _setTrack(ctx, L, size);        // ★자간 — 재는 곳(thumbFit)과 같은 값이어야 한다
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     const startY = -((lines.length - 1) * lh) / 2;             // 블록을 앵커 기준 세로 중앙 정렬
+    const ls = _trackPx(ctx, L, size);          // 자간 한 칸(가운데 정렬 보정용, 없으면 0)
+    const tx = ls / 2;                          // 글자를 오른쪽으로 반 칸 — 위 주석 참고
     lines.forEach((line, li) => {
       const y = startY + li * lh;
       if (L.box){
-        const w = ctx.measureText(line).width, pad = L.box.pad * s;
+        const w = ctx.measureText(line).width - ls, pad = L.box.pad * s;
         ctx.globalAlpha = (L.box.opacity != null ? L.box.opacity : 80) / 100;
         ctx.fillStyle = L.box.color;
         ctx.fillRect(-w/2 - pad, y - size/2 - pad*0.6, w + pad*2, size + pad*1.2);
         ctx.globalAlpha = 1;
       }
-      _fxMarker(ctx, line, y, size, L.fx);        // ✨형광펜은 글자 뒤 — 먼저 깐다
+      _fxMarker(ctx, line, y, size, L.fx, ls);        // ✨형광펜은 글자 뒤 — 먼저 깐다
       // 레퍼런스 룩: 은은한 그림자 + 폰트 크기에 비례한 두꺼운 외곽선(작아도 커도 비율 유지).
       // fixed px(외곽선 슬라이더)보다 얇아지지 않게 max로 바닥을 깐다 — 큰 글자에 얇은 테두리 방지.
       if (L.outline && L.outline.w){
@@ -10972,7 +11741,7 @@ function drawThumb(ctx, img, layers, W, H){
         ctx.lineWidth = Math.max(L.outline.w * s, size * 0.085);
         ctx.strokeStyle = L.outline.color;
         ctx.lineJoin = 'round';
-        ctx.strokeText(line, 0, y);
+        ctx.strokeText(line, tx, y);
         ctx.restore();
       }
       const _fill = (li > 0 && L.color2) ? L.color2 : L.color;     // 1줄=color, 2줄부터=color2(2색 룩)
@@ -10982,12 +11751,12 @@ function drawThumb(ctx, img, layers, W, H){
         ctx.shadowColor = L.fx.glow.color || '#2EE6C5';
         ctx.shadowBlur = size * 0.35;
         ctx.fillStyle = _fill;
-        for (let g = 0; g < 3; g++) ctx.fillText(line, 0, y);      // 겹쳐야 눈에 띄게 빛난다
+        for (let g = 0; g < 3; g++) ctx.fillText(line, tx, y);      // 겹쳐야 눈에 띄게 빛난다
         ctx.restore();
       }
       ctx.fillStyle = _fill;
-      ctx.fillText(line, 0, y);
-      _fxUnderline(ctx, line, y, size, L.fx, _fill);   // ✨밑줄은 글자 위 획 — 마지막
+      ctx.fillText(line, tx, y);
+      _fxUnderline(ctx, line, y, size, L.fx, _fill, ls);   // ✨밑줄은 글자 위 획 — 마지막
     });
     ctx.restore();
   });
@@ -11032,6 +11801,23 @@ async function loadThumbFrames(opt){
     if (_more && _btn){ _btn.disabled = false; _btn.textContent = '🔄 다른 장면 더 뽑기'; }
   }
 }
+// ★배경에 원본 자막이 남았을 때 **화면이 먼저 말한다**(2026-08-28 고객 제보).
+//   실측: clean_preview.mp4가 16:11에 생겼는데 제보 화면은 15:35 — 자막제거가 끝나기 전에
+//   썸네일을 열어 preview로 조용히 폴백했다. 규칙대로 고른 것이지만 아무도 안 알려주니
+//   "자막 지웠는데 왜 남아있지"가 된다. 조용한 폴백이 쳇바퀴의 뿌리다.
+function thumbBgNotice(d){
+  if (!d || d.bg === 'clean') return '';                 // 자막 없는 배경 — 알릴 것 없음
+  if (!d.subtitle_removal) return '';                    // 자막제거를 안 쓰는 작업이면 정상
+  const 진행중 = d.clean_status && d.clean_status !== 'ready';
+  return '<span style="color:var(--gold)">⚠️ 지금 배경에는 <b>원본 자막이 남아 있어요</b> — '
+    + (진행중
+        ? '자막 지우기가 <b>아직 끝나지 않았어요</b>. 끝난 뒤 '
+        : '자막 지운 영상을 아직 못 찾았어요. ')
+    + '<a href="#" onclick="loadThumbFrames({more:true});return false" '
+    + 'style="color:var(--accent2);font-weight:700">🔄 다른 장면 더 뽑기</a>를 누르면 '
+    + '깨끗한 화면으로 다시 뽑아요.</span>';
+}
+
 async function _loadThumbFrames(more){
   const hintEl = document.getElementById('thumbFramesHint');
   // ★믹스 영상이 없으면 뽑을 프레임이 없다. 예전엔 서버가 준 "job 없음"만 떠서 사장님이 왜 막혔는지
@@ -11086,12 +11872,12 @@ async function _loadThumbFrames(more){
   if (!more && _prevUrls && _prevUrls === _nextUrls && _box && _box.children.length){
     THUMB_STATE.frames = d.frames;
     document.getElementById('thumbFrameCount').textContent = `(${d.frames.length}개)`;
-    hintEl.textContent = '';
+    hintEl.innerHTML = thumbBgNotice(d);
     return;                                  // 선택 유지
   }
   THUMB_STATE.frames = d.frames;
   document.getElementById('thumbFrameCount').textContent = `(${d.frames.length}개)`;
-  document.getElementById('thumbFramesHint').textContent = '';
+  document.getElementById('thumbFramesHint').innerHTML = thumbBgNotice(d);
   document.getElementById('thumbFrames').innerHTML = d.frames.map((f, i) => `
     <div onclick="pickThumbFrame(${i})" style="position:relative;cursor:pointer;border-radius:6px;
          overflow:hidden;border:2px solid ${i === 0 ? 'var(--accent2)' : 'transparent'}" data-fi="${i}">
@@ -11155,6 +11941,24 @@ function _thumbHalf(L){
     const B = badgeBox(null, L, THUMB_W);
     return {hx: (B.bw / 2) / THUMB_W, hy: (B.bh / 2) / THUMB_H};
   }
+  // ★글자는 정사각이 아니다 — 여러 줄 블록이라 가로로 넓고 세로는 줄 수만큼이다(2026-08-28).
+  //   스티커 식(size/200 정사각)으로 재면 점선 박스가 글자와 안 맞고 ✕가 허공에 뜬다.
+  //   실제 그리는 값(thumbFit)을 그대로 빌려 쓴다 — 같은 계산을 두 번 적지 않는다(0순위-B).
+  if (!L.kind && L.text){
+    try {
+      const ctx = document.getElementById('thumbCanvas').getContext('2d');
+      const {lines, size, family} = thumbFit(ctx, L, THUMB_W, THUMB_H);
+      ctx.save();
+      ctx.font = `900 ${size}px ${family}`;
+      _setTrack(ctx, L, size);
+      const ls = _trackPx(ctx, L, size);
+      const w = Math.max(1, ...lines.map(l => ctx.measureText(l).width - ls));
+      ctx.restore();
+      const h = lines.length * size * 1.16;
+      const pad = size * 0.16;                       // 손잡이가 글자에 붙지 않게 약간 띄운다
+      return {hx: (w / 2 + pad) / THUMB_W, hy: (h / 2 + pad) / THUMB_H};
+    } catch (e) { /* 못 재면 아래 기본식 — 손잡이가 조금 어긋날 뿐 기능은 산다 */ }
+  }
   const hx = (L.size != null ? L.size : 18) / 200;   // x축 정규화 반각
   return {hx, hy: hx * (THUMB_W / THUMB_H)};          // 캔버스가 세로로 길어 y는 비율만큼 작다
 }
@@ -11164,7 +11968,12 @@ function renderThumbHandles(){
   // ★배지도 손잡이를 받는다(2026-08-27 사장님 "배지 넣고 취소하는거 없어").
   //   종전엔 sticker·shape만 허용해 **배지를 얹으면 캔버스에 ✕가 안 떴다** — 지우려면
   //   왼쪽 레이어 목록의 작은 ✕를 찾아야 했는데 사장님 눈엔 "취소가 없다"였다.
-  if (!L || !['sticker', 'shape', 'badge'].includes(L.kind)){ box.innerHTML = ''; return; }
+  // ★글자 레이어에도 손잡이를 준다(2026-08-28 사장님 "전체잡고 늘려서 글씨 크게 작게").
+  //   손잡이 자체는 2026-08-18부터 있었는데 kind 필터가 **글자만 빼놓고** 있었다 —
+  //   그래서 글자는 [크기 미세조정] 슬라이더로만 조절해야 했다.
+  if (!L){ box.innerHTML = ''; return; }
+  const isText = !L.kind && !!L.text;
+  if (!isText && !['sticker', 'shape', 'badge'].includes(L.kind)){ box.innerHTML = ''; return; }
   const {hx, hy} = _thumbHalf(L);
   const pos = (x, y) => `left:${(x * 100).toFixed(2)}%;top:${(y * 100).toFixed(2)}%`;
   const btn = (id, x, y, label, title, cur) =>
@@ -11172,52 +11981,57 @@ function renderThumbHandles(){
        transform:translate(-50%,-50%);pointer-events:auto;width:22px;height:22px;border-radius:50%;
        border:1.5px solid #fff;background:#1b1b28;color:#fff;font-size:12px;line-height:1;
        padding:0;cursor:${cur};box-shadow:0 1px 4px rgba(0,0,0,.6)">${label}</button>`;
+  // ★모서리 ⤢(크기·방향) 손잡이는 뺐다 — 2026-08-28 사장님 "손잡이 모서리 기능빼줘
+  //   버튼조절 기능 있으니까". 끌어서 맞추는 건 감도를 아무리 손봐도 슬라이더보다 정확할
+  //   수 없고(사장님 제보: "둘다 조정하는 감도가 안좋아"), 크기·회전은 이미 편집칸에
+  //   [크기 미세조정]·[회전] 슬라이더가 있다. 같은 일을 두 방법으로 두지 않는다.
+  //   ⚠️남기는 것: ✕(삭제)는 슬라이더로 대신할 수 없고(2026-08-27 "배지 넣고 취소하는거
+  //   없어"로 넣은 것), 점선 네모는 "지금 뭐가 골라져 있나"를 보여주는 표시다.
   box.innerHTML =
     `<div style="position:absolute;${pos(L.x - hx, L.y - hy)};width:${(hx * 200).toFixed(2)}%;
         height:${(hy * 200).toFixed(2)}%;border:1.5px dashed rgba(255,255,255,.65);border-radius:4px"></div>` +
-    // 사장님 2차(2026-08-18): 삭제는 **왼쪽 위 한 곳**, 나머지 세 모서리는 전부
-    // "끌면 크기+방향이 같이" — 어느 모서리를 잡았는지 외울 필요가 없어진다.
-    btn('del', L.x - hx, L.y - hy, '✕', '삭제', 'pointer') +
-    btn('g-45', L.x + hx, L.y - hy, '⤢', '끌어서 크기·방향 동시', 'nesw-resize') +
-    btn('g45',  L.x + hx, L.y + hy, '⤢', '끌어서 크기·방향 동시', 'nwse-resize') +
-    btn('g135', L.x - hx, L.y + hy, '⤢', '끌어서 크기·방향 동시', 'nesw-resize');
+    btn('del', L.x - hx, L.y - hy, '✕', '삭제', 'pointer');
 }
 
 // 손잡이 드래그 — 캔버스 드래그(이동)와 겹치지 않게 손잡이에서 시작한 것만 여기서 처리한다.
+// 손잡이 클릭 — 남은 손잡이는 ✕(삭제) 하나뿐이다.
+// ★끌어서 크기·방향을 맞추던 코드는 뺐다(2026-08-28 사장님 "손잡이 모서리 기능빼줘
+//   버튼조절 기능 있으니까"). 감도를 손봐도 슬라이더보다 정확할 수 없고, 같은 일을
+//   두 방법으로 두면 어느 쪽이 맞는지 헷갈린다. 크기·회전은 편집칸 슬라이더가 맡는다.
+//   캔버스 드래그(위치 옮기기)는 그대로다 — 그건 슬라이더로 못 하는 일이다.
 function initThumbHandleDrag(){
   const box = document.getElementById('thumbHandles'); if (!box || !box.addEventListener) return;
-  const cv = document.getElementById('thumbCanvas');
-  let mode = null;
-  const to = e => {
-    const r = cv.getBoundingClientRect();
-    return {x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height};
-  };
   box.addEventListener('mousedown', e => {
     const b = e.target.closest('button[data-h]'); if (!b) return;
     e.preventDefault(); e.stopPropagation();      // 캔버스 이동 드래그가 같이 붙는 걸 막는다
-    const h = b.getAttribute('data-h');
-    if (h === 'del'){ removeThumbLayer(THUMB_STATE.sel); return; }
-    mode = h;
+    if (b.getAttribute('data-h') === 'del') removeThumbLayer(THUMB_STATE.sel);
   });
-  window.addEventListener('mouseup', () => { mode = null; });
-  window.addEventListener('mousemove', e => {
-    if (!mode) return;
-    const L = THUMB_STATE.layers[THUMB_STATE.sel]; if (!L) return;
-    const p = to(e);
-    const dx = (p.x - L.x) * THUMB_W, dy = (p.y - L.y) * THUMB_H;   // px 공간에서 재야 각도가 맞다
-    // 세 모서리 손잡이는 이름이 곧 '원래 각도'다(g-45=우상, g45=우하, g135=좌하).
-    // 크기는 끈 거리, 방향은 그 각도에서 얼마나 돌았나 — 한 번의 드래그로 둘 다 잡힌다.
-    const base = Number(mode.slice(1));
-    const s = Math.max(Math.abs(dx), Math.abs(dy)) / THUMB_W * 200;
-    L.size = Math.min(120, Math.max(4, Math.round(s)));
-    L.rot = Math.round(Math.atan2(dy, dx) * 180 / Math.PI - base);
-    renderThumbCanvas(); renderThumbLayers();
-  });
+}
+
+// 새 글자를 어디에 놓을지 — **이미 있는 글자와 겹치지 않는 첫 자리**를 고른다.
+// ★2026-08-28 사장님 "고쳐": 종전엔 새 레이어가 무조건 프리셋 y(0.14, 맨 위)에 생겨
+//   기존 제목 **바로 위에 포개졌다**. 화면이 안 바뀐 것처럼 보여 "얹어도 반영이 안 된다"로
+//   읽혔다(실측: 라이브에서 '케이크' 입력 → y=0.14 레이어 생성, 기존 제목과 같은 자리).
+// 자리를 위에서부터 훑어 이미 쓴 곳(±GAP)을 건너뛴다. 다 찼으면 마지막 자리에 둔다
+// — 겹치더라도 **레이어가 만들어지는 것 자체는 막지 않는다**(사람이 옮기면 된다).
+const THUMB_SLOT_Y = [0.14, 0.30, 0.46, 0.62, 0.78, 0.88];
+function _freeThumbY(preferred){
+  const used = (THUMB_STATE.layers || [])
+    .filter(L => !L.kind && String(L.text || '').trim())
+    .map(L => L.y);
+  if (!used.length) return preferred;
+  const GAP = 0.09;
+  const slots = [preferred].concat(THUMB_SLOT_Y.filter(y => y !== preferred));
+  for (const y of slots){
+    if (used.every(u => Math.abs(u - y) >= GAP)) return y;
+  }
+  return THUMB_SLOT_Y[THUMB_SLOT_Y.length - 1];
 }
 
 function addThumbLayer(){
   const base = thumbPresetToLayer(HC_PRESETS.find(p => p.cat === '썸네일') || {y: 12});
   base.text = '문구를 입력하세요';
+  base.y = _freeThumbY(base.y);
   THUMB_STATE.layers.push(base);
   THUMB_STATE.sel = THUMB_STATE.layers.length - 1;
   renderThumbLayers(); renderThumbCanvas();
@@ -11263,17 +12077,42 @@ function addThumbShape(key){
   renderThumbLayers(); renderThumbCanvas();
 }
 
+// 이모지인가(그림문자). 글자·숫자·기호는 false.
+// ★스티커는 **이모지 전용**이다(컬러 글리프라 색·외곽선이 안 먹어 그 UI를 안 준다).
+//   그래서 글자를 넣으면 스티커가 아니라 **글자 레이어**로 얹어야 맞다.
+function _isEmojiOnly(t){
+  const s = String(t == null ? '' : t).trim();
+  if (!s) return false;
+  try { return /^[\p{Extended_Pictographic}\p{Emoji_Component}️‍]+$/u.test(s); }
+  catch (e) { return !/[0-9A-Za-z가-힣ㄱ-ㅎㅏ-ㅣ]/.test(s); }   // 구형 브라우저 폴백
+}
+
 function addThumbStickerFromInput(){
   const el = document.getElementById('thumbStickerInput'); if (!el) return;
   const hint = document.getElementById('thumbStickerInputHint');
-  const one = firstGrapheme(el.value);
-  if (!one){
-    if (hint) hint.textContent = '이모지를 붙여넣고 눌러주세요';
+  const raw = String(el.value == null ? '' : el.value).trim();
+  if (!raw){
+    if (hint) hint.textContent = '이모지나 글자를 넣고 눌러주세요';
     return;
   }
+  // ★글자를 넣으면 글자 레이어로 얹는다(2026-08-27 고객 제보 "글자를 쳐도 적용이 안된다").
+  //   종전엔 firstGrapheme으로 **첫 글자만** 스티커가 됐다 — "안녕하세요"를 넣으면 '안'
+  //   한 글자만 얹혔고, 안내문마저 "안 얹었어요"로 나가 **실패한 것처럼 읽혔다**(실측).
+  //   글자는 크기·색·외곽선을 조절해야 쓸모가 있으니 글자 레이어가 맞는 자리다.
+  if (!_isEmojiOnly(raw)){
+    addThumbLayer();                                  // 글자 레이어 하나 새로 만들고
+    const L = THUMB_STATE.layers[THUMB_STATE.sel];
+    if (L){ L.text = raw; thumbReleaseFitHold(L); }   // 문구를 넣는다(크기는 새로 맞춘다)
+    el.value = '';
+    renderThumbLayers(); renderThumbCanvas();
+    if (hint) hint.textContent = '“' + raw + '” 를 글자로 얹었어요 — 크기·색은 아래에서 바꾸세요';
+    return;
+  }
+  const one = firstGrapheme(raw);
   addThumbSticker(one);
   el.value = '';
-  if (hint) hint.textContent = one + ' 얹었어요 — 미리보기에서 드래그해 옮기세요';
+  // ★따옴표로 감싼다 — 첫 글자가 '안'이면 "안 얹었어요"가 **부정문으로 읽힌다**(실측).
+  if (hint) hint.textContent = '“' + one + '” 얹었어요 — 미리보기에서 드래그해 옮기세요';
 }
 
 function selectThumbLayer(i){ THUMB_STATE.sel = i; renderThumbLayers(); renderThumbHandles(); }
@@ -11316,9 +12155,14 @@ function setThumbField(key, val){
   if (key === 'outline_w'){ L.outline = L.outline || {color: '#000000', w: 0}; L.outline.w = +val; }
   else if (key === 'outline_color'){ L.outline = L.outline || {color: '#000000', w: 4}; L.outline.color = val; }
   else if (key === 'box'){ L.box = val ? {color: '#000000', pad: 16, opacity: 80} : null; }
-  else if (key === 'size' || key === 'rot'){ L[key] = +val; }
+  else if (key === 'size' || key === 'rot' || key === 'tracking'){ L[key] = +val; }
   else L[key] = val;
+  if (key === 'text') thumbHoldSizeWhileTyping();   // 치는 동안 크기 고정(2026-08-27 고객 제보)
   renderThumbCanvas();
+  // 글자에도 손잡이가 생겼으니(2026-08-28) 슬라이더로 바꿔도 점선 박스가 따라와야 한다.
+  // ★#thumbHandles만 다시 그린다 — 편집칸(#thumbEdit)을 다시 그리면 끌던 슬라이더가
+  //   교체돼 드래그가 끊긴다.
+  try { renderThumbHandles(); } catch (e) {}
 }
 
 // 위치 = 큰 버튼 3개(⬆위/⏺가운데/⬇아래). 시니어가 드래그 없이 클릭 한 번으로 배치한다.
@@ -11573,6 +12417,10 @@ function renderThumbLayers(){
     </div>
     <label style="font-size:11px;color:var(--sub)">크기 미세조정 <span style="color:var(--sub);opacity:.7">(자동으로 화면 폭을 꽉 채워요 · 필요하면 조절)</span></label>
     <input type="range" min="30" max="200" value="${L.size}" oninput="setThumbField('size', this.value)" style="width:100%">
+    <label style="font-size:11px;color:var(--sub)">자간 ${Number(L.tracking || 0) > 0 ? '+' : ''}${Number(L.tracking || 0)}
+      <span style="color:var(--sub);opacity:.7">(글자 사이 간격 · 0이 기본)</span></label>
+    <input type="range" min="-10" max="40" value="${Number(L.tracking || 0)}"
+           oninput="setThumbField('tracking', this.value)" style="width:100%">
     <label style="font-size:11px;color:var(--sub)">회전 ${L.rot}°</label>
     <input type="range" min="-45" max="45" value="${L.rot}" oninput="setThumbField('rot', this.value)" style="width:100%">
     <div style="display:flex;gap:8px;align-items:center;margin-top:6px">

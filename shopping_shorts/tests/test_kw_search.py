@@ -244,9 +244,71 @@ def test_tiktok_free_path_wins_when_it_returns_rows(monkeypatch):
     assert res["meta"]["tiktok"]["cost_usd"] == 0
 
 
-def test_real_chain_has_the_three_platforms():
-    """실제 배선이 세 플랫폼을 다 갖고 있나(모킹된 테스트만 통과하면 의미 없다)."""
-    assert set(kw_search._CHAIN) == {"instagram", "tiktok", "youtube"}
+def test_real_chain_has_the_four_platforms():
+    """실제 배선이 네 플랫폼을 다 갖고 있나(모킹된 테스트만 통과하면 의미 없다).
+    핀터레스트는 2026-08-29 합류 — 렌즈 시각검색이 영상 핀을 안 물어와서(실측 0개)."""
+    assert set(kw_search._CHAIN) == {"instagram", "tiktok", "youtube", "pinterest"}
     assert kw_search._CHAIN["instagram"] == [kw_backends.instagram]
     assert kw_search._CHAIN["tiktok"] == [kw_backends.pw_tiktok, kw_backends.apify_tiktok]
     assert kw_search._CHAIN["youtube"] == [kw_backends.youtube]
+    assert kw_search._CHAIN["pinterest"] == [kw_backends.pinterest_videos]
+
+
+# ── 핀터레스트 백엔드 (2026-08-29) ───────────────────────────────
+
+def _pin_rows():
+    return [
+        {"url": "https://www.pinterest.com/pin/111/", "title": "", "desc": "camping table",
+         "video_url": "https://v1.pinimg.com/videos/a.mp4", "thumbnail": "t1",
+         "duration": 33.1, "pin_id": "111", "width": 720, "height": 1280},
+        {"url": "https://www.pinterest.com/pin/222/", "title": "long", "desc": "",
+         "video_url": "https://v1.pinimg.com/videos/b.mp4", "thumbnail": "t2",
+         "duration": 999.0, "pin_id": "222", "width": 720, "height": 1280},
+        {"url": "", "video_url": "x", "duration": 5},      # url 없으면 버린다
+    ]
+
+
+def test_pinterest_translates_to_english_and_uses_videos_tab(monkeypatch):
+    """★실측 근거 둘이 코드에 박혀 있나 — 같은 소재도 '인덕션 테이블' 0건 /
+    'induction table' 12건(영어 번역), 일반 핀 탭은 영상 0개(영상탭)."""
+    seen = {}
+    import shopping_shorts.pinterest_crawl as pc
+    import shopping_shorts.video_analysis as va
+    monkeypatch.setattr(va, "translate_keyword",
+                        lambda kw: {"ko": kw, "en": "induction table"})
+
+    def fake_search(kw, max_results=40, scrolls=5, timeout_ms=45000, _crawler=None, tab="pins"):
+        seen.update(kw=kw, tab=tab)
+        return _pin_rows()
+    monkeypatch.setattr(pc, "search_videos", fake_search)
+    rows = kw_backends.pinterest_videos("인덕션 테이블", 8)
+    assert seen["kw"] == "induction table"
+    assert seen["tab"] == "videos"
+    assert len(rows) == 1                      # 롱폼(999s)·url없음은 걸러진다
+    r = rows[0]
+    assert _CARD_KEYS.issubset(r.keys())
+    assert r["platform"] == "pinterest"
+    assert r["play_url"].endswith("a.mp4")     # 카드 인라인 재생용 mp4 직링크
+    assert r["title"] == "camping table"       # title 비면 desc로
+
+
+def test_pinterest_translation_failure_falls_back_to_raw_keyword(monkeypatch):
+    """번역이 죽어도 검색은 살아야 한다 — 원문 그대로(영어 입력이면 그대로 통한다)."""
+    seen = {}
+    import shopping_shorts.pinterest_crawl as pc
+    import shopping_shorts.video_analysis as va
+    monkeypatch.setattr(va, "translate_keyword",
+                        lambda kw: (_ for _ in ()).throw(RuntimeError("키 소진")))
+    monkeypatch.setattr(pc, "search_videos",
+                        lambda kw, **k: seen.update(kw=kw) or [])
+    assert kw_backends.pinterest_videos("camping table", 5) == []
+    assert seen["kw"] == "camping table"
+
+
+def test_pinterest_backend_never_raises(monkeypatch):
+    import shopping_shorts.video_analysis as va
+    monkeypatch.setattr(va, "translate_keyword", lambda kw: {"en": "x"})
+    import shopping_shorts.pinterest_crawl as pc
+    monkeypatch.setattr(pc, "search_videos",
+                        lambda *a, **k: (_ for _ in ()).throw(RuntimeError("죽음")))
+    assert kw_backends.pinterest_videos("감자칩", 5) == []

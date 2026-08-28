@@ -110,6 +110,23 @@ def test_prewarm_daily_cap(store, gate, monkeypatch):
     assert prewarm.run_prewarm("sc6", "https://x/", db_path=_p(store)) == "skipped_cap"
 
 
+def test_prewarm_manual_bypasses_cap(store, gate, monkeypatch):
+    """사람이 직접 '분석'을 누른 건은 상한을 건너뛴다(2026-08-28 사장님 확정).
+
+    상한은 담기 남발(자동 예열)을 막으려는 것이다. 상한이 찼다고 버튼까지 막으면
+    화면은 몇 초 pending을 보이다 '분석 전'으로 되돌아가 고장으로 보인다(조율가 제보).
+    ★자동 몫을 까먹지 않는지도 함께 본다 — 같은 카운터에 더하면 담기예열이 굶는다.
+    """
+    monkeypatch.setattr(prewarm, "_PREWARM_DAILY_CAP", 1)
+    _stub_pipeline(monkeypatch)
+    assert prewarm.run_prewarm("m1", "https://x/", db_path=_p(store)) == "done"
+    assert prewarm.run_prewarm("m2", "https://x/", db_path=_p(store)) == "skipped_cap"
+    # 상한이 찬 상태에서도 수동은 돈다
+    assert prewarm.run_prewarm("m3", "https://x/", db_path=_p(store), manual=True) == "done"
+    # 수동이 자동 카운터를 건드리지 않았다(자동은 여전히 1 = 상한 그대로)
+    assert prewarm._daily_used(store) == 1
+
+
 def test_prewarm_structure_failure_is_harmless(store, gate, monkeypatch):
     """구조분석(제미니)이 죽어도 대본 캐시는 남는다 — 로딩 절감의 대부분이 여기 있다."""
     _stub_pipeline(monkeypatch)

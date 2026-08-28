@@ -660,6 +660,11 @@ const CTYPES = [
   // 썰쇼핑은 **화법**(정체 은폐·용도 뒤집기)이 축이고, 장비템은 **제품 도메인**이 축이다.
   // 기존 5축이 전부 집 안(살림·주방·뷰티)이라 이 버튼이 없으면 갈 곳이 '기타'뿐이다.
   {key:"장비템", label:"🔧 장비·공구",   topics:[]},
+  // 차량템(2026-08-28 사장님 결정 "차량템 별도 축 신설") — 장비템과 나란히 둔다.
+  // 둘 다 제품 도메인이 축이지만 장소가 다르다: 장비템=집 밖 현장 / 차량템=차 안팎.
+  // 발굴 실측: 차량용품 채널 12개(차츄 4,710만·안녕형들 1.16억)의 제목 30편이
+  // 축 없이는 23편(76.7%)이 '기타'로 샜다.
+  {key:"차량템", label:"🚗 차량용품",     topics:[]},
   {key:"홈템",   label:"🏠 홈·살림·가전", topics:[]},
   {key:"비법형", label:"🍳 레시피·꿀팁",  topics:[]},
   {key:"혼합형", label:"💄 뷰티",        topics:[]},
@@ -673,14 +678,16 @@ const CTYPES = [
 //   버튼으로는 못 찾는 상태였다. 백엔드에 카테고리를 추가하면 **반드시 여기도** 추가하라.
 //   (test_ranking_style_filter.py가 이 짝을 검사한다)
 const TOPIC_CTYPE = {홈템:"홈템", 가전:"홈템", 레시피:"비법형", 뷰티:"혼합형", 기타:"기타",
-                     제품정체형:"썰쇼핑", 오용형:"썰쇼핑", 장비템:"장비템"};
+                     제품정체형:"썰쇼핑", 오용형:"썰쇼핑", 장비템:"장비템",
+                     차량템:"차량템"};
 // 플랫폼별로 **버튼만** 감춘다(2026-08-26 사장님 "인스타쪽 썰쇼핑과 장비공구는 없애").
 // 썰쇼핑(제품정체형·오용형)·장비템은 **유튜브 발굴에서 나온 축**이라 인스타에선 안 쓴다.
 // ★항목을 버리는 게 아니다 — 버튼만 안 보인다. 그 카테고리 영상은 '전체'에서 그대로 보인다.
 //   (거르는 코드 render()는 이 표를 쳐다보지 않는다. 거기서 쓰면 항목이 통째로 사라진다.)
 // ★유튜브에선 그대로 둔다 — 실측(2026-08-26) 유튜브 8,000건에 장비템 99·제품정체형 170·
 //   오용형 83건이 실재한다. 같이 숨기면 그 352건이 버튼으로는 못 찾게 된다.
-const CTYPE_HIDDEN = {instagram:["썰쇼핑", "장비템"], threads:["썰쇼핑", "장비템"]};
+const CTYPE_HIDDEN = {instagram:["썰쇼핑", "장비템", "차량템"],
+                      threads:["썰쇼핑", "장비템", "차량템"]};
 let STATE = {items:[], tab:"comments", ctype:"전체", cat:"전체", q:"", style:"",
              filters:_loadFilters()};
 // 걸러내기 상태는 브라우저에 기억시킨다 — 새로고침마다 다시 켜게 하면 아무도 안 쓴다.
@@ -1437,12 +1444,28 @@ document.querySelectorAll('.tab').forEach(x=> x.onclick=()=>setTab(x.dataset.tab
 //   "오늘 가장 많이 오른 영상"이 위로 올라와 매일 순서가 실제로 바뀐다.
 //   ?? 폴백: delta 없는 옛 캐시 items가 섞여도 예전 기준(누적 댓글수)으로 자연히 되돌아간다.
 // 최신순 정렬키 — 클 수록 최신. 시간 판단은 여기 한 곳에서만 한다(0순위-B):
-// 카드의 'X시간 전' 표시(아래 1606행 근처)도 같은 우선순위(posted_at > age_hours)를 쓴다.
-function recencyKey(i){
-  if (i.posted_at){
-    const t = Date.parse(i.posted_at);
+// 카드의 'X시간 전' 표시(fmtAgo)도 **같은 우선순위**를 쓴다 — recencyMs 하나를 공유한다.
+// 시각을 담고 있을 수 있는 필드들 — **탭마다 들어오는 필드가 다르다**(2026-08-28 실측).
+//   48시간 탭(last_run)      : age_hours만
+//   주·달 탭(hits_since)     : first_seen만 (upload_ts는 전부 빈 문자열)
+//   역대 탭(archive_hits)    : upload_ts만 (first_seen 없음)
+// 그래서 posted_at·age_hours만 보던 종전 코드에서는 주·달·역대 탭의 **모든 항목이
+// -1e15로 같아져 최신순이 통째로 무효**가 됐다(사장님 제보 "최신순인데 2일 전").
+const RECENCY_FIELDS = ['posted_at', 'upload_ts', 'first_seen'];
+
+function recencyMs(i){
+  for (const f of RECENCY_FIELDS){
+    const v = i[f];
+    if (!v) continue;                              // 빈 문자열도 여기서 걸러진다
+    const t = Date.parse(v);
     if (!isNaN(t)) return t;                       // epoch ms — 클수록 최신
   }
+  return null;
+}
+
+function recencyKey(i){
+  const t = recencyMs(i);
+  if (t != null) return t;                         // epoch ms — 클수록 최신
   if (i.age_hours != null) return -i.age_hours;    // 경과가 적을수록 최신 → 부호를 뒤집는다
   return -1e15;                                    // 시간을 모르는 것은 맨 뒤
 }
@@ -2074,11 +2097,13 @@ function _historyCard(h){
 }
 function fmtAgo(i){
   // 'X시간 전' 실시간 계산(2026-08-03). age_hours는 수집 시점 스냅샷이라 다음 수집까지
-  // 고정돼 보였음 — 서버가 실어주는 posted_at(발행시각, UTC)이 있으면 지금 기준으로 계산.
+  // 고정돼 보였음 — 실제 시각이 있으면 지금 기준으로 계산한다.
+  // ★정렬과 **같은 필드 우선순위**를 쓴다(recencyMs). 표시와 정렬이 다른 값을 보면
+  //   "최신순인데 위쪽이 더 오래돼 보이는" 어긋남이 난다(0순위-B).
   let h = i.age_hours || 0;
-  if(i.posted_at){
-    const t = Date.parse(i.posted_at);
-    if(!isNaN(t)) h = Math.max(0, (Date.now()-t)/3.6e6);
+  const t = recencyMs(i);
+  if(t != null){
+    h = Math.max(0, (Date.now()-t)/3.6e6);
   }
   if(h < 1) return Math.max(1, Math.round(h*60)) + '분 전';
   if(h < 48) return Math.round(h) + '시간 전';
@@ -2628,7 +2653,11 @@ function playInstagram(img, shortcode){ _playViaMedia(img, shortcode, 'instagram
 const LENS_PLATFORMS=[
   {k:'instagram',label:'📷 인스타'},{k:'tiktok',label:'🎵 틱톡'},
   {k:'xiaohongshu',label:'📕 샤오홍슈'},{k:'douyin',label:'🎶 도우인'},
-  {k:'youtube',label:'▶️ 유튜브'}];
+  {k:'youtube',label:'▶️ 유튜브'},
+  // 핀터레스트(2026-08-29 사장님 "핀터레스트 검색결과도 노출 / 숏폼영상만").
+  // 서버(lens_discover)가 핀 페이지를 실조회해 **영상 핀만** 보내준다(이미지 핀은 서버컷).
+  // play_url(mp4 직링크)이 실려 와 기존 인라인 재생 경로(/api/video 프록시)로 바로 재생된다.
+  {k:'pinterest',label:'📌 핀터레스트'}];
 // 카드 정렬용 우선순위 — ★위 배열에서 자동 생성한다(손으로 또 적지 않는다).
 const _LENS_ORDER=Object.fromEntries(LENS_PLATFORMS.map((p,i)=>[p.k,i]));
 let LENS_STATE={};   // shortcode → {items, on:Set, saved:Set}
@@ -3383,7 +3412,7 @@ function renderLens(shortcode, mountId){
       <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="영상 길이 90초 이하(또는 길이 불명)만 표시"><input type="checkbox" ${st.shortsOnly?'checked':''} onclick="toggleLensShorts('${shortcode}')"> 숏폼만</label>
       <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="제목에 한글이 없는 결과만 표시 — 원본(해외) 영상 찾을 때. 채널명이 아닌 제목 기준 근사치라 완벽하진 않음"><input type="checkbox" ${st.foreignOnly?'checked':''} onclick="toggleLensForeign('${shortcode}')"> 🌍 해외만</label>
       <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="제목에 한글이 있는 결과만 표시 — 국내 레퍼런스를 볼 때. '해외만'과 반대라 둘은 함께 켜지지 않습니다(제목 기준 근사치)"><input type="checkbox" ${st.koreanOnly?'checked':''} onclick="toggleLensKorean('${shortcode}')"> 🇰🇷 한국만</label>
-      <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="인스타 카드뉴스(사진·카러셀 게시물)를 가립니다. URL이 /p/면 사진으로 봅니다 — 렌즈 응답에 동영상 여부가 없어서 쓰는 근사치라, 드물게 /p/로 올라간 옛 동영상도 같이 가려집니다(끄면 다시 보임)"><input type="checkbox" ${st.videoOnly!==false?'checked':''} onclick="toggleLensVideoOnly('${shortcode}')"> 🎬 영상만${nPhoto?` <span style="color:var(--sub)">(카드뉴스 ${nPhoto})</span>`:''}</label>
+      <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="인스타 카드뉴스(사진·카러셀 게시물)와 영상인지 확인 못 한 핀터레스트 핀을 가립니다. 인스타는 URL이 /p/면 사진으로 보는 근사치라 드물게 옛 동영상도 같이 가려집니다(끄면 다시 보임). 핀터레스트 이미지 핀은 서버가 확인해 아예 빼고, 확인 실패분만 여기서 가립니다"><input type="checkbox" ${st.videoOnly!==false?'checked':''} onclick="toggleLensVideoOnly('${shortcode}')"> 🎬 영상만${nPhoto?` <span style="color:var(--sub)">(카드뉴스 ${nPhoto})</span>`:''}</label>
       <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="소재 키워드가 제목에 하나도 없는 결과(⚠️다른주제?)를 가립니다. 렌즈는 시각 유사도만 보기 때문에 엉뚱한 게시물이 섞입니다. ⚠️중국어·영어 제목은 키워드가 안 맞아 원본(해외) 후보까지 사라질 수 있어 기본 꺼짐"><input type="checkbox" ${st.hideOfftopic?'checked':''} onclick="toggleLensOfftopic('${shortcode}')"> ⚠️ 다른주제 숨기기${nOff?` <span style="color:var(--sub)">(${nOff})</span>`:''}</label>
       <button onclick="lensBulkSave('${shortcode}')" ${selCount?'':'disabled'} style="${btnCss}">📥 선택 담기(${selCount})</button>
       <button onclick="lensBulkDelete('${shortcode}')" ${selCount?'':'disabled'} style="${btnCss}">🗑 선택 삭제(${selCount})</button>
@@ -3407,7 +3436,7 @@ function renderLens(shortcode, mountId){
           title="넣은 소재로 검색어 조합을 여러 개 만들어 아래에 쌓습니다. 한국어만 넣어도 중국어까지 같이 나옵니다 — 무료" style="${btnCss};border-color:var(--accent);color:var(--accent);font-weight:700">${st.cnLoading?'⏳ 만드는 중…':'✨ 검색어 조합 만들기'}</button>
       </div>
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px">
-        <span style="font-size:12px;color:var(--sub)" title="🔎 여기서 = 인스타·틱톡·유튜브를 이 페이지 안에서 찾습니다. 나머지 아이콘(📕샤오홍슈 🎶도우인 🎵틱톡 📷인스타)은 그 사이트를 새 탭으로 엽니다">🔎 비슷한 영상 찾기 <span style="opacity:.7">— 🔎는 여기서, 아이콘은 새 탭</span></span>
+        <span style="font-size:12px;color:var(--sub)" title="🔎 여기서 = 인스타·틱톡·유튜브·핀터레스트를 이 페이지 안에서 찾습니다. 나머지 아이콘(📕샤오홍슈 🎶도우인 🎵틱톡 📷인스타)은 그 사이트를 새 탭으로 엽니다">🔎 비슷한 영상 찾기 <span style="opacity:.7">— 🔎는 여기서, 아이콘은 새 탭</span></span>
         ${st.frameBlob?`<button onclick="lensMoreCnKeywords('${shortcode}')" ${st.cnLoading?'disabled':''} title="같은 장면으로 다른 각도의 검색어를 더 뽑습니다(이미 나온 건 빼고 아래에 쌓입니다). 무료 — 추가 비용 없음" style="${btnCss};border-color:var(--accent);color:var(--accent)">${st.cnLoading?'⏳ 뽑는 중…':'🔄 다른 검색어 더'}</button>`:''}
         ${st.cnNoNew?'<span style="font-size:11px;color:var(--sub)">더 나올 게 없어요 — 이 장면에서 뽑을 각도는 다 나왔습니다</span>':''}
       </div>
@@ -3439,7 +3468,7 @@ function renderLens(shortcode, mountId){
               <div style="font-size:14px;font-weight:600;line-height:1.3">${kw}</div>
               <div style="font-size:11px;color:var(--sub)">${c.zh||''}</div></div>
             <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-            ${kw?`<button onclick="lensKwSearch('${shortcode}',${idx})" ${st.kwSearching?'disabled':''} title="인스타·틱톡·유튜브를 '${kw}'로 검색해 이 페이지 안에 카드로 불러옵니다(이동 없음)" style="${wide}">🔎 여기서</button>`:''}
+            ${kw?`<button onclick="lensKwSearch('${shortcode}',${idx})" ${st.kwSearching?'disabled':''} title="인스타·틱톡·유튜브·핀터레스트를 '${kw}'로 검색해 이 페이지 안에 카드로 불러옵니다(이동 없음). 핀터레스트는 영어로 번역해 영상탭을 찾습니다" style="${wide}">🔎 여기서</button>`:''}
             ${c.zh?`<a href="${xhs}" target="_blank" rel="noopener" title="샤오홍슈에서 '${c.zh}' 검색 — 새 탭으로 엽니다" style="${ico}">📕</a>
             <a href="${dy}" target="_blank" rel="noopener" title="도우인에서 '${c.zh}' 검색 — 새 탭으로 엽니다" style="${ico}">🎶</a>`:''}
             ${kw?`<a href="${tk}" target="_blank" rel="noopener" title="틱톡에서 '${kw}' 검색 — 새 탭" style="${ico}">🎵</a>

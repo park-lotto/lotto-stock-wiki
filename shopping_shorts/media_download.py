@@ -464,6 +464,23 @@ def _is_direct_video(u):
                                 "cdninstagram.com"))
 
 
+def _download_pinterest(url, dest_dir):
+    """핀터레스트 핀 페이지 URL → mp4 다운로드 (2026-08-29, 렌즈 핀터레스트 노출과 짝).
+
+    핀 페이지의 JSON-LD VideoObject에서 mp4 직링크를 뽑아(무료·무로그인,
+    pinterest_crawl.pin_video_info — 렌즈 검증과 **같은 한 곳**) 직접 받는다.
+    pinimg CDN은 핫링크 차단이 없다(실측 Referer 없이 200). 렌즈뿐 아니라
+    핀터레스트 탭에서 담은 핀(url=핀 페이지)도 이 분기로 받아진다 — 종전엔
+    분기가 없어 '지원하지 않는 URL'로 떨어졌다."""
+    from shopping_shorts import pinterest_crawl
+    from shopping_shorts.frame_extract import download_video
+    info = pinterest_crawl.pin_video_info(url)
+    if info is None:
+        raise RuntimeError(f"영상이 없는 핀이에요(이미지 핀): {url}")
+    caption = info.get("title") or info.get("description") or ""
+    return str(download_video(info["video_url"], Path(dest_dir))), caption
+
+
 def download_any(url, dest_dir):
     """소스 URL 다운로드 → (mp4경로, caption) 튜플. caption은 인스타에서만 채워짐."""
     u = (url or "").lower()
@@ -489,6 +506,10 @@ def download_any(url, dest_dir):
         return _download_threads(url, dest_dir)
     if host == "instagram.com" or host.endswith(".instagram.com"):
         return _download_instagram(url, dest_dir)
+    # 핀터레스트 핀 페이지 — yt-dlp를 안 거치고 JSON-LD의 mp4 직링크로 받는다.
+    # (pinimg CDN 직링크가 이미 넘어온 경우는 .mp4라 아래 _is_direct_video로 간다)
+    if host == "pinterest.com" or host.endswith(".pinterest.com"):
+        return _download_pinterest(url, dest_dir)
     # 직접 mp4(예: 샤오홍슈 url_720p) — 담긴 샤오홍슈 url은 rednote.com/search_result 검색결과
     # '페이지'라 yt-dlp로 못 받는다. 프론트가 이미 확보한 직접 mp4(play_url)를 넘기면 이 경로로
     # 그대로 HTTP 다운로드한다(Apify 재호출 없음 = 추가 비용 0). CDN URL은 만료될 수 있어

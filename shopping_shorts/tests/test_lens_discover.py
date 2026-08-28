@@ -8,7 +8,10 @@ def _fake_response(matches):
     return R()
 
 
-def test_filters_to_five_video_platforms(monkeypatch):
+def test_filters_to_supported_video_platforms(monkeypatch):
+    # 핀터레스트는 2026-08-29부터 지원 플랫폼이다(사장님 "핀터레스트 검색결과도 노출").
+    # 이 테스트의 requests 몽키패치는 핀 페이지 실조회까지 막으므로 판정불가 →
+    # 남되 is_photo=True(기본 가림)여야 한다. 영상확정·이미지컷은 아래 전용 테스트에서.
     matches = [
         {"link": "https://www.youtube.com/watch?v=abc", "title": "yt", "thumbnail": "t1", "source": "YouTube"},
         {"link": "https://www.tiktok.com/@u/video/1", "title": "tt", "thumbnail": "t2", "source": "TikTok"},
@@ -16,7 +19,7 @@ def test_filters_to_five_video_platforms(monkeypatch):
         {"link": "https://www.xiaohongshu.com/explore/aaa", "title": "xhs", "thumbnail": "t4", "source": "小红书"},
         {"link": "https://www.douyin.com/video/999", "title": "dy", "thumbnail": "t5", "source": "抖音"},
         {"link": "https://en.wikipedia.org/wiki/X", "title": "wiki", "thumbnail": "t6", "source": "Wikipedia"},
-        {"link": "https://www.pinterest.com/pin/1", "title": "pin", "thumbnail": "t7", "source": "Pinterest"},
+        {"link": "https://www.pinterest.com/pin/18295942229438860/", "title": "pin", "thumbnail": "t7", "source": "Pinterest"},
     ]
     monkeypatch.setattr(lens_discover, "SERPAPI_KEYS", ["fake"])
     monkeypatch.setattr(lens_discover, "SERPAPI_KEY", "fake")
@@ -25,7 +28,10 @@ def test_filters_to_five_video_platforms(monkeypatch):
     out = lens_discover.search_similar_videos("https://ex.com/frame.jpg")
 
     platforms = [i["platform"] for i in out]
-    assert platforms == ["youtube", "tiktok", "instagram", "xiaohongshu", "douyin"]
+    assert platforms == ["youtube", "tiktok", "instagram", "xiaohongshu", "douyin",
+                         "pinterest"]
+    pin = out[-1]
+    assert pin["is_photo"] is True          # 판정불가 → 기본 가림(삭제 아님)
     # is_photo(카드뉴스 후보) 추가 2026-07-30 — 프론트 '🎬 영상만' 토글이 이 키를 본다.
     # is_short/duration 추가 2026-08-16 — 롱폼 서버컷용. 길이를 모르면 None·숏폼 취급.
     assert out[0] == {"platform": "youtube", "url": "https://www.youtube.com/watch?v=abc",
@@ -448,3 +454,105 @@ def test_한_나라만_고르면_예산도_한_번만_쓴다(monkeypatch):
     lens_discover.search_similar_videos("https://ex.com/f.jpg",
                                         locales=[("ko", "kr")], stats=stats)
     assert stats["serpapi_calls"] == 1
+
+
+# ── 핀터레스트 노출 (2026-08-29 사장님 "핀터레스트 검색결과도 노출해줘 / 숏폼영상만") ──
+# 렌즈가 주는 핀 링크는 대부분 이미지 핀인데 응답에 영상 여부가 없다 → 핀 페이지의
+# JSON-LD VideoObject(pinterest_crawl.pin_video_info)를 실조회해 **영상 핀만** 남긴다.
+# 실측(2026-08-29): 영상 핀 2/2 VideoObject 있음 / 이미지 핀 4/4 없음.
+
+def _pin_search(monkeypatch, pin_links, info_fn):
+    """핀 링크들로 SerpApi 응답을 꾸미고 pin_video_info만 갈아끼워 검색 전체를 돌린다."""
+    matches = [{"link": u, "title": "p", "thumbnail": "t", "source": "Pinterest"}
+               for u in pin_links]
+    monkeypatch.setattr(lens_discover, "SERPAPI_KEYS", ["fake"])
+    monkeypatch.setattr(lens_discover, "SERPAPI_KEY", "fake")
+    monkeypatch.setattr(lens_discover.requests, "get",
+                        lambda *a, **k: _fake_response(matches))
+    monkeypatch.setattr(lens_discover.pinterest_crawl, "pin_video_info", info_fn)
+    stats = {}
+    out = lens_discover.search_similar_videos("https://ex.com/f.jpg", stats=stats)
+    return out, stats
+
+
+def test_핀터레스트_영상핀은_남고_mp4가_실린다(monkeypatch):
+    def info(url, timeout=None):
+        return {"video_url": "https://v1.pinimg.com/videos/mc/720p/a.mp4",
+                "duration": 15.0, "thumbnail": "https://i.pinimg.com/t.jpg",
+                "title": "진짜 제목", "description": ""}
+    out, stats = _pin_search(monkeypatch,
+                             ["https://www.pinterest.com/pin/18295942229438860/"], info)
+    assert len(out) == 1
+    pin = out[0]
+    assert pin["platform"] == "pinterest"
+    # play_url = 프론트 기존 인라인 재생 경로(/api/video 프록시)가 읽는 필드
+    assert pin["play_url"].endswith("a.mp4")
+    assert pin["duration"] == 15.0 and pin["is_short"] is True
+    assert pin["title"] == "진짜 제목"       # 보이는 것 = 열리는 것(oEmbed 검증과 같은 원칙)
+    assert stats["pin_raw"] == 1 and stats["pin_video"] == 1 and stats["pin_dropped"] == 0
+
+
+def test_핀터레스트_이미지핀은_서버가_잘라낸다(monkeypatch):
+    """사장님 요구가 '숏폼영상만'이다 — 이미지 확정 핀은 응답에서 아예 뺀다
+    (2026-08-16 '사진·롱폼 자체 커트'와 같은 원칙)."""
+    out, stats = _pin_search(monkeypatch,
+                             ["https://www.pinterest.com/pin/1084452785302525968/"],
+                             lambda url, timeout=None: None)
+    assert out == []
+    assert stats["pin_raw"] == 1 and stats["pin_dropped"] == 1
+
+
+def test_핀터레스트_롱폼은_잘라낸다(monkeypatch):
+    def info(url, timeout=None):
+        return {"video_url": "https://v1.pinimg.com/x.mp4", "duration": 999.0,
+                "thumbnail": "", "title": "", "description": ""}
+    out, _ = _pin_search(monkeypatch,
+                         ["https://www.pinterest.com/pin/18295942229438860/"], info)
+    assert out == []
+
+
+def test_핀터레스트_판정불가는_지우지_않고_기본가림(monkeypatch):
+    """네트워크 실패 = 이미지 확정이 아니다. 자르면 회수율이 깎인다 →
+    is_photo=True로만 표시(프론트 '🎬 영상만' 토글 기본 켜짐이라 가려지고, 끄면 보인다)."""
+    def boom(url, timeout=None):
+        raise RuntimeError("핀 페이지 HTTP 503")
+    out, stats = _pin_search(monkeypatch,
+                             ["https://www.pinterest.com/pin/18295942229438860/"], boom)
+    assert len(out) == 1
+    assert out[0]["is_photo"] is True
+    assert "play_url" not in out[0]
+    assert stats["pin_dropped"] == 0
+
+
+def test_핀터레스트_실조회_상한밖은_기본가림(monkeypatch):
+    """핀 페이지는 1.3MB HTML(실측)이라 개수 뚜껑(_PIN_VERIFY_MAX)을 씌운다.
+    상한 밖은 실조회 없이 판정불가 취급 — 지우지 않는다."""
+    calls = []
+
+    def info(url, timeout=None):
+        calls.append(url)
+        return {"video_url": "https://v1.pinimg.com/x.mp4", "duration": 10.0,
+                "thumbnail": "", "title": "", "description": ""}
+    n = lens_discover._PIN_VERIFY_MAX
+    links = [f"https://www.pinterest.com/pin/1000000000000{i:04d}/" for i in range(n + 3)]
+    out, stats = _pin_search(monkeypatch, links, info)
+    assert len(calls) == n                      # 상한만큼만 실조회
+    assert len(out) == n + 3                    # 상한 밖도 안 지운다
+    assert sum(1 for i in out if i.get("is_photo")) == 3   # 상한 밖 = 기본 가림
+
+
+def test_핀터레스트_개별핀만_통과한다():
+    ok = lens_discover._is_watchable
+    assert ok("pinterest", "https://www.pinterest.com/pin/123456/") is True
+    assert ok("pinterest", "https://kr.pinterest.com/pin/slug-name--123456/") is True
+    assert ok("pinterest", "https://www.pinterest.com/search/pins/?q=x") is False
+    assert ok("pinterest", "https://www.pinterest.com/username/board-name/") is False
+
+
+def test_핀터레스트_중복은_핀id로_뭉갠다():
+    """같은 핀이 kr./www.·슬러그 유무로 제각각 온다(실측) — netloc+path 키로는
+    전부 달라 같은 카드가 여러 장 뜬다."""
+    a = lens_discover._dedup_key("https://kr.pinterest.com/pin/18295942229438860/")
+    b = lens_discover._dedup_key(
+        "https://www.pinterest.com/pin/stylish-gadgets--18295942229438860/")
+    assert a == b == "pinterest.com/pin/18295942229438860"

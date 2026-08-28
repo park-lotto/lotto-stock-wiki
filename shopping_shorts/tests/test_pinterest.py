@@ -224,3 +224,84 @@ def test_키워드_하나가_죽어도_나머지는_산다():
     fn = _collect_fn()
     j = fn.index("ThreadPoolExecutor")
     assert "except" in fn[max(0, j - 700):j + 700], "예외 격리가 없다"
+# ── pin_video_info: 핀 1개 실조회(렌즈·다운로드 공용, 2026-08-29) ────────────
+# 실측 근거: 익명 requests로 핀 상세 페이지가 200으로 열리고, 영상 핀에만
+# JSON-LD VideoObject가 있다(영상 2/2 있음 / 이미지 4/4 없음).
+
+_VIDEO_PIN_HTML = """<html><head>
+<script type="application/ld+json">{"@type":"SocialMediaPosting","headline":"x"}</script>
+<script type="application/ld+json">{"@type":"VideoObject","@context":"http://schema.org/",
+ "name":"Stylish Gadgets","description":"desc here",
+ "contentUrl":"https://v1.pinimg.com/videos/mc/720p/f2/72/46/aaa.mp4",
+ "duration":"PT15S",
+ "thumbnailUrl":"https://i.pinimg.com/videos/thumbnails/originals/f2/72/46/aaa.0000000.jpg"}</script>
+</head><body></body></html>"""
+
+_IMAGE_PIN_HTML = """<html><head>
+<script type="application/ld+json">{"@type":"SocialMediaPosting","headline":"이미지 핀"}</script>
+</head><body></body></html>"""
+
+
+class _PageResp:
+    def __init__(self, text, status=200):
+        self.text, self.status_code = text, status
+
+
+def test_iso_duration_secs():
+    from shopping_shorts import pinterest_crawl as pc
+    assert pc.iso_duration_secs("PT15S") == 15.0
+    assert pc.iso_duration_secs("PT1M2S") == 62.0
+    assert pc.iso_duration_secs("PT1H2M3S") == 3723.0
+    # 못 읽으면 None — 0으로 뭉개면 '0초 영상'이 돼 롱폼컷·숏폼 판정이 틀린다
+    assert pc.iso_duration_secs("") is None
+    assert pc.iso_duration_secs("nope") is None
+    assert pc.iso_duration_secs(None) is None
+
+
+def test_pin_video_info_영상핀은_dict(monkeypatch):
+    import requests
+    from shopping_shorts import pinterest_crawl as pc
+    monkeypatch.setattr(requests, "get", lambda *a, **k: _PageResp(_VIDEO_PIN_HTML))
+    info = pc.pin_video_info("https://www.pinterest.com/pin/123456/")
+    assert info["video_url"].endswith("aaa.mp4")
+    assert info["duration"] == 15.0
+    assert info["title"] == "Stylish Gadgets"
+    assert "thumbnails" in info["thumbnail"]
+
+
+def test_pin_video_info_이미지핀은_None(monkeypatch):
+    import requests
+    from shopping_shorts import pinterest_crawl as pc
+    monkeypatch.setattr(requests, "get", lambda *a, **k: _PageResp(_IMAGE_PIN_HTML))
+    assert pc.pin_video_info("https://www.pinterest.com/pin/123456/") is None
+
+
+def test_search_videos_tab이_기본크롤에_전달된다(monkeypatch):
+    """tab="videos"(렌즈용 영상탭)가 실제 크롤 URL 선택까지 닿아야 한다.
+    ⚠️ 주입 크롤러(_crawler) 계약은 3인자 그대로 — 기존 테스트·수집이 그 모양을 쓴다."""
+    from shopping_shorts import pinterest_crawl as pc
+    seen = {}
+
+    def fake_crawl(keyword, scrolls, timeout_ms, tab="pins"):
+        seen["tab"] = tab
+        return []
+    monkeypatch.setattr(pc, "_crawl", fake_crawl)
+    pc.search_videos("camping table", tab="videos")
+    assert seen["tab"] == "videos"
+    pc.search_videos("camping table")           # 기본은 종전 그대로 pins
+    assert seen["tab"] == "pins"
+    # 주입 크롤러는 tab 없이 3인자로 불린다(하위호환)
+    calls = []
+    pc.search_videos("x", _crawler=lambda k, s, t: calls.append((k, s, t)) or [])
+    assert len(calls) == 1
+
+
+def test_pin_video_info_비200은_예외(monkeypatch):
+    """판정불가는 예외로 갈라 준다 — None(이미지 확정)과 섞이면 렌즈가
+    멀쩡한 영상 핀을 '이미지'로 잘라버린다(회수율 사고)."""
+    import pytest
+    import requests
+    from shopping_shorts import pinterest_crawl as pc
+    monkeypatch.setattr(requests, "get", lambda *a, **k: _PageResp("", status=503))
+    with pytest.raises(Exception):
+        pc.pin_video_info("https://www.pinterest.com/pin/123456/")

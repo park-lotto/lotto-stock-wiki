@@ -46,7 +46,7 @@ TASKS = {
     "prewarm":  lambda a: _log_prewarm(a, prewarm.run_prewarm(
         a.get("shortcode"), a.get("url"), caption=a.get("caption") or "",
         customer_id=a.get("customer_id") or "0", video_url=a.get("video_url") or "",
-        category=a.get("category"))),
+        category=a.get("category"), manual=bool(a.get("manual")))),
     # 랭킹 카드 ⏱ 길이 백필(2026-08-04) — /api/reference가 1시간에 1번 넣는다.
     # 실패해도 무해(run_backfill이 예외 없이 요약 문자열만 돌려준다).
     # codes: 렌즈 조회 경로가 넘긴 명시 shortcode(2026-08-11) — 없으면 종전 피드 스캔.

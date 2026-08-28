@@ -12,7 +12,7 @@ import json
 import pathlib
 import re
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 W, H = 1080, 1920
 _FONT_DIR = pathlib.Path(__file__).resolve().parent / "static" / "fonts"
@@ -338,12 +338,38 @@ PRESETS = {
     "news_lime":   {"name": "커뮤니티 · 연두", "bar": "#B5D46A", "on_bar": "#1A1A1A"},
     "news_gray":   {"name": "커뮤니티 · 그레이", "bar": "#6E6E6E", "on_bar": "#FFFFFF"},
     "news_navy":   {"name": "커뮤니티 · 네이비", "bar": "#2B3A67", "on_bar": "#FFFFFF"},
+    # ── 🧱 빈 틀(2026-08-28) — 글자·아이콘 없는 **색띠만**.
+    #   왜 필요한가: 지금 20종은 전부 가짜 채널 UI(☰·🔍·채널명)가 박혀 있어
+    #   "위아래 띠만 깔고 싶다"가 불가능했다. 아이콘을 하나씩 '없음'으로 돌리는
+    #   길은 있었지만 세 칸을 매번 만져야 했다 — 골라서 끝나게 한다.
+    #   ★띠 색은 화면에서 바꾼다(bar_color) — 여기 4종은 흔한 출발점일 뿐이다.
+    "plain_black": {"name": "빈 틀 · 검정", "bar": "#000000", "on_bar": "#FFFFFF",
+                    "left_icon": "none", "right_icon": "none", "center_kind": "없음"},
+    "plain_white": {"name": "빈 틀 · 흰색", "bar": "#FFFFFF", "on_bar": "#111111",
+                    "left_icon": "none", "right_icon": "none", "center_kind": "없음"},
+    "plain_coral": {"name": "빈 틀 · 살구", "bar": "#F08080", "on_bar": "#FFFFFF",
+                    "left_icon": "none", "right_icon": "none", "center_kind": "없음"},
+    "plain_navy":  {"name": "빈 틀 · 네이비", "bar": "#2B3A67", "on_bar": "#FFFFFF",
+                    "left_icon": "none", "right_icon": "none", "center_kind": "없음"},
 }
 
 # 기본 치수(1080x1920 기준). 사장님이 화면에서 바 높이를 조절하면 bar_h만 바뀐다.
 DEFAULTS = {
+    # ── 가림막(2026-08-28 고객 요청 "자막이 안 지워졌을때 가릴수 있는 네모 도형") ──
+    # ★VMake가 못 지운 자막·워터마크·스티커를 덮는다(반투명 대형 워터마크는 구조적으로
+    #   못 지운다는 걸 08-27에 확정했다 — eraser_watermark는 이미지 전용, 두 번 태워도 무효).
+    # 각 항목: {l,t,w,h}=% 좌표, shape=rect|round|pill|ellipse,
+    #          fx=solid|fade, color=#RRGGBB, op=0~100, soft=0~100(가장자리), rot=-45~45
+    # ★흐림 계열(blur/blurdark)은 여기서 못 그린다 — 배경을 흐리게 하는 건 영상 필터다.
+    #   PNG는 '위에 얹는 그림'이라 뒤를 못 만진다. 흐림은 렌더 쪽에서 따로 붙인다(2차).
+    "masks": [],
     "preset": "news_coral",
     "bar_h": 190,          # 상단 띠 높이(px)
+    # 띠 끝부분 처리(2026-08-28 사장님 시안 "끝부분 효과").
+    #   solid=딱 자름(지금까지의 그림) / grad=투명으로 흘림 / blur=경계 뭉갬 /
+    #   blurdark=뭉갬+띠를 어둡게. ★기본이 solid라 옛 그림은 하나도 안 바뀐다.
+    "bar_fx": "solid",
+    "bar_soft": 0,         # 번지는 정도 %(띠 높이 대비). 0이면 효과 없음
     "bottom_h": 0,         # 하단 띠 높이(px) — 0이면 없음
     "channel": "",         # 가짜 채널명
     "ad_badge": False,     # [광고] 뱃지
@@ -441,6 +467,72 @@ def _fade(color, pct):
     return (color[0], color[1], color[2], int(a * max(0, min(100, pct)) / 100))
 
 
+_BAR_FX = ("solid", "grad", "blur", "blurdark")
+# 가림막의 **종류**(2026-08-28 사장님 "이모티콘이나 뱃지같은거 … 가릴것들 가리게").
+#   shape = 색 도형(지금까지의 가림막)  ·  emoji = 이모지 스티커  ·  badge = 글자 뱃지
+# ★새 기계를 만들지 않고 masks에 종류를 얹었다. 위치·크기·회전·드래그·저장이 이미
+#   여기 다 있다 — 스티커용 배관을 따로 파면 그 규칙이 두 벌이 된다(0순위-B).
+_MASK_KINDS = ("shape", "emoji", "badge")
+_EMOJI_FONT = "/usr/share/fonts/truetype/noto/NotoColorEmoji.ttf"
+_EMOJI_PX = 109          # Noto Color Emoji는 109px 고정 비트맵만 있다(실측)
+
+_MASK_SHAPES = ("rect", "round", "pill", "ellipse")
+# 흐림 계열은 **그림으로는 못 그린다** — 뒤에 있는 영상을 흐리게 하는 것이라
+# 렌더(ffmpeg)가 처리한다. PNG에는 안 그리고 마스크만 넘긴다(render_blur_mask).
+_MASK_BLUR_FX = ("blur", "blurdark")
+_MASK_FX = ("solid", "fade") + _MASK_BLUR_FX          # 흐림 계열은 PNG로 못 그린다(위 DEFAULTS 주석)
+_MASK_MAX = 12                        # 화면에서 실수로 수백 개를 만들어도 렌더가 안 죽게
+
+
+def _norm_masks(raw):
+    """가림막 목록을 정규화한다 — 범위 검사도 **여기 한 곳**(normalize와 같은 규약).
+
+    화면과 서버가 각자 자르면 미리보기와 결과가 갈린다. 이상한 항목은 통째로 버린다
+    (조용히 엉뚱한 자리에 그리는 것보다 안 그리는 게 낫다).
+    """
+    out = []
+    for m in (raw or [])[:_MASK_MAX]:
+        if not isinstance(m, dict):
+            continue
+        try:
+            l, t = float(m.get("l", 0)), float(m.get("t", 0))
+            w, h = float(m.get("w", 0)), float(m.get("h", 0))
+        except (TypeError, ValueError):
+            continue
+        if w <= 0 or h <= 0:
+            continue
+        l = max(0.0, min(100.0, l)); t = max(0.0, min(100.0, t))
+        # ★남은 자리보다 크면 줄인다. 자리 자체가 없으면(가장자리에 딱 붙었다) 버린다 —
+        #   하한(0.5%)을 억지로 붙이면 화면 밖으로 삐져나간다(테스트가 잡았다).
+        w = min(100.0 - l, w); h = min(100.0 - t, h)
+        if w < 0.5 or h < 0.5:
+            continue
+        shape = m.get("shape") if m.get("shape") in _MASK_SHAPES else "rect"
+        fx = m.get("fx") if m.get("fx") in _MASK_FX else "solid"
+        col = str(m.get("color") or "#000000")
+        if not (len(col) == 7 and col.startswith("#")):
+            col = "#000000"
+        def _i(k, d, lo, hi):
+            try:
+                return max(lo, min(hi, int(float(m.get(k, d)))))
+            except (TypeError, ValueError):
+                return d
+        kind = m.get("kind") if m.get("kind") in _MASK_KINDS else "shape"
+        # 이모지 1~2자 · 뱃지 글자는 8자까지(그 이상은 뱃지가 아니라 자막이다).
+        ch = str(m.get("ch") or "")[:2]
+        text = " ".join(str(m.get("text") or "").split())[:8]
+        if kind == "emoji" and not ch:
+            continue                       # 그릴 글자가 없으면 버린다(빈 자리를 남기지 않는다)
+        if kind == "badge" and not text:
+            continue
+        out.append({"l": round(l, 3), "t": round(t, 3), "w": round(w, 3), "h": round(h, 3),
+                    "kind": kind, "ch": ch, "text": text,
+                    "shape": shape, "fx": fx, "color": col,
+                    "op": _i("op", 100, 0, 100), "soft": _i("soft", 0, 0, 100),
+                    "rot": _i("rot", 0, -45, 45)})
+    return out
+
+
 def normalize(spec):
     """화면이 준 값에 기본값을 채우고 범위를 자른다.
 
@@ -452,6 +544,7 @@ def normalize(spec):
             s[k] = v
     if s["preset"] not in PRESETS:
         s["preset"] = DEFAULTS["preset"]
+    s["masks"] = _norm_masks(s.get("masks"))
     # ★프리셋이 자기 띠 높이를 갖고 있으면 그게 기본이다(실측한 원본 비율).
     #   화면이 bar_h를 직접 보내오면 그건 사장님이 손으로 민 것이므로 존중한다.
     #   이 분기가 없으면 20종이 전부 같은 190px 띠가 돼 "비율이 원본과 다르다"가 된다.
@@ -461,6 +554,15 @@ def normalize(spec):
     #   190px 띠를 뒤집어쓴다. 있고 없고는 `is not None`으로 갈라야 한다.
     if "bar_h" not in (spec or {}) and p.get("bar_h") is not None:
         s["bar_h"] = p["bar_h"]
+    # 띠 끝부분 처리도 **여기 한 곳에서만** 자른다(위 bar_h와 같은 원칙).
+    # 모르는 값은 solid로 — 이름이 틀렸는데 조용히 다른 효과가 나가면 더 나쁘다.
+    v = str(s.get("bar_fx") or "solid").strip()
+    s["bar_fx"] = v if v in _BAR_FX else "solid"
+    try:
+        s["bar_soft"] = int(s.get("bar_soft") or 0)
+    except (TypeError, ValueError):
+        s["bar_soft"] = 0
+    s["bar_soft"] = max(0, min(100, s["bar_soft"]))
     # 위·아래 띠는 **같은 규칙**으로 자른다 — 한쪽만 다르게 자르면 언젠가 어긋난다
     for k in ("bar_h", "bottom_h"):
         try:
@@ -607,6 +709,51 @@ _CENTER = {"검색창": "search", "search": "search",
            "없음": "none", "none": "none", "": "none", None: "name"}
 
 
+def _bar_layer(col, bar_h, fx, soft, top=True):
+    """띠 한 장(RGBA, W x H)을 만들어 돌려준다.
+
+    ★띠의 **끝부분 처리**를 정하는 유일한 자리다(0순위-B) — 위 띠와 아래 띠가
+      각자 다르게 잘리면 언젠가 어긋난다. 두 곳 다 이 함수를 부른다.
+
+    fx  solid    딱 잘린 띠(지금까지의 그림 — 기본값이라 회귀가 없다)
+        grad     안쪽 끝에서 투명으로 선형으로 흘린다
+        blur     경계를 가우시안으로 뭉갠다
+        blurdark 뭉갠 경계 + 띠 자체를 어둡게(배경이 밝을 때 글자가 산다)
+    soft 0~100   번지는 정도. 띠 높이에 대한 비율이라 띠를 키우면 같이 커진다.
+    """
+    layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    if bar_h <= 0:
+        return layer
+    if fx == "blurdark":
+        col = tuple([int(c * 0.55) for c in col[:3]] + [col[3] if len(col) > 3 else 255])
+    d = ImageDraw.Draw(layer)
+    y0, y1 = (0, bar_h - 1) if top else (H - bar_h, H - 1)
+    d.rectangle([0, y0, W, y1], fill=col)
+    if fx == "solid" or soft <= 0:
+        return layer
+    span = max(1, int(bar_h * soft / 100.0))
+    # 알파만 손본다 — 색은 그대로 두고 '얼마나 비치나'만 바꾼다.
+    a = layer.split()[3]
+    if fx == "grad":
+        da = ImageDraw.Draw(a)
+        for i in range(span):
+            v = int(255 * (1.0 - (i + 1) / float(span)))
+            y = (bar_h - span + i) if top else (H - bar_h + span - 1 - i)
+            da.line([(0, y), (W, y)], fill=v)
+    else:                                   # blur / blurdark
+        # ★그냥 블러하면 **화면 바깥쪽 끝까지 옅어진다**(위 띠의 맨 위가 반투명이 됨).
+        #   바깥으로 늘려서 블러한 뒤 잘라내면 안쪽 경계만 뭉개진다.
+        pad = span * 2
+        big = Image.new("L", (W, H + pad * 2), 0)
+        ImageDraw.Draw(big).rectangle(
+            [0, (0 if top else H - bar_h + pad), W, (bar_h + pad - 1 if top else H + pad * 2 - 1)],
+            fill=255)
+        big = big.filter(ImageFilter.GaussianBlur(max(1, span // 2)))
+        a = big.crop((0, pad, W, H + pad))
+    layer.putalpha(a)
+    return layer
+
+
 def render(spec):
     """spec → 1080x1920 RGBA 이미지. 가운데는 투명(영상이 비쳐야 한다)."""
     s = normalize(spec)
@@ -621,7 +768,7 @@ def render(spec):
 
     bar_h = s["bar_h"]
     if bar_h > 0:
-        d.rectangle([0, 0, W, bar_h - 1], fill=bar_col)   # PIL은 끝점 포함 → -1
+        im.alpha_composite(_bar_layer(bar_col, bar_h, s["bar_fx"], s["bar_soft"], True))
         cy = bar_h // 2
         if s["icons"]:
             # ★어느 아이콘인지도 채널마다 다르다(실측: 햄버거·돋보기·⋮·←·북마크).
@@ -678,7 +825,7 @@ def render(spec):
             d.text((ax, ay), "[광고]", font=fb, fill=fill, anchor="mm")
 
     if s["bottom_h"] > 0:
-        d.rectangle([0, H - s["bottom_h"], W, H - 1], fill=bar_col)
+        im.alpha_composite(_bar_layer(bar_col, s["bottom_h"], s["bar_fx"], s["bar_soft"], False))
 
     # 제목·메타가 얹히는 흰 블록 — 내용이 있을 때만 그린다(빈 블록이 영상을 가리면 손해).
     y = bar_h
@@ -743,7 +890,208 @@ def render(spec):
             d.text((60, ty + 6), meta, font=fm, fill=meta_fill, anchor="la")
             ty += 46
             d.rectangle([60, ty + 8, W - 60, ty + 11], fill=rule_fill)
+
+    # ★가림막은 **맨 마지막**에 얹는다 — 띠·글자보다 위여야 원본 자막을 확실히 덮는다.
+    _draw_masks(im, s["masks"])
     return im
+
+
+def _draw_masks(im, masks):
+    """가림막을 그림 위에 얹는다. 모양은 _mask_shape_layer 한 곳에서 정한다.
+
+    ★흐림(blur)은 여기서 **안 그린다** — 그림 한 장으로는 뒤 영상을 흐리게 못 한다.
+      렌더가 마스크를 받아 처리한다. 흐림+어둡게(blurdark)는 '어둡게'만 여기서 얹는다.
+    """
+    for m in masks or []:
+        # ★이모지·뱃지는 '덮는 것'이 아니라 '얹는 것'이라 흐림 분기를 안 탄다.
+        #   자리·크기·회전 규칙은 도형과 똑같이 _mask_shape_layer 계열을 쓴다.
+        if m.get("kind") == "emoji":
+            _draw_emoji_mask(im, m)
+            continue
+        if m.get("kind") == "badge":
+            _draw_badge_mask(im, m)
+            continue
+        if m["fx"] == "blur":
+            continue
+        if m["fx"] == "blurdark":
+            # 진하기 100%를 그대로 검정으로 쓰면 완전히 까매져 흐림이 무의미해진다.
+            rgb, alpha = (0, 0, 0), int(255 * m["op"] / 100.0 * 0.45)
+        else:
+            rgb, alpha = _rgb(m["color"])[:3], int(255 * m["op"] / 100.0)
+        layer, x, y = _mask_shape_layer(m, rgb, alpha)
+        im.alpha_composite(layer, (x, y))
+
+
+def _mask_box(im, m):
+    """masks의 %좌표를 픽셀 상자로. 자리 계산은 도형과 **같은 식**을 쓴다(0순위-B)."""
+    W, H = im.size
+    x = int(W * m["l"] / 100.0)
+    y = int(H * m["t"] / 100.0)
+    w = max(1, int(W * m["w"] / 100.0))
+    h = max(1, int(H * m["h"] / 100.0))
+    return x, y, w, h
+
+
+def _draw_emoji_mask(im, m):
+    """이모지 스티커 한 장. 컬러 이모지는 Noto Color Emoji로만 그려진다.
+
+    ★109px 고정 비트맵이다(실측) — 다른 크기로 truetype()을 열면 예외가 난다.
+      그래서 **109로 그린 뒤 상자에 맞춰 줄인다**. 폰트가 없거나 실패하면 아무것도
+      안 그린다 — 두부(⊠)를 그리는 것보다 낫다(영문전용 폰트 사고와 같은 판단).
+    """
+    x, y, w, h = _mask_box(im, m)
+    try:
+        f = ImageFont.truetype(_EMOJI_FONT, _EMOJI_PX)
+    except Exception:                      # noqa: BLE001 — 폰트가 없는 환경(개발 PC)
+        return
+    pad = _EMOJI_PX // 4
+    n = max(1, len(m.get("ch") or ""))
+    tile = Image.new("RGBA", (_EMOJI_PX * n + pad * 2, _EMOJI_PX + pad * 2), (0, 0, 0, 0))
+    try:
+        ImageDraw.Draw(tile).text((pad, pad), m["ch"], font=f, embedded_color=True)
+    except Exception:                      # noqa: BLE001 — 지원 안 하는 글자
+        return
+    bb = tile.getbbox()
+    if not bb:
+        return
+    tile = tile.crop(bb)
+    tile = tile.resize((w, h), Image.LANCZOS)
+    if m["rot"]:
+        tile = tile.rotate(m["rot"], expand=True, resample=Image.BICUBIC)
+        x -= (tile.width - w) // 2
+        y -= (tile.height - h) // 2
+    if m["op"] < 100:
+        a = tile.getchannel("A").point(lambda v: int(v * m["op"] / 100.0))
+        tile.putalpha(a)
+    im.alpha_composite(tile, (max(0, x), max(0, y)))
+
+
+def _draw_badge_mask(im, m):
+    """글자 뱃지(SALE·NEW·인기…) 한 장 — 둥근 사각 + 가운데 글자.
+
+    색은 가림막과 같은 `color`를 쓰고, 글자색은 배경 밝기로 정한다(어두우면 흰 글자).
+    한 곳에서 정해야 화면 미리보기와 결과가 안 갈린다.
+    """
+    x, y, w, h = _mask_box(im, m)
+    rgb = _rgb(m["color"])[:3]
+    alpha = int(255 * m["op"] / 100.0)
+    tile = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    d = ImageDraw.Draw(tile)
+    r = int(min(w, h) * 0.28)
+    d.rounded_rectangle([0, 0, w - 1, h - 1], radius=r, fill=rgb + (alpha,))
+    # 밝은 바탕엔 검은 글자 — 흰 뱃지에 흰 글자가 되는 걸 막는다.
+    lum = 0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]
+    fg = (17, 17, 17, 255) if lum > 150 else (255, 255, 255, 255)
+    txt = m.get("text") or ""
+    size = max(10, int(h * 0.52))
+    for _ in range(12):                    # 상자에 들어갈 때까지 줄인다
+        f = _font("title", size)
+        bb = d.textbbox((0, 0), txt, font=f)
+        if bb[2] - bb[0] <= w * 0.84 or size <= 10:
+            break
+        size = int(size * 0.9)
+    bb = d.textbbox((0, 0), txt, font=f)
+    d.text(((w - (bb[2] - bb[0])) / 2 - bb[0], (h - (bb[3] - bb[1])) / 2 - bb[1]),
+           txt, font=f, fill=fg)
+    if m["rot"]:
+        tile = tile.rotate(m["rot"], expand=True, resample=Image.BICUBIC)
+        x -= (tile.width - w) // 2
+        y -= (tile.height - h) // 2
+    im.alpha_composite(tile, (max(0, x), max(0, y)))
+
+
+def _mask_shape_layer(m, rgb, alpha, feather=None):
+    """가림막 한 장을 자기 레이어에 그린다 — 모양·회전·가장자리 규칙의 **유일한 자리**.
+
+    ★색 막(_draw_masks)과 흐림 마스크(render_blur_mask)가 **같은 함수**를 쓴다.
+      두 벌로 그리면 "화면의 막"과 "실제로 흐려지는 자리"가 언젠가 어긋난다(0순위-B).
+    돌려주는 값: (레이어, 붙일 좌표 x, y)
+    """
+    x, y = int(W * m["l"] / 100.0), int(H * m["t"] / 100.0)
+    w, h = max(1, int(W * m["w"] / 100.0)), max(1, int(H * m["h"] / 100.0))
+    # 가장자리 흐림 크기를 먼저 정한다 — 레이어에 그만큼 여백이 있어야 **바깥으로 번진다**.
+    # ★여백 없이 흐리면 레이어 경계에서 잘려 안쪽만 흐려진다(테스트가 잡은 버그).
+    if feather is None:
+        blur_px = 0
+        if m["fx"] == "fade":
+            blur_px = max(2, int(min(w, h) * (0.12 + m["soft"] / 100.0 * 0.38)))
+        elif m["soft"] > 0 and m["fx"] not in _MASK_BLUR_FX:
+            blur_px = max(1, int(min(w, h) * m["soft"] / 100.0 * 0.30))
+    else:
+        blur_px = feather
+    pad = blur_px * 3                                   # 가우시안이 사실상 사라지는 거리
+    if m["rot"]:
+        pad = max(pad, int(max(w, h) * 0.5))            # 회전하면 모서리가 잘린다
+    layer = Image.new("RGBA", (w + pad * 2, h + pad * 2), (0, 0, 0, 0))
+    ld = ImageDraw.Draw(layer)
+    box = [pad, pad, pad + w - 1, pad + h - 1]
+    fill = tuple(rgb) + (alpha,)
+    if m["shape"] == "ellipse":
+        ld.ellipse(box, fill=fill)
+    elif m["shape"] == "pill":
+        ld.rounded_rectangle(box, radius=h // 2, fill=fill)
+    elif m["shape"] == "round":
+        ld.rounded_rectangle(box, radius=max(6, min(w, h) // 8), fill=fill)
+    else:
+        ld.rectangle(box, fill=fill)
+    # 가장자리 부드럽게(soft) / 그라데이션(fade) — 알파만 흐리면 색은 그대로다.
+    if blur_px:
+        layer.putalpha(layer.split()[3].filter(ImageFilter.GaussianBlur(blur_px)))
+    if m["rot"]:
+        layer = layer.rotate(m["rot"], resample=Image.BICUBIC, expand=False)
+    return layer, x - pad, y - pad
+
+
+def blur_sigma(masks):
+    """흐림 세기(ffmpeg gblur sigma). 막마다 다르게 줄 수 없어 **가장 센 것**으로 맞춘다.
+
+    ★'가장자리' 슬라이더(soft)가 흐림 계열에서는 세기를 겸한다 — 슬라이더를 하나 더
+      만들면 안 쓰는 칸이 늘고, 흐림에선 어차피 가장자리 값이 놀고 있었다.
+    """
+    best = 0.0
+    for m in masks or []:
+        if m.get("fx") in _MASK_BLUR_FX:
+            best = max(best, 25.0 + (m.get("soft", 0) / 100.0) * 55.0)
+    return round(best, 1)
+
+
+def render_blur_mask(spec):
+    """흐림을 먹일 영역만 **알파에** 칠한 마스크(RGBA). 흐림 막이 없으면 None.
+
+    렌더는 이 알파를 뽑아(alphaextract) 흐린 영상에 붙이고 원본 위에 얹는다.
+    ★모양은 색 막과 같은 함수로 그린다 — 보이는 자리와 흐려지는 자리가 같아야 한다.
+    """
+    masks = [m for m in _norm_masks(spec.get("masks")) if m["fx"] in _MASK_BLUR_FX]
+    if not masks:
+        return None
+    im = Image.new("RGBA", (W, H), (255, 255, 255, 0))
+    for m in masks:
+        # 경계가 칼로 자른 듯하면 흐림 티가 난다 — 늘 조금 부드럽게(soft와 별개).
+        w = max(1, int(W * m["w"] / 100.0))
+        h = max(1, int(H * m["h"] / 100.0))
+        feather = max(4, int(min(w, h) * 0.06))
+        layer, x, y = _mask_shape_layer(m, (255, 255, 255), 255, feather=feather)
+        im.alpha_composite(layer, (x, y))
+    return im
+
+
+def blur_mask_path(spec):
+    """흐림 마스크 파일 자리. 틀 그림과 **같은 규약**(cache_key + 접미사)."""
+    return (pathlib.Path(__file__).resolve().parent / "data" / "frame_cache"
+            / f"{cache_key(spec)}_blurmask.png")
+
+
+def render_blur_mask_to(spec, out_path=None):
+    """마스크를 파일로 저장하고 경로를 돌려준다. 흐림 막이 없으면 None."""
+    out_path = pathlib.Path(out_path or blur_mask_path(spec))
+    if out_path.exists():
+        return out_path
+    im = render_blur_mask(spec)
+    if im is None:
+        return None
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    im.save(out_path, "PNG")
+    return out_path
 
 
 def cache_path(spec):

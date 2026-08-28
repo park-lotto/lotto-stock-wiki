@@ -1247,10 +1247,40 @@ def api_bot_unanswered(request: Request):
 
 # ★정적 파일은 인라인 Path로 연다 — `_STATIC`은 app.py 아래쪽(14107줄 부근)에 있어
 #   여기선 그 이름이 아직 없다. /help·/challenge 라우트가 쓰는 방식과 같게 맞춘다.
+# ── 화면 스크립트 캐시 무효화(2026-08-26) ─────────────────────────────────
+# 사장님 제보: 고친 게 안 보인다 → 브라우저가 **옛 filmroll.js를 캐시**하고 있었다.
+# F5로는 스크립트 캐시가 안 지워져, 새 코드를 올려도 옛 화면이 돈다(실측).
+# 파일이 바뀌면 URL도 바뀌게 mtime을 붙여준다 — 사람이 기억해서 눌러야 하는 구조를 없앤다.
+# ★목록으로 파일명을 나열하지 않는다: HTML 안의 `src="/xxx.js"`를 전부 훑어 붙인다
+#   (새 스크립트가 늘어도 저절로 따라온다 — _ASSET_SUFFIXES 교훈과 같은 이유).
+_SCRIPT_SRC_RE = re.compile(r'src="/([A-Za-z0-9_./-]+\.js)"')
+
+
+def _html_with_versioned_scripts(name: str) -> HTMLResponse:
+    base = Path(__file__).parent / "static"
+    html = (base / name).read_text(encoding="utf-8")
+
+    def _stamp(m):
+        f = m.group(1)
+        try:
+            v = int((base / f).stat().st_mtime)
+        except OSError:
+            return m.group(0)
+        return f'src="/{f}?v={v}"'
+
+    return HTMLResponse(_SCRIPT_SRC_RE.sub(_stamp, html),
+                        headers={"Cache-Control": "no-cache, must-revalidate"})
+
+
+@app.get("/scene_lab.html", response_class=HTMLResponse)
+async def _scene_lab_html():
+    return _html_with_versioned_scripts("scene_lab.html")
+
+
 @app.get("/bot_admin.html", include_in_schema=False)
 def bot_admin_page():
     return FileResponse(str(Path(__file__).parent / "static" / "bot_admin.html"),
-                        media_type="text/html")
+                        media_type="text/html", headers=_NOCACHE)
 
 
 @app.post("/api/save")
@@ -1268,7 +1298,8 @@ def api_saved(request: Request):
     return {"ok": True, "saved": sorted(store.saved_set(customer_id=_cid(request)))}
 
 
-def _enqueue_prewarm(store, shortcode, url, *, caption="", customer_id="0", category=None):
+def _enqueue_prewarm(store, shortcode, url, *, caption="", customer_id="0", category=None,
+                     manual=False):
     """담긴 영상의 사전분석(추출+구조분석)을 워커 큐에 걸어 제작소 1단계 로딩을 없앤다
     (2026-07-30, 설계 `2026-07-29-추출속도-3종묶음-design.md` §2①).
 
@@ -1277,6 +1308,8 @@ def _enqueue_prewarm(store, shortcode, url, *, caption="", customer_id="0", cate
       · 이미 유효 캐시 — 예열할 이유가 없다(제미니 재과금 방지).
       · 같은 shortcode가 이미 큐에 있음 — 담기취소·재담기 연타로 중복 적재 방지.
     래치·크레딧·일일상한은 워커 쪽 `prewarm.run_prewarm`이 최종 판단한다(서버는 얇게).
+    manual=True(사람이 '분석' 버튼을 누른 것)는 그 상한을 건너뛴다 — 인자로만 실어 보내고
+    판단은 워커가 한다(같은 판단을 두 곳에 적지 않는다, 0순위-B).
     실패는 조용히 — 예열이 안 걸려도 제작소가 그때 추출하므로 기능은 그대로다."""
     try:
         if not (shortcode and (url or "").strip()):
@@ -1290,7 +1323,9 @@ def _enqueue_prewarm(store, shortcode, url, *, caption="", customer_id="0", cate
         if store.queue_has_pending("prewarm", "shortcode", shortcode):
             return False
         store.enqueue("prewarm", {"shortcode": shortcode, "url": url, "caption": caption,
-                                  "customer_id": str(customer_id), "category": category})
+                                  "customer_id": str(customer_id), "category": category,
+                                  # 사람이 직접 누른 분석은 일일 상한을 건너뛴다(2026-08-28).
+                                  "manual": bool(manual)})
         return True
     except Exception as e:  # noqa: BLE001 — 예열 실패는 담기를 막지 않는다
         print(f"prewarm enqueue 실패(무해) {shortcode}: {e}", file=sys.stderr)
@@ -3710,6 +3745,12 @@ def api_add_keys(request: Request, body: dict):
     if not raw:
         return JSONResponse(status_code=422,
                             content={"ok": False, "error": "키를 입력하세요"})
+    # ★가려진 키는 받지 않는다(2026-08-28 실사고, keyroute.masked_key_reason 참고).
+    #   종전엔 그대로 저장돼 status=ok로 "등록 완료"가 떴고, 쓸 때만 서명이 안 맞아
+    #   실패했다 — 고객은 잘 된 줄 알고 있다가 자막제거를 눌러야 알았다(6회 재시도).
+    _masked = keyroute.masked_key_reason(raw)
+    if _masked:
+        return JSONResponse(status_code=422, content={"ok": False, "error": _masked})
 
     if service == keyroute.SVC_GEMINI:
         parts = [p.strip() for p in re.split(r"[\s,]+", raw) if p.strip()]
@@ -4039,15 +4080,20 @@ def api_mix_product(body: dict):
     prev = job.get("product") or {}
     product["inpock_registered"] = bool(
         body.get("inpock_registered", prev.get("inpock_registered", False)))
-    # ── 인포크 번호 자동 부여 (2026-08-18, 사장님 "마지막번호 다음으로") ──
-    # 8단계에서 저장이 끝나는 순간 번호가 붙어, 인포크에 넣을 문구가 이미 완성돼 있다.
-    # ★한 번 받은 번호는 고정이다 — 링크를 고칠 때마다 번호가 바뀌면 이미 인포크에
-    #   등록해둔 것과 어긋나 사장님이 찾지 못한다(등록완료 플래그와 같은 이유).
-    num = prev.get("inpock_number") or body.get("inpock_number")
-    if not num:
-        num = coupang_partners.next_number(store.get_setting("inpock_last_number"))
-        store.set_setting("inpock_last_number", str(num))
-    product["inpock_number"] = str(num)
+    # ── 인포크 번호는 **사람이 넣는다** (2026-08-28 사장님 "수정버튼만 만들어주고
+    #    번호는 공란으로 표시해줘") ──
+    # 전엔 next_number로 자동 부여했는데, 그 카운터가 `settings`(전역)라 **전 고객이
+    # 하나를 나눠 썼다** — settings는 key가 PK라 계정 축이 없다(store.py:1072).
+    # 실측: cid174=30 · cid110=29 · cid201=28 … 각자 다른 사람인데 번호가 이어졌고,
+    # 고객 눈엔 "무작위로 29번"으로 보였다. 그래서 자동 부여를 걷어냈다.
+    #
+    # ★body에 번호가 오면 **그게 이긴다** — 수정 버튼이 그 경로다. 전엔 prev가 먼저라
+    #   한 번 붙은 번호를 영영 못 고쳤다. 빈 문자열을 보내면 지운다(공란으로 되돌리기).
+    if "inpock_number" in body:
+        num = str(body.get("inpock_number") or "").strip()
+    else:
+        num = str(prev.get("inpock_number") or "").strip()
+    product["inpock_number"] = num
     store.set_mix_product(job_id, product)
     return {"ok": True, "product": product,
             "final_link": coupang_partners.final_link(product),
@@ -4973,6 +5019,20 @@ def api_mix_tts_regen(job_id: str, beat_idx: int, body: dict, background_tasks: 
     for k in ("voice_id", "settings", "speed"):
         if body.get(k) is not None:
             override[k] = body.get(k)
+    # ★어느 톤으로 뽑았는지 비트에 남긴다 (2026-08-28 사장님 제보 "tts 속삭임 누르고
+    #   톤바꿔서 다시 눌러도 다시 안정으로 돌아오는데").
+    #   화면의 톤 고르개는 다시 그릴 때마다 첫 옵션(안정)으로 리셋됐다 — 기억하는 곳이
+    #   어디에도 없었기 때문이다. voice_override에는 voice_id·settings·speed만 담겨
+    #   **어느 톤이었는지 되짚을 방법이 없다**(같은 성우의 톤끼리 voice_id가 다르지만
+    #   화면이 그걸 이름으로 되돌리려면 판단이 두 벌이 된다).
+    #   ⚠️override에 섞지 않는다 — 그건 그대로 synthesize_line으로 흘러간다.
+    tone = (body.get("variant") or "").strip()
+    if tone:
+        plan = job["edit_plan"]
+        _b = next((x for x in plan["beats"] if x["beat_idx"] == beat_idx), None)
+        if _b is not None:
+            _b["tts_tone"] = tone
+            store.update_mix_job(job_id, edit_plan=plan)
     background_tasks.add_task(resynth_one_beat, job_id, beat_idx, override, DB_PATH, _MIX_WORK_DIR)
     return {"ok": True}
 
@@ -5778,10 +5838,59 @@ def api_mix_capcut(job_id: str, base: str = ""):
     #   아직 렌더 전이면 None → 그 항목만 빠진다(내보내기는 그대로 된다).
     _final = job.get("video_path") if (job.get("video_path")
                                        and Path(job["video_path"]).exists()) else None
+    # ★제작소에서 고른 자막 스타일을 함께 보낸다(2026-08-28 고객 제보 "캡컷으로 보내니
+    #   템플릿은 안 따라온다"). 종전엔 capcut_draft가 caption_style_json을 **한 번도**
+    #   참조하지 않아 캡컷엔 늘 흰색 기본 자막만 갔다(grep 0건으로 확인).
+    #   ⚠️저장 형식이 흔들려도 내보내기 자체는 되게 한다 — 스타일은 부가물이다.
+    _cap_style = job.get("caption_style")
+    if isinstance(_cap_style, str):
+        try:
+            import json as _json
+            _cap_style = _json.loads(_cap_style)
+        except (ValueError, TypeError):
+            _cap_style = None
+    if not isinstance(_cap_style, dict):
+        _cap_style = None
+    # 꾸미기(워터마크·템플릿)도 같은 규칙으로 꺼낸다 — 형식이 흔들려도 내보내기는 된다.
+    _deco = job.get("deco")
+    if isinstance(_deco, str):
+        try:
+            import json as _json2
+            _deco = _json2.loads(_deco)
+        except (ValueError, TypeError):
+            _deco = None
+    if not isinstance(_deco, dict):
+        _deco = None
+    # ★꾸미기 틀(템플릿)을 **그림 파일로** 만들어 둔다(2026-08-28 고객 제보 3단계).
+    #   PNG를 굽는 곳은 mix_pipeline._template_layer 한 곳이다 — 미리보기·렌더·캡컷이
+    #   같은 그림을 쓴다(0순위-B). 여기서 따로 그리면 화면과 캡컷이 갈린다.
+    #   실패해도 내보내기는 그대로 된다(틀만 빠진다).
+    if _deco and _deco.get("template"):
+        try:
+            _first = float((timeline[0].get("dur") if timeline else 0) or 0)
+            _lay = mix_pipeline._template_layer(_deco["template"], first_beat_dur=_first)
+            if _lay and _lay.get("_abspath"):
+                _deco = {**_deco, "template": {**_deco["template"],
+                                               "_abspath": _lay["_abspath"],
+                                               "alpha": _lay.get("alpha", 1)}}
+        except Exception:      # noqa: BLE001 — 틀 하나 때문에 내보내기가 막히면 안 된다
+            import traceback as _tb2
+            _tb2.print_exc(file=sys.stderr)
+    # ★긴급 차단(2026-08-28): "캡컷으로 보내니 파일이 열리지 않습니다 / 다른 영상은 다
+    #   열리는데 숏템파일만" — 오늘 넣은 스타일·꾸미기 전달이 draft를 깨뜨렸다.
+    #   원인을 가릴 때까지 **끈다**. 켜는 스위치는 여기 한 곳(설정 capcut_style_on=1).
+    #   ⚠️캡컷이 못 여는 draft는 고객이 손쓸 방법이 없다 — 되돌리기가 최우선이다.
+    _style_on = False
+    try:
+        _style_on = str(Store(DB_PATH).get_setting("capcut_style_on", "") or "") == "1"
+    except Exception:      # noqa: BLE001 — 설정을 못 읽으면 꺼진 채로 간다(안전 기본값)
+        _style_on = False
     proj, project, files = capcut_draft.assemble_draft_folder(
         out_root, base, plan=plan, timeline=timeline, source_video_paths=source_video_paths,
         tts_paths=tts_paths, project_name=_capcut_project_name(job_id, job, plan),
-        final_video=_final)
+        final_video=_final,
+        caption_style=(_cap_style if _style_on else None),
+        deco=(_deco if _style_on else None))
     texts, assets = {}, []
     for name in files:
         if name.endswith(".json"):
@@ -5880,9 +5989,12 @@ def api_thumb_frames(body: dict):
         except Exception:
             pass   # 자막 없는 배경을 못 만들면 자막 있는 preview/최종으로라도 프레임을 낸다
     video = None
-    for cand in (job.get("clean_video_path"), job.get("preview_path"), job.get("video_path")):
+    bg_kind = ""          # 어떤 배경을 썼나 — 화면이 사장님·고객에게 알린다(아래 참조)
+    for cand, kind in ((job.get("clean_video_path"), "clean"),
+                       (job.get("preview_path"), "preview"),
+                       (job.get("video_path"), "final")):
         if cand and Path(cand).exists():
-            video = cand
+            video, bg_kind = cand, kind
             break
     if not video:
         return JSONResponse(status_code=404, content={"ok": False, "error": "믹스 영상 없음"})
@@ -5924,7 +6036,9 @@ def api_thumb_frames(body: dict):
     if not want_more and existing and thumb.get("video_sig") == video_sig:
         meta = thumb.get("frames") or []
         if len(meta) == len(existing):
-            return {"ok": True, "frames": meta, "stale_results": _stale_results()}
+            return {"ok": True, "frames": meta, "stale_results": _stale_results(),
+                    "bg": bg_kind, "subtitle_removal": bool(job.get("subtitle_removal")),
+                    "clean_status": job.get("clean_status") or ""}
 
     # 재추출(재재조사 픽스1·2, 2026-07-17): 여기서 rmtree(out_dir)를 돌리면 안 된다.
     # 같은 out_dir을 T4(썸네일 저장, task-4-brief.md)가 써서 사용자가 고른
@@ -5962,7 +6076,13 @@ def api_thumb_frames(body: dict):
     thumb["frames"] = frames
     thumb["video_sig"] = video_sig
     Store(DB_PATH).update_mix_job(job_id, thumbnail=thumb)
-    return {"ok": True, "frames": frames, "stale_results": _stale_results()}
+    # ★어떤 배경으로 뽑았는지 함께 알린다(2026-08-28 고객 제보 "썸네일에 원본 자막이 남는다").
+    #   실측: clean_preview.mp4는 16:11에 생겼는데 제보 화면은 15:35였다 — 즉 **자막제거가
+    #   끝나기 전에** 썸네일을 열어 preview로 조용히 폴백한 것이다. 배경 자체는 규칙대로
+    #   골랐지만, 그 사실을 아무도 말해주지 않아 "지웠는데 왜 남아있지"가 된다.
+    return {"ok": True, "frames": frames, "stale_results": _stale_results(),
+            "bg": bg_kind, "subtitle_removal": bool(job.get("subtitle_removal")),
+            "clean_status": job.get("clean_status") or ""}
 
 
 @app.get("/api/produce/thumb/file/{job_id}/{name}")
@@ -9589,6 +9709,18 @@ def _is_admin(customer_id):
     return ((cust.get("email") or "").lower() in _ADMIN_EMAILS) or bool(cust.get("admin"))
 
 
+# ── 화면 파일 캐시 정책 (한 곳에서만 정한다, 0순위-B) ─────────────────────
+# no-cache = "캐시는 하되 쓸 때마다 서버에 물어본다". 안 바뀌었으면 304(본문 0바이트)라
+# 트래픽 부담은 거의 없고, 바뀌면 **즉시** 새 파일이 간다.
+#
+# ★2026-08-28 실사고: 관리자 화면을 고쳐 배포했는데 회사 PC에서 강력 새로고침을 해도
+#   옛 화면이 그대로였다. admin.html·ops.html에 이 헤더가 없어 브라우저가 제멋대로
+#   캐시한 것(헤더가 없으면 Last-Modified 기반으로 임의 기간 캐시한다).
+#   produce·refs·archive 등은 이미 쓰고 있었는데 **관리자 화면만 빠져 있었다** —
+#   같은 결정이 두 부류로 갈려 있었다. 정의를 파일 위로 올려 전부 같은 값을 쓴다.
+_NOCACHE = {"Cache-Control": "no-cache, must-revalidate"}
+
+
 def _require_admin(request):
     if not _is_admin(getattr(request.state, "customer_id", None)):
         return JSONResponse({"error": "관리자 전용"}, status_code=403)
@@ -10325,7 +10457,7 @@ def _admin_page(request: Request):
     if not _is_admin(getattr(request.state, "customer_id", None)):
         return HTMLResponse("<h2 style='font-family:sans-serif'>관리자 전용입니다</h2>", status_code=403)
     return FileResponse(Path(__file__).parent / "static" / "admin.html",
-                        media_type="text/html; charset=utf-8")
+                        media_type="text/html; charset=utf-8", headers=_NOCACHE)
 
 
 # ── 관측판(2026-08-22) — 1기 100명을 받기 전에 "얼마나 버티나"를 숫자로 남긴다 ──
@@ -10337,7 +10469,7 @@ def _ops_page(request: Request):
         return HTMLResponse("<h2 style='font-family:sans-serif'>관리자 전용입니다</h2>",
                             status_code=403)
     return FileResponse(Path(__file__).parent / "static" / "ops.html",
-                        media_type="text/html; charset=utf-8")
+                        media_type="text/html; charset=utf-8", headers=_NOCACHE)
 
 
 @app.post("/api/pinterest/collect")
@@ -11907,7 +12039,7 @@ def api_challenge_members_bulk(request: Request, body: dict):
 def page_challenge():
     """멤버 제출 화면 — 단톡방에 이 주소를 공유한다."""
     return FileResponse(Path(__file__).parent / "static" / "challenge.html",
-                        media_type="text/html; charset=utf-8")
+                        media_type="text/html; charset=utf-8", headers=_NOCACHE)
 
 
 @app.get("/challenge/admin", response_class=HTMLResponse)
@@ -11915,7 +12047,7 @@ def page_challenge_admin():
     """관리 화면(Task 8에서 HTML을 만든다). 데이터 API가 관리자를 검사하므로
     페이지 자체는 열어둔다 — 비관리자가 열면 목록이 비고 안내가 뜬다."""
     return FileResponse(Path(__file__).parent / "static" / "challenge_admin.html",
-                        media_type="text/html; charset=utf-8")
+                        media_type="text/html; charset=utf-8", headers=_NOCACHE)
 
 
 @app.get("/api/reference/adopt", response_class=HTMLResponse)
@@ -12061,11 +12193,21 @@ def api_basket_analyze(request: Request, body: dict):
             skipped += 1
             continue
         it = basket.get(c) or {}
-        _enqueue_prewarm(store, c, it.get("url") or "",
-                         caption=it.get("caption") or "", customer_id=str(cid))
+        url = (it.get("url") or "").strip()
+        if not url:
+            # ★조용히 실패하지 않는다(2026-08-28). URL이 없으면 워커가 받을 게 없어
+            #   큐에 아무것도 안 남고, 화면은 몇 초 뒤 '분석 전'으로 되돌아간다.
+            out[c] = "no_url"
+            skipped += 1
+            continue
+        _enqueue_prewarm(store, c, url, caption=it.get("caption") or "",
+                         customer_id=str(cid), manual=True)
         out[c] = "queued"
         queued += 1
-    return {"ok": True, "queued": queued, "skipped": skipped, "items": out}
+    return {"ok": True, "queued": queued, "skipped": skipped, "items": out,
+            # 화면이 "왜 아무 일도 안 났는지" 말할 수 있게(조율가 제보 2026-08-28).
+            "note": ("고른 항목에 영상 주소가 없어 분석을 걸 수 없었어요 — 다시 담아 주세요"
+                     if all(v == "no_url" for v in out.values()) and out else "")}
 
 
 @app.get("/api/produce/source_brief")
@@ -12840,7 +12982,7 @@ def page_setup(request: Request):
         except Exception as e:  # noqa: BLE001 — 플래그 해제 실패로 안내를 못 보게 하지 않는다
             print(f"[setup] 플래그 해제 실패(무시): {e!r}", file=sys.stderr)
     return FileResponse(str(Path(__file__).parent / "static" / "setup.html"),
-                        media_type="text/html")
+                        media_type="text/html", headers=_NOCACHE)
 
 
 @app.get("/coupang", response_class=HTMLResponse)
@@ -12848,7 +12990,7 @@ def page_coupang():
     """쿠팡파트너스 안내 — 가입·추적링크·고지문구. /setup과 같이 로그인 없이 열린다
     (단톡방·카톡에 링크만 뿌리면 되도록)."""
     return FileResponse(str(Path(__file__).parent / "static" / "coupang.html"),
-                        media_type="text/html")
+                        media_type="text/html", headers=_NOCACHE)
 
 
 @app.get("/inpock", response_class=HTMLResponse)
@@ -12860,14 +13002,14 @@ def page_inpock():
       이 페이지가 채우는 빈칸은 **인포크 쪽 절차**다(coupang.html에 인포크는 한 줄뿐).
     """
     return FileResponse(str(Path(__file__).parent / "static" / "inpock.html"),
-                        media_type="text/html")
+                        media_type="text/html", headers=_NOCACHE)
 
 
 @app.get("/help", response_class=HTMLResponse)
 def page_help():
     """도움말 페이지 — 로그인 없이 열린다(가입 전 문의를 줄이는 게 목적)."""
     return FileResponse(str(Path(__file__).parent / "static" / "help.html"),
-                        media_type="text/html")
+                        media_type="text/html", headers=_NOCACHE)
 
 
 @app.get("/api/help/items")
@@ -12957,6 +13099,12 @@ def api_produce_frame_png(request: Request):
     for b in ("ad_badge", "icons"):
         if b in spec:
             spec[b] = str(spec[b]).lower() in ("1", "true", "on", "yes")
+    # ★masks는 배열이라 쿼리에 JSON 문자열로 실려 온다 — 여기서만 푼다
+    if "masks" in spec:
+        try:
+            spec["masks"] = json.loads(spec["masks"] or "[]")
+        except Exception:
+            spec["masks"] = []
     out = deco_frame.render_to(spec, deco_frame.cache_path(spec))
     return FileResponse(str(out), media_type="image/png",
                         headers={"Cache-Control": "public, max-age=31536000"})
@@ -15393,7 +15541,6 @@ except Exception:                                  # noqa: BLE001 — 이 기능
 # 기존 /xxx.html 경로도 아래 StaticFiles 마운트로 계속 동작(백워드 호환).
 # no-cache: UI 배포 후 브라우저가 옛 HTML을 캐시로 재사용해 "고쳤는데 안 바뀜"이
 # 반복됨(2026-07-14 역할배정·사이드바 등 실사고) → 매 요청 서버 재검증 강제.
-_NOCACHE = {"Cache-Control": "no-cache, must-revalidate"}
 # ★"produce"는 여기서 뺐다(2026-08-20) — 등급에 따라 다른 파일을 서빙해야 해서
 #   아래 _produce_page 명시 라우트로 옮겼다(voice_tune·refs와 같은 패턴).
 for _pg in ("discover", "find", "library", "mix", "outreach", "collection",

@@ -147,8 +147,21 @@ def dm_set(number, name):
     """
     n = str(number or "").strip()
     nm = " ".join((name or "").split())
-    if not n or not nm:
-        return None
+    if not nm:
+        return None                 # 상품 이름이 없으면 만들 게 없다
+    if not n:
+        # ★번호는 비워둘 수 있다(2026-08-28 사장님 "번호는 공란으로 표시해줘").
+        #   전엔 전역 카운터로 자동 부여했는데 그 카운터를 **전 고객이 공유**해서
+        #   내 두 번째 영상이 29번을 받는 일이 났다(실측: cid174=30·cid110=29·cid201=28).
+        #   그래서 자동 부여를 걷어내고 사장님이 직접 넣는다 — 넣기 전까지는
+        #   번호 없는 문구를 보여준다(반쪽 번호를 붙여넣는 것보다 낫다).
+        return {
+            "number": "",
+            "listing_name": nm,
+            "dm_title": nm,
+            "dm_button": "✅ 제품 확인하기",
+            "dm_desc": DISCLOSURE,
+        }
     return {
         "number": n,
         # 인포크 상품 등록란에 그대로 넣는 이름. 검색이 이 문자열을 훑는다.

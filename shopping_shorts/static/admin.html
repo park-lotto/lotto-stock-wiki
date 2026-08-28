@@ -158,7 +158,11 @@ tbody tr:hover{background:#1b1b22}
      ★고객은 한 줄만 쓴다. 페이지·작업번호·단계·화면오류는 화면이 자동으로 담아 보낸다
        (고객에게 job_id를 물어보면 못 받는다 — 실제로 그래서 원인 찾는 데 오래 걸렸다). -->
 <div class="card wait">
-  <h2>🐞 오류 신고 (<span id=bcnt>0</span>건) <span id=bMsg class=msg></span></h2>
+  <h2>🐞 오류 신고 (<span id=bcnt>0</span>건) <span id=bMsg class=msg></span>
+    <label style="float:right;font-size:13px;font-weight:400;color:#8a8a92;cursor:pointer">
+      <input type=checkbox id=bugShowDone onchange="loadBugReports()" style="vertical-align:middle">
+      해결된 것도 보기 (<span id=bdone>0</span>)
+    </label></h2>
   <table><thead><tr><th>시각</th><th>고객</th><th>내용</th><th>사진</th><th>어디서</th><th>화면오류</th><th>처리</th></tr></thead>
   <tbody id=brows><tr><td colspan=7 class=empty>불러오는 중…</td></tr></tbody></table>
 </div>
@@ -186,7 +190,7 @@ tbody tr:hover{background:#1b1b22}
 <div class=card>
   <h2>고객 (<span id=cnt>0</span>명) <span id=cMsg class=msg></span></h2>
   <div class=filterbar>
-    <input id=custSearch placeholder="🔍 이름·전화·이메일·성별·연령으로 찾기" oninput="renderCustomers()">
+    <input id=custSearch placeholder="🔍 이름·전화·이메일·성별·연령으로 찾기 (승인 대기도 함께 찾습니다)" oninput="renderCustomers()">
     <select id=tierFilter onchange="renderCustomers()">
       <option value="">전체 등급</option>
       <option value="pro">pro</option>
@@ -194,6 +198,7 @@ tbody tr:hover{background:#1b1b22}
       <option value="free">일반회원</option>
     </select>
   </div>
+  <div id=custHint style="display:none;margin:8px 0 0;padding:9px 12px;border-radius:8px;background:#2a2416;border:1px solid #6b5a1e;color:#f0d98a;font-size:13px;line-height:1.6"></div>
   <table><thead><tr><th>ID</th><th>이름</th><th>전화</th><th class=mini>성별</th><th class=mini>연령</th><th>이메일/아이디</th><th>등급</th><th>상태</th><th>시작일</th><th>마감일</th><th>결제</th><th>포인트</th><th>오늘 사용(렌즈/렌더/대본)</th><th>접속7일(IP/기기)</th><th>접속/활동</th><th>조작</th></tr></thead>
   <tbody id=rows><tr><td colspan=16 class=empty>불러오는 중…</td></tr></tbody></table>
 </div>
@@ -231,14 +236,22 @@ async function load(){
   // 미승인(approved_at null) = 순수대기 + 이벤트 체험중 → 모두 대기명단(사장님이 승인 가능해야 함).
   const pend=d.customers.filter(c=>c.approved_at==null);
   const rest=d.customers.filter(c=>c.approved_at!=null);
+  // ★대기 명단을 renderCustomers가 볼 수 있게 남긴다(2026-08-28 사장님 제보:
+  //   "입금까지 한 사람인데 조회가 안 돼"). 종전엔 검색이 승인된 회원(rest)만
+  //   훑어서, 미승인은 이메일을 정확히 넣어도 **한 건도 안 나왔다**. 실측 당시
+  //   승인 대기가 18명이라 눈으로 찾을 수 있었지만 늘어나면 못 찾는다.
+  window._PEND = pend;
   // 요약 채우기(2026-08-24) — 표를 훑기 전에 '처리할 게 있나'를 먼저 답한다.
   // ★숫자는 아래 표와 **같은 배열**에서 뽑는다. 따로 세면 언젠가 어긋난다(0순위-B).
   fillSummary(d.customers, pend.length);
   const esc=s=>(s||'').toString().replace(/</g,'&lt;').replace(/>/g,'&gt;');
   // 승인 대기 표
-  document.getElementById('pcnt').textContent=pend.length;
+  const _pq=((document.getElementById('custSearch')||{}).value||'').trim().toLowerCase();
+  const pendView = _pq ? pend.filter(c=>_custMatch(c,_pq)) : pend;
+  document.getElementById('pcnt').textContent=
+    _pq ? (pendView.length+' / '+pend.length) : pend.length;
   const nowSec=Math.floor(Date.now()/1000);
-  document.getElementById('prows').innerHTML= pend.length ? pend.map(c=>{
+  document.getElementById('prows').innerHTML= pendView.length ? pendView.map(c=>{
     const joined=c.created_at? new Date((''+c.created_at).length>10?c.created_at:c.created_at*1000).toLocaleString('ko-KR'):'-';
     const trialLeft = c.trial_ends_at && c.trial_ends_at>nowSec ? Math.ceil((c.trial_ends_at-nowSec)/3600) : 0;
     const trialBadge = trialLeft ? ` <span class="badge trial">🎁 체험중 ${trialLeft}h</span>` : '';
@@ -246,7 +259,9 @@ async function load(){
       <td style="font-size:12px;color:#8a8a92">${joined}</td>
       <td><button class=bok onclick="ackCustomer(${c.id},this)" title="체험은 그대로 두고 대기실에서만 내립니다">✅ 확인</button>
           <button class=bpro onclick="approveCustomer(${c.id})" title="결제받고 기간을 줄 때">💳 결제승인</button></td></tr>`;
-  }).join('') : '<tr><td colspan=6 class=empty>대기 중인 가입 신청이 없어요</td></tr>';
+  }).join('') : ('<tr><td colspan=6 class=empty>'
+      + (_pq ? '검색 결과가 대기 명단에 없어요' : '대기 중인 가입 신청이 없어요')
+      + '</td></tr>');
   // 일반 고객표 — 검색·등급 필터 적용 렌더
   renderCustomers();
 }
@@ -316,6 +331,20 @@ function renderCustomers(){
     return true;
   });
   document.getElementById('cnt').textContent=rest.length;
+  // ★"조회가 안 된다"의 정체를 화면이 직접 말한다(2026-08-28). 승인된 목록에서
+  //   0건인데 대기 명단에 있으면, 없는 게 아니라 **아직 승인 전**인 것이다.
+  try{
+    const box=document.getElementById('custHint');
+    if(box){
+      const hit = q ? (window._PEND||[]).filter(c=>_custMatch(c,q)) : [];
+      box.innerHTML = (q && rest.length===0 && hit.length)
+        ? ('⚠️ 이 검색어는 <b>승인 대기</b> 명단에 ' + hit.length + '명 있습니다 — '
+           + hit.map(c=>esc(c.name||c.email||c.username)).join(', ')
+           + ' <span style="color:#8a8a92">(위 «승인 대기중» 표에서 승인하세요)</span>')
+        : '';
+      box.style.display = box.innerHTML ? 'block' : 'none';
+    }
+  }catch(e){}
   document.getElementById('rows').innerHTML= rest.length ? rest.map(c=>{
     const lvl=c.plan==='pro'?'<span class="badge pro">pro</span>'
               :(c.plan==='trial'?'<span class="badge trial">체험판(랭킹만)</span>'
@@ -722,7 +751,14 @@ async function loadWorkLines(){
   try{
     const r=await fetch('/api/admin/work-lines');
     if(r.status===403) return;              // 관리자 아님 — 조용히 넘어간다
-    const d=await r.json();
+    // ★상태코드를 뭉뚱그리지 않는다(2026-08-28 사장님 "조회 실패" 제보).
+    //   종전엔 401(로그인 풀림)도 그냥 '조회 실패'로 나와, 새로고침하면 될 일인지
+    //   서버가 고장인지 구분할 수 없었다. 무엇을 하면 되는지까지 말한다.
+    if(r.status===401) throw new Error('로그인이 풀렸습니다 — 새로고침 후 다시 로그인하세요');
+    if(!r.ok) throw new Error('서버 응답 ' + r.status + ' — 잠시 후 다시 시도하세요');
+    let d=null;
+    try{ d = await r.json(); }
+    catch(e){ throw new Error('응답을 읽지 못했습니다(형식 오류)'); }
     if(!d || !d.ok) throw new Error((d&&d.error)||'조회 실패');
     const run=d.running||[], q=d.queued||[], rc=d.recent||[];
     const now=document.getElementById('wlnow');
@@ -797,8 +833,21 @@ function loadBugs(){
       if(ao!==bo) return ao-bo;                       // 미해결 먼저
       return (b.created_at||0)-(a.created_at||0);     // 그 안에서 최신순
     });
-    document.getElementById('bcnt').textContent = rows.filter(function(b){return b.status!=='done';}).length;
+    // ★해결된 건은 기본으로 숨긴다(2026-08-28 사장님 "처리된 거 숨기고").
+    //   종전엔 전부 뿌려서 제목이 "(0건)"인데 표에는 6줄이 보였다 — 숫자와 표가
+    //   서로 다른 말을 하니 "처리할 일이 있나?"를 한눈에 못 읽는다.
+    //   ★다만 지우지는 않는다 — 2026-08-25에 "처리한 신고가 통째로 사라져
+    //     해결됐는지 아닌지를 볼 수 없다"고 하셨다. 체크박스로 되살릴 수 있게 둔다.
+    var doneRows = rows.filter(function(b){ return b.status==='done'; });
+    var openRows = rows.filter(function(b){ return b.status!=='done'; });
+    document.getElementById('bcnt').textContent = openRows.length;
+    var dEl=document.getElementById('bdone'); if(dEl) dEl.textContent = doneRows.length;
+    var showDone = !!(document.getElementById('bugShowDone')||{}).checked;
+    if(!showDone) rows = openRows;
     var esc=function(x){return (x==null?'':String(x)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');};
+    window._BUG_EMPTY_MSG = showDone ? '신고가 없어요'
+      : (doneRows.length ? '처리할 신고가 없어요 (해결된 '+doneRows.length+'건은 위 체크박스로 보기)'
+                         : '신고가 없어요');
     document.getElementById('brows').innerHTML = rows.length ? rows.map(function(b){
       var where=[];
       if(b.step) where.push(esc(b.step)+'단계');
@@ -838,7 +887,8 @@ function loadBugs(){
         '<td class=mini>'+(where.join('<br>')||'-')+'</td>'+
         '<td>'+errCell+'</td>'+
         '<td>'+act+'</td></tr>';
-    }).join('') : '<tr><td colspan=7 class=empty>신고 없음</td></tr>';
+    }).join('') : ('<tr><td colspan=7 class=empty>'
+      + (window._BUG_EMPTY_MSG || '신고 없음') + '</td></tr>');
   }).catch(function(e){
     document.getElementById('bMsg').textContent='불러오기 실패: '+e.message;
   });
