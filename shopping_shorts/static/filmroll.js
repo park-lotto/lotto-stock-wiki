@@ -162,21 +162,8 @@
 
     const winW = () => win.clientWidth || 600;
     const pps = () => CW / STEP;
-    // ★조각을 펼쳤으면 **그 구간 밖으로 못 나간다**(2026-08-28 사장님 "이게 2.3초잖아
-    //   그럼 2.3초 부분만 펼쳐달라고"). 종전엔 배율만 구간에 맞추고 원본 전체를 그려서,
-    //   옆으로 밀면 조각 밖 영상이 계속 나왔다.
-    //   ★그리는 것은 그대로 원본 전체다 — 좌표계(빨간선·구간 박스·담기 초)가 원본
-    //     시각 기준이라, 잘라 그리면 그 전부를 함께 고쳐야 한다. 여기서는 **볼 수 있는
-    //     범위만** 막는다(한 곳에서: clamp).
-    //   ⚠️이 때문에 '조각 범위 넓히기'(🔁)로 조각 밖을 잡는 길은 막힌다 — 사장님 지시가
-    //     그쪽이므로 그렇게 둔다. 되살리려면 panLo/panHi에 여유(±초)를 주면 된다.
     const maxOff = () => Math.max(0, DUR * pps() - winW());
-    const panLo = () => (opt.fit && opt.from != null) ? Math.min(maxOff(), Math.max(0, opt.from * pps())) : 0;
-    const panHi = () => {
-      if (!(opt.fit && opt.to != null)) return maxOff();
-      return Math.max(panLo(), Math.min(maxOff(), opt.to * pps() - winW()));
-    };
-    const clamp = v => Math.max(panLo(), Math.min(panHi(), v));
+    const clamp = v => Math.max(0, Math.min(maxOff(), v));
     const secToX = t => t * pps() - off;
     const xToSec = x => (x + off) / pps();
 
@@ -483,14 +470,6 @@
     }
 
     function applyW() {
-      // ★조각을 펼쳤으면 창이 **그 길이만큼만** 넓어진다(2026-08-28 사장님).
-      //   남는 자리를 다 먹지 않는다 — 옆 칸·다음 카드가 그대로 보여야 한다.
-      if (opt.fit && opt.from != null && opt.to != null) {
-        const need = Math.ceil((opt.to - opt.from) * pps()) + 2;
-        const room = (host.parentElement ? host.parentElement.clientWidth : 0) || need;
-        win.style.width = Math.max(120, Math.min(need, room)) + 'px';
-        host.style.width = win.style.width;               // 슬롯도 그만큼만 차지한다
-      }
       off = clamp(off);
       belt.style.transform = `translateX(${-off}px)`;
       belt.querySelectorAll('.fc').forEach(c => {
@@ -603,20 +582,15 @@
           //     조각이 길어 칸이 실오라기가 될 때만 한 단계씩 성기게 한다.
           //   ★캐시키는 STEP과 칸 높이로 만든다(폭은 안 들어간다 — ckey 참조).
           //     그래서 폭만 조정할 때는 썸네일을 다시 뽑지 않는다.
-          // ★칸 폭은 **읽을 만한 크기로 고정**하고, 대신 **필름 자체가 조각 길이만큼만
-          //   옆으로 늘어난다**(2026-08-28 사장님 "2.3초면 저 연두색 부분 정도만
-          //   늘어날 거잖아"). 종전엔 반대로 했다 — 창은 남는 폭을 다 먹고 칸 폭을
-          //   거기 맞춰 늘렸다. 그래서 2.3초짜리가 화면을 가로질렀다.
-          //   창 폭은 아래 applyW가 잡는다(FITW). 여기서는 한 칸 초만 정한다:
-          //   0.25초를 지키되(F21), 조각이 길어 남는 폭을 넘으면 한 단계씩 성기게.
-          const FIT_CELL = 46;                            // 조각을 펼칠 때 칸 폭(px)
+          const MIN_CELL = 34;                            // 이보다 좁으면 그림이 안 읽힌다
+          const fitCW = st => Math.round(W / (span / st));
           let want = ZOOM_MAX_STEP;
-          for (const st of LADDER) {
+          for (const st of LADDER) {                      // 사다리는 촘촘→성긴 순서다
             if (st < ZOOM_MAX_STEP) continue;             // 기본보다 촘촘하게는 안 간다
             want = st;
-            if ((span / st) * FIT_CELL <= W) break;       // 남는 폭 안에 들어오면 그만
+            if (fitCW(st) >= MIN_CELL) break;             // 칸이 읽힐 만큼 넓어지면 그만
           }
-          const wantCW = FIT_CELL;
+          const wantCW = Math.max(CW_MIN, Math.min(CW_MAX, fitCW(want)));
           if (want !== STEP || wantCW !== CW) {
             const restrip = (want !== STEP);
             STEP = want; CW = wantCW;
