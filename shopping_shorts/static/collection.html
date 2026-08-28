@@ -113,12 +113,23 @@ async function analyzeCodes(codes){
   if(!codes.length){ alert('분석할 항목을 먼저 선택하세요'); return; }
   codes.forEach(c=>{ ANALYSIS[c]={state:'pending',reason:''}; });   // 누른 즉시 표시
   render();
+  let res=null;
   try{
-    await fetch('/api/basket/analyze',{method:'POST',
+    const r=await fetch('/api/basket/analyze',{method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({shortcodes:codes})});
+    res=await r.json();
   }catch(e){}
   await loadAnalysis(); render();
+  // ★조용히 되돌아가지 않게 한다(2026-08-28 조율가 제보 "몇 초 하다가 분석 전으로 돌아감").
+  //   누른 직후엔 pending을 칠했는데 서버가 아무것도 안 걸었으면 배지가 '분석 전'으로
+  //   되돌아가고, 화면은 그 이유를 한 마디도 안 했다. 되돌아간 게 있으면 말해 준다.
+  if(res && res.note){ alert(res.note); return; }
+  const stuck=codes.filter(c=>{
+    const st=(ANALYSIS[c]||{}).state;
+    return st!=='pending' && st!=='done' && st!=='gave_up';
+  });
+  if(stuck.length) alert('분석을 걸지 못한 항목이 '+stuck.length+'개 있어요. 잠시 뒤 다시 눌러 보시고, 계속 그러면 알려 주세요.');
 }
 function analyzeSelected(){ analyzeCodes([...SELECTED]); }
 function analyzeOne(sc){ analyzeCodes([sc]); }

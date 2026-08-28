@@ -32,12 +32,17 @@ log = logging.getLogger("prewarm")
 # 하루 예열 상한(전 고객 합산). 1건당 Gemini 호출은 최대 2회(추출 + 구조분석)다.
 # 2026-08-27 사장님 "100건으로 올려봐 상황보게" — 40에선 낮에 소진돼 밤 담기가 통째로
 # 스킵됐다(실측: KST 00~08시 44건 전부 skipped_cap / 09시 이후 done).
-_PREWARM_DAILY_CAP = 100
+# 2026-08-28 100 → 300: 100도 하루에 다 찼다(실측 08-28 KST — 카운터 100 소진 뒤
+# 워커 로그에 skipped_cap 180건. 실수요는 280건대). 상한에 걸린 사용자는 즐겨찾기에서
+# "분석 시작"을 눌러도 배지가 몇 초 뒤 '분석 전'으로 되돌아가 고장으로 보였다(조율가 제보).
+_PREWARM_DAILY_CAP = 300
 # 1 → 3 (2026-08-04 실사고): 인스타 다운로드는 일시 실패가 흔한데 1회 실패로 영구
 # 래치돼 재담기해도 예열이 조용히 스킵됐다(DQohOUqgdRt — 수동 대본뽑기는 즉시 성공
 # = 경로는 멀쩡, 래치만 스테일). 어제 '래치 7건 삭제' 사고와 같은 계보.
 _PREWARM_MAX_ATTEMPTS = 3        # shortcode당 총 시도(autoload와 같은 래치를 공유)
 _DAILY_KEY = "prewarm_daily"     # settings: "YYYY-MM-DD|n"
+# 사람이 직접 누른 분석은 상한 밖에서 따로 센다(관측용, 2026-08-28).
+_DAILY_MANUAL_KEY = "prewarm_daily_manual"
 
 
 def _log_tag_qa(shortcode, result):
@@ -92,8 +97,20 @@ def daily_remaining(store: Store) -> int:
     return max(0, _PREWARM_DAILY_CAP - _daily_used(store))
 
 
-def _daily_take(store: Store) -> bool:
-    """오늘 예열 카운터를 1 올리고 상한 내인지 돌려준다. 날짜가 바뀌면 리셋."""
+def _daily_take(store: Store, *, manual: bool = False) -> bool:
+    """오늘 예열 카운터를 1 올리고 상한 내인지 돌려준다. 날짜가 바뀌면 리셋.
+
+    manual=True는 **사람이 직접 '분석' 버튼을 누른 것**이다(2026-08-28 사장님 확정).
+    상한은 담기 남발(자동 예열)을 막으려는 것이지, 지금 그 영상을 쓰겠다고 누른 사람을
+    막으려는 게 아니다 — 그래서 상한을 건너뛴다. 대신 **자동 몫을 까먹지 않게** 별도
+    카운터에 센다(같은 카운터에 더하면 사람이 누른 만큼 담기예열이 굶는다).
+    """
+    if manual:
+        raw = store.get_setting(_DAILY_MANUAL_KEY, "") or ""
+        day, _, n = raw.partition("|")
+        used = int(n) if (day == _today_kst() and n.isdigit()) else 0
+        store.set_setting(_DAILY_MANUAL_KEY, f"{_today_kst()}|{used + 1}")
+        return True
     used = _daily_used(store)
     if used >= _PREWARM_DAILY_CAP:
         return False
@@ -145,11 +162,12 @@ def _is_transient(err):
 
 
 def run_prewarm(shortcode, url, *, caption="", customer_id="0", video_url="",
-                category=None, db_path=None):
+                category=None, db_path=None, manual=False):
     """담긴 영상 1건을 미리 추출+구조분석해 캐시에 채운다. 상태 문자열을 돌려준다.
 
     반환: already | skipped_latched | skipped_cap | skipped_limit | skipped_nogate |
           failed_download | failed_empty | failed_error | done
+    manual=True면 사람이 '분석' 버튼을 직접 누른 것 → 일일 상한을 건너뛴다(2026-08-28).
     예외를 밖으로 던지지 않는다 — 예열은 보조작업이라 실패해도 무해해야 한다."""
     from shopping_shorts.media_download import download_any
     from shopping_shorts.script_extract import (extract_auto, storable, KeyPoolExhausted,
@@ -181,7 +199,7 @@ def run_prewarm(shortcode, url, *, caption="", customer_id="0", video_url="",
         return "skipped_nogate"
     if over_cap("script"):
         return "skipped_limit"
-    if not _daily_take(store):
+    if not _daily_take(store, manual=manual):
         return "skipped_cap"
     if not check_and_count(customer_id, "script"):
         return "skipped_limit"
