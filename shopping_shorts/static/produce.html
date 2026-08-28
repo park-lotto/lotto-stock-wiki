@@ -2046,6 +2046,24 @@
               <button type="button" onclick="mkAdd('wmr')" class="mkbtn">⊡ 구석 워터마크</button>
               <button type="button" onclick="mkAdd('sub')" class="mkbtn">◎ 가운데</button>
             </div>
+            <!-- 😀 스티커·뱃지(2026-08-28 사장님 지시로 고급효과 자리를 대체).
+                 ★가림막과 **같은 목록**에 들어간다 — 아래 알약/편집기/드래그가 그대로 쓰인다. -->
+            <details id="mkStickerBox" style="margin-bottom:10px;border:1px solid var(--line);
+                     border-radius:10px;background:var(--panel)">
+              <summary style="cursor:pointer;padding:9px 12px;font-size:13px;font-weight:800;
+                       display:flex;align-items:center;gap:6px;min-height:44px">
+                😀 스티커 · 뱃지 <span style="font-size:11px;color:var(--sub);font-weight:600">— 눌러서 얹고, 끌어서 옮깁니다</span>
+              </summary>
+              <div style="padding:2px 12px 12px">
+                <div id="mkEmojiTabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px"></div>
+                <!-- ★칸 수를 고정하지 않는다(auto-fill) — 12열로 박으면 좁은 화면에서
+                     마지막 칸이 밖으로 밀려 잘린다(실측: 그리드 밖 228px). -->
+                <div id="mkEmojiGrid" style="display:grid;
+                     grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:6px"></div>
+                <div style="font-size:11px;color:var(--sub);margin:12px 0 6px">🏷 글자 뱃지 — 색은 아래 <b>색</b>에서 바꿉니다</div>
+                <div id="mkBadgeGrid" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+              </div>
+            </details>
             <div id="mkPills" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
             <div id="mkEditor"></div>
             <div class="hint" style="font-size:11px;margin-top:10px;line-height:1.7">
@@ -2068,8 +2086,11 @@
               지금 템플릿 24종은 전부 채널명·검색창·제목이 들어갑니다.
             </div>
           </div>
-          <!-- ✨ 고급효과(리모션) — 항상 보이는 자리·선택·프리미엄. 켜면 자동 추천 → 렌더 -->
-          <div id="fxAdvBox" style="background:linear-gradient(135deg,#1c1436,var(--inset));border:1px solid #6b4fa0;border-radius:10px;padding:10px 12px;margin-bottom:12px">
+          <!-- ✨ 고급효과(리모션) — 사장님 지시로 화면에서 뺌(2026-08-28 "고급효과는 없애고").
+               ★배선은 남긴다: toggleFxAdv·fxSuggest·fxRender가 이 안의 id들을 널가드 없이
+                 만진다(이 파일의 추가텍스트·BGM을 뺄 때와 같은 방식). 옛 작업에 저장된
+                 fx_plan도 서버 쪽 렌더 경로에 그대로 살아 있다. -->
+          <div id="fxAdvBox" hidden style="display:none;background:linear-gradient(135deg,#1c1436,var(--inset));border:1px solid #6b4fa0;border-radius:10px;padding:10px 12px;margin-bottom:12px">
             <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;cursor:pointer">
               <input id="fxAdvOn" type="checkbox" onchange="toggleFxAdv()">
               ✨ 고급효과 <span style="font-size:11px;color:var(--accent2);font-weight:600">— 대본에 맞춰 움직이는 효과 자동 배치 · 렌더당 10P</span>
@@ -3399,6 +3420,18 @@ function mkEnsure(){
   return a;
 }
 // 빠른 자리 — 흔한 자막·워터마크 위치. %(왼쪽,위,너비,높이)
+// ★스티커·뱃지(2026-08-28 사장님 "이모티콘이나 뱃지같은거 다양하고 예쁘고 유료급으로").
+//   가림막(masks)에 kind로 얹는다 — 위치·크기·회전·드래그·저장이 이미 거기 다 있다.
+//   새 배관을 파면 그 규칙이 두 벌이 된다(0순위-B).
+const MK_EMOJI=[
+  ['시선', ['🔥','✨','💥','⚡','🚨','❗','❓','👀','📌','🎯','💯','🆕']],
+  ['감정', ['😍','🤩','😱','🥹','😳','🤔','😮','🥰','👍','👏','🙌','🫶']],
+  ['쇼핑', ['🛒','🎁','💰','💸','🏷️','✅','⭐','💎','🧾','📦','🚚','🔖']],
+  ['살림', ['🏠','🧹','🧼','🍳','🧴','🧺','☕','🌿','🐾','🛁','🪥','🧊']],
+];
+// 뱃지 = 글자 + 색. 색은 12색 팔레트에서 고른 것을 그대로 쓴다(따로 색을 두지 않는다).
+const MK_BADGE=['SALE','NEW','인기','추천','필수','1위','할인','품절임박','재구매','강추'];
+
 const MK_QUICK={
   sub:    {l:6,  t:44, w:88, h:12, shape:'round', fx:'fade', soft:35},
   subbot: {l:6,  t:76, w:88, h:11, shape:'round', fx:'fade', soft:35},
@@ -3416,6 +3449,49 @@ function mkAdd(kind){
   if(a.length>=MK_MAX){ alert('가림막은 최대 '+MK_MAX+'개까지예요.'); return; }
   const q=MK_QUICK[kind]||{l:30,t:44,w:40,h:10};
   a.push(Object.assign({shape:'round',fx:'fade',color:'#000000',op:100,soft:30,rot:0}, q));
+  MK_SEL=a.length-1;
+  renderTemplatePreview(); saveHeadcopy(); mkRender();
+}
+// 이모지 스티커 추가 — 자리는 가운데 위쪽, 크기는 화면 폭의 14%(정사각에 가깝게).
+let MK_EMO_TAB=0;
+function renderStickerPicker(){
+  const tabs=document.getElementById('mkEmojiTabs');
+  const grid=document.getElementById('mkEmojiGrid');
+  const bg=document.getElementById('mkBadgeGrid');
+  if(!tabs||!grid||!bg) return;
+  tabs.innerHTML=MK_EMOJI.map(function(g,i){
+    return '<button type="button" class="tab'+(i===MK_EMO_TAB?' active':'')+'" '
+      +'onclick="MK_EMO_TAB='+i+';renderStickerPicker()" '
+      +'style="flex:0 0 auto;min-width:auto;padding:6px 14px;font-size:12px">'+g[0]+'</button>';
+  }).join('');
+  grid.innerHTML=(MK_EMOJI[MK_EMO_TAB]||['',[]])[1].map(function(ch){
+    return '<button type="button" title="'+ch+' 얹기" onclick="mkAddEmoji(&quot;'+ch+'&quot;)" '
+      +'style="height:44px;font-size:22px;line-height:1;border-radius:8px;cursor:pointer;'
+      +'background:var(--inset);border:1px solid var(--line)">'+ch+'</button>';
+  }).join('');
+  bg.innerHTML=MK_BADGE.map(function(t){
+    return '<button type="button" onclick="mkAddBadge(&quot;'+t+'&quot;)" '
+      +'style="min-height:38px;padding:6px 14px;font-size:12.5px;font-weight:800;border-radius:999px;'
+      +'cursor:pointer;background:var(--inset);color:var(--txt);border:1px solid var(--line)">'+t+'</button>';
+  }).join('');
+}
+function mkAddEmoji(ch){
+  const a=mkArr(); if(!a) return;
+  if(a.length>=MK_MAX){ alert('가림막·스티커는 최대 '+MK_MAX+'개까지예요.'); return; }
+  // 9:16 화면이라 같은 %라도 세로가 훨씬 길다 — 정사각으로 보이려면 h = w*(1080/1920).
+  const w=14;
+  a.push({kind:'emoji', ch:ch, l:43, t:26, w:w, h:+(w*1080/1920).toFixed(2),
+          shape:'round', fx:'solid', color:'#000000', op:100, soft:0, rot:0});
+  MK_SEL=a.length-1;
+  renderTemplatePreview(); saveHeadcopy(); mkRender();
+}
+// 글자 뱃지 추가 — 색은 지금 고른 색(없으면 눈에 띄는 빨강)을 쓴다.
+function mkAddBadge(text){
+  const a=mkArr(); if(!a) return;
+  if(a.length>=MK_MAX){ alert('가림막·스티커는 최대 '+MK_MAX+'개까지예요.'); return; }
+  const w=Math.min(46, 12 + text.length*7);
+  a.push({kind:'badge', text:text, l:6, t:14, w:w, h:6.5,
+          shape:'round', fx:'solid', color:'#FF2D5E', op:100, soft:0, rot:0});
   MK_SEL=a.length-1;
   renderTemplatePreview(); saveHeadcopy(); mkRender();
 }
@@ -3492,7 +3568,7 @@ function pbRender(){
   const lab='font-size:11px;color:var(--sub);margin:12px 0 6px';
   const pal=MK_PAL.map(function(c){
     return '<button type="button" title="'+c+'" onclick="pbColor(&quot;'+c+'&quot;)" '
-      +'style="height:44px;border-radius:8px;cursor:pointer;background:'+c+';'
+      +'style="height:36px;border-radius:7px;cursor:pointer;background:'+c+';'
       +'border:2px solid '+(cur===c?'#2FBF71':'rgba(255,255,255,.18)')+'"></button>';
   }).join('');
   const row=function(name,key,val,max){
@@ -3513,7 +3589,9 @@ function pbRender(){
     +'<input type="color" value="'+(f.bar_color||'#000000')+'" oninput="pbColor(this.value)" '
     +'style="width:44px;height:28px;padding:0;border:1px solid var(--line);border-radius:6px;background:none;cursor:pointer">'
     +'<span style="font-size:12px;color:var(--sub)">'+(f.bar_color||'(틀 기본)')+'</span></div>'
-    +'<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px">'+pal+'</div>';
+    // ★12색을 **한 줄**로(2026-08-28 사장님 "이건 12색을 한줄로하면된다").
+    //   6열 2줄은 세로를 두 배로 먹어 아래 세부 설정이 화면 밖으로 밀렸다.
+    +'<div style="display:grid;grid-template-columns:repeat(12,1fr);gap:6px">'+pal+'</div>';
 }
 function mkDelSel(){
   const a=mkArr(); if(!a||!a.length) return;
@@ -3538,6 +3616,8 @@ function mkChoice(opts, cur, fn){
 function mkRender(){
   const pills=document.getElementById('mkPills');
   const ed=document.getElementById('mkEditor');
+  // 스티커 목록도 여기서 같이 그린다 — 그리는 자리를 따로 두면 한쪽만 갱신된다(0순위-B).
+  try{ renderStickerPicker(); }catch(e){}
   if(!ed||!pills) return;
   const a=mkArr()||[];
   // ★도형이 하나도 없어도 **편집 화면은 펼쳐 둔다**(2026-08-28 사장님 "기본으로 펼쳐지게").
@@ -3558,7 +3638,7 @@ function mkRender(){
   const pal=MK_PAL.map(function(c){
     const on=String(m.color||'').toUpperCase()===c;
     return '<button type="button" title="'+c+'" onclick="mkPick(&quot;'+c+'&quot;)" '
-      +'style="height:44px;border-radius:8px;cursor:pointer;background:'+c+';'
+      +'style="height:36px;border-radius:7px;cursor:pointer;background:'+c+';'
       +'border:2px solid '+(on?'#2FBF71':'rgba(255,255,255,.18)')+'"></button>';
   }).join('');
   const row=function(name, key, min, max, suf){
@@ -3579,7 +3659,8 @@ function mkRender(){
     +'<input id="mkC" type="color" value="'+(m.color||'#000000')+'" oninput="mkPick(this.value)" '
     +'style="width:44px;height:28px;padding:0;border:1px solid var(--line);border-radius:6px;background:none;cursor:pointer">'
     +'<span style="font-size:12px;color:var(--sub)">'+(m.color||'#000000')+'</span></div>'
-    +'<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px">'+pal+'</div>'
+    // 12색 한 줄 — 위 팔레트와 같은 규칙(0순위-B: 한쪽만 고치면 어긋난다).
+    +'<div style="display:grid;grid-template-columns:repeat(12,1fr);gap:6px">'+pal+'</div>'
     +'<div style="'+lab+'">세부</div>'
     +row('진하기','op',10,100)
     +row(MK_BLUR_FX.includes(m.fx)?'흐림 세기':'가장자리','soft',0,100)
