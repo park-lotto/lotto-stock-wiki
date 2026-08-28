@@ -52,10 +52,13 @@ const document = {getElementById: () => ({getContext: () => mkCtx()})};
 
 
 def _slice():
+    """실제 소스 두 토막 — grow-to-fill(thumbFit)과 새 레이어 자리 고르기(_freeThumbY)."""
     src = PRODUCE_HTML.read_text(encoding="utf-8")
     i = src.index("// 자동 2줄:")
     j = src.index("// ── ✨ 강조 효과")
-    return _HEAD + src[i:j]
+    a = src.index("const THUMB_SLOT_Y")
+    b = src.index("function addThumbLayer()")
+    return _HEAD + src[i:j] + src[a:b]
 
 
 def _run(script):
@@ -177,3 +180,50 @@ class Test화면배선:
         block = self.SRC[i:j]
         assert "isText" in block, "글자 레이어가 다시 손잡이에서 빠졌다"
         assert "['sticker', 'shape', 'badge'].includes(L.kind)" in block
+
+
+class Test새글자_얹기:
+    """스티커 직접입력 칸 — 사장님 "고쳐"(2026-08-28).
+
+    라이브 실측으로 확인한 두 가지:
+      · maxlength=8 → 썸네일 문구가 통째로 잘렸다
+      · 새 글자 레이어가 늘 y=0.14(맨 위)에 생겨 **기존 제목과 포개졌다**
+        → 화면이 안 바뀐 것처럼 보여 "얹어도 반영이 안 된다"로 읽혔다
+    """
+    SRC = PRODUCE_HTML.read_text(encoding="utf-8")
+
+    def test_입력칸_길이제한이_문구를_안_자른다(self):
+        i = self.SRC.index('id="thumbStickerInput"')
+        seg = self.SRC[i:i + 200]
+        assert 'maxlength="8"' not in seg, "8글자 제한이 아직 있다 — 썸네일 문구가 잘린다"
+        import re
+        m = re.search(r'maxlength="(\d+)"', seg)
+        assert m and int(m.group(1)) >= 30, f"제한이 여전히 짧다: {seg[:80]}"
+
+    def test_새_글자는_기존_글자와_겹치지_않는_자리에_생긴다(self):
+        d = _run("""
+THUMB_STATE.layers = [{text:'아이 생일 엄마들', y:0.14}];
+const a = _freeThumbY(0.14);
+THUMB_STATE.layers.push({text:'둘째 줄', y:a});
+const b = _freeThumbY(0.14);
+console.log(JSON.stringify({a, b}));
+""")
+        assert abs(d["a"] - 0.14) > 0.05, f"기존 제목과 같은 자리에 또 놓았다: {d}"
+        assert abs(d["b"] - d["a"]) > 0.05 and abs(d["b"] - 0.14) > 0.05, \
+            f"세 번째도 앞의 것들을 피해야 한다: {d}"
+
+    def test_처음_얹는_글자는_원래_자리_그대로(self):
+        """빈 판에서는 프리셋 위치를 그대로 쓴다 — 회귀 0."""
+        d = _run("""
+THUMB_STATE.layers = [];
+console.log(JSON.stringify({y: _freeThumbY(0.14)}));
+""")
+        assert d["y"] == 0.14
+
+    def test_빈_문구_레이어는_자리를_차지하지_않는다(self):
+        """문구가 비어 있으면 화면에 아무것도 안 그려진다 — 피할 이유가 없다."""
+        d = _run("""
+THUMB_STATE.layers = [{text:'   ', y:0.14}, {kind:'sticker', emoji:'F', y:0.14}];
+console.log(JSON.stringify({y: _freeThumbY(0.14)}));
+""")
+        assert d["y"] == 0.14
