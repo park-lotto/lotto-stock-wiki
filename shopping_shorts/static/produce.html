@@ -10624,7 +10624,7 @@ async function renderTtsBeats(){
           <button class="btn-prev" style="padding:3px 8px" onclick="vpNudge(${i},-1)">◀ 자막 당기기</button>
           <button class="btn-prev" style="padding:3px 8px" onclick="vpNudge(${i},1)">자막 밀기 ▶</button>
           <button class="btn-prev" style="padding:3px 8px" onclick="vpResetOffset(${i})">↩︎ 되돌리기</button>
-          <select id="vpTone${i}" style="padding:3px"><option value="stable">안정</option><option value="natural">자연</option><option value="expressive">표현</option><option value="whisper">속삭임</option></select>
+          <select id="vpTone${i}" style="padding:3px">${Object.entries(VARIANT_LABELS).map(([k,lab])=>`<option value="${k}"${(b.tts_tone||'stable')===k?' selected':''}>${lab}</option>`).join('')}</select>
           <button class="btn-prev" style="padding:3px 8px" onclick="vpRegenTone(${i})">🔁 톤 바꿔 다시</button>
           <button class="btn-prev" style="padding:3px 8px" onclick="vpEditNarr(${i})" title="이 문장을 고치고 음성·자막을 다시 뽑습니다">✏ 대본수정</button>
           ${window.IS_ADMIN?`<button class="btn-prev" style="padding:3px 8px" onclick="pronReport(this,${i})">🩺 발음 이상해요</button>`:''}
@@ -10733,7 +10733,10 @@ function _voiceForTone(tone){
   const g=(typeof VOICE_GROUPS!=='undefined'?VOICE_GROUPS:[]).find(x=>x.group_id===(VOICE&&VOICE.group_id));
   const v=g && g.variants && g.variants[tone];
   if(!v) return null;
-  return {voice_id:v.voice_id, settings:Object.assign({}, v.voice_settings), speed:v.default_speed};
+  // variant(톤 이름)는 **서버가 비트에 기록만** 한다 — 합성 인자로는 안 쓴다.
+  // 이게 없으면 화면이 '지금 무슨 톤인지'를 되짚을 수 없어 늘 안정으로 리셋된다.
+  return {voice_id:v.voice_id, settings:Object.assign({}, v.voice_settings),
+          speed:v.default_speed, variant:tone};
 }
 async function vpRegenTone(i){
   const b=VP_BEATS[i]; if(!b) return;
