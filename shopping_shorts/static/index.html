@@ -1444,12 +1444,28 @@ document.querySelectorAll('.tab').forEach(x=> x.onclick=()=>setTab(x.dataset.tab
 //   "오늘 가장 많이 오른 영상"이 위로 올라와 매일 순서가 실제로 바뀐다.
 //   ?? 폴백: delta 없는 옛 캐시 items가 섞여도 예전 기준(누적 댓글수)으로 자연히 되돌아간다.
 // 최신순 정렬키 — 클 수록 최신. 시간 판단은 여기 한 곳에서만 한다(0순위-B):
-// 카드의 'X시간 전' 표시(아래 1606행 근처)도 같은 우선순위(posted_at > age_hours)를 쓴다.
-function recencyKey(i){
-  if (i.posted_at){
-    const t = Date.parse(i.posted_at);
+// 카드의 'X시간 전' 표시(fmtAgo)도 **같은 우선순위**를 쓴다 — recencyMs 하나를 공유한다.
+// 시각을 담고 있을 수 있는 필드들 — **탭마다 들어오는 필드가 다르다**(2026-08-28 실측).
+//   48시간 탭(last_run)      : age_hours만
+//   주·달 탭(hits_since)     : first_seen만 (upload_ts는 전부 빈 문자열)
+//   역대 탭(archive_hits)    : upload_ts만 (first_seen 없음)
+// 그래서 posted_at·age_hours만 보던 종전 코드에서는 주·달·역대 탭의 **모든 항목이
+// -1e15로 같아져 최신순이 통째로 무효**가 됐다(사장님 제보 "최신순인데 2일 전").
+const RECENCY_FIELDS = ['posted_at', 'upload_ts', 'first_seen'];
+
+function recencyMs(i){
+  for (const f of RECENCY_FIELDS){
+    const v = i[f];
+    if (!v) continue;                              // 빈 문자열도 여기서 걸러진다
+    const t = Date.parse(v);
     if (!isNaN(t)) return t;                       // epoch ms — 클수록 최신
   }
+  return null;
+}
+
+function recencyKey(i){
+  const t = recencyMs(i);
+  if (t != null) return t;                         // epoch ms — 클수록 최신
   if (i.age_hours != null) return -i.age_hours;    // 경과가 적을수록 최신 → 부호를 뒤집는다
   return -1e15;                                    // 시간을 모르는 것은 맨 뒤
 }
@@ -2081,11 +2097,13 @@ function _historyCard(h){
 }
 function fmtAgo(i){
   // 'X시간 전' 실시간 계산(2026-08-03). age_hours는 수집 시점 스냅샷이라 다음 수집까지
-  // 고정돼 보였음 — 서버가 실어주는 posted_at(발행시각, UTC)이 있으면 지금 기준으로 계산.
+  // 고정돼 보였음 — 실제 시각이 있으면 지금 기준으로 계산한다.
+  // ★정렬과 **같은 필드 우선순위**를 쓴다(recencyMs). 표시와 정렬이 다른 값을 보면
+  //   "최신순인데 위쪽이 더 오래돼 보이는" 어긋남이 난다(0순위-B).
   let h = i.age_hours || 0;
-  if(i.posted_at){
-    const t = Date.parse(i.posted_at);
-    if(!isNaN(t)) h = Math.max(0, (Date.now()-t)/3.6e6);
+  const t = recencyMs(i);
+  if(t != null){
+    h = Math.max(0, (Date.now()-t)/3.6e6);
   }
   if(h < 1) return Math.max(1, Math.round(h*60)) + '분 전';
   if(h < 48) return Math.round(h) + '시간 전';
