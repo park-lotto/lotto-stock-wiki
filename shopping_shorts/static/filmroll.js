@@ -110,6 +110,12 @@
           '<span class="frstep"></span>' +
           '<button type="button" class="frclose" title="접기">◀ 접기</button>' +
         '</div>' +
+        // ★위/아래 띠 = 다른 장면(칸)으로 넘어가기(2026-08-28 사장님 "빨간박스 위아래 2개는
+        //   훅에서 다른 장면으로 넘어갈 수 있는 걸로"). 필름을 접고 다시 펴는 왕복 없이
+        //   이 자리에서 앞뒤 칸을 훑는다. 부품은 어느 칸이 있는지 모른다 — 부모가 준
+        //   onGoBeat(-1|+1)에 넘길 뿐이다(없으면 띠도 안 만든다).
+        (typeof opt.onGoBeat === 'function'
+          ? '<button type="button" class="frgo up" data-go="-1" title="앞 장면의 필름으로">▲ 앞 장면</button>' : '') +
         '<div class="frwin">' +
           '<div class="frload">🎞 필름 뽑는 중…</div>' +
           '<div class="frbelt"></div>' +
@@ -119,15 +125,34 @@
           '<div class="frmark"></div>' +
           '<div class="frhead"><span class="frgrip"></span><span class="frdur"></span></div>' +
         '</div>' +
+        (typeof opt.onGoBeat === 'function'
+          ? '<button type="button" class="frgo down" data-go="1" title="다음 장면의 필름으로">▼ 다음 장면</button>' : '') +
         '<video class="frpv" muted playsinline preload="auto"></video>' +
         '<canvas class="frcv" style="display:none"></canvas>' +
       '</div>';
+
+    // ★필름 안에서 난 클릭이 **바깥 칸으로 새지 않게** 한다(2026-08-28 사장님
+    //   "확대조절을 하고 마우스를 놓으면 미리보기가 자동으로 재생됨").
+    //   필름은 칸(.tbeat) 안에 들어가는데 그 칸에는 onclick="selBeat();playBeatHere()"가
+    //   걸려 있다 — 확대 슬라이더를 놓는 click이 칸까지 올라가 재생이 시작됐다.
+    //   ★막는 곳은 여기 하나다(0순위-B). 부품마다 stopPropagation을 붙이면 새 버튼을
+    //     만들 때마다 빠뜨리고, 그때마다 같은 증상이 다시 난다.
+    //   버블 단계에서 막으므로 필름 **안쪽** 동작(빨간선·박스·버튼)은 그대로 돈다.
+    host.addEventListener('click', ev => ev.stopPropagation());
+    host.addEventListener('dblclick', ev => ev.stopPropagation());
 
     const $ = s => host.querySelector(s);
     const win = $('.frwin'), belt = $('.frbelt'), pv = $('.frpv'), cv = $('.frcv');
     const headEl = $('.frhead'), gripEl = $('.frgrip'), durEl = $('.frdur');
     const markEl = $('.frmark'), boxesEl = $('.frboxes'), capsEl = $('.frcaps');
     const useEl = $('.fruse'), barEl = $('.frbar'), loadEl = $('.frload');
+
+    host.querySelectorAll('.frgo').forEach(b => {
+      b.addEventListener('click', e => {
+        e.preventDefault(); e.stopPropagation();
+        opt.onGoBeat(+b.dataset.go);
+      });
+    });
 
     $('.frname').textContent = opt.name || '';
     $('.frclose').onclick = () => { if (opt.onClose) opt.onClose(); };
@@ -604,12 +629,39 @@
     // ★상태 선언을 배선보다 먼저 — 아래 핸들러들이 참조한다(TDZ 예방)
     let down = false, sx = 0, so = 0, dragged = false, dg = false;
     win.addEventListener('contextmenu', e => e.preventDefault());
-    win.addEventListener('click', e => {
-      if (dragged || e.target.closest('.bx')) return;
+    // ★가운데를 잡고 앞뒤로 밀기(2026-08-28 사장님 "가운데 부분은 마우스를 잡고
+    //   필름을 뒤쪽 앞쪽으로 넘길수있게"). 2026-08-26에 뺐던 조작인데, 그때 문제는
+    //   '밀기'와 '빨간선 찍기'가 **같은 왼쪽 버튼에서 구분 없이** 싸운 것이었다.
+    //   이제 움직인 거리로 가른다: 4px 넘게 끌면 밀기, 그 자리에서 놓으면 찍기.
+    //   (손잡이 gripEl이 이미 쓰는 판정과 같은 방식이다 — 판단 기준을 새로 만들지 않는다)
+    win.addEventListener('pointerdown', e => {
+      if (e.button !== 0 || e.target.closest('.bx')) return;
+      down = true; sx = e.clientX; so = off; dragged = false;
+      win.style.cursor = 'grabbing';
+      try { win.setPointerCapture(e.pointerId); } catch (_) {}
+    });
+    win.addEventListener('pointermove', e => {
+      if (!down) return;
+      const dx = e.clientX - sx;
+      if (!dragged && Math.abs(dx) > 4) dragged = true;   // 여기부터는 '밀기'다
+      if (dragged) { off = clamp(so - dx); applyW(); }
+    });
+    const _endPan = e => {
+      if (!down) return;
+      down = false; win.style.cursor = '';
+      try { win.releasePointerCapture(e.pointerId); } catch (_) {}
+      if (dragged) { setTimeout(() => { dragged = false; }, 0); return; }  // 끌었으면 찍지 않는다
+      // 안 끌었다 = 그 자리를 찍는다(종전 동작 그대로)
       const r = win.getBoundingClientRect();
-      const t = Math.max(0, Math.min(DUR, xToSec(e.clientX - r.left)));
+      const tt = Math.max(0, Math.min(DUR, xToSec(e.clientX - r.left)));
       pv.pause(); playing = false;
-      scrubTo(t);
+      scrubTo(tt);
+    };
+    win.addEventListener('pointerup', _endPan);
+    win.addEventListener('pointercancel', e => { down = false; dragged = false; win.style.cursor = ''; });
+    win.addEventListener('click', e => {
+      // 위 pointerup이 이미 처리했다. click은 밖으로 새지 않게만 막는다.
+      e.stopPropagation();
     });
     win.addEventListener('wheel', e => {
       e.preventDefault();
