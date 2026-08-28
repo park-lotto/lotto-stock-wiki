@@ -207,6 +207,11 @@
       //   보고 있는지 알기 어렵다(2026-08-26 사장님). 부품은 부모를 모른다: 콜백만 부른다.
       if (typeof opt.onScrub === 'function') { try { opt.onScrub(t); } catch (_) {} }
       scrubWant = Math.max(0, Math.min(DUR - 0.03, t));
+      // ★손으로 옮긴 자리가 곧 다음 재생 지점이다(2026-08-28 사장님 제보: "한 번 재생
+      //   후 다른 지점 클릭하고 재생하면 빨간선부터 안 되고 엉뚱한 곳에서 재생된다").
+      //   RESUME(마지막 멈춘 자리)이 남아 있으면 아래 재생이 그걸 우선해, 방금 옮긴
+      //   빨간선을 무시하고 옛 자리에서 이어 갔다. 사용자가 직접 옮겼으면 그게 이긴다.
+      RESUME = scrubWant;
       moveHead(scrubWant);
       if (scrubBusy) return;
       scrubBusy = true;
@@ -831,10 +836,16 @@
         //   재생이 파란구간만 되나" 캡쳐 535). 종전엔 '쓰는 구간 길이'(없으면 3초)만큼만
         //   돌아서, 앞뒤를 이어 보려 해도 파란 구간 언저리에서 툭 끊겼다.
         //   멈추는 건 스페이스 한 번이면 된다 — 길이를 미리 재단할 이유가 없다.
-        const s2 = bx ? bx.s : (pv.currentTime || 0);
-        const b2 = bx ? bx.e : DUR;
-        // 멈춘 자리가 이 구간 안이면 거기서 이어서(끝까지 봤으면 RESUME이 비어 처음부터).
-        const a2 = (RESUME != null && RESUME > s2 + 0.05 && RESUME < b2 - 0.05) ? RESUME : s2;
+        // ★빨간 막대가 **언제나 이긴다**(2026-08-28 사장님 제보: "빨간색을 스페이스로
+        //   한 번 재생 후 다른 지점 클릭하고 재생하면 빨간선부터 재생이 안 되고 엉뚱한
+        //   곳에서 재생된다"). 종전엔 박스가 있으면 s2=bx.s로 **박스 시작**부터 갔고,
+        //   RESUME은 '박스 안'일 때만 인정했다 — 그래서 막대를 박스 밖으로 옮기면
+        //   그 자리를 무시하고 박스 앞머리로 튀었다. 내가 놓은 자리가 곧 시작점이다.
+        //   (RESUME은 스크럽으로 옮길 때와 멈출 때 둘 다 갱신된다 — scrubTo/stopHead)
+        const a2 = (RESUME != null) ? RESUME : (bx ? bx.s : (pv.currentTime || 0));
+        // 끝은 쓰는 구간 끝까지. 막대가 그 뒤에 있으면 잘 곳이 없으니 필름 끝까지 돈다.
+        let b2 = bx ? bx.e : DUR;
+        if (b2 <= a2 + 0.05) b2 = DUR;
         opt.onPlay(a2, b2);
         runHead(a2, b2);
         return;
