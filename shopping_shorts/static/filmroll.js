@@ -280,10 +280,15 @@
     }
 
     function drawBoxes() {
+      // ★자식 좌표는 **절대(t×pps)**다 — frboxes 층 자체가 applyW에서 translateX(-off)로
+      //   밀리므로, 여기서 secToX(off를 또 빼는 함수)를 쓰면 off가 **이중 차감**돼
+      //   박스만 왼쪽으로 스크롤량만큼 밀린다(2026-08-29 사장님 "1초 빼고 다 안 찍힌다"
+      //   — 실측: 어긋난 거리가 각 단계에서 정확히 off와 일치. 1·2·5초는 필름이 창보다
+      //   좁아 off=0이라 안 드러났을 뿐). caps·use 층과 같은 규약: 층은 translate, 자식은 절대.
       boxesEl.style.width = (DUR * pps()) + 'px';
       boxesEl.innerHTML = BOXES.map((b, i) =>
         `<div class="bx${ACTBOX === i ? ' act' : ''}" data-i="${i}" ` +
-        `style="left:${secToX(b.s)}px;width:${Math.max(8, (b.e - b.s) * pps())}px">` +
+        `style="left:${b.s * pps()}px;width:${Math.max(8, (b.e - b.s) * pps())}px">` +
         `<span class="t">${(b.e - b.s).toFixed(2)}초</span>` +
         // ★키 안내(2026-08-28 사장님 "시작Q 종료W 담기E 이렇게 써줘").
         //   기능은 이미 있었지만 화면에 없으니 아무도 몰랐다 — 없는 기능과 같다.
@@ -341,7 +346,7 @@
           else if (mode === 'r') b.e = Math.min(DUR, Math.max(s0 + 0.1, e0 + d));
           else { const len = e0 - s0, ns = Math.max(0, Math.min(DUR - len, s0 + d)); b.s = ns; b.e = ns + len; }
           b.s = Math.round(b.s * 100) / 100; b.e = Math.round(b.e * 100) / 100;
-          el.style.left = secToX(b.s) + 'px';
+          el.style.left = (b.s * pps()) + 'px';   // 절대좌표 — drawBoxes와 같은 규약
           el.style.width = Math.max(8, (b.e - b.s) * pps()) + 'px';
           const lab = el.querySelector('.t'); if (lab) lab.textContent = (b.e - b.s).toFixed(2) + '초';
           ev.stopPropagation();
