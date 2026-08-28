@@ -1729,7 +1729,10 @@ function renderRollHosts(beatIdx, slot){
 
   S.inst = filmroll(host, {
     videoId: vid, src: SL.src(vid), dur, from, to, name,
-    initBoxes: rollInitBoxes(kind, sid, vid),
+    // ★열 때 주황 박스를 미리 올리지 않는다(2026-08-29 사장님 "펼치면 노란박스가 아예없이").
+    //   종전엔 이미 담긴 구간을 전부 박스로 올렸는데(08-26 결정) 영상 하나에 6개씩 잡혀
+    //   오히려 새 구간을 잡기 불편했다. 담기는 추가 방식(commitRoll)이라 빈 채로 열어도
+    //   기존 담긴 조각은 그대로다. 담은 직후의 박스는 종전대로 남는다(필름을 안 닫으므로).
     // 조각을 펼쳤으면 그 구간이 창을 채우게(영상 통째는 전체를 본다)
     fit: (kind !== 'src'),
     caps: _rollCaps(vid),
@@ -1816,26 +1819,9 @@ function hydrateExtra(w){
       shot_role: '기타', is_key: false, action: '', change: '', benefits: []};
   }
 }
-// 필름을 열 때 주황 박스로 올릴 구간들 — **이미 쓰고 있는 구간**이다.
-//  · 조각 하나를 펼쳤으면(seg·cut) 그 조각 하나
-//  · 영상을 통째로 펼쳤으면(src) 그 영상에서 어느 칸에든 담긴 구간 전부
-// 담은 뒤에도 필름이 그대로 열려 있으므로(commitRoll이 안 닫는다) 새로 담은 구간이
-// 같은 모양으로 이어서 보인다(2026-08-26 사장님 "같은 형태로 이어지도록").
-function rollInitBoxes(kind, sid, vid){
-  if (kind !== 'src'){
-    const s = DATA.segments[sid];
-    return s ? [{s: +s.start, e: +mergeSpan(sid).end}] : [];
-  }
-  const used = new Set();
-  (lists || []).forEach(l => (l || []).forEach(id => used.add(id)));
-  const out = [];
-  for (const id of used){
-    const s = DATA.segments[id];
-    if (!s || s.video_id !== vid) continue;
-    out.push({s: +s.start, e: +mergeSpan(id).end});
-  }
-  return out.sort((a, b) => a.s - b.s);
-}
+// (rollInitBoxes 삭제 2026-08-29 — 필름을 열 때 이미 쓰는 구간을 주황 박스로 미리
+//  올리던 기능. 사장님 "펼치면 노란박스가 아예없이"로 폐기. 열 때는 빈 필름이고,
+//  박스는 사용자가 직접 잡은 것만 생긴다.)
 
 // 묶음 하나가 어느 영상인가 — 소스별 묶음일 때만 답이 있다(조각 전부가 같은 영상).
 function srcVidOf(g){
