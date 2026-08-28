@@ -278,7 +278,9 @@ console.log(JSON.stringify({
 """
     d = json.loads(_run_node(script))
     assert d["hasDel"], "배지에 ✕ 삭제 손잡이가 안 뜬다"
-    assert d["buttons"] == 4, f"손잡이는 삭제 1 + 크기·방향 3 = 4개여야 한다: {d['buttons']}"
+    # 2026-08-28 사장님 "손잡이 모서리 기능빼줘 버튼조절 기능 있으니까"
+    #  → 크기·방향 모서리 3개를 뺐다. 남는 버튼은 ✕ 하나뿐(점선 네모는 button이 아니다).
+    assert d["buttons"] == 1, f"손잡이는 삭제 ✕ 하나여야 한다: {d['buttons']}"
 
 
 def test_badge_handle_box_matches_pill_width():

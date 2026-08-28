@@ -683,25 +683,32 @@ console.log(JSON.stringify({html: HTML}));
     return json.loads(_run_node(script))["html"]
 
 
-def test_handles_show_for_sticker_with_delete_size_rotate():
-    """스티커를 고르면 ✕삭제(좌상) + 크기·방향 동시 모서리 3개가 뜬다."""
+def test_handles_show_delete_only():
+    """★모서리 ⤢(크기·방향)는 뺐다 — 2026-08-28 사장님 "손잡이 모서리 기능빼줘
+    버튼조절 기능 있으니까". 크기·회전은 편집칸 슬라이더가 맡는다.
+
+    남는 것은 ✕(삭제)와 점선 네모뿐이다. ✕는 슬라이더로 대신할 수 없고
+    (2026-08-27 "배지 넣고 취소하는거 없어"로 넣은 것), 점선은 선택 표시다.
+    """
     html = _handles_html({"kind": "sticker", "emoji": "F", "size": 20,
                           "x": 0.5, "y": 0.5, "rot": 0})
-    for h in ("del", "g-45", "g45", "g135"):
-        assert f'data-h="{h}"' in html, f"{h} 손잡이가 없다"
+    assert 'data-h="del"' in html, "삭제 손잡이가 없다"
+    assert "dashed" in html, "선택 표시(점선 네모)가 없다"
+    for h in ("g-45", "g45", "g135"):
+        assert f'data-h="{h}"' not in html, f"{h} 모서리 손잡이가 아직 있다"
 
 
 def test_handles_show_for_text_layer():
-    """글자 레이어에도 손잡이를 띄운다(2026-08-28 사장님 "전체잡고 늘려서 글씨 크게 작게").
+    """글자 레이어도 ✕(삭제)와 선택 표시를 받는다.
 
-    ★뒤집힌 계약이다 — 2026-08-18엔 "글자는 편집창에서 다룬다(범위 고정)"로 일부러
-      막아 뒀다. 기술적 이유가 아니라 그때의 작업 범위였고, 사장님이 직접 요청해 열었다.
-      그래서 이 테스트는 옛 test_handles_hidden_for_text_layer를 대체한다.
+    ★두 번 뒤집힌 자리다 — 2026-08-18 "글자는 편집창에서 다룬다(범위 고정)"로 막아 뒀고,
+      2026-08-28 사장님 요청("전체잡고 늘려서")으로 열었다가, 같은 날 감도가 나쁘다는
+      제보로 **끌어서 조절하는 기능만** 도로 뺐다. 남은 것은 삭제·선택 표시다.
     """
     html = _handles_html({"text": "A", "font": "X.ttf", "size": 78, "color": "#fff",
                           "outline": None, "box": None, "rot": 0, "x": 0.5, "y": 0.2})
-    for h in ("del", "g-45", "g45", "g135"):
-        assert f'data-h="{h}"' in html, f"글자 레이어에 {h} 손잡이가 없다"
+    assert 'data-h="del"' in html, "글자 레이어에 삭제 손잡이가 없다"
+    assert "dashed" in html, "글자 레이어에 선택 표시가 없다"
 
 
 def test_handles_hidden_for_empty_text_layer():

@@ -11408,64 +11408,30 @@ function renderThumbHandles(){
        transform:translate(-50%,-50%);pointer-events:auto;width:22px;height:22px;border-radius:50%;
        border:1.5px solid #fff;background:#1b1b28;color:#fff;font-size:12px;line-height:1;
        padding:0;cursor:${cur};box-shadow:0 1px 4px rgba(0,0,0,.6)">${label}</button>`;
+  // ★모서리 ⤢(크기·방향) 손잡이는 뺐다 — 2026-08-28 사장님 "손잡이 모서리 기능빼줘
+  //   버튼조절 기능 있으니까". 끌어서 맞추는 건 감도를 아무리 손봐도 슬라이더보다 정확할
+  //   수 없고(사장님 제보: "둘다 조정하는 감도가 안좋아"), 크기·회전은 이미 편집칸에
+  //   [크기 미세조정]·[회전] 슬라이더가 있다. 같은 일을 두 방법으로 두지 않는다.
+  //   ⚠️남기는 것: ✕(삭제)는 슬라이더로 대신할 수 없고(2026-08-27 "배지 넣고 취소하는거
+  //   없어"로 넣은 것), 점선 네모는 "지금 뭐가 골라져 있나"를 보여주는 표시다.
   box.innerHTML =
     `<div style="position:absolute;${pos(L.x - hx, L.y - hy)};width:${(hx * 200).toFixed(2)}%;
         height:${(hy * 200).toFixed(2)}%;border:1.5px dashed rgba(255,255,255,.65);border-radius:4px"></div>` +
-    // 사장님 2차(2026-08-18): 삭제는 **왼쪽 위 한 곳**, 나머지 세 모서리는 전부
-    // "끌면 크기+방향이 같이" — 어느 모서리를 잡았는지 외울 필요가 없어진다.
-    btn('del', L.x - hx, L.y - hy, '✕', '삭제', 'pointer') +
-    btn('g-45', L.x + hx, L.y - hy, '⤢', '끌어서 크기·방향 동시', 'nesw-resize') +
-    btn('g45',  L.x + hx, L.y + hy, '⤢', '끌어서 크기·방향 동시', 'nwse-resize') +
-    btn('g135', L.x - hx, L.y + hy, '⤢', '끌어서 크기·방향 동시', 'nesw-resize');
+    btn('del', L.x - hx, L.y - hy, '✕', '삭제', 'pointer');
 }
 
 // 손잡이 드래그 — 캔버스 드래그(이동)와 겹치지 않게 손잡이에서 시작한 것만 여기서 처리한다.
+// 손잡이 클릭 — 남은 손잡이는 ✕(삭제) 하나뿐이다.
+// ★끌어서 크기·방향을 맞추던 코드는 뺐다(2026-08-28 사장님 "손잡이 모서리 기능빼줘
+//   버튼조절 기능 있으니까"). 감도를 손봐도 슬라이더보다 정확할 수 없고, 같은 일을
+//   두 방법으로 두면 어느 쪽이 맞는지 헷갈린다. 크기·회전은 편집칸 슬라이더가 맡는다.
+//   캔버스 드래그(위치 옮기기)는 그대로다 — 그건 슬라이더로 못 하는 일이다.
 function initThumbHandleDrag(){
   const box = document.getElementById('thumbHandles'); if (!box || !box.addEventListener) return;
-  const cv = document.getElementById('thumbCanvas');
-  let mode = null, grab = null;   // grab = 글자 레이어를 잡은 순간의 기준(아래 설명)
-  const to = e => {
-    const r = cv.getBoundingClientRect();
-    return {x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height};
-  };
   box.addEventListener('mousedown', e => {
     const b = e.target.closest('button[data-h]'); if (!b) return;
     e.preventDefault(); e.stopPropagation();      // 캔버스 이동 드래그가 같이 붙는 걸 막는다
-    const h = b.getAttribute('data-h');
-    if (h === 'del'){ removeThumbLayer(THUMB_STATE.sel); return; }
-    mode = h;
-    // ★글자는 스티커와 크기 단위가 다르다(2026-08-28). 스티커의 size는 '반각 × 200'이라
-    //   끈 거리를 그대로 크기로 쓸 수 있지만, 글자의 size는 [크기 미세조정] 슬라이더 값
-    //   (30~200, 기준 90)이고 실제 픽셀은 thumbFit이 문구 길이까지 봐서 정한다.
-    //   그래서 글자는 **끈 거리의 비율**로 키운다 — 잡은 순간의 거리·크기를 기준으로 삼는다.
-    grab = null;
-    const L = THUMB_STATE.layers[THUMB_STATE.sel];
-    if (L && !L.kind && L.text){
-      const p = to(e);
-      const d = Math.hypot((p.x - L.x) * THUMB_W, (p.y - L.y) * THUMB_H);
-      grab = {d: Math.max(1, d), size: L.size || 90};
-    }
-  });
-  window.addEventListener('mouseup', () => { mode = null; grab = null; });
-  window.addEventListener('mousemove', e => {
-    if (!mode) return;
-    const L = THUMB_STATE.layers[THUMB_STATE.sel]; if (!L) return;
-    const p = to(e);
-    const dx = (p.x - L.x) * THUMB_W, dy = (p.y - L.y) * THUMB_H;   // px 공간에서 재야 각도가 맞다
-    // 세 모서리 손잡이는 이름이 곧 '원래 각도'다(g-45=우상, g45=우하, g135=좌하).
-    // 크기는 끈 거리, 방향은 그 각도에서 얼마나 돌았나 — 한 번의 드래그로 둘 다 잡힌다.
-    const base = Number(mode.slice(1));
-    if (grab){
-      // 글자 — 비율로 키우고, 회전은 슬라이더와 같은 범위(-45~45)로 묶는다.
-      const d = Math.hypot(dx, dy);
-      L.size = Math.min(200, Math.max(30, Math.round(grab.size * d / grab.d)));
-      L.rot = Math.max(-45, Math.min(45, Math.round(Math.atan2(dy, dx) * 180 / Math.PI - base)));
-    } else {
-      const s = Math.max(Math.abs(dx), Math.abs(dy)) / THUMB_W * 200;
-      L.size = Math.min(120, Math.max(4, Math.round(s)));
-      L.rot = Math.round(Math.atan2(dy, dx) * 180 / Math.PI - base);
-    }
-    renderThumbCanvas(); renderThumbLayers();
+    if (b.getAttribute('data-h') === 'del') removeThumbLayer(THUMB_STATE.sel);
   });
 }
 
