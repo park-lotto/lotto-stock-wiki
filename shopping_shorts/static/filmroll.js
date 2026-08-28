@@ -549,7 +549,13 @@
         // ★배율은 **레이아웃이 잡힌 뒤** 정한다. 여기서 바로 재면 win.clientWidth가 아직
         //   0이라 winW()가 600 폴백을 쓰고, 그 폭 기준으로 엉뚱한 배율이 나온다
         //   (실측 2026-08-26: 2.4초 구간인데 창의 32%밖에 안 찼다).
-        requestAnimationFrame(() => { try{ _fitToRange(); }catch(_){} });
+        // ★async 함수의 예외는 try/catch로 안 잡힌다(Promise rejection이 된다).
+        //   그래서 여기가 실패해도 화면만 이상하고 아무 흔적이 없었다 — 실제로
+        //   2026-08-28에 '왜 안 도는지' 찾는 데 한참 걸렸다. 반드시 남긴다.
+        requestAnimationFrame(() => {
+          Promise.resolve().then(_fitToRange)
+            .catch(e => console.error('[filmroll] 자동확대(_fitToRange) 실패', e));
+        });
       }
       applyW(); drawBar();
     }
