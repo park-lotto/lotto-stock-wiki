@@ -1280,7 +1280,7 @@ async def _scene_lab_html():
 @app.get("/bot_admin.html", include_in_schema=False)
 def bot_admin_page():
     return FileResponse(str(Path(__file__).parent / "static" / "bot_admin.html"),
-                        media_type="text/html")
+                        media_type="text/html", headers=_NOCACHE)
 
 
 @app.post("/api/save")
@@ -9619,6 +9619,18 @@ def _is_admin(customer_id):
     return ((cust.get("email") or "").lower() in _ADMIN_EMAILS) or bool(cust.get("admin"))
 
 
+# ── 화면 파일 캐시 정책 (한 곳에서만 정한다, 0순위-B) ─────────────────────
+# no-cache = "캐시는 하되 쓸 때마다 서버에 물어본다". 안 바뀌었으면 304(본문 0바이트)라
+# 트래픽 부담은 거의 없고, 바뀌면 **즉시** 새 파일이 간다.
+#
+# ★2026-08-28 실사고: 관리자 화면을 고쳐 배포했는데 회사 PC에서 강력 새로고침을 해도
+#   옛 화면이 그대로였다. admin.html·ops.html에 이 헤더가 없어 브라우저가 제멋대로
+#   캐시한 것(헤더가 없으면 Last-Modified 기반으로 임의 기간 캐시한다).
+#   produce·refs·archive 등은 이미 쓰고 있었는데 **관리자 화면만 빠져 있었다** —
+#   같은 결정이 두 부류로 갈려 있었다. 정의를 파일 위로 올려 전부 같은 값을 쓴다.
+_NOCACHE = {"Cache-Control": "no-cache, must-revalidate"}
+
+
 def _require_admin(request):
     if not _is_admin(getattr(request.state, "customer_id", None)):
         return JSONResponse({"error": "관리자 전용"}, status_code=403)
@@ -10355,7 +10367,7 @@ def _admin_page(request: Request):
     if not _is_admin(getattr(request.state, "customer_id", None)):
         return HTMLResponse("<h2 style='font-family:sans-serif'>관리자 전용입니다</h2>", status_code=403)
     return FileResponse(Path(__file__).parent / "static" / "admin.html",
-                        media_type="text/html; charset=utf-8")
+                        media_type="text/html; charset=utf-8", headers=_NOCACHE)
 
 
 # ── 관측판(2026-08-22) — 1기 100명을 받기 전에 "얼마나 버티나"를 숫자로 남긴다 ──
@@ -10367,7 +10379,7 @@ def _ops_page(request: Request):
         return HTMLResponse("<h2 style='font-family:sans-serif'>관리자 전용입니다</h2>",
                             status_code=403)
     return FileResponse(Path(__file__).parent / "static" / "ops.html",
-                        media_type="text/html; charset=utf-8")
+                        media_type="text/html; charset=utf-8", headers=_NOCACHE)
 
 
 @app.post("/api/pinterest/collect")
@@ -11914,7 +11926,7 @@ def api_challenge_members_bulk(request: Request, body: dict):
 def page_challenge():
     """멤버 제출 화면 — 단톡방에 이 주소를 공유한다."""
     return FileResponse(Path(__file__).parent / "static" / "challenge.html",
-                        media_type="text/html; charset=utf-8")
+                        media_type="text/html; charset=utf-8", headers=_NOCACHE)
 
 
 @app.get("/challenge/admin", response_class=HTMLResponse)
@@ -11922,7 +11934,7 @@ def page_challenge_admin():
     """관리 화면(Task 8에서 HTML을 만든다). 데이터 API가 관리자를 검사하므로
     페이지 자체는 열어둔다 — 비관리자가 열면 목록이 비고 안내가 뜬다."""
     return FileResponse(Path(__file__).parent / "static" / "challenge_admin.html",
-                        media_type="text/html; charset=utf-8")
+                        media_type="text/html; charset=utf-8", headers=_NOCACHE)
 
 
 @app.get("/api/reference/adopt", response_class=HTMLResponse)
@@ -12847,7 +12859,7 @@ def page_setup(request: Request):
         except Exception as e:  # noqa: BLE001 — 플래그 해제 실패로 안내를 못 보게 하지 않는다
             print(f"[setup] 플래그 해제 실패(무시): {e!r}", file=sys.stderr)
     return FileResponse(str(Path(__file__).parent / "static" / "setup.html"),
-                        media_type="text/html")
+                        media_type="text/html", headers=_NOCACHE)
 
 
 @app.get("/coupang", response_class=HTMLResponse)
@@ -12855,7 +12867,7 @@ def page_coupang():
     """쿠팡파트너스 안내 — 가입·추적링크·고지문구. /setup과 같이 로그인 없이 열린다
     (단톡방·카톡에 링크만 뿌리면 되도록)."""
     return FileResponse(str(Path(__file__).parent / "static" / "coupang.html"),
-                        media_type="text/html")
+                        media_type="text/html", headers=_NOCACHE)
 
 
 @app.get("/inpock", response_class=HTMLResponse)
@@ -12867,14 +12879,14 @@ def page_inpock():
       이 페이지가 채우는 빈칸은 **인포크 쪽 절차**다(coupang.html에 인포크는 한 줄뿐).
     """
     return FileResponse(str(Path(__file__).parent / "static" / "inpock.html"),
-                        media_type="text/html")
+                        media_type="text/html", headers=_NOCACHE)
 
 
 @app.get("/help", response_class=HTMLResponse)
 def page_help():
     """도움말 페이지 — 로그인 없이 열린다(가입 전 문의를 줄이는 게 목적)."""
     return FileResponse(str(Path(__file__).parent / "static" / "help.html"),
-                        media_type="text/html")
+                        media_type="text/html", headers=_NOCACHE)
 
 
 @app.get("/api/help/items")
@@ -15400,7 +15412,6 @@ except Exception:                                  # noqa: BLE001 — 이 기능
 # 기존 /xxx.html 경로도 아래 StaticFiles 마운트로 계속 동작(백워드 호환).
 # no-cache: UI 배포 후 브라우저가 옛 HTML을 캐시로 재사용해 "고쳤는데 안 바뀜"이
 # 반복됨(2026-07-14 역할배정·사이드바 등 실사고) → 매 요청 서버 재검증 강제.
-_NOCACHE = {"Cache-Control": "no-cache, must-revalidate"}
 # ★"produce"는 여기서 뺐다(2026-08-20) — 등급에 따라 다른 파일을 서빙해야 해서
 #   아래 _produce_page 명시 라우트로 옮겼다(voice_tune·refs와 같은 패턴).
 for _pg in ("discover", "find", "library", "mix", "outreach", "collection",
