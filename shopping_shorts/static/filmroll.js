@@ -72,6 +72,7 @@
     let CW = cwFor(ZOOM_MAX_STEP), STEP = ZOOM_MAX_STEP, N = 0, off = 0;  // 기본 확대(위 상수)
     let _homed = false;      // 지금 쓰는 구간으로 한 번 옮겼나(처음 펼칠 때만)
     let MA = null;                     // 찍어둔 시작점
+    let HEAD_T = 0;                    // 빨간선이 가리키는 시각(초) — moveHead가 갱신한다
     // ★열 때 **이미 쓰는 구간**을 주황 박스로 올린다(2026-08-26 사장님 "상단에 카드형으로
     //   들어간걸 펼치면 … 해당 2.4초만 필름형으로 나오게"). 조각을 펼치면 그 조각이,
     //   영상을 펼치면 그 영상에서 담긴 구간들이 바로 손에 잡힌다(늘리고 줄이고 지운다).
@@ -232,6 +233,13 @@
     }
 
     function moveHead(t) {
+      // ★빨간선이 **지금 가리키는 시각**을 여기 한 곳에서 기록한다(2026-08-28 사장님
+      //   "한 칸 1초에선 정확한데 확대가 바뀌면 Q/W가 다른 곳에 찍힌다").
+      //   종전엔 Q/W가 pv.currentTime(영상 요소의 실제 시각)을 읽었는데, seek는
+      //   **비동기**라 방금 옮긴 자리가 아직 반영되기 전이다. 확대를 바꾸면 필름을
+      //   다시 뽑느라 그 지연이 커져 옛 시각이 찍혔다.
+      //   막대를 옮기는 길은 전부 moveHead를 지나므로 여기가 유일한 기록 지점이다(0순위-B).
+      HEAD_T = Math.round((+t || 0) * 100) / 100;
       if (!headEl) return;
       if (MA !== null && durEl) {
         durEl.textContent = Math.abs(t - MA).toFixed(2) + '초';
@@ -396,7 +404,7 @@
        ★박스를 만드는 규칙은 addBox 하나뿐이다 — 여기서 BOXES를 직접 건드리면
          정렬·중복·최소길이 규칙이 두 벌이 된다(0순위-B). */
     function headTime() {
-      return Math.round((pv.currentTime || 0) * 100) / 100;
+      return HEAD_T;
     }
     function markStart() {
       MA = headTime();
@@ -414,7 +422,7 @@
 
     /* 손잡이 우클릭 = 여기 찍기(시작 → 끝) */
     function markHere() {
-      const t = Math.round(pv.currentTime * 100) / 100;
+      const t = headTime();
       if (MA === null) { MA = t; drawMark(); drawBar(); moveHead(t); return; }
       const a = Math.min(MA, t), b = Math.max(MA, t);
       if (b - a < 0.15) { MA = null; drawMark(); drawBar(); moveHead(t); return; }
@@ -425,7 +433,7 @@
       const el = host.querySelector('.frlen');
       if (el) BOXLEN = Math.max(0.1, parseFloat(el.value) || BOXLEN);
       const n = BOXLEN;
-      const a = Math.max(0, Math.min(DUR - 0.1, pv.currentTime));
+      const a = Math.max(0, Math.min(DUR - 0.1, headTime()));
       addBox(a, Math.min(DUR, a + n));
     }
 
@@ -544,6 +552,7 @@
       //   (조각 밖 구간을 잡으려면 원본이 다 보여야 한다) — 문제는 **0초에서 열려서**
       //   지금 쓰는 구간이 화면 밖에 있었다는 것이다. 처음 한 번만 그 구간으로 옮긴다
       //   (확대·축소로 다시 그릴 때는 그 자리를 지킨다 — 아래 frz 핸들러가 정한다).
+      console.log('[filmroll] strip 끝 · _homed=', _homed, '· from=', opt.from, '· fit=', opt.fit);
       if (!_homed && opt.from != null) {
         _homed = true;
         // ★배율은 **레이아웃이 잡힌 뒤** 정한다. 여기서 바로 재면 win.clientWidth가 아직
