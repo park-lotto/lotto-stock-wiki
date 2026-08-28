@@ -406,12 +406,25 @@ body.is-admin .admin-only{display:block}
       <button onclick="pinCollect(this)" style="margin-left:8px">📌 수집해서 쌓기</button>
       <button onclick="pinCollect(this,true)" style="margin-left:4px" title="지금까지 쌓은 것을 비우고 새로 시작합니다">🗑 비우고 새로</button>
       <span id="pinMsg" style="font-size:12px;color:var(--sub);margin-left:8px"></span>
+      <!-- 쇼핑몰 필터(2026-08-29 사장님 "알리 테무에서 나오는 상품들을 중점으로").
+           ★핀의 목적지(pin_dest)로 고른다 — 수집 때 상세 페이지에서 읽어 담는다. -->
+      <div style="margin-top:7px;display:flex;gap:5px;align-items:center;flex-wrap:wrap">
+        <span style="font-size:11px;color:var(--sub)">쇼핑몰만 보기:</span>
+        <button class="ftog pinf on" data-dest="" onclick="pinFilter(this)">전체</button>
+        <button class="ftog pinf" data-dest="shop" onclick="pinFilter(this)">🛒 쇼핑몰</button>
+        <button class="ftog pinf" data-dest="temu" onclick="pinFilter(this)">테무</button>
+        <button class="ftog pinf" data-dest="aliexpress" onclick="pinFilter(this)">알리</button>
+        <button class="ftog pinf" data-dest="amzn,amazon" onclick="pinFilter(this)">아마존</button>
+        <span id="pinFilterMsg" style="font-size:11px;color:var(--sub)"></span>
+      </div>
       <div style="font-size:11px;color:var(--sub);margin-top:5px">
         자막·워터마크 없는 <b>깨끗한 원본</b>이 많아 자막제거 없이 바로 씁니다(실측 720×1280 세로).
         로그인·비용 없이 긁습니다. ⚠️워터마크가 박힌 것도 섞여 오니 <b>눈으로 골라</b> 담으세요.
-        검색어 1개당 30초쯤 걸립니다. <b>누를 때마다 쌓입니다</b> — 조금씩 여러 번 돌려 모으세요.
+        검색어 <b>12개를 한꺼번에</b> 돌려 20~30초쯤 걸립니다. <b>누를 때마다 쌓입니다</b>.
         <br>⚠️로그인 없이 긁으므로 <b>검색어 1개당 10~27개</b>가 한계입니다(스크롤을 늘려도 안 늘어납니다).
         많이 모으려면 <b>검색어를 바꿔가며</b> 여러 번 누르세요.
+        <br>🛒 쇼핑몰 필터는 핀이 <b>실제로 연결되는 곳</b>으로 고릅니다(실측 624개 중 85개가
+        아마존·테무 등, 전부 영상 있음·중앙값 15.8초). 대부분은 링크가 없거나 인스타 재업로드입니다.
       </div>
     </div>
     <div id="xhsDiscoverPanel" style="display:none;margin-bottom:12px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--inset)">
@@ -959,6 +972,29 @@ async function xhsLoadLatest(){   // 페이지 재진입 시 마지막 결과(�
       renderXhsList();
     }
   }catch(e){}
+}
+// ── 핀터레스트 쇼핑몰 필터(2026-08-29 사장님 "알리 테무 상품 중점으로") ──
+// ★서버의 pinterest_crawl.SHOP_DOMAINS와 **같은 목록**이다. 둘이 어긋나면
+//   "쇼핑몰"이 서로 다른 걸 뜻하게 된다 — 늘릴 때 양쪽을 함께 고쳐라(0순위-B).
+const PIN_SHOP_KEYS = ['aliexpress','temu','amzn','amazon','alibaba','shopee',
+                       'lightinthebox','banggood','shein','etsy','ebay','coupang'];
+let PIN_DEST = '';        // '' = 전체 / 'shop' = 쇼핑몰 전부 / 그 외 = 콤마목록
+function pinFilter(btn){
+  PIN_DEST = btn.getAttribute('data-dest') || '';
+  document.querySelectorAll('.pinf').forEach(b=>b.classList.toggle('on', b===btn));
+  render();
+  // ★몇 개가 걸렸는지 말해준다 — 0건이 '없음'인지 '고장'인지 화면이 말해야 한다.
+  const msg=document.getElementById('pinFilterMsg');
+  if(msg){
+    const tot=(STATE.items||[]).length;
+    const n=(STATE.items||[]).filter(i=>{
+      const d=(i.pin_dest||'').toLowerCase();
+      if(!PIN_DEST) return true;
+      const want = PIN_DEST==='shop' ? PIN_SHOP_KEYS : PIN_DEST.split(',');
+      return d && want.some(k=>d.includes(k));
+    }).length;
+    msg.textContent = PIN_DEST ? (n+'개 / 전체 '+tot+'개') : ('전체 '+tot+'개');
+  }
 }
 // 핀터레스트 수집(2026-08-28 사장님) — 무료·로그인 없음. 관리자 전용.
 // ★검색어 1개당 브라우저를 띄워 스크롤하므로 30초쯤 걸린다. 버튼을 잠가 중복 실행을 막고,
@@ -1876,6 +1912,15 @@ function render(opts){
   stopAllMedia(document.getElementById('cards'));
   let items = STATE.items.slice();
   if(BLOCKED.size) items = items.filter(i=> !BLOCKED.has(_normUser(i.username)));  // 차단 채널은 항상 가린다
+  // 핀터레스트 쇼핑몰 필터(2026-08-29 사장님 "알리 테무 상품 중점으로").
+  // ★핀이 **실제로 연결되는 곳**(pin_dest)으로 고른다. 이 탭에서만 동작한다.
+  if(PLATFORM==='pinterest' && PIN_DEST){
+    const want = PIN_DEST==='shop' ? PIN_SHOP_KEYS : PIN_DEST.split(',');
+    items = items.filter(i=>{
+      const d=(i.pin_dest||'').toLowerCase();
+      return d && want.some(k=>d.includes(k));
+    });
+  }
   const searching = !!(STATE.q && STATE.q.trim());
   const histWrap = document.getElementById("channelHistoryWrap");
   if(histWrap) histWrap.innerHTML = "";   // 검색/필터 바뀔 때마다 초기화
@@ -3436,7 +3481,7 @@ function renderLens(shortcode, mountId){
           title="넣은 소재로 검색어 조합을 여러 개 만들어 아래에 쌓습니다. 한국어만 넣어도 중국어까지 같이 나옵니다 — 무료" style="${btnCss};border-color:var(--accent);color:var(--accent);font-weight:700">${st.cnLoading?'⏳ 만드는 중…':'✨ 검색어 조합 만들기'}</button>
       </div>
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px">
-        <span style="font-size:12px;color:var(--sub)" title="🔎 여기서 = 인스타·틱톡·유튜브를 이 페이지 안에서 찾습니다. 나머지 아이콘(📕샤오홍슈 🎶도우인 🎵틱톡 📷인스타)은 그 사이트를 새 탭으로 엽니다">🔎 비슷한 영상 찾기 <span style="opacity:.7">— 🔎는 여기서, 아이콘은 새 탭</span></span>
+        <span style="font-size:12px;color:var(--sub)" title="🔎 여기서 = 인스타·틱톡·유튜브·핀터레스트를 이 페이지 안에서 찾습니다. 나머지 아이콘(📕샤오홍슈 🎶도우인 🎵틱톡 📷인스타)은 그 사이트를 새 탭으로 엽니다">🔎 비슷한 영상 찾기 <span style="opacity:.7">— 🔎는 여기서, 아이콘은 새 탭</span></span>
         ${st.frameBlob?`<button onclick="lensMoreCnKeywords('${shortcode}')" ${st.cnLoading?'disabled':''} title="같은 장면으로 다른 각도의 검색어를 더 뽑습니다(이미 나온 건 빼고 아래에 쌓입니다). 무료 — 추가 비용 없음" style="${btnCss};border-color:var(--accent);color:var(--accent)">${st.cnLoading?'⏳ 뽑는 중…':'🔄 다른 검색어 더'}</button>`:''}
         ${st.cnNoNew?'<span style="font-size:11px;color:var(--sub)">더 나올 게 없어요 — 이 장면에서 뽑을 각도는 다 나왔습니다</span>':''}
       </div>
@@ -3468,7 +3513,7 @@ function renderLens(shortcode, mountId){
               <div style="font-size:14px;font-weight:600;line-height:1.3">${kw}</div>
               <div style="font-size:11px;color:var(--sub)">${c.zh||''}</div></div>
             <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-            ${kw?`<button onclick="lensKwSearch('${shortcode}',${idx})" ${st.kwSearching?'disabled':''} title="인스타·틱톡·유튜브를 '${kw}'로 검색해 이 페이지 안에 카드로 불러옵니다(이동 없음)" style="${wide}">🔎 여기서</button>`:''}
+            ${kw?`<button onclick="lensKwSearch('${shortcode}',${idx})" ${st.kwSearching?'disabled':''} title="인스타·틱톡·유튜브·핀터레스트를 '${kw}'로 검색해 이 페이지 안에 카드로 불러옵니다(이동 없음). 핀터레스트는 영어로 번역해 영상탭을 찾습니다" style="${wide}">🔎 여기서</button>`:''}
             ${c.zh?`<a href="${xhs}" target="_blank" rel="noopener" title="샤오홍슈에서 '${c.zh}' 검색 — 새 탭으로 엽니다" style="${ico}">📕</a>
             <a href="${dy}" target="_blank" rel="noopener" title="도우인에서 '${c.zh}' 검색 — 새 탭으로 엽니다" style="${ico}">🎶</a>`:''}
             ${kw?`<a href="${tk}" target="_blank" rel="noopener" title="틱톡에서 '${kw}' 검색 — 새 탭" style="${ico}">🎵</a>

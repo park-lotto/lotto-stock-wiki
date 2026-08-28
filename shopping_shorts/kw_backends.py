@@ -155,6 +155,53 @@ def apify_tiktok(keyword, max_results):
     return out
 
 
+# 렌즈의 롱폼 서버컷과 같은 기준(초). 핀터레스트 영상탭엔 롱폼도 섞여 온다.
+_PIN_LONGFORM_MAX = 180
+
+
+def pinterest_videos(keyword, max_results):
+    """핀터레스트 **영상탭** 검색(무료 — Playwright, 로그인·프록시 불필요).
+
+    왜 이렇게 하나(2026-08-29 사장님 "핀터레스트 검색결과도 노출 / 숏폼영상만" —
+    렌즈 시각검색 실측 ko+en 147건 중 영상 핀 0개라 키워드 검색으로 합류):
+    ★일반 핀 검색(/search/pins/)이 아니라 영상탭(/search/videos/)을 긁는다 —
+      일반 탭은 이미지가 대부분이라 4키워드 전부 영상 0개였다(실측).
+    ★검색어는 **영어로 번역**해 쓴다 — 같은 소재도 '인덕션 테이블' 0건 /
+      'induction table' 12건(실측). 한국어 인덱스가 사실상 없다.
+      번역 실패 시 원문 그대로 폴백(영어 입력이면 그대로 통한다).
+    비용: 번역 flash-lite 1회(0.5원 안쪽) 외 0원."""
+    try:
+        from shopping_shorts import pinterest_crawl, video_analysis
+        try:
+            en = (video_analysis.translate_keyword(keyword) or {}).get("en") or ""
+        except Exception:      # noqa: BLE001 — 번역 실패가 검색을 죽이면 안 된다
+            en = ""
+        # scrolls=3 — 익명 검색은 배치가 들쭉날쭉해서(실측: scrolls=2에서 같은 검색어가
+        # 2건↔12건) 한 번 더 스크롤해 안정시킨다.
+        rows = pinterest_crawl.search_videos(en or keyword, max_results=max_results * 2,
+                                             scrolls=3, tab="videos")
+    except Exception:          # noqa: BLE001 — 백엔드 계약: 예외를 밖으로 던지지 않는다
+        return []
+    out = []
+    for r in rows:
+        if not r.get("url"):
+            continue
+        dur = r.get("duration")
+        if dur and dur > _PIN_LONGFORM_MAX:
+            continue           # 렌즈는 숏폼 소재 자리 — 렌즈 서버컷과 같은 기준
+        out.append(cn_backends.normalize({
+            "url": r["url"],
+            "title": (r.get("title") or r.get("desc") or "").strip(),
+            "thumbnail": r.get("thumbnail") or "",
+            # 검색 응답에 mp4 직링크가 있다 — 카드 인라인 재생(/api/video 프록시)용.
+            "play_url": r.get("video_url") or "",
+            "duration": dur,
+        }, "pinterest"))
+        if len(out) >= max_results:
+            break
+    return out
+
+
 def youtube(keyword, max_results):
     """유튜브 키워드 검색(무료 쿼터). 렌즈와 같은 조건 — 숏폼·한국어.
 

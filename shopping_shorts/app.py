@@ -10837,16 +10837,39 @@ def _api_pinterest_collect(request: Request, body: dict = None):
     kws = [k.strip() for k in (body.get("keywords") or []) if str(k).strip()]
     if not kws:
         kws = list(pinterest_crawl.DEFAULT_KEYWORDS)
-    kws = kws[:8]                      # 폭주 방지 — 한 번에 8개까지
+    kws = kws[:12]                     # 폭주 방지 — 한 번에 12개까지(병렬 폭과 맞춘다)
     try:
         per = max(5, min(int(body.get("per_keyword") or 40), 80))
         scrolls = max(1, min(int(body.get("scrolls") or 5), 12))
     except (TypeError, ValueError):
         per, scrolls = 40, 5
 
+    # ★병렬로 돈다(2026-08-29). 병목은 IP가 아니라 **브라우저 기동 + 고정 sleep**이다:
+    #   pinterest_crawl._crawl()은 키워드마다 chromium.launch()를 새로 열고
+    #   `for _ in range(scrolls): wait_for_timeout(1500)` + 끝에 2000ms를 쉰다
+    #   = 키워드당 약 9.5초가 순수 대기. 12키워드 순차 70.1초 → 병렬 18.1초(손실 0).
+    # ★프로세스풀이 아니라 **스레드풀**이다 — 웹서버(uvicorn) 안에서 fork하면 소켓·
+    #   시그널 핸들러가 상속돼 위험한데 실측 속도가 같다(스레드 12.8초/프로세스 12.5초).
+    # ⚠️scrolls를 줄여 아끼려 하지 마라 — scrolls=1로 낮췄더니 결과가 34% 날아갔다
+    #   (`diy tool invention` 15개→0개). 대기는 낭비가 아니라 로딩 시간이다.
+    def _one(kw):
+        # ★예외 격리: 키워드 하나가 죽어도 나머지는 살아야 한다.
+        #   (0개가 나오는 건 정상이다 — 핀터레스트가 안 주는 검색어가 실제로 있다)
+        try:
+            return kw, pinterest_crawl.search_videos(
+                kw, max_results=per, scrolls=scrolls)
+        except Exception as e:            # noqa: BLE001 — 한 건 실패로 수집 전체를 죽이지 않는다
+            logging.warning("pinterest 수집 실패(%s): %s", kw, type(e).__name__)
+            return kw, []
+
+    # map은 **순서를 보존한다** — as_completed로 바꾸지 마라(방금 담은 게 위로 오는
+    # 규칙이 뒤섞인다). 폭은 키워드 수만큼만 연다(서버 8코어, 대기가 대부분이라 안전).
+    with ThreadPoolExecutor(max_workers=max(1, min(len(kws), 12))) as _ex:
+        _per_kw = list(_ex.map(_one, kws))
+
     items, seen = [], set()
-    for kw in kws:
-        for it in pinterest_crawl.search_videos(kw, max_results=per, scrolls=scrolls):
+    for kw, _found in _per_kw:
+        for it in _found:
             k = it.get("pin_id") or it.get("video_url")
             if not k or k in seen:
                 continue
@@ -10873,6 +10896,9 @@ def _api_pinterest_collect(request: Request, body: dict = None):
                 "width": it.get("width") or 0, "height": it.get("height") or 0,
                 "keyword": kw,
                 "category": "장비템",     # 이 탭은 장비템·신박템 컨셉 전용이다
+                # 목적지는 아래에서 한꺼번에 채운다(핀마다 상세 페이지 1회 왕복이라
+                # 순차로 하면 느리다). 못 읽으면 빈 값 — 지어내지 않는다.
+                "pin_dest": "", "pin_link": "",
             })
     # ★누적한다(2026-08-28 사장님 "한번에 다해서 올리는게 아니라 10개씩 하고 올리고").
     #   익명 수집은 **검색어당 첫 묶음에서 잘린다**(실측: 스크롤 4→15회로 늘려도
@@ -10880,21 +10906,31 @@ def _api_pinterest_collect(request: Request, body: dict = None):
     #   그래서 키워드를 조금씩 여러 번 돌려 쌓는 게 유일한 길인데, 덮어쓰기면
     #   앞서 모은 게 매번 사라진다.
     #   reset=true를 주면 비우고 새로 시작한다(쌓이기만 하면 정리를 못 한다).
+    # ★목적지(쇼핑몰) 채우기 — 사장님 "알리 테무 상품 중점으로"(2026-08-29).
+    #   검색 응답엔 링크가 없어 **핀마다 상세 페이지를 1회 왕복**해야 한다.
+    #   비용은 싸다: 병렬16이면 40건 7.8초(건당 0.19초)·판별성공 39/40 실측.
+    #   ⚠️덤이므로 실패해도 수집은 그대로 산다(pin_destination이 빈 값을 준다).
+    if items and body.get("with_dest", True):
+        def _dest(it):
+            d, l = pinterest_crawl.pin_destination(it.get("url") or "")
+            it["pin_dest"], it["pin_link"] = d or "", l or ""
+            return it
+        with ThreadPoolExecutor(max_workers=16) as _ex:
+            items = list(_ex.map(_dest, items))
+
     store = Store(DB_PATH)
-    added = len(items)
-    if not body.get("reset"):
-        # ⚠️load_last_run_platform은 **(items, collected_at) 튜플**을 준다(dict 아님).
-        #   dict로 읽으면 AttributeError로 수집이 통째로 죽는다(실측으로 밟았다).
-        prev, _prev_at = store.load_last_run_platform("pinterest")
-        prev = prev or []
-        have = {(x.get("shortcode") or x.get("video_url")) for x in prev}
-        fresh = [x for x in items
-                 if (x.get("shortcode") or x.get("video_url")) not in have]
-        added = len(fresh)
-        items = fresh + prev          # 새 것을 앞에 — 방금 담은 게 위로 온다
     now = datetime.now(timezone.utc).isoformat()
-    store.save_last_run_platform("pinterest", items, now)
-    return {"ok": True, "count": len(items), "added": added,
+    if body.get("reset"):
+        # 비우고 새로 시작 — 쌓이기만 하면 정리를 못 한다.
+        store.save_last_run_platform("pinterest", items, now)
+        added, total = len(items), len(items)
+    else:
+        # ★읽기~쓰기를 **한 트랜잭션으로** 묶는다(2026-08-29). 예전처럼 load →
+        #   파이썬 병합 → save 로 하면 두 수집이 겹칠 때 나중 것이 앞 것을 통째로
+        #   덮는다 — 재현 실측: 각 50개를 담았는데 **저장된 건 50개**(한쪽 전멸).
+        #   오류가 안 나서 '덜 담겼네'로만 보이는 조용한 유실이다.
+        added, total = store.merge_last_run_platform("pinterest", items, now)
+    return {"ok": True, "count": total, "added": added,
             "keywords": kws, "collected_at": now}
 
 
