@@ -2079,14 +2079,14 @@
           <div style="font-size:12px;color:var(--sub);margin:10px 0 4px">😀 스티커 — 누르면 썸네일에 얹혀요 (드래그로 옮기고, 크기 조절)</div>
           <div id="thumbStickers" style="display:flex;gap:4px;flex-wrap:wrap"></div>
           <div style="display:flex;gap:6px;align-items:center;margin-top:6px">
-            <input id="thumbStickerInput" maxlength="8" placeholder="직접 입력 — 원하는 이모지 붙여넣기 😀"
+            <input id="thumbStickerInput" maxlength="8" placeholder="직접 입력 — 이모지 😀 또는 넣고 싶은 글자"
                    onkeydown="if(event.key==='Enter'){addThumbStickerFromInput();return false}"
                    style="flex:1;padding:7px 9px;font-size:15px">
             <button class="tab" style="flex:0 0 auto;min-width:auto;padding:7px 13px"
                     onclick="addThumbStickerFromInput()">얹기</button>
           </div>
           <div id="thumbStickerInputHint" class="hint" style="font-size:10px;opacity:.7;margin-top:3px">
-            휴대폰·윈도우 이모지판(⊞+마침표)에서 골라 붙여넣으면 돼요</div>
+            이모지는 스티커로, 글자는 글자 레이어로 얹혀요 (윈도우 이모지판 ⊞+마침표)</div>
 
           <div style="font-size:12px;color:var(--sub);margin:12px 0 4px">🎨 고급 도형 — 화살표·강조 (색·크기·각도 조절돼요)</div>
           <div id="thumbShapes" style="display:flex;gap:6px;flex-wrap:wrap"></div>
@@ -11409,17 +11409,42 @@ function addThumbShape(key){
   renderThumbLayers(); renderThumbCanvas();
 }
 
+// 이모지인가(그림문자). 글자·숫자·기호는 false.
+// ★스티커는 **이모지 전용**이다(컬러 글리프라 색·외곽선이 안 먹어 그 UI를 안 준다).
+//   그래서 글자를 넣으면 스티커가 아니라 **글자 레이어**로 얹어야 맞다.
+function _isEmojiOnly(t){
+  const s = String(t == null ? '' : t).trim();
+  if (!s) return false;
+  try { return /^[\p{Extended_Pictographic}\p{Emoji_Component}️‍]+$/u.test(s); }
+  catch (e) { return !/[0-9A-Za-z가-힣ㄱ-ㅎㅏ-ㅣ]/.test(s); }   // 구형 브라우저 폴백
+}
+
 function addThumbStickerFromInput(){
   const el = document.getElementById('thumbStickerInput'); if (!el) return;
   const hint = document.getElementById('thumbStickerInputHint');
-  const one = firstGrapheme(el.value);
-  if (!one){
-    if (hint) hint.textContent = '이모지를 붙여넣고 눌러주세요';
+  const raw = String(el.value == null ? '' : el.value).trim();
+  if (!raw){
+    if (hint) hint.textContent = '이모지나 글자를 넣고 눌러주세요';
     return;
   }
+  // ★글자를 넣으면 글자 레이어로 얹는다(2026-08-27 고객 제보 "글자를 쳐도 적용이 안된다").
+  //   종전엔 firstGrapheme으로 **첫 글자만** 스티커가 됐다 — "안녕하세요"를 넣으면 '안'
+  //   한 글자만 얹혔고, 안내문마저 "안 얹었어요"로 나가 **실패한 것처럼 읽혔다**(실측).
+  //   글자는 크기·색·외곽선을 조절해야 쓸모가 있으니 글자 레이어가 맞는 자리다.
+  if (!_isEmojiOnly(raw)){
+    addThumbLayer();                                  // 글자 레이어 하나 새로 만들고
+    const L = THUMB_STATE.layers[THUMB_STATE.sel];
+    if (L){ L.text = raw; thumbReleaseFitHold(L); }   // 문구를 넣는다(크기는 새로 맞춘다)
+    el.value = '';
+    renderThumbLayers(); renderThumbCanvas();
+    if (hint) hint.textContent = '“' + raw + '” 를 글자로 얹었어요 — 크기·색은 아래에서 바꾸세요';
+    return;
+  }
+  const one = firstGrapheme(raw);
   addThumbSticker(one);
   el.value = '';
-  if (hint) hint.textContent = one + ' 얹었어요 — 미리보기에서 드래그해 옮기세요';
+  // ★따옴표로 감싼다 — 첫 글자가 '안'이면 "안 얹었어요"가 **부정문으로 읽힌다**(실측).
+  if (hint) hint.textContent = '“' + one + '” 얹었어요 — 미리보기에서 드래그해 옮기세요';
 }
 
 function selectThumbLayer(i){ THUMB_STATE.sel = i; renderThumbLayers(); renderThumbHandles(); }
