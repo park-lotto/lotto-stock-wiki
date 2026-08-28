@@ -240,6 +240,56 @@ def test_download_threads_downloads_video_url(monkeypatch, tmp_path):
     assert caption == "캡션임"
 
 
+# ── 핀터레스트(2026-08-29, 렌즈 핀터레스트 노출과 짝) ───────────────────────
+# 종전엔 핀 페이지 URL 분기가 없어 렌즈·핀터레스트 탭에서 담은 핀이 제작 다운로드에서
+# '지원하지 않는 URL'로 100% 실패했다(쓰레드가 밟았던 것과 같은 구멍).
+
+def test_route_pinterest_pin_page(monkeypatch, tmp_path):
+    import shopping_shorts.frame_extract as frame_extract
+    import shopping_shorts.pinterest_crawl as pc
+    monkeypatch.setattr(pc, "pin_video_info",
+                        lambda url, timeout=8: {"video_url": "https://v1.pinimg.com/videos/mc/720p/a.mp4",
+                                                "duration": 15.0, "thumbnail": "",
+                                                "title": "핀 제목", "description": "설명"})
+    calls = {}
+
+    def fake_dl(video_url, dest):
+        calls["video_url"] = video_url
+        return tmp_path / "pin.mp4"
+    monkeypatch.setattr(frame_extract, "download_video", fake_dl)
+    monkeypatch.setattr(md, "_download_ytdlp",
+                        lambda url, d: (_ for _ in ()).throw(AssertionError("yt-dlp를 타면 안 된다(핀터레스트)")))
+
+    path, caption = md.download_any(
+        "https://kr.pinterest.com/pin/18295942229438860/", str(tmp_path))
+    assert calls["video_url"].endswith("a.mp4")     # JSON-LD의 mp4 직링크로 받는다
+    assert path.endswith("pin.mp4")
+    assert caption == "핀 제목"                      # 제목이 대본추출 힌트로 넘어간다
+
+
+def test_route_pinterest_image_pin_raises_clear_error(monkeypatch, tmp_path):
+    import shopping_shorts.pinterest_crawl as pc
+    monkeypatch.setattr(pc, "pin_video_info", lambda url, timeout=8: None)
+    try:
+        md.download_any("https://www.pinterest.com/pin/123456/", str(tmp_path))
+        assert False, "에러가 나야 한다"
+    except RuntimeError as e:
+        assert "이미지 핀" in str(e)
+
+
+def test_pinimg_direct_mp4_skips_page_fetch(monkeypatch, tmp_path):
+    """핀터레스트 탭이 저장한 video_url(v1.pinimg …mp4)이 그대로 오면 페이지 재조회 없이
+    직접 다운로드(.mp4 → _is_direct_video 경로)여야 한다."""
+    import shopping_shorts.frame_extract as frame_extract
+    import shopping_shorts.pinterest_crawl as pc
+    monkeypatch.setattr(pc, "pin_video_info",
+                        lambda *a, **k: (_ for _ in ()).throw(AssertionError("핀 페이지를 다시 볼 이유가 없다")))
+    monkeypatch.setattr(frame_extract, "download_video", lambda video_url, dest: tmp_path / "direct.mp4")
+    path, caption = md.download_any(
+        "https://v1.pinimg.com/videos/mc/720p/f2/72/46/aaa.mp4", str(tmp_path))
+    assert path.endswith("direct.mp4")
+
+
 def test_probe_grab_meta_threads_forwards_timeout(monkeypatch):
     """probe_grab_meta(url, timeout=40) 호출 시 쓰레드 분기가 그 timeout을
     _probe_threads_meta에 실제로 넘겨야 한다(넘기지 않으면 기본 30초로 새 나감)."""

@@ -19,6 +19,7 @@
 ★워터마크 자동 필터는 **넣지 않는다**(사장님 결정: "다 담고 눈으로 고른다").
   화면을 봐야 아는 판정을 코드가 대신하면 "왜 안 담기지"가 되고 근거도 남지 않는다.
 """
+import re
 import urllib.parse
 
 #: 기본 검색어 — 사장님 확정 "영어 먼저"(핀터레스트는 영어권이 압도적).
@@ -166,3 +167,61 @@ def search_videos(keyword, max_results=40, scrolls=5, timeout_ms=45000, _crawler
             if len(out) >= max_results:
                 return out
     return out
+
+
+# ── 핀 1개 실조회: 영상인가? (렌즈·다운로드 공용, 2026-08-29) ──────────────
+# 렌즈(구글렌즈)가 물어오는 핀터레스트 링크에는 영상 여부가 없다. 위 검색 크롤과 달리
+# **핀 상세 페이지는 로그인·브라우저 없이 requests로 열리고**, SEO용 JSON-LD에
+# 영상 핀이면 VideoObject(mp4 직링크·길이·썸네일·제목)가 박혀 있다.
+# 실측(2026-08-29, 익명 requests): 영상 핀 2/2 VideoObject 있음(contentUrl=
+# v1.pinimg.com mp4, duration=PT15S) / 이미지 핀 4/4 없음 / mp4·썸네일 모두
+# Referer 없이 200(핫링크 차단 없음). 비공식 API(PinResource/get)는 익명 403이라 못 쓴다.
+_PIN_PAGE_UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                "(KHTML, like Gecko) Chrome/120.0 Safari/537.36")
+_LD_JSON_RE = re.compile(
+    r'<script[^>]*type="application/ld\+json"[^>]*>(.*?)</script>', re.S)
+# PT15S / PT1M2S / PT1H2M3S → 초. schema.org duration(ISO8601)용.
+_ISO_DUR_RE = re.compile(r"^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?$")
+
+
+def iso_duration_secs(raw):
+    """"PT15S" → 15.0. 못 읽으면 None(0으로 뭉개지 않는다 — 길이 모름과 0초는 다르다)."""
+    m = _ISO_DUR_RE.match(str(raw or "").strip())
+    if not m or not any(m.groups()):
+        return None
+    h, mi, s = m.groups()
+    return int(h or 0) * 3600 + int(mi or 0) * 60 + float(s or 0)
+
+
+def pin_video_info(url, timeout=8):
+    """핀 상세 페이지 URL → 영상 정보 dict / 영상 아님 None. 네트워크 실패는 예외.
+
+    반환 dict: {video_url, duration(초|None), thumbnail, title, description}
+    ★세 가지 결과를 구분해서 준다 — 호출부의 처분이 다르기 때문이다:
+      dict = 영상 확정(렌즈: 남긴다·보강 / 다운로드: mp4 직접 받기)
+      None = 영상 아님 확정(렌즈: 잘라낸다 — 렌즈는 숏폼 소재를 찾는 자리)
+      예외 = 판정불가(렌즈: 자르면 안 된다 — 검증 불가가 회수율을 깎으면 안 됨)"""
+    import json
+    import requests
+    r = requests.get(url, headers={"User-Agent": _PIN_PAGE_UA}, timeout=timeout)
+    if r.status_code != 200:
+        raise RuntimeError(f"핀 페이지 HTTP {r.status_code}: {url}")
+    for m in _LD_JSON_RE.finditer(r.text):
+        try:
+            block = json.loads(m.group(1))
+        except ValueError:
+            continue
+        for it in (block if isinstance(block, list) else [block]):
+            if not (isinstance(it, dict) and it.get("@type") == "VideoObject"):
+                continue
+            vurl = str(it.get("contentUrl") or "")
+            if not vurl:
+                continue
+            return {
+                "video_url": vurl,
+                "duration": iso_duration_secs(it.get("duration")),
+                "thumbnail": str(it.get("thumbnailUrl") or ""),
+                "title": str(it.get("name") or "").strip(),
+                "description": str(it.get("description") or "").strip()[:300],
+            }
+    return None
