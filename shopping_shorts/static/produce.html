@@ -6118,7 +6118,9 @@ function coupangInner(){
   return head+coupangForm();
 }
 // 📦 인포크에 붙여넣을 세 줄(2026-08-18) — 저장이 끝나면 이미 완성돼 있다.
-// 번호는 서버가 "마지막 번호 다음"으로 자동 부여하고, 한 번 받으면 고정이다.
+// ★번호는 **사람이 넣는다**(2026-08-28). 전엔 서버가 "마지막 번호 다음"으로 자동
+// 부여했는데 그 카운터가 전역이라 전 고객이 나눠 썼다 — 내 두 번째 영상이 29번을
+// 받았다. 이제 아래 '번호 저장'으로 직접 넣고, 비워두면 번호 없이 나간다.
 // 이름은 지어내지 않는다 — 쿠팡 검색 카드를 고를 때 들어온 **실제 상품명**을 쓴다.
 function coupangDmSet(){
   const d=COUPANG.dm_set; if(!d) return '';
@@ -6136,14 +6138,50 @@ function coupangDmSet(){
       <button class="btn-prev" style="padding:5px 9px;font-size:11px"
               onclick="dmCopy(this,'${esc(val).replace(/'/g,"\\'")}')">복사</button>
     </div>`;
+  // ★번호는 **사람이 넣는다**(2026-08-28 사장님 지시). 전엔 자동으로 매겼는데 그
+  //   카운터가 전역이라 전 고객이 나눠 썼다 — 내 두 번째 영상이 29번을 받았다.
+  const numTxt = (d.number || '').trim();
   return `<div style="margin-top:12px;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--inset)">
-    <div style="font-weight:600;font-size:13px">📦 인포크에 넣을 문구 <span class="hint">— ${esc(d.number)}번</span></div>
+    <div style="font-weight:600;font-size:13px">📦 인포크에 넣을 문구
+      ${numTxt ? `<span class="hint">— ${esc(numTxt)}번</span>` : '<span class="hint">— 번호 없음</span>'}</div>
+    <div style="display:flex;gap:6px;align-items:center;margin-top:7px">
+      <span class="hint" style="min-width:74px">번호</span>
+      <input id="inpockNum" value="${esc(numTxt)}" placeholder="예) 29 — 비워두면 번호 없이 나갑니다"
+             inputmode="numeric" onkeydown="if(event.key==='Enter')saveInpockNumber()"
+             style="flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);
+                    border-radius:6px;padding:6px 8px;color:var(--txt);font-size:12px">
+      <button class="btn-next" style="padding:5px 11px;font-size:11px"
+              onclick="saveInpockNumber()">번호 저장</button>
+    </div>
     ${row('등록 이름', d.listing_name)}
     ${row('DM 타이틀', d.dm_title)}
     ${row('버튼 이름', d.dm_button)}
     ${row('설명(고지)', d.dm_desc)}
-    <div class="hint" style="margin-top:8px">번호는 자동으로 매겨집니다(마지막 번호 다음). 인포크에 이 이름으로 올리면 시청자가 <b>${esc(d.number)}</b>을 검색해 찾습니다.</div>
+    <div class="hint" style="margin-top:8px">${numTxt
+      ? `인포크에 이 이름으로 올리면 시청자가 <b>${esc(numTxt)}</b>을 검색해 찾습니다.`
+      : '번호를 넣고 <b>번호 저장</b>을 누르면 위 문구에 번호가 붙습니다. 비워두면 번호 없이 나갑니다.'}</div>
   </div>`;
+}
+// 번호만 고쳐 저장한다. ★기존 상품 저장(/api/mix/product)과 **같은 출구**를 쓴다 —
+//   번호 전용 API를 새로 파면 저장 규칙이 두 벌이 된다(0순위-B).
+async function saveInpockNumber(){
+  const el = document.getElementById('inpockNum');
+  if(!el || !MIX_JOB) return;
+  const v = (el.value || '').trim();
+  if(v && !/^\d+$/.test(v)){ toast('번호는 숫자만 넣어주세요'); return; }
+  const p = COUPANG.product || {};
+  try{
+    const r = await fetch('/api/mix/product', {method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({job_id: MIX_JOB, url: p.url || '', name: p.name || '',
+                            partner_url: p.partner_url || '', keyword: COUPANG.target,
+                            inpock_number: v})});
+    const d = await r.json().catch(()=>({ok:false}));
+    if(!r.ok || !d.ok){ toast(d.error || '번호 저장 실패'); return; }
+    COUPANG.product = d.product; COUPANG.dm_set = d.dm_set || null;
+    redrawCoupang();
+    toast(v ? v + '번으로 저장했어요' : '번호를 비웠어요');
+  }catch(e){ toast('네트워크 오류'); }
 }
 async function dmCopy(btn, text){
   // ★writeText는 Promise다 — 동기 try/catch로는 거부를 못 잡아 unhandled rejection이
