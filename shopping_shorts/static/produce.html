@@ -3442,7 +3442,7 @@ function mkRender(){
     syncMaskBoxes(); return;
   }
   if(MK_SEL<0||MK_SEL>=a.length) MK_SEL=a.length-1;
-  pills.innerHTML=a.map(function(m,i){
+  pills.innerHTML=a.map(function(_m,i){
     const on=(i===MK_SEL);
     return '<button type="button" onclick="mkSelect('+i+')" '
       +'style="padding:5px 14px;border-radius:999px;font-size:12px;cursor:pointer;'
