@@ -286,6 +286,16 @@ body.tight .tbsegs{display:none}          /* 촘촘히에선 글자를 걷는다
 /* 위아래 14 → 8px(2026-08-22 "최대한 위쪽으로"). 좌우는 14px 유지 — 카드가 상자
    테두리에 붙으면 "모서리 한 줄"이 깨진다(사장님 정렬 기준). */
 .pane{overflow-y:auto;height:100%;padding:8px 14px}
+/* ★부모(제작소)가 iframe 높이를 내용에 맞춰 늘려줄 때는 **안쪽 스크롤을 끈다**
+   (2026-08-28 사장님 "3단계에서 아랫부분 스크롤말고 아래로 다 보이게").
+   2026-08-16의 '여기 안에서만 스크롤'은 iframe이 화면 높이에 갇혀 있던 시절의 짝이다 —
+   이제 iframe이 내용만큼 늘어나므로 안쪽에서 또 자르면 이중 스크롤이 된다.
+   ★sticky(담을칸 머리줄·dropmsg)는 스크롤 컨테이너가 바뀌면 깨진다. 그래서
+   컨테이너를 없애지 않고 높이 제한만 푼다 — sticky는 부모 페이지 기준으로 붙는다. */
+body.grow .wrap{align-items:flex-start}
+body.grow .pane{overflow:visible;height:auto}
+body.grow #playerhost{overflow:visible;position:sticky;top:8px;align-self:flex-start;
+  max-height:calc(100vh - 24px)}
 .pane.left{background:var(--panel);border:1px solid var(--line);border-radius:10px}
 .srcgroup{margin-bottom:18px}
 /* ★담을 칸 고정줄(2026-08-17 사장님 "영상2번 3번도 써야하는데 스크롤 내리면 다시 올라와야 돼서
