@@ -5112,6 +5112,33 @@ def api_mix_scene_lab_narration(job_id: str, beat_idx: int, body: dict,
             "tts_ver": beat.get("tts_ver") or 0}
 
 
+@app.post("/api/mix/scene_lab/{job_id}/swap_log")
+def api_mix_scene_lab_swap_log(job_id: str, body: dict):
+    """칸 타임라인 ⑧ 교체 로그 — "AI 픽 → 사람이 바꾼 장면" 쌍을 기록만 한다.
+
+    픽 로직·프롬프트에는 절대 주입하지 않는다(2026-08-29 사장님 확정 — 잘 되는 매칭을
+    건드리면 회귀 위험). 어디서 반복적으로 손이 가는지 숫자가 쌓인 뒤에만 다음을 정한다.
+    """
+    store = Store(DB_PATH)
+    if not store.get_mix_job(job_id):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    row = {
+        "ts": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "beat": body.get("beat"), "old_seg": str(body.get("old_seg") or ""),
+        "new_video": str(body.get("new_video") or ""),
+        "new_start": body.get("new_start"), "new_end": body.get("new_end"),
+        "cap_text": str(body.get("cap_text") or "")[:200], "cap_sec": body.get("cap_sec"),
+    }
+    try:
+        d = Path(_MIX_WORK_DIR) / job_id
+        d.mkdir(parents=True, exist_ok=True)
+        with open(d / "swap_log.jsonl", "a", encoding="utf-8") as f:
+            f.write(json.dumps(row, ensure_ascii=False) + "\n")
+    except OSError as e:
+        return JSONResponse(status_code=500, content={"ok": False, "error": str(e)})
+    return {"ok": True}
+
+
 @app.post("/api/mix/caption_offset/{job_id}/{beat_idx}")
 def api_mix_caption_offset(job_id: str, beat_idx: int, body: dict):
     """비트 자막의 수동 시각 보정값(초)을 저장. 최종 _burn_captions가 읽어 반영."""
@@ -13658,15 +13685,24 @@ def api_produce_mix_caplines(job_id: str, body: dict):
     if tts and Path(tts).exists():               # 음성은 그대로 → 타임스탬프만 다시 읽어 재계산
         try:
             dur = mix_pipeline._probe_duration(tts)
-            words = mix_pipeline._beat_words(
+            # 산출 단계(⑦a)도 같이 기록 — 정밀/받아쓰기/추정이 화면 배지의 근거다.
+            words, _wsrc = mix_pipeline._beat_words_src(
                 tts, dur, removed=tts_timestamps.load_removed(tts))
             timing = caption_sync.phrase_durs_from_words(narr, words, dur or 0.0, preset=lines)
             if timing:
                 hit["cap_durs"], hit["cap_lead"] = timing.durs, timing.lead_in
+            hit["cap_src"] = _wsrc if (words and timing) else "estimate"
         except Exception as e:  # noqa: BLE001 — 재계산 실패해도 줄 나누기는 살린다(글자수 폴백)
             print(f"[caplines] 타이밍 재계산 실패(폴백 사용): {e!r}", file=sys.stderr)
     store.update_mix_job(job_id, edit_plan=plan)
-    return {"ok": True, "lines": lines, "timed": hit.get("cap_durs") is not None}
+    # ★칸 타임라인(2026-08-29)이 이 응답으로 화면을 바로 갱신한다 — 새 시간표는
+    #   GET과 같은 함수(_lab_captions)로 만든다. 여기서 따로 계산하면 두 벌이 된다(0순위-B).
+    _caps, _td = _lab_captions(plan)
+    _bi = str(hit.get("beat_idx"))
+    return {"ok": True, "lines": lines, "timed": hit.get("cap_durs") is not None,
+            "cap_src": hit.get("cap_src"),
+            "captions": _caps.get(_bi) or [], "tts_dur": _td.get(_bi),
+            "cap_durs": hit.get("cap_durs"), "cap_lead": hit.get("cap_lead", 0.0)}
 
 
 @app.post("/api/produce/mix/{job_id}/shorten")
