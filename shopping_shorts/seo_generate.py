@@ -18,7 +18,10 @@ from shopping_shorts import keyroute
 _MODEL = comment_gen._MODEL
 _GEN_GROUP = "general"
 
-_PLATFORMS = ("youtube", "tiktok", "threads")
+# ★인스타를 포함한다(2026-08-28 사장님 "인스타 유튜브 틱톡 쓰레드 나눠서").
+#   종전엔 인스타 해시태그가 insta_caption 덩어리 안에만 있어 따로 복사할 수 없었다.
+#   순서 = 화면에 보이는 순서(produce.html SEO_PLATS와 같게 둔다).
+_PLATFORMS = ("instagram", "youtube", "tiktok", "threads")
 
 _SCHEMA = {
     "type": "object",
@@ -74,8 +77,10 @@ _BASE_PROMPT = """너는 한국 쇼츠 채널의 SEO 담당이다. 아래 확정
 - title_candidates[].keywords: 그 제목이 노리는 검색 키워드 1~3개. 실제로 사람이 검색창에 칠 법한 말로.
 - 설명: 200~300자. 첫 줄에 핵심, 이후 줄바꿈으로 나눈다. **반드시 존댓말**(아래 '말투' 참고).
 - 태그: 정확히 20개. 유튜브 태그 전체가 500자를 넘지 않게.
-- 해시태그: 플랫폼마다 다르게. youtube 3~5개 / tiktok 3~5개 / threads 1~2개(쓰레드는 해시태그를 거의 안 쓴다).
-- CTA: 플랫폼마다 어투가 다르다. youtube=설명란 링크 유도 / tiktok=댓글 유도형 / threads=되묻는 대화체.
+- 해시태그: 플랫폼마다 다르게. instagram 5~8개(가장 많이 쓴다) / youtube 3~5개 / tiktok 3~5개 /
+  threads 1~2개(쓰레드는 해시태그를 거의 안 쓴다).
+- CTA: 플랫폼마다 어투가 다르다. instagram=프로필 링크 유도 / youtube=설명란 링크 유도 /
+  tiktok=댓글 유도형 / threads=되묻는 대화체.
 - insta_caption: **인스타 릴스 캡션 전문** — 폰에서 그대로 붙여넣는 완성된 한 덩어리 텍스트다.
   잘 되는 공구 계정들의 캡션 공식을 그대로 따른다(순서 고정):
   ① 경험담 본문: 대본의 이야기를 1인칭으로 이어 쓴다. 한 문장마다 줄바꿈, 2~3문장마다 빈 줄.
