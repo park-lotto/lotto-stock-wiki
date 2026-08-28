@@ -24,7 +24,28 @@ import urllib.parse
 
 #: 기본 검색어 — 사장님 확정 "영어 먼저"(핀터레스트는 영어권이 압도적).
 #: 장비템·신박템 컨셉. 여기 없는 말은 화면에서 직접 넣는다.
+# 기본 검색어 — **실측 적중률 순**으로 담는다(2026-08-29).
+# ★쇼핑몰 겨냥이 확실히 통한다. 검색어에 `temu`가 있으면 핀 설명에도 있고,
+#   그러면 실제로 테무 링크가 붙어 있다:
+#       temu gadgets must have        4/4  = 100%
+#       temu tools gadget             1/1  = 100%
+#       temu home gadgets             5/9  =  56%
+#       kitchen gadgets amazon finds  3/6  =  50%
+#       temu haul kitchen             3/7  =  43%
+#   (기존 공구·차량 계열 전체는 18%)
+# ⚠️12개를 넘기지 마라 — 엔드포인트가 kws[:12]로 자른다(뒤쪽이 조용히 사라진다).
+# ⚠️같은 검색어를 또 돌리면 새 핀이 거의 안 나온다(검색어당 10~27개가 한계).
+#   많이 모으려면 화면 입력칸에 **다른 검색어**를 넣어 돌려라.
 DEFAULT_KEYWORDS = [
+    # 쇼핑몰 겨냥(적중률 높은 순)
+    "temu gadgets must have",
+    "temu home gadgets",
+    "temu tools gadget",
+    "temu haul kitchen",
+    "kitchen gadgets amazon finds",
+    "amazon finds under 20 dollars",
+    "aliexpress gadgets cool",
+    # 원래 쓰던 공구·신박템 계열(쇼핑몰 링크는 적지만 영상이 깨끗하다)
     "welding tool hack",
     "diy tool invention",
     "amazing tools gadget",

@@ -446,3 +446,31 @@ def test_필터_버튼은_기존_토글_스타일을_쓴다():
     src = _index_html()
     i = src.index('onclick="pinFilter')
     assert "ftog" in src[max(0, i - 200):i], "새 버튼 스타일을 만들었다 — .ftog를 재사용하라"
+
+
+def test_기본_키워드에_쇼핑몰_겨냥이_있다():
+    """★실측(2026-08-29): 검색어에 `temu`를 넣으면 적중률이 완전히 달라진다.
+
+        temu gadgets must have         4/4  = 100%
+        temu home gadgets              5/9  =  56%
+        kitchen gadgets amazon finds   3/6  =  50%
+        temu haul kitchen              3/7  =  43%
+        (기존 차량템 계열 전체는 18%)
+
+    원리: 핀 제목·설명에 `temu`가 있으면 실제로 테무 링크가 붙어 있다.
+    사장님이 검색어를 매번 손으로 넣지 않아도 되게 기본값에 담는다.
+    """
+    from shopping_shorts import pinterest_crawl
+    kws = pinterest_crawl.DEFAULT_KEYWORDS
+    assert any("temu" in k for k in kws), "테무 겨냥 검색어가 기본에 없다"
+    assert any("amazon" in k for k in kws), "아마존 겨냥 검색어가 기본에 없다"
+    for k in kws:
+        assert k.isascii(), f"영어가 아닌 키워드: {k}"
+
+
+def test_기본_키워드가_한_배치에_들어간다():
+    """★엔드포인트가 12개까지만 받는다(kws[:12]). 기본값이 그보다 많으면
+    뒤쪽이 **조용히 잘린다** — 넣어놓고 안 돌아가는 상태가 된다."""
+    from shopping_shorts import pinterest_crawl
+    assert len(pinterest_crawl.DEFAULT_KEYWORDS) <= 12, \
+        "기본 키워드가 12개를 넘으면 뒤쪽이 조용히 잘린다"
