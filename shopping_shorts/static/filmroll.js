@@ -290,6 +290,9 @@
         `<div class="bx${ACTBOX === i ? ' act' : ''}" data-i="${i}" ` +
         `style="left:${secToX(b.s)}px;width:${Math.max(8, (b.e - b.s) * pps())}px">` +
         `<span class="t">${(b.e - b.s).toFixed(2)}초</span>` +
+        // ★키 안내(2026-08-28 사장님 "시작Q 종료W 담기E 이렇게 써줘").
+        //   기능은 이미 있었지만 화면에 없으니 아무도 몰랐다 — 없는 기능과 같다.
+        `<span class="k">시작 <b>Q</b> · 종료 <b>W</b> · 담기 <b>E</b></span>` +
         `<span class="e l" data-edge="l"></span><span class="e r" data-edge="r"></span>` +
         `<span class="x" data-del="${i}">×</span>` +
         // ★2026-08-26 사장님 "주황색 박스 만들면 위쪽 훅 있는 윗칸으로 더블클릭이나
@@ -885,10 +888,18 @@
       }
       // ★Q/W = 주황 박스 만들기(2026-08-28 사장님). Space(재생)와 같은 자리에서 처리해
       //   '지금 만지는 필름만 받는다'(ACTIVE)와 입력칸 회피가 그대로 적용된다.
-      if (!_typing && (e.code === 'KeyQ' || e.code === 'KeyW')) {
+      if (!_typing && (e.code === 'KeyQ' || e.code === 'KeyW' || e.code === 'KeyE')) {
         if (e.ctrlKey || e.metaKey || e.altKey) return;   // Ctrl+W(창 닫기) 등은 건드리지 않는다
         e.preventDefault();
-        if (e.code === 'KeyQ') markStart(); else markEnd();
+        if (e.code === 'KeyQ') { markStart(); return; }
+        if (e.code === 'KeyW') { markEnd();   return; }
+        // ★E = 담기(2026-08-28 사장님). 손을 마우스로 옮기지 않고 Q→W→E로 끝낸다.
+        //   담는 함수는 ⬆ 손잡이·두 번 누르기와 같은 onBoxCommit 하나다(0순위-B).
+        //   고른 박스가 있으면 그것, 없으면 마지막에 만든 것(Esc가 지우는 것과 같은 기준).
+        if (!BOXES.length) return;
+        const bi = (ACTBOX != null && BOXES[ACTBOX]) ? ACTBOX : BOXES.length - 1;
+        const b = BOXES[bi];
+        if (b && typeof opt.onBoxCommit === 'function') opt.onBoxCommit({ s: b.s, e: b.e });
         return;
       }
       if (e.code !== 'Space') return;
