@@ -5832,10 +5832,48 @@ def api_mix_capcut(job_id: str, base: str = ""):
     #   아직 렌더 전이면 None → 그 항목만 빠진다(내보내기는 그대로 된다).
     _final = job.get("video_path") if (job.get("video_path")
                                        and Path(job["video_path"]).exists()) else None
+    # ★제작소에서 고른 자막 스타일을 함께 보낸다(2026-08-28 고객 제보 "캡컷으로 보내니
+    #   템플릿은 안 따라온다"). 종전엔 capcut_draft가 caption_style_json을 **한 번도**
+    #   참조하지 않아 캡컷엔 늘 흰색 기본 자막만 갔다(grep 0건으로 확인).
+    #   ⚠️저장 형식이 흔들려도 내보내기 자체는 되게 한다 — 스타일은 부가물이다.
+    _cap_style = job.get("caption_style")
+    if isinstance(_cap_style, str):
+        try:
+            import json as _json
+            _cap_style = _json.loads(_cap_style)
+        except (ValueError, TypeError):
+            _cap_style = None
+    if not isinstance(_cap_style, dict):
+        _cap_style = None
+    # 꾸미기(워터마크·템플릿)도 같은 규칙으로 꺼낸다 — 형식이 흔들려도 내보내기는 된다.
+    _deco = job.get("deco")
+    if isinstance(_deco, str):
+        try:
+            import json as _json2
+            _deco = _json2.loads(_deco)
+        except (ValueError, TypeError):
+            _deco = None
+    if not isinstance(_deco, dict):
+        _deco = None
+    # ★꾸미기 틀(템플릿)을 **그림 파일로** 만들어 둔다(2026-08-28 고객 제보 3단계).
+    #   PNG를 굽는 곳은 mix_pipeline._template_layer 한 곳이다 — 미리보기·렌더·캡컷이
+    #   같은 그림을 쓴다(0순위-B). 여기서 따로 그리면 화면과 캡컷이 갈린다.
+    #   실패해도 내보내기는 그대로 된다(틀만 빠진다).
+    if _deco and _deco.get("template"):
+        try:
+            _first = float((timeline[0].get("dur") if timeline else 0) or 0)
+            _lay = mix_pipeline._template_layer(_deco["template"], first_beat_dur=_first)
+            if _lay and _lay.get("_abspath"):
+                _deco = {**_deco, "template": {**_deco["template"],
+                                               "_abspath": _lay["_abspath"],
+                                               "alpha": _lay.get("alpha", 1)}}
+        except Exception:      # noqa: BLE001 — 틀 하나 때문에 내보내기가 막히면 안 된다
+            import traceback as _tb2
+            _tb2.print_exc(file=sys.stderr)
     proj, project, files = capcut_draft.assemble_draft_folder(
         out_root, base, plan=plan, timeline=timeline, source_video_paths=source_video_paths,
         tts_paths=tts_paths, project_name=_capcut_project_name(job_id, job, plan),
-        final_video=_final)
+        final_video=_final, caption_style=_cap_style, deco=_deco)
     texts, assets = {}, []
     for name in files:
         if name.endswith(".json"):

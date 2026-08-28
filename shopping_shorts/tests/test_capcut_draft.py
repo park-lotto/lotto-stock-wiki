@@ -202,3 +202,197 @@ def test_세그먼트_렌더인덱스가_캡션기준이다():
     seg = [tr for tr in draft["tracks"] if tr["type"] == "text"][0]["segments"][0]
     assert seg["render_index"] == 0, "텍스트 관례(14000)가 남아 있다"
     assert seg["track_render_index"] == 2
+
+
+# ── 자막 스타일이 캡컷으로 따라간다(2026-08-28 고객 제보) ────────────────────
+# 제보: "캡컷으로 보내니 템플릿은 안 따라온다"
+# 실측 원인: capcut_draft가 caption_style_json을 **한 번도 참조하지 않았다**(grep 0건).
+#   색·크기·외곽선·그림자가 전부 고정값이라 캡컷엔 늘 흰색 기본 자막만 갔다.
+_STYLE = {"font": "GmarketSansBold.otf", "color": "#ffcc00", "size": 70,
+          "outline": True, "outline_color": "#000000", "outline_w": 9,
+          "shadow": True, "shadow_color": "#111111", "shadow_d": 4,
+          "y_pct": 32, "x_pct": 50}
+
+
+def _texts(draft):
+    return draft["materials"]["texts"]
+
+
+def test_caption_style_reaches_draft():
+    """★뿌리: 고른 색·크기·외곽선·그림자가 draft에 실제로 실린다."""
+    draft, _ = cd.build_draft(plan=_PLAN, timeline=_TIMELINE, source_video_paths=_SRC,
+                              tts_paths=_TTS, asset_paths=_ASSET, project_name="t",
+                              caption_style=_STYLE)
+    t = _texts(draft)[0]
+    assert t["text_color"] == "#ffcc00", f"글자색이 안 갔다: {t['text_color']}"
+    assert t["font_size"] > 16.0, f"크기(70)가 기본(16) 그대로다: {t['font_size']}"
+    assert t["border_color"] == "#000000" and t["border_width"] > 0, "외곽선이 안 갔다"
+    assert t["has_shadow"] is True and t["shadow_color"] == "#111111", "그림자가 안 갔다"
+    # content(0~1 RGB)에도 같은 색이 들어가야 한다 — 캡컷은 둘 다 본다
+    rgb = json.loads(t["content"])["styles"][0]["fill"]["content"]["solid"]["color"]
+    assert rgb[0] == 1.0 and abs(rgb[1] - 0.8) < 0.01 and rgb[2] == 0.0, rgb
+
+
+def test_no_style_keeps_old_output():
+    """★회귀 0: 스타일을 안 주면 종전과 똑같은 기본 자막이다."""
+    draft, _ = cd.build_draft(plan=_PLAN, timeline=_TIMELINE, source_video_paths=_SRC,
+                              tts_paths=_TTS, asset_paths=_ASSET, project_name="t")
+    t = _texts(draft)[0]
+    assert t["text_color"] == "#ffffff" and t["font_size"] == 16.0
+    assert t["border_color"] == "" and t["has_shadow"] is False
+
+
+def test_caption_stays_subtitle_type():
+    """★스타일을 넣어도 **캡션(subtitle)**이어야 한다 — 텍스트로 바뀌면 2026-08-26 제보가 재발한다."""
+    draft, _ = cd.build_draft(plan=_PLAN, timeline=_TIMELINE, source_video_paths=_SRC,
+                              tts_paths=_TTS, asset_paths=_ASSET, project_name="t",
+                              caption_style=_STYLE)
+    t = _texts(draft)[0]
+    assert t["type"] == "subtitle" and t["check_flag"] == 31, "캡션이 아니라 텍스트가 됐다"
+
+
+def test_junk_style_does_not_break_export():
+    """★이상한 값이 와도 내보내기는 된다 — 스타일은 부가물이지 관문이 아니다."""
+    for bad in (None, {}, {"color": "zzz", "size": "많이", "outline_w": None},
+                {"color": None, "shadow": True, "shadow_d": "x"}):
+        draft, _ = cd.build_draft(plan=_PLAN, timeline=_TIMELINE, source_video_paths=_SRC,
+                                  tts_paths=_TTS, asset_paths=_ASSET, project_name="t",
+                                  caption_style=bad)
+        t = _texts(draft)[0]
+        assert t["text_color"].startswith("#") and t["font_size"] > 0, bad
+
+
+def test_size_is_clamped():
+    """터무니없는 크기는 잘라낸다 — 캡컷에서 글자가 화면을 덮으면 못 쓴다."""
+    big, _ = cd.build_draft(plan=_PLAN, timeline=_TIMELINE, source_video_paths=_SRC,
+                            tts_paths=_TTS, asset_paths=_ASSET, project_name="t",
+                            caption_style={"size": 99999})
+    tiny, _ = cd.build_draft(plan=_PLAN, timeline=_TIMELINE, source_video_paths=_SRC,
+                             tts_paths=_TTS, asset_paths=_ASSET, project_name="t",
+                             caption_style={"size": 1})
+    assert _texts(big)[0]["font_size"] <= 16.0 * 3
+    assert _texts(tiny)[0]["font_size"] >= 16.0 * 0.3
+
+
+# ── 워터마크(채널 닉네임)도 따라간다 — 고객 제보 2단계 ─────────────────────
+_WM = {"watermark": {"text": "캡틴살림꾼", "color": "#ffffff", "size": 30,
+                     "alpha": 0.6, "outline": True, "outline_color": "#000000",
+                     "outline_w": 3}}
+
+
+def _wm_mats(draft):
+    return [m for m in draft["materials"]["texts"] if m["type"] == "text"]
+
+
+def test_watermark_reaches_draft():
+    """★워터마크가 캡컷에 실린다(종전엔 아예 안 갔다)."""
+    draft, _ = cd.build_draft(plan=_PLAN, timeline=_TIMELINE, source_video_paths=_SRC,
+                              tts_paths=_TTS, asset_paths=_ASSET, project_name="t", deco=_WM)
+    wm = _wm_mats(draft)
+    assert len(wm) == 1, f"워터마크가 없거나 여러 개다: {len(wm)}"
+    assert "캡틴살림꾼" in wm[0]["content"]
+    assert abs(wm[0]["text_alpha"] - 0.6) < 0.01, "투명도가 안 갔다"
+
+
+def test_watermark_is_text_not_caption():
+    """★워터마크는 **텍스트**다 — 캡션으로 넣으면 자막 패널에서 대사와 섞인다."""
+    draft, _ = cd.build_draft(plan=_PLAN, timeline=_TIMELINE, source_video_paths=_SRC,
+                              tts_paths=_TTS, asset_paths=_ASSET, project_name="t", deco=_WM)
+    wm = _wm_mats(draft)[0]
+    assert wm["type"] == "text" and wm["check_flag"] == 7 and wm["line_max_width"] == 0.82
+    # 대사 자막은 그대로 캡션이어야 한다
+    caps = [m for m in draft["materials"]["texts"] if m["type"] == "subtitle"]
+    assert caps and caps[0]["check_flag"] == 31
+
+
+def test_watermark_gets_its_own_track():
+    """★자막과 **다른 트랙**이어야 한다 — 같은 트랙이면 시간이 겹쳐 하나가 밀려난다."""
+    draft, _ = cd.build_draft(plan=_PLAN, timeline=_TIMELINE, source_video_paths=_SRC,
+                              tts_paths=_TTS, asset_paths=_ASSET, project_name="t", deco=_WM)
+    text_tracks = [t for t in draft["tracks"] if t["type"] == "text"]
+    assert len(text_tracks) == 2, f"텍스트 트랙이 {len(text_tracks)}개다(자막+워터마크=2)"
+    # 워터마크는 영상 전체 길이를 덮는다
+    total = draft["duration"]
+    wm_track = [t for t in text_tracks if len(t["segments"]) == 1
+                and t["segments"][0]["target_timerange"]["duration"] == total]
+    assert wm_track, "워터마크가 영상 전체에 안 깔린다"
+
+
+def test_no_watermark_keeps_old_tracks():
+    """★회귀 0: 워터마크가 없으면 트랙 구성이 종전 그대로다."""
+    draft, _ = cd.build_draft(plan=_PLAN, timeline=_TIMELINE, source_video_paths=_SRC,
+                              tts_paths=_TTS, asset_paths=_ASSET, project_name="t")
+    assert [t["type"] for t in draft["tracks"]] == ["video", "audio", "text"]
+    for bad in (None, {}, {"watermark": None}, {"watermark": {"text": "  "}}):
+        d2, _ = cd.build_draft(plan=_PLAN, timeline=_TIMELINE, source_video_paths=_SRC,
+                               tts_paths=_TTS, asset_paths=_ASSET, project_name="t", deco=bad)
+        assert [t["type"] for t in d2["tracks"]] == ["video", "audio", "text"], bad
+
+
+# ── 🖼 꾸미기 틀(템플릿)도 따라간다 — 고객 제보 3단계 ──────────────────────
+def _tpl_deco(span="full", alpha=1):
+    return {"template": {"_capcut_path": "C:/cap/p/deco_frame.png",
+                         "span": span, "alpha": alpha}}
+
+
+def _photos(draft):
+    return [m for m in draft["materials"]["videos"] if m["type"] == "photo"]
+
+
+def test_template_frame_reaches_draft():
+    """★뿌리: 꾸미기 틀 PNG가 캡컷 타임라인에 실제로 얹힌다(종전엔 아예 안 갔다)."""
+    draft, _ = cd.build_draft(plan=_PLAN, timeline=_TIMELINE, source_video_paths=_SRC,
+                              tts_paths=_TTS, asset_paths=_ASSET, project_name="t",
+                              deco=_tpl_deco())
+    ph = _photos(draft)
+    assert len(ph) == 1, f"틀 이미지가 없거나 여러 개다: {len(ph)}"
+    assert ph[0]["path"].endswith("deco_frame.png")
+    assert ph[0]["has_audio"] is False, "이미지에 오디오가 붙으면 캡컷이 이상하게 다룬다"
+
+
+def test_template_is_above_video_below_caption():
+    """★쌓임 순서: 소스 영상 위 · 자막 아래. 자막을 덮으면 글자가 안 보인다."""
+    draft, _ = cd.build_draft(plan=_PLAN, timeline=_TIMELINE, source_video_paths=_SRC,
+                              tts_paths=_TTS, asset_paths=_ASSET, project_name="t",
+                              deco=_tpl_deco())
+    vid_tracks = [t for t in draft["tracks"] if t["type"] == "video"]
+    assert len(vid_tracks) == 2, "틀이 별도 영상 트랙으로 안 올라갔다"
+    tpl_seg = vid_tracks[1]["segments"][0]
+    src_seg = vid_tracks[0]["segments"][0]
+    cap_seg = [t for t in draft["tracks"] if t["type"] == "text"][0]["segments"][0]
+    assert src_seg["track_render_index"] < tpl_seg["track_render_index"] < \
+        cap_seg["track_render_index"], "쌓임 순서가 어긋났다(영상 < 틀 < 자막)"
+
+
+def test_template_span_first_covers_only_first_beat():
+    """★span='first'는 첫 비트만 덮는다 — 우리 렌더와 같은 규칙이어야 한다."""
+    full, _ = cd.build_draft(plan=_PLAN, timeline=_TIMELINE, source_video_paths=_SRC,
+                             tts_paths=_TTS, asset_paths=_ASSET, project_name="t",
+                             deco=_tpl_deco("full"))
+    first, _ = cd.build_draft(plan=_PLAN, timeline=_TIMELINE, source_video_paths=_SRC,
+                              tts_paths=_TTS, asset_paths=_ASSET, project_name="t",
+                              deco=_tpl_deco("first"))
+    dur_full = [t for t in full["tracks"] if t["type"] == "video"][1]["segments"][0]
+    dur_first = [t for t in first["tracks"] if t["type"] == "video"][1]["segments"][0]
+    assert dur_full["target_timerange"]["duration"] == full["duration"]
+    assert dur_first["target_timerange"]["duration"] == cd._us(_TIMELINE[0]["dur"])
+    assert dur_first["target_timerange"]["duration"] < dur_full["target_timerange"]["duration"]
+
+
+def test_template_alpha_applies():
+    """투명도를 주면 그대로 반영된다."""
+    draft, _ = cd.build_draft(plan=_PLAN, timeline=_TIMELINE, source_video_paths=_SRC,
+                              tts_paths=_TTS, asset_paths=_ASSET, project_name="t",
+                              deco=_tpl_deco(alpha=0.5))
+    seg = [t for t in draft["tracks"] if t["type"] == "video"][1]["segments"][0]
+    assert abs(seg["clip"]["alpha"] - 0.5) < 0.01
+
+
+def test_no_template_keeps_old_tracks():
+    """★회귀 0: 틀이 없으면 트랙 구성이 종전 그대로다."""
+    for bad in (None, {}, {"template": None}, {"template": {}},
+                {"template": {"span": "full"}}):        # _capcut_path 없음
+        d, _ = cd.build_draft(plan=_PLAN, timeline=_TIMELINE, source_video_paths=_SRC,
+                              tts_paths=_TTS, asset_paths=_ASSET, project_name="t", deco=bad)
+        assert [t["type"] for t in d["tracks"]] == ["video", "audio", "text"], bad
+        assert not _photos(d)
