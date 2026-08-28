@@ -5870,10 +5870,21 @@ def api_mix_capcut(job_id: str, base: str = ""):
         except Exception:      # noqa: BLE001 — 틀 하나 때문에 내보내기가 막히면 안 된다
             import traceback as _tb2
             _tb2.print_exc(file=sys.stderr)
+    # ★긴급 차단(2026-08-28): "캡컷으로 보내니 파일이 열리지 않습니다 / 다른 영상은 다
+    #   열리는데 숏템파일만" — 오늘 넣은 스타일·꾸미기 전달이 draft를 깨뜨렸다.
+    #   원인을 가릴 때까지 **끈다**. 켜는 스위치는 여기 한 곳(설정 capcut_style_on=1).
+    #   ⚠️캡컷이 못 여는 draft는 고객이 손쓸 방법이 없다 — 되돌리기가 최우선이다.
+    _style_on = False
+    try:
+        _style_on = str(Store(DB_PATH).get_setting("capcut_style_on", "") or "") == "1"
+    except Exception:      # noqa: BLE001 — 설정을 못 읽으면 꺼진 채로 간다(안전 기본값)
+        _style_on = False
     proj, project, files = capcut_draft.assemble_draft_folder(
         out_root, base, plan=plan, timeline=timeline, source_video_paths=source_video_paths,
         tts_paths=tts_paths, project_name=_capcut_project_name(job_id, job, plan),
-        final_video=_final, caption_style=_cap_style, deco=_deco)
+        final_video=_final,
+        caption_style=(_cap_style if _style_on else None),
+        deco=(_deco if _style_on else None))
     texts, assets = {}, []
     for name in files:
         if name.endswith(".json"):
