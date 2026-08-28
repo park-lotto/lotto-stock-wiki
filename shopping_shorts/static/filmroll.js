@@ -605,15 +605,18 @@
           //        **볼 수 없는 자리**에 생겼다.
           //   그래서 여기서는 **슬롯의 최대 폭만** 정하고(레이아웃은 브라우저가 잡는다),
           //   폭이 반영된 **다음 프레임에** 다시 채운다. 스크롤 범위는 건드리지 않는다.
-          const MIN_CELL = 34;                            // 이보다 좁으면 그림이 안 읽힌다
+          // ★칸 폭은 **읽을 만한 크기로 고정**한다. 그래야 필름이 조각 길이에 비례해
+          //   좁게/넓게 늘어난다(2026-08-28 사장님 "2.3초면 저 연두색 부분 정도만").
+          //   종전처럼 '조각이 창을 채우도록' 칸 폭을 키우면 0.8초짜리도 화면을 가로지른다.
+          const FIT_CELL = 46;                            // 조각을 펼칠 때 칸 폭(px)
           const room = winW();
           let want = ZOOM_MAX_STEP;                       // 한 칸 초는 0.25 기본을 지킨다(F21)
           for (const st of LADDER) {
             if (st < ZOOM_MAX_STEP) continue;             // 기본보다 촘촘하게는 안 간다
             want = st;
-            if (Math.round(room / (span / st)) >= MIN_CELL) break;   // 칸이 읽히면 그만
+            if ((span / st) * FIT_CELL <= room) break;    // 남는 폭 안에 들어오면 그만
           }
-          const wantCW = Math.max(MIN_CELL, Math.min(CW_MAX, Math.round(room / (span / want))));
+          const wantCW = FIT_CELL;
           const restrip = (want !== STEP);
           STEP = want; CW = wantCW;
           z.value = sliderFromStep(STEP);
