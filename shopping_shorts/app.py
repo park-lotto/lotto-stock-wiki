@@ -10015,7 +10015,10 @@ def _admin_customers(request: Request):
         cu["usage"] = {op: _u.get(op, 0) for op in ("lens", "render", "script")}
         # 이 회원에게 **실제로 걸린** 한도 + 그 근거. 화면이 "10/10"만 보여주면
         # 10이 어디서 온 값인지 알 수 없다(2026-08-27 pro가 조용히 10회로 떨어진 사고).
-        cu["limits"] = limits_map.get(_cid) or _effective_limits(st, _cid)
+        # ★폴백으로 낱개 _effective_limits를 두지 않는다 — 그러면 N+1이 조용히
+        #   되살아난다(정확히 그것 때문에 목록이 18.2초였다). 일괄 함수가 전원을
+        #   채우므로 빠지는 고객이 없다. 혹시 비면 빈 dict가 낫다 — 화면이 '—'로 뜬다.
+        cu["limits"] = limits_map.get(_cid, {})
         cu["made_today"] = made_map.get(_cid, {"made": 0, "charged": 0})   # 한국시간 오늘 실측
         cu["access_7d"] = access_map.get(_cid, {"ips": 0, "devices": 0})  # 최근 7일 고유 수
         # 관리자 판정도 목록이 이미 들고 있는 email·admin으로 한다(규칙은 _is_admin과 동일)

@@ -80,10 +80,19 @@ def test_admin_list_does_not_query_per_customer():
     import re
     from pathlib import Path
     src = (Path(__file__).resolve().parents[1] / "app.py").read_text(encoding="utf-8")
-    i = src.index("for cu in st.list_customers():")
-    body = src[i: src.index("\n    # ★설정", i)]
+    # 2026-08-29: 목록을 한 번만 읽어 재사용하도록 바뀌어(`_customers = st.list_customers()`)
+    #   루프 머리가 `for cu in _customers:`가 됐다. 둘 다 받아준다 — 지켜야 할 것은
+    #   "루프 안에서 낱개 조회를 하지 않는가"이지 루프를 어떻게 쓰느냐가 아니다.
+    m = re.search(r"for cu in (?:st\.list_customers\(\)|_customers):", src)
+    assert m, "관리자 목록 루프를 못 찾았다 — 이 테스트를 고쳐라"
+    body = src[m.start(): src.index("\n    # ★설정", m.start())]
     for bad in ("st.usage_get(", "st.access_summary(", "points.balance(st",
-                "st.is_challenge_member("):
+                "st.is_challenge_member(",
+                # 아래 셋은 2026-08-29 추가 — 고객마다 DB를 다시 치던 것들이다.
+                # 이것들 때문에 목록이 라이브에서 18.2초 걸렸다(290명 실측).
+                "_effective_limits(st", "_is_admin(_cid)", "_code_admin(_cid)"):
         assert bad not in body, f"관리자 목록 루프에 낱개 조회가 남아 있다: {bad}"
     assert re.search(r"usage_all|access_summary_all|points_balance_all", src), (
         "일괄 조회를 안 쓰고 있다")
+    assert "_effective_limits_all(" in src, (
+        "한도를 일괄로 안 구한다 — 고객마다 설정·키를 다시 읽으면 목록이 다시 느려진다")

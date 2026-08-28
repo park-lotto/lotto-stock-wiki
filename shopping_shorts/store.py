@@ -5575,11 +5575,13 @@ class Store:
                 "ORDER BY created_at DESC LIMIT ?", (customer_id, int(limit))).fetchall()
         out = []
         for r in rows:
+            # urls_json이 비었거나(옛 job) 형식이 깨져도 소스 개수만 0이 될 뿐,
+            # 목록 자체는 그려져야 한다. **삼키는 예외를 좁혀서** 진짜 오류는 올라가게 둔다.
             n_src = 0
             try:
                 n_src = len(json.loads(r[9]) or [])
-            except Exception:
-                pass
+            except (ValueError, TypeError):        # 빈 문자열·깨진 JSON — 정상 범주
+                n_src = 0
             out.append({"job_id": r[0], "status": r[1], "error": r[2],
                         "created_at": r[3], "updated_at": r[4],
                         "made": bool(r[5]),          # video_path 채워짐 = 고객이 받은 영상
@@ -5711,7 +5713,11 @@ class Store:
                     "  IFNULL(finished_at, ''), IFNULL(error,'') "
                     "FROM job_queue WHERE owner=? AND claimed_at IS NOT NULL "
                     "ORDER BY id DESC LIMIT ?", (str(customer_id), int(limit))).fetchall()
-            except Exception:
+            except sqlite3.Error as e:
+                # job_queue가 아직 없는 DB(테스트·새 설치)에서는 소요시간 칸만 빈다.
+                # ★조용히 넘기지 않는다 — 침묵 except가 SQL 오류를 삼켜 라이브에서
+                #   0건이 된 2026-08-10 사고와 같은 모양이다.
+                logging.warning("customer_job_durations 조회 실패(빈 목록으로 진행): %r", e)
                 return []
         return [{"task": r[0], "state": r[1], "sec": r[2] or 0,
                  "finished_at": r[3], "error": r[4]} for r in rows]
