@@ -1024,5 +1024,49 @@
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
+  // ── 구간 프레임 추출(2026-08-29, 칸 타임라인 ④) ──────────────────────────
+  // 타임라인 컷 블록을 '필름식'으로 펼칠 때 쓴다 — 구간 [a,b]를 n장으로.
+  // 시크·캡처 원리는 위 fillVisible과 같다(같은 브라우저 검증을 통과한 방식).
+  // 여기(부품 파일)에 두는 이유: 프레임을 뽑는 코드가 두 벌이 되면 반드시
+  // 한쪽만 고쳐진다(0순위-B). 필름롤 자체와는 캐시가 다르다 — 필름롤은
+  // 칸(step) 단위, 이건 임의 구간 단위라 키가 애초에 다르다.
+  const FRAME_CACHE = {};                    // "vid|a|b|n" → [dataURL…]
+  const _FVIDS = {};                         // vid → <video> 재사용(매번 열면 느리다)
+  async function filmframes(vid, src, a, b, n) {
+    n = Math.max(1, Math.min(24, Math.round(n) || 1));
+    const key = `${vid}|${(+a).toFixed(2)}|${(+b).toFixed(2)}|${n}`;
+    if (FRAME_CACHE[key]) return FRAME_CACHE[key];
+    let v = _FVIDS[vid];
+    if (!v) {
+      v = document.createElement('video');
+      v.muted = true; v.preload = 'auto'; v.src = src;
+      _FVIDS[vid] = v;
+    }
+    await new Promise(r => {
+      if (v.readyState >= 1) return r();
+      v.addEventListener('loadedmetadata', r, { once: true });
+      setTimeout(r, 5000);
+    });
+    const cv = document.createElement('canvas');
+    cv.width = 96; cv.height = 170;                       // 9:16 소형 — 펼침용이라 충분
+    const x = cv.getContext('2d');
+    const out = [];
+    for (let k = 0; k < n; k++) {
+      const t = (+a) + ((+b) - (+a)) * (k + 0.5) / n;     // 칸 한가운데(위 strip과 같은 규칙)
+      await new Promise(r => {
+        let done = false;
+        const fin = () => { if (done) return; done = true; v.removeEventListener('seeked', fin); r(); };
+        v.addEventListener('seeked', fin);
+        try { v.currentTime = Math.max(0, t); } catch (e) { fin(); }
+        setTimeout(fin, 800);                              // 시크가 영영 안 오는 파일 대비
+      });
+      try { x.drawImage(v, 0, 0, cv.width, cv.height); out.push(cv.toDataURL('image/jpeg', 0.6)); }
+      catch (e) { out.push(''); }                          // tainted 등 — 빈 칸으로 두고 계속
+    }
+    FRAME_CACHE[key] = out;
+    return out;
+  }
+
   global.filmroll = filmroll;
+  global.filmframes = filmframes;
 })(window);

@@ -89,12 +89,34 @@
     if (el) el.classList.add('sel');
   };
 
-  /* 컷 블록: 카드 ↔ 필름식 펼침(T2에서 filmframes로 채운다 — T1은 토글만) */
+  /* 컷 블록: 카드 ↔ 필름식 펼침(④). 프레임 추출은 filmroll.js의 filmframes 하나만 쓴다. */
   g.tlToggleCut = function (i, k) {
     const el = document.querySelector(`.tlwrap .tl-cut[data-k="${k}"]`);
     if (!el) return;
     const open = el.classList.toggle('open');
-    if (open && typeof g.tlFillFrames === 'function') g.tlFillFrames(i, k, el);
+    if (!open) { const fr = el.querySelector('.tl-frames'); if (fr) fr.remove(); return; }
+    g.tlFillFrames(i, k, el);
+  };
+
+  /* 펼친 컷을 실제 프레임들로 채운다 — clip 구간을 폭에 맞는 장수로. */
+  g.tlFillFrames = async function (i, k, el) {
+    const clips = planClips(lists[i] || [], beatDur(i), STRETCH[i], i);
+    const c = clips[k];
+    if (!c || typeof filmframes !== 'function') return;
+    const n = Math.max(3, Math.round(el.offsetWidth / 34));
+    let fr = el.querySelector('.tl-frames');
+    if (!fr) {
+      fr = document.createElement('div'); fr.className = 'tl-frames';
+      fr.innerHTML = '<span class="tl-loading">🎞…</span>';
+      el.appendChild(fr);
+    }
+    try {
+      const urls = await filmframes(c.video_id, SL.src(c.video_id), c.start, c.start + c.dur, n);
+      if (!el.classList.contains('open')) return;          // 그 사이 접혔다 — 버린다
+      fr.innerHTML = urls.map(u => u ? `<img src="${u}">` : '<img>').join('');
+    } catch (e) {
+      fr.innerHTML = '<span class="tl-loading">프레임 실패</span>';
+    }
   };
 
   /* 마운트 — renderBand()가 innerHTML을 갈아끼운 직후 부른다. */
