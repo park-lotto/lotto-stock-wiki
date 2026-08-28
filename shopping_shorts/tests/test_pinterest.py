@@ -383,3 +383,66 @@ def test_병합은_저장쪽에서_원자적으로_한다():
     i = src.index("def merge_last_run_platform")
     blk = src[i:i + 1800]
     assert "BEGIN IMMEDIATE" in blk or "_conn()" in blk, "한 트랜잭션으로 안 묶인다"
+
+
+# ── 목적지(쇼핑몰) 판별 — 사장님 "알리 테무 상품 중점으로" (2026-08-29) ──────────
+def test_수집이_핀의_목적지를_저장한다():
+    """★사장님 질문: "알리 테무에서 나오는 상품들을 중점으로 어떻게 찾을수있나"
+
+    검색 응답엔 링크가 없다(핀 키는 id·images·videos뿐 — 25개 전수 확인).
+    그러나 **상세 페이지**엔 목적지가 정확히 있다(주거용 프록시로 열면):
+        "link":"https://temu.to/m/u9c4kk5ldcu"   "domain":"temu.to"
+
+    수집 때 이걸 같이 담아야 화면에서 골라낼 수 있다. 전량 실측(624개, 262초):
+        Uploaded by user 234 · instagram 212 · amzn 34 · temu.to 20 · amazon 19
+        → 쇼핑몰 핀 85개, **85개 전부 영상 있음**, 중앙값 15.8초(쇼츠 규격)
+
+    비용도 싸다: 병렬16이면 40건 7.8초(건당 0.19초) · 판별성공 39/40.
+    """
+    fn = _code_only(_collect_fn())
+    assert "pin_dest" in fn, "목적지를 안 담는다 — 화면에서 알리·테무를 못 고른다"
+
+
+def test_목적지_판정은_domain_필드로만_한다():
+    """★문자열 검색은 오탐이다 — `amazon` 히트 하나가 실은 CSP 헤더의
+    `m.media-amazon.com`이었다(실측). 핀의 진짜 목적지는 `"domain":` 필드다."""
+    from shopping_shorts import pinterest_crawl
+    src = __import__("inspect").getsource(pinterest_crawl)
+    assert '"domain":' in src, 'domain 필드로 읽지 않는다 — 문자열 검색은 CSP를 오탐한다'
+
+
+def test_목적지_조회_실패가_수집을_죽이지_않는다():
+    """★목적지는 **덤**이다. 프록시가 죽었거나 핀터레스트가 막아도 영상 수집 자체는
+    살아야 한다 — 없으면 빈 값으로 두고 넘어간다(0순위: 지어내지 않는다)."""
+    from shopping_shorts import pinterest_crawl
+    src = __import__("inspect").getsource(pinterest_crawl.pin_destination)
+    assert "except" in src, "실패가 수집을 죽인다"
+    assert "return None" in src or "return ''" in src or 'return ""' in src, \
+        "실패 시 조용히 비워야 한다"
+
+
+def test_화면에_쇼핑몰_필터가_있다():
+    """★저장만 하고 화면에서 못 고르면 소용없다. 사장님이 알리·테무만 보려면 버튼이 있어야."""
+    src = _index_html()
+    assert "pinFilter" in src, "쇼핑몰 필터 버튼이 없다"
+    assert "PIN_SHOP_KEYS" in src, "쇼핑몰 판정 목록이 없다"
+
+
+def test_필터_목록이_서버와_같다():
+    """★서버(SHOP_DOMAINS)와 화면(PIN_SHOP_KEYS)이 어긋나면 '쇼핑몰'이 서로 다른 걸
+    뜻하게 된다 — 같은 판단을 두 곳에 적은 대가다(0순위-B). 어긋나면 여기서 잡는다."""
+    import re
+    from shopping_shorts import pinterest_crawl
+    src = _index_html()
+    m = re.search(r"PIN_SHOP_KEYS\s*=\s*\[(.*?)\]", src, re.S)
+    assert m, "화면 목록을 못 찾았다"
+    front = set(re.findall(r"'([^']+)'", m.group(1)))
+    assert front == set(pinterest_crawl.SHOP_DOMAINS), \
+        f"서버와 화면이 다르다: 서버만 {set(pinterest_crawl.SHOP_DOMAINS)-front} / 화면만 {front-set(pinterest_crawl.SHOP_DOMAINS)}"
+
+
+def test_필터_버튼은_기존_토글_스타일을_쓴다():
+    """★새 CSS를 만들지 않는다 — 기존 .ftog(활성 클래스 'on')를 그대로 쓴다(0순위-B)."""
+    src = _index_html()
+    i = src.index('onclick="pinFilter')
+    assert "ftog" in src[max(0, i - 200):i], "새 버튼 스타일을 만들었다 — .ftog를 재사용하라"
