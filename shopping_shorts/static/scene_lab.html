@@ -107,9 +107,18 @@ h1{font-size:16px;margin:0;font-weight:700}
 .frhead{position:absolute;top:6px;bottom:20px;width:2px;background:#ff4d4d;display:none;
     pointer-events:none;z-index:8;box-shadow:0 0 7px rgba(255,77,77,.85)}
 .frhead.on{display:block}
-.frgrip{display:block;position:absolute;top:-14px;left:-13px;width:28px;height:19px;
-    background:#ff4d4d;border-radius:5px;cursor:grab;pointer-events:auto;
-    box-shadow:0 2px 6px rgba(0,0,0,.7);z-index:9;touch-action:none}
+/* ★손잡이를 크게(2026-08-28 사장님 "손잡이를 좀더 크게"). 28x19는 끌기엔 작았다 —
+   주 사용자가 60대라 다른 곳도 44px 터치타깃을 쓴다.
+   left = -(width/2) = -22px 로 가운데를 막대에 맞춘다.
+   top은 -(height)가 아니라 -19px — 5px을 필름 안에 걸쳐 둔다. 완전히 위로 빼면
+   필름 위에 여유가 없는 화면에서 손잡이가 잘린다(실측: 하네스에서 윗부분이 잘렸다). */
+.frgrip{display:block;position:absolute;top:-19px;left:-22px;width:44px;height:24px;
+    background:#ff4d4d;border-radius:7px;cursor:grab;pointer-events:auto;
+    box-shadow:0 2px 8px rgba(0,0,0,.75);z-index:9;touch-action:none}
+/* 잡는 곳임을 보이게 — 가로줄 두 개(다른 손잡이와 같은 표시). */
+.frgrip::after{content:'';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    width:16px;height:8px;border-top:2px solid rgba(255,255,255,.75);
+    border-bottom:2px solid rgba(255,255,255,.75)}
 .frgrip:hover{background:#ff6b6b}
 .frgrip:active{cursor:grabbing}
 .frdur{position:absolute;top:-36px;left:50%;transform:translateX(-50%);background:#ff9614;
