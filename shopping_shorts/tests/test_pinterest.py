@@ -179,7 +179,9 @@ def test_수집은_누적된다():
     → 기존 것과 합치고 pin_id로 중복 제거한다.
     """
     fn = _collect_fn()
-    assert "load_last_run_platform" in fn, "기존 수집분을 안 읽는다 — 매번 덮어쓴다"
+    # 2026-08-29: 읽기~쓰기를 한 트랜잭션으로 묶으면서 병합이 store로 옮겨갔다
+    # (동시 수집이 서로를 덮던 문제). 누적한다는 계약 자체는 그대로다.
+    assert "merge_last_run_platform" in fn, "기존 수집분을 안 읽는다 — 매번 덮어쓴다"
     assert "reset" in fn, "비우기 수단이 없다 — 쌓이기만 하면 정리를 못 한다"
 
 
@@ -353,3 +355,31 @@ def test_핀_상세는_주거용_프록시로_간다():
     src = __import__("inspect").getsource(pinterest_crawl.pin_video_info)
     assert "proxies" in src, "프록시를 안 태운다 — 데이터센터 IP는 JSON-LD를 못 받는다"
     assert "_proxies" in src, "프록시 dict를 새로 짜지 마라 — reddit_source._proxies() 재사용"
+
+
+def test_동시_수집이_서로를_덮지_않는다():
+    """★재현 확인(2026-08-29): 두 수집이 각 50개를 담았는데 **50개만 남았다**.
+
+    엔드포인트가 load(기존) → 파이썬에서 병합 → save(전량) 순서라,
+    두 수집이 겹치면 나중 save가 앞 save 결과를 통째로 덮는다.
+    사장님이 두 PC에서 동시에 버튼을 누르면 한쪽이 조용히 사라진다
+    (오류가 없어서 '덜 담겼네' 정도로만 보인다).
+
+    → 읽기~쓰기를 **한 덩어리로 묶는다**. 같은 함정을 이미 포인트 차감에서 겪었고
+      그때 결론도 같았다(메모리 `포인트차감_원자성`).
+    """
+    fn = _code_only(_collect_fn())
+    assert "merge_last_run_platform" in fn, \
+        "load→병합→save를 따로 하면 동시 수집이 서로를 덮는다"
+
+
+def test_병합은_저장쪽에서_원자적으로_한다():
+    """★락은 **저장을 담당하는 곳**에 있어야 한다 — 호출부마다 걸면 반드시 빠뜨린다
+    (0순위-B: 같은 판단을 두 번 적지 않는다)."""
+    import pathlib
+    p = pathlib.Path(__file__).resolve().parents[1] / "store.py"
+    src = p.read_text(encoding="utf-8")
+    assert "def merge_last_run_platform" in src, "저장쪽에 병합 함수가 없다"
+    i = src.index("def merge_last_run_platform")
+    blk = src[i:i + 1800]
+    assert "BEGIN IMMEDIATE" in blk or "_conn()" in blk, "한 트랜잭션으로 안 묶인다"

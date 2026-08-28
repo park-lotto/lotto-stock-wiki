@@ -2276,6 +2276,39 @@ class Store:
             c.execute("INSERT OR REPLACE INTO settings(key, value) VALUES(?,?)",
                       (f"last_run::{platform}", json.dumps({"items": items, "collected_at": collected_at}, ensure_ascii=False)))
 
+    def merge_last_run_platform(self, platform, new_items, collected_at, key="shortcode"):
+        """기존 수집분에 새 항목을 **한 트랜잭션 안에서** 합친다. 새로 담긴 개수를 준다.
+
+        ★왜 필요한가(2026-08-29 재현): 호출부에서 load → 파이썬 병합 → save 로 하면
+          두 수집이 겹칠 때 나중 save가 앞 save를 **통째로 덮는다**.
+          실측: 두 수집이 각 50개를 담았는데 저장된 건 50개(한쪽 전멸).
+          오류가 안 나서 '덜 담겼네'로만 보이는 조용한 유실이다.
+        ★락은 호출부가 아니라 **저장을 담당하는 여기**에 둔다 — 호출부마다 걸면
+          반드시 어딘가 빠뜨린다(0순위-B). 같은 결론을 포인트 차감에서도 냈다.
+
+        BEGIN IMMEDIATE로 쓰기 락을 먼저 잡아, 읽는 순간부터 다른 수집이 끼어들지
+        못하게 한다(sqlite는 이 시점부터 다른 쓰기를 막는다).
+        """
+        with self._conn() as c:
+            c.execute("BEGIN IMMEDIATE")
+            row = c.execute("SELECT value FROM settings WHERE key=?",
+                            (f"last_run::{platform}",)).fetchone()
+            prev = []
+            if row and row[0]:
+                try:
+                    prev = json.loads(row[0]).get("items", []) or []
+                except ValueError:      # 값이 깨져 있어도 수집을 죽이지 않는다
+                    prev = []
+            have = {x.get(key) or x.get("video_url") for x in prev}
+            fresh = [x for x in (new_items or [])
+                     if (x.get(key) or x.get("video_url")) not in have]
+            items = self._newest_first(fresh + prev)[: self.LAST_RUN_MAX_ITEMS]
+            c.execute("INSERT OR REPLACE INTO settings(key, value) VALUES(?,?)",
+                      (f"last_run::{platform}",
+                       json.dumps({"items": items, "collected_at": collected_at},
+                                  ensure_ascii=False)))
+            return len(fresh), len(items)
+
     def load_last_run_platform(self, platform):
         v = self.get_setting(f"last_run::{platform}", "")
         if not v:
