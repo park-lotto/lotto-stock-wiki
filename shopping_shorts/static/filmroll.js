@@ -404,6 +404,16 @@
        ★박스를 만드는 규칙은 addBox 하나뿐이다 — 여기서 BOXES를 직접 건드리면
          정렬·중복·최소길이 규칙이 두 벌이 된다(0순위-B). */
     function headTime() {
+      // ★**화면에 보이는 그 자리**가 곧 시각이다(2026-08-28 실측).
+      //   HEAD_T만 믿었더니 0.2초 단계에서 W(종료)가 2.57초로 튀었다 —
+      //   빨간선은 700px(=0.80초)에 멀쩡히 서 있고 영상도 0.80초에 멈춰 있는데,
+      //   내부 값만 재생 tick 같은 다른 경로에 밀려 있었다.
+      //   찍히는 자리는 사장님이 보는 자리여야 한다. 그래서 막대의 실제 위치에서
+      //   되돌려 계산하고, 막대가 안 보일 때만 HEAD_T로 물러난다.
+      if (headEl && headEl.classList.contains('on')) {
+        const x = parseFloat(headEl.style.left);
+        if (isFinite(x)) return Math.round(xToSec(x) * 100) / 100;
+      }
       return HEAD_T;
     }
     function markStart() {
