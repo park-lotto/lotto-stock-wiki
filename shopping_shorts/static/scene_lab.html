@@ -37,8 +37,16 @@ h1{font-size:16px;margin:0;font-weight:700}
 .frtop{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:11.5px;color:var(--dim)}
 .frname{font-weight:700;color:var(--fg)}
 /* margin-left:auto를 뺐다 — 확대·접기가 오른쪽 끝까지 밀려 가운데가 비었다(캡쳐 532). */
-.frzoom{display:flex;align-items:center;gap:5px}
-.frzoom input{width:96px}
+.frzoom{display:flex;align-items:center;gap:4px}
+/* ★슬라이더를 넓힌다(2026-08-28 사장님 "확대기능에서 마우스로 조절하는게 안된다").
+   단계가 7개인데 폭이 96px이면 한 칸이 16px이라 손잡이를 잡기 전에 지나친다(실측). */
+.frzoom input{width:150px}
+/* ★버튼도 함께 준다 — 끌지 않고 눌러서 한 단계씩. 시니어 타깃이라 '잡아 끌기'보다 쉽다. */
+.frzoom .zb{flex:0 0 auto;width:22px;height:22px;line-height:20px;text-align:center;
+    background:#1a1f27;color:var(--ink);border:1px solid var(--line);border-radius:6px;
+    font-size:15px;cursor:pointer;padding:0}
+.frzoom .zb:hover{background:var(--warn);color:#3a2a08;border-color:transparent}
+.frzoom .zb:disabled{opacity:.35;cursor:default}
 .frstep{font-variant-numeric:tabular-nums;color:var(--accent)}
 .frclose{background:#22262c;color:var(--fg);border:1px solid var(--line);border-radius:6px;
     padding:4px 9px;font-size:11.5px;cursor:pointer;font-weight:700}
@@ -84,7 +92,10 @@ h1{font-size:16px;margin:0;font-weight:700}
     background:rgba(0,0,0,.62);color:#ffb3b3;border-radius:3px;font-size:12px;line-height:17px;
     text-align:center;cursor:pointer;font-weight:700}
 .frboxes .bx .x:hover{background:#a03434;color:#fff}
-.frboxes .bx .g{position:absolute;top:1px;left:9px;width:17px;height:17px;z-index:3;
+/* ★'위 칸으로 담기' 손잡이를 키운다(2026-08-28 사장님 "오렌지박스로 담은 부분은
+   더블클릭이나 마우스로 잡고 훅쪽으로 옮기는게 가능하게"). 기능은 있었는데
+   17×17px 아이콘이라 박스(691×197) 안에서 눈에 띄지도, 잡히지도 않았다(실측). */
+.frboxes .bx .g{position:absolute;top:1px;left:9px;height:22px;padding:0 8px;z-index:3;
   display:flex;align-items:center;justify-content:center;border-radius:3px;cursor:grab;
   background:rgba(0,0,0,.55);color:#ffd24a;font-size:12px;line-height:1;user-select:none}
 .frboxes .bx .g:hover{background:#ffd24a;color:#3a2a08}
@@ -145,6 +156,13 @@ h1{font-size:16px;margin:0;font-weight:700}
     color:var(--warn);border:1px solid var(--line);border-radius:5px;padding:0 4px;
     font-size:12px;line-height:16px;cursor:pointer}
 .tbcut .rollbtn:hover{background:var(--warn);color:#3a2a08}
+/* ★조각 빼기 ✕(2026-08-28 사장님 "훅 장면조각에서 삭제할때 X표기능으로 하나").
+   빼는 길은 종전에도 있었지만(두 번 클릭·아래로 끌기) 화면에 안 보이니 없는 기능이었다.
+   ★부르는 함수는 그 길과 같은 dropCutFromBand 하나다(0순위-B — 빼는 규칙을 두 벌로 두지 않는다). */
+.tbcut .delx{position:absolute;right:3px;bottom:6px;z-index:4;background:rgba(0,0,0,.72);
+    color:#ff9d9d;border:1px solid var(--line);border-radius:5px;padding:0 5px;
+    font-size:12px;line-height:16px;cursor:pointer}
+.tbcut .delx:hover{background:#a03434;color:#fff;border-color:transparent}
 
 /* ── 타임프레임(내 영상 전체) ─────────────────────────────────────────────
    위=전체 한 줄, 아래=고를 조각. 사장님 손그림 구조. 띠는 가로로만 스크롤한다. */
@@ -2211,7 +2229,9 @@ function renderBand(){
                     ${isPicked(i, c.seg_id) ? 'checked' : ''}
                     onclick="event.stopPropagation();togglePick(${i}, '${c.seg_id}', this.checked)"
                     ondblclick="event.stopPropagation()"><button type="button" class="rollbtn" title="이 조각을 필름으로 펼쳐 자릅니다"
-             onclick="event.stopPropagation();clearTimeout(clickTimer);toggleRoll('cut','${c.seg_id}',${i})">🎞</button></div>`).join('')
+             onclick="event.stopPropagation();clearTimeout(clickTimer);toggleRoll('cut','${c.seg_id}',${i})">🎞</button
+             ><button type="button" class="delx" title="이 조각을 이 칸에서 뺍니다"
+             onclick="event.stopPropagation();clearTimeout(clickTimer);dropCutFromBand(${i}, '${c.seg_id}')">✕</button></div>`).join('')
       : `<div class="tbempty">장면을 담아주세요</div>`;
     // ★담겼지만 화면엔 안 나오는 조각을 흐리게 이어 붙인다(2026-08-23).
     //   planClips는 자막 길이를 채우면 거기서 멈춘다 — 남은 id는 컷이 하나도 안 생겨
@@ -2234,7 +2254,8 @@ function renderBand(){
              ><input type="checkbox" class="pk" title="빼려면 체크"
                     ${isPicked(i, id) ? 'checked' : ''}
                     onclick="event.stopPropagation();togglePick(${i}, '${id}', this.checked)"
-                    ondblclick="event.stopPropagation()"></div>`;
+                    ondblclick="event.stopPropagation()"><button type="button" class="delx" title="이 조각을 이 칸에서 뺍니다"
+             onclick="event.stopPropagation();dropCutFromBand(${i}, '${id}')">✕</button></div>`;
     }).join('');
     // 담기·빼기는 기존 기능(add/delSeg)을 그대로 쓴다 — 아래 소스에서 끌어다 놓거나 두 번 클릭.
     return `<div class="tbeat ${clips.length ? '' : 'empty'} ${playKey === 'beat:' + i ? 'on' : ''} ${sel === i ? 'sel' : ''}"

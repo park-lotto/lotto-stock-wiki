@@ -100,7 +100,13 @@
           //   아래쪽까지 필름높이는 높여"). 별도 줄로 두면 그 한 줄만큼 필름이 낮아진다.
           '<div class="frgrab" title="아래를 잡고 끌면 높이가 바뀝니다"></div>' +
           '<div class="frbar"></div>' +
-          '<span class="frzoom">확대 <input type="range" class="frz" min="0" max="' + SMAX + '" step="1" value="' + sliderFromStep(ZOOM_MAX_STEP) + '"></span>' +
+          '<span class="frzoom">확대 ' +
+            // ★버튼으로도 한 단계씩(2026-08-28 사장님 "마우스로 조절하는게 안된다").
+            //   단계가 7개라 슬라이더를 넓혀도 끌기는 여전히 섬세한 조작이다 — 누르는 길을 같이 둔다.
+            //   두 길 모두 아래 setStep() 하나를 부른다(0순위-B).
+            '<button type="button" class="zb" data-z="-1" title="한 단계 축소">－</button>' +
+            '<input type="range" class="frz" min="0" max="' + SMAX + '" step="1" value="' + sliderFromStep(ZOOM_MAX_STEP) + '">' +
+            '<button type="button" class="zb" data-z="1" title="한 단계 확대">＋</button></span>' +
           '<span class="frstep"></span>' +
           '<button type="button" class="frclose" title="접기">◀ 접기</button>' +
         '</div>' +
@@ -246,7 +252,7 @@
         //   **끌기 전용 손잡이**를 따로 둔다. 부품은 어디로 가는지 모른다: 부모가
         //   준 onBoxDrag에 넘길 뿐이다.
         (typeof opt.onBoxDrag === 'function'
-          ? `<span class="g" draggable="true" data-g="${i}" title="위 칸으로 끌어다 놓으면 담깁니다">⬆</span>` : '') +
+          ? `<span class="g" draggable="true" data-g="${i}" title="누르면 바로 위 칸에 담깁니다 (끌어다 놓아도 됩니다)">⬆ 위로 담기</span>` : '') +
         `</div>`).join('');
       wireBoxes();
     }
@@ -314,7 +320,17 @@
         const g = el.querySelector('.g');
         if (g) {
           g.addEventListener('pointerdown', ev => ev.stopPropagation());
-          g.addEventListener('click', ev => ev.stopPropagation());
+          // ★눌러도 담긴다(2026-08-28 사장님 "더블클릭이나 마우스로 잡고 훅쪽으로").
+          //   박스 두 번 누르기는 **실제 마우스에서 안 잡힌다**(라이브 실측: 박스 위를
+          //   정확히 두 번 눌러도 pointerdown이 오지 않아 담기지 않았다 — 위 LASTTAP
+          //   주석의 함정이 아직 살아 있다). 끌기 하나만 남기면 손이 떨리는 날엔 아예 못 담는다.
+          //   그래서 **누르기**를 정식 길로 둔다 — 담는 함수는 두 번 누르기와 같은
+          //   onBoxCommit 하나다(0순위-B: 담는 규칙을 두 벌로 두지 않는다).
+          g.addEventListener('click', ev => {
+            ev.stopPropagation(); ev.preventDefault();
+            const b = BOXES[+el.dataset.i]; if (!b) return;
+            if (typeof opt.onBoxCommit === 'function') opt.onBoxCommit({ s: b.s, e: b.e });
+          });
           g.addEventListener('dragstart', ev => {
             ev.stopPropagation();
             const b = BOXES[+el.dataset.i]; if (!b) return;
@@ -650,12 +666,23 @@
     });
     gripEl.addEventListener('contextmenu', e => { e.preventDefault(); e.stopPropagation(); markHere(); });
 
-    host.querySelector('.frz').addEventListener('input', function () {
-      const centerT = xToSec(winW() / 2);
-      const ns = stepFromSlider(this.value);               // 한 칸 = 한 단계
-      if (ns === STEP) return;
-      STEP = ns; CW = cwFor(STEP);
+    // ★확대를 바꾸는 곳은 여기 하나다(슬라이더·＋－버튼·Ctrl+휠이 모두 이걸 부른다).
+    function setStep(sliderVal) {
+      const z = host.querySelector('.frz');
+      const v = Math.max(0, Math.min(SMAX, Math.round(+sliderVal)));
+      const ns = stepFromSlider(v);
+      if (ns === STEP) { z.value = v; return; }
+      const centerT = xToSec(winW() / 2);                  // 보던 자리를 지킨다
+      z.value = v; STEP = ns; CW = cwFor(STEP);
       strip().then(() => { off = clamp(centerT * pps() - winW() / 2); applyW(); });
+    }
+    host.querySelector('.frz').addEventListener('input', function () { setStep(this.value); });
+    host.querySelectorAll('.zb').forEach(b => {
+      b.addEventListener('click', e => {
+        e.preventDefault(); e.stopPropagation();
+        const z = host.querySelector('.frz');
+        setStep((+z.value || 0) + (+b.dataset.z));
+      });
     });
 
     /* ▶ 빨간 막대를 [a,b] 구간 동안 움직인다(소리는 미리보기 창이 낸다).
