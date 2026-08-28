@@ -31,11 +31,14 @@ _CHAIN = {
     # 샤오홍슈가 그렇게 무료로 돌고 있고, 도우인이 그 반대 상태다.
     "tiktok": [kw_backends.pw_tiktok, kw_backends.apify_tiktok],
     "youtube": [kw_backends.youtube],
+    # 핀터레스트(2026-08-29) — 렌즈 시각검색이 영상 핀을 사실상 안 물어와서(실측
+    # ko+en 147건 중 0개) 키워드 검색으로 합류한다. 영상탭+영어번역, 비용 0.
+    "pinterest": [kw_backends.pinterest_videos],
 }
 
 
 def search(keyword, max_results=10):
-    """한국어 키워드 → 인스타+틱톡+유튜브 결과(플랫폼 병렬).
+    """한국어 키워드 → 인스타+틱톡+유튜브+핀터레스트 결과(플랫폼 병렬).
 
     반환: {"items": [...], "count": N, "keyword": kw, "meta": {플랫폼: {...}}}
     items는 렌즈 카드와 같은 스키마다(cn_backends.normalize 공용)."""

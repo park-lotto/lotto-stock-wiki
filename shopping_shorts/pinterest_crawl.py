@@ -109,9 +109,13 @@ def _thumb(pin):
     return ""
 
 
-def _crawl(keyword, scrolls, timeout_ms):
+def _crawl(keyword, scrolls, timeout_ms, tab="pins"):
     """실제 브라우저를 띄우는 유일한 함수 — 테스트는 이걸 주입 대체한다
-    (playwright_crawl._crawl_xiaohongshu과 같은 계약)."""
+    (playwright_crawl._crawl_xiaohongshu과 같은 계약).
+
+    tab: "pins"=일반 검색(종전 그대로) / "videos"=영상 전용 탭(2026-08-29 렌즈용).
+    ★영상 핀은 일반 탭에 거의 안 나온다 — 실측: '인덕션 테이블'·'induction table'
+      등 4키워드 전부 pins 탭 영상 0개, videos 탭은 12개씩."""
     from playwright.sync_api import sync_playwright   # 지연 import — 미설치 환경 보호
 
     caps = []
@@ -124,7 +128,8 @@ def _crawl(keyword, scrolls, timeout_ms):
         except Exception:      # noqa: BLE001 — JSON이 아니면 무시
             pass
 
-    url = "https://www.pinterest.com/search/pins/?q=" + urllib.parse.quote(keyword)
+    url = ("https://www.pinterest.com/search/%s/?q=" % (tab if tab == "videos" else "pins")
+           + urllib.parse.quote(keyword))
     with sync_playwright() as p:
         b = p.chromium.launch(headless=True)
         ctx = b.new_context(
@@ -143,14 +148,20 @@ def _crawl(keyword, scrolls, timeout_ms):
     return caps
 
 
-def search_videos(keyword, max_results=40, scrolls=5, timeout_ms=45000, _crawler=None):
+def search_videos(keyword, max_results=40, scrolls=5, timeout_ms=45000, _crawler=None,
+                  tab="pins"):
     """키워드 → 영상 핀 목록. 실패해도 예외를 던지지 않는다(빈 목록).
+
+    tab="videos"면 영상 전용 검색 탭을 긁는다(렌즈 '여기서' 검색용, 2026-08-29).
+    기본은 종전 그대로 "pins" — 핀터레스트 탭 수집의 동작은 안 바뀐다.
 
     ★수집이 서비스를 죽이면 안 된다 — 브라우저가 없거나 페이지가 바뀌어도 []를 준다.
       단 **조용히 삼키지는 않는다**(아래 print) — 0건이 '없음'인지 '고장'인지 구별해야 한다.
     """
     import sys
-    crawl = _crawler or _crawl
+    # ⚠️ 주입 크롤러(_crawler)의 계약은 (keyword, scrolls, timeout_ms) 3인자 그대로다
+    #    — 기존 테스트·수집이 이 모양을 쓴다. tab은 기본 _crawl에만 전달한다.
+    crawl = _crawler or (lambda k, s, t: _crawl(k, s, t, tab=tab))
     try:
         bodies = crawl(keyword, scrolls, timeout_ms)
     except Exception as e:  # noqa: BLE001
