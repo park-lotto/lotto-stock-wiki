@@ -10374,7 +10374,83 @@ async function applyVoice(){
     }catch(e){ clearInterval(poll); el.textContent='❌ 상태 확인 실패'; }
   },2500);
 }
+// ── ✏ 5단계 대본수정(2026-08-28 사장님 "TTS에서 대본수정") ──────────────────
+// 들어보다 어색한 문장을 **그 자리에서** 고친다. 3단계까지 돌아갈 필요가 없다.
+// ★3단계(scene_lab)와 **같은 저장구멍**을 쓴다(0순위-B):
+//     POST /api/mix/scene_lab/{job}/narration/{beat}  {text, regen:true}
+//   서버가 resynth_one_beat을 부르고, 그 안에서 target_seconds·cap_durs·sync_gap까지
+//   렌더와 같은 규칙(_conform_beats)으로 맞춘다. 여기서 자막을 다시 나누지 않는다 —
+//   2026-08-20 실사고(초가 두 벌 → 화면이 앞 장면을 되풀이)가 그렇게 났다.
+const VP_NARR_EDIT = {};      // beat_idx → 편집칸 열림
+// ★편집 중에는 목록을 다시 그리지 않는다(2026-08-19 사장님 "아까 분명히 고쳤는데 안 된다").
+//   renderTtsBeats는 목록을 통째로 갈아끼우므로, 폴러가 끼어들면 입력 중이던 글자와
+//   커서가 그대로 날아간다. 저장까지 못 가니 "안 고쳐진다"로 보인다.
+function vpIsEditing(){ return Object.keys(VP_NARR_EDIT).length > 0; }
+function vpEditNarr(i){
+  const row=document.getElementById('beatRow'+i), say=document.getElementById('vpSay'+i);
+  if(!row || !say || VP_NARR_EDIT[i]) return;
+  const b=VP_BEATS[i]; if(!b) return;
+  VP_NARR_EDIT[i]=true;
+  const cur=(b.narration||'');
+  say.innerHTML='<textarea id="vpNarrEd'+i+'" rows="3" '
+    +'style="width:100%;box-sizing:border-box;padding:7px 9px;border:2px solid var(--accent);'
+    +'border-radius:8px;background:var(--bg);color:var(--txt);font-size:13px;line-height:1.55;'
+    +'resize:vertical"></textarea>'
+    +'<div style="margin-top:5px;display:flex;gap:6px;align-items:center;flex-wrap:wrap">'
+    +'<button class="btn-prev" style="padding:3px 10px" onclick="vpSaveNarr('+i+')">저장하고 다시 뽑기</button>'
+    +'<button class="btn-prev" style="padding:3px 10px" onclick="vpCancelNarr('+i+')">취소</button>'
+    +'<span class="hint">Ctrl+Enter 저장 · Esc 취소</span></div>';
+  const ed=document.getElementById('vpNarrEd'+i);
+  ed.value=cur;                                  // ★value로 넣는다(HTML 이스케이프 사고 방지)
+  ed.onkeydown=(ev)=>{
+    ev.stopPropagation();
+    if(ev.key==='Escape'){ ev.preventDefault(); vpCancelNarr(i); }
+    else if(ev.key==='Enter' && (ev.ctrlKey||ev.metaKey)){ ev.preventDefault(); vpSaveNarr(i); }
+  };
+  ed.focus(); ed.setSelectionRange(cur.length, cur.length);
+}
+function vpCancelNarr(i){ delete VP_NARR_EDIT[i]; renderTtsBeats(); }
+async function vpSaveNarr(i){
+  const ed=document.getElementById('vpNarrEd'+i), m=document.getElementById('vpMsg'+i);
+  const b=VP_BEATS[i]; if(!ed || !b) return;
+  const text=(ed.value||'').trim();
+  if(!text){ if(m) m.textContent='대본이 비었어요 — 취소하거나 문장을 넣어주세요'; return; }
+  if(!MIX_JOB){ if(m) m.textContent='작업 ID를 몰라 저장할 수 없어요'; return; }
+  const prevVer=(+b.tts_ver||0);
+  delete VP_NARR_EDIT[i];                        // 저장 시작 = 편집 종료(폴러 재개)
+  if(m) m.textContent='✏ 저장 중…';
+  try{
+    const r=await fetch('/api/mix/scene_lab/'+MIX_JOB+'/narration/'+b.beat_idx,{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({text, regen:true})});
+    const j=await r.json().catch(()=>null);
+    if(!r.ok || !j || !j.ok){
+      if(m) m.textContent = (r.status===409)
+        ? '⏳ 생성 중엔 못 바꿔요 — 전체 생성이 끝나고 다시 눌러요'
+        : ('❌ 저장 실패' + (j&&j.error?(' — '+j.error):''));
+      renderTtsBeats(); return;
+    }
+    // 글자가 같으면 서버가 unchanged로 알려준다 — 헛되이 기다리지 않는다.
+    if(j.unchanged && !j.regen){ if(m) m.textContent='그대로예요(바뀐 글자 없음)'; renderTtsBeats(); return; }
+    if(m) m.textContent='🔊 음성·자막 다시 뽑는 중… (10~20초)';
+    // 완료 감지는 tts_ver — mp3는 같은 경로라 겉으론 구분이 안 된다(vpRegenTone과 같은 방식).
+    const started=Date.now();
+    const poll=setInterval(async()=>{
+      try{
+        const d=await (await fetch('/api/mix/result/'+MIX_JOB,{cache:'no-store'})).json();
+        const nb=(d.beats||[]).find(x=>x.beat_idx===b.beat_idx);
+        if(nb && (+nb.tts_ver||0)>prevVer){ clearInterval(poll); renderTtsBeats(); return; }
+        if(Date.now()-started>60000){ clearInterval(poll); if(m) m.textContent='❌ 시간 초과 — 다시 시도해 주세요'; }
+      }catch(e){}
+    }, 1500);
+  }catch(e){
+    if(m) m.textContent='❌ 저장 실패: '+(e.message||e);
+    renderTtsBeats();
+  }
+}
+
 async function renderTtsBeats(){
+  if(vpIsEditing()) return;      // ★고치는 중엔 갈아끼우지 않는다(입력이 날아간다)
   const el=document.getElementById('ttsBeats');
   // 매칭 전에도 큰 미리보기 자리는 유지한다(처음 상태에서 자리 예약 — 2026-07-25 사장님 요청).
   // ★대기 화면 모양은 HTML 초기값(#ttsBeats 안)과 **같은 틀**을 쓴다(2026-08-18).
@@ -10401,7 +10477,7 @@ async function renderTtsBeats(){
       const badgeTip = synced ? '자막 자동맞춤 됨' : '자막 자동맞춤 불확실 — 들어보세요';
       return `
       <div id="beatRow${i}" data-idx="${i}" style="border:1px solid var(--line);border-radius:9px;padding:9px;margin-bottom:6px;background:var(--inset);transition:background .15s">
-        <div style="font-size:13px;margin-bottom:4px"><span title="${badgeTip}">${badge}</span> <b>${i+1}.</b> ${esc(b.narration||'')}</div>
+        <div id="vpSay${i}" style="font-size:13px;margin-bottom:4px"><span title="${badgeTip}">${badge}</span> <b>${i+1}.</b> <span class="vpNarr">${esc(b.narration||'')}</span></div>
         ${b.tts_preview_url?`<audio id="beatAudio${i}" preload="metadata" src="${esc(b.tts_preview_url)}?t=${Date.now()}" style="display:none"></audio><button class="btn-prev" style="padding:4px 10px" onclick="vpPlayBeat(${i})">▶ 이 장면</button>
         <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">
           <button class="btn-prev" style="padding:3px 8px" onclick="vpNudge(${i},-1)">◀ 자막 당기기</button>
@@ -10409,6 +10485,7 @@ async function renderTtsBeats(){
           <button class="btn-prev" style="padding:3px 8px" onclick="vpResetOffset(${i})">↩︎ 되돌리기</button>
           <select id="vpTone${i}" style="padding:3px"><option value="stable">안정</option><option value="natural">자연</option><option value="expressive">표현</option><option value="whisper">속삭임</option></select>
           <button class="btn-prev" style="padding:3px 8px" onclick="vpRegenTone(${i})">🔁 톤 바꿔 다시</button>
+          <button class="btn-prev" style="padding:3px 8px" onclick="vpEditNarr(${i})" title="이 문장을 고치고 음성·자막을 다시 뽑습니다">✏ 대본수정</button>
           ${window.IS_ADMIN?`<button class="btn-prev" style="padding:3px 8px" onclick="pronReport(this,${i})">🩺 발음 이상해요</button>`:''}
           <span id="vpMsg${i}" class="hint"></span>
         </div>`:'<span class="hint">음성 없음</span>'}
