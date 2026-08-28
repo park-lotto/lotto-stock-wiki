@@ -2099,7 +2099,10 @@
           <div style="font-size:12px;color:var(--sub);margin:10px 0 4px">😀 스티커 — 누르면 썸네일에 얹혀요 (드래그로 옮기고, 크기 조절)</div>
           <div id="thumbStickers" style="display:flex;gap:4px;flex-wrap:wrap"></div>
           <div style="display:flex;gap:6px;align-items:center;margin-top:6px">
-            <input id="thumbStickerInput" maxlength="8" placeholder="직접 입력 — 이모지 😀 또는 넣고 싶은 글자"
+            <!-- ★maxlength 8 → 40 (2026-08-28 사장님 "고쳐"). 8글자면 "아이 생일 엄마들 다
+                 이거 쓰네요" 같은 썸네일 문구가 통째로 잘려 **안 얹힌 것처럼** 보였다.
+                 이모지는 어차피 firstGrapheme으로 첫 덩어리만 쓰므로 길이를 풀어도 무해하다. -->
+            <input id="thumbStickerInput" maxlength="40" placeholder="직접 입력 — 이모지 😀 또는 넣고 싶은 글자"
                    onkeydown="if(event.key==='Enter'){addThumbStickerFromInput();return false}"
                    style="flex:1;padding:7px 9px;font-size:15px">
             <button class="tab" style="flex:0 0 auto;min-width:auto;padding:7px 13px"
@@ -11651,9 +11654,30 @@ function initThumbHandleDrag(){
   });
 }
 
+// 새 글자를 어디에 놓을지 — **이미 있는 글자와 겹치지 않는 첫 자리**를 고른다.
+// ★2026-08-28 사장님 "고쳐": 종전엔 새 레이어가 무조건 프리셋 y(0.14, 맨 위)에 생겨
+//   기존 제목 **바로 위에 포개졌다**. 화면이 안 바뀐 것처럼 보여 "얹어도 반영이 안 된다"로
+//   읽혔다(실측: 라이브에서 '케이크' 입력 → y=0.14 레이어 생성, 기존 제목과 같은 자리).
+// 자리를 위에서부터 훑어 이미 쓴 곳(±GAP)을 건너뛴다. 다 찼으면 마지막 자리에 둔다
+// — 겹치더라도 **레이어가 만들어지는 것 자체는 막지 않는다**(사람이 옮기면 된다).
+const THUMB_SLOT_Y = [0.14, 0.30, 0.46, 0.62, 0.78, 0.88];
+function _freeThumbY(preferred){
+  const used = (THUMB_STATE.layers || [])
+    .filter(L => !L.kind && String(L.text || '').trim())
+    .map(L => L.y);
+  if (!used.length) return preferred;
+  const GAP = 0.09;
+  const slots = [preferred].concat(THUMB_SLOT_Y.filter(y => y !== preferred));
+  for (const y of slots){
+    if (used.every(u => Math.abs(u - y) >= GAP)) return y;
+  }
+  return THUMB_SLOT_Y[THUMB_SLOT_Y.length - 1];
+}
+
 function addThumbLayer(){
   const base = thumbPresetToLayer(HC_PRESETS.find(p => p.cat === '썸네일') || {y: 12});
   base.text = '문구를 입력하세요';
+  base.y = _freeThumbY(base.y);
   THUMB_STATE.layers.push(base);
   THUMB_STATE.sel = THUMB_STATE.layers.length - 1;
   renderThumbLayers(); renderThumbCanvas();
