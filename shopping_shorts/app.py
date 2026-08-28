@@ -9249,13 +9249,20 @@ async def _auth_guard(request: Request, call_next):
 
 
 # ── 유료게이트 접근권한 판정 (단일 진실원. API게이트·화면·크레딧 모두 이 함수만 본다) ──
-def access_level(customer_id, now=None):
+def access_level(customer_id, now=None, cust=None):
     """customer_id → "full"(전기능) | "ranking_only"(랭킹만) | "pending"(승인대기, 전면차단).
     규칙: 사장님(0)=full / 계정없음=ranking_only / 미승인(approved_at NULL)=pending /
-    plan=pro=full / 체험중(now<full_access_until)=full / 그 외 ranking_only."""
+    plan=pro=full / 체험중(now<full_access_until)=full / 그 외 ranking_only.
+
+    ★cust를 넘기면 DB를 다시 안 친다(2026-08-29). 관리자 목록처럼 고객 dict를 이미
+      들고 있는 곳에서 쓴다 — **판정 규칙은 아래 그대로**라 결과가 달라지지 않는다.
+      (넘기는 dict는 get_customer와 같은 키를 가져야 한다: approved_at·trial_ends_at·
+       plan·full_access_until. store.list_customers가 그 넷을 모두 준다)
+    """
     if _as_cid(customer_id) == 0:           # "0"(문자열)로 와도 사장님 (2026-07-30)
         return "full"                       # 사장님 = 영구 pro+admin
-    cust = Store(DB_PATH).get_customer(customer_id)
+    if cust is None:
+        cust = Store(DB_PATH).get_customer(customer_id)
     if not cust:
         return "ranking_only"
     if cust.get("approved_at") is None:
@@ -9514,7 +9521,7 @@ def _lens_api_keys(customer_id):
     return keys
 
 
-def _lens_key_count(customer_id):
+def _lens_key_count(customer_id, store=None, cache=False):
     """이 회원이 실제로 쓸 수 있는 **자기 SerpApi 키 개수**(2026-08-26 사장님
     "api 2개 등록시 20회로 상향하는걸로 모두 그렇게 설정").
 
@@ -9523,11 +9530,16 @@ def _lens_key_count(customer_id):
       안 쓰는 키로 한도만 늘리면 실제 호출에서 그냥 실패한다.
     ★못 세면 0 — 한도를 안 늘릴 뿐 기존 동작 그대로다(안전한 쪽으로 넘어진다).
     """
+    # ★_lens_key_info가 keys_for를 한 번만 부르고 그 결과를 센다(2026-08-29).
+    #   종전엔 has_own 판정과 개수 세기가 **각각** 복호화를 돌려 1명당 2회였고,
+    #   관리자 목록 290명에서 580회가 되어 18.2초를 먹었다(라이브 실측).
+    #   꺼진 키(status='off') 제외 규칙은 그대로다 — keys_for도 같은
+    #   get_customer_keys_plain을 쓰므로 판정이 어긋나지 않는다(0순위-B).
     try:
-        if not _lens_has_own_key(customer_id):
+        has_own, count = _lens_key_info(customer_id, store, cache=cache)
+        if not has_own:
             return 0            # 운영자 키로 도는 사람 — 남의 키로 더 달라고 할 수 없다
-        keys = Store(DB_PATH).get_customer_keys_plain(customer_id, keyroute.SVC_SERPAPI)
-        return len(keys or [])
+        return count
     except Exception as e:      # noqa: BLE001
         print(f"[limit] SerpApi 키 세기 실패(한도 안 늘림): {e!r}", file=sys.stderr)
         return 0
@@ -9540,7 +9552,7 @@ def _lens_limit_for(store, customer_id, fallback):
     ★한도를 막는 쪽(게이트)과 보여주는 쪽(마이페이지)이 **이 함수 하나**를 쓴다 —
       두 곳에 따로 적으면 "20회라더니 10회에서 막힌다"가 난다(0순위-B).
     """
-    n = _lens_key_count(customer_id)
+    n = _lens_key_count(customer_id, store)
     if not n:
         return fallback
     try:
@@ -9558,7 +9570,7 @@ def _limit_tier(store, customer_id, op):
       적으면 반드시 어긋난다(0순위-B). 실제로 그래서 사고가 났다:
       화면은 "pro"라는데 게이트는 무료와 같은 10회를 걸고 있었다.
     """
-    if op == "lens" and _lens_key_count(customer_id):
+    if op == "lens" and _lens_key_count(customer_id, store):
         return None, None, "byok"          # 자기 키 — 키 개수 × per_key
     is_paid = ((_as_cid(customer_id) == 0)
                or (store.get_customer(customer_id) or {}).get("plan") == "pro")
@@ -9583,7 +9595,7 @@ def _effective_limits(store, customer_id):
         if key is None:                       # BYOK — 키 개수로 계산, 설정칸 없음
             out[op] = {"limit": _lens_limit_for(store, customer_id,
                                                 _CREDIT_DEFAULTS["lens"]),
-                       "tier": tier, "source": f"SerpApi 키 {_lens_key_count(customer_id)}개",
+                       "tier": tier, "source": f"SerpApi 키 {_lens_key_count(customer_id, store)}개",
                        "fallback": False}
             continue
         raw = store.get_setting(key, None)
@@ -9595,6 +9607,105 @@ def _effective_limits(store, customer_id):
     return out
 
 
+def _effective_limits_all(store, customers):
+    """관리자 목록용 — 전원 몫의 한도를 **한 번에** 계산한다 → {cid: limits}.
+
+    ★왜(2026-08-29 라이브 실측): 관리자 고객 목록이 **18.2초** 걸렸다(290명·229KB).
+      `_effective_limits`를 고객마다 부르면 1명당 설정 3회 + get_customer 3회 +
+      SerpApi 키 복호화가 다시 돌아 DB 연결만 수천 번 열린다(쿼리 자체는 0.00초).
+      여기서는 **전원 공통인 것을 밖으로 뺀다**: 설정값 6개는 한 번만 읽고,
+      plan은 이미 들고 있는 목록에서 꺼낸다.
+
+    ★판정은 여전히 `_limit_tier`가 정한 규칙과 같아야 한다(0순위-B). 그래서 tier·
+      source·fallback의 의미와 값을 그대로 맞춘다 — 아래 테스트가 두 경로의 결과가
+      같은지 대조한다(test_effective_limits_all_matches_single).
+    """
+    ops = ("lens", "render", "script")
+    # 설정값은 전원 공통 — 루프 밖에서 한 번만
+    raw_by_key = {}
+    for op in ops:
+        for key in (f"limit_{op}", f"limit_{op}_pro"):
+            raw_by_key[key] = store.get_setting(key, None)
+    try:
+        per_key = int(store.get_setting("limit_lens_per_key",
+                                        _CREDIT_PER_KEY_DEFAULTS["lens"]))
+    except (TypeError, ValueError):
+        per_key = _CREDIT_PER_KEY_DEFAULTS["lens"]
+
+    out = {}
+    for cu in customers:
+        cid = cu["id"]
+        # plan은 목록이 이미 들고 있다 — get_customer를 다시 부르지 않는다
+        is_paid = (_as_cid(cid) == 0) or (cu.get("plan") == "pro")
+        # ★목록은 **보여주기만** 한다 — 여기서만 캐시를 켠다. 막는 쪽(check_and_count)은
+        #   캐시를 안 쓴다(키를 방금 바꾼 사람에게 옛 한도를 걸면 안 된다).
+        n_keys = _lens_key_count(cid, store, cache=True)
+        lim = {}
+        for op in ops:
+            if op == "lens" and n_keys:                    # BYOK — 키 개수 × per_key
+                lim[op] = {"limit": per_key * n_keys, "tier": "byok",
+                           "source": f"SerpApi 키 {n_keys}개", "fallback": False}
+                continue
+            key = f"limit_{op}_pro" if is_paid else f"limit_{op}"
+            dflt = (_CREDIT_PRO_DEFAULTS if is_paid else _CREDIT_DEFAULTS).get(
+                op, 100 if is_paid else 5)
+            try:
+                limit, fell = int(raw_by_key.get(key)), False
+            except (TypeError, ValueError):
+                limit, fell = dflt, True
+            lim[op] = {"limit": limit, "tier": "pro" if is_paid else "free",
+                       "source": key, "fallback": fell}
+        out[cid] = lim
+    return out
+
+
+# ── SerpApi 키 조회 캐시(2026-08-29) ──────────────────────────────────────
+# ★왜: 관리자 고객 목록이 **18.2초** 걸렸다(라이브 실측, 고객 290명·응답 229KB).
+#   범인은 DB가 아니라 **키 복호화**다 — `_effective_limits`가 고객마다
+#   `_lens_has_own_key`와 `_lens_key_count`를 부르고, 그 둘이 각각 복호화를 돌려
+#   1명당 2회 × 290명 = 580회를 매 요청마다 다시 했다(쿼리 자체는 0.00초).
+#   판정 로직은 그대로 두고 **결과만** 잠깐 재사용한다(0순위-B: 판단은 여전히
+#   keyroute 한 곳). TTL이 짧아 키를 등록하면 몇 초 안에 반영된다.
+_LENSKEY_CACHE = {}          # cid → (만료epoch, has_own, count)
+_LENSKEY_TTL = 20.0
+
+
+def _lens_key_info(customer_id, store=None, cache=False):
+    """(자기 키를 쓰는가, 쓸 수 있는 키 개수).
+
+    ★store를 받는 이유(2026-08-29 프로파일 실측): `Store(DB_PATH)`를 새로 만들면
+      생성자가 `_init_schema`를 돌려 **1회당 18ms**가 든다. 고객 290명이면 그것만
+      5초가 넘는다. 호출부가 이미 열어둔 Store가 있으면 그걸 쓴다.
+
+    ★cache는 **기본 꺼짐**이고, 목록을 그리는 읽기 전용 경로에서만 켠다.
+      한도 게이트(check_and_count)에 캐시를 물리면 키를 등록·삭제한 뒤에도 20초간
+      **옛 한도로 막거나 통과시킨다**. 실제로 그렇게 했다가 렌즈 한도 테스트 10건이
+      깨졌다(2026-08-29) — 같은 cid로 키 개수를 바꿔가며 재는 테스트가 캐시에 걸렸다.
+      "막는 쪽은 항상 지금 값을 본다"가 규칙이다.
+    """
+    import time as _t
+    now = _t.time()
+    if cache:
+        hit = _LENSKEY_CACHE.get(customer_id)
+        if hit and hit[0] > now:
+            return hit[1], hit[2]
+    has_own, count = False, 0
+    try:
+        _keys, is_user = keyroute.keys_for(store or Store(DB_PATH),
+                                           customer_id, keyroute.SVC_SERPAPI)
+        has_own = bool(is_user)
+        if has_own:
+            # keys_for가 이미 복호화해 돌려준 목록을 그대로 센다 — 다시 복호화하지 않는다.
+            count = len(_keys or [])
+    except Exception as e:                       # noqa: BLE001
+        print(f"[limit] SerpApi 키 조회 실패(한도 안 늘림): {e!r}", file=sys.stderr)
+    if cache:
+        if len(_LENSKEY_CACHE) > 5000:
+            _LENSKEY_CACHE.clear()
+        _LENSKEY_CACHE[customer_id] = (now + _LENSKEY_TTL, has_own, count)
+    return has_own, count
+
+
 def _lens_has_own_key(customer_id):
     """이 회원이 **자기 SerpApi 키**로 렌즈를 쓰는가.
 
@@ -9602,11 +9713,7 @@ def _lens_has_own_key(customer_id):
       그대로 빌린다(0순위-B). 여기서 customer_keys를 직접 조회하면 키 고르는 쪽과
       한도 주는 쪽이 어긋나, "키 냈는데 한도가 안 늘었다"가 난다.
     실패하면 False — 한도를 못 늘릴 뿐 기존 동작 그대로다(안전한 쪽으로 넘어진다)."""
-    try:
-        _keys, is_user = keyroute.keys_for(Store(DB_PATH), customer_id, keyroute.SVC_SERPAPI)
-        return bool(is_user)
-    except Exception:
-        return False
+    return _lens_key_info(customer_id)[0]
 
 
 def _global_over_cap(op):
@@ -9675,7 +9782,7 @@ def _api_me(request: Request):
                       for op in ("lens", "render", "script")}
         # 🔑 자기 SerpApi 키를 낸 회원은 렌즈 한도가 다르다 — check_and_count와 **같은 규칙**.
         #   여기가 어긋나면 "20회라더니 10회에서 막힌다"가 된다(0순위-B).
-        if _lens_key_count(cid):
+        if _lens_key_count(cid, st):
             # ★store가 아니라 st — 이 함수의 Store는 st다(모듈 전역 store는 없다).
             #   2026-08-26까지 `store`를 넘겨 NameError→/api/me 500이 났고, 사이드바가
             #   응답을 못 받아 계정 카드(오늘 사용량·로그아웃)가 통째로 안 떴다.
@@ -9922,19 +10029,30 @@ def _admin_customers(request: Request):
     access_map = st.access_summary_all(since7)
     points_map = st.points_balance_all()
     challenge_ids = st.challenge_member_ids()
-    for cu in st.list_customers():
+    _customers = st.list_customers()
+    # ★한도도 일괄로(2026-08-29). 고객마다 _effective_limits를 부르면 설정·고객·키를
+    #   1인당 6~7회 다시 읽어 **목록이 18.2초** 걸렸다(라이브 실측 290명).
+    limits_map = _effective_limits_all(st, _customers)
+    for cu in _customers:
         _cid = cu["id"]
-        cu["level"] = access_level(_cid)
+        # ★access_level에 이미 읽은 고객 dict를 넘긴다(2026-08-29) — 안 넘기면
+        #   고객마다 get_customer로 DB를 다시 친다. 판정 규칙은 그 함수 것 그대로다.
+        cu["level"] = access_level(_cid, cust=cu)
         _u = usage_map.get(_cid, {})
         cu["usage"] = {op: _u.get(op, 0) for op in ("lens", "render", "script")}
         # 이 회원에게 **실제로 걸린** 한도 + 그 근거. 화면이 "10/10"만 보여주면
         # 10이 어디서 온 값인지 알 수 없다(2026-08-27 pro가 조용히 10회로 떨어진 사고).
-        cu["limits"] = _effective_limits(st, _cid)
+        # ★폴백으로 낱개 _effective_limits를 두지 않는다 — 그러면 N+1이 조용히
+        #   되살아난다(정확히 그것 때문에 목록이 18.2초였다). 일괄 함수가 전원을
+        #   채우므로 빠지는 고객이 없다. 혹시 비면 빈 dict가 낫다 — 화면이 '—'로 뜬다.
+        cu["limits"] = limits_map.get(_cid, {})
         cu["made_today"] = made_map.get(_cid, {"made": 0, "charged": 0})   # 한국시간 오늘 실측
         cu["access_7d"] = access_map.get(_cid, {"ips": 0, "devices": 0})  # 최근 7일 고유 수
-        cu["is_admin"] = _is_admin(_cid)                        # 관리자 배지용
+        # 관리자 판정도 목록이 이미 들고 있는 email·admin으로 한다(규칙은 _is_admin과 동일)
+        _email = (cu.get("email") or "").lower()
+        cu["code_admin"] = (_as_cid(_cid) == 0) or (_email in _ADMIN_EMAILS)
+        cu["is_admin"] = cu["code_admin"] or bool(cu.get("admin"))
         cu["challenge"] = _cid in challenge_ids                 # 1기 챌린지 참가 여부(2026-08-24)
-        cu["code_admin"] = _code_admin(_cid)                    # 코드 고정 관리자(UI 토글 불가)
         # 포인트 잔액(화면 단위 P) — 등급이 full이어도 잔액 0이면 유료 op가 402로 막힌다.
         # 관리자가 그 상태를 목록에서 바로 보게 한다(2026-08-20 체험 계정 402 사고).
         cu["points"] = pricing.to_display(points_map.get(_cid, 0))
@@ -10142,6 +10260,222 @@ def _admin_customer_activity(request: Request, customer_id: int):
     if denied:
         return denied
     return {"ok": True, "activity": Store(DB_PATH).recent_activity(customer_id, 12)}
+
+
+# ── 고객 1명 상세 시트(2026-08-29) ──────────────────────────────────────────
+# 사장님 요청: "고객 누르면 상세창으로 이동, 날짜별로 어떤 작업을 어떻게 했는지
+#              접속부터 디테일하게. 결제 후 평균 얼마나 쓰는지, API는 얼마나 쓰는지."
+#
+# ★왜 KST로 묶나: 테이블마다 시간 형식이 4가지(epoch초 / ISO8601 / datetime('now')
+#   공백형 / YYYY-MM-DD UTC)라 그대로 두면 같은 하루가 서로 다른 칸에 흩어진다.
+#   **여기 한 곳에서** KST 날짜로 정규화한다(화면이 또 계산하면 두 벌 — 0순위-B).
+_KST = timezone(timedelta(hours=9))
+
+# 고객별 AI 원가 귀속이 시작된 날. 이 날 이전 gemini_usage 행은 customer_id가
+# 비어 있어(라이브 실측 96%·86,580원) 어느 고객 몫인지 알 수 없다 — 화면이 이 사실을 밝힌다.
+_AI_ATTRIBUTION_SINCE = "2026-08-29"
+
+
+def _kst_day(value):
+    """어떤 형식이 오든 KST 기준 `YYYY-MM-DD` 문자열로. 못 읽으면 None.
+
+    받는 형식: epoch초(int/float) / ISO8601(`2026-08-28T16:12:21+00:00`) /
+              `datetime('now')` 공백형(`2026-08-28 16:12:21`) / `YYYY-MM-DD`.
+    ⚠️ `YYYY-MM-DD`(usage·customer_access)는 **이미 UTC 날짜**라 시각 정보가 없다.
+       그날 09:00 KST 이전 활동이 전날로 적힌 것을 되돌릴 방법이 없으므로 그대로 쓴다.
+       (되돌리려고 +9h를 더하면 하루가 통째로 밀려 더 틀린다)
+    """
+    if value is None or value == "":
+        return None
+    try:
+        if isinstance(value, (int, float)):
+            return datetime.fromtimestamp(float(value), _KST).strftime("%Y-%m-%d")
+        s = str(value).strip()
+        if len(s) == 10 and s[4] == "-":          # 이미 날짜만 — UTC 날짜 그대로
+            return s
+        if s == "trial":                          # 체험 render 영구 버킷
+            return None
+        dt = datetime.fromisoformat(s.replace("Z", "+00:00"))
+        if dt.tzinfo is None:                     # 공백형은 tz가 없다 = UTC로 읽는다
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt.astimezone(_KST).strftime("%Y-%m-%d")
+    except Exception:                             # noqa: BLE001
+        return None
+
+
+def _customer_daily(store, cid, since_day):
+    """날짜(KST) → 그날 무슨 일이 있었나. 상세 화면의 '날짜별 타임라인' 재료.
+
+    한 날짜 칸에 접속·활동·영상·포인트·AI원가를 **함께** 담는다. 표를 5개 따로 두면
+    "8월 25일에 무슨 일이 있었나"를 사람이 눈으로 맞춰야 한다.
+    """
+    days = {}
+
+    def slot(day):
+        if not day or day < since_day:
+            return None
+        return days.setdefault(day, {
+            "day": day, "access": [], "actions": {}, "jobs": [],
+            "points_in": 0, "points_out": 0, "ai_krw": 0.0, "ai_calls": 0,
+            "usage": {},
+        })
+
+    for a in store.customer_access_rows(cid, limit=400):
+        s = slot(a["day"])                      # day는 UTC 날짜(시각 없음)
+        if s is not None and a["ip"] not in [x["ip"] for x in s["access"]]:
+            s["access"].append({"ip": a["ip"], "ua": a["ua"]})
+
+    for a in store.customer_activity_rows(cid, limit=600):
+        s = slot(_kst_day(a["at"]))
+        if s is not None:
+            s["actions"][a["action"]] = s["actions"].get(a["action"], 0) + 1
+
+    for j in store.customer_jobs(cid, limit=300):
+        s = slot(_kst_day(j["created_at"]))
+        if s is not None:
+            s["jobs"].append(j)
+
+    for p in store.customer_points_ledger(cid, limit=500):
+        s = slot(_kst_day(p["at"]))
+        if s is None:
+            continue
+        # ★내부 단위(정수)로 더한 뒤 **마지막에 한 번만** P로 바꾼다.
+        #   0.1P씩 float으로 누적하면 -48.20000000000002 같은 값이 화면에 뜬다
+        #   (실측 2026-08-29 브라우저). 포인트가 정수(×100)로 저장된 이유가 이것이다.
+        if p["delta"] >= 0:
+            s["points_in"] += p["delta"]
+        else:
+            s["points_out"] += -p["delta"]
+
+    for u in store.customer_usage_days(cid, since_day):
+        s = slot(u["day"])                      # UTC 날짜 버킷
+        if s is not None:
+            s["usage"][u["op"]] = u["count"]
+
+    ai = store.customer_ai_cost(cid, since_day)
+    for d in ai["days"]:
+        s = slot(d["day"])                      # gemini_usage.day도 UTC 날짜
+        if s is not None:
+            s["ai_krw"] = d["krw"]
+            s["ai_calls"] = d["calls"]
+
+    # 내부 단위로 누적한 포인트를 여기서 딱 한 번 표시 단위(P)로 바꾼다
+    for s in days.values():
+        s["points_in"] = pricing.to_display(s["points_in"])
+        s["points_out"] = pricing.to_display(s["points_out"])
+
+    return sorted(days.values(), key=lambda x: x["day"], reverse=True), ai
+
+
+@app.get("/api/admin/customer/detail")
+def _admin_customer_detail(request: Request, customer_id: int, days: int = 60):
+    """고객 1명 상세 시트. admin 전용.
+
+    ★pro 지표(결제 후 평균 사용량·수익성)는 **결제한 고객에게만** 뜻이 있다.
+      체험·무료는 '결제 후'라는 기준선이 없어 계산 자체가 성립하지 않는다
+      → paid=False로 내리고 화면이 그 칸을 감춘다.
+    """
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    st = Store(DB_PATH)
+    cust = st.get_customer(customer_id)
+    if not cust:
+        return JSONResponse({"error": "없는 고객입니다"}, status_code=404)
+
+    days = max(1, min(int(days or 60), 365))
+    since_day = (datetime.now(_KST) - timedelta(days=days)).strftime("%Y-%m-%d")
+
+    cust["level"] = access_level(customer_id)
+    cust["limits"] = _effective_limits(st, customer_id)
+    cust["points"] = pricing.to_display(st.points_balance(customer_id))
+    cust["is_admin"] = _is_admin(customer_id)
+    cust["code_admin"] = _code_admin(customer_id)
+    cust["challenge"] = customer_id in st.challenge_member_ids()
+    cust["usage_today"] = {op: st.usage_get(customer_id, op, _today_utc())
+                           for op in ("lens", "render", "script")}
+
+    payments = st.list_payments(customer_id)
+    timeline, ai = _customer_daily(st, customer_id, since_day)
+    jobs = st.customer_jobs(customer_id, limit=300)
+
+    return {
+        "ok": True,
+        "customer": cust,
+        "payments": payments,
+        "timeline": timeline,
+        "jobs": jobs,
+        "ledger": st.customer_points_ledger(customer_id, limit=300),
+        "durations": st.customer_job_durations(customer_id, limit=100),
+        "ai": ai,
+        "ai_unattributed": st.ai_cost_unattributed(since_day),
+        "sheet": _customer_sheet(st, cust, payments, jobs, ai),
+        "window": {"days": days, "since": since_day},
+    }
+
+
+def _ratio_pct(part, whole):
+    """part/whole을 %로. 아주 작아도 0으로 뭉개지 않는다 — 0%는 '원가가 없다'로 읽힌다."""
+    pct = part / whole * 100
+    if pct >= 1:
+        return round(pct, 1)
+    if pct >= 0.01:
+        return round(pct, 2)
+    return round(pct, 4)          # 0.0001% 미만이면 그때는 0으로 봐도 된다
+
+
+def _customer_sheet(store, cust, payments, jobs, ai):
+    """★'고객관리 시트' — 결제한 사람에 대해서만 계산되는 장사 지표.
+
+    사장님 질문 그대로: **결제 후 평균적으로 얼마나 쓰는지 / API는 얼마나 소모하는지.**
+
+    ⚠️ 정직하게 만드는 게 이 함수의 전부다. 모르는 값은 지어내지 않고 None으로 둔다:
+      - `ai_krw`는 2026-08-29 배선 수정 **이후** 데이터만 잡힌다. 그 전 것은 주인이
+        기록돼 있지 않아 0으로 보이는데, 이걸 '원가가 안 들었다'로 읽으면 정반대다
+        → `ai_since`로 언제부터 믿을 수 있는 수치인지 함께 내린다.
+      - 결제가 없으면 paid=False. 평균·수익성 칸을 아예 만들지 않는다.
+    """
+    paid = bool(payments)
+    out = {"paid": paid, "ai_since": _AI_ATTRIBUTION_SINCE}
+    if not paid:
+        return out
+
+    first = min(p["paid_at"] for p in payments)
+    total_paid = sum(int(p.get("amount") or 0) for p in payments)
+    now = int(datetime.now(timezone.utc).timestamp())
+    days_since = max(1, (now - first) // 86400)
+
+    made = [j for j in jobs if j["made"]]
+    # 결제 시점 이후에 만든 것만 센다 — '결제 후'가 질문이다
+    made_after = [j for j in made
+                  if (_kst_day(j["created_at"]) or "") >= (_kst_day(first) or "")]
+
+    ai_krw = ai["total"]["krw"]
+    out.update({
+        "first_paid_at": first,
+        "payment_count": len(payments),
+        "total_paid": total_paid,
+        # ★결제 건은 있는데 금액이 0인 경우가 실제로 많다(2026-08-29 서버 실측:
+        #   pro 33명 중 금액이 들어간 건 1명뿐). 승인할 때 금액 칸을 비우고 넘기면
+        #   이렇게 된다. 이걸 '무료 고객'으로 읽으면 수익성이 통째로 틀리므로
+        #   **금액 미기재**라고 화면이 대놓고 말한다.
+        "amount_missing": total_paid == 0,
+        "days_since_first": days_since,
+        "videos_made": len(made_after),
+        "videos_per_week": round(len(made_after) / days_since * 7, 1),
+        "days_per_video": (round(days_since / len(made_after), 1)
+                           if made_after else None),
+        "ai_krw": ai_krw,
+        "ai_krw_per_video": (round(ai_krw / len(made_after), 1)
+                             if made_after and ai_krw else None),
+        # 수익성 — 결제액 대비 AI 원가. 어느 한쪽이라도 0이면 None(0%로 속이지 않는다).
+        # ★소수 1자리로 반올림하면 실제 0.005%가 '0.0%'로 찍혀 "원가가 안 든다"로 읽힌다
+        #   (실측 cid 260: 38.66원 / 770,000원). 작은 값은 자릿수를 더 준다.
+        "cost_ratio": (_ratio_pct(ai_krw, total_paid)
+                       if total_paid and ai_krw else None),
+        "margin_krw": (round(total_paid - ai_krw, 1) if total_paid and ai_krw else None),
+    })
+    return out
 
 
 # 체험 계정 기본 포인트(화면 단위 P). admin 설정 trial_grant_points로 조정.
@@ -10484,6 +10818,20 @@ def _admin_page(request: Request):
     if not _is_admin(getattr(request.state, "customer_id", None)):
         return HTMLResponse("<h2 style='font-family:sans-serif'>관리자 전용입니다</h2>", status_code=403)
     return FileResponse(Path(__file__).parent / "static" / "admin.html",
+                        media_type="text/html; charset=utf-8", headers=_NOCACHE)
+
+
+@app.get("/admin/customer/{customer_id}", response_class=HTMLResponse)
+def _admin_customer_page(request: Request, customer_id: int):
+    """고객 1명 상세 시트 화면(2026-08-29).
+
+    ★전용 페이지로 둔 이유: 모달(520px)엔 날짜별 타임라인이 안 들어간다. 주소가 있으면
+      새 탭·북마크·공유가 되고, 새로고침해도 그 고객 자리로 돌아온다.
+    customer_id는 화면이 주소에서 직접 읽는다 — 여기선 파일만 준다.
+    """
+    if not _is_admin(getattr(request.state, "customer_id", None)):
+        return HTMLResponse("<h2 style='font-family:sans-serif'>관리자 전용입니다</h2>", status_code=403)
+    return FileResponse(Path(__file__).parent / "static" / "admin_customer.html",
                         media_type="text/html; charset=utf-8", headers=_NOCACHE)
 
 
