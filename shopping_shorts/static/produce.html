@@ -1401,7 +1401,13 @@
         <!-- ② 미리듣기·설정 (성우를 고르면 나타난다) -->
         <div>
           <div id="voiceControls" style="display:none">
-          <div style="font-size:12px;color:var(--sub)">속도</div>
+          <!-- ★현재 속도를 숫자로 보여준다(2026-08-28 고객 제보 "속도 조절이 안 먹는다").
+               성우 67명 중 24명의 기본 속도가 1.42·1.48·1.52처럼 버튼(0.1 단위)에 **없는 값**이라
+               활성 버튼이 하나도 안 떴다 — 사용자에겐 "안 걸린" 것으로 보였다. -->
+          <div style="font-size:12px;color:var(--sub);display:flex;align-items:center;gap:6px">
+            속도 <b id="speedNow" style="color:var(--txt)">–</b>
+            <span id="speedOff" class="hint" style="display:none;font-size:11px"></span>
+          </div>
           <div id="speedBtns" style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 10px"></div>
           <div style="font-size:12px;color:var(--sub)">무음 삭제</div>
           <div id="silenceBtns" style="display:flex;gap:6px;margin:4px 0 10px"></div>
@@ -1423,6 +1429,15 @@
               <label style="display:flex;align-items:center;gap:6px;min-height:44px;cursor:pointer"><input type="checkbox" id="advBoost" onchange="onAdv()"> Speaker boost</label>
             </div>
           </details>
+          <!-- ★설정을 바꾸면 전체 음성은 **다시 만들어야** 바뀐다(2026-08-28 고객 제보:
+               "미리듣기 하고 전체 재생 누르면 조절 전 속도가 나와요"). 미리듣기는 즉석
+               합성이라 바로 반영되지만, 완성본은 이미 만들어둔 파일을 튼다 — 그 사실을
+               화면이 말해주지 않아 고장으로 읽혔다. -->
+          <div id="voiceDirty" style="display:none;margin:2px 0 8px;padding:8px 10px;border-radius:8px;
+               background:#3a2f12;border:1px solid #7a5f1c;color:#ffc75a;font-size:12.5px;line-height:1.5">
+            ⚠️ 설정을 바꿨어요 — <b>아래 「이 음성으로 전체 생성」</b>을 눌러야 완성본에 반영됩니다.
+            (미리듣기는 지금 설정으로 바로 들려줍니다)
+          </div>
           <button onclick="previewVoice()" class="btn-prev" style="padding:8px 14px;margin-right:8px" title="이 성우·설정으로 대본 일부만 짧게 들어봅니다 (완성본 아님)">🎧 목소리만 미리듣기</button>
           <button onclick="applyVoice()" class="btn-next" style="padding:8px 16px" title="이 성우로 대본 전체 음성을 만듭니다 — 완성되면 왼쪽에서 ▶ 완성본 전체 듣기">이 음성으로 전체 생성</button>
           <div id="voicePreview" style="margin-top:8px"></div>
@@ -9884,6 +9899,7 @@ function pickPreset(gid){
   document.getElementById('voiceControls').style.display='block';
   { const _vh=document.getElementById('voiceHint'); if(_vh) _vh.style.display='none'; }  // 성우 고르면 안내문 → 컨트롤
   syncCurVoiceName();     // 접힌 '🎙 목소리 바꾸기' 줄에 지금 성우를 띄운다(2026-08-18)
+  markVoiceDirty(true);   // 성우가 바뀌면 완성본도 다시 만들어야 한다(속도와 같은 이유)
   pickHighlight();
   renderPresetCards();  // whisper role 선택도 이 안에서 카드와 같이 그려진다(결함① 수정, 별도 호출 불필요)
   const vs=VOICE.settings||{};
@@ -9895,9 +9911,15 @@ function pickPreset(gid){
   syncAdvLabels();
   renderTtsBeats();
 }
-function setSpeed(s){ VOICE.speed=s; pickHighlight(); }
-function setSil(v){ VOICE.silence_trim=v; pickHighlight(); }
-function setPace(v){ VOICE.pace_mode=v; }
+// ★완성본과 지금 설정이 어긋났음을 화면에 띄운다(2026-08-28). 판단은 이 함수 한 곳에서만
+//   한다 — 설정을 바꾸는 자리가 여럿이라 각자 배너를 켜고 끄면 반드시 어긋난다(0순위-B).
+function markVoiceDirty(on){
+  const el = document.getElementById('voiceDirty');
+  if(el) el.style.display = on ? '' : 'none';
+}
+function setSpeed(s){ VOICE.speed=s; markVoiceDirty(true); pickHighlight(); }
+function setSil(v){ VOICE.silence_trim=v; markVoiceDirty(true); pickHighlight(); }
+function setPace(v){ VOICE.pace_mode=v; markVoiceDirty(true); }
 // 카드 안 role 버튼을 고르면 카드 전체를 다시 그린다(WHISPER_PICK은 renderPresetCards()가 읽는다) —
 // 예전엔 #whisperRoleControls 하나만 갱신하는 renderWhisperRoleBtns()가 따로 있었지만, 그 div가
 // 이제 카드 마크업 안에서만 존재하므로(결함① 수정) 카드 재렌더가 곧 role 버튼 재렌더다.
@@ -9909,7 +9931,21 @@ function _whisperRolesForBody(){
   return w ? w.roles : null;
 }
 function pickHighlight(){
-  document.getElementById('speedBtns').innerHTML=SPEEDS.map(s=>`<button onclick="setSpeed(${s})" class="tab${VOICE.speed===s?' active':''}" style="flex:0 0 auto;min-width:auto;padding:6px 12px;font-size:13px">${s}x</button>`).join('');
+  // ★버튼에 없는 속도(성우 기본값 1.42·1.48·1.52…)도 "지금 이 속도"가 보이게 한다.
+  //   전엔 `VOICE.speed===s` 완전일치라 그런 값이면 활성 버튼이 하나도 없었고,
+  //   사용자는 속도가 안 걸린 줄 알았다(2026-08-28 고객 제보).
+  const cur = +VOICE.speed;
+  const near = SPEEDS.reduce((a, b) => Math.abs(b - cur) < Math.abs(a - cur) ? b : a, SPEEDS[0]);
+  const exact = SPEEDS.some(s => s === cur);
+  const _sn = document.getElementById('speedNow');
+  if(_sn) _sn.textContent = isFinite(cur) ? cur + 'x' : '–';
+  const _so = document.getElementById('speedOff');
+  if(_so){
+    // 버튼에 없는 값이면 그 사실을 밝힌다 — 활성 버튼(가장 가까운 것)과 실제 값이 다르니까.
+    _so.style.display = (isFinite(cur) && !exact) ? '' : 'none';
+    _so.textContent = (isFinite(cur) && !exact) ? `(성우 기본값 — 버튼을 누르면 ${near}x로 바뀝니다)` : '';
+  }
+  document.getElementById('speedBtns').innerHTML=SPEEDS.map(s=>`<button onclick="setSpeed(${s})" class="tab${(exact ? VOICE.speed===s : s===near)?' active':''}" style="flex:0 0 auto;min-width:auto;padding:6px 12px;font-size:13px">${s}x</button>`).join('');
   document.getElementById('silenceBtns').innerHTML=SIL.map(([v,l])=>`<button onclick="setSil('${v}')" class="tab${VOICE.silence_trim===v?' active':''}" style="flex:0 0 auto;min-width:auto;padding:6px 12px;font-size:13px">${l}</button>`).join('');
   const _pm=document.getElementById('paceMode'); if(_pm) _pm.checked=VOICE.pace_mode!==false;
 }
@@ -9920,6 +9956,7 @@ function syncAdvLabels(){
   g('advStyleV').textContent=(+g('advStyle').value).toFixed(2);
 }
 function onAdv(){
+  markVoiceDirty(true);   // 고급값(안정성·유사도·스타일)도 완성본에 반영되려면 재생성이 필요하다
   const g=id=>document.getElementById(id);
   VOICE.settings={stability:+g('advStability').value, similarity_boost:+g('advSimilarity').value,
                   style:+g('advStyle').value, use_speaker_boost:g('advBoost').checked};
@@ -9955,6 +9992,7 @@ async function applyVoice(){
       const d=await (await fetch('/api/mix/status/'+MIX_JOB)).json();
       if(d.status==='ready_for_review'){
         clearInterval(poll); el.innerHTML='✅ 완료 — 아래 <b>▶ 완성본 전체 듣기</b>로 확인하세요';
+        markVoiceDirty(false);        // 이제 완성본이 지금 설정과 같다
         await renderTtsBeats();
         // 완성되자마자 재생기가 보이도록 스크롤 — 버튼이 화면 밖이라 못 찾던 문제 보강
         try{ document.getElementById('ttsBeats').scrollIntoView({behavior:'smooth', block:'nearest'}); }catch(e){}
