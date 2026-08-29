@@ -944,10 +944,15 @@ def _caption_durations(segs, dur, real_durs=None):
         # 늘려버려, 애써 실측한 타이밍을 도로 흐트러뜨렸다. 합이 dur를 넘을 때만 줄인다.
         s = sum(real_durs)
         raw = [dur * d / s for d in real_durs] if s > dur else list(real_durs)
-    else:
-        weights = [max(1, len(s.replace("\n", ""))) for s in segs]
-        total_w = sum(weights)
-        raw = [dur * w / total_w for w in weights]
+        # ★실측이 있으면 하한(_CAP_MIN_DUR)도 건너뛴다(2026-08-29 사장님 "자막이 나오기
+        #   전에 음성이 나온다" — 실측 job fa0f71a16a13 beat0: '충격 받았어요' 실발화
+        #   0.68초를 하한이 1.0초로 늘려 다음 구절 자막이 0.32초 늦었고, 그만큼 음성이
+        #   앞서 들렸다). 하한은 글자수 '추정'이 만든 찰나 구절을 막으려는 장치다 —
+        #   실제로 그 길이로 말한 구절을 늘리면 싱크가 깨진다. 짧게 말했으면 짧게 띄운다.
+        return raw
+    weights = [max(1, len(s.replace("\n", ""))) for s in segs]
+    total_w = sum(weights)
+    raw = [dur * w / total_w for w in weights]
     # 하한 미달인 구절은 하한으로 올리고, 그만큼을 하한 이상인 구절에서 비례로 회수.
     floored = [max(_CAP_MIN_DUR, r) for r in raw]
     over = sum(floored) - dur
