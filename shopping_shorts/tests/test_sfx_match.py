@@ -61,14 +61,22 @@ def test_렌더가_전환_타점을_칸_끝으로_계산한다():
     assert "sum(seg_durs[:-1])" in body, "기본(last) 계산이 사라졌다"
 
 
-def test_sfx_position_others_are_last():
-    for role in ("problem", "info", "cta", "result_wow", "benefit"):
-        assert scene_match._sfx_position(role) == "last"
+def test_sfx_position_모든역할이_컷경계다():
+    """★2026-08-29 실측으로 기본값이 last→transition으로 바뀌었다.
+    대세 채널 3편에서 컷 55개 중 52개(95%)에 소리가 붙고, 타점은 컷 경계
+    ±12ms였다(역할 무관). 종전 'last'는 검증 안 된 추측이었다."""
+    for role in ("hook", "problem", "info", "cta", "result_wow", "benefit"):
+        assert scene_match._sfx_position(role) == "transition"
 
 
-def test_sfx_position_unknown_role_defaults_last():
-    assert scene_match._sfx_position("존재안함") == "last"
-    assert scene_match._sfx_position(None) == "last"
+def test_sfx_position_unknown_role도_컷경계():
+    assert scene_match._sfx_position("존재안함") == "transition"
+    assert scene_match._sfx_position(None) == "transition"
+
+
+def test_sfx_last는_수동으로_여전히_쓸_수_있다():
+    """기본값만 바뀐 것이지 last가 없어진 게 아니다 — 렌더가 계속 받아야 한다."""
+    assert "last" in scene_match.SFX_POSITIONS
 
 
 # ── match_sfx ──────────────────────────────────────────────────
@@ -103,10 +111,10 @@ def test_match_sfx_places_by_role():
     assert sfx["position"] == "transition"   # hook → 다음 칸으로 넘어가는 순간(2026-08-21)
 
 
-def test_match_sfx_non_hook_position_last():
+def test_match_sfx_non_hook도_컷경계():
     plan = _plan("cta")
     out = scene_match.match_sfx(plan, [_sfx(3, "CTA")])
-    assert out["beats"][0]["sfx"]["position"] == "last"
+    assert out["beats"][0]["sfx"]["position"] == "transition"
 
 
 def test_match_sfx_allows_duplicate_across_beats():
