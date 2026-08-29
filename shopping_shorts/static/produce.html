@@ -755,6 +755,194 @@
     }
 
     /* ══════════════════════════════════════════════════════════════════════
+       6단계(자막꾸미기) 보기 좋게 — 2026-08-29 사장님 "사용자들 편하게 ui를
+       보기좋게 잡아보자 / 디자인요소 넣어서"
+       ★위 블록(2026-08-19 '크게')과 같은 자리에 이어 쓴다 — 이 패널의 모양을
+         정하는 곳은 여기 하나다(0순위-B). inline style을 이기려면 !important가 필요.
+       ★선택자는 전부 실측으로 확인했다(2026-08-29 브라우저):
+         · 활성 탭 클래스 = `.on`
+         · #decoPaneStyle 직계 자식 순서 = 제목 / #fullPresets / #moreStylesBtn /
+           제목 / #myPresets / 저장줄 / #advDetails  → nth-child(1)·(4)가 제목
+         · #advBody 자식 = details ×3 (가운데는 hidden)
+         · 스타일 카드는 클래스 없는 <button> → **선택 표시 규칙은 넣지 않았다**
+           (없는 클래스를 지어내면 조용히 안 먹는다)
+       ══════════════════════════════════════════════════════════════════════ */
+
+    /* 0. 우측 칼럼 넘침 방지 — flex 아이템은 min-width가 auto라 내용이 넓으면
+          뷰포트를 뚫는다(사장님 캡쳐에서 '지금 스타일 저장'이 잘려 있었다). */
+    .panel[data-step="3"] div:has(> #decoTabs){min-width:0!important}
+
+    /* 1. 탭 = 세그먼트 컨트롤. `.tab{flex:1;min-width:150px}` 때문에 4개가 1021px을
+          4등분해 비대했다 → 내용 폭 알약으로. 시니어 확대(16px)는 그대로. */
+    .panel[data-step="3"] #decoTabs{
+      display:inline-flex!important;
+      width:max-content;max-width:100%;
+      background:var(--inset);border:1px solid var(--line);
+      border-radius:999px;padding:5px!important;gap:4px!important;
+    }
+    .panel[data-step="3"] #decoTabs .tab{
+      flex:0 0 auto!important;min-width:auto!important;
+      border-radius:999px!important;border-color:transparent!important;
+      background:transparent!important;color:var(--sub)!important;
+      transition:background .18s,color .18s;
+    }
+    .panel[data-step="3"] #decoTabs .tab:hover{
+      background:var(--hover)!important;color:var(--txt)!important;
+    }
+    .panel[data-step="3"] #decoTabs .tab.on{
+      background:var(--grad)!important;color:#06251c!important;
+      font-weight:800!important;border-color:transparent!important;
+      box-shadow:0 2px 10px rgba(55,224,189,.28);
+    }
+
+    /* 2. 섹션 제목 = 색 막대 라벨. 제목 div엔 id가 없어 직계 자식 순서로 잡는다.
+          ⚠️#decoPaneStyle의 자식 순서가 바뀌면 이 두 줄을 따라 고쳐야 한다. */
+    .panel[data-step="3"] #decoPaneStyle > div:nth-child(1),
+    .panel[data-step="3"] #decoPaneStyle > div:nth-child(4){
+      font-size:17px!important;
+      padding-left:11px;border-left:4px solid var(--accent);
+      line-height:1.3;margin-bottom:10px!important;
+    }
+    .panel[data-step="3"] #decoPaneStyle > div:nth-child(4){
+      border-left-color:var(--gold);margin-top:22px!important;
+    }
+
+    /* 3. 완성 스타일 = 주인공. 88px 카드가 왼쪽에 몰리고 오른쪽 700px이 비어 있었다
+          → grid가 폭을 채운다. 카드가 커지며 라벨 잘림도 함께 풀린다. */
+    .panel[data-step="3"] #fullPresets{
+      display:grid!important;
+      grid-template-columns:repeat(auto-fill,minmax(120px,140px));
+      justify-content:start;
+      gap:12px!important;margin-bottom:10px!important;
+      background:var(--inset);border:1px solid var(--line);
+      border-radius:14px;padding:14px;
+    }
+    .panel[data-step="3"] #fullPresets > *{
+      width:auto!important;min-width:0!important;
+      border-radius:12px;cursor:pointer;
+      transition:transform .15s,box-shadow .15s,border-color .15s;
+    }
+    .panel[data-step="3"] #fullPresets > *:hover{
+      transform:translateY(-2px);
+      box-shadow:0 6px 18px rgba(0,0,0,.4),0 0 0 1px var(--accent2);
+    }
+    .panel[data-step="3"] #moreStylesBtn{
+      display:block!important;margin:0 0 6px auto!important;
+      background:transparent!important;color:var(--accent2)!important;
+      border:1px dashed var(--line)!important;border-radius:999px!important;
+    }
+    .panel[data-step="3"] #moreStylesBtn:hover{
+      color:var(--accent)!important;border-color:var(--accent2)!important;
+    }
+
+    /* 4. 내 프리셋 — 칩 목록을 판으로, 이름칸이 혼자 900px 먹던 것을 제한. */
+    .panel[data-step="3"] #myPresets{
+      background:var(--inset);border:1px solid var(--line);
+      border-radius:14px;padding:12px 14px;margin-bottom:8px!important;
+      min-height:46px;
+    }
+    .panel[data-step="3"] #myPresetName,
+    .panel[data-step="3"] #capPresetName{
+      max-width:340px!important;
+      font-size:16px!important;padding:10px 12px!important;
+      transition:border-color .15s,box-shadow .15s;
+    }
+    .panel[data-step="3"] #myPresetName:focus,
+    .panel[data-step="3"] #capPresetName:focus{
+      outline:none;border-color:var(--accent)!important;
+      box-shadow:0 0 0 3px rgba(55,224,189,.18);
+    }
+
+    /* 5. 직접 다듬기 = 보조. 완성 스타일과 같은 무게로 보이던 위계를 눌러준다. */
+    .panel[data-step="3"] #advDetails{
+      border:1px solid var(--line);border-radius:14px;
+      padding:4px 16px 12px;margin-top:18px;
+      background:rgba(12,20,18,.45);
+    }
+    .panel[data-step="3"] #advDetails > summary{
+      font-size:15px!important;color:var(--sub)!important;
+      padding:10px 0!important;list-style:none;
+      transition:color .15s;
+    }
+    .panel[data-step="3"] #advDetails > summary:hover{color:var(--accent2)!important}
+    .panel[data-step="3"] #advDetails[open] > summary{color:var(--accent2)!important}
+    .panel[data-step="3"] #advBody > details > summary{
+      font-size:15px!important;transition:color .15s;
+    }
+    .panel[data-step="3"] #advBody > details > summary:hover{color:var(--accent)}
+
+    /* 6. 다듬기 안 컨트롤 줄.
+          ⚠️처음엔 이 줄들을 2열 grid로 바꿨다가 **되돌렸다**(2026-08-29 화면 확인).
+            여기 flex 줄들은 "라벨+입력+색+슬라이더"가 **가로로 붙어 있어야** 뜻이 통하는
+            묶음이라, grid로 쪼개니 워터마크 줄의 위치·크기·투명도가 사방으로 흩어지고
+            폰트 고르개가 40px로 짜부라졌다. 남는 폭을 쓰겠다고 뜻을 깨면 안 된다.
+          → flex는 그대로 두고 **간격과 폭 상한만** 손본다. */
+    .panel[data-step="3"] #advBody div[style*="flex-wrap"]{
+      gap:10px 14px!important;align-items:center;
+    }
+    /* 슬라이더가 790px까지 늘어나 한 줄을 혼자 먹었다 — 잡기 좋은 만큼만. */
+    .panel[data-step="3"] #advBody input[type="range"]{max-width:300px}
+    .panel[data-step="3"] #decoPaneFx input[type="range"]{max-width:420px}
+    /* 폰트 고르개는 글자가 보여야 고른다 */
+    .panel[data-step="3"] #advBody select{min-width:130px}
+    .panel[data-step="3"] #advBody label{
+      display:flex;align-items:center;gap:8px;
+      font-size:15px!important;color:var(--txt)!important;
+    }
+    .panel[data-step="3"] #decoPaneStyle input[type="range"]{
+      flex:1;min-width:120px;height:26px;
+      -webkit-appearance:none;appearance:none;background:transparent;cursor:pointer;
+    }
+    .panel[data-step="3"] #decoPaneStyle input[type="range"]::-webkit-slider-runnable-track{
+      height:8px;border-radius:999px;
+      background:linear-gradient(90deg,var(--accent2),var(--line));
+    }
+    .panel[data-step="3"] #decoPaneStyle input[type="range"]::-webkit-slider-thumb{
+      -webkit-appearance:none;width:22px;height:22px;margin-top:-7px;
+      border-radius:50%;background:var(--accent);
+      border:3px solid #06251c;box-shadow:0 1px 6px rgba(0,0,0,.5);
+      transition:transform .12s;
+    }
+    .panel[data-step="3"] #decoPaneStyle input[type="range"]:hover::-webkit-slider-thumb{
+      transform:scale(1.15);
+    }
+    .panel[data-step="3"] #decoPaneStyle input[type="color"]{
+      width:44px;height:34px;padding:2px;cursor:pointer;
+      border:1px solid var(--line);border-radius:9px;background:var(--inset);
+      transition:border-color .15s;
+    }
+    .panel[data-step="3"] #decoPaneStyle input[type="color"]:hover{border-color:var(--accent2)}
+    .panel[data-step="3"] #decoPaneStyle select{
+      font-size:16px!important;padding:8px 10px!important;border-radius:8px!important;
+    }
+    .panel[data-step="3"] #decoPaneStyle select:focus,
+    .panel[data-step="3"] #decoPaneStyle input:focus-visible{
+      outline:2px solid var(--accent);outline-offset:1px;
+    }
+    .panel[data-step="3"] #decoPaneStyle input[type="checkbox"]{
+      width:20px;height:20px;accent-color:var(--accent);cursor:pointer;
+    }
+
+    /* 7. 스크롤바 */
+    .panel[data-step="3"] ::-webkit-scrollbar{width:10px;height:10px}
+    .panel[data-step="3"] ::-webkit-scrollbar-track{background:var(--inset)}
+    .panel[data-step="3"] ::-webkit-scrollbar-thumb{
+      background:var(--line);border-radius:999px;border:2px solid var(--inset);
+    }
+    .panel[data-step="3"] ::-webkit-scrollbar-thumb:hover{background:var(--accent2)}
+
+    /* 8. 좁은 화면 — 1366px에서 탭이 2줄로 접히고 우측이 492px까지 줄었다(실측). */
+    @media (max-width:1500px){
+      .panel[data-step="3"] #fullPresets{
+        grid-template-columns:repeat(auto-fill,minmax(110px,130px));
+      }
+      .panel[data-step="3"] #advBody input[type="range"]{max-width:220px}
+      .panel[data-step="3"] #myPresetName,
+      .panel[data-step="3"] #capPresetName{max-width:none!important}
+      .panel[data-step="3"] #decoTabs{width:100%;justify-content:space-between}
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
        T3 · 모바일 (≤768px) — 2026-08-15 신설. 제작소엔 폭 기반 미디어쿼리가 0건이었다.
        ★사이드바는 여기서 손대지 않는다: sidebar.js가 이미 @media(max-width:760px)로
          가로띠 규칙을 갖고 있고(6개 페이지 공용 단일 소스), 여기 또 적으면 두 벌이 된다.
@@ -4073,6 +4261,13 @@ function decoTab(name){
   document.querySelectorAll('#decoTabs [data-decotab]').forEach(b=>{
     b.classList.toggle('on', b.getAttribute('data-decotab')===name);
   });
+  // 효과 탭을 열면 가림막·위아래띠를 **펼친 채로** 보여준다(2026-08-28 사장님
+  // "가림막 기본으로 펼쳐지게"). 지금까지는 틀을 고를 때(frFill) 말고는 그리는 곳이
+  // 없어서, 탭만 열면 제목만 있고 아래가 비어 있었다.
+  if(name==='fx'){
+    try{ mkRender(); }catch(e){}
+    try{ pbRender(); }catch(e){}
+  }
 }
 function initHeadcopy(){
   const t=document.getElementById('hcText');
