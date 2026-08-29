@@ -3772,8 +3772,10 @@ async function boot(){
 function autoOpenRoll(){
   if (!document.body.classList.contains('tight')) return;
   if (ROLL.key) return;
-  const vid = (DATA.videos || [])[0];
-  const id = vid && (vid.video_id || vid.id);
+  // ★DATA.videos는 존재하지 않는 필드였다(2026-08-29 실측 — 그래서 "처음 화면에 필름
+  //   펼쳐져 있게"가 조용히 무산되고 자리 안내문만 떴다). 실제 있는 필드에서 영상1을 뽑는다.
+  const id = Object.keys(DATA.src_duration || {}).sort()[0]
+          || (Object.values(DATA.segments || {})[0] || {}).video_id;
   if (!id) return;
   try{ toggleRoll('src', id); }catch(e){ console.warn('필름 자동 펼치기 실패', e); }
 }
