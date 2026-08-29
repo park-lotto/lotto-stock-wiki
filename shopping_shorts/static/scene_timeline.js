@@ -169,11 +169,28 @@
      영상 통째 필름(src)에서만 잠근다: 조각 필름은 원래의 🔁(replaceRoll)이 이미 있다. */
   g.tlLockOpts = function (kind, vid) {
     if (!REPLACE || kind !== 'src') return {};
+    REPLACE.filmVid = vid;                 // Esc로 끌 때 이 필름을 잠금 없이 다시 연다
     return {
       lockLen: REPLACE.len,
       onReplace: r => tlReplaceApply(vid, r),
     };
   };
+
+  // Esc = 박스(교체 모드) 끄기(2026-08-29 사장님 "esc로 끄기"). 필름롤의 Esc(박스 삭제)는
+  // 잠금 모드에선 아무것도 안 하므로(LOCK 가드) 여기가 받아서 모드를 접는다.
+  document.addEventListener('keydown', e => {
+    if (e.code !== 'Escape' || !REPLACE) return;
+    const tag = (e.target && e.target.tagName || '').toLowerCase();
+    if (tag === 'input' || tag === 'textarea' || (e.target && e.target.isContentEditable)) return;
+    const v = REPLACE.filmVid;
+    REPLACE = null;
+    render();
+    // 잠금 박스를 얹은 채 열린 소스 필름이 있으면 잠금 없이 다시 연다(닫았다 열기).
+    if (v && document.querySelector('.frwin')) {
+      try { toggleRoll('src', v); toggleRoll('src', v); } catch (err) {}
+    }
+    nsay('📦 박스 모드를 껐어요');
+  });
 
   async function tlReplaceApply(vid, r) {
     if (!REPLACE) return;

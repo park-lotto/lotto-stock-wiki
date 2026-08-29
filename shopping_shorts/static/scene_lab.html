@@ -698,7 +698,10 @@ body.tight #pvfoldbtn{display:none}
    다 줄여서 박스안에 영상크기가 최대한 크게해".
    ★영상 자체가 커지려면 두 가지가 함께 필요하다: 박스 폭을 늘리고(240→330),
      그 안에서 영상 말고 자리를 먹던 것을 치운다. 하나만 하면 별로 안 커진다. */
-body.tight{--pv-w:330px}
+/* ★기본 400px(2026-08-29 사장님 "미리보기 크기를 키워 기본 배치 자리를 영상1 필름
+   자리까지 확보") — 9:16 높이 ≈711px가 오른쪽 열(타임라인+카드+필름행)을 품는다.
+   개인 취향은 미리보기 오른쪽 가장자리 끌기(pvgrip)로 — localStorage(pvW)가 이긴다. */
+body.tight{--pv-w:400px}
 body.tight #playerhost{padding:6px}
 body.tight #player .phead,                 /* '미리보기 / 닫기✕' 머리줄 */
 body.tight #player .pinfo,                 /* '화면에 박힌 글자는…' 안내 2줄 */
@@ -937,6 +940,9 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
 .tl-cut.sizing{z-index:9;box-shadow:0 0 10px rgba(255,150,20,.6)}
 .tl-len.fixed{color:#ffd24a;cursor:pointer}
 .tl-len.fixed:hover{background:#3a2a08}
+/* 구절 맞춤 — 이 카드들이 구절 수만큼 들어간다는 표시(2026-08-29 사장님 "파란색 테두리") */
+.tbcut.inuse{outline:2px solid #4ac1ff;outline-offset:-2px}
+.boxbtn{color:#ffd24a}
 </style></head><body>
 
 <header style="display:none">
@@ -2349,7 +2355,7 @@ function renderBand(){
     const f = beatFill(i, clips);
     const { need, have, lack, stretching } = f;
     const cuts = clips.length
-      ? clips.map((c, ci) => `<div class="tbcut ${c.dur > LONG_CUT ? 'long' : ''} ${isPicked(i, c.seg_id) ? 'picked' : ''}"
+      ? clips.map((c, ci) => `<div class="tbcut ${phraseSyncOn(i) ? 'inuse' : ''} ${c.dur > LONG_CUT ? 'long' : ''} ${isPicked(i, c.seg_id) ? 'picked' : ''}"
              data-sid="${c.seg_id}"
              draggable="true"
              ondragstart="event.stopPropagation();bandDragStart(${i}, '${c.seg_id}', event)"
@@ -2365,6 +2371,8 @@ function renderBand(){
                     onclick="event.stopPropagation();togglePick(${i}, '${c.seg_id}', this.checked)"
                     ondblclick="event.stopPropagation()"><button type="button" class="rollbtn" title="이 조각을 필름으로 펼쳐 자릅니다"
              onclick="event.stopPropagation();clearTimeout(clickTimer);toggleRoll('cut','${c.seg_id}',${i})">🎞 펼치기</button
+             ><button type="button" class="rollbtn boxbtn" title="이 컷 길이(${c.dur.toFixed(2)}초)로 잠긴 오렌지박스를 소스 필름에 띄웁니다 — 영상을 갈아 열어도 유지, Esc로 끄기"
+             onclick="event.stopPropagation();clearTimeout(clickTimer);tlReplaceToggle(${i},${ci})">📦 박스</button
              ><button type="button" class="delx" title="이 조각을 이 칸에서 뺍니다"
              onclick="event.stopPropagation();clearTimeout(clickTimer);dropCutFromBand(${i}, '${c.seg_id}')">✕</button></div>`).join('')
       : `<div class="tbempty">장면을 담아주세요</div>`;
@@ -2419,6 +2427,7 @@ function renderBand(){
                //   담아도 안 나온다는 사실을 화면에서 알 길이 없었다.
                : f.over > 0.1 ? ` · ${f.over.toFixed(1)}초는 안 나와요` : ''}</span>${sel === i ? '<span class="picked">여기에 담깁니다</span>' : ''}
           <span class="tbtools" onclick="event.stopPropagation()">
+            <label title="컷 경계를 자막 구절 경계에 1:1로 맞춥니다(구절 수만큼 컷·길이도 구절대로). ✋수동 길이가 있으면 수동이 우선"><input type="checkbox" ${phraseSyncOn(i) ? 'checked' : ''} onchange="togglePhraseSync(${i}, this.checked)"> 구절 맞춤</label>
             <label title="재료가 모자랄 때 마지막 컷만 늘리지 않고 전체를 고르게 늘립니다"><input type="checkbox" ${STRETCH[i] ? 'checked' : ''} onchange="toggleStretch(${i}, this.checked)"> 늘려 채우기</label>
             <!-- ★칸 순서 바꾸기(◀▶)를 뺐다(2026-08-17 사장님 "필요없는 기능이고 그자리에
                  대본수정 만들고"). 그 자리에 대본수정을 둔다 — 3단계에서 자막을 보다가
@@ -2908,6 +2917,7 @@ function saveWork(){
       mode, lists, chosen: [...chosen], narr: NARR, trims: TRIMS, merges: MERGES,
       stretch: STRETCH, autoadd: AUTOADD, extra: EXTRA,
       fixlen: FIXLEN,        // ✋ 손으로 정한 컷 길이(2026-08-29 — "저장을 빼먹어" 경고의 해소)
+      phraseOff: PHRASE_SYNC, // 구절 맞춤 끔 표시(기본 켬이라 끈 칸만 남는다)
       at: new Date().toISOString()
     }));
   }catch(e){}
@@ -2994,6 +3004,8 @@ function loadWork(){
     Object.assign(AUTOADD, w.autoadd || {});
     hydrateExtra(w);
     hydrateFixlen(w.fixlen);   // ✋ 옛 저장본엔 없다 → 비워진다(캐리오버 방지)
+    Object.keys(PHRASE_SYNC).forEach(k => delete PHRASE_SYNC[k]);
+    Object.assign(PHRASE_SYNC, w.phraseOff || {});
     ['live','one','hand','pick'].forEach(x => {
       const b = document.getElementById('m-' + x);
       if (b) b.classList.toggle('on', x === mode);
@@ -3023,6 +3035,8 @@ function loadSaved(){
   Object.assign(AUTOADD, w.autoadd || {});
   hydrateExtra(w);
   hydrateFixlen(w.fixlen);     // ✋ 없으면 비운다
+  Object.keys(PHRASE_SYNC).forEach(k => delete PHRASE_SYNC[k]);
+  Object.assign(PHRASE_SYNC, w.phraseOff || {});
   ['live','one','hand','pick'].forEach(x => {
     const b = document.getElementById('m-' + x);
     if (b) b.classList.toggle('on', x === mode);
@@ -3262,7 +3276,8 @@ async function applyServer(opt){
   const msg = document.getElementById('savedmsg');
   const payload = {
     beats: DATA.beats.map((b, i) => ({beat_idx: b.beat_idx,
-      list: (lists[i] || []).slice(), stretch: !!STRETCH[i]})),
+      list: (lists[i] || []).slice(), stretch: !!STRETCH[i],
+      phrase: phraseSyncOn(i)})),   // 구절 맞춤 — 렌더도 같은 경계로(video_assemble)
     trims: TRIMS,
     merges: MERGES,          // 🔗 합친 조각(대표 → 이어 붙일 조각들) — 서버는 긴 구간 하나로 받는다
     // ✋ 손으로 정한 컷 길이(2026-08-24). 안 보내면 미리보기에만 살고 렌더는 자동 계산이라
