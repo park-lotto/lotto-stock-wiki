@@ -132,13 +132,25 @@
   //    그 지점부터 듣고 멈추며 자막과 비교하는 흐름). 재생·정지·이어서는 전부 기존 경로
   //    (playBeat가 토글까지 겸한다 / 미리보기 류는 togglePause)라 새 재생 규칙이 없다.
   //    ★필름롤이 펼쳐져 있으면 스페이스는 필름롤 몫이다(filmroll onKey) — 건드리지 않는다.
+  // ★스페이스 주인은 '마지막으로 만진 구역'이 정한다(2026-08-29 사장님 "훅에서 작업이면
+  //   거기서만 스페이스로 재생 정지"). 필름이 상시 펼쳐진 뒤로 "열려 있으면 필름 몫"
+  //   규칙이 늘 필름을 재생시켰다. 칸을 만졌으면 칸이 주인 — 필름 핸들러(문서 리스너,
+  //   우리보다 늦게 등록됨)는 stopImmediatePropagation으로 차단한다.
+  let LAST_ZONE = 'beat';
+  document.addEventListener('pointerdown', e => {
+    const t = e.target;
+    if (!t || !t.closest) return;
+    if (t.closest('.frwin,.frslot')) LAST_ZONE = 'film';
+    else if (t.closest('.tbeat,.tl-host,.tlwrap')) LAST_ZONE = 'beat';
+  }, true);
   document.addEventListener('keydown', e => {
     if (e.code !== 'Space') return;
     const tag = (e.target && e.target.tagName || '').toLowerCase();
     if (tag === 'input' || tag === 'textarea' || (e.target && e.target.isContentEditable)) return;
-    if (document.querySelector('.frwin')) return;      // 필름이 열려 있다 — 필름롤이 받는다
+    if (LAST_ZONE === 'film' && document.querySelector('.frwin')) return;   // 필름이 주인
     if (typeof playBeat !== 'function') return;
     e.preventDefault();
+    e.stopImmediatePropagation();   // 필름롤 스페이스(같은 문서 리스너)가 겹재생하지 않게
     if (typeof playKey !== 'undefined' && playKey && String(playKey).indexOf('beat:') === 0) {
       playBeat(+String(playKey).split(':')[1]);        // 재생 중이면 일시정지/재개 토글
     } else if (typeof seq !== 'undefined' && seq.length && typeof togglePause === 'function'
