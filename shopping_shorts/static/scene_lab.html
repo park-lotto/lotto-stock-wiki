@@ -1814,7 +1814,12 @@ function renderRollHosts(beatIdx, slot){
     //   오히려 새 구간을 잡기 불편했다. 담기는 추가 방식(commitRoll)이라 빈 채로 열어도
     //   기존 담긴 조각은 그대로다. 담은 직후의 박스는 종전대로 남는다(필름을 안 닫으므로).
     // 조각을 펼쳤으면 그 구간이 창을 채우게(영상 통째는 전체를 본다)
-    fit: (kind !== 'src'),
+    // ★조각 펼치기도 영상 전체 필름과 같게(2026-08-29 사장님 "영상 필름 펼치기로
+    //   하고있는게 편하다") — 종전엔 조각만 fit=true라 창이 조각 길이로 좁혀지고
+    //   확대가 고정돼(08-26·28 결정), 앞/다음 장면으로 가려면 좁은 창에서 끌거나
+    //   ▲▼ 버튼을 눌러야 했다. 이제 전체 폭에서 왼쪽 끌기로 자유롭게 오가고,
+    //   열릴 때 '지금 쓰는 구간'으로 시선만 맞춘다(_fitToRange의 가운데 정렬은 유지).
+    fit: false,
     caps: _rollCaps(vid),
     onClose(){ closeRoll(S); renderRollHosts(beatIdx, S);
                if (S === ROLL && document.body.classList.contains('tight')) autoOpenRoll(); },
