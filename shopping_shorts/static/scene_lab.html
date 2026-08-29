@@ -707,7 +707,7 @@ body.tight #pvfoldbtn{display:none}
 /* ★기본 400px(2026-08-29 사장님 "미리보기 크기를 키워 기본 배치 자리를 영상1 필름
    자리까지 확보") — 9:16 높이 ≈711px가 오른쪽 열(타임라인+카드+필름행)을 품는다.
    개인 취향은 미리보기 오른쪽 가장자리 끌기(pvgrip)로 — localStorage(pvW)가 이긴다. */
-body.tight{--pv-w:400px}
+body.tight{--pv-w:450px}   /* 880px 밴드를 9:16으로 채우는 폭(슬라이더·라벨 몫 제외) */
 body.tight #playerhost{padding:6px}
 body.tight #player .phead,                 /* '미리보기 / 닫기✕' 머리줄 */
 body.tight #player .pinfo,                 /* '화면에 박힌 글자는…' 안내 2줄 */
@@ -718,7 +718,11 @@ body.tight #playerhost .lbl label{display:none}   /* 1장=1컷 — 사장님 "�
    ★#vidbox는 aspect-ratio 9/16이라 **높이를 주면 폭이 따라온다** — 그래서 폭을 100%로
      박지 않고 높이를 남는 만큼 주고, 폭은 박스를 넘지 않게만 막는다. 이러면 세로 영상이
      주어진 자리에서 가장 크게 들어간다. */
-body.tight #topband{height:min(560px,64vh)}
+/* ★상단 밴드 높이의 정의처는 **여기 한 곳**(2026-08-29 정리 — 620px·560px 두 벌이 아래
+   더 있어서 이 값이 조용히 덮였었다. 0순위-B). 값 = 모든 창(타임라인+카드+필름행)이
+   켜진 높이 고정(사장님 "모든 창 켜져있을때 크기를 고정으로"). 종전 560px의 근거였던
+   "아래 소스 한 줄이 보여야"(70vh 실사고)는 이 결정으로 번복 — 아래는 스크롤로 본다. */
+body.tight #topband{height:min(880px,86vh)}
 body.tight #topband > #playerhost{height:100%;display:flex;flex-direction:column;min-height:0}
 /* ★display를 여기서 주면 안 된다 — #player는 원래 재생 중(.on)일 때만 보인다.
    내가 display:flex를 박는 바람에 **재생 전에도 빈 검은 재생창+진행바**가 떠서
@@ -738,8 +742,7 @@ body.tight #subbox:empty{display:none}
 body.tight #subbox{max-height:32px;font-size:14px;margin-top:3px}
 body.tight #seek{margin:3px 0}
 body.tight #pvTabs .pvTab{padding:4px 8px;font-size:11.5px}
-/* 위 영역을 조금 더 준다 — 아래 소스는 한 줄이 온전히 보이면 된다 */
-body.tight #topband{height:min(620px,70vh)}
+/* (높이 규칙은 위 정의처 한 곳만 — 2026-08-29 통합) */
 body.tight #subbox{min-height:0;max-height:44px;font-size:15px;margin-top:4px}
 body.tight #pvTabs{margin-bottom:5px}
 body.tight #playerhost .lbl{margin:0 0 5px 0}
@@ -770,9 +773,8 @@ body.tight #dropmsg{padding:1px 0;margin:0;gap:8px;font-size:12px;line-height:1.
 body.tight .srchead{font-size:13.5px;margin:0 0 2px 0;line-height:1.15;min-height:0;align-items:center}
 body.tight .srchead .act,body.tight .srchead .slotbtn{padding:1px 6px;font-size:11px}
 body.tight .srchead .cnt{font-size:11px}
-/* ★위 영역이 70vh면 아래 카드 한 줄(187px)이 잘린다(실측 232px). 카드 줄이 통째로
-   보이는 선까지만 위를 쓴다 — 영상은 조금 작아지지만 소스를 못 보면 소용이 없다. */
-body.tight #topband{height:min(560px,62vh)}
+/* (높이 규칙은 위 정의처 한 곳만 — 2026-08-29 통합. "소스 한 줄 보장" 560px은
+   "모든 창 고정" 결정으로 번복됨) */
 body.tight .srcgroup{margin-bottom:8px}
 body.tight .pane{padding:4px 10px}
 body.tight .pane.left{padding-top:2px}
