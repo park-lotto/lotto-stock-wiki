@@ -30,7 +30,7 @@ SVC_SERPAPI = "serpapi"
 SERVICES = (SVC_GEMINI, SVC_VMAKE, SVC_ELEVENLABS, SVC_YOUTUBE, SVC_SERPAPI)
 
 # ★등록은 받지만 **실제 호출에 쓰이는** 서비스는 아직 이 둘뿐이다(2026-08-17 실측).
-#   - vmake     : mix_pipeline.py:1432-1433 job의 customer_id → _vmake_key → keys_for
+#   - vmake     : job의 customer_id → mix_pipeline._vmake_keys → keys_for (목록 전체)
 #   - serpapi   : app.py _lens_api_keys(cid) → 렌즈 호출부 2곳
 #   - gemini    : keyroute.gemini_keys()가 유일한 출구. cid는 인자가 아니라
 #                 keyctx(요청=미들웨어 / 워커=_owned_job 데코레이터)에서 읽는다.
@@ -65,8 +65,11 @@ WIRED = (SVC_VMAKE, SVC_SERPAPI, SVC_ELEVENLABS, SVC_GEMINI, SVC_YOUTUBE)
 #   서비스라 남의 키를 쓰면 안 되고, 자기 키만 쓴다(폴백 없음).
 POOLED = (SVC_GEMINI, SVC_YOUTUBE)
 
-# ★호출부가 **키 하나만** 쓰는 서비스(mix_pipeline._vmake_key·tts._api_key가
-#   둘 다 keys[0]만 집는다). 여기서만 **나중에 등록한 키를 앞에** 둔다.
+# ★호출부가 **키 하나만** 쓰는 서비스(tts._api_key가 keys[0]만 집는다).
+#   여기서만 **나중에 등록한 키를 앞에** 둔다.
+# ⚠️vmake는 2026-08-29부터 **목록 전체를 쓴다**(mix_pipeline._vmake_clean이 소진된 키를
+#   건너뛰고 다음 키로 넘긴다). 그래도 이 목록에 남겨 둔다 — 새로 등록한 키를 **먼저**
+#   시도하는 게 맞기 때문이다(갈아끼우려고 등록한 키가 뒤에 있으면 옛 키를 먼저 태운다).
 #   왜: get_customer_keys_plain은 ORDER BY id라 가장 오래된 키가 keys[0]이다.
 #   그래서 키를 갈아끼우려고 새로 등록해도 옛 키가 계속 쓰인다.
 #   실사고(2026-08-28 cid 57): 크레딧 떨어진 Vmake 계정을 버리고 새 계정

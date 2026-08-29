@@ -16,6 +16,23 @@ _VIDEO_TASK = "videoscreenclear"
 _DEFAULT_PARAMS = {"parameter": {"rsp_media_type": "url"}}
 
 
+# ── "이 키는 크레딧이 떨어졌다"의 판정 (2026-08-29) ───────────────────────────
+# ★판정은 여기 한 곳에서만 한다(0순위-B). 쓰는 곳이 둘이다:
+#     · mix_pipeline — 다음 키로 넘길지 결정
+#     · app.clean_failure_kind — 고객에게 보여줄 문구 결정
+#   두 곳이 각자 문자열을 검사하면 "화면은 소진이라는데 다음 키로는 안 넘어간다"처럼
+#   서로 어긋난다. VMake 에러의 뜻을 아는 건 이 파일이므로 여기가 제자리다.
+#   실측 원문: "[60002] You don't have enough credits for this API. Purchase a subscription..."
+def is_no_credit(err) -> bool:
+    """이 오류가 **그 키의 잔액 소진**인가. 다른 실패(네트워크·처리불가)는 False.
+
+    ★좁게 본다 — 넓게 잡으면 멀쩡한 키를 죽은 것으로 보고 건너뛰다가 결국
+      전부 못 쓰게 된다(2026-08 vmake_paused 사고의 계보).
+    """
+    t = str(err or "")
+    return "60002" in t or "enough credits" in t.lower()
+
+
 def _split_key(api_key):
     """대시보드 키 'app_key:secret' → (ak, sk). 콜론 없으면 둘 다 키 전체."""
     if ":" in api_key:

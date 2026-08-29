@@ -1517,12 +1517,46 @@ def _resolve_sources(job, work):
     return source_video_paths
 
 
-def _vmake_key(store, customer_id=0):
-    """자막제거에 쓸 키. 사용자가 등록했으면 그 키, 아니면 사장님 키.
-    ★keyroute가 유일한 판단처다 — 여기서 따로 고르지 마라(0순위-B)."""
+def _vmake_keys(store, customer_id=0):
+    """자막제거에 쓸 키 **전부**. 사용자가 등록했으면 그 키들, 아니면 사장님 키.
+    ★keyroute가 유일한 판단처다 — 여기서 따로 고르지 마라(0순위-B).
+
+    ★2026-08-29까지는 keys[0] **하나만** 돌려줬다. 그래서 키를 두 개 등록해도
+      첫 키가 소진되면 그걸로 끝이었다(사장님 제보: "두개 키등록했다는데 한개 소진후
+      다른걸로 안넘어가는것같은데"). 실측 cid 57: vmake 키 235·236 둘 다 status='ok'인데
+      나중 것(236)만 쓰이고 235는 잔액이 남아도 영영 안 쓰였다.
+    """
     from shopping_shorts import keyroute
     keys, _ = keyroute.keys_for(store, customer_id, keyroute.SVC_VMAKE)
-    return keys[0] if keys else ""
+    return list(keys or [])
+
+
+def _vmake_clean(video_path, keys, out_path):
+    """VMake 청소 1회 — **크레딧이 떨어진 키는 건너뛰고 다음 키로** 이어서 시도한다.
+
+    ★키를 넘기는 판단은 여기 한 곳에서만 한다(0순위-B). 호출부 셋(_clean_one·
+      _clean_joined·_final_clean_fn)이 각자 돌리면 어떤 경로로 들어왔느냐에 따라
+      넘어가기도 하고 안 넘어가기도 한다.
+    ★소진(60002) **말고 다른 실패는 즉시 올린다** — 네트워크·처리불가로 키를 갈아타면
+      멀쩡한 키를 태우기만 하고 원인은 그대로다. 판정은 vmake_client.is_no_credit.
+    ★전부 소진이면 마지막 오류를 그대로 올린다 → 화면은 종전처럼 'no_credit'을 띄운다
+      (사장님 결정 2026-08-29: 회원 키가 다 떨어져도 본사 키로 넘기지 않는다).
+    """
+    from shopping_shorts.vmake_client import is_no_credit
+    ks = [k for k in (keys or []) if k]
+    if not ks:
+        raise ValueError("자막제거 키가 없습니다")
+    last = None
+    for i, k in enumerate(ks):
+        try:
+            return remove_subtitles(video_path, k, out_path=out_path)
+        except Exception as e:                      # noqa: BLE001 — 다음 키로 넘길지 가른다
+            last = e
+            if not is_no_credit(e):
+                raise                               # 소진이 아니면 키 문제가 아니다
+            print(f"[clean] 키 {i + 1}/{len(ks)} 크레딧 소진 → 다음 키로: {e}",
+                  file=sys.stderr)
+    raise last
 
 
 class NotEnoughPoints(Exception):
@@ -1661,7 +1695,7 @@ _CLEAN_RETRY = 2          # 최초 1회 + 재시도 2회 = 최대 3번
 _CLEAN_RETRY_WAIT = 5     # 초. 곧바로 다시 때리면 같은 이유로 또 실패하기 쉽다.
 
 
-def _clean_one(item, key, work):
+def _clean_one(item, keys, work):
     """소스 하나를 VMake로 청소 → (video_id, 클린경로, 지워진자막박스|None). ThreadPool 워커용(DB 미접근).
     청소 직후 원본↔클린을 diff해 '어디가 지워졌나'를 그 자리에서 구한다 — VMake는 좌표를 안 주지만
     우리가 before/after를 둘 다 쥐고 있어 계산 가능하다(best-effort, 실패해도 None으로 청소는 성공).
@@ -1676,12 +1710,17 @@ def _clean_one(item, key, work):
     last = None
     for attempt in range(_CLEAN_RETRY + 1):
         try:
-            clean_path = remove_subtitles(src, key, out_path=out)
+            clean_path = _vmake_clean(src, keys, out)
             break
         except Exception as e:
             last = e
             if attempt >= _CLEAN_RETRY:
                 print(f"[clean] {vid} 최종 실패({attempt + 1}회 시도): {e}", file=sys.stderr)
+                raise
+            # ★크레딧 소진은 재시도해도 영원히 같다 — _vmake_clean이 이미 등록된 키를
+            #   전부 훑고 올린 것이므로 여기서 3번 더 때릴 이유가 없다(2026-08-29).
+            from shopping_shorts.vmake_client import is_no_credit
+            if is_no_credit(e):
                 raise
             print(f"[clean] {vid} 실패 — {_CLEAN_RETRY_WAIT}초 뒤 재시도"
                   f"({attempt + 1}/{_CLEAN_RETRY}): {e}", file=sys.stderr)
@@ -2007,7 +2046,7 @@ def _join_batches(items, work):
     return batches
 
 
-def _clean_joined(items, key, work, tag=""):
+def _clean_joined(items, keys, work, tag=""):
     """소스 여러 편을 붙여 **VMake 1콜**로 청소 → {vid: 클린경로}, {vid: region}.
 
     붙이기·청소·자르기 중 어디서 실패하든 예외를 올린다 — 호출부가 옛 방식으로 되돌린다.
@@ -2019,12 +2058,17 @@ def _clean_joined(items, key, work, tag=""):
     last = None
     for attempt in range(_CLEAN_RETRY + 1):
         try:
-            cleaned = remove_subtitles(joined, key, out_path=out)
+            cleaned = _vmake_clean(joined, keys, out)
             break
         except Exception as e:                      # noqa: BLE001 — 재시도 후 상위로
             last = e
             if attempt >= _CLEAN_RETRY:
                 print(f"[clean] 합본 최종 실패({attempt + 1}회): {e}", file=sys.stderr)
+                raise
+            # ★크레딧 소진은 재시도해도 영원히 같다 — _vmake_clean이 이미 등록된 키를
+            #   전부 훑고 올린 것이므로 여기서 3번 더 때릴 이유가 없다(2026-08-29).
+            from shopping_shorts.vmake_client import is_no_credit
+            if is_no_credit(e):
                 raise
             print(f"[clean] 합본 실패 — {_CLEAN_RETRY_WAIT}초 뒤 재시도"
                   f"({attempt + 1}/{_CLEAN_RETRY}): {e}", file=sys.stderr)
@@ -2338,7 +2382,7 @@ def _plan_signature(plan):
     return hashlib.sha1("".join(parts).encode("utf-8")).hexdigest()[:16]
 
 
-def _final_clean_fn(store, job, job_id, work, key, customer_id=0):
+def _final_clean_fn(store, job, job_id, work, keys, customer_id=0):
     """assemble에 넘길 clean_fn — **조립된 완성본 1편**을 VMake로 청소한다.
 
     assemble은 이미 3토막이다: _render_mix(조립) → clean_fn(청소) → _burn_captions(우리 자막).
@@ -2357,7 +2401,7 @@ def _final_clean_fn(store, job, job_id, work, key, customer_id=0):
         charged = _charge_clean(store, customer_id, 1)
         try:
             print(f"[clean] 완성본 1편만 청소 시작 sig={sig}", file=sys.stderr)
-            return remove_subtitles(str(mix_raw), key, out_path=str(out))
+            return _vmake_clean(str(mix_raw), keys, str(out))
         except Exception:
             if charged:
                 _refund_clean(store, customer_id, charged)
@@ -2365,7 +2409,7 @@ def _final_clean_fn(store, job, job_id, work, key, customer_id=0):
     return _clean
 
 
-def _ensure_clean_sources(store, job, job_id, work, key, customer_id=0):
+def _ensure_clean_sources(store, job, job_id, work, keys, customer_id=0):
     """clean_sources 맵을 채워 반환. 이미 있고 파일이 존재하면 스킵(재과금 0).
     각 스레드는 remove_subtitles만 하고 경로를 반환 → DB 저장은 취합 후 메인에서 1회(경합 없음).
 
@@ -2399,7 +2443,7 @@ def _ensure_clean_sources(store, job, job_id, work, key, customer_id=0):
             for bi, batch in enumerate(batches):
                 if len(batch) > 1:
                     try:
-                        paths, regs = _clean_joined(batch, key, work, tag=str(bi))
+                        paths, regs = _clean_joined(batch, keys, work, tag=str(bi))
                         done.update(paths)
                         for vid in dict(batch):
                             if vid in regs:
@@ -2415,7 +2459,7 @@ def _ensure_clean_sources(store, job, job_id, work, key, customer_id=0):
                         if extra > 0:
                             charged += _charge_clean(store, customer_id, extra)
                 with ThreadPoolExecutor(max_workers=len(batch)) as ex:
-                    for vid, out, region in ex.map(lambda t: _clean_one(t, key, work), batch):
+                    for vid, out, region in ex.map(lambda t: _clean_one(t, keys, work), batch):
                         done[vid] = out
                         if region:
                             regions[vid] = region
@@ -2536,8 +2580,8 @@ def run_clean_sources(job_id, db_path, work_root):
                 print("[clean] TTS 선확정 실패(계속 진행): %s" % e, file=sys.stderr)
         # ★워커는 HTTP 요청이 없어 request.state가 없다 — job 레코드에서 읽는다.
         customer_id = job.get("customer_id") or 0
-        key = _vmake_key(store, customer_id)
-        if not key:
+        keys = _vmake_keys(store, customer_id)
+        if not keys:
             store.update_mix_job(job_id, clean_status="failed",
                                  clean_error="AI 자막 제거 설정이 완료되지 않았습니다 (관리자 문의)")
             return
@@ -2549,9 +2593,9 @@ def run_clean_sources(job_id, db_path, work_root):
         #   ★clean_sources는 일부러 비워 둔다 — 그래야 3단계(run_render)가 already=False로
         #     같은 완성본 경로를 타고, 편성이 그대로면 final_clean_{sig}.mp4를 재사용해 과금 0.
         if _clean_strategy(job) == "final":
-            final_fn = _final_clean_fn(store, job, job_id, work, key, customer_id)
+            final_fn = _final_clean_fn(store, job, job_id, work, keys, customer_id)
         else:
-            _ensure_clean_sources(store, job, job_id, work, key, customer_id)
+            _ensure_clean_sources(store, job, job_id, work, keys, customer_id)
             store.update_mix_job(job_id, clean_status="ready", clean_error=None)
     except NotEnoughPoints as e:
         store.update_mix_job(job_id, clean_status="failed", clean_error=str(e))
@@ -2695,18 +2739,18 @@ def run_render(job_id, db_path, work_root):
             # ★2단계 버튼을 안 거치고 바로 렌더로 오는 경로도 VMake를 탄다 — 여기도 과금해야
             #   구멍이 안 남는다(2단계에서 이미 청소됐으면 todo가 비어 자동으로 0원).
             customer_id = job.get("customer_id") or 0
-            key = _vmake_key(store, customer_id)
-            if not key:
+            keys = _vmake_keys(store, customer_id)
+            if not keys:
                 raise RuntimeError("자막 제거가 켜져 있으나 설정이 완료되지 않았습니다 (관리자 문의)")
             if _clean_strategy(job) == "final":
                 # 완성본 1편만 청소한다(2026-08-26). 소스를 다 지우던 것보다 보내는 길이가
                 # 훨씬 짧아 같은 1콜로 몇 배 빠르다. 조립 뒤·우리 자막 앞에서 돈다.
                 # 실측(08-27): 완성본 30.5초 → 130초. 합본 569MB를 보내던 것은 595초였다.
                 # ★이미 청소된 소스가 있으면 _clean_strategy가 "sources"를 준다 — 두 번 안 낸다.
-                final_clean_fn = _final_clean_fn(store, job, job_id, work, key, customer_id)
+                final_clean_fn = _final_clean_fn(store, job, job_id, work, keys, customer_id)
                 store.update_mix_job(job_id, clean_status="ready", clean_error=None)
             else:
-                clean_map = _ensure_clean_sources(store, job, job_id, work, key, customer_id)
+                clean_map = _ensure_clean_sources(store, job, job_id, work, keys, customer_id)
                 store.update_mix_job(job_id, clean_status="ready", clean_error=None)
                 source_video_paths = {vid: clean_map.get(vid, p)
                                       for vid, p in source_video_paths.items()}
