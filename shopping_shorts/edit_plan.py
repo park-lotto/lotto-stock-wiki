@@ -5317,6 +5317,12 @@ def apply_scene_lab(plan, seg_map, edits):
             beat["stretch_fill"] = True
         else:
             beat.pop("stretch_fill", None)
+        # 구절 맞춤(2026-08-29 사장님 "개수+길이까지 1:1") — 켠 칸만 표식을 남긴다.
+        # 표식이 없으면 렌더는 종전 배분 그대로다(옛 job 회귀 0).
+        if eb.get("phrase"):
+            beat["phrase_sync"] = True
+        else:
+            beat.pop("phrase_sync", None)
         applied += 1
     # ★이 편성이 서버에 얹힌 시각(2026-08-21). 화면(localStorage)과 서버 중 어느 쪽이
     #   최신인지 가르는 유일한 기준이다 — mix_jobs.updated_at은 음성 생성 같은 다른
@@ -5484,6 +5490,34 @@ def enforce_script_order(beats, given_script):
     # 칸 길이 비례로 문장을 나눈다 — 긴 칸에 더 많이. 길이 정보가 없으면 균등.
     secs = [float(beats[i].get("target_seconds") or 0) or 1.0 for i in targets]
     total_sec = sum(secs) or float(n)
+    # ★칸이 감당 못 할 초장문은 호흡 단위로 미리 가른다(2026-08-29 실사고 — 유튜브
+    #   오용형 대본은 설계상 마침표 없는 음슴체("~였음 ~기기임")라 script_sentences가
+    #   **통짜 1문장**을 준다. "문장은 쪼개지 않는다" 규칙이 그 덩어리를 첫 칸에 통째로
+    #   넣어 훅이 288자·29.9초가 됐고(job fdf6ece94471), TTS 뒤 target이 실측으로
+    #   덮이며 재매칭마다 훅 독식이 고착됐다).
+    #   음슴체 종결어미를 새 규칙으로 감지하지 않는다 — '요' 때 명사 차단목록이 계속
+    #   샜던 교훈(위 _SENT_SPLIT 주석) 그대로다. 대신 **길이**로만 판정하고, 가르는 건
+    #   렌더 자막과 같은 분할기(_caption_segments 호흡 단위)를 빌려 칸 크기 덩이로
+    #   묶는다(0순위-B — 새 언어 규칙 0개).
+    _cap = max(24, int((total_sec / n) * _SYLLABLES_PER_SEC * 1.5))
+    if any(len(s) > _cap * 2 for s in sents):
+        from shopping_shorts import video_assemble as _va   # 지연 — 순환 방지(관례)
+        resplit = []
+        for s in sents:
+            if len(s) <= _cap * 2:
+                resplit.append(s)
+                continue
+            merged, curc = [], ""
+            for piece in (_va._caption_segments(s) or [s]):
+                if curc and len(curc) + len(piece) + 1 > _cap:
+                    merged.append(curc)
+                    curc = piece
+                else:
+                    curc = (curc + " " + piece).strip()
+            if curc:
+                merged.append(curc)
+            resplit.extend(merged or [s])
+        sents = resplit
     total_len = sum(len(x) for x in sents) or 1
     buckets, cur, budget_carry = [], [], 0.0
     si = 0

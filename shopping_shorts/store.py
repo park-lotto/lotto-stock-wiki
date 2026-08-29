@@ -2276,6 +2276,39 @@ class Store:
             c.execute("INSERT OR REPLACE INTO settings(key, value) VALUES(?,?)",
                       (f"last_run::{platform}", json.dumps({"items": items, "collected_at": collected_at}, ensure_ascii=False)))
 
+    def merge_last_run_platform(self, platform, new_items, collected_at, key="shortcode"):
+        """기존 수집분에 새 항목을 **한 트랜잭션 안에서** 합친다. 새로 담긴 개수를 준다.
+
+        ★왜 필요한가(2026-08-29 재현): 호출부에서 load → 파이썬 병합 → save 로 하면
+          두 수집이 겹칠 때 나중 save가 앞 save를 **통째로 덮는다**.
+          실측: 두 수집이 각 50개를 담았는데 저장된 건 50개(한쪽 전멸).
+          오류가 안 나서 '덜 담겼네'로만 보이는 조용한 유실이다.
+        ★락은 호출부가 아니라 **저장을 담당하는 여기**에 둔다 — 호출부마다 걸면
+          반드시 어딘가 빠뜨린다(0순위-B). 같은 결론을 포인트 차감에서도 냈다.
+
+        BEGIN IMMEDIATE로 쓰기 락을 먼저 잡아, 읽는 순간부터 다른 수집이 끼어들지
+        못하게 한다(sqlite는 이 시점부터 다른 쓰기를 막는다).
+        """
+        with self._conn() as c:
+            c.execute("BEGIN IMMEDIATE")
+            row = c.execute("SELECT value FROM settings WHERE key=?",
+                            (f"last_run::{platform}",)).fetchone()
+            prev = []
+            if row and row[0]:
+                try:
+                    prev = json.loads(row[0]).get("items", []) or []
+                except ValueError:      # 값이 깨져 있어도 수집을 죽이지 않는다
+                    prev = []
+            have = {x.get(key) or x.get("video_url") for x in prev}
+            fresh = [x for x in (new_items or [])
+                     if (x.get(key) or x.get("video_url")) not in have]
+            items = self._newest_first(fresh + prev)[: self.LAST_RUN_MAX_ITEMS]
+            c.execute("INSERT OR REPLACE INTO settings(key, value) VALUES(?,?)",
+                      (f"last_run::{platform}",
+                       json.dumps({"items": items, "collected_at": collected_at},
+                                  ensure_ascii=False)))
+            return len(fresh), len(items)
+
     def load_last_run_platform(self, platform):
         v = self.get_setting(f"last_run::{platform}", "")
         if not v:
@@ -5551,6 +5584,176 @@ class Store:
             n_act = c.execute("DELETE FROM customer_activity WHERE at < ?", (cutoff_ts,)).rowcount
             n_acc = c.execute("DELETE FROM customer_access WHERE day < ?", (cutoff_day,)).rowcount
         return (n_act or 0, n_acc or 0)
+
+    # ── 고객 1명 상세 시트(2026-08-29) ─────────────────────────────────────
+    #    ★목록(list_customers)은 '오늘 몇 번'만 보여준다. "결제 후 이 사람이
+    #      실제로 얼마나 쓰는가 / 원가가 얼마나 나가는가"는 날짜별로 펴봐야 알 수 있다.
+    #    ★시간 형식이 테이블마다 다르다(epoch초 / ISO8601 / datetime('now') 공백형 /
+    #      YYYY-MM-DD). 아래 함수들은 **각 테이블의 원래 형식 그대로** 돌려주고,
+    #      KST 변환은 화면 한 곳에서만 한다(0순위-B — 여기서도 바꾸면 두 벌이 된다).
+
+    def customer_jobs(self, customer_id, limit=200):
+        """이 고객의 영상 제작 작업 목록(최신 먼저).
+
+        무거운 JSON 칸(extract_json·edit_plan_json 등)은 **빼고** 가져온다 —
+        상세 화면은 '언제·무엇을·성공했나'만 필요한데 통째로 실으면 응답이 MB 단위가 된다.
+        created_at/updated_at은 **ISO8601 UTC 문자열**이다(epoch 아님).
+        """
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT job_id, status, error, created_at, updated_at, "
+                "       IFNULL(video_path,''), IFNULL(render_charge_day,''), "
+                "       IFNULL(mix_charged,0), IFNULL(target_seconds,0), IFNULL(urls_json,'') "
+                "FROM mix_jobs WHERE customer_id=? "
+                "ORDER BY created_at DESC LIMIT ?", (customer_id, int(limit))).fetchall()
+        out = []
+        for r in rows:
+            # urls_json이 비었거나(옛 job) 형식이 깨져도 소스 개수만 0이 될 뿐,
+            # 목록 자체는 그려져야 한다. **삼키는 예외를 좁혀서** 진짜 오류는 올라가게 둔다.
+            n_src = 0
+            try:
+                n_src = len(json.loads(r[9]) or [])
+            except (ValueError, TypeError):        # 빈 문자열·깨진 JSON — 정상 범주
+                n_src = 0
+            out.append({"job_id": r[0], "status": r[1], "error": r[2],
+                        "created_at": r[3], "updated_at": r[4],
+                        "made": bool(r[5]),          # video_path 채워짐 = 고객이 받은 영상
+                        "charge_day": r[6], "charged": r[7],   # 내부 100배 단위
+                        "target_seconds": r[8], "sources": n_src})
+        return out
+
+    def customer_points_ledger(self, customer_id, limit=300):
+        """포인트 원장 내역(최신 먼저). delta는 **내부 단위**(표시값×100)다.
+
+        created_at은 `datetime('now')`가 넣은 `'YYYY-MM-DD HH:MM:SS'`(공백 구분, UTC)라
+        다른 테이블의 ISO(`T` 구분)와 형식이 다르다 — 화면에서 정규화한다.
+        rowid로 정렬한다: created_at이 초 단위라 같은 초에 여러 건이면 순서가 뒤집힌다.
+        """
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT delta, IFNULL(reason,''), IFNULL(created_at,'') FROM points_ledger "
+                "WHERE customer_id=? ORDER BY rowid DESC LIMIT ?",
+                (customer_id, int(limit))).fetchall()
+        return [{"delta": r[0], "reason": r[1], "at": r[2]} for r in rows]
+
+    def customer_access_rows(self, customer_id, limit=200):
+        """접속 기록 원본 행(최신 날짜 먼저). day는 `YYYY-MM-DD` **UTC**.
+
+        ★요약(access_summary)은 개수만 준다. "언제 어느 IP로 들어왔나"를 보려면
+          원본이 필요한데 그 함수가 없었다. 돌려쓰기 판단은 사장님 눈이 한다.
+        ⚠️ 30일이 지나면 prune_activity가 지운다 — 그보다 옛 기록은 없다.
+        """
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT day, ip, ua FROM customer_access WHERE customer_id=? "
+                "ORDER BY day DESC, ip LIMIT ?", (customer_id, int(limit))).fetchall()
+        return [{"day": r[0], "ip": r[1], "ua": r[2]} for r in rows]
+
+    def customer_activity_rows(self, customer_id, limit=300):
+        """활동 로그(최신 먼저). at은 **epoch초 UTC**.
+
+        recent_activity(limit=12)와 같은 테이블이지만 상세 화면은 날짜별로 펴야 해서
+        더 많이 가져온다. ⚠️ 같은 (cid, 액션)은 60초에 1건만 기록되므로
+        **실제 호출 횟수가 아니다** — '무엇을 했나'의 흔적이지 카운터가 아니다.
+        """
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT at, action FROM customer_activity WHERE customer_id=? "
+                "ORDER BY at DESC, id DESC LIMIT ?", (customer_id, int(limit))).fetchall()
+        return [{"at": r[0], "action": r[1]} for r in rows]
+
+    def customer_usage_days(self, customer_id, since_day=None):
+        """날짜별 사용량 → [{day, op, count}] (오래된 것 먼저).
+
+        ⚠️ `customer_id = -1`은 전역 집계 버킷이라 애초에 안 걸린다(cid로 조회하므로).
+        ⚠️ 체험 render는 day가 날짜가 아니라 리터럴 `"trial"`이다(영구 1회 버킷) —
+           걸러내지 않고 그대로 돌려준다. 화면이 '체험 1회'로 따로 표시한다.
+        """
+        sql = "SELECT day, op, count FROM usage WHERE customer_id=?"
+        args = [customer_id]
+        if since_day:
+            # "trial" 리터럴은 날짜 비교에서 살아남게 따로 OR로 붙인다
+            sql += " AND (day >= ? OR day='trial')"
+            args.append(since_day)
+        sql += " ORDER BY day, op"
+        with self._conn() as c:
+            rows = c.execute(sql, tuple(args)).fetchall()
+        return [{"day": r[0], "op": r[1], "count": r[2]} for r in rows]
+
+    def customer_ai_cost(self, customer_id, since_day=None):
+        """이 고객이 태운 Gemini 원가 → {"days": [...], "ops": [...], "total": {...}}.
+
+        ★gemini_usage.customer_id는 **TEXT 컬럼**이다(다른 테이블은 INTEGER).
+          문자열 '57'과 정수 57이 섞여 저장돼 있어 한쪽만 비교하면 조용히 반쪽만 잡힌다
+          → 양쪽 다 비교한다. (2026-08-29부터 usage_meter가 문자열로 통일해 넣는다)
+        ⚠️ 2026-08-29 이전 데이터는 customer_id가 대부분 NULL이라 여기 안 잡힌다 —
+          그건 '이 고객이 안 썼다'가 아니라 **'누가 썼는지 기록이 없다'**이다.
+        """
+        where = "(customer_id = ? OR customer_id = ?)"
+        args = [str(customer_id), int(customer_id) if str(customer_id).lstrip("-").isdigit() else -999999]
+        if since_day:
+            where += " AND day >= ?"
+            args.append(since_day)
+        with self._conn() as c:
+            days = c.execute(
+                "SELECT day, COUNT(*), SUM(in_tokens), SUM(out_tokens), SUM(krw) "
+                f"FROM gemini_usage WHERE {where} GROUP BY day ORDER BY day",
+                tuple(args)).fetchall()
+            ops = c.execute(
+                "SELECT IFNULL(op,'(미지정)'), COUNT(*), SUM(krw) "
+                f"FROM gemini_usage WHERE {where} GROUP BY op ORDER BY 3 DESC",
+                tuple(args)).fetchall()
+            tot = c.execute(
+                "SELECT COUNT(*), SUM(in_tokens), SUM(out_tokens), SUM(krw) "
+                f"FROM gemini_usage WHERE {where}", tuple(args)).fetchone()
+        return {
+            "days": [{"day": r[0], "calls": r[1], "in": r[2] or 0,
+                      "out": r[3] or 0, "krw": round(r[4] or 0, 2)} for r in days],
+            "ops": [{"op": r[0], "calls": r[1], "krw": round(r[2] or 0, 2)} for r in ops],
+            "total": {"calls": tot[0] or 0, "in": tot[1] or 0,
+                      "out": tot[2] or 0, "krw": round(tot[3] or 0, 2)},
+        }
+
+    def ai_cost_unattributed(self, since_day=None):
+        """주인이 안 적힌 Gemini 원가 합계 → {"calls": n, "krw": x}.
+
+        ★이 숫자를 화면에 반드시 띄운다. 고객별 합이 전체와 안 맞을 때 "왜 안 맞나"를
+          사람이 추측하게 두면 안 된다 — 미상이 얼마인지 그 자리에서 보여준다.
+        """
+        where = "(customer_id IS NULL OR customer_id = '')"
+        args = []
+        if since_day:
+            where += " AND day >= ?"
+            args.append(since_day)
+        with self._conn() as c:
+            r = c.execute(f"SELECT COUNT(*), SUM(krw) FROM gemini_usage WHERE {where}",
+                          tuple(args)).fetchone()
+        return {"calls": r[0] or 0, "krw": round(r[1] or 0, 2)}
+
+    def customer_job_durations(self, customer_id, limit=100):
+        """이 고객 작업의 실제 소요시간 → [{task, state, sec, finished_at}].
+
+        ★mix_jobs엔 소요시간 칸이 없다. job_queue가 claimed_at·finished_at을 갖고 있고,
+          `owner` 컬럼이 **customer_id를 문자열로** 담은 것이라(_owner_of) 여기로 뽑는다.
+        시간은 `datetime('now')` 공백형 UTC라 sqlite julianday로 초를 낸다.
+        """
+        with self._conn() as c:
+            try:
+                rows = c.execute(
+                    "SELECT task, state, "
+                    "  CAST((julianday(IFNULL(finished_at, heartbeat_at)) - julianday(claimed_at)) "
+                    "       * 86400 AS INTEGER), "
+                    "  IFNULL(finished_at, ''), IFNULL(error,'') "
+                    "FROM job_queue WHERE owner=? AND claimed_at IS NOT NULL "
+                    "ORDER BY id DESC LIMIT ?", (str(customer_id), int(limit))).fetchall()
+            except sqlite3.Error as e:
+                # job_queue가 아직 없는 DB(테스트·새 설치)에서는 소요시간 칸만 빈다.
+                # ★조용히 넘기지 않는다 — 침묵 except가 SQL 오류를 삼켜 라이브에서
+                #   0건이 된 2026-08-10 사고와 같은 모양이다.
+                logging.warning("customer_job_durations 조회 실패(빈 목록으로 진행): %r", e)
+                return []
+        return [{"task": r[0], "state": r[1], "sec": r[2] or 0,
+                 "finished_at": r[3], "error": r[4]} for r in rows]
 
     def usage_decr(self, customer_id, op, day):
         """(customer_id, op, day) 카운트 -1(0 밑으로 안 감), 감소 후 값 반환. 실패 환불용.

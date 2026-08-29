@@ -25,6 +25,68 @@ const PV_AR = '9/16';
 if (typeof document !== 'undefined' && document.documentElement){
   document.documentElement.style.setProperty('--shorts-pv-w', PV_W);
   document.documentElement.style.setProperty('--shorts-pv-ar', PV_AR);
+  // ★미리보기 폭 끌어서 조절(2026-08-29 사장님 "미리보기 비율을 늘리면 높이가 살아나니
+  //   충분할 것 같은데") — '이정도'를 숫자로 짐작해 박지 않는다. 필름 높이(frgrab)처럼
+  //   오른쪽 가장자리를 끌게 하고 localStorage(pvW)로 기억한다. 기본값·정의처는 그대로
+  //   위 PV_W 한 곳이고, 조절값은 그 위에 덮일 뿐이다(0순위-B — 두 화면 공용도 그대로).
+  // ⚠️tight 모드(장면편집 3단)는 폭 변수가 --pv-w(scene_lab body.tight) 두 벌째다 —
+  //   둘 다 민다(변수 통합은 별도 정리감. 여기서 한쪽만 밀면 '조절이 안 된다'가 된다).
+  const _pvApply = (w) => {
+    document.documentElement.style.setProperty('--shorts-pv-w', w + 'px');
+    if (document.body) document.body.style.setProperty('--pv-w', w + 'px');
+  };
+  try {
+    const saved = parseFloat(localStorage.getItem('pvW'));
+    if (saved >= 280 && saved <= 900) {
+      if (document.body) _pvApply(saved);
+      else document.addEventListener('DOMContentLoaded', () => _pvApply(saved));
+    }
+  } catch (e) {}
+  const initPvResize = () => {
+    const el = document.getElementById('playerhost') || document.getElementById('mixPreviewRail');
+    if (!el || el._pvGrip) return;
+    if (!document.getElementById('pvgrip-style')) {
+      const st = document.createElement('style');
+      st.id = 'pvgrip-style';
+      st.textContent = '.pvgrip{position:absolute;right:0;top:0;bottom:0;width:7px;cursor:ew-resize;'
+        + 'z-index:30;border-radius:3px}'
+        + '.pvgrip:hover,.pvgrip.on{background:rgba(74,193,255,.35)}';
+      document.head.appendChild(st);
+    }
+    // ★getComputedStyle은 Node 슬라이스 하네스에 없다(★슬라이스하네스 함정) — typeof 가드
+    if (!el.style.position && (typeof getComputedStyle !== 'function'
+        || getComputedStyle(el).position === 'static')) el.style.position = 'relative';
+    const g = document.createElement('div');
+    // 비브라우저(테스트 스텁 DOM)면 조작 UI는 생략 — 여긴 편의 기능일 뿐이다
+    if (typeof g.addEventListener !== 'function') return;
+    g.className = 'pvgrip'; g.title = '끌어서 미리보기 크기 조절';
+    el.appendChild(g); el._pvGrip = g;
+    let sx = 0, w0 = 0, on = false;
+    g.addEventListener('pointerdown', e => {
+      on = true; sx = e.clientX; w0 = el.getBoundingClientRect().width;
+      g.classList.add('on');
+      try { g.setPointerCapture(e.pointerId); } catch (_) {}
+      e.preventDefault(); e.stopPropagation();
+    });
+    g.addEventListener('pointermove', e => {
+      if (!on) return;
+      const w = Math.max(280, Math.min(900, Math.round(w0 + (e.clientX - sx))));
+      _pvApply(w);
+      e.stopPropagation();
+    });
+    const fin = () => {
+      if (!on) return;
+      on = false; g.classList.remove('on');
+      try {
+        localStorage.setItem('pvW',
+          parseFloat(document.documentElement.style.getPropertyValue('--shorts-pv-w')));
+      } catch (_) {}
+    };
+    g.addEventListener('pointerup', fin);
+    g.addEventListener('pointercancel', fin);
+  };
+  if (document.readyState !== 'loading') initPvResize();
+  else document.addEventListener('DOMContentLoaded', initPvResize);
 }
 
 // ── 미리보기를 칸 안에 맞춘다(2026-08-22 사장님 "미리보기창이 너무 크가 스크롤없이 맞춰봐")
@@ -134,6 +196,10 @@ function setFix(i, sid, sec){
   if (!(sec > 0)) delete FIXLEN[k];
   else FIXLEN[k] = Math.round(sec * 100) / 100;
   (typeof render === 'function' && render());
+  // ✋ 정한 길이를 그 자리에서 저장까지(2026-08-29 사장님 "컷 길이 저장하고") —
+  //   saveWork가 localStorage(fixlen 포함)+autoApply(서버 fixed_lens)를 한 번에 처리한다.
+  //   장면편집 밖(테스트 스텁 등)엔 saveWork가 없다 → 조용히 통과.
+  if (typeof saveWork === 'function') { try { saveWork(); } catch (e) {} }
 }
 // 지정 길이를 반영해 컷 길이를 다시 나눈다. 총합(ttsDur)은 **그대로 유지**한다.
 // ★planClips의 분배 규칙은 안 건드린다 — 만들어진 결과를 뒤에서 손본다(0순위-B:
@@ -281,9 +347,19 @@ function unTrim(sid){
 }
 
 // video_assemble._plan_beat_clips 이식(라운드로빈 + shortfall 1순위 근사)
-let onePerSeg = false;   
+let onePerSeg = false;
 const STRETCH = {};                 // beat_idx → true(늘려 채우기 켬)
 function toggleStretch(i, on){ if (on) STRETCH[i] = true; else delete STRETCH[i]; (typeof render === 'function' && render()); }
+// ★구절 맞춤(2026-08-29 사장님 "활성화는 자막 분할 개수대로 / 개수+길이까지 1:1") —
+//   컷 경계 = 자막 구절 경계. 컷1이 리드인(첫말 전 무음)을 얹고, 마지막 컷이 꼬리를
+//   얹는다. 기본 **켬**(끄면 종전 배분). ✋수동 길이(FIXLEN)가 있는 칸은 수동이 이긴다.
+const PHRASE_SYNC = {};             // beat_idx → false(끔)일 때만 기록. 기본은 켬.
+function phraseSyncOn(i){ return PHRASE_SYNC[i] !== false; }
+function togglePhraseSync(i, on){
+  if (on) delete PHRASE_SYNC[i]; else PHRASE_SYNC[i] = false;
+  if (typeof saveWork === 'function') { try { saveWork(); } catch (e) {} }
+  (typeof render === 'function' && render());
+}
 // beatIdx는 **선택**이다 — 넘기면 그 칸의 수동 지정 길이(FIXLEN)를 반영한다.
 // 안 넘기는 옛 호출부는 종전과 똑같이 동작한다(하위호환).
 function planClips(segIds, ttsDur, spread, beatIdx){
@@ -292,6 +368,28 @@ function planClips(segIds, ttsDur, spread, beatIdx){
                          .filter(s => s.start != null);
   const clips = []; let filled = 0;
   if (!segments.length) return clips;
+  // ── 구절 맞춤 경로: 자막 시간표가 있고, 수동 길이가 없을 때만.
+  //    (라이브 렌더의 같은 규칙은 video_assemble의 phrase_sync 분기 — 짝으로 움직인다)
+  if (beatIdx != null && phraseSyncOn(beatIdx)
+      && typeof capsOf === 'function'
+      && !segIds.some(id => typeof getFix === 'function' && getFix(beatIdx, id) > 0)) {
+    const caps = capsOf(beatIdx) || [];
+    if (caps.length >= 1 && ttsDur > 0.1) {
+      // 경계: [0, caps[1].start, …, caps[n-1].start, ttsDur] — 리드인·꼬리는 양끝 컷 몫.
+      const bounds = [0];
+      for (let k = 1; k < caps.length; k++) bounds.push(Math.min(ttsDur, caps[k].start));
+      bounds.push(ttsDur);
+      const nCut = Math.min(caps.length, segments.length);
+      for (let k = 0; k < nCut; k++) {
+        const isLast = k === nCut - 1;
+        const endB = isLast ? bounds[bounds.length - 1] : bounds[k + 1];  // 재료 부족 → 마지막이 남은 구절 커버
+        const d = Math.max(0.1, endB - bounds[k]);
+        const seg = segments[k];
+        clips.push({ seg_id: seg.seg_id, video_id: seg.video_id, start: seg.start, dur: Math.round(d * 100) / 100 });
+      }
+      return clips;
+    }
+  }
   if (onePerSeg){
     // 1장=1컷 · 비례 배분(라이브 _plan_beat_clips one_per_seg와 같은 규칙).
     // 나레이션 시간을 담은 장면들에 **길이 비례**로 나눈다 — 남으면 줄이고 모자라면 늘린다.
