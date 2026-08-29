@@ -74,12 +74,15 @@
     const capHtml = silHtml + caps.map((c, k) => {
       const wd = Math.max(8, (c.end - c.start) * pps - 2);
       const sec = c.end - c.start;
+      // ★좁은 블록엔 글자를 아예 안 넣는다(2026-08-29 사장님 "자막이 0000 이렇게 뽑혔어" —
+      //   구절 31개짜리 비정상 칸에서 초 배지가 "0."으로 잘려 도배됐다). 정보는 title에 남는다.
+      const inner = wd < 30 ? ''
+        : `<span class="tl-cap-t">${esc(c.text)}</span>` +
+          (wd < 60 ? '' : `<span class="tl-cap-s">${sec.toFixed(1)}s</span>`);
       return `<div class="tl-cap" data-k="${k}"
         style="left:${(c.start * pps).toFixed(1)}px;width:${wd.toFixed(1)}px"
         title="${esc(c.text)} — ${sec.toFixed(2)}초. 누르면 필름 [+구간] 길이가 이 초로 맞춰집니다"
-        onclick="event.stopPropagation();tlPickCap(${i},${k})">
-        <span class="tl-cap-t">${esc(c.text)}</span><span class="tl-cap-s">${sec.toFixed(1)}s</span>
-      </div>`;
+        onclick="event.stopPropagation();tlPickCap(${i},${k})">${inner}</div>`;
     }).join('');
 
     // ── 음성 레인 + 재생선. cap_src(⑦a) = 이 칸 구절 초가 어느 단에서 나왔나.
