@@ -89,7 +89,8 @@ from shopping_shorts.video_assemble import _probe_duration, _effective_dur, _TRI
 from shopping_shorts.narration_naturalize import naturalize as _naturalize
 from shopping_shorts import frame_extract, scene_assets, scene_cut
 from shopping_shorts import effect_match, remotion_render, points
-from shopping_shorts import keycrypt, keyctx, keyroute, pricing      # BYOK(사용자 키·포인트). points는 위에서 이미 import
+from shopping_shorts import keycrypt, keyctx, keyroute, pricing
+from shopping_shorts import buffer_api      # BYOK(사용자 키·포인트). points는 위에서 이미 import
 from shopping_shorts import video_assemble
 from shopping_shorts import seo_generate, seo_probe
 from shopping_shorts import pattern_bank
@@ -5768,6 +5769,80 @@ def share_page(sid: str):
                         .replace("__THUMB__", f"/api/share/t/{sid}" if has_thumb else ""))
 
 
+# ── Buffer(SNS 예약발행) ────────────────────────────────────────────────
+#  ★고객이 자기 Buffer 개인 키를 등록해야만 된다(회사 키로 대신 못 한다).
+#    Buffer가 제3자 OAuth를 아직 안 열었기 때문 — buffer_api.py 머리말 참조.
+#  ★키를 고르는 곳은 keyroute 하나다. 여기서 customer_keys를 직접 뒤지지 않는다.
+def _buffer_key(request: Request) -> str:
+    """이 요청자의 Buffer 키 하나. 없으면 빈 문자열(호출부가 안내를 띄운다)."""
+    keys, _mine = keyroute.keys_for(Store(DB_PATH), _cid(request), keyroute.SVC_BUFFER)
+    return (keys or [""])[0]
+
+
+_BUFFER_NO_KEY = {"ok": False, "need_key": True,
+                  "error": "먼저 마이페이지에서 Buffer 키를 등록해 주세요."}
+
+
+@app.get("/api/buffer/channels")
+def api_buffer_channels(request: Request):
+    """이 고객의 Buffer에 연결된 채널 목록(어디에 올릴지 고르게 한다)."""
+    key = _buffer_key(request)
+    if not key:
+        return JSONResponse(status_code=200, content=_BUFFER_NO_KEY)
+    try:
+        return {"ok": True, "channels": buffer_api.channels(key)}
+    except buffer_api.BufferError as e:
+        return JSONResponse(status_code=200, content={"ok": False, "error": str(e)})
+
+
+@app.post("/api/buffer/schedule")
+async def api_buffer_schedule(request: Request):
+    """완성 영상을 Buffer에 예약한다.
+
+    body: {job_id, channel_ids[], text, due_at?(ISO8601 UTC), thumb_ms?}
+
+    ★영상은 파일로 못 올린다 — Buffer가 **게시 시점에 공개 URL을 직접 가져간다.**
+      그래서 여기서 임시 공개 링크를 발급한다(기본 24시간이 아니라 14일:
+      예약이 사흘 뒤인데 링크가 하루 만에 죽으면 발행이 조용히 실패한다).
+    ★채널마다 따로 예약한다. 한 채널이 실패해도 나머지는 올라가야 하므로
+      결과를 채널별로 돌려준다(하나 실패 = 전부 실패로 만들지 않는다).
+    """
+    key = _buffer_key(request)
+    if not key:
+        return JSONResponse(status_code=200, content=_BUFFER_NO_KEY)
+
+    body = await request.json()
+    job_id = os.path.basename(str(body.get("job_id") or ""))
+    chans = [str(c) for c in (body.get("channel_ids") or []) if c]
+    text = str(body.get("text") or "")
+    due_at = str(body.get("due_at") or "").strip() or None
+    thumb_ms = int(body.get("thumb_ms") or 0)
+    if not job_id or not chans:
+        return JSONResponse(status_code=400,
+                            content={"ok": False, "error": "job_id와 채널을 골라 주세요."})
+
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job or not job.get("video_path") or not Path(job["video_path"]).exists():
+        return JSONResponse(status_code=404,
+                            content={"ok": False, "error": "완성된 영상이 없습니다."})
+    # 내 작업인지 확인 — 남의 job_id로 남의 영상을 공개 링크로 뽑아낼 수 있으면 안 된다.
+    if int(job.get("customer_id") or 0) != _cid(request):
+        return JSONResponse(status_code=403, content={"ok": False, "error": "내 작업이 아닙니다."})
+
+    sid = _share_put(job_id, _SHARE_TTL_BUFFER)
+    base = str(request.base_url).rstrip("/")
+    video_url = f"{base}/api/share/v/{sid}"
+
+    out = []
+    for cid_ in chans:
+        try:
+            r = buffer_api.schedule_video(key, cid_, text, video_url, due_at, thumb_ms)
+            out.append({"channel_id": cid_, "ok": True, "post_id": r["id"], "due_at": r["dueAt"]})
+        except buffer_api.BufferError as e:
+            out.append({"channel_id": cid_, "ok": False, "error": str(e)})
+    return {"ok": any(x["ok"] for x in out), "results": out, "video_url": video_url}
+
+
 @app.get("/api/mix/export/{job_id}")
 def api_mix_export(job_id: str, part: str = ""):
     """캡컷 편집용 내보내기 ZIP(설계 2026-07-20 §2, T1). part=sources|srt|script면 그것만(개별
@@ -7581,7 +7656,8 @@ def _set_session_cookie(response, customer_id: int):
 # '로그인 없이 열리는' 단기 링크를 QR로 띄운다 → 폰으로 스캔해 폰 카톡 네이티브 공유로 전송.
 # ★URL을 짧게(/s/{8자}) 유지해야 QR이 v3(검증범위) 안에 든다 → 긴 서명토큰 대신 메모리 저장소에
 #   짧은 id→(job,만료)를 담는다. 재기동 시 사라짐 = 24h 만료와 같은 성질(재발급하면 됨). 무상태 필요 없음.
-_SHARE_TTL = 60 * 60 * 24  # 24시간
+_SHARE_TTL = 60 * 60 * 24        # 24시간(QR '폰으로 보내기')
+_SHARE_TTL_BUFFER = 60 * 60 * 24 * 14   # 14일 — Buffer가 게시 시점에 가져간다
 
 # ★DB에 저장한다(2026-08-19 사장님 "카톡 QR로 보내기 다시 살려줘"). 예전엔 프로세스 메모리
 #   dict였다 — 자동배포 크론이 3분마다 새 커밋을 보고 systemctl restart 하므로, 발급한 QR이
@@ -7590,10 +7666,18 @@ _SHARE_TTL = 60 * 60 * 24  # 24시간
 #   저장소가 sqlite면 재시작·워커 분리와 무관하게 24시간 그대로 산다.
 
 
-def _share_put(job_id: str) -> str:
+def _share_put(job_id: str, ttl: int | None = None) -> str:
+    """단축 공개 링크를 발급한다. ttl(초)을 주면 그 기간, 없으면 기본 24시간.
+
+    ★Buffer 예약발행이 ttl을 길게 준다(buffer_api 참조). Buffer는 파일을 안 받고
+      **공개 URL을 게시 시점에 직접 가져간다** — 예약이 사흘 뒤면 그때까지 링크가
+      살아 있어야 한다. 24시간이면 예약이 조용히 실패한다.
+      ⚠️그래도 '무기한'은 안 된다. 주소를 아는 사람은 로그인 없이 볼 수 있으므로,
+        기간을 반드시 끊는다(사장님 선택: 예약한 영상만 임시 공개).
+    """
     now = int(datetime.now(timezone.utc).timestamp())
     sid = secrets.token_urlsafe(6)   # ~8자
-    Store(DB_PATH).put_share_link(sid, job_id, now + _SHARE_TTL)
+    Store(DB_PATH).put_share_link(sid, job_id, now + int(ttl or _SHARE_TTL))
     return sid
 
 
