@@ -196,6 +196,10 @@ function setFix(i, sid, sec){
   if (!(sec > 0)) delete FIXLEN[k];
   else FIXLEN[k] = Math.round(sec * 100) / 100;
   (typeof render === 'function' && render());
+  // ✋ 정한 길이를 그 자리에서 저장까지(2026-08-29 사장님 "컷 길이 저장하고") —
+  //   saveWork가 localStorage(fixlen 포함)+autoApply(서버 fixed_lens)를 한 번에 처리한다.
+  //   장면편집 밖(테스트 스텁 등)엔 saveWork가 없다 → 조용히 통과.
+  if (typeof saveWork === 'function') { try { saveWork(); } catch (e) {} }
 }
 // 지정 길이를 반영해 컷 길이를 다시 나눈다. 총합(ttsDur)은 **그대로 유지**한다.
 // ★planClips의 분배 규칙은 안 건드린다 — 만들어진 결과를 뒤에서 손본다(0순위-B:

@@ -2902,7 +2902,9 @@ function saveWork(){
   try{
     localStorage.setItem(SAVE_KEY, JSON.stringify({
       mode, lists, chosen: [...chosen], narr: NARR, trims: TRIMS, merges: MERGES,
-      stretch: STRETCH, autoadd: AUTOADD, extra: EXTRA, at: new Date().toISOString()
+      stretch: STRETCH, autoadd: AUTOADD, extra: EXTRA,
+      fixlen: FIXLEN,        // ✋ 손으로 정한 컷 길이(2026-08-29 — "저장을 빼먹어" 경고의 해소)
+      at: new Date().toISOString()
     }));
   }catch(e){}
   const el = document.getElementById('savedmsg');
@@ -2933,6 +2935,23 @@ function autoApply(){
 // ⚠️여유 30초: 내 저장(saveWork) → 서버 반영(autoApply 1.2초 뒤)이라 서버 시각이 내
 //   저장본보다 늘 조금 늦다. 여유가 없으면 **내가 방금 한 편집을 내가 버린다.**
 //   다른 기기에서 고친 경우는 보통 몇 분 이상 벌어지므로 30초로 충분히 갈린다.
+// ✋ FIXLEN 복원은 이 함수 하나로(복원 경로가 loadWork·loadSaved·서버편성 셋이다 —
+//    ★저장가드 교훈: 하이드레이션 함수 하나, 값이 없으면 **비운다**(캐리오버 방지)).
+function hydrateFixlen(map){
+  Object.keys(FIXLEN).forEach(k => delete FIXLEN[k]);
+  for (const [k, v] of Object.entries(map || {})){
+    const n = parseFloat(v);
+    if (n > 0) FIXLEN[k] = Math.round(n * 100) / 100;
+  }
+}
+// 서버 편성으로 열 때 — 서버는 칸마다 fixed_lens({조각id:초})로 갖고 있다(apply_scene_lab).
+function fixlenFromBeats(){
+  const out = {};
+  (DATA.beats || []).forEach((b, i) => {
+    for (const [sid, v] of Object.entries(b.fixed_lens || {})) out[i + ':' + sid] = v;
+  });
+  return out;
+}
 function serverEditIsNewer(){
   const sAt = DATA && DATA.scene_lab_at;
   if (!sAt) return false;                       // 서버에 얹힌 편성이 없다 → 내 것이 맞다
@@ -2970,6 +2989,7 @@ function loadWork(){
     Object.keys(AUTOADD).forEach(k => delete AUTOADD[k]);
     Object.assign(AUTOADD, w.autoadd || {});
     hydrateExtra(w);
+    hydrateFixlen(w.fixlen);   // ✋ 옛 저장본엔 없다 → 비워진다(캐리오버 방지)
     ['live','one','hand','pick'].forEach(x => {
       const b = document.getElementById('m-' + x);
       if (b) b.classList.toggle('on', x === mode);
@@ -2998,6 +3018,7 @@ function loadSaved(){
   Object.keys(AUTOADD).forEach(k => delete AUTOADD[k]);
   Object.assign(AUTOADD, w.autoadd || {});
   hydrateExtra(w);
+  hydrateFixlen(w.fixlen);     // ✋ 없으면 비운다
   ['live','one','hand','pick'].forEach(x => {
     const b = document.getElementById('m-' + x);
     if (b) b.classList.toggle('on', x === mode);
@@ -3662,6 +3683,7 @@ async function boot(){
     // 다른 곳에서 더 최근에 고쳤다 — 내 옛 저장본을 버리고 서버 편성으로 연다.
     clearWork();
     lists = DATA.beats.map(b => serverList(b) || baseList(b));
+    hydrateFixlen(fixlenFromBeats());    // ✋ 서버가 기억하는 손 길이도 같이
     mode = 'hand';                       // 서버 편성 = 사람이 정한 배치다
     render();
     nsay('🔄 다른 곳에서 편집한 내용이 더 최신이라 서버 편성을 불러왔어요');
