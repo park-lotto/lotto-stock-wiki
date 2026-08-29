@@ -298,7 +298,7 @@
       //   좁아 off=0이라 안 드러났을 뿐). caps·use 층과 같은 규약: 층은 translate, 자식은 절대.
       boxesEl.style.width = (DUR * pps()) + 'px';
       boxesEl.innerHTML = BOXES.map((b, i) =>
-        `<div class="bx${ACTBOX === i ? ' act' : ''}" data-i="${i}" ` +
+        `<div class="bx${ACTBOX === i ? ' act' : ''}${LOCK ? ' lock' : ''}" data-i="${i}" ` +
         `style="left:${b.s * pps()}px;width:${Math.max(8, (b.e - b.s) * pps())}px">` +
         `<span class="t">${(b.e - b.s).toFixed(2)}초${LOCK ? ' 🔒' : ''}</span>` +
         // ★키 안내(2026-08-28 사장님 "시작Q 종료W 담기E 이렇게 써줘").
@@ -626,7 +626,14 @@
       //   (조각 밖 구간을 잡으려면 원본이 다 보여야 한다) — 문제는 **0초에서 열려서**
       //   지금 쓰는 구간이 화면 밖에 있었다는 것이다. 처음 한 번만 그 구간으로 옮긴다
       //   (확대·축소로 다시 그릴 때는 그 자리를 지킨다 — 아래 frz 핸들러가 정한다).
-      if (!_homed && opt.from != null) {
+      if (!_homed && LOCK) {
+        // ★잠금 박스는 열리자마자 **화면 가운데**(2026-08-29 사장님 "옆으로 이동해서
+        //   찾아야 한다") — 박스를 찾으러 스크롤하게 두지 않는다.
+        _homed = true;
+        const _c = (Math.max(0, +opt.lockFrom || 0) + (+opt.lockLen || 0) / 2);
+        setTimeout(() => { off = clamp(_c * pps() - winW() / 2); applyW(); }, 0);
+      }
+      else if (!_homed && opt.from != null) {
         _homed = true;
         // ★배율은 **레이아웃이 잡힌 뒤** 정한다. 여기서 바로 재면 win.clientWidth가 아직
         //   0이라 winW()가 600 폴백을 쓰고, 그 폭 기준으로 엉뚱한 배율이 나온다
