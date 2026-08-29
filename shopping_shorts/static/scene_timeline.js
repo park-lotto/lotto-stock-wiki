@@ -40,7 +40,7 @@
       const stretchPx = (isLast && f.lack > 0.1 && !f.stretching)
         ? Math.min(f.lack, c.dur) * pps : 0;
       const inRep = REPLACE && REPLACE.i === i && REPLACE.k === k;
-      return `<div class="tl-cut${inRep ? ' rep' : ''}" data-k="${k}" data-seg="${c.seg_id}"
+      return `<div class="tl-cut" data-k="${k}" data-seg="${c.seg_id}"
         style="left:${left.toFixed(1)}px;width:${wd.toFixed(1)}px"
         title="${esc((DATA.segments[c.seg_id] || {}).label || c.seg_id)} · ${c.dur.toFixed(2)}초 — 누르면 필름식으로 펼쳐집니다"
         onclick="event.stopPropagation();tlToggleCut(${i},${k})">
