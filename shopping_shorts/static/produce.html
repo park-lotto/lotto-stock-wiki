@@ -2251,6 +2251,49 @@
       </div>
     </section>
 
+    <!-- 10) SNS 예약 발행 — 2026-08-29 사장님 "경쟁 프로그램은 버퍼를 연결해서 완성본
+         다음 단계에서 이걸 쓰고 있어. 개인 api키 넣게 등록하고".
+         ★고객이 자기 Buffer 개인 키를 등록해야만 쓸 수 있다(회사 키로 대신 못 한다) —
+           Buffer가 제3자 OAuth를 아직 안 열었다. buffer_api.py 머리말 참조.
+         ★영상은 파일로 안 올라간다. 예약할 때 임시 공개 링크(14일)를 발급하고 Buffer가
+           게시 시점에 그 주소로 직접 가져간다. -->
+    <section class="panel" data-step="9">
+      <h3 data-steptitle="sns">10 · SNS 예약 발행</h3>
+      <div class="sub">완성한 영상을 인스타·유튜브·틱톡 등에 예약해 올립니다. 올리는 곳은 <b>내 Buffer 계정</b>입니다.</div>
+
+      <div id="bufNeedKey" class="warnBox" style="display:none;margin-bottom:12px">
+        먼저 <a href="/settings#keys" style="color:var(--accent2)">마이페이지 → 🔑 내 키 등록</a>에서
+        <b>Buffer 키</b>를 넣어 주세요. 이 키는 <b>회사 키로 대신 못 합니다</b> —
+        내 SNS 계정에 올리는 일이라 반드시 내 Buffer 키가 있어야 합니다.
+      </div>
+
+      <div id="bufBody" style="display:none">
+        <div class="hint" style="margin-bottom:6px">📡 올릴 곳 (여러 곳 고를 수 있습니다)</div>
+        <div id="bufChannels" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px"></div>
+
+        <div class="hint" style="margin-bottom:6px">✍️ 올릴 글 — 8단계에서 만든 제목·설명·해시태그를 가져왔습니다</div>
+        <textarea id="bufText" rows="7" style="width:100%"></textarea>
+
+        <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-top:12px">
+          <div>
+            <div class="hint" style="margin-bottom:6px">🕒 언제 올릴까요</div>
+            <label style="display:flex;align-items:center;gap:8px;min-height:44px;cursor:pointer">
+              <input type="radio" name="bufWhen" value="queue" checked>
+              <span>내 Buffer 시간표에 맡기기 <span class="hint">(Buffer에서 정해둔 시간에 순서대로)</span></span>
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;min-height:44px;cursor:pointer">
+              <input type="radio" name="bufWhen" value="at">
+              <span>직접 정하기</span>
+              <input type="datetime-local" id="bufAt" style="margin-left:4px">
+            </label>
+          </div>
+        </div>
+
+        <button id="btnBufGo" class="btn-next" style="padding:12px 22px;margin-top:12px" onclick="bufSchedule()">📅 예약하기</button>
+        <div id="bufStatus" class="hint" style="margin-top:10px"></div>
+      </div>
+    </section>
+
     <!-- 8) 화면 붙이기(매칭) — Task 6(2026-07-23) 신규. 물리적으로는 꼬리에 붙지만(data-step=7,
          기존 인덱스 불변) 오브바에선 2번째로 보인다(ORB_TO_PANEL[1]=7). ⚡시작(Task4)이 매칭을
          걸고, 완료되면 pollMix가 이 패널로 데려온다(패널0=제작소는 그대로, 미리보기는 여기로 이사).
@@ -2516,10 +2559,10 @@
 //   대본(신규 패널 8)을 2번째로 세우고, 장면 편집(패널 7)을 3번째로 민다.
 //   ★물리 패널 번호(data-step)는 그대로 두고 이 매핑만 바꾼다 — cur===n 분기가
 //   파일 곳곳에 박혀 있어 번호를 다시 매기면 전부 어긋난다.
-const STEP_LABELS = ["영상추출/분석","대본생성","영상대본MIX","고품질 자막제거","TTS음성","자막꾸미기","썸네일","제목·태그","완성본"];
+const STEP_LABELS = ["영상추출/분석","대본생성","영상대본MIX","고품질 자막제거","TTS음성","자막꾸미기","썸네일","제목·태그","완성본","SNS 예약"];
 // ★도크 라벨은 11px이라 긴 이름이 두 줄로 접힌다 → 도크에서만 줄여 쓴다(패널 제목은 STEP_LABELS 그대로).
 //   빈 문자열이면 STEP_LABELS를 그대로 쓴다 — 두 벌을 다 적지 않기 위해서다(0순위-B).
-const STEP_SHORT = ["영상추출","","","자막제거","","","","",""];
+const STEP_SHORT = ["영상추출","","","자막제거","","","","","","예약발행"];
 function stepShort(o){ return STEP_SHORT[o] || STEP_LABELS[o]; }
 // 단계 색(2026-08-26 사장님 확정 K3 색흐름). [선/기본색, 현재일 때 그라디언트 끝색]
 // ★여기가 색의 유일한 출처다 — theme.css는 var(--c)만 읽는다.
@@ -2527,6 +2570,7 @@ const STEP_COLORS = [
   ["#38bdf8","#0ea5e9"], ["#8c6ef0","#6d4df0"], ["#f472b6","#ec4899"],
   ["#fb7185","#f43f5e"], ["#7df5db","#14b8a6"], ["#fb923c","#f97316"],
   ["#facc6b","#f5b53f"], ["#a3e635","#84cc16"], ["#6ee7b7","#10b981"],
+  ["#60a5fa","#3b82f6"],   // SNS 예약 — 완성본(초록) 다음이라 파랑으로 끊는다
 ];
 // 단계 아이콘(24x24 stroke 전용, fill 없음 — 색은 currentColor가 받는다)
 const STEP_ICONS = [
@@ -2539,16 +2583,19 @@ const STEP_ICONS = [
   '<rect x="2.5" y="4" width="19" height="16" rx="2.5"/><circle cx="8" cy="9.5" r="1.8"/><path d="M3 16.5 8.5 12l4 3.5L16 13l5 4.5"/>',
   '<path d="M3 4.6h9M3 8h6"/><path d="M21 13.6 13.6 21a1.4 1.4 0 0 1-2 0l-5.9-5.9a1.4 1.4 0 0 1-.4-1V8.4c0-.8.6-1.4 1.4-1.4h5.7c.4 0 .7.1 1 .4l5.6 5.6a1.4 1.4 0 0 1 0 2z"/><circle cx="9.6" cy="10.8" r="1.15"/>',
   '<path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5zM3.5 7.5 12 12l8.5-4.5M12 12v9"/>',
+  /* SNS 예약 — 달력에 시계(예약해 둔다) */
+  '<rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/><circle cx="16.5" cy="15.5" r="4"/><path d="M16.5 13.6v2l1.4 1"/>',
 ];
 // 표시 오브 → 실제 패널 data-step (대본=신규 8이 2번째, 매칭=7이 3번째)
-const ORB_TO_PANEL = [0, 8, 7, 1, 2, 3, 4, 5, 6];
+// ★SNS 예약(신규 패널 9)은 **완성본 뒤**에 붙는다 — 영상이 나와야 올릴 수 있다.
+const ORB_TO_PANEL = [0, 8, 7, 1, 2, 3, 4, 5, 6, 9];
 const PANEL_TO_ORB = Object.fromEntries(ORB_TO_PANEL.map((p,o)=>[p,o]));
 // ★안내 문구가 단계 번호를 직접 쓰지 않게 한다(2026-08-16). 예전엔 "1단계에서 영상 매칭을
 //   먼저 하세요" 같은 문장이 16곳에 손으로 박혀 있었는데, 9단계 개편으로 매칭이 3단계가
 //   되면서 **전부 거짓말이 됐다**. 다음에 순서가 또 바뀌어도 여기만 맞으면 문구가 따라온다
 //   (CLAUDE.md 0순위-B: 같은 판단을 두 곳에 적지 마라).
 //   쓰는 법: stepName('mix') → "3단계(영상대본MIX)"
-const PANEL_BY_KEY = {source:0, script:8, mix:7, subtitle:1, tts:2, deco:3, thumb:4, seo:5, final:6};
+const PANEL_BY_KEY = {source:0, script:8, mix:7, subtitle:1, tts:2, deco:3, thumb:4, seo:5, final:6, sns:9};
 function stepOrb(key){ return PANEL_TO_ORB[PANEL_BY_KEY[key]] ?? 0; }
 function stepName(key){ const o = stepOrb(key); return `${o+1}단계(${STEP_LABELS[o]})`; }
 function stepGo(key){ jump(stepOrb(key)); }
@@ -2565,6 +2612,115 @@ function orbIndex(){ return PANEL_TO_ORB[cur] ?? 0; }
 // 되돌리기(revertWork)·작업복원(_restoreWork)의 범위 체크는 반드시 이걸 써야 한다 —
 // STEP_LABELS.length를 쓰면 신규 매칭 패널(data-step=7)이 범위 밖으로 오판돼 0으로 튕긴다
 // (Task 2 리뷰 Minor②, Task 6에서 수정. 값이 우연히 같아진 지금도 축의 의미는 다르다).
+
+/* ── SNS 예약 발행(Buffer) — 10단계 ──────────────────────────────────────
+   ★고객이 자기 Buffer 개인 키를 등록해야만 쓴다(회사 키로 대신 못 한다).
+     Buffer가 제3자 OAuth를 아직 안 열었기 때문 — 서버 buffer_api.py 머리말 참조.
+   ★올릴 글은 8단계 SEO에서 가져온다. 여기서 문구를 새로 지어내면 두 벌이 된다(0순위-B).
+   ★영상은 예약할 때 서버가 임시 공개 링크(14일)를 만든다 — Buffer가 게시 시점에
+     그 주소로 직접 가져가기 때문. 화면은 그 사정을 몰라도 된다. */
+var BUF = { loadedFor: null, channels: [], picked: {} };
+/* 키 없음 안내 — 처음 HTML에 있는 글과 같다. 상황이 바뀌면 이걸로 되돌린다. */
+var BUF_NEED_KEY_HTML = '먼저 <a href="/settings#keys" style="color:var(--accent2)">마이페이지 → 🔑 내 키 등록</a>에서 '
+  + '<b>Buffer 키</b>를 넣어 주세요. 이 키는 <b>회사 키로 대신 못 합니다</b> — '
+  + '내 SNS 계정에 올리는 일이라 반드시 내 Buffer 키가 있어야 합니다.';
+
+function bufText(){
+  /* 8단계에서 만든 것을 그대로 쓴다. 없으면 빈 칸으로 둔다(지어내지 않는다). */
+  /* ★window.SEO로 보면 **항상 비어 있다** — 이 파일의 SEO는 let 전역이라
+     window의 속성이 아니다(이 저장소에서 여러 번 밟은 함정: MIX_JOB·lists도 같다).
+     typeof로 본다. */
+  if (typeof SEO === 'undefined' || !SEO) return '';
+  var lines = [];
+  if (SEO.title) lines.push(SEO.title);
+  if (SEO.description) lines.push('', SEO.description);
+  /* 해시태그는 인스타 몫이 가장 많다 — 있으면 그걸, 없으면 유튜브 것을 쓴다.
+     만드는 규칙은 SEO 쪽 seoHashLine 하나뿐이라 여기서 다시 안 만든다. */
+  if (typeof seoHashLine === 'function'){
+    var tags = seoHashLine('instagram') || seoHashLine('youtube');
+    if (tags) lines.push('', tags);
+  }
+  return lines.join('\n');
+}
+
+async function loadBuffer(){
+  var need = document.getElementById('bufNeedKey');
+  // ★작업이 없으면 **왜 비었는지** 말해준다. 조용히 빈 화면이 가장 나쁘다.
+  if (!MIX_JOB){
+    need.style.display = 'block';
+    need.innerHTML = '먼저 영상을 만들어 주세요 — 완성한 영상이 있어야 예약할 수 있습니다.';
+    document.getElementById('bufBody').style.display = 'none';
+    return;
+  }
+  if (BUF.loadedFor === MIX_JOB) return;      /* job당 1회 — 패널을 오갈 때마다 부르지 않는다 */
+  BUF.loadedFor = MIX_JOB;
+  var body = document.getElementById('bufBody');
+  var d = null;
+  try { d = await (await fetch('/api/buffer/channels')).json(); } catch(e){ d = null; }
+  if (!d || !d.ok){
+    /* 안내만 띄운다. '조용히 빈 화면'이 가장 나쁘다.
+       ★문구를 **매번 다시 쓴다** — 앞서 '영상을 만들어 주세요'를 띄웠으면 그 글이
+         그대로 남아 엉뚱한 안내가 된다(실측). 상황마다 글을 새로 넣는다. */
+    need.style.display = 'block'; body.style.display = 'none';
+    need.innerHTML = (d && d.error && !d.need_key) ? esc(d.error) : BUF_NEED_KEY_HTML;
+    BUF.loadedFor = null;                     /* 키를 넣고 돌아오면 다시 부른다 */
+    return;
+  }
+  need.style.display = 'none'; body.style.display = '';
+  BUF.channels = d.channels || [];
+  var box = document.getElementById('bufChannels');
+  if (!BUF.channels.length){
+    box.innerHTML = '<div class="hint">Buffer에 연결된 채널이 없습니다 — Buffer에서 먼저 SNS 계정을 연결해 주세요.</div>';
+  } else {
+    box.innerHTML = BUF.channels.map(function(c, i){
+      return '<label style="display:flex;align-items:center;gap:8px;min-height:44px;cursor:pointer;'
+           + 'border:1px solid var(--line);border-radius:10px;padding:6px 12px">'
+           + '<input type="checkbox" data-ch="' + esc(c.id) + '" onchange="bufPick(this)">'
+           + '<span>' + esc(c.service) + ' · <b>' + esc(c.name) + '</b></span></label>';
+    }).join('');
+  }
+  var ta = document.getElementById('bufText');
+  if (ta && !ta.value) ta.value = bufText();
+}
+
+function bufPick(el){ BUF.picked[el.dataset.ch] = el.checked; }
+
+async function bufSchedule(){
+  var st = document.getElementById('bufStatus');
+  var ids = Object.keys(BUF.picked).filter(function(k){ return BUF.picked[k]; });
+  if (!ids.length){ st.textContent = '올릴 곳을 하나 이상 골라 주세요.'; return; }
+  var mode = (document.querySelector('input[name=bufWhen]:checked') || {}).value;
+  var due = null;
+  if (mode === 'at'){
+    var v = (document.getElementById('bufAt') || {}).value;
+    if (!v){ st.textContent = '올릴 시각을 정해 주세요.'; return; }
+    /* datetime-local은 **내 시간대**다. Buffer는 UTC를 받으므로 여기서 변환한다 —
+       그냥 문자열로 넘기면 9시간 어긋난 시각에 올라간다. */
+    due = new Date(v).toISOString();
+  }
+  var btn = document.getElementById('btnBufGo');
+  btn.disabled = true; st.textContent = '예약하는 중…';
+  var d = null;
+  try {
+    d = await (await fetch('/api/buffer/schedule', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ job_id: MIX_JOB, channel_ids: ids,
+        text: (document.getElementById('bufText') || {}).value || '', due_at: due })
+    })).json();
+  } catch(e){ d = null; }
+  btn.disabled = false;
+  if (!d){ st.textContent = '서버에 연결하지 못했습니다.'; return; }
+  if (d.need_key){ st.textContent = d.error; return; }
+  if (!d.results){ st.textContent = d.error || '예약에 실패했습니다.'; return; }
+  /* 채널마다 결과가 다를 수 있다 — 성공/실패를 있는 그대로 보여준다. */
+  var name = {};
+  BUF.channels.forEach(function(c){ name[c.id] = c.name; });
+  st.innerHTML = d.results.map(function(r){
+    return (r.ok ? '✅ ' : '⚠️ ') + esc(name[r.channel_id] || r.channel_id)
+         + (r.ok ? ' 예약됨' : ' — ' + esc(r.error || ''));
+  }).join('<br>');
+}
+
 const PANEL_COUNT = document.querySelectorAll('.panel').length;
 let cur = 0;
 
@@ -2601,6 +2757,9 @@ function showPanel(){
   if(cur===3) initHeadcopy();
   if(cur===4) initThumb();
   if(cur===5) initSeo();
+  // 10단계(패널 9)를 열면 Buffer 채널을 불러온다 — 다른 패널에선 부르지 않는다
+  // (키가 없는 고객에게 매번 401을 만들지 않기 위해서다).
+  if(cur===9) loadBuffer();
   if(cur===6) refreshFinal();
   if(cur===7) initMatch();   // 화면 붙이기(매칭) 패널 — 신규(Task 6)
   if(cur===8) s2Enter();     // 대본 패널 — 신규(2026-08-16). 물리 8 = 화면 2단계(ORB_TO_PANEL[1])
