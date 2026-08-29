@@ -45,7 +45,11 @@
         title="${esc((DATA.segments[c.seg_id] || {}).label || c.seg_id)} · ${c.dur.toFixed(2)}초 — 누르면 필름식으로 펼쳐집니다"
         onclick="event.stopPropagation();tlToggleCut(${i},${k})">
         <img class="tl-thumb" src="${SL.thumb(c.seg_id)}" loading="lazy">
-        <span class="tl-len">${c.dur.toFixed(1)}s</span>
+        <span class="tl-len${getFix(i, c.seg_id) ? ' fixed' : ''}"
+          ${getFix(i, c.seg_id) ? `title="내가 정한 길이 — 누르면 자동 배분으로 되돌립니다"
+            onclick="event.stopPropagation();tlFixReset(${i},${k})"` : ''}
+          >${getFix(i, c.seg_id) ? '✋' : ''}${c.dur.toFixed(1)}s</span>
+        <span class="tl-edge" data-k="${k}" title="끌어서 이 컷의 길이 조절 — 늘리면 나머지 컷이 비례로 줄어듭니다"></span>
         <button type="button" class="tl-repbtn${inRep ? ' on' : ''}"
           title="${inRep ? '교체 모드 끄기' : `이 컷을 바꿉니다 — ${c.dur.toFixed(2)}초 고정 박스가 아래 소스 필름에 뜹니다`}"
           onclick="event.stopPropagation();tlReplaceToggle(${i},${k})">🔁</button>
@@ -197,6 +201,50 @@
     g.tlMount();
   };
 
+  // ── 컷 가장자리 드래그 = 길이 직접 조절(2026-08-29 사장님 "1초짜리를 마우스로 잡고
+  //    조금 더 길게 늘릴 수 있나? 편하게"). 길이를 정하는 곳은 기존 FIXLEN/setFix
+  //    하나다(0순위-B) — 카드 숫자 클릭(askCutLen)과 같은 저장소·같은 배분 규칙:
+  //    "정한 컷은 그대로, 나머지 컷이 비례로 줄어든다"(칸 총초는 음성에 매여 불변).
+  g.tlFixReset = function (i, k) {
+    const clips = planClips(lists[i] || [], beatDur(i), STRETCH[i], i);
+    const c = clips[k];
+    if (c) setFix(i, c.seg_id, 0);         // setFix가 render()까지 부른다
+  };
+  function wireEdges(host, i, pps) {
+    host.querySelectorAll('.tl-edge').forEach(ed => {
+      ed.addEventListener('pointerdown', e => {
+        e.stopPropagation(); e.preventDefault();
+        const cut = ed.closest('.tl-cut');
+        const k = +cut.dataset.k;
+        const w0 = cut.offsetWidth, x0 = e.clientX;
+        const badge = cut.querySelector('.tl-len');
+        cut.classList.add('sizing');
+        try { ed.setPointerCapture(e.pointerId); } catch (_) {}
+        const move = me => {
+          const w = Math.max(0.2 * pps, w0 + (me.clientX - x0));
+          cut.style.width = w + 'px';                       // 미리보기 — 확정은 놓을 때
+          if (badge) badge.textContent = '✋' + (w / pps).toFixed(2) + 's';
+          me.stopPropagation();
+        };
+        const up = ue => {
+          ed.removeEventListener('pointermove', move);
+          ed.removeEventListener('pointerup', up);
+          ed.removeEventListener('pointercancel', up);
+          cut.classList.remove('sizing');
+          const sec = Math.round((cut.offsetWidth / pps) * 100) / 100;
+          const clips = planClips(lists[i] || [], beatDur(i), STRETCH[i], i);
+          const c = clips[k];
+          if (c && Math.abs(sec - c.dur) >= 0.05) setFix(i, c.seg_id, sec);
+          else g.tlMount();                                 // 거의 안 움직임 — 원상 복구
+          ue.stopPropagation();
+        };
+        ed.addEventListener('pointermove', move);
+        ed.addEventListener('pointerup', up);
+        ed.addEventListener('pointercancel', up);
+      });
+    });
+  }
+
   /* 어절 j 뒤의 경계를 토글 → 새 구절 목록을 서버에 저장(초 재계산) → 화면 연쇄 갱신(⑨). */
   g.tlGapClick = async function (i, j) {
     const caps = capsOf(i);
@@ -279,6 +327,7 @@
     const pps = parseFloat(wrap.dataset.pps);
     const capEls = [...host.querySelectorAll('.tl-cap')];
     const caps = capsOf(i);
+    wireEdges(host, i, pps);               // 컷 가장자리 드래그(길이 조절)
     const tick = () => {
       if (!document.body.contains(host)) return;        // 다시 그려짐 — 다음 mount가 잇는다
       const playing = (typeof playKey !== 'undefined') && playKey === 'beat:' + i;
