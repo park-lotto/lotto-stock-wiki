@@ -108,6 +108,47 @@ def dedup_key(url, shortcode=""):
     return "url:" + host + path
 
 
+def day_list(start, end):
+    """기간 안의 모든 날짜 ['YYYY-MM-DD', ...]. 달력이 그릴 줄 목록이다.
+
+    ★제출이 없는 날도 줄이 나와야 한다 — 빈칸을 눌러 그날을 채우는 것이
+    이 화면의 핵심 기능이라, 제출한 날만 그리면 빈 날에 손댈 방법이 없다.
+
+    start·end 중 하나라도 비면 빈 목록을 돌려준다(달력을 못 그린다).
+    그 경우 화면은 목록 탭으로 폴백한다 — 기간 미설정이 제출을 막지는
+    않는다(in_period는 열린 끝을 허용한다). 판단이 갈라지지 않게, 여기서도
+    '기간이 없으면 달력이 없다'까지만 말하고 제출 가부는 말하지 않는다.
+    """
+    if not start or not end or start > end:
+        return []
+    d0 = datetime.strptime(start, "%Y-%m-%d").date()
+    d1 = datetime.strptime(end, "%Y-%m-%d").date()
+    out, d = [], d0
+    while d <= d1:
+        out.append(d.strftime("%Y-%m-%d"))
+        d += timedelta(days=1)
+    return out
+
+
+def streak(by_day, today, goal=2):
+    """오늘 기준 연속 달성 일수.
+
+    오늘부터 거꾸로 세되, **오늘이 아직 미달성이면 어제부터** 센다 —
+    오전에 열었다고 어제까지의 연속기록이 0으로 보이면 안 된다.
+    (하루 목표를 채우기 전엔 오늘이 성공도 실패도 아니기 때문)
+    """
+    if not today:
+        return 0
+    d = datetime.strptime(today, "%Y-%m-%d").date()
+    if by_day.get(today, 0) < goal:
+        d -= timedelta(days=1)          # 오늘은 아직 진행 중 — 판정 보류
+    n = 0
+    while by_day.get(d.strftime("%Y-%m-%d"), 0) >= goal:
+        n += 1
+        d -= timedelta(days=1)
+    return n
+
+
 def summarize(subs, goal=2):
     """제출 목록 → {by_day, done_days, total}.
 

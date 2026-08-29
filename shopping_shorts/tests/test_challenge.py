@@ -120,3 +120,53 @@ def test_embed_url_reuses_given_code():
     """DB에 저장된 shortcode를 넘기면 그것을 쓴다 — 같은 판단을 두 번 하지 않는다."""
     assert challenge.embed_url("https://vt.tiktok.com/ZSabc/", "tiktok",
                                "999888777") == "https://www.tiktok.com/embed/v2/999888777"
+
+
+# ── 달력 3칸 개편 (2026-08-29) ──────────────────────────────────────
+class TestDayList:
+    def test_기간_전체를_하루도_빠짐없이(self):
+        days = challenge.day_list("2026-08-28", "2026-09-26")
+        assert len(days) == 30
+        assert days[0] == "2026-08-28"
+        assert days[-1] == "2026-09-26"
+
+    def test_월말_넘어가도_이어진다(self):
+        days = challenge.day_list("2026-08-30", "2026-09-02")
+        assert days == ["2026-08-30", "2026-08-31", "2026-09-01", "2026-09-02"]
+
+    def test_하루짜리(self):
+        assert challenge.day_list("2026-08-28", "2026-08-28") == ["2026-08-28"]
+
+    def test_기간_미설정이면_빈목록(self):
+        # 달력을 못 그린다 → 화면은 목록 탭으로 폴백한다(제출은 여전히 된다)
+        assert challenge.day_list("", "2026-09-26") == []
+        assert challenge.day_list("2026-08-28", "") == []
+        assert challenge.day_list("", "") == []
+
+    def test_거꾸로_된_기간은_빈목록(self):
+        assert challenge.day_list("2026-09-26", "2026-08-28") == []
+
+
+class TestStreak:
+    def test_오늘까지_사흘_연속(self):
+        by = {"2026-08-27": 2, "2026-08-28": 3, "2026-08-29": 2}
+        assert challenge.streak(by, "2026-08-29", goal=2) == 3
+
+    def test_오늘이_아직_미달성이면_어제부터_센다(self):
+        # 오전에 열었다고 어제까지의 연속기록이 0으로 보이면 안 된다
+        by = {"2026-08-27": 2, "2026-08-28": 2, "2026-08-29": 1}
+        assert challenge.streak(by, "2026-08-29", goal=2) == 2
+
+    def test_중간에_끊기면_끊긴_뒤부터(self):
+        by = {"2026-08-26": 2, "2026-08-27": 0, "2026-08-28": 2, "2026-08-29": 2}
+        assert challenge.streak(by, "2026-08-29", goal=2) == 2
+
+    def test_하나도_없으면_0(self):
+        assert challenge.streak({}, "2026-08-29", goal=2) == 0
+
+    def test_오늘이_비면_0(self):
+        assert challenge.streak({"2026-08-28": 2}, "", goal=2) == 0
+
+    def test_목표_3이면_2개는_연속이_아니다(self):
+        by = {"2026-08-28": 3, "2026-08-29": 2}
+        assert challenge.streak(by, "2026-08-29", goal=3) == 1

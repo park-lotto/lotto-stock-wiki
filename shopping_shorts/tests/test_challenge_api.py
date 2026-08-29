@@ -438,3 +438,118 @@ def test_challenge_settings_are_admin_settable():
     assert "challenge_start" in appmod._ADMIN_SETTING_KEYS
     assert "challenge_end" in appmod._ADMIN_SETTING_KEYS
     assert "challenge_daily_goal" in appmod._ADMIN_SETTING_KEYS
+
+
+# ── 달력 3칸 개편 (2026-08-29) ──────────────────────────────────────
+def _kst_today():
+    return (datetime.now(timezone.utc) + timedelta(hours=9)).strftime("%Y-%m-%d")
+
+
+def _kst_days_ago(n):
+    return ((datetime.now(timezone.utc) + timedelta(hours=9))
+            - timedelta(days=n)).strftime("%Y-%m-%d")
+
+
+def test_지난날_빈칸에_넣으면_그날로_들어간다(env):
+    """자정 몇 분 넘겨 날짜가 갈린 걸 사람이 바로잡는 통로."""
+    env.add_challenge_member(77)
+    c = _client()
+    y = _kst_days_ago(1)
+    r = c.post("/api/challenge/submit",
+               params={"url": "https://youtu.be/latecomer1", "day": y},
+               cookies={"dash_auth": _cookie(77)})
+    assert r.status_code == 200, r.text
+    assert r.json()["day"] == y
+    assert r.json()["late"] is True
+
+    rows = env.list_challenge_submissions(customer_id=77)
+    assert rows[0]["submit_day"] == y          # 어제 칸에 들어갔고
+    assert rows[0]["target_day"] == y          # '늦게 채움' 표식이 남았고
+    # ★실제 누른 시각은 오늘 그대로다 — 이게 사장님이 보셔야 하는 값
+    assert rows[0]["submitted_at"][:10] == datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+
+def test_오늘_날짜를_넘겨도_늦은게_아니다(env):
+    """day=오늘은 지정 안 한 것과 같다 — 괜히 '늦게' 배지가 붙으면 안 된다."""
+    env.add_challenge_member(77)
+    c = _client()
+    r = c.post("/api/challenge/submit",
+               params={"url": "https://youtu.be/ontime1", "day": _kst_today()},
+               cookies={"dash_auth": _cookie(77)})
+    assert r.status_code == 200
+    assert r.json()["late"] is False
+    assert env.list_challenge_submissions(customer_id=77)[0]["target_day"] is None
+
+
+def test_미래_날짜는_거절(env):
+    """안 올린 날을 미리 채우는 건 달성이 아니다."""
+    env.add_challenge_member(77)
+    c = _client()
+    tomorrow = ((datetime.now(timezone.utc) + timedelta(hours=9))
+                + timedelta(days=1)).strftime("%Y-%m-%d")
+    r = c.post("/api/challenge/submit",
+               params={"url": "https://youtu.be/future1", "day": tomorrow},
+               cookies={"dash_auth": _cookie(77)})
+    assert r.status_code == 422
+    assert env.list_challenge_submissions(customer_id=77) == []
+
+
+def test_이상한_날짜형식은_거절(env):
+    env.add_challenge_member(77)
+    c = _client()
+    r = c.post("/api/challenge/submit",
+               params={"url": "https://youtu.be/bad1", "day": "어제"},
+               cookies={"dash_auth": _cookie(77)})
+    assert r.status_code == 422
+
+
+def test_mine이_달력과_연속기록을_준다(env):
+    env.add_challenge_member(77)
+    env.set_setting("challenge_start", "2026-08-28")
+    env.set_setting("challenge_end", "2026-09-26")
+    c = _client()
+    r = c.get("/api/challenge/mine", cookies={"dash_auth": _cookie(77)})
+    d = r.json()
+    assert len(d["days"]) == 30
+    assert d["days"][0] == "2026-08-28"
+    assert "streak" in d
+
+
+def test_내_영상_삭제(env):
+    """잘못 낸 링크를 지우고 다시 낼 수 있어야 한다."""
+    env.add_challenge_member(77)
+    c = _client()
+    r = c.post("/api/challenge/submit", params={"url": "https://youtu.be/oops1"},
+               cookies={"dash_auth": _cookie(77)})
+    sid = r.json()["id"]
+    r = c.delete(f"/api/challenge/submission/{sid}", cookies={"dash_auth": _cookie(77)})
+    assert r.status_code == 200
+    assert env.list_challenge_submissions(customer_id=77) == []
+    # ★지웠으면 같은 영상을 다시 낼 수 있어야 한다(dedup 행이 남아 있으면 못 낸다)
+    r = c.post("/api/challenge/submit", params={"url": "https://youtu.be/oops1"},
+               cookies={"dash_auth": _cookie(77)})
+    assert r.status_code == 200
+
+
+def test_남의_영상은_못_지운다(env):
+    env.add_challenge_member(77)
+    env.add_challenge_member(88)
+    c = _client()
+    sid = c.post("/api/challenge/submit", params={"url": "https://youtu.be/mine1"},
+                 cookies={"dash_auth": _cookie(77)}).json()["id"]
+    r = c.delete(f"/api/challenge/submission/{sid}", cookies={"dash_auth": _cookie(88)})
+    assert r.status_code == 404
+    assert len(env.list_challenge_submissions(customer_id=77)) == 1
+
+
+def test_사장님은_남의_영상도_지운다(env, monkeypatch):
+    """도배·잘못된 링크를 사장님이 치울 수 있어야 한다(2026-08-29 지시)."""
+    env.add_challenge_member(77)
+    c = _client()
+    sid = c.post("/api/challenge/submit", params={"url": "https://youtu.be/spam1"},
+                 cookies={"dash_auth": _cookie(77)}).json()["id"]
+    # cid 0은 _is_admin이 True로 본다(사장님). 관리자 경로만 격리해 확인한다.
+    monkeypatch.setattr(appmod, "_is_admin", lambda cid: cid == 999)
+    r = c.delete(f"/api/challenge/submission/{sid}", cookies={"dash_auth": _cookie(999)})
+    assert r.status_code == 200
+    assert env.list_challenge_submissions(customer_id=77) == []

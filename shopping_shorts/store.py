@@ -409,6 +409,16 @@ class Store:
                       "ON challenge_submission(submit_day)")
             c.execute("CREATE INDEX IF NOT EXISTS idx_chal_sub_cust "
                       "ON challenge_submission(customer_id, submit_day)")
+            # 지난 날짜 빈칸을 눌러 뒤늦게 채운 제출(2026-08-29).
+            #   submit_day     = 어느 날짜 칸에 들어가나 (달성 카운트의 진실 — 그대로)
+            #   submitted_at   = 실제로 누른 시각 (그대로, 절대 안 바뀐다)
+            #   target_day     = 빈칸 클릭으로 **지정한** 날짜. 오늘 낸 것은 NULL.
+            # ★target_day는 카운트에 쓰지 않는다 — 그건 submit_day 한 곳뿐이다(0순위-B).
+            #   오직 "그날 올렸나 / 나중에 채웠나"를 화면에 갈라 보여주기 위해 존재한다.
+            try:
+                c.execute("ALTER TABLE challenge_submission ADD COLUMN target_day TEXT")
+            except sqlite3.OperationalError:
+                pass  # 이미 존재
             c.execute("""
                 CREATE TABLE IF NOT EXISTS last_run (
                     id INTEGER PRIMARY KEY CHECK (id = 1),
@@ -5912,7 +5922,7 @@ class Store:
                  "created_at": r[3]} for r in rows]
 
     def add_challenge_submission(self, customer_id, url, platform, shortcode,
-                                 dedup_key, submit_day):
+                                 dedup_key, submit_day, target_day=None):
         """제출 저장 → id. 같은 사람이 같은 영상을 또 내면 0을 돌려준다.
 
         ★수집(썸네일·조회수)은 여기서 하지 않는다. 링크가 들어온 순간 행이
@@ -5924,9 +5934,10 @@ class Store:
             cur = c.execute(
                 "INSERT OR IGNORE INTO challenge_submission"
                 "(customer_id, url, platform, shortcode, dedup_key, submit_day,"
-                " submitted_at, fetch_status) VALUES(?,?,?,?,?,?,?,'pending')",
+                " submitted_at, target_day, fetch_status)"
+                " VALUES(?,?,?,?,?,?,?,?,'pending')",
                 (int(customer_id), url, platform, shortcode or "",
-                 dedup_key, submit_day, now))
+                 dedup_key, submit_day, now, target_day or None))
             return cur.lastrowid if cur.rowcount else 0
 
     def update_challenge_submission_meta(self, sub_id, *, title=None, thumb=None,
@@ -5951,7 +5962,7 @@ class Store:
         """제출 목록 — 최신순. customer_id를 주면 그 사람 것만."""
         q = ("SELECT id, customer_id, url, platform, shortcode, submit_day,"
              " submitted_at, title, thumb, channel, views, likes, comments,"
-             " fetch_status FROM challenge_submission")
+             " fetch_status, target_day FROM challenge_submission")
         where, args = [], []
         if customer_id is not None:
             where.append("customer_id=?")
@@ -5970,8 +5981,29 @@ class Store:
         return [{"id": r[0], "customer_id": r[1], "url": r[2], "platform": r[3],
                  "shortcode": r[4], "submit_day": r[5], "submitted_at": r[6],
                  "title": r[7], "thumb": r[8], "channel": r[9], "views": r[10],
-                 "likes": r[11], "comments": r[12], "fetch_status": r[13]}
+                 "likes": r[11], "comments": r[12], "fetch_status": r[13],
+                 "target_day": r[14]}
                 for r in rows]
+
+    def delete_challenge_submission(self, sub_id, customer_id=None):
+        """제출을 지운다 → 지워졌으면 True.
+
+        customer_id를 주면 **그 사람 것일 때만** 지운다(멤버가 자기 것만
+        지우는 경로). 관리자는 customer_id 없이 불러 누구 것이든 지운다.
+        소유자 검사를 WHERE에 넣는 이유: 조회 후 검사하고 지우면 그 사이에
+        바뀔 수 있고, 검사를 잊은 호출부가 생기면 남의 것이 지워진다.
+
+        ★행을 실제로 지운다(소프트 삭제 아님). idx_chal_sub_dedup이
+        (customer_id, dedup_key) 유니크라 행이 남아 있으면 잘못 낸 영상을
+        고쳐서 다시 낼 수 없다 — 지우는 목적 자체가 다시 내기 위함이다.
+        """
+        q = "DELETE FROM challenge_submission WHERE id=?"
+        args = [int(sub_id)]
+        if customer_id is not None:
+            q += " AND customer_id=?"
+            args.append(int(customer_id))
+        with self._conn() as c:
+            return c.execute(q, args).rowcount > 0
 
     def put_share_link(self, sid, job_id, expires_at):
         """QR 단축링크 저장 + 만료분 청소(누수 방지)."""
