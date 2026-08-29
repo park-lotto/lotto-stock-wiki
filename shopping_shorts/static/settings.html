@@ -388,10 +388,13 @@ var SERVICES = [
   { id: "buffer",     icon: "📅", name: "SNS 예약 발행 (Buffer)",
     desc: "완성한 영상을 인스타·유튜브·틱톡 등에 예약해 올립니다",
     multi: false, ph: "키 붙여넣기",
-    note: "Buffer는 <b>무료 요금제</b>에도 키가 1개 나옵니다(월 3,000회). " +
+    note: "Buffer는 <b>무료 요금제</b>에도 키가 1개 나옵니다(월 3,000회 · 채널 3개). " +
           "Buffer에서 <b>조직 소유자</b>만 키를 만들 수 있습니다. " +
-          "이 키는 <b>사장님(회사) 키로 대신 못 합니다</b> — 내 SNS 계정에 올리는 일이라 " +
-          "반드시 내 Buffer 키가 있어야 합니다." }
+          "이 키는 <b>숏템메이커가 대신해 드릴 수 없습니다</b> — 내 SNS 계정에 올리는 일이라 " +
+          "반드시 내 Buffer 키가 있어야 합니다.",
+    /* ★내 키가 없으면 **아예 못 쓰는** 서비스다(포인트로 대신 못 쓴다).
+       배지·안내가 다른 서비스와 달라야 한다 — renderKeys의 mustOwn 분기 참조. */
+    mustOwn: true }
 ];
 
 var STATUS = {
@@ -532,9 +535,13 @@ function renderKeys(){
   el("adminNotice").style.display = PERSONAL ? "none" : "";
   el("svcCards").innerHTML = SERVICES.map(function(s){
     var mine = keysOf(s.id);
+    /* ★포인트로 대신 쓸 수 있는 서비스에만 '포인트로 사용중'을 쓴다.
+       Buffer처럼 **내 키가 없으면 아예 못 쓰는** 서비스(mustOwn)에 그 말을 붙이면
+       "안 넣어도 포인트로 되는구나"로 읽혀 거짓말이 된다(2026-08-30 사장님 지적). */
     var badge = mine.length
       ? '<span class="svcBadge on">✓ ' + mine.length + '개 등록됨</span>'
-      : '<span class="svcBadge off">포인트로 사용중</span>';
+      : (s.mustOwn ? '<span class="svcBadge off">내 키 필요</span>'
+                   : '<span class="svcBadge off">포인트로 사용중</span>');
 
     /* 설명 — 단가는 실제 값으로 보여준다(하드코딩하지 않는다).
        ★예전엔 freeOp가 있으면 desc를 통째로 덮어썼다. 렌즈처럼 desc에 꼭 필요한
