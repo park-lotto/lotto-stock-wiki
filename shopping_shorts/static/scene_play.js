@@ -25,6 +25,64 @@ const PV_AR = '9/16';
 if (typeof document !== 'undefined' && document.documentElement){
   document.documentElement.style.setProperty('--shorts-pv-w', PV_W);
   document.documentElement.style.setProperty('--shorts-pv-ar', PV_AR);
+  // ★미리보기 폭 끌어서 조절(2026-08-29 사장님 "미리보기 비율을 늘리면 높이가 살아나니
+  //   충분할 것 같은데") — '이정도'를 숫자로 짐작해 박지 않는다. 필름 높이(frgrab)처럼
+  //   오른쪽 가장자리를 끌게 하고 localStorage(pvW)로 기억한다. 기본값·정의처는 그대로
+  //   위 PV_W 한 곳이고, 조절값은 그 위에 덮일 뿐이다(0순위-B — 두 화면 공용도 그대로).
+  // ⚠️tight 모드(장면편집 3단)는 폭 변수가 --pv-w(scene_lab body.tight) 두 벌째다 —
+  //   둘 다 민다(변수 통합은 별도 정리감. 여기서 한쪽만 밀면 '조절이 안 된다'가 된다).
+  const _pvApply = (w) => {
+    document.documentElement.style.setProperty('--shorts-pv-w', w + 'px');
+    if (document.body) document.body.style.setProperty('--pv-w', w + 'px');
+  };
+  try {
+    const saved = parseFloat(localStorage.getItem('pvW'));
+    if (saved >= 280 && saved <= 900) {
+      if (document.body) _pvApply(saved);
+      else document.addEventListener('DOMContentLoaded', () => _pvApply(saved));
+    }
+  } catch (e) {}
+  const initPvResize = () => {
+    const el = document.getElementById('playerhost') || document.getElementById('mixPreviewRail');
+    if (!el || el._pvGrip) return;
+    if (!document.getElementById('pvgrip-style')) {
+      const st = document.createElement('style');
+      st.id = 'pvgrip-style';
+      st.textContent = '.pvgrip{position:absolute;right:0;top:0;bottom:0;width:7px;cursor:ew-resize;'
+        + 'z-index:30;border-radius:3px}'
+        + '.pvgrip:hover,.pvgrip.on{background:rgba(74,193,255,.35)}';
+      document.head.appendChild(st);
+    }
+    if (!el.style.position && getComputedStyle(el).position === 'static') el.style.position = 'relative';
+    const g = document.createElement('div');
+    g.className = 'pvgrip'; g.title = '끌어서 미리보기 크기 조절';
+    el.appendChild(g); el._pvGrip = g;
+    let sx = 0, w0 = 0, on = false;
+    g.addEventListener('pointerdown', e => {
+      on = true; sx = e.clientX; w0 = el.getBoundingClientRect().width;
+      g.classList.add('on');
+      try { g.setPointerCapture(e.pointerId); } catch (_) {}
+      e.preventDefault(); e.stopPropagation();
+    });
+    g.addEventListener('pointermove', e => {
+      if (!on) return;
+      const w = Math.max(280, Math.min(900, Math.round(w0 + (e.clientX - sx))));
+      _pvApply(w);
+      e.stopPropagation();
+    });
+    const fin = () => {
+      if (!on) return;
+      on = false; g.classList.remove('on');
+      try {
+        localStorage.setItem('pvW',
+          parseFloat(document.documentElement.style.getPropertyValue('--shorts-pv-w')));
+      } catch (_) {}
+    };
+    g.addEventListener('pointerup', fin);
+    g.addEventListener('pointercancel', fin);
+  };
+  if (document.readyState !== 'loading') initPvResize();
+  else document.addEventListener('DOMContentLoaded', initPvResize);
 }
 
 // ── 미리보기를 칸 안에 맞춘다(2026-08-22 사장님 "미리보기창이 너무 크가 스크롤없이 맞춰봐")
