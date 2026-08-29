@@ -128,6 +128,27 @@
 
   const TL_POS = {};               // beat_idx → 재생선이 마지막으로 선 시각(초)
 
+  // ── 스페이스 = 선택 칸 재생/일시정지(2026-08-29 사장님 — 재생선을 옮겨놓고 스페이스로
+  //    그 지점부터 듣고 멈추며 자막과 비교하는 흐름). 재생·정지·이어서는 전부 기존 경로
+  //    (playBeat가 토글까지 겸한다 / 미리보기 류는 togglePause)라 새 재생 규칙이 없다.
+  //    ★필름롤이 펼쳐져 있으면 스페이스는 필름롤 몫이다(filmroll onKey) — 건드리지 않는다.
+  document.addEventListener('keydown', e => {
+    if (e.code !== 'Space') return;
+    const tag = (e.target && e.target.tagName || '').toLowerCase();
+    if (tag === 'input' || tag === 'textarea' || (e.target && e.target.isContentEditable)) return;
+    if (document.querySelector('.frwin')) return;      // 필름이 열려 있다 — 필름롤이 받는다
+    if (typeof playBeat !== 'function') return;
+    e.preventDefault();
+    if (typeof playKey !== 'undefined' && playKey && String(playKey).indexOf('beat:') === 0) {
+      playBeat(+String(playKey).split(':')[1]);        // 재생 중이면 일시정지/재개 토글
+    } else if (typeof seq !== 'undefined' && seq.length && typeof togglePause === 'function'
+               && typeof playKey !== 'undefined' && playKey) {
+      togglePause();                                   // 전체·조각 미리보기 중이면 그것을
+    } else if (typeof sel !== 'undefined') {
+      playBeat(sel);                                   // 아무것도 안 돌면 선택 칸부터
+    }
+  });
+
   // ── ⑧ 고정길이 박스 교체 ─────────────────────────────────────────────
   // 컷의 🔁를 누르면 그 컷 길이로 잠긴 박스가 **아래 소스 필름 어디를 펼치든** 떠 있고,
   // 영상1→2→3 갈아 끼워도 유지된다. 박스를 옮겨 맞는 장면에 놓고 [🔁 교체]를 누르면
