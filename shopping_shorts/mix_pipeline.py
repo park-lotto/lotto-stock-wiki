@@ -392,6 +392,7 @@ def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron
         # 자막 타이밍용: 실제 말한 워드 시각으로 구절 표시시간 계산(실패/키없음 → 미설정=폴백).
         beat["cap_durs"] = None
         beat["cap_lead"] = 0.0
+        _ensure_breath_lines(beat)   # 폴백 칸이면 Gemini 호흡 끊기(실패=규칙 폴백)
         words, _wsrc = _beat_words_src(str(out), _ad, removed=tts_timestamps.load_removed(str(out)))
         _timing = None
         if words:
@@ -414,6 +415,22 @@ def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron
             f.result()  # 예외를 여기서 소비 — 숨기지 않고 그대로 전파(run_mix_job이 failed 처리)
     print(f"[tts] {total}비트 합성 {(datetime.now(timezone.utc) - _t0).total_seconds():.1f}s "
           f"(workers={workers})", file=sys.stderr)
+
+
+def _ensure_breath_lines(beat):
+    """폴백 칸이면 Gemini 호흡 끊기로 caption_lines를 채운다(2026-08-29 사장님 "해봐").
+
+    자연스러운 호흡은 문장 이해가 필요해 규칙(_caption_segments)의 마지막 10%가 안 닿는다
+    — AI가 끊은 줄(caption_lines)이 있으면 규칙을 안 타므로, 없는 비트만 여기서 채운다.
+    실패·무키·불일치는 조용히 None = 규칙 폴백(종전과 동일, 절대 죽이지 않는다).
+    ⚠️같은 판단 두 곳 금지(0순위-B) — 재합성 경로 전부가 이 함수 하나를 거친다."""
+    if beat.get("caption_lines"):
+        return
+    try:
+        from shopping_shorts import script_generate
+        beat["caption_lines"] = script_generate.ai_breath_lines(beat.get("narration"))
+    except Exception:      # noqa: BLE001 — 호흡 끊기 실패로 합성을 죽이지 않는다
+        traceback.print_exc(file=sys.stderr)
 
 
 def invalidate_caption_meta(beat):
@@ -2802,6 +2819,7 @@ def resynth_one_beat(job_id, beat_idx, voice_override, db_path, work_root):
             _rdur = _probe_duration(str(out))
         except Exception:      # noqa: BLE001 — 길이 측정 실패로 재합성을 죽이지 않는다
             _rdur = None
+        _ensure_breath_lines(beat)   # 폴백 칸이면 Gemini 호흡 끊기(실패=규칙 폴백)
         words, _wsrc = _beat_words_src(str(out), _rdur, removed=tts_timestamps.load_removed(str(out)))
         _t = None
         if words:

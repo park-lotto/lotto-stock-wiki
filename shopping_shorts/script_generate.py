@@ -8,6 +8,7 @@
 전용 키풀(comment_gen) 재사용. 실패/무키면 [].
 """
 import json
+import os
 import random
 import re
 
@@ -94,6 +95,56 @@ def _call_json(prompt, schema, note=None):
 def _generate_drafts(prompt):
     """key_vault 캐스케이드 키풀로 대본 초안 리스트 생성. 무키·전부실패면 []."""
     return _call_json(prompt, _SCHEMA).get("drafts", [])
+
+
+_BREATH_SCHEMA = {
+    "type": "object",
+    "properties": {"lines": {"type": "array", "items": {"type": "string"}}},
+    "required": ["lines"],
+}
+
+# 이 길이(공백 제외)까지는 규칙 분할로 충분하다 — 호출 자체를 안 해 비용 0.
+_BREATH_MIN_CHARS = 13
+
+
+def ai_breath_lines(narration):
+    """자막 호흡 줄 — Gemini가 문장을 '숨 쉬는 자리'에서만 끊는다(글자 불변, 줄만 나눔).
+
+    폴백 칸 전용(2026-08-29 사장님 "자연스러운 호흡으로 끊는 게 기본"): caption_lines가
+    없는 비트만 재합성 관문(mix_pipeline._ensure_breath_lines)이 부른다. 규칙 분할
+    (_caption_segments)은 표면 글자만 봐서 관형형('안다는')과 조사('언니는')를 못 가르는데,
+    여기는 문장을 이해하고 끊는다. 실패·무키·불일치 → None(=규칙 폴백, 종전과 동일).
+
+    검증: 이어붙인 줄이 원문과 같아야 한다 — 대조 기준은 cap_preset_key **한 곳**만 쓴다
+    (0순위-B: 여기서 다른 기준으로 재면 "저장은 통과, 렌더는 폴백" 두 벌 사고가 재발한다).
+    """
+    text = (narration or "").strip()
+    flat = "".join(text.split())
+    if len(flat) <= _BREATH_MIN_CHARS:
+        return None
+    # ⚠️로컬 pytest는 .env 실키가 있어 네트워크를 타면 게이트가 느려지고 흔들린다
+    #   (ops_alert.py와 같은 가드). 로직 테스트는 delenv로 걷고 _call_json을 목으로.
+    if os.environ.get("PYTEST_CURRENT_TEST"):
+        return None
+    # ★.format() 금지(중괄호 예시가 KeyError를 삼킨다 — memory 대본템플릿 빈칸 짝맞추기)
+    prompt = (
+        "아래 한국어 쇼츠 내레이션 한 비트를 자막 줄로 나눠라.\n"
+        "규칙:\n"
+        "- 사람이 말하다 숨을 쉬는 자연스러운 호흡 단위(의미 덩어리)로만 끊는다.\n"
+        "- 글자를 추가·삭제·수정하지 마라. 원문 어절 그대로, 줄만 나눈다.\n"
+        "- 한 줄은 공백 제외 4~14자. 명사구나 '조사 앞' 한가운데를 끊지 마라.\n"
+        "  (좋은 예: '인테리어 고수들만 안다는' | '비밀 테이블이 있어요')\n"
+        '- JSON {"lines": ["줄1", "줄2", ...]} 로만 답하라.\n'
+        "원문: " + text
+    )
+    out = _call_json(prompt, _BREATH_SCHEMA)
+    lines = [str(l).strip() for l in (out.get("lines") or []) if str(l).strip()]
+    if not lines:
+        return None
+    from shopping_shorts.video_assemble import cap_preset_key   # 지연 — 순환 import 방지
+    if cap_preset_key("".join(lines)) != cap_preset_key(text):
+        return None
+    return lines
 
 # 유지/변형 토글 대상 요소(키 → 표시 라벨). 프론트·엔드포인트가 공유.
 ELEM_LABELS = {
