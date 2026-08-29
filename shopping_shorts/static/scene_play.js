@@ -194,7 +194,10 @@ function getFix(i, sid){ const v = FIXLEN[fixKey(i, sid)]; return v > 0 ? v : 0;
 function setFix(i, sid, sec){
   const k = fixKey(i, sid);
   if (!(sec > 0)) delete FIXLEN[k];
-  else FIXLEN[k] = Math.round(sec * 100) / 100;
+  else {
+    FIXLEN[k] = Math.round(sec * 100) / 100;
+    PHRASE_SYNC[i] = false;   // ✋를 만졌다 = 이 칸은 수동 모드(구절맞춤 체크가 꺼진다)
+  }
   (typeof render === 'function' && render());
   // ✋ 정한 길이를 그 자리에서 저장까지(2026-08-29 사장님 "컷 길이 저장하고") —
   //   saveWork가 localStorage(fixlen 포함)+autoApply(서버 fixed_lens)를 한 번에 처리한다.
@@ -370,9 +373,11 @@ function planClips(segIds, ttsDur, spread, beatIdx){
   if (!segments.length) return clips;
   // ── 구절 맞춤 경로: 자막 시간표가 있고, 수동 길이가 없을 때만.
   //    (라이브 렌더의 같은 규칙은 video_assemble의 phrase_sync 분기 — 짝으로 움직인다)
-  if (beatIdx != null && phraseSyncOn(beatIdx)
-      && typeof capsOf === 'function'
-      && !segIds.some(id => typeof getFix === 'function' && getFix(beatIdx, id) > 0)) {
+  // ★우선순위(2026-08-29 사장님 실사용): 구절 맞춤이 **켜져 있으면 구절이 이긴다**.
+  //   (처음엔 ✋수동 우선으로 했더니, 실험하다 남은 ✋ 두 개가 구절맞춤을 조용히 꺼서
+  //    "마지막 구절 카드가 활성이 안 된다"로 보였다. 이제 ✋를 새로 만지는 순간
+  //    setFix가 그 칸의 구절맞춤을 눈에 보이게 끈다 — 숨은 상태가 없다.)
+  if (beatIdx != null && phraseSyncOn(beatIdx) && typeof capsOf === 'function') {
     const caps = capsOf(beatIdx) || [];
     if (caps.length >= 1 && ttsDur > 0.1) {
       // 경계: [0, caps[1].start, …, caps[n-1].start, ttsDur] — 리드인·꼬리는 양끝 컷 몫.

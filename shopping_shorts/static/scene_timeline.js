@@ -160,9 +160,18 @@
     const clips = planClips(lists[i] || [], beatDur(i), STRETCH[i], i);
     const c = clips[k];
     if (!c) return;
-    REPLACE = { i, k, len: Math.round(c.dur * 100) / 100, oldSeg: c.seg_id };
+    // ★박스 = 그 조각이 쓰인 자리(2026-08-29 사장님 "그 영상이 담긴 부분이 오렌지박스로
+    //   되어서 해당 영상을 필름으로 펼치고") — 그 영상 필름을 바로 펼치고, 잠금 박스를
+    //   조각의 원본 위치에 놓는다. 카드의 🎞펼치기는 이 버튼이 겸한다(폭도 확보).
+    REPLACE = { i, k, len: Math.round(c.dur * 100) / 100, oldSeg: c.seg_id,
+                vid: c.video_id, from: Math.round(c.start * 100) / 100 };
     render();
-    nsay(`🔁 교체 모드 — 아래 소스 필름을 펼치면 ${REPLACE.len.toFixed(2)}초 고정 박스가 떠 있습니다. 옮겨 놓고 [🔁 이 장면으로 교체]`);
+    try {
+      const S = (typeof rollSlot === 'function') ? rollSlot('src') : null;
+      if (S && S.key === 'src:' + c.video_id) toggleRoll('src', c.video_id);  // 이미 열림 → 닫고
+      toggleRoll('src', c.video_id);                                          // 잠금 박스와 함께 연다
+    } catch (e) {}
+    nsay(`📦 ${REPLACE.len.toFixed(2)}초 고정 박스 — 옮겨 놓고 [🔁 이 장면으로 교체], Esc로 끄기`);
   };
 
   /* 필름롤을 여는 쪽(scene_lab openRoll)이 부른다 — 교체 모드면 잠금 옵션을 준다.
@@ -172,6 +181,8 @@
     REPLACE.filmVid = vid;                 // Esc로 끌 때 이 필름을 잠금 없이 다시 연다
     return {
       lockLen: REPLACE.len,
+      // 조각이 이 영상 것이면 박스를 그 조각 자리에 놓는다(다른 영상이면 0초부터).
+      lockFrom: (REPLACE.vid === vid ? REPLACE.from : 0),
       onReplace: r => tlReplaceApply(vid, r),
     };
   };

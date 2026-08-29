@@ -2369,9 +2369,7 @@ function renderBand(){
              ><input type="checkbox" class="pk" title="빼려면 체크 — 여러 장 고르고 위 [고른 것 빼기]를 누르세요"
                     ${isPicked(i, c.seg_id) ? 'checked' : ''}
                     onclick="event.stopPropagation();togglePick(${i}, '${c.seg_id}', this.checked)"
-                    ondblclick="event.stopPropagation()"><button type="button" class="rollbtn" title="이 조각을 필름으로 펼쳐 자릅니다"
-             onclick="event.stopPropagation();clearTimeout(clickTimer);toggleRoll('cut','${c.seg_id}',${i})">🎞 펼치기</button
-             ><button type="button" class="rollbtn boxbtn" title="이 컷 길이(${c.dur.toFixed(2)}초)로 잠긴 오렌지박스를 소스 필름에 띄웁니다 — 영상을 갈아 열어도 유지, Esc로 끄기"
+                    ondblclick="event.stopPropagation()"><button type="button" class="rollbtn boxbtn" title="이 컷 길이(${c.dur.toFixed(2)}초)로 잠긴 오렌지박스를 소스 필름에 띄웁니다 — 영상을 갈아 열어도 유지, Esc로 끄기"
              onclick="event.stopPropagation();clearTimeout(clickTimer);tlReplaceToggle(${i},${ci})">📦 박스</button
              ><button type="button" class="delx" title="이 조각을 이 칸에서 뺍니다"
              onclick="event.stopPropagation();clearTimeout(clickTimer);dropCutFromBand(${i}, '${c.seg_id}')">✕</button></div>`).join('')
