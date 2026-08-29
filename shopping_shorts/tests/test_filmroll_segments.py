@@ -326,46 +326,48 @@ def test_extra_seg_render_plan_ignores_server_seg_map():
 # 종전엔 자막의 끝을 **다음 자막 시작**으로 지어내, 말과 말 사이 공백이 앞 자막에
 # 통째로 먹혔다(실측: 0.0~1.2초 자막이 0.0~3.5초로 그려짐 = +2.3초. 마지막 자막은
 # 영상 끝까지 +20.9초). 진실은 세그의 end다 — 지어내지 말고 있는 값을 쓴다.
-# JS 파일이라 파이썬으로 못 부른다. node로 그 함수만 떼어 실제로 돌린다.
+# JS라 파이썬으로 못 부른다. 공용 하네스로 그 규칙만 떼어 실제로 돌린다
+# (★node -e 금지 — 윈도우 32,767자 상한. test_no_node_dash_e.py가 강제한다).
+import json as _json
+import pathlib as _pathlib
+import re as _re
 
-def _caps_widths(caps):
-    """filmroll.js drawCaps의 끝시각 규칙을 그 파일에서 읽어 그대로 돌린다."""
-    import json
-    import re
-    import subprocess
-    from pathlib import Path
+from shopping_shorts.tests.js_harness import requires_node, run_js
 
-    js = (Path(__file__).resolve().parents[1] / "static" / "filmroll.js").read_text(encoding="utf-8")
-    # drawCaps 안의 '끝시각 정하는 세 줄'을 그대로 뽑아 쓴다(규칙을 두 벌로 적지 않는다).
-    m = re.search(r"const st = c\[0\];\s*\n\s*(const nxt = [^\n]+)\s*\n\s*(const en = [^\n]+)", js)
+pytestmark = requires_node
+
+
+def _caps_ends(caps):
+    """filmroll.js drawCaps의 '끝시각 정하는 규칙'을 그 파일에서 읽어 그대로 돌린다."""
+    js_path = _pathlib.Path(__file__).resolve().parents[1] / "static" / "filmroll.js"
+    js = js_path.read_text(encoding="utf-8")
+    pat = (r"const st = c\[0\];\s*\n\s*(const nxt = [^\n]+)"
+           r"\s*\n\s*(const en = [^\n]+)")
+    m = _re.search(pat, js)
     assert m, "drawCaps의 끝시각 규칙을 못 찾았다 — 코드가 바뀌었으면 이 테스트도 같이 고쳐라"
-    script = (
-        "const caps=" + json.dumps(caps, ensure_ascii=False) + ";const DUR=30;"
+    code = (
+        "const caps=" + _json.dumps(caps, ensure_ascii=False) + ";const DUR=30;"
         "const out=caps.map((c,i)=>{const st=c[0];" + m.group(1) + " " + m.group(2)
         + " return [st,en];});console.log(JSON.stringify(out));"
     )
-    r = subprocess.run(["node", "-e", script], capture_output=True, text=True, timeout=30)
-    assert r.returncode == 0, r.stderr
-    return json.loads(r.stdout)
+    return _json.loads(run_js(code))
 
 
 def test_film_caption_band_uses_real_end_not_next_start():
     """자막띠는 실제 끝 시각으로 그린다 — 공백을 앞 자막이 먹지 않는다."""
     caps = [[0.0, "아이 생일 때마다", 1.2], [3.5, "케이크 고민하던", 4.4],
             [4.4, "엄마들 사이에서", 5.0], [8.0, "난리 난 물건인데", 9.1]]
-    got = _caps_widths(caps)
+    got = _caps_ends(caps)
     assert [round(e, 2) for _s, e in got] == [1.2, 4.4, 5.0, 9.1], got
 
 
 def test_film_caption_band_falls_back_when_no_end():
     """끝이 없는 옛 2칸 caps는 종전대로(다음 시작까지) — 옛 호출부가 안 깨진다."""
-    caps = [[0.0, "가"], [3.5, "나"]]
-    got = _caps_widths(caps)
+    got = _caps_ends([[0.0, "가"], [3.5, "나"]])
     assert [round(e, 2) for _s, e in got] == [3.5, 30.0], got
 
 
 def test_film_caption_never_overruns_next_caption():
     """end가 다음 자막을 넘겨 들어와도 겹치지 않는다(자막끼리 포개지면 못 읽는다)."""
-    caps = [[0.0, "가", 9.9], [3.5, "나", 4.0]]
-    got = _caps_widths(caps)
+    got = _caps_ends([[0.0, "가", 9.9], [3.5, "나", 4.0]])
     assert round(got[0][1], 2) == 3.5, got
