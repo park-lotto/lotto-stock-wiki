@@ -534,8 +534,19 @@ def plan_beat_clips_for(beat, tts_dur, src_durs, *, runout=0.0):
     _max_shot = None if _bb.is_point_beat(beat) else getattr(_cfg, "MAX_SHOT_SECONDS", 0) or None
     # 1장=1컷 모드(기본 off). 켜면 담은 장면이 순서대로 한 번씩만 나온다(되돌아옴 없음).
     _one = bool(getattr(_cfg, "ONE_CLIP_PER_SEGMENT", False))
-    plan = _plan_beat_clips(segs, tts_dur, src_durs=beat_src_durs, max_shot=_max_shot,
-                            one_per_seg=_one)
+    # ★구절 맞춤(2026-08-29 사장님 "개수+길이까지 1:1") — 컷 경계 = 자막 구절 경계.
+    #   화면(scene_play.js planClips의 phraseSync 분기)과 **같은 규칙의 서버판**이다:
+    #   컷1이 리드인(첫말 전 무음)을 얹고 마지막 컷이 꼬리를 얹는다. 재료가 구절보다
+    #   적으면 마지막 재료가 남은 구절을 이어 커버한다. ✋수동 길이가 있으면 수동이
+    #   이기고(아래 fixed_lens), 그땐 이 분기를 타지 않는다.
+    _phrase_plan = None
+    if beat.get("phrase_sync") and not (beat.get("fixed_lens") or {}):
+        _phrase_plan = _plan_phrase_clips(beat, segs, tts_dur)
+    if _phrase_plan:
+        plan = _phrase_plan
+    else:
+        plan = _plan_beat_clips(segs, tts_dur, src_durs=beat_src_durs, max_shot=_max_shot,
+                                one_per_seg=_one)
     # ✋ 손으로 정한 컷 길이가 있으면 먼저 반영한다(칸 총합은 안 바뀐다).
     _fixed = beat.get("fixed_lens") or {}
     if _fixed:
@@ -547,6 +558,41 @@ def plan_beat_clips_for(beat, tts_dur, src_durs, *, runout=0.0):
     if runout > 0:
         _extend_last_clip_for_runout(plan, segs, runout)
     return plan
+
+
+def _plan_phrase_clips(beat, segs, tts_dur):
+    """구절 맞춤 계획 — 컷 k = k번째 재료, 길이 = k번째 자막 구절 표시시간.
+
+    경계는 화면 자막과 같은 함수로 만든다(_caption_segments/_caption_durations/
+    _adjust_caps_for_trim — _lab_captions와 동일 조합, 0순위-B). 시간표를 못 만들면
+    None을 돌려 종전 배분으로 폴백한다(조용한 어긋남 대신 옛 동작)."""
+    try:
+        cap_segs = _caption_segments(beat.get("narration") or "",
+                                     beat.get("caption_lines"))
+        if not cap_segs or tts_dur <= 0.1 or not segs:
+            return None
+        lead, rd = _adjust_caps_for_trim(beat)
+        durs = _caption_durations(cap_segs, tts_dur, real_durs=rd)
+        if not durs:
+            return None
+        # 경계 [0, lead+d1, lead+d1+d2, …, tts_dur] — 리드인은 컷1, 꼬리는 마지막 컷 몫.
+        bounds = [0.0]
+        t = float(lead or 0.0)
+        for d in durs[:-1]:
+            t += d
+            bounds.append(min(tts_dur, t))
+        bounds.append(tts_dur)
+        n_cut = min(len(durs), len(segs))
+        plan = []
+        for k in range(n_cut):
+            end_b = bounds[-1] if k == n_cut - 1 else bounds[k + 1]  # 재료 부족 → 마지막이 커버
+            d = max(0.1, end_b - bounds[k])
+            seg = segs[k]
+            plan.append({"video_id": seg["video_id"], "start": float(seg["start"]),
+                         "src_dur": d, "out_dur": d})
+        return plan
+    except Exception:      # noqa: BLE001 — 계획 실패가 렌더를 죽이면 안 된다(폴백이 있다)
+        return None
 
 
 def _plan_beat_clips(segments, tts_dur, min_clip=_MIN_CLIP, src_durs=None, max_shot=None,

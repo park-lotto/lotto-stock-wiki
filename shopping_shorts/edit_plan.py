@@ -5317,6 +5317,12 @@ def apply_scene_lab(plan, seg_map, edits):
             beat["stretch_fill"] = True
         else:
             beat.pop("stretch_fill", None)
+        # 구절 맞춤(2026-08-29 사장님 "개수+길이까지 1:1") — 켠 칸만 표식을 남긴다.
+        # 표식이 없으면 렌더는 종전 배분 그대로다(옛 job 회귀 0).
+        if eb.get("phrase"):
+            beat["phrase_sync"] = True
+        else:
+            beat.pop("phrase_sync", None)
         applied += 1
     # ★이 편성이 서버에 얹힌 시각(2026-08-21). 화면(localStorage)과 서버 중 어느 쪽이
     #   최신인지 가르는 유일한 기준이다 — mix_jobs.updated_at은 음성 생성 같은 다른
