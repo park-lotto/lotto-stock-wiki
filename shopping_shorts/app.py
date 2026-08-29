@@ -7530,6 +7530,11 @@ def _ranking_only_blocked(path: str, method: str = "GET") -> bool:
     if (path in _AUTH_ALLOW or path.startswith("/api/find/frame/")
             or path.startswith("/api/help/media/")):
         return False   # 유저스크립트 담기·favicon 등 기존 공개 경로(단 /api/grab은 핸들러서 등급확인)
+    # ★잘못 낸 챌린지 영상 삭제(2026-08-29). 경로에 id가 붙어 exact 목록으로는 못 잡는다.
+    #   위 submit·mine과 같은 이유로 등급 게이트에서 빼야 한다 — 권한은 핸들러가
+    #   본인/관리자로 판정하고, store의 DELETE WHERE가 남의 것을 못 지우게 막는다.
+    if path.startswith("/api/challenge/submission/"):
+        return False
     return True
 
 
@@ -12206,6 +12211,7 @@ def _adopt_into_ranking(store, platform, url, meta):
 # 하루 2영상 챌린지. 판정 로직은 shopping_shorts/challenge.py에 모아 두었다
 # (app.py가 13,000줄을 넘어 더 얹지 않는다). 여기 라우트는 얇게 유지한다.
 _CHALLENGE_PLATFORMS = ("instagram", "youtube", "tiktok")
+_DAY_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")   # 빈칸 클릭으로 넘어온 날짜 검증
 
 
 def _challenge_period(store):
@@ -12263,12 +12269,20 @@ def _challenge_fetch(sub_id, url, platform):
 
 
 @app.post("/api/challenge/submit")
-def api_challenge_submit(request: Request, background_tasks: BackgroundTasks, url: str = ""):
+def api_challenge_submit(request: Request, background_tasks: BackgroundTasks,
+                         url: str = "", day: str = ""):
     """멤버가 챌린지 영상 링크를 낸다.
 
     ★저장 먼저, 수집 나중. 링크가 들어온 순간 행이 생기고 달성 카운트가
     확정된다 — 인스타 수집은 수십 초가 걸리고 간헐적으로 실패하는데, 거기에
     카운트를 묶으면 '올렸는데 미달성' 사고가 난다.
+
+    day를 주면(달력의 지난 날짜 빈칸을 눌러 낸 경우) **그 날짜 칸**에 넣는다.
+    자정을 몇 분 넘겨 날짜가 갈린 것을 사람이 바로잡는 통로다(2026-08-29).
+      · 저장되는 날짜(submit_day) = day
+      · 실제 누른 시각(submitted_at) = 서버 시계. **그대로 남는다.**
+      · target_day = day  → 화면이 '늦게 등록'으로 갈라 보여준다
+    미래 날짜는 받지 않는다 — 안 올린 날을 미리 채우는 건 달성이 아니다.
     """
     cid = _cid(request)
     store = Store(DB_PATH)
@@ -12282,20 +12296,33 @@ def api_challenge_submit(request: Request, background_tasks: BackgroundTasks, ur
             "ok": False,
             "error": "인스타그램·유튜브·틱톡 영상 주소를 넣어주세요"})
     start, end, goal = _challenge_period(store)
-    day = challenge.kst_day()
-    if not challenge.in_period(day, start, end):
+    today = challenge.kst_day()
+    # 빈칸 클릭으로 지난 날짜를 지정했나. 오늘이면 지정하지 않은 것과 같게 둔다.
+    want = (day or "").strip()
+    target = want if want and want != today else ""
+    if target:
+        if not _DAY_RE.match(target):
+            return JSONResponse(status_code=422,
+                                content={"ok": False, "error": "날짜 형식이 올바르지 않아요"})
+        if target > today:
+            return JSONResponse(status_code=422, content={
+                "ok": False, "error": "아직 오지 않은 날짜에는 넣을 수 없어요"})
+    sday = target or today
+    if not challenge.in_period(sday, start, end):
         return JSONResponse(status_code=422,
                             content={"ok": False, "error": "지금은 챌린지 기간이 아니에요"})
     code = challenge.video_code(u, platform)
     key = challenge.dedup_key(u, code)
-    sub_id = store.add_challenge_submission(cid, u, platform, code, key, day)
+    sub_id = store.add_challenge_submission(cid, u, platform, code, key, sday,
+                                            target_day=target or None)
     if not sub_id:
         return JSONResponse(status_code=422,
                             content={"ok": False, "error": "이미 제출한 영상이에요"})
     background_tasks.add_task(_challenge_fetch, sub_id, u, platform)   # 썸네일·조회수 등 보강
-    today = sum(1 for s in store.list_challenge_submissions(customer_id=cid)
-                if s["submit_day"] == day)
-    return {"ok": True, "id": sub_id, "today": today, "goal": goal, "day": day}
+    n = sum(1 for s in store.list_challenge_submissions(customer_id=cid)
+            if s["submit_day"] == sday)
+    return {"ok": True, "id": sub_id, "today": n, "goal": goal, "day": sday,
+            "late": bool(target)}
 
 
 @app.get("/api/challenge/mine")
@@ -12310,10 +12337,40 @@ def api_challenge_mine(request: Request):
     items = store.list_challenge_submissions(customer_id=cid)
     day = challenge.kst_day()
     summary = challenge.summarize(items, goal=goal)
+    # 달력이 그릴 줄 목록. 기간이 미설정이면 빈 목록이고 화면은 목록 탭만 쓴다.
+    # ★날짜별로 나누는 일은 화면이 한다(items에 submit_day가 이미 들어 있다) —
+    #   여기서 또 묶어 보내면 같은 판단이 두 벌이 된다(0순위-B).
     return {"ok": True, "is_member": True, "items": items,
             "today": summary["by_day"].get(day, 0), "goal": goal,
             "done_days": summary["done_days"], "total": summary["total"],
+            "streak": challenge.streak(summary["by_day"], day, goal=goal),
+            "days": challenge.day_list(start, end),
             "start": start, "end": end, "day": day}
+
+
+@app.delete("/api/challenge/submission/{sub_id}")
+def api_challenge_submission_delete(request: Request, sub_id: int):
+    """잘못 낸 영상을 지운다. 멤버는 자기 것만, 사장님은 누구 것이든.
+
+    ★소유자 검사를 파이썬에서 하지 않고 store에 넘긴다 — DELETE의 WHERE에
+    박혀야 조회와 삭제 사이가 벌어지지 않고, 검사를 잊은 호출부도 안 생긴다.
+
+    지우는 이유가 '다시 내기 위함'이라 행을 실제로 지운다(소프트 삭제 아님).
+    dedup 유니크 인덱스가 (customer_id, dedup_key)라 행이 남아 있으면 같은
+    영상을 고쳐 다시 낼 수 없다.
+    """
+    cid = _cid(request)
+    store = Store(DB_PATH)
+    admin = _is_admin(cid)
+    if not admin and not store.is_challenge_member(cid):
+        return JSONResponse(status_code=403,
+                            content={"ok": False, "error": "권한이 없어요"})
+    # 관리자는 owner 제한 없이(None), 멤버는 자기 것만.
+    ok = store.delete_challenge_submission(sub_id, customer_id=None if admin else cid)
+    if not ok:
+        return JSONResponse(status_code=404,
+                            content={"ok": False, "error": "이미 지워졌거나 내 영상이 아니에요"})
+    return {"ok": True, "id": sub_id}
 
 
 @app.get("/api/challenge/board")
