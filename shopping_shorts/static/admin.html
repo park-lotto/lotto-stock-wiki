@@ -24,6 +24,9 @@ th.mini,td.mini{white-space:nowrap;min-width:52px}
 button{border:0;border-radius:7px;padding:7px 13px;font-weight:700;font-size:13px;cursor:pointer;margin-right:4px}
 .bpro{background:#2ea043;color:#fff}.bfree{background:#6e2020;color:#fff}.bok{background:#d19b1e;color:#111}.bpay{background:#3a5bd0;color:#fff}.bpt{background:#7a4bd0;color:#fff}.bkey{background:#0f766e;color:#fff}
 .bedit{background:#5a4bd0;color:#fff}.bdel{background:#8b1a1a;color:#fff}.btrial{background:#1c6a8a;color:#fff}.badm{background:#7a3da8;color:#fff}.bchal{background:#c2410c;color:#fff}
+/* bmng는 클래스만 붙고 색이 없어 회색 기본버튼으로 보이고 있었다(2026-08-29 발견).
+   bsheet(상세 시트)와 짝을 이루도록 함께 정의한다. */
+.bmng{background:#3a5bd0;color:#fff}.bsheet{background:#0f766e;color:#fff}
 .wait{border-color:#5a4a1e;background:#1a1710}.wait h2{color:#ffd479}
 .empty{color:#6a6a72;font-size:13px;padding:6px 2px}
 input{background:#0e0e12;border:1px solid #333;border-radius:7px;color:#eee;padding:8px 10px;font-size:13px;width:90px}
@@ -358,7 +361,11 @@ function renderCustomers(){
     const ls = c.last_seen||0, nowS=Math.floor(Date.now()/1000);
     const online = ls && (nowS-ls) < 300;   // 5분 내 활동 = 접속중
     const seenCell = `<span class=actlink data-actcid=${c.id} title="최근 활동 보기" style="cursor:pointer;color:${online?'#7ee787':'#8ab4f8'}">${online?'🟢 접속중':(ls?'⚪ '+_ago(nowS-ls):'-')}</span>`;
-    return `<tr><td>${c.id}</td><td>${esc(c.name)}${adminBadge}</td><td>${esc(c.phone)}</td>
+    // ★이름을 누르면 상세 시트로 간다(2026-08-29). 모달은 빠른 조작용으로 그대로 두고,
+    //   날짜별 이력·API 원가처럼 넓게 봐야 하는 것만 전용 페이지로 뺐다.
+    const nameCell = `<a href="/admin/customer/${c.id}" style="color:#e8e8ea;text-decoration:none;border-bottom:1px dotted #4a4a52"
+        title="상세 시트 열기 — 날짜별 활동·API 원가">${esc(c.name)||'(이름없음)'}</a>`;
+    return `<tr><td>${c.id}</td><td>${nameCell}${adminBadge}</td><td>${esc(c.phone)}</td>
       <td class=mini style="color:${c.gender?'#e8eaed':'#5f6773'}">${esc(c.gender)||'—'}</td>
       <td class=mini style="color:${c.age_band?'#e8eaed':'#5f6773'}">${esc(c.age_band)||'—'}</td>
       <td>${esc(c.email||c.username)}</td><td>${c.plan}</td><td>${lvl}</td>
@@ -370,6 +377,7 @@ function renderCustomers(){
       <td>${accCell}</td>
       <td>${seenCell}</td>
       <td><button class=bmng onclick="openCust(${c.id})">관리</button>
+          <button class=bsheet onclick="location.href='/admin/customer/${c.id}'" title="날짜별 활동·API 원가">📄 상세</button>
           <button class=bpay onclick="addPayment(${c.id})">결제추가</button></td></tr>`;
   }).join('') : '<tr><td colspan=16 class=empty>조건에 맞는 고객이 없어요</td></tr>';
 }
@@ -581,6 +589,7 @@ function drawCust(){
    </div>
 
    <div class=mfoot>
+     <button class=bsheet onclick="location.href='/admin/customer/${c.id}'">📄 상세 시트</button>
      <button class=bedit onclick="editInfo(${c.id})">정보수정</button>
      <button class=bkey onclick="openKeys(${c.id},this)">키</button>
      <button class=bchal onclick="setChallenge(${c.id},${c.challenge?'false':'true'})">${c.challenge?'🔥챌린지해제':'챌린지참가'}</button>

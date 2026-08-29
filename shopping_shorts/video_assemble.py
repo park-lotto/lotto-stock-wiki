@@ -247,13 +247,20 @@ def _ui_px(v, default, zero_ok=False):
 # /etc/shopping-shorts.env 에 CAPTION_TARGET_CHARS=8 CAPTION_MAX_WORDS=3 으로 짧게 운용,
 # 되돌리기는 그 두 줄 삭제.
 _CAP_TARGET = int(os.environ.get("CAPTION_TARGET_CHARS", "14") or 14)
-_CAP_MAX_WORDS = int(os.environ.get("CAPTION_MAX_WORDS", "4") or 4)
+_CAP_MAX_WORDS = int(os.environ.get("CAPTION_MAX_WORDS", "5") or 5)   # 4→5(2026-08-29 B규칙 — 결합을 지키려면 한 어절 여유가 필요, 글자수 14가 실질 상한)
 # 의존명사(홀로 자막이 되면 뜻이 없어 앞말에 붙어야 하는 말) — 1어절 꼬리로 남으면 앞 구절에 병합.
 # "…식단" | "때문?" → "…식단 때문?". 글자수가 아니라 품사로 판별(독립명사 "대박"·"가루"는 안 붙임).
 # "거·게·건·걸"은 "것"의 구어형(것+조사 축약) — 실렌더에서 "…사 드시는 | 거 이제
 # 멈추셔야"로 끊긴 실사고(2026-08-06, 8자 상한에서 드러남).
 _CAP_BOUND_NOUN = {"때문", "때", "것", "수", "뿐", "등", "데", "줄", "채", "척", "터", "만큼", "대로", "듯",
-                   "거", "게", "건", "걸"}
+                   "거", "게", "건", "걸",
+                   # ★2026-08-29 사장님 B규칙: "5분 | 만에"로 갈라지던 실사고 — 수량 뒤 의존명사.
+                   "만", "만에", "만은", "만이"}
+# 의존명사에 어미가 붙어 길어진 꼴("거였더라고요"·"것이었죠") — 앞말에 붙어야 하는 건 같다.
+# ⚠️짧은 접두(예: "수")를 그대로 prefix로 쓰면 수건·수납이 걸린다 — 두 글자 이상 확정형만.
+_CAP_BOUND_PREFIX = ("거였", "거예", "거죠", "거라", "거야", "거임", "것이", "것도", "것만",
+                     "수가", "수는", "수도", "수밖", "줄은", "줄도", "줄을",
+                     "만에", "만큼", "때문", "뿐이", "뿐만", "듯이", "듯한", "채로")
 # ── 머리 단어(head-marker): 이 단어를 만나면 그 **앞에서** 끊고, 이 단어가 다음
 #    구절의 머리가 된다(뒤 명사/서술어를 데려간다). "…일쑤였는데 | 이 방법은"처럼
 #    관형어 "이"가 앞 구절 꼬리에 남지 않게 한다. 관형사·지시어·부사·수관형사.
@@ -263,14 +270,20 @@ _CAP_HEAD = {"이", "그", "저", "한", "두", "세", "네", "몇", "각", "매
              "바로", "그냥", "그대로", "다시", "먼저", "이제", "지금", "꼭", "막",
              "가장", "제일", "훨씬", "더", "덜", "약간", "좀", "진짜", "정말",
              # 양태부사(뒤 서술어를 꾸며 반드시 앞에서 끊고 뒤로 붙는다): "뚝 떨어지다"
-             "뚝", "확", "쭉", "싹", "푹", "팍", "툭", "쫙", "쓱", "훅"}
+             "뚝", "확", "쭉", "싹", "푹", "팍", "툭", "쫙", "쓱", "훅",
+             # ★2026-08-29 사장님 B규칙 표본에서 추가: "전혀 | 없어서"·"쏙 | 들어가서"류 방지
+             "전혀", "쏙", "통째로", "살짝", "슬쩍", "꽉", "몽땅", "전부", "금방",
+             "이미", "벌써", "아예",
+             # 부정부사·수량부사 — 뒤 서술어와 한 몸("안 됐는데"·"다들 놀랐어요")
+             "안", "못", "다들", "모두", "함께", "같이"}
 # ── 도입어(lead): 이 단어(로 끝나는 어절)는 한 호흡을 열고 **뒤에서** 끊는다.
 #    호격("여러분")·연결 도입("남겨주시면") 등 그 자체로 한 박자.
 _CAP_LEAD = {"여러분", "여러분,", "자"}
 # 연결어미로 끝나는 절은 뒤에서 끊어 한 박자를 준다(…하면 | …했는데 |). 단 "-서"는
 # 장소조사 "-에서/-께서"와 어미 "-아서/-어서"가 섞여 오탐이 잦아 제외한다. 또 이
 # 끊기는 앞 절이 충분히 길 때(_CAP_LEAD_MINCHARS↑)만 적용해 "밭에서"(짧음)는 안 끊는다.
-_CAP_LEAD_SUFFIX = ("면", "면서", "니까", "는데", "지만", "거든", "잖아")
+_CAP_LEAD_SUFFIX = ("면", "면서", "니까", "는데", "지만", "거든", "잖아",
+                    "려", "려고")   # 2026-08-29 B규칙: "꾸미려 | 이것저것…"도 한 박자
 _CAP_LEAD_MINCHARS = 4  # 연결어미 끊기 최소 글자수(공백 제외). 이보다 짧으면 이어붙임.
 # 시간/빈도 도입 부사(아침마다·날마다·집집마다)는 자기 뒤에서 끊어 한 박자를 연다 →
 # 뒤에 오는 '수식어+명사'가 3어절 하드캡에 밀려 쪼개지지 않는다("빵 달라는 아이"가 온전히
@@ -534,10 +547,22 @@ def plan_beat_clips_for(beat, tts_dur, src_durs, *, runout=0.0):
     _max_shot = None if _bb.is_point_beat(beat) else getattr(_cfg, "MAX_SHOT_SECONDS", 0) or None
     # 1장=1컷 모드(기본 off). 켜면 담은 장면이 순서대로 한 번씩만 나온다(되돌아옴 없음).
     _one = bool(getattr(_cfg, "ONE_CLIP_PER_SEGMENT", False))
-    plan = _plan_beat_clips(segs, tts_dur, src_durs=beat_src_durs, max_shot=_max_shot,
-                            one_per_seg=_one)
+    # ★구절 맞춤(2026-08-29 사장님 "개수+길이까지 1:1") — 컷 경계 = 자막 구절 경계.
+    #   화면(scene_play.js planClips의 phraseSync 분기)과 **같은 규칙의 서버판**이다:
+    #   컷1이 리드인(첫말 전 무음)을 얹고 마지막 컷이 꼬리를 얹는다. 재료가 구절보다
+    #   적으면 마지막 재료가 남은 구절을 이어 커버한다. ✋수동 길이가 있으면 수동이
+    #   이기고(아래 fixed_lens), 그땐 이 분기를 타지 않는다.
+    _phrase_plan = None
+    if beat.get("phrase_sync"):          # 구절맞춤 켬 = 구절이 ✋보다 우선(화면과 같은 규칙)
+        _phrase_plan = _plan_phrase_clips(beat, segs, tts_dur)
+    if _phrase_plan:
+        plan = _phrase_plan
+    else:
+        plan = _plan_beat_clips(segs, tts_dur, src_durs=beat_src_durs, max_shot=_max_shot,
+                                one_per_seg=_one)
     # ✋ 손으로 정한 컷 길이가 있으면 먼저 반영한다(칸 총합은 안 바뀐다).
-    _fixed = beat.get("fixed_lens") or {}
+    #   단 구절맞춤 계획엔 덧입히지 않는다 — 구절 경계가 곧 정답이다.
+    _fixed = {} if _phrase_plan else (beat.get("fixed_lens") or {})
     if _fixed:
         _apply_fixed_lens(plan, _fixed, tts_dur)
     # ★늘려 채우기(실험실 칸별 토글): 부족분을 전 컷에 고르게 — 여운보다 먼저.
@@ -547,6 +572,41 @@ def plan_beat_clips_for(beat, tts_dur, src_durs, *, runout=0.0):
     if runout > 0:
         _extend_last_clip_for_runout(plan, segs, runout)
     return plan
+
+
+def _plan_phrase_clips(beat, segs, tts_dur):
+    """구절 맞춤 계획 — 컷 k = k번째 재료, 길이 = k번째 자막 구절 표시시간.
+
+    경계는 화면 자막과 같은 함수로 만든다(_caption_segments/_caption_durations/
+    _adjust_caps_for_trim — _lab_captions와 동일 조합, 0순위-B). 시간표를 못 만들면
+    None을 돌려 종전 배분으로 폴백한다(조용한 어긋남 대신 옛 동작)."""
+    try:
+        cap_segs = _caption_segments(beat.get("narration") or "",
+                                     beat.get("caption_lines"))
+        if not cap_segs or tts_dur <= 0.1 or not segs:
+            return None
+        lead, rd = _adjust_caps_for_trim(beat)
+        durs = _caption_durations(cap_segs, tts_dur, real_durs=rd)
+        if not durs:
+            return None
+        # 경계 [0, lead+d1, lead+d1+d2, …, tts_dur] — 리드인은 컷1, 꼬리는 마지막 컷 몫.
+        bounds = [0.0]
+        t = float(lead or 0.0)
+        for d in durs[:-1]:
+            t += d
+            bounds.append(min(tts_dur, t))
+        bounds.append(tts_dur)
+        n_cut = min(len(durs), len(segs))
+        plan = []
+        for k in range(n_cut):
+            end_b = bounds[-1] if k == n_cut - 1 else bounds[k + 1]  # 재료 부족 → 마지막이 커버
+            d = max(0.1, end_b - bounds[k])
+            seg = segs[k]
+            plan.append({"video_id": seg["video_id"], "start": float(seg["start"]),
+                         "src_dur": d, "out_dur": d})
+        return plan
+    except Exception:      # noqa: BLE001 — 계획 실패가 렌더를 죽이면 안 된다(폴백이 있다)
+        return None
 
 
 def _plan_beat_clips(segments, tts_dur, min_clip=_MIN_CLIP, src_durs=None, max_shot=None,
@@ -858,7 +918,24 @@ def _caption_segments(narration, preset=None):
         # 앞 단어가 수식어면(머리 단어이거나 관형격 "-의"로 끝남) 뒤 단어를 반드시
         # 데려가야 한다("마법의 | 가루" 방지) → 이땐 이어붙인다. 단 어절 상한(under_cap)
         # 은 지켜 "꼭 두 세개씩"이 4어절로 폭주하지 않게 한다.
-        prev_pulls = (prev in _CAP_HEAD or prev.endswith("의")) and under_cap
+        # ★관형형(2026-08-29 사장님 B규칙): "-는/-된/-한/-던"이나 ㄹ받침(다칠·할·볼…)으로
+        #   끝난 어절은 뒤 명사를 꾸미는 중이다 — "채 썰리는 | 모습"·"다칠 | 걱정"으로
+        #   가르지 않는다. 명사가 우연히 걸려도(채칼·겨울) 붙는 쪽 오류라 안전하다.
+        _jong_l = (lambda w2: bool(w2) and 0xAC00 <= ord(w2[-1]) <= 0xD7A3
+                   and (ord(w2[-1]) - 0xAC00) % 28 == 8)
+        # ㄹ받침 견인은 **글자수 여유가 있을 때만**(2026-08-29 2차 — '비밀'(명사)의 ㄹ받침이
+        # '테이블이'를 14자 넘겨 끌어 "…비밀 테이블이 | 있어요"(17자+고아)를 만들었다.
+        # ㄹ받침은 용언 관형형(다칠·쓸)과 명사(비밀·채칼)를 표면으로 못 가른다 → 넘칠 땐 양보).
+        # 어미형(는/된/한…)은 확실한 관형형이라 종전대로 상한을 넘겨서라도 지킨다.
+        tail_pull = (prev.endswith(("는", "된", "한", "던", "네", "인"))
+                     or (_jong_l(prev) and not prev.endswith("들") and room))                     and not cur[-1].endswith((".", "?", "!", "…", ","))
+        # 견인의 힘은 둘로 갈린다(2026-08-29 B규칙 실측):
+        #  · 머리단어/-의(strong) — 구절 끝에 남으면 안 되는 말: 모든 끊기를 막는다(종전).
+        #  · 관형형(tail, "-는/-된/ㄹ받침…") — **글자수 때문에 끊기**만 막는다. 머리단어·
+        #    어미·문장 경계 같은 명시적 신호까지 막으면 "며칠 안 | 됐는데"처럼
+        #    부정부사('안')가 앞 구절 꼬리에 남는다(실측). 상한은 한 어절까지 양보.
+        strong_prev = (prev in _CAP_HEAD or prev.endswith("의")) and under_cap
+        tail_hold = tail_pull and (under_cap or len(cur) <= _CAP_MAX_WORDS)
         # (a) 다음 단어가 머리 단어면 그 앞에서 끊어 그 단어를 다음 구절 머리로 만든다.
         #     단 뒤에 데려갈 단어가 있고, 앞 구절이 이미 충분히 길 때만(짧으면 이어붙임 —
         #     "이것 한" 파편 방지). "…일쑤였는데(5자) | 이 방법은"은 앞이 길어 끊긴다.
@@ -868,7 +945,10 @@ def _caption_segments(narration, preset=None):
         #     연결어미 끊기는 앞 절이 충분히 길 때만("밭에서" 같은 짧은 부사구는 이어붙임).
         lead_break = prev in _CAP_LEAD or (
             prev.endswith(_CAP_LEAD_SUFFIX) and cur_chars >= _CAP_LEAD_MINCHARS
-        ) or prev.endswith(_CAP_OPENER_SUFFIX)   # 도입 부사(…마다)는 글자수 무관 뒤에서 끊음
+        ) or prev.endswith(_CAP_OPENER_SUFFIX) or (
+            # ★절을 닫는 의존명사 뒤 = 좋은 숨 자리(2026-08-29 B규칙: "더 대박인 건 | 요리…").
+            #   '채·거·데·때'는 수식으로도 쓰여(채 썰리는) 오탐 — 확실한 넷만.
+            prev in ("건", "게", "것", "때문에") and cur_chars >= _CAP_LEAD_MINCHARS)
         # (c) 앞 어절이 문장부호로 끝났으면 문장 경계에서 끊는다. 쉼표도 자연 휴지라
         #     그 뒤에서 끊는다("빵 달라는 아이, | 아무 식빵이나" — 쉼표 넘겨 뭉치지 않게).
         #     ★단 쉼표는 앞 구절이 충분히 길 때만(2026-08-17). 나열형에서 1~2자 파편이
@@ -900,11 +980,34 @@ def _caption_segments(narration, preset=None):
         #   끊을 자리라도 다음 단어가 의존명사면 상한을 한 어절 넘겨서라도 데려간 뒤 끊는다.
         #   기존 병합(아래)은 '마지막 1어절 꼬리'만 잡아 중간 구절 머리는 못 막았다.
         #   문장 경계(sent_break)는 예외 — 문장부호를 넘겨 붙이지 않는다.
-        bound_pull = bare in _CAP_BOUND_NOUN and not sent_break
-        if not prev_pulls and not bound_pull and (head_break or lead_break or sent_break
-                               or not room or not under_cap):
-            out.append(" ".join(cur))
-            cur = [w]
+        bound_pull = (bare in _CAP_BOUND_NOUN
+                      or bare.startswith(_CAP_BOUND_PREFIX)) and not sent_break
+        explicit = head_break or lead_break or sent_break
+        lengthy = (not room or not under_cap) and not tail_hold
+        if not strong_prev and not bound_pull and (explicit or lengthy):
+            # ★넘쳐서 끊을 땐 **명사구 한가운데**가 아니라 닫힌 어절(조사·어미로 끝난 곳)
+            #   까지 되짚어 끊는다(2026-08-29 사장님 "인테리어 고수들만 안다는 | 비밀
+            #   테이블이 있어요 — 이게 맞는 거 아니야?"). 종전엔 넘친 그 자리에서 뚝 끊어
+            #   "…안다는 비밀 | 테이블이"처럼 짝을 갈랐다. 명시적 신호(어미·머리단어·문장)로
+            #   끊을 땐 이미 좋은 자리라 되짚지 않는다.
+            if lengthy and not explicit and len(cur) >= 3:
+                _closed = ("는", "은", "이", "가", "을", "를", "도", "에", "로",
+                           "고", "서", "면", "요", "죠", "만", "데", "와", "과", "랑")
+                for _j in range(len(cur) - 2, 0, -1):
+                    _wj = _strip_punct(cur[_j])
+                    if _wj.endswith(_closed) and len("".join(cur[:_j + 1])) >= 4:
+                        out.append(" ".join(cur[:_j + 1]))
+                        cur = cur[_j + 1:] + [w]
+                        break
+                else:
+                    out.append(" ".join(cur))
+                    cur = [w]
+                if cur and cur[-1] is w and len(cur) > 1:
+                    continue          # 룩백으로 나눴다 — w는 이미 cur에 실렸다
+                # (룩백 실패 시 아래 기본 경로가 이미 처리됨)
+            else:
+                out.append(" ".join(cur))
+                cur = [w]
         else:
             cur.append(w)
     if cur:
@@ -944,10 +1047,15 @@ def _caption_durations(segs, dur, real_durs=None):
         # 늘려버려, 애써 실측한 타이밍을 도로 흐트러뜨렸다. 합이 dur를 넘을 때만 줄인다.
         s = sum(real_durs)
         raw = [dur * d / s for d in real_durs] if s > dur else list(real_durs)
-    else:
-        weights = [max(1, len(s.replace("\n", ""))) for s in segs]
-        total_w = sum(weights)
-        raw = [dur * w / total_w for w in weights]
+        # ★실측이 있으면 하한(_CAP_MIN_DUR)도 건너뛴다(2026-08-29 사장님 "자막이 나오기
+        #   전에 음성이 나온다" — 실측 job fa0f71a16a13 beat0: '충격 받았어요' 실발화
+        #   0.68초를 하한이 1.0초로 늘려 다음 구절 자막이 0.32초 늦었고, 그만큼 음성이
+        #   앞서 들렸다). 하한은 글자수 '추정'이 만든 찰나 구절을 막으려는 장치다 —
+        #   실제로 그 길이로 말한 구절을 늘리면 싱크가 깨진다. 짧게 말했으면 짧게 띄운다.
+        return raw
+    weights = [max(1, len(s.replace("\n", ""))) for s in segs]
+    total_w = sum(weights)
+    raw = [dur * w / total_w for w in weights]
     # 하한 미달인 구절은 하한으로 올리고, 그만큼을 하한 이상인 구절에서 비례로 회수.
     floored = [max(_CAP_MIN_DUR, r) for r in raw]
     over = sum(floored) - dur

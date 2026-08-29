@@ -66,11 +66,24 @@ def _beat_words(mp3_path, dur=None, removed=None):
     removed: 후처리가 잘라낸 무음 구간(원본 타임라인). 주면 rescale이 조각별로 갚는다
     — 속도감 모드 내부 무음 제거는 선형사상으로 못 맞춘다(2026-08-06).
     """
+    return _beat_words_src(mp3_path, dur, removed)[0]
+
+
+def _beat_words_src(mp3_path, dur=None, removed=None):
+    """_beat_words + **어느 단에서 나온 시각인지**(2026-08-29 설계 ⑦a).
+
+    "precise"  TTS가 준 정밀 타임스탬프(사이드카) — 정렬 실패 없음
+    "asr"      받아쓰기 폴백 — 오인식만큼 오차
+    "estimate" 둘 다 실패(None) — 하류가 글자수 비례로 떨어진다
+
+    폴백 사다리는 지금까지 **조용히** 내려가서, 어긋난 작업물을 보고도 어느 단이
+    범인인지 알 길이 없었다. 산출 단계를 beat["cap_src"]로 남겨 화면에 띄운다."""
     words = tts_timestamps.words_from_mp3(mp3_path)
     if words:
         # 합성 뒤 audio_post가 배속·무음트림으로 파일을 고쳤을 수 있다 → 최종 길이로 되맞춤.
-        return tts_timestamps.rescale(words, dur, removed=removed)
-    return asr_check.transcribe_words(mp3_path)
+        return tts_timestamps.rescale(words, dur, removed=removed), "precise"
+    w = asr_check.transcribe_words(mp3_path)
+    return w, ("asr" if w else "estimate")
 
 
 def _source_video_id(i):
@@ -379,7 +392,8 @@ def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron
         # 자막 타이밍용: 실제 말한 워드 시각으로 구절 표시시간 계산(실패/키없음 → 미설정=폴백).
         beat["cap_durs"] = None
         beat["cap_lead"] = 0.0
-        words = _beat_words(str(out), _ad, removed=tts_timestamps.load_removed(str(out)))
+        words, _wsrc = _beat_words_src(str(out), _ad, removed=tts_timestamps.load_removed(str(out)))
+        _timing = None
         if words:
             _timing = caption_sync.phrase_durs_from_words(
                 beat["narration"], words, _ad or 0.0,
@@ -387,6 +401,8 @@ def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron
             if _timing:
                 beat["cap_durs"] = _timing.durs
                 beat["cap_lead"] = _timing.lead_in
+        # 산출 단계 기록(⑦a) — 정렬까지 성공해야 그 단이다. 실패하면 글자수 추정.
+        beat["cap_src"] = _wsrc if (words and _timing) else "estimate"
 
     if total == 0:
         return
@@ -551,11 +567,13 @@ def _conform_beats(beats, tts_dir, *, voice, global_pron=None):
         # 못 봐 오차가 커서 실측으로 둔다(2026-07-21). 실측 실패 시에만 추정 폴백.
         beat["target_seconds"] = round(new_dur, 1) if new_dur and new_dur > 0 \
             else round(max(1.5, len(new_n.strip()) / _SYLLABLES_PER_SEC), 1)
-        words = _beat_words(str(out), new_dur, removed=tts_timestamps.load_removed(str(out)))
+        words, _wsrc = _beat_words_src(str(out), new_dur, removed=tts_timestamps.load_removed(str(out)))
+        _t = None
         if words:
             _t = caption_sync.phrase_durs_from_words(new_n, words, new_dur)
             beat["cap_durs"] = _t.durs if _t else None
             beat["cap_lead"] = _t.lead_in if _t else 0.0
+        beat["cap_src"] = _wsrc if (words and _t) else "estimate"
         beat["sync_gap"] = round(max(0.0, new_dur - budget), 2)
 
 
@@ -2784,13 +2802,15 @@ def resynth_one_beat(job_id, beat_idx, voice_override, db_path, work_root):
             _rdur = _probe_duration(str(out))
         except Exception:      # noqa: BLE001 — 길이 측정 실패로 재합성을 죽이지 않는다
             _rdur = None
-        words = _beat_words(str(out), _rdur, removed=tts_timestamps.load_removed(str(out)))
+        words, _wsrc = _beat_words_src(str(out), _rdur, removed=tts_timestamps.load_removed(str(out)))
+        _t = None
         if words:
             _t = caption_sync.phrase_durs_from_words(
                 beat["narration"], words, _rdur or 0.0,
                 preset=beat.get("caption_lines"))
             beat["cap_durs"] = _t.durs if _t else None
             beat["cap_lead"] = _t.lead_in if _t else 0.0
+        beat["cap_src"] = _wsrc if (words and _t) else "estimate"
         # ★싱크 마무리 — 렌더가 하던 것을 여기서도 한다(2026-08-20 실사고 job 087e03b69dc2).
         #   대본수정으로 hook 대사가 105자가 돼 mp3가 16.8초가 됐는데 target_seconds는
         #   옛 2.9초 그대로였다. 미리보기는 mp3 실길이를, 편성·예산은 옛 초를 따라가

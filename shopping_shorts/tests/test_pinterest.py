@@ -179,7 +179,9 @@ def test_수집은_누적된다():
     → 기존 것과 합치고 pin_id로 중복 제거한다.
     """
     fn = _collect_fn()
-    assert "load_last_run_platform" in fn, "기존 수집분을 안 읽는다 — 매번 덮어쓴다"
+    # 2026-08-29: 읽기~쓰기를 한 트랜잭션으로 묶으면서 병합이 store로 옮겨갔다
+    # (동시 수집이 서로를 덮던 문제). 누적한다는 계약 자체는 그대로다.
+    assert "merge_last_run_platform" in fn, "기존 수집분을 안 읽는다 — 매번 덮어쓴다"
     assert "reset" in fn, "비우기 수단이 없다 — 쌓이기만 하면 정리를 못 한다"
 
 
@@ -353,3 +355,122 @@ def test_핀_상세는_주거용_프록시로_간다():
     src = __import__("inspect").getsource(pinterest_crawl.pin_video_info)
     assert "proxies" in src, "프록시를 안 태운다 — 데이터센터 IP는 JSON-LD를 못 받는다"
     assert "_proxies" in src, "프록시 dict를 새로 짜지 마라 — reddit_source._proxies() 재사용"
+
+
+def test_동시_수집이_서로를_덮지_않는다():
+    """★재현 확인(2026-08-29): 두 수집이 각 50개를 담았는데 **50개만 남았다**.
+
+    엔드포인트가 load(기존) → 파이썬에서 병합 → save(전량) 순서라,
+    두 수집이 겹치면 나중 save가 앞 save 결과를 통째로 덮는다.
+    사장님이 두 PC에서 동시에 버튼을 누르면 한쪽이 조용히 사라진다
+    (오류가 없어서 '덜 담겼네' 정도로만 보인다).
+
+    → 읽기~쓰기를 **한 덩어리로 묶는다**. 같은 함정을 이미 포인트 차감에서 겪었고
+      그때 결론도 같았다(메모리 `포인트차감_원자성`).
+    """
+    fn = _code_only(_collect_fn())
+    assert "merge_last_run_platform" in fn, \
+        "load→병합→save를 따로 하면 동시 수집이 서로를 덮는다"
+
+
+def test_병합은_저장쪽에서_원자적으로_한다():
+    """★락은 **저장을 담당하는 곳**에 있어야 한다 — 호출부마다 걸면 반드시 빠뜨린다
+    (0순위-B: 같은 판단을 두 번 적지 않는다)."""
+    import pathlib
+    p = pathlib.Path(__file__).resolve().parents[1] / "store.py"
+    src = p.read_text(encoding="utf-8")
+    assert "def merge_last_run_platform" in src, "저장쪽에 병합 함수가 없다"
+    i = src.index("def merge_last_run_platform")
+    blk = src[i:i + 1800]
+    assert "BEGIN IMMEDIATE" in blk or "_conn()" in blk, "한 트랜잭션으로 안 묶인다"
+
+
+# ── 목적지(쇼핑몰) 판별 — 사장님 "알리 테무 상품 중점으로" (2026-08-29) ──────────
+def test_수집이_핀의_목적지를_저장한다():
+    """★사장님 질문: "알리 테무에서 나오는 상품들을 중점으로 어떻게 찾을수있나"
+
+    검색 응답엔 링크가 없다(핀 키는 id·images·videos뿐 — 25개 전수 확인).
+    그러나 **상세 페이지**엔 목적지가 정확히 있다(주거용 프록시로 열면):
+        "link":"https://temu.to/m/u9c4kk5ldcu"   "domain":"temu.to"
+
+    수집 때 이걸 같이 담아야 화면에서 골라낼 수 있다. 전량 실측(624개, 262초):
+        Uploaded by user 234 · instagram 212 · amzn 34 · temu.to 20 · amazon 19
+        → 쇼핑몰 핀 85개, **85개 전부 영상 있음**, 중앙값 15.8초(쇼츠 규격)
+
+    비용도 싸다: 병렬16이면 40건 7.8초(건당 0.19초) · 판별성공 39/40.
+    """
+    fn = _code_only(_collect_fn())
+    assert "pin_dest" in fn, "목적지를 안 담는다 — 화면에서 알리·테무를 못 고른다"
+
+
+def test_목적지_판정은_domain_필드로만_한다():
+    """★문자열 검색은 오탐이다 — `amazon` 히트 하나가 실은 CSP 헤더의
+    `m.media-amazon.com`이었다(실측). 핀의 진짜 목적지는 `"domain":` 필드다."""
+    from shopping_shorts import pinterest_crawl
+    src = __import__("inspect").getsource(pinterest_crawl)
+    assert '"domain":' in src, 'domain 필드로 읽지 않는다 — 문자열 검색은 CSP를 오탐한다'
+
+
+def test_목적지_조회_실패가_수집을_죽이지_않는다():
+    """★목적지는 **덤**이다. 프록시가 죽었거나 핀터레스트가 막아도 영상 수집 자체는
+    살아야 한다 — 없으면 빈 값으로 두고 넘어간다(0순위: 지어내지 않는다)."""
+    from shopping_shorts import pinterest_crawl
+    src = __import__("inspect").getsource(pinterest_crawl.pin_destination)
+    assert "except" in src, "실패가 수집을 죽인다"
+    assert "return None" in src or "return ''" in src or 'return ""' in src, \
+        "실패 시 조용히 비워야 한다"
+
+
+def test_화면에_쇼핑몰_필터가_있다():
+    """★저장만 하고 화면에서 못 고르면 소용없다. 사장님이 알리·테무만 보려면 버튼이 있어야."""
+    src = _index_html()
+    assert "pinFilter" in src, "쇼핑몰 필터 버튼이 없다"
+    assert "PIN_SHOP_KEYS" in src, "쇼핑몰 판정 목록이 없다"
+
+
+def test_필터_목록이_서버와_같다():
+    """★서버(SHOP_DOMAINS)와 화면(PIN_SHOP_KEYS)이 어긋나면 '쇼핑몰'이 서로 다른 걸
+    뜻하게 된다 — 같은 판단을 두 곳에 적은 대가다(0순위-B). 어긋나면 여기서 잡는다."""
+    import re
+    from shopping_shorts import pinterest_crawl
+    src = _index_html()
+    m = re.search(r"PIN_SHOP_KEYS\s*=\s*\[(.*?)\]", src, re.S)
+    assert m, "화면 목록을 못 찾았다"
+    front = set(re.findall(r"'([^']+)'", m.group(1)))
+    assert front == set(pinterest_crawl.SHOP_DOMAINS), \
+        f"서버와 화면이 다르다: 서버만 {set(pinterest_crawl.SHOP_DOMAINS)-front} / 화면만 {front-set(pinterest_crawl.SHOP_DOMAINS)}"
+
+
+def test_필터_버튼은_기존_토글_스타일을_쓴다():
+    """★새 CSS를 만들지 않는다 — 기존 .ftog(활성 클래스 'on')를 그대로 쓴다(0순위-B)."""
+    src = _index_html()
+    i = src.index('onclick="pinFilter')
+    assert "ftog" in src[max(0, i - 200):i], "새 버튼 스타일을 만들었다 — .ftog를 재사용하라"
+
+
+def test_기본_키워드에_쇼핑몰_겨냥이_있다():
+    """★실측(2026-08-29): 검색어에 `temu`를 넣으면 적중률이 완전히 달라진다.
+
+        temu gadgets must have         4/4  = 100%
+        temu home gadgets              5/9  =  56%
+        kitchen gadgets amazon finds   3/6  =  50%
+        temu haul kitchen              3/7  =  43%
+        (기존 차량템 계열 전체는 18%)
+
+    원리: 핀 제목·설명에 `temu`가 있으면 실제로 테무 링크가 붙어 있다.
+    사장님이 검색어를 매번 손으로 넣지 않아도 되게 기본값에 담는다.
+    """
+    from shopping_shorts import pinterest_crawl
+    kws = pinterest_crawl.DEFAULT_KEYWORDS
+    assert any("temu" in k for k in kws), "테무 겨냥 검색어가 기본에 없다"
+    assert any("amazon" in k for k in kws), "아마존 겨냥 검색어가 기본에 없다"
+    for k in kws:
+        assert k.isascii(), f"영어가 아닌 키워드: {k}"
+
+
+def test_기본_키워드가_한_배치에_들어간다():
+    """★엔드포인트가 12개까지만 받는다(kws[:12]). 기본값이 그보다 많으면
+    뒤쪽이 **조용히 잘린다** — 넣어놓고 안 돌아가는 상태가 된다."""
+    from shopping_shorts import pinterest_crawl
+    assert len(pinterest_crawl.DEFAULT_KEYWORDS) <= 12, \
+        "기본 키워드가 12개를 넘으면 뒤쪽이 조용히 잘린다"
