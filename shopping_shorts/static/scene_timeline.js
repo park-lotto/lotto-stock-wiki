@@ -395,8 +395,18 @@
         if (typeof playKey === 'undefined' || playKey !== 'beat:' + i) {
           try { playBeat(i); } catch (_) {}
         }
-        // 진행바와 같은 규칙: 잡는 순간 일시정지(끌면서 소리가 튀지 않게)
-        try { if (!seqPaused && seq.length) togglePause(); } catch (_) {}
+        // ★일시정지는 seq가 **뜬 뒤에** 걸어야 한다(2026-08-29 사장님 "놓으면 맨 앞으로
+        //   튕김"). startSeq가 비동기라 잡는 순간엔 seq가 비어 togglePause가 조용히
+        //   무시됐고, 재생이 0초부터 시작돼 놓을 때 오디오 시계 0초가 이겼다.
+        //   뜰 때까지 되풀이해 멈춘다 — 멈추면 이후 seek이 '자리만 옮김'으로 안전하다.
+        let _pt = 0;
+        const ensurePause = () => {
+          try {
+            if (seq.length) { if (!seqPaused) togglePause(); return; }
+          } catch (_) { return; }
+          if (_pt++ < 30) setTimeout(ensurePause, 100);
+        };
+        ensurePause();
       });
       hgrip.addEventListener('pointermove', e => {
         if (!hdrag) return;
@@ -413,11 +423,23 @@
         if (!hdrag) return;
         hdrag = false;
         const t = TL_POS[i];
-        // startSeq가 아직 세팅 중이면 seq가 비어 seekTo가 무시된다 — 잠깐 되풀이해 안착시킨다.
+        // seq가 뜨고 + 멈춘 상태가 된 뒤에 시크하고, 안착까지 확인한다(오디오가 늦게
+        // 준비되면 시계가 0초로 되감아 "맨 앞으로 튕김"이 됐다 — 안착 실패 시 재시도).
         let tries = 0;
         const settle = () => {
-          try { if (typeof seq !== 'undefined' && seq.length) { seekTo(t); return; } } catch (_) {}
-          if (tries++ < 10) setTimeout(settle, 150);
+          try {
+            if (typeof seq !== 'undefined' && seq.length) {
+              if (!seqPaused) togglePause();
+              seekTo(t);
+              setTimeout(() => {
+                try {
+                  if (t > 0.4 && curT() < 0.2 && tries++ < 8) settle();  // 0으로 되감김 — 다시
+                } catch (_) {}
+              }, 250);
+              return;
+            }
+          } catch (_) {}
+          if (tries++ < 12) setTimeout(settle, 150);
         };
         settle();
         e.stopPropagation();
