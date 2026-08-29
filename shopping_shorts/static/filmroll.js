@@ -283,7 +283,13 @@
       capsEl.style.width = (DUR * pps()) + 'px';
       if (!caps.length) { capsEl.innerHTML = ''; return; }
       capsEl.innerHTML = caps.map((c, i) => {
-        const st = c[0], en = (i + 1 < caps.length) ? caps[i + 1][0] : DUR;
+        // ★자막이 실제로 끝나는 시각을 쓴다(2026-08-29 사장님 "장면 자막이 안 맞음").
+        //   종전엔 끝을 **다음 자막 시작**으로 지어냈다 — 말과 말 사이 공백이 앞 자막에
+        //   통째로 먹혀 자막띠가 그림보다 길게 깔렸다(실측 2.3~3.0초씩 초과).
+        //   c[2]=end가 오면 그걸 쓰고, 없으면(옛 2칸 caps) 종전대로 — 다음 시작을 넘진 않게.
+        const st = c[0];
+        const nxt = (i + 1 < caps.length) ? caps[i + 1][0] : DUR;
+        const en = (c.length > 2 && isFinite(c[2]) && c[2] > st) ? Math.min(c[2], nxt) : nxt;
         const w = (en - st) * pps() - 1;
         if (w < 8) return '';
         return `<span class="cp" style="left:${st * pps()}px;width:${w}px">${esc(c[1])}</span>`;
