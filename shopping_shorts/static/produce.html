@@ -8935,7 +8935,12 @@ function _sceneLabGrow(f, on){
       const d = f.contentDocument;
       if(!d || !d.body) return;
       d.body.classList.add('grow');
-      const h = Math.max(d.body.scrollHeight, d.documentElement.scrollHeight);
+      // ★body만 잰다(2026-08-29 "화면이 아래로 점점 늘어난다").
+      //   documentElement.scrollHeight는 명세상 **항상 ≥ iframe 높이**(뷰포트가 하한)라
+      //   max()에 넣는 순간 want=현재높이+8이 매 틱 참이 돼 영원히 자란다(+8px/0.7초).
+      //   내용 높이는 body.scrollHeight가 안다 — 짝: scene_lab의 body.grow{height:auto}
+      //   (body가 100vh면 body.scrollHeight도 뷰포트를 따라가 같은 루프가 된다).
+      const h = d.body.scrollHeight;
       // 하한을 지켜 짧은 내용에서 칸이 찌그러지지 않게 한다.
       const want = Math.max(h + 8, parseInt(_SL_FRAME_MINH, 10) || 560);
       if(Math.abs((parseInt(f.style.height, 10) || 0) - want) > 4){
