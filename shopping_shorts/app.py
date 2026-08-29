@@ -5783,11 +5783,24 @@ _BUFFER_NO_KEY = {"ok": False, "need_key": True,
                   "error": "먼저 마이페이지에서 Buffer 키를 등록해 주세요."}
 
 
+# 화면 구성을 확인할 때만 쓰는 예시 채널. **로컬에서 환경변수를 켰을 때만** 나온다 —
+# 라이브에서 켜지면 있지도 않은 채널에 '예약됨'이 뜬다(가짜 성공은 조용한 사고다).
+_BUFFER_DEMO = os.environ.get("BUFFER_DEMO", "") == "1"
+_BUFFER_DEMO_CHANNELS = [
+    {"id": "demo-ig", "service": "instagram", "name": "숏템탑스", "avatar": ""},
+    {"id": "demo-yt", "service": "youtube", "name": "로또의 스탁브레인", "avatar": ""},
+    {"id": "demo-tt", "service": "tiktok", "name": "shottem", "avatar": ""},
+    {"id": "demo-th", "service": "threads", "name": "숏템탑스", "avatar": ""},
+]
+
+
 @app.get("/api/buffer/channels")
 def api_buffer_channels(request: Request):
     """이 고객의 Buffer에 연결된 채널 목록(어디에 올릴지 고르게 한다)."""
     key = _buffer_key(request)
     if not key:
+        if _BUFFER_DEMO:
+            return {"ok": True, "channels": _BUFFER_DEMO_CHANNELS, "demo": True}
         return JSONResponse(status_code=200, content=_BUFFER_NO_KEY)
     try:
         return {"ok": True, "channels": buffer_api.channels(key)}
@@ -5799,7 +5812,11 @@ def api_buffer_channels(request: Request):
 async def api_buffer_schedule(request: Request):
     """완성 영상을 Buffer에 예약한다.
 
-    body: {job_id, channel_ids[], text, due_at?(ISO8601 UTC), thumb_ms?}
+    body: {job_id, channel_ids[], texts{채널id:글}, due_at?(ISO8601 UTC), thumb_ms?}
+
+    ★글은 **채널마다 다르다**(2026-08-29 사장님). 인스타는 해시태그를 많이 달고
+      쓰레드는 거의 안 단다 — 8단계가 이미 플랫폼별로 만들어 두므로 하나로 뭉개면
+      그 구분이 통째로 죽는다. text 하나만 오면 모든 채널에 그걸 쓴다(옛 호출 호환).
 
     ★영상은 파일로 못 올린다 — Buffer가 **게시 시점에 공개 URL을 직접 가져간다.**
       그래서 여기서 임시 공개 링크를 발급한다(기본 24시간이 아니라 14일:
@@ -5809,12 +5826,18 @@ async def api_buffer_schedule(request: Request):
     """
     key = _buffer_key(request)
     if not key:
+        if _BUFFER_DEMO:
+            # ★가짜로 '예약됨'을 돌려주지 않는다. 안 올라갔는데 올라간 줄 알면 그게 더 나쁘다.
+            return JSONResponse(status_code=200, content={
+                "ok": False, "need_key": True,
+                "error": "화면 확인용입니다 — 실제로 예약하려면 Buffer 키를 등록해 주세요."})
         return JSONResponse(status_code=200, content=_BUFFER_NO_KEY)
 
     body = await request.json()
     job_id = os.path.basename(str(body.get("job_id") or ""))
     chans = [str(c) for c in (body.get("channel_ids") or []) if c]
-    text = str(body.get("text") or "")
+    texts = body.get("texts") or {}
+    text = str(body.get("text") or "")          # 옛 호출 호환(모든 채널에 같은 글)
     due_at = str(body.get("due_at") or "").strip() or None
     thumb_ms = int(body.get("thumb_ms") or 0)
     if not job_id or not chans:
@@ -5836,7 +5859,8 @@ async def api_buffer_schedule(request: Request):
     out = []
     for cid_ in chans:
         try:
-            r = buffer_api.schedule_video(key, cid_, text, video_url, due_at, thumb_ms)
+            t = str(texts.get(cid_) or text or "")
+            r = buffer_api.schedule_video(key, cid_, t, video_url, due_at, thumb_ms)
             out.append({"channel_id": cid_, "ok": True, "post_id": r["id"], "due_at": r["dueAt"]})
         except buffer_api.BufferError as e:
             out.append({"channel_id": cid_, "ok": False, "error": str(e)})
