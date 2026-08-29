@@ -84,7 +84,11 @@
 
     // ── 음성 레인 + 재생선. cap_src(⑦a) = 이 칸 구절 초가 어느 단에서 나왔나.
     const ttsReal = ((DATA.tts_dur || {})[String(i)]);
-    const capSrc = ((DATA.beats || [])[i] || {}).cap_src;
+    const _b = (DATA.beats || [])[i] || {};
+    // cap_src 기록이 없는 옛 job이라도 cap_durs가 비어 있으면 **그 자체가 추정**이다
+    // (렌더도 그때 글자수 비례로 그린다). 균일한 0.8s 블록·무음 없음의 정체가 이것 —
+    // 기록이 없다고 아는 척은 안 하되, 데이터가 말해주는 것까지 숨기진 않는다(2026-08-29).
+    const capSrc = _b.cap_src || (ttsReal && _b.cap_durs == null ? 'estimate' : null);
     const srcBadge = capSrc === 'precise'
         ? '<span class="tl-src ok" title="TTS가 준 정밀 타임스탬프로 계산된 초입니다">🎯 정밀싱크</span>'
       : capSrc === 'asr'
