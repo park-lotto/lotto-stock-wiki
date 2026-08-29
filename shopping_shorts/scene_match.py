@@ -132,16 +132,30 @@ def _pick_role_asset(pool, narration):
 # 여기와 렌더 둘 중 한쪽만 늘리면 조용히 기본값(last)으로 떨어진다(0순위-B).
 SFX_POSITIONS = ("first", "last", "transition")
 
-# 훅은 **다음 칸으로 넘어가는 순간**에 둔다(2026-08-21 사장님 "훅에서 다음 넘어가거나
-# 이럴때"). 이븐쇼핑류가 장면이 바뀌는 그 지점에 띠용을 얹는 방식이다.
-# 나머지 역할은 종전대로 칸의 마지막 자막("last") — 문장을 맺는 자리라 자연스럽다.
-_SFX_POSITION = {"hook": "transition"}
+# ★타점 기본값 = **칸이 넘어가는 순간**(transition), 역할 무관 (2026-08-29).
+#
+# 종전엔 훅만 transition이고 나머지는 "last"(칸의 마지막 자막)였다. 실측해보니
+# 대세 채널은 **역할을 가리지 않고 컷 경계에** 소리를 얹는다:
+#
+#   실측 3편 — 이븐쇼핑(영어더빙) 28.5s·긍정템 17.5s·공가미 19.6s
+#     · 컷 55개 중 52개(95%)에 소리가 붙어 있다
+#       (이븐쇼핑 25컷중 23 / 긍정템 21컷중 20 / 공가미 9컷중 9)
+#     · 타점은 컷 경계 그 자리 — Δ중앙값 **-12ms**, 평균 +2ms.
+#       컷보다 먼저 27개 / 나중 25개로 반반이라 "경계에 맞춘 것"이 분명하다.
+#     · 소리 길이는 20~200ms(중앙값 ~50ms)로 짧다.
+#   검출법: 8~16kHz 고역 전이(반짝·whoosh) + 20~120Hz 저역 임팩트(붐).
+#          합성 정답파일로 먼저 검증하고 썼다(5/5 정확, 음성만인 파일엔 0건 오탐).
+#
+# 즉 "문장을 맺는 자리(last)"는 우리 추측이었고, 실제로는 **장면이 바뀌는 자리**다.
+# last를 쓰려면 칸마다 손으로 바꾸면 된다(api_produce_mix_sfx가 그대로 받는다).
+_SFX_POSITION = {}
+_SFX_POSITION_DEFAULT = "transition"
 
 
 def _sfx_position(beat_role):
     """이 역할의 **기본** 타점 이름. 사람이 칸마다 바꿀 수 있다(api_produce_mix_sfx).
     실제 몇 초인지는 렌더(_burn_captions)가 계산한다 — 여기선 위치 이름만."""
-    return _SFX_POSITION.get(beat_role, "last")
+    return _SFX_POSITION.get(beat_role, _SFX_POSITION_DEFAULT)
 
 
 def _sfx_candidates(assets):
