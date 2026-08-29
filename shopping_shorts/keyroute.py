@@ -26,8 +26,9 @@ SVC_VMAKE = "vmake"
 SVC_ELEVENLABS = "elevenlabs"
 SVC_YOUTUBE = "youtube"
 SVC_SERPAPI = "serpapi"
+SVC_BUFFER = "buffer"      # SNS 예약발행. 고객이 자기 Buffer 개인 키를 넣는다
 
-SERVICES = (SVC_GEMINI, SVC_VMAKE, SVC_ELEVENLABS, SVC_YOUTUBE, SVC_SERPAPI)
+SERVICES = (SVC_GEMINI, SVC_VMAKE, SVC_ELEVENLABS, SVC_YOUTUBE, SVC_SERPAPI, SVC_BUFFER)
 
 # ★등록은 받지만 **실제 호출에 쓰이는** 서비스는 아직 이 둘뿐이다(2026-08-17 실측).
 #   - vmake     : job의 customer_id → mix_pipeline._vmake_keys → keys_for (목록 전체)
@@ -56,7 +57,10 @@ SERVICES = (SVC_GEMINI, SVC_VMAKE, SVC_ELEVENLABS, SVC_YOUTUBE, SVC_SERPAPI)
 #   용량은 사장님이 키를 더 만들어 채운다). 의도된 거래라 누수가 아니다.
 #   ⚠️단 합류 배선(config.refresh_member_gemini_keys 호출)이 살아 있어야 성립한다.
 #     그 호출을 지우면 여기 면제도 같이 빼라 — 안 그러면 08-17 사고가 그대로 재현된다.
-WIRED = (SVC_VMAKE, SVC_SERPAPI, SVC_ELEVENLABS, SVC_GEMINI, SVC_YOUTUBE)
+# ★buffer는 **사장님 키가 아예 없다.** 고객이 자기 키를 넣어야만 되는 서비스다
+#   (Buffer는 제3자 OAuth가 안 열려 우리가 대신 발행할 수 없다 — buffer_api.py 참조).
+#   그래서 폴백이 없고, 우리 돈이 나가지도 않는다(발행은 고객의 Buffer 요금제로 나간다).
+WIRED = (SVC_VMAKE, SVC_SERPAPI, SVC_ELEVENLABS, SVC_GEMINI, SVC_YOUTUBE, SVC_BUFFER)
 
 # ★공용 풀 모델(2026-08-24 사장님 결정) — 이 서비스들은 회원 키를 **우리 풀에 합류**시키고
 #   회원은 풀 전체를 무료로 쓴다. 키 1개만 받는데 그 1개로만 돌리면 곧바로 한도에 걸려

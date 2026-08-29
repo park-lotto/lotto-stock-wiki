@@ -3590,6 +3590,10 @@ def _probe_user_key(service: str, key: str) -> bool:
       같은 판단을 여기 또 적으면 어긋난다(CLAUDE.md 0순위-B).
     ★vmake는 형식만 본다. 실호출이 크레딧을 먹으므로 '확인' 버튼이 돈을 쓰면 안 된다.
     """
+    if service == keyroute.SVC_BUFFER:
+        # 문서가 첫 예제로 쓰는 account 쿼리 하나. 돈이 안 들고 401이면 바로 갈린다.
+        from shopping_shorts.buffer_api import probe as _buffer_probe
+        return _buffer_probe(key)
     if service == keyroute.SVC_GEMINI:
         from shopping_shorts.comment_gen import _probe_key_alive
         return _probe_key_alive(key)
