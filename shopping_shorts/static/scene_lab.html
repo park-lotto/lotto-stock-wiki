@@ -843,6 +843,30 @@ body.tight .frslot.inbeat .frbelt{top:0;height:100%}
 body.tight .frslot.inbeat .fc{height:100%}
 body.tight .frslot.inbeat .frboxes .bx{top:0;height:100%}
 body.tight .frslot.inbeat .frcaps{top:auto;bottom:4px}
+
+/* ══ 모바일(≤720px): 3단을 세로로 쌓는다(2026-08-29 사장님 "모바일 최적화") ══
+   실측(390px 폰): 미리보기가 폭 330px을 고정으로 먹어 필름 자리가 50px, 펼친 필름
+   창이 32px — 사실상 못 쓴다. 가로 3단(미리보기|칸들/필름)을 세로 적층으로 바꾼다:
+   미리보기(높이만 잡고 폭은 9:16이 정함) → 칸들(가로 스크롤 그대로) → 필름(전체 폭).
+   ★크기 정의처는 안 늘린다 — 폭 고정을 풀고 높이 캡만 주면 나머지는 기존 규칙
+   (aspect-ratio·--cutw·fitPlayer)이 알아서 맞춘다. */
+@media (max-width: 720px){
+  body.tight #topband{flex-direction:column;height:auto}
+  body.tight #topband > #playerhost{flex:0 0 auto;max-width:none;width:100%;height:38vh}
+  body.tight #topband > #topright{flex:0 0 auto;overflow:visible}
+  body.tight #topband #topzone{overflow-x:auto}   /* 칸들 — 손가락 가로 스크롤 */
+}
+/* 필름 좌우 밀기를 터치에 연다 — pan-y: 세로 제스처는 브라우저(페이지 스크롤)가 갖고,
+   가로 끌기는 pointermove가 우리에게 온다(auto면 브라우저가 가로채 pointercancel).
+   기존 밀기/찍기 4px 판정(win pointerdown)이 터치에서도 그대로 돈다 — 배선 무변경. */
+.frwin{touch-action:pan-y}
+/* 터치 화면: 자주 쓰는 필름 조작만 손가락 크기로(44px 규칙은 핵심 동선부터). */
+@media (pointer: coarse){
+  .frbtn{min-height:36px;padding:6px 10px}
+  .fr .frgo{min-height:30px}
+  .frz{width:150px;height:26px}
+  .cutbtn{min-height:30px;padding:4px 8px}
+}
 body.tight .frslot.inbeat .frhead{top:4px;bottom:28px}
 
 /* 소스 카드 필름 — 그 묶음 아래에서 편다(가운데 자리와 별개) */
@@ -1563,7 +1587,7 @@ function toggleTight(){
   localStorage.setItem(TIGHT_KEY, document.body.classList.contains('tight') ? '0' : '1');
   _tightApply();
 }
-const BUILD_TAG = 'F22';   // 필름롤러 — ✂ 쓰는 구간 다듬기(조각 꼬리 자르기) + ＋구간 보이는 자리에
+const BUILD_TAG = 'F23';   // 필름롤러 — 모바일: 3단 세로적층 + 필름 터치 밀기(pan-y) + 터치타깃
 (function(){ const b=document.getElementById('buildtag'); if(b) b.textContent = BUILD_TAG; })();
 
 function toggleHints(){
