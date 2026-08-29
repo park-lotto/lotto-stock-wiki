@@ -526,6 +526,24 @@
       };
     }
 
+    /* ★끌기 전용 경량 경로(2026-08-29 사장님 "앞으로 땡기면 이동이 안 되고 놓는 순간
+       움직인다"). 원인은 applyW가 매 mousemove마다 자막·구간띠를 innerHTML로 통째
+       재구성해 메인스레드가 막히는 것 — 브라우저가 그릴 틈이 없어 놓는 순간에야
+       한꺼번에 그려졌다(합성 이벤트 실측으론 off가 매 이동 갱신됨 = 로직은 정상,
+       페인트가 굶은 것). 끌 때 바뀌는 건 off 하나 — 층들의 transform만 밀면 된다.
+       (모든 자식은 절대좌표 규약이라 transform만으로 정확히 따라온다) */
+    function panW() {
+      off = clamp(off);
+      belt.style.transform = `translateX(${-off}px)`;
+      boxesEl.style.transform = `translateX(${-off}px)`;
+      capsEl.style.transform = `translateX(${-off}px)`;
+      useEl.style.transform = `translateX(${-off}px)`;
+      drawMark();                    // left 한 줄 — 재구성 아님
+      moveHead(HEAD_T);
+      clearTimeout(applyW._fill);
+      applyW._fill = setTimeout(() => { fillVisible(); }, 60);
+    }
+
     function applyW() {
       off = clamp(off);
       belt.style.transform = `translateX(${-off}px)`;
@@ -781,7 +799,7 @@
       if (!down) return;
       const dx = e.clientX - sx;
       if (!dragged && Math.abs(dx) > 4) dragged = true;   // 여기부터는 '밀기'다
-      if (dragged) { off = clamp(so - dx); applyW(); }
+      if (dragged) { off = clamp(so - dx); panW(); }   // 끌기 중엔 경량 경로(위 주석)
     });
     const _endPan = e => {
       if (!down) return;
@@ -818,7 +836,7 @@
         strip().then(keep);
         return;
       }
-      off = clamp(off + ((e.deltaY || e.deltaX) > 0 ? pps() * 2 : -pps() * 2)); applyW();
+      off = clamp(off + ((e.deltaY || e.deltaX) > 0 ? pps() * 2 : -pps() * 2)); panW();
     }, { passive: false });
 
     // ★왼쪽 버튼으로 필름을 끌어 좌우로 미는 조작은 **없앴다**(2026-08-26 사장님 캡쳐 536
@@ -831,8 +849,14 @@
     // ★손잡이를 끌었는지(=훑어보기) 눌렀다 뗐는지(=여기 찍기) 가른다.
     //   끌고 난 뒤의 click까지 '찍기'로 받으면 훑을 때마다 구간이 생긴다.
     let gripMoved = false, gripX = 0;
+    // ★한 손 제스처(2026-08-29 사장님): 빨간선을 왼쪽으로 잡고 끌다가 **오른쪽 버튼을
+    //   겹쳐 누르면** 잡은 지점~지금 지점이 주황 박스가 된다(Q→W를 마우스 하나로).
+    //   겹친 버튼은 pointerdown이 아니라 **buttons 비트가 바뀐 pointermove**로 온다
+    //   (포인터 이벤트 규약 — chorded buttons). 우클릭 한 번 = 박스 하나(dgBoxed).
+    let dgT0 = null, dgBoxed = false;
     gripEl.addEventListener('pointerdown', e => {
       dg = true; gripMoved = false; gripX = e.clientX;
+      dgT0 = headTime(); dgBoxed = false;        // 잡은 순간의 시각 = 박스 시작점
       e.stopPropagation(); e.preventDefault();
       try { gripEl.setPointerCapture(e.pointerId); } catch (_) {}
     });
@@ -841,9 +865,17 @@
       if (Math.abs(e.clientX - gripX) > 4) gripMoved = true;
       const r = win.getBoundingClientRect();
       scrubTo(xToSec(e.clientX - r.left));
+      if ((e.buttons & 2) && !dgBoxed && dgT0 != null && !LOCK) {
+        dgBoxed = true;                          // 우클릭이 눌려 있는 동안 한 번만
+        gripEl._chordAt = performance.now();     // 곧 올 contextmenu(찍기)를 무시하기 위해
+        const t1 = headTime();
+        if (addBox(Math.min(dgT0, t1), Math.max(dgT0, t1)))
+          dgT0 = t1;                             // 이어서 끌면 다음 박스는 여기부터
+      }
+      if (!(e.buttons & 2)) dgBoxed = false;     // 우클릭을 뗐다 — 다음 겹침을 받는다
       e.stopPropagation();
     });
-    gripEl.addEventListener('pointerup', e => { dg = false; e.stopPropagation(); });
+    gripEl.addEventListener('pointerup', e => { dg = false; dgT0 = null; e.stopPropagation(); });
     // ★2026-08-26 사장님 "빨간 막대 두번 누르면 시작점되고 주황박스 만들어지는 거
     //   그거 왜 구현 안 되어 있나". 되어 있었는데 **오른쪽 클릭에만** 걸려 있었다
     //   (왼쪽 클릭은 stopPropagation만 하고 아무 일도 안 했다) — 아무도 안 쓰는
@@ -854,7 +886,13 @@
       if (gripMoved) { gripMoved = false; return; }
       markHere();
     });
-    gripEl.addEventListener('contextmenu', e => { e.preventDefault(); e.stopPropagation(); markHere(); });
+    gripEl.addEventListener('contextmenu', e => {
+      e.preventDefault(); e.stopPropagation();
+      // 끌기+우클릭(위 겹침 박스)의 우클릭 뗌이 여기로도 온다 — 그때 찍기까지 하면
+      // 박스 만들자마자 새 시작점이 찍혀 헷갈린다. 겹침 직후엔 조용히 넘어간다.
+      if (gripEl._chordAt && performance.now() - gripEl._chordAt < 600) return;
+      markHere();
+    });
 
     // ★확대를 바꾸는 곳은 여기 하나다(슬라이더·＋－버튼·Ctrl+휠이 모두 이걸 부른다).
     function setStep(sliderVal) {
