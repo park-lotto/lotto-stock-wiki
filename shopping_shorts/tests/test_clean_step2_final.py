@@ -47,7 +47,8 @@ def env(monkeypatch, tmp_path):
     store = _FakeStore(job)
     monkeypatch.setattr(mp, "Store", lambda p: store)
     monkeypatch.setattr(mp, "_resolve_sources", lambda j, w: {"s0": "/orig/s0.mp4"})
-    monkeypatch.setattr(mp, "_vmake_key", lambda *a, **k: "appkey:secret")
+    # 2026-08-29: _vmake_key(단일) → _vmake_keys(목록) — 소진 시 다음 키로 넘긴다.
+    monkeypatch.setattr(mp, "_vmake_keys", lambda *a, **k: ["appkey:secret"])
     monkeypatch.setattr(mp, "_charge_clean", lambda *a, **k: 5)
     monkeypatch.setattr(mp, "_refund_clean", lambda *a, **k: None)
     monkeypatch.setattr(mp, "_resolve_cutaway_paths", lambda *a, **k: {})

@@ -4815,9 +4815,11 @@ def clean_failure_kind(clean_error):
     #   "남의 키에 충전하세요"라는 엉뚱한 안내가 안 나간다.
     if "포인트가 부족" in e:
         return "no_points"
-    # VMake가 직접 주는 코드다(실측 원문:
-    #   "[60002] You don't have enough credits for this API. Purchase a subscription...")
-    if "60002" in e or "enough credits" in low:
+    # VMake가 직접 주는 코드다. ★판정은 vmake_client 한 곳에서 빌려 쓴다(0순위-B,
+    #   2026-08-29) — 여기서 따로 문자열을 검사하면 "화면은 소진이라는데 다음 키로는
+    #   안 넘어간다"처럼 로테이션 쪽 판정과 어긋난다.
+    from shopping_shorts.vmake_client import is_no_credit as _vmake_no_credit
+    if _vmake_no_credit(e):
         return "no_credit"
     # 배포·재시작으로 BackgroundTask가 죽은 경우 — 이건 진짜로 다시 시도하면 된다.
     if "서버 재시작" in e or "중단되었습니다" in e:
