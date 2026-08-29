@@ -57,8 +57,18 @@ def test_orb_labels_and_mapping():
     # 2026-08-26 사장님 지시로 8·9번째 이름 변경 — "SEO해시테크"는 실제로 제목·설명·태그를
     # 만드는 단계라 이름이 하는 일과 어긋났고, "최종렌더"는 서비스 다른 곳에서 이미 쓰는
     # "완성본"으로 통일했다(용어가 두 벌이면 어느 쪽이 진짜인지 알 수 없다).
+    # 2026-08-29 SNS 예약(10번째) 추가 — 완성한 영상을 Buffer로 예약 발행한다.
     assert labels == ["영상추출/분석", "대본생성", "영상대본MIX", "고품질 자막제거", "TTS음성",
-                      "자막꾸미기", "썸네일", "제목·태그", "완성본"], labels
+                      "자막꾸미기", "썸네일", "제목·태그", "완성본", "SNS 예약"], labels
+    # ★단계를 늘리면 배열 4벌(LABELS·SHORT·COLORS·ICONS)을 **모두** 늘려야 한다.
+    #   하나라도 빠지면 그 단계만 조용히 회색으로 뜬다 — 그래서 개수를 함께 못 박는다.
+    n = len(labels)
+    for name in ("STEP_SHORT", "STEP_COLORS", "STEP_ICONS"):
+        mm = re.search(r"const " + name + r"\s*=\s*\[(.*?)\n\];", HTML, re.S)
+        assert mm, name + " 선언을 못 찾음"
+        body = mm.group(1)
+        cnt = body.count("[") if name == "STEP_COLORS" else body.count("',") + body.count('",')
+        assert cnt >= n, "%s가 단계 수(%d)보다 적다 — 그 단계는 회색으로 뜬다" % (name, n)
 
 
 def test_orb_to_panel_mapping_v6():
@@ -67,7 +77,8 @@ def test_orb_to_panel_mapping_v6():
     m = re.search(r"const ORB_TO_PANEL\s*=\s*(\[[^\]]*\])", HTML)
     assert m, "ORB_TO_PANEL 선언을 못 찾음"
     mapping = json.loads(m.group(1))
-    assert mapping == [0, 8, 7, 1, 2, 3, 4, 5, 6], mapping
+    # 2026-08-29 SNS 예약(신규 패널 9)은 **완성본 뒤**에 붙는다 — 영상이 나와야 올린다.
+    assert mapping == [0, 8, 7, 1, 2, 3, 4, 5, 6, 9], mapping
 
 
 def test_패널_제목은_손으로_안_적는다():
