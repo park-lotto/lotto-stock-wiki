@@ -59,7 +59,19 @@
       ? `<span class="tl-badge warn">늘려 채움 중 (+${f.lack.toFixed(1)}초)</span>` : '';
 
     // ── 자막 레인: captions 시간표 그대로. 누르면 F21(pickSeg)로 초가 필름에 들어간다.
-    const capHtml = caps.map((c, k) => {
+    //    앞뒤 무음(리드인·꼬리)은 회색으로 채운다(2026-08-29 사장님 "무음표시 넣고") —
+    //    표시만 한다: 시간표(진실)는 서버가 준 그대로, 빈 자리를 이름 붙일 뿐이다.
+    let silHtml = '';
+    if (caps.length) {
+      const lead = caps[0].start, tail = dur - caps[caps.length - 1].end;
+      if (lead > 0.15)
+        silHtml += `<div class="tl-sil" style="left:0;width:${(lead * pps - 2).toFixed(1)}px"
+          title="첫말 전 무음 ${lead.toFixed(2)}초 — 화면은 나오지만 아직 말이 없습니다">무음 ${lead.toFixed(1)}s</div>`;
+      if (tail > 0.15)
+        silHtml += `<div class="tl-sil" style="left:${(caps[caps.length - 1].end * pps).toFixed(1)}px;` +
+          `width:${(tail * pps - 2).toFixed(1)}px" title="끝 무음 ${tail.toFixed(2)}초">무음 ${tail.toFixed(1)}s</div>`;
+    }
+    const capHtml = silHtml + caps.map((c, k) => {
       const wd = Math.max(8, (c.end - c.start) * pps - 2);
       const sec = c.end - c.start;
       return `<div class="tl-cap" data-k="${k}"
