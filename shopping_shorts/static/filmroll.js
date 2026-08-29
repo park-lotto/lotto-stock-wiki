@@ -206,14 +206,8 @@
     }
 
     function seekRaw(v, t) {
-      return new Promise(r => {
-        let done = false;
-        const k = () => { if (done) return; done = true; v.removeEventListener('seeked', k); r(); };
-        v.addEventListener('seeked', k);
-        try { v.currentTime = Math.min(Math.max(0, t), Math.max(0, (v.duration || DUR) - 0.04)); }
-        catch (_) { done = true; r(); return; }
-        setTimeout(k, 800);
-      });
+      // 공용 seekSettled 하나로(0순위-B) — 스크럽은 반환값을 안 쓰고, 캡처는 쓴다.
+      return seekSettled(v, t, DUR);
     }
 
     /* 스크러빙 — 끄는 동안 미리보기가 따라온다. 마지막 요청만 처리한다. */
@@ -738,7 +732,7 @@
     /* ── 보이는 칸만 그림 채우기 ─────────────────────────────
        필름은 원본 전체를 그리지만 **화면에 든 칸만** 실제로 캡처한다.
        스크롤·확대 때마다 다시 부르면 그때 필요한 것만 뽑힌다(캐시는 그대로 쓴다). */
-    let _shotVid = null, _filling = false, _fillWant = false;
+    let _shotVid = null, _filling = false, _fillWant = false, _fillRetry = 0;
     async function fillVisible() {
       // ★도는 중에 온 요청을 **기억한다**(2026-08-29 사장님 "칸이 검게 빈다").
       //   칸마다 영상을 seek해 캡처하므로 한 번 도는 데 오래 걸린다. 그 사이
@@ -763,17 +757,25 @@
           const key = ckey(STEP, i);
           let d = CACHE[key];
           if (!d) {
-            await seekRaw(_shotVid, t);
+            const ok = await seekRaw(_shotVid, t);
             if (destroyed || my !== _stripSeq) break;
-            try { x.drawImage(_shotVid, 0, 0, cv.width, cv.height); d = cv.toDataURL('image/jpeg', 0.6); CACHE[key] = d; }
-            catch (_) { d = ''; }
+            // ★시크가 진짜 끝난 것만 캐시(사장님 "필름이 검게 나온다") — 타임아웃 캡처는
+            //   검정인데, 캐시에 박히면 영영 검정이라 캐시 없이 두고 다음 패스가 다시 뽑는다.
+            if (ok) {
+              try { x.drawImage(_shotVid, 0, 0, cv.width, cv.height); d = cv.toDataURL('image/jpeg', 0.6); CACHE[key] = d; }
+              catch (_) { d = ''; }
+            } else { _fillWant = true; }
           }
-          if (d) c.insertAdjacentHTML('afterbegin', `<img src="${d}">`);
+          if (d) { c.insertAdjacentHTML('afterbegin', `<img src="${d}">`); _fillRetry = 0; }
         }
       } finally {
         _filling = false;
-        // 도는 동안 화면이 바뀌었으면 그 자리를 다시 채운다(놓친 요청을 갚는다).
-        if (_fillWant && !destroyed) { _fillWant = false; setTimeout(fillVisible, 0); }
+        // 도는 동안 화면이 바뀌었거나 실패 칸이 남았으면 다시 채운다(놓친 요청을 갚는다).
+        // 실패만 반복되면 400ms 간격 최대 20패스에서 멈춘다(성공이 하나라도 나오면 리셋).
+        if (_fillWant && !destroyed && _fillRetry < 20) {
+          _fillWant = false; _fillRetry++;
+          setTimeout(fillVisible, _fillRetry > 1 ? 400 : 0);
+        }
       }
     }
 
@@ -1133,6 +1135,35 @@
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
+  // ── 시크가 '진짜 끝났는지'까지 확인하는 공용 시크(2026-08-29 사장님 "필름이 검게 나온다") ──
+  // 검정 칸의 원인: 예전 시크는 800ms 타임아웃이면 프레임이 아직 없어도 그냥 진행했고,
+  // 그 검정 캡처가 캐시에 박혀 스크롤·확대에도 계속 검정이 나왔다(앞쪽 칸이 특히 —
+  // 채우기가 앞에서부터 도는데 그때가 버퍼링이 가장 덜 된 시점이라).
+  // 반환: true = seeked가 실제로 왔고 readyState≥2(프레임 있음) → 캡처·캐시해도 된다.
+  //       false = 타임아웃·미로딩 → **캐시하지 마라**(다음 패스가 다시 시도하게 비워둔다).
+  // ★판정은 휘도 검사 같은 추정이 아니라 브라우저 이벤트로만 한다 — 진짜 검은 장면
+  //   (페이드 등)은 seeked가 정상으로 오므로 억울하게 재시도당하지 않는다.
+  function seekSettled(v, t, dur) {
+    return new Promise(r => {
+      const tgt = Math.min(Math.max(0, t), Math.max(0, (v.duration || dur || 0) - 0.04));
+      if (!v.seeking && v.readyState >= 2 && Math.abs((v.currentTime || 0) - tgt) < 0.02) return r(true);
+      let done = false;
+      const fin = ok => { if (done) return; done = true; v.removeEventListener('seeked', onSeek); r(ok); };
+      const onSeek = () => {
+        if (v.readyState >= 2) return fin(true);
+        const t0 = Date.now();                 // seeked는 왔는데 프레임 데이터가 아직 — 잠깐만 더
+        (function wait() {
+          if (v.readyState >= 2) return fin(true);
+          if (Date.now() - t0 > 700) return fin(false);
+          setTimeout(wait, 40);
+        })();
+      };
+      v.addEventListener('seeked', onSeek);
+      try { v.currentTime = tgt; } catch (_) { return fin(false); }
+      setTimeout(() => fin(false), 1500);      // 영영 안 오는 파일 대비(실패로 판정)
+    });
+  }
+
   // ── 구간 프레임 추출(2026-08-29, 칸 타임라인 ④) ──────────────────────────
   // 타임라인 컷 블록을 '필름식'으로 펼칠 때 쓴다 — 구간 [a,b]를 n장으로.
   // 시크·캡처 원리는 위 fillVisible과 같다(같은 브라우저 검증을 통과한 방식).
@@ -1160,19 +1191,18 @@
     cv.width = 96; cv.height = 170;                       // 9:16 소형 — 펼침용이라 충분
     const x = cv.getContext('2d');
     const out = [];
+    let miss = false;
     for (let k = 0; k < n; k++) {
       const t = (+a) + ((+b) - (+a)) * (k + 0.5) / n;     // 칸 한가운데(위 strip과 같은 규칙)
-      await new Promise(r => {
-        let done = false;
-        const fin = () => { if (done) return; done = true; v.removeEventListener('seeked', fin); r(); };
-        v.addEventListener('seeked', fin);
-        try { v.currentTime = Math.max(0, t); } catch (e) { fin(); }
-        setTimeout(fin, 800);                              // 시크가 영영 안 오는 파일 대비
-      });
-      try { x.drawImage(v, 0, 0, cv.width, cv.height); out.push(cv.toDataURL('image/jpeg', 0.6)); }
-      catch (e) { out.push(''); }                          // tainted 등 — 빈 칸으로 두고 계속
+      let ok = await seekSettled(v, t, v.duration);
+      if (!ok) ok = await seekSettled(v, t, v.duration);   // 첫 로딩 직후 한 번은 흔히 늦는다
+      if (ok) {
+        try { x.drawImage(v, 0, 0, cv.width, cv.height); out.push(cv.toDataURL('image/jpeg', 0.6)); }
+        catch (e) { out.push(''); }                        // tainted 등 — 빈 칸으로 두고 계속
+      } else { out.push(''); miss = true; }                // 검정 캡처 대신 빈 칸
     }
-    FRAME_CACHE[key] = out;
+    // ★실패 칸이 있으면 캐시하지 않는다(사장님 "필름이 검게 나온다") — 다음 펼침이 다시 뽑는다.
+    if (!miss) FRAME_CACHE[key] = out;
     return out;
   }
 
