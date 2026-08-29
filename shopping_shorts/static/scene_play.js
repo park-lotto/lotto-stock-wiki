@@ -53,8 +53,12 @@ if (typeof document !== 'undefined' && document.documentElement){
         + '.pvgrip:hover,.pvgrip.on{background:rgba(74,193,255,.35)}';
       document.head.appendChild(st);
     }
-    if (!el.style.position && getComputedStyle(el).position === 'static') el.style.position = 'relative';
+    // ★getComputedStyle은 Node 슬라이스 하네스에 없다(★슬라이스하네스 함정) — typeof 가드
+    if (!el.style.position && (typeof getComputedStyle !== 'function'
+        || getComputedStyle(el).position === 'static')) el.style.position = 'relative';
     const g = document.createElement('div');
+    // 비브라우저(테스트 스텁 DOM)면 조작 UI는 생략 — 여긴 편의 기능일 뿐이다
+    if (typeof g.addEventListener !== 'function') return;
     g.className = 'pvgrip'; g.title = '끌어서 미리보기 크기 조절';
     el.appendChild(g); el._pvGrip = g;
     let sx = 0, w0 = 0, on = false;
