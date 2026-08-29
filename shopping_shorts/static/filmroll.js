@@ -463,8 +463,30 @@
       const el = host.querySelector('.frlen');
       if (el) BOXLEN = Math.max(0.1, parseFloat(el.value) || BOXLEN);
       const n = BOXLEN;
-      const a = Math.max(0, Math.min(DUR - 0.1, headTime()));
+      // ★빨간선이 화면 밖이면 **보이는 왼쪽 끝**에 만든다(2026-08-29). 조각 필름은
+      //   펼치면 그 조각 자리로 스크롤돼 있는데 HEAD_T 초기값은 0이라, 그대로 만들면
+      //   박스가 화면 밖(0초)에 생겨 "＋구간이 안 된다"로 보였다.
+      //   화면에 생겨야 기능이 있는 것이다 — 박스 규칙 자체는 addBox 하나 그대로다.
+      const base = (headEl && headEl.classList.contains('on')) ? headTime() : xToSec(8);
+      const a = Math.max(0, Math.min(DUR - 0.1, base));
       addBox(a, Math.min(DUR, a + n));
+    }
+
+    /* ✂ 지금 쓰는 구간을 그대로 주황 박스로 올린다(2026-08-29 사장님 "훅쪽 짧은 카드를
+       펼치고 끝에 다른 장면으로 이어지는 남는 부분을 잘라내려고").
+       꼬리를 자르려면 쓰는 구간이 손에 잡혀야 한다 — 박스로 올린 뒤 끝을 당기고
+       🔁(이 조각을 이 구간으로)로 확정하면 된다. 펼칠 때 미리 올리진 않는다
+       (08-29 "노란박스 아예없이" 결정 유지) — **누를 때만** 만든다.
+       박스를 만드는 규칙은 addBox 하나다(0순위-B). */
+    function useToBox() {
+      if (opt.from == null || opt.to == null) return;
+      const s = Math.round(Math.max(0, +opt.from) * 100) / 100;
+      const e = Math.round(Math.min(DUR || +opt.to, +opt.to) * 100) / 100;
+      if (!(e - s >= 0.1)) return;
+      const same = b => Math.abs(b.s - s) < 0.01 && Math.abs(b.e - e) < 0.01;
+      if (!BOXES.some(same)) addBox(s, e);          // 이미 있으면 또 안 만든다
+      ACTBOX = BOXES.findIndex(same);
+      drawBoxes(); drawBar();
     }
 
     function drawBar() {
@@ -498,6 +520,10 @@
           : '') +
         `<span class="frmk"><button type="button" class="frbtn mk">＋ 구간</button>` +
         `<input type="number" class="frlen" step="0.1" min="0.1" value="${BOXLEN}"><span class="frhint">초</span></span>` +
+        // ✂ 조각 하나를 펼친 필름에만 나온다(쓰는 구간 + 바꿀 대상이 있어야 하므로
+        //   from/to·onReplace 둘 다 필요 — 영상 통째 필름엔 안 나온다).
+        (opt.from != null && opt.to != null && typeof opt.onReplace === 'function'
+          ? `<button type="button" class="frbtn use" title="지금 쓰는 구간을 주황 박스로 올립니다 — 끝을 당겨 자르고 🔁로 확정">✂ 쓰는 구간 다듬기</button>` : '') +
         (BOXES.length
           ? `<button type="button" class="frbtn" data-act="play">▶ 미리보기에서 듣기</button>` +
             `<button type="button" class="frbtn ok">⬆ 담기 (${BOXES.length}개 · ${total.toFixed(2)}초)</button>` +
@@ -508,6 +534,7 @@
             `<button type="button" class="frbtn" data-act="clr">비우기</button>`
           : '');
       const mk = barEl.querySelector('.mk'); if (mk) mk.onclick = makeBox;
+      const use = barEl.querySelector('.use'); if (use) use.onclick = useToBox;
       const len = barEl.querySelector('.frlen');
       if (len) len.oninput = () => { const v = parseFloat(len.value); if (v > 0) BOXLEN = v; };
       const ok = barEl.querySelector('.ok');
