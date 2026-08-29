@@ -365,10 +365,15 @@
   };
 
   /* 마운트 — renderBand()가 innerHTML을 갈아끼운 직후 부른다. */
+  // 모든 칸에 타임라인(2026-08-29 사장님 "옆에도 다 타임스탬프 만들고 꽉 채워줘" —
+  // 종전엔 선택 칸 하나만). 칸마다 자기 rAF·자기 재생선이라 서로 안 밟는다.
+  const RAFS = [];
   g.tlMount = function () {
     cancelAnimationFrame(RAF);
-    const host = document.querySelector('.tl-host');
-    if (!host) return;
+    while (RAFS.length) cancelAnimationFrame(RAFS.pop());
+    document.querySelectorAll('.tl-host').forEach(h => { try { _mountOne(h); } catch (e) { console.error('[tl]', e); } });
+  };
+  function _mountOne(host) {
     const i = +host.dataset.i;
     if (!isFinite(i)) return;
     const w = host.clientWidth || 900;
@@ -416,7 +421,14 @@
         head.style.left = (52 + t * pps) + 'px';
         head.classList.add('on');
         const now = performance.now();
-        if (now - lastSeek > 150) { lastSeek = now; try { seekTo(t); } catch (_) {} }
+        if (now - lastSeek > 150) {
+          lastSeek = now;
+          try { seekTo(t); } catch (_) {}
+          // ★멈춘 채 옮길 땐 seekTo가 자막 갱신(tickSub)을 건너뛴다(재생 분기에만 있음) —
+          //   미리보기 자막도 그 지점 것으로 한 번 칠한다(2026-08-29 사장님 "이동할 때는
+          //   미리보기에서 자막이 안 바뀐다"). tickSub는 멈춤 상태면 한 번 그리고 스스로 꺼진다.
+          try { if (typeof tickSub === 'function') tickSub(); } catch (_) {}
+        }
         e.stopPropagation();
       });
       const hup = e => {
@@ -431,6 +443,7 @@
             if (typeof seq !== 'undefined' && seq.length) {
               if (!seqPaused) togglePause();
               seekTo(t);
+              try { if (typeof tickSub === 'function') tickSub(); } catch (_) {}
               setTimeout(() => {
                 try {
                   if (t > 0.4 && curT() < 0.2 && tries++ < 8) settle();  // 0으로 되감김 — 다시
@@ -466,8 +479,8 @@
         head.classList.add('on');
         capEls.forEach(el => el.classList.remove('on'));
       }
-      RAF = requestAnimationFrame(tick);
+      RAFS.push(requestAnimationFrame(tick));
     };
-    RAF = requestAnimationFrame(tick);
-  };
+    RAFS.push(requestAnimationFrame(tick));
+  }
 })(window);
