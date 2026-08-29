@@ -35,6 +35,8 @@ if (typeof document !== 'undefined' && document.documentElement){
     document.documentElement.style.setProperty('--shorts-pv-w', w + 'px');
     if (document.body) document.body.style.setProperty('--pv-w', w + 'px');
   };
+  window._pvApply = _pvApply;   // 장면편집의 자동 맞춤(아래 scene_lab)이 같은 함수를 쓴다
+  window._pvManual = () => { try { return parseFloat(localStorage.getItem('pvW')) > 0; } catch (e) { return false; } };
   try {
     const saved = parseFloat(localStorage.getItem('pvW'));
     if (saved >= 280 && saved <= 900) {
