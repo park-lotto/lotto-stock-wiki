@@ -2261,6 +2261,23 @@
       <h3 data-steptitle="sns">10 · SNS 예약 발행</h3>
       <div class="sub">완성한 영상을 인스타·유튜브·틱톡 등에 예약해 올립니다. 올리는 곳은 <b>내 Buffer 계정</b>입니다.</div>
 
+      <!-- ★사용 가이드(2026-08-29 사장님 "고객들한테 사용 가이드 줘야지").
+           처음 오신 분이 무엇부터 해야 하는지 세 줄로. 자세한 건 그림 안내로 보낸다. -->
+      <details style="margin-bottom:12px;border:1px solid var(--line);border-radius:10px;padding:10px 12px">
+        <summary style="cursor:pointer;font-size:14px;font-weight:600">❓ 처음이신가요 — 이렇게 하시면 됩니다</summary>
+        <div style="margin-top:8px;font-size:13px;line-height:1.9">
+          <b>1.</b> <a href="https://buffer.com" target="_blank" rel="noopener" style="color:var(--accent2)">buffer.com</a> 에 무료로 가입합니다. <b>3채널까지 공짜</b>입니다.<br>
+          <b>2.</b> Buffer 안에서 <b>내 인스타·유튜브·틱톡 계정을 연결</b>합니다.<br>
+          <b>3.</b> Buffer 설정의 <b>API</b> 에서 키를 만들어
+                 <a href="/settings#keys" style="color:var(--accent2)">마이페이지 → 🔑 내 키 등록</a> 에 붙여넣습니다.<br>
+          <b>4.</b> 여기로 돌아오시면 <b>내 채널이 목록으로</b> 뜹니다. 고르고 예약하시면 끝입니다.
+          <div class="hint" style="margin-top:8px">
+            <a href="/api_manual.html#buffer" target="_blank" rel="noopener" style="color:var(--accent2)">📖 그림으로 보는 준비 방법</a>
+            &nbsp;·&nbsp; 키는 <b>회사 키로 대신 못 합니다</b> — 내 SNS에 올리는 일이라 내 키가 있어야 합니다.
+          </div>
+        </div>
+      </details>
+
       <div id="bufNeedKey" class="warnBox" style="display:none;margin-bottom:12px">
         먼저 <a href="/settings#keys" style="color:var(--accent2)">마이페이지 → 🔑 내 키 등록</a>에서
         <b>Buffer 키</b>를 넣어 주세요. 이 키는 <b>회사 키로 대신 못 합니다</b> —
@@ -2268,6 +2285,21 @@
       </div>
 
       <div id="bufBody" style="display:none">
+        <!-- ★무엇이 올라가는지 먼저 보여준다(2026-08-29 사장님 "서버에 저장된 걸 우리가
+             어떤 영상을 올릴지 어떻게 설명해야 하나"). 고객은 파일을 어디에 올린 적이
+             없으므로, 지금 이 작업의 완성본이 그대로 나간다는 것을 눈으로 보여줘야 한다. -->
+        <div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:14px;
+                    border:1px solid var(--line);border-radius:12px;padding:12px">
+          <div style="flex:0 0 108px"><div id="bufVideo"></div></div>
+          <div style="flex:1 1 260px;min-width:220px">
+            <div style="font-size:14px;font-weight:600;margin-bottom:4px">📼 올라갈 영상</div>
+            <div class="hint" id="bufVideoName" style="margin-bottom:6px"></div>
+            <div class="hint">이 작업에서 <b>완성한 영상 그대로</b> 올라갑니다.
+              파일을 따로 받아 올리실 필요 없습니다 —
+              <b>정한 시각이 되면 Buffer가 우리 서버에서 직접 가져갑니다.</b></div>
+          </div>
+        </div>
+
         <div class="hint" style="margin-bottom:6px">📡 올릴 곳 (여러 곳 고를 수 있습니다)</div>
         <div id="bufChannels" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px"></div>
 
@@ -2738,6 +2770,14 @@ async function loadBuffer(){
       var sd = await sr.json();
       SEO = (sd && sd.seo) || null;
     } catch(e){ /* 못 가져와도 화면은 뜬다 — 글만 빈다 */ }
+  }
+  /* 올라갈 영상을 보여준다 — 완성본 미리보기와 같은 주소를 쓴다(0순위-B). */
+  var vbox = document.getElementById('bufVideo');
+  if (vbox && MIX_JOB){
+    vbox.innerHTML = '<video src="/api/mix/video/' + encodeURIComponent(MIX_JOB) + '" '
+      + 'style="width:100%;border-radius:8px;background:#000" muted playsinline preload="metadata"></video>';
+    var nm = document.getElementById('bufVideoName');
+    if (nm) nm.innerHTML = '작업 <b>' + esc(MIX_JOB) + '</b> 의 완성본';
   }
   var hint = document.getElementById('bufTextHint');
   var got = !!(typeof SEO !== 'undefined' && SEO && (SEO.title || SEO.description));

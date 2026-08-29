@@ -81,18 +81,41 @@ def probe(key: str) -> bool:
         return False
 
 
+def organizations(key: str) -> list[str]:
+    """이 키가 속한 조직 id 목록.
+
+    ★channels는 **organizationId가 필수**다(문서 examples/get-channels).
+      인자 없이 부르면 에러가 난다 — 조직을 먼저 얻어야 한다.
+    """
+    d = _call(key, "{ account { organizations { id } } }")
+    orgs = ((d.get("account") or {}).get("organizations") or [])
+    return [o["id"] for o in orgs if (o or {}).get("id")]
+
+
 def channels(key: str) -> list[dict]:
     """이 키로 발행할 수 있는 채널 목록 → [{id, service, name}]
 
     고객이 어디에 올릴지 고르게 하려면 이게 있어야 한다.
+    ★조직이 여러 개일 수 있다 — 전부 합쳐서 준다(하나만 보면 어떤 고객은
+      자기 채널이 통째로 안 보인다).
     """
-    d = _call(key, "{ channels { id service name avatar } }")
-    out = []
-    for c in (d.get("channels") or []):
-        if not (c or {}).get("id"):
-            continue
-        out.append({"id": c["id"], "service": c.get("service") or "",
-                    "name": c.get("name") or "", "avatar": c.get("avatar") or ""})
+    q = """query($org: String!) {
+      channels(input: { organizationId: $org }) {
+        id name displayName service avatar isQueuePaused
+      }
+    }"""
+    out, seen = [], set()
+    for org in organizations(key):
+        d = _call(key, q, {"org": org})
+        for c in (d.get("channels") or []):
+            cid = (c or {}).get("id")
+            if not cid or cid in seen:
+                continue
+            seen.add(cid)
+            out.append({"id": cid, "service": c.get("service") or "",
+                        "name": c.get("displayName") or c.get("name") or "",
+                        "avatar": c.get("avatar") or "",
+                        "paused": bool(c.get("isQueuePaused"))})
     return out
 
 
