@@ -283,8 +283,7 @@ _CAP_LEAD = {"여러분", "여러분,", "자"}
 # 장소조사 "-에서/-께서"와 어미 "-아서/-어서"가 섞여 오탐이 잦아 제외한다. 또 이
 # 끊기는 앞 절이 충분히 길 때(_CAP_LEAD_MINCHARS↑)만 적용해 "밭에서"(짧음)는 안 끊는다.
 _CAP_LEAD_SUFFIX = ("면", "면서", "니까", "는데", "지만", "거든", "잖아",
-                    "려", "려고",   # 2026-08-29 B규칙: "꾸미려 | 이것저것…"도 한 박자
-                    "만")           # 보조사 '만' 뒤도 숨 자리("고수들만 | 안다는…") — 2차
+                    "려", "려고")   # 2026-08-29 B규칙: "꾸미려 | 이것저것…"도 한 박자
 _CAP_LEAD_MINCHARS = 4  # 연결어미 끊기 최소 글자수(공백 제외). 이보다 짧으면 이어붙임.
 # 시간/빈도 도입 부사(아침마다·날마다·집집마다)는 자기 뒤에서 끊어 한 박자를 연다 →
 # 뒤에 오는 '수식어+명사'가 3어절 하드캡에 밀려 쪼개지지 않는다("빵 달라는 아이"가 온전히
@@ -986,8 +985,29 @@ def _caption_segments(narration, preset=None):
         explicit = head_break or lead_break or sent_break
         lengthy = (not room or not under_cap) and not tail_hold
         if not strong_prev and not bound_pull and (explicit or lengthy):
-            out.append(" ".join(cur))
-            cur = [w]
+            # ★넘쳐서 끊을 땐 **명사구 한가운데**가 아니라 닫힌 어절(조사·어미로 끝난 곳)
+            #   까지 되짚어 끊는다(2026-08-29 사장님 "인테리어 고수들만 안다는 | 비밀
+            #   테이블이 있어요 — 이게 맞는 거 아니야?"). 종전엔 넘친 그 자리에서 뚝 끊어
+            #   "…안다는 비밀 | 테이블이"처럼 짝을 갈랐다. 명시적 신호(어미·머리단어·문장)로
+            #   끊을 땐 이미 좋은 자리라 되짚지 않는다.
+            if lengthy and not explicit and len(cur) >= 3:
+                _closed = ("는", "은", "이", "가", "을", "를", "도", "에", "로",
+                           "고", "서", "면", "요", "죠", "만", "데", "와", "과", "랑")
+                for _j in range(len(cur) - 2, 0, -1):
+                    _wj = _strip_punct(cur[_j])
+                    if _wj.endswith(_closed) and len("".join(cur[:_j + 1])) >= 4:
+                        out.append(" ".join(cur[:_j + 1]))
+                        cur = cur[_j + 1:] + [w]
+                        break
+                else:
+                    out.append(" ".join(cur))
+                    cur = [w]
+                if cur and cur[-1] is w and len(cur) > 1:
+                    continue          # 룩백으로 나눴다 — w는 이미 cur에 실렸다
+                # (룩백 실패 시 아래 기본 경로가 이미 처리됨)
+            else:
+                out.append(" ".join(cur))
+                cur = [w]
         else:
             cur.append(w)
     if cur:
