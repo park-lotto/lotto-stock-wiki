@@ -122,9 +122,11 @@
       ${capLane}
       <div class="tl-lane tl-auds"><span class="tl-name">음성</span>${audHtml}</div>
       ${editBtn}
-      <div class="tl-head"></div>
+      <div class="tl-head"><span class="tl-hgrip" title="잡고 끌어서 재생 위치 이동">≡</span></div>
     </div>`;
   }
+
+  const TL_POS = {};               // beat_idx → 재생선이 마지막으로 선 시각(초)
 
   // ── ⑧ 고정길이 박스 교체 ─────────────────────────────────────────────
   // 컷의 🔁를 누르면 그 컷 길이로 잠긴 박스가 **아래 소스 필름 어디를 펼치든** 떠 있고,
@@ -328,19 +330,69 @@
     const capEls = [...host.querySelectorAll('.tl-cap')];
     const caps = capsOf(i);
     wireEdges(host, i, pps);               // 컷 가장자리 드래그(길이 조절)
+    // ── 재생선 손잡이(2026-08-29 사장님 "가운데 잡고 재생위치 옮길수있게") ─────────
+    //    이동은 기존 seekTo 하나로(0순위-B — 진행바(#seek)와 같은 길: 컷·음성·타이머
+    //    정렬을 그 함수가 다 한다). 끄는 동안은 진행바처럼 **일시정지**.
+    let hdrag = false;
+    const hgrip = head.querySelector('.tl-hgrip');
+    if (hgrip) {
+      const laneX = () => host.querySelector('.tl-lane').getBoundingClientRect().left;
+      let lastSeek = 0;
+      hgrip.addEventListener('pointerdown', e => {
+        e.stopPropagation(); e.preventDefault();
+        hdrag = true;
+        try { hgrip.setPointerCapture(e.pointerId); } catch (_) {}
+        // 이 칸 재생이 아직 안 올라와 있으면 올린다(그래야 seek할 대상이 있다).
+        if (typeof playKey === 'undefined' || playKey !== 'beat:' + i) {
+          try { playBeat(i); } catch (_) {}
+        }
+        // 진행바와 같은 규칙: 잡는 순간 일시정지(끌면서 소리가 튀지 않게)
+        try { if (!seqPaused && seq.length) togglePause(); } catch (_) {}
+      });
+      hgrip.addEventListener('pointermove', e => {
+        if (!hdrag) return;
+        const dur = _dur(i);
+        const t = Math.max(0, Math.min(dur - 0.05, (e.clientX - laneX()) / pps));
+        TL_POS[i] = t;
+        head.style.left = (52 + t * pps) + 'px';
+        head.classList.add('on');
+        const now = performance.now();
+        if (now - lastSeek > 150) { lastSeek = now; try { seekTo(t); } catch (_) {} }
+        e.stopPropagation();
+      });
+      const hup = e => {
+        if (!hdrag) return;
+        hdrag = false;
+        const t = TL_POS[i];
+        // startSeq가 아직 세팅 중이면 seq가 비어 seekTo가 무시된다 — 잠깐 되풀이해 안착시킨다.
+        let tries = 0;
+        const settle = () => {
+          try { if (typeof seq !== 'undefined' && seq.length) { seekTo(t); return; } } catch (_) {}
+          if (tries++ < 10) setTimeout(settle, 150);
+        };
+        settle();
+        e.stopPropagation();
+      };
+      hgrip.addEventListener('pointerup', hup);
+      hgrip.addEventListener('pointercancel', hup);
+    }
     const tick = () => {
       if (!document.body.contains(host)) return;        // 다시 그려짐 — 다음 mount가 잇는다
       const playing = (typeof playKey !== 'undefined') && playKey === 'beat:' + i;
-      if (playing) {
+      if (playing && !hdrag) {
         const t = curT();
+        TL_POS[i] = t;
         head.style.left = (52 + t * pps) + 'px';
         head.classList.add('on');
         for (let k = 0; k < capEls.length; k++) {
           const c = caps[k];
           capEls[k].classList.toggle('on', !!c && t >= c.start - 1e-3 && t < c.end);
         }
-      } else {
-        head.classList.remove('on');
+      } else if (!hdrag) {
+        // 재생 전에도 손잡이는 보인다(잡을 수 있어야 하니까) — 마지막 자리 또는 첫말 앞.
+        const t = TL_POS[i] != null ? TL_POS[i] : ((caps[0] && caps[0].start) || 0);
+        head.style.left = (52 + t * pps) + 'px';
+        head.classList.add('on');
         capEls.forEach(el => el.classList.remove('on'));
       }
       RAF = requestAnimationFrame(tick);
