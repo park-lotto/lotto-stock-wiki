@@ -17,41 +17,105 @@
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--txt);
        font-family:'IBM Plex Sans KR','Malgun Gothic',system-ui,sans-serif}
-  .wrap{max-width:720px;margin:0 auto;padding:24px 16px 60px}
+  .wrap{max-width:760px;margin:0 auto;padding:24px 16px 60px}
   h1{font-size:22px;margin:0 0 4px}
   .sub{color:var(--sub);font-size:14px;margin-bottom:20px}
+
+  /* ── 상단 요약 ── */
   .today{display:flex;align-items:baseline;gap:10px;background:var(--panel);
-         border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:18px}
+         border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:14px}
   /* ★큰 숫자는 '오늘 N' 하나뿐이다. .today b 처럼 자손 전체에 걸면 오른쪽
      '달성한 날 N일'의 <b>까지 38px이 되어 13px 줄 안에서 튀어나오고,
      line-height:1이라 윗줄과 겹친다(2026-08-24 사장님 제보). 첫 칸으로 좁힌다. */
   .today .big{font-size:38px;line-height:1;color:var(--accent)}
   .today .goal{font-size:18px;color:var(--sub)}
   .today .lbl{font-size:13px;color:var(--sub)}
+  .today .streak{font-size:13px;line-height:1.6;color:var(--gold);margin-left:14px}
   .today .done{margin-left:auto;font-size:13px;line-height:1.6;color:var(--sub);text-align:right}
   .today .done b{font-size:15px;color:var(--txt)}
+
+  /* ── 제출칸 ── */
   .box{display:flex;gap:8px;margin-bottom:8px}
   .box input{flex:1;min-width:0;padding:13px 14px;font-size:15px;border-radius:10px;
              border:1px solid var(--line);background:var(--inset);color:inherit}
   .box button{padding:13px 22px;font-size:15px;font-weight:700;border:0;border-radius:10px;
               background:var(--accent2);color:#fff;cursor:pointer}
   .box button:disabled{opacity:.5;cursor:default}
-  .msg{min-height:20px;font-size:14px;margin-bottom:22px}
+  .msg{min-height:20px;font-size:14px;margin-bottom:14px}
   .msg.ok{color:var(--accent)} .msg.no{color:var(--fire)}
-  .day{margin:22px 0 10px;font-size:13px;color:var(--sub);
-       border-top:1px solid var(--line);padding-top:12px}
-  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
-  .card{background:var(--panel);border:1px solid var(--line);
-        border-radius:12px;overflow:hidden;display:flex;flex-direction:column;
-        text-decoration:none;color:inherit}
-  .card .th{aspect-ratio:var(--shorts-ar);background:var(--inset);display:block;
-            object-fit:cover;width:100%}
-  .card .no-th{aspect-ratio:var(--shorts-ar);display:flex;align-items:center;
-               justify-content:center;color:var(--sub);font-size:26px;background:var(--inset)}
-  .card .t{font-size:12px;padding:8px 9px;line-height:1.4;
+
+  /* ── 탭 ── */
+  .tabs{display:flex;gap:6px;margin-bottom:14px}
+  .tabs button{padding:8px 16px;font-size:14px;border-radius:9px;cursor:pointer;
+               border:1px solid var(--line);background:var(--panel);color:var(--sub)}
+  .tabs button.on{background:var(--accent2);border-color:var(--accent2);color:#fff;font-weight:700}
+
+  /* ── 날짜 한 줄 ── */
+  .drow{border-top:1px solid var(--line);padding:12px 0 14px}
+  .drow.isnow{background:linear-gradient(90deg,var(--hover),transparent);
+              border-radius:0 10px 10px 0}
+  .dhead{display:flex;align-items:center;gap:8px;font-size:13px;
+         color:var(--sub);margin-bottom:8px}
+  .dhead .dname{font-weight:700;color:var(--txt);font-size:14px}
+  .dhead .sat{color:#6ea8ff} .dhead .sun{color:var(--fire)}
+  .dhead .now{font-size:11px;padding:2px 7px;border-radius:20px;
+              background:var(--accent2);color:#fff;font-weight:700}
+  .dhead .st{margin-left:auto;font-size:12px}
+  .st.ok{color:var(--accent)} .st.part{color:var(--gold)} .st.none{color:var(--sub)}
+
+  /* ── 3칸 ──
+     grid-auto-rows:1fr 이 없으면 칸 높이가 계단으로 어긋난다(사장님 정렬 기준). */
+  .slots{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;grid-auto-rows:1fr}
+  @media(max-width:520px){.slots{gap:7px}}
+
+  .slot{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+        overflow:hidden;display:flex;flex-direction:column;min-height:0;position:relative}
+  .slot .th{aspect-ratio:var(--shorts-ar);background:var(--inset);display:block;
+            object-fit:cover;width:100%;cursor:pointer}
+  .slot .no-th{aspect-ratio:var(--shorts-ar);display:flex;align-items:center;
+               justify-content:center;color:var(--sub);font-size:26px;
+               background:var(--inset);cursor:pointer}
+  .slot .t{font-size:12px;padding:7px 8px 0;line-height:1.4;
            display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-  .card .m{font-size:11px;color:var(--sub);padding:0 9px 9px;margin-top:auto}
+  .slot .m{font-size:11px;color:var(--sub);padding:4px 8px 0}
+  .slot .when{font-size:11px;color:var(--sub);padding:4px 8px 8px;margin-top:auto}
+  .slot .when.late{color:var(--gold)}
+  .slot .del{position:absolute;top:6px;right:6px;width:24px;height:24px;border:0;
+             border-radius:50%;background:rgba(0,0,0,.62);color:#fff;font-size:13px;
+             line-height:1;cursor:pointer;opacity:0;transition:opacity .15s}
+  .slot:hover .del,.slot:focus-within .del{opacity:1}
+  @media(hover:none){.slot .del{opacity:1}}   /* 모바일엔 hover가 없다 — 늘 보인다 */
+
+  /* ── 빈칸 ── */
+  .empty-slot{background:transparent;border:1.5px dashed var(--line);border-radius:12px;
+              display:flex;flex-direction:column;align-items:center;justify-content:center;
+              gap:5px;color:var(--sub);font-size:12px;cursor:pointer;min-height:0;
+              aspect-ratio:var(--shorts-ar);width:100%;padding:0;font-family:inherit}
+  .empty-slot:hover{border-color:var(--accent2);color:var(--accent)}
+  .empty-slot .plus{font-size:22px;line-height:1}
+  .empty-slot.bonus{opacity:.5}
+  .empty-slot:disabled{cursor:default;opacity:.28}
+  .empty-slot:disabled:hover{border-color:var(--line);color:var(--sub)}
+
+  /* ── 빈칸을 눌렀을 때 그 자리에서 열리는 입력 ── */
+  .inline{grid-column:1/-1;display:flex;gap:8px;padding:2px 0 0}
+  .inline input{flex:1;min-width:0;padding:10px 12px;font-size:14px;border-radius:9px;
+                border:1px solid var(--accent2);background:var(--inset);color:inherit}
+  .inline button{padding:10px 16px;font-size:14px;font-weight:700;border:0;border-radius:9px;
+                 background:var(--accent2);color:#fff;cursor:pointer}
+  .inline button.x{background:transparent;color:var(--sub);border:1px solid var(--line)}
+
   .empty{color:var(--sub);font-size:14px;padding:30px 0;text-align:center;line-height:1.7}
+
+  /* ── 재생 모달 ── */
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.86);display:none;
+         align-items:center;justify-content:center;z-index:50;padding:16px}
+  .modal.on{display:flex}
+  .modal .inner{width:min(420px,100%);aspect-ratio:var(--shorts-ar);
+                background:#000;border-radius:14px;overflow:hidden;position:relative}
+  .modal iframe{width:100%;height:100%;border:0}
+  .modal .close{position:absolute;top:-40px;right:0;background:transparent;border:0;
+                color:#fff;font-size:26px;cursor:pointer;line-height:1}
 </style>
 <div class="wrap">
   <h1>🔥 1기 챌린지</h1>
@@ -60,6 +124,7 @@
   <div class="today">
     <div><b class="big" id="todayN">0</b><span class="goal"> / <span id="goalN">2</span></span></div>
     <div class="lbl">오늘</div>
+    <div class="streak" id="streak"></div>
     <div class="done">달성한 날 <b id="doneN">0</b>일<br>총 <span id="totalN">0</span>개</div>
   </div>
 
@@ -70,12 +135,29 @@
   </div>
   <div class="msg" id="msg"></div>
 
+  <div class="tabs" id="tabs" hidden>
+    <button data-tab="cal" class="on">📅 달력</button>
+    <button data-tab="list">📋 목록</button>
+  </div>
+
   <div id="list"><div class="empty">아직 제출한 영상이 없어요</div></div>
 </div>
+
+<div class="modal" id="modal">
+  <div class="inner">
+    <button class="close" id="mClose" aria-label="닫기">✕</button>
+    <iframe id="mFrame" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+  </div>
+</div>
+
 <script>
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g,
   c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+let DATA = null;          // 마지막으로 받은 /api/challenge/mine
+let TAB = 'cal';          // 'cal' | 'list'
+let OPEN_DAY = '';        // 빈칸을 눌러 입력창이 열려 있는 날짜
 
 function say(text, ok) {
   const m = $('#msg');
@@ -83,90 +165,265 @@ function say(text, ok) {
   m.className = 'msg ' + (ok ? 'ok' : 'no');
 }
 
-function cardHtml(it) {
-  // ★썸네일 프록시 파라미터는 ?url= 이다(app.py:5579). ?u=로 쓰면 422.
-  const th = it.thumb
-    ? `<img class="th" src="/api/thumb?url=${encodeURIComponent(it.thumb)}" alt="">`
-    : `<div class="no-th">🎬</div>`;
-  let meta;
-  if (it.fetch_status === 'ok' && (it.views || it.views === 0)) {
-    meta = `조회 ${Number(it.views).toLocaleString()}`;
-  } else if (it.platform === 'tiktok') {
-    meta = '틱톡';
-  } else if (it.fetch_status === 'failed') {
-    meta = '정보 없음';
-  } else {
-    meta = '정보 수집 중';
-  }
-  return `<a class="card" href="${esc(it.url)}" target="_blank" rel="noopener">
-    ${th}
-    <div class="t">${esc(it.title || it.url)}</div>
-    <div class="m">${esc(meta)}</div>
-  </a>`;
+/* ── 시각 표시 ──────────────────────────────────────────────
+   submitted_at은 UTC ISO(초 단위)다. 한국 시각으로 바꿔 보여준다.
+   ★사장님 지시(2026-08-29): 지난 날짜에 뒤늦게 채워도 **실제 등록 시각은
+   그대로 보인다.** 그래야 '그날 올린 사람'과 '나중에 몰아 채운 사람'이
+   구별된다. 그래서 submit_day(어느 칸)와 submitted_at(언제 눌렀나)을
+   따로 보여주고, 둘이 다르면 ⏰로 갈라 표시한다. */
+function kstParts(iso) {
+  const raw = iso || '';
+  const t = Date.parse(/[zZ]|[+-]\d\d:?\d\d$/.test(raw) ? raw : raw + 'Z');
+  if (!Number.isFinite(t)) return null;
+  const d = new Date(t + 9 * 3600 * 1000);   // KST
+  const p = n => String(n).padStart(2, '0');
+  return {
+    day: d.getUTCFullYear() + '-' + p(d.getUTCMonth() + 1) + '-' + p(d.getUTCDate()),
+    md: p(d.getUTCMonth() + 1) + '-' + p(d.getUTCDate()),
+    hm: p(d.getUTCHours()) + ':' + p(d.getUTCMinutes()),
+    full: d.getUTCFullYear() + '-' + p(d.getUTCMonth() + 1) + '-' + p(d.getUTCDate())
+        + ' ' + p(d.getUTCHours()) + ':' + p(d.getUTCMinutes()) + ':' + p(d.getUTCSeconds())
+  };
 }
 
-function render(d) {
+function whenHtml(it) {
+  const k = kstParts(it.submitted_at);
+  if (!k) return '';
+  // 등록한 날 ≠ 들어간 칸의 날짜 → 늦게 채운 것.
+  const late = k.day !== it.submit_day;
+  return '<div class="when' + (late ? ' late' : '') + '" title="' + esc(k.full) + ' 등록">'
+       + (late ? '⏰ ' : '🕓 ') + k.md + ' ' + k.hm + (late ? ' 등록 (늦게)' : ' 저장')
+       + '</div>';
+}
+
+function metaText(it) {
+  if (it.fetch_status === 'ok' && (it.views || it.views === 0))
+    return '조회 ' + Number(it.views).toLocaleString();
+  if (it.platform === 'tiktok') return '틱톡';
+  if (it.fetch_status === 'failed') return '정보 없음';
+  return '정보 수집 중';
+}
+
+function slotHtml(it) {
+  // ★썸네일 프록시 파라미터는 ?url= 이다(app.py:5579). ?u=로 쓰면 422.
+  const th = it.thumb
+    ? '<img class="th" src="/api/thumb?url=' + encodeURIComponent(it.thumb)
+      + '" alt="" data-play="' + it.id + '">'
+    : '<div class="no-th" data-play="' + it.id + '">🎬</div>';
+  return '<div class="slot">'
+       + '<button class="del" data-del="' + it.id + '" title="지우기" aria-label="지우기">✕</button>'
+       + th
+       + '<div class="t">' + esc(it.title || it.url) + '</div>'
+       + '<div class="m">' + esc(metaText(it)) + '</div>'
+       + whenHtml(it)
+       + '</div>';
+}
+
+function emptySlotHtml(day, bonus, disabled) {
+  return '<button class="empty-slot' + (bonus ? ' bonus' : '') + '"'
+       + ' data-add="' + esc(day) + '"' + (disabled ? ' disabled' : '') + '>'
+       + '<span class="plus">+</span><span>' + (bonus ? '여분' : '추가') + '</span></button>';
+}
+
+const WD = ['일', '월', '화', '수', '목', '금', '토'];
+function dayHead(day, n, goal, isToday) {
+  const d = new Date(day + 'T00:00:00Z');
+  const w = d.getUTCDay();
+  const wc = w === 0 ? 'sun' : (w === 6 ? 'sat' : '');
+  const md = (d.getUTCMonth() + 1) + '월 ' + d.getUTCDate() + '일';
+  let st;
+  if (n >= goal) st = '<span class="st ok">✅ 달성 ' + n + '/' + goal + '</span>';
+  else if (n > 0) st = '<span class="st part">⚠️ ' + n + '/' + goal + '</span>';
+  else st = '<span class="st none">·</span>';
+  return '<div class="dhead">'
+       + '<span class="dname ' + wc + '">' + md + '</span>'
+       + '<span class="' + wc + '">(' + WD[w] + ')</span>'
+       + (isToday ? '<span class="now">오늘</span>' : '')
+       + st + '</div>';
+}
+
+/* 날짜 한 줄 = 머리글 + 3칸(모자라면 빈칸, 넘치면 칸이 늘어난다) */
+function dayRowHtml(day, items, goal, today) {
+  const isToday = day === today;
+  const future = day > today;                 // 아직 오지 않은 날은 못 채운다
+  const cells = items.map(slotHtml);
+  const minSlots = Math.max(goal + 1, 3);     // 목표 2 + 여분 1 = 3칸
+  for (let i = cells.length; i < minSlots; i++)
+    cells.push(emptySlotHtml(day, i >= goal, future));
+  const inline = OPEN_DAY === day
+    ? '<div class="inline">'
+      + '<input id="inlineUrl" type="url" placeholder="' + esc(day) + ' 에 넣을 영상 주소"'
+      + ' autocomplete="off" enterkeyhint="send">'
+      + '<button id="inlineGo">넣기</button>'
+      + '<button class="x" id="inlineX">취소</button></div>'
+    : '';
+  return '<div class="drow' + (isToday ? ' isnow' : '') + '">'
+       + dayHead(day, items.length, goal, isToday)
+       + '<div class="slots">' + cells.join('') + inline + '</div></div>';
+}
+
+function render() {
+  const d = DATA;
+  if (!d) return;
   $('#todayN').textContent = d.today || 0;
   $('#goalN').textContent = d.goal || 2;
   $('#doneN').textContent = d.done_days || 0;
   $('#totalN').textContent = d.total || 0;
+  $('#streak').textContent = d.streak ? '🔥 ' + d.streak + '일 연속' : '';
   if (d.start || d.end) {
-    $('#period').textContent =
-      `하루 ${d.goal || 2}영상 · ${d.start || ''} ~ ${d.end || ''}`;
+    $('#period').textContent = (d.start || '') + ' ~ ' + (d.end || '')
+                             + ' · 하루 ' + (d.goal || 2) + '영상';
   }
   if (!d.is_member) {
+    $('#tabs').hidden = true;
     $('#list').innerHTML = '<div class="empty">1기 챌린지 참가자만 제출할 수 있어요.<br>'
       + '참가 신청은 사장님께 문의해주세요.</div>';
     $('#go').disabled = true;
     $('#url').disabled = true;
     return;
   }
+
   const items = d.items || [];
-  if (!items.length) {
-    $('#list').innerHTML = '<div class="empty">아직 제출한 영상이 없어요</div>';
-    return;
-  }
+  const goal = d.goal || 2;
   const byDay = {};
   items.forEach(i => { (byDay[i.submit_day] = byDay[i.submit_day] || []).push(i); });
-  $('#list').innerHTML = Object.keys(byDay).sort().reverse().map(day =>
-    `<div class="day">${esc(day)} · ${byDay[day].length}개</div>
-     <div class="cards">${byDay[day].map(cardHtml).join('')}</div>`
-  ).join('');
+  // 한 날짜 안에서는 먼저 낸 것이 왼쪽. API는 id DESC로 준다.
+  Object.keys(byDay).forEach(k => byDay[k].sort((x, y) => x.id - y.id));
+
+  // 달력이 그릴 줄: 기간 전체(서버가 준다). 기간 미설정이면 비어서 목록 탭만 쓴다.
+  const days = d.days || [];
+  $('#tabs').hidden = !days.length;
+  if (!days.length) TAB = 'list';
+  const tb = $('#tabs').querySelectorAll('button');
+  for (let i = 0; i < tb.length; i++) tb[i].classList.toggle('on', tb[i].dataset.tab === TAB);
+
+  if (TAB === 'cal') {
+    // 최신 날짜가 위로. 아직 오지 않은 날도 줄은 그리되 빈칸이 잠겨 있다.
+    $('#list').innerHTML = days.slice().reverse()
+      .map(day => dayRowHtml(day, byDay[day] || [], goal, d.day)).join('');
+  } else if (!items.length) {
+    $('#list').innerHTML = '<div class="empty">아직 제출한 영상이 없어요</div>';
+  } else {
+    $('#list').innerHTML = Object.keys(byDay).sort().reverse()
+      .map(day => dayRowHtml(day, byDay[day], goal, d.day)).join('');
+  }
+  if (OPEN_DAY) {
+    const el = $('#inlineUrl');
+    if (el) el.focus();
+  }
 }
 
 async function load() {
   try {
     const r = await fetch('/api/challenge/mine');
     if (!r.ok) { say('불러오지 못했어요 — 로그인 후 다시 열어주세요', false); return; }
-    render(await r.json());
+    DATA = await r.json();
+    render();
   } catch (e) {
     say('불러오지 못했어요 — 새로고침 해주세요', false);
   }
 }
 
-async function submit() {
-  const url = $('#url').value.trim();
-  if (!url) { say('영상 주소를 넣어주세요', false); return; }
-  $('#go').disabled = true;
+/* day를 주면 그 날짜 칸에 넣는다(빈칸 클릭 경로). 안 주면 오늘. */
+async function submit(url, day) {
+  const u = (url || '').trim();
+  if (!u) { say('영상 주소를 넣어주세요', false); return false; }
   say('제출 중…', true);
   try {
-    const r = await fetch('/api/challenge/submit?url=' + encodeURIComponent(url),
-                          { method: 'POST' });
+    let q = '/api/challenge/submit?url=' + encodeURIComponent(u);
+    if (day) q += '&day=' + encodeURIComponent(day);
+    const r = await fetch(q, { method: 'POST' });
     const d = await r.json().catch(() => ({}));
-    if (!r.ok) { say(d.error || '제출하지 못했어요', false); return; }
-    $('#url').value = '';
-    say(`제출 완료! 오늘 ${d.today}개`, true);
+    if (!r.ok) { say(d.error || '제출하지 못했어요', false); return false; }
+    say(d.late ? d.day + ' 칸에 넣었어요 — 등록 시각은 지금으로 남습니다'
+               : '제출 완료! 오늘 ' + d.today + '개', true);
     await load();
     // 수집이 끝나면 썸네일이 채워진다 — 잠깐 뒤 한 번만 다시 읽는다.
     setTimeout(load, 6000);
+    return true;
   } catch (e) {
     say('제출하지 못했어요 — 잠시 후 다시 시도해주세요', false);
-  } finally {
-    $('#go').disabled = false;
+    return false;
   }
 }
 
-$('#go').addEventListener('click', submit);
-$('#url').addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
+async function del(id) {
+  // ★alert/confirm을 쓰지 않는다 — 모달이 화면을 통째로 멈추고 자동화도 죽는다
+  //   (2026-08-25 결정). 지운 뒤 같은 영상을 다시 낼 수 있으니 되돌리기보다 재제출이 빠르다.
+  try {
+    const r = await fetch('/api/challenge/submission/' + encodeURIComponent(id),
+                          { method: 'DELETE' });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) { say(d.error || '지우지 못했어요', false); return; }
+    say('지웠어요 — 같은 영상을 다시 넣을 수 있어요', true);
+    await load();
+  } catch (e) {
+    say('지우지 못했어요 — 잠시 후 다시 시도해주세요', false);
+  }
+}
+
+/* ── 재생 ──────────────────────────────────────────────────
+   임베드 주소를 프론트가 만들지 않는다 — challenge.embed_url 한 곳에서만
+   만든다(플랫폼 판단이 두 벌이 되면 어긋난다, 0순위-B). /mine이 embed를
+   주면 모달로 재생하고, 없으면 원본을 새 탭으로 연다. */
+function play(id) {
+  const items = (DATA && DATA.items) || [];
+  let it = null;
+  for (let i = 0; i < items.length; i++) if (String(items[i].id) === String(id)) it = items[i];
+  if (!it) return;
+  if (it.embed) {
+    $('#mFrame').src = it.embed;
+    $('#modal').classList.add('on');
+  } else {
+    window.open(it.url, '_blank', 'noopener');
+  }
+}
+function closeModal() {
+  $('#modal').classList.remove('on');
+  $('#mFrame').src = '';       // 소리가 계속 나지 않게 반드시 비운다
+}
+
+/* ── 이벤트 (위임 — 목록이 매번 다시 그려진다) ── */
+$('#list').addEventListener('click', e => {
+  const add = e.target.closest('[data-add]');
+  if (add) { OPEN_DAY = (OPEN_DAY === add.dataset.add) ? '' : add.dataset.add; render(); return; }
+  const dl = e.target.closest('[data-del]');
+  if (dl) { del(dl.dataset.del); return; }
+  const p = e.target.closest('[data-play]');
+  if (p) { play(p.dataset.play); return; }
+  if (e.target.id === 'inlineX') { OPEN_DAY = ''; render(); return; }
+  if (e.target.id === 'inlineGo') {
+    const day = OPEN_DAY;
+    submit($('#inlineUrl').value, day).then(ok => { if (ok) { OPEN_DAY = ''; render(); } });
+  }
+});
+$('#list').addEventListener('keydown', e => {
+  if (e.target.id === 'inlineUrl' && e.key === 'Enter') {
+    const day = OPEN_DAY;
+    submit(e.target.value, day).then(ok => { if (ok) { OPEN_DAY = ''; render(); } });
+  }
+});
+$('#tabs').addEventListener('click', e => {
+  const b = e.target.closest('[data-tab]');
+  if (!b) return;
+  TAB = b.dataset.tab;
+  OPEN_DAY = '';
+  render();
+});
+$('#go').addEventListener('click', () => {
+  $('#go').disabled = true;
+  submit($('#url').value).then(ok => {
+    if (ok) $('#url').value = '';
+    $('#go').disabled = false;
+  });
+});
+$('#url').addEventListener('keydown', e => { if (e.key === 'Enter') $('#go').click(); });
+$('#mClose').addEventListener('click', closeModal);
+$('#modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  if ($('#modal').classList.contains('on')) closeModal();
+  else if (OPEN_DAY) { OPEN_DAY = ''; render(); }
+});
 load();
 </script>
