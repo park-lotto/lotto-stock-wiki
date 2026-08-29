@@ -132,13 +132,25 @@
   //    그 지점부터 듣고 멈추며 자막과 비교하는 흐름). 재생·정지·이어서는 전부 기존 경로
   //    (playBeat가 토글까지 겸한다 / 미리보기 류는 togglePause)라 새 재생 규칙이 없다.
   //    ★필름롤이 펼쳐져 있으면 스페이스는 필름롤 몫이다(filmroll onKey) — 건드리지 않는다.
+  // ★스페이스 주인은 '마지막으로 만진 구역'이 정한다(2026-08-29 사장님 "훅에서 작업이면
+  //   거기서만 스페이스로 재생 정지"). 필름이 상시 펼쳐진 뒤로 "열려 있으면 필름 몫"
+  //   규칙이 늘 필름을 재생시켰다. 칸을 만졌으면 칸이 주인 — 필름 핸들러(문서 리스너,
+  //   우리보다 늦게 등록됨)는 stopImmediatePropagation으로 차단한다.
+  let LAST_ZONE = 'beat';
+  document.addEventListener('pointerdown', e => {
+    const t = e.target;
+    if (!t || !t.closest) return;
+    if (t.closest('.frwin,.frslot')) LAST_ZONE = 'film';
+    else if (t.closest('.tbeat,.tl-host,.tlwrap')) LAST_ZONE = 'beat';
+  }, true);
   document.addEventListener('keydown', e => {
     if (e.code !== 'Space') return;
     const tag = (e.target && e.target.tagName || '').toLowerCase();
     if (tag === 'input' || tag === 'textarea' || (e.target && e.target.isContentEditable)) return;
-    if (document.querySelector('.frwin')) return;      // 필름이 열려 있다 — 필름롤이 받는다
+    if (LAST_ZONE === 'film' && document.querySelector('.frwin')) return;   // 필름이 주인
     if (typeof playBeat !== 'function') return;
     e.preventDefault();
+    e.stopImmediatePropagation();   // 필름롤 스페이스(같은 문서 리스너)가 겹재생하지 않게
     if (typeof playKey !== 'undefined' && playKey && String(playKey).indexOf('beat:') === 0) {
       playBeat(+String(playKey).split(':')[1]);        // 재생 중이면 일시정지/재개 토글
     } else if (typeof seq !== 'undefined' && seq.length && typeof togglePause === 'function'
@@ -365,10 +377,15 @@
   };
 
   /* 마운트 — renderBand()가 innerHTML을 갈아끼운 직후 부른다. */
+  // 모든 칸에 타임라인(2026-08-29 사장님 "옆에도 다 타임스탬프 만들고 꽉 채워줘" —
+  // 종전엔 선택 칸 하나만). 칸마다 자기 rAF·자기 재생선이라 서로 안 밟는다.
+  const RAFS = [];
   g.tlMount = function () {
     cancelAnimationFrame(RAF);
-    const host = document.querySelector('.tl-host');
-    if (!host) return;
+    while (RAFS.length) cancelAnimationFrame(RAFS.pop());
+    document.querySelectorAll('.tl-host').forEach(h => { try { _mountOne(h); } catch (e) { console.error('[tl]', e); } });
+  };
+  function _mountOne(host) {
     const i = +host.dataset.i;
     if (!isFinite(i)) return;
     const w = host.clientWidth || 900;
@@ -395,8 +412,18 @@
         if (typeof playKey === 'undefined' || playKey !== 'beat:' + i) {
           try { playBeat(i); } catch (_) {}
         }
-        // 진행바와 같은 규칙: 잡는 순간 일시정지(끌면서 소리가 튀지 않게)
-        try { if (!seqPaused && seq.length) togglePause(); } catch (_) {}
+        // ★일시정지는 seq가 **뜬 뒤에** 걸어야 한다(2026-08-29 사장님 "놓으면 맨 앞으로
+        //   튕김"). startSeq가 비동기라 잡는 순간엔 seq가 비어 togglePause가 조용히
+        //   무시됐고, 재생이 0초부터 시작돼 놓을 때 오디오 시계 0초가 이겼다.
+        //   뜰 때까지 되풀이해 멈춘다 — 멈추면 이후 seek이 '자리만 옮김'으로 안전하다.
+        let _pt = 0;
+        const ensurePause = () => {
+          try {
+            if (seq.length) { if (!seqPaused) togglePause(); return; }
+          } catch (_) { return; }
+          if (_pt++ < 30) setTimeout(ensurePause, 100);
+        };
+        ensurePause();
       });
       hgrip.addEventListener('pointermove', e => {
         if (!hdrag) return;
@@ -406,18 +433,38 @@
         head.style.left = (52 + t * pps) + 'px';
         head.classList.add('on');
         const now = performance.now();
-        if (now - lastSeek > 150) { lastSeek = now; try { seekTo(t); } catch (_) {} }
+        if (now - lastSeek > 150) {
+          lastSeek = now;
+          try { seekTo(t); } catch (_) {}
+          // ★멈춘 채 옮길 땐 seekTo가 자막 갱신(tickSub)을 건너뛴다(재생 분기에만 있음) —
+          //   미리보기 자막도 그 지점 것으로 한 번 칠한다(2026-08-29 사장님 "이동할 때는
+          //   미리보기에서 자막이 안 바뀐다"). tickSub는 멈춤 상태면 한 번 그리고 스스로 꺼진다.
+          try { if (typeof tickSub === 'function') tickSub(); } catch (_) {}
+        }
         e.stopPropagation();
       });
       const hup = e => {
         if (!hdrag) return;
         hdrag = false;
         const t = TL_POS[i];
-        // startSeq가 아직 세팅 중이면 seq가 비어 seekTo가 무시된다 — 잠깐 되풀이해 안착시킨다.
+        // seq가 뜨고 + 멈춘 상태가 된 뒤에 시크하고, 안착까지 확인한다(오디오가 늦게
+        // 준비되면 시계가 0초로 되감아 "맨 앞으로 튕김"이 됐다 — 안착 실패 시 재시도).
         let tries = 0;
         const settle = () => {
-          try { if (typeof seq !== 'undefined' && seq.length) { seekTo(t); return; } } catch (_) {}
-          if (tries++ < 10) setTimeout(settle, 150);
+          try {
+            if (typeof seq !== 'undefined' && seq.length) {
+              if (!seqPaused) togglePause();
+              seekTo(t);
+              try { if (typeof tickSub === 'function') tickSub(); } catch (_) {}
+              setTimeout(() => {
+                try {
+                  if (t > 0.4 && curT() < 0.2 && tries++ < 8) settle();  // 0으로 되감김 — 다시
+                } catch (_) {}
+              }, 250);
+              return;
+            }
+          } catch (_) {}
+          if (tries++ < 12) setTimeout(settle, 150);
         };
         settle();
         e.stopPropagation();
@@ -444,8 +491,8 @@
         head.classList.add('on');
         capEls.forEach(el => el.classList.remove('on'));
       }
-      RAF = requestAnimationFrame(tick);
+      RAFS.push(requestAnimationFrame(tick));
     };
-    RAF = requestAnimationFrame(tick);
-  };
+    RAFS.push(requestAnimationFrame(tick));
+  }
 })(window);

@@ -923,8 +923,12 @@ def _caption_segments(narration, preset=None):
         #   가르지 않는다. 명사가 우연히 걸려도(채칼·겨울) 붙는 쪽 오류라 안전하다.
         _jong_l = (lambda w2: bool(w2) and 0xAC00 <= ord(w2[-1]) <= 0xD7A3
                    and (ord(w2[-1]) - 0xAC00) % 28 == 8)
+        # ㄹ받침 견인은 **글자수 여유가 있을 때만**(2026-08-29 2차 — '비밀'(명사)의 ㄹ받침이
+        # '테이블이'를 14자 넘겨 끌어 "…비밀 테이블이 | 있어요"(17자+고아)를 만들었다.
+        # ㄹ받침은 용언 관형형(다칠·쓸)과 명사(비밀·채칼)를 표면으로 못 가른다 → 넘칠 땐 양보).
+        # 어미형(는/된/한…)은 확실한 관형형이라 종전대로 상한을 넘겨서라도 지킨다.
         tail_pull = (prev.endswith(("는", "된", "한", "던", "네", "인"))
-                     or (_jong_l(prev) and not prev.endswith("들")))                     and not cur[-1].endswith((".", "?", "!", "…", ","))
+                     or (_jong_l(prev) and not prev.endswith("들") and room))                     and not cur[-1].endswith((".", "?", "!", "…", ","))
         # 견인의 힘은 둘로 갈린다(2026-08-29 B규칙 실측):
         #  · 머리단어/-의(strong) — 구절 끝에 남으면 안 되는 말: 모든 끊기를 막는다(종전).
         #  · 관형형(tail, "-는/-된/ㄹ받침…") — **글자수 때문에 끊기**만 막는다. 머리단어·
@@ -981,8 +985,29 @@ def _caption_segments(narration, preset=None):
         explicit = head_break or lead_break or sent_break
         lengthy = (not room or not under_cap) and not tail_hold
         if not strong_prev and not bound_pull and (explicit or lengthy):
-            out.append(" ".join(cur))
-            cur = [w]
+            # ★넘쳐서 끊을 땐 **명사구 한가운데**가 아니라 닫힌 어절(조사·어미로 끝난 곳)
+            #   까지 되짚어 끊는다(2026-08-29 사장님 "인테리어 고수들만 안다는 | 비밀
+            #   테이블이 있어요 — 이게 맞는 거 아니야?"). 종전엔 넘친 그 자리에서 뚝 끊어
+            #   "…안다는 비밀 | 테이블이"처럼 짝을 갈랐다. 명시적 신호(어미·머리단어·문장)로
+            #   끊을 땐 이미 좋은 자리라 되짚지 않는다.
+            if lengthy and not explicit and len(cur) >= 3:
+                _closed = ("는", "은", "이", "가", "을", "를", "도", "에", "로",
+                           "고", "서", "면", "요", "죠", "만", "데", "와", "과", "랑")
+                for _j in range(len(cur) - 2, 0, -1):
+                    _wj = _strip_punct(cur[_j])
+                    if _wj.endswith(_closed) and len("".join(cur[:_j + 1])) >= 4:
+                        out.append(" ".join(cur[:_j + 1]))
+                        cur = cur[_j + 1:] + [w]
+                        break
+                else:
+                    out.append(" ".join(cur))
+                    cur = [w]
+                if cur and cur[-1] is w and len(cur) > 1:
+                    continue          # 룩백으로 나눴다 — w는 이미 cur에 실렸다
+                # (룩백 실패 시 아래 기본 경로가 이미 처리됨)
+            else:
+                out.append(" ".join(cur))
+                cur = [w]
         else:
             cur.append(w)
     if cur:

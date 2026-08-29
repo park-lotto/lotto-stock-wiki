@@ -2478,7 +2478,7 @@ function renderBand(){
               : '이 칸의 대사를 AI가 읽고, 그 말이 실제로 보이는 화면을 골라 담습니다'}"
               onclick="autoFill(${i})">${AUTOADD[i] ? `↩ 담은 ${AUTOADD[i].length}장 빼기` : '✨ 채우기'}</button>
           </span></div>
-        ${sel === i ? `<div class="tl-host" data-i="${i}"></div>` : ''}
+        <div class="tl-host" data-i="${i}"></div><!-- 모든 칸에 타임라인(2026-08-29 사장님 "옆에도 다") -->
         <div class="tbcuts">${cuts}${unusedCuts}</div>
         <!-- ★썸네일 아래 대본 — ✏대본수정을 누르면 여기가 편집칸이 된다(2026-08-17 사장님
              "누르면 썸네일아래 대본 수정되게"). 읽기 전용일 때는 종전과 같은 모양이다. -->
