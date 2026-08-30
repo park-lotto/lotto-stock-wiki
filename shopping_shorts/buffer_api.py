@@ -99,7 +99,7 @@ def channels(key: str) -> list[dict]:
     ★조직이 여러 개일 수 있다 — 전부 합쳐서 준다(하나만 보면 어떤 고객은
       자기 채널이 통째로 안 보인다).
     """
-    q = """query($org: String!) {
+    q = """query($org: OrganizationId!) {
       channels(input: { organizationId: $org }) {
         id name displayName service avatar isQueuePaused
       }
