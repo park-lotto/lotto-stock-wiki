@@ -755,6 +755,52 @@
     }
 
     /* ══════════════════════════════════════════════════════════════════════
+       🔍 장면 확대 (2026-08-30 사장님 "장면 확대기능 / 부분확대 / 어떤지점을
+       클릭해서 / 최대한 쉽게 · 캡컷보다 더 쉽게")
+       ★왜 transform:scale인가 — 컨테이너 폭(--pvw)을 키우면 배경만 커지고 글자는
+         안 커진다. 글자 px은 `PREVIEW_W=380` 상수로 계산되는데(12곳) 이 상수는
+         서버 렌더(_UI_REF_W=720)와 짝이라 절대 못 바꾼다(3281행 주석).
+         scale은 자식 전부를 같은 비율로 확대하므로 그 12곳을 한 줄도 안 건드린다.
+       ★드래그 회귀 없음 — 좌표 계산이 전부 pv.getBoundingClientRect() 기준이고,
+         그 값에는 scale이 이미 반영된다(비율(%)이 그대로 맞는다).
+       ★자리(레이아웃)는 안 흔든다 — .zoomStage가 원래 크기를 유지하고 그 안에서만
+         확대된다. sticky(.previewSlot)·우측 편집칸 폭은 한 픽셀도 안 변한다.
+       ══════════════════════════════════════════════════════════════════════ */
+    /* 확대해도 자리를 안 먹도록 원래 크기의 창(window) 역할 — 넘치는 부분은 잘린다 */
+    .zoomStage{position:relative;overflow:hidden;border-radius:12px;touch-action:none}
+    /* 실제로 커지는 건 이 안쪽. transform-origin을 클릭 지점으로 바꿔 그 자리를 확대한다 */
+    .zoomStage > #hcPreview{
+      transform-origin:var(--zox,50%) var(--zoy,50%);
+      transform:scale(var(--zoom,1));
+      transition:transform .18s ease-out;
+    }
+    /* 확대 중엔 배경 어디서든 끌어서 움직일 수 있다는 걸 커서로 알린다 */
+    .zoomStage.zoomed{cursor:grab}
+    .zoomStage.zoomed.grabbing{cursor:grabbing}
+    /* 확대 배율 표시 알약 — 미리보기 위에 겹쳐 띄운다(자리를 안 먹는다) */
+    .zoomBadge{
+      position:absolute;left:8px;top:8px;z-index:9;
+      background:rgba(0,0,0,.62);color:#fff;border-radius:999px;
+      padding:4px 10px;font-size:12px;font-weight:700;pointer-events:none;
+      display:none;
+    }
+    .zoomStage.zoomed .zoomBadge{display:block}
+    /* 확대 조작줄 */
+    .zoomBar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px}
+    .zoomBar .zbtn{
+      min-width:auto;padding:6px 12px;font-size:13px;min-height:36px;
+      border:1px solid var(--line);border-radius:8px;
+      background:var(--inset);color:var(--txt);cursor:pointer;
+    }
+    .zoomBar .zbtn:hover{background:var(--hover)}
+    /* ★min-width는 60px — 이보다 크면 280px 칸(기본 --pvw)에서 ＋가 아랫줄로 밀린다(실측:
+         라벨69+버튼38+슬라이더153+버튼38=298 > 280). 조작줄은 반드시 한 줄이어야 그 아래
+         미리보기가 안 밀린다. */
+    .zoomBar input[type=range]{flex:1 1 60px;min-width:60px;accent-color:var(--accent2)}
+    /* 확대 중에만 나타나는 '원래대로'까지 들어와도 한 줄을 지키게 버튼을 조금 좁힌다 */
+    .zoomBar .zbtn{white-space:nowrap}
+
+    /* ══════════════════════════════════════════════════════════════════════
        6단계(자막꾸미기) 보기 좋게 — 2026-08-29 사장님 "사용자들 편하게 ui를
        보기좋게 잡아보자 / 디자인요소 넣어서"
        ★위 블록(2026-08-19 '크게')과 같은 자리에 이어 쓴다 — 이 패널의 모양을
@@ -1730,7 +1776,7 @@
               공용 [다음 →]이 그 검사를 거쳐야 한다(아래 배선 확인). -->
     </section>
     <section class="panel" data-step="3">
-      <h3 data-steptitle="deco">6 · 자막꾸미기</h3>
+      <h3 data-steptitle="deco">6 · 장면꾸미기</h3>
       <div class="sub">아래 <b>완성 스타일</b>을 고르면 바로 완성돼요. 실제 장면 위에서 미리보고, 더 손보고 싶으면 <b>직접 다듬기</b>를 펼치세요.</div>
       <!-- 🪞 피팅룸: 좌(큰 미러) + 우(문구·스타일카드·강조·고급) -->
       <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start;margin-top:12px">
@@ -1744,9 +1790,31 @@
         <div class="previewSlot decoMirror" style="flex:0 0 auto;width:var(--pvw)">
           <div class="hint" style="margin-bottom:4px">🪞 실시간 미리보기 (9:16) — 글자를 <b>드래그</b>해 위치 이동
             <label style="cursor:pointer;margin-left:6px;color:var(--txt)"><input type="checkbox" id="sceneBg" onchange="toggleSceneBg()"> 실장면 배경</label></div>
+          <!-- 🔍 확대 조작줄 (2026-08-30). 조작은 셋뿐이고 셋 다 같은 결과로 모인다:
+               ①보고 싶은 곳을 그냥 누른다(=그 자리가 2배) ②슬라이더로 배율 ③원래대로.
+               캡컷은 배율 입력·단축키·스페이스드래그로 갈라져 있는데, 여기선 '누르면 커진다'
+               하나로 줄였다 — 사장님 "최대한 쉽게 / 캡컷보다 더 쉽게". -->
+          <div class="zoomBar">
+            <button type="button" class="zbtn" onclick="zoomStep(-1)" title="축소 (Alt+Shift+-)">－</button>
+            <input type="range" id="zoomRange" min="100" max="300" step="10" value="100"
+                   oninput="zoomSet(this.value/100)" title="확대 배율">
+            <button type="button" class="zbtn" onclick="zoomStep(1)" title="확대 (Alt+Shift++)">＋</button>
+            <button type="button" class="zbtn" id="zoomResetBtn" onclick="zoomReset()"
+                    style="display:none" title="원래 크기로 (Alt+Shift+Z)">↩ 원래대로</button>
+          </div>
+          <!-- ★"보기 전용"을 라벨에 못박는다 — 캡컷 사용자가 가장 헷갈리는 지점이
+               '미리보기 줌'과 '클립 크기(Scale)'의 혼동이다(2026-08-30 조사: 튜토리얼
+               절반이 둘을 섞어 설명하고 있었다). 여기서 커지는 건 화면뿐이고 만들어지는
+               영상에는 영향이 없다 — 그걸 글로 적어두면 물어볼 일이 없다. -->
+          <div class="hint" style="margin-bottom:6px;font-size:12px" id="zoomHint">
+            🔍 크게 보고 싶은 곳을 <b>그냥 누르세요</b> — 그 자리가 확대돼요. 다시 누르면 더 크게.</div>
+          <div class="hint" style="margin-bottom:6px;font-size:11px;opacity:.75">
+            👀 <b>보기만</b> 커져요 — 만들어지는 영상 크기는 그대로예요.</div>
           <!-- ★세로 크기는 화면 안에 들어와야 한다(2026-08-18 사장님 지시). 380px면 9:16이라
                675px가 돼 노트북 화면에서 아래가 잘려 하단 띠·자막 위치를 확인할 수 없다.
                폭은 부모의 --pvw를 그대로 받는다(정의처 한 곳) — aspect-ratio가 높이를 따라온다. -->
+          <div id="zoomStage" class="zoomStage" style="width:100%;aspect-ratio:9/16">
+          <div class="zoomBadge" id="zoomBadge">100%</div>
           <div id="hcPreview" style="position:relative;width:100%;aspect-ratio:9/16;background:#ffffff;border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.4)">
             <img id="hcPreviewBg" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none" alt="">
 <!-- 2026-07-27 사장님: "원본 자막이 있던 자리" 점선 박스 제거(필요 없음). 자동 정렬
@@ -1757,6 +1825,7 @@
             <img id="ovPreview" style="position:absolute;transform:translate(-50%,-50%);cursor:move;user-select:none;z-index:5;display:none" alt="">
             <div id="wmPreview" style="position:absolute;transform:translate(-50%,-50%);white-space:nowrap;z-index:6;pointer-events:none;display:none"></div>
           </div>
+          </div><!-- /#zoomStage -->
           <div id="beatStepper" style="display:none;margin-top:10px">
             <div style="display:flex;align-items:center;justify-content:center;gap:16px">
               <button type="button" class="tab" onclick="stepBeat(-1)" style="min-width:auto;padding:8px 14px;font-size:16px">◀</button>
@@ -2856,7 +2925,7 @@
 //   대본(신규 패널 8)을 2번째로 세우고, 장면 편집(패널 7)을 3번째로 민다.
 //   ★물리 패널 번호(data-step)는 그대로 두고 이 매핑만 바꾼다 — cur===n 분기가
 //   파일 곳곳에 박혀 있어 번호를 다시 매기면 전부 어긋난다.
-const STEP_LABELS = ["영상추출/분석","대본생성","영상대본MIX","고품질 자막제거","TTS음성","자막꾸미기","썸네일","제목·태그","완성본","SNS 예약"];
+const STEP_LABELS = ["영상추출/분석","대본생성","영상대본MIX","고품질 자막제거","TTS음성","장면꾸미기","썸네일","제목·태그","완성본","SNS 예약"];
 // ★도크 라벨은 11px이라 긴 이름이 두 줄로 접힌다 → 도크에서만 줄여 쓴다(패널 제목은 STEP_LABELS 그대로).
 //   빈 문자열이면 STEP_LABELS를 그대로 쓴다 — 두 벌을 다 적지 않기 위해서다(0순위-B).
 const STEP_SHORT = ["영상추출","","","자막제거","","","","","","예약발행"];
@@ -4657,6 +4726,7 @@ function initHeadcopy(){
   renderHighlightRules();
   bindHCDrag();
   bindCapDrag();
+  bindZoom();       // 🔍 장면 확대 — 한 번만 걸린다(_zoomBound). 재진입해도 배율은 유지.
   // ★복원된 스타일 밀어넣기(C-2 잔여) — 반드시 아래 updateHC/updateCaption **앞**이다.
   // 그것들이 먼저 돌면 빈 DOM 입력칸을 읽어 STATE.headcopy/captionStyle을 기본값으로 덮는다
   // (라이브 실측: 색이 #ffe100→#ff8800으로 죽었다). 여기서 pristine한 STATE로 DOM을 먼저 채우면
@@ -6014,6 +6084,125 @@ function alignCap(where){
   else if(where==='left') CAP_X_PCT=22;
   else if(where==='right') CAP_X_PCT=78;
   updateCaption();
+}
+// ══════════════════════════════════════════════════════════════════════════
+// 🔍 장면 확대 (2026-08-30 사장님 "장면 확대기능 / 부분확대 / 어떤지점을 클릭해서 /
+//    최대한 쉽게 · 캡컷보다 더 쉽게")
+//
+// 조작은 셋뿐이고 전부 같은 상태(ZOOM/ZOX/ZOY)로 모인다 — 같은 판단을 두 벌로
+// 적지 않는다(0순위-B):
+//   ① 배경 아무 데나 클릭 → 그 지점이 중심이 되어 한 단계 확대 (부분확대의 본체)
+//   ② 슬라이더·＋－ → 배율만 바꾸고 보던 지점은 유지
+//   ③ 원래대로 → 100%
+// 확대 중엔 배경을 끌어 볼 곳을 옮긴다(패닝). 캡컷은 스페이스+드래그로 갈라놨는데
+// 여기선 글자 위가 아니면 그냥 끌면 된다.
+//
+// ★기존 글자 드래그와 안 부딪힌다 — 글자 드래그는 #hcPreviewText/#capPreviewText
+//   **자신에게** 걸려 있고(bindHCDrag/bindCapDrag), 여기 핸들러는 그 요소 위에서
+//   시작하면 즉시 손을 뗀다(_zoomOnText). 컨테이너 빈 배경은 원래 아무도 안 잡고
+//   있었다(실측으로 확인).
+// ★좌표계 — 드래그가 쓰는 pv.getBoundingClientRect()에는 scale이 이미 반영되므로
+//   비율(%) 계산은 확대 상태에서도 그대로 맞는다. 드래그 코드는 한 줄도 안 고쳤다.
+let ZOOM=1, ZOX=50, ZOY=50;
+const ZOOM_MIN=1, ZOOM_MAX=3, ZOOM_STEP=0.5;
+
+function _zoomEls(){
+  return {st:document.getElementById('zoomStage'),
+          pv:document.getElementById('hcPreview'),
+          bd:document.getElementById('zoomBadge'),
+          rg:document.getElementById('zoomRange'),
+          rs:document.getElementById('zoomResetBtn'),
+          ht:document.getElementById('zoomHint')};
+}
+// 상태 → 화면. 배율·원점을 CSS 변수로만 넘긴다(요소 크기는 안 건드린다).
+function _zoomApply(){
+  const {st,pv,bd,rg,rs,ht}=_zoomEls(); if(!st||!pv) return;
+  ZOOM=Math.max(ZOOM_MIN,Math.min(ZOOM_MAX,ZOOM));
+  // 원점은 0~100%로 가둔다 — 밖으로 나가면 확대해도 빈 자리가 보인다
+  ZOX=Math.max(0,Math.min(100,ZOX)); ZOY=Math.max(0,Math.min(100,ZOY));
+  pv.style.setProperty('--zoom',ZOOM);
+  pv.style.setProperty('--zox',ZOX+'%');
+  pv.style.setProperty('--zoy',ZOY+'%');
+  const on = ZOOM>1.001;
+  st.classList.toggle('zoomed',on);
+  if(bd) bd.textContent=Math.round(ZOOM*100)+'%';
+  if(rg) rg.value=Math.round(ZOOM*100);
+  if(rs) rs.style.display = on ? '' : 'none';
+  // ★확대 중엔 '글자 드래그'와 '화면 끌기'가 어떻게 갈리는지 알려준다. 캡컷은 확대 후
+  //   드래그하면 화면이 아니라 **요소가 끌려가서** 사고가 나는데(2026-08-30 조사),
+  //   여긴 글자 위=글자 이동 / 그 밖=화면 이동으로 갈라놨다 — 그걸 글로 적어둔다.
+  if(ht) ht.innerHTML = on
+    ? '<b>글자를 끌면</b> 자막이 옮겨지고, <b>그 밖을 끌면</b> 볼 곳이 움직여요. <b>원래대로</b>면 전체가 보여요.'
+    : '🔍 크게 보고 싶은 곳을 <b>그냥 누르세요</b> — 그 자리가 확대돼요. 다시 누르면 더 크게.';
+}
+function zoomSet(v){ ZOOM=+v||1; if(ZOOM<=1.001){ ZOX=50; ZOY=50; } _zoomApply(); }
+function zoomStep(d){ zoomSet(ZOOM + d*ZOOM_STEP); }
+function zoomReset(){ ZOOM=1; ZOX=50; ZOY=50; _zoomApply(); }
+// 이벤트가 글자(드래그 대상) 위에서 시작했나 — 그러면 확대/패닝은 손을 뗀다
+function _zoomOnText(t){
+  return !!(t && t.closest && t.closest('#hcPreviewText,#capPreviewText,#ovPreview,#extraPreview,[data-maskbox]'));
+}
+function bindZoom(){
+  const {st,pv}=_zoomEls(); if(!st||!pv||st._zoomBound) return; st._zoomBound=true;
+  let panning=false, moved=false, sx=0, sy=0, ox=0, oy=0;
+
+  st.addEventListener('pointerdown', e=>{
+    if(_zoomOnText(e.target)) return;          // 글자는 기존 드래그가 가져간다
+    if(ZOOM>1.001){                            // 확대 중 = 배경을 끌어 볼 곳 옮기기
+      panning=true; moved=false; sx=e.clientX; sy=e.clientY; ox=ZOX; oy=ZOY;
+      st.classList.add('grabbing');
+      try{ st.setPointerCapture(e.pointerId); }catch(_){}
+    }
+  });
+  st.addEventListener('pointermove', e=>{
+    if(!panning) return;
+    const r=st.getBoundingClientRect(); if(!r.width||!r.height) return;
+    const dx=e.clientX-sx, dy=e.clientY-sy;
+    if(Math.abs(dx)>3||Math.abs(dy)>3) moved=true;
+    // ★계수는 유도해서 넣었다(짐작 금지). transform-origin이 o(0~1)일 때 컨테이너
+    //   좌표 p에 있던 점은 화면에서 p' = o + (p-o)*Z 에 놓인다. 여기서
+    //   d(p')/do = 1 - Z 이므로, 화면을 dr(폭 대비 비율)만큼 끌려면
+    //   Δo = dr/(1-Z) = -dr/(Z-1).  ÷Z 로 나누면 저배율에서 6배 적게 움직인다(실측).
+    const k = 100/(ZOOM-1);        // ZOOM>1일 때만 이 경로에 들어온다(pointerdown 가드)
+    ZOX = ox - dx/r.width*k;
+    ZOY = oy - dy/r.height*k;
+    _zoomApply();
+  });
+  const end = e=>{
+    if(panning){
+      panning=false; st.classList.remove('grabbing');
+      try{ st.releasePointerCapture(e.pointerId); }catch(_){}
+      if(moved) return;                        // 끌었으면 확대는 안 한다
+    }
+    if(_zoomOnText(e.target)) return;
+    // ★부분확대 본체 — 누른 그 지점을 원점으로 삼고 한 단계 키운다.
+    //   최대까지 갔으면 다시 눌러 원래대로(끝에서 막히면 "고장났나" 싶다).
+    const r=st.getBoundingClientRect(); if(!r.width||!r.height) return;
+    if(ZOOM>=ZOOM_MAX-0.001){ zoomReset(); return; }
+    ZOX=(e.clientX-r.left)/r.width*100;
+    ZOY=(e.clientY-r.top)/r.height*100;
+    ZOOM=ZOOM+ZOOM_STEP;
+    _zoomApply();
+  };
+  st.addEventListener('pointerup', end);
+  st.addEventListener('pointercancel', ()=>{ panning=false; st.classList.remove('grabbing'); });
+
+  // ★단축키는 캡컷과 같은 키로 맞춘다(2026-08-30 조사로 실측 확인한 공식 키):
+  //   Alt+Shift + '+' / '-' = 플레이어 확대·축소, Alt+Shift+Z = 원래대로(Fit).
+  //   캡컷을 쓰던 사람이 손에 익은 키를 그대로 쓸 수 있게 — 새 키를 지어내지 않는다.
+  //   ★글자를 입력하는 중이면 가로챈다(입력칸에서 단축키가 먹으면 글이 안 써진다).
+  document.addEventListener('keydown', e=>{
+    if(!e.altKey || !e.shiftKey) return;
+    const p3=document.querySelector('.panel[data-step="3"]');
+    if(!p3 || !p3.classList.contains('show')) return;     // 6단계에서만
+    const t=e.target, tag=(t&&t.tagName)||'';
+    if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT'||(t&&t.isContentEditable)) return;
+    const k=(e.key||'').toLowerCase();
+    if(k==='+'||k==='='){ zoomStep(1); e.preventDefault(); }
+    else if(k==='-'||k==='_'){ zoomStep(-1); e.preventDefault(); }
+    else if(k==='z'){ zoomReset(); e.preventDefault(); }
+  });
+  _zoomApply();
 }
 function bindHCDrag(){
   const pv=document.getElementById('hcPreview'), tx=document.getElementById('hcPreviewText');
