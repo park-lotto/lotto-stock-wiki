@@ -13428,6 +13428,17 @@ function _thumbTrackCss(L, size){
   const t = Number((L && L.tracking) || 0);
   return t ? `${(size * t / 100).toFixed(2)}px` : '0px';
 }
+// ── 행간(줄 간격) ────────────────────────────────────────────────────
+// L.leading = 글자 크기 대비 %(기본 116 = 종전 그대로). 없으면 116 → 옛 저장본 그림 불변.
+// ★자간과 같이 **비율**로 담는다 — px로 담으면 미리보기(270)와 저장(1080)이 어긋난다.
+// ★1.16이 세 군데(자동맞춤·그리기·손잡이높이)에 각각 박혀 있었다(2026-08-30). 한 곳만
+//   고치면 나머지 둘과 어긋나 글자가 넘치거나 손잡이가 뜬다 → 값의 주인을 이 함수 하나로
+//   모은다(0순위-B). 줄 간격을 쓰는 곳은 반드시 이 함수를 부른다.
+function _thumbLH(L, size){
+  const v = Number((L && L.leading != null) ? L.leading : 116);
+  // 글자가 겹쳐 못 읽는 것만 막는다(하한 60%). 상한은 넉넉히 둔다.
+  return size * Math.max(60, Math.min(300, v)) / 100;
+}
 // 구형 브라우저(letterSpacing 미지원)에서도 죽지 않게 — 있으면 걸고 없으면 종전 그림.
 function _setTrack(ctx, L, size){
   try { if ('letterSpacing' in ctx) ctx.letterSpacing = _thumbTrackCss(L, size); } catch (e) {}
@@ -13458,7 +13469,8 @@ function thumbFit(ctx, L, W, H){
   const _hold = (typeof THUMB_FIT_HOLD !== 'undefined' && THUMB_FIT_HOLD.get)
     ? THUMB_FIT_HOLD.get(L) : null;
   if (_hold) size = _hold.ratio * W * scale;
-  if (lines.length * size * 1.16 > maxH) size *= maxH / (lines.length * size * 1.16);  // 높이 상한
+  // 높이 상한 — 행간을 좁히면 그만큼 글자를 더 키울 수 있어야 한다(_thumbLH 하나가 주인)
+  if (lines.length * _thumbLH(L, size) > maxH) size *= maxH / (lines.length * _thumbLH(L, size));
   size = Math.max(W * 0.02, Math.min(size, H * 0.22));            // 안전 하한·상한
   return {lines, size, family};
 }
@@ -13821,7 +13833,7 @@ function drawThumb(ctx, img, layers, W, H){
     if (L.kind === 'badge'){ drawBadge(ctx, L, W, H); return; }
     if (!L.text) return;
     const {lines, size, family} = thumbFit(ctx, L, W, H);      // 자동 2줄 + grow-to-fill
-    const lh = size * 1.16;                                     // 줄 간격
+    const lh = _thumbLH(L, size);                               // 줄 간격(L.leading %)
     ctx.save();
     ctx.translate(L.x * W, L.y * H);                            // 앵커 = 여러 줄 블록의 세로 중앙
     if (L.rot) ctx.rotate(L.rot * Math.PI / 180);
@@ -14100,7 +14112,7 @@ function _thumbHalf(L){
       const ls = _trackPx(ctx, L, size);
       const w = Math.max(1, ...lines.map(l => ctx.measureText(l).width - ls));
       ctx.restore();
-      const h = lines.length * size * 1.16;
+      const h = lines.length * _thumbLH(L, size);
       const pad = size * 0.16;                       // 손잡이가 글자에 붙지 않게 약간 띄운다
       return {hx: (w / 2 + pad) / THUMB_W, hy: (h / 2 + pad) / THUMB_H};
     } catch (e) { /* 못 재면 아래 기본식 — 손잡이가 조금 어긋날 뿐 기능은 산다 */ }
@@ -14302,7 +14314,7 @@ function setThumbField(key, val){
   if (key === 'outline_w'){ L.outline = L.outline || {color: '#000000', w: 0}; L.outline.w = +val; }
   else if (key === 'outline_color'){ L.outline = L.outline || {color: '#000000', w: 4}; L.outline.color = val; }
   else if (key === 'box'){ L.box = val ? {color: '#000000', pad: 16, opacity: 80} : null; }
-  else if (key === 'size' || key === 'rot' || key === 'tracking'){ L[key] = +val; }
+  else if (key === 'size' || key === 'rot' || key === 'tracking' || key === 'leading'){ L[key] = +val; }
   else L[key] = val;
   if (key === 'text') thumbHoldSizeWhileTyping();   // 치는 동안 크기 고정(2026-08-27 고객 제보)
   renderThumbCanvas();
@@ -14580,6 +14592,13 @@ function renderThumbLayers(){
       <span style="color:var(--sub);opacity:.7">(글자 사이 간격 · 0이 기본)</span></label>
     <input type="range" min="-10" max="40" value="${Number(L.tracking || 0)}"
            oninput="setThumbField('tracking', this.value)" style="width:100%">
+    <!-- ★행간(2026-08-30 사장님 "글씨가 작아지면 공백이 넓어진다").
+         지금까지 줄 간격이 1.16 고정이라 손댈 수 있는 게 크기 슬라이더뿐이었고,
+         그래서 글자·자간·줄간격이 한 덩어리로만 움직였다. 자간과 같은 방식(비율)으로 따로 둔다. -->
+    <label style="font-size:11px;color:var(--sub)">행간 ${Number(L.leading != null ? L.leading : 116)}%
+      <span style="color:var(--sub);opacity:.7">(윗줄·아랫줄 사이 · 116이 기본)</span></label>
+    <input type="range" min="60" max="200" step="2" value="${Number(L.leading != null ? L.leading : 116)}"
+           oninput="setThumbField('leading', this.value)" style="width:100%">
     <label style="font-size:11px;color:var(--sub)">회전 ${L.rot}°</label>
     <input type="range" min="-45" max="45" value="${L.rot}" oninput="setThumbField('rot', this.value)" style="width:100%">
     <div style="display:flex;gap:8px;align-items:center;margin-top:6px">
