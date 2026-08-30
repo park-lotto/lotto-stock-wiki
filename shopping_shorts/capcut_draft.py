@@ -311,6 +311,18 @@ def _beat_clips(beat, beat_dur, src_durs):
     return []
 
 
+
+def _scene_zoom(beat):
+    """장면 확대 배율 — **렌더와 같은 함수**가 뜻을 정한다(video_assemble.scene_zoom_of).
+    구하지 못하면 1.0(확대 없음) — 확대 하나 때문에 내보내기가 죽으면 안 된다."""
+    try:
+        from shopping_shorts.video_assemble import scene_zoom_of
+        z, _px, _py = scene_zoom_of(beat or {})
+        return float(z)
+    except Exception:      # noqa: BLE001
+        return 1.0
+
+
 def _photo_material(path, name, width, height):
     """정지 이미지(꾸미기 틀 PNG) 머티리얼.
 
@@ -368,7 +380,8 @@ def _watermark_material(wm, font_path):
 
 def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
                 project_name, canvas=(1080, 1920), font_path=_DEFAULT_FONT, video_durs=None,
-                caption_style=None, deco=None):
+                caption_style=None, deco=None, headcopy_layer=None, bgm_layer=None,
+                sfx_layers=None, cutaway_layers=None):
     """편집안 → (draft_content_dict, assets_to_copy).
 
     asset_paths: {real_path: 캡컷이 볼 절대경로} — 호출부가 파일을 그 절대경로에 두고 넘긴다.
@@ -385,6 +398,16 @@ def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
                  "name": "", "is_default_name": True, "segments": []}
     txt_track = {"id": _uid(), "type": "text", "attribute": 0, "flag": 0,
                  "name": "", "is_default_name": True, "segments": []}
+    # 컷어웨이(b-roll)·BGM·효과음은 각각 **자기 트랙**에 둔다 — 소스 영상/TTS와 같은 트랙에
+    # 넣으면 시간이 겹쳐 캡컷이 하나를 밀어낸다(워터마크에서 이미 겪은 함정).
+    cut_track = {"id": _uid(), "type": "video", "attribute": 0, "flag": 0,
+                 "name": "", "is_default_name": True, "segments": []}
+    bgm_track = {"id": _uid(), "type": "audio", "attribute": 0, "flag": 0,
+                 "name": "", "is_default_name": True, "segments": []}
+    sfx_track = {"id": _uid(), "type": "audio", "attribute": 0, "flag": 0,
+                 "name": "", "is_default_name": True, "segments": []}
+    hc_track = {"id": _uid(), "type": "video", "attribute": 0, "flag": 0,
+                "name": "", "is_default_name": True, "segments": []}
     beats_by_idx = {b["beat_idx"]: b for b in plan.get("beats", [])}
     assets_to_copy = []
     total_us = 0
@@ -432,6 +455,15 @@ def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
                                 source_dur=_us(c.get("src_dur", 0.0)) or c_dur,
                                 render_index=0, volume=0.0,
                                 extra_refs=[sp["id"], ca["id"], sc["id"], ph["id"], vs["id"]])
+            # ── 🔍 장면 확대(6단계에서 끌어 맞춘 것) ──
+            #   뜻은 video_assemble.scene_zoom_of **한 곳**이 정한다(0순위-B) — 여기서
+            #   따로 파싱하면 화면·렌더와 갈린다.
+            #   ⚠️**이동(pan)은 아직 안 간다** — 캡컷 clip.transform의 좌표계(부호·스케일)를
+            #     실측한 근거가 없다. 짐작해 넣으면 화면 밖으로 날아간다(자막 위치와 같은 이유).
+            #     배율만 얹으면 최소한 "얼마나 당겨 봤는지"는 따라간다.
+            _z = _scene_zoom(beat)
+            if _z > 1.0:
+                seg["clip"]["scale"] = {"x": _z, "y": _z}
             vid_track["segments"].append(seg)
             _acc += c_dur
 
@@ -452,6 +484,20 @@ def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
                                     render_index=0,
                                     extra_refs=[sp["id"], ph["id"], be["id"], sc["id"], vs["id"]])
                 aud_track["segments"].append(seg)
+
+        # ── 컷어웨이(장면라이브러리 b-roll): 비트 영상 위 풀프레임 오버레이 ──
+        #   렌더와 같은 창: [비트 시작, min(자산 길이, 비트 길이)] (video_assemble._render_mix).
+        _ca = (cutaway_layers or {}).get(idx)
+        if _ca and _ca.get("_capcut_path"):
+            _cadur = min(dur, _us(_ca.get("dur", 0.0)) or dur)
+            if _cadur > 0:
+                _cam = _video_material(_ca["_capcut_path"],
+                                       _ca["_capcut_path"].rsplit("/", 1)[-1], _cadur, cw, ch)
+                mats["videos"].append(_cam)
+                _cseg = _base_segment(_cam["id"], t0, _cadur, source_start=0,
+                                      source_dur=_cadur, render_index=0, volume=0.0)
+                _cseg["track_render_index"] = 1     # 소스 영상(0) 위
+                cut_track["segments"].append(_cseg)
 
         # ── 자막 트랙: 비트 나레이션 ──
         text = (tl.get("narration") or "").strip()
@@ -498,6 +544,62 @@ def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
             tseg["clip"]["alpha"] = max(0.05, min(1.0, a))
             tpl_track["segments"].append(tseg)
 
+    # ── ✍ 머리카피(헤드카피) — 투명 PNG 한 장으로 올린다 ──
+    #   ★캡컷 텍스트로 다시 만들지 않는다: 여러 줄·배경박스·단어별 강조색·자동축소가
+    #     얽혀 있고, 무엇보다 위치(x·y%)를 옮기려면 clip.transform 좌표계 실측이 필요한데
+    #     아직 근거가 없다. 풀캔버스 PNG면 좌표 변환이 아예 필요 없다(틀과 같은 방법).
+    #   ★그림은 렌더와 같은 함수가 굽는다(video_assemble.headcopy_layer_png).
+    #   ★구간도 렌더와 한 벌(video_assemble.headcopy_span) — 마지막 비트 전까지.
+    if headcopy_layer and headcopy_layer.get("_capcut_path") and total_us > 0:
+        _hdur = min(total_us, _us(headcopy_layer.get("dur", 0.0)) or total_us)
+        _ht0 = _us(headcopy_layer.get("t0", 0.0))
+        if _hdur > 0:
+            hm = _photo_material(headcopy_layer["_capcut_path"],
+                                 headcopy_layer["_capcut_path"].rsplit("/", 1)[-1], cw, ch)
+            mats["videos"].append(hm)
+            hseg = _base_segment(hm["id"], _ht0, _hdur, source_start=0, source_dur=_hdur,
+                                 render_index=0, volume=0.0)
+            hseg["track_render_index"] = 2     # 틀(1) 위
+            hc_track["segments"].append(hseg)
+
+    # ── 🎵 배경음악(BGM) — 영상 전체에 한 칸, 볼륨은 제작소 설정 그대로 ──
+    #   짧으면 캡컷에서 늘려 쓰면 된다(우리 렌더는 amix가 잘라 쓴다). 여기서 반복을
+    #   흉내내면 렌더와 다른 소리가 되므로 **원본 길이 그대로** 한 칸만 올린다.
+    if bgm_layer and bgm_layer.get("_capcut_path") and total_us > 0:
+        _bdur = _us(bgm_layer.get("dur", 0.0)) or total_us
+        _bdur = min(_bdur, total_us)
+        if _bdur > 0:
+            bm = _audio_material(bgm_layer["_capcut_path"],
+                                 bgm_layer["_capcut_path"].rsplit("/", 1)[-1], _bdur)
+            mats["audios"].append(bm)
+            try:
+                _bvol = float(bgm_layer.get("volume", 15)) / 100.0
+            except (TypeError, ValueError):
+                _bvol = 0.15
+            bseg = _base_segment(bm["id"], 0, _bdur, source_start=0, source_dur=_bdur,
+                                 render_index=0, volume=max(0.0, min(1.0, _bvol)))
+            bgm_track["segments"].append(bseg)
+
+    # ── 🔔 효과음(sfx) — 타점은 렌더와 같은 함수가 준다(video_assemble.sfx_events_for) ──
+    for _sx in (sfx_layers or []):
+        if not _sx.get("_capcut_path"):
+            continue
+        _sdur = _us(_sx.get("dur", 0.0))
+        _st0 = _us(_sx.get("at", 0.0))
+        if _sdur <= 0 or (total_us and _st0 >= total_us):
+            continue
+        if total_us:
+            _sdur = min(_sdur, total_us - _st0)     # 영상 끝을 넘으면 잘라 쓴다(amix와 같다)
+        sm = _audio_material(_sx["_capcut_path"], _sx["_capcut_path"].rsplit("/", 1)[-1], _sdur)
+        mats["audios"].append(sm)
+        try:
+            _svol = float(_sx.get("volume", 60)) / 100.0
+        except (TypeError, ValueError):
+            _svol = 0.6
+        sseg = _base_segment(sm["id"], _st0, _sdur, source_start=0, source_dur=_sdur,
+                             render_index=0, volume=max(0.0, min(1.0, _svol)))
+        sfx_track["segments"].append(sseg)
+
     # ── 워터마크(채널 닉네임) — 영상 전체에 한 칸(2026-08-28 고객 제보 2단계) ──
     #   ★자막 트랙과 **따로** 둔다: 같은 트랙에 넣으면 대사 자막과 시간이 겹쳐
     #     캡컷이 하나를 밀어낸다(둘 다 전 구간에 있을 수 없다).
@@ -511,7 +613,8 @@ def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
         wseg["track_render_index"] = 3        # 자막(2)보다 위
         wm_track["segments"].append(wseg)
 
-    tracks = [t for t in (vid_track, tpl_track, aud_track, txt_track, wm_track)
+    tracks = [t for t in (vid_track, cut_track, tpl_track, hc_track,
+                          aud_track, bgm_track, sfx_track, txt_track, wm_track)
               if t["segments"]]
     draft = _skeleton(project_name, cw, ch, total_us)
     draft["materials"].update(mats)
@@ -561,7 +664,9 @@ def _skeleton(name, cw, ch, duration_us):
 
 def assemble_draft_folder(out_root, base_abs, *, plan, timeline, source_video_paths,
                           tts_paths, project_name, canvas=(1080, 1920), font_path=_DEFAULT_FONT,
-                          probe=None, final_video=None, caption_style=None, deco=None):
+                          probe=None, final_video=None, caption_style=None, deco=None,
+                          headcopy_png=None, headcopy_span=None, sfx_events=None,
+                          cutaway_paths=None):
     """draft 폴더를 out_root/<project>/ 에 실제로 조립한다(에셋 복사 + draft_content.json + meta).
 
     base_abs: 캡컷이 이 draft 폴더를 볼 **절대경로**(예: C:/capcutproject/CapCut Drafts). draft가
@@ -615,10 +720,62 @@ def assemble_draft_folder(out_root, base_abs, *, plan, timeline, source_video_pa
         shutil.copy(_tpl_src, proj / _tpl_name)
         deco["template"] = {**deco["template"],
                             "_capcut_path": f"{base_abs}/{project}/{_tpl_name}"}
+    # ── ✍ 머리카피 PNG · 🎵 BGM · 🔔 효과음 · 🎞 컷어웨이도 draft 폴더로 복사한다 ──
+    #   틀(template)과 같은 규칙: 파일을 폴더에 두고 **캡컷이 볼 절대경로**를 심는다
+    #   (상대경로는 2026-07-20에 Media Not Found로 확정 기각).
+    #   ⚠️어느 하나가 없거나 실패해도 내보내기는 그대로 된다 — 그 재료만 빠진다.
+    def _bring(src, name):
+        """파일 하나를 draft 폴더로 복사하고 (캡컷절대경로, 길이초)를 돌려준다."""
+        try:
+            if not src or not Path(src).exists():
+                return None, 0.0
+            shutil.copy(src, proj / name)
+            try:
+                d = float(probe(src) or 0.0)
+            except Exception:      # noqa: BLE001 — 길이를 못 재도 파일은 간다
+                d = 0.0
+            return f"{base_abs}/{project}/{name}", d
+        except Exception:      # noqa: BLE001
+            return None, 0.0
+
+    headcopy_layer = None
+    if headcopy_png:
+        _hp, _ = _bring(headcopy_png, "headcopy.png")
+        if _hp:
+            _ht0, _hdur = (headcopy_span or (0.0, 0.0))
+            headcopy_layer = {"_capcut_path": _hp, "t0": float(_ht0 or 0.0),
+                              "dur": float(_hdur or 0.0)}
+
+    bgm_layer = None
+    _bgm = (deco.get("bgm") or {}) if isinstance(deco, dict) else {}
+    if _bgm.get("_abspath"):
+        _ext = Path(_bgm["_abspath"]).suffix.lower() or ".mp3"
+        _bp, _bd = _bring(_bgm["_abspath"], "bgm" + _ext)
+        if _bp:
+            bgm_layer = {"_capcut_path": _bp, "dur": _bd,
+                         "volume": _bgm.get("volume", 15)}
+
+    sfx_layers = []
+    _sfx_vol = (deco or {}).get("sfx_volume", 60) if isinstance(deco, dict) else 60
+    for _i, (_spath, _sat) in enumerate(sfx_events or []):
+        _ext = Path(_spath).suffix.lower() or ".mp3"
+        _sp, _sd = _bring(_spath, "sfx_%02d%s" % (_i, _ext))
+        if _sp:
+            sfx_layers.append({"_capcut_path": _sp, "at": float(_sat or 0.0),
+                               "dur": _sd, "volume": _sfx_vol})
+
+    cutaway_layers = {}
+    for _idx, _cpath in (cutaway_paths or {}).items():
+        _cp, _cd = _bring(_cpath, "cutaway_%02d.mp4" % int(_idx))
+        if _cp:
+            cutaway_layers[_idx] = {"_capcut_path": _cp, "dur": _cd}
+
     draft, _ = build_draft(caption_style=caption_style, deco=deco,
                            plan=plan, timeline=timeline, source_video_paths=source_video_paths,
                            tts_paths=tts_paths, asset_paths=asset_paths, project_name=project,
-                           canvas=canvas, font_path=font_path, video_durs=video_durs)
+                           canvas=canvas, font_path=font_path, video_durs=video_durs,
+                           headcopy_layer=headcopy_layer, bgm_layer=bgm_layer,
+                           sfx_layers=sfx_layers, cutaway_layers=cutaway_layers)
 
     # ── 미디어 보관함(2026-08-23 사장님 "라이브러리에 조각 영상들 불러올 수 있게") ──
     #   타임라인은 그대로 두고, **장면 조각을 캡컷 보관함에 넣어** 끌어다 갈아끼울 수 있게 한다.

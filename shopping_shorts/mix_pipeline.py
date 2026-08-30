@@ -1624,6 +1624,25 @@ def _apply_motion_pack(deco, caption_style, timeline, packs):
     return deco, caption_style
 
 
+
+def resolve_deco_media(deco, work):
+    """deco의 BGM·오버레이 파일(업로드 시 work/{file}에 저장) → 절대경로(_abspath)를 심어 돌려준다.
+
+    ★렌더와 캡컷 내보내기가 **같은 함수**를 쓴다(0순위-B) — 두 곳에 따로 적으면
+      "완성본엔 음악이 있는데 캡컷엔 없다"처럼 조용히 갈린다.
+    원본 dict는 건드리지 않는다(얕은 복사본 반환).
+    """
+    deco = dict(deco or {})
+    work = Path(work)
+    for key in ("bgm", "overlay"):
+        item = deco.get(key) or {}
+        if item.get("file"):
+            p = work / item["file"]
+            if p.exists():
+                deco[key] = {**item, "_abspath": str(p)}
+    return deco
+
+
 def _template_layer(tpl, first_beat_dur=0):
     """꾸미기 템플릿 → 렌더가 쓸 레이어 dict. 없거나 모르는 id면 None.
 
@@ -2814,18 +2833,8 @@ def run_render(job_id, db_path, work_root):
                 source_video_paths = {vid: clean_map.get(vid, p)
                                       for vid, p in source_video_paths.items()}
 
-        # deco의 BGM 파일(업로드 시 work/{file}에 저장)을 절대경로로 해석해 넘긴다.
-        deco = job.get("deco") or {}
-        bgm = deco.get("bgm") or {}
-        if bgm.get("file"):
-            bp = work / bgm["file"]
-            if bp.exists():
-                deco = {**deco, "bgm": {**bgm, "_abspath": str(bp)}}
-        ov = deco.get("overlay") or {}
-        if ov.get("file"):
-            op = work / ov["file"]
-            if op.exists():
-                deco = {**deco, "overlay": {**ov, "_abspath": str(op)}}
+        # deco의 BGM·오버레이 파일을 절대경로로 해석해 넘긴다(캡컷 내보내기와 같은 함수).
+        deco = resolve_deco_media(job.get("deco") or {}, work)
         # 템플릿은 job 폴더가 아니라 **정적 자산**이다(모두가 같은 12장을 쓴다).
         # span→dur 변환은 _template_layer 한 곳에서만 한다.
         _first = 0
