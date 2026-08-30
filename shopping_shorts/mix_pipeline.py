@@ -2740,7 +2740,6 @@ def _thumb_intro_png(job, thumb):
     return last if last.exists() else None
 
 
-@_owned_job
 def _faststart(path):
     """mp4의 moov 원자를 파일 앞으로 옮긴다(-c copy 리멕스). 실패해도 원본을 지키고 넘어간다.
 
@@ -2769,6 +2768,7 @@ def _faststart(path):
             pass
 
 
+@_owned_job
 def run_render(job_id, db_path, work_root):
     """확인된 EDL을 최종 mp4로 렌더. subtitle_removal이 켜져 있으면 믹스 후
     VMake로 원본 자막을 제거하고 그 위에 우리 자막을 굽는다. 완료 시 status='done'."""
