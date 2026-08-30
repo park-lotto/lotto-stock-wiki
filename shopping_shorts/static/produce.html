@@ -1877,6 +1877,16 @@
               <span class="zoomSaved" id="zoomSaved"></span>
             </div>
           </div>
+          <!-- 🖼 이 장면을 썸네일로 (2026-08-30 사장님 "장면들중 썸네일로 쓰고싶은건
+               썸네일페이지로 이동시킬수있게"). 여태 썸네일 후보는 **자동 등분 추출뿐**이라,
+               여기서 좋은 장면을 봐 두고도 [다른 장면 더 뽑기]로 걸리기를 기다려야 했다. -->
+          <div class="zoomPanel" style="margin-top:6px">
+            <div class="zoomBar" style="justify-content:space-between">
+              <button type="button" class="zbtn" id="thumbPinBtn" onclick="pinBeatToThumb()"
+                      title="지금 보고 있는 장면을 7단계 썸네일 후보 맨 앞에 넣습니다">🖼 이 장면을 썸네일로</button>
+              <span class="zoomSaved" id="thumbPinMsg"></span>
+            </div>
+          </div>
           <!-- ★세로 크기는 화면 안에 들어와야 한다(2026-08-18 사장님 지시). 380px면 9:16이라
                675px가 돼 노트북 화면에서 아래가 잘려 하단 띠·자막 위치를 확인할 수 없다.
                폭은 부모의 --pvw를 그대로 받는다(정의처 한 곳) — aspect-ratio가 높이를 따라온다. -->
@@ -6552,6 +6562,36 @@ async function zoomSaveNow(){
     if(msg){ msg.style.color='var(--fire)'; msg.textContent='❌ 저장 실패 — 다시 눌러 주세요'; }
   }finally{ if(btn) btn.disabled=false; }
 }
+// 🖼 지금 보고 있는 장면을 7단계 썸네일 후보로 보낸다(2026-08-30).
+// ★서버가 **미리보기와 같은 함수**(_beatframe_file)로 그림을 뜬다 — 화면에서 본 장면과
+//   썸네일로 간 장면이 다를 수 없다. 프론트가 캔버스를 떠서 올리면 그게 두 벌이 된다.
+async function pinBeatToThumb(){
+  const msg=document.getElementById('thumbPinMsg');
+  const btn=document.getElementById('thumbPinBtn');
+  const say=(t,c)=>{ if(msg){ msg.style.color=c; msg.textContent=t; } };
+  if(typeof MIX_JOB==='undefined' || !MIX_JOB){
+    say('먼저 영상 매칭이 필요해요','var(--fire)'); return;
+  }
+  const b=(typeof BEATS_PREVIEW!=='undefined' && BEATS_PREVIEW[BEAT_IDX]) || null;
+  if(!b){ say('보낼 장면이 없어요','var(--fire)'); return; }
+  const idx=(b.beat_idx!=null?b.beat_idx:BEAT_IDX);      // 저장용 진짜 번호(scenezoom과 동일)
+  if(btn) btn.disabled=true;
+  say('보내는 중…','var(--sub)');
+  try{
+    const r=await fetch('/api/produce/thumb/pin',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({job_id:MIX_JOB, beat_idx:idx})});
+    const d=await r.json();
+    if(!d.ok) throw new Error(d.error||'실패');
+    say('✅ '+(d.label||'장면')+' → '+stepName('thumb')+' 후보 맨 앞에 넣었어요','var(--ok)');
+    // 7단계를 이미 열어봤다면 목록을 바로 새로 그린다(안 그러면 가서 새로고침해야 보인다).
+    if(typeof THUMB_STATE!=='undefined' && THUMB_STATE.job===MIX_JOB
+       && typeof loadThumbFrames==='function') loadThumbFrames();
+  }catch(e){
+    say('❌ 못 보냈어요 — 다시 눌러 주세요','var(--fire)');
+  }finally{ if(btn) btn.disabled=false; }
+}
+
 // 끌기·클릭이 끝난 뒤 한 번만 보낸다(끄는 도중 매 프레임 보내면 서버가 죽는다)
 function _zoomSaveSoon(){
   if(_ZOOM_SAVE_T) clearTimeout(_ZOOM_SAVE_T);
@@ -13083,6 +13123,12 @@ async function _loadThumbFrames(more){
     // job은 있는데 서버가 거절(영상 미완성 등) — 원문 에러에 갈 곳까지 얹는다.
     hintEl.innerHTML = (d.error || '프레임 추출 실패')
       + ' — <a href="#" onclick="stepGo(&quot;mix&quot;);return false" style="color:var(--accent2);font-weight:700">'+stepName('mix')+'에서 영상 매칭 확인 →</a>';
+    // ★화면도 비운다(2026-08-30 실브라우저 관찰). 종전엔 그리드를 그대로 둬서, 마지막
+    //   후보를 뺀 직후 서버엔 0개인데 화면엔 **유령 카드**가 남았다 — 그걸 누르면 이미
+    //   지워진 그림으로 썸네일을 만들게 된다. 화면이 서버보다 뒤처지면 안 된다.
+    THUMB_STATE.frames = [];
+    document.getElementById('thumbFrames').innerHTML = '';
+    document.getElementById('thumbFrameCount').textContent = '';
     return;
   }
   // ★프레임이 그대로면 다시 그리지 않는다(2026-07-30) — 아래에서 5단계 진입마다 서버에
@@ -13104,14 +13150,33 @@ async function _loadThumbFrames(more){
   THUMB_STATE.frames = d.frames;
   document.getElementById('thumbFrameCount').textContent = `(${d.frames.length}개)`;
   document.getElementById('thumbFramesHint').innerHTML = thumbBgNotice(d);
+  // ★핀(장면꾸미기에서 보낸 장면)은 자동 추출과 **눈에 띄게 갈라 보인다** — 안 그러면
+  //   16장 사이에 섞여 사장님이 방금 보낸 게 어느 것인지 못 찾는다. 빼기(×)도 여기서.
   document.getElementById('thumbFrames').innerHTML = d.frames.map((f, i) => `
     <div onclick="pickThumbFrame(${i})" style="position:relative;cursor:pointer;border-radius:6px;
-         overflow:hidden;border:2px solid ${i === 0 ? 'var(--accent2)' : 'transparent'}" data-fi="${i}">
+         overflow:hidden;border:2px solid ${i === 0 ? 'var(--accent2)' : (f.pin ? 'var(--gold)' : 'transparent')}" data-fi="${i}">
       <img src="${f.url}" style="width:100%;display:block">
+      ${f.pin ? `<span style="position:absolute;left:4px;top:4px;background:var(--gold);color:#000;
+            font-size:10px;font-weight:800;padding:1px 4px;border-radius:3px">🖼 ${f.label || '장면'}</span>
+      <span onclick="event.stopPropagation();unpinThumbFrame('${f.pin}')" title="후보에서 빼기"
+            style="position:absolute;right:4px;top:4px;background:#000c;color:#fff;font-size:11px;
+            line-height:1;padding:2px 5px;border-radius:3px">×</span>` : ''}
       <span style="position:absolute;right:4px;bottom:4px;background:#000c;color:#fff;
             font-size:10px;padding:1px 4px;border-radius:3px">${f.ts}s</span>
     </div>`).join('');
   if (d.frames.length) pickThumbFrame(0);
+}
+
+// 🖼 보낸 장면을 후보에서 뺀다(파일도 지운다 — 우리가 만든 사본이라 원본 장면은 그대로).
+async function unpinThumbFrame(name){
+  if(!MIX_JOB || !name) return;
+  try{
+    const r=await fetch('/api/produce/thumb/pin',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({job_id:MIX_JOB, name:name, remove:true})});
+    const d=await r.json();
+    if(d.ok) loadThumbFrames();
+  }catch(e){}
 }
 
 function pickThumbFrame(i){
