@@ -1510,7 +1510,9 @@
            align-items:center;justify-content:center;font-size:16px;font-weight:700}
   .vmeta{flex:1 1 auto;min-width:0}
   .vname{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .vdesc{font-size:12.5px;color:var(--sub);line-height:1.4;
+  /* ★설명 칸은 **늘 두 줄 높이**를 차지한다 — 한 줄짜리 성우가 섞이면 카드 높이가 들쭉날쭉해
+     두 열이 어긋나 보인다(사장님 지적 2026-08-30). 글자는 두 줄에서 자른다. */
+  .vdesc{font-size:12.5px;color:var(--sub);line-height:1.4;height:2.8em;
          display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
   .vbadge{position:absolute;top:5px;right:10px;white-space:nowrap;font-size:10px;font-weight:700;
           color:#8fbfff;background:#1c2f4a;border:1px solid #2a4a75;border-radius:5px;
@@ -11650,8 +11652,9 @@ function renderPresetCards(){
          + (showAll ? rest.map(cardHtml).join('') : '') + more;
   };
   // 열마다 '성우를 늘리는 길'을 그 열 위에 둔다 — 어느 엔진에 담기는지 헷갈리지 않게.
-  const elvAct = '<button type="button" class="colAct" onclick="toggleVoiceLibrary()">🔎 목소리 찾기</button>';
-  const tcAct  = '';   // 타입캐스트는 서버 큐레이션 목록이라 고객이 담는 길이 아직 없다
+  // ★열 안에 '목소리 찾기'를 넣지 않는다(2026-08-30). 위쪽 #vlibBox에 같은 버튼이 이미 있어
+  //   두 벌이 됐고, 한쪽 열에만 있으니 두 열의 첫 카드 높이가 어긋나 보였다(0순위-B).
+  const elvAct = '', tcAct = '';
   document.getElementById('presetCards').innerHTML =
       renderFavRow()
     + '<div class="voiceCols">'
