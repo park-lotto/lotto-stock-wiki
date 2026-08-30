@@ -33,7 +33,12 @@ def _real_deps():
     # ★여기서 {script:'x'}를 발명하면 위 주석의 2026-07-17 사고를 그대로 되풀이하는 것이다.
     st = re.search(r"^const STATE = \{.*?\};", src, re.M)
     assert st, "STATE 선언을 못 찾았다 — suggestThumbTitles가 STATE.script를 읽는다"
-    return m.group(0) + "\n" + st.group(0) + "\n"
+    # 🖍 글자별 색(2026-08-30) — 썸네일 편집칸이 hlSwatchHtml/hlChipsHtml을, drawThumb이
+    # hlSegments를 부른다. 슬라이스 밖이라 없으면 ReferenceError로 배선이 통째로 죽는다.
+    # ★흉내내지 않고 **파일에서 그대로** 가져온다(위 _real_deps 원칙).
+    _hs = src.index("const HL_SWATCHES")
+    hl = src[_hs:src.index("function renderHighlightRules(", _hs)]
+    return m.group(0) + "\n" + st.group(0) + "\n" + hl + "\n"
 
 
 def _slice_source():
