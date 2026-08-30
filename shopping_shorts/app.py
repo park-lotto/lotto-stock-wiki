@@ -6086,6 +6086,26 @@ def _thumb_dir(job_id: str):
     return _THUMB_DIR / safe
 
 
+def _with_pins(job_id, thumb, grid_frames):
+    """후보 목록 = **고정한 장면(핀) 먼저 + 자동 추출 프레임**.
+
+    ★핀을 thumb["frames"](자동 추출 결과)에 섞어 넣지 않는다 — frames는 재추출 때마다
+    통째로 갈아엎히는 서버 소유 목록이라, 거기 넣으면 [다른 장면 더 뽑기] 한 번에 사장님이
+    고른 장면이 조용히 사라진다. 별도 키(pins)에 두고 **응답을 만들 때만** 앞에 붙인다.
+    파일명도 pin_*.jpg라 grid_*.jpg만 지우는 고아 정리에 안 걸린다.
+    """
+    out = []
+    d = _thumb_dir(job_id)
+    for p in (thumb.get("pins") or []):
+        name = str(p.get("name") or "")
+        if not name or d is None or not (d / name).is_file():
+            continue                      # 파일이 사라진 핀은 조용히 건너뛴다(깨진 이미지 방지)
+        out.append({"url": f"/api/produce/thumb/file/{job_id}/{name}",
+                    "ts": p.get("ts") or 0, "pin": name,
+                    "label": p.get("label") or "장면"})
+    return out + list(grid_frames or [])
+
+
 def _grid_phase(round_no):
     """라운드 → 구간 안에서 찍을 지점(0~1). 라운드마다 격자를 **반씩 어긋나게** 한다.
 
@@ -6161,6 +6181,15 @@ def api_thumb_frames(body: dict):
             video, bg_kind = cand, kind
             break
     if not video:
+        # ★영상이 아직 없어도 **보낸 장면(핀)은 보여준다**(2026-08-30 실측으로 발견).
+        #   핀은 비트 프레임에서 오므로 믹스 영상과 무관한데, 여기서 통째로 404를 내면
+        #   사장님이 6단계에서 보낸 장면이 7단계에서 통째로 사라져 보인다.
+        thumb0 = job.get("thumbnail") or {}
+        pinned = _with_pins(job_id, thumb0, [])
+        if pinned:
+            return {"ok": True, "frames": pinned, "stale_results": [],
+                    "bg": "", "subtitle_removal": bool(job.get("subtitle_removal")),
+                    "clean_status": job.get("clean_status") or ""}
         return JSONResponse(status_code=404, content={"ok": False, "error": "믹스 영상 없음"})
 
     out_dir = _thumb_dir(job_id)
@@ -6200,7 +6229,8 @@ def api_thumb_frames(body: dict):
     if not want_more and existing and thumb.get("video_sig") == video_sig:
         meta = thumb.get("frames") or []
         if len(meta) == len(existing):
-            return {"ok": True, "frames": meta, "stale_results": _stale_results(),
+            return {"ok": True, "frames": _with_pins(job_id, thumb, meta),
+                    "stale_results": _stale_results(),
                     "bg": bg_kind, "subtitle_removal": bool(job.get("subtitle_removal")),
                     "clean_status": job.get("clean_status") or ""}
 
@@ -6244,9 +6274,68 @@ def api_thumb_frames(body: dict):
     #   실측: clean_preview.mp4는 16:11에 생겼는데 제보 화면은 15:35였다 — 즉 **자막제거가
     #   끝나기 전에** 썸네일을 열어 preview로 조용히 폴백한 것이다. 배경 자체는 규칙대로
     #   골랐지만, 그 사실을 아무도 말해주지 않아 "지웠는데 왜 남아있지"가 된다.
-    return {"ok": True, "frames": frames, "stale_results": _stale_results(),
+    return {"ok": True, "frames": _with_pins(job_id, thumb, frames),
+            "stale_results": _stale_results(),
             "bg": bg_kind, "subtitle_removal": bool(job.get("subtitle_removal")),
             "clean_status": job.get("clean_status") or ""}
+
+
+@app.post("/api/produce/thumb/pin")
+def api_thumb_pin(body: dict):
+    """6단계 장면꾸미기에서 보고 있는 **그 장면을 썸네일 후보로 보낸다**(2026-08-30 사장님).
+
+    후보는 여태 자동 추출(등분)뿐이라, 사장님이 "이 장면으로 썸네일 하고 싶다"고 봐 둔
+    장면을 쓰려면 [다른 장면 더 뽑기]로 걸리기를 기다리는 수밖에 없었다.
+
+    body.remove=true + name → 보낸 것을 도로 뺀다(파일도 지운다 — 우리가 만든 파일이다).
+    """
+    job_id = str(body.get("job_id") or "")
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
+    out_dir = _thumb_dir(job_id)
+    if out_dir is None:
+        return JSONResponse(status_code=400, content={"ok": False, "error": "bad job_id"})
+    thumb = job.get("thumbnail") or {}
+    pins = list(thumb.get("pins") or [])
+
+    if body.get("remove"):
+        name = os.path.basename(str(body.get("name") or ""))
+        # 목록에 있는 이름만 지운다 — 임의 파일 삭제 통로가 되면 안 된다(thumb_*.png는 사장님 결과물).
+        if name not in [str(p.get("name") or "") for p in pins]:
+            return JSONResponse(status_code=400, content={"ok": False, "error": "없는 핀"})
+        (out_dir / name).unlink(missing_ok=True)
+        thumb["pins"] = [p for p in pins if str(p.get("name") or "") != name]
+        store.update_mix_job(job_id, thumbnail=thumb)
+        return {"ok": True, "removed": name, "pins": thumb["pins"]}
+
+    try:
+        i = int(body.get("beat_idx"))
+    except (TypeError, ValueError):
+        return JSONResponse(status_code=400, content={"ok": False, "error": "beat_idx 없음"})
+    src = _beatframe_file(job, job_id, i)      # ★미리보기와 같은 함수 = 같은 그림(0순위-B)
+    if src is None:
+        return JSONResponse(status_code=404,
+                            content={"ok": False, "error": "이 장면의 화면을 아직 못 떴어요"})
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    # 이름에 원본 캐시 파일명을 녹인다 — 같은 장면을 두 번 보내면 같은 파일로 덮어써
+    # 후보가 중복으로 쌓이지 않는다(편성이 바뀌면 캐시명이 달라져 새 핀이 된다).
+    stem = re.sub(r"[^0-9a-zA-Z.\-]", "_", src.stem)[:60]
+    name = f"pin_{stem}.jpg"
+    shutil.copyfile(str(src), str(out_dir / name))
+
+    beats = ((job.get("edit_plan") or {}).get("beats") or [])
+    label = f"장면 {i + 1}"
+    pins = [p for p in pins if str(p.get("name") or "") != name]
+    # 새로 보낸 것이 맨 앞 = 방금 한 일이 눈에 바로 보인다.
+    pins.insert(0, {"name": name, "beat_idx": i, "label": label,
+                    "ts": round(float((beats[i] or {}).get("start") or 0), 2)})
+    thumb["pins"] = pins
+    store.update_mix_job(job_id, thumbnail=thumb)
+    return {"ok": True, "name": name, "label": label, "pins": pins,
+            "url": f"/api/produce/thumb/file/{job_id}/{name}"}
 
 
 @app.get("/api/produce/thumb/file/{job_id}/{name}")
@@ -13924,6 +14013,42 @@ def api_produce_mix_scenezoom(job_id: str, body: dict):
     return {"ok": True, "zoom": z, "pan_x": px, "pan_y": py}
 
 
+@app.post("/api/produce/mix/{job_id}/scenehl")
+def api_produce_mix_scenehl(job_id: str, body: dict):
+    """🔎 장면 하나의 **강조**(원형 돋보기 / 스포트라이트) — 2026-08-30 사장님
+    "장면꾸미기에서 강조하고싶은것들 수동하게".
+
+    body: {beat_idx, on, mode:'zoom'|'spot', cx, cy, r, zoom}
+      cx/cy = 화면 폭·높이 대비 원 중심(0~1), r = 화면 **폭** 대비 반지름(0~1)
+      on=false면 강조를 지운다.
+
+    ★확대(scenezoom)와 다른 물건이다 — 확대는 화면 구도를 바꾸고, 강조는 구도를 그대로
+      둔 채 위에 원을 얹는다. 그래서 두 개를 같이 걸 수 있다.
+    ★값 해석·보정은 video_assemble.scene_hl_of 한 곳뿐(0순위-B). 여기선 뜻만 저장한다.
+    ★음성·타이밍·자막을 안 건드린다 → 즉시·무료(scenezoom과 같다)."""
+    store = Store(DB_PATH)
+    plan, hit, err = _mix_job_beat_or_error(job_id, body, store)
+    if err:
+        return err
+    if not body.get("on"):
+        hit.pop("scene_hl", None)
+    else:
+        def _f(key, dflt):
+            try:
+                return float(body.get(key))
+            except (TypeError, ValueError):
+                return dflt
+        hit["scene_hl"] = {
+            "on": True,
+            "mode": "spot" if str(body.get("mode") or "zoom") == "spot" else "zoom",
+            "shape": "round" if str(body.get("shape") or "circle") == "round" else "circle",
+            "cx": round(_f("cx", 0.5), 5), "cy": round(_f("cy", 0.5), 5),
+            "r": round(_f("r", 0.28), 5), "zoom": round(_f("zoom", 2.0), 4),
+        }
+    store.update_mix_job(job_id, edit_plan=plan)
+    return {"ok": True, "hl": video_assemble.scene_hl_of(hit)}
+
+
 @app.post("/api/produce/mix/{job_id}/caplines")
 def api_produce_mix_caplines(job_id: str, body: dict):
     """장면 하나의 자막 줄 나누기(2026-08-25). body: {beat_idx, lines: [str, ...]}
@@ -14261,17 +14386,23 @@ def api_produce_mix_beats_preview(job_id: str):
             # ★장면별 화면 확대 구도(2026-08-30). 해석·보정은 scene_zoom_of 한 곳에서만 —
             #   화면이 스스로 가두면 렌더와 두 벌이 된다(0순위-B, cap_pos와 같은 방식).
             "zoom": _z_of(b)[0], "pan_x": _z_of(b)[1], "pan_y": _z_of(b)[2],
+            # 🔎 장면별 강조(원형 돋보기/스포트라이트, 2026-08-30). 같은 이유로 서버가 준다.
+            "hl": video_assemble.scene_hl_of(b),
         })
     return {"beats": out}
 
 
-@app.get("/api/produce/mix/beatframe/{job_id}/{i}")
-def api_produce_mix_beatframe(job_id: str, i: int):
-    """i번째 비트의 영상 프레임 1장(캐시). 없으면 404 → 프론트는 흰 배경 폴백."""
-    job = Store(DB_PATH).get_mix_job(job_id)
+def _beatframe_file(job, job_id: str, i: int):
+    """i번째 비트의 정지 프레임 파일(없으면 뜬다). 못 만들면 None.
+
+    ★이 판단은 **여기 한 곳에만** 있다(0순위-B). 미리보기(api_produce_mix_beatframe)와
+    '썸네일로 보내기'(api_thumb_pin)가 같은 함수를 부르므로, 어느 소스(청소본/원본)에서
+    어느 시각을 뜨는지가 두 벌로 갈릴 수 없다 — 갈리면 화면에 보이는 장면과 썸네일로
+    간 장면이 조용히 달라진다.
+    """
     beats = ((job or {}).get("edit_plan") or {}).get("beats") or []
     if i < 0 or i >= len(beats):
-        return JSONResponse(status_code=404, content={"ok": False})
+        return None
     work = _MIX_WORK_DIR / job_id
     # 2단계 자막제거를 밟았으면(clean_sources 존재) 청소본에서 프레임을 뜬다. 캐시 파일명도
     # 분리(_clean)해, 자막제거 전에 캐시된 원본 프레임이 남아 미리보기에 지운 자막이 살아
@@ -14286,7 +14417,15 @@ def api_produce_mix_beatframe(job_id: str, i: int):
     if not out.exists():
         _extract_beat_frame(work, beats[i], out, clean_sources=clean_map,
                             clean_final=_cfin, final_ratio=_crat)
-    if not out.exists():
+    return out if out.exists() else None
+
+
+@app.get("/api/produce/mix/beatframe/{job_id}/{i}")
+def api_produce_mix_beatframe(job_id: str, i: int):
+    """i번째 비트의 영상 프레임 1장(캐시). 없으면 404 → 프론트는 흰 배경 폴백."""
+    job = Store(DB_PATH).get_mix_job(job_id)
+    out = _beatframe_file(job, job_id, i)
+    if out is None:
         return JSONResponse(status_code=404, content={"ok": False})
     return FileResponse(str(out), media_type="image/jpeg")
 

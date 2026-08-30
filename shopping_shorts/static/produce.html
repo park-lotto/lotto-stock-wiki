@@ -1966,6 +1966,16 @@
               <span class="zoomSaved" id="zoomSaved"></span>
             </div>
           </div>
+          <!-- 🖼 이 장면을 썸네일로 (2026-08-30 사장님 "장면들중 썸네일로 쓰고싶은건
+               썸네일페이지로 이동시킬수있게"). 여태 썸네일 후보는 **자동 등분 추출뿐**이라,
+               여기서 좋은 장면을 봐 두고도 [다른 장면 더 뽑기]로 걸리기를 기다려야 했다. -->
+          <div class="zoomPanel" style="margin-top:6px">
+            <div class="zoomBar" style="justify-content:space-between">
+              <button type="button" class="zbtn" id="thumbPinBtn" onclick="pinBeatToThumb()"
+                      title="지금 보고 있는 장면을 7단계 썸네일 후보 맨 앞에 넣습니다">🖼 이 장면을 썸네일로</button>
+              <span class="zoomSaved" id="thumbPinMsg"></span>
+            </div>
+          </div>
           <!-- ★세로 크기는 화면 안에 들어와야 한다(2026-08-18 사장님 지시). 380px면 9:16이라
                675px가 돼 노트북 화면에서 아래가 잘려 하단 띠·자막 위치를 확인할 수 없다.
                폭은 부모의 --pvw를 그대로 받는다(정의처 한 곳) — aspect-ratio가 높이를 따라온다. -->
@@ -1977,6 +1987,15 @@
                  (applyErasedRegion)과 '다시 그 자리로' 버튼은 그대로 — 표시만 뺀 것. -->
             <div id="capPreviewText" style="position:absolute;left:50%;transform:translate(-50%,-50%);text-align:center;white-space:pre-wrap;word-break:keep-all;line-height:1.2;z-index:5;cursor:move;user-select:none"></div>
             <div id="hcPreviewText" style="position:absolute;transform:translate(-50%,-50%);text-align:center;line-height:1.18;word-break:keep-all;padding:0 6px;cursor:move;user-select:none;z-index:5"></div>
+            <!-- 🔎 강조 미리보기(2026-08-30). 렌더와 **같은 뜻**을 그린다:
+                 자리는 최종 프레임 기준(장면 확대가 걸린 뒤의 좌표) = 서버가 얹는 자리와 같다.
+                 z-index 2 — 배경 위, 자막(5) 아래. 렌더도 강조를 자막보다 먼저 얹는다. -->
+            <div id="hlCircle" style="position:absolute;display:none;z-index:2;border-radius:50%;
+                 overflow:hidden;border:2px solid #fff;box-sizing:border-box;cursor:move;
+                 box-shadow:0 2px 12px rgba(0,0,0,.45)">
+              <!-- 원 안 확대: 배경과 똑같은 그림을 같은 변형으로 깔고, 원 중심 기준으로 한 번 더 키운다 -->
+              <img id="hlZoomImg" style="position:absolute;object-fit:cover;display:none" alt="">
+            </div>
             <div id="extraPreview"></div>
             <img id="ovPreview" style="position:absolute;transform:translate(-50%,-50%);cursor:move;user-select:none;z-index:5;display:none" alt="">
             <div id="wmPreview" style="position:absolute;transform:translate(-50%,-50%);white-space:nowrap;z-index:6;pointer-events:none;display:none"></div>
@@ -2024,6 +2043,7 @@
             <button type="button" class="tab" data-decotab="tpl" onclick="decoTab('tpl')" style="min-width:auto;padding:7px 14px;font-size:12px">🖼 템플릿</button>
             <button type="button" class="tab" data-decotab="fx" onclick="decoTab('fx')" style="min-width:auto;padding:7px 14px;font-size:12px">✨ 효과</button>
           </div>
+
           <div id="decoPaneCopy" style="display:none">
           <!-- ✍ 고정카피 후보 — 대본에서 AI가 뽑는다. ★누를 때만 textarea에 들어간다
                (2026-07-19에 '자동 재채움'을 일부러 없앴다 — 자동으로 밀어넣으면 그 버그가 되살아난다) -->
@@ -2511,8 +2531,64 @@
                   <button onclick="clearOverlay()" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:12px">제거</button>
                   <span class="hint">미리보기에서 <b>드래그</b>로 이동</span>
                 </div>
+          <!-- 🧱 위아래띠(2026-08-28 사장님 시안 ② · 옛 이름 "빈 틀") — 글자·아이콘 없는 위아래 띠.
+               ★띠 끝부분 처리는 deco_frame._bar_layer 한 곳에서 정한다(0순위-B).
+                 여기 슬라이더는 그 값을 담는 그릇일 뿐이다. -->
+          <div id="pbBox" style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:12px">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+              <div style="font-size:17px;font-weight:900;letter-spacing:-.3px">🧱 <span style="color:#7CE8B0">위아래띠</span> <span style="font-size:12px;color:var(--sub);font-weight:600">— 글자 없는 위아래 띠</span></div>
+              <button type="button" class="mkbtn" onclick="pbApply()" style="margin-left:auto">이 틀로 바꾸기</button>
+            </div>
+            <div id="pbBody"></div>
+            <div class="hint" style="font-size:11px;margin-top:10px;line-height:1.7">
+              <b>글자·아이콘이 하나도 없는 틀입니다</b> — 인스타처럼 썰 스타일이 안 맞는 곳에 씁니다.<br>
+              지금 템플릿 24종은 전부 채널명·검색창·제목이 들어갑니다.
+            </div>
+          </div>
           </div>
           <div id="decoPaneFx" style="display:none">
+          <!-- 🔎 강조 — 효과 탭 **맨 위**에 둔다(2026-08-30). 아래(가림막 뒤)에 두니
+               첫 화면에서 615px 밖으로 밀려 안 보였다(실측). 새 기능일수록 먼저 보여야 한다. -->
+          <div id="hlBox" style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:12px">
+            <div style="font-size:13px;font-weight:800;margin-bottom:6px">🔎 이 장면에서 강조할 곳
+              <span style="font-size:11px;color:var(--accent2);font-weight:600">— 완성본에 그대로 나갑니다</span>
+            </div>
+            <div class="hint" style="margin-bottom:10px">
+              보여주고 싶은 곳에 원을 얹습니다. <b>왼쪽 미리보기에서 원을 끌어</b> 자리를 잡으세요.
+              원은 장면 내내 떠 있고, 나올 때 톡 커집니다. <b>장면마다 따로</b> 지정합니다.
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+              <button type="button" class="tab" id="hlOffBtn" onclick="hlSetMode('')">끄기</button>
+              <button type="button" class="tab" id="hlZoomBtn" onclick="hlSetMode('zoom')"
+                      title="원 안을 확대해서 보여줍니다">🔍 원 안 확대</button>
+              <button type="button" class="tab" id="hlSpotBtn" onclick="hlSetMode('spot')"
+                      title="원 밖을 어둡게 해서 원 안만 눈에 띄게 합니다">💡 원 밖 어둡게</button>
+              <span class="zoomNow" id="hlNow" style="align-self:center">꺼짐</span>
+            </div>
+            <div id="hlBody" style="display:none">
+              <div style="margin-bottom:10px">
+                <label style="font-size:12px;color:var(--sub);display:block;margin-bottom:4px">모양</label>
+                <div style="display:flex;gap:6px">
+                  <button type="button" class="tab" id="hlShapeCircle" onclick="hlSetShape('circle')">⭕ 원</button>
+                  <button type="button" class="tab" id="hlShapeRound" onclick="hlSetShape('round')">▢ 둥근네모</button>
+                </div>
+              </div>
+              <div style="margin-bottom:10px">
+                <label style="font-size:12px;color:var(--sub)">크기 <b id="hlRVal">28</b></label>
+                <input type="range" id="hlR" min="10" max="55" step="1" value="28"
+                       style="width:100%" oninput="hlSetR(this.value)">
+              </div>
+              <div id="hlZoomRow" style="margin-bottom:10px">
+                <label style="font-size:12px;color:var(--sub)">원 안 배율 <b id="hlZVal">2.0</b>배</label>
+                <input type="range" id="hlZ" min="12" max="40" step="1" value="20"
+                       style="width:100%" oninput="hlSetZ(this.value)">
+              </div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <button type="button" class="tab" id="hlSaveBtn" onclick="hlSaveNow()">💾 저장</button>
+                <span class="zoomSaved" id="hlSaved"></span>
+              </div>
+            </div>
+          </div>
           <!-- 🩹 가림막(2026-08-28 사장님 시안 그대로 · "효과" 탭으로) ────────────────
                "자막 남는것 가운데나 이런거 가릴때 … 도형이나 모양변경 가능하게해서
                 배치할수있게 … 워터마크도 가리고" + "색 쪽에 파레트 배치"
@@ -2558,19 +2634,6 @@
               <b>가장자리</b>를 올리면 경계가 부드럽게 풀려 덮은 티가 덜 납니다.
             </div>
           </div>
-          <!-- 🧱 위아래띠(2026-08-28 사장님 시안 ② · 옛 이름 "빈 틀") — 글자·아이콘 없는 위아래 띠.
-               ★띠 끝부분 처리는 deco_frame._bar_layer 한 곳에서 정한다(0순위-B).
-                 여기 슬라이더는 그 값을 담는 그릇일 뿐이다. -->
-          <div id="pbBox" style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:12px">
-            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
-              <div style="font-size:17px;font-weight:900;letter-spacing:-.3px">🧱 <span style="color:#7CE8B0">위아래띠</span> <span style="font-size:12px;color:var(--sub);font-weight:600">— 글자 없는 위아래 띠</span></div>
-              <button type="button" class="mkbtn" onclick="pbApply()" style="margin-left:auto">이 틀로 바꾸기</button>
-            </div>
-            <div id="pbBody"></div>
-            <div class="hint" style="font-size:11px;margin-top:10px;line-height:1.7">
-              <b>글자·아이콘이 하나도 없는 틀입니다</b> — 인스타처럼 썰 스타일이 안 맞는 곳에 씁니다.<br>
-              지금 템플릿 24종은 전부 채널명·검색창·제목이 들어갑니다.
-            </div>
           </div>
           <!-- ✨ 고급효과(리모션) — 사장님 지시로 화면에서 뺌(2026-08-28 "고급효과는 없애고").
                ★배선은 남긴다: toggleFxAdv·fxSuggest·fxRender가 이 안의 id들을 널가드 없이
@@ -5083,6 +5146,9 @@ function renderTemplatePreview(){
 // 🗂 탭 전환 — 보이기/숨기기만 한다. 상태(STATE)는 아무것도 안 바꾼다.
 function decoTab(name){
   const panes={copy:'decoPaneCopy', style:'decoPaneStyle', tpl:'decoPaneTpl', fx:'decoPaneFx'};
+  // ★위아래띠는 "틀"이라 템플릿 탭으로 옮겼다(2026-08-30 사장님). 펼쳐 그리는 것도 같이 옮긴다 —
+  //   안 옮기면 템플릿 탭을 열어도 띠 본문(pbBody)이 빈 채로 남는다.
+  if(name==='tpl'){ try{ pbRender(); }catch(e){} }
   Object.keys(panes).forEach(k=>{
     const el=document.getElementById(panes[k]);
     if(el) el.style.display=(k===name)?'':'none';
@@ -5095,7 +5161,8 @@ function decoTab(name){
   // 없어서, 탭만 열면 제목만 있고 아래가 비어 있었다.
   if(name==='fx'){
     try{ mkRender(); }catch(e){}
-    try{ pbRender(); }catch(e){}
+    // 🔎 강조도 효과 탭에 산다(2026-08-30) — 탭을 열 때 지금 장면의 값으로 다시 그린다.
+    try{ hlLoadFromBeat(); }catch(e){}
   }
 }
 function initHeadcopy(){
@@ -5277,6 +5344,9 @@ function showBeat(i, first){
   renderBeatTools();          // 장면을 넘기면 그 장면의 자리·줄을 보여준다
   // 확대를 이 장면에도 이어갈지는 '모든 장면에 같은 배율' 체크가 정한다(zoomOnBeatChange)
   if(typeof zoomOnBeatChange==='function') zoomOnBeatChange(first);
+  // 🔎 강조는 **장면마다 따로**다(확대의 '모든 장면에 같은 배율' 같은 전파가 없다) —
+  //   강조는 "이 장면의 이 자리"를 가리키는 것이라 다음 장면에 그대로 옮기면 엉뚱한 곳을 가리킨다.
+  if(typeof hlLoadFromBeat==='function') hlLoadFromBeat();
 }
 let CAP_SEQ_TIMER=null;
 function _playBeatCaptions(b){
@@ -6641,6 +6711,221 @@ async function zoomSaveNow(){
     if(msg){ msg.style.color='var(--fire)'; msg.textContent='❌ 저장 실패 — 다시 눌러 주세요'; }
   }finally{ if(btn) btn.disabled=false; }
 }
+/* ══════════════════════════════════════════════════════════════════════
+   🔎 장면 강조 (원형 돋보기 / 스포트라이트) — 2026-08-30 사장님
+   "장면꾸미기에서 강조하고싶은것들 수동하게"
+
+   ★값의 뜻은 **서버(video_assemble.scene_hl_of)와 한 벌**이다(0순위-B):
+       cx,cy = 화면 폭·높이 대비 원 중심(0~1)  /  r = 화면 **폭** 대비 반지름(0~1)
+     그래서 미리보기에서 보이는 자리 = 완성본에 찍히는 자리다. 여기서 px으로 가두거나
+     따로 해석하지 않는다 — 그 순간 두 벌이 되어 언젠가 어긋난다.
+   ★강조는 **자막 아래**에 그린다(z-index 2). 렌더도 강조를 먼저 얹고 자막을 나중에 얹는다.
+   ══════════════════════════════════════════════════════════════════════ */
+let HL = {on:false, mode:'zoom', shape:'circle', cx:0.5, cy:0.47, r:0.28, zoom:2.0};
+
+// 모양 → 미리보기 둥글기. ★서버(video_assemble._HL_SHAPE_N)와 **짝**이다:
+//   원(지수 2) = 50%,  둥근네모(지수 4=스퀘어클) ≈ 22%. 한쪽만 고치면 화면과 완성본이 달라진다.
+const HL_RADIUS_CSS = {circle:'50%', round:'22%'};
+
+// 미리보기가 **크기를 갖는 순간**(패널이 열리거나 창이 바뀔 때) 스스로 다시 그린다.
+// 감시자는 하나만 만든다 — 매번 새로 붙이면 같은 요소에 관찰자가 쌓인다.
+let _HL_RO=null;
+function _hlWatchSize(pv){
+  if(_HL_RO || typeof ResizeObserver==='undefined') return;
+  _HL_RO=new ResizeObserver(()=>{ if(pv.clientWidth>=10) hlApply(); });
+  _HL_RO.observe(pv);
+}
+
+function _hlEls(){
+  return {c:document.getElementById('hlCircle'), img:document.getElementById('hlZoomImg'),
+          pv:document.getElementById('hcPreview'), bg:document.getElementById('hcPreviewBg')};
+}
+
+// 화면에 그린다. ★렌더와 같은 그림이 되도록, 확대 모드는 배경과 **똑같은 변형**을 깔고
+//   원 중심 기준으로 배율만 한 번 더 건다(서버: base 크롭 → 그 위에 원 안 확대).
+function hlApply(){
+  const {c, img, pv, bg} = _hlEls();
+  if(!c || !pv) return;
+  const now=document.getElementById('hlNow');
+  const show=(id,on)=>{ const e=document.getElementById(id); if(e) e.style.display= on?'':'none'; };
+  if(!HL.on){
+    c.style.display='none';
+    show('hlBody',false);
+    if(now) now.textContent='꺼짐';
+    _hlBtnMark();
+    return;
+  }
+  const W=pv.clientWidth, H=pv.clientHeight;
+  // ★폭이 0이면 그리지 않는다(2026-08-30 실브라우저에서 잡음). 패널이 숨어 있을 때
+  //   계산하면 원이 16px로 뭉개진 채 굳고, 패널이 열려도 아무도 다시 그려주지 않는다.
+  //   대신 크기가 잡히는 순간 스스로 다시 그린다(아래 _hlWatchSize).
+  if(W < 10 || H < 10){ _hlWatchSize(pv); return; }
+  const d=Math.max(16, HL.r*2*W);
+  c.style.display=''; c.style.width=d+'px'; c.style.height=d+'px';
+  c.style.left=(HL.cx*W - d/2)+'px'; c.style.top=(HL.cy*H - d/2)+'px';
+  c.style.borderRadius = HL_RADIUS_CSS[HL.shape] || '50%';
+  show('hlBody',true);
+  show('hlZoomRow', HL.mode!=='spot');            // 배율은 확대 모드에서만 뜻이 있다
+  const rv=document.getElementById('hlRVal'), zv=document.getElementById('hlZVal');
+  if(rv) rv.textContent=Math.round(HL.r*100);
+  if(zv) zv.textContent=HL.zoom.toFixed(1);
+
+  if(HL.mode==='spot'){
+    // 원 밖을 어둡게 — 원 하나에 아주 큰 그림자를 퍼뜨리면 바깥이 통째로 덮인다.
+    c.style.boxShadow='0 0 0 9999px rgba(0,0,0,.6)';
+    img.style.display='none';
+    if(now) now.textContent='원 밖 어둡게';
+  }else{
+    c.style.boxShadow='0 2px 12px rgba(0,0,0,.45)';
+    // 원 안 확대: 배경과 같은 그림·같은 크기·같은 변형을 깔고, 원 중심을 원점으로 배율을 얹는다.
+    if(bg && bg.src){
+      img.src=bg.src; img.style.display='';
+      img.style.width=W+'px'; img.style.height=H+'px';
+      img.style.left=(-(HL.cx*W - d/2))+'px'; img.style.top=(-(HL.cy*H - d/2))+'px';
+      // 배경이 이미 쓰고 있는 확대/이동을 그대로 물려받는다(장면 확대와 겹쳐도 어긋나지 않게)
+      const cs=getComputedStyle(bg);
+      img.style.transformOrigin=(HL.cx*100)+'% '+(HL.cy*100)+'%';
+      img.style.transform='scale('+HL.zoom+') '+(cs.transform==='none'?'':cs.transform);
+    }else{
+      img.style.display='none';       // 아직 배경 그림이 없으면 테두리만 보여준다
+    }
+    if(now) now.textContent='원 안 '+HL.zoom.toFixed(1)+'배';
+  }
+  _hlBtnMark();
+}
+
+function _hlBtnMark(){
+  const on=(id,yes)=>{ const b=document.getElementById(id); if(b) b.style.outline= yes?'2px solid var(--accent2)':''; };
+  on('hlOffBtn', !HL.on);
+  on('hlZoomBtn', HL.on && HL.mode==='zoom');
+  on('hlSpotBtn', HL.on && HL.mode==='spot');
+  on('hlShapeCircle', HL.on && HL.shape==='circle');
+  on('hlShapeRound', HL.on && HL.shape==='round');
+}
+
+// 모양 바꾸기(2026-08-30 사장님 "돋보기 기능은 모양 변경가능하게").
+// 원 = 얼굴·물건 하나, 둥근네모 = 글자·버튼처럼 네모난 것을 감쌀 때.
+function hlSetShape(s){ HL.shape = (s==='round'?'round':'circle'); hlApply(); _hlSaveSoon(); }
+
+function hlSetMode(m){
+  HL.on = !!m; if(m) HL.mode=m;
+  hlApply(); _hlSaveSoon();
+}
+function hlSetR(v){ HL.r = Math.max(0.06, Math.min(0.9, Number(v)/100)); hlApply(); _hlSaveSoon(); }
+function hlSetZ(v){ HL.zoom = Math.max(1.1, Math.min(4.0, Number(v)/10)); hlApply(); _hlSaveSoon(); }
+
+// 원을 끌어서 옮긴다. ★배경 끌기(패닝)와 안 부딪힌다 — 이 핸들러는 원 자신에게만 걸리고
+//   stopPropagation으로 배경까지 안 내려간다(자막 끌기가 자기 요소에 거는 방식과 같다).
+function bindHLDrag(){
+  const {c, pv} = _hlEls();
+  if(!c || !pv || c._bound) return;
+  c._bound = true;
+  let sx=0, sy=0, cx0=0, cy0=0, moved=false, dragging=false;
+  c.addEventListener('pointerdown', e=>{
+    e.preventDefault(); e.stopPropagation();
+    sx=e.clientX; sy=e.clientY; cx0=HL.cx; cy0=HL.cy; moved=false; dragging=true;
+    // ★캡처는 **되면 좋은 것**이지 조건이 아니다 — 캡처 여부로 끌기를 판정하면
+    //   캡처가 안 되는 환경에서 원이 통째로 안 움직인다(2026-08-30 실측으로 잡음).
+    try{ c.setPointerCapture(e.pointerId); }catch(err){}
+  });
+  c.addEventListener('pointermove', e=>{
+    if(!dragging) return;
+    e.preventDefault(); e.stopPropagation();
+    const r=pv.getBoundingClientRect();
+    if(!r.width||!r.height) return;
+    moved=true;
+    // ★비율로 옮긴다 — rect는 확대(scale)가 반영된 값이라 어떤 배율에서도 1:1로 따라온다
+    HL.cx=Math.max(0,Math.min(1, cx0+(e.clientX-sx)/r.width));
+    HL.cy=Math.max(0,Math.min(1, cy0+(e.clientY-sy)/r.height));
+    hlApply();
+  });
+  const end=e=>{ dragging=false;
+                 try{ c.releasePointerCapture(e.pointerId); }catch(err){}
+                 if(moved) _hlSaveSoon(); };
+  c.addEventListener('pointerup', end);
+  c.addEventListener('pointercancel', end);
+}
+
+// 장면을 넘길 때 그 장면의 강조를 불러온다(서버가 준 값 그대로 — 화면이 만들어내지 않는다).
+function hlLoadFromBeat(){
+  const b=(typeof BEATS_PREVIEW!=='undefined' && BEATS_PREVIEW[BEAT_IDX]) || null;
+  const h=b && b.hl;
+  HL = h ? {on:true, mode:h.mode||'zoom', shape:h.shape||'circle', cx:h.cx, cy:h.cy, r:h.r, zoom:h.zoom}
+         : {on:false, mode:'zoom', shape:'circle', cx:0.5, cy:0.47, r:0.28, zoom:2.0};
+  const rEl=document.getElementById('hlR'), zEl=document.getElementById('hlZ');
+  if(rEl) rEl.value=Math.round(HL.r*100);
+  if(zEl) zEl.value=Math.round(HL.zoom*10);
+  bindHLDrag();
+  hlApply();
+}
+
+let _HL_SAVE_T=null;
+function _hlSaveSoon(){
+  if(_HL_SAVE_T) clearTimeout(_HL_SAVE_T);
+  _HL_SAVE_T=setTimeout(()=>{ _HL_SAVE_T=null; _hlSave(); }, 400);
+}
+async function _hlSave(wait){
+  if(typeof MIX_JOB==='undefined' || !MIX_JOB) return;
+  const b=(typeof BEATS_PREVIEW!=='undefined' && BEATS_PREVIEW[BEAT_IDX]) || null;
+  if(!b) return;
+  const idx=(b.beat_idx!=null?b.beat_idx:BEAT_IDX);
+  const payload={beat_idx:idx, on:HL.on, mode:HL.mode, shape:HL.shape,
+                 cx:HL.cx, cy:HL.cy, r:HL.r, zoom:HL.zoom};
+  const p=fetch('/api/produce/mix/'+MIX_JOB+'/scenehl',{method:'POST',
+    headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+    .then(r=>r.json()).then(d=>{
+      // 서버가 가둔 값을 그대로 받아 화면에 담는다 — 화면이 따로 가두면 두 벌이 된다
+      b.hl = d && d.hl ? d.hl : null;
+      if(!d || !d.ok) throw new Error('저장 실패');
+      return d;
+    });
+  if(wait) return p;
+  p.catch(()=>{});
+}
+async function hlSaveNow(){
+  const msg=document.getElementById('hlSaved'), btn=document.getElementById('hlSaveBtn');
+  const say=(t,c)=>{ if(msg){ msg.style.color=c; msg.textContent=t; } };
+  if(typeof MIX_JOB==='undefined' || !MIX_JOB){ say('먼저 영상 매칭이 필요해요','var(--fire)'); return; }
+  if(_HL_SAVE_T){ clearTimeout(_HL_SAVE_T); _HL_SAVE_T=null; }
+  if(btn) btn.disabled=true;
+  say('저장 중…','var(--sub)');
+  try{
+    await _hlSave(true);
+    say('✅ 저장됨 — 완성본에 그대로 나갑니다','var(--ok)');
+  }catch(e){ say('❌ 저장 실패 — 다시 눌러 주세요','var(--fire)'); }
+  finally{ if(btn) btn.disabled=false; }
+}
+
+// 🖼 지금 보고 있는 장면을 7단계 썸네일 후보로 보낸다(2026-08-30).
+// ★서버가 **미리보기와 같은 함수**(_beatframe_file)로 그림을 뜬다 — 화면에서 본 장면과
+//   썸네일로 간 장면이 다를 수 없다. 프론트가 캔버스를 떠서 올리면 그게 두 벌이 된다.
+async function pinBeatToThumb(){
+  const msg=document.getElementById('thumbPinMsg');
+  const btn=document.getElementById('thumbPinBtn');
+  const say=(t,c)=>{ if(msg){ msg.style.color=c; msg.textContent=t; } };
+  if(typeof MIX_JOB==='undefined' || !MIX_JOB){
+    say('먼저 영상 매칭이 필요해요','var(--fire)'); return;
+  }
+  const b=(typeof BEATS_PREVIEW!=='undefined' && BEATS_PREVIEW[BEAT_IDX]) || null;
+  if(!b){ say('보낼 장면이 없어요','var(--fire)'); return; }
+  const idx=(b.beat_idx!=null?b.beat_idx:BEAT_IDX);      // 저장용 진짜 번호(scenezoom과 동일)
+  if(btn) btn.disabled=true;
+  say('보내는 중…','var(--sub)');
+  try{
+    const r=await fetch('/api/produce/thumb/pin',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({job_id:MIX_JOB, beat_idx:idx})});
+    const d=await r.json();
+    if(!d.ok) throw new Error(d.error||'실패');
+    say('✅ '+(d.label||'장면')+' → '+stepName('thumb')+' 후보 맨 앞에 넣었어요','var(--ok)');
+    // 7단계를 이미 열어봤다면 목록을 바로 새로 그린다(안 그러면 가서 새로고침해야 보인다).
+    if(typeof THUMB_STATE!=='undefined' && THUMB_STATE.job===MIX_JOB
+       && typeof loadThumbFrames==='function') loadThumbFrames();
+  }catch(e){
+    say('❌ 못 보냈어요 — 다시 눌러 주세요','var(--fire)');
+  }finally{ if(btn) btn.disabled=false; }
+}
+
 // 끌기·클릭이 끝난 뒤 한 번만 보낸다(끄는 도중 매 프레임 보내면 서버가 죽는다)
 function _zoomSaveSoon(){
   if(_ZOOM_SAVE_T) clearTimeout(_ZOOM_SAVE_T);
@@ -13348,6 +13633,12 @@ async function _loadThumbFrames(more){
     // job은 있는데 서버가 거절(영상 미완성 등) — 원문 에러에 갈 곳까지 얹는다.
     hintEl.innerHTML = (d.error || '프레임 추출 실패')
       + ' — <a href="#" onclick="stepGo(&quot;mix&quot;);return false" style="color:var(--accent2);font-weight:700">'+stepName('mix')+'에서 영상 매칭 확인 →</a>';
+    // ★화면도 비운다(2026-08-30 실브라우저 관찰). 종전엔 그리드를 그대로 둬서, 마지막
+    //   후보를 뺀 직후 서버엔 0개인데 화면엔 **유령 카드**가 남았다 — 그걸 누르면 이미
+    //   지워진 그림으로 썸네일을 만들게 된다. 화면이 서버보다 뒤처지면 안 된다.
+    THUMB_STATE.frames = [];
+    document.getElementById('thumbFrames').innerHTML = '';
+    document.getElementById('thumbFrameCount').textContent = '';
     return;
   }
   // ★프레임이 그대로면 다시 그리지 않는다(2026-07-30) — 아래에서 5단계 진입마다 서버에
@@ -13369,14 +13660,33 @@ async function _loadThumbFrames(more){
   THUMB_STATE.frames = d.frames;
   document.getElementById('thumbFrameCount').textContent = `(${d.frames.length}개)`;
   document.getElementById('thumbFramesHint').innerHTML = thumbBgNotice(d);
+  // ★핀(장면꾸미기에서 보낸 장면)은 자동 추출과 **눈에 띄게 갈라 보인다** — 안 그러면
+  //   16장 사이에 섞여 사장님이 방금 보낸 게 어느 것인지 못 찾는다. 빼기(×)도 여기서.
   document.getElementById('thumbFrames').innerHTML = d.frames.map((f, i) => `
     <div onclick="pickThumbFrame(${i})" style="position:relative;cursor:pointer;border-radius:6px;
-         overflow:hidden;border:2px solid ${i === 0 ? 'var(--accent2)' : 'transparent'}" data-fi="${i}">
+         overflow:hidden;border:2px solid ${i === 0 ? 'var(--accent2)' : (f.pin ? 'var(--gold)' : 'transparent')}" data-fi="${i}">
       <img src="${f.url}" style="width:100%;display:block">
+      ${f.pin ? `<span style="position:absolute;left:4px;top:4px;background:var(--gold);color:#000;
+            font-size:10px;font-weight:800;padding:1px 4px;border-radius:3px">🖼 ${f.label || '장면'}</span>
+      <span onclick="event.stopPropagation();unpinThumbFrame('${f.pin}')" title="후보에서 빼기"
+            style="position:absolute;right:4px;top:4px;background:#000c;color:#fff;font-size:11px;
+            line-height:1;padding:2px 5px;border-radius:3px">×</span>` : ''}
       <span style="position:absolute;right:4px;bottom:4px;background:#000c;color:#fff;
             font-size:10px;padding:1px 4px;border-radius:3px">${f.ts}s</span>
     </div>`).join('');
   if (d.frames.length) pickThumbFrame(0);
+}
+
+// 🖼 보낸 장면을 후보에서 뺀다(파일도 지운다 — 우리가 만든 사본이라 원본 장면은 그대로).
+async function unpinThumbFrame(name){
+  if(!MIX_JOB || !name) return;
+  try{
+    const r=await fetch('/api/produce/thumb/pin',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({job_id:MIX_JOB, name:name, remove:true})});
+    const d=await r.json();
+    if(d.ok) loadThumbFrames();
+  }catch(e){}
 }
 
 function pickThumbFrame(i){

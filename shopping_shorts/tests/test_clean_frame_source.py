@@ -64,9 +64,17 @@ class Test판단이_흩어지지_않았나:
     """★0순위-B — 화면 라우트가 clean_sources를 직접 보고 판단하면 이 사고가 재발한다."""
 
     def test_화면_라우트는_공용함수를_쓴다(self):
+        """★2026-08-30: 프레임을 뜨는 몸통이 `_beatframe_file`로 빠졌다(썸네일로 보내기가
+        같은 그림을 봐야 해서). 판단은 한 곳으로 더 모였고, 가드는 그 새 주인을 지킨다."""
         import inspect
-        for fn in (A.api_produce_mix_beatframe,):
+        for fn in (A._beatframe_file,):
             body = inspect.getsource(fn)
             assert "_clean_frame_src" in body, f"{fn.__name__}이 공용 판단을 안 쓴다"
+            assert 'job.get("clean_sources")' not in body, \
+                f"{fn.__name__}이 clean_sources를 또 직접 본다"
+        # 프레임을 쓰는 쪽(라우트·썸네일 핀)은 전부 그 몸통을 통해야 한다
+        for fn in (A.api_produce_mix_beatframe, A.api_thumb_pin):
+            body = inspect.getsource(fn)
+            assert "_beatframe_file" in body, f"{fn.__name__}이 공용 몸통을 안 쓴다"
             assert 'job.get("clean_sources")' not in body, \
                 f"{fn.__name__}이 clean_sources를 또 직접 본다"
