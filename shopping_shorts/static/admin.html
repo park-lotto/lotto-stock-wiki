@@ -236,9 +236,12 @@ async function load(){
   document.getElementById('settings').innerHTML=SETTING_FIELDS.map(([k,label])=>
     `<div class=setfield><label>${label}</label><input id=set_${k} value="${(CURRENT[k]??'').toString().replace(/"/g,'&quot;')}"></div>`).join('');
   loadDepositClaims();   // 입금 신고 목록(별도 API — 실패해도 이 화면은 계속 뜬다)
-  // 미승인(approved_at null) = 순수대기 + 이벤트 체험중 → 모두 대기명단(사장님이 승인 가능해야 함).
-  const pend=d.customers.filter(c=>c.approved_at==null);
-  const rest=d.customers.filter(c=>c.approved_at!=null);
+  // ★대기명단 판정 = acked_at(2026-08-30 사장님 "가입하면 자동으로 체험판 랭킹만으로").
+  //   가입이 acked_at을 바로 채우므로 이 목록은 **상시 0건이 정상**이다.
+  //   approved_at으로 가르면 안 된다 — 그건 '체험창 무시하고 영구개방'이라는 권한
+  //   필드라, 목록에서 내리려고 채우는 순간 3일 체험이 영구가 된다(0순위-B).
+  const pend=d.customers.filter(c=>c.acked_at==null);
+  const rest=d.customers.filter(c=>c.acked_at!=null);
   // ★대기 명단을 renderCustomers가 볼 수 있게 남긴다(2026-08-28 사장님 제보:
   //   "입금까지 한 사람인데 조회가 안 돼"). 종전엔 검색이 승인된 회원(rest)만
   //   훑어서, 미승인은 이메일을 정확히 넣어도 **한 건도 안 나왔다**. 실측 당시
@@ -328,7 +331,7 @@ function renderCustomers(){
   const esc=s=>(s||'').toString().replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const q=((document.getElementById('custSearch')||{}).value||'').trim().toLowerCase();
   const tier=(document.getElementById('tierFilter')||{}).value||'';
-  const rest=(window._CUST||[]).filter(c=>c.approved_at!=null).filter(c=>{
+  const rest=(window._CUST||[]).filter(c=>c.acked_at!=null).filter(c=>{
     if(tier && _tierOf(c)!==tier) return false;
     if(q && !_custMatch(c,q)) return false;
     return true;
