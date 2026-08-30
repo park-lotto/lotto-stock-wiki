@@ -3166,7 +3166,11 @@ async function loadBuffer(){
   /* 올라갈 영상을 보여준다 — 완성본 미리보기와 같은 주소를 쓴다(0순위-B). */
   var vbox = document.getElementById('bufVideo');
   if (vbox && MIX_JOB){
+    /* ★poster를 반드시 준다 — 없으면 preload="metadata"에서 멈춘 브라우저가 **검은 칸**을
+       보여준다(실측 2026-08-30 사장님 화면. 내 브라우저는 readyState 4까지 가서 첫 프레임이
+       그려져 멀쩡해 보였다 — 브라우저마다 갈린다). 주소는 이 화면이 이미 쓰는 것과 같다. */
     vbox.innerHTML = '<video src="/api/mix/video/' + encodeURIComponent(MIX_JOB) + '" '
+      + 'poster="/api/produce/mix/poster/' + encodeURIComponent(MIX_JOB) + '" '
       + 'style="width:100%;border-radius:8px;background:#000" muted playsinline preload="metadata"></video>';
     var nm = document.getElementById('bufVideoName');
     /* ★사람이 읽을 수 있는 이름을 먼저 쓴다 — 작업이 여러 개면 ID로는 분간이 안 된다
@@ -3259,10 +3263,30 @@ async function bufSchedule(){
   /* 채널마다 결과가 다를 수 있다 — 성공/실패를 있는 그대로 보여준다. */
   var name = {};
   BUF.channels.forEach(function(c){ name[c.id] = c.name; });
-  st.innerHTML = d.results.map(function(r){
-    return (r.ok ? '✅ ' : '⚠️ ') + esc(name[r.channel_id] || r.channel_id)
-         + (r.ok ? ' 예약됨' : ' — ' + esc(r.error || ''));
-  }).join('<br>');
+  /* ★"예약됨" 한 마디로 끝내지 않는다 — **언제 올라가는지, 어디서 확인하는지**까지
+     보여준다(사장님 2026-08-30: "정상적으로 올라간건지 결과도 볼수있게").
+     ⚠️여기서 끝난 것은 **예약**이다. 실제 게시는 그 시각에 Buffer가 한다 —
+       '올라갔다'고 단정하지 않는다(가짜 성공은 조용한 사고다). */
+  var okN = d.results.filter(function(r){ return r.ok; }).length;
+  var rows = d.results.map(function(r){
+    var nm = esc(name[r.channel_id] || r.channel_id);
+    if (!r.ok) return '⚠️ <b>' + nm + '</b> — ' + esc(r.error || '실패');
+    var when = '';
+    if (r.due_at){
+      /* Buffer가 준 UTC를 **내 시간대**로 되돌려 보여준다(보낼 때 UTC로 바꿨다). */
+      try { when = new Date(r.due_at).toLocaleString('ko-KR',
+              {year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'}); }
+      catch(e){ when = r.due_at; }
+    }
+    return '✅ <b>' + nm + '</b> 예약 완료'
+         + (when ? ' — <b>' + esc(when) + '</b>에 올라갑니다' : ' — 내 Buffer 시간표 순서대로 올라갑니다');
+  });
+  if (okN){
+    rows.push('<div style="margin-top:8px">🔎 <a href="https://publish.buffer.com" target="_blank" '
+            + 'rel="noopener">Buffer에서 확인·수정·취소하기</a> — 예약이 걸린 것이고, '
+            + '실제 게시는 그 시각에 Buffer가 합니다.</div>');
+  }
+  st.innerHTML = rows.join('<br>');
 }
 
 const PANEL_COUNT = document.querySelectorAll('.panel').length;
