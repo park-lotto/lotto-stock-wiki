@@ -146,7 +146,7 @@ def _service_of(key: str, channel_id: str) -> str:
     return _SERVICE_CACHE.get(channel_id, "")
 
 
-def _post_metadata(key: str, channel_id: str) -> dict:
+def _post_metadata(key: str, channel_id: str, privacy: str = "") -> dict:
     """SNS마다 요구하는 부가정보. **없으면 Buffer가 거절한다.**
 
     ★인스타는 type이 **필수**다(실측 2026-08-30 라이브 오류:
@@ -160,16 +160,25 @@ def _post_metadata(key: str, channel_id: str) -> dict:
     svc = _service_of(key, channel_id)
     if svc == "instagram":
         return {"instagram": {"type": "reel", "shouldShareToFeed": True}}
+    if svc == "youtube":
+        # ★유튜브만 공개범위를 받는다(스키마 실측: YoutubePrivacy = public/unlisted/private).
+        #   인스타는 이 축이 **아예 없다** — InstagramPostMetadataInput 7필드에 없다.
+        pv = privacy if privacy in ("public", "unlisted", "private") else "public"
+        return {"youtube": {"type": "short", "privacy": pv}}
     return {}
 
 
 def schedule_video(key: str, channel_id: str, text: str, video_url: str,
-                   due_at: str | None = None, thumb_ms: int = 0) -> dict:
+                   due_at: str | None = None, thumb_ms: int = 0,
+                   share_now: bool = False, privacy: str = "") -> dict:
     """영상 하나를 예약한다. → {id, dueAt}
 
     due_at : ISO8601 UTC (예 "2026-03-26T10:28:47.545Z"). 없으면 **큐에 넣는다**
              (고객이 Buffer에서 정해둔 시간표를 따른다 — 우리가 시간을 지어내지 않는다).
     thumb_ms: 썸네일로 쓸 지점(밀리초). 인스타·틱톡·핀터레스트에 적용된다.
+    share_now: True면 **지금 바로 올린다**(예약이 아니다. 되돌릴 수 없다).
+    privacy  : 유튜브 공개범위 public|unlisted|private. 다른 SNS는 무시된다
+               (인스타에는 이 축이 없다 — 스키마 실측).
     ★video_url은 **인증 없이 열리는 주소**여야 한다. Buffer가 직접 받아 간다.
     """
     asset = {"video": {"url": video_url}}
@@ -177,10 +186,15 @@ def schedule_video(key: str, channel_id: str, text: str, video_url: str,
         asset["video"]["metadata"] = {"thumbnailOffset": int(thumb_ms)}
     inp = {"channelId": channel_id, "text": text or "",
            "schedulingType": "automatic", "assets": [asset]}
-    meta = _post_metadata(key, channel_id)
+    meta = _post_metadata(key, channel_id, privacy)
     if meta:
         inp["metadata"] = meta
-    if due_at:
+    # ★올리는 방식은 셋 중 하나다(스키마 실측 ShareMode: addToQueue/customScheduled/
+    #   shareNext/shareNow). shareNow는 **지금 바로 게시**라 되돌릴 수 없다 —
+    #   화면이 한 번 더 묻고 나서만 여기로 온다.
+    if share_now:
+        inp["mode"] = "shareNow"
+    elif due_at:
         inp["mode"] = "customScheduled"
         inp["dueAt"] = due_at
     else:
