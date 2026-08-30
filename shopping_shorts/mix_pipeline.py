@@ -2741,6 +2741,34 @@ def _thumb_intro_png(job, thumb):
 
 
 @_owned_job
+def _faststart(path):
+    """mp4의 moov 원자를 파일 앞으로 옮긴다(-c copy 리멕스). 실패해도 원본을 지키고 넘어간다.
+
+    왜: 스트리밍 수집기(Buffer→인스타 등)는 앞부분만 읽어 영상을 판정한다. moov가 끝에
+    있으면 "읽을 수 없다"고 거절한다. 이미 앞에 있으면 그대로 복사할 뿐이라 무해하다.
+    """
+    p = Path(path)
+    if not p.exists():
+        return
+    tmp = p.with_suffix(".fs.mp4")
+    try:
+        r = subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", str(p),
+                            "-c", "copy", "-movflags", "+faststart", str(tmp)],
+                           capture_output=True, text=True)
+        if r.returncode == 0 and tmp.exists() and tmp.stat().st_size > 0:
+            os.replace(str(tmp), str(p))
+        else:
+            print(f"[faststart] 실패(원본 유지): {(r.stderr or '')[:300]}", file=sys.stderr)
+    except Exception:
+        traceback.print_exc(file=sys.stderr)
+    finally:
+        try:
+            if tmp.exists():
+                tmp.unlink()
+        except Exception:
+            pass
+
+
 def run_render(job_id, db_path, work_root):
     """확인된 EDL을 최종 mp4로 렌더. subtitle_removal이 켜져 있으면 믹스 후
     VMake로 원본 자막을 제거하고 그 위에 우리 자막을 굽는다. 완료 시 status='done'."""
@@ -2842,6 +2870,12 @@ def run_render(job_id, db_path, work_root):
                     print(f"[thumb-intro] {job_id}: 붙일 썸네일 PNG를 못 찾음", file=sys.stderr)
             except Exception:
                 traceback.print_exc(file=sys.stderr)
+        # ★moov 앞으로(faststart). 안 하면 moov가 파일 끝에 남아, 헤더만 읽어 판단하는
+        #   외부 수집기가 영상을 못 읽는다 — Buffer 실측 2026-08-30:
+        #   "Invalid post: Video could not be read from its URL"(HEAD 200인데 거절).
+        #   재인코딩이 아니라 -c copy 리멕스라 화질 손실도 시간도 거의 없다.
+        #   ★여기 한 곳에서만 한다 — 완성본 경로를 DB에 박는 유일한 출구다(0순위-B).
+        _faststart(out_path)
         store.update_mix_job(job_id, status="done", video_path=str(out_path))
     except Exception as e:
         traceback.print_exc(file=sys.stderr)

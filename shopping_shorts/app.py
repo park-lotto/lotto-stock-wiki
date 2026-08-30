@@ -5784,8 +5784,49 @@ def api_share_link(job_id: str, request: Request):
     return {"ok": True, "url": url, "qr_svg": qr}
 
 
+def _mp4_range_response(path: str, request: Request):
+    """mp4를 Range(부분 요청)까지 지원해 내보낸다.
+
+    ★왜 직접 짰나: 설치된 starlette 0.36의 FileResponse는 Range를 **무시하고**
+      200에 전체(수십 MB)를 보낸다(0.37부터 지원). 영상 수집기·플레이어는 앞부분만
+      Range로 띄 가 판정하므로, 그걸 못 받으면 "영상을 읽을 수 없다"고 거절한다
+      (Buffer 실측 2026-08-30). Accept-Ranges 헤더도 같이 준다.
+    """
+    size = os.path.getsize(path)
+    rng = (request.headers.get("range") or "").strip().lower()
+    m = re.match(r"bytes=(\d*)-(\d*)$", rng) if rng else None
+    if not m or (not m.group(1) and not m.group(2)):
+        return FileResponse(path, media_type="video/mp4", headers={"Accept-Ranges": "bytes"})
+    if m.group(1):
+        start = int(m.group(1))
+        end = int(m.group(2)) if m.group(2) else size - 1
+    else:                                   # bytes=-N → 끝에서 N바이트
+        start = max(0, size - int(m.group(2)))
+        end = size - 1
+    if start >= size:                       # 범위 밖 — 규격대로 416
+        return Response(status_code=416, headers={"Content-Range": f"bytes */{size}"})
+    end = min(end, size - 1)
+    length = end - start + 1
+
+    def _chunks():
+        with open(path, "rb") as f:
+            f.seek(start)
+            left = length
+            while left > 0:
+                buf = f.read(min(262144, left))
+                if not buf:
+                    break
+                left -= len(buf)
+                yield buf
+
+    return StreamingResponse(_chunks(), status_code=206, media_type="video/mp4", headers={
+        "Accept-Ranges": "bytes",
+        "Content-Range": f"bytes {start}-{end}/{size}",
+        "Content-Length": str(length)})
+
+
 @app.api_route("/api/share/v/{sid}", methods=["GET", "HEAD"])
-def api_share_v(sid: str, dl: int = 0):
+def api_share_v(request: Request, sid: str, dl: int = 0):
     """단축 id로 영상 스트리밍(로그인 불필요·저장소 조회). allowlist 경로.
 
     ★HEAD를 반드시 받는다(2026-08-30 실사고). Buffer는 영상을 가져가기 전에
@@ -5794,6 +5835,7 @@ def api_share_v(sid: str, dl: int = 0):
       실측: 같은 주소가 GET 200(41MB, video/mp4) / HEAD 404였다.
       FileResponse는 HEAD면 본문을 안 보내고 헤더만 준다 — 우리가 따로 갈 필요 없다.
     """
+    sid = sid[:-4] if sid.endswith(".mp4") else sid   # 확장자를 붙여 부르는 수집기 호환
     job_id = _share_get(sid)
     if not job_id:
         return JSONResponse(status_code=403, content={"ok": False, "error": "링크가 만료됐어요"})
@@ -5803,7 +5845,7 @@ def api_share_v(sid: str, dl: int = 0):
     if dl:
         return FileResponse(job["video_path"], media_type="video/mp4",
                             filename=export_bundle.safe_name(job_id) + ".mp4")
-    return FileResponse(job["video_path"], media_type="video/mp4")
+    return _mp4_range_response(job["video_path"], request)
 
 
 def _selected_thumb_path(job):
@@ -5953,7 +5995,8 @@ async def api_buffer_schedule(request: Request):
     base = str(request.base_url).rstrip("/")
     if base.startswith("http://"):
         base = "https://" + base[len("http://"):]
-    video_url = f"{base}/api/share/v/{sid}"
+    # ★.mp4를 붙인다 — 확장자로 종류를 판단하는 수집기가 있다(라우트가 떼고 읽는다).
+    video_url = f"{base}/api/share/v/{sid}.mp4"
 
     out = []
     for cid_ in chans:
