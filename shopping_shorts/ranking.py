@@ -475,3 +475,31 @@ def fill_intensity(items, now=None):
             if it.get(k) is None:
                 it[k] = v
     return items
+
+
+def attach_delta(items, prev_base=None):
+    """항목들에 `delta`·`is_new`를 채워 돌려준다(제자리 수정, 같은 리스트 반환).
+
+    ★왜 이 함수가 있나(2026-08-31 사장님 제보 "+undefined"):
+      유튜브·인스타·틱톡은 이 파일의 랭킹 함수를 거치며 delta·is_new를 얻는데,
+      **네이버클립·핀터레스트는 그 경로를 안 타고 바로 저장**해서 두 키가 통째로
+      없었다(실측: naverclip 4,492/4,492 · pinterest 2,259/2,259 누락).
+      화면은 `'+'+i.delta`로 이어붙이므로 그대로 **"+undefined"**가 찍혔다.
+
+      새 플랫폼을 붙일 때마다 같은 사고가 나므로, 증가분 규칙을 **여기 한 곳**에
+      두고 수집이 이걸 부르게 한다(0순위-B).
+
+    prev_base: {shortcode: 직전 수집의 조회수}. 비어 있으면 전부 신규다.
+    ★음수를 만들지 않는다 — 플랫폼이 집계를 보정해 조회수가 줄어 보이는 일이 있는데
+      "-30" 같은 증가분은 화면에서 거짓말이 된다.
+    """
+    prev = prev_base or {}
+    for it in items or []:
+        if not isinstance(it, dict):
+            continue
+        sc = it.get("shortcode") or ""
+        base = int(it.get("views") or it.get("base_count") or 0)
+        was = prev.get(sc)
+        it["is_new"] = was is None
+        it["delta"] = base if was is None else max(0, base - int(was or 0))
+    return items
