@@ -83,6 +83,26 @@ class Test완성본_컷별분할:
         mp.split_final_into_beat_clips("/x/final.mp4", _timeline(), tmp_path)
         assert len(n) == 3, "두 번째 호출에서 또 잘랐다"
 
+    def test_편성이_바뀌면_다시_자른다(self, monkeypatch, tmp_path):
+        """★버그헌트 P1-3. 종전 파일명엔 서명이 없어 편성을 고쳐도 **옛 조각**이 나갔다.
+
+        오류가 안 나므로 고객은 '고쳤는데 안 바뀜'만 본다 — 조용한 실패라 더 나쁘다.
+        위 `test_이미_잘라둔_건_다시_안_자른다`는 같은 편성만 봐서 이걸 못 잡았다.
+        """
+        n = []
+        def fake_run(cmd, **kw):
+            n.append(1); Path(cmd[-1]).write_text("clip" * 500)
+            class R: returncode = 0
+            return R()
+        monkeypatch.setattr(mp.subprocess, "run", fake_run)
+        mp.split_final_into_beat_clips("/x/final.mp4", _timeline(), tmp_path)
+        assert len(n) == 3
+        # 비트 길이를 바꾼다 = 다른 편성. 조각도 달라져야 한다.
+        changed = [dict(r) for r in _timeline()]
+        changed[1]["dur"] = 6.0
+        mp.split_final_into_beat_clips("/x/final.mp4", changed, tmp_path)
+        assert len(n) == 4, "편성이 바뀌었는데 옛 조각을 그대로 썼다"
+
     def test_빈_조각은_예외(self, monkeypatch, tmp_path):
         def fake_run(cmd, **kw):
             Path(cmd[-1]).write_text("")        # 0바이트

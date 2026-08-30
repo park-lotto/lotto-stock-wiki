@@ -258,8 +258,14 @@ def _text_material(text, font_path, style=None):
             "combo_info": {"text_templates": []}, "sub_type": 0, "check_flag": 31}
 
 
-_DEFAULT_FONT = ("C:/Users/TheRose/AppData/Local/CapCut/Apps/8.9.1.3802/"
-                 "Resources/Font/SystemFont/en.ttf")
+# 폰트 경로는 **비운다**(2026-08-30).
+#   종전 값은 `C:/Users/TheRose/.../CapCut/Apps/8.9.1.3802/.../en.ttf`였다 — 특정 PC의
+#   특정 사용자·특정 캡컷 버전 경로다. 실측: 이 회사 PC엔 그 경로가 없고(캡컷 8.7.0.3685)
+#   고객 PC엔 더더욱 없다. 즉 **모든 고객에게 없는 파일**을 가리키고 있었다.
+#   빈 값이면 캡컷이 자기 기본 폰트로 그린다 — 한글도 폴백으로 나온다.
+#   ⚠️우리 폰트(TmonMonsori 등)를 진짜로 따라가게 하려면 draft 폴더에 ttf를 동봉하고
+#     그 절대경로를 넣어야 한다. 그건 별도 작업이다(라이선스 확인 필요).
+_DEFAULT_FONT = ""
 
 
 def _safe_part(s, limit=20):

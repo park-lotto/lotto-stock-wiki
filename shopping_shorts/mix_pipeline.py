@@ -2187,6 +2187,24 @@ def _final_source_indices(plan, n_sources):
     return out
 
 
+def _clip_sig(clean_final, t0, dur):
+    """완성본 조각 1개의 편성 서명(8자). 구간이나 원본이 바뀌면 값이 바뀐다.
+
+    ★캐시가 조용히 옛것을 내주는 사고를 막는 자리다(버그헌트 P1-3). 파일 내용을
+      다 읽지 않고 mtime·크기만 본다 — 조각은 완성본이 바뀌면 반드시 다시 만들어지고,
+      완성본은 렌더가 새로 쓰므로 mtime이 바뀐다.
+    원본을 못 읽어도 자르기 자체는 되어야 하므로(내보내기가 통째로 죽으면 안 된다)
+    stat 실패 시 구간만으로 서명한다.
+    """
+    import hashlib
+    try:
+        st = Path(clean_final).stat()
+        base = f"{int(st.st_mtime)}:{st.st_size}"
+    except OSError:
+        base = "na"
+    return hashlib.md5(f"{base}:{t0:.3f}:{dur:.3f}".encode()).hexdigest()[:8]
+
+
 def split_final_into_beat_clips(clean_final, timeline, work, prefix="cc"):
     """청소된 **완성본 1편**을 비트 경계로 잘라 {가상 video_id: 경로} (2026-08-27).
 
@@ -2207,7 +2225,12 @@ def split_final_into_beat_clips(clean_final, timeline, work, prefix="cc"):
         if dur <= 0:
             continue
         vid = f"{prefix}{idx}"
-        dst = work / f"capcut_clean_{vid}.mp4"
+        # ★파일명에 **편성 서명**을 넣는다(2026-08-30, 버그헌트 P1-3).
+        #   종전엔 `capcut_clean_cc0.mp4`처럼 서명이 없어, 편성을 고친 뒤 다시 내보내면
+        #   **옛 조각**이 그대로 나갔다(오류 0건 — 고객은 "고쳤는데 안 바뀜"만 본다).
+        #   서명 = 잘라낼 구간(t0·dur) + 원본 완성본(mtime·크기). 셋 중 하나만 바뀌어도
+        #   다른 이름이 되어 다시 자른다. 같으면 그대로 재사용한다(기존 이점 유지).
+        dst = work / f"capcut_clean_{vid}_{_clip_sig(clean_final, t0, dur)}.mp4"
         if dst.exists() and dst.stat().st_size > 1024:
             out[vid] = str(dst)                     # 같은 편성이면 다시 안 자른다
             continue

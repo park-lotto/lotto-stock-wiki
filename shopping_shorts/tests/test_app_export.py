@@ -217,12 +217,13 @@ def test_capcut_survives_broken_template(monkeypatch, tmp_path):
     assert {t["type"] for t in draft["tracks"]} == {"video", "audio", "text"}
 
 
-def test_capcut_style_is_off_by_default(monkeypatch, tmp_path):
-    """★긴급 차단(2026-08-28) — 스타일·꾸미기 전달은 **기본 꺼짐**이다.
+def test_capcut_style_is_on_by_default(monkeypatch, tmp_path):
+    """★기본 켜짐으로 되돌림(2026-08-30). 08-28 긴급차단은 원인을 잘못 짚었다.
 
-    고객 제보: "캡컷으로 보내니 파일이 열리지 않습니다. 다른 영상은 다 열리는데
-    숏템파일만 안 열려요." 오늘 넣은 전달이 draft를 깨뜨렸다.
-    캡컷이 못 여는 draft는 고객이 손쓸 방법이 없다 — 원인을 가릴 때까지 꺼둔다.
+    배포 이력 실측: 고객 실패 3건(20:43·21:33·21:59)은 전부 스타일 코드가 **라이브에
+    올라가기 전**(첫 라이브 22:06:12)에 났다. 스타일이 돌던 37분 동안 캡컷 내보내기
+    요청은 0건이었다 — 즉 고객이 못 연 draft는 스타일이 만든 것이 아니다.
+    (진짜 결함은 조각 캐시 서명 누락과 남의 PC 폰트 경로였고, 둘 다 함께 고쳤다.)
     """
     client = _seed(monkeypatch, tmp_path)
     Store(app_module.DB_PATH).update_mix_job("j1", caption_style={"color": "#ffcc00", "size": 70},
@@ -231,6 +232,21 @@ def test_capcut_style_is_off_by_default(monkeypatch, tmp_path):
     assert r.status_code == 200
     draft = __import__("json").loads(r.json()["texts"]["draft_content.json"])
     t = draft["materials"]["texts"][0]
-    assert t["text_color"] == "#ffffff" and t["font_size"] == 16.0, "꺼져 있어야 하는데 스타일이 갔다"
+    assert t["text_color"] == "#ffcc00", "자막 색이 안 따라갔다"
+    assert [tr["type"] for tr in draft["tracks"]] == ["video", "audio", "text", "text"], \
+        "워터마크 트랙이 안 생겼다"
+
+
+def test_capcut_style_can_be_turned_off(monkeypatch, tmp_path):
+    """되돌릴 일이 생기면 설정 한 곳(capcut_style_off=1)으로 끈다 — 배포 없이 막는 길."""
+    client = _seed(monkeypatch, tmp_path)
+    st = Store(app_module.DB_PATH)
+    st.update_mix_job("j1", caption_style={"color": "#ffcc00", "size": 70},
+                      deco={"watermark": {"text": "채널"}})
+    st.set_setting("capcut_style_off", "1")
+    r = client.get("/api/mix/capcut/j1", params={"base": "C:/capcutproject/CapCut Drafts"})
+    assert r.status_code == 200
+    draft = __import__("json").loads(r.json()["texts"]["draft_content.json"])
+    assert draft["materials"]["texts"][0]["text_color"] == "#ffffff", "껐는데 스타일이 갔다"
     assert [tr["type"] for tr in draft["tracks"]] == ["video", "audio", "text"], \
-        "꺼져 있어야 하는데 트랙이 늘었다"
+        "껐는데 트랙이 늘었다"
