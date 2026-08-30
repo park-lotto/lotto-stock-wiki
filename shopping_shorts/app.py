@@ -24,6 +24,7 @@ import requests
 from fastapi import BackgroundTasks, FastAPI, Request, UploadFile, File, Form
 from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse, FileResponse, Response, StreamingResponse
 from fastapi.middleware.gzip import GZipMiddleware
+from starlette.concurrency import run_in_threadpool
 from fastapi.staticfiles import StaticFiles
 from shopping_shorts import service
 from shopping_shorts.service import collect, census, generate_missing_drafts, next_draft_targets, youtube_channel_board
@@ -6011,8 +6012,15 @@ async def api_buffer_schedule(request: Request):
     for cid_ in chans:
         try:
             t = str(texts.get(cid_) or text or "")
-            r = buffer_api.schedule_video(key, cid_, t, video_url, due_at, thumb_ms,
-                                          share_now=share_now, privacy=privacy)
+            # ★반드시 스레드풀로 — 이 핸들러는 async라 blocking urllib을 그대로 부르면
+            #   이벤트루프 전체가 10~20초 멈춘다. 그 사이 Buffer 검증기가 video_url을
+            #   HEAD/GET하러 오는데 서버가 응답을 못 해 "Video could not be read from
+            #   its URL"로 거절된다(실측 2026-08-30: 같은 파일·같은 캡션을 앱 밖에서
+            #   부르면 성공, 이 핸들러를 지나면 실패 — HEAD가 createPost 응답과 동시에
+            #   풀리는 게 apache/uvicorn 로그 시각차 10초로 확인됨).
+            r = await run_in_threadpool(
+                buffer_api.schedule_video, key, cid_, t, video_url, due_at, thumb_ms,
+                share_now=share_now, privacy=privacy)
             out.append({"channel_id": cid_, "ok": True, "post_id": r["id"], "due_at": r["dueAt"]})
         except buffer_api.BufferError as e:
             out.append({"channel_id": cid_, "ok": False, "error": str(e)})
