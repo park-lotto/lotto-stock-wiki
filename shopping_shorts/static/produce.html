@@ -2028,6 +2028,27 @@
           <div style="font-size:13px;margin-bottom:4px">헤드카피 문구</div>
           <textarea id="hcText" rows="2" placeholder="예: 써보면 놀라는 이것" oninput="updateHC()"
             style="width:100%;background:var(--inset);border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px;margin-bottom:12px;resize:vertical;font-family:inherit;font-size:14px;line-height:1.4"></textarea>
+          <!-- 🖍 글자별 색 (2026-08-30 사장님 "바꾸고 싶은 글자만 컬러 바꿀 수 있게").
+               ★단어를 **눌러서** 고른다 — 손으로 타이핑하는 옛 UI(2026-08-24에 뺌)는
+                 문구를 다시 적어야 해서 안 쓰였다. 값은 종전과 같은 STATE.deco.highlight_rules다
+                 (엔진은 계속 살아 있었다) — 미리보기·실렌더가 이미 그걸 읽는다(0순위-B). -->
+          <div id="hcWordBox" style="background:var(--inset);border:1px solid var(--line);
+               border-radius:10px;padding:10px 12px;margin-bottom:8px">
+            <div style="font-size:13px;font-weight:700;margin-bottom:6px">🖍 글자별 색
+              <span style="font-size:11px;color:var(--sub);font-weight:600">— 바꾸고 싶은 낱말을 누르세요</span>
+            </div>
+            <div id="hcWordPills" style="display:flex;gap:5px;flex-wrap:wrap"></div>
+            <div id="hcWordPick" style="display:none;margin-top:8px;padding-top:8px;border-top:1px solid var(--line)">
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">
+                <b id="hcWordSel" style="font-size:13px"></b>
+                <input type="color" id="hcWordColor" oninput="hcWordSetColor(this.value)"
+                       style="width:36px;height:22px;padding:0;border:1px solid var(--line);border-radius:6px;background:none;cursor:pointer">
+                <button type="button" class="tab" onclick="hcWordClear()"
+                        style="min-width:auto;padding:4px 10px;font-size:11px">↩ 원래 색</button>
+              </div>
+              <div id="hcWordPal" style="display:grid;grid-template-columns:repeat(10,1fr);gap:4px"></div>
+            </div>
+          </div>
           <!-- ⚡빠른 조절(2026-08-19 사장님 "폰트나 색상도 지정이 되야지") — 문구를 고치는
                바로 그 자리에서 폰트·색·크기·위치를 만진다. ★값은 여기서 따로 갖지 않는다:
                아래 '직접 다듬기'의 진짜 입력칸(hcFont/hcColor/hcSize/hcY/hcX)에 그대로 써넣고
@@ -5185,6 +5206,7 @@ function initHeadcopy(){
   renderFullPresets();
   renderMyPresets(); renderCapPresets();
   renderHighlightRules();
+  try{ renderHCWords(); }catch(e){}
   bindHCDrag();
   bindCapDrag();
   bindZoom();       // 🔍 장면 확대 — 한 번만 걸린다(_zoomBound). 재진입해도 배율은 유지.
@@ -6000,6 +6022,76 @@ function updateHighlightRule(i, field, val){
   if(field==='box') renderHighlightRules();
   updateHC();
 }
+/* ══════════════════════════════════════════════════════════════════════
+   🖍 글자별 색 — 2026-08-30 사장님 "바꾸고 싶은 글자만 컬러 바꿀 수 있게"
+   ★값의 주인은 STATE.deco.highlight_rules 하나뿐이다(0순위-B). 미리보기(updateHC)와
+     실렌더(video_assemble._build_segments)가 이미 그걸 읽으므로 **여기서는 규칙만 손댄다**.
+   ★낱말을 눌러 고른다 — 옛 UI는 단어를 손으로 타이핑해야 해서 안 쓰였다(딸깍 원칙).
+   ══════════════════════════════════════════════════════════════════════ */
+const HC_WORD_PAL = ['#FFE100','#FF2D2D','#2EE6C5','#35C3FF','#FF5FA2',
+                     '#2FD873','#FF8A00','#FFFFFF','#111111','#B983FF'];
+let HC_WORD = null;                       // 지금 고른 낱말(문자열)
+
+function _hcRules(){
+  STATE.deco = STATE.deco || {};
+  STATE.deco.highlight_rules = STATE.deco.highlight_rules || [];
+  return STATE.deco.highlight_rules;
+}
+function _hcRuleOf(w){ return _hcRules().find(r=>r.keyword===w) || null; }
+
+// 문구를 낱말로 쪼개 알약으로 보여준다. 색이 걸린 낱말은 그 색으로 물들여 **한눈에** 보인다.
+function renderHCWords(){
+  const box=document.getElementById('hcWordPills'); if(!box) return;
+  const txt=(document.getElementById('hcText')||{}).value||'';
+  const words=[...new Set(txt.split(/[\s\n]+/).filter(w=>w.trim()))];
+  if(!words.length){
+    box.innerHTML='<span class="hint" style="font-size:11px">문구를 먼저 쓰면 낱말이 여기 나와요</span>';
+    document.getElementById('hcWordPick').style.display='none';
+    return;
+  }
+  box.innerHTML=words.map(w=>{
+    const r=_hcRuleOf(w), on=(HC_WORD===w);
+    const bg=r? r.color : 'transparent';
+    const fg=r? (_isLight(r.color)?'#111':'#fff') : 'var(--txt)';
+    return `<button type="button" onclick="hcWordPick(${JSON.stringify(w).replace(/"/g,'&quot;')})"
+      style="padding:5px 10px;border-radius:999px;font-size:12px;cursor:pointer;
+      background:${bg};color:${fg};border:2px solid ${on?'#2FBF71':(r?r.color:'var(--line)')}">${_esc(w)}</button>`;
+  }).join('');
+  const pick=document.getElementById('hcWordPick');
+  if(HC_WORD && words.includes(HC_WORD)){
+    pick.style.display='';
+    document.getElementById('hcWordSel').textContent='「'+HC_WORD+'」';
+    const r=_hcRuleOf(HC_WORD);
+    document.getElementById('hcWordColor').value=(r&&r.color)||'#FFE100';
+    document.getElementById('hcWordPal').innerHTML=HC_WORD_PAL.map(c=>
+      `<button type="button" title="${c}" onclick="hcWordSetColor('${c}')"
+        style="height:22px;border-radius:5px;cursor:pointer;background:${c};
+        border:2px solid ${(r&&String(r.color).toUpperCase()===c)?'#2FBF71':'rgba(255,255,255,.18)'}"></button>`).join('');
+  } else {
+    HC_WORD=null; pick.style.display='none';
+  }
+}
+function _esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+function _isLight(hex){
+  const h=String(hex||'').replace('#','');
+  if(h.length!==6) return false;
+  const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16);
+  return (r*299+g*587+b*114)/1000 > 150;      // 밝으면 글자를 검게(가독성)
+}
+function hcWordPick(w){ HC_WORD=(HC_WORD===w?null:w); renderHCWords(); }
+function hcWordSetColor(c){
+  if(!HC_WORD) return;
+  const rules=_hcRules(); const r=_hcRuleOf(HC_WORD);
+  if(r) r.color=c;
+  else rules.push({keyword:HC_WORD, color:c, box:false, box_color:'#FF2D2D'});
+  renderHCWords(); updateHC();
+}
+function hcWordClear(){
+  if(!HC_WORD) return;
+  STATE.deco.highlight_rules=_hcRules().filter(r=>r.keyword!==HC_WORD);
+  renderHCWords(); updateHC();
+}
+
 function renderHighlightRules(){
   const box=document.getElementById('highlightRuleList'); if(!box) return;
   const list=(STATE.deco && STATE.deco.highlight_rules)||[];
@@ -6422,6 +6514,8 @@ function updateHC(){
     el.style.borderRadius=Math.round(10*scale*3)+'px';
   } else { el.style.background='none'; el.style.padding='0 6px'; el.style.borderRadius='0'; }
   hcQuickSync(hc);
+  // 🖍 낱말 알약도 같이 갱신 — 문구를 고치면 알약이 따라와야 한다(2026-08-30)
+  try{ renderHCWords(); }catch(e){}
   if(document.getElementById('fullPresets')) renderStyleCards();
 }
 
@@ -6976,7 +7070,13 @@ function _zoomMark(){
 }
 // 이벤트가 글자(드래그 대상) 위에서 시작했나 — 그러면 확대/이동은 손을 뗀다
 function _zoomOnText(t){
-  return !!(t && t.closest && t.closest('#hcPreviewText,#capPreviewText,#ovPreview,#extraPreview,[data-maskbox]'));
+  // ★#hlCircle 추가(2026-08-30 사장님 "원위치를 조정하면 장면확대가 한번씩 바뀐다").
+  //   강조 원에서 손을 떼면 그 pointerup이 스테이지까지 버블링돼 아래 end()의
+  //   "누른 곳을 한 단계 확대"가 **덤으로** 실행됐다. 글자·가림막 상자와 똑같이
+  //   "내 것이 아니면 손대지 않는다"로 한 줄에서 막는다 — 원 쪽에 stopPropagation을
+  //   흩뿌리면 새 손잡이가 생길 때마다 또 빠뜨린다(0순위-B).
+  return !!(t && t.closest && t.closest(
+    '#hcPreviewText,#capPreviewText,#ovPreview,#extraPreview,[data-maskbox],#hlCircle'));
 }
 function bindZoom(){
   const {st,pv}=_zoomEls(); if(!st||!pv||st._zoomBound) return; st._zoomBound=true;
