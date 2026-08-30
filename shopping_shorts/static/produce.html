@@ -1496,8 +1496,66 @@
 
   /* 🎙 성우 두 열(2026-08-30) — 일레븐랩스 | 타입캐스트를 나란히 본다.
      좁아지면 자동으로 위아래로 쌓인다(minmax + auto-fit). */
-  .voiceCols{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
+  .voiceCols{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
   .voiceColHead{font-size:11.5px;color:var(--sub);font-weight:700;margin:0 0 6px 2px}
+  /* ★성우 카드 — 시안(사장님 승인본)대로 [아바타][이름·설명][☆][▶] 한 줄.
+     종전엔 이름·설명이 한 줄 텍스트로 흐르고 <audio controls>가 통째로 박혀 있어
+     카드가 들쭉날쭉했다. 톤 탭은 **고른 카드 안에서만** 펼친다(.vcard.sel .tones). */
+  .vcard{position:relative;border:1px solid var(--line);border-radius:12px;background:var(--inset);
+         cursor:pointer;overflow:hidden;margin-bottom:8px;transition:background .15s,border-color .15s}
+  .vcard:hover{background:var(--panel)}
+  .vcard.sel{border-color:var(--accent2)}
+  .vrow{display:flex;align-items:center;gap:11px;padding:10px 12px;min-height:56px}
+  .vavatar{width:40px;height:40px;border-radius:50%;flex:0 0 auto;display:flex;
+           align-items:center;justify-content:center;font-size:16px;font-weight:700}
+  .vmeta{flex:1 1 auto;min-width:0}
+  .vname{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .vdesc{font-size:12.5px;color:var(--sub);line-height:1.4;
+         display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .vbadge{position:absolute;top:5px;right:10px;white-space:nowrap;font-size:10px;font-weight:700;
+          color:#8fbfff;background:#1c2f4a;border:1px solid #2a4a75;border-radius:5px;
+          padding:0 5px;line-height:16px;letter-spacing:.04em;pointer-events:none}
+  .vstar{width:40px;height:40px;flex:0 0 auto;border:none;background:transparent;
+         color:#525b70;font-size:17px;cursor:pointer;border-radius:10px}
+  .vstar:hover{color:#e3b341}
+  .vstar.on{color:#e3b341}
+  .vplay{width:40px;height:40px;flex:0 0 auto;border-radius:50%;border:1px solid var(--line);
+         background:transparent;color:var(--txt);font-size:13px;cursor:pointer}
+  .vplay:hover{border-color:var(--accent2);color:var(--accent2)}
+  .vplay.playing{background:#1c2f4a;border-color:var(--accent2);color:var(--accent2)}
+  .tones{display:none;gap:7px;padding:0 12px 12px;flex-wrap:wrap}
+  .vcard.sel .tones{display:flex}
+  .tone{min-height:38px;padding:0 15px;border-radius:10px;border:1px solid var(--line);
+        background:transparent;color:var(--sub);font:inherit;font-size:13px;cursor:pointer}
+  .tone.on{background:#1c2f4a;border-color:var(--accent2);color:var(--txt);font-weight:700}
+  /* 열마다 다는 가져오기 버튼(일레븐=목소리 찾기 / 타입캐스트=성우 불러오기) */
+  .colAct{width:100%;min-height:42px;margin-bottom:8px;border:1px dashed var(--line);
+          border-radius:10px;background:transparent;color:var(--sub);font:inherit;
+          font-size:13px;cursor:pointer}
+  .colAct:hover{color:var(--txt);border-color:var(--accent2)}
+  /* ⭐즐겨찾기 줄 — 별 누른 성우가 맨 위에 모인다(가로 스크롤) */
+  .favs{display:flex;flex-wrap:nowrap;gap:8px;align-items:center;overflow-x:auto;
+        padding-bottom:4px;margin:10px 0 2px}
+  .favs::-webkit-scrollbar{height:6px}
+  .favs::-webkit-scrollbar-thumb{background:#2a3040;border-radius:3px}
+  .favLabel{flex:0 0 auto;font-size:12px;color:var(--sub);letter-spacing:.06em}
+  .fchip{flex:0 0 auto;display:flex;align-items:center;gap:5px;min-height:38px;
+         padding:0 5px 0 12px;border:1px solid var(--line);border-radius:22px;
+         background:var(--inset);font-size:13.5px;cursor:pointer}
+  .fchip:hover{border-color:var(--accent2)}
+  .fchip .fplay{width:30px;height:30px;border-radius:50%;border:none;background:transparent;
+                color:var(--sub);font-size:11px;cursor:pointer}
+  .fchip .fplay:hover{color:var(--accent2)}
+  .favEmpty{font-size:12px;color:#5a627a}
+  /* 장면 줄 파형 — 길이를 눈으로 가늠하게 한다(시안) */
+  .wave{flex:0 0 auto;width:96px;height:20px;display:flex;align-items:flex-end;gap:2px;overflow:hidden}
+  .wave i{flex:1;min-width:2px;background:#39415a;border-radius:1px}
+  .ttsRow.playing .wave i{background:var(--accent)}
+  @media (max-width:900px){ .wave{display:none} }
+  /* 바닥 요약 줄 */
+  .plSum{margin-top:12px;padding:11px 4px 2px;border-top:1px solid var(--line);
+         font-size:12.5px;color:var(--sub);display:flex;gap:18px;flex-wrap:wrap;
+         font-variant-numeric:tabular-nums}
   .sw-btn{width:22px;height:22px;border-radius:50%;border:2px solid rgba(255,255,255,.35);
           cursor:pointer;padding:0;flex:none;background:
           conic-gradient(#ff2d2d,#ffd400,#3ddc57,#00b3ff,#b14cff,#ff2d8f,#ff2d2d);
@@ -1732,7 +1790,7 @@
            #curVoiceName은 그대로 둔다 — syncCurVoiceName()이 이 id 하나만 찾는다. -->
       <!-- ★flex는 `0 1 360px` — 넓은 화면에선 360px 고정(0=안 늘어남), 좁은 화면에선 줄어든다
            (1=줄어듦). `0 0`으로 두면 390px 폰에서 칸이 안 줄어 가로로 넘친다(실측). -->
-      <aside style="flex:0 1 360px;min-width:0;max-width:420px;position:sticky;top:8px;border:1px solid var(--line);border-radius:12px;background:var(--inset);padding:14px;box-sizing:border-box">
+      <aside style="flex:0 1 560px;min-width:0;max-width:620px;position:sticky;top:8px;border:1px solid var(--line);border-radius:12px;background:var(--inset);padding:14px;box-sizing:border-box">
         <div style="font-weight:800;font-size:15px;display:flex;align-items:center;gap:6px">🎙 목소리 바꾸기</div>
         <div id="curVoiceName" style="font-size:12px;color:var(--sub);margin-top:3px">— 기본 성우로 완성됨</div>
       <!-- ★좌우를 뒤집었다(2026-08-18). 예전엔 [설정 | 성우카드] 순서라, 성우를 고르기 전
@@ -11494,74 +11552,124 @@ async function vlibAdd(btn, i){
 
 let VOICES_EXPANDED=false;   // ＋더보기 펼침 상태 — 재렌더(pickPreset)가 접힘으로 되돌리지 않게 보존
 function toggleMoreVoices(){ VOICES_EXPANDED=!VOICES_EXPANDED; renderPresetCards(); }
+// ── 성우 카드 (시안 승인본 이식, 2026-08-30) ────────────────────────────────
+// 카드 한 장 = [아바타][이름·한줄설명][☆즐겨찾기][▶샘플]. 고른 카드 **안에서만** 톤 탭이
+// 펼쳐진다. 종전엔 이름·설명이 한 줄로 흐르고 <audio controls>가 카드마다 박혀 있었다.
+// ★배선은 그대로다 — 고르기는 pickPreset, 톤은 pickVariant. 여기서 새로 만들지 않는다.
+
+// 즐겨찾기 — 이 브라우저에만 남는 편의값이다(서버에 안 보낸다).
+let VOICE_FAVS = (()=>{ try{ return new Set(JSON.parse(localStorage.getItem('sm_voice_favs')||'[]')); }
+                        catch(e){ return new Set(); } })();
+function _favSave(){ try{ localStorage.setItem('sm_voice_favs', JSON.stringify([...VOICE_FAVS])); }catch(e){} }
+function toggleFav(gid){
+  VOICE_FAVS.has(gid) ? VOICE_FAVS.delete(gid) : VOICE_FAVS.add(gid);
+  _favSave(); renderPresetCards();
+}
+// 아바타 색 — 이름에서 뽑아 성우마다 늘 같은 색이 나오게 한다(무작위 금지).
+function _avaColor(name){
+  const hues=[215,265,185,330,205,285];
+  let h=0; for(const c of String(name||'')) h+=c.charCodeAt(0);
+  const hue=hues[h%hues.length];
+  return {bg:`hsl(${hue},30%,25%)`, fg:`hsl(${hue},62%,78%)`};
+}
+// 샘플 듣기 — 카드마다 <audio>를 깔지 않고 **하나를 돌려 쓴다**(카드 20장 × audio는 무겁다).
+let _SAMPLE_AUD=null;
+function playSample(btn, url){
+  if(!_SAMPLE_AUD){ _SAMPLE_AUD=new Audio(); }
+  const stop=()=>{ document.querySelectorAll('.vplay.playing,.fplay.playing').forEach(b=>{
+                     b.classList.remove('playing'); b.textContent='▶'; }); };
+  if(btn.classList.contains('playing')){ _SAMPLE_AUD.pause(); stop(); return; }
+  stop(); _SAMPLE_AUD.pause();
+  if(!url){ return; }
+  _SAMPLE_AUD.src=url; _SAMPLE_AUD.currentTime=0;
+  _SAMPLE_AUD.play().then(()=>{ btn.classList.add('playing'); btn.textContent='■'; }).catch(()=>{});
+  _SAMPLE_AUD.onended=stop;
+}
+function _sampleUrlOf(g){
+  const variant=SEL_VARIANT[g.group_id]||g.default_variant||'stable';
+  const v=g.variants[variant]||g.variants[g.default_variant]||Object.values(g.variants)[0];
+  return (v&&v.sample_url)||'';
+}
 function renderPresetCards(){
   const cardHtml=(g)=>{
     const variant=SEL_VARIANT[g.group_id]||g.default_variant||'stable';
     const v=g.variants[variant]||g.variants[g.default_variant]||Object.values(g.variants)[0];
     const active=VOICE.group_id===g.group_id;
-    // whisper는 베스트 5명에게만 프리셋이 있다(사장님 청취 판정 2026-07-16). filter가
-    // 존재하는 variant만 그리므로 나머지 9명은 탭이 자동으로 안 뜬다 — 숨김 분기 불필요.
-    const tabs=['stable','natural','expressive','whisper'].filter(k=>g.variants[k]).map(k=>
-      `<button type="button" class="tab${variant===k?' active':''}" style="flex:0 0 auto;min-width:auto;padding:3px 9px;font-size:11px"
+    const ava=_avaColor(g.name);
+    const fav=VOICE_FAVS.has(g.group_id);
+    // 톤 탭은 **있는 variant만** 그린다 — whisper 프리셋이 없는 성우는 탭이 자동으로 안 뜬다.
+    const tones=['stable','natural','expressive','whisper'].filter(k=>g.variants[k]).map(k=>
+      `<button type="button" class="tone${active&&variant===k?' on':''}"
         onclick="event.stopPropagation();pickVariant('${g.group_id}','${k}')">${VARIANT_LABELS[k]}</button>`).join('');
-    // 속삭임 role 선택 — "선택된(active) 이 카드"가 지금 whisper 톤일 때만, 그 카드 안에 뜬다.
-    // [2026-07-17 결함① 수정] 예전엔 presetCards(성우 카드 14개) 전부의 밑, voiceControls 안
-    // 별도 div(#whisperRoleControls, display:none 토글)에 있었다 — 카드 top 293px vs 그 div
-    // top 1561px, 화면 한 장(1012px)에 같이 안 보여 "속삭임 눌러도 반응 없다"는 오인을 낳았다
-    // (사장님이 브라우저로 실측). 카드 렌더 루프 안에서 조건부로만 그려 항상 같이 보이게 한다
-    // — display:none 토글이 아니라 "다른 카드/다른 톤이면 이 블록 자체가 안 그려진다"로 해결.
-    // 태그는 켜지거나 꺼질 뿐이라(설계 §6) range 입력은 없다 — "속삭임 강도" 슬라이더 금지.
+    // 속삭임 role — 고른 카드가 지금 whisper일 때만 그 카드 안에 뜬다(2026-07-17 결함① 수정).
+    // 카드 밖 별도 자리에 두면 화면 한 장에 같이 안 보여 "눌러도 반응 없다"로 읽힌다.
     const whisperPicker=(active && variant==='whisper')?`
-        <div id="whisperRoleControls" style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)">
-          <div style="font-size:11px;color:var(--sub);margin-bottom:4px">이 영상은 속삭임을 어디에 적용할까요?</div>
+        <div id="whisperRoleControls" style="margin:0 12px 12px;padding-top:9px;border-top:1px dashed var(--line)">
+          <div style="font-size:11px;color:var(--sub);margin-bottom:5px">이 영상은 속삭임을 어디에 적용할까요?</div>
           <div id="whisperRoleBtns" style="display:flex;gap:6px;flex-wrap:wrap">${WHISPER_ROLE_PRESETS.map(w=>
-            `<button type="button" onclick="event.stopPropagation();setWhisperPreset('${w.key}')" class="tab${WHISPER_PICK===w.key?' active':''}" style="flex:0 0 auto;min-width:auto;padding:6px 12px;font-size:13px">${w.label}</button>`).join('')}</div>
+            `<button type="button" onclick="event.stopPropagation();setWhisperPreset('${w.key}')" class="tone${WHISPER_PICK===w.key?' on':''}">${w.label}</button>`).join('')}</div>
         </div>` : '';
+    const url=(v&&v.sample_url)||'';
     return `
-      <div onclick="pickPreset('${g.group_id}')"
-        style="border:1px solid ${active?'var(--accent2)':'var(--line)'};border-radius:9px;padding:9px;margin-bottom:6px;cursor:pointer;background:var(--inset)">
-        <b>${esc(g.name)}</b>${g.best?' <span title="사장님 청취 판정 베스트" style="color:var(--accent2)">⭐</span>':''} — ${esc(g.one_liner||'')}
-        <div style="display:flex;gap:4px;align-items:center;margin-top:6px;flex-wrap:wrap">
-          ${tabs}
-          ${v&&v.sample_url?`<audio controls src="${esc(v.sample_url)}" style="height:26px;vertical-align:middle;margin-left:4px"></audio>`:''}
+      <div class="vcard${active?' sel':''}" onclick="pickPreset('${g.group_id}')">
+        <div class="vrow">
+          <div class="vavatar" style="background:${ava.bg};color:${ava.fg}">${esc(String(g.name||'?').slice(0,1))}</div>
+          <div class="vmeta">
+            <div class="vname">${esc(g.name)}</div>
+            <div class="vdesc">${esc(g.one_liner||'')}</div>
+          </div>
+          <button type="button" class="vstar${fav?' on':''}" title="즐겨찾기에 담기"
+                  onclick="event.stopPropagation();toggleFav('${g.group_id}')">${fav?'★':'☆'}</button>
+          <button type="button" class="vplay" title="샘플 듣기"
+                  onclick="event.stopPropagation();playSample(this,'${esc(url)}')" ${url?'':'disabled'}>▶</button>
         </div>
+        ${g.best?'<span class="vbadge">추천</span>':''}
+        <div class="tones">${tones}</div>
         ${whisperPicker}
       </div>`;
   };
-  // ★엔진별 두 열로 나란히(2026-08-30 사장님 "일레븐랩스 왼쪽 타입캐스트 오른쪽").
-  //   전엔 두 엔진 성우가 한 목록에 섞여 배지로만 구분됐다 — 어느 쪽 성우인지,
-  //   무엇이 다른지 한눈에 안 보였다. 엔진 판정은 서버가 준 g.engine 하나로만 한다
-  //   (여기서 group_id로 추측하면 판단이 두 벌이 된다 — engineBadge와 같은 규칙).
+  // ★엔진 이름은 **서버가 주는 값 그대로** 쓴다(2026-08-30 실사고).
+  //   서버(app.py)는 "elevenlabs"/"typecast"를 준다. 여기서 'eleven'으로 줄여 비교했더니
+  //   일레븐랩스 성우 14명이 어느 열에도 안 걸려 통째로 사라졌다("성우가 없어요"로 떴다).
+  //   같은 이름을 두 곳에서 다르게 적으면 반드시 어긋난다(0순위-B).
   const q = (VOICE_Q||'').trim().toLowerCase();
   const hit = g => !q || (String(g.name||'')+' '+String(g.one_liner||'')).toLowerCase().includes(q);
-  // ★엔진 이름은 **서버가 주는 값 그대로** 쓴다(2026-08-30 실사고).
-  //   서버(app.py, voice_presets)는 "elevenlabs"/"typecast"를 준다. 여기서 'eleven'으로
-  //   줄여 비교했더니 일레븐랩스 성우 47명이 **어느 열에도 안 걸려 통째로 사라졌다**
-  //   (라이브 화면에 "성우가 없어요"로 떴다). 같은 이름을 두 곳에서 다르게 적으면
-  //   반드시 어긋난다(0순위-B) — 서버 값을 그대로 쓰고 옛 표기만 관대하게 받아준다.
-  const colHtml = (list, engine) => {
-    const eng = g => { const e=String(g.engine||'elevenlabs'); return e==='eleven'?'elevenlabs':e; };
+  const eng = g => { const e=String(g.engine||'elevenlabs'); return e==='eleven'?'elevenlabs':e; };
+  const colHtml = (list, engine, actBtn) => {
     const mine = list.filter(g => eng(g)===engine && hit(g));
-    if(!mine.length) return '<div class="hint" style="padding:8px 2px">'
+    if(!mine.length) return actBtn + '<div class="hint" style="padding:8px 2px">'
       + (q ? '검색 결과가 없어요' : '성우가 없어요') + '</div>';
     const best = mine.filter(g=>g.best), rest = mine.filter(g=>!g.best);
     // 고른 성우가 '더보기' 안에 있으면 접혀서 안 보이는 사고 방지 — 자동으로 펼친다.
     if(rest.some(g=>g.group_id===VOICE.group_id)) VOICES_EXPANDED=true;
-    // ★열마다 '몇 명이 더 있는지'를 밝힌다 — 접힘 상태는 두 열이 함께 움직인다
-    //   (VOICES_EXPANDED 하나. 열마다 따로 두면 상태가 두 벌이 된다).
-    const more = rest.length ? `
-      <button type="button" onclick="toggleMoreVoices()" class="tab" style="width:100%;margin:2px 0 6px;padding:7px;font-size:12px">${VOICES_EXPANDED?'－ 접기 ('+rest.length+'명)':'＋ 더보기 ('+rest.length+'명)'}</button>
-      <div style="display:${VOICES_EXPANDED?'block':'none'}">${rest.map(cardHtml).join('')}</div>` : '';
-    return best.map(cardHtml).join('') + more;
+    // 검색 중엔 접지 않는다 — 찾은 성우가 '더보기' 뒤에 숨으면 검색이 헛돈다.
+    const showAll = q || VOICES_EXPANDED;
+    const more = (rest.length && !q) ? `
+      <button type="button" onclick="toggleMoreVoices()" class="colAct">${VOICES_EXPANDED?'－ 접기':'＋ 더보기 ('+rest.length+'명)'}</button>` : '';
+    return actBtn + best.map(cardHtml).join('')
+         + (showAll ? rest.map(cardHtml).join('') : '') + more;
   };
-  // ★타입캐스트 경고문을 뺐다(2026-08-30) — 키는 서버에 이미 등록돼 있는데(실측)
-  //   "API 키가 없으면 소리가 안 납니다"를 무조건 띄워, 멀쩡한 성우를 못 믿게 만들었다.
-  //   진짜로 키가 없으면 합성이 실패하며 그때 오류로 알려준다 — 상시 경고는 거짓말이다.
+  // 열마다 '성우를 늘리는 길'을 그 열 위에 둔다 — 어느 엔진에 담기는지 헷갈리지 않게.
+  const elvAct = '<button type="button" class="colAct" onclick="toggleVoiceLibrary()">🔎 목소리 찾기</button>';
+  const tcAct  = '';   // 타입캐스트는 서버 큐레이션 목록이라 고객이 담는 길이 아직 없다
   document.getElementById('presetCards').innerHTML =
-      '<div class="voiceCols">'
-    +   '<div><div class="voiceColHead">일레븐랩스</div>' + colHtml(VOICE_GROUPS,'elevenlabs') + '</div>'
-    +   '<div><div class="voiceColHead">타입캐스트</div>' + colHtml(VOICE_GROUPS,'typecast') + '</div>'
+      renderFavRow()
+    + '<div class="voiceCols">'
+    +   '<div><div class="voiceColHead">일레븐랩스</div>' + colHtml(VOICE_GROUPS,'elevenlabs',elvAct) + '</div>'
+    +   '<div><div class="voiceColHead">타입캐스트</div>' + colHtml(VOICE_GROUPS,'typecast',tcAct) + '</div>'
     + '</div>';
+}
+// ⭐즐겨찾기 줄 — 별을 누른 성우가 두 열 위에 모인다. 이름을 누르면 바로 그 성우로 바뀐다.
+function renderFavRow(){
+  const favs=(VOICE_GROUPS||[]).filter(g=>VOICE_FAVS.has(g.group_id));
+  if(!favs.length) return '<div class="favs"><span class="favLabel">⭐ 즐겨찾기</span>'
+    + '<span class="favEmpty">성우 카드의 ☆를 누르면 여기에 모입니다</span></div>';
+  return '<div class="favs"><span class="favLabel">⭐ 즐겨찾기</span>'
+    + favs.map(g=>`<div class="fchip" onclick="pickPreset('${g.group_id}')">
+         <span>${esc(g.name)}</span>
+         <button type="button" class="fplay" title="샘플 듣기"
+           onclick="event.stopPropagation();playSample(this,'${esc(_sampleUrlOf(g))}')">▶</button>
+       </div>`).join('') + '</div>';
 }
 
 // 검색어 — 이미 담은 성우를 걸러본다(일레븐 공개 라이브러리 검색과는 다른 것).
@@ -11680,8 +11788,12 @@ function syncCurVoiceName(){
   const el=document.getElementById('curVoiceName'); if(!el) return;
   const g=(VOICE_GROUPS||[]).find(x=>x.group_id===VOICE.group_id);
   if(!g){ el.textContent='— 기본 성우로 완성됨'; return; }
+  // ★시안대로 성우·톤·속도를 한 줄에 띄운다 — 속도는 여기서 계산하지 않고 VOICE.speed를
+  //   그대로 읽는다(속도를 정하는 곳은 setSpeed 한 군데다, 0순위-B).
   const tone=VARIANT_LABELS[VOICE.variant]||'';
-  el.textContent='— 지금: '+g.name+(tone?(' · '+tone):'');
+  const spd=(VOICE.speed!=null)?(Number(VOICE.speed).toFixed(2)+'x'):'';
+  el.innerHTML='지금: <b style="color:var(--accent2)">'+esc(g.name)
+    + (tone?(' · '+esc(tone)):'') + (spd?(' · '+spd):'') + '</b>';
 }
 
 function pickPreset(gid){
@@ -11714,7 +11826,7 @@ function markVoiceDirty(on){
   const el = document.getElementById('voiceDirty');
   if(el) el.style.display = on ? '' : 'none';
 }
-function setSpeed(s){ VOICE.speed=s; markVoiceDirty(true); pickHighlight(); }
+function setSpeed(s){ VOICE.speed=s; markVoiceDirty(true); pickHighlight(); syncCurVoiceName(); }
 function setSil(v){ VOICE.silence_trim=v; markVoiceDirty(true); pickHighlight(); }
 function setPace(v){ VOICE.pace_mode=v; markVoiceDirty(true); }
 // 카드 안 role 버튼을 고르면 카드 전체를 다시 그린다(WHISPER_PICK은 renderPresetCards()가 읽는다) —
@@ -11873,6 +11985,19 @@ async function vpSaveNarr(i){
   }
 }
 
+// 장면 줄 파형 — 길이를 눈으로 가늠하게 하는 **장식**이다(오디오 분석이 아니다).
+// 대사 글자에서 막대 높이를 뽑아 같은 문장이면 늘 같은 모양이 나오게 한다(무작위 금지 —
+// 다시 그릴 때마다 모양이 바뀌면 화면이 흔들린다).
+function _waveHTML(i, b){
+  const t=String((b&&b.narration)||'')||' ';
+  const N=16, bars=[];
+  for(let k=0;k<N;k++){
+    const c=t.charCodeAt(k%t.length)||65;
+    bars.push(28 + ((c*7 + k*13) % 72));   // 28~100%
+  }
+  return '<span class="wave" aria-hidden="true">'
+       + bars.map(h=>'<i style="height:'+h+'%"></i>').join('') + '</span>';
+}
 async function renderTtsBeats(){
   if(vpIsEditing()) return;      // ★고치는 중엔 갈아끼우지 않는다(입력이 날아간다)
   const el=document.getElementById('ttsBeats');
@@ -11909,7 +12034,8 @@ async function renderTtsBeats(){
         <div class="ttsRowMain" onclick="vpPlayBeat(${i})" title="이 장면부터 들어봅니다">
           <span class="ttsNo">${i+1}<i title="${badgeTip}" class="${synced?'ok':'warn'}"></i></span>
           <div id="vpSay${i}" class="ttsSay"><span class="vpNarr">${esc(b.narration||'')}</span></div>
-          <span class="ttsDur">${dur}</span>
+          ${_waveHTML(i, b)}
+        <span class="ttsDur">${dur}</span>
           ${b.tts_preview_url?`<audio id="beatAudio${i}" preload="metadata" src="${esc(b.tts_preview_url)}?t=${Date.now()}" style="display:none"></audio>
           <button class="btn-prev ttsBtn" onclick="event.stopPropagation();vpPlayBeat(${i})" title="이 장면 듣기">▶</button>
           <button class="btn-prev ttsBtn" onclick="event.stopPropagation();vpEditNarr(${i})" title="이 문장을 고치고 음성·자막을 다시 뽑습니다">✏ 수정</button>
@@ -11964,7 +12090,14 @@ async function renderTtsBeats(){
       <div style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)" aria-hidden="true">
         <img id="vpFrame" onerror="this.style.display='none'"><div id="vpCap"></div>
       </div>
-      ${rows}`;
+      ${rows}
+      <!-- 바닥 요약(시안) — 장면 수·음성 총길이·자막 자동맞춤 성공 수를 한 줄로.
+           숫자는 위 [영상/음성 길이]와 **같은 값**을 쓴다(_updateVoiceLen이 채운다). -->
+      <div class="plSum">
+        <span>총 ${beats.length}장면</span>
+        <span>음성 <b id="sumVoiceLen" style="color:var(--txt)">…</b></span>
+        <span>자막 자동맞춤 ${beats.filter(x=>Array.isArray(x.cap_durs)&&x.cap_durs.length).length}/${beats.length}</span>
+      </div>`;
     _updateVoiceLen(beats.length, vidLen);
   }catch(e){ el.innerHTML='<div class="hint" style="color:var(--fire)">로드 실패</div>'; }
 }
@@ -11975,6 +12108,8 @@ function _updateVoiceLen(n, vidLen){
     if(!auds.length || auds.some(a=>!a.duration||isNaN(a.duration))) return; // 아직 메타로딩중
     const total=auds.reduce((s,a)=>s+a.duration,0);
     const vl=document.getElementById('voiceLen'); if(vl) vl.textContent=total.toFixed(1)+'초';
+    // 바닥 요약도 **같은 값**으로 채운다 — 따로 세면 두 숫자가 어긋난다(0순위-B).
+    const sv=document.getElementById('sumVoiceLen'); if(sv) sv.textContent=total.toFixed(1)+'초';
     const msg=document.getElementById('fitMsg'); if(!msg) return;
     const diff=total-vidLen;
     if(vidLen<=0){ msg.textContent=''; }
