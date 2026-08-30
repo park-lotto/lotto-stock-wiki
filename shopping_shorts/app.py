@@ -11440,6 +11440,186 @@ _NAVERCLIP_BEAUTY_KWS = (
 )
 
 
+# ★벤치마킹 채널(2026-08-31 사장님 목록) — 매일 훑을 대상.
+#   핸들은 전부 실측으로 확인했다(검색으로 그 채널 영상 1건을 잡아 카드 API의
+#   channel_url에서 뽑음). 손으로 지어내면 404다.
+#
+#   ⚠️사장님 원본 목록에서 3건이 바뀌었다:
+#     · 팁모하랑 → **팁모아랑**(daillio)이 정확한 이름이다(오타).
+#     · 미미홀릭 = **사오공픽**이다 — 핸들이 mimipick99인 게 증거(개명한 것으로 보인다).
+#       그래서 17개가 아니라 **15개**다.
+#     · 꽃보다클립은 네이버 클립에 **없다**(다른 플랫폼 채널로 보인다).
+#
+#   실측(2026-08-31): 15채널 프로필 조회 1.1초, 영상 915건 수집 4.2초.
+_NAVERCLIP_BENCH_CHANNELS = (
+    ("하루홈", "haruhomee"),
+    ("결이고운", "pqk2yxfjtn"),
+    ("후다닥홈", "hudadak_home"),
+    ("템템바라", "temtembara"),
+    ("예쁨더하기", "zipkootem"),
+    ("예쁨한스푼", "beautyspoon_c"),
+    ("사오공픽", "mimipick99"),
+    ("팁모아랑", "daillio"),
+    ("핑카의 하루하루", "pingca_life"),
+    ("스킨힐스", "skinheals"),
+    ("동안습관연구소", "armeee"),
+    ("퀸즈살롱", "queenssalon"),
+    ("진리뷰티", "youn-youn"),
+    ("아름다름뷰티", "areumdareum_beauty"),
+    ("미소의꿀템찾기", "mirrorlifetem"),
+)
+
+
+@app.post("/api/naverclip/channels/collect")
+def _api_naverclip_channels_collect(request: Request, body: dict = None):
+    """네이버 클립 **채널** 수집 — 벤치마킹 채널을 훑는다(2026-08-31).
+
+    키워드 수집(/api/naverclip/collect)과 **다른 축**이다:
+      · 키워드 = "뷰티에서 뭐가 터지나"(넓게, 하루 한 번)
+      · 채널   = "이 15명이 오늘 뭘 올렸나"(좁게, 매일)
+
+    저장은 키워드 수집과 **같은 계약**(merge_last_run_platform, platform="naverclip")을
+    쓴다 — 화면·랭킹이 이미 platform으로 갈리므로 새 배선이 필요 없다(0순위-B).
+
+    시드는 DB(platform_seeds, kind="account")를 먼저 보고, 비어 있으면
+    _NAVERCLIP_BENCH_CHANNELS로 시작한다 — 처음 눌러도 바로 돌게 하려는 것이다.
+    """
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import naverclip_search as _nc
+    body = body or {}
+    store = Store(DB_PATH)
+
+    # ① 대상 채널 — 요청 > DB 시드 > 기본 목록
+    handles = [str(h).strip().lstrip("@") for h in (body.get("handles") or []) if str(h).strip()]
+    if not handles:
+        handles = [(_nc.handle_from_url(v) or v)
+                   for _k, v, _a in store.list_seeds("naverclip")]
+        handles = [h for h in handles if h]
+    if not handles:
+        handles = [h for _n, h in _NAVERCLIP_BENCH_CHANNELS]
+    handles = handles[:60]
+
+    try:
+        per = max(5, min(int(body.get("per_channel") or 60), 200))
+    except (TypeError, ValueError):
+        per = 60
+
+    now_dt = datetime.now(timezone.utc)
+
+    def _one(handle):
+        # ★예외 격리 — 채널 하나가 죽어도 나머지는 산다(키워드 수집과 같은 계약).
+        try:
+            prof = _nc.profile_by_handle(handle)
+            if not prof:
+                return handle, {}, []
+            return handle, prof, _nc.channel_videos(prof["profile_id"], want=per)
+        except Exception as e:      # noqa: BLE001
+            logging.warning("naverclip 채널 수집 실패(%s): %s", handle, type(e).__name__)
+            return handle, {}, []
+
+    with ThreadPoolExecutor(max_workers=max(1, min(len(handles), 6))) as _ex:
+        results = list(_ex.map(_one, handles))
+
+    # ② 상세 보강 — 목록엔 조회수만 온다. 좋아요·댓글·썸네일·길이는 카드 API에만 있다
+    #    (검색 경로도 같은 이유로 상세를 부른다). 카드는 채널과 무관하게 1건씩이라
+    #    한 번에 병렬로 돌린다.
+    flat = [(h, prof, r) for h, prof, rows in results for r in rows]
+    def _card(t):
+        try:
+            return _nc._fetch_card(t[2]["media_id"])
+        except Exception:           # noqa: BLE001 — 보강 실패는 행을 죽이지 않는다
+            return {}
+    cards = []
+    if flat:
+        with ThreadPoolExecutor(max_workers=8) as _ex:
+            cards = list(_ex.map(_card, flat))
+
+    items, seen, per_ch = [], set(), {}
+    for (handle, prof, r), card in zip(flat, cards or [{}] * len(flat)):
+        mid = r.get("media_id") or ""
+        if not mid or mid in seen:
+            continue
+        seen.add(mid)
+        per_ch[handle] = per_ch.get(handle, 0) + 1
+        views = int(card.get("views") or r.get("views") or 0)
+        likes = int(card.get("likes") or 0)
+        comments = int(card.get("comments") or 0)
+        posted = r.get("posted_at") or card.get("posted_at") or ""
+        age = None
+        if posted:
+            try:
+                age = max(0.0, (now_dt - datetime.fromisoformat(posted)
+                                ).total_seconds() / 3600.0)
+            except (TypeError, ValueError):
+                age = None
+        items.append({
+            "platform": "naverclip",
+            "shortcode": mid,
+            "name": r.get("channel") or prof.get("nickname") or "네이버 클립",
+            "username": r.get("channel_id") or prof.get("profile_id") or mid,
+            "url": r.get("url") or "",
+            "video_url": card.get("play_url") or "",
+            "thumbnail": card.get("thumbnail") or "",
+            "caption": (r.get("title") or card.get("title") or "")[:200],
+            "views": views, "likes": likes, "comments": comments,
+            "base_count": views,
+            "followers": prof.get("followers") or 0,
+            "posted_at": posted,
+            "age_hours": None if age is None else round(age, 1),
+            "speed": (views / age) if age else None,
+            "density": ((likes + comments) / views) if views else 0.0,
+            "duration": card.get("duration") or 0,
+            # 어느 채널에서 왔는지 — 키워드 수집의 keyword 자리와 같은 역할이다.
+            "keyword": f"@{handle}",
+            "category": "뷰티",
+        })
+
+    now = now_dt.isoformat()
+    if body.get("reset"):
+        store.save_last_run_platform("naverclip", items, now)
+        added, total = len(items), len(items)
+    else:
+        added, total = store.merge_last_run_platform("naverclip", items, now)
+    return {"ok": True, "count": total, "added": added,
+            "channels": len(handles), "per_channel": per_ch,
+            "collected_at": now}
+
+
+@app.post("/api/naverclip/channels/seed")
+def _api_naverclip_channels_seed(request: Request, body: dict = None):
+    """벤치마킹 채널 시드 등록/삭제. 기본 15개를 한 번에 심을 수도 있다.
+
+    ★틱톡·유튜브 채널시드와 **같은 표**(platform_seeds)를 쓴다 — 목록·삭제 API가
+    이미 platform으로 갈리므로 새 저장소를 만들지 않는다(0순위-B).
+    """
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import naverclip_search as _nc
+    body = body or {}
+    store = Store(DB_PATH)
+    if body.get("remove"):
+        store.remove_seed("naverclip", str(body["remove"]).strip())
+        return {"ok": True, "removed": body["remove"]}
+    if body.get("defaults"):
+        for _name, h in _NAVERCLIP_BENCH_CHANNELS:
+            store.add_seed("naverclip", "account", h)
+        return {"ok": True, "added": len(_NAVERCLIP_BENCH_CHANNELS)}
+    raw = [str(v).strip() for v in (body.get("handles") or []) if str(v).strip()]
+    added, bad = [], []
+    for v in raw:
+        h = _nc.handle_from_url(v) or v.lstrip("@")
+        # ★있는 채널인지 확인하고 심는다 — 오타를 심으면 매일 0건을 긁는다.
+        if not _nc.profile_by_handle(h):
+            bad.append(v)
+            continue
+        store.add_seed("naverclip", "account", h)
+        added.append(h)
+    return {"ok": True, "added": added, "not_found": bad}
+
+
 @app.post("/api/naverclip/collect")
 def _api_naverclip_collect(request: Request, body: dict = None):
     """네이버 클립 수집 — **관리자 전용·무료**(2026-08-30 사장님 "핀터레스트 옆에").
