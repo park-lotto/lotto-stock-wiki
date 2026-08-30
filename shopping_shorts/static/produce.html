@@ -1849,7 +1849,7 @@
             <div class="zoomBar">
               <button type="button" class="zbtn" onclick="zoomStep(-1)" title="축소 (Alt+Shift+-)">－</button>
               <input type="range" id="zoomRange" min="100" max="300" step="10" value="100"
-                     oninput="zoomSet(this.value/100)" title="확대 배율">
+                     oninput="zoomSet(this.value/100); _zoomSaveSoon()" title="확대 배율">
               <button type="button" class="zbtn" onclick="zoomStep(1)" title="확대 (Alt+Shift++)">＋</button>
               <button type="button" class="zbtn" id="zoomResetBtn" onclick="zoomReset()"
                       style="display:none" title="원래 크기로 (Alt+Shift+Z)">↩ 원래대로</button>
@@ -6243,8 +6243,8 @@ function zoomSet(v){
   if(prev>1.001){ ZTX=ZTX*prev/z; ZTY=ZTY*prev/z; }
   ZOOM=z; _zoomApply();
 }
-function zoomStep(d){ zoomSet(ZOOM + d*ZOOM_STEP); }
-function zoomReset(){ ZOOM=1; ZTX=0; ZTY=0; _zoomApply(); }
+function zoomStep(d){ zoomSet(ZOOM + d*ZOOM_STEP); _zoomSaveSoon(); }
+function zoomReset(){ ZOOM=1; ZTX=0; ZTY=0; _zoomApply(); _zoomSaveSoon(); }
 // ★모든 장면에 같은 배율? (2026-08-30 사장님 "다른 전체 장면도 같은 비율로 적용할지 말지")
 //   켬(기본) = 장면을 넘겨도 배율·위치가 그대로 — 여러 장면을 같은 확대로 훑어볼 때.
 //   끔       = 장면을 넘기면 100%로 돌아간다 — 이 장면만 잠깐 확대해 볼 때.
@@ -6255,13 +6255,68 @@ function zoomAllOn(){
 }
 function zoomAllChanged(){
   // 방금 껐다면 지금 화면부터 원래대로 — 안 그러면 "껐는데 왜 아직 커져 있나"가 된다.
-  if(!zoomAllOn()) zoomReset();
+  if(!zoomAllOn()){ zoomReset(); return; }     // zoomReset이 저장까지 부른다
+  _zoomApply();
+  _zoomSaveSoon();                             // 켰다 = 지금 구도를 전 장면에 퍼뜨린다
+}
+// 장면을 넘길 때 showBeat이 부른다. 유지/복원을 여기서 정한다.
+// ★'모든 장면에 같은 배율'이 켜져 있으면 배율을 그대로 이어간다(그리고 그 장면에도 저장).
+//   꺼져 있으면 **그 장면에 저장된 값**을 복원한다 — 없으면 100%.
+function zoomOnBeatChange(){
+  if(zoomAllOn()){ _zoomApply(); _zoomSaveCur(); return; }
+  const b=(typeof BEATS_PREVIEW!=='undefined' && BEATS_PREVIEW[BEAT_IDX]) || null;
+  const z=b && +b.zoom || 1;
+  ZOOM = z>1.0001 ? z : 1;
+  // 저장은 '비율'(화면 폭 대비 이동)이고 화면은 '확대좌표계 px'을 쓴다 → 되돌려 환산
+  const st=document.getElementById('zoomStage');
+  const r=st?st.getBoundingClientRect():{width:0,height:0};
+  ZTX = (ZOOM>1.0001 && r.width)  ? (+b.pan_x||0)*r.width/ZOOM  : 0;
+  ZTY = (ZOOM>1.0001 && r.height) ? (+b.pan_y||0)*r.height/ZOOM : 0;
   _zoomApply();
 }
-// 장면을 넘길 때 showBeat이 부른다. 유지/초기화를 여기서 정한다.
-function zoomOnBeatChange(){
-  if(!zoomAllOn()) zoomReset();
-  else _zoomApply();             // 유지 — 배경이 바뀌었으니 변수만 다시 입힌다
+// ★지금 구도를 서버에 저장한다 — 이게 있어야 **최종 렌더에 그대로 나온다**
+//   (2026-08-30 사장님 "장면 바꾸기에서 수정한 대로 나오게").
+//   화면은 '확대좌표계 px'로 들고 있고, 서버·렌더는 '화면 폭 대비 비율'로 주고받는다:
+//       pan = (ZOOM * t) / 컨테이너크기      한계 |pan| <= (ZOOM-1)/2
+//   ★가두는 판단은 서버(scene_zoom_of)가 한다 — 여기서 또 가두면 두 벌이 된다(0순위-B).
+let _ZOOM_SAVE_T=null;
+function _zoomSaveCur(){
+  if(typeof MIX_JOB==='undefined' || !MIX_JOB) return;
+  const b=(typeof BEATS_PREVIEW!=='undefined' && BEATS_PREVIEW[BEAT_IDX]) || null;
+  if(!b) return;
+  const st=document.getElementById('zoomStage'); if(!st) return;
+  const r=st.getBoundingClientRect(); if(!r.width||!r.height) return;
+  const payload={ beat_idx:(b.beat_idx!=null?b.beat_idx:BEAT_IDX),
+                  zoom:ZOOM,
+                  pan_x: ZOOM>1.0001 ? (ZOOM*ZTX)/r.width  : 0,
+                  pan_y: ZOOM>1.0001 ? (ZOOM*ZTY)/r.height : 0 };
+  // 화면에도 같은 값을 담아둔다 — 장면을 오갈 때 서버를 다시 안 물어도 되게
+  b.zoom=payload.zoom; b.pan_x=payload.pan_x; b.pan_y=payload.pan_y;
+  fetch('/api/produce/mix/'+MIX_JOB+'/scenezoom',{method:'POST',
+    headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).catch(()=>{});
+}
+// 끌기·클릭이 끝난 뒤 한 번만 보낸다(끄는 도중 매 프레임 보내면 서버가 죽는다)
+function _zoomSaveSoon(){
+  if(_ZOOM_SAVE_T) clearTimeout(_ZOOM_SAVE_T);
+  _ZOOM_SAVE_T=setTimeout(()=>{ _ZOOM_SAVE_T=null; _zoomSaveAll(); }, 400);
+}
+// '모든 장면에 같은 배율'이 켜져 있으면 전 장면에 같은 구도를 저장한다.
+function _zoomSaveAll(){
+  if(typeof MIX_JOB==='undefined' || !MIX_JOB) return;
+  if(!zoomAllOn()){ _zoomSaveCur(); return; }
+  const list=(typeof BEATS_PREVIEW!=='undefined' && BEATS_PREVIEW) || [];
+  if(!list.length){ _zoomSaveCur(); return; }
+  const st=document.getElementById('zoomStage'); if(!st) return;
+  const r=st.getBoundingClientRect(); if(!r.width||!r.height) return;
+  const px = ZOOM>1.0001 ? (ZOOM*ZTX)/r.width  : 0;
+  const py = ZOOM>1.0001 ? (ZOOM*ZTY)/r.height : 0;
+  list.forEach((b,i)=>{
+    b.zoom=ZOOM; b.pan_x=px; b.pan_y=py;
+    fetch('/api/produce/mix/'+MIX_JOB+'/scenezoom',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({beat_idx:(b.beat_idx!=null?b.beat_idx:i), zoom:ZOOM, pan_x:px, pan_y:py})
+    }).catch(()=>{});
+  });
 }
 // 이벤트가 글자(드래그 대상) 위에서 시작했나 — 그러면 확대/이동은 손을 뗀다
 function _zoomOnText(t){
@@ -6295,7 +6350,7 @@ function bindZoom(){
     if(panning){
       panning=false; st.classList.remove('grabbing');
       try{ st.releasePointerCapture(e.pointerId); }catch(_){}
-      if(moved) return;                        // 끌었으면 확대는 안 한다
+      if(moved){ _zoomSaveSoon(); return; }    // 끌었으면 확대는 안 한다(자리는 저장)
     }
     if(_zoomOnText(e.target)) return;
     // ★누른 그 지점을 화면 가운데로 가져오면서 한 단계 확대한다.
@@ -6311,6 +6366,7 @@ function bindZoom(){
     ZTX=(keepX-offX)/nz;
     ZTY=(keepY-offY)/nz;
     _zoomApply();
+    _zoomSaveSoon();                           // 이 구도가 최종 영상에 그대로 나간다
   };
   st.addEventListener('pointerup', end);
   st.addEventListener('pointercancel', ()=>{ panning=false; st.classList.remove('grabbing'); });

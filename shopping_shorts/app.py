@@ -13867,6 +13867,45 @@ def api_produce_mix_cappos(job_id: str, body: dict):
             "y_pct": video_assemble._CAP_POS_PCT.get(hit["cap_pos"])}
 
 
+@app.post("/api/produce/mix/{job_id}/scenezoom")
+def api_produce_mix_scenezoom(job_id: str, body: dict):
+    """장면 하나의 화면 확대 구도(2026-08-30 사장님 "장면 바꾸기에서 수정한 대로 나오게").
+    body: {beat_idx, zoom, pan_x, pan_y}
+      zoom  = 1.0~3.0 (1.0이면 지정 해제 = 기본 구도로 되돌린다)
+      pan_x/pan_y = 화면 폭·높이 대비 이동 비율. 오른쪽·아래가 +. 한계 |pan| <= (zoom-1)/2
+
+    ★값을 해석·보정하는 곳은 video_assemble.scene_zoom_of 한 군데뿐이다 — 여기선
+      **뜻만 저장**한다(0순위-B). 그래야 화면·렌더가 같은 규칙을 본다.
+    ★음성·타이밍·자막을 건드리지 않는다 → 즉시·무료."""
+    store = Store(DB_PATH)
+    plan, hit, err = _mix_job_beat_or_error(job_id, body, store)
+    if err:
+        return err
+    try:
+        zoom = float(body.get("zoom") or 1.0)
+    except (TypeError, ValueError):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "zoom은 숫자"})
+    if zoom <= 1.0001:
+        # 지정 해제 — 키를 지운다(기본값을 저장해두면 나중에 기본이 바뀔 때 안 따라온다)
+        for k in ("scene_zoom", "scene_pan_x", "scene_pan_y"):
+            hit.pop(k, None)
+    else:
+        zoom = max(1.0, min(3.0, zoom))
+        lim = (zoom - 1.0) / 2.0
+        def _pan(key):
+            try:
+                v = float(body.get(key) or 0.0)
+            except (TypeError, ValueError):
+                v = 0.0
+            return max(-lim, min(lim, v))
+        hit["scene_zoom"] = round(zoom, 4)
+        hit["scene_pan_x"] = round(_pan("pan_x"), 5)
+        hit["scene_pan_y"] = round(_pan("pan_y"), 5)
+    store.update_mix_job(job_id, edit_plan=plan)
+    z, px, py = video_assemble.scene_zoom_of(hit)
+    return {"ok": True, "zoom": z, "pan_x": px, "pan_y": py}
+
+
 @app.post("/api/produce/mix/{job_id}/caplines")
 def api_produce_mix_caplines(job_id: str, body: dict):
     """장면 하나의 자막 줄 나누기(2026-08-25). body: {beat_idx, lines: [str, ...]}
@@ -14186,6 +14225,7 @@ def api_produce_mix_beats_preview(job_id: str):
     # 2~3어절씩 쪼갠다. 그래서 "미리보기는 안 끊기는데 실제론 끊긴다"였다. 이제 실제 렌더와
     # 같은 구절 분할(segs)과, 있으면 실제 표시시간(cap_durs)을 함께 내려 미리보기가 순차 재생한다.
     out = []
+    _z_of = video_assemble.scene_zoom_of      # (zoom, pan_x, pan_y) — 해석은 저기 한 곳
     for idx, b in enumerate(beats):
         narr = b.get("narration", "")
         out.append({
@@ -14200,6 +14240,9 @@ def api_produce_mix_beats_preview(job_id: str):
             #   None = 전체 설정 그대로(bottom) → 화면은 caption_style.y_pct를 쓴다.
             "pos_y_pct": video_assemble._CAP_POS_PCT.get(b.get("cap_pos")),
             "beat_idx": b.get("beat_idx", idx),                     # 저장 API가 쓰는 진짜 번호(목록 순번과 다를 수 있다)
+            # ★장면별 화면 확대 구도(2026-08-30). 해석·보정은 scene_zoom_of 한 곳에서만 —
+            #   화면이 스스로 가두면 렌더와 두 벌이 된다(0순위-B, cap_pos와 같은 방식).
+            "zoom": _z_of(b)[0], "pan_x": _z_of(b)[1], "pan_y": _z_of(b)[2],
         })
     return {"beats": out}
 

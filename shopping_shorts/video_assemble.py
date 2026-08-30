@@ -196,10 +196,59 @@ def _kenburns_vf(duration_sec, fps=30, zoom_end=_KENBURNS_ZOOM):
     )
 
 
-def _base_zoom_vf():
-    """일반 비트 기본 크롭+줌(정적, 저비용) — 원본과 프레임 구도만 살짝 달라지게."""
-    w, h = int(_OUT_W * _BASE_ZOOM), int(_OUT_H * _BASE_ZOOM)
-    return f"scale={w}:{h}:force_original_aspect_ratio=increase,crop={_OUT_W}:{_OUT_H}"
+def scene_zoom_of(beat):
+    """장면 하나에 사장님이 지정한 확대(6단계 미리보기에서 끌어 맞춘 것)를 꺼낸다.
+    → (zoom, pan_x, pan_y). 지정이 없으면 (1.0, 0, 0) = 종전 그대로.
+
+    ★값의 뜻은 **화면과 한 벌**이다(0순위-B). 미리보기는 배경에 scale(Z)+translate(t)를
+      걸고, 저장할 때 이동을 **화면 폭 대비 비율**로 정규화해 보낸다:
+          pan = (Z*t) / 컨테이너폭        (오른쪽·아래가 +)
+      그래서 한계는 |pan| <= (Z-1)/2 이고, 이 함수도 같은 식으로 가둔다.
+    ★여기서만 읽는다 — 크롭을 만드는 곳이 여럿이라 각자 파싱하면 반드시 어긋난다."""
+    if not isinstance(beat, dict):
+        return 1.0, 0.0, 0.0
+    z = beat.get("scene_zoom")
+    try:
+        z = float(z) if z is not None else 1.0
+    except (TypeError, ValueError):
+        z = 1.0
+    z = max(1.0, min(3.0, z))
+    if z <= 1.0001:
+        return 1.0, 0.0, 0.0
+    lim = (z - 1.0) / 2.0
+    def _pan(key):
+        try:
+            v = float(beat.get(key) or 0.0)
+        except (TypeError, ValueError):
+            v = 0.0
+        return max(-lim, min(lim, v))
+    return z, _pan("scene_pan_x"), _pan("scene_pan_y")
+
+
+def _crop_xy(zoom, pan_x, pan_y, base_w, base_h):
+    """확대된 화면(base_w×base_h)에서 잘라낼 위치. 중앙에서 pan 만큼 옮긴다.
+    유도: 화면 폭 대비 pan 만큼 그림이 움직였으므로 잘라내는 창은 반대로 -pan 이동.
+    ★검산 완료 — pan이 한계(±(Z-1)/2)일 때 crop이 정확히 0 또는 max에 닿는다."""
+    max_x = max(0, base_w - _OUT_W)
+    max_y = max(0, base_h - _OUT_H)
+    x = max_x / 2.0 - _OUT_W * pan_x
+    y = max_y / 2.0 - _OUT_H * pan_y
+    return int(round(max(0, min(max_x, x)))), int(round(max(0, min(max_y, y))))
+
+
+def _base_zoom_vf(beat=None):
+    """일반 비트 기본 크롭+줌(정적, 저비용) — 원본과 프레임 구도만 살짝 달라지게.
+    ★beat에 사장님이 6단계에서 맞춘 확대가 있으면 **그 구도 그대로** 잘라낸다
+      (2026-08-30 "장면 바꾸기에서 수정한 대로 나오게"). 없으면 종전과 완전히 같다."""
+    zoom, pan_x, pan_y = scene_zoom_of(beat)
+    if zoom <= 1.0001:
+        w, h = int(_OUT_W * _BASE_ZOOM), int(_OUT_H * _BASE_ZOOM)
+        return f"scale={w}:{h}:force_original_aspect_ratio=increase,crop={_OUT_W}:{_OUT_H}"
+    # 사장님 지정 확대 — 기본 줌은 얹지 않는다(지정한 배율이 곧 최종 구도다)
+    w, h = int(_OUT_W * zoom), int(_OUT_H * zoom)
+    x, y = _crop_xy(zoom, pan_x, pan_y, w, h)
+    return (f"scale={w}:{h}:force_original_aspect_ratio=increase,"
+            f"crop={_OUT_W}:{_OUT_H}:{x}:{y}")
 # 하단 자막 바(원본 소각 자막을 덮는다) + 한 줄 자막 스타일.
 _BAR_H = 450
 _CAP_FONTSIZE = 78      # 짧은 1줄 구절이라 여유 있음 → 키움
@@ -1312,7 +1361,14 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
         if not plan:
             continue
         segs = [s for s in _beat_material(beat) if s and _srcd.get(s.get("video_id"), 0.0) > 0.05]
-        vf = _kenburns_vf(tts_dur) if idx in important else _base_zoom_vf()
+        # ★사장님이 6단계에서 구도를 맞춘 장면은 **켄번즈를 얹지 않는다**(2026-08-30).
+        #   켄번즈는 중앙 기준으로 서서히 확대하는 연출이라, 지정한 구도를 밀어낸다 —
+        #   "이 자리를 보여달라"는 지시가 연출보다 우선이다.
+        _z, _, _ = scene_zoom_of(beat)
+        if _z > 1.0001:
+            vf = _base_zoom_vf(beat)
+        else:
+            vf = _kenburns_vf(tts_dur) if idx in important else _base_zoom_vf(beat)
         # 비트당 다중 클립: 각 구간을 [start, start+src_dur]만큼만 잘라(유출 0) 이어붙이고,
         # 부족분은 마지막 클립을 슬로모(setpts)로 늘려 대사 길이에 맞춘다.
         sub_paths = []
@@ -1344,7 +1400,7 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
             # freeze 클립은 움직이는 부분을 정적 베이스줌으로 두고, 켄번즈 모션은 freeze
             # 패스에서 전체(play+freeze)에 한 번만 건다(정지 구간도 살아있게, 2026-07-19).
             # 안 그러면 pass1 줌 + freeze 켄번즈가 겹쳐 줌이 두 번 쌓인다.
-            clip_vf = _base_zoom_vf() if freeze > 1e-3 else vf
+            clip_vf = _base_zoom_vf(beat) if freeze > 1e-3 else vf
             factor = play_out / _c_src if _c_src > 1e-6 else 1.0
             vf_full = f"{clip_vf},setpts={factor:.6f}*PTS" if factor > 1.0 + 1e-6 else clip_vf
             # start를 소스 안으로 당긴다(타트랙 병합, 2026-07-19). 약한 매칭이 소스 밖을 잡으면
