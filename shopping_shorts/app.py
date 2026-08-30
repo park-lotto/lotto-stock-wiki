@@ -24,6 +24,7 @@ import requests
 from fastapi import BackgroundTasks, FastAPI, Request, UploadFile, File, Form
 from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse, FileResponse, Response, StreamingResponse
 from fastapi.middleware.gzip import GZipMiddleware
+from starlette.concurrency import run_in_threadpool
 from fastapi.staticfiles import StaticFiles
 from shopping_shorts import service
 from shopping_shorts.service import collect, census, generate_missing_drafts, next_draft_targets, youtube_channel_board
@@ -5988,6 +5989,15 @@ async def api_buffer_schedule(request: Request):
     if int(job.get("customer_id") or 0) != _cid(request):
         return JSONResponse(status_code=403, content={"ok": False, "error": "내 작업이 아닙니다."})
 
+    # ★주소를 내주기 전에 moov를 앞으로 보장한다(2026-08-30 실측). Buffer는 영상을
+    #   받아보다가 못 읽으면 "Video could not be read from its URL"로 거절하는데,
+    #   렌더 시점에만 처리하면 **그 전에 만든 완성본**이 영영 안 올라간다.
+    #   이미 앞에 있으면 아무 일도 안 한다(무해·즉시).
+    try:
+        mix_pipeline.ensure_faststart(job["video_path"])
+    except Exception as e:         # 실패해도 예약은 시도한다(원본은 그대로다) — 단 조용히 넘기지 않는다
+        logging.getLogger("buffer").warning(
+            "faststart 보장 실패 job=%s: %s", job_id, type(e).__name__)
     sid = _share_put(job_id, _SHARE_TTL_BUFFER)
     # ★Buffer는 **HTTPS**를 요구한다(buffer_api 머리말). 그런데 프록시 뒤라
     #   request.base_url이 http로 잡혀 301 리다이렉트 주소를 넘기고 있었다
@@ -6002,8 +6012,15 @@ async def api_buffer_schedule(request: Request):
     for cid_ in chans:
         try:
             t = str(texts.get(cid_) or text or "")
-            r = buffer_api.schedule_video(key, cid_, t, video_url, due_at, thumb_ms,
-                                          share_now=share_now, privacy=privacy)
+            # ★반드시 스레드풀로 — 이 핸들러는 async라 blocking urllib을 그대로 부르면
+            #   이벤트루프 전체가 10~20초 멈춘다. 그 사이 Buffer 검증기가 video_url을
+            #   HEAD/GET하러 오는데 서버가 응답을 못 해 "Video could not be read from
+            #   its URL"로 거절된다(실측 2026-08-30: 같은 파일·같은 캡션을 앱 밖에서
+            #   부르면 성공, 이 핸들러를 지나면 실패 — HEAD가 createPost 응답과 동시에
+            #   풀리는 게 apache/uvicorn 로그 시각차 10초로 확인됨).
+            r = await run_in_threadpool(
+                buffer_api.schedule_video, key, cid_, t, video_url, due_at, thumb_ms,
+                share_now=share_now, privacy=privacy)
             out.append({"channel_id": cid_, "ok": True, "post_id": r["id"], "due_at": r["dueAt"]})
         except buffer_api.BufferError as e:
             out.append({"channel_id": cid_, "ok": False, "error": str(e)})
