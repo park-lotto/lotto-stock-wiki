@@ -13301,9 +13301,13 @@ def api_produce_source_brief(request: Request, shortcode: str):
     #   프론트가 w>h를 다시 계산하면 판단이 두 곳이 된다(0순위-B) — 실제 차단을 하는
     #   mix_pipeline._block_landscape와 어긋나면 "화면은 괜찮다는데 제작은 실패"가 된다.
     _w, _h = data.get("video_w"), data.get("video_h")
+    # ★판정식을 여기 적지 않는다 — mix_pipeline이 실제로 차단할 때 쓰는 함수를
+    #   그대로 빌려 쓴다(0순위-B). 전엔 여기도 가로>세로 비교를 따로 적어서, 문턱을
+    #   한쪽만 고치면 "화면은 괜찮다는데 제작은 실패"가 났다.
+    from shopping_shorts.mix_pipeline import is_landscape_wh
     return {"ok": True, "brief": data.get("source_brief") or {}, "segments": segs,
             "video_w": _w, "video_h": _h,
-            "landscape": bool(_w and _h and _w > _h)}
+            "landscape": bool(is_landscape_wh(_w, _h))}
 
 
 @app.get("/api/produce/aipick")

@@ -696,19 +696,37 @@ def _prepare_sources(urls, work, store=None):
     return video_paths, captions, skipped
 
 
-def _is_landscape(path):
-    """가로형인가 — 가로가 세로보다 길면 True. 못 재면 None(모르면 막지 않는다).
+# 이 비율을 넘어야 '가로형'으로 본다(2026-08-31). 1.0(= w>h)으로 재면 **1픽셀만 넓어도**
+# 걸린다 — 실사고 cid110 job adb9eb74362e: 인스타 릴 736x718(1.025)이 "가로형(롱폼)"으로
+# 막혔다. 18px 차이는 사람 눈엔 정사각이고 세로 화면에 넣어도 좌우가 잘리지 않는다.
+# 원래 docstring도 "정사각은 가로형으로 치지 않는다"였는데 코드만 어긋나 있었다.
+# 1.15는 실측 근거: 서버 script_extracts 399건에서 비율 1.0~1.5 구간은 0건이고
+# 진짜 롱폼(1.78 등)만 3건이라, 문턱을 둬도 막아야 할 것은 그대로 막힌다.
+LANDSCAPE_RATIO = 1.15
 
-    정사각(1:1)은 가로형으로 치지 않는다. 세로 화면에 넣어도 위아래만 남지
-    좌우가 잘려 나가지 않는다.
+
+def is_landscape_wh(w, h):
+    """(w,h) → 가로형인가. 못 재면 None. **판정은 여기 한 곳뿐이다(0순위-B).**
+
+    화면(app.py source_brief의 `landscape`)과 실제 차단(_block_landscape)이 각자
+    재면 "화면은 괜찮다는데 제작은 실패"가 난다. 그래서 둘 다 이 함수를 부른다.
+    """
+    if not (w and h):
+        return None
+    return (w / h) > LANDSCAPE_RATIO
+
+
+def _is_landscape(path):
+    """가로형인가 — 못 재면 None(모르면 막지 않는다).
+
+    정사각(1:1)과 그 언저리는 가로형으로 치지 않는다. 세로 화면에 넣어도 위아래만
+    남지 좌우가 잘려 나가지 않는다. 문턱은 LANDSCAPE_RATIO 참조.
     """
     try:
         w, h, _dur = _probe_wh_dur(path)
     except Exception:      # noqa: BLE001 — 못 재는 걸 막을 근거로 쓰지 않는다
         return None
-    if not (w and h):
-        return None
-    return w > h
+    return is_landscape_wh(w, h)
 
 
 def _block_landscape(video_paths, url_of=None):
