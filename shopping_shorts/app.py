@@ -6686,7 +6686,12 @@ _ALLOWED_THUMB_HOSTS = ("cdninstagram.com", "fbcdn.net", "ytimg.com",
                         # 핀터레스트 커버(i.pinimg.com) — 2026-08-28 신설 탭.
                         # ★넣지 않으면 카드가 통째로 검게 뜬다(같은 사고가 xhscdn·
                         #   douyinpic·gstatic로 이미 3번 반복됐다: 메모리 `썸네일화이트리스트_누락`).
-                        "pinimg.com")
+                        "pinimg.com",
+                        # 네이버 클립 포스터 프레임(video-phinf.pstatic.net) — 2026-08-30 신설 탭.
+                        # ★같은 사고를 또 냈다(실측: 카드 8장 중 8장이 안 그려지고
+                        #   "GET /api/thumb?url=...video-phinf.pstatic.net... 400"). 새 플랫폼을
+                        #   붙일 때 이 목록을 같이 고치는 것을 잊지 마라 — 이번이 5번째다.
+                        "pstatic.net")
 _ALLOWED_VIDEO_HOSTS = ("cdninstagram.com", "fbcdn.net",
                         # 틱톡·도우인 mp4(2026-08-17). 렌즈 카드 인라인 재생에 필요하다 —
                         # CDN 주소를 브라우저에 직접 주면 리퍼러·IP를 따져 막히고(그래서
@@ -6696,7 +6701,10 @@ _ALLOWED_VIDEO_HOSTS = ("cdninstagram.com", "fbcdn.net",
                         "douyinvod.com", "douyinpic.com",
                         # 핀터레스트 mp4(v1.pinimg.com) — 카드 인라인 재생용(2026-08-28).
                         # 실측: Referer만 있으면 200이라 프록시를 타면 그대로 흐른다.
-                        "pinimg.com")
+                        "pinimg.com",
+                        # 네이버 클립 mp4(b02-kr-smp-vod.pstatic.net) — 카드 인라인 재생용.
+                        # ⚠️URL에 만료(hdnts=exp=...)가 붙어 있어 오래된 링크는 실패한다.
+                        "pstatic.net")
 
 
 # HEIC은 크롬·파이어폭스가 못 그린다(사파리만). 도우인 커버가 image/heic으로 온다
@@ -11414,6 +11422,90 @@ def _api_pinterest_collect(request: Request, body: dict = None):
         #   덮는다 — 재현 실측: 각 50개를 담았는데 **저장된 건 50개**(한쪽 전멸).
         #   오류가 안 나서 '덜 담겼네'로만 보이는 조용한 유실이다.
         added, total = store.merge_last_run_platform("pinterest", items, now)
+    return {"ok": True, "count": total, "added": added,
+            "keywords": kws, "collected_at": now}
+
+
+@app.post("/api/naverclip/collect")
+def _api_naverclip_collect(request: Request, body: dict = None):
+    """네이버 클립 수집 — **관리자 전용·무료**(2026-08-30 사장님 "핀터레스트 옆에").
+
+    핀터레스트와 **같은 계약**을 쓴다(save_last_run_platform / merge_last_run_platform)
+    — 화면·API가 이미 platform으로 갈리므로 새 배선이 필요 없다(0순위-B).
+
+    핀터레스트와 다른 점 둘:
+      ★브라우저를 안 띄운다. HTTP 2번이라 키워드당 1초 안쪽이고 병렬이 필요 없다
+        (핀터레스트는 chromium 기동+고정 sleep으로 키워드당 9.5초라 병렬이 필수였다).
+      ★지표가 **진짜로 온다**. 핀터레스트는 조회수를 안 줘서 0으로 뒀지만, 클립은
+        조회수·좋아요·댓글·발행시각이 다 와서 속도·참여율을 정상 계산한다.
+    """
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import naverclip_search
+    body = body or {}
+    kws = [k.strip() for k in (body.get("keywords") or []) if str(k).strip()]
+    if not kws:
+        kws = ["뷰티"]                  # 첫 카테고리(2026-08-30 사장님 "뷰티쪽으로")
+    kws = kws[:12]
+    try:
+        per = max(5, min(int(body.get("per_keyword") or 20), 60))
+    except (TypeError, ValueError):
+        per = 20
+
+    now_dt = datetime.now(timezone.utc)
+    items, seen = [], set()
+    for kw in kws:
+        try:
+            found = naverclip_search.search(kw, max_results=per)
+        except Exception as e:          # noqa: BLE001 — 한 키워드 실패로 전체를 죽이지 않는다
+            logging.warning("naverclip 수집 실패(%s): %s", kw, type(e).__name__)
+            continue
+        for it in found:
+            mid = it.get("mediaId") or ""
+            if not mid or mid in seen:
+                continue
+            seen.add(mid)
+            views = int(it.get("views") or 0)
+            likes = int(it.get("likes") or 0)
+            comments = int(it.get("comments") or 0)
+            # 경과시간 — 발행시각이 있어야 속도가 나온다. 없으면 None으로 두고
+            # 속도를 지어내지 않는다(0순위: 추측 금지).
+            age = None
+            posted = it.get("posted_at") or ""
+            if posted:
+                try:
+                    age = max(0.0, (now_dt - datetime.fromisoformat(posted)
+                                    ).total_seconds() / 3600.0)
+                except (TypeError, ValueError):
+                    age = None
+            items.append({
+                "platform": "naverclip",
+                "shortcode": mid,
+                "name": it.get("channel") or "네이버 클립",
+                "username": it.get("channel_id") or mid,
+                "url": it.get("url") or "",
+                "video_url": it.get("play_url") or "",
+                "thumbnail": it.get("thumbnail") or "",
+                "caption": (it.get("title") or "")[:200],
+                "views": views, "likes": likes, "comments": comments,
+                "base_count": views,
+                "posted_at": posted,
+                "age_hours": None if age is None else round(age, 1),
+                "speed": (views / age) if age else None,
+                "density": ((likes + comments) / views) if views else 0.0,
+                "duration": it.get("duration") or 0,
+                "keyword": kw,
+                "category": "뷰티",
+            })
+
+    store = Store(DB_PATH)
+    now = now_dt.isoformat()
+    if body.get("reset"):
+        store.save_last_run_platform("naverclip", items, now)
+        added, total = len(items), len(items)
+    else:
+        added, total = store.merge_last_run_platform("naverclip", items, now)
     return {"ok": True, "count": total, "added": added,
             "keywords": kws, "collected_at": now}
 
