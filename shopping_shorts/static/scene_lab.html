@@ -739,6 +739,8 @@ body.tight #playerhost .lbl label{display:none}   /* 1장=1컷 — 사장님 "�
 body.tight #topband{height:min(700px,72vh)}
 body:not(.tight) #topband{height:auto}
 body:not(.tight) #topband > #topright{overflow:visible}
+/* 밴드가 auto면 height:100%가 안 먹는다(실측 playerhost 287px) — stretch로 채운다 */
+body:not(.tight) #topband > #playerhost{height:auto;align-self:stretch}
 #topband > #playerhost{height:100%;display:flex;flex-direction:column;min-height:0}
 /* ★display를 여기서 주면 안 된다 — #player는 원래 재생 중(.on)일 때만 보인다.
    내가 display:flex를 박는 바람에 **재생 전에도 빈 검은 재생창+진행바**가 떠서
