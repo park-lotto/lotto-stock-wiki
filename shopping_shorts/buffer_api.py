@@ -129,6 +129,40 @@ mutation CreatePost($input: CreatePostInput!) {
 """
 
 
+# 채널이 어느 SNS인지 → id로 기억해 둔다. 예약 한 번에 채널을 매번 다시 묻지 않는다.
+_SERVICE_CACHE: dict[str, str] = {}
+
+
+def _service_of(key: str, channel_id: str) -> str:
+    """이 채널이 어느 SNS인가. 모르면 빈 문자열(호출부가 metadata를 안 붙인다)."""
+    if channel_id in _SERVICE_CACHE:
+        return _SERVICE_CACHE[channel_id]
+    try:
+        for c in channels(key):
+            if c.get("id"):
+                _SERVICE_CACHE[c["id"]] = (c.get("service") or "").lower()
+    except BufferError:
+        return ""                       # 채널을 못 물어봐도 예약 자체는 시도한다
+    return _SERVICE_CACHE.get(channel_id, "")
+
+
+def _post_metadata(key: str, channel_id: str) -> dict:
+    """SNS마다 요구하는 부가정보. **없으면 Buffer가 거절한다.**
+
+    ★인스타는 type이 **필수**다(실측 2026-08-30 라이브 오류:
+      "Invalid post: Instagram posts require a type (post, story, or reel)").
+      우리가 올리는 것은 세로 완성본이므로 reel이 맞다.
+      shouldShareToFeed도 필수 — 릴스를 피드에도 남긴다(True).
+      문서: developers.buffer.com/types/InstagramPostMetadataInput
+    ★SNS를 늘릴 때 여기 한 곳만 고친다(0순위-B). 모르는 SNS면 빈 dict —
+      필요 없는 곳에 metadata를 붙여 새 거절을 만들지 않는다.
+    """
+    svc = _service_of(key, channel_id)
+    if svc == "instagram":
+        return {"instagram": {"type": "reel", "shouldShareToFeed": True}}
+    return {}
+
+
 def schedule_video(key: str, channel_id: str, text: str, video_url: str,
                    due_at: str | None = None, thumb_ms: int = 0) -> dict:
     """영상 하나를 예약한다. → {id, dueAt}
@@ -143,6 +177,9 @@ def schedule_video(key: str, channel_id: str, text: str, video_url: str,
         asset["video"]["metadata"] = {"thumbnailOffset": int(thumb_ms)}
     inp = {"channelId": channel_id, "text": text or "",
            "schedulingType": "automatic", "assets": [asset]}
+    meta = _post_metadata(key, channel_id)
+    if meta:
+        inp["metadata"] = meta
     if due_at:
         inp["mode"] = "customScheduled"
         inp["dueAt"] = due_at
