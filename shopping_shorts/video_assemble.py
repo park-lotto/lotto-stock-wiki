@@ -1774,14 +1774,6 @@ def _resolve_seg_font(base_style, work, key_prefix, text=""):
     return fontref, str(work / fontref)
 
 
-def _match_highlight(word, highlight_rules):
-    """word가 highlight_rules의 keyword와 정확히 일치하면 그 규칙(dict) 반환, 아니면 None."""
-    for rule in (highlight_rules or []):
-        if rule.get("keyword") and word == rule["keyword"]:
-            return rule
-    return None
-
-
 def _lacks_space_glyph(pil_font):
     """→ font_glyphs.lacks_space_glyph (판정은 한 곳에서만 — 0순위-B)."""
     return _fg.lacks_space_glyph(pil_font)
@@ -1799,23 +1791,41 @@ def _text_px(pil_font, text, size):
 
 
 def _build_segments(line, base_color, highlight_rules):
-    """한 줄 텍스트를 공백 기준 토큰화하고, 연속된 동일 스타일(강조 or 기본) 토큰을 묶어
-    [(text, color, box, box_color), ...] 세그먼트 리스트로 반환. 사이 공백은 각 세그먼트
-    텍스트에 뒤따르는 공백으로 포함시켜(마지막 세그먼트 제외) 폭 계산 시 자연스럽게 처리한다."""
-    words = line.split(" ")
+    """한 줄 텍스트를 highlight_rules 기준으로 [(text, color, box, box_color), ...]로 쪼갠다.
+
+    ★부분 문자열 매칭(2026-08-30 사장님 "바꾸고 싶은 글자만 색"). 예전엔 공백으로 나눈
+    **단어 전체**가 일치할 때만 색이 바뀌어서, "쿠팡꿀템"의 '꿀템'만 노랗게는 못 했다.
+    이제 규칙의 글자열이 줄 안 어디에 있든 그 자리만 다른 색이 된다(긴 규칙 먼저 잡아
+    짧은 규칙이 겹쳐 먹지 않게 한다).
+
+    규칙이 없거나 매칭 0건이면 세그먼트 1개 = 기존과 같은 산출물(하위호환).
+    ※단어 전체 일치도 부분 일치의 한 경우라 종전 동작을 그대로 포함한다."""
+    if not line:
+        return []
+    base = (base_color, False, None)
+    marks = [None] * len(line)
+    rules = [r for r in (highlight_rules or []) if r.get("keyword")]
+    # 긴 키워드 먼저 — 짧은 규칙이 먼저 자리를 잡으면 긴 규칙이 조각나 색이 튄다.
+    for rule in sorted(rules, key=lambda r: -len(r["keyword"])):
+        kw = rule["keyword"]
+        style = (rule.get("color"), bool(rule.get("box")), rule.get("box_color"))
+        pos = line.find(kw)
+        while pos >= 0:
+            for i in range(pos, pos + len(kw)):
+                if marks[i] is None:
+                    marks[i] = style
+            pos = line.find(kw, pos + len(kw))
     segs = []
     cur_text, cur_style = "", None
-    for i, w in enumerate(words):
-        rule = _match_highlight(w, highlight_rules)
-        style = (rule["color"], bool(rule.get("box")), rule.get("box_color")) if rule else (base_color, False, None)
-        piece = w + (" " if i < len(words) - 1 else "")
+    for ch, st in zip(line, marks):
+        st = st or base
         if cur_style is None:
-            cur_text, cur_style = piece, style
-        elif style == cur_style:
-            cur_text += piece
+            cur_text, cur_style = ch, st
+        elif st == cur_style:
+            cur_text += ch
         else:
             segs.append((cur_text, *cur_style))
-            cur_text, cur_style = piece, style
+            cur_text, cur_style = ch, st
     if cur_text:
         segs.append((cur_text, *cur_style))
     return segs

@@ -2061,6 +2061,23 @@
           <div style="font-size:13px;margin-bottom:4px">헤드카피 문구</div>
           <textarea id="hcText" rows="2" placeholder="예: 써보면 놀라는 이것" oninput="updateHC()"
             style="width:100%;background:var(--inset);border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px;margin-bottom:12px;resize:vertical;font-family:inherit;font-size:14px;line-height:1.4"></textarea>
+          <!-- 🖍 글자별 색(2026-08-30 사장님 "바꾸고 싶은 글자만 컬러 바꿀 수 있게").
+               ★값의 주인은 STATE.deco.highlight_rules 하나다(0순위-B) — 미리보기(updateHC)와
+               실렌더(video_assemble._build_segments)가 같은 규칙을 읽는다. 여기선 문구에서
+               드래그한 글자를 그 규칙으로 넣어줄 뿐이다. -->
+          <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:12px">
+            <div style="font-size:13px;font-weight:700;margin-bottom:6px">🖍 글자별 색
+              <span style="font-size:11px;color:var(--sub);font-weight:400">— 위 문구에서 바꿀 글자를 드래그해 고른 뒤, 아래 색을 누르세요</span></div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+              <input type="color" id="hcPartColor" value="#FFD400" style="width:46px;height:30px;cursor:pointer"
+                oninput="hcPaintSelection(this.value)">
+              <button type="button" class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 10px;font-size:12px"
+                onclick="hcPaintSelection((document.getElementById('hcPartColor')||{}).value||'#FFD400')">고른 글자 색칠</button>
+              <span id="hcPartSwatch"></span>
+            </div>
+            <div id="hcPartList" style="margin-top:7px"></div>
+            <div id="hcPartMsg" class="hint" style="margin-top:3px"></div>
+          </div>
           <!-- ⚡빠른 조절(2026-08-19 사장님 "폰트나 색상도 지정이 되야지") — 문구를 고치는
                바로 그 자리에서 폰트·색·크기·위치를 만진다. ★값은 여기서 따로 갖지 않는다:
                아래 '직접 다듬기'의 진짜 입력칸(hcFont/hcColor/hcSize/hcY/hcX)에 그대로 써넣고
@@ -6033,6 +6050,64 @@ function updateHighlightRule(i, field, val){
   if(field==='box') renderHighlightRules();
   updateHC();
 }
+// ── 🖍 글자별 색(2026-08-30) — 고른 글자만 다른 색으로 ─────────────────────
+// 규칙 모양은 헤드카피(STATE.deco.highlight_rules)와 썸네일(L.hl)이 같다: {keyword,color}.
+// ★자르는 판단은 여기 한 곳에서만 한다 — 서버 _build_segments와 **같은 규칙**이다:
+//   긴 키워드 먼저, 이미 색이 잡힌 자리는 덮지 않는다. 두 군데서 각자 정하면 어긋난다(0순위-B).
+const HL_SWATCHES = ['#FFD400','#FF3B30','#2EE6C5','#35C3FF','#FF5FA2','#2FD873','#FFFFFF'];
+function hlSegments(line, rules, baseColor){
+  const list=(rules||[]).filter(r=>r&&r.keyword);
+  const marks=new Array(line.length).fill(null);
+  list.slice().sort((a,b)=>b.keyword.length-a.keyword.length).forEach(r=>{
+    let pos=line.indexOf(r.keyword);
+    while(pos>=0){
+      for(let i=pos;i<pos+r.keyword.length;i++) if(marks[i]==null) marks[i]=r;
+      pos=line.indexOf(r.keyword,pos+r.keyword.length);
+    }
+  });
+  const out=[];
+  for(let i=0;i<line.length;i++){
+    const r=marks[i], color=(r&&r.color)||baseColor, box=(r&&r.box)?(r.box_color||'#FF2D2D'):null;
+    const last=out[out.length-1];
+    if(last && last.color===color && last.box===box) last.text+=line[i];
+    else out.push({text:line[i], color:color, box:box});
+  }
+  return out;
+}
+// 색 견본 버튼 묶음(헤드카피·썸네일이 같은 모양을 쓴다).
+function hlSwatchHtml(fn){
+  return HL_SWATCHES.map(c=>`<button type="button" class="tab" onclick="${fn}('${c}')"
+    style="flex:0 0 auto;min-width:auto;width:22px;height:22px;padding:0;background:${c};border:1px solid #0006"></button>`).join('');
+}
+function hlChipsHtml(rules, delFn){
+  return (rules||[]).map((r,i)=>`<span style="display:inline-flex;align-items:center;gap:5px;background:#0b1018;
+    border:1px solid var(--line);border-radius:999px;padding:3px 8px;margin:0 5px 5px 0;font-size:12px">
+    <b style="color:${r.color}">${esc(r.keyword||'')}</b>
+    <span onclick="${delFn}(${i})" style="cursor:pointer;color:var(--sub)">✕</span></span>`).join('');
+}
+// 헤드카피 — 문구칸(hcText)에서 드래그해 고른 글자에 색을 준다.
+function hcPaintSelection(color){
+  const t=document.getElementById('hcText'), msg=document.getElementById('hcPartMsg');
+  if(!t) return;
+  const sel=String(t.value||'').slice(t.selectionStart||0, t.selectionEnd||0).trim();
+  if(!sel){ if(msg) msg.textContent='먼저 위 문구에서 색을 바꿀 글자를 드래그해 골라주세요'; return; }
+  STATE.deco=STATE.deco||{extra_texts:[]};
+  const rules=STATE.deco.highlight_rules=STATE.deco.highlight_rules||[];
+  const hit=rules.find(r=>r.keyword===sel);
+  if(hit) hit.color=color; else rules.push({keyword:sel, color:color, box:false, box_color:'#FF2D2D'});
+  if(msg) msg.textContent='';
+  renderHcParts(); updateHC();
+}
+function removeHcPart(i){
+  const rules=(STATE.deco&&STATE.deco.highlight_rules)||[];
+  rules.splice(i,1); renderHcParts(); updateHC();
+}
+function renderHcParts(){
+  const sw=document.getElementById('hcPartSwatch'); if(sw) sw.innerHTML=hlSwatchHtml('hcPaintSelection');
+  const box=document.getElementById('hcPartList'); if(!box) return;
+  const rules=(STATE.deco&&STATE.deco.highlight_rules)||[];
+  box.innerHTML=hlChipsHtml(rules,'removeHcPart');
+}
 function renderHighlightRules(){
   const box=document.getElementById('highlightRuleList'); if(!box) return;
   const list=(STATE.deco && STATE.deco.highlight_rules)||[];
@@ -6411,13 +6486,14 @@ function updateHC(){
   //   자동 줄바꿈에 걸려 4줄로 깨졌다 — 재줄바꿈을 끄고, 폭을 넘으면 폰트를 줄여 맞춘다.
   //   서버도 같은 규칙이다(video_assemble fit_lines=True).
   if(rules.length && hc.text){
+    // ★부분 글자 강조(2026-08-30) — 단어 전체가 아니라 **고른 글자만** 색이 바뀐다.
+    //   자르는 규칙은 hlSegments 한 곳(서버 _build_segments와 같은 규칙).
     const esc2 = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
-    el.innerHTML = hc.text.split('\n').map(line=>line.split(' ').map(w=>{
-      const r = rules.find(x=>x.keyword && x.keyword===w);
-      if(!r) return esc2(w);
-      const bg = r.box ? `background:${r.box_color};padding:0 4px;border-radius:4px;` : '';
-      return `<span style="color:${r.color};${bg}">${esc2(w)}</span>`;
-    }).join(' ')).join('\n');
+    el.innerHTML = hc.text.split('\n').map(line=>hlSegments(line, rules, hc.color).map(sg=>{
+      if(sg.color===hc.color && !sg.box) return esc2(sg.text);
+      const bg = sg.box ? `background:${sg.box};padding:0 4px;border-radius:4px;` : '';
+      return `<span style="color:${sg.color};${bg}">${esc2(sg.text)}</span>`;
+    }).join('')).join('\n');
   } else {
     el.textContent = hc.text;
   }
@@ -6455,6 +6531,7 @@ function updateHC(){
     el.style.borderRadius=Math.round(10*scale*3)+'px';
   } else { el.style.background='none'; el.style.padding='0 6px'; el.style.borderRadius='0'; }
   hcQuickSync(hc);
+  if(typeof renderHcParts==='function') renderHcParts();   // 🖍 글자별 색 칩 목록도 같이
   if(document.getElementById('fullPresets')) renderStyleCards();
 }
 
@@ -13625,27 +13702,39 @@ function drawThumb(ctx, img, layers, W, H){
       _fxMarker(ctx, line, y, size, L.fx, ls);        // ✨형광펜은 글자 뒤 — 먼저 깐다
       // 레퍼런스 룩: 은은한 그림자 + 폰트 크기에 비례한 두꺼운 외곽선(작아도 커도 비율 유지).
       // fixed px(외곽선 슬라이더)보다 얇아지지 않게 max로 바닥을 깐다 — 큰 글자에 얇은 테두리 방지.
+      const _fill = (li > 0 && L.color2) ? L.color2 : L.color;     // 1줄=color, 2줄부터=color2(2색 룩)
+      // 🖍 글자별 색(2026-08-30) — L.hl이 있으면 줄을 색 조각으로 쪼개 이어 그린다.
+      // ★없으면 종전 그대로 한 번에 그린다(회귀 0). 자르는 규칙은 hlSegments 한 곳.
+      // ★조각 폭의 합 = 줄 폭(자간까지 같은 방식으로 재므로) — 그래서 가운데가 안 밀린다.
+      let runs;
+      if (L.hl && L.hl.length){
+        ctx.textAlign = 'left';
+        const segs = hlSegments(line, L.hl, _fill);
+        const ws = segs.map(sg => ctx.measureText(sg.text).width);
+        let rx = -(ws.reduce((a, b) => a + b, 0) - ls) / 2;
+        runs = segs.map((sg, i) => { const r = {text: sg.text, x: rx, color: sg.color}; rx += ws[i]; return r; });
+      } else {
+        ctx.textAlign = 'center';
+        runs = [{text: line, x: tx, color: _fill}];
+      }
       if (L.outline && L.outline.w){
         ctx.save();
         ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = size * 0.05; ctx.shadowOffsetY = size * 0.02;
         ctx.lineWidth = Math.max(L.outline.w * s, size * 0.085);
         ctx.strokeStyle = L.outline.color;
         ctx.lineJoin = 'round';
-        ctx.strokeText(line, tx, y);
+        runs.forEach(r => ctx.strokeText(r.text, r.x, y));
         ctx.restore();
       }
-      const _fill = (li > 0 && L.color2) ? L.color2 : L.color;     // 1줄=color, 2줄부터=color2(2색 룩)
       // ✨네온 글로우 — 글자 자체를 발광시킨다. 그림자를 색으로 깔고 여러 번 겹쳐 진하게.
       if (L.fx && L.fx.glow){
         ctx.save();
         ctx.shadowColor = L.fx.glow.color || '#2EE6C5';
         ctx.shadowBlur = size * 0.35;
-        ctx.fillStyle = _fill;
-        for (let g = 0; g < 3; g++) ctx.fillText(line, tx, y);      // 겹쳐야 눈에 띄게 빛난다
+        for (let g = 0; g < 3; g++) runs.forEach(r => { ctx.fillStyle = r.color; ctx.fillText(r.text, r.x, y); });
         ctx.restore();
       }
-      ctx.fillStyle = _fill;
-      ctx.fillText(line, tx, y);
+      runs.forEach(r => { ctx.fillStyle = r.color; ctx.fillText(r.text, r.x, y); });
       _fxUnderline(ctx, line, y, size, L.fx, _fill, ls);   // ✨밑줄은 글자 위 획 — 마지막
     });
     ctx.restore();
@@ -14061,6 +14150,7 @@ function applyThumbPreset(i){
   // x만 살아남아 "왜 위아래만 튀지"가 된다 — 위 주석이 선언한 계약을 지키려면 셋 다 필요하다.
   styled.x = cur.x; styled.y = cur.y; styled.rot = cur.rot;
   styled.fx = cur.fx;   // 강조 효과도 사장님 것 — 색 프리셋을 바꿔도 밑줄·형광펜이 안 사라진다
+  styled.hl = cur.hl;   // 🖍 글자별 색도 사장님 것 — 프리셋을 바꿔도 고른 글자 색이 남는다
   THUMB_STATE.layers[THUMB_STATE.sel] = styled;
   renderThumbLayers(); renderThumbCanvas();
 }
@@ -14318,9 +14408,21 @@ function renderThumbLayers(){
     return;
   }
   document.getElementById('thumbEdit').innerHTML = !L ? '' : `
-    <textarea oninput="setThumbField('text', this.value)" rows="2"
+    <textarea id="thumbTextArea" oninput="setThumbField('text', this.value)" rows="2"
       style="width:100%;padding:8px;margin-bottom:6px;resize:vertical;font-family:inherit;font-size:14px;line-height:1.3"
       placeholder="문구 — Enter로 줄바꿈 (안 나눠도 길면 자동으로 줄이 나뉘고 크기가 맞춰져요)">${esc(L.text || '')}</textarea>
+    <!-- 🖍 글자별 색(2026-08-30) — 문구에서 드래그해 고른 글자만 색을 바꾼다.
+         값의 주인은 이 레이어의 L.hl 하나(저장 meta에 그대로 실려 결과 PNG와 같은 그림). -->
+    <div style="background:#0b1018;border:1px solid var(--line);border-radius:8px;padding:7px 9px;margin-bottom:8px">
+      <div style="font-size:11px;color:var(--sub);margin-bottom:5px">🖍 글자별 색 — 위 문구에서 바꿀 글자를 드래그해 고른 뒤 색을 누르세요</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+        <input type="color" id="thumbPartColor" value="#FFD400" style="width:42px;height:26px;cursor:pointer"
+               oninput="thumbPaintSelection(this.value)">
+        ${hlSwatchHtml('thumbPaintSelection')}
+      </div>
+      <div style="margin-top:6px">${hlChipsHtml(L.hl, 'removeThumbPart')}</div>
+      <div id="thumbPartMsg" class="hint" style="font-size:10px;opacity:.8"></div>
+    </div>
     <select onchange="setThumbField('font', this.value)" style="width:100%;padding:6px;margin-bottom:6px">
       ${thumbFontOptions(L.font)}
     </select>
@@ -14374,6 +14476,23 @@ function _fxOn(L, b){
   return b.key === 'underline' ? fx.underline === b.val : !!fx[b.key];
 }
 
+// 🖍 썸네일 글자별 색 — 고른 글자를 이 레이어의 L.hl 규칙으로 넣는다(헤드카피와 같은 모양).
+function thumbPaintSelection(color){
+  const L = THUMB_STATE.layers[THUMB_STATE.sel]; if (!L || L.kind) return;
+  const t = document.getElementById('thumbTextArea'), msg = document.getElementById('thumbPartMsg');
+  if (!t) return;
+  const sel = String(t.value || '').slice(t.selectionStart || 0, t.selectionEnd || 0).trim();
+  if (!sel){ if (msg) msg.textContent = '먼저 문구에서 색을 바꿀 글자를 드래그해 골라주세요'; return; }
+  L.hl = L.hl || [];
+  const hit = L.hl.find(r => r.keyword === sel);
+  if (hit) hit.color = color; else L.hl.push({keyword: sel, color: color});
+  renderThumbLayers(); renderThumbCanvas();
+}
+function removeThumbPart(i){
+  const L = THUMB_STATE.layers[THUMB_STATE.sel]; if (!L || !L.hl) return;
+  L.hl.splice(i, 1);
+  renderThumbLayers(); renderThumbCanvas();
+}
 function toggleThumbFx(i){
   const b = THUMB_FX_BTNS[i], L = THUMB_STATE.layers[THUMB_STATE.sel];
   if (!b || !L) return;
