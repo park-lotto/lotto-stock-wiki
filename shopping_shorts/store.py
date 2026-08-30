@@ -1559,13 +1559,22 @@ class Store:
         #    NULL=아직 안 내려감. 기존 미승인 고객은 아래 백필이 한 번에 내린다.
         try:
             c.execute("ALTER TABLE customers ADD COLUMN acked_at INTEGER")
-            # 이번에 처음 생긴 경우에만 백필 — 이미 승인된 고객은 대기실에 없으므로
-            # 미승인(approved_at NULL)만 '확인함'으로 내린다. 체험창은 손대지 않는다.
+            # 이번에 처음 생긴 경우에만 백필 — **기존 고객 전원**을 '확인함'으로 내린다.
+            # ★미승인(approved_at NULL)만 내리면 안 된다: 이미 승인된 고객 263명도
+            #   acked_at이 NULL이라 **새 판정에서 통째로 대기실에 나타난다**(실측
+            #   2026-08-30 라이브: 62명을 내렸더니 263명이 새로 떴다). 승인된 고객은
+            #   정의상 이미 처리된 사람이므로 같이 내린다. 체험창은 손대지 않는다.
             _now_ack = int(datetime.now(timezone.utc).timestamp())
-            c.execute("UPDATE customers SET acked_at=? "
-                      "WHERE acked_at IS NULL AND approved_at IS NULL", (_now_ack,))
+            c.execute("UPDATE customers SET acked_at=? WHERE acked_at IS NULL", (_now_ack,))
         except sqlite3.OperationalError:
             pass  # 이미 존재
+        # ★위 백필을 좁게(미승인만) 내보낸 판이 라이브에 한 번 나갔다(2026-08-30).
+        #   그 서버는 ALTER가 이미 끝나 위 except로 빠지므로 **넓힌 백필이 영영 안 돈다**
+        #   → 승인된 263명이 대기실에 남는다. 컬럼이 이미 있어도 도는 보정을 따로 둔다.
+        #   조건이 좁아 평상시엔 0행이고(가입이 acked_at을 채운다), 한 번 정리되면 끝난다.
+        _fix = int(datetime.now(timezone.utc).timestamp())
+        c.execute("UPDATE customers SET acked_at=? "
+                  "WHERE acked_at IS NULL AND approved_at IS NOT NULL", (_fix,))
 
         # ── 성별·연령대(2026-08-24): 가입 마무리 화면에서 이름·전화와 함께 받는다. ──
         #   NULL=아직 안 받음. 기존 고객은 NULL로 남고 다음 접속 때 한 번 물어본다(백필).

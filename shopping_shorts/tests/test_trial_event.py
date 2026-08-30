@@ -353,3 +353,24 @@ def test_existing_pending_backfilled_on_migration(tmp_path):
     s2 = Store(db)                                          # 재기동 = 마이그레이션
     assert s2.get_customer(cid)["acked_at"] is not None     # 백필로 내려감
     assert s2.pending_customers() == []
+
+
+def test_approved_customers_never_appear_in_waiting_room(tmp_path):
+    """★라이브 실사고 재현(2026-08-30): 승인된 고객이 대기실에 나타나면 안 된다.
+
+    백필을 '미승인만'으로 좁게 내보냈더니, acked_at이 NULL인 **이미 승인된 263명**이
+    새 판정에서 통째로 대기실에 떴다(62명을 내렸더니 263명이 생김). 컬럼이 이미 있는
+    서버에선 ALTER가 except로 빠져 넓힌 백필이 영영 안 돈다 — 그래서 보정을 분리했다.
+    """
+    import sqlite3
+    db = str(tmp_path / "t.db")
+    s = Store(db)
+    cid = s.create_customer("paid", "pw12", approved=False)
+    s.approve_customer(cid, 30, 50000, "계좌")
+    c = sqlite3.connect(db)                     # 좁은 백필이 나갔던 상태를 재현
+    c.execute("UPDATE customers SET acked_at=NULL WHERE id=?", (cid,))
+    c.commit()
+    c.close()
+    s2 = Store(db)                              # 재기동 = 보정이 돈다(컬럼은 이미 있다)
+    assert s2.get_customer(cid)["acked_at"] is not None
+    assert s2.pending_customers() == []         # 승인 고객은 대기실에 없다
