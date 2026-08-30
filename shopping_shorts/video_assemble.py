@@ -1898,7 +1898,13 @@ def _segmented_drawtext(text, base_style, work, key_prefix, x_pct, y_pct,
         pil_font = ImageFont.truetype(font_disk_path, size)
     except OSError:
         pil_font = ImageFont.load_default()
-    max_w = 0.92 * _OUT_W
+    # 안전 여백 — 헤드카피는 0.86까지만 쓴다(2026-08-30 사장님 "옆에가 짤리잖아").
+    # 0.92는 좌우 여백이 4%뿐이라, 인스타·유튜브가 화면비에 맞춰 조금만 확대해도
+    # 양끝 글자가 잘려 나간다(실측: "방충망 먼지 빨리 해결"은 원폭 1275px→993px로
+    # 줄여도 폭을 꽉 채웠고, 외곽선 10px가 더 번져 사실상 여백이 없었다).
+    # 자막(single_line)은 종전 0.92 그대로 — 한 줄 꽉 채우는 룩이 이미 검증된 자리다.
+    # ★미리보기(produce.html updateHC의 _boxW)와 **같은 값**이어야 한다(0순위-B).
+    max_w = (0.86 if fit_lines else 0.92) * _OUT_W
     if single_line:
         # 자막: 개행·연속공백을 한 칸으로 접어 한 줄로. 폭 초과 시 폰트 축소(줄바꿈 금지).
         one = " ".join(" ".join(lines).split())

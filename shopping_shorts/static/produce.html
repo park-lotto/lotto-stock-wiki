@@ -6575,7 +6575,7 @@ function updateHC(){
   el.style.color=hc.color; el.style.fontWeight=hc.weight;
   el.style.fontSize=Math.max(9, hc.size*scale)+'px';
   el.style.whiteSpace='pre'; el.style.maxWidth='none';   // 자동 줄바꿈 없음 — 넘치면 축소
-  const _boxW=Math.round(PREVIEW_W*0.92);                // 서버 max_w(0.92*_OUT_W)와 같은 비율
+  const _boxW=Math.round(PREVIEW_W*0.86);                // 서버 max_w(헤드카피 0.86*_OUT_W)와 같은 비율 — 안전 여백(2026-08-30 "옆에가 짤리잖아")
   const _w=el.scrollWidth;
   if(_w>_boxW && _w>0) el.style.fontSize=Math.max(9, (Math.max(9,hc.size*scale))*_boxW/_w)+'px';
   // ★외곽선은 **줄어든 실제 글자 크기**를 따라가야 한다(2026-08-20 사장님 "고정문구가 이상하다").
