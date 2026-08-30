@@ -2270,18 +2270,72 @@ class Store:
     #   훑는 채널은 통째로 사라졌다(사장님 제보: "어제까지 썰쇼핑 엄청 많았는데").
     #   → 자르기 전에 **최신순으로 정렬**한다. 잘리는 건 오래된 뒤쪽뿐이다.
     #   상한도 8000으로 올린다 — 어제(8,281건) 수준을 유지하면서 무한 증식만 막는다.
-    LAST_RUN_MAX_ITEMS = 8000
+    #   ★2026-08-30 사장님 지시: "상한올려 / 자를땐 조회수기준 안나온것들로".
+    #   상한 8000은 유튜브가 **정확히 꽉 채워** 걸려 있었다(실측 8,000/8,000). 그래서
+    #   신설 축이 부스러기만 남았다 — 오용형 67·차량템 68·장비템 106건.
+    #   상한을 24,000으로 올린다(저장 4.65MB → 약 14MB 예상, 1건 609바이트 실측).
+    #   화면은 이미 [채널당 2개]+[렌더 200장]으로 잘리므로(2026-08-18 랭킹렌더상한)
+    #   저장이 늘어도 브라우저 부하는 그대로다 — 상한을 올려도 안전한 이유.
+    LAST_RUN_MAX_ITEMS = 24000
+
+    # 갓 올라온 영상을 조회수로 자르지 않는 보호 창(시간).
+    # ★왜 필요한가(2026-08-30 실측, 라이브 8,000건 나이대별 조회수 중앙값):
+    #     0-1일 1,420 / 1-2일 2,397 / 2-5일 3,015 / 5-10일 4,775
+    #   **어린 영상은 구조적으로 조회수가 낮다.** 순수 조회수순으로 자르면 오늘 올라온
+    #   영상이 조회수를 벌기도 전에 잘려, 랭킹이 옛날 히트작만 남는 박제가 된다
+    #   (실측: 48h 신선분 1,309건 중 892건이 조회수 하위 절반에 있었다).
+    NEW_GRACE_HOURS = 48
+
+    @staticmethod
+    def _trim_for_store(items, cap=None):
+        """저장 상한까지 자른다. **자르는 기준은 조회수**(2026-08-30 사장님 지시).
+
+        1) 신선분(NEW_GRACE_HOURS 이내)은 조회수와 무관하게 먼저 보호한다.
+        2) 남은 자리를 조회수 높은 순으로 채운다 → 잘리는 건 '조회수 안 나온' 옛 영상.
+
+        ★자르는 기준을 여기 한 곳에서만 정한다(0순위-B). 예전엔 저장 함수마다
+          `_newest_first(...)[:CAP]`이 따로 적혀 있어 기준이 어긋날 자리였다.
+        ★2026-08-25 회귀의 교훈: 자르기 전 **반드시 정렬**한다. build_youtube_items는
+          정렬을 안 하므로, 정렬 없이 자르면 '수집 순서 뒤쪽' 채널이 통째로 사라진다.
+        """
+        cap = Store.LAST_RUN_MAX_ITEMS if cap is None else cap
+        items = list(items or [])
+        if len(items) <= cap:
+            return items
+
+        def views_of(i):
+            return i.get("views") or 0
+
+        def age_of(i):
+            a = i.get("age_hours")
+            return a if a is not None else float("inf")
+
+        # ★조회수를 아무도 안 들고 있으면(쓰레드 0/229·핀터레스트 0/2,259 실측)
+        #   조회수 정렬은 전부 동률이라 순서가 사실상 임의가 된다 —
+        #   그 플랫폼은 옛 규칙(최신순)으로 자르는 게 맞다. 조회수 기준은
+        #   조회수가 실제로 있는 플랫폼(유튜브·인스타)에만 적용한다.
+        if not any(views_of(i) for i in items):
+            return Store._newest_first(items)[:cap]
+
+        fresh, rest = [], []
+        for i in items:
+            (fresh if age_of(i) < Store.NEW_GRACE_HOURS else rest).append(i)
+        # 신선분이 상한을 통째로 넘기면 그 안에서도 조회수로 고른다(보호가 무제한은 아니다).
+        if len(fresh) >= cap:
+            return sorted(fresh, key=views_of, reverse=True)[:cap]
+        rest.sort(key=views_of, reverse=True)
+        return fresh + rest[: cap - len(fresh)]
 
     @staticmethod
     def _newest_first(items):
-        """자르기 전 최신순 정렬. age_hours가 없는 항목은 뒤로 보낸다(정렬 불가).
-        ★정렬 없이 자르면 '수집 순서 뒤쪽' 채널이 통째로 사라진다(2026-08-25 회귀)."""
+        """최신순 정렬. age_hours가 없는 항목은 뒤로 보낸다(정렬 불가).
+        ★자르기 기준은 이제 _trim_for_store(조회수)다 — 이 함수는 표시 순서용으로만 쓴다."""
         return sorted(items or [],
                       key=lambda i: (i.get("age_hours") is None,
                                      i.get("age_hours") if i.get("age_hours") is not None else 0))
 
     def save_last_run_platform(self, platform, items, collected_at):
-        items = self._newest_first(items)[: self.LAST_RUN_MAX_ITEMS]
+        items = self._trim_for_store(items)
         with self._conn() as c:
             c.execute("INSERT OR REPLACE INTO settings(key, value) VALUES(?,?)",
                       (f"last_run::{platform}", json.dumps({"items": items, "collected_at": collected_at}, ensure_ascii=False)))
@@ -2312,7 +2366,7 @@ class Store:
             have = {x.get(key) or x.get("video_url") for x in prev}
             fresh = [x for x in (new_items or [])
                      if (x.get(key) or x.get("video_url")) not in have]
-            items = self._newest_first(fresh + prev)[: self.LAST_RUN_MAX_ITEMS]
+            items = self._trim_for_store(fresh + prev)
             c.execute("INSERT OR REPLACE INTO settings(key, value) VALUES(?,?)",
                       (f"last_run::{platform}",
                        json.dumps({"items": items, "collected_at": collected_at},
@@ -2675,7 +2729,7 @@ class Store:
         """마지막 수집 결과 전체(items + 시각)를 저장. 단일 행 덮어쓰기.
         + 수집분을 reel_history에 누적(shortcode upsert)해 48h 창에서 내려가도
         30일간 보존한다. 누적은 부가작업 — 실패해도 last_run 저장은 살린다."""
-        items = self._newest_first(items)[: self.LAST_RUN_MAX_ITEMS]   # 플랫폼별 저장과 같은 규칙
+        items = self._trim_for_store(items)   # 플랫폼별 저장과 같은 규칙(조회수 기준)
         with self._conn() as c:
             c.execute(
                 "INSERT INTO last_run(id, items_json, collected_at) VALUES(1, ?, ?) "
