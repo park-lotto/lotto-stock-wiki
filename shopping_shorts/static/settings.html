@@ -29,6 +29,31 @@
   .pane{display:none}
   .pane.on{display:block}
 
+  /* ── 💳 1기 참가비 결제 카드 (2026-08-30) ──────────── */
+  .payCard{background:var(--panel);border:2px solid var(--accent);border-radius:16px;
+    padding:24px;margin-bottom:20px}
+  .payTop{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .payTitle{font-size:18px;font-weight:800;color:var(--txt)}
+  .payPrice{font-size:28px;font-weight:900;letter-spacing:-1px;
+    background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .paySub{color:var(--sub);font-size:14px;margin-top:8px;line-height:1.6}
+  .payBtn{display:block;text-align:center;margin-top:16px;padding:15px;border-radius:12px;
+    font-size:16px;font-weight:800;text-decoration:none;color:#fff;background:var(--grad);
+    border:none;cursor:pointer}
+  .payBtn:hover{filter:brightness(1.08)}
+  .payBtn.off{background:var(--hover);color:var(--sub);cursor:not-allowed;
+    pointer-events:none;border:1px solid var(--line)}
+  .payOr{text-align:center;color:var(--sub);font-size:13px;margin:18px 0 10px}
+  .payBank{display:flex;align-items:center;justify-content:space-between;gap:12px;
+    background:var(--hover);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .payBankName{color:var(--sub);font-size:13px}
+  .payBankNo{font-size:19px;font-weight:800;letter-spacing:0.5px;color:var(--txt);margin-top:2px}
+  .payCopy{font-family:inherit;font-size:14px;font-weight:700;padding:9px 16px;
+    border-radius:9px;border:1px solid var(--line);background:var(--panel);
+    color:var(--txt);cursor:pointer;white-space:nowrap}
+  .payCopy:hover{background:var(--hover)}
+  .payNote{color:var(--sub);font-size:13px;line-height:1.7;margin-top:14px}
+
   /* ── 잔액 카드 ─────────────────────────────────────── */
   .balCard{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:24px}
   .balCard .lbl{color:var(--sub);font-size:14px}
@@ -236,6 +261,34 @@
   </section>
 
   <section class="pane" id="paneAccount">
+    <!-- ═══════ 💳 1기 참가비 결제 안내 (2026-08-30) ═══════
+         Pro가 아닌 회원(체험·무료)에게만 뜬다. 판단은 /api/me의 plan·is_admin을
+         그대로 쓴다 — 결제 여부를 여기서 새로 계산하면 언젠가 어긋난다(0순위-B).
+         카드결제 오픈 시각 전에는 버튼을 눌러도 소용없으므로 아예 비활성으로 둔다. -->
+    <div class="payCard" id="payCard" hidden>
+      <div class="payTop">
+        <div class="payTitle">💳 1기 참가비 결제</div>
+        <div class="payPrice">77만원</div>
+      </div>
+      <div class="paySub" id="payCardSub">카드결제는 8월 31일(일) 오전 11시부터 열립니다.</div>
+
+      <a class="payBtn" id="payCardBtn" href="https://stmaker.kr/surl/O/3068"
+         target="_blank" rel="noopener">카드로 결제하기 →</a>
+
+      <div class="payOr">또는 계좌이체</div>
+      <div class="payBank">
+        <div>
+          <div class="payBankName">카카오뱅크 · 예금주 최지희</div>
+          <div class="payBankNo" id="payAcctNo">3333-13-9497518</div>
+        </div>
+        <button class="payCopy" type="button" onclick="copyAcct()">복사</button>
+      </div>
+      <div class="payNote">
+        입금자명은 <b>신청자 성함과 같게</b> 넣어주세요.<br>
+        결제·입금이 확인되면 이용권이 <b>Pro</b>로 바뀝니다. (확인까지 시간이 걸릴 수 있습니다)
+      </div>
+    </div>
+
     <div class="balCard">
       <div class="lbl">현재 플랜</div>
       <div class="balRow">
@@ -720,10 +773,57 @@ async function verifyKeys(svc, quiet){
    따로 만들면 어긋난다 — 화면만 옮겨온 것이다. */
 var PLAN_LABEL = { pro: "Pro 이용권", trial: "체험 중", free: "무료" };
 
+/* ── 💳 1기 참가비 결제 카드 (2026-08-30) ─────────────
+   Pro/관리자가 아닌 회원에게만 보인다. 오픈 시각 전에는 카드결제 버튼을 잠근다. */
+var PAY_CARD_OPEN = new Date("2026-08-31T11:00:00+09:00").getTime();
+
+function renderPayCard(d){
+  var card = el("payCard");
+  if (!card) return;
+  var plan = String(d.plan || "free");
+  if (d.is_admin || plan === "pro") { card.hidden = true; return; }
+  card.hidden = false;
+
+  var btn = el("payCardBtn");
+  var sub = el("payCardSub");
+  if (Date.now() < PAY_CARD_OPEN) {
+    btn.classList.add("off");
+    btn.textContent = "카드결제 8월 31일(일) 오전 11시 오픈";
+    sub.textContent = "카드결제는 8월 31일(일) 오전 11시부터 열립니다. 계좌이체는 지금 바로 가능합니다.";
+  } else {
+    btn.classList.remove("off");
+    btn.textContent = "카드로 결제하기 →";
+    sub.textContent = "카드결제 또는 계좌이체 중 편하신 방법으로 결제해 주세요.";
+  }
+}
+
+function copyAcct(){
+  var t = (el("payAcctNo") || {}).textContent || "";
+  var btn = event && event.target;
+  function done(){
+    if (!btn) return;
+    var old = btn.textContent;
+    btn.textContent = "복사됨";
+    setTimeout(function(){ btn.textContent = old; }, 1500);
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(t).then(done, fallback);
+  } else { fallback(); }
+  function fallback(){
+    // clipboard API가 막힌 환경(http·구형 브라우저)에서도 복사되게 한다
+    var ta = document.createElement("textarea");
+    ta.value = t; ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); done(); } catch (e) {}
+    document.body.removeChild(ta);
+  }
+}
+
 async function loadAccount(){
   clearErr("acctErr");
   try {
     var d = await getJSON("/api/me");
+    renderPayCard(d);
     var plan = String(d.plan || "free");
     el("acctPlan").textContent = PLAN_LABEL[plan] || plan;
     el("acctPlanSub").textContent = (d.days_left != null)
