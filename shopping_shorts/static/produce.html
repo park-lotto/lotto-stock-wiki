@@ -3048,6 +3048,55 @@ var BUF_NEED_KEY_HTML = '먼저 <a href="/settings#keys" style="color:var(--acce
 /* 채널 하나에 올릴 글. **그 플랫폼 몫**으로 만든다(8단계가 만들어 둔 것을 쓴다).
    ★여기서 문구를 새로 지어내지 않는다 — 해시태그는 seoHashLine 하나만 부른다(0순위-B).
    ★모르는 플랫폼(페북·X 등)은 제목+설명에 인스타 해시태그를 붙여 둔다. 빈 칸보다 낫다. */
+/* ★사장님 2026-08-30: "제목이나 이런건 선택을 해야하자나".
+   8단계는 제목 후보 5개·해시태그 20개를 이미 만들어 두는데 화면에선 하나도 못 골랐다
+   (title 1개만 쓰이고 나머지 4개는 묻혀 있었다).
+   그래서 채널마다 **고른 것**을 기억하고, 그것으로 글을 다시 조립한다.
+   조립 규칙은 bufComposeFor 하나뿐이다 — 채널별 관례(유튜브는 설명 길게, 틱톡은 짧게)는
+   bufPartsFor가 정하고, 켜고끄기·제목·태그 선택만 여기서 얹는다(0순위-B: 규칙 두 벌 금지). */
+var BUFSEL = {};        /* {채널id: {title, off:{설명,CTA,댓글유도,해시태그}, tags:[..]}} */
+
+/* 이 채널의 글을 이루는 조각들. 순서가 곧 글의 순서다. */
+function bufPartsFor(service){
+  if (typeof SEO === 'undefined' || !SEO) return [];
+  var sv = (service || '').toLowerCase();
+  var cta = ((SEO.cta || {})[sv] || '').trim();
+  var parts = [];
+  parts.push({key:'제목', text:(SEO.title||'').trim()});
+  /* 틱톡·쓰레드는 설명을 통째로 넣지 않는 관례다 — 조각 자체를 안 만든다. */
+  if (sv !== 'tiktok' && sv !== 'threads')
+    parts.push({key:'설명', text:(SEO.description||'').trim()});
+  parts.push({key:'CTA', text:cta});
+  parts.push({key:'댓글유도', text:(SEO.comment_bait||'').trim()});
+  return parts.filter(function(p){ return p.text; });
+}
+
+/* 이 채널에서 고를 수 있는 해시태그(8단계가 만든 것). */
+function bufTagsFor(service){
+  var sv = (service || '').toLowerCase();
+  var hs = (typeof SEO!=='undefined' && SEO && SEO.hashtags) || {};
+  var arr = (hs[sv] || []).slice();
+  if (!arr.length && typeof SEO!=='undefined' && SEO) arr = (SEO.tags || []).slice();
+  return arr.map(function(t){ return String(t).trim().replace(/^#/,''); }).filter(Boolean);
+}
+
+/* 고른 것으로 글을 만든다. 아무것도 안 고른 처음에는 기존 자동조립과 같은 결과가 나온다. */
+function bufComposeFor(chId, service){
+  var sel = BUFSEL[chId] || {};
+  var off = sel.off || {};
+  var lines = [];
+  bufPartsFor(service).forEach(function(p){
+    if (off[p.key]) return;                       /* 사장님이 끈 조각 */
+    var t = (p.key === '제목' && sel.title) ? sel.title : p.text;   /* 고른 제목이 있으면 그것 */
+    if (t) lines.push(lines.length ? '' : null, t);
+  });
+  if (!off['해시태그']){
+    var tags = sel.tags || bufTagsFor(service);
+    if (tags.length) lines.push('', tags.map(function(t){ return '#'+t; }).join(' '));
+  }
+  return lines.filter(function(x){ return x !== null; }).join('\n');
+}
+
 function bufTextFor(service){
   if (typeof SEO === 'undefined' || !SEO) return '';
   var sv = (service || '').toLowerCase();
@@ -3200,6 +3249,98 @@ function bufPick(el){
 }
 
 /* 고른 채널마다 글 칸을 하나씩. 이미 고쳐 쓴 글은 **지우지 않는다**(다시 그려도 유지). */
+/* 채널 하나의 선택 UI — 제목 후보·구성요소 켜고끄기·해시태그. */
+function bufRenderPicker(c){
+  var host = document.getElementById('bufPick-' + c.id);
+  if (!host) return;
+  var sel = BUFSEL[c.id] || (BUFSEL[c.id] = {off:{}, title:'', tags:null});
+  var cands = (typeof SEO!=='undefined' && SEO && SEO.title_candidates) || [];
+  var titles = [];
+  if (typeof SEO!=='undefined' && SEO && SEO.title) titles.push(String(SEO.title));
+  cands.forEach(function(t){
+    var x = (t && (t.text || t)) ? String(t.text || t) : '';
+    if (x && titles.indexOf(x) < 0) titles.push(x);
+  });
+  var parts = bufPartsFor(c.service).map(function(p){ return p.key; });
+  if (bufTagsFor(c.service).length) parts.push('해시태그');
+  var allTags = bufTagsFor(c.service);
+  var onTags = sel.tags || allTags;
+
+  var h = '<details style="border:1px solid var(--line);border-radius:10px;padding:8px 12px">'
+        + '<summary style="cursor:pointer;font-size:12px;opacity:.85">✏️ 무엇을 넣을지 고르기'
+        + ' <span style="opacity:.6">— 제목 ' + titles.length + '개 · 태그 ' + allTags.length + '개</span></summary>';
+
+  if (titles.length > 1){
+    h += '<div style="margin-top:10px"><div class="hint" style="margin-bottom:4px">제목 — 8단계가 만든 후보입니다</div>';
+    titles.forEach(function(t, i){
+      var on = (sel.title || titles[0]) === t;
+      h += '<label style="display:flex;gap:8px;align-items:flex-start;padding:5px 8px;border-radius:8px;cursor:pointer;'
+         + (on ? 'background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.4)' : 'border:1px solid transparent') + '">'
+         + '<input type="radio" name="bufTitle-' + esc(c.id) + '" ' + (on ? 'checked' : '')
+         + ' onchange="bufSetTitle(\'' + esc(c.id) + '\',' + i + ')" style="margin-top:3px">'
+         + '<span style="font-size:13px">' + esc(t) + '</span></label>';
+    });
+    h += '<div style="display:none" id="bufTitles-' + esc(c.id) + '">' + esc(JSON.stringify(titles)) + '</div></div>';
+  }
+
+  h += '<div style="margin-top:10px"><div class="hint" style="margin-bottom:4px">넣을 것</div>'
+     + '<div style="display:flex;flex-wrap:wrap;gap:6px">';
+  parts.forEach(function(k){
+    var on = !sel.off[k];
+    h += '<label style="display:flex;gap:6px;align-items:center;font-size:12px;padding:5px 10px;border-radius:999px;cursor:pointer;'
+       + (on ? 'background:rgba(52,211,153,.14);border:1px solid rgba(52,211,153,.45)' : 'border:1px solid var(--line);opacity:.55') + '">'
+       + '<input type="checkbox" ' + (on ? 'checked' : '')
+       + ' onchange="bufTogglePart(\'' + esc(c.id) + '\',\'' + esc(k) + '\',this.checked)">' + esc(k) + '</label>';
+  });
+  h += '</div></div>';
+
+  if (allTags.length && !sel.off['해시태그']){
+    h += '<div style="margin-top:10px"><div class="hint" style="margin-bottom:4px">해시태그 — 눌러서 빼거나 넣습니다</div>'
+       + '<div style="display:flex;flex-wrap:wrap;gap:5px">';
+    allTags.forEach(function(t){
+      var on = onTags.indexOf(t) >= 0;
+      h += '<button type="button" onclick="bufToggleTag(\'' + esc(c.id) + '\',\'' + esc(t) + '\')"'
+         + ' style="font-size:12px;padding:4px 10px;border-radius:999px;cursor:pointer;'
+         + (on ? 'background:rgba(139,110,240,.18);border:1px solid rgba(139,110,240,.5);color:inherit'
+               : 'background:transparent;border:1px solid var(--line);opacity:.45;color:inherit') + '">#' + esc(t) + '</button>';
+    });
+    h += '</div></div>';
+  }
+  h += '</details>';
+  host.innerHTML = h;
+}
+
+/* 고른 것을 글 칸에 **다시 조립해 넣는다**. */
+function bufApply(chId){
+  var c = BUF.channels.filter(function(x){ return x.id === chId; })[0];
+  if (!c) return;
+  var ta = document.getElementById('bufTx-' + chId);
+  if (ta) ta.value = bufComposeFor(chId, c.service);
+  bufRenderPicker(c);
+}
+function bufSetTitle(chId, i){
+  var box = document.getElementById('bufTitles-' + chId);
+  var titles = [];
+  try { titles = JSON.parse(box.textContent); } catch(e){ return; }
+  (BUFSEL[chId] = BUFSEL[chId] || {off:{}}).title = titles[i] || '';
+  bufApply(chId);
+}
+function bufTogglePart(chId, key, on){
+  var sel = (BUFSEL[chId] = BUFSEL[chId] || {off:{}});
+  sel.off = sel.off || {};
+  if (on) delete sel.off[key]; else sel.off[key] = true;
+  bufApply(chId);
+}
+function bufToggleTag(chId, tag){
+  var c = BUF.channels.filter(function(x){ return x.id === chId; })[0];
+  if (!c) return;
+  var sel = (BUFSEL[chId] = BUFSEL[chId] || {off:{}});
+  if (!sel.tags) sel.tags = bufTagsFor(c.service).slice();
+  var i = sel.tags.indexOf(tag);
+  if (i >= 0) sel.tags.splice(i, 1); else sel.tags.push(tag);
+  bufApply(chId);
+}
+
 function bufRenderTexts(){
   var box = document.getElementById('bufTexts');
   var ids = BUF.channels.filter(function(c){ return BUF.picked[c.id]; });
@@ -3214,10 +3355,12 @@ function bufRenderTexts(){
     wrap.style.cssText = 'margin-bottom:14px';
     wrap.innerHTML = '<div class="hint" style="margin-bottom:4px">'
       + esc(c.service) + ' · <b>' + esc(c.name) + '</b></div>'
+      + '<div id="bufPick-' + esc(c.id) + '" style="margin-bottom:8px"></div>'
       + '<textarea id="bufTx-' + esc(c.id) + '" rows="6" style="width:100%"></textarea>';
     box.appendChild(wrap);
     var ta = document.getElementById('bufTx-' + c.id);
     ta.value = bufTextFor(c.service);
+    bufRenderPicker(c);
   });
   /* 뺀 채널의 칸은 치운다 */
   BUF.channels.forEach(function(c){
