@@ -1497,6 +1497,12 @@
   /* 🎙 성우 두 열(2026-08-30) — 일레븐랩스 | 타입캐스트를 나란히 본다.
      좁아지면 자동으로 위아래로 쌓인다(minmax + auto-fit). */
   .voiceCols{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+  /* 성우 늘리는 버튼 2열 — 아래 카드 2열(.voiceCols)과 **같은 규칙**이라 축이 맞는다.
+     패널이 열리면 그 열만 아래로 길어진다(align-items:start). */
+  .findCols{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;
+            align-items:start;margin-bottom:10px}
+  .findCol{min-width:0;display:flex;flex-direction:column;gap:7px}
+  .findBtn{width:100%;padding:9px 10px;min-height:44px;font-size:13px;text-align:left}
   /* ★열 머리는 **크고 진하게**(2026-08-30 사장님) — 11.5px 회색이라 카드에 묻혀
      어느 쪽이 어느 엔진인지 눈에 안 걸렸다. 로고 원을 앞에 달아 한눈에 가른다. */
   .voiceColHead{display:flex;align-items:center;gap:7px;font-size:14px;color:var(--txt);
@@ -1790,7 +1796,7 @@
           </div>
           <div style="flex:1 1 320px;min-width:280px;display:flex;flex-direction:column;justify-content:center;gap:10px;padding:16px 18px;border:1px dashed var(--line);border-radius:10px;background:var(--inset);box-sizing:border-box">
             <div style="font-size:15px;font-weight:800;color:var(--txt)">아직 완성 음성이 없어요</div>
-            <div class="hint" style="line-height:1.6">오른쪽 <b>🎙 목소리 바꾸기</b>에서 성우를 고르고<br><b>[이 음성으로 전체 생성]</b>을 누르면<br>여기에 <b>▶ 완성본 전체 듣기</b>와 장면별 목록이 생깁니다.</div>
+            <div class="hint" style="line-height:1.6">오른쪽에서 <b>성우</b>를 고르고<br><b>[이 음성으로 전체 생성]</b>을 누르면<br>여기에 <b>▶ 완성본 전체 듣기</b>와 장면별 목록이 생깁니다.</div>
           </div>
         </div>
       </div>
@@ -1802,8 +1808,11 @@
       <!-- ★flex는 `0 1 360px` — 넓은 화면에선 360px 고정(0=안 늘어남), 좁은 화면에선 줄어든다
            (1=줄어듦). `0 0`으로 두면 390px 폰에서 칸이 안 줄어 가로로 넘친다(실측). -->
       <aside style="flex:0 1 560px;min-width:0;max-width:620px;position:sticky;top:8px;border:1px solid var(--line);border-radius:12px;background:var(--inset);padding:14px;box-sizing:border-box">
-        <div style="font-weight:800;font-size:15px;display:flex;align-items:center;gap:6px">🎙 목소리 바꾸기</div>
-        <div id="curVoiceName" style="font-size:12px;color:var(--sub);margin-top:3px">— 기본 성우로 완성됨</div>
+        <!-- ★제목 '🎙 목소리 바꾸기'와 안내문을 뺐다(2026-08-30 사장님). 이 칸이 무엇인지는
+             안에 든 것(성우 카드)이 이미 말하고 있는데, 제목 15px + 부제 + 안내박스가
+             세로 90px을 먹어 정작 누를 것들이 화면 아래로 밀렸다. 지금 성우 한 줄만 남긴다.
+             ★#curVoiceName은 지우지 않는다 — syncCurVoiceName()이 이 id 하나만 찾는다. -->
+        <div id="curVoiceName" style="font-size:12.5px;color:var(--sub);margin-bottom:9px">— 기본 성우로 완성됨</div>
       <!-- ★좌우를 뒤집었다(2026-08-18). 예전엔 [설정 | 성우카드] 순서라, 성우를 고르기 전
            왼쪽 큰 칸이 안내문 한 줄(높이 47px)만 담은 채 폭 1226px을 먹어 **세로 381px짜리
            빈 구멍**이 생겼다(실측). 순서를 [성우카드 | 설정]으로 바꾸면 먼저 할 일(고르기)이
@@ -1813,13 +1822,21 @@
            폭 1226px을 잡은 채 높이는 47px뿐이라, 420px짜리 성우카드와 **367px 어긋난다**
            (좌우 뒤집기만으로는 안 없어졌다 — 실측으로 확인). 성우를 고르면 이 줄이 사라지고
            (#voiceHint display:none, pickPreset) 오른쪽 칸을 설정이 실제 내용으로 채운다. -->
-        <div id="voiceHint" class="hint" style="margin-top:8px;padding:10px 12px;border:1px dashed var(--line);border-radius:9px">아래에서 <b>성우</b>를 고르면 속도·미리듣기 설정이 나타납니다.</div>
+        <!-- ★안내문을 숨겼다(2026-08-30) — 성우 카드가 바로 아래 보이는데 "아래에서 고르면"은
+             군말이고 자리만 먹었다. id는 남긴다(pickPreset이 이 id를 숨김 처리한다). -->
+        <div id="voiceHint" style="display:none"></div>
       <!-- ★일레븐랩스 계정 보이스 등록(2026-08-18, 관리자만). 종전엔 성우를 늘리려면
            assets/voice_presets.json을 고치고 샘플을 굽고 배포해야 했다. 등록 한 번이 톤 4종
            프리셋 + 미리듣기 샘플을 만든다(실TTS 4회 = 크레딧을 쓰므로 관리자 전용).
            #elvBox는 기본 숨김이고 loadElevenVoices()가 열 때만 채운다. -->
-      <div id="elvAdmin" style="display:none;margin-top:8px">
-        <button class="btn-prev" style="padding:6px 12px;min-height:44px" onclick="toggleElevenPicker()">＋ 일레븐랩스에서 성우 추가</button>
+      <!-- ★성우를 늘리는 길을 **엔진별 좌우 2열**로 세운다(2026-08-30 사장님 "둘다 배열해야지").
+           왼쪽 = 일레븐랩스(성우 추가·목소리 찾기 — 둘 다 일레븐랩스 기능이다),
+           오른쪽 = 타입캐스트(성우 찾기). 아래 성우 카드 2열과 **같은 축**이라 어느 쪽이
+           어느 엔진인지 눈으로 바로 이어진다. -->
+      <div class="findCols">
+      <div class="findCol">
+      <div id="elvAdmin" style="display:none">
+        <button class="btn-prev findBtn" onclick="toggleElevenPicker()">＋ 일레븐랩스에서 성우 추가</button>
         <div id="elvBox" style="display:none;margin-top:8px;border:1px solid var(--line);border-radius:9px;padding:10px;max-height:320px;overflow:auto">
           <div id="elvList" class="hint">불러오는 중…</div>
         </div>
@@ -1830,8 +1847,8 @@
       <!-- 고객용 목소리 찾기(2026-08-24) — 일레븐랩스 공개 라이브러리에서 직접 골라 담는다.
            ★본인 키가 있어야 쓸 수 있다: 담기는 각자 계정에 되므로 키가 없으면 합성 때 실패한다.
              서버가 need_key로 알려주면 등록 안내를 대신 띄운다. -->
-      <div id="vlibBox" style="margin-top:8px">
-        <button class="btn-prev" style="padding:6px 12px;min-height:44px"
+      <div id="vlibBox">
+        <button class="btn-prev findBtn"
                 onclick="toggleVoiceLibrary()">🔎 마음에 드는 목소리 찾기</button>
         <div id="vlibPanel" style="display:none;margin-top:8px;border:1px solid var(--line);border-radius:9px;padding:10px">
           <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
@@ -1856,8 +1873,10 @@
       <!-- 타입캐스트 성우 찾기(2026-08-30) — 일레븐 '목소리 찾기'의 짝.
            ★담기가 없다: 타입캐스트는 서버 키로 곧장 부르는 공용 목록이라(1125명 실측)
              고르면 바로 쓴다. 인기순도 없다 — API가 그 지표를 안 준다. -->
-      <div id="tcvBox" style="margin-top:8px">
-        <button class="btn-prev" style="padding:6px 12px;min-height:44px"
+      </div><!-- 일레븐 칸 끝 -->
+      <div class="findCol">
+      <div id="tcvBox">
+        <button class="btn-prev findBtn"
                 onclick="toggleTypecastFinder()">🔎 타입캐스트 성우 찾기</button>
         <div id="tcvPanel" style="display:none;margin-top:8px;border:1px solid var(--line);border-radius:9px;padding:10px">
           <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
@@ -1870,6 +1889,8 @@
           <div id="tcvList" style="margin-top:10px;max-height:340px;overflow:auto"></div>
         </div>
       </div>
+      </div><!-- 타입캐스트 칸 끝 -->
+      </div><!-- .findCols 끝 -->
       <!-- ★한 칸 안에서는 세로로 쌓는다 — 360px 폭에 카드와 설정을 좌우로 나누면 둘 다 좁아진다. -->
       <div id="voiceUI" style="display:flex;flex-direction:column;gap:12px;margin-top:10px">
         <!-- ① 성우 카드 (⭐베스트 5 상시 + ＋더보기로 나머지 9명) — 먼저 하는 일 -->
