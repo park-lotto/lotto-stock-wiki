@@ -678,16 +678,21 @@ body:not(.tight) #rollbay:empty::before{display:none}
      아래는 소스 목록이 화면 전체 폭을 쓴다.
    ★자리를 '고정'한다 = 무엇을 하든 이 세 칸의 위치가 안 바뀐다. 필름을 접었다 폈다
      할 때 아래가 튀던 문제도 여기서 같이 사라진다. */
-body.tight #topband{display:flex;gap:10px;align-items:stretch;margin-bottom:8px}
-body.tight #topband > #playerhost{flex:0 0 var(--pv-w,240px);max-width:var(--pv-w,240px);
+/* ★2026-08-30: body.tight 게이트를 뗐다 — 이 '자리'는 모드와 무관하게 늘 같아야 한다.
+   증상: [▤ 넓게]를 누른 브라우저(sceneLab:tight='0')에서 미리보기가 훅 옆이 아니라
+   칸들 **아래**로 떨어졌다(고객 제보 + 사장님 화면 실측). '넓게'는 글자를 다 보여주는
+   모드일 뿐, 배치를 바꾸는 모드가 아니다. 글자 접기 규칙(.tbsay/.tbsegs/.meta)은
+   그대로 body.tight에 남는다. */
+#topband{display:flex;gap:10px;align-items:stretch;margin-bottom:8px}
+#topband > #playerhost{flex:0 0 var(--pv-w,240px);max-width:var(--pv-w,240px);
   order:0;padding:0;overflow:hidden;border:1px solid var(--line);border-radius:10px;
   background:var(--panel)}
-body.tight #topband > #topright{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
-body.tight #topband #topzone{margin:0}
-body.tight #topband #rollbay{margin:0;min-height:150px}   /* 필름 자리 — 늘 이만큼 잡는다 */
-body.tight #rollbay:empty::before{height:150px;align-items:center;justify-content:center}
+#topband > #topright{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+#topband #topzone{margin:0}
+#topband #rollbay{margin:0;min-height:150px}   /* 필름 자리 — 늘 이만큼 잡는다 */
+#rollbay:empty::before{height:150px;align-items:center;justify-content:center}
 /* 접기 버튼은 이 배치에선 필요 없다(자리가 고정이라 접을 이유가 없다) */
-body.tight #pvfoldbtn{display:none}
+#pvfoldbtn{display:none}
 
 .filmbtn{margin-left:8px;font-size:11.5px}
 /* ★필름 위/아래 '다른 장면으로' 띠(2026-08-28 사장님). 가로로 길게 둬서 조준이 필요 없다 —
@@ -867,11 +872,11 @@ body.tight .frslot.inbeat .frcaps{top:auto;bottom:4px}
    ★크기 정의처는 안 늘린다 — 폭 고정을 풀고 높이 캡만 주면 나머지는 기존 규칙
    (aspect-ratio·--cutw·fitPlayer)이 알아서 맞춘다. */
 @media (max-width: 720px){
-  body.tight #topband{flex-direction:column;height:auto}
+  #topband{flex-direction:column;height:auto}
   /* ★vh 금지 — grow 모드에선 100vh=iframe높이=내용높이라 자기참조로 부푼다(위 body.grow 참조) */
-  body.tight #topband > #playerhost{flex:0 0 auto;max-width:none;width:100%;height:320px}
-  body.tight #topband > #topright{flex:0 0 auto;overflow:visible}
-  body.tight #topband #topzone{overflow-x:auto}   /* 칸들 — 손가락 가로 스크롤 */
+  #topband > #playerhost{flex:0 0 auto;max-width:none;width:100%;height:320px}
+  #topband > #topright{flex:0 0 auto;overflow:visible}
+  #topband #topzone{overflow-x:auto}   /* 칸들 — 손가락 가로 스크롤 */
 }
 /* 필름 좌우 밀기를 터치에 연다 — pan-y: 세로 제스처는 브라우저(페이지 스크롤)가 갖고,
    가로 끌기는 pointermove가 우리에게 온다(auto면 브라우저가 가로채 pointercancel).
@@ -1695,7 +1700,7 @@ function toggleTight(){
   localStorage.setItem(TIGHT_KEY, document.body.classList.contains('tight') ? '0' : '1');
   _tightApply();
 }
-const BUILD_TAG = 'F24';   // 필름롤러 — 화면이 아래로 점점 늘어나던 것(grow×100vh 자기참조) 수리
+const BUILD_TAG = 'F25';   // 미리보기 자리 고정 — '넓게'에서도 훅 옆(#topband)에 선다
 (function(){ const b=document.getElementById('buildtag'); if(b) b.textContent = BUILD_TAG; })();
 
 function toggleHints(){
@@ -2835,8 +2840,9 @@ function render(){
     const host = document.getElementById('playerhost');
     // ★촘촘히에서는 미리보기가 **왼쪽 위 고정 자리**(#topband)에 산다. 여기서 .wrap으로
     //   옮기면 그 배치를 되돌린다 — 어디에 둘지는 한 곳에서만 정한다(0순위-B).
-    const wrap = document.body.classList.contains('tight')
-      ? document.getElementById('topband') : document.querySelector('.wrap');
+    // ★2026-08-30: 모드로 갈리던 것을 없앴다(0순위-B). '넓게'에서 .wrap으로 옮기면
+    //   미리보기가 칸들 아래로 떨어진다 — 자리는 한 곳(#topband)으로 고정한다.
+    const wrap = document.getElementById('topband') || document.querySelector('.wrap');
     if (host && wrap && host.parentElement !== wrap){
       host.style.display = '';            // 위에서 감추던 것을 되살린다
       wrap.insertBefore(host, wrap.firstChild);
