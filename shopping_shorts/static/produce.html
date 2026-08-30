@@ -5583,10 +5583,10 @@ function updateCaption(){
   const _yp = (_b && _b.pos_y_pct != null) ? _b.pos_y_pct : cs.y_pct;
   el.style.top=_yp+'%'; el.style.transform='translate(-50%,-50%)';
   el.style.color=cs.color; el.style.fontWeight=900;
-  // 자막은 무조건 한 줄 — 줄바꿈 금지(nowrap). 폭(0.92) 넘으면 폰트 자동축소로 한 줄에 맞춘다.
+  // 자막은 무조건 한 줄 — 줄바꿈 금지(nowrap). 폭(0.86=안전 여백) 넘으면 폰트 자동축소로 한 줄에 맞춘다.
   // 서버 _segmented_drawtext(single_line=True)와 동일 비율: shrink = maxW / textW.
   el.style.whiteSpace='nowrap'; el.style.wordBreak='normal'; el.style.maxWidth='none';
-  const capAvail=PREVIEW_W*0.92;
+  const capAvail=PREVIEW_W*0.86;   // 서버 _SAFE_W와 같은 값 — 안전 여백(2026-08-30 "옆에가 짤리잖아")
   let capFs=Math.max(9, cs.size*scale);
   el.style.fontSize=capFs+'px';
   const capW=el.scrollWidth;

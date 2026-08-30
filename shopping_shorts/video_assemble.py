@@ -369,6 +369,10 @@ _CAP_FONTSIZE = 78      # 짧은 1줄 구절이라 여유 있음 → 키움
 #   **이 폭 기준**으로 축소해 그린다(scale = PREVIEW_W/VIDEO_W).
 _UI_REF_W = 720
 
+# 글자가 화면 밖으로 잘리지 않게 남기는 안전 여백(2026-08-30). 플랫폼이 화면비에 맞춰
+# 확대해 보여주므로 폭을 꽉 채우면 양끝이 잘린다 — 헤드카피·자막이 이 값을 함께 쓴다.
+_SAFE_W = 0.86
+
 
 def _ui_px(v, default, zero_ok=False):
     """꾸미기 화면에서 온 px 값을 출력 해상도로 환산한다(2026-07-30 사장님 제보:
@@ -1898,13 +1902,13 @@ def _segmented_drawtext(text, base_style, work, key_prefix, x_pct, y_pct,
         pil_font = ImageFont.truetype(font_disk_path, size)
     except OSError:
         pil_font = ImageFont.load_default()
-    # 안전 여백 — 헤드카피는 0.86까지만 쓴다(2026-08-30 사장님 "옆에가 짤리잖아").
+    # 안전 여백 — 글자는 화면 폭의 0.86까지만 쓴다(2026-08-30 사장님 "옆에가 짤리잖아").
     # 0.92는 좌우 여백이 4%뿐이라, 인스타·유튜브가 화면비에 맞춰 조금만 확대해도
     # 양끝 글자가 잘려 나간다(실측: "방충망 먼지 빨리 해결"은 원폭 1275px→993px로
     # 줄여도 폭을 꽉 채웠고, 외곽선 10px가 더 번져 사실상 여백이 없었다).
-    # 자막(single_line)은 종전 0.92 그대로 — 한 줄 꽉 채우는 룩이 이미 검증된 자리다.
-    # ★미리보기(produce.html updateHC의 _boxW)와 **같은 값**이어야 한다(0순위-B).
-    max_w = (0.86 if fit_lines else 0.92) * _OUT_W
+    # 자막도 같은 위험이라 같은 값을 쓴다 — 한 줄 강제라 길면 **항상** 폭을 꽉 채운다.
+    # ★미리보기(produce.html _boxW·capAvail)와 **같은 값**이어야 한다(0순위-B).
+    max_w = _SAFE_W * _OUT_W
     if single_line:
         # 자막: 개행·연속공백을 한 칸으로 접어 한 줄로. 폭 초과 시 폰트 축소(줄바꿈 금지).
         one = " ".join(" ".join(lines).split())
