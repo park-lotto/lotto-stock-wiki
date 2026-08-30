@@ -201,13 +201,15 @@ def schedule_video(key: str, channel_id: str, text: str, video_url: str,
     else:
         inp["mode"] = "addToQueue"
 
-    # ★거절 원인을 눈으로 보려고 보낸 것을 그대로 남긴다(2026-08-30 조사).
-    #   키는 절대 안 남긴다 — inp에는 키가 없다(헤더로만 간다).
-    log.warning("buffer createPost 보냄: %s", json.dumps(inp, ensure_ascii=False)[:1200])
     d = _call(key, _CREATE, {"input": inp})
-    log.warning("buffer createPost 받음: %s", json.dumps(d, ensure_ascii=False)[:1200])
     res = d.get("createPost") or {}
     if res.get("message"):                      # MutationError 쪽으로 왔다
+        # ★거절될 때만 보낸 것을 남긴다(2026-08-30). 성공까지 남기면 고객 글이 매번
+        #   로그에 쌓인다. 키는 어차피 inp에 없다(헤더로만 간다).
+        #   ⚠️"Video could not be read from its URL"은 주소를 못 읽을 때뿐 아니라
+        #     **규격 미달**(예: 9:16이 아닌 영상)에도 같은 문구로 온다 — 실측 2026-08-30.
+        log.warning("buffer createPost 거절: %s / 보낸것: %s",
+                    res["message"], json.dumps(inp, ensure_ascii=False)[:800])
         raise BufferError(f"Buffer: {res['message']}")
     post = res.get("post") or {}
     if not post.get("id"):
