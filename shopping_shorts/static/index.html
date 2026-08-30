@@ -411,6 +411,18 @@ body.is-admin .admin-only{display:block}
       <button onclick="ncCollect(this)" style="margin-left:8px">🟩 수집해서 쌓기</button>
       <button onclick="ncCollect(this,true)" style="margin-left:4px" title="지금까지 쌓은 것을 비우고 새로 시작합니다">🗑 비우고 새로</button>
       <span id="ncMsg" style="font-size:12px;color:var(--sub);margin-left:8px"></span>
+      <!-- 벤치마킹 채널 수집(2026-08-31) — 키워드와 다른 축이다.
+           키워드 = "뷰티에서 뭐가 터지나"(넓게) / 채널 = "이 15명이 오늘 뭘 올렸나"(매일). -->
+      <div style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)">
+        <span style="font-size:12px;color:var(--sub)">벤치마킹 채널</span>
+        <button onclick="ncChannels(this)" style="margin-left:8px">👥 채널 수집</button>
+        <button onclick="ncSeedDefaults(this)" style="margin-left:4px"
+                title="사장님이 고른 기본 15채널을 시드로 등록합니다">⭐ 기본 15채널 등록</button>
+        <input id="ncHandle" placeholder="채널 추가 — @핸들 또는 clip.naver.com 주소"
+               style="margin-left:6px;width:min(300px,44%);padding:6px 9px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--txt);font-size:12px">
+        <button onclick="ncSeedAdd(this)" style="margin-left:4px">➕ 추가</button>
+        <span id="ncChMsg" style="font-size:12px;color:var(--sub);margin-left:8px"></span>
+      </div>
     </div>
     <!-- 핀터레스트 수집(2026-08-28) — 관리자 전용. switchPlatform이 켜고 끈다. -->
     <div id="pinPanel" style="display:none;margin-bottom:12px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--inset)">
@@ -1065,6 +1077,69 @@ async function ncCollect(btn, reset){
     if(PLATFORM==='naverclip') load();     // 그 탭이면 즉시 다시 그린다
   }catch(e){
     if(msg) msg.textContent = '⚠️ '+(e&&e.message||e);
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent=orig; }
+  }
+}
+// ── 네이버 클립 벤치마킹 채널(2026-08-31) ───────────────────────────
+// 키워드 수집과 **다른 축**이다: 키워드는 넓게 훑고, 채널은 정해둔 사람들만 매일 본다.
+// 저장은 같은 platform("naverclip")이라 같은 목록에 쌓인다.
+async function ncChannels(btn){
+  const msg=document.getElementById('ncChMsg');
+  const orig=btn?btn.textContent:'';
+  if(btn){ btn.disabled=true; btn.textContent='수집 중…'; }
+  if(msg) msg.textContent='등록된 벤치마킹 채널을 훑는 중…';
+  try{
+    const r=await fetch('/api/naverclip/channels/collect',{method:'POST',
+      headers:{'Content-Type':'application/json'}, body:JSON.stringify({})});
+    const d=await r.json();
+    if(!d||!d.ok) throw new Error((d&&d.error)||('실패 '+r.status));
+    if(msg) msg.textContent='✅ 채널 '+d.channels+'개에서 새로 '
+      +(d.added!=null?d.added:d.count)+'개 추가 · 지금까지 '+d.count+'개';
+    if(PLATFORM==='naverclip') load();
+  }catch(e){
+    if(msg) msg.textContent='⚠️ '+(e&&e.message||e);
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent=orig; }
+  }
+}
+async function ncSeedDefaults(btn){
+  const msg=document.getElementById('ncChMsg');
+  const orig=btn?btn.textContent:'';
+  if(btn){ btn.disabled=true; btn.textContent='등록 중…'; }
+  try{
+    const r=await fetch('/api/naverclip/channels/seed',{method:'POST',
+      headers:{'Content-Type':'application/json'}, body:JSON.stringify({defaults:true})});
+    const d=await r.json();
+    if(!d||!d.ok) throw new Error((d&&d.error)||('실패 '+r.status));
+    if(msg) msg.textContent='✅ 기본 '+d.added+'채널을 시드로 등록했어요. 이제 [채널 수집]을 누르세요.';
+  }catch(e){
+    if(msg) msg.textContent='⚠️ '+(e&&e.message||e);
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent=orig; }
+  }
+}
+async function ncSeedAdd(btn){
+  const el=document.getElementById('ncHandle'), msg=document.getElementById('ncChMsg');
+  const v=(el&&el.value||'').trim();
+  if(!v){ if(msg) msg.textContent='@핸들이나 채널 주소를 넣어 주세요'; return; }
+  const orig=btn?btn.textContent:'';
+  if(btn){ btn.disabled=true; btn.textContent='확인 중…'; }
+  try{
+    const r=await fetch('/api/naverclip/channels/seed',{method:'POST',
+      headers:{'Content-Type':'application/json'}, body:JSON.stringify({handles:[v]})});
+    const d=await r.json();
+    if(!d||!d.ok) throw new Error((d&&d.error)||('실패 '+r.status));
+    // ★없는 채널은 서버가 거부한다 — 오타를 심으면 매일 0건을 긁게 되므로.
+    if(d.not_found&&d.not_found.length){
+      if(msg) msg.textContent='⚠️ 네이버 클립에서 못 찾았어요: '+d.not_found.join(', ')
+        +' — 채널 주소(clip.naver.com/@핸들)로 다시 시도해 보세요';
+    }else{
+      if(msg) msg.textContent='✅ 추가했어요: '+(d.added||[]).join(', ');
+      if(el) el.value='';
+    }
+  }catch(e){
+    if(msg) msg.textContent='⚠️ '+(e&&e.message||e);
   }finally{
     if(btn){ btn.disabled=false; btn.textContent=orig; }
   }

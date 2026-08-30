@@ -11470,39 +11470,43 @@ _NAVERCLIP_BENCH_CHANNELS = (
 )
 
 
-@app.post("/api/naverclip/channels/collect")
-def _api_naverclip_channels_collect(request: Request, body: dict = None):
-    """네이버 클립 **채널** 수집 — 벤치마킹 채널을 훑는다(2026-08-31).
+def collect_channels(handles=None, per_channel=60, reset=False):
+    """네이버 클립 **채널** 수집 본체 — 화면 버튼과 크론이 **같이 쓴다**(0순위-B).
 
     키워드 수집(/api/naverclip/collect)과 **다른 축**이다:
       · 키워드 = "뷰티에서 뭐가 터지나"(넓게, 하루 한 번)
       · 채널   = "이 15명이 오늘 뭘 올렸나"(좁게, 매일)
 
     저장은 키워드 수집과 **같은 계약**(merge_last_run_platform, platform="naverclip")을
-    쓴다 — 화면·랭킹이 이미 platform으로 갈리므로 새 배선이 필요 없다(0순위-B).
+    쓴다 — 화면·랭킹이 이미 platform으로 갈리므로 새 배선이 필요 없다.
 
     시드는 DB(platform_seeds, kind="account")를 먼저 보고, 비어 있으면
     _NAVERCLIP_BENCH_CHANNELS로 시작한다 — 처음 눌러도 바로 돌게 하려는 것이다.
+
+    ★API 안에 두지 않는 이유: 크론이 HTTP를 자기 서버에 다시 쏘게 하면 인증·타임아웃이
+      얽힌다. 로직을 함수로 두면 둘 다 그냥 부른다.
     """
-    denied = _require_admin(request)
-    if denied:
-        return denied
     from shopping_shorts import naverclip_search as _nc
-    body = body or {}
     store = Store(DB_PATH)
 
     # ① 대상 채널 — 요청 > DB 시드 > 기본 목록
-    handles = [str(h).strip().lstrip("@") for h in (body.get("handles") or []) if str(h).strip()]
+    handles = [str(h).strip().lstrip("@") for h in (handles or []) if str(h).strip()]
     if not handles:
-        handles = [(_nc.handle_from_url(v) or v)
-                   for _k, v, _a in store.list_seeds("naverclip")]
-        handles = [h for h in handles if h]
+        # ★list_seeds는 **dict 리스트**를 준다(튜플 아님) — 튜플로 언패킹하면 값이
+        #   컬럼 이름 문자열("value")이 되어 오류 없이 0건이 된다(2026-08-31 실사고,
+        #   브라우저에서 눌러 보고서야 잡혔다).
+        handles = []
+        for row in store.list_seeds("naverclip"):
+            v = (row or {}).get("value") if isinstance(row, dict) else None
+            h = _nc.handle_from_url(v or "") or (v or "").strip().lstrip("@")
+            if h:
+                handles.append(h)
     if not handles:
         handles = [h for _n, h in _NAVERCLIP_BENCH_CHANNELS]
     handles = handles[:60]
 
     try:
-        per = max(5, min(int(body.get("per_channel") or 60), 200))
+        per = max(5, min(int(per_channel or 60), 200))
     except (TypeError, ValueError):
         per = 60
 
@@ -11577,7 +11581,7 @@ def _api_naverclip_channels_collect(request: Request, body: dict = None):
         })
 
     now = now_dt.isoformat()
-    if body.get("reset"):
+    if reset:
         store.save_last_run_platform("naverclip", items, now)
         added, total = len(items), len(items)
     else:
@@ -11585,6 +11589,21 @@ def _api_naverclip_channels_collect(request: Request, body: dict = None):
     return {"ok": True, "count": total, "added": added,
             "channels": len(handles), "per_channel": per_ch,
             "collected_at": now}
+
+
+@app.post("/api/naverclip/channels/collect")
+def _api_naverclip_channels_collect(request: Request, body: dict = None):
+    """채널 수집 버튼 — 관리자 전용. 로직은 collect_channels()에 있다(크론과 공유)."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    body = body or {}
+    try:
+        per = max(5, min(int(body.get("per_channel") or 60), 200))
+    except (TypeError, ValueError):
+        per = 60
+    return collect_channels(handles=body.get("handles"), per_channel=per,
+                            reset=bool(body.get("reset")))
 
 
 @app.post("/api/naverclip/channels/seed")
