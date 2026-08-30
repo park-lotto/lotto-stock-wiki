@@ -5262,7 +5262,7 @@ async def api_typecast_adopt(request: Request):
     ★소유자(owner_customer_id)를 본인으로 박는다 — 남이 담은 성우가 내 카드에 섞이면
       누가 담았는지 알 수 없다(일레븐 담기와 같은 규칙).
     """
-    from shopping_shorts import typecast_tts
+    from shopping_shorts import typecast_tts, eleven_voices
     cid = getattr(request.state, "customer_id", 0) or 0
     body = await request.json()
     vid = ((body or {}).get("voice_id") or "").strip()
@@ -5285,18 +5285,32 @@ async def api_typecast_adopt(request: Request):
     store = Store(DB_PATH)
     # 톤 3종 — 기존 타입캐스트 프리셋(assets/voice_presets.json)과 **같은 모양**으로 만든다.
     tones = [("stable", "normal", 1.0), ("natural", "tonedown", 1.0), ("expressive", "toneup", 1.2)]
+    # ★샘플을 굽는다(2026-08-30 사장님 "즐겨찾기한게 재생이안됨").
+    #   종전엔 sample_file=None으로 넣어 **미리듣기가 아예 없었다** — 카드의 ▶는 비활성이라
+    #   그나마 티가 났지만, 즐겨찾기 줄의 ▶는 눌려도 아무 일이 안 나 "고장"으로 보였다.
+    #   일레븐 등록(eleven_voices.register, bake=True)과 **같은 함수·같은 문장**으로 굽는다
+    #   — 성우끼리 나란히 비교하려면 같은 대사여야 한다(0순위-B).
+    #   bake_sample은 preset["model_id"]로 공급자를 가르므로 타입캐스트도 그대로 된다.
+    failed = []
     for variant, emotion, intensity in tones:
-        store.upsert_voice_preset({
-            "preset_id": f"{gid}-{variant}", "group_id": gid, "variant": variant,
+        pid = f"{gid}-{variant}"
+        preset = {
+            "preset_id": pid, "group_id": gid, "variant": variant,
             "name": name, "one_liner": "타입캐스트에서 담은 성우", "lang": "KR",
             "archetype": "타입캐스트에서 담은 성우",
             "base_voice_id": vid, "model_id": model,
             "voice_settings": {"emotion": emotion, "emotion_intensity": intensity},
             "default_speed": 1.2, "default_silence_trim": "mid",
-            "sample_file": None, "source_ref": "타입캐스트 성우 찾기(2026-08-30)",
+            "sample_file": f"{pid}.mp3", "source_ref": "타입캐스트 성우 찾기(2026-08-30)",
             "origin": "curated", "best": False, "owner_customer_id": cid,
-        })
-    return {"ok": True, "group_id": gid, "count": len(tones)}
+        }
+        try:
+            eleven_voices.bake_sample(preset)
+        except Exception as e:      # noqa: BLE001 — 굽기가 실패해도 성우 등록 자체는 살린다
+            failed.append(f"{pid}: {e}")
+            preset["sample_file"] = None
+        store.upsert_voice_preset(preset)
+    return {"ok": True, "group_id": gid, "count": len(tones), "sample_failed": failed}
 
 
 @app.get("/api/voice-presets")
@@ -5434,6 +5448,40 @@ def api_admin_eleven_voice_delete(group_id: str, request: Request):
 def eleven_voices_origin():
     from shopping_shorts import eleven_voices
     return eleven_voices.ORIGIN
+
+
+@app.post("/api/voice-presets/{preset_id}/bake")
+def api_voice_preset_bake(preset_id: str, request: Request):
+    """샘플이 **없는** 성우의 미리듣기를 그 자리에서 굽는다(2026-08-30 사장님
+    "즐겨찾기한게 재생이안됨").
+
+    타입캐스트에서 담은 성우는 종전에 sample_file=None으로 들어가 미리듣기가 아예
+    없었다. 담는 경로는 고쳤지만(굽도록) **이미 담아둔 성우**는 그대로 벙어리다 —
+    화면에서 ▶를 누르면 여기로 와서 한 번 굽고, 그 뒤로는 캐시된 파일을 쓴다.
+
+    ★실제 TTS 1회(크레딧)라 아무나 못 굽게 소유자를 가린다 — 공용(0)이거나 본인 것만.
+    ★굽는 규칙(문장·설정)은 eleven_voices.bake_sample 한 곳뿐이다(0순위-B).
+    """
+    from shopping_shorts import eleven_voices
+    cid = getattr(request.state, "customer_id", 0) or 0
+    store = Store(DB_PATH)
+    p = store.get_voice_preset(preset_id)
+    if not p:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "성우 없음"})
+    owner = int(p.get("owner_customer_id") or 0)
+    if owner and owner != int(cid):
+        return JSONResponse(status_code=403, content={"ok": False, "error": "내 성우가 아닙니다"})
+    url = f"/api/voice-presets/{preset_id}/sample"
+    if p.get("sample_file") and (voice_presets.SAMPLES_DIR / p["sample_file"]).exists():
+        return {"ok": True, "url": url, "cached": True}      # 이미 있으면 다시 안 굽는다
+    p = {**p, "sample_file": f"{preset_id}.mp3"}
+    try:
+        eleven_voices.bake_sample(p)
+    except Exception as e:      # noqa: BLE001 — 실패를 화면이 사람 말로 알려야 한다
+        return JSONResponse(status_code=502,
+                            content={"ok": False, "error": f"미리듣기 만들기 실패: {e}"})
+    store.upsert_voice_preset(p)
+    return {"ok": True, "url": url, "cached": False}
 
 
 @app.get("/api/voice-presets/{preset_id}/sample")

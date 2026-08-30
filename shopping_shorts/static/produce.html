@@ -1563,6 +1563,16 @@
   .fchip .fplay{width:30px;height:30px;border-radius:50%;border:none;background:transparent;
                 color:var(--sub);font-size:11px;cursor:pointer}
   .fchip .fplay:hover{color:var(--accent2)}
+  /* ◀앞으로 · ✕빼기 (2026-08-30 사장님 "즐겨찾기에서 삭제 만들어주고 / 순위 바꿔서
+     위쪽으로"). 평소엔 흐리게 두고 칩에 손을 올리면 또렷해진다 — 늘 진하면 이름보다
+     버튼이 먼저 보인다. */
+  .fchip .fmove,.fchip .fdel{width:22px;height:22px;border-radius:50%;border:none;
+        background:transparent;color:#5a627a;font-size:11px;cursor:pointer;padding:0;flex:0 0 auto}
+  .fchip:hover .fmove,.fchip:hover .fdel{color:var(--sub)}
+  .fchip .fmove:hover{color:var(--accent2)}
+  .fchip .fdel:hover{color:var(--fire)}
+  .fchip .fmove:disabled{opacity:.25;cursor:default}
+  .fchip{padding:0 5px 0 5px}          /* ◀가 앞에 붙으므로 왼쪽 여백을 줄인다 */
   .favEmpty{font-size:12px;color:#5a627a}
   /* 장면 줄 파형 — 길이를 눈으로 가늠하게 한다(시안) */
   .wave{flex:0 0 auto;width:96px;height:20px;display:flex;align-items:flex-end;gap:2px;overflow:hidden}
@@ -12118,10 +12128,45 @@ function playSample(btn, url){
                      b.classList.remove('playing'); b.textContent='▶'; }); };
   if(btn.classList.contains('playing')){ _SAMPLE_AUD.pause(); stop(); return; }
   stop(); _SAMPLE_AUD.pause();
-  if(!url){ return; }
+  if(!url){
+    // 🔊 샘플이 아직 없는 성우(타입캐스트에서 담은 것) — 그 자리에서 한 번 굽는다.
+    //   종전엔 조용히 return이라 "눌러도 아무 일이 없다"였다(2026-08-30 사장님 제보).
+    const pid = btn.getAttribute('data-preset');
+    if(!pid){ return; }
+    const old = btn.textContent;
+    btn.textContent='…'; btn.disabled = true;
+    fetch('/api/voice-presets/'+encodeURIComponent(pid)+'/bake', {method:'POST'})
+      .then(r=>r.json()).then(d=>{
+        btn.disabled = false; btn.textContent = old;
+        if(d && d.ok && d.url){
+          btn.setAttribute('data-url', d.url);
+          playSample(btn, d.url);          // 다 구웠으면 바로 들려준다
+        } else {
+          btn.textContent='✕'; btn.title=(d&&d.error)||'미리듣기를 못 만들었어요';
+          setTimeout(()=>{ btn.textContent=old; }, 1800);
+        }
+      }).catch(()=>{ btn.disabled=false; btn.textContent=old; });
+    return;
+  }
   _SAMPLE_AUD.src=url; _SAMPLE_AUD.currentTime=0;
   _SAMPLE_AUD.play().then(()=>{ btn.classList.add('playing'); btn.textContent='■'; }).catch(()=>{});
   _SAMPLE_AUD.onended=stop;
+}
+// 즐겨찾기 순서를 앞뒤로 옮긴다. VOICE_FAVS(Set)는 **넣은 순서를 보존**하므로
+// 배열로 풀어 자리를 바꾼 뒤 다시 만든다 — 순서를 담는 두 번째 저장소를 만들지 않는다.
+function favMove(gid, dir){
+  const a=[...VOICE_FAVS], i=a.indexOf(gid);
+  if(i<0) return;
+  const j=i+dir;
+  if(j<0 || j>=a.length) return;
+  [a[i],a[j]]=[a[j],a[i]];
+  VOICE_FAVS=new Set(a); _favSave(); renderPresetCards();
+}
+// 지금 고른 톤의 preset_id — 샘플이 없을 때 "그 자리에서 굽기"에 쓴다.
+function _presetIdOf(g){
+  const variant=SEL_VARIANT[g.group_id]||g.default_variant||'stable';
+  const v=g.variants[variant]||g.variants[g.default_variant]||Object.values(g.variants)[0];
+  return (v&&v.preset_id)||'';
 }
 function _sampleUrlOf(g){
   const variant=SEL_VARIANT[g.group_id]||g.default_variant||'stable';
@@ -12159,7 +12204,8 @@ function renderPresetCards(){
           <button type="button" class="vstar${fav?' on':''}" title="즐겨찾기에 담기"
                   onclick="event.stopPropagation();toggleFav('${g.group_id}')">${fav?'★':'☆'}</button>
           <button type="button" class="vplay" title="샘플 듣기"
-                  onclick="event.stopPropagation();playSample(this,'${esc(url)}')" ${url?'':'disabled'}>▶</button>
+                  data-preset="${esc(_presetIdOf(g))}"
+                  onclick="event.stopPropagation();playSample(this,'${esc(url)}')">▶</button>
         </div>
         ${g.best?'<span class="vbadge">추천</span>':''}
         <div class="tones">${tones}</div>
@@ -12208,14 +12254,21 @@ function renderPresetCards(){
 }
 // ⭐즐겨찾기 줄 — 별을 누른 성우가 두 열 위에 모인다. 이름을 누르면 바로 그 성우로 바뀐다.
 function renderFavRow(){
-  const favs=(VOICE_GROUPS||[]).filter(g=>VOICE_FAVS.has(g.group_id));
+  // ★VOICE_GROUPS 순서가 아니라 **즐겨찾기에 담은 순서**로 뽑는다(2026-08-30 사장님
+  //   "즐겨찾기한것 순위 바꿔서 위쪽으로 할수있게"). 순서의 정본은 VOICE_FAVS 하나다.
+  const favs=[...VOICE_FAVS].map(id=>(VOICE_GROUPS||[]).find(g=>g.group_id===id)).filter(Boolean);
   if(!favs.length) return '<div class="favs"><span class="favLabel">⭐ 즐겨찾기</span>'
     + '<span class="favEmpty">성우 카드의 ☆를 누르면 여기에 모입니다</span></div>';
   return '<div class="favs"><span class="favLabel">⭐ 즐겨찾기</span>'
-    + favs.map(g=>`<div class="fchip" onclick="pickPreset('${g.group_id}')">
+    + favs.map((g,i)=>`<div class="fchip" onclick="pickPreset('${g.group_id}')">
+         <button type="button" class="fmove" title="앞으로 옮기기" ${i===0?'disabled':''}
+           onclick="event.stopPropagation();favMove('${g.group_id}',-1)">◀</button>
          <span>${esc(g.name)}</span>
          <button type="button" class="fplay" title="샘플 듣기"
+           data-preset="${esc(_presetIdOf(g))}"
            onclick="event.stopPropagation();playSample(this,'${esc(_sampleUrlOf(g))}')">▶</button>
+         <button type="button" class="fdel" title="즐겨찾기에서 빼기"
+           onclick="event.stopPropagation();toggleFav('${g.group_id}')">✕</button>
        </div>`).join('') + '</div>';
 }
 
