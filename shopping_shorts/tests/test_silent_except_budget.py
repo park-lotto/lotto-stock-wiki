@@ -39,8 +39,11 @@ PKG = pathlib.Path(__file__).resolve().parents[1]
 #: 내리는 건 언제나 환영 — 줄었으면 이 숫자도 같이 내려라(그래야 되돌아가지 않는다).
 BUDGET = {
     "app.py": 35,
-    "store.py": 32,   # +2(2026-08-24): welcome_due·성별연령 컬럼 마이그레이션 — 위 컬럼들과 같은 "이미 존재" 패턴
+    "store.py": 33,   # +2(2026-08-24): welcome_due·성별연령 컬럼 마이그레이션 — 위 컬럼들과 같은 "이미 존재" 패턴
                       # +1(2026-08-29): challenge_submission.target_day — 같은 "이미 존재" 패턴
+                      # +1(2026-08-30): customers.acked_at 컬럼 마이그레이션 — 같은 "이미 존재" 패턴.
+                      #   삼키는 건 ALTER TABLE의 OperationalError(=컬럼이 이미 있다)뿐이고,
+                      #   매 기동마다 정상적으로 나는 오류라 로그로 흘릴 수도 없다.
     "instagram_playwright.py": 9,
     "media_download.py": 4,
     "mix_pipeline.py": 4,
