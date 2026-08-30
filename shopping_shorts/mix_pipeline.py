@@ -2759,6 +2759,38 @@ def _thumb_intro_png(job, thumb):
     return last if last.exists() else None
 
 
+def is_faststart(path) -> bool:
+    """mp4의 moov가 앞쪽(mdat보다 먼저)인지. 아니면 앞부분만 읽는 수집기가 못 읽는다."""
+    try:
+        with open(path, "rb") as f:
+            head = f.read(64)
+    except Exception:
+        return True                     # 못 읽으면 건드리지 않는다
+    i = 0
+    while i < len(head) - 8:
+        sz = int.from_bytes(head[i:i+4], "big")
+        typ = head[i+4:i+8]
+        if typ == b"moov":
+            return True
+        if typ == b"mdat":
+            return False                # mdat이 먼저 = moov는 뒤에 있다
+        if sz < 8:
+            break
+        i += sz
+    return False                        # 64바이트 안에 moov가 없다 = 뒤에 있다
+
+
+def ensure_faststart(path):
+    """moov가 뒤에 있으면 앞으로 옮긴다. 이미 앞이면 아무것도 안 한다.
+
+    ★렌더 때뿐 아니라 **바깥으로 주소를 내줄 때**도 부른다 — 옛 영상은 렌더를 다시
+      돌리지 않는 한 moov가 뒤에 남아 있어서, 렌더에만 걸면 옛 작업이 계속 거절된다
+      (Buffer 실측 2026-08-30: 옛 완성본 2건 모두 거절, moov를 앞으로 옮기면 통과).
+    """
+    if not is_faststart(path):
+        _faststart(path)
+
+
 def _faststart(path):
     """mp4의 moov 원자를 파일 앞으로 옮긴다(-c copy 리멕스). 실패해도 원본을 지키고 넘어간다.
 
@@ -2884,7 +2916,7 @@ def run_render(job_id, db_path, work_root):
         #   "Invalid post: Video could not be read from its URL"(HEAD 200인데 거절).
         #   재인코딩이 아니라 -c copy 리멕스라 화질 손실도 시간도 거의 없다.
         #   ★여기 한 곳에서만 한다 — 완성본 경로를 DB에 박는 유일한 출구다(0순위-B).
-        _faststart(out_path)
+        ensure_faststart(out_path)
         store.update_mix_job(job_id, status="done", video_path=str(out_path))
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
