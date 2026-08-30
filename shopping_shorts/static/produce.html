@@ -1931,43 +1931,6 @@
         <div class="previewSlot decoMirror" style="flex:0 0 auto;width:var(--pvw)">
           <div class="hint" style="margin-bottom:4px">🪞 실시간 미리보기 (9:16) — 글자를 <b>드래그</b>해 위치 이동
             <label style="cursor:pointer;margin-left:6px;color:var(--txt)"><input type="checkbox" id="sceneBg" onchange="toggleSceneBg()"> 실장면 배경</label></div>
-          <!-- 🔍 장면 확대 (2026-08-30). ★사장님 "장면 확대 기능인 걸 모르겠고 짧고
-               직관적으로 설명하고 잘 보이게" — 종전엔 회색 hint 두 줄(총 4줄)이 늘어져
-               있어서 무슨 기능인지 읽히지 않았다. 상자로 묶고 **제목을 달아** 한눈에
-               "장면 확대"임을 보이게 하고, 설명은 **한 줄**로 줄인다.
-               긴 설명(보기 전용·자막 고정)은 ⓘ 툴팁으로 접어 넣는다 — 필요한 사람만 본다. -->
-          <div class="zoomPanel">
-            <div class="zoomTitle">
-              <span>🔍 장면 확대</span>
-              <span class="zoomTip" title="화면에서만 커집니다. 만들어지는 영상 크기는 그대로고, 자막도 확대와 상관없이 제자리·같은 크기로 남습니다.">ⓘ</span>
-              <span class="zoomNow" id="zoomNow">100%</span>
-            </div>
-            <div class="zoomBar">
-              <button type="button" class="zbtn" onclick="zoomStep(-1)" title="축소 (Alt+Shift+-)">－</button>
-              <input type="range" id="zoomRange" min="100" max="300" step="10" value="100"
-                     oninput="zoomSet(this.value/100); _zoomSaveSoon()" title="확대 배율">
-              <button type="button" class="zbtn" onclick="zoomStep(1)" title="확대 (Alt+Shift++)">＋</button>
-              <button type="button" class="zbtn" id="zoomResetBtn" onclick="zoomReset()"
-                      style="display:none" title="원래 크기로 (Alt+Shift+Z)">↩ 원래대로</button>
-            </div>
-            <div class="zoomSay" id="zoomHint">크게 볼 곳을 <b>누르세요</b></div>
-            <!-- ★모든 장면에 같은 배율 (2026-08-30 사장님 "해당 장면을 확대했으면 다른
-                 전체 장면도 같은 비율로 적용할지 말지 체크버튼"). 기본 켬 — 장면을 넘겨도
-                 배율이 유지되는 게 지금까지의 동작이고, 대개 그걸 원한다. 끄면 장면을
-                 넘길 때마다 100%로 돌아가 그 장면만 따로 확대해 볼 수 있다. -->
-            <div class="zoomFoot">
-              <label class="zoomAll" id="zoomAllWrap">
-                <input type="checkbox" id="zoomAll" checked onchange="zoomAllChanged()">
-                <span>모든 장면에 같은 배율</span>
-              </label>
-              <!-- ★자동 저장은 이미 되지만 **저장됐는지 눈에 보여야** 안심이 된다
-                   (2026-08-30 사장님 "저장버튼이 있어야 원활할 듯"). 버튼은 지금 즉시
-                   저장하고, 옆 글자가 결과를 말한다. -->
-              <button type="button" class="zbtn" id="zoomSaveBtn" onclick="zoomSaveNow()"
-                      title="이 확대 구도를 저장합니다(최종 영상에 그대로 나갑니다)">💾 저장</button>
-              <span class="zoomSaved" id="zoomSaved"></span>
-            </div>
-          </div>
           <!-- 🖼 이 장면을 썸네일로 (2026-08-30 사장님 "장면들중 썸네일로 쓰고싶은건
                썸네일페이지로 이동시킬수있게"). 여태 썸네일 후보는 **자동 등분 추출뿐**이라,
                여기서 좋은 장면을 봐 두고도 [다른 장면 더 뽑기]로 걸리기를 기다려야 했다. -->
@@ -2551,6 +2514,40 @@
           <div id="decoPaneFx" style="display:none">
           <!-- 🔎 강조 — 효과 탭 **맨 위**에 둔다(2026-08-30). 아래(가림막 뒤)에 두니
                첫 화면에서 615px 밖으로 밀려 안 보였다(실측). 새 기능일수록 먼저 보여야 한다. -->
+          <!-- 🔍 장면 확대 — 미리보기 옆에서 **효과 탭 안**으로 옮겼다(2026-08-30 사장님).
+               왼쪽은 미리보기만 남기고, 손대는 것은 전부 오른쪽 탭에 모은다. -->
+          <div class="zoomPanel">
+            <div class="zoomTitle">
+              <span>🔍 장면 확대</span>
+              <span class="zoomTip" title="화면에서만 커집니다. 만들어지는 영상 크기는 그대로고, 자막도 확대와 상관없이 제자리·같은 크기로 남습니다.">ⓘ</span>
+              <span class="zoomNow" id="zoomNow">100%</span>
+            </div>
+            <div class="zoomBar">
+              <button type="button" class="zbtn" onclick="zoomStep(-1)" title="축소 (Alt+Shift+-)">－</button>
+              <input type="range" id="zoomRange" min="100" max="300" step="10" value="100"
+                     oninput="zoomSet(this.value/100); _zoomSaveSoon()" title="확대 배율">
+              <button type="button" class="zbtn" onclick="zoomStep(1)" title="확대 (Alt+Shift++)">＋</button>
+              <button type="button" class="zbtn" id="zoomResetBtn" onclick="zoomReset()"
+                      style="display:none" title="원래 크기로 (Alt+Shift+Z)">↩ 원래대로</button>
+            </div>
+            <div class="zoomSay" id="zoomHint">크게 볼 곳을 <b>누르세요</b></div>
+            <!-- ★모든 장면에 같은 배율 (2026-08-30 사장님 "해당 장면을 확대했으면 다른
+                 전체 장면도 같은 비율로 적용할지 말지 체크버튼"). 기본 켬 — 장면을 넘겨도
+                 배율이 유지되는 게 지금까지의 동작이고, 대개 그걸 원한다. 끄면 장면을
+                 넘길 때마다 100%로 돌아가 그 장면만 따로 확대해 볼 수 있다. -->
+            <div class="zoomFoot">
+              <label class="zoomAll" id="zoomAllWrap">
+                <input type="checkbox" id="zoomAll" checked onchange="zoomAllChanged()">
+                <span>모든 장면에 같은 배율</span>
+              </label>
+              <!-- ★자동 저장은 이미 되지만 **저장됐는지 눈에 보여야** 안심이 된다
+                   (2026-08-30 사장님 "저장버튼이 있어야 원활할 듯"). 버튼은 지금 즉시
+                   저장하고, 옆 글자가 결과를 말한다. -->
+              <button type="button" class="zbtn" id="zoomSaveBtn" onclick="zoomSaveNow()"
+                      title="이 확대 구도를 저장합니다(최종 영상에 그대로 나갑니다)">💾 저장</button>
+              <span class="zoomSaved" id="zoomSaved"></span>
+            </div>
+          </div>
           <div id="hlBox" style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:12px">
             <div style="font-size:13px;font-weight:800;margin-bottom:6px">🔎 이 장면에서 강조할 곳
               <span style="font-size:11px;color:var(--accent2);font-weight:600">— 완성본에 그대로 나갑니다</span>
@@ -2599,10 +2596,10 @@
                ★버튼식이다(슬라이더 대신) — 딸깍·시니어 북극성. -->
           <div id="mkBox" style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:12px">
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
-              <div style="font-size:17px;font-weight:900;letter-spacing:-.3px">🩹 <span style="color:#7CE8B0">가림막</span> <span style="font-size:12px;color:var(--sub);font-weight:600">— 남은 자막·워터마크 덮기</span></div>
+              <div style="font-size:17px;font-weight:900;letter-spacing:-.3px">🩹 <span style="color:#7CE8B0">가림효과</span> <span style="font-size:12px;color:var(--sub);font-weight:600">— 남은 자막·워터마크 덮기</span></div>
             </div>
             <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
-              <button type="button" onclick="mkAdd()" class="mkbtn">+ 가림막 추가</button>
+              <button type="button" onclick="mkAdd()" class="mkbtn">+ 가림 추가</button>
               <button type="button" onclick="mkDelSel()" class="mkbtn">✕ 선택 삭제</button>
               <span style="width:10px"></span>
               <button type="button" onclick="mkAdd('subbot')" class="mkbtn">↓ 하단 자막</button>
@@ -2610,32 +2607,35 @@
               <button type="button" onclick="mkAdd('wmr')" class="mkbtn">⊡ 구석 워터마크</button>
               <button type="button" onclick="mkAdd('sub')" class="mkbtn">◎ 가운데</button>
             </div>
-            <!-- 😀 스티커·뱃지(2026-08-28 사장님 지시로 고급효과 자리를 대체).
-                 ★가림막과 **같은 목록**에 들어간다 — 아래 알약/편집기/드래그가 그대로 쓰인다. -->
-            <details id="mkStickerBox" style="margin-bottom:10px;border:1px solid var(--line);
-                     border-radius:10px;background:var(--panel)">
-              <summary style="cursor:pointer;padding:9px 12px;font-size:13px;font-weight:800;
-                       display:flex;align-items:center;gap:6px;min-height:44px">
-                😀 스티커 · 뱃지 <span style="font-size:11px;color:var(--sub);font-weight:600">— 눌러서 얹고, 끌어서 옮깁니다</span>
-              </summary>
-              <div style="padding:2px 12px 12px">
-                <div id="mkEmojiTabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px"></div>
-                <!-- ★칸 수를 고정하지 않는다(auto-fill) — 12열로 박으면 좁은 화면에서
-                     마지막 칸이 밖으로 밀려 잘린다(실측: 그리드 밖 228px). -->
-                <div id="mkEmojiGrid" style="display:grid;
-                     grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:6px"></div>
-                <div style="font-size:11px;color:var(--sub);margin:12px 0 6px">🏷 글자 뱃지 — 색은 아래 <b>색</b>에서 바꿉니다</div>
-                <div id="mkBadgeGrid" style="display:flex;gap:6px;flex-wrap:wrap"></div>
-              </div>
-            </details>
             <div id="mkPills" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
             <div id="mkEditor"></div>
             <div class="hint" style="font-size:11px;margin-top:10px;line-height:1.7">
-              <b>쓰는 법</b> — [+ 가림막 추가]로 여러 개를 얹고, 도형을 <b>끌어서</b> 옮기고
+              <b>쓰는 법</b> — [+ 가림 추가]로 여러 개를 얹고, 도형을 <b>끌어서</b> 옮기고
               파란 손잡이로 <b>크기</b>를 바꿉니다. 위 알약(1번·2번…)을 눌러 편집할 도형을 고릅니다.<br>
               <b>가장자리</b>를 올리면 경계가 부드럽게 풀려 덮은 티가 덜 납니다.
             </div>
           </div>
+          <!-- 😀 스티커·뱃지 — 가림효과 상자 **밖으로** 뺐다(2026-08-30 사장님
+               "가림막 안에 스티커가 들어간것 독립적으로 빼고 스티커는 펼친거 기본으로").
+               얹히는 목록(masks)은 그대로 공유한다 — 알약·편집기·드래그가 한 벌이다. -->
+          <!-- 😀 스티커·뱃지(2026-08-28 사장님 지시로 고급효과 자리를 대체).
+               ★가림막과 **같은 목록**에 들어간다 — 아래 알약/편집기/드래그가 그대로 쓰인다. -->
+          <details id="mkStickerBox" open style="margin-bottom:10px;border:1px solid var(--line);
+                   border-radius:10px;background:var(--panel)">
+            <summary style="cursor:pointer;padding:9px 12px;font-size:13px;font-weight:800;
+                     display:flex;align-items:center;gap:6px;min-height:44px">
+              😀 스티커 · 뱃지 <span style="font-size:11px;color:var(--sub);font-weight:600">— 눌러서 얹고, 끌어서 옮깁니다</span>
+            </summary>
+            <div style="padding:2px 12px 12px">
+              <div id="mkEmojiTabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px"></div>
+              <!-- ★칸 수를 고정하지 않는다(auto-fill) — 12열로 박으면 좁은 화면에서
+                   마지막 칸이 밖으로 밀려 잘린다(실측: 그리드 밖 228px). -->
+              <div id="mkEmojiGrid" style="display:grid;
+                   grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:6px"></div>
+              <div style="font-size:11px;color:var(--sub);margin:12px 0 6px">🏷 글자 뱃지 — 색은 아래 <b>색</b>에서 바꿉니다</div>
+              <div id="mkBadgeGrid" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+            </div>
+          </details>
           </div>
           <!-- ✨ 고급효과(리모션) — 사장님 지시로 화면에서 뺌(2026-08-28 "고급효과는 없애고").
                ★배선은 남긴다: toggleFxAdv·fxSuggest·fxRender가 이 안의 id들을 널가드 없이
@@ -4528,7 +4528,7 @@ function mkArr(){
 }
 function mkAdd(kind){
   const a=mkArr(); if(!a) return;
-  if(a.length>=MK_MAX){ alert('가림막은 최대 '+MK_MAX+'개까지예요.'); return; }
+  if(a.length>=MK_MAX){ alert('가림효과는 최대 '+MK_MAX+'개까지예요.'); return; }
   const q=MK_QUICK[kind]||{l:30,t:44,w:40,h:10};
   a.push(Object.assign({shape:'round',fx:'fade',color:'#000000',op:100,soft:30,rot:0}, q));
   MK_SEL=a.length-1;
@@ -4559,7 +4559,7 @@ function renderStickerPicker(){
 }
 function mkAddEmoji(ch){
   const a=mkArr(); if(!a) return;
-  if(a.length>=MK_MAX){ alert('가림막·스티커는 최대 '+MK_MAX+'개까지예요.'); return; }
+  if(a.length>=MK_MAX){ alert('가림효과·스티커는 최대 '+MK_MAX+'개까지예요.'); return; }
   // 9:16 화면이라 같은 %라도 세로가 훨씬 길다 — 정사각으로 보이려면 h = w*(1080/1920).
   const w=14;
   a.push({kind:'emoji', ch:ch, l:43, t:26, w:w, h:+(w*1080/1920).toFixed(2),
@@ -4570,7 +4570,7 @@ function mkAddEmoji(ch){
 // 글자 뱃지 추가 — 색은 지금 고른 색(없으면 눈에 띄는 빨강)을 쓴다.
 function mkAddBadge(text){
   const a=mkArr(); if(!a) return;
-  if(a.length>=MK_MAX){ alert('가림막·스티커는 최대 '+MK_MAX+'개까지예요.'); return; }
+  if(a.length>=MK_MAX){ alert('가림효과·스티커는 최대 '+MK_MAX+'개까지예요.'); return; }
   const w=Math.min(46, 12 + text.length*7);
   a.push({kind:'badge', text:text, l:6, t:14, w:w, h:6.5,
           shape:'round', fx:'solid', color:'#FF2D5E', op:100, soft:0, rot:0});
@@ -4686,13 +4686,15 @@ function mkDelSel(){
 function mkSelect(i){ MK_SEL=i; mkRender(); }
 // 버튼 한 줄 만들기 — 고른 것만 초록 테두리(시안 그대로)
 function mkChoice(opts, cur, fn){
-  return '<div style="display:grid;grid-template-columns:repeat('+opts.length+',1fr);gap:8px">'
+  // ★칸을 잘게(2026-08-30 사장님 "조금 간소하게 보이게 지금너무 크게 펼쳐짐").
+  //   종전 padding 9px+gap 8px는 네 칸이 폭을 다 먹어 편집기가 통째로 길어졌다.
+  return '<div style="display:grid;grid-template-columns:repeat('+opts.length+',1fr);gap:4px">'
     +opts.map(function(o){
       const on=(cur===o[0]);
       const dis=!!o[2];
       return '<button type="button"'+(dis?' disabled title="아직 준비 중이에요"':'')
         +' onclick="'+(dis?'':fn+'(&quot;'+o[0]+'&quot;)')+'" '
-        +'style="padding:9px 6px;font-size:12px;border-radius:8px;cursor:'+(dis?'not-allowed':'pointer')+';'
+        +'style="padding:6px 4px;font-size:11px;border-radius:7px;cursor:'+(dis?'not-allowed':'pointer')+';'
         +'background:'+(on?'#0d2a1c':'var(--inset2,#131c26)')+';'
         +'color:'+(dis?'#5a6672':(on?'#7CE8B0':'var(--txt)'))+';'
         +'border:1px solid '+(on?'#2FBF71':'var(--line)')+'">'+o[1]+'</button>';
@@ -4719,11 +4721,11 @@ function mkRender(){
   }).join('');
   if(MK_SEL<0||MK_SEL>=a.length) MK_SEL=Math.max(0,a.length-1);
   const m=empty ? Object.assign({},MK_DRAFT) : a[MK_SEL];
-  const lab='font-size:11px;color:var(--sub);margin:12px 0 6px';
+  const lab='font-size:11px;color:var(--sub);margin:7px 0 4px';
   const pal=MK_PAL.map(function(c){
     const on=String(m.color||'').toUpperCase()===c;
     return '<button type="button" title="'+c+'" onclick="mkPick(&quot;'+c+'&quot;)" '
-      +'style="height:36px;border-radius:7px;cursor:pointer;background:'+c+';'
+      +'style="height:20px;border-radius:5px;cursor:pointer;background:'+c+';'
       +'border:2px solid '+(on?'#2FBF71':'rgba(255,255,255,.18)')+'"></button>';
   }).join('');
   const row=function(name, key, min, max, suf){
@@ -4742,10 +4744,10 @@ function mkRender(){
      '<div style="'+lab+'">색</div>'
     +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'
     +'<input id="mkC" type="color" value="'+(m.color||'#000000')+'" oninput="mkPick(this.value)" '
-    +'style="width:44px;height:28px;padding:0;border:1px solid var(--line);border-radius:6px;background:none;cursor:pointer">'
+    +'style="width:36px;height:22px;padding:0;border:1px solid var(--line);border-radius:6px;background:none;cursor:pointer">'
     +'<span style="font-size:12px;color:var(--sub)">'+(m.color||'#000000')+'</span></div>'
     // 12색 한 줄 — 위 팔레트와 같은 규칙(0순위-B: 한쪽만 고치면 어긋난다).
-    +'<div style="display:grid;grid-template-columns:repeat(12,1fr);gap:6px">'+pal+'</div>';
+    +'<div style="display:grid;grid-template-columns:repeat(12,1fr);gap:4px">'+pal+'</div>';
   ed.innerHTML=
      (isEmoji
         ? '<div style="'+lab+'">스티커</div><div style="font-size:30px;line-height:1.1;margin-bottom:4px">'
@@ -4764,11 +4766,14 @@ function mkRender(){
         +'<div style="'+lab+'">효과</div>'
         +mkChoice(MK_FX, m.fx, 'mkFx'))
     +(isEmoji ? '' : colorBlock)
-    +'<div style="'+lab+'">세부</div>'
+    // ★세부는 접어 둔다(2026-08-30) — 늘 펼쳐 두니 상자가 길어져 아래가 안 보였다.
+    +'<details style="margin-top:8px;border-top:1px solid var(--line);padding-top:6px">'
+    +'<summary style="cursor:pointer;font-size:11px;color:var(--sub)">세부 (진하기·가장자리·회전)</summary>'
     +row('진하기','op',10,100)
     +(isEmoji||isBadge ? '' :
         row(MK_BLUR_FX.includes(m.fx)?'흐림 세기':'가장자리','soft',0,100))
-    +row('회전','rot',-45,45);
+    +row('회전','rot',-45,45)
+    +'</details>';
   syncMaskBoxes();
 }
 function mkShape(v){ mkEnsure(); mkSet(MK_SEL,'shape',v); mkRender(); }
