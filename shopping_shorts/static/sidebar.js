@@ -964,17 +964,26 @@
     });
   }
 
-  window.ssOpenBugReport = function () {
+  /* opt(선택) — 같은 창을 다른 용도로도 쓰기 위한 것(2026-08-30).
+     결제 알림처럼 "관리자에게 한 줄 남기기"는 오류 신고와 **가는 곳이 같다**
+     (bug_report → 관리자 확인 → 쪽지 답장). 창을 새로 만들면 접수함이 두 개가 되어
+     언젠가 한쪽을 안 보게 된다(0순위-B) — 제목·안내문만 갈아끼워 재사용한다.
+       opt = { title, sub, placeholder, preset } */
+  window.ssOpenBugReport = function (opt) {
+    opt = opt || {};
     css();
     var back = document.createElement("div");
     back.className = "ssbug-back";
     SHOT = null;
     back.innerHTML =
       '<div class="ssbug" role="dialog" aria-modal="true">' +
-        "<h3>🐞 오류 신고</h3>" +
-        '<p class="sub">어떤 문제인지 한 줄만 적어주세요.<br>' +
-          '<b style="color:#cfe3e3">문제가 보이는 화면 사진</b>을 같이 보내주시면 훨씬 빨리 찾습니다.</p>' +
-        '<textarea id="ssBugText" placeholder="예) 5단계에서 영상 만들기를 누르면 계속 실패해요"></textarea>' +
+        "<h3>" + (opt.title || "🐞 오류 신고") + "</h3>" +
+        '<p class="sub">' + (opt.sub ||
+            '어떤 문제인지 한 줄만 적어주세요.<br>' +
+            '<b style="color:#cfe3e3">문제가 보이는 화면 사진</b>을 같이 보내주시면 훨씬 빨리 찾습니다.'
+          ) + '</p>' +
+        '<textarea id="ssBugText" placeholder="' +
+          (opt.placeholder || "예) 5단계에서 영상 만들기를 누르면 계속 실패해요") + '"></textarea>' +
         '<div class="drop" id="ssBugDrop">' +
           '📷 <b>화면 사진</b> — <button type="button" id="ssShotPick">사진 고르기</button>' +
           '<div style="margin-top:8px;font-size:13.5px;color:#7d8f8f">' +
@@ -1001,6 +1010,7 @@
     back.addEventListener("click", function (e) { if (e.target === back) close(); });
     document.getElementById("ssBugNo").onclick = close;
     var ta = document.getElementById("ssBugText");
+    if (opt.preset) ta.value = opt.preset;   // 결제 알림 등 미리 채워 여는 경우
     ta.focus();
     /* 사진 넣는 길 세 가지 — 하나만 되면 못 쓰는 사람이 생긴다. */
     var fileEl = document.getElementById("ssShotFile");
