@@ -5988,6 +5988,14 @@ async def api_buffer_schedule(request: Request):
     if int(job.get("customer_id") or 0) != _cid(request):
         return JSONResponse(status_code=403, content={"ok": False, "error": "내 작업이 아닙니다."})
 
+    # ★주소를 내주기 전에 moov를 앞으로 보장한다(2026-08-30 실측). Buffer는 영상을
+    #   받아보다가 못 읽으면 "Video could not be read from its URL"로 거절하는데,
+    #   렌더 시점에만 처리하면 **그 전에 만든 완성본**이 영영 안 올라간다.
+    #   이미 앞에 있으면 아무 일도 안 한다(무해·즉시).
+    try:
+        mix_pipeline.ensure_faststart(job["video_path"])
+    except Exception:
+        pass                       # 실패해도 예약 자체는 시도한다(원본은 그대로다)
     sid = _share_put(job_id, _SHARE_TTL_BUFFER)
     # ★Buffer는 **HTTPS**를 요구한다(buffer_api 머리말). 그런데 프록시 뒤라
     #   request.base_url이 http로 잡혀 301 리다이렉트 주소를 넘기고 있었다
