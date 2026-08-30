@@ -41,12 +41,22 @@ class Test판단은_각각_한곳:
         assert len(reads) == 1, f"재료 판정이 또 손으로 적혔다: {reads}"
 
     def test_화면출처_판정은_clean_frame_src만(self):
-        """poster·beatframe이 clean_sources를 직접 보면 원본이 새어 나간다."""
-        for fn in (A.api_produce_mix_beatframe,):
+        """poster·beatframe이 clean_sources를 직접 보면 원본이 새어 나간다.
+
+        ★2026-08-30: 프레임을 뜨는 몸통이 `_beatframe_file`로 빠졌다(썸네일로 보내기가
+          같은 그림을 써야 해서). 판단은 **한 곳으로 더 모인 것**이라 가드의 뜻은 그대로다 —
+          이제 그 함수가 공용 판단을 쓰는지 본다. 엔드포인트는 그 함수만 부르면 된다.
+        """
+        for fn in (A._beatframe_file,):
             body = _src(fn)
             assert "_clean_frame_src" in body, f"{fn.__name__}이 공용 판단을 안 쓴다"
             assert 'get("clean_sources")' not in body, \
                 f"{fn.__name__}이 clean_sources를 또 직접 본다"
+        # 엔드포인트는 스스로 판정하지 않는다 — 몸통에 맡긴다(두 벌 방지)
+        ep = _src(A.api_produce_mix_beatframe)
+        assert "_beatframe_file" in ep, "beatframe 엔드포인트가 공용 몸통을 안 쓴다"
+        assert 'get("clean_sources")' not in ep and "_clean_frame_src" not in ep, \
+            "엔드포인트가 출처 판정을 또 적었다"
 
     def test_컷_계획은_video_assemble_한곳에서(self):
         """★렌더·캡컷·ZIP·썸네일이 같은 계획을 봐야 화면이 안 갈린다."""

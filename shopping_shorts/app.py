@@ -14001,6 +14001,42 @@ def api_produce_mix_scenezoom(job_id: str, body: dict):
     return {"ok": True, "zoom": z, "pan_x": px, "pan_y": py}
 
 
+@app.post("/api/produce/mix/{job_id}/scenehl")
+def api_produce_mix_scenehl(job_id: str, body: dict):
+    """🔎 장면 하나의 **강조**(원형 돋보기 / 스포트라이트) — 2026-08-30 사장님
+    "장면꾸미기에서 강조하고싶은것들 수동하게".
+
+    body: {beat_idx, on, mode:'zoom'|'spot', cx, cy, r, zoom}
+      cx/cy = 화면 폭·높이 대비 원 중심(0~1), r = 화면 **폭** 대비 반지름(0~1)
+      on=false면 강조를 지운다.
+
+    ★확대(scenezoom)와 다른 물건이다 — 확대는 화면 구도를 바꾸고, 강조는 구도를 그대로
+      둔 채 위에 원을 얹는다. 그래서 두 개를 같이 걸 수 있다.
+    ★값 해석·보정은 video_assemble.scene_hl_of 한 곳뿐(0순위-B). 여기선 뜻만 저장한다.
+    ★음성·타이밍·자막을 안 건드린다 → 즉시·무료(scenezoom과 같다)."""
+    store = Store(DB_PATH)
+    plan, hit, err = _mix_job_beat_or_error(job_id, body, store)
+    if err:
+        return err
+    if not body.get("on"):
+        hit.pop("scene_hl", None)
+    else:
+        def _f(key, dflt):
+            try:
+                return float(body.get(key))
+            except (TypeError, ValueError):
+                return dflt
+        hit["scene_hl"] = {
+            "on": True,
+            "mode": "spot" if str(body.get("mode") or "zoom") == "spot" else "zoom",
+            "shape": "round" if str(body.get("shape") or "circle") == "round" else "circle",
+            "cx": round(_f("cx", 0.5), 5), "cy": round(_f("cy", 0.5), 5),
+            "r": round(_f("r", 0.28), 5), "zoom": round(_f("zoom", 2.0), 4),
+        }
+    store.update_mix_job(job_id, edit_plan=plan)
+    return {"ok": True, "hl": video_assemble.scene_hl_of(hit)}
+
+
 @app.post("/api/produce/mix/{job_id}/caplines")
 def api_produce_mix_caplines(job_id: str, body: dict):
     """장면 하나의 자막 줄 나누기(2026-08-25). body: {beat_idx, lines: [str, ...]}
@@ -14338,6 +14374,8 @@ def api_produce_mix_beats_preview(job_id: str):
             # ★장면별 화면 확대 구도(2026-08-30). 해석·보정은 scene_zoom_of 한 곳에서만 —
             #   화면이 스스로 가두면 렌더와 두 벌이 된다(0순위-B, cap_pos와 같은 방식).
             "zoom": _z_of(b)[0], "pan_x": _z_of(b)[1], "pan_y": _z_of(b)[2],
+            # 🔎 장면별 강조(원형 돋보기/스포트라이트, 2026-08-30). 같은 이유로 서버가 준다.
+            "hl": video_assemble.scene_hl_of(b),
         })
     return {"beats": out}
 
