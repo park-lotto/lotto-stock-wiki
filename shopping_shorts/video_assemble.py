@@ -1867,7 +1867,7 @@ def _wrap_to_width(line, font, max_w):
 
 def _segmented_drawtext(text, base_style, work, key_prefix, x_pct, y_pct,
                           highlight_rules=None, default_color="0xFFFFFF", single_line=False,
-                          fit_lines=False):
+                          fit_lines=False, block_box=False):
     """헤드카피/자막 한 블록을 줄 단위로 나누고, highlight_rules에 매칭되는 단어만
     별도 색·배지로 세그먼트를 쪼개 나란히 이어붙인 drawtext 필터 리스트를 반환한다.
     규칙이 없거나 매칭 0건이면 줄마다 세그먼트 1개 = 기존 _fixed_drawtext/_caption_drawtexts와
@@ -1918,6 +1918,27 @@ def _segmented_drawtext(text, base_style, work, key_prefix, x_pct, y_pct,
     line_h = size * 1.2
     total_h = line_h * len(lines)
     parts = []
+    # ── 🟨 배경 박스는 **블록 하나**로 (2026-08-30 사장님 "헤드커피 부분이 분리되서 나옴")
+    # 종전엔 줄마다 drawtext에 box=1을 걸어, 두 줄짜리 헤드카피가 **박스 2개**로 갈라져
+    # 나왔다(실측: 조각 2개, x=42 / x=272 — 줄 폭이 달라 시작점도 어긋난다). 그런데
+    # 미리보기(produce.html updateHC)는 글자 덩어리 하나에 배경을 깔아 **한 덩어리**였다.
+    # → 같은 판단이 두 곳에 다르게 적힌 것(0순위-B). 렌더를 미리보기 규칙에 맞춘다:
+    #     세로 여백 = box_pad, 가로 여백 = box_pad*1.5, 모서리 = 30px(=10*3, 720 기준)
+    if block_box and base_style.get("box"):
+        _pad = max(0, _ui_px(base_style.get("box_pad"), 24, zero_ok=True))
+        _widest = 0
+        for _ln in lines:
+            _segs = _build_segments(_ln, base_color_raw, highlight_rules or [])
+            _widest = max(_widest, sum(_text_px(pil_font, s[0], size) for s in _segs))
+        if _widest > 0:
+            _bw = _widest + _pad * 3            # 좌우 각각 pad*1.5
+            _bh = total_h + _pad * 2
+            _bx = int(round(x_center - _bw / 2))
+            _by = int(round(y_top - total_h / 2 - _pad))
+            _bc = _hex_to_ff(base_style.get("box_color"), "0x000000")
+            _op = max(0.0, min(1.0, (base_style.get("box_opacity") or 80) / 100.0))
+            parts.append(f"drawbox=x={_bx}:y={_by}:w={int(round(_bw))}:h={int(round(_bh))}:"
+                         f"color={_bc}@{_op:.2f}:t=fill")
     for li, line in enumerate(lines):
         segs = _build_segments(line, base_color_raw, highlight_rules or [])
         if not segs:
@@ -1960,6 +1981,8 @@ def _segmented_drawtext(text, base_style, work, key_prefix, x_pct, y_pct,
                 if seg_box:
                     bc = _hex_to_ff(seg_box_color, "0x000000")
                     seg_parts += ["box=1", f"boxcolor={bc}@0.90", "boxborderw=12"]
+                elif base_style.get("box") and block_box:
+                    pass          # 배경은 아래에서 **블록 하나**로 미리 그렸다(줄마다 안 그린다)
                 elif base_style.get("box") and not seg_box:
                     bc = _hex_to_ff(base_style.get("box_color"), "0x000000")
                     op = max(0.0, min(1.0, (base_style.get("box_opacity") or 80) / 100.0))
@@ -2028,7 +2051,7 @@ def _headcopy_drawtext_parts(hc, work, enable=None):
     parts = _segmented_drawtext(
         hc.get("text", ""), hc, work, "hc", hc.get("x", 50), hc.get("y", 14),
         highlight_rules=hc.get("highlight_rules"), default_color="0xFF8800",
-        fit_lines=True,
+        fit_lines=True, block_box=True,
     )
     if not enable:
         return parts
