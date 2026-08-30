@@ -13,9 +13,11 @@
 // @match        https://*.douyin.com/*
 // @match        https://*.iesdouyin.com/*
 // @match        https://shoppingshorts.duckdns.org/grab*
+// @match        https://app.stmaker.kr/grab*
 // @run-at       document-idle
 // @grant        GM_xmlhttpRequest
 // @connect      shoppingshorts.duckdns.org
+// @connect      app.stmaker.kr
 // @downloadURL  https://shoppingshorts.duckdns.org/grab.user.js
 // @updateURL    https://shoppingshorts.duckdns.org/grab.user.js
 // ==/UserScript==
