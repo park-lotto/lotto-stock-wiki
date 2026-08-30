@@ -1,0 +1,40 @@
+{
+  "date": "2026-08-31",
+  "steps": {
+    "STEP1 sync+ingest": {
+      "status": "done",
+      "exit": 0,
+      "at": "2026-08-31T07:00:02.636534"
+    },
+    "STEP2 pending": {
+      "status": "done",
+      "exit": 0,
+      "at": "2026-08-31T07:54:12.607388"
+    },
+    "STEP3 report_ingest": {
+      "status": "done",
+      "exit": 0,
+      "at": "2026-08-31T07:54:37.952369"
+    },
+    "STEP3.5 telegram": {
+      "status": "done",
+      "exit": 0,
+      "at": "2026-08-31T07:54:39.851472"
+    },
+    "STEP3.6 blog": {
+      "status": "done",
+      "exit": 0,
+      "at": "2026-08-31T07:54:41.779670"
+    },
+    "STEP3.7 youtube": {
+      "status": "done",
+      "exit": 0,
+      "at": "2026-08-31T07:54:43.684631"
+    },
+    "STEP3.8 news": {
+      "status": "done",
+      "exit": 1073807364,
+      "at": "2026-08-31T08:53:20.594802"
+    }
+  }
+}
