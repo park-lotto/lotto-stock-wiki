@@ -5708,7 +5708,7 @@ def api_share_link(job_id: str, request: Request):
 
 
 @app.api_route("/api/share/v/{sid}", methods=["GET", "HEAD"])
-def api_share_v(sid: str, dl: int = 0):
+def api_share_v(request: Request, sid: str, dl: int = 0):
     """단축 id로 영상 스트리밍(로그인 불필요·저장소 조회). allowlist 경로.
 
     ★HEAD를 반드시 받는다(2026-08-30 실사고). Buffer는 영상을 가져가기 전에
@@ -5726,7 +5726,13 @@ def api_share_v(sid: str, dl: int = 0):
     if dl:
         return FileResponse(job["video_path"], media_type="video/mp4",
                             filename=export_bundle.safe_name(job_id) + ".mp4")
-    return FileResponse(job["video_path"], media_type="video/mp4")
+    # ★Range(부분 요청)를 지원해야 한다 — 서버 starlette 0.36.3의 FileResponse에는
+    #   range 처리가 **아예 없어** 늘 200에 41MB 전체를 주고 Accept-Ranges도 안 보낸다
+    #   (2026-08-15에 같은 사고를 겪고 _range_mp4_response를 만들어 뒀는데 이 경로만
+    #    안 쓰고 있었다 — 0순위-B: 같은 일을 하는 코드는 한 곳에서).
+    #   Buffer는 영상을 나눠 받으려 하므로 여기서 막히면
+    #   "Video could not be read from its URL."로 예약이 거절된다(실측 2026-08-30).
+    return _range_mp4_response(job["video_path"], request)
 
 
 def _selected_thumb_path(job):
