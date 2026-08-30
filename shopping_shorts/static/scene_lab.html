@@ -666,8 +666,8 @@ body:not(.tight) #pvfoldbtn{display:none}
 #rollbay:empty::before{content:'🎞 조각의 [필름 펼치기]를 누르면 여기에 필름이 펼쳐집니다';
   display:flex;align-items:center;height:34px;padding:0 12px;font-size:11.5px;color:var(--dim);
   border:1px dashed var(--line);border-radius:8px;background:var(--panel)}
-body:not(.tight) #rollbay:empty{min-height:0}
-body:not(.tight) #rollbay:empty::before{display:none}
+/* ★2026-08-30: '넓게'에서 필름 자리를 죽이던 두 줄을 걷었다 — 자리는 모드와 무관하다.
+   증상: 넓게에서 [필름 펼치기]를 눌러도 펼쳐질 자리가 없었다(사장님 실측). */
 
 /* ══ 위쪽 3단 배치(2026-08-26 사장님 스케치) ══
      ┌──────────┬─────────────────────────────┐
@@ -797,7 +797,7 @@ body.tight #binmsg:not(.on){display:none}
   cursor:pointer;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;
   padding-left:5px;transition:transform .12s,background .12s}
 #pvbigplay:hover{background:var(--accent);color:#06231a;transform:scale(1.06)}
-body:not(.tight) #pvbigplay{display:none}
+/* (넓게에서 큰 재생버튼을 숨기던 줄 제거 — #playerIdle이 이제 늘 같은 자리다) */
 #playerIdle{display:flex;flex-direction:column;align-items:center;justify-content:center;
   flex:1;min-height:0;background:#000;border-radius:6px}
 /* ✂ 여기부터 자르기 — 필름에서 하므로 없앤다(2026-08-26 사장님 "기능 없어도 된다").
@@ -1700,7 +1700,7 @@ function toggleTight(){
   localStorage.setItem(TIGHT_KEY, document.body.classList.contains('tight') ? '0' : '1');
   _tightApply();
 }
-const BUILD_TAG = 'F26';   // 미리보기 자리 — 배치를 버티는 규칙(폭·높이·overflow)까지 함께 모드 밖으로
+const BUILD_TAG = 'F27';   // 필름 자리도 모드 밖으로 — '넓게'에서 필름이 안 펼쳐지던 것
 (function(){ const b=document.getElementById('buildtag'); if(b) b.textContent = BUILD_TAG; })();
 
 function toggleHints(){
