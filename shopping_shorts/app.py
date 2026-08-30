@@ -5707,9 +5707,16 @@ def api_share_link(job_id: str, request: Request):
     return {"ok": True, "url": url, "qr_svg": qr}
 
 
-@app.get("/api/share/v/{sid}")
+@app.api_route("/api/share/v/{sid}", methods=["GET", "HEAD"])
 def api_share_v(sid: str, dl: int = 0):
-    """단축 id로 영상 스트리밍(로그인 불필요·저장소 조회). allowlist 경로."""
+    """단축 id로 영상 스트리밍(로그인 불필요·저장소 조회). allowlist 경로.
+
+    ★HEAD를 반드시 받는다(2026-08-30 실사고). Buffer는 영상을 가져가기 전에
+      **HEAD로 먼저 확인**하는데, GET만 등록돼 있으면 404가 나가고 예약이
+      "Video could not be read from its URL."로 거절된다.
+      실측: 같은 주소가 GET 200(41MB, video/mp4) / HEAD 404였다.
+      FileResponse는 HEAD면 본문을 안 보내고 헤더만 준다 — 우리가 따로 갈 필요 없다.
+    """
     job_id = _share_get(sid)
     if not job_id:
         return JSONResponse(status_code=403, content={"ok": False, "error": "링크가 만료됐어요"})
@@ -5863,7 +5870,12 @@ async def api_buffer_schedule(request: Request):
         return JSONResponse(status_code=403, content={"ok": False, "error": "내 작업이 아닙니다."})
 
     sid = _share_put(job_id, _SHARE_TTL_BUFFER)
+    # ★Buffer는 **HTTPS**를 요구한다(buffer_api 머리말). 그런데 프록시 뒤라
+    #   request.base_url이 http로 잡혀 301 리다이렉트 주소를 넘기고 있었다
+    #   (실측 2026-08-30: http://…/api/share/v/xxx → 301). 여기서 https로 못박는다.
     base = str(request.base_url).rstrip("/")
+    if base.startswith("http://"):
+        base = "https://" + base[len("http://"):]
     video_url = f"{base}/api/share/v/{sid}"
 
     out = []
