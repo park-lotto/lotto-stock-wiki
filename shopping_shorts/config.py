@@ -316,6 +316,13 @@ TTS_MAX_WORKERS = int(os.getenv("TTS_MAX_WORKERS", "3"))
 # http://user:pass@host:port). 우선순위: 프록시 > 릴레이(A) > 직접. 미설정이면 기존 A/직접 그대로(회귀0).
 YTDLP_PROXY = os.getenv("YTDLP_PROXY", "")
 
+# 네이버 클립 벤치마킹 채널 매일 자동수집(2026-08-31). 샤홍·인스타 발굴과 같은
+# 계약으로 **기본은 꺼둔다** — 켜는 건 서버 env에서 한다(병합만으로 라이브 동작이
+# 바뀌면 안 된다). 실측 부담: 15채널 915건에 4.2초라 배치에 얹어도 티가 안 난다.
+NAVERCLIP_AUTO_COLLECT = os.getenv("NAVERCLIP_AUTO_COLLECT", "") == "1"
+# 채널당 몇 편까지 볼 것인가. 매일 도는 거라 신규만 잡으면 되므로 크게 둘 이유가 없다.
+NAVERCLIP_AUTO_PER_CHANNEL = int(os.getenv("NAVERCLIP_AUTO_PER_CHANNEL", "60"))
+
 YT_RELAY_ENABLED = os.getenv("YT_RELAY_ENABLED", "") == "1"
 YT_RELAY_KEY = os.getenv("YT_RELAY_KEY", "")
 YT_RELAY_DIR = Path(__file__).parent / "data" / "yt_relay"   # 에이전트가 올린 mp4 보관

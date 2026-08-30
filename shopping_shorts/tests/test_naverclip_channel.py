@@ -224,3 +224,81 @@ def test_seed_rejects_unknown_handle(monkeypatch):
     assert d["added"] == ["good"]
     assert d["not_found"] == ["@오타채널"]
     assert added == [("naverclip", "account", "good")]
+
+
+# ── 크론 자동수집 (2026-08-31) ─────────────────────────────────────────
+# ★수집 로직을 API 안에 두면 크론이 그걸 못 쓴다 → 같은 코드를 두 벌 쓰게 되고
+#   언젠가 어긋난다(0순위-B). 그래서 collect_channels()로 뽑아 둘이 같이 쓴다.
+
+def test_collect_channels_is_shared_by_api_and_cron():
+    """★API와 크론이 **같은 함수**를 불러야 한다."""
+    import inspect
+    from shopping_shorts import app as ss, daily_batch as db
+    assert hasattr(ss, "collect_channels"), "공용 수집 함수가 있어야 한다"
+    api_src = inspect.getsource(ss._api_naverclip_channels_collect)
+    assert "collect_channels(" in api_src, "API가 공용 함수를 안 쓴다"
+    cron_src = inspect.getsource(db._collect_naverclip_channels)
+    assert "collect_channels(" in cron_src, "크론이 공용 함수를 안 쓴다"
+
+
+def test_cron_killswitch_off_by_default(monkeypatch):
+    """킬스위치가 꺼져 있으면 아무것도 안 한다(샤홍·인스타 발굴과 같은 계약)."""
+    from shopping_shorts import daily_batch as db, config
+    monkeypatch.setattr(config, "NAVERCLIP_AUTO_COLLECT", False, raising=False)
+    assert db._collect_naverclip_channels() == 0
+
+
+def test_cron_failure_does_not_kill_batch(monkeypatch):
+    """★수집이 터져도 배치 전체를 죽이지 않는다 — 다른 유지보수는 돌아야 한다."""
+    from shopping_shorts import daily_batch as db, config, app as ss
+    monkeypatch.setattr(config, "NAVERCLIP_AUTO_COLLECT", True, raising=False)
+
+    def _boom(*a, **k):
+        raise RuntimeError("네이버가 통로를 바꿈")
+
+    monkeypatch.setattr(ss, "collect_channels", _boom)
+    assert db._collect_naverclip_channels() == 0      # 예외가 새면 안 된다
+
+
+def test_cron_calls_collect_and_returns_count(monkeypatch):
+    from shopping_shorts import daily_batch as db, config, app as ss
+    monkeypatch.setattr(config, "NAVERCLIP_AUTO_COLLECT", True, raising=False)
+    monkeypatch.setattr(ss, "collect_channels",
+                        lambda **kw: {"ok": True, "added": 42, "count": 900})
+    assert db._collect_naverclip_channels() == 42
+
+
+def test_seeds_are_read_as_dicts(monkeypatch):
+    """★store.list_seeds는 **dict 리스트**를 준다 — 튜플로 언패킹하면 안 된다.
+
+    실사고(2026-08-31, 브라우저 실측에서 잡힘): `for _k, v, _a in store.list_seeds(...)`로
+    받아 v가 컬럼 이름 문자열("value")이 되었다. 오류 없이 **채널 15개에서 0건**이
+    수집됐고, 로그에도 아무 흔적이 없었다. 목킹 테스트는 시드 경로를 안 타서(빈 시드)
+    통과했다 — 브라우저에서 실제로 눌러 보고서야 드러났다.
+    """
+    from shopping_shorts import app as ss
+
+    seen = {}
+
+    class _FakeStore:
+        def __init__(self, *a, **k):
+            pass
+
+        def list_seeds(self, platform):
+            # 실제 store가 주는 모양 그대로
+            return [{"kind": "account", "value": "temtembara", "added_at": "x"},
+                    {"kind": "account", "value": "https://clip.naver.com/@queenssalon",
+                     "added_at": "x"}]
+
+        def merge_last_run_platform(self, platform, items, now):
+            return 0, 0
+
+    monkeypatch.setattr(ss, "Store", _FakeStore)
+    monkeypatch.setattr(nc, "profile_by_handle",
+                        lambda h: (seen.setdefault("handles", []).append(h) or
+                                   {"profile_id": "P", "nickname": h, "followers": 1}))
+    monkeypatch.setattr(nc, "channel_videos", lambda pid, want=60: [])
+
+    ss.collect_channels(per_channel=5)
+    # URL로 심은 것도 핸들로 풀려야 한다
+    assert sorted(seen["handles"]) == ["queenssalon", "temtembara"]
