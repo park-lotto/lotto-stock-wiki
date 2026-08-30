@@ -11534,8 +11534,14 @@ function renderPresetCards(){
   //   (여기서 group_id로 추측하면 판단이 두 벌이 된다 — engineBadge와 같은 규칙).
   const q = (VOICE_Q||'').trim().toLowerCase();
   const hit = g => !q || (String(g.name||'')+' '+String(g.one_liner||'')).toLowerCase().includes(q);
+  // ★엔진 이름은 **서버가 주는 값 그대로** 쓴다(2026-08-30 실사고).
+  //   서버(app.py, voice_presets)는 "elevenlabs"/"typecast"를 준다. 여기서 'eleven'으로
+  //   줄여 비교했더니 일레븐랩스 성우 47명이 **어느 열에도 안 걸려 통째로 사라졌다**
+  //   (라이브 화면에 "성우가 없어요"로 떴다). 같은 이름을 두 곳에서 다르게 적으면
+  //   반드시 어긋난다(0순위-B) — 서버 값을 그대로 쓰고 옛 표기만 관대하게 받아준다.
   const colHtml = (list, engine) => {
-    const mine = list.filter(g => ((g.engine||'eleven')===engine) && hit(g));
+    const eng = g => { const e=String(g.engine||'elevenlabs'); return e==='eleven'?'elevenlabs':e; };
+    const mine = list.filter(g => eng(g)===engine && hit(g));
     if(!mine.length) return '<div class="hint" style="padding:8px 2px">'
       + (q ? '검색 결과가 없어요' : '성우가 없어요') + '</div>';
     const best = mine.filter(g=>g.best), rest = mine.filter(g=>!g.best);
@@ -11548,13 +11554,13 @@ function renderPresetCards(){
       <div style="display:${VOICES_EXPANDED?'block':'none'}">${rest.map(cardHtml).join('')}</div>` : '';
     return best.map(cardHtml).join('') + more;
   };
-  const tcNote = '<div class="hint" style="margin-bottom:6px;padding:6px 8px;border:1px solid #7a5f1c;'
-    + 'border-radius:7px;background:#241f12;color:#ffc75a;font-size:11.5px;line-height:1.5">'
-    + '서버에 API 키가 없으면 소리가 나지 않습니다</div>';
+  // ★타입캐스트 경고문을 뺐다(2026-08-30) — 키는 서버에 이미 등록돼 있는데(실측)
+  //   "API 키가 없으면 소리가 안 납니다"를 무조건 띄워, 멀쩡한 성우를 못 믿게 만들었다.
+  //   진짜로 키가 없으면 합성이 실패하며 그때 오류로 알려준다 — 상시 경고는 거짓말이다.
   document.getElementById('presetCards').innerHTML =
       '<div class="voiceCols">'
-    +   '<div><div class="voiceColHead">일레븐랩스</div>' + colHtml(VOICE_GROUPS,'eleven') + '</div>'
-    +   '<div><div class="voiceColHead">타입캐스트</div>' + tcNote + colHtml(VOICE_GROUPS,'typecast') + '</div>'
+    +   '<div><div class="voiceColHead">일레븐랩스</div>' + colHtml(VOICE_GROUPS,'elevenlabs') + '</div>'
+    +   '<div><div class="voiceColHead">타입캐스트</div>' + colHtml(VOICE_GROUPS,'typecast') + '</div>'
     + '</div>';
 }
 
