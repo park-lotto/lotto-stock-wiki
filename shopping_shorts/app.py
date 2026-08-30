@@ -11426,6 +11426,20 @@ def _api_pinterest_collect(request: Request, body: dict = None):
             "keywords": kws, "collected_at": now}
 
 
+# 뷰티 기본 키워드(2026-08-30 실측으로 고른 것). 한 단어의 천장이 약 500건이라
+# 규모를 키우려면 페이지가 아니라 **키워드를 쪼개는** 수밖에 없다 — 이 20개로
+# 고유 2,525건을 모았다(겹치는 건 mediaId로 자동 중복제거).
+# ⚠️이 중 5개(립메이크업·피부관리·눈썹정리·다이소뷰티·모공관리)는 0건이 나왔다.
+#   파서 문제인지 진짜 결과가 없는 건지 아직 안 갈랐다 — 그래서 목록에는 남겨 두고
+#   (비용이 키워드당 1초 남짓) 원인이 밝혀지면 그때 고친다.
+_NAVERCLIP_BEAUTY_KWS = (
+    "뷰티", "메이크업", "스킨케어", "화장품", "네일", "헤어", "아이메이크업",
+    "립메이크업", "쿠션추천", "다이어트", "피부관리", "눈썹정리", "속눈썹",
+    "향수추천", "올리브영", "여드름", "다이소뷰티", "헤어스타일링",
+    "베이스메이크업", "모공관리",
+)
+
+
 @app.post("/api/naverclip/collect")
 def _api_naverclip_collect(request: Request, body: dict = None):
     """네이버 클립 수집 — **관리자 전용·무료**(2026-08-30 사장님 "핀터레스트 옆에").
@@ -11446,21 +11460,33 @@ def _api_naverclip_collect(request: Request, body: dict = None):
     body = body or {}
     kws = [k.strip() for k in (body.get("keywords") or []) if str(k).strip()]
     if not kws:
-        kws = ["뷰티"]                  # 첫 카테고리(2026-08-30 사장님 "뷰티쪽으로")
-    kws = kws[:12]
+        kws = list(_NAVERCLIP_BEAUTY_KWS)   # 뷰티 한 벌(2026-08-30 사장님 "뷰티쪽으로")
+    kws = kws[:24]
     try:
-        per = max(5, min(int(body.get("per_keyword") or 20), 60))
+        # 한 키워드의 천장이 약 500건이라 기본을 600으로 둔다(실측 '뷰티' 520건).
+        per = max(5, min(int(body.get("per_keyword") or 600), 1000))
     except (TypeError, ValueError):
-        per = 20
+        per = 600
+    # 72건을 넘겨 달라고 하면 페이지를 끝까지 판다(3페이지=72건이 얕은 기본값).
+    pages = 40 if per > 72 else 3
 
     now_dt = datetime.now(timezone.utc)
-    items, seen = [], set()
-    for kw in kws:
+
+    def _one(kw):
+        # ★예외 격리 — 키워드 하나가 죽어도 나머지는 산다(핀터레스트와 같은 계약).
         try:
-            found = naverclip_search.search(kw, max_results=per)
-        except Exception as e:          # noqa: BLE001 — 한 키워드 실패로 전체를 죽이지 않는다
+            return naverclip_search.search(kw, max_results=per, pages=pages)
+        except Exception as e:          # noqa: BLE001
             logging.warning("naverclip 수집 실패(%s): %s", kw, type(e).__name__)
-            continue
+            return []
+
+    # 키워드도 병렬로 돈다. 실측: 20키워드 목록훑기 순차 ~10분 → 6스레드 37초.
+    # 폭을 6으로 묶는 건 상세(키워드당 8스레드)까지 겹치면 동시 연결이 과해지기 때문.
+    with ThreadPoolExecutor(max_workers=max(1, min(len(kws), 6))) as _ex:
+        _found_all = list(_ex.map(_one, kws))
+
+    items, seen = [], set()
+    for kw, found in zip(kws, _found_all):
         for it in found:
             mid = it.get("mediaId") or ""
             if not mid or mid in seen:
