@@ -371,3 +371,39 @@ def test_film_caption_never_overruns_next_caption():
     """end가 다음 자막을 넘겨 들어와도 겹치지 않는다(자막끼리 포개지면 못 읽는다)."""
     got = _caps_ends([[0.0, "가", 9.9], [3.5, "나", 4.0]])
     assert round(got[0][1], 2) == 3.5, got
+
+
+# ── 필름 칸 검정 (2026-08-30 사장님 "검정화면이 필름에 계속 나온다") ──────────────
+# 원인: strip/filmframes가 `loadedmetadata`(readyState 1 = 길이·크기만 앎)만 기다리고
+# drawImage를 했다. 그 상태엔 **그릴 픽셀이 없어** 검은 프레임이 나오고, 그게 CACHE에
+# 구워지면 아무도 다시 안 뽑아 **영영 검정**이었다.
+# 실측(400kbps+CPU 4배): 고치기 전 그려진 16칸이 16칸 모두 검정(0.25~5.75초 앞쪽 연속),
+# 고친 뒤 검정 0 + 네트워크가 풀리면 60칸 전부 자동으로 채워짐.
+
+def _filmroll_src():
+    return (_pathlib.Path(__file__).resolve().parents[1]
+            / "static" / "filmroll.js").read_text(encoding="utf-8")
+
+
+def test_그릴_수_있나_판정이_한_곳뿐이다():
+    """canShoot 정의는 하나여야 한다(0순위-B) — 두 벌이 되면 한쪽만 고쳐진다."""
+    src = _filmroll_src()
+    assert src.count("const canShoot =") == 1, "canShoot 정의가 여러 벌이다"
+    assert "v.readyState >= 2" in src, "readyState 2(픽셀 있음) 기준이 사라졌다"
+
+
+def test_픽셀_없이는_그리지_않는다():
+    """drawImage 앞에 canShoot 가드가 있어야 한다 — 없으면 검정이 캐시에 굽힌다."""
+    src = _filmroll_src()
+    for m in _re.finditer(r"drawImage\(", src):
+        before = src[max(0, m.start() - 900):m.start()]
+        assert "canShoot" in before, (
+            "canShoot 가드 없이 drawImage하는 자리가 있다 — 검은 프레임이 캐시된다 "
+            f"(위치 {src.count(chr(10), 0, m.start()) + 1}줄)")
+
+
+def test_빈_결과는_캐시하지_않는다():
+    """전부 빈 프레임이면 FRAME_CACHE에 굽지 않는다(구우면 다시 안 뽑는다)."""
+    src = _filmroll_src()
+    assert "if (out.some(Boolean)) FRAME_CACHE[key] = out;" in src, \
+        "filmframes가 빈 결과까지 캐시한다"
