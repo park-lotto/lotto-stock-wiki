@@ -755,6 +755,363 @@
     }
 
     /* ══════════════════════════════════════════════════════════════════════
+       🔍 장면 확대 (2026-08-30 사장님 "장면 확대기능 / 부분확대 / 어떤지점을
+       클릭해서 / 최대한 쉽게 · 캡컷보다 더 쉽게")
+       ★왜 transform:scale인가 — 컨테이너 폭(--pvw)을 키우면 배경만 커지고 글자는
+         안 커진다. 글자 px은 `PREVIEW_W=380` 상수로 계산되는데(12곳) 이 상수는
+         서버 렌더(_UI_REF_W=720)와 짝이라 절대 못 바꾼다(3281행 주석).
+         scale은 자식 전부를 같은 비율로 확대하므로 그 12곳을 한 줄도 안 건드린다.
+       ★드래그 회귀 없음 — 좌표 계산이 전부 pv.getBoundingClientRect() 기준이고,
+         그 값에는 scale이 이미 반영된다(비율(%)이 그대로 맞는다).
+       ★자리(레이아웃)는 안 흔든다 — .zoomStage가 원래 크기를 유지하고 그 안에서만
+         확대된다. sticky(.previewSlot)·우측 편집칸 폭은 한 픽셀도 안 변한다.
+       ══════════════════════════════════════════════════════════════════════ */
+    /* 확대해도 자리를 안 먹도록 원래 크기의 창(window) 역할 — 넘치는 부분은 잘린다 */
+    .zoomStage{position:relative;overflow:hidden;border-radius:12px;touch-action:none}
+    /* 실제로 커지는 건 이 안쪽. transform-origin을 클릭 지점으로 바꿔 그 자리를 확대한다 */
+    /* ★확대되는 건 **배경 영상뿐**이다 (2026-08-30 사장님 "확대해도 자막 비율과 위치는 고정")
+       #hcPreview 통째로 scale하면 우리가 입힌 자막·헤드카피까지 같이 커져서, 완성본에서
+       자막이 어떻게 보일지를 알 수 없게 된다. 배경(#hcPreviewBg)에만 걸면 나머지 레이어
+       (capPreviewText·hcPreviewText·extraPreview·ovPreview·wmPreview)는 **저절로** 제자리에
+       남는다 — 자막 코드를 한 줄도 안 건드린다.
+       ★그래서 PREVIEW_W(=380, 서버 렌더와 짝) 문제도 애초에 안 생긴다: 자막 크기는
+         확대와 무관하게 늘 실제 비율 그대로다.
+
+       ★translate + scale 방식 (종전 transform-origin 방식은 두 가지가 틀렸다 — 실측):
+         ① 원점을 0~100%로 가둬도 **가장자리까지 못 간다** — Z=1.3에서 원점을 끝까지
+            밀어도 하단 23%는 영영 안 보인다(자막이 거기 있는데 갈 수가 없었다).
+         ② 이동 감도가 배율에 반비례해 폭주 — Δorigin=-dr/(Z-1)이라 Z=1.3이면 **333배**.
+       translate는 끈 만큼 1:1로 움직이고(감도가 배율과 무관), 모서리까지 전부 볼 수 있다.
+       ★순서: scale()을 먼저, translate를 나중에 — translate가 확대된 좌표계에서 해석돼
+         계산이 단순해진다(이동 px을 ÷ZOOM 해서 넘긴다). */
+    .zoomStage > #hcPreview{ transform:none }        /* 통째 확대는 하지 않는다 */
+    #hcPreviewBg{
+      transform-origin:50% 50%;
+      transform:scale(var(--zoom,1)) translate(var(--ztx,0px), var(--zty,0px));
+      transition:transform .18s ease-out;
+      will-change:transform;
+    }
+    /* 끄는 중엔 전환을 끈다 — 안 그러면 손가락보다 화면이 늦게 따라와 미끄러진다 */
+    .zoomStage.grabbing #hcPreviewBg{transition:none}
+    /* 확대 중엔 배경 어디서든 끌어서 움직일 수 있다는 걸 커서로 알린다 */
+    .zoomStage.zoomed{cursor:grab}
+    .zoomStage.zoomed.grabbing{cursor:grabbing}
+    /* 확대 배율 표시 알약 — 미리보기 위에 겹쳐 띄운다(자리를 안 먹는다) */
+    .zoomBadge{
+      position:absolute;left:8px;top:8px;z-index:9;
+      background:rgba(0,0,0,.62);color:#fff;border-radius:999px;
+      padding:4px 10px;font-size:12px;font-weight:700;pointer-events:none;
+      display:none;
+    }
+    .zoomStage.zoomed .zoomBadge{display:block}
+    /* 확대 조작줄 */
+    /* ★확대 UI는 상자로 묶는다 — 회색 hint로 흘려 놓으면 "이게 무슨 기능인지" 안 읽힌다
+       (2026-08-30 사장님 지적). 제목 한 줄 + 조작 한 줄 + 설명 한 줄로 끝낸다. */
+    .zoomPanel{
+      border:1px solid var(--line);border-radius:10px;
+      background:var(--inset);padding:8px 10px;margin-bottom:8px;
+    }
+    .zoomTitle{
+      display:flex;align-items:center;gap:6px;
+      font-size:13px;font-weight:800;color:var(--txt);margin-bottom:6px;
+    }
+    /* 긴 설명(보기 전용·자막 고정)은 여기 접어 둔다 — 필요한 사람만 올려보면 된다 */
+    .zoomTip{
+      cursor:help;color:var(--sub);font-weight:400;font-size:12px;
+      border:1px solid var(--line);border-radius:50%;width:16px;height:16px;
+      display:inline-flex;align-items:center;justify-content:center;line-height:1;
+    }
+    /* 지금 배율 — 제목 줄 오른쪽 끝에 붙여 늘 보이게(미리보기 위 뱃지는 확대 때만 뜬다) */
+    .zoomNow{margin-left:auto;font-size:12px;font-weight:700;color:var(--accent2)}
+    /* 설명은 한 줄. 상황에 따라 문장이 바뀐다(_zoomApply) */
+    .zoomSay{font-size:12px;color:var(--sub);margin-top:6px;line-height:1.45}
+    /* 모든 장면 적용 토글 */
+    .zoomAll{
+      display:flex;align-items:center;gap:6px;margin-top:7px;
+      font-size:12px;color:var(--sub);cursor:pointer;user-select:none;
+    }
+    .zoomAll input{cursor:pointer;accent-color:var(--accent2);width:15px;height:15px}
+    /* 체크 + 저장버튼 + 상태를 한 줄에 */
+    .zoomFoot{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:7px}
+    .zoomFoot .zoomAll{margin-top:0;margin-right:auto}
+    .zoomFoot .zbtn{padding:5px 10px;font-size:12px;min-height:32px}
+    .zoomSaved{font-size:12px;color:var(--ok);min-width:0}
+    .zoomBar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px}
+    .zoomBar .zbtn{
+      min-width:auto;padding:6px 12px;font-size:13px;min-height:36px;
+      border:1px solid var(--line);border-radius:8px;
+      background:var(--inset);color:var(--txt);cursor:pointer;
+    }
+    .zoomBar .zbtn:hover{background:var(--hover)}
+    /* ★min-width는 60px — 이보다 크면 280px 칸(기본 --pvw)에서 ＋가 아랫줄로 밀린다(실측:
+         라벨69+버튼38+슬라이더153+버튼38=298 > 280). 조작줄은 반드시 한 줄이어야 그 아래
+         미리보기가 안 밀린다. */
+    .zoomBar input[type=range]{flex:1 1 60px;min-width:60px;accent-color:var(--accent2)}
+    /* 확대 중에만 나타나는 '원래대로'까지 들어와도 한 줄을 지키게 버튼을 조금 좁힌다 */
+    .zoomBar .zbtn{white-space:nowrap}
+
+    /* ══════════════════════════════════════════════════════════════════════
+       6단계(자막꾸미기) 보기 좋게 — 2026-08-29 사장님 "사용자들 편하게 ui를
+       보기좋게 잡아보자 / 디자인요소 넣어서"
+       ★위 블록(2026-08-19 '크게')과 같은 자리에 이어 쓴다 — 이 패널의 모양을
+         정하는 곳은 여기 하나다(0순위-B). inline style을 이기려면 !important가 필요.
+       ★선택자는 전부 실측으로 확인했다(2026-08-29 브라우저):
+         · 활성 탭 클래스 = `.on`
+         · #decoPaneStyle 직계 자식 순서 = 제목 / #fullPresets / #moreStylesBtn /
+           제목 / #myPresets / 저장줄 / #advDetails  → nth-child(1)·(4)가 제목
+         · #advBody 자식 = details ×3 (가운데는 hidden)
+         · 스타일 카드는 클래스 없는 <button> → **선택 표시 규칙은 넣지 않았다**
+           (없는 클래스를 지어내면 조용히 안 먹는다)
+       ══════════════════════════════════════════════════════════════════════ */
+
+    /* 0. 우측 칼럼 넘침 방지 — flex 아이템은 min-width가 auto라 내용이 넓으면
+          뷰포트를 뚫는다(사장님 캡쳐에서 '지금 스타일 저장'이 잘려 있었다). */
+    .panel[data-step="3"] div:has(> #decoTabs){min-width:0!important}
+
+    /* 1. 탭 = 세그먼트 컨트롤. `.tab{flex:1;min-width:150px}` 때문에 4개가 1021px을
+          4등분해 비대했다 → 내용 폭 알약으로. 시니어 확대(16px)는 그대로. */
+    .panel[data-step="3"] #decoTabs{
+      display:inline-flex!important;
+      width:max-content;max-width:100%;
+      background:var(--inset);border:1px solid var(--line);
+      border-radius:999px;padding:5px!important;gap:4px!important;
+    }
+    .panel[data-step="3"] #decoTabs .tab{
+      flex:0 0 auto!important;min-width:auto!important;
+      border-radius:999px!important;border-color:transparent!important;
+      background:transparent!important;color:var(--sub)!important;
+      transition:background .18s,color .18s;
+    }
+    .panel[data-step="3"] #decoTabs .tab:hover{
+      background:var(--hover)!important;color:var(--txt)!important;
+    }
+    .panel[data-step="3"] #decoTabs .tab.on{
+      background:var(--grad)!important;color:#06251c!important;
+      font-weight:800!important;border-color:transparent!important;
+      box-shadow:0 2px 10px rgba(55,224,189,.28);
+    }
+
+    /* 2. 섹션 제목 = 색 막대 라벨. 제목 div엔 id가 없어 직계 자식 순서로 잡는다.
+          ⚠️#decoPaneStyle의 자식 순서가 바뀌면 이 두 줄을 따라 고쳐야 한다. */
+    .panel[data-step="3"] #decoPaneStyle > div:nth-child(1),
+    .panel[data-step="3"] #decoPaneStyle > div:nth-child(4){
+      font-size:17px!important;
+      padding-left:11px;border-left:4px solid var(--accent);
+      line-height:1.3;margin-bottom:10px!important;
+    }
+    .panel[data-step="3"] #decoPaneStyle > div:nth-child(4){
+      border-left-color:var(--gold);margin-top:22px!important;
+    }
+
+    /* 3. 완성 스타일 = 주인공. 88px 카드가 왼쪽에 몰리고 오른쪽 700px이 비어 있었다
+          → grid가 폭을 채운다. 카드가 커지며 라벨 잘림도 함께 풀린다. */
+    .panel[data-step="3"] #fullPresets{
+      display:grid!important;
+      grid-template-columns:repeat(auto-fill,minmax(120px,140px));
+      justify-content:start;
+      gap:12px!important;margin-bottom:10px!important;
+      background:var(--inset);border:1px solid var(--line);
+      border-radius:14px;padding:14px;
+    }
+    .panel[data-step="3"] #fullPresets > *{
+      width:auto!important;min-width:0!important;
+      border-radius:12px;cursor:pointer;
+      transition:transform .15s,box-shadow .15s,border-color .15s;
+    }
+    .panel[data-step="3"] #fullPresets > *:hover{
+      transform:translateY(-2px);
+      box-shadow:0 6px 18px rgba(0,0,0,.4),0 0 0 1px var(--accent2);
+    }
+    .panel[data-step="3"] #moreStylesBtn{
+      display:block!important;margin:0 0 6px auto!important;
+      background:transparent!important;color:var(--accent2)!important;
+      border:1px dashed var(--line)!important;border-radius:999px!important;
+    }
+    .panel[data-step="3"] #moreStylesBtn:hover{
+      color:var(--accent)!important;border-color:var(--accent2)!important;
+    }
+
+    /* 4. 내 프리셋 — 칩 목록을 판으로, 이름칸이 혼자 900px 먹던 것을 제한. */
+    .panel[data-step="3"] #myPresets{
+      background:var(--inset);border:1px solid var(--line);
+      border-radius:14px;padding:12px 14px;margin-bottom:8px!important;
+      min-height:46px;
+    }
+    .panel[data-step="3"] #myPresetName,
+    .panel[data-step="3"] #capPresetName{
+      max-width:340px!important;
+      font-size:16px!important;padding:10px 12px!important;
+      transition:border-color .15s,box-shadow .15s;
+    }
+    .panel[data-step="3"] #myPresetName:focus,
+    .panel[data-step="3"] #capPresetName:focus{
+      outline:none;border-color:var(--accent)!important;
+      box-shadow:0 0 0 3px rgba(55,224,189,.18);
+    }
+
+    /* 5. 직접 다듬기 = 보조. 완성 스타일과 같은 무게로 보이던 위계를 눌러준다. */
+    .panel[data-step="3"] #advDetails{
+      border:1px solid var(--line);border-radius:14px;
+      padding:4px 16px 12px;margin-top:18px;
+      background:rgba(12,20,18,.45);
+    }
+    .panel[data-step="3"] #advDetails > summary{
+      font-size:15px!important;color:var(--sub)!important;
+      padding:10px 0!important;list-style:none;
+      transition:color .15s;
+    }
+    .panel[data-step="3"] #advDetails > summary:hover{color:var(--accent2)!important}
+    .panel[data-step="3"] #advDetails[open] > summary{color:var(--accent2)!important}
+    .panel[data-step="3"] #advBody > details > summary{
+      font-size:15px!important;transition:color .15s;
+    }
+    .panel[data-step="3"] #advBody > details > summary:hover{color:var(--accent)}
+
+    /* 6. 다듬기 안 컨트롤 줄.
+          ⚠️처음엔 이 줄들을 2열 grid로 바꿨다가 **되돌렸다**(2026-08-29 화면 확인).
+            여기 flex 줄들은 "라벨+입력+색+슬라이더"가 **가로로 붙어 있어야** 뜻이 통하는
+            묶음이라, grid로 쪼개니 워터마크 줄의 위치·크기·투명도가 사방으로 흩어지고
+            폰트 고르개가 40px로 짜부라졌다. 남는 폭을 쓰겠다고 뜻을 깨면 안 된다.
+          → flex는 그대로 두고 **간격과 폭 상한만** 손본다. */
+    .panel[data-step="3"] #advBody div[style*="flex-wrap"]{
+      gap:10px 14px!important;align-items:center;
+    }
+    /* 슬라이더가 790px까지 늘어나 한 줄을 혼자 먹었다 — 잡기 좋은 만큼만. */
+    .panel[data-step="3"] #advBody input[type="range"]{max-width:300px}
+    .panel[data-step="3"] #decoPaneFx input[type="range"]{max-width:420px}
+    /* 폰트 고르개는 글자가 보여야 고른다 */
+    .panel[data-step="3"] #advBody select{min-width:130px}
+    .panel[data-step="3"] #advBody label{
+      display:flex;align-items:center;gap:8px;
+      font-size:15px!important;color:var(--txt)!important;
+    }
+    .panel[data-step="3"] #decoPaneStyle input[type="range"]{
+      flex:1;min-width:120px;height:26px;
+      -webkit-appearance:none;appearance:none;background:transparent;cursor:pointer;
+    }
+    .panel[data-step="3"] #decoPaneStyle input[type="range"]::-webkit-slider-runnable-track{
+      height:8px;border-radius:999px;
+      background:linear-gradient(90deg,var(--accent2),var(--line));
+    }
+    .panel[data-step="3"] #decoPaneStyle input[type="range"]::-webkit-slider-thumb{
+      -webkit-appearance:none;width:22px;height:22px;margin-top:-7px;
+      border-radius:50%;background:var(--accent);
+      border:3px solid #06251c;box-shadow:0 1px 6px rgba(0,0,0,.5);
+      transition:transform .12s;
+    }
+    .panel[data-step="3"] #decoPaneStyle input[type="range"]:hover::-webkit-slider-thumb{
+      transform:scale(1.15);
+    }
+    .panel[data-step="3"] #decoPaneStyle input[type="color"]{
+      width:44px;height:34px;padding:2px;cursor:pointer;
+      border:1px solid var(--line);border-radius:9px;background:var(--inset);
+      transition:border-color .15s;
+    }
+    .panel[data-step="3"] #decoPaneStyle input[type="color"]:hover{border-color:var(--accent2)}
+    .panel[data-step="3"] #decoPaneStyle select{
+      font-size:16px!important;padding:8px 10px!important;border-radius:8px!important;
+    }
+    .panel[data-step="3"] #decoPaneStyle select:focus,
+    .panel[data-step="3"] #decoPaneStyle input:focus-visible{
+      outline:2px solid var(--accent);outline-offset:1px;
+    }
+    .panel[data-step="3"] #decoPaneStyle input[type="checkbox"]{
+      width:20px;height:20px;accent-color:var(--accent);cursor:pointer;
+    }
+
+    /* 7. 스크롤바 */
+    .panel[data-step="3"] ::-webkit-scrollbar{width:10px;height:10px}
+    .panel[data-step="3"] ::-webkit-scrollbar-track{background:var(--inset)}
+    .panel[data-step="3"] ::-webkit-scrollbar-thumb{
+      background:var(--line);border-radius:999px;border:2px solid var(--inset);
+    }
+    .panel[data-step="3"] ::-webkit-scrollbar-thumb:hover{background:var(--accent2)}
+
+
+    /* ── 🖼 템플릿 탭 정리 — 2026-08-29 사장님 "여기 너무 난잡한데 쓸 기능이긴해.
+          근데 접으면 안보이니 사용을 못하니까 제목같은건 구분을 잘하고 박스형태로 묶고
+          구성을 보기좋게 정리하는게 핵심"
+       ★접지 않는다. 대신 **박스로 구획**한다 — 접으면 있는 줄도 모르고 못 쓴다.
+       ★구조 실측(2026-08-29): #decoPaneTpl 안은 큰 카드 하나에 전부 들어 있고,
+         그 안에서 소섹션이 `border-top:1px dashed`로만 갈려 있어 경계가 안 보였다.
+         그 dashed 줄들을 각각 **박스**로 세운다(마크업은 안 바꾼다). */
+
+    /* 소섹션 = 박스. dashed 경계선은 박스 테두리로 대체한다(둘 다 있으면 지저분). */
+    .panel[data-step="3"] #decoPaneTpl div[style*="border-top:1px dashed"]{
+      border-top:0!important;
+      border:1px solid var(--line);border-radius:12px;
+      background:rgba(12,20,18,.55);
+      padding:12px 14px!important;margin-top:14px!important;
+    }
+    /* 소섹션 제목 — 12px 회색이라 본문에 묻혔다. 색 막대 + 키워서 "여기부터 딴 얘기"를 만든다. */
+    .panel[data-step="3"] #decoPaneTpl div[style*="border-top:1px dashed"] > div:first-child{
+      font-size:15px!important;font-weight:800!important;color:var(--txt)!important;
+      padding-left:10px;border-left:4px solid var(--accent2);
+      margin-bottom:10px!important;line-height:1.3;
+    }
+    /* 바깥 큰 카드의 제목(📰 내용물 있는 틀)은 한 급 위 */
+    .panel[data-step="3"] #decoPaneTpl > div:first-of-type > div:first-child{
+      font-size:16px!important;
+      padding-left:11px;border-left:4px solid var(--accent);
+    }
+
+    /* 틀 24종 — flex-wrap이라 줄마다 개수가 들쭉날쭉했다. 격자로 세워 가지런히. */
+    .panel[data-step="3"] #frPresets{
+      display:grid!important;
+      grid-template-columns:repeat(auto-fill,minmax(78px,1fr));
+      gap:10px!important;
+      max-height:300px;overflow-y:auto;padding-right:6px;
+    }
+    .panel[data-step="3"] #frPresets > *{
+      width:auto!important;min-width:0!important;
+      border-radius:10px;transition:transform .14s,box-shadow .14s;
+    }
+    .panel[data-step="3"] #frPresets > *:hover{
+      transform:translateY(-2px);box-shadow:0 5px 14px rgba(0,0,0,.45);
+    }
+
+    /* 값 입력 줄(채널명·제목·조회수·띠 높이) — 줄 사이 숨통과 세로 정렬. */
+    .panel[data-step="3"] #frFields > div{
+      margin-top:9px!important;align-items:center;
+    }
+    .panel[data-step="3"] #frFields > div:first-child{margin-top:0!important}
+    /* 입력칸이 제각각(150·260px)이라 왼쪽 끝이 안 맞았다 — 라벨 폭을 맞춘다. */
+    .panel[data-step="3"] #frFields > div > label{
+      display:inline-flex;align-items:center;gap:8px;
+    }
+    .panel[data-step="3"] #frChannel{width:200px!important}
+    .panel[data-step="3"] #frTitle{width:320px!important}
+
+    /* 색 고르개가 줄줄이 이어지는 줄(띠 색·띠 글자·제목 바탕·조회수 글자) —
+       한 덩이로 보이게 묶음마다 간격을 준다. */
+    .panel[data-step="3"] #decoPaneTpl label:has(> input[type="color"]){
+      background:var(--inset);border:1px solid var(--line);
+      border-radius:9px;padding:5px 9px;
+    }
+
+    /* 내 템플릿 저장 줄 — 이름칸이 혼자 늘어나던 것 제한 */
+    .panel[data-step="3"] #frTplName{max-width:340px!important}
+
+    @media (max-width:1500px){
+      .panel[data-step="3"] #frPresets{
+        grid-template-columns:repeat(auto-fill,minmax(70px,1fr));
+        max-height:250px;
+      }
+      .panel[data-step="3"] #frTitle{width:100%!important;max-width:320px}
+    }
+
+    /* 8. 좁은 화면 — 1366px에서 탭이 2줄로 접히고 우측이 492px까지 줄었다(실측). */
+    @media (max-width:1500px){
+      .panel[data-step="3"] #fullPresets{
+        grid-template-columns:repeat(auto-fill,minmax(110px,130px));
+      }
+      .panel[data-step="3"] #advBody input[type="range"]{max-width:220px}
+      .panel[data-step="3"] #myPresetName,
+      .panel[data-step="3"] #capPresetName{max-width:none!important}
+      .panel[data-step="3"] #decoTabs{width:100%;justify-content:space-between}
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
        T3 · 모바일 (≤768px) — 2026-08-15 신설. 제작소엔 폭 기반 미디어쿼리가 0건이었다.
        ★사이드바는 여기서 손대지 않는다: sidebar.js가 이미 @media(max-width:760px)로
          가로띠 규칙을 갖고 있고(6개 페이지 공용 단일 소스), 여기 또 적으면 두 벌이 된다.
@@ -1469,7 +1826,7 @@
               공용 [다음 →]이 그 검사를 거쳐야 한다(아래 배선 확인). -->
     </section>
     <section class="panel" data-step="3">
-      <h3 data-steptitle="deco">6 · 자막꾸미기</h3>
+      <h3 data-steptitle="deco">6 · 장면꾸미기</h3>
       <div class="sub">아래 <b>완성 스타일</b>을 고르면 바로 완성돼요. 실제 장면 위에서 미리보고, 더 손보고 싶으면 <b>직접 다듬기</b>를 펼치세요.</div>
       <!-- 🪞 피팅룸: 좌(큰 미러) + 우(문구·스타일카드·강조·고급) -->
       <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start;margin-top:12px">
@@ -1483,9 +1840,48 @@
         <div class="previewSlot decoMirror" style="flex:0 0 auto;width:var(--pvw)">
           <div class="hint" style="margin-bottom:4px">🪞 실시간 미리보기 (9:16) — 글자를 <b>드래그</b>해 위치 이동
             <label style="cursor:pointer;margin-left:6px;color:var(--txt)"><input type="checkbox" id="sceneBg" onchange="toggleSceneBg()"> 실장면 배경</label></div>
+          <!-- 🔍 장면 확대 (2026-08-30). ★사장님 "장면 확대 기능인 걸 모르겠고 짧고
+               직관적으로 설명하고 잘 보이게" — 종전엔 회색 hint 두 줄(총 4줄)이 늘어져
+               있어서 무슨 기능인지 읽히지 않았다. 상자로 묶고 **제목을 달아** 한눈에
+               "장면 확대"임을 보이게 하고, 설명은 **한 줄**로 줄인다.
+               긴 설명(보기 전용·자막 고정)은 ⓘ 툴팁으로 접어 넣는다 — 필요한 사람만 본다. -->
+          <div class="zoomPanel">
+            <div class="zoomTitle">
+              <span>🔍 장면 확대</span>
+              <span class="zoomTip" title="화면에서만 커집니다. 만들어지는 영상 크기는 그대로고, 자막도 확대와 상관없이 제자리·같은 크기로 남습니다.">ⓘ</span>
+              <span class="zoomNow" id="zoomNow">100%</span>
+            </div>
+            <div class="zoomBar">
+              <button type="button" class="zbtn" onclick="zoomStep(-1)" title="축소 (Alt+Shift+-)">－</button>
+              <input type="range" id="zoomRange" min="100" max="300" step="10" value="100"
+                     oninput="zoomSet(this.value/100); _zoomSaveSoon()" title="확대 배율">
+              <button type="button" class="zbtn" onclick="zoomStep(1)" title="확대 (Alt+Shift++)">＋</button>
+              <button type="button" class="zbtn" id="zoomResetBtn" onclick="zoomReset()"
+                      style="display:none" title="원래 크기로 (Alt+Shift+Z)">↩ 원래대로</button>
+            </div>
+            <div class="zoomSay" id="zoomHint">크게 볼 곳을 <b>누르세요</b></div>
+            <!-- ★모든 장면에 같은 배율 (2026-08-30 사장님 "해당 장면을 확대했으면 다른
+                 전체 장면도 같은 비율로 적용할지 말지 체크버튼"). 기본 켬 — 장면을 넘겨도
+                 배율이 유지되는 게 지금까지의 동작이고, 대개 그걸 원한다. 끄면 장면을
+                 넘길 때마다 100%로 돌아가 그 장면만 따로 확대해 볼 수 있다. -->
+            <div class="zoomFoot">
+              <label class="zoomAll" id="zoomAllWrap">
+                <input type="checkbox" id="zoomAll" checked onchange="zoomAllChanged()">
+                <span>모든 장면에 같은 배율</span>
+              </label>
+              <!-- ★자동 저장은 이미 되지만 **저장됐는지 눈에 보여야** 안심이 된다
+                   (2026-08-30 사장님 "저장버튼이 있어야 원활할 듯"). 버튼은 지금 즉시
+                   저장하고, 옆 글자가 결과를 말한다. -->
+              <button type="button" class="zbtn" id="zoomSaveBtn" onclick="zoomSaveNow()"
+                      title="이 확대 구도를 저장합니다(최종 영상에 그대로 나갑니다)">💾 저장</button>
+              <span class="zoomSaved" id="zoomSaved"></span>
+            </div>
+          </div>
           <!-- ★세로 크기는 화면 안에 들어와야 한다(2026-08-18 사장님 지시). 380px면 9:16이라
                675px가 돼 노트북 화면에서 아래가 잘려 하단 띠·자막 위치를 확인할 수 없다.
                폭은 부모의 --pvw를 그대로 받는다(정의처 한 곳) — aspect-ratio가 높이를 따라온다. -->
+          <div id="zoomStage" class="zoomStage" style="width:100%;aspect-ratio:9/16">
+          <div class="zoomBadge" id="zoomBadge">100%</div>
           <div id="hcPreview" style="position:relative;width:100%;aspect-ratio:9/16;background:#ffffff;border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.4)">
             <img id="hcPreviewBg" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none" alt="">
 <!-- 2026-07-27 사장님: "원본 자막이 있던 자리" 점선 박스 제거(필요 없음). 자동 정렬
@@ -1496,6 +1892,7 @@
             <img id="ovPreview" style="position:absolute;transform:translate(-50%,-50%);cursor:move;user-select:none;z-index:5;display:none" alt="">
             <div id="wmPreview" style="position:absolute;transform:translate(-50%,-50%);white-space:nowrap;z-index:6;pointer-events:none;display:none"></div>
           </div>
+          </div><!-- /#zoomStage -->
           <div id="beatStepper" style="display:none;margin-top:10px">
             <div style="display:flex;align-items:center;justify-content:center;gap:16px">
               <button type="button" class="tab" onclick="stepBeat(-1)" style="min-width:auto;padding:8px 14px;font-size:16px">◀</button>
@@ -2251,6 +2648,85 @@
       </div>
     </section>
 
+    <!-- 10) SNS 예약 발행 — 2026-08-29 사장님 "경쟁 프로그램은 버퍼를 연결해서 완성본
+         다음 단계에서 이걸 쓰고 있어. 개인 api키 넣게 등록하고".
+         ★고객이 자기 Buffer 개인 키를 등록해야만 쓸 수 있다(회사 키로 대신 못 한다) —
+           Buffer가 제3자 OAuth를 아직 안 열었다. buffer_api.py 머리말 참조.
+         ★영상은 파일로 안 올라간다. 예약할 때 임시 공개 링크(14일)를 발급하고 Buffer가
+           게시 시점에 그 주소로 직접 가져간다. -->
+    <section class="panel" data-step="9">
+      <h3 data-steptitle="sns">10 · SNS 예약 발행</h3>
+      <div class="sub">완성한 영상을 인스타·유튜브·틱톡 등에 예약해 올립니다. 올리는 곳은 <b>내 Buffer 계정</b>입니다.</div>
+
+      <!-- ★사용 가이드(2026-08-29 사장님 "고객들한테 사용 가이드 줘야지").
+           처음 오신 분이 무엇부터 해야 하는지 세 줄로. 자세한 건 그림 안내로 보낸다. -->
+      <details style="margin-bottom:12px;border:1px solid var(--line);border-radius:10px;padding:10px 12px">
+        <summary style="cursor:pointer;font-size:14px;font-weight:600">❓ 처음이신가요 — 이렇게 하시면 됩니다</summary>
+        <div style="margin-top:8px;font-size:13px;line-height:1.9">
+          <b>1.</b> <a href="https://buffer.com" target="_blank" rel="noopener" style="color:var(--accent2)">buffer.com</a> 에 무료로 가입합니다. <b>3채널까지 공짜</b>입니다.<br>
+          <b>2.</b> Buffer 안에서 <b>내 인스타·유튜브·틱톡 계정을 연결</b>합니다.<br>
+          <b>3.</b> Buffer 설정의 <b>API</b> 에서 키를 만들어
+                 <a href="/settings#keys" style="color:var(--accent2)">마이페이지 → 🔑 내 키 등록</a> 에 붙여넣습니다.<br>
+          <b>4.</b> 여기로 돌아오시면 <b>내 채널이 목록으로</b> 뜹니다. 고르고 예약하시면 끝입니다.
+          <div class="hint" style="margin-top:8px">
+            <a href="/api_manual.html#buffer" target="_blank" rel="noopener" style="color:var(--accent2)">📖 그림으로 보는 준비 방법</a>
+            &nbsp;·&nbsp; 키는 <b>숏템메이커가 대신해 드릴 수 없습니다</b> — 내 SNS에 올리는 일이라 내 키가 있어야 합니다.
+          </div>
+        </div>
+      </details>
+
+      <div id="bufNeedKey" class="warnBox" style="display:none;margin-bottom:12px">
+        먼저 <a href="/settings#keys" style="color:var(--accent2)">마이페이지 → 🔑 내 키 등록</a>에서
+        <b>Buffer 키</b>를 넣어 주세요. 이 키는 <b>숏템메이커가 대신해 드릴 수 없습니다</b> —
+        내 SNS 계정에 올리는 일이라 반드시 내 Buffer 키가 있어야 합니다.
+      </div>
+
+      <div id="bufBody" style="display:none">
+        <!-- ★무엇이 올라가는지 먼저 보여준다(2026-08-29 사장님 "서버에 저장된 걸 우리가
+             어떤 영상을 올릴지 어떻게 설명해야 하나"). 고객은 파일을 어디에 올린 적이
+             없으므로, 지금 이 작업의 완성본이 그대로 나간다는 것을 눈으로 보여줘야 한다. -->
+        <div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:14px;
+                    border:1px solid var(--line);border-radius:12px;padding:12px">
+          <div style="flex:0 0 108px"><div id="bufVideo"></div></div>
+          <div style="flex:1 1 260px;min-width:220px">
+            <div style="font-size:14px;font-weight:600;margin-bottom:4px">📼 올라갈 영상</div>
+            <div class="hint" id="bufVideoName" style="margin-bottom:6px"></div>
+            <div class="hint">이 작업에서 <b>완성한 영상 그대로</b> 올라갑니다.
+              파일을 따로 받아 올리실 필요 없습니다 —
+              <b>정한 시각이 되면 Buffer가 우리 서버에서 직접 가져갑니다.</b></div>
+          </div>
+        </div>
+
+        <div class="hint" style="margin-bottom:6px">📡 올릴 곳 (여러 곳 고를 수 있습니다)</div>
+        <div id="bufChannels" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px"></div>
+
+        <div class="hint" id="bufTextHint" style="margin-bottom:6px">✍️ 올릴 글</div>
+        <!-- ★채널마다 따로다(2026-08-29 사장님 "채널별로 태그·제목·해시태그·캡션 다 다양한데
+             만들어놓은 한 칸에 다 되는 거야?"). 인스타는 해시태그를 많이 달고 쓰레드는
+             거의 안 단다 — 8단계가 이미 플랫폼별로 만들어 두는데 여기서 하나로 뭉개면
+             그 구분이 통째로 죽는다. 고른 채널마다 칸이 하나씩 생긴다. -->
+        <div id="bufTexts"></div>
+
+        <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-top:12px">
+          <div>
+            <div class="hint" style="margin-bottom:6px">🕒 언제 올릴까요</div>
+            <label style="display:flex;align-items:center;gap:8px;min-height:44px;cursor:pointer">
+              <input type="radio" name="bufWhen" value="queue" checked>
+              <span>내 Buffer 시간표에 맡기기 <span class="hint">(Buffer에서 정해둔 시간에 순서대로)</span></span>
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;min-height:44px;cursor:pointer">
+              <input type="radio" name="bufWhen" value="at">
+              <span>직접 정하기</span>
+              <input type="datetime-local" id="bufAt" style="margin-left:4px">
+            </label>
+          </div>
+        </div>
+
+        <button id="btnBufGo" class="btn-next" style="padding:12px 22px;margin-top:12px" onclick="bufSchedule()">📅 예약하기</button>
+        <div id="bufStatus" class="hint" style="margin-top:10px"></div>
+      </div>
+    </section>
+
     <!-- 8) 화면 붙이기(매칭) — Task 6(2026-07-23) 신규. 물리적으로는 꼬리에 붙지만(data-step=7,
          기존 인덱스 불변) 오브바에선 2번째로 보인다(ORB_TO_PANEL[1]=7). ⚡시작(Task4)이 매칭을
          걸고, 완료되면 pollMix가 이 패널로 데려온다(패널0=제작소는 그대로, 미리보기는 여기로 이사).
@@ -2516,10 +2992,10 @@
 //   대본(신규 패널 8)을 2번째로 세우고, 장면 편집(패널 7)을 3번째로 민다.
 //   ★물리 패널 번호(data-step)는 그대로 두고 이 매핑만 바꾼다 — cur===n 분기가
 //   파일 곳곳에 박혀 있어 번호를 다시 매기면 전부 어긋난다.
-const STEP_LABELS = ["영상추출/분석","대본생성","영상대본MIX","고품질 자막제거","TTS음성","자막꾸미기","썸네일","제목·태그","완성본"];
+const STEP_LABELS = ["영상추출/분석","대본생성","영상대본MIX","고품질 자막제거","TTS음성","장면꾸미기","썸네일","제목·태그","완성본","SNS 예약"];
 // ★도크 라벨은 11px이라 긴 이름이 두 줄로 접힌다 → 도크에서만 줄여 쓴다(패널 제목은 STEP_LABELS 그대로).
 //   빈 문자열이면 STEP_LABELS를 그대로 쓴다 — 두 벌을 다 적지 않기 위해서다(0순위-B).
-const STEP_SHORT = ["영상추출","","","자막제거","","","","",""];
+const STEP_SHORT = ["영상추출","","","자막제거","","","","","","예약발행"];
 function stepShort(o){ return STEP_SHORT[o] || STEP_LABELS[o]; }
 // 단계 색(2026-08-26 사장님 확정 K3 색흐름). [선/기본색, 현재일 때 그라디언트 끝색]
 // ★여기가 색의 유일한 출처다 — theme.css는 var(--c)만 읽는다.
@@ -2527,6 +3003,7 @@ const STEP_COLORS = [
   ["#38bdf8","#0ea5e9"], ["#8c6ef0","#6d4df0"], ["#f472b6","#ec4899"],
   ["#fb7185","#f43f5e"], ["#7df5db","#14b8a6"], ["#fb923c","#f97316"],
   ["#facc6b","#f5b53f"], ["#a3e635","#84cc16"], ["#6ee7b7","#10b981"],
+  ["#60a5fa","#3b82f6"],   // SNS 예약 — 완성본(초록) 다음이라 파랑으로 끊는다
 ];
 // 단계 아이콘(24x24 stroke 전용, fill 없음 — 색은 currentColor가 받는다)
 const STEP_ICONS = [
@@ -2539,16 +3016,19 @@ const STEP_ICONS = [
   '<rect x="2.5" y="4" width="19" height="16" rx="2.5"/><circle cx="8" cy="9.5" r="1.8"/><path d="M3 16.5 8.5 12l4 3.5L16 13l5 4.5"/>',
   '<path d="M3 4.6h9M3 8h6"/><path d="M21 13.6 13.6 21a1.4 1.4 0 0 1-2 0l-5.9-5.9a1.4 1.4 0 0 1-.4-1V8.4c0-.8.6-1.4 1.4-1.4h5.7c.4 0 .7.1 1 .4l5.6 5.6a1.4 1.4 0 0 1 0 2z"/><circle cx="9.6" cy="10.8" r="1.15"/>',
   '<path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5zM3.5 7.5 12 12l8.5-4.5M12 12v9"/>',
+  /* SNS 예약 — 달력에 시계(예약해 둔다) */
+  '<rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/><circle cx="16.5" cy="15.5" r="4"/><path d="M16.5 13.6v2l1.4 1"/>',
 ];
 // 표시 오브 → 실제 패널 data-step (대본=신규 8이 2번째, 매칭=7이 3번째)
-const ORB_TO_PANEL = [0, 8, 7, 1, 2, 3, 4, 5, 6];
+// ★SNS 예약(신규 패널 9)은 **완성본 뒤**에 붙는다 — 영상이 나와야 올릴 수 있다.
+const ORB_TO_PANEL = [0, 8, 7, 1, 2, 3, 4, 5, 6, 9];
 const PANEL_TO_ORB = Object.fromEntries(ORB_TO_PANEL.map((p,o)=>[p,o]));
 // ★안내 문구가 단계 번호를 직접 쓰지 않게 한다(2026-08-16). 예전엔 "1단계에서 영상 매칭을
 //   먼저 하세요" 같은 문장이 16곳에 손으로 박혀 있었는데, 9단계 개편으로 매칭이 3단계가
 //   되면서 **전부 거짓말이 됐다**. 다음에 순서가 또 바뀌어도 여기만 맞으면 문구가 따라온다
 //   (CLAUDE.md 0순위-B: 같은 판단을 두 곳에 적지 마라).
 //   쓰는 법: stepName('mix') → "3단계(영상대본MIX)"
-const PANEL_BY_KEY = {source:0, script:8, mix:7, subtitle:1, tts:2, deco:3, thumb:4, seo:5, final:6};
+const PANEL_BY_KEY = {source:0, script:8, mix:7, subtitle:1, tts:2, deco:3, thumb:4, seo:5, final:6, sns:9};
 function stepOrb(key){ return PANEL_TO_ORB[PANEL_BY_KEY[key]] ?? 0; }
 function stepName(key){ const o = stepOrb(key); return `${o+1}단계(${STEP_LABELS[o]})`; }
 function stepGo(key){ jump(stepOrb(key)); }
@@ -2565,6 +3045,406 @@ function orbIndex(){ return PANEL_TO_ORB[cur] ?? 0; }
 // 되돌리기(revertWork)·작업복원(_restoreWork)의 범위 체크는 반드시 이걸 써야 한다 —
 // STEP_LABELS.length를 쓰면 신규 매칭 패널(data-step=7)이 범위 밖으로 오판돼 0으로 튕긴다
 // (Task 2 리뷰 Minor②, Task 6에서 수정. 값이 우연히 같아진 지금도 축의 의미는 다르다).
+
+/* ── SNS 예약 발행(Buffer) — 10단계 ──────────────────────────────────────
+   ★고객이 자기 Buffer 개인 키를 등록해야만 쓴다(회사 키로 대신 못 한다).
+     Buffer가 제3자 OAuth를 아직 안 열었기 때문 — 서버 buffer_api.py 머리말 참조.
+   ★올릴 글은 8단계 SEO에서 가져온다. 여기서 문구를 새로 지어내면 두 벌이 된다(0순위-B).
+   ★영상은 예약할 때 서버가 임시 공개 링크(14일)를 만든다 — Buffer가 게시 시점에
+     그 주소로 직접 가져가기 때문. 화면은 그 사정을 몰라도 된다. */
+var BUF = { loadedFor: null, channels: [], picked: {}, demo: false };
+/* 키 없음 안내 — 처음 HTML에 있는 글과 같다. 상황이 바뀌면 이걸로 되돌린다. */
+var BUF_NEED_KEY_HTML = '먼저 <a href="/settings#keys" style="color:var(--accent2)">마이페이지 → 🔑 내 키 등록</a>에서 '
+  + '<b>Buffer 키</b>를 넣어 주세요. 이 키는 <b>숏템메이커가 대신해 드릴 수 없습니다</b> — '
+  + '내 SNS 계정에 올리는 일이라 반드시 내 Buffer 키가 있어야 합니다.';
+
+/* 채널 하나에 올릴 글. **그 플랫폼 몫**으로 만든다(8단계가 만들어 둔 것을 쓴다).
+   ★여기서 문구를 새로 지어내지 않는다 — 해시태그는 seoHashLine 하나만 부른다(0순위-B).
+   ★모르는 플랫폼(페북·X 등)은 제목+설명에 인스타 해시태그를 붙여 둔다. 빈 칸보다 낫다. */
+/* ★사장님 2026-08-30: "제목이나 이런건 선택을 해야하자나".
+   8단계는 제목 후보 5개·해시태그 20개를 이미 만들어 두는데 화면에선 하나도 못 골랐다
+   (title 1개만 쓰이고 나머지 4개는 묻혀 있었다).
+   그래서 채널마다 **고른 것**을 기억하고, 그것으로 글을 다시 조립한다.
+   조립 규칙은 bufComposeFor 하나뿐이다 — 채널별 관례(유튜브는 설명 길게, 틱톡은 짧게)는
+   bufPartsFor가 정하고, 켜고끄기·제목·태그 선택만 여기서 얹는다(0순위-B: 규칙 두 벌 금지). */
+var BUFSEL = {};        /* {채널id: {title, off:{설명,CTA,댓글유도,해시태그}, tags:[..]}} */
+
+/* 이 채널의 글을 이루는 조각들. 순서가 곧 글의 순서다. */
+function bufPartsFor(service){
+  if (typeof SEO === 'undefined' || !SEO) return [];
+  var sv = (service || '').toLowerCase();
+  var cta = ((SEO.cta || {})[sv] || '').trim();
+  var parts = [];
+  parts.push({key:'제목', text:(SEO.title||'').trim()});
+  /* 틱톡·쓰레드는 설명을 통째로 넣지 않는 관례다 — 조각 자체를 안 만든다. */
+  if (sv !== 'tiktok' && sv !== 'threads')
+    parts.push({key:'설명', text:(SEO.description||'').trim()});
+  parts.push({key:'CTA', text:cta});
+  parts.push({key:'댓글유도', text:(SEO.comment_bait||'').trim()});
+  return parts.filter(function(p){ return p.text; });
+}
+
+/* 이 채널에서 고를 수 있는 해시태그(8단계가 만든 것). */
+function bufTagsFor(service){
+  var sv = (service || '').toLowerCase();
+  var hs = (typeof SEO!=='undefined' && SEO && SEO.hashtags) || {};
+  var arr = (hs[sv] || []).slice();
+  if (!arr.length && typeof SEO!=='undefined' && SEO) arr = (SEO.tags || []).slice();
+  return arr.map(function(t){ return String(t).trim().replace(/^#/,''); }).filter(Boolean);
+}
+
+/* 고른 것으로 글을 만든다. 아무것도 안 고른 처음에는 기존 자동조립과 같은 결과가 나온다. */
+function bufComposeFor(chId, service){
+  var sel = BUFSEL[chId] || {};
+  var off = sel.off || {};
+  var lines = [];
+  bufPartsFor(service).forEach(function(p){
+    if (off[p.key]) return;                       /* 사장님이 끈 조각 */
+    var t = (p.key === '제목' && sel.title) ? sel.title : p.text;   /* 고른 제목이 있으면 그것 */
+    if (t) lines.push(lines.length ? '' : null, t);
+  });
+  if (!off['해시태그']){
+    var tags = sel.tags || bufTagsFor(service);
+    if (tags.length) lines.push('', tags.map(function(t){ return '#'+t; }).join(' '));
+  }
+  return lines.filter(function(x){ return x !== null; }).join('\n');
+}
+
+function bufTextFor(service){
+  if (typeof SEO === 'undefined' || !SEO) return '';
+  var sv = (service || '').toLowerCase();
+  var hs = (typeof seoHashLine === 'function') ? seoHashLine(sv) : '';
+  var cta = ((SEO.cta || {})[sv] || '').trim();
+  var lines = [];
+
+  /* 인스타는 8단계가 **캡션 전문**을 따로 만든다(경험담+CTA+해시태그가 이미 한 덩어리).
+     그게 있으면 그대로 쓴다 — 우리가 다시 조립하면 두 벌이 된다. */
+  if (sv === 'instagram' && (SEO.insta_caption || '').trim())
+    return SEO.insta_caption.trim();
+
+  if (sv === 'youtube'){
+    /* 유튜브는 제목이 따로 뜨는 자리가 없어 첫 줄이 제목 노릇을 한다. 설명을 길게 둔다. */
+    if (SEO.title) lines.push(SEO.title);
+    if (SEO.description) lines.push('', SEO.description);
+    if (cta) lines.push('', cta);
+    if (hs) lines.push('', hs);
+  } else if (sv === 'threads'){
+    /* 쓰레드는 해시태그를 거의 안 쓴다(8단계도 1~2개만 만든다). 대화체로 짧게. */
+    if (SEO.title) lines.push(SEO.title);
+    if (cta) lines.push('', cta);
+    if (hs) lines.push('', hs);
+  } else if (sv === 'tiktok'){
+    /* 틱톡은 짧은 한 줄 + 해시태그가 관례다. 설명을 통째로 넣지 않는다. */
+    if (SEO.title) lines.push(SEO.title);
+    if (cta) lines.push('', cta);
+    if (hs) lines.push('', hs);
+  } else {
+    if (SEO.title) lines.push(SEO.title);
+    if (SEO.description) lines.push('', SEO.description);
+    var fallback = hs || ((typeof seoHashLine === 'function') ? seoHashLine('instagram') : '');
+    if (fallback) lines.push('', fallback);
+  }
+  return lines.join('\n');
+}
+
+function bufText(){
+  /* 8단계에서 만든 것을 그대로 쓴다. 없으면 빈 칸으로 둔다(지어내지 않는다). */
+  /* ★window.SEO로 보면 **항상 비어 있다** — 이 파일의 SEO는 let 전역이라
+     window의 속성이 아니다(이 저장소에서 여러 번 밟은 함정: MIX_JOB·lists도 같다).
+     typeof로 본다. */
+  if (typeof SEO === 'undefined' || !SEO) return '';
+  var lines = [];
+  if (SEO.title) lines.push(SEO.title);
+  if (SEO.description) lines.push('', SEO.description);
+  /* 해시태그는 인스타 몫이 가장 많다 — 있으면 그걸, 없으면 유튜브 것을 쓴다.
+     만드는 규칙은 SEO 쪽 seoHashLine 하나뿐이라 여기서 다시 안 만든다. */
+  if (typeof seoHashLine === 'function'){
+    var tags = seoHashLine('instagram') || seoHashLine('youtube');
+    if (tags) lines.push('', tags);
+  }
+  return lines.join('\n');
+}
+
+async function loadBuffer(){
+  var need = document.getElementById('bufNeedKey');
+  var body = document.getElementById('bufBody');
+  if (BUF.loadedFor === MIX_JOB && MIX_JOB) return;   /* job당 1회 — 패널을 오갈 때마다 부르지 않는다 */
+  BUF.loadedFor = MIX_JOB;
+  /* ★서버복원(loadWork)이 MIX_JOB을 늦게 채운다 — 그 전에 여기 오면 **옛 job이 굳는다**
+     (실측 2026-08-30: 화면은 84b5f66a8e1f(영상없음)를 쥐고 있었고 저장된 작업의
+      진짜 job은 030d90a7a97a(final.mp4 39MB)였다 → 미리보기가 검고 예약은 404).
+     복원이 끝나 job이 바뀌면 **한 번 더** 부른다. 대입 지점이 4군데라 값을 여기서
+     다시 읽는 것 말고는 믿을 게 없다(0순위-B: 판단을 한 곳으로). */
+  var _jobAtCall = MIX_JOB;
+  /* ★채널을 **먼저** 물어본다. 화면 확인용 응답(로컬 BUFFER_DEMO=1)인지는 답을 받아야
+     알 수 있어서, 작업 유무를 그 전에 따지면 영영 못 온다(실측으로 밟았다). */
+  var d = null;
+  try { d = await (await fetch('/api/buffer/channels')).json(); } catch(e){ d = null; }
+  /* 기다리는 사이 복원이 끝나 job이 바뀌었으면, 지금 그린 화면은 옛 job 것이다 → 다시 그린다. */
+  if (MIX_JOB && MIX_JOB !== _jobAtCall){ BUF.loadedFor = null; return loadBuffer(); }
+  var demo = !!(d && d.demo);
+  // 작업이 없으면 **왜 비었는지** 말해준다. 조용히 빈 화면이 가장 나쁘다.
+  if (!MIX_JOB && !demo){
+    need.style.display = 'block';
+    need.innerHTML = '먼저 영상을 만들어 주세요 — 완성한 영상이 있어야 예약할 수 있습니다.';
+    body.style.display = 'none';
+    BUF.loadedFor = null;
+    return;
+  }
+  if (!d || !d.ok){
+    /* 안내만 띄운다. '조용히 빈 화면'이 가장 나쁘다.
+       ★문구를 **매번 다시 쓴다** — 앞서 '영상을 만들어 주세요'를 띄웠으면 그 글이
+         그대로 남아 엉뚱한 안내가 된다(실측). 상황마다 글을 새로 넣는다. */
+    need.style.display = 'block'; body.style.display = 'none';
+    need.innerHTML = (d && d.error && !d.need_key) ? esc(d.error) : BUF_NEED_KEY_HTML;
+    BUF.loadedFor = null;                     /* 키를 넣고 돌아오면 다시 부른다 */
+    return;
+  }
+  need.style.display = 'none'; body.style.display = '';
+  BUF.demo = !!d.demo;                        /* 화면 확인용 응답인가(로컬 전용) */
+  BUF.channels = d.channels || [];
+  var box = document.getElementById('bufChannels');
+  if (!BUF.channels.length){
+    box.innerHTML = '<div class="hint">Buffer에 연결된 채널이 없습니다 — Buffer에서 먼저 SNS 계정을 연결해 주세요.</div>';
+  } else {
+    box.innerHTML = BUF.channels.map(function(c, i){
+      return '<label style="display:flex;align-items:center;gap:8px;min-height:44px;cursor:pointer;'
+           + 'border:1px solid var(--line);border-radius:10px;padding:6px 12px">'
+           + '<input type="checkbox" data-ch="' + esc(c.id) + '" onchange="bufPick(this)">'
+           + '<span>' + esc(c.service) + ' · <b>' + esc(c.name) + '</b></span></label>';
+    }).join('');
+  }
+  /* ★8단계(제목·태그)를 **거치지 않고** 바로 여기로 와도 글이 채워져야 한다.
+     SEO는 5단계 패널을 열 때만 불러오므로, 없으면 여기서 직접 가져온다
+     (사장님: "올릴 글은 제목·태그에 있는 걸 그대로 끌어와서 자동등록 되게").
+     ★가져오는 주소는 8단계가 쓰는 것과 같다 — 규칙을 두 벌로 두지 않는다(0순위-B). */
+  if (typeof SEO !== 'undefined' && !SEO && MIX_JOB){
+    try {
+      var sr = await fetch('/api/produce/seo/get?job_id=' + encodeURIComponent(MIX_JOB));
+      var sd = await sr.json();
+      SEO = (sd && sd.seo) || null;
+    } catch(e){ /* 못 가져와도 화면은 뜬다 — 글만 빈다 */ }
+  }
+  /* 올라갈 영상을 보여준다 — 완성본 미리보기와 같은 주소를 쓴다(0순위-B). */
+  var vbox = document.getElementById('bufVideo');
+  if (vbox && MIX_JOB){
+    /* ★poster를 반드시 준다 — 없으면 preload="metadata"에서 멈춘 브라우저가 **검은 칸**을
+       보여준다(실측 2026-08-30 사장님 화면. 내 브라우저는 readyState 4까지 가서 첫 프레임이
+       그려져 멀쩡해 보였다 — 브라우저마다 갈린다). 주소는 이 화면이 이미 쓰는 것과 같다. */
+    vbox.innerHTML = '<video src="/api/mix/video/' + encodeURIComponent(MIX_JOB) + '" '
+      + 'poster="/api/produce/mix/poster/' + encodeURIComponent(MIX_JOB) + '" '
+      + 'style="width:100%;border-radius:8px;background:#000" muted playsinline preload="metadata"></video>';
+    var nm = document.getElementById('bufVideoName');
+    /* ★사람이 읽을 수 있는 이름을 먼저 쓴다 — 작업이 여러 개면 ID로는 분간이 안 된다
+       (사장님 2026-08-30). 이름은 이미 저장돼 있다(produce_works.title / STATE.title).
+       규칙을 새로 만들지 않고 화면이 이미 쓰는 값을 그대로 읽는다(0순위-B). */
+    if (nm){
+      var _t = '';
+      try { _t = (typeof STATE !== 'undefined' && STATE && STATE.title) ? String(STATE.title) : ''; } catch(e){ _t = ''; }
+      if (!_t){ var _el = document.getElementById('workTitle');
+                _t = _el ? String(_el.value || _el.textContent || '').trim() : ''; }
+      nm.innerHTML = _t
+        ? '<b>' + esc(_t) + '</b> 의 완성본'
+        : '작업 <b>' + esc(MIX_JOB) + '</b> 의 완성본';
+    }
+  }
+  var hint = document.getElementById('bufTextHint');
+  var got = !!(typeof SEO !== 'undefined' && SEO && (SEO.title || SEO.description));
+  if (hint) hint.innerHTML = got
+    ? '✍️ 올릴 글 — <b>채널마다 따로</b> 만들어 넣었습니다(8단계 기준). 고쳐도 됩니다.'
+    : '✍️ 올릴 글 — 아직 <b>8단계(제목·태그)</b>를 안 만드셨습니다. 거기서 만들면 여기에 자동으로 들어옵니다.';
+  bufRenderTexts();
+}
+
+function bufPick(el){
+  BUF.picked[el.dataset.ch] = el.checked;
+  bufRenderTexts();
+}
+
+/* 고른 채널마다 글 칸을 하나씩. 이미 고쳐 쓴 글은 **지우지 않는다**(다시 그려도 유지). */
+/* 채널 하나의 선택 UI — 제목 후보·구성요소 켜고끄기·해시태그. */
+function bufRenderPicker(c){
+  var host = document.getElementById('bufPick-' + c.id);
+  if (!host) return;
+  var sel = BUFSEL[c.id] || (BUFSEL[c.id] = {off:{}, title:'', tags:null});
+  var cands = (typeof SEO!=='undefined' && SEO && SEO.title_candidates) || [];
+  var titles = [];
+  if (typeof SEO!=='undefined' && SEO && SEO.title) titles.push(String(SEO.title));
+  cands.forEach(function(t){
+    var x = (t && (t.text || t)) ? String(t.text || t) : '';
+    if (x && titles.indexOf(x) < 0) titles.push(x);
+  });
+  var parts = bufPartsFor(c.service).map(function(p){ return p.key; });
+  if (bufTagsFor(c.service).length) parts.push('해시태그');
+  var allTags = bufTagsFor(c.service);
+  var onTags = sel.tags || allTags;
+
+  var h = '<details style="border:1px solid var(--line);border-radius:10px;padding:8px 12px">'
+        + '<summary style="cursor:pointer;font-size:12px;opacity:.85">✏️ 무엇을 넣을지 고르기'
+        + ' <span style="opacity:.6">— 제목 ' + titles.length + '개 · 태그 ' + allTags.length + '개</span></summary>';
+
+  if (titles.length > 1){
+    h += '<div style="margin-top:10px"><div class="hint" style="margin-bottom:4px">제목 — 8단계가 만든 후보입니다</div>';
+    titles.forEach(function(t, i){
+      var on = (sel.title || titles[0]) === t;
+      h += '<label style="display:flex;gap:8px;align-items:flex-start;padding:5px 8px;border-radius:8px;cursor:pointer;'
+         + (on ? 'background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.4)' : 'border:1px solid transparent') + '">'
+         + '<input type="radio" name="bufTitle-' + esc(c.id) + '" ' + (on ? 'checked' : '')
+         + ' onchange="bufSetTitle(\'' + esc(c.id) + '\',' + i + ')" style="margin-top:3px">'
+         + '<span style="font-size:13px">' + esc(t) + '</span></label>';
+    });
+    h += '<div style="display:none" id="bufTitles-' + esc(c.id) + '">' + esc(JSON.stringify(titles)) + '</div></div>';
+  }
+
+  h += '<div style="margin-top:10px"><div class="hint" style="margin-bottom:4px">넣을 것</div>'
+     + '<div style="display:flex;flex-wrap:wrap;gap:6px">';
+  parts.forEach(function(k){
+    var on = !sel.off[k];
+    h += '<label style="display:flex;gap:6px;align-items:center;font-size:12px;padding:5px 10px;border-radius:999px;cursor:pointer;'
+       + (on ? 'background:rgba(52,211,153,.14);border:1px solid rgba(52,211,153,.45)' : 'border:1px solid var(--line);opacity:.55') + '">'
+       + '<input type="checkbox" ' + (on ? 'checked' : '')
+       + ' onchange="bufTogglePart(\'' + esc(c.id) + '\',\'' + esc(k) + '\',this.checked)">' + esc(k) + '</label>';
+  });
+  h += '</div></div>';
+
+  if (allTags.length && !sel.off['해시태그']){
+    h += '<div style="margin-top:10px"><div class="hint" style="margin-bottom:4px">해시태그 — 눌러서 빼거나 넣습니다</div>'
+       + '<div style="display:flex;flex-wrap:wrap;gap:5px">';
+    allTags.forEach(function(t){
+      var on = onTags.indexOf(t) >= 0;
+      h += '<button type="button" onclick="bufToggleTag(\'' + esc(c.id) + '\',\'' + esc(t) + '\')"'
+         + ' style="font-size:12px;padding:4px 10px;border-radius:999px;cursor:pointer;'
+         + (on ? 'background:rgba(139,110,240,.18);border:1px solid rgba(139,110,240,.5);color:inherit'
+               : 'background:transparent;border:1px solid var(--line);opacity:.45;color:inherit') + '">#' + esc(t) + '</button>';
+    });
+    h += '</div></div>';
+  }
+  h += '</details>';
+  host.innerHTML = h;
+}
+
+/* 고른 것을 글 칸에 **다시 조립해 넣는다**. */
+function bufApply(chId){
+  var c = BUF.channels.filter(function(x){ return x.id === chId; })[0];
+  if (!c) return;
+  var ta = document.getElementById('bufTx-' + chId);
+  if (ta) ta.value = bufComposeFor(chId, c.service);
+  bufRenderPicker(c);
+}
+function bufSetTitle(chId, i){
+  var box = document.getElementById('bufTitles-' + chId);
+  var titles = [];
+  try { titles = JSON.parse(box.textContent); } catch(e){ return; }
+  (BUFSEL[chId] = BUFSEL[chId] || {off:{}}).title = titles[i] || '';
+  bufApply(chId);
+}
+function bufTogglePart(chId, key, on){
+  var sel = (BUFSEL[chId] = BUFSEL[chId] || {off:{}});
+  sel.off = sel.off || {};
+  if (on) delete sel.off[key]; else sel.off[key] = true;
+  bufApply(chId);
+}
+function bufToggleTag(chId, tag){
+  var c = BUF.channels.filter(function(x){ return x.id === chId; })[0];
+  if (!c) return;
+  var sel = (BUFSEL[chId] = BUFSEL[chId] || {off:{}});
+  if (!sel.tags) sel.tags = bufTagsFor(c.service).slice();
+  var i = sel.tags.indexOf(tag);
+  if (i >= 0) sel.tags.splice(i, 1); else sel.tags.push(tag);
+  bufApply(chId);
+}
+
+function bufRenderTexts(){
+  var box = document.getElementById('bufTexts');
+  var ids = BUF.channels.filter(function(c){ return BUF.picked[c.id]; });
+  if (!ids.length){
+    box.innerHTML = '<div class="hint">올릴 곳을 고르면 채널마다 글 칸이 생깁니다.</div>';
+    return;
+  }
+  ids.forEach(function(c){
+    if (document.getElementById('bufTx-' + c.id)) return;      /* 이미 있다 */
+    var wrap = document.createElement('div');
+    wrap.id = 'bufTxWrap-' + c.id;
+    wrap.style.cssText = 'margin-bottom:14px';
+    wrap.innerHTML = '<div class="hint" style="margin-bottom:4px">'
+      + esc(c.service) + ' · <b>' + esc(c.name) + '</b></div>'
+      + '<div id="bufPick-' + esc(c.id) + '" style="margin-bottom:8px"></div>'
+      + '<textarea id="bufTx-' + esc(c.id) + '" rows="6" style="width:100%"></textarea>';
+    box.appendChild(wrap);
+    var ta = document.getElementById('bufTx-' + c.id);
+    ta.value = bufTextFor(c.service);
+    bufRenderPicker(c);
+  });
+  /* 뺀 채널의 칸은 치운다 */
+  BUF.channels.forEach(function(c){
+    if (BUF.picked[c.id]) return;
+    var w = document.getElementById('bufTxWrap-' + c.id);
+    if (w) w.remove();
+  });
+  if (!box.querySelector('textarea')) box.innerHTML = '<div class="hint">올릴 곳을 고르면 채널마다 글 칸이 생깁니다.</div>';
+}
+
+async function bufSchedule(){
+  var st = document.getElementById('bufStatus');
+  var ids = Object.keys(BUF.picked).filter(function(k){ return BUF.picked[k]; });
+  if (!ids.length){ st.textContent = '올릴 곳을 하나 이상 골라 주세요.'; return; }
+  var mode = (document.querySelector('input[name=bufWhen]:checked') || {}).value;
+  var due = null;
+  if (mode === 'at'){
+    var v = (document.getElementById('bufAt') || {}).value;
+    if (!v){ st.textContent = '올릴 시각을 정해 주세요.'; return; }
+    /* datetime-local은 **내 시간대**다. Buffer는 UTC를 받으므로 여기서 변환한다 —
+       그냥 문자열로 넘기면 9시간 어긋난 시각에 올라간다. */
+    due = new Date(v).toISOString();
+  }
+  var btn = document.getElementById('btnBufGo');
+  btn.disabled = true; st.textContent = '예약하는 중…';
+  /* ★채널마다 글이 다르다 — texts로 채널별 글을 보낸다. */
+  var texts = {};
+  ids.forEach(function(id){
+    var ta = document.getElementById('bufTx-' + id);
+    texts[id] = ta ? ta.value : '';
+  });
+  var d = null;
+  try {
+    d = await (await fetch('/api/buffer/schedule', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ job_id: MIX_JOB, channel_ids: ids, texts: texts, due_at: due })
+    })).json();
+  } catch(e){ d = null; }
+  btn.disabled = false;
+  if (!d){ st.textContent = '서버에 연결하지 못했습니다.'; return; }
+  if (d.need_key){ st.textContent = d.error; return; }
+  if (!d.results){ st.textContent = d.error || '예약에 실패했습니다.'; return; }
+  /* 채널마다 결과가 다를 수 있다 — 성공/실패를 있는 그대로 보여준다. */
+  var name = {};
+  BUF.channels.forEach(function(c){ name[c.id] = c.name; });
+  /* ★"예약됨" 한 마디로 끝내지 않는다 — **언제 올라가는지, 어디서 확인하는지**까지
+     보여준다(사장님 2026-08-30: "정상적으로 올라간건지 결과도 볼수있게").
+     ⚠️여기서 끝난 것은 **예약**이다. 실제 게시는 그 시각에 Buffer가 한다 —
+       '올라갔다'고 단정하지 않는다(가짜 성공은 조용한 사고다). */
+  var okN = d.results.filter(function(r){ return r.ok; }).length;
+  var rows = d.results.map(function(r){
+    var nm = esc(name[r.channel_id] || r.channel_id);
+    if (!r.ok) return '⚠️ <b>' + nm + '</b> — ' + esc(r.error || '실패');
+    var when = '';
+    if (r.due_at){
+      /* Buffer가 준 UTC를 **내 시간대**로 되돌려 보여준다(보낼 때 UTC로 바꿨다). */
+      try { when = new Date(r.due_at).toLocaleString('ko-KR',
+              {year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'}); }
+      catch(e){ when = r.due_at; }
+    }
+    return '✅ <b>' + nm + '</b> 예약 완료'
+         + (when ? ' — <b>' + esc(when) + '</b>에 올라갑니다' : ' — 내 Buffer 시간표 순서대로 올라갑니다');
+  });
+  if (okN){
+    rows.push('<div style="margin-top:8px">🔎 <a href="https://publish.buffer.com" target="_blank" '
+            + 'rel="noopener">Buffer에서 확인·수정·취소하기</a> — 예약이 걸린 것이고, '
+            + '실제 게시는 그 시각에 Buffer가 합니다.</div>');
+  }
+  st.innerHTML = rows.join('<br>');
+}
+
 const PANEL_COUNT = document.querySelectorAll('.panel').length;
 let cur = 0;
 
@@ -2601,6 +3481,9 @@ function showPanel(){
   if(cur===3) initHeadcopy();
   if(cur===4) initThumb();
   if(cur===5) initSeo();
+  // 10단계(패널 9)를 열면 Buffer 채널을 불러온다 — 다른 패널에선 부르지 않는다
+  // (키가 없는 고객에게 매번 401을 만들지 않기 위해서다).
+  if(cur===9) loadBuffer();
   if(cur===6) refreshFinal();
   if(cur===7) initMatch();   // 화면 붙이기(매칭) 패널 — 신규(Task 6)
   if(cur===8) s2Enter();     // 대본 패널 — 신규(2026-08-16). 물리 8 = 화면 2단계(ORB_TO_PANEL[1])
@@ -4073,6 +4956,13 @@ function decoTab(name){
   document.querySelectorAll('#decoTabs [data-decotab]').forEach(b=>{
     b.classList.toggle('on', b.getAttribute('data-decotab')===name);
   });
+  // 효과 탭을 열면 가림막·위아래띠를 **펼친 채로** 보여준다(2026-08-28 사장님
+  // "가림막 기본으로 펼쳐지게"). 지금까지는 틀을 고를 때(frFill) 말고는 그리는 곳이
+  // 없어서, 탭만 열면 제목만 있고 아래가 비어 있었다.
+  if(name==='fx'){
+    try{ mkRender(); }catch(e){}
+    try{ pbRender(); }catch(e){}
+  }
 }
 function initHeadcopy(){
   const t=document.getElementById('hcText');
@@ -4089,6 +4979,7 @@ function initHeadcopy(){
   renderHighlightRules();
   bindHCDrag();
   bindCapDrag();
+  bindZoom();       // 🔍 장면 확대 — 한 번만 걸린다(_zoomBound). 재진입해도 배율은 유지.
   // ★복원된 스타일 밀어넣기(C-2 잔여) — 반드시 아래 updateHC/updateCaption **앞**이다.
   // 그것들이 먼저 돌면 빈 DOM 입력칸을 읽어 STATE.headcopy/captionStyle을 기본값으로 덮는다
   // (라이브 실측: 색이 #ffe100→#ff8800으로 죽었다). 여기서 pristine한 STATE로 DOM을 먼저 채우면
@@ -4229,9 +5120,9 @@ async function loadBeatsPreview(){
   if(!BEATS_PREVIEW.length){ if(st) st.style.display='none'; return; }
   if(st) st.style.display='block';
   BEAT_IDX=Math.min(BEAT_IDX, BEATS_PREVIEW.length-1);
-  showBeat(BEAT_IDX);
+  showBeat(BEAT_IDX, true);      // true = 처음 불러옴 → 저장된 확대를 **읽기만** 한다
 }
-function showBeat(i){
+function showBeat(i, first){
   if(!BEATS_PREVIEW.length) return;
   BEAT_IDX=(i+BEATS_PREVIEW.length)%BEATS_PREVIEW.length;
   const b=BEATS_PREVIEW[BEAT_IDX];
@@ -4250,6 +5141,8 @@ function showBeat(i){
   const cnt=document.getElementById('beatCount');
   if(cnt) cnt.textContent=(BEAT_IDX+1)+' / '+BEATS_PREVIEW.length+' 장면';
   renderBeatTools();          // 장면을 넘기면 그 장면의 자리·줄을 보여준다
+  // 확대를 이 장면에도 이어갈지는 '모든 장면에 같은 배율' 체크가 정한다(zoomOnBeatChange)
+  if(typeof zoomOnBeatChange==='function') zoomOnBeatChange(first);
 }
 let CAP_SEQ_TIMER=null;
 function _playBeatCaptions(b){
@@ -5446,6 +6339,285 @@ function alignCap(where){
   else if(where==='left') CAP_X_PCT=22;
   else if(where==='right') CAP_X_PCT=78;
   updateCaption();
+}
+// ══════════════════════════════════════════════════════════════════════════
+// 🔍 장면 확대 (2026-08-30 사장님 "장면 확대기능 / 부분확대 / 어떤지점을 클릭해서 /
+//    최대한 쉽게 · 캡컷보다 더 쉽게")
+//
+// 조작은 셋뿐이고 전부 같은 상태(ZOOM/ZOX/ZOY)로 모인다 — 같은 판단을 두 벌로
+// 적지 않는다(0순위-B):
+//   ① 배경 아무 데나 클릭 → 그 지점이 중심이 되어 한 단계 확대 (부분확대의 본체)
+//   ② 슬라이더·＋－ → 배율만 바꾸고 보던 지점은 유지
+//   ③ 원래대로 → 100%
+// 확대 중엔 배경을 끌어 볼 곳을 옮긴다(패닝). 캡컷은 스페이스+드래그로 갈라놨는데
+// 여기선 글자 위가 아니면 그냥 끌면 된다.
+//
+// ★기존 글자 드래그와 안 부딪힌다 — 글자 드래그는 #hcPreviewText/#capPreviewText
+//   **자신에게** 걸려 있고(bindHCDrag/bindCapDrag), 여기 핸들러는 그 요소 위에서
+//   시작하면 즉시 손을 뗀다(_zoomOnText). 컨테이너 빈 배경은 원래 아무도 안 잡고
+//   있었다(실측으로 확인).
+// ★좌표계 — 드래그가 쓰는 pv.getBoundingClientRect()에는 scale이 이미 반영되므로
+//   비율(%) 계산은 확대 상태에서도 그대로 맞는다. 드래그 코드는 한 줄도 안 고쳤다.
+// 상태: ZOOM=배율, ZTX/ZTY=옮긴 거리(px, 확대된 좌표계 기준)
+let ZOOM=1, ZTX=0, ZTY=0;
+const ZOOM_MIN=1, ZOOM_MAX=3, ZOOM_STEP=0.5;
+
+function _zoomEls(){
+  // ★pv = 배경 이미지다(#hcPreview 아님) — 확대되는 건 배경뿐이고, CSS 변수도 거기 심는다.
+  //   자막 레이어는 #hcPreview 아래 형제로 남아 확대와 무관하게 제자리를 지킨다.
+  return {st:document.getElementById('zoomStage'),
+          pv:document.getElementById('hcPreviewBg'),
+          bd:document.getElementById('zoomBadge'),
+          rg:document.getElementById('zoomRange'),
+          rs:document.getElementById('zoomResetBtn'),
+          nw:document.getElementById('zoomNow'),
+          ht:document.getElementById('zoomHint')};
+}
+// ★옮길 수 있는 최대 거리(px). 이보다 더 가면 화면에 빈 자리가 보인다.
+//   유도: scale(Z) 뒤의 translate(t)는 화면상 Z*t 만큼 움직인다. 확대로 넘치는 폭이
+//   W*(Z-1)이고 그 절반씩 좌우로 여유가 있으므로 |Z*t| <= W*(Z-1)/2
+//   → |t| <= W*(Z-1)/(2Z).  검산: 이 값에서 원본 0%에 정확히 닿는다(모서리까지 보인다).
+function _zoomLimit(){
+  const st=document.getElementById('zoomStage');
+  if(!st || ZOOM<=1) return {x:0,y:0};
+  const r=st.getBoundingClientRect();
+  return {x: r.width*(ZOOM-1)/(2*ZOOM), y: r.height*(ZOOM-1)/(2*ZOOM)};
+}
+// 상태 → 화면. 크기는 안 건드리고 CSS 변수만 넘긴다.
+function _zoomApply(){
+  const {st,pv,bd,rg,rs,nw,ht}=_zoomEls(); if(!st||!pv) return;
+  ZOOM=Math.max(ZOOM_MIN,Math.min(ZOOM_MAX,ZOOM));
+  const lim=_zoomLimit();
+  ZTX=Math.max(-lim.x,Math.min(lim.x,ZTX));   // 가장자리 밖으로는 못 나간다
+  ZTY=Math.max(-lim.y,Math.min(lim.y,ZTY));
+  pv.style.setProperty('--zoom',ZOOM);
+  pv.style.setProperty('--ztx',ZTX.toFixed(2)+'px');
+  pv.style.setProperty('--zty',ZTY.toFixed(2)+'px');
+  const on = ZOOM>1.001;
+  st.classList.toggle('zoomed',on);
+  const pct=Math.round(ZOOM*100)+'%';
+  if(bd) bd.textContent=pct;
+  if(nw) nw.textContent=pct;          // 제목 줄 — 확대 안 해도 늘 보인다
+  if(rg) rg.value=Math.round(ZOOM*100);
+  if(rs) rs.style.display = on ? '' : 'none';
+  // ★확대 중엔 '끌어서 옮긴다'를 먼저 말한다 — 안 보이는 부분을 보는 방법이 그거다.
+  // ★배경(실장면)이 꺼져 있으면 확대해도 화면이 안 변한다 — 흰 바탕만 커질 뿐이다.
+  //   그대로 두면 "눌러도 아무 일이 없다"로 보이므로, 무엇을 켜야 하는지 알려준다.
+  // ★변수명을 bgEl로 둔다(pv를 쓰면 안 된다): #mixPreview의 display를 _pvShow 밖에서
+  //   만지지 말라는 규약을 테스트가 **파일 전체 문자열 검색**으로 지킨다. 여긴 전혀 다른
+  //   요소를 읽기만 하는데도 이름이 겹치면 걸린다 — 규약 쪽이 옳으니 이름을 비켜준다.
+  const bgEl = document.getElementById('hcPreviewBg');
+  const bgOn = bgEl && bgEl.style.display !== 'none' && bgEl.getAttribute('src');
+  // ★한 줄로 끝낸다(2026-08-30). 문장이 길면 안 읽힌다 — 지금 할 수 있는 동작 하나만 말한다.
+  if(ht) ht.innerHTML = !bgOn
+    ? '먼저 위 <b>실장면 배경</b>을 켜세요'
+    : (on ? '✋ <b>끌어서</b> 안 보이는 곳 보기' : '크게 볼 곳을 <b>누르세요</b>');
+}
+// 배율을 바꿔도 **화면 가운데에 있던 것이 그대로 가운데** 남도록 이동거리를 환산한다.
+// (그냥 두면 배율이 바뀔 때 보던 자리가 튄다 — 확대 좌표계라 t의 의미가 배율마다 다르다)
+function zoomSet(v){
+  const prev=ZOOM;
+  let z=+v||1; z=Math.max(ZOOM_MIN,Math.min(ZOOM_MAX,z));
+  if(z<=1.001){ ZOOM=1; ZTX=0; ZTY=0; _zoomApply(); return; }
+  // 화면상 이동량(prev*t)을 유지하도록 새 배율의 t로 환산
+  if(prev>1.001){ ZTX=ZTX*prev/z; ZTY=ZTY*prev/z; }
+  ZOOM=z; _zoomApply();
+}
+function zoomStep(d){ zoomSet(ZOOM + d*ZOOM_STEP); _zoomSaveSoon(); }
+function zoomReset(){ ZOOM=1; ZTX=0; ZTY=0; _zoomApply(); _zoomSaveSoon(); }
+// ★모든 장면에 같은 배율? (2026-08-30 사장님 "다른 전체 장면도 같은 비율로 적용할지 말지")
+//   켬(기본) = 장면을 넘겨도 배율·위치가 그대로 — 여러 장면을 같은 확대로 훑어볼 때.
+//   끔       = 장면을 넘기면 100%로 돌아간다 — 이 장면만 잠깐 확대해 볼 때.
+//   ★판단은 이 함수 하나에서만 한다(0순위-B). showBeat은 이걸 부르기만 한다.
+function zoomAllOn(){
+  const el=document.getElementById('zoomAll');
+  return !el || el.checked;      // 요소가 아직 없으면 종전 동작(유지)이 기본
+}
+function zoomAllChanged(){
+  // 방금 껐다면 지금 화면부터 원래대로 — 안 그러면 "껐는데 왜 아직 커져 있나"가 된다.
+  if(!zoomAllOn()){ zoomReset(); return; }     // zoomReset이 저장까지 부른다
+  _zoomApply();
+  _zoomSaveSoon();                             // 켰다 = 지금 구도를 전 장면에 퍼뜨린다
+}
+// 장면을 넘길 때 showBeat이 부른다. 유지/복원을 여기서 정한다.
+// ★'모든 장면에 같은 배율'이 켜져 있으면 배율을 그대로 이어간다(그리고 그 장면에도 저장).
+//   꺼져 있으면 **그 장면에 저장된 값**을 복원한다 — 없으면 100%.
+// 그 장면에 **저장된** 구도를 화면에 올린다(서버 값 → 화면 상태).
+// 저장은 '화면 크기 대비 비율', 화면은 '확대좌표계 px' → 되돌려 환산한다.
+function _zoomLoadFromBeat(){
+  const b=(typeof BEATS_PREVIEW!=='undefined' && BEATS_PREVIEW[BEAT_IDX]) || null;
+  const z=(b && +b.zoom) || 1;
+  ZOOM = z>1.0001 ? z : 1;
+  const st=document.getElementById('zoomStage');
+  const r=st?st.getBoundingClientRect():{width:0,height:0};
+  ZTX = (ZOOM>1.0001 && r.width)  ? (+b.pan_x||0)*r.width/ZOOM  : 0;
+  ZTY = (ZOOM>1.0001 && r.height) ? (+b.pan_y||0)*r.height/ZOOM : 0;
+  _zoomApply();
+}
+// ★장면을 넘길 때 showBeat이 부른다.
+//   ⚠️'처음 들어옴'과 '장면 넘김'을 갈라야 한다 — 안 가르면, '모든 장면에 같은 배율'이
+//     켜진 채 6단계에 다시 들어왔을 때 저장값을 읽는 대신 **현재값(100%)을 덮어써 저장**해
+//     사장님이 맞춰둔 확대가 통째로 날아간다(2026-08-30 "다른 작업 후 다시 오면 저장
+//     안 되지 않게").
+function zoomOnBeatChange(first){
+  if(first){ _zoomLoadFromBeat(); return; }      // 들어올 때는 **읽기만** 한다
+  if(zoomAllOn()){ _zoomApply(); _zoomSaveCur(); return; }
+  _zoomLoadFromBeat();                            // 장면별 모드 = 그 장면 값 복원
+}
+// ★지금 구도를 서버에 저장한다 — 이게 있어야 **최종 렌더에 그대로 나온다**
+//   (2026-08-30 사장님 "장면 바꾸기에서 수정한 대로 나오게").
+//   화면은 '확대좌표계 px'로 들고 있고, 서버·렌더는 '화면 폭 대비 비율'로 주고받는다:
+//       pan = (ZOOM * t) / 컨테이너크기      한계 |pan| <= (ZOOM-1)/2
+//   ★가두는 판단은 서버(scene_zoom_of)가 한다 — 여기서 또 가두면 두 벌이 된다(0순위-B).
+let _ZOOM_SAVE_T=null;
+function _zoomSaveCur(){
+  if(typeof MIX_JOB==='undefined' || !MIX_JOB) return;
+  const b=(typeof BEATS_PREVIEW!=='undefined' && BEATS_PREVIEW[BEAT_IDX]) || null;
+  if(!b) return;
+  const st=document.getElementById('zoomStage'); if(!st) return;
+  const r=st.getBoundingClientRect(); if(!r.width||!r.height) return;
+  const payload={ beat_idx:(b.beat_idx!=null?b.beat_idx:BEAT_IDX),
+                  zoom:ZOOM,
+                  pan_x: ZOOM>1.0001 ? (ZOOM*ZTX)/r.width  : 0,
+                  pan_y: ZOOM>1.0001 ? (ZOOM*ZTY)/r.height : 0 };
+  // 화면에도 같은 값을 담아둔다 — 장면을 오갈 때 서버를 다시 안 물어도 되게
+  b.zoom=payload.zoom; b.pan_x=payload.pan_x; b.pan_y=payload.pan_y;
+  fetch('/api/produce/mix/'+MIX_JOB+'/scenezoom',{method:'POST',
+    headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+    .then(()=>{ if(typeof _zoomMark==='function') _zoomMark(); }).catch(()=>{});
+}
+// 💾 저장 버튼 — 지금 즉시 저장하고 **결과를 화면에 말한다**.
+// 자동 저장은 조용히 실패할 수 있는데(fetch catch), 그러면 사장님은 저장된 줄 안다.
+// 버튼은 서버 응답을 확인하고 성공/실패를 글자로 보여준다.
+async function zoomSaveNow(){
+  const msg=document.getElementById('zoomSaved');
+  const btn=document.getElementById('zoomSaveBtn');
+  if(typeof MIX_JOB==='undefined' || !MIX_JOB){
+    if(msg){ msg.style.color='var(--fire)'; msg.textContent='먼저 3단계 영상 매칭이 필요해요'; }
+    return;
+  }
+  if(_ZOOM_SAVE_T){ clearTimeout(_ZOOM_SAVE_T); _ZOOM_SAVE_T=null; }   // 예약된 자동저장은 흡수
+  if(btn) btn.disabled=true;
+  if(msg){ msg.style.color='var(--sub)'; msg.textContent='저장 중…'; }
+  try{
+    const n=await _zoomSaveAll(true);      // true = 응답을 기다린다
+    if(msg){ msg.style.color='var(--ok)';
+      msg.textContent='✅ 저장됨'+(n>1?(' ('+n+'개 장면)'):'')+' — 완성본에 그대로 나갑니다'; }
+  }catch(e){
+    if(msg){ msg.style.color='var(--fire)'; msg.textContent='❌ 저장 실패 — 다시 눌러 주세요'; }
+  }finally{ if(btn) btn.disabled=false; }
+}
+// 끌기·클릭이 끝난 뒤 한 번만 보낸다(끄는 도중 매 프레임 보내면 서버가 죽는다)
+function _zoomSaveSoon(){
+  if(_ZOOM_SAVE_T) clearTimeout(_ZOOM_SAVE_T);
+  _ZOOM_SAVE_T=setTimeout(()=>{ _ZOOM_SAVE_T=null; _zoomSaveAll(); }, 400);
+}
+// '모든 장면에 같은 배율'이 켜져 있으면 전 장면에 같은 구도를 저장한다.
+// wait=true면 서버 응답까지 기다리고 저장한 장면 수를 돌려준다(저장 버튼이 쓴다).
+// 하나라도 실패하면 throw — 버튼이 "저장 실패"를 보여줄 수 있어야 하기 때문이다.
+async function _zoomSaveAll(wait){
+  if(typeof MIX_JOB==='undefined' || !MIX_JOB){ if(wait) throw new Error('no job'); return 0; }
+  const st=document.getElementById('zoomStage');
+  const r=st?st.getBoundingClientRect():null;
+  if(!r||!r.width||!r.height){ if(wait) throw new Error('no stage'); return 0; }
+  const px = ZOOM>1.0001 ? (ZOOM*ZTX)/r.width  : 0;
+  const py = ZOOM>1.0001 ? (ZOOM*ZTY)/r.height : 0;
+  const list=(typeof BEATS_PREVIEW!=='undefined' && BEATS_PREVIEW) || [];
+  // 대상: 모든 장면 모드면 전부, 아니면 지금 장면 하나
+  const targets = (zoomAllOn() && list.length) ? list
+                : (list[BEAT_IDX] ? [list[BEAT_IDX]] : []);
+  if(!targets.length){ if(wait) throw new Error('no beats'); return 0; }
+  const send = (b,i)=>{
+    b.zoom=ZOOM; b.pan_x=px; b.pan_y=py;     // 화면 사본도 같이 — 장면을 오갈 때 즉시 맞는다
+    const bi = (b.beat_idx!=null) ? b.beat_idx : (zoomAllOn()? i : BEAT_IDX);
+    return fetch('/api/produce/mix/'+MIX_JOB+'/scenezoom',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({beat_idx:bi, zoom:ZOOM, pan_x:px, pan_y:py})});
+  };
+  if(!wait){ targets.forEach((b,i)=>send(b,i).catch(()=>{})); _zoomMark(); return targets.length; }
+  const rs = await Promise.all(targets.map((b,i)=>send(b,i)));
+  if(rs.some(x=>!x || !x.ok)) throw new Error('save failed');
+  _zoomMark();
+  return targets.length;
+}
+// 자동 저장이 돌았음을 조용히 알린다(버튼을 안 눌러도 저장된다는 걸 보이게)
+function _zoomMark(){
+  const msg=document.getElementById('zoomSaved'); if(!msg) return;
+  msg.style.color='var(--sub)';
+  msg.textContent='자동 저장됨';
+  clearTimeout(_zoomMark._t);
+  _zoomMark._t=setTimeout(()=>{ if(msg.textContent==='자동 저장됨') msg.textContent=''; }, 2500);
+}
+// 이벤트가 글자(드래그 대상) 위에서 시작했나 — 그러면 확대/이동은 손을 뗀다
+function _zoomOnText(t){
+  return !!(t && t.closest && t.closest('#hcPreviewText,#capPreviewText,#ovPreview,#extraPreview,[data-maskbox]'));
+}
+function bindZoom(){
+  const {st,pv}=_zoomEls(); if(!st||!pv||st._zoomBound) return; st._zoomBound=true;
+  let panning=false, moved=false, sx=0, sy=0, tx0=0, ty0=0;
+
+  st.addEventListener('pointerdown', e=>{
+    if(_zoomOnText(e.target)) return;          // 글자는 기존 드래그가 가져간다
+    if(ZOOM>1.001){                            // 확대 중 = 화면을 잡고 끌기
+      panning=true; moved=false;
+      sx=e.clientX; sy=e.clientY; tx0=ZTX; ty0=ZTY;
+      st.classList.add('grabbing');
+      try{ st.setPointerCapture(e.pointerId); }catch(_){}
+      e.preventDefault();
+    }
+  });
+  st.addEventListener('pointermove', e=>{
+    if(!panning) return;
+    const dx=e.clientX-sx, dy=e.clientY-sy;
+    if(Math.abs(dx)>3||Math.abs(dy)>3) moved=true;
+    // ★화면상 dx px 움직이려면 translate는 dx/ZOOM (scale 뒤에 적용되므로).
+    //   결과적으로 **끈 만큼 정확히 1:1로** 그림이 따라온다 — 배율과 무관하게 같은 느낌.
+    ZTX = tx0 + dx/ZOOM;
+    ZTY = ty0 + dy/ZOOM;
+    _zoomApply();
+  });
+  const end = e=>{
+    if(panning){
+      panning=false; st.classList.remove('grabbing');
+      try{ st.releasePointerCapture(e.pointerId); }catch(_){}
+      if(moved){ _zoomSaveSoon(); return; }    // 끌었으면 확대는 안 한다(자리는 저장)
+    }
+    if(_zoomOnText(e.target)) return;
+    // ★누른 그 지점을 화면 가운데로 가져오면서 한 단계 확대한다.
+    //   (origin 방식과 달리 translate는 "누른 곳을 중앙으로"가 자연스럽다)
+    const r=st.getBoundingClientRect(); if(!r.width||!r.height) return;
+    if(ZOOM>=ZOOM_MAX-0.001){ zoomReset(); return; }
+    const nz=ZOOM+ZOOM_STEP;
+    // 누른 점이 중앙에서 얼마나 떨어졌나(화면 px) → 그만큼 반대로 밀어 중앙에 세운다
+    const offX=(e.clientX-r.left)-r.width/2;
+    const offY=(e.clientY-r.top)-r.height/2;
+    const keepX=ZTX*ZOOM, keepY=ZTY*ZOOM;     // 지금 화면상 이동량(유지)
+    ZOOM=nz;
+    ZTX=(keepX-offX)/nz;
+    ZTY=(keepY-offY)/nz;
+    _zoomApply();
+    _zoomSaveSoon();                           // 이 구도가 최종 영상에 그대로 나간다
+  };
+  st.addEventListener('pointerup', end);
+  st.addEventListener('pointercancel', ()=>{ panning=false; st.classList.remove('grabbing'); });
+
+  // ★단축키는 캡컷과 같은 키로 맞춘다(2026-08-30 조사로 실측 확인한 공식 키):
+  //   Alt+Shift + '+' / '-' = 플레이어 확대·축소, Alt+Shift+Z = 원래대로(Fit).
+  //   ★글자를 입력하는 중이면 가로챈다(입력칸에서 단축키가 먹으면 글이 안 써진다).
+  document.addEventListener('keydown', e=>{
+    if(!e.altKey || !e.shiftKey) return;
+    const p3=document.querySelector('.panel[data-step="3"]');
+    if(!p3 || !p3.classList.contains('show')) return;     // 6단계에서만
+    const t=e.target, tag=(t&&t.tagName)||'';
+    if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT'||(t&&t.isContentEditable)) return;
+    const k=(e.key||'').toLowerCase();
+    if(k==='+'||k==='='){ zoomStep(1); e.preventDefault(); }
+    else if(k==='-'||k==='_'){ zoomStep(-1); e.preventDefault(); }
+    else if(k==='z'){ zoomReset(); e.preventDefault(); }
+  });
+  // 창 크기가 바뀌면 한계도 바뀐다 — 다시 가둬 빈 자리가 보이지 않게 한다
+  window.addEventListener('resize', ()=>{ if(ZOOM>1.001) _zoomApply(); });
+  _zoomApply();
 }
 function bindHCDrag(){
   const pv=document.getElementById('hcPreview'), tx=document.getElementById('hcPreviewText');
@@ -11099,6 +12271,10 @@ function renderExport(opts){
         : '<div class="hint" style="margin-bottom:10px">💡 캡컷으로 바로 보내기는 <b>Chrome·Edge</b>에서만 됩니다. 지금 브라우저에선 아래 ZIP을 받아 캡컷에 올리세요. '
             + '<a href="/capcut_manual.html" target="_blank" rel="noopener" style="color:var(--accent2)">📖 그림으로 보는 준비 방법</a></div>')
     + (rendered?`<a class="btn-next" style="${big}" href="/api/mix/video/${j}?dl=1" download>⬇ 완성 영상(MP4)</a>`:'')
+    // ★완성본을 받은 뒤 바로 예약으로(2026-08-29 사장님 "완성본도 만든 뒤 다운을 누르면
+    //   예약발행에도 들어가게"). 파일을 어디에 다시 올릴 필요가 없다 — 예약 단계가
+    //   **같은 작업(MIX_JOB)의 완성본**을 그대로 쓴다.
+    + (rendered?`<button class="btn-next" style="${big};border:0;cursor:pointer" onclick="stepGo('sns')">📅 예약 발행으로 보내기</button>`:'')
     // ★'📱 카톡·공유로 보내기' 버튼은 뺐다(2026-08-18 사장님 지시). 데스크톱 브라우저는
     //   파일 공유(Web Share Level 2)를 대부분 못 해 눌러도 다운로드 안내로 떨어졌고,
     //   폰으로 보내는 길은 아래 'QR로 폰에 보내기' 하나로 충분하다(그 페이지에서 카톡 선택).

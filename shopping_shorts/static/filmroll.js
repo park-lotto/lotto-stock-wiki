@@ -28,6 +28,34 @@
 (function (global) {
   'use strict';
 
+  /* ★"지금 이 영상에서 그림을 뽑을 수 있나" — 판정은 이 파일에서 여기 하나뿐이다(0순위-B).
+     readyState는 0~4이고 **2(HAVE_CURRENT_DATA)부터** 그 시각의 픽셀이 있다.
+     1(HAVE_METADATA)은 길이·크기만 안다는 뜻이라, 그 상태로 drawImage하면 **검은 화면**이
+     그려진다. 그게 2026-08-30 사장님 "검정화면이 필름에 계속 나온다"의 원인이었다
+     (실측 400kbps+CPU 4배: 그려진 16칸이 16칸 모두 검정, 0.25~5.75초 = 정확히 앞쪽 연속).
+     ★검은 프레임은 **캐시에 구워지면 끝**이다 — 캐시가 있으니 아무도 다시 안 뽑는다.
+     그래서 '못 뽑을 때는 아예 안 그린다'가 규칙이다(빈 칸은 다음 차례에 다시 집는다). */
+  const canShoot = v => !!v && v.readyState >= 2;
+
+  /* 그림을 뽑을 수 있을 때까지 기다린다(최대 ms). 못 기다리면 false. */
+  function waitShootable(v, ms) {
+    if (canShoot(v)) return Promise.resolve(true);
+    return new Promise(r => {
+      let done = false;
+      const fin = ok => {
+        if (done) return;
+        done = true;
+        v.removeEventListener('loadeddata', on);
+        v.removeEventListener('canplay', on);
+        r(ok);
+      };
+      const on = () => { if (canShoot(v)) fin(true); };
+      v.addEventListener('loadeddata', on);
+      v.addEventListener('canplay', on);
+      setTimeout(() => fin(canShoot(v)), ms);
+    });
+  }
+
   const PPS_BASE = 54;                 // 칸 폭 54px일 때 1초
   const LADDER = [0.1, 0.2, 0.25, 0.5, 1, 2, 5];   // 확대 단계(오른쪽일수록 확대)
   const CH = 139;   // 칸 기본 높이(px). 훅 칸(78×16/9)과 같다 — CSS --fr-cell 기본값과 짝.
@@ -208,11 +236,19 @@
     function seekRaw(v, t) {
       return new Promise(r => {
         let done = false;
-        const k = () => { if (done) return; done = true; v.removeEventListener('seeked', k); r(); };
-        v.addEventListener('seeked', k);
+        // ★왜 끝났는지 알려준다 — 부른 쪽이 '시간이 없어서 못 끝냈다'를 구분해야
+        //   검은 프레임을 캐시에 굽지 않는다(종전엔 타임아웃도 성공처럼 보였다).
+        const k = why => {
+          if (done) return;
+          done = true;
+          v.removeEventListener('seeked', ks);
+          r(why);
+        };
+        const ks = () => k('seeked');
+        v.addEventListener('seeked', ks);
         try { v.currentTime = Math.min(Math.max(0, t), Math.max(0, (v.duration || DUR) - 0.04)); }
-        catch (_) { done = true; r(); return; }
-        setTimeout(k, 800);
+        catch (_) { done = true; r('throw'); return; }
+        setTimeout(() => k('timeout'), 800);
       });
     }
 
@@ -283,7 +319,13 @@
       capsEl.style.width = (DUR * pps()) + 'px';
       if (!caps.length) { capsEl.innerHTML = ''; return; }
       capsEl.innerHTML = caps.map((c, i) => {
-        const st = c[0], en = (i + 1 < caps.length) ? caps[i + 1][0] : DUR;
+        // ★자막이 실제로 끝나는 시각을 쓴다(2026-08-29 사장님 "장면 자막이 안 맞음").
+        //   종전엔 끝을 **다음 자막 시작**으로 지어냈다 — 말과 말 사이 공백이 앞 자막에
+        //   통째로 먹혀 자막띠가 그림보다 길게 깔렸다(실측 2.3~3.0초씩 초과).
+        //   c[2]=end가 오면 그걸 쓰고, 없으면(옛 2칸 caps) 종전대로 — 다음 시작을 넘진 않게.
+        const st = c[0];
+        const nxt = (i + 1 < caps.length) ? caps[i + 1][0] : DUR;
+        const en = (c.length > 2 && isFinite(c[2]) && c[2] > st) ? Math.min(c[2], nxt) : nxt;
         const w = (en - st) * pps() - 1;
         if (w < 8) return '';
         return `<span class="cp" style="left:${st * pps()}px;width:${w}px">${esc(c[1])}</span>`;
@@ -763,8 +805,16 @@
           const key = ckey(STEP, i);
           let d = CACHE[key];
           if (!d) {
+            // ★그릴 픽셀이 아직 없으면 **기다린다**. 종전엔 그냥 그려서 검은 칸이
+            //   캐시에 구워졌고, 캐시가 있으니 아무도 다시 뽑지 않아 **영영 검정**이었다.
+            if (!canShoot(_shotVid)) await waitShootable(_shotVid, 3000);
+            if (destroyed || my !== _stripSeq) break;
             await seekRaw(_shotVid, t);
             if (destroyed || my !== _stripSeq) break;
+            // 아직 픽셀이 없으면 **이번엔 건너뛴다** — 칸을 비워 두면 다음 fillVisible이
+            // 다시 집는다(검정으로 굳혀 놓는 것보다 낫다). 시크가 타임아웃이었는지는
+            // 따로 안 본다: 결국 물어볼 것은 '지금 그릴 수 있나' 하나뿐이다(0순위-B).
+            if (!canShoot(_shotVid)) { _fillWant = true; continue; }
             try { x.drawImage(_shotVid, 0, 0, cv.width, cv.height); d = cv.toDataURL('image/jpeg', 0.6); CACHE[key] = d; }
             catch (_) { d = ''; }
           }
@@ -773,7 +823,12 @@
       } finally {
         _filling = false;
         // 도는 동안 화면이 바뀌었으면 그 자리를 다시 채운다(놓친 요청을 갚는다).
-        if (_fillWant && !destroyed) { _fillWant = false; setTimeout(fillVisible, 0); }
+        // ★영상이 아직 안 여물어 건너뛴 것도 여기로 온다 — 그때는 **텀을 두고** 다시
+        //   집는다(0ms로 되부르면 준비도 안 된 영상을 두들기며 CPU만 태운다).
+        if (_fillWant && !destroyed) {
+          _fillWant = false;
+          setTimeout(fillVisible, canShoot(_shotVid) ? 0 : 300);
+        }
       }
     }
 
@@ -1156,6 +1211,11 @@
       v.addEventListener('loadedmetadata', r, { once: true });
       setTimeout(r, 5000);
     });
+    // ★그릴 픽셀이 생길 때까지 기다린다(길이만 아는 readyState 1로 그리면 검정이다).
+    //   여기서 못 여물면 **캐시에 굽지 않고** 빈 배열로 물러난다 — 검은 프레임을
+    //   저장하면 캐시 때문에 영영 검은 채로 남는다(strip 쪽과 같은 규칙, 0순위-B).
+    if (!canShoot(v)) await waitShootable(v, 3000);
+    if (!canShoot(v)) return [];
     const cv = document.createElement('canvas');
     cv.width = 96; cv.height = 170;                       // 9:16 소형 — 펼침용이라 충분
     const x = cv.getContext('2d');
@@ -1169,10 +1229,13 @@
         try { v.currentTime = Math.max(0, t); } catch (e) { fin(); }
         setTimeout(fin, 800);                              // 시크가 영영 안 오는 파일 대비
       });
+      // 도중에 다시 여물지 않았으면 그 칸은 **빈 칸**으로 둔다(검정보다 낫다).
+      if (!canShoot(v)) { out.push(''); continue; }
       try { x.drawImage(v, 0, 0, cv.width, cv.height); out.push(cv.toDataURL('image/jpeg', 0.6)); }
       catch (e) { out.push(''); }                          // tainted 등 — 빈 칸으로 두고 계속
     }
-    FRAME_CACHE[key] = out;
+    // ★한 칸이라도 건진 게 있을 때만 캐시한다 — 전부 빈 결과를 구우면 다시 안 뽑는다.
+    if (out.some(Boolean)) FRAME_CACHE[key] = out;
     return out;
   }
 

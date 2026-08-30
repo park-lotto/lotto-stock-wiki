@@ -1,4 +1,5 @@
 """설정 화면 — 참고 화면을 베끼지 않았는지, 우리 색을 쓰는지."""
+import re
 from pathlib import Path
 
 _HTML = Path(__file__).parent.parent / "static" / "settings.html"
@@ -47,11 +48,26 @@ def test_add_key_shows_result_popup():
     assert "white-space:pre-line" in txt, "팝업 줄바꿈이 안 보인다"
 
 
-def test_no_coupang_or_buffer_tab():
-    """연동이 없는 서비스의 빈 탭을 만들지 않는다."""
+def test_no_unwired_service_tab():
+    """연동이 없는 서비스의 빈 탭을 만들지 않는다.
+
+    ★2026-08-29: Buffer는 **실제로 배선됐다**(keyroute.SVC_BUFFER · buffer_api ·
+      10단계 SNS 예약). 그래서 이름만 보고 금지하던 것을 걷고, 원래 의도를
+      그대로 지키는 검사로 바꿨다 — 화면에 있는 서비스 카드는 전부
+      keyroute.SERVICES에 있어야 한다(없으면 저장만 되고 안 쓰이는 빈 탭이다).
+      쿠팡 파트너스는 여전히 키 연동이 없으므로 금지 그대로다.
+    """
     txt = _HTML.read_text(encoding="utf-8")
     assert "쿠팡 파트너스" not in txt
-    assert "Buffer" not in txt
+
+    from shopping_shorts import keyroute
+    m = re.search(r"var SERVICES = (\[.*?\n\];)", txt, re.S)
+    assert m, "SERVICES 선언을 못 찾음"
+    ids = re.findall(r'id:\s*"([a-z]+)"', m.group(1))
+    assert ids, "SERVICES에서 id를 못 뽑음"
+    unknown = [i for i in ids if i not in keyroute.SERVICES]
+    assert not unknown, "keyroute에 없는 서비스 카드: %s" % unknown
+    assert "buffer" in ids, "Buffer 카드가 있어야 한다(2026-08-29 배선 완료)"
 
 
 def test_key_input_is_password_type():

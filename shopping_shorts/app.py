@@ -89,7 +89,8 @@ from shopping_shorts.video_assemble import _probe_duration, _effective_dur, _TRI
 from shopping_shorts.narration_naturalize import naturalize as _naturalize
 from shopping_shorts import frame_extract, scene_assets, scene_cut
 from shopping_shorts import effect_match, remotion_render, points
-from shopping_shorts import keycrypt, keyctx, keyroute, pricing      # BYOK(사용자 키·포인트). points는 위에서 이미 import
+from shopping_shorts import keycrypt, keyctx, keyroute, pricing
+from shopping_shorts import buffer_api      # BYOK(사용자 키·포인트). points는 위에서 이미 import
 from shopping_shorts import video_assemble
 from shopping_shorts import seo_generate, seo_probe
 from shopping_shorts import pattern_bank
@@ -3590,6 +3591,10 @@ def _probe_user_key(service: str, key: str) -> bool:
       같은 판단을 여기 또 적으면 어긋난다(CLAUDE.md 0순위-B).
     ★vmake는 형식만 본다. 실호출이 크레딧을 먹으므로 '확인' 버튼이 돈을 쓰면 안 된다.
     """
+    if service == keyroute.SVC_BUFFER:
+        # 문서가 첫 예제로 쓰는 account 쿼리 하나. 돈이 안 들고 401이면 바로 갈린다.
+        from shopping_shorts.buffer_api import probe as _buffer_probe
+        return _buffer_probe(key)
     if service == keyroute.SVC_GEMINI:
         from shopping_shorts.comment_gen import _probe_key_alive
         return _probe_key_alive(key)
@@ -3692,7 +3697,12 @@ def api_list_keys(request: Request):
             #   조회조차 안 한다 — 저장은 되는데 안 쓰인다. 그걸 모르고 화면이
             #   "N개 등록됨"을 띄워 사장님이 '넣었는데 왜 안 되냐'로 반나절을 썼다.
             #   wired = 등록 키가 실제 호출에 쓰이는 서비스(나머지는 저장만 된다).
-            "personal": bool(cid),
+            # ★cid 0(관리자)도 **자기 키를 쓴다**(2026-08-27 keyroute.keys_for 수정).
+            #   그때 keyroute만 고치고 여기를 안 고쳐서, 관리자 화면에서는 등록칸이
+            #   통째로 숨겨져 **키를 넣을 방법이 없었다**(2026-08-30 사장님 제보:
+            #   "내 키 넣는 곳에 키가 안 넣어진다"). 같은 판단이 두 곳에 있으면
+            #   한쪽만 고쳐 어긋난다 — keys_for가 보는 기준을 그대로 따른다(0순위-B).
+            "personal": True,
             "wired": list(keyroute.WIRED),
             # pooled = 회원 키가 **공용 풀에 합류**하는 서비스(2026-08-24). 화면 문구가
             # 달라진다 — "내 키로 돈다"가 아니라 "풀에 넣고 무료로 쓴다"이기 때문이다.
@@ -4815,9 +4825,11 @@ def clean_failure_kind(clean_error):
     #   "남의 키에 충전하세요"라는 엉뚱한 안내가 안 나간다.
     if "포인트가 부족" in e:
         return "no_points"
-    # VMake가 직접 주는 코드다(실측 원문:
-    #   "[60002] You don't have enough credits for this API. Purchase a subscription...")
-    if "60002" in e or "enough credits" in low:
+    # VMake가 직접 주는 코드다. ★판정은 vmake_client 한 곳에서 빌려 쓴다(0순위-B,
+    #   2026-08-29) — 여기서 따로 문자열을 검사하면 "화면은 소진이라는데 다음 키로는
+    #   안 넘어간다"처럼 로테이션 쪽 판정과 어긋난다.
+    from shopping_shorts.vmake_client import is_no_credit as _vmake_no_credit
+    if _vmake_no_credit(e):
         return "no_credit"
     # 배포·재시작으로 BackgroundTask가 죽은 경우 — 이건 진짜로 다시 시도하면 된다.
     if "서버 재시작" in e or "중단되었습니다" in e:
@@ -5762,6 +5774,104 @@ def share_page(sid: str):
                         .replace("__THUMB__", f"/api/share/t/{sid}" if has_thumb else ""))
 
 
+# ── Buffer(SNS 예약발행) ────────────────────────────────────────────────
+#  ★고객이 자기 Buffer 개인 키를 등록해야만 된다(회사 키로 대신 못 한다).
+#    Buffer가 제3자 OAuth를 아직 안 열었기 때문 — buffer_api.py 머리말 참조.
+#  ★키를 고르는 곳은 keyroute 하나다. 여기서 customer_keys를 직접 뒤지지 않는다.
+def _buffer_key(request: Request) -> str:
+    """이 요청자의 Buffer 키 하나. 없으면 빈 문자열(호출부가 안내를 띄운다)."""
+    keys, _mine = keyroute.keys_for(Store(DB_PATH), _cid(request), keyroute.SVC_BUFFER)
+    return (keys or [""])[0]
+
+
+_BUFFER_NO_KEY = {"ok": False, "need_key": True,
+                  "error": "먼저 마이페이지에서 Buffer 키를 등록해 주세요."}
+
+
+# 화면 구성을 확인할 때만 쓰는 예시 채널. **로컬에서 환경변수를 켰을 때만** 나온다 —
+# 라이브에서 켜지면 있지도 않은 채널에 '예약됨'이 뜬다(가짜 성공은 조용한 사고다).
+_BUFFER_DEMO = os.environ.get("BUFFER_DEMO", "") == "1"
+_BUFFER_DEMO_CHANNELS = [
+    {"id": "demo-ig", "service": "instagram", "name": "숏템탑스", "avatar": ""},
+    {"id": "demo-yt", "service": "youtube", "name": "로또의 스탁브레인", "avatar": ""},
+    {"id": "demo-tt", "service": "tiktok", "name": "shottem", "avatar": ""},
+    {"id": "demo-th", "service": "threads", "name": "숏템탑스", "avatar": ""},
+]
+
+
+@app.get("/api/buffer/channels")
+def api_buffer_channels(request: Request):
+    """이 고객의 Buffer에 연결된 채널 목록(어디에 올릴지 고르게 한다)."""
+    key = _buffer_key(request)
+    if not key:
+        if _BUFFER_DEMO:
+            return {"ok": True, "channels": _BUFFER_DEMO_CHANNELS, "demo": True}
+        return JSONResponse(status_code=200, content=_BUFFER_NO_KEY)
+    try:
+        return {"ok": True, "channels": buffer_api.channels(key)}
+    except buffer_api.BufferError as e:
+        return JSONResponse(status_code=200, content={"ok": False, "error": str(e)})
+
+
+@app.post("/api/buffer/schedule")
+async def api_buffer_schedule(request: Request):
+    """완성 영상을 Buffer에 예약한다.
+
+    body: {job_id, channel_ids[], texts{채널id:글}, due_at?(ISO8601 UTC), thumb_ms?}
+
+    ★글은 **채널마다 다르다**(2026-08-29 사장님). 인스타는 해시태그를 많이 달고
+      쓰레드는 거의 안 단다 — 8단계가 이미 플랫폼별로 만들어 두므로 하나로 뭉개면
+      그 구분이 통째로 죽는다. text 하나만 오면 모든 채널에 그걸 쓴다(옛 호출 호환).
+
+    ★영상은 파일로 못 올린다 — Buffer가 **게시 시점에 공개 URL을 직접 가져간다.**
+      그래서 여기서 임시 공개 링크를 발급한다(기본 24시간이 아니라 14일:
+      예약이 사흘 뒤인데 링크가 하루 만에 죽으면 발행이 조용히 실패한다).
+    ★채널마다 따로 예약한다. 한 채널이 실패해도 나머지는 올라가야 하므로
+      결과를 채널별로 돌려준다(하나 실패 = 전부 실패로 만들지 않는다).
+    """
+    key = _buffer_key(request)
+    if not key:
+        if _BUFFER_DEMO:
+            # ★가짜로 '예약됨'을 돌려주지 않는다. 안 올라갔는데 올라간 줄 알면 그게 더 나쁘다.
+            return JSONResponse(status_code=200, content={
+                "ok": False, "need_key": True,
+                "error": "화면 확인용입니다 — 실제로 예약하려면 Buffer 키를 등록해 주세요."})
+        return JSONResponse(status_code=200, content=_BUFFER_NO_KEY)
+
+    body = await request.json()
+    job_id = os.path.basename(str(body.get("job_id") or ""))
+    chans = [str(c) for c in (body.get("channel_ids") or []) if c]
+    texts = body.get("texts") or {}
+    text = str(body.get("text") or "")          # 옛 호출 호환(모든 채널에 같은 글)
+    due_at = str(body.get("due_at") or "").strip() or None
+    thumb_ms = int(body.get("thumb_ms") or 0)
+    if not job_id or not chans:
+        return JSONResponse(status_code=400,
+                            content={"ok": False, "error": "job_id와 채널을 골라 주세요."})
+
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job or not job.get("video_path") or not Path(job["video_path"]).exists():
+        return JSONResponse(status_code=404,
+                            content={"ok": False, "error": "완성된 영상이 없습니다."})
+    # 내 작업인지 확인 — 남의 job_id로 남의 영상을 공개 링크로 뽑아낼 수 있으면 안 된다.
+    if int(job.get("customer_id") or 0) != _cid(request):
+        return JSONResponse(status_code=403, content={"ok": False, "error": "내 작업이 아닙니다."})
+
+    sid = _share_put(job_id, _SHARE_TTL_BUFFER)
+    base = str(request.base_url).rstrip("/")
+    video_url = f"{base}/api/share/v/{sid}"
+
+    out = []
+    for cid_ in chans:
+        try:
+            t = str(texts.get(cid_) or text or "")
+            r = buffer_api.schedule_video(key, cid_, t, video_url, due_at, thumb_ms)
+            out.append({"channel_id": cid_, "ok": True, "post_id": r["id"], "due_at": r["dueAt"]})
+        except buffer_api.BufferError as e:
+            out.append({"channel_id": cid_, "ok": False, "error": str(e)})
+    return {"ok": any(x["ok"] for x in out), "results": out, "video_url": video_url}
+
+
 @app.get("/api/mix/export/{job_id}")
 def api_mix_export(job_id: str, part: str = ""):
     """캡컷 편집용 내보내기 ZIP(설계 2026-07-20 §2, T1). part=sources|srt|script면 그것만(개별
@@ -5903,15 +6013,24 @@ def api_mix_capcut(job_id: str, base: str = ""):
         except Exception:      # noqa: BLE001 — 틀 하나 때문에 내보내기가 막히면 안 된다
             import traceback as _tb2
             _tb2.print_exc(file=sys.stderr)
-    # ★긴급 차단(2026-08-28): "캡컷으로 보내니 파일이 열리지 않습니다 / 다른 영상은 다
-    #   열리는데 숏템파일만" — 오늘 넣은 스타일·꾸미기 전달이 draft를 깨뜨렸다.
-    #   원인을 가릴 때까지 **끈다**. 켜는 스위치는 여기 한 곳(설정 capcut_style_on=1).
-    #   ⚠️캡컷이 못 여는 draft는 고객이 손쓸 방법이 없다 — 되돌리기가 최우선이다.
-    _style_on = False
+    # ★다시 켠다(2026-08-30). 08-28 긴급차단은 **원인을 잘못 짚었다** — 배포 이력 실측:
+    #     · 고객 실패 3건: 20:43 · 21:33 · 21:59
+    #     · 스타일 3커밋이 main 병합: 21:44 / 그 코드가 **처음 라이브**: 22:06:12
+    #     · 차단 커밋: 22:07 → 스타일이 실제로 돌던 창은 22:06~22:43(37분)
+    #     · 그 37분 동안 캡컷 내보내기 요청 **0건**(journalctl 실측)
+    #   즉 고객이 못 연 draft는 스타일 코드가 만든 것이 **아니다**. 셋 다 스타일 없는
+    #   배포본(ad18c6b13 등)이 만들었다. 차단해도 증상이 안 사라졌을 것이다.
+    #   ⚠️같이 고친 진짜 결함 2개(이게 그 시각에 살아 있던 것들):
+    #     ① mix_pipeline.split_final_into_beat_clips 캐시에 편성 서명이 없어 **옛 조각**이
+    #        나갔다(버그헌트 P1-3) → _clip_sig 추가.
+    #     ② capcut_draft._DEFAULT_FONT가 남의 PC 경로(TheRose·8.9.1.3802)라 **모든 고객에게
+    #        없는 파일**을 가리켰다 → 빈 값(캡컷 기본 폰트 폴백).
+    #   되돌릴 일이 생기면 설정 capcut_style_off=1 한 곳으로 끈다.
+    _style_on = True
     try:
-        _style_on = str(Store(DB_PATH).get_setting("capcut_style_on", "") or "") == "1"
-    except Exception:      # noqa: BLE001 — 설정을 못 읽으면 꺼진 채로 간다(안전 기본값)
-        _style_on = False
+        _style_on = str(Store(DB_PATH).get_setting("capcut_style_off", "") or "") != "1"
+    except Exception:      # noqa: BLE001 — 설정을 못 읽어도 내보내기는 되어야 한다
+        _style_on = True
     proj, project, files = capcut_draft.assemble_draft_folder(
         out_root, base, plan=plan, timeline=timeline, source_video_paths=source_video_paths,
         tts_paths=tts_paths, project_name=_capcut_project_name(job_id, job, plan),
@@ -6403,6 +6522,39 @@ _IG_OEMBED_APP_ID = "936619743392459"
 _YT_THUMB_NAMES = ("maxresdefault.jpg", "sddefault.jpg", "hqdefault.jpg", "mqdefault.jpg")
 
 
+# 카드에 실제로 그려지는 규격. `.card img`가 aspect-ratio:9/16으로 그리므로
+# 원본이 1280×720이든 480×360이든 **화면 크기는 같다** — 큰 파일은 그대로 낭비다.
+_YT_CARD_THUMB = "hqdefault.jpg"
+# 카드에 과한(= 낮춰도 화면이 같은) 규격들. 이보다 작은 건 건드리지 않는다.
+_YT_THUMB_TOO_BIG = ("oardefault.jpg", "maxresdefault.jpg", "sddefault.jpg")
+
+
+def _yt_thumb_downscale(url):
+    """유튜브 썸네일 URL → 카드 크기에 맞는 가벼운 규격으로. 유튜브가 아니면 그대로.
+
+    ★왜(2026-08-30 사장님 "카테고리 탭 들어가면 썸네일 로딩이 엄청 오래 걸린다"):
+      수집된 유튜브 8,000건이 **전량 oardefault**(1280×720)였다. 같은 영상 실측 —
+        oardefault 168,835B / sddefault 52,222B / hqdefault 12,643B / mqdefault 6,517B
+      카드 한 화면이 200장이니 32.2MB를 받는다. hqdefault면 2.5MB(13배).
+      브라우저는 호스트당 6개만 병렬로 받으므로 33겹 대기줄이 생겨 검게 남았다.
+
+    ★덤: oardefault는 '있을 수도 없을 수도 한 변형'이라 **7.5%가 404**였다
+      (_yt_thumb_alternates 주석의 실측). hqdefault는 사실상 항상 있다 —
+      속도만이 아니라 검은 카드도 같이 준다.
+
+    ★영상ID는 절대 보존한다 — 바뀌면 카드↔영상이 어긋난다.
+    ★여기(프록시) 한 곳에서만 정한다(0순위-B). 프론트 thumbURL에서 바꾸면
+      도서관·트렌드·히트작 등 호출부마다 제각각 남는다.
+    """
+    if not url or "ytimg.com" not in url:
+        return url                      # 인스타·틱톡·핀터레스트는 그대로(회귀 0)
+    base, sep_q, query = url.partition("?")
+    head, sep, name = base.rpartition("/")
+    if not sep or "/vi/" not in base or name not in _YT_THUMB_TOO_BIG:
+        return url                      # 모르는 모양·이미 작은 규격은 손대지 않는다
+    return "%s/%s%s%s" % (head, _YT_CARD_THUMB, sep_q, query)
+
+
 def _yt_thumb_alternates(url):
     """유튜브 썸네일 URL → 같은 영상의 **다른 규격** 후보들. 유튜브가 아니면 [].
 
@@ -6477,6 +6629,10 @@ def api_thumb(url: str, v: str | None = None, shortcode: str | None = None):
     from fastapi.responses import Response
     if _reject_cdn_proxy(url, _ALLOWED_THUMB_HOSTS):
         return Response(status_code=400, content=b"invalid host")
+    # ★카드 크기에 맞는 가벼운 규격으로 낮춘다(2026-08-30). 화이트리스트 검사를 **통과한
+    #   뒤에** 바꾼다 — 순서가 바뀌면 검사 대상이 원본이 아니게 된다. 영상ID는 보존되므로
+    #   호스트도 그대로다. 캐시 키도 이 주소로 잡혀 큰 파일을 아예 안 받는다.
+    url = _yt_thumb_downscale(url)
     cache = _thumb_cache_path(url)
     if cache is not None and cache.exists():
         return Response(content=cache.read_bytes(), media_type="image/jpeg",
@@ -7575,7 +7731,8 @@ def _set_session_cookie(response, customer_id: int):
 # '로그인 없이 열리는' 단기 링크를 QR로 띄운다 → 폰으로 스캔해 폰 카톡 네이티브 공유로 전송.
 # ★URL을 짧게(/s/{8자}) 유지해야 QR이 v3(검증범위) 안에 든다 → 긴 서명토큰 대신 메모리 저장소에
 #   짧은 id→(job,만료)를 담는다. 재기동 시 사라짐 = 24h 만료와 같은 성질(재발급하면 됨). 무상태 필요 없음.
-_SHARE_TTL = 60 * 60 * 24  # 24시간
+_SHARE_TTL = 60 * 60 * 24        # 24시간(QR '폰으로 보내기')
+_SHARE_TTL_BUFFER = 60 * 60 * 24 * 14   # 14일 — Buffer가 게시 시점에 가져간다
 
 # ★DB에 저장한다(2026-08-19 사장님 "카톡 QR로 보내기 다시 살려줘"). 예전엔 프로세스 메모리
 #   dict였다 — 자동배포 크론이 3분마다 새 커밋을 보고 systemctl restart 하므로, 발급한 QR이
@@ -7584,10 +7741,18 @@ _SHARE_TTL = 60 * 60 * 24  # 24시간
 #   저장소가 sqlite면 재시작·워커 분리와 무관하게 24시간 그대로 산다.
 
 
-def _share_put(job_id: str) -> str:
+def _share_put(job_id: str, ttl: int | None = None) -> str:
+    """단축 공개 링크를 발급한다. ttl(초)을 주면 그 기간, 없으면 기본 24시간.
+
+    ★Buffer 예약발행이 ttl을 길게 준다(buffer_api 참조). Buffer는 파일을 안 받고
+      **공개 URL을 게시 시점에 직접 가져간다** — 예약이 사흘 뒤면 그때까지 링크가
+      살아 있어야 한다. 24시간이면 예약이 조용히 실패한다.
+      ⚠️그래도 '무기한'은 안 된다. 주소를 아는 사람은 로그인 없이 볼 수 있으므로,
+        기간을 반드시 끊는다(사장님 선택: 예약한 영상만 임시 공개).
+    """
     now = int(datetime.now(timezone.utc).timestamp())
     sid = secrets.token_urlsafe(6)   # ~8자
-    Store(DB_PATH).put_share_link(sid, job_id, now + _SHARE_TTL)
+    Store(DB_PATH).put_share_link(sid, job_id, now + int(ttl or _SHARE_TTL))
     return sid
 
 
@@ -13702,6 +13867,45 @@ def api_produce_mix_cappos(job_id: str, body: dict):
             "y_pct": video_assemble._CAP_POS_PCT.get(hit["cap_pos"])}
 
 
+@app.post("/api/produce/mix/{job_id}/scenezoom")
+def api_produce_mix_scenezoom(job_id: str, body: dict):
+    """장면 하나의 화면 확대 구도(2026-08-30 사장님 "장면 바꾸기에서 수정한 대로 나오게").
+    body: {beat_idx, zoom, pan_x, pan_y}
+      zoom  = 1.0~3.0 (1.0이면 지정 해제 = 기본 구도로 되돌린다)
+      pan_x/pan_y = 화면 폭·높이 대비 이동 비율. 오른쪽·아래가 +. 한계 |pan| <= (zoom-1)/2
+
+    ★값을 해석·보정하는 곳은 video_assemble.scene_zoom_of 한 군데뿐이다 — 여기선
+      **뜻만 저장**한다(0순위-B). 그래야 화면·렌더가 같은 규칙을 본다.
+    ★음성·타이밍·자막을 건드리지 않는다 → 즉시·무료."""
+    store = Store(DB_PATH)
+    plan, hit, err = _mix_job_beat_or_error(job_id, body, store)
+    if err:
+        return err
+    try:
+        zoom = float(body.get("zoom") or 1.0)
+    except (TypeError, ValueError):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "zoom은 숫자"})
+    if zoom <= 1.0001:
+        # 지정 해제 — 키를 지운다(기본값을 저장해두면 나중에 기본이 바뀔 때 안 따라온다)
+        for k in ("scene_zoom", "scene_pan_x", "scene_pan_y"):
+            hit.pop(k, None)
+    else:
+        zoom = max(1.0, min(3.0, zoom))
+        lim = (zoom - 1.0) / 2.0
+        def _pan(key):
+            try:
+                v = float(body.get(key) or 0.0)
+            except (TypeError, ValueError):
+                v = 0.0
+            return max(-lim, min(lim, v))
+        hit["scene_zoom"] = round(zoom, 4)
+        hit["scene_pan_x"] = round(_pan("pan_x"), 5)
+        hit["scene_pan_y"] = round(_pan("pan_y"), 5)
+    store.update_mix_job(job_id, edit_plan=plan)
+    z, px, py = video_assemble.scene_zoom_of(hit)
+    return {"ok": True, "zoom": z, "pan_x": px, "pan_y": py}
+
+
 @app.post("/api/produce/mix/{job_id}/caplines")
 def api_produce_mix_caplines(job_id: str, body: dict):
     """장면 하나의 자막 줄 나누기(2026-08-25). body: {beat_idx, lines: [str, ...]}
@@ -14021,6 +14225,7 @@ def api_produce_mix_beats_preview(job_id: str):
     # 2~3어절씩 쪼갠다. 그래서 "미리보기는 안 끊기는데 실제론 끊긴다"였다. 이제 실제 렌더와
     # 같은 구절 분할(segs)과, 있으면 실제 표시시간(cap_durs)을 함께 내려 미리보기가 순차 재생한다.
     out = []
+    _z_of = video_assemble.scene_zoom_of      # (zoom, pan_x, pan_y) — 해석은 저기 한 곳
     for idx, b in enumerate(beats):
         narr = b.get("narration", "")
         out.append({
@@ -14035,6 +14240,9 @@ def api_produce_mix_beats_preview(job_id: str):
             #   None = 전체 설정 그대로(bottom) → 화면은 caption_style.y_pct를 쓴다.
             "pos_y_pct": video_assemble._CAP_POS_PCT.get(b.get("cap_pos")),
             "beat_idx": b.get("beat_idx", idx),                     # 저장 API가 쓰는 진짜 번호(목록 순번과 다를 수 있다)
+            # ★장면별 화면 확대 구도(2026-08-30). 해석·보정은 scene_zoom_of 한 곳에서만 —
+            #   화면이 스스로 가두면 렌더와 두 벌이 된다(0순위-B, cap_pos와 같은 방식).
+            "zoom": _z_of(b)[0], "pan_x": _z_of(b)[1], "pan_y": _z_of(b)[2],
         })
     return {"beats": out}
 

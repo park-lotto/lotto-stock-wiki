@@ -359,7 +359,8 @@ var GUIDE_VIDEO = {
   vmake: "",       // VMake 키 받는 법
   elevenlabs: "",  // ElevenLabs 키 받는 법
   youtube: "",     // 유튜브 Data API 키 받는 법
-  serpapi: ""      // SerpApi 키 받는 법(렌즈 검색)
+  serpapi: "",     // SerpApi 키 받는 법(렌즈 검색)
+  buffer: ""       // Buffer 키 받는 법(SNS 예약발행)
 };
 
 /* 서비스 정의 — 이름·설명·복수허용 여부를 한 곳에서만 정한다(CLAUDE.md 0순위-B). */
@@ -380,7 +381,20 @@ var SERVICES = [
     desc: "비슷한 영상 찾기에 씁니다. 검색 1번에 3회가 쓰입니다(한국어·영어·중국어로 각각 찾기)",
     multi: true, ph: "여러 개를 한 번에 붙여넣어도 됩니다", freeOp: "lens",
     note: "가입하면 <b>월 250회 무료</b>입니다 — 검색으로 치면 한 달에 약 83번. " +
-          "등록하셔도 <b>하루 10번</b> 제한은 그대로입니다(서버 보호)." }
+          "등록하셔도 <b>하루 10번</b> 제한은 그대로입니다(서버 보호)." },
+  /* ★Buffer는 **내 키가 있어야만** 되는 서비스입니다. 회사 키로 대신 올려드릴 수
+     없습니다 — Buffer가 '남을 대신해 발행'을 아직 안 열어놨습니다(2026-08 확인).
+     그래서 안내 문구가 다른 서비스와 다릅니다: 없으면 '느려지는' 게 아니라 '못 씁니다'. */
+  { id: "buffer",     icon: "📅", name: "SNS 예약 발행 (Buffer)",
+    desc: "완성한 영상을 인스타·유튜브·틱톡 등에 예약해 올립니다",
+    multi: false, ph: "키 붙여넣기",
+    note: "Buffer는 <b>무료 요금제</b>에도 키가 1개 나옵니다(월 3,000회 · 채널 3개). " +
+          "Buffer에서 <b>조직 소유자</b>만 키를 만들 수 있습니다. " +
+          "이 키는 <b>숏템메이커가 대신해 드릴 수 없습니다</b> — 내 SNS 계정에 올리는 일이라 " +
+          "반드시 내 Buffer 키가 있어야 합니다.",
+    /* ★내 키가 없으면 **아예 못 쓰는** 서비스다(포인트로 대신 못 쓴다).
+       배지·안내가 다른 서비스와 달라야 한다 — renderKeys의 mustOwn 분기 참조. */
+    mustOwn: true }
 ];
 
 var STATUS = {
@@ -521,9 +535,13 @@ function renderKeys(){
   el("adminNotice").style.display = PERSONAL ? "none" : "";
   el("svcCards").innerHTML = SERVICES.map(function(s){
     var mine = keysOf(s.id);
+    /* ★포인트로 대신 쓸 수 있는 서비스에만 '포인트로 사용중'을 쓴다.
+       Buffer처럼 **내 키가 없으면 아예 못 쓰는** 서비스(mustOwn)에 그 말을 붙이면
+       "안 넣어도 포인트로 되는구나"로 읽혀 거짓말이 된다(2026-08-30 사장님 지적). */
     var badge = mine.length
       ? '<span class="svcBadge on">✓ ' + mine.length + '개 등록됨</span>'
-      : '<span class="svcBadge off">포인트로 사용중</span>';
+      : (s.mustOwn ? '<span class="svcBadge off">내 키 필요</span>'
+                   : '<span class="svcBadge off">포인트로 사용중</span>');
 
     /* 설명 — 단가는 실제 값으로 보여준다(하드코딩하지 않는다).
        ★예전엔 freeOp가 있으면 desc를 통째로 덮어썼다. 렌즈처럼 desc에 꼭 필요한
