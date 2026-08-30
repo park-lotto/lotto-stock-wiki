@@ -831,6 +831,11 @@
       font-size:12px;color:var(--sub);cursor:pointer;user-select:none;
     }
     .zoomAll input{cursor:pointer;accent-color:var(--accent2);width:15px;height:15px}
+    /* 체크 + 저장버튼 + 상태를 한 줄에 */
+    .zoomFoot{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:7px}
+    .zoomFoot .zoomAll{margin-top:0;margin-right:auto}
+    .zoomFoot .zbtn{padding:5px 10px;font-size:12px;min-height:32px}
+    .zoomSaved{font-size:12px;color:var(--ok);min-width:0}
     .zoomBar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px}
     .zoomBar .zbtn{
       min-width:auto;padding:6px 12px;font-size:13px;min-height:36px;
@@ -1859,10 +1864,18 @@
                  전체 장면도 같은 비율로 적용할지 말지 체크버튼"). 기본 켬 — 장면을 넘겨도
                  배율이 유지되는 게 지금까지의 동작이고, 대개 그걸 원한다. 끄면 장면을
                  넘길 때마다 100%로 돌아가 그 장면만 따로 확대해 볼 수 있다. -->
-            <label class="zoomAll" id="zoomAllWrap">
-              <input type="checkbox" id="zoomAll" checked onchange="zoomAllChanged()">
-              <span>모든 장면에 같은 배율</span>
-            </label>
+            <div class="zoomFoot">
+              <label class="zoomAll" id="zoomAllWrap">
+                <input type="checkbox" id="zoomAll" checked onchange="zoomAllChanged()">
+                <span>모든 장면에 같은 배율</span>
+              </label>
+              <!-- ★자동 저장은 이미 되지만 **저장됐는지 눈에 보여야** 안심이 된다
+                   (2026-08-30 사장님 "저장버튼이 있어야 원활할 듯"). 버튼은 지금 즉시
+                   저장하고, 옆 글자가 결과를 말한다. -->
+              <button type="button" class="zbtn" id="zoomSaveBtn" onclick="zoomSaveNow()"
+                      title="이 확대 구도를 저장합니다(최종 영상에 그대로 나갑니다)">💾 저장</button>
+              <span class="zoomSaved" id="zoomSaved"></span>
+            </div>
           </div>
           <!-- ★세로 크기는 화면 안에 들어와야 한다(2026-08-18 사장님 지시). 380px면 9:16이라
                675px가 돼 노트북 화면에서 아래가 잘려 하단 띠·자막 위치를 확인할 수 없다.
@@ -4964,9 +4977,9 @@ async function loadBeatsPreview(){
   if(!BEATS_PREVIEW.length){ if(st) st.style.display='none'; return; }
   if(st) st.style.display='block';
   BEAT_IDX=Math.min(BEAT_IDX, BEATS_PREVIEW.length-1);
-  showBeat(BEAT_IDX);
+  showBeat(BEAT_IDX, true);      // true = 처음 불러옴 → 저장된 확대를 **읽기만** 한다
 }
-function showBeat(i){
+function showBeat(i, first){
   if(!BEATS_PREVIEW.length) return;
   BEAT_IDX=(i+BEATS_PREVIEW.length)%BEATS_PREVIEW.length;
   const b=BEATS_PREVIEW[BEAT_IDX];
@@ -4986,7 +4999,7 @@ function showBeat(i){
   if(cnt) cnt.textContent=(BEAT_IDX+1)+' / '+BEATS_PREVIEW.length+' 장면';
   renderBeatTools();          // 장면을 넘기면 그 장면의 자리·줄을 보여준다
   // 확대를 이 장면에도 이어갈지는 '모든 장면에 같은 배율' 체크가 정한다(zoomOnBeatChange)
-  if(typeof zoomOnBeatChange==='function') zoomOnBeatChange();
+  if(typeof zoomOnBeatChange==='function') zoomOnBeatChange(first);
 }
 let CAP_SEQ_TIMER=null;
 function _playBeatCaptions(b){
@@ -6286,17 +6299,27 @@ function zoomAllChanged(){
 // 장면을 넘길 때 showBeat이 부른다. 유지/복원을 여기서 정한다.
 // ★'모든 장면에 같은 배율'이 켜져 있으면 배율을 그대로 이어간다(그리고 그 장면에도 저장).
 //   꺼져 있으면 **그 장면에 저장된 값**을 복원한다 — 없으면 100%.
-function zoomOnBeatChange(){
-  if(zoomAllOn()){ _zoomApply(); _zoomSaveCur(); return; }
+// 그 장면에 **저장된** 구도를 화면에 올린다(서버 값 → 화면 상태).
+// 저장은 '화면 크기 대비 비율', 화면은 '확대좌표계 px' → 되돌려 환산한다.
+function _zoomLoadFromBeat(){
   const b=(typeof BEATS_PREVIEW!=='undefined' && BEATS_PREVIEW[BEAT_IDX]) || null;
-  const z=b && +b.zoom || 1;
+  const z=(b && +b.zoom) || 1;
   ZOOM = z>1.0001 ? z : 1;
-  // 저장은 '비율'(화면 폭 대비 이동)이고 화면은 '확대좌표계 px'을 쓴다 → 되돌려 환산
   const st=document.getElementById('zoomStage');
   const r=st?st.getBoundingClientRect():{width:0,height:0};
   ZTX = (ZOOM>1.0001 && r.width)  ? (+b.pan_x||0)*r.width/ZOOM  : 0;
   ZTY = (ZOOM>1.0001 && r.height) ? (+b.pan_y||0)*r.height/ZOOM : 0;
   _zoomApply();
+}
+// ★장면을 넘길 때 showBeat이 부른다.
+//   ⚠️'처음 들어옴'과 '장면 넘김'을 갈라야 한다 — 안 가르면, '모든 장면에 같은 배율'이
+//     켜진 채 6단계에 다시 들어왔을 때 저장값을 읽는 대신 **현재값(100%)을 덮어써 저장**해
+//     사장님이 맞춰둔 확대가 통째로 날아간다(2026-08-30 "다른 작업 후 다시 오면 저장
+//     안 되지 않게").
+function zoomOnBeatChange(first){
+  if(first){ _zoomLoadFromBeat(); return; }      // 들어올 때는 **읽기만** 한다
+  if(zoomAllOn()){ _zoomApply(); _zoomSaveCur(); return; }
+  _zoomLoadFromBeat();                            // 장면별 모드 = 그 장면 값 복원
 }
 // ★지금 구도를 서버에 저장한다 — 이게 있어야 **최종 렌더에 그대로 나온다**
 //   (2026-08-30 사장님 "장면 바꾸기에서 수정한 대로 나오게").
@@ -6317,7 +6340,29 @@ function _zoomSaveCur(){
   // 화면에도 같은 값을 담아둔다 — 장면을 오갈 때 서버를 다시 안 물어도 되게
   b.zoom=payload.zoom; b.pan_x=payload.pan_x; b.pan_y=payload.pan_y;
   fetch('/api/produce/mix/'+MIX_JOB+'/scenezoom',{method:'POST',
-    headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).catch(()=>{});
+    headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+    .then(()=>{ if(typeof _zoomMark==='function') _zoomMark(); }).catch(()=>{});
+}
+// 💾 저장 버튼 — 지금 즉시 저장하고 **결과를 화면에 말한다**.
+// 자동 저장은 조용히 실패할 수 있는데(fetch catch), 그러면 사장님은 저장된 줄 안다.
+// 버튼은 서버 응답을 확인하고 성공/실패를 글자로 보여준다.
+async function zoomSaveNow(){
+  const msg=document.getElementById('zoomSaved');
+  const btn=document.getElementById('zoomSaveBtn');
+  if(typeof MIX_JOB==='undefined' || !MIX_JOB){
+    if(msg){ msg.style.color='var(--fire)'; msg.textContent='먼저 3단계 영상 매칭이 필요해요'; }
+    return;
+  }
+  if(_ZOOM_SAVE_T){ clearTimeout(_ZOOM_SAVE_T); _ZOOM_SAVE_T=null; }   // 예약된 자동저장은 흡수
+  if(btn) btn.disabled=true;
+  if(msg){ msg.style.color='var(--sub)'; msg.textContent='저장 중…'; }
+  try{
+    const n=await _zoomSaveAll(true);      // true = 응답을 기다린다
+    if(msg){ msg.style.color='var(--ok)';
+      msg.textContent='✅ 저장됨'+(n>1?(' ('+n+'개 장면)'):'')+' — 완성본에 그대로 나갑니다'; }
+  }catch(e){
+    if(msg){ msg.style.color='var(--fire)'; msg.textContent='❌ 저장 실패 — 다시 눌러 주세요'; }
+  }finally{ if(btn) btn.disabled=false; }
 }
 // 끌기·클릭이 끝난 뒤 한 번만 보낸다(끄는 도중 매 프레임 보내면 서버가 죽는다)
 function _zoomSaveSoon(){
@@ -6325,22 +6370,40 @@ function _zoomSaveSoon(){
   _ZOOM_SAVE_T=setTimeout(()=>{ _ZOOM_SAVE_T=null; _zoomSaveAll(); }, 400);
 }
 // '모든 장면에 같은 배율'이 켜져 있으면 전 장면에 같은 구도를 저장한다.
-function _zoomSaveAll(){
-  if(typeof MIX_JOB==='undefined' || !MIX_JOB) return;
-  if(!zoomAllOn()){ _zoomSaveCur(); return; }
-  const list=(typeof BEATS_PREVIEW!=='undefined' && BEATS_PREVIEW) || [];
-  if(!list.length){ _zoomSaveCur(); return; }
-  const st=document.getElementById('zoomStage'); if(!st) return;
-  const r=st.getBoundingClientRect(); if(!r.width||!r.height) return;
+// wait=true면 서버 응답까지 기다리고 저장한 장면 수를 돌려준다(저장 버튼이 쓴다).
+// 하나라도 실패하면 throw — 버튼이 "저장 실패"를 보여줄 수 있어야 하기 때문이다.
+async function _zoomSaveAll(wait){
+  if(typeof MIX_JOB==='undefined' || !MIX_JOB){ if(wait) throw new Error('no job'); return 0; }
+  const st=document.getElementById('zoomStage');
+  const r=st?st.getBoundingClientRect():null;
+  if(!r||!r.width||!r.height){ if(wait) throw new Error('no stage'); return 0; }
   const px = ZOOM>1.0001 ? (ZOOM*ZTX)/r.width  : 0;
   const py = ZOOM>1.0001 ? (ZOOM*ZTY)/r.height : 0;
-  list.forEach((b,i)=>{
-    b.zoom=ZOOM; b.pan_x=px; b.pan_y=py;
-    fetch('/api/produce/mix/'+MIX_JOB+'/scenezoom',{method:'POST',
+  const list=(typeof BEATS_PREVIEW!=='undefined' && BEATS_PREVIEW) || [];
+  // 대상: 모든 장면 모드면 전부, 아니면 지금 장면 하나
+  const targets = (zoomAllOn() && list.length) ? list
+                : (list[BEAT_IDX] ? [list[BEAT_IDX]] : []);
+  if(!targets.length){ if(wait) throw new Error('no beats'); return 0; }
+  const send = (b,i)=>{
+    b.zoom=ZOOM; b.pan_x=px; b.pan_y=py;     // 화면 사본도 같이 — 장면을 오갈 때 즉시 맞는다
+    const bi = (b.beat_idx!=null) ? b.beat_idx : (zoomAllOn()? i : BEAT_IDX);
+    return fetch('/api/produce/mix/'+MIX_JOB+'/scenezoom',{method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({beat_idx:(b.beat_idx!=null?b.beat_idx:i), zoom:ZOOM, pan_x:px, pan_y:py})
-    }).catch(()=>{});
-  });
+      body:JSON.stringify({beat_idx:bi, zoom:ZOOM, pan_x:px, pan_y:py})});
+  };
+  if(!wait){ targets.forEach((b,i)=>send(b,i).catch(()=>{})); _zoomMark(); return targets.length; }
+  const rs = await Promise.all(targets.map((b,i)=>send(b,i)));
+  if(rs.some(x=>!x || !x.ok)) throw new Error('save failed');
+  _zoomMark();
+  return targets.length;
+}
+// 자동 저장이 돌았음을 조용히 알린다(버튼을 안 눌러도 저장된다는 걸 보이게)
+function _zoomMark(){
+  const msg=document.getElementById('zoomSaved'); if(!msg) return;
+  msg.style.color='var(--sub)';
+  msg.textContent='자동 저장됨';
+  clearTimeout(_zoomMark._t);
+  _zoomMark._t=setTimeout(()=>{ if(msg.textContent==='자동 저장됨') msg.textContent=''; }, 2500);
 }
 // 이벤트가 글자(드래그 대상) 위에서 시작했나 — 그러면 확대/이동은 손을 뗀다
 function _zoomOnText(t){

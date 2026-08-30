@@ -2388,19 +2388,27 @@ def _clean_strategy(job):
 def _plan_signature(plan):
     """편집안 → 완성본 **그림**을 결정하는 것만 뽑은 서명(sha1 앞 16자).
 
-    들어가는 것: 비트 순서 · 각 비트의 재료(video_id·start·end) · 컷 길이(target_seconds).
+    들어가는 것: 비트 순서 · 각 비트의 재료(video_id·start·end) · 컷 길이(target_seconds)
+                 · **장면 확대 구도(scene_zoom/pan)** — 잘라내는 자리가 곧 그림이다.
     빠지는 것:  대사·음성·자막 — 화면 그림을 안 바꾸므로 다시 청소할 이유가 없다.
 
     ★재료 판정은 video_assemble._beat_material과 같은 규칙이다(scene_override 우선).
       여기가 어긋나면 장면을 바꿨는데 옛 청소본이 그대로 나간다.
+    ★확대(2026-08-30)도 같은 이유로 반드시 들어가야 한다 — 빼면 배율만 바꿨을 때
+      서명이 그대로라 **옛 청소본(확대 전 화면)이 재사용된다**. 실제로 "최종렌더만
+      다시 하면 되나"라는 질문에서 이 구멍을 찾았다.
     """
     import hashlib
+    from . import video_assemble as _va       # 확대 해석은 저기 한 곳(0순위-B)
     beats = (plan or {}).get("beats") or []
     parts = []
     for b in beats:
         for m in _beat_materials(b):
             parts.append("%s:%s:%s" % (m.get("video_id"), m.get("start"), m.get("end")))
         parts.append("t=%s" % b.get("target_seconds"))
+        _z, _px, _py = _va.scene_zoom_of(b)
+        if _z > 1.0001:                        # 지정 없으면 아무것도 안 붙인다
+            parts.append("z=%.4f,%.5f,%.5f" % (_z, _px, _py))   # → 옛 작업 서명 불변
         parts.append("|")
     return hashlib.sha1("".join(parts).encode("utf-8")).hexdigest()[:16]
 
