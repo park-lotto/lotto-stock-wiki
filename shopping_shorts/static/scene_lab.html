@@ -732,7 +732,15 @@ body.tight #playerhost .lbl label{display:none}   /* 1장=1컷 — 사장님 "�
    ★값은 880px/86vh → 700px/72vh (2026-08-29 사장님 "3단계 미리보기가 너무 크다").
      880은 미리보기 450px(9:16 = 800px)을 품으려던 높이였다. 미리보기를 330px로
      되돌렸으니(9:16 ≈ 587px) 밴드도 같이 내린다 — 한쪽만 내리면 빈 세로가 남는다. */
-#topband{height:min(700px,72vh)}
+/* ★높이 고정은 '촘촘히' 전용이다(2026-08-30 브라우저 실측). 700px은 글자를 접었을 때
+   맞춘 값이라(촘촘히 실측: 칸 473 + 필름 221 = 694) 넓게에선 글자가 다 보여 776px이
+   되고, #topright{overflow:hidden}에 잘려 필름 자리가 빈 검은 칸으로 보인다.
+   → 자리(어디에 있나)는 모드 무관, 높이(얼마나 눌러 담나)는 촘촘히 전용. */
+body.tight #topband{height:min(700px,72vh)}
+body:not(.tight) #topband{height:auto}
+body:not(.tight) #topband > #topright{overflow:visible}
+/* 밴드가 auto면 height:100%가 안 먹는다(실측 playerhost 287px) — stretch로 채운다 */
+body:not(.tight) #topband > #playerhost{height:auto;align-self:stretch}
 #topband > #playerhost{height:100%;display:flex;flex-direction:column;min-height:0}
 /* ★display를 여기서 주면 안 된다 — #player는 원래 재생 중(.on)일 때만 보인다.
    내가 display:flex를 박는 바람에 **재생 전에도 빈 검은 재생창+진행바**가 떠서
@@ -1700,7 +1708,7 @@ function toggleTight(){
   localStorage.setItem(TIGHT_KEY, document.body.classList.contains('tight') ? '0' : '1');
   _tightApply();
 }
-const BUILD_TAG = 'F27';   // 필름 자리도 모드 밖으로 — '넓게'에서 필름이 안 펼쳐지던 것
+const BUILD_TAG = 'F28';   // 밴드 높이 고정은 촘촘히 전용 — 넓게는 내용만큼 자란다
 (function(){ const b=document.getElementById('buildtag'); if(b) b.textContent = BUILD_TAG; })();
 
 function toggleHints(){
