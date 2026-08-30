@@ -396,3 +396,111 @@ def test_no_template_keeps_old_tracks():
                               tts_paths=_TTS, asset_paths=_ASSET, project_name="t", deco=bad)
         assert [t["type"] for t in d["tracks"]] == ["video", "audio", "text"], bad
         assert not _photos(d)
+
+
+# ── 최종렌더에 있던 것이 캡컷에도 간다(2026-08-30 전구간 점검) ────────────────
+# 점검 실측: 머리카피·BGM·효과음·컷어웨이·장면확대가 capcut_draft에 **grep 0건**이었다.
+# 즉 완성본과 캡컷이 서로 다른 영상이었다. 아래는 각 재료가 실제로 트랙에 얹히는지 본다.
+
+def _tracks_of(draft, kind):
+    return [t for t in draft["tracks"] if t["type"] == kind]
+
+
+def test_머리카피_PNG가_영상트랙에_얹힌다():
+    draft, _ = cd.build_draft(
+        plan=_PLAN, timeline=_TIMELINE, source_video_paths=_SRC, tts_paths=_TTS,
+        asset_paths=_ASSET, project_name="테스트",
+        headcopy_layer={"_capcut_path": "C:/cap/p/headcopy.png", "t0": 0.0, "dur": 2.0})
+    photos = [m for m in draft["materials"]["videos"] if m.get("type") == "photo"]
+    assert any(m["path"].endswith("headcopy.png") for m in photos), "머리카피 PNG가 없다"
+    seg = next(s for t in _tracks_of(draft, "video") for s in t["segments"]
+               if s["material_id"] in {m["id"] for m in photos})
+    assert seg["target_timerange"] == {"start": 0, "duration": 2_000_000}
+    assert seg["track_render_index"] == 2, "틀(1) 위에 와야 한다"
+
+
+def test_머리카피_구간은_렌더규칙과_같다():
+    """마지막 비트 전까지만 — video_assemble.headcopy_span 한 곳이 정한다."""
+    from shopping_shorts import video_assemble as va
+    assert va.headcopy_span(_TIMELINE) == (0.0, 2.0)      # 마지막 비트 t0=2.0
+    assert va.headcopy_span(_TIMELINE[:1]) == (0.0, 2.0)  # 비트 1개면 전체
+
+
+def test_BGM이_자기_오디오트랙에_붙는다():
+    draft, _ = cd.build_draft(
+        plan=_PLAN, timeline=_TIMELINE, source_video_paths=_SRC, tts_paths=_TTS,
+        asset_paths=_ASSET, project_name="테스트",
+        bgm_layer={"_capcut_path": "C:/cap/p/bgm.mp3", "dur": 60.0, "volume": 20})
+    bgm = next(m for m in draft["materials"]["audios"] if m["path"].endswith("bgm.mp3"))
+    segs = [s for t in _tracks_of(draft, "audio") for s in t["segments"]
+            if s["material_id"] == bgm["id"]]
+    assert len(segs) == 1
+    assert segs[0]["volume"] == 0.2, "제작소 볼륨(20%)이 안 따라갔다"
+    # 영상 전체(3.5초)를 넘지 않는다 — 60초 음원이 타임라인을 늘리면 안 된다
+    assert segs[0]["target_timerange"]["duration"] == 3_500_000
+    assert draft["duration"] == 3_500_000
+    # TTS와 **다른 트랙**이어야 한다(같은 트랙이면 캡컷이 하나를 밀어낸다)
+    tts_track = next(t for t in _tracks_of(draft, "audio")
+                     if any(s["material_id"] != bgm["id"] for s in t["segments"]))
+    assert bgm["id"] not in {s["material_id"] for s in tts_track["segments"]}
+
+
+def test_효과음이_타점에_꽂힌다():
+    draft, _ = cd.build_draft(
+        plan=_PLAN, timeline=_TIMELINE, source_video_paths=_SRC, tts_paths=_TTS,
+        asset_paths=_ASSET, project_name="테스트",
+        sfx_layers=[{"_capcut_path": "C:/cap/p/sfx_00.mp3", "at": 2.0, "dur": 0.8,
+                     "volume": 60}])
+    sfx = next(m for m in draft["materials"]["audios"] if m["path"].endswith("sfx_00.mp3"))
+    seg = next(s for t in _tracks_of(draft, "audio") for s in t["segments"]
+               if s["material_id"] == sfx["id"])
+    assert seg["target_timerange"] == {"start": 2_000_000, "duration": 800_000}
+    assert seg["volume"] == 0.6
+
+
+def test_효과음_타점은_렌더와_같은_함수가_준다():
+    """position 3종(first/last/transition)을 렌더와 한 곳에서 계산한다."""
+    from shopping_shorts import video_assemble as va
+    tl = [{"beat_idx": 0, "t0": 0.0, "dur": 2.0, "narration": "첫 장면",
+           "sfx": {"position": "transition"}},
+          {"beat_idx": 1, "t0": 2.0, "dur": 1.5, "narration": "둘째 장면",
+           "sfx": {"position": "first"}}]
+    ev = va.sfx_events_for(tl, {0: "a.mp3", 1: "b.mp3"})
+    assert ev[0] == ("a.mp3", 2.0)     # transition = 칸이 끝나는 순간
+    assert ev[1] == ("b.mp3", 2.0)     # first = 칸 시작
+    assert va.sfx_events_for(tl, {}) == []      # 경로 없으면 안 넣는다
+
+
+def test_컷어웨이가_비트_위에_얹힌다():
+    draft, _ = cd.build_draft(
+        plan=_PLAN, timeline=_TIMELINE, source_video_paths=_SRC, tts_paths=_TTS,
+        asset_paths=_ASSET, project_name="테스트",
+        cutaway_layers={1: {"_capcut_path": "C:/cap/p/cutaway_01.mp4", "dur": 5.0}})
+    mat = next(m for m in draft["materials"]["videos"]
+               if m["path"].endswith("cutaway_01.mp4"))
+    seg = next(s for t in _tracks_of(draft, "video") for s in t["segments"]
+               if s["material_id"] == mat["id"])
+    # 창 = [비트 t0, min(자산길이, 비트길이)] — 렌더(_render_mix)와 같은 규칙
+    assert seg["target_timerange"] == {"start": 2_000_000, "duration": 1_500_000}
+    assert seg["track_render_index"] == 1
+    assert seg["volume"] == 0.0, "b-roll은 소리를 버린다"
+
+
+def test_장면확대가_세그먼트_배율로_간다():
+    plan = json.loads(json.dumps(_PLAN))
+    plan["beats"][0]["scene_zoom"] = 1.6
+    draft, _ = cd.build_draft(
+        plan=plan, timeline=_TIMELINE, source_video_paths=_SRC, tts_paths=_TTS,
+        asset_paths=_ASSET, project_name="테스트")
+    vids = [m for m in draft["materials"]["videos"] if m.get("type") == "video"]
+    segs = [s for t in _tracks_of(draft, "video") for s in t["segments"]
+            if s["material_id"] in {m["id"] for m in vids}]
+    assert segs[0]["clip"]["scale"] == {"x": 1.6, "y": 1.6}
+    assert segs[1]["clip"]["scale"] == {"x": 1.0, "y": 1.0}, "확대 없는 비트는 그대로"
+
+
+def test_재료가_없으면_트랙도_안_생긴다():
+    """빈 트랙을 넣으면 캡컷이 draft를 못 읽을 수 있다 — 종전 동작 유지 확인."""
+    draft, _ = _build()
+    assert {t["type"]: len(t["segments"]) for t in draft["tracks"]} == {
+        "video": 2, "audio": 2, "text": 2}

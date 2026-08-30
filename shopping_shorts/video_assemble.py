@@ -2135,6 +2135,93 @@ def _beat_cap_style(caption_style, beat):
     return st
 
 
+
+def sfx_events_for(timeline, sfx_paths):
+    """효과음 타점 계산 — [(경로, 절대초), ...]. **렌더와 캡컷 내보내기가 같이 쓴다**(0순위-B).
+
+    비트별 position → 절대 오프셋(초)을 캡션과 **같은 함수**로 계산한다(별도 계산 금지 —
+    저장위치=읽기위치). 절대시각 = 비트 t0 + 오프셋.
+    타점 3종(2026-08-21 사장님 "훅에서 다음 넘어갈 때"):
+      first      = 칸 시작
+      last       = 칸의 마지막 자막(기본)
+      transition = **칸이 끝나는 순간** = 다음 칸이 시작하는 지점. 이븐쇼핑류가
+                   장면 전환에 띠용을 얹는 그 자리다. 다음 칸의 t0와 같은 값이라
+                   따로 더할 게 없다(마지막 칸이면 영상 끝이라 amix가 잘라준다).
+    """
+    sfx_paths = sfx_paths or {}
+    events = []
+    for b in timeline or []:
+        sfx = b.get("sfx")
+        path = sfx_paths.get(b["beat_idx"])
+        if not sfx or not path:
+            continue
+        segs = _caption_segments(b["narration"], preset=b.get("caption_lines"))
+        seg_durs = _caption_durations(segs, b["dur"], real_durs=b.get("cap_durs"))
+        pos = sfx.get("position")
+        if pos == "first":
+            offset = 0.0
+        elif pos == "transition":
+            offset = b["dur"]
+        else:
+            offset = sum(seg_durs[:-1])
+        events.append((path, b["t0"] + offset))
+    return events
+
+
+def headcopy_span(timeline):
+    """머리카피가 화면에 떠 있는 구간 (t0, dur). **렌더의 노출 규칙과 한 벌**이다(0순위-B).
+
+    렌더는 drawtext에 `_default_headcopy_enable`이 만든 `lte(t,마지막비트t0)`를 걸어
+    마지막 비트 전까지만 보여준다(끝의 CTA 자막과 두 줄 충돌 방지). 캡컷은 enable 식이
+    없으므로 **세그먼트 길이**로 같은 구간을 만든다 — 그래서 그 함수의 결과를 그대로 읽는다.
+    """
+    if not timeline:
+        return 0.0, 0.0
+    total = float(timeline[-1]["t0"]) + float(timeline[-1].get("dur") or 0.0)
+    enable = _default_headcopy_enable(timeline)
+    if not enable:
+        return 0.0, total
+    m = re.search(r"lte\(t,([0-9.]+)\)", enable)
+    return (0.0, float(m.group(1))) if m else (0.0, total)
+
+
+def headcopy_layer_png(headcopy, out_path, work, caption_style=None, deco=None):
+    """머리카피를 **투명 PNG 한 장**으로 굽는다(캡컷 내보내기용) → out_path 또는 None.
+
+    ★캡컷 텍스트로 다시 만들지 않는 이유: 머리카피는 여러 줄·배경박스·단어별 강조색·
+      자동 축소가 얽혀 있고, 무엇보다 **위치(x·y%)를 캡컷 clip.transform으로 옮기려면
+      좌표계 실측이 필요한데 아직 근거가 없다**(capcut_draft 주석 참조). 풀캔버스 PNG로
+      구우면 좌표 변환이 아예 필요 없다 — 꾸미기 틀(template)이 이미 쓰는 방법과 같다.
+    ★그림은 렌더와 **같은 함수**(_headcopy_drawtext_parts)가 그린다 — 화면과 캡컷이
+      갈리지 않는다(0순위-B). enable은 걸지 않는다(구간은 headcopy_span이 정한다).
+    실패하면 None을 돌려준다 — 머리카피 한 장 때문에 내보내기가 막히면 안 된다.
+    """
+    if not headcopy or not (headcopy.get("text") or "").strip():
+        return None
+    hc, _cs = _merge_highlight_rules(headcopy, caption_style, deco)
+    try:
+        # ★기본 폰트를 work에 깔아둔다 — drawtext는 `fontfile=font.ttf`(상대명)를 참조하고,
+        #   그 파일을 두는 곳이 _burn_captions뿐이었다. 안 깔면 ffmpeg가 죽는다(실측:
+        #   exit 3221225477 + "Fontconfig error"). 폰트 이름 해석은 _font_ref 한 곳이 한다.
+        _font = _resolve_font()
+        if not _font:
+            print("[캡컷] 폰트 미해결 — 머리카피 건너뜀", file=sys.stderr)
+            return None
+        shutil.copy(_font, Path(work) / "font.ttf")
+        parts = _headcopy_drawtext_parts(hc, Path(work))
+        if not parts:
+            return None
+        _run_ffmpeg([
+            "ffmpeg", "-y", "-f", "lavfi",
+            "-i", f"color=c=black@0.0:s={_OUT_W}x{_OUT_H}:d=1,format=rgba",
+            "-vf", ",".join(parts), "-frames:v", "1", str(out_path),
+        ], cwd=str(work))
+    except Exception as e:      # noqa: BLE001 — 머리카피 실패가 내보내기를 죽이면 안 된다
+        print(f"[캡컷] 머리카피 PNG 실패(건너뜀): {e!r}", file=sys.stderr)
+        return None
+    return str(out_path) if Path(out_path).exists() else None
+
+
 def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None, caption_style=None, deco=None, sfx_paths=None):
     """완성된 믹스 영상(in_video) 위에 우리 자막을 비트 타이밍대로 굽는다.
     비트 경계는 각 비트 tts 길이 누적(t0)으로 계산해, drawtext enable 구간을 전체
@@ -2222,29 +2309,7 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
     # 효과음(sfx): 비트별 position → 절대 오프셋(초)을 캡션과 **같은 함수**로 계산한다
     # (별도 계산 금지 — 저장위치=읽기위치). first=0.0 / last=마지막 세그먼트 직전까지의 합
     # (세그먼트 1개면 0.0). 절대시각 = 비트 t0 + 오프셋. sfx_events=[(경로, 절대초), ...].
-    sfx_paths = sfx_paths or {}
-    sfx_events = []
-    for b in timeline:
-        sfx = b.get("sfx")
-        path = sfx_paths.get(b["beat_idx"])
-        if not sfx or not path:
-            continue
-        segs = _caption_segments(b["narration"], preset=b.get("caption_lines"))
-        seg_durs = _caption_durations(segs, b["dur"], real_durs=b.get("cap_durs"))
-        # 타점 3종(2026-08-21 사장님 "훅에서 다음 넘어갈 때"):
-        #   first      = 칸 시작
-        #   last       = 칸의 마지막 자막(기본)
-        #   transition = **칸이 끝나는 순간** = 다음 칸이 시작하는 지점. 이븐쇼핑류가
-        #                장면 전환에 띠용을 얹는 그 자리다. 다음 칸의 t0와 같은 값이라
-        #                따로 더할 게 없다(마지막 칸이면 영상 끝이라 amix가 잘라준다).
-        pos = sfx.get("position")
-        if pos == "first":
-            offset = 0.0
-        elif pos == "transition":
-            offset = b["dur"]
-        else:
-            offset = sum(seg_durs[:-1])
-        sfx_events.append((path, b["t0"] + offset))
+    sfx_events = sfx_events_for(timeline, sfx_paths)
     has_sfx = bool(sfx_events)
     if not has_bgm and not has_overlay and not has_motion and not has_sfx:
         base_vf = vf

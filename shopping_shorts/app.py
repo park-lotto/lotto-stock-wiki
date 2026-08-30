@@ -6169,12 +6169,55 @@ def api_mix_capcut(job_id: str, base: str = ""):
         _style_on = str(Store(DB_PATH).get_setting("capcut_style_off", "") or "") != "1"
     except Exception:      # noqa: BLE001 — 설정을 못 읽어도 내보내기는 되어야 한다
         _style_on = True
+    # ── 🎵 BGM · 🔔 효과음 · 🎞 컷어웨이 · ✍ 머리카피 — 최종렌더가 넣는 것을 캡컷에도 ──
+    #   (2026-08-30 전구간 점검: 렌더엔 있는데 캡컷엔 통째로 안 가던 것들. grep 0건 확인)
+    #   ★어느 것을 어떻게 해석할지는 전부 **렌더가 쓰는 함수**가 정한다(0순위-B):
+    #     BGM 경로=mix_pipeline.resolve_deco_media · 효과음 타점=video_assemble.sfx_events_for
+    #     컷어웨이 경로=mix_pipeline._resolve_cutaway_paths · 머리카피 그림=headcopy_layer_png
+    #   ★하나가 실패해도 내보내기는 그대로 된다 — 그 재료만 빠진다.
+    if _deco:
+        try:
+            _deco = mix_pipeline.resolve_deco_media(_deco, work)
+        except Exception:      # noqa: BLE001
+            import traceback as _tb3
+            _tb3.print_exc(file=sys.stderr)
+    _cust = job.get("customer_id", 0)
+    _store = Store(DB_PATH)
+    try:
+        _sfx_events = video_assemble.sfx_events_for(
+            timeline, mix_pipeline._resolve_sfx_paths(_store, plan, _cust))
+    except Exception:      # noqa: BLE001
+        _sfx_events = []
+    try:
+        _cutaways = mix_pipeline._resolve_cutaway_paths(_store, plan, _cust)
+    except Exception:      # noqa: BLE001
+        _cutaways = {}
+    # 머리카피는 풀캔버스 투명 PNG로 굽는다(캡컷 텍스트 좌표계 미실측 — 아래 주석 참조).
+    _hc_png, _hc_span = None, None
+    _hc = job.get("headcopy")
+    if isinstance(_hc, str):
+        try:
+            import json as _json3
+            _hc = _json3.loads(_hc)
+        except (ValueError, TypeError):
+            _hc = None
+    if isinstance(_hc, dict) and (_hc.get("text") or "").strip():
+        _hc_dir = work / "capcut_hc"
+        _hc_dir.mkdir(parents=True, exist_ok=True)
+        _hc_png = video_assemble.headcopy_layer_png(
+            _hc, _hc_dir / "headcopy.png", _hc_dir,
+            caption_style=_cap_style, deco=_deco)
+        _hc_span = video_assemble.headcopy_span(timeline)
+
     proj, project, files = capcut_draft.assemble_draft_folder(
         out_root, base, plan=plan, timeline=timeline, source_video_paths=source_video_paths,
         tts_paths=tts_paths, project_name=_capcut_project_name(job_id, job, plan),
         final_video=_final,
         caption_style=(_cap_style if _style_on else None),
-        deco=(_deco if _style_on else None))
+        deco=(_deco if _style_on else None),
+        headcopy_png=(_hc_png if _style_on else None),
+        headcopy_span=_hc_span,
+        sfx_events=_sfx_events, cutaway_paths=_cutaways)
     texts, assets = {}, []
     for name in files:
         if name.endswith(".json"):
