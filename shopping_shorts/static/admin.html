@@ -272,7 +272,14 @@ async function load(){
   renderCustomers();
 }
 
-function _tierOf(c){ return c.level==='full' ? (c.plan==='pro'?'pro':'trial') : 'free'; }
+function _tierOf(c){
+  // ★이름표(위 lvl)와 **같은 규칙**이어야 한다 — 따로 적으면 언젠가 어긋난다(0순위-B).
+  //   등급 필터 '체험중'으로 걸러도 체험판이 안 나오던 문제(2026-08-31).
+  if(c.plan==='pro') return 'pro';
+  if(c.plan==='trial') return 'trial';
+  if(c.trial_ends_at && c.trial_ends_at*1000 > Date.now()) return 'trial';   // 가입 체험
+  return c.level==='full' ? 'trial' : 'free';
+}
 function _ago(s){ if(s<60)return '방금 전'; if(s<3600)return Math.floor(s/60)+'분 전'; if(s<86400)return Math.floor(s/3600)+'시간 전'; return Math.floor(s/86400)+'일 전'; }
 // 접속/활동 셀 클릭 → 최근 활동 트레일 팝업
 document.addEventListener('click', async (e)=>{
@@ -352,9 +359,15 @@ function renderCustomers(){
     }
   }catch(e){}
   document.getElementById('rows').innerHTML= rest.length ? rest.map(c=>{
+    // ★가입 체험(plan='free' + 체험창)도 '체험판'으로 보여준다(2026-08-31 사장님
+    //   "승인대기중이었던 사람들은 다 일반회원이다"). 권한은 이미 랭킹만으로 맞는데
+    //   plan 칸만 보고 이름표를 정해서 체험 중인 사람이 '일반회원'으로 찍혔다.
+    //   남은 시간은 위 대기명단이 쓰는 것과 같은 식(trialLeft)으로 계산한다.
+    const _tl=c.trial_ends_at?Math.round((c.trial_ends_at*1000-Date.now())/3600000):0;
     const lvl=c.plan==='pro'?'<span class="badge pro">pro</span>'
               :(c.plan==='trial'?'<span class="badge trial">체험판(랭킹만)</span>'
-              :(c.level==='full'?'<span class="badge trial">이용중(기간제)</span>':'<span class="badge free">일반회원</span>'));
+              :(_tl>0?`<span class="badge trial">🎁 체험판 ${_tl}h</span>`
+              :(c.level==='full'?'<span class="badge trial">이용중(기간제)</span>':'<span class="badge free">일반회원</span>')));
     const u=c.usage||{};
     const acc=c.access_7d||{ips:0,devices:0};
     // 돌려쓰기 의심: 최근 7일 고유 IP 3개↑ 또는 기기 3종↑이면 빨간 강조(차단은 안 함, 사장님 눈으로 판단)
