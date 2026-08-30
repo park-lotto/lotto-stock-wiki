@@ -26,6 +26,7 @@ import json
 import re
 import urllib.parse
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor
 
 # 모바일 UA로 고정한다 — 클립 탭은 모바일 검색의 탭이고, PC UA로는 같은
 # 프래그먼트가 안 온다(실측). 여기서 UA를 바꾸면 파서가 통째로 헛돈다.
@@ -188,11 +189,18 @@ def _fetch_card(media_id):
     }
 
 
-def search(keyword, max_results=10, pages=3, enrich=True):
+def search(keyword, max_results=10, pages=3, enrich=True, workers=8):
     """키워드 → 네이버 클립 **인기순**(조회수 내림차순) 결과.
 
     pages=3이면 최대 72건을 훑어 그중 상위 max_results건만 상세 조회한다.
-    상세(②)는 건당 1회 호출이라, 훑는 범위는 넓히되 상세는 상위만 본다."""
+    상세(②)는 건당 1회 호출이라, 훑는 범위는 넓히되 상세는 상위만 본다.
+
+    ★한 키워드의 천장은 약 500건이다(실측 '뷰티' 520건 / 40페이지 29초).
+      페이지가 깊어질수록 수확이 23→6건으로 줄다가 신규 0으로 끝난다.
+      더 늘리려면 페이지가 아니라 **키워드를 쪼개야** 한다.
+
+    ★상세는 스레드로 돈다(2026-08-30). 순차면 건당 0.17초라 2,500건에 7분이
+      걸려 웹 요청이 죽는다 — 실측 8스레드로 2,519건 118초."""
     rows, seen = [], set()
     for p in range(max(1, pages)):
         try:
@@ -208,8 +216,8 @@ def search(keyword, max_results=10, pages=3, enrich=True):
             rows.append(it)
 
     rows.sort(key=lambda x: -x["views"])
-    out = []
-    for it in rows[:max_results]:
+
+    def _row(it):
         row = {
             "url": ("https://m.naver.com/shorts?serviceType=CLIP&mediaType=VOD"
                     f"&seedMediaId={it['mediaId']}"),
@@ -228,5 +236,16 @@ def search(keyword, max_results=10, pages=3, enrich=True):
             for k, v in card.items():
                 if v not in (None, "", 0) or k in ("likes",):
                     row[k] = v
-        out.append(row)
+        return row
+
+    top = rows[:max_results]
+    if enrich and workers > 1 and len(top) > 1:
+        with ThreadPoolExecutor(max_workers=min(workers, len(top))) as ex:
+            out = list(ex.map(_row, top))      # map은 순서를 보존한다
+    else:
+        out = [_row(it) for it in top]
+    # ★상세를 붙인 뒤 **다시** 정렬한다. 위 정렬은 목록의 반올림값('14.7만')
+    #   기준이라 정확값(146,844)으로 바뀌면 순서가 조금 어긋난다 — 화면이
+    #   '인기순'이라고 말하는 이상 마지막 값 기준으로 세워야 거짓말이 안 된다.
+    out.sort(key=lambda r: -(r.get("views") or 0))
     return out
