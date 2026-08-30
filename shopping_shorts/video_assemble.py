@@ -1925,7 +1925,10 @@ def _segmented_drawtext(text, base_style, work, key_prefix, x_pct, y_pct,
     base_color_raw = base_style.get("color")  # 원시 #hex(또는 None) — _hex_to_ff는 drawtext 빌드에서 1회만 적용(이중변환 방지)
     x_center = x_pct / 100.0 * _OUT_W
     y_top = y_pct / 100.0 * _OUT_H
-    line_h = size * 1.2
+    # 줄 간격 — 1.2는 두꺼운 한글 폰트에서 윗줄 받침과 아랫줄 머리가 맞닿아 **겹쳐 보인다**
+    # (2026-08-30 사장님 제보, job 36a02e5ad1ef '방충망 먼지 빨리 해결/다이소 꿀템').
+    # 미리보기(produce.html #hcPreviewText line-height)와 **같은 값**이어야 한다(0순위-B).
+    line_h = size * 1.34
     total_h = line_h * len(lines)
     parts = []
     for li, line in enumerate(lines):
