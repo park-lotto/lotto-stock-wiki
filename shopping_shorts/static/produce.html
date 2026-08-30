@@ -13739,6 +13739,34 @@ function addThumbBadge(label){
   renderThumbLayers(); renderThumbCanvas();
 }
 
+/* 🖍 썸네일 자막 — 낱말별 색 (2026-08-30 사장님 "썸네일자막에 바꾸고 싶은 글자만 컬러")
+   ★채우기(fill)만 낱말로 쪼개 그린다. 외곽선·박스·형광펜·밑줄은 **줄 단위 그대로** —
+     모양은 한 글자도 안 바뀌고 색만 갈린다(회귀 0).
+   ★L.word_colors가 없으면 이 함수는 아예 안 불린다 → 기존 그림과 완전히 같다.
+   좌표: 지금 textAlign='center'로 그리므로 줄 전체 폭의 절반만큼 왼쪽에서 시작한다.
+     tx(=자간 보정 ls/2)를 그대로 쓰면 center와 정확히 같은 자리에 떨어진다. */
+function _thumbHasWordColor(L){
+  const wc = L && L.word_colors;
+  return !!(wc && Object.keys(wc).length);
+}
+function _drawThumbWords(ctx, line, y, tx, baseFill, wc){
+  const total = ctx.measureText(line).width;      // 자간 포함(설정돼 있으면)
+  const prev = ctx.textAlign;
+  ctx.textAlign = 'left';
+  let x = tx - total / 2;
+  // 공백도 조각으로 남겨 폭 누적이 어긋나지 않게 한다
+  line.split(/(\s+)/).forEach(p => {
+    if (!p) return;
+    const w = ctx.measureText(p).width;
+    if (p.trim()){
+      ctx.fillStyle = wc[p] || baseFill;
+      ctx.fillText(p, x, y);
+    }
+    x += w;
+  });
+  ctx.textAlign = prev;
+}
+
 function drawThumb(ctx, img, layers, W, H){
   const s = W / THUMB_W;                    // 캔버스 배율 — 외곽선·박스 여백용
   // ★매 렌더마다 먼저 지운다(2026-07-18 라이브 실측) — job 없을 때 드래그 잔상이 쌓이던 것 봉인.
@@ -13789,11 +13817,19 @@ function drawThumb(ctx, img, layers, W, H){
         ctx.shadowColor = L.fx.glow.color || '#2EE6C5';
         ctx.shadowBlur = size * 0.35;
         ctx.fillStyle = _fill;
-        for (let g = 0; g < 3; g++) ctx.fillText(line, tx, y);      // 겹쳐야 눈에 띄게 빛난다
+        // 글로우도 낱말색을 따라간다 — 안 그러면 빨간 글자가 기본색으로 빛나 어긋나 보인다
+        for (let g = 0; g < 3; g++){
+          if (_thumbHasWordColor(L)) _drawThumbWords(ctx, line, y, tx, _fill, L.word_colors);
+          else ctx.fillText(line, tx, y);                            // 겹쳐야 눈에 띄게 빛난다
+        }
         ctx.restore();
       }
-      ctx.fillStyle = _fill;
-      ctx.fillText(line, tx, y);
+      if (_thumbHasWordColor(L)){
+        _drawThumbWords(ctx, line, y, tx, _fill, L.word_colors);
+      } else {
+        ctx.fillStyle = _fill;
+        ctx.fillText(line, tx, y);
+      }
       _fxUnderline(ctx, line, y, size, L.fx, _fill, ls);   // ✨밑줄은 글자 위 획 — 마지막
     });
     ctx.restore();
@@ -14309,6 +14345,53 @@ function applyThumbTitle(i){
   renderThumbCanvas();    // 미리보기에 즉시 반영(자동 줄바꿈·크기맞춤은 drawThumb이 처리)
 }
 
+/* 🖍 썸네일 자막 낱말별 색 — 조작부(2026-08-30).
+   ★값의 주인은 그 레이어의 L.word_colors 하나뿐이다. 그리는 곳(_drawThumbWords)과
+     저장(THUMB_STATE.layers → meta)이 같은 값을 본다 — 캔버스로 그린 그대로 PNG가 되므로
+     "화면과 결과가 다르다"가 구조적으로 안 생긴다.
+   ★헤드카피 쪽(hcWord*)과 **같은 조작 방식**이다 — 낱말을 눌러 고르고 색을 찍는다. */
+let TL_WORD = null;
+function _tlLayer(){ return (THUMB_STATE.layers || [])[THUMB_STATE.sel] || null; }
+function renderTLWords(){
+  const box=document.getElementById('tlWordPills'); if(!box) return;
+  const L=_tlLayer(); if(!L) return;
+  const wc=L.word_colors||{};
+  const words=[...new Set(String(L.text||'').split(/[\s\n]+/).filter(w=>w.trim()))];
+  if(!words.length){
+    box.innerHTML='<span class="hint" style="font-size:11px">문구를 쓰면 낱말이 여기 나와요</span>';
+    document.getElementById('tlWordPick').style.display='none'; return;
+  }
+  box.innerHTML=words.map(w=>{
+    const c=wc[w], on=(TL_WORD===w);
+    const fg=c? (_isLight(c)?'#111':'#fff') : 'var(--txt)';
+    return `<button type="button" onclick="tlWordPick(${JSON.stringify(w).replace(/"/g,'&quot;')})"
+      style="padding:4px 9px;border-radius:999px;font-size:11px;cursor:pointer;
+      background:${c||'transparent'};color:${fg};border:2px solid ${on?'#2FBF71':(c||'var(--line)')}">${_esc(w)}</button>`;
+  }).join('');
+  const pick=document.getElementById('tlWordPick');
+  if(TL_WORD && words.includes(TL_WORD)){
+    pick.style.display='';
+    document.getElementById('tlWordSel').textContent='「'+TL_WORD+'」';
+    document.getElementById('tlWordColor').value=wc[TL_WORD]||'#FFE100';
+    document.getElementById('tlWordPal').innerHTML=HC_WORD_PAL.map(c=>
+      `<button type="button" title="${c}" onclick="tlWordSetColor('${c}')"
+        style="height:20px;border-radius:5px;cursor:pointer;background:${c};
+        border:2px solid ${String(wc[TL_WORD]||'').toUpperCase()===c?'#2FBF71':'rgba(255,255,255,.18)'}"></button>`).join('');
+  } else { TL_WORD=null; pick.style.display='none'; }
+}
+function tlWordPick(w){ TL_WORD=(TL_WORD===w?null:w); renderTLWords(); }
+function tlWordSetColor(c){
+  const L=_tlLayer(); if(!L||!TL_WORD) return;
+  L.word_colors = Object.assign({}, L.word_colors||{}, {[TL_WORD]: c});
+  renderTLWords(); renderThumbCanvas();
+}
+function tlWordClear(){
+  const L=_tlLayer(); if(!L||!TL_WORD) return;
+  const wc=Object.assign({}, L.word_colors||{}); delete wc[TL_WORD];
+  L.word_colors = wc;
+  renderTLWords(); renderThumbCanvas();
+}
+
 function renderThumbLayers(){
   document.getElementById('thumbLayers').innerHTML = THUMB_STATE.layers.map((L, i) => `
     <div onclick="selectThumbLayer(${i})" style="display:flex;justify-content:space-between;
@@ -14466,6 +14549,23 @@ function renderThumbLayers(){
     return;
   }
   document.getElementById('thumbEdit').innerHTML = !L ? '' : `
+    <div id="tlWordBox" style="background:var(--inset);border:1px solid var(--line);
+         border-radius:8px;padding:8px 10px;margin-bottom:8px">
+      <div style="font-size:12px;font-weight:700;margin-bottom:5px">🖍 글자별 색
+        <span style="font-size:11px;color:var(--sub);font-weight:600">— 바꾸고 싶은 낱말을 누르세요</span>
+      </div>
+      <div id="tlWordPills" style="display:flex;gap:4px;flex-wrap:wrap"></div>
+      <div id="tlWordPick" style="display:none;margin-top:7px;padding-top:7px;border-top:1px solid var(--line)">
+        <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:5px">
+          <b id="tlWordSel" style="font-size:12px"></b>
+          <input type="color" id="tlWordColor" oninput="tlWordSetColor(this.value)"
+                 style="width:34px;height:21px;padding:0;border:1px solid var(--line);border-radius:6px;background:none;cursor:pointer">
+          <button type="button" class="tab" onclick="tlWordClear()"
+                  style="min-width:auto;padding:3px 9px;font-size:11px">↩ 원래 색</button>
+        </div>
+        <div id="tlWordPal" style="display:grid;grid-template-columns:repeat(10,1fr);gap:3px"></div>
+      </div>
+    </div>
     <textarea oninput="setThumbField('text', this.value)" rows="2"
       style="width:100%;padding:8px;margin-bottom:6px;resize:vertical;font-family:inherit;font-size:14px;line-height:1.3"
       placeholder="문구 — Enter로 줄바꿈 (안 나눠도 길면 자동으로 줄이 나뉘고 크기가 맞춰져요)">${esc(L.text || '')}</textarea>
@@ -14507,6 +14607,7 @@ function renderThumbLayers(){
              oninput="setThumbFxColor(this.value)">
       <span class="hint" style="font-size:10px;opacity:.7">밑줄·형광펜·네온에 함께 적용</span>
     </div>`;
+  try{ renderTLWords(); }catch(e){}   // 🖍 낱말 알약도 같이 그린다(2026-08-30)
 }
 
 // ✨강조 효과 버튼 — 고민 없이 딸깍(꾸미기 프리셋 철학). 켜짐/꺼짐 토글이라 되돌리기도 한 번.
