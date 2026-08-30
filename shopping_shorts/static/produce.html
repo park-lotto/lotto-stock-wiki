@@ -805,6 +805,37 @@
     }
     .zoomStage.zoomed .zoomBadge{display:block}
     /* 확대 조작줄 */
+    /* ★확대 UI는 상자로 묶는다 — 회색 hint로 흘려 놓으면 "이게 무슨 기능인지" 안 읽힌다
+       (2026-08-30 사장님 지적). 제목 한 줄 + 조작 한 줄 + 설명 한 줄로 끝낸다. */
+    .zoomPanel{
+      border:1px solid var(--line);border-radius:10px;
+      background:var(--inset);padding:8px 10px;margin-bottom:8px;
+    }
+    .zoomTitle{
+      display:flex;align-items:center;gap:6px;
+      font-size:13px;font-weight:800;color:var(--txt);margin-bottom:6px;
+    }
+    /* 긴 설명(보기 전용·자막 고정)은 여기 접어 둔다 — 필요한 사람만 올려보면 된다 */
+    .zoomTip{
+      cursor:help;color:var(--sub);font-weight:400;font-size:12px;
+      border:1px solid var(--line);border-radius:50%;width:16px;height:16px;
+      display:inline-flex;align-items:center;justify-content:center;line-height:1;
+    }
+    /* 지금 배율 — 제목 줄 오른쪽 끝에 붙여 늘 보이게(미리보기 위 뱃지는 확대 때만 뜬다) */
+    .zoomNow{margin-left:auto;font-size:12px;font-weight:700;color:var(--accent2)}
+    /* 설명은 한 줄. 상황에 따라 문장이 바뀐다(_zoomApply) */
+    .zoomSay{font-size:12px;color:var(--sub);margin-top:6px;line-height:1.45}
+    /* 모든 장면 적용 토글 */
+    .zoomAll{
+      display:flex;align-items:center;gap:6px;margin-top:7px;
+      font-size:12px;color:var(--sub);cursor:pointer;user-select:none;
+    }
+    .zoomAll input{cursor:pointer;accent-color:var(--accent2);width:15px;height:15px}
+    /* 체크 + 저장버튼 + 상태를 한 줄에 */
+    .zoomFoot{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:7px}
+    .zoomFoot .zoomAll{margin-top:0;margin-right:auto}
+    .zoomFoot .zbtn{padding:5px 10px;font-size:12px;min-height:32px}
+    .zoomSaved{font-size:12px;color:var(--ok);min-width:0}
     .zoomBar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px}
     .zoomBar .zbtn{
       min-width:auto;padding:6px 12px;font-size:13px;min-height:36px;
@@ -1443,6 +1474,90 @@
   .pool-lscape{display:inline-block;margin-left:7px;padding:1px 7px;border-radius:999px;
                background:#4a1414;color:#ff8a8a;border:1px solid #7a2b2b;
                font-size:11px;font-weight:700;vertical-align:middle}
+  /* ▶ TTS 재생목록 한 줄(2026-08-30) — 칸을 고정해 겹치지 않게 한다.
+     [번호][대사=남는 폭][길이][▶][✏ 수정][⋯] */
+  .ttsRow{border:1px solid var(--line);border-radius:10px;margin-bottom:7px;
+          background:var(--inset);transition:background .15s,border-color .15s}
+  .ttsRow.playing{border-color:var(--accent);background:linear-gradient(90deg,#16223a,var(--inset))}
+  .ttsRowMain{display:flex;align-items:center;gap:10px;padding:11px 12px;cursor:pointer;min-height:44px}
+  .ttsNo{flex:0 0 auto;width:22px;text-align:center;color:var(--sub);font-size:12px;
+         font-variant-numeric:tabular-nums;position:relative}
+  .ttsNo i{display:block;width:6px;height:6px;border-radius:50%;margin:3px auto 0}
+  .ttsNo i.ok{background:#3ecf8e}      /* 자막 자동맞춤 됨 */
+  .ttsNo i.warn{background:#ffc75a}    /* 맞춤 불확실 — 들어보세요 */
+  .ttsSay{flex:1 1 auto;min-width:0;font-size:14px;line-height:1.45;
+          display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .ttsDur{flex:0 0 auto;width:46px;text-align:right;color:var(--sub);font-size:12px;
+          font-variant-numeric:tabular-nums}
+  .ttsBtn{flex:0 0 auto;padding:6px 10px;font-size:12px;min-height:36px}
+  .ttsMore{display:flex;gap:6px;flex-wrap:wrap;align-items:center;
+           padding:0 12px 11px 44px;border-top:1px dashed var(--line);margin-top:-1px;padding-top:9px}
+  @media (max-width:760px){ .ttsSay{font-size:13px} .ttsDur{width:40px} }
+
+  /* 🎙 성우 두 열(2026-08-30) — 일레븐랩스 | 타입캐스트를 나란히 본다.
+     좁아지면 자동으로 위아래로 쌓인다(minmax + auto-fit). */
+  .voiceCols{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+  .voiceColHead{font-size:11.5px;color:var(--sub);font-weight:700;margin:0 0 6px 2px}
+  /* ★성우 카드 — 시안(사장님 승인본)대로 [아바타][이름·설명][☆][▶] 한 줄.
+     종전엔 이름·설명이 한 줄 텍스트로 흐르고 <audio controls>가 통째로 박혀 있어
+     카드가 들쭉날쭉했다. 톤 탭은 **고른 카드 안에서만** 펼친다(.vcard.sel .tones). */
+  .vcard{position:relative;border:1px solid var(--line);border-radius:12px;background:var(--inset);
+         cursor:pointer;overflow:hidden;margin-bottom:8px;transition:background .15s,border-color .15s}
+  .vcard:hover{background:var(--panel)}
+  .vcard.sel{border-color:var(--accent2)}
+  .vrow{display:flex;align-items:center;gap:11px;padding:10px 12px;min-height:56px}
+  .vavatar{width:40px;height:40px;border-radius:50%;flex:0 0 auto;display:flex;
+           align-items:center;justify-content:center;font-size:16px;font-weight:700}
+  .vmeta{flex:1 1 auto;min-width:0}
+  .vname{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  /* ★설명 칸은 **늘 두 줄 높이**를 차지한다 — 한 줄짜리 성우가 섞이면 카드 높이가 들쭉날쭉해
+     두 열이 어긋나 보인다(사장님 지적 2026-08-30). 글자는 두 줄에서 자른다. */
+  .vdesc{font-size:12.5px;color:var(--sub);line-height:1.4;height:2.8em;
+         display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .vbadge{position:absolute;top:5px;right:10px;white-space:nowrap;font-size:10px;font-weight:700;
+          color:#8fbfff;background:#1c2f4a;border:1px solid #2a4a75;border-radius:5px;
+          padding:0 5px;line-height:16px;letter-spacing:.04em;pointer-events:none}
+  .vstar{width:40px;height:40px;flex:0 0 auto;border:none;background:transparent;
+         color:#525b70;font-size:17px;cursor:pointer;border-radius:10px}
+  .vstar:hover{color:#e3b341}
+  .vstar.on{color:#e3b341}
+  .vplay{width:40px;height:40px;flex:0 0 auto;border-radius:50%;border:1px solid var(--line);
+         background:transparent;color:var(--txt);font-size:13px;cursor:pointer}
+  .vplay:hover{border-color:var(--accent2);color:var(--accent2)}
+  .vplay.playing{background:#1c2f4a;border-color:var(--accent2);color:var(--accent2)}
+  .tones{display:none;gap:7px;padding:0 12px 12px;flex-wrap:wrap}
+  .vcard.sel .tones{display:flex}
+  .tone{min-height:38px;padding:0 15px;border-radius:10px;border:1px solid var(--line);
+        background:transparent;color:var(--sub);font:inherit;font-size:13px;cursor:pointer}
+  .tone.on{background:#1c2f4a;border-color:var(--accent2);color:var(--txt);font-weight:700}
+  /* 열마다 다는 가져오기 버튼(일레븐=목소리 찾기 / 타입캐스트=성우 불러오기) */
+  .colAct{width:100%;min-height:42px;margin-bottom:8px;border:1px dashed var(--line);
+          border-radius:10px;background:transparent;color:var(--sub);font:inherit;
+          font-size:13px;cursor:pointer}
+  .colAct:hover{color:var(--txt);border-color:var(--accent2)}
+  /* ⭐즐겨찾기 줄 — 별 누른 성우가 맨 위에 모인다(가로 스크롤) */
+  .favs{display:flex;flex-wrap:nowrap;gap:8px;align-items:center;overflow-x:auto;
+        padding-bottom:4px;margin:10px 0 2px}
+  .favs::-webkit-scrollbar{height:6px}
+  .favs::-webkit-scrollbar-thumb{background:#2a3040;border-radius:3px}
+  .favLabel{flex:0 0 auto;font-size:12px;color:var(--sub);letter-spacing:.06em}
+  .fchip{flex:0 0 auto;display:flex;align-items:center;gap:5px;min-height:38px;
+         padding:0 5px 0 12px;border:1px solid var(--line);border-radius:22px;
+         background:var(--inset);font-size:13.5px;cursor:pointer}
+  .fchip:hover{border-color:var(--accent2)}
+  .fchip .fplay{width:30px;height:30px;border-radius:50%;border:none;background:transparent;
+                color:var(--sub);font-size:11px;cursor:pointer}
+  .fchip .fplay:hover{color:var(--accent2)}
+  .favEmpty{font-size:12px;color:#5a627a}
+  /* 장면 줄 파형 — 길이를 눈으로 가늠하게 한다(시안) */
+  .wave{flex:0 0 auto;width:96px;height:20px;display:flex;align-items:flex-end;gap:2px;overflow:hidden}
+  .wave i{flex:1;min-width:2px;background:#39415a;border-radius:1px}
+  .ttsRow.playing .wave i{background:var(--accent)}
+  @media (max-width:900px){ .wave{display:none} }
+  /* 바닥 요약 줄 */
+  .plSum{margin-top:12px;padding:11px 4px 2px;border-top:1px solid var(--line);
+         font-size:12.5px;color:var(--sub);display:flex;gap:18px;flex-wrap:wrap;
+         font-variant-numeric:tabular-nums}
   .sw-btn{width:22px;height:22px;border-radius:50%;border:2px solid rgba(255,255,255,.35);
           cursor:pointer;padding:0;flex:none;background:
           conic-gradient(#ff2d2d,#ffd400,#3ddc57,#00b3ff,#b14cff,#ff2d8f,#ff2d2d);
@@ -1677,7 +1792,7 @@
            #curVoiceName은 그대로 둔다 — syncCurVoiceName()이 이 id 하나만 찾는다. -->
       <!-- ★flex는 `0 1 360px` — 넓은 화면에선 360px 고정(0=안 늘어남), 좁은 화면에선 줄어든다
            (1=줄어듦). `0 0`으로 두면 390px 폰에서 칸이 안 줄어 가로로 넘친다(실측). -->
-      <aside style="flex:0 1 360px;min-width:0;max-width:420px;position:sticky;top:8px;border:1px solid var(--line);border-radius:12px;background:var(--inset);padding:14px;box-sizing:border-box">
+      <aside style="flex:0 1 560px;min-width:0;max-width:620px;position:sticky;top:8px;border:1px solid var(--line);border-radius:12px;background:var(--inset);padding:14px;box-sizing:border-box">
         <div style="font-weight:800;font-size:15px;display:flex;align-items:center;gap:6px">🎙 목소리 바꾸기</div>
         <div id="curVoiceName" style="font-size:12px;color:var(--sub);margin-top:3px">— 기본 성우로 완성됨</div>
       <!-- ★좌우를 뒤집었다(2026-08-18). 예전엔 [설정 | 성우카드] 순서라, 성우를 고르기 전
@@ -1726,6 +1841,13 @@
       <div id="voiceUI" style="display:flex;flex-direction:column;gap:12px;margin-top:10px">
         <!-- ① 성우 카드 (⭐베스트 5 상시 + ＋더보기로 나머지 9명) — 먼저 하는 일 -->
         <div>
+          <!-- 🔎 이미 담은 성우 걸러보기(2026-08-30 사장님). ★일레븐랩스 공개 라이브러리
+               검색(#vlibPanel)과 **다른 것**이다 — 저건 밖에서 데려오는 것, 이건 이미
+               가진 목록을 좁히는 것. 헷갈리지 않게 문구를 분명히 둔다. -->
+          <input id="voiceQ" oninput="voiceFilter(this.value)" placeholder="이미 담은 성우 걸러보기"
+                 style="width:100%;box-sizing:border-box;margin-bottom:8px;background:var(--panel);
+                        border:1px solid var(--line);color:var(--txt);border-radius:9px;
+                        padding:9px 11px;font-size:13px;min-height:44px">
           <div id="presetCards">불러오는 중…</div>
         </div>
         <!-- ② 미리듣기·설정 (성우를 고르면 나타난다) -->
@@ -1809,27 +1931,53 @@
         <div class="previewSlot decoMirror" style="flex:0 0 auto;width:var(--pvw)">
           <div class="hint" style="margin-bottom:4px">🪞 실시간 미리보기 (9:16) — 글자를 <b>드래그</b>해 위치 이동
             <label style="cursor:pointer;margin-left:6px;color:var(--txt)"><input type="checkbox" id="sceneBg" onchange="toggleSceneBg()"> 실장면 배경</label></div>
-          <!-- 🔍 확대 조작줄 (2026-08-30). 조작은 셋뿐이고 셋 다 같은 결과로 모인다:
-               ①보고 싶은 곳을 그냥 누른다(=그 자리가 2배) ②슬라이더로 배율 ③원래대로.
-               캡컷은 배율 입력·단축키·스페이스드래그로 갈라져 있는데, 여기선 '누르면 커진다'
-               하나로 줄였다 — 사장님 "최대한 쉽게 / 캡컷보다 더 쉽게". -->
-          <div class="zoomBar">
-            <button type="button" class="zbtn" onclick="zoomStep(-1)" title="축소 (Alt+Shift+-)">－</button>
-            <input type="range" id="zoomRange" min="100" max="300" step="10" value="100"
-                   oninput="zoomSet(this.value/100)" title="확대 배율">
-            <button type="button" class="zbtn" onclick="zoomStep(1)" title="확대 (Alt+Shift++)">＋</button>
-            <button type="button" class="zbtn" id="zoomResetBtn" onclick="zoomReset()"
-                    style="display:none" title="원래 크기로 (Alt+Shift+Z)">↩ 원래대로</button>
+          <!-- 🔍 장면 확대 (2026-08-30). ★사장님 "장면 확대 기능인 걸 모르겠고 짧고
+               직관적으로 설명하고 잘 보이게" — 종전엔 회색 hint 두 줄(총 4줄)이 늘어져
+               있어서 무슨 기능인지 읽히지 않았다. 상자로 묶고 **제목을 달아** 한눈에
+               "장면 확대"임을 보이게 하고, 설명은 **한 줄**로 줄인다.
+               긴 설명(보기 전용·자막 고정)은 ⓘ 툴팁으로 접어 넣는다 — 필요한 사람만 본다. -->
+          <div class="zoomPanel">
+            <div class="zoomTitle">
+              <span>🔍 장면 확대</span>
+              <span class="zoomTip" title="화면에서만 커집니다. 만들어지는 영상 크기는 그대로고, 자막도 확대와 상관없이 제자리·같은 크기로 남습니다.">ⓘ</span>
+              <span class="zoomNow" id="zoomNow">100%</span>
+            </div>
+            <div class="zoomBar">
+              <button type="button" class="zbtn" onclick="zoomStep(-1)" title="축소 (Alt+Shift+-)">－</button>
+              <input type="range" id="zoomRange" min="100" max="300" step="10" value="100"
+                     oninput="zoomSet(this.value/100); _zoomSaveSoon()" title="확대 배율">
+              <button type="button" class="zbtn" onclick="zoomStep(1)" title="확대 (Alt+Shift++)">＋</button>
+              <button type="button" class="zbtn" id="zoomResetBtn" onclick="zoomReset()"
+                      style="display:none" title="원래 크기로 (Alt+Shift+Z)">↩ 원래대로</button>
+            </div>
+            <div class="zoomSay" id="zoomHint">크게 볼 곳을 <b>누르세요</b></div>
+            <!-- ★모든 장면에 같은 배율 (2026-08-30 사장님 "해당 장면을 확대했으면 다른
+                 전체 장면도 같은 비율로 적용할지 말지 체크버튼"). 기본 켬 — 장면을 넘겨도
+                 배율이 유지되는 게 지금까지의 동작이고, 대개 그걸 원한다. 끄면 장면을
+                 넘길 때마다 100%로 돌아가 그 장면만 따로 확대해 볼 수 있다. -->
+            <div class="zoomFoot">
+              <label class="zoomAll" id="zoomAllWrap">
+                <input type="checkbox" id="zoomAll" checked onchange="zoomAllChanged()">
+                <span>모든 장면에 같은 배율</span>
+              </label>
+              <!-- ★자동 저장은 이미 되지만 **저장됐는지 눈에 보여야** 안심이 된다
+                   (2026-08-30 사장님 "저장버튼이 있어야 원활할 듯"). 버튼은 지금 즉시
+                   저장하고, 옆 글자가 결과를 말한다. -->
+              <button type="button" class="zbtn" id="zoomSaveBtn" onclick="zoomSaveNow()"
+                      title="이 확대 구도를 저장합니다(최종 영상에 그대로 나갑니다)">💾 저장</button>
+              <span class="zoomSaved" id="zoomSaved"></span>
+            </div>
           </div>
-          <!-- ★"보기 전용"을 라벨에 못박는다 — 캡컷 사용자가 가장 헷갈리는 지점이
-               '미리보기 줌'과 '클립 크기(Scale)'의 혼동이다(2026-08-30 조사: 튜토리얼
-               절반이 둘을 섞어 설명하고 있었다). 여기서 커지는 건 화면뿐이고 만들어지는
-               영상에는 영향이 없다 — 그걸 글로 적어두면 물어볼 일이 없다. -->
-          <div class="hint" style="margin-bottom:6px;font-size:12px" id="zoomHint">
-            🔍 크게 보고 싶은 곳을 <b>그냥 누르세요</b> — 그 자리가 확대돼요. 다시 누르면 더 크게.</div>
-          <div class="hint" style="margin-bottom:6px;font-size:11px;opacity:.75">
-            👀 <b>보기만</b> 커져요 — 만들어지는 영상은 그대로. <b>자막은 확대해도 제자리·같은 크기</b>라
-            완성본에서 어떻게 보일지 그대로 확인돼요.</div>
+          <!-- 🖼 이 장면을 썸네일로 (2026-08-30 사장님 "장면들중 썸네일로 쓰고싶은건
+               썸네일페이지로 이동시킬수있게"). 여태 썸네일 후보는 **자동 등분 추출뿐**이라,
+               여기서 좋은 장면을 봐 두고도 [다른 장면 더 뽑기]로 걸리기를 기다려야 했다. -->
+          <div class="zoomPanel" style="margin-top:6px">
+            <div class="zoomBar" style="justify-content:space-between">
+              <button type="button" class="zbtn" id="thumbPinBtn" onclick="pinBeatToThumb()"
+                      title="지금 보고 있는 장면을 7단계 썸네일 후보 맨 앞에 넣습니다">🖼 이 장면을 썸네일로</button>
+              <span class="zoomSaved" id="thumbPinMsg"></span>
+            </div>
+          </div>
           <!-- ★세로 크기는 화면 안에 들어와야 한다(2026-08-18 사장님 지시). 380px면 9:16이라
                675px가 돼 노트북 화면에서 아래가 잘려 하단 띠·자막 위치를 확인할 수 없다.
                폭은 부모의 --pvw를 그대로 받는다(정의처 한 곳) — aspect-ratio가 높이를 따라온다. -->
@@ -1841,6 +1989,15 @@
                  (applyErasedRegion)과 '다시 그 자리로' 버튼은 그대로 — 표시만 뺀 것. -->
             <div id="capPreviewText" style="position:absolute;left:50%;transform:translate(-50%,-50%);text-align:center;white-space:pre-wrap;word-break:keep-all;line-height:1.2;z-index:5;cursor:move;user-select:none"></div>
             <div id="hcPreviewText" style="position:absolute;transform:translate(-50%,-50%);text-align:center;line-height:1.18;word-break:keep-all;padding:0 6px;cursor:move;user-select:none;z-index:5"></div>
+            <!-- 🔎 강조 미리보기(2026-08-30). 렌더와 **같은 뜻**을 그린다:
+                 자리는 최종 프레임 기준(장면 확대가 걸린 뒤의 좌표) = 서버가 얹는 자리와 같다.
+                 z-index 2 — 배경 위, 자막(5) 아래. 렌더도 강조를 자막보다 먼저 얹는다. -->
+            <div id="hlCircle" style="position:absolute;display:none;z-index:2;border-radius:50%;
+                 overflow:hidden;border:2px solid #fff;box-sizing:border-box;cursor:move;
+                 box-shadow:0 2px 12px rgba(0,0,0,.45)">
+              <!-- 원 안 확대: 배경과 똑같은 그림을 같은 변형으로 깔고, 원 중심 기준으로 한 번 더 키운다 -->
+              <img id="hlZoomImg" style="position:absolute;object-fit:cover;display:none" alt="">
+            </div>
             <div id="extraPreview"></div>
             <img id="ovPreview" style="position:absolute;transform:translate(-50%,-50%);cursor:move;user-select:none;z-index:5;display:none" alt="">
             <div id="wmPreview" style="position:absolute;transform:translate(-50%,-50%);white-space:nowrap;z-index:6;pointer-events:none;display:none"></div>
@@ -1888,6 +2045,7 @@
             <button type="button" class="tab" data-decotab="tpl" onclick="decoTab('tpl')" style="min-width:auto;padding:7px 14px;font-size:12px">🖼 템플릿</button>
             <button type="button" class="tab" data-decotab="fx" onclick="decoTab('fx')" style="min-width:auto;padding:7px 14px;font-size:12px">✨ 효과</button>
           </div>
+
           <div id="decoPaneCopy" style="display:none">
           <!-- ✍ 고정카피 후보 — 대본에서 AI가 뽑는다. ★누를 때만 textarea에 들어간다
                (2026-07-19에 '자동 재채움'을 일부러 없앴다 — 자동으로 밀어넣으면 그 버그가 되살아난다) -->
@@ -2375,8 +2533,64 @@
                   <button onclick="clearOverlay()" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:12px">제거</button>
                   <span class="hint">미리보기에서 <b>드래그</b>로 이동</span>
                 </div>
+          <!-- 🧱 위아래띠(2026-08-28 사장님 시안 ② · 옛 이름 "빈 틀") — 글자·아이콘 없는 위아래 띠.
+               ★띠 끝부분 처리는 deco_frame._bar_layer 한 곳에서 정한다(0순위-B).
+                 여기 슬라이더는 그 값을 담는 그릇일 뿐이다. -->
+          <div id="pbBox" style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:12px">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+              <div style="font-size:17px;font-weight:900;letter-spacing:-.3px">🧱 <span style="color:#7CE8B0">위아래띠</span> <span style="font-size:12px;color:var(--sub);font-weight:600">— 글자 없는 위아래 띠</span></div>
+              <button type="button" class="mkbtn" onclick="pbApply()" style="margin-left:auto">이 틀로 바꾸기</button>
+            </div>
+            <div id="pbBody"></div>
+            <div class="hint" style="font-size:11px;margin-top:10px;line-height:1.7">
+              <b>글자·아이콘이 하나도 없는 틀입니다</b> — 인스타처럼 썰 스타일이 안 맞는 곳에 씁니다.<br>
+              지금 템플릿 24종은 전부 채널명·검색창·제목이 들어갑니다.
+            </div>
+          </div>
           </div>
           <div id="decoPaneFx" style="display:none">
+          <!-- 🔎 강조 — 효과 탭 **맨 위**에 둔다(2026-08-30). 아래(가림막 뒤)에 두니
+               첫 화면에서 615px 밖으로 밀려 안 보였다(실측). 새 기능일수록 먼저 보여야 한다. -->
+          <div id="hlBox" style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:12px">
+            <div style="font-size:13px;font-weight:800;margin-bottom:6px">🔎 이 장면에서 강조할 곳
+              <span style="font-size:11px;color:var(--accent2);font-weight:600">— 완성본에 그대로 나갑니다</span>
+            </div>
+            <div class="hint" style="margin-bottom:10px">
+              보여주고 싶은 곳에 원을 얹습니다. <b>왼쪽 미리보기에서 원을 끌어</b> 자리를 잡으세요.
+              원은 장면 내내 떠 있고, 나올 때 톡 커집니다. <b>장면마다 따로</b> 지정합니다.
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+              <button type="button" class="tab" id="hlOffBtn" onclick="hlSetMode('')">끄기</button>
+              <button type="button" class="tab" id="hlZoomBtn" onclick="hlSetMode('zoom')"
+                      title="원 안을 확대해서 보여줍니다">🔍 원 안 확대</button>
+              <button type="button" class="tab" id="hlSpotBtn" onclick="hlSetMode('spot')"
+                      title="원 밖을 어둡게 해서 원 안만 눈에 띄게 합니다">💡 원 밖 어둡게</button>
+              <span class="zoomNow" id="hlNow" style="align-self:center">꺼짐</span>
+            </div>
+            <div id="hlBody" style="display:none">
+              <div style="margin-bottom:10px">
+                <label style="font-size:12px;color:var(--sub);display:block;margin-bottom:4px">모양</label>
+                <div style="display:flex;gap:6px">
+                  <button type="button" class="tab" id="hlShapeCircle" onclick="hlSetShape('circle')">⭕ 원</button>
+                  <button type="button" class="tab" id="hlShapeRound" onclick="hlSetShape('round')">▢ 둥근네모</button>
+                </div>
+              </div>
+              <div style="margin-bottom:10px">
+                <label style="font-size:12px;color:var(--sub)">크기 <b id="hlRVal">28</b></label>
+                <input type="range" id="hlR" min="10" max="55" step="1" value="28"
+                       style="width:100%" oninput="hlSetR(this.value)">
+              </div>
+              <div id="hlZoomRow" style="margin-bottom:10px">
+                <label style="font-size:12px;color:var(--sub)">원 안 배율 <b id="hlZVal">2.0</b>배</label>
+                <input type="range" id="hlZ" min="12" max="40" step="1" value="20"
+                       style="width:100%" oninput="hlSetZ(this.value)">
+              </div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <button type="button" class="tab" id="hlSaveBtn" onclick="hlSaveNow()">💾 저장</button>
+                <span class="zoomSaved" id="hlSaved"></span>
+              </div>
+            </div>
+          </div>
           <!-- 🩹 가림막(2026-08-28 사장님 시안 그대로 · "효과" 탭으로) ────────────────
                "자막 남는것 가운데나 이런거 가릴때 … 도형이나 모양변경 가능하게해서
                 배치할수있게 … 워터마크도 가리고" + "색 쪽에 파레트 배치"
@@ -2422,19 +2636,6 @@
               <b>가장자리</b>를 올리면 경계가 부드럽게 풀려 덮은 티가 덜 납니다.
             </div>
           </div>
-          <!-- 🧱 위아래띠(2026-08-28 사장님 시안 ② · 옛 이름 "빈 틀") — 글자·아이콘 없는 위아래 띠.
-               ★띠 끝부분 처리는 deco_frame._bar_layer 한 곳에서 정한다(0순위-B).
-                 여기 슬라이더는 그 값을 담는 그릇일 뿐이다. -->
-          <div id="pbBox" style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:12px">
-            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
-              <div style="font-size:17px;font-weight:900;letter-spacing:-.3px">🧱 <span style="color:#7CE8B0">위아래띠</span> <span style="font-size:12px;color:var(--sub);font-weight:600">— 글자 없는 위아래 띠</span></div>
-              <button type="button" class="mkbtn" onclick="pbApply()" style="margin-left:auto">이 틀로 바꾸기</button>
-            </div>
-            <div id="pbBody"></div>
-            <div class="hint" style="font-size:11px;margin-top:10px;line-height:1.7">
-              <b>글자·아이콘이 하나도 없는 틀입니다</b> — 인스타처럼 썰 스타일이 안 맞는 곳에 씁니다.<br>
-              지금 템플릿 24종은 전부 채널명·검색창·제목이 들어갑니다.
-            </div>
           </div>
           <!-- ✨ 고급효과(리모션) — 사장님 지시로 화면에서 뺌(2026-08-28 "고급효과는 없애고").
                ★배선은 남긴다: toggleFxAdv·fxSuggest·fxRender가 이 안의 id들을 널가드 없이
@@ -2664,14 +2865,29 @@
           <div>
             <div class="hint" style="margin-bottom:6px">🕒 언제 올릴까요</div>
             <label style="display:flex;align-items:center;gap:8px;min-height:44px;cursor:pointer">
-              <input type="radio" name="bufWhen" value="queue" checked>
+              <input type="radio" name="bufWhen" value="queue" checked onchange="bufSyncWhen()">
               <span>내 Buffer 시간표에 맡기기 <span class="hint">(Buffer에서 정해둔 시간에 순서대로)</span></span>
             </label>
             <label style="display:flex;align-items:center;gap:8px;min-height:44px;cursor:pointer">
-              <input type="radio" name="bufWhen" value="at">
+              <input type="radio" name="bufWhen" value="at" onchange="bufSyncWhen()">
               <span>직접 정하기</span>
               <input type="datetime-local" id="bufAt" style="margin-left:4px">
             </label>
+            <!-- ★지금 바로 = 예약이 아니라 즉시 게시다(ShareMode shareNow, 스키마 실측).
+                 되돌릴 수 없으므로 누를 때 한 번 더 묻는다(사장님 2026-08-30 확정). -->
+            <label style="display:flex;align-items:center;gap:8px;min-height:44px;cursor:pointer">
+              <input type="radio" name="bufWhen" value="now" onchange="bufSyncWhen()">
+              <span>지금 바로 올리기 <span class="hint">(예약하지 않고 곧바로 게시합니다)</span></span>
+            </label>
+          </div>
+          <!-- 유튜브를 골랐을 때만 뜬다 — 인스타에는 이 축이 아예 없다(스키마 실측). -->
+          <div id="bufPrivacyBox" style="display:none">
+            <div class="hint" style="margin-bottom:6px">🔒 유튜브 공개범위</div>
+            <select id="bufPrivacy" style="min-height:38px">
+              <option value="public">공개</option>
+              <option value="unlisted">일부공개(링크가 있는 사람만)</option>
+              <option value="private">비공개(나만)</option>
+            </select>
           </div>
         </div>
 
@@ -3014,6 +3230,55 @@ var BUF_NEED_KEY_HTML = '먼저 <a href="/settings#keys" style="color:var(--acce
 /* 채널 하나에 올릴 글. **그 플랫폼 몫**으로 만든다(8단계가 만들어 둔 것을 쓴다).
    ★여기서 문구를 새로 지어내지 않는다 — 해시태그는 seoHashLine 하나만 부른다(0순위-B).
    ★모르는 플랫폼(페북·X 등)은 제목+설명에 인스타 해시태그를 붙여 둔다. 빈 칸보다 낫다. */
+/* ★사장님 2026-08-30: "제목이나 이런건 선택을 해야하자나".
+   8단계는 제목 후보 5개·해시태그 20개를 이미 만들어 두는데 화면에선 하나도 못 골랐다
+   (title 1개만 쓰이고 나머지 4개는 묻혀 있었다).
+   그래서 채널마다 **고른 것**을 기억하고, 그것으로 글을 다시 조립한다.
+   조립 규칙은 bufComposeFor 하나뿐이다 — 채널별 관례(유튜브는 설명 길게, 틱톡은 짧게)는
+   bufPartsFor가 정하고, 켜고끄기·제목·태그 선택만 여기서 얹는다(0순위-B: 규칙 두 벌 금지). */
+var BUFSEL = {};        /* {채널id: {title, off:{설명,CTA,댓글유도,해시태그}, tags:[..]}} */
+
+/* 이 채널의 글을 이루는 조각들. 순서가 곧 글의 순서다. */
+function bufPartsFor(service){
+  if (typeof SEO === 'undefined' || !SEO) return [];
+  var sv = (service || '').toLowerCase();
+  var cta = ((SEO.cta || {})[sv] || '').trim();
+  var parts = [];
+  parts.push({key:'제목', text:(SEO.title||'').trim()});
+  /* 틱톡·쓰레드는 설명을 통째로 넣지 않는 관례다 — 조각 자체를 안 만든다. */
+  if (sv !== 'tiktok' && sv !== 'threads')
+    parts.push({key:'설명', text:(SEO.description||'').trim()});
+  parts.push({key:'CTA', text:cta});
+  parts.push({key:'댓글유도', text:(SEO.comment_bait||'').trim()});
+  return parts.filter(function(p){ return p.text; });
+}
+
+/* 이 채널에서 고를 수 있는 해시태그(8단계가 만든 것). */
+function bufTagsFor(service){
+  var sv = (service || '').toLowerCase();
+  var hs = (typeof SEO!=='undefined' && SEO && SEO.hashtags) || {};
+  var arr = (hs[sv] || []).slice();
+  if (!arr.length && typeof SEO!=='undefined' && SEO) arr = (SEO.tags || []).slice();
+  return arr.map(function(t){ return String(t).trim().replace(/^#/,''); }).filter(Boolean);
+}
+
+/* 고른 것으로 글을 만든다. 아무것도 안 고른 처음에는 기존 자동조립과 같은 결과가 나온다. */
+function bufComposeFor(chId, service){
+  var sel = BUFSEL[chId] || {};
+  var off = sel.off || {};
+  var lines = [];
+  bufPartsFor(service).forEach(function(p){
+    if (off[p.key]) return;                       /* 사장님이 끈 조각 */
+    var t = (p.key === '제목' && sel.title) ? sel.title : p.text;   /* 고른 제목이 있으면 그것 */
+    if (t) lines.push(lines.length ? '' : null, t);
+  });
+  if (!off['해시태그']){
+    var tags = sel.tags || bufTagsFor(service);
+    if (tags.length) lines.push('', tags.map(function(t){ return '#'+t; }).join(' '));
+  }
+  return lines.filter(function(x){ return x !== null; }).join('\n');
+}
+
 function bufTextFor(service){
   if (typeof SEO === 'undefined' || !SEO) return '';
   var sv = (service || '').toLowerCase();
@@ -3132,7 +3397,11 @@ async function loadBuffer(){
   /* 올라갈 영상을 보여준다 — 완성본 미리보기와 같은 주소를 쓴다(0순위-B). */
   var vbox = document.getElementById('bufVideo');
   if (vbox && MIX_JOB){
+    /* ★poster를 반드시 준다 — 없으면 preload="metadata"에서 멈춘 브라우저가 **검은 칸**을
+       보여준다(실측 2026-08-30 사장님 화면. 내 브라우저는 readyState 4까지 가서 첫 프레임이
+       그려져 멀쩡해 보였다 — 브라우저마다 갈린다). 주소는 이 화면이 이미 쓰는 것과 같다. */
     vbox.innerHTML = '<video src="/api/mix/video/' + encodeURIComponent(MIX_JOB) + '" '
+      + 'poster="/api/produce/mix/poster/' + encodeURIComponent(MIX_JOB) + '" '
       + 'style="width:100%;border-radius:8px;background:#000" muted playsinline preload="metadata"></video>';
     var nm = document.getElementById('bufVideoName');
     /* ★사람이 읽을 수 있는 이름을 먼저 쓴다 — 작업이 여러 개면 ID로는 분간이 안 된다
@@ -3159,9 +3428,102 @@ async function loadBuffer(){
 function bufPick(el){
   BUF.picked[el.dataset.ch] = el.checked;
   bufRenderTexts();
+  bufSyncPrivacy();
 }
 
 /* 고른 채널마다 글 칸을 하나씩. 이미 고쳐 쓴 글은 **지우지 않는다**(다시 그려도 유지). */
+/* 채널 하나의 선택 UI — 제목 후보·구성요소 켜고끄기·해시태그. */
+function bufRenderPicker(c){
+  var host = document.getElementById('bufPick-' + c.id);
+  if (!host) return;
+  var sel = BUFSEL[c.id] || (BUFSEL[c.id] = {off:{}, title:'', tags:null});
+  var cands = (typeof SEO!=='undefined' && SEO && SEO.title_candidates) || [];
+  var titles = [];
+  if (typeof SEO!=='undefined' && SEO && SEO.title) titles.push(String(SEO.title));
+  cands.forEach(function(t){
+    var x = (t && (t.text || t)) ? String(t.text || t) : '';
+    if (x && titles.indexOf(x) < 0) titles.push(x);
+  });
+  var parts = bufPartsFor(c.service).map(function(p){ return p.key; });
+  if (bufTagsFor(c.service).length) parts.push('해시태그');
+  var allTags = bufTagsFor(c.service);
+  var onTags = sel.tags || allTags;
+
+  var h = '<details style="border:1px solid var(--line);border-radius:10px;padding:8px 12px">'
+        + '<summary style="cursor:pointer;font-size:12px;opacity:.85">✏️ 무엇을 넣을지 고르기'
+        + ' <span style="opacity:.6">— 제목 ' + titles.length + '개 · 태그 ' + allTags.length + '개</span></summary>';
+
+  if (titles.length > 1){
+    h += '<div style="margin-top:10px"><div class="hint" style="margin-bottom:4px">제목 — 8단계가 만든 후보입니다</div>';
+    titles.forEach(function(t, i){
+      var on = (sel.title || titles[0]) === t;
+      h += '<label style="display:flex;gap:8px;align-items:flex-start;padding:5px 8px;border-radius:8px;cursor:pointer;'
+         + (on ? 'background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.4)' : 'border:1px solid transparent') + '">'
+         + '<input type="radio" name="bufTitle-' + esc(c.id) + '" ' + (on ? 'checked' : '')
+         + ' onchange="bufSetTitle(\'' + esc(c.id) + '\',' + i + ')" style="margin-top:3px">'
+         + '<span style="font-size:13px">' + esc(t) + '</span></label>';
+    });
+    h += '<div style="display:none" id="bufTitles-' + esc(c.id) + '">' + esc(JSON.stringify(titles)) + '</div></div>';
+  }
+
+  h += '<div style="margin-top:10px"><div class="hint" style="margin-bottom:4px">넣을 것</div>'
+     + '<div style="display:flex;flex-wrap:wrap;gap:6px">';
+  parts.forEach(function(k){
+    var on = !sel.off[k];
+    h += '<label style="display:flex;gap:6px;align-items:center;font-size:12px;padding:5px 10px;border-radius:999px;cursor:pointer;'
+       + (on ? 'background:rgba(52,211,153,.14);border:1px solid rgba(52,211,153,.45)' : 'border:1px solid var(--line);opacity:.55') + '">'
+       + '<input type="checkbox" ' + (on ? 'checked' : '')
+       + ' onchange="bufTogglePart(\'' + esc(c.id) + '\',\'' + esc(k) + '\',this.checked)">' + esc(k) + '</label>';
+  });
+  h += '</div></div>';
+
+  if (allTags.length && !sel.off['해시태그']){
+    h += '<div style="margin-top:10px"><div class="hint" style="margin-bottom:4px">해시태그 — 눌러서 빼거나 넣습니다</div>'
+       + '<div style="display:flex;flex-wrap:wrap;gap:5px">';
+    allTags.forEach(function(t){
+      var on = onTags.indexOf(t) >= 0;
+      h += '<button type="button" onclick="bufToggleTag(\'' + esc(c.id) + '\',\'' + esc(t) + '\')"'
+         + ' style="font-size:12px;padding:4px 10px;border-radius:999px;cursor:pointer;'
+         + (on ? 'background:rgba(139,110,240,.18);border:1px solid rgba(139,110,240,.5);color:inherit'
+               : 'background:transparent;border:1px solid var(--line);opacity:.45;color:inherit') + '">#' + esc(t) + '</button>';
+    });
+    h += '</div></div>';
+  }
+  h += '</details>';
+  host.innerHTML = h;
+}
+
+/* 고른 것을 글 칸에 **다시 조립해 넣는다**. */
+function bufApply(chId){
+  var c = BUF.channels.filter(function(x){ return x.id === chId; })[0];
+  if (!c) return;
+  var ta = document.getElementById('bufTx-' + chId);
+  if (ta) ta.value = bufComposeFor(chId, c.service);
+  bufRenderPicker(c);
+}
+function bufSetTitle(chId, i){
+  var box = document.getElementById('bufTitles-' + chId);
+  var titles = [];
+  try { titles = JSON.parse(box.textContent); } catch(e){ return; }
+  (BUFSEL[chId] = BUFSEL[chId] || {off:{}}).title = titles[i] || '';
+  bufApply(chId);
+}
+function bufTogglePart(chId, key, on){
+  var sel = (BUFSEL[chId] = BUFSEL[chId] || {off:{}});
+  sel.off = sel.off || {};
+  if (on) delete sel.off[key]; else sel.off[key] = true;
+  bufApply(chId);
+}
+function bufToggleTag(chId, tag){
+  var c = BUF.channels.filter(function(x){ return x.id === chId; })[0];
+  if (!c) return;
+  var sel = (BUFSEL[chId] = BUFSEL[chId] || {off:{}});
+  if (!sel.tags) sel.tags = bufTagsFor(c.service).slice();
+  var i = sel.tags.indexOf(tag);
+  if (i >= 0) sel.tags.splice(i, 1); else sel.tags.push(tag);
+  bufApply(chId);
+}
+
 function bufRenderTexts(){
   var box = document.getElementById('bufTexts');
   var ids = BUF.channels.filter(function(c){ return BUF.picked[c.id]; });
@@ -3176,10 +3538,12 @@ function bufRenderTexts(){
     wrap.style.cssText = 'margin-bottom:14px';
     wrap.innerHTML = '<div class="hint" style="margin-bottom:4px">'
       + esc(c.service) + ' · <b>' + esc(c.name) + '</b></div>'
+      + '<div id="bufPick-' + esc(c.id) + '" style="margin-bottom:8px"></div>'
       + '<textarea id="bufTx-' + esc(c.id) + '" rows="6" style="width:100%"></textarea>';
     box.appendChild(wrap);
     var ta = document.getElementById('bufTx-' + c.id);
     ta.value = bufTextFor(c.service);
+    bufRenderPicker(c);
   });
   /* 뺀 채널의 칸은 치운다 */
   BUF.channels.forEach(function(c){
@@ -3188,6 +3552,21 @@ function bufRenderTexts(){
     if (w) w.remove();
   });
   if (!box.querySelector('textarea')) box.innerHTML = '<div class="hint">올릴 곳을 고르면 채널마다 글 칸이 생깁니다.</div>';
+}
+
+/* 고른 방식에 따라 버튼 이름을 바꾼다 — '예약하기'인데 즉시 올라가면 사고다. */
+function bufSyncWhen(){
+  var mode = (document.querySelector('input[name=bufWhen]:checked') || {}).value;
+  var btn = document.getElementById('btnBufGo');
+  if (btn) btn.textContent = (mode === 'now') ? '🚀 지금 올리기' : '📅 예약하기';
+}
+/* 유튜브를 하나라도 골랐을 때만 공개범위 칸을 보인다(인스타엔 이 축이 없다). */
+function bufSyncPrivacy(){
+  var box = document.getElementById('bufPrivacyBox');
+  if (!box) return;
+  var hasYt = BUF.channels.some(function(c){
+    return BUF.picked[c.id] && (c.service || '').toLowerCase() === 'youtube'; });
+  box.style.display = hasYt ? '' : 'none';
 }
 
 async function bufSchedule(){
@@ -3203,8 +3582,18 @@ async function bufSchedule(){
        그냥 문자열로 넘기면 9시간 어긋난 시각에 올라간다. */
     due = new Date(v).toISOString();
   }
+  /* ★지금 바로 = 되돌릴 수 없다. 반드시 한 번 더 묻는다(사장님 2026-08-30 확정).
+     어디에 올라가는지 이름을 보여준다 — "정말?"만 묻는 창은 아무도 안 읽는다. */
+  var now = (mode === 'now');
+  if (now){
+    var nm = {};
+    BUF.channels.forEach(function(c){ nm[c.id] = c.service + ' · ' + c.name; });
+    var where = ids.map(function(i){ return nm[i] || i; }).join('\n  · ');
+    if (!confirm('지금 바로 올립니다 — 예약이 아니라 곧바로 게시되고 되돌릴 수 없습니다.\n\n  · '
+                 + where + '\n\n계속할까요?')) { st.textContent = ''; return; }
+  }
   var btn = document.getElementById('btnBufGo');
-  btn.disabled = true; st.textContent = '예약하는 중…';
+  btn.disabled = true; st.textContent = now ? '올리는 중…' : '예약하는 중…';
   /* ★채널마다 글이 다르다 — texts로 채널별 글을 보낸다. */
   var texts = {};
   ids.forEach(function(id){
@@ -3215,7 +3604,9 @@ async function bufSchedule(){
   try {
     d = await (await fetch('/api/buffer/schedule', {
       method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ job_id: MIX_JOB, channel_ids: ids, texts: texts, due_at: due })
+      body: JSON.stringify({ job_id: MIX_JOB, channel_ids: ids, texts: texts, due_at: due,
+                             share_now: now,
+                             privacy: (document.getElementById('bufPrivacy') || {}).value || '' })
     })).json();
   } catch(e){ d = null; }
   btn.disabled = false;
@@ -3225,10 +3616,32 @@ async function bufSchedule(){
   /* 채널마다 결과가 다를 수 있다 — 성공/실패를 있는 그대로 보여준다. */
   var name = {};
   BUF.channels.forEach(function(c){ name[c.id] = c.name; });
-  st.innerHTML = d.results.map(function(r){
-    return (r.ok ? '✅ ' : '⚠️ ') + esc(name[r.channel_id] || r.channel_id)
-         + (r.ok ? ' 예약됨' : ' — ' + esc(r.error || ''));
-  }).join('<br>');
+  /* ★"예약됨" 한 마디로 끝내지 않는다 — **언제 올라가는지, 어디서 확인하는지**까지
+     보여준다(사장님 2026-08-30: "정상적으로 올라간건지 결과도 볼수있게").
+     ⚠️여기서 끝난 것은 **예약**이다. 실제 게시는 그 시각에 Buffer가 한다 —
+       '올라갔다'고 단정하지 않는다(가짜 성공은 조용한 사고다). */
+  var okN = d.results.filter(function(r){ return r.ok; }).length;
+  var rows = d.results.map(function(r){
+    var nm = esc(name[r.channel_id] || r.channel_id);
+    if (!r.ok) return '⚠️ <b>' + nm + '</b> — ' + esc(r.error || '실패');
+    var when = '';
+    if (r.due_at){
+      /* Buffer가 준 UTC를 **내 시간대**로 되돌려 보여준다(보낼 때 UTC로 바꿨다). */
+      try { when = new Date(r.due_at).toLocaleString('ko-KR',
+              {year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'}); }
+      catch(e){ when = r.due_at; }
+    }
+    if (now) return '✅ <b>' + nm + '</b> — 지금 올렸습니다';
+    return '✅ <b>' + nm + '</b> 예약 완료'
+         + (when ? ' — <b>' + esc(when) + '</b>에 올라갑니다' : ' — 내 Buffer 시간표 순서대로 올라갑니다');
+  });
+  if (okN){
+    rows.push('<div style="margin-top:8px">🔎 <a href="https://publish.buffer.com" target="_blank" '
+            + 'rel="noopener">Buffer에서 확인하기</a>'
+            + (now ? ' — 올리라고 보냈습니다. 실제 게시 여부는 Buffer·내 SNS에서 확인해 주세요.'
+                   : ' — 예약이 걸린 것이고, 실제 게시는 그 시각에 Buffer가 합니다.') + '</div>');
+  }
+  st.innerHTML = rows.join('<br>');
 }
 
 const PANEL_COUNT = document.querySelectorAll('.panel').length;
@@ -4735,6 +5148,9 @@ function renderTemplatePreview(){
 // 🗂 탭 전환 — 보이기/숨기기만 한다. 상태(STATE)는 아무것도 안 바꾼다.
 function decoTab(name){
   const panes={copy:'decoPaneCopy', style:'decoPaneStyle', tpl:'decoPaneTpl', fx:'decoPaneFx'};
+  // ★위아래띠는 "틀"이라 템플릿 탭으로 옮겼다(2026-08-30 사장님). 펼쳐 그리는 것도 같이 옮긴다 —
+  //   안 옮기면 템플릿 탭을 열어도 띠 본문(pbBody)이 빈 채로 남는다.
+  if(name==='tpl'){ try{ pbRender(); }catch(e){} }
   Object.keys(panes).forEach(k=>{
     const el=document.getElementById(panes[k]);
     if(el) el.style.display=(k===name)?'':'none';
@@ -4747,7 +5163,8 @@ function decoTab(name){
   // 없어서, 탭만 열면 제목만 있고 아래가 비어 있었다.
   if(name==='fx'){
     try{ mkRender(); }catch(e){}
-    try{ pbRender(); }catch(e){}
+    // 🔎 강조도 효과 탭에 산다(2026-08-30) — 탭을 열 때 지금 장면의 값으로 다시 그린다.
+    try{ hlLoadFromBeat(); }catch(e){}
   }
 }
 function initHeadcopy(){
@@ -4906,9 +5323,9 @@ async function loadBeatsPreview(){
   if(!BEATS_PREVIEW.length){ if(st) st.style.display='none'; return; }
   if(st) st.style.display='block';
   BEAT_IDX=Math.min(BEAT_IDX, BEATS_PREVIEW.length-1);
-  showBeat(BEAT_IDX);
+  showBeat(BEAT_IDX, true);      // true = 처음 불러옴 → 저장된 확대를 **읽기만** 한다
 }
-function showBeat(i){
+function showBeat(i, first){
   if(!BEATS_PREVIEW.length) return;
   BEAT_IDX=(i+BEATS_PREVIEW.length)%BEATS_PREVIEW.length;
   const b=BEATS_PREVIEW[BEAT_IDX];
@@ -4927,6 +5344,11 @@ function showBeat(i){
   const cnt=document.getElementById('beatCount');
   if(cnt) cnt.textContent=(BEAT_IDX+1)+' / '+BEATS_PREVIEW.length+' 장면';
   renderBeatTools();          // 장면을 넘기면 그 장면의 자리·줄을 보여준다
+  // 확대를 이 장면에도 이어갈지는 '모든 장면에 같은 배율' 체크가 정한다(zoomOnBeatChange)
+  if(typeof zoomOnBeatChange==='function') zoomOnBeatChange(first);
+  // 🔎 강조는 **장면마다 따로**다(확대의 '모든 장면에 같은 배율' 같은 전파가 없다) —
+  //   강조는 "이 장면의 이 자리"를 가리키는 것이라 다음 장면에 그대로 옮기면 엉뚱한 곳을 가리킨다.
+  if(typeof hlLoadFromBeat==='function') hlLoadFromBeat();
 }
 let CAP_SEQ_TIMER=null;
 function _playBeatCaptions(b){
@@ -6154,6 +6576,7 @@ function _zoomEls(){
           bd:document.getElementById('zoomBadge'),
           rg:document.getElementById('zoomRange'),
           rs:document.getElementById('zoomResetBtn'),
+          nw:document.getElementById('zoomNow'),
           ht:document.getElementById('zoomHint')};
 }
 // ★옮길 수 있는 최대 거리(px). 이보다 더 가면 화면에 빈 자리가 보인다.
@@ -6168,7 +6591,7 @@ function _zoomLimit(){
 }
 // 상태 → 화면. 크기는 안 건드리고 CSS 변수만 넘긴다.
 function _zoomApply(){
-  const {st,pv,bd,rg,rs,ht}=_zoomEls(); if(!st||!pv) return;
+  const {st,pv,bd,rg,rs,nw,ht}=_zoomEls(); if(!st||!pv) return;
   ZOOM=Math.max(ZOOM_MIN,Math.min(ZOOM_MAX,ZOOM));
   const lim=_zoomLimit();
   ZTX=Math.max(-lim.x,Math.min(lim.x,ZTX));   // 가장자리 밖으로는 못 나간다
@@ -6178,7 +6601,9 @@ function _zoomApply(){
   pv.style.setProperty('--zty',ZTY.toFixed(2)+'px');
   const on = ZOOM>1.001;
   st.classList.toggle('zoomed',on);
-  if(bd) bd.textContent=Math.round(ZOOM*100)+'%';
+  const pct=Math.round(ZOOM*100)+'%';
+  if(bd) bd.textContent=pct;
+  if(nw) nw.textContent=pct;          // 제목 줄 — 확대 안 해도 늘 보인다
   if(rg) rg.value=Math.round(ZOOM*100);
   if(rs) rs.style.display = on ? '' : 'none';
   // ★확대 중엔 '끌어서 옮긴다'를 먼저 말한다 — 안 보이는 부분을 보는 방법이 그거다.
@@ -6189,11 +6614,10 @@ function _zoomApply(){
   //   요소를 읽기만 하는데도 이름이 겹치면 걸린다 — 규약 쪽이 옳으니 이름을 비켜준다.
   const bgEl = document.getElementById('hcPreviewBg');
   const bgOn = bgEl && bgEl.style.display !== 'none' && bgEl.getAttribute('src');
+  // ★한 줄로 끝낸다(2026-08-30). 문장이 길면 안 읽힌다 — 지금 할 수 있는 동작 하나만 말한다.
   if(ht) ht.innerHTML = !bgOn
-    ? '🔍 위 <b>실장면 배경</b>을 켜면, 실제 장면을 확대해서 구석구석 볼 수 있어요.'
-    : (on
-      ? '✋ <b>화면을 잡고 끌어</b> 안 보이는 곳을 보세요. <b>자막은 제자리·같은 크기</b>로 고정돼요.'
-      : '🔍 크게 보고 싶은 곳을 <b>그냥 누르세요</b> — 그 자리가 확대돼요. 다시 누르면 더 크게.');
+    ? '먼저 위 <b>실장면 배경</b>을 켜세요'
+    : (on ? '✋ <b>끌어서</b> 안 보이는 곳 보기' : '크게 볼 곳을 <b>누르세요</b>');
 }
 // 배율을 바꿔도 **화면 가운데에 있던 것이 그대로 가운데** 남도록 이동거리를 환산한다.
 // (그냥 두면 배율이 바뀔 때 보던 자리가 튄다 — 확대 좌표계라 t의 의미가 배율마다 다르다)
@@ -6205,8 +6629,346 @@ function zoomSet(v){
   if(prev>1.001){ ZTX=ZTX*prev/z; ZTY=ZTY*prev/z; }
   ZOOM=z; _zoomApply();
 }
-function zoomStep(d){ zoomSet(ZOOM + d*ZOOM_STEP); }
-function zoomReset(){ ZOOM=1; ZTX=0; ZTY=0; _zoomApply(); }
+function zoomStep(d){ zoomSet(ZOOM + d*ZOOM_STEP); _zoomSaveSoon(); }
+function zoomReset(){ ZOOM=1; ZTX=0; ZTY=0; _zoomApply(); _zoomSaveSoon(); }
+// ★모든 장면에 같은 배율? (2026-08-30 사장님 "다른 전체 장면도 같은 비율로 적용할지 말지")
+//   켬(기본) = 장면을 넘겨도 배율·위치가 그대로 — 여러 장면을 같은 확대로 훑어볼 때.
+//   끔       = 장면을 넘기면 100%로 돌아간다 — 이 장면만 잠깐 확대해 볼 때.
+//   ★판단은 이 함수 하나에서만 한다(0순위-B). showBeat은 이걸 부르기만 한다.
+function zoomAllOn(){
+  const el=document.getElementById('zoomAll');
+  return !el || el.checked;      // 요소가 아직 없으면 종전 동작(유지)이 기본
+}
+function zoomAllChanged(){
+  // 방금 껐다면 지금 화면부터 원래대로 — 안 그러면 "껐는데 왜 아직 커져 있나"가 된다.
+  if(!zoomAllOn()){ zoomReset(); return; }     // zoomReset이 저장까지 부른다
+  _zoomApply();
+  _zoomSaveSoon();                             // 켰다 = 지금 구도를 전 장면에 퍼뜨린다
+}
+// 장면을 넘길 때 showBeat이 부른다. 유지/복원을 여기서 정한다.
+// ★'모든 장면에 같은 배율'이 켜져 있으면 배율을 그대로 이어간다(그리고 그 장면에도 저장).
+//   꺼져 있으면 **그 장면에 저장된 값**을 복원한다 — 없으면 100%.
+// 그 장면에 **저장된** 구도를 화면에 올린다(서버 값 → 화면 상태).
+// 저장은 '화면 크기 대비 비율', 화면은 '확대좌표계 px' → 되돌려 환산한다.
+function _zoomLoadFromBeat(){
+  const b=(typeof BEATS_PREVIEW!=='undefined' && BEATS_PREVIEW[BEAT_IDX]) || null;
+  const z=(b && +b.zoom) || 1;
+  ZOOM = z>1.0001 ? z : 1;
+  const st=document.getElementById('zoomStage');
+  const r=st?st.getBoundingClientRect():{width:0,height:0};
+  ZTX = (ZOOM>1.0001 && r.width)  ? (+b.pan_x||0)*r.width/ZOOM  : 0;
+  ZTY = (ZOOM>1.0001 && r.height) ? (+b.pan_y||0)*r.height/ZOOM : 0;
+  _zoomApply();
+}
+// ★장면을 넘길 때 showBeat이 부른다.
+//   ⚠️'처음 들어옴'과 '장면 넘김'을 갈라야 한다 — 안 가르면, '모든 장면에 같은 배율'이
+//     켜진 채 6단계에 다시 들어왔을 때 저장값을 읽는 대신 **현재값(100%)을 덮어써 저장**해
+//     사장님이 맞춰둔 확대가 통째로 날아간다(2026-08-30 "다른 작업 후 다시 오면 저장
+//     안 되지 않게").
+function zoomOnBeatChange(first){
+  if(first){ _zoomLoadFromBeat(); return; }      // 들어올 때는 **읽기만** 한다
+  if(zoomAllOn()){ _zoomApply(); _zoomSaveCur(); return; }
+  _zoomLoadFromBeat();                            // 장면별 모드 = 그 장면 값 복원
+}
+// ★지금 구도를 서버에 저장한다 — 이게 있어야 **최종 렌더에 그대로 나온다**
+//   (2026-08-30 사장님 "장면 바꾸기에서 수정한 대로 나오게").
+//   화면은 '확대좌표계 px'로 들고 있고, 서버·렌더는 '화면 폭 대비 비율'로 주고받는다:
+//       pan = (ZOOM * t) / 컨테이너크기      한계 |pan| <= (ZOOM-1)/2
+//   ★가두는 판단은 서버(scene_zoom_of)가 한다 — 여기서 또 가두면 두 벌이 된다(0순위-B).
+let _ZOOM_SAVE_T=null;
+function _zoomSaveCur(){
+  if(typeof MIX_JOB==='undefined' || !MIX_JOB) return;
+  const b=(typeof BEATS_PREVIEW!=='undefined' && BEATS_PREVIEW[BEAT_IDX]) || null;
+  if(!b) return;
+  const st=document.getElementById('zoomStage'); if(!st) return;
+  const r=st.getBoundingClientRect(); if(!r.width||!r.height) return;
+  const payload={ beat_idx:(b.beat_idx!=null?b.beat_idx:BEAT_IDX),
+                  zoom:ZOOM,
+                  pan_x: ZOOM>1.0001 ? (ZOOM*ZTX)/r.width  : 0,
+                  pan_y: ZOOM>1.0001 ? (ZOOM*ZTY)/r.height : 0 };
+  // 화면에도 같은 값을 담아둔다 — 장면을 오갈 때 서버를 다시 안 물어도 되게
+  b.zoom=payload.zoom; b.pan_x=payload.pan_x; b.pan_y=payload.pan_y;
+  fetch('/api/produce/mix/'+MIX_JOB+'/scenezoom',{method:'POST',
+    headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+    .then(()=>{ if(typeof _zoomMark==='function') _zoomMark(); }).catch(()=>{});
+}
+// 💾 저장 버튼 — 지금 즉시 저장하고 **결과를 화면에 말한다**.
+// 자동 저장은 조용히 실패할 수 있는데(fetch catch), 그러면 사장님은 저장된 줄 안다.
+// 버튼은 서버 응답을 확인하고 성공/실패를 글자로 보여준다.
+async function zoomSaveNow(){
+  const msg=document.getElementById('zoomSaved');
+  const btn=document.getElementById('zoomSaveBtn');
+  if(typeof MIX_JOB==='undefined' || !MIX_JOB){
+    if(msg){ msg.style.color='var(--fire)'; msg.textContent='먼저 3단계 영상 매칭이 필요해요'; }
+    return;
+  }
+  if(_ZOOM_SAVE_T){ clearTimeout(_ZOOM_SAVE_T); _ZOOM_SAVE_T=null; }   // 예약된 자동저장은 흡수
+  if(btn) btn.disabled=true;
+  if(msg){ msg.style.color='var(--sub)'; msg.textContent='저장 중…'; }
+  try{
+    const n=await _zoomSaveAll(true);      // true = 응답을 기다린다
+    if(msg){ msg.style.color='var(--ok)';
+      msg.textContent='✅ 저장됨'+(n>1?(' ('+n+'개 장면)'):'')+' — 완성본에 그대로 나갑니다'; }
+  }catch(e){
+    if(msg){ msg.style.color='var(--fire)'; msg.textContent='❌ 저장 실패 — 다시 눌러 주세요'; }
+  }finally{ if(btn) btn.disabled=false; }
+}
+/* ══════════════════════════════════════════════════════════════════════
+   🔎 장면 강조 (원형 돋보기 / 스포트라이트) — 2026-08-30 사장님
+   "장면꾸미기에서 강조하고싶은것들 수동하게"
+
+   ★값의 뜻은 **서버(video_assemble.scene_hl_of)와 한 벌**이다(0순위-B):
+       cx,cy = 화면 폭·높이 대비 원 중심(0~1)  /  r = 화면 **폭** 대비 반지름(0~1)
+     그래서 미리보기에서 보이는 자리 = 완성본에 찍히는 자리다. 여기서 px으로 가두거나
+     따로 해석하지 않는다 — 그 순간 두 벌이 되어 언젠가 어긋난다.
+   ★강조는 **자막 아래**에 그린다(z-index 2). 렌더도 강조를 먼저 얹고 자막을 나중에 얹는다.
+   ══════════════════════════════════════════════════════════════════════ */
+let HL = {on:false, mode:'zoom', shape:'circle', cx:0.5, cy:0.47, r:0.28, zoom:2.0};
+
+// 모양 → 미리보기 둥글기. ★서버(video_assemble._HL_SHAPE_N)와 **짝**이다:
+//   원(지수 2) = 50%,  둥근네모(지수 4=스퀘어클) ≈ 22%. 한쪽만 고치면 화면과 완성본이 달라진다.
+const HL_RADIUS_CSS = {circle:'50%', round:'22%'};
+
+// 미리보기가 **크기를 갖는 순간**(패널이 열리거나 창이 바뀔 때) 스스로 다시 그린다.
+// 감시자는 하나만 만든다 — 매번 새로 붙이면 같은 요소에 관찰자가 쌓인다.
+let _HL_RO=null;
+function _hlWatchSize(pv){
+  if(_HL_RO || typeof ResizeObserver==='undefined') return;
+  _HL_RO=new ResizeObserver(()=>{ if(pv.clientWidth>=10) hlApply(); });
+  _HL_RO.observe(pv);
+}
+
+function _hlEls(){
+  return {c:document.getElementById('hlCircle'), img:document.getElementById('hlZoomImg'),
+          pv:document.getElementById('hcPreview'), bg:document.getElementById('hcPreviewBg')};
+}
+
+// 화면에 그린다. ★렌더와 같은 그림이 되도록, 확대 모드는 배경과 **똑같은 변형**을 깔고
+//   원 중심 기준으로 배율만 한 번 더 건다(서버: base 크롭 → 그 위에 원 안 확대).
+function hlApply(){
+  const {c, img, pv, bg} = _hlEls();
+  if(!c || !pv) return;
+  const now=document.getElementById('hlNow');
+  const show=(id,on)=>{ const e=document.getElementById(id); if(e) e.style.display= on?'':'none'; };
+  if(!HL.on){
+    c.style.display='none';
+    show('hlBody',false);
+    if(now) now.textContent='꺼짐';
+    _hlBtnMark();
+    return;
+  }
+  const W=pv.clientWidth, H=pv.clientHeight;
+  // ★폭이 0이면 그리지 않는다(2026-08-30 실브라우저에서 잡음). 패널이 숨어 있을 때
+  //   계산하면 원이 16px로 뭉개진 채 굳고, 패널이 열려도 아무도 다시 그려주지 않는다.
+  //   대신 크기가 잡히는 순간 스스로 다시 그린다(아래 _hlWatchSize).
+  if(W < 10 || H < 10){ _hlWatchSize(pv); return; }
+  const d=Math.max(16, HL.r*2*W);
+  c.style.display=''; c.style.width=d+'px'; c.style.height=d+'px';
+  c.style.left=(HL.cx*W - d/2)+'px'; c.style.top=(HL.cy*H - d/2)+'px';
+  c.style.borderRadius = HL_RADIUS_CSS[HL.shape] || '50%';
+  show('hlBody',true);
+  show('hlZoomRow', HL.mode!=='spot');            // 배율은 확대 모드에서만 뜻이 있다
+  const rv=document.getElementById('hlRVal'), zv=document.getElementById('hlZVal');
+  if(rv) rv.textContent=Math.round(HL.r*100);
+  if(zv) zv.textContent=HL.zoom.toFixed(1);
+
+  if(HL.mode==='spot'){
+    // 원 밖을 어둡게 — 원 하나에 아주 큰 그림자를 퍼뜨리면 바깥이 통째로 덮인다.
+    c.style.boxShadow='0 0 0 9999px rgba(0,0,0,.6)';
+    img.style.display='none';
+    if(now) now.textContent='원 밖 어둡게';
+  }else{
+    c.style.boxShadow='0 2px 12px rgba(0,0,0,.45)';
+    // 원 안 확대: 배경과 같은 그림·같은 크기·같은 변형을 깔고, 원 중심을 원점으로 배율을 얹는다.
+    if(bg && bg.src){
+      img.src=bg.src; img.style.display='';
+      img.style.width=W+'px'; img.style.height=H+'px';
+      img.style.left=(-(HL.cx*W - d/2))+'px'; img.style.top=(-(HL.cy*H - d/2))+'px';
+      // 배경이 이미 쓰고 있는 확대/이동을 그대로 물려받는다(장면 확대와 겹쳐도 어긋나지 않게)
+      const cs=getComputedStyle(bg);
+      img.style.transformOrigin=(HL.cx*100)+'% '+(HL.cy*100)+'%';
+      img.style.transform='scale('+HL.zoom+') '+(cs.transform==='none'?'':cs.transform);
+    }else{
+      img.style.display='none';       // 아직 배경 그림이 없으면 테두리만 보여준다
+    }
+    if(now) now.textContent='원 안 '+HL.zoom.toFixed(1)+'배';
+  }
+  _hlBtnMark();
+}
+
+function _hlBtnMark(){
+  const on=(id,yes)=>{ const b=document.getElementById(id); if(b) b.style.outline= yes?'2px solid var(--accent2)':''; };
+  on('hlOffBtn', !HL.on);
+  on('hlZoomBtn', HL.on && HL.mode==='zoom');
+  on('hlSpotBtn', HL.on && HL.mode==='spot');
+  on('hlShapeCircle', HL.on && HL.shape==='circle');
+  on('hlShapeRound', HL.on && HL.shape==='round');
+}
+
+// 모양 바꾸기(2026-08-30 사장님 "돋보기 기능은 모양 변경가능하게").
+// 원 = 얼굴·물건 하나, 둥근네모 = 글자·버튼처럼 네모난 것을 감쌀 때.
+function hlSetShape(s){ HL.shape = (s==='round'?'round':'circle'); hlApply(); _hlSaveSoon(); }
+
+function hlSetMode(m){
+  HL.on = !!m; if(m) HL.mode=m;
+  hlApply(); _hlSaveSoon();
+}
+function hlSetR(v){ HL.r = Math.max(0.06, Math.min(0.9, Number(v)/100)); hlApply(); _hlSaveSoon(); }
+function hlSetZ(v){ HL.zoom = Math.max(1.1, Math.min(4.0, Number(v)/10)); hlApply(); _hlSaveSoon(); }
+
+// 원을 끌어서 옮긴다. ★배경 끌기(패닝)와 안 부딪힌다 — 이 핸들러는 원 자신에게만 걸리고
+//   stopPropagation으로 배경까지 안 내려간다(자막 끌기가 자기 요소에 거는 방식과 같다).
+function bindHLDrag(){
+  const {c, pv} = _hlEls();
+  if(!c || !pv || c._bound) return;
+  c._bound = true;
+  let sx=0, sy=0, cx0=0, cy0=0, moved=false, dragging=false;
+  c.addEventListener('pointerdown', e=>{
+    e.preventDefault(); e.stopPropagation();
+    sx=e.clientX; sy=e.clientY; cx0=HL.cx; cy0=HL.cy; moved=false; dragging=true;
+    // ★캡처는 **되면 좋은 것**이지 조건이 아니다 — 캡처 여부로 끌기를 판정하면
+    //   캡처가 안 되는 환경에서 원이 통째로 안 움직인다(2026-08-30 실측으로 잡음).
+    try{ c.setPointerCapture(e.pointerId); }catch(err){}
+  });
+  c.addEventListener('pointermove', e=>{
+    if(!dragging) return;
+    e.preventDefault(); e.stopPropagation();
+    const r=pv.getBoundingClientRect();
+    if(!r.width||!r.height) return;
+    moved=true;
+    // ★비율로 옮긴다 — rect는 확대(scale)가 반영된 값이라 어떤 배율에서도 1:1로 따라온다
+    HL.cx=Math.max(0,Math.min(1, cx0+(e.clientX-sx)/r.width));
+    HL.cy=Math.max(0,Math.min(1, cy0+(e.clientY-sy)/r.height));
+    hlApply();
+  });
+  const end=e=>{ dragging=false;
+                 try{ c.releasePointerCapture(e.pointerId); }catch(err){}
+                 if(moved) _hlSaveSoon(); };
+  c.addEventListener('pointerup', end);
+  c.addEventListener('pointercancel', end);
+}
+
+// 장면을 넘길 때 그 장면의 강조를 불러온다(서버가 준 값 그대로 — 화면이 만들어내지 않는다).
+function hlLoadFromBeat(){
+  const b=(typeof BEATS_PREVIEW!=='undefined' && BEATS_PREVIEW[BEAT_IDX]) || null;
+  const h=b && b.hl;
+  HL = h ? {on:true, mode:h.mode||'zoom', shape:h.shape||'circle', cx:h.cx, cy:h.cy, r:h.r, zoom:h.zoom}
+         : {on:false, mode:'zoom', shape:'circle', cx:0.5, cy:0.47, r:0.28, zoom:2.0};
+  const rEl=document.getElementById('hlR'), zEl=document.getElementById('hlZ');
+  if(rEl) rEl.value=Math.round(HL.r*100);
+  if(zEl) zEl.value=Math.round(HL.zoom*10);
+  bindHLDrag();
+  hlApply();
+}
+
+let _HL_SAVE_T=null;
+function _hlSaveSoon(){
+  if(_HL_SAVE_T) clearTimeout(_HL_SAVE_T);
+  _HL_SAVE_T=setTimeout(()=>{ _HL_SAVE_T=null; _hlSave(); }, 400);
+}
+async function _hlSave(wait){
+  if(typeof MIX_JOB==='undefined' || !MIX_JOB) return;
+  const b=(typeof BEATS_PREVIEW!=='undefined' && BEATS_PREVIEW[BEAT_IDX]) || null;
+  if(!b) return;
+  const idx=(b.beat_idx!=null?b.beat_idx:BEAT_IDX);
+  const payload={beat_idx:idx, on:HL.on, mode:HL.mode, shape:HL.shape,
+                 cx:HL.cx, cy:HL.cy, r:HL.r, zoom:HL.zoom};
+  const p=fetch('/api/produce/mix/'+MIX_JOB+'/scenehl',{method:'POST',
+    headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+    .then(r=>r.json()).then(d=>{
+      // 서버가 가둔 값을 그대로 받아 화면에 담는다 — 화면이 따로 가두면 두 벌이 된다
+      b.hl = d && d.hl ? d.hl : null;
+      if(!d || !d.ok) throw new Error('저장 실패');
+      return d;
+    });
+  if(wait) return p;
+  p.catch(()=>{});
+}
+async function hlSaveNow(){
+  const msg=document.getElementById('hlSaved'), btn=document.getElementById('hlSaveBtn');
+  const say=(t,c)=>{ if(msg){ msg.style.color=c; msg.textContent=t; } };
+  if(typeof MIX_JOB==='undefined' || !MIX_JOB){ say('먼저 영상 매칭이 필요해요','var(--fire)'); return; }
+  if(_HL_SAVE_T){ clearTimeout(_HL_SAVE_T); _HL_SAVE_T=null; }
+  if(btn) btn.disabled=true;
+  say('저장 중…','var(--sub)');
+  try{
+    await _hlSave(true);
+    say('✅ 저장됨 — 완성본에 그대로 나갑니다','var(--ok)');
+  }catch(e){ say('❌ 저장 실패 — 다시 눌러 주세요','var(--fire)'); }
+  finally{ if(btn) btn.disabled=false; }
+}
+
+// 🖼 지금 보고 있는 장면을 7단계 썸네일 후보로 보낸다(2026-08-30).
+// ★서버가 **미리보기와 같은 함수**(_beatframe_file)로 그림을 뜬다 — 화면에서 본 장면과
+//   썸네일로 간 장면이 다를 수 없다. 프론트가 캔버스를 떠서 올리면 그게 두 벌이 된다.
+async function pinBeatToThumb(){
+  const msg=document.getElementById('thumbPinMsg');
+  const btn=document.getElementById('thumbPinBtn');
+  const say=(t,c)=>{ if(msg){ msg.style.color=c; msg.textContent=t; } };
+  if(typeof MIX_JOB==='undefined' || !MIX_JOB){
+    say('먼저 영상 매칭이 필요해요','var(--fire)'); return;
+  }
+  const b=(typeof BEATS_PREVIEW!=='undefined' && BEATS_PREVIEW[BEAT_IDX]) || null;
+  if(!b){ say('보낼 장면이 없어요','var(--fire)'); return; }
+  const idx=(b.beat_idx!=null?b.beat_idx:BEAT_IDX);      // 저장용 진짜 번호(scenezoom과 동일)
+  if(btn) btn.disabled=true;
+  say('보내는 중…','var(--sub)');
+  try{
+    const r=await fetch('/api/produce/thumb/pin',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({job_id:MIX_JOB, beat_idx:idx})});
+    const d=await r.json();
+    if(!d.ok) throw new Error(d.error||'실패');
+    say('✅ '+(d.label||'장면')+' → '+stepName('thumb')+' 후보 맨 앞에 넣었어요','var(--ok)');
+    // 7단계를 이미 열어봤다면 목록을 바로 새로 그린다(안 그러면 가서 새로고침해야 보인다).
+    if(typeof THUMB_STATE!=='undefined' && THUMB_STATE.job===MIX_JOB
+       && typeof loadThumbFrames==='function') loadThumbFrames();
+  }catch(e){
+    say('❌ 못 보냈어요 — 다시 눌러 주세요','var(--fire)');
+  }finally{ if(btn) btn.disabled=false; }
+}
+
+// 끌기·클릭이 끝난 뒤 한 번만 보낸다(끄는 도중 매 프레임 보내면 서버가 죽는다)
+function _zoomSaveSoon(){
+  if(_ZOOM_SAVE_T) clearTimeout(_ZOOM_SAVE_T);
+  _ZOOM_SAVE_T=setTimeout(()=>{ _ZOOM_SAVE_T=null; _zoomSaveAll(); }, 400);
+}
+// '모든 장면에 같은 배율'이 켜져 있으면 전 장면에 같은 구도를 저장한다.
+// wait=true면 서버 응답까지 기다리고 저장한 장면 수를 돌려준다(저장 버튼이 쓴다).
+// 하나라도 실패하면 throw — 버튼이 "저장 실패"를 보여줄 수 있어야 하기 때문이다.
+async function _zoomSaveAll(wait){
+  if(typeof MIX_JOB==='undefined' || !MIX_JOB){ if(wait) throw new Error('no job'); return 0; }
+  const st=document.getElementById('zoomStage');
+  const r=st?st.getBoundingClientRect():null;
+  if(!r||!r.width||!r.height){ if(wait) throw new Error('no stage'); return 0; }
+  const px = ZOOM>1.0001 ? (ZOOM*ZTX)/r.width  : 0;
+  const py = ZOOM>1.0001 ? (ZOOM*ZTY)/r.height : 0;
+  const list=(typeof BEATS_PREVIEW!=='undefined' && BEATS_PREVIEW) || [];
+  // 대상: 모든 장면 모드면 전부, 아니면 지금 장면 하나
+  const targets = (zoomAllOn() && list.length) ? list
+                : (list[BEAT_IDX] ? [list[BEAT_IDX]] : []);
+  if(!targets.length){ if(wait) throw new Error('no beats'); return 0; }
+  const send = (b,i)=>{
+    b.zoom=ZOOM; b.pan_x=px; b.pan_y=py;     // 화면 사본도 같이 — 장면을 오갈 때 즉시 맞는다
+    const bi = (b.beat_idx!=null) ? b.beat_idx : (zoomAllOn()? i : BEAT_IDX);
+    return fetch('/api/produce/mix/'+MIX_JOB+'/scenezoom',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({beat_idx:bi, zoom:ZOOM, pan_x:px, pan_y:py})});
+  };
+  if(!wait){ targets.forEach((b,i)=>send(b,i).catch(()=>{})); _zoomMark(); return targets.length; }
+  const rs = await Promise.all(targets.map((b,i)=>send(b,i)));
+  if(rs.some(x=>!x || !x.ok)) throw new Error('save failed');
+  _zoomMark();
+  return targets.length;
+}
+// 자동 저장이 돌았음을 조용히 알린다(버튼을 안 눌러도 저장된다는 걸 보이게)
+function _zoomMark(){
+  const msg=document.getElementById('zoomSaved'); if(!msg) return;
+  msg.style.color='var(--sub)';
+  msg.textContent='자동 저장됨';
+  clearTimeout(_zoomMark._t);
+  _zoomMark._t=setTimeout(()=>{ if(msg.textContent==='자동 저장됨') msg.textContent=''; }, 2500);
+}
 // 이벤트가 글자(드래그 대상) 위에서 시작했나 — 그러면 확대/이동은 손을 뗀다
 function _zoomOnText(t){
   return !!(t && t.closest && t.closest('#hcPreviewText,#capPreviewText,#ovPreview,#extraPreview,[data-maskbox]'));
@@ -6239,7 +7001,7 @@ function bindZoom(){
     if(panning){
       panning=false; st.classList.remove('grabbing');
       try{ st.releasePointerCapture(e.pointerId); }catch(_){}
-      if(moved) return;                        // 끌었으면 확대는 안 한다
+      if(moved){ _zoomSaveSoon(); return; }    // 끌었으면 확대는 안 한다(자리는 저장)
     }
     if(_zoomOnText(e.target)) return;
     // ★누른 그 지점을 화면 가운데로 가져오면서 한 단계 확대한다.
@@ -6255,6 +7017,7 @@ function bindZoom(){
     ZTX=(keepX-offX)/nz;
     ZTY=(keepY-offY)/nz;
     _zoomApply();
+    _zoomSaveSoon();                           // 이 구도가 최종 영상에 그대로 나간다
   };
   st.addEventListener('pointerup', end);
   st.addEventListener('pointercancel', ()=>{ panning=false; st.classList.remove('grabbing'); });
@@ -11076,49 +11839,130 @@ async function vlibAdd(btn, i){
 
 let VOICES_EXPANDED=false;   // ＋더보기 펼침 상태 — 재렌더(pickPreset)가 접힘으로 되돌리지 않게 보존
 function toggleMoreVoices(){ VOICES_EXPANDED=!VOICES_EXPANDED; renderPresetCards(); }
+// ── 성우 카드 (시안 승인본 이식, 2026-08-30) ────────────────────────────────
+// 카드 한 장 = [아바타][이름·한줄설명][☆즐겨찾기][▶샘플]. 고른 카드 **안에서만** 톤 탭이
+// 펼쳐진다. 종전엔 이름·설명이 한 줄로 흐르고 <audio controls>가 카드마다 박혀 있었다.
+// ★배선은 그대로다 — 고르기는 pickPreset, 톤은 pickVariant. 여기서 새로 만들지 않는다.
+
+// 즐겨찾기 — 이 브라우저에만 남는 편의값이다(서버에 안 보낸다).
+let VOICE_FAVS = (()=>{ try{ return new Set(JSON.parse(localStorage.getItem('sm_voice_favs')||'[]')); }
+                        catch(e){ return new Set(); } })();
+function _favSave(){ try{ localStorage.setItem('sm_voice_favs', JSON.stringify([...VOICE_FAVS])); }catch(e){} }
+function toggleFav(gid){
+  VOICE_FAVS.has(gid) ? VOICE_FAVS.delete(gid) : VOICE_FAVS.add(gid);
+  _favSave(); renderPresetCards();
+}
+// 아바타 색 — 이름에서 뽑아 성우마다 늘 같은 색이 나오게 한다(무작위 금지).
+function _avaColor(name){
+  const hues=[215,265,185,330,205,285];
+  let h=0; for(const c of String(name||'')) h+=c.charCodeAt(0);
+  const hue=hues[h%hues.length];
+  return {bg:`hsl(${hue},30%,25%)`, fg:`hsl(${hue},62%,78%)`};
+}
+// 샘플 듣기 — 카드마다 <audio>를 깔지 않고 **하나를 돌려 쓴다**(카드 20장 × audio는 무겁다).
+let _SAMPLE_AUD=null;
+function playSample(btn, url){
+  if(!_SAMPLE_AUD){ _SAMPLE_AUD=new Audio(); }
+  const stop=()=>{ document.querySelectorAll('.vplay.playing,.fplay.playing').forEach(b=>{
+                     b.classList.remove('playing'); b.textContent='▶'; }); };
+  if(btn.classList.contains('playing')){ _SAMPLE_AUD.pause(); stop(); return; }
+  stop(); _SAMPLE_AUD.pause();
+  if(!url){ return; }
+  _SAMPLE_AUD.src=url; _SAMPLE_AUD.currentTime=0;
+  _SAMPLE_AUD.play().then(()=>{ btn.classList.add('playing'); btn.textContent='■'; }).catch(()=>{});
+  _SAMPLE_AUD.onended=stop;
+}
+function _sampleUrlOf(g){
+  const variant=SEL_VARIANT[g.group_id]||g.default_variant||'stable';
+  const v=g.variants[variant]||g.variants[g.default_variant]||Object.values(g.variants)[0];
+  return (v&&v.sample_url)||'';
+}
 function renderPresetCards(){
   const cardHtml=(g)=>{
     const variant=SEL_VARIANT[g.group_id]||g.default_variant||'stable';
     const v=g.variants[variant]||g.variants[g.default_variant]||Object.values(g.variants)[0];
     const active=VOICE.group_id===g.group_id;
-    // whisper는 베스트 5명에게만 프리셋이 있다(사장님 청취 판정 2026-07-16). filter가
-    // 존재하는 variant만 그리므로 나머지 9명은 탭이 자동으로 안 뜬다 — 숨김 분기 불필요.
-    const tabs=['stable','natural','expressive','whisper'].filter(k=>g.variants[k]).map(k=>
-      `<button type="button" class="tab${variant===k?' active':''}" style="flex:0 0 auto;min-width:auto;padding:3px 9px;font-size:11px"
+    const ava=_avaColor(g.name);
+    const fav=VOICE_FAVS.has(g.group_id);
+    // 톤 탭은 **있는 variant만** 그린다 — whisper 프리셋이 없는 성우는 탭이 자동으로 안 뜬다.
+    const tones=['stable','natural','expressive','whisper'].filter(k=>g.variants[k]).map(k=>
+      `<button type="button" class="tone${active&&variant===k?' on':''}"
         onclick="event.stopPropagation();pickVariant('${g.group_id}','${k}')">${VARIANT_LABELS[k]}</button>`).join('');
-    // 속삭임 role 선택 — "선택된(active) 이 카드"가 지금 whisper 톤일 때만, 그 카드 안에 뜬다.
-    // [2026-07-17 결함① 수정] 예전엔 presetCards(성우 카드 14개) 전부의 밑, voiceControls 안
-    // 별도 div(#whisperRoleControls, display:none 토글)에 있었다 — 카드 top 293px vs 그 div
-    // top 1561px, 화면 한 장(1012px)에 같이 안 보여 "속삭임 눌러도 반응 없다"는 오인을 낳았다
-    // (사장님이 브라우저로 실측). 카드 렌더 루프 안에서 조건부로만 그려 항상 같이 보이게 한다
-    // — display:none 토글이 아니라 "다른 카드/다른 톤이면 이 블록 자체가 안 그려진다"로 해결.
-    // 태그는 켜지거나 꺼질 뿐이라(설계 §6) range 입력은 없다 — "속삭임 강도" 슬라이더 금지.
+    // 속삭임 role — 고른 카드가 지금 whisper일 때만 그 카드 안에 뜬다(2026-07-17 결함① 수정).
+    // 카드 밖 별도 자리에 두면 화면 한 장에 같이 안 보여 "눌러도 반응 없다"로 읽힌다.
     const whisperPicker=(active && variant==='whisper')?`
-        <div id="whisperRoleControls" style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)">
-          <div style="font-size:11px;color:var(--sub);margin-bottom:4px">이 영상은 속삭임을 어디에 적용할까요?</div>
+        <div id="whisperRoleControls" style="margin:0 12px 12px;padding-top:9px;border-top:1px dashed var(--line)">
+          <div style="font-size:11px;color:var(--sub);margin-bottom:5px">이 영상은 속삭임을 어디에 적용할까요?</div>
           <div id="whisperRoleBtns" style="display:flex;gap:6px;flex-wrap:wrap">${WHISPER_ROLE_PRESETS.map(w=>
-            `<button type="button" onclick="event.stopPropagation();setWhisperPreset('${w.key}')" class="tab${WHISPER_PICK===w.key?' active':''}" style="flex:0 0 auto;min-width:auto;padding:6px 12px;font-size:13px">${w.label}</button>`).join('')}</div>
+            `<button type="button" onclick="event.stopPropagation();setWhisperPreset('${w.key}')" class="tone${WHISPER_PICK===w.key?' on':''}">${w.label}</button>`).join('')}</div>
         </div>` : '';
+    const url=(v&&v.sample_url)||'';
     return `
-      <div onclick="pickPreset('${g.group_id}')"
-        style="border:1px solid ${active?'var(--accent2)':'var(--line)'};border-radius:9px;padding:9px;margin-bottom:6px;cursor:pointer;background:var(--inset)">
-        <b>${esc(g.name)}</b>${g.best?' <span title="사장님 청취 판정 베스트" style="color:var(--accent2)">⭐</span>':''}${engineBadge(g)} — ${esc(g.one_liner||'')}
-        <div style="display:flex;gap:4px;align-items:center;margin-top:6px;flex-wrap:wrap">
-          ${tabs}
-          ${v&&v.sample_url?`<audio controls src="${esc(v.sample_url)}" style="height:26px;vertical-align:middle;margin-left:4px"></audio>`:''}
+      <div class="vcard${active?' sel':''}" onclick="pickPreset('${g.group_id}')">
+        <div class="vrow">
+          <div class="vavatar" style="background:${ava.bg};color:${ava.fg}">${esc(String(g.name||'?').slice(0,1))}</div>
+          <div class="vmeta">
+            <div class="vname">${esc(g.name)}</div>
+            <div class="vdesc">${esc(g.one_liner||'')}</div>
+          </div>
+          <button type="button" class="vstar${fav?' on':''}" title="즐겨찾기에 담기"
+                  onclick="event.stopPropagation();toggleFav('${g.group_id}')">${fav?'★':'☆'}</button>
+          <button type="button" class="vplay" title="샘플 듣기"
+                  onclick="event.stopPropagation();playSample(this,'${esc(url)}')" ${url?'':'disabled'}>▶</button>
         </div>
+        ${g.best?'<span class="vbadge">추천</span>':''}
+        <div class="tones">${tones}</div>
         ${whisperPicker}
       </div>`;
   };
-  const best=VOICE_GROUPS.filter(g=>g.best);
-  const rest=VOICE_GROUPS.filter(g=>!g.best);
-  // 선택된 성우가 '나머지 9명'에 있으면 접혀서 안 보이는 사고 방지 — 자동으로 펼친다
-  if(rest.some(g=>g.group_id===VOICE.group_id)) VOICES_EXPANDED=true;
-  const more = rest.length ? `
-    <button type="button" id="moreVoicesBtn" onclick="toggleMoreVoices()" class="tab" style="width:100%;margin:2px 0 6px;padding:7px;font-size:12px">${VOICES_EXPANDED?'－ 접기':'＋ 더보기 ('+rest.length+'명)'}</button>
-    <div id="restVoices" style="display:${VOICES_EXPANDED?'block':'none'}">${rest.map(cardHtml).join('')}</div>` : '';
-  document.getElementById('presetCards').innerHTML=(best.map(cardHtml).join('')+more)||'<div class="hint">프리셋이 없습니다.</div>';
+  // ★엔진 이름은 **서버가 주는 값 그대로** 쓴다(2026-08-30 실사고).
+  //   서버(app.py)는 "elevenlabs"/"typecast"를 준다. 여기서 'eleven'으로 줄여 비교했더니
+  //   일레븐랩스 성우 14명이 어느 열에도 안 걸려 통째로 사라졌다("성우가 없어요"로 떴다).
+  //   같은 이름을 두 곳에서 다르게 적으면 반드시 어긋난다(0순위-B).
+  const q = (VOICE_Q||'').trim().toLowerCase();
+  const hit = g => !q || (String(g.name||'')+' '+String(g.one_liner||'')).toLowerCase().includes(q);
+  const eng = g => { const e=String(g.engine||'elevenlabs'); return e==='eleven'?'elevenlabs':e; };
+  const colHtml = (list, engine, actBtn) => {
+    const mine = list.filter(g => eng(g)===engine && hit(g));
+    if(!mine.length) return actBtn + '<div class="hint" style="padding:8px 2px">'
+      + (q ? '검색 결과가 없어요' : '성우가 없어요') + '</div>';
+    const best = mine.filter(g=>g.best), rest = mine.filter(g=>!g.best);
+    // 고른 성우가 '더보기' 안에 있으면 접혀서 안 보이는 사고 방지 — 자동으로 펼친다.
+    if(rest.some(g=>g.group_id===VOICE.group_id)) VOICES_EXPANDED=true;
+    // 검색 중엔 접지 않는다 — 찾은 성우가 '더보기' 뒤에 숨으면 검색이 헛돈다.
+    const showAll = q || VOICES_EXPANDED;
+    const more = (rest.length && !q) ? `
+      <button type="button" onclick="toggleMoreVoices()" class="colAct">${VOICES_EXPANDED?'－ 접기':'＋ 더보기 ('+rest.length+'명)'}</button>` : '';
+    return actBtn + best.map(cardHtml).join('')
+         + (showAll ? rest.map(cardHtml).join('') : '') + more;
+  };
+  // 열마다 '성우를 늘리는 길'을 그 열 위에 둔다 — 어느 엔진에 담기는지 헷갈리지 않게.
+  // ★열 안에 '목소리 찾기'를 넣지 않는다(2026-08-30). 위쪽 #vlibBox에 같은 버튼이 이미 있어
+  //   두 벌이 됐고, 한쪽 열에만 있으니 두 열의 첫 카드 높이가 어긋나 보였다(0순위-B).
+  const elvAct = '', tcAct = '';
+  document.getElementById('presetCards').innerHTML =
+      renderFavRow()
+    + '<div class="voiceCols">'
+    +   '<div><div class="voiceColHead">일레븐랩스</div>' + colHtml(VOICE_GROUPS,'elevenlabs',elvAct) + '</div>'
+    +   '<div><div class="voiceColHead">타입캐스트</div>' + colHtml(VOICE_GROUPS,'typecast',tcAct) + '</div>'
+    + '</div>';
 }
+// ⭐즐겨찾기 줄 — 별을 누른 성우가 두 열 위에 모인다. 이름을 누르면 바로 그 성우로 바뀐다.
+function renderFavRow(){
+  const favs=(VOICE_GROUPS||[]).filter(g=>VOICE_FAVS.has(g.group_id));
+  if(!favs.length) return '<div class="favs"><span class="favLabel">⭐ 즐겨찾기</span>'
+    + '<span class="favEmpty">성우 카드의 ☆를 누르면 여기에 모입니다</span></div>';
+  return '<div class="favs"><span class="favLabel">⭐ 즐겨찾기</span>'
+    + favs.map(g=>`<div class="fchip" onclick="pickPreset('${g.group_id}')">
+         <span>${esc(g.name)}</span>
+         <button type="button" class="fplay" title="샘플 듣기"
+           onclick="event.stopPropagation();playSample(this,'${esc(_sampleUrlOf(g))}')">▶</button>
+       </div>`).join('') + '</div>';
+}
+
+// 검색어 — 이미 담은 성우를 걸러본다(일레븐 공개 라이브러리 검색과는 다른 것).
+let VOICE_Q = '';
+function voiceFilter(v){ VOICE_Q = v || ''; renderPresetCards(); }
 
 function pickVariant(gid, variant){
   SEL_VARIANT[gid]=variant;
@@ -11232,8 +12076,12 @@ function syncCurVoiceName(){
   const el=document.getElementById('curVoiceName'); if(!el) return;
   const g=(VOICE_GROUPS||[]).find(x=>x.group_id===VOICE.group_id);
   if(!g){ el.textContent='— 기본 성우로 완성됨'; return; }
+  // ★시안대로 성우·톤·속도를 한 줄에 띄운다 — 속도는 여기서 계산하지 않고 VOICE.speed를
+  //   그대로 읽는다(속도를 정하는 곳은 setSpeed 한 군데다, 0순위-B).
   const tone=VARIANT_LABELS[VOICE.variant]||'';
-  el.textContent='— 지금: '+g.name+(tone?(' · '+tone):'');
+  const spd=(VOICE.speed!=null)?(Number(VOICE.speed).toFixed(2)+'x'):'';
+  el.innerHTML='지금: <b style="color:var(--accent2)">'+esc(g.name)
+    + (tone?(' · '+esc(tone)):'') + (spd?(' · '+spd):'') + '</b>';
 }
 
 function pickPreset(gid){
@@ -11266,7 +12114,7 @@ function markVoiceDirty(on){
   const el = document.getElementById('voiceDirty');
   if(el) el.style.display = on ? '' : 'none';
 }
-function setSpeed(s){ VOICE.speed=s; markVoiceDirty(true); pickHighlight(); }
+function setSpeed(s){ VOICE.speed=s; markVoiceDirty(true); pickHighlight(); syncCurVoiceName(); }
 function setSil(v){ VOICE.silence_trim=v; markVoiceDirty(true); pickHighlight(); }
 function setPace(v){ VOICE.pace_mode=v; markVoiceDirty(true); }
 // 카드 안 role 버튼을 고르면 카드 전체를 다시 그린다(WHISPER_PICK은 renderPresetCards()가 읽는다) —
@@ -11425,6 +12273,19 @@ async function vpSaveNarr(i){
   }
 }
 
+// 장면 줄 파형 — 길이를 눈으로 가늠하게 하는 **장식**이다(오디오 분석이 아니다).
+// 대사 글자에서 막대 높이를 뽑아 같은 문장이면 늘 같은 모양이 나오게 한다(무작위 금지 —
+// 다시 그릴 때마다 모양이 바뀌면 화면이 흔들린다).
+function _waveHTML(i, b){
+  const t=String((b&&b.narration)||'')||' ';
+  const N=16, bars=[];
+  for(let k=0;k<N;k++){
+    const c=t.charCodeAt(k%t.length)||65;
+    bars.push(28 + ((c*7 + k*13) % 72));   // 28~100%
+  }
+  return '<span class="wave" aria-hidden="true">'
+       + bars.map(h=>'<i style="height:'+h+'%"></i>').join('') + '</span>';
+}
 async function renderTtsBeats(){
   if(vpIsEditing()) return;      // ★고치는 중엔 갈아끼우지 않는다(입력이 날아간다)
   const el=document.getElementById('ttsBeats');
@@ -11451,20 +12312,34 @@ async function renderTtsBeats(){
       const synced = Array.isArray(b.cap_durs) && b.cap_durs.length;
       const badge = synced ? '🟢' : '🟡';
       const badgeTip = synced ? '자막 자동맞춤 됨' : '자막 자동맞춤 불확실 — 들어보세요';
+      // ★재생목록 한 줄(2026-08-30 사장님 "단락별·전체 들어보는 걸 편하게").
+      //   종전엔 줄마다 버튼이 6~7개 깔려(장면 8개면 48개) 무엇을 눌러야 할지 몰랐다.
+      //   기본은 [▶][✏ 수정][⋯] 셋만 두고 나머지는 ⋯ 안으로 접는다.
+      //   ★버튼·id·onclick은 하나도 안 바꿨다 — 자리만 옮겼다(배선은 그대로 산다).
+      const dur = (typeof b.target_seconds==='number') ? b.target_seconds.toFixed(1)+'초' : '';
       return `
-      <div id="beatRow${i}" data-idx="${i}" style="border:1px solid var(--line);border-radius:9px;padding:9px;margin-bottom:6px;background:var(--inset);transition:background .15s">
-        <div id="vpSay${i}" style="font-size:13px;margin-bottom:4px"><span title="${badgeTip}">${badge}</span> <b>${i+1}.</b> <span class="vpNarr">${esc(b.narration||'')}</span></div>
-        ${b.tts_preview_url?`<audio id="beatAudio${i}" preload="metadata" src="${esc(b.tts_preview_url)}?t=${Date.now()}" style="display:none"></audio><button class="btn-prev" style="padding:4px 10px" onclick="vpPlayBeat(${i})">▶ 이 장면</button>
-        <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+      <div id="beatRow${i}" data-idx="${i}" class="ttsRow">
+        <div class="ttsRowMain" onclick="vpPlayBeat(${i})" title="이 장면부터 들어봅니다">
+          <span class="ttsNo">${i+1}<i title="${badgeTip}" class="${synced?'ok':'warn'}"></i></span>
+          <div id="vpSay${i}" class="ttsSay"><span class="vpNarr">${esc(b.narration||'')}</span></div>
+          ${_waveHTML(i, b)}
+        <span class="ttsDur">${dur}</span>
+          ${b.tts_preview_url?`<audio id="beatAudio${i}" preload="metadata" src="${esc(b.tts_preview_url)}?t=${Date.now()}" style="display:none"></audio>
+          <button class="btn-prev ttsBtn" onclick="event.stopPropagation();vpPlayBeat(${i})" title="이 장면 듣기">▶</button>
+          <button class="btn-prev ttsBtn" onclick="event.stopPropagation();vpEditNarr(${i})" title="이 문장을 고치고 음성·자막을 다시 뽑습니다">✏ 수정</button>
+          <button class="btn-prev ttsBtn" onclick="event.stopPropagation();vpMore(${i})" title="자막 맞춤·톤 바꾸기">⋯</button>`
+          :'<span class="hint">음성 없음</span>'}
+        </div>
+        ${b.tts_preview_url?`
+        <div id="vpMore${i}" class="ttsMore" style="display:none">
           <button class="btn-prev" style="padding:3px 8px" onclick="vpNudge(${i},-1)">◀ 자막 당기기</button>
           <button class="btn-prev" style="padding:3px 8px" onclick="vpNudge(${i},1)">자막 밀기 ▶</button>
           <button class="btn-prev" style="padding:3px 8px" onclick="vpResetOffset(${i})">↩︎ 되돌리기</button>
           <select id="vpTone${i}" style="padding:3px">${Object.entries(VARIANT_LABELS).map(([k,lab])=>`<option value="${k}"${(b.tts_tone||'stable')===k?' selected':''}>${lab}</option>`).join('')}</select>
           <button class="btn-prev" style="padding:3px 8px" onclick="vpRegenTone(${i})">🔁 톤 바꿔 다시</button>
-          <button class="btn-prev" style="padding:3px 8px" onclick="vpEditNarr(${i})" title="이 문장을 고치고 음성·자막을 다시 뽑습니다">✏ 대본수정</button>
           ${window.IS_ADMIN?`<button class="btn-prev" style="padding:3px 8px" onclick="pronReport(this,${i})">🩺 발음 이상해요</button>`:''}
           <span id="vpMsg${i}" class="hint"></span>
-        </div>`:'<span class="hint">음성 없음</span>'}
+        </div>`:''}
       </div>`;
     }).join('');
     // 영상길이(비트 목표시간 합) vs 음성길이(오디오 실측 합) — 맞춤 힌트로 편집 편의성↑
@@ -11479,17 +12354,38 @@ async function renderTtsBeats(){
     //   재생 중 이 두 요소에 프레임·자막을 그린다(없으면 재생이 죽는다 — 실측으로 확인).
     el.innerHTML=`
       <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:10px">
-        <button onclick="playAllBeats()" class="btn-next" style="padding:13px 22px;font-size:15px;font-weight:700;min-height:44px" title="방금 만든 완성 음성을 처음부터 끝까지 재생합니다">▶ 완성본 전체 듣기</button>
+        <button id="vpAllBtn" onclick="playAllBeats()" class="btn-next" style="padding:13px 22px;font-size:15px;font-weight:700;min-height:44px" title="방금 만든 완성 음성을 처음부터 끝까지 재생합니다">▶ 완성본 전체 듣기</button>
         <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
           <div><span class="hint">영상 길이</span> <b style="color:var(--accent2)">${vidLen.toFixed(1)}초</b></div>
           <div><span class="hint">음성 길이</span> <b id="voiceLen" style="color:var(--ok)">…</b></div>
           <div id="fitMsg" class="hint">음성 길이 측정 중…</div>
         </div>
       </div>
+      <!-- ★전체 듣기 진행 표시(2026-08-30 사장님 "단락별·전체 들어보는 걸 편하게").
+           종전엔 8장면을 이어 듣는 동안 화면에 아무 표시가 없어, 지금 몇 번째인지·
+           얼마나 남았는지 알 수 없었다(줄 강조만 있고 위쪽 버튼은 그대로였다).
+           ★진행값을 계산하는 곳은 _vpAllTick() 한 군데다 — 줄 강조(vpMarkPlaying)와
+             따로 세지 않는다(같은 판단을 두 벌로 적으면 어긋난다, 0순위-B). -->
+      <div id="vpAllBar" style="display:none;margin:-4px 0 10px">
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--sub)">
+          <span id="vpAllNow">1 / 1</span>
+          <div style="flex:1 1 120px;height:6px;border-radius:4px;background:var(--inset);overflow:hidden">
+            <div id="vpAllFill" style="height:100%;width:0%;background:var(--accent);transition:width .2s"></div>
+          </div>
+          <span id="vpAllTime">0.0 / 0.0초</span>
+        </div>
+      </div>
       <div style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)" aria-hidden="true">
         <img id="vpFrame" onerror="this.style.display='none'"><div id="vpCap"></div>
       </div>
-      ${rows}`;
+      ${rows}
+      <!-- 바닥 요약(시안) — 장면 수·음성 총길이·자막 자동맞춤 성공 수를 한 줄로.
+           숫자는 위 [영상/음성 길이]와 **같은 값**을 쓴다(_updateVoiceLen이 채운다). -->
+      <div class="plSum">
+        <span>총 ${beats.length}장면</span>
+        <span>음성 <b id="sumVoiceLen" style="color:var(--txt)">…</b></span>
+        <span>자막 자동맞춤 ${beats.filter(x=>Array.isArray(x.cap_durs)&&x.cap_durs.length).length}/${beats.length}</span>
+      </div>`;
     _updateVoiceLen(beats.length, vidLen);
   }catch(e){ el.innerHTML='<div class="hint" style="color:var(--fire)">로드 실패</div>'; }
 }
@@ -11500,6 +12396,8 @@ function _updateVoiceLen(n, vidLen){
     if(!auds.length || auds.some(a=>!a.duration||isNaN(a.duration))) return; // 아직 메타로딩중
     const total=auds.reduce((s,a)=>s+a.duration,0);
     const vl=document.getElementById('voiceLen'); if(vl) vl.textContent=total.toFixed(1)+'초';
+    // 바닥 요약도 **같은 값**으로 채운다 — 따로 세면 두 숫자가 어긋난다(0순위-B).
+    const sv=document.getElementById('sumVoiceLen'); if(sv) sv.textContent=total.toFixed(1)+'초';
     const msg=document.getElementById('fitMsg'); if(!msg) return;
     const diff=total-vidLen;
     if(vidLen<=0){ msg.textContent=''; }
@@ -11543,12 +12441,30 @@ function vpPlayBeat(i){
   // 다른 오디오 정지
   let k=0; while(document.getElementById('beatAudio'+k)){ const o=document.getElementById('beatAudio'+k); if(o!==a){o.pause();} k++; }
   _vpShowFrame(i); _vpDriveCaption(a,b); _vpHeard.add(i);
-  const r=document.getElementById('beatRow'+i);
-  document.querySelectorAll('[id^=beatRow]').forEach(x=>x.style.background='var(--inset)');
-  if(r) r.style.background='#1a2740';
+  // ★강조는 **클래스 하나**로 한다(2026-08-30). 종전엔 style.background를 직접 넣어
+  //   재생목록 CSS(.ttsRow.playing)와 규칙이 두 벌이 됐다 — 한쪽만 고치면 어긋난다(0순위-B).
+  vpMarkPlaying(i);
   a.currentTime=0; a.play().catch(()=>{});
 }
 // ── 고치기: 자막 당기기/밀기·되돌리기·톤 재생성·부드러운 다음-단계 게이트 ──
+// 재생 중인 줄 강조 — 켜고 끄는 곳이 여기 하나뿐이다(한 줄 재생·전체 재생이 공유).
+function vpMarkPlaying(i){
+  document.querySelectorAll('.ttsRow').forEach(x=>x.classList.remove('playing'));
+  const r = (i>=0) ? document.getElementById('beatRow'+i) : null;
+  if(r){
+    r.classList.add('playing');
+    // 목록이 길면 재생 중인 줄이 화면 밖으로 나간다 — 따라 내려가게 한다.
+    try{ r.scrollIntoView({block:'nearest', behavior:'smooth'}); }catch(_){}
+  }
+}
+
+// ⋯ — 그 줄의 보조 버튼만 펼친다(다른 줄은 닫는다: 화면이 한 번에 하나만 열리게).
+function vpMore(i){
+  const el=document.getElementById('vpMore'+i); if(!el) return;
+  const open = el.style.display==='none';
+  document.querySelectorAll('.ttsMore').forEach(e=>{ e.style.display='none'; });
+  el.style.display = open ? 'flex' : 'none';
+}
 async function vpNudge(i,dir){
   const b=VP_BEATS[i]; if(!b) return;
   b.cap_offset=Math.max(-2,Math.min(2, (+b.cap_offset||0) + dir*0.1));
@@ -11632,15 +12548,39 @@ function vpGateNext(){
   return true;
 }
 // ▶ 전체 재생 — 비트 음성을 순서대로 이어 재생하며 현재 비트의 프레임+자막을 갱신(가라오케식)
+let VP_ALL=null;    // 전체 듣기 상태(재생 중일 때만 채워진다) — 진행바가 이것만 읽는다
+function _vpAllStop(){
+  if(VP_ALL && VP_ALL.timer) clearInterval(VP_ALL.timer);
+  (VP_ALL&&VP_ALL.auds||[]).forEach(a=>{ a.pause(); a.onended=null; });
+  VP_ALL=null;
+  const bar=document.getElementById('vpAllBar'); if(bar) bar.style.display='none';
+  const btn=document.getElementById('vpAllBtn'); if(btn) btn.textContent='▶ 완성본 전체 듣기';
+  vpMarkPlaying(-1);
+}
+// 진행값을 세는 **유일한 곳**. 앞 장면들의 길이 합 + 지금 장면의 재생 위치.
+function _vpAllTick(){
+  if(!VP_ALL) return;
+  const {auds,cur}=VP_ALL;
+  const done=auds.slice(0,cur).reduce((s,a)=>s+(a.duration||0),0);
+  const total=auds.reduce((s,a)=>s+(a.duration||0),0);
+  const at=done+(auds[cur]?(auds[cur].currentTime||0):0);
+  const now=document.getElementById('vpAllNow'); if(now) now.textContent=(cur+1)+' / '+auds.length;
+  const fill=document.getElementById('vpAllFill'); if(fill) fill.style.width=(total>0?Math.min(100,at/total*100):0).toFixed(1)+'%';
+  const tm=document.getElementById('vpAllTime'); if(tm) tm.textContent=at.toFixed(1)+' / '+total.toFixed(1)+'초';
+}
 function playAllBeats(){
+  if(VP_ALL){ _vpAllStop(); return; }    // 재생 중에 다시 누르면 멈춘다
   const auds=[]; let i=0; while(document.getElementById('beatAudio'+i)){ auds.push(document.getElementById('beatAudio'+i)); i++; }
   if(!auds.length) return;
   auds.forEach(a=>{ a.pause(); a.currentTime=0; a.onended=null; });
-  let cur=0;
+  VP_ALL={auds, cur:0, timer:setInterval(_vpAllTick,200)};
+  const bar=document.getElementById('vpAllBar'); if(bar) bar.style.display='block';
+  const btn=document.getElementById('vpAllBtn'); if(btn) btn.textContent='■ 멈추기';
   const playOne=()=>{
-    if(cur>=auds.length){ document.querySelectorAll('[id^=beatRow]').forEach(x=>x.style.background='var(--inset)'); return; }
-    vpPlayBeat(cur);
-    auds[cur].onended=()=>{ cur++; playOne(); };
+    if(!VP_ALL) return;                                  // 사용자가 멈췄다
+    if(VP_ALL.cur>=auds.length){ _vpAllStop(); return; } // 끝나면 원래대로
+    vpPlayBeat(VP_ALL.cur); _vpAllTick();
+    auds[VP_ALL.cur].onended=()=>{ if(!VP_ALL) return; VP_ALL.cur++; playOne(); };
   };
   playOne();
 }
@@ -12696,6 +13636,12 @@ async function _loadThumbFrames(more){
     // job은 있는데 서버가 거절(영상 미완성 등) — 원문 에러에 갈 곳까지 얹는다.
     hintEl.innerHTML = (d.error || '프레임 추출 실패')
       + ' — <a href="#" onclick="stepGo(&quot;mix&quot;);return false" style="color:var(--accent2);font-weight:700">'+stepName('mix')+'에서 영상 매칭 확인 →</a>';
+    // ★화면도 비운다(2026-08-30 실브라우저 관찰). 종전엔 그리드를 그대로 둬서, 마지막
+    //   후보를 뺀 직후 서버엔 0개인데 화면엔 **유령 카드**가 남았다 — 그걸 누르면 이미
+    //   지워진 그림으로 썸네일을 만들게 된다. 화면이 서버보다 뒤처지면 안 된다.
+    THUMB_STATE.frames = [];
+    document.getElementById('thumbFrames').innerHTML = '';
+    document.getElementById('thumbFrameCount').textContent = '';
     return;
   }
   // ★프레임이 그대로면 다시 그리지 않는다(2026-07-30) — 아래에서 5단계 진입마다 서버에
@@ -12717,14 +13663,33 @@ async function _loadThumbFrames(more){
   THUMB_STATE.frames = d.frames;
   document.getElementById('thumbFrameCount').textContent = `(${d.frames.length}개)`;
   document.getElementById('thumbFramesHint').innerHTML = thumbBgNotice(d);
+  // ★핀(장면꾸미기에서 보낸 장면)은 자동 추출과 **눈에 띄게 갈라 보인다** — 안 그러면
+  //   16장 사이에 섞여 사장님이 방금 보낸 게 어느 것인지 못 찾는다. 빼기(×)도 여기서.
   document.getElementById('thumbFrames').innerHTML = d.frames.map((f, i) => `
     <div onclick="pickThumbFrame(${i})" style="position:relative;cursor:pointer;border-radius:6px;
-         overflow:hidden;border:2px solid ${i === 0 ? 'var(--accent2)' : 'transparent'}" data-fi="${i}">
+         overflow:hidden;border:2px solid ${i === 0 ? 'var(--accent2)' : (f.pin ? 'var(--gold)' : 'transparent')}" data-fi="${i}">
       <img src="${f.url}" style="width:100%;display:block">
+      ${f.pin ? `<span style="position:absolute;left:4px;top:4px;background:var(--gold);color:#000;
+            font-size:10px;font-weight:800;padding:1px 4px;border-radius:3px">🖼 ${f.label || '장면'}</span>
+      <span onclick="event.stopPropagation();unpinThumbFrame('${f.pin}')" title="후보에서 빼기"
+            style="position:absolute;right:4px;top:4px;background:#000c;color:#fff;font-size:11px;
+            line-height:1;padding:2px 5px;border-radius:3px">×</span>` : ''}
       <span style="position:absolute;right:4px;bottom:4px;background:#000c;color:#fff;
             font-size:10px;padding:1px 4px;border-radius:3px">${f.ts}s</span>
     </div>`).join('');
   if (d.frames.length) pickThumbFrame(0);
+}
+
+// 🖼 보낸 장면을 후보에서 뺀다(파일도 지운다 — 우리가 만든 사본이라 원본 장면은 그대로).
+async function unpinThumbFrame(name){
+  if(!MIX_JOB || !name) return;
+  try{
+    const r=await fetch('/api/produce/thumb/pin',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({job_id:MIX_JOB, name:name, remove:true})});
+    const d=await r.json();
+    if(d.ok) loadThumbFrames();
+  }catch(e){}
 }
 
 function pickThumbFrame(i){

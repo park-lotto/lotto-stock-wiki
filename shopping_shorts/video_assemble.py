@@ -196,10 +196,171 @@ def _kenburns_vf(duration_sec, fps=30, zoom_end=_KENBURNS_ZOOM):
     )
 
 
-def _base_zoom_vf():
-    """일반 비트 기본 크롭+줌(정적, 저비용) — 원본과 프레임 구도만 살짝 달라지게."""
-    w, h = int(_OUT_W * _BASE_ZOOM), int(_OUT_H * _BASE_ZOOM)
-    return f"scale={w}:{h}:force_original_aspect_ratio=increase,crop={_OUT_W}:{_OUT_H}"
+def scene_zoom_of(beat):
+    """장면 하나에 사장님이 지정한 확대(6단계 미리보기에서 끌어 맞춘 것)를 꺼낸다.
+    → (zoom, pan_x, pan_y). 지정이 없으면 (1.0, 0, 0) = 종전 그대로.
+
+    ★값의 뜻은 **화면과 한 벌**이다(0순위-B). 미리보기는 배경에 scale(Z)+translate(t)를
+      걸고, 저장할 때 이동을 **화면 폭 대비 비율**로 정규화해 보낸다:
+          pan = (Z*t) / 컨테이너폭        (오른쪽·아래가 +)
+      그래서 한계는 |pan| <= (Z-1)/2 이고, 이 함수도 같은 식으로 가둔다.
+    ★여기서만 읽는다 — 크롭을 만드는 곳이 여럿이라 각자 파싱하면 반드시 어긋난다."""
+    if not isinstance(beat, dict):
+        return 1.0, 0.0, 0.0
+    z = beat.get("scene_zoom")
+    try:
+        z = float(z) if z is not None else 1.0
+    except (TypeError, ValueError):
+        z = 1.0
+    z = max(1.0, min(3.0, z))
+    if z <= 1.0001:
+        return 1.0, 0.0, 0.0
+    lim = (z - 1.0) / 2.0
+    def _pan(key):
+        try:
+            v = float(beat.get(key) or 0.0)
+        except (TypeError, ValueError):
+            v = 0.0
+        return max(-lim, min(lim, v))
+    return z, _pan("scene_pan_x"), _pan("scene_pan_y")
+
+
+# ── 🔎 장면 강조(원형 돋보기 / 스포트라이트, 2026-08-30 사장님) ──────────────────
+# 사장님 요청: "장면꾸미기에서 강조하고싶은것들 수동하게". 레퍼런스 화면처럼 **원 하나로
+# 시선을 끄는** 연출이다. 확대(scene_zoom)와는 다른 물건 — 확대는 화면 전체 구도를 바꾸고,
+# 강조는 구도를 그대로 둔 채 그 위에 원을 얹는다. 그래서 강조는 base 크롭 **다음**에 온다.
+_HL_GROW = 0.35          # 등장할 때 원이 커지는 시간(초). 사장님 확정: "뜰 때 커지는 애니메이션까지"
+_HL_DARK = 0.60          # 스포트라이트에서 원 **밖**을 어둡게 하는 정도(0~1)
+_HL_RING = 3             # 흰 테두리 두께(px, 반지름 기준)
+
+
+def scene_hl_of(beat):
+    """장면 하나에 사장님이 지정한 강조를 꺼낸다 → dict 또는 None(=강조 없음).
+
+    ★해석은 **여기 한 곳에서만** 한다(0순위-B) — 화면(미리보기)과 렌더가 같은 뜻으로
+      읽어야 한다. 저장 형식은 화면 크기와 무관한 **비율**이다:
+        cx, cy : 화면 폭·높이 대비 원 중심 (0~1)
+        r      : 화면 **폭** 대비 반지름 (0~1) — 폭 기준이라 세로 영상에서도 원이 원이다
+        zoom   : 원 안 확대 배율(mode=zoom일 때만 의미)
+        mode   : 'zoom'(원 안을 확대) | 'spot'(원 밖을 어둡게)
+    """
+    if not isinstance(beat, dict):
+        return None
+    hl = beat.get("scene_hl")
+    if not isinstance(hl, dict) or not hl.get("on"):
+        return None
+    def _f(key, dflt, lo, hi):
+        try:
+            v = float(hl.get(key))
+        except (TypeError, ValueError):
+            v = dflt
+        return max(lo, min(hi, v))
+    mode = "spot" if str(hl.get("mode") or "zoom") == "spot" else "zoom"
+    shape = "round" if str(hl.get("shape") or "circle") == "round" else "circle"
+    # 반지름 하한 0.06 — 이보다 작으면 화면에서 점으로 보여 아무것도 강조가 안 된다.
+    return {"mode": mode, "shape": shape,
+            "cx": _f("cx", 0.5, 0.0, 1.0), "cy": _f("cy", 0.5, 0.0, 1.0),
+            "r": _f("r", 0.28, 0.06, 0.9), "zoom": _f("zoom", 2.0, 1.1, 4.0)}
+
+
+# 모양 → 거리식의 지수. ★모양을 **하나의 식**으로 다룬다(0순위-B) — 모양마다 따로 식을 적으면
+#   테두리·마스크·미리보기가 각자 다른 모양을 그리게 된다.
+#     n=2 → 원,  n=4 → 둥근 네모(스퀘어클). 나중에 네모(n=12)를 더해도 이 표만 늘리면 된다.
+_HL_SHAPE_N = {"circle": 2, "round": 4}
+
+
+def _hl_dist(cx, cy, r, shape):
+    """중심에서 얼마나 떨어졌나 — **테두리에서 정확히 1**이 되는 값(ffmpeg 식 문자열)."""
+    n = _HL_SHAPE_N.get(shape, 2)
+    return (f"pow(pow(abs(X-{cx})/{r},{n})+pow(abs(Y-{cy})/{r},{n}),{1.0 / n:.6f})")
+
+
+def _hl_px(hl):
+    """비율 → 픽셀(최종 출력 좌표계). 원이 화면 밖으로 나가도 ffmpeg가 알아서 자른다."""
+    cx = int(round(hl["cx"] * _OUT_W))
+    cy = int(round(hl["cy"] * _OUT_H))
+    r = max(8, int(round(hl["r"] * _OUT_W)))
+    return cx, cy, r
+
+
+def highlight_fc(beat, base_vf, grow=True):
+    """base_vf(기존 크롭/줌 체인) 뒤에 강조를 얹은 **filter_complex 문자열**. 강조가 없으면 None.
+
+    반환값을 쓰는 쪽은 `-vf base_vf` 대신 `-filter_complex <이것> -map [out]`을 쓴다.
+
+    ★왜 geq를 프레임마다 돌리지 않나 — 실측(2026-08-30): 1080x1920 전면 geq는 3초 소스에
+      13.0초(4.3배 느림)였다. 마스크를 **한 장만** 만들고 loop로 재사용하니 0.86초
+      (0.28배) — **15배** 빠르다. 라이브 렌더에 얹을 수 있는 유일한 형태다.
+    ★등장 성장은 마스크를 다시 그리는 게 아니라 **다 만든 원을 scale로 키운다**(eval=frame).
+      그래서 커지는 동안 비용이 0이다.
+    grow=False — 한 비트가 컷 여러 개로 쪼개졌을 때 **두 번째 컷부터**. 안 그러면 컷마다
+      원이 다시 톡톡 튀어 사장님이 "왜 여러 번 나오냐"고 보게 된다.
+    """
+    hl = scene_hl_of(beat)
+    if not hl:
+        return None
+    cx, cy, r = _hl_px(hl)
+    d = r * 2
+    sh = hl["shape"]
+    k = f"min(1,max(0.2,t/{_HL_GROW}))" if grow else "1"
+    # 테두리·마스크 모두 **같은 거리식**을 쓴다 → 모양을 바꿔도 둘이 어긋날 수 없다.
+    # (테두리 조각은 d×d 캔버스라 중심이 (r,r)이다)
+    _dl = _hl_dist(r, r, r, sh)                     # 조각 안 좌표 기준
+    _dg = _hl_dist(cx, cy, r, sh)                   # 전체 화면 좌표 기준
+    ring = (f"color=c=white:s={d}x{d}:d=1,format=rgba,"
+            f"geq=r=255:g=255:b=255:"
+            f"a='255*clip(({_HL_RING}-abs((1-{_dl})*{r}))/1.5,0,1)',"
+            f"loop=loop=-1:size=1,setpts=N/30/TB[ring0];"
+            f"[ring0]scale=w='{d}*{k}':h='{d}*{k}':eval=frame[rg];")
+    at = f"x='{cx}-{d}*{k}/2':y='{cy}-{d}*{k}/2'"
+    parts = [f"[0:v]{base_vf}[base];", ring]
+    if hl["mode"] == "spot":
+        # 원 밖을 어둡게. 전면 마스크지만 **한 장만** 계산하고 loop로 돌린다(위 실측 참고).
+        parts.append(
+            f"color=c=black:s={_OUT_W}x{_OUT_H}:d=1,format=rgba,geq=r=0:g=0:b=0:"
+            f"a='255*{_HL_DARK}*clip(({_dg}-1)*{r}/2+0.5,0,1)',"
+            f"loop=loop=-1:size=1,setpts=N/30/TB"
+            + (f",fade=t=in:st=0:d={_HL_GROW}:alpha=1" if grow else "") + "[dark];")
+        parts.append("[base][dark]overlay=0:0:shortest=1[o1];")
+    else:
+        m = hl["zoom"]
+        # 원 안만 확대 — 전체를 m배로 키운 뒤 **그 점 둘레만** d×d로 잘라 원 마스크를 씌운다.
+        parts.append(
+            f"[base]split[a][b];"
+            f"[b]scale=iw*{m}:ih*{m},crop={d}:{d}:{m}*{cx}-{r}:{m}*{cy}-{r},format=rgba[pat];"
+            f"color=c=black:s={d}x{d}:d=1,format=gray,"
+            f"geq=lum='255*clip((1-{_dl})*{r}/2+0.5,0,1)',"
+            f"loop=loop=-1:size=1[msk];"
+            f"[pat][msk]alphamerge,scale=w='{d}*{k}':h='{d}*{k}':eval=frame[cut];"
+            f"[a][cut]overlay={at}:shortest=1[o1];")
+    parts.append(f"[o1][rg]overlay={at}:shortest=1[out]")
+    return "".join(parts)
+
+
+def _crop_xy(zoom, pan_x, pan_y, base_w, base_h):
+    """확대된 화면(base_w×base_h)에서 잘라낼 위치. 중앙에서 pan 만큼 옮긴다.
+    유도: 화면 폭 대비 pan 만큼 그림이 움직였으므로 잘라내는 창은 반대로 -pan 이동.
+    ★검산 완료 — pan이 한계(±(Z-1)/2)일 때 crop이 정확히 0 또는 max에 닿는다."""
+    max_x = max(0, base_w - _OUT_W)
+    max_y = max(0, base_h - _OUT_H)
+    x = max_x / 2.0 - _OUT_W * pan_x
+    y = max_y / 2.0 - _OUT_H * pan_y
+    return int(round(max(0, min(max_x, x)))), int(round(max(0, min(max_y, y))))
+
+
+def _base_zoom_vf(beat=None):
+    """일반 비트 기본 크롭+줌(정적, 저비용) — 원본과 프레임 구도만 살짝 달라지게.
+    ★beat에 사장님이 6단계에서 맞춘 확대가 있으면 **그 구도 그대로** 잘라낸다
+      (2026-08-30 "장면 바꾸기에서 수정한 대로 나오게"). 없으면 종전과 완전히 같다."""
+    zoom, pan_x, pan_y = scene_zoom_of(beat)
+    if zoom <= 1.0001:
+        w, h = int(_OUT_W * _BASE_ZOOM), int(_OUT_H * _BASE_ZOOM)
+        return f"scale={w}:{h}:force_original_aspect_ratio=increase,crop={_OUT_W}:{_OUT_H}"
+    # 사장님 지정 확대 — 기본 줌은 얹지 않는다(지정한 배율이 곧 최종 구도다)
+    w, h = int(_OUT_W * zoom), int(_OUT_H * zoom)
+    x, y = _crop_xy(zoom, pan_x, pan_y, w, h)
+    return (f"scale={w}:{h}:force_original_aspect_ratio=increase,"
+            f"crop={_OUT_W}:{_OUT_H}:{x}:{y}")
 # 하단 자막 바(원본 소각 자막을 덮는다) + 한 줄 자막 스타일.
 _BAR_H = 450
 _CAP_FONTSIZE = 78      # 짧은 1줄 구절이라 여유 있음 → 키움
@@ -1312,7 +1473,14 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
         if not plan:
             continue
         segs = [s for s in _beat_material(beat) if s and _srcd.get(s.get("video_id"), 0.0) > 0.05]
-        vf = _kenburns_vf(tts_dur) if idx in important else _base_zoom_vf()
+        # ★사장님이 6단계에서 구도를 맞춘 장면은 **켄번즈를 얹지 않는다**(2026-08-30).
+        #   켄번즈는 중앙 기준으로 서서히 확대하는 연출이라, 지정한 구도를 밀어낸다 —
+        #   "이 자리를 보여달라"는 지시가 연출보다 우선이다.
+        _z, _, _ = scene_zoom_of(beat)
+        if _z > 1.0001:
+            vf = _base_zoom_vf(beat)
+        else:
+            vf = _kenburns_vf(tts_dur) if idx in important else _base_zoom_vf(beat)
         # 비트당 다중 클립: 각 구간을 [start, start+src_dur]만큼만 잘라(유출 0) 이어붙이고,
         # 부족분은 마지막 클립을 슬로모(setpts)로 늘려 대사 길이에 맞춘다.
         sub_paths = []
@@ -1344,7 +1512,7 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
             # freeze 클립은 움직이는 부분을 정적 베이스줌으로 두고, 켄번즈 모션은 freeze
             # 패스에서 전체(play+freeze)에 한 번만 건다(정지 구간도 살아있게, 2026-07-19).
             # 안 그러면 pass1 줌 + freeze 켄번즈가 겹쳐 줌이 두 번 쌓인다.
-            clip_vf = _base_zoom_vf() if freeze > 1e-3 else vf
+            clip_vf = _base_zoom_vf(beat) if freeze > 1e-3 else vf
             factor = play_out / _c_src if _c_src > 1e-6 else 1.0
             vf_full = f"{clip_vf},setpts={factor:.6f}*PTS" if factor > 1.0 + 1e-6 else clip_vf
             # start를 소스 안으로 당긴다(타트랙 병합, 2026-07-19). 약한 매칭이 소스 밖을 잡으면
@@ -1358,10 +1526,15 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
             #   입력 제한이 핵심(P1) — 상한 배율이 out_dur/src_dur보다 작으면 setpts가 다음
             #   구간까지 끌어와 유출된다(다색 소스 실측). 잘라두면 이 구간만 play_out으로 늘어난다.
             sub = work / f"beat_{idx}_{j}.mp4"
+            # 🔎 강조가 있으면 -vf 대신 filter_complex(오버레이가 필요해 단일 체인으로 안 된다).
+            #   성장 애니메이션은 **첫 컷에서만** — 컷마다 다시 튀면 여러 번 나오는 것처럼 보인다.
+            _hl_fc = highlight_fc(beat, vf_full, grow=(j == 0))
+            _vf_args = (["-filter_complex", _hl_fc, "-map", "[out]"] if _hl_fc
+                        else ["-vf", vf_full])
             _run_ffmpeg([
                 "ffmpeg", "-y", "-ss", f"{start:.3f}", "-t", f"{_c_src:.3f}",
                 "-i", str(src),
-                "-vf", vf_full, "-r", "30", "-an", "-t", f"{play_out:.3f}",
+                *_vf_args, "-r", "30", "-an", "-t", f"{play_out:.3f}",
                 "-c:v", "libx264", "-preset", _mid_preset(), "-crf", _mid_crf(), *_threads_args(), "-pix_fmt", "yuv420p", str(sub),
             ])
             # 그래도 비면(소스 손상/범위밖) 이 클립만 버린다 — 하나가 미리보기 전체를 죽이지 않게.
