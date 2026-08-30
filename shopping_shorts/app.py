@@ -5168,9 +5168,31 @@ def api_mix_caption_offset(job_id: str, beat_idx: int, body: dict):
     return {"ok": True, "offset": offset}
 
 
+# ── 타입캐스트 성우 찾기 (2026-08-30 사장님 "타입캐스트도 하고 검색이 용이하게") ────
+# ★일레븐랩스와 다른 점: 담기가 없다. 타입캐스트 성우는 계정에 담는 개념이 아니라
+#   서버 키로 곧장 부르는 공용 목록이라(실측 1125명), 고른 즉시 쓸 수 있다.
+# ★인기순이 없다 — API가 주는 건 voice_id·이름·모델·감정·타입뿐이다(실측). 그래서
+#   정렬 대신 검색만 준다. 없는 지표를 지어내지 않는다.
+@app.get("/api/typecast/voices")
+def api_typecast_voices(request: Request, q: str = "", limit: int = 60):
+    from shopping_shorts import typecast_tts
+    d = typecast_tts.list_voices()
+    if not d.get("ok"):
+        return {"ok": False, "voices": [], "error": d.get("error") or "성우 목록을 못 불러왔습니다"}
+    key = (q or "").strip().lower()
+    out = []
+    for v in d.get("voices") or []:
+        if key and key not in str(v.get("name", "")).lower():
+            continue
+        out.append(v)
+        if len(out) >= max(1, min(int(limit or 60), 200)):
+            break
+    return {"ok": True, "voices": out, "total": len(d.get("voices") or []), "error": None}
+
+
 @app.get("/api/voice-library/search")
 def api_voice_library_search(request: Request, q: str = "", language: str = "",
-                             gender: str = "", page: int = 0):
+                             gender: str = "", page: int = 0, sort: str = ""):
     """일레븐랩스 **공개 음성 라이브러리** 검색(2026-08-24 사장님: "사용자들이 목소리 검색 가능하게").
 
     ★본인 키가 있어야 한다. 담기는 각자 계정에 되므로, 키 없이 담으면 합성 때
@@ -5178,12 +5200,16 @@ def api_voice_library_search(request: Request, q: str = "", language: str = "",
     """
     cid = getattr(request.state, "customer_id", 0) or 0
     from shopping_shorts import eleven_voices, keyroute
-    keys, _src = keyroute.keys_for(Store(DB_PATH), cid, keyroute.SVC_ELEVENLABS)
-    if not keys or _src != "customer":
+    # ★두 번째 반환값은 **참/거짓**이다(keyroute.keys_for → is_user). 여기서 문자열
+    #   "customer"와 비교하고 있었다 — True != "customer"는 언제나 참이라, 키를 등록한
+    #   사람도 전부 need_key로 막혔다(사장님 실측 2026-08-30: 본인 키가 있는데도 안 됨).
+    keys, is_user = keyroute.keys_for(Store(DB_PATH), cid, keyroute.SVC_ELEVENLABS)
+    if not keys or not is_user:
         return {"ok": False, "voices": [], "need_key": True,
                 "error": "내 일레븐랩스 키를 등록하면 원하는 목소리를 직접 찾아 쓸 수 있어요."}
     return eleven_voices.search_shared(customer_id=cid, query=q, language=(language or None),
-                                       gender=(gender or None), page=page)
+                                       gender=(gender or None), page=page,
+                                       sort=(sort or None))
 
 
 @app.post("/api/voice-library/add")
@@ -5196,8 +5222,11 @@ async def api_voice_library_add(request: Request):
     """
     cid = getattr(request.state, "customer_id", 0) or 0
     from shopping_shorts import eleven_voices, keyroute
-    keys, _src = keyroute.keys_for(Store(DB_PATH), cid, keyroute.SVC_ELEVENLABS)
-    if not keys or _src != "customer":
+    # ★두 번째 반환값은 **참/거짓**이다(keyroute.keys_for → is_user). 여기서 문자열
+    #   "customer"와 비교하고 있었다 — True != "customer"는 언제나 참이라, 키를 등록한
+    #   사람도 전부 need_key로 막혔다(사장님 실측 2026-08-30: 본인 키가 있는데도 안 됨).
+    keys, is_user = keyroute.keys_for(Store(DB_PATH), cid, keyroute.SVC_ELEVENLABS)
+    if not keys or not is_user:
         return JSONResponse({"ok": False, "need_key": True,
                              "error": "내 일레븐랩스 키를 먼저 등록해주세요."}, status_code=400)
     body = await request.json()
@@ -5220,6 +5249,54 @@ async def api_voice_library_add(request: Request):
     return {"ok": True, "already": added.get("already", False),
             "group_id": res["group_id"], "count": res["count"],
             "sample_failed": res.get("sample_failed") or []}
+
+
+@app.post("/api/typecast/voices/adopt")
+async def api_typecast_adopt(request: Request):
+    """고른 타입캐스트 성우를 **성우 카드**로 등록한다(2026-08-30).
+
+    ★일레븐랩스의 '담기'와 다르다: 타입캐스트는 계정에 담는 절차가 없다(서버 키로 곧장
+      부른다). 여기서 하는 일은 DB에 프리셋 행을 만들어 두 열 카드에 나오게 하는 것뿐이다.
+    ★샘플을 굽지 않는다 — 실TTS 1회는 크레딧을 쓴다. 카드의 ▶는 샘플이 없으면 꺼진 채로
+      두고, 고른 뒤 '미리듣기'로 들으면 된다.
+    ★소유자(owner_customer_id)를 본인으로 박는다 — 남이 담은 성우가 내 카드에 섞이면
+      누가 담았는지 알 수 없다(일레븐 담기와 같은 규칙).
+    """
+    from shopping_shorts import typecast_tts
+    cid = getattr(request.state, "customer_id", 0) or 0
+    body = await request.json()
+    vid = ((body or {}).get("voice_id") or "").strip()
+    name = ((body or {}).get("name") or "").strip()[:40]
+    model = ((body or {}).get("model") or "ssfm-v30").strip()
+    if not vid or not name:
+        return JSONResponse({"ok": False, "error": "성우 정보가 모자랍니다."}, status_code=400)
+    if not typecast_tts.is_typecast(model):
+        return JSONResponse({"ok": False, "error": f"타입캐스트 모델이 아닙니다({model})."},
+                            status_code=400)
+    # 실제로 있는 성우인지 목록에서 확인한다 — 화면이 보낸 값을 그대로 믿지 않는다.
+    listed = typecast_tts.list_voices()
+    if not listed.get("ok"):
+        return JSONResponse({"ok": False, "error": listed.get("error") or "성우 목록 조회 실패"},
+                            status_code=502)
+    if not any(v.get("voice_id") == vid for v in listed.get("voices") or []):
+        return JSONResponse({"ok": False, "error": "그 성우를 타입캐스트에서 찾지 못했습니다."},
+                            status_code=404)
+    gid = "tcv-" + re.sub(r"[^a-zA-Z0-9]", "", vid)[-16:]
+    store = Store(DB_PATH)
+    # 톤 3종 — 기존 타입캐스트 프리셋(assets/voice_presets.json)과 **같은 모양**으로 만든다.
+    tones = [("stable", "normal", 1.0), ("natural", "tonedown", 1.0), ("expressive", "toneup", 1.2)]
+    for variant, emotion, intensity in tones:
+        store.upsert_voice_preset({
+            "preset_id": f"{gid}-{variant}", "group_id": gid, "variant": variant,
+            "name": name, "one_liner": "타입캐스트에서 담은 성우", "lang": "KR",
+            "archetype": "타입캐스트에서 담은 성우",
+            "base_voice_id": vid, "model_id": model,
+            "voice_settings": {"emotion": emotion, "emotion_intensity": intensity},
+            "default_speed": 1.2, "default_silence_trim": "mid",
+            "sample_file": None, "source_ref": "타입캐스트 성우 찾기(2026-08-30)",
+            "origin": "curated", "best": False, "owner_customer_id": cid,
+        })
+    return {"ok": True, "group_id": gid, "count": len(tones)}
 
 
 @app.get("/api/voice-presets")

@@ -1497,7 +1497,16 @@
   /* 🎙 성우 두 열(2026-08-30) — 일레븐랩스 | 타입캐스트를 나란히 본다.
      좁아지면 자동으로 위아래로 쌓인다(minmax + auto-fit). */
   .voiceCols{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
-  .voiceColHead{font-size:11.5px;color:var(--sub);font-weight:700;margin:0 0 6px 2px}
+  /* ★열 머리는 **크고 진하게**(2026-08-30 사장님) — 11.5px 회색이라 카드에 묻혀
+     어느 쪽이 어느 엔진인지 눈에 안 걸렸다. 로고 원을 앞에 달아 한눈에 가른다. */
+  .voiceColHead{display:flex;align-items:center;gap:7px;font-size:14px;color:var(--txt);
+                font-weight:800;margin:0 0 9px 2px;letter-spacing:-.2px}
+  .voiceColHead .lg{width:22px;height:22px;border-radius:6px;flex:0 0 auto;
+                    display:flex;align-items:center;justify-content:center;
+                    font-size:12px;font-weight:900;letter-spacing:-.5px}
+  .voiceColHead .lg.elv{background:#e8eaf0;color:#0f1115}          /* 일레븐랩스 = 흰 바탕 */
+  .voiceColHead .lg.tc{background:#6c4bf5;color:#fff}              /* 타입캐스트 = 보라 */
+  .voiceColHead small{font-weight:600;color:var(--sub);font-size:11.5px}
   /* ★성우 카드 — 시안(사장님 승인본)대로 [아바타][이름·설명][☆][▶] 한 줄.
      종전엔 이름·설명이 한 줄 텍스트로 흐르고 <audio controls>가 통째로 박혀 있어
      카드가 들쭉날쭉했다. 톤 탭은 **고른 카드 안에서만** 펼친다(.vcard.sel .tones). */
@@ -1831,10 +1840,34 @@
             <select id="vlibGender" style="padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--txt)">
               <option value="">성별 전체</option><option value="female">여성</option><option value="male">남성</option>
             </select>
+            <!-- ★인기순(2026-08-30 사장님 "거기서 추천하는 것들"). 일레븐랩스가 실제로 받는
+                 값만 둔다 — trending·cloned_by_count는 되고 나머지는 400이다(실측). -->
+            <select id="vlibSort" onchange="searchVoiceLibrary(0)" style="padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--txt)">
+              <option value="cloned_by_count">인기순</option>
+              <option value="trending">요즘 뜨는</option>
+              <option value="">관련도순</option>
+            </select>
             <button class="btn-next" style="padding:8px 14px" onclick="searchVoiceLibrary(0)">찾기</button>
           </div>
           <div class="hint" style="margin-top:6px">한국어 목소리를 먼저 보여줍니다. 담으면 내 성우 카드에 바로 추가돼요.</div>
           <div id="vlibList" style="margin-top:10px;max-height:340px;overflow:auto"></div>
+        </div>
+      </div>
+      <!-- 타입캐스트 성우 찾기(2026-08-30) — 일레븐 '목소리 찾기'의 짝.
+           ★담기가 없다: 타입캐스트는 서버 키로 곧장 부르는 공용 목록이라(1125명 실측)
+             고르면 바로 쓴다. 인기순도 없다 — API가 그 지표를 안 준다. -->
+      <div id="tcvBox" style="margin-top:8px">
+        <button class="btn-prev" style="padding:6px 12px;min-height:44px"
+                onclick="toggleTypecastFinder()">🔎 타입캐스트 성우 찾기</button>
+        <div id="tcvPanel" style="display:none;margin-top:8px;border:1px solid var(--line);border-radius:9px;padding:10px">
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+            <input id="tcvQ" placeholder="이름으로 찾기 (예) Sanghyun, 지훈" onkeydown="if(event.key==='Enter')searchTypecastVoices()"
+                   style="flex:1 1 150px;min-width:120px;padding:8px 10px;border:1px solid var(--line);
+                          border-radius:8px;background:var(--panel);color:var(--txt)">
+            <button class="btn-next" style="padding:8px 14px" onclick="searchTypecastVoices()">찾기</button>
+          </div>
+          <div class="hint" style="margin-top:6px">타입캐스트 성우는 담을 필요 없이 바로 쓸 수 있어요.</div>
+          <div id="tcvList" style="margin-top:10px;max-height:340px;overflow:auto"></div>
         </div>
       </div>
       <!-- ★한 칸 안에서는 세로로 쌓는다 — 360px 폭에 카드와 설정을 좌우로 나누면 둘 다 좁아진다. -->
@@ -11776,8 +11809,10 @@ async function searchVoiceLibrary(page){
   const g=(document.getElementById('vlibGender')||{}).value||'';
   let d;
   try{
+    const srt=(document.getElementById('vlibSort')||{}).value||'';
     d=await (await fetch('/api/voice-library/search?language=ko&page='+VLIB_PAGE
-      +'&q='+encodeURIComponent(q)+'&gender='+encodeURIComponent(g))).json();
+      +'&q='+encodeURIComponent(q)+'&gender='+encodeURIComponent(g)
+      +'&sort='+encodeURIComponent(srt))).json();
   }catch(e){ box.innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; return; }
   if(d && d.need_key){
     box.innerHTML='<div class="hint" style="line-height:1.6">'+esc(d.error||'')
@@ -11792,11 +11827,16 @@ async function searchVoiceLibrary(page){
   const rows = VLIB_RESULTS.map(function(v, i){
     const tags=[v.gender,v.age,v.accent,v.use_case].filter(Boolean).slice(0,3)
       .map(function(t){ return '<span class="r">'+esc(t)+'</span>'; }).join('');
+    // 담아간 사람 수 = 일레븐랩스가 주는 실제 인기 지표(cloned_by_count). 만 단위는 줄여 쓴다.
+    const cc=+v.cloned_by_count||0;
+    const pop = cc ? '<span class="r" style="border-color:#7a5f1c;color:#ffc75a">👥 '
+                     + (cc>=10000 ? (cc/10000).toFixed(1)+'만' : cc.toLocaleString()) + '명</span>' : '';
+    const feat = v.featured ? '<span class="r" style="border-color:#2a4a75;color:#8fbfff">공식 추천</span>' : '';
     return '<div style="display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)">'
       + '<div style="flex:1;min-width:0">'
       +   '<div style="font-weight:700;font-size:13.5px">'+esc(v.name)+'</div>'
       +   (v.description ? '<div class="hint" style="margin:2px 0 4px">'+esc(v.description.slice(0,70))+'</div>' : '')
-      +   '<div style="display:flex;gap:4px;flex-wrap:wrap">'+tags+'</div>'
+      +   '<div style="display:flex;gap:4px;flex-wrap:wrap">'+feat+pop+tags+'</div>'
       + '</div>'
       + (v.preview_url ? '<button class="btn-prev" style="padding:6px 10px" onclick="vlibPlay('+i+')">▶ 듣기</button>' : '')
       + '<button class="btn-next" style="padding:6px 12px" onclick="vlibAdd(this,'+i+')">담기</button>'
@@ -11807,6 +11847,56 @@ async function searchVoiceLibrary(page){
     + (d.has_more ? '<button class="btn-prev" style="padding:6px 12px" onclick="searchVoiceLibrary('+(VLIB_PAGE+1)+')">다음 →</button>' : '')
     + '</div>';
   box.innerHTML = rows + nav;
+}
+
+// ── 타입캐스트 성우 찾기 ──────────────────────────────────────────────
+// ★담기가 없다 — 고르면 그 자리에서 이 영상에 쓴다. 일레븐과 다른 점이라 문구로 밝힌다.
+let TCV_RESULTS = [];
+function toggleTypecastFinder(){
+  const p=document.getElementById('tcvPanel'); if(!p) return;
+  const open = p.style.display==='none';
+  p.style.display = open ? 'block' : 'none';
+  if(open && !p.dataset.loaded){ p.dataset.loaded='1'; searchTypecastVoices(); }
+}
+async function searchTypecastVoices(){
+  const box=document.getElementById('tcvList'); if(!box) return;
+  box.innerHTML='<div class="hint">찾는 중…</div>';
+  const q=(document.getElementById('tcvQ')||{}).value||'';
+  let d;
+  try{ d=await (await fetch('/api/typecast/voices?limit=60&q='+encodeURIComponent(q))).json(); }
+  catch(e){ box.innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; return; }
+  if(!d || !d.ok){
+    box.innerHTML='<div class="hint" style="color:var(--fire)">'+esc((d&&d.error)||'불러오지 못했습니다')+'</div>'; return; }
+  TCV_RESULTS = d.voices||[];
+  if(!TCV_RESULTS.length){ box.innerHTML='<div class="hint">결과가 없습니다.</div>'; return; }
+  box.innerHTML = '<div class="hint" style="margin-bottom:6px">전체 '+(d.total||TCV_RESULTS.length)
+    +'명 중 '+TCV_RESULTS.length+'명</div>'
+    + TCV_RESULTS.map(function(v,i){
+        const emo=(v.emotions||[]).length;
+        return '<div style="display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)">'
+          + '<div style="flex:1;min-width:0">'
+          +   '<div style="font-weight:700;font-size:13.5px">'+esc(v.name)+'</div>'
+          +   '<div class="hint" style="margin-top:2px">'+esc(v.model||'')
+          +     (emo?(' · 감정 '+emo+'종'):'')+'</div>'
+          + '</div>'
+          + '<button class="btn-next" style="padding:6px 12px" onclick="tcvUse(this,'+i+')">이 성우로</button>'
+          + '</div>';
+      }).join('');
+}
+// 고른 타입캐스트 성우를 지금 영상에 쓴다 — 성우 카드로 등록해 두 열에서도 보이게 한다.
+async function tcvUse(btn, i){
+  const v=TCV_RESULTS[i]; if(!v) return;
+  const orig=btn.textContent; btn.disabled=true; btn.textContent='등록 중…';
+  try{
+    const r=await (await fetch('/api/typecast/voices/adopt',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({voice_id:v.voice_id, name:v.name, model:v.model})
+    })).json();
+    if(!r || !r.ok){ toast('⚠️ '+((r&&r.error)||'등록 실패')); btn.disabled=false; btn.textContent=orig; return; }
+    toast('✅ '+v.name+' 성우를 담았습니다');
+    await loadPresets();               // 카드 목록을 다시 받아 두 열에 반영
+    if(r.group_id) pickPreset(r.group_id);
+  }catch(e){ toast('⚠️ 등록 실패'); btn.disabled=false; btn.textContent=orig; }
 }
 
 function vlibPlay(i){
@@ -11838,7 +11928,15 @@ async function vlibAdd(btn, i){
 }
 
 let VOICES_EXPANDED=false;   // ＋더보기 펼침 상태 — 재렌더(pickPreset)가 접힘으로 되돌리지 않게 보존
-function toggleMoreVoices(){ VOICES_EXPANDED=!VOICES_EXPANDED; renderPresetCards(); }
+// ★접힘은 **열마다 따로** 기억한다(2026-08-30). 예전엔 VOICES_EXPANDED 하나를 두 열이
+//   같이 봐서, 타입캐스트를 펼치면 일레븐랩스 14명이 통째로 같이 쏟아졌다.
+let VOICES_OPEN = {elevenlabs:false, typecast:false};
+function toggleMoreVoices(engine){
+  if(engine){ VOICES_OPEN[engine] = !VOICES_OPEN[engine]; }
+  else { VOICES_OPEN.elevenlabs = VOICES_OPEN.typecast = !VOICES_EXPANDED; }  // 옛 호출 호환
+  VOICES_EXPANDED = VOICES_OPEN.elevenlabs || VOICES_OPEN.typecast;
+  renderPresetCards();
+}
 // ── 성우 카드 (시안 승인본 이식, 2026-08-30) ────────────────────────────────
 // 카드 한 장 = [아바타][이름·한줄설명][☆즐겨찾기][▶샘플]. 고른 카드 **안에서만** 톤 탭이
 // 펼쳐진다. 종전엔 이름·설명이 한 줄로 흐르고 <audio controls>가 카드마다 박혀 있었다.
@@ -11922,19 +12020,25 @@ function renderPresetCards(){
   const q = (VOICE_Q||'').trim().toLowerCase();
   const hit = g => !q || (String(g.name||'')+' '+String(g.one_liner||'')).toLowerCase().includes(q);
   const eng = g => { const e=String(g.engine||'elevenlabs'); return e==='eleven'?'elevenlabs':e; };
+  // ★기본은 **열마다 6명**까지만 보인다(2026-08-30 사장님). 예전엔 '추천(best)' 전부를
+  //   폈는데 일레븐랩스는 추천이 5~6명, 타입캐스트는 6명이라 열마다 길이가 제각각이었고,
+  //   추천이 많은 쪽은 접기 버튼조차 화면 밖으로 밀렸다. 추천을 앞으로 정렬한 뒤 6에서 끊는다.
+  const COL_SHOW = 6;
   const colHtml = (list, engine, actBtn) => {
     const mine = list.filter(g => eng(g)===engine && hit(g));
     if(!mine.length) return actBtn + '<div class="hint" style="padding:8px 2px">'
       + (q ? '검색 결과가 없어요' : '성우가 없어요') + '</div>';
-    const best = mine.filter(g=>g.best), rest = mine.filter(g=>!g.best);
-    // 고른 성우가 '더보기' 안에 있으면 접혀서 안 보이는 사고 방지 — 자동으로 펼친다.
-    if(rest.some(g=>g.group_id===VOICE.group_id)) VOICES_EXPANDED=true;
+    // 추천을 앞으로 — 순서는 서버가 준 것을 보존하고 best만 끌어올린다.
+    const sorted = mine.filter(g=>g.best).concat(mine.filter(g=>!g.best));
+    const head = sorted.slice(0, COL_SHOW), tail = sorted.slice(COL_SHOW);
+    // 고른 성우가 '더보기' 안에 있으면 접혀서 안 보이는 사고 방지 — 그 열만 자동으로 펼친다.
+    if(tail.some(g=>g.group_id===VOICE.group_id)) VOICES_OPEN[engine]=true;
     // 검색 중엔 접지 않는다 — 찾은 성우가 '더보기' 뒤에 숨으면 검색이 헛돈다.
-    const showAll = q || VOICES_EXPANDED;
-    const more = (rest.length && !q) ? `
-      <button type="button" onclick="toggleMoreVoices()" class="colAct">${VOICES_EXPANDED?'－ 접기':'＋ 더보기 ('+rest.length+'명)'}</button>` : '';
-    return actBtn + best.map(cardHtml).join('')
-         + (showAll ? rest.map(cardHtml).join('') : '') + more;
+    const open = q || VOICES_OPEN[engine];
+    const more = (tail.length && !q) ? `
+      <button type="button" onclick="toggleMoreVoices('${engine}')" class="colAct">${open?'－ 접기':'＋ 더보기 ('+tail.length+'명)'}</button>` : '';
+    return actBtn + head.map(cardHtml).join('')
+         + (open ? tail.map(cardHtml).join('') : '') + more;
   };
   // 열마다 '성우를 늘리는 길'을 그 열 위에 둔다 — 어느 엔진에 담기는지 헷갈리지 않게.
   // ★열 안에 '목소리 찾기'를 넣지 않는다(2026-08-30). 위쪽 #vlibBox에 같은 버튼이 이미 있어
@@ -11943,8 +12047,10 @@ function renderPresetCards(){
   document.getElementById('presetCards').innerHTML =
       renderFavRow()
     + '<div class="voiceCols">'
-    +   '<div><div class="voiceColHead">일레븐랩스</div>' + colHtml(VOICE_GROUPS,'elevenlabs',elvAct) + '</div>'
-    +   '<div><div class="voiceColHead">타입캐스트</div>' + colHtml(VOICE_GROUPS,'typecast',tcAct) + '</div>'
+    +   '<div><div class="voiceColHead"><span class="lg elv">11</span>일레븐랩스</div>'
+    +     colHtml(VOICE_GROUPS,'elevenlabs',elvAct) + '</div>'
+    +   '<div><div class="voiceColHead"><span class="lg tc">TC</span>타입캐스트</div>'
+    +     colHtml(VOICE_GROUPS,'typecast',tcAct) + '</div>'
     + '</div>';
 }
 // ⭐즐겨찾기 줄 — 별을 누른 성우가 두 열 위에 모인다. 이름을 누르면 바로 그 성우로 바뀐다.
