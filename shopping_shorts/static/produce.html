@@ -1474,6 +1474,30 @@
   .pool-lscape{display:inline-block;margin-left:7px;padding:1px 7px;border-radius:999px;
                background:#4a1414;color:#ff8a8a;border:1px solid #7a2b2b;
                font-size:11px;font-weight:700;vertical-align:middle}
+  /* ▶ TTS 재생목록 한 줄(2026-08-30) — 칸을 고정해 겹치지 않게 한다.
+     [번호][대사=남는 폭][길이][▶][✏ 수정][⋯] */
+  .ttsRow{border:1px solid var(--line);border-radius:10px;margin-bottom:7px;
+          background:var(--inset);transition:background .15s,border-color .15s}
+  .ttsRow.playing{border-color:var(--accent);background:linear-gradient(90deg,#16223a,var(--inset))}
+  .ttsRowMain{display:flex;align-items:center;gap:10px;padding:11px 12px;cursor:pointer;min-height:44px}
+  .ttsNo{flex:0 0 auto;width:22px;text-align:center;color:var(--sub);font-size:12px;
+         font-variant-numeric:tabular-nums;position:relative}
+  .ttsNo i{display:block;width:6px;height:6px;border-radius:50%;margin:3px auto 0}
+  .ttsNo i.ok{background:#3ecf8e}      /* 자막 자동맞춤 됨 */
+  .ttsNo i.warn{background:#ffc75a}    /* 맞춤 불확실 — 들어보세요 */
+  .ttsSay{flex:1 1 auto;min-width:0;font-size:14px;line-height:1.45;
+          display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .ttsDur{flex:0 0 auto;width:46px;text-align:right;color:var(--sub);font-size:12px;
+          font-variant-numeric:tabular-nums}
+  .ttsBtn{flex:0 0 auto;padding:6px 10px;font-size:12px;min-height:36px}
+  .ttsMore{display:flex;gap:6px;flex-wrap:wrap;align-items:center;
+           padding:0 12px 11px 44px;border-top:1px dashed var(--line);margin-top:-1px;padding-top:9px}
+  @media (max-width:760px){ .ttsSay{font-size:13px} .ttsDur{width:40px} }
+
+  /* 🎙 성우 두 열(2026-08-30) — 일레븐랩스 | 타입캐스트를 나란히 본다.
+     좁아지면 자동으로 위아래로 쌓인다(minmax + auto-fit). */
+  .voiceCols{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
+  .voiceColHead{font-size:11.5px;color:var(--sub);font-weight:700;margin:0 0 6px 2px}
   .sw-btn{width:22px;height:22px;border-radius:50%;border:2px solid rgba(255,255,255,.35);
           cursor:pointer;padding:0;flex:none;background:
           conic-gradient(#ff2d2d,#ffd400,#3ddc57,#00b3ff,#b14cff,#ff2d8f,#ff2d2d);
@@ -1757,6 +1781,13 @@
       <div id="voiceUI" style="display:flex;flex-direction:column;gap:12px;margin-top:10px">
         <!-- ① 성우 카드 (⭐베스트 5 상시 + ＋더보기로 나머지 9명) — 먼저 하는 일 -->
         <div>
+          <!-- 🔎 이미 담은 성우 걸러보기(2026-08-30 사장님). ★일레븐랩스 공개 라이브러리
+               검색(#vlibPanel)과 **다른 것**이다 — 저건 밖에서 데려오는 것, 이건 이미
+               가진 목록을 좁히는 것. 헷갈리지 않게 문구를 분명히 둔다. -->
+          <input id="voiceQ" oninput="voiceFilter(this.value)" placeholder="이미 담은 성우 걸러보기"
+                 style="width:100%;box-sizing:border-box;margin-bottom:8px;background:var(--panel);
+                        border:1px solid var(--line);color:var(--txt);border-radius:9px;
+                        padding:9px 11px;font-size:13px;min-height:44px">
           <div id="presetCards">불러오는 중…</div>
         </div>
         <!-- ② 미리듣기·설정 (성우를 고르면 나타난다) -->
@@ -11489,7 +11520,7 @@ function renderPresetCards(){
     return `
       <div onclick="pickPreset('${g.group_id}')"
         style="border:1px solid ${active?'var(--accent2)':'var(--line)'};border-radius:9px;padding:9px;margin-bottom:6px;cursor:pointer;background:var(--inset)">
-        <b>${esc(g.name)}</b>${g.best?' <span title="사장님 청취 판정 베스트" style="color:var(--accent2)">⭐</span>':''}${engineBadge(g)} — ${esc(g.one_liner||'')}
+        <b>${esc(g.name)}</b>${g.best?' <span title="사장님 청취 판정 베스트" style="color:var(--accent2)">⭐</span>':''} — ${esc(g.one_liner||'')}
         <div style="display:flex;gap:4px;align-items:center;margin-top:6px;flex-wrap:wrap">
           ${tabs}
           ${v&&v.sample_url?`<audio controls src="${esc(v.sample_url)}" style="height:26px;vertical-align:middle;margin-left:4px"></audio>`:''}
@@ -11497,15 +11528,39 @@ function renderPresetCards(){
         ${whisperPicker}
       </div>`;
   };
-  const best=VOICE_GROUPS.filter(g=>g.best);
-  const rest=VOICE_GROUPS.filter(g=>!g.best);
-  // 선택된 성우가 '나머지 9명'에 있으면 접혀서 안 보이는 사고 방지 — 자동으로 펼친다
-  if(rest.some(g=>g.group_id===VOICE.group_id)) VOICES_EXPANDED=true;
-  const more = rest.length ? `
-    <button type="button" id="moreVoicesBtn" onclick="toggleMoreVoices()" class="tab" style="width:100%;margin:2px 0 6px;padding:7px;font-size:12px">${VOICES_EXPANDED?'－ 접기':'＋ 더보기 ('+rest.length+'명)'}</button>
-    <div id="restVoices" style="display:${VOICES_EXPANDED?'block':'none'}">${rest.map(cardHtml).join('')}</div>` : '';
-  document.getElementById('presetCards').innerHTML=(best.map(cardHtml).join('')+more)||'<div class="hint">프리셋이 없습니다.</div>';
+  // ★엔진별 두 열로 나란히(2026-08-30 사장님 "일레븐랩스 왼쪽 타입캐스트 오른쪽").
+  //   전엔 두 엔진 성우가 한 목록에 섞여 배지로만 구분됐다 — 어느 쪽 성우인지,
+  //   무엇이 다른지 한눈에 안 보였다. 엔진 판정은 서버가 준 g.engine 하나로만 한다
+  //   (여기서 group_id로 추측하면 판단이 두 벌이 된다 — engineBadge와 같은 규칙).
+  const q = (VOICE_Q||'').trim().toLowerCase();
+  const hit = g => !q || (String(g.name||'')+' '+String(g.one_liner||'')).toLowerCase().includes(q);
+  const colHtml = (list, engine) => {
+    const mine = list.filter(g => ((g.engine||'eleven')===engine) && hit(g));
+    if(!mine.length) return '<div class="hint" style="padding:8px 2px">'
+      + (q ? '검색 결과가 없어요' : '성우가 없어요') + '</div>';
+    const best = mine.filter(g=>g.best), rest = mine.filter(g=>!g.best);
+    // 고른 성우가 '더보기' 안에 있으면 접혀서 안 보이는 사고 방지 — 자동으로 펼친다.
+    if(rest.some(g=>g.group_id===VOICE.group_id)) VOICES_EXPANDED=true;
+    // ★열마다 '몇 명이 더 있는지'를 밝힌다 — 접힘 상태는 두 열이 함께 움직인다
+    //   (VOICES_EXPANDED 하나. 열마다 따로 두면 상태가 두 벌이 된다).
+    const more = rest.length ? `
+      <button type="button" onclick="toggleMoreVoices()" class="tab" style="width:100%;margin:2px 0 6px;padding:7px;font-size:12px">${VOICES_EXPANDED?'－ 접기 ('+rest.length+'명)':'＋ 더보기 ('+rest.length+'명)'}</button>
+      <div style="display:${VOICES_EXPANDED?'block':'none'}">${rest.map(cardHtml).join('')}</div>` : '';
+    return best.map(cardHtml).join('') + more;
+  };
+  const tcNote = '<div class="hint" style="margin-bottom:6px;padding:6px 8px;border:1px solid #7a5f1c;'
+    + 'border-radius:7px;background:#241f12;color:#ffc75a;font-size:11.5px;line-height:1.5">'
+    + '서버에 API 키가 없으면 소리가 나지 않습니다</div>';
+  document.getElementById('presetCards').innerHTML =
+      '<div class="voiceCols">'
+    +   '<div><div class="voiceColHead">일레븐랩스</div>' + colHtml(VOICE_GROUPS,'eleven') + '</div>'
+    +   '<div><div class="voiceColHead">타입캐스트</div>' + tcNote + colHtml(VOICE_GROUPS,'typecast') + '</div>'
+    + '</div>';
 }
+
+// 검색어 — 이미 담은 성우를 걸러본다(일레븐 공개 라이브러리 검색과는 다른 것).
+let VOICE_Q = '';
+function voiceFilter(v){ VOICE_Q = v || ''; renderPresetCards(); }
 
 function pickVariant(gid, variant){
   SEL_VARIANT[gid]=variant;
@@ -11838,20 +11893,33 @@ async function renderTtsBeats(){
       const synced = Array.isArray(b.cap_durs) && b.cap_durs.length;
       const badge = synced ? '🟢' : '🟡';
       const badgeTip = synced ? '자막 자동맞춤 됨' : '자막 자동맞춤 불확실 — 들어보세요';
+      // ★재생목록 한 줄(2026-08-30 사장님 "단락별·전체 들어보는 걸 편하게").
+      //   종전엔 줄마다 버튼이 6~7개 깔려(장면 8개면 48개) 무엇을 눌러야 할지 몰랐다.
+      //   기본은 [▶][✏ 수정][⋯] 셋만 두고 나머지는 ⋯ 안으로 접는다.
+      //   ★버튼·id·onclick은 하나도 안 바꿨다 — 자리만 옮겼다(배선은 그대로 산다).
+      const dur = (typeof b.target_seconds==='number') ? b.target_seconds.toFixed(1)+'초' : '';
       return `
-      <div id="beatRow${i}" data-idx="${i}" style="border:1px solid var(--line);border-radius:9px;padding:9px;margin-bottom:6px;background:var(--inset);transition:background .15s">
-        <div id="vpSay${i}" style="font-size:13px;margin-bottom:4px"><span title="${badgeTip}">${badge}</span> <b>${i+1}.</b> <span class="vpNarr">${esc(b.narration||'')}</span></div>
-        ${b.tts_preview_url?`<audio id="beatAudio${i}" preload="metadata" src="${esc(b.tts_preview_url)}?t=${Date.now()}" style="display:none"></audio><button class="btn-prev" style="padding:4px 10px" onclick="vpPlayBeat(${i})">▶ 이 장면</button>
-        <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+      <div id="beatRow${i}" data-idx="${i}" class="ttsRow">
+        <div class="ttsRowMain" onclick="vpPlayBeat(${i})" title="이 장면부터 들어봅니다">
+          <span class="ttsNo">${i+1}<i title="${badgeTip}" class="${synced?'ok':'warn'}"></i></span>
+          <div id="vpSay${i}" class="ttsSay"><span class="vpNarr">${esc(b.narration||'')}</span></div>
+          <span class="ttsDur">${dur}</span>
+          ${b.tts_preview_url?`<audio id="beatAudio${i}" preload="metadata" src="${esc(b.tts_preview_url)}?t=${Date.now()}" style="display:none"></audio>
+          <button class="btn-prev ttsBtn" onclick="event.stopPropagation();vpPlayBeat(${i})" title="이 장면 듣기">▶</button>
+          <button class="btn-prev ttsBtn" onclick="event.stopPropagation();vpEditNarr(${i})" title="이 문장을 고치고 음성·자막을 다시 뽑습니다">✏ 수정</button>
+          <button class="btn-prev ttsBtn" onclick="event.stopPropagation();vpMore(${i})" title="자막 맞춤·톤 바꾸기">⋯</button>`
+          :'<span class="hint">음성 없음</span>'}
+        </div>
+        ${b.tts_preview_url?`
+        <div id="vpMore${i}" class="ttsMore" style="display:none">
           <button class="btn-prev" style="padding:3px 8px" onclick="vpNudge(${i},-1)">◀ 자막 당기기</button>
           <button class="btn-prev" style="padding:3px 8px" onclick="vpNudge(${i},1)">자막 밀기 ▶</button>
           <button class="btn-prev" style="padding:3px 8px" onclick="vpResetOffset(${i})">↩︎ 되돌리기</button>
           <select id="vpTone${i}" style="padding:3px">${Object.entries(VARIANT_LABELS).map(([k,lab])=>`<option value="${k}"${(b.tts_tone||'stable')===k?' selected':''}>${lab}</option>`).join('')}</select>
           <button class="btn-prev" style="padding:3px 8px" onclick="vpRegenTone(${i})">🔁 톤 바꿔 다시</button>
-          <button class="btn-prev" style="padding:3px 8px" onclick="vpEditNarr(${i})" title="이 문장을 고치고 음성·자막을 다시 뽑습니다">✏ 대본수정</button>
           ${window.IS_ADMIN?`<button class="btn-prev" style="padding:3px 8px" onclick="pronReport(this,${i})">🩺 발음 이상해요</button>`:''}
           <span id="vpMsg${i}" class="hint"></span>
-        </div>`:'<span class="hint">음성 없음</span>'}
+        </div>`:''}
       </div>`;
     }).join('');
     // 영상길이(비트 목표시간 합) vs 음성길이(오디오 실측 합) — 맞춤 힌트로 편집 편의성↑
@@ -11866,11 +11934,25 @@ async function renderTtsBeats(){
     //   재생 중 이 두 요소에 프레임·자막을 그린다(없으면 재생이 죽는다 — 실측으로 확인).
     el.innerHTML=`
       <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:10px">
-        <button onclick="playAllBeats()" class="btn-next" style="padding:13px 22px;font-size:15px;font-weight:700;min-height:44px" title="방금 만든 완성 음성을 처음부터 끝까지 재생합니다">▶ 완성본 전체 듣기</button>
+        <button id="vpAllBtn" onclick="playAllBeats()" class="btn-next" style="padding:13px 22px;font-size:15px;font-weight:700;min-height:44px" title="방금 만든 완성 음성을 처음부터 끝까지 재생합니다">▶ 완성본 전체 듣기</button>
         <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
           <div><span class="hint">영상 길이</span> <b style="color:var(--accent2)">${vidLen.toFixed(1)}초</b></div>
           <div><span class="hint">음성 길이</span> <b id="voiceLen" style="color:var(--ok)">…</b></div>
           <div id="fitMsg" class="hint">음성 길이 측정 중…</div>
+        </div>
+      </div>
+      <!-- ★전체 듣기 진행 표시(2026-08-30 사장님 "단락별·전체 들어보는 걸 편하게").
+           종전엔 8장면을 이어 듣는 동안 화면에 아무 표시가 없어, 지금 몇 번째인지·
+           얼마나 남았는지 알 수 없었다(줄 강조만 있고 위쪽 버튼은 그대로였다).
+           ★진행값을 계산하는 곳은 _vpAllTick() 한 군데다 — 줄 강조(vpMarkPlaying)와
+             따로 세지 않는다(같은 판단을 두 벌로 적으면 어긋난다, 0순위-B). -->
+      <div id="vpAllBar" style="display:none;margin:-4px 0 10px">
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--sub)">
+          <span id="vpAllNow">1 / 1</span>
+          <div style="flex:1 1 120px;height:6px;border-radius:4px;background:var(--inset);overflow:hidden">
+            <div id="vpAllFill" style="height:100%;width:0%;background:var(--accent);transition:width .2s"></div>
+          </div>
+          <span id="vpAllTime">0.0 / 0.0초</span>
         </div>
       </div>
       <div style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)" aria-hidden="true">
@@ -11930,12 +12012,30 @@ function vpPlayBeat(i){
   // 다른 오디오 정지
   let k=0; while(document.getElementById('beatAudio'+k)){ const o=document.getElementById('beatAudio'+k); if(o!==a){o.pause();} k++; }
   _vpShowFrame(i); _vpDriveCaption(a,b); _vpHeard.add(i);
-  const r=document.getElementById('beatRow'+i);
-  document.querySelectorAll('[id^=beatRow]').forEach(x=>x.style.background='var(--inset)');
-  if(r) r.style.background='#1a2740';
+  // ★강조는 **클래스 하나**로 한다(2026-08-30). 종전엔 style.background를 직접 넣어
+  //   재생목록 CSS(.ttsRow.playing)와 규칙이 두 벌이 됐다 — 한쪽만 고치면 어긋난다(0순위-B).
+  vpMarkPlaying(i);
   a.currentTime=0; a.play().catch(()=>{});
 }
 // ── 고치기: 자막 당기기/밀기·되돌리기·톤 재생성·부드러운 다음-단계 게이트 ──
+// 재생 중인 줄 강조 — 켜고 끄는 곳이 여기 하나뿐이다(한 줄 재생·전체 재생이 공유).
+function vpMarkPlaying(i){
+  document.querySelectorAll('.ttsRow').forEach(x=>x.classList.remove('playing'));
+  const r = (i>=0) ? document.getElementById('beatRow'+i) : null;
+  if(r){
+    r.classList.add('playing');
+    // 목록이 길면 재생 중인 줄이 화면 밖으로 나간다 — 따라 내려가게 한다.
+    try{ r.scrollIntoView({block:'nearest', behavior:'smooth'}); }catch(_){}
+  }
+}
+
+// ⋯ — 그 줄의 보조 버튼만 펼친다(다른 줄은 닫는다: 화면이 한 번에 하나만 열리게).
+function vpMore(i){
+  const el=document.getElementById('vpMore'+i); if(!el) return;
+  const open = el.style.display==='none';
+  document.querySelectorAll('.ttsMore').forEach(e=>{ e.style.display='none'; });
+  el.style.display = open ? 'flex' : 'none';
+}
 async function vpNudge(i,dir){
   const b=VP_BEATS[i]; if(!b) return;
   b.cap_offset=Math.max(-2,Math.min(2, (+b.cap_offset||0) + dir*0.1));
@@ -12019,15 +12119,39 @@ function vpGateNext(){
   return true;
 }
 // ▶ 전체 재생 — 비트 음성을 순서대로 이어 재생하며 현재 비트의 프레임+자막을 갱신(가라오케식)
+let VP_ALL=null;    // 전체 듣기 상태(재생 중일 때만 채워진다) — 진행바가 이것만 읽는다
+function _vpAllStop(){
+  if(VP_ALL && VP_ALL.timer) clearInterval(VP_ALL.timer);
+  (VP_ALL&&VP_ALL.auds||[]).forEach(a=>{ a.pause(); a.onended=null; });
+  VP_ALL=null;
+  const bar=document.getElementById('vpAllBar'); if(bar) bar.style.display='none';
+  const btn=document.getElementById('vpAllBtn'); if(btn) btn.textContent='▶ 완성본 전체 듣기';
+  vpMarkPlaying(-1);
+}
+// 진행값을 세는 **유일한 곳**. 앞 장면들의 길이 합 + 지금 장면의 재생 위치.
+function _vpAllTick(){
+  if(!VP_ALL) return;
+  const {auds,cur}=VP_ALL;
+  const done=auds.slice(0,cur).reduce((s,a)=>s+(a.duration||0),0);
+  const total=auds.reduce((s,a)=>s+(a.duration||0),0);
+  const at=done+(auds[cur]?(auds[cur].currentTime||0):0);
+  const now=document.getElementById('vpAllNow'); if(now) now.textContent=(cur+1)+' / '+auds.length;
+  const fill=document.getElementById('vpAllFill'); if(fill) fill.style.width=(total>0?Math.min(100,at/total*100):0).toFixed(1)+'%';
+  const tm=document.getElementById('vpAllTime'); if(tm) tm.textContent=at.toFixed(1)+' / '+total.toFixed(1)+'초';
+}
 function playAllBeats(){
+  if(VP_ALL){ _vpAllStop(); return; }    // 재생 중에 다시 누르면 멈춘다
   const auds=[]; let i=0; while(document.getElementById('beatAudio'+i)){ auds.push(document.getElementById('beatAudio'+i)); i++; }
   if(!auds.length) return;
   auds.forEach(a=>{ a.pause(); a.currentTime=0; a.onended=null; });
-  let cur=0;
+  VP_ALL={auds, cur:0, timer:setInterval(_vpAllTick,200)};
+  const bar=document.getElementById('vpAllBar'); if(bar) bar.style.display='block';
+  const btn=document.getElementById('vpAllBtn'); if(btn) btn.textContent='■ 멈추기';
   const playOne=()=>{
-    if(cur>=auds.length){ document.querySelectorAll('[id^=beatRow]').forEach(x=>x.style.background='var(--inset)'); return; }
-    vpPlayBeat(cur);
-    auds[cur].onended=()=>{ cur++; playOne(); };
+    if(!VP_ALL) return;                                  // 사용자가 멈췄다
+    if(VP_ALL.cur>=auds.length){ _vpAllStop(); return; } // 끝나면 원래대로
+    vpPlayBeat(VP_ALL.cur); _vpAllTick();
+    auds[VP_ALL.cur].onended=()=>{ if(!VP_ALL) return; VP_ALL.cur++; playOne(); };
   };
   playOne();
 }
