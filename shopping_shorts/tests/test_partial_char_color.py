@@ -35,7 +35,7 @@ def test_build_segments_whole_word_still_works():
 def test_ui_has_partial_color_pickers():
     """헤드카피·썸네일 양쪽에 '고른 글자 색칠' 배선이 살아 있어야 한다."""
     assert "function hlSegments(" in HTML          # 자르는 규칙은 한 곳
-    assert "function hcPaintSelection(" in HTML     # 헤드카피
+    assert "function hcWordSetColor(" in HTML       # 헤드카피(낱말 알약 UI — main에서 온 것)
     assert "function thumbPaintSelection(" in HTML  # 썸네일
     assert 'id="thumbTextArea"' in HTML             # 선택 범위를 읽는 칸
     assert "L.hl && L.hl.length" in HTML            # 썸네일 렌더가 규칙을 읽는다
