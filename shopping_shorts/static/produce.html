@@ -13442,6 +13442,11 @@ function _trackPx(ctx, L, size){
   return parseFloat(_thumbTrackCss(L, size)) || 0;
 }
 
+// 썸네일 줄 간격 — 1.16은 두꺼운 한글 폰트에서 윗줄 받침과 아랫줄 머리가 맞닿는다
+// (2026-08-30 실브라우저 캔버스로 확인. 헤드카피 1.2와 같은 증상이라 같은 폭으로 벌린다).
+// ★재는 곳·그리는 곳·손잡이 세 군데가 같은 값이어야 한다 — 그래서 상수로 둔다(0순위-B).
+const THUMB_LH = 1.30;
+
 function thumbFit(ctx, L, W, H){
   const family = thumbFontCss(L.font);
   const maxW = W * 0.92, maxH = H * 0.44;
@@ -13458,7 +13463,7 @@ function thumbFit(ctx, L, W, H){
   const _hold = (typeof THUMB_FIT_HOLD !== 'undefined' && THUMB_FIT_HOLD.get)
     ? THUMB_FIT_HOLD.get(L) : null;
   if (_hold) size = _hold.ratio * W * scale;
-  if (lines.length * size * 1.16 > maxH) size *= maxH / (lines.length * size * 1.16);  // 높이 상한
+  if (lines.length * size * THUMB_LH > maxH) size *= maxH / (lines.length * size * THUMB_LH);  // 높이 상한
   size = Math.max(W * 0.02, Math.min(size, H * 0.22));            // 안전 하한·상한
   return {lines, size, family};
 }
@@ -13821,7 +13826,7 @@ function drawThumb(ctx, img, layers, W, H){
     if (L.kind === 'badge'){ drawBadge(ctx, L, W, H); return; }
     if (!L.text) return;
     const {lines, size, family} = thumbFit(ctx, L, W, H);      // 자동 2줄 + grow-to-fill
-    const lh = size * 1.16;                                     // 줄 간격
+    const lh = size * THUMB_LH;                                     // 줄 간격
     ctx.save();
     ctx.translate(L.x * W, L.y * H);                            // 앵커 = 여러 줄 블록의 세로 중앙
     if (L.rot) ctx.rotate(L.rot * Math.PI / 180);
@@ -14100,7 +14105,7 @@ function _thumbHalf(L){
       const ls = _trackPx(ctx, L, size);
       const w = Math.max(1, ...lines.map(l => ctx.measureText(l).width - ls));
       ctx.restore();
-      const h = lines.length * size * 1.16;
+      const h = lines.length * size * THUMB_LH;
       const pad = size * 0.16;                       // 손잡이가 글자에 붙지 않게 약간 띄운다
       return {hx: (w / 2 + pad) / THUMB_W, hy: (h / 2 + pad) / THUMB_H};
     } catch (e) { /* 못 재면 아래 기본식 — 손잡이가 조금 어긋날 뿐 기능은 산다 */ }
