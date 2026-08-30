@@ -6076,41 +6076,6 @@ function updateHighlightRule(i, field, val){
   if(field==='box') renderHighlightRules();
   updateHC();
 }
-// ── 🖍 글자별 색(2026-08-30) — 고른 글자만 다른 색으로 ─────────────────────
-// 규칙 모양은 헤드카피(STATE.deco.highlight_rules)와 썸네일(L.hl)이 같다: {keyword,color}.
-// ★자르는 판단은 여기 한 곳에서만 한다 — 서버 _build_segments와 **같은 규칙**이다:
-//   긴 키워드 먼저, 이미 색이 잡힌 자리는 덮지 않는다. 두 군데서 각자 정하면 어긋난다(0순위-B).
-const HL_SWATCHES = ['#FFD400','#FF3B30','#2EE6C5','#35C3FF','#FF5FA2','#2FD873','#FFFFFF'];
-function hlSegments(line, rules, baseColor){
-  const list=(rules||[]).filter(r=>r&&r.keyword);
-  const marks=new Array(line.length).fill(null);
-  list.slice().sort((a,b)=>b.keyword.length-a.keyword.length).forEach(r=>{
-    let pos=line.indexOf(r.keyword);
-    while(pos>=0){
-      for(let i=pos;i<pos+r.keyword.length;i++) if(marks[i]==null) marks[i]=r;
-      pos=line.indexOf(r.keyword,pos+r.keyword.length);
-    }
-  });
-  const out=[];
-  for(let i=0;i<line.length;i++){
-    const r=marks[i], color=(r&&r.color)||baseColor, box=(r&&r.box)?(r.box_color||'#FF2D2D'):null;
-    const last=out[out.length-1];
-    if(last && last.color===color && last.box===box) last.text+=line[i];
-    else out.push({text:line[i], color:color, box:box});
-  }
-  return out;
-}
-// 색 견본 버튼 묶음(헤드카피·썸네일이 같은 모양을 쓴다).
-function hlSwatchHtml(fn){
-  return HL_SWATCHES.map(c=>`<button type="button" class="tab" onclick="${fn}('${c}')"
-    style="flex:0 0 auto;min-width:auto;width:22px;height:22px;padding:0;background:${c};border:1px solid #0006"></button>`).join('');
-}
-function hlChipsHtml(rules, delFn){
-  return (rules||[]).map((r,i)=>`<span style="display:inline-flex;align-items:center;gap:5px;background:#0b1018;
-    border:1px solid var(--line);border-radius:999px;padding:3px 8px;margin:0 5px 5px 0;font-size:12px">
-    <b style="color:${r.color}">${esc(r.keyword||'')}</b>
-    <span onclick="${delFn}(${i})" style="cursor:pointer;color:var(--sub)">✕</span></span>`).join('');
-}
 /* ══════════════════════════════════════════════════════════════════════
    🖍 글자별 색 — 2026-08-30 사장님 "바꾸고 싶은 글자만 컬러 바꿀 수 있게"
    ★값의 주인은 STATE.deco.highlight_rules 하나뿐이다(0순위-B). 미리보기(updateHC)와
@@ -13289,6 +13254,41 @@ async function pollFinal(){
 renderSteps(); showPanel(); setScriptMode('manual');
 
 // ── 6단계 썸네일 (2026-07-17) ──────────────────────────────────
+// ── 🖍 글자별 색(2026-08-30) — 고른 글자만 다른 색으로 ─────────────────────
+// 규칙 모양은 헤드카피(STATE.deco.highlight_rules)와 썸네일(L.hl)이 같다: {keyword,color}.
+// ★자르는 판단은 여기 한 곳에서만 한다 — 서버 _build_segments와 **같은 규칙**이다:
+//   긴 키워드 먼저, 이미 색이 잡힌 자리는 덮지 않는다. 두 군데서 각자 정하면 어긋난다(0순위-B).
+const HL_SWATCHES = ['#FFD400','#FF3B30','#2EE6C5','#35C3FF','#FF5FA2','#2FD873','#FFFFFF'];
+function hlSegments(line, rules, baseColor){
+  const list=(rules||[]).filter(r=>r&&r.keyword);
+  const marks=new Array(line.length).fill(null);
+  list.slice().sort((a,b)=>b.keyword.length-a.keyword.length).forEach(r=>{
+    let pos=line.indexOf(r.keyword);
+    while(pos>=0){
+      for(let i=pos;i<pos+r.keyword.length;i++) if(marks[i]==null) marks[i]=r;
+      pos=line.indexOf(r.keyword,pos+r.keyword.length);
+    }
+  });
+  const out=[];
+  for(let i=0;i<line.length;i++){
+    const r=marks[i], color=(r&&r.color)||baseColor, box=(r&&r.box)?(r.box_color||'#FF2D2D'):null;
+    const last=out[out.length-1];
+    if(last && last.color===color && last.box===box) last.text+=line[i];
+    else out.push({text:line[i], color:color, box:box});
+  }
+  return out;
+}
+// 색 견본 버튼 묶음(헤드카피·썸네일이 같은 모양을 쓴다).
+function hlSwatchHtml(fn){
+  return HL_SWATCHES.map(c=>`<button type="button" class="tab" onclick="${fn}('${c}')"
+    style="flex:0 0 auto;min-width:auto;width:22px;height:22px;padding:0;background:${c};border:1px solid #0006"></button>`).join('');
+}
+function hlChipsHtml(rules, delFn){
+  return (rules||[]).map((r,i)=>`<span style="display:inline-flex;align-items:center;gap:5px;background:#0b1018;
+    border:1px solid var(--line);border-radius:999px;padding:3px 8px;margin:0 5px 5px 0;font-size:12px">
+    <b style="color:${r.color}">${esc(r.keyword||'')}</b>
+    <span onclick="${delFn}(${i})" style="cursor:pointer;color:var(--sub)">✕</span></span>`).join('');
+}
 // 합성은 전적으로 여기(canvas)서 한다. 서버는 완성된 PNG를 받아 저장만 한다(설계 Q3).
 // 프리뷰 캔버스와 업로드 캔버스가 **같은 하나**라서 "보이는 그대로"가 구조적으로 보장된다.
 // 좌표(x·y)는 0~1 비율, size는 1080 기준 px — 그래야 270px 프리뷰와 1080px 결과가 일치한다.
