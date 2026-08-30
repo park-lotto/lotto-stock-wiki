@@ -3054,10 +3054,18 @@ async function loadBuffer(){
   var body = document.getElementById('bufBody');
   if (BUF.loadedFor === MIX_JOB && MIX_JOB) return;   /* job당 1회 — 패널을 오갈 때마다 부르지 않는다 */
   BUF.loadedFor = MIX_JOB;
+  /* ★서버복원(loadWork)이 MIX_JOB을 늦게 채운다 — 그 전에 여기 오면 **옛 job이 굳는다**
+     (실측 2026-08-30: 화면은 84b5f66a8e1f(영상없음)를 쥐고 있었고 저장된 작업의
+      진짜 job은 030d90a7a97a(final.mp4 39MB)였다 → 미리보기가 검고 예약은 404).
+     복원이 끝나 job이 바뀌면 **한 번 더** 부른다. 대입 지점이 4군데라 값을 여기서
+     다시 읽는 것 말고는 믿을 게 없다(0순위-B: 판단을 한 곳으로). */
+  var _jobAtCall = MIX_JOB;
   /* ★채널을 **먼저** 물어본다. 화면 확인용 응답(로컬 BUFFER_DEMO=1)인지는 답을 받아야
      알 수 있어서, 작업 유무를 그 전에 따지면 영영 못 온다(실측으로 밟았다). */
   var d = null;
   try { d = await (await fetch('/api/buffer/channels')).json(); } catch(e){ d = null; }
+  /* 기다리는 사이 복원이 끝나 job이 바뀌었으면, 지금 그린 화면은 옛 job 것이다 → 다시 그린다. */
+  if (MIX_JOB && MIX_JOB !== _jobAtCall){ BUF.loadedFor = null; return loadBuffer(); }
   var demo = !!(d && d.demo);
   // 작업이 없으면 **왜 비었는지** 말해준다. 조용히 빈 화면이 가장 나쁘다.
   if (!MIX_JOB && !demo){
@@ -3107,7 +3115,18 @@ async function loadBuffer(){
     vbox.innerHTML = '<video src="/api/mix/video/' + encodeURIComponent(MIX_JOB) + '" '
       + 'style="width:100%;border-radius:8px;background:#000" muted playsinline preload="metadata"></video>';
     var nm = document.getElementById('bufVideoName');
-    if (nm) nm.innerHTML = '작업 <b>' + esc(MIX_JOB) + '</b> 의 완성본';
+    /* ★사람이 읽을 수 있는 이름을 먼저 쓴다 — 작업이 여러 개면 ID로는 분간이 안 된다
+       (사장님 2026-08-30). 이름은 이미 저장돼 있다(produce_works.title / STATE.title).
+       규칙을 새로 만들지 않고 화면이 이미 쓰는 값을 그대로 읽는다(0순위-B). */
+    if (nm){
+      var _t = '';
+      try { _t = (typeof STATE !== 'undefined' && STATE && STATE.title) ? String(STATE.title) : ''; } catch(e){ _t = ''; }
+      if (!_t){ var _el = document.getElementById('workTitle');
+                _t = _el ? String(_el.value || _el.textContent || '').trim() : ''; }
+      nm.innerHTML = _t
+        ? '<b>' + esc(_t) + '</b> 의 완성본'
+        : '작업 <b>' + esc(MIX_JOB) + '</b> 의 완성본';
+    }
   }
   var hint = document.getElementById('bufTextHint');
   var got = !!(typeof SEO !== 'undefined' && SEO && (SEO.title || SEO.description));
