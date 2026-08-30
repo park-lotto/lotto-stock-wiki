@@ -1845,15 +1845,10 @@
            어느 엔진인지 눈으로 바로 이어진다. -->
       <div class="findCols">
       <div class="findCol">
-      <div id="elvAdmin" style="display:none">
-        <button class="btn-prev findBtn" onclick="toggleElevenPicker()">＋ 일레븐랩스에서 성우 추가</button>
-        <div id="elvBox" style="display:none;margin-top:8px;border:1px solid var(--line);border-radius:9px;padding:10px;max-height:320px;overflow:auto">
-          <div id="elvList" class="hint">불러오는 중…</div>
-        </div>
-        <!-- 추가 직후 '이제 뭘 누르면 되나'를 한 줄로 알려준다 — 없으면 추가해도 화면이
-             안 바뀐 것처럼 보인다(사장님 질문 "추가를 하거나 이 성우로 적용을 하려면?"). -->
-        <div id="elvDone" class="hint" style="display:none;margin-top:8px;padding:8px 10px;border:1px solid var(--ok);border-radius:8px;line-height:1.5"></div>
-      </div>
+      <!-- ★[목소리 찾기]를 칸 **맨 위**로 올렸다(2026-08-30 사장님 "이건 칸이 안맞으니
+           위로이동" + "칸비율"). 왼쪽 칸엔 관리자에게만 보이는 [＋성우 추가]가 위에
+           있어서, 고객이 늘 쓰는 [목소리 찾기]가 오른쪽 [타입캐스트 찾기]보다 아래로
+           내려가 두 칸의 첫 버튼 높이가 어긋났다. 늘 보이는 것을 위에 둔다. -->
       <!-- 고객용 목소리 찾기(2026-08-24) — 일레븐랩스 공개 라이브러리에서 직접 골라 담는다.
            ★본인 키가 있어야 쓸 수 있다: 담기는 각자 계정에 되므로 키가 없으면 합성 때 실패한다.
              서버가 need_key로 알려주면 등록 안내를 대신 띄운다. -->
@@ -1879,6 +1874,15 @@
           <div class="hint" style="margin-top:6px">한국어 목소리를 먼저 보여줍니다. 담으면 내 성우 카드에 바로 추가돼요.</div>
           <div id="vlibList" style="margin-top:10px;max-height:340px;overflow:auto"></div>
         </div>
+      </div>
+      <div id="elvAdmin" style="display:none">
+        <button class="btn-prev findBtn" onclick="toggleElevenPicker()">＋ 일레븐랩스에서 성우 추가</button>
+        <div id="elvBox" style="display:none;margin-top:8px;border:1px solid var(--line);border-radius:9px;padding:10px;max-height:320px;overflow:auto">
+          <div id="elvList" class="hint">불러오는 중…</div>
+        </div>
+        <!-- 추가 직후 '이제 뭘 누르면 되나'를 한 줄로 알려준다 — 없으면 추가해도 화면이
+             안 바뀐 것처럼 보인다(사장님 질문 "추가를 하거나 이 성우로 적용을 하려면?"). -->
+        <div id="elvDone" class="hint" style="display:none;margin-top:8px;padding:8px 10px;border:1px solid var(--ok);border-radius:8px;line-height:1.5"></div>
       </div>
       <!-- 타입캐스트 성우 찾기(2026-08-30) — 일레븐 '목소리 찾기'의 짝.
            ★담기가 없다: 타입캐스트는 서버 키로 곧장 부르는 공용 목록이라(1125명 실측)
@@ -12042,10 +12046,31 @@ async function searchTypecastVoices(){
           +   '<div class="hint" style="margin-top:2px">'+esc(v.model||'')
           +     (emo?(' · 감정 '+emo+'종'):'')+'</div>'
           + '</div>'
+          + '<button type="button" class="fplay" title="들어보기" style="width:auto;padding:6px 10px;'
+          +   'border:1px solid var(--line);border-radius:8px;color:var(--sub);margin-right:6px" '
+          +   'onclick="tcvPreview(this,'+i+')">🎧 들어보기</button>'
           + '<button class="btn-next" style="padding:6px 12px" onclick="tcvUse(this,'+i+')">이 성우로</button>'
           + '</div>';
       }).join('');
 }
+// 🎧 담기 **전에** 들어본다(2026-08-30 사장님 "즐겨찾기 전에 들어보고 즐겨찾기 안되나").
+// 종전엔 [이 성우로]밖에 없어, 들어보려면 일단 담아야 했다 — 마음에 안 들면 카드에 남는다.
+// ★일레븐 '🎧 들어보기'와 같은 문장·같은 톤으로 굽는다(서버에서). 그래야 나란히 비교된다.
+async function tcvPreview(btn, i){
+  const v=TCV_RESULTS[i]; if(!v) return;
+  const orig=btn.textContent;
+  btn.disabled=true; btn.textContent='굽는 중…';
+  try{
+    const r=await (await fetch('/api/typecast/voices/preview',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({voice_id:v.voice_id, model:v.model})
+    })).json();
+    btn.disabled=false; btn.textContent=orig;
+    if(!r || !r.ok){ toast('⚠️ '+((r&&r.error)||'들어보기 실패')); return; }
+    playSample(btn, r.url);
+  }catch(e){ btn.disabled=false; btn.textContent=orig; toast('⚠️ 들어보기 실패'); }
+}
+
 // 고른 타입캐스트 성우를 지금 영상에 쓴다 — 성우 카드로 등록해 두 열에서도 보이게 한다.
 async function tcvUse(btn, i){
   const v=TCV_RESULTS[i]; if(!v) return;

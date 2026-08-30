@@ -5450,6 +5450,53 @@ def eleven_voices_origin():
     return eleven_voices.ORIGIN
 
 
+@app.post("/api/typecast/voices/preview")
+async def api_typecast_voice_preview(request: Request):
+    """담기 **전에** 타입캐스트 성우를 들어본다(2026-08-30 사장님 "즐겨찾기 전에 들어보고").
+
+    종전엔 목록에서 [이 성우로]밖에 없어, 들어보려면 일단 담아야 했다 — 마음에 안 들면
+    카드에 쓰레기가 남는다. 일레븐 쪽 '🎧 들어보기'(eleven_voices.make_preview)와 같은
+    자리를 타입캐스트에도 준다.
+
+    ★문장·톤은 일레븐과 **같은 것**을 쓴다 — 성우끼리 나란히 비교하려면 같은 대사여야
+      한다(eleven_voices.DEMO_TEXT). 톤은 담을 때의 기본과 같은 stable(normal).
+    ★캐시: 파일이 있으면 다시 굽지 않는다(실TTS = 크레딧).
+    """
+    from shopping_shorts import eleven_voices, typecast_tts
+    body = await request.json()
+    vid = ((body or {}).get("voice_id") or "").strip()
+    model = ((body or {}).get("model") or "ssfm-v30").strip()
+    if not vid:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "voice_id 필요"})
+    out = eleven_voices.preview_path("tc-" + vid)
+    url = f"/api/typecast/voices/preview/{urllib.parse.quote(vid)}.mp3"
+    if out.exists():
+        return {"ok": True, "url": url, "cached": True}
+    voice_presets.SAMPLES_DIR.mkdir(parents=True, exist_ok=True)
+    from shopping_shorts.mix_pipeline import synthesize_line
+    try:
+        synthesize_line(
+            eleven_voices.DEMO_TEXT, out,
+            voice={"voice_id": vid, "model_id": model,
+                   "settings": {"emotion": "normal", "emotion_intensity": 1.0},
+                   "speed": 1.2, "silence_trim": "mid", "naturalize_profile": None},
+            beat_role="훅", beat_index=0, beat_total=5)
+    except Exception as e:      # noqa: BLE001 — 화면이 사람 말로 알려야 한다
+        return JSONResponse(status_code=502,
+                            content={"ok": False, "error": f"들어보기 실패: {e}"})
+    return {"ok": True, "url": url, "cached": False}
+
+
+@app.get("/api/typecast/voices/preview/{voice_id}.mp3")
+def api_typecast_voice_preview_file(voice_id: str):
+    from shopping_shorts import eleven_voices
+    f = eleven_voices.preview_path("tc-" + voice_id)
+    if not f.exists():
+        return JSONResponse(status_code=404, content={"ok": False})
+    return FileResponse(str(f), media_type="audio/mpeg",
+                        headers={"Cache-Control": "no-cache"})
+
+
 @app.post("/api/voice-presets/{preset_id}/bake")
 def api_voice_preset_bake(preset_id: str, request: Request):
     """샘플이 **없는** 성우의 미리듣기를 그 자리에서 굽는다(2026-08-30 사장님
