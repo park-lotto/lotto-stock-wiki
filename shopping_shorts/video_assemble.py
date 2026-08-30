@@ -225,6 +225,118 @@ def scene_zoom_of(beat):
     return z, _pan("scene_pan_x"), _pan("scene_pan_y")
 
 
+# ── 🔎 장면 강조(원형 돋보기 / 스포트라이트, 2026-08-30 사장님) ──────────────────
+# 사장님 요청: "장면꾸미기에서 강조하고싶은것들 수동하게". 레퍼런스 화면처럼 **원 하나로
+# 시선을 끄는** 연출이다. 확대(scene_zoom)와는 다른 물건 — 확대는 화면 전체 구도를 바꾸고,
+# 강조는 구도를 그대로 둔 채 그 위에 원을 얹는다. 그래서 강조는 base 크롭 **다음**에 온다.
+_HL_GROW = 0.35          # 등장할 때 원이 커지는 시간(초). 사장님 확정: "뜰 때 커지는 애니메이션까지"
+_HL_DARK = 0.60          # 스포트라이트에서 원 **밖**을 어둡게 하는 정도(0~1)
+_HL_RING = 3             # 흰 테두리 두께(px, 반지름 기준)
+
+
+def scene_hl_of(beat):
+    """장면 하나에 사장님이 지정한 강조를 꺼낸다 → dict 또는 None(=강조 없음).
+
+    ★해석은 **여기 한 곳에서만** 한다(0순위-B) — 화면(미리보기)과 렌더가 같은 뜻으로
+      읽어야 한다. 저장 형식은 화면 크기와 무관한 **비율**이다:
+        cx, cy : 화면 폭·높이 대비 원 중심 (0~1)
+        r      : 화면 **폭** 대비 반지름 (0~1) — 폭 기준이라 세로 영상에서도 원이 원이다
+        zoom   : 원 안 확대 배율(mode=zoom일 때만 의미)
+        mode   : 'zoom'(원 안을 확대) | 'spot'(원 밖을 어둡게)
+    """
+    if not isinstance(beat, dict):
+        return None
+    hl = beat.get("scene_hl")
+    if not isinstance(hl, dict) or not hl.get("on"):
+        return None
+    def _f(key, dflt, lo, hi):
+        try:
+            v = float(hl.get(key))
+        except (TypeError, ValueError):
+            v = dflt
+        return max(lo, min(hi, v))
+    mode = "spot" if str(hl.get("mode") or "zoom") == "spot" else "zoom"
+    shape = "round" if str(hl.get("shape") or "circle") == "round" else "circle"
+    # 반지름 하한 0.06 — 이보다 작으면 화면에서 점으로 보여 아무것도 강조가 안 된다.
+    return {"mode": mode, "shape": shape,
+            "cx": _f("cx", 0.5, 0.0, 1.0), "cy": _f("cy", 0.5, 0.0, 1.0),
+            "r": _f("r", 0.28, 0.06, 0.9), "zoom": _f("zoom", 2.0, 1.1, 4.0)}
+
+
+# 모양 → 거리식의 지수. ★모양을 **하나의 식**으로 다룬다(0순위-B) — 모양마다 따로 식을 적으면
+#   테두리·마스크·미리보기가 각자 다른 모양을 그리게 된다.
+#     n=2 → 원,  n=4 → 둥근 네모(스퀘어클). 나중에 네모(n=12)를 더해도 이 표만 늘리면 된다.
+_HL_SHAPE_N = {"circle": 2, "round": 4}
+
+
+def _hl_dist(cx, cy, r, shape):
+    """중심에서 얼마나 떨어졌나 — **테두리에서 정확히 1**이 되는 값(ffmpeg 식 문자열)."""
+    n = _HL_SHAPE_N.get(shape, 2)
+    return (f"pow(pow(abs(X-{cx})/{r},{n})+pow(abs(Y-{cy})/{r},{n}),{1.0 / n:.6f})")
+
+
+def _hl_px(hl):
+    """비율 → 픽셀(최종 출력 좌표계). 원이 화면 밖으로 나가도 ffmpeg가 알아서 자른다."""
+    cx = int(round(hl["cx"] * _OUT_W))
+    cy = int(round(hl["cy"] * _OUT_H))
+    r = max(8, int(round(hl["r"] * _OUT_W)))
+    return cx, cy, r
+
+
+def highlight_fc(beat, base_vf, grow=True):
+    """base_vf(기존 크롭/줌 체인) 뒤에 강조를 얹은 **filter_complex 문자열**. 강조가 없으면 None.
+
+    반환값을 쓰는 쪽은 `-vf base_vf` 대신 `-filter_complex <이것> -map [out]`을 쓴다.
+
+    ★왜 geq를 프레임마다 돌리지 않나 — 실측(2026-08-30): 1080x1920 전면 geq는 3초 소스에
+      13.0초(4.3배 느림)였다. 마스크를 **한 장만** 만들고 loop로 재사용하니 0.86초
+      (0.28배) — **15배** 빠르다. 라이브 렌더에 얹을 수 있는 유일한 형태다.
+    ★등장 성장은 마스크를 다시 그리는 게 아니라 **다 만든 원을 scale로 키운다**(eval=frame).
+      그래서 커지는 동안 비용이 0이다.
+    grow=False — 한 비트가 컷 여러 개로 쪼개졌을 때 **두 번째 컷부터**. 안 그러면 컷마다
+      원이 다시 톡톡 튀어 사장님이 "왜 여러 번 나오냐"고 보게 된다.
+    """
+    hl = scene_hl_of(beat)
+    if not hl:
+        return None
+    cx, cy, r = _hl_px(hl)
+    d = r * 2
+    sh = hl["shape"]
+    k = f"min(1,max(0.2,t/{_HL_GROW}))" if grow else "1"
+    # 테두리·마스크 모두 **같은 거리식**을 쓴다 → 모양을 바꿔도 둘이 어긋날 수 없다.
+    # (테두리 조각은 d×d 캔버스라 중심이 (r,r)이다)
+    _dl = _hl_dist(r, r, r, sh)                     # 조각 안 좌표 기준
+    _dg = _hl_dist(cx, cy, r, sh)                   # 전체 화면 좌표 기준
+    ring = (f"color=c=white:s={d}x{d}:d=1,format=rgba,"
+            f"geq=r=255:g=255:b=255:"
+            f"a='255*clip(({_HL_RING}-abs((1-{_dl})*{r}))/1.5,0,1)',"
+            f"loop=loop=-1:size=1,setpts=N/30/TB[ring0];"
+            f"[ring0]scale=w='{d}*{k}':h='{d}*{k}':eval=frame[rg];")
+    at = f"x='{cx}-{d}*{k}/2':y='{cy}-{d}*{k}/2'"
+    parts = [f"[0:v]{base_vf}[base];", ring]
+    if hl["mode"] == "spot":
+        # 원 밖을 어둡게. 전면 마스크지만 **한 장만** 계산하고 loop로 돌린다(위 실측 참고).
+        parts.append(
+            f"color=c=black:s={_OUT_W}x{_OUT_H}:d=1,format=rgba,geq=r=0:g=0:b=0:"
+            f"a='255*{_HL_DARK}*clip(({_dg}-1)*{r}/2+0.5,0,1)',"
+            f"loop=loop=-1:size=1,setpts=N/30/TB"
+            + (f",fade=t=in:st=0:d={_HL_GROW}:alpha=1" if grow else "") + "[dark];")
+        parts.append("[base][dark]overlay=0:0:shortest=1[o1];")
+    else:
+        m = hl["zoom"]
+        # 원 안만 확대 — 전체를 m배로 키운 뒤 **그 점 둘레만** d×d로 잘라 원 마스크를 씌운다.
+        parts.append(
+            f"[base]split[a][b];"
+            f"[b]scale=iw*{m}:ih*{m},crop={d}:{d}:{m}*{cx}-{r}:{m}*{cy}-{r},format=rgba[pat];"
+            f"color=c=black:s={d}x{d}:d=1,format=gray,"
+            f"geq=lum='255*clip((1-{_dl})*{r}/2+0.5,0,1)',"
+            f"loop=loop=-1:size=1[msk];"
+            f"[pat][msk]alphamerge,scale=w='{d}*{k}':h='{d}*{k}':eval=frame[cut];"
+            f"[a][cut]overlay={at}:shortest=1[o1];")
+    parts.append(f"[o1][rg]overlay={at}:shortest=1[out]")
+    return "".join(parts)
+
+
 def _crop_xy(zoom, pan_x, pan_y, base_w, base_h):
     """확대된 화면(base_w×base_h)에서 잘라낼 위치. 중앙에서 pan 만큼 옮긴다.
     유도: 화면 폭 대비 pan 만큼 그림이 움직였으므로 잘라내는 창은 반대로 -pan 이동.
@@ -256,6 +368,10 @@ _CAP_FONTSIZE = 78      # 짧은 1줄 구절이라 여유 있음 → 키움
 # ★꾸미기 UI가 쓰는 기준 폭(produce.html의 VIDEO_W). 미리보기·썸네일은 자막/헤드카피 px를
 #   **이 폭 기준**으로 축소해 그린다(scale = PREVIEW_W/VIDEO_W).
 _UI_REF_W = 720
+
+# 글자가 화면 밖으로 잘리지 않게 남기는 안전 여백(2026-08-30). 플랫폼이 화면비에 맞춰
+# 확대해 보여주므로 폭을 꽉 채우면 양끝이 잘린다 — 헤드카피·자막이 이 값을 함께 쓴다.
+_SAFE_W = 0.86
 
 
 def _ui_px(v, default, zero_ok=False):
@@ -1414,10 +1530,15 @@ def _render_mix(edit_plan, tts_paths, source_video_paths, work, cutaway_paths=No
             #   입력 제한이 핵심(P1) — 상한 배율이 out_dur/src_dur보다 작으면 setpts가 다음
             #   구간까지 끌어와 유출된다(다색 소스 실측). 잘라두면 이 구간만 play_out으로 늘어난다.
             sub = work / f"beat_{idx}_{j}.mp4"
+            # 🔎 강조가 있으면 -vf 대신 filter_complex(오버레이가 필요해 단일 체인으로 안 된다).
+            #   성장 애니메이션은 **첫 컷에서만** — 컷마다 다시 튀면 여러 번 나오는 것처럼 보인다.
+            _hl_fc = highlight_fc(beat, vf_full, grow=(j == 0))
+            _vf_args = (["-filter_complex", _hl_fc, "-map", "[out]"] if _hl_fc
+                        else ["-vf", vf_full])
             _run_ffmpeg([
                 "ffmpeg", "-y", "-ss", f"{start:.3f}", "-t", f"{_c_src:.3f}",
                 "-i", str(src),
-                "-vf", vf_full, "-r", "30", "-an", "-t", f"{play_out:.3f}",
+                *_vf_args, "-r", "30", "-an", "-t", f"{play_out:.3f}",
                 "-c:v", "libx264", "-preset", _mid_preset(), "-crf", _mid_crf(), *_threads_args(), "-pix_fmt", "yuv420p", str(sub),
             ])
             # 그래도 비면(소스 손상/범위밖) 이 클립만 버린다 — 하나가 미리보기 전체를 죽이지 않게.
@@ -1657,14 +1778,6 @@ def _resolve_seg_font(base_style, work, key_prefix, text=""):
     return fontref, str(work / fontref)
 
 
-def _match_highlight(word, highlight_rules):
-    """word가 highlight_rules의 keyword와 정확히 일치하면 그 규칙(dict) 반환, 아니면 None."""
-    for rule in (highlight_rules or []):
-        if rule.get("keyword") and word == rule["keyword"]:
-            return rule
-    return None
-
-
 def _lacks_space_glyph(pil_font):
     """→ font_glyphs.lacks_space_glyph (판정은 한 곳에서만 — 0순위-B)."""
     return _fg.lacks_space_glyph(pil_font)
@@ -1682,23 +1795,41 @@ def _text_px(pil_font, text, size):
 
 
 def _build_segments(line, base_color, highlight_rules):
-    """한 줄 텍스트를 공백 기준 토큰화하고, 연속된 동일 스타일(강조 or 기본) 토큰을 묶어
-    [(text, color, box, box_color), ...] 세그먼트 리스트로 반환. 사이 공백은 각 세그먼트
-    텍스트에 뒤따르는 공백으로 포함시켜(마지막 세그먼트 제외) 폭 계산 시 자연스럽게 처리한다."""
-    words = line.split(" ")
+    """한 줄 텍스트를 highlight_rules 기준으로 [(text, color, box, box_color), ...]로 쪼갠다.
+
+    ★부분 문자열 매칭(2026-08-30 사장님 "바꾸고 싶은 글자만 색"). 예전엔 공백으로 나눈
+    **단어 전체**가 일치할 때만 색이 바뀌어서, "쿠팡꿀템"의 '꿀템'만 노랗게는 못 했다.
+    이제 규칙의 글자열이 줄 안 어디에 있든 그 자리만 다른 색이 된다(긴 규칙 먼저 잡아
+    짧은 규칙이 겹쳐 먹지 않게 한다).
+
+    규칙이 없거나 매칭 0건이면 세그먼트 1개 = 기존과 같은 산출물(하위호환).
+    ※단어 전체 일치도 부분 일치의 한 경우라 종전 동작을 그대로 포함한다."""
+    if not line:
+        return []
+    base = (base_color, False, None)
+    marks = [None] * len(line)
+    rules = [r for r in (highlight_rules or []) if r.get("keyword")]
+    # 긴 키워드 먼저 — 짧은 규칙이 먼저 자리를 잡으면 긴 규칙이 조각나 색이 튄다.
+    for rule in sorted(rules, key=lambda r: -len(r["keyword"])):
+        kw = rule["keyword"]
+        style = (rule.get("color"), bool(rule.get("box")), rule.get("box_color"))
+        pos = line.find(kw)
+        while pos >= 0:
+            for i in range(pos, pos + len(kw)):
+                if marks[i] is None:
+                    marks[i] = style
+            pos = line.find(kw, pos + len(kw))
     segs = []
     cur_text, cur_style = "", None
-    for i, w in enumerate(words):
-        rule = _match_highlight(w, highlight_rules)
-        style = (rule["color"], bool(rule.get("box")), rule.get("box_color")) if rule else (base_color, False, None)
-        piece = w + (" " if i < len(words) - 1 else "")
+    for ch, st in zip(line, marks):
+        st = st or base
         if cur_style is None:
-            cur_text, cur_style = piece, style
-        elif style == cur_style:
-            cur_text += piece
+            cur_text, cur_style = ch, st
+        elif st == cur_style:
+            cur_text += ch
         else:
             segs.append((cur_text, *cur_style))
-            cur_text, cur_style = piece, style
+            cur_text, cur_style = ch, st
     if cur_text:
         segs.append((cur_text, *cur_style))
     return segs
@@ -1750,7 +1881,7 @@ def _wrap_to_width(line, font, max_w):
 
 def _segmented_drawtext(text, base_style, work, key_prefix, x_pct, y_pct,
                           highlight_rules=None, default_color="0xFFFFFF", single_line=False,
-                          fit_lines=False):
+                          fit_lines=False, block_box=False):
     """헤드카피/자막 한 블록을 줄 단위로 나누고, highlight_rules에 매칭되는 단어만
     별도 색·배지로 세그먼트를 쪼개 나란히 이어붙인 drawtext 필터 리스트를 반환한다.
     규칙이 없거나 매칭 0건이면 줄마다 세그먼트 1개 = 기존 _fixed_drawtext/_caption_drawtexts와
@@ -1771,7 +1902,13 @@ def _segmented_drawtext(text, base_style, work, key_prefix, x_pct, y_pct,
         pil_font = ImageFont.truetype(font_disk_path, size)
     except OSError:
         pil_font = ImageFont.load_default()
-    max_w = 0.92 * _OUT_W
+    # 안전 여백 — 글자는 화면 폭의 0.86까지만 쓴다(2026-08-30 사장님 "옆에가 짤리잖아").
+    # 0.92는 좌우 여백이 4%뿐이라, 인스타·유튜브가 화면비에 맞춰 조금만 확대해도
+    # 양끝 글자가 잘려 나간다(실측: "방충망 먼지 빨리 해결"은 원폭 1275px→993px로
+    # 줄여도 폭을 꽉 채웠고, 외곽선 10px가 더 번져 사실상 여백이 없었다).
+    # 자막도 같은 위험이라 같은 값을 쓴다 — 한 줄 강제라 길면 **항상** 폭을 꽉 채운다.
+    # ★미리보기(produce.html _boxW·capAvail)와 **같은 값**이어야 한다(0순위-B).
+    max_w = _SAFE_W * _OUT_W
     if single_line:
         # 자막: 개행·연속공백을 한 칸으로 접어 한 줄로. 폭 초과 시 폰트 축소(줄바꿈 금지).
         one = " ".join(" ".join(lines).split())
@@ -1798,9 +1935,33 @@ def _segmented_drawtext(text, base_style, work, key_prefix, x_pct, y_pct,
     base_color_raw = base_style.get("color")  # 원시 #hex(또는 None) — _hex_to_ff는 drawtext 빌드에서 1회만 적용(이중변환 방지)
     x_center = x_pct / 100.0 * _OUT_W
     y_top = y_pct / 100.0 * _OUT_H
-    line_h = size * 1.2
+    # 줄 간격 — 1.2는 두꺼운 한글 폰트에서 윗줄 받침과 아랫줄 머리가 맞닿아 **겹쳐 보인다**
+    # (2026-08-30 사장님 제보, job 36a02e5ad1ef '방충망 먼지 빨리 해결/다이소 꿀템').
+    # 미리보기(produce.html #hcPreviewText line-height)와 **같은 값**이어야 한다(0순위-B).
+    line_h = size * 1.34
     total_h = line_h * len(lines)
     parts = []
+    # ── 🟨 배경 박스는 **블록 하나**로 (2026-08-30 사장님 "헤드커피 부분이 분리되서 나옴")
+    # 종전엔 줄마다 drawtext에 box=1을 걸어, 두 줄짜리 헤드카피가 **박스 2개**로 갈라져
+    # 나왔다(실측: 조각 2개, x=42 / x=272 — 줄 폭이 달라 시작점도 어긋난다). 그런데
+    # 미리보기(produce.html updateHC)는 글자 덩어리 하나에 배경을 깔아 **한 덩어리**였다.
+    # → 같은 판단이 두 곳에 다르게 적힌 것(0순위-B). 렌더를 미리보기 규칙에 맞춘다:
+    #     세로 여백 = box_pad, 가로 여백 = box_pad*1.5, 모서리 = 30px(=10*3, 720 기준)
+    if block_box and base_style.get("box"):
+        _pad = max(0, _ui_px(base_style.get("box_pad"), 24, zero_ok=True))
+        _widest = 0
+        for _ln in lines:
+            _segs = _build_segments(_ln, base_color_raw, highlight_rules or [])
+            _widest = max(_widest, sum(_text_px(pil_font, s[0], size) for s in _segs))
+        if _widest > 0:
+            _bw = _widest + _pad * 3            # 좌우 각각 pad*1.5
+            _bh = total_h + _pad * 2
+            _bx = int(round(x_center - _bw / 2))
+            _by = int(round(y_top - total_h / 2 - _pad))
+            _bc = _hex_to_ff(base_style.get("box_color"), "0x000000")
+            _op = max(0.0, min(1.0, (base_style.get("box_opacity") or 80) / 100.0))
+            parts.append(f"drawbox=x={_bx}:y={_by}:w={int(round(_bw))}:h={int(round(_bh))}:"
+                         f"color={_bc}@{_op:.2f}:t=fill")
     for li, line in enumerate(lines):
         segs = _build_segments(line, base_color_raw, highlight_rules or [])
         if not segs:
@@ -1843,6 +2004,8 @@ def _segmented_drawtext(text, base_style, work, key_prefix, x_pct, y_pct,
                 if seg_box:
                     bc = _hex_to_ff(seg_box_color, "0x000000")
                     seg_parts += ["box=1", f"boxcolor={bc}@0.90", "boxborderw=12"]
+                elif base_style.get("box") and block_box:
+                    pass          # 배경은 아래에서 **블록 하나**로 미리 그렸다(줄마다 안 그린다)
                 elif base_style.get("box") and not seg_box:
                     bc = _hex_to_ff(base_style.get("box_color"), "0x000000")
                     op = max(0.0, min(1.0, (base_style.get("box_opacity") or 80) / 100.0))
@@ -1911,7 +2074,7 @@ def _headcopy_drawtext_parts(hc, work, enable=None):
     parts = _segmented_drawtext(
         hc.get("text", ""), hc, work, "hc", hc.get("x", 50), hc.get("y", 14),
         highlight_rules=hc.get("highlight_rules"), default_color="0xFF8800",
-        fit_lines=True,
+        fit_lines=True, block_box=True,
     )
     if not enable:
         return parts
@@ -1993,6 +2156,93 @@ def _beat_cap_style(caption_style, beat):
     st = dict(caption_style or {})
     st["y_pct"] = ypct
     return st
+
+
+
+def sfx_events_for(timeline, sfx_paths):
+    """효과음 타점 계산 — [(경로, 절대초), ...]. **렌더와 캡컷 내보내기가 같이 쓴다**(0순위-B).
+
+    비트별 position → 절대 오프셋(초)을 캡션과 **같은 함수**로 계산한다(별도 계산 금지 —
+    저장위치=읽기위치). 절대시각 = 비트 t0 + 오프셋.
+    타점 3종(2026-08-21 사장님 "훅에서 다음 넘어갈 때"):
+      first      = 칸 시작
+      last       = 칸의 마지막 자막(기본)
+      transition = **칸이 끝나는 순간** = 다음 칸이 시작하는 지점. 이븐쇼핑류가
+                   장면 전환에 띠용을 얹는 그 자리다. 다음 칸의 t0와 같은 값이라
+                   따로 더할 게 없다(마지막 칸이면 영상 끝이라 amix가 잘라준다).
+    """
+    sfx_paths = sfx_paths or {}
+    events = []
+    for b in timeline or []:
+        sfx = b.get("sfx")
+        path = sfx_paths.get(b["beat_idx"])
+        if not sfx or not path:
+            continue
+        segs = _caption_segments(b["narration"], preset=b.get("caption_lines"))
+        seg_durs = _caption_durations(segs, b["dur"], real_durs=b.get("cap_durs"))
+        pos = sfx.get("position")
+        if pos == "first":
+            offset = 0.0
+        elif pos == "transition":
+            offset = b["dur"]
+        else:
+            offset = sum(seg_durs[:-1])
+        events.append((path, b["t0"] + offset))
+    return events
+
+
+def headcopy_span(timeline):
+    """머리카피가 화면에 떠 있는 구간 (t0, dur). **렌더의 노출 규칙과 한 벌**이다(0순위-B).
+
+    렌더는 drawtext에 `_default_headcopy_enable`이 만든 `lte(t,마지막비트t0)`를 걸어
+    마지막 비트 전까지만 보여준다(끝의 CTA 자막과 두 줄 충돌 방지). 캡컷은 enable 식이
+    없으므로 **세그먼트 길이**로 같은 구간을 만든다 — 그래서 그 함수의 결과를 그대로 읽는다.
+    """
+    if not timeline:
+        return 0.0, 0.0
+    total = float(timeline[-1]["t0"]) + float(timeline[-1].get("dur") or 0.0)
+    enable = _default_headcopy_enable(timeline)
+    if not enable:
+        return 0.0, total
+    m = re.search(r"lte\(t,([0-9.]+)\)", enable)
+    return (0.0, float(m.group(1))) if m else (0.0, total)
+
+
+def headcopy_layer_png(headcopy, out_path, work, caption_style=None, deco=None):
+    """머리카피를 **투명 PNG 한 장**으로 굽는다(캡컷 내보내기용) → out_path 또는 None.
+
+    ★캡컷 텍스트로 다시 만들지 않는 이유: 머리카피는 여러 줄·배경박스·단어별 강조색·
+      자동 축소가 얽혀 있고, 무엇보다 **위치(x·y%)를 캡컷 clip.transform으로 옮기려면
+      좌표계 실측이 필요한데 아직 근거가 없다**(capcut_draft 주석 참조). 풀캔버스 PNG로
+      구우면 좌표 변환이 아예 필요 없다 — 꾸미기 틀(template)이 이미 쓰는 방법과 같다.
+    ★그림은 렌더와 **같은 함수**(_headcopy_drawtext_parts)가 그린다 — 화면과 캡컷이
+      갈리지 않는다(0순위-B). enable은 걸지 않는다(구간은 headcopy_span이 정한다).
+    실패하면 None을 돌려준다 — 머리카피 한 장 때문에 내보내기가 막히면 안 된다.
+    """
+    if not headcopy or not (headcopy.get("text") or "").strip():
+        return None
+    hc, _cs = _merge_highlight_rules(headcopy, caption_style, deco)
+    try:
+        # ★기본 폰트를 work에 깔아둔다 — drawtext는 `fontfile=font.ttf`(상대명)를 참조하고,
+        #   그 파일을 두는 곳이 _burn_captions뿐이었다. 안 깔면 ffmpeg가 죽는다(실측:
+        #   exit 3221225477 + "Fontconfig error"). 폰트 이름 해석은 _font_ref 한 곳이 한다.
+        _font = _resolve_font()
+        if not _font:
+            print("[캡컷] 폰트 미해결 — 머리카피 건너뜀", file=sys.stderr)
+            return None
+        shutil.copy(_font, Path(work) / "font.ttf")
+        parts = _headcopy_drawtext_parts(hc, Path(work))
+        if not parts:
+            return None
+        _run_ffmpeg([
+            "ffmpeg", "-y", "-f", "lavfi",
+            "-i", f"color=c=black@0.0:s={_OUT_W}x{_OUT_H}:d=1,format=rgba",
+            "-vf", ",".join(parts), "-frames:v", "1", str(out_path),
+        ], cwd=str(work))
+    except Exception as e:      # noqa: BLE001 — 머리카피 실패가 내보내기를 죽이면 안 된다
+        print(f"[캡컷] 머리카피 PNG 실패(건너뜀): {e!r}", file=sys.stderr)
+        return None
+    return str(out_path) if Path(out_path).exists() else None
 
 
 def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None, caption_style=None, deco=None, sfx_paths=None):
@@ -2082,29 +2332,7 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
     # 효과음(sfx): 비트별 position → 절대 오프셋(초)을 캡션과 **같은 함수**로 계산한다
     # (별도 계산 금지 — 저장위치=읽기위치). first=0.0 / last=마지막 세그먼트 직전까지의 합
     # (세그먼트 1개면 0.0). 절대시각 = 비트 t0 + 오프셋. sfx_events=[(경로, 절대초), ...].
-    sfx_paths = sfx_paths or {}
-    sfx_events = []
-    for b in timeline:
-        sfx = b.get("sfx")
-        path = sfx_paths.get(b["beat_idx"])
-        if not sfx or not path:
-            continue
-        segs = _caption_segments(b["narration"], preset=b.get("caption_lines"))
-        seg_durs = _caption_durations(segs, b["dur"], real_durs=b.get("cap_durs"))
-        # 타점 3종(2026-08-21 사장님 "훅에서 다음 넘어갈 때"):
-        #   first      = 칸 시작
-        #   last       = 칸의 마지막 자막(기본)
-        #   transition = **칸이 끝나는 순간** = 다음 칸이 시작하는 지점. 이븐쇼핑류가
-        #                장면 전환에 띠용을 얹는 그 자리다. 다음 칸의 t0와 같은 값이라
-        #                따로 더할 게 없다(마지막 칸이면 영상 끝이라 amix가 잘라준다).
-        pos = sfx.get("position")
-        if pos == "first":
-            offset = 0.0
-        elif pos == "transition":
-            offset = b["dur"]
-        else:
-            offset = sum(seg_durs[:-1])
-        sfx_events.append((path, b["t0"] + offset))
+    sfx_events = sfx_events_for(timeline, sfx_paths)
     has_sfx = bool(sfx_events)
     if not has_bgm and not has_overlay and not has_motion and not has_sfx:
         base_vf = vf

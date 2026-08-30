@@ -24,6 +24,7 @@ import requests
 from fastapi import BackgroundTasks, FastAPI, Request, UploadFile, File, Form
 from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse, FileResponse, Response, StreamingResponse
 from fastapi.middleware.gzip import GZipMiddleware
+from starlette.concurrency import run_in_threadpool
 from fastapi.staticfiles import StaticFiles
 from shopping_shorts import service
 from shopping_shorts.service import collect, census, generate_missing_drafts, next_draft_targets, youtube_channel_board
@@ -5168,9 +5169,31 @@ def api_mix_caption_offset(job_id: str, beat_idx: int, body: dict):
     return {"ok": True, "offset": offset}
 
 
+# ── 타입캐스트 성우 찾기 (2026-08-30 사장님 "타입캐스트도 하고 검색이 용이하게") ────
+# ★일레븐랩스와 다른 점: 담기가 없다. 타입캐스트 성우는 계정에 담는 개념이 아니라
+#   서버 키로 곧장 부르는 공용 목록이라(실측 1125명), 고른 즉시 쓸 수 있다.
+# ★인기순이 없다 — API가 주는 건 voice_id·이름·모델·감정·타입뿐이다(실측). 그래서
+#   정렬 대신 검색만 준다. 없는 지표를 지어내지 않는다.
+@app.get("/api/typecast/voices")
+def api_typecast_voices(request: Request, q: str = "", limit: int = 60):
+    from shopping_shorts import typecast_tts
+    d = typecast_tts.list_voices()
+    if not d.get("ok"):
+        return {"ok": False, "voices": [], "error": d.get("error") or "성우 목록을 못 불러왔습니다"}
+    key = (q or "").strip().lower()
+    out = []
+    for v in d.get("voices") or []:
+        if key and key not in str(v.get("name", "")).lower():
+            continue
+        out.append(v)
+        if len(out) >= max(1, min(int(limit or 60), 200)):
+            break
+    return {"ok": True, "voices": out, "total": len(d.get("voices") or []), "error": None}
+
+
 @app.get("/api/voice-library/search")
 def api_voice_library_search(request: Request, q: str = "", language: str = "",
-                             gender: str = "", page: int = 0):
+                             gender: str = "", page: int = 0, sort: str = ""):
     """일레븐랩스 **공개 음성 라이브러리** 검색(2026-08-24 사장님: "사용자들이 목소리 검색 가능하게").
 
     ★본인 키가 있어야 한다. 담기는 각자 계정에 되므로, 키 없이 담으면 합성 때
@@ -5178,12 +5201,16 @@ def api_voice_library_search(request: Request, q: str = "", language: str = "",
     """
     cid = getattr(request.state, "customer_id", 0) or 0
     from shopping_shorts import eleven_voices, keyroute
-    keys, _src = keyroute.keys_for(Store(DB_PATH), cid, keyroute.SVC_ELEVENLABS)
-    if not keys or _src != "customer":
+    # ★두 번째 반환값은 **참/거짓**이다(keyroute.keys_for → is_user). 여기서 문자열
+    #   "customer"와 비교하고 있었다 — True != "customer"는 언제나 참이라, 키를 등록한
+    #   사람도 전부 need_key로 막혔다(사장님 실측 2026-08-30: 본인 키가 있는데도 안 됨).
+    keys, is_user = keyroute.keys_for(Store(DB_PATH), cid, keyroute.SVC_ELEVENLABS)
+    if not keys or not is_user:
         return {"ok": False, "voices": [], "need_key": True,
                 "error": "내 일레븐랩스 키를 등록하면 원하는 목소리를 직접 찾아 쓸 수 있어요."}
     return eleven_voices.search_shared(customer_id=cid, query=q, language=(language or None),
-                                       gender=(gender or None), page=page)
+                                       gender=(gender or None), page=page,
+                                       sort=(sort or None))
 
 
 @app.post("/api/voice-library/add")
@@ -5196,8 +5223,11 @@ async def api_voice_library_add(request: Request):
     """
     cid = getattr(request.state, "customer_id", 0) or 0
     from shopping_shorts import eleven_voices, keyroute
-    keys, _src = keyroute.keys_for(Store(DB_PATH), cid, keyroute.SVC_ELEVENLABS)
-    if not keys or _src != "customer":
+    # ★두 번째 반환값은 **참/거짓**이다(keyroute.keys_for → is_user). 여기서 문자열
+    #   "customer"와 비교하고 있었다 — True != "customer"는 언제나 참이라, 키를 등록한
+    #   사람도 전부 need_key로 막혔다(사장님 실측 2026-08-30: 본인 키가 있는데도 안 됨).
+    keys, is_user = keyroute.keys_for(Store(DB_PATH), cid, keyroute.SVC_ELEVENLABS)
+    if not keys or not is_user:
         return JSONResponse({"ok": False, "need_key": True,
                              "error": "내 일레븐랩스 키를 먼저 등록해주세요."}, status_code=400)
     body = await request.json()
@@ -5220,6 +5250,54 @@ async def api_voice_library_add(request: Request):
     return {"ok": True, "already": added.get("already", False),
             "group_id": res["group_id"], "count": res["count"],
             "sample_failed": res.get("sample_failed") or []}
+
+
+@app.post("/api/typecast/voices/adopt")
+async def api_typecast_adopt(request: Request):
+    """고른 타입캐스트 성우를 **성우 카드**로 등록한다(2026-08-30).
+
+    ★일레븐랩스의 '담기'와 다르다: 타입캐스트는 계정에 담는 절차가 없다(서버 키로 곧장
+      부른다). 여기서 하는 일은 DB에 프리셋 행을 만들어 두 열 카드에 나오게 하는 것뿐이다.
+    ★샘플을 굽지 않는다 — 실TTS 1회는 크레딧을 쓴다. 카드의 ▶는 샘플이 없으면 꺼진 채로
+      두고, 고른 뒤 '미리듣기'로 들으면 된다.
+    ★소유자(owner_customer_id)를 본인으로 박는다 — 남이 담은 성우가 내 카드에 섞이면
+      누가 담았는지 알 수 없다(일레븐 담기와 같은 규칙).
+    """
+    from shopping_shorts import typecast_tts
+    cid = getattr(request.state, "customer_id", 0) or 0
+    body = await request.json()
+    vid = ((body or {}).get("voice_id") or "").strip()
+    name = ((body or {}).get("name") or "").strip()[:40]
+    model = ((body or {}).get("model") or "ssfm-v30").strip()
+    if not vid or not name:
+        return JSONResponse({"ok": False, "error": "성우 정보가 모자랍니다."}, status_code=400)
+    if not typecast_tts.is_typecast(model):
+        return JSONResponse({"ok": False, "error": f"타입캐스트 모델이 아닙니다({model})."},
+                            status_code=400)
+    # 실제로 있는 성우인지 목록에서 확인한다 — 화면이 보낸 값을 그대로 믿지 않는다.
+    listed = typecast_tts.list_voices()
+    if not listed.get("ok"):
+        return JSONResponse({"ok": False, "error": listed.get("error") or "성우 목록 조회 실패"},
+                            status_code=502)
+    if not any(v.get("voice_id") == vid for v in listed.get("voices") or []):
+        return JSONResponse({"ok": False, "error": "그 성우를 타입캐스트에서 찾지 못했습니다."},
+                            status_code=404)
+    gid = "tcv-" + re.sub(r"[^a-zA-Z0-9]", "", vid)[-16:]
+    store = Store(DB_PATH)
+    # 톤 3종 — 기존 타입캐스트 프리셋(assets/voice_presets.json)과 **같은 모양**으로 만든다.
+    tones = [("stable", "normal", 1.0), ("natural", "tonedown", 1.0), ("expressive", "toneup", 1.2)]
+    for variant, emotion, intensity in tones:
+        store.upsert_voice_preset({
+            "preset_id": f"{gid}-{variant}", "group_id": gid, "variant": variant,
+            "name": name, "one_liner": "타입캐스트에서 담은 성우", "lang": "KR",
+            "archetype": "타입캐스트에서 담은 성우",
+            "base_voice_id": vid, "model_id": model,
+            "voice_settings": {"emotion": emotion, "emotion_intensity": intensity},
+            "default_speed": 1.2, "default_silence_trim": "mid",
+            "sample_file": None, "source_ref": "타입캐스트 성우 찾기(2026-08-30)",
+            "origin": "curated", "best": False, "owner_customer_id": cid,
+        })
+    return {"ok": True, "group_id": gid, "count": len(tones)}
 
 
 @app.get("/api/voice-presets")
@@ -5707,9 +5785,58 @@ def api_share_link(job_id: str, request: Request):
     return {"ok": True, "url": url, "qr_svg": qr}
 
 
-@app.get("/api/share/v/{sid}")
-def api_share_v(sid: str, dl: int = 0):
-    """단축 id로 영상 스트리밍(로그인 불필요·저장소 조회). allowlist 경로."""
+def _mp4_range_response(path: str, request: Request):
+    """mp4를 Range(부분 요청)까지 지원해 내보낸다.
+
+    ★왜 직접 짰나: 설치된 starlette 0.36의 FileResponse는 Range를 **무시하고**
+      200에 전체(수십 MB)를 보낸다(0.37부터 지원). 영상 수집기·플레이어는 앞부분만
+      Range로 띄 가 판정하므로, 그걸 못 받으면 "영상을 읽을 수 없다"고 거절한다
+      (Buffer 실측 2026-08-30). Accept-Ranges 헤더도 같이 준다.
+    """
+    size = os.path.getsize(path)
+    rng = (request.headers.get("range") or "").strip().lower()
+    m = re.match(r"bytes=(\d*)-(\d*)$", rng) if rng else None
+    if not m or (not m.group(1) and not m.group(2)):
+        return FileResponse(path, media_type="video/mp4", headers={"Accept-Ranges": "bytes"})
+    if m.group(1):
+        start = int(m.group(1))
+        end = int(m.group(2)) if m.group(2) else size - 1
+    else:                                   # bytes=-N → 끝에서 N바이트
+        start = max(0, size - int(m.group(2)))
+        end = size - 1
+    if start >= size:                       # 범위 밖 — 규격대로 416
+        return Response(status_code=416, headers={"Content-Range": f"bytes */{size}"})
+    end = min(end, size - 1)
+    length = end - start + 1
+
+    def _chunks():
+        with open(path, "rb") as f:
+            f.seek(start)
+            left = length
+            while left > 0:
+                buf = f.read(min(262144, left))
+                if not buf:
+                    break
+                left -= len(buf)
+                yield buf
+
+    return StreamingResponse(_chunks(), status_code=206, media_type="video/mp4", headers={
+        "Accept-Ranges": "bytes",
+        "Content-Range": f"bytes {start}-{end}/{size}",
+        "Content-Length": str(length)})
+
+
+@app.api_route("/api/share/v/{sid}", methods=["GET", "HEAD"])
+def api_share_v(request: Request, sid: str, dl: int = 0):
+    """단축 id로 영상 스트리밍(로그인 불필요·저장소 조회). allowlist 경로.
+
+    ★HEAD를 반드시 받는다(2026-08-30 실사고). Buffer는 영상을 가져가기 전에
+      **HEAD로 먼저 확인**하는데, GET만 등록돼 있으면 404가 나가고 예약이
+      "Video could not be read from its URL."로 거절된다.
+      실측: 같은 주소가 GET 200(41MB, video/mp4) / HEAD 404였다.
+      FileResponse는 HEAD면 본문을 안 보내고 헤더만 준다 — 우리가 따로 갈 필요 없다.
+    """
+    sid = sid[:-4] if sid.endswith(".mp4") else sid   # 확장자를 붙여 부르는 수집기 호환
     job_id = _share_get(sid)
     if not job_id:
         return JSONResponse(status_code=403, content={"ok": False, "error": "링크가 만료됐어요"})
@@ -5719,7 +5846,7 @@ def api_share_v(sid: str, dl: int = 0):
     if dl:
         return FileResponse(job["video_path"], media_type="video/mp4",
                             filename=export_bundle.safe_name(job_id) + ".mp4")
-    return FileResponse(job["video_path"], media_type="video/mp4")
+    return _mp4_range_response(job["video_path"], request)
 
 
 def _selected_thumb_path(job):
@@ -5862,16 +5989,38 @@ async def api_buffer_schedule(request: Request):
     if int(job.get("customer_id") or 0) != _cid(request):
         return JSONResponse(status_code=403, content={"ok": False, "error": "내 작업이 아닙니다."})
 
+    # ★주소를 내주기 전에 moov를 앞으로 보장한다(2026-08-30 실측). Buffer는 영상을
+    #   받아보다가 못 읽으면 "Video could not be read from its URL"로 거절하는데,
+    #   렌더 시점에만 처리하면 **그 전에 만든 완성본**이 영영 안 올라간다.
+    #   이미 앞에 있으면 아무 일도 안 한다(무해·즉시).
+    try:
+        mix_pipeline.ensure_faststart(job["video_path"])
+    except Exception as e:         # 실패해도 예약은 시도한다(원본은 그대로다) — 단 조용히 넘기지 않는다
+        logging.getLogger("buffer").warning(
+            "faststart 보장 실패 job=%s: %s", job_id, type(e).__name__)
     sid = _share_put(job_id, _SHARE_TTL_BUFFER)
+    # ★Buffer는 **HTTPS**를 요구한다(buffer_api 머리말). 그런데 프록시 뒤라
+    #   request.base_url이 http로 잡혀 301 리다이렉트 주소를 넘기고 있었다
+    #   (실측 2026-08-30: http://…/api/share/v/xxx → 301). 여기서 https로 못박는다.
     base = str(request.base_url).rstrip("/")
-    video_url = f"{base}/api/share/v/{sid}"
+    if base.startswith("http://"):
+        base = "https://" + base[len("http://"):]
+    # ★.mp4를 붙인다 — 확장자로 종류를 판단하는 수집기가 있다(라우트가 떼고 읽는다).
+    video_url = f"{base}/api/share/v/{sid}.mp4"
 
     out = []
     for cid_ in chans:
         try:
             t = str(texts.get(cid_) or text or "")
-            r = buffer_api.schedule_video(key, cid_, t, video_url, due_at, thumb_ms,
-                                          share_now=share_now, privacy=privacy)
+            # ★반드시 스레드풀로 — 이 핸들러는 async라 blocking urllib을 그대로 부르면
+            #   이벤트루프 전체가 10~20초 멈춘다. 그 사이 Buffer 검증기가 video_url을
+            #   HEAD/GET하러 오는데 서버가 응답을 못 해 "Video could not be read from
+            #   its URL"로 거절된다(실측 2026-08-30: 같은 파일·같은 캡션을 앱 밖에서
+            #   부르면 성공, 이 핸들러를 지나면 실패 — HEAD가 createPost 응답과 동시에
+            #   풀리는 게 apache/uvicorn 로그 시각차 10초로 확인됨).
+            r = await run_in_threadpool(
+                buffer_api.schedule_video, key, cid_, t, video_url, due_at, thumb_ms,
+                share_now=share_now, privacy=privacy)
             out.append({"channel_id": cid_, "ok": True, "post_id": r["id"], "due_at": r["dueAt"]})
         except buffer_api.BufferError as e:
             out.append({"channel_id": cid_, "ok": False, "error": str(e)})
@@ -6037,12 +6186,55 @@ def api_mix_capcut(job_id: str, base: str = ""):
         _style_on = str(Store(DB_PATH).get_setting("capcut_style_off", "") or "") != "1"
     except Exception:      # noqa: BLE001 — 설정을 못 읽어도 내보내기는 되어야 한다
         _style_on = True
+    # ── 🎵 BGM · 🔔 효과음 · 🎞 컷어웨이 · ✍ 머리카피 — 최종렌더가 넣는 것을 캡컷에도 ──
+    #   (2026-08-30 전구간 점검: 렌더엔 있는데 캡컷엔 통째로 안 가던 것들. grep 0건 확인)
+    #   ★어느 것을 어떻게 해석할지는 전부 **렌더가 쓰는 함수**가 정한다(0순위-B):
+    #     BGM 경로=mix_pipeline.resolve_deco_media · 효과음 타점=video_assemble.sfx_events_for
+    #     컷어웨이 경로=mix_pipeline._resolve_cutaway_paths · 머리카피 그림=headcopy_layer_png
+    #   ★하나가 실패해도 내보내기는 그대로 된다 — 그 재료만 빠진다.
+    if _deco:
+        try:
+            _deco = mix_pipeline.resolve_deco_media(_deco, work)
+        except Exception:      # noqa: BLE001
+            import traceback as _tb3
+            _tb3.print_exc(file=sys.stderr)
+    _cust = job.get("customer_id", 0)
+    _store = Store(DB_PATH)
+    try:
+        _sfx_events = video_assemble.sfx_events_for(
+            timeline, mix_pipeline._resolve_sfx_paths(_store, plan, _cust))
+    except Exception:      # noqa: BLE001
+        _sfx_events = []
+    try:
+        _cutaways = mix_pipeline._resolve_cutaway_paths(_store, plan, _cust)
+    except Exception:      # noqa: BLE001
+        _cutaways = {}
+    # 머리카피는 풀캔버스 투명 PNG로 굽는다(캡컷 텍스트 좌표계 미실측 — 아래 주석 참조).
+    _hc_png, _hc_span = None, None
+    _hc = job.get("headcopy")
+    if isinstance(_hc, str):
+        try:
+            import json as _json3
+            _hc = _json3.loads(_hc)
+        except (ValueError, TypeError):
+            _hc = None
+    if isinstance(_hc, dict) and (_hc.get("text") or "").strip():
+        _hc_dir = work / "capcut_hc"
+        _hc_dir.mkdir(parents=True, exist_ok=True)
+        _hc_png = video_assemble.headcopy_layer_png(
+            _hc, _hc_dir / "headcopy.png", _hc_dir,
+            caption_style=_cap_style, deco=_deco)
+        _hc_span = video_assemble.headcopy_span(timeline)
+
     proj, project, files = capcut_draft.assemble_draft_folder(
         out_root, base, plan=plan, timeline=timeline, source_video_paths=source_video_paths,
         tts_paths=tts_paths, project_name=_capcut_project_name(job_id, job, plan),
         final_video=_final,
         caption_style=(_cap_style if _style_on else None),
-        deco=(_deco if _style_on else None))
+        deco=(_deco if _style_on else None),
+        headcopy_png=(_hc_png if _style_on else None),
+        headcopy_span=_hc_span,
+        sfx_events=_sfx_events, cutaway_paths=_cutaways)
     texts, assets = {}, []
     for name in files:
         if name.endswith(".json"):
@@ -6072,6 +6264,26 @@ def _thumb_dir(job_id: str):
     if not safe or safe != job_id or safe in (".", ".."):
         return None
     return _THUMB_DIR / safe
+
+
+def _with_pins(job_id, thumb, grid_frames):
+    """후보 목록 = **고정한 장면(핀) 먼저 + 자동 추출 프레임**.
+
+    ★핀을 thumb["frames"](자동 추출 결과)에 섞어 넣지 않는다 — frames는 재추출 때마다
+    통째로 갈아엎히는 서버 소유 목록이라, 거기 넣으면 [다른 장면 더 뽑기] 한 번에 사장님이
+    고른 장면이 조용히 사라진다. 별도 키(pins)에 두고 **응답을 만들 때만** 앞에 붙인다.
+    파일명도 pin_*.jpg라 grid_*.jpg만 지우는 고아 정리에 안 걸린다.
+    """
+    out = []
+    d = _thumb_dir(job_id)
+    for p in (thumb.get("pins") or []):
+        name = str(p.get("name") or "")
+        if not name or d is None or not (d / name).is_file():
+            continue                      # 파일이 사라진 핀은 조용히 건너뛴다(깨진 이미지 방지)
+        out.append({"url": f"/api/produce/thumb/file/{job_id}/{name}",
+                    "ts": p.get("ts") or 0, "pin": name,
+                    "label": p.get("label") or "장면"})
+    return out + list(grid_frames or [])
 
 
 def _grid_phase(round_no):
@@ -6149,6 +6361,15 @@ def api_thumb_frames(body: dict):
             video, bg_kind = cand, kind
             break
     if not video:
+        # ★영상이 아직 없어도 **보낸 장면(핀)은 보여준다**(2026-08-30 실측으로 발견).
+        #   핀은 비트 프레임에서 오므로 믹스 영상과 무관한데, 여기서 통째로 404를 내면
+        #   사장님이 6단계에서 보낸 장면이 7단계에서 통째로 사라져 보인다.
+        thumb0 = job.get("thumbnail") or {}
+        pinned = _with_pins(job_id, thumb0, [])
+        if pinned:
+            return {"ok": True, "frames": pinned, "stale_results": [],
+                    "bg": "", "subtitle_removal": bool(job.get("subtitle_removal")),
+                    "clean_status": job.get("clean_status") or ""}
         return JSONResponse(status_code=404, content={"ok": False, "error": "믹스 영상 없음"})
 
     out_dir = _thumb_dir(job_id)
@@ -6188,7 +6409,8 @@ def api_thumb_frames(body: dict):
     if not want_more and existing and thumb.get("video_sig") == video_sig:
         meta = thumb.get("frames") or []
         if len(meta) == len(existing):
-            return {"ok": True, "frames": meta, "stale_results": _stale_results(),
+            return {"ok": True, "frames": _with_pins(job_id, thumb, meta),
+                    "stale_results": _stale_results(),
                     "bg": bg_kind, "subtitle_removal": bool(job.get("subtitle_removal")),
                     "clean_status": job.get("clean_status") or ""}
 
@@ -6232,9 +6454,68 @@ def api_thumb_frames(body: dict):
     #   실측: clean_preview.mp4는 16:11에 생겼는데 제보 화면은 15:35였다 — 즉 **자막제거가
     #   끝나기 전에** 썸네일을 열어 preview로 조용히 폴백한 것이다. 배경 자체는 규칙대로
     #   골랐지만, 그 사실을 아무도 말해주지 않아 "지웠는데 왜 남아있지"가 된다.
-    return {"ok": True, "frames": frames, "stale_results": _stale_results(),
+    return {"ok": True, "frames": _with_pins(job_id, thumb, frames),
+            "stale_results": _stale_results(),
             "bg": bg_kind, "subtitle_removal": bool(job.get("subtitle_removal")),
             "clean_status": job.get("clean_status") or ""}
+
+
+@app.post("/api/produce/thumb/pin")
+def api_thumb_pin(body: dict):
+    """6단계 장면꾸미기에서 보고 있는 **그 장면을 썸네일 후보로 보낸다**(2026-08-30 사장님).
+
+    후보는 여태 자동 추출(등분)뿐이라, 사장님이 "이 장면으로 썸네일 하고 싶다"고 봐 둔
+    장면을 쓰려면 [다른 장면 더 뽑기]로 걸리기를 기다리는 수밖에 없었다.
+
+    body.remove=true + name → 보낸 것을 도로 뺀다(파일도 지운다 — 우리가 만든 파일이다).
+    """
+    job_id = str(body.get("job_id") or "")
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
+    out_dir = _thumb_dir(job_id)
+    if out_dir is None:
+        return JSONResponse(status_code=400, content={"ok": False, "error": "bad job_id"})
+    thumb = job.get("thumbnail") or {}
+    pins = list(thumb.get("pins") or [])
+
+    if body.get("remove"):
+        name = os.path.basename(str(body.get("name") or ""))
+        # 목록에 있는 이름만 지운다 — 임의 파일 삭제 통로가 되면 안 된다(thumb_*.png는 사장님 결과물).
+        if name not in [str(p.get("name") or "") for p in pins]:
+            return JSONResponse(status_code=400, content={"ok": False, "error": "없는 핀"})
+        (out_dir / name).unlink(missing_ok=True)
+        thumb["pins"] = [p for p in pins if str(p.get("name") or "") != name]
+        store.update_mix_job(job_id, thumbnail=thumb)
+        return {"ok": True, "removed": name, "pins": thumb["pins"]}
+
+    try:
+        i = int(body.get("beat_idx"))
+    except (TypeError, ValueError):
+        return JSONResponse(status_code=400, content={"ok": False, "error": "beat_idx 없음"})
+    src = _beatframe_file(job, job_id, i)      # ★미리보기와 같은 함수 = 같은 그림(0순위-B)
+    if src is None:
+        return JSONResponse(status_code=404,
+                            content={"ok": False, "error": "이 장면의 화면을 아직 못 떴어요"})
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    # 이름에 원본 캐시 파일명을 녹인다 — 같은 장면을 두 번 보내면 같은 파일로 덮어써
+    # 후보가 중복으로 쌓이지 않는다(편성이 바뀌면 캐시명이 달라져 새 핀이 된다).
+    stem = re.sub(r"[^0-9a-zA-Z.\-]", "_", src.stem)[:60]
+    name = f"pin_{stem}.jpg"
+    shutil.copyfile(str(src), str(out_dir / name))
+
+    beats = ((job.get("edit_plan") or {}).get("beats") or [])
+    label = f"장면 {i + 1}"
+    pins = [p for p in pins if str(p.get("name") or "") != name]
+    # 새로 보낸 것이 맨 앞 = 방금 한 일이 눈에 바로 보인다.
+    pins.insert(0, {"name": name, "beat_idx": i, "label": label,
+                    "ts": round(float((beats[i] or {}).get("start") or 0), 2)})
+    thumb["pins"] = pins
+    store.update_mix_job(job_id, thumbnail=thumb)
+    return {"ok": True, "name": name, "label": label, "pins": pins,
+            "url": f"/api/produce/thumb/file/{job_id}/{name}"}
 
 
 @app.get("/api/produce/thumb/file/{job_id}/{name}")
@@ -11760,6 +12041,37 @@ def api_font_favorites_set(request: Request, body: dict):
     return {"ok": True, "files": clean, "is_default": False}
 
 
+_MY_CHANNEL_KEY = "deco_my_channel"
+
+
+@app.get("/api/produce/frame/my_channel")
+def api_my_channel(request: Request):
+    """장면꾸미기 띠에 넣을 **내 채널명**(계정별로 기억한다).
+
+    ★없던 시절엔 틀을 고를 때마다 샘플값 '숏템메이커'가 다시 박혔다 —
+      produce.html frPick()이 그 작업(job) 안의 이전 값만 물려받아서,
+      새 작업을 시작하면 매번 되돌아갔다(2026-08-30 사장님 제보).
+      그래서 값의 주인을 계정 설정 한 곳으로 옮긴다(0순위-B)."""
+    saved = Store(DB_PATH).get_pref(_MY_CHANNEL_KEY, customer_id=_cid(request))
+    return {"ok": True, "channel": saved or "", "is_default": saved is None}
+
+
+@app.post("/api/produce/frame/my_channel")
+def api_my_channel_set(request: Request, body: dict):
+    """내 채널명 저장. body: {channel:"..."} — 빈 문자열이면 지운다(샘플값으로 복귀)."""
+    store = Store(DB_PATH)
+    cid = _cid(request)
+    name = (body.get("channel") or "").strip()
+    if len(name) > 40:
+        return JSONResponse(status_code=422,
+                            content={"ok": False, "error": "채널명은 40자까지"})
+    if not name:
+        store.clear_pref(_MY_CHANNEL_KEY, customer_id=cid)
+        return {"ok": True, "channel": "", "is_default": True}
+    store.set_pref(_MY_CHANNEL_KEY, name, customer_id=cid)
+    return {"ok": True, "channel": name, "is_default": False}
+
+
 @app.get("/api/produce/picks")
 def api_produce_picks(request: Request):
     """영상제작에 담긴 도서관 대본(전체 데이터). 우리믹스 탭 기본 목록."""
@@ -13912,6 +14224,42 @@ def api_produce_mix_scenezoom(job_id: str, body: dict):
     return {"ok": True, "zoom": z, "pan_x": px, "pan_y": py}
 
 
+@app.post("/api/produce/mix/{job_id}/scenehl")
+def api_produce_mix_scenehl(job_id: str, body: dict):
+    """🔎 장면 하나의 **강조**(원형 돋보기 / 스포트라이트) — 2026-08-30 사장님
+    "장면꾸미기에서 강조하고싶은것들 수동하게".
+
+    body: {beat_idx, on, mode:'zoom'|'spot', cx, cy, r, zoom}
+      cx/cy = 화면 폭·높이 대비 원 중심(0~1), r = 화면 **폭** 대비 반지름(0~1)
+      on=false면 강조를 지운다.
+
+    ★확대(scenezoom)와 다른 물건이다 — 확대는 화면 구도를 바꾸고, 강조는 구도를 그대로
+      둔 채 위에 원을 얹는다. 그래서 두 개를 같이 걸 수 있다.
+    ★값 해석·보정은 video_assemble.scene_hl_of 한 곳뿐(0순위-B). 여기선 뜻만 저장한다.
+    ★음성·타이밍·자막을 안 건드린다 → 즉시·무료(scenezoom과 같다)."""
+    store = Store(DB_PATH)
+    plan, hit, err = _mix_job_beat_or_error(job_id, body, store)
+    if err:
+        return err
+    if not body.get("on"):
+        hit.pop("scene_hl", None)
+    else:
+        def _f(key, dflt):
+            try:
+                return float(body.get(key))
+            except (TypeError, ValueError):
+                return dflt
+        hit["scene_hl"] = {
+            "on": True,
+            "mode": "spot" if str(body.get("mode") or "zoom") == "spot" else "zoom",
+            "shape": "round" if str(body.get("shape") or "circle") == "round" else "circle",
+            "cx": round(_f("cx", 0.5), 5), "cy": round(_f("cy", 0.5), 5),
+            "r": round(_f("r", 0.28), 5), "zoom": round(_f("zoom", 2.0), 4),
+        }
+    store.update_mix_job(job_id, edit_plan=plan)
+    return {"ok": True, "hl": video_assemble.scene_hl_of(hit)}
+
+
 @app.post("/api/produce/mix/{job_id}/caplines")
 def api_produce_mix_caplines(job_id: str, body: dict):
     """장면 하나의 자막 줄 나누기(2026-08-25). body: {beat_idx, lines: [str, ...]}
@@ -14249,17 +14597,23 @@ def api_produce_mix_beats_preview(job_id: str):
             # ★장면별 화면 확대 구도(2026-08-30). 해석·보정은 scene_zoom_of 한 곳에서만 —
             #   화면이 스스로 가두면 렌더와 두 벌이 된다(0순위-B, cap_pos와 같은 방식).
             "zoom": _z_of(b)[0], "pan_x": _z_of(b)[1], "pan_y": _z_of(b)[2],
+            # 🔎 장면별 강조(원형 돋보기/스포트라이트, 2026-08-30). 같은 이유로 서버가 준다.
+            "hl": video_assemble.scene_hl_of(b),
         })
     return {"beats": out}
 
 
-@app.get("/api/produce/mix/beatframe/{job_id}/{i}")
-def api_produce_mix_beatframe(job_id: str, i: int):
-    """i번째 비트의 영상 프레임 1장(캐시). 없으면 404 → 프론트는 흰 배경 폴백."""
-    job = Store(DB_PATH).get_mix_job(job_id)
+def _beatframe_file(job, job_id: str, i: int):
+    """i번째 비트의 정지 프레임 파일(없으면 뜬다). 못 만들면 None.
+
+    ★이 판단은 **여기 한 곳에만** 있다(0순위-B). 미리보기(api_produce_mix_beatframe)와
+    '썸네일로 보내기'(api_thumb_pin)가 같은 함수를 부르므로, 어느 소스(청소본/원본)에서
+    어느 시각을 뜨는지가 두 벌로 갈릴 수 없다 — 갈리면 화면에 보이는 장면과 썸네일로
+    간 장면이 조용히 달라진다.
+    """
     beats = ((job or {}).get("edit_plan") or {}).get("beats") or []
     if i < 0 or i >= len(beats):
-        return JSONResponse(status_code=404, content={"ok": False})
+        return None
     work = _MIX_WORK_DIR / job_id
     # 2단계 자막제거를 밟았으면(clean_sources 존재) 청소본에서 프레임을 뜬다. 캐시 파일명도
     # 분리(_clean)해, 자막제거 전에 캐시된 원본 프레임이 남아 미리보기에 지운 자막이 살아
@@ -14274,7 +14628,15 @@ def api_produce_mix_beatframe(job_id: str, i: int):
     if not out.exists():
         _extract_beat_frame(work, beats[i], out, clean_sources=clean_map,
                             clean_final=_cfin, final_ratio=_crat)
-    if not out.exists():
+    return out if out.exists() else None
+
+
+@app.get("/api/produce/mix/beatframe/{job_id}/{i}")
+def api_produce_mix_beatframe(job_id: str, i: int):
+    """i번째 비트의 영상 프레임 1장(캐시). 없으면 404 → 프론트는 흰 배경 폴백."""
+    job = Store(DB_PATH).get_mix_job(job_id)
+    out = _beatframe_file(job, job_id, i)
+    if out is None:
         return JSONResponse(status_code=404, content={"ok": False})
     return FileResponse(str(out), media_type="image/jpeg")
 

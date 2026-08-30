@@ -84,7 +84,11 @@ function rebuildForm() {
 
   form.addTextItem()
       .setTitle('휴대폰 번호')
+<<<<<<< HEAD
       .setHelpText('예) 010-1234-5678')
+=======
+      .setHelpText('예) 010-1234-5678 — 개별 안내가 이 번호로 갑니다')
+>>>>>>> e57739ce0fde1bb40ce55fc73cb617ed627e5efd
       .setRequired(true);
 
   var email = form.addTextItem()

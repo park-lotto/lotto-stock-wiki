@@ -62,6 +62,7 @@ def _call(key: str, query: str, variables: dict | None = None) -> dict:
     # GraphQL은 HTTP 200으로도 오류를 준다 — errors를 반드시 본다.
     errs = out.get("errors") or []
     if errs:
+        log.warning("buffer GraphQL errors 원문: %s", json.dumps(errs, ensure_ascii=False)[:1500])
         msg = (errs[0] or {}).get("message") or "알 수 없는 오류"
         raise BufferError(f"Buffer: {msg}")
     return out.get("data") or {}
@@ -203,6 +204,12 @@ def schedule_video(key: str, channel_id: str, text: str, video_url: str,
     d = _call(key, _CREATE, {"input": inp})
     res = d.get("createPost") or {}
     if res.get("message"):                      # MutationError 쪽으로 왔다
+        # ★거절될 때만 보낸 것을 남긴다(2026-08-30). 성공까지 남기면 고객 글이 매번
+        #   로그에 쌓인다. 키는 어차피 inp에 없다(헤더로만 간다).
+        #   ⚠️"Video could not be read from its URL"은 주소를 못 읽을 때뿐 아니라
+        #     **규격 미달**(예: 9:16이 아닌 영상)에도 같은 문구로 온다 — 실측 2026-08-30.
+        log.warning("buffer createPost 거절: %s / 보낸것: %s",
+                    res["message"], json.dumps(inp, ensure_ascii=False)[:800])
         raise BufferError(f"Buffer: {res['message']}")
     post = res.get("post") or {}
     if not post.get("id"):

@@ -1624,6 +1624,25 @@ def _apply_motion_pack(deco, caption_style, timeline, packs):
     return deco, caption_style
 
 
+
+def resolve_deco_media(deco, work):
+    """deco의 BGM·오버레이 파일(업로드 시 work/{file}에 저장) → 절대경로(_abspath)를 심어 돌려준다.
+
+    ★렌더와 캡컷 내보내기가 **같은 함수**를 쓴다(0순위-B) — 두 곳에 따로 적으면
+      "완성본엔 음악이 있는데 캡컷엔 없다"처럼 조용히 갈린다.
+    원본 dict는 건드리지 않는다(얕은 복사본 반환).
+    """
+    deco = dict(deco or {})
+    work = Path(work)
+    for key in ("bgm", "overlay"):
+        item = deco.get(key) or {}
+        if item.get("file"):
+            p = work / item["file"]
+            if p.exists():
+                deco[key] = {**item, "_abspath": str(p)}
+    return deco
+
+
 def _template_layer(tpl, first_beat_dur=0):
     """꾸미기 템플릿 → 렌더가 쓸 레이어 dict. 없거나 모르는 id면 None.
 
@@ -2740,6 +2759,66 @@ def _thumb_intro_png(job, thumb):
     return last if last.exists() else None
 
 
+def is_faststart(path) -> bool:
+    """mp4의 moov가 앞쪽(mdat보다 먼저)인지. 아니면 앞부분만 읽는 수집기가 못 읽는다."""
+    try:
+        with open(path, "rb") as f:
+            head = f.read(64)
+    except Exception:
+        return True                     # 못 읽으면 건드리지 않는다
+    i = 0
+    while i < len(head) - 8:
+        sz = int.from_bytes(head[i:i+4], "big")
+        typ = head[i+4:i+8]
+        if typ == b"moov":
+            return True
+        if typ == b"mdat":
+            return False                # mdat이 먼저 = moov는 뒤에 있다
+        if sz < 8:
+            break
+        i += sz
+    return False                        # 64바이트 안에 moov가 없다 = 뒤에 있다
+
+
+def ensure_faststart(path):
+    """moov가 뒤에 있으면 앞으로 옮긴다. 이미 앞이면 아무것도 안 한다.
+
+    ★렌더 때뿐 아니라 **바깥으로 주소를 내줄 때**도 부른다 — 옛 영상은 렌더를 다시
+      돌리지 않는 한 moov가 뒤에 남아 있어서, 렌더에만 걸면 옛 작업이 계속 거절된다
+      (Buffer 실측 2026-08-30: 옛 완성본 2건 모두 거절, moov를 앞으로 옮기면 통과).
+    """
+    if not is_faststart(path):
+        _faststart(path)
+
+
+def _faststart(path):
+    """mp4의 moov 원자를 파일 앞으로 옮긴다(-c copy 리멕스). 실패해도 원본을 지키고 넘어간다.
+
+    왜: 스트리밍 수집기(Buffer→인스타 등)는 앞부분만 읽어 영상을 판정한다. moov가 끝에
+    있으면 "읽을 수 없다"고 거절한다. 이미 앞에 있으면 그대로 복사할 뿐이라 무해하다.
+    """
+    p = Path(path)
+    if not p.exists():
+        return
+    tmp = p.with_suffix(".fs.mp4")
+    try:
+        r = subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", str(p),
+                            "-c", "copy", "-movflags", "+faststart", str(tmp)],
+                           capture_output=True, text=True)
+        if r.returncode == 0 and tmp.exists() and tmp.stat().st_size > 0:
+            os.replace(str(tmp), str(p))
+        else:
+            print(f"[faststart] 실패(원본 유지): {(r.stderr or '')[:300]}", file=sys.stderr)
+    except Exception:
+        traceback.print_exc(file=sys.stderr)
+    finally:
+        try:
+            if tmp.exists():
+                tmp.unlink()
+        except Exception:
+            pass
+
+
 @_owned_job
 def run_render(job_id, db_path, work_root):
     """확인된 EDL을 최종 mp4로 렌더. subtitle_removal이 켜져 있으면 믹스 후
@@ -2786,18 +2865,8 @@ def run_render(job_id, db_path, work_root):
                 source_video_paths = {vid: clean_map.get(vid, p)
                                       for vid, p in source_video_paths.items()}
 
-        # deco의 BGM 파일(업로드 시 work/{file}에 저장)을 절대경로로 해석해 넘긴다.
-        deco = job.get("deco") or {}
-        bgm = deco.get("bgm") or {}
-        if bgm.get("file"):
-            bp = work / bgm["file"]
-            if bp.exists():
-                deco = {**deco, "bgm": {**bgm, "_abspath": str(bp)}}
-        ov = deco.get("overlay") or {}
-        if ov.get("file"):
-            op = work / ov["file"]
-            if op.exists():
-                deco = {**deco, "overlay": {**ov, "_abspath": str(op)}}
+        # deco의 BGM·오버레이 파일을 절대경로로 해석해 넘긴다(캡컷 내보내기와 같은 함수).
+        deco = resolve_deco_media(job.get("deco") or {}, work)
         # 템플릿은 job 폴더가 아니라 **정적 자산**이다(모두가 같은 12장을 쓴다).
         # span→dur 변환은 _template_layer 한 곳에서만 한다.
         _first = 0
@@ -2842,6 +2911,12 @@ def run_render(job_id, db_path, work_root):
                     print(f"[thumb-intro] {job_id}: 붙일 썸네일 PNG를 못 찾음", file=sys.stderr)
             except Exception:
                 traceback.print_exc(file=sys.stderr)
+        # ★moov 앞으로(faststart). 안 하면 moov가 파일 끝에 남아, 헤더만 읽어 판단하는
+        #   외부 수집기가 영상을 못 읽는다 — Buffer 실측 2026-08-30:
+        #   "Invalid post: Video could not be read from its URL"(HEAD 200인데 거절).
+        #   재인코딩이 아니라 -c copy 리멕스라 화질 손실도 시간도 거의 없다.
+        #   ★여기 한 곳에서만 한다 — 완성본 경로를 DB에 박는 유일한 출구다(0순위-B).
+        ensure_faststart(out_path)
         store.update_mix_job(job_id, status="done", video_path=str(out_path))
     except Exception as e:
         traceback.print_exc(file=sys.stderr)

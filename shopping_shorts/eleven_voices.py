@@ -199,7 +199,7 @@ _ADD_ENDPOINT = "https://api.elevenlabs.io/v1/voices/add/{owner}/{vid}"
 
 
 def search_shared(customer_id=0, query="", language=None, gender=None,
-                  category=None, page_size=24, page=0):
+                  category=None, page_size=24, page=0, sort=None):
     """공개 음성 라이브러리 검색 → {"ok","voices","has_more","error"}.
 
     voices 항목: voice_id·public_owner_id(담을 때 필요)·name·description·
@@ -222,6 +222,11 @@ def search_shared(customer_id=0, query="", language=None, gender=None,
         params["gender"] = gender
     if category:
         params["category"] = category
+    # ★인기순 정렬(2026-08-30 사장님 "거기서 추천하는 것들"). 일레븐랩스가 실제로 받는
+    #   값만 허용한다 — 실측: trending·cloned_by_count는 200, usage_character_count_7d나
+    #   most_users_chosen은 400을 뱉는다. 모르는 값을 그대로 넘기면 검색이 통째로 죽는다.
+    if sort in ("trending", "cloned_by_count"):
+        params["sort"] = sort
     try:
         r = requests.get(_SHARED_ENDPOINT, headers={"xi-api-key": api_key},
                          params=params, timeout=_TIMEOUT)
@@ -253,6 +258,9 @@ def search_shared(customer_id=0, query="", language=None, gender=None,
             "use_case": (v.get("labels") or {}).get("use_case") or v.get("use_case") or "",
             "category": v.get("category") or "",
             "free": bool(v.get("free_users_allowed", True)),
+            # 인기 지표 — 화면에 "N명이 담아감"으로 띄운다. featured는 일레븐랩스 공식 추천.
+            "cloned_by_count": int(v.get("cloned_by_count") or 0),
+            "featured": bool(v.get("featured")),
         })
     return {"ok": True, "voices": out,
             "has_more": len(out) >= params["page_size"], "error": None}
