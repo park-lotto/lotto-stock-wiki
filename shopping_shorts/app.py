@@ -5817,7 +5817,8 @@ def api_buffer_channels(request: Request):
 async def api_buffer_schedule(request: Request):
     """완성 영상을 Buffer에 예약한다.
 
-    body: {job_id, channel_ids[], texts{채널id:글}, due_at?(ISO8601 UTC), thumb_ms?}
+    body: {job_id, channel_ids[], texts{채널id:글}, due_at?(ISO8601 UTC), thumb_ms?,
+           share_now?(지금 바로 게시), privacy?(유튜브 공개범위)}
 
     ★글은 **채널마다 다르다**(2026-08-29 사장님). 인스타는 해시태그를 많이 달고
       쓰레드는 거의 안 단다 — 8단계가 이미 플랫폼별로 만들어 두므로 하나로 뭉개면
@@ -5845,6 +5846,10 @@ async def api_buffer_schedule(request: Request):
     text = str(body.get("text") or "")          # 옛 호출 호환(모든 채널에 같은 글)
     due_at = str(body.get("due_at") or "").strip() or None
     thumb_ms = int(body.get("thumb_ms") or 0)
+    # ★"지금 바로 올리기"(ShareMode shareNow). 예약이 아니라 **즉시 게시**라
+    #   되돌릴 수 없다 — 화면이 한 번 더 물어본 뒤에만 이 값이 온다.
+    share_now = bool(body.get("share_now"))
+    privacy = str(body.get("privacy") or "").strip()   # 유튜브 전용(public|unlisted|private)
     if not job_id or not chans:
         return JSONResponse(status_code=400,
                             content={"ok": False, "error": "job_id와 채널을 골라 주세요."})
@@ -5865,7 +5870,8 @@ async def api_buffer_schedule(request: Request):
     for cid_ in chans:
         try:
             t = str(texts.get(cid_) or text or "")
-            r = buffer_api.schedule_video(key, cid_, t, video_url, due_at, thumb_ms)
+            r = buffer_api.schedule_video(key, cid_, t, video_url, due_at, thumb_ms,
+                                          share_now=share_now, privacy=privacy)
             out.append({"channel_id": cid_, "ok": True, "post_id": r["id"], "due_at": r["dueAt"]})
         except buffer_api.BufferError as e:
             out.append({"channel_id": cid_, "ok": False, "error": str(e)})
