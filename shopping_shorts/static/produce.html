@@ -2606,6 +2606,15 @@
                       style="display:none" title="원래 크기로 (Alt+Shift+Z)">↩ 원래대로</button>
             </div>
             <div class="zoomSay" id="zoomHint">크게 볼 곳을 <b>누르세요</b></div>
+            <!-- 🖱 눌러서 확대 — **기본 꺼짐**(2026-08-30 사장님 "장면확대는 계속 켜져있어서
+                 가림막이든 다른걸 할때 장면 클릭하면 확대가 계속됨").
+                 종전엔 미리보기를 누르기만 하면 늘 한 단계씩 확대돼, 가림막·강조·글자를
+                 만지려고 화면을 누를 때마다 배율이 따라 올라갔다. 확대는 슬라이더·＋－로
+                 언제든 되므로, **클릭 확대는 쓰고 싶을 때만 켠다.** -->
+            <label class="zoomAll" id="zoomClickWrap" style="display:flex;align-items:center;gap:6px;margin:2px 0 4px">
+              <input type="checkbox" id="zoomClick" onchange="zoomClickChanged()">
+              <span>🖱 화면을 눌러서 확대</span>
+            </label>
             <!-- ★모든 장면에 같은 배율 (2026-08-30 사장님 "해당 장면을 확대했으면 다른
                  전체 장면도 같은 비율로 적용할지 말지 체크버튼"). 기본 켬 — 장면을 넘겨도
                  배율이 유지되는 게 지금까지의 동작이고, 대개 그걸 원한다. 끄면 장면을
@@ -6719,6 +6728,14 @@ function alignCap(where){
 //   비율(%) 계산은 확대 상태에서도 그대로 맞는다. 드래그 코드는 한 줄도 안 고쳤다.
 // 상태: ZOOM=배율, ZTX/ZTY=옮긴 거리(px, 확대된 좌표계 기준)
 let ZOOM=1, ZTX=0, ZTY=0;
+// 🖱 화면을 눌러서 확대 — 기본 꺼짐. 켜면 누른 지점이 가운데로 오며 한 단계 확대된다.
+// 기본을 켬으로 두니 가림막·강조·글자를 만지려는 클릭까지 전부 확대로 먹혔다(사장님 제보).
+let ZOOM_CLICK=false;
+function zoomClickChanged(){
+  const c=document.getElementById('zoomClick');
+  ZOOM_CLICK = !!(c && c.checked);
+  if(typeof _zoomApply==='function') _zoomApply();   // 안내문이 여기서 갱신된다
+}
 const ZOOM_MIN=1, ZOOM_MAX=3, ZOOM_STEP=0.5;
 
 function _zoomEls(){
@@ -6770,7 +6787,9 @@ function _zoomApply(){
   // ★한 줄로 끝낸다(2026-08-30). 문장이 길면 안 읽힌다 — 지금 할 수 있는 동작 하나만 말한다.
   if(ht) ht.innerHTML = !bgOn
     ? '먼저 위 <b>실장면 배경</b>을 켜세요'
-    : (on ? '✋ <b>끌어서</b> 안 보이는 곳 보기' : '크게 볼 곳을 <b>누르세요</b>');
+    : (on ? '✋ <b>끌어서</b> 안 보이는 곳 보기'
+          : (ZOOM_CLICK ? '크게 볼 곳을 <b>누르세요</b>'
+                        : '아래 <b>＋</b>나 막대로 크기를 조절하세요'));
 }
 // 배율을 바꿔도 **화면 가운데에 있던 것이 그대로 가운데** 남도록 이동거리를 환산한다.
 // (그냥 두면 배율이 바뀔 때 보던 자리가 튄다 — 확대 좌표계라 t의 의미가 배율마다 다르다)
@@ -7163,6 +7182,9 @@ function bindZoom(){
       if(moved){ _zoomSaveSoon(); return; }    // 끌었으면 확대는 안 한다(자리는 저장)
     }
     if(_zoomOnText(e.target)) return;
+    // 🖱 클릭 확대는 **켰을 때만**(2026-08-30 사장님 "가림막이든 다른걸 할때 장면 클릭하면
+    //   확대가 계속됨"). 끌기(패닝)는 위에서 이미 처리했으므로 여기서만 막으면 된다.
+    if(!ZOOM_CLICK) return;
     // ★누른 그 지점을 화면 가운데로 가져오면서 한 단계 확대한다.
     //   (origin 방식과 달리 translate는 "누른 곳을 중앙으로"가 자연스럽다)
     const r=st.getBoundingClientRect(); if(!r.width||!r.height) return;
