@@ -1633,7 +1633,12 @@ function _rollCaps(vid){
     const v = DATA.segments[k];
     if (v.video_id !== vid) continue;
     const t = (v.text || '').trim();
-    if (t) out.push([+v.start, t.slice(0, 40)]);
+    // ★끝 시각을 **같이** 넘긴다(2026-08-29 사장님 "장면 자막이 안 맞음").
+    //   종전엔 [start, text]만 줘서 filmroll이 끝을 '다음 자막 시작'으로 지어냈고,
+    //   말과 말 사이 공백이 통째로 앞 자막에 먹혔다(실측: 0.0~1.2초 자막이 0.0~3.5초로
+    //   2.3초 더 길게 그려짐 — 화면의 "2.3초는 안 나와요"가 바로 그 공백이다).
+    //   진실은 세그의 end다. 지어내지 말고 있는 값을 쓴다.
+    if (t) out.push([+v.start, t.slice(0, 40), +v.end]);
   }
   return out.sort((a,b) => a[0] - b[0]);
 }
