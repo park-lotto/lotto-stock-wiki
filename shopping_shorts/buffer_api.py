@@ -62,6 +62,7 @@ def _call(key: str, query: str, variables: dict | None = None) -> dict:
     # GraphQL은 HTTP 200으로도 오류를 준다 — errors를 반드시 본다.
     errs = out.get("errors") or []
     if errs:
+        log.warning("buffer GraphQL errors 원문: %s", json.dumps(errs, ensure_ascii=False)[:1500])
         msg = (errs[0] or {}).get("message") or "알 수 없는 오류"
         raise BufferError(f"Buffer: {msg}")
     return out.get("data") or {}
@@ -200,7 +201,11 @@ def schedule_video(key: str, channel_id: str, text: str, video_url: str,
     else:
         inp["mode"] = "addToQueue"
 
+    # ★거절 원인을 눈으로 보려고 보낸 것을 그대로 남긴다(2026-08-30 조사).
+    #   키는 절대 안 남긴다 — inp에는 키가 없다(헤더로만 간다).
+    log.warning("buffer createPost 보냄: %s", json.dumps(inp, ensure_ascii=False)[:1200])
     d = _call(key, _CREATE, {"input": inp})
+    log.warning("buffer createPost 받음: %s", json.dumps(d, ensure_ascii=False)[:1200])
     res = d.get("createPost") or {}
     if res.get("message"):                      # MutationError 쪽으로 왔다
         raise BufferError(f"Buffer: {res['message']}")
