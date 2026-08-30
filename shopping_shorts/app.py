@@ -6419,6 +6419,39 @@ _IG_OEMBED_APP_ID = "936619743392459"
 _YT_THUMB_NAMES = ("maxresdefault.jpg", "sddefault.jpg", "hqdefault.jpg", "mqdefault.jpg")
 
 
+# 카드에 실제로 그려지는 규격. `.card img`가 aspect-ratio:9/16으로 그리므로
+# 원본이 1280×720이든 480×360이든 **화면 크기는 같다** — 큰 파일은 그대로 낭비다.
+_YT_CARD_THUMB = "hqdefault.jpg"
+# 카드에 과한(= 낮춰도 화면이 같은) 규격들. 이보다 작은 건 건드리지 않는다.
+_YT_THUMB_TOO_BIG = ("oardefault.jpg", "maxresdefault.jpg", "sddefault.jpg")
+
+
+def _yt_thumb_downscale(url):
+    """유튜브 썸네일 URL → 카드 크기에 맞는 가벼운 규격으로. 유튜브가 아니면 그대로.
+
+    ★왜(2026-08-30 사장님 "카테고리 탭 들어가면 썸네일 로딩이 엄청 오래 걸린다"):
+      수집된 유튜브 8,000건이 **전량 oardefault**(1280×720)였다. 같은 영상 실측 —
+        oardefault 168,835B / sddefault 52,222B / hqdefault 12,643B / mqdefault 6,517B
+      카드 한 화면이 200장이니 32.2MB를 받는다. hqdefault면 2.5MB(13배).
+      브라우저는 호스트당 6개만 병렬로 받으므로 33겹 대기줄이 생겨 검게 남았다.
+
+    ★덤: oardefault는 '있을 수도 없을 수도 한 변형'이라 **7.5%가 404**였다
+      (_yt_thumb_alternates 주석의 실측). hqdefault는 사실상 항상 있다 —
+      속도만이 아니라 검은 카드도 같이 준다.
+
+    ★영상ID는 절대 보존한다 — 바뀌면 카드↔영상이 어긋난다.
+    ★여기(프록시) 한 곳에서만 정한다(0순위-B). 프론트 thumbURL에서 바꾸면
+      도서관·트렌드·히트작 등 호출부마다 제각각 남는다.
+    """
+    if not url or "ytimg.com" not in url:
+        return url                      # 인스타·틱톡·핀터레스트는 그대로(회귀 0)
+    base, sep_q, query = url.partition("?")
+    head, sep, name = base.rpartition("/")
+    if not sep or "/vi/" not in base or name not in _YT_THUMB_TOO_BIG:
+        return url                      # 모르는 모양·이미 작은 규격은 손대지 않는다
+    return "%s/%s%s%s" % (head, _YT_CARD_THUMB, sep_q, query)
+
+
 def _yt_thumb_alternates(url):
     """유튜브 썸네일 URL → 같은 영상의 **다른 규격** 후보들. 유튜브가 아니면 [].
 
@@ -6493,6 +6526,10 @@ def api_thumb(url: str, v: str | None = None, shortcode: str | None = None):
     from fastapi.responses import Response
     if _reject_cdn_proxy(url, _ALLOWED_THUMB_HOSTS):
         return Response(status_code=400, content=b"invalid host")
+    # ★카드 크기에 맞는 가벼운 규격으로 낮춘다(2026-08-30). 화이트리스트 검사를 **통과한
+    #   뒤에** 바꾼다 — 순서가 바뀌면 검사 대상이 원본이 아니게 된다. 영상ID는 보존되므로
+    #   호스트도 그대로다. 캐시 키도 이 주소로 잡혀 큰 파일을 아예 안 받는다.
+    url = _yt_thumb_downscale(url)
     cache = _thumb_cache_path(url)
     if cache is not None and cache.exists():
         return Response(content=cache.read_bytes(), media_type="image/jpeg",
