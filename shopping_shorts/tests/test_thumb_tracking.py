@@ -169,8 +169,10 @@ class Test화면배선:
         i = self.SRC.index("const tx = ls / 2;")
         j = self.SRC.index("_fxUnderline(ctx, line, y, size, L.fx, _fill, ls)", i)
         block = self.SRC[i:j]
-        assert "ctx.fillText(line, tx, y)" in block, "채우기가 보정을 안 쓴다"
-        assert "ctx.strokeText(line, tx, y)" in block, "외곽선이 보정을 안 쓴다"
+        # 🖍 글자별 색(2026-08-30) 이후 채우기는 runs를 돈다 — 강조가 없으면
+        # runs=[{x:tx}]라 결국 같은 x다. 지키려는 계약은 그대로다.
+        assert "runs = [{text: line, x: tx, color: _fill}]" in block, "채우기가 보정을 안 쓴다"
+        assert "runs.forEach(r => ctx.strokeText(r.text, r.x, y))" in block, "외곽선이 보정을 안 쓴다"
         assert "ctx.measureText(line).width - ls" in block, "배경 박스 폭에서 자간 한 칸을 안 뺐다"
 
     def test_글자_레이어도_손잡이를_받는다(self):

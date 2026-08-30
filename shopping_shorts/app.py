@@ -24,6 +24,7 @@ import requests
 from fastapi import BackgroundTasks, FastAPI, Request, UploadFile, File, Form
 from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse, FileResponse, Response, StreamingResponse
 from fastapi.middleware.gzip import GZipMiddleware
+from starlette.concurrency import run_in_threadpool
 from fastapi.staticfiles import StaticFiles
 from shopping_shorts import service
 from shopping_shorts.service import collect, census, generate_missing_drafts, next_draft_targets, youtube_channel_board
@@ -5168,9 +5169,31 @@ def api_mix_caption_offset(job_id: str, beat_idx: int, body: dict):
     return {"ok": True, "offset": offset}
 
 
+# ── 타입캐스트 성우 찾기 (2026-08-30 사장님 "타입캐스트도 하고 검색이 용이하게") ────
+# ★일레븐랩스와 다른 점: 담기가 없다. 타입캐스트 성우는 계정에 담는 개념이 아니라
+#   서버 키로 곧장 부르는 공용 목록이라(실측 1125명), 고른 즉시 쓸 수 있다.
+# ★인기순이 없다 — API가 주는 건 voice_id·이름·모델·감정·타입뿐이다(실측). 그래서
+#   정렬 대신 검색만 준다. 없는 지표를 지어내지 않는다.
+@app.get("/api/typecast/voices")
+def api_typecast_voices(request: Request, q: str = "", limit: int = 60):
+    from shopping_shorts import typecast_tts
+    d = typecast_tts.list_voices()
+    if not d.get("ok"):
+        return {"ok": False, "voices": [], "error": d.get("error") or "성우 목록을 못 불러왔습니다"}
+    key = (q or "").strip().lower()
+    out = []
+    for v in d.get("voices") or []:
+        if key and key not in str(v.get("name", "")).lower():
+            continue
+        out.append(v)
+        if len(out) >= max(1, min(int(limit or 60), 200)):
+            break
+    return {"ok": True, "voices": out, "total": len(d.get("voices") or []), "error": None}
+
+
 @app.get("/api/voice-library/search")
 def api_voice_library_search(request: Request, q: str = "", language: str = "",
-                             gender: str = "", page: int = 0):
+                             gender: str = "", page: int = 0, sort: str = ""):
     """일레븐랩스 **공개 음성 라이브러리** 검색(2026-08-24 사장님: "사용자들이 목소리 검색 가능하게").
 
     ★본인 키가 있어야 한다. 담기는 각자 계정에 되므로, 키 없이 담으면 합성 때
@@ -5178,12 +5201,16 @@ def api_voice_library_search(request: Request, q: str = "", language: str = "",
     """
     cid = getattr(request.state, "customer_id", 0) or 0
     from shopping_shorts import eleven_voices, keyroute
-    keys, _src = keyroute.keys_for(Store(DB_PATH), cid, keyroute.SVC_ELEVENLABS)
-    if not keys or _src != "customer":
+    # ★두 번째 반환값은 **참/거짓**이다(keyroute.keys_for → is_user). 여기서 문자열
+    #   "customer"와 비교하고 있었다 — True != "customer"는 언제나 참이라, 키를 등록한
+    #   사람도 전부 need_key로 막혔다(사장님 실측 2026-08-30: 본인 키가 있는데도 안 됨).
+    keys, is_user = keyroute.keys_for(Store(DB_PATH), cid, keyroute.SVC_ELEVENLABS)
+    if not keys or not is_user:
         return {"ok": False, "voices": [], "need_key": True,
                 "error": "내 일레븐랩스 키를 등록하면 원하는 목소리를 직접 찾아 쓸 수 있어요."}
     return eleven_voices.search_shared(customer_id=cid, query=q, language=(language or None),
-                                       gender=(gender or None), page=page)
+                                       gender=(gender or None), page=page,
+                                       sort=(sort or None))
 
 
 @app.post("/api/voice-library/add")
@@ -5196,8 +5223,11 @@ async def api_voice_library_add(request: Request):
     """
     cid = getattr(request.state, "customer_id", 0) or 0
     from shopping_shorts import eleven_voices, keyroute
-    keys, _src = keyroute.keys_for(Store(DB_PATH), cid, keyroute.SVC_ELEVENLABS)
-    if not keys or _src != "customer":
+    # ★두 번째 반환값은 **참/거짓**이다(keyroute.keys_for → is_user). 여기서 문자열
+    #   "customer"와 비교하고 있었다 — True != "customer"는 언제나 참이라, 키를 등록한
+    #   사람도 전부 need_key로 막혔다(사장님 실측 2026-08-30: 본인 키가 있는데도 안 됨).
+    keys, is_user = keyroute.keys_for(Store(DB_PATH), cid, keyroute.SVC_ELEVENLABS)
+    if not keys or not is_user:
         return JSONResponse({"ok": False, "need_key": True,
                              "error": "내 일레븐랩스 키를 먼저 등록해주세요."}, status_code=400)
     body = await request.json()
@@ -5220,6 +5250,54 @@ async def api_voice_library_add(request: Request):
     return {"ok": True, "already": added.get("already", False),
             "group_id": res["group_id"], "count": res["count"],
             "sample_failed": res.get("sample_failed") or []}
+
+
+@app.post("/api/typecast/voices/adopt")
+async def api_typecast_adopt(request: Request):
+    """고른 타입캐스트 성우를 **성우 카드**로 등록한다(2026-08-30).
+
+    ★일레븐랩스의 '담기'와 다르다: 타입캐스트는 계정에 담는 절차가 없다(서버 키로 곧장
+      부른다). 여기서 하는 일은 DB에 프리셋 행을 만들어 두 열 카드에 나오게 하는 것뿐이다.
+    ★샘플을 굽지 않는다 — 실TTS 1회는 크레딧을 쓴다. 카드의 ▶는 샘플이 없으면 꺼진 채로
+      두고, 고른 뒤 '미리듣기'로 들으면 된다.
+    ★소유자(owner_customer_id)를 본인으로 박는다 — 남이 담은 성우가 내 카드에 섞이면
+      누가 담았는지 알 수 없다(일레븐 담기와 같은 규칙).
+    """
+    from shopping_shorts import typecast_tts
+    cid = getattr(request.state, "customer_id", 0) or 0
+    body = await request.json()
+    vid = ((body or {}).get("voice_id") or "").strip()
+    name = ((body or {}).get("name") or "").strip()[:40]
+    model = ((body or {}).get("model") or "ssfm-v30").strip()
+    if not vid or not name:
+        return JSONResponse({"ok": False, "error": "성우 정보가 모자랍니다."}, status_code=400)
+    if not typecast_tts.is_typecast(model):
+        return JSONResponse({"ok": False, "error": f"타입캐스트 모델이 아닙니다({model})."},
+                            status_code=400)
+    # 실제로 있는 성우인지 목록에서 확인한다 — 화면이 보낸 값을 그대로 믿지 않는다.
+    listed = typecast_tts.list_voices()
+    if not listed.get("ok"):
+        return JSONResponse({"ok": False, "error": listed.get("error") or "성우 목록 조회 실패"},
+                            status_code=502)
+    if not any(v.get("voice_id") == vid for v in listed.get("voices") or []):
+        return JSONResponse({"ok": False, "error": "그 성우를 타입캐스트에서 찾지 못했습니다."},
+                            status_code=404)
+    gid = "tcv-" + re.sub(r"[^a-zA-Z0-9]", "", vid)[-16:]
+    store = Store(DB_PATH)
+    # 톤 3종 — 기존 타입캐스트 프리셋(assets/voice_presets.json)과 **같은 모양**으로 만든다.
+    tones = [("stable", "normal", 1.0), ("natural", "tonedown", 1.0), ("expressive", "toneup", 1.2)]
+    for variant, emotion, intensity in tones:
+        store.upsert_voice_preset({
+            "preset_id": f"{gid}-{variant}", "group_id": gid, "variant": variant,
+            "name": name, "one_liner": "타입캐스트에서 담은 성우", "lang": "KR",
+            "archetype": "타입캐스트에서 담은 성우",
+            "base_voice_id": vid, "model_id": model,
+            "voice_settings": {"emotion": emotion, "emotion_intensity": intensity},
+            "default_speed": 1.2, "default_silence_trim": "mid",
+            "sample_file": None, "source_ref": "타입캐스트 성우 찾기(2026-08-30)",
+            "origin": "curated", "best": False, "owner_customer_id": cid,
+        })
+    return {"ok": True, "group_id": gid, "count": len(tones)}
 
 
 @app.get("/api/voice-presets")
@@ -5707,8 +5785,49 @@ def api_share_link(job_id: str, request: Request):
     return {"ok": True, "url": url, "qr_svg": qr}
 
 
+def _mp4_range_response(path: str, request: Request):
+    """mp4를 Range(부분 요청)까지 지원해 내보낸다.
+
+    ★왜 직접 짰나: 설치된 starlette 0.36의 FileResponse는 Range를 **무시하고**
+      200에 전체(수십 MB)를 보낸다(0.37부터 지원). 영상 수집기·플레이어는 앞부분만
+      Range로 띄 가 판정하므로, 그걸 못 받으면 "영상을 읽을 수 없다"고 거절한다
+      (Buffer 실측 2026-08-30). Accept-Ranges 헤더도 같이 준다.
+    """
+    size = os.path.getsize(path)
+    rng = (request.headers.get("range") or "").strip().lower()
+    m = re.match(r"bytes=(\d*)-(\d*)$", rng) if rng else None
+    if not m or (not m.group(1) and not m.group(2)):
+        return FileResponse(path, media_type="video/mp4", headers={"Accept-Ranges": "bytes"})
+    if m.group(1):
+        start = int(m.group(1))
+        end = int(m.group(2)) if m.group(2) else size - 1
+    else:                                   # bytes=-N → 끝에서 N바이트
+        start = max(0, size - int(m.group(2)))
+        end = size - 1
+    if start >= size:                       # 범위 밖 — 규격대로 416
+        return Response(status_code=416, headers={"Content-Range": f"bytes */{size}"})
+    end = min(end, size - 1)
+    length = end - start + 1
+
+    def _chunks():
+        with open(path, "rb") as f:
+            f.seek(start)
+            left = length
+            while left > 0:
+                buf = f.read(min(262144, left))
+                if not buf:
+                    break
+                left -= len(buf)
+                yield buf
+
+    return StreamingResponse(_chunks(), status_code=206, media_type="video/mp4", headers={
+        "Accept-Ranges": "bytes",
+        "Content-Range": f"bytes {start}-{end}/{size}",
+        "Content-Length": str(length)})
+
+
 @app.api_route("/api/share/v/{sid}", methods=["GET", "HEAD"])
-def api_share_v(sid: str, dl: int = 0):
+def api_share_v(request: Request, sid: str, dl: int = 0):
     """단축 id로 영상 스트리밍(로그인 불필요·저장소 조회). allowlist 경로.
 
     ★HEAD를 반드시 받는다(2026-08-30 실사고). Buffer는 영상을 가져가기 전에
@@ -5717,6 +5836,7 @@ def api_share_v(sid: str, dl: int = 0):
       실측: 같은 주소가 GET 200(41MB, video/mp4) / HEAD 404였다.
       FileResponse는 HEAD면 본문을 안 보내고 헤더만 준다 — 우리가 따로 갈 필요 없다.
     """
+    sid = sid[:-4] if sid.endswith(".mp4") else sid   # 확장자를 붙여 부르는 수집기 호환
     job_id = _share_get(sid)
     if not job_id:
         return JSONResponse(status_code=403, content={"ok": False, "error": "링크가 만료됐어요"})
@@ -5726,7 +5846,7 @@ def api_share_v(sid: str, dl: int = 0):
     if dl:
         return FileResponse(job["video_path"], media_type="video/mp4",
                             filename=export_bundle.safe_name(job_id) + ".mp4")
-    return FileResponse(job["video_path"], media_type="video/mp4")
+    return _mp4_range_response(job["video_path"], request)
 
 
 def _selected_thumb_path(job):
@@ -5869,6 +5989,15 @@ async def api_buffer_schedule(request: Request):
     if int(job.get("customer_id") or 0) != _cid(request):
         return JSONResponse(status_code=403, content={"ok": False, "error": "내 작업이 아닙니다."})
 
+    # ★주소를 내주기 전에 moov를 앞으로 보장한다(2026-08-30 실측). Buffer는 영상을
+    #   받아보다가 못 읽으면 "Video could not be read from its URL"로 거절하는데,
+    #   렌더 시점에만 처리하면 **그 전에 만든 완성본**이 영영 안 올라간다.
+    #   이미 앞에 있으면 아무 일도 안 한다(무해·즉시).
+    try:
+        mix_pipeline.ensure_faststart(job["video_path"])
+    except Exception as e:         # 실패해도 예약은 시도한다(원본은 그대로다) — 단 조용히 넘기지 않는다
+        logging.getLogger("buffer").warning(
+            "faststart 보장 실패 job=%s: %s", job_id, type(e).__name__)
     sid = _share_put(job_id, _SHARE_TTL_BUFFER)
     # ★Buffer는 **HTTPS**를 요구한다(buffer_api 머리말). 그런데 프록시 뒤라
     #   request.base_url이 http로 잡혀 301 리다이렉트 주소를 넘기고 있었다
@@ -5876,14 +6005,22 @@ async def api_buffer_schedule(request: Request):
     base = str(request.base_url).rstrip("/")
     if base.startswith("http://"):
         base = "https://" + base[len("http://"):]
-    video_url = f"{base}/api/share/v/{sid}"
+    # ★.mp4를 붙인다 — 확장자로 종류를 판단하는 수집기가 있다(라우트가 떼고 읽는다).
+    video_url = f"{base}/api/share/v/{sid}.mp4"
 
     out = []
     for cid_ in chans:
         try:
             t = str(texts.get(cid_) or text or "")
-            r = buffer_api.schedule_video(key, cid_, t, video_url, due_at, thumb_ms,
-                                          share_now=share_now, privacy=privacy)
+            # ★반드시 스레드풀로 — 이 핸들러는 async라 blocking urllib을 그대로 부르면
+            #   이벤트루프 전체가 10~20초 멈춘다. 그 사이 Buffer 검증기가 video_url을
+            #   HEAD/GET하러 오는데 서버가 응답을 못 해 "Video could not be read from
+            #   its URL"로 거절된다(실측 2026-08-30: 같은 파일·같은 캡션을 앱 밖에서
+            #   부르면 성공, 이 핸들러를 지나면 실패 — HEAD가 createPost 응답과 동시에
+            #   풀리는 게 apache/uvicorn 로그 시각차 10초로 확인됨).
+            r = await run_in_threadpool(
+                buffer_api.schedule_video, key, cid_, t, video_url, due_at, thumb_ms,
+                share_now=share_now, privacy=privacy)
             out.append({"channel_id": cid_, "ok": True, "post_id": r["id"], "due_at": r["dueAt"]})
         except buffer_api.BufferError as e:
             out.append({"channel_id": cid_, "ok": False, "error": str(e)})
@@ -6049,12 +6186,55 @@ def api_mix_capcut(job_id: str, base: str = ""):
         _style_on = str(Store(DB_PATH).get_setting("capcut_style_off", "") or "") != "1"
     except Exception:      # noqa: BLE001 — 설정을 못 읽어도 내보내기는 되어야 한다
         _style_on = True
+    # ── 🎵 BGM · 🔔 효과음 · 🎞 컷어웨이 · ✍ 머리카피 — 최종렌더가 넣는 것을 캡컷에도 ──
+    #   (2026-08-30 전구간 점검: 렌더엔 있는데 캡컷엔 통째로 안 가던 것들. grep 0건 확인)
+    #   ★어느 것을 어떻게 해석할지는 전부 **렌더가 쓰는 함수**가 정한다(0순위-B):
+    #     BGM 경로=mix_pipeline.resolve_deco_media · 효과음 타점=video_assemble.sfx_events_for
+    #     컷어웨이 경로=mix_pipeline._resolve_cutaway_paths · 머리카피 그림=headcopy_layer_png
+    #   ★하나가 실패해도 내보내기는 그대로 된다 — 그 재료만 빠진다.
+    if _deco:
+        try:
+            _deco = mix_pipeline.resolve_deco_media(_deco, work)
+        except Exception:      # noqa: BLE001
+            import traceback as _tb3
+            _tb3.print_exc(file=sys.stderr)
+    _cust = job.get("customer_id", 0)
+    _store = Store(DB_PATH)
+    try:
+        _sfx_events = video_assemble.sfx_events_for(
+            timeline, mix_pipeline._resolve_sfx_paths(_store, plan, _cust))
+    except Exception:      # noqa: BLE001
+        _sfx_events = []
+    try:
+        _cutaways = mix_pipeline._resolve_cutaway_paths(_store, plan, _cust)
+    except Exception:      # noqa: BLE001
+        _cutaways = {}
+    # 머리카피는 풀캔버스 투명 PNG로 굽는다(캡컷 텍스트 좌표계 미실측 — 아래 주석 참조).
+    _hc_png, _hc_span = None, None
+    _hc = job.get("headcopy")
+    if isinstance(_hc, str):
+        try:
+            import json as _json3
+            _hc = _json3.loads(_hc)
+        except (ValueError, TypeError):
+            _hc = None
+    if isinstance(_hc, dict) and (_hc.get("text") or "").strip():
+        _hc_dir = work / "capcut_hc"
+        _hc_dir.mkdir(parents=True, exist_ok=True)
+        _hc_png = video_assemble.headcopy_layer_png(
+            _hc, _hc_dir / "headcopy.png", _hc_dir,
+            caption_style=_cap_style, deco=_deco)
+        _hc_span = video_assemble.headcopy_span(timeline)
+
     proj, project, files = capcut_draft.assemble_draft_folder(
         out_root, base, plan=plan, timeline=timeline, source_video_paths=source_video_paths,
         tts_paths=tts_paths, project_name=_capcut_project_name(job_id, job, plan),
         final_video=_final,
         caption_style=(_cap_style if _style_on else None),
-        deco=(_deco if _style_on else None))
+        deco=(_deco if _style_on else None),
+        headcopy_png=(_hc_png if _style_on else None),
+        headcopy_span=_hc_span,
+        sfx_events=_sfx_events, cutaway_paths=_cutaways)
     texts, assets = {}, []
     for name in files:
         if name.endswith(".json"):
@@ -6506,7 +6686,12 @@ _ALLOWED_THUMB_HOSTS = ("cdninstagram.com", "fbcdn.net", "ytimg.com",
                         # 핀터레스트 커버(i.pinimg.com) — 2026-08-28 신설 탭.
                         # ★넣지 않으면 카드가 통째로 검게 뜬다(같은 사고가 xhscdn·
                         #   douyinpic·gstatic로 이미 3번 반복됐다: 메모리 `썸네일화이트리스트_누락`).
-                        "pinimg.com")
+                        "pinimg.com",
+                        # 네이버 클립 포스터 프레임(video-phinf.pstatic.net) — 2026-08-30 신설 탭.
+                        # ★같은 사고를 또 냈다(실측: 카드 8장 중 8장이 안 그려지고
+                        #   "GET /api/thumb?url=...video-phinf.pstatic.net... 400"). 새 플랫폼을
+                        #   붙일 때 이 목록을 같이 고치는 것을 잊지 마라 — 이번이 5번째다.
+                        "pstatic.net")
 _ALLOWED_VIDEO_HOSTS = ("cdninstagram.com", "fbcdn.net",
                         # 틱톡·도우인 mp4(2026-08-17). 렌즈 카드 인라인 재생에 필요하다 —
                         # CDN 주소를 브라우저에 직접 주면 리퍼러·IP를 따져 막히고(그래서
@@ -6516,7 +6701,10 @@ _ALLOWED_VIDEO_HOSTS = ("cdninstagram.com", "fbcdn.net",
                         "douyinvod.com", "douyinpic.com",
                         # 핀터레스트 mp4(v1.pinimg.com) — 카드 인라인 재생용(2026-08-28).
                         # 실측: Referer만 있으면 200이라 프록시를 타면 그대로 흐른다.
-                        "pinimg.com")
+                        "pinimg.com",
+                        # 네이버 클립 mp4(b02-kr-smp-vod.pstatic.net) — 카드 인라인 재생용.
+                        # ⚠️URL에 만료(hdnts=exp=...)가 붙어 있어 오래된 링크는 실패한다.
+                        "pstatic.net")
 
 
 # HEIC은 크롬·파이어폭스가 못 그린다(사파리만). 도우인 커버가 image/heic으로 온다
@@ -11238,6 +11426,116 @@ def _api_pinterest_collect(request: Request, body: dict = None):
             "keywords": kws, "collected_at": now}
 
 
+# 뷰티 기본 키워드(2026-08-30 실측으로 고른 것). 한 단어의 천장이 약 500건이라
+# 규모를 키우려면 페이지가 아니라 **키워드를 쪼개는** 수밖에 없다 — 이 20개로
+# 고유 2,525건을 모았다(겹치는 건 mediaId로 자동 중복제거).
+# ⚠️이 중 5개(립메이크업·피부관리·눈썹정리·다이소뷰티·모공관리)는 0건이 나왔다.
+#   파서 문제인지 진짜 결과가 없는 건지 아직 안 갈랐다 — 그래서 목록에는 남겨 두고
+#   (비용이 키워드당 1초 남짓) 원인이 밝혀지면 그때 고친다.
+_NAVERCLIP_BEAUTY_KWS = (
+    "뷰티", "메이크업", "스킨케어", "화장품", "네일", "헤어", "아이메이크업",
+    "립메이크업", "쿠션추천", "다이어트", "피부관리", "눈썹정리", "속눈썹",
+    "향수추천", "올리브영", "여드름", "다이소뷰티", "헤어스타일링",
+    "베이스메이크업", "모공관리",
+)
+
+
+@app.post("/api/naverclip/collect")
+def _api_naverclip_collect(request: Request, body: dict = None):
+    """네이버 클립 수집 — **관리자 전용·무료**(2026-08-30 사장님 "핀터레스트 옆에").
+
+    핀터레스트와 **같은 계약**을 쓴다(save_last_run_platform / merge_last_run_platform)
+    — 화면·API가 이미 platform으로 갈리므로 새 배선이 필요 없다(0순위-B).
+
+    핀터레스트와 다른 점 둘:
+      ★브라우저를 안 띄운다. HTTP 2번이라 키워드당 1초 안쪽이고 병렬이 필요 없다
+        (핀터레스트는 chromium 기동+고정 sleep으로 키워드당 9.5초라 병렬이 필수였다).
+      ★지표가 **진짜로 온다**. 핀터레스트는 조회수를 안 줘서 0으로 뒀지만, 클립은
+        조회수·좋아요·댓글·발행시각이 다 와서 속도·참여율을 정상 계산한다.
+    """
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import naverclip_search
+    body = body or {}
+    kws = [k.strip() for k in (body.get("keywords") or []) if str(k).strip()]
+    if not kws:
+        kws = list(_NAVERCLIP_BEAUTY_KWS)   # 뷰티 한 벌(2026-08-30 사장님 "뷰티쪽으로")
+    kws = kws[:24]
+    try:
+        # 한 키워드의 천장이 약 500건이라 기본을 600으로 둔다(실측 '뷰티' 520건).
+        per = max(5, min(int(body.get("per_keyword") or 600), 1000))
+    except (TypeError, ValueError):
+        per = 600
+    # 72건을 넘겨 달라고 하면 페이지를 끝까지 판다(3페이지=72건이 얕은 기본값).
+    pages = 40 if per > 72 else 3
+
+    now_dt = datetime.now(timezone.utc)
+
+    def _one(kw):
+        # ★예외 격리 — 키워드 하나가 죽어도 나머지는 산다(핀터레스트와 같은 계약).
+        try:
+            return naverclip_search.search(kw, max_results=per, pages=pages)
+        except Exception as e:          # noqa: BLE001
+            logging.warning("naverclip 수집 실패(%s): %s", kw, type(e).__name__)
+            return []
+
+    # 키워드도 병렬로 돈다. 실측: 20키워드 목록훑기 순차 ~10분 → 6스레드 37초.
+    # 폭을 6으로 묶는 건 상세(키워드당 8스레드)까지 겹치면 동시 연결이 과해지기 때문.
+    with ThreadPoolExecutor(max_workers=max(1, min(len(kws), 6))) as _ex:
+        _found_all = list(_ex.map(_one, kws))
+
+    items, seen = [], set()
+    for kw, found in zip(kws, _found_all):
+        for it in found:
+            mid = it.get("mediaId") or ""
+            if not mid or mid in seen:
+                continue
+            seen.add(mid)
+            views = int(it.get("views") or 0)
+            likes = int(it.get("likes") or 0)
+            comments = int(it.get("comments") or 0)
+            # 경과시간 — 발행시각이 있어야 속도가 나온다. 없으면 None으로 두고
+            # 속도를 지어내지 않는다(0순위: 추측 금지).
+            age = None
+            posted = it.get("posted_at") or ""
+            if posted:
+                try:
+                    age = max(0.0, (now_dt - datetime.fromisoformat(posted)
+                                    ).total_seconds() / 3600.0)
+                except (TypeError, ValueError):
+                    age = None
+            items.append({
+                "platform": "naverclip",
+                "shortcode": mid,
+                "name": it.get("channel") or "네이버 클립",
+                "username": it.get("channel_id") or mid,
+                "url": it.get("url") or "",
+                "video_url": it.get("play_url") or "",
+                "thumbnail": it.get("thumbnail") or "",
+                "caption": (it.get("title") or "")[:200],
+                "views": views, "likes": likes, "comments": comments,
+                "base_count": views,
+                "posted_at": posted,
+                "age_hours": None if age is None else round(age, 1),
+                "speed": (views / age) if age else None,
+                "density": ((likes + comments) / views) if views else 0.0,
+                "duration": it.get("duration") or 0,
+                "keyword": kw,
+                "category": "뷰티",
+            })
+
+    store = Store(DB_PATH)
+    now = now_dt.isoformat()
+    if body.get("reset"):
+        store.save_last_run_platform("naverclip", items, now)
+        added, total = len(items), len(items)
+    else:
+        added, total = store.merge_last_run_platform("naverclip", items, now)
+    return {"ok": True, "count": total, "added": added,
+            "keywords": kws, "collected_at": now}
+
+
 @app.get("/api/admin/work-lines")
 def _api_admin_work_lines(request: Request):
     """관리자 작업라인 — **지금 누가 무엇을 하고 있나**(2026-08-26 사장님 지시).
@@ -11859,6 +12157,37 @@ def api_font_favorites_set(request: Request, body: dict):
     clean = [f for f in dict.fromkeys(files) if f in valid]
     store.set_pref(_FONT_FAV_KEY, clean, customer_id=cid)
     return {"ok": True, "files": clean, "is_default": False}
+
+
+_MY_CHANNEL_KEY = "deco_my_channel"
+
+
+@app.get("/api/produce/frame/my_channel")
+def api_my_channel(request: Request):
+    """장면꾸미기 띠에 넣을 **내 채널명**(계정별로 기억한다).
+
+    ★없던 시절엔 틀을 고를 때마다 샘플값 '숏템메이커'가 다시 박혔다 —
+      produce.html frPick()이 그 작업(job) 안의 이전 값만 물려받아서,
+      새 작업을 시작하면 매번 되돌아갔다(2026-08-30 사장님 제보).
+      그래서 값의 주인을 계정 설정 한 곳으로 옮긴다(0순위-B)."""
+    saved = Store(DB_PATH).get_pref(_MY_CHANNEL_KEY, customer_id=_cid(request))
+    return {"ok": True, "channel": saved or "", "is_default": saved is None}
+
+
+@app.post("/api/produce/frame/my_channel")
+def api_my_channel_set(request: Request, body: dict):
+    """내 채널명 저장. body: {channel:"..."} — 빈 문자열이면 지운다(샘플값으로 복귀)."""
+    store = Store(DB_PATH)
+    cid = _cid(request)
+    name = (body.get("channel") or "").strip()
+    if len(name) > 40:
+        return JSONResponse(status_code=422,
+                            content={"ok": False, "error": "채널명은 40자까지"})
+    if not name:
+        store.clear_pref(_MY_CHANNEL_KEY, customer_id=cid)
+        return {"ok": True, "channel": "", "is_default": True}
+    store.set_pref(_MY_CHANNEL_KEY, name, customer_id=cid)
+    return {"ok": True, "channel": name, "is_default": False}
 
 
 @app.get("/api/produce/picks")
