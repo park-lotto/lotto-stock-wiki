@@ -1548,6 +1548,25 @@ class Store:
         except sqlite3.OperationalError:
             pass  # 이미 존재
 
+        # ── 가입 자동확인(2026-08-30 사장님 "가입하면 그냥 자동으로 체험판 랭킹만으로
+        #    한번에 다 해주고, 지금 승인대기중도 다 내려서 체험판 랭킹만으로") ──
+        #    승인대기 목록은 지금까지 approved_at NULL로 판정했는데, 그 필드는 동시에
+        #    **체험창(trial_ends_at)을 무시하고 영구 개방**하는 권한 필드이기도 하다
+        #    (access_level: approved_at이 있으면 체험창을 아예 안 본다).
+        #    그래서 "대기실에서만 내린다"고 approved_at을 채우면 3일 체험이 영구가 된다
+        #    — 2026-08-26에 같은 필드를 공유해서 이미 한 번 사고가 났다(0순위-B).
+        #    → 목록 판정용 acked_at을 따로 둔다. 권한은 approved_at·plan이 그대로 정한다.
+        #    NULL=아직 안 내려감. 기존 미승인 고객은 아래 백필이 한 번에 내린다.
+        try:
+            c.execute("ALTER TABLE customers ADD COLUMN acked_at INTEGER")
+            # 이번에 처음 생긴 경우에만 백필 — 이미 승인된 고객은 대기실에 없으므로
+            # 미승인(approved_at NULL)만 '확인함'으로 내린다. 체험창은 손대지 않는다.
+            _now_ack = int(datetime.now(timezone.utc).timestamp())
+            c.execute("UPDATE customers SET acked_at=? "
+                      "WHERE acked_at IS NULL AND approved_at IS NULL", (_now_ack,))
+        except sqlite3.OperationalError:
+            pass  # 이미 존재
+
         # ── 성별·연령대(2026-08-24): 가입 마무리 화면에서 이름·전화와 함께 받는다. ──
         #   NULL=아직 안 받음. 기존 고객은 NULL로 남고 다음 접속 때 한 번 물어본다(백필).
         for _col in ("gender", "age_band"):
@@ -5222,8 +5241,14 @@ class Store:
                         name=None, phone=None, welcome_due=False, gender=None, age_band=None):
         """신규 고객 계정 생성. username 중복이면 ValueError. 성공 시 customer_id 반환.
         approved=True(기본): 가입 즉시 승인+무료체험 시작(full_access_until=now+trial_days).
-        approved=False: 대기중(approved_at=NULL) + 체험 미시작(full_access_until=0).
-        체험은 사장님 승인 시점(approve_customer)에 시작된다."""
+        approved=False: 체험판(랭킹만) + 체험창(trial_ends_at) 시작. full_access_until=0.
+
+        ★2026-08-30 사장님 "가입하면 그냥 자동으로 체험판 랭킹만으로 한번에 다 해주고
+          포인트 50 넣고": acked_at을 **가입 시점에 바로 채운다** → 승인대기 목록에
+          아예 안 들어간다(버튼 누를 일이 없다). 포인트 50P는 app.py의 _signup_topup이
+          같은 가입 경로에서 넣는다.
+        ⚠️ approved_at은 여기서 채우지 않는다 — 채우면 access_level이 체험창을
+          안 보게 돼 3일 체험이 영구 개방이 된다."""
         salt = secrets.token_hex(16)
         pw_hash = self._hash_password(password, salt)
         now_ts = int(datetime.now(timezone.utc).timestamp())
@@ -5243,8 +5268,9 @@ class Store:
             #   기본값을 72시간으로 둔다 — 설정을 안 건드려도 켜진다(서버 settings는 미설정).
             #   0으로 바꾸면 옛 동작(가입 직후 잠김, 사장님이 줘야 시작)으로 돌아간다.
             #   ⚠️ 이 창은 approved_at이 비어 있을 때만 유효하다(access_level).
-            #      사장님이 '확인'을 누르면 ack_customer가 남은 시간을 full_access_until로
-            #      옮겨 체험이 끊기지 않게 한다.
+            #      그래서 '확인'(ack_customer)은 approved_at을 건드리지 않는다 —
+            #      건드리면 체험창이 무시돼 영구 개방이 된다(2026-08-30).
+            #      창이 끝나면 access_level이 pending으로 떨어져 전면차단된다.
             try:
                 trial_hours = int(self.get_setting("trial_event_hours", 72))
             except (TypeError, ValueError):
@@ -5255,11 +5281,11 @@ class Store:
                 cur = c.execute(
                     "INSERT INTO customers(username, password_hash, salt, created_at, "
                     "plan, full_access_until, email, google_sub, approved_at, name, phone, "
-                    "trial_ends_at, welcome_due, gender, age_band) "
-                    "VALUES(?,?,?,datetime('now'),'free',?,?,?,?,?,?,?,?,?,?)",
+                    "trial_ends_at, welcome_due, gender, age_band, acked_at) "
+                    "VALUES(?,?,?,datetime('now'),'free',?,?,?,?,?,?,?,?,?,?,?)",
                     (username, pw_hash, salt, full_access_until, email, google_sub,
                      approved_at, name, phone, trial_ends_at, 1 if welcome_due else 0,
-                     gender, age_band),
+                     gender, age_band, now_ts),
                 )
             except sqlite3.IntegrityError:
                 raise ValueError(f"이미 존재하는 아이디: {username}")
@@ -5286,12 +5312,18 @@ class Store:
             return _ret(row[0] if row else None, False)  # 경합 패자는 알림 안 울림(승자만 1번)
 
     def pending_customers(self):
-        """승인 대기(approved_at IS NULL) 고객 목록 — 관리자 알림 폴링용(가벼운 쿼리).
-        최근 가입 먼저. 사장님(0) 제외. → [{id, username, name, phone, email, created_at}]."""
+        """승인 대기(acked_at IS NULL) 고객 목록 — 관리자 알림 폴링용(가벼운 쿼리).
+        최근 가입 먼저. 사장님(0) 제외. → [{id, username, name, phone, email, created_at}].
+
+        ★2026-08-30: 판정 기준이 approved_at → **acked_at**으로 바뀌었다.
+          approved_at은 '체험창을 무시하고 영구 개방'이라는 권한 의미를 겸하고 있어
+          목록에서 내리려고 채우면 3일 체험이 영구가 된다(0순위-B, 08-26 동일 사고).
+          이제 가입이 acked_at을 바로 채우므로 이 목록은 **상시 비어 있는 게 정상**이다.
+          권한은 여전히 approved_at·plan·trial_ends_at이 정한다 — 여기선 안 본다."""
         with self._conn() as c:
             rows = c.execute(
                 "SELECT id, username, name, phone, email, created_at FROM customers "
-                "WHERE id != 0 AND approved_at IS NULL ORDER BY id DESC"
+                "WHERE id != 0 AND acked_at IS NULL ORDER BY id DESC"
             ).fetchall()
         return [{"id": r[0], "username": r[1], "name": r[2], "phone": r[3],
                  "email": r[4], "created_at": r[5]} for r in rows]
@@ -5315,12 +5347,15 @@ class Store:
         """
         now_ts = int(datetime.now(timezone.utc).timestamp())
         with self._conn() as c:
-            row = c.execute("SELECT approved_at, trial_ends_at, full_access_until "
-                            "FROM customers WHERE id=?", (int(customer_id),)).fetchone()
+            row = c.execute("SELECT acked_at FROM customers WHERE id=?",
+                            (int(customer_id),)).fetchone()
             if row is None or row[0] is not None:
                 return False                       # 없는 고객이거나 이미 내려간 고객
-            # ★full_access_until은 손대지 않는다(위 설명). 유료 기간 필드다.
-            c.execute("UPDATE customers SET approved_at=? WHERE id=?",
+            # ★approved_at도 full_access_until도 손대지 않는다(2026-08-30).
+            #   둘 다 **권한** 필드다: approved_at은 체험창을 무시하게 만들고,
+            #   full_access_until은 입금으로 부여한 유료 기간이다. '봤다'는 표시를
+            #   권한 필드에 적으면 확인 한 번에 3일 체험이 영구가 된다.
+            c.execute("UPDATE customers SET acked_at=? WHERE id=?",
                       (now_ts, int(customer_id)))
         return True
 
@@ -5345,7 +5380,7 @@ class Store:
             row = c.execute(
                 "SELECT id, username, created_at, plan, full_access_until, google_sub, email, "
                 "approved_at, name, phone, trial_ends_at, admin, welcome_due, "
-                "gender, age_band "
+                "gender, age_band, acked_at "
                 "FROM customers WHERE id=?", (customer_id,)
             ).fetchone()
         if not row:
@@ -5355,7 +5390,9 @@ class Store:
                 "google_sub": row[5], "email": row[6], "approved_at": row[7],
                 "name": row[8], "phone": row[9], "trial_ends_at": row[10],
                 "admin": bool(row[11]), "welcome_due": bool(row[12]),
-                "gender": row[13], "age_band": row[14]}
+                "gender": row[13], "age_band": row[14],
+                # ★대기실 판정 전용(2026-08-30). 권한은 approved_at·plan이 정한다.
+                "acked_at": row[15]}
 
     def clear_welcome_due(self, customer_id):
         """가입 마무리(이름·전화) 입력을 마쳤다 → 다시 묻지 않는다."""
@@ -5496,7 +5533,7 @@ class Store:
         """관리자용 전체 고객 목록(사장님 cid0 제외). 최근 가입 먼저. 최근 결제 요약 포함."""
         with self._conn() as c:
             rows = c.execute(
-                "SELECT id, username, email, plan, full_access_until, created_at, approved_at, name, phone, trial_ends_at, admin, last_seen, gender, age_band "
+                "SELECT id, username, email, plan, full_access_until, created_at, approved_at, name, phone, trial_ends_at, admin, last_seen, gender, age_band, acked_at "
                 "FROM customers WHERE id != 0 ORDER BY id DESC"
             ).fetchall()
             out = []
@@ -5509,6 +5546,9 @@ class Store:
                             "full_access_until": r[4] or 0, "created_at": r[5], "approved_at": r[6],
                             "name": r[7], "phone": r[8], "trial_ends_at": r[9], "admin": bool(r[10]),
                             "last_seen": r[11], "gender": r[12], "age_band": r[13],
+                            # ★대기실 판정은 acked_at 하나로 본다(2026-08-30). approved_at은
+                            #   권한 필드라 대기 목록 판정에 쓰면 체험이 영구가 된다.
+                            "acked_at": r[14],
                             "last_payment": ({"amount": p[0], "paid_at": p[1]} if p else None),
                             "payment_count": cnt})
         return out

@@ -21,12 +21,25 @@ def _cookie(cid):
     return appmod._sign_session(cid, exp)
 
 
+def _unack(store, *cids):
+    """★2026-08-30부터 가입은 곧 '확인함'이라 대기실이 비어 있다(사장님 지시).
+    이 파일은 대기 목록의 **배선**(정렬·엔드포인트 모양)을 보는 테스트라,
+    확인 전 상태를 일부러 만들어 그 배선이 아직 도는지 확인한다."""
+    import sqlite3
+    c = sqlite3.connect(store.db_path)
+    for cid in cids:
+        c.execute("UPDATE customers SET acked_at=NULL WHERE id=?", (cid,))
+    c.commit()
+    c.close()
+
+
 # ── store: pending 목록 ──
 def test_pending_customers_only_unapproved_newest_first(tmp_path):
     s = Store(str(tmp_path / "t.db"))
     a = s.create_customer("a", "pw12", approved=False, name="에이")
     s.create_customer("b", "pw12", approved=True)              # 승인됨 → 제외
     c = s.create_customer("c", "pw12", approved=False, name="씨")
+    _unack(s, a, c)                                            # 확인 전 상태로 되돌린다
     pend = s.pending_customers()
     assert [p["id"] for p in pend] == [c, a]                   # 최근(id DESC) 먼저, 승인자 b 제외
     assert pend[0]["name"] == "씨"
@@ -45,7 +58,8 @@ def test_google_return_created_flag(tmp_path):
 # ── API: pending 폴링 엔드포인트 ──
 def test_admin_pending_endpoint(tmp_path, monkeypatch):
     s = _setup(tmp_path, monkeypatch)
-    s.create_customer("waiter", "pw12", approved=False, name="대기자", phone="010-1")
+    _w = s.create_customer("waiter", "pw12", approved=False, name="대기자", phone="010-1")
+    _unack(s, _w)                                              # 확인 전 상태로 되돌린다
     cl = TestClient(appmod.app, cookies={"dash_auth": _cookie(0)})   # cid0=사장님
     r = cl.get("/api/admin/pending")
     assert r.status_code == 200
