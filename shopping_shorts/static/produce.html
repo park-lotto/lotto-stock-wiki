@@ -805,6 +805,32 @@
     }
     .zoomStage.zoomed .zoomBadge{display:block}
     /* 확대 조작줄 */
+    /* ★확대 UI는 상자로 묶는다 — 회색 hint로 흘려 놓으면 "이게 무슨 기능인지" 안 읽힌다
+       (2026-08-30 사장님 지적). 제목 한 줄 + 조작 한 줄 + 설명 한 줄로 끝낸다. */
+    .zoomPanel{
+      border:1px solid var(--line);border-radius:10px;
+      background:var(--inset);padding:8px 10px;margin-bottom:8px;
+    }
+    .zoomTitle{
+      display:flex;align-items:center;gap:6px;
+      font-size:13px;font-weight:800;color:var(--txt);margin-bottom:6px;
+    }
+    /* 긴 설명(보기 전용·자막 고정)은 여기 접어 둔다 — 필요한 사람만 올려보면 된다 */
+    .zoomTip{
+      cursor:help;color:var(--sub);font-weight:400;font-size:12px;
+      border:1px solid var(--line);border-radius:50%;width:16px;height:16px;
+      display:inline-flex;align-items:center;justify-content:center;line-height:1;
+    }
+    /* 지금 배율 — 제목 줄 오른쪽 끝에 붙여 늘 보이게(미리보기 위 뱃지는 확대 때만 뜬다) */
+    .zoomNow{margin-left:auto;font-size:12px;font-weight:700;color:var(--accent2)}
+    /* 설명은 한 줄. 상황에 따라 문장이 바뀐다(_zoomApply) */
+    .zoomSay{font-size:12px;color:var(--sub);margin-top:6px;line-height:1.45}
+    /* 모든 장면 적용 토글 */
+    .zoomAll{
+      display:flex;align-items:center;gap:6px;margin-top:7px;
+      font-size:12px;color:var(--sub);cursor:pointer;user-select:none;
+    }
+    .zoomAll input{cursor:pointer;accent-color:var(--accent2);width:15px;height:15px}
     .zoomBar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px}
     .zoomBar .zbtn{
       min-width:auto;padding:6px 12px;font-size:13px;min-height:36px;
@@ -1809,27 +1835,35 @@
         <div class="previewSlot decoMirror" style="flex:0 0 auto;width:var(--pvw)">
           <div class="hint" style="margin-bottom:4px">🪞 실시간 미리보기 (9:16) — 글자를 <b>드래그</b>해 위치 이동
             <label style="cursor:pointer;margin-left:6px;color:var(--txt)"><input type="checkbox" id="sceneBg" onchange="toggleSceneBg()"> 실장면 배경</label></div>
-          <!-- 🔍 확대 조작줄 (2026-08-30). 조작은 셋뿐이고 셋 다 같은 결과로 모인다:
-               ①보고 싶은 곳을 그냥 누른다(=그 자리가 2배) ②슬라이더로 배율 ③원래대로.
-               캡컷은 배율 입력·단축키·스페이스드래그로 갈라져 있는데, 여기선 '누르면 커진다'
-               하나로 줄였다 — 사장님 "최대한 쉽게 / 캡컷보다 더 쉽게". -->
-          <div class="zoomBar">
-            <button type="button" class="zbtn" onclick="zoomStep(-1)" title="축소 (Alt+Shift+-)">－</button>
-            <input type="range" id="zoomRange" min="100" max="300" step="10" value="100"
-                   oninput="zoomSet(this.value/100)" title="확대 배율">
-            <button type="button" class="zbtn" onclick="zoomStep(1)" title="확대 (Alt+Shift++)">＋</button>
-            <button type="button" class="zbtn" id="zoomResetBtn" onclick="zoomReset()"
-                    style="display:none" title="원래 크기로 (Alt+Shift+Z)">↩ 원래대로</button>
+          <!-- 🔍 장면 확대 (2026-08-30). ★사장님 "장면 확대 기능인 걸 모르겠고 짧고
+               직관적으로 설명하고 잘 보이게" — 종전엔 회색 hint 두 줄(총 4줄)이 늘어져
+               있어서 무슨 기능인지 읽히지 않았다. 상자로 묶고 **제목을 달아** 한눈에
+               "장면 확대"임을 보이게 하고, 설명은 **한 줄**로 줄인다.
+               긴 설명(보기 전용·자막 고정)은 ⓘ 툴팁으로 접어 넣는다 — 필요한 사람만 본다. -->
+          <div class="zoomPanel">
+            <div class="zoomTitle">
+              <span>🔍 장면 확대</span>
+              <span class="zoomTip" title="화면에서만 커집니다. 만들어지는 영상 크기는 그대로고, 자막도 확대와 상관없이 제자리·같은 크기로 남습니다.">ⓘ</span>
+              <span class="zoomNow" id="zoomNow">100%</span>
+            </div>
+            <div class="zoomBar">
+              <button type="button" class="zbtn" onclick="zoomStep(-1)" title="축소 (Alt+Shift+-)">－</button>
+              <input type="range" id="zoomRange" min="100" max="300" step="10" value="100"
+                     oninput="zoomSet(this.value/100)" title="확대 배율">
+              <button type="button" class="zbtn" onclick="zoomStep(1)" title="확대 (Alt+Shift++)">＋</button>
+              <button type="button" class="zbtn" id="zoomResetBtn" onclick="zoomReset()"
+                      style="display:none" title="원래 크기로 (Alt+Shift+Z)">↩ 원래대로</button>
+            </div>
+            <div class="zoomSay" id="zoomHint">크게 볼 곳을 <b>누르세요</b></div>
+            <!-- ★모든 장면에 같은 배율 (2026-08-30 사장님 "해당 장면을 확대했으면 다른
+                 전체 장면도 같은 비율로 적용할지 말지 체크버튼"). 기본 켬 — 장면을 넘겨도
+                 배율이 유지되는 게 지금까지의 동작이고, 대개 그걸 원한다. 끄면 장면을
+                 넘길 때마다 100%로 돌아가 그 장면만 따로 확대해 볼 수 있다. -->
+            <label class="zoomAll" id="zoomAllWrap">
+              <input type="checkbox" id="zoomAll" checked onchange="zoomAllChanged()">
+              <span>모든 장면에 같은 배율</span>
+            </label>
           </div>
-          <!-- ★"보기 전용"을 라벨에 못박는다 — 캡컷 사용자가 가장 헷갈리는 지점이
-               '미리보기 줌'과 '클립 크기(Scale)'의 혼동이다(2026-08-30 조사: 튜토리얼
-               절반이 둘을 섞어 설명하고 있었다). 여기서 커지는 건 화면뿐이고 만들어지는
-               영상에는 영향이 없다 — 그걸 글로 적어두면 물어볼 일이 없다. -->
-          <div class="hint" style="margin-bottom:6px;font-size:12px" id="zoomHint">
-            🔍 크게 보고 싶은 곳을 <b>그냥 누르세요</b> — 그 자리가 확대돼요. 다시 누르면 더 크게.</div>
-          <div class="hint" style="margin-bottom:6px;font-size:11px;opacity:.75">
-            👀 <b>보기만</b> 커져요 — 만들어지는 영상은 그대로. <b>자막은 확대해도 제자리·같은 크기</b>라
-            완성본에서 어떻게 보일지 그대로 확인돼요.</div>
           <!-- ★세로 크기는 화면 안에 들어와야 한다(2026-08-18 사장님 지시). 380px면 9:16이라
                675px가 돼 노트북 화면에서 아래가 잘려 하단 띠·자막 위치를 확인할 수 없다.
                폭은 부모의 --pvw를 그대로 받는다(정의처 한 곳) — aspect-ratio가 높이를 따라온다. -->
@@ -4927,6 +4961,8 @@ function showBeat(i){
   const cnt=document.getElementById('beatCount');
   if(cnt) cnt.textContent=(BEAT_IDX+1)+' / '+BEATS_PREVIEW.length+' 장면';
   renderBeatTools();          // 장면을 넘기면 그 장면의 자리·줄을 보여준다
+  // 확대를 이 장면에도 이어갈지는 '모든 장면에 같은 배율' 체크가 정한다(zoomOnBeatChange)
+  if(typeof zoomOnBeatChange==='function') zoomOnBeatChange();
 }
 let CAP_SEQ_TIMER=null;
 function _playBeatCaptions(b){
@@ -6154,6 +6190,7 @@ function _zoomEls(){
           bd:document.getElementById('zoomBadge'),
           rg:document.getElementById('zoomRange'),
           rs:document.getElementById('zoomResetBtn'),
+          nw:document.getElementById('zoomNow'),
           ht:document.getElementById('zoomHint')};
 }
 // ★옮길 수 있는 최대 거리(px). 이보다 더 가면 화면에 빈 자리가 보인다.
@@ -6168,7 +6205,7 @@ function _zoomLimit(){
 }
 // 상태 → 화면. 크기는 안 건드리고 CSS 변수만 넘긴다.
 function _zoomApply(){
-  const {st,pv,bd,rg,rs,ht}=_zoomEls(); if(!st||!pv) return;
+  const {st,pv,bd,rg,rs,nw,ht}=_zoomEls(); if(!st||!pv) return;
   ZOOM=Math.max(ZOOM_MIN,Math.min(ZOOM_MAX,ZOOM));
   const lim=_zoomLimit();
   ZTX=Math.max(-lim.x,Math.min(lim.x,ZTX));   // 가장자리 밖으로는 못 나간다
@@ -6178,7 +6215,9 @@ function _zoomApply(){
   pv.style.setProperty('--zty',ZTY.toFixed(2)+'px');
   const on = ZOOM>1.001;
   st.classList.toggle('zoomed',on);
-  if(bd) bd.textContent=Math.round(ZOOM*100)+'%';
+  const pct=Math.round(ZOOM*100)+'%';
+  if(bd) bd.textContent=pct;
+  if(nw) nw.textContent=pct;          // 제목 줄 — 확대 안 해도 늘 보인다
   if(rg) rg.value=Math.round(ZOOM*100);
   if(rs) rs.style.display = on ? '' : 'none';
   // ★확대 중엔 '끌어서 옮긴다'를 먼저 말한다 — 안 보이는 부분을 보는 방법이 그거다.
@@ -6189,11 +6228,10 @@ function _zoomApply(){
   //   요소를 읽기만 하는데도 이름이 겹치면 걸린다 — 규약 쪽이 옳으니 이름을 비켜준다.
   const bgEl = document.getElementById('hcPreviewBg');
   const bgOn = bgEl && bgEl.style.display !== 'none' && bgEl.getAttribute('src');
+  // ★한 줄로 끝낸다(2026-08-30). 문장이 길면 안 읽힌다 — 지금 할 수 있는 동작 하나만 말한다.
   if(ht) ht.innerHTML = !bgOn
-    ? '🔍 위 <b>실장면 배경</b>을 켜면, 실제 장면을 확대해서 구석구석 볼 수 있어요.'
-    : (on
-      ? '✋ <b>화면을 잡고 끌어</b> 안 보이는 곳을 보세요. <b>자막은 제자리·같은 크기</b>로 고정돼요.'
-      : '🔍 크게 보고 싶은 곳을 <b>그냥 누르세요</b> — 그 자리가 확대돼요. 다시 누르면 더 크게.');
+    ? '먼저 위 <b>실장면 배경</b>을 켜세요'
+    : (on ? '✋ <b>끌어서</b> 안 보이는 곳 보기' : '크게 볼 곳을 <b>누르세요</b>');
 }
 // 배율을 바꿔도 **화면 가운데에 있던 것이 그대로 가운데** 남도록 이동거리를 환산한다.
 // (그냥 두면 배율이 바뀔 때 보던 자리가 튄다 — 확대 좌표계라 t의 의미가 배율마다 다르다)
@@ -6207,6 +6245,24 @@ function zoomSet(v){
 }
 function zoomStep(d){ zoomSet(ZOOM + d*ZOOM_STEP); }
 function zoomReset(){ ZOOM=1; ZTX=0; ZTY=0; _zoomApply(); }
+// ★모든 장면에 같은 배율? (2026-08-30 사장님 "다른 전체 장면도 같은 비율로 적용할지 말지")
+//   켬(기본) = 장면을 넘겨도 배율·위치가 그대로 — 여러 장면을 같은 확대로 훑어볼 때.
+//   끔       = 장면을 넘기면 100%로 돌아간다 — 이 장면만 잠깐 확대해 볼 때.
+//   ★판단은 이 함수 하나에서만 한다(0순위-B). showBeat은 이걸 부르기만 한다.
+function zoomAllOn(){
+  const el=document.getElementById('zoomAll');
+  return !el || el.checked;      // 요소가 아직 없으면 종전 동작(유지)이 기본
+}
+function zoomAllChanged(){
+  // 방금 껐다면 지금 화면부터 원래대로 — 안 그러면 "껐는데 왜 아직 커져 있나"가 된다.
+  if(!zoomAllOn()) zoomReset();
+  _zoomApply();
+}
+// 장면을 넘길 때 showBeat이 부른다. 유지/초기화를 여기서 정한다.
+function zoomOnBeatChange(){
+  if(!zoomAllOn()) zoomReset();
+  else _zoomApply();             // 유지 — 배경이 바뀌었으니 변수만 다시 입힌다
+}
 // 이벤트가 글자(드래그 대상) 위에서 시작했나 — 그러면 확대/이동은 손을 뗀다
 function _zoomOnText(t){
   return !!(t && t.closest && t.closest('#hcPreviewText,#capPreviewText,#ovPreview,#extraPreview,[data-maskbox]'));
