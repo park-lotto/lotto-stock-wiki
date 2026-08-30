@@ -2411,6 +2411,13 @@
                            실제 채널이랑 안 맞는다"로 보였다. -->
                       <label>채널명 <input id="frChannel" oninput="frUpdate()" placeholder="내 채널 이름"
                         style="width:150px;padding:5px 8px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--txt)"></label>
+                      <!-- ★내 채널명 기억하기(2026-08-30 사장님 "자꾸 숏템메이커로 나온다").
+                           채널명은 작업마다 바뀌는 값이 아니라 **내 것 하나**다. 그런데 값이
+                           job의 deco 안에만 있어서 새 작업을 열면 샘플값으로 되돌아갔다.
+                           → 계정 설정(customer_prefs)에 저장하고 frPick이 그걸 먼저 쓴다. -->
+                      <button type="button" id="frChSave" class="tab" onclick="saveMyChannel()"
+                        title="이 이름을 기억해서 다음 작업에도 자동으로 넣습니다"
+                        style="flex:0 0 auto;min-width:auto;padding:5px 10px;font-size:12px;white-space:nowrap">💾 내 채널로 기억</button>
                       <label style="cursor:pointer"><input id="frIcons" type="checkbox" checked onchange="frUpdate()"> ☰ 🔍</label>
                     </div>
                     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:12px;margin-top:8px">
@@ -4316,6 +4323,29 @@ function setTemplateSpan(span){
 // 📰 내용물 있는 틀 — spec은 STATE.deco.template.frame 하나에만 산다.
 // ★그림 URL을 만드는 곳도 여기 하나뿐이다(frameUrl) — 미리보기·카드가 같은 걸 쓴다.
 let FR_PRESETS=[];
+/* ★내 채널명 — 계정에 저장된 값(2026-08-30). 값의 주인은 서버 customer_prefs 하나이고
+   여기는 그 사본이다. 아직 못 읽었으면 null(=서버에 물어본 적 없음)이라 샘플값을 쓴다. */
+let MY_CHANNEL=null;
+async function loadMyChannel(){
+  try{
+    const d=await (await fetch('/api/produce/frame/my_channel')).json();
+    MY_CHANNEL=(d&&d.channel)||'';
+  }catch(e){ MY_CHANNEL=''; }   /* 못 읽어도 꾸미기 화면은 떠야 한다(fail-open) */
+}
+/* 지금 칸에 적힌 이름을 '내 채널'로 굳힌다. 빈 칸이면 지운다(샘플값으로 복귀). */
+async function saveMyChannel(){
+  const el=document.getElementById('frChannel'); if(!el) return;
+  const name=(el.value||'').trim();
+  const btn=document.getElementById('frChSave');
+  try{
+    const r=await (await fetch('/api/produce/frame/my_channel',{method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify({channel:name})})).json();
+    if(!r||!r.ok){ if(btn) btn.textContent='⚠ 저장 실패'; setTimeout(()=>{if(btn)btn.textContent='💾 내 채널로 기억';},2000); return; }
+    MY_CHANNEL=r.channel||'';
+    if(btn){ btn.textContent = MY_CHANNEL ? '✅ 기억했어요' : '↩ 지웠어요';
+             setTimeout(()=>{btn.textContent='💾 내 채널로 기억';},2000); }
+  }catch(e){ if(btn){ btn.textContent='⚠ 저장 실패'; setTimeout(()=>{btn.textContent='💾 내 채널로 기억';},2000); } }
+}
 // ★색 입력칸(<input type=color>)은 **빈값을 가질 수 없다** — 항상 #RRGGBB다.
 //   그래서 "안 정했음"을 값으로는 표현 못 한다. 만졌는지를 따로 기억한다.
 //   (헤드카피 HC_Y_TOUCHED·자막 CAP_POS_TOUCHED와 같은 규약)
@@ -4373,6 +4403,9 @@ function frameUrl(f){
 }
 async function loadFramePresets(){
   const box=document.getElementById('frPresets'); if(!box) return;
+  /* ★내 채널명을 틀 목록보다 **먼저** 읽는다 — frPick이 MY_CHANNEL을 쓰는데
+     아직 null이면 샘플값('숏템메이커')이 박혀 저장해둔 이름이 무시된다(2026-08-30). */
+  if(MY_CHANNEL===null) await loadMyChannel();
   if(!FR_PRESETS.length){
     try{ const d=await (await fetch('/api/produce/frame/presets')).json(); FR_PRESETS=(d&&d.presets)||[]; }
     catch(e){ box.innerHTML='<span class="hint" style="color:var(--fire)">틀 목록을 불러오지 못했어요</span>'; return; }
@@ -4500,7 +4533,9 @@ function frPick(preset){
       //   ★사장님이 이미 적어둔 값(old)은 절대 안 덮는다 — 고쳐둔 게 날아가면 안 된다.
       // ★채널명 기본은 '숏템메이커' 샘플(2026-08-25 사장님). 빈 칸이면 띠 가운데가
       //   허전해서 그 틀이 어떻게 생겼는지 판단이 안 된다. 사장님이 고치면 그대로 둔다.
-      channel:old.channel||'숏템메이커', title:old.title||hc,
+      //   ★순서: 이 작업에 이미 적어둔 값 → 계정에 기억해둔 내 채널 → 샘플(2026-08-30).
+      //     예전엔 가운데가 없어서 새 작업마다 '숏템메이커'로 되돌아갔다.
+      channel:old.channel||MY_CHANNEL||'숏템메이커', title:old.title||hc,
       views:(old.views!=null&&old.views!=='')?old.views:(meta.has_head?(meta.demo_views||''):''),
       comments:(old.comments!=null&&old.comments!=='')?old.comments:(meta.has_head?(meta.demo_comments||''):''),
       ad_badge:!!old.ad_badge, icons:old.icons!==false}};

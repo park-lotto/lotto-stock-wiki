@@ -11981,6 +11981,37 @@ def api_font_favorites_set(request: Request, body: dict):
     return {"ok": True, "files": clean, "is_default": False}
 
 
+_MY_CHANNEL_KEY = "deco_my_channel"
+
+
+@app.get("/api/produce/frame/my_channel")
+def api_my_channel(request: Request):
+    """장면꾸미기 띠에 넣을 **내 채널명**(계정별로 기억한다).
+
+    ★없던 시절엔 틀을 고를 때마다 샘플값 '숏템메이커'가 다시 박혔다 —
+      produce.html frPick()이 그 작업(job) 안의 이전 값만 물려받아서,
+      새 작업을 시작하면 매번 되돌아갔다(2026-08-30 사장님 제보).
+      그래서 값의 주인을 계정 설정 한 곳으로 옮긴다(0순위-B)."""
+    saved = Store(DB_PATH).get_pref(_MY_CHANNEL_KEY, customer_id=_cid(request))
+    return {"ok": True, "channel": saved or "", "is_default": saved is None}
+
+
+@app.post("/api/produce/frame/my_channel")
+def api_my_channel_set(request: Request, body: dict):
+    """내 채널명 저장. body: {channel:"..."} — 빈 문자열이면 지운다(샘플값으로 복귀)."""
+    store = Store(DB_PATH)
+    cid = _cid(request)
+    name = (body.get("channel") or "").strip()
+    if len(name) > 40:
+        return JSONResponse(status_code=422,
+                            content={"ok": False, "error": "채널명은 40자까지"})
+    if not name:
+        store.clear_pref(_MY_CHANNEL_KEY, customer_id=cid)
+        return {"ok": True, "channel": "", "is_default": True}
+    store.set_pref(_MY_CHANNEL_KEY, name, customer_id=cid)
+    return {"ok": True, "channel": name, "is_default": False}
+
+
 @app.get("/api/produce/picks")
 def api_produce_picks(request: Request):
     """영상제작에 담긴 도서관 대본(전체 데이터). 우리믹스 탭 기본 목록."""
