@@ -1,0 +1,1 @@
+- 2026-08-30: Buffer 거절 뿌리 = async 핸들러의 blocking 호출로 이벤트루프 정지(검증 HEAD가 10초 블록). run_in_threadpool로 수정·배포. 시험 예약 전부 삭제.
