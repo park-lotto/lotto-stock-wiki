@@ -2711,14 +2711,29 @@
           <div>
             <div class="hint" style="margin-bottom:6px">🕒 언제 올릴까요</div>
             <label style="display:flex;align-items:center;gap:8px;min-height:44px;cursor:pointer">
-              <input type="radio" name="bufWhen" value="queue" checked>
+              <input type="radio" name="bufWhen" value="queue" checked onchange="bufSyncWhen()">
               <span>내 Buffer 시간표에 맡기기 <span class="hint">(Buffer에서 정해둔 시간에 순서대로)</span></span>
             </label>
             <label style="display:flex;align-items:center;gap:8px;min-height:44px;cursor:pointer">
-              <input type="radio" name="bufWhen" value="at">
+              <input type="radio" name="bufWhen" value="at" onchange="bufSyncWhen()">
               <span>직접 정하기</span>
               <input type="datetime-local" id="bufAt" style="margin-left:4px">
             </label>
+            <!-- ★지금 바로 = 예약이 아니라 즉시 게시다(ShareMode shareNow, 스키마 실측).
+                 되돌릴 수 없으므로 누를 때 한 번 더 묻는다(사장님 2026-08-30 확정). -->
+            <label style="display:flex;align-items:center;gap:8px;min-height:44px;cursor:pointer">
+              <input type="radio" name="bufWhen" value="now" onchange="bufSyncWhen()">
+              <span>지금 바로 올리기 <span class="hint">(예약하지 않고 곧바로 게시합니다)</span></span>
+            </label>
+          </div>
+          <!-- 유튜브를 골랐을 때만 뜬다 — 인스타에는 이 축이 아예 없다(스키마 실측). -->
+          <div id="bufPrivacyBox" style="display:none">
+            <div class="hint" style="margin-bottom:6px">🔒 유튜브 공개범위</div>
+            <select id="bufPrivacy" style="min-height:38px">
+              <option value="public">공개</option>
+              <option value="unlisted">일부공개(링크가 있는 사람만)</option>
+              <option value="private">비공개(나만)</option>
+            </select>
           </div>
         </div>
 
@@ -3259,6 +3274,7 @@ async function loadBuffer(){
 function bufPick(el){
   BUF.picked[el.dataset.ch] = el.checked;
   bufRenderTexts();
+  bufSyncPrivacy();
 }
 
 /* 고른 채널마다 글 칸을 하나씩. 이미 고쳐 쓴 글은 **지우지 않는다**(다시 그려도 유지). */
@@ -3384,6 +3400,21 @@ function bufRenderTexts(){
   if (!box.querySelector('textarea')) box.innerHTML = '<div class="hint">올릴 곳을 고르면 채널마다 글 칸이 생깁니다.</div>';
 }
 
+/* 고른 방식에 따라 버튼 이름을 바꾼다 — '예약하기'인데 즉시 올라가면 사고다. */
+function bufSyncWhen(){
+  var mode = (document.querySelector('input[name=bufWhen]:checked') || {}).value;
+  var btn = document.getElementById('btnBufGo');
+  if (btn) btn.textContent = (mode === 'now') ? '🚀 지금 올리기' : '📅 예약하기';
+}
+/* 유튜브를 하나라도 골랐을 때만 공개범위 칸을 보인다(인스타엔 이 축이 없다). */
+function bufSyncPrivacy(){
+  var box = document.getElementById('bufPrivacyBox');
+  if (!box) return;
+  var hasYt = BUF.channels.some(function(c){
+    return BUF.picked[c.id] && (c.service || '').toLowerCase() === 'youtube'; });
+  box.style.display = hasYt ? '' : 'none';
+}
+
 async function bufSchedule(){
   var st = document.getElementById('bufStatus');
   var ids = Object.keys(BUF.picked).filter(function(k){ return BUF.picked[k]; });
@@ -3397,8 +3428,18 @@ async function bufSchedule(){
        그냥 문자열로 넘기면 9시간 어긋난 시각에 올라간다. */
     due = new Date(v).toISOString();
   }
+  /* ★지금 바로 = 되돌릴 수 없다. 반드시 한 번 더 묻는다(사장님 2026-08-30 확정).
+     어디에 올라가는지 이름을 보여준다 — "정말?"만 묻는 창은 아무도 안 읽는다. */
+  var now = (mode === 'now');
+  if (now){
+    var nm = {};
+    BUF.channels.forEach(function(c){ nm[c.id] = c.service + ' · ' + c.name; });
+    var where = ids.map(function(i){ return nm[i] || i; }).join('\n  · ');
+    if (!confirm('지금 바로 올립니다 — 예약이 아니라 곧바로 게시되고 되돌릴 수 없습니다.\n\n  · '
+                 + where + '\n\n계속할까요?')) { st.textContent = ''; return; }
+  }
   var btn = document.getElementById('btnBufGo');
-  btn.disabled = true; st.textContent = '예약하는 중…';
+  btn.disabled = true; st.textContent = now ? '올리는 중…' : '예약하는 중…';
   /* ★채널마다 글이 다르다 — texts로 채널별 글을 보낸다. */
   var texts = {};
   ids.forEach(function(id){
@@ -3409,7 +3450,9 @@ async function bufSchedule(){
   try {
     d = await (await fetch('/api/buffer/schedule', {
       method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ job_id: MIX_JOB, channel_ids: ids, texts: texts, due_at: due })
+      body: JSON.stringify({ job_id: MIX_JOB, channel_ids: ids, texts: texts, due_at: due,
+                             share_now: now,
+                             privacy: (document.getElementById('bufPrivacy') || {}).value || '' })
     })).json();
   } catch(e){ d = null; }
   btn.disabled = false;
@@ -3434,13 +3477,15 @@ async function bufSchedule(){
               {year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'}); }
       catch(e){ when = r.due_at; }
     }
+    if (now) return '✅ <b>' + nm + '</b> — 지금 올렸습니다';
     return '✅ <b>' + nm + '</b> 예약 완료'
          + (when ? ' — <b>' + esc(when) + '</b>에 올라갑니다' : ' — 내 Buffer 시간표 순서대로 올라갑니다');
   });
   if (okN){
     rows.push('<div style="margin-top:8px">🔎 <a href="https://publish.buffer.com" target="_blank" '
-            + 'rel="noopener">Buffer에서 확인·수정·취소하기</a> — 예약이 걸린 것이고, '
-            + '실제 게시는 그 시각에 Buffer가 합니다.</div>');
+            + 'rel="noopener">Buffer에서 확인하기</a>'
+            + (now ? ' — 올리라고 보냈습니다. 실제 게시 여부는 Buffer·내 SNS에서 확인해 주세요.'
+                   : ' — 예약이 걸린 것이고, 실제 게시는 그 시각에 Buffer가 합니다.') + '</div>');
   }
   st.innerHTML = rows.join('<br>');
 }
