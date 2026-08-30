@@ -2277,6 +2277,21 @@ class Store:
                             "ORDER BY id DESC LIMIT 1", (platform, shortcode)).fetchone()
         return row[0] if row else None
 
+    def prev_base_map(self, platform):
+        """플랫폼의 {shortcode: 직전 수집 조회수} 전부 — delta 계산용.
+
+        ★단건(prev_base_platform)을 수천 번 부르면 그만큼 왕복이 난다(네이버클립은
+          한 번에 4,000건이 넘는다). 마지막 base만 필요하므로 한 방에 가져온다.
+          `MAX(id)` 기준으로 각 shortcode의 **최신 회차**를 고른다.
+        """
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT shortcode, base FROM platform_snapshots "
+                "WHERE platform=? AND id IN ("
+                "  SELECT MAX(id) FROM platform_snapshots WHERE platform=? GROUP BY shortcode)",
+                (platform, platform)).fetchall()
+        return {r[0]: r[1] for r in rows if r[0] is not None and r[1] is not None}
+
     def prev_delta_platform(self, platform, shortcode):
         with self._conn() as c:
             row = c.execute("SELECT delta FROM platform_snapshots WHERE platform=? AND shortcode=? "
@@ -2362,8 +2377,34 @@ class Store:
                       key=lambda i: (i.get("age_hours") is None,
                                      i.get("age_hours") if i.get("age_hours") is not None else 0))
 
+    def _fill_delta(self, platform, items):
+        """delta·is_new가 없는 항목을 채운다 — **모든 플랫폼이 지나는 자리**(0순위-B).
+
+        ★2026-08-31 사장님 제보 "+undefined": 유튜브·인스타·틱톡은 ranking.py를
+          거치며 delta를 얻는데 네이버클립·핀터레스트는 그 경로를 안 타 두 키가
+          통째로 없었다(실측 4,492/4,492 · 2,259/2,259). 화면이 `'+'+i.delta`로
+          이어붙여 "+undefined"가 그대로 찍혔다.
+          호출부마다 붙이면 **새 플랫폼이 생길 때마다 또 빠뜨린다** — 저장을
+          담당하는 여기서 한 번에 채운다(락을 여기 둔 것과 같은 이유).
+        ★이미 채워진 항목은 건드리지 않는다 — ranking.py가 계산한 값이 더 정확하다
+          (가속·직전 delta까지 본다).
+        """
+        need = [x for x in (items or [])
+                if isinstance(x, dict) and x.get("delta") is None]
+        if not need:
+            return items
+        try:
+            from shopping_shorts import ranking
+            ranking.attach_delta(need, self.prev_base_map(platform))
+        except Exception as e:      # noqa: BLE001 — delta를 못 채워도 수집은 살린다
+            logging.warning("delta 채우기 실패(%s): %s", platform, type(e).__name__)
+            for x in need:          # 그래도 undefined는 막는다
+                x.setdefault("delta", 0)
+                x.setdefault("is_new", True)
+        return items
+
     def save_last_run_platform(self, platform, items, collected_at):
-        items = self._trim_for_store(items)
+        items = self._trim_for_store(self._fill_delta(platform, items))
         with self._conn() as c:
             c.execute("INSERT OR REPLACE INTO settings(key, value) VALUES(?,?)",
                       (f"last_run::{platform}", json.dumps({"items": items, "collected_at": collected_at}, ensure_ascii=False)))
@@ -2394,7 +2435,7 @@ class Store:
             have = {x.get(key) or x.get("video_url") for x in prev}
             fresh = [x for x in (new_items or [])
                      if (x.get(key) or x.get("video_url")) not in have]
-            items = self._trim_for_store(fresh + prev)
+            items = self._trim_for_store(self._fill_delta(platform, fresh) + prev)
             c.execute("INSERT OR REPLACE INTO settings(key, value) VALUES(?,?)",
                       (f"last_run::{platform}",
                        json.dumps({"items": items, "collected_at": collected_at},
