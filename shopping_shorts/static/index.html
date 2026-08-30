@@ -372,6 +372,10 @@ body.is-admin .admin-only{display:block}
            ★관리자 전용 — admin-only 클래스가 body.is-admin일 때만 보이게 한다(기존 방식 그대로).
              고객 화면엔 아예 안 뜬다. 새 방식을 만들지 않는다(0순위-B). -->
       <div class="ctype admin-only" data-platform="pinterest" onclick="switchPlatform('pinterest',this)">📌 핀터레스트</div>
+      <!-- 네이버 클립(2026-08-30 사장님 "핀터레스트 옆에 네이버클립 카테고리").
+           국내 숏폼. 핀터레스트와 달리 조회수·좋아요·댓글·발행시각이 다 와서
+           속도·참여율이 정상 계산된다. 무료·로그인 없음(HTTP 2번). -->
+      <div class="ctype admin-only" data-platform="naverclip" onclick="switchPlatform('naverclip',this)">🟩 네이버클립</div>
       <div class="ctype" data-platform="tiktok" onclick="switchPlatform('tiktok',this)" style="display:none">🎵 틱톡</div>
       <div class="ctype" data-platform="xiaohongshu" onclick="switchPlatform('xiaohongshu',this)" style="display:none">📕 샤오홍슈</div>
       <div class="ctype" data-platform="douyin" onclick="switchPlatform('douyin',this)" style="display:none">🎬 도우인</div>
@@ -398,6 +402,15 @@ body.is-admin .admin-only{display:block}
         <button onclick="saveTtSettings()" style="margin-left:8px">저장</button>
         <div id="ttStatus" style="margin-top:6px;font-size:11px;color:var(--sub)"></div>
       </div>
+    </div>
+    <!-- 네이버 클립 수집(2026-08-30) — 관리자 전용. switchPlatform이 켜고 끈다.
+         핀터레스트 패널과 같은 모양으로 둔다(사장님이 배우는 조작이 하나여야 한다). -->
+    <div id="ncPanel" style="display:none;margin-bottom:12px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--inset)">
+      <input id="ncKw" placeholder="검색어(한국어, 쉼표로 여러 개) — 비우면 뷰티"
+             style="width:min(560px,72%);padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--txt);font-size:13px">
+      <button onclick="ncCollect(this)" style="margin-left:8px">🟩 수집해서 쌓기</button>
+      <button onclick="ncCollect(this,true)" style="margin-left:4px" title="지금까지 쌓은 것을 비우고 새로 시작합니다">🗑 비우고 새로</button>
+      <span id="ncMsg" style="font-size:12px;color:var(--sub);margin-left:8px"></span>
     </div>
     <!-- 핀터레스트 수집(2026-08-28) — 관리자 전용. switchPlatform이 켜고 끈다. -->
     <div id="pinPanel" style="display:none;margin-bottom:12px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--inset)">
@@ -837,6 +850,9 @@ const DESC_BY_PLATFORM = {
   // ★핀터레스트는 조회수·좋아요를 안 준다 — 지표가 없으니 **없다고 말한다**(지어내지 않는다).
   //   깨끗한 원본(자막·워터마크 없음)을 찾는 게 목적이라 순위보다 '무엇이 있나'가 중요하다.
   pinterest: '검색어로 모은 <b>영상 핀</b>입니다. 자막·워터마크 없는 <b>깨끗한 원본</b>이 많아 자막제거 없이 바로 씁니다. (무료 수집 · 관리자 전용)',
+  // 네이버 클립은 핀터레스트와 달리 지표가 진짜로 온다 — 그래서 '지표 없음'이라
+  // 말하지 않는다(설명이 화면과 어긋나면 그게 거짓말이 된다).
+  naverclip: '검색어로 모은 <b>네이버 클립</b> 숏폼을 <b>조회수</b> 기반으로 랭킹합니다. 국내 소재라 번역 없이 바로 참고합니다. (무료 수집 · 관리자 전용)',
 };
 const TAB_TIP = {
   instagram: {speed:'댓글 ÷ 경과시간', density:'댓글 ÷ 조회수', fan_density:'댓글 ÷ 팔로워수'},
@@ -846,6 +862,7 @@ const TAB_TIP = {
   xiaohongshu: {speed:'(좋아요+댓글+수집+공유) ÷ 경과시간', density:'(수집+공유) ÷ (좋아요+댓글+수집+공유)'},
   threads:   {speed:'댓글 ÷ 경과시간', density:'댓글 ÷ 조회수'},
   pinterest: {},          // 지표 없음 — 핀터레스트가 조회수·좋아요를 안 준다
+  naverclip: {speed:'조회수 ÷ 경과시간', density:'(좋아요+댓글) ÷ 조회수 = 반응률'},
 };
 // ── 지표 '이름'도 플랫폼마다 다르다(2026-08-24 사장님 "이름고치고") ──────────────
 // 여태 툴팁(TAB_TIP)만 갈리고 **글자는 한 벌**이라, 유튜브에서 조회수÷시간으로
@@ -859,6 +876,9 @@ const METRIC_LABELS = {
   xiaohongshu: {speed:'시간당반응', density:'저장·공유율'},
   threads:     {speed:'시간당댓글', density:'조회수당댓글'},
   pinterest:   {},        // 비워 두면 정렬 탭이 자동으로 숨는다(위 주석 규약)
+  // fan_density(구독자 대비)는 없다 — 클립 카드 API가 구독자수를 안 준다.
+  // 지어내지 않고 키를 비워 그 탭이 자동으로 숨게 둔다.
+  naverclip:   {speed:'시간당조회수', density:'반응률'},
 };
 // 지표 이름 하나 — 모르는 플랫폼·지표는 인스타 이름으로 떨어진다(빈 화면보다 낫다).
 // 카드 툴팁 = 그 플랫폼의 실제 식(TAB_TIP). 이름과 식을 한 곳에서 짝지어 준다.
@@ -944,6 +964,9 @@ function switchPlatform(p, el){
   // 핀터레스트 수집 패널 — 관리자 + 그 탭일 때만(샤오홍슈와 같은 방식, 0순위-B).
   const _pp=document.getElementById('pinPanel');
   if(_pp) _pp.style.display = (p==='pinterest' && window.IS_ADMIN) ? 'block' : 'none';
+  // 네이버 클립 수집 패널 — 핀터레스트와 같은 방식(0순위-B: 새 방식을 만들지 않는다).
+  const _nc=document.getElementById('ncPanel');
+  if(_nc) _nc.style.display = (p==='naverclip' && window.IS_ADMIN) ? 'block' : 'none';
   const _xd=document.getElementById('xhsDiscoverPanel');
   if(_xd){
     const showXhs = (p==='xiaohongshu' && window.IS_ADMIN);
@@ -1018,6 +1041,29 @@ async function pinCollect(btn, reset){
     if(PLATFORM==='pinterest') load();     // 그 탭이면 즉시 다시 그린다
   }catch(e){
     // ★조용히 실패하지 않는다 — 0건이 '없음'인지 '고장'인지 화면이 말해야 한다.
+    if(msg) msg.textContent = '⚠️ '+(e&&e.message||e);
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent=orig; }
+  }
+}
+// 네이버 클립 수집(2026-08-30 사장님 "핀터레스트 옆에 / 뷰티쪽으로").
+// pinCollect와 같은 모양이다 — 다른 건 대기 문구뿐(브라우저를 안 띄워서 훨씬 빠르다).
+async function ncCollect(btn, reset){
+  const kwEl=document.getElementById('ncKw'), msg=document.getElementById('ncMsg');
+  const kws=(kwEl&&kwEl.value||'').split(',').map(s=>s.trim()).filter(Boolean);
+  if(reset && !confirm('지금까지 쌓은 네이버 클립 목록을 비우고 새로 시작할까요?')) return;
+  const orig=btn?btn.textContent:'';
+  if(btn){ btn.disabled=true; btn.textContent='수집 중…'; }
+  if(msg) msg.textContent = '네이버 클립 검색 중… (검색어 '+(kws.length||1)+'개)';
+  try{
+    const r=await fetch('/api/naverclip/collect',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({keywords:kws, reset:!!reset})});
+    const d=await r.json();
+    if(!d||!d.ok) throw new Error((d&&d.error)||('실패 '+r.status));
+    if(msg) msg.textContent = '✅ 새로 '+(d.added!=null?d.added:d.count)+'개 추가 · 지금까지 '+d.count+'개';
+    if(PLATFORM==='naverclip') load();     // 그 탭이면 즉시 다시 그린다
+  }catch(e){
     if(msg) msg.textContent = '⚠️ '+(e&&e.message||e);
   }finally{
     if(btn){ btn.disabled=false; btn.textContent=orig; }
