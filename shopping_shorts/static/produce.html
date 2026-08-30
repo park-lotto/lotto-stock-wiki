@@ -6165,7 +6165,11 @@ function _zoomApply(){
   // ★확대 중엔 '끌어서 옮긴다'를 먼저 말한다 — 안 보이는 부분을 보는 방법이 그거다.
   // ★배경(실장면)이 꺼져 있으면 확대해도 화면이 안 변한다 — 흰 바탕만 커질 뿐이다.
   //   그대로 두면 "눌러도 아무 일이 없다"로 보이므로, 무엇을 켜야 하는지 알려준다.
-  const bgOn = pv && pv.style.display !== 'none' && pv.getAttribute('src');
+  // ★변수명을 bgEl로 둔다(pv를 쓰면 안 된다): #mixPreview의 display를 _pvShow 밖에서
+  //   만지지 말라는 규약을 테스트가 **파일 전체 문자열 검색**으로 지킨다. 여긴 전혀 다른
+  //   요소를 읽기만 하는데도 이름이 겹치면 걸린다 — 규약 쪽이 옳으니 이름을 비켜준다.
+  const bgEl = document.getElementById('hcPreviewBg');
+  const bgOn = bgEl && bgEl.style.display !== 'none' && bgEl.getAttribute('src');
   if(ht) ht.innerHTML = !bgOn
     ? '🔍 위 <b>실장면 배경</b>을 켜면, 실제 장면을 확대해서 구석구석 볼 수 있어요.'
     : (on
