@@ -5994,8 +5994,9 @@ async def api_buffer_schedule(request: Request):
     #   이미 앞에 있으면 아무 일도 안 한다(무해·즉시).
     try:
         mix_pipeline.ensure_faststart(job["video_path"])
-    except Exception:
-        pass                       # 실패해도 예약 자체는 시도한다(원본은 그대로다)
+    except Exception as e:         # 실패해도 예약은 시도한다(원본은 그대로다) — 단 조용히 넘기지 않는다
+        logging.getLogger("buffer").warning(
+            "faststart 보장 실패 job=%s: %s", job_id, type(e).__name__)
     sid = _share_put(job_id, _SHARE_TTL_BUFFER)
     # ★Buffer는 **HTTPS**를 요구한다(buffer_api 머리말). 그런데 프록시 뒤라
     #   request.base_url이 http로 잡혀 301 리다이렉트 주소를 넘기고 있었다
