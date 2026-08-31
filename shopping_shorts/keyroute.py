@@ -102,6 +102,89 @@ def is_pooled(service):
     return service in POOLED
 
 
+# ★개인 키가 **없으면 아예 못 쓰는** 서비스(2026-09-01 사장님 확정).
+#   "v메이크랑 tts는 없으면 못하게 막아"
+#
+#   왜 생겼나(실사고): 회원이 개인 키를 안 내면 **사장님 키로 조용히 나가고**
+#   포인트만 깎였다. 회원들은 "다 개인 API키로 쓴다"고 알고 있었고 아무도 포인트
+#   얘기를 못 들었다. 포인트가 남은 회원(유영창 9,500P·이정훈 105,530P …)은 계속
+#   사장님 일레븐랩스·VMake 계정을 태웠고, 잔액이 떨어진 회원만 402로 막혀
+#   "어떤 사람은 되고 어떤 사람은 안 되는" 상태가 됐다.
+#   실측(2026-09-01): 최근 30일 제작 46명 중 **16명이 TTS 키 없이** 86건을 만들었다.
+#
+#   그래서 폴백을 없앤다 — 키가 없으면 **기능 자체가 안 열린다**. 포인트로 때우는
+#   길을 막아야 회원이 키를 등록한다.
+#   ⚠️ gemini·youtube는 여기 넣지 마라. 저긴 공용 풀 정책(키 1개 받고 무료)이라
+#      회사 키로 도는 게 **의도된 거래**다.
+REQUIRE_OWN_KEY = (SVC_VMAKE, SVC_ELEVENLABS, SVC_TYPECAST)
+
+#: 차단 안내에 쓸 사람 말 이름 — 화면이 서비스 코드를 그대로 보여주면 안 된다.
+#   ★업체명을 쓰지 마라(브랜드 정책 — test_subclean_ui가 produce.html을 검사한다).
+#     이 문구는 서버가 만들어 그 화면에 그대로 실린다.
+SERVICE_LABEL = {
+    SVC_VMAKE: "자막 지우기",
+    SVC_ELEVENLABS: "목소리(ElevenLabs)",
+    SVC_TYPECAST: "목소리(타입캐스트)",
+    SVC_SERPAPI: "SerpAPI(렌즈 검색)",
+    SVC_BUFFER: "Buffer(SNS 예약)",
+    SVC_GEMINI: "제미니",
+    SVC_YOUTUBE: "유튜브",
+}
+
+
+def requires_own_key(service):
+    """개인 키가 없으면 못 쓰는 서비스인가. 판단은 여기 한 곳(0순위-B)."""
+    return service in REQUIRE_OWN_KEY
+
+
+def has_own_key(store, customer_id, service):
+    """이 회원이 그 서비스의 **자기 키**를 등록했나. 사장님 키는 세지 않는다."""
+    try:
+        return bool(store.get_customer_keys_plain(as_cid(customer_id), service))
+    except AttributeError:      # store 스텁 — 판단 불가면 '없다'로 보지 않는다(작업을 막지 않게)
+        logging.warning("has_own_key: store에 get_customer_keys_plain이 없다 "
+                        "(cid=%r, service=%r) — 있음으로 처리한다", customer_id, service)
+        return True
+    except Exception as e:      # noqa: BLE001 — 조회 실패로 회원을 막으면 안 된다
+        logging.warning("has_own_key 조회 실패(있음으로 처리): %r", e)
+        return True
+
+
+def block_reason(store, customer_id, service):
+    """개인 키가 없어 막아야 하면 (코드, 사람이 읽는 문구), 아니면 None.
+
+    ★차단 판단은 여기 한 곳뿐이다 — 엔드포인트마다 다시 적으면 어긋난다(0순위-B).
+    ★사장님(cid 0)은 막지 않는다: 공용 보이스 굽기·샘플 제작 등 회사 자산 작업이
+      여기서 막히면 서비스가 통째로 선다.
+    """
+    if not requires_own_key(service):
+        return None
+    if not as_cid(customer_id):          # cid 0 = 사장님/관리자
+        return None
+    if has_own_key(store, customer_id, service):
+        return None
+    label = SERVICE_LABEL.get(service, service)
+    return ("need_own_key",
+            f"{label} API 키를 등록해야 이용할 수 있어요. "
+            f"설정 > 🔑 API 키에서 등록해 주세요.")
+
+
+def tts_block_reason(store, customer_id):
+    """음성(TTS)은 일레븐랩스·타입캐스트 **둘 중 하나만** 있으면 된다.
+
+    ★서비스 하나씩 block_reason을 부르면 "일레븐랩스 없음"으로 막혀, 타입캐스트를
+      등록한 회원(실측 4명)이 억울하게 막힌다 — 그래서 음성은 이 함수가 판단한다.
+    """
+    if not as_cid(customer_id):
+        return None
+    if (has_own_key(store, customer_id, SVC_ELEVENLABS)
+            or has_own_key(store, customer_id, SVC_TYPECAST)):
+        return None
+    return ("need_own_key",
+            "음성 생성을 하려면 일레븐랩스 또는 타입캐스트 API 키가 필요해요. "
+            "설정 > 🔑 API 키에서 등록해 주세요.")
+
+
 def uses_customer_key(service):
     """등록한 키가 실제 작업에 쓰이는 서비스인가. 화면 문구도 이걸 봐야
     "등록하면 0P"라는 거짓말이 안 나간다(0순위-B: 판단은 한 곳에서)."""

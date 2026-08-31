@@ -3329,6 +3329,13 @@ def api_mix_start(request: Request, background_tasks: BackgroundTasks, body: dic
         return JSONResponse(status_code=429, content={
             "ok": False, "error_code": "daily_limit",
             "error": "오늘 영상 만들기 횟수를 다 썼어요. 결제하면 더 만들 수 있어요."})
+    # ★음성 키가 없으면 제작 자체를 막는다(2026-09-01) — 전엔 사장님 일레븐랩스로
+    #   조용히 나가고 포인트만 깎였다(실측: 최근 30일 16명이 키 없이 86건 제작).
+    _blocked = _need_own_key_or_402(cid, tts=True)
+    if _blocked:
+        uncount(cid, "render")
+        _store.release_mix_claim(_fp)
+        return _blocked
     _charged = {}                      # ★깎은 액수를 그대로 job에 남긴다(환불이 재판단하지 않게)
     _denied = _charge_or_402(cid, pricing.OP_MIX, keyroute.SVC_GEMINI, out=_charged)
     if _denied:
@@ -3469,6 +3476,10 @@ def api_mix_candidate_clone(request: Request, body: dict):
         return JSONResponse(status_code=429, content={
             "ok": False, "error_code": "daily_limit",
             "error": "오늘 영상 만들기 횟수를 다 썼어요. 결제하면 더 만들 수 있어요."})
+    # ★음성 키가 없으면 제작을 막는다(2026-09-01 사장님 확정) — keyroute가 판단처.
+    _blocked = _need_own_key_or_402(cid, tts=True)
+    if _blocked:
+        return _blocked
     _charged = {}                      # ★깎은 액수를 그대로 job에 남긴다(환불이 재판단하지 않게)
     _denied = _charge_or_402(cid, pricing.OP_MIX, keyroute.SVC_GEMINI, out=_charged)
     if _denied:
@@ -4858,7 +4869,11 @@ def clean_failure_kind(clean_error):
     """
     e = (clean_error or "")
     low = e.lower()
-    # 우리 포인트 부족(mix_pipeline._charge_clean). 재시도해도 영원히 안 된다.
+    # ★내 키 미등록(2026-09-01) — 키를 등록하기 전엔 재시도해도 영원히 안 된다.
+    #   포인트 부족보다 **먼저** 본다: 이제 포인트는 없고 사유는 키 미등록뿐이다.
+    if "키를 등록해야" in e or "need_own_key" in e or "API 키가 필요" in e:
+        return "need_own_key"
+    # 우리 포인트 부족(옛 사유 — 배포 직전에 담긴 job이 이 문구를 들고 있을 수 있다).
     # ★no_credit보다 **먼저** 본다 — 문구가 겹쳐도 우리 쪽 사유가 우선이라야
     #   "남의 키에 충전하세요"라는 엉뚱한 안내가 안 나간다.
     if "포인트가 부족" in e:
@@ -4962,6 +4977,11 @@ def api_produce_mix_clean(background_tasks: BackgroundTasks, body: dict):
     job = store.get_mix_job(job_id)
     if not job or not job.get("edit_plan"):
         return JSONResponse(status_code=422, content={"ok": False, "error": "매칭 먼저 실행하세요"})
+    # ★VMake 개인 키가 없으면 막는다(2026-09-01). 이 라우트는 요청자 cid를 안 읽으므로
+    #   **job 주인**을 기준으로 판단한다 — 실제로 키가 나가는 것도 job 주인 몫이다.
+    _blocked = _need_own_key_or_402(job.get("customer_id"), keyroute.SVC_VMAKE)
+    if _blocked:
+        return _blocked
     if job.get("clean_status") == "cleaning" and not _render_is_stale(job):
         return {"ok": True, "status": "cleaning"}       # 더블클릭 — VMake를 두 번 안 돌린다
     # 'cleaning'을 여기서 동기 기록(응답 전) — run 안에서 쓰면 이중예약된다(preview 라우트 주석 참조)
@@ -5077,6 +5097,10 @@ def api_mix_tts_regen(job_id: str, beat_idx: int, body: dict, background_tasks: 
     job = store.get_mix_job(job_id)
     if not job or not job.get("edit_plan"):
         return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    # ★음성 키 없으면 막는다(2026-09-01) — 안 막으면 무음 mp3가 조용히 만들어진다.
+    _blocked = _need_own_key_or_402(job.get("customer_id"), tts=True)
+    if _blocked:
+        return _blocked
     # 렌더 단계뿐 아니라 '이 음성으로 전체 생성'(active stage "tts") 등 활성 단계 전부에서 막는다.
     # 안 막으면 전체생성 백그라운드가 이 비트 새 톤 mp3를 job 기본 보이스로 덮어써 톤 변경이 사라진다
     # (2026-07-23 진단 — 스크린샷 "전체 음성 생성 중…" 상태에서 톤 바꿔도 적용 안 됨).
@@ -5777,6 +5801,9 @@ def api_mix_voice(background_tasks: BackgroundTasks, body: dict):
     job = store.get_mix_job(job_id)
     if not job or not job.get("edit_plan"):
         return JSONResponse(status_code=404, content={"ok": False, "error": "job/plan 없음"})
+    _blocked = _need_own_key_or_402(job.get("customer_id"), tts=True)   # 음성 키 필수(2026-09-01)
+    if _blocked:
+        return _blocked
     voice = _voice_snapshot(store, body)
     store.update_mix_job(job_id, voice=voice)
     background_tasks.add_task(resynth_tts_job, job_id, DB_PATH, _MIX_WORK_DIR)
@@ -5790,6 +5817,9 @@ def api_mix_voice_preview(body: dict):
     job = Store(DB_PATH).get_mix_job(job_id)
     if not job or not job.get("edit_plan") or not job["edit_plan"].get("beats"):
         return JSONResponse(status_code=404, content={"ok": False, "error": "plan 없음"})
+    _blocked = _need_own_key_or_402(job.get("customer_id"), tts=True)   # 음성 키 필수(2026-09-01)
+    if _blocked:
+        return _blocked
     beats = job["edit_plan"]["beats"]
     d = _MIX_WORK_DIR / job_id / "tts"
     d.mkdir(parents=True, exist_ok=True)
@@ -10139,6 +10169,25 @@ def uncount(customer_id, op):
         st.usage_decr(customer_id, "render", "trial")
         return
     st.usage_decr(customer_id, op, _today_utc())
+
+
+def _need_own_key_or_402(customer_id, service=None, *, tts=False):
+    """개인 키가 없으면 402로 막는다(2026-09-01 사장님 "v메이크랑 tts는 없으면 못하게 막아").
+
+    ★판단은 keyroute 한 곳(0순위-B) — 여기선 응답 모양만 만든다.
+    ★왜 402인가: 화면이 이미 402를 '이용 조건 미충족'으로 다루고 error_code로 갈래를
+      나눈다. 새 상태코드를 만들면 옛 화면이 조용히 무시한다.
+    반환: 막아야 하면 JSONResponse, 아니면 None."""
+    store = Store(DB_PATH)
+    hit = (keyroute.tts_block_reason(store, customer_id) if tts
+           else keyroute.block_reason(store, customer_id, service))
+    if not hit:
+        return None
+    code, msg = hit
+    return JSONResponse(status_code=402, content={
+        "ok": False, "error_code": code, "error": msg,
+        "need_key_service": ("tts" if tts else service),
+        "settings_url": "/settings#keys"})
 
 
 def _charge_or_402(customer_id, op, service, out=None):
@@ -14619,6 +14668,10 @@ def api_produce_mix_start(request: Request, background_tasks: BackgroundTasks, b
         return JSONResponse(status_code=429, content={
             "ok": False, "error_code": "daily_limit",
             "error": "오늘 영상 만들기 횟수를 다 썼어요. 결제하면 더 만들 수 있어요."})
+    # ★음성 키가 없으면 제작을 막는다(2026-09-01 사장님 확정) — keyroute가 판단처.
+    _blocked = _need_own_key_or_402(cid, tts=True)
+    if _blocked:
+        return _blocked
     _charged = {}                      # ★깎은 액수를 그대로 job에 남긴다(환불이 재판단하지 않게)
     _denied = _charge_or_402(cid, pricing.OP_MIX, keyroute.SVC_GEMINI, out=_charged)
     if _denied:

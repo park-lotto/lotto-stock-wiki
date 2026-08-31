@@ -440,15 +440,23 @@ var SERVICES = [
   { id: "gemini",     icon: "🤖", name: "구글 (제미나이)",
     desc: "대본 뽑기 · 영상 분석 · 썸네일에 씁니다", multi: true,
     ph: "여러 개를 한 번에 붙여넣어도 됩니다" },
+  /* ★2026-09-01 사장님 확정: "v메이크랑 tts는 없으면 못하게 막아".
+     전엔 키가 없으면 사장님 키로 나가고 포인트만 깎였다 — 회원들은 그 사실을
+     몰랐고(아무도 설명 못 들음), 포인트가 남은 회원만 조용히 통과했다.
+     실측: 최근 30일 제작 46명 중 16명이 음성 키 없이 86건을 만들었다. */
   { id: "vmake",      icon: "🎬", name: "자막 지우기 (VMake)",
-    desc: "", multi: false, ph: "키 붙여넣기", freeOp: "vmake" },
+    desc: "이 키가 있어야 자막 지우기를 쓸 수 있습니다", multi: false,
+    ph: "키 붙여넣기", mustOwn: true },
   { id: "elevenlabs", icon: "🔊", name: "목소리 (ElevenLabs)",
-    desc: "영상에 넣을 목소리를 만듭니다", multi: false, ph: "키 붙여넣기" },
+    desc: "영상에 넣을 목소리를 만듭니다 — 목소리 키(이것 또는 타입캐스트)가 "
+        + "있어야 영상을 만들 수 있습니다",
+    multi: false, ph: "키 붙여넣기", mustOwn: true },
   /* ★타입캐스트는 목소리의 **두 번째 엔진**입니다. 성우를 고를 때 정해집니다 —
      필재·김건·박창수·용식이 같은 남자 성우가 여기 있습니다(ElevenLabs에 없는 라인업).
      그래서 두 칸이 따로입니다: 고른 성우가 어느 쪽이냐에 따라 쓰이는 키가 다릅니다. */
   { id: "typecast",   icon: "🎤", name: "목소리 (타입캐스트)",
-    desc: "한국 성우 목소리를 만듭니다", multi: false, ph: "키 붙여넣기",
+    desc: "한국 성우 목소리를 만듭니다 — ElevenLabs 대신 이 키만 있어도 됩니다",
+    multi: false, ph: "키 붙여넣기", mustOwn: true,
     note: "성우 목록에서 <b>필재·김건·박창수·용식이</b> 같은 한국 성우를 고르면 " +
           "이 키가 쓰입니다. 다른 성우는 위의 <b>ElevenLabs</b> 키를 씁니다 — " +
           "두 곳 다 쓰시려면 키도 둘 다 넣어주세요." },
@@ -621,13 +629,13 @@ function renderKeys(){
   el("adminNotice").style.display = PERSONAL ? "none" : "";
   el("svcCards").innerHTML = SERVICES.map(function(s){
     var mine = keysOf(s.id);
-    /* ★포인트로 대신 쓸 수 있는 서비스에만 '포인트로 사용중'을 쓴다.
-       Buffer처럼 **내 키가 없으면 아예 못 쓰는** 서비스(mustOwn)에 그 말을 붙이면
-       "안 넣어도 포인트로 되는구나"로 읽혀 거짓말이 된다(2026-08-30 사장님 지적). */
+    /* ★2026-09-01: 포인트 제도를 없앴다. 이제 갈래는 둘뿐이다 —
+       내 키가 없으면 **못 쓰는** 서비스(mustOwn)와, 회사 풀로 무료인 서비스
+       (제미니·유튜브. 키 1개 내면 풀 전체를 쓰는 거래). 중간은 없다. */
     var badge = mine.length
       ? '<span class="svcBadge on">✓ ' + mine.length + '개 등록됨</span>'
       : (s.mustOwn ? '<span class="svcBadge off">내 키 필요</span>'
-                   : '<span class="svcBadge off">포인트로 사용중</span>');
+                   : '<span class="svcBadge off">무료로 사용중</span>');
 
     /* 설명 — 단가는 실제 값으로 보여준다(하드코딩하지 않는다).
        ★예전엔 freeOp가 있으면 desc를 통째로 덮어썼다. 렌즈처럼 desc에 꼭 필요한
@@ -638,8 +646,7 @@ function renderKeys(){
        거짓말이고, 서버도 그렇게 안 준다(keyroute.should_charge). */
     var freeTxt = (s.freeOp && PRICES[s.freeOp] != null && WIRED.indexOf(s.id) >= 0)
       ? "등록하면 " + num(PRICES[s.freeOp]) + "P → 0P" : "";
-    /* ★공용 풀 서비스는 "내 키로 돈다"가 아니다 — 키를 풀에 넣어주는 대신 무료로 쓴다.
-       사실대로 적는다: 내 키 1개만 내면 풀 전체를 쓰게 되고 포인트가 안 깎인다. */
+    /* ★공용 풀 서비스는 "내 키로 돈다"가 아니다 — 키를 풀에 넣어주는 대신 무료로 쓴다. */
     var isPooled = POOLED.indexOf(s.id) >= 0;
 
     var rows = mine.map(function(k){

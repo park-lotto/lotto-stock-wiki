@@ -1628,28 +1628,37 @@ class NotEnoughPoints(Exception):
 
 
 def _charge_clean(store, customer_id, n_sources):
-    """자막제거 선차감. 깎은 액수를 반환(0=무료). 모자라면 NotEnoughPoints.
+    """자막제거 관문 — **내 키가 없으면 거절**한다. 반환값은 항상 0(과금 없음).
 
-    ★소스 개수만큼 곱한다 — VMake는 소스 1편당 1콜이다(_ensure_clean_sources).
-      job당 1회로 계산하면 소스 3개짜리에서 1,000원을 손해 본다.
+    ★2026-09-01 사장님 확정: "v메이크랑 tts는 없으면 못하게 막아".
+      전엔 키가 없으면 사장님 키로 돌리고 포인트를 깎았다. 회원들은 포인트를 쓰는
+      줄도 몰랐고(설명받은 적 없음), 포인트가 남은 회원만 조용히 통과해
+      "어떤 사람은 되고 어떤 사람은 안 되는" 상태가 됐다. 이제 길은 하나다 —
+      키를 등록하면 되고, 없으면 안 된다.
+
+    ★함수 이름을 그대로 둔 이유: 호출부 3곳(2521·2559·2580)과 환불 짝(_refund_clean),
+      실패 분류(app.py clean_failure_kind)가 이 이름에 걸려 있다. 이름을 바꾸면
+      그 전부를 같이 고쳐야 하고, 하나라도 빠뜨리면 관문이 통째로 사라진다.
+      **관문이라는 역할은 그대로고, 통행료가 없어졌을 뿐이다.**
+
+    ★반환 0의 의미: 호출부는 이 값을 charged로 들고 다니다 실패 시 _refund_clean에
+      넘긴다. 0이면 환불이 아무 일도 안 한다 — 없는 포인트를 돌려주는 유령 지급이
+      생기지 않는다(환불 코드는 그대로 두어도 안전하다).
     """
-    from shopping_shorts import keyroute, points, pricing
+    from shopping_shorts import keyroute
     if n_sources <= 0:
         return 0
-    # ★cid 0 = 사장님 본인(store.LEGACY_CUSTOMER_ID). 자기 키로 자기한테 청구하는 꼴이라
-    #   과금 대상이 아니다. keyroute도 cid 0은 개인키 조회를 아예 건너뛴다.
-    #   정규화는 keyroute.as_cid를 그대로 쓴다 — 여기서 int()를 또 부르면
-    #   같은 판단이 두 곳에 흩어진다(0순위-B).
+    # ★cid 0 = 사장님 본인(store.LEGACY_CUSTOMER_ID)은 막지 않는다 — 회사 자산 작업이
+    #   여기서 막히면 서비스가 통째로 선다. 정규화는 keyroute.as_cid 하나만 쓴다(0순위-B).
     if not keyroute.as_cid(customer_id):
         return 0
-    if not keyroute.should_charge(store, customer_id, keyroute.SVC_VMAKE):
-        return 0                                    # 내 키 → 무료
-    need = pricing.cost(store, pricing.OP_VMAKE) * n_sources
-    if not points.deduct(store, customer_id, need, pricing.OP_VMAKE):
-        raise NotEnoughPoints(
-            f"포인트가 부족합니다 (필요 {pricing.to_display(need)}P, "
-            f"보유 {pricing.to_display(points.balance(store, customer_id))}P)")
-    return need
+    # ★차단 판단은 keyroute 한 곳(block_reason). 여기서 키 유무를 또 검사하면
+    #   웹 진입(app.py _need_own_key_or_402)과 어긋난다 — 한쪽만 막히면 큐에 남은
+    #   작업이 그대로 통과한다(웹만 막고 워커를 안 막으면 나는 사고).
+    hit = keyroute.block_reason(store, customer_id, keyroute.SVC_VMAKE)
+    if hit:
+        raise NotEnoughPoints(hit[1])   # 예외 타입은 유지 — 호출부 3곳이 이걸 잡는다
+    return 0
 
 
 def _refund_clean(store, customer_id, amount):

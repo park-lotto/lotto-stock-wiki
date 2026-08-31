@@ -41,10 +41,16 @@ def test_ui_has_branch_for_every_kind():
         assert re.search(r"kind\s*===\s*['\"]%s['\"]" % kind, body), kind
 
 
-def test_no_points_does_not_offer_retry():
-    """포인트 부족은 다시 눌러도 같은 결과라 재시도 버튼을 주면 안 된다."""
+def test_need_own_key_does_not_offer_retry():
+    """★키 미등록은 다시 눌러도 같은 결과다 — 재시도 버튼을 주면 안 된다.
+    (2026-08-26에 6번 헛누른 고객이 있었다. 2026-09-01 포인트 폐지 후에도 같다.)
+
+    옛 사유 'no_points'도 같은 분기가 받는다 — 배포 직전에 담긴 job이 그 값을
+    들고 있기 때문이다."""
     p = os.path.join(os.path.dirname(__file__), "..", "static", "produce.html")
     html = io.open(p, encoding="utf-8").read()
-    start = html.index("if(kind === 'no_points')")
+    start = html.index("if(kind === 'no_points'")          # 옛 사유도 같이 받는 분기
     block = html[start:html.index("if(kind === 'no_credit')", start)]
     assert "+ redo" not in block
+    assert "need_own_key" in block                          # 새 사유가 같은 분기에 있다
+    assert "등록" in block                                   # 무엇을 해야 하는지 적혀 있다

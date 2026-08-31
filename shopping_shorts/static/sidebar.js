@@ -403,23 +403,34 @@
         // 줄바꿈(\n)은 <br>로 — escHtml 먼저 하고 바꾼다(순서 반대면 태그가 escape된다).
         (opts.body ? escHtml(opts.body).replace(/\n/g, "<br>")
                    : '이 기능은 결제하시면 계속 쓸 수 있어요.<br>담아둔 영상·자료는 <b>그대로 보존</b>돼요.') + '</div>' +
-      '<div style="margin-top:14px;font-size:14px;color:#7db4ff">' +
-        (k ? "카톡: " + escHtml(k) + "<br>" : "") +
-        (ph ? "전화: " + escHtml(ph) : "") +
-        (!k && !ph ? "결제를 원하시면 안내받으신 판매 채널로 문의해 주세요." : "") +
-      "</div>" +
+      // 결제 문의처 — 키 등록 안내처럼 결제와 무관한 사유에선 숨긴다(hideContact).
+      (opts.hideContact ? "" :
+        '<div style="margin-top:14px;font-size:14px;color:#7db4ff">' +
+          (k ? "카톡: " + escHtml(k) + "<br>" : "") +
+          (ph ? "전화: " + escHtml(ph) : "") +
+          (!k && !ph ? "결제를 원하시면 안내받으신 판매 채널로 문의해 주세요." : "") +
+        "</div>") +
+      // ★사유별 바로가기(2026-09-01) — 키 등록처럼 '지금 할 일'이 결제가 아닌 경우,
+      //   그리로 보내는 버튼을 결제 CTA **대신** 띄운다.
+      (opts.link
+        ? '<div style="margin-top:18px"><a href="' + escHtml(opts.link) + '"' +
+          (/^https?:\/\//.test(opts.link) ? ' target="_blank" rel="noopener"' : "") +
+          ' style="display:block;background:linear-gradient(135deg,#6ff0d6,#1f9e7a);color:#08110e;' +
+          'border-radius:10px;padding:13px 20px;font-weight:800;font-size:15px;text-decoration:none">' +
+          escHtml(opts.linkText || "바로가기") + "</a></div>"
+        : "") +
       // 결제로 가는 길(2026-08-23). 예전엔 '카톡 문의'만 있어서, 계좌를 넣어놔도
       // 기존 회원은 결제 안내 화면으로 갈 방법이 아예 없었다(사장님이 일일이 카톡으로
       // 계좌를 알려줘야 했다). 주소·문구는 서버(/api/me pay_cta)가 정한 것을 그대로 쓴다.
-      (_pw.cta && _pw.cta.href
+      (!opts.link && _pw.cta && _pw.cta.href
         ? '<div style="margin-top:18px"><a id="ss-pw-pay" href="' + escHtml(_pw.cta.href) + '"' +
           (/^https?:\/\//.test(_pw.cta.href) ? ' target="_blank" rel="noopener"' : "") +
           ' style="display:block;background:linear-gradient(135deg,#6ff0d6,#1f9e7a);color:#08110e;' +
           'border-radius:10px;padding:13px 20px;font-weight:800;font-size:15px;text-decoration:none">' +
           escHtml(_pw.cta.label || "💳 결제 안내") + "</a></div>"
         : "") +
-      '<div style="margin-top:' + (_pw.cta && _pw.cta.href ? "10px" : "18px") + '"><button id="ss-pw-close" style="background:' +
-      (_pw.cta && _pw.cta.href ? "transparent;color:#8a8a92;border:1px solid #2a2a30" : "#4f9dfa;color:#111;border:0") +
+      '<div style="margin-top:' + ((opts.link || (_pw.cta && _pw.cta.href)) ? "10px" : "18px") + '"><button id="ss-pw-close" style="background:' +
+      ((opts.link || (_pw.cta && _pw.cta.href)) ? "transparent;color:#8a8a92;border:1px solid #2a2a30" : "#4f9dfa;color:#111;border:0") +
       ';border-radius:8px;padding:10px 22px;font-weight:800;font-size:14px;cursor:pointer">' +
       escHtml(opts.closeLabel || "닫기") + "</button></div>" +
       "</div>";
@@ -605,6 +616,15 @@
   function _pwReason(d) {
     var msg = (d && d.error) || "";
     var lvl = (d && d.level) || "";
+    // ★내 API 키가 없어 막힌 경우(2026-09-01 사장님 확정 "v메이크랑 tts는 없으면 못하게 막아").
+    //   이건 결제 문제가 **아니라** 키 등록 문제라 처방이 다르다 — 여기서 안 가르면
+    //   기본 분기로 떨어져 결제 버튼이 뜨고, 회원은 등록하러 갈 길을 못 찾는다.
+    if (d && d.error_code === "need_own_key") {
+      return { title: "내 API 키가 필요해요", body: msg,
+               link: (d.settings_url || "/settings#keys"),
+               linkText: "🔑 API 키 등록하러 가기",
+               hideContact: true };          // 결제 문의처를 띄우지 않는다(결제 문제가 아니다)
+    }
     if (/포인트/.test(msg)) return { title: "포인트가 부족해요", body: msg };
     if (lvl === "ranking_only") {
       return { title: "체험판에서는 잠긴 기능이에요",
