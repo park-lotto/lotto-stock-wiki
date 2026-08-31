@@ -9620,14 +9620,13 @@ def _check_pc_device(customer_id, request, path):
             return None
         dev = _device_id(request)
         if not dev:
-            # 도장이 없는 첫 방문 — 찍어주고 통과시킨다. 다음 요청부터 이 도장으로 본다.
-            # ★여기서 바로 등록하지 않는다: 도장 없이 등록하면 요청마다 새 칸을 먹는다.
-            resp = RedirectResponse(str(request.url), status_code=303)                 if _is_page_nav(request, path) else None
-            if resp is None:
-                return None                        # API는 그냥 통과(다음 화면이동 때 찍힌다)
-            resp.set_cookie(_DEVICE_COOKIE, secrets.token_hex(16),
-                            max_age=_DEVICE_MAX_AGE, httponly=True, samesite="lax")
-            return resp
+            # 도장이 없는 첫 방문 — **리다이렉트하지 않는다.** 나가는 응답에 쿠키만 얹고
+            # 그냥 통과시킨다. 다음 요청부터 이 도장으로 본다.
+            # ★왜 리다이렉트를 쓰면 안 되나(2026-08-31 게이트가 잡음): 이 303이
+            #   승인·유료·가입마무리 게이트보다 **먼저** 떠서, 신규 가입자가 /welcome
+            #   대신 /로 튕겼다. 파일 위쪽 주석이 경고하던 바로 그 사고다.
+            request.state.new_device_id = secrets.token_hex(16)
+            return None
         ok, _slot, _n = Store(DB_PATH).device_check(
             customer_id, dev, ua, _client_ip(request))
         if ok:
@@ -9772,7 +9771,14 @@ async def _auth_guard(request: Request, call_next):
                     return RedirectResponse("/setup?first=1", status_code=303)
             except Exception as e:  # noqa: BLE001 — 안내 때문에 서비스를 막지 않는다
                 print(f"[setup] 안내 판정 실패(무시): {e!r}", file=sys.stderr)
-        return await call_next(request)
+        resp = await call_next(request)
+        # 🖥 기기 도장은 **여기서만** 찍는다 — 모든 게이트를 통과한 응답에 얹으므로
+        #   화면 이동(303)을 가로채지 않는다(위 _check_pc_device 주석 참조).
+        _newdev = getattr(request.state, "new_device_id", None)
+        if _newdev:
+            resp.set_cookie(_DEVICE_COOKIE, _newdev, max_age=_DEVICE_MAX_AGE,
+                            httponly=True, samesite="lax")
+        return resp
     if path.startswith("/api/"):
         return JSONResponse({"error": "unauthorized"}, status_code=401)
     if path in ("/", "/index.html"):

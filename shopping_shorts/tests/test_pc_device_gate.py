@@ -96,12 +96,24 @@ def test_mobile_is_never_gated(client):
     assert r.status_code != 403, "모바일이 막혔다 — 사장님: 모바일은 상관없다"
 
 
-def test_first_pc_visit_gets_a_stamp(client):
-    """도장이 없으면 찍어주고 보낸다 — 그래야 다음부터 같은 PC로 알아본다."""
+def test_stamp_never_hijacks_a_redirect(client):
+    """★도장 때문에 화면 이동을 가로채면 안 된다(2026-08-31 게이트가 잡은 사고).
+
+    도장 찍기를 303 리다이렉트로 했더니, 그 응답이 승인·유료·가입마무리 게이트보다
+    **먼저** 떠서 신규 가입자가 /welcome 대신 /로 튕겼다. 이제는 리다이렉트 없이
+    나가는 응답에 쿠키만 얹는다 — 그러니 '같은 URL로 되돌리는 303'은 없어야 한다.
+    """
     c, app_mod = client
     r = c.get("/produce.html", headers={"user-agent": PC}, follow_redirects=False)
-    if r.status_code == 303:
-        assert app_mod._DEVICE_COOKIE in r.cookies, "기기 도장을 안 찍었다"
+    loc = r.headers.get("location", "")
+    assert not loc.endswith("/produce.html"), f"도장이 화면 이동을 가로챘다({loc})"
+
+
+def test_stamp_is_written_by_the_middleware_not_a_redirect():
+    """★도장을 찍는 코드가 한 곳뿐인지 본다 — 두 군데서 찍으면 칸을 두 개 먹는다."""
+    src = pathlib.Path(__file__).resolve().parents[1] / "app.py"
+    txt = src.read_text(encoding="utf-8")
+    assert txt.count("set_cookie(_DEVICE_COOKIE") == 1, "도장 찍는 곳이 한 곳이 아니다"
 
 
 def test_logout_stays_open_even_when_blocked(client):
