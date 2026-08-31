@@ -9781,6 +9781,14 @@ def _is_trial(customer_id, now=None):
     cust = Store(DB_PATH).get_customer(customer_id)
     if not cust or cust.get("approved_at") is not None:
         return False
+    # ★plan="pro"는 체험이 아니다(2026-08-31 실사고, access_level과 같은 함정).
+    #   관리자가 [pro]로 올린 회원은 approved_at이 비어 있을 수 있는데(결제승인을 따로
+    #   안 거친 경우), 그 상태가 그대로 '체험'으로 읽혀 렌즈가 통째로 막혔다 —
+    #   고객은 "체험 기간에는 렌즈 검색을 쓸 수 없어요"를 보고, 사장님은 pro로
+    #   만들어준 사람이 왜 그 문구를 보는지 알 길이 없다(실측 cid 344 김미화).
+    #   등급 판정은 두 곳(access_level·여기)이 **같은 답**을 내야 한다(0순위-B).
+    if cust.get("plan") == "pro":
+        return False
     if now is None:
         now = int(datetime.now(timezone.utc).timestamp())
     return now < (cust.get("trial_ends_at") or 0)
