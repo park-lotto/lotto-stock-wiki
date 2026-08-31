@@ -6482,7 +6482,11 @@ def api_thumb_pin(body: dict):
         i = int(body.get("beat_idx"))
     except (TypeError, ValueError):
         return JSONResponse(status_code=400, content={"ok": False, "error": "beat_idx 없음"})
-    src = _beatframe_file(job, job_id, i)      # ★미리보기와 같은 함수 = 같은 그림(0순위-B)
+    try:
+        _cut = None if body.get("cut") is None else int(body.get("cut"))
+    except (TypeError, ValueError):
+        _cut = None
+    src = _beatframe_file(job, job_id, i, cut=_cut)   # ★미리보기와 같은 함수 = 같은 그림(0순위-B)
     if src is None:
         return JSONResponse(status_code=404,
                             content={"ok": False, "error": "이 장면의 화면을 아직 못 떴어요"})
@@ -15269,7 +15273,41 @@ def api_produce_mix_poster(job_id: str):
     return FileResponse(str(poster), media_type="image/jpeg")
 
 
-def _clean_frame_src(job, work, beat_idx):
+def _beat_by_idx(beats, i):
+    """beat_idx == i 인 비트. 없으면 목록 i번째(옛 잡 호환).
+    ★목록 순번과 beat_idx는 **다를 수 있다**. 여기 한 곳에서만 푼다(0순위-B)."""
+    hit = next((b for b in beats if b.get("beat_idx") == i), None)
+    if hit is not None:
+        return hit
+    return beats[i] if 0 <= i < len(beats) else None
+
+
+def _final_cuts(job, work):
+    """완성본에 **실제로 나가는 컷** 목록. mix_pipeline.final_clip_pairs 그대로.
+
+    ★왜 함수로 뽑았나(0순위-B): 장면 목록(beats_preview)과 그 장면의 프레임
+      (_clean_frame_src/_beatframe_file)이 **같은 컷 목록**을 봐야 한다. 각자 세면
+      "3번 칸"이 서로 다른 그림을 가리킨다.
+    실패하면 [] — 호출부는 비트 단위로 물러선다(조용히 깨지지 않게)."""
+    plan = (job or {}).get("edit_plan") or {}
+    tts = {b["beat_idx"]: b["tts_path"] for b in (plan.get("beats") or []) if b.get("tts_path")}
+    try:
+        durs = {v: (frame_extract._probe_duration(pth) or 0.0)
+                for v, pth in _resolve_sources(job, work).items()}
+    except Exception:      # noqa: BLE001
+        durs = {}
+    try:
+        return mix_pipeline.final_clip_pairs(plan, tts, durs) or []
+    except Exception:      # noqa: BLE001
+        return []
+
+
+def _cuts_of_beat(cuts, beat_idx):
+    """그 비트가 쓰는 컷들(순서대로)."""
+    return [c for c in (cuts or []) if c.get("beat_idx") == beat_idx]
+
+
+def _clean_frame_src(job, work, beat_idx, cut=None):
     """**청소된 화면을 어디서 뜰지** 정하는 유일한 자리 (2026-08-27).
 
     returns (clean_sources, clean_final, final_ratio, cache_tag)
@@ -15302,6 +15340,16 @@ def _clean_frame_src(job, work, beat_idx):
     except Exception:      # noqa: BLE001
         _sd = {}
     sec = mix_pipeline.final_time_of_beat(_plan, beat_idx, tts_paths=_tts, src_durs=_sd)
+    # ★컷 번호가 오면 **그 컷** 한가운데다(2026-08-31). 종전엔 늘 첫 컷이라, 한 비트에
+    #   컷이 여럿이면 2번째 이후 칸이 모두 같은 그림(첫 컷)으로 보였다.
+    if cut is not None:
+        try:
+            _cl = _cuts_of_beat(mix_pipeline.final_clip_pairs(_plan, _tts, _sd), beat_idx)
+            if _cl:
+                _c = _cl[cut] if 0 <= cut < len(_cl) else _cl[-1]
+                sec = _c["fin"] + _c["dur"] * 0.5
+        except Exception:      # noqa: BLE001
+            pass
     if sec is None:
         # ★컷 계획을 못 세워도(소스 길이 조회 실패 등) **원본으로 떨어지면 안 된다** —
         #   그러면 자막·워터마크가 화면에 그대로 나온다(08-27 회귀의 정체).
@@ -15314,7 +15362,7 @@ def _clean_frame_src(job, work, beat_idx):
 
 
 def _extract_beat_frame(work, beat, out_path, clean_sources=None,
-                        clean_final=None, final_ratio=None):
+                        clean_final=None, final_ratio=None, seg_spec=None):
     """beat.primary 클립의 start 시각 프레임 1장을 9:16(1080x1920)로 out_path에 저장.
     소스 영상이 없으면 False(파일 안 만듦). 프로덕션 poster 로직을 비트 단위로 일반화.
 
@@ -15329,8 +15377,9 @@ def _extract_beat_frame(work, beat, out_path, clean_sources=None,
     #   실측 job b4a571f559f7: 7번 칸 primary=s2 8.6초(깨진 프레임) / 편성=s1 21.1초(정상).
     #   재료를 고르는 판단은 video_assemble._beat_material 한 곳에 있다 — 그것을 그대로 쓴다
     #   (렌더·미리보기가 같은 함수를 봐야 두 화면이 안 갈린다).
+    #   ★seg_spec이 오면 그 조각이다(2026-08-31, 컷 단위 장면 목록). 없으면 종전대로 첫 조각.
     _segs = video_assemble._beat_material(beat)
-    pr = (_segs[0] if _segs else beat.get("primary")) or {}
+    pr = seg_spec or (_segs[0] if _segs else beat.get("primary")) or {}
     vid = pr.get("video_id")
     ss = float(pr.get("start") or 0)
     src = None
@@ -15362,11 +15411,18 @@ def _extract_beat_frame(work, beat, out_path, clean_sources=None,
 
 @app.get("/api/produce/mix/beats_preview/{job_id}")
 def api_produce_mix_beats_preview(job_id: str):
-    """꾸미기 프리뷰용 — 비트별 자막(narration)과 개수. 프레임은 beatframe 라우트가 따로 서빙.
-    매칭(edit_plan) 전이면 빈 목록."""
+    """꾸미기 프리뷰용 — **화면에 나가는 컷 하나하나**와 그 자막. 프레임은 beatframe 라우트.
+    매칭(edit_plan) 전이면 빈 목록.
+
+    ★2026-08-31 사장님 "지금 6장이자나, 총 장면을 보여야 자막 안지워진것들 각각 배정할수있으니":
+      종전엔 **비트당 1칸**이라 한 비트에 재료가 여럿 섞이면 첫 컷만 보였다
+      (mix_pipeline.final_clip_pairs 실측 기록: beat 9 = 컷 4개). 이제 컷마다 한 칸이다.
+      컷 계획을 못 세우면 종전처럼 비트당 1칸으로 물러선다(조용히 깨지지 않게)."""
     job = Store(DB_PATH).get_mix_job(job_id)
     beats = ((job or {}).get("edit_plan") or {}).get("beats") or []
     total = len(beats)
+    # 컷 목록 — 장면 목록과 프레임(_beatframe_file)이 **같은 함수**를 본다(0순위-B)
+    _cuts = _final_cuts(job, _MIX_WORK_DIR / job_id) if beats else []
     # ★자막 미리보기가 실제 영상과 어긋나던 것 수정(2026-07-18 사장님 실측): 예전엔 narration
     # 문장 전체를 caption으로 줘서 미리보기가 통째로 떴는데, 실제 영상은 _caption_segments로
     # 2~3어절씩 쪼갠다. 그래서 "미리보기는 안 끊기는데 실제론 끊긴다"였다. 이제 실제 렌더와
@@ -15375,8 +15431,19 @@ def api_produce_mix_beats_preview(job_id: str):
     _z_of = video_assemble.scene_zoom_of      # (zoom, pan_x, pan_y) — 해석은 저기 한 곳
     for idx, b in enumerate(beats):
         narr = b.get("narration", "")
-        out.append({
+        _bi = b.get("beat_idx", idx)
+        # 이 비트가 쓰는 컷들 → 컷마다 한 칸. 없으면 한 칸(종전 동작).
+        _mine = _cuts_of_beat(_cuts, _bi)
+        _slots = list(range(len(_mine))) if _mine else [None]
+        for _ci in _slots:
+            _c = _mine[_ci] if _ci is not None else {}
+            out.append({
             "i": idx, "total": total,
+            # ── 컷 정보(2026-08-31). cut=None이면 비트 통째(컷 계획 없음).
+            "cut": _ci,
+            "cut_of": len(_mine),                                   # 이 비트가 쓰는 컷 수
+            "video_id": _c.get("video_id"),
+            "cut_src": _c.get("src"), "cut_dur": _c.get("dur"),
             "caption": narr,                                        # 폴백·호환용(통째)
             "segs": video_assemble._caption_segments(narr, preset=b.get("caption_lines")),  # 렌더와 같은 분할
             "durs": b.get("cap_durs"),                              # 구절별 실제 표시시간(없으면 None)
@@ -15395,12 +15462,16 @@ def api_produce_mix_beats_preview(job_id: str):
             "zoom": _z_of(b)[0], "pan_x": _z_of(b)[1], "pan_y": _z_of(b)[2],
             # 🔎 장면별 강조(원형 돋보기/스포트라이트, 2026-08-30). 같은 이유로 서버가 준다.
             "hl": video_assemble.scene_hl_of(b),
-        })
+            })
+    # 전체 칸 수 — 화면의 "n / N 장면"이 이 값을 쓴다(비트 수가 아니라 컷 수).
+    for _k, _o in enumerate(out):
+        _o["i"] = _k
+        _o["total"] = len(out)
     return {"beats": out}
 
 
-def _beatframe_file(job, job_id: str, i: int):
-    """i번째 비트의 정지 프레임 파일(없으면 뜬다). 못 만들면 None.
+def _beatframe_file(job, job_id: str, i: int, cut=None):
+    """i번 비트(cut을 주면 그 비트의 cut번째 컷)의 정지 프레임 파일. 못 만들면 None.
 
     ★이 판단은 **여기 한 곳에만** 있다(0순위-B). 미리보기(api_produce_mix_beatframe)와
     '썸네일로 보내기'(api_thumb_pin)가 같은 함수를 부르므로, 어느 소스(청소본/원본)에서
@@ -15408,30 +15479,39 @@ def _beatframe_file(job, job_id: str, i: int):
     간 장면이 조용히 달라진다.
     """
     beats = ((job or {}).get("edit_plan") or {}).get("beats") or []
-    if i < 0 or i >= len(beats):
+    beat = _beat_by_idx(beats, i)
+    if beat is None:
         return None
     work = _MIX_WORK_DIR / job_id
     # 2단계 자막제거를 밟았으면(clean_sources 존재) 청소본에서 프레임을 뜬다. 캐시 파일명도
     # 분리(_clean)해, 자막제거 전에 캐시된 원본 프레임이 남아 미리보기에 지운 자막이 살아
     # 있는 것처럼 보이는 캐시 오염을 막는다(2026-07-21 제보).
-    clean_map, _cfin, _crat, _ctag = _clean_frame_src(job, work, i)
+    clean_map, _cfin, _crat, _ctag = _clean_frame_src(job, work, i, cut=cut)
     # ★캐시 이름에 **그 칸이 실제로 쓰는 소스·시각**을 넣는다(2026-08-21). 종전엔 칸 번호만
     #   써서, 3단계에서 편성을 바꿔도 옛 프레임이 그대로 나왔다(조용한 어긋남).
-    _seg0 = (video_assemble._beat_material(beats[i]) or [beats[i].get("primary") or {}])[0] or {}
+    _spec = None
+    if cut is not None:
+        _cl = _cuts_of_beat(_final_cuts(job, work), i)
+        if _cl:
+            _c = _cl[cut] if 0 <= cut < len(_cl) else _cl[-1]
+            _spec = {"video_id": _c.get("video_id"), "start": _c.get("src")}
+    _seg0 = _spec or (video_assemble._beat_material(beat) or [beat.get("primary") or {}])[0] or {}
     _key = f"{_seg0.get('video_id') or '-'}@{round(float(_seg0.get('start') or 0), 2)}"
     _key = re.sub(r"[^0-9a-zA-Z@.\-]", "_", _key)
-    out = work / "beatframes" / f"{i}_{_key}{_ctag}.jpg"
+    _ct = "" if cut is None else f"c{cut}_"
+    out = work / "beatframes" / f"{i}_{_ct}{_key}{_ctag}.jpg"
     if not out.exists():
-        _extract_beat_frame(work, beats[i], out, clean_sources=clean_map,
-                            clean_final=_cfin, final_ratio=_crat)
+        _extract_beat_frame(work, beat, out, clean_sources=clean_map,
+                            clean_final=_cfin, final_ratio=_crat, seg_spec=_spec)
     return out if out.exists() else None
 
 
 @app.get("/api/produce/mix/beatframe/{job_id}/{i}")
-def api_produce_mix_beatframe(job_id: str, i: int):
-    """i번째 비트의 영상 프레임 1장(캐시). 없으면 404 → 프론트는 흰 배경 폴백."""
+def api_produce_mix_beatframe(job_id: str, i: int, cut: int = None):
+    """i번 비트(cut=그 비트의 몇 번째 컷)의 영상 프레임 1장(캐시).
+    없으면 404 → 프론트는 흰 배경 폴백."""
     job = Store(DB_PATH).get_mix_job(job_id)
-    out = _beatframe_file(job, job_id, i)
+    out = _beatframe_file(job, job_id, i, cut=cut)
     if out is None:
         return JSONResponse(status_code=404, content={"ok": False})
     return FileResponse(str(out), media_type="image/jpeg")

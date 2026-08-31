@@ -38,7 +38,7 @@ def _fake_frame(tmp_path, name="2_vid@3.5.jpg"):
 def test_pin_creates_candidate_at_front(job, monkeypatch):
     jid, tmp = job
     src = _fake_frame(tmp)
-    monkeypatch.setattr(A, "_beatframe_file", lambda job, job_id, i: src)
+    monkeypatch.setattr(A, "_beatframe_file", lambda job, job_id, i, cut=None: src)
 
     r = A.api_thumb_pin({"job_id": jid, "beat_idx": 1})
     assert r["ok"] is True
@@ -59,7 +59,7 @@ def test_pin_creates_candidate_at_front(job, monkeypatch):
 def test_pin_survives_regrid(job, monkeypatch):
     """★재추출(더 뽑기)이 자동 프레임을 갈아엎어도 핀은 후보 맨 앞에 남는다."""
     jid, tmp = job
-    monkeypatch.setattr(A, "_beatframe_file", lambda job, job_id, i: _fake_frame(tmp))
+    monkeypatch.setattr(A, "_beatframe_file", lambda job, job_id, i, cut=None: _fake_frame(tmp))
     pin = A.api_thumb_pin({"job_id": jid, "beat_idx": 1})["name"]
 
     st = Store(A.DB_PATH)
@@ -78,7 +78,7 @@ def test_pin_survives_regrid(job, monkeypatch):
 def test_pin_same_beat_twice_is_one(job, monkeypatch):
     """같은 장면을 두 번 보내도 후보가 두 개로 늘지 않는다(같은 파일로 덮어씀)."""
     jid, tmp = job
-    monkeypatch.setattr(A, "_beatframe_file", lambda job, job_id, i: _fake_frame(tmp))
+    monkeypatch.setattr(A, "_beatframe_file", lambda job, job_id, i, cut=None: _fake_frame(tmp))
     A.api_thumb_pin({"job_id": jid, "beat_idx": 1})
     r2 = A.api_thumb_pin({"job_id": jid, "beat_idx": 1})
     assert len(r2["pins"]) == 1
@@ -86,7 +86,7 @@ def test_pin_same_beat_twice_is_one(job, monkeypatch):
 
 def test_unpin_removes_file_and_entry(job, monkeypatch):
     jid, tmp = job
-    monkeypatch.setattr(A, "_beatframe_file", lambda job, job_id, i: _fake_frame(tmp))
+    monkeypatch.setattr(A, "_beatframe_file", lambda job, job_id, i, cut=None: _fake_frame(tmp))
     name = A.api_thumb_pin({"job_id": jid, "beat_idx": 1})["name"]
     path = tmp / "thumb" / jid / name
 
@@ -98,7 +98,7 @@ def test_unpin_removes_file_and_entry(job, monkeypatch):
 def test_unpin_refuses_unknown_name(job, monkeypatch):
     """★임의 파일 삭제 통로가 되면 안 된다 — 목록에 없는 이름은 거절."""
     jid, tmp = job
-    monkeypatch.setattr(A, "_beatframe_file", lambda job, job_id, i: _fake_frame(tmp))
+    monkeypatch.setattr(A, "_beatframe_file", lambda job, job_id, i, cut=None: _fake_frame(tmp))
     A.api_thumb_pin({"job_id": jid, "beat_idx": 1})
     victim = tmp / "thumb" / jid / "thumb_1.png"       # 사장님이 저장한 결과물
     victim.write_bytes(b"\x89PNG\r\n\x1a\n")
@@ -111,7 +111,7 @@ def test_unpin_refuses_unknown_name(job, monkeypatch):
 def test_missing_frame_returns_error_not_crash(job, monkeypatch):
     """프레임을 못 뜨면 404 + 사람 말 — 조용한 성공은 안 된다."""
     jid, _ = job
-    monkeypatch.setattr(A, "_beatframe_file", lambda job, job_id, i: None)
+    monkeypatch.setattr(A, "_beatframe_file", lambda job, job_id, i, cut=None: None)
     r = A.api_thumb_pin({"job_id": jid, "beat_idx": 1})
     assert getattr(r, "status_code", None) == 404
 
@@ -119,7 +119,7 @@ def test_missing_frame_returns_error_not_crash(job, monkeypatch):
 def test_pin_with_missing_file_is_skipped(job, monkeypatch):
     """파일이 사라진 핀은 목록에서 조용히 빠진다(깨진 이미지 대신)."""
     jid, tmp = job
-    monkeypatch.setattr(A, "_beatframe_file", lambda job, job_id, i: _fake_frame(tmp))
+    monkeypatch.setattr(A, "_beatframe_file", lambda job, job_id, i, cut=None: _fake_frame(tmp))
     name = A.api_thumb_pin({"job_id": jid, "beat_idx": 1})["name"]
     (tmp / "thumb" / jid / name).unlink()
 
@@ -134,7 +134,7 @@ def test_pins_visible_before_mix_video_exists(job, monkeypatch, tmp_path):
     먼저 나가 사장님이 6단계에서 보낸 장면이 7단계에서 통째로 사라져 보였다.
     """
     jid, tmp = job
-    monkeypatch.setattr(A, "_beatframe_file", lambda job, job_id, i: _fake_frame(tmp))
+    monkeypatch.setattr(A, "_beatframe_file", lambda job, job_id, i, cut=None: _fake_frame(tmp))
     name = A.api_thumb_pin({"job_id": jid, "beat_idx": 1})["name"]
 
     r = A.api_thumb_frames({"job_id": jid})           # 이 job엔 preview/final mp4가 없다
