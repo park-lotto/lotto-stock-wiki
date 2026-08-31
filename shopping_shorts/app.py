@@ -10563,7 +10563,7 @@ _NOCACHE = {"Cache-Control": "no-cache, must-revalidate"}
 #   ★admin=1을 주면 안 된다 — 관리자 전권(수집·차단·계정목록)이 통째로 열린다.
 #   허용 목록은 DB 설정에 두어 **배포 없이** 사장님이 넣고 뺄 수 있다.
 #     설정키: feature_allow_<기능>  값: "11,42" (customer_id 쉼표 구분)
-_FEATURE_KEYS = ("naverclip",)
+_FEATURE_KEYS = ("naverclip", "pinterest")
 
 
 def _feature_allowed(store, cid, feature):
@@ -10596,7 +10596,7 @@ _ADMIN_SETTING_KEYS = {"trial_days", "trial_grant_points", "trial_event_hours",
                        # 1기 챌린지(2026-08-24) — 기간·하루 목표
                        "challenge_start", "challenge_end", "challenge_daily_goal",
                        # 기능별 허용 목록(2026-08-31) — "11,42" 처럼 customer_id를 쉼표로
-                       "feature_allow_naverclip"}
+                       "feature_allow_naverclip", "feature_allow_pinterest"}
 
 
 # ── 오류 신고(2026-08-24) ────────────────────────────────────────────────

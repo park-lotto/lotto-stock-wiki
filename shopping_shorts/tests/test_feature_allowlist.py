@@ -50,3 +50,30 @@ def test_관리자는_설정과_무관하게_열린다(tmp_path, monkeypatch):
 def test_설정키가_관리자화면에서_바꿀수있게_등록돼있다():
     """배포 없이 사장님이 넣고 뺄 수 있어야 한다."""
     assert "feature_allow_naverclip" in A._ADMIN_SETTING_KEYS
+
+
+def test_핀터레스트도_같은_방식으로_열린다(tmp_path):
+    """기능이 늘어도 배관은 하나 — 설정키만 다르다(2026-08-31 사장님 "핀터레스트도")."""
+    st = _store(tmp_path)
+    st.set_setting("feature_allow_pinterest", "11")
+    assert A._feature_allowed(st, 11, "pinterest") is True
+    assert A._feature_allowed(st, 12, "pinterest") is False
+    # 서로 새지 않는다 — 핀터만 열었는데 네이버클립까지 열리면 안 된다
+    assert A._feature_allowed(st, 11, "naverclip") is False
+
+
+def test_두_기능_설정키가_모두_관리자화면에_있다():
+    for k in ("feature_allow_naverclip", "feature_allow_pinterest"):
+        assert k in A._ADMIN_SETTING_KEYS, k
+
+
+def test_화면은_기능이름을_박아두지_않는다():
+    """index.html이 서버가 준 features를 **순회**해야 한다.
+    기능 이름을 화면에 적으면 기능이 늘 때 한쪽만 고쳐 조용히 안 열린다(0순위-B)."""
+    import pathlib
+    html = pathlib.Path(A.__file__).parent / "static" / "index.html"
+    src = html.read_text(encoding="utf-8")
+    i = src.index("const F = (d && d.features) || {};")
+    block = src[i:i + 500]
+    assert "Object.keys(F)" in block, "features를 순회하지 않는다"
+    assert "F.naverclip" not in block and "F.pinterest" not in block, "기능 이름이 박혀 있다"
