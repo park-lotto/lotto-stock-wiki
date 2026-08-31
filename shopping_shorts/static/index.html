@@ -4431,6 +4431,14 @@ fetch('/api/me').then(r=>r.ok?r.json():null).then(d=>{
       const el=document.getElementById(id); if(el) el.style.display='';
     });
   }
+  // ★관리자가 아니어도 **탭 하나만** 열어주는 길(2026-08-31 사장님 지시).
+  //   판단은 서버(/api/me.features)가 한다 — 화면이 스스로 정하면 두 벌이 된다(0순위-B).
+  //   보기만 연다: 수집 패널(_nc)은 위 IS_ADMIN 조건 그대로라 그대로 잠긴다.
+  const F = (d && d.features) || {};
+  if(F.naverclip && !window.IS_ADMIN){
+    const tab = document.querySelector('[data-platform="naverclip"]');
+    if(tab) tab.style.display = 'block';
+  }
 }).catch(()=>{});
 
 // 탭 밑줄 네온 슬라이드(2026-07-23) — 기존 탭 클릭(setTab)에 얹기만 함. active 클래스는 기존 로직이 토글.
