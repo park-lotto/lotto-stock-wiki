@@ -15,6 +15,7 @@ import math
 import os
 import re
 import sys
+import threading
 import time
 
 from google.genai import types
@@ -2353,6 +2354,31 @@ def _is_per_minute_quota(m):
             or "requests per min" in low)
 
 
+_AUTO_OFF_LOCK = threading.Lock()
+_AUTO_OFF_SEQ = 0
+
+
+def _auto_key_offset():
+    """호출마다 **다른 키부터** 시작하게 하는 기본 오프셋(2026-08-31 실사고).
+
+    ★왜: get_live_keys_cascade는 매번 **같은 순서**를 돌려준다. 그런데 _vault_call을
+      offset 없이 부르는 곳이 대부분이라(오프셋을 주던 곳은 후보생성 1곳뿐) 대본
+      생성·비트다듬기·장면재선택·태깅이 전부 keys[0]부터 두들겼다. 워커가 12개
+      동시에 도니 무료등급 분당 15회는 몇 초 만에 넘는다.
+      실측 08-31: 제미니 호출 1,825건 중 **816건(45%)이 429**, 분당 피크 115건.
+      429 상세 사유는 전부 '분당' 한도였고 '하루' 한도는 0건 — 즉 키가 모자란 게
+      아니라 **앞쪽 키에 몰린 것**이 원인이었다.
+
+    PID로 워커 12개를 갈라놓고, 호출 순번으로 같은 워커 안 연속 호출도 갈라놓는다.
+    키풀 길이는 여기서 모른다(그때그때 다르다) — 나머지 연산은 _vault_call_once가
+    실제 키 개수로 한다. 여기선 '서로 다른 수'만 보장하면 된다."""
+    global _AUTO_OFF_SEQ
+    with _AUTO_OFF_LOCK:
+        _AUTO_OFF_SEQ += 1
+        seq = _AUTO_OFF_SEQ
+    return os.getpid() * 7 + seq
+
+
 def _vault_call(prompt, schema, max_tries=8, key_offset=0):
     """키풀을 한 바퀴 돌리되, **분당 한도(429 RPM)면 쉬었다 다시 돈다**(2026-08-31 실사고).
 
@@ -2365,9 +2391,12 @@ def _vault_call(prompt, schema, max_tries=8, key_offset=0):
 
     쉬는 건 **분당 한도일 때만**이다. 일일 소진·403 계정차단은 쉬어도 안 풀리므로
     종전대로 즉시 포기한다(무의미한 대기를 만들지 않는다)."""
+    # ★offset을 안 주면 **자동으로 갈라준다**(2026-08-31). 종전 기본값 0은 모든
+    #   호출을 keys[0]으로 몰아 429를 만들었다. 명시적으로 준 값은 그대로 존중한다.
+    off = key_offset or _auto_key_offset()
     for _round in range(_RPM_MAX_ROUNDS):
         got = _vault_call_once(prompt, schema, max_tries=max_tries,
-                               key_offset=key_offset)
+                               key_offset=off)
         if got is not None:
             return got
         if not _is_per_minute_quota(_LAST_VAULT_ERR):
