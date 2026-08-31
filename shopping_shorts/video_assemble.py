@@ -782,7 +782,12 @@ def _plan_phrase_clips(beat, segs, tts_dur):
                 idx = -1
                 for t2 in range(len(segs)):              # 두 바퀴째 = 뒤가 남은 조각을 돌아가며
                     j2 = (ri + t2) % len(segs)
-                    if float(segs[j2]["end"]) - pos[j2] >= min(d, _MIN_CLIP) - 1e-3:
+                    # ★end를 모르는 재료는 '남은 게 없다'로 본다 → 종전 동작(마지막이 커버).
+                    #   지어내서 조각 밖을 읽으면 엉뚱한 화면이 나온다.
+                    _end = segs[j2].get("end")
+                    if _end is None:
+                        continue
+                    if float(_end) - pos[j2] >= min(d, _MIN_CLIP) - 1e-3:
                         idx = j2
                         break
                 if idx < 0:                              # 재료 소진 → 종전대로 마지막 컷이 커버
