@@ -166,8 +166,8 @@ def _cache_keys_for_url(url):
         if uploaded_footage_path(url) is not None:
             import hashlib as _hl
             _add(_hl.sha1((url or "").encode()).hexdigest()[:12])
-    except Exception:      # noqa: BLE001 — 캐시 키 보강 실패가 파이프라인을 막지 않는다
-        pass
+    except Exception as _e:      # noqa: BLE001 — 캐시 키 보강 실패가 파이프라인을 막지 않는다
+        print(f"[캐시키] 업로드 소스 키 보강 실패(무해): {_e!r}", file=sys.stderr)
 
     # ② URL 추론 폴백 — DB에 기록이 없는 경로(위키 직행 등)도 종전대로 맞힌다.
     for rx, plat in zip(_SHORTCODE_RES, _SHORTCODE_PLATFORMS):
