@@ -206,6 +206,24 @@ def style_spine_rank(sp):
             -(sp.get("id") or 0))
 
 
+# ── PC / 모바일 판별 (2026-08-31) ─────────────────────────────────────────────
+# ★여기 한 곳에서만 정한다(0순위-B). 돌려쓰기 판정이 이 한 줄에 걸려 있어서,
+#   두 군데에 적히면 화면과 서버가 서로 다른 답을 낸다.
+# ★왜 필요한가: 모바일은 IP가 계속 바뀐다(LTE↔와이파이·기지국 이동). 모바일 IP까지
+#   세면 혼자 쓰는 회원도 7일이면 IP 대여섯 개가 되어 공유 의심이 켜진다.
+_MOBILE_UA_MARKS = ("android", "iphone", "ipad", "ipod", "mobile", "windows phone")
+
+
+def _is_mobile_ua(ua):
+    """UA 문자열이 모바일·태블릿이면 True. 빈 UA는 판단 불가라 PC로 본다(엄격한 쪽).
+
+    ★'mobile'만 보면 안 된다: 아이패드 사파리 UA에는 Mobile이 있지만, 안드로이드
+      태블릿에는 없다. 그래서 기기 이름도 같이 본다.
+    """
+    u = (ua or "").lower()
+    return any(m in u for m in _MOBILE_UA_MARKS)
+
+
 class Store:
     def __init__(self, db_path):
         self.db_path = Path(db_path)
@@ -5678,13 +5696,27 @@ class Store:
     #      목록이 뜨는 데 3.7초가 걸렸고, 그동안 화면은 비어 있다.
     #      아래 세 함수는 **한 번의 쿼리로** 전원 몫을 가져온다.
     def access_summary_all(self, since_day):
-        """{customer_id: {"ips": n, "devices": n}} — access_summary의 일괄판."""
+        """{customer_id: {"ips": n, "devices": n, "pc_ips": n}} — access_summary의 일괄판.
+
+        ★pc_ips가 왜 따로 필요한가(2026-08-31 사장님 "pc등록ip를 두개씩, 모바일은 상관없고"):
+          모바일은 **IP가 계속 바뀐다**(LTE↔와이파이, 기지국 이동). 그래서 혼자 쓰는
+          정상 회원도 7일이면 IP가 대여섯 개로 불어나 공유 의심 빨간불이 켜졌다.
+          IP로 돌려쓰기를 볼 수 있는 건 **PC뿐**이다 — 모바일 IP는 세지 않는다.
+        ★판별은 UA 한 곳에서만 한다(_is_mobile_ua) — 두 군데서 갈리면 화면과 서버가 어긋난다.
+        """
+        rows_by_cid = {}
         with self._conn() as c:
-            rows = c.execute(
-                "SELECT customer_id, COUNT(DISTINCT ip), COUNT(DISTINCT ua) "
-                "FROM customer_access WHERE day>=? GROUP BY customer_id",
-                (since_day,)).fetchall()
-        return {r[0]: {"ips": (r[1] or 0), "devices": (r[2] or 0)} for r in rows}
+            for cid, ip, ua in c.execute(
+                    "SELECT customer_id, ip, ua FROM customer_access WHERE day>=?",
+                    (since_day,)):
+                d = rows_by_cid.setdefault(cid, {"ips": set(), "uas": set(), "pc_ips": set()})
+                d["ips"].add(ip)
+                d["uas"].add(ua)
+                if not _is_mobile_ua(ua):
+                    d["pc_ips"].add(ip)
+        return {cid: {"ips": len(d["ips"]), "devices": len(d["uas"]),
+                      "pc_ips": len(d["pc_ips"])}
+                for cid, d in rows_by_cid.items()}
 
     def usage_all(self, day):
         """{customer_id: {op: count}} — usage_get의 일괄판."""

@@ -10516,7 +10516,8 @@ def _admin_customers(request: Request):
         #   채우므로 빠지는 고객이 없다. 혹시 비면 빈 dict가 낫다 — 화면이 '—'로 뜬다.
         cu["limits"] = limits_map.get(_cid, {})
         cu["made_today"] = made_map.get(_cid, {"made": 0, "charged": 0})   # 한국시간 오늘 실측
-        cu["access_7d"] = access_map.get(_cid, {"ips": 0, "devices": 0})  # 최근 7일 고유 수
+        # 최근 7일 고유 수. pc_ips = 모바일 뺀 PC IP(공유 판정은 이걸 본다, 2026-08-31)
+        cu["access_7d"] = access_map.get(_cid, {"ips": 0, "devices": 0, "pc_ips": 0})
         # 관리자 판정도 목록이 이미 들고 있는 email·admin으로 한다(규칙은 _is_admin과 동일)
         _email = (cu.get("email") or "").lower()
         cu["code_admin"] = (_as_cid(_cid) == 0) or (_email in _ADMIN_EMAILS)
