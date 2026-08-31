@@ -132,6 +132,26 @@ SERVICE_LABEL = {
 }
 
 
+# ★차단 면제 명단(2026-09-01 사장님 지정) — "박2/관리자/용석/정훈 4명은 제외한다".
+#   이분들은 키를 안 내도 회사 키로 계속 쓰신다(사장님이 비용을 감수하기로 한 계정).
+#   실측으로 확정한 cid:
+#     4  현경   arte.eum@gmail.com        (customers.admin=1 — 관리자)
+#     5  용석   koho851101@gmail.com      ┐ 같은 분의 계정 2개
+#     9  용석   851101ys@gmail.com        ┘
+#     11 이정훈 aijumpers85@gmail.com
+#     12 박2    parklotto20@gmail.com
+#   ⚠️ 여기에 cid를 더하면 그 회원의 VMake·TTS 비용을 회사가 계속 부담한다.
+#      사장님 지시 없이 늘리지 마라. 빼는 것은 언제든 안전하다.
+#   ⚠️ 이름으로 판단하지 마라 — 동명이인이 있다(민정훈 cid 234는 면제 대상이 아니다).
+BLOCK_EXEMPT_CIDS = frozenset({4, 5, 9, 11, 12})
+
+
+def is_block_exempt(customer_id):
+    """차단 면제 대상인가. cid 0(사장님)과 지정 명단. 판단은 여기 한 곳(0순위-B)."""
+    cid = as_cid(customer_id)
+    return (not cid) or (cid in BLOCK_EXEMPT_CIDS)
+
+
 def requires_own_key(service):
     """개인 키가 없으면 못 쓰는 서비스인가. 판단은 여기 한 곳(0순위-B)."""
     return service in REQUIRE_OWN_KEY
@@ -159,7 +179,7 @@ def block_reason(store, customer_id, service):
     """
     if not requires_own_key(service):
         return None
-    if not as_cid(customer_id):          # cid 0 = 사장님/관리자
+    if is_block_exempt(customer_id):     # cid 0(사장님) + 지정 면제 명단
         return None
     if has_own_key(store, customer_id, service):
         return None
@@ -175,7 +195,7 @@ def tts_block_reason(store, customer_id):
     ★서비스 하나씩 block_reason을 부르면 "일레븐랩스 없음"으로 막혀, 타입캐스트를
       등록한 회원(실측 4명)이 억울하게 막힌다 — 그래서 음성은 이 함수가 판단한다.
     """
-    if not as_cid(customer_id):
+    if is_block_exempt(customer_id):     # cid 0(사장님) + 지정 면제 명단
         return None
     if (has_own_key(store, customer_id, SVC_ELEVENLABS)
             or has_own_key(store, customer_id, SVC_TYPECAST)):

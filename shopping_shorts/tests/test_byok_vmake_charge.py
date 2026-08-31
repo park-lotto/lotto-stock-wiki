@@ -29,6 +29,9 @@ from shopping_shorts.store import Store
 
 _KEY = "NZAowCs7o9LHVnJdZbxrVmYI7MHqyPFkydIUd1mc8To="   # 유효한 Fernet 키(44자). 테스트 전용
 
+# ★cid 77 — keyroute.BLOCK_EXEMPT_CIDS(4·5·9·11·12)와 겹치지 않는 번호를 쓴다.
+#   면제 대상으로 차단을 검증하면 테스트가 통과처럼 보이지만 아무것도 안 지킨다.
+
 
 @pytest.fixture
 def store(tmp_path, monkeypatch):
@@ -44,30 +47,30 @@ def store(tmp_path, monkeypatch):
 def test_blocked_without_own_key(store):
     """★핵심. 전엔 여기서 사장님 키로 돌며 포인트만 깎였다."""
     with pytest.raises(mp.NotEnoughPoints) as e:
-        mp._charge_clean(store, 5, 3)
+        mp._charge_clean(store, 77, 3)
     assert "키를 등록해야" in str(e.value)          # 회원이 할 행동이 문구에 있다
 
 
 def test_points_do_not_unblock(store):
     """★포인트가 아무리 많아도 키가 없으면 못 쓴다 — 포인트로 때우는 길을 막는 것이
     이 변경의 목적이다(그 길이 열려 있어 회원이 키를 등록하지 않았다)."""
-    points.add(store, 5, 999999)
+    points.add(store, 77, 999999)
     with pytest.raises(mp.NotEnoughPoints):
-        mp._charge_clean(store, 5, 3)
+        mp._charge_clean(store, 77, 3)
 
 
 # ── ② 키가 있으면 통과, 아무것도 안 깎는다 ─────────────────────────────
 
 def test_own_key_passes_and_costs_nothing(store):
-    store.add_customer_key(5, keyroute.SVC_VMAKE, "내키")
-    points.add(store, 5, 10000)
-    assert mp._charge_clean(store, 5, 3) == 0
-    assert points.balance(store, 5) == 10000        # 한 푼도 안 깎인다
+    store.add_customer_key(77, keyroute.SVC_VMAKE, "내키")
+    points.add(store, 77, 10000)
+    assert mp._charge_clean(store, 77, 3) == 0
+    assert points.balance(store, 77) == 10000        # 한 푼도 안 깎인다
 
 
 def test_zero_sources_is_free_even_without_key(store):
     """청소할 게 없으면 키를 안 봐도 된다 — 아무 호출도 안 나가기 때문이다."""
-    assert mp._charge_clean(store, 5, 0) == 0
+    assert mp._charge_clean(store, 77, 0) == 0
 
 
 # ── ③ 사장님은 안 막힌다 ───────────────────────────────────────────────
@@ -82,17 +85,17 @@ def test_owner_cid0_never_blocked(store):
 def test_worker_and_web_share_one_judgement(store):
     """★한쪽만 막으면 큐에 남은 작업이 그대로 통과한다.
     둘 다 keyroute.block_reason을 봐야 하고, 그래서 결과가 늘 같아야 한다."""
-    web_blocked = keyroute.block_reason(store, 5, keyroute.SVC_VMAKE) is not None
+    web_blocked = keyroute.block_reason(store, 77, keyroute.SVC_VMAKE) is not None
     try:
-        mp._charge_clean(store, 5, 1)
+        mp._charge_clean(store, 77, 1)
         worker_blocked = False
     except mp.NotEnoughPoints:
         worker_blocked = True
     assert web_blocked == worker_blocked is True
 
-    store.add_customer_key(5, keyroute.SVC_VMAKE, "내키")
-    web_blocked2 = keyroute.block_reason(store, 5, keyroute.SVC_VMAKE) is not None
-    mp._charge_clean(store, 5, 1)                   # 안 막혀야 한다(예외 없음)
+    store.add_customer_key(77, keyroute.SVC_VMAKE, "내키")
+    web_blocked2 = keyroute.block_reason(store, 77, keyroute.SVC_VMAKE) is not None
+    mp._charge_clean(store, 77, 1)                   # 안 막혀야 한다(예외 없음)
     assert web_blocked2 is False
 
 
@@ -101,9 +104,9 @@ def test_worker_and_web_share_one_judgement(store):
 def test_refund_of_zero_does_nothing(store):
     """★과금이 사라졌으니 환불도 0이어야 한다. 환불 코드를 남겨둔 채 액수만
     잘못 넣으면 **없던 포인트가 생긴다**(2026-08-23 점검에서 실제로 났던 모양)."""
-    before = points.balance(store, 5)
-    mp._refund_clean(store, 5, 0)
-    assert points.balance(store, 5) == before
+    before = points.balance(store, 77)
+    mp._refund_clean(store, 77, 0)
+    assert points.balance(store, 77) == before
 
 
 def test_mix_refund_skipped_without_charge_mark(store):

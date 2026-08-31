@@ -140,3 +140,32 @@ def test_endpoint_helper_passes_owner(monkeypatch, tmp_path):
     from shopping_shorts import app as appmod
     monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
     assert appmod._need_own_key_or_402(0, tts=True) is None      # 사장님은 통과
+
+
+# ── 차단 면제 명단 (2026-09-01 사장님 지정) ────────────────────────────
+
+def test_exempt_list_is_exactly_the_four_people():
+    """★사장님이 지정한 계정만 면제된다 — "박2/관리자/용석/정훈 4명은 제외한다".
+    실측 cid: 4(현경·관리자) 5·9(용석 2계정) 11(이정훈) 12(박2).
+
+    이 목록이 늘면 그 회원의 VMake·TTS 비용을 **회사가 계속 부담한다** — 그래서
+    숫자를 박아 고정한다. 지시 없이 늘어나면 이 테스트가 잡는다."""
+    assert set(keyroute.BLOCK_EXEMPT_CIDS) == {4, 5, 9, 11, 12}
+
+
+@pytest.mark.parametrize("cid", [4, 5, 9, 11, 12])
+def test_exempt_members_are_never_blocked(store, cid):
+    """면제 대상은 키가 없어도 VMake·음성 둘 다 열린다."""
+    assert keyroute.block_reason(store, cid, keyroute.SVC_VMAKE) is None
+    assert keyroute.tts_block_reason(store, cid) is None
+
+
+def test_exempt_accepts_string_cid(store):
+    """cid는 int와 문자열이 섞여 온다 — 면제가 한쪽에서만 먹으면 안 된다."""
+    assert keyroute.tts_block_reason(store, "12") is None
+
+
+def test_nonexempt_member_is_still_blocked(store):
+    """★면제는 명단뿐이다 — 비슷한 이름(민정훈 cid 234)까지 풀리면 안 된다."""
+    assert keyroute.tts_block_reason(store, 234) is not None
+    assert keyroute.block_reason(store, 261, keyroute.SVC_VMAKE) is not None
