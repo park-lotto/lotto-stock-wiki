@@ -10501,6 +10501,8 @@ def _api_me(request: Request):
             member_days = None
     return {"customer_id": cid, "level": access_level(cid, now), "plan": plan,
             "days_left": days_left, "is_admin": is_admin,
+            # 관리자가 아니어도 열어준 기능들(2026-08-31). 화면은 이 값만 보고 켠다.
+            "features": {f: _feature_allowed(st, cid, f) for f in _FEATURE_KEYS},
             "email": email, "name": name, "member_days": member_days,
             # ★limits = **이 사람의 실제 한도**. 예전엔 plan을 안 보고 무료 등급 값을
             #   하드코딩해서, Pro 결제 고객의 마이페이지에 "영상 제작 2회"가 떴다
@@ -10556,6 +10558,25 @@ def _is_admin(customer_id):
 _NOCACHE = {"Cache-Control": "no-cache, must-revalidate"}
 
 
+# ── 관리자 아닌 사람에게 **기능 하나만** 열어주는 자리 (2026-08-31) ──────────────
+#   사장님 "aijumpers85@gmail.com 이 아이디한테만 네이버 클립 볼수있게".
+#   ★admin=1을 주면 안 된다 — 관리자 전권(수집·차단·계정목록)이 통째로 열린다.
+#   허용 목록은 DB 설정에 두어 **배포 없이** 사장님이 넣고 뺄 수 있다.
+#     설정키: feature_allow_<기능>  값: "11,42" (customer_id 쉼표 구분)
+_FEATURE_KEYS = ("naverclip",)
+
+
+def _feature_allowed(store, cid, feature):
+    """이 사람이 그 기능을 볼 수 있나. 관리자는 항상 True."""
+    if _is_admin(cid):
+        return True
+    if not cid or feature not in _FEATURE_KEYS:
+        return False
+    raw = store.get_setting("feature_allow_" + feature, "") or ""
+    allow = {p.strip() for p in raw.replace(" ", ",").split(",") if p.strip()}
+    return str(cid) in allow
+
+
 def _require_admin(request):
     if not _is_admin(getattr(request.state, "customer_id", None)):
         return JSONResponse({"error": "관리자 전용"}, status_code=403)
@@ -10573,7 +10594,9 @@ _ADMIN_SETTING_KEYS = {"trial_days", "trial_grant_points", "trial_event_hours",
                        # 조립 끄기 — "1"이면 틀 조립을 건너뛰고 전부 생성기로(2026-08-21)
                        "assemble_off",
                        # 1기 챌린지(2026-08-24) — 기간·하루 목표
-                       "challenge_start", "challenge_end", "challenge_daily_goal"}
+                       "challenge_start", "challenge_end", "challenge_daily_goal",
+                       # 기능별 허용 목록(2026-08-31) — "11,42" 처럼 customer_id를 쉼표로
+                       "feature_allow_naverclip"}
 
 
 # ── 오류 신고(2026-08-24) ────────────────────────────────────────────────
