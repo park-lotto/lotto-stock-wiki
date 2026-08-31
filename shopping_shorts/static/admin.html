@@ -285,6 +285,33 @@ function _tierOf(c){ return c.level==='full' ? (c.plan==='pro'?'pro':'trial') : 
 function _ago(s){ if(s<60)return '방금 전'; if(s<3600)return Math.floor(s/60)+'분 전'; if(s<86400)return Math.floor(s/3600)+'시간 전'; return Math.floor(s/86400)+'일 전'; }
 // 접속/활동 셀 클릭 → 최근 활동 트레일 팝업
 document.addEventListener('click', async e=>{
+  // 📅 이용기간 설정(2026-08-31) — pro_from/pro_until만 건드린다.
+  // ★full_access_until은 안 건드린다: 이미 지난 값이 pro 26명에게 박혀 있어(체험 잔재)
+  //   그걸 만료 판정에 쓰면 결제 고객이 즉시 추락한다.
+  const el = e.target.closest && e.target.closest('.termcell');
+  if(!el) return;
+  const cid = el.dataset.termcid;
+  const cur = (window._CUST||[]).find(x=>String(x.id)===String(cid))||{};
+  const now = new Date(); now.setDate(now.getDate()+1);
+  const tomorrow = now.toISOString().slice(0,10);
+  const start = prompt('시작일 (YYYY-MM-DD) — 비우면 기간 없음(무기한)', 
+                       cur.pro_from? new Date(cur.pro_from*1000).toISOString().slice(0,10) : tomorrow);
+  if(start===null) return;
+  let months = 0;
+  if(start.trim()){
+    const m = prompt('몇 개월? (12 = 1년)', '12');
+    if(m===null) return;
+    months = parseInt(m,10)||0;
+    if(!months){ alert('개월 수를 숫자로 넣어주세요'); return; }
+  }
+  const r = await (await fetch('/api/admin/customer/term',{method:'POST',
+    headers:{'content-type':'application/json'},
+    body:JSON.stringify({customer_id:Number(cid), start:start.trim(), months})})).json();
+  if(!r.ok){ alert(r.error||'설정하지 못했어요'); return; }
+  alert(r.cleared ? '기간을 지웠습니다 (무기한)' : (r.start+' ~ '+r.until+' 로 설정했습니다'));
+  if(typeof loadCustomers==='function') loadCustomers();
+});
+document.addEventListener('click', async e=>{
   // 🖥 등록 PC 해제(2026-08-31) — 사장님만 푼다. PC 교체·쿠키 삭제로 잠긴 고객 구제용.
   const el = e.target.closest && e.target.closest('.pcslot');
   if(!el) return;
@@ -431,7 +458,10 @@ function renderCustomers(){
       <td class=mini style="color:${c.age_band?'#e8eaed':'#5f6773'}">${esc(c.age_band)||'—'}</td>
       <td>${esc(c.email||c.username)}</td><td>${c.plan}</td><td>${lvl}</td>
       <td style="color:#8a8a92">${c.approved_at? new Date(c.approved_at*1000).toLocaleDateString('ko-KR'):'-'}</td>
-      <td style="color:#8a8a92">${c.full_access_until? new Date(c.full_access_until*1000).toLocaleDateString('ko-KR'):'-'}</td>
+      <td class=termcell data-termcid=${c.id} title="눌러서 이용기간 설정(시작일·개월)"
+          style="cursor:pointer;color:${c.pro_until?'#7ee787':'#8a8a92'}">${
+        c.pro_until ? new Date(c.pro_until*1000).toLocaleDateString('ko-KR')+' ⏳'
+        : (c.full_access_until? new Date(c.full_access_until*1000).toLocaleDateString('ko-KR'):'-')}</td>
       <td>${c.last_payment? `<span class=paylink data-cid=${c.id} style="cursor:pointer;color:#8ab4f8">${c.last_payment.amount.toLocaleString()}원 · ${c.payment_count}건</span>` : '-'}</td>
       <td><span style="color:${(c.points||0)<=0?'#ff6b6b':'#7ee787'};font-weight:700">${c.points||0}P</span></td>
       <td>${_useCell(c)}${_madeCell(c)}</td>

@@ -1473,6 +1473,16 @@ class Store:
                         ua TEXT NOT NULL,
                         PRIMARY KEY (customer_id, day, ip, ua)
                     )""")
+        # ── 📅 기간제 이용권(2026-08-31 사장님 "시작일을 내일부터 1년으로") ──────────
+        #    ★왜 full_access_until을 안 쓰나: pro 48명 중 **26명**이 이미 지난 날짜를
+        #      갖고 있다(체험 때 잔재). 그 필드로 만료를 판정하면 결제 고객 26명이
+        #      즉시 랭킹만으로 추락한다(실측 2026-08-31). 새 개념은 새 칸에 담는다.
+        #    ★비어 있으면(NULL/0) 지금까지와 완전히 같다 = 무기한. 기존 전원 무영향.
+        for _col in ("pro_from", "pro_until"):
+            try:
+                c.execute(f"ALTER TABLE customers ADD COLUMN {_col} INTEGER DEFAULT 0")
+            except sqlite3.OperationalError:
+                pass                      # 이미 있음
         # ── 🖥 PC 등록(2026-08-31 사장님 "pc를 등록하게 해줘 1번pc 2번pc 다른곳에선 안되게") ──
         #    ★IP로 판정하지 않는다. 가정용 인터넷은 대부분 유동 IP라 재접속마다 바뀌고,
         #      같은 PC인데도 잠긴다. 브라우저에 찍은 **기기 도장(랜덤 id)**으로 본다.
@@ -5466,7 +5476,7 @@ class Store:
             row = c.execute(
                 "SELECT id, username, created_at, plan, full_access_until, google_sub, email, "
                 "approved_at, name, phone, trial_ends_at, admin, welcome_due, "
-                "gender, age_band, acked_at "
+                "gender, age_band, acked_at, pro_from, pro_until "
                 "FROM customers WHERE id=?", (customer_id,)
             ).fetchone()
         if not row:
@@ -5478,7 +5488,9 @@ class Store:
                 "admin": bool(row[11]), "welcome_due": bool(row[12]),
                 "gender": row[13], "age_band": row[14],
                 # ★대기실 판정 전용(2026-08-30). 권한은 approved_at·plan이 정한다.
-                "acked_at": row[15]}
+                "acked_at": row[15],
+                # 📅 기간제 이용권(2026-08-31). 0이면 무기한 — 기존 고객 전원이 0이다.
+                "pro_from": row[16] or 0, "pro_until": row[17] or 0}
 
     def clear_welcome_due(self, customer_id):
         """가입 마무리(이름·전화) 입력을 마쳤다 → 다시 묻지 않는다."""
@@ -5619,7 +5631,7 @@ class Store:
         """관리자용 전체 고객 목록(사장님 cid0 제외). 최근 가입 먼저. 최근 결제 요약 포함."""
         with self._conn() as c:
             rows = c.execute(
-                "SELECT id, username, email, plan, full_access_until, created_at, approved_at, name, phone, trial_ends_at, admin, last_seen, gender, age_band, acked_at "
+                "SELECT id, username, email, plan, full_access_until, created_at, approved_at, name, phone, trial_ends_at, admin, last_seen, gender, age_band, acked_at, pro_from, pro_until "
                 "FROM customers WHERE id != 0 ORDER BY id DESC"
             ).fetchall()
             out = []
@@ -5635,6 +5647,8 @@ class Store:
                             # ★대기실 판정은 acked_at 하나로 본다(2026-08-30). approved_at은
                             #   권한 필드라 대기 목록 판정에 쓰면 체험이 영구가 된다.
                             "acked_at": r[14],
+                            # 📅 기간제 이용권(2026-08-31) — 0이면 무기한
+                            "pro_from": r[15] or 0, "pro_until": r[16] or 0,
                             "last_payment": ({"amount": p[0], "paid_at": p[1]} if p else None),
                             "payment_count": cnt})
         return out
@@ -5695,6 +5709,16 @@ class Store:
     # ── 돌려쓰기 소프트감지(2026-07-22): 접속 IP·기기 기록 + 요약 ──
     # ── 🖥 PC 등록/차단 (2026-08-31) ─────────────────────────────────────────
     PC_SLOTS = 2          # ★계정당 PC 2대. 늘리려면 여기 한 곳만 고친다
+
+    def set_pro_term(self, customer_id, start_ts, until_ts):
+        """기간제 이용권 설정(시작·만료). 0을 주면 그 칸을 비운다(=무기한).
+
+        ★full_access_until은 **건드리지 않는다** — 그건 체험·입금승인 기간이라
+          의미가 다르고, 이미 지난 값이 pro 26명에게 박혀 있다(2026-08-31 실측).
+        """
+        with self._conn() as c:
+            c.execute("UPDATE customers SET pro_from=?, pro_until=? WHERE id=?",
+                      (int(start_ts or 0), int(until_ts or 0), int(customer_id)))
 
     def device_check(self, customer_id, device_id, ua="", ip=""):
         """이 기기가 등록된 PC인가 → (허용?, 슬롯번호, 등록된수). **등록은 하지 않는다.**
