@@ -142,6 +142,22 @@ def test_verdict_auth_dead_is_danger(tmp_db):
     assert v["level"] == "danger"
 
 
+def test_verdict_counts_dead_keys_not_calls(tmp_db):
+    """★죽은 키 1개를 12번 때린 것을 "12개 사망"으로 읽으면 안 된다(2026-09-01 사장님 지적).
+
+    실사고: crawling_bot이 옛 키 목록을 메모리에 들고 34분간 12번 401을 맞았는데
+    피드가 12줄로 펼쳐져 무더기 사망으로 보였다. 판정 단위는 **키 개수**다."""
+    for _ in range(12):
+        api_health.record("gemini", api_health.OUT_AUTH, pool="vault",
+                          key="X" * 20 + "VRgKpw", detail=_AUTH_MSG)
+    agg = api_health.aggregates(hours=1)
+    assert len(agg["dead_keys"]) == 1                  # 키는 하나
+    assert agg["dead_keys"][0]["hits"] == 12           # 헛호출은 12번
+    v = api_health.verdict(snap={"gemini": [], "others": [], "collectors": []}, agg=agg)
+    msg = " ".join(v["problems"])
+    assert "죽은 키 1개" in msg and "12번" in msg      # 개수와 횟수를 갈라서 말한다
+
+
 # ── 배선 — MeteredClient 실패가 api_events에 실제로 닿는가 ─────────────────
 
 class _BoomModels:

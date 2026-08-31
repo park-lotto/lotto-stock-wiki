@@ -304,11 +304,38 @@ function renderOps(agg){
   }).join(''):'<tr><td colspan="8">최근 24시간 기록 없음</td></tr>';
 }
 
+// ★같은 사고를 묶어서 보여준다(2026-09-01 사장님 지적).
+//   실측: 죽은 키 1개를 34분간 12번 때린 것이 12줄로 펼쳐져 "몇 분 사이 키 12개 사망"
+//   으로 읽혔다. 사고 대응은 **몇 번 났나**가 아니라 **무엇이 몇 개 났나**로 판단한다.
+//   묶음 기준: 서비스+풀+분류+키+기능 (원문은 대표 1건, 시각은 처음~마지막).
+function groupFails(fails){
+  const out=[], idx=new Map();
+  for(const f of (fails||[])){
+    const k=[f.service,f.pool,f.outcome,f.key_tail,f.op].join('|');
+    let g=idx.get(k);
+    if(!g){ g={...f, n:1, first:f.ts, last:f.ts, whos:new Set()}; idx.set(k,g); out.push(g); }
+    else {
+      g.n++;
+      if(f.ts<g.first) g.first=f.ts;
+      if(f.ts>g.last) g.last=f.ts;
+      if(!g.detail && f.detail) g.detail=f.detail;
+    }
+    if(f.customer_id!==null&&f.customer_id!==undefined) g.whos.add('cid '+f.customer_id);
+    if(f.job_id) g.whos.add(String(f.job_id).slice(0,8));
+  }
+  return out;
+}
+
 function renderFeed(fails){
-  $('#feed tbody').innerHTML=(fails||[]).length?fails.map(f=>{
-    const who=[f.customer_id?('cid '+f.customer_id):null, f.job_id?String(f.job_id).slice(0,8):null]
-      .filter(Boolean).join(' · ');
-    return `<tr><td>${kst(f.ts)}</td><td>${esc(f.service)}${f.pool?` <span style="color:var(--sub)">${esc(f.pool)}</span>`:''}</td>
+  const rows=groupFails(fails);
+  $('#feed tbody').innerHTML=rows.length?rows.map(f=>{
+    const who=[...f.whos].slice(0,3).join(' · ');
+    // 반복이면 "N회 · 처음~마지막", 1건이면 그냥 시각 — 한 번인지 되풀이인지가 처방을 가른다.
+    const when=f.n>1
+      ? `${kst(f.first).slice(0,-3)}~${kst(f.last).slice(-8,-3)}`
+      : kst(f.ts);
+    const cnt=f.n>1?` <span class="hot">×${f.n}회</span>`:'';
+    return `<tr><td>${when}${cnt}</td><td>${esc(f.service)}${f.pool?` <span style="color:var(--sub)">${esc(f.pool)}</span>`:''}</td>
       <td>${esc(f.op||'–')}</td><td>${badge(f.outcome)}</td>
       <td>${f.key_tail?'…'+esc(f.key_tail):'–'}</td><td>${esc(who||'–')}</td>
       <td class="wraps">${esc((f.detail||'').slice(0,180))}</td></tr>`;
