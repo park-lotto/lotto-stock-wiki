@@ -27,8 +27,10 @@ SVC_ELEVENLABS = "elevenlabs"
 SVC_YOUTUBE = "youtube"
 SVC_SERPAPI = "serpapi"
 SVC_BUFFER = "buffer"      # SNS 예약발행. 고객이 자기 Buffer 개인 키를 넣는다
+SVC_TYPECAST = "typecast"  # 목소리 두 번째 백엔드. 프리셋 model_id가 `ssfm-*`면 이쪽으로 나간다
 
-SERVICES = (SVC_GEMINI, SVC_VMAKE, SVC_ELEVENLABS, SVC_YOUTUBE, SVC_SERPAPI, SVC_BUFFER)
+SERVICES = (SVC_GEMINI, SVC_VMAKE, SVC_ELEVENLABS, SVC_TYPECAST, SVC_YOUTUBE,
+            SVC_SERPAPI, SVC_BUFFER)
 
 # ★등록은 받지만 **실제 호출에 쓰이는** 서비스는 아직 이 둘뿐이다(2026-08-17 실측).
 #   - vmake     : job의 customer_id → mix_pipeline._vmake_keys → keys_for (목록 전체)
@@ -60,12 +62,18 @@ SERVICES = (SVC_GEMINI, SVC_VMAKE, SVC_ELEVENLABS, SVC_YOUTUBE, SVC_SERPAPI, SVC
 # ★buffer는 **사장님 키가 아예 없다.** 고객이 자기 키를 넣어야만 되는 서비스다
 #   (Buffer는 제3자 OAuth가 안 열려 우리가 대신 발행할 수 없다 — buffer_api.py 참조).
 #   그래서 폴백이 없고, 우리 돈이 나가지도 않는다(발행은 고객의 Buffer 요금제로 나간다).
-WIRED = (SVC_VMAKE, SVC_SERPAPI, SVC_ELEVENLABS, SVC_GEMINI, SVC_YOUTUBE, SVC_BUFFER)
+#   ★2026-08-31 typecast 배선 완료 → WIRED에 넣었다.
+#     일레븐랩스와 **같은 경로**를 탄다: synthesize_tts(customer_id=…) →
+#     _synthesize_typecast → typecast_tts.api_key(customer_id) → keys_for.
+#     호출부는 이미 customer_id를 흘리고 있었고(일레븐랩스 배선 때 뚫린 길),
+#     타입캐스트 분기만 그 인자를 버리고 config 키를 쓰고 있었다.
+WIRED = (SVC_VMAKE, SVC_SERPAPI, SVC_ELEVENLABS, SVC_TYPECAST, SVC_GEMINI,
+         SVC_YOUTUBE, SVC_BUFFER)
 
 # ★공용 풀 모델(2026-08-24 사장님 결정) — 이 서비스들은 회원 키를 **우리 풀에 합류**시키고
 #   회원은 풀 전체를 무료로 쓴다. 키 1개만 받는데 그 1개로만 돌리면 곧바로 한도에 걸려
 #   "부담 줄이려 1개만 받은" 취지가 뒤집히기 때문이다.
-#   나머지(vmake·serpapi·elevenlabs)는 **개인 전용**이다 — 회원이 자기 돈으로 결제하는
+#   나머지(vmake·serpapi·elevenlabs·typecast)는 **개인 전용**이다 — 회원이 자기 돈으로 결제하는
 #   서비스라 남의 키를 쓰면 안 되고, 자기 키만 쓴다(폴백 없음).
 POOLED = (SVC_GEMINI, SVC_YOUTUBE)
 
@@ -81,7 +89,7 @@ POOLED = (SVC_GEMINI, SVC_YOUTUBE)
 #   때려 [60002]로 실패했다. 화면엔 두 키가 다 'ok'라 고객은 이유를 모른다.
 #   ⚠️ serpapi는 **넣지 마라** — 거긴 키 개수만큼 한도를 주고(_lens_key_count)
 #     목록 전체를 쓴다. 순서를 뒤집을 이유가 없다.
-SINGLE_KEY = (SVC_VMAKE, SVC_ELEVENLABS)
+SINGLE_KEY = (SVC_VMAKE, SVC_ELEVENLABS, SVC_TYPECAST)
 
 
 def uses_single_key(service):

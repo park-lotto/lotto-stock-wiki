@@ -85,7 +85,7 @@ def synthesize_tts(text, out_path, voice_id=None, voice_settings=None,
             text, out_path, voice_id=voice_id, voice_settings=voice_settings,
             speed=speed, model_id=model_id, seed=seed,
             previous_text=previous_text, next_text=next_text,
-            max_retries=max_retries)
+            max_retries=max_retries, customer_id=customer_id)
     api_key = _api_key(customer_id)
     if not api_key:
         _write_silent_mp3(out_path, _estimate_seconds(text))
@@ -150,7 +150,8 @@ def synthesize_tts(text, out_path, voice_id=None, voice_settings=None,
 
 
 def _synthesize_typecast(text, out_path, *, voice_id, voice_settings, speed,
-                         model_id, seed, previous_text, next_text, max_retries):
+                         model_id, seed, previous_text, next_text, max_retries,
+                         customer_id=0):
     """타입캐스트 경로. 키 없으면 무음 mock(일레븐랩스 경로와 같은 계약).
 
     감정은 프리셋 스냅샷의 `settings.emotion`/`emotion_intensity`에서 온다. 일레븐랩스의
@@ -163,7 +164,7 @@ def _synthesize_typecast(text, out_path, *, voice_id, voice_settings, speed,
       synthesize_line이 speed>1.2면 extra_tempo를 계산해 후처리로 **또** 당기므로,
       호출부(mix_pipeline._voice_params)가 엔진을 보고 extra_tempo를 1.0으로 두어야
       이중 가속이 안 난다 — 그쪽에 같이 반영돼 있다."""
-    if not typecast_tts.api_key():
+    if not typecast_tts.api_key(customer_id):
         _write_silent_mp3(out_path, _estimate_seconds(text))
         return out_path
     s = voice_settings or {}
@@ -175,7 +176,8 @@ def _synthesize_typecast(text, out_path, *, voice_id, voice_settings, speed,
             alignment = typecast_tts.synthesize(
                 text, out_path, voice_id=voice_id, speed=speed, emotion=emotion,
                 intensity=intensity, model_id=model_id, seed=seed,
-                previous_text=previous_text, next_text=next_text)
+                previous_text=previous_text, next_text=next_text,
+                customer_id=customer_id)
             if alignment:
                 tts_timestamps.save(out_path, alignment)
             return out_path

@@ -281,7 +281,11 @@ def synthesize_line(narration, out_path, *, voice=None, profile=None, beat_role=
     # ★"실제 음성인가"는 그 비트가 쓰는 엔진의 키로 판정한다(2026-08-19). 종전엔
     #   ELEVENLABS_API_KEY만 봐서, 타입캐스트 성우로 뽑은 진짜 음성이 일레븐랩스 키가
     #   없다는 이유로 정규화를 건너뛰어 **혼자만 작게** 들렸다.
-    has_voice_key = (bool(typecast_tts.api_key()) if typecast_tts.is_typecast(model_id)
+    #   ★2026-08-31: 키를 **그 job 주인 기준**으로 본다. 회원이 자기 타입캐스트 키를
+    #   등록했으면 회사 키가 비어 있어도 진짜 음성이다 — customer_id를 안 넘기면
+    #   회사 키만 보고 "무음 mock"으로 오판해 정규화를 건너뛴다.
+    has_voice_key = (bool(typecast_tts.api_key(customer_id))
+                     if typecast_tts.is_typecast(model_id)
                      else bool(config.ELEVENLABS_API_KEY))
     audio_post.post_process(str(out_path), str(out_path), tempo=extra_tempo,
                             silence_trim=trim, pace_mode=pace_mode,
