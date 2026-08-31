@@ -2294,6 +2294,39 @@ def headcopy_layer_png(headcopy, out_path, work, caption_style=None, deco=None):
     return str(out_path) if Path(out_path).exists() else None
 
 
+def _pre_compose_under_text(in_video, deco, work):
+    """틀 그림을 자막·글자 **밑에** 깔아 영상에 미리 굽는다 → (새 영상, 틀을 뺀 deco).
+
+    ★언제 도나: deco.template.under_text가 참일 때만(이미지 틀). 기존 틀은 안 탄다 —
+      옛 작업의 그림이 한 픽셀도 안 바뀐다.
+    ★왜 별도 패스인가: 자막은 -vf drawtext 체인이라 두 번째 입력(PNG)을 못 섞는다.
+      순서를 바꾸려면 합성을 먼저 끝내고 그 결과를 자막 패스에 넘기는 수밖에 없다.
+    실패하면 원본을 그대로 돌려준다 — 틀 하나 때문에 렌더가 죽으면 안 된다(fail-open).
+    """
+    tpl = (deco or {}).get("template") or {}
+    png = tpl.get("_abspath")
+    if not (tpl.get("under_text") and png and os.path.exists(png)):
+        return in_video, deco
+    out = Path(work) / "under_tpl.mp4"
+    try:
+        _run_ffmpeg([
+            "ffmpeg", "-y", "-i", str(in_video), "-i", str(png),
+            "-filter_complex", f"[1:v]scale={_OUT_W}:{_OUT_H}[tpl];[0:v][tpl]overlay=0:0[v]",
+            "-map", "[v]", "-map", "0:a?", "-c:a", "copy",
+            "-c:v", "libx264", "-preset", _mid_preset(), "-crf", _mid_crf(),
+            *_threads_args(), "-pix_fmt", "yuv420p", str(out),
+        ], cwd=str(work))
+    except Exception as e:      # noqa: BLE001
+        print(f"[틀] 밑에 깔기 실패 — 예전처럼 위에 얹는다: {e!r}", file=sys.stderr)
+        return in_video, deco
+    if not out.exists():
+        return in_video, deco
+    # ★틀 슬롯을 비운다 — 안 비우면 뒤에서 **또** 얹어 결국 글자를 덮는다(두 번 그리기 금지).
+    deco = dict(deco or {})
+    deco["template"] = {k: v for k, v in tpl.items() if k not in ("_abspath",)}
+    return str(out), deco
+
+
 def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None, caption_style=None, deco=None, sfx_paths=None):
     """완성된 믹스 영상(in_video) 위에 우리 자막을 비트 타이밍대로 굽는다.
     비트 경계는 각 비트 tts 길이 누적(t0)으로 계산해, drawtext enable 구간을 전체
@@ -2480,6 +2513,13 @@ def assemble(edit_plan, tts_paths, source_video_paths, out_path, clean_fn=None, 
             import shutil
             shutil.copyfile(base_video, out_path)
             return out_path
+        # 🖼 이미지 틀은 **자막·글자보다 아래**여야 한다(2026-08-31 사장님: "그림위로
+        #   올라가는게 해드카피만있고 자막 제목등 다 안된다").
+        #   지금까지 틀은 맨 마지막에 얹혔다 — 기존 20종은 띠 말고 전부 투명이라 덮을 게
+        #   없어 문제가 안 보였을 뿐이다. 화면을 꽉 채우는 이미지 틀에선 글자가 통째로 묻힌다.
+        #   → 그림을 **자막 굽기 전에** 먼저 영상에 합성하고, 틀 슬롯은 비운다(두 번 얹으면
+        #     또 덮는다). 순서를 정하는 곳은 여기 한 곳이다(0순위-B).
+        base_video, deco = _pre_compose_under_text(base_video, deco, work)
         return _burn_captions(base_video, edit_plan, tts_paths, out_path, work, headcopy, caption_style, deco, sfx_paths=sfx_paths)
     finally:
         try:

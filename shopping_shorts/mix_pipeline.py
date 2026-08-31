@@ -1693,6 +1693,12 @@ def _template_layer(tpl, first_beat_dur=0):
     if not p or not p.exists():
         return None
     out = {"_abspath": str(p), "id": tid, "alpha": tpl.get("alpha", 1)}
+    # ★이미지 틀(캔바 그림)은 화면을 꽉 채우므로 **글자보다 아래**에 깔아야 한다.
+    #   안 그러면 자막·헤드카피가 그림에 통째로 묻힌다(2026-08-31 사장님 제보).
+    #   기존 틀은 띠 말고 전부 투명이라 지금까지 그대로 얹혀도 문제가 없었다 —
+    #   그래서 **이미지를 깐 틀만** 표시한다(옛 작업의 그림은 한 픽셀도 안 바뀐다).
+    if frame and (frame.get("bg_image") or "").strip():
+        out["under_text"] = True
     if frame and _bm and _bsig > 0:
         out["blur_mask"] = str(_bm)
         out["blur_sigma"] = _bsig

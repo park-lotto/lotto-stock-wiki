@@ -5346,6 +5346,10 @@ function renderTemplatePreview(){
       pv.appendChild(el);
     }
     el.src=frameUrl(t.frame); el.style.display='';
+    // ★이미지 틀은 글자(자막 z5·헤드카피 z5) **아래**로 내린다 — 그림이 화면을 꽉 채워서
+    //   위에 두면 글자가 통째로 묻힌다(2026-08-31). 렌더도 같은 순서다(under_text).
+    //   기존 틀은 8 그대로 — 띠가 글자 위에 와야 하는 경우가 있다(옛 그림 무변경).
+    el.style.zIndex = (t.frame.bg_image ? 1 : 8);
     syncFrameHandles();
     return;
   }
