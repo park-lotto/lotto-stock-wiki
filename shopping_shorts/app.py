@@ -12410,18 +12410,61 @@ def _grab_popup_html(ok, msg, sub=""):
 <script>setTimeout(function(){{window.close();}}, {delay});</script></body>""")
 
 
+def _grab_meta_is_stale(url, stored_thumbnail):
+    """담기가 보낸 제목·썸네일이 **다른 영상 것**인가(= 서버 값으로 덮어써야 하는가).
+
+    ★왜 필요한가(2026-09-01 실사고): 유튜브 쇼츠는 SPA라 세로 스크롤로 다음 영상에
+      가면 `location.href`는 갱신되지만 `<meta og:image>`·`<meta og:title>`은
+      **처음 로드한 영상 것 그대로** 남는다. 담기 스크립트는 주소를 location.href에서,
+      제목·썸네일을 og:*에서 따로 읽으므로 둘이 어긋난다(0순위-B: 같은 판단
+      "지금 보는 영상"을 두 군데서 따로 내렸다).
+      실측 — url=L8mYlaYXVFI(집코드)인데 name·thumbnail은 B_O4a0x_MmU(홈모아).
+
+    ★확장 사용자는 재설치 전엔 옛 로직이 돈다(MV3 원격코드 금지). 실측 34명 중 32명이
+      확장 사용자였으므로 **서버가 바로잡아야** 전원이 즉시 산다.
+
+    판정은 여기 한 곳에서만 한다 — 호출부 3곳에 같은 판단을 적으면 반드시 어긋난다.
+    유튜브 썸네일은 `i.ytimg.com/vi/<영상ID>/...` 라 URL의 영상ID와 대조할 수 있다.
+    ⚠️유튜브 밖에는 적용하지 않는다 — 틱톡·인스타 썸네일에는 영상ID가 없어 대조가
+      불가능하고, 억지로 판정하면 멀쩡한 값을 덮어써 증상 없는 데이터 손상이 된다."""
+    if not stored_thumbnail:
+        return False                       # 비교할 게 없으면 종전대로 '빈 칸만 채우기'
+    m = _YT_ID_RE.search(url or "")
+    if not m:
+        return False                       # 유튜브가 아니면 판정하지 않는다
+    t = re.search(r"i\.ytimg\.com/vi/([A-Za-z0-9_-]{6,})/", stored_thumbnail)
+    if not t:
+        return False                       # 우리가 아는 형식이 아니면 건드리지 않는다
+    return t.group(1) != m.group(1)
+
+
 def _enrich_grab(url, sc, cid):
     """백그라운드: yt-dlp/oEmbed로 썸네일·제목·조회수·좋아요·댓글·길이·채널을 보강해 저장.
-    틱톡 썸네일 빔·정보 없음 제보 대응(2026-07-18). 실패해도 담긴 항목엔 지장 없음."""
+    틱톡 썸네일 빔·정보 없음 제보 대응(2026-07-18). 실패해도 담긴 항목엔 지장 없음.
+
+    ★담기가 보낸 얼굴이 다른 영상 것이면 덮어쓴다(2026-09-01) — _grab_meta_is_stale 참조.
+      주소는 항상 정확하므로(location.href는 스크롤 따라 제대로 바뀐다) URL로 다시
+      조회한 값이 진실이다."""
     meta = probe_grab_meta(url)
     if not meta:
         return
-    Store(DB_PATH).mix_basket_set_meta(
+    store = Store(DB_PATH)
+    # 지금 저장돼 있는 썸네일과 대조해 '옛 영상 잔상'인지 본다.
+    stale = False
+    try:
+        row = next((i for i in store.mix_basket_list(customer_id=cid)
+                    if i.get("shortcode") == sc), None)
+        if row:
+            stale = _grab_meta_is_stale(url, row.get("thumbnail") or "")
+    except Exception:      # noqa: BLE001 — 교정 판정이 보강 자체를 막으면 안 된다
+        stale = False
+    store.mix_basket_set_meta(
         sc, customer_id=cid,
         thumbnail=meta.get("thumbnail"), name=meta.get("title"),
         meta={k: meta[k] for k in
               ("views", "likes", "comments", "shares", "duration", "channel", "followers", "ts")
-              if k in meta})
+              if k in meta},
+        overwrite=stale)
 
 
 @app.get("/api/grab", include_in_schema=False)

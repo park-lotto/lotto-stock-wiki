@@ -2628,17 +2628,27 @@ class Store:
         return out
 
     def mix_basket_set_meta(self, shortcode, customer_id=LEGACY_CUSTOMER_ID,
-                            thumbnail=None, name=None, meta=None):
+                            thumbnail=None, name=None, meta=None, overwrite=False):
         """원클릭 담기 항목의 보강값 갱신(백그라운드 enrich용). None인 필드는 안 건드린다.
         thumbnail/name은 기존 값이 빈 경우에만 채운다(사용자·유저스크립트가 준 값 우선).
-        meta=dict면 JSON으로 직렬화해 meta_json에 저장."""
+        meta=dict면 JSON으로 직렬화해 meta_json에 저장.
+
+        overwrite=True면 thumbnail/name을 **기존 값이 있어도 덮어쓴다**(2026-09-01).
+          왜: 유튜브 쇼츠는 SPA라 스크롤로 다음 영상에 가도 og:image/og:title이 처음
+          로드한 영상 것으로 남는다 → 담기가 보낸 제목·썸네일이 **다른 영상 것**이다
+          (실측: url=L8mYlaYXVFI(집코드)인데 name·thumbnail은 B_O4a0x_MmU(홈모아)).
+          주소는 항상 정확하므로 URL로 다시 조회한 값이 진실이다.
+          ⚠️기본값은 False로 둔다 — 늘 덮어쓰면 사용자가 손으로 고친 이름을
+            백그라운드 보강이 조용히 되돌린다. 호출부가 '틀렸다고 아는' 때만 켠다."""
         with self._conn() as c:
             sets, args = [], []
             if thumbnail:
-                sets.append("thumbnail=COALESCE(NULLIF(thumbnail,''), ?)")
+                sets.append("thumbnail=?" if overwrite
+                            else "thumbnail=COALESCE(NULLIF(thumbnail,''), ?)")
                 args.append(thumbnail)
             if name:
-                sets.append("name=COALESCE(NULLIF(name,''), ?)")
+                sets.append("name=?" if overwrite
+                            else "name=COALESCE(NULLIF(name,''), ?)")
                 args.append(name)
             if meta:
                 # ★기존 meta_json에 병합 — yt-dlp 추출이 간헐 실패(틱톡 rehydration 등)해도
