@@ -2241,7 +2241,15 @@ def _is_transient_api_error(msg):
     return is_transient_api_error(msg)
 
 
-def _vault_call_once(prompt, schema, max_tries=8, key_offset=0):
+_KEY_TRY_LIMIT = 40             # 한 호출에서 최대 몇 개의 키까지 돌아볼 것인가
+# ★종전 4/8이 오늘 사고의 마지막 뿌리였다(2026-08-31). build_edit_plan의
+#   max_retries 기본값 4가 그대로 _vault_call(max_tries=4)로 흘러 **keys[:4]**,
+#   즉 키가 33개 살아 있어도 **앞의 4개만 두들기고 포기**했다.
+#   그래서 회원 키를 넣어 풀을 11→34개로 늘려도 고객 실패가 그대로였다
+#   (실측 job 96786f4a0e44: "키 4개를 다 돌았는데 결과 없음 — 429").
+#   성공하면 즉시 반환하므로 값을 크게 잡아도 손해가 없다 — 429로 튕긴 키는
+#   대기 없이 다음으로 넘어가므로 비용은 거의 없다.
+def _vault_call_once(prompt, schema, max_tries=_KEY_TRY_LIMIT, key_offset=0):
     """key_vault 캐스케이드 예비키풀로 JSON 생성 호출 → raw dict. 무키/실패면 None.
 
     build_edit_plan이 comment_gen 전용키(1개, 쉽게 소진) 대신 배치된 예비키를
@@ -2379,7 +2387,7 @@ def _auto_key_offset():
     return os.getpid() * 7 + seq
 
 
-def _vault_call(prompt, schema, max_tries=8, key_offset=0):
+def _vault_call(prompt, schema, max_tries=_KEY_TRY_LIMIT, key_offset=0):
     """키풀을 한 바퀴 돌리되, **분당 한도(429 RPM)면 쉬었다 다시 돈다**(2026-08-31 실사고).
 
     ★왜: 종전엔 429를 만나면 대기 없이 다음 키로 넘어가기만 했다. 살아있는 키가
@@ -4009,7 +4017,7 @@ def _repick_weak_beats(beats, seg_map, call=_vault_call, min_fit=4):
 
 
 def build_edit_plan(source_scripts, target_seconds, structure="template", video_type=None,
-                    n_alternates=2, max_retries=4, quota_sleep=8, given_script=None,
+                    n_alternates=2, max_retries=_KEY_TRY_LIMIT, quota_sleep=8, given_script=None,
                     is_recipe=False):
     """소스 대본들 → 그라운딩·표절검사된 EDL(설계 §3-2). 실패 시 빈 EDL.
 
