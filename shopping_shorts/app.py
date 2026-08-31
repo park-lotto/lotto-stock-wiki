@@ -15348,8 +15348,8 @@ def _clean_frame_src(job, work, beat_idx, cut=None):
             if _cl:
                 _c = _cl[cut] if 0 <= cut < len(_cl) else _cl[-1]
                 sec = _c["fin"] + _c["dur"] * 0.5
-        except Exception:      # noqa: BLE001
-            pass
+        except Exception as e:      # noqa: BLE001 — 컷을 못 찾으면 첫 컷(위 sec) 그대로 쓴다
+            print(f"[beatframe] 컷 시각 계산 실패(무해, 첫 컷 사용): {e!r}", file=sys.stderr)
     if sec is None:
         # ★컷 계획을 못 세워도(소스 길이 조회 실패 등) **원본으로 떨어지면 안 된다** —
         #   그러면 자막·워터마크가 화면에 그대로 나온다(08-27 회귀의 정체).
