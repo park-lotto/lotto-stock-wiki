@@ -5990,6 +5990,24 @@ const STYLE_USE={
 };
 // 대표 완성 스타일(피팅 카드 우선 노출). 나머지는 더보기.
 let STYLE_TOUCHED=false;
+// ★실장면 배경 자동 ON은 **스타일과 별개의 판단**이다(2026-08-31 고객 사고).
+//   종전엔 applyDefaultStyleOnEntry의 `if(STYLE_TOUCHED||DEFAULT_APPLIED) return;` 뒤에
+//   같이 묶여 있었는데, 그 깃발은 "기본 프리셋을 덮어쓰지 마라"는 뜻이지 "배경을 켜지 마라"가
+//   아니다. 한 번이라도 꾸민 사람은 다시 들어올 때 PENDING_STYLE_RESTORE→STYLE_TOUCHED=true가
+//   되어 **배경 ON에 영영 도달하지 못했고**, 체크박스 기본값은 꺼짐이라 toggleSceneBg의
+//   꺼짐 분기(background='#ffffff')가 돌아 **흰 화면에 자막만** 남았다.
+//   증상 재현: 꾸미기 → 나갔다 다시 들어오기. "꾸미고 나면 계속 그렇다"가 정확히 이것이다.
+let BG_AUTO_TRIED=false;   // 페이지 로드당 1회만 자동으로 켠다
+let BG_USER_OFF=false;     // 사용자가 스스로 껐으면 존중한다(자꾸 되켜지면 그게 더 나쁘다)
+function autoSceneBgOnEntry(){
+  if(BG_AUTO_TRIED || BG_USER_OFF) return;
+  const sb=document.getElementById('sceneBg');
+  if(!sb || sb.checked) return;
+  if(typeof MIX_JOB==='undefined' || !MIX_JOB) return;   // 매칭 전이면 켤 그림이 없다
+  BG_AUTO_TRIED=true;
+  sb.checked=true;
+  try{ toggleSceneBg(true); }catch(e){}   // silent — 실패해도 조용히 흰배경(종전과 같다)
+}
 // ★꾸미기 패널은 DOM 입력칸을 진실의 원천으로 읽는다(updateHC/updateCaption이 DOM→STATE) +
 // 진입 시 applyDefaultStyleOnEntry가 기본 프리셋을 자동 적용한다. 그래서 작업 복원이 STATE만
 // 채우면 스타일·꾸미기가 전부 기본값으로 덮인다(C-2 잔여, 라이브 실측 확인). 복원 시 이 플래그를
@@ -6149,16 +6167,14 @@ let DEFAULT_APPLIED=false;
 function applyDefaultStyleOnEntry(){
   // step5 진입 1회: 사용자가 아직 스타일을 안 건드렸으면 기본 스타일 자동 적용 + 실장면 배경 자동 ON.
   // DEFAULT_APPLIED: 페이지 로드당 최초 1회만 자동적용 → 재진입 시 수동 미세조정(카드 미클릭) 보존.
+  // ★배경 켜기가 먼저다 — 아래 게이트(STYLE_TOUCHED)는 **스타일 프리셋** 전용이라
+  //   여기서 걸러지면 배경까지 같이 죽는다(그게 흰 화면 사고의 뿌리였다).
+  autoSceneBgOnEntry();
   if(STYLE_TOUCHED || DEFAULT_APPLIED){ renderStyleCards(); return; }
   DEFAULT_APPLIED=true;
   const di = FULL_PRESETS.findIndex(p=>p.name===DEFAULT_STYLE_NAME);
   if(di>=0) applyFullPreset(di);          // updateHC/updateCaption 내부호출됨
-  // 실장면 배경 자동 ON(매칭된 job 있을 때만). 실패는 조용히 흰배경 유지.
-  const sb=document.getElementById('sceneBg');
-  if(sb && !sb.checked && typeof MIX_JOB!=='undefined' && MIX_JOB){
-    sb.checked=true;
-    try{ toggleSceneBg(true); }catch(e){}
-  }
+  // (실장면 배경 자동 ON은 위 autoSceneBgOnEntry 한 곳으로 옮겼다 — 두 벌로 두지 않는다)
   renderStyleCards();
 }
 // ── 💾 내 프리셋(localStorage) — 사용자가 만든 완성 스타일을 딸깍 축적 ──
@@ -6465,6 +6481,9 @@ function updateBgmVol(){ const v=+document.getElementById('bgmVol').value; docum
 // 🖼 실장면 배경 — 매칭된 소스 프레임을 미리보기 배경으로(기본 흰색). 스타일 판단을 실제 영상 위에서.
 function toggleSceneBg(silent){
   const on=document.getElementById('sceneBg').checked;
+  // ★사람이 직접 끈 것만 기억한다(silent=자동 호출은 제외) — 그래야 자동 ON이 사용자의
+  //   선택을 매번 뒤집지 않는다. 켜면 다시 자동 대상이 된다.
+  if(!silent){ BG_USER_OFF = !on; }
   const img=document.getElementById('hcPreviewBg'), pv=document.getElementById('hcPreview');
   if(!on){ img.style.display='none'; pv.style.background='#ffffff'; return; }
   if(!MIX_JOB){ alert(stepName('mix')+'에서 영상 매칭을 먼저 실행하세요'); document.getElementById('sceneBg').checked=false; return; }
@@ -13014,9 +13033,13 @@ function _updateVoiceLen(n, vidLen){
   auds.forEach(a=>{ if(a.readyState>=1) recompute(); else a.addEventListener('loadedmetadata', recompute, {once:true}); });
 }
 // ▶ 프리뷰 — 재생 중인 비트의 9:16 프레임을 vpFrame에, 자막을 vpCap에 서버 cap_segments/cap_durs(+cap_offset) 타이밍으로 표시(가라오케식)
-function _vpShowFrame(i){
+function _vpShowFrame(b){
+  // ★목록 순번이 아니라 **비트번호+컷번호**로 부른다(2026-08-31). 종전엔 순번 i를 그대로
+  //   비트번호로 넘겨, 목록이 컷 단위로 펴진 뒤에는 없는 번호를 불러 404가 났다
+  //   (라이브 실측: 비트가 10개인 job에 /10 ~ /18 요청 9건, ?cut= 도 빠져 있었다).
+  //   주소는 _beatFrameUrl 한 곳에서만 만든다 — showBeat·prefetch와 같은 규칙(0순위-B).
   const f=document.getElementById('vpFrame');
-  if(f && typeof MIX_JOB!=='undefined' && MIX_JOB){ f.style.display='block'; f.src='/api/produce/mix/beatframe/'+MIX_JOB+'/'+i; }
+  if(f && typeof MIX_JOB!=='undefined' && MIX_JOB){ f.style.display='block'; f.src=_beatFrameUrl(b); }
 }
 function _vpCapDurs(b){
   const segs=b.cap_segments||[]; if(!segs.length) return [];
@@ -13046,7 +13069,7 @@ function vpPlayBeat(i){
   const a=document.getElementById('beatAudio'+i); if(!a) return;
   // 다른 오디오 정지
   let k=0; while(document.getElementById('beatAudio'+k)){ const o=document.getElementById('beatAudio'+k); if(o!==a){o.pause();} k++; }
-  _vpShowFrame(i); _vpDriveCaption(a,b); _vpHeard.add(i);
+  _vpShowFrame(b); _vpDriveCaption(a,b); _vpHeard.add(i);   // ★프레임은 비트 객체로(순번 아님)
   // ★강조는 **클래스 하나**로 한다(2026-08-30). 종전엔 style.background를 직접 넣어
   //   재생목록 CSS(.ttsRow.playing)와 규칙이 두 벌이 됐다 — 한쪽만 고치면 어긋난다(0순위-B).
   vpMarkPlaying(i);
