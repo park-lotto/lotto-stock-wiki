@@ -35,6 +35,23 @@ def _estimate_seconds(text):
     return max(_MIN_MOCK_SEC, min(_MAX_MOCK_SEC, n / _CHARS_PER_SEC))
 
 
+def _record_tts_event(service, exc, *, silent=False, customer_id=None):
+    """관측판 배선(2026-09-01) — TTS 실패·무음폴백을 api_events에 남긴다.
+
+    ★무음 폴백은 그동안 완전한 사각이었다: 키가 없으면 조용히 무음 mp3를 만들어
+      고객이 '무음 영상'을 받아도 어디에도 흔적이 없었다. 기록 실패는 삼킨다."""
+    try:
+        from shopping_shorts import api_health
+        if silent:
+            api_health.record(service, api_health.OUT_SILENT,
+                              customer_id=customer_id, detail="키 없음 → 무음 mp3 폴백")
+        else:
+            http = getattr(getattr(exc, "response", None), "status_code", None)
+            api_health.record_failure(service, exc, http=http, customer_id=customer_id)
+    except Exception:                      # noqa: BLE001 — 관측이 본작업을 죽이면 안 된다
+        pass
+
+
 def _write_silent_mp3(out_path, seconds):
     """ffmpeg로 ffprobe 가능한 실제 무음 mp3 생성(개발용 mock — 실제 음성 아님,
     파이프라인 관통 목적). anullsrc로 무음 오디오를 지정 길이만큼 인코딩한다."""
@@ -88,6 +105,7 @@ def synthesize_tts(text, out_path, voice_id=None, voice_settings=None,
             max_retries=max_retries, customer_id=customer_id)
     api_key = _api_key(customer_id)
     if not api_key:
+        _record_tts_event("elevenlabs", None, silent=True, customer_id=customer_id)
         _write_silent_mp3(out_path, _estimate_seconds(text))
         return out_path
     vid = voice_id or config.ELEVENLABS_VOICE_ID
@@ -137,7 +155,8 @@ def synthesize_tts(text, out_path, voice_id=None, voice_settings=None,
             with open(out_path, "wb") as f:
                 f.write(r.content)
             return out_path
-        except requests.RequestException:
+        except requests.RequestException as e:
+            _record_tts_event("elevenlabs", e, customer_id=customer_id)
             if want_ts:                           # 타임스탬프 경로만의 문제일 수 있다
                 want_ts = False
                 continue
@@ -165,6 +184,7 @@ def _synthesize_typecast(text, out_path, *, voice_id, voice_settings, speed,
       호출부(mix_pipeline._voice_params)가 엔진을 보고 extra_tempo를 1.0으로 두어야
       이중 가속이 안 난다 — 그쪽에 같이 반영돼 있다."""
     if not typecast_tts.api_key(customer_id):
+        _record_tts_event("typecast", None, silent=True, customer_id=customer_id)
         _write_silent_mp3(out_path, _estimate_seconds(text))
         return out_path
     s = voice_settings or {}
@@ -181,7 +201,8 @@ def _synthesize_typecast(text, out_path, *, voice_id, voice_settings, speed,
             if alignment:
                 tts_timestamps.save(out_path, alignment)
             return out_path
-        except requests.RequestException:
+        except requests.RequestException as e:
+            _record_tts_event("typecast", e, customer_id=customer_id)
             attempt += 1
             if attempt < max_retries:
                 time.sleep(attempt * 2)

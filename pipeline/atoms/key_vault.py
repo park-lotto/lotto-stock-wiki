@@ -149,6 +149,13 @@ def mark_exhausted(group: str, key: str) -> None:
             with open(tmp_path, "w", encoding="utf-8") as f:
                 json.dump(state, f)
             os.replace(tmp_path, _STATE_PATH)
+            try:                    # 관측판(2026-09-01) — 쇼핑쇼츠 없는 환경이면 조용히 통과
+                from shopping_shorts import api_health
+                api_health.record("gemini", api_health.OUT_LOCK,
+                                  pool=f"vault-{group}", key_idx=idx, key=key,
+                                  detail="당일 낙인(vault엔 TTL 없음)")
+            except Exception:       # noqa: BLE001
+                pass
 
 
 def get_live_keys(group: str) -> list[str]:
@@ -196,7 +203,9 @@ def get_client_for_key(key: str) -> genai.Client:
         # shopping_shorts에 하드 의존하면 안 된다 — 없으면 조용히 원본을 쓴다.
         try:
             from shopping_shorts import usage_meter
-            cl = usage_meter.wrap(cl)
+            # pool/key(2026-09-01, API 관측판): 어느 풀의 어느 키인지 귀속.
+            # 그룹은 여기서 모르므로 vault로 뭉뚱그린다 — 그룹 구분은 스냅샷이 한다.
+            cl = usage_meter.wrap(cl, pool="vault", key=key)
         except Exception:      # noqa: BLE001 — 계측은 있으면 좋고 없어도 돈다
             pass
         _client_cache[key] = cl

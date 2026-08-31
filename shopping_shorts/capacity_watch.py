@@ -317,3 +317,12 @@ if __name__ == "__main__":      # 크론: */5 * * * * python -m shopping_shorts.
     from shopping_shorts.config import DB_PATH
 
     print(sample(DB_PATH))
+    # ── API 관측판 무인 경보(2026-09-01) — 아무도 화면을 안 보고 있어도 5분마다
+    #    판정이 돌아 danger면 ops_alert(텔레그램+쪽지, 30분 쿨다운)가 나간다.
+    #    관측이 크론 본업(용량 표본)을 죽이면 안 되므로 전부 삼킨다.
+    try:
+        from shopping_shorts import api_health
+        v = api_health.verdict()
+        print(f"[apiwatch] {v['level']}: {v['msg'][:120]}")
+    except Exception as e:      # noqa: BLE001
+        print(f"[apiwatch] 판정 실패(무시): {e}")

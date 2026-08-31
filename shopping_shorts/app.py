@@ -1990,7 +1990,11 @@ def api_refs_api_usage(request: Request, days: int = 7):
     keys["gemini_member"] = max(0, keys["gemini_total"] - keys["gemini_owner"])
     try:
         from shopping_shorts import comment_gen as _cg
-        exhausted = set(_cg._load_state().get("exhausted") or [])
+        # ★2026-09-01 수리: 08-27에 상태가 dict{"3": 만료ts}로 바뀌었는데 여기가
+        #   list 시절 코드로 남아 str<int 비교 TypeError → except → 늘 소진 0으로
+        #   보였다("현재 상황을 물어봐도 모르던" 직접 원인 중 하나). 판단은
+        #   comment_gen._live_exhausted() 한 곳만 쓴다 — 만료 잠금 자동 해제 포함.
+        exhausted = _cg._live_exhausted()
         keys["exhausted_today"] = len([i for i in exhausted if i < keys["gemini_total"]])
         keys["live"] = keys["gemini_total"] - keys["exhausted_today"]
     except Exception:                             # noqa: BLE001 — 상태파일 없으면 0
@@ -11695,6 +11699,18 @@ def _ops_page(request: Request):
                         media_type="text/html; charset=utf-8", headers=_NOCACHE)
 
 
+# ── API 관측판(2026-09-01) — "어디에 어떤 API가 붙어 어떤 약속으로 도는데 지금 어떤가" ──
+#    08-31 제미니 429 2,524건(워커 실측)짜리 사고날에 상태를 물어볼 곳이 없어 만들었다.
+#    데이터층은 shopping_shorts/api_health.py — 모든 외부 API 호출이 api_events로 모인다.
+@app.get("/apiwatch", response_class=HTMLResponse)
+def _apiwatch_page(request: Request):
+    if not _is_admin(getattr(request.state, "customer_id", None)):
+        return HTMLResponse("<h2 style='font-family:sans-serif'>관리자 전용입니다</h2>",
+                            status_code=403)
+    return FileResponse(Path(__file__).parent / "static" / "apiwatch.html",
+                        media_type="text/html; charset=utf-8", headers=_NOCACHE)
+
+
 @app.post("/api/pinterest/collect")
 def _api_pinterest_collect(request: Request, body: dict = None):
     """핀터레스트 영상 수집 — **관리자 전용·무료**(2026-08-28 사장님 "나만보게 비공개탭").
@@ -12159,6 +12175,60 @@ def _api_capacity(request: Request, days: int = 14):
             "waiting": wait,
             "verdict": capacity_watch.verdict(DB_PATH, cores=now.get("cores"),
                                               now_queued=now.get("queued"))}
+
+
+def _apiwatch_contract():
+    """로테이션 '약속'을 화면에 박제한다 — 상수는 적지 않고 코드에서 실시간으로 뽑는다
+    (여기 숫자를 손으로 적으면 코드와 어긋나는 두 번째 진실이 된다, 0순위-B)."""
+    out = {"notes": [
+        "제미니 풀은 두 벌: SHORTS(태깅·댓글·비전·대본, systemd env) / vault(제작소 대본·SEO·썸네일·주식위키, .env 직접 읽음)",
+        "회원 키는 keypool.resync_pools가 두 풀 모두 '뒤에' 합류시킨다(웹 기동·키 등록/삭제·워커 매 작업 직전)",
+        "SHORTS 잠금은 TTL(30초~6시간) 후 자동 해제, vault 잠금은 당일 내내(자정 리셋)",
+        "분당 페이서는 프로세스-로컬이다 — 워커 12개면 키당 실효 RPM이 약속의 최대 13배까지 갈 수 있다",
+        "개인전용 서비스(vmake·serpapi·elevenlabs·typecast)는 회원 키만 쓰고 폴백이 없다 — 소진돼도 사장님 키로 안 넘어간다",
+        "일레븐랩스·타입캐스트는 키가 없으면 무음 mp3로 조용히 내려앉는다 → silent_fallback 이벤트로만 보인다",
+    ]}
+    try:
+        from shopping_shorts import keyroute as _kr
+        out["pooled"] = list(_kr.POOLED)
+        out["wired"] = list(_kr.WIRED)
+    except Exception:                             # noqa: BLE001
+        pass
+    try:
+        from shopping_shorts import comment_gen as _cg2
+        out["rpm_per_key"] = int(getattr(_cg2, "_RPM_PER_KEY", 0))
+        out["exhaust_ttl_s"] = int(getattr(_cg2, "_EXHAUST_TTL_S", 0))
+        out["revive_ratio"] = float(getattr(_cg2, "_REVIVE_BELOW_RATIO", 0))
+    except Exception:                             # noqa: BLE001
+        pass
+    try:
+        from shopping_shorts import api_health as _ah
+        out["rpd_per_key"] = _ah.RPD_PER_KEY
+    except Exception:                             # noqa: BLE001
+        pass
+    return out
+
+
+@app.get("/api/admin/apiwatch")
+def _api_apiwatch(request: Request, hours: int = 24):
+    """API 관측판 데이터 — 키풀 스냅샷 + 이벤트 집계 + 판정 한 줄 + RPD 예산 + 계약.
+    조회가 하루치 정리(purge)도 겸한다(capacity의 '열 때 표본 한 점' 관습)."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import api_health
+    try:
+        snap = api_health.snapshot()
+        agg = api_health.aggregates(hours=max(1, min(int(hours or 24), 168)))
+        agg1 = api_health.aggregates(hours=1)
+        out = {"ok": True, "snapshot": snap, "agg": agg,
+               "verdict": api_health.verdict(snap=snap, agg=agg1),
+               "budget": api_health.budget(snap=snap, agg=agg),
+               "contract": _apiwatch_contract()}
+        api_health.purge()
+        return out
+    except Exception as e:                        # noqa: BLE001 — 관측이 죽어도 사유는 보이게
+        return {"ok": False, "error": str(e)[:300]}
 
 
 @app.get("/insta_fill_comment.user.js", include_in_schema=False)

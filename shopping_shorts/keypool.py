@@ -33,10 +33,12 @@ def resync_pools(store, verbose=False):
     ★웹 기동·키 등록·삭제·**워커**가 전부 이 함수를 쓴다. 합류 규칙을 두 군데
       적으면 어긋난다(0순위-B).
     실패해도 호출부를 막지 않는다: 키는 이미 DB에 있고 늦어도 다음 기동에 합류한다."""
+    counts = {}
     for svc in keyroute.POOLED:
         label, fn = _POOL_REFRESHERS[svc]
         try:
             n_owner, n_member = fn(store.get_pooled_keys(svc))
+            counts[svc] = {"owner": n_owner, "member": n_member}
             if verbose and n_member:
                 import sys as _sys
                 print(f"[keypool] {label} 사장님 {n_owner} + 회원 {n_member} "
@@ -47,3 +49,10 @@ def resync_pools(store, verbose=False):
         except Exception as e:      # noqa: BLE001 — 한 서비스가 실패해도 나머지는 갱신
             logging.warning("%s 공용풀 갱신 실패(%s) — 다음 기동에 반영된다",
                             label, type(e).__name__)
+    try:
+        # 관측판(2026-09-01): "이 프로세스가 언제 몇 개로 합류했나"를 남긴다.
+        # 08-31 사고(워커가 회원 키를 몰라 429 45%)를 화면에서 즉시 보이게 하는 장치.
+        from shopping_shorts import api_health
+        api_health.heartbeat(counts)
+    except Exception:                       # noqa: BLE001
+        pass
