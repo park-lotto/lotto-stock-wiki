@@ -245,6 +245,15 @@
     const items = [];               // {w, ci} — 어절과 그 어절이 속한 구절 번호
     caps.forEach((c, ci) => String(c.text).split(/\s+/).filter(Boolean)
       .forEach(w => items.push({ w, ci })));
+    // ★구절을 다 지우면 캡션이 0개가 되는데, 종전엔 여기서 '자막 없음'만 띄워
+    //   **다시 나눌 길이 통째로 막혔다**(2026-08-31 사장님 "다 없앤 뒤에는 안 만들어짐.
+    //   한 개라도 있을 땐 가능"). 실측: 구절 1개 → 경계 버튼 12개(가능) / 0개 → 0개(막다름).
+    //   대사(narration)는 그대로 남아 있으니 거기서 어절을 뽑아 처음부터 나눌 수 있게 한다.
+    //   저장 API(caplines)도 narration과 글자가 같아야 통과하므로 기준이 어긋나지 않는다.
+    if (!items.length) {
+      const narr = String((((typeof DATA === 'object' && DATA && DATA.beats) || [])[i] || {}).narration || '');
+      narr.split(/\s+/).filter(Boolean).forEach(w => items.push({ w, ci: 0 }));
+    }
     if (!items.length) return '<span class="tl-loading">자막 없음</span>';
     let h = '<div class="tl-chips">';
     items.forEach((it, j) => {
