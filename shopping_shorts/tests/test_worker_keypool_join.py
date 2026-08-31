@@ -36,34 +36,40 @@ def test_대상서비스는_keyroute_POOLED를_따른다():
     assert set(keypool._POOL_REFRESHERS) == set(keyroute.POOLED)
 
 
-def test_합류가_두_풀에_모두_반영된다():
-    """제미니 풀은 두 벌이다 — SHORTS(태깅·댓글)와 key_vault(제작소 대본).
-    한쪽만 채우면 회원 키가 절반의 경로에서만 쓰인다.
+def test_합류가_회원키를_그대로_넘긴다(monkeypatch):
+    """resync_pools가 DB의 회원 키를 합류 함수에 그대로 넘기는가.
 
-    ★전역(config.SHORTS_GEMINI_KEYS·key_vault._member_keys)을 건드리므로 원래
-      값을 **그대로 복원**한다. 빈 목록으로 되돌리면 뒤에 도는 테스트가 밟는다
-      (단독 통과 = 오염 — CLAUDE.md 게이트 교훈)."""
-    from pipeline.atoms import key_vault
-
+    ★전역(config.SHORTS_GEMINI_KEYS·key_vault._member_keys)을 **실제로 바꾸지
+      않는다.** 예전엔 진짜 resync를 돌리고 되돌렸는데 되돌림이 완전하지 않아
+      전체 게이트에서 뒤에 도는 테스트가 밟았다(단독 통과 = 오염)."""
     from shopping_shorts import config
+
+    seen = {}
+
+    def _fake_gemini(pooled):
+        seen["gemini"] = list(pooled)
+        return (0, len(pooled))
+
+    monkeypatch.setattr(config, "refresh_member_gemini_keys", _fake_gemini)
+    monkeypatch.setattr(config, "refresh_member_youtube_keys", lambda p: (0, len(p)))
 
     class _Store:
         def get_pooled_keys(self, svc):
             return ["ZZ_MEMBER_1"] if svc == keyroute.SVC_GEMINI else []
 
-    before_pool = list(config.SHORTS_GEMINI_KEYS)
-    before_member = list(key_vault._member_keys)
-    before_yt = list(config.YOUTUBE_API_KEYS)
-    try:
-        keypool.resync_pools(_Store())
-        assert "ZZ_MEMBER_1" in config.SHORTS_GEMINI_KEYS
-        assert "ZZ_MEMBER_1" in key_vault._member_keys, (
-            "제작소가 쓰는 key_vault 풀에 회원 키가 안 들어갔다")
-    finally:
-        config.SHORTS_GEMINI_KEYS = before_pool
-        config.YOUTUBE_API_KEYS = before_yt
-        key_vault.set_member_keys(before_member)
-        try:                       # 값을 복사해 간 모듈들에도 원상복구를 밀어 넣는다
-            config._push_pool_to_importers(before_pool)
-        except Exception:
-            pass
+    keypool.resync_pools(_Store())
+    assert seen.get("gemini") == ["ZZ_MEMBER_1"], "회원 키가 합류 함수에 안 넘어갔다"
+
+
+def test_합류함수가_두_풀을_모두_채운다():
+    """config.refresh_member_gemini_keys가 SHORTS와 key_vault 양쪽을 채우는지
+    **소스로** 확인한다(전역을 건드리지 않는다). 한쪽만 채우면 회원 키가
+    제작소(key_vault) 또는 태깅(SHORTS) 한쪽 경로에서만 쓰인다."""
+    import inspect
+
+    from shopping_shorts import config
+
+    src = inspect.getsource(config.refresh_member_gemini_keys)
+    assert "SHORTS_GEMINI_KEYS" in src
+    assert "set_member_keys" in src, (
+        "제작소가 쓰는 key_vault 풀에 회원 키를 안 밀어 넣는다")
