@@ -436,9 +436,18 @@ def _download_ytdlp(url, dest_dir, max_attempts=3):
         #   단일 스트림)를 먼저 잡아 유튜브에서 720p·360p 저화질을 받았다(원본이 고화질이어도).
         #   최고 해상도 영상+음성을 따로 받아 mp4로 머지한다 — 이래야 원본 해상도가 천장이 된다.
         #   (틱톡 등 분리 스트림이 없으면 best 단일로 폴백; 그 best는 보통 원본 해상도다.)
+        # ★화질 상한 1080p(2026-08-31 실사고). 상한이 없으면 유튜브 4K 원본을 받으러
+        #   간다 — 실측 GhBaFe-99RU는 **668MiB**였고, 주거용 프록시 속도로는 ETA 2시간
+        #   26분이라 그 사이 재생 URL이 만료돼 **HTTP 403**으로 죽었다(12건 중 3건이
+        #   전부 이 모양이었다). 같은 영상을 단일 스트림으로 받으면 29.6MB로 정상 완료된다.
+        #   최종 출력이 1080x1920이라 4K는 화면에 쓰이지도 않는다 — 받을 이유가 없다.
+        #   ★대역폭도 같이 지킨다: 668MB 몇 건이면 월 25GB 프록시 플랜이 날아간다
+        #   (2026-08-17 실제로 초과해 인스타 수집이 402로 멈춘 적이 있다).
+        #   상한을 넘는 영상만 영향을 받고, 1080p 이하 원본은 종전 그대로다.
         r = subprocess.run(
             [sys.executable, "-m", "yt_dlp",
-             "-f", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio/best",
+             "-f", ("bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/"
+                    "bestvideo[height<=1080]+bestaudio/best[height<=1080]/best"),
              "--merge-output-format", "mp4",
              "--no-playlist", *_cookies_arg(url), *_proxy_arg(url), "-o", out, url],
             capture_output=True, text=True, timeout=300)
