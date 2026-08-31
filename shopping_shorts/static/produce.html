@@ -4505,7 +4505,9 @@ function renderFramePresets(){
   const curImg=f?(f.bg_image||''):'';
   const imgThumb=i=>`<div style="width:${Math.round(TH*9/16)}px;height:${TH}px;border-radius:4px;
       overflow:hidden;position:relative;flex:0 0 auto;background:#0a1017">
-      <img src="/api/produce/frame/image/${i.id}" loading="lazy"
+      <!-- ★loading="lazy" 금지 — 라이브에서 요청이 안 나가 카드가 통째로 빈다
+           (실측: 랭킹 0/99·발굴 0/79·즐겨찾기 0/591. test_no_lazy_thumbs가 지킨다) -->
+      <img src="/api/produce/frame/image/${i.id}"
            style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">
       <span onclick="frImgDelete('${i.id}',event)" title="목록에서 빼기"
             style="position:absolute;top:1px;right:1px;background:rgba(0,0,0,.6);color:#fff;
