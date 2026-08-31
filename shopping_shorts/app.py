@@ -3716,15 +3716,33 @@ def api_list_keys(request: Request):
             "pooled": list(keyroute.POOLED)}
 
 
-# ★합류 규칙 본체는 shopping_shorts/keypool.py 한 곳이다(2026-08-31).
-#   여기 있던 _POOL_REFRESHERS·_resync_pools를 그리로 옮겼다 — **워커도 같은 규칙을
-#   써야 하는데** worker.py는 FastAPI 앱을 안 띄워 startup 이벤트가 없었고, 그래서
-#   제작 job이 회원 키 44개를 통째로 몰랐다(실측: 워커 유닛 [keypool] 로그 24시간 0건).
-#   워커에 규칙을 다시 적으면 두 벌이 돼 어긋난다(0순위-B) → 중립 모듈로 뽑았다.
+_POOL_REFRESHERS = {
+    keyroute.SVC_GEMINI: ("제미니", lambda p: config.refresh_member_gemini_keys(p)),
+    keyroute.SVC_YOUTUBE: ("유튜브", lambda p: config.refresh_member_youtube_keys(p)),
+}
+
+
 def _resync_pools(store, verbose=False):
-    """keypool.resync_pools 로 넘긴다(호출부 이름 보존)."""
-    from shopping_shorts import keypool
-    return keypool.resync_pools(store, verbose=verbose)
+    """회원 키를 공용 풀(제미니·유튜브)에 합류시킨다(2026-08-24 사장님 정책).
+
+    회원은 키를 1개만 내고 풀 전체를 무료로 쓴다 — 모자란 용량은 사장님이 채운다.
+    ★기동·등록·삭제가 **같은 함수**를 쓴다 — 합류 규칙을 두 군데 적으면 어긋난다(0순위-B).
+    ★keyroute.POOLED가 진실 — 여기에 서비스를 손으로 또 적지 않는다.
+    실패해도 요청은 성공시킨다: 키는 이미 DB에 있고 늦어도 다음 기동에 합류한다."""
+    for svc in keyroute.POOLED:
+        label, fn = _POOL_REFRESHERS[svc]
+        try:
+            n_owner, n_member = fn(store.get_pooled_keys(svc))
+            if verbose and n_member:
+                import sys as _sys
+                print(f"[keypool] {label} 사장님 {n_owner} + 회원 {n_member} "
+                      f"= {n_owner + n_member}개", file=_sys.stderr)
+            elif n_member:
+                logging.info("%s 공용풀 갱신: 사장님 %d + 회원 %d",
+                             label, n_owner, n_member)
+        except Exception as e:      # noqa: BLE001 — 한 서비스가 실패해도 나머지는 갱신
+            logging.warning("%s 공용풀 갱신 실패(%s) — 다음 기동에 반영된다",
+                            label, type(e).__name__)
 
 
 @app.post("/api/settings/keys")
