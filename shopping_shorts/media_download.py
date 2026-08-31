@@ -30,8 +30,13 @@ def _cookies_arg(url):
     (이미 캐시 있으면 그냥 빠르게 스킵 — 매 호출 재다운로드 아님)."""
     u = (url or "").lower()
     if "youtube.com" in u or "youtu.be" in u:
-        path = config.YTDLP_COOKIES_YOUTUBE
         extra = ["--remote-components", "ejs:github"]
+        # 브라우저 직독이 파일 스냅샷보다 우선한다 — 스냅샷은 유튜브의 세션 회전으로
+        # 조용히 죽는다(2026-08-31 실측: 09:32 추출본이 10:15에 봇확인 재발, 같은
+        # 브라우저에서 새로 읽으면 즉시 성공). 설정돼 있으면 매번 최신 쿠키를 쓴다.
+        if config.YTDLP_COOKIES_BROWSER_YOUTUBE:
+            return ["--cookies-from-browser", config.YTDLP_COOKIES_BROWSER_YOUTUBE] + extra
+        path = config.YTDLP_COOKIES_YOUTUBE
     elif "tiktok.com" in u:
         path = config.YTDLP_COOKIES_TIKTOK
         extra = []

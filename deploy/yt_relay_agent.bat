@@ -20,6 +20,8 @@ REM   py -m yt_dlp --cookies-from-browser firefox --cookies yt_cookies.txt --ski
 
 REM If the file is missing, yt-dlp runs without cookies exactly as before.
 
+set "YTDLP_COOKIES_BROWSER_YOUTUBE=firefox"
+REM (file snapshot fallback - browser-direct above wins when Firefox is present)
 set "YTDLP_COOKIES_YOUTUBE=C:\Users\CH\yt_cookies.txt"
 
 pushd "%~dp0.."
