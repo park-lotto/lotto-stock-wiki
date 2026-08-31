@@ -2651,7 +2651,9 @@ def api_produce_save_to_wiki(request: Request, body: dict, background_tasks: Bac
 @app.get("/api/wiki/video")
 def api_wiki_video(shortcode: str):
     """도서관에 영구보관한 원본 영상 서빙(인라인 재생). 없으면 404.
-    FileResponse는 Range 요청을 지원해 탐색(seek)도 됨."""
+    ★"FileResponse가 Range를 지원한다"고 적혀 있던 자리다 — **사실이 아니다**
+      (starlette 0.36.3 실측, _range_mp4_response 머리말). 위키 영상은 로컬 파일이라
+      실사용에 문제가 없어 그대로 두되, 거짓 근거는 지운다."""
     from fastapi.responses import FileResponse, Response
     f = _WIKI_MEDIA_DIR / f"{hashlib.sha1(shortcode.encode()).hexdigest()[:16]}.mp4"
     if not f.exists():
@@ -4874,13 +4876,34 @@ def api_produce_mix_preview(background_tasks: BackgroundTasks, body: dict):
 
 
 @app.get("/api/produce/mix/preview/{job_id}")
-def api_produce_mix_preview_file(job_id: str):
-    """1단계 미리보기 mp4 서빙(/api/produce/mix/poster와 같은 성격 — job의 미디어 파일)."""
+def api_produce_mix_preview_file(job_id: str, request: Request):
+    """1단계 미리보기 mp4 서빙(/api/produce/mix/poster와 같은 성격 — job의 미디어 파일).
+
+    ★2026-08-31 고객 제보("영상이 정지된 채로 나온다")의 뿌리가 여기였다. 두 가지가 겹쳤다:
+      ① 미리보기 mp4는 moov가 파일 **끝**에 있었다(faststart는 완성본에만 걸려 있었다).
+      ② 이 라우트가 맨 FileResponse라 **Range를 지원하지 않았다**(starlette 0.36.3의
+         FileResponse에는 range 처리 코드가 아예 없다 — _range_mp4_response 머리말 참조).
+      합치면 브라우저가 목차(moov)를 얻으려고 **파일 전체를 순차로 받아야** 첫 프레임이 떴다.
+      실측: 같은 날 미리보기가 4MB~15MB로 널뛰는데(비트레이트 1.76M~4.12M), 작은 건 티가
+      안 나고 12MB짜리(job 565892493c82)는 눈에 띄게 멈춰 보였다. 그래서 "어떤 건 되고
+      어떤 건 정지"로 산발적으로만 나타나 오래 안 잡혔다.
+    ★둘 중 하나만 고쳐도 증상은 사라지지만 둘 다 고친다 — faststart는 새로 만드는 것만
+      구제하고(옛 미리보기는 moov가 뒤에 남는다), Range는 시크까지 살린다."""
     job = Store(DB_PATH).get_mix_job(job_id)
     path = (job or {}).get("preview_path")
     if not job or job.get("preview_status") != "ready" or not path or not Path(path).exists():
         return JSONResponse(status_code=404, content={"ok": False, "error": "미리보기 없음"})
-    return FileResponse(path, media_type="video/mp4")
+    # ★옛 미리보기 구제 — 렌더 시점에 안 걸린 파일은 내줄 때 한 번 보정한다(완성본이
+    #   Buffer 예약 직전에 하는 것과 같은 이유·같은 함수). 이미 앞이면 아무 일도 안 한다.
+    #   ★Range 요청일 때는 **건드리지 않는다** — 이미 재생이 시작된 파일을 리멕스로
+    #     갈아치우면 길이가 달라져 진행 중인 재생이 깨진다. 첫(=Range 없는) 요청만 손본다.
+    if not (request.headers.get("range") or "").strip():
+        try:
+            mix_pipeline.ensure_faststart(path)
+        except Exception as e:     # 실패해도 원본은 그대로다 — 조용히 넘기지 않는다
+            logging.getLogger("preview").warning(
+                "faststart 보장 실패 job=%s: %s", job_id, type(e).__name__)
+    return _range_mp4_response(path, request)
 
 
 @app.post("/api/produce/mix/clean")
@@ -5739,14 +5762,16 @@ def api_mix_voice_preview(body: dict):
 
 
 @app.get("/api/mix/video/{job_id}")
-def api_mix_video(job_id: str, dl: int = 0):
+def api_mix_video(job_id: str, request: Request, dl: int = 0):
     job = Store(DB_PATH).get_mix_job(job_id)
     if not job or not job.get("video_path") or not Path(job["video_path"]).exists():
         return JSONResponse(status_code=404, content={"ok": False})
     if dl:   # ?dl=1 → 첨부 다운로드(Content-Disposition attachment). 없으면 인라인 재생(기존).
         return FileResponse(job["video_path"], media_type="video/mp4",
                             filename=export_bundle.safe_name(job_id) + ".mp4")
-    return FileResponse(job["video_path"])
+    # ★인라인 재생도 Range로 준다(2026-08-31). 종전엔 맨 FileResponse라 media_type조차
+    #   없었다 — 완성본은 faststart가 걸려 있어 티가 덜 났을 뿐, 시크는 안 됐다.
+    return _range_mp4_response(job["video_path"], request)
 
 
 # ── QR '폰으로 보내기' (2026-07-23) ──
