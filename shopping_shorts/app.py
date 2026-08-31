@@ -6928,6 +6928,14 @@ def api_thumb(url: str, v: str | None = None, shortcode: str | None = None):
     브라우저가 옛 404를 재사용하지 못하게 하는 게 전부다."""
     import requests
     from fastapi.responses import Response
+    # ★사장님이 올린 영상의 썸네일은 **우리 파일**이다 — 프록시할 CDN이 없다(2026-08-31).
+    #   카드 렌더가 모든 thumbnail을 이 프록시로 감싸 넘기므로, 여기서 갈라주지 않으면
+    #   올린 영상만 그림이 깨진다(호스트 화이트리스트에 걸려 400).
+    from shopping_shorts.media_download import uploaded_footage_poster_path
+    _own = uploaded_footage_poster_path(url)
+    if _own is not None:
+        return Response(content=_own.read_bytes(), media_type="image/jpeg",
+                        headers={"Cache-Control": "public, max-age=86400"})
     if _reject_cdn_proxy(url, _ALLOWED_THUMB_HOSTS):
         return Response(status_code=400, content=b"invalid host")
     # ★카드 크기에 맞는 가벼운 규격으로 낮춘다(2026-08-30). 화이트리스트 검사를 **통과한
@@ -14374,6 +14382,82 @@ def _frame_img_save_list(cid: int, items):
     p = _frame_img_index_path(cid)
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(json.dumps(items, ensure_ascii=False), encoding="utf-8")
+
+
+# ────────────────────────────────────────────────────────────────────────────
+# 내 영상파일 올려서 담기(2026-08-31 사장님 지시: "1단계에서 링크말고 만든 영상파일을
+# 넣어서 될 수 있게"). 링크가 없는 영상 — 직접 찍은 것, 편집해서 뽑은 것 — 은 여태
+# 재료가 될 수 없었다. 파일을 서버에 두고 **URL 하나로 바꿔** 넘기면 그 아래 파이프
+# 라인(다운로드·추출·매칭·렌더)은 종전 그대로 돈다 — 새 경로를 만들지 않는다(0순위-B).
+from shopping_shorts.media_download import (
+    FOOTAGE_EXT as _FOOTAGE_EXT, FOOTAGE_DIR as _FOOTAGE_DIR,
+    FOOTAGE_URL_PREFIX as _FOOTAGE_URL_PREFIX)
+
+_FOOTAGE_MAX = 500 * 1024 * 1024      # 숏폼 원본 여유치. 넘으면 413으로 분명히 거절한다
+
+
+@app.post("/api/produce/footage/upload")
+async def api_produce_footage_upload(request: Request, file: UploadFile = File(...)):
+    """영상파일 1개 업로드 → 담기에 쓸 {url, thumbnail}을 돌려준다.
+
+    ★크기는 **청크로 누적하며** 잰다 — await file.read()로 통째 읽고 len()을 재면
+      이미 메모리에 다 올린 뒤라 방어가 안 된다(장면 자산 업로드에서 배운 것).
+    """
+    ext = Path(file.filename or "").suffix.lower()
+    if ext not in _FOOTAGE_EXT:
+        return JSONResponse(status_code=422, content={
+            "ok": False, "error": "mp4·mov·m4v·webm 영상만 올릴 수 있어요"})
+    token = uuid.uuid4().hex
+    _FOOTAGE_DIR.mkdir(parents=True, exist_ok=True)
+    dest = _FOOTAGE_DIR / f"{token}{ext}"
+    total = 0
+    too_big = False
+    with open(dest, "wb") as f:
+        while True:
+            chunk = await file.read(1024 * 1024)
+            if not chunk:
+                break
+            total += len(chunk)
+            if total > _FOOTAGE_MAX:
+                too_big = True
+                break
+            f.write(chunk)
+    if too_big or total == 0:
+        dest.unlink(missing_ok=True)
+        if too_big:
+            return JSONResponse(status_code=413, content={
+                "ok": False,
+                "error": f"영상이 너무 커요(최대 {_FOOTAGE_MAX // (1024 * 1024)}MB)"})
+        return JSONResponse(status_code=422, content={"ok": False, "error": "빈 파일이에요"})
+    # 첫 장면 썸네일 — 담김 카드에 그림이 없으면 어느 영상인지 못 알아본다.
+    # 실패해도 업로드는 성공이다(그림만 빈다).
+    thumb = ""
+    try:
+        import subprocess
+        poster = _FOOTAGE_DIR / f"{token}_poster.jpg"
+        subprocess.run(["ffmpeg", "-y", "-v", "error", "-ss", "0.5", "-i", str(dest),
+                        "-frames:v", "1", "-vf", "scale=320:-2", str(poster)],
+                       check=True, timeout=60)
+        if poster.exists():
+            thumb = f"{_FOOTAGE_URL_PREFIX}{poster.name}"
+    except Exception as _e:      # noqa: BLE001 — 썸네일은 있으면 좋고 없어도 담긴다
+        print(f"[footage] 썸네일 실패(무해): {_e!r}", file=sys.stderr)
+    return {"ok": True, "url": f"{_FOOTAGE_URL_PREFIX}{dest.name}",
+            "thumbnail": thumb, "name": (file.filename or "내 영상"),
+            "bytes": total}
+
+
+@app.get("/api/produce/footage/{name}")
+def api_produce_footage_get(name: str):
+    """업로드한 영상·썸네일 서빙. 토큰 모양이 아닌 이름은 전부 거절한다(경로 탈출 차단)."""
+    stem, _, ext = (name or "").rpartition(".")
+    ok_stem = re.fullmatch(r"[0-9a-f]{32}(_poster)?", stem or "")
+    if not ok_stem or ("." + ext) not in (_FOOTAGE_EXT | {".jpg"}):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "not found"})
+    f = _FOOTAGE_DIR / name
+    if not f.exists():
+        return JSONResponse(status_code=404, content={"ok": False, "error": "not found"})
+    return FileResponse(str(f))
 
 
 @app.post("/api/produce/frame/image")

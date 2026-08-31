@@ -486,8 +486,68 @@ def _download_pinterest(url, dest_dir):
     return str(download_video(info["video_url"], Path(dest_dir))), caption
 
 
+# ────────────────────────────────────────────────────────────────────────────
+# 사장님이 직접 올린 영상파일(2026-08-31). 링크가 없는 영상 — 직접 찍은 것, 편집해서
+# 뽑은 것 — 도 재료가 되게 한다. 파일은 서버에 두고 **URL 하나로 바꿔** 넘기므로
+# 그 아래 파이프라인(추출·매칭·렌더)은 종전 그대로 돈다.
+# ★판정은 여기 한 곳뿐이다(0순위-B). app.py의 업로드·서빙 라우트도 이 함수를 쓴다 —
+#   같은 판단을 두 곳에 적으면 언젠가 반드시 어긋난다.
+FOOTAGE_DIR = Path(__file__).parent / "data" / "footage_uploads"
+FOOTAGE_EXT = {".mp4", ".mov", ".m4v", ".webm"}
+FOOTAGE_URL_PREFIX = "/api/produce/footage/"
+
+
+def uploaded_footage_path(url):
+    """URL이 **우리가 보관 중인 업로드 파일**을 가리키면 실제 경로, 아니면 None.
+
+    토큰 모양(32자리 hex)과 확장자를 함께 검사한다 — 경로 탈출(../)은 이 검사에서
+    통째로 막힌다(이름이 토큰 모양이 아니면 무조건 None)."""
+    try:
+        path = urllib.parse.urlparse(str(url or "")).path or str(url or "")
+    except Exception:      # noqa: BLE001
+        return None
+    if FOOTAGE_URL_PREFIX not in path:
+        return None
+    name = path.rsplit("/", 1)[-1]
+    stem, _dot, ext = name.rpartition(".")
+    if not re.fullmatch(r"[0-9a-f]{32}", stem or "") or ("." + ext) not in FOOTAGE_EXT:
+        return None
+    f = FOOTAGE_DIR / name
+    return f if f.exists() else None
+
+
+def uploaded_footage_poster_path(url):
+    """업로드 영상의 **썸네일(jpg)** 경로. 아니면 None.
+
+    영상 본체는 uploaded_footage_path가 본다 — 확장자만 다르고 판정 규칙은 같다."""
+    try:
+        path = urllib.parse.urlparse(str(url or "")).path or str(url or "")
+    except Exception:      # noqa: BLE001
+        return None
+    if FOOTAGE_URL_PREFIX not in path:
+        return None
+    name = path.rsplit("/", 1)[-1]
+    if not re.fullmatch(r"[0-9a-f]{32}_poster\.jpg", name or ""):
+        return None
+    f = FOOTAGE_DIR / name
+    return f if f.exists() else None
+
+
 def download_any(url, dest_dir):
     """소스 URL 다운로드 → (mp4경로, caption) 튜플. caption은 인스타에서만 채워짐."""
+    # ★사장님이 **직접 올린 영상파일**이면 받을 게 없다 — 이미 서버에 있다(2026-08-31).
+    #   링크 없는 영상(직접 찍은 것·편집해 뽑은 것)을 재료로 쓰려고 만든 경로다.
+    #   판정은 app._uploaded_footage_path 한 곳에만 있다(0순위-B: 같은 판단을 두 번
+    #   적지 마라). 작업 폴더로 **복사**해서 넘긴다 — 파이프라인이 원본을 건드려
+    #   보관본을 망가뜨리는 일을 원천 차단한다.
+    _up = uploaded_footage_path(url)
+    if _up is not None:
+        import shutil
+        dst = Path(dest_dir) / _up.name
+        Path(dest_dir).mkdir(parents=True, exist_ok=True)
+        if str(dst) != str(_up):
+            shutil.copy2(str(_up), str(dst))
+        return str(dst), ""
     u = (url or "").lower()
     # ★yt-dlp는 rednote.com 도메인을 모른다(Unsupported URL) — 같은 사이트인 xiaohongshu.com으로
     # 정규화해야 추출기가 인식한다. 렌즈가 로그인벽 우회용으로 '원본 열기'를 rednote로 바꾼 URL이
