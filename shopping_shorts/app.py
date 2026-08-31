@@ -9879,6 +9879,15 @@ def access_level(customer_id, now=None, cust=None):
     #   ⚠️2026-08-31 이 수정이 다른 세션 커밋(2ea85e4f4)에 통째로 되돌아간 적이 있다.
     #     app.py를 옛 사본 위에서 고치면 이 블록이 조용히 사라진다 — 지우지 마라.
     if cust.get("plan") == "pro":
+        # 📅 기간제 이용권(2026-08-31 사장님 "시작일을 내일부터 1년으로").
+        # ★pro_until이 **있을 때만** 만료를 본다. 0/없음이면 지금까지처럼 무기한이다.
+        #   full_access_until을 쓰지 않는 이유: pro 48명 중 26명이 이미 지난 값을
+        #   갖고 있어(체험 잔재) 그걸로 판정하면 결제 고객이 즉시 추락한다(실측).
+        _until = cust.get("pro_until") or 0
+        if _until:
+            _now = int((now or datetime.now(timezone.utc)).timestamp())                 if not isinstance(now, int) else now
+            if _now > _until:
+                return "ranking_only"       # 기간 만료 → 랭킹만(재결제 유도)
         return "full"
     if cust.get("approved_at") is None:
         # 🎁 무료체험 이벤트: 미승인이라도 가입 후 체험창(trial_ends_at) 안이면 맛보기.
@@ -10934,6 +10943,49 @@ async def _admin_customer_device_reset(request: Request):
     slot = body.get("slot")
     Store(DB_PATH).device_reset(cid, int(slot) if slot else None)
     return {"ok": True}
+
+
+@app.post("/api/admin/customer/term")
+async def _admin_customer_term(request: Request):
+    """기간제 이용권 설정. body: {customer_id, start:'YYYY-MM-DD', months|days|until}
+
+    ★full_access_until은 건드리지 않는다 — 그건 체험·입금승인 기간이고, 이미 지난
+      값이 pro 26명에게 박혀 있다(2026-08-31 실측). 새 개념은 pro_from/pro_until에.
+    ★비우려면 start를 빈값으로 → 무기한으로 돌아간다.
+    """
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    body = await request.json()
+    try:
+        cid = int(body.get("customer_id"))
+    except (TypeError, ValueError):
+        return JSONResponse({"error": "customer_id 필요"}, status_code=400)
+    st = Store(DB_PATH)
+    start = (body.get("start") or "").strip()
+    if not start:
+        st.set_pro_term(cid, 0, 0)                       # 비움 = 무기한
+        return {"ok": True, "cleared": True}
+    # 한국시간 자정 기준으로 읽는다 — 사장님이 말하는 '내일'은 KST 날짜다.
+    kst = timezone(timedelta(hours=9))
+    try:
+        d0 = datetime.strptime(start, "%Y-%m-%d").replace(tzinfo=kst)
+    except ValueError:
+        return JSONResponse({"error": "start는 YYYY-MM-DD"}, status_code=422)
+    months = int(body.get("months") or 0)
+    days = int(body.get("days") or 0)
+    if body.get("until"):
+        try:
+            d1 = datetime.strptime(str(body["until"]), "%Y-%m-%d").replace(tzinfo=kst)
+        except ValueError:
+            return JSONResponse({"error": "until은 YYYY-MM-DD"}, status_code=422)
+    elif months or days:
+        # 12개월 = 같은 날짜의 1년 뒤(2026-09-01 → 2027-09-01). 30일*12로 세면 며칠 어긋난다.
+        d1 = d0.replace(year=d0.year + months // 12, month=d0.month) if months % 12 == 0 and months             else d0 + timedelta(days=days or months * 30)
+    else:
+        return JSONResponse({"error": "months·days·until 중 하나 필요"}, status_code=422)
+    st.set_pro_term(cid, int(d0.timestamp()), int(d1.timestamp()))
+    return {"ok": True, "start": d0.strftime("%Y-%m-%d"), "until": d1.strftime("%Y-%m-%d")}
 
 
 @app.post("/api/admin/customer/set_admin")
