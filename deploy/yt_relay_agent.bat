@@ -10,7 +10,12 @@ REM short-name expansion instead of being typed literally.
 
 set "PY=C:\Users\CH\AppData\Local\Python\bin\python.exe"
 set "YT_RELAY_KEY=eAiqvdZ27K121kvDT0zhZ0o-tda5a6Nm"
-set "LOG=C:\Users\CH\yt_relay_agent.log"
+set "LOG=C:\Users\CH\yt_relay_agent.log"
+REM YouTube bot-check cookies (2026-08-31). yt-dlp cannot read Chrome cookies
+REM (App-Bound Encryption, Chrome 127+). Export from a logged-in Firefox profile:
+REM   py -m yt_dlp --cookies-from-browser firefox --cookies "%YTDLP_COOKIES_YOUTUBE%" --skip-download <URL>
+REM If the file is missing, yt-dlp runs without cookies exactly as before.
+set "YTDLP_COOKIES_YOUTUBE=C:\Users\CH\yt_cookies.txt"
 
 pushd "%~dp0.."
 
