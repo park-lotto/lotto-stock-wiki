@@ -14569,7 +14569,14 @@ async def api_produce_footage_upload(request: Request, file: UploadFile = File(.
             thumb = f"{_FOOTAGE_URL_PREFIX}{poster.name}"
     except Exception as _e:      # noqa: BLE001 — 썸네일은 있으면 좋고 없어도 담긴다
         print(f"[footage] 썸네일 실패(무해): {_e!r}", file=sys.stderr)
-    return {"ok": True, "url": f"{_FOOTAGE_URL_PREFIX}{dest.name}",
+    _url = f"{_FOOTAGE_URL_PREFIX}{dest.name}"
+    # ★shortcode를 **여기서** 준다(2026-08-31 실측). 화면은 shortcode가 없으면
+    #   분석 상태를 아예 묻지 않아(produce.html renderSourceAnalysis: `if(!code) return`)
+    #   올린 영상이 실제로는 분석이 끝났는데도 "분석 중 0/2"에서 영영 멈춰 보였다.
+    #   규칙은 자동적재(api_produce_autoload)가 shortcode 없는 항목에 쓰는 것과
+    #   **똑같다** — sha1(url) 앞 12자. 같은 키를 봐야 화면과 서버가 어긋나지 않는다.
+    return {"ok": True, "url": _url,
+            "shortcode": hashlib.sha1(_url.encode()).hexdigest()[:12],
             "thumbnail": thumb, "name": (file.filename or "내 영상"),
             "bytes": total}
 

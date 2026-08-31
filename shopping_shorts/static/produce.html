@@ -10134,7 +10134,7 @@ async function uploadFootageFiles(files){
       if(!r.ok || !j.ok || !j.url){ failed.push(`${f.name}: ${j.error||('HTTP '+r.status)}`); continue; }
       if(have.has(j.url)) continue;
       have.add(j.url);
-      HANDOFF.push({url:j.url, shortcode:'', name:(j.name||f.name), thumbnail:(j.thumbnail||''),
+      HANDOFF.push({url:j.url, shortcode:(j.shortcode||''), name:(j.name||f.name), thumbnail:(j.thumbnail||''),
                     caption:'', pickScript:false, useFootage:true, uploaded:true});
       added++;
     }catch(e){ failed.push(`${f.name}: ${e}`); }
