@@ -14912,17 +14912,55 @@ def _mix_job_beat_or_error(job_id, body, store):
 @app.post("/api/produce/mix/{job_id}/cappos")
 def api_produce_mix_cappos(job_id: str, body: dict):
     """장면 하나의 자막 세로 자리(2026-08-25 사장님 "장면당 자막 배치").
-    body: {beat_idx, pos} — pos = top|mid|bottom. bottom(또는 빈값)이면 **전체 설정으로 되돌린다**.
+    body 세 가지 (2026-08-31 사장님 "자막을 이동하면 한 장면씩·모두 적용"):
+      {beat_idx, pos}            — pos = top|mid|bottom. bottom(빈값)이면 **전체 설정으로 되돌린다**.
+      {beat_idx, x_pct, y_pct}   — 드래그로 옮긴 자유 좌표를 **이 장면에만** 저장(cap_xy).
+      {apply_all: true}          — 모든 장면의 장면별 덮어쓰기를 지운다 = 전체 설정(드래그 결과)이 이긴다.
     ★%로 번역하는 곳은 video_assemble._CAP_POS_PCT 한 군데뿐이다 — 여기선 뜻만 저장한다.
+    ★자유 좌표는 cap_pos보다 우선한다 — 해석은 video_assemble._beat_cap_style 한 곳(0순위-B).
     ★음성·타이밍을 건드리지 않는다 → 즉시·무료."""
     store = Store(DB_PATH)
+
+    # ── '모두 적용': 장면별 덮어쓰기를 싹 지운다. 안 지우면 손댔던 장면만 옛 자리에 남아
+    #    "모두 적용했는데 몇 장면은 안 바뀐다"가 된다.
+    if body.get("apply_all"):
+        job = store.get_mix_job(job_id)
+        if not job:
+            return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+        if job.get("status") in ("rendering", "removing_subtitles"):
+            return JSONResponse(status_code=409, content={"ok": False, "error": "렌더 중에는 못 고쳐요"})
+        plan = job.get("edit_plan") or {}
+        cleared = 0
+        for b in (plan.get("beats") or []):
+            if b.get("cap_pos") or b.get("cap_xy"):
+                cleared += 1
+            b["cap_pos"] = None
+            b["cap_xy"] = None
+        store.update_mix_job(job_id, edit_plan=plan)
+        return {"ok": True, "apply_all": True, "cleared": cleared}
+
     plan, hit, err = _mix_job_beat_or_error(job_id, body, store)
     if err:
         return err
+
+    # ── 자유 좌표(드래그) — 이 장면만
+    if body.get("x_pct") is not None or body.get("y_pct") is not None:
+        try:
+            xy = {"x_pct": max(0.0, min(100.0, float(body.get("x_pct", 50)))),
+                  "y_pct": max(0.0, min(100.0, float(body.get("y_pct", 84))))}
+        except (TypeError, ValueError):
+            return JSONResponse(status_code=422, content={"ok": False, "error": "x_pct/y_pct 숫자"})
+        hit["cap_xy"] = xy
+        hit["cap_pos"] = None          # 버튼 자리와 두 벌로 남기지 않는다
+        store.update_mix_job(job_id, edit_plan=plan)
+        return {"ok": True, "pos": "free", "xy": xy,
+                "x_pct": xy["x_pct"], "y_pct": xy["y_pct"]}
+
     pos = (body.get("pos") or "").strip().lower()
     if pos not in ("top", "mid", "bottom", ""):
         return JSONResponse(status_code=422, content={"ok": False, "error": "pos=top|mid|bottom"})
     hit["cap_pos"] = pos if pos in ("top", "mid") else None   # bottom = 기본값 = 저장 안 함
+    hit["cap_xy"] = None                                      # 버튼을 누르면 드래그 좌표는 버린다
     store.update_mix_job(job_id, edit_plan=plan)
     # y_pct도 함께 준다 — 화면이 %를 스스로 계산하면 렌더와 두 벌이 된다(0순위-B).
     return {"ok": True, "pos": hit["cap_pos"] or "bottom",
@@ -15337,6 +15375,9 @@ def api_produce_mix_beats_preview(job_id: str):
             #   미리보기가 %를 스스로 계산하면 렌더와 두 벌이 되어 언젠가 어긋난다(0순위-B).
             #   None = 전체 설정 그대로(bottom) → 화면은 caption_style.y_pct를 쓴다.
             "pos_y_pct": video_assemble._CAP_POS_PCT.get(b.get("cap_pos")),
+            # ★드래그로 옮긴 장면별 자유 좌표(2026-08-31). 있으면 pos/pos_y_pct보다 우선한다
+            #   — 렌더(_beat_cap_style)와 같은 우선순위여야 "보는 것=나오는 것"이 지켜진다.
+            "cap_xy": b.get("cap_xy") or None,
             "beat_idx": b.get("beat_idx", idx),                     # 저장 API가 쓰는 진짜 번호(목록 순번과 다를 수 있다)
             # ★장면별 화면 확대 구도(2026-08-30). 해석·보정은 scene_zoom_of 한 곳에서만 —
             #   화면이 스스로 가두면 렌더와 두 벌이 된다(0순위-B, cap_pos와 같은 방식).

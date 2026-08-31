@@ -2179,6 +2179,7 @@ def _beat_timeline(edit_plan, tts_paths):
             # 장면별 자막 자리(2026-08-25). 여기서 안 실으면 저장위치≠읽기위치가 되어
             # 사장님이 고친 자리가 렌더에 반영되지 않는다(위 cap_durs와 같은 함정).
             "cap_pos": beat.get("cap_pos"),
+            "cap_xy": beat.get("cap_xy"),                  # 드래그로 옮긴 장면별 자유 좌표(2026-08-31)
             "sfx": beat.get("sfx"),                        # 효과음 매칭(있으면) — position 읽기용
             "head_trim": beat.get("head_trim", 0.0),
         })
@@ -2196,8 +2197,21 @@ _CAP_POS_PCT = {"top": 18.0, "mid": 50.0}
 
 
 def _beat_cap_style(caption_style, beat):
-    """이 비트에 쓸 자막 스타일. beat['cap_pos']가 있으면 세로 위치만 덮어쓴다.
-    없으면 **원본 객체를 그대로** 돌려준다(복사 비용도, 동작 변화도 없음)."""
+    """이 비트에 쓸 자막 스타일.
+
+    두 가지 장면별 덮어쓰기를 같은 곳에서 푼다(0순위-B — 해석은 한 군데):
+      1) beat['cap_xy'] = {"x_pct","y_pct"}  드래그로 옮긴 자유 좌표(2026-08-31).
+         가로·세로 둘 다 덮는다. **cap_pos보다 우선**한다(나중에 손댄 뜻).
+      2) beat['cap_pos'] = top|mid          버튼으로 고른 세로 자리(2026-08-25).
+    둘 다 없으면 **원본 객체를 그대로** 돌려준다(복사 비용도, 동작 변화도 없음)."""
+    xy = (beat or {}).get("cap_xy") or None
+    if isinstance(xy, dict) and (xy.get("x_pct") is not None or xy.get("y_pct") is not None):
+        st = dict(caption_style or {})
+        if xy.get("x_pct") is not None:
+            st["x_pct"] = float(xy["x_pct"])
+        if xy.get("y_pct") is not None:
+            st["y_pct"] = float(xy["y_pct"])
+        return st
     pos = (beat or {}).get("cap_pos")
     ypct = _CAP_POS_PCT.get(pos)
     if ypct is None:

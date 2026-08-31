@@ -2041,6 +2041,24 @@
             </div>
             <div class="hint" style="margin-top:6px;text-align:center">◀ ▶ 로 장면을 넘겨가며 자막이 어떻게 나오는지 확인</div>
 
+            <!-- ✋ 자막을 끌어 옮길 때 어디까지 바꿀지(2026-08-31 사장님 "자막을 이동하면
+                 한장면씩 적용이랑 모두 적용할수있게"). 종전엔 드래그가 **무조건 전체**였다.
+                 ★뜻만 고른다 — 실제 저장은 /cappos 한 곳(0순위-B). -->
+            <div style="margin-top:10px;background:var(--inset);border:1px solid var(--line);
+                        border-radius:10px;padding:9px 12px">
+              <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:6px">
+                ✋ 자막을 끌어 옮기면 <span class="hint" style="font-weight:400">— 어디에 적용할까요?</span></div>
+              <div id="capScopeBtns" style="display:flex;gap:6px">
+                <button type="button" class="tab on" data-capscope="all" onclick="setCapDragScope('all')"
+                        style="flex:1;min-width:auto;padding:7px 10px;font-size:13px"
+                        title="끌어 옮긴 자리를 영상 전체 자막에 적용합니다">🌐 모든 장면</button>
+                <button type="button" class="tab" data-capscope="one" onclick="setCapDragScope('one')"
+                        style="flex:1;min-width:auto;padding:7px 10px;font-size:13px"
+                        title="지금 보고 있는 이 장면의 자막만 옮깁니다">🎯 이 장면만</button>
+              </div>
+              <div class="hint" id="capScopeMsg" style="margin-top:6px">미리보기 자막을 마우스로 끌어 옮기세요.</div>
+            </div>
+
             <!-- ★이 장면만 손보기(2026-08-25 사장님 "장면당 자막 배치를 수정할 수 있게").
                  둘 다 음성을 다시 만들지 않는다 → 즉시·무료. 대사를 바꾸는 건 다른 자리다. -->
             <div style="margin-top:10px;background:var(--inset);border:1px solid var(--line);
@@ -2054,6 +2072,8 @@
                 <button type="button" class="tab" data-cappos="mid"    onclick="setBeatCapPos('mid')"    style="flex:1;min-width:auto;padding:7px 10px;font-size:13px">⬍ 중간</button>
                 <button type="button" class="tab" data-cappos="bottom" onclick="setBeatCapPos('bottom')" style="flex:1;min-width:auto;padding:7px 10px;font-size:13px">⬇ 아래</button>
               </div>
+              <div class="hint" id="capFreeHint" style="display:none;margin-top:5px">
+                ✋ 이 장면은 <b>끌어서 옮긴 자리</b>를 씁니다 — 버튼을 누르면 그 자리로 되돌아갑니다.</div>
 
               <div style="font-size:12px;color:var(--sub);margin:10px 0 5px">
                 줄 나누기 — <b>Enter</b>=여기서 끊기 · <b>Backspace</b>(줄 맨 앞)=윗줄과 붙이기</div>
@@ -5552,6 +5572,18 @@ let CAP_EFFECT='none';
 let CAP_SHADOW=false;   // 은은한 드롭 그림자(레퍼런스 자막룩). 프리셋이 켬. 두꺼운 테두리 대안.
 // 자막 가로위치(%) — 슬라이더가 아니라 드래그/자동정렬/되돌리기로만 바뀐다. 기본 중앙(50).
 let CAP_X_PCT=50;
+// ✋ 자막 드래그 적용 범위(2026-08-31): 'all'=전체 설정(종전 동작) / 'one'=이 장면만(cap_xy).
+//   ★기본은 'all' — 여태 동작이 그것이라 아무것도 안 고른 사장님에겐 달라지는 게 없다.
+let CAP_DRAG_SCOPE='all';
+function setCapDragScope(v){
+  CAP_DRAG_SCOPE = (v==='one') ? 'one' : 'all';
+  document.querySelectorAll('#capScopeBtns [data-capscope]').forEach(el=>{
+    el.classList.toggle('on', el.dataset.capscope===CAP_DRAG_SCOPE); });
+  const m=document.getElementById('capScopeMsg');
+  if(m){ m.textContent = (CAP_DRAG_SCOPE==='one')
+    ? '이 장면(' + ((typeof BEAT_IDX!=='undefined'?BEAT_IDX:0)+1) + '번)의 자막만 옮깁니다.'
+    : '끌어 옮기면 모든 장면의 자막이 같이 갑니다.'; m.style.color=''; }
+}
 // 지워진 자막영역(자막제거 시 서버가 diff로 구함): {sources:{vid:box}, primary:box}. box=중심x/y·w/h·score(%).
 let CLEAN_REGIONS=null;
 // 사장님이 자막을 직접 드래그로 옮겼나 — true면 '1번 자리' 자동정렬이 그 위치를 덮지 않는다.
@@ -5630,9 +5662,12 @@ function _capMsg(t, color){ const m=document.getElementById('capLinesMsg');
 function renderBeatTools(){
   const b=_curBeat(); if(!b) return;
   // 자리 버튼 — 지금 값에 불이 들어온다
-  const pos=b.pos||'bottom';
+  const pos = (b.cap_xy ? 'free' : (b.pos||'bottom'));
   document.querySelectorAll('#capPosBtns [data-cappos]').forEach(el=>{
     el.classList.toggle('on', el.dataset.cappos===pos); });
+  // 드래그로 이 장면만 옮겨둔 상태면 버튼엔 불이 안 들어온다 → 왜 그런지 한 줄로 알려준다
+  const fh=document.getElementById('capFreeHint');
+  if(fh) fh.style.display = b.cap_xy ? '' : 'none';
   // 줄 편집칸 — 렌더와 같은 분할(segs)을 그대로 줄로 보여준다
   const box=document.getElementById('capLinesBox'); if(!box) return;
   const lines=(b.segs && b.segs.length) ? b.segs : [b.caption||''];
@@ -5680,6 +5715,7 @@ async function setBeatCapPos(pos){
     if(!r.ok || !d.ok){ _capMsg(d.error||'저장 실패','var(--fire)'); return; }
     // ★저장 성공 → 화면도 그 자리로 즉시 옮긴다. %는 서버가 준 값을 쓴다(렌더와 같은 표).
     b.pos=d.pos; b.pos_y_pct=(d.y_pct!=null?d.y_pct:null);
+    b.cap_xy=null;                 // 서버도 같이 지운다 — 두 벌로 남기지 않는다
     renderBeatTools();
     if(typeof updateCaption==='function') updateCaption();
     _capMsg('이 장면 자막을 '+({top:'위',mid:'중간',bottom:'아래'}[d.pos]||d.pos)+'로 옮겼어요','var(--ok)');
@@ -5769,8 +5805,12 @@ function updateCaption(){
   //   종전엔 전체 설정(cs.y_pct)만 봐서, 장면마다 다르게 저장해도 미리보기는 늘 같은 자리였다.
   //   저장·최종렌더는 정상이었고 **보이는 것만** 안 따라왔다 → "안 먹혔나"로 읽혔다.
   //   %는 서버가 준 값(pos_y_pct)을 쓴다 — 렌더와 같은 표(_CAP_POS_PCT)에서 나온다.
+  //   ★자유 좌표(cap_xy, 드래그 '이 장면만')가 있으면 그게 먼저다 — 렌더(_beat_cap_style)와 같은 우선순위.
   const _b = (typeof BEATS_PREVIEW!=='undefined' && BEATS_PREVIEW[BEAT_IDX]) || null;
-  const _yp = (_b && _b.pos_y_pct != null) ? _b.pos_y_pct : cs.y_pct;
+  const _xy = (_b && _b.cap_xy) || null;
+  const _yp = (_xy && _xy.y_pct!=null) ? _xy.y_pct
+            : ((_b && _b.pos_y_pct != null) ? _b.pos_y_pct : cs.y_pct);
+  if(_xy && _xy.x_pct!=null) el.style.left=_xy.x_pct+'%';
   el.style.top=_yp+'%'; el.style.transform='translate(-50%,-50%)';
   el.style.color=cs.color; el.style.fontWeight=900;
   // 자막은 무조건 한 줄 — 줄바꿈 금지(nowrap). 폭(0.86=안전 여백) 넘으면 폰트 자동축소로 한 줄에 맞춘다.
@@ -7414,18 +7454,59 @@ function bindHCDrag(){
 function bindCapDrag(){
   const pv=document.getElementById('hcPreview'), tx=document.getElementById('capPreviewText');
   if(!pv||!tx||tx._dragBound) return; tx._dragBound=true;
-  tx.style.cursor='move'; let drag=false;
+  tx.style.cursor='move'; let drag=false, moved=false;
   const move=e=>{ if(!drag) return; const r=pv.getBoundingClientRect();
     const cx=(e.touches?e.touches[0].clientX:e.clientX), cy=(e.touches?e.touches[0].clientY:e.clientY);
-    CAP_X_PCT=Math.round(Math.max(0,Math.min(100,(cx-r.left)/r.width*100)));
+    const x=Math.round(Math.max(0,Math.min(100,(cx-r.left)/r.width*100)));
     const y=Math.round(Math.max(0,Math.min(100,(cy-r.top)/r.height*100)));
-    document.getElementById('capY').value=y; CAP_POS_TOUCHED=true; updateCaption(); };
-  tx.addEventListener('mousedown', e=>{drag=true; e.preventDefault();});
-  tx.addEventListener('touchstart', e=>{drag=true;}, {passive:true});
+    moved=true;
+    if(CAP_DRAG_SCOPE==='one'){
+      // 🎯 이 장면만 — 전체 설정(CAP_X_PCT/capY)은 **건드리지 않는다**. 장면에만 좌표를 얹는다.
+      const b=(typeof _curBeat==='function') ? _curBeat() : null;
+      if(b){ b.cap_xy={x_pct:x, y_pct:y}; b.pos='free'; b.pos_y_pct=null; }
+    }else{
+      CAP_X_PCT=x; document.getElementById('capY').value=y; CAP_POS_TOUCHED=true;
+    }
+    updateCaption(); };
+  const end=()=>{ if(!drag) return; drag=false; if(!moved) return; moved=false; saveCapDrag(); };
+  tx.addEventListener('mousedown', e=>{drag=true; moved=false; e.preventDefault();});
+  tx.addEventListener('touchstart', e=>{drag=true; moved=false;}, {passive:true});
   document.addEventListener('mousemove', move);
   document.addEventListener('touchmove', move, {passive:true});
-  document.addEventListener('mouseup', ()=>drag=false);
-  document.addEventListener('touchend', ()=>drag=false);
+  document.addEventListener('mouseup', end);
+  document.addEventListener('touchend', end);
+}
+// 손을 뗐을 때 실제로 저장한다(끄는 동안 매 픽셀 저장하면 서버를 두들긴다).
+//   'one' → 이 장면에만 자유 좌표(cap_xy)
+//   'all' → 전체 설정을 저장 + 장면별 덮어쓰기를 **싹 지운다**(안 지우면 손댔던 장면만 안 따라온다)
+async function saveCapDrag(){
+  const msg=document.getElementById('capScopeMsg');
+  const say=(t,c)=>{ if(msg){ msg.textContent=t; msg.style.color=c||''; } };
+  if(typeof MIX_JOB==='undefined' || !MIX_JOB){ say('작업을 아직 못 찾았어요','var(--fire)'); return; }
+  try{
+    if(CAP_DRAG_SCOPE==='one'){
+      const b=(typeof _curBeat==='function') ? _curBeat() : null;
+      if(!b || !b.cap_xy) return;
+      const r=await fetch('/api/produce/mix/'+encodeURIComponent(MIX_JOB)+'/cappos',
+        {method:'POST',headers:{'Content-Type':'application/json'},
+         body:JSON.stringify({beat_idx:_beatNo(b), x_pct:b.cap_xy.x_pct, y_pct:b.cap_xy.y_pct})});
+      const d=await r.json();
+      if(!r.ok || !d.ok){ say(d.error||'저장 실패','var(--fire)'); return; }
+      b.cap_xy={x_pct:d.x_pct, y_pct:d.y_pct}; b.pos='free'; b.pos_y_pct=null;
+      if(typeof renderBeatTools==='function') renderBeatTools();
+      say('이 장면('+(BEAT_IDX+1)+'번) 자막만 옮겼어요','var(--ok)');
+    }else{
+      if(typeof saveHeadcopy==='function') await saveHeadcopy();     // 전체 자막 설정 저장
+      const r=await fetch('/api/produce/mix/'+encodeURIComponent(MIX_JOB)+'/cappos',
+        {method:'POST',headers:{'Content-Type':'application/json'},
+         body:JSON.stringify({apply_all:true})});
+      const d=await r.json();
+      if(!r.ok || !d.ok){ say(d.error||'저장 실패','var(--fire)'); return; }
+      (BEATS_PREVIEW||[]).forEach(b=>{ b.cap_xy=null; b.pos='bottom'; b.pos_y_pct=null; });
+      if(typeof renderBeatTools==='function') renderBeatTools();
+      say('모든 장면 자막을 이 자리로 옮겼어요'+(d.cleared?' (장면별로 따로 두셨던 '+d.cleared+'개도 맞췄어요)':''),'var(--ok)');
+    }
+  }catch(e){ say('네트워크 오류','var(--fire)'); }
 }
 // 지워진 자막영역(primary=넓고 자주 쓰인 1번 자리)이 있으면 '다시 그 자리로' 버튼만 연다.
 // ★2026-07-27 사장님 요청으로 점선 박스 표시(capRegionMarker)는 제거했다 — 미리보기를
