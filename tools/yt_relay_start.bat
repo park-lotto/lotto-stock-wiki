@@ -7,6 +7,8 @@ set "YT_RELAY_KEY=eAiqvdZ27K121kvDT0zhZ0o-tda5a6Nm"
 REM 유튜브 봇차단(Sign in to confirm youre not a bot) 우회용 쿠키파일 (2026-08-31).
 REM 크롬은 App-Bound Encryption(127+)으로 yt-dlp가 복호 불가. 파이어폭스 로그인 세션에서 뽑았다.
 REM 재발급: py -m yt_dlp --cookies-from-browser firefox --cookies yt_cookies.txt --skip-download URL
+set "YTDLP_COOKIES_BROWSER_YOUTUBE=firefox"
+REM (파일 스냅샷 폴백 - 브라우저 직독이 우선이라 보통 안 쓰인다)
 set "YTDLP_COOKIES_YOUTUBE=C:\Users\TheRose\yt_cookies.txt"
 :loop
 py -m shopping_shorts.youtube_relay_agent >> "%TEMP%\yt_relay.log" 2>&1

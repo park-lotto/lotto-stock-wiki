@@ -415,6 +415,13 @@ CATEGORIES = ["홈템", "레시피", "뷰티", "기타"]
 # 경로(플랫폼별 별도 — 계정 다르면 쿠키도 다르다). 파일이 없으면 빈 문자열이고,
 # media_download.py는 빈 값이면 --cookies 없이(기존처럼) 시도해 회귀가 없다.
 YTDLP_COOKIES_YOUTUBE = os.environ.get("YTDLP_COOKIES_YOUTUBE", "")
+# ★파일 스냅샷보다 브라우저 직독이 낫다(2026-08-31 실측): 브라우저에서 한 번 뽑아둔
+# cookies.txt는 그 브라우저로 유튜브를 계속 쓰면 유튜브가 세션을 회전시켜 30분 만에
+# 죽는다("Sign in to confirm you're not a bot" 재발). 이 값이 있으면 매 호출 브라우저에서
+# 직접 읽어 항상 최신 쿠키를 쓴다. 값 = yt-dlp의 --cookies-from-browser 인자(예: "firefox",
+# "firefox:<프로필경로>"). 크롬은 App-Bound Encryption(127+)으로 복호 불가라 못 쓴다.
+# 릴레이 PC에서만 켠다 — 서버엔 브라우저가 없다.
+YTDLP_COOKIES_BROWSER_YOUTUBE = os.environ.get("YTDLP_COOKIES_BROWSER_YOUTUBE", "")
 YTDLP_COOKIES_TIKTOK = os.environ.get("YTDLP_COOKIES_TIKTOK", "")
 
 # ── 쿠팡 상품검색 크롤(2026-07-29) ──
