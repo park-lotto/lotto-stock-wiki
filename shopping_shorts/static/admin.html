@@ -284,6 +284,31 @@ async function load(){
 function _tierOf(c){ return c.level==='full' ? (c.plan==='pro'?'pro':'trial') : 'free'; }
 function _ago(s){ if(s<60)return '방금 전'; if(s<3600)return Math.floor(s/60)+'분 전'; if(s<86400)return Math.floor(s/3600)+'시간 전'; return Math.floor(s/86400)+'일 전'; }
 // 접속/활동 셀 클릭 → 최근 활동 트레일 팝업
+document.addEventListener('click', async e=>{
+  // 🖥 등록 PC 해제(2026-08-31) — 사장님만 푼다. PC 교체·쿠키 삭제로 잠긴 고객 구제용.
+  const el = e.target.closest && e.target.closest('.pcslot');
+  if(!el) return;
+  const cid = el.dataset.pccid;
+  let info;
+  try{ info = await (await fetch('/api/admin/customer/devices?customer_id='+cid)).json(); }
+  catch(err){ alert('등록 PC를 못 읽었어요'); return; }
+  const ds = (info&&info.devices)||[];
+  if(!ds.length){ alert('등록된 PC가 없습니다 — 다음 접속 PC가 1번으로 등록됩니다.'); return; }
+  // 줄바꿈은 배열로 만든다 — 템플릿 문자열 안에 직접 넣으면 파일에 진짜 줄바꿈이 박혀
+  // JS 문법오류가 난다(2026-08-31 실측: node --check가 잡았다).
+  const lines = ds.map(function(d){
+    var when = new Date(d.last_seen*1000).toLocaleString('ko-KR');
+    return d.slot + '번 PC · 마지막 ' + when + '\n   ' + (d.ua||'').slice(0,70);
+  }).join('\n');
+  var msg = '등록된 PC ' + ds.length + '대\n\n' + lines
+          + '\n\n전부 해제할까요? (고객이 다음 접속하는 PC 2대가 새로 등록됩니다)';
+  if(confirm(msg)){
+    await fetch('/api/admin/customer/device_reset',{method:'POST',
+      headers:{'content-type':'application/json'}, body:JSON.stringify({customer_id:Number(cid)})});
+    alert('해제했습니다.');
+    if(typeof loadCustomers==='function') loadCustomers();
+  }
+});
 document.addEventListener('click', async (e)=>{
   const el=e.target.closest('.actlink'); if(!el) return;
   const cid=el.dataset.actcid;
@@ -389,7 +414,10 @@ function renderCustomers(){
     const pcIps = (acc.pc_ips!=null ? acc.pc_ips : acc.ips);
     const accSusp = (pcIps>=3 || acc.devices>=3);
     const accCell = `<span title="PC IP ${pcIps}개(모바일 제외) · 전체 IP ${acc.ips}개 · 기기 ${acc.devices}종"
-        style="color:${accSusp?'#ff6b6b':'#8a8a92'};font-weight:${accSusp?'700':'400'}">PC ${pcIps}IP/${acc.devices}기기${accSusp?' ⚠️':''}</span>`;
+        style="color:${accSusp?'#ff6b6b':'#8a8a92'};font-weight:${accSusp?'700':'400'}">PC ${pcIps}IP/${acc.devices}기기${accSusp?' ⚠️':''}</span>`
+      // 🖥 등록 PC(2026-08-31) — 2대가 차면 3번째 PC는 막힌다. 눌러서 풀어준다.
+      + ` <span class=pcslot data-pccid=${c.id} title="등록된 PC ${c.pc_slots||0}대 — 눌러서 해제"
+            style="cursor:pointer;margin-left:6px;color:${(c.pc_slots||0)>=2?'#f0b429':'#5f6773'}">🖥${c.pc_slots||0}</span>`;
     const adminBadge = c.is_admin ? ' <span class="badge admin">관리자</span>' : '';
     const ls = c.last_seen||0, nowS=Math.floor(Date.now()/1000);
     const online = _isOnline(c);            // ★기준은 _isOnline 한 곳(필터와 같은 값)

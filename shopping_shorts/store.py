@@ -1473,6 +1473,24 @@ class Store:
                         ua TEXT NOT NULL,
                         PRIMARY KEY (customer_id, day, ip, ua)
                     )""")
+        # ── 🖥 PC 등록(2026-08-31 사장님 "pc를 등록하게 해줘 1번pc 2번pc 다른곳에선 안되게") ──
+        #    ★IP로 판정하지 않는다. 가정용 인터넷은 대부분 유동 IP라 재접속마다 바뀌고,
+        #      같은 PC인데도 잠긴다. 브라우저에 찍은 **기기 도장(랜덤 id)**으로 본다.
+        #    ★모바일은 아예 안 센다(_is_mobile_ua) — 사장님: "모바일은 상관없고".
+        #    slot은 1 또는 2. (customer_id, slot) 유니크 = 계정당 PC 2대.
+        c.execute("""CREATE TABLE IF NOT EXISTS customer_devices (
+                        customer_id INTEGER NOT NULL,
+                        slot INTEGER NOT NULL,
+                        device_id TEXT NOT NULL,
+                        first_seen INTEGER NOT NULL,
+                        last_seen INTEGER NOT NULL,
+                        ua TEXT DEFAULT '',
+                        ip TEXT DEFAULT '',
+                        PRIMARY KEY (customer_id, slot)
+                    )""")
+        # 같은 기기가 두 칸을 먹지 않게(재등록 경합) — 조회도 이 인덱스를 탄다
+        c.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_cust_device "
+                  "ON customer_devices(customer_id, device_id)")
         # ── 활동 로그(2026-07-22): '몇 번 전 뭘 했다' 트레일. 미들웨어가 의미있는 액션만 기록. ──
         c.execute("""CREATE TABLE IF NOT EXISTS customer_activity (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -5675,6 +5693,72 @@ class Store:
         return [{"at": r[0], "action": r[1]} for r in rows]
 
     # ── 돌려쓰기 소프트감지(2026-07-22): 접속 IP·기기 기록 + 요약 ──
+    # ── 🖥 PC 등록/차단 (2026-08-31) ─────────────────────────────────────────
+    PC_SLOTS = 2          # ★계정당 PC 2대. 늘리려면 여기 한 곳만 고친다
+
+    def device_check(self, customer_id, device_id, ua="", ip=""):
+        """이 기기가 이 계정으로 써도 되는가 → (허용?, 슬롯번호, 등록된수).
+
+        ★규칙:
+          - 이미 등록된 기기면 통과(마지막 접속만 갱신)
+          - 빈 칸이 있으면 그 칸에 등록하고 통과 ← 처음 쓰는 PC 2대가 자동 등록
+          - 칸이 다 찼으면 **차단**(False). 푸는 건 사장님뿐(device_reset)
+        ★모바일 판정은 여기서 안 한다 — 부르는 쪽(미들웨어)이 PC일 때만 부른다.
+          여기서 또 판정하면 같은 결정이 두 벌이 된다(0순위-B).
+        """
+        if not (customer_id and device_id):
+            return True, None, 0        # 판단 불가면 막지 않는다(fail-open)
+        now = int(datetime.now(timezone.utc).timestamp())
+        with self._conn() as c:
+            rows = c.execute("SELECT slot, device_id FROM customer_devices "
+                             "WHERE customer_id=?", (customer_id,)).fetchall()
+            used = {r[0]: r[1] for r in rows}
+            for slot, did in used.items():
+                if did == device_id:
+                    c.execute("UPDATE customer_devices SET last_seen=?, ua=?, ip=? "
+                              "WHERE customer_id=? AND slot=?",
+                              (now, (ua or "")[:200], (ip or "")[:64], customer_id, slot))
+                    return True, slot, len(used)
+            for slot in range(1, self.PC_SLOTS + 1):
+                if slot not in used:
+                    try:
+                        c.execute(
+                            "INSERT INTO customer_devices"
+                            "(customer_id, slot, device_id, first_seen, last_seen, ua, ip) "
+                            "VALUES(?,?,?,?,?,?,?)",
+                            (customer_id, slot, device_id, now, now,
+                             (ua or "")[:200], (ip or "")[:64]))
+                    except sqlite3.IntegrityError:
+                        # 같은 기기가 동시에 두 번 들어온 경우 — 이미 등록된 것이니 통과
+                        return True, None, len(used)
+                    return True, slot, len(used) + 1
+            return False, None, len(used)
+
+    def device_list(self, customer_id):
+        """등록된 PC 목록(관리자 화면용)."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT slot, device_id, first_seen, last_seen, ua, ip "
+                "FROM customer_devices WHERE customer_id=? ORDER BY slot", (customer_id,)).fetchall()
+        return [{"slot": r[0], "device_id": r[1], "first_seen": r[2],
+                 "last_seen": r[3], "ua": r[4] or "", "ip": r[5] or ""} for r in rows]
+
+    def device_list_all(self):
+        """{customer_id: 등록된 PC 수} — 목록 화면이 1인당 쿼리를 돌지 않게(N+1 방지)."""
+        with self._conn() as c:
+            rows = c.execute("SELECT customer_id, COUNT(*) FROM customer_devices "
+                             "GROUP BY customer_id").fetchall()
+        return {r[0]: r[1] for r in rows}
+
+    def device_reset(self, customer_id, slot=None):
+        """등록 해제. slot을 주면 그 칸만, 없으면 전부. 사장님만 부른다."""
+        with self._conn() as c:
+            if slot:
+                c.execute("DELETE FROM customer_devices WHERE customer_id=? AND slot=?",
+                          (customer_id, int(slot)))
+            else:
+                c.execute("DELETE FROM customer_devices WHERE customer_id=?", (customer_id,))
+
     def record_access(self, customer_id, ip, ua, day):
         """계정 접속 1건 기록. (cid, day, ip, ua) 유니크 → 같은 조합 재접속은 무시(하루 1행)."""
         ua = (ua or "")[:200]                       # UA는 길어 절단(admin 표시·중복판정엔 충분)
@@ -5684,12 +5768,19 @@ class Store:
                       "VALUES(?,?,?,?)", (customer_id, day, ip, ua))
 
     def access_summary(self, customer_id, since_day):
-        """since_day(포함) 이후의 고유 IP 수·고유 기기(UA) 수. 공유 의심 지표."""
+        """since_day(포함) 이후의 고유 IP 수·고유 기기(UA) 수·PC IP 수. 공유 의심 지표.
+
+        ★일괄판(access_summary_all)과 **같은 칸**을 돌려줘야 한다 — 한쪽에만 pc_ips를
+          넣었다가 "일괄판=낱개판" 계약을 깼다(2026-08-31, 게이트가 잡았다).
+        """
         with self._conn() as c:
-            row = c.execute(
-                "SELECT COUNT(DISTINCT ip), COUNT(DISTINCT ua) FROM customer_access "
-                "WHERE customer_id=? AND day>=?", (customer_id, since_day)).fetchone()
-        return {"ips": (row[0] or 0), "devices": (row[1] or 0)}
+            rows = c.execute(
+                "SELECT ip, ua FROM customer_access WHERE customer_id=? AND day>=?",
+                (customer_id, since_day)).fetchall()
+        ips = {r[0] for r in rows}
+        uas = {r[1] for r in rows}
+        pc_ips = {r[0] for r in rows if not _is_mobile_ua(r[1])}
+        return {"ips": len(ips), "devices": len(uas), "pc_ips": len(pc_ips)}
 
     # ── 관리자 목록용 일괄 조회 (2026-08-24) ──
     #    ★고객 1명당 쿼리를 도는 구조(N+1)라 155명에서 775번을 돌았다.

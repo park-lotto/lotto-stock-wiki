@@ -58,7 +58,9 @@ def test_access_summary_all_matches_access_summary(store):
     bulk = store.access_summary_all(since)
     for cid in (1, 2, 3):
         want = store.access_summary(cid, since)
-        got = bulk.get(cid, {"ips": 0, "devices": 0})
+        # ★기본값도 실제 칸과 같아야 한다 — 칸이 늘면 여기도 같이 는다(app.py의
+        #   access_7d 기본값과 같은 모양). 2026-08-31 pc_ips 추가 때 게이트가 잡았다.
+        got = bulk.get(cid, {"ips": 0, "devices": 0, "pc_ips": 0})
         assert got == want, f"cid={cid} 접속요약 불일치: {got} != {want}"
 
 
