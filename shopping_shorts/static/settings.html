@@ -809,6 +809,11 @@ async function pcLoad(){
   try{ d=await (await fetch('/api/my/devices')).json(); }
   catch(e){ list.innerHTML='<span class=hint>등록 정보를 못 읽었어요</span>'; return; }
   if(!d||!d.ok) return;
+  // ★관리자는 게이트 대상이 아니다 — 칸 자체를 숨긴다. 눌러도 안 되는 버튼을
+  //   보여주면 "고장났다"로 보인다(2026-08-31 실측: 사장님 계정에서 그랬다).
+  const card=document.getElementById('pcCard');
+  if(d.exempt){ if(card) card.style.display='none'; return; }
+  if(card) card.style.display='';
   const req=document.getElementById('pcReq');
   if(req) req.textContent = d.required ? '(필수)' : '';
   const rows=(d.devices||[]).map(function(x){

@@ -10858,6 +10858,8 @@ def api_my_devices(request: Request):
     this_slot = next((d["slot"] for d in devices if d["device_id"] == dev), None)
     cust = st.get_customer(cid)
     return {"ok": True, "slots": st.PC_SLOTS,
+            # 관리자·사장님은 게이트 대상이 아니다 → 화면이 등록칸을 숨긴다
+            "exempt": (not cid) or bool((cust or {}).get("admin")),
             "required": _pc_gate_applies(cust),      # 이 계정이 등록 필수인가
             "this_registered": this_slot is not None, "this_slot": this_slot,
             # ★기기 id는 내려주지 않는다 — 남의 도장을 알면 흉내낼 수 있다.
@@ -10877,7 +10879,10 @@ def api_my_devices_register(request: Request):
     """
     cid = _cid(request)
     if not cid:
-        return JSONResponse({"ok": False, "error": "로그인이 필요해요"}, status_code=401)
+        # ★사장님 계정(0)은 게이트 대상이 아니다 — 등록할 이유가 없다.
+        #   종전엔 "로그인이 필요해요"가 떠서 마치 고장난 것처럼 보였다(2026-08-31 실측).
+        return JSONResponse({"ok": False, "error": "관리자 계정은 등록이 필요 없어요"},
+                            status_code=400)
     dev = _device_id(request)
     if not dev:
         return JSONResponse({"ok": False, "error": "이 브라우저를 확인할 수 없어요. "
