@@ -383,6 +383,12 @@ DEFAULTS = {
     # ★흐림 계열(blur/blurdark)은 여기서 못 그린다 — 배경을 흐리게 하는 건 영상 필터다.
     #   PNG는 '위에 얹는 그림'이라 뒤를 못 만진다. 흐림은 렌더 쪽에서 따로 붙인다(2차).
     "masks": [],
+    # ── 🖼 이미지 틀(2026-08-31 사장님 "너가 코드로 다시그리면 느낌이 안나와") ──────
+    # ★캔바 등에서 만든 그림을 **그대로** 맨 아래에 깐다. 코드로 재현하면 질감이 죽는다.
+    #   값 = 업로드가 돌려준 id(내용 sha1 16자)뿐이다 — 경로를 받으면 폴더 밖을 읽는다.
+    #   id가 내용 해시라 **그림이 바뀌면 id도 바뀐다** → 캐시키가 자동으로 갈린다.
+    #   빈값이면 지금까지와 완전히 같다(그리는 순서에 레이어 하나가 안 끼는 것뿐).
+    "bg_image": "",
     "preset": "news_coral",
     "bar_h": 190,          # 상단 띠 높이(px)
     # 띠 끝부분 처리(2026-08-28 사장님 시안 "끝부분 효과").
@@ -413,6 +419,15 @@ DEFAULTS = {
     "title_font": "",      # 제목 폰트(빈값=Pretendard-ExtraBold)
     "title_size": 0,       # 제목 크기(0=62, 기존 값)
     "title_x": 50,         # 제목 가로 위치 %
+    # ── 세로 위치(2026-08-31 이미지 틀과 짝) ────────────────────────────────
+    # ★이미지 틀을 쓰면 글자를 **그림 안 빈자리**에 놓아야 한다. 지금까지는 세로가
+    #   "띠 바로 아래"로 고정이라 캔바 그림 위에서 자리를 못 맞췄다.
+    # ★0 = "안 정했음" → 지금까지의 자리 그대로(가로위치·크기와 같은 규약).
+    "ch_y": 0,             # 채널명 세로 위치 %(0=띠 한가운데)
+    "title_y": 0,          # 제목 블록 윗변 세로 위치 %(0=띠 바로 아래)
+    # ★이미지 틀에선 바탕 블록을 우리가 또 그리면 **그림을 덮어버린다**(질감이 죽는
+    #   바로 그 지점이다). 끄면 글자만 얹는다.
+    "head_block": True,
     # ── 제목 글자 꾸미기 확장(2026-08-28 사장님 "폰트쪽 꾸미는것 추가") ──────
     # ★빈값/0 = "안 정했음" → 지금까지의 자동 규칙 그대로(기존 그림 무변경).
     "title_color": "",     # 제목 글자색(빈값=바탕 밝기로 흑/백 자동)
@@ -553,6 +568,22 @@ def _norm_masks(raw):
     return out
 
 
+_VALID_IMG_ID = re.compile(r"[0-9a-f]{16}")
+_BG_DIR = pathlib.Path(__file__).resolve().parent / "data" / "frame_images"
+
+
+def bg_image_path(img_id):
+    """이미지 틀 id → 실제 파일 경로. 없으면 None.
+
+    ★id 검사(normalize)를 통과한 값만 들어온다는 전제에 기대지 않고 여기서 **또** 본다 —
+      이 함수는 API·렌더 양쪽에서 불리고, 한쪽이 검사를 잊으면 경로탈출이 된다.
+    """
+    if not (img_id and _VALID_IMG_ID.fullmatch(str(img_id))):
+        return None
+    p = _BG_DIR / f"{img_id}.png"
+    return p if p.exists() else None
+
+
 def normalize(spec):
     """화면이 준 값에 기본값을 채우고 범위를 자른다.
 
@@ -594,10 +625,12 @@ def normalize(spec):
         s[k] = str(s[k] or "").strip()[:60]
     s["ad_badge"] = bool(s["ad_badge"])
     s["icons"] = bool(s["icons"])
+    s["head_block"] = bool(s["head_block"])
     # ── 글자 꾸미기 값도 **여기 한 곳에서만** 자른다(위 bar_h와 같은 원칙) ──
     # ★0은 "안 정했음"이라 살려둔다 — 그림 그릴 때 프리셋 기본으로 되돌아간다.
     for k, lo, hi in (("ch_size", 0, 200), ("title_size", 0, 200),
                       ("ch_x", 0, 100), ("title_x", 0, 100),
+                      ("ch_y", 0, 100), ("title_y", 0, 100),
                       ("title_ol_w", 0, 20),
                       ("ad_size", 0, 200), ("ad_x", 0, 100), ("ad_y", 0, 100),
                       ("ad_alpha", 0, 100)):
@@ -623,6 +656,9 @@ def normalize(spec):
     for k in ("left_icon", "right_icon"):
         v = str(s[k] or "").strip()
         s[k] = v if v in _ICON_CHOICES else ""
+    # 이미지 틀 id — 16자 hex만. 경로·확장자가 섞이면 폴더 밖을 읽을 수 있다(폰트와 같은 원칙).
+    v = str(s["bg_image"] or "").strip()
+    s["bg_image"] = v if _VALID_IMG_ID.fullmatch(v) else ""
     v = str(s["center_kind"] or "").strip()
     s["center_kind"] = v if v in _CENTER else ""
     v = str(s["layout"] or "").strip()
@@ -729,6 +765,36 @@ _CENTER = {"검색창": "search", "search": "search",
            "없음": "none", "none": "none", "": "none", None: "name"}
 
 
+def _draw_channel(d, s, color, bar_h, cy):
+    """채널명 한 줄을 (ch_x%, cy)에 그린다.
+
+    ★띠 안/밖 두 군데서 부르므로 **여기 한 곳에서만** 자리·크기를 정한다(0순위-B).
+      두 번 적으면 띠가 있을 때와 없을 때 글자가 다르게 나온다.
+    """
+    csize = s["ch_size"] or max(28, int(bar_h * 0.30))
+    f = _font("bar", csize, s["ch_font"])
+    cx = W * (s["ch_x"] / 100.0)
+    # 글자 절반이 화면 밖으로 나가지 않게 중심을 안쪽으로 당긴다.
+    half = _fg.text_px(f, s["channel"], csize) / 2
+    cx = max(half + 20, min(W - half - 20, cx))
+    _fg.draw_text(d, (cx, cy), s["channel"], f, color, "mm", csize)
+
+
+def _fit_cover(src):
+    """어떤 비율이든 1080x1920을 꽉 채우게 맞춘다(넘치는 쪽은 가운데 기준으로 자른다).
+
+    ★'맞춰 줄이기'(contain)가 아니라 '채우기'(cover)다 — 틀은 화면을 덮는 게 일이라
+      여백이 생기면 그 자리로 영상이 비쳐 나와 틀이 깨져 보인다.
+    """
+    sw, sh = src.size
+    if not sw or not sh:
+        return Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    k = max(W / sw, H / sh)
+    nw, nh = max(1, round(sw * k)), max(1, round(sh * k))
+    r = src.resize((nw, nh), Image.LANCZOS)
+    return r.crop(((nw - W) // 2, (nh - H) // 2, (nw - W) // 2 + W, (nh - H) // 2 + H))
+
+
 def _bar_layer(col, bar_h, fx, soft, top=True):
     """띠 한 장(RGBA, W x H)을 만들어 돌려준다.
 
@@ -784,6 +850,15 @@ def render(spec):
     on_bar = _rgb(s["on_bar_color"] or p["on_bar"])
 
     im = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    # ★이미지 틀은 **맨 아래**에 깔린다 — 그 위에 띠·글자가 얹힌다.
+    #   실패해도 그림 전체가 죽으면 안 된다(그림 한 장이 화면을 통째로 막는다).
+    _bg = bg_image_path(s["bg_image"])
+    if _bg:
+        try:
+            with Image.open(_bg) as _src:
+                im.alpha_composite(_fit_cover(_src.convert("RGBA")))
+        except Exception:      # noqa: BLE001 — 깨진 파일 하나로 미리보기가 막히면 안 된다
+            pass
     d = ImageDraw.Draw(im)
 
     bar_h = s["bar_h"]
@@ -806,14 +881,13 @@ def render(spec):
         if center == "search":
             _searchbar(d, W // 2, cy, on_bar, h=max(44, int(bar_h * 0.34)))
         elif center == "name" and s["channel"]:
-            # 크기 0 = "안 정했음" → 기존 자동 규칙(띠 높이의 30%)을 그대로 쓴다.
-            csize = s["ch_size"] or max(28, int(bar_h * 0.30))
-            f = _font("bar", csize, s["ch_font"])
-            cx = W * (s["ch_x"] / 100.0)
-            # 글자 절반이 화면 밖으로 나가지 않게 중심을 안쪽으로 당긴다.
-            half = _fg.text_px(f, s["channel"], csize) / 2
-            cx = max(half + 20, min(W - half - 20, cx))
-            _fg.draw_text(d, (cx, cy), s["channel"], f, on_bar, "mm", csize)
+            _draw_channel(d, s, on_bar, bar_h,
+                          int(H * s["ch_y"] / 100.0) if s["ch_y"] else cy)
+
+    # ★띠가 없어도 채널명을 그린다 — 이미지 틀은 띠를 그림이 갖고 있어서 bar_h=0인데,
+    #   그때 채널명이 통째로 사라지면 "글자를 얹을 수 없다"가 된다(세로위치와 짝).
+    if bar_h <= 0 and s["channel"] and s["ch_y"]:
+        _draw_channel(d, s, on_bar, 190, int(H * s["ch_y"] / 100.0))
 
     # ★[광고]는 **틀과 독립**이다(2026-08-22 사장님 "템플릿 없어도 사용가능").
     #   그래서 띠(bar_h>0) 블록 **밖**에서 그린다 — 띠가 없어도 나온다.
@@ -848,7 +922,8 @@ def render(spec):
         im.alpha_composite(_bar_layer(bar_col, s["bottom_h"], s["bar_fx"], s["bar_soft"], False))
 
     # 제목·메타가 얹히는 흰 블록 — 내용이 있을 때만 그린다(빈 블록이 영상을 가리면 손해).
-    y = bar_h
+    # ★0 = "안 정했음" → 지금까지처럼 띠 바로 아래(옛 그림 무변경).
+    y = int(H * s["title_y"] / 100.0) if s["title_y"] else bar_h
     if s["title"] or s["views"] or s["comments"]:
         tsize = s["title_size"] or 62
         ft = _font("title", tsize, s["title_font"])
@@ -892,7 +967,9 @@ def render(spec):
         if not s["sub_text_c"] and abs(_lum(meta_fill) - _lum(bg)) < 60:
             meta_fill = _fallback_meta
         rule_fill = (210, 210, 210, 255) if dark_bg else (30, 30, 30, 255)
-        d.rectangle([0, y, W, y + block_h - 1], fill=bg)
+        # ★이미지 틀에선 이 바탕이 그림을 덮는다 — 끄면 글자만 얹힌다.
+        if s["head_block"]:
+            d.rectangle([0, y, W, y + block_h - 1], fill=bg)
         ty = y + 36
         # 외곽선(2026-08-28): 두께>0일 때만. 색을 안 정했으면 **바탕**과 대비되는 쪽
         # (밝은 바탕→검정, 어두운 바탕→흰색). ★글자색 기준으로 뒤집으면 흰 바탕에서

@@ -4,6 +4,7 @@ import base64
 import functools
 import hmac
 import hashlib
+import io
 import ipaddress
 import json
 import logging
@@ -14337,6 +14338,113 @@ def api_help_media(name: str):
                         headers={"Cache-Control": "public, max-age=31536000"})
 
 
+# ── 🖼 이미지 틀 업로드(2026-08-31) ──────────────────────────────────────────
+# ★사장님 지시의 뿌리: "너가 코드로 다시그리면 느낌이 안나와".
+#   캔바에서 만든 그림을 **그대로** 틀로 쓴다. 코드로 재현하면 색·간격은 맞춰도
+#   질감(그림자·노이즈·미묘한 그라데이션)이 죽는다.
+# ★그리는 쪽은 deco_frame 하나뿐이다(0순위-B) — 여기선 파일만 받아 두고, id를 준다.
+_FRAME_IMG_EXT = {".png", ".jpg", ".jpeg", ".webp"}
+_FRAME_IMG_MAX = 12 * 1024 * 1024
+
+
+def _frame_img_index_path(cid: int):
+    """고객별 '내 이미지 틀' 목록. 파일 자체는 내용해시라 전 고객 공용이지만,
+    **누가 올렸는지**는 갈라야 남의 목록에 내 그림이 뜨지 않는다."""
+    from shopping_shorts import deco_frame
+    return deco_frame._BG_DIR / f"index_{int(cid)}.json"
+
+
+def _frame_img_list(cid: int):
+    p = _frame_img_index_path(cid)
+    if not p.exists():
+        return []
+    try:
+        return json.loads(p.read_text(encoding="utf-8")) or []
+    except (OSError, ValueError):
+        return []
+
+
+def _frame_img_save_list(cid: int, items):
+    p = _frame_img_index_path(cid)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(json.dumps(items, ensure_ascii=False), encoding="utf-8")
+
+
+@app.post("/api/produce/frame/image")
+async def api_produce_frame_image_upload(request: Request, file: UploadFile = File(...),
+                                         name: str = Form("")):
+    """캔바 등에서 내보낸 그림 1장을 이미지 틀로 등록 → id를 돌려준다.
+
+    ★알파(투명)를 지켜서 PNG로 저장한다 — 가운데가 투명해야 영상이 비친다.
+      JPEG로 저장하면 투명이 검게 굳어 영상을 통째로 가린다.
+    """
+    from PIL import Image
+    from shopping_shorts import deco_frame
+    ext = Path(file.filename or "").suffix.lower()
+    if ext not in _FRAME_IMG_EXT:
+        return JSONResponse(status_code=422, content={
+            "ok": False, "error": "png·jpg·webp 그림만 올릴 수 있어요"})
+    raw = await file.read()
+    if len(raw) > _FRAME_IMG_MAX:
+        return JSONResponse(status_code=413, content={
+            "ok": False, "error": f"그림이 너무 커요(최대 {_FRAME_IMG_MAX // (1024 * 1024)}MB)"})
+    try:
+        with Image.open(io.BytesIO(raw)) as src:
+            im = src.convert("RGBA")
+            # 저장할 땐 출력 규격(1080x1920)으로 미리 맞춰둔다 — 렌더 때마다 큰 그림을
+            # 다시 줄이면 느리고, 무엇보다 **잘리는 자리가 지금 눈에 보인다**.
+            im = deco_frame._fit_cover(im)
+            buf = io.BytesIO()
+            im.save(buf, format="PNG")
+            data = buf.getvalue()
+    except Exception as e:      # noqa: BLE001 — 깨진 그림은 사용자 잘못이지 서버 오류가 아니다
+        return JSONResponse(status_code=422, content={
+            "ok": False, "error": f"그림을 읽지 못했어요({e.__class__.__name__})"})
+    iid = hashlib.sha1(data).hexdigest()[:16]      # 내용 해시 = 그림이 바뀌면 id도 바뀐다
+    deco_frame._BG_DIR.mkdir(parents=True, exist_ok=True)
+    (deco_frame._BG_DIR / f"{iid}.png").write_bytes(data)
+    cid = _cid(request)
+    items = [x for x in _frame_img_list(cid) if x.get("id") != iid]
+    items.insert(0, {"id": iid, "name": (name or Path(file.filename or "").stem or "내 틀")[:40],
+                     "at": int(time.time())})
+    _frame_img_save_list(cid, items[:60])
+    return {"ok": True, "id": iid, "url": f"/api/produce/frame/image/{iid}"}
+
+
+@app.get("/api/produce/frame/images")
+def api_produce_frame_images(request: Request):
+    """내가 올린 이미지 틀 목록(최신순). 파일이 지워진 항목은 조용히 걸러낸다."""
+    from shopping_shorts import deco_frame
+    items = [x for x in _frame_img_list(_cid(request))
+             if deco_frame.bg_image_path(x.get("id"))]
+    return {"ok": True, "images": items}
+
+
+@app.delete("/api/produce/frame/image/{iid}")
+def api_produce_frame_image_delete(request: Request, iid: str):
+    """내 목록에서만 뺀다 — 파일은 지우지 않는다.
+
+    ★내용해시라 **다른 고객·다른 작업이 같은 파일을 쓰고 있을 수 있다.** 파일을
+      지우면 남의 완성본 틀이 조용히 사라진다(파생물을 원본 키에 쓰지 말라는 것과 같은 원칙).
+    """
+    cid = _cid(request)
+    items = [x for x in _frame_img_list(cid) if x.get("id") != iid]
+    _frame_img_save_list(cid, items)
+    return {"ok": True}
+
+
+@app.get("/api/produce/frame/image/{iid}")
+def api_produce_frame_image(iid: str):
+    """올린 원본 그림 서빙(축소판·미리보기용). id 검사는 deco_frame 한 곳이 한다."""
+    from fastapi.responses import FileResponse
+    from shopping_shorts import deco_frame
+    path = deco_frame.bg_image_path(iid)
+    if not path:
+        return JSONResponse(status_code=404, content={"ok": False})
+    return FileResponse(str(path), media_type="image/png",
+                        headers={"Cache-Control": "public, max-age=31536000"})
+
+
 @app.get("/api/produce/frame.png")
 def api_produce_frame_png(request: Request):
     """틀 미리보기 PNG. ★화면은 이 그림을 그대로 얹는다 — 렌더도 같은 함수를 쓰므로
@@ -14345,8 +14453,11 @@ def api_produce_frame_png(request: Request):
     from shopping_shorts import deco_frame
     q = dict(request.query_params)
     spec = {k: q.get(k) for k in deco_frame.DEFAULTS if k in q}
-    for b in ("ad_badge", "icons"):
-        if b in spec:
+    # ★참/거짓 칸은 **DEFAULTS의 타입에서 뽑는다** — 이름을 손으로 나열하면 값이 늘 때
+    #   반드시 하나 빠진다(2026-08-31 실사고: head_block을 빼먹어 문자열 "0"이 True로
+    #   읽혀 '바탕 끄기'가 통째로 무시됐다. 파이썬에서 "0"은 참이다).
+    for b, dv in deco_frame.DEFAULTS.items():
+        if isinstance(dv, bool) and b in spec:
             spec[b] = str(spec[b]).lower() in ("1", "true", "on", "yes")
     # ★masks는 배열이라 쿼리에 JSON 문자열로 실려 온다 — 여기서만 푼다
     if "masks" in spec:
