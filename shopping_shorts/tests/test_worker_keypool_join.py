@@ -38,7 +38,11 @@ def test_대상서비스는_keyroute_POOLED를_따른다():
 
 def test_합류가_두_풀에_모두_반영된다():
     """제미니 풀은 두 벌이다 — SHORTS(태깅·댓글)와 key_vault(제작소 대본).
-    한쪽만 채우면 회원 키가 절반의 경로에서만 쓰인다."""
+    한쪽만 채우면 회원 키가 절반의 경로에서만 쓰인다.
+
+    ★전역(config.SHORTS_GEMINI_KEYS·key_vault._member_keys)을 건드리므로 원래
+      값을 **그대로 복원**한다. 빈 목록으로 되돌리면 뒤에 도는 테스트가 밟는다
+      (단독 통과 = 오염 — CLAUDE.md 게이트 교훈)."""
     from pipeline.atoms import key_vault
 
     from shopping_shorts import config
@@ -47,10 +51,19 @@ def test_합류가_두_풀에_모두_반영된다():
         def get_pooled_keys(self, svc):
             return ["ZZ_MEMBER_1"] if svc == keyroute.SVC_GEMINI else []
 
+    before_pool = list(config.SHORTS_GEMINI_KEYS)
+    before_member = list(key_vault._member_keys)
+    before_yt = list(config.YOUTUBE_API_KEYS)
     try:
         keypool.resync_pools(_Store())
         assert "ZZ_MEMBER_1" in config.SHORTS_GEMINI_KEYS
         assert "ZZ_MEMBER_1" in key_vault._member_keys, (
             "제작소가 쓰는 key_vault 풀에 회원 키가 안 들어갔다")
     finally:
-        keypool.resync_pools(type("S", (), {"get_pooled_keys": lambda s, v: []})())
+        config.SHORTS_GEMINI_KEYS = before_pool
+        config.YOUTUBE_API_KEYS = before_yt
+        key_vault.set_member_keys(before_member)
+        try:                       # 값을 복사해 간 모듈들에도 원상복구를 밀어 넣는다
+            config._push_pool_to_importers(before_pool)
+        except Exception:
+            pass
