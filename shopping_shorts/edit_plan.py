@@ -2240,7 +2240,14 @@ def _is_transient_api_error(msg):
     return is_transient_api_error(msg)
 
 
-def _vault_call_once(prompt, schema, max_tries=8, key_offset=0):
+# ★한 번에 시도할 키 개수(2026-08-31). 종전 8은 풀이 18개이던 시절 값이라,
+#   SHORTS 풀(56개)을 이어붙인 뒤에도 앞 8개만 두들기고 포기했다. 429 RPM으로
+#   앞쪽이 다 막힌 날 뒤쪽 키가 놀게 된다. 실패했을 때만 더 도는 값이라 정상
+#   경로(첫 키 성공)의 비용은 그대로 0이다.
+_MAX_KEY_TRIES = 24
+
+
+def _vault_call_once(prompt, schema, max_tries=_MAX_KEY_TRIES, key_offset=0):
     """key_vault 캐스케이드 예비키풀로 JSON 생성 호출 → raw dict. 무키/실패면 None.
 
     build_edit_plan이 comment_gen 전용키(1개, 쉽게 소진) 대신 배치된 예비키를
@@ -2255,21 +2262,32 @@ def _vault_call_once(prompt, schema, max_tries=8, key_offset=0):
       후보 인덱스·워커 PID를 섞어 오프셋을 주면 서로 다른 키로 나가 429 자체가
       안 난다. 실패 시 동작은 종전과 같다 — 대기 없이 다음 키로 순차 회전."""
     keys = keyroute.gemini_keys("general")
-    if not keys:
-        # ★위키 예비풀(general/ingest/embed/briefing)이 전멸하면 SHORTS 전용풀의
-        #   살아있는 키로라도 대본을 만든다(2026-08-10 실사고). 이날 위키 4개 그룹이
-        #   전부 라이브 0이 돼 _vault_call이 None을 돌려 → scene_first 후보 0 →
-        #   build_edit_plan beats 0 → "EDL 비어있음"으로 제작소가 통째로 실패했다.
-        #   추출(script_extract)은 SHORTS 키로 정상이었는데 대본 쓰기만 위키 풀에
-        #   묶여 있어 죽은 것 — 같은 lite 모델이라 SHORTS 키로 그대로 생성된다.
-        try:
-            from shopping_shorts import comment_gen as _cg
-            keys = [_cg.SHORTS_GEMINI_KEYS[i] for i in _cg._live_key_indices()]
-            if keys:
-                print("edit_plan._vault_call: 위키 예비풀 전멸 → SHORTS 전용풀로 폴백",
-                      file=sys.stderr)
-        except Exception:
-            keys = []
+    # ★위키 예비풀(general/ingest/embed/briefing)이 마르면 SHORTS 전용풀의 살아있는
+    #   키로라도 대본을 만든다(2026-08-10 실사고). 그날 위키 4개 그룹이 전부 라이브 0이
+    #   돼 _vault_call이 None → scene_first 후보 0 → beats 0 → "EDL 비어있음"으로
+    #   제작소가 통째로 실패했다. 추출은 SHORTS 키로 정상인데 대본 쓰기만 위키 풀에
+    #   묶여 있어 죽은 것 — 같은 lite 모델이라 SHORTS 키로 그대로 생성된다.
+    # ★SHORTS 전용풀을 **항상 뒤에 이어붙인다**(2026-08-31 실사고).
+    #   종전엔 위 `if not keys:` 안에서만 폴백했다 — 즉 위키 예비풀이 **0개일 때만**
+    #   SHORTS 풀을 봤다. 실측 job 862d10fefd1c: 예비풀 라이브가 4개였고 그 4개가
+    #   전부 429 RPM이라 3라운드(45초) 재시도가 **같은 4개만** 두들기다 포기 →
+    #   "EDL 비어있음(extract_thin)"으로 사장님 제작이 죽었다. 그때 SHORTS 풀엔
+    #   키가 56개(사장님 12 + 회원 44) 놀고 있었다 — 있는 키를 안 쓴 것이다.
+    #   순서는 그대로라 예비풀이 먼저 쓰이고(종전 동작 보존), 그게 다 막혔을 때만
+    #   SHORTS 키로 이어진다. 같은 lite 모델이라 결과 품질은 동일하다.
+    try:
+        from shopping_shorts import comment_gen as _cg
+        _seen = set(keys)
+        _extra = [k for k in (_cg.SHORTS_GEMINI_KEYS[i]
+                              for i in _cg._live_key_indices())
+                  if k and k not in _seen]
+        if _extra:
+            print("edit_plan._vault_call: SHORTS 전용풀 %d개를 뒤에 이어붙임"
+                  " (예비풀 %d개)" % (len(_extra), len(keys)), file=sys.stderr)
+            keys = list(keys) + _extra
+    except Exception as _e:      # noqa: BLE001 — 보강 실패가 본 호출을 죽이지 않는다
+        print("edit_plan._vault_call: SHORTS 풀 이어붙이기 실패(무해): %r" % (_e,),
+              file=sys.stderr)
     if not keys:
         return None
     if key_offset:
@@ -2353,7 +2371,7 @@ def _is_per_minute_quota(m):
             or "requests per min" in low)
 
 
-def _vault_call(prompt, schema, max_tries=8, key_offset=0):
+def _vault_call(prompt, schema, max_tries=_MAX_KEY_TRIES, key_offset=0):
     """키풀을 한 바퀴 돌리되, **분당 한도(429 RPM)면 쉬었다 다시 돈다**(2026-08-31 실사고).
 
     ★왜: 종전엔 429를 만나면 대기 없이 다음 키로 넘어가기만 했다. 살아있는 키가

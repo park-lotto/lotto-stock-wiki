@@ -816,6 +816,20 @@ def _edl_empty_reason(source_scripts, plan):
     chars = sum(len(t) for t in texts)
     got = [t for t in texts if t]
     gen = (plan or {}).get("generator") or ""
+    # ★키 소진이 먼저다(2026-08-31 실사고). 실측 job 862d10fefd1c는 소스 대본이
+    #   460자 있었는데 "뽑힌 대본이 너무 짧습니다(22자)"로 나갔다 — [언어분리]가
+    #   외국어 소스 3개의 '말'을 뺀 뒤(정상 동작) 남은 22자만 세었기 때문이다.
+    #   진짜 원인은 제미나이 429(분당 한도)로 편집안 생성이 못 돈 것이었다.
+    #   원인이 다르면 처방도 다르다 — 키풀이 전멸한 흔적이 있으면 그걸 먼저 말한다.
+    try:
+        from shopping_shorts import edit_plan as _ep
+        _last = str(getattr(_ep, "_LAST_VAULT_ERR", "") or "")
+    except Exception:      # noqa: BLE001 — 진단 보조가 진단을 죽이지 않는다
+        _last = ""
+    if "429" in _last or "RESOURCE_EXHAUSTED" in _last or "PERMISSION_DENIED" in _last:
+        return ("key_exhausted",
+                "제미나이 키가 한도에 걸려 편집안을 만들지 못했습니다"
+                " — 잠시 후 다시 [매칭]을 눌러 주세요(분당 한도는 1분이면 풀립니다).")
     if not (source_scripts or []):
         return ("no_source",
                 "소스 영상이 없습니다 — 담긴 영상을 확인해 주세요.")
