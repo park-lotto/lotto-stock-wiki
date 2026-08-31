@@ -5608,6 +5608,35 @@ async function loadBeatsPreview(){
   BEAT_IDX=Math.min(BEAT_IDX, BEATS_PREVIEW.length-1);
   showBeat(BEAT_IDX, true);      // true = 처음 불러옴 → 저장된 확대를 **읽기만** 한다
 }
+// ── 장면 프레임 주소는 **여기 한 곳**에서만 만든다(0순위-B) ────────────────
+//   showBeat(보여주기)과 prefetch(미리 받기)가 같은 주소를 써야 한다. 두 벌로 적으면
+//   미리 받아둔 것과 실제로 띄우는 것이 어긋나 prefetch가 통째로 헛돈다(조용히).
+function _beatFrameUrl(b){
+  if(!b || typeof MIX_JOB==='undefined' || !MIX_JOB) return '';
+  return '/api/produce/mix/beatframe/'+MIX_JOB+'/'+_beatNo(b)
+         + (b.cut!=null ? ('?cut='+b.cut) : '');
+}
+// ── 이웃 장면 그림 미리 받기(2026-08-31 사장님 "다음 장면 넘어갈 때 로딩이 느리다") ──
+//   서버 추출은 실측 150~220ms로 병목이 아니었다. 진짜 원인은 ◀▶를 누르는 **그 순간에야**
+//   요청이 나가는 것 — 왕복을 통째로 기다린다. 보고 있는 동안 다음 것을 받아두면 그 대기가
+//   사라진다. 앞(+1,+2)을 뒤(-1)보다 먼저 넣는다 — 사람은 대개 앞으로 넘긴다.
+const _BF_PRE = new Map();          // url → Image. 참조를 쥐고 있어야 GC가 안 걷어간다
+function _prefetchNeighborFrames(i){
+  const sb=document.getElementById('sceneBg');
+  if(!sb || !sb.checked) return;    // 실장면 배경이 꺼져 있으면 애초에 안 쓴다 — 낭비 금지
+  const n=BEATS_PREVIEW.length; if(!n) return;
+  [1, 2, -1].forEach(d=>{
+    const b=BEATS_PREVIEW[((i+d)%n+n)%n];
+    const u=_beatFrameUrl(b);
+    if(!u || _BF_PRE.has(u)) return;
+    const im=new Image();
+    im.decoding='async';
+    im.src=u;                       // 실패해도 그만 — 넘어갈 때 정상 경로가 다시 부른다
+    _BF_PRE.set(u, im);
+  });
+  // 무한 증식 방지 — Map은 넣은 순서를 지키므로 오래된 것부터 버린다
+  while(_BF_PRE.size>24) _BF_PRE.delete(_BF_PRE.keys().next().value);
+}
 function showBeat(i, first){
   if(!BEATS_PREVIEW.length) return;
   BEAT_IDX=(i+BEATS_PREVIEW.length)%BEATS_PREVIEW.length;
@@ -5619,8 +5648,7 @@ function showBeat(i, first){
     bg.onerror=()=>{ bg.style.display='none'; };
     // ★목록 순번(BEAT_IDX)이 아니라 비트번호+컷번호로 부른다(2026-08-31) — 목록이 컷
     //   단위로 펴지면서 순번과 비트번호가 갈라졌다. 순번으로 부르면 엉뚱한 그림이 뜬다.
-    bg.src='/api/produce/mix/beatframe/'+MIX_JOB+'/'+_beatNo(b)
-           +(b.cut!=null?('?cut='+b.cut):'');
+    bg.src=_beatFrameUrl(b);     // ★주소는 _beatFrameUrl 한 곳에서만(prefetch와 같은 주소여야 한다)
     bg.style.display='block';
   }
   // 자막 = 그 비트 대본. ★실제 영상은 2~3어절씩 순차로 바뀐다(서버 segs=_caption_segments).
@@ -5636,6 +5664,8 @@ function showBeat(i, first){
   // 🔎 강조는 **장면마다 따로**다(확대의 '모든 장면에 같은 배율' 같은 전파가 없다) —
   //   강조는 "이 장면의 이 자리"를 가리키는 것이라 다음 장면에 그대로 옮기면 엉뚱한 곳을 가리킨다.
   if(typeof hlLoadFromBeat==='function') hlLoadFromBeat();
+  // ★지금 장면을 다 그린 **뒤에** 이웃을 받는다 — 먼저 받으면 지금 볼 그림과 대역폭을 다툰다
+  try{ _prefetchNeighborFrames(BEAT_IDX); }catch(e){}
 }
 let CAP_SEQ_TIMER=null;
 function _playBeatCaptions(b){

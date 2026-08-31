@@ -15586,12 +15586,20 @@ def _beatframe_file(job, job_id: str, i: int, cut=None):
 @app.get("/api/produce/mix/beatframe/{job_id}/{i}")
 def api_produce_mix_beatframe(job_id: str, i: int, cut: int = None):
     """i번 비트(cut=그 비트의 몇 번째 컷)의 영상 프레임 1장(캐시).
-    없으면 404 → 프론트는 흰 배경 폴백."""
+    없으면 404 → 프론트는 흰 배경 폴백.
+
+    ★캐시 정책(2026-08-31): **immutable을 주면 안 된다.** 이 주소는 칸 번호로만 갈리는데
+      (job/i?cut=c) 정작 내용은 그 칸이 쓰는 소스·시각이 바뀌면 달라진다 — _beatframe_file이
+      파일명에 소스·시각을 넣어 서버 캐시는 갈라 놨지만 **주소는 그대로**다. immutable로 굳히면
+      3단계에서 편성을 바꿔도 브라우저가 옛 그림을 계속 보여준다(파일명 키를 넣기 전에 있던
+      '조용한 어긋남'이 브라우저 쪽에서 되살아난다). 그래서 "캐시하되 매번 재검증"으로 둔다 —
+      FileResponse가 ETag·Last-Modified를 주므로 안 바뀌었으면 304, 전송량은 0이다."""
     job = Store(DB_PATH).get_mix_job(job_id)
     out = _beatframe_file(job, job_id, i, cut=cut)
     if out is None:
         return JSONResponse(status_code=404, content={"ok": False})
-    return FileResponse(str(out), media_type="image/jpeg")
+    return FileResponse(str(out), media_type="image/jpeg",
+                        headers={"cache-control": "no-cache"})
 
 
 # ── 장면 라이브러리(재사용 짤 뱅크, 2026-07-15) ──
