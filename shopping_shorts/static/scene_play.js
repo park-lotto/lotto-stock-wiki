@@ -386,13 +386,40 @@ function planClips(segIds, ttsDur, spread, beatIdx){
       const bounds = [0];
       for (let k = 1; k < caps.length; k++) bounds.push(Math.min(ttsDur, caps[k].start));
       bounds.push(ttsDur);
-      const nCut = Math.min(caps.length, segments.length);
-      for (let k = 0; k < nCut; k++) {
-        const isLast = k === nCut - 1;
-        const endB = isLast ? bounds[bounds.length - 1] : bounds[k + 1];  // 재료 부족 → 마지막이 남은 구절 커버
+      // ★구절이 재료보다 많으면 **담은 조각의 뒷부분을 한 바퀴 더 쓴다**(2026-08-31 사장님
+      //   "대본이 길어지니까 뒤에까지 장면이 안 붙는다").
+      //   종전 nCut=min(caps, segments)는 조각 3·구절 6일 때 컷을 3개만 만들고 마지막 컷이
+      //   남은 구절 전부를 덮었다 — 뒤쪽 말에는 화면 전환이 없고 한 장면이 멈춘 듯 나온다.
+      //   실측(job 33377557599e): 칸 4개 모두 조각 3 < 구절 3~6인데 재료는 오히려 1.0~2.5초
+      //   **남는다**(over). 길이가 아니라 **개수**가 모자란 것이다.
+      //   ★첫 바퀴는 종전 그대로 담은 순서대로 1:1 — 안 그러면 커서가 먼저 앞 조각을 두 번
+      //     쓰고 **담은 장면 하나가 통째로 안 나온다**(실측으로 잡은 회귀). 두 바퀴째부터만
+      //     뒤가 남은 조각을 돌아가며 이어 쓴다. 재료가 진짜 떨어지면 그때만 종전 동작.
+      const nPhrase = caps.length;
+      const pos = segments.map(s => s.start);
+      let ri = 0;
+      for (let k = 0; k < nPhrase; k++) {
+        const isLast = k === nPhrase - 1;
+        const endB = isLast ? bounds[bounds.length - 1] : bounds[k + 1];
         const d = Math.max(0.1, endB - bounds[k]);
-        const seg = segments[k];
-        clips.push({ seg_id: seg.seg_id, video_id: seg.video_id, start: seg.start, dur: Math.round(d * 100) / 100 });
+        let idx = -1;
+        if (k < segments.length){
+          idx = k;                                   // 첫 바퀴 = 담은 순서대로(종전과 같다)
+        } else {
+          for (let t = 0; t < segments.length; t++){ // 두 바퀴째 = 뒤가 남은 조각을 돌아가며
+            const j = (ri + t) % segments.length;
+            if (segments[j].end - pos[j] >= Math.min(d, MIN_CLIP) - EPS){ idx = j; break; }
+          }
+          if (idx < 0){                              // 재료 소진 → 종전대로 마지막 컷이 커버
+            if (clips.length) clips[clips.length - 1].dur =
+              Math.round((clips[clips.length - 1].dur + (bounds[bounds.length - 1] - bounds[k])) * 100) / 100;
+            break;
+          }
+          ri = (idx + 1) % segments.length;
+        }
+        const seg = segments[idx];
+        clips.push({ seg_id: seg.seg_id, video_id: seg.video_id, start: pos[idx], dur: Math.round(d * 100) / 100 });
+        pos[idx] += d;
       }
       return clips;
     }
