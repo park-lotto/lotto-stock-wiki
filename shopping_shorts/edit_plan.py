@@ -2398,6 +2398,10 @@ def _vault_call(prompt, schema, max_tries=8, key_offset=0):
         got = _vault_call_once(prompt, schema, max_tries=max_tries,
                                key_offset=off)
         if got is not None:
+            # ★성공하면 사유를 비운다(2026-08-31). 안 비우면 앞선 호출의 429가 전역에
+            #   남아, 뒤에 다른 이유로 EDL이 비었을 때 "키 문제"로 잘못 보고된다.
+            global _LAST_VAULT_ERR
+            _LAST_VAULT_ERR = ""
             return got
         if not _is_per_minute_quota(_LAST_VAULT_ERR):
             return None

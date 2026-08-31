@@ -21,7 +21,11 @@ _GROUP_ENV_PREFIX = {
     "briefing": "GEMINI_BRIEFING_KEY",
 }
 
-_MAX_KEYS_PER_GROUP = 30  # 안전 상한 — 이 이상은 .env에 추가해도 무시
+# ★상한을 30 → 120으로 올린다(2026-08-31 실사고). 회원 키를 .env에 넣어 응급 복구할 때
+#   `GEMINI_API_KEY_31` 이상이 **조용히 무시돼** 49개 중 23개만 들어갔다. 화면에도 로그에도
+#   아무 표시가 없어 "넣었는데 왜 그대로냐"가 된다. 이 상한은 무한루프 방지용일 뿐이라
+#   넉넉히 잡아도 비용이 없다(없는 번호는 그냥 건너뛴다).
+_MAX_KEYS_PER_GROUP = 120
 
 
 def _read_env_file() -> dict[str, str]:
