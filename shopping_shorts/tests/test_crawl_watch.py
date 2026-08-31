@@ -134,3 +134,18 @@ def test_dead_channels_counts_recent_streak_not_all_history(db):
     dead = cw.dead_channels(db, "instagram_collect", min_fails=2)
     assert [d["username"] for d in dead] == ["x"]
     assert dead[0]["fails"] == 2      # 최근 연속 2회. 옛 실패까지 더해 4가 되면 안 된다
+
+
+def test_admin_page_links_to_crawl_dashboard():
+    """★화면을 만들었으면 **가는 길**도 만들어야 한다(2026-09-01 실측 사고).
+
+    /crawl을 배포하고 라우트·API·테스트까지 다 통과했는데 사장님은 "안 열림"이었다.
+    원인은 버그가 아니라 **어디에도 링크가 없어서** 주소를 외워 쳐야 했던 것.
+    admin.html 주석에 이미 같은 사고가 적혀 있었다("관측판 /ops는 어디에도 링크가 없었다").
+    같은 실수를 두 번 했으므로 테스트로 막는다.
+    """
+    import pathlib
+    html = (pathlib.Path(__file__).resolve().parents[1]
+            / "static" / "admin.html").read_text(encoding="utf-8")
+    assert 'href="/crawl"' in html, "관리자 화면에 크롤링 관측판 링크가 없다"
+    assert 'href="/ops"' in html, "기존 관측판 링크까지 사라지면 안 된다"
