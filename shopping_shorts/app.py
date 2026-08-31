@@ -3616,6 +3616,11 @@ def _probe_user_key(service: str, key: str) -> bool:
         #   `/v1/voices`를 고른 이유: TTS와 같은 voices 권한을 요구하고, 실제 합성이
         #   아니라 목록 조회라 **크레딧을 안 쓴다**(확인 버튼이 돈을 쓰면 안 된다).
         url, kw = "https://api.elevenlabs.io/v1/voices", {"headers": {"xi-api-key": key}}
+    elif service == keyroute.SVC_TYPECAST:
+        # ★일레븐랩스와 같은 규칙: **우리가 실제로 쓰는 기능이 되는가**로 본다.
+        #   /v1/voices는 합성이 아니라 성우 목록 조회라 크레딧을 안 쓴다
+        #   (확인 버튼이 돈을 쓰면 안 된다). 헤더 이름이 다르다 — X-API-KEY다.
+        url, kw = "https://api.typecast.ai/v1/voices", {"headers": {"X-API-KEY": key}}
     elif service == keyroute.SVC_YOUTUBE:
         url = ("https://www.googleapis.com/youtube/v3/videos"
                f"?part=id&id=dQw4w9WgXcQ&key={urllib.parse.quote(key)}")
@@ -9858,7 +9863,8 @@ def check_and_count(customer_id, op):
     return True
 
 
-_SVC_KO = {"elevenlabs": "목소리(ElevenLabs)", "vmake": "자막제거(Vmake)",
+_SVC_KO = {"elevenlabs": "목소리(ElevenLabs)", "typecast": "목소리(타입캐스트)",
+           "vmake": "자막제거(Vmake)",
            "serpapi": "제품찾기(SerpApi)", "gemini": "AI(Gemini)", "youtube": "유튜브"}
 
 

@@ -411,6 +411,7 @@ var GUIDE_VIDEO = {
   gemini: "",      // 구글(제미나이) 키 받는 법
   vmake: "",       // VMake 키 받는 법
   elevenlabs: "",  // ElevenLabs 키 받는 법
+  typecast: "",    // 타입캐스트 키 받는 법
   youtube: "",     // 유튜브 Data API 키 받는 법
   serpapi: "",     // SerpApi 키 받는 법(렌즈 검색)
   buffer: ""       // Buffer 키 받는 법(SNS 예약발행)
@@ -425,6 +426,14 @@ var SERVICES = [
     desc: "", multi: false, ph: "키 붙여넣기", freeOp: "vmake" },
   { id: "elevenlabs", icon: "🔊", name: "목소리 (ElevenLabs)",
     desc: "영상에 넣을 목소리를 만듭니다", multi: false, ph: "키 붙여넣기" },
+  /* ★타입캐스트는 목소리의 **두 번째 엔진**입니다. 성우를 고를 때 정해집니다 —
+     필재·김건·박창수·용식이 같은 남자 성우가 여기 있습니다(ElevenLabs에 없는 라인업).
+     그래서 두 칸이 따로입니다: 고른 성우가 어느 쪽이냐에 따라 쓰이는 키가 다릅니다. */
+  { id: "typecast",   icon: "🎤", name: "목소리 (타입캐스트)",
+    desc: "한국 성우 목소리를 만듭니다", multi: false, ph: "키 붙여넣기",
+    note: "성우 목록에서 <b>필재·김건·박창수·용식이</b> 같은 한국 성우를 고르면 " +
+          "이 키가 쓰입니다. 다른 성우는 위의 <b>ElevenLabs</b> 키를 씁니다 — " +
+          "두 곳 다 쓰시려면 키도 둘 다 넣어주세요." },
   { id: "youtube",    icon: "📺", name: "유튜브",
     desc: "유튜브 영상 정보를 가져올 때 씁니다", multi: false, ph: "키 붙여넣기" },
   /* ★렌즈 검색은 클릭 1번에 SerpApi를 3회 씁니다 — 코드에 박힌 값입니다
