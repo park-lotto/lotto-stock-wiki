@@ -570,6 +570,29 @@ def _norm_masks(raw):
 
 _VALID_IMG_ID = re.compile(r"[0-9a-f]{16}")
 _BG_DIR = pathlib.Path(__file__).resolve().parent / "data" / "frame_images"
+# ── 기본 제공 이미지 틀(2026-08-31) ─────────────────────────────────────────
+# ★사장님: "내가 캔바에서 올려서 쓰라고? 너가 만든거 없어?" — 올리는 길만 만들고
+#   정작 쓸 틀이 없으면 빈 통이다. 우리가 구워서 함께 배포한다.
+# ★굽는 방법이 중요하다: PIL로 그리지 않고 **HTML/CSS를 진짜 크로미움으로 렌더**한다
+#   (tools/frame_kit/build_frames.py). 여러 겹 그림자·유리 흐림·그라데이션은 CSS가
+#   이미 잘하는 일이고, 그 결과가 그대로 PNG가 된다 — 그게 '느낌'의 정체다.
+_BUILTIN_DIR = pathlib.Path(__file__).resolve().parent / "static" / "frames"
+_VALID_BUILTIN_ID = re.compile(r"[a-z0-9_]{3,24}")
+
+
+def builtin_frames():
+    """기본 제공 틀 목록 [{id,name}]. 목록 파일이 없거나 깨져도 빈 목록을 준다."""
+    f = _BUILTIN_DIR / "frames.json"
+    if not f.exists():
+        return []
+    try:
+        items = json.loads(f.read_text(encoding="utf-8")) or []
+    except (OSError, ValueError):
+        return []
+    # ★목록에 적혀도 **파일이 실제로 있어야** 준다 — 없는 걸 주면 화면에 빈 칸이 뜬다
+    return [x for x in items if isinstance(x, dict)
+            and _VALID_BUILTIN_ID.fullmatch(str(x.get("id") or ""))
+            and (_BUILTIN_DIR / f"{x['id']}.png").exists()]
 
 
 def bg_image_path(img_id):
@@ -577,11 +600,19 @@ def bg_image_path(img_id):
 
     ★id 검사(normalize)를 통과한 값만 들어온다는 전제에 기대지 않고 여기서 **또** 본다 —
       이 함수는 API·렌더 양쪽에서 불리고, 한쪽이 검사를 잊으면 경로탈출이 된다.
+    ★두 갈래를 **여기 한 곳에서** 푼다(0순위-B): 올린 것(16자 hex) / 기본 제공(이름).
+      두 군데서 풀면 한쪽만 경로검사를 잊는다.
     """
-    if not (img_id and _VALID_IMG_ID.fullmatch(str(img_id))):
+    if not img_id:
         return None
-    p = _BG_DIR / f"{img_id}.png"
-    return p if p.exists() else None
+    sid = str(img_id)
+    if _VALID_IMG_ID.fullmatch(sid):
+        p = _BG_DIR / f"{sid}.png"
+        return p if p.exists() else None
+    if _VALID_BUILTIN_ID.fullmatch(sid):
+        p = _BUILTIN_DIR / f"{sid}.png"
+        return p if p.exists() else None
+    return None
 
 
 def normalize(spec):
@@ -658,7 +689,9 @@ def normalize(spec):
         s[k] = v if v in _ICON_CHOICES else ""
     # 이미지 틀 id — 16자 hex만. 경로·확장자가 섞이면 폴더 밖을 읽을 수 있다(폰트와 같은 원칙).
     v = str(s["bg_image"] or "").strip()
-    s["bg_image"] = v if _VALID_IMG_ID.fullmatch(v) else ""
+    # ★형식만 보지 않고 **실제 파일이 있는지**로 받는다 — 이름이 그럴듯한데 파일이
+    #   없으면 렌더가 조용히 맨 그림을 내보내고 "왜 틀이 안 나오냐"가 된다.
+    s["bg_image"] = v if bg_image_path(v) else ""
     v = str(s["center_kind"] or "").strip()
     s["center_kind"] = v if v in _CENTER else ""
     v = str(s["layout"] or "").strip()

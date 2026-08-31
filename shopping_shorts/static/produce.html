@@ -4459,10 +4459,15 @@ function frPickImage(iid){
   const span=(STATE.deco.template&&STATE.deco.template.span)||'full';
   // ★그림이 곧 틀이다 — 우리가 띠·바탕을 또 그리면 그 위를 덮어 질감이 죽는다.
   //   그래서 띠 0 · 아이콘 없음 · 제목 바탕 끔으로 시작한다. 글자는 사장님이 자리를 잡는다.
+  // ★틀과 글자색은 **한 세트**다(프리셋 20종에서 배운 것). 색을 안 채우면 크림 틀에
+  //   흰 채널명, 먹지 틀에 검은 제목이 나가 글자가 통째로 사라진다(실측 2026-08-31).
+  const meta=(FR_IMAGES||[]).find(x=>x.id===iid)||{};
   STATE.deco.template={span:span, frame:{preset:'plain_black', bg_image:iid,
     bar_h:0, bottom_h:0, icons:false, head_block:false,
     channel:old.channel||'', title:old.title||'', views:'', comments:'',
-    ch_y:old.ch_y??0, title_y:old.title_y??0, ad_badge:!!old.ad_badge}};
+    on_bar_color:meta.on_bar||'', title_color:meta.title||'',
+    // 기본 자리: 채널명은 띠 안, 제목은 그 아래 흰 칸. 사장님이 슬라이더로 옮긴다.
+    ch_y:old.ch_y||7, title_y:old.title_y||17, ad_badge:!!old.ad_badge}};
   renderFramePresets(); renderTemplateCards(); renderTemplatePreview();
 }
 function renderFramePresets(){
@@ -4509,9 +4514,9 @@ function renderFramePresets(){
            (실측: 랭킹 0/99·발굴 0/79·즐겨찾기 0/591. test_no_lazy_thumbs가 지킨다) -->
       <img src="/api/produce/frame/image/${i.id}"
            style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">
-      <span onclick="frImgDelete('${i.id}',event)" title="목록에서 빼기"
+      ${i.mine===false?'':`<span onclick="frImgDelete('${i.id}',event)" title="목록에서 빼기"
             style="position:absolute;top:1px;right:1px;background:rgba(0,0,0,.6);color:#fff;
-                   border-radius:3px;font-size:10px;line-height:1;padding:2px 3px">×</span></div>`;
+                   border-radius:3px;font-size:10px;line-height:1;padding:2px 3px">×</span>`}</div>`;
   box.innerHTML = card(!f, "frPick('')", noneThumb, '안 씀')
     + card(false, "document.getElementById('frImgFile').click()", upThumb, '내 그림')
     + FR_IMAGES.map(i=>card(curImg===i.id, `frPickImage('${i.id}')`, imgThumb(i), esc(i.name||'내 틀'))).join('')

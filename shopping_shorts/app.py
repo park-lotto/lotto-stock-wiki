@@ -14413,11 +14413,16 @@ async def api_produce_frame_image_upload(request: Request, file: UploadFile = Fi
 
 @app.get("/api/produce/frame/images")
 def api_produce_frame_images(request: Request):
-    """내가 올린 이미지 틀 목록(최신순). 파일이 지워진 항목은 조용히 걸러낸다."""
+    """이미지 틀 목록 — **기본 제공이 먼저, 내가 올린 것이 뒤**(최신순).
+
+    ★기본 제공을 앞에 두는 이유: 올린 게 하나도 없어도 목록이 비지 않는다.
+      빈 목록이면 "올려서 쓰라는 거냐"가 된다(2026-08-31 사장님).
+    """
     from shopping_shorts import deco_frame
-    items = [x for x in _frame_img_list(_cid(request))
-             if deco_frame.bg_image_path(x.get("id"))]
-    return {"ok": True, "images": items}
+    mine = [dict(x, mine=True) for x in _frame_img_list(_cid(request))
+            if deco_frame.bg_image_path(x.get("id"))]
+    builtin = [dict(x, mine=False) for x in deco_frame.builtin_frames()]
+    return {"ok": True, "images": builtin + mine}
 
 
 @app.delete("/api/produce/frame/image/{iid}")
