@@ -49,7 +49,7 @@ def test_delete_customer_removes_all(tmp_path):
     s.delete_customer(cid)
     assert s.get_customer(cid) is None
     assert s.list_payments(cid) == []
-    assert s.access_summary(cid, "2026-07-01") == {"ips": 0, "devices": 0}
+    assert s.access_summary(cid, "2026-07-01") == {"ips": 0, "devices": 0, "pc_ips": 0}
     assert s.get_mix_job("jdel01") is None                           # 완전삭제=콘텐츠도 청소
 
 
