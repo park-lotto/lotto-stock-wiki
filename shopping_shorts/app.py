@@ -9635,8 +9635,14 @@ _PC_GATE_OPEN = ("/logout", "/login", "/welcome", "/api/welcome",
 def _pc_gate_open_path(path):
     if path in _PC_GATE_OPEN:
         return True
-    # 내 PC 등록 API는 당연히 열려 있어야 한다(등록하러 온 요청이다)
-    return path.startswith("/api/my/devices") or path.startswith("/api/me")
+    # ★페이지만 열고 그 페이지가 쓰는 API를 막으면 **화면은 뜨는데 내용이 전부 403**이다
+    #   (2026-08-31 실측: /settings는 열렸는데 /api/settings/points·keys가 막혀
+    #    마이페이지가 통째로 빈 화면이었다). 페이지와 그 데이터는 같이 열어야 한다.
+    for pre in ("/api/my/devices", "/api/me", "/api/settings", "/api/welcome",
+                "/api/bug-report", "/api/points", "/api/help"):
+        if path.startswith(pre):
+            return True
+    return False
 
 
 def _pc_gate_applies(cust):
@@ -9666,6 +9672,11 @@ def _check_pc_device(customer_id, request, path):
             return None
         ua = request.headers.get("user-agent", "")
         if _is_mobile_ua(ua):                     # 모바일·태블릿은 제한 없음
+            return None
+        # ★체험판·무료(ranking_only)는 게이트를 걸지 않는다(2026-08-31 사장님).
+        #   랭킹만 보는 분에게 PC 등록을 요구하는 건 과하고, 돌려쓰기로 잃을 것도 없다.
+        #   유료로 올라간 뒤부터 등록하면 된다.
+        if access_level(customer_id, cust=cust) != "full":
             return None
         # ★도장은 **화면 문서 요청에만** 찍는다(2026-08-31 실사고). 요청마다 찍으면
         #   페이지 하나 열 때 나가는 동시 API들이 각각 다른 도장을 만들어, 마지막 것만
