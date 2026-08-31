@@ -9614,6 +9614,22 @@ def _record_access(customer_id, request):
 _PC_GATE_FROM = "2026-08-31 07:40:00"
 
 
+# ★막혀도 반드시 열려 있어야 하는 길(2026-08-31). 여기 한 곳에서만 정한다.
+#   ⚠️마이페이지(/settings)를 막으면 **등록하러 갈 수가 없어 교착**이 된다 —
+#     "등록하세요"라고 막아놓고 등록 화면도 막는 꼴이다.
+#   ⚠️가입 마무리(/welcome)도 열어야 한다 — 신규 가입자는 이름·전화를 내야
+#     승인이 되는데, 그 전에 막히면 가입 자체가 끝나지 않는다(게이트가 잡았다).
+_PC_GATE_OPEN = ("/logout", "/login", "/welcome", "/api/welcome",
+                 "/settings", "/setup", "/pricing")
+
+
+def _pc_gate_open_path(path):
+    if path in _PC_GATE_OPEN:
+        return True
+    # 내 PC 등록 API는 당연히 열려 있어야 한다(등록하러 온 요청이다)
+    return path.startswith("/api/my/devices") or path.startswith("/api/me")
+
+
 def _pc_gate_applies(cust):
     """이 고객에게 PC 등록을 강제하는가. 가입일이 기준 시각 이후면 True."""
     try:
@@ -9634,7 +9650,7 @@ def _check_pc_device(customer_id, request, path):
     try:
         if not customer_id:                       # 사장님(0)·비로그인은 제외
             return None
-        if path in ("/logout", "/login"):         # 막혀도 로그아웃은 돼야 한다
+        if _pc_gate_open_path(path):              # 막혀도 반드시 열려 있어야 하는 길
             return None
         cust = Store(DB_PATH).get_customer(customer_id)
         if cust and cust.get("admin"):

@@ -159,3 +159,18 @@ def test_gate_cutoff_is_a_single_constant():
     from shopping_shorts import app as app_mod
     src = pathlib.Path(app_mod.__file__).read_text(encoding="utf-8")
     assert src.count("_PC_GATE_FROM = ") == 1
+
+
+def test_gate_never_locks_the_registration_path():
+    """★교착 금지: '등록하세요'라고 막아놓고 등록 화면까지 막으면 아무것도 못 한다.
+
+    2026-08-31 게이트가 /api/welcome 403을 잡아 발견했다. 마이페이지(/settings)는
+    테스트가 못 잡았지만 같은 교착이라 함께 연다.
+    """
+    from shopping_shorts import app as app_mod
+    for path in ("/settings", "/welcome", "/api/welcome", "/logout", "/login",
+                 "/api/my/devices", "/api/my/devices/register", "/setup"):
+        assert app_mod._pc_gate_open_path(path), f"{path}가 막히면 등록할 길이 없다"
+    # 정작 막아야 할 길은 열려 있으면 안 된다
+    for path in ("/produce.html", "/api/mix/start", "/api/produce/mix/render"):
+        assert not app_mod._pc_gate_open_path(path), f"{path}가 통째로 열려 있다"
