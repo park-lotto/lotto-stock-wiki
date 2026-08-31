@@ -232,8 +232,8 @@ def record(service, outcome, *, pool=None, key=None, key_idx=None, owner=None,
                 op = ctx.get("op") or _um._op_from_stack()
                 job_id = job_id or ctx.get("job_id")
                 customer_id = customer_id if customer_id is not None else ctx.get("customer_id")
-            except Exception:             # noqa: BLE001
-                pass
+            except Exception as e:        # noqa: BLE001 — 문맥 없이도 기록은 간다
+                log.debug("api_health: op 문맥 유도 실패(무해) %r", e)
         conn = _connect()
         try:
             conn.execute(
@@ -258,8 +258,8 @@ def record(service, outcome, *, pool=None, key=None, key_idx=None, owner=None,
                 "api_key_dead",
                 f"[API] {service} 키 사망 감지({'…' + (key_tail(key) or '?')})",
                 f"{detail or ''}"[:300] + " — /apiwatch에서 확인, .env에서 제거 필요")
-        except Exception:                 # noqa: BLE001
-            pass
+        except Exception as e:            # noqa: BLE001 — 경보 실패가 기록을 막으면 안 된다
+            log.warning("api_health: 키사망 경보 실패(무시) %r", e)
 
 
 def record_failure(service, exc, **kw):
@@ -307,8 +307,8 @@ def purge(days=30):
             conn.commit()
         finally:
             conn.close()
-    except Exception:                     # noqa: BLE001
-        pass
+    except Exception as e:                # noqa: BLE001 — 정리 실패는 다음 조회가 다시 시도한다
+        log.warning("api_health: purge 실패(무시) %r", e)
 
 
 def set_db_path(p):
@@ -432,8 +432,8 @@ def _collector_units_snapshot():
         for u, s in zip(units, states):
             out.append({"unit": u.replace("shopping-shorts-", "").replace(".service", ""),
                         "failed": s == "failed", "state": s})
-    except Exception:                     # noqa: BLE001
-        pass
+    except Exception as e:                # noqa: BLE001 — 서버가 아니면(로컬) 없는 게 정상
+        log.debug("api_health: systemd 유닛 조회 불가(무해) %r", e)
     return out
 
 
@@ -565,8 +565,8 @@ def verdict(snap=None, agg=None):
             from shopping_shorts import ops_alert
             ops_alert.raise_alert("api_health_danger", "[API관측판] " + problems[0],
                                   " / ".join(problems)[:500])
-        except Exception:                 # noqa: BLE001
-            pass
+        except Exception as e:            # noqa: BLE001 — 경보 실패가 판정을 막으면 안 된다
+            log.warning("api_health: danger 경보 실패(무시) %r", e)
     return {"level": level, "msg": msg, "problems": problems, "warns": warns}
 
 

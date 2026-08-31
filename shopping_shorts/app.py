@@ -12234,20 +12234,20 @@ def _apiwatch_contract():
         from shopping_shorts import keyroute as _kr
         out["pooled"] = list(_kr.POOLED)
         out["wired"] = list(_kr.WIRED)
-    except Exception:                             # noqa: BLE001
-        pass
+    except Exception as e:                        # noqa: BLE001 — 계약 일부가 비어도 화면은 뜬다
+        print(f"[apiwatch] keyroute 계약 조회 실패(무해): {e!r}", file=sys.stderr)
     try:
         from shopping_shorts import comment_gen as _cg2
         out["rpm_per_key"] = int(getattr(_cg2, "_RPM_PER_KEY", 0))
         out["exhaust_ttl_s"] = int(getattr(_cg2, "_EXHAUST_TTL_S", 0))
         out["revive_ratio"] = float(getattr(_cg2, "_REVIVE_BELOW_RATIO", 0))
-    except Exception:                             # noqa: BLE001
-        pass
+    except Exception as e:                        # noqa: BLE001 — 계약 일부가 비어도 화면은 뜬다
+        print(f"[apiwatch] comment_gen 계약 조회 실패(무해): {e!r}", file=sys.stderr)
     try:
         from shopping_shorts import api_health as _ah
         out["rpd_per_key"] = _ah.RPD_PER_KEY
-    except Exception:                             # noqa: BLE001
-        pass
+    except Exception as e:                        # noqa: BLE001 — 계약 일부가 비어도 화면은 뜬다
+        print(f"[apiwatch] api_health 계약 조회 실패(무해): {e!r}", file=sys.stderr)
     return out
 
 

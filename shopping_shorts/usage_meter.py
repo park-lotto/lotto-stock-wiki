@@ -273,8 +273,8 @@ class _MeteredModels:
                 api_health.record_failure(
                     "gemini", exc, pool=self._pool, key=self._key,
                     model=str(model), dur_ms=int((time.monotonic() - t0) * 1000))
-            except Exception:          # noqa: BLE001 — 관측이 본작업을 죽이면 안 된다
-                pass
+            except Exception as ee:    # noqa: BLE001 — 관측이 본작업을 죽이면 안 된다
+                log.warning("usage_meter: 실패 관측 기록 실패(무시) %r", ee)
             raise                      # 원래 예외 그대로 — 호출부 동작 불변
         try:
             um = getattr(resp, "usage_metadata", None)
@@ -292,8 +292,8 @@ class _MeteredModels:
             api_health.record(
                 "gemini", api_health.OUT_OK, pool=self._pool, key=self._key,
                 model=str(model), dur_ms=int((time.monotonic() - t0) * 1000))
-        except Exception:              # noqa: BLE001
-            pass
+        except Exception as ee:        # noqa: BLE001 — 관측이 본작업을 죽이면 안 된다
+            log.warning("usage_meter: 성공 관측 기록 실패(무시) %r", ee)
         return resp
 
     def __getattr__(self, name):       # count_tokens 등은 그대로 통과
