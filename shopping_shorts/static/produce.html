@@ -15851,10 +15851,32 @@ async function s2Generate(){
     }
     if(S2.picked.length) _reqs.push({...body, style_ids:S2.picked});
     if(!_reqs.length) _reqs.push({...body, auto_style:true});   // 둘 다 없으면 종전 그대로
-    const _outs=await Promise.all(_reqs.map(b=>
-      fetch('/api/wiki/generate?shortcode='+encodeURIComponent(s.shortcode),
-        {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)})
-        .then(r=>r.json()).catch(()=>({ok:false,error:'네트워크 오류'}))));
+    // ★한 방에 다 쏘지 마라(2026-08-31 사장님 "왜 한 개만 나오나"). 두 요청을 동시에
+    //   보내면 같은 Gemini 키를 한꺼번에 때려 한쪽이 429(RESOURCE_EXHAUSTED)→502로 죽는다.
+    //   실측 서버로그: 같은 shortcode에 200 하나 / 502 하나가 12초 간격으로 나란히 찍혔다.
+    //   그래서 ①요청 사이를 띄우고 ②429·502면 한 번 더 시도한다.
+    const _sleep=ms=>new Promise(r=>setTimeout(r,ms));
+    const _one=async(b)=>{
+      for(let t=0;t<2;t++){
+        try{
+          const r=await fetch('/api/wiki/generate?shortcode='+encodeURIComponent(s.shortcode),
+            {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});
+          const j=await r.json().catch(()=>({ok:false,error:'응답을 읽지 못했습니다'}));
+          if(j&&j.ok) return j;
+          // 키 소진·게이트웨이 오류는 잠깐 뒤 다시 하면 대개 산다(다른 키로 돌아간다).
+          if(t===0 && (r.status===502||r.status===429)){ await _sleep(2500); continue; }
+          return j||{ok:false,error:'생성 실패'};
+        }catch(e){
+          if(t===0){ await _sleep(2500); continue; }
+          return {ok:false,error:'네트워크 오류'};
+        }
+      }
+    };
+    const _outs=[];
+    for(let i=0;i<_reqs.length;i++){
+      if(i) await _sleep(900);              // 키를 겹쳐 때리지 않게 살짝 어긋내 보낸다
+      _outs.push(await _one(_reqs[i]));
+    }
     // 하나만 실패해도 나머지는 살린다 — 둘 다 실패했을 때만 오류로 본다.
     const _good=_outs.filter(x=>x&&x.ok);
     const d = _good.length
@@ -15873,9 +15895,16 @@ async function s2Generate(){
     S2.cps=d.cps||null;   // 글자→초 환산계수(서버 상수). 없으면 초 표시를 아예 안 한다
     // ★고른 스타일 수와 나온 안의 수가 다르면 조용히 넘어가지 마라 — 실제로 2개를 골랐는데
     //   1안만 나온 적이 있다(서버가 카테고리로 걸러냈다). 조용한 실패가 제일 나쁘다.
-    if(S2.picked.length && S2.drafts.length < S2.picked.length && hint){
-      hint.innerHTML='<span style="color:var(--gold)">⚠️ 스타일 '+S2.picked.length
-        +'개 중 '+S2.drafts.length+'개만 만들어졌어요 — 나머지는 생성에 실패했습니다(다시 시도해 보세요)</span>';
+    // ★기준은 '고른 스타일 수'가 아니라 **기대한 안의 수**다(2026-08-31 수정).
+    //   종전엔 스타일 1개 + 픽업 ON = 2안을 기대했는데 픽업 요청이 502로 죽어 1안만 나와도
+    //   `1 < 1`이 거짓이라 경고가 안 떴다 — 조용히 삼켜졌다. s2AnCount()가 진짜 기대치다.
+    const _want=s2AnCount();
+    if(_want && S2.drafts.length < _want && hint){
+      const _err=(_outs.find(x=>x&&!x.ok)||{}).error||'';
+      hint.innerHTML='<span style="color:var(--gold)">⚠️ '+_want+'안을 요청했는데 '
+        +S2.drafts.length+'안만 만들어졌어요'
+        +(_err?(' — '+esc(_err)):' — 나머지는 생성에 실패했습니다')
+        +' (다시 만들기를 눌러보세요)</span>';
     }
     // ★픽업영상 대본에서 걸러낸 안이 있으면 **왜** 걸렀는지 말한다(조용한 폴백 금지).
     //   안이 줄어든 이유를 안 알려주면 "왜 2안만 나오지?"가 된다.
