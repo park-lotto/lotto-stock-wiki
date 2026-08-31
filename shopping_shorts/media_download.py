@@ -90,16 +90,48 @@ def _ig_cookies_file():
         return ""
 
 
+_YT_SLOT_LOCK = threading.Lock()
+_YT_SLOT_SEQ = 0
+
+
+def _youtube_proxy_url():
+    """이번 호출에 쓸 유튜브 프록시 주소. 없으면 "".
+
+    ★슬롯을 돌린다(2026-08-31 사장님 "프록시 몇 개 붙여야 되는 거 아닌가"). 하나로
+      고정하면 고객이 동시에 제작할 때 같은 출구 IP로 몰려 유튜브가 다시 막고, 그 IP가
+      죽으면 유튜브가 통째로 멈춘다. _download_ytdlp는 재시도(3회)마다 _proxy_arg를
+      다시 부르므로 **재시도가 곧 다른 IP로의 재시도**가 된다.
+
+    주소 조립은 channel_archive.slot_proxy 한 곳에서만 한다(0순위-B) — 인스타가 쓰는
+    그 규칙 그대로다. 자격증명이 없거나 슬롯 0이면 종전처럼 config.YTDLP_PROXY를 쓴다.
+    """
+    global _YT_SLOT_SEQ
+    n = int(getattr(config, "YTDLP_PROXY_SLOTS", 0) or 0)
+    if n > 0:
+        try:
+            from shopping_shorts.channel_archive import slot_proxy
+            with _YT_SLOT_LOCK:
+                _YT_SLOT_SEQ += 1
+                i = _YT_SLOT_SEQ % n
+            p = slot_proxy(i, "ytdlp")
+            if p:
+                return p
+        except Exception as e:      # noqa: BLE001 — 슬롯 조립 실패는 단일 프록시로 견딘다
+            print(f"[ytdlp프록시] 슬롯 조립 실패(무해): {e!r}", file=sys.stderr)
+    return config.YTDLP_PROXY
+
+
 def _proxy_arg(url):
-    """B안(2026-07-24): 유튜브만 프록시로 보낸다(config.YTDLP_PROXY 설정 시). 서버 데이터센터 IP가
+    """B안(2026-07-24): 유튜브만 프록시로 보낸다. 서버 데이터센터 IP가
     유튜브에 봇차단당하는 걸 주거용 프록시로 우회 → PC 릴레이 없이 서버가 직접 받는다. 틱톡·샤오홍슈
     등은 서버서도 되므로 프록시를 안 태워(대역폭·비용 절약). 미설정이면 [](회귀0)."""
     u = (url or "").lower()
-    if config.YTDLP_PROXY and ("youtube.com" in u or "youtu.be" in u):
+    _px = _youtube_proxy_url()
+    if _px and ("youtube.com" in u or "youtu.be" in u):
         # 회전 주거용 프록시는 죽은 IP로 라우팅되면 502(Tunnel failed)를 뱉는다 — 재시도하면
         # 새 IP로 성공한다(2026-07-24 실측: GB풀 불량, DE/CA/FR 정상). 재시도를 넉넉히 줘서
         # 드문 502에 소스가 통째로 스킵되지 않게 한다.
-        return ["--proxy", config.YTDLP_PROXY,
+        return ["--proxy", _px,
                 "--extractor-retries", "10", "--retries", "10", "--socket-timeout", "30"]
     return []
 

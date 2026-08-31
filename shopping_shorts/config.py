@@ -315,6 +315,12 @@ TTS_MAX_WORKERS = int(os.getenv("TTS_MAX_WORKERS", "3"))
 # 넣으면 서버가 직접 유튜브를 그 IP로 받아 PC 없이 24/7·고객 다중 동시 처리된다(업체 무관, 형식
 # http://user:pass@host:port). 우선순위: 프록시 > 릴레이(A) > 직접. 미설정이면 기존 A/직접 그대로(회귀0).
 YTDLP_PROXY = os.getenv("YTDLP_PROXY", "")
+# ★유튜브 프록시를 **몇 개 슬롯으로 돌릴지**(2026-08-31 사장님 "프록시 몇 개 붙여야
+#   되는 거 아닌가"). 슬롯 하나로 고정하면 (1) 고객이 동시에 제작할 때 같은 출구 IP로
+#   몰려 유튜브가 다시 막고 (2) 그 IP가 죽으면 유튜브가 통째로 멈춘다.
+#   Webshare 자격증명(WEBSHARE_USER/PASS)이 있으면 kr-31.. 로 회전한다. 0이면
+#   종전대로 YTDLP_PROXY 한 개만 쓴다(회귀 0).
+YTDLP_PROXY_SLOTS = int(os.getenv("YTDLP_PROXY_SLOTS", "4"))
 
 # 네이버 클립 벤치마킹 채널 매일 자동수집(2026-08-31). 샤홍·인스타 발굴과 같은
 # 계약으로 **기본은 꺼둔다** — 켜는 건 서버 env에서 한다(병합만으로 라이브 동작이
