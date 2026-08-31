@@ -351,6 +351,20 @@ PRESETS = {
                     "left_icon": "none", "right_icon": "none", "center_kind": "없음"},
     "plain_navy":  {"name": "빈 틀 · 네이비", "bar": "#2B3A67", "on_bar": "#FFFFFF",
                     "left_icon": "none", "right_icon": "none", "center_kind": "없음"},
+    # ── 🖤 회색띠 2줄 헤드 (2026-08-31, 사장님이 가져온 실캡처 1장으로 만듦) ──
+    #   구조: 짙은 회색 띠 안에 **2줄 헤드카피**(1줄 흰색 / 2줄 형광초록) → 그 아래
+    #   흰 블록에 검은 제목 한 줄. 아이콘·채널명은 없다(띠가 곧 헤드라인 판이다).
+    #   ★색·높이는 캡처 픽셀 실측(339x600 → 1920 환산): 띠 0~23%, 흰 블록 24~35.5%,
+    #     띠 #404040, 2줄 강조 #00E500, 흰 블록 #F2F2F2 / 글자 #000000.
+    "gray_head2": {
+        "name": "회색띠 · 2줄 헤드", "ref": "사장님 캡처 실측(2026-08-31)",
+        "bar": "#404040", "on_bar": "#FFFFFF", "bar_h": 442,
+        "left_icon": "none", "right_icon": "none", "center_kind": "없음",
+        "sub_bg": "#F2F2F2", "sub_text": "#000000", "sub_h": 220,
+        "has_head": True, "demo_views": "264만", "demo_comments": "587",
+        "headcopy": _hc("BlackHanSans.ttf", 96, "#FFFFFF", "#00E500", 10, 10, "#000000"),
+        "caption": _cap("#FFFFFF", "#000000", 78, False),
+    },
 }
 
 # 기본 치수(1080x1920 기준). 사장님이 화면에서 바 높이를 조절하면 bar_h만 바뀐다.
