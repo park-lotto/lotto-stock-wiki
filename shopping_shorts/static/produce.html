@@ -2404,6 +2404,10 @@
                   <div style="font-size:13px;font-weight:800;margin-bottom:8px">📰 내용물 있는 틀
                     <span style="font-size:11px;color:var(--sub);font-weight:400">— 커뮤니티 글처럼 보이게</span></div>
                   <div id="frPresets" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px"></div>
+                  <!-- 이미지 틀 올리기(2026-08-31). 목록의 [＋ 내 그림] 카드가 이걸 누른다.
+                       ★캔바에서 만든 그림을 그대로 얹는다 — 코드로 다시 그리면 질감이 죽는다. -->
+                  <input id="frImgFile" type="file" accept="image/png,image/jpeg,image/webp"
+                         onchange="frImgUpload(this)" style="display:none">
                   <div id="frFields" style="display:none">
                     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:12px">
                       <!-- ★안내문은 고른 틀에 따라 바뀐다(2026-08-20). "살림킹왕짱"이 고정으로
@@ -2465,6 +2469,12 @@
                         <input id="frTtSize" type="range" min="0" max="140" step="2" value="0" oninput="frUpdate()" style="width:110px">
                         <span>가로 <b id="frTtXV" style="color:var(--sub)">50%</b></span>
                         <input id="frTtX" type="range" min="0" max="100" value="50" oninput="frUpdate()" style="width:110px">
+                        <!-- 세로위치·바탕끄기(2026-08-31) — 이미지 틀 위에 글자를 놓으려면 필요하다.
+                             ★0%='자동'(띠 바로 아래) — 지금까지의 자리 그대로다. -->
+                        <span>세로 <b id="frTtYV" style="color:var(--sub)">자동</b></span>
+                        <input id="frTtY" type="range" min="0" max="100" value="0" oninput="frUpdate()" style="width:110px">
+                        <label style="display:flex;align-items:center;gap:4px" title="끄면 글자만 얹혀 배경 그림이 그대로 보입니다">
+                          <input id="frHeadBlock" type="checkbox" checked onchange="frUpdate()">바탕</label>
                       </div>
                       <!-- 제목 색·테두리(2026-08-28 사장님 "폰트쪽 꾸미는것 추가").
                            ★색 칸은 빈값이 없어 '자동'을 값으로 못 담는다 → FR_TOUCHED 규약
@@ -2490,6 +2500,8 @@
                         <input id="frChSize" type="range" min="0" max="140" step="2" value="0" oninput="frUpdate()" style="width:110px">
                         <span>가로 <b id="frChXV" style="color:var(--sub)">50%</b></span>
                         <input id="frChX" type="range" min="0" max="100" value="50" oninput="frUpdate()" style="width:110px">
+                        <span>세로 <b id="frChYV" style="color:var(--sub)">자동</b></span>
+                        <input id="frChY" type="range" min="0" max="100" value="0" oninput="frUpdate()" style="width:110px">
                       </div>
                       <div class="hint" style="font-size:11px;margin-top:6px">크기를 맨 왼쪽(자동)에 두면 틀이 정한 크기를 씁니다.</div>
                     </div>
@@ -4396,7 +4408,10 @@ function frameUrl(f){
     sub_bg_c:f.sub_bg_c||'', sub_text_c:f.sub_text_c||'',
     left_icon:f.left_icon||'', right_icon:f.right_icon||'', center_kind:f.center_kind||'',
     // 띠 끝부분 처리(2026-08-28) — solid/0이면 서버가 지금까지의 그림 그대로
-    bar_fx:f.bar_fx||'solid', bar_soft:f.bar_soft??0});
+    bar_fx:f.bar_fx||'solid', bar_soft:f.bar_soft??0,
+    // 이미지 틀(2026-08-31) — 빈값이면 안 깔린다(지금까지와 완전히 같다)
+    bg_image:f.bg_image||'', ch_y:f.ch_y??0, title_y:f.title_y??0,
+    head_block:(f.head_block===false)?'0':'1'});
   // 가림막(2026-08-28) — 배열이라 JSON으로 싣는다. 없으면 아예 안 보낸다(옛 그림 캐시를 그대로 쓰게).
   if(Array.isArray(f.masks) && f.masks.length) q.set('masks', JSON.stringify(f.masks));
   return '/api/produce/frame.png?'+q.toString();
@@ -4410,7 +4425,45 @@ async function loadFramePresets(){
     try{ const d=await (await fetch('/api/produce/frame/presets')).json(); FR_PRESETS=(d&&d.presets)||[]; }
     catch(e){ box.innerHTML='<span class="hint" style="color:var(--fire)">틀 목록을 불러오지 못했어요</span>'; return; }
   }
+  try{ const r=await (await fetch('/api/produce/frame/images')).json(); FR_IMAGES=(r&&r.images)||[]; }
+  catch(e){ FR_IMAGES=[]; }      // 목록 하나 못 읽었다고 틀 고르기가 통째로 막히면 안 된다
   renderFramePresets();
+}
+// ── 🖼 이미지 틀(2026-08-31 사장님 "너가 코드로 다시그리면 느낌이 안나와") ──────────
+// 캔바 등에서 만든 그림을 **그대로** 깐다. 코드로 다시 그리면 질감이 죽는다.
+let FR_IMAGES=[];
+async function frImgUpload(input){
+  const file=input.files&&input.files[0]; if(!file) return;
+  input.value='';                                  // 같은 파일을 다시 골라도 change가 뜨게
+  const fd=new FormData(); fd.append('file', file); fd.append('name', file.name||'');
+  try{
+    const r=await (await fetch('/api/produce/frame/image',{method:'POST',body:fd})).json();
+    if(!r||!r.ok){ alert((r&&r.error)||'그림을 올리지 못했어요'); return; }
+    FR_IMAGES=FR_IMAGES.filter(x=>x.id!==r.id);
+    FR_IMAGES.unshift({id:r.id, name:(file.name||'내 틀').replace(/\.[^.]+$/,'')});
+    frPickImage(r.id);
+  }catch(e){ alert('그림을 올리지 못했어요'); }
+}
+async function frImgDelete(iid, ev){
+  if(ev) ev.stopPropagation();                     // 카드 선택으로 번지지 않게
+  if(!confirm('이 이미지 틀을 목록에서 뺄까요? (다른 작업에 쓰인 그림은 그대로 남습니다)')) return;
+  try{ await fetch('/api/produce/frame/image/'+iid,{method:'DELETE'}); }catch(e){}
+  FR_IMAGES=FR_IMAGES.filter(x=>x.id!==iid);
+  const f=(STATE.deco&&STATE.deco.template&&STATE.deco.template.frame)||null;
+  if(f&&f.bg_image===iid) frPick('');              // 지금 쓰던 걸 뺐으면 틀도 내린다
+  else renderFramePresets();
+}
+function frPickImage(iid){
+  if(!STATE.deco) STATE.deco={extra_texts:[], motion:null};
+  const old=(STATE.deco.template&&STATE.deco.template.frame)||{};
+  const span=(STATE.deco.template&&STATE.deco.template.span)||'full';
+  // ★그림이 곧 틀이다 — 우리가 띠·바탕을 또 그리면 그 위를 덮어 질감이 죽는다.
+  //   그래서 띠 0 · 아이콘 없음 · 제목 바탕 끔으로 시작한다. 글자는 사장님이 자리를 잡는다.
+  STATE.deco.template={span:span, frame:{preset:'plain_black', bg_image:iid,
+    bar_h:0, bottom_h:0, icons:false, head_block:false,
+    channel:old.channel||'', title:old.title||'', views:'', comments:'',
+    ch_y:old.ch_y??0, title_y:old.title_y??0, ad_badge:!!old.ad_badge}};
+  renderFramePresets(); renderTemplateCards(); renderTemplatePreview();
 }
 function renderFramePresets(){
   const box=document.getElementById('frPresets'); if(!box) return;
@@ -4445,8 +4498,22 @@ function renderFramePresets(){
   // 축소판이 커졌으니 한 줄에 4칸(폭이 좁으면 자동으로 줄어든다)
   box.style.cssText='display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:6px;'
     +'max-height:280px;overflow-y:auto;margin-bottom:10px;padding-right:2px';
+  // ★내 그림을 **맨 앞**에 둔다 — 사장님이 올린 게 목록 20칸 뒤에 숨으면 못 찾는다.
+  const upThumb=`<div style="width:${Math.round(TH*9/16)}px;height:${TH}px;border-radius:4px;
+      border:1px dashed var(--line);display:flex;align-items:center;justify-content:center;
+      color:var(--sub);font-size:18px;flex:0 0 auto">＋</div>`;
+  const curImg=f?(f.bg_image||''):'';
+  const imgThumb=i=>`<div style="width:${Math.round(TH*9/16)}px;height:${TH}px;border-radius:4px;
+      overflow:hidden;position:relative;flex:0 0 auto;background:#0a1017">
+      <img src="/api/produce/frame/image/${i.id}" loading="lazy"
+           style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">
+      <span onclick="frImgDelete('${i.id}',event)" title="목록에서 빼기"
+            style="position:absolute;top:1px;right:1px;background:rgba(0,0,0,.6);color:#fff;
+                   border-radius:3px;font-size:10px;line-height:1;padding:2px 3px">×</span></div>`;
   box.innerHTML = card(!f, "frPick('')", noneThumb, '안 씀')
-    + FR_PRESETS.map(p=>card(cur===p.id, `frPick('${p.id}')`, thumbOf(p), esc(p.name))).join('');
+    + card(false, "document.getElementById('frImgFile').click()", upThumb, '내 그림')
+    + FR_IMAGES.map(i=>card(curImg===i.id, `frPickImage('${i.id}')`, imgThumb(i), esc(i.name||'내 틀'))).join('')
+    + FR_PRESETS.map(p=>card(cur===p.id&&!curImg, `frPick('${p.id}')`, thumbOf(p), esc(p.name))).join('');
   const fields=document.getElementById('frFields');
   if(fields) fields.style.display=f?'':'none';
   fillFrameFontSelects();
@@ -4478,6 +4545,9 @@ function frFill(f){
   if(g('frTtFont')) g('frTtFont').value=f.title_font||'';
   if(g('frTtSize')) g('frTtSize').value=f.title_size??0;
   if(g('frTtX')) g('frTtX').value=f.title_x??50;
+  if(g('frChY')) g('frChY').value=f.ch_y??0;
+  if(g('frTtY')) g('frTtY').value=f.title_y??0;
+  if(g('frHeadBlock')) g('frHeadBlock').checked=(f.head_block!==false);
   if(g('frChSizeV')) g('frChSizeV').textContent=(f.ch_size?f.ch_size+'px':'자동');
   if(g('frTtSizeV')) g('frTtSizeV').textContent=(f.title_size?f.title_size+'px':'자동');
   // 틀 색·구성 — ★칸을 **그 틀의 실제 색으로 채워놓고** 시작한다.
@@ -4502,6 +4572,8 @@ function frFill(f){
               ttcolor:!!f.title_color, ttol:!!f.title_ol_c};
   if(g('frChXV')) g('frChXV').textContent=(f.ch_x??50)+'%';
   if(g('frTtXV')) g('frTtXV').textContent=(f.title_x??50)+'%';
+  if(g('frChYV')) g('frChYV').textContent=(f.ch_y?f.ch_y+'%':'자동');
+  if(g('frTtYV')) g('frTtYV').textContent=(f.title_y?f.title_y+'%':'자동');
   fillFrameFontSelects(); syncAdBadge();
 }
 function frPick(preset){
@@ -4569,6 +4641,9 @@ function frUpdate(){
   f.title_font=(g('frTtFont')||{}).value||'';
   f.title_size=parseInt((g('frTtSize')||{}).value||0,10);
   f.title_x=parseInt((g('frTtX')||{}).value||50,10);
+  f.ch_y=parseInt((g('frChY')||{}).value||0,10);
+  f.title_y=parseInt((g('frTtY')||{}).value||0,10);
+  f.head_block=!((g('frHeadBlock')||{}).checked===false);
   // 제목 색·테두리 — 색은 만졌을 때만 값(아래 틀 색과 같은 FR_TOUCHED 규약)
   f.title_color=FR_TOUCHED.ttcolor?((g('frTtColor')||{}).value||''):'';
   f.title_ol_c=FR_TOUCHED.ttol?((g('frTtOlC')||{}).value||''):'';
@@ -4594,6 +4669,8 @@ function frUpdate(){
   lab('frChSizeV',f.ch_size,'px'); lab('frTtSizeV',f.title_size,'px');
   if(g('frChXV')) g('frChXV').textContent=f.ch_x+'%';
   if(g('frTtXV')) g('frTtXV').textContent=f.title_x+'%';
+  if(g('frChYV')) g('frChYV').textContent=(f.ch_y?f.ch_y+'%':'자동');
+  if(g('frTtYV')) g('frTtYV').textContent=(f.title_y?f.title_y+'%':'자동');
   if(g('frBarVal')) g('frBarVal').textContent=f.bar_h+'px';
   if(g('frBottomVal')) g('frBottomVal').textContent=f.bottom_h+'px';
   frHcLabel();          // 제목칸을 직접 고치면 번호도 따라 바뀐다(안 그러면 거짓말이 된다)
