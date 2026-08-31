@@ -1829,10 +1829,15 @@ function renderRollHosts(beatIdx, slot){
     anchor = document.querySelector(`.srcfilm[data-vid="${CSS.escape(id)}"]`);
     vidOnly = true;
   }
-  // ★촘촘히에서는 필름 자리가 **고정**이라 anchor가 필요 없다. 종전엔 카드 옆에 끼우던
-  //   잔재로 anchor를 못 찾으면 통째로 return해서, 소스별에서 [🎞 필름]을 눌러도
-  //   아무 일도 안 일어났다(실측 2026-08-26).
-  if (!anchor && !document.body.classList.contains('tight')){ markRollBtns(); return; }
+  // ★anchor가 실제로 필요한 건 **위 칸의 컷(cut)**뿐이다 — 그 칸 안(.tbcuts)에서 펼치므로.
+  //   영상 전체(src)·아래 카드(seg)는 고정 자리(#rollbay)에 펴서 anchor를 쓰지 않는다.
+  //   ★2026-08-31 사장님 "왜 필름이 안 펼쳐지나": 종전 가드는 tight일 때만 anchor를 면제했는데,
+  //     제작소 안(body.inside-studio)은 tight가 아니다. 그런데 소스별 묶음의 헤더 [🎞 필름]은
+  //     `.srcfilm` 표식 없이 버튼만 그린다(.srcfilm은 '필름형' 그룹에서만 생긴다) →
+  //     anchor를 못 찾아 통째로 return, **누르면 아무 일도 안 일어났다**.
+  //     실측(라이브 work=33377557599e): src 클릭 후 #rollbay 자식 0 / seg 클릭은 1(정상).
+  //     셀렉터와 표식이 짝이 아니면 가드가 엉뚱한 걸 막는다 — 필요한 곳에서만 막는다.
+  if (kind === 'cut' && !anchor){ markRollBtns(); return; }
 
   // ★맨 위 고정 자리에 편다(2026-08-26 사장님 "필름 펼치면 맨위도 가게").
   //   카드 옆에 끼우면 카드 폭(150px)에 눌려 필름이 제구실을 못 한다.
