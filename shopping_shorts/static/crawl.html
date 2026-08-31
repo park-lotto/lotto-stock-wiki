@@ -9,6 +9,13 @@
   저긴 5분 표본·서버 자원이고 여긴 하루 회차·수집 결과다.
   디자인은 ops.html을 그대로 따른다(두 화면이 형제처럼 보여야 한다).
   데이터는 /api/admin/crawl 하나만 부른다 — 화면에서 다시 계산하지 않는다(0순위-B).
+
+  "살아 움직이는" 층(2026-09-01 사장님 "물어봐서 되는게 아니고 계속움직여야"):
+    · 도는 중(state=running)이면 진행막대+맥박, 폴링을 5초로 당긴다(평소 60초)
+    · 상대시각("3분 전")은 1초마다 다시 계산 — fetch 없이 화면만 움직인다
+    · '몇 분 전'의 기준 시계는 서버(server_now)다 — PC 시계가 틀려도 안 흔들린다
+    · 헤더 심박 점 = 관측판 자체가 살아있나. fetch 실패면 빨강 고정 + "연결 끊김"
+    · 판정(danger/warn)은 서버 verdict()가 한다 — 여기서 다시 계산하지 않는다
 -->
 <style>
   /* ops.html의 변수·골격을 그대로 복사 — 새 디자인을 발명하지 않는다 */
@@ -28,6 +35,10 @@
   .lv-ok{border-color:#1f6b4d;background:linear-gradient(180deg,#12241c,#171a21)}
   .lv-warn{border-color:#7a5f1c;background:linear-gradient(180deg,#241f12,#171a21)}
   .lv-danger{border-color:#7a2b2b;background:linear-gradient(180deg,#241414,#171a21)}
+  /* 죽었으면 배너가 은은하게 맥박 — 1.8초 주기. 번쩍이면 계속 못 켜둔다 */
+  @keyframes vpulse{0%,100%{box-shadow:0 0 0 0 rgba(255,107,107,.30)}
+                    50%{box-shadow:0 0 0 7px rgba(255,107,107,0)}}
+  .verdict.pulse{animation:vpulse 1.8s ease-in-out infinite}
   /* 축 카드는 ops 숫자카드보다 내용이 많아 폭만 넓힌다 — 나머지 룩은 동일 */
   .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-bottom:20px}
   .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
@@ -36,6 +47,20 @@
   .card .n{color:var(--sub);font-size:11.5px;margin-top:4px}
   .card.bad{border-color:#7a2b2b}          /* 전멸·0건 — 눈에 걸려야 한다 */
   .card.none .v{color:var(--sub);font-size:15px;font-weight:600}  /* 기록 없음 ≠ 정상 */
+  .card.run{border-color:#2b4a7a}          /* 도는 중 — 파란 테두리 */
+  /* 도는 중 맥박 점 — 보는 순간 "지금 돌고 있다"가 느껴져야 한다 */
+  @keyframes dotpulse{0%,100%{opacity:1}50%{opacity:.25}}
+  .rundot{display:inline-block;width:9px;height:9px;border-radius:50%;
+          background:var(--accent);margin-right:7px;vertical-align:2px;
+          animation:dotpulse 1.3s ease-in-out infinite}
+  /* 진행 막대 — 줄무늬가 흐른다(도는 중임을 몸으로 보여준다) */
+  .prog{height:6px;border-radius:4px;background:#232837;overflow:hidden;margin:8px 0 2px}
+  .prog>i{display:block;height:100%;border-radius:4px;transition:width .6s ease;
+          background:
+            repeating-linear-gradient(45deg,rgba(255,255,255,.16) 0 7px,transparent 7px 14px),
+            linear-gradient(90deg,var(--accent),#7cc0ff);
+          background-size:28px 100%,auto;animation:flow 1.1s linear infinite}
+  @keyframes flow{0%{background-position:0 0,0 0}100%{background-position:28px 0,0 0}}
   table{width:100%;border-collapse:collapse;font-size:13px;background:var(--panel);
         border:1px solid var(--line);border-radius:12px;overflow:hidden}
   th,td{padding:9px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
@@ -58,12 +83,30 @@
        background:var(--panel);color:var(--sub);font-size:13px;padding:5px 12px;
        margin-right:6px;font-family:inherit}
   .tab.on{color:var(--txt);border-color:var(--accent);font-weight:700}
-  #btnRefresh{float:right;cursor:pointer;border:1px solid var(--line);border-radius:8px;
+  /* 우상단 — 새로고침 버튼 + 관측판 자체 심박(이 화면이 살아있나) */
+  #liveBox{float:right;text-align:right}
+  #btnRefresh{cursor:pointer;border:1px solid var(--line);border-radius:8px;
        background:var(--panel);color:var(--txt);font-size:13px;padding:5px 12px;font-family:inherit}
+  #liveStat{font-size:11.5px;color:var(--sub);margin-top:6px}
+  #hb{display:inline-block;width:8px;height:8px;border-radius:50%;
+      background:var(--sub);margin-right:6px}
+  #hb.hb-ok{background:var(--ok)}
+  #hb.hb-ok.blink{animation:hbflash .9s ease-out 1}
+  #hb.hb-bad{background:var(--danger)}
+  @keyframes hbflash{0%{box-shadow:0 0 0 0 rgba(62,207,142,.7)}
+                     100%{box-shadow:0 0 0 7px rgba(62,207,142,0)}}
+  .hb-down{color:var(--danger);font-weight:700}
+  /* 움직임을 줄여달라는 설정이면 전부 멈춘다 — 정보는 색·숫자로 이미 다 있다 */
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation:none!important;transition:none!important}
+  }
 </style>
 </head>
 <body>
-<button id="btnRefresh" onclick="load()">↻ 새로고침</button>
+<div id="liveBox">
+  <button id="btnRefresh" onclick="load()">↻ 새로고침</button>
+  <div id="liveStat"><span id="hb"></span><span id="hbTxt">연결 대기…</span></div>
+</div>
 <h1>🕸 크롤링 관측판</h1>
 <div class="sub">매일 도는 크롤이 살아있는지 — 죽은 건 바로 보이게</div>
 
@@ -94,7 +137,8 @@
   · 시각은 전부 <b>한국시간(KST)</b>이다 — 서버 기록은 UTC라 +9시간 해서 보여준다.<br>
   · <b>죽은 채널</b>은 최근 회차에서 <b>연속으로</b> 실패한 채널이다. 중간에 한 번이라도
     살아났으면 안 뜬다(인스타는 로그인벽을 띄웠다 푸는 일이 잦다).<br>
-  · "아직 기록 없음"은 정상이 아니라 <b>모름</b>이다 — 조용한 실패가 가장 위험하다.
+  · "아직 기록 없음"은 정상이 아니라 <b>모름</b>이다 — 조용한 실패가 가장 위험하다.<br>
+  · 크롤이 <b>도는 중</b>이면 5초마다, 평소엔 60초마다 새로 그린다(백그라운드 탭은 60초).
 </div>
 
 <script>
@@ -122,6 +166,12 @@ function utcDate(s){
   return isNaN(d.getTime()) ? null : d;
 }
 
+// ── 살아있는 시계 ──────────────────────────────────────────────
+// '몇 분 전'의 기준은 서버 시계(server_now)다 — PC 시계가 틀려도 안 흔들린다.
+// 매 응답에서 서버-클라이언트 오프셋을 갱신하고, 그 사이는 클라이언트 시계로 흘려보낸다.
+let SRV_OFF = 0;                                   // server_now - Date.now() (ms)
+function nowMs(){ return Date.now() + SRV_OFF; }
+
 // KST 표기 — 보는 사람 PC의 시간대에 기대지 않고 +9h를 직접 더해 UTC 게터로 뽑는다.
 // (서버·집·회사 어디서 열어도 같은 값이 나와야 한다)
 function kst(s){
@@ -133,14 +183,21 @@ function kst(s){
        + p(k.getUTCHours()) + ':' + p(k.getUTCMinutes());
 }
 
-// "3시간 전" — 마지막 실행이 얼마나 됐는지. 하루를 넘기면 날짜 단위로(크론이 죽은 신호).
+// "42초 전 / 3분 전 / 5시간 전" — 90초까지는 초 단위(1초 틱마다 실제로 움직이는 게 보인다).
 function ago(s){
   const d = utcDate(s);
   if (!d) return '';
-  const h = Math.max(0, (Date.now() - d.getTime()) / 3600000);
-  if (h < 1) return Math.round(h * 60) + '분 전';
+  const sec = Math.max(0, (nowMs() - d.getTime()) / 1000);
+  if (sec < 90) return Math.round(sec) + '초 전';
+  const h = sec / 3600;
+  if (h < 1) return Math.round(sec / 60) + '분 전';
   if (h < 48) return Math.round(h) + '시간 전';
   return Math.round(h / 24) + '일 전';
+}
+
+// 상대시각 조각 — data-ts를 달아두면 1초 틱이 fetch 없이 다시 계산해 갱신한다.
+function agoSpan(ts){
+  return `<span data-ts="${esc(ts || '')}">${esc(ago(ts) || '–')}</span>`;
 }
 
 // 초 → "35분" / "1시간 4분". 숫자만 던지면 사장님이 암산해야 한다(ops.html과 동일 취지).
@@ -164,6 +221,8 @@ function tallyBadges(tally){
   ).join('');
 }
 
+const BASE_TITLE = document.title;
+
 function renderVerdict(v){
   v = v || {};
   const lv = {ok:'lv-ok', warn:'lv-warn', danger:'lv-danger'}[v.level] || '';  // unknown → 회색
@@ -171,8 +230,11 @@ function renderVerdict(v){
   const head = v.level === 'danger' ? '크롤이 죽었습니다'
              : v.level === 'warn' ? '지켜봐야 합니다'
              : v.level === 'ok' ? '전부 살아있습니다' : '아직 모릅니다';
-  $('#verdict').className = 'verdict ' + lv;
+  // 죽었으면 배너가 은은하게 맥박 + 탭 제목으로도 알린다(다른 탭에 가 있어도 보이게).
+  // 판정 자체는 서버 verdict()가 한 것 — 여기선 level을 그대로 옮겨 그릴 뿐이다.
+  $('#verdict').className = 'verdict ' + lv + (v.level === 'danger' ? ' pulse' : '');
   $('#verdict').innerHTML = `<b>${icon} ${head}</b>${esc(v.msg || '')}`;
+  document.title = v.level === 'danger' ? '🚨 크롤 멈춤 — 크롤링 관측판' : BASE_TITLE;
 }
 
 function renderCards(jobs){
@@ -190,6 +252,18 @@ function renderCards(jobs){
         <div class="v">아직 기록 없음 — 다음 회차부터 쌓입니다</div>
         ${j.error ? `<div class="n hot">${esc(j.error)}</div>` : ''}</div>`;
     }
+    if (r.state === 'running') {
+      // 도는 중 — 진행 막대 + 맥박. "지금 돌고 있다"가 보는 순간 느껴져야 한다.
+      // 돌다가 죽었나(심박 끊김)의 판정은 서버 verdict()가 한다 — 여기선 그리기만.
+      const done = num(r.done), total = num(r.total), items = num(r.items);
+      const pct = (done !== null && total) ? Math.min(100, Math.round(done / total * 100)) : null;
+      return `<div class="card run">
+        <div class="k">${meta.icon} ${esc(meta.name)}</div>
+        <div class="v"><span class="rundot"></span>${done === null ? '–' : done}/${total ? total : '?'} 채널</div>
+        <div class="prog"><i style="width:${pct === null ? 100 : pct}%"></i></div>
+        <div class="n">${items === null ? '–' : items}건 수집 중${pct === null ? '' : ' · ' + pct + '%'}</div>
+        <div class="n">시작 ${kst(r.ran_at)} · 심박 ${agoSpan(r.beat_at || r.ran_at)}</div></div>`;
+    }
     const items = num(r.items), total = num(r.total), failed = num(r.failed);
     const okCnt = (total !== null && failed !== null) ? total - failed : null;
     // 서버 verdict()와 같은 눈금(실패*2>=전체)으로 빨간 줄을 긋는다 — 눈금이 둘이면 어긋난다.
@@ -198,7 +272,7 @@ function renderCards(jobs){
     return `<div class="card${wiped ? ' bad' : ''}">
       <div class="k">${meta.icon} ${esc(meta.name)}</div>
       <div class="v${items === 0 ? ' hot' : ''}">${items === null ? '–' : items}건</div>
-      <div class="n">마지막 실행 ${kst(r.ran_at)} <b>(${ago(r.ran_at) || '–'})</b></div>
+      <div class="n">마지막 실행 ${kst(r.ran_at)} <b>(${agoSpan(r.ran_at)})</b></div>
       <div class="n${(failed !== null && total && failed * 2 >= total) ? ' hot' : ''}">성공
         ${okCnt === null ? '–' : okCnt}/${total === null ? '–' : total} 채널
         · 소요 ${dur(r.seconds)}</div>
@@ -225,7 +299,7 @@ function renderDead(dead){
   }).join('');
 }
 
-// 이력 탭 상태 — 새로고침(60초)돼도 보던 축이 유지돼야 한다.
+// 이력 탭 상태 — 새로고침돼도 보던 축이 유지돼야 한다.
 let ACTIVE = 'instagram_collect';
 let DATA = null;
 
@@ -245,6 +319,16 @@ function renderHistory(jobs){
   }).join('');
   const rows = ((jobs || {})[ACTIVE] || {}).history || [];
   $('#histTbl tbody').innerHTML = rows.length ? rows.map(r => {
+    if (r.state === 'running') {
+      // 도는 중인 회차 — 결과 숫자가 아직 없으니 진행 상황으로 그린다.
+      const done = num(r.done), total = num(r.total), items = num(r.items);
+      return `<tr>
+        <td>${kst(r.ran_at)}</td>
+        <td>${items === null ? '–' : items}</td>
+        <td>진행 ${done === null ? '–' : done}/${total ? total : '?'}</td>
+        <td>–</td>
+        <td><span class="rundot"></span>도는 중</td></tr>`;
+    }
     const items = num(r.items), total = num(r.total), failed = num(r.failed);
     const okCnt = (total !== null && failed !== null) ? total - failed : null;
     const cls = (total && failed !== null && failed * 2 >= total) ? 'hot'
@@ -258,22 +342,86 @@ function renderHistory(jobs){
   }).join('') : '<tr><td colspan="5">아직 회차 기록이 없습니다 — 다음 회차부터 쌓입니다.</td></tr>';
 }
 
+// ── 관측판 자체 심박 — 이 화면이 살아있나 ─────────────────────────
+let LAST_OK = 0;        // 마지막 성공 fetch(클라이언트 ms)
+let NEXT_AT = 0;        // 다음 자동 갱신 예정(클라이언트 ms)
+let DOWN = false;       // 서버와 연결이 끊겼나
+
+function beatOk(){
+  DOWN = false; LAST_OK = Date.now();
+  const hb = $('#hb');
+  hb.className = 'hb-ok';
+  void hb.offsetWidth;               // 리플로우로 애니메이션 재시작(같은 클래스 재부착)
+  hb.className = 'hb-ok blink';      // 갱신 성공 = 초록으로 한 번 반짝
+  $('#hbTxt').className = '';
+}
+
+function beatBad(){
+  DOWN = true;
+  $('#hb').className = 'hb-bad';     // 빨강 고정 — 관측판 자체가 죽었다는 신호
+  $('#hbTxt').className = 'hb-down';
+}
+
+// ── 폴링 — 도는 중 5초 / 평소 60초 / 백그라운드 탭 60초 ─────────────
+let TIMER = null;
+let RUNNING = false;    // 어느 축이든 state=running 인가(서버 응답에서 읽는다)
+
+function schedule(){
+  clearTimeout(TIMER);
+  const ms = (RUNNING && !document.hidden) ? 5000 : 60000;
+  NEXT_AT = Date.now() + ms;
+  TIMER = setTimeout(load, ms);
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) load();      // 돌아오면 바로 최신으로
+  else schedule();                   // 숨으면 60초 리듬으로 늦춘다
+});
+
+// ── 1초 틱 — fetch 없이 화면만 움직인다(멈춘 화면처럼 안 보이게) ─────
+function tick(){
+  // ① 모든 상대시각("N초 전")을 서버 시계 기준으로 다시 계산
+  document.querySelectorAll('[data-ts]').forEach(el => {
+    el.textContent = ago(el.getAttribute('data-ts')) || '–';
+  });
+  // ② 우상단 — 방금 갱신됨 · 다음 갱신 카운트다운
+  if (DOWN) {
+    $('#hbTxt').textContent = '연결 끊김 — ' + (LAST_OK
+      ? '마지막 성공 ' + Math.max(0, Math.round((Date.now() - LAST_OK) / 1000)) + '초 전'
+      : '아직 성공 없음');
+  } else if (LAST_OK) {
+    const a = Math.max(0, Math.round((Date.now() - LAST_OK) / 1000));
+    const n = Math.max(0, Math.round((NEXT_AT - Date.now()) / 1000));
+    $('#hbTxt').textContent = '방금 갱신됨 · ' + a + '초 전 · 다음 ' + n + '초';
+  }
+}
+
 async function load(){
   let d;
   try {
     const r = await fetch('/api/admin/crawl?days=14');
     d = await r.json();
   } catch (e) {
+    beatBad();
     $('#verdict').className = 'verdict';
     $('#verdict').textContent = '불러오지 못했습니다 — 네트워크를 확인하세요.';
-    return;   // 통신 자체가 죽었으면 아래 구역들은 마지막 화면을 유지한다(빈 화면보다 낫다)
+    schedule();   // 끊겨도 다시 두드린다 — 복구되면 저절로 살아난다
+    return;       // 아래 구역들은 마지막 화면을 유지한다(빈 화면보다 낫다)
   }
   if (!d || !d.ok) {
+    beatBad();
     $('#verdict').className = 'verdict';
     $('#verdict').textContent = '불러오지 못했습니다: ' + ((d && d.error) || '알 수 없음');
+    schedule();
     return;
   }
+  // 서버 시계에 맞춘다 — 이후의 모든 '몇 분 전'이 이 오프셋을 쓴다.
+  const sn = utcDate(d.server_now);
+  if (sn) SRV_OFF = sn.getTime() - Date.now();
   DATA = d;
+  RUNNING = Object.values(d.jobs || {}).some(
+    j => j && j.latest && j.latest.state === 'running');
+  beatOk();
   // 구역별로 따로 감싼다 — 한 구역의 렌더 오류가 화면 전체를 비우면 안 된다.
   try { renderVerdict(d.verdict); }
   catch (e) { $('#verdict').textContent = '판정 표시 오류: ' + e.message; }
@@ -285,10 +433,11 @@ async function load(){
   try { renderHistory(d.jobs); }
   catch (e) { $('#histTbl tbody').innerHTML = '<tr><td colspan="5">이력 표시 오류: '
               + esc(e.message) + '</td></tr>'; }
+  schedule();
 }
 
 load();
-setInterval(load, 60000);   // 1분마다 갱신 — ops.html과 같은 리듬
+setInterval(tick, 1000);   // 시계는 항상 흐른다(계산만 — 서버는 안 건드린다)
 </script>
 </body>
 </html>

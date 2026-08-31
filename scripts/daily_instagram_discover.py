@@ -63,6 +63,7 @@ def _watch(db_path, count, t0, error=""):
             db_path, "instagram_discover",
             tally={"found": count, **({"error": 1} if error else {})},
             verdicts=[], items=count, seconds=time.time() - t0)
+        crawl_watch.check_and_alert(db_path)   # 나쁘면 텔레그램·쪽지로 밀어준다
     except Exception as e:  # noqa: BLE001
         print(f"[daily_instagram_discover] 관측 기록 실패(무해): {e!r}", file=sys.stderr)
 
