@@ -421,6 +421,11 @@ def _download_douyin_inner(url, dest_dir, timeout):
     return path, ""
 
 
+# 유튜브 다운로드 시도별 player_client(2026-08-31). None=기본(종전 동작).
+# 기본이 403으로 막히는 영상이 있고, android로는 그대로 받아진다(실측 3/3).
+_YTDLP_CLIENTS = [None, "android", "ios"]
+
+
 def _download_ytdlp(url, dest_dir, max_attempts=3):
     """유튜브/틱톡 다운로드 → (mp4경로, caption). yt-dlp 경로는 캡션 없음(빈 문자열).
 
@@ -444,12 +449,26 @@ def _download_ytdlp(url, dest_dir, max_attempts=3):
         #   ★대역폭도 같이 지킨다: 668MB 몇 건이면 월 25GB 프록시 플랜이 날아간다
         #   (2026-08-17 실제로 초과해 인스타 수집이 402로 멈춘 적이 있다).
         #   상한을 넘는 영상만 영향을 받고, 1080p 이하 원본은 종전 그대로다.
+        # ★재시도마다 **다른 player_client**로 바꾼다(2026-08-31 실사고).
+        #   증상: 프록시를 켜 봇차단은 풀렸는데 12건 중 3건이 다운로드 단계에서
+        #   HTTP 403. 동시성·IP고정·파일크기·스트림종류·화질·연령제한을 하나씩
+        #   배제한 끝에, 같은 영상이 `player_client=android`로는 **그대로 받아졌다**
+        #   (12.8MB/10.5s · 43.6MB/15.7s · 21.6MB/17.8s — 3건 전부).
+        #   즉 403은 기본 클라이언트가 막힌 것이고 영상 문제가 아니다.
+        #   ⚠️ yt-dlp의 클라이언트 폴백은 **추출 단계**에만 걸린다 — 다운로드 403은
+        #     자동으로 안 넘어가므로 우리 재시도 루프가 직접 바꿔줘야 한다.
+        #   1차는 기본 그대로라 잘 되던 영상은 종전 경로를 탄다(회귀 0).
+        _client = _YTDLP_CLIENTS[attempt] if attempt < len(_YTDLP_CLIENTS) else None
+        _client_arg = (["--extractor-args", f"youtube:player_client={_client}"]
+                       if _client and ("youtube.com" in (url or "").lower()
+                                       or "youtu.be" in (url or "").lower()) else [])
         r = subprocess.run(
             [sys.executable, "-m", "yt_dlp",
              "-f", ("bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/"
                     "bestvideo[height<=1080]+bestaudio/best[height<=1080]/best"),
              "--merge-output-format", "mp4",
-             "--no-playlist", *_cookies_arg(url), *_proxy_arg(url), "-o", out, url],
+             "--no-playlist", *_cookies_arg(url), *_proxy_arg(url), *_client_arg,
+             "-o", out, url],
             capture_output=True, text=True, timeout=300)
         if r.returncode == 0:
             files = sorted(Path(dest_dir).glob(stem + "*"))
