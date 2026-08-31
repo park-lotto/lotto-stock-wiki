@@ -3551,6 +3551,19 @@ def _take_key_failure() -> str:
 def _explain_key_failure(service: str, code: int, body: str) -> str:
     """업체 응답 → 고객이 **무엇을 고쳐야 하는지** 아는 한 줄."""
     low = (body or "").lower()
+    # ★VMake는 code 0(네트워크) 검사보다 **먼저** 본다(2026-08-31). SDK가 예외로만
+    #   알려줘 HTTP 코드가 없는데, 그렇다고 "인터넷이 불안정"이라 하면 **거짓 안내**다
+    #   — 고객은 멀쩡한 인터넷을 의심하며 재시도만 반복한다(실사고의 연장).
+    if service == keyroute.SVC_VMAKE:
+        if "sign not equals" in low:
+            return ("두 값의 짝이 맞지 않습니다. Vmake 개발자 페이지에서 **같은 줄**의 "
+                    "API Key와 Secret Access Key를 각각 복사 버튼으로 붙여넣어 주세요 "
+                    "(Secret은 눈 아이콘을 눌러야 보입니다).")
+        if "invalid or inactive" in low:
+            return ("Vmake에 없는 키입니다. 키를 새로 만드셨다면 **여기에도 다시 등록**해 주세요 "
+                    "(옛 키를 지우면 그 키로는 더 이상 안 됩니다).")
+        if "60002" in low or "enough credits" in low:
+            return "Vmake 크레딧이 부족합니다. vmake.ai에서 충전해 주세요."
     if code == 0:
         return "인터넷 연결이 불안정해 확인하지 못했습니다. 잠시 뒤 다시 시도해주세요."
     if service == keyroute.SVC_ELEVENLABS:
@@ -3584,6 +3597,17 @@ def _key_format_hint(service: str, key: str) -> str:
         if not k.startswith("sk_"):
             return ("ElevenLabs 키는 `sk_`로 시작합니다. 키 목록에 보이는 **ID**가 아니라, "
                     "키를 만들 때 한 번만 보이는 값을 붙여넣어 주세요.")
+    if service == keyroute.SVC_VMAKE:
+        # VMake만 값이 **두 개**다(화면 이름: API Key / Secret Access Key). 콜론으로 잇는다.
+        # ★실측 2026-08-31: 라이브 34개 중 32개가 32자hex:32자hex, 2개는 **중간에 공백**이
+        #   섞여 있었다(cid 85·166). 공백이 섞이면 서명이 깨져 제작 도중에야 죽는다.
+        parts = k.split(":")
+        if len(parts) != 2 or not parts[0] or not parts[1]:
+            return ("Vmake는 값이 두 개입니다 — 개발자 페이지의 **API Key**와 "
+                    "**Secret Access Key**를 가운데 `:` 로 이어 한 줄로 넣어 주세요. "
+                    "(예: 앞의값:뒤의값)")
+        if any(ch.isspace() for ch in k):
+            return "키 안에 띄어쓰기가 들어 있습니다. 공백 없이 붙여넣어 주세요."
     return ""
 
 
@@ -3593,7 +3617,12 @@ def _probe_user_key(service: str, key: str) -> bool:
     ★gemini는 comment_gen._probe_key_alive(REST)를 그대로 쓴다 — SDK models.list는
       살아있는 키도 전부 실패로 만든다(2026-08-07 실측, comment_gen.py:95 주석).
       같은 판단을 여기 또 적으면 어긋난다(CLAUDE.md 0순위-B).
-    ★vmake는 형식만 본다. 실호출이 크레딧을 먹으므로 '확인' 버튼이 돈을 쓰면 안 된다.
+    ★vmake는 **서명까지 실제로 확인한다**(2026-08-31). /skill/config.json은 SDK가
+      본작업 전에 부르는 설정 조회라 **크레딧을 안 쓴다**(과금은 /skill/consume.json).
+      종전엔 `":" in key`로 형식만 봐서, 짝이 안 맞는 키도 '● 정상'으로 떴다 —
+      고객은 정상인 줄 알고 제작을 돌리다 그제야 죽었다(실사고: 1시간 45분 허비,
+      에러 `[10021] sign not equals client`). 판정은 **우리가 실제로 쓰는 기능이
+      되는가**로 해야 한다(ElevenLabs를 /v1/voices로 바꾼 것과 같은 이유).
     """
     if service == keyroute.SVC_BUFFER:
         # 문서가 첫 예제로 쓰는 account 쿼리 하나. 돈이 안 들고 401이면 바로 갈린다.
@@ -3603,7 +3632,21 @@ def _probe_user_key(service: str, key: str) -> bool:
         from shopping_shorts.comment_gen import _probe_key_alive
         return _probe_key_alive(key)
     if service == keyroute.SVC_VMAKE:
-        return ":" in key           # ak:sk 형식. 실호출 안 함(크레딧 소모)
+        # 형식은 _key_format_hint가 이미 걸렀다. 여기선 서명이 맞는지만 본다.
+        from shopping_shorts.vmake_client import _split_key
+        ak, sk = _split_key(key)
+        try:
+            from shopping_shorts.vmake_sdk import SkillClient
+            SkillClient(ak=ak, sk=sk)      # 생성 시 fetch_config → 서명 검증(무과금)
+            return True
+        except Exception as e:      # noqa: BLE001 — 사유는 남기고 판정만 돌려준다
+            # 값이 사유 문구에 섞여 나가지 않게 지운다(로그·화면에 키가 남으면 안 된다).
+            msg = str(e)
+            for _v in (ak, sk):
+                if _v:
+                    msg = msg.replace(_v, "***")
+            _remember_key_failure(service, 0, msg[:300])
+            return False
     if service == keyroute.SVC_ELEVENLABS:
         # ★`/v1/user`가 아니라 `/v1/voices`로 본다(2026-08-24 라이브 실측).
         #   일레븐랩스 키는 **권한(scope)을 좁게 만들 수 있다.** 고객이 그렇게 만들면
