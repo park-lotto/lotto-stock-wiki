@@ -5697,14 +5697,13 @@ class Store:
     PC_SLOTS = 2          # ★계정당 PC 2대. 늘리려면 여기 한 곳만 고친다
 
     def device_check(self, customer_id, device_id, ua="", ip=""):
-        """이 기기가 이 계정으로 써도 되는가 → (허용?, 슬롯번호, 등록된수).
+        """이 기기가 등록된 PC인가 → (허용?, 슬롯번호, 등록된수). **등록은 하지 않는다.**
 
-        ★규칙:
-          - 이미 등록된 기기면 통과(마지막 접속만 갱신)
-          - 빈 칸이 있으면 그 칸에 등록하고 통과 ← 처음 쓰는 PC 2대가 자동 등록
-          - 칸이 다 찼으면 **차단**(False). 푸는 건 사장님뿐(device_reset)
+        ★2026-08-31 실사고로 자동등록을 없앴다: 도장이 없는 상태에서 브라우저가 보내는
+          **동시 요청마다 서로 다른 도장**이 만들어져, 한 PC가 두 칸을 먹었다.
+          라이브에서 2칸이 찬 계정 4명이 전부 같은 IP였다(= 전부 한 PC).
+          → 등록은 사람이 마이페이지에서 **직접 한 번 누를 때만** 한다(device_register).
         ★모바일 판정은 여기서 안 한다 — 부르는 쪽(미들웨어)이 PC일 때만 부른다.
-          여기서 또 판정하면 같은 결정이 두 벌이 된다(0순위-B).
         """
         if not (customer_id and device_id):
             return True, None, 0        # 판단 불가면 막지 않는다(fail-open)
@@ -5719,6 +5718,24 @@ class Store:
                               "WHERE customer_id=? AND slot=?",
                               (now, (ua or "")[:200], (ip or "")[:64], customer_id, slot))
                     return True, slot, len(used)
+            return False, None, len(used)
+
+    def device_register(self, customer_id, device_id, ua="", ip=""):
+        """이 PC를 빈 칸에 등록 → (성공?, 슬롯|None, 사유).
+
+        ★사람이 마이페이지에서 직접 누를 때만 불린다. 미들웨어는 절대 부르지 않는다 —
+          그게 '한 PC가 두 칸' 사고의 뿌리였다.
+        """
+        if not (customer_id and device_id):
+            return False, None, "기기를 확인할 수 없어요"
+        now = int(datetime.now(timezone.utc).timestamp())
+        with self._conn() as c:
+            rows = c.execute("SELECT slot, device_id FROM customer_devices "
+                             "WHERE customer_id=?", (customer_id,)).fetchall()
+            used = {r[0]: r[1] for r in rows}
+            for slot, did in used.items():
+                if did == device_id:
+                    return True, slot, "이미 등록된 PC예요"
             for slot in range(1, self.PC_SLOTS + 1):
                 if slot not in used:
                     try:
@@ -5729,10 +5746,9 @@ class Store:
                             (customer_id, slot, device_id, now, now,
                              (ua or "")[:200], (ip or "")[:64]))
                     except sqlite3.IntegrityError:
-                        # 같은 기기가 동시에 두 번 들어온 경우 — 이미 등록된 것이니 통과
-                        return True, None, len(used)
-                    return True, slot, len(used) + 1
-            return False, None, len(used)
+                        return True, None, "이미 등록된 PC예요"
+                    return True, slot, ""
+            return False, None, f"PC {self.PC_SLOTS}대가 이미 등록돼 있어요"
 
     def device_list(self, customer_id):
         """등록된 PC 목록(관리자 화면용)."""

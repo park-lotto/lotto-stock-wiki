@@ -27,25 +27,42 @@ def st():
 
 
 def test_two_pcs_register_then_third_is_blocked(st):
-    assert st.device_check(9, "aaa", PC, "1.1.1.1") == (True, 1, 1)
-    assert st.device_check(9, "bbb", PC, "2.2.2.2") == (True, 2, 2)
-    ok, slot, n = st.device_check(9, "ccc", PC, "3.3.3.3")
-    assert ok is False and n == 2, "3번째 PC가 안 막혔다"
+    """★등록은 사람이 누를 때만(device_register). 조회(device_check)는 등록하지 않는다."""
+    assert st.device_register(9, "aaa", PC, "1.1.1.1")[:2] == (True, 1)
+    assert st.device_register(9, "bbb", PC, "2.2.2.2")[:2] == (True, 2)
+    ok, slot, why = st.device_register(9, "ccc", PC, "3.3.3.3")
+    assert ok is False and "2대" in why, f"3번째 PC가 안 막혔다({why})"
+    assert st.device_check(9, "ccc", PC, "3.3.3.3")[0] is False
+
+
+def test_check_never_registers(st):
+    """★2026-08-31 라이브 사고의 뿌리: 조회가 등록까지 하면, 페이지 하나 열 때 나가는
+    동시 요청들이 각각 다른 도장으로 칸을 먹는다(4명 전원 같은 IP였다)."""
+    for _ in range(5):
+        st.device_check(9, "same-pc-many-requests", PC, "1.1.1.1")
+    assert st.device_list(9) == [], "조회만 했는데 등록됐다"
+
+
+def test_registering_same_pc_twice_uses_one_slot(st):
+    """★한 PC가 두 칸을 먹으면 안 된다 — 그게 최일환님이 갇힌 이유였다."""
+    st.device_register(9, "aaa", PC, "1.1.1.1")
+    ok, slot, why = st.device_register(9, "aaa", PC, "1.1.1.1")
+    assert ok and slot == 1 and len(st.device_list(9)) == 1, "같은 PC가 두 칸을 먹었다"
 
 
 def test_registered_pc_passes_even_when_ip_changes(st):
     """★핵심: IP가 바뀌어도 같은 PC면 통과해야 한다(유동 IP라 매번 바뀐다)."""
-    st.device_check(9, "aaa", PC, "1.1.1.1")
+    st.device_register(9, "aaa", PC, "1.1.1.1")
     ok, slot, _ = st.device_check(9, "aaa", PC, "77.77.77.77")
     assert ok and slot == 1, "IP가 바뀌었다고 같은 PC를 막았다"
 
 
 def test_reset_frees_a_slot(st):
-    st.device_check(9, "aaa", PC, "1.1.1.1")
-    st.device_check(9, "bbb", PC, "2.2.2.2")
-    assert st.device_check(9, "ccc", PC, "3.3.3.3")[0] is False
+    st.device_register(9, "aaa", PC, "1.1.1.1")
+    st.device_register(9, "bbb", PC, "2.2.2.2")
+    assert st.device_register(9, "ccc", PC, "3.3.3.3")[0] is False
     st.device_reset(9, 2)                       # 사장님이 2번 칸 해제
-    ok, slot, _ = st.device_check(9, "ccc", PC, "3.3.3.3")
+    ok, slot, _ = st.device_register(9, "ccc", PC, "3.3.3.3")
     assert ok and slot == 2, "해제했는데도 안 들어온다"
     st.device_reset(9)                          # 전부 해제
     assert st.device_list(9) == []
@@ -58,7 +75,7 @@ def test_no_device_id_never_blocks(st):
 
 
 def test_list_shows_what_admin_needs(st):
-    st.device_check(9, "aaa", PC, "1.1.1.1")
+    st.device_register(9, "aaa", PC, "1.1.1.1")
     d = st.device_list(9)[0]
     assert d["slot"] == 1 and d["device_id"] == "aaa"
     assert d["ua"] == PC and d["ip"] == "1.1.1.1"
@@ -66,9 +83,9 @@ def test_list_shows_what_admin_needs(st):
 
 
 def test_counts_for_admin_list(st):
-    st.device_check(1, "a", PC, "1.1.1.1")
-    st.device_check(1, "b", PC, "1.1.1.2")
-    st.device_check(2, "c", PC, "1.1.1.3")
+    st.device_register(1, "a", PC, "1.1.1.1")
+    st.device_register(1, "b", PC, "1.1.1.2")
+    st.device_register(2, "c", PC, "1.1.1.3")
     assert st.device_list_all() == {1: 2, 2: 1}
 
 
@@ -121,3 +138,39 @@ def test_logout_stays_open_even_when_blocked(client):
     c, app_mod = client
     r = c.get("/logout", headers={"user-agent": PC}, follow_redirects=False)
     assert r.status_code != 403
+
+
+# ── 기존 고객은 소급 적용하지 않는다 (2026-08-31) ─────────────────────────────
+def test_gate_applies_only_to_new_signups():
+    """★사장님: "지금부터 가입받는사람은 필수". 기존 고객까지 잠그면 잘 쓰던 사람이
+    어느 날 갑자기 막힌다 — 실제로 최일환님이 그렇게 갇혔다."""
+    from shopping_shorts import app as app_mod
+    old = {"created_at": "2026-08-01 10:00:00"}
+    new = {"created_at": "2026-09-01 10:00:00"}
+    assert app_mod._pc_gate_applies(old) is False, "기존 고객이 소급 적용됐다"
+    assert app_mod._pc_gate_applies(new) is True, "신규 가입자가 안 걸린다"
+    # 판단이 안 되면 강제하지 않는다(fail-open)
+    assert app_mod._pc_gate_applies({}) is False
+    assert app_mod._pc_gate_applies(None) is False
+
+
+def test_gate_cutoff_is_a_single_constant():
+    """★기준 시각이 두 곳에 적히면 화면과 서버가 다른 답을 낸다."""
+    from shopping_shorts import app as app_mod
+    src = pathlib.Path(app_mod.__file__).read_text(encoding="utf-8")
+    assert src.count("_PC_GATE_FROM = ") == 1
+
+
+def test_gate_never_locks_the_registration_path():
+    """★교착 금지: '등록하세요'라고 막아놓고 등록 화면까지 막으면 아무것도 못 한다.
+
+    2026-08-31 게이트가 /api/welcome 403을 잡아 발견했다. 마이페이지(/settings)는
+    테스트가 못 잡았지만 같은 교착이라 함께 연다.
+    """
+    from shopping_shorts import app as app_mod
+    for path in ("/settings", "/welcome", "/api/welcome", "/logout", "/login",
+                 "/api/my/devices", "/api/my/devices/register", "/setup"):
+        assert app_mod._pc_gate_open_path(path), f"{path}가 막히면 등록할 길이 없다"
+    # 정작 막아야 할 길은 열려 있으면 안 된다
+    for path in ("/produce.html", "/api/mix/start", "/api/produce/mix/render"):
+        assert not app_mod._pc_gate_open_path(path), f"{path}가 통째로 열려 있다"

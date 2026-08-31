@@ -8794,12 +8794,13 @@ display:flex;align-items:center;justify-content:center;min-height:100vh;padding:
 h1{font-size:20px;margin:0 0 14px}p{color:#9aa4b2;line-height:1.7;margin:0 0 10px;font-size:14px}
 a{display:inline-block;margin-top:18px;color:#7ee787;text-decoration:none;border:1px solid #2f6b45;
 border-radius:8px;padding:9px 18px;font-size:14px}</style></head><body><div class=box>
-<h1>🖥 등록된 PC에서만 쓸 수 있어요</h1>
-<p>이 계정은 PC <b>2대</b>까지 쓸 수 있고, 이미 2대가 등록돼 있어요.</p>
-<p>PC를 바꾸셨거나 브라우저를 정리하셨다면 <b>등록 해제</b>가 필요합니다.<br>
+<h1>🖥 이 PC를 등록해 주세요</h1>
+<p>계정 보호를 위해 <b>PC 2대</b>까지 등록해서 쓰실 수 있어요.<br>
+마이페이지에서 <b>이 PC 등록</b>을 한 번 눌러주시면 바로 열립니다.</p>
+<p style="color:#f0b429">이미 2대를 등록하셨다면 자리를 비워야 해요 —<br>
 아래 문의하기로 알려주시면 바로 풀어드릴게요.</p>
 <p style="color:#5f6773;font-size:12px">휴대폰·태블릿은 제한 없이 쓰실 수 있어요.</p>
-<a href="__KAKAO__">문의하기</a></div></body></html>""")
+<a href="/settings#pc" style="margin-right:8px">마이페이지에서 등록</a><a href="__KAKAO__">문의하기</a></div></body></html>""")
 
 
 _PENDING_HTML = _fill_brand("""<!doctype html><html lang=ko><head><meta charset=utf-8>
@@ -9616,6 +9617,37 @@ def _record_access(customer_id, request):
         pass
 
 
+# ★PC 등록 의무화 시작 시각(2026-08-31 16:40 KST = 07:40 UTC). 이 시각 **이후 가입자**만
+#   게이트를 받는다. 사장님: "지금부터 가입받는사람은 필수".
+#   기존 고객까지 소급하면 잘 쓰던 사람이 어느 날 갑자기 막힌다 — 그건 기능이 아니라 사고다.
+_PC_GATE_FROM = "2026-08-31 07:40:00"
+
+
+# ★막혀도 반드시 열려 있어야 하는 길(2026-08-31). 여기 한 곳에서만 정한다.
+#   ⚠️마이페이지(/settings)를 막으면 **등록하러 갈 수가 없어 교착**이 된다 —
+#     "등록하세요"라고 막아놓고 등록 화면도 막는 꼴이다.
+#   ⚠️가입 마무리(/welcome)도 열어야 한다 — 신규 가입자는 이름·전화를 내야
+#     승인이 되는데, 그 전에 막히면 가입 자체가 끝나지 않는다(게이트가 잡았다).
+_PC_GATE_OPEN = ("/logout", "/login", "/welcome", "/api/welcome",
+                 "/settings", "/setup", "/pricing")
+
+
+def _pc_gate_open_path(path):
+    if path in _PC_GATE_OPEN:
+        return True
+    # 내 PC 등록 API는 당연히 열려 있어야 한다(등록하러 온 요청이다)
+    return path.startswith("/api/my/devices") or path.startswith("/api/me")
+
+
+def _pc_gate_applies(cust):
+    """이 고객에게 PC 등록을 강제하는가. 가입일이 기준 시각 이후면 True."""
+    try:
+        created = str((cust or {}).get("created_at") or "")
+        return bool(created) and created >= _PC_GATE_FROM
+    except Exception:      # noqa: BLE001
+        return False       # 판단이 안 되면 강제하지 않는다(fail-open)
+
+
 def _check_pc_device(customer_id, request, path):
     """PC 등록 게이트 → 막아야 하면 응답, 통과면 None.
 
@@ -9627,7 +9659,7 @@ def _check_pc_device(customer_id, request, path):
     try:
         if not customer_id:                       # 사장님(0)·비로그인은 제외
             return None
-        if path in ("/logout", "/login"):         # 막혀도 로그아웃은 돼야 한다
+        if _pc_gate_open_path(path):              # 막혀도 반드시 열려 있어야 하는 길
             return None
         cust = Store(DB_PATH).get_customer(customer_id)
         if cust and cust.get("admin"):
@@ -9635,22 +9667,26 @@ def _check_pc_device(customer_id, request, path):
         ua = request.headers.get("user-agent", "")
         if _is_mobile_ua(ua):                     # 모바일·태블릿은 제한 없음
             return None
+        # ★도장은 **화면 문서 요청에만** 찍는다(2026-08-31 실사고). 요청마다 찍으면
+        #   페이지 하나 열 때 나가는 동시 API들이 각각 다른 도장을 만들어, 마지막 것만
+        #   남는 경합이 생긴다 — 실제로 한 PC가 두 칸을 먹었다(라이브 4명 전원 같은 IP).
         dev = _device_id(request)
         if not dev:
-            # 도장이 없는 첫 방문 — **리다이렉트하지 않는다.** 나가는 응답에 쿠키만 얹고
-            # 그냥 통과시킨다. 다음 요청부터 이 도장으로 본다.
-            # ★왜 리다이렉트를 쓰면 안 되나(2026-08-31 게이트가 잡음): 이 303이
-            #   승인·유료·가입마무리 게이트보다 **먼저** 떠서, 신규 가입자가 /welcome
-            #   대신 /로 튕겼다. 파일 위쪽 주석이 경고하던 바로 그 사고다.
-            request.state.new_device_id = secrets.token_hex(16)
-            return None
+            if _is_page_nav(request, path):
+                request.state.new_device_id = secrets.token_hex(16)
+            return None                            # 도장이 없으면 판단 불가 → 안 막는다
+        # ★게이트는 **기준일 이후 가입자에게만** 건다(2026-08-31 사장님: "지금부터
+        #   가입받는사람은 필수"). 기존 고객을 소급해서 잠그면 쓰던 사람이 갑자기 막힌다.
+        if not _pc_gate_applies(cust):
+            Store(DB_PATH).device_check(customer_id, dev, ua, _client_ip(request))
+            return None                            # 마지막 접속만 갱신하고 통과
         ok, _slot, _n = Store(DB_PATH).device_check(
             customer_id, dev, ua, _client_ip(request))
         if ok:
             return None
         if path.startswith("/api/"):
-            return JSONResponse({"error": "등록된 PC 2대에서만 쓸 수 있어요",
-                                 "reason": "pc_limit"}, status_code=403)
+            return JSONResponse({"error": "먼저 마이페이지에서 이 PC를 등록해 주세요",
+                                 "reason": "pc_unregistered"}, status_code=403)
         return HTMLResponse(_PC_BLOCKED_HTML, status_code=403)
     except Exception:      # noqa: BLE001 — 이 게이트가 고장나도 서비스는 열려 있어야 한다
         return None
@@ -10809,6 +10845,48 @@ async def _admin_customer_delete(request: Request):
         return JSONResponse({"error": "관리자 계정은 삭제할 수 없어요"}, status_code=400)
     Store(DB_PATH).delete_customer(cid)
     return {"ok": True}
+
+
+# ── 🖥 내 PC 등록(마이페이지, 2026-08-31 사장님 "마이페이지에 pc등록칸 만들고 직접") ──
+@app.get("/api/my/devices")
+def api_my_devices(request: Request):
+    """내가 등록한 PC 목록 + 지금 이 PC가 등록됐는지."""
+    cid = _cid(request)
+    dev = _device_id(request)
+    st = Store(DB_PATH)
+    devices = st.device_list(cid)
+    this_slot = next((d["slot"] for d in devices if d["device_id"] == dev), None)
+    cust = st.get_customer(cid)
+    return {"ok": True, "slots": st.PC_SLOTS,
+            "required": _pc_gate_applies(cust),      # 이 계정이 등록 필수인가
+            "this_registered": this_slot is not None, "this_slot": this_slot,
+            # ★기기 id는 내려주지 않는다 — 남의 도장을 알면 흉내낼 수 있다.
+            "devices": [{"slot": d["slot"], "first_seen": d["first_seen"],
+                         "last_seen": d["last_seen"], "ip": d["ip"],
+                         "is_this": d["device_id"] == dev} for d in devices]}
+
+
+@app.post("/api/my/devices/register")
+def api_my_devices_register(request: Request):
+    """지금 쓰는 이 PC를 내 계정에 등록한다.
+
+    ★등록은 **사람이 이 버튼을 누를 때만** 일어난다. 미들웨어가 자동으로 등록하던 때에는
+      페이지 하나 열 때 나가는 동시 요청들이 서로 다른 도장을 만들어 한 PC가 두 칸을
+      먹었다(2026-08-31 라이브 사고, 4명 전원 같은 IP).
+    ★해제는 여기 없다 — 사장님만 푼다. 스스로 풀 수 있으면 등록 제한이 무의미해진다.
+    """
+    cid = _cid(request)
+    if not cid:
+        return JSONResponse({"ok": False, "error": "로그인이 필요해요"}, status_code=401)
+    dev = _device_id(request)
+    if not dev:
+        return JSONResponse({"ok": False, "error": "이 브라우저를 확인할 수 없어요. "
+                             "새로고침 후 다시 눌러주세요"}, status_code=409)
+    ok, slot, why = Store(DB_PATH).device_register(
+        cid, dev, request.headers.get("user-agent", ""), _client_ip(request))
+    if not ok:
+        return JSONResponse({"ok": False, "error": why}, status_code=409)
+    return {"ok": True, "slot": slot, "message": why or f"{slot}번 PC로 등록했어요"}
 
 
 @app.get("/api/admin/customer/devices")
