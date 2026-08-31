@@ -5605,6 +5605,27 @@ function renderCapFontSelect(){
 function setCapEffect(e){ CAP_EFFECT=e;
   document.querySelectorAll('.capEff').forEach(b=>b.classList.toggle('active', b.dataset.eff===e));
   updateCaption(); }
+// ── 🎯 자막 미리보기 = 최종렌더와 같은 그림 (2026-08-31, 0순위-B) ──
+// 종전엔 자막 미리보기가 CSS text-shadow 대각선 4방향이라 ffmpeg 렌더와 달랐다. 검정 자막에서 발각:
+//   ① 테두리 모양: ffmpeg borderw는 **전방향 균일 + 글자 뒤**. 대각 4방향 그림자는 두꺼워지면
+//      검은 사본이 글자 **위로** 올라와 획을 메운다(헤드카피가 2026-08-20에 겪은 그 사고).
+//      → 헤드카피와 같이 -webkit-text-stroke + paint-order:stroke fill 로 통일한다.
+//   ② 두께 0: 렌더는 기본값 9가 되살아나 굵은 검정 테두리가 붙었다(video_assemble 고침) → 여기도 0이면 없음.
+//   ③ 그림자: ffmpeg shadowx/y는 **blur가 없다** → 딱딱한 오프셋으로.
+//   ④ 박스 모서리: ffmpeg box/drawbox는 **각진 사각** → borderRadius 0.
+function applyCapStroke(st, cs, scale){
+  const ow=(cs.outline_w||0)*scale;
+  if(cs.outline && ow>0){
+    st.webkitTextStrokeWidth=ow.toFixed(1)+'px';
+    st.webkitTextStrokeColor=cs.outline_color||'#000000';
+    st.paintOrder='stroke fill';
+    st.textShadow='none';
+    return;
+  }
+  st.webkitTextStrokeWidth='0';
+  const sd=Math.max(1,(cs.shadow_d||3)*scale).toFixed(1);
+  st.textShadow = cs.shadow ? `${sd}px ${sd}px 0 rgba(0,0,0,.55)` : 'none';
+}
 function updateCaption(){
   const g=id=>document.getElementById(id); if(!g('capFont')) return;
   const cs={ font:g('capFont').value||'NanumGothic-Bold.ttf', color:g('capColor').value, size:+g('capSize').value,
@@ -5640,12 +5661,8 @@ function updateCaption(){
   el.style.fontSize=capFs+'px';
   const capW=el.scrollWidth;
   if(capW>capAvail){ capFs=Math.max(6, capFs*capAvail/capW); el.style.fontSize=capFs+'px'; }
-  const oc=cs.outline_color, ow=(cs.outline_w*scale).toFixed(1);
-  const sd=Math.max(1,(cs.shadow_d||3)*scale).toFixed(1);
-  el.style.textShadow = cs.outline
-    ? `${ow}px ${ow}px 0 ${oc}, -${ow}px -${ow}px 0 ${oc}, ${ow}px -${ow}px 0 ${oc}, -${ow}px ${ow}px 0 ${oc}`
-    : (cs.shadow ? `0 ${sd}px ${(sd*2)}px rgba(0,0,0,.55), 0 0 ${sd}px rgba(0,0,0,.4)` : 'none');
-  if(cs.box){ el.style.background=hexA(cs.box_color, cs.box_opacity/100); el.style.padding=`${Math.round(cs.box_pad*scale)}px ${Math.round(cs.box_pad*1.5*scale)}px`; el.style.borderRadius='6px'; }
+  applyCapStroke(el.style, cs, scale);
+  if(cs.box){ el.style.background=hexA(cs.box_color, cs.box_opacity/100); el.style.padding=`${Math.round(cs.box_pad*scale)}px ${Math.round(cs.box_pad*1.5*scale)}px`; el.style.borderRadius='0'; }
   else { el.style.background='none'; el.style.padding='2px 6px'; el.style.borderRadius='0'; }
   // 효과 프리뷰: 선택 효과를 미리보기에서 반복 재생(fade/slide/pop/sparkle). 없음이면 정지.
   el.classList.remove('eff-fade','eff-slide','eff-pop','eff-sparkle');
@@ -5733,16 +5750,11 @@ window.applyPlaySubStyle = function(box){
   st.fontSize = fs + 'px';
   const avail = w * 0.92;
   if (el.scrollWidth > avail) st.fontSize = Math.max(6, fs * avail / el.scrollWidth) + 'px';
-  const ow = ((cs.outline_w || 0) * scale).toFixed(1);
-  const sd = Math.max(1, (cs.shadow_d || 3) * scale).toFixed(1);
-  st.textShadow = cs.outline
-    ? `${ow}px ${ow}px 0 ${cs.outline_color}, -${ow}px -${ow}px 0 ${cs.outline_color}, `
-      + `${ow}px -${ow}px 0 ${cs.outline_color}, -${ow}px ${ow}px 0 ${cs.outline_color}`
-    : (cs.shadow ? `0 ${sd}px ${sd*2}px rgba(0,0,0,.55)` : 'none');
+  applyCapStroke(st, cs, scale);
   if (cs.box){
     st.background = hexA(cs.box_color, (cs.box_opacity || 80) / 100);
     st.padding = `${Math.round((cs.box_pad||12)*scale)}px ${Math.round((cs.box_pad||12)*1.5*scale)}px`;
-    st.borderRadius = '6px';
+    st.borderRadius = '0';
   } else { st.background = 'none'; st.padding = '2px 6px'; st.borderRadius = '0'; }
   // 세로 자리도 실제 값대로 — CSS의 bottom:64px 고정을 덮는다.
   if (cs.y_pct != null){
@@ -6597,13 +6609,13 @@ function updateHC(){
   //   테두리는 그대로라 획 사이가 메워져 글자가 뭉개졌다. 줄어든 비율만큼 같이 줄인다.
   const _shrunk=parseFloat(el.style.fontSize)||Math.max(9,hc.size*scale);
   const _ratio=Math.min(1, _shrunk/Math.max(1, hc.size*scale));
-  const oc=hc.outline_color, ow=Math.max(0.5, hc.outline_w*scale*_ratio).toFixed(1);
+  const oc=hc.outline_color, ow=Math.max(0, hc.outline_w*scale*_ratio).toFixed(1);
   // ★진짜 테두리로 그린다(2026-08-20 사장님 "고정문구가 이상하다").
   //   전에는 text-shadow를 대각선 4방향으로만 깔았는데, 두께가 커지면 그 검은 사본이
   //   흰 글자 **위로 올라와 글자를 통째로 메웠다**(실측: 46px 글자에 6.2px 그림자 →
   //   화면이 새까맣게 뭉갬). paint-order:stroke fill은 테두리를 글자 **뒤에** 그려서
   //   두꺼워져도 획이 살아 있다 — 실제 채널 영상의 그 룩이다.
-  if(hc.outline){
+  if(hc.outline && parseFloat(ow)>0){
     el.style.webkitTextStrokeWidth=ow+'px';
     el.style.webkitTextStrokeColor=oc;
     el.style.paintOrder='stroke fill';
@@ -6615,7 +6627,7 @@ function updateHC(){
   if(hc.box){
     el.style.background=hexA(hc.box_color, hc.box_opacity/100);
     el.style.padding=`${Math.round(hc.box_pad*scale)}px ${Math.round(hc.box_pad*1.5*scale)}px`;
-    el.style.borderRadius=Math.round(10*scale*3)+'px';
+    el.style.borderRadius='0';   // ffmpeg drawbox는 각진 사각 — 렌더와 같게(2026-08-31)
   } else { el.style.background='none'; el.style.padding='0 6px'; el.style.borderRadius='0'; }
   hcQuickSync(hc);
   // 🖍 낱말 알약도 같이 갱신 — 문구를 고치면 알약이 따라와야 한다(2026-08-30)

@@ -1729,6 +1729,24 @@ def _hex_to_ff(c, default="0xFFFFFF"):
     return f"0x{c.upper()}" if len(c) == 6 and all(ch in "0123456789ABCDEFabcdef" for ch in c) else default
 
 
+def _outline_parts(style):
+    """외곽선 drawtext 조각. **꺼져 있거나 두께 0이면 아무것도 안 붙인다.**
+
+    ★2026-08-31 실사고: 종전 `borderw=max(1, _ui_px(outline_w, 9))`는 UI에서 두께를
+      0으로 내려도 _ui_px가 0을 "값 없음"으로 보고 기본값 9를 되살렸다. 그래서
+      미리보기엔 없는 **굵은 검정 테두리**가 최종렌더에만 붙었다(흰 자막에선 원래
+      테두리처럼 보여 안 걸리고, 검정 자막에서 글자가 뭉개져 발각).
+      0은 box_pad와 똑같이 "없음"이라는 뜻이다 → zero_ok로 읽는다.
+    같은 판단이 자막·헤드카피 두 곳에 따로 적혀 있어 한 곳만 고치면 어긋난다 → 함수 하나."""
+    if not style.get("outline"):
+        return []
+    w = max(0, _ui_px(style.get("outline_w"), 9, zero_ok=True))
+    if w <= 0:
+        return []
+    return [f"borderw={w}",
+            f"bordercolor={_hex_to_ff(style.get('outline_color'), '0x000000')}"]
+
+
 def _missing_glyphs(font_path, text):
     """→ font_glyphs.missing_glyphs (판정은 한 곳에서만 — 0순위-B)."""
     return _fg.missing_glyphs(font_path, text)
@@ -1993,17 +2011,20 @@ def _segmented_drawtext(text, base_style, work, key_prefix, x_pct, y_pct,
                     f"fontsize={size}",
                     f"x={int(cx)}", f"y={int(line_y)}",
                 ]
-                if base_style.get("outline"):
-                    seg_parts.append(f"borderw={max(1, _ui_px(base_style.get('outline_w'), 9))}")
-                    seg_parts.append(f"bordercolor={_hex_to_ff(base_style.get('outline_color'), '0x000000')}")
+                seg_parts += _outline_parts(base_style)
                 if base_style.get("shadow"):
                     # 은은한 드롭 그림자(레퍼런스 자막룩) — 두꺼운 테두리 대신 부드러운 가독성.
                     sc = _hex_to_ff(base_style.get("shadow_color"), "0x000000")
                     sd = max(1, _ui_px(base_style.get("shadow_d"), 5))
                     seg_parts += [f"shadowcolor={sc}@0.55", f"shadowx={sd}", f"shadowy={sd}"]
                 if seg_box:
+                    # ★강조 단어 박스도 **자막 박스와 같은 투명도·여백**을 쓴다(0순위-B).
+                    #   종전엔 @0.90 / boxborderw=12 하드코딩이라 화면에서 정한 값이
+                    #   통째로 무시됐다(2026-08-31). 색만 강조 규칙의 것을 쓴다.
                     bc = _hex_to_ff(seg_box_color, "0x000000")
-                    seg_parts += ["box=1", f"boxcolor={bc}@0.90", "boxborderw=12"]
+                    _op = max(0.0, min(1.0, (base_style.get("box_opacity") or 90) / 100.0))
+                    _pad = max(0, _ui_px(base_style.get("box_pad"), 12, zero_ok=True))
+                    seg_parts += ["box=1", f"boxcolor={bc}@{_op:.2f}", f"boxborderw={_pad}"]
                 elif base_style.get("box") and block_box:
                     pass          # 배경은 아래에서 **블록 하나**로 미리 그렸다(줄마다 안 그린다)
                 elif base_style.get("box") and not seg_box:
@@ -2044,9 +2065,7 @@ def _fixed_drawtext(spec, work, key, default_color="0xFFFFFF"):
     ]
     if spec.get("alpha") is not None:
         parts.append(f"alpha={max(0.0, min(1.0, float(spec.get('alpha')))):.2f}")
-    if spec.get("outline"):
-        parts.append(f"borderw={max(1, _ui_px(spec.get('outline_w'), 9))}")
-        parts.append(f"bordercolor={_hex_to_ff(spec.get('outline_color'), '0x000000')}")
+    parts += _outline_parts(spec)
     if spec.get("box"):
         bc = _hex_to_ff(spec.get("box_color"), "0x000000")
         op = max(0.0, min(1.0, (spec.get("box_opacity") or 80) / 100.0))
