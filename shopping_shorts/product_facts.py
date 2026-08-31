@@ -222,7 +222,12 @@ def _gemini(parts_or_text, *, model="gemini-3-flash-preview", log=print):
         contents = [types.Content(role="user", parts=parts_or_text)]
     for k in keys[:8]:
         try:
-            cl = genai.Client(api_key=k)
+            # ★2026-09-01: 유일하게 usage_meter 미배선이던 생성부(비용·429가 안 보였다).
+            #   wrap으로 계측+관측 합류, 타임아웃은 comment_gen._client_for_key와 동일값.
+            from shopping_shorts import usage_meter
+            cl = usage_meter.wrap(
+                genai.Client(api_key=k, http_options=types.HttpOptions(timeout=120_000)),
+                pool="shorts", key=k)
             r = cl.models.generate_content(
                 model=model, contents=contents,
                 config=types.GenerateContentConfig(

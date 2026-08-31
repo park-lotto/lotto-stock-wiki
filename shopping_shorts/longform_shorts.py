@@ -168,7 +168,8 @@ def plan_shorts(segs, n_shorts=5, api_key=None, model=None):
     for i, key in enumerate(keys):
         try:
             from shopping_shorts import usage_meter
-            cl = usage_meter.wrap(genai.Client(api_key=key))
+            cl = usage_meter.wrap(genai.Client(api_key=key),
+                                  pool="shorts", key=key)   # 관측판 귀속(2026-09-01)
             r = cl.models.generate_content(
                 model=model or _MODEL, contents=prompt,
                 config={"response_mime_type": "application/json"})

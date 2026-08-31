@@ -21,6 +21,7 @@ import logging
 import os
 import sqlite3
 import threading
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -152,6 +153,7 @@ _OP_BY_MODULE = {
     "element_stats": "요소통계",
     "longform_shorts": "롱폼분할",
     "mix_pipeline": "제작",
+    "tts": "음성합성",
 }
 
 
@@ -172,7 +174,7 @@ def _op_from_stack():
                 break
             fn = fr.f_code.co_filename
             mod = Path(fn).stem
-            if mod not in ("usage_meter", "key_vault", "keyroute", "keyctx"):
+            if mod not in ("usage_meter", "key_vault", "keyroute", "keyctx", "api_health"):
                 if mod in _OP_BY_MODULE:
                     return _OP_BY_MODULE[mod]
                 # shopping_shorts 안의 모듈이면 이름 그대로 남긴다(표에 없어도 '미지정'보단 낫다)
@@ -250,16 +252,33 @@ def record(model: str, in_tokens: int, out_tokens: int, auth: str = "apikey", **
 class _MeteredModels:
     """client.models 를 감싸 generate_content 응답에서 토큰을 뽑아 기록한다."""
 
-    def __init__(self, inner, auth):
+    def __init__(self, inner, auth, pool=None, key=None):
         self._inner = inner
         self._auth = auth
+        self._pool = pool              # gemini 풀 이름(shorts/vault-general/…) — 관측판 귀속용
+        self._key = key                # 원문 키 — api_health가 끝 6자만 저장한다
 
     def generate_content(self, *a, **kw):
-        resp = self._inner.generate_content(*a, **kw)
+        # ★관측판 배선(2026-09-01): 성공·실패를 api_health(api_events)에도 남긴다.
+        #   실패 콜은 usage_metadata가 없어 gemini_usage에 0행이었고, 08-31 429
+        #   2,524건이 journald grep으로만 보였다 — 여기가 34개 호출부의 유일한
+        #   깔때기라 이 한 곳에 배선하면 전부 잡힌다(0순위-B).
+        t0 = time.monotonic()
+        model = kw.get("model") or (a[0] if a else "") or ""
+        try:
+            resp = self._inner.generate_content(*a, **kw)
+        except Exception as exc:
+            try:
+                from shopping_shorts import api_health
+                api_health.record_failure(
+                    "gemini", exc, pool=self._pool, key=self._key,
+                    model=str(model), dur_ms=int((time.monotonic() - t0) * 1000))
+            except Exception as ee:    # noqa: BLE001 — 관측이 본작업을 죽이면 안 된다
+                log.warning("usage_meter: 실패 관측 기록 실패(무시) %r", ee)
+            raise                      # 원래 예외 그대로 — 호출부 동작 불변
         try:
             um = getattr(resp, "usage_metadata", None)
             if um is not None:
-                model = kw.get("model") or (a[0] if a else "") or ""
                 # 필드명이 SDK 버전마다 다를 수 있어 방어적으로 읽는다
                 pt = getattr(um, "prompt_token_count", 0) or 0
                 ct = (getattr(um, "candidates_token_count", 0) or 0)
@@ -268,6 +287,13 @@ class _MeteredModels:
                 record(str(model), pt, ct, auth=self._auth)
         except Exception as e:         # noqa: BLE001
             log.warning("usage_meter: 응답 파싱 실패(무시) %s", e)
+        try:
+            from shopping_shorts import api_health
+            api_health.record(
+                "gemini", api_health.OUT_OK, pool=self._pool, key=self._key,
+                model=str(model), dur_ms=int((time.monotonic() - t0) * 1000))
+        except Exception as ee:        # noqa: BLE001 — 관측이 본작업을 죽이면 안 된다
+            log.warning("usage_meter: 성공 관측 기록 실패(무시) %r", ee)
         return resp
 
     def __getattr__(self, name):       # count_tokens 등은 그대로 통과
@@ -277,25 +303,31 @@ class _MeteredModels:
 class MeteredClient:
     """genai.Client 를 감싼다. .models 만 가로채고 나머지(files 등)는 그대로."""
 
-    def __init__(self, inner, auth="apikey"):
+    def __init__(self, inner, auth="apikey", pool=None, key=None):
         self._inner = inner
         self._auth = auth
+        self._pool = pool
+        self._key = key
         self._models = None
 
     @property
     def models(self):
         if self._models is None:
-            self._models = _MeteredModels(self._inner.models, self._auth)
+            self._models = _MeteredModels(self._inner.models, self._auth,
+                                          pool=self._pool, key=self._key)
         return self._models
 
     def __getattr__(self, name):
         return getattr(self._inner, name)
 
 
-def wrap(client, auth="apikey"):
-    """이미 감싼 것은 두 번 감싸지 않는다(중복 기록 방지)."""
+def wrap(client, auth="apikey", pool=None, key=None):
+    """이미 감싼 것은 두 번 감싸지 않는다(중복 기록 방지).
+
+    pool/key(2026-09-01, 관측판): 생성부가 알고 있는 '어느 풀의 어느 키'를 실어
+    보내면 api_events에 귀속돼 키별 사용량·429가 보인다. 안 넘겨도 종전과 같다."""
     if client is None or isinstance(client, MeteredClient):
         return client
     if os.environ.get("USAGE_METER", "1") != "1":
         return client
-    return MeteredClient(client, auth=auth)
+    return MeteredClient(client, auth=auth, pool=pool, key=key)
