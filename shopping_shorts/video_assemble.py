@@ -761,14 +761,39 @@ def _plan_phrase_clips(beat, segs, tts_dur):
             t += d
             bounds.append(min(tts_dur, t))
         bounds.append(tts_dur)
-        n_cut = min(len(durs), len(segs))
+        # ★구절이 재료보다 많으면 **담은 조각의 뒷부분을 한 바퀴 더 쓴다**(2026-08-31 사장님
+        #   "대본이 길어지니까 뒤에까지 장면이 안 붙는다"). 화면(scene_play.js planClips의
+        #   구절맞춤 분기)과 **같은 규칙의 서버판**이다 — 한쪽만 고치면 미리보기와 결과물이
+        #   어긋난다(0순위-B). 종전 n_cut=min(구절, 재료)는 조각 3·구절 6이면 컷을 3개만
+        #   만들고 마지막 컷이 남은 구절 전부를 덮어, 뒤쪽 말에 화면 전환이 없었다.
+        #   실측(job 33377557599e): 칸 4개 모두 조각 3 < 구절 3~6인데 길이는 1.0~2.5초씩
+        #   남았다 — 길이가 아니라 **개수**가 모자란 것이다.
+        #   ★첫 바퀴는 종전 그대로 1:1(담은 장면이 하나도 빠지지 않게), 두 바퀴째부터만
+        #     뒤가 남은 조각을 돌아가며 쓴다.
         plan = []
-        for k in range(n_cut):
-            end_b = bounds[-1] if k == n_cut - 1 else bounds[k + 1]  # 재료 부족 → 마지막이 커버
+        pos = [float(g["start"]) for g in segs]
+        ri = 0
+        for k in range(len(durs)):
+            end_b = bounds[-1] if k == len(durs) - 1 else bounds[k + 1]
             d = max(0.1, end_b - bounds[k])
-            seg = segs[k]
-            plan.append({"video_id": seg["video_id"], "start": float(seg["start"]),
+            if k < len(segs):
+                idx = k                                  # 첫 바퀴 = 담은 순서대로(종전과 같다)
+            else:
+                idx = -1
+                for t2 in range(len(segs)):              # 두 바퀴째 = 뒤가 남은 조각을 돌아가며
+                    j2 = (ri + t2) % len(segs)
+                    if float(segs[j2]["end"]) - pos[j2] >= min(d, _MIN_CLIP) - 1e-3:
+                        idx = j2
+                        break
+                if idx < 0:                              # 재료 소진 → 종전대로 마지막 컷이 커버
+                    if plan:
+                        plan[-1]["src_dur"] += bounds[-1] - bounds[k]
+                        plan[-1]["out_dur"] = plan[-1]["src_dur"]
+                    break
+                ri = (idx + 1) % len(segs)
+            plan.append({"video_id": segs[idx]["video_id"], "start": pos[idx],
                          "src_dur": d, "out_dur": d})
+            pos[idx] += d
         return plan
     except Exception:      # noqa: BLE001 — 계획 실패가 렌더를 죽이면 안 된다(폴백이 있다)
         return None
