@@ -12194,6 +12194,15 @@ def _api_crawl(request: Request, days: int = 14, min_fails: int = 2):
         out["verdict"] = crawl_watch.verdict(DB_PATH)
     except Exception as e:          # noqa: BLE001
         out["verdict"] = {"level": "unknown", "msg": str(e), "unknown": []}
+    # ★화면을 여는 것만으로도 감시가 돈다(2026-09-01). 크롤이 **아예 안 돈** 날에는
+    #   크롤 쪽 check_and_alert가 불릴 일이 없다 — 그때가 정작 알아야 할 때다.
+    #   여기서 한 번 더 부르면 관리자가 화면을 열 때마다 자동으로 걸린다.
+    try:
+        crawl_watch.check_and_alert(DB_PATH)
+    except Exception as e:          # noqa: BLE001 — 알림이 화면을 죽이면 안 된다
+        # 조용히 삼키지 않는다: 알림이 안 오는 날 "왜 안 왔나"를 로그로 되짚어야 한다.
+        print(f"[crawl_watch] 알림 확인 실패(무해): {e!r}", file=sys.stderr)
+    out["server_now"] = crawl_watch._utcnow()   # 화면이 '몇 분 전'을 정확히 계산하게
     return out
 
 

@@ -59,8 +59,33 @@ def main():
         print("[daily_instagram_collect] 렌더/믹스가 계속 진행 중 — 이번 회차 포기"
               f"(대기 {RETRY_MAX * RETRY_EVERY_MIN}분 초과)")
         return 0
+    # 🕸 심박 — 도는 중에도 관측판이 움직이게 한다(2026-09-01 사장님 "살아있는것처럼").
+    # ★시작을 먼저 남긴다: 여기서 죽으면 '시작만 있고 끝이 없는' 줄이 남아
+    #   관측판이 "돌다가 멈췄다"를 말할 수 있다. 안 남기면 흔적 없이 사라진다.
+    _run_id = None
     try:
-        items = service.collect(platform="instagram")
+        from shopping_shorts import crawl_watch
+        _run_id = crawl_watch.start_run(DB_PATH, "instagram_collect")
+    except Exception as e:  # noqa: BLE001 — 관측이 수집을 죽이면 안 된다
+        print(f"[daily_instagram_collect] 관측 시작 실패(무해): {e!r}", file=sys.stderr)
+
+    def _beat(done, total, items_so_far, _tally):
+        """채널 하나 끝날 때마다 진행을 찍는다(service.collect의 on_progress 계약)."""
+        if _run_id is None:
+            return
+        try:
+            from shopping_shorts import crawl_watch
+            crawl_watch.beat(DB_PATH, _run_id, done=done, items=items_so_far)
+        except Exception as e:  # noqa: BLE001 — 심박 실패가 수집을 멈추면 본말전도
+            # 매 채널 찍히면 로그가 넘치므로 **처음 한 번만** 남긴다.
+            # 조용히 삼키면 "관측판이 안 움직인다"의 원인을 못 찾는다.
+            if not getattr(_beat, "_warned", False):
+                _beat._warned = True
+                print(f"[daily_instagram_collect] 심박 기록 실패(무해): {e!r}",
+                      file=sys.stderr)
+
+    try:
+        items = service.collect(platform="instagram", on_progress=_beat)
     except Exception as e:  # noqa: BLE001 — 크론이 죽어도 서비스는 무사, 로그만 남긴다
         print(f"[daily_instagram_collect] 실패: {e!r}", file=sys.stderr)
         return 1
@@ -129,13 +154,19 @@ def main():
     # 화면에서는 볼 수 없었다 — 2026-08-31에 153채널이 전부 실패했는데도 아무 표시가
     # 없었던 게 이 관측판을 만든 이유다(핸드오프 '발굴 0건일 때 경고 알림').
     # ⚠️ 관측이 수집을 죽이면 안 된다 — 실패해도 사유만 남기고 넘어간다.
+    # ★start_run으로 연 줄을 **닫는다**(새로 넣지 않는다 — 넣으면 '도는 중' 줄이
+    #   영원히 남아 관측판이 "멈췄다"고 거짓말한다).
     try:
         from shopping_shorts import crawl_watch
         from shopping_shorts.instagram_playwright import LAST_VERDICTS
-        crawl_watch.record_run(
-            DB_PATH, "instagram_collect",
-            tally=dict(getattr(service, "LAST_COLLECT_TALLY", {}) or {}),
-            verdicts=list(LAST_VERDICTS), items=len(items), seconds=time.time() - t0)
+        _kw = dict(tally=dict(getattr(service, "LAST_COLLECT_TALLY", {}) or {}),
+                   verdicts=list(LAST_VERDICTS), items=len(items),
+                   seconds=time.time() - t0)
+        if _run_id is not None:
+            crawl_watch.finish_run(DB_PATH, _run_id, **_kw)
+        else:
+            crawl_watch.record_run(DB_PATH, "instagram_collect", **_kw)
+        crawl_watch.check_and_alert(DB_PATH)      # 나쁘면 텔레그램·쪽지로 밀어준다
     except Exception as e:  # noqa: BLE001
         print(f"[daily_instagram_collect] 관측 기록 실패(무해): {e!r}", file=sys.stderr)
 

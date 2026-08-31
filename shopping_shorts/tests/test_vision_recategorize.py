@@ -109,7 +109,10 @@ def test_cron_script_calls_tagging_and_recategorize(tmp_path, monkeypatch):
     #   main()이 1을 반환하고 후속(태깅·재분류)까지 안 불려 이 테스트가 실패했다.
     #   여기서 지킬 것은 '크론이 후속을 부르는가'이므로 가드를 통과할 만큼만 준다.
     _items = [_item(f"Z{i}", "채널", "기타") for i in range(60)]
-    monkeypatch.setattr(cron.service, "collect", lambda platform=None: _items)
+    # ★진짜 service.collect는 on_progress(진행 심박)도 받는다 — 스텁이 좁으면
+    #   호출부가 정상인데도 TypeError로 죽는다(2026-09-01 관측판 심박 배선 때 실측).
+    monkeypatch.setattr(cron.service, "collect",
+                        lambda platform=None, on_progress=None, **kw: _items)
     monkeypatch.setattr(cron.Store(db).__class__, "heavy_job_active", lambda self: False)
 
     called = {}
