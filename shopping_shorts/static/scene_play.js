@@ -715,7 +715,13 @@ function playSeg(sid, ev){
   const s = DATA.segments[sid];
   if (!s) return;
   // ★한 번 누르면 재생, 같은 것을 다시 누르면 정지(2026-08-14 사장님 "정지 버튼이 없다").
-  if (playKey === 'seg:' + sid && !vid().paused){ stopPlay(); return; }
+  // ★vid()는 **첫 재생 전이면 null**이다(curVid는 showVid가 놓기 전까지 null이고,
+  //   #vid 요소는 이 화면에 없다 — 영상은 vidFor가 그때그때 만든다). 그래서 playKey만
+  //   남고 재생기가 없는 상태에서 같은 조각을 다시 누르면 `null.paused`로 죽고,
+  //   그 뒤 재생이 통째로 안 먹는다(2026-08-31 실측: 이 세션에서 실제로 터졌다).
+  //   위아래 다른 줄은 전부 `const v = vid(); if (v)`로 막고 있는데 여기만 무방비였다.
+  const _v = vid();
+  if (playKey === 'seg:' + sid && _v && !_v.paused){ stopPlay(); return; }
   playKey = 'seg:' + sid;
   seqLabel = '장면 미리보기';
   clearInterval(subTimer); seqBeat = null;
@@ -738,7 +744,8 @@ function playSegs(sids, label){
   }
   if (!clips.length) return;
   const key = 'segs:' + (sids || []).join(',');
-  if (playKey === key && !vid().paused){ stopPlay(); return; }   // 같은 것 다시 누르면 정지
+  const _v2 = vid();                                             // ★null 가능 — 위 playSeg와 같은 함정
+  if (playKey === key && _v2 && !_v2.paused){ stopPlay(); return; }   // 같은 것 다시 누르면 정지
   playKey = key;
   seqLabel = label || `이어 보기 - 조각 ${clips.length}개`;
   clearInterval(subTimer); seqBeat = null;
