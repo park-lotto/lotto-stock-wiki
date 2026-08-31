@@ -76,8 +76,13 @@ def main():
         try:
             from shopping_shorts import crawl_watch
             crawl_watch.beat(DB_PATH, _run_id, done=done, items=items_so_far)
-        except Exception:  # noqa: BLE001 — 심박 실패가 수집을 멈추면 본말전도
-            pass
+        except Exception as e:  # noqa: BLE001 — 심박 실패가 수집을 멈추면 본말전도
+            # 매 채널 찍히면 로그가 넘치므로 **처음 한 번만** 남긴다.
+            # 조용히 삼키면 "관측판이 안 움직인다"의 원인을 못 찾는다.
+            if not getattr(_beat, "_warned", False):
+                _beat._warned = True
+                print(f"[daily_instagram_collect] 심박 기록 실패(무해): {e!r}",
+                      file=sys.stderr)
 
     try:
         items = service.collect(platform="instagram", on_progress=_beat)
