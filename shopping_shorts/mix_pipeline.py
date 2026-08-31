@@ -2653,6 +2653,25 @@ def assemble_clean_video(job_id, db_path, work_root, clean_fn=None):
 
 
 @_owned_job
+def _clear_stale_failure(store, job_id, job=None):
+    """이 job에 남아 있는 **옛 실패 표시**를 지운다 (2026-08-31 실사고).
+
+    자막제거가 방금 성공했는데도 화면엔 오전에 실패한 문구가 그대로 떠 있었다
+    ("❌ 매칭 실패 — [10021] sign not equals"). run_clean_sources가 clean_status만
+    ready로 쓰고 job의 status·error는 안 건드렸기 때문이다. 고객은 성공한 줄 모르고
+    최종 렌더를 안 눌렀다 — 되는 걸 안 된다고 보여준 셈이다.
+
+    ★status는 'failed'일 때만 되돌린다. 편성(edit_plan)이 있으면 렌더 직전 상태
+      'ready_for_review'가 맞다(mix_pipeline:1537과 같은 값 — 두 벌로 만들지 않는다).
+    """
+    job = job or store.get_mix_job(job_id)
+    if not job or job.get("status") != "failed":
+        return
+    if not ((job.get("edit_plan") or {}).get("beats")):
+        return          # 편성도 없으면 되돌릴 자리가 없다 — 그대로 둔다
+    store.update_mix_job(job_id, status="ready_for_review", error=None)
+
+
 def run_clean_sources(job_id, db_path, work_root):
     """2단계: 각 소스 원본을 VMake로 자막제거해 clean_sources에 캐시.
     BackgroundTasks로 불리므로 예외를 밖으로 안 던진다(clean_status로만 알린다)."""
@@ -2717,6 +2736,7 @@ def run_clean_sources(job_id, db_path, work_root):
         else:
             _ensure_clean_sources(store, job, job_id, work, keys, customer_id)
             store.update_mix_job(job_id, clean_status="ready", clean_error=None)
+            _clear_stale_failure(store, job_id)
     except NotEnoughPoints as e:
         store.update_mix_job(job_id, clean_status="failed", clean_error=str(e))
         return
@@ -2749,6 +2769,7 @@ def run_clean_sources(job_id, db_path, work_root):
                              clean_error="자막 제거 결과를 만들지 못했습니다")
         return
     store.update_mix_job(job_id, clean_status="ready", clean_error=None)
+    _clear_stale_failure(store, job_id)
 
 
 @_owned_job
