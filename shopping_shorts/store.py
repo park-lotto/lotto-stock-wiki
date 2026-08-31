@@ -1478,11 +1478,12 @@ class Store:
         #      갖고 있다(체험 때 잔재). 그 필드로 만료를 판정하면 결제 고객 26명이
         #      즉시 랭킹만으로 추락한다(실측 2026-08-31). 새 개념은 새 칸에 담는다.
         #    ★비어 있으면(NULL/0) 지금까지와 완전히 같다 = 무기한. 기존 전원 무영향.
+        # ★이미 있으면 조용히 넘어간다 — 다만 '왜 무해한지'를 코드가 말하게 둔다.
+        #   컬럼 목록을 먼저 보고 없을 때만 추가하면 예외를 삼킬 일이 아예 없다.
+        _cols = {r[1] for r in c.execute("PRAGMA table_info(customers)")}
         for _col in ("pro_from", "pro_until"):
-            try:
+            if _col not in _cols:
                 c.execute(f"ALTER TABLE customers ADD COLUMN {_col} INTEGER DEFAULT 0")
-            except sqlite3.OperationalError:
-                pass                      # 이미 있음
         # ── 🖥 PC 등록(2026-08-31 사장님 "pc를 등록하게 해줘 1번pc 2번pc 다른곳에선 안되게") ──
         #    ★IP로 판정하지 않는다. 가정용 인터넷은 대부분 유동 IP라 재접속마다 바뀌고,
         #      같은 PC인데도 잠긴다. 브라우저에 찍은 **기기 도장(랜덤 id)**으로 본다.
