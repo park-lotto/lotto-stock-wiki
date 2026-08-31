@@ -358,11 +358,17 @@ PRESETS = {
     #     띠 #404040, 2줄 강조 #00E500, 흰 블록 #F2F2F2 / 글자 #000000.
     "gray_head2": {
         "name": "회색띠 · 2줄 헤드", "ref": "사장님 캡처 실측(2026-08-31)",
-        "bar": "#404040", "on_bar": "#FFFFFF", "bar_h": 442,
+        # ★head_in_bar: 이 틀은 **띠 자체가 헤드라인 판**이다 — 기존 20종(띠=가짜 UI,
+        #   헤드카피는 그 아래)과 반대 갈래다. 그래서 "헤드카피는 틀 바닥 아래" 계약이
+        #   그대로 적용되면 안 된다(테스트가 갈래를 보고 검사를 뒤집는다).
+        "head_in_bar": True,
+        # ★442·96은 캡처 실측값이지만 엔진 상한(normalize: bar_h≤400)과 화면 입력칸
+        #   상한(크기≤90·외곽선≤10%)에 걸려 조용히 잘린다 → 상한값으로 맞춰 박는다.
+        "bar": "#404040", "on_bar": "#FFFFFF", "bar_h": 400,
         "left_icon": "none", "right_icon": "none", "center_kind": "없음",
         "sub_bg": "#F2F2F2", "sub_text": "#000000", "sub_h": 220,
         "has_head": True, "demo_views": "264만", "demo_comments": "587",
-        "headcopy": _hc("BlackHanSans.ttf", 96, "#FFFFFF", "#00E500", 10, 10, "#000000"),
+        "headcopy": _hc("BlackHanSans.ttf", 90, "#FFFFFF", "#00E500", 11, 9, "#000000"),
         "caption": _cap("#FFFFFF", "#000000", 78, False),
     },
 }
