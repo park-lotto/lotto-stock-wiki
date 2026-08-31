@@ -433,6 +433,11 @@
       ((opts.link || (_pw.cta && _pw.cta.href)) ? "transparent;color:#8a8a92;border:1px solid #2a2a30" : "#4f9dfa;color:#111;border:0") +
       ';border-radius:8px;padding:10px 22px;font-weight:800;font-size:14px;cursor:pointer">' +
       escHtml(opts.closeLabel || "닫기") + "</button></div>" +
+      // ★언제 뜬 안내인지 남긴다(2026-09-01 사장님 "시간을 표시해줘 팝업에도").
+      //   화면을 캡처해 보내주실 때 시각이 같이 찍혀야 원인을 찾을 수 있다.
+      '<div style="margin-top:12px;font-size:11.5px;color:#6a6a72">' +
+        escHtml(new Date().toLocaleString("ko-KR", {month:"2-digit", day:"2-digit",
+          hour:"2-digit", minute:"2-digit", hour12:false})) + "</div>" +
       "</div>";
     document.body.appendChild(m);
     document.getElementById("ss-pw-close").onclick = function () { m.style.display = "none"; };
