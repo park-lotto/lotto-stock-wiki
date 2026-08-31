@@ -9718,6 +9718,17 @@ def access_level(customer_id, now=None, cust=None):
         cust = Store(DB_PATH).get_customer(customer_id)
     if not cust:
         return "ranking_only"
+    # ★plan="pro"는 **승인 검사보다 앞선다**(2026-08-31 실사고, 2회 재발).
+    #   관리자가 손으로 올린 pro는 "이 사람은 쓴다"는 사장님의 결정 그 자체다. 아래
+    #   미승인(approved_at NULL) 분기가 먼저 걸리면, pro로 올려도 체험창 안이면
+    #   ranking_only로 떨어진다 — 고객은 "체험판에서는 잠긴 기능이에요"를 보고
+    #   사장님은 pro로 만들어준 사람이 왜 막히는지 알 길이 없다.
+    #   ⚠️approved_at을 대신 채우지 않는다: 그건 입금 승인의 기록이고 payments 행과
+    #     짝이라, 결제 없이 채우면 강등 판정이 어긋난다.
+    #   ⚠️2026-08-31 이 수정이 다른 세션 커밋(2ea85e4f4)에 통째로 되돌아간 적이 있다.
+    #     app.py를 옛 사본 위에서 고치면 이 블록이 조용히 사라진다 — 지우지 마라.
+    if cust.get("plan") == "pro":
+        return "full"
     if cust.get("approved_at") is None:
         # 🎁 무료체험 이벤트: 미승인이라도 가입 후 체험창(trial_ends_at) 안이면 맛보기.
         #    창 밖이면 대기실 전면차단(pending). NULL(기존고객)은 0 취급 → 즉시 pending.
@@ -9728,8 +9739,7 @@ def access_level(customer_id, now=None, cust=None):
         if now < (cust.get("trial_ends_at") or 0):
             return "ranking_only"
         return "pending"
-    if cust.get("plan") == "pro":
-        return "full"
+    # (plan=="pro"는 위에서 이미 처리했다 — 승인 검사보다 앞선다)
     # ★체험판(plan="trial", 2026-08-21 사장님 "체험판은 레퍼런스랭킹만 + 렌즈 10회")
     #   = 기간과 무관하게 ranking_only. 제작소는 얼린 미리보기가 나가고 유료 API는 402.
     #   full_access_until은 화면에 'D-N'을 띄우는 표시용으로만 남는다.
@@ -9754,6 +9764,11 @@ def _is_trial(customer_id, now=None):
         return False
     cust = Store(DB_PATH).get_customer(customer_id)
     if not cust or cust.get("approved_at") is not None:
+        return False
+    # ★plan="pro"는 체험이 아니다(access_level과 **같은 답**을 내야 한다, 0순위-B).
+    #   미승인 pro가 '체험'으로 읽혀 렌즈가 통째로 막혔다(실측 cid 344·323).
+    #   ⚠️2026-08-31 다른 세션 커밋에 한 번 되돌아갔다 — 지우지 마라.
+    if cust.get("plan") == "pro":
         return False
     if now is None:
         now = int(datetime.now(timezone.utc).timestamp())
