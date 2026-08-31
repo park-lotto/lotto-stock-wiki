@@ -6646,7 +6646,16 @@ def _ssrf_guard(*urls):
     extract_from_url·save_to_wiki·wiki/save)는 전부 무방비였다. 가드가 "어떤 라우트엔
     있고 어떤 라우트엔 없는" 상태 자체가 결함이라, 호출부를 하나로 모은다.
     """
+    from shopping_shorts.media_download import uploaded_footage_path
     for u in urls:
+        # ★사장님이 올린 영상은 **바깥으로 나가는 요청이 아니다** — 우리 디스크의 파일이다
+        #   (2026-08-31). 이 가드는 "http/https만"이라 상대경로인 업로드 URL을 422로
+        #   막았고, 그래서 올린 영상은 담기까지만 되고 **3단계(매칭)로 못 넘어갔다**.
+        #   실측: /api/mix/start → {"error":"http/https URL만 허용"}.
+        #   판정은 uploaded_footage_path 한 곳뿐이라(0순위-B) 여기서 통과시켜도
+        #   임의 경로가 새지 않는다 — 토큰(32 hex) 모양이고 실제로 존재하는 파일만 참이다.
+        if uploaded_footage_path(u) is not None:
+            continue
         err = _reject_ssrf(u)
         if err:
             return JSONResponse(status_code=422, content={"ok": False, "error": err})
