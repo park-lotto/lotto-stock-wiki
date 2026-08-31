@@ -2240,7 +2240,7 @@ def _is_transient_api_error(msg):
     return is_transient_api_error(msg)
 
 
-def _vault_call(prompt, schema, max_tries=8, key_offset=0):
+def _vault_call_once(prompt, schema, max_tries=8, key_offset=0):
     """key_vault 캐스케이드 예비키풀로 JSON 생성 호출 → raw dict. 무키/실패면 None.
 
     build_edit_plan이 comment_gen 전용키(1개, 쉽게 소진) 대신 배치된 예비키를
@@ -2275,7 +2275,8 @@ def _vault_call(prompt, schema, max_tries=8, key_offset=0):
     if key_offset:
         _o = int(key_offset) % len(keys)
         keys = keys[_o:] + keys[:_o]
-    _last_err = ""
+    global _LAST_VAULT_ERR
+    _LAST_VAULT_ERR = ""
     for key in keys[:max_tries]:
         try:
             resp = key_vault.get_client_for_key(key).models.generate_content(
@@ -2292,11 +2293,11 @@ def _vault_call(prompt, schema, max_tries=8, key_offset=0):
             #   재시도는 다른 키로 나가므로 429·일시 장애와도 자연히 갈린다.
             if not (resp.text or "").strip():
                 print("edit_plan._vault_call: 빈 응답 → 다음 키로 재시도", file=sys.stderr)
-                _last_err = "모델이 빈 응답을 돌려줌"
+                _LAST_VAULT_ERR = "모델이 빈 응답을 돌려줌"
                 continue
             return json.loads(resp.text)
         except Exception as e:  # noqa: BLE001
-            _last_err = repr(e)[:200]
+            _LAST_VAULT_ERR = repr(e)[:200]
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
                 key_vault.mark_exhausted(key_vault._owner_group(key) or "general", key)
                 continue
@@ -2325,12 +2326,58 @@ def _vault_call(prompt, schema, max_tries=8, key_offset=0):
             if _is_transient_api_error(m) or "high demand" in m:
                 time.sleep(2)
                 continue
+            _LAST_VAULT_ERR = repr(e)[:200]
             print(f"edit_plan._vault_call: {e!r}", file=sys.stderr)
             return None
     # ★키를 다 돌고도 못 받았으면 **왜**인지 남긴다(2026-08-27). 종전엔 조용히 None이라
     #   운영사고엔 "편집안이 비었습니다"만 뜨고 로그엔 아무것도 없어 원인을 못 짚었다.
     print(f"edit_plan._vault_call: 키 {min(len(keys), max_tries)}개를 다 돌았는데 결과 없음 "
-          f"— 마지막 사유 {(_last_err or '빈 응답')!r}", file=sys.stderr)
+          f"— 마지막 사유 {(_LAST_VAULT_ERR or '빈 응답')!r}", file=sys.stderr)
+    return None
+
+
+_LAST_VAULT_ERR = ""            # _vault_call_once 가 남기는 마지막 실패 사유
+_RPM_WAIT_SECS = 22             # 분당 한도는 60초 창이라 20여 초면 대개 풀린다
+_RPM_MAX_ROUNDS = 3
+
+
+def _is_per_minute_quota(m):
+    """429가 **분당(RPM) 한도**인가 — 일일 소진과 갈라야 처방이 달라진다.
+
+    분당 한도는 잠깐 쉬면 저절로 풀린다. 일일 소진·계정 차단은 쉬어도 안 풀린다."""
+    m = str(m)
+    if not ("429" in m or "RESOURCE_EXHAUSTED" in m):
+        return False
+    low = m.lower()
+    return ("per minute" in low or "perminute" in low or "per-minute" in low
+            or "requests per min" in low)
+
+
+def _vault_call(prompt, schema, max_tries=8, key_offset=0):
+    """키풀을 한 바퀴 돌리되, **분당 한도(429 RPM)면 쉬었다 다시 돈다**(2026-08-31 실사고).
+
+    ★왜: 종전엔 429를 만나면 대기 없이 다음 키로 넘어가기만 했다. 살아있는 키가
+      적을 때(실측 그때 general 라이브 4개) **0.7초 안에 4키를 전부 429로 태우고
+      포기**했고 -> beats 0 -> 운영사고 "편집안(EDL)이 비었습니다 [생성기=legacy]"가
+      떴다(실측 job 498afe4046a3, 08-31 13:28:01~02, 429 4연발).
+      그런데 그 429는 **분당** 한도였다 — 20여 초만 쉬면 저절로 풀리는 것을
+      영구 실패로 보고한 셈이다. 그래서 라운드를 나눠 쉬었다 다시 돈다.
+
+    쉬는 건 **분당 한도일 때만**이다. 일일 소진·403 계정차단은 쉬어도 안 풀리므로
+    종전대로 즉시 포기한다(무의미한 대기를 만들지 않는다)."""
+    for _round in range(_RPM_MAX_ROUNDS):
+        got = _vault_call_once(prompt, schema, max_tries=max_tries,
+                               key_offset=key_offset)
+        if got is not None:
+            return got
+        if not _is_per_minute_quota(_LAST_VAULT_ERR):
+            return None
+        if _round >= _RPM_MAX_ROUNDS - 1:
+            break
+        print(f"edit_plan._vault_call: 분당 한도(429 RPM)로 키풀 전멸 — "
+              f"{_RPM_WAIT_SECS}초 쉬고 재시도 "
+              f"(라운드 {_round + 2}/{_RPM_MAX_ROUNDS})", file=sys.stderr)
+        time.sleep(_RPM_WAIT_SECS)
     return None
 
 
