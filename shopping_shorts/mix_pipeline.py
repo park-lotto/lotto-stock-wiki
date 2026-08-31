@@ -157,6 +157,18 @@ def _cache_keys_for_url(url):
     except Exception:      # noqa: BLE001 — 캐시 조회 실패가 파이프라인을 막으면 안 된다
         pass               #    (못 찾으면 아래 추론 + 종전대로 재추출로 간다)
 
+    # ①-b 사장님이 올린 영상(2026-08-31). 플랫폼 ID가 없으니 정규식으로는 못 맞힌다.
+    #     키 규칙은 업로드 응답·자동적재와 **똑같다** — sha1(url) 앞 12자.
+    #     안 맞추면 1단계에서 이미 뽑아 둔 추출을 못 찾아 3단계가 같은 영상을 제미니로
+    #     다시 태운다(느리고 돈이 두 번 든다).
+    try:
+        from shopping_shorts.media_download import uploaded_footage_path
+        if uploaded_footage_path(url) is not None:
+            import hashlib as _hl
+            _add(_hl.sha1((url or "").encode()).hexdigest()[:12])
+    except Exception as _e:      # noqa: BLE001 — 캐시 키 보강 실패가 파이프라인을 막지 않는다
+        print(f"[캐시키] 업로드 소스 키 보강 실패(무해): {_e!r}", file=sys.stderr)
+
     # ② URL 추론 폴백 — DB에 기록이 없는 경로(위키 직행 등)도 종전대로 맞힌다.
     for rx, plat in zip(_SHORTCODE_RES, _SHORTCODE_PLATFORMS):
         m = rx.search(url or "")
