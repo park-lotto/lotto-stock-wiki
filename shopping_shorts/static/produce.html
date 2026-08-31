@@ -1681,10 +1681,23 @@
               <div id="mixUrls">
                 <div class="row" style="margin-bottom:6px;display:flex;gap:6px;align-items:center"><input class="mixUrl" type="text" placeholder="인스타/유튜브/틱톡 URL" style="flex:1;min-width:0;background:var(--inset);border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px"><button class="urlDel" title="이 칸 지우기" onclick="removeMixUrlRow(this)" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:16px;padding:0 4px">✕</button></div>
               </div>
-              <div style="display:flex;gap:8px;margin-top:2px">
+              <div style="display:flex;gap:8px;margin-top:2px;flex-wrap:wrap">
                 <button class="btn-prev" style="padding:8px 14px" onclick="addMixUrl()">+ URL 추가</button>
                 <button class="btn-next" style="padding:8px 14px" onclick="confirmMixUrls()">✔ 확정(영상풀에 담기)</button>
               </div>
+            </div>
+          </details>
+          <!-- 📁 내 영상파일 담기(2026-08-31) — 링크가 없는 영상(직접 찍은 것·편집해
+               뽑은 것)도 재료가 되게 한다. 올리면 서버가 URL 하나로 바꿔주고, 그 아래
+               흐름(추출·매칭·렌더)은 URL로 담은 영상과 **똑같이** 돈다. -->
+          <details style="margin-top:6px">
+            <summary style="cursor:pointer;font-size:12px;color:var(--sub)">📁 내 영상파일 올리기 ▾</summary>
+            <div style="margin-top:8px">
+              <input id="footageFile" type="file" accept="video/mp4,video/quicktime,video/webm,.mp4,.mov,.m4v,.webm" multiple
+                     style="display:none" onchange="uploadFootageFiles(this.files)">
+              <button class="btn-next" style="padding:8px 14px"
+                      onclick="document.getElementById('footageFile').click()">＋ 영상파일 고르기</button>
+              <div id="footageUpMsg" class="hint" style="margin-top:8px">mp4·mov·m4v·webm · 한 개당 최대 500MB · 여러 개 한 번에 됩니다.</div>
             </div>
           </details>
       </div>
@@ -10083,6 +10096,41 @@ function removeFootage(i){
 }
 // URL 입력칸에 넣은 URL들을 영상풀 카드로 올린다(2026-07-18 사장님 요청 — 카드로 잘 보이게).
 // 확정 = "이 영상들을 화면에 쓰겠다"이므로 useFootage:true로 담아 바로 믹스 가능하게 한다.
+// 📁 내 영상파일 올려서 담기(2026-08-31 사장님 지시). 올린 파일은 서버가 URL로
+// 바꿔주고, 그 URL을 URL 직접 추가와 **똑같은 모양**으로 HANDOFF에 넣는다 —
+// 담김 이후 흐름(소스분석·AI PICK·매칭·렌더)에 분기를 새로 만들지 않는다.
+async function uploadFootageFiles(files){
+  const msg=document.getElementById('footageUpMsg');
+  const list=Array.from(files||[]);
+  if(!list.length) return;
+  const have=new Set(HANDOFF.map(h=>h.url));
+  let added=0, failed=[];
+  for(let i=0;i<list.length;i++){
+    const f=list[i];
+    if(msg) msg.textContent=`올리는 중… ${i+1}/${list.length} — ${f.name}`;
+    try{
+      const fd=new FormData(); fd.append('file', f);
+      const r=await fetch('/api/produce/footage/upload',{method:'POST',body:fd});
+      const j=await r.json().catch(()=>({}));
+      if(!r.ok || !j.ok || !j.url){ failed.push(`${f.name}: ${j.error||('HTTP '+r.status)}`); continue; }
+      if(have.has(j.url)) continue;
+      have.add(j.url);
+      HANDOFF.push({url:j.url, shortcode:'', name:(j.name||f.name), thumbnail:(j.thumbnail||''),
+                    caption:'', pickScript:false, useFootage:true, uploaded:true});
+      added++;
+    }catch(e){ failed.push(`${f.name}: ${e}`); }
+  }
+  // 고른 파일을 비운다 — 같은 파일을 다시 고를 수 있게(change 이벤트가 안 뜨는 것 방지)
+  const inp=document.getElementById('footageFile'); if(inp) inp.value='';
+  if(added){
+    renderPool(); syncFootageToMixUrls(); refreshFinalPeek(); saveWork();
+    if(typeof refreshStep0==='function') refreshStep0();
+  }
+  if(msg){
+    msg.textContent = (added? `✔ ${added}개 담았습니다.` : '담긴 영상이 없습니다.')
+                    + (failed.length? ` 실패 ${failed.length}건 — ${failed.join(' / ')}` : '');
+  }
+}
 function confirmMixUrls(){
   const wrap=document.getElementById('mixUrls'); if(!wrap) return;
   const typed=Array.from(wrap.querySelectorAll('.mixUrl')).map(i=>i.value.trim()).filter(Boolean);
