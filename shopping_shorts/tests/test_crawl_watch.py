@@ -149,3 +149,112 @@ def test_admin_page_links_to_crawl_dashboard():
             / "static" / "admin.html").read_text(encoding="utf-8")
     assert 'href="/crawl"' in html, "관리자 화면에 크롤링 관측판 링크가 없다"
     assert 'href="/ops"' in html, "기존 관측판 링크까지 사라지면 안 된다"
+
+
+# ══════════════════════════════════════════════════════════════════════
+# 살아 움직이는 관측판 — "물어봐서 아는" 게 아니라 스스로 신호를 낸다
+# (2026-09-01 사장님 "살아있는것처럼 계속움직이는 관측판이 되야한다")
+# ══════════════════════════════════════════════════════════════════════
+
+def test_stale_job_is_danger_even_with_old_success(db):
+    """★가장 위험한 구멍 — 어제 성공 기록이 있으면 오늘 안 돌아도 초록이었다.
+
+    타이머가 통째로 죽으면 화면은 영원히 '정상'이라 아무도 모른다.
+    예정 시각이 지났는데 오늘 기록이 없으면 **빨강**이어야 한다.
+    """
+    cw.record_run(db, "instagram_collect", tally={"ok": 100},
+                  verdicts=[(f"c{i}", "ok", "") for i in range(100)],
+                  items=120, ran_at="2026-08-31 00:16:00")     # 어제(UTC)
+    v = cw.verdict(db, now="2026-09-01 05:00:00")              # 오늘 14:00 KST
+    assert v["level"] == "danger"
+    assert "소식" in v["msg"] or "안 돌" in v["msg"]
+
+
+def test_fresh_run_today_is_ok(db):
+    """오늘 예정대로 돌았으면 초록."""
+    cw.record_run(db, "instagram_collect", tally={"ok": 100},
+                  verdicts=[(f"c{i}", "ok", "") for i in range(100)],
+                  items=120, ran_at="2026-09-01 00:16:00")
+    for j in ("instagram_discover", "youtube_collect"):
+        cw.record_run(db, j, tally={"found": 5}, verdicts=[], items=5,
+                      ran_at="2026-09-01 00:16:00")
+    assert cw.verdict(db, now="2026-09-01 05:00:00")["level"] == "ok"
+
+
+def test_before_due_time_is_not_stale(db):
+    """예정 시각 전이면 아직 안 돈 게 정상 — 빨강이면 매일 새벽마다 거짓 경보."""
+    cw.record_run(db, "instagram_collect", tally={"ok": 1}, verdicts=[("a", "ok", "")],
+                  items=1, ran_at="2026-08-31 00:16:00")
+    # 09-01 05:00 KST = 08-31 20:00 UTC. 아직 오늘 09:00 KST 전이다.
+    v = cw.verdict(db, now="2026-08-31 20:00:00")
+    assert v["level"] != "danger"
+
+
+def test_running_run_is_visible_while_it_works(db):
+    """★심박 — 도는 중에도 화면이 움직인다(끝나야만 보이면 '정지된 표'다)."""
+    rid = cw.start_run(db, "instagram_collect", total=147)
+    cw.beat(db, rid, done=30, items=42)
+    cur = cw.latest(db, "instagram_collect")
+    assert cur["state"] == "running"
+    assert cur["done"] == 30 and cur["items"] == 42
+
+
+def test_finished_run_is_not_running(db):
+    rid = cw.start_run(db, "instagram_collect", total=3)
+    cw.finish_run(db, rid, tally={"ok": 3},
+                  verdicts=[("a", "ok", ""), ("b", "ok", ""), ("c", "ok", "")], items=9)
+    cur = cw.latest(db, "instagram_collect")
+    assert cur["state"] == "done" and cur["items"] == 9
+
+
+def test_crashed_run_is_danger(db):
+    """시작만 하고 심박이 끊기면 '돌다가 죽은 것' — 이걸 못 잡으면 조용히 사라진다."""
+    rid = cw.start_run(db, "instagram_collect", total=147)
+    cw.beat(db, rid, done=10, items=5, at="2026-09-01 00:00:00")
+    v = cw.verdict(db, now="2026-09-01 02:00:00")      # 2시간째 심박 없음
+    assert v["level"] == "danger"
+    assert "멈춘" in v["msg"] or "죽" in v["msg"]
+
+
+def test_alert_fires_once_for_same_problem(db, monkeypatch):
+    """★알림은 화면을 안 봐도 오게 한다. 단 같은 사고로 도배하면 안 된다."""
+    sent = []
+    monkeypatch.setattr(cw, "_send_alert", lambda kind, title, detail: sent.append(kind) or True)
+    cw.record_run(db, "instagram_collect", tally={"ok": 0, "unknown": 3},
+                  verdicts=[(f"d{i}", "unknown", "") for i in range(3)], items=0,
+                  ran_at="2026-09-01 00:16:00")
+    cw.check_and_alert(db, now="2026-09-01 01:00:00")
+    cw.check_and_alert(db, now="2026-09-01 01:10:00")
+    assert len(sent) == 1, f"같은 사고로 {len(sent)}번 알림 — 도배"
+
+
+def test_alert_not_sent_when_healthy(db, monkeypatch):
+    sent = []
+    monkeypatch.setattr(cw, "_send_alert", lambda kind, title, detail: sent.append(kind) or True)
+    for j in cw.JOBS:
+        cw.record_run(db, j, tally={"ok": 5},
+                      verdicts=[(f"c{i}", "ok", "") for i in range(5)], items=10,
+                      ran_at="2026-09-01 00:16:00")
+    cw.check_and_alert(db, now="2026-09-01 01:00:00")
+    assert sent == []
+
+
+def test_api_exposes_live_fields(tmp_path, monkeypatch):
+    """★화면이 '움직이려면' API가 진행 상태를 줘야 한다(state/done/beat_at/server_now).
+
+    이 필드가 빠지면 화면은 끝난 회차만 보여주는 '정지된 표'로 되돌아간다.
+    """
+    from shopping_shorts import app as appmod
+    db = str(tmp_path / "t.db")
+    monkeypatch.setattr(appmod, "DB_PATH", db)
+    monkeypatch.setattr(appmod, "_require_admin", lambda r: None)
+
+    rid = cw.start_run(db, "instagram_collect", total=147)
+    cw.beat(db, rid, done=30, items=42)
+    out = appmod._api_crawl(request=None, days=14)
+
+    live = out["jobs"]["instagram_collect"]["latest"]
+    assert live["state"] == "running"
+    assert live["done"] == 30 and live["total"] == 147 and live["items"] == 42
+    assert live["beat_at"]                      # 심박 시각이 있어야 '멈춤'을 잴 수 있다
+    assert out.get("server_now")                # 화면이 '몇 분 전'을 서버 시계로 계산한다
