@@ -9470,9 +9470,31 @@ function toggleSrcCard(code){
   if (_SRC_CLOSED.has(code)) _SRC_CLOSED.delete(code); else _SRC_CLOSED.add(code);
   renderSourceAnalysis();    // 이미 받아 둔 데이터로 다시 그린다(서버 재요청 없음)
 }
+// ★올린 영상인데 shortcode가 비어 있으면 채워준다(2026-08-31 사장님 제보).
+//   업로드 응답이 shortcode를 주기 **전에** 담은 항목은 코드가 빈 문자열이라,
+//   아래 renderSourceAnalysis가 `if(!code) return`으로 상태를 아예 안 물어
+//   서버는 분석이 끝났는데도 화면만 영영 "분석 중"이었다(실측: video (8).mp4).
+//   규칙은 서버(업로드 응답·자동적재)와 **똑같은** sha1(url) 앞 12자다 — 같은 키를
+//   봐야 어긋나지 않는다(0순위-B). 다시 올릴 필요 없이 그 자리에서 풀린다.
+async function _sha1Hex12(str){
+  const buf = await crypto.subtle.digest('SHA-1', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('').slice(0,12);
+}
+async function _healUploadedShortcodes(){
+  const need = (HANDOFF||[]).filter(h => h && !h.shortcode
+                                      && String(h.url||'').includes('/api/produce/footage/'));
+  if(!need.length) return false;
+  for(const h of need){
+    try{ h.shortcode = await _sha1Hex12(h.url); }
+    catch(e){ console.warn('[shortcode 보정 실패]', e); }
+  }
+  try{ saveWork(); }catch(e){}
+  return true;
+}
 async function renderSourceAnalysis(){
   const box = document.getElementById('srcAnalysis');
   if(!box) return;
+  await _healUploadedShortcodes();
   const items = HANDOFF.filter(h => h.useFootage);
   if(!items.length){
     // ★담긴 목록이 아직 안 잡혔는데 자동적재는 돌고 있는 순간이 있다(HANDOFF가 채워지기
