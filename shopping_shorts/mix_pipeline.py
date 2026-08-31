@@ -2652,7 +2652,6 @@ def assemble_clean_video(job_id, db_path, work_root, clean_fn=None):
         return None
 
 
-@_owned_job
 def _clear_stale_failure(store, job_id, job=None):
     """이 job에 남아 있는 **옛 실패 표시**를 지운다 (2026-08-31 실사고).
 
@@ -2672,6 +2671,7 @@ def _clear_stale_failure(store, job_id, job=None):
     store.update_mix_job(job_id, status="ready_for_review", error=None)
 
 
+@_owned_job
 def run_clean_sources(job_id, db_path, work_root):
     """2단계: 각 소스 원본을 VMake로 자막제거해 clean_sources에 캐시.
     BackgroundTasks로 불리므로 예외를 밖으로 안 던진다(clean_status로만 알린다)."""
