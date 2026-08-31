@@ -56,7 +56,10 @@ def test_delete_removes_from_list_but_keeps_file(client):
     iid = client.post("/api/produce/frame/image",
                       files={"file": ("a.png", _png(), "image/png")}).json()["id"]
     assert client.delete(f"/api/produce/frame/image/{iid}").status_code == 200
-    assert client.get("/api/produce/frame/images").json()["images"] == []
+    # ★기본 제공 틀은 늘 남는다 — '내가 올린 것'만 빠져야 한다
+    left = client.get("/api/produce/frame/images").json()["images"]
+    assert [x for x in left if x.get("mine")] == [], "내가 올린 게 안 빠졌다"
+    assert [x for x in left if not x.get("mine")], "기본 제공 틀까지 사라졌다"
     assert df.bg_image_path(iid), "★파일까지 지우면 같은 그림을 쓰는 남의 작업이 깨진다"
 
 

@@ -104,3 +104,31 @@ def test_channel_name_draws_without_a_bar():
                     "ch_y": 30, "ch_size": 60})
     band = sum(im.getpixel((x, int(df.H * 0.30)))[3] > 0 for x in range(0, df.W, 10))
     assert band > 0, "띠 없이 채널명이 안 그려졌다"
+
+
+# ── 기본 제공 이미지 틀 (2026-08-31 "너가 만든거 없어?") ─────────────────────
+def test_builtin_frames_ship_with_the_product():
+    """★올린 게 없어도 목록이 비면 안 된다 — 빈 통이면 기능이 없는 것과 같다."""
+    items = df.builtin_frames()
+    assert len(items) >= 5, f"기본 제공 틀이 너무 적다({len(items)}종)"
+    for it in items:
+        p = df.bg_image_path(it["id"])
+        assert p, f"{it['id']}: 목록에 있는데 파일이 없다"
+        with Image.open(p) as im:
+            assert im.size == (df.W, df.H), f"{it['id']}: 출력 규격이 아니다 {im.size}"
+            assert im.mode == "RGBA" and im.getpixel((df.W // 2, 1300))[3] == 0, (
+                f"{it['id']}: 영상 자리가 막혀 있다 — 영상이 안 보인다")
+
+
+def test_builtin_id_cannot_escape_its_folder():
+    """★기본 제공은 이름(hex가 아님)이라 경로검사가 따로 필요하다."""
+    for bad in ("../deco_frame", "a/b", "..", "AB", "x" * 40, "../../app"):
+        assert df.bg_image_path(bad) is None, f"{bad!r}가 통과했다"
+
+
+def test_builtin_frame_actually_renders():
+    items = df.builtin_frames()
+    im = df.render({"preset": "plain_black", "bar_h": 0, "icons": False,
+                    "bg_image": items[0]["id"]})
+    assert im.getpixel((df.W // 2, 60))[3] > 0, "띠가 안 그려졌다"
+    assert im.getpixel((df.W // 2, 1300))[3] == 0, "영상 자리가 막혔다"
