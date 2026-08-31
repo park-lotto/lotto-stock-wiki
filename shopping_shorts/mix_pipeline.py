@@ -801,7 +801,7 @@ def _download_fail_hint(err_text):
     return ""
 
 
-def _edl_empty_reason(source_scripts, plan):
+def _edl_empty_reason(source_scripts, plan, api_reason=""):
     """EDL이 빈 이유를 **갈라서** 말한다(2026-08-19 사장님 총점검 지시).
 
     ★종전 문구는 원인 2개를 뭉갰다: "대본 추출 실패 또는 Gemini 키 소진".
@@ -819,6 +819,15 @@ def _edl_empty_reason(source_scripts, plan):
     if not (source_scripts or []):
         return ("no_source",
                 "소스 영상이 없습니다 — 담긴 영상을 확인해 주세요.")
+    # ★API가 실제로 뱉은 사유가 있으면 **그게 진짜 원인이다**(2026-08-31 실사고).
+    #   종전엔 소스 글자수만 보고 이름을 붙여서, 키가 다 튕긴 job을 "추출 실패"로
+    #   불렀다. 실측(cid 193): 429+401로 죽었는데 화면엔 extract_empty가 떠서
+    #   "대사 없는 영상이라 안 된다"고 사장님께 잘못 보고했다. 대사가 없어도 확정
+    #   대본이 있으면 scene_desc로 정상 매칭된다 — 소스 글자수는 원인이 아니다.
+    if api_reason:
+        return ("api_failed",
+                f"편집안 생성 API가 실패했습니다 — {api_reason}"
+                " (소스 대본 문제가 아닙니다).")
     if not got:
         return ("extract_empty",
                 f"소스 {len(texts)}편에서 대본을 한 글자도 못 뽑았습니다"
@@ -1419,7 +1428,14 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
         # ★사유를 갈라서 말한다(2026-08-19). 종전엔 "추출 실패 또는 키 소진"으로 뭉개서
         #   실측 13건 중 대부분이 **추출은 성공한 상태**(9,091자)였는데도 "추출 실패"로
         #   보였다 — 원인이 다르면 처방도 다르므로 여기서 갈라 기록·표시한다.
-        code, why = _edl_empty_reason(source_scripts, plan)
+        # edit_plan._vault_call_once가 남긴 마지막 실패 사유를 그대로 가져온다 —
+        # 추측하지 말고 **API가 한 말**을 쓴다(2026-08-31).
+        try:
+            from shopping_shorts import edit_plan as _ep
+            _api_reason = (getattr(_ep, "_LAST_VAULT_ERR", "") or "")[:180]
+        except Exception:      # noqa: BLE001 — 사유 수집 실패가 본작업을 막지 않는다
+            _api_reason = ""
+        code, why = _edl_empty_reason(source_scripts, plan, api_reason=_api_reason)
         n_src = len(source_scripts or [])
         n_chars = sum(len((s.get("full_text") or "")) for s in (source_scripts or []))
         print(f"[EDL빈원인] code={code} sources={n_src} chars={n_chars} "
