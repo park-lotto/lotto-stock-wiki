@@ -169,8 +169,27 @@ def test_gate_never_locks_the_registration_path():
     """
     from shopping_shorts import app as app_mod
     for path in ("/settings", "/welcome", "/api/welcome", "/logout", "/login",
-                 "/api/my/devices", "/api/my/devices/register", "/setup"):
+                 "/api/my/devices", "/api/my/devices/register", "/setup",
+                 # ★페이지만 열고 그 데이터 API를 막으면 화면이 통째로 빈다(2026-08-31 실측)
+                 "/api/settings/keys", "/api/settings/points", "/api/me",
+                 "/api/bug-report/replies"):
         assert app_mod._pc_gate_open_path(path), f"{path}가 막히면 등록할 길이 없다"
     # 정작 막아야 할 길은 열려 있으면 안 된다
     for path in ("/produce.html", "/api/mix/start", "/api/produce/mix/render"):
         assert not app_mod._pc_gate_open_path(path), f"{path}가 통째로 열려 있다"
+
+
+def test_trial_users_are_not_gated(monkeypatch):
+    """★체험판·무료(랭킹만)는 게이트 제외 — 랭킹만 보는 분에게 PC 등록은 과하다.
+    실측 2026-08-31: 체험판 고객이 '결제하세요'와 'PC 등록하세요'를 함께 맞았다."""
+    from shopping_shorts import app as app_mod
+
+    class _Req:
+        headers = {"user-agent": PC}
+        cookies = {}
+        state = type("S", (), {})()
+        url = "http://x/produce.html"
+        method = "GET"
+
+    monkeypatch.setattr(app_mod, "access_level", lambda cid, cust=None: "ranking_only")
+    assert app_mod._check_pc_device(999, _Req(), "/produce.html") is None
