@@ -2066,6 +2066,7 @@
               <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:7px">
                 🎯 이 장면만 손보기 <span class="hint" style="font-weight:400">(다른 장면은 안 바뀌어요)</span></div>
 
+              <div class="hint" id="capCutHint" style="display:none;margin-bottom:6px"></div>
               <div style="font-size:12px;color:var(--sub);margin-bottom:5px">자막 자리 — 제품을 가리면 옮기세요</div>
               <div id="capPosBtns" style="display:flex;gap:6px;flex-wrap:wrap">
                 <button type="button" class="tab" data-cappos="top"    onclick="setBeatCapPos('top')"    style="flex:1;min-width:auto;padding:7px 10px;font-size:13px">⬆ 위</button>
@@ -5616,7 +5617,10 @@ function showBeat(i, first){
   const sb=document.getElementById('sceneBg');
   if(bg && sb && sb.checked){
     bg.onerror=()=>{ bg.style.display='none'; };
-    bg.src='/api/produce/mix/beatframe/'+MIX_JOB+'/'+BEAT_IDX;
+    // ★목록 순번(BEAT_IDX)이 아니라 비트번호+컷번호로 부른다(2026-08-31) — 목록이 컷
+    //   단위로 펴지면서 순번과 비트번호가 갈라졌다. 순번으로 부르면 엉뚱한 그림이 뜬다.
+    bg.src='/api/produce/mix/beatframe/'+MIX_JOB+'/'+_beatNo(b)
+           +(b.cut!=null?('?cut='+b.cut):'');
     bg.style.display='block';
   }
   // 자막 = 그 비트 대본. ★실제 영상은 2~3어절씩 순차로 바뀐다(서버 segs=_caption_segments).
@@ -5624,7 +5628,8 @@ function showBeat(i, first){
   // 미리보기라 한 장면 안에서 계속 반복한다. 장면을 넘기면 아래 재생을 새로 건다.
   _playBeatCaptions(b);
   const cnt=document.getElementById('beatCount');
-  if(cnt) cnt.textContent=(BEAT_IDX+1)+' / '+BEATS_PREVIEW.length+' 장면';
+  if(cnt) cnt.textContent=(BEAT_IDX+1)+' / '+BEATS_PREVIEW.length+' 장면'
+          + ((b.cut_of>1) ? (' (자막 '+(_beatNo(b)+1)+'번의 '+(b.cut+1)+'/'+b.cut_of+' 컷)') : '');
   renderBeatTools();          // 장면을 넘기면 그 장면의 자리·줄을 보여준다
   // 확대를 이 장면에도 이어갈지는 '모든 장면에 같은 배율' 체크가 정한다(zoomOnBeatChange)
   if(typeof zoomOnBeatChange==='function') zoomOnBeatChange(first);
@@ -5668,6 +5673,13 @@ function renderBeatTools(){
   // 드래그로 이 장면만 옮겨둔 상태면 버튼엔 불이 안 들어온다 → 왜 그런지 한 줄로 알려준다
   const fh=document.getElementById('capFreeHint');
   if(fh) fh.style.display = b.cap_xy ? '' : 'none';
+  // 한 자막(비트)이 여러 컷에 걸쳐 있으면 자막 손질은 그 컷들 전부에 같이 걸린다 — 미리 알린다
+  const cs2=document.getElementById('capCutHint');
+  if(cs2){ cs2.style.display=(b.cut_of>1)?'':'none';
+           cs2.innerHTML='이 자막은 <b>'+b.cut_of+'개 컷</b>에 걸쳐 나옵니다 — 자막 손질은 그 컷 전부에 같이 적용돼요.'; }
+  // 범위 안내는 **장면을 넘길 때마다** 다시 쓴다 — 안 그러면 "이 장면(4번)"이라 적힌 채로
+  //   2번 장면을 보고 있게 된다(2026-08-31 사장님 화면에서 발각).
+  if(typeof setCapDragScope==='function') setCapDragScope(CAP_DRAG_SCOPE);
   // 줄 편집칸 — 렌더와 같은 분할(segs)을 그대로 줄로 보여준다
   const box=document.getElementById('capLinesBox'); if(!box) return;
   const lines=(b.segs && b.segs.length) ? b.segs : [b.caption||''];
@@ -7301,7 +7313,7 @@ async function pinBeatToThumb(){
   try{
     const r=await fetch('/api/produce/thumb/pin',{method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({job_id:MIX_JOB, beat_idx:idx})});
+      body:JSON.stringify({job_id:MIX_JOB, beat_idx:idx, cut:(b.cut!=null?b.cut:null)})});
     const d=await r.json();
     if(!d.ok) throw new Error(d.error||'실패');
     say('✅ '+(d.label||'장면')+' → '+stepName('thumb')+' 후보 맨 앞에 넣었어요','var(--ok)');
