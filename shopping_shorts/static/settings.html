@@ -261,6 +261,24 @@
   </section>
 
   <section class="pane" id="paneAccount">
+    <!-- ═══════ 🖥 내 PC 등록 (2026-08-31 사장님 "마이페이지에 pc등록칸 만들고 직접 할수있게") ═══════
+         ★자동 등록은 없앴다: 페이지 하나 열 때 나가는 동시 요청들이 각각 다른 기기
+           도장을 만들어 **한 PC가 두 칸을 먹었다**(라이브 사고, 4명 전원 같은 IP).
+           사람이 이 버튼을 한 번 누를 때만 등록한다.
+         ★해제 버튼은 일부러 없다 — 스스로 풀 수 있으면 등록 제한이 의미가 없다. -->
+    <div class="card" id="pcCard" style="margin-bottom:14px">
+      <h3 style="margin:0 0 8px;font-size:16px">🖥 내 PC 등록 <span id="pcReq" style="font-size:12px;color:#f0b429"></span></h3>
+      <p class="hint" style="margin:0 0 10px">
+        계정 보호를 위해 <b>PC 2대</b>까지 등록해서 쓸 수 있어요.
+        휴대폰·태블릿은 등록 없이 그냥 쓰시면 됩니다.</p>
+      <div id="pcList" style="margin-bottom:10px"></div>
+      <button id="pcBtn" onclick="pcRegister()" style="padding:9px 16px;border-radius:8px;
+        border:1px solid #2f6b45;background:#16241c;color:#7ee787;cursor:pointer;font-size:14px">
+        이 PC 등록하기</button>
+      <span id="pcMsg" style="margin-left:10px;font-size:13px"></span>
+      <p class="hint" style="margin:10px 0 0;font-size:12px;color:#5f6773">
+        PC를 바꾸셨거나 자리가 다 찼으면 문의해 주세요 — 바로 비워드립니다.</p>
+    </div>
     <!-- ═══════ 💳 1기 참가비 결제 안내 (2026-08-30) ═══════
          Pro가 아닌 회원(체험·무료)에게만 뜬다. 판단은 /api/me의 plan·is_admin을
          그대로 쓴다 — 결제 여부를 여기서 새로 계산하면 언젠가 어긋난다(0순위-B).
@@ -508,6 +526,9 @@ function showTab(which){
   if (which === "setup") {
     try { localStorage.setItem(FIRST_KEY, "1"); } catch (e) {}   // 봤다 → 다음부터 내 계정
   }
+  // 🖥 PC 등록 칸은 '내 계정' 탭에 있다 — 탭을 열 때마다 최신 상태로 다시 읽는다
+  // (다른 PC에서 등록했을 수 있다). 실패해도 탭 전환은 막지 않는다.
+  if (which === "account") { try { pcLoad(); } catch (e) {} }
   window.scrollTo(0, 0);
 }
 
@@ -515,6 +536,9 @@ function showTab(which){
    저장이 막힌 브라우저(시크릿 등)에서는 매번 안내가 먼저 뜬다 — 안 뜨는 것보다 낫다. */
 var FIRST_KEY = "ss_setup_seen";
 (function initTab(){
+  // ★PC 등록 안내에서 온 사람(#pc)은 무조건 '내 계정'으로 — 설치안내가 먼저 뜨면
+  //   등록 버튼을 못 찾는다(막혀서 온 사람이다).
+  if (location.hash === "#pc") { showTab("account"); return; }
   var seen = false;
   try { seen = localStorage.getItem(FIRST_KEY) === "1"; } catch (e) {}
   showTab(seen ? "account" : "setup");
@@ -775,6 +799,48 @@ async function verifyKeys(svc, quiet){
     if (!quiet) notice("확인하지 못했습니다.\n\n" + e.message);
     return null;
   }
+}
+
+/* ── 🖥 내 PC 등록 (2026-08-31) ────────────────────────────
+   ★등록만 있고 해제는 없다 — 스스로 풀 수 있으면 제한이 무의미하다(사장님 결정). */
+async function pcLoad(){
+  const list=document.getElementById('pcList'); if(!list) return;
+  let d;
+  try{ d=await (await fetch('/api/my/devices')).json(); }
+  catch(e){ list.innerHTML='<span class=hint>등록 정보를 못 읽었어요</span>'; return; }
+  if(!d||!d.ok) return;
+  const req=document.getElementById('pcReq');
+  if(req) req.textContent = d.required ? '(필수)' : '';
+  const rows=(d.devices||[]).map(function(x){
+    var when = x.last_seen ? new Date(x.last_seen*1000).toLocaleDateString('ko-KR') : '';
+    return '<div style="padding:6px 0;border-bottom:1px solid #1e2732;font-size:13px">'
+      + '<b>' + x.slot + '번 PC</b>'
+      + (x.is_this ? ' <span style="color:#7ee787">← 지금 이 PC</span>' : '')
+      + ' <span style="color:#5f6773">· 마지막 ' + when + '</span></div>';
+  }).join('');
+  list.innerHTML = rows || '<span class=hint>아직 등록한 PC가 없어요.</span>';
+  const btn=document.getElementById('pcBtn');
+  if(btn){
+    if(d.this_registered){
+      btn.disabled=true; btn.textContent='이 PC는 등록돼 있어요 ('+d.this_slot+'번)';
+      btn.style.opacity=.6; btn.style.cursor='default';
+    }else if((d.devices||[]).length >= d.slots){
+      btn.disabled=true; btn.textContent='자리가 다 찼어요 (문의 필요)';
+      btn.style.opacity=.6; btn.style.cursor='default';
+    }else{
+      btn.disabled=false; btn.textContent='이 PC 등록하기';
+      btn.style.opacity=1; btn.style.cursor='pointer';
+    }
+  }
+}
+async function pcRegister(){
+  const msg=document.getElementById('pcMsg'); if(msg) msg.textContent='등록 중…';
+  try{
+    const r=await (await fetch('/api/my/devices/register',{method:'POST'})).json();
+    if(msg){ msg.textContent = r.ok ? ('✅ ' + (r.message||'등록했어요')) : ('⚠️ ' + (r.error||'등록하지 못했어요'));
+             msg.style.color = r.ok ? '#7ee787' : '#ff6b6b'; }
+  }catch(e){ if(msg){ msg.textContent='⚠️ 등록하지 못했어요'; msg.style.color='#ff6b6b'; } }
+  pcLoad();
 }
 
 /* ── 👤 내 계정 ─────────────────────────────────────────
