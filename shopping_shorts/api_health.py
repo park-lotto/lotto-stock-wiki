@@ -145,9 +145,9 @@ def _ensure_schema(conn):
     conn.commit()
 
 
-def _connect():
+def _connect(timeout=10):
     global _initialized
-    conn = sqlite3.connect(str(_DB_PATH), timeout=10)
+    conn = sqlite3.connect(str(_DB_PATH), timeout=timeout)
     if not _initialized:
         with _init_lock:
             if not _initialized:
@@ -234,7 +234,9 @@ def record(service, outcome, *, pool=None, key=None, key_idx=None, owner=None,
                 customer_id = customer_id if customer_id is not None else ctx.get("customer_id")
             except Exception as e:        # noqa: BLE001 — 문맥 없이도 기록은 간다
                 log.debug("api_health: op 문맥 유도 실패(무해) %r", e)
-        conn = _connect()
+        # ★2초만 기다린다(리뷰 3): 429 폭풍+쓰기 경합 때 기록 한 줄이 예외 전파를
+        #   10초씩 붙잡으면 호출부의 retry_delay 페이싱이 밀린다. 못 쓰면 버리고 경고.
+        conn = _connect(timeout=2)
         try:
             conn.execute(
                 "INSERT INTO api_events(ts,day,service,pool,key_tail,key_idx,owner,"
@@ -254,10 +256,17 @@ def record(service, outcome, *, pool=None, key=None, key_idx=None, owner=None,
     if outcome == OUT_AUTH:
         try:
             from shopping_shorts import ops_alert
+            # 제미니·유튜브는 회사 풀 키, 나머지는 회원 등록(BYOK) 키가 대부분이다 —
+            # 처방을 갈라 보낸다(리뷰 8: 회원 키에 ".env에서 제거"는 틀린 처방).
+            # kind도 서비스별로 — 한 쿨다운에 서로 다른 서비스 사망이 묻히지 않게.
+            if service in ("gemini", "youtube"):
+                cure = " — /apiwatch에서 확인, env에서 제거 필요"
+            else:
+                cure = " — 회원 등록 키(BYOK)일 수 있음: /apiwatch 피드에서 고객 확인"
             ops_alert.raise_alert(
-                "api_key_dead",
+                f"api_key_dead_{service}",
                 f"[API] {service} 키 사망 감지({'…' + (key_tail(key) or '?')})",
-                f"{detail or ''}"[:300] + " — /apiwatch에서 확인, .env에서 제거 필요")
+                f"{detail or ''}"[:300] + cure)
         except Exception as e:            # noqa: BLE001 — 경보 실패가 기록을 막으면 안 된다
             log.warning("api_health: 키사망 경보 실패(무시) %r", e)
 
@@ -281,7 +290,7 @@ def heartbeat(detail=None, proc=None):
     if os.environ.get("PYTEST_CURRENT_TEST") and str(_DB_PATH).endswith("reference.db"):
         return
     try:
-        conn = _connect()
+        conn = _connect(timeout=2)               # 하트비트도 핫패스 — 경합 시 버린다
         try:
             conn.execute(
                 "INSERT INTO api_heartbeats(proc,pid,ts,detail) VALUES(?,?,?,?) "
@@ -295,14 +304,27 @@ def heartbeat(detail=None, proc=None):
         log.warning("api_health: heartbeat 실패(무시) %s", e)
 
 
+_last_purge_day = {"d": None}
+
+
 def purge(days=30):
-    """오래된 이벤트 정리. 관측판 조회 시 하루 한 번만 실제로 돈다."""
+    """오래된 이벤트 정리 — **하루 한 번만** 실제로 돈다(2026-09-01 리뷰 확정: 게이트
+    없이는 30초 자동갱신마다 DELETE가 나가고, 오래 안 열다 열면 대량 DELETE 한 방이
+    쓰기락을 점유해 12워커 record가 줄줄이 기다린다)."""
+    if os.environ.get("PYTEST_CURRENT_TEST") and str(_DB_PATH).endswith("reference.db"):
+        return                                   # 테스트가 라이브 DB를 지우면 안 된다
+    today = _kst_day()
+    if _last_purge_day["d"] == today:
+        return
+    _last_purge_day["d"] = today
     try:
         conn = _connect()
         try:
             cut = (_utcnow() - timedelta(days=days)).isoformat()
             conn.execute("DELETE FROM api_events WHERE ts < ?", (cut,))
-            stale = (_utcnow() - timedelta(days=3)).isoformat()
+            # 웹은 기동·키 등록 때만 신고한다 — 3일이면 멀쩡한 웹의 신고가 지워져
+            # '합류 안 함'으로 오독된다(리뷰 15). 7일 보존.
+            stale = (_utcnow() - timedelta(days=7)).isoformat()
             conn.execute("DELETE FROM api_heartbeats WHERE ts < ?", (stale,))
             conn.commit()
         finally:
@@ -474,17 +496,21 @@ def aggregates(hours=24):
                 f"WHERE outcome IN ({fail_in}) ORDER BY id DESC LIMIT 80",
                 FAIL_OUTCOMES)]
 
-            # 키별 '구글 하루'(PT 자정 이후) 사용/429 — RPD 예산의 근거
+            # 키별 '구글 하루'(PT 자정 이후) 사용/429 — RPD 예산의 근거.
+            # ★total은 _REQUEST_OUTCOMES만 센다(2026-09-01 리뷰 확정): lock 이벤트도
+            #   키를 싣고 기록되므로 COUNT(*)면 일일소진 429 1건이 실패+잠금 2행으로
+            #   잡혀 사고날일수록 예산이 부풀었다 — 관측판이 답할 질문을 스스로 왜곡.
+            req_in = ",".join("?" * len(_REQUEST_OUTCOMES))
             out["keys_today"] = [dict(r) for r in conn.execute(
-                "SELECT service, pool, key_tail, "
-                "SUM(CASE WHEN outcome='ok' THEN 1 ELSE 0 END) ok, "
-                "SUM(CASE WHEN outcome IN ('rpm','quota') THEN 1 ELSE 0 END) rpm, "
-                "SUM(CASE WHEN outcome='rpd' THEN 1 ELSE 0 END) rpd, "
-                "SUM(CASE WHEN outcome='auth_dead' THEN 1 ELSE 0 END) dead, "
-                "COUNT(*) total FROM api_events "
-                "WHERE ts >= ? AND key_tail IS NOT NULL "
-                "GROUP BY service, pool, key_tail ORDER BY total DESC LIMIT 300",
-                (pt_start,))]
+                f"SELECT service, pool, key_tail, "
+                f"SUM(CASE WHEN outcome='ok' THEN 1 ELSE 0 END) ok, "
+                f"SUM(CASE WHEN outcome IN ('rpm','quota') THEN 1 ELSE 0 END) rpm, "
+                f"SUM(CASE WHEN outcome='rpd' THEN 1 ELSE 0 END) rpd, "
+                f"SUM(CASE WHEN outcome='auth_dead' THEN 1 ELSE 0 END) dead, "
+                f"SUM(CASE WHEN outcome IN ({req_in}) THEN 1 ELSE 0 END) total "
+                f"FROM api_events WHERE ts >= ? AND key_tail IS NOT NULL "
+                f"GROUP BY service, pool, key_tail ORDER BY total DESC LIMIT 300",
+                (*_REQUEST_OUTCOMES, pt_start))]
 
             out["hourly"] = [dict(r) for r in conn.execute(
                 f"SELECT substr(ts, 1, 13) hour_utc, "
@@ -506,6 +532,9 @@ def aggregates(hours=24):
 
 def verdict(snap=None, agg=None):
     """지금 상태 한 줄 + 처방. danger가 새로 켜지면 ops_alert로 사람에게 민다."""
+    if not _enabled():                           # 기록을 껐으면 묵은 이벤트로 경보하지 않는다(리뷰 13)
+        return {"level": "ok", "msg": "관측이 꺼져 있습니다(API_HEALTH=0) — 판정 없음",
+                "problems": [], "warns": []}
     snap = snap or snapshot()
     agg = agg or aggregates(hours=1)
     problems, warns = [], []
@@ -581,16 +610,21 @@ def budget(snap=None, agg=None):
     snap = snap or snapshot()
     agg = agg or aggregates()
     try:
-        n_keys = 0
+        # ★키 수는 풀 합산이 아니라 tail 전역 dedup(2026-09-01 리뷰 확정): 회원 키는
+        #   refresh가 SHORTS·vault 양쪽에 합류시켜 합산하면 같은 물리 키가 2번 세어져
+        #   cap이 부풀고(회원 44키면 +22,000건) 소진 임박이 '여유'로 보인다.
+        #   구글 RPD는 키(프로젝트) 단위 — 두 풀에 있어도 500은 한 번뿐이다.
+        tails = set()
         for pool in snap.get("gemini", []):
             if pool.get("pool") == "shorts":
-                n_keys += pool.get("total", 0)
+                for k in (pool.get("keys") or []):
+                    tails.add(k.get("tail"))
             else:
-                seen = set()
                 for d in (pool.get("groups") or {}).values():
-                    for k in d.get("keys", []):
-                        seen.add(k.get("tail"))
-                n_keys += len(seen)
+                    for k in (d.get("keys") or []):
+                        tails.add(k.get("tail"))
+        tails.discard(None)
+        n_keys = len(tails)
         cap = n_keys * RPD_PER_KEY
         used = sum(r.get("total", 0) for r in agg.get("keys_today", [])
                    if r.get("service") == "gemini")

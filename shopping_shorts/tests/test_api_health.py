@@ -219,9 +219,11 @@ def test_budget_counts_requests_in_pt_window(tmp_db):
     for _ in range(10):
         api_health.record("gemini", api_health.OUT_OK, pool="shorts", key="B" * 20)
     snap = {"gemini": [{"pool": "shorts", "total": 2, "owner": 1, "member": 1,
-                        "live": 2, "locked": [], "keys": []}]}
+                        "live": 2, "locked": [], "keys": [
+                            {"idx": 0, "tail": "TAIL_A", "owner": "owner", "state": "live"},
+                            {"idx": 1, "tail": "TAIL_B", "owner": "member", "state": "live"}]}]}
     b = api_health.budget(snap=snap, agg=api_health.aggregates())
-    assert b["keys"] == 2
+    assert b["keys"] == 2                      # 키 수는 tail 전역 dedup(리뷰 수리 후 방식)
     assert b["cap"] == 2 * api_health.RPD_PER_KEY
     assert b["used"] == 10
     assert b["used_pct"] == pytest.approx(100 * 10 / (2 * api_health.RPD_PER_KEY), abs=0.11)
@@ -277,3 +279,39 @@ def test_apiwatch_endpoint_denies_non_admin(tmp_db):
         state = _S()
     out = appmod._api_apiwatch(R(), hours=24)
     assert not isinstance(out, dict) or out.get("ok") is not True
+
+
+# ── 2026-09-01 적대 리뷰 확정 결함의 회귀 가드 ─────────────────────────────
+
+def test_budget_excludes_lock_events(tmp_db):
+    """잠금(lock) 이벤트는 실제 요청이 아니다 — used에 세면 429 1건이 2건으로 부푼다."""
+    api_health.record("gemini", api_health.OUT_RPD, pool="shorts", key="C" * 20)
+    api_health.record("gemini", api_health.OUT_LOCK, pool="shorts", key="C" * 20,
+                      key_idx=0, detail="ttl=1800s")
+    snap = {"gemini": [{"pool": "shorts", "total": 1, "owner": 1, "member": 0,
+                        "live": 1, "locked": [], "keys": [{"idx": 0, "tail": "C" * 6,
+                        "owner": "owner", "state": "live"}]}]}
+    b = api_health.budget(snap=snap, agg=api_health.aggregates())
+    assert b["used"] == 1                      # rpd 1건만 — lock은 요청이 아니다
+
+
+def test_budget_dedups_member_keys_across_pools(tmp_db):
+    """회원 키는 SHORTS·vault 양쪽에 합류한다 — cap이 두 번 세면 소진 임박이 '여유'로 보인다."""
+    shared = {"idx": 0, "tail": "SAME99", "owner": "member", "state": "live"}
+    snap = {"gemini": [
+        {"pool": "shorts", "total": 1, "owner": 0, "member": 1, "live": 1,
+         "locked": [], "keys": [dict(shared)]},
+        {"pool": "vault", "groups": {"general": {"total": 1, "live": 1,
+         "keys": [dict(shared)]}}},
+    ]}
+    b = api_health.budget(snap=snap, agg=api_health.aggregates())
+    assert b["keys"] == 1                      # 같은 물리 키는 한 번만
+    assert b["cap"] == api_health.RPD_PER_KEY
+
+
+def test_verdict_respects_kill_switch(tmp_db, monkeypatch):
+    """API_HEALTH=0이면 판정도 쉰다 — 기록을 껐는데 묵은 이벤트로 경보하면 안 된다."""
+    api_health.record("elevenlabs", api_health.OUT_SILENT)   # danger급 이벤트를 심고
+    monkeypatch.setenv("API_HEALTH", "0")
+    v = api_health.verdict()
+    assert v["level"] == "ok" and "꺼져" in v["msg"]

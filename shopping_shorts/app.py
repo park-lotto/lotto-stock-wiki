@@ -12267,8 +12267,9 @@ def _api_apiwatch(request: Request, hours: int = 24):
     denied = _require_admin(request)
     if denied:
         return denied
-    from shopping_shorts import api_health
     try:
+        # import도 try 안(리뷰 20): 모듈이 깨지면 500 대신 {ok:false, error}로 사유가 보이게
+        from shopping_shorts import api_health
         snap = api_health.snapshot()
         agg = api_health.aggregates(hours=max(1, min(int(hours or 24), 168)))
         agg1 = api_health.aggregates(hours=1)

@@ -136,6 +136,7 @@ class _FileLock:
 
 def mark_exhausted(group: str, key: str) -> None:
     """키를 당일 소진으로 기록(그룹별). 이후 프로세스는 재시도하지 않는다."""
+    marked_idx = None
     with _FileLock(_LOCK_PATH):
         keys = get_keys(group)
         if key not in keys:
@@ -149,13 +150,18 @@ def mark_exhausted(group: str, key: str) -> None:
             with open(tmp_path, "w", encoding="utf-8") as f:
                 json.dump(state, f)
             os.replace(tmp_path, _STATE_PATH)
-            try:                    # 관측판(2026-09-01) — 쇼핑쇼츠 없는 환경이면 조용히 통과
-                from shopping_shorts import api_health
-                api_health.record("gemini", api_health.OUT_LOCK,
-                                  pool=f"vault-{group}", key_idx=idx, key=key,
-                                  detail="당일 낙인(vault엔 TTL 없음)")
-            except Exception:       # noqa: BLE001
-                pass
+            marked_idx = idx
+    # ★기록은 락 **밖**에서(2026-09-01 리뷰 확정) — DB가 붐비면 record가 수 초를
+    #   먹는데 그동안 락을 쥐면 다른 프로세스가 5초 타임아웃 후 '락 없이 진행'으로
+    #   떨어져 소진표시가 유실될 수 있다(comment_gen도 락 밖에서 기록한다).
+    if marked_idx is not None:
+        try:                        # 관측판 — 쇼핑쇼츠 없는 환경이면 조용히 통과
+            from shopping_shorts import api_health
+            api_health.record("gemini", api_health.OUT_LOCK,
+                              pool=f"vault-{group}", key_idx=marked_idx, key=key,
+                              detail="당일 낙인(vault엔 TTL 없음)")
+        except Exception:           # noqa: BLE001
+            pass
 
 
 def get_live_keys(group: str) -> list[str]:

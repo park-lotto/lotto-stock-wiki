@@ -196,9 +196,12 @@ function poolCards(snap,agg,budget){
     html+=card('오늘 예산 사용',`${budget.used_pct??'?'}%`,
       `${budget.used||0}건 / ${budget.cap||0}건 (키 ${budget.keys}개×${(budget.cap&&budget.keys)?Math.round(budget.cap/budget.keys):500})`,cls);
   }
-  const hb=(agg.heartbeats||[]).filter(h=>h.proc==='worker').length;
+  // 죽은 워커의 옛 PID 행이 며칠 남으므로(재시작마다 새 PID) 최근 1시간 신고만 센다.
+  const hbCut=Date.now()-3600*1000;
+  const hb=(agg.heartbeats||[]).filter(h=>h.proc==='worker'
+    && new Date(h.ts).getTime()>hbCut).length;
   html+=card('워커 합류 신고',hb+'개',
-    '회원 키 합류를 신고한 워커 수(작업이 있어야 신고한다)');
+    '최근 1시간 내 신고한 워커 수(작업이 있어야 신고한다)');
   const dead=(snap.collectors||[]).filter(c=>c.failed);
   if((snap.collectors||[]).length)
     html+=card('수집 유닛',dead.length?dead.length+'개 죽음':'정상',
