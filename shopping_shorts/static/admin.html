@@ -200,6 +200,15 @@ tbody tr:hover{background:#1b1b22}
       <option value="trial">체험중</option>
       <option value="free">일반회원</option>
     </select>
+    <!-- 접속 상태 필터(2026-08-31 사장님 "접속중만 볼수있게 드롭다운 하나").
+         ★'접속중' 기준(5분)은 아래 표 칸이 쓰는 값과 **같은 상수**를 쓴다 — 두 벌이면
+           목록엔 초록불인데 필터엔 안 잡히는 일이 난다. -->
+    <select id=onlineFilter onchange="renderCustomers()">
+      <option value="">전체 접속상태</option>
+      <option value="online">🟢 접속중만</option>
+      <option value="today">오늘 접속</option>
+      <option value="off">비접속</option>
+    </select>
   </div>
   <div id=custHint style="display:none;margin:8px 0 0;padding:9px 12px;border-radius:8px;background:#2a2416;border:1px solid #6b5a1e;color:#f0d98a;font-size:13px;line-height:1.6"></div>
   <table><thead><tr><th>ID</th><th>이름</th><th>전화</th><th class=mini>성별</th><th class=mini>연령</th><th>이메일/아이디</th><th>등급</th><th>상태</th><th>시작일</th><th>마감일</th><th>결제</th><th>포인트</th><th>오늘 사용(렌즈/렌더/대본)</th><th>접속7일(IP/기기)</th><th>접속/활동</th><th>조작</th></tr></thead>
@@ -275,6 +284,31 @@ async function load(){
 function _tierOf(c){ return c.level==='full' ? (c.plan==='pro'?'pro':'trial') : 'free'; }
 function _ago(s){ if(s<60)return '방금 전'; if(s<3600)return Math.floor(s/60)+'분 전'; if(s<86400)return Math.floor(s/3600)+'시간 전'; return Math.floor(s/86400)+'일 전'; }
 // 접속/활동 셀 클릭 → 최근 활동 트레일 팝업
+document.addEventListener('click', async e=>{
+  // 🖥 등록 PC 해제(2026-08-31) — 사장님만 푼다. PC 교체·쿠키 삭제로 잠긴 고객 구제용.
+  const el = e.target.closest && e.target.closest('.pcslot');
+  if(!el) return;
+  const cid = el.dataset.pccid;
+  let info;
+  try{ info = await (await fetch('/api/admin/customer/devices?customer_id='+cid)).json(); }
+  catch(err){ alert('등록 PC를 못 읽었어요'); return; }
+  const ds = (info&&info.devices)||[];
+  if(!ds.length){ alert('등록된 PC가 없습니다 — 다음 접속 PC가 1번으로 등록됩니다.'); return; }
+  // 줄바꿈은 배열로 만든다 — 템플릿 문자열 안에 직접 넣으면 파일에 진짜 줄바꿈이 박혀
+  // JS 문법오류가 난다(2026-08-31 실측: node --check가 잡았다).
+  const lines = ds.map(function(d){
+    var when = new Date(d.last_seen*1000).toLocaleString('ko-KR');
+    return d.slot + '번 PC · 마지막 ' + when + '\n   ' + (d.ua||'').slice(0,70);
+  }).join('\n');
+  var msg = '등록된 PC ' + ds.length + '대\n\n' + lines
+          + '\n\n전부 해제할까요? (고객이 다음 접속하는 PC 2대가 새로 등록됩니다)';
+  if(confirm(msg)){
+    await fetch('/api/admin/customer/device_reset',{method:'POST',
+      headers:{'content-type':'application/json'}, body:JSON.stringify({customer_id:Number(cid)})});
+    alert('해제했습니다.');
+    if(typeof loadCustomers==='function') loadCustomers();
+  }
+});
 document.addEventListener('click', async (e)=>{
   const el=e.target.closest('.actlink'); if(!el) return;
   const cid=el.dataset.actcid;
@@ -327,12 +361,28 @@ function _useCell(c){
          + n + (lim!=null?'/'+lim:'') + '</span>';
   }).join('<span style="color:#4a4a52"> · </span>');
 }
+// ★'접속중'의 뜻을 **여기 한 곳에서** 정한다(0순위-B). 표 칸과 필터가 따로 계산하면
+//   목록엔 🟢인데 '접속중만'으로 거르면 안 나오는 일이 난다.
+const ONLINE_SEC = 300;              // 5분 내 활동 = 접속중
+function _isOnline(c){
+  const ls=c.last_seen||0;
+  return !!ls && (Math.floor(Date.now()/1000)-ls) < ONLINE_SEC;
+}
+function _onlineMatch(c,mode){
+  const ls=c.last_seen||0, nowS=Math.floor(Date.now()/1000);
+  if(mode==='online') return _isOnline(c);
+  if(mode==='today')  return !!ls && (nowS-ls) < 86400;
+  if(mode==='off')    return !_isOnline(c);
+  return true;
+}
 function renderCustomers(){
   const esc=s=>(s||'').toString().replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const q=((document.getElementById('custSearch')||{}).value||'').trim().toLowerCase();
   const tier=(document.getElementById('tierFilter')||{}).value||'';
+  const onl=(document.getElementById('onlineFilter')||{}).value||'';
   const rest=(window._CUST||[]).filter(c=>c.acked_at!=null).filter(c=>{
     if(tier && _tierOf(c)!==tier) return false;
+    if(onl && !_onlineMatch(c,onl)) return false;
     if(q && !_custMatch(c,q)) return false;
     return true;
   });
@@ -356,13 +406,21 @@ function renderCustomers(){
               :(c.plan==='trial'?'<span class="badge trial">체험판(랭킹만)</span>'
               :(c.level==='full'?'<span class="badge trial">이용중(기간제)</span>':'<span class="badge free">일반회원</span>'));
     const u=c.usage||{};
-    const acc=c.access_7d||{ips:0,devices:0};
-    // 돌려쓰기 의심: 최근 7일 고유 IP 3개↑ 또는 기기 3종↑이면 빨간 강조(차단은 안 함, 사장님 눈으로 판단)
-    const accSusp = (acc.ips>=3 || acc.devices>=3);
-    const accCell = `<span style="color:${accSusp?'#ff6b6b':'#8a8a92'};font-weight:${accSusp?'700':'400'}">${acc.ips}IP/${acc.devices}기기${accSusp?' ⚠️':''}</span>`;
+    const acc=c.access_7d||{ips:0,devices:0,pc_ips:0};
+    // 돌려쓰기 의심(2026-08-31 사장님 "pc등록ip를 두개씩, 모바일은 상관없고"):
+    //   ★모바일 IP는 안 센다 — LTE↔와이파이·기지국 이동으로 계속 바뀌어서, 혼자 쓰는
+    //     회원도 7일이면 IP가 대여섯 개가 된다. 그 탓에 정상 회원이 빨갛게 떴다.
+    //   ★PC는 집+회사 **2개까지 정상**, 3개째부터 의심. 기기 3종↑은 그대로 본다.
+    const pcIps = (acc.pc_ips!=null ? acc.pc_ips : acc.ips);
+    const accSusp = (pcIps>=3 || acc.devices>=3);
+    const accCell = `<span title="PC IP ${pcIps}개(모바일 제외) · 전체 IP ${acc.ips}개 · 기기 ${acc.devices}종"
+        style="color:${accSusp?'#ff6b6b':'#8a8a92'};font-weight:${accSusp?'700':'400'}">PC ${pcIps}IP/${acc.devices}기기${accSusp?' ⚠️':''}</span>`
+      // 🖥 등록 PC(2026-08-31) — 2대가 차면 3번째 PC는 막힌다. 눌러서 풀어준다.
+      + ` <span class=pcslot data-pccid=${c.id} title="등록된 PC ${c.pc_slots||0}대 — 눌러서 해제"
+            style="cursor:pointer;margin-left:6px;color:${(c.pc_slots||0)>=2?'#f0b429':'#5f6773'}">🖥${c.pc_slots||0}</span>`;
     const adminBadge = c.is_admin ? ' <span class="badge admin">관리자</span>' : '';
     const ls = c.last_seen||0, nowS=Math.floor(Date.now()/1000);
-    const online = ls && (nowS-ls) < 300;   // 5분 내 활동 = 접속중
+    const online = _isOnline(c);            // ★기준은 _isOnline 한 곳(필터와 같은 값)
     const seenCell = `<span class=actlink data-actcid=${c.id} title="최근 활동 보기" style="cursor:pointer;color:${online?'#7ee787':'#8ab4f8'}">${online?'🟢 접속중':(ls?'⚪ '+_ago(nowS-ls):'-')}</span>`;
     // ★이름을 누르면 상세 시트로 간다(2026-08-29). 모달은 빠른 조작용으로 그대로 두고,
     //   날짜별 이력·API 원가처럼 넓게 봐야 하는 것만 전용 페이지로 뺐다.

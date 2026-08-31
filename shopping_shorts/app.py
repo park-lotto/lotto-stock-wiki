@@ -31,7 +31,7 @@ from shopping_shorts import service
 from shopping_shorts.service import collect, census, generate_missing_drafts, next_draft_targets, youtube_channel_board
 from shopping_shorts.outreach import build_queue
 from shopping_shorts.instagram_parse import shortcode_to_timestamp
-from shopping_shorts.store import Store, style_spine_rank
+from shopping_shorts.store import Store, _is_mobile_ua, style_spine_rank
 from shopping_shorts import vision_tagging
 from shopping_shorts.auto_run import run_auto_job, default_stages
 from shopping_shorts import config
@@ -8017,6 +8017,22 @@ def _set_session_cookie(response, customer_id: int):
                          max_age=_COOKIE_MAX_AGE, httponly=True, samesite="lax")
 
 
+# ── 🖥 PC 등록(2026-08-31 사장님 "1번pc 2번pc 다른곳에선 안되게") ──────────────
+# ★IP로 막지 않는다: 가정용 인터넷은 대부분 유동 IP라 재접속마다 바뀐다 — 같은 PC인데
+#   잠긴다. 브라우저에 **랜덤 기기 도장**을 찍어 그걸로 본다.
+# ★모바일은 아예 안 본다(사장님: "모바일은 상관없고"). 판정은 store._is_mobile_ua 한 곳.
+# ⚠️쿠키가 지워지면(청소·시크릿창·포맷) 같은 PC도 새 기기로 보인다 — 그래서 사장님이
+#   누르는 '기기 초기화'가 반드시 짝으로 있어야 한다(관리자 화면).
+_DEVICE_COOKIE = "ss_pc"
+_DEVICE_MAX_AGE = 60 * 60 * 24 * 730      # 2년 — 쿠키가 만료로 사라지면 곧 잠김이다
+
+
+def _device_id(request):
+    """이 브라우저의 기기 도장. 없으면 None(호출부가 새로 찍는다)."""
+    v = (request.cookies.get(_DEVICE_COOKIE) or "").strip()
+    return v if re.fullmatch(r"[0-9a-f]{32}", v) else None
+
+
 # ── QR '폰으로 보내기' 단축 공유 (2026-07-23) ──
 # PC 웹은 카톡 대화방에 mp4를 직접 못 넣는다(카톡 PC가 파일 붙여넣기 미지원). 그래서 완성 영상의
 # '로그인 없이 열리는' 단기 링크를 QR로 띄운다 → 폰으로 스캔해 폰 카톡 네이티브 공유로 전송.
@@ -8760,6 +8776,22 @@ else{btn.href="/pricing";btn.textContent="카톡으로 문의";}
 </body></html>"""
 
 _LANDING_HTML = _fill_brand(_LANDING_TMPL)
+
+_PC_BLOCKED_HTML = _fill_brand("""<!doctype html><html lang=ko><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1"><title>등록된 PC에서만 쓸 수 있어요</title>
+<style>body{margin:0;background:#0b0f14;color:#e8e8ea;font-family:Pretendard,'Malgun Gothic',sans-serif;
+display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px}
+.box{max-width:460px;text-align:center;background:#121821;border:1px solid #26303d;border-radius:16px;padding:34px 28px}
+h1{font-size:20px;margin:0 0 14px}p{color:#9aa4b2;line-height:1.7;margin:0 0 10px;font-size:14px}
+a{display:inline-block;margin-top:18px;color:#7ee787;text-decoration:none;border:1px solid #2f6b45;
+border-radius:8px;padding:9px 18px;font-size:14px}</style></head><body><div class=box>
+<h1>🖥 등록된 PC에서만 쓸 수 있어요</h1>
+<p>이 계정은 PC <b>2대</b>까지 쓸 수 있고, 이미 2대가 등록돼 있어요.</p>
+<p>PC를 바꾸셨거나 브라우저를 정리하셨다면 <b>등록 해제</b>가 필요합니다.<br>
+아래 문의하기로 알려주시면 바로 풀어드릴게요.</p>
+<p style="color:#5f6773;font-size:12px">휴대폰·태블릿은 제한 없이 쓰실 수 있어요.</p>
+<a href="__KAKAO__">문의하기</a></div></body></html>""")
+
 
 _PENDING_HTML = _fill_brand("""<!doctype html><html lang=ko><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1">
@@ -9575,6 +9607,46 @@ def _record_access(customer_id, request):
         pass
 
 
+def _check_pc_device(customer_id, request, path):
+    """PC 등록 게이트 → 막아야 하면 응답, 통과면 None.
+
+    ★막는 판단을 여기 한 곳에서만 한다(0순위-B). 미들웨어 본문에 흩어놓으면
+      "어떤 경로는 막히고 어떤 경로는 안 막힌다"가 된다.
+    ★fail-open: 무슨 일이 생겨도 **막지 않는다**. 이 기능이 고장나서 결제한 고객이
+      못 들어오는 것보다, 돌려쓰기 한 명을 놓치는 게 낫다.
+    """
+    try:
+        if not customer_id:                       # 사장님(0)·비로그인은 제외
+            return None
+        if path in ("/logout", "/login"):         # 막혀도 로그아웃은 돼야 한다
+            return None
+        cust = Store(DB_PATH).get_customer(customer_id)
+        if cust and cust.get("admin"):
+            return None
+        ua = request.headers.get("user-agent", "")
+        if _is_mobile_ua(ua):                     # 모바일·태블릿은 제한 없음
+            return None
+        dev = _device_id(request)
+        if not dev:
+            # 도장이 없는 첫 방문 — **리다이렉트하지 않는다.** 나가는 응답에 쿠키만 얹고
+            # 그냥 통과시킨다. 다음 요청부터 이 도장으로 본다.
+            # ★왜 리다이렉트를 쓰면 안 되나(2026-08-31 게이트가 잡음): 이 303이
+            #   승인·유료·가입마무리 게이트보다 **먼저** 떠서, 신규 가입자가 /welcome
+            #   대신 /로 튕겼다. 파일 위쪽 주석이 경고하던 바로 그 사고다.
+            request.state.new_device_id = secrets.token_hex(16)
+            return None
+        ok, _slot, _n = Store(DB_PATH).device_check(
+            customer_id, dev, ua, _client_ip(request))
+        if ok:
+            return None
+        if path.startswith("/api/"):
+            return JSONResponse({"error": "등록된 PC 2대에서만 쓸 수 있어요",
+                                 "reason": "pc_limit"}, status_code=403)
+        return HTMLResponse(_PC_BLOCKED_HTML, status_code=403)
+    except Exception:      # noqa: BLE001 — 이 게이트가 고장나도 서비스는 열려 있어야 한다
+        return None
+
+
 # 활동 트레일(2026-07-22): 경로→친절한 액션명. 이 목록에 걸리는 요청만 '몇 번 전 뭘 했다'로 남는다.
 # 나머지(단순 조회·정적)는 last_seen(접속중)만 갱신하고 로그엔 안 남긴다.
 _ACTIVITY_MAP = (
@@ -9672,6 +9744,14 @@ async def _auth_guard(request: Request, call_next):
             if path.startswith("/api/"):
                 return JSONResponse({"error": "승인 대기중이에요", "level": "pending"}, status_code=403)
             return HTMLResponse(_with_pay(_PENDING_HTML))
+        # ── 🖥 PC 등록 게이트(2026-08-31) ────────────────────────────────────
+        #   등록된 PC 2대에서만 쓴다. 3번째 PC는 막는다(사장님이 풀어줘야 열린다).
+        #   ★모바일은 통째로 제외 — 사장님: "모바일은 상관없고".
+        #   ★사장님 계정(0·admin)도 제외 — 여러 기기가 정상이다(_record_access와 같은 규약).
+        #   ★/logout은 열어둔다 — 막힌 사람이 로그아웃조차 못 하면 계정을 바꿀 수 없다.
+        _pc_block = _check_pc_device(customer_id, request, path)
+        if _pc_block is not None:
+            return _pc_block
         # 유료게이트: 로그인은 됐으나 등급이 ranking_only(무료/체험만료)면 유료 경로 차단.
         # 사장님(0)·pro·체험중은 access_level=full이라 안 걸린다. deny-by-default.
         if lvl == "ranking_only" and _ranking_only_blocked(path, request.method):
@@ -9699,7 +9779,14 @@ async def _auth_guard(request: Request, call_next):
                     return RedirectResponse("/setup?first=1", status_code=303)
             except Exception as e:  # noqa: BLE001 — 안내 때문에 서비스를 막지 않는다
                 print(f"[setup] 안내 판정 실패(무시): {e!r}", file=sys.stderr)
-        return await call_next(request)
+        resp = await call_next(request)
+        # 🖥 기기 도장은 **여기서만** 찍는다 — 모든 게이트를 통과한 응답에 얹으므로
+        #   화면 이동(303)을 가로채지 않는다(위 _check_pc_device 주석 참조).
+        _newdev = getattr(request.state, "new_device_id", None)
+        if _newdev:
+            resp.set_cookie(_DEVICE_COOKIE, _newdev, max_age=_DEVICE_MAX_AGE,
+                            httponly=True, samesite="lax")
+        return resp
     if path.startswith("/api/"):
         return JSONResponse({"error": "unauthorized"}, status_code=401)
     if path in ("/", "/index.html"):
@@ -10504,6 +10591,7 @@ def _admin_customers(request: Request):
                      .astimezone(timezone.utc).isoformat())
     made_map = st.made_and_charged_since_all(_kst_midnight)
     access_map = st.access_summary_all(since7)
+    device_map = st.device_list_all()      # 등록 PC 수(1인당 쿼리 금지 — N+1 방지)
     points_map = st.points_balance_all()
     challenge_ids = st.challenge_member_ids()
     _customers = st.list_customers()
@@ -10524,7 +10612,9 @@ def _admin_customers(request: Request):
         #   채우므로 빠지는 고객이 없다. 혹시 비면 빈 dict가 낫다 — 화면이 '—'로 뜬다.
         cu["limits"] = limits_map.get(_cid, {})
         cu["made_today"] = made_map.get(_cid, {"made": 0, "charged": 0})   # 한국시간 오늘 실측
-        cu["access_7d"] = access_map.get(_cid, {"ips": 0, "devices": 0})  # 최근 7일 고유 수
+        # 최근 7일 고유 수. pc_ips = 모바일 뺀 PC IP(공유 판정은 이걸 본다, 2026-08-31)
+        cu["access_7d"] = access_map.get(_cid, {"ips": 0, "devices": 0, "pc_ips": 0})
+        cu["pc_slots"] = device_map.get(_cid, 0)      # 등록된 PC 수(2026-08-31)
         # 관리자 판정도 목록이 이미 들고 있는 email·admin으로 한다(규칙은 _is_admin과 동일)
         _email = (cu.get("email") or "").lower()
         cu["code_admin"] = (_as_cid(_cid) == 0) or (_email in _ADMIN_EMAILS)
@@ -10709,6 +10799,37 @@ async def _admin_customer_delete(request: Request):
     if _is_admin(cid):
         return JSONResponse({"error": "관리자 계정은 삭제할 수 없어요"}, status_code=400)
     Store(DB_PATH).delete_customer(cid)
+    return {"ok": True}
+
+
+@app.get("/api/admin/customer/devices")
+def _admin_customer_devices(request: Request, customer_id: int):
+    """이 고객이 등록한 PC 목록 — 사장님이 누구 PC인지 눈으로 보고 푼다."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    return {"ok": True, "slots": Store(DB_PATH).PC_SLOTS,
+            "devices": Store(DB_PATH).device_list(customer_id)}
+
+
+@app.post("/api/admin/customer/device_reset")
+async def _admin_customer_device_reset(request: Request):
+    """등록된 PC를 푼다. body: {customer_id, slot?} — slot 없으면 전부.
+
+    ★해제는 **사장님만**이다(2026-08-31 사장님이 정함). 고객이 스스로 풀 수 있으면
+      돌려쓰기를 막는 의미가 없어진다. 대신 PC 교체·쿠키 삭제로 잠긴 고객이 생기니
+      이 버튼이 반드시 있어야 한다 — 없으면 기능이 아니라 사고다.
+    """
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    body = await request.json()
+    try:
+        cid = int(body.get("customer_id"))
+    except (TypeError, ValueError):
+        return JSONResponse({"error": "customer_id 필요"}, status_code=400)
+    slot = body.get("slot")
+    Store(DB_PATH).device_reset(cid, int(slot) if slot else None)
     return {"ok": True}
 
 
