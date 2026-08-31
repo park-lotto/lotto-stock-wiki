@@ -519,6 +519,15 @@ def aggregates(hours=24):
                 f"FROM api_events WHERE ts >= ? GROUP BY hour_utc ORDER BY hour_utc",
                 (*FAIL_OUTCOMES, since))]
 
+            # ★죽은 키는 '호출 몇 번'이 아니라 '키 몇 개'로 센다(2026-09-01 사장님 지적).
+            #   실측: 죽은 키 1개를 34분간 12번 때린 것이 "12건 사망"으로 읽혀,
+            #   무더기 사고로 오인됐다. 처방(키를 빼라)의 단위도 키 개수다.
+            out["dead_keys"] = [dict(r) for r in conn.execute(
+                "SELECT service, pool, key_tail, COUNT(*) hits, MIN(ts) first_ts, MAX(ts) last_ts "
+                "FROM api_events WHERE outcome=? AND ts >= ? "
+                "GROUP BY service, pool, key_tail ORDER BY hits DESC LIMIT 50",
+                (OUT_AUTH, since))]
+
             out["heartbeats"] = [dict(r) for r in conn.execute(
                 "SELECT proc, pid, ts, detail FROM api_heartbeats ORDER BY proc, pid")]
         finally:
@@ -550,8 +559,21 @@ def verdict(snap=None, agg=None):
                 fails[svc] = fails.get(svc, 0) + row.get("n", 0)
             if row.get("outcome") == OUT_SILENT and row.get("n", 0) > 0:
                 problems.append(f"{svc}: 무음 폴백 {row['n']}건 — 고객이 무음 영상을 받았다")
-            if row.get("outcome") == OUT_AUTH and row.get("n", 0) > 0:
-                problems.append(f"{svc}: 죽은 키 호출 {row['n']}건 — .env에서 제거 필요")
+            # OUT_AUTH는 아래에서 '키 개수' 기준으로 따로 판정한다(호출 건수로 세지 않는다).
+        # ★죽은 키 판정 — 키 개수가 본체, 호출 횟수는 "얼마나 헛되이 때렸나"의 근거.
+        dead_by_svc = {}
+        for d in (agg.get("dead_keys") or []):
+            s = d.get("service")
+            e = dead_by_svc.setdefault(s, {"keys": 0, "hits": 0, "tails": []})
+            e["keys"] += 1
+            e["hits"] += d.get("hits", 0)
+            if d.get("key_tail"):
+                e["tails"].append("…" + str(d["key_tail"]))
+        for s, e in dead_by_svc.items():
+            problems.append(
+                f"{s}: 죽은 키 {e['keys']}개({', '.join(e['tails'][:3])})를 "
+                f"{e['hits']}번 헛되이 호출 — 그 키를 빼야 시간을 안 버린다")
+
         for svc, f in fails.items():
             tot = f + oks.get(svc, 0)
             if tot >= 10 and f / tot > 0.5:
