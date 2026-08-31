@@ -12155,6 +12155,48 @@ def _api_admin_work_lines(request: Request):
     return {"ok": True, **out}
 
 
+@app.get("/crawl", response_class=HTMLResponse)
+def _crawl_page(request: Request):
+    """🕸 크롤링 관측판 — 매일 도는 크롤이 어떤 상태인지(2026-09-01 사장님).
+    용량 관측판(/ops)과 나눈 이유: 저긴 5분 표본·서버 자원이고 여긴 하루 회차·수집 결과다."""
+    if not _is_admin(getattr(request.state, "customer_id", None)):
+        return HTMLResponse("<h2 style='font-family:sans-serif'>관리자 전용입니다</h2>",
+                            status_code=403)
+    return FileResponse(Path(__file__).parent / "static" / "crawl.html",
+                        media_type="text/html; charset=utf-8", headers=_NOCACHE)
+
+
+@app.get("/api/admin/crawl")
+def _api_crawl(request: Request, days: int = 14, min_fails: int = 2):
+    """크롤링 관측판 데이터 — 축별 최근 회차 + 이력 + 죽은 채널 + 판정 한 줄."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import crawl_watch
+    days = max(1, min(int(days or 14), 60))
+    out = {"ok": True, "jobs": {}}
+    for job in crawl_watch.JOBS:
+        try:
+            out["jobs"][job] = {
+                "latest": crawl_watch.latest(DB_PATH, job),
+                "history": crawl_watch.history(DB_PATH, job, days=days),
+            }
+        except Exception as e:      # noqa: BLE001 — 한 축이 깨져도 나머지는 보여야 한다
+            out["jobs"][job] = {"latest": None, "history": [], "error": str(e)}
+    try:
+        # 죽은 채널은 인스타 수집에만 의미가 있다(발굴·유튜브는 채널 목록이 아니다).
+        out["dead"] = crawl_watch.dead_channels(DB_PATH, "instagram_collect",
+                                                min_fails=max(2, int(min_fails or 2)))
+    except Exception as e:          # noqa: BLE001
+        out["dead"] = []
+        out["dead_error"] = str(e)
+    try:
+        out["verdict"] = crawl_watch.verdict(DB_PATH)
+    except Exception as e:          # noqa: BLE001
+        out["verdict"] = {"level": "unknown", "msg": str(e), "unknown": []}
+    return out
+
+
 @app.get("/api/admin/capacity")
 def _api_capacity(request: Request, days: int = 14):
     """관측판 데이터. 지금 상태(실시간 1회 표본) + 날짜별 최대치 + 판정 한 줄."""

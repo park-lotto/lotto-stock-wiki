@@ -125,6 +125,20 @@ def main():
     except Exception as e:  # noqa: BLE001 — 로그가 수집을 죽이면 안 된다
         print(f"[daily_instagram_collect] tally 로깅 실패(무해): {e!r}", file=sys.stderr)
 
+    # 🕸 관측판에 이 회차를 남긴다(2026-09-01). 위 로그는 journalctl에만 남아
+    # 화면에서는 볼 수 없었다 — 2026-08-31에 153채널이 전부 실패했는데도 아무 표시가
+    # 없었던 게 이 관측판을 만든 이유다(핸드오프 '발굴 0건일 때 경고 알림').
+    # ⚠️ 관측이 수집을 죽이면 안 된다 — 실패해도 사유만 남기고 넘어간다.
+    try:
+        from shopping_shorts import crawl_watch
+        from shopping_shorts.instagram_playwright import LAST_VERDICTS
+        crawl_watch.record_run(
+            DB_PATH, "instagram_collect",
+            tally=dict(getattr(service, "LAST_COLLECT_TALLY", {}) or {}),
+            verdicts=list(LAST_VERDICTS), items=len(items), seconds=time.time() - t0)
+    except Exception as e:  # noqa: BLE001
+        print(f"[daily_instagram_collect] 관측 기록 실패(무해): {e!r}", file=sys.stderr)
+
     print(f"[daily_instagram_collect] {len(items)}건 수집 · {time.time() - t0:.1f}s")
     return 0
 
