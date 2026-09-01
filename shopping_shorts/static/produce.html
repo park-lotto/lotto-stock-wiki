@@ -16488,14 +16488,21 @@ function s2DelBeat(i,j){
   if(!beats[j]) return;
   // 마지막 한 줄까지 빼면 대본이 통째로 사라져 확정도 못 한다(s2Confirm이 빈 대본을 막는다).
   // 지울 게 아니라 **고쳐 쓸** 상황이므로 여기서 갈라 말해준다.
-  if(beats.filter(x=>((x&&x.text)||'').trim()).length<=1){
-    toast('마지막 한 줄은 뺄 수 없어요 — 문장을 고쳐서 쓰세요'); return;
+  // ★단 ✍내 대본은 **아직 안 쓴 빈 칸이 정상**이다(2026-09-01 사장님 "빼기가 안 된다").
+  //   글자 수로 세면 한 칸만 쓴 상태에서 나머지 빈 칸을 하나도 못 뺀다 — 여기선 **칸 수**로 센다.
+  const _left = dr.mine ? beats.length
+                        : beats.filter(x=>((x&&x.text)||'').trim()).length;
+  if(_left<=1){
+    toast(dr.mine ? '칸이 하나만 남았어요 — 여기에 쓰시면 됩니다'
+                  : '마지막 한 줄은 뺄 수 없어요 — 문장을 고쳐서 쓰세요'); return;
   }
   const b=beats[j];
   const label=s2RoleName(b.role||'').replace(/^·\s*/,'') || '이 줄';
   const txt=(b.text||'').trim();
   const head=txt.slice(0,24)+(txt.length>24?'…':'');
-  if(!confirm(label+' — "'+head+'"\n\n이 줄을 대본에서 뺍니다. 계속할까요?')) return;
+  // 빈 칸은 잃을 게 없다 — 물어보지 않고 바로 뺀다(칸을 여러 개 지울 때 매번
+  // 확인창이 뜨면 그게 더 방해다). 쓴 글이 있는 줄만 확인한다.
+  if(txt && !confirm(label+' — "'+head+'"\n\n이 줄을 대본에서 뺍니다. 계속할까요?')) return;
   beats.splice(j,1);
   dr.beats=beats;
   // script는 beats에서 다시 만든다 — 두 벌을 따로 고치지 않는다(0순위-B, s2EditBeat와 동일).
