@@ -92,7 +92,8 @@ def embed_text(text: str) -> list[float]:
                     #   쓰게 됐는데 "embed"로 하드코딩하면 **엉뚱한 그룹의 인덱스**에
                     #   낙인이 박혀 멀쩡한 키가 죽은 것으로 기록된다
                     #   (script_generate.py:77이 쓰는 것과 같은 패턴).
-                    key_vault.mark_exhausted(key_vault._owner_group(key) or "embed", key)
+                    key_vault.mark_exhausted(key_vault._owner_group(key) or "embed", key,
+                                             key_vault.retry_delay_seconds(e))
                     continue
                 if key_vault.is_quota_error(e):
                     continue
