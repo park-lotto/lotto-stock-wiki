@@ -10,7 +10,7 @@
   // 원인 찾는 데 한참 걸렸다. 그래서 버전을 숫자로 박고 큰 쪽이 이어받게 한다.
   // (옛 코드는 이 숫자가 없다 → 0으로 보고 새 로직이 이긴다. 옛 인터벌은 남지만
   //  버튼은 id 선점이라 서로 안 덮고, 새 화면(유튜브·쓰레드)은 새 로직이 그린다.)
-  var LOGIC_VER = 20260901;
+  var LOGIC_VER = 20260902;
   if ((window.__ssGrabVer || 0) >= LOGIC_VER) return;   // 같거나 더 새것이 이미 돎
   if (window.__ssGrabLoaded && !window.__ssGrabVer) {
     // 옛 로직이 이미 돌고 있다 — 그 버튼을 걷어내고 새 로직이 다시 그린다.
@@ -288,14 +288,14 @@
       box = document.createElement("div");
       box.id = "ss-seek";
       box.style.cssText = "position:fixed;right:18px;bottom:174px;z-index:2147483647;background:rgba(20,20,20,.92);" +
-        "border:1px solid #444;border-radius:14px;padding:8px 12px;display:flex;align-items:center;gap:8px;" +
-        "font-family:system-ui,sans-serif;color:#fff;font-size:12px;box-shadow:0 4px 14px rgba(0,0,0,.35)";
+        "border:1px solid #444;border-radius:12px;padding:5px 8px;display:flex;align-items:center;gap:6px;" +
+        "font-family:system-ui,sans-serif;color:#fff;font-size:11px;box-shadow:0 4px 14px rgba(0,0,0,.35)";
       box.innerHTML = "<button id='ss-seek-p' title='일시정지/재생' style='background:none;border:none;" +
-        "color:#fff;font-size:15px;cursor:pointer;padding:0 2px'>⏸</button>" +
-        "<input id='ss-seek-r' type='range' min='0' max='100' step='0.1' value='0' style='width:150px;cursor:pointer'>" +
-        "<span id='ss-seek-t' style='min-width:70px;text-align:right'>0:00/0:00</span>" +
-        "<span id='ss-seek-d' title='영상 등록일' style='color:#aaa;border-left:1px solid #555;padding-left:8px'></span>" +
-        "<span id='ss-seek-s' title='조회수·댓글수' style='color:#aaa;border-left:1px solid #555;padding-left:8px'></span>";
+        "color:#fff;font-size:13px;cursor:pointer;padding:0 2px'>⏸</button>" +
+        "<input id='ss-seek-r' type='range' min='0' max='100' step='0.1' value='0' style='width:90px;cursor:pointer'>" +
+        "<span id='ss-seek-t' style='min-width:58px;text-align:right'>0:00/0:00</span>" +
+        "<span id='ss-seek-d' title='영상 등록일' style='color:#aaa;border-left:1px solid #555;padding-left:6px'></span>" +
+        "<span id='ss-seek-s' title='조회수·댓글수' style='color:#aaa;border-left:1px solid #555;padding-left:6px'></span>";
       document.body.appendChild(box);
       var r = document.getElementById("ss-seek-r");
       r.addEventListener("input", function () {
@@ -913,32 +913,53 @@
   //   넓은 화면에선 영상에서 한참 떨어진 구석에 붙어 있었다.
   //   자리 판단은 **여기 한 곳에서만** 한다(0순위-B) — 만드는 쪽은 right:18px로 두고,
   //   이 함수가 매 tick에 left로 덮어쓴다. 못 정하면 종전 자리 그대로 둔다.
-  var DOCK_IDS = ["ss-grab-btn", "ss-chadd-btn", "ss-lens-btn", "ss-adopt-btn"];
-  function _dockAnchorRight() {
+  // 위→아래 순서. 지금 화면에 있는 것만 골라 빈칸 없이 연속으로 쌓는다.
+  var DOCK_IDS = ["ss-adopt-btn", "ss-lens-btn", "ss-chadd-btn", "ss-grab-btn"];
+  var DOCK_STEP = 52;      // 버튼 세로 간격
+  function _dockAnchor() {
     // 가장 큰 <video>가 지금 보는 영상이다. 액션열(좋아요·댓글)까지 감싸는
-    // 게시물 칸(article)이 있으면 그 오른쪽 끝을 쓴다 — 없으면 영상 자체.
+    // 게시물 칸(article)이 있으면 그 사각형을 쓴다 — 없으면 영상 자체.
     var vs = document.querySelectorAll("video"), best = null, area = 0;
     for (var i = 0; i < vs.length; i++) {
       var r = vs[i].getBoundingClientRect();
       if (r.width * r.height > area) { area = r.width * r.height; best = vs[i]; }
     }
-    if (!best || area < 10000) return 0;
+    if (!best || area < 10000) return null;
     var box = best.closest ? (best.closest("article") || best) : best;
     var rr = box.getBoundingClientRect();
-    if (rr.right <= 0 || rr.right >= window.innerWidth) return 0;
-    return rr.right;
+    if (rr.right <= 0 || rr.right >= window.innerWidth) return null;
+    return rr;
   }
   function _dockBtns() {
-    var x = _dockAnchorRight();
+    var rr = _dockAnchor();
+    var x = rr ? rr.right : 0;
+    // 버튼 4개: 영상 칸 오른쪽 + **위에서부터** 아래로(2026-09-01 사장님 요청 —
+    // 종전엔 아래에 깔려 사이트 액션 아이콘·'메시지' 팝업과 겹쳤다).
+    var slot = 0;
     for (var i = 0; i < DOCK_IDS.length; i++) {
       var el = document.getElementById(DOCK_IDS[i]);
       if (!el) continue;
-      // 버튼이 화면 밖으로 밀리면(좁은 창) 종전 오른쪽 끝 자리로 되돌린다.
+      // 화면 밖으로 밀리면(좁은 창) 종전 오른쪽 아래 자리로 되돌린다.
       var w = el.offsetWidth || 150;
-      if (!x || x + 16 + w + 12 > window.innerWidth) {
-        el.style.left = ""; el.style.right = "18px";
+      if (!rr || x + 16 + w + 12 > window.innerWidth) {
+        el.style.left = ""; el.style.right = "18px"; el.style.top = ""; el.style.bottom = "";
       } else {
         el.style.right = "auto"; el.style.left = (x + 16) + "px";
+        el.style.bottom = "auto";
+        el.style.top = Math.max(8, rr.top + 8 + slot * DOCK_STEP) + "px";
+        slot++;
+      }
+    }
+    // 시크바: 버튼과 겹치지 않게 **영상 아래쪽**에 붙인다(폭은 만들 때 줄여둔다).
+    var sk = document.getElementById("ss-seek");
+    if (sk) {
+      if (!rr) { sk.style.left = ""; sk.style.right = "18px"; sk.style.bottom = "174px"; }
+      else {
+        var sw = sk.offsetWidth || 260;
+        var sx = x + 16;
+        if (sx + sw + 12 > window.innerWidth) sx = Math.max(8, window.innerWidth - sw - 12);
+        sk.style.right = "auto"; sk.style.left = sx + "px";
+        sk.style.bottom = Math.max(8, window.innerHeight - rr.bottom + 8) + "px";
       }
     }
   }
