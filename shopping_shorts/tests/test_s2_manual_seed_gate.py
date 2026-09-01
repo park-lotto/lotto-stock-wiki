@@ -44,3 +44,45 @@ def test_안내문구가_직접쓰기를_가리킨다():
     src = PRODUCE.read_text(encoding="utf-8")
     assert "직접 쓴 대본은 아직 생성 대상이 아닙니다" not in src
     assert "「직접 쓰기」" in src
+
+
+# ── 카드 선택 표시(2026-09-01 2차 제보: "씨앗이 내 대본인데 씨앗을 고르라고 한다") ──
+def _seed_on_src():
+    src = PRODUCE.read_text(encoding="utf-8")
+    i = src.index("function s2SeedOn(i){")
+    j = src.index("\n}", i) + 2
+    return src[i:j]
+
+
+def _on(seeds, seed):
+    out = run_js(f"""
+var S2 = {{seeds: {json.dumps(seeds)}, seed: null}};
+S2.seed = {json.dumps(seed)};
+{_seed_on_src()}
+console.log(JSON.stringify(S2.seeds.map(function(_, i){{ return s2SeedOn(i); }})));
+""")
+    return json.loads(out)
+
+
+MANUAL = {"shortcode": "", "text": "화물트럭 케이크 모양 보셨나요", "manual": True}
+VIDEOS = [{"shortcode": "A1", "text": "영상1", "pick": True},
+          {"shortcode": "B2", "text": "영상2", "pick": False}]
+
+
+def test_내_대본이_씨앗이면_영상카드는_다_꺼진다():
+    """종전엔 대표(AI PICK) 카드가 켜진 것처럼 보여 화면이 거짓말을 했다."""
+    assert _on(VIDEOS + [MANUAL], MANUAL) == [False, False, True]
+
+
+def test_영상을_고르면_내_대본_카드는_꺼진다():
+    assert _on(VIDEOS + [MANUAL], VIDEOS[1]) == [False, True, False]
+
+
+def test_아무것도_안_골랐으면_대표가_켜진다():
+    assert _on(VIDEOS, None) == [True, False]
+
+
+def test_직접_쓴_씨앗은_목록을_다시_그려도_남는다():
+    """s2RenderSeeds가 매번 S2.seeds를 새로 만든다 — 다시 얹지 않으면 카드가 사라진다."""
+    src = PRODUCE.read_text(encoding="utf-8")
+    assert "S2.seeds.push(S2.manualSeed)" in src
