@@ -1186,6 +1186,33 @@ def fix_hapsyo_violation_prompt(beats, style_name=None):
 _HOOK_OPENERS = ("와", "여러분")
 
 
+_HOOK_OPENER_KEY = "script_hook_opener"     # 전역 설정 키. "off"면 감탄사를 안 붙인다.
+_HOOK_OPENER_CACHE = {"t": 0.0, "on": True}
+
+
+def hook_opener_on():
+    """훅 감탄사("와, " / "여러분 ")를 붙일까 — 관리자 전역 스위치(2026-09-01 사장님).
+
+    ★기본은 켬이다(설정이 없으면 종전과 100% 같다 — 회귀 0).
+    ★DB를 매 대본마다 읽지 않게 60초 캐시. 스위치를 바꾸면 최대 1분 뒤 반영된다.
+    ★Store를 지연 import한다 — 이 모듈은 순수 로직이라 위에서 끌어오면 순환참조가 난다.
+    """
+    import time as _t
+    now = _t.time()
+    if now - _HOOK_OPENER_CACHE["t"] < 60:
+        return _HOOK_OPENER_CACHE["on"]
+    on = True
+    try:
+        from shopping_shorts.store import Store
+        from shopping_shorts.config import DB_PATH
+        v = (Store(DB_PATH).get_setting(_HOOK_OPENER_KEY, "on") or "on").strip().lower()
+        on = v not in ("off", "0", "false", "")
+    except Exception:      # noqa: BLE001 — 설정을 못 읽으면 켬(종전 동작)
+        on = True
+    _HOOK_OPENER_CACHE.update(t=now, on=on)
+    return on
+
+
 def hook_opener_missing(beats, style_name=None):
     """훅 첫머리에 감탄사·부름말이 없는가(2026-08-09 사장님 지시).
 
@@ -1196,6 +1223,8 @@ def hook_opener_missing(beats, style_name=None):
       그래서 CTA·서명과 같이 코드로 보장한다.
     ★채이는 대상이 아니다 — few-shot 2편 모두 "이거 몰라서/저 이거 때문에"로 열고
       감탄사를 안 쓴다(그 채널 결이 아니다)."""
+    if not hook_opener_on():          # 관리자가 끈 상태 — 어떤 스타일이든 안 붙인다
+        return False
     if (style_name or "") == "chae":
         return False
     if not beats:
