@@ -8696,27 +8696,6 @@ function _renderPreviewVideoFallback(job, src){
 ;   // 안내 문구 없음(2026-08-15 사장님 "랜더 아래쪽 문구들은 다 지워")
   const btn = document.getElementById('btnPreview'); if(btn) btn.disabled = false;
 }
-// 실패로 끝난 매칭을 편집안 자리에 그린다(2026-09-01). 폴러가 안 도는 복원 경로에서도
-// 사용자가 "왜 빈 화면이지"를 겪지 않게 — 사유 + 다시 매칭 버튼을 같이 준다.
-// st = /api/mix/status 응답(없을 수 있다). 그려도 되고 못 그려도 본작업을 막지 않는다.
-function _renderMixFailed(st){
-  try{
-    const el = document.getElementById('mixReview');
-    if(!el) return;
-    const err = (st && (st.error || '')) || '';
-    const stale = !st || !st.status;
-    el.innerHTML =
-      '<div style="border:1px solid var(--fire);border-radius:10px;padding:14px;'
-      + 'background:rgba(255,90,90,.08);font-size:14px">'
-      + '<b style="color:var(--fire)">❌ 이 작업의 영상 매칭이 실패한 채로 남아 있습니다</b>'
-      + (err ? '<div class="hint" style="margin-top:6px">' + esc(err) + '</div>' : '')
-      + (stale ? '<div class="hint" style="margin-top:6px">매칭 결과를 찾지 못했습니다.</div>' : '')
-      + '<div class="hint" style="margin-top:8px">확정한 대본은 그대로 남아 있어요 — 아래 버튼으로 매칭만 다시 하면 됩니다.</div>'
-      + '<button class="btn" style="margin-top:10px;padding:8px 16px" '
-      + 'onclick="startProduceMix()">✔ 확정한 대본으로 다시 매칭</button>'
-      + '</div>';
-  }catch(_){ }
-}
 // 편집안(#mixReview) 렌더 본체 — loadMixReview(새 매칭)와 _restoreMixContext(복원)가 공유한다.
 // ★loadMixReview와 달리 PREVIEW_STATUS를 리셋하지 않는다: 리셋은 "새 매칭이라 미리보기 다시 봐야 함"의
 //   의미인데, 복원은 이미 확인한 미리보기를 되살리는 것이라 게이트를 다시 잠그면 안 된다.
@@ -9056,7 +9035,26 @@ async function coupangSave(opts){
 }
 // ── 쿠팡 연결 끝 ── COUPANG-END
 
-function _renderMixReviewBody(d){
+function _renderMixReviewBody(d, failStatus){
+  // ★실패도 여기서 그린다(2026-09-01). #mixReview를 그리는 함수를 새로 만들면 같은 자리를
+  //   덮어쓰는 함수가 늘어 '고쳤는데 또 나는' 버그의 뿌리가 된다(test_dom_owner_budget).
+  //   실패로 끝난 job을 나중에 다시 열면 폴러가 안 돌아 배너가 안 떠, 3단계가 통째로
+  //   빈 화면이었다(사장님 제보, job 46e16b285ca7).
+  if(!d || !d.ok){
+    const el0 = document.getElementById('mixReview');
+    if(!el0) return;
+    const err = (failStatus && failStatus.error) || (d && d.error) || '';
+    el0.innerHTML =
+      '<div style="border:1px solid var(--fire);border-radius:10px;padding:14px;'
+      + 'background:rgba(255,90,90,.08);font-size:14px">'
+      + '<b style="color:var(--fire)">❌ 이 작업의 영상 매칭이 실패한 채로 남아 있습니다</b>'
+      + (err ? '<div class="hint" style="margin-top:6px">' + esc(err) + '</div>' : '')
+      + '<div class="hint" style="margin-top:8px">확정한 대본은 그대로 남아 있어요 — 아래 버튼으로 매칭만 다시 하면 됩니다.</div>'
+      + '<button class="btn" style="margin-top:10px;padding:8px 16px" '
+      + 'onclick="startProduceMix()">✔ 확정한 대본으로 다시 매칭</button>'
+      + '</div>';
+    return;
+  }
   MIX_REVIEW_SUGGESTIONS = d.asset_suggestions || [];
   try{ _syncSceneLab(true); }catch(_){ }   // ② 장면실험실 iframe(정의는 loadMixReview 위)
   if(typeof window!=='undefined') window._mixBeats = d.beats || [];   // 조각 전체 보기(paletteStats)가 읽는다 — 실제 쓴 컷 집계용
@@ -9190,14 +9188,7 @@ async function _restoreMixContext(){
   }catch(e){}   // 후보 복원 실패는 부가기능 — 편집안·미리보기 복원을 막지 않는다.
   let d=null;
   try{ d = await (await fetch('/api/mix/result/'+encodeURIComponent(MIX_JOB))).json(); }catch(e){}
-  if(!d || !d.ok){
-    // ★실패로 끝난 job을 나중에 다시 열면 3단계가 **통째로 빈 화면**이었다(2026-09-01 사장님
-    //   제보, job 46e16b285ca7). 실패 배너를 그리는 코드는 pollMix에만 있는데 이미 끝난
-    //   job엔 폴러가 안 돌아, 여기서 result 404를 받고 조용히 return해 아무 말도 안 했다.
-    //   → 조용한 return을 없앤다. 사유와 [다시 매칭]을 같은 자리에 그린다.
-    _renderMixFailed(_st);
-    return;
-  }
+  if(!d || !d.ok){ _renderMixReviewBody(d, _st); return; }   // 조용한 return 금지 — 사유+[다시 매칭]을 그린다
   _renderMixReviewBody(d);
   if(PREVIEW_STATUS === 'ready') _renderPreviewVideo(MIX_JOB);
 }
@@ -11388,7 +11379,7 @@ function _syncSceneLab(on){
 async function loadMixReview(){
   const d=await (await fetch('/api/mix/result/'+MIX_JOB)).json();
   const el=document.getElementById('mixReview');
-  if(!d.ok){ el.innerHTML=`<div class="hint" style="color:var(--fire)">편집안 로드 실패 ${esc(d.error||'')}</div>`; return; }
+  if(!d.ok){ _renderMixReviewBody(d); return; }   // 실패 표시도 렌더 본체 한 곳에서(0순위-B)
   // ★렌더 본체는 _renderMixReviewBody로 뽑았다(2026-07-19) — 새로고침 복원(_restoreMixContext)이
   //   같은 화면을 그려야 하는데 markup을 복제하면 갈라진다. 아래 초기화(게이트 재잠금)는 여기 남는다:
   //   loadMixReview는 "새 매칭"이라 미리보기를 다시 봐야 하고, 복원은 이미 본 것이라 안 잠근다.
