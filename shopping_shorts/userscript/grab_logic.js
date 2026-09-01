@@ -10,12 +10,12 @@
   // 원인 찾는 데 한참 걸렸다. 그래서 버전을 숫자로 박고 큰 쪽이 이어받게 한다.
   // (옛 코드는 이 숫자가 없다 → 0으로 보고 새 로직이 이긴다. 옛 인터벌은 남지만
   //  버튼은 id 선점이라 서로 안 덮고, 새 화면(유튜브·쓰레드)은 새 로직이 그린다.)
-  var LOGIC_VER = 20260818;
+  var LOGIC_VER = 20260901;
   if ((window.__ssGrabVer || 0) >= LOGIC_VER) return;   // 같거나 더 새것이 이미 돎
   if (window.__ssGrabLoaded && !window.__ssGrabVer) {
     // 옛 로직이 이미 돌고 있다 — 그 버튼을 걷어내고 새 로직이 다시 그린다.
     try {
-      var olds = document.querySelectorAll("#ss-grab-btn,#ss-chadd-btn,#ss-lens-btn,#ss-seek");
+      var olds = document.querySelectorAll("#ss-grab-btn,#ss-chadd-btn,#ss-lens-btn,#ss-adopt-btn,#ss-seek");
       for (var oi = 0; oi < olds.length; oi++) olds[oi].remove();
     } catch (e) {}
   }
@@ -907,7 +907,43 @@
     } catch (e) { window.__ssDouyinInjected = false; }   // 실패 시 다음 tick에 재시도(폴백=플로팅)
   }
 
-  function tick() { try{addFloatBtn();}catch(e){} try{addCardBtns();}catch(e){} try{addAnchorCardBtns();}catch(e){} try{addDouyinCardBtns();}catch(e){} try{syncFloat();}catch(e){} try{syncChannelBtn();}catch(e){} try{syncExtraBtns();}catch(e){} try{syncSeekBar();}catch(e){} try{syncGridBadges();}catch(e){} }
+
+  // ── 버튼 자리: 화면 오른쪽 끝 → **영상 칸 바로 옆**(2026-09-01 사장님 요청) ─────
+  //   종전엔 right:18px 고정이라 사이트 UI(쓰레드 '메시지' 팝업 등)와 겹쳤고,
+  //   넓은 화면에선 영상에서 한참 떨어진 구석에 붙어 있었다.
+  //   자리 판단은 **여기 한 곳에서만** 한다(0순위-B) — 만드는 쪽은 right:18px로 두고,
+  //   이 함수가 매 tick에 left로 덮어쓴다. 못 정하면 종전 자리 그대로 둔다.
+  var DOCK_IDS = ["ss-grab-btn", "ss-chadd-btn", "ss-lens-btn", "ss-adopt-btn"];
+  function _dockAnchorRight() {
+    // 가장 큰 <video>가 지금 보는 영상이다. 액션열(좋아요·댓글)까지 감싸는
+    // 게시물 칸(article)이 있으면 그 오른쪽 끝을 쓴다 — 없으면 영상 자체.
+    var vs = document.querySelectorAll("video"), best = null, area = 0;
+    for (var i = 0; i < vs.length; i++) {
+      var r = vs[i].getBoundingClientRect();
+      if (r.width * r.height > area) { area = r.width * r.height; best = vs[i]; }
+    }
+    if (!best || area < 10000) return 0;
+    var box = best.closest ? (best.closest("article") || best) : best;
+    var rr = box.getBoundingClientRect();
+    if (rr.right <= 0 || rr.right >= window.innerWidth) return 0;
+    return rr.right;
+  }
+  function _dockBtns() {
+    var x = _dockAnchorRight();
+    for (var i = 0; i < DOCK_IDS.length; i++) {
+      var el = document.getElementById(DOCK_IDS[i]);
+      if (!el) continue;
+      // 버튼이 화면 밖으로 밀리면(좁은 창) 종전 오른쪽 끝 자리로 되돌린다.
+      var w = el.offsetWidth || 150;
+      if (!x || x + 16 + w + 12 > window.innerWidth) {
+        el.style.left = ""; el.style.right = "18px";
+      } else {
+        el.style.right = "auto"; el.style.left = (x + 16) + "px";
+      }
+    }
+  }
+
+  function tick() { try{addFloatBtn();}catch(e){} try{addCardBtns();}catch(e){} try{addAnchorCardBtns();}catch(e){} try{addDouyinCardBtns();}catch(e){} try{syncFloat();}catch(e){} try{syncChannelBtn();}catch(e){} try{syncExtraBtns();}catch(e){} try{syncSeekBar();}catch(e){} try{syncGridBadges();}catch(e){} try{_dockBtns();}catch(e){} }
   tick();
   // SPA라 스크롤·재검색으로 카드가 갈아끼워져도 버튼을 계속 유지한다.
   // 핸들을 남긴다 — 더 새로운 로직이 로드되면 위 가드가 이걸 끄고 이어받는다.
