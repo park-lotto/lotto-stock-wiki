@@ -5,10 +5,10 @@
 """
 import json
 import pathlib
-import shutil
-import subprocess
 
-import pytest
+from shopping_shorts.tests.js_harness import requires_node, run_js
+
+pytestmark = requires_node
 
 LOGIC = pathlib.Path(__file__).resolve().parents[1] / "userscript" / "grab_logic.js"
 
@@ -21,8 +21,6 @@ def _dock_src():
 
 
 def _run(inner_width, video_rect, btn_width=150):
-    if not shutil.which("node"):
-        pytest.skip("node 없음")
     rect = json.dumps(video_rect)
     script = f"""
 var window = {{ innerWidth: {inner_width} }};
@@ -42,9 +40,7 @@ var document = {{
 _dockBtns();
 console.log(JSON.stringify(els["ss-grab-btn"].style));
 """
-    r = subprocess.run(["node", "-e", script], capture_output=True, text=True, timeout=60)
-    assert r.returncode == 0, r.stderr
-    return json.loads(r.stdout)
+    return json.loads(run_js(script))
 
 
 def test_넓은_화면이면_영상_오른쪽에_붙는다():
