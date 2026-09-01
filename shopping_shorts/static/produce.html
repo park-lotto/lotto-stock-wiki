@@ -5674,6 +5674,24 @@ function showBeat(i, first){
   try{ _prefetchNeighborFrames(BEAT_IDX); }catch(e){}
 }
 let CAP_SEQ_TIMER=null;
+let CAP_SEQ_GEN=0;      // 재생 세대 — 그림을 기다리는 사이 다른 칸으로 넘어가면 옛 대기를 버린다
+// 🖼 그 칸의 컷 그림을 **전부 병렬로** 미리 받는다(2026-09-01).
+//   실측: 컷 프레임 1장 = 1.7~2.2초인데 구절은 0.58~1.13초마다 바뀐다. 그때그때 bg.src만
+//   갈아끼우면 도착 전에 다음 구절로 넘어가 4컷 중 2장만 화면에 뜬다(사장님 제보).
+function _preloadBeatCuts(cuts){
+  try{
+    return Promise.all((cuts||[]).map(i=>{
+      const u=_beatFrameUrl(BEATS_PREVIEW[i]);
+      if(!u) return Promise.resolve();
+      if(_BF_PRE.has(u)) return Promise.resolve();      // 이미 받아둔 것은 건너뛴다
+      return new Promise(res=>{
+        const im=new Image(); im.decoding='async';
+        im.onload=im.onerror=()=>res();
+        im.src=u; _BF_PRE.set(u, im);
+      });
+    }));
+  }catch(e){ return Promise.resolve(); }
+}
 // 지금 보고 있는 칸의 **컷 목록**(BEATS_PREVIEW 안의 순번들). 목록은 컷 단위로 펴져 있어
 // 같은 beat_idx가 여러 줄이다 — 자막 구절이 넘어갈 때 화면도 그 구절의 컷으로 같이 넘긴다.
 function _cutsOfBeat(i){
@@ -5746,7 +5764,22 @@ function _playBeatCaptions(b){
     si=(si+1)%segs.length;
     CAP_SEQ_TIMER=setTimeout(play, Math.max(450, Math.min(2600, d)));
   };
-  play();
+  // ★그림을 **다 받아놓고** 순환을 시작한다(2026-09-01 사장님 "믹스에서는 4장면이 나와야
+  //   하는데 장면꾸미기는 2장면이 나옴"). 실측: 컷 프레임 한 장 받는 데 1.7~2.2초인데
+  //   구절은 0.58~1.13초마다 바뀐다 → 그림이 도착하기 전에 다음 구절로 넘어가, 4컷 중
+  //   2장 정도만 실제로 화면에 뜬다(bg.src만 갈아끼우면 도착할 때까지 옛 그림이 남는다).
+  //   4장을 병렬로 받고, 다 받거나 2.5초가 지나면 시작한다 — 첫 바퀴부터 컷이 맞는다.
+  //   ★내가 최신 호출인지는 세대번호(CAP_SEQ_GEN)로 본다 — 기다리는 동안 다른 칸으로
+  //   넘어가면 옛 대기가 깨어나 **두 벌이 겹쳐 돈다**(그러면 자막이 불규칙해진다).
+  const _gen = ++CAP_SEQ_GEN;
+  if(cuts.length>1 && sb && sb.checked){
+    let done=false;
+    const once=()=>{ if(done || _gen!==CAP_SEQ_GEN) return; done=true; play(); };
+    _preloadBeatCuts(cuts).then(once);
+    setTimeout(once, 2500);                    // 느린 회선에서 영영 안 뜨는 일은 없게
+  } else {
+    play();
+  }
 }
 // ◀ ▶ 는 **칸 단위**로 넘긴다(2026-09-01). 컷은 자막을 따라 자동으로 흘러가므로,
 // 예전처럼 컷 단위로 넘기면 같은 칸 안에서 눌러도 아무 일이 없는 것처럼 보인다.
