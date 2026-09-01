@@ -16093,9 +16093,17 @@ function s2RenderStyles(){
   }).join('');
   row.innerHTML=auto+cards;
   const hint=document.getElementById('s2GenHint');
-  if(hint) hint.textContent = S2.picked.length
-    ? (S2.picked.length+'개 스타일 → '+S2.picked.length+'안이 나옵니다')
-    : 'AI가 스타일까지 골라 2안을 만듭니다';
+  // ★안의 개수는 s2AnCount() 한 곳에서만 센다(0순위-B). 종전엔 여기에 '2안'이
+  //   손으로 박혀 있었는데, 스타일을 하나도 안 고르면 실제로는 픽업 1안만 나온다
+  //   (실측 2026-09-02: s2AnCount()=1, drafts=1인데 화면은 "2안을 만듭니다").
+  //   생성 뒤 부족 경고도 s2AnCount()를 기준으로 도므로 경고조차 안 뜬다 —
+  //   즉 **안내만 거짓말**이었다. 같은 함수로 세면 어긋날 수가 없다.
+  if(hint){
+    const _n = s2AnCount();
+    hint.textContent = S2.picked.length
+      ? (S2.picked.length+'개 스타일 → '+_n+'안이 나옵니다')
+      : ('AI가 스타일까지 골라 '+_n+'안을 만듭니다');
+  }
 }
 function s2ClearStyles(){ S2.picked=[]; s2RenderStyles(); }
 // ★안은 최대 2개다(종전 그대로). 픽업도 한 안을 차지하므로 **함께 세어** 상한을 건다 —
