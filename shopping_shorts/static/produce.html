@@ -2019,6 +2019,19 @@
           <div id="zoomStage" class="zoomStage" style="width:100%;aspect-ratio:9/16">
           <div class="zoomBadge" id="zoomBadge">100%</div>
           <div id="hcPreview" style="position:relative;width:100%;aspect-ratio:9/16;background:#ffffff;border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.4)">
+            <!-- ▶/⏸ 장면 자동넘김 (2026-09-01 사장님 "빠르게 장면이랑 대본이 넘어가는데
+                 미리보기 가운데 정지 재생버튼 만들어줘"). 종전엔 29컷을 ◀▶로 29번 눌러야
+                 자막이 어떻게 흐르는지 볼 수 있었다. z-index 6 — 자막(5) 위라 눌린다.
+                 자막을 가리지 않게 정지 상태에선 반투명, 손을 올리면 진해진다. -->
+            <button type="button" id="scenePlayBtn" onclick="toggleScenePlay(event)"
+                    title="장면을 자동으로 넘기며 자막이 어떻게 나오는지 봅니다"
+                    style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+                           z-index:6;width:64px;height:64px;border-radius:50%;border:0;cursor:pointer;
+                           background:rgba(0,0,0,.42);color:#fff;font-size:26px;line-height:1;
+                           display:flex;align-items:center;justify-content:center;opacity:.55;
+                           transition:opacity .15s,background .15s"
+                    onmouseover="this.style.opacity='1';this.style.background='rgba(0,0,0,.68)'"
+                    onmouseout="this.style.opacity=SCENE_PLAY?'.85':'.55';this.style.background='rgba(0,0,0,.42)'">▶</button>
             <img id="hcPreviewBg" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none" alt="">
 <!-- 2026-07-27 사장님: "원본 자막이 있던 자리" 점선 박스 제거(필요 없음). 자동 정렬
                  (applyErasedRegion)과 '다시 그 자리로' 버튼은 그대로 — 표시만 뺀 것. -->
@@ -5785,11 +5798,48 @@ function _playBeatCaptions(b){
 // 예전처럼 컷 단위로 넘기면 같은 칸 안에서 눌러도 아무 일이 없는 것처럼 보인다.
 function stepBeat(d){
   if(!BEATS_PREVIEW.length) return;
+  stopScenePlay();          // 사람이 직접 넘기면 자동넘김은 손을 뗀다(주인이 둘이면 다툰다)
   const n=BEATS_PREVIEW.length;
   const cuts=_cutsOfBeat(BEAT_IDX);
   const next=(d>0) ? (cuts[cuts.length-1]+1) : (cuts[0]-1);
   const idx=((next%n)+n)%n;
   showBeat(_cutsOfBeat(idx)[0]);      // 어느 방향이든 그 칸의 첫 컷부터
+}
+
+// ── ▶/⏸ 장면 자동넘김 (2026-09-01) ──────────────────────────────────────
+// 컷마다 **그 컷의 실제 길이**(cut_dur, 서버가 beats_preview로 내려준다)만큼 머문다.
+// 없으면 1.2초. 마지막 컷에서 멈춘다(되감지 않는다 — 어디서 끝났는지 보여야 한다).
+// ★타이머는 한 개만 산다 — 앞 타이머를 반드시 죽이고 새로 건다(좀비 폴러가 상태를
+//   되돌리던 사고와 같은 모양, reference_mix_poll_orphan_undoes_confirm).
+let SCENE_PLAY=false, SCENE_TIMER=null;
+function _scenePlayIcon(){
+  const b=document.getElementById('scenePlayBtn'); if(!b) return;
+  b.textContent = SCENE_PLAY ? '⏸' : '▶';
+  b.style.opacity = SCENE_PLAY ? '.85' : '.55';
+}
+function stopScenePlay(){
+  if(SCENE_TIMER){ clearTimeout(SCENE_TIMER); SCENE_TIMER=null; }
+  SCENE_PLAY=false; _scenePlayIcon();
+}
+function _sceneCutMs(i){
+  const b=BEATS_PREVIEW[i]; const d=b && +b.cut_dur;
+  return (d && d>0) ? Math.min(Math.max(d*1000, 350), 8000) : 1200;
+}
+function _sceneTick(){
+  if(!SCENE_PLAY) return;
+  const n=BEATS_PREVIEW.length;
+  if(BEAT_IDX>=n-1){ stopScenePlay(); return; }   // 끝 컷에서 정지
+  showBeat(BEAT_IDX+1);
+  if(!SCENE_PLAY) return;                          // showBeat 안에서 멈췄을 수도
+  SCENE_TIMER=setTimeout(_sceneTick, _sceneCutMs(BEAT_IDX));
+}
+function toggleScenePlay(ev){
+  if(ev){ ev.preventDefault(); ev.stopPropagation(); }   // 자막 드래그로 새지 않게
+  if(SCENE_PLAY){ stopScenePlay(); return; }
+  if(!BEATS_PREVIEW.length) return;
+  if(BEAT_IDX>=BEATS_PREVIEW.length-1) showBeat(0);      // 끝에서 누르면 처음부터
+  SCENE_PLAY=true; _scenePlayIcon();
+  SCENE_TIMER=setTimeout(_sceneTick, _sceneCutMs(BEAT_IDX));
 }
 
 // ── 🎯 이 장면만 손보기(2026-08-25) ───────────────────────────────────────
