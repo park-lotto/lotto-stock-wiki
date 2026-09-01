@@ -218,17 +218,62 @@ def get_client_for_key(key: str) -> genai.Client:
     return _client_cache[key]
 
 
+# ── 분산(2026-09-01) — 키가 많아도 1개만 때리던 것을 고친다 ────────────────
+# ★실측(최근 6시간, api_events): 쇼핑쇼츠 web은 68개 키로 360콜에 rpm 0건인데
+#   주식위키 server는 13개 키로 983콜에 rpm 398건이었다. report_ingest는 키 1개로
+#   64콜을 쳐서 **64건 전부** 분당한도. 같은 시각·같은 구글 한도인데 결과가 정반대다.
+#   차이는 나눠 쓰느냐뿐이었다 — 키를 더 살 문제가 아니다.
+#
+# comment_gen이 쓰는 방식을 그대로 가져온다(그쪽은 실측 rpm 0~1건):
+#   ① 호출마다 다음 키로 넘기는 라운드로빈 커서
+#   ② 키마다 최소 간격을 둬서 **애초에 429를 안 맞게** 한다
+#      (무료등급 실측 상한은 키당 분당 5건 — comment_gen._RPM_PER_KEY와 같은 근거)
+_RR_CURSOR = {"i": 0}
+_KEY_LAST_USED: dict[str, float] = {}
+_RPM_PER_KEY = int(os.environ.get("VAULT_RPM_PER_KEY",
+                                 os.environ.get("SHORTS_RPM_PER_KEY", "5")))
+_MIN_GAP_S = 60.0 / max(1, _RPM_PER_KEY)
+
+
+def _pick_key(live: list[str]) -> str:
+    """라이브 키 중 '지금 쓸 수 있는' 것을 하나 고른다(라운드로빈 + 최소 간격).
+
+    전부 쿨다운 중이면 가장 빨리 풀리는 키가 풀릴 때까지만 잔다(최대 _MIN_GAP_S).
+    키가 많아질수록 대기는 0에 수렴한다 — 키를 늘리면 그대로 빨라진다.
+    ⚠️프로세스 로컬이다(comment_gen도 같다). 여러 프로세스가 같이 돌면 실효 RPM이
+      프로세스 수만큼 곱해질 수 있다 — 그래도 '1개만 때리기'보다는 압도적으로 낫다.
+    """
+    if not live:
+        return ""
+    while True:
+        now = time.monotonic()
+        start = _RR_CURSOR["i"] % len(live)
+        _RR_CURSOR["i"] = start + 1
+        soonest = None
+        for off in range(len(live)):
+            k = live[(start + off) % len(live)]
+            ready_at = _KEY_LAST_USED.get(k, 0.0) + _MIN_GAP_S
+            if ready_at <= now:
+                _KEY_LAST_USED[k] = now
+                return k
+            if soonest is None or ready_at < soonest:
+                soonest = ready_at
+        time.sleep(min(max(0.0, (soonest or now) - now), _MIN_GAP_S))
+
+
 def get_client(group: str) -> genai.Client:
-    """그룹의 현재 활성 키로 클라이언트 반환. 그룹이 다 소진되면 다른 그룹 키로 폴백."""
+    """그룹의 키로 클라이언트 반환. 그룹이 다 소진되면 다른 그룹 키로 폴백.
+
+    ★2026-09-01: 늘 live[0]을 주던 것을 **라운드로빈 + 분당 페이서**로 바꿨다
+      (_pick_key). 위 주석의 실측 참조 — 이 한 줄이 rpm 398건의 원인이었다.
+    """
     all_keys = get_keys(group)
     if not all_keys:
         raise RuntimeError(f"key_vault: '{group}' 그룹에 설정된 Gemini 키가 없습니다 (.env 확인)")
     live = get_live_keys_cascade(group)  # cross-group 폴백
     if not live:
         live = all_keys[-1:]  # 전체 소진 시 최후로 마지막 키 시도
-    idx = min(_active_idx.get(group, 0), len(live) - 1) if live else 0
-    key = live[idx] if live else ""
-    return get_client_for_key(key)
+    return get_client_for_key(_pick_key(live))
 
 
 client = get_client  # 드롭인 헬퍼 별칭 — genai.Client(api_key=...) 대체용
