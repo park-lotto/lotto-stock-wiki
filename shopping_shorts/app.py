@@ -3961,11 +3961,56 @@ _USER_ERROR_RULES = (
      "(계속되면 관리자에게 알려주세요)"),
     (("서버 재시작", "중단되었습니다"),
      "작업이 중단되었습니다. 다시 시도해 주세요."),
+    # ★아래 3줄은 2026-09-01에 늘렸다. 이 사유들이 최근 30일 실패 100건 중 36건인데
+    #   전부 "처리 중 문제가 발생했습니다"로 뭉개져, 고객이 자기 잘못인 줄 알고 헤맸다.
+    #   셋 다 **고객이 고칠 수 없는 우리 쪽 문제**라 그렇게 분명히 말한다.
+    (("payment required", "402", "not enough credits", "[600", "insufficient"),
+     "영상 처리 서비스의 사용 한도에 걸렸습니다. 고객님 잘못이 아니에요 — "
+     "관리자에게 알려주시면 바로 풀어드립니다."),
+    (("unauthorized", "401", "403", "forbidden", "bad request", "400"),
+     "영상 처리 서버와 연결에 문제가 있습니다. 고객님 잘못이 아니에요 — "
+     "잠시 후 다시 시도하시고, 계속되면 관리자에게 알려주세요."),
+    (("ffmpeg", "no module named", "traceback", "command '["),
+     "서버에서 영상을 처리하다 문제가 생겼습니다. 고객님 잘못이 아니에요 — "
+     "관리자에게 알려주시면 확인하겠습니다."),
 )
+
+
+# ★개발자 원문의 흔적. 하나라도 있으면 "사람에게 쓴 안내"가 아니다 → 순화 대상.
+#   EDL·quota 같은 우리 내부 용어도 여기 넣는다 — 한글 문장이어도 고객은 못 알아본다.
+_DEV_ERROR_MARKS = (
+    "client error", "traceback", "no module named", "command '[", "exception",
+    "errno", "httperror", "status code", "edl ", "quota", "permission_denied",
+    "api key", "apify", "resource_exhausted", "not enough credits", "[600",
+)
+
+
+def _looks_user_written(msg):
+    """파이프라인이 **고객에게 보여주려고 쓴** 안내인가.
+
+    ★왜 필요한가(2026-09-01 사장님 지시 "3단계에 실패사유 안 나오는 것들 다 적어줘야대").
+      _USER_ERROR_RULES에 안 걸리면 전부 "처리 중 문제가 발생했습니다"로 뭉개졌다.
+      그래서 애써 만든 안내가 고객에게 통째로 사라졌다 — 실측(최근 30일 실패 100건):
+        · 가로형 영상 섞임 + **문제 영상 URL** 20건 → "처리 중 문제가…"
+        · 소스 못 받음 + **실패한 URL 목록** 6건 → URL이 사라진 일반 문구
+      고객은 무엇을 고쳐야 하는지 알 수 없어 그대로 멈춘다.
+
+    판정: 개발자 흔적이 없고 한글이 20자 이상이면 사람에게 쓴 글로 본다.
+    애매하면 False(=순화) — 내부 사정이 새는 쪽보다 뭉개지는 쪽이 안전하다.
+    """
+    low = (msg or "").lower()
+    if any(m in low for m in _DEV_ERROR_MARKS):
+        return False
+    ko = sum(1 for ch in (msg or "") if "가" <= ch <= "힣")
+    return ko >= 20
 
 
 def _user_facing_error(msg):
     """실패 사유를 일반 사용자에게 보여줄 문장으로 바꾼다. 관리자에겐 쓰지 않는다."""
+    # ★이미 사람 말로 쓴 안내는 **그대로 내보낸다**. 순화 규칙보다 먼저 판정한다 —
+    #   뒤에 두면 "다운로드 실패" 같은 낱말이 규칙에 걸려 URL 목록째 지워진다.
+    if _looks_user_written(msg):
+        return msg
     low = (msg or "").lower()
     for keys, friendly in _USER_ERROR_RULES:
         if any(k in low for k in keys):
