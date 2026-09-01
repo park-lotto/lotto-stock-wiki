@@ -97,3 +97,42 @@ def test_배선이_끊기지_않았다():
     assert "hook_opener=None" in inspect.getsource(edit_plan.build_scene_first_plan)
     assert "hook_opener=hook_opener" in inspect.getsource(edit_plan.build_scene_first_plan)
     assert "on=hook_opener" in inspect.getsource(edit_plan._single_source_candidates)
+
+
+# ── 대본을 끄면 음성도 같이 꺼진다(2026-09-01 사장님 "동시에 꺼지고 켜지고") ──────────
+# ★감탄사를 붙이는 자리가 **두 곳**이었다:
+#     ① 대본  single_source.add_hook_opener   → "와, " / "여러분 "   (자막에 남는다)
+#     ② 음성  naturalize fillers(훅 칸만)     → 와/오/우와/헐/이야   (자막에 안 남는다)
+#   ①만 끄면 ②가 다시 붙여 **자막에 없는 말이 들린다**(실측으로 확인한 뒤 묶었다).
+def test_스위치를_끄면_TTS_추임새도_안_붙는다():
+    import copy
+    from shopping_shorts.narration_naturalize import merge_profile, naturalize_detail
+    prof = copy.deepcopy(merge_profile(None))
+    prof["fillers"]["on"] = False            # synthesize_line이 스위치 off일 때 하는 일
+    d = naturalize_detail("다이소에서 봤어요.", prof, beat_role="훅")
+    assert d["applied"].get("fillers", 0) == 0, d["text"]
+    assert "와," not in d["text"], d["text"]
+
+
+def test_스위치가_켜져_있으면_종전대로_붙는다():
+    from shopping_shorts.narration_naturalize import naturalize_detail
+    d = naturalize_detail("다이소에서 봤어요.", None, beat_role="훅")
+    assert d["applied"].get("fillers", 0) == 1, d["text"]
+
+
+def test_대본이_이미_부름말로_열었으면_음성이_또_안_붙인다():
+    """실측: 대본 "여러분 다이소…"에 TTS가 "와, 여러분 다이소…"를 만들었다.
+    멱등 가드가 **1~2자+쉼표**만 봐서 "여러분 "(3자+공백)을 못 잡았다."""
+    from shopping_shorts.narration_naturalize import naturalize_detail
+    d = naturalize_detail("여러분 다이소 가면 이거 무조건 사오세요.", None, beat_role="훅")
+    assert d["applied"].get("fillers", 0) == 0, d["text"]
+    assert not d["text"].replace("[curious] ", "").startswith("와"), d["text"]
+
+
+def test_음성쪽_배선이_끊기지_않았다():
+    import inspect
+    from shopping_shorts import mix_pipeline
+    src = inspect.getsource(mix_pipeline.synthesize_line)
+    assert "hook_opener=None" in inspect.signature(mix_pipeline.synthesize_line).__str__() \
+        or "hook_opener" in src, "음성 쪽이 스위치를 안 본다"
+    assert '["on"] = False' in src, "스위치를 꺼도 fillers가 안 꺼진다"
