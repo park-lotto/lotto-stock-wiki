@@ -5668,14 +5668,45 @@ function showBeat(i, first){
   try{ _prefetchNeighborFrames(BEAT_IDX); }catch(e){}
 }
 let CAP_SEQ_TIMER=null;
+// 지금 보고 있는 칸의 **컷 목록**(BEATS_PREVIEW 안의 순번들). 목록은 컷 단위로 펴져 있어
+// 같은 beat_idx가 여러 줄이다 — 자막 구절이 넘어갈 때 화면도 그 구절의 컷으로 같이 넘긴다.
+function _cutsOfBeat(i){
+  const b=BEATS_PREVIEW[i]; if(!b) return [i];
+  const no=_beatNo(b);
+  const out=[];
+  BEATS_PREVIEW.forEach((x,k)=>{ if(_beatNo(x)===no) out.push(k); });
+  return out.length ? out : [i];
+}
 function _playBeatCaptions(b){
   if(CAP_SEQ_TIMER){ clearTimeout(CAP_SEQ_TIMER); CAP_SEQ_TIMER=null; }
   const segs=(b && b.segs && b.segs.length) ? b.segs : [ (b&&b.caption)||'' ];
   const durs=(b && b.durs) || null;   // 구절별 실제 표시시간(초). 없으면 균등.
+  // ★자막만 흘러가고 화면은 첫 컷에 고정돼 있었다(2026-09-01 고객 제보 "자막은
+  //   흘러가는데 장면이 첫화면 고정"). 실제 영상은 구절이 넘어갈 때 컷도 넘어간다 —
+  //   미리보기도 그렇게 맞춘다("보는 것 = 나오는 것"). 구절 맞춤 이후 컷 수 = 구절 수라
+  //   대개 1:1이고, 어긋나면 비례로 고른다.
+  const cuts=_cutsOfBeat(BEAT_IDX);
+  const bg=document.getElementById('hcPreviewBg');
+  const sb=document.getElementById('sceneBg');
+  const cnt=document.getElementById('beatCount');
+  const paintScene=(si)=>{
+    if(!cuts.length) return;
+    const k=Math.min(cuts.length-1, Math.floor(si*cuts.length/Math.max(1,segs.length)));
+    const idx=cuts[k], x=BEATS_PREVIEW[idx];
+    if(!x) return;
+    BEAT_IDX=idx;                       // '이 장면을 썸네일로'가 지금 보이는 컷을 집게
+    if(bg && sb && sb.checked){
+      const u=_beatFrameUrl(x);
+      if(u && bg.getAttribute('src')!==u){ bg.src=u; bg.style.display='block'; }
+    }
+    if(cnt) cnt.textContent=(idx+1)+' / '+BEATS_PREVIEW.length+' 장면'
+            + ((x.cut_of>1) ? (' (자막 '+(_beatNo(x)+1)+'번의 '+(x.cut+1)+'/'+x.cut_of+' 컷)') : '');
+  };
   let si=0;
   const play=()=>{
     PREVIEW_CAP_TEXT=segs[si]||'';
     if(typeof updateCaption==='function') updateCaption();
+    paintScene(si);
     // 실제 타이밍이 있으면 그걸로, 없으면 1.1초. 너무 짧거나 길지 않게 가둔다.
     const d=(durs && durs[si]>0) ? durs[si]*1000 : 1100;
     si=(si+1)%segs.length;
@@ -5683,7 +5714,16 @@ function _playBeatCaptions(b){
   };
   play();
 }
-function stepBeat(d){ if(BEATS_PREVIEW.length) showBeat(BEAT_IDX+d); }
+// ◀ ▶ 는 **칸 단위**로 넘긴다(2026-09-01). 컷은 자막을 따라 자동으로 흘러가므로,
+// 예전처럼 컷 단위로 넘기면 같은 칸 안에서 눌러도 아무 일이 없는 것처럼 보인다.
+function stepBeat(d){
+  if(!BEATS_PREVIEW.length) return;
+  const n=BEATS_PREVIEW.length;
+  const cuts=_cutsOfBeat(BEAT_IDX);
+  const next=(d>0) ? (cuts[cuts.length-1]+1) : (cuts[0]-1);
+  const idx=((next%n)+n)%n;
+  showBeat(_cutsOfBeat(idx)[0]);      // 어느 방향이든 그 칸의 첫 컷부터
+}
 
 // ── 🎯 이 장면만 손보기(2026-08-25) ───────────────────────────────────────
 // 자리(cap_pos)와 줄 나누기(caption_lines) 둘 다 **음성을 안 건드린다** → 즉시·무료.
