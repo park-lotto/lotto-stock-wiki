@@ -78,3 +78,11 @@ def test_화면_계약_내_대본은_게이트도_다시만들기도_안_붙는�
     assert "const fix=(!dr.mine &&" in src
     assert "내 대본으로 확정" in src
     assert ".s2-sent:empty::before" in src      # 빈 칸 안내
+
+
+def test_내_대본은_빈_칸도_뺄_수_있다():
+    """사장님 제보: 한 칸만 쓴 상태에서 나머지 빈 칸이 하나도 안 빠졌다.
+    글자 수로 세던 가드가 원인 — 내 대본은 '칸 수'로 센다."""
+    src = PRODUCE.read_text(encoding="utf-8")
+    assert "const _left = dr.mine ? beats.length" in src
+    assert "if(txt && !confirm(" in src, "빈 칸은 확인창 없이 바로 빠져야 한다"
