@@ -1653,14 +1653,18 @@ class NotEnoughPoints(Exception):
     """포인트가 모자라 시작조차 못 함. 반만 청소되는 것보다 아예 안 하는 게 낫다."""
 
 
-def _charge_clean(store, customer_id, n_sources):
+def _charge_clean(store, customer_id, n_calls):
     """자막제거 선차감. 깎은 액수를 반환(0=무료). 모자라면 NotEnoughPoints.
 
-    ★소스 개수만큼 곱한다 — VMake는 소스 1편당 1콜이다(_ensure_clean_sources).
-      job당 1회로 계산하면 소스 3개짜리에서 1,000원을 손해 본다.
+    ★단위는 **자막제거 콜 수**다(소스 개수가 아니다). 호출부(_ensure_clean_sources)가
+      소스를 이어붙여 보내므로 콜 수 = 묶음 수이고 보통 1이다.
+      2026-08-25 이전엔 len(todo)(=소스 수)로 깎아서, 화면 안내는 "영상 1편당"인데
+      소스 4개짜리 영상 하나에 4배가 나가는 실사고가 있었다(3a573e381로 수정).
+      ⚠️이 독스트링이 2026-09-02까지 옛 설명("소스 개수만큼 곱한다")으로 남아 있어
+        코드와 정반대를 말했다 — 인자 이름도 n_sources였다. 되돌리지 마라.
     """
     from shopping_shorts import keyroute, points, pricing
-    if n_sources <= 0:
+    if n_calls <= 0:
         return 0
     # ★cid 0 = 사장님 본인(store.LEGACY_CUSTOMER_ID). 자기 키로 자기한테 청구하는 꼴이라
     #   과금 대상이 아니다. keyroute도 cid 0은 개인키 조회를 아예 건너뛴다.
@@ -1670,7 +1674,7 @@ def _charge_clean(store, customer_id, n_sources):
         return 0
     if not keyroute.should_charge(store, customer_id, keyroute.SVC_VMAKE):
         return 0                                    # 내 키 → 무료
-    need = pricing.cost(store, pricing.OP_VMAKE) * n_sources
+    need = pricing.cost(store, pricing.OP_VMAKE) * n_calls
     if not points.deduct(store, customer_id, need, pricing.OP_VMAKE):
         raise NotEnoughPoints(
             f"포인트가 부족합니다 (필요 {pricing.to_display(need)}P, "
@@ -1817,8 +1821,8 @@ def _clean_one(item, keys, work):
 
     ★간헐 실패 자동 재시도(2026-08-19): VMake는 멀쩡한 영상에도 가끔 10101을 준다.
       예전엔 그 한 번으로 작업 전체가 실패로 끝나 사장님이 손으로 다시 눌러야 했다.
-      **재과금은 없다** — 과금은 호출부(_ensure_clean_sources)에서 소스 개수로 선차감하고
-      여기선 같은 소스를 다시 시도할 뿐이다. VMake 쪽도 실패한 작업은 크레딧을 안 깎는다
+      **재과금은 없다** — 과금은 호출부(_ensure_clean_sources)에서 **콜(묶음) 수**로
+      선차감하고 여기선 같은 소스를 다시 시도할 뿐이다. VMake 쪽도 실패한 작업은 크레딧을 안 깎는다
       (실측: 실패 3건 동안 잔액이 그대로였다)."""
     vid, src = item
     out = str(Path(work) / f"clean_src_{vid}.mp4")

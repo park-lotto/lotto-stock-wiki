@@ -1771,6 +1771,13 @@
           <div id="cleanPreviewWrap" style="margin-top:14px;display:none">
             <!-- 문구: "내 영상으로 미리보기"는 뭘 하는 버튼인지 안 보였다 → 행동을 그대로 쓴다(2026-07-30 사장님 지시) -->
             <button id="btnCleanPreview" class="cta" onclick="startCleanPreview()">✨ 자막제거 시작하기</button>
+            <!-- ★가격을 누르기 **전에** 보여준다(2026-09-02). 종전엔 이 패널 어디에도
+                 P·포인트·차감이라는 글자가 없었고, 아래 안내의 "추가 비용 없이"만 보여
+                 오히려 무료로 읽혔다. 실제로는 _charge_clean이 선차감하고, 고객이 금액을
+                 처음 보는 곳은 **잔액 부족으로 실패한 뒤**였다.
+                 값은 /api/settings/points(단가표·잔액)에서 가져온다 — 화면에 숫자를 박으면
+                 사장님이 단가를 바꿨을 때 거짓말이 된다(0순위-B). -->
+            <div id="cleanCost" class="ctahint" style="margin-top:6px"></div>
             <div class="ctahint">미리 확인하면 최종 렌더가 이 결과를 그대로 써서 추가 비용 없이 빨라져요</div>
             <div id="cleanPreview" style="margin-top:12px"></div>
           </div>
@@ -12484,14 +12491,55 @@ function refreshSub(){
   // T7: 못 쓰는 컨트롤은 비활성 노출 대신 숨긴다 — 자막제거 켜짐+매칭됨일 때만 미리보기가 등장.
   const wrap=document.getElementById('cleanPreviewWrap');
   if(wrap) wrap.style.display = (STATE.subtitleRemoval && MIX_JOB) ? '' : 'none';
+  // ★토글을 누르지 않고 이 화면으로 돌아온 경우(작업 복원·단계 이동)에도 가격을 채운다 —
+  //   onSubToggle에만 걸면 "이미 켜둔 채 돌아온" 고객에겐 안내가 영영 안 뜬다.
+  if(STATE.subtitleRemoval && typeof renderCleanCost === 'function') renderCleanCost();
   // 이미 끝난 제거 결과를 서버에서 되살린다(화면 전환으로 DOM이 비워져도 결과는 남는다).
   restoreCleanPreview();
+}
+// 자막제거 단가·잔액을 **누르기 전에** 보여준다(2026-09-02).
+// ★숫자를 화면에 박지 않는다 — 단가는 서버(pricing)가 정하고 사장님이 바꿀 수 있다.
+//   박아두면 단가를 바꾼 날부터 화면이 거짓말을 한다(0순위-B).
+// ★키를 등록한 고객·사장님(cid 0)은 실제로 안 깎인다(_charge_clean의 should_charge).
+//   그 경우까지 "5P 차감"이라고 하면 반대로 겁을 준다 → 서버가 준 값이 0이면 무료라고 쓴다.
+// 실패해도 조용히 넘어간다 — 가격 안내가 안 떠도 기능 자체는 종전대로 돌아야 한다.
+let _cleanCostCache = null;
+async function renderCleanCost(){
+  const el = document.getElementById('cleanCost');
+  if(!el) return;
+  try{
+    if(!_cleanCostCache){
+      const r = await fetch('/api/settings/points', {credentials:'include'});
+      if(!r.ok) return;
+      _cleanCostCache = await r.json();
+    }
+    const d = _cleanCostCache || {};
+    // ★업체명이 들어간 키를 여기서 쓰지 않는다 — 이 파일은 고객 화면이라 벤더명이
+    //   한 글자도 있으면 안 되고, tests/test_subclean_ui.py가 파일 전체를 훑어 막는다
+    //   (주석까지 검사한다. 실제로 이 주석에 이름을 적었다가 게이트에 잡혔다).
+    //   그래서 서버가 중립 이름(subclean_*)으로도 함께 내려준다.
+    const price = Number(d.subclean_price);
+    // ★"깎이는가"는 서버 판정을 그대로 믿는다 — 내 키·관리자 면제·사장님(cid 0)은
+    //   단가가 5P라도 한 푼도 안 나간다. 화면이 그 조건을 다시 세면 어긋난다(0순위-B).
+    //   그 필드가 없는 옛 서버 응답이면 단가만 보고 판단(종전 동작, 회귀 없음).
+    const willCharge = (typeof d.subclean_charged === 'boolean')
+                       ? d.subclean_charged : (price > 0);
+    if(!willCharge || !(price > 0)){
+      el.textContent = '내 키로 처리돼서 포인트는 차감되지 않아요.'; return;
+    }
+    const bal = Number(d.balance);
+    const short = Number.isFinite(bal) && bal < price;
+    el.innerHTML = '💳 이 단계는 <b>' + price + 'P</b>가 차감돼요'
+      + (Number.isFinite(bal) ? ' · 남은 포인트 <b>' + bal + 'P</b>' : '')
+      + (short ? ' <span style="color:var(--fire)">— 포인트가 모자라 지금은 실행할 수 없어요</span>' : '');
+  }catch(e){ /* 가격 안내 실패가 기능을 막으면 안 된다 */ }
 }
 async function onSubToggle(){
   STATE.subtitleRemoval = document.getElementById('subToggle').checked;
   // T7: disabled 노출 대신 숨김 — 자막제거 켜짐+매칭됨일 때만 미리보기 버튼이 나타난다.
   const cwrap=document.getElementById('cleanPreviewWrap');
   if(cwrap) cwrap.style.display = (STATE.subtitleRemoval && MIX_JOB) ? '' : 'none';
+  if(STATE.subtitleRemoval) renderCleanCost();
   const s=document.getElementById('subState');
   if(!MIX_JOB){ if(s) s.textContent='⚠️ 2단계 매칭 후 적용됩니다(설정은 기억됨).'; return; }
   try{
