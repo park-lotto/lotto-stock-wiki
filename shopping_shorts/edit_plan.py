@@ -2319,8 +2319,7 @@ def _vault_call_once(prompt, schema, max_tries=_KEY_TRY_LIMIT, key_offset=0):
         except Exception as e:  # noqa: BLE001
             _LAST_VAULT_ERR = repr(e)[:200]
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
-                key_vault.mark_exhausted(key_vault._owner_group(key) or "general", key,
-                                         key_vault.retry_delay_seconds(e))
+                key_vault.mark_exhausted(key_vault._owner_group(key) or "general", key)
                 continue
             if key_vault.is_quota_error(e):
                 continue
@@ -2332,11 +2331,7 @@ def _vault_call_once(prompt, schema, max_tries=_KEY_TRY_LIMIT, key_offset=0):
             #   아예 안 뽑히게 하고, 지금 호출은 다음 키로 계속한다.
             if _is_dead_key_error(e):
                 try:
-                    # ★죽은 키는 **길게** 잠근다(2026-09-01 TTL 전환). 소진과 달리
-                    #   403/401은 시간이 지나도 안 풀리므로 기본 30분이면 하루에 48번
-                    #   되살아나 매번 얻어맞는다. TTL 상한(6시간)을 준다.
-                    key_vault.mark_exhausted(key_vault._owner_group(key) or "general", key,
-                                             6 * 3600)
+                    key_vault.mark_exhausted(key_vault._owner_group(key) or "general", key)
                 except Exception:
                     pass
                 continue

@@ -57,16 +57,9 @@ OUT_ERROR = "error"                # 그 외
 # 요청이 실제로 상대 API에 나간 outcome — RPD 예산 계산은 이것만 센다.
 _REQUEST_OUTCOMES = (OUT_OK, OUT_RPM, OUT_RPD, OUT_AUTH, OUT_QUOTA,
                      OUT_SERVER, OUT_TIMEOUT, OUT_EMPTY, OUT_ERROR)
-# 사람이 "사고"로 보는 outcome — 피드에 싣는 기본 필터.
+# 사람이 "사고"로 보는 outcome — 판정·피드 기본 필터.
 FAIL_OUTCOMES = (OUT_RPM, OUT_RPD, OUT_AUTH, OUT_QUOTA, OUT_SERVER,
                  OUT_TIMEOUT, OUT_NETWORK, OUT_EMPTY, OUT_SILENT, OUT_ERROR)
-
-# ★기다리면 저절로 풀리는 것 — **판정에서 실패로 세지 않는다**(2026-09-01).
-#   분당 한도는 로테이션이 정상 동작하는 모습이다. 실측: 아침 크론 시간대에
-#   rpm 66 / ok 56이 나와 "실패율 56% danger" 경보가 떴는데, 실제로는 56건이
-#   정상 처리되고 있었다. 매일 아침 울리는 경보는 진짜 사고를 가린다.
-#   ⚠️ 피드에는 그대로 보인다(FAIL_OUTCOMES) — 숨기는 게 아니라 **등급만** 낮춘다.
-_RETRYABLE_OUTCOMES = (OUT_RPM, OUT_QUOTA, OUT_SERVER)
 
 _KST = timezone(timedelta(hours=9))
 # 구글 무료티어 RPD는 태평양시 자정에 리셋된다(실측 08-27: 오전 429 키가 오후 200).
@@ -270,13 +263,10 @@ def record(service, outcome, *, pool=None, key=None, key_idx=None, owner=None,
                 cure = " — /apiwatch에서 확인, env에서 제거 필요"
             else:
                 cure = " — 회원 등록 키(BYOK)일 수 있음: /apiwatch 피드에서 고객 확인"
-            when = now.astimezone(_KST).strftime("%m-%d %H:%M")
             ops_alert.raise_alert(
                 f"api_key_dead_{service}",
-                # ★시각을 제목에 박는다 — 없으면 이미 고친 일을 '지금 사고'로 읽는다
-                #   (2026-09-01: 04:11에 키를 뺐는데 04:08 경보를 보고 다시 쫓았다).
-                f"[API {when}] {service} 키 사망({'…' + (key_tail(key) or '?')})",
-                f"[발생 {when} KST] " + f"{detail or ''}"[:280] + cure)
+                f"[API] {service} 키 사망 감지({'…' + (key_tail(key) or '?')})",
+                f"{detail or ''}"[:300] + cure)
         except Exception as e:            # noqa: BLE001 — 경보 실패가 기록을 막으면 안 된다
             log.warning("api_health: 키사망 경보 실패(무시) %r", e)
 
@@ -549,26 +539,6 @@ def aggregates(hours=24):
 
 # ── 판정 — 맨 위 한 줄 (ops.html 철학: 답 먼저, 근거는 아래) ─────────────────
 
-def _when_suffix(ts):
-    """'(마지막 06:40, 12분 전)' 같은 꼬리표. 빈 값이면 빈 문자열.
-
-    ★왜 '몇 분 전'까지 붙이나: 시각만 있으면 사장님이 지금 시각과 암산해야 한다.
-      이미 끝난 일인지 진행 중인지가 한눈에 보여야 다시 쫓지 않는다."""
-    if not ts:
-        return ""
-    try:
-        t = datetime.fromisoformat(str(ts))
-        if t.tzinfo is None:
-            t = t.replace(tzinfo=timezone.utc)
-        mins = int((_utcnow() - t).total_seconds() // 60)
-        ago = ("방금" if mins < 2 else
-               f"{mins}분 전" if mins < 60 else
-               f"{mins // 60}시간 {mins % 60}분 전")
-        return f"(마지막 {t.astimezone(_KST).strftime('%H:%M')}, {ago})"
-    except Exception:                     # noqa: BLE001 — 표기 실패로 판정을 막지 않는다
-        return ""
-
-
 def verdict(snap=None, agg=None):
     """지금 상태 한 줄 + 처방. danger가 새로 켜지면 ops_alert로 사람에게 민다."""
     if not _enabled():                           # 기록을 껐으면 묵은 이벤트로 경보하지 않는다(리뷰 13)
@@ -579,18 +549,12 @@ def verdict(snap=None, agg=None):
     problems, warns = [], []
     try:
         # ① 최근 1시간 실패 비율(서비스별) — silent_fallback은 1건이라도 danger
-        fails = {}      # 진짜 실패(사람이 조치해야 하는 것)
-        soft = {}       # 기다리면 풀리는 것(분당 한도·일시 서버오류) — 참고용
+        fails = {}
         oks = {}
         for row in agg.get("by_service", []):
             svc = row.get("service")
             if row.get("outcome") == OUT_OK:
                 oks[svc] = oks.get(svc, 0) + row.get("n", 0)
-            elif row.get("outcome") in _RETRYABLE_OUTCOMES:
-                # ★분당 한도·일시적 서버 오류는 **사고가 아니다**(2026-09-01 실측).
-                #   아침 크론이 키를 돌려쓰며 정상적으로 부딪히는 것이라, 이걸 실패로
-                #   세면 매일 아침 danger 경보가 울려 진짜 사고가 묻힌다.
-                soft[svc] = soft.get(svc, 0) + row.get("n", 0)
             elif row.get("outcome") in FAIL_OUTCOMES:
                 fails[svc] = fails.get(svc, 0) + row.get("n", 0)
             if row.get("outcome") == OUT_SILENT and row.get("n", 0) > 0:
@@ -600,34 +564,22 @@ def verdict(snap=None, agg=None):
         dead_by_svc = {}
         for d in (agg.get("dead_keys") or []):
             s = d.get("service")
-            e = dead_by_svc.setdefault(s, {"keys": 0, "hits": 0, "tails": [], "last": ""})
+            e = dead_by_svc.setdefault(s, {"keys": 0, "hits": 0, "tails": []})
             e["keys"] += 1
             e["hits"] += d.get("hits", 0)
             if d.get("key_tail"):
                 e["tails"].append("…" + str(d["key_tail"]))
-            lt = d.get("last_ts") or ""
-            if lt > e["last"]:
-                e["last"] = lt
         for s, e in dead_by_svc.items():
             problems.append(
                 f"{s}: 죽은 키 {e['keys']}개({', '.join(e['tails'][:3])})를 "
-                f"{e['hits']}번 헛되이 호출{_when_suffix(e['last'])} — 그 키를 빼야 시간을 안 버린다")
+                f"{e['hits']}번 헛되이 호출 — 그 키를 빼야 시간을 안 버린다")
 
-        # 실패율은 **진짜 실패만** 센다(분당 한도는 아래에서 따로 본다).
         for svc, f in fails.items():
-            tot = f + oks.get(svc, 0) + soft.get(svc, 0)
+            tot = f + oks.get(svc, 0)
             if tot >= 10 and f / tot > 0.5:
                 problems.append(f"{svc}: 최근 1시간 실패율 {round(100 * f / tot)}% ({f}/{tot}건)")
             elif tot >= 10 and f / tot > 0.2:
                 warns.append(f"{svc}: 최근 1시간 실패율 {round(100 * f / tot)}%")
-        # 분당 한도가 성공보다 많으면 '몰렸다'는 신호 — 처방은 키 추가가 아니라 **분산**이다.
-        # danger로 올리지 않는다: 기다리면 풀리고, 실제로 작업은 나가고 있다.
-        for svc, s in soft.items():
-            ok_n = oks.get(svc, 0)
-            if s >= 20 and s > ok_n:
-                warns.append(
-                    f"{svc}: 분당 한도에 {s}번 걸림(성공 {ok_n}건) — "
-                    f"한 시간에 몰렸다. 키를 늘리기 전에 작업을 분산하라")
 
         # ② 제미니 풀 잔량
         for pool in snap.get("gemini", []):
@@ -652,7 +604,6 @@ def verdict(snap=None, agg=None):
     except Exception as e:                # noqa: BLE001
         warns.append(f"판정 일부 실패: {str(e)[:80]}")
 
-    checked_at = _utcnow().astimezone(_KST).strftime("%m-%d %H:%M")
     if problems:
         level, msg = "danger", " / ".join(problems[:3])
     elif warns:
@@ -663,15 +614,11 @@ def verdict(snap=None, agg=None):
     if level == "danger":
         try:
             from shopping_shorts import ops_alert
-            ops_alert.raise_alert(
-                "api_health_danger",
-                f"[API관측판 {checked_at}] " + problems[0],
-                f"[{checked_at} KST · 최근 1시간 기준]\n" + " / ".join(problems)[:450])
+            ops_alert.raise_alert("api_health_danger", "[API관측판] " + problems[0],
+                                  " / ".join(problems)[:500])
         except Exception as e:            # noqa: BLE001 — 경보 실패가 판정을 막으면 안 된다
             log.warning("api_health: danger 경보 실패(무시) %r", e)
-    return {"level": level, "msg": msg, "problems": problems, "warns": warns,
-            "checked_at": checked_at,        # 화면·경보가 "언제 기준인지" 말할 수 있게
-            "window": "최근 1시간"}
+    return {"level": level, "msg": msg, "problems": problems, "warns": warns}
 
 
 # ── RPD 예산 — "모자라지 않은가"에 숫자로 답한다 ───────────────────────────
