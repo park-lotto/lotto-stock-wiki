@@ -9041,21 +9041,23 @@ function _renderMixReviewBody(d, failStatus){
   //   실패로 끝난 job을 나중에 다시 열면 폴러가 안 돌아 배너가 안 떠, 3단계가 통째로
   //   빈 화면이었다(사장님 제보, job 46e16b285ca7).
   if(!d || !d.ok){
-    // ⚠️document가 없는 하네스(복원 테스트는 이 함수를 node로 잘라 돌린다)에서도 죽지 않게
-    //   감싼다 — 이 파일의 복원 계열 관례와 같다.
+    // ★실패 안내는 #mixStatus에 그린다 — #mixReview는 <details id="matchSceneDetails"> 안이고
+    //   그 부모는 SHOW_OLD_SCENE_TOOLS=false로 display:none이다. 거기 그리면 **보이지 않는다**.
+    //   성공 때는 장면편집 iframe이 따로 떠서 이 함정이 안 드러났고, 실패 때는 그것뿐이라
+    //   3단계가 통째로 빈 화면이었다(2026-09-01 사장님 제보, job 46e16b285ca7·c8a5846c2f70).
+    //   그리는 함수는 늘리지 않는다 — 이미 #mixStatus를 그리는 setMixStatusText를 쓴다(0순위-B).
+    // ⚠️document 없는 하네스(복원 테스트는 이 함수를 node로 잘라 돌린다)에서도 죽지 않게 감싼다.
     try{
-    const el0 = document.getElementById('mixReview');
-    if(!el0) return;
-    const err = (failStatus && failStatus.error) || (d && d.error) || '';
-    el0.innerHTML =
-      '<div style="border:1px solid var(--fire);border-radius:10px;padding:14px;'
-      + 'background:rgba(255,90,90,.08);font-size:14px">'
-      + '<b style="color:var(--fire)">❌ 이 작업의 영상 매칭이 실패한 채로 남아 있습니다</b>'
-      + (err ? '<div class="hint" style="margin-top:6px">' + esc(err) + '</div>' : '')
-      + '<div class="hint" style="margin-top:8px">확정한 대본은 그대로 남아 있어요 — 아래 버튼으로 매칭만 다시 하면 됩니다.</div>'
-      + '<button class="btn" style="margin-top:10px;padding:8px 16px" '
-      + 'onclick="startProduceMix()">✔ 확정한 대본으로 다시 매칭</button>'
-      + '</div>';
+      const err = (failStatus && failStatus.error) || (d && d.error) || '';
+      const box = setMixStatusText('❌ 영상 매칭이 실패한 채로 남아 있습니다');
+      if(box) box.insertAdjacentHTML('beforeend',
+          (err ? '<div style="margin-top:8px;white-space:pre-wrap;color:var(--fire);font-size:13px">'
+                 + esc(err) + '</div>' : '')
+        + '<div class="hint" style="margin-top:8px">확정한 대본은 그대로 남아 있어요 — 위 사유를 고친 뒤 매칭만 다시 하면 됩니다.</div>'
+        + '<div style="margin-top:10px"><button class="btn-next" style="padding:8px 16px" '
+        + 'onclick="startProduceMix()">✔ 확정한 대본으로 다시 매칭</button></div>');
+      const rev = document.getElementById('mixReview');
+      if(rev) rev.innerHTML = '';
     }catch(_){ }
     return;
   }
