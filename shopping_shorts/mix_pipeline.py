@@ -1388,7 +1388,15 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
                 print("[훅패턴] %s" % " / ".join(p[1] for p in _pats), file=sys.stderr)
         except Exception:
             traceback.print_exc(file=sys.stderr)
+        # ★훅 감탄사(와,/여러분) 강제 — 고객 설정 → 사장님 전역 기본값 순으로 **여기서 한 번**
+        #   판정해 내려보낸다(2026-09-01). 생성 중에 DB를 여러 번 읽지 않게 한 곳에서만 본다.
+        try:
+            from shopping_shorts import single_source as _ss_opt
+            _hook_opener = _ss_opt.hook_opener_on(customer_id)
+        except Exception:      # noqa: BLE001 — 못 읽으면 설정대로(하류가 스스로 본다)
+            _hook_opener = None
         sf = build_scene_first_plan(source_scripts, reference_text, target_seconds,
+                                    hook_opener=_hook_opener,
                                     video_type=video_type, ping_pong=ping_pong,
                                     backbone_meta=backbone_meta, backbone_forced=backbone_forced,
                                     bank_context=bank_context, avoid_hooks=avoid_hooks,

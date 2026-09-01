@@ -979,11 +979,37 @@ def api_xhs_auto_get():
 
 
 @app.get("/api/script/hook_opener")
-def api_script_hook_opener_get():
-    """훅 감탄사("와, " / "여러분 ") 자동 붙이기 — 지금 켜졌나(2026-09-01 사장님 요청).
-    ★판정은 single_source.hook_opener_on 한 곳뿐이다(0순위-B). 여기선 저장값만 읽는다."""
-    v = (Store(DB_PATH).get_setting(single_source._HOOK_OPENER_KEY, "on") or "on").strip().lower()
-    return {"ok": True, "on": v not in ("off", "0", "false", "")}
+def api_script_hook_opener_get(request: Request):
+    """훅 감탄사("와, " / "여러분 ") 자동 붙이기 상태(2026-09-01 사장님 "3번").
+
+    돌려주는 것:
+      default   = 사장님이 정한 전역 기본값
+      mine      = 이 고객이 직접 정한 값(안 정했으면 None → 기본값을 따른다)
+      effective = 지금 이 고객의 대본에 실제로 적용되는 값
+    ★판정은 single_source.hook_opener_on 한 곳뿐이다(0순위-B) — 여기서 다시 계산하지 않는다."""
+    cid = _cid(request)
+    store = Store(DB_PATH)
+    mine = store.get_pref(single_source._HOOK_OPENER_KEY, customer_id=cid, default=None)
+    return {"ok": True,
+            "default": single_source.hook_opener_default(),
+            "mine": (None if mine is None else single_source._truthy(mine)),
+            "effective": single_source.hook_opener_on(cid),
+            "is_admin": _is_admin(cid)}
+
+
+@app.post("/api/script/hook_opener/mine")
+def api_script_hook_opener_mine(body: dict, request: Request):
+    """내 대본에만 적용되는 값. body: {on: true|false|null}.
+    null이면 **내 설정을 지운다** → 사장님 기본값을 다시 따른다."""
+    cid = _cid(request)
+    store = Store(DB_PATH)
+    on = body.get("on", None)
+    if on is None:
+        store.set_pref(single_source._HOOK_OPENER_KEY, None, customer_id=cid)
+    else:
+        store.set_pref(single_source._HOOK_OPENER_KEY, "on" if on else "off", customer_id=cid)
+    return {"ok": True, "mine": (None if on is None else bool(on)),
+            "effective": single_source.hook_opener_on(cid)}
 
 
 @app.post("/api/script/hook_opener")
