@@ -80,11 +80,56 @@ def _today_str() -> str:
     return datetime.now().strftime("%Y-%m-%d")
 
 
+# 소진 잠금 유효시간(초). 만료되면 자동으로 풀린다.
+# ★2026-09-01: 종전엔 **하루 낙인**이었다(날짜가 바뀔 때만 해제). 실측으로 그게
+#   틀렸음이 드러났다 — 잠긴 키 11개를 구글에 직접 찔러보니 8개가 HTTP 200이었다.
+#   ①"오늘"이 한국 자정 기준인데 구글은 태평양시 자정(한국 오후 4~5시)에 리셋하고
+#   ②분당 한도를 일일 소진으로 잘못 낙인한 것도 섞였다.
+#   쇼핑쇼츠 풀은 2026-08-27에 같은 이유로 이미 TTL로 바꿨다(comment_gen._EXHAUST_TTL_S).
+#   서버가 'Please retry in 45.5s'로 알려주면 그 값을 쓰고, 없으면 이 기본값.
+_EXHAUST_TTL_S = float(os.environ.get("VAULT_KEY_EXHAUST_TTL",
+                                     os.environ.get("SHORTS_KEY_EXHAUST_TTL", "1800")))
+
+
+def _exhausted_map(state) -> dict:
+    """state의 exhausted를 {그룹: {인덱스: 만료ts}}로 읽는다.
+
+    ★옛 형식({group: [idx, ...]})도 그대로 받는다 — 배포 순간에 파일이 옛 모양이다.
+      옛 항목엔 만료시각이 없는데 '오늘 내내'로 두면 **바로 그 영구 낙인**이라
+      배포 직후에도 증상이 그대로다. 그래서 기본 TTL이 붙은 것으로 본다
+      (comment_gen이 2026-08-27에 같은 함정을 밟고 배운 것).
+    """
+    raw = state.get("exhausted") or {}
+    out = {}
+    for g, v in raw.items():
+        if isinstance(v, dict):
+            slot = {}
+            for k, t in v.items():
+                try:
+                    slot[int(k)] = float(t)
+                except (TypeError, ValueError):
+                    continue
+            out[g] = slot
+        else:                                  # 옛 형식 list[int] — 기본 TTL을 붙인다
+            fallback = time.time() + _EXHAUST_TTL_S
+            out[g] = {int(i): fallback for i in (v or []) if isinstance(i, (int, float))}
+    return out
+
+
+def _live_exhausted(group: str, state=None) -> dict:
+    """그 그룹에서 **아직 유효한** 잠금만 {인덱스: 만료ts}. 만료분은 여기서 걸러진다."""
+    st = state if state is not None else _load_state()
+    now = time.time()
+    return {i: t for i, t in _exhausted_map(st).get(group, {}).items() if t > now}
+
+
 def _load_state() -> dict:
+    """★날짜로 버리지 않는다(2026-09-01) — 만료 판단은 TTL이 한다.
+    종전엔 date가 다르면 통째로 버려 '한국 자정에만 해제'가 됐다."""
     try:
         with open(_STATE_PATH, encoding="utf-8") as f:
             state = json.load(f)
-        if state.get("date") == _today_str() and isinstance(state.get("exhausted"), dict):
+        if isinstance(state.get("exhausted"), dict):
             return state
     except Exception:
         pass
@@ -134,8 +179,17 @@ class _FileLock:
         self._fh.close()
 
 
-def mark_exhausted(group: str, key: str) -> None:
-    """키를 당일 소진으로 기록(그룹별). 이후 프로세스는 재시도하지 않는다."""
+def mark_exhausted(group: str, key: str, retry_after=None) -> None:
+    """키를 **한시적으로** 잠근다(그룹별). retry_after(초)를 주면 그만큼, 없으면 기본 TTL.
+
+    ★2026-09-01: '당일 소진'에서 TTL로 바꿨다. 하루 낙인은 멀쩡한 키를 놀렸다
+      (실측: 잠긴 11개 중 8개가 HTTP 200). 위 _EXHAUST_TTL_S 주석 참조.
+    """
+    try:
+        ttl = float(retry_after) if retry_after else _EXHAUST_TTL_S
+    except (TypeError, ValueError):
+        ttl = _EXHAUST_TTL_S
+    ttl = max(30.0, min(ttl, 6 * 3600.0))     # 30초~6시간 — 영구 낙인을 만들지 않는다
     marked_idx = None
     with _FileLock(_LOCK_PATH):
         keys = get_keys(group)
@@ -143,9 +197,14 @@ def mark_exhausted(group: str, key: str) -> None:
             return
         idx = keys.index(key)
         state = _load_state()
-        bucket = state["exhausted"].setdefault(group, [])
-        if idx not in bucket:
-            bucket.append(idx)
+        cur = _exhausted_map(state)
+        slot = cur.setdefault(group, {})
+        until = time.time() + ttl
+        if slot.get(idx, 0.0) < until:
+            slot[idx] = until
+            state["date"] = _today_str()      # 사람이 파일을 열어볼 때의 참고용
+            state["exhausted"] = {g: {str(i): t for i, t in v.items()}
+                                  for g, v in cur.items()}
             tmp_path = _STATE_PATH.with_suffix(".json.tmp")
             with open(tmp_path, "w", encoding="utf-8") as f:
                 json.dump(state, f)
@@ -165,9 +224,8 @@ def mark_exhausted(group: str, key: str) -> None:
 
 
 def get_live_keys(group: str) -> list[str]:
-    """당일 소진 기록된 키를 제외한 그룹의 키 목록."""
-    state = _load_state()
-    exhausted = set(state["exhausted"].get(group, []))
+    """잠긴 키를 뺀 그룹의 키 목록. ★만료된 잠금은 자동으로 풀린다(2026-09-01)."""
+    exhausted = _live_exhausted(group)         # 만료분은 여기서 걸러진다
     return [k for i, k in enumerate(get_keys(group)) if i not in exhausted]
 
 

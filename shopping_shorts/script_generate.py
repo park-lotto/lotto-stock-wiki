@@ -76,7 +76,8 @@ def _call_json(prompt, schema, note=None):
             return json.loads(resp.text)
         except Exception as e:  # noqa: BLE001 — 생성 실패는 치명적 아님
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
-                key_vault.mark_exhausted(key_vault._owner_group(key) or _GEN_GROUP, key)
+                key_vault.mark_exhausted(key_vault._owner_group(key) or _GEN_GROUP, key,
+                                         key_vault.retry_delay_seconds(e))
                 if note is not None:
                     note["reason"] = "exhausted"     # 돌다가 다 말랐다 = 진짜 소진
                 continue

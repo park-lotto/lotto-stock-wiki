@@ -72,7 +72,9 @@ def test_generate_cascades_on_exhausted_key(monkeypatch):
     monkeypatch.setattr(seo_generate.key_vault, "is_daily_exhausted_error", lambda e: True)
     monkeypatch.setattr(seo_generate.key_vault, "is_account_disabled_error", lambda e: False)
     monkeypatch.setattr(seo_generate.key_vault, "_owner_group", lambda k: "general")
-    monkeypatch.setattr(seo_generate.key_vault, "mark_exhausted", lambda g, k: marked.append(k))
+    # ★인자 3개(retry_after 추가, 2026-09-01) — 서버가 알려준 재시도 시각을 쓴다
+    monkeypatch.setattr(seo_generate.key_vault, "mark_exhausted",
+                        lambda g, k, retry_after=None: marked.append(k))
     got = seo_generate.generate(_JOB)
     assert got["title"] == "샐 걱정 ZERO 텀블러"
     # ★어느 키가 **먼저**인지는 박지 않는다(2026-09-01): 목록은 호출마다 시작점이
