@@ -2713,10 +2713,18 @@ function render(){
       <div class="bhead">
         <span class="role">${i+1}. ${b.role || '칸'}</span>
         ${i===sel ? '<span class="selbadge">✔ 선택됨 — 여기에 담깁니다</span>' : ''}
-        <span class="chip ${lack > 0.1 ? (stretching ? 'warn' : 'bad') : 'good'}">재료 ${have.toFixed(1)}/멘트 ${needSec.toFixed(1)}초${
+        <span class="chip ${lack > 0.1 ? (stretching ? 'warn' : 'bad')
+                            : (f.over > 0.1 ? 'warn' : 'good')}">재료 ${have.toFixed(1)}/멘트 ${needSec.toFixed(1)}초${
           f.empty ? ` · <b>장면이 없어요 — 아래에서 담아주세요</b>`
                   : lack > 0.1 ? (stretching ? ` · 재료 ${lack.toFixed(1)}초 모자라 늘려 채우는 중`
-                                   : ` · <b>${lack.toFixed(1)}초 부족 — 장면 ${Math.ceil(lack / MAX_SHOT)}장 더 담아주세요</b>`) : ' · 다 채웠어요'}</span>
+                                   : ` · <b>${lack.toFixed(1)}초 부족 — 장면 ${Math.ceil(lack / MAX_SHOT)}장 더 담아주세요</b>`)
+                  // ★남는 재료도 여기서 말한다(2026-09-02). 위 타임라인(2487행)은 08-21에
+                  //   "N초는 안 나와요"를 넣었는데 **이 줄만 안 고쳤다** → 같은 칸을 두고
+                  //   위는 "3.4초는 안 나와요", 아래는 "다 채웠어요"라고 서로 다른 말을 했다
+                  //   (실측 job 353493f20d31: 5칸 합쳐 5.8초가 버려지는데 전부 '다 채웠어요').
+                  //   판단은 같은 f.over 하나를 쓴다 — 문구만 자리에 맞게 다르다(0순위-B).
+                  : f.over > 0.1 ? ` · ${f.over.toFixed(1)}초는 안 나와요(재료가 남아요)`
+                  : ' · 다 채웠어요'}</span>
         ${(lack > 0.1 || AUTOADD[i]) ? `<button class="act" style="${AUTOADD[i]?'':'border-color:var(--good);color:var(--good)'}"
           title="${AUTOADD[i] ? '자동으로 담아준 장면을 도로 뺍니다 — 내가 담은 것은 그대로'
                               : '부족한 만큼 안 쓴 장면을 골라 자동으로 담아줍니다(늘리지 않고 진짜 재료로) · 다시 누르면 되돌아갑니다'}"

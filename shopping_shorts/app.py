@@ -3923,9 +3923,28 @@ def api_points(request: Request):
            pricing.OP_LENS, pricing.OP_SCRIPT)
     history = [{**h, "delta": pricing.to_display(h["delta"])}
                for h in store.points_history(cid, 20)]
+    # ★"이 사람에게 실제로 깎이는가"를 서버가 판정해서 준다(2026-09-02).
+    #   단가표(prices)만으로는 화면이 알 수 없다 — 내 키 사용·관리자 면제·cid 0(사장님)은
+    #   단가가 5P라도 한 푼도 안 깎인다(_charge_clean의 keyroute.should_charge/as_cid).
+    #   화면이 이 조건을 다시 구현하면 판단이 두 곳이 된다(0순위-B) → 여기서 한 번만 본다.
+    #   실패해도 단가표는 그대로 나간다(면제 조회가 화면을 죽이면 안 된다).
+    charged = {}
+    for op in ops:
+        try:
+            charged[op] = bool(cid) and keyroute.should_charge(store, cid, op)
+        except Exception:      # noqa: BLE001 — 판정 실패는 '깎인다'로 보수적 처리
+            charged[op] = bool(cid)
+    # ★자막제거 단가·과금여부는 **업체명이 아닌 이름**으로도 함께 내보낸다(2026-09-02).
+    #   produce.html은 고객이 보는 화면이라 벤더명이 한 글자도 들어가면 안 되고,
+    #   그걸 test_no_vmake_anywhere_in_produce_html이 실제로 막는다(게이트가 나를 잡았다).
+    #   기존 키(prices/charged)는 관리·설정 화면이 쓰고 있으므로 그대로 두고 별칭만 더한다.
+    _clean_op = pricing.OP_VMAKE
     return {"ok": True,
             "balance": pricing.to_display(points.balance(store, cid)),
             "prices": {op: pricing.to_display(pricing.cost(store, op)) for op in ops},
+            "charged": charged,
+            "subclean_price": pricing.to_display(pricing.cost(store, _clean_op)),
+            "subclean_charged": charged.get(_clean_op, bool(cid)),
             "history": history}
 
 
@@ -14324,9 +14343,15 @@ def api_produce_source_brief(request: Request, shortcode: str):
     #   그대로 빌려 쓴다(0순위-B). 전엔 여기도 가로>세로 비교를 따로 적어서, 문턱을
     #   한쪽만 고치면 "화면은 괜찮다는데 제작은 실패"가 났다.
     from shopping_shorts.mix_pipeline import is_landscape_wh
+    # ★is_landscape_wh는 **못 재면 None**을 준다("모르면 막지 않는다"가 그 함수의 설계).
+    #   종전엔 bool()로 감싸 None이 False(=세로형 확실)로 뭉개졌다 — 즉 "안 재봤다"와
+    #   "세로형이다"가 화면에서 같은 값이 됐다(2026-09-02 실측: URL로 담은 3편이
+    #   video_w/h null인데 landscape:false로 내려가 안전한 것처럼 보였다).
+    #   None을 그대로 실어 화면이 "모름"을 알 수 있게 한다 — 기존 프론트는
+    #   `b.landscape ? 경고 : ''` 라 None에서도 종전과 똑같이 조용하다(회귀 없음).
     return {"ok": True, "brief": data.get("source_brief") or {}, "segments": segs,
             "video_w": _w, "video_h": _h,
-            "landscape": bool(is_landscape_wh(_w, _h))}
+            "landscape": is_landscape_wh(_w, _h)}
 
 
 @app.get("/api/produce/aipick")
@@ -14588,6 +14613,23 @@ def api_produce_autoload(request: Request, body: dict):
             except Exception as ex:  # noqa: BLE001
                 e["status"], e["error"] = "failed_download", str(ex)
                 return e
+            # ★화면 방향을 여기서도 재둔다(2026-09-02). 종전엔 prewarm.py에만 있어서
+            #   («담기 예열»을 안 거친 경로 — 특히 「🔗 URL 직접 추가」 — 는 video_w/h가
+            #   영영 null이었다. 실측: URL로 담은 인스타 3편 전부 null → 1단계가
+            #   "가로형(롱폼)" 경고를 못 띄우고, 가로 영상이면 다운로드·추출 비용을
+            #   다 쓴 뒤 3단계 믹스에서야 _block_landscape로 막힌다.
+            #   prewarm과 **같은 함수**를 쓴다(0순위-B) — 방향 판정은 한 곳에서만.
+            #   못 재도 그냥 넘어간다: 이건 보조 정보라 이걸로 적재를 실패시키면 안 된다.
+            try:
+                from shopping_shorts.mix_pipeline import _probe_wh_dur
+                _vw, _vh, _vd = _probe_wh_dur(e["video_path"])
+                if _vw and _vh:
+                    result["video_w"], result["video_h"] = _vw, _vh
+            except Exception as _we:   # noqa: BLE001 — 측정 실패가 적재를 막으면 안 된다
+                # ★traceback은 이 파일에 모듈 최상단 import가 없다 — 여기서 부르면
+                #   NameError로 오히려 적재가 죽는다(예외 처리 안에서 나는 예외).
+                print(f"[autoload] 화면 방향 측정 실패(무해) {code}: {_we!r}",
+                      file=sys.stderr)
             # ★재료가 하나도 안 나왔을 때만 버린다(2026-08-16 기준 교체).
             #   예전엔 full_text(말)만 봐서 **무음 영상이 통째로 버려졌다** — 도우인
             #   제품 영상이 여기 걸렸다. 화면 태깅만 나와도 쓸 수 있는 재료다.

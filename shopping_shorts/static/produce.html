@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="utf-8"/>
@@ -1771,6 +1771,13 @@
           <div id="cleanPreviewWrap" style="margin-top:14px;display:none">
             <!-- 문구: "내 영상으로 미리보기"는 뭘 하는 버튼인지 안 보였다 → 행동을 그대로 쓴다(2026-07-30 사장님 지시) -->
             <button id="btnCleanPreview" class="cta" onclick="startCleanPreview()">✨ 자막제거 시작하기</button>
+            <!-- ★가격을 누르기 **전에** 보여준다(2026-09-02). 종전엔 이 패널 어디에도
+                 P·포인트·차감이라는 글자가 없었고, 아래 안내의 "추가 비용 없이"만 보여
+                 오히려 무료로 읽혔다. 실제로는 _charge_clean이 선차감하고, 고객이 금액을
+                 처음 보는 곳은 **잔액 부족으로 실패한 뒤**였다.
+                 값은 /api/settings/points(단가표·잔액)에서 가져온다 — 화면에 숫자를 박으면
+                 사장님이 단가를 바꿨을 때 거짓말이 된다(0순위-B). -->
+            <div id="cleanCost" class="ctahint" style="margin-top:6px"></div>
             <div class="ctahint">미리 확인하면 최종 렌더가 이 결과를 그대로 써서 추가 비용 없이 빨라져요</div>
             <div id="cleanPreview" style="margin-top:12px"></div>
           </div>
@@ -2137,7 +2144,7 @@
             <div id="hcCopyMsg" class="hint" style="margin-top:4px"></div>
           </div>
           <div style="font-size:13px;margin-bottom:4px">헤드카피 문구</div>
-          <textarea id="hcText" rows="2" placeholder="예: 써보면 놀라는 이것" oninput="updateHC()"
+          <textarea id="hcText" rows="2" placeholder="예: 써보면 놀라는 이것" oninput="hcTouched()"
             style="width:100%;background:var(--inset);border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px;margin-bottom:12px;resize:vertical;font-family:inherit;font-size:14px;line-height:1.4"></textarea>
           <!-- 🖍 글자별 색 (2026-08-30 사장님 "바꾸고 싶은 글자만 컬러 바꿀 수 있게").
                ★단어를 **눌러서** 고른다 — 손으로 타이핑하는 옛 UI(2026-08-24에 뺌)는
@@ -2237,28 +2244,28 @@
                 <div hidden style="display:none">
                   <span id="hcFontPicker"><button type="button" id="hcFontBtn" onclick="toggleFontMenu(event)">폰트</button>
                     <div id="hcFontMenu" style="display:none"></div></span>
-                  <select id="hcFont" onchange="updateHC()"></select>
-                  <input id="hcColor" type="color" value="#FF8800" oninput="updateHC()">
-                  <select id="hcWeight" onchange="updateHC()">
+                  <select id="hcFont" onchange="hcTouched()"></select>
+                  <input id="hcColor" type="color" value="#FF8800" oninput="hcTouched()">
+                  <select id="hcWeight" onchange="hcTouched()">
                     <option value="700">굵게</option><option value="900" selected>아주 굵게</option><option value="400">보통</option>
                   </select>
-                  <span id="hcSizeV">64</span><input id="hcSize" type="range" min="28" max="120" value="64" oninput="updateHC()">
-                  <span id="hcYV">14</span><input id="hcY" type="range" min="0" max="100" value="14" oninput="HC_Y_TOUCHED=true;updateHC()">
-                  <span id="hcXV">50</span><input id="hcX" type="range" min="0" max="100" value="50" oninput="updateHC()">
+                  <span id="hcSizeV">64</span><input id="hcSize" type="range" min="28" max="120" value="64" oninput="hcTouched()">
+                  <span id="hcYV">14</span><input id="hcY" type="range" min="0" max="100" value="14" oninput="HC_Y_TOUCHED=true;hcTouched()">
+                  <span id="hcXV">50</span><input id="hcX" type="range" min="0" max="100" value="50" oninput="hcTouched()">
                 </div>
                 <!-- ③ 테두리 · 박스 -->
                 <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px">
                   <div style="font-size:13px;font-weight:700;margin-bottom:8px">🎨 테두리 · 박스</div>
                   <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
-                    <input id="hcOutline" type="checkbox" checked onchange="updateHC()"> 외곽선
-                    <input id="hcOutColor" type="color" value="#000000" oninput="updateHC()">
-                    <span style="color:var(--sub);font-size:12px">두께 <input id="hcOutW" type="range" min="0" max="12" value="6" oninput="updateHC()"></span>
+                    <input id="hcOutline" type="checkbox" checked onchange="hcTouched()"> 외곽선
+                    <input id="hcOutColor" type="color" value="#000000" oninput="hcTouched()">
+                    <span style="color:var(--sub);font-size:12px">두께 <input id="hcOutW" type="range" min="0" max="12" value="6" oninput="hcTouched()"></span>
                   </label>
                   <label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;cursor:pointer">
-                    <input id="hcBox" type="checkbox" onchange="updateHC()"> 배경 박스
-                    <input id="hcBoxColor" type="color" value="#000000" oninput="updateHC()">
-                    <span style="color:var(--sub);font-size:12px">여백 <input id="hcBoxPad" type="range" min="0" max="40" value="16" oninput="updateHC()"></span>
-                    <span style="color:var(--sub);font-size:12px">투명도 <input id="hcBoxOpacity" type="range" min="20" max="100" value="80" oninput="updateHC()"></span>
+                    <input id="hcBox" type="checkbox" onchange="hcTouched()"> 배경 박스
+                    <input id="hcBoxColor" type="color" value="#000000" oninput="hcTouched()">
+                    <span style="color:var(--sub);font-size:12px">여백 <input id="hcBoxPad" type="range" min="0" max="40" value="16" oninput="hcTouched()"></span>
+                    <span style="color:var(--sub);font-size:12px">투명도 <input id="hcBoxOpacity" type="range" min="20" max="100" value="80" oninput="hcTouched()"></span>
                   </label>
                 </div>
                           </div>
@@ -2305,19 +2312,19 @@
                   <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:8px">① 글씨</div>
                   <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
                     <label style="font-size:12px;color:var(--sub)">폰트
-                      <select id="capFont" onchange="updateCaption()" style="background:#0a1017;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:5px 8px"></select></label>
+                      <select id="capFont" onchange="capTouched()" style="background:#0a1017;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:5px 8px"></select></label>
                     <label style="font-size:12px;color:var(--sub)">색상
-                      <input id="capColor" type="color" value="#FFFFFF" oninput="updateCaption()" style="vertical-align:middle;cursor:pointer"></label>
+                      <input id="capColor" type="color" value="#FFFFFF" oninput="capTouched()" style="vertical-align:middle;cursor:pointer"></label>
                   </div>
                   <div style="margin-top:8px;font-size:12px;color:var(--sub)">크기 <b id="capSizeV">54</b>px
-                    <input id="capSize" type="range" min="28" max="96" value="54" oninput="updateCaption()" style="width:100%"></div>
+                    <input id="capSize" type="range" min="28" max="96" value="54" oninput="capTouched()" style="width:100%"></div>
                 </div>
 
                 <!-- ② 자리 -->
                 <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px">
                   <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:8px">② 자리</div>
                   <div style="font-size:12px;color:var(--sub)">세로 위치 <b id="capYV">84</b>%
-                    <input id="capY" type="range" min="0" max="100" value="84" oninput="CAP_POS_TOUCHED=true;updateCaption()" style="width:100%"></div>
+                    <input id="capY" type="range" min="0" max="100" value="84" oninput="CAP_POS_TOUCHED=true;capTouched()" style="width:100%"></div>
                   <!-- ★가로 정렬 버튼(2026-08-25 고객 요청 "자막이 한쪽으로 치우쳐져 있어서
                        정렬하는 부분이 추가되면 좋겠어요"). 자막은 드래그로 가로 이동이 되는데
                        (CAP_X_PCT) **되돌리는 길이 없었다** — 한 번 끌면 중앙으로 못 돌아온다.
@@ -2335,15 +2342,15 @@
                 <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px">
                   <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:8px">③ 테두리 · 박스 · 효과</div>
                   <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
-                    <input id="capOutline" type="checkbox" checked onchange="updateCaption()"> 외곽선
-                    <input id="capOutColor" type="color" value="#000000" oninput="updateCaption()">
-                    <span style="color:var(--sub);font-size:12px">두께 <input id="capOutW" type="range" min="0" max="12" value="5" oninput="updateCaption()"></span>
+                    <input id="capOutline" type="checkbox" checked onchange="capTouched()"> 외곽선
+                    <input id="capOutColor" type="color" value="#000000" oninput="capTouched()">
+                    <span style="color:var(--sub);font-size:12px">두께 <input id="capOutW" type="range" min="0" max="12" value="5" oninput="capTouched()"></span>
                   </label>
                   <label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;cursor:pointer">
-                    <input id="capBox" type="checkbox" onchange="updateCaption()"> 배경 박스
-                    <input id="capBoxColor" type="color" value="#000000" oninput="updateCaption()">
-                    <span style="color:var(--sub);font-size:12px">여백 <input id="capBoxPad" type="range" min="0" max="40" value="12" oninput="updateCaption()"></span>
-                    <span style="color:var(--sub);font-size:12px">투명도 <input id="capBoxOpacity" type="range" min="20" max="100" value="80" oninput="updateCaption()"></span>
+                    <input id="capBox" type="checkbox" onchange="capTouched()"> 배경 박스
+                    <input id="capBoxColor" type="color" value="#000000" oninput="capTouched()">
+                    <span style="color:var(--sub);font-size:12px">여백 <input id="capBoxPad" type="range" min="0" max="40" value="12" oninput="capTouched()"></span>
+                    <span style="color:var(--sub);font-size:12px">투명도 <input id="capBoxOpacity" type="range" min="20" max="100" value="80" oninput="capTouched()"></span>
                   </label>
                   <div class="hint" style="font-size:11px;margin-top:4px"></div>
                   <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;align-items:center">
@@ -6092,6 +6099,33 @@ function updateCaption(){
   else if(cs.effect==='pop') el.classList.add('eff-pop');
   else if(cs.effect==='sparkle') el.classList.add('eff-sparkle');
   renderSparkles(cs.effect==='sparkle', cs.y_pct);
+  // ★여기서 저장한다(2026-09-02). 종전엔 이 함수가 STATE.captionStyle을 채우고
+  //   **미리보기만** 그렸다 — 저장(saveHeadcopy)은 안 불렀다. 그래서 자막 색·크기·
+  //   위치·외곽선·박스를 손보면 화면은 바뀌는데 새로고침하면 원래대로 돌아갔고,
+  //   최종 렌더도 옛 스타일로 나갔다("미리보기엔 보이는데 영상엔 안 나온다").
+  //   실측 2026-09-02: capColor를 #ff00cc로 바꿔 미리보기는 마젠타가 됐지만
+  //   새로고침 후 #ffffff. 서버 caption_style도 흰색 그대로였다.
+  //   ★자막 컨트롤 11개에 saveHeadcopy()를 각각 붙이지 않는다 — 하나만 빠뜨려도
+  //     같은 병이 재발하고, 나중에 컨트롤이 늘면 또 빠진다. 값을 만드는 이 한 곳에서
+  //     저장까지 한다(0순위-B).
+  //   ★디바운스: 슬라이더는 드래그 중 oninput이 매 픽셀 뜬다. 그대로 쏘면 초당 수십 번
+  //     POST가 나간다 — 손을 멈춘 뒤 한 번만 보낸다.
+  _capSaveSoon();
+}
+let _CAP_SAVE_T = null;
+// ★"사람이 만진 뒤"에만 저장한다. updateCaption은 패널에 들어올 때도 불리는데(복원 경로),
+//   그때 DOM이 아직 기본값이면 **저장된 스타일을 기본값으로 덮어쓴다** — 이 파일이 이미
+//   같은 사고를 겪었다("색이 #ffe100→#ff8800으로 죽었다", 5510행 주석). 복원은
+//   applyConfig가 DOM을 채운 뒤 updateCaption을 부르므로 값은 맞지만, 복원할 게 없는
+//   경우(PENDING_STYLE_RESTORE=false)까지 저장하면 새 사고를 내가 만드는 셈이다.
+//   그래서 **입력 이벤트에서 온 호출만** 저장한다.
+let _CAP_USER_EDIT = false;
+function capTouched(){ _CAP_USER_EDIT = true; updateCaption(); }
+function _capSaveSoon(){
+  if(!_CAP_USER_EDIT) return;                      // 복원·초기 렌더는 저장하지 않는다
+  if(typeof saveHeadcopy !== 'function') return;   // 하네스엔 없다(슬라이스 테스트 보호)
+  clearTimeout(_CAP_SAVE_T);
+  _CAP_SAVE_T = setTimeout(() => { try{ saveHeadcopy(); }catch(e){} }, 500);
 }
 // 반짝 효과: 자막 주위에 ✨ 입자를 뿌려 깜빡이게(미리보기 연출). 최종 영상은 서버가 알파 깜빡임으로 렌더.
 function renderSparkles(on, ypct){
@@ -7073,6 +7107,20 @@ function updateHC(){
   // 🖍 낱말 알약도 같이 갱신 — 문구를 고치면 알약이 따라와야 한다(2026-08-30)
   try{ renderHCWords(); }catch(e){}
   if(document.getElementById('fullPresets')) renderStyleCards();
+  // ★자막(updateCaption)과 **같은 이유·같은 방식**으로 저장한다(2026-09-02).
+  //   헤드카피 컨트롤 13개도 전부 updateHC()만 불러서, 색·크기·자리를 바꾸면
+  //   미리보기만 바뀌고 새로고침하면 되돌아갔다(실측: #00ff88 → 새로고침 후 #ffffff).
+  //   저장은 사람이 만졌을 때만 — 복원·초기 렌더에서 저장하면 빈 DOM 기본값이
+  //   저장된 스타일을 덮는다(이 파일의 "#ffe100→#ff8800" 사고와 같은 자리).
+  _hcSaveSoon();
+}
+let _HC_SAVE_T = null, _HC_USER_EDIT = false;
+function hcTouched(){ _HC_USER_EDIT = true; updateHC(); }
+function _hcSaveSoon(){
+  if(!_HC_USER_EDIT) return;                       // 복원·초기 렌더는 저장하지 않는다
+  if(typeof saveHeadcopy !== 'function') return;   // 하네스 보호(슬라이스 테스트)
+  clearTimeout(_HC_SAVE_T);
+  _HC_SAVE_T = setTimeout(() => { try{ saveHeadcopy(); }catch(e){} }, 500);
 }
 
 // 스타일 프리셋 — 고민없이 누르면 색·크기·외곽선 한 번에 지정(핵심 포인트)
@@ -9870,12 +9918,24 @@ async function renderSourceAnalysis(){
   // ★빈 shortcode 보정은 **여기 안에서** 한다(2026-08-31). 별도 함수로 빼면
   //   테스트 하네스(js_harness)가 이 함수만 떼어 실행할 때 ReferenceError로 죽는다 —
   //   게이트가 실제로 잡았다. 보정 자체가 실패해도 아래 흐름은 종전대로 돈다.
+  // ★2026-09-02: 대상을 **빈 shortcode 전부**로 넓힌다(URL 종류를 안 가린다).
+  //   종전엔 `/api/produce/footage/`(내 파일 올리기)만 보정해서, 「🔗 URL 직접 추가」로
+  //   담은 영상은 shortcode가 ''인 채로 남았다. 그런데 서버(app.py api_produce_autoload)는
+  //   빈 shortcode를 **sha1(url)[:12]로 채워서** 저장한다 — 즉 같은 영상을 두고
+  //   서버는 sha1 키로 쓰고 화면은 ''로 조회해 **영영 만나지 못했다**(0순위-B: 같은
+  //   판단을 두 곳에서 따로 지으면 반드시 어긋난다).
+  //   실측(2026-09-02 라이브, 인스타 릴스 3개): 서버엔 brief·segments가 다 있는데
+  //   (14d95dbf8729·03b8c77e91db·bd2f67e84fce = 각 URL의 sha1) 화면은 "0/3개 읽음 ·
+  //   분석 중"에 영구 고정 → 2단계에서 씨앗 카드가 하나도 안 생겨 **고객이 완전히 막혔다**.
+  //   여기서 서버와 **같은 규칙**(sha1(url) 앞 12자)으로 채우면 조회 키가 일치한다.
   try{
-    const _need = (HANDOFF||[]).filter(h => h && !h.shortcode
-                                        && String(h.url||'').includes('/api/produce/footage/'));
+    const _need = (HANDOFF||[]).filter(h => h && !h.shortcode && h.url);
     if(_need.length && typeof crypto !== 'undefined' && crypto.subtle){
       for(const _h of _need){
-        const _b = await crypto.subtle.digest('SHA-1', new TextEncoder().encode(_h.url));
+        // ★서버와 **글자 하나까지 같은 입력**으로 해싱한다 — app.py는
+        //   sha1(url.strip())이라 여기서 trim()을 빼면 앞뒤 공백 하나로 키가 갈린다.
+        const _b = await crypto.subtle.digest('SHA-1',
+                         new TextEncoder().encode(String(_h.url||'').trim()));
         _h.shortcode = Array.from(new Uint8Array(_b))
                             .map(x=>x.toString(16).padStart(2,'0')).join('').slice(0,12);
       }
@@ -12486,14 +12546,55 @@ function refreshSub(){
   // T7: 못 쓰는 컨트롤은 비활성 노출 대신 숨긴다 — 자막제거 켜짐+매칭됨일 때만 미리보기가 등장.
   const wrap=document.getElementById('cleanPreviewWrap');
   if(wrap) wrap.style.display = (STATE.subtitleRemoval && MIX_JOB) ? '' : 'none';
+  // ★토글을 누르지 않고 이 화면으로 돌아온 경우(작업 복원·단계 이동)에도 가격을 채운다 —
+  //   onSubToggle에만 걸면 "이미 켜둔 채 돌아온" 고객에겐 안내가 영영 안 뜬다.
+  if(STATE.subtitleRemoval && typeof renderCleanCost === 'function') renderCleanCost();
   // 이미 끝난 제거 결과를 서버에서 되살린다(화면 전환으로 DOM이 비워져도 결과는 남는다).
   restoreCleanPreview();
+}
+// 자막제거 단가·잔액을 **누르기 전에** 보여준다(2026-09-02).
+// ★숫자를 화면에 박지 않는다 — 단가는 서버(pricing)가 정하고 사장님이 바꿀 수 있다.
+//   박아두면 단가를 바꾼 날부터 화면이 거짓말을 한다(0순위-B).
+// ★키를 등록한 고객·사장님(cid 0)은 실제로 안 깎인다(_charge_clean의 should_charge).
+//   그 경우까지 "5P 차감"이라고 하면 반대로 겁을 준다 → 서버가 준 값이 0이면 무료라고 쓴다.
+// 실패해도 조용히 넘어간다 — 가격 안내가 안 떠도 기능 자체는 종전대로 돌아야 한다.
+let _cleanCostCache = null;
+async function renderCleanCost(){
+  const el = document.getElementById('cleanCost');
+  if(!el) return;
+  try{
+    if(!_cleanCostCache){
+      const r = await fetch('/api/settings/points', {credentials:'include'});
+      if(!r.ok) return;
+      _cleanCostCache = await r.json();
+    }
+    const d = _cleanCostCache || {};
+    // ★업체명이 들어간 키를 여기서 쓰지 않는다 — 이 파일은 고객 화면이라 벤더명이
+    //   한 글자도 있으면 안 되고, tests/test_subclean_ui.py가 파일 전체를 훑어 막는다
+    //   (주석까지 검사한다. 실제로 이 주석에 이름을 적었다가 게이트에 잡혔다).
+    //   그래서 서버가 중립 이름(subclean_*)으로도 함께 내려준다.
+    const price = Number(d.subclean_price);
+    // ★"깎이는가"는 서버 판정을 그대로 믿는다 — 내 키·관리자 면제·사장님(cid 0)은
+    //   단가가 5P라도 한 푼도 안 나간다. 화면이 그 조건을 다시 세면 어긋난다(0순위-B).
+    //   그 필드가 없는 옛 서버 응답이면 단가만 보고 판단(종전 동작, 회귀 없음).
+    const willCharge = (typeof d.subclean_charged === 'boolean')
+                       ? d.subclean_charged : (price > 0);
+    if(!willCharge || !(price > 0)){
+      el.textContent = '내 키로 처리돼서 포인트는 차감되지 않아요.'; return;
+    }
+    const bal = Number(d.balance);
+    const short = Number.isFinite(bal) && bal < price;
+    el.innerHTML = '💳 이 단계는 <b>' + price + 'P</b>가 차감돼요'
+      + (Number.isFinite(bal) ? ' · 남은 포인트 <b>' + bal + 'P</b>' : '')
+      + (short ? ' <span style="color:var(--fire)">— 포인트가 모자라 지금은 실행할 수 없어요</span>' : '');
+  }catch(e){ /* 가격 안내 실패가 기능을 막으면 안 된다 */ }
 }
 async function onSubToggle(){
   STATE.subtitleRemoval = document.getElementById('subToggle').checked;
   // T7: disabled 노출 대신 숨김 — 자막제거 켜짐+매칭됨일 때만 미리보기 버튼이 나타난다.
   const cwrap=document.getElementById('cleanPreviewWrap');
   if(cwrap) cwrap.style.display = (STATE.subtitleRemoval && MIX_JOB) ? '' : 'none';
+  if(STATE.subtitleRemoval) renderCleanCost();
   const s=document.getElementById('subState');
   if(!MIX_JOB){ if(s) s.textContent='⚠️ 2단계 매칭 후 적용됩니다(설정은 기억됨).'; return; }
   try{
@@ -16260,9 +16361,17 @@ function s2RenderStyles(){
   }).join('');
   row.innerHTML=auto+cards;
   const hint=document.getElementById('s2GenHint');
-  if(hint) hint.textContent = S2.picked.length
-    ? (S2.picked.length+'개 스타일 → '+S2.picked.length+'안이 나옵니다')
-    : 'AI가 스타일까지 골라 2안을 만듭니다';
+  // ★안의 개수는 s2AnCount() 한 곳에서만 센다(0순위-B). 종전엔 여기에 '2안'이
+  //   손으로 박혀 있었는데, 스타일을 하나도 안 고르면 실제로는 픽업 1안만 나온다
+  //   (실측 2026-09-02: s2AnCount()=1, drafts=1인데 화면은 "2안을 만듭니다").
+  //   생성 뒤 부족 경고도 s2AnCount()를 기준으로 도므로 경고조차 안 뜬다 —
+  //   즉 **안내만 거짓말**이었다. 같은 함수로 세면 어긋날 수가 없다.
+  if(hint){
+    const _n = s2AnCount();
+    hint.textContent = S2.picked.length
+      ? (S2.picked.length+'개 스타일 → '+_n+'안이 나옵니다')
+      : ('AI가 스타일까지 골라 '+_n+'안을 만듭니다');
+  }
 }
 function s2ClearStyles(){ S2.picked=[]; s2RenderStyles(); }
 // ★안은 최대 2개다(종전 그대로). 픽업도 한 안을 차지하므로 **함께 세어** 상한을 건다 —
