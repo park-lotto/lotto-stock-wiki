@@ -15791,6 +15791,11 @@ function s2RenderSeeds(){
         text:c.text||'', structure:c.structure||{}, tiles:c.tiles||{}, pick:false});
     });
   }catch(e){}
+  // ★사장님이 직접 쓴 대본은 **AI PICK 목록에 없다** — 이 함수가 매번 S2.seeds를 새로
+  //   만들기 때문에, 다시 얹어주지 않으면 카드가 조용히 사라진다(2026-09-01 실사고:
+  //   "씨앗이 내 대본인데 씨앗을 고르라고 한다" — 원문 칸엔 내 대본이 보이는데
+  //   카드 선택은 1번 영상에 켜져 있었다). 보관처는 S2.manualSeed 한 곳(0순위-B).
+  if(S2.manualSeed && String(S2.manualSeed.text||'').trim()) S2.seeds.push(S2.manualSeed);
   // ★씨앗은 **지금 담긴 영상**을 따라간다(2026-08-18). 예전엔 `!S2.seed`일 때만
   //   채워서, 한 번 정해진 씨앗이 1단계에서 영상을 바꿔도 그대로 굳었다 —
   //   담긴 영상과 무관한 옛 영상이 대표로 남아 대본이 그쪽으로 끌려갔다.
@@ -15875,7 +15880,12 @@ function s2SeedSentences(text){
 //   ⚠️대본 **재료**는 씨앗 선택과 무관하게 담긴 영상 전부를 쓴다(그건 그대로다).
 function s2SeedOn(i){
   const s=S2.seeds[i]; if(!s) return false;
-  // 고른 게 있으면 그것, 없으면 대표(AI PICK)가 켜진 것으로 본다.
+  if(S2.seed===s) return true;                       // 같은 것을 고른 경우
+  // ★직접 쓴 대본이 씨앗이면 **영상 카드는 전부 꺼진다**(2026-09-01). 종전엔
+  //   shortcode가 없다는 이유로 대표(AI PICK)가 켜진 것처럼 보여, 사장님 대본을
+  //   넣어도 화면은 1번 영상을 가리켰다 — 화면이 진실과 다르게 말한 것이다.
+  if(S2.seed && !S2.seed.shortcode)
+    return !s.shortcode && String(s.text||'')===String(S2.seed.text||'');
   if(S2.seed && S2.seed.shortcode) return S2.seed.shortcode===s.shortcode;
   return !!s.pick;
 }
@@ -15900,8 +15910,10 @@ function s2ShowSeedText(i){
 function s2ManualSeed(){
   const t=prompt('씨앗으로 쓸 대본을 붙여넣으세요');
   if(!t || !t.trim()) return;
-  S2.seed={shortcode:'', title:'직접 쓴 대본', thumb:'', category:PM_CATEGORY||'', text:t.trim(), structure:{}, tiles:{}};
-  S2.seeds.push(S2.seed); s2RenderSeeds();
+  S2.manualSeed={shortcode:'', title:'✍ 직접 쓴 대본', thumb:'', category:PM_CATEGORY||'',
+                 text:t.trim(), structure:{}, tiles:{}, manual:true};
+  S2.seed=S2.manualSeed;            // 넣자마자 이게 씨앗이다
+  s2RenderSeeds(); saveWork();
 }
 // 고른 씨앗의 뼈대 — 첫 문장·칸 구성·밀도. 전부 데이터다(설명글을 늘리지 않는다).
 function s2RenderSeedInfo(){
