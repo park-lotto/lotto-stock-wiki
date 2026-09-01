@@ -58,3 +58,38 @@ def test_single_key_still_works(monkeypatch):
     monkeypatch.setattr(kv, "_MIN_GAP_S", 0.0)
     monkeypatch.setattr(kv, "_KEY_LAST_USED", {})
     assert kv._pick_key(["SOLO"]) == "SOLO"
+
+
+# ── 목록 회전(rotated) — for문 호출부용 (2026-09-01) ────────────────────
+
+def test_rotated_starts_at_different_key(monkeypatch):
+    """★목록의 시작점이 호출마다 넘어가야 한다.
+
+    이게 죽으면 `for key in keys`를 도는 호출부(script_generate·seo_generate·
+    thumb_title·pattern_bank·edit_plan)가 전부 keys[0]만 두들기던 2026-08-31
+    사고가 그대로 재발한다. 실측: 키 82개 중 최근 5분에 쓰인 건 21개뿐이었다."""
+    monkeypatch.setattr(kv, "_RR_CURSOR", {"i": 0})
+    live = [f"KEY{i:02d}" for i in range(5)]
+    firsts = [kv.rotated(live)[0] for _ in range(5)]
+    assert len(set(firsts)) == 5, f"시작 키가 {len(set(firsts))}종뿐 — 회전이 죽었다"
+
+
+def test_rotated_preserves_all_keys(monkeypatch):
+    """순서만 돌리고 원소는 그대로 — 키가 사라지면 후보가 줄어 오히려 악화된다."""
+    monkeypatch.setattr(kv, "_RR_CURSOR", {"i": 3})
+    live = [f"KEY{i:02d}" for i in range(5)]
+    assert sorted(kv.rotated(live)) == sorted(live)
+    assert len(kv.rotated(live)) == 5
+
+
+def test_rotated_is_safe_for_tiny_pools():
+    """키 0·1개면 돌릴 게 없다 — 단일키 크론(report_ingest)이 여기서 깨지면 안 된다."""
+    assert kv.rotated([]) == []
+    assert kv.rotated(["SOLO"]) == ["SOLO"]
+
+
+def test_cursor_is_seeded_per_process():
+    """★워커 12개는 독립 프로세스다 — 커서가 0에서 다 같이 출발하면 전원이 live[0]을 친다.
+    PID로 씨딩해 프로세스마다 다른 지점에서 시작한다."""
+    import os
+    assert kv._RR_CURSOR["i"] != 0 or os.getpid() == 0   # PID가 0인 프로세스는 없다
