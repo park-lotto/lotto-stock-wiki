@@ -15691,7 +15691,17 @@ def _extract_beat_frame(work, beat, out_path, clean_sources=None,
     vid = pr.get("video_id")
     ss = float(pr.get("start") or 0)
     src = None
-    if clean_final and Path(clean_final).exists():
+    # ★컷 좌표(seg_spec)가 있으면 **절대 덮어쓰지 않는다**(2026-09-01 사장님 캡처 대조).
+    #   완성본 청소본 경로는 "완성본 영상의 몇 초"라는 **다른 좌표계**다. 그 파일은 청소를
+    #   돌린 그 시점의 편성물이라, 그 뒤 편성·컷 길이가 바뀌면 그 초는 아무 뜻이 없다.
+    #   실측(job 84b5f66a8e1f): clean_preview.mp4 = 8/27 20:58 생성인데 컷 계획은 9/1 —
+    #   hook 4컷이 케이크/케이크/여자/여자로 떴다(3단계는 케이크/여자/야외/아이).
+    #   컷 좌표는 3단계 재생과 **같은 좌표계**(소스 mp4 + 원본 시각)라 편성이 바뀌어도
+    #   안 썩는다. 그래서 컷 프레임은 늘 소스에서 뜬다 — 아래 clean_sources(소스별 청소본)는
+    #   좌표계가 같으므로 그대로 우선한다. 칸 대표 프레임(seg_spec 없음)은 종전대로.
+    #   ⚠ 완성본만 청소한 작업은 컷 미리보기에 원본 자막이 보일 수 있다 — 틀린 장면을
+    #     보여주는 것보다 낫다(렌더 결과는 청소본을 쓰므로 영향 없다).
+    if seg_spec is None and clean_final and Path(clean_final).exists():
         # 완성본 1편만 청소한 경로 — 소스별 파일이 없다. 완성본에서 그 칸 지점을 뜬다.
         src = Path(clean_final)
         if final_ratio is not None:
@@ -15807,6 +15817,11 @@ def _beatframe_file(job, job_id: str, i: int, cut=None):
     _key = f"{_seg0.get('video_id') or '-'}@{round(float(_seg0.get('start') or 0), 2)}"
     _key = re.sub(r"[^0-9a-zA-Z@.\-]", "_", _key)
     _ct = "" if cut is None else f"c{cut}_"
+    # ★컷 좌표가 있으면 _extract_beat_frame이 **소스에서** 뜬다(완성본 청소본은 좌표계가
+    #   달라 안 쓴다 — 아래 함수 주석). 그런데 캐시 이름은 그대로 _clean이라, 옛 완성본에서
+    #   뜬 **틀린 그림**이 그대로 재사용됐다. 실제로 무엇에서 떴는지를 이름에 반영한다.
+    if _spec and not clean_map:
+        _ctag = "_src"
     out = work / "beatframes" / f"{i}_{_ct}{_key}{_ctag}.jpg"
     if not out.exists():
         _extract_beat_frame(work, beat, out, clean_sources=clean_map,
