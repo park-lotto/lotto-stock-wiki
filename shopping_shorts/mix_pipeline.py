@@ -4,6 +4,7 @@ run_mix_job: 다운로드→대본추출(병렬)→EDL생성→TTS까지 진행�
 run_render: 사용자가 확인 후 최종 ffmpeg 렌더 → done.
 각 단계에서 mix_jobs.status를 갱신하고, 예외는 status='failed'+error로 잡는다.
 """
+import copy
 import hashlib
 import os
 import json
@@ -242,9 +243,18 @@ def asr_ranker(path, text):
     return asr_check.mismatch_score(asr_check.diff_words(text, hyp)) if hyp else 0
 
 
+def _hook_opener_on(customer_id):
+    """훅 감탄사 스위치 — 판정은 single_source 한 곳. 못 읽으면 켬(종전 동작)."""
+    try:
+        from shopping_shorts import single_source as _ss_opt
+        return _ss_opt.hook_opener_on(customer_id)
+    except Exception:      # noqa: BLE001
+        return True
+
+
 def synthesize_line(narration, out_path, *, voice=None, profile=None, beat_role=None,
                     beat_index=None, beat_total=None, previous_text=None, next_text=None,
-                    ranker=asr_ranker, global_pron=None, customer_id=0):
+                    ranker=asr_ranker, global_pron=None, customer_id=0, hook_opener=None):
     """한 줄을 naturalize→TTS(N-best·연속성)→후처리까지 합성하고 변환텍스트를 반환.
 
     **튜닝 작업대와 실제 렌더가 공유하는 단일 경로**다. 양쪽이 각자 파이프라인을 조립하면
@@ -262,6 +272,14 @@ def synthesize_line(narration, out_path, *, voice=None, profile=None, beat_role=
     prof = merge_profile(profile if profile is not None else prof_v)
     # 전역 발음교정을 profile 위에 병합(설계 §2-A) — 렌더·작업대 공통 choke.
     prof = pron_corrections.overlay(prof, global_pron or {})
+    # ★훅 감탄사 스위치는 **음성도 같이** 끈다(2026-09-01 사장님 "대본 끄면 tts도 동시에").
+    #   감탄사를 붙이는 자리가 두 곳이었다: 대본(add_hook_opener)과 여기(naturalize fillers,
+    #   bank=와/오/우와/헐/이야, 훅 칸만). 대본만 끄면 음성에서 다시 붙어 **자막에 없는
+    #   말이 들린다**. 판정은 single_source.hook_opener_on 한 곳(0순위-B) — 고객 설정 →
+    #   사장님 기본값 순. 켤 때는 종전 그대로다(회귀 0).
+    if hook_opener is False or (hook_opener is None and not _hook_opener_on(customer_id)):
+        prof = copy.deepcopy(prof)
+        prof.setdefault("fillers", {})["on"] = False
     natural = naturalize(narration, prof, beat_role=beat_role,
                          beat_index=beat_index, beat_total=beat_total)
     # 오독 자동회피(2026-07-22): Whisper 랭커(GROQ 키)가 실동작할 때만 n을 최소 2로
