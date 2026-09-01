@@ -1,0 +1,126 @@
+<title>매칭 오푸스 vs 제미니</title>
+<style>
+:root{--bg:#fbfaf9;--fg:#1a1a19;--mut:#6b6b68;--line:#e3e0dc;--card:#fff;
+--good:#1a7f5a;--bad:#b3402f;--warn:#8a6d1f}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#191817;--fg:#eceae7;
+--mut:#a09d98;--line:#343230;--card:#211f1e;--good:#5fce9f;--bad:#f08a75;--warn:#d9bc6a}}
+:root[data-theme="dark"]{--bg:#191817;--fg:#eceae7;--mut:#a09d98;--line:#343230;--card:#211f1e;
+--good:#5fce9f;--bad:#f08a75;--warn:#d9bc6a}
+body{background:var(--bg);color:var(--fg);font:15px/1.65 -apple-system,"Segoe UI",
+"Malgun Gothic",sans-serif;margin:0;padding:28px 20px 60px}
+.w{max-width:1000px;margin:0 auto}
+h1{font-size:25px;margin:0 0 4px;letter-spacing:-.02em}
+h2{font-size:17px;margin:34px 0 12px;padding-bottom:7px;border-bottom:1px solid var(--line)}
+.sub{color:var(--mut);font-size:13.5px;margin-bottom:22px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:12px}
+.c{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:15px 17px}
+.c .n{font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:.05em}
+.c .v{font-size:29px;font-weight:640;margin:5px 0 2px;letter-spacing:-.02em}
+.c .d{font-size:12.5px;color:var(--mut)}
+table{border-collapse:collapse;width:100%;font-size:13.5px;background:var(--card);
+border:1px solid var(--line);border-radius:9px;overflow:hidden}
+th,td{padding:8px 11px;text-align:left;border-bottom:1px solid var(--line)}
+th{background:rgba(128,128,128,.07);font-weight:600;font-size:12.5px}
+tr:last-child td{border-bottom:none}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+.good{color:var(--good);font-weight:600}.bad{color:var(--bad);font-weight:600}
+.warn{color:var(--warn)}
+.scroll{overflow-x:auto}
+.note{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--warn);
+border-radius:8px;padding:13px 16px;margin:16px 0;font-size:13.5px}
+code{background:rgba(128,128,128,.13);padding:1px 5px;border-radius:4px;font-size:12.5px}
+</style>
+<div class="w">
+<h1>장면매칭 — 오푸스 vs 제미니</h1>
+<div class="sub">실측 20건 / 계획 150건 · 2.0분 소요 · 실패 0건<br>채점축 = 프로덕션 <code>backbone.beat_role_mismatch</code> (역할↔결 어긋남. 낮을수록 좋다)</div>
+<div class="note">⚠️ 계획 150건 중 <b>20건까지</b> 돌았다. 아래 수치는 그 범위의 실측이다.</div>
+<h2>한눈에</h2><div class='cards'>
+<div class="c"><div class="n">gemini</div><div class="v warn">45%</div><div class="d">어긋남 교정률 (20→11)<br>호출 9건 · 중앙 3.0초</div></div>
+<div class="c"><div class="n">opus</div><div class="v good">50%</div><div class="d">어긋남 교정률 (20→10)<br>호출 9건 · 중앙 9.2초</div></div>
+</div>
+<h2>모델 비교</h2><div class='scroll'><table><tr><th>모델</th><th class='num'>호출</th><th class='num'>출발 어긋남</th><th class='num'>교정 후</th><th class='num'>교정률</th><th class='num'>좋아짐</th><th class='num'>나빠짐</th><th class='num'>그대로</th><th class='num'>중앙초</th></tr>
+<tr><td><b>gemini</b></td><td class='num'>9</td><td class='num'>20</td><td class='num'>11</td><td class='num warn'>45%</td><td class='num good'>6</td><td class='num '>0</td><td class='num'>3</td><td class='num'>3.0</td></tr>
+<tr><td><b>opus</b></td><td class='num'>9</td><td class='num'>20</td><td class='num'>10</td><td class='num good'>50%</td><td class='num good'>8</td><td class='num '>0</td><td class='num'>1</td><td class='num'>9.2</td></tr>
+</table></div>
+<h2>역할별 — 교정 후에도 어긋난 비율</h2><div class='scroll'><table><tr><th>역할</th>
+<th class='num'>gemini</th>
+<th class='num'>opus</th>
+</tr>
+<tr><td><b>cta</b></td>
+<td class='num bad'>56% <span style='color:var(--mut)'>(5/9)</span></td>
+<td class='num warn'>33% <span style='color:var(--mut)'>(3/9)</span></td>
+</tr>
+<tr><td><b>hook</b></td>
+<td class='num warn'>33% <span style='color:var(--mut)'>(3/9)</span></td>
+<td class='num warn'>22% <span style='color:var(--mut)'>(2/9)</span></td>
+</tr>
+<tr><td><b>problem</b></td>
+<td class='num warn'>33% <span style='color:var(--mut)'>(3/9)</span></td>
+<td class='num bad'>56% <span style='color:var(--mut)'>(5/9)</span></td>
+</tr>
+<tr><td><b>result</b></td>
+<td class='num good'>0% <span style='color:var(--mut)'>(0/9)</span></td>
+<td class='num good'>0% <span style='color:var(--mut)'>(0/9)</span></td>
+</tr>
+<tr><td><b>solution</b></td>
+<td class='num good'>0% <span style='color:var(--mut)'>(0/9)</span></td>
+<td class='num good'>0% <span style='color:var(--mut)'>(0/9)</span></td>
+</tr>
+</table></div>
+<h2>케이스별 (출발 → 교정 후, 반복 3회)</h2><div class='scroll'><table><tr><th>케이스</th><th class='num'>출발</th>
+<th class='num'>gemini</th>
+<th class='num'>opus</th>
+</tr>
+<tr><td>all_open</td>
+<td class='num'>3</td>
+<td class='num good'>0</td>
+<td class='num good'>1</td>
+</tr>
+<tr><td>live_asis</td>
+<td class='num'>3</td>
+<td class='num' style='color:var(--mut)'>미호출</td>
+<td class='num' style='color:var(--mut)'>미호출</td>
+</tr>
+<tr><td>only_hook</td>
+<td class='num'>3</td>
+<td class='num '>3</td>
+<td class='num good'>2</td>
+</tr>
+<tr><td>only_problem</td>
+<td class='num'>3</td>
+<td class='num '>3</td>
+<td class='num good'>2</td>
+</tr>
+<tr><td>only_solution</td>
+<td class='num'>3</td>
+<td class='num '>3</td>
+<td class='num '>3</td>
+</tr>
+<tr><td>shift1</td>
+<td class='num'>1</td>
+<td class='num good'>0</td>
+<td class='num good'>0</td>
+</tr>
+<tr><td>shift2</td>
+<td class='num'>1</td>
+<td class='num good'>0</td>
+<td class='num good'>0</td>
+</tr>
+<tr><td>shift3</td>
+<td class='num'>2</td>
+<td class='num good'>1</td>
+<td class='num good'>0</td>
+</tr>
+<tr><td>shift4</td>
+<td class='num'>2</td>
+<td class='num good'>1</td>
+<td class='num good'>1</td>
+</tr>
+<tr><td>worst_start</td>
+<td class='num'>2</td>
+<td class='num good'>0</td>
+<td class='num good'>1</td>
+</tr>
+</table></div>
+<h2>이 리포트를 읽는 법</h2><div class="note"><b>교정률</b> = 출발 시 어긋난 비트 중 몇 %를 고쳤나. 높을수록 좋다.<br><b>나빠짐</b> = 멀쩡하던 걸 망친 케이스 수. <b>0이어야 한다.</b><br><b>미호출</b> = 재픽 대상이 0개라 모델을 아예 안 부른 것 (<code>live_asis</code>가 여기 해당 — fit=5라 문이 안 열린다).<br>⚠️ 표본은 <b>라이브 잡 1건</b>(세그 64개)에서 출발점만 바꿔 만든 것이다. "어느 모델이 잘 고르나"는 답하지만 "라이브 전체에서 몇 % 좋아지나"는 답하지 못한다.</div>
+</div>

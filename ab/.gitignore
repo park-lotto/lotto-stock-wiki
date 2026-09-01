@@ -1,0 +1,6 @@
+# 실행 산출물 — 코드가 아니라 결과다. 재현하려면 run_ab.py를 다시 돌리면 된다.
+logs/
+logs_gate/
+*.log
+report_shot.png
+report_check.html
