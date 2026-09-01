@@ -1575,6 +1575,18 @@ class Store:
         except sqlite3.OperationalError:
             pass  # 이미 존재
 
+        # ── 🎙 마지막 성우 기억(2026-09-02 사장님 "마지막 본인이 세팅한 TTS를 다음작업에도"). ──
+        #    왜 필요한가: job.voice가 비면 mix_pipeline._voice_params가 _DEFAULT_VOICE(미나)로
+        #    폴백한다. 그래서 3단계 매칭의 1차 TTS가 **항상 미나**로 나가고, 고객은 4단계에서
+        #    자기 성우로 바꿔야 했다. 그 '적용'이 resynth_tts_job(skip_existing 없음 = 전 비트
+        #    재합성)이라 **편당 TTS가 2회** 나갔다. 여기 기억해 둔 값을 create_mix_job이
+        #    job.voice 초기값으로 넣으면 1차부터 본인 성우 → 4단계를 누를 이유가 없어진다.
+        #    값은 /api/mix/voice가 만드는 voice 스냅샷 JSON 그대로(같은 모양이라야 재가공이 없다).
+        try:
+            c.execute("ALTER TABLE customers ADD COLUMN last_voice_json TEXT")
+        except sqlite3.OperationalError:
+            pass  # 이미 존재. 기존 고객은 NULL = 종전대로 미나 폴백(동작 불변).
+
         # ── 관리자 지정(2026-07-22): admin=1이면 관리자(권한 관리자와 동일). 사장님이 UI로 부여/회수. ──
         try:
             c.execute("ALTER TABLE customers ADD COLUMN admin INTEGER NOT NULL DEFAULT 0")
@@ -4564,19 +4576,27 @@ class Store:
             None이면 자동 선정(인스타/유튜브·댓글수 규칙). run_mix_job이 인덱스→video_id로 푼다."""
         now = datetime.now(timezone.utc).isoformat()
         bb = None if backbone_main is None else int(backbone_main)
+        # ★🎙 마지막 성우를 job에 미리 심는다(2026-09-02) — 이중 TTS 차단의 핵심.
+        #   여기서 안 심으면 3단계 매칭의 1차 TTS가 _DEFAULT_VOICE(미나)로 나가고, 고객이
+        #   4단계에서 바꾸는 순간 resynth_tts_job이 **전 비트를 다시 합성**한다(편당 2회).
+        #   ★반드시 이 한 곳에서만 심는다(0순위-B): create_mix_job 호출부가 4군데
+        #   (app.py 3390·3527·14730, auto_run.py 134)라 호출부마다 심으면 언젠가 어긋난다.
+        #   기억이 없으면(신규 고객) None → 종전대로 미나 폴백이라 동작이 안 바뀐다.
+        last_voice = self.get_last_voice(customer_id)
         with self._conn() as c:
             c.execute(
                 "INSERT INTO mix_jobs(job_id, urls_json, target_seconds, structure, "
                 "status, created_at, updated_at, subtitle_removal, given_script, "
                 "script_structure_json, customer_id, render_charge_day, scene_first, backbone_main, "
-                "mix_charged) "
-                "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                "mix_charged, voice_json) "
+                "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 (job_id, json.dumps(urls, ensure_ascii=False), target_seconds,
                  structure, "downloading", now, now, 1 if subtitle_removal else 0,
                  given_script or None,
                  json.dumps(script_structure, ensure_ascii=False) if script_structure else None,
                  customer_id, render_charge_day, 1 if scene_first else 0, bb,
-                 None if mix_charged is None else int(mix_charged)),
+                 None if mix_charged is None else int(mix_charged),
+                 json.dumps(last_voice, ensure_ascii=False) if last_voice else None),
             )
 
     def get_mix_job(self, job_id):
@@ -5480,6 +5500,37 @@ class Store:
         if _hmac.compare_digest(self._hash_password(password, salt), stored_hash):
             return customer_id
         return None
+
+    # ── 🎙 마지막 성우 기억(2026-09-02) ──────────────────────────────────────
+    #  이 두 함수가 last_voice_json을 만지는 **유일한 출구**다(0순위-B). 다른 곳에서
+    #  customers.last_voice_json을 직접 SELECT/UPDATE 하지 마라 — JSON 파싱 규칙이
+    #  갈리면 "기억은 했는데 안 불러와진다"가 된다.
+    def get_last_voice(self, customer_id):
+        """고객이 마지막으로 적용한 voice 스냅샷 dict. 없거나 깨졌으면 None
+        (→ 호출부는 종전대로 _DEFAULT_VOICE 폴백 = 동작 불변)."""
+        if not customer_id:
+            return None
+        with self._conn() as c:
+            row = c.execute("SELECT last_voice_json FROM customers WHERE id=?",
+                            (customer_id,)).fetchone()
+        if not row or not row[0]:
+            return None
+        try:
+            v = json.loads(row[0])
+        except (ValueError, TypeError):
+            return None      # 깨진 값이 영상제작을 막지 않는다
+        return v if isinstance(v, dict) and v.get("voice_id") else None
+
+    def set_last_voice(self, customer_id, voice):
+        """이 고객의 다음 작업 기본 성우를 저장(upsert). voice=None이면 지운다.
+        ⚠️voice_id 없는 스냅샷은 저장하지 않는다 — 넣어봐야 get_last_voice가 거른다."""
+        if not customer_id:
+            return
+        val = None
+        if isinstance(voice, dict) and voice.get("voice_id"):
+            val = json.dumps(voice, ensure_ascii=False)
+        with self._conn() as c:
+            c.execute("UPDATE customers SET last_voice_json=? WHERE id=?", (val, customer_id))
 
     def get_customer(self, customer_id):
         """customer_id → {id, username, created_at, plan, full_access_until, google_sub, email, approved_at, name, phone} 또는 None."""

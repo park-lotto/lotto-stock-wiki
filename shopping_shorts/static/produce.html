@@ -12526,10 +12526,41 @@ function engineBadge(g){
 // 일레븐랩스에서 성우를 등록·삭제한 뒤 addElevenVoice/removeElevenVoice) — 그래서 fetch와
 // 렌더 순서를 여기 한 곳에만 적는다(0순위-B: 두 벌이면 한쪽만 고쳐져 어긋난다).
 // 실패는 false를 반환하고 카드 자리에 표시한다.
+// 🎙 지난 작업의 성우를 화면에 되살린다(2026-09-02 사장님 "마지막 세팅한 TTS를 기억").
+//   서버(create_mix_job)는 이미 같은 값을 job.voice로 심어 3단계 1차 TTS부터 그 성우로
+//   합성한다. 이 함수는 **화면만** 맞춘다 — 안 맞추면 실제론 내 성우로 합성됐는데 카드는
+//   아무것도 안 골라진 상태라, 자막제거의 "음성을 아직 고르지 않았어요" 경고가 헛나가고
+//   고객이 불필요하게 4단계에서 성우를 다시 눌러 **재합성 비용을 낸다**(이 작업의 목적과 정반대).
+//   ★VOICE를 통째로 갈아끼우지 않고 저장된 스냅샷 값만 옮긴다 — 저장 당시엔 없던 필드가
+//     생겨도 화면 기본값이 살아남는다.
+function restoreLastVoice(lv){
+  if(!lv || !lv.preset_id) return;                 // 신규 고객(기억 없음) → 종전대로
+  if(VOICE.preset_id || VOICE.voice_id) return;    // 이미 고른 게 있으면 덮지 않는다
+  // preset_id로 그룹·톤을 되찾는다. 프리셋이 사라졌으면(성우 삭제) 조용히 포기한다.
+  for(const g of (VOICE_GROUPS||[])){
+    for(const [variant, v] of Object.entries(g.variants||{})){
+      if(v && v.preset_id===lv.preset_id){
+        SEL_VARIANT[g.group_id]=variant;
+        VOICE.preset_id=lv.preset_id;
+        VOICE.voice_id=lv.voice_id||v.voice_id;
+        VOICE.settings=Object.assign({}, v.voice_settings, lv.settings||{});
+        if(lv.speed!=null) VOICE.speed=lv.speed;
+        if(lv.silence_trim!=null) VOICE.silence_trim=lv.silence_trim;
+        if(lv.pace_mode!=null) VOICE.pace_mode=lv.pace_mode;
+        VOICE.group_id=g.group_id; VOICE.variant=variant;
+        const _vc=document.getElementById('voiceControls'); if(_vc) _vc.style.display='block';
+        const _vh=document.getElementById('voiceHint');     if(_vh) _vh.style.display='none';
+        return;
+      }
+    }
+  }
+}
+
 async function loadPresets(){
   try{
     const d=await (await fetch('/api/voice-presets?lang=KR')).json();
     VOICE_GROUPS=d.groups||[];
+    restoreLastVoice(d.last_voice);   // 🎙 지난 작업에서 쓰던 성우를 미리 골라둔다(2026-09-02)
     renderPresetCards();
     syncCurVoiceName();   // 처음 뜰 때도 접힌 줄에 지금 성우를 띄운다(2026-08-18)
     return true;
