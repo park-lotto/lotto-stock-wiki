@@ -6888,6 +6888,25 @@ class Store:
                 continue
         return out
 
+    def list_all_customer_keys(self, service=None):
+        """관리자용 — 회원 등록 키 전체(누가·언제·상태). **키 원문은 안 준다.**
+
+        ★2026-09-01 사고에서 나온 필요: "등록 안 했다"는 회원 계정에 키 5개가 있었다.
+          누가 언제 넣었는지 화면에서 못 보면 그때마다 서버 DB를 직접 열어야 한다.
+        label(마스킹 문자열)까지만 노출한다 — 복호는 하지 않는다.
+        """
+        q = ("SELECT k.id, k.customer_id, k.service, k.label, k.status, "
+             "k.created_at, k.checked_at, c.name, c.email "
+             "FROM customer_keys k LEFT JOIN customers c ON c.id = k.customer_id")
+        args = ()
+        if service:
+            q += " WHERE k.service=?"
+            args = (service,)
+        q += " ORDER BY k.created_at DESC LIMIT 500"
+        with self._conn() as c:
+            c.row_factory = sqlite3.Row
+            return [dict(r) for r in c.execute(q, args)]
+
     def delete_customer_key(self, customer_id, key_id):
         """★customer_id를 조건에 반드시 넣는다 — 안 넣으면 id만 알면 남의 키를 지운다."""
         with self._conn() as c:

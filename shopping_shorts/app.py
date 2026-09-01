@@ -12353,6 +12353,31 @@ def _apiwatch_contract():
     return out
 
 
+@app.post("/api/admin/apiwatch/key/delete")
+def _api_apiwatch_key_delete(request: Request, body: dict):
+    """관리자가 **회원 키를 뺀다**(2026-09-02 사장님 "제미니 키 추가 삭제").
+
+    ★왜 관리자 전용 경로가 따로 필요한가: 기존 /api/settings/keys/delete는 로그인한
+      본인 키만 지운다(customer_id를 조건에 박는다 — 그게 맞다). 관리자는 **남의**
+      이상한 키를 빼야 하므로 별도 입구가 있어야 하고, 그래서 _require_admin이 필수다.
+    ★뺀 키는 공용 풀에서도 즉시 빠져야 한다 — 안 그러면 지운 키를 계속 때려 429/401.
+    """
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    try:
+        cid = int(body.get("customer_id") or 0)
+        kid = int(body.get("id") or 0)
+    except (TypeError, ValueError):
+        return {"ok": False, "error": "customer_id·id는 숫자여야 합니다"}
+    if not cid or not kid:
+        return {"ok": False, "error": "customer_id와 id가 필요합니다"}
+    store = Store(DB_PATH)
+    store.delete_customer_key(cid, kid)
+    _resync_pools(store)          # 풀에서도 즉시 뺀다(idempotent)
+    return {"ok": True, "member_keys": store.list_all_customer_keys("gemini")}
+
+
 @app.get("/api/admin/apiwatch")
 def _api_apiwatch(request: Request, hours: int = 24):
     """API 관측판 데이터 — 키풀 스냅샷 + 이벤트 집계 + 판정 한 줄 + RPD 예산 + 계약.
@@ -12370,6 +12395,18 @@ def _api_apiwatch(request: Request, hours: int = 24):
                "verdict": api_health.verdict(snap=snap, agg=agg1),
                "budget": api_health.budget(snap=snap, agg=agg),
                "contract": _apiwatch_contract()}
+        # 🔑 키별 실시간 흐름 + 회원 등록 키 목록(2026-09-02 사장님).
+        #   한 구역이 깨져도 나머지 관측판은 살아야 한다 — 각각 따로 감싼다.
+        try:
+            out["keyflow"] = api_health.key_timeline(minutes=60)
+        except Exception as e:                    # noqa: BLE001
+            out["keyflow"] = []
+            print(f"[apiwatch] keyflow 실패(무해): {e!r}", file=sys.stderr)
+        try:
+            out["member_keys"] = api_health.member_keys(Store(DB_PATH), service="gemini")
+        except Exception as e:                    # noqa: BLE001
+            out["member_keys"] = []
+            print(f"[apiwatch] member_keys 실패(무해): {e!r}", file=sys.stderr)
         api_health.purge()
         return out
     except Exception as e:                        # noqa: BLE001 — 관측이 죽어도 사유는 보이게

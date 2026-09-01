@@ -64,6 +64,32 @@
   .hfail{border-radius:3px 3px 0 0;background:var(--danger);margin-bottom:1px}
   .hlegend{color:var(--sub);font-size:11.5px;margin:6px 2px 20px}
   .hlegend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin:0 4px 0 10px}
+  /* ① 시간축 라벨 — 막대와 같은 flex 배치라 칸이 1:1로 맞는다. 3시간 간격만 글자. */
+  .haxis{display:flex;gap:2px;padding:3px 13px 0;color:var(--sub);font-size:10.5px}
+  .haxis .hx{flex:1;min-width:6px;text-align:center;white-space:nowrap}
+  .haxis .tick{color:#3a4254}
+  /* ③ 키별 실시간 흐름 — 키 한 줄 = 왼쪽 이름표 + 60분 띠(점) + 오른쪽 요약 */
+  .kfbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;margin-bottom:8px}
+  .kf-row{display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid var(--line)}
+  .kf-row:last-child{border-bottom:0}
+  .kf-id{flex:0 0 230px;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .kf-id .pool{color:var(--sub);font-size:11.5px}
+  .kf-strip{flex:1;position:relative;height:18px;background:#1c202a;border-radius:9px;min-width:120px}
+  .kf-dot{position:absolute;top:50%;width:8px;height:8px;border-radius:50%;transform:translate(-50%,-50%)}
+  .kf-sum{flex:0 0 170px;text-align:right;font-size:12px;color:var(--sub);white-space:nowrap}
+  .kf-empty{padding:14px;color:var(--sub);font-size:13px}
+  .b-owner{background:#16202a;color:var(--accent)}
+  .b-member{background:#12241c;color:var(--ok)}
+  @media (prefers-reduced-motion: no-preference){
+    .kf-dot.latest{animation:kfpulse 2s ease-out infinite}
+    @keyframes kfpulse{0%{box-shadow:0 0 0 0 rgba(90,169,255,.45)}
+      70%{box-shadow:0 0 0 6px rgba(90,169,255,0)}100%{box-shadow:0 0 0 0 rgba(90,169,255,0)}}
+  }
+  /* ② 회원 키 [빼기] — confirm() 대신 2단계 버튼(브라우저 모달은 자동화를 멈춘다) */
+  .mk-del{background:#1c202a;border:1px solid var(--line);color:var(--txt);border-radius:8px;
+          padding:3px 10px;font-size:12px;cursor:pointer;font-family:inherit}
+  .mk-del.arm{background:#2a1616;border-color:#7a2b2b;color:var(--danger);font-weight:700}
+  .mk-del:disabled{opacity:.5;cursor:default}
   .keystate-live{color:var(--ok)} .keystate-locked{color:var(--warn)} .keystate-dead{color:var(--danger)}
   details{margin-bottom:22px}
   summary{cursor:pointer;color:var(--sub);font-size:13px;margin-bottom:8px}
@@ -83,8 +109,25 @@
 
 <h2 class="sec">🕐 시간대별 호출·실패 (최근 24시간, KST)</h2>
 <div id="hours" class="hours"></div>
+<div id="haxis" class="haxis"></div>
 <div class="hlegend">막대 = 그 시간의 API 호출 수<i style="background:#2c3444"></i>호출
   <i style="background:var(--danger)"></i>실패 — 마우스를 올리면 정확한 수가 뜬다</div>
+
+<h2 class="sec">🔑 키별 실시간 흐름 — 최근 60분, 지금 누가 일하나</h2>
+<div id="kfsum" class="sub" style="margin-bottom:8px"></div>
+<div id="keyflow" class="kfbox"></div>
+<div class="hlegend"><i style="background:var(--ok);margin-left:0"></i>성공
+  <i style="background:var(--warn)"></i>분당한도 <i style="background:#ff9f43"></i>일일소진
+  <i style="background:var(--danger)"></i>키사망 <i style="background:#8a93a8"></i>기타
+  — 점 하나 = 호출 한 번, 오른쪽 끝이 지금이다. 점에 마우스를 올리면 시각·기능이 뜬다</div>
+
+<h2 class="sec">🔑 회원 제미니 키 관리</h2>
+<div id="mkinfo" class="sub" style="margin-bottom:8px"></div>
+<div id="mkmsg" style="color:var(--danger);font-size:12.5px;margin-bottom:6px"></div>
+<div class="wrap"><table id="memberkeys">
+  <thead><tr><th>회원</th><th>키(마스킹)</th><th>상태</th><th>등록시각(KST)</th><th></th></tr></thead>
+  <tbody><tr><td colspan="5">불러오는 중…</td></tr></tbody>
+</table></div>
 
 <h2 class="sec">🧩 서비스별 — 무엇이 붙어 있고 지금 어떤가</h2>
 <div class="wrap"><table id="svc">
@@ -230,22 +273,130 @@ function renderBudget(b){
 }
 
 function renderHours(hourly){
-  const el=$('#hours');
-  if(!(hourly||[]).length){el.innerHTML='<div style="color:var(--sub);font-size:13px">아직 표본이 없습니다 — 호출이 생기면 쌓입니다.</div>';return;}
+  const el=$('#hours'), ax=$('#haxis');
+  if(!(hourly||[]).length){
+    el.innerHTML='<div style="color:var(--sub);font-size:13px">아직 표본이 없습니다 — 호출이 생기면 쌓입니다.</div>';
+    ax.innerHTML=''; return;
+  }
   const max=Math.max(1,...hourly.map(h=>(h.ok||0)+(h.fail||0)));
+  // ★시각은 서버가 준 kst_hour 그대로 쓴다 — 화면에서 UTC→KST 재계산 금지(0순위-B).
+  const hh24=h=>(h.kst_hour===null||h.kst_hour===undefined)?null:h.kst_hour;
   el.innerHTML=hourly.map(h=>{
     const tot=(h.ok||0)+(h.fail||0);
     const hh=Math.max(2,Math.round(64*tot/max));
     const fh=tot?Math.max(h.fail?2:0,Math.round(hh*(h.fail||0)/tot)):0;
-    // hour_utc "2026-09-01T03" → KST 시각
-    let label=h.hour_utc;
-    try{ const d=new Date(h.hour_utc+':00:00Z');
-      label=d.toLocaleString('ko-KR',{timeZone:'Asia/Seoul',day:'2-digit',hour:'2-digit',hour12:false});}catch(e){}
-    return `<div class="hcol" title="${esc(label)}시 — 호출 ${tot}건, 실패 ${h.fail||0}건">
+    const k=hh24(h);
+    const label=k===null?'–':String(k).padStart(2,'0');
+    return `<div class="hcol" title="${label}시 — 호출 ${tot}건, 실패 ${h.fail||0}건">
       <div class="hfail" style="height:${fh}px"></div>
       <div class="hbar" style="height:${Math.max(2,hh-fh)}px"></div></div>`;
   }).join('');
+  // 축 라벨 — 24칸에 다 쓰면 겹치니 3시간 간격만 글자, 나머지는 눈금.
+  ax.innerHTML=hourly.map(h=>{
+    const k=hh24(h);
+    return `<div class="hx">${(k!==null&&k%3===0)
+      ? String(k).padStart(2,'0')+'시' : '<span class="tick">·</span>'}</div>`;
+  }).join('');
 }
+
+// ── ③ 키별 실시간 흐름 (최근 60분) ──────────────────────────────────────
+// ts 해석은 이 함수 하나만 한다(0순위-B) — 서버 ts는 "+00:00"이 붙지만, 없으면 UTC로 본다.
+function ets(ts){ if(!ts) return null;
+  try{ const s=String(ts);
+    const t=Date.parse(/Z$|[+-]\d\d:?\d\d$/.test(s)?s:s+'Z');
+    return isNaN(t)?null:t; }catch(e){ return null; } }
+function rel(ts){ const t=ets(ts); if(t===null) return '–';
+  const s=Math.max(0,Math.round((Date.now()-t)/1000));
+  if(s<60) return s+'초 전';
+  const m=Math.floor(s/60); if(m<60) return m+'분 전';
+  return Math.floor(m/60)+'시간 전'; }
+function hms(ts){ const t=ets(ts); if(t===null) return '–';
+  return new Date(t).toLocaleTimeString('ko-KR',{timeZone:'Asia/Seoul',
+    hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'}); }
+const DOTCOL={ok:'var(--ok)',rpm:'var(--warn)',quota:'var(--warn)',
+  rpd:'#ff9f43',auth_dead:'var(--danger)'};
+
+function renderKeyflow(list){
+  list=list||[];
+  const calls=list.reduce((s,k)=>s+(k.total||0),0);
+  $('#kfsum').innerHTML=list.length
+    ? `지금 <b>${list.length}개</b> 키가 일하는 중 · 최근 60분 <b>${calls}회</b> 호출 — 바쁜 키가 맨 위`
+    : '';
+  if(!list.length){
+    $('#keyflow').innerHTML='<div class="kf-empty">최근 60분간 호출이 없습니다 — 사람이 들어오면 여기서 키가 움직입니다.</div>';
+    return;
+  }
+  const now=Date.now(), start=now-3600*1000;
+  $('#keyflow').innerHTML=list.map(k=>{
+    const ownerB=k.owner==='owner'?' <span class="badge b-owner">사장님</span>'
+      :k.owner==='member'?' <span class="badge b-member">회원</span>':'';
+    // 맨 마지막 점만 살짝 맥동 — 살아 있음이 보인다(reduced-motion이면 CSS가 끈다).
+    let lastT=-1;
+    for(const e of (k.events||[])){ const t=ets(e.ts); if(t!==null&&t>lastT) lastT=t; }
+    const dots=(k.events||[]).map(e=>{
+      const t=ets(e.ts); if(t===null) return '';
+      const x=Math.max(0,Math.min(100,(t-start)/3600000*100));
+      const col=DOTCOL[e.outcome]||'#8a93a8';
+      const oc=(BADGE[e.outcome]||[,e.outcome||'?'])[1];
+      const tip=`${hms(e.ts)} · ${e.op||'–'} · ${oc} · ${
+        (e.dur_ms===null||e.dur_ms===undefined)?'–':e.dur_ms+' ms'}`;
+      return `<span class="kf-dot${t===lastT?' latest':''}" style="left:${x.toFixed(1)}%;background:${col}"
+        title="${esc(tip)}"></span>`;
+    }).join('');
+    return `<div class="kf-row">
+      <div class="kf-id"><b>…${esc(k.key_tail||'?')}</b>${ownerB}
+        <span class="pool">${esc(k.pool||'')}</span></div>
+      <div class="kf-strip">${dots}</div>
+      <div class="kf-sum"><span class="${(k.fail||0)?'mid':'good'}">${k.ok||0}/${k.total||0} 성공</span>
+        · ${rel(k.last_ts)}</div></div>`;
+  }).join('');
+}
+
+// ── ② 회원 제미니 키 관리 ──────────────────────────────────────────────
+function renderMemberKeys(list){
+  list=list||[];
+  const tb=$('#memberkeys tbody');
+  if(!list.length){
+    $('#mkinfo').textContent='';
+    tb.innerHTML='<tr><td colspan="5">회원이 등록한 제미니 키가 없습니다</td></tr>';
+    return;
+  }
+  const who=new Set(list.map(r=>r.customer_id)).size;
+  $('#mkinfo').innerHTML=`회원 <b>${who}명</b>이 키 <b>${list.length}개</b>를 등록했습니다 — 이상한 키는 여기서 바로 뺀다`;
+  tb.innerHTML=list.map(r=>{
+    const name=[r.name,r.email].filter(Boolean).join(' · ')||('cid '+(r.customer_id??'–'));
+    const st=r.status||'–';
+    const stCls=st==='ok'?'good':(/dead|invalid|bad|error/.test(st)?'hot':'');
+    return `<tr><td>${esc(name)}</td><td style="text-align:left">${esc(r.label||'–')}</td>
+      <td class="${stCls}">${esc(st)}</td>
+      <td>${kst(r.created_at?r.created_at*1000:null)}</td>
+      <td><button class="mk-del" data-cid="${esc(r.customer_id)}" data-kid="${esc(r.id)}">빼기</button></td></tr>`;
+  }).join('');
+}
+
+// [빼기] 2단계 확인 — confirm()/alert()는 자동화·폴링을 멈추므로 쓰지 않는다.
+$('#memberkeys').addEventListener('click', async ev=>{
+  const b=ev.target.closest('button.mk-del'); if(!b||b.disabled) return;
+  if(b.dataset.armed!=='1'){
+    b.dataset.armed='1'; b.textContent='정말 뺄까요?'; b.classList.add('arm');
+    b._t=setTimeout(()=>{ b.dataset.armed=''; b.textContent='빼기'; b.classList.remove('arm'); },3000);
+    return;
+  }
+  clearTimeout(b._t); b.disabled=true; b.textContent='빼는 중…';
+  $('#mkmsg').textContent='';
+  try{
+    const r=await fetch('/api/admin/apiwatch/key/delete',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({customer_id:Number(b.dataset.cid), id:Number(b.dataset.kid)})});
+    const d=await r.json();
+    if(d&&d.ok){ renderMemberKeys(d.member_keys||[]); }
+    else{ b.disabled=false; b.textContent='빼기'; b.dataset.armed=''; b.classList.remove('arm');
+      $('#mkmsg').textContent='빼기 실패: '+((d&&d.error)||'알 수 없음'); }
+  }catch(e){
+    b.disabled=false; b.textContent='빼기'; b.dataset.armed=''; b.classList.remove('arm');
+    $('#mkmsg').textContent='빼기 실패 — 네트워크를 확인하세요.';
+  }
+});
 
 function renderSvc(snap,agg){
   const sum={};
@@ -405,16 +556,20 @@ async function load(){
   try{ const r=await fetch('/api/admin/apiwatch?hours=24'); d=await r.json(); }
   catch(e){ $('#verdict').textContent='불러오지 못했습니다 — 네트워크를 확인하세요.'; return; }
   if(!d||!d.ok){ $('#verdict').textContent='불러오지 못했습니다: '+esc((d&&d.error)||'알 수 없음'); return; }
-  renderVerdict(d.verdict||{});
-  poolCards(d.snapshot||{}, d.agg||{}, d.budget||{});
-  renderBudget(d.budget||{});
-  renderHours((d.agg||{}).hourly||[]);
-  renderSvc(d.snapshot||{}, d.agg||{});
-  renderOps(d.agg||{});
-  renderFeed((d.agg||{}).recent_fails||[]);
-  renderKeys(d.snapshot||{}, d.agg||{});
-  renderHb((d.agg||{}).heartbeats||[]);
-  renderContract(d.contract||null);
+  // 구역별로 가른다 — 한 구역이 깨져도 나머지 화면은 살아야 한다.
+  const sect=(name,fn)=>{ try{ fn(); }catch(e){ console.error('[apiwatch] '+name+' 렌더 실패:',e); } };
+  sect('verdict', ()=>renderVerdict(d.verdict||{}));
+  sect('cards',   ()=>poolCards(d.snapshot||{}, d.agg||{}, d.budget||{}));
+  sect('budget',  ()=>renderBudget(d.budget||{}));
+  sect('hours',   ()=>renderHours((d.agg||{}).hourly||[]));
+  sect('keyflow', ()=>renderKeyflow(d.keyflow||[]));
+  sect('memberkeys', ()=>renderMemberKeys(d.member_keys||[]));
+  sect('svc',     ()=>renderSvc(d.snapshot||{}, d.agg||{}));
+  sect('ops',     ()=>renderOps(d.agg||{}));
+  sect('feed',    ()=>renderFeed((d.agg||{}).recent_fails||[]));
+  sect('keys',    ()=>renderKeys(d.snapshot||{}, d.agg||{}));
+  sect('hb',      ()=>renderHb((d.agg||{}).heartbeats||[]));
+  sect('contract',()=>renderContract(d.contract||null));
   $('#upd').textContent='갱신 '+new Date().toLocaleTimeString('ko-KR',{hour12:false});
 }
 load();
