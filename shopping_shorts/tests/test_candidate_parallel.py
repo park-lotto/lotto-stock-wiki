@@ -54,7 +54,7 @@ def _fixture(monkeypatch, delay=0.0, record=None):
         ("hook_contradicts", lambda b, mat, call: False),
         ("under_budget", lambda b, used, floor=0.85: (False, 0, 0)),
         ("hapsyo_violation", lambda b, style_name=None: False),
-        ("hook_opener_missing", lambda b, style_name=None: False),
+        ("hook_opener_missing", lambda b, style_name=None, on=None: False),   # on= 추가(2026-09-01 훅 감탄사 고객별 스위치) — 호출부 형태 그대로
     ):
         monkeypatch.setattr(real_ss, name, val, raising=False)
 

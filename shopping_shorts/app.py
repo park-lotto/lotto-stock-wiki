@@ -979,11 +979,37 @@ def api_xhs_auto_get():
 
 
 @app.get("/api/script/hook_opener")
-def api_script_hook_opener_get():
-    """훅 감탄사("와, " / "여러분 ") 자동 붙이기 — 지금 켜졌나(2026-09-01 사장님 요청).
-    ★판정은 single_source.hook_opener_on 한 곳뿐이다(0순위-B). 여기선 저장값만 읽는다."""
-    v = (Store(DB_PATH).get_setting(single_source._HOOK_OPENER_KEY, "on") or "on").strip().lower()
-    return {"ok": True, "on": v not in ("off", "0", "false", "")}
+def api_script_hook_opener_get(request: Request):
+    """훅 감탄사("와, " / "여러분 ") 자동 붙이기 상태(2026-09-01 사장님 "3번").
+
+    돌려주는 것:
+      default   = 사장님이 정한 전역 기본값
+      mine      = 이 고객이 직접 정한 값(안 정했으면 None → 기본값을 따른다)
+      effective = 지금 이 고객의 대본에 실제로 적용되는 값
+    ★판정은 single_source.hook_opener_on 한 곳뿐이다(0순위-B) — 여기서 다시 계산하지 않는다."""
+    cid = _cid(request)
+    store = Store(DB_PATH)
+    mine = store.get_pref(single_source._HOOK_OPENER_KEY, customer_id=cid, default=None)
+    return {"ok": True,
+            "default": single_source.hook_opener_default(),
+            "mine": (None if mine is None else single_source._truthy(mine)),
+            "effective": single_source.hook_opener_on(cid),
+            "is_admin": _is_admin(cid)}
+
+
+@app.post("/api/script/hook_opener/mine")
+def api_script_hook_opener_mine(body: dict, request: Request):
+    """내 대본에만 적용되는 값. body: {on: true|false|null}.
+    null이면 **내 설정을 지운다** → 사장님 기본값을 다시 따른다."""
+    cid = _cid(request)
+    store = Store(DB_PATH)
+    on = body.get("on", None)
+    if on is None:
+        store.set_pref(single_source._HOOK_OPENER_KEY, None, customer_id=cid)
+    else:
+        store.set_pref(single_source._HOOK_OPENER_KEY, "on" if on else "off", customer_id=cid)
+    return {"ok": True, "mine": (None if on is None else bool(on)),
+            "effective": single_source.hook_opener_on(cid)}
 
 
 @app.post("/api/script/hook_opener")
@@ -15590,14 +15616,14 @@ def api_produce_mix_poster(job_id: str):
     #      — beatframe은 2026-07-21에 이미 고친 버그가 여기만 남아 있었다.
     #   ③ 캐시가 poster.jpg 한 이름이라 편성·청소를 바꿔도 옛 그림이 그대로였다.
     #   그래서 계산을 새로 하지 않고 _extract_beat_frame 한 곳에 맡긴다(0순위-B).
-    clean_map, _cfin, _crat, _ctag = _clean_frame_src(job, work, 0)
+    clean_map, _cfin, _crat, _ctag, _cfresh = _clean_frame_src(job, work, 0)
     _seg0 = (video_assemble._beat_material(beats[0]) or [beats[0].get("primary") or {}])[0] or {}
     _key = f"{_seg0.get('video_id') or '-'}@{round(float(_seg0.get('start') or 0), 2)}"
     _key = re.sub(r"[^0-9a-zA-Z@.\-]", "_", _key)
     poster = work / f"poster_{_key}{_ctag}.jpg"
     if not poster.exists():
         _extract_beat_frame(work, beats[0], poster, clean_sources=clean_map,
-                            clean_final=_cfin, final_ratio=_crat)
+                            clean_final=_cfin, final_ratio=_crat, clean_fresh=_cfresh)
     if not poster.exists():
         return JSONResponse(status_code=404, content={"ok": False, "error": "소스 영상 없음"})
     return FileResponse(str(poster), media_type="image/jpeg")
@@ -15640,7 +15666,10 @@ def _cuts_of_beat(cuts, beat_idx):
 def _clean_frame_src(job, work, beat_idx, cut=None):
     """**청소된 화면을 어디서 뜰지** 정하는 유일한 자리 (2026-08-27).
 
-    returns (clean_sources, clean_final, final_ratio, cache_tag)
+    returns (clean_sources, clean_final, final_ratio, cache_tag, clean_fresh)
+    ★clean_fresh = 완성본 청소본이 **지금 편성**으로 만든 것인가
+      (mix_pipeline.clean_final_matches_plan). 참이면 컷 좌표를 완성본 시각으로
+      옮겨도 맞으므로 컷 프레임도 청소본에서 뜬다(2026-09-01).
 
     두 경로가 있다:
       소스별 청소본(clean_sources)  — 옛 방식. 그 소스에서 바로 뜬다.
@@ -15653,12 +15682,13 @@ def _clean_frame_src(job, work, beat_idx, cut=None):
     """
     clean_map = job.get("clean_sources") or {}
     if clean_map:
-        return clean_map, None, None, "_clean"
+        return clean_map, None, None, "_clean", True
     if job.get("clean_status") != "ready":
-        return {}, None, None, ""
+        return {}, None, None, "", False
     cvp = job.get("clean_video_path")
     if not cvp or not Path(cvp).exists():
-        return {}, None, None, ""
+        return {}, None, None, "", False
+    fresh = mix_pipeline.clean_final_matches_plan(job, work)
     # ★컷 단위로 찾는다(2026-08-27) — 비트에 재료가 여럿이면 비트 한가운데는
     #   다른 소스 자리다. 화면에 나가는 최소 단위는 컷이다(clean_thumb과 같은 기준).
     _plan = job.get("edit_plan") or {}
@@ -15685,14 +15715,15 @@ def _clean_frame_src(job, work, beat_idx, cut=None):
         #   그러면 자막·워터마크가 화면에 그대로 나온다(08-27 회귀의 정체).
         #   비트 근사로라도 청소본을 가리킨다. 정확도는 떨어져도 '지워진 그림'이다.
         r = mix_pipeline._final_time_of_beat(_plan, beat_idx)
-        return {}, cvp, (r if r is not None else 0.5), "_clean"
+        return {}, cvp, (r if r is not None else 0.5), "_clean", fresh
     _d = frame_extract._probe_duration(cvp) or 0.0
     # 호출부는 '비율'을 받는다 — 파일 길이가 계획 합과 달라도 초를 비율로 환산해 넘긴다.
-    return {}, cvp, (min(0.98, max(0.02, sec / _d)) if _d > 0 else 0.5), "_clean"
+    return {}, cvp, (min(0.98, max(0.02, sec / _d)) if _d > 0 else 0.5), "_clean", fresh
 
 
 def _extract_beat_frame(work, beat, out_path, clean_sources=None,
-                        clean_final=None, final_ratio=None, seg_spec=None):
+                        clean_final=None, final_ratio=None, seg_spec=None,
+                        clean_fresh=False):
     """beat.primary 클립의 start 시각 프레임 1장을 9:16(1080x1920)로 out_path에 저장.
     소스 영상이 없으면 False(파일 안 만듦). 프로덕션 poster 로직을 비트 단위로 일반화.
 
@@ -15719,11 +15750,14 @@ def _extract_beat_frame(work, beat, out_path, clean_sources=None,
     #   실측(job 84b5f66a8e1f): clean_preview.mp4 = 8/27 20:58 생성인데 컷 계획은 9/1 —
     #   hook 4컷이 케이크/케이크/여자/여자로 떴다(3단계는 케이크/여자/야외/아이).
     #   컷 좌표는 3단계 재생과 **같은 좌표계**(소스 mp4 + 원본 시각)라 편성이 바뀌어도
-    #   안 썩는다. 그래서 컷 프레임은 늘 소스에서 뜬다 — 아래 clean_sources(소스별 청소본)는
-    #   좌표계가 같으므로 그대로 우선한다. 칸 대표 프레임(seg_spec 없음)은 종전대로.
-    #   ⚠ 완성본만 청소한 작업은 컷 미리보기에 원본 자막이 보일 수 있다 — 틀린 장면을
-    #     보여주는 것보다 낫다(렌더 결과는 청소본을 쓰므로 영향 없다).
-    if seg_spec is None and clean_final and Path(clean_final).exists():
+    #   안 썩는다. 아래 clean_sources(소스별 청소본)도 좌표계가 같으므로 그대로 우선한다.
+    #   ★단, 완성본 청소본이 **지금 편성으로 만든 것**이면(clean_fresh) 좌표계가 일치하므로
+    #     컷 프레임도 그 청소본에서 뜬다(2026-09-01 "자막제거했는데 꾸미기에 자막 그대로").
+    #     신선도 판정은 mix_pipeline.clean_final_matches_plan 한 곳 — 서명이 이미 청소본
+    #     파일명(final_clean_{sig}.mp4)에 박혀 있어 대조만 하면 된다.
+    #   ⚠ 편성을 바꾼 뒤 다시 청소하지 않았으면 원본에서 뜬다(자막이 보인다) — 그때는
+    #     틀린 장면을 보여주는 것보다 낫다. 렌더 결과는 어차피 다시 청소하므로 영향 없다.
+    if (seg_spec is None or clean_fresh) and clean_final and Path(clean_final).exists():
         # 완성본 1편만 청소한 경로 — 소스별 파일이 없다. 완성본에서 그 칸 지점을 뜬다.
         src = Path(clean_final)
         if final_ratio is not None:
@@ -15826,7 +15860,7 @@ def _beatframe_file(job, job_id: str, i: int, cut=None):
     # 2단계 자막제거를 밟았으면(clean_sources 존재) 청소본에서 프레임을 뜬다. 캐시 파일명도
     # 분리(_clean)해, 자막제거 전에 캐시된 원본 프레임이 남아 미리보기에 지운 자막이 살아
     # 있는 것처럼 보이는 캐시 오염을 막는다(2026-07-21 제보).
-    clean_map, _cfin, _crat, _ctag = _clean_frame_src(job, work, i, cut=cut)
+    clean_map, _cfin, _crat, _ctag, _cfresh = _clean_frame_src(job, work, i, cut=cut)
     # ★캐시 이름에 **그 칸이 실제로 쓰는 소스·시각**을 넣는다(2026-08-21). 종전엔 칸 번호만
     #   써서, 3단계에서 편성을 바꿔도 옛 프레임이 그대로 나왔다(조용한 어긋남).
     _spec = None
@@ -15842,12 +15876,14 @@ def _beatframe_file(job, job_id: str, i: int, cut=None):
     # ★컷 좌표가 있으면 _extract_beat_frame이 **소스에서** 뜬다(완성본 청소본은 좌표계가
     #   달라 안 쓴다 — 아래 함수 주석). 그런데 캐시 이름은 그대로 _clean이라, 옛 완성본에서
     #   뜬 **틀린 그림**이 그대로 재사용됐다. 실제로 무엇에서 떴는지를 이름에 반영한다.
-    if _spec and not clean_map:
+    #   ★청소본이 지금 편성으로 만든 것이면(_cfresh) 컷도 청소본에서 뜬다 → _clean 그대로.
+    if _spec and not clean_map and not _cfresh:
         _ctag = "_src"
     out = work / "beatframes" / f"{i}_{_ct}{_key}{_ctag}.jpg"
     if not out.exists():
         _extract_beat_frame(work, beat, out, clean_sources=clean_map,
-                            clean_final=_cfin, final_ratio=_crat, seg_spec=_spec)
+                            clean_final=_cfin, final_ratio=_crat, seg_spec=_spec,
+                            clean_fresh=_cfresh)
     return out if out.exists() else None
 
 

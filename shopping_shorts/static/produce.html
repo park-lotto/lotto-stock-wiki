@@ -3203,6 +3203,15 @@
               </div>
             </div>
           </div>
+          <!-- 훅 감탄사 켜고 끄기(2026-09-01 사장님 "3번": 고객도 정하되 기본은 사장님 값).
+               안 건드리면 관리자 기본값을 따른다 — 그래서 처음엔 '기본'으로 뜬다. -->
+          <div class="s2-regen" style="align-items:center;gap:10px;flex-wrap:wrap">
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px">
+              <input type="checkbox" id="hookOpenerChk" onchange="saveHookOpenerMine()">
+              <span>첫마디에 <b>"와, / 여러분"</b> 붙이기</span>
+            </label>
+            <span class="hint" id="hookOpenerMsg" style="margin:0"></span>
+          </div>
           <div class="s2-regen">
             <button class="btn-next" id="s2GenBtn" onclick="s2Generate()">✨ 이 스타일로 대본 만들기</button>
             <span class="hint" id="s2GenHint" style="margin:0"></span>
@@ -5602,6 +5611,36 @@ let PREVIEW_CAP_TEXT='이렇게 자막이 나와요';   // 스텝퍼가 비트�
 // ── 🎞 공용 장면 프리뷰 스텝퍼 — 비트마다 프레임+자막 넘겨보기(TTS·검수판 트랙도 재사용) ──
 let BEATS_PREVIEW=[];   // [{i,total,caption}]
 let BEAT_IDX=0;
+
+// ── 훅 감탄사(와,/여러분) 켜고 끄기 — 내 설정. 안 정하면 사장님 기본값을 따른다 ──────
+let HOOK_OPENER_MINE = null;      // null = 내가 안 정함(기본값 따름)
+async function loadHookOpenerMine(){
+  const c=document.getElementById('hookOpenerChk'), m=document.getElementById('hookOpenerMsg');
+  if(!c) return;
+  try{
+    const d=await (await fetch('/api/script/hook_opener')).json();
+    HOOK_OPENER_MINE = (d.mine===undefined) ? null : d.mine;
+    c.checked = !!d.effective;
+    if(m) m.textContent = (HOOK_OPENER_MINE===null)
+      ? ('기본값 따름 — 지금은 ' + (d.default ? '켜짐' : '꺼짐'))
+      : '내 설정';
+  }catch(e){}
+}
+async function saveHookOpenerMine(){
+  const c=document.getElementById('hookOpenerChk'), m=document.getElementById('hookOpenerMsg');
+  if(!c) return;
+  if(m) m.textContent='저장 중…';
+  try{
+    const d=await (await fetch('/api/script/hook_opener/mine',{method:'POST',
+      headers:{'Content-Type':'application/json'}, body:JSON.stringify({on:c.checked})})).json();
+    if(!d.ok) throw new Error(d.error||'실패');
+    HOOK_OPENER_MINE = d.mine;
+    if(m) m.textContent='내 설정으로 저장됨';
+  }catch(e){ if(m) m.textContent='실패: '+e.message; }
+}
+// 페이지가 뜨면 한 번 읽는다(2단계에 안 들어와 있어도 요소는 있다 — 함수가 알아서 빠진다).
+try{ loadHookOpenerMine(); }catch(e){}
+
 async function loadBeatsPreview(){
   const st=document.getElementById('beatStepper');
   if(typeof MIX_JOB==='undefined' || !MIX_JOB){ if(st) st.style.display='none'; return; }

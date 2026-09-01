@@ -56,3 +56,44 @@ def test_판정은_한_곳뿐이다():
     import inspect
     src = inspect.getsource(S.hook_opener_missing)
     assert "hook_opener_on()" in src, "스위치를 안 본다"
+
+
+# ── 고객별 설정(2026-09-01 사장님 "3번") ────────────────────────────────────
+def test_고객이_정하면_그_값이_이긴다(monkeypatch):
+    """① 고객 설정 → ② 사장님 기본값 → ③ 켬. 고객 값이 있으면 기본값을 안 본다."""
+    monkeypatch.setattr(S, "hook_opener_default", lambda: True)
+
+    class _St:
+        def __init__(self, *a, **k): pass
+        def get_pref(self, key, customer_id=None, default=None): return "off"
+    monkeypatch.setattr("shopping_shorts.store.Store", _St)
+    S._HOOK_OPENER_CACHE.update(t=0.0)
+    assert S.hook_opener_on(customer_id=7) is False
+
+
+def test_고객이_안_정했으면_사장님_기본값을_따른다(monkeypatch):
+    monkeypatch.setattr(S, "hook_opener_default", lambda: False)
+
+    class _St:
+        def __init__(self, *a, **k): pass
+        def get_pref(self, key, customer_id=None, default=None): return None   # 안 정함
+    monkeypatch.setattr("shopping_shorts.store.Store", _St)
+    assert S.hook_opener_on(customer_id=7) is False
+
+
+def test_부르는_쪽이_정한_값이_그대로_쓰인다():
+    """생성 중 DB를 여러 번 읽지 않게 위에서 한 번 판정해 내려보낸다."""
+    b = [{"narration": "다이소에서 이걸 봤어요."}]
+    assert S.hook_opener_missing(b, None, on=False) is False
+    assert S.hook_opener_missing(b, None, on=True) is True
+
+
+def test_배선이_끊기지_않았다():
+    """mix_pipeline → build_scene_first_plan → _single_source_candidates → hook_opener_missing.
+    한 군데만 빠져도 고객 설정이 조용히 무시된다."""
+    import inspect
+    from shopping_shorts import edit_plan, mix_pipeline
+    assert "hook_opener=_hook_opener" in inspect.getsource(mix_pipeline._plan_and_tts)
+    assert "hook_opener=None" in inspect.getsource(edit_plan.build_scene_first_plan)
+    assert "hook_opener=hook_opener" in inspect.getsource(edit_plan.build_scene_first_plan)
+    assert "on=hook_opener" in inspect.getsource(edit_plan._single_source_candidates)

@@ -24,9 +24,12 @@ from shopping_shorts import app as A
 _SRC = inspect.getsource(A._extract_beat_frame)
 
 
-def test_컷좌표가_있으면_완성본으로_덮어쓰지_않는다():
-    assert "if seg_spec is None and clean_final" in _SRC, \
-        "컷 좌표가 있어도 완성본 시각으로 덮어쓴다 — 3단계와 다른 그림이 뜬다"
+def test_낡은_청소본으로는_컷좌표를_덮어쓰지_않는다():
+    """★후속(2026-09-01 19:48, d9d9603): 청소본이 **지금 편성으로 만든 것**이면
+    (clean_fresh) 좌표계가 일치하므로 그때는 청소본에서 뜬다 — 자막까지 지워진 정확한
+    그림. 낡은 청소본일 때만 소스로 떨어진다. 그 판단이 이 한 줄에 모여 있다."""
+    assert "if (seg_spec is None or clean_fresh) and clean_final" in _SRC, \
+        "낡은 청소본 좌표로 컷 그림을 덮어쓴다 — 3단계와 다른 장면이 뜬다"
 
 
 def test_소스별_청소본은_그대로_우선한다():
@@ -40,4 +43,4 @@ def test_캐시이름이_실제로_뜬_곳을_반영한다():
     """이름이 _clean 그대로면 옛 완성본에서 뜬 틀린 그림이 재사용된다."""
     s = inspect.getsource(A._beatframe_file)
     assert '_ctag = "_src"' in s, "컷 프레임 캐시 태그가 안 갈린다 — 옛 그림이 그대로 나온다"
-    assert "if _spec and not clean_map:" in s, "소스별 청소본일 때는 _clean 태그를 지켜야 한다"
+    assert "if _spec and not clean_map and not _cfresh:" in s,         "소스별 청소본·최신 청소본일 때는 _clean 태그를 지켜야 한다"
