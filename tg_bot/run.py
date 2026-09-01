@@ -7,6 +7,7 @@ import os
 import sys
 import traceback
 
+from tg_bot.ask import AskError, ask
 from tg_bot.context import extract
 from tg_bot.poller import Telegram
 from tg_bot.probe import ProbeError, Prober
@@ -14,9 +15,14 @@ from tg_bot.reply import build, table_loaded
 
 BASE = os.environ.get("SHORTS_BASE", "https://shoppingshorts.duckdns.org")
 
-_HELP = ("주소에서 작업 번호를 찾지 못했습니다.\n"
-         "고객이 보낸 주소를 그대로 붙여넣어 주세요 "
-         "(…/produce?job_id=… 형태).")
+# 작업 폴더 — 여기서 클로드가 파일을 읽고 고친다. 기본은 이 프로젝트.
+WORK_DIR = os.environ.get("BOT_WORK_DIR") or os.getcwd()
+
+_NEW = ("🆕 새 대화를 시작합니다. 앞의 맥락은 잊습니다.")
+_INTRO = ("🤖 작업봇을 켰습니다.\n\n"
+          "• 고객 주소를 붙여넣으면 → 그 작업을 조사합니다\n"
+          "• 그냥 물어보시면 → 대화합니다 (터미널과 같습니다)\n"
+          "• /새로 → 대화를 처음부터")
 
 
 def load_env(path=".env"):
@@ -38,16 +44,49 @@ def load_env(path=".env"):
     return None
 
 
-def handle(text, prober):
-    """메시지 하나 → 사장님께 보낼 답변 문자열."""
-    info = extract(text)
-    if not info["job_id"]:
-        return _HELP
+class Session:
+    """대화 하나를 기억한다. session_id 가 있으면 클로드가 맥락을 이어간다."""
+
+    def __init__(self):
+        self.claude_id = None
+
+    def reset(self):
+        self.claude_id = None
+
+
+def handle(text, prober, session=None, *, _ask=None):
+    """메시지 하나 → 사장님께 보낼 답변 문자열.
+
+    ★갈림길은 하나뿐이다(0순위-B): 작업 주소가 있으면 **조사**, 없으면 **대화**.
+    """
+    session = session if session is not None else Session()
+    body = (text or "").strip()
+
+    if body in ("/새로", "/new", "/reset"):
+        session.reset()
+        return _NEW
+
+    info = extract(body)
+
+    # ① 작업 주소가 있으면 — 정확한 조회가 대화보다 낫다(추측이 안 섞인다).
+    if info["job_id"]:
+        try:
+            job = prober.job(info["job_id"])
+        except ProbeError as e:
+            return f"조사하지 못했습니다.\n{e}"
+        return build(info["job_id"], job, question=info["text"])
+
+    # ② 그 외에는 클로드와 대화한다 — 터미널에서 하던 그대로.
+    if not body:
+        return "무엇을 도와드릴까요?"
+    caller = _ask or ask
     try:
-        job = prober.job(info["job_id"])
-    except ProbeError as e:
-        return f"조사하지 못했습니다.\n{e}"
-    return build(info["job_id"], job, question=info["text"])
+        answer, sid = caller(body, session_id=session.claude_id, cwd=WORK_DIR)
+    except AskError as e:
+        return f"{e}"
+    if sid:
+        session.claude_id = sid
+    return answer or "(답이 비어 있습니다)"
 
 
 def main():
@@ -73,14 +112,18 @@ def main():
               file=sys.stderr)
 
     prober = Prober(BASE, user, password)
-    tg.send("🤖 작업봇을 켰습니다. 고객 질문을 넘겨주세요.")
-    print(f"작업봇 실행 중 ({BASE}). 멈추려면 Ctrl+C.")
+    session = Session()
+    tg.send(_INTRO)
+    print(f"작업봇 실행 중 ({BASE}, 작업폴더 {WORK_DIR}). 멈추려면 Ctrl+C.")
 
     try:
         while True:
             for text in tg.poll():
                 try:
-                    tg.send(handle(text, prober))
+                    # 대화는 몇 분 걸릴 수 있다 — 잠잠하면 사장님이 죽은 줄 안다.
+                    if not extract(text)["job_id"] and not text.startswith("/"):
+                        tg.send("⏳ 생각 중입니다…")
+                    tg.send(handle(text, prober, session))
                 except Exception:   # noqa: BLE001 — 한 건 실패가 봇을 죽이면 안 된다
                     traceback.print_exc()
                     tg.send("처리 중 오류가 났습니다. 창의 기록을 확인해 주세요.")
