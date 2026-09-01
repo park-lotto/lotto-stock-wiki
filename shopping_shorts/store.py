@@ -874,6 +874,28 @@ class Store:
             """)
             c.execute("CREATE INDEX IF NOT EXISTS idx_produce_works_customer "
                       "ON produce_works(customer_id, updated_at DESC)")
+            # 🖼 내 썸네일 프리셋(2026-09-02, 영상제작 7단계) — 만든 썸네일의 **구성**을 통째로
+            # 담아두고 다음 영상에 그대로 얹는다. 사장님이 매번 스티커·도형·색을 다시 만들던
+            # 일을 딸깍 한 번으로 끝낸다.
+            # ★배경(frame)은 담지 않는다 — 프리셋은 **다른 영상**에 쓰는 것이라 그 영상의
+            #   배경 프레임 위에 얹혀야 한다. 담으면 남의 영상 장면이 딸려온다.
+            # ★layers_json 하나에 다 넣는다(글자·스티커·도형·배지가 한 배열). THUMB_STATE.layers
+            #   모양 그대로라 프런트가 변환 없이 쓴다 — 모양을 두 군데서 정하면 어긋난다(0순위-B).
+            # thumb_file: 저장 당시 만든 PNG 사본(카드 그림). 원본 job이 지워져도 남아야 하므로
+            #   job 폴더가 아니라 프리셋 전용 폴더에 따로 복사해 둔다.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS thumb_presets (
+                    preset_id TEXT PRIMARY KEY,
+                    customer_id INTEGER NOT NULL DEFAULT 0,
+                    name TEXT NOT NULL,
+                    layers_json TEXT NOT NULL,
+                    thumb_file TEXT,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                )
+            """)
+            c.execute("CREATE INDEX IF NOT EXISTS idx_thumb_presets_customer "
+                      "ON thumb_presets(customer_id, updated_at DESC)")
             # 보이스 프리셋(2026-07-14, 영상제작 4단계) — 큐레이션된 목소리 카드.
             c.execute("""
                 CREATE TABLE IF NOT EXISTS voice_presets (
@@ -4968,6 +4990,78 @@ class Store:
         with self._conn() as c:
             return c.execute("DELETE FROM produce_works WHERE work_id=? AND customer_id=?",
                              (work_id, customer_id)).rowcount > 0
+
+    # ── 🖼 내 썸네일 프리셋(2026-09-02, 영상제작 7단계) ──
+    # 만든 썸네일의 구성(레이어 배열)을 담아두고 다음 영상에 그대로 얹는다.
+    # customer_id를 WHERE에 항상 끼운다 — produce_works와 같은 관례라 남의 프리셋은
+    # 읽지도 지우지도 못한다.
+    def add_thumb_preset(self, preset_id, name, layers, thumb_file=None,
+                         customer_id=LEGACY_CUSTOMER_ID):
+        """프리셋 1건 저장. 저장된 dict를 돌려준다.
+
+        layers는 THUMB_STATE.layers 모양 그대로(글자·스티커·도형·배지가 한 배열)."""
+        now = datetime.now(timezone.utc).isoformat()
+        with self._conn() as c:
+            c.execute(
+                "INSERT INTO thumb_presets (preset_id, customer_id, name, layers_json, "
+                "thumb_file, created_at, updated_at) VALUES (?,?,?,?,?,?,?)",
+                (preset_id, customer_id, name,
+                 json.dumps(layers, ensure_ascii=False), thumb_file, now, now),
+            )
+        return {"preset_id": preset_id, "name": name, "layers": layers,
+                "thumb_file": thumb_file, "created_at": now, "updated_at": now}
+
+    def list_thumb_presets(self, customer_id=LEGACY_CUSTOMER_ID, limit=60):
+        """내 프리셋 목록(최신순). layers까지 함께 싣는다 — 카드를 누르는 즉시 적용해야
+        하는데 목록과 상세를 나누면 왕복이 한 번 더 늘고, 레이어는 원래 작다(수 KB)."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT preset_id, name, layers_json, thumb_file, updated_at "
+                "FROM thumb_presets WHERE customer_id=? "
+                "ORDER BY updated_at DESC, rowid DESC LIMIT ?",
+                (customer_id, limit),
+            ).fetchall()
+        out = []
+        for r in rows:
+            try:
+                layers = json.loads(r[2])
+            except Exception:
+                continue          # 깨진 행 하나가 목록 전체를 죽이지 않게 한다
+            out.append({"preset_id": r[0], "name": r[1], "layers": layers,
+                        "thumb_file": r[3], "updated_at": r[4]})
+        return out
+
+    def get_thumb_preset(self, preset_id, customer_id=LEGACY_CUSTOMER_ID):
+        """프리셋 1건. 없거나 남의 것이면 None."""
+        with self._conn() as c:
+            row = c.execute(
+                "SELECT preset_id, name, layers_json, thumb_file, updated_at "
+                "FROM thumb_presets WHERE preset_id=? AND customer_id=?",
+                (preset_id, customer_id),
+            ).fetchone()
+        if not row:
+            return None
+        try:
+            layers = json.loads(row[2])
+        except Exception:
+            return None
+        return {"preset_id": row[0], "name": row[1], "layers": layers,
+                "thumb_file": row[3], "updated_at": row[4]}
+
+    def rename_thumb_preset(self, preset_id, name, customer_id=LEGACY_CUSTOMER_ID):
+        """이름 바꾸기. 성공하면 True — 남의 것/없으면 False."""
+        with self._conn() as c:
+            return c.execute(
+                "UPDATE thumb_presets SET name=?, updated_at=? "
+                "WHERE preset_id=? AND customer_id=?",
+                (name, datetime.now(timezone.utc).isoformat(), preset_id, customer_id),
+            ).rowcount > 0
+
+    def delete_thumb_preset(self, preset_id, customer_id=LEGACY_CUSTOMER_ID):
+        """지운다. 실제로 지워졌으면(내 것이었으면) True."""
+        with self._conn() as c:
+            return c.execute("DELETE FROM thumb_presets WHERE preset_id=? AND customer_id=?",
+                             (preset_id, customer_id)).rowcount > 0
 
     # ── 보이스 프리셋(2026-07-14, 영상제작 4단계) ──
     def upsert_voice_preset(self, p):

@@ -2181,6 +2181,9 @@ _MIX_WORK_DIR = Path(__file__).parent / "data" / "mix_jobs"
 _WIKI_MEDIA_DIR = Path(__file__).parent / "data" / "wiki_media"   # 도서관 원본 영구보관
 _SCENE_ASSETS_DIR = Path(__file__).parent / "data" / "scene_assets"  # 장면 라이브러리 자산 영구보관
 _THUMB_DIR = Path(__file__).parent / "data" / "thumbs"   # 5단계 썸네일 프레임·산출물
+# 🖼 내 썸네일 프리셋의 카드 그림(2026-09-02). job 폴더가 아니라 **따로** 둔다 —
+# 프리셋은 그 job보다 오래 살아야 하는데, job 폴더는 정리(disk_cleanup)에 지워진다.
+_THUMB_PRESET_DIR = Path(__file__).parent / "data" / "thumb_presets"
 
 
 def _download_item_video(item, work_dir):
@@ -6807,6 +6810,122 @@ def api_thumb_selected(job_id: str):
     name = thumb.get("selected")
     return {"ok": True, "name": name, "intro": intro,
             "url": f"/api/produce/thumb/file/{job_id}/{name}"}
+
+
+# ── 🖼 내 썸네일 프리셋(2026-09-02 사장님 "만들어진것 프리셋으로 저장") ──
+# 만든 썸네일의 **구성**(글자·스티커·도형·배지)을 담아 다음 영상에 딸깍 한 번에 얹는다.
+# ★배경은 담지 않는다 — 프리셋을 쓰는 곳은 **다른 영상**이라 그 영상의 배경 위에 얹혀야 한다.
+# ★HC_PRESETS(내장 색 프리셋)와 다른 물건이다: 저건 고른 글자 레이어 **하나의 스타일**만
+#   바꾸고, 이건 화면 구성을 통째로 바꾼다. 섞지 않는다(0순위-B — 판단이 두 곳에 생긴다).
+THUMB_PRESET_NAME_MAX = 30
+_THUMB_PRESET_MAX = 60          # 1인당. 카드가 무한히 늘면 고르는 화면이 못 쓰게 된다
+
+
+def _thumb_preset_file(fname: str):
+    """프리셋 카드 그림의 실제 경로. 경로순회를 여기 한 곳에서 막는다(_thumb_dir과 같은 관례)."""
+    safe = os.path.basename(fname or "")
+    if not safe or safe != fname or safe in (".", ".."):
+        return None
+    return _THUMB_PRESET_DIR / safe
+
+
+@app.get("/api/produce/thumb/presets")
+def api_thumb_presets(request: Request):
+    """내 프리셋 목록. 카드에 그림과 구성이 같이 필요하므로 layers까지 함께 내려준다."""
+    rows = Store(DB_PATH).list_thumb_presets(customer_id=_cid(request))
+    return {"ok": True, "presets": [
+        {"preset_id": p["preset_id"], "name": p["name"], "layers": p["layers"],
+         "updated_at": p["updated_at"],
+         "url": f"/api/produce/thumb/preset-image/{p['thumb_file']}" if p["thumb_file"] else None}
+        for p in rows]}
+
+
+@app.post("/api/produce/thumb/presets")
+async def api_thumb_preset_add(request: Request, name: str = Form(...),
+                               layers: str = Form(...),
+                               file: UploadFile = File(None)):
+    """지금 편집 중인 썸네일 구성을 프리셋으로 담는다.
+
+    file(PNG)은 카드에 보여줄 그림 — 없어도 저장은 된다(그림 없는 카드로 뜬다).
+    """
+    import json as _json          # app.py 관례(:1448·:1482) — 최상위 import 아님
+    cid = _cid(request)
+    store = Store(DB_PATH)
+
+    name = (name or "").strip()[:THUMB_PRESET_NAME_MAX]
+    if not name:
+        return JSONResponse(status_code=400, content={"ok": False, "error": "이름을 입력하세요"})
+    try:
+        layers_obj = _json.loads(layers)
+    except (ValueError, TypeError):
+        return JSONResponse(status_code=400, content={"ok": False, "error": "layers 파싱 실패"})
+    # ★list인지 본다. dict를 받아 그대로 넣으면 불러올 때 프런트가 layers.map에서 죽는다.
+    if not isinstance(layers_obj, list) or not layers_obj:
+        return JSONResponse(status_code=400,
+                            content={"ok": False, "error": "담을 것이 없습니다 — 글자나 스티커를 먼저 얹으세요"})
+
+    if len(store.list_thumb_presets(customer_id=cid, limit=_THUMB_PRESET_MAX + 1)) >= _THUMB_PRESET_MAX:
+        return JSONResponse(status_code=400, content={
+            "ok": False, "error": f"프리셋은 {_THUMB_PRESET_MAX}개까지예요 — 안 쓰는 것을 지우고 담아주세요"})
+
+    thumb_file = None
+    if file is not None:
+        data = await file.read()
+        if data:
+            if not data.startswith(b"\x89PNG\r\n\x1a\n"):     # PNG 시그니처(save와 같은 검사)
+                return JSONResponse(status_code=400, content={"ok": False, "error": "PNG가 아님"})
+            _THUMB_PRESET_DIR.mkdir(parents=True, exist_ok=True)
+            thumb_file = f"tp_{uuid.uuid4().hex[:12]}.png"    # 파일명은 서버가 부여(경로순회 차단)
+            (_THUMB_PRESET_DIR / thumb_file).write_bytes(data)
+
+    p = store.add_thumb_preset(f"tp_{uuid.uuid4().hex[:12]}", name, layers_obj,
+                               thumb_file=thumb_file, customer_id=cid)
+    return {"ok": True, "preset": {
+        "preset_id": p["preset_id"], "name": p["name"], "layers": p["layers"],
+        "updated_at": p["updated_at"],
+        "url": f"/api/produce/thumb/preset-image/{thumb_file}" if thumb_file else None}}
+
+
+@app.post("/api/produce/thumb/presets/{preset_id}/rename")
+async def api_thumb_preset_rename(preset_id: str, request: Request):
+    body = await request.json()
+    name = str(body.get("name") or "").strip()[:THUMB_PRESET_NAME_MAX]
+    if not name:
+        return JSONResponse(status_code=400, content={"ok": False, "error": "이름을 입력하세요"})
+    if not Store(DB_PATH).rename_thumb_preset(preset_id, name, customer_id=_cid(request)):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "없는 프리셋"})
+    return {"ok": True, "name": name}
+
+
+@app.delete("/api/produce/thumb/presets/{preset_id}")
+def api_thumb_preset_delete(preset_id: str, request: Request):
+    store = Store(DB_PATH)
+    cid = _cid(request)
+    p = store.get_thumb_preset(preset_id, customer_id=cid)      # 그림 경로를 먼저 알아둔다
+    if not store.delete_thumb_preset(preset_id, customer_id=cid):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "없는 프리셋"})
+    # 행을 지웠으면 그림도 치운다 — 안 하면 안 쓰이는 PNG가 영원히 쌓인다.
+    if p and p.get("thumb_file"):
+        fp = _thumb_preset_file(p["thumb_file"])
+        if fp is not None:
+            try:
+                fp.unlink(missing_ok=True)
+            except OSError as e:  # noqa: BLE001 — DB 행은 이미 지웠다. 그림 한 장이
+                # 안 지워져도 사장님 눈엔 프리셋이 사라진 것이라 요청은 성공으로 둔다.
+                # 다만 조용히 넘기면 안 쓰이는 PNG가 쌓이는 걸 아무도 모른다 → 사유를 남긴다.
+                print(f"[thumb_preset] 그림 삭제 실패(무해, 고아 파일 남음): {e!r}",
+                      file=sys.stderr)
+    return {"ok": True}
+
+
+@app.get("/api/produce/thumb/preset-image/{fname}")
+def api_thumb_preset_image(fname: str):
+    """프리셋 카드 그림 서빙. is_file()로 본다(디렉터리면 FileResponse가 500을 낸다 — 위 참조)."""
+    path = _thumb_preset_file(fname)
+    if path is None or not path.is_file():
+        return JSONResponse(status_code=404, content={"ok": False})
+    # 파일명이 uuid라 내용이 안 바뀐다 → 길게 캐시해도 안전하다(썸네일 파일과 다른 점).
+    return FileResponse(str(path), headers={"Cache-Control": "public, max-age=31536000, immutable"})
 
 
 def _reject_cdn_proxy(url: str, allowed_hosts) -> bool:
