@@ -10,7 +10,7 @@
   // 원인 찾는 데 한참 걸렸다. 그래서 버전을 숫자로 박고 큰 쪽이 이어받게 한다.
   // (옛 코드는 이 숫자가 없다 → 0으로 보고 새 로직이 이긴다. 옛 인터벌은 남지만
   //  버튼은 id 선점이라 서로 안 덮고, 새 화면(유튜브·쓰레드)은 새 로직이 그린다.)
-  var LOGIC_VER = 20260902;
+  var LOGIC_VER = 20260903;
   if ((window.__ssGrabVer || 0) >= LOGIC_VER) return;   // 같거나 더 새것이 이미 돎
   if (window.__ssGrabLoaded && !window.__ssGrabVer) {
     // 옛 로직이 이미 돌고 있다 — 그 버튼을 걷어내고 새 로직이 다시 그린다.
@@ -125,6 +125,25 @@
     if (location.host.indexOf("instagram.com") >= 0) return "instagram";
     if (location.host.indexOf("tiktok.com") >= 0) return "tiktok";
     return "";
+  }
+  // 시크바·렌즈가 붙는 플랫폼(2026-09-01 사장님 "유튜브도 인스타랑 같게").
+  // _snsHost()는 인스타·틱톡 전용 로직(그리드 카드 등)에 계속 쓰인다 — 섞지 않는다.
+  function _playerPlat() {
+    var h = location.host;
+    if (h.indexOf("instagram.com") >= 0) return "instagram";
+    if (h.indexOf("tiktok.com") >= 0) return "tiktok";
+    if (h.indexOf("youtube.com") >= 0 || h.indexOf("youtu.be") >= 0) return "youtube";
+    if (h.indexOf("threads.com") >= 0 || h.indexOf("threads.net") >= 0) return "threads";
+    return "";
+  }
+  // 이 영상 한 편을 가리키는 키(캐시·통계용). 플랫폼마다 주소 모양이 다르다.
+  function _pageKey() {
+    var m = location.pathname.match(/\/(?:reel|reels|p|tv|video|shorts)\/[A-Za-z0-9_-]+/);
+    if (m) return m[0];
+    var v = location.search.match(/[?&]v=([A-Za-z0-9_-]+)/);       // 유튜브 watch
+    if (v && _playerPlat() === "youtube") return "/watch/" + v[1];
+    var t = location.pathname.match(/^\/@[\w.\-]+\/post\/[A-Za-z0-9_-]+/);  // 쓰레드
+    return t ? t[0] : "";
   }
   function _ttProfile() {   // 틱톡 프로필(/@handle) — 영상 페이지(/@handle/video/..)는 제외
     var m = location.pathname.match(/^\/@([\w.\-]+)\/?$/);
@@ -279,9 +298,9 @@
     return y + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
   }
   function syncSeekBar() {
-    if (!_snsHost()) return;
+    if (!_playerPlat()) return;
     var box = document.getElementById("ss-seek");
-    if (!isSinglePost()) { if (box) box.remove(); return; }
+    if (!_isVideoPage()) { if (box) box.remove(); return; }
     var v = _igVideo();
     if (!v) { if (box) box.remove(); return; }
     if (!box) {
@@ -292,6 +311,8 @@
         "font-family:system-ui,sans-serif;color:#fff;font-size:11px;box-shadow:0 4px 14px rgba(0,0,0,.35)";
       box.innerHTML = "<button id='ss-seek-p' title='일시정지/재생' style='background:none;border:none;" +
         "color:#fff;font-size:13px;cursor:pointer;padding:0 2px'>⏸</button>" +
+        "<button id='ss-seek-x' title='재생 속도' style='background:none;border:none;" +
+        "color:#fff;font-size:11px;font-weight:800;cursor:pointer;padding:0 2px'>1x</button>" +
         "<input id='ss-seek-r' type='range' min='0' max='100' step='0.1' value='0' style='width:90px;cursor:pointer'>" +
         "<span id='ss-seek-t' style='min-width:58px;text-align:right'>0:00/0:00</span>" +
         "<span id='ss-seek-d' title='영상 등록일' style='color:#aaa;border-left:1px solid #555;padding-left:6px'></span>" +
@@ -300,6 +321,12 @@
       var r = document.getElementById("ss-seek-r");
       r.addEventListener("input", function () {
         var vv = _igVideo(); if (vv) { try { vv.currentTime = parseFloat(this.value); } catch (e) {} }
+      });
+      var SPEEDS = [1, 1.25, 1.5, 2, 0.5];
+      document.getElementById("ss-seek-x").addEventListener("click", function () {
+        var vv = _igVideo(); if (!vv) return;
+        var i = SPEEDS.indexOf(vv.playbackRate);
+        vv.playbackRate = SPEEDS[(i + 1) % SPEEDS.length];   // 목록에 없으면 i=-1 → 1x
       });
       document.getElementById("ss-seek-p").addEventListener("click", function () {
         var vv = _igVideo(); if (!vv) return;
@@ -315,6 +342,8 @@
       t2.textContent = _fmtT(v.currentTime) + "/" + _fmtT(v.duration);
       if (p2) p2.textContent = v.paused ? "▶" : "⏸";
     }
+    var x2 = document.getElementById("ss-seek-x");
+    if (x2) x2.textContent = (v.playbackRate || 1) + "x";
     var d2 = document.getElementById("ss-seek-d");
     if (d2) {                                    // SPA라 영상이 바뀌면 URL도 바뀜 — 매 tick 갱신
       var dd = _fmtDate(_postDate());
@@ -343,9 +372,8 @@
   function _syncStats() {
     var el = document.getElementById("ss-seek-s");
     if (!el) return;
-    var m = location.pathname.match(/\/(?:reel|reels|p|tv|video)\/[A-Za-z0-9_-]+/);
-    if (!m) { el.style.display = "none"; return; }
-    var key = m[0];
+    var key = _pageKey();
+    if (!key) { el.style.display = "none"; return; }
     if (_statsCache[key]) {
       var t = _statsText(_statsCache[key]);
       el.textContent = t; el.style.display = t ? "" : "none"; return;
@@ -547,7 +575,7 @@
   }
   function syncExtraBtns() {
     var lens = document.getElementById("ss-lens-btn");
-    if (_snsHost() && isSinglePost()) {
+    if (_playerPlat() && _isVideoPage()) {
       _miniBtn("ss-lens-btn", "🔍 렌즈", "이 영상으로 원본·유사 레퍼런스 역추적(화면 안에서)", 122, "#37b0e0",
                function () { _lensRun(location.href); });
     } else if (lens) { lens.remove(); }
@@ -925,7 +953,10 @@
       if (r.width * r.height > area) { area = r.width * r.height; best = vs[i]; }
     }
     if (!best || area < 10000) return null;
-    var box = best.closest ? (best.closest("article") || best) : best;
+    // 유튜브 쇼츠엔 <article>이 없어 영상 사각형만 보면 버튼이 좋아요·공유 열 위에
+    // 얹힌다(2026-09-01 실사고). 액션열까지 감싸는 칸을 플랫폼별로 함께 본다.
+    var box = best.closest
+      ? (best.closest("article,ytd-reel-video-renderer,#shorts-container") || best) : best;
     var rr = box.getBoundingClientRect();
     if (rr.right <= 0 || rr.right >= window.innerWidth) return null;
     return rr;
