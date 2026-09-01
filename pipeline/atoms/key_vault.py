@@ -261,6 +261,24 @@ def _pick_key(live: list[str]) -> str:
         time.sleep(min(max(0.0, (soonest or now) - now), _MIN_GAP_S))
 
 
+def pick_paced_key(live: list[str]) -> str:
+    """키 목록에서 **지금 쓸 수 있는** 키를 하나 고른다(라운드로빈 + 분당 최소 간격).
+
+    ★왜 공개하나(2026-09-01): 목록을 직접 순회하는 호출부(script_generate·seo_generate·
+      thumb_title·pattern_bank)는 get_client(group)를 안 거쳐 **페이서를 통째로 우회**했다.
+      실측(오늘 KST 12·15시 피크): 대본생성 web 407콜 중 429 분당한도 149건(36.6%).
+      `for key in keys:`가 간격 0으로 연타하고, 429가 나면 대기 없이 다음 키로 넘어가
+      키 76개를 순식간에 다 태운다.
+
+    ★get_client_for_key 안에 넣지 않는 이유: 그 함수는 클라이언트만 얻고 실제로는
+      호출하지 않는 자리에서도 불린다 — 거기서 재우면 엉뚱한 곳이 느려진다.
+      **호출 직전에** 이 함수로 키를 고르는 게 맞다.
+
+    내부 구현은 _pick_key 하나뿐이다(0순위-B: 같은 판단을 두 번 적지 않는다).
+    """
+    return _pick_key(live)
+
+
 def get_client(group: str) -> genai.Client:
     """그룹의 키로 클라이언트 반환. 그룹이 다 소진되면 다른 그룹 키로 폴백.
 
