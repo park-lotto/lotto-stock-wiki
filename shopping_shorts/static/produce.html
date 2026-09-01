@@ -193,10 +193,15 @@
     /* 반짝: 등장할 때 여러 번 깜빡이며 시선을 끄는 집중 효과(CTA·훅) */
     @keyframes capSparkle{0%{opacity:0;transform:translate(-50%,-50%) scale(.85)}10%{opacity:1;transform:translate(-50%,-50%) scale(1.05)}18%{opacity:.35}26%{opacity:1}34%{opacity:.5}42%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:1;transform:translate(-50%,-50%) scale(1)}}
     @keyframes twinkle{0%,100%{opacity:0;transform:scale(.4)}50%{opacity:1;transform:scale(1)}}
-    .eff-fade{animation:capFade 2.2s ease-in-out infinite}
-    .eff-slide{animation:capSlide 2.2s ease-in-out infinite}
-    .eff-pop{animation:capPop 2.2s ease-in-out infinite}
-    .eff-sparkle{animation:capSparkle 2.6s ease-in-out infinite}
+    /* ★infinite를 뺐다(2026-09-01 고객 제보 "화면이 불규칙"). 효과는 2.2초 주기로 무한
+       반복인데 구절 표시시간은 1.0~1.5초라 서로 미끄러져, 같은 문구가 두 번 깜빡이거나
+       자막이 통째로 사라지는 구간이 생겼다(녹화 실측: 3.33~4.00초 자막 0). 실제 렌더는
+       구절이 새로 뜰 때 효과가 **한 번** 나므로, 미리보기도 1회 재생 후 그대로 둔다
+       (both = 끝난 상태 유지). 재시작은 updateCaption이 문구가 바뀔 때만 건다. */
+    .eff-fade{animation:capFade 2.2s ease-in-out both}
+    .eff-slide{animation:capSlide 2.2s ease-in-out both}
+    .eff-pop{animation:capPop 2.2s ease-in-out both}
+    .eff-sparkle{animation:capSparkle 2.6s ease-in-out both}
     .cap-spark{position:absolute;font-size:.5em;color:#fff;pointer-events:none;text-shadow:0 0 4px #fff;animation:twinkle 1.3s ease-in-out infinite}
     /* 헤드카피 번들 폰트 22종(브라우저 미리보기 = 실제 렌더 일치, ttf/otf만) */
 /* @@FONTS:BEGIN — tools/sync_fonts.py가 생성. 직접 고치지 마라 */
@@ -5592,6 +5597,7 @@ let CAP_POS_TOUCHED=false;
 // ★헤드카피 세로위치를 사장님이 한 번이라도 만졌나(2026-08-20). 만졌으면 틀을 바꿔도
 //   그 자리를 지킨다 — 안 그러면 애써 맞춰둔 위치가 매번 맨 위로 튄다.
 let HC_Y_TOUCHED=false;
+let _CAP_FX_TEXT=null;   // 효과를 마지막으로 재생한 자막 문구(바뀔 때만 다시 튼다)
 let PREVIEW_CAP_TEXT='이렇게 자막이 나와요';   // 스텝퍼가 비트별 자막으로 교체
 // ── 🎞 공용 장면 프리뷰 스텝퍼 — 비트마다 프레임+자막 넘겨보기(TTS·검수판 트랙도 재사용) ──
 let BEATS_PREVIEW=[];   // [{i,total,caption}]
@@ -5908,6 +5914,14 @@ function updateCaption(){
   else { el.style.background='none'; el.style.padding='2px 6px'; el.style.borderRadius='0'; }
   // 효과 프리뷰: 선택 효과를 미리보기에서 반복 재생(fade/slide/pop/sparkle). 없음이면 정지.
   el.classList.remove('eff-fade','eff-slide','eff-pop','eff-sparkle');
+  // ★문구가 바뀔 때만 효과를 처음부터 다시 튼다. 리플로우(offsetWidth)를 안 읽으면
+  //   클래스를 뗐다 붙여도 브라우저는 '변한 게 없다'로 보고 재시작하지 않는다.
+  //   문구가 그대로일 때(글씨 크기·색 조절 등)는 재시작하지 않는다 — 손볼 때마다
+  //   자막이 깜빡이면 자리를 못 잡는다.
+  if(_CAP_FX_TEXT !== el.textContent){
+    _CAP_FX_TEXT = el.textContent;
+    void el.offsetWidth;
+  }
   if(cs.effect==='fade') el.classList.add('eff-fade');
   else if(cs.effect==='slide') el.classList.add('eff-slide');
   else if(cs.effect==='pop') el.classList.add('eff-pop');
