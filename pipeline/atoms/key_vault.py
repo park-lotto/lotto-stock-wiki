@@ -228,11 +228,39 @@ def get_client_for_key(key: str) -> genai.Client:
 #   ① 호출마다 다음 키로 넘기는 라운드로빈 커서
 #   ② 키마다 최소 간격을 둬서 **애초에 429를 안 맞게** 한다
 #      (무료등급 실측 상한은 키당 분당 5건 — comment_gen._RPM_PER_KEY와 같은 근거)
-_RR_CURSOR = {"i": 0}
+# ★프로세스마다 **다른 지점**에서 출발한다(2026-09-01). 워커는 스레드가 아니라
+#   systemd 템플릿 유닛(shopping-shorts-worker@)으로 뜨는 **독립 프로세스 12개**라
+#   이 커서를 공유하지 않는다. 0에서 다 같이 출발하면 12개가 동시에 live[0]을 때린다
+#   — edit_plan._auto_key_offset이 os.getpid()를 쓰는 것과 같은 이유.
+_RR_CURSOR = {"i": os.getpid()}
 _KEY_LAST_USED: dict[str, float] = {}
 _RPM_PER_KEY = int(os.environ.get("VAULT_RPM_PER_KEY",
                                  os.environ.get("SHORTS_RPM_PER_KEY", "5")))
 _MIN_GAP_S = 60.0 / max(1, _RPM_PER_KEY)
+
+
+def rotated(live):
+    """키 목록을 **다음 시작점부터** 돌려준다. 원소는 그대로, 순서만 회전.
+
+    ★왜 필요한가(2026-09-01 사장님 "다같이 1번부터 써서 그런 거 아닌가" → 맞다):
+      get_live_keys_cascade는 매번 **같은 순서**를 준다. 그래서 이 목록을 받아
+      `for key in keys`로 도는 호출부는 성공하면 **항상 keys[0]**에서 끝난다.
+      실측(최근 5분): 쓸 수 있는 키 82개 중 **21개만** 쓰이고 61개가 놀았다.
+      rpm 990건의 88%가 "한 주체가 앞쪽 키에 혼자 몰아친" 것이었다.
+
+    ★_pick_key와 짝이다: 저건 클라이언트 1개를 주고(get_client 경로), 이건 목록을
+      준다(for문 경로). **커서를 공유**해야 두 경로가 서로 안 겹친다.
+
+    ★호출부마다 offset을 심지 않는 이유(0순위-B): 어느 키부터 쓸지를 8군데에 적으면
+      반드시 어긋난다. 2026-08-31에 edit_plan만 고쳐지고 나머지가 안 고쳐진 사고가
+      정확히 그 구조의 산물이다. **목록을 나눠주는 곳에서 한 번만** 돌린다.
+    """
+    live = list(live or [])
+    if len(live) < 2:
+        return live                      # 0·1개면 돌릴 것이 없다(단일키 크론도 무해)
+    i = _RR_CURSOR["i"] % len(live)
+    _RR_CURSOR["i"] = i + 1
+    return live[i:] + live[:i]
 
 
 def _pick_key(live: list[str]) -> str:

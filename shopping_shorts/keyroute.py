@@ -283,4 +283,10 @@ def gemini_keys(group="general", customer_id=None):
 
     # cid는 더 이상 '누구 키를 쓸까'를 가르지 않는다(공용 풀). 소진 로그·디버깅용으로만 읽는다.
     _ = as_cid(customer_id if customer_id is not None else keyctx.owner_cid())
-    return key_vault.get_live_keys_cascade(group)
+    # ★목록은 **호출마다 시작점이 돌아간다**(2026-09-01, key_vault.rotated).
+    #   여기가 '키를 꺼내는 유일한 출구'라 회전도 여기서 한 번만 한다 — 호출부마다
+    #   따로 돌리면 판단처가 5개로 늘어난다(0순위-B).
+    #   왜: cascade는 매번 같은 순서를 줘서, 이 목록으로 `for key in keys`를 도는
+    #   호출부(script_generate·seo_generate·thumb_title·pattern_bank·edit_plan)가
+    #   전부 **keys[0]만** 때렸다. 실측: 키 82개 중 최근 5분에 쓰인 건 21개뿐.
+    return key_vault.rotated(key_vault.get_live_keys_cascade(group))
