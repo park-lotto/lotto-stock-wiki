@@ -2019,6 +2019,20 @@
           <div id="zoomStage" class="zoomStage" style="width:100%;aspect-ratio:9/16">
           <div class="zoomBadge" id="zoomBadge">100%</div>
           <div id="hcPreview" style="position:relative;width:100%;aspect-ratio:9/16;background:#ffffff;border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.4)">
+            <!-- ⏸/▶ 자막·화면 자동흐름 멈춤 (2026-09-01 사장님 "빠르게 장면이랑 대본이
+                 넘어가는데 미리보기 가운데 정지 재생버튼 만들어줘"). _playBeatCaptions가
+                 구절마다 자막과 배경 컷을 계속 돌리는데, 그 사이에 글자를 드래그해 자리를
+                 잡으려면 화면이 자꾸 바뀌어 못 만진다. 멈추면 그 구절에서 고정된다.
+                 z-index 6 — 자막(5) 위라 눌린다. 평소엔 흐리고 손을 올리면 진해진다. -->
+            <button type="button" id="scenePlayBtn" onclick="toggleCapPlay(event)"
+                    title="자막·화면이 자동으로 넘어가는 것을 멈춥니다 (다시 누르면 재생)"
+                    style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+                           z-index:6;width:56px;height:56px;border-radius:50%;border:0;cursor:pointer;
+                           background:rgba(0,0,0,.42);color:#fff;font-size:22px;line-height:1;
+                           display:flex;align-items:center;justify-content:center;opacity:.4;
+                           transition:opacity .15s,background .15s"
+                    onmouseover="this.style.opacity='1';this.style.background='rgba(0,0,0,.68)'"
+                    onmouseout="this.style.opacity=CAP_PAUSED?'.85':'.4';this.style.background='rgba(0,0,0,.42)'">⏸</button>
             <img id="hcPreviewBg" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none" alt="">
 <!-- 2026-07-27 사장님: "원본 자막이 있던 자리" 점선 박스 제거(필요 없음). 자동 정렬
                  (applyErasedRegion)과 '다시 그 자리로' 버튼은 그대로 — 표시만 뺀 것. -->
@@ -5713,6 +5727,9 @@ function showBeat(i, first){
   try{ _prefetchNeighborFrames(BEAT_IDX); }catch(e){}
 }
 let CAP_SEQ_TIMER=null;
+// ⏸ 자막·화면 자동흐름 멈춤(2026-09-01 사장님). 멈춘 동안에도 **그 구절은 보여야** 하므로
+// _playBeatCaptions는 첫 그림·첫 구절을 그린 뒤 순환만 걸지 않는다. 칸을 넘겨도 멈춤은 유지된다.
+let CAP_PAUSED=false;
 let CAP_SEQ_GEN=0;      // 재생 세대 — 그림을 기다리는 사이 다른 칸으로 넘어가면 옛 대기를 버린다
 // 🖼 그 칸의 컷 그림을 **전부 병렬로** 미리 받는다(2026-09-01).
 //   실측: 컷 프레임 1장 = 1.7~2.2초인데 구절은 0.58~1.13초마다 바뀐다. 그때그때 bg.src만
@@ -5801,6 +5818,7 @@ function _playBeatCaptions(b){
     // 실제 타이밍이 있으면 그걸로, 없으면 1.1초. 너무 짧거나 길지 않게 가둔다.
     const d=(durs && durs[si]>0) ? durs[si]*1000 : 1100;
     si=(si+1)%segs.length;
+    if(CAP_PAUSED) return;      // ⏸ — 지금 구절·지금 그림에서 멈춘다(다음 예약을 안 건다)
     CAP_SEQ_TIMER=setTimeout(play, Math.max(450, Math.min(2600, d)));
   };
   // ★그림을 **다 받아놓고** 순환을 시작한다(2026-09-01 사장님 "믹스에서는 4장면이 나와야
@@ -5830,6 +5848,27 @@ function stepBeat(d){
   const idx=((next%n)+n)%n;
   showBeat(_cutsOfBeat(idx)[0]);      // 어느 방향이든 그 칸의 첫 컷부터
 }
+
+// ── ⏸/▶ 자막·화면 자동흐름 (2026-09-01) ────────────────────────────────
+// 멈춤은 **예약을 안 거는 것**으로 한다 — 돌고 있는 타이머만 죽이면 다음 바퀴가 또 산다.
+// 재생을 누르면 지금 보고 있는 칸부터 다시 돈다(_playBeatCaptions가 유일한 재생 주인).
+function _capPlayIcon(){
+  const b=document.getElementById('scenePlayBtn'); if(!b) return;
+  b.textContent = CAP_PAUSED ? '▶' : '⏸';
+  b.style.opacity = CAP_PAUSED ? '.85' : '.4';
+}
+function toggleCapPlay(ev){
+  if(ev){ ev.preventDefault(); ev.stopPropagation(); }   // 자막 드래그로 새지 않게
+  CAP_PAUSED = !CAP_PAUSED;
+  _capPlayIcon();
+  if(CAP_PAUSED){
+    if(CAP_SEQ_TIMER){ clearTimeout(CAP_SEQ_TIMER); CAP_SEQ_TIMER=null; }
+    return;
+  }
+  const b=BEATS_PREVIEW[BEAT_IDX];
+  if(b && typeof _playBeatCaptions==='function') _playBeatCaptions(b);
+}
+
 
 // ── 🎯 이 장면만 손보기(2026-08-25) ───────────────────────────────────────
 // 자리(cap_pos)와 줄 나누기(caption_lines) 둘 다 **음성을 안 건드린다** → 즉시·무료.
