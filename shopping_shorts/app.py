@@ -48,6 +48,7 @@ from shopping_shorts import backbone
 from shopping_shorts.aipick import build_aipick
 from shopping_shorts.categorize import categorize, KEYWORDS as CATEGORY_KEYWORDS
 from shopping_shorts import script_generate
+from shopping_shorts import single_source
 from shopping_shorts import pickup_script        # 픽업영상 대본 — 씨앗 훅 문형·CTA 판정
 from shopping_shorts import caption_sync          # 장면별 줄 나누기 후 타이밍 재계산
 from shopping_shorts import tts_timestamps        # 위와 같은 용도(잘라낸 무음 보정)
@@ -975,6 +976,27 @@ def api_xhs_auto_get():
     """백그라운드 자동 발굴 on/off 상태 + 주기."""
     on = Store(DB_PATH).get_setting("xhs_bg_auto", "off") == "on"
     return {"ok": True, "on": on, "interval_min": config.XIAOHONGSHU_BG_INTERVAL_MIN}
+
+
+@app.get("/api/script/hook_opener")
+def api_script_hook_opener_get():
+    """훅 감탄사("와, " / "여러분 ") 자동 붙이기 — 지금 켜졌나(2026-09-01 사장님 요청).
+    ★판정은 single_source.hook_opener_on 한 곳뿐이다(0순위-B). 여기선 저장값만 읽는다."""
+    v = (Store(DB_PATH).get_setting(single_source._HOOK_OPENER_KEY, "on") or "on").strip().lower()
+    return {"ok": True, "on": v not in ("off", "0", "false", "")}
+
+
+@app.post("/api/script/hook_opener")
+def api_script_hook_opener_set(body: dict, request: Request):
+    """훅 감탄사 켜기/끄기. body: {on: bool}. 관리자만.
+    끄면 **모든 스타일**의 대본에서 "와, "·"여러분 "을 안 붙인다(모델이 스스로 쓴 감탄사는
+    그대로 — 코드가 얹는 것만 끈다). 반영은 최대 1분(생성기 캐시)."""
+    if not _is_admin(_cid(request)):
+        return JSONResponse(status_code=403, content={"ok": False, "error": "관리자만"})
+    on = bool(body.get("on"))
+    Store(DB_PATH).set_setting(single_source._HOOK_OPENER_KEY, "on" if on else "off")
+    single_source._HOOK_OPENER_CACHE.update(t=0.0)      # 캐시 즉시 무효 — 이 프로세스는 바로 반영
+    return {"ok": True, "on": on}
 
 
 @app.post("/api/xhs/auto")
