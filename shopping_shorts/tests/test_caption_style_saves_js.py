@@ -66,3 +66,32 @@ def test_debounced_not_per_pixel():
     src = _src()
     body = src[src.index("function _capSaveSoon()"):][:500]
     assert "setTimeout" in body and "clearTimeout" in body, "디바운스가 없다"
+
+
+# ── 헤드카피도 **똑같은 병**이었다(2026-09-02 실측: #00ff88 → 새로고침 후 #ffffff) ──
+_HC_INPUTS = ["hcText", "hcFont", "hcColor", "hcWeight", "hcSize", "hcX", "hcY",
+              "hcOutline", "hcOutColor", "hcOutW", "hcBox", "hcBoxColor",
+              "hcBoxPad", "hcBoxOpacity"]
+
+
+def test_every_headcopy_control_goes_through_touched():
+    """헤드카피 컨트롤도 저장 경로를 타야 한다 — 자막과 같은 뿌리, 같은 증상."""
+    src = _src()
+    missed = []
+    for cid in _HC_INPUTS:
+        m = re.search(r'id="%s"[^>]*?(?:oninput|onchange)="([^"]*)"' % cid, src)
+        assert m, f"{cid} 컨트롤을 못 찾음(마크업이 바뀌었나)"
+        if "hcTouched()" not in m.group(1):
+            missed.append((cid, m.group(1)))
+    assert not missed, (
+        "이 헤드카피 컨트롤들은 저장 경로를 안 탄다 — 화면만 바뀐다: %r" % missed)
+
+
+def test_update_hc_saves_and_guards_restore():
+    """updateHC도 저장하되, 복원·초기 렌더에서는 저장하지 않아야 한다."""
+    src = _src()
+    assert "_hcSaveSoon()" in src, "updateHC가 저장을 안 부른다"
+    guard = src[src.index("function _hcSaveSoon()"):][:400]
+    assert "_HC_USER_EDIT" in guard, (
+        "사람이 만졌는지 가리는 가드가 없다 — 패널 진입만으로 저장돼 스타일이 덮인다")
+    assert "setTimeout" in guard and "clearTimeout" in guard, "디바운스가 없다"

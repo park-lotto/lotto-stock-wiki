@@ -2144,7 +2144,7 @@
             <div id="hcCopyMsg" class="hint" style="margin-top:4px"></div>
           </div>
           <div style="font-size:13px;margin-bottom:4px">헤드카피 문구</div>
-          <textarea id="hcText" rows="2" placeholder="예: 써보면 놀라는 이것" oninput="updateHC()"
+          <textarea id="hcText" rows="2" placeholder="예: 써보면 놀라는 이것" oninput="hcTouched()"
             style="width:100%;background:var(--inset);border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px;margin-bottom:12px;resize:vertical;font-family:inherit;font-size:14px;line-height:1.4"></textarea>
           <!-- 🖍 글자별 색 (2026-08-30 사장님 "바꾸고 싶은 글자만 컬러 바꿀 수 있게").
                ★단어를 **눌러서** 고른다 — 손으로 타이핑하는 옛 UI(2026-08-24에 뺌)는
@@ -2244,28 +2244,28 @@
                 <div hidden style="display:none">
                   <span id="hcFontPicker"><button type="button" id="hcFontBtn" onclick="toggleFontMenu(event)">폰트</button>
                     <div id="hcFontMenu" style="display:none"></div></span>
-                  <select id="hcFont" onchange="updateHC()"></select>
-                  <input id="hcColor" type="color" value="#FF8800" oninput="updateHC()">
-                  <select id="hcWeight" onchange="updateHC()">
+                  <select id="hcFont" onchange="hcTouched()"></select>
+                  <input id="hcColor" type="color" value="#FF8800" oninput="hcTouched()">
+                  <select id="hcWeight" onchange="hcTouched()">
                     <option value="700">굵게</option><option value="900" selected>아주 굵게</option><option value="400">보통</option>
                   </select>
-                  <span id="hcSizeV">64</span><input id="hcSize" type="range" min="28" max="120" value="64" oninput="updateHC()">
-                  <span id="hcYV">14</span><input id="hcY" type="range" min="0" max="100" value="14" oninput="HC_Y_TOUCHED=true;updateHC()">
-                  <span id="hcXV">50</span><input id="hcX" type="range" min="0" max="100" value="50" oninput="updateHC()">
+                  <span id="hcSizeV">64</span><input id="hcSize" type="range" min="28" max="120" value="64" oninput="hcTouched()">
+                  <span id="hcYV">14</span><input id="hcY" type="range" min="0" max="100" value="14" oninput="HC_Y_TOUCHED=true;hcTouched()">
+                  <span id="hcXV">50</span><input id="hcX" type="range" min="0" max="100" value="50" oninput="hcTouched()">
                 </div>
                 <!-- ③ 테두리 · 박스 -->
                 <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px">
                   <div style="font-size:13px;font-weight:700;margin-bottom:8px">🎨 테두리 · 박스</div>
                   <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
-                    <input id="hcOutline" type="checkbox" checked onchange="updateHC()"> 외곽선
-                    <input id="hcOutColor" type="color" value="#000000" oninput="updateHC()">
-                    <span style="color:var(--sub);font-size:12px">두께 <input id="hcOutW" type="range" min="0" max="12" value="6" oninput="updateHC()"></span>
+                    <input id="hcOutline" type="checkbox" checked onchange="hcTouched()"> 외곽선
+                    <input id="hcOutColor" type="color" value="#000000" oninput="hcTouched()">
+                    <span style="color:var(--sub);font-size:12px">두께 <input id="hcOutW" type="range" min="0" max="12" value="6" oninput="hcTouched()"></span>
                   </label>
                   <label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;cursor:pointer">
-                    <input id="hcBox" type="checkbox" onchange="updateHC()"> 배경 박스
-                    <input id="hcBoxColor" type="color" value="#000000" oninput="updateHC()">
-                    <span style="color:var(--sub);font-size:12px">여백 <input id="hcBoxPad" type="range" min="0" max="40" value="16" oninput="updateHC()"></span>
-                    <span style="color:var(--sub);font-size:12px">투명도 <input id="hcBoxOpacity" type="range" min="20" max="100" value="80" oninput="updateHC()"></span>
+                    <input id="hcBox" type="checkbox" onchange="hcTouched()"> 배경 박스
+                    <input id="hcBoxColor" type="color" value="#000000" oninput="hcTouched()">
+                    <span style="color:var(--sub);font-size:12px">여백 <input id="hcBoxPad" type="range" min="0" max="40" value="16" oninput="hcTouched()"></span>
+                    <span style="color:var(--sub);font-size:12px">투명도 <input id="hcBoxOpacity" type="range" min="20" max="100" value="80" oninput="hcTouched()"></span>
                   </label>
                 </div>
                           </div>
@@ -7093,6 +7093,20 @@ function updateHC(){
   // 🖍 낱말 알약도 같이 갱신 — 문구를 고치면 알약이 따라와야 한다(2026-08-30)
   try{ renderHCWords(); }catch(e){}
   if(document.getElementById('fullPresets')) renderStyleCards();
+  // ★자막(updateCaption)과 **같은 이유·같은 방식**으로 저장한다(2026-09-02).
+  //   헤드카피 컨트롤 13개도 전부 updateHC()만 불러서, 색·크기·자리를 바꾸면
+  //   미리보기만 바뀌고 새로고침하면 되돌아갔다(실측: #00ff88 → 새로고침 후 #ffffff).
+  //   저장은 사람이 만졌을 때만 — 복원·초기 렌더에서 저장하면 빈 DOM 기본값이
+  //   저장된 스타일을 덮는다(이 파일의 "#ffe100→#ff8800" 사고와 같은 자리).
+  _hcSaveSoon();
+}
+let _HC_SAVE_T = null, _HC_USER_EDIT = false;
+function hcTouched(){ _HC_USER_EDIT = true; updateHC(); }
+function _hcSaveSoon(){
+  if(!_HC_USER_EDIT) return;                       // 복원·초기 렌더는 저장하지 않는다
+  if(typeof saveHeadcopy !== 'function') return;   // 하네스 보호(슬라이스 테스트)
+  clearTimeout(_HC_SAVE_T);
+  _HC_SAVE_T = setTimeout(() => { try{ saveHeadcopy(); }catch(e){} }, 500);
 }
 
 // 스타일 프리셋 — 고민없이 누르면 색·크기·외곽선 한 번에 지정(핵심 포인트)
