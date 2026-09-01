@@ -12131,6 +12131,19 @@ async function startCleanPreview(){
   const box=document.getElementById('cleanPreview');
   const btn=document.getElementById('btnCleanPreview');
   if(!MIX_JOB){ box.textContent='⚠️ 2단계에서 영상 매칭을 먼저 실행하세요.'; return; }
+  // ★음성을 먼저 정해야 자막제거가 한 번으로 끝난다 (2026-09-01 실측).
+  //   자막제거는 **조립된 완성본 1편**을 청소하는데, 컷 길이가 음성 발화초에 맞춰져 있다.
+  //   그래서 청소 뒤에 보이스를 바꾸면 컷 길이가 달라져 청소본이 무효가 되고 **다시 청소한다**
+  //   (실측 job 119092fa678d: 12:46 자막제거 → 12:50:46 보이스 변경 → 12:55 렌더가 재청소.
+  //    VMake 2콜 = 크레딧 100 + 2분 추가). 단계 번호(4=자막제거, 5=TTS음성)가 뒤바뀐 탓에
+  //   순서대로 누른 고객이 그대로 당했다. 순서 자체를 바꾸는 건 DB의 step을 밀어 위험해서
+  //   (진행 중 작업이 1단계로 떨어진 전례) 여기서 안내만 한다.
+  if(!(VOICE.preset_id||VOICE.voice_id)){
+    if(!confirm('음성을 아직 고르지 않았어요.\n\n'
+      +stepName('tts')+'에서 음성을 먼저 정하시면 자막제거가 한 번으로 끝납니다.\n'
+      +'지금 진행하고 나중에 음성을 바꾸면 자막제거를 다시 해야 해요(크레딧 추가).\n\n'
+      +'그래도 지금 자막제거를 할까요?')) return;
+  }
   clearInterval(CLEAN_POLL); CLEAN_POLL=null;
   const myGen=++CLEAN_GEN, myJob=MIX_JOB;
   CLEAN_VIEW={si:0, pos:0.5, job:myJob};   // 새로 돌리면 확인 지점도 처음(영상1·가운데)으로
@@ -12844,6 +12857,19 @@ async function previewVoice(){
 async function applyVoice(){
   const el=document.getElementById('voicePreview');
   if(!MIX_JOB){ el.innerHTML='<span class="hint">🎬 '+stepName('mix')+' 영상 매칭 후 사용할 수 있어요.</span>'; return; }
+  // ★자막제거를 이미 했으면 음성 변경에 값이 붙는다 — 말없이 태우지 않는다(2026-09-01).
+  //   컷 길이가 음성 발화초에 맞춰져 있어, 음성이 바뀌면 청소해 둔 완성본이 무효가 되고
+  //   렌더가 조용히 다시 청소한다(실측 job 119092fa678d: VMake 2콜). 막지는 않는다 —
+  //   음성을 바꾸는 건 정당한 작업이고, 다시 청소하는 것도 화면상 맞다. 다만 **누르기 전에**
+  //   알려서 고객이 정하게 한다.
+  try{
+    const st=await (await fetch('/api/mix/status/'+MIX_JOB)).json();
+    if(st && st.clean_status==='ready'){
+      if(!confirm('이미 '+stepName('subtitle')+'를 끝낸 작업이에요.\n\n'
+        +'음성을 바꾸면 컷 길이가 달라져서 자막제거를 다시 해야 합니다(크레딧 추가).\n\n'
+        +'그래도 음성을 바꿀까요?')){ return; }
+    }
+  }catch(e){ /* 상태를 못 받으면 종전대로 그냥 진행한다 — 고지 실패가 작업을 막지 않는다 */ }
   el.textContent='⏳ 전체 음성 생성 중…';
   try{
     await fetch('/api/mix/voice',{method:'POST',headers:{'Content-Type':'application/json'},
