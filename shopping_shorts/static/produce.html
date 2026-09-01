@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="utf-8"/>
@@ -2312,19 +2312,19 @@
                   <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:8px">① 글씨</div>
                   <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
                     <label style="font-size:12px;color:var(--sub)">폰트
-                      <select id="capFont" onchange="updateCaption()" style="background:#0a1017;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:5px 8px"></select></label>
+                      <select id="capFont" onchange="capTouched()" style="background:#0a1017;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:5px 8px"></select></label>
                     <label style="font-size:12px;color:var(--sub)">색상
-                      <input id="capColor" type="color" value="#FFFFFF" oninput="updateCaption()" style="vertical-align:middle;cursor:pointer"></label>
+                      <input id="capColor" type="color" value="#FFFFFF" oninput="capTouched()" style="vertical-align:middle;cursor:pointer"></label>
                   </div>
                   <div style="margin-top:8px;font-size:12px;color:var(--sub)">크기 <b id="capSizeV">54</b>px
-                    <input id="capSize" type="range" min="28" max="96" value="54" oninput="updateCaption()" style="width:100%"></div>
+                    <input id="capSize" type="range" min="28" max="96" value="54" oninput="capTouched()" style="width:100%"></div>
                 </div>
 
                 <!-- ② 자리 -->
                 <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px">
                   <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:8px">② 자리</div>
                   <div style="font-size:12px;color:var(--sub)">세로 위치 <b id="capYV">84</b>%
-                    <input id="capY" type="range" min="0" max="100" value="84" oninput="CAP_POS_TOUCHED=true;updateCaption()" style="width:100%"></div>
+                    <input id="capY" type="range" min="0" max="100" value="84" oninput="CAP_POS_TOUCHED=true;capTouched()" style="width:100%"></div>
                   <!-- ★가로 정렬 버튼(2026-08-25 고객 요청 "자막이 한쪽으로 치우쳐져 있어서
                        정렬하는 부분이 추가되면 좋겠어요"). 자막은 드래그로 가로 이동이 되는데
                        (CAP_X_PCT) **되돌리는 길이 없었다** — 한 번 끌면 중앙으로 못 돌아온다.
@@ -2342,15 +2342,15 @@
                 <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px">
                   <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:8px">③ 테두리 · 박스 · 효과</div>
                   <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
-                    <input id="capOutline" type="checkbox" checked onchange="updateCaption()"> 외곽선
-                    <input id="capOutColor" type="color" value="#000000" oninput="updateCaption()">
-                    <span style="color:var(--sub);font-size:12px">두께 <input id="capOutW" type="range" min="0" max="12" value="5" oninput="updateCaption()"></span>
+                    <input id="capOutline" type="checkbox" checked onchange="capTouched()"> 외곽선
+                    <input id="capOutColor" type="color" value="#000000" oninput="capTouched()">
+                    <span style="color:var(--sub);font-size:12px">두께 <input id="capOutW" type="range" min="0" max="12" value="5" oninput="capTouched()"></span>
                   </label>
                   <label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;cursor:pointer">
-                    <input id="capBox" type="checkbox" onchange="updateCaption()"> 배경 박스
-                    <input id="capBoxColor" type="color" value="#000000" oninput="updateCaption()">
-                    <span style="color:var(--sub);font-size:12px">여백 <input id="capBoxPad" type="range" min="0" max="40" value="12" oninput="updateCaption()"></span>
-                    <span style="color:var(--sub);font-size:12px">투명도 <input id="capBoxOpacity" type="range" min="20" max="100" value="80" oninput="updateCaption()"></span>
+                    <input id="capBox" type="checkbox" onchange="capTouched()"> 배경 박스
+                    <input id="capBoxColor" type="color" value="#000000" oninput="capTouched()">
+                    <span style="color:var(--sub);font-size:12px">여백 <input id="capBoxPad" type="range" min="0" max="40" value="12" oninput="capTouched()"></span>
+                    <span style="color:var(--sub);font-size:12px">투명도 <input id="capBoxOpacity" type="range" min="20" max="100" value="80" oninput="capTouched()"></span>
                   </label>
                   <div class="hint" style="font-size:11px;margin-top:4px"></div>
                   <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;align-items:center">
@@ -6085,6 +6085,33 @@ function updateCaption(){
   else if(cs.effect==='pop') el.classList.add('eff-pop');
   else if(cs.effect==='sparkle') el.classList.add('eff-sparkle');
   renderSparkles(cs.effect==='sparkle', cs.y_pct);
+  // ★여기서 저장한다(2026-09-02). 종전엔 이 함수가 STATE.captionStyle을 채우고
+  //   **미리보기만** 그렸다 — 저장(saveHeadcopy)은 안 불렀다. 그래서 자막 색·크기·
+  //   위치·외곽선·박스를 손보면 화면은 바뀌는데 새로고침하면 원래대로 돌아갔고,
+  //   최종 렌더도 옛 스타일로 나갔다("미리보기엔 보이는데 영상엔 안 나온다").
+  //   실측 2026-09-02: capColor를 #ff00cc로 바꿔 미리보기는 마젠타가 됐지만
+  //   새로고침 후 #ffffff. 서버 caption_style도 흰색 그대로였다.
+  //   ★자막 컨트롤 11개에 saveHeadcopy()를 각각 붙이지 않는다 — 하나만 빠뜨려도
+  //     같은 병이 재발하고, 나중에 컨트롤이 늘면 또 빠진다. 값을 만드는 이 한 곳에서
+  //     저장까지 한다(0순위-B).
+  //   ★디바운스: 슬라이더는 드래그 중 oninput이 매 픽셀 뜬다. 그대로 쏘면 초당 수십 번
+  //     POST가 나간다 — 손을 멈춘 뒤 한 번만 보낸다.
+  _capSaveSoon();
+}
+let _CAP_SAVE_T = null;
+// ★"사람이 만진 뒤"에만 저장한다. updateCaption은 패널에 들어올 때도 불리는데(복원 경로),
+//   그때 DOM이 아직 기본값이면 **저장된 스타일을 기본값으로 덮어쓴다** — 이 파일이 이미
+//   같은 사고를 겪었다("색이 #ffe100→#ff8800으로 죽었다", 5510행 주석). 복원은
+//   applyConfig가 DOM을 채운 뒤 updateCaption을 부르므로 값은 맞지만, 복원할 게 없는
+//   경우(PENDING_STYLE_RESTORE=false)까지 저장하면 새 사고를 내가 만드는 셈이다.
+//   그래서 **입력 이벤트에서 온 호출만** 저장한다.
+let _CAP_USER_EDIT = false;
+function capTouched(){ _CAP_USER_EDIT = true; updateCaption(); }
+function _capSaveSoon(){
+  if(!_CAP_USER_EDIT) return;                      // 복원·초기 렌더는 저장하지 않는다
+  if(typeof saveHeadcopy !== 'function') return;   // 하네스엔 없다(슬라이스 테스트 보호)
+  clearTimeout(_CAP_SAVE_T);
+  _CAP_SAVE_T = setTimeout(() => { try{ saveHeadcopy(); }catch(e){} }, 500);
 }
 // 반짝 효과: 자막 주위에 ✨ 입자를 뿌려 깜빡이게(미리보기 연출). 최종 영상은 서버가 알파 깜빡임으로 렌더.
 function renderSparkles(on, ypct){
