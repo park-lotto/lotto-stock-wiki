@@ -80,11 +80,56 @@ def _today_str() -> str:
     return datetime.now().strftime("%Y-%m-%d")
 
 
+# 소진 잠금 유효시간(초). 만료되면 자동으로 풀린다.
+# ★2026-09-01: 종전엔 **하루 낙인**이었다(날짜가 바뀔 때만 해제). 실측으로 그게
+#   틀렸음이 드러났다 — 잠긴 키 11개를 구글에 직접 찔러보니 8개가 HTTP 200이었다.
+#   ①"오늘"이 한국 자정 기준인데 구글은 태평양시 자정(한국 오후 4~5시)에 리셋하고
+#   ②분당 한도를 일일 소진으로 잘못 낙인한 것도 섞였다.
+#   쇼핑쇼츠 풀은 2026-08-27에 같은 이유로 이미 TTL로 바꿨다(comment_gen._EXHAUST_TTL_S).
+#   서버가 'Please retry in 45.5s'로 알려주면 그 값을 쓰고, 없으면 이 기본값.
+_EXHAUST_TTL_S = float(os.environ.get("VAULT_KEY_EXHAUST_TTL",
+                                     os.environ.get("SHORTS_KEY_EXHAUST_TTL", "1800")))
+
+
+def _exhausted_map(state) -> dict:
+    """state의 exhausted를 {그룹: {인덱스: 만료ts}}로 읽는다.
+
+    ★옛 형식({group: [idx, ...]})도 그대로 받는다 — 배포 순간에 파일이 옛 모양이다.
+      옛 항목엔 만료시각이 없는데 '오늘 내내'로 두면 **바로 그 영구 낙인**이라
+      배포 직후에도 증상이 그대로다. 그래서 기본 TTL이 붙은 것으로 본다
+      (comment_gen이 2026-08-27에 같은 함정을 밟고 배운 것).
+    """
+    raw = state.get("exhausted") or {}
+    out = {}
+    for g, v in raw.items():
+        if isinstance(v, dict):
+            slot = {}
+            for k, t in v.items():
+                try:
+                    slot[int(k)] = float(t)
+                except (TypeError, ValueError):
+                    continue
+            out[g] = slot
+        else:                                  # 옛 형식 list[int] — 기본 TTL을 붙인다
+            fallback = time.time() + _EXHAUST_TTL_S
+            out[g] = {int(i): fallback for i in (v or []) if isinstance(i, (int, float))}
+    return out
+
+
+def _live_exhausted(group: str, state=None) -> dict:
+    """그 그룹에서 **아직 유효한** 잠금만 {인덱스: 만료ts}. 만료분은 여기서 걸러진다."""
+    st = state if state is not None else _load_state()
+    now = time.time()
+    return {i: t for i, t in _exhausted_map(st).get(group, {}).items() if t > now}
+
+
 def _load_state() -> dict:
+    """★날짜로 버리지 않는다(2026-09-01) — 만료 판단은 TTL이 한다.
+    종전엔 date가 다르면 통째로 버려 '한국 자정에만 해제'가 됐다."""
     try:
         with open(_STATE_PATH, encoding="utf-8") as f:
             state = json.load(f)
-        if state.get("date") == _today_str() and isinstance(state.get("exhausted"), dict):
+        if isinstance(state.get("exhausted"), dict):
             return state
     except Exception:
         pass
@@ -134,8 +179,17 @@ class _FileLock:
         self._fh.close()
 
 
-def mark_exhausted(group: str, key: str) -> None:
-    """키를 당일 소진으로 기록(그룹별). 이후 프로세스는 재시도하지 않는다."""
+def mark_exhausted(group: str, key: str, retry_after=None) -> None:
+    """키를 **한시적으로** 잠근다(그룹별). retry_after(초)를 주면 그만큼, 없으면 기본 TTL.
+
+    ★2026-09-01: '당일 소진'에서 TTL로 바꿨다. 하루 낙인은 멀쩡한 키를 놀렸다
+      (실측: 잠긴 11개 중 8개가 HTTP 200). 위 _EXHAUST_TTL_S 주석 참조.
+    """
+    try:
+        ttl = float(retry_after) if retry_after else _EXHAUST_TTL_S
+    except (TypeError, ValueError):
+        ttl = _EXHAUST_TTL_S
+    ttl = max(30.0, min(ttl, 6 * 3600.0))     # 30초~6시간 — 영구 낙인을 만들지 않는다
     marked_idx = None
     with _FileLock(_LOCK_PATH):
         keys = get_keys(group)
@@ -143,9 +197,14 @@ def mark_exhausted(group: str, key: str) -> None:
             return
         idx = keys.index(key)
         state = _load_state()
-        bucket = state["exhausted"].setdefault(group, [])
-        if idx not in bucket:
-            bucket.append(idx)
+        cur = _exhausted_map(state)
+        slot = cur.setdefault(group, {})
+        until = time.time() + ttl
+        if slot.get(idx, 0.0) < until:
+            slot[idx] = until
+            state["date"] = _today_str()      # 사람이 파일을 열어볼 때의 참고용
+            state["exhausted"] = {g: {str(i): t for i, t in v.items()}
+                                  for g, v in cur.items()}
             tmp_path = _STATE_PATH.with_suffix(".json.tmp")
             with open(tmp_path, "w", encoding="utf-8") as f:
                 json.dump(state, f)
@@ -165,9 +224,8 @@ def mark_exhausted(group: str, key: str) -> None:
 
 
 def get_live_keys(group: str) -> list[str]:
-    """당일 소진 기록된 키를 제외한 그룹의 키 목록."""
-    state = _load_state()
-    exhausted = set(state["exhausted"].get(group, []))
+    """잠긴 키를 뺀 그룹의 키 목록. ★만료된 잠금은 자동으로 풀린다(2026-09-01)."""
+    exhausted = _live_exhausted(group)         # 만료분은 여기서 걸러진다
     return [k for i, k in enumerate(get_keys(group)) if i not in exhausted]
 
 
@@ -218,17 +276,90 @@ def get_client_for_key(key: str) -> genai.Client:
     return _client_cache[key]
 
 
+# ── 분산(2026-09-01) — 키가 많아도 1개만 때리던 것을 고친다 ────────────────
+# ★실측(최근 6시간, api_events): 쇼핑쇼츠 web은 68개 키로 360콜에 rpm 0건인데
+#   주식위키 server는 13개 키로 983콜에 rpm 398건이었다. report_ingest는 키 1개로
+#   64콜을 쳐서 **64건 전부** 분당한도. 같은 시각·같은 구글 한도인데 결과가 정반대다.
+#   차이는 나눠 쓰느냐뿐이었다 — 키를 더 살 문제가 아니다.
+#
+# comment_gen이 쓰는 방식을 그대로 가져온다(그쪽은 실측 rpm 0~1건):
+#   ① 호출마다 다음 키로 넘기는 라운드로빈 커서
+#   ② 키마다 최소 간격을 둬서 **애초에 429를 안 맞게** 한다
+#      (무료등급 실측 상한은 키당 분당 5건 — comment_gen._RPM_PER_KEY와 같은 근거)
+# ★프로세스마다 **다른 지점**에서 출발한다(2026-09-01). 워커는 스레드가 아니라
+#   systemd 템플릿 유닛(shopping-shorts-worker@)으로 뜨는 **독립 프로세스 12개**라
+#   이 커서를 공유하지 않는다. 0에서 다 같이 출발하면 12개가 동시에 live[0]을 때린다
+#   — edit_plan._auto_key_offset이 os.getpid()를 쓰는 것과 같은 이유.
+_RR_CURSOR = {"i": os.getpid()}
+_KEY_LAST_USED: dict[str, float] = {}
+_RPM_PER_KEY = int(os.environ.get("VAULT_RPM_PER_KEY",
+                                 os.environ.get("SHORTS_RPM_PER_KEY", "5")))
+_MIN_GAP_S = 60.0 / max(1, _RPM_PER_KEY)
+
+
+def rotated(live):
+    """키 목록을 **다음 시작점부터** 돌려준다. 원소는 그대로, 순서만 회전.
+
+    ★왜 필요한가(2026-09-01 사장님 "다같이 1번부터 써서 그런 거 아닌가" → 맞다):
+      get_live_keys_cascade는 매번 **같은 순서**를 준다. 그래서 이 목록을 받아
+      `for key in keys`로 도는 호출부는 성공하면 **항상 keys[0]**에서 끝난다.
+      실측(최근 5분): 쓸 수 있는 키 82개 중 **21개만** 쓰이고 61개가 놀았다.
+      rpm 990건의 88%가 "한 주체가 앞쪽 키에 혼자 몰아친" 것이었다.
+
+    ★_pick_key와 짝이다: 저건 클라이언트 1개를 주고(get_client 경로), 이건 목록을
+      준다(for문 경로). **커서를 공유**해야 두 경로가 서로 안 겹친다.
+
+    ★호출부마다 offset을 심지 않는 이유(0순위-B): 어느 키부터 쓸지를 8군데에 적으면
+      반드시 어긋난다. 2026-08-31에 edit_plan만 고쳐지고 나머지가 안 고쳐진 사고가
+      정확히 그 구조의 산물이다. **목록을 나눠주는 곳에서 한 번만** 돌린다.
+    """
+    live = list(live or [])
+    if len(live) < 2:
+        return live                      # 0·1개면 돌릴 것이 없다(단일키 크론도 무해)
+    i = _RR_CURSOR["i"] % len(live)
+    _RR_CURSOR["i"] = i + 1
+    return live[i:] + live[:i]
+
+
+def _pick_key(live: list[str]) -> str:
+    """라이브 키 중 '지금 쓸 수 있는' 것을 하나 고른다(라운드로빈 + 최소 간격).
+
+    전부 쿨다운 중이면 가장 빨리 풀리는 키가 풀릴 때까지만 잔다(최대 _MIN_GAP_S).
+    키가 많아질수록 대기는 0에 수렴한다 — 키를 늘리면 그대로 빨라진다.
+    ⚠️프로세스 로컬이다(comment_gen도 같다). 여러 프로세스가 같이 돌면 실효 RPM이
+      프로세스 수만큼 곱해질 수 있다 — 그래도 '1개만 때리기'보다는 압도적으로 낫다.
+    """
+    if not live:
+        return ""
+    while True:
+        now = time.monotonic()
+        start = _RR_CURSOR["i"] % len(live)
+        _RR_CURSOR["i"] = start + 1
+        soonest = None
+        for off in range(len(live)):
+            k = live[(start + off) % len(live)]
+            ready_at = _KEY_LAST_USED.get(k, 0.0) + _MIN_GAP_S
+            if ready_at <= now:
+                _KEY_LAST_USED[k] = now
+                return k
+            if soonest is None or ready_at < soonest:
+                soonest = ready_at
+        time.sleep(min(max(0.0, (soonest or now) - now), _MIN_GAP_S))
+
+
 def get_client(group: str) -> genai.Client:
-    """그룹의 현재 활성 키로 클라이언트 반환. 그룹이 다 소진되면 다른 그룹 키로 폴백."""
+    """그룹의 키로 클라이언트 반환. 그룹이 다 소진되면 다른 그룹 키로 폴백.
+
+    ★2026-09-01: 늘 live[0]을 주던 것을 **라운드로빈 + 분당 페이서**로 바꿨다
+      (_pick_key). 위 주석의 실측 참조 — 이 한 줄이 rpm 398건의 원인이었다.
+    """
     all_keys = get_keys(group)
     if not all_keys:
         raise RuntimeError(f"key_vault: '{group}' 그룹에 설정된 Gemini 키가 없습니다 (.env 확인)")
     live = get_live_keys_cascade(group)  # cross-group 폴백
     if not live:
         live = all_keys[-1:]  # 전체 소진 시 최후로 마지막 키 시도
-    idx = min(_active_idx.get(group, 0), len(live) - 1) if live else 0
-    key = live[idx] if live else ""
-    return get_client_for_key(key)
+    return get_client_for_key(_pick_key(live))
 
 
 client = get_client  # 드롭인 헬퍼 별칭 — genai.Client(api_key=...) 대체용
