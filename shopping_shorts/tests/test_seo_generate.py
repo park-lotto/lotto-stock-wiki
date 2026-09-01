@@ -72,15 +72,10 @@ def test_generate_cascades_on_exhausted_key(monkeypatch):
     monkeypatch.setattr(seo_generate.key_vault, "is_daily_exhausted_error", lambda e: True)
     monkeypatch.setattr(seo_generate.key_vault, "is_account_disabled_error", lambda e: False)
     monkeypatch.setattr(seo_generate.key_vault, "_owner_group", lambda k: "general")
-    # ★인자 3개(retry_after 추가, 2026-09-01) — 서버가 알려준 재시도 시각을 쓴다
-    monkeypatch.setattr(seo_generate.key_vault, "mark_exhausted",
-                        lambda g, k, retry_after=None: marked.append(k))
+    monkeypatch.setattr(seo_generate.key_vault, "mark_exhausted", lambda g, k: marked.append(k))
     got = seo_generate.generate(_JOB)
     assert got["title"] == "샐 걱정 ZERO 텀블러"
-    # ★어느 키가 **먼저**인지는 박지 않는다(2026-09-01): 목록은 호출마다 시작점이
-    #   돌아간다(key_vault.rotated) — 모든 호출이 keys[0]만 때리던 것을 고친 결과다.
-    #   이 테스트가 지키는 것은 "소진된 키 1개를 마킹하고 다음 키로 넘어가 성공한다"이다.
-    assert len(marked) == 1 and marked[0] in ("k1", "k2")
+    assert marked == ["k1"]
 
 
 def test_generate_bad_json_returns_none(monkeypatch):

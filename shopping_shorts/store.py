@@ -6868,16 +6868,8 @@ class Store:
         ★복호 실패 행은 _decrypt_rows가 로그를 남기고 건너뛴다.
         """
         with self._conn() as c:
-            # ★개인 경로(get_customer_keys_plain)와 **같은 필터**를 쓴다(0순위-B).
-            #   2026-08-25에 개인 경로에만 status 필터가 붙고 여기는 안 붙어서,
-            #   꺼둔·죽은 키가 resync_pools(웹 기동·키등록/삭제·워커)마다 **풀에 되살아났다**.
-            #   격리·프로브를 아무리 잘 만들어도 목록 자체가 매번 되돌아온다.
-            # ★반드시 제외형(NOT IN)이다 — status 기본값이 'unknown'이라(:1114)
-            #    포함형으로 쓰면 **아직 검증 안 된 정상 키가 통째로 사라져**
-            #   라이브 용량이 급감한다.
             rows = c.execute(
-                "SELECT id, key_enc FROM customer_keys WHERE service=? "
-                "AND COALESCE(status,'') NOT IN ('off','bad') ORDER BY id",
+                "SELECT id, key_enc FROM customer_keys WHERE service=? ORDER BY id",
                 (service,)).fetchall()
         return [plain for _kid, plain in self._decrypt_rows(rows, "pool", service)]
 

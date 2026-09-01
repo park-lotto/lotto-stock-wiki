@@ -48,6 +48,7 @@ from shopping_shorts import backbone
 from shopping_shorts.aipick import build_aipick
 from shopping_shorts.categorize import categorize, KEYWORDS as CATEGORY_KEYWORDS
 from shopping_shorts import script_generate
+from shopping_shorts import single_source
 from shopping_shorts import pickup_script        # 픽업영상 대본 — 씨앗 훅 문형·CTA 판정
 from shopping_shorts import caption_sync          # 장면별 줄 나누기 후 타이밍 재계산
 from shopping_shorts import tts_timestamps        # 위와 같은 용도(잘라낸 무음 보정)
@@ -975,6 +976,53 @@ def api_xhs_auto_get():
     """백그라운드 자동 발굴 on/off 상태 + 주기."""
     on = Store(DB_PATH).get_setting("xhs_bg_auto", "off") == "on"
     return {"ok": True, "on": on, "interval_min": config.XIAOHONGSHU_BG_INTERVAL_MIN}
+
+
+@app.get("/api/script/hook_opener")
+def api_script_hook_opener_get(request: Request):
+    """훅 감탄사("와, " / "여러분 ") 자동 붙이기 상태(2026-09-01 사장님 "3번").
+
+    돌려주는 것:
+      default   = 사장님이 정한 전역 기본값
+      mine      = 이 고객이 직접 정한 값(안 정했으면 None → 기본값을 따른다)
+      effective = 지금 이 고객의 대본에 실제로 적용되는 값
+    ★판정은 single_source.hook_opener_on 한 곳뿐이다(0순위-B) — 여기서 다시 계산하지 않는다."""
+    cid = _cid(request)
+    store = Store(DB_PATH)
+    mine = store.get_pref(single_source._HOOK_OPENER_KEY, customer_id=cid, default=None)
+    return {"ok": True,
+            "default": single_source.hook_opener_default(),
+            "mine": (None if mine is None else single_source._truthy(mine)),
+            "effective": single_source.hook_opener_on(cid),
+            "is_admin": _is_admin(cid)}
+
+
+@app.post("/api/script/hook_opener/mine")
+def api_script_hook_opener_mine(body: dict, request: Request):
+    """내 대본에만 적용되는 값. body: {on: true|false|null}.
+    null이면 **내 설정을 지운다** → 사장님 기본값을 다시 따른다."""
+    cid = _cid(request)
+    store = Store(DB_PATH)
+    on = body.get("on", None)
+    if on is None:
+        store.set_pref(single_source._HOOK_OPENER_KEY, None, customer_id=cid)
+    else:
+        store.set_pref(single_source._HOOK_OPENER_KEY, "on" if on else "off", customer_id=cid)
+    return {"ok": True, "mine": (None if on is None else bool(on)),
+            "effective": single_source.hook_opener_on(cid)}
+
+
+@app.post("/api/script/hook_opener")
+def api_script_hook_opener_set(body: dict, request: Request):
+    """훅 감탄사 켜기/끄기. body: {on: bool}. 관리자만.
+    끄면 **모든 스타일**의 대본에서 "와, "·"여러분 "을 안 붙인다(모델이 스스로 쓴 감탄사는
+    그대로 — 코드가 얹는 것만 끈다). 반영은 최대 1분(생성기 캐시)."""
+    if not _is_admin(_cid(request)):
+        return JSONResponse(status_code=403, content={"ok": False, "error": "관리자만"})
+    on = bool(body.get("on"))
+    Store(DB_PATH).set_setting(single_source._HOOK_OPENER_KEY, "on" if on else "off")
+    single_source._HOOK_OPENER_CACHE.update(t=0.0)      # 캐시 즉시 무효 — 이 프로세스는 바로 반영
+    return {"ok": True, "on": on}
 
 
 @app.post("/api/xhs/auto")
@@ -3913,11 +3961,56 @@ _USER_ERROR_RULES = (
      "(계속되면 관리자에게 알려주세요)"),
     (("서버 재시작", "중단되었습니다"),
      "작업이 중단되었습니다. 다시 시도해 주세요."),
+    # ★아래 3줄은 2026-09-01에 늘렸다. 이 사유들이 최근 30일 실패 100건 중 36건인데
+    #   전부 "처리 중 문제가 발생했습니다"로 뭉개져, 고객이 자기 잘못인 줄 알고 헤맸다.
+    #   셋 다 **고객이 고칠 수 없는 우리 쪽 문제**라 그렇게 분명히 말한다.
+    (("payment required", "402", "not enough credits", "[600", "insufficient"),
+     "영상 처리 서비스의 사용 한도에 걸렸습니다. 고객님 잘못이 아니에요 — "
+     "관리자에게 알려주시면 바로 풀어드립니다."),
+    (("unauthorized", "401", "403", "forbidden", "bad request", "400"),
+     "영상 처리 서버와 연결에 문제가 있습니다. 고객님 잘못이 아니에요 — "
+     "잠시 후 다시 시도하시고, 계속되면 관리자에게 알려주세요."),
+    (("ffmpeg", "no module named", "traceback", "command '["),
+     "서버에서 영상을 처리하다 문제가 생겼습니다. 고객님 잘못이 아니에요 — "
+     "관리자에게 알려주시면 확인하겠습니다."),
 )
+
+
+# ★개발자 원문의 흔적. 하나라도 있으면 "사람에게 쓴 안내"가 아니다 → 순화 대상.
+#   EDL·quota 같은 우리 내부 용어도 여기 넣는다 — 한글 문장이어도 고객은 못 알아본다.
+_DEV_ERROR_MARKS = (
+    "client error", "traceback", "no module named", "command '[", "exception",
+    "errno", "httperror", "status code", "edl ", "quota", "permission_denied",
+    "api key", "apify", "resource_exhausted", "not enough credits", "[600",
+)
+
+
+def _looks_user_written(msg):
+    """파이프라인이 **고객에게 보여주려고 쓴** 안내인가.
+
+    ★왜 필요한가(2026-09-01 사장님 지시 "3단계에 실패사유 안 나오는 것들 다 적어줘야대").
+      _USER_ERROR_RULES에 안 걸리면 전부 "처리 중 문제가 발생했습니다"로 뭉개졌다.
+      그래서 애써 만든 안내가 고객에게 통째로 사라졌다 — 실측(최근 30일 실패 100건):
+        · 가로형 영상 섞임 + **문제 영상 URL** 20건 → "처리 중 문제가…"
+        · 소스 못 받음 + **실패한 URL 목록** 6건 → URL이 사라진 일반 문구
+      고객은 무엇을 고쳐야 하는지 알 수 없어 그대로 멈춘다.
+
+    판정: 개발자 흔적이 없고 한글이 20자 이상이면 사람에게 쓴 글로 본다.
+    애매하면 False(=순화) — 내부 사정이 새는 쪽보다 뭉개지는 쪽이 안전하다.
+    """
+    low = (msg or "").lower()
+    if any(m in low for m in _DEV_ERROR_MARKS):
+        return False
+    ko = sum(1 for ch in (msg or "") if "가" <= ch <= "힣")
+    return ko >= 20
 
 
 def _user_facing_error(msg):
     """실패 사유를 일반 사용자에게 보여줄 문장으로 바꾼다. 관리자에겐 쓰지 않는다."""
+    # ★이미 사람 말로 쓴 안내는 **그대로 내보낸다**. 순화 규칙보다 먼저 판정한다 —
+    #   뒤에 두면 "다운로드 실패" 같은 낱말이 규칙에 걸려 URL 목록째 지워진다.
+    if _looks_user_written(msg):
+        return msg
     low = (msg or "").lower()
     for keys, friendly in _USER_ERROR_RULES:
         if any(k in low for k in keys):
@@ -15568,14 +15661,14 @@ def api_produce_mix_poster(job_id: str):
     #      — beatframe은 2026-07-21에 이미 고친 버그가 여기만 남아 있었다.
     #   ③ 캐시가 poster.jpg 한 이름이라 편성·청소를 바꿔도 옛 그림이 그대로였다.
     #   그래서 계산을 새로 하지 않고 _extract_beat_frame 한 곳에 맡긴다(0순위-B).
-    clean_map, _cfin, _crat, _ctag = _clean_frame_src(job, work, 0)
+    clean_map, _cfin, _crat, _ctag, _cfresh = _clean_frame_src(job, work, 0)
     _seg0 = (video_assemble._beat_material(beats[0]) or [beats[0].get("primary") or {}])[0] or {}
     _key = f"{_seg0.get('video_id') or '-'}@{round(float(_seg0.get('start') or 0), 2)}"
     _key = re.sub(r"[^0-9a-zA-Z@.\-]", "_", _key)
     poster = work / f"poster_{_key}{_ctag}.jpg"
     if not poster.exists():
         _extract_beat_frame(work, beats[0], poster, clean_sources=clean_map,
-                            clean_final=_cfin, final_ratio=_crat)
+                            clean_final=_cfin, final_ratio=_crat, clean_fresh=_cfresh)
     if not poster.exists():
         return JSONResponse(status_code=404, content={"ok": False, "error": "소스 영상 없음"})
     return FileResponse(str(poster), media_type="image/jpeg")
@@ -15618,7 +15711,10 @@ def _cuts_of_beat(cuts, beat_idx):
 def _clean_frame_src(job, work, beat_idx, cut=None):
     """**청소된 화면을 어디서 뜰지** 정하는 유일한 자리 (2026-08-27).
 
-    returns (clean_sources, clean_final, final_ratio, cache_tag)
+    returns (clean_sources, clean_final, final_ratio, cache_tag, clean_fresh)
+    ★clean_fresh = 완성본 청소본이 **지금 편성**으로 만든 것인가
+      (mix_pipeline.clean_final_matches_plan). 참이면 컷 좌표를 완성본 시각으로
+      옮겨도 맞으므로 컷 프레임도 청소본에서 뜬다(2026-09-01).
 
     두 경로가 있다:
       소스별 청소본(clean_sources)  — 옛 방식. 그 소스에서 바로 뜬다.
@@ -15631,12 +15727,13 @@ def _clean_frame_src(job, work, beat_idx, cut=None):
     """
     clean_map = job.get("clean_sources") or {}
     if clean_map:
-        return clean_map, None, None, "_clean"
+        return clean_map, None, None, "_clean", True
     if job.get("clean_status") != "ready":
-        return {}, None, None, ""
+        return {}, None, None, "", False
     cvp = job.get("clean_video_path")
     if not cvp or not Path(cvp).exists():
-        return {}, None, None, ""
+        return {}, None, None, "", False
+    fresh = mix_pipeline.clean_final_matches_plan(job, work)
     # ★컷 단위로 찾는다(2026-08-27) — 비트에 재료가 여럿이면 비트 한가운데는
     #   다른 소스 자리다. 화면에 나가는 최소 단위는 컷이다(clean_thumb과 같은 기준).
     _plan = job.get("edit_plan") or {}
@@ -15663,14 +15760,15 @@ def _clean_frame_src(job, work, beat_idx, cut=None):
         #   그러면 자막·워터마크가 화면에 그대로 나온다(08-27 회귀의 정체).
         #   비트 근사로라도 청소본을 가리킨다. 정확도는 떨어져도 '지워진 그림'이다.
         r = mix_pipeline._final_time_of_beat(_plan, beat_idx)
-        return {}, cvp, (r if r is not None else 0.5), "_clean"
+        return {}, cvp, (r if r is not None else 0.5), "_clean", fresh
     _d = frame_extract._probe_duration(cvp) or 0.0
     # 호출부는 '비율'을 받는다 — 파일 길이가 계획 합과 달라도 초를 비율로 환산해 넘긴다.
-    return {}, cvp, (min(0.98, max(0.02, sec / _d)) if _d > 0 else 0.5), "_clean"
+    return {}, cvp, (min(0.98, max(0.02, sec / _d)) if _d > 0 else 0.5), "_clean", fresh
 
 
 def _extract_beat_frame(work, beat, out_path, clean_sources=None,
-                        clean_final=None, final_ratio=None, seg_spec=None):
+                        clean_final=None, final_ratio=None, seg_spec=None,
+                        clean_fresh=False):
     """beat.primary 클립의 start 시각 프레임 1장을 9:16(1080x1920)로 out_path에 저장.
     소스 영상이 없으면 False(파일 안 만듦). 프로덕션 poster 로직을 비트 단위로 일반화.
 
@@ -15691,7 +15789,20 @@ def _extract_beat_frame(work, beat, out_path, clean_sources=None,
     vid = pr.get("video_id")
     ss = float(pr.get("start") or 0)
     src = None
-    if clean_final and Path(clean_final).exists():
+    # ★컷 좌표(seg_spec)가 있으면 **절대 덮어쓰지 않는다**(2026-09-01 사장님 캡처 대조).
+    #   완성본 청소본 경로는 "완성본 영상의 몇 초"라는 **다른 좌표계**다. 그 파일은 청소를
+    #   돌린 그 시점의 편성물이라, 그 뒤 편성·컷 길이가 바뀌면 그 초는 아무 뜻이 없다.
+    #   실측(job 84b5f66a8e1f): clean_preview.mp4 = 8/27 20:58 생성인데 컷 계획은 9/1 —
+    #   hook 4컷이 케이크/케이크/여자/여자로 떴다(3단계는 케이크/여자/야외/아이).
+    #   컷 좌표는 3단계 재생과 **같은 좌표계**(소스 mp4 + 원본 시각)라 편성이 바뀌어도
+    #   안 썩는다. 아래 clean_sources(소스별 청소본)도 좌표계가 같으므로 그대로 우선한다.
+    #   ★단, 완성본 청소본이 **지금 편성으로 만든 것**이면(clean_fresh) 좌표계가 일치하므로
+    #     컷 프레임도 그 청소본에서 뜬다(2026-09-01 "자막제거했는데 꾸미기에 자막 그대로").
+    #     신선도 판정은 mix_pipeline.clean_final_matches_plan 한 곳 — 서명이 이미 청소본
+    #     파일명(final_clean_{sig}.mp4)에 박혀 있어 대조만 하면 된다.
+    #   ⚠ 편성을 바꾼 뒤 다시 청소하지 않았으면 원본에서 뜬다(자막이 보인다) — 그때는
+    #     틀린 장면을 보여주는 것보다 낫다. 렌더 결과는 어차피 다시 청소하므로 영향 없다.
+    if (seg_spec is None or clean_fresh) and clean_final and Path(clean_final).exists():
         # 완성본 1편만 청소한 경로 — 소스별 파일이 없다. 완성본에서 그 칸 지점을 뜬다.
         src = Path(clean_final)
         if final_ratio is not None:
@@ -15794,7 +15905,7 @@ def _beatframe_file(job, job_id: str, i: int, cut=None):
     # 2단계 자막제거를 밟았으면(clean_sources 존재) 청소본에서 프레임을 뜬다. 캐시 파일명도
     # 분리(_clean)해, 자막제거 전에 캐시된 원본 프레임이 남아 미리보기에 지운 자막이 살아
     # 있는 것처럼 보이는 캐시 오염을 막는다(2026-07-21 제보).
-    clean_map, _cfin, _crat, _ctag = _clean_frame_src(job, work, i, cut=cut)
+    clean_map, _cfin, _crat, _ctag, _cfresh = _clean_frame_src(job, work, i, cut=cut)
     # ★캐시 이름에 **그 칸이 실제로 쓰는 소스·시각**을 넣는다(2026-08-21). 종전엔 칸 번호만
     #   써서, 3단계에서 편성을 바꿔도 옛 프레임이 그대로 나왔다(조용한 어긋남).
     _spec = None
@@ -15807,10 +15918,17 @@ def _beatframe_file(job, job_id: str, i: int, cut=None):
     _key = f"{_seg0.get('video_id') or '-'}@{round(float(_seg0.get('start') or 0), 2)}"
     _key = re.sub(r"[^0-9a-zA-Z@.\-]", "_", _key)
     _ct = "" if cut is None else f"c{cut}_"
+    # ★컷 좌표가 있으면 _extract_beat_frame이 **소스에서** 뜬다(완성본 청소본은 좌표계가
+    #   달라 안 쓴다 — 아래 함수 주석). 그런데 캐시 이름은 그대로 _clean이라, 옛 완성본에서
+    #   뜬 **틀린 그림**이 그대로 재사용됐다. 실제로 무엇에서 떴는지를 이름에 반영한다.
+    #   ★청소본이 지금 편성으로 만든 것이면(_cfresh) 컷도 청소본에서 뜬다 → _clean 그대로.
+    if _spec and not clean_map and not _cfresh:
+        _ctag = "_src"
     out = work / "beatframes" / f"{i}_{_ct}{_key}{_ctag}.jpg"
     if not out.exists():
         _extract_beat_frame(work, beat, out, clean_sources=clean_map,
-                            clean_final=_cfin, final_ratio=_crat, seg_spec=_spec)
+                            clean_final=_cfin, final_ratio=_crat, seg_spec=_spec,
+                            clean_fresh=_cfresh)
     return out if out.exists() else None
 
 

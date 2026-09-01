@@ -1,6 +1,6 @@
 // 로또 · 원클릭 담기 — 실제 로직 (grab.user.js 로더가 서버에서 이 파일을 매번 불러와 실행).
 // ★이 파일을 고치면 모든 사용자가 다음 새로고침에 자동 반영된다(재설치 불필요).
-// 로직 버전: 2026-08-18-b  (⭐레퍼런스 등록 — 영상+채널 한 번에, 랭킹 즉시 반영)
+// 로직 버전: 2026-09-01-d  (버튼 도킹·유튜브 렌즈/시크바·재생속도 — LOGIC_VER가 정본)
 (function () {
   "use strict";
   // ── 중복 실행 방지 → '새 로직이 이긴다'로 교체(2026-08-18 실사고) ──────────
@@ -10,12 +10,12 @@
   // 원인 찾는 데 한참 걸렸다. 그래서 버전을 숫자로 박고 큰 쪽이 이어받게 한다.
   // (옛 코드는 이 숫자가 없다 → 0으로 보고 새 로직이 이긴다. 옛 인터벌은 남지만
   //  버튼은 id 선점이라 서로 안 덮고, 새 화면(유튜브·쓰레드)은 새 로직이 그린다.)
-  var LOGIC_VER = 20260818;
+  var LOGIC_VER = 20260904;
   if ((window.__ssGrabVer || 0) >= LOGIC_VER) return;   // 같거나 더 새것이 이미 돎
   if (window.__ssGrabLoaded && !window.__ssGrabVer) {
     // 옛 로직이 이미 돌고 있다 — 그 버튼을 걷어내고 새 로직이 다시 그린다.
     try {
-      var olds = document.querySelectorAll("#ss-grab-btn,#ss-chadd-btn,#ss-lens-btn,#ss-seek");
+      var olds = document.querySelectorAll("#ss-grab-btn,#ss-chadd-btn,#ss-lens-btn,#ss-adopt-btn,#ss-seek");
       for (var oi = 0; oi < olds.length; oi++) olds[oi].remove();
     } catch (e) {}
   }
@@ -125,6 +125,25 @@
     if (location.host.indexOf("instagram.com") >= 0) return "instagram";
     if (location.host.indexOf("tiktok.com") >= 0) return "tiktok";
     return "";
+  }
+  // 시크바·렌즈가 붙는 플랫폼(2026-09-01 사장님 "유튜브도 인스타랑 같게").
+  // _snsHost()는 인스타·틱톡 전용 로직(그리드 카드 등)에 계속 쓰인다 — 섞지 않는다.
+  function _playerPlat() {
+    var h = location.host;
+    if (h.indexOf("instagram.com") >= 0) return "instagram";
+    if (h.indexOf("tiktok.com") >= 0) return "tiktok";
+    if (h.indexOf("youtube.com") >= 0 || h.indexOf("youtu.be") >= 0) return "youtube";
+    if (h.indexOf("threads.com") >= 0 || h.indexOf("threads.net") >= 0) return "threads";
+    return "";
+  }
+  // 이 영상 한 편을 가리키는 키(캐시·통계용). 플랫폼마다 주소 모양이 다르다.
+  function _pageKey() {
+    var m = location.pathname.match(/\/(?:reel|reels|p|tv|video|shorts)\/[A-Za-z0-9_-]+/);
+    if (m) return m[0];
+    var v = location.search.match(/[?&]v=([A-Za-z0-9_-]+)/);       // 유튜브 watch
+    if (v && _playerPlat() === "youtube") return "/watch/" + v[1];
+    var t = location.pathname.match(/^\/@[\w.\-]+\/post\/[A-Za-z0-9_-]+/);  // 쓰레드
+    return t ? t[0] : "";
   }
   function _ttProfile() {   // 틱톡 프로필(/@handle) — 영상 페이지(/@handle/video/..)는 제외
     var m = location.pathname.match(/^\/@([\w.\-]+)\/?$/);
@@ -279,27 +298,35 @@
     return y + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
   }
   function syncSeekBar() {
-    if (!_snsHost()) return;
+    if (!_playerPlat()) return;
     var box = document.getElementById("ss-seek");
-    if (!isSinglePost()) { if (box) box.remove(); return; }
+    if (!_isVideoPage()) { if (box) box.remove(); return; }
     var v = _igVideo();
     if (!v) { if (box) box.remove(); return; }
     if (!box) {
       box = document.createElement("div");
       box.id = "ss-seek";
       box.style.cssText = "position:fixed;right:18px;bottom:174px;z-index:2147483647;background:rgba(20,20,20,.92);" +
-        "border:1px solid #444;border-radius:14px;padding:8px 12px;display:flex;align-items:center;gap:8px;" +
-        "font-family:system-ui,sans-serif;color:#fff;font-size:12px;box-shadow:0 4px 14px rgba(0,0,0,.35)";
+        "border:1px solid #444;border-radius:12px;padding:5px 8px;display:flex;align-items:center;gap:6px;" +
+        "font-family:system-ui,sans-serif;color:#fff;font-size:11px;box-shadow:0 4px 14px rgba(0,0,0,.35)";
       box.innerHTML = "<button id='ss-seek-p' title='일시정지/재생' style='background:none;border:none;" +
-        "color:#fff;font-size:15px;cursor:pointer;padding:0 2px'>⏸</button>" +
-        "<input id='ss-seek-r' type='range' min='0' max='100' step='0.1' value='0' style='width:150px;cursor:pointer'>" +
-        "<span id='ss-seek-t' style='min-width:70px;text-align:right'>0:00/0:00</span>" +
-        "<span id='ss-seek-d' title='영상 등록일' style='color:#aaa;border-left:1px solid #555;padding-left:8px'></span>" +
-        "<span id='ss-seek-s' title='조회수·댓글수' style='color:#aaa;border-left:1px solid #555;padding-left:8px'></span>";
+        "color:#fff;font-size:13px;cursor:pointer;padding:0 2px'>⏸</button>" +
+        "<button id='ss-seek-x' title='재생 속도' style='background:none;border:none;" +
+        "color:#fff;font-size:11px;font-weight:800;cursor:pointer;padding:0 2px'>1x</button>" +
+        "<input id='ss-seek-r' type='range' min='0' max='100' step='0.1' value='0' style='width:90px;cursor:pointer'>" +
+        "<span id='ss-seek-t' style='min-width:58px;text-align:right'>0:00/0:00</span>" +
+        "<span id='ss-seek-d' title='영상 등록일' style='color:#aaa;border-left:1px solid #555;padding-left:6px'></span>" +
+        "<span id='ss-seek-s' title='조회수·댓글수' style='color:#aaa;border-left:1px solid #555;padding-left:6px'></span>";
       document.body.appendChild(box);
       var r = document.getElementById("ss-seek-r");
       r.addEventListener("input", function () {
         var vv = _igVideo(); if (vv) { try { vv.currentTime = parseFloat(this.value); } catch (e) {} }
+      });
+      var SPEEDS = [1, 1.25, 1.5, 2, 0.5];
+      document.getElementById("ss-seek-x").addEventListener("click", function () {
+        var vv = _igVideo(); if (!vv) return;
+        var i = SPEEDS.indexOf(vv.playbackRate);
+        vv.playbackRate = SPEEDS[(i + 1) % SPEEDS.length];   // 목록에 없으면 i=-1 → 1x
       });
       document.getElementById("ss-seek-p").addEventListener("click", function () {
         var vv = _igVideo(); if (!vv) return;
@@ -315,6 +342,8 @@
       t2.textContent = _fmtT(v.currentTime) + "/" + _fmtT(v.duration);
       if (p2) p2.textContent = v.paused ? "▶" : "⏸";
     }
+    var x2 = document.getElementById("ss-seek-x");
+    if (x2) x2.textContent = (v.playbackRate || 1) + "x";
     var d2 = document.getElementById("ss-seek-d");
     if (d2) {                                    // SPA라 영상이 바뀌면 URL도 바뀜 — 매 tick 갱신
       var dd = _fmtDate(_postDate());
@@ -343,9 +372,8 @@
   function _syncStats() {
     var el = document.getElementById("ss-seek-s");
     if (!el) return;
-    var m = location.pathname.match(/\/(?:reel|reels|p|tv|video)\/[A-Za-z0-9_-]+/);
-    if (!m) { el.style.display = "none"; return; }
-    var key = m[0];
+    var key = _pageKey();
+    if (!key) { el.style.display = "none"; return; }
     if (_statsCache[key]) {
       var t = _statsText(_statsCache[key]);
       el.textContent = t; el.style.display = t ? "" : "none"; return;
@@ -547,7 +575,7 @@
   }
   function syncExtraBtns() {
     var lens = document.getElementById("ss-lens-btn");
-    if (_snsHost() && isSinglePost()) {
+    if (_playerPlat() && _isVideoPage()) {
       _miniBtn("ss-lens-btn", "🔍 렌즈", "이 영상으로 원본·유사 레퍼런스 역추적(화면 안에서)", 122, "#37b0e0",
                function () { _lensRun(location.href); });
     } else if (lens) { lens.remove(); }
@@ -907,7 +935,80 @@
     } catch (e) { window.__ssDouyinInjected = false; }   // 실패 시 다음 tick에 재시도(폴백=플로팅)
   }
 
-  function tick() { try{addFloatBtn();}catch(e){} try{addCardBtns();}catch(e){} try{addAnchorCardBtns();}catch(e){} try{addDouyinCardBtns();}catch(e){} try{syncFloat();}catch(e){} try{syncChannelBtn();}catch(e){} try{syncExtraBtns();}catch(e){} try{syncSeekBar();}catch(e){} try{syncGridBadges();}catch(e){} }
+
+  // ── 버튼 자리: 화면 오른쪽 끝 → **영상 칸 바로 옆**(2026-09-01 사장님 요청) ─────
+  //   종전엔 right:18px 고정이라 사이트 UI(쓰레드 '메시지' 팝업 등)와 겹쳤고,
+  //   넓은 화면에선 영상에서 한참 떨어진 구석에 붙어 있었다.
+  //   자리 판단은 **여기 한 곳에서만** 한다(0순위-B) — 만드는 쪽은 right:18px로 두고,
+  //   이 함수가 매 tick에 left로 덮어쓴다. 못 정하면 종전 자리 그대로 둔다.
+  // 위→아래 순서. 지금 화면에 있는 것만 골라 빈칸 없이 연속으로 쌓는다.
+  var DOCK_IDS = ["ss-adopt-btn", "ss-lens-btn", "ss-chadd-btn", "ss-grab-btn"];
+  var DOCK_STEP = 52;      // 버튼 세로 간격
+  function _dockAnchor() {
+    // 가장 큰 <video>가 지금 보는 영상이다.
+    var vs = document.querySelectorAll("video"), best = null, area = 0;
+    for (var i = 0; i < vs.length; i++) {
+      var r = vs[i].getBoundingClientRect();
+      if (r.width * r.height > area) { area = r.width * r.height; best = vs[i]; }
+    }
+    if (!best || area < 10000) return null;
+    var v = best.getBoundingClientRect();
+    var right = v.right;
+    // ★조상 칸을 쓰되 '영상보다 지나치게 넓은 칸'은 버린다(2026-09-01 실사고).
+    //   유튜브 쇼츠의 ytd-reel-video-renderer는 **화면 전체 폭**이라, 그걸 그대로 쓰면
+    //   버튼이 브라우저 오른쪽 끝(주소창 밑)까지 날아갔다. 액션열까지만 감싸는 칸이 목표다.
+    var el = best.parentElement, guard = 0;
+    while (el && guard++ < 6) {
+      var rr = el.getBoundingClientRect();
+      if (rr.width <= v.width * 1.6 && rr.right > right && rr.right < window.innerWidth) right = rr.right;
+      el = el.parentElement;
+    }
+    // 액션열(좋아요·댓글·공유)이 영상 **바깥 형제**인 경우(유튜브 쇼츠) — 따로 찾아 넘는다.
+    var rails = document.querySelectorAll("#actions,ytd-reel-player-overlay-renderer #actions");
+    for (var k = 0; k < rails.length; k++) {
+      var q = rails[k].getBoundingClientRect();
+      if (q.height < 100 || q.width > 200) continue;                 // 세로 아이콘 열만
+      if (q.left < v.right - 40 || q.right > v.right + 300) continue; // 이 영상 옆의 것만
+      if (q.right > right) right = q.right;
+    }
+    if (right <= 0 || right >= window.innerWidth) return null;
+    return { top: v.top, bottom: v.bottom, right: right };
+  }
+  function _dockBtns() {
+    var rr = _dockAnchor();
+    var x = rr ? rr.right : 0;
+    // 버튼 4개: 영상 칸 오른쪽 + **위에서부터** 아래로(2026-09-01 사장님 요청 —
+    // 종전엔 아래에 깔려 사이트 액션 아이콘·'메시지' 팝업과 겹쳤다).
+    var slot = 0;
+    for (var i = 0; i < DOCK_IDS.length; i++) {
+      var el = document.getElementById(DOCK_IDS[i]);
+      if (!el) continue;
+      // 화면 밖으로 밀리면(좁은 창) 종전 오른쪽 아래 자리로 되돌린다.
+      var w = el.offsetWidth || 150;
+      if (!rr || x + 16 + w + 12 > window.innerWidth) {
+        el.style.left = ""; el.style.right = "18px"; el.style.top = ""; el.style.bottom = "";
+      } else {
+        el.style.right = "auto"; el.style.left = (x + 16) + "px";
+        el.style.bottom = "auto";
+        el.style.top = Math.max(8, rr.top + 8 + slot * DOCK_STEP) + "px";
+        slot++;
+      }
+    }
+    // 시크바: 버튼과 겹치지 않게 **영상 아래쪽**에 붙인다(폭은 만들 때 줄여둔다).
+    var sk = document.getElementById("ss-seek");
+    if (sk) {
+      if (!rr) { sk.style.left = ""; sk.style.right = "18px"; sk.style.bottom = "174px"; }
+      else {
+        var sw = sk.offsetWidth || 260;
+        var sx = x + 16;
+        if (sx + sw + 12 > window.innerWidth) sx = Math.max(8, window.innerWidth - sw - 12);
+        sk.style.right = "auto"; sk.style.left = sx + "px";
+        sk.style.bottom = Math.max(8, window.innerHeight - rr.bottom + 8) + "px";
+      }
+    }
+  }
+
+  function tick() { try{addFloatBtn();}catch(e){} try{addCardBtns();}catch(e){} try{addAnchorCardBtns();}catch(e){} try{addDouyinCardBtns();}catch(e){} try{syncFloat();}catch(e){} try{syncChannelBtn();}catch(e){} try{syncExtraBtns();}catch(e){} try{syncSeekBar();}catch(e){} try{syncGridBadges();}catch(e){} try{_dockBtns();}catch(e){} }
   tick();
   // SPA라 스크롤·재검색으로 카드가 갈아끼워져도 버튼을 계속 유지한다.
   // 핸들을 남긴다 — 더 새로운 로직이 로드되면 위 가드가 이걸 끄고 이어받는다.

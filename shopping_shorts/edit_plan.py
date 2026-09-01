@@ -2319,8 +2319,7 @@ def _vault_call_once(prompt, schema, max_tries=_KEY_TRY_LIMIT, key_offset=0):
         except Exception as e:  # noqa: BLE001
             _LAST_VAULT_ERR = repr(e)[:200]
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
-                key_vault.mark_exhausted(key_vault._owner_group(key) or "general", key,
-                                         key_vault.retry_delay_seconds(e))
+                key_vault.mark_exhausted(key_vault._owner_group(key) or "general", key)
                 continue
             if key_vault.is_quota_error(e):
                 continue
@@ -2332,11 +2331,7 @@ def _vault_call_once(prompt, schema, max_tries=_KEY_TRY_LIMIT, key_offset=0):
             #   아예 안 뽑히게 하고, 지금 호출은 다음 키로 계속한다.
             if _is_dead_key_error(e):
                 try:
-                    # ★죽은 키는 **길게** 잠근다(2026-09-01 TTL 전환). 소진과 달리
-                    #   403/401은 시간이 지나도 안 풀리므로 기본 30분이면 하루에 48번
-                    #   되살아나 매번 얻어맞는다. TTL 상한(6시간)을 준다.
-                    key_vault.mark_exhausted(key_vault._owner_group(key) or "general", key,
-                                             6 * 3600)
+                    key_vault.mark_exhausted(key_vault._owner_group(key) or "general", key)
                 except Exception:
                     pass
                 continue
@@ -4186,7 +4181,8 @@ def _backbone_order_block(backbone_video, source_scripts):
 
 
 def _single_source_candidates(source_scripts, seg_map, target_seconds,
-                              n_candidates, call, detected, judge=False):
+                              n_candidates, call, detected, judge=False,
+                              hook_opener=None):
     """1소스 전용 대본 생성(2026-08-04, handoff 남은작업①의 '핵심 배선').
 
     기존 경로는 목표길이 조정+훅 주입'만' 하고 생성은 범용 생성기가 해서
@@ -4542,7 +4538,8 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
             _forced_store = bool(beats) and (beats[0].get("narration") or "") != _before_h
         # ★LLM이 아니라 **코드가** 붙인다 — fix 프롬프트로 "첫 문장 맨 앞에만"이라 시켰더니
         #   모델이 6문장 전부에 "아니,"를 붙였다(실측). 한 단어 얹는 데 모델은 불필요하다.
-        if not _forced_store and single_source.hook_opener_missing(beats, _hap_style):
+        if not _forced_store and single_source.hook_opener_missing(beats, _hap_style,
+                                                                    on=hook_opener):
             beats = single_source.add_hook_opener(beats)
         # covers → 화면 배정. 모델이 빠뜨린 컷은 직전 비트에 붙여 **컷 100% 커버**를 코드가
         # 보장한다(화면 총길이 == used == 예산 → 길이 하한이 프롬프트 아닌 코드로 지켜진다).
@@ -4830,7 +4827,7 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
                            n_candidates=3, video_type=None, call=None, ping_pong=False,
                            backbone_meta=None, backbone_forced=None, bank_context="",
                            avoid_hooks=None, backbone_base=False, judge=False,
-                           is_recipe=False, engine=None):
+                           is_recipe=False, engine=None, hook_opener=None):
     """장면 우선 대본 모드: 팔레트+헌장으로 후보 n개 생성 → 각 EDL grounding·채점 →
     최고 score에 recommended=True. 각 candidate.plan은 build_edit_plan 반환형(하류 렌더 호환).
     후보 0개면 candidates=[](호출부가 기존 build_edit_plan로 폴백).
@@ -4853,7 +4850,8 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
     from shopping_shorts import single_source as _ss
     if _ss.is_single_source(source_scripts):
         _ss_result = _single_source_candidates(
-            source_scripts, seg_map, target_seconds, n_candidates, _call, detected, judge=judge)
+            source_scripts, seg_map, target_seconds, n_candidates, _call, detected, judge=judge,
+            hook_opener=hook_opener)
         if _ss_result and _ss_result.get("candidates"):
             return _ss_result
         print("[1소스대본] 전용 생성 실패 — 기존 경로 폴백", file=sys.stderr)

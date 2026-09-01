@@ -75,10 +75,7 @@ def embed_text(text: str) -> list[float]:
     embed 전용 키 풀(key_vault 'embed' 그룹)을 한 바퀴 돌고,
     그래도 다 막히면 20초 대기 후 한 번 더 전체를 재시도한다."""
     for attempt in range(2):
-        # ★2026-09-01 회전 + cascade. 원자 1건당 1콜이라 인제스트 배치에서 **원자 수만큼
-        #   곱해지는** 최대 호출처인데 늘 keys[0]이었다(실측: report_ingest가 키 1개로
-        #   64콜 전부 rpm). embed 그룹만 보던 것도 넓힌다 — 다른 그룹이 놀아도 여기만 말랐다.
-        keys = key_vault.rotated(key_vault.get_live_keys_cascade("embed"))
+        keys = key_vault.get_live_keys("embed")
         for key in keys:
             try:
                 resp = key_vault.get_client_for_key(key).models.embed_content(
@@ -88,12 +85,7 @@ def embed_text(text: str) -> list[float]:
                 return list(resp.embeddings[0].values)
             except Exception as e:
                 if key_vault.is_daily_exhausted_error(e):
-                    # ★소유 그룹에 기록한다(2026-09-01). cascade로 다른 그룹 키를 빌려
-                    #   쓰게 됐는데 "embed"로 하드코딩하면 **엉뚱한 그룹의 인덱스**에
-                    #   낙인이 박혀 멀쩡한 키가 죽은 것으로 기록된다
-                    #   (script_generate.py:77이 쓰는 것과 같은 패턴).
-                    key_vault.mark_exhausted(key_vault._owner_group(key) or "embed", key,
-                                             key_vault.retry_delay_seconds(e))
+                    key_vault.mark_exhausted("embed", key)
                     continue
                 if key_vault.is_quota_error(e):
                     continue

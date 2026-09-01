@@ -223,8 +223,7 @@ def generate(job, captions=None, only=None, locked=None, keyword_stats=None):
             return json.loads(resp.text)
         except Exception as e:  # noqa: BLE001 — 생성 실패는 치명적 아님
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
-                key_vault.mark_exhausted(key_vault._owner_group(key) or _GEN_GROUP, key,
-                                         key_vault.retry_delay_seconds(e))
+                key_vault.mark_exhausted(key_vault._owner_group(key) or _GEN_GROUP, key)
                 continue
             if key_vault.is_quota_error(e):
                 continue  # 순간 rate limit — 다음 키로

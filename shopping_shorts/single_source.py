@@ -1186,7 +1186,56 @@ def fix_hapsyo_violation_prompt(beats, style_name=None):
 _HOOK_OPENERS = ("와", "여러분")
 
 
-def hook_opener_missing(beats, style_name=None):
+_HOOK_OPENER_KEY = "script_hook_opener"     # 전역 설정 키. "off"면 감탄사를 안 붙인다.
+_HOOK_OPENER_CACHE = {"t": 0.0, "on": True}
+
+
+def _truthy(v, default=True):
+    """'on'/'off' 같은 저장값 → bool. 값이 없으면 default."""
+    if v is None:
+        return default
+    return str(v).strip().lower() not in ("off", "0", "false", "")
+
+
+def hook_opener_default():
+    """사장님이 관리자 페이지에서 정한 **전역 기본값**(2026-09-01).
+    설정이 없으면 켬 = 종전과 100% 같다(회귀 0). DB를 매 대본마다 읽지 않게 60초 캐시."""
+    import time as _t
+    now = _t.time()
+    if now - _HOOK_OPENER_CACHE["t"] < 60:
+        return _HOOK_OPENER_CACHE["on"]
+    on = True
+    try:
+        from shopping_shorts.store import Store
+        from shopping_shorts.config import DB_PATH
+        on = _truthy(Store(DB_PATH).get_setting(_HOOK_OPENER_KEY, "on"))
+    except Exception:      # noqa: BLE001 — 설정을 못 읽으면 켬(종전 동작)
+        on = True
+    _HOOK_OPENER_CACHE.update(t=now, on=on)
+    return on
+
+
+def hook_opener_on(customer_id=None):
+    """훅 감탄사("와, " / "여러분 ")를 붙일까 — **판정은 여기 한 곳**(0순위-B).
+
+    순서(2026-09-01 사장님 "3번"):
+      ① 그 고객이 직접 정한 값(customer_prefs)  ② 사장님 전역 기본값  ③ 켬
+    고객이 안 건드리면 ②를 따르므로, 관리자 버튼이 그대로 기본값 노릇을 한다.
+    ★Store는 지연 import — 이 모듈은 순수 로직이라 위에서 끌어오면 순환참조가 난다.
+    """
+    if customer_id is not None:
+        try:
+            from shopping_shorts.store import Store
+            from shopping_shorts.config import DB_PATH
+            v = Store(DB_PATH).get_pref(_HOOK_OPENER_KEY, customer_id=customer_id, default=None)
+            if v is not None:
+                return _truthy(v)
+        except Exception:      # noqa: BLE001 — 못 읽으면 전역 기본값으로
+            pass
+    return hook_opener_default()
+
+
+def hook_opener_missing(beats, style_name=None, on=None):
     """훅 첫머리에 감탄사·부름말이 없는가(2026-08-09 사장님 지시).
 
     "처음 훅은 와~ / 여러분 이런 것 좀 들어가게. 적당히 좀 넣어야 살지.
@@ -1196,6 +1245,10 @@ def hook_opener_missing(beats, style_name=None):
       그래서 CTA·서명과 같이 코드로 보장한다.
     ★채이는 대상이 아니다 — few-shot 2편 모두 "이거 몰라서/저 이거 때문에"로 열고
       감탄사를 안 쓴다(그 채널 결이 아니다)."""
+    # on=None이면 설정대로(고객→전역). 부르는 쪽이 이미 정했으면 그 값을 그대로 쓴다
+    # (대본 한 편을 만드는 동안 DB를 여러 번 읽지 않게 위에서 한 번만 판정해 내려온다).
+    if not (hook_opener_on() if on is None else on):
+        return False
     if (style_name or "") == "chae":
         return False
     if not beats:

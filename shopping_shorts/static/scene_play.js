@@ -693,6 +693,7 @@ function stopPlay(){
   clearSfxTimers();                              // 예약된 효과음도 끈다 — 안 끄면 멈춘 뒤에 울린다
   if (sfxAudio) { try{ sfxAudio.pause(); }catch(e){} }
   playKey = null; seqPaused = false;
+  holdShot(null, false);            // 멈추면 되감기 그림도 걷는다
   // 재생을 멈추면 겹쳐뒀던 꾸미기도 걷는다 — 안 걷으면 멈춘 화면 위에 남는다.
   // ★remove()가 없는 DOM 스텁도 있다(테스트 하네스) — 있는지 보고 부른다.
   const _pd = document.getElementById('playDeco');
@@ -877,6 +878,31 @@ function startSeq(clips, slot0){
   updatePlayBtns();
   step();
 }
+// 컷을 보여주기 전에 되감기를 기다리는 시간(ms). 컷 길이의 60%를 넘기지 않는다 —
+// 기다림이 컷보다 길면 화면을 켜기도 전에 그 컷이 끝나 검은 화면만 보인다.
+function cutWaitMs(c){
+  const d = (c && +c.dur) || 0;
+  return Math.max(300, Math.min(1500, Math.round(d * 1000 * 0.6)));
+}
+// 🖼 되감는 동안 깔아두는 정지 그림 — 그 조각의 썸네일(seg_thumb)이라 '검은 화면'이 안 남는다.
+//   자막(#subbox z-index:3)보다 아래(z-index:2)라 내 자막은 그대로 보인다.
+function holdShot(c, on){
+  let box; try{ box = document.getElementById('vidbox'); }catch(e){ box = null; }
+  if (!box || typeof box.appendChild !== 'function') return;
+  let im = document.getElementById('seekshot');
+  if (!on){ if (im) im.style.display = 'none'; return; }
+  if (!c || !c.seg_id) return;
+  if (!im){
+    im = document.createElement('img');
+    im.id = 'seekshot';
+    im.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:contain;'
+                     + 'background:#000;z-index:2;pointer-events:none';
+    box.appendChild(im);
+  }
+  const s = SL.thumb(c.seg_id);
+  if (im.getAttribute('src') !== s) im.src = s;
+  im.style.display = 'block';
+}
 function step(){
   if (seqI >= seq.length){
     document.getElementById('pinfo').textContent = `${seqLabel} — 재생 끝 (${seq.length}컷)`;
@@ -905,17 +931,30 @@ function step(){
       showVid(v);
       v.play().catch(()=>{});
       paintCut();
+      // ★아직 첫 프레임이 없으면 썸네일을 **걷지 않는다** — 걷으면 그 자리가 검게 남는다.
+      //   준비되는 순간(canplay/seeked) 걷어 실제 영상으로 바뀐다.
+      if (v.readyState >= 2) holdShot(null, false);
+      else {
+        const late = () => { v.oncanplay = null; v.onseeked = null; holdShot(null, false); };
+        v.oncanplay = late; v.onseeked = late;
+      }
       if (seq[seqI + 1]) seat(seq[seqI + 1]);   // 다음 컷은 숨은 재생기에 미리 앉힌다
       schedStep(c.dur * 1000);                  // ← 여기서부터 시간을 잰다
     };
     if (Math.abs(v.currentTime - c.start) < 0.05 && v.readyState >= 2) show();
     else {
+      // 되감는 동안 검은 화면 대신 그 조각의 썸네일을 깔아둔다(2026-09-01 사장님 제보).
+      holdShot(c, true);
       let done = false;
       const once = () => { if (done) return; done = true; v.onseeked = null; v.oncanplay = null; show(); };
       v.onseeked = once;
       v.oncanplay = once;
       v.currentTime = c.start;
-      setTimeout(once, 1500);      // 그래도 안 오면(느린 네트워크) 1.5초 뒤 진행
+      // ★기다리는 시간은 **컷 길이보다 짧아야 한다**(2026-09-01 실사고).
+      //   1.5초 고정이던 것이 컷 1.0초짜리(구절 맞춤으로 컷이 짧아진 뒤)에서는
+      //   '컷이 끝난 뒤에야 화면을 켜는' 꼴이 돼, 그 칸이 통째로 검게 지나갔다
+      //   (실측 job 591432e714ca 8번 칸: 컷 1.0초·1.1초, 첫 소재는 시크가 느린 AV1).
+      setTimeout(once, cutWaitMs(c));
     }
   };
   if (v.readyState >= 1) go();           // 이미 열려 있으면 즉시
