@@ -1234,8 +1234,14 @@ def _caption_durations(segs, dur, real_durs=None):
     n = len(segs)
     if n == 0:
         return []
-    if _CAP_MIN_DUR * n >= dur:      # 하한조차 못 채우면 균등분할
-        return [dur / n] * n
+    # ★실측(ASR)이 있으면 **하한 폴백보다 먼저** 쓴다(2026-09-01 사장님 "4장면으로 싱크 맞춰").
+    #   종전엔 아래 하한 폴백이 위에 있어서, 짧고 구절 많은 칸(하한 1.0초 × 4구절 ≥ 칸 3.55초)은
+    #   애써 잰 실측을 통째로 버리고 균등분할했다 — 실측 job 84b5f66a8e1f 칸0(hook):
+    #     실측 0.58/0.78/1.13/0.78  →  균등 0.89/0.89/0.89/0.89
+    #   구절 맞춤은 컷 경계를 이 값으로 잡으므로 **컷까지 균등**이 되어, 자막 4구절과
+    #   화면 4컷이 서로 밀렸다(사장님 3단계↔6단계 캡처 대조로 발각).
+    #   바로 아래 주석이 "실측이 있으면 하한을 건너뛴다"라고 이미 못박아 뒀는데, 그 위의
+    #   폴백이 먼저 걸려 통째로 무력이었다(CLAUDE.md 0순위-B: 조건부 값을 위에서 덮어쓰기).
     if real_durs is not None and len(real_durs) == len(segs) and sum(real_durs) > 0:
         # ★실측값은 그대로 쓴다 — dur로 되늘리지 않는다(2026-08-06).
         # 예전 `dur * d / s` 정규화는 리드인(자막 밖 무음)까지 구절에 비례배분해 자막을
@@ -1248,6 +1254,8 @@ def _caption_durations(segs, dur, real_durs=None):
         #   앞서 들렸다). 하한은 글자수 '추정'이 만든 찰나 구절을 막으려는 장치다 —
         #   실제로 그 길이로 말한 구절을 늘리면 싱크가 깨진다. 짧게 말했으면 짧게 띄운다.
         return raw
+    if _CAP_MIN_DUR * n >= dur:      # 하한조차 못 채우면 균등분할 (실측이 없을 때만)
+        return [dur / n] * n
     weights = [max(1, len(s.replace("\n", ""))) for s in segs]
     total_w = sum(weights)
     raw = [dur * w / total_w for w in weights]

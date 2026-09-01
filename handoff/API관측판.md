@@ -186,3 +186,60 @@
 - 고치는 법(테스트 docstring): 기준선을 올리지 말고 **자리 하나에 그리는 함수 하나로**
   모아라. 어느 자리가 늘었는지는 실패 출력에 나온다.
 - ⚠️단독 실행은 통과, 전체에서만 실패 → 반드시 게이트(finish)로 확인할 것.
+---
+
+## 2026-09-01 오후 — 키 분산·수명 관리 (회사PC 인수인계)
+
+### 오늘 라이브에 나간 것 (main 반영 완료)
+1. **경보에 시각 표시** + 분당한도(rpm)를 danger에서 제외 → 매일 아침 헛경보 제거
+2. **키 회전(rotated)** — 목록 시작점을 호출마다 돌린다. `_RR_CURSOR`는 `os.getpid()` 씨딩
+   (워커 12개가 독립 프로세스라 전부 live[0]에서 출발하던 것)
+3. **소진 낙인을 하루 → TTL 30분** — 실측으로 잠긴 11개 중 8개가 살아있었다(HTTP 200).
+   "오늘"이 한국 자정 기준인데 구글은 태평양시(한국 오후 4~5시)에 리셋한다
+4. **죽은 키 되살아나는 구멍 차단** — `get_pooled_keys`에 status 필터(개인 경로와 동일)
+5. 죽은 키 `…VRgKpw` 제거(범인은 `/etc/stockbrain.env`의 `GEMINI_BRIEFING_KEY`)
+
+**효과 실측**: rpm **25% → 11%**, 쓰인 키 73 → 76개
+
+### 남은 rpm 11%의 정체 (조사 확정 — 다음 작업 근거)
+- **A. 페이서 없는 경로 4곳**: script_generate:71 · seo_generate:218 · thumb_title:164 ·
+  pattern_bank:93 (모두 `keyroute.gemini_keys()`로 목록만 받아 순회, 간격 0)
+- **A-2. 완전 사각 2곳(새로 발견)**: `product_facts.py:215` · `longform_shorts.py:165`
+  — `SHORTS_GEMINI_KEYS` 원본을 직접 순회. **잠긴 키 필터·라운드로빈·페이서 전부 없음**.
+  product_facts는 `except: continue`로 예외를 삼켜 mark_exhausted도 안 한다
+- **B. 페이서가 프로세스 로컬** — 워커 12개가 각자 5rpm씩 세어 실효 60rpm
+- **C. edit_plan 이중 회전** — keyroute가 이미 돌린 목록 위에 `_auto_key_offset`이 또 돌린다
+
+### ⏭ 다음 작업 순서 (사장님 요구 5가지 반영)
+```
+2. 페이서를 for문 경로에 — key_vault에 get_paced_client(key) 신설,
+   호출부 4곳의 get_client_for_key를 그걸로 교체(한 줄씩)
+   ★get_client_for_key 안에 직접 넣지 마라 — 클라이언트만 얻고 안 부르는 호출부까지 재운다
+3. 사각 2곳을 comment_gen._next_live_key_and_idx 경유로 봉합
+4. ★사장님 키 관리 화면 — 넣기/삭제. customer_keys(cid 0)에 저장하면 env를 안 건드려
+   배포와 안 꼬이고, get_pooled_keys가 자동으로 풀에 합류시킨다(실측 확인)
+5. 관측 배선 — usage_meter._MeteredModels(292)가 customer_id·job_id를 안 넘겨
+   화면의 '고객/잡' 칸이 비어 있다. _resolve_cid를 재사용해 채운다(새로 적지 말 것)
+6. 상태 3분리(rpm/rpd/dead) + 일일소진 격리(태평양 자정까지) + 사망 확인 후 제거목록
+7. 20분 자동 점검 — ★되살림이 아니라 **사망 판정용**으로만
+   (2026-08-27: 가벼운 프로브는 TPD 소진 키에도 200을 준다. 되살린 키가 앞줄에 서면
+    로테이션이 재시도를 다 태워 제작소 5/5 실패. revived_once가 그래서 있다)
+나중. edit_plan 이중 회전 제거 — 08-31 사고 무대라 위험 높음. 2·3이 안정된 뒤 별도로
+```
+
+### ⚠️ 함정 (다음 세션 반드시 읽을 것)
+- **트랙 폴더의 reference.db는 api_events 1건뿐**이다. 11%·76키는 프로덕션 수치 —
+  **효과 검증은 반드시 서버 api_events로** 하라. 로컬에서 재면 정반대 결론이 나온다
+- **TTL 상한 6시간 클램프**(key_vault:192)를 그대로 두고 rpd 격리를 넣으면 24시간을
+  요청해도 조용히 6시간으로 잘린다 — why별로 상한을 갈라라
+- **죽은 키 판정이 세 곳**(edit_plan:2224 / key_vault:423 / api_health:176)이고 이미
+  어긋나 있다. `API_KEY_INVALID`는 edit_plan에서만 잡힌다 — 네 번째를 만들지 말고 합쳐라
+- **key_idx를 '키번호'로 쓰지 마라** — shorts(전역)와 vault(그룹 로컬)가 같은 컬럼에
+  다른 뜻으로 들어가 있다. 안정키는 key_tail뿐
+- env 파일이 **셋**이다: `/etc/shopping-shorts.env`(SHORTS_*) · 프로젝트 `.env`(GEMINI_*) ·
+  `/etc/stockbrain.env`(주식위키). 오늘 죽은 키 찾을 때 이것 때문에 헤맸다
+
+### 브랜치 상태 (회사PC에서 이어받을 것)
+- `track/API관측판-경보` — 오늘 배포분 전부. main과 동기
+- `track/API관측판` — **VMake·TTS 차단(미배포)**. 감사가 찾은 결함 11건을 고쳐야 배포 가능
+  (무음 렌더·거짓 완료·사장님 키 잔존·DOM 가드 초과 — 위 handoff 3차 항목 참조)

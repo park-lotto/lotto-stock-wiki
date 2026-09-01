@@ -80,18 +80,18 @@ class Test완성본_경로에서_화면이_새지_않는다:
 
     def test_소스별이_없어도_완성본을_가리킨다(self, tmp_path, monkeypatch):
         monkeypatch.setattr(A, "_resolve_sources", lambda j, w: {})
-        srcs, final, ratio, tag = A._clean_frame_src(self._job(tmp_path), tmp_path, 0)
+        srcs, final, ratio, tag, _fresh = A._clean_frame_src(self._job(tmp_path), tmp_path, 0)
         assert srcs == {}
         assert final is not None, "완성본을 안 쓰면 원본 자막이 화면에 남는다"
         assert tag == "_clean", "캐시 이름을 안 가르면 청소 전 그림이 재사용된다"
 
     def test_청소_전이면_아무것도_안_준다(self, tmp_path):
         j = self._job(tmp_path); j["clean_status"] = None
-        assert A._clean_frame_src(j, tmp_path, 0) == ({}, None, None, "")
+        assert A._clean_frame_src(j, tmp_path, 0) [:4] == ({}, None, None, "")
 
     def test_소스별이_있으면_그걸_쓴다(self, tmp_path):
         j = self._job(tmp_path); j["clean_sources"] = {"s0": "/c/s0.mp4"}
-        srcs, final, _, tag = A._clean_frame_src(j, tmp_path, 0)
+        srcs, final, _, tag, _fresh = A._clean_frame_src(j, tmp_path, 0)
         assert srcs and final is None and tag == "_clean"
 
 

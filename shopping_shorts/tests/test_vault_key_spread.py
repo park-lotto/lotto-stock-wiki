@@ -58,3 +58,107 @@ def test_single_key_still_works(monkeypatch):
     monkeypatch.setattr(kv, "_MIN_GAP_S", 0.0)
     monkeypatch.setattr(kv, "_KEY_LAST_USED", {})
     assert kv._pick_key(["SOLO"]) == "SOLO"
+
+
+# ── 목록 회전(rotated) — for문 호출부용 (2026-09-01) ────────────────────
+
+def test_rotated_starts_at_different_key(monkeypatch):
+    """★목록의 시작점이 호출마다 넘어가야 한다.
+
+    이게 죽으면 `for key in keys`를 도는 호출부(script_generate·seo_generate·
+    thumb_title·pattern_bank·edit_plan)가 전부 keys[0]만 두들기던 2026-08-31
+    사고가 그대로 재발한다. 실측: 키 82개 중 최근 5분에 쓰인 건 21개뿐이었다."""
+    monkeypatch.setattr(kv, "_RR_CURSOR", {"i": 0})
+    live = [f"KEY{i:02d}" for i in range(5)]
+    firsts = [kv.rotated(live)[0] for _ in range(5)]
+    assert len(set(firsts)) == 5, f"시작 키가 {len(set(firsts))}종뿐 — 회전이 죽었다"
+
+
+def test_rotated_preserves_all_keys(monkeypatch):
+    """순서만 돌리고 원소는 그대로 — 키가 사라지면 후보가 줄어 오히려 악화된다."""
+    monkeypatch.setattr(kv, "_RR_CURSOR", {"i": 3})
+    live = [f"KEY{i:02d}" for i in range(5)]
+    assert sorted(kv.rotated(live)) == sorted(live)
+    assert len(kv.rotated(live)) == 5
+
+
+def test_rotated_is_safe_for_tiny_pools():
+    """키 0·1개면 돌릴 게 없다 — 단일키 크론(report_ingest)이 여기서 깨지면 안 된다."""
+    assert kv.rotated([]) == []
+    assert kv.rotated(["SOLO"]) == ["SOLO"]
+
+
+def test_cursor_is_seeded_per_process():
+    """★워커 12개는 독립 프로세스다 — 커서가 0에서 다 같이 출발하면 전원이 live[0]을 친다.
+    PID로 씨딩해 프로세스마다 다른 지점에서 시작한다."""
+    import os
+    assert kv._RR_CURSOR["i"] != 0 or os.getpid() == 0   # PID가 0인 프로세스는 없다
+
+
+# ── 소진 낙인 TTL (2026-09-01) ─────────────────────────────────────────
+
+def _tmp_state(tmp_path, payload):
+    """상태파일을 임시로 갈아끼운다(라이브 파일을 절대 안 건드린다)."""
+    import json
+    p = tmp_path / "state.json"
+    p.write_text(json.dumps(payload), encoding="utf-8")
+    return p
+
+
+def test_old_list_format_gets_ttl(tmp_path, monkeypatch):
+    """★배포 즉시 풀려야 한다 — 서버 파일은 옛 형식(list)이다.
+
+    실측(2026-09-01 14:04): 하루 낙인으로 11개가 잠겨 있었는데 구글에 직접 찔러보니
+    **8개가 HTTP 200**이었다. 옛 항목에 만료를 안 붙이면 배포해도 그날은 그대로다
+    (comment_gen이 2026-08-27에 밟은 함정)."""
+    import time
+    monkeypatch.setattr(kv, "_STATE_PATH", _tmp_state(tmp_path, {
+        "date": "2026-09-01", "exhausted": {"general": [0, 1, 2]}}))
+    monkeypatch.setattr(kv, "get_keys", lambda g: [f"K{i}" for i in range(10)])
+    locked = kv._live_exhausted("general")
+    assert len(locked) == 3
+    left = min(locked.values()) - time.time()
+    assert 0 < left <= kv._EXHAUST_TTL_S + 5      # 만료시각이 붙었다(영구 낙인 아님)
+
+
+def test_expired_lock_auto_releases(tmp_path, monkeypatch):
+    """만료된 잠금은 조회 시점에 저절로 풀린다 — 이게 '하루 낙인'과의 차이다."""
+    import time
+    monkeypatch.setattr(kv, "_STATE_PATH", _tmp_state(tmp_path, {
+        "date": "x", "exhausted": {"general": {"0": time.time() - 10,
+                                               "1": time.time() + 999}}}))
+    monkeypatch.setattr(kv, "get_keys", lambda g: [f"K{i}" for i in range(5)])
+    assert set(kv._live_exhausted("general")) == {1}      # 만료된 0은 빠진다
+    assert "K0" in kv.get_live_keys("general")            # 다시 쓸 수 있다
+
+
+def test_state_survives_date_change(tmp_path, monkeypatch):
+    """★날짜가 달라도 상태를 버리지 않는다 — 만료 판단은 TTL이 한다.
+    종전엔 date가 다르면 통째로 버려 '한국 자정에만 해제'가 됐는데, 구글은
+    태평양시(한국 오후 4~5시)에 리셋한다."""
+    import time
+    monkeypatch.setattr(kv, "_STATE_PATH", _tmp_state(tmp_path, {
+        "date": "1999-01-01", "exhausted": {"general": {"2": time.time() + 999}}}))
+    monkeypatch.setattr(kv, "get_keys", lambda g: [f"K{i}" for i in range(5)])
+    assert set(kv._live_exhausted("general")) == {2}      # 옛 날짜여도 유효한 잠금은 산다
+
+
+def test_retry_after_is_used(tmp_path, monkeypatch):
+    """서버가 'Please retry in 45.5s'로 알려주면 그 값을 쓴다(30분을 헛되이 안 잠근다)."""
+    import time
+    monkeypatch.setattr(kv, "_STATE_PATH", _tmp_state(tmp_path, {"date": "x", "exhausted": {}}))
+    monkeypatch.setattr(kv, "_LOCK_PATH", tmp_path / "s.lock")
+    monkeypatch.setattr(kv, "get_keys", lambda g: ["K0", "K1", "K2"])
+    kv.mark_exhausted("general", "K1", 45.5)
+    until = kv._live_exhausted("general")[1]
+    assert 40 <= until - time.time() <= 50
+
+
+def test_lock_is_clamped(tmp_path, monkeypatch):
+    """★영구 낙인을 만들지 않는다 — 상한 6시간. 아무리 큰 값이 와도 하루를 안 넘긴다."""
+    import time
+    monkeypatch.setattr(kv, "_STATE_PATH", _tmp_state(tmp_path, {"date": "x", "exhausted": {}}))
+    monkeypatch.setattr(kv, "_LOCK_PATH", tmp_path / "s.lock")
+    monkeypatch.setattr(kv, "get_keys", lambda g: ["K0", "K1"])
+    kv.mark_exhausted("general", "K0", 999999)
+    assert kv._live_exhausted("general")[0] - time.time() <= 6 * 3600 + 5

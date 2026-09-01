@@ -4,6 +4,7 @@ run_mix_job: 다운로드→대본추출(병렬)→EDL생성→TTS까지 진행�
 run_render: 사용자가 확인 후 최종 ffmpeg 렌더 → done.
 각 단계에서 mix_jobs.status를 갱신하고, 예외는 status='failed'+error로 잡는다.
 """
+import copy
 import hashlib
 import os
 import json
@@ -242,9 +243,18 @@ def asr_ranker(path, text):
     return asr_check.mismatch_score(asr_check.diff_words(text, hyp)) if hyp else 0
 
 
+def _hook_opener_on(customer_id):
+    """훅 감탄사 스위치 — 판정은 single_source 한 곳. 못 읽으면 켬(종전 동작)."""
+    try:
+        from shopping_shorts import single_source as _ss_opt
+        return _ss_opt.hook_opener_on(customer_id)
+    except Exception:      # noqa: BLE001
+        return True
+
+
 def synthesize_line(narration, out_path, *, voice=None, profile=None, beat_role=None,
                     beat_index=None, beat_total=None, previous_text=None, next_text=None,
-                    ranker=asr_ranker, global_pron=None, customer_id=0):
+                    ranker=asr_ranker, global_pron=None, customer_id=0, hook_opener=None):
     """한 줄을 naturalize→TTS(N-best·연속성)→후처리까지 합성하고 변환텍스트를 반환.
 
     **튜닝 작업대와 실제 렌더가 공유하는 단일 경로**다. 양쪽이 각자 파이프라인을 조립하면
@@ -262,6 +272,14 @@ def synthesize_line(narration, out_path, *, voice=None, profile=None, beat_role=
     prof = merge_profile(profile if profile is not None else prof_v)
     # 전역 발음교정을 profile 위에 병합(설계 §2-A) — 렌더·작업대 공통 choke.
     prof = pron_corrections.overlay(prof, global_pron or {})
+    # ★훅 감탄사 스위치는 **음성도 같이** 끈다(2026-09-01 사장님 "대본 끄면 tts도 동시에").
+    #   감탄사를 붙이는 자리가 두 곳이었다: 대본(add_hook_opener)과 여기(naturalize fillers,
+    #   bank=와/오/우와/헐/이야, 훅 칸만). 대본만 끄면 음성에서 다시 붙어 **자막에 없는
+    #   말이 들린다**. 판정은 single_source.hook_opener_on 한 곳(0순위-B) — 고객 설정 →
+    #   사장님 기본값 순. 켤 때는 종전 그대로다(회귀 0).
+    if hook_opener is False or (hook_opener is None and not _hook_opener_on(customer_id)):
+        prof = copy.deepcopy(prof)
+        prof.setdefault("fillers", {})["on"] = False
     natural = naturalize(narration, prof, beat_role=beat_role,
                          beat_index=beat_index, beat_total=beat_total)
     # 오독 자동회피(2026-07-22): Whisper 랭커(GROQ 키)가 실동작할 때만 n을 최소 2로
@@ -1388,7 +1406,15 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
                 print("[훅패턴] %s" % " / ".join(p[1] for p in _pats), file=sys.stderr)
         except Exception:
             traceback.print_exc(file=sys.stderr)
+        # ★훅 감탄사(와,/여러분) 강제 — 고객 설정 → 사장님 전역 기본값 순으로 **여기서 한 번**
+        #   판정해 내려보낸다(2026-09-01). 생성 중에 DB를 여러 번 읽지 않게 한 곳에서만 본다.
+        try:
+            from shopping_shorts import single_source as _ss_opt
+            _hook_opener = _ss_opt.hook_opener_on(customer_id)
+        except Exception:      # noqa: BLE001 — 못 읽으면 설정대로(하류가 스스로 본다)
+            _hook_opener = None
         sf = build_scene_first_plan(source_scripts, reference_text, target_seconds,
+                                    hook_opener=_hook_opener,
                                     video_type=video_type, ping_pong=ping_pong,
                                     backbone_meta=backbone_meta, backbone_forced=backbone_forced,
                                     bank_context=bank_context, avoid_hooks=avoid_hooks,
@@ -2509,6 +2535,33 @@ def _plan_signature(plan):
             parts.append("z=%.4f,%.5f,%.5f" % (_z, _px, _py))   # → 옛 작업 서명 불변
         parts.append("|")
     return hashlib.sha1("".join(parts).encode("utf-8")).hexdigest()[:16]
+
+
+def clean_final_matches_plan(job, work):
+    """완성본 청소본(clean_video_path)이 **지금 편성**으로 만든 것인가 (2026-09-01).
+
+    완성본 1편 청소는 편성 서명을 **파일명에 박아** 캐시한다(final_clean_{sig}.mp4).
+    그러니 "지금 편성의 서명 파일이 있고, 조립본이 그것보다 새로우면" 두 파일은
+    같은 편성이다 = 완성본 시각과 지금 컷 계획의 좌표계가 일치한다.
+
+    ★왜 필요한가: 컷 미리보기가 완성본 청소본을 쓰려면 좌표계가 같아야 한다.
+      08-27~09-01 사이엔 그걸 확인할 방법이 없어 **컷은 늘 원본에서** 떴고,
+      그래서 자막제거를 켰는데도 꾸미기 컷 카드에 원본 자막이 그대로 보였다.
+      서명이 이미 파일명에 있으므로 새로 계산할 것 없이 대조만 하면 된다(0순위-B).
+    실패하면 False — 원본에서 뜬다(틀린 장면보다 자막 있는 정확한 장면이 낫다)."""
+    try:
+        cvp = (job or {}).get("clean_video_path")
+        if not cvp or not Path(cvp).exists():
+            return False
+        if job.get("clean_sources"):
+            return True     # 소스별 청소본 — 좌표계가 원본과 같아 애초에 안 썩는다
+        sig = _plan_signature(job.get("edit_plan") or {})
+        f = Path(work) / ("final_clean_%s.mp4" % sig)
+        if not (f.exists() and f.stat().st_size > 1024):
+            return False    # 편성이 바뀐 뒤 다시 청소하지 않았다
+        return Path(cvp).stat().st_mtime >= f.stat().st_mtime - 1
+    except Exception:      # noqa: BLE001
+        return False
 
 
 def _final_clean_fn(store, job, job_id, work, keys, customer_id=0):

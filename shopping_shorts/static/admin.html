@@ -159,6 +159,21 @@ tbody tr:hover{background:#1b1b22}
   <tbody id=wlrecent><tr><td colspan=6 class=empty>–</td></tr></tbody></table>
 </details>
 
+<h2 class=grouphead>✍ 대본 생성 규칙</h2>
+
+<!-- 훅 감탄사 켜고 끄기(2026-09-01 사장님 "그냥 모든 대본에 앞에 감탄사 켜고 끄기 버튼").
+     코드가 첫 문장 앞에 "와, "/"여러분 "을 얹는다(add_hook_opener) — 그 강제만 끈다.
+     모델이 스스로 쓴 감탄사는 그대로다. 반영은 다른 서버 프로세스 기준 최대 1분(캐시). -->
+<div class=card>
+  <h2>훅 감탄사 자동 붙이기 <span id=hoMsg class=msg></span></h2>
+  <p style="color:#8b95a3;font-size:13px;margin:6px 0 10px">
+    켜면 대본 첫 문장 앞에 <b>"와, "</b>(서술형 절반) 또는 <b>"여러분 "</b>(권유형)을 코드가 얹습니다.
+    질문형·채이 스타일은 원래 안 붙습니다. 끄면 <b>모든 스타일</b>에서 안 붙입니다
+    (모델이 스스로 쓴 감탄사는 그대로).
+  </p>
+  <button id=hoBtn class=btn onclick="toggleHookOpener()">불러오는 중…</button>
+</div>
+
 <h2 class=grouphead>🔔 오늘 처리할 일</h2>
 
 <!-- 오류 신고(2026-08-24) — 고객이 사이드바 '🐞 오류 신고'를 누르면 여기 쌓인다.
@@ -220,6 +235,32 @@ tbody tr:hover{background:#1b1b22}
 </div>
 
 <script>
+
+// ── 훅 감탄사 스위치(2026-09-01) ────────────────────────────────────────────
+let HOOK_OPENER_ON = null;
+function _hoPaint(){
+  const b=document.getElementById('hoBtn'); if(!b) return;
+  b.textContent = HOOK_OPENER_ON ? '켜짐 — 누르면 끕니다' : '꺼짐 — 누르면 켭니다';
+  b.style.background = HOOK_OPENER_ON ? '#1f9e7a' : '#555';
+  b.style.color = '#fff';
+}
+async function loadHookOpener(){
+  try{ const d=await (await fetch('/api/script/hook_opener')).json();
+    HOOK_OPENER_ON = !!d.on; _hoPaint(); }catch(e){}
+}
+async function toggleHookOpener(){
+  const want = !HOOK_OPENER_ON;
+  const m=document.getElementById('hoMsg'); if(m) m.textContent='저장 중…';
+  try{
+    const d=await (await fetch('/api/script/hook_opener',{method:'POST',
+      headers:{'Content-Type':'application/json'}, body:JSON.stringify({on:want})})).json();
+    if(!d.ok) throw new Error(d.error||'실패');
+    HOOK_OPENER_ON=!!d.on; _hoPaint();
+    if(m) m.textContent='저장됨 (다른 서버 프로세스는 최대 1분 뒤 반영)';
+  }catch(e){ if(m) m.textContent='실패: '+e.message; }
+}
+loadHookOpener();
+
 const SETTING_FIELDS=[
   ['trial_days','체험 기간(일)'],['trial_grant_points','체험 기본 포인트(P)'],['pro_grant_points','결제(pro) 기본 포인트(P)'],['trial_event_hours','가입 자동체험(시간,0=끔)'],['limit_lens','무료 렌즈/일'],['limit_render','무료 렌더/일'],
   ['limit_script','무료 대본/일'],['limit_lens_pro','pro 렌즈/일'],['limit_render_pro','pro 렌더/일'],
