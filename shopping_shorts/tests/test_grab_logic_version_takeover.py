@@ -55,12 +55,12 @@ def _run(setup):
 
 def test_옛_로직이_먼저_돌아도_새_로직이_이어받는다():
     out = _run("window.__ssGrabLoaded = true;\n")   # 옛 코드: 버전 표시가 없다
-    assert out["ver"] == 20260903, "새 로직이 버전을 남기며 이어받아야 한다"
+    assert out["ver"] == 20260904, "새 로직이 버전을 남기며 이어받아야 한다"
     assert out["removed"] >= 1, "옛 버튼을 걷어내고 다시 그려야 한다"
 
 
 def test_같은_버전이_이미_돌면_두_번_돌지_않는다():
-    out = _run("window.__ssGrabLoaded = true; window.__ssGrabVer = 20260903;\n")
+    out = _run("window.__ssGrabLoaded = true; window.__ssGrabVer = 20260904;\n")
     assert out["removed"] == 0, "같은 버전이면 손대지 않고 그대로 둔다"
 
 

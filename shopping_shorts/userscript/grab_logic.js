@@ -1,6 +1,6 @@
 // 로또 · 원클릭 담기 — 실제 로직 (grab.user.js 로더가 서버에서 이 파일을 매번 불러와 실행).
 // ★이 파일을 고치면 모든 사용자가 다음 새로고침에 자동 반영된다(재설치 불필요).
-// 로직 버전: 2026-08-18-b  (⭐레퍼런스 등록 — 영상+채널 한 번에, 랭킹 즉시 반영)
+// 로직 버전: 2026-09-01-d  (버튼 도킹·유튜브 렌즈/시크바·재생속도 — LOGIC_VER가 정본)
 (function () {
   "use strict";
   // ── 중복 실행 방지 → '새 로직이 이긴다'로 교체(2026-08-18 실사고) ──────────
@@ -10,7 +10,7 @@
   // 원인 찾는 데 한참 걸렸다. 그래서 버전을 숫자로 박고 큰 쪽이 이어받게 한다.
   // (옛 코드는 이 숫자가 없다 → 0으로 보고 새 로직이 이긴다. 옛 인터벌은 남지만
   //  버튼은 id 선점이라 서로 안 덮고, 새 화면(유튜브·쓰레드)은 새 로직이 그린다.)
-  var LOGIC_VER = 20260903;
+  var LOGIC_VER = 20260904;
   if ((window.__ssGrabVer || 0) >= LOGIC_VER) return;   // 같거나 더 새것이 이미 돎
   if (window.__ssGrabLoaded && !window.__ssGrabVer) {
     // 옛 로직이 이미 돌고 있다 — 그 버튼을 걷어내고 새 로직이 다시 그린다.
@@ -945,21 +945,34 @@
   var DOCK_IDS = ["ss-adopt-btn", "ss-lens-btn", "ss-chadd-btn", "ss-grab-btn"];
   var DOCK_STEP = 52;      // 버튼 세로 간격
   function _dockAnchor() {
-    // 가장 큰 <video>가 지금 보는 영상이다. 액션열(좋아요·댓글)까지 감싸는
-    // 게시물 칸(article)이 있으면 그 사각형을 쓴다 — 없으면 영상 자체.
+    // 가장 큰 <video>가 지금 보는 영상이다.
     var vs = document.querySelectorAll("video"), best = null, area = 0;
     for (var i = 0; i < vs.length; i++) {
       var r = vs[i].getBoundingClientRect();
       if (r.width * r.height > area) { area = r.width * r.height; best = vs[i]; }
     }
     if (!best || area < 10000) return null;
-    // 유튜브 쇼츠엔 <article>이 없어 영상 사각형만 보면 버튼이 좋아요·공유 열 위에
-    // 얹힌다(2026-09-01 실사고). 액션열까지 감싸는 칸을 플랫폼별로 함께 본다.
-    var box = best.closest
-      ? (best.closest("article,ytd-reel-video-renderer,#shorts-container") || best) : best;
-    var rr = box.getBoundingClientRect();
-    if (rr.right <= 0 || rr.right >= window.innerWidth) return null;
-    return rr;
+    var v = best.getBoundingClientRect();
+    var right = v.right;
+    // ★조상 칸을 쓰되 '영상보다 지나치게 넓은 칸'은 버린다(2026-09-01 실사고).
+    //   유튜브 쇼츠의 ytd-reel-video-renderer는 **화면 전체 폭**이라, 그걸 그대로 쓰면
+    //   버튼이 브라우저 오른쪽 끝(주소창 밑)까지 날아갔다. 액션열까지만 감싸는 칸이 목표다.
+    var el = best.parentElement, guard = 0;
+    while (el && guard++ < 6) {
+      var rr = el.getBoundingClientRect();
+      if (rr.width <= v.width * 1.6 && rr.right > right && rr.right < window.innerWidth) right = rr.right;
+      el = el.parentElement;
+    }
+    // 액션열(좋아요·댓글·공유)이 영상 **바깥 형제**인 경우(유튜브 쇼츠) — 따로 찾아 넘는다.
+    var rails = document.querySelectorAll("#actions,ytd-reel-player-overlay-renderer #actions");
+    for (var k = 0; k < rails.length; k++) {
+      var q = rails[k].getBoundingClientRect();
+      if (q.height < 100 || q.width > 200) continue;                 // 세로 아이콘 열만
+      if (q.left < v.right - 40 || q.right > v.right + 300) continue; // 이 영상 옆의 것만
+      if (q.right > right) right = q.right;
+    }
+    if (right <= 0 || right >= window.innerWidth) return null;
+    return { top: v.top, bottom: v.bottom, right: right };
   }
   function _dockBtns() {
     var rr = _dockAnchor();
