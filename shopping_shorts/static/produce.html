@@ -1431,6 +1431,9 @@
   .s2-bank .bk-or::after{content:"";flex:1;height:1px;background:var(--line)}
   /* 재생성 도는 동안 — 그 칸만 흐리게 + 클릭 잠금(다른 칸은 계속 쓸 수 있다). */
   .s2-row.s2-busy .s2-sent{opacity:.6;font-style:italic}
+  /* ✍ 내가 직접 쓰기 — 빈 칸에 '여기에 쓰세요'를 흐리게 띄운다(2026-09-01).
+     빈 contenteditable은 아무 안내가 없어 "고장난 칸"으로 읽힌다. */
+  .s2-sent:empty::before{content:attr(data-ph);opacity:.38}
   .s2-row.s2-busy .s2-swap{pointer-events:none;opacity:.4}
   .s2-cand .fq{margin-left:auto;flex:none;font-size:11px;color:var(--s2-sub);background:var(--inset);border-radius:4px;padding:2px 7px;white-space:nowrap}
   .s2-dfoot{display:none}
@@ -3229,6 +3232,12 @@
           </div>
           <div class="s2-regen">
             <button class="btn-next" id="s2GenBtn" onclick="s2Generate()">✨ 이 스타일로 대본 만들기</button>
+            <!-- ✍ 내가 직접 쓰기(2026-09-01 사장님 "그냥 내 대본을 그대로 하고 싶을 때 —
+                 빈칸으로 자리를 만들어주고 쓸 수 있게"). AI를 안 부른다: 빈 칸만 만들고
+                 사장님이 채운 그대로 확정된다(각색 없음). 칸 구성은 고른 스타일을 따른다. -->
+            <button class="btn-ghost" id="s2MineBtn" style="min-width:auto"
+                    title="AI를 부르지 않고 빈 칸을 만들어 드립니다 — 쓰신 문장이 그대로 대본이 됩니다"
+                    onclick="s2AddMineDraft()">✍ 내가 직접 쓰기</button>
             <span class="hint" id="s2GenHint" style="margin:0"></span>
           </div>
         </div>
@@ -16367,7 +16376,9 @@ function s2DraftHtml(dr,i){
   const tries=(dr.tries||[]).length;
   const again=tries>1?(' <small>· 다시 쓴 횟수 '+(tries-1)+'</small>'):'';
   // 통과는 조용히 뱃지 하나. 실패는 못 지킨 항목을 그대로 — 조용히 통과시키지 않는 게 핵심.
-  const gate=(dr.checks&&dr.checks.length)
+  // ★내 대본엔 스타일 게이트를 붙이지 않는다 — AI가 만든 게 아니라 사장님이 쓴 것이다.
+  //   'hook 문장틀 준수' 같은 빨간 줄을 띄우면 사장님 문장을 틀렸다고 말하는 꼴이 된다.
+  const gate=dr.mine?'':(dr.checks&&dr.checks.length)
     ? (dr.passed
         ? `<span class="s2-gate pass" title="게이트 통과 — 스타일 구조를 지켰습니다">✅ 구조 지킴${again}</span>`
         : `<span class="s2-gate fail">⚠️ ${esc(bad.map(c=>c.name).join(' · '))}</span>`)
@@ -16378,9 +16389,10 @@ function s2DraftHtml(dr,i){
     return `<div class="s2-row${isBad?' bad':''}" id="s2r-${i}-${j}" data-role="${esc(b.role||'')}">
       <div class="s2-row-in">
         <div class="s2-role"><div class="rn">${esc(s2RoleName(b.role))}</div><span id="s2sec-${i}-${j}">${s2SecTag(s2SecOf(b.text))}</span></div>
-        <div class="s2-sent" contenteditable="true" oninput="s2EditBeat(${i},${j},this)">${esc(b.text||'')}${chk}</div>
+        <div class="s2-sent" contenteditable="true" data-ph="${esc(s2RoleName(b.role).replace(/^\S+\s*/,''))} — 여기에 쓰세요"
+             oninput="s2EditBeat(${i},${j},this)">${esc(b.text||'')}${chk}</div>
         <div class="s2-acts">
-          <button class="s2-swap" onclick="s2OpenBank(${i},${j})">바꾸기</button>
+          ${dr.mine?'':`<button class="s2-swap" onclick="s2OpenBank(${i},${j})">바꾸기</button>`}
           <button class="s2-del" title="이 줄을 대본에서 아주 뺍니다 — 3단계에서 이 장면 칸도 안 생깁니다"
             onclick="s2DelBeat(${i},${j})">🗑 빼기</button>
         </div>
@@ -16388,21 +16400,63 @@ function s2DraftHtml(dr,i){
       <div class="s2-bank" id="s2b-${i}-${j}"><div class="hint">불러오는 중…</div></div>
     </div>`;
   }).join('');
-  const fix=(!dr.passed && bad.length)
+  const fix=(!dr.mine && !dr.passed && bad.length)
     ? `<div class="s2-fix">
          <div class="fx-t">⚠️ ${esc(bad.map(c=>c.name).join(' · '))} — 이 스타일에서 벗어났어요</div>
          <div class="fx-d">그대로 써도 되지만, 위 칸의 <b>바꾸기</b>로 틀에서 고르거나 전체를 다시 만들면 더 맞습니다.</div>
          <button class="fx-re" onclick="s2Generate()">🔄 전체 다시 만들기</button>
        </div>` : '';
   return `<div class="s2-draft ${i===0?'da':'db'}${i===S2.curDraft?' on':''}" id="s2d-${i}">
-    <div class="s2-dhead"><span class="s2-dname">${String.fromCharCode(65+i)}안${dr.style_name?(`<span class="sty"> · ${esc(dr.style_name)}</span>`):''}</span>
+    <div class="s2-dhead"><span class="s2-dname">${dr.mine?'✍ 내 대본':(String.fromCharCode(65+i)+'안'+(dr.style_name?(`<span class="sty"> · ${esc(dr.style_name)}</span>`):''))}</span>
       <span id="s2tot-${i}" title="우리 보이스 실측 속도로 환산한 예상 길이 — 릴스 기본은 30초 이내">${s2SecTag(s2DraftSec(dr), 30)}</span>${gate}</div>
     ${rows}${fix}
     <div class="s2-dfoot">
-      <button class="btn-next" onclick="s2Confirm(${i})">✔ ${String.fromCharCode(65+i)}안으로 확정</button>
+      ${dr.mine?`<button class="btn-ghost" style="min-width:auto" title="칸을 하나 더 만듭니다" onclick="s2MineAddRow(${i})">＋ 칸 추가</button>`:''}
+      <button class="btn-next" onclick="s2Confirm(${i})">✔ ${dr.mine?'내 대본으로 확정':(String.fromCharCode(65+i)+'안으로 확정')}</button>
       <button class="btn-ghost" title="지금 작업은 그대로 두고, 담긴 영상까지 그대로 복제한 새 작업을 만들어 이 안을 넣습니다(다채널용 2편)" onclick="s2ConfirmToNewWork(${i})">＋ 이 안으로 새 작업</button>
     </div>
   </div>`;
+}
+
+// ── ✍ 내가 직접 쓰기(2026-09-01) ─────────────────────────────────────────────
+// 사장님이 칸을 직접 채워 **각색 없이 그대로** 확정하는 안. AI를 부르지 않는다.
+//: 스타일을 안 골랐을 때 쓰는 기본 칸 구성(가장 흔한 쇼츠 뼈대).
+const S2_MINE_ROLES = ['hook', 'problem', 'method', 'proof', 'cta'];
+// 칸 구성은 **지금 보고 있는 안**을 따라간다 — 스타일을 골라 만들어 본 뒤 "이 틀로
+// 내가 쓰겠다"가 자연스러운 순서다. 없으면 기본 뼈대.
+function s2MineRoles(){
+  const dr = (S2.drafts || [])[S2.curDraft];
+  const roles = dr && !dr.mine ? s2Beats(dr).map(b => (b && b.role) || '').filter(Boolean) : [];
+  return roles.length ? roles : S2_MINE_ROLES.slice();
+}
+function s2AddMineDraft(){
+  const roles = s2MineRoles();
+  const dr = {mine: true, style_name: '내가 직접 쓴 대본',
+              beats: roles.map(r => ({role: r, text: ''})),
+              script: '', checks: [], passed: false, tries: []};
+  S2.drafts = (S2.drafts || []).concat([dr]);
+  S2.curDraft = S2.drafts.length - 1;
+  const band = document.getElementById('s2ResultBand'); if (band) band.style.display = '';
+  s2RenderDrafts(); saveWork();
+  toast('✍ 빈 칸을 만들었어요 — 칸을 눌러 쓰시면 그대로 대본이 됩니다');
+  // 첫 칸에 바로 커서를 둔다(어디를 눌러야 하는지 묻지 않게).
+  try{
+    const first = document.querySelector('#s2d-' + S2.curDraft + ' .s2-sent');
+    if (first && first.focus){ first.focus(); first.scrollIntoView({block: 'center'}); }
+  }catch(e){}
+}
+
+// 칸을 하나 더 — 역할은 마지막 칸을 따라간다(모르면 비운다: 이름 없는 칸도 정상).
+function s2MineAddRow(i){
+  const dr=S2.drafts[i]; if(!dr || !dr.mine) return;
+  const beats=s2Beats(dr).slice();
+  beats.push({role:'', text:''});
+  dr.beats=beats;
+  s2RenderDrafts(); saveWork();
+  try{
+    const rows=document.querySelectorAll('#s2d-'+i+' .s2-sent');
+    const last=rows[rows.length-1]; if(last&&last.focus){ last.focus(); last.scrollIntoView({block:'center'}); }
+  }catch(e){}
 }
 function s2PickDraft(i){ S2.curDraft=i; s2RenderDrafts(); saveWork(); }   // 보던 안도 그대로 돌아오게
 // 문장 편집 — beats가 원본이고 script는 거기서 다시 만든다(두 벌 유지 금지, 0순위-B).
