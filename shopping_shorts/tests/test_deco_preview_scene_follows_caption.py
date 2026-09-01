@@ -82,6 +82,25 @@ setTimeout(()=>{ clearTimeout(CAP_SEQ_TIMER);
         f"장면이 첫 컷에 고정됐다(또는 순서가 틀렸다): {seen}"
 
 
+def test_컷수와_구절수가_다르면_시간으로_고른다():
+    """사장님 3단계 대조 지적(2026-09-01): 컷 5개(1.2/0.9/0.9/0.9/0.6)에 구절 4개(0.9씩).
+    개수 비례면 구절2가 컷1로 가지만, 시간축으론 구절2 시작 0.9초는 아직 **컷0**(0~1.2초)이다."""
+    out = _run("""
+const segs=['예측 못 한','반전 기능으로','개떡상한 움직이는','기차 케이크임'];
+const durs=[0.9,0.9,0.9,0.6];
+const cd=[1.2,0.9,0.9,0.9,0.6];
+BEATS_PREVIEW=[];
+for(let c=0;c<5;c++) BEATS_PREVIEW.push({beat_idx:1,cut:c,cut_of:5,segs,durs,lead:0,cut_dur:cd[c]});
+BEAT_IDX=0;
+_playBeatCaptions(BEATS_PREVIEW[0]);
+setTimeout(()=>{ clearTimeout(CAP_SEQ_TIMER);
+  console.log('SEEN=' + JSON.stringify(_SEEN.slice(0,4)));
+}, 3300);
+""")
+    # 구절 시작 0 / 0.9 / 1.8 / 2.7  ↔  컷 경계 1.2 / 2.1 / 3.0 / 3.9 / 4.5
+    assert out[-1] == 'SEEN=["/f/1-0","/f/1-1","/f/1-2"]',         f"3단계 컷 시간축과 안 맞는다: {out[-1]}"
+
+
 def test_구절보다_컷이_적으면_비례로_고른다():
     """컷 2개 · 구절 4개 — 앞 두 구절은 컷0, 뒤 두 구절은 컷1."""
     out = _run("""

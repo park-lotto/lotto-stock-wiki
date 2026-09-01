@@ -5695,9 +5695,37 @@ function _playBeatCaptions(b){
   const bg=document.getElementById('hcPreviewBg');
   const sb=document.getElementById('sceneBg');
   const cnt=document.getElementById('beatCount');
+  // ★어느 구절에 어느 컷인지는 **시간**으로 정한다(2026-09-01 사장님 3단계 대조 지적).
+  //   개수 비례로 나누면 컷 수 ≠ 구절 수인 칸에서 어긋난다(실측: 컷 5개 1.2/0.9/0.9/0.9/0.6
+  //   에 구절 4개 → 2번째 구절 '반전 기능으로'인데 화면은 뒤쪽 컷이 떴다).
+  //   서버가 컷 길이(cut_dur)와 리드인(lead)을 이미 주므로 3단계와 같은 시간축을 쓴다.
+  const _cutEnds=(()=>{                 // 컷 누적 끝시각(초). 하나라도 없으면 null → 개수 비례로 물러선다
+    const out=[]; let t=0;
+    for(const i of cuts){
+      const d=+((BEATS_PREVIEW[i]||{}).cut_dur);
+      if(!(d>0)) return null;
+      t+=d; out.push(t);
+    }
+    return out;
+  })();
+  const _lead=+((b && b.lead) || 0);
+  const _capStarts=(()=>{               // 구절 시작시각(초) — 렌더와 같은 기준점(리드인 포함)
+    const out=[]; let t=_lead;
+    for(let i=0;i<segs.length;i++){
+      out.push(t);
+      t += (durs && durs[i]>0) ? durs[i] : 1.1;
+    }
+    return out;
+  })();
+  const _cutForSeg=(si)=>{
+    if(!_cutEnds) return Math.min(cuts.length-1, Math.floor(si*cuts.length/Math.max(1,segs.length)));
+    const t=_capStarts[si] || 0;
+    for(let k=0;k<_cutEnds.length;k++) if(t < _cutEnds[k] - 0.001) return k;
+    return _cutEnds.length-1;
+  };
   const paintScene=(si)=>{
     if(!cuts.length) return;
-    const k=Math.min(cuts.length-1, Math.floor(si*cuts.length/Math.max(1,segs.length)));
+    const k=_cutForSeg(si);
     const idx=cuts[k], x=BEATS_PREVIEW[idx];
     if(!x) return;
     BEAT_IDX=idx;                       // '이 장면을 썸네일로'가 지금 보이는 컷을 집게
