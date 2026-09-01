@@ -9856,12 +9856,24 @@ async function renderSourceAnalysis(){
   // ★빈 shortcode 보정은 **여기 안에서** 한다(2026-08-31). 별도 함수로 빼면
   //   테스트 하네스(js_harness)가 이 함수만 떼어 실행할 때 ReferenceError로 죽는다 —
   //   게이트가 실제로 잡았다. 보정 자체가 실패해도 아래 흐름은 종전대로 돈다.
+  // ★2026-09-02: 대상을 **빈 shortcode 전부**로 넓힌다(URL 종류를 안 가린다).
+  //   종전엔 `/api/produce/footage/`(내 파일 올리기)만 보정해서, 「🔗 URL 직접 추가」로
+  //   담은 영상은 shortcode가 ''인 채로 남았다. 그런데 서버(app.py api_produce_autoload)는
+  //   빈 shortcode를 **sha1(url)[:12]로 채워서** 저장한다 — 즉 같은 영상을 두고
+  //   서버는 sha1 키로 쓰고 화면은 ''로 조회해 **영영 만나지 못했다**(0순위-B: 같은
+  //   판단을 두 곳에서 따로 지으면 반드시 어긋난다).
+  //   실측(2026-09-02 라이브, 인스타 릴스 3개): 서버엔 brief·segments가 다 있는데
+  //   (14d95dbf8729·03b8c77e91db·bd2f67e84fce = 각 URL의 sha1) 화면은 "0/3개 읽음 ·
+  //   분석 중"에 영구 고정 → 2단계에서 씨앗 카드가 하나도 안 생겨 **고객이 완전히 막혔다**.
+  //   여기서 서버와 **같은 규칙**(sha1(url) 앞 12자)으로 채우면 조회 키가 일치한다.
   try{
-    const _need = (HANDOFF||[]).filter(h => h && !h.shortcode
-                                        && String(h.url||'').includes('/api/produce/footage/'));
+    const _need = (HANDOFF||[]).filter(h => h && !h.shortcode && h.url);
     if(_need.length && typeof crypto !== 'undefined' && crypto.subtle){
       for(const _h of _need){
-        const _b = await crypto.subtle.digest('SHA-1', new TextEncoder().encode(_h.url));
+        // ★서버와 **글자 하나까지 같은 입력**으로 해싱한다 — app.py는
+        //   sha1(url.strip())이라 여기서 trim()을 빼면 앞뒤 공백 하나로 키가 갈린다.
+        const _b = await crypto.subtle.digest('SHA-1',
+                         new TextEncoder().encode(String(_h.url||'').trim()));
         _h.shortcode = Array.from(new Uint8Array(_b))
                             .map(x=>x.toString(16).padStart(2,'0')).join('').slice(0,12);
       }
