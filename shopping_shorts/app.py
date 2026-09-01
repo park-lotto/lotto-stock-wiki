@@ -6887,8 +6887,11 @@ def api_thumb_preset_delete(preset_id: str, request: Request):
         if fp is not None:
             try:
                 fp.unlink(missing_ok=True)
-            except OSError:
-                pass          # 그림이 안 지워져도 프리셋 삭제 자체는 성공으로 둔다
+            except OSError as e:  # noqa: BLE001 — DB 행은 이미 지웠다. 그림 한 장이
+                # 안 지워져도 사장님 눈엔 프리셋이 사라진 것이라 요청은 성공으로 둔다.
+                # 다만 조용히 넘기면 안 쓰이는 PNG가 쌓이는 걸 아무도 모른다 → 사유를 남긴다.
+                print(f"[thumb_preset] 그림 삭제 실패(무해, 고아 파일 남음): {e!r}",
+                      file=sys.stderr)
     return {"ok": True}
 
 
