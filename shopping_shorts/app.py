@@ -5494,7 +5494,19 @@ def api_voice_presets(request: Request, lang: str = "KR"):
             "default_silence_trim": p["default_silence_trim"],
             "sample_url": f"/api/voice-presets/{p['preset_id']}/sample" if p["sample_file"] else None,
         }
-    return {"ok": True, "groups": list(groups.values())}
+    # 🎙 마지막으로 쓴 성우(2026-09-02) — 화면이 그 성우를 미리 골라둔 상태로 연다.
+    #   ★왜 여기냐: 이 라우트는 이미 로그인 고객 기준(_cid)이고 4단계가 열릴 때 한 번 부른다.
+    #     /api/mix/status는 **인증이 없어**(job_id만 알면 열림) 거기 실으면 남의 선택이 샌다.
+    #   화면은 이 값으로 VOICE만 채운다 — 실제 합성에 쓰이는 값은 job.voice(서버가 이미
+    #   create_mix_job에서 같은 기억으로 심었다)라, 둘이 어긋날 일이 없다.
+    #   ★기억 조회 실패가 **성우 목록을 죽이면 안 된다**(부가기능 < 본기능). 실제로
+    #     Store를 가짜로 바꿔치는 테스트들이 여기서 AttributeError로 터졌다 — 라이브에서도
+    #     DB 스키마가 옛것이면 같은 일이 난다. 못 읽으면 그냥 기억 없음(=종전 동작)으로 둔다.
+    try:
+        _last = Store(DB_PATH).get_last_voice(_cid)
+    except Exception:      # noqa: BLE001
+        _last = None
+    return {"ok": True, "groups": list(groups.values()), "last_voice": _last}
 
 
 # ── 일레븐랩스 계정 보이스 → 성우 카드 등록 (2026-08-18, 관리자 전용) ─────────────
@@ -5872,6 +5884,17 @@ def api_mix_voice(background_tasks: BackgroundTasks, body: dict):
         return JSONResponse(status_code=404, content={"ok": False, "error": "job/plan 없음"})
     voice = _voice_snapshot(store, body)
     store.update_mix_job(job_id, voice=voice)
+    # 🎙 이 선택을 고객의 '다음 작업 기본 성우'로 기억한다(2026-09-02 사장님 지시).
+    #   → 다음 작업은 create_mix_job이 이 값을 job.voice로 심어 3단계 1차 TTS부터 본인
+    #     성우로 나간다. 그러면 4단계에서 이 버튼을 누를 이유가 없어져 **편당 TTS 1회**가 된다
+    #     (다른 합성 지점 3곳은 전부 skip_existing=True라 재과금 0).
+    #   ★주인은 요청자가 아니라 **작업의 주인**이다 — 미리듣기(위 preview)가 같은 이유로
+    #     job.customer_id를 쓴다. 관리자가 남의 작업을 손봐도 그 고객 기억이 바뀌어야 맞다.
+    #   기억 저장 실패가 성우 적용을 막지 않는다(부가기능이 본작업을 죽이면 안 된다).
+    try:
+        store.set_last_voice(job.get("customer_id", 0), voice)
+    except Exception as _e:      # noqa: BLE001
+        print(f"[성우기억] 저장 실패(무해): {_e!r}", file=sys.stderr)
     background_tasks.add_task(resynth_tts_job, job_id, DB_PATH, _MIX_WORK_DIR)
     return {"ok": True}
 
