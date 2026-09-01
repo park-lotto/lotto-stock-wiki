@@ -2909,6 +2909,20 @@
           </div>
           <button class="btn-next" style="width:270px;margin-top:8px" onclick="generateThumb()">썸네일 생성</button>
           <div id="thumbSaveStatus" class="hint" style="margin-top:6px"></div>
+
+          <!-- 🖼 내 프리셋(2026-09-02 사장님 "만들어진것 프리셋으로 저장하는것 만들어줘.
+               자리는 썸네일 생성 바로 아래"). 지금 만든 구성(글자·스티커·도형·배지)을 담아두고
+               다음 영상에서 딸깍 한 번에 그대로 얹는다.
+               ★위쪽 '🖼 프리셋 — 한 번에 스타일 적용'(HC_PRESETS)과 다른 물건이다:
+                 저건 고른 글자 하나의 **색·스타일**만 바꾸고, 이건 **화면 구성 전체**를 바꾼다.
+               ★배경은 안 담는다 — 다음 영상에 쓸 것이라 그 영상의 배경 위에 얹혀야 한다. -->
+          <div style="width:270px;margin-top:14px;border-top:1px solid var(--line);padding-top:10px">
+            <div style="font-size:12px;color:var(--sub);margin-bottom:5px">🖼 내 프리셋 — 지금 구성을 담아 다음 영상에 그대로</div>
+            <button class="tab" style="width:100%;min-width:auto;padding:8px;font-size:12px"
+                    onclick="saveThumbPreset()">💾 지금 구성을 프리셋으로 담기</button>
+            <div id="myThumbPresetStatus" class="hint" style="margin-top:5px;font-size:11px"></div>
+            <div id="myThumbPresets" style="display:flex;flex-wrap:wrap;gap:7px;margin-top:8px"></div>
+          </div>
         </div>
       </div>
     </section>
@@ -15438,6 +15452,140 @@ function initThumb(){
   // (같으면 저장된 목록만 돌려준다) 이 호출은 싸고, 프론트의 중복 캐시가 틀린 계층이었다.
   loadThumbFrames();
   renderThumbLayers();
+  loadThumbPresets();   // 🖼 내 프리셋(서버 저장) — 진입할 때마다 물어본다(다른 기기에서 담았을 수 있다)
+}
+
+// ── 🖼 내 썸네일 프리셋(2026-09-02) ─────────────────────────
+// 만든 구성(글자·스티커·도형·배지)을 담아 다음 영상에 그대로 얹는다.
+// ★배경(frame_ts·frame_url·img)은 담지도 얹지도 않는다 — 프리셋을 쓰는 곳은 **다른 영상**이라
+//   그 영상에서 고른 배경 위에 얹혀야 한다. 담으면 남의 영상 장면이 딸려온다.
+let MY_THUMB_PRESETS = [];
+let THUMB_PRESET_BUSY = false;
+
+function _thumbPresetMsg(text, color){
+  const el = document.getElementById('myThumbPresetStatus');
+  if (el){ el.textContent = text || ''; el.style.color = color || 'var(--sub)'; }
+}
+
+async function loadThumbPresets(){
+  try {
+    const r = await fetch('/api/produce/thumb/presets');
+    const d = await r.json().catch(() => ({ok: false}));
+    if (!d.ok) return;
+    MY_THUMB_PRESETS = d.presets || [];
+    renderMyThumbPresets();
+  } catch(e){ /* 목록을 못 불러와도 썸네일 편집 자체는 계속 된다 — 조용히 넘긴다 */ }
+}
+
+function renderMyThumbPresets(){
+  const box = document.getElementById('myThumbPresets');
+  if (!box) return;
+  if (!MY_THUMB_PRESETS.length){
+    box.innerHTML = '<div class="hint" style="font-size:11px;opacity:.75">아직 담은 프리셋이 없어요 — '
+                  + '마음에 드는 썸네일을 만든 뒤 위 버튼으로 담아두면, 다음 영상에서 한 번에 얹혀요.</div>';
+    return;
+  }
+  // 카드 = 그림 + 이름 + (✕ 삭제 / ✏️ 이름). ✕·✏️는 stopPropagation으로 '적용'과 분리한다
+  // — 안 그러면 지우려다 프리셋이 적용돼 편집 중이던 구성이 통째로 바뀐다.
+  box.innerHTML = MY_THUMB_PRESETS.map(p => `
+    <div style="position:relative;width:78px">
+      <div onclick="applyMyThumbPreset('${p.preset_id}')" title="누르면 이 구성으로 바꿔요"
+           style="cursor:pointer;border:2px solid var(--line);border-radius:6px;overflow:hidden;
+                  background:#111;aspect-ratio:9/16;display:flex;align-items:center;justify-content:center">
+        ${p.url ? `<img src="${p.url}" style="width:100%;height:100%;object-fit:cover" alt="">`
+                : `<span style="font-size:20px">🖼</span>`}
+      </div>
+      <div style="font-size:10px;line-height:1.3;margin-top:3px;word-break:break-all">${esc(p.name)}</div>
+      <button onclick="event.stopPropagation();renameMyThumbPreset('${p.preset_id}')" title="이름 바꾸기"
+              style="position:absolute;top:2px;left:2px;width:20px;height:20px;border:0;border-radius:50%;
+                     background:rgba(0,0,0,.62);color:#fff;font-size:10px;cursor:pointer;padding:0">✏️</button>
+      <button onclick="event.stopPropagation();deleteMyThumbPreset('${p.preset_id}')" title="지우기"
+              style="position:absolute;top:2px;right:2px;width:20px;height:20px;border:0;border-radius:50%;
+                     background:rgba(0,0,0,.62);color:#fff;font-size:11px;cursor:pointer;padding:0">✕</button>
+    </div>`).join('');
+}
+
+async function saveThumbPreset(){
+  if (THUMB_PRESET_BUSY) return;            // 연타로 같은 구성이 두 번 담기는 것을 막는다
+  const layers = THUMB_STATE.layers || [];
+  if (!layers.length){
+    _thumbPresetMsg('담을 것이 없어요 — 글자나 스티커를 먼저 얹어주세요', 'var(--fire)');
+    return;
+  }
+  const name = (prompt('프리셋 이름 (예: 빨강 강조형)', '') || '').trim();
+  if (!name) return;                        // 취소 — 조용히 아무것도 안 한다
+
+  THUMB_PRESET_BUSY = true;
+  _thumbPresetMsg('담는 중…');
+  try {
+    // 카드 그림 = 지금 미리보기 그대로. 폰트 로드까지 기다린 뒤 그려야 첫 저장부터 맞는
+    // 글꼴로 나간다(generateThumb과 같은 이유).
+    await renderThumbCanvas();
+    const cv = document.getElementById('thumbCanvas');
+    const blob = await new Promise(res => cv.toBlob(res, 'image/png'));
+    const fd = new FormData();
+    fd.append('name', name);
+    fd.append('layers', JSON.stringify(layers));
+    if (blob) fd.append('file', blob, 'preset.png');   // 이름은 서버가 무시한다(경로순회 방지)
+    const r = await fetch('/api/produce/thumb/presets', {method: 'POST', body: fd});
+    const d = await r.json().catch(() => ({ok: false}));
+    if (!r.ok || !d.ok){
+      _thumbPresetMsg(r.status === 401 ? '로그인이 풀렸습니다 — 새로고침 후 다시 시도하세요'
+                                       : (d.error || '담기 실패'), 'var(--fire)');
+      return;
+    }
+    MY_THUMB_PRESETS.unshift(d.preset);     // 최신순 — 서버 정렬(updated_at DESC)과 같은 순서
+    renderMyThumbPresets();
+    _thumbPresetMsg('✅ “' + name + '” 담았어요 — 다음 영상에서 눌러 쓰세요', 'var(--ok)');
+  } catch(e){
+    _thumbPresetMsg('담기 실패 — 연결을 확인하세요', 'var(--fire)');
+  } finally {
+    THUMB_PRESET_BUSY = false;
+  }
+}
+
+function applyMyThumbPreset(pid){
+  const p = MY_THUMB_PRESETS.find(x => x.preset_id === pid);
+  if (!p || !Array.isArray(p.layers)) return;
+  // ★깊은 복사로 얹는다. 얕게 넣으면 편집이 MY_THUMB_PRESETS 안의 원본을 같이 고쳐,
+  //   같은 프리셋을 다시 눌러도 처음 모습으로 안 돌아온다(조용한 오염).
+  THUMB_STATE.layers = JSON.parse(JSON.stringify(p.layers));
+  // 글자 레이어를 고른 상태로 둔다 — 얹자마자 문구를 고치는 것이 다음 할 일이다.
+  const ti = THUMB_STATE.layers.findIndex(L => !['sticker', 'shape', 'badge'].includes(L.kind));
+  THUMB_STATE.sel = ti >= 0 ? ti : 0;
+  renderThumbLayers(); renderThumbCanvas();
+  _thumbPresetMsg('“' + p.name + '” 얹었어요 — 문구만 바꾸면 끝이에요', 'var(--ok)');
+}
+
+async function renameMyThumbPreset(pid){
+  const p = MY_THUMB_PRESETS.find(x => x.preset_id === pid);
+  if (!p) return;
+  const name = (prompt('새 이름', p.name) || '').trim();
+  if (!name || name === p.name) return;
+  try {
+    const r = await fetch('/api/produce/thumb/presets/' + pid + '/rename',
+                          {method: 'POST', headers: {'Content-Type': 'application/json'},
+                           body: JSON.stringify({name})});
+    const d = await r.json().catch(() => ({ok: false}));
+    if (!r.ok || !d.ok){ _thumbPresetMsg(d.error || '이름 변경 실패', 'var(--fire)'); return; }
+    p.name = d.name;                         // 서버가 확정한 이름(길이 잘림 반영)
+    renderMyThumbPresets();
+    _thumbPresetMsg('');
+  } catch(e){ _thumbPresetMsg('이름 변경 실패 — 연결을 확인하세요', 'var(--fire)'); }
+}
+
+async function deleteMyThumbPreset(pid){
+  const p = MY_THUMB_PRESETS.find(x => x.preset_id === pid);
+  if (!p) return;
+  if (!confirm('“' + p.name + '” 프리셋을 지울까요?')) return;
+  try {
+    const r = await fetch('/api/produce/thumb/presets/' + pid, {method: 'DELETE'});
+    const d = await r.json().catch(() => ({ok: false}));
+    if (!r.ok || !d.ok){ _thumbPresetMsg(d.error || '삭제 실패', 'var(--fire)'); return; }
+    MY_THUMB_PRESETS = MY_THUMB_PRESETS.filter(x => x.preset_id !== pid);
+    renderMyThumbPresets();
+    _thumbPresetMsg('');
+  } catch(e){ _thumbPresetMsg('삭제 실패 — 연결을 확인하세요', 'var(--fire)'); }
 }
 // ── 썸네일 끝 ────────────────────────────────────────────────
 
