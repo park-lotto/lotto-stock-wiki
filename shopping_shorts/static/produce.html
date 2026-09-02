@@ -14180,6 +14180,31 @@ function _ccProgDone(msg, ok){
 function _ccProgReset(){ Object.assign(_ccState, {phase:'idle', msg:'', done:0, total:0}); _ccRender(); }
 function _ccBusyOn(){ _ccState.busy=true; window.addEventListener('beforeunload', _ccBeforeUnload); _ccRender(); }
 function _ccBusyOff(){ _ccState.busy=false; window.removeEventListener('beforeunload', _ccBeforeUnload); _ccRender(); }
+// ── 고른 폴더의 진짜 절대경로 알아내기(2026-09-02) ──
+// 캡컷이 만든 프로젝트마다 draft_meta_info.json이 있고 그 안에 draft_root_path(= 드래프트
+// 폴더의 절대경로)가 들어 있다. 폴더 안을 훑어 그 값을 읽는다 — 여러 개면 **가장 흔한 값**을
+// 쓴다(하나쯤 옮겨온 프로젝트가 섞여 있어도 다수가 이긴다).
+// 못 찾으면(빈 폴더 등) null → 호출부가 표준 경로로 물러나되 사용자에게 알린다.
+async function _ccDetectRoot(dir){
+  try{
+    const tally = new Map(); let looked = 0;
+    for await (const [name, h] of dir.entries()){
+      if (h.kind !== 'directory' || looked >= 12) continue;
+      looked++;
+      try{
+        const fh = await h.getFileHandle('draft_meta_info.json');
+        const txt = await (await fh.getFile()).text();
+        const root = (JSON.parse(txt) || {}).draft_root_path;
+        if (root && typeof root === 'string'){
+          const k = root.replace(/[\/]+$/, '');
+          tally.set(k, (tally.get(k) || 0) + 1);
+        }
+      }catch(e){ /* 그 폴더엔 없다 — 다음 것을 본다 */ }
+    }
+    if (!tally.size) return null;
+    return [...tally.entries()].sort((a,b)=>b[1]-a[1])[0][0];
+  }catch(e){ return null; }
+}
 async function sendToCapCut(){
   let _ccDone=0, _ccTotal=0;   // ★실패 문구에 '몇 개까지 갔는지'를 남기기 위해 함수 스코프에 둔다
   if(!('showDirectoryPicker' in window)){ alert('캡컷으로 바로 보내기는 Chrome 또는 Edge에서만 됩니다.\n지금은 「📦 캡컷용 ZIP(수동)」을 받아 캡컷에 올려 주세요.'); return; }
@@ -14193,10 +14218,20 @@ async function sendToCapCut(){
       firstTime = true;
     }
     if(!(await _ccPerm(_ccHandle))){ alert('폴더 접근 권한이 필요합니다. 다시 시도해 주세요.'); _ccHandle=null; return; }
-    // 경로는 자동설정(.bat)이 C:\capcutproject\CapCut Drafts로 표준화하므로 기본값을 쓴다(prompt 없음).
-    // draft가 에셋을 절대경로로 참조하는데 브라우저는 고른 폴더의 경로를 안 알려주므로 이 표준 경로에 의존.
-    // 비표준 위치를 쓰는 사용자는 localStorage.capcut_path로 바꿀 수 있다('폴더 다시 지정' 후 재설정).
-    const path = localStorage.getItem('capcut_path') || CAPCUT_DEFAULT_PATH;
+    // ★고른 폴더의 **진짜 경로를 캡컷에게 물어본다**(2026-09-02 — "폴더만 있고 빈 통"의 진짜 원인).
+    //   draft는 미디어를 절대경로로 참조하는데, 종전엔 표준 경로(C:\capcutproject\CapCut Drafts)를
+    //   **가정**했다. 고객이 캡컷 기본 폴더(AppData\Local\CapCut\...)를 고르면 파일은 거기 잘
+    //   쓰이지만 draft는 엉뚱한 곳을 가리켜 **미디어를 하나도 못 찾는다** = 폴더만 있고 빈 통.
+    //   (실측: 서버 로그는 전부 200 OK였다 — 재료는 다 갔는데 경로가 어긋난 것이다.)
+    //   캡컷이 만든 프로젝트의 draft_meta_info.json에는 draft_root_path가 박혀 있다.
+    //   그걸 읽으면 추측 없이 실제 경로를 안다.
+    let path = await _ccDetectRoot(_ccHandle);
+    if (!path){
+      path = localStorage.getItem('capcut_path') || CAPCUT_DEFAULT_PATH;
+      _ccProgDone('⚠️ 이 폴더가 캡컷 폴더가 맞는지 확인하지 못했습니다 — 캡컷에서 영상이 안 보이면 '
+        + '「폴더 다시 지정」을 눌러 <b>캡컷 프로젝트가 이미 들어 있는 폴더</b>를 골라주세요.', false);
+      await new Promise(r=>setTimeout(r, 1200));   // 안내를 읽을 틈
+    }
     _ccBusyOn();
     _ccProgShow('📦 캡컷 프로젝트 준비 중…', 0, 0);
     const m=await (await fetch('/api/mix/capcut/'+encodeURIComponent(MIX_JOB)+'?base='+encodeURIComponent(path))).json();
