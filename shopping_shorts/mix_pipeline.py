@@ -2567,13 +2567,34 @@ def clean_final_matches_plan(job, work):
             return False
         if job.get("clean_sources"):
             return True     # 소스별 청소본 — 좌표계가 원본과 같아 애초에 안 썩는다
-        sig = _plan_signature(job.get("edit_plan") or {})
-        f = Path(work) / ("final_clean_%s.mp4" % sig)
-        if not (f.exists() and f.stat().st_size > 1024):
-            return False    # 편성이 바뀐 뒤 다시 청소하지 않았다
-        return Path(cvp).stat().st_mtime >= f.stat().st_mtime - 1
+        return clean_final_path_for_plan(job, work) is not None
     except Exception:      # noqa: BLE001
         return False
+
+
+def clean_final_path_for_plan(job, work):
+    """지금 편성으로 청소한 완성본 파일 경로. 없으면 None (2026-09-02).
+
+    ★파일 시각(mtime)으로 판정하지 않는다 — 어제(09-01) 넣은 판정이
+      "clean_preview.mp4가 그 서명 파일보다 새것이냐"를 함께 봤는데, 편성을 바꿔
+      **다시 청소하면 새 청소본이 clean_preview보다 당연히 더 새것**이라 판정이
+      늘 False가 됐다. 그러면 꾸미기 화면이 조용히 원본으로 떨어져 "자막제거는
+      완료인데 자막이 보인다"가 된다(2026-09-02 이유준님 job 210a0c33c32d 실측:
+      청소본 17:54:28 vs clean_preview 17:44:46 → False).
+      좌표계 보증은 **서명 그 자체**다. 시각은 아무것도 보증하지 않는다.
+    ★경로를 함께 돌려준다 — 화면이 clean_video_path(옛 편성 파일)를 쓰면
+      판정만 고쳐도 옛 그림이 나온다. 판정과 출처는 짝이다(0순위-B).
+    """
+    try:
+        if (job or {}).get("clean_sources"):
+            return None     # 소스별 청소본 경로 — 호출부가 그 맵을 그대로 쓴다
+        sig = _plan_signature((job or {}).get("edit_plan") or {})
+        f = Path(work) / ("final_clean_%s.mp4" % sig)
+        if f.exists() and f.stat().st_size > 1024:
+            return f
+        return None
+    except Exception:      # noqa: BLE001
+        return None
 
 
 def _final_clean_fn(store, job, job_id, work, keys, customer_id=0):

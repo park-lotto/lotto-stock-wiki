@@ -16425,7 +16425,13 @@ def _clean_frame_src(job, work, beat_idx, cut=None):
     cvp = job.get("clean_video_path")
     if not cvp or not Path(cvp).exists():
         return {}, None, None, "", False
-    fresh = mix_pipeline.clean_final_matches_plan(job, work)
+    # ★지금 편성으로 청소한 파일이 있으면 **그 파일**을 쓴다(2026-09-02).
+    #   clean_video_path(clean_preview.mp4)는 편성을 바꿔 재청소해도 갱신되지 않아
+    #   옛 편성 그림이다 — 판정만 고치고 출처를 그대로 두면 옛 장면이 뜬다(짝이다).
+    _fresh_path = mix_pipeline.clean_final_path_for_plan(job, work)
+    fresh = _fresh_path is not None
+    if fresh:
+        cvp = str(_fresh_path)
     # ★컷 단위로 찾는다(2026-08-27) — 비트에 재료가 여럿이면 비트 한가운데는
     #   다른 소스 자리다. 화면에 나가는 최소 단위는 컷이다(clean_thumb과 같은 기준).
     _plan = job.get("edit_plan") or {}
