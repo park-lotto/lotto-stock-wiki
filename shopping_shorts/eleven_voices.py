@@ -198,6 +198,41 @@ _SHARED_ENDPOINT = "https://api.elevenlabs.io/v1/shared-voices"
 _ADD_ENDPOINT = "https://api.elevenlabs.io/v1/voices/add/{owner}/{vid}"
 
 
+# ★일레븐랩스가 **무엇이 잘못됐는지 정확히 말해주는데** 우리가 버리고 있었다
+#   (실사고 2026-09-02): 사장님 화면엔 "검색 실패 (HTTP 401)"만 떴고 서버 로그엔
+#   "키를 새로 만들어 다시 넣어주세요"가 찍혔다. 그런데 응답 본문의 진짜 사유는
+#     "The API key you used is missing the permission voices_read to execute this operation."
+#   — **키는 멀쩡하고 권한 한 칸이 빠진 것**이었다. 새 키를 만들어도 그 칸을 안 켜면
+#   똑같이 실패한다. 안내가 틀리면 고객은 고칠 수 없는 쳇바퀴를 돈다.
+#   ★판단은 여기 한 곳에서만 한다(0순위-B) — app._explain_key_failure도 이걸 부른다.
+_PERM_KO = {
+    "voices_read":   "목소리 보기(voices_read)",
+    "voices_write":  "목소리 담기/수정(voices_write)",
+    "text_to_speech": "음성 합성(text_to_speech)",
+    "user_read":     "내 정보 보기(user_read)",
+}
+
+
+def explain_error(code: int, body: str) -> str:
+    """일레븐랩스 응답 → 고객이 **무엇을 눌러야 하는지** 아는 한 줄. 모르면 빈 문자열."""
+    low = (body or "").lower()
+    if "api key id used as api key" in low or "key id" in low:
+        return ("키가 아니라 **키 ID**를 붙여넣으셨어요. ElevenLabs에서 키를 새로 만들 때 "
+                "한 번만 보이는 `sk_`로 시작하는 값을 넣어주세요.")
+    if "missing the permission" in low:
+        m = re.search(r"missing the permission ([a-z_]+)", low)
+        perm = (m.group(1) if m else "")
+        ko = _PERM_KO.get(perm, f"`{perm}`" if perm else "필요한 권한")
+        return (f"키는 정상인데 **{ko} 권한**이 꺼져 있습니다. "
+                "ElevenLabs → 내 프로필 → API Keys에서 그 키를 편집해 이 권한을 켜주세요 "
+                "(키를 새로 만들어도 권한을 안 켜면 똑같이 실패합니다).")
+    if code in (401, 403):
+        return "ElevenLabs가 이 키를 인식하지 못합니다. 키를 새로 만들어 다시 넣어주세요."
+    if code == 429:
+        return "요청이 너무 많습니다. 잠시 뒤 다시 시도해주세요."
+    return ""
+
+
 def search_shared(customer_id=0, query="", language=None, gender=None,
                   category=None, page_size=24, page=0, sort=None):
     """공개 음성 라이브러리 검색 → {"ok","voices","has_more","error"}.
@@ -233,8 +268,10 @@ def search_shared(customer_id=0, query="", language=None, gender=None,
     except Exception as e:                                   # 네트워크 자체 실패
         return {"ok": False, "voices": [], "has_more": False, "error": f"검색 실패: {e}"}
     if r.status_code != 200:
+        # ★본문의 진짜 사유를 버리지 않는다 — "HTTP 401"만 보여주면 고객이 못 고친다.
+        why = explain_error(r.status_code, r.text or "")
         return {"ok": False, "voices": [], "has_more": False,
-                "error": f"검색 실패 (HTTP {r.status_code})"}
+                "error": why or f"검색 실패 (HTTP {r.status_code})"}
     try:
         body = r.json()
     except Exception:

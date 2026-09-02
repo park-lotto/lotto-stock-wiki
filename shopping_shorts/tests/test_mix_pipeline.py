@@ -208,7 +208,12 @@ def test_mix_accepts_youtube_url(monkeypatch, tmp_path):
     # _prepare_sources 만 단위 검증(전체 잡 아님): youtube URL도 통과해야 함
     urls = ["https://www.youtube.com/watch?v=a", "https://www.tiktok.com/@u/video/1"]
     paths, captions, skipped = mp._prepare_sources(urls, tmp_path)
-    assert len(paths) == 2 and got["urls"] == urls
+    # ★순서로 비교하지 않는다(2026-09-02): _prepare_sources는 ThreadPoolExecutor로
+    #   **병렬** 다운로드라 워커 도착 순서가 실행마다 다르다. 종전엔 리스트를 그대로
+    #   비교해 스레드 스케줄링에 따라 무작위로 실패했고, 그 실패가 병합 게이트에서
+    #   "새로 깨진 테스트"로 잡혀 남의 배포까지 막았다. 여기서 확인할 것은
+    #   '두 URL 모두 받아 갔는가'이지 '어느 것이 먼저인가'가 아니다.
+    assert len(paths) == 2 and sorted(got["urls"]) == sorted(urls)
     assert captions == {"s0": "", "s1": ""}
     assert skipped == []
 

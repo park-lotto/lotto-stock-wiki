@@ -1,6 +1,10 @@
 // 로또 · 원클릭 담기 — 실제 로직 (grab.user.js 로더가 서버에서 이 파일을 매번 불러와 실행).
 // ★이 파일을 고치면 모든 사용자가 다음 새로고침에 자동 반영된다(재설치 불필요).
-// 로직 버전: 2026-09-01-d  (버튼 도킹·유튜브 렌즈/시크바·재생속도 — LOGIC_VER가 정본)
+// 로직 버전: 2026-09-02-b  (LOGIC_VER가 정본)
+//   · ⭐볼채널등록 — 회원용 개인 채널 즐겨찾기
+//   · 유튜브는 쇼츠에서만 동작 — 메인·롱폼 차단
+//   ★두 트랙이 같은 날 각각 20260905를 달아 병합에서 부딪혔다. 합친 파일이라
+//     번호를 한 칸 올린다 — 버전은 "무엇이 들어있나"의 유일한 표식이다.
 (function () {
   "use strict";
   // ── 중복 실행 방지 → '새 로직이 이긴다'로 교체(2026-08-18 실사고) ──────────
@@ -10,7 +14,7 @@
   // 원인 찾는 데 한참 걸렸다. 그래서 버전을 숫자로 박고 큰 쪽이 이어받게 한다.
   // (옛 코드는 이 숫자가 없다 → 0으로 보고 새 로직이 이긴다. 옛 인터벌은 남지만
   //  버튼은 id 선점이라 서로 안 덮고, 새 화면(유튜브·쓰레드)은 새 로직이 그린다.)
-  var LOGIC_VER = 20260904;
+  var LOGIC_VER = 20260908;
   if ((window.__ssGrabVer || 0) >= LOGIC_VER) return;   // 같거나 더 새것이 이미 돎
   if (window.__ssGrabLoaded && !window.__ssGrabVer) {
     // 옛 로직이 이미 돌고 있다 — 그 버튼을 걷어내고 새 로직이 다시 그린다.
@@ -153,6 +157,40 @@
     var m = location.pathname.match(/^\/([^/]+)\/?(reels\/?)?$/);
     return (m && !_IG_RESERVED[m[1]]) ? m[1] : "";
   }
+  // ── 릴스/게시물 화면의 **작성자 핸들**을 화면에서 읽는다 (2026-09-02 사장님 제보) ──
+  //   증상: 릴스에서 📌채널수집을 누르면 "❌ 채널을 못 찾았어요"만 떴다.
+  //   원인: 서버가 username 없이 오면 yt-dlp로 인스타를 해석하는데, 로그인 없는 서버는
+  //         자주 막힌다(_resolve_uploader). 그런데 **화면에는 계정명이 이미 떠 있다** —
+  //         담기가 조회수를 화면에서 읽어 보내는 것과 같은 처방으로, 여기서 읽어 보낸다.
+  //   ★영상 근처(조상 6단계 안)의 프로필 링크만 고른다 — 사이드바 추천 계정을 집으면
+  //     엉뚱한 채널이 등록된다.
+  function _igAuthor() {
+    var ok = function (h) {
+      var m = String(h || "").match(/^\/([A-Za-z0-9._]+)\/?(\?|$)/);
+      return (m && !_IG_RESERVED[m[1]]) ? m[1] : "";
+    };
+    var vs = document.querySelectorAll("video"), best = null, area = 0;
+    for (var i = 0; i < vs.length; i++) {
+      var r = vs[i].getBoundingClientRect();
+      if (r.width * r.height > area) { area = r.width * r.height; best = vs[i]; }
+    }
+    var el = best && best.parentElement, guard = 0;
+    while (el && guard++ < 6) {
+      var as = el.querySelectorAll('a[href^="/"]');
+      for (var k = 0; k < as.length; k++) {
+        var u = ok(as[k].getAttribute("href"));
+        if (u) return u;
+      }
+      el = el.parentElement;
+    }
+    // 폴백: 페이지 안 JSON에 owner.username이 들어 있는 경우
+    try {
+      var m2 = (document.body.innerHTML || "").match(/"owner":\{[^}]*"username":"([A-Za-z0-9._]+)"/);
+      if (m2) return m2[1];
+    } catch (e) {}
+    return "";
+  }
+
   // ── 채널수집 버튼 — 인스타·틱톡에 이어 유튜브·쓰레드까지(2026-08-18 사장님 요청) ──
   // 플랫폼마다 '어디에 넣어야 수집이 잡느냐'가 다르다(인스타=discovered_channels,
   // 나머지=platform_seeds account). 그 갈래는 **서버 한 곳**(/api/discover/add_by_url)
@@ -185,7 +223,11 @@
     if (plat === "instagram") {
       var ig = _igProfileName();
       if (ig) return "username=" + encodeURIComponent(ig);
-      return isSinglePost() ? "url=" + encodeURIComponent(location.href) : "";
+      if (!isSinglePost()) return "";
+      var q = "url=" + encodeURIComponent(location.href);
+      var au = _igAuthor();
+      if (au) q += "&username=" + encodeURIComponent(au);   // 서버 yt-dlp 해석을 건너뛴다
+      return q;
     }
     if (plat === "tiktok")
       return (_ttProfile() || isSinglePost()) ? "url=" + encodeURIComponent(location.href) : "";
@@ -198,6 +240,10 @@
   function addChannelBtn() {
     if (document.getElementById("ss-chadd-btn") || !document.body) return;
     if (!_chQuery()) return;
+    // 회원에겐 아예 안 붙인다(관리자 전용 API라 눌러도 "관리자 필요"만 뜬다).
+    // ★syncExtraBtns에서 지우기만 하면 붙였다 지웠다를 반복해 깜빡인다 —
+    //   붙이는 쪽에서 막는 게 유일한 정답이다. 아직 모르는 동안(null)도 안 붙인다.
+    if (window.__ssIsAdmin !== true) return;
     var b = document.createElement("button");
     b.id = "ss-chadd-btn";
     b.textContent = "📌 채널수집";
@@ -573,6 +619,48 @@
         }
       });
   }
+  // ── ⭐볼채널등록(2026-09-02 사장님) — 회원용 개인 채널 즐겨찾기 ────────────
+  //  📌채널수집·⭐레퍼런스등록은 **관리자 전용 + 전역 수집**이라 회원이 눌러도
+  //  "관리자 필요"만 뜬다. 회원에겐 이 버튼이 그 자리를 대신한다.
+  //  ★담아도 크롤 대상은 안 늘어난다(순수 북마크) — 서버 주석과 같은 이유.
+  var _ssIsAdmin = null;      // null=아직 모름, true/false=확정
+  function _ssWhoAmI(cb) {
+    if (_ssIsAdmin !== null) { cb(_ssIsAdmin); return; }
+    _gmGet(BASE + "/api/me", function (st, text) {
+      try {
+        var d = (st === 200) ? JSON.parse(text) : null;
+        _ssIsAdmin = !!(d && d.is_admin);
+      } catch (e) { _ssIsAdmin = false; }
+      window.__ssIsAdmin = _ssIsAdmin;   // addChannelBtn이 읽는다(같은 판정 한 곳)
+      cb(_ssIsAdmin);
+    }, function () { _ssIsAdmin = false; window.__ssIsAdmin = false; cb(false); });
+  }
+  // 지금 화면의 대표 썸네일(카드에 그림을 채우는 용도 — 없으면 이름만 뜬다).
+  function _ssPageThumb() {
+    var v = document.querySelector("video[poster]");
+    if (v && v.getAttribute("poster")) return v.getAttribute("poster");
+    var og = document.querySelector("meta[property='og:image']");
+    return og ? (og.getAttribute("content") || "") : "";
+  }
+  function addFavChannelBtn() {
+    var b = document.getElementById("ss-favch-btn");
+    // 대상 판정은 📌채널수집과 **같은 함수**를 쓴다 — 여기서 또 정하면 어긋난다.
+    // ★관리자(사장님)에겐 안 띄운다 — 📌채널수집과 자리가 겹쳐 헷갈린다(2026-09-02 사장님).
+    //   회원에겐 그대로 필요하다(회원은 📌채널수집을 못 쓴다).
+    var want = !!_chQuery() && window.__ssIsAdmin !== true;
+    if (b && !want) { b.remove(); return; }
+    if (b || !want) return;
+    _miniBtn("ss-favch-btn", "⭐ 나만의 채널등록",
+             "이 채널을 내 즐겨찾기(나만의 채널등록)에 담습니다 — 수집 목록과는 별개", 278, "#d1a054",
+             function () {
+               var q = "url=" + encodeURIComponent(location.href);
+               var t = _ssPageThumb();
+               if (t) q += "&thumb=" + encodeURIComponent(t);
+               window.open(BASE + "/api/fav_channel/grab?" + q,
+                           "ss_favch", "width=400,height=250");
+             });
+  }
+
   function syncExtraBtns() {
     var lens = document.getElementById("ss-lens-btn");
     if (_playerPlat() && _isVideoPage()) {
@@ -584,8 +672,17 @@
     //   담기(📥)는 내 즐겨찾기로만 가고, 채널수집(📌)은 다음 수집까지 기다려야 했다.
     //   이 버튼은 **영상+채널을 한 번에** 넣고 그 영상을 지금 랭킹 스냅샷에 끼워 넣는다.
     //   ★영상 페이지에서만 띄운다 — 피드·프로필에선 "어느 영상"이 정해지지 않는다.
+    // ★회원에겐 관리자 전용 버튼(📌채널수집·⭐레퍼런스등록)을 감추고 ⭐볼채널등록을
+    //   대신 띄운다. 관리자(사장님)는 넷 다 보인다 — 개인 즐겨찾기도 쓰기 때문.
+    _ssWhoAmI(function (isAdmin) {
+      addFavChannelBtn();
+      if (!isAdmin) {   // 판정 전에 이미 붙은 것이 있으면 걷어낸다
+        var ch = document.getElementById("ss-chadd-btn"); if (ch) ch.remove();
+        var ad = document.getElementById("ss-adopt-btn"); if (ad) ad.remove();
+      }
+    });
     var adopt = document.getElementById("ss-adopt-btn");
-    var wantAdopt = !!_chPlat() && _isVideoPage();
+    var wantAdopt = !!_chPlat() && _isVideoPage() && window.__ssIsAdmin === true;
     if (adopt && !wantAdopt) adopt.remove();
     else if (!adopt && wantAdopt) {
       _miniBtn("ss-adopt-btn", "⭐ 레퍼런스 등록",
@@ -942,7 +1039,7 @@
   //   자리 판단은 **여기 한 곳에서만** 한다(0순위-B) — 만드는 쪽은 right:18px로 두고,
   //   이 함수가 매 tick에 left로 덮어쓴다. 못 정하면 종전 자리 그대로 둔다.
   // 위→아래 순서. 지금 화면에 있는 것만 골라 빈칸 없이 연속으로 쌓는다.
-  var DOCK_IDS = ["ss-adopt-btn", "ss-lens-btn", "ss-chadd-btn", "ss-grab-btn"];
+  var DOCK_IDS = ["ss-adopt-btn", "ss-favch-btn", "ss-lens-btn", "ss-chadd-btn", "ss-grab-btn"];
   var DOCK_STEP = 52;      // 버튼 세로 간격
   function _dockAnchor() {
     // 가장 큰 <video>가 지금 보는 영상이다.
@@ -957,10 +1054,18 @@
     // ★조상 칸을 쓰되 '영상보다 지나치게 넓은 칸'은 버린다(2026-09-01 실사고).
     //   유튜브 쇼츠의 ytd-reel-video-renderer는 **화면 전체 폭**이라, 그걸 그대로 쓰면
     //   버튼이 브라우저 오른쪽 끝(주소창 밑)까지 날아갔다. 액션열까지만 감싸는 칸이 목표다.
+    // ★인스타 '모달'(프로필에서 영상을 클릭했을 때)은 왼쪽 영상 + 오른쪽 캡션판이 한 칸이다
+    //   (2026-09-02 사장님 스샷). 영상 오른쪽만 보면 버튼이 **캡션 글자 위를 덮는다** —
+    //   모달 칸 자체를 넘어 그 바깥(오른쪽 빈 공간)에 세워야 한다. 그래서 dialog·article은
+    //   폭 가드(영상의 1.6배)를 면제한다. 나머지 칸은 종전대로 — 유튜브 쇼츠의 화면 전체폭
+    //   조상을 집어 버튼이 브라우저 끝까지 날아갔던 사고(2026-09-01)를 막아야 한다.
     var el = best.parentElement, guard = 0;
-    while (el && guard++ < 6) {
+    while (el && guard++ < 10) {
       var rr = el.getBoundingClientRect();
-      if (rr.width <= v.width * 1.6 && rr.right > right && rr.right < window.innerWidth) right = rr.right;
+      var isModal = (el.getAttribute && el.getAttribute("role") === "dialog") ||
+                    el.tagName === "ARTICLE";
+      if (rr.right > right && rr.right < window.innerWidth &&
+          (isModal || rr.width <= v.width * 1.6)) right = rr.right;
       el = el.parentElement;
     }
     // 액션열(좋아요·댓글·공유)이 영상 **바깥 형제**인 경우(유튜브 쇼츠) — 따로 찾아 넘는다.
@@ -979,10 +1084,24 @@
     var x = rr ? rr.right : 0;
     // 버튼 4개: 영상 칸 오른쪽 + **위에서부터** 아래로(2026-09-01 사장님 요청 —
     // 종전엔 아래에 깔려 사이트 액션 아이콘·'메시지' 팝업과 겹쳤다).
+    // ★스크롤로 영상이 화면 위로 밀리면 rr.top이 음수가 된다. 종전엔 각 버튼이
+    //   Math.max(8, rr.top + 8 + slot*STEP)라 **전부 top:8로 눌려 한 자리에 포개졌다**
+    //   (2026-09-02 사장님 "스크롤 조금 내리면 합쳐진다"). 바닥값을 버튼별로 두지 말고
+    //   **기준선 하나를 먼저 정하고** 거기서 간격을 더한다 — 그러면 절대 겹치지 않는다.
+    var live = [];
+    for (var i0 = 0; i0 < DOCK_IDS.length; i0++) {
+      var e0 = document.getElementById(DOCK_IDS[i0]);
+      if (e0) live.push(e0);
+    }
+    // 영상이 화면에서 거의 사라졌으면 버튼도 숨긴다(엉뚱한 자리에 떠 있는 것보다 낫다).
+    var gone = !!rr && (rr.bottom < 120 || rr.top > window.innerHeight - 80);
+    var base = rr ? Math.max(8, Math.min(rr.top + 8,
+                 window.innerHeight - 8 - live.length * DOCK_STEP)) : 0;
     var slot = 0;
-    for (var i = 0; i < DOCK_IDS.length; i++) {
-      var el = document.getElementById(DOCK_IDS[i]);
-      if (!el) continue;
+    for (var i = 0; i < live.length; i++) {
+      var el = live[i];
+      el.style.display = gone ? "none" : "";
+      if (gone) continue;
       // 화면 밖으로 밀리면(좁은 창) 종전 오른쪽 아래 자리로 되돌린다.
       var w = el.offsetWidth || 150;
       if (!rr || x + 16 + w + 12 > window.innerWidth) {
@@ -990,13 +1109,15 @@
       } else {
         el.style.right = "auto"; el.style.left = (x + 16) + "px";
         el.style.bottom = "auto";
-        el.style.top = Math.max(8, rr.top + 8 + slot * DOCK_STEP) + "px";
+        el.style.top = (base + slot * DOCK_STEP) + "px";
         slot++;
       }
     }
     // 시크바: 버튼과 겹치지 않게 **영상 아래쪽**에 붙인다(폭은 만들 때 줄여둔다).
     var sk = document.getElementById("ss-seek");
     if (sk) {
+      sk.style.display = gone ? "none" : "";
+      if (gone) return;
       if (!rr) { sk.style.left = ""; sk.style.right = "18px"; sk.style.bottom = "174px"; }
       else {
         var sw = sk.offsetWidth || 260;
@@ -1008,7 +1129,31 @@
     }
   }
 
-  function tick() { try{addFloatBtn();}catch(e){} try{addCardBtns();}catch(e){} try{addAnchorCardBtns();}catch(e){} try{addDouyinCardBtns();}catch(e){} try{syncFloat();}catch(e){} try{syncChannelBtn();}catch(e){} try{syncExtraBtns();}catch(e){} try{syncSeekBar();}catch(e){} try{syncGridBadges();}catch(e){} try{_dockBtns();}catch(e){} }
+  // ── 유튜브는 '쇼츠'에서만 동작한다 (2026-09-02 사장님 요청) ──────────────
+  //   메인·구독·검색·채널 등 목록 화면과 **롱폼(watch)** 에선 버튼을 아예 띄우지 않는다.
+  //   예외: 공유 링크로 열린 쇼츠는 /watch?v=... 로 뜨기도 한다 → 재생 중인 영상 길이가
+  //   3분 이하이면 쇼츠로 보고 허용한다(길이를 못 읽으면 롱폼으로 간주해 끈다).
+  function _ytOff() {
+    var h = location.host;
+    if (h.indexOf("youtube.com") < 0 && h.indexOf("youtu.be") < 0) return false;
+    if (/^\/shorts\//.test(location.pathname)) return false;      // 쇼츠 = 동작
+    if (/^\/watch/.test(location.pathname) || h.indexOf("youtu.be") >= 0) {
+      var v = document.querySelector("video");
+      var d = v && isFinite(v.duration) ? v.duration : 0;
+      if (d > 0 && d <= 180) return false;                        // watch로 열린 쇼츠
+    }
+    return true;                                                  // 그 외 유튜브 = 끔
+  }
+  // 유튜브 비대상 화면에서 이미 붙은 것들을 걷어낸다(SPA 이동 대응).
+  function _ytClear() {
+    try {
+      var els = document.querySelectorAll(
+        "#ss-grab-btn,#ss-chadd-btn,#ss-lens-btn,#ss-adopt-btn,#ss-seek,.ss-card-grab");
+      for (var i = 0; i < els.length; i++) els[i].remove();
+    } catch (e) {}
+  }
+
+  function tick() { if (_ytOff()) { _ytClear(); return; } try{addFloatBtn();}catch(e){} try{addCardBtns();}catch(e){} try{addAnchorCardBtns();}catch(e){} try{addDouyinCardBtns();}catch(e){} try{syncFloat();}catch(e){} try{syncChannelBtn();}catch(e){} try{syncExtraBtns();}catch(e){} try{syncSeekBar();}catch(e){} try{syncGridBadges();}catch(e){} try{_dockBtns();}catch(e){} }
   tick();
   // SPA라 스크롤·재검색으로 카드가 갈아끼워져도 버튼을 계속 유지한다.
   // 핸들을 남긴다 — 더 새로운 로직이 로드되면 위 가드가 이걸 끄고 이어받는다.

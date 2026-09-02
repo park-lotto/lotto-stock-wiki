@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>오늘 제작 현황 — 숏템메이커</title>
+<!--
+  사장님 요청(2026-09-02): "회원들이 오늘 영상 만드는 걸 한 페이지에서,
+  통계랑 실제 만든 영상까지 편하게 보게 해달라."
+
+  설계 원칙 — 숫자를 늘어놓지 않는다:
+    ① 맨 위 한 줄이 답("지금 3건 만드는 중 · 오늘 12편 완성")
+    ② 그 아래 카드가 근거(완성·진행·실패·참여인원)
+    ③ 맨 아래는 실제 영상 — 썸네일이 아니라 그 자리에서 재생한다.
+  ★상태 분류·집계는 서버(_PROD_RUNNING)가 정한다. 여기서 또 나누지 않는다(0순위-B).
+-->
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --line:#262b36; --txt:#e8eaf0; --sub:#98a0b3;
+    --ok:#3ecf8e; --warn:#ffc75a; --danger:#ff6b6b; --accent:#5aa9ff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);
+       font-family:'Malgun Gothic','Apple SD Gothic Neo',system-ui,sans-serif;
+       padding:22px;line-height:1.55}
+  h1{font-size:20px;margin:0 0 4px}
+  .sub{color:var(--sub);font-size:13px;margin-bottom:16px}
+  a{color:var(--accent)}
+  .verdict{border-radius:14px;padding:16px 18px;margin-bottom:16px;
+           border:1px solid var(--line);background:var(--panel);font-size:15px}
+  .verdict b{font-size:18px;display:block;margin-bottom:4px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+  .card .k{color:var(--sub);font-size:12px;margin-bottom:6px}
+  .card .v{font-size:26px;font-weight:800;letter-spacing:-.5px}
+  .card .n{color:var(--sub);font-size:11.5px;margin-top:4px}
+  .bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+  button.f{background:#1c202a;border:1px solid var(--line);color:var(--txt);
+           border-radius:999px;padding:7px 14px;font-size:13px;cursor:pointer}
+  button.f.on{background:var(--accent);border-color:var(--accent);color:#08131f;font-weight:700}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+  /* align-self:start — 카드마다 높이가 달라(영상 9:16 vs 빈 칸 132px) grid가 늘려 놓으면
+     내용 아래에 빈 공간이 길게 남는다. 내용 높이에 맞춰 붙인다. */
+  .job{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;
+       display:flex;flex-direction:column;align-self:start}
+  .job video{width:100%;aspect-ratio:9/16;background:#000;display:block;object-fit:cover}
+  /* ★영상이 없는 카드까지 9:16을 잡으면 실패 사유가 화면 밖으로 밀린다(브라우저 실측).
+     빈 칸은 낮게 두고, 사장님이 가장 먼저 봐야 하는 '왜 실패했나'를 바로 위로 끌어올린다. */
+  .job .ph{width:100%;height:132px;display:flex;align-items:center;justify-content:center;
+           background:#12151c;color:var(--sub);font-size:13px;text-align:center;padding:12px;
+           flex-direction:column;gap:6px}
+  .job .meta{padding:10px 12px;font-size:12.5px}
+  .job .who{font-weight:700;font-size:13.5px;margin-bottom:3px}
+  .job .t{color:var(--sub);font-size:11.5px}
+  .tag{display:inline-block;border-radius:999px;padding:2px 9px;font-size:11px;font-weight:700;margin-top:6px}
+  .t-done{background:#12241c;color:var(--ok);border:1px solid #1f6b4d}
+  .t-run{background:#241f12;color:var(--warn);border:1px solid #7a5f1c}
+  .t-fail{background:#241414;color:var(--danger);border:1px solid #7a2b2b}
+  .job .err{color:var(--danger);font-size:11.5px;margin-top:6px;word-break:break-all}
+  .job .acts{padding:0 12px 12px;display:flex;gap:8px}
+  .job .acts a{font-size:12px;text-decoration:none;background:#1c202a;border:1px solid var(--line);
+               border-radius:8px;padding:5px 9px;color:var(--txt)}
+  .empty{color:var(--sub);padding:30px 0;text-align:center}
+</style>
+</head>
+<body>
+<h1>🎬 오늘 제작 현황</h1>
+<div class="sub">회원들이 지금 무엇을 만들고 있는지 · 실제로 나온 영상까지 이 화면에서 바로 본다.
+  · <a href="/admin">🔐 관리자</a> · <a href="/ops">📊 서버 관측판</a> · <a href="/apiwatch">🔑 API 관측판</a></div>
+
+<div id="verdict" class="verdict">불러오는 중…</div>
+<div id="cards" class="cards"></div>
+
+<div class="bar">
+  <button class="f on" data-days="0">오늘</button>
+  <button class="f" data-days="1">어제부터</button>
+  <button class="f" data-days="7">최근 7일</button>
+  <span style="flex:1"></span>
+  <button class="f on" data-filter="all">전체</button>
+  <button class="f" data-filter="video">영상 나온 것</button>
+  <button class="f" data-filter="running">만드는 중</button>
+  <button class="f" data-filter="failed">실패</button>
+</div>
+
+<div id="grid" class="grid"></div>
+<div id="empty" class="empty" hidden>해당하는 작업이 없습니다.</div>
+
+<script>
+let DAYS = 0, FILTER = 'all', JOBS = [], RUNNING = [], STAT = {};
+
+function esc(s){
+  return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];
+  });
+}
+
+// mix_jobs.created_at은 tz 없는 UTC 문자열도 온다 — 그대로 new Date()에 넣으면
+// 브라우저가 로컬시간으로 읽어 9시간 어긋난다. Z를 붙여 UTC로 읽힌 뒤 KST로 표시한다.
+function asDate(iso){
+  if (!iso) return null;
+  var s = String(iso);
+  var d = new Date(/[Z+]|[0-9]-[0-9]{2}:[0-9]{2}$/.test(s) ? s : s.replace(' ', 'T') + 'Z');
+  return isNaN(d) ? null : d;
+}
+
+function hhmm(iso){
+  var d = asDate(iso);
+  if (!d) return String(iso || '').slice(5, 16);
+  return d.toLocaleString('ko-KR', {month:'2-digit', day:'2-digit',
+                                    hour:'2-digit', minute:'2-digit'});
+}
+
+function mins(a, b){
+  var s = asDate(a), e = asDate(b);
+  if (!s || !e) return null;
+  var m = Math.round((e - s) / 60000);
+  return (m >= 0 && m < 60 * 24) ? m : null;
+}
+
+function kind(j){
+  if (j.status === 'done') return 'done';
+  if (j.status === 'failed') return 'fail';
+  return 'run';
+}
+
+function render(){
+  var label = DAYS === 0 ? '오늘' : (DAYS === 1 ? '어제부터' : '최근 ' + DAYS + '일');
+  document.getElementById('verdict').innerHTML =
+    '<b>' + (STAT.running ? '지금 ' + STAT.running + '건 만드는 중'
+                          : '지금 만드는 중인 작업 없음') +
+    ' · ' + label + ' 영상 ' + (STAT.made || 0) + '편 완성</b>' +
+    (STAT.people || 0) + '명이 ' + (STAT.total || 0) + '건을 접수했습니다.' +
+    (STAT.failed ? ' <span style="color:var(--danger)">실패 ' + STAT.failed +
+                   '건은 아래 카드에서 사유를 볼 수 있습니다.</span>' : '');
+
+  var tiles = [
+    ['영상 나온 것', STAT.made || 0, '실제로 파일이 만들어진 건'],
+    ['만드는 중', STAT.running || 0, '지금 파이프라인이 도는 중'],
+    ['실패', STAT.failed || 0, '사유는 카드에 표시'],
+    ['만든 사람', STAT.people || 0, '이 기간에 접수한 회원 수'],
+    ['총 접수', STAT.total || 0, '완성·실패·진행 전부']
+  ];
+  document.getElementById('cards').innerHTML = tiles.map(function(t){
+    return '<div class="card"><div class="k">' + t[0] + '</div><div class="v">' + t[1] +
+           '</div><div class="n">' + t[2] + '</div></div>';
+  }).join('');
+
+  var rows = JOBS.filter(function(j){
+    if (FILTER === 'all') return true;
+    if (FILTER === 'video') return j.has_video;
+    if (FILTER === 'failed') return j.status === 'failed';
+    return RUNNING.indexOf(j.status) >= 0;
+  });
+
+  document.getElementById('empty').hidden = rows.length > 0;
+  document.getElementById('grid').innerHTML = rows.map(function(j){
+    var k = kind(j);
+    var took = mins(j.created_at, j.updated_at);
+    var media = j.has_video
+      ? '<video src="/api/mix/video/' + encodeURIComponent(j.job_id) +
+        '" controls preload="metadata" playsinline></video>'
+      : '<div class="ph">' + (k === 'fail' ? '⚠️ 영상 없음' : '⏳ 만드는 중') +
+        '<span style="font-size:11px">' + esc(j.status || '') + '</span></div>';
+    return '<div class="job">' + media +
+      '<div class="meta">' +
+        '<div class="who">' + esc(j.who) + '</div>' +
+        '<div class="t">' + hhmm(j.created_at) + ' 접수' +
+          (took != null ? ' · ' + took + '분 걸림' : '') + '</div>' +
+        '<div class="t">' + (j.target_seconds || '?') + '초 · ' + esc(j.structure || '') +
+          (j.subtitle_removal ? ' · 자막제거' : '') + '</div>' +
+        '<span class="tag ' + (k === 'done' ? 't-done' : k === 'fail' ? 't-fail' : 't-run') + '">' +
+          (k === 'done' ? '완성' : k === 'fail' ? '실패' : esc(j.status || '진행')) + '</span>' +
+        (j.status === 'failed' && j.error
+          ? '<div class="err">' + esc(String(j.error).slice(0, 160)) + '</div>' : '') +
+      '</div>' +
+      '<div class="acts">' +
+        '<a href="/produce.html?job=' + encodeURIComponent(j.job_id) + '" target="_blank">제작소에서 열기</a>' +
+        (j.customer_id ? '<a href="/admin/customer/' + j.customer_id + '" target="_blank">회원 상세</a>' : '') +
+      '</div></div>';
+  }).join('');
+}
+
+function load(){
+  return fetch('/api/admin/production?days=' + DAYS, {credentials: 'same-origin'})
+    .then(function(r){
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
+    .then(function(d){
+      JOBS = d.jobs || [];
+      RUNNING = d.running_states || [];
+      STAT = d.stat || {};
+      render();
+    })
+    .catch(function(e){
+      document.getElementById('verdict').textContent = '불러오지 못했습니다: ' + e.message;
+    });
+}
+
+Array.prototype.forEach.call(document.querySelectorAll('button.f'), function(b){
+  b.addEventListener('click', function(){
+    var grp = b.dataset.days !== undefined ? '[data-days]' : '[data-filter]';
+    Array.prototype.forEach.call(document.querySelectorAll('button.f' + grp), function(x){
+      x.classList.remove('on');
+    });
+    b.classList.add('on');
+    if (b.dataset.days !== undefined) { DAYS = +b.dataset.days; load(); }
+    else { FILTER = b.dataset.filter; render(); }
+  });
+});
+
+load();
+// 30초 주기 — 더 잦으면 보고 있던 영상이 자꾸 튄다(재생 중인 <video>는 다시 그려진다).
+setInterval(load, 30000);
+</script>
+</body>
+</html>
