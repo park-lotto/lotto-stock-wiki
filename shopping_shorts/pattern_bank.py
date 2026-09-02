@@ -149,7 +149,7 @@ def _default_call(prompt, schema, max_key_tries=None):
             except Exception as e:  # noqa: BLE001 — 추출 실패는 치명적 아님(빈 dict로 처리)
                 if (comment_gen.key_vault.is_daily_exhausted_error(e)
                         or comment_gen.key_vault.is_account_disabled_error(e)):
-                    comment_gen._mark_key_exhausted(ki, comment_gen.key_vault.retry_delay_seconds(e))   # 일일 소진·계정 비활성 → 그날 제외
+                    comment_gen._mark_key_exhausted(ki, comment_gen.key_vault.retry_delay_seconds(e), exc=e)   # 일일 소진·계정 비활성 → 그날 제외
                     continue
                 if comment_gen.key_vault.is_quota_error(e):  # 분당 429 → 다른 키(제외 안 함)
                     continue
