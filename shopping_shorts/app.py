@@ -3380,6 +3380,13 @@ def api_mix_start(request: Request, background_tasks: BackgroundTasks, body: dic
         return JSONResponse(status_code=429, content={
             "ok": False, "error_code": "daily_limit",
             "error": "오늘 영상 만들기 횟수를 다 썼어요. 결제하면 더 만들 수 있어요."})
+    # ★음성 키가 없으면 제작 자체를 막는다(2026-09-01) — 전엔 사장님 일레븐랩스로
+    #   조용히 나가고 포인트만 깎였다(실측: 최근 30일 16명이 키 없이 86건 제작).
+    _blocked = _need_own_key_or_402(cid, tts=True)
+    if _blocked:
+        uncount(cid, "render")
+        _store.release_mix_claim(_fp)
+        return _blocked
     _charged = {}                      # ★깎은 액수를 그대로 job에 남긴다(환불이 재판단하지 않게)
     _denied = _charge_or_402(cid, pricing.OP_MIX, keyroute.SVC_GEMINI, out=_charged)
     if _denied:
@@ -3401,7 +3408,7 @@ def api_mix_start(request: Request, background_tasks: BackgroundTasks, body: dic
 
 
 @app.post("/api/mix/candidate")
-def api_mix_candidate(body: dict):
+def api_mix_candidate(request: Request, body: dict):
     """장면 우선 대본 모드(2026-07-20, Task6): 후보 선택 — 고른 후보의 plan을 edit_plan으로
     세팅한다(미리보기/렌더가 이걸 읽는다).
 
@@ -3417,6 +3424,12 @@ def api_mix_candidate(body: dict):
       (mix_pipeline._beat_tts_path) 글자가 바뀌면 tts_path가 안 맞아 그 비트만 다시 합성된다.
       그래서 여기선 tts_path를 지울 필요도, 별도 재합성을 부를 필요도 없다.
     """
+    # ★키 없으면 여기서 막는다(2026-09-02). 안 막으면 TTS가 무음 mp3로 폴백해
+    #   **소리 없는 영상**이 끝까지 만들어지고 화면은 "완료"라고 말한다 — 사장님 지시
+    #   ("실패했을 때 안내문구를 띄우면 된다")의 정반대다. 판단은 keyroute 한 곳(0순위-B).
+    _blocked = _need_own_key_or_402(_cid(request), tts=True)
+    if _blocked:
+        return _blocked
     job_id = (body.get("job_id") or "").strip()
     idx = int(body.get("index") or 0)
     store = Store(DB_PATH)
@@ -3520,9 +3533,18 @@ def api_mix_candidate_clone(request: Request, body: dict):
         return JSONResponse(status_code=429, content={
             "ok": False, "error_code": "daily_limit",
             "error": "오늘 영상 만들기 횟수를 다 썼어요. 결제하면 더 만들 수 있어요."})
+    # ★음성 키가 없으면 제작을 막는다(2026-09-01 사장님 확정) — keyroute가 판단처.
+    # ⚠️여기서 막을 땐 위 check_and_count로 **이미 깎은 하루 횟수를 돌려준다**(2026-09-02).
+    #   안 돌려주면 아무것도 못 만들고 오늘 한 번을 잃는다 — 막힌 사람을 두 번 벌하는 꼴이다.
+    #   원본 경로(api_mix_start)엔 이 되돌림이 있는데 이 복제 경로만 빠져 있었다.
+    _blocked = _need_own_key_or_402(cid, tts=True)
+    if _blocked:
+        uncount(cid, "render")
+        return _blocked
     _charged = {}                      # ★깎은 액수를 그대로 job에 남긴다(환불이 재판단하지 않게)
     _denied = _charge_or_402(cid, pricing.OP_MIX, keyroute.SVC_GEMINI, out=_charged)
     if _denied:
+        uncount(cid, "render")          # 같은 이유 — 시작도 못 했으면 횟수도 없던 일로
         return _denied
     global_incr_and_alert("render")
     urls = src.get("urls") or []
@@ -4919,7 +4941,7 @@ def api_mix_scene_lab_apply(job_id: str, body: dict):
 
 
 @app.post("/api/mix/render")
-def api_mix_render(background_tasks: BackgroundTasks, body: dict):
+def api_mix_render(request: Request, background_tasks: BackgroundTasks, body: dict):
     """최종 렌더 예약. 미리보기(/api/produce/mix/preview)와 같은 중복예약 가드를 건다 —
     이쪽이 오히려 **돈이 나가는** 경로다(subtitle_removal이 켜져 있으면 VMake 유료 호출).
 
@@ -4929,6 +4951,12 @@ def api_mix_render(background_tasks: BackgroundTasks, body: dict):
     수십 ms 간격의 POST 2건이 둘 다 아직 이전 status를 보고 통과한다(TOCTOU).
     → 여기서 **동기적으로** 선기록한다.
     """
+    # ★키 없으면 여기서 막는다(2026-09-02). 안 막으면 TTS가 무음 mp3로 폴백해
+    #   **소리 없는 영상**이 끝까지 만들어지고 화면은 "완료"라고 말한다 — 사장님 지시
+    #   ("실패했을 때 안내문구를 띄우면 된다")의 정반대다. 판단은 keyroute 한 곳(0순위-B).
+    _blocked = _need_own_key_or_402(_cid(request), tts=True)
+    if _blocked:
+        return _blocked
     job_id = body.get("job_id")
     store = Store(DB_PATH)
     job = store.get_mix_job(job_id)
@@ -4973,7 +5001,11 @@ def clean_failure_kind(clean_error):
     """
     e = (clean_error or "")
     low = e.lower()
-    # 우리 포인트 부족(mix_pipeline._charge_clean). 재시도해도 영원히 안 된다.
+    # ★내 키 미등록(2026-09-01) — 키를 등록하기 전엔 재시도해도 영원히 안 된다.
+    #   포인트 부족보다 **먼저** 본다: 이제 포인트는 없고 사유는 키 미등록뿐이다.
+    if "키를 등록해야" in e or "need_own_key" in e or "API 키가 필요" in e:
+        return "need_own_key"
+    # 우리 포인트 부족(옛 사유 — 배포 직전에 담긴 job이 이 문구를 들고 있을 수 있다).
     # ★no_credit보다 **먼저** 본다 — 문구가 겹쳐도 우리 쪽 사유가 우선이라야
     #   "남의 키에 충전하세요"라는 엉뚱한 안내가 안 나간다.
     if "포인트가 부족" in e:
@@ -5016,11 +5048,17 @@ def _render_is_stale(job) -> bool:
 
 
 @app.post("/api/produce/mix/preview")
-def api_produce_mix_preview(background_tasks: BackgroundTasks, body: dict):
+def api_produce_mix_preview(request: Request, background_tasks: BackgroundTasks, body: dict):
     """1단계 미리보기 렌더 예약 — 유료 자막제거 없이(0원). 스펙 §6.3.
 
     다음 단계(자막제거)가 VMake 유료 API라, 컷·대본이 틀린 채 넘어가면 그 돈이 날아간다.
     그래서 여기서 먼저 공짜로 보여주고 OK를 받는다."""
+    # ★키 없으면 여기서 막는다(2026-09-02). 안 막으면 TTS가 무음 mp3로 폴백해
+    #   **소리 없는 영상**이 끝까지 만들어지고 화면은 "완료"라고 말한다 — 사장님 지시
+    #   ("실패했을 때 안내문구를 띄우면 된다")의 정반대다. 판단은 keyroute 한 곳(0순위-B).
+    _blocked = _need_own_key_or_402(_cid(request), tts=True)
+    if _blocked:
+        return _blocked
     job_id = body.get("job_id")
     store = Store(DB_PATH)
     job = store.get_mix_job(job_id)
@@ -5077,6 +5115,11 @@ def api_produce_mix_clean(background_tasks: BackgroundTasks, body: dict):
     job = store.get_mix_job(job_id)
     if not job or not job.get("edit_plan"):
         return JSONResponse(status_code=422, content={"ok": False, "error": "매칭 먼저 실행하세요"})
+    # ★VMake 개인 키가 없으면 막는다(2026-09-01). 이 라우트는 요청자 cid를 안 읽으므로
+    #   **job 주인**을 기준으로 판단한다 — 실제로 키가 나가는 것도 job 주인 몫이다.
+    _blocked = _need_own_key_or_402(job.get("customer_id"), keyroute.SVC_VMAKE)
+    if _blocked:
+        return _blocked
     if job.get("clean_status") == "cleaning" and not _render_is_stale(job):
         return {"ok": True, "status": "cleaning"}       # 더블클릭 — VMake를 두 번 안 돌린다
     # 'cleaning'을 여기서 동기 기록(응답 전) — run 안에서 쓰면 이중예약된다(preview 라우트 주석 참조)
@@ -5192,6 +5235,10 @@ def api_mix_tts_regen(job_id: str, beat_idx: int, body: dict, background_tasks: 
     job = store.get_mix_job(job_id)
     if not job or not job.get("edit_plan"):
         return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    # ★음성 키 없으면 막는다(2026-09-01) — 안 막으면 무음 mp3가 조용히 만들어진다.
+    _blocked = _need_own_key_or_402(job.get("customer_id"), tts=True)
+    if _blocked:
+        return _blocked
     # 렌더 단계뿐 아니라 '이 음성으로 전체 생성'(active stage "tts") 등 활성 단계 전부에서 막는다.
     # 안 막으면 전체생성 백그라운드가 이 비트 새 톤 mp3를 job 기본 보이스로 덮어써 톤 변경이 사라진다
     # (2026-07-23 진단 — 스크린샷 "전체 음성 생성 중…" 상태에서 톤 바꿔도 적용 안 됨).
@@ -5904,6 +5951,9 @@ def api_mix_voice(background_tasks: BackgroundTasks, body: dict):
     job = store.get_mix_job(job_id)
     if not job or not job.get("edit_plan"):
         return JSONResponse(status_code=404, content={"ok": False, "error": "job/plan 없음"})
+    _blocked = _need_own_key_or_402(job.get("customer_id"), tts=True)   # 음성 키 필수(2026-09-01)
+    if _blocked:
+        return _blocked
     voice = _voice_snapshot(store, body)
     store.update_mix_job(job_id, voice=voice)
     # 🎙 이 선택을 고객의 '다음 작업 기본 성우'로 기억한다(2026-09-02 사장님 지시).
@@ -5917,6 +5967,12 @@ def api_mix_voice(background_tasks: BackgroundTasks, body: dict):
         store.set_last_voice(job.get("customer_id", 0), voice)
     except Exception as _e:      # noqa: BLE001
         print(f"[성우기억] 저장 실패(무해): {_e!r}", file=sys.stderr)
+    # ★status를 **여기서 동기적으로** 찍는다(2026-09-02). resynth_tts_job도 안에서 찍지만
+    #   그건 응답을 보낸 뒤에야 도는지라, 화면 폴러(2.5초)가 그 전에 옛 'ready_for_review'를
+    #   보고 **"✅ 완료"를 띄운다** — 음성은 아직 만들어지는 중인데 다 됐다고 말한다.
+    #   preview·render가 쓰는 선기록 패턴과 같다(TOCTOU). 'tts'는 _MIX_ACTIVE_STAGES라
+    #   중간에 죽어도 staleness 가드가 failed로 알려준다.
+    store.update_mix_job(job_id, status="tts")
     background_tasks.add_task(resynth_tts_job, job_id, DB_PATH, _MIX_WORK_DIR)
     return {"ok": True}
 
@@ -5928,6 +5984,9 @@ def api_mix_voice_preview(body: dict):
     job = Store(DB_PATH).get_mix_job(job_id)
     if not job or not job.get("edit_plan") or not job["edit_plan"].get("beats"):
         return JSONResponse(status_code=404, content={"ok": False, "error": "plan 없음"})
+    _blocked = _need_own_key_or_402(job.get("customer_id"), tts=True)   # 음성 키 필수(2026-09-01)
+    if _blocked:
+        return _blocked
     beats = job["edit_plan"]["beats"]
     d = _MIX_WORK_DIR / job_id / "tts"
     d.mkdir(parents=True, exist_ok=True)
@@ -10393,6 +10452,25 @@ def uncount(customer_id, op):
         st.usage_decr(customer_id, "render", "trial")
         return
     st.usage_decr(customer_id, op, _today_utc())
+
+
+def _need_own_key_or_402(customer_id, service=None, *, tts=False):
+    """개인 키가 없으면 402로 막는다(2026-09-01 사장님 "v메이크랑 tts는 없으면 못하게 막아").
+
+    ★판단은 keyroute 한 곳(0순위-B) — 여기선 응답 모양만 만든다.
+    ★왜 402인가: 화면이 이미 402를 '이용 조건 미충족'으로 다루고 error_code로 갈래를
+      나눈다. 새 상태코드를 만들면 옛 화면이 조용히 무시한다.
+    반환: 막아야 하면 JSONResponse, 아니면 None."""
+    store = Store(DB_PATH)
+    hit = (keyroute.tts_block_reason(store, customer_id) if tts
+           else keyroute.block_reason(store, customer_id, service))
+    if not hit:
+        return None
+    code, msg = hit
+    return JSONResponse(status_code=402, content={
+        "ok": False, "error_code": code, "error": msg,
+        "need_key_service": ("tts" if tts else service),
+        "settings_url": "/settings#keys"})
 
 
 def _charge_or_402(customer_id, op, service, out=None):
@@ -14933,6 +15011,16 @@ def api_produce_mix_start(request: Request, background_tasks: BackgroundTasks, b
         return JSONResponse(status_code=429, content={
             "ok": False, "error_code": "daily_limit",
             "error": "오늘 영상 만들기 횟수를 다 썼어요. 결제하면 더 만들 수 있어요."})
+    # ★음성 키가 없으면 제작을 막는다(2026-09-01 사장님 확정) — keyroute가 판단처.
+    # ⚠️막을 때 **횟수와 클레임을 둘 다 되돌린다**(2026-09-02). 바로 아래 포인트 실패
+    #   경로엔 이 되돌림이 있는데 키 게이트만 빠져 있었다 — 그래서 키 없는 사람은
+    #   아무것도 못 만들고 오늘 1회를 잃고(체험이면 평생 1회), 30초간 409로 재시도도
+    #   막혔다. 막힌 사람을 두 번 벌하는 꼴이다.
+    _blocked = _need_own_key_or_402(cid, tts=True)
+    if _blocked:
+        uncount(cid, "render")
+        _store.release_mix_claim(_fp)
+        return _blocked
     _charged = {}                      # ★깎은 액수를 그대로 job에 남긴다(환불이 재판단하지 않게)
     _denied = _charge_or_402(cid, pricing.OP_MIX, keyroute.SVC_GEMINI, out=_charged)
     if _denied:

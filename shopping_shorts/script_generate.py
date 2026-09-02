@@ -66,7 +66,17 @@ def _call_json(prompt, schema, note=None):
         if not keys:
             # ★키가 하나도 안 남았을 때만 진짜 '키 소진'이다.
             note["reason"] = "no_keys"
-    for key in keys:
+    # ★키를 **페이서로 골라 쓴다**(2026-09-01). 종전엔 `for key in keys:`가 간격 0으로
+    #   연타하고 429가 나면 대기 없이 다음 키로 넘어가, 키 76개를 순식간에 다 태웠다.
+    #   실측(오늘 KST 12·15시 피크): 대본생성 web 407콜 중 분당한도 149건(36.6%).
+    #   pick_paced_key는 라운드로빈 + 키당 최소 간격(분당 5회, comment_gen과 같은 근거)을
+    #   지켜 **애초에 429를 안 맞게** 한다. 시도 횟수·실패 처리는 종전과 같다(키 수만큼).
+    pool = list(keys)
+    while pool:
+        key = key_vault.pick_paced_key(pool)
+        if not key:
+            break
+        pool.remove(key)      # 한 키는 한 번만 시도(종전 for문과 같은 계약)
         try:
             resp = key_vault.get_client_for_key(key).models.generate_content(
                 model=_MODEL, contents=prompt,
