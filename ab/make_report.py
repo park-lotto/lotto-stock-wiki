@@ -37,11 +37,23 @@ def main():
         if not rs:
             continue
         # 재픽이 실제로 돈 건만(모델을 부른 건만) 성능으로 센다.
-        called = [r for r in rs if r.get("seconds", 0) > 0.5]
+        # ★blank는 제외한다 — 출발이 '화면 없음'이라 채점축이 판정을 보류해
+        #   base_bad=0(만점처럼 보임)이 된다. 채우면 판정이 켜지므로 무엇을 골라도
+        #   "나빠짐"으로 세어져 지표가 거꾸로 나온다. 별도 표로 따로 본다.
+        called = [r for r in rs if r.get("seconds", 0) > 0.5 and r["case"] != "blank"]
         beats = sum(r["n_beats"] for r in called)
         base = sum(r["base_bad"] for r in called)
         after = sum(r["after_bad"] for r in called)
-        worse = [r for r in called if r["after_bad"] > r["base_bad"]]
+        # ★"나빠짐"은 **잴 수 있었던 비트**에서만 센다.
+        #   출발 shot_role이 없는 비트(pad·빈칸)는 채점축이 판정을 보류해 어긋남 0으로
+        #   잡히므로, 채우는 순간 무엇을 골라도 나빠짐이 된다(blank와 같은 함정).
+        def _real_worse(r):
+            gained = 0
+            for b0, a0 in zip(r.get("base_detail", []), r.get("after_detail", [])):
+                if b0.get("shot_role") and (not b0["mismatch"]) and a0["mismatch"]:
+                    gained += 1   # 판정 가능했고 멀쩡했는데 어긋나게 만든 것만
+            return gained > 0
+        worse = [r for r in called if _real_worse(r)]
         better = [r for r in called if r["after_bad"] < r["base_bad"]]
         same = [r for r in called if r["after_bad"] == r["base_bad"]]
         agg[m] = {
@@ -72,7 +84,7 @@ def main():
     # ── 훅/CTA 역할별 (가장 중요한 두 자리) ─────────────────────────
     role_stat = {}
     for r in ok:
-        if r.get("seconds", 0) <= 0.5:
+        if r.get("seconds", 0) <= 0.5 or r["case"] == "blank":
             continue
         for d in r.get("after_detail", []):
             k = (r["model"], d.get("role") or "?")
@@ -139,6 +151,42 @@ code{background:rgba(128,128,128,.13);padding:1px 5px;border-radius:4px;font-siz
                  '호출 %d건 · 중앙 %.1f초</div></div>'
                  % (esc(m), cls, a["fixed_rate"], a["base"], a["after"], a["called"], a["sec"]))
     P.append("</div>")
+
+    # ── 실험2: 문턱(fit) — 이번 실측의 결론 ──────────────────────────
+    GATE = os.path.join(_HERE, "gate_results.json")
+    if os.path.exists(GATE):
+        grows = [r for r in json.load(io.open(GATE, encoding="utf-8")) if r.get("ok")]
+        if grows:
+            gagg = {}
+            for r in grows:
+                gagg.setdefault((r["fit"], r["model"]), []).append(r)
+            P.append("<h2>★ 실험2 — 진짜 원인은 모델이 아니라 <b>문턱</b>이었다</h2>")
+            P.append('<div class="note">재픽(<code>_repick_weak_beats</code>)은 '
+                     '<b>fit≤3 또는 forced</b>인 비트만 고친다. 라이브는 전 비트가 '
+                     '<b>fit=5</b>라 <b>어느 모델도 호출되지 않는다.</b><br>'
+                     '아래는 문턱만 바꿔가며 같은 비트를 재픽시킨 결과다.</div>')
+            P.append("<div class='scroll'><table><tr><th>fit(출발)</th>"
+                     "<th class='num'>모델</th><th class='num'>모델 호출</th>"
+                     "<th class='num'>출발 어긋남</th><th class='num'>교정 후</th></tr>")
+            for fit in [5, 4, 3, 2, 1]:
+                for m in sorted({r["model"] for r in grows}):
+                    rs = gagg.get((fit, m)) or []
+                    if not rs:
+                        continue
+                    called = sum(1 for r in rs if r.get("called"))
+                    base = sum(r["base_bad"] for r in rs) / len(rs)
+                    after = sum(r["after_bad"] for r in rs) / len(rs)
+                    cls = "good" if after < base else ("bad" if called == 0 else "")
+                    P.append("<tr><td><b>fit=%d</b></td><td class='num'>%s</td>"
+                             "<td class='num %s'>%d/%d</td><td class='num'>%.1f</td>"
+                             "<td class='num %s'>%.1f</td></tr>"
+                             % (fit, esc(m), "bad" if called == 0 else "good",
+                                called, len(rs), base, cls, after))
+            P.append("</table></div>")
+            P.append('<div class="note"><b>읽는 법:</b> fit 5·4에서는 <b>호출 0회</b> — '
+                     '오푸스를 붙여도 <b>부르질 않으니 소용이 없다</b>. '
+                     'fit을 3 이하로 낮추면 <b>양쪽 모델 다 어긋남을 0으로</b> 만든다.<br>'
+                     '→ 처방은 <b>모델 교체가 아니라 fit 판정 수정</b>이다(원가 0).</div>')
 
     # 모델 비교표
     P.append("<h2>모델 비교</h2><div class='scroll'><table><tr>"
@@ -207,6 +255,55 @@ code{background:rgba(128,128,128,.13);padding:1px 5px;border-radius:4px;font-siz
             P.append("<td class='num %s'>%s</td>" % (cls, "·".join(str(x) for x in afters)))
         P.append("</tr>")
     P.append("</table></div>")
+
+    # blank(백지에서 고르기) — 별도로 본다. 위 집계에서 제외한 이유를 함께 밝힌다.
+    blanks = [r for r in ok if r["case"] == "blank" and r.get("seconds", 0) > 0.5]
+    if blanks:
+        P.append("<h2>백지에서 고르기 (blank) — 따로 보는 이유</h2>")
+        P.append('<div class="note">출발이 <b>화면 없음</b>이라 채점축이 판정을 보류해 '
+                 '<b>출발 어긋남이 0</b>으로 잡힌다(만점처럼 보이지만 실은 "잴 수 없음"). '
+                 '무엇을 채워도 "나빠짐"으로 세어지므로 <b>위 집계에서 뺐다.</b> '
+                 '여기서는 <b>채운 뒤 몇 개가 어긋났나</b>로만 본다 — 낮을수록 좋다.</div>')
+        P.append("<div class='scroll'><table><tr><th>모델</th><th class='num'>회차</th>"
+                 "<th class='num'>채운 칸</th><th class='num'>채운 뒤 어긋남</th></tr>")
+        for r in sorted(blanks, key=lambda x: (x["model"], x["rep"])):
+            filled = sum(1 for d in r["after_detail"] if d["seg_id"])
+            bad_n = r["after_bad"]
+            cls = "good" if bad_n == 0 else ("warn" if bad_n <= 1 else "bad")
+            P.append("<tr><td><b>%s</b></td><td class='num'>%d</td>"
+                     "<td class='num'>%d/%d</td><td class='num %s'>%d</td></tr>"
+                     % (esc(r["model"]), r["rep"], filled, r["n_beats"], cls, bad_n))
+        P.append("</table></div>")
+
+    # ── problem 비트 — 나빠짐의 정체 ────────────────────────────────
+    prob_worse = {}
+    for r in ok:
+        if r["case"] == "blank" or r.get("seconds", 0) <= 0.5:
+            continue
+        for b0, a0 in zip(r.get("base_detail", []), r.get("after_detail", [])):
+            if b0.get("shot_role") and (not b0["mismatch"]) and a0["mismatch"]:
+                k = (r["model"], a0.get("role") or "?")
+                prob_worse[k] = prob_worse.get(k, 0) + 1
+    if prob_worse:
+        P.append("<h2>\"나빠짐\"은 어디서 났나</h2>")
+        P.append("<div class='scroll'><table><tr><th>모델</th><th>역할</th>"
+                 "<th class='num'>멀쩡→어긋남</th></tr>")
+        for (m, role), n in sorted(prob_worse.items(), key=lambda x: -x[1]):
+            P.append("<tr><td><b>%s</b></td><td>%s</td><td class='num bad'>%d건</td></tr>"
+                     % (esc(m), esc(role), n))
+        P.append("</table></div>")
+        P.append('<div class="note"><b>오푸스 나빠짐은 대부분 <code>problem</code> 한 자리에 몰려 있다</b> '
+                 '— 오푸스가 문제 비트에 완성·after 샷을 고르기 때문.<br>'
+                 '⚠️ <b>이 잡의 인벤토리엔 <code>before</code>·<code>문제</code> 결이 0건</b>이다'
+                 '(사용중 41·완성 9·after 5·기타 1). 판정표는 problem에 '
+                 '<code>before/문제</code>(없으면 <code>사용중</code>)를 요구하는데, '
+                 '재픽 프롬프트는 <b>재고에 없는 <code>before·문제</code>를 그대로 지시</b>한다 '
+                 '(<code>edit_plan.py:3978</code>이 <code>available</code>을 안 넘긴다 — '
+                 '3861은 넘긴다).<br>'
+                 '★단 <b>그 힌트를 고쳐 재실측했더니 오푸스 선택은 안 바뀌었다</b>(짝비교 3쌍 전부 동일). '
+                 '즉 힌트 누락은 <b>진짜지만 이 증상의 원인은 아니다</b> — 대사가 "맛보더니 가져가도 '
+                 '되냐고 매달려서"라 실제로 문제 상황이 아니고, 완성샷이 대사엔 더 맞는다. '
+                 '<b>채점축이 problem에 요구하는 결과 대사가 어긋난 경우</b>로 보인다.</div>')
 
     if fail:
         P.append("<h2>실패 %d건</h2><div class='scroll'><table>"

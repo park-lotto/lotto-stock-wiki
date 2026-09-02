@@ -1,0 +1,1466 @@
+[
+ {
+  "model": "opus",
+  "fixed": false,
+  "rep": 0,
+  "base": 3,
+  "after": 1,
+  "problem_bad": 1,
+  "problem_role": "after",
+  "detail": [
+   {
+    "beat_idx": 0,
+    "role": "hook",
+    "seg_id": "Db9O4pqza74-4",
+    "shot_role": "after",
+    "scene_desc": "다 구워진 쿠키를 두 손으로 반으로 쪼개어 단면을 보여주는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 1,
+    "role": "problem",
+    "seg_id": "Db9O4pqza74-4",
+    "shot_role": "after",
+    "scene_desc": "다 구워진 쿠키를 두 손으로 반으로 쪼개어 단면을 보여주는 모습",
+    "fit": 1,
+    "repicked": false,
+    "mismatch": true
+   },
+   {
+    "beat_idx": 2,
+    "role": "solution",
+    "seg_id": "Db9O4pqza74-5",
+    "shot_role": "사용중",
+    "scene_desc": "버터 크림에 액체 재료를 붓고 핸드믹서로 휘핑하는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 3,
+    "role": "result",
+    "seg_id": "Db9O4pqza74-8",
+    "shot_role": "after",
+    "scene_desc": "장갑 낀 손으로 바닐라, 초코, 말차 맛 구운 쿠키를 차례로 보여주는 장면",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 4,
+    "role": "cta",
+    "seg_id": "s1-1",
+    "shot_role": "완성",
+    "scene_desc": "접시 위에 노릇노릇하게 잘 구워진 버터 쿠키들이 가득 담겨 있는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   }
+  ]
+ },
+ {
+  "model": "opus",
+  "fixed": true,
+  "rep": 0,
+  "base": 3,
+  "after": 1,
+  "problem_bad": 1,
+  "problem_role": "after",
+  "detail": [
+   {
+    "beat_idx": 0,
+    "role": "hook",
+    "seg_id": "Db9O4pqza74-4",
+    "shot_role": "after",
+    "scene_desc": "다 구워진 쿠키를 두 손으로 반으로 쪼개어 단면을 보여주는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 1,
+    "role": "problem",
+    "seg_id": "Db9O4pqza74-4",
+    "shot_role": "after",
+    "scene_desc": "다 구워진 쿠키를 두 손으로 반으로 쪼개어 단면을 보여주는 모습",
+    "fit": 1,
+    "repicked": false,
+    "mismatch": true
+   },
+   {
+    "beat_idx": 2,
+    "role": "solution",
+    "seg_id": "Db9O4pqza74-5",
+    "shot_role": "사용중",
+    "scene_desc": "버터 크림에 액체 재료를 붓고 핸드믹서로 휘핑하는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 3,
+    "role": "result",
+    "seg_id": "Db9O4pqza74-8",
+    "shot_role": "after",
+    "scene_desc": "장갑 낀 손으로 바닐라, 초코, 말차 맛 구운 쿠키를 차례로 보여주는 장면",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 4,
+    "role": "cta",
+    "seg_id": "s1-1",
+    "shot_role": "완성",
+    "scene_desc": "접시 위에 노릇노릇하게 잘 구워진 버터 쿠키들이 가득 담겨 있는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   }
+  ]
+ },
+ {
+  "model": "opus",
+  "fixed": false,
+  "rep": 1,
+  "base": 3,
+  "after": 1,
+  "problem_bad": 1,
+  "problem_role": "after",
+  "detail": [
+   {
+    "beat_idx": 0,
+    "role": "hook",
+    "seg_id": "s1-1",
+    "shot_role": "완성",
+    "scene_desc": "접시 위에 노릇노릇하게 잘 구워진 버터 쿠키들이 가득 담겨 있는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 1,
+    "role": "problem",
+    "seg_id": "Db9O4pqza74-4",
+    "shot_role": "after",
+    "scene_desc": "다 구워진 쿠키를 두 손으로 반으로 쪼개어 단면을 보여주는 모습",
+    "fit": 1,
+    "repicked": false,
+    "mismatch": true
+   },
+   {
+    "beat_idx": 2,
+    "role": "solution",
+    "seg_id": "Db9O4pqza74-5",
+    "shot_role": "사용중",
+    "scene_desc": "버터 크림에 액체 재료를 붓고 핸드믹서로 휘핑하는 모습",
+    "fit": 5,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 3,
+    "role": "result",
+    "seg_id": "Db9O4pqza74-8",
+    "shot_role": "after",
+    "scene_desc": "장갑 낀 손으로 바닐라, 초코, 말차 맛 구운 쿠키를 차례로 보여주는 장면",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 4,
+    "role": "cta",
+    "seg_id": "s3-18",
+    "shot_role": "완성",
+    "scene_desc": "두 개의 오븐 팬 가득히 완벽하게 완성된 쿠키의 정렬 샷",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   }
+  ]
+ },
+ {
+  "model": "opus",
+  "fixed": true,
+  "rep": 1,
+  "base": 3,
+  "after": 1,
+  "problem_bad": 1,
+  "problem_role": "after",
+  "detail": [
+   {
+    "beat_idx": 0,
+    "role": "hook",
+    "seg_id": "Db9O4pqza74-4",
+    "shot_role": "after",
+    "scene_desc": "다 구워진 쿠키를 두 손으로 반으로 쪼개어 단면을 보여주는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 1,
+    "role": "problem",
+    "seg_id": "Db9O4pqza74-4",
+    "shot_role": "after",
+    "scene_desc": "다 구워진 쿠키를 두 손으로 반으로 쪼개어 단면을 보여주는 모습",
+    "fit": 1,
+    "repicked": false,
+    "mismatch": true
+   },
+   {
+    "beat_idx": 2,
+    "role": "solution",
+    "seg_id": "Db9O4pqza74-5",
+    "shot_role": "사용중",
+    "scene_desc": "버터 크림에 액체 재료를 붓고 핸드믹서로 휘핑하는 모습",
+    "fit": 5,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 3,
+    "role": "result",
+    "seg_id": "Db9O4pqza74-8",
+    "shot_role": "after",
+    "scene_desc": "장갑 낀 손으로 바닐라, 초코, 말차 맛 구운 쿠키를 차례로 보여주는 장면",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 4,
+    "role": "cta",
+    "seg_id": "s1-1",
+    "shot_role": "완성",
+    "scene_desc": "접시 위에 노릇노릇하게 잘 구워진 버터 쿠키들이 가득 담겨 있는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   }
+  ]
+ },
+ {
+  "model": "opus",
+  "fixed": false,
+  "rep": 2,
+  "base": 3,
+  "after": 1,
+  "problem_bad": 1,
+  "problem_role": "after",
+  "detail": [
+   {
+    "beat_idx": 0,
+    "role": "hook",
+    "seg_id": "Db9O4pqza74-4",
+    "shot_role": "after",
+    "scene_desc": "다 구워진 쿠키를 두 손으로 반으로 쪼개어 단면을 보여주는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 1,
+    "role": "problem",
+    "seg_id": "Db9O4pqza74-4",
+    "shot_role": "after",
+    "scene_desc": "다 구워진 쿠키를 두 손으로 반으로 쪼개어 단면을 보여주는 모습",
+    "fit": 1,
+    "repicked": false,
+    "mismatch": true
+   },
+   {
+    "beat_idx": 2,
+    "role": "solution",
+    "seg_id": "Db9O4pqza74-5",
+    "shot_role": "사용중",
+    "scene_desc": "버터 크림에 액체 재료를 붓고 핸드믹서로 휘핑하는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 3,
+    "role": "result",
+    "seg_id": "Db9O4pqza74-8",
+    "shot_role": "after",
+    "scene_desc": "장갑 낀 손으로 바닐라, 초코, 말차 맛 구운 쿠키를 차례로 보여주는 장면",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 4,
+    "role": "cta",
+    "seg_id": "s1-1",
+    "shot_role": "완성",
+    "scene_desc": "접시 위에 노릇노릇하게 잘 구워진 버터 쿠키들이 가득 담겨 있는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   }
+  ]
+ },
+ {
+  "model": "opus",
+  "fixed": true,
+  "rep": 2,
+  "base": 3,
+  "after": 1,
+  "problem_bad": 1,
+  "problem_role": "after",
+  "detail": [
+   {
+    "beat_idx": 0,
+    "role": "hook",
+    "seg_id": "Db9O4pqza74-4",
+    "shot_role": "after",
+    "scene_desc": "다 구워진 쿠키를 두 손으로 반으로 쪼개어 단면을 보여주는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 1,
+    "role": "problem",
+    "seg_id": "Db9O4pqza74-4",
+    "shot_role": "after",
+    "scene_desc": "다 구워진 쿠키를 두 손으로 반으로 쪼개어 단면을 보여주는 모습",
+    "fit": 1,
+    "repicked": false,
+    "mismatch": true
+   },
+   {
+    "beat_idx": 2,
+    "role": "solution",
+    "seg_id": "Db9O4pqza74-5",
+    "shot_role": "사용중",
+    "scene_desc": "버터 크림에 액체 재료를 붓고 핸드믹서로 휘핑하는 모습",
+    "fit": 5,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 3,
+    "role": "result",
+    "seg_id": "s1-11",
+    "shot_role": "after",
+    "scene_desc": "장갑을 낀 손으로 잘 구워진 버터 쿠키 하나를 반으로 쪼개고 으깨며 질감을 보여주는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 4,
+    "role": "cta",
+    "seg_id": "s1-1",
+    "shot_role": "완성",
+    "scene_desc": "접시 위에 노릇노릇하게 잘 구워진 버터 쿠키들이 가득 담겨 있는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   }
+  ]
+ },
+ {
+  "model": "opus",
+  "fixed": false,
+  "rep": 3,
+  "base": 3,
+  "after": 1,
+  "problem_bad": 1,
+  "problem_role": "after",
+  "detail": [
+   {
+    "beat_idx": 0,
+    "role": "hook",
+    "seg_id": "Db9O4pqza74-4",
+    "shot_role": "after",
+    "scene_desc": "다 구워진 쿠키를 두 손으로 반으로 쪼개어 단면을 보여주는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 1,
+    "role": "problem",
+    "seg_id": "Db9O4pqza74-4",
+    "shot_role": "after",
+    "scene_desc": "다 구워진 쿠키를 두 손으로 반으로 쪼개어 단면을 보여주는 모습",
+    "fit": 1,
+    "repicked": false,
+    "mismatch": true
+   },
+   {
+    "beat_idx": 2,
+    "role": "solution",
+    "seg_id": "Db9O4pqza74-5",
+    "shot_role": "사용중",
+    "scene_desc": "버터 크림에 액체 재료를 붓고 핸드믹서로 휘핑하는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 3,
+    "role": "result",
+    "seg_id": "Db9O4pqza74-8",
+    "shot_role": "after",
+    "scene_desc": "장갑 낀 손으로 바닐라, 초코, 말차 맛 구운 쿠키를 차례로 보여주는 장면",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 4,
+    "role": "cta",
+    "seg_id": "s1-1",
+    "shot_role": "완성",
+    "scene_desc": "접시 위에 노릇노릇하게 잘 구워진 버터 쿠키들이 가득 담겨 있는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   }
+  ]
+ },
+ {
+  "model": "opus",
+  "fixed": true,
+  "rep": 3,
+  "base": 3,
+  "after": 0,
+  "problem_bad": 0,
+  "problem_role": "사용중",
+  "detail": [
+   {
+    "beat_idx": 0,
+    "role": "hook",
+    "seg_id": "Db9O4pqza74-4",
+    "shot_role": "after",
+    "scene_desc": "다 구워진 쿠키를 두 손으로 반으로 쪼개어 단면을 보여주는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 1,
+    "role": "problem",
+    "seg_id": "s2-4",
+    "shot_role": "사용중",
+    "scene_desc": "볼에 담긴 말랑한 버터를 손가락으로 가볍게 눌러보는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 2,
+    "role": "solution",
+    "seg_id": "Db9O4pqza74-5",
+    "shot_role": "사용중",
+    "scene_desc": "버터 크림에 액체 재료를 붓고 핸드믹서로 휘핑하는 모습",
+    "fit": 5,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 3,
+    "role": "result",
+    "seg_id": "s1-11",
+    "shot_role": "after",
+    "scene_desc": "장갑을 낀 손으로 잘 구워진 버터 쿠키 하나를 반으로 쪼개고 으깨며 질감을 보여주는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 4,
+    "role": "cta",
+    "seg_id": "s1-1",
+    "shot_role": "완성",
+    "scene_desc": "접시 위에 노릇노릇하게 잘 구워진 버터 쿠키들이 가득 담겨 있는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   }
+  ]
+ },
+ {
+  "model": "opus",
+  "fixed": false,
+  "rep": 4,
+  "base": 3,
+  "after": 1,
+  "problem_bad": 1,
+  "problem_role": "after",
+  "detail": [
+   {
+    "beat_idx": 0,
+    "role": "hook",
+    "seg_id": "Db9O4pqza74-4",
+    "shot_role": "after",
+    "scene_desc": "다 구워진 쿠키를 두 손으로 반으로 쪼개어 단면을 보여주는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 1,
+    "role": "problem",
+    "seg_id": "Db9O4pqza74-4",
+    "shot_role": "after",
+    "scene_desc": "다 구워진 쿠키를 두 손으로 반으로 쪼개어 단면을 보여주는 모습",
+    "fit": 1,
+    "repicked": false,
+    "mismatch": true
+   },
+   {
+    "beat_idx": 2,
+    "role": "solution",
+    "seg_id": "Db9O4pqza74-5",
+    "shot_role": "사용중",
+    "scene_desc": "버터 크림에 액체 재료를 붓고 핸드믹서로 휘핑하는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 3,
+    "role": "result",
+    "seg_id": "Db9O4pqza74-8",
+    "shot_role": "after",
+    "scene_desc": "장갑 낀 손으로 바닐라, 초코, 말차 맛 구운 쿠키를 차례로 보여주는 장면",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 4,
+    "role": "cta",
+    "seg_id": "s1-1",
+    "shot_role": "완성",
+    "scene_desc": "접시 위에 노릇노릇하게 잘 구워진 버터 쿠키들이 가득 담겨 있는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   }
+  ]
+ },
+ {
+  "model": "opus",
+  "fixed": true,
+  "rep": 4,
+  "base": 3,
+  "after": 0,
+  "problem_bad": 0,
+  "problem_role": "사용중",
+  "detail": [
+   {
+    "beat_idx": 0,
+    "role": "hook",
+    "seg_id": "Db9O4pqza74-4",
+    "shot_role": "after",
+    "scene_desc": "다 구워진 쿠키를 두 손으로 반으로 쪼개어 단면을 보여주는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 1,
+    "role": "problem",
+    "seg_id": "s2-4",
+    "shot_role": "사용중",
+    "scene_desc": "볼에 담긴 말랑한 버터를 손가락으로 가볍게 눌러보는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 2,
+    "role": "solution",
+    "seg_id": "Db9O4pqza74-5",
+    "shot_role": "사용중",
+    "scene_desc": "버터 크림에 액체 재료를 붓고 핸드믹서로 휘핑하는 모습",
+    "fit": 5,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 3,
+    "role": "result",
+    "seg_id": "s2-3",
+    "shot_role": "완성",
+    "scene_desc": "쿠키를 손으로 반 갈라 부드럽고 바삭한 단면을 보여주는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 4,
+    "role": "cta",
+    "seg_id": "s1-1",
+    "shot_role": "완성",
+    "scene_desc": "접시 위에 노릇노릇하게 잘 구워진 버터 쿠키들이 가득 담겨 있는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   }
+  ]
+ },
+ {
+  "model": "opus",
+  "fixed": false,
+  "rep": 5,
+  "base": 3,
+  "after": 0,
+  "problem_bad": 0,
+  "problem_role": "사용중",
+  "detail": [
+   {
+    "beat_idx": 0,
+    "role": "hook",
+    "seg_id": "Db9O4pqza74-4",
+    "shot_role": "after",
+    "scene_desc": "다 구워진 쿠키를 두 손으로 반으로 쪼개어 단면을 보여주는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 1,
+    "role": "problem",
+    "seg_id": "s3-7",
+    "shot_role": "사용중",
+    "scene_desc": "버터가 담긴 볼에 설탕 가루 등의 재료를 붓고 핸드믹서기로 섞는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 2,
+    "role": "solution",
+    "seg_id": "Db9O4pqza74-5",
+    "shot_role": "사용중",
+    "scene_desc": "버터 크림에 액체 재료를 붓고 핸드믹서로 휘핑하는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 3,
+    "role": "result",
+    "seg_id": "Db9O4pqza74-8",
+    "shot_role": "after",
+    "scene_desc": "장갑 낀 손으로 바닐라, 초코, 말차 맛 구운 쿠키를 차례로 보여주는 장면",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 4,
+    "role": "cta",
+    "seg_id": "s1-1",
+    "shot_role": "완성",
+    "scene_desc": "접시 위에 노릇노릇하게 잘 구워진 버터 쿠키들이 가득 담겨 있는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   }
+  ]
+ },
+ {
+  "model": "opus",
+  "fixed": true,
+  "rep": 5,
+  "base": 3,
+  "after": 1,
+  "problem_bad": 1,
+  "problem_role": "after",
+  "detail": [
+   {
+    "beat_idx": 0,
+    "role": "hook",
+    "seg_id": "Db9O4pqza74-4",
+    "shot_role": "after",
+    "scene_desc": "다 구워진 쿠키를 두 손으로 반으로 쪼개어 단면을 보여주는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 1,
+    "role": "problem",
+    "seg_id": "Db9O4pqza74-4",
+    "shot_role": "after",
+    "scene_desc": "다 구워진 쿠키를 두 손으로 반으로 쪼개어 단면을 보여주는 모습",
+    "fit": 1,
+    "repicked": false,
+    "mismatch": true
+   },
+   {
+    "beat_idx": 2,
+    "role": "solution",
+    "seg_id": "Db9O4pqza74-5",
+    "shot_role": "사용중",
+    "scene_desc": "버터 크림에 액체 재료를 붓고 핸드믹서로 휘핑하는 모습",
+    "fit": 5,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 3,
+    "role": "result",
+    "seg_id": "s2-3",
+    "shot_role": "완성",
+    "scene_desc": "쿠키를 손으로 반 갈라 부드럽고 바삭한 단면을 보여주는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 4,
+    "role": "cta",
+    "seg_id": "s1-1",
+    "shot_role": "완성",
+    "scene_desc": "접시 위에 노릇노릇하게 잘 구워진 버터 쿠키들이 가득 담겨 있는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   }
+  ]
+ },
+ {
+  "model": "opus",
+  "fixed": false,
+  "rep": 6,
+  "base": 3,
+  "after": 1,
+  "problem_bad": 1,
+  "problem_role": "after",
+  "detail": [
+   {
+    "beat_idx": 0,
+    "role": "hook",
+    "seg_id": "Db9O4pqza74-4",
+    "shot_role": "after",
+    "scene_desc": "다 구워진 쿠키를 두 손으로 반으로 쪼개어 단면을 보여주는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 1,
+    "role": "problem",
+    "seg_id": "Db9O4pqza74-4",
+    "shot_role": "after",
+    "scene_desc": "다 구워진 쿠키를 두 손으로 반으로 쪼개어 단면을 보여주는 모습",
+    "fit": 1,
+    "repicked": false,
+    "mismatch": true
+   },
+   {
+    "beat_idx": 2,
+    "role": "solution",
+    "seg_id": "Db9O4pqza74-5",
+    "shot_role": "사용중",
+    "scene_desc": "버터 크림에 액체 재료를 붓고 핸드믹서로 휘핑하는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 3,
+    "role": "result",
+    "seg_id": "Db9O4pqza74-8",
+    "shot_role": "after",
+    "scene_desc": "장갑 낀 손으로 바닐라, 초코, 말차 맛 구운 쿠키를 차례로 보여주는 장면",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 4,
+    "role": "cta",
+    "seg_id": "s1-1",
+    "shot_role": "완성",
+    "scene_desc": "접시 위에 노릇노릇하게 잘 구워진 버터 쿠키들이 가득 담겨 있는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   }
+  ]
+ },
+ {
+  "model": "opus",
+  "fixed": true,
+  "rep": 6,
+  "base": 3,
+  "after": 1,
+  "problem_bad": 1,
+  "problem_role": "after",
+  "detail": [
+   {
+    "beat_idx": 0,
+    "role": "hook",
+    "seg_id": "Db9O4pqza74-4",
+    "shot_role": "after",
+    "scene_desc": "다 구워진 쿠키를 두 손으로 반으로 쪼개어 단면을 보여주는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 1,
+    "role": "problem",
+    "seg_id": "Db9O4pqza74-4",
+    "shot_role": "after",
+    "scene_desc": "다 구워진 쿠키를 두 손으로 반으로 쪼개어 단면을 보여주는 모습",
+    "fit": 1,
+    "repicked": false,
+    "mismatch": true
+   },
+   {
+    "beat_idx": 2,
+    "role": "solution",
+    "seg_id": "Db9O4pqza74-5",
+    "shot_role": "사용중",
+    "scene_desc": "버터 크림에 액체 재료를 붓고 핸드믹서로 휘핑하는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 3,
+    "role": "result",
+    "seg_id": "Db9O4pqza74-8",
+    "shot_role": "after",
+    "scene_desc": "장갑 낀 손으로 바닐라, 초코, 말차 맛 구운 쿠키를 차례로 보여주는 장면",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 4,
+    "role": "cta",
+    "seg_id": "s1-1",
+    "shot_role": "완성",
+    "scene_desc": "접시 위에 노릇노릇하게 잘 구워진 버터 쿠키들이 가득 담겨 있는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   }
+  ]
+ },
+ {
+  "model": "opus",
+  "fixed": false,
+  "rep": 7,
+  "base": 3,
+  "after": 1,
+  "problem_bad": 1,
+  "problem_role": "after",
+  "detail": [
+   {
+    "beat_idx": 0,
+    "role": "hook",
+    "seg_id": "Db9O4pqza74-4",
+    "shot_role": "after",
+    "scene_desc": "다 구워진 쿠키를 두 손으로 반으로 쪼개어 단면을 보여주는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 1,
+    "role": "problem",
+    "seg_id": "Db9O4pqza74-4",
+    "shot_role": "after",
+    "scene_desc": "다 구워진 쿠키를 두 손으로 반으로 쪼개어 단면을 보여주는 모습",
+    "fit": 1,
+    "repicked": false,
+    "mismatch": true
+   },
+   {
+    "beat_idx": 2,
+    "role": "solution",
+    "seg_id": "Db9O4pqza74-5",
+    "shot_role": "사용중",
+    "scene_desc": "버터 크림에 액체 재료를 붓고 핸드믹서로 휘핑하는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 3,
+    "role": "result",
+    "seg_id": "Db9O4pqza74-8",
+    "shot_role": "after",
+    "scene_desc": "장갑 낀 손으로 바닐라, 초코, 말차 맛 구운 쿠키를 차례로 보여주는 장면",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 4,
+    "role": "cta",
+    "seg_id": "s1-1",
+    "shot_role": "완성",
+    "scene_desc": "접시 위에 노릇노릇하게 잘 구워진 버터 쿠키들이 가득 담겨 있는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   }
+  ]
+ },
+ {
+  "model": "opus",
+  "fixed": true,
+  "rep": 7,
+  "base": 3,
+  "after": 1,
+  "problem_bad": 1,
+  "problem_role": "after",
+  "detail": [
+   {
+    "beat_idx": 0,
+    "role": "hook",
+    "seg_id": "Db9O4pqza74-4",
+    "shot_role": "after",
+    "scene_desc": "다 구워진 쿠키를 두 손으로 반으로 쪼개어 단면을 보여주는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 1,
+    "role": "problem",
+    "seg_id": "Db9O4pqza74-4",
+    "shot_role": "after",
+    "scene_desc": "다 구워진 쿠키를 두 손으로 반으로 쪼개어 단면을 보여주는 모습",
+    "fit": 1,
+    "repicked": false,
+    "mismatch": true
+   },
+   {
+    "beat_idx": 2,
+    "role": "solution",
+    "seg_id": "Db9O4pqza74-5",
+    "shot_role": "사용중",
+    "scene_desc": "버터 크림에 액체 재료를 붓고 핸드믹서로 휘핑하는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 3,
+    "role": "result",
+    "seg_id": "Db9O4pqza74-8",
+    "shot_role": "after",
+    "scene_desc": "장갑 낀 손으로 바닐라, 초코, 말차 맛 구운 쿠키를 차례로 보여주는 장면",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 4,
+    "role": "cta",
+    "seg_id": "s1-1",
+    "shot_role": "완성",
+    "scene_desc": "접시 위에 노릇노릇하게 잘 구워진 버터 쿠키들이 가득 담겨 있는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   }
+  ]
+ },
+ {
+  "model": "opus",
+  "fixed": false,
+  "rep": 8,
+  "base": 3,
+  "after": 1,
+  "problem_bad": 1,
+  "problem_role": "after",
+  "detail": [
+   {
+    "beat_idx": 0,
+    "role": "hook",
+    "seg_id": "Db9O4pqza74-4",
+    "shot_role": "after",
+    "scene_desc": "다 구워진 쿠키를 두 손으로 반으로 쪼개어 단면을 보여주는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 1,
+    "role": "problem",
+    "seg_id": "Db9O4pqza74-4",
+    "shot_role": "after",
+    "scene_desc": "다 구워진 쿠키를 두 손으로 반으로 쪼개어 단면을 보여주는 모습",
+    "fit": 1,
+    "repicked": false,
+    "mismatch": true
+   },
+   {
+    "beat_idx": 2,
+    "role": "solution",
+    "seg_id": "Db9O4pqza74-5",
+    "shot_role": "사용중",
+    "scene_desc": "버터 크림에 액체 재료를 붓고 핸드믹서로 휘핑하는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 3,
+    "role": "result",
+    "seg_id": "Db9O4pqza74-8",
+    "shot_role": "after",
+    "scene_desc": "장갑 낀 손으로 바닐라, 초코, 말차 맛 구운 쿠키를 차례로 보여주는 장면",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 4,
+    "role": "cta",
+    "seg_id": "s1-1",
+    "shot_role": "완성",
+    "scene_desc": "접시 위에 노릇노릇하게 잘 구워진 버터 쿠키들이 가득 담겨 있는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   }
+  ]
+ },
+ {
+  "model": "opus",
+  "fixed": true,
+  "rep": 8,
+  "base": 3,
+  "after": 2,
+  "problem_bad": 1,
+  "problem_role": "after",
+  "detail": [
+   {
+    "beat_idx": 0,
+    "role": "hook",
+    "seg_id": "s1-11",
+    "shot_role": "after",
+    "scene_desc": "장갑을 낀 손으로 잘 구워진 버터 쿠키 하나를 반으로 쪼개고 으깨며 질감을 보여주는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 1,
+    "role": "problem",
+    "seg_id": "Db9O4pqza74-4",
+    "shot_role": "after",
+    "scene_desc": "다 구워진 쿠키를 두 손으로 반으로 쪼개어 단면을 보여주는 모습",
+    "fit": 1,
+    "repicked": false,
+    "mismatch": true
+   },
+   {
+    "beat_idx": 2,
+    "role": "solution",
+    "seg_id": "s2-7",
+    "shot_role": "사용중",
+    "scene_desc": "핸드믹서로 버터를 휘핑하고 우유를 넣어 가며 뽀얗고 폭신하게 만드는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 3,
+    "role": "result",
+    "seg_id": "s3-5",
+    "shot_role": "기타",
+    "scene_desc": "도마 위의 쿠키를 직접 한 입 베어 물어 먹어보는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": true
+   },
+   {
+    "beat_idx": 4,
+    "role": "cta",
+    "seg_id": "s1-1",
+    "shot_role": "완성",
+    "scene_desc": "접시 위에 노릇노릇하게 잘 구워진 버터 쿠키들이 가득 담겨 있는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   }
+  ]
+ },
+ {
+  "model": "opus",
+  "fixed": false,
+  "rep": 9,
+  "base": 3,
+  "after": 0,
+  "problem_bad": 0,
+  "problem_role": "사용중",
+  "detail": [
+   {
+    "beat_idx": 0,
+    "role": "hook",
+    "seg_id": "Db9O4pqza74-4",
+    "shot_role": "after",
+    "scene_desc": "다 구워진 쿠키를 두 손으로 반으로 쪼개어 단면을 보여주는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 1,
+    "role": "problem",
+    "seg_id": "s3-7",
+    "shot_role": "사용중",
+    "scene_desc": "버터가 담긴 볼에 설탕 가루 등의 재료를 붓고 핸드믹서기로 섞는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 2,
+    "role": "solution",
+    "seg_id": "Db9O4pqza74-5",
+    "shot_role": "사용중",
+    "scene_desc": "버터 크림에 액체 재료를 붓고 핸드믹서로 휘핑하는 모습",
+    "fit": 5,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 3,
+    "role": "result",
+    "seg_id": "s2-3",
+    "shot_role": "완성",
+    "scene_desc": "쿠키를 손으로 반 갈라 부드럽고 바삭한 단면을 보여주는 모습",
+    "fit": 5,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 4,
+    "role": "cta",
+    "seg_id": "s1-1",
+    "shot_role": "완성",
+    "scene_desc": "접시 위에 노릇노릇하게 잘 구워진 버터 쿠키들이 가득 담겨 있는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   }
+  ]
+ },
+ {
+  "model": "opus",
+  "fixed": true,
+  "rep": 9,
+  "base": 3,
+  "after": 1,
+  "problem_bad": 1,
+  "problem_role": "after",
+  "detail": [
+   {
+    "beat_idx": 0,
+    "role": "hook",
+    "seg_id": "Db9O4pqza74-4",
+    "shot_role": "after",
+    "scene_desc": "다 구워진 쿠키를 두 손으로 반으로 쪼개어 단면을 보여주는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 1,
+    "role": "problem",
+    "seg_id": "Db9O4pqza74-4",
+    "shot_role": "after",
+    "scene_desc": "다 구워진 쿠키를 두 손으로 반으로 쪼개어 단면을 보여주는 모습",
+    "fit": 1,
+    "repicked": false,
+    "mismatch": true
+   },
+   {
+    "beat_idx": 2,
+    "role": "solution",
+    "seg_id": "Db9O4pqza74-5",
+    "shot_role": "사용중",
+    "scene_desc": "버터 크림에 액체 재료를 붓고 핸드믹서로 휘핑하는 모습",
+    "fit": 5,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 3,
+    "role": "result",
+    "seg_id": "Db9O4pqza74-8",
+    "shot_role": "after",
+    "scene_desc": "장갑 낀 손으로 바닐라, 초코, 말차 맛 구운 쿠키를 차례로 보여주는 장면",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 4,
+    "role": "cta",
+    "seg_id": "s1-1",
+    "shot_role": "완성",
+    "scene_desc": "접시 위에 노릇노릇하게 잘 구워진 버터 쿠키들이 가득 담겨 있는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   }
+  ]
+ },
+ {
+  "model": "opus",
+  "fixed": false,
+  "rep": 10,
+  "base": 3,
+  "after": 1,
+  "problem_bad": 1,
+  "problem_role": "after",
+  "detail": [
+   {
+    "beat_idx": 0,
+    "role": "hook",
+    "seg_id": "Db9O4pqza74-4",
+    "shot_role": "after",
+    "scene_desc": "다 구워진 쿠키를 두 손으로 반으로 쪼개어 단면을 보여주는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 1,
+    "role": "problem",
+    "seg_id": "Db9O4pqza74-4",
+    "shot_role": "after",
+    "scene_desc": "다 구워진 쿠키를 두 손으로 반으로 쪼개어 단면을 보여주는 모습",
+    "fit": 1,
+    "repicked": false,
+    "mismatch": true
+   },
+   {
+    "beat_idx": 2,
+    "role": "solution",
+    "seg_id": "Db9O4pqza74-5",
+    "shot_role": "사용중",
+    "scene_desc": "버터 크림에 액체 재료를 붓고 핸드믹서로 휘핑하는 모습",
+    "fit": 5,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 3,
+    "role": "result",
+    "seg_id": "Db9O4pqza74-8",
+    "shot_role": "after",
+    "scene_desc": "장갑 낀 손으로 바닐라, 초코, 말차 맛 구운 쿠키를 차례로 보여주는 장면",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 4,
+    "role": "cta",
+    "seg_id": "s1-1",
+    "shot_role": "완성",
+    "scene_desc": "접시 위에 노릇노릇하게 잘 구워진 버터 쿠키들이 가득 담겨 있는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   }
+  ]
+ },
+ {
+  "model": "opus",
+  "fixed": true,
+  "rep": 10,
+  "base": 3,
+  "after": 1,
+  "problem_bad": 1,
+  "problem_role": "after",
+  "detail": [
+   {
+    "beat_idx": 0,
+    "role": "hook",
+    "seg_id": "Db9O4pqza74-4",
+    "shot_role": "after",
+    "scene_desc": "다 구워진 쿠키를 두 손으로 반으로 쪼개어 단면을 보여주는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 1,
+    "role": "problem",
+    "seg_id": "Db9O4pqza74-4",
+    "shot_role": "after",
+    "scene_desc": "다 구워진 쿠키를 두 손으로 반으로 쪼개어 단면을 보여주는 모습",
+    "fit": 1,
+    "repicked": false,
+    "mismatch": true
+   },
+   {
+    "beat_idx": 2,
+    "role": "solution",
+    "seg_id": "Db9O4pqza74-5",
+    "shot_role": "사용중",
+    "scene_desc": "버터 크림에 액체 재료를 붓고 핸드믹서로 휘핑하는 모습",
+    "fit": 5,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 3,
+    "role": "result",
+    "seg_id": "Db9O4pqza74-8",
+    "shot_role": "after",
+    "scene_desc": "장갑 낀 손으로 바닐라, 초코, 말차 맛 구운 쿠키를 차례로 보여주는 장면",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 4,
+    "role": "cta",
+    "seg_id": "s1-1",
+    "shot_role": "완성",
+    "scene_desc": "접시 위에 노릇노릇하게 잘 구워진 버터 쿠키들이 가득 담겨 있는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   }
+  ]
+ },
+ {
+  "model": "opus",
+  "fixed": false,
+  "rep": 11,
+  "base": 3,
+  "after": 1,
+  "problem_bad": 1,
+  "problem_role": "after",
+  "detail": [
+   {
+    "beat_idx": 0,
+    "role": "hook",
+    "seg_id": "Db9O4pqza74-4",
+    "shot_role": "after",
+    "scene_desc": "다 구워진 쿠키를 두 손으로 반으로 쪼개어 단면을 보여주는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 1,
+    "role": "problem",
+    "seg_id": "Db9O4pqza74-4",
+    "shot_role": "after",
+    "scene_desc": "다 구워진 쿠키를 두 손으로 반으로 쪼개어 단면을 보여주는 모습",
+    "fit": 1,
+    "repicked": false,
+    "mismatch": true
+   },
+   {
+    "beat_idx": 2,
+    "role": "solution",
+    "seg_id": "Db9O4pqza74-5",
+    "shot_role": "사용중",
+    "scene_desc": "버터 크림에 액체 재료를 붓고 핸드믹서로 휘핑하는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 3,
+    "role": "result",
+    "seg_id": "Db9O4pqza74-8",
+    "shot_role": "after",
+    "scene_desc": "장갑 낀 손으로 바닐라, 초코, 말차 맛 구운 쿠키를 차례로 보여주는 장면",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 4,
+    "role": "cta",
+    "seg_id": "s1-1",
+    "shot_role": "완성",
+    "scene_desc": "접시 위에 노릇노릇하게 잘 구워진 버터 쿠키들이 가득 담겨 있는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   }
+  ]
+ },
+ {
+  "model": "opus",
+  "fixed": true,
+  "rep": 11,
+  "base": 3,
+  "after": 0,
+  "problem_bad": 0,
+  "problem_role": "사용중",
+  "detail": [
+   {
+    "beat_idx": 0,
+    "role": "hook",
+    "seg_id": "Db9O4pqza74-4",
+    "shot_role": "after",
+    "scene_desc": "다 구워진 쿠키를 두 손으로 반으로 쪼개어 단면을 보여주는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 1,
+    "role": "problem",
+    "seg_id": "s2-4",
+    "shot_role": "사용중",
+    "scene_desc": "볼에 담긴 말랑한 버터를 손가락으로 가볍게 눌러보는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 2,
+    "role": "solution",
+    "seg_id": "Db9O4pqza74-5",
+    "shot_role": "사용중",
+    "scene_desc": "버터 크림에 액체 재료를 붓고 핸드믹서로 휘핑하는 모습",
+    "fit": 5,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 3,
+    "role": "result",
+    "seg_id": "s2-3",
+    "shot_role": "완성",
+    "scene_desc": "쿠키를 손으로 반 갈라 부드럽고 바삭한 단면을 보여주는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   },
+   {
+    "beat_idx": 4,
+    "role": "cta",
+    "seg_id": "s1-1",
+    "shot_role": "완성",
+    "scene_desc": "접시 위에 노릇노릇하게 잘 구워진 버터 쿠키들이 가득 담겨 있는 모습",
+    "fit": 4,
+    "repicked": true,
+    "mismatch": false
+   }
+  ]
+ }
+]
