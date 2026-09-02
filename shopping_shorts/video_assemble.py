@@ -794,29 +794,25 @@ def _plan_phrase_clips(beat, segs, tts_dur):
         for k in range(len(durs)):
             end_b = bounds[-1] if k == len(durs) - 1 else bounds[k + 1]
             d = max(0.1, end_b - bounds[k])
-            if k < len(segs):
-                idx = k                                  # 첫 바퀴 = 담은 순서대로(종전과 같다)
-            else:
-                idx = -1
-                for t2 in range(len(segs)):              # 두 바퀴째 = 뒤가 남은 조각을 돌아가며
-                    j2 = (ri + t2) % len(segs)
-                    # ★end를 모르는 재료는 '남은 게 없다'로 본다 → 종전 동작(마지막이 커버).
-                    #   지어내서 조각 밖을 읽으면 엉뚱한 화면이 나온다.
-                    _end = segs[j2].get("end")
-                    if _end is None:
-                        continue
-                    if float(_end) - pos[j2] >= min(d, _MIN_CLIP) - 1e-3:
-                        idx = j2
-                        break
-                if idx < 0:                              # 재료 소진 → 종전대로 마지막 컷이 커버
-                    if plan:
-                        plan[-1]["src_dur"] += bounds[-1] - bounds[k]
-                        plan[-1]["out_dur"] = plan[-1]["src_dur"]
-                    break
-                ri = (idx + 1) % len(segs)
-            plan.append({"video_id": segs[idx]["video_id"], "start": pos[idx],
+            # ★재료가 구절보다 적으면 **담은 순서대로 돌아간다**(1,2,3,1,2,3…).
+            #   2026-09-02 사장님: "하나를 올렸더니 2·3번 자리에 배치되고 같은 내용이 두 번
+            #   반복돼야 하는데 다른 게 3번에 붙는다" / "장면을 빼면 두 개가 없어지고 넣으면
+            #   갑자기 배치가 바뀐다".
+            #   종전엔 두 바퀴째에 '뒤가 남은 조각의 이어지는 구간'을 골랐다(2026-08-31).
+            #   그 규칙은 자리↔조각 관계가 재료 개수·잔량에 따라 달라져, 조각 하나를 빼면
+            #   그 뒤 배치가 통째로 밀렸다 — 사람 눈엔 "하나 뺐는데 둘이 사라졌다".
+            #   순환 반복은 k만 알면 어느 자리에 무엇이 오는지 정해진다(예측 가능).
+            #   ★화면(scene_play.js planClips 구절맞춤 분기)과 **같은 규칙**이어야 한다 —
+            #     한쪽만 고치면 미리보기와 결과물이 어긋난다(0순위-B).
+            idx = k % len(segs)
+            _end = segs[idx].get("end")
+            st = pos[idx]
+            # 조각 뒤가 남았으면 이어서, 다 썼으면 그 조각의 처음부터 다시(같은 내용 반복).
+            if _end is not None and float(_end) - st < min(d, _MIN_CLIP) - 1e-3:
+                st = float(segs[idx]["start"])
+            plan.append({"video_id": segs[idx]["video_id"], "start": st,
                          "src_dur": d, "out_dur": d})
-            pos[idx] += d
+            pos[idx] = st + d
         return plan
     except Exception:      # noqa: BLE001 — 계획 실패가 렌더를 죽이면 안 된다(폴백이 있다)
         return None
