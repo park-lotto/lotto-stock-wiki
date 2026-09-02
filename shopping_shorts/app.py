@@ -1557,8 +1557,11 @@ def api_fav_channel_list(request: Request):
 @app.post("/api/fav_channel/add")
 def api_fav_channel_add(request: Request, body: dict):
     """볼채널 담기(멱등). body: {url, username?, platform?, name?, avatar?, thumb?}"""
-    cid = _cid(request)
-    if not cid:
+    # ★로그인 판정을 `not cid`로 하면 안 된다 — 관리자(사장님)는 cid==0이라
+    #   falsy에 걸려 자기 기능을 못 쓴다(2026-09-02 브라우저 실측으로 발견).
+    #   비로그인도 _cid는 0을 준다(폴백) → 세션으로만 갈린다. /api/grab과 같은 방식.
+    cid = _verify_session(request.cookies.get("dash_auth")) if _AUTH_ON else 0
+    if cid is None:
         return {"ok": False, "error": "로그인이 필요합니다"}
     url = (body.get("url") or "").strip()
     uname = (body.get("username") or "").strip().lstrip("@")
@@ -1965,8 +1968,8 @@ def api_fav_channel_grab(request: Request, url: str = "", username: str = "",
 
     ★📌채널수집(/api/discover/add_by_url)과 다른 점: 저기는 **관리자 전용 + 전역
     수집 시드**다. 여기는 **회원 개인 북마크**라 수집 대상을 1건도 늘리지 않는다."""
-    cid = _cid(request)
-    if not cid:
+    cid = _verify_session(request.cookies.get("dash_auth")) if _AUTH_ON else 0
+    if cid is None:      # ★cid==0(관리자)은 정상 로그인이다 — not cid로 판정 금지
         return HTMLResponse(_chadd_html("⛔ 로그인 필요",
                                         "shoppingshorts.duckdns.org에 로그인 후 다시 눌러주세요."))
     plat = _fav_channel_platform(url)
@@ -8549,6 +8552,11 @@ _FREE_EXACT_ANY = {"/login", "/signup", "/api/login", "/api/signup", "/logout",
                    #   402라 아무 데도 못 간다. 실제로 체험판 고객이 이 상태에 갇혔다.
                    #   ⚠️ 정보를 받는 화면이지 유료 기능이 아니다. GET·POST 둘 다 연다.
                    "/welcome", "/api/welcome",
+                   # ★볼채널등록 담기/빼기/갱신(2026-09-02)은 POST라 _FREE_EXACT_GET로는
+                   #   안 열린다(저 세트는 method=="GET"에서만 본다). 개인 북마크라
+                   #   과금 요소가 없어 등급과 무관하게 연다 — 로그인 여부는 핸들러가 본다.
+                   "/api/fav_channel/add", "/api/fav_channel/remove",
+                   "/api/fav_channel/refresh",
 
                    "/api/mix/basket/toggle",
                    "/api/lens/search", "/api/lens/trace_url",
@@ -8578,6 +8586,10 @@ _FREE_EXACT_GET = {"/", "/pricing", "/account", "/api/me", "/api/reference", "/a
                    "/settings", "/api/settings/points", "/api/settings/keys",
                    # ★2026-08-20 체험판: 즐겨찾기 목록·모음집 화면.
                    "/collection", "/api/mix/basket",
+                   # ★볼채널등록(2026-09-02) — 사이드바 free:true와 짝. 여기 안 넣으면
+                   #   체험 사용자가 메뉴는 보이는데 눌러도 페이월만 본다(sidebar.js 주석).
+                   #   목록·갱신·빼기는 개인 북마크라 과금 요소가 없다.
+                   "/fav_channels", "/api/fav_channel/list", "/api/fav_channel/grab",
                    # ★2026-08-20 체험판: 제작소는 HTML만 연다(소개 페이지가 뜬다).
                    #   /api/produce/* 는 열지 않는다 — 과금 기능은 계속 막힌다.
                    "/produce", "/produce.html",
@@ -18434,7 +18446,7 @@ except Exception:                                  # noqa: BLE001 — 이 기능
 # ★"produce"는 여기서 뺐다(2026-08-20) — 등급에 따라 다른 파일을 서빙해야 해서
 #   아래 _produce_page 명시 라우트로 옮겼다(voice_tune·refs와 같은 패턴).
 for _pg in ("discover", "find", "library", "mix", "outreach", "collection",
-            "scene_library", "pattern_bank", "longform", "settings"):
+            "fav_channels", "scene_library", "pattern_bank", "longform", "settings"):
     app.add_api_route(
         f"/{_pg}",
         (lambda n=_pg: FileResponse(_STATIC / f"{n}.html", media_type="text/html",
