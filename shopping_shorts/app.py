@@ -1503,6 +1503,166 @@ def api_mix_basket(request: Request):
             "shortcodes": sorted(store.mix_basket_shortcodes(customer_id=cid))}
 
 
+# ══ 볼채널등록 (개인 채널 즐겨찾기, 2026-09-02) ═══════════════════════════════
+#  ★전역 수집(platform_seeds·discovered_channels)과 **절대 섞지 않는다**.
+#    /api/discover/add_by_url(📌 채널수집)은 관리자 전용 + 전역 시드라 회원에게 열 수
+#    없다 — 회원이 등록한 채널이 주기크롤 대상이 되면 채널 수만큼 API 쿼터·Apify
+#    비용이 늘어난다. 여기는 순수 북마크: 담아도 수집량은 1건도 늘지 않는다.
+
+_FAV_CH_PATTERNS = [
+    ("instagram",   r"instagram\.com/(?:reels?/[^/?#]+/?\?[^#]*|)?(?!p/|reel/|reels/|explore/|stories/)([A-Za-z0-9._]+)"),
+    ("tiktok",      r"tiktok\.com/@([\w.\-]+)"),
+    ("youtube",     r"youtube\.com/(?:@([\w.\-가-힣]+)|channel/([\w\-]+)|c/([\w\-가-힣]+))"),
+    ("threads",     r"threads\.(?:net|com)/@([\w.\-]+)"),
+    ("xiaohongshu", r"(?:xiaohongshu|rednote)\.com/user/profile/([\w]+)"),
+]
+
+
+def _fav_channel_from_url(url: str):
+    """URL에서 (platform, channel_id)를 뽑는다. 못 뽑으면 (None, None).
+    ★프로필 URL만 확실히 처리한다 — 게시물 URL(릴스·shorts)은 채널을 알 수 없으므로
+    호출부가 username을 함께 넘겨야 한다(유저스크립트는 화면에서 읽어 넘긴다)."""
+    u = url or ""
+    for plat, pat in _FAV_CH_PATTERNS:
+        m = re.search(pat, u, re.I)
+        if m:
+            cid = next((g for g in m.groups() if g), "")
+            if cid and cid.lower() not in ("p", "reel", "reels", "shorts", "explore", "watch"):
+                return plat, cid
+    return None, None
+
+
+def _fav_channel_platform(url: str) -> str:
+    """URL 호스트로 플랫폼만 가린다(username을 따로 받은 경우)."""
+    h = (url or "").lower()
+    for plat in ("instagram", "tiktok", "youtube", "threads"):
+        if plat + ".com" in h:
+            return plat
+    if "xiaohongshu.com" in h or "rednote.com" in h:
+        return "xiaohongshu"
+    if "douyin.com" in h:
+        return "douyin"
+    return ""
+
+
+@app.get("/api/fav_channel/list")
+def api_fav_channel_list(request: Request):
+    """내 볼채널 목록. 지표 갱신은 여기서 하지 않는다 — 화면이 refresh를 따로 부른다
+    (열 때 1회·6시간 캐시. 목록 조회마다 외부 API를 때리면 카드 수만큼 비용이 난다)."""
+    store = Store(DB_PATH)
+    items = store.fav_channel_list(customer_id=_cid(request))
+    return {"ok": True, "items": items, "cap": store.FAV_CHANNEL_CAP}
+
+
+@app.post("/api/fav_channel/add")
+def api_fav_channel_add(request: Request, body: dict):
+    """볼채널 담기(멱등). body: {url, username?, platform?, name?, avatar?, thumb?}"""
+    # ★로그인 판정을 `not cid`로 하면 안 된다 — 관리자(사장님)는 cid==0이라
+    #   falsy에 걸려 자기 기능을 못 쓴다(2026-09-02 브라우저 실측으로 발견).
+    #   비로그인도 _cid는 0을 준다(폴백) → 세션으로만 갈린다. /api/grab과 같은 방식.
+    cid = _verify_session(request.cookies.get("dash_auth")) if _AUTH_ON else 0
+    if cid is None:
+        return {"ok": False, "error": "로그인이 필요합니다"}
+    url = (body.get("url") or "").strip()
+    uname = (body.get("username") or "").strip().lstrip("@")
+    plat = (body.get("platform") or "").strip().lower()
+    if uname:
+        plat = plat or _fav_channel_platform(url)
+        chid = uname
+    else:
+        plat2, chid = _fav_channel_from_url(url)
+        plat = plat or plat2 or ""
+    if not plat or not chid:
+        return {"ok": False, "error": "채널을 못 찾았어요 — 채널(프로필) 주소로 눌러주세요"}
+    store = Store(DB_PATH)
+    added = store.fav_channel_add(
+        plat, chid,
+        name=(body.get("name") or chid),
+        url=(body.get("channel_url") or url),
+        avatar=(body.get("avatar") or ""),
+        last_video_thumb=(body.get("thumb") or ""),
+        last_video_url=(body.get("video_url") or ""),
+        customer_id=cid,
+    )
+    if added is None:
+        return {"ok": False, "error": f"볼채널은 최대 {store.FAV_CHANNEL_CAP}개까지예요"}
+    n = len(store.fav_channel_list(customer_id=cid))
+    return {"ok": True, "added": bool(added), "platform": plat, "channel_id": chid, "count": n}
+
+
+@app.post("/api/fav_channel/remove")
+def api_fav_channel_remove(request: Request, body: dict):
+    store = Store(DB_PATH)
+    cid = _cid(request)
+    store.fav_channel_remove((body.get("platform") or ""), (body.get("channel_id") or ""),
+                             customer_id=cid)
+    return {"ok": True, "count": len(store.fav_channel_list(customer_id=cid))}
+
+
+# 갱신 캐시 — 사장님 확정(2026-09-02): "열 때 1회". 6시간 안에 이미 갱신했으면 건너뛴다.
+_FAV_CH_TTL_SEC = 6 * 3600
+
+
+@app.post("/api/fav_channel/refresh")
+def api_fav_channel_refresh(request: Request):
+    """화면을 열 때 1회 호출. 6시간 지난 카드만 지표를 다시 채운다.
+    실패해도 목록은 그대로 보인다(옛 값 유지) — 갱신 실패가 화면을 비우면 안 된다."""
+    store = Store(DB_PATH)
+    cid = _cid(request)
+    items = store.fav_channel_list(customer_id=cid)
+    now = time.time()
+    done = 0
+    for it in items:
+        ts = it.get("refreshed_at")
+        if ts:
+            try:
+                if now - datetime.strptime(ts, "%Y-%m-%d %H:%M:%S").replace(
+                        tzinfo=timezone.utc).timestamp() < _FAV_CH_TTL_SEC:
+                    continue
+            except (ValueError, TypeError) as e:  # noqa: BLE001 — 형식이 깨진 값은
+                # 캐시를 못 믿는다는 뜻이라 그냥 갱신한다(무해). 다만 조용히 넘기면
+                # 매번 전부 재갱신하는 상태를 눈치채지 못한다 → 로그는 남긴다.
+                print(f"[볼채널] refreshed_at 파싱 실패(갱신 진행): {ts!r} {e!r}",
+                      file=sys.stderr)
+        meta = _fav_channel_probe(it.get("platform"), it.get("channel_id"), it.get("url") or "")
+        if meta:
+            store.fav_channel_set_meta(it.get("platform"), it.get("channel_id"),
+                                       customer_id=cid, **meta)
+            done += 1
+    return {"ok": True, "refreshed": done,
+            "items": store.fav_channel_list(customer_id=cid)}
+
+
+def _fav_channel_probe(platform, channel_id, url=""):
+    """채널 1개의 표시용 메타(팔로워·프로필·최근영상 썸네일)를 얻는다.
+    ★유료 API를 새로 부르지 않는다 — 우리가 이미 가진 아카이브를 먼저 본다.
+    아카이브에 없으면 빈 dict(카드는 이름만 뜨고, 그게 정상이다)."""
+    out = {}
+    try:
+        store = Store(DB_PATH)
+        with store._conn() as c:
+            # channel_archive의 실제 컬럼(실측 store.py:655): username·shortcode·url·
+            # thumbnail·views·likes·comments·posted_at·first_seen·last_seen.
+            # 채널 표시명은 여기 없고 channel_names 표에 따로 있다(설계 의도).
+            row = c.execute(
+                "SELECT thumbnail, url FROM channel_archive "
+                "WHERE lower(username)=? AND COALESCE(thumbnail,'')!='' "
+                "ORDER BY COALESCE(posted_at, last_seen) DESC LIMIT 1",
+                ((channel_id or "").lower(),),
+            ).fetchone()
+            nm = c.execute("SELECT name FROM channel_names WHERE lower(username)=?",
+                           ((channel_id or "").lower(),)).fetchone()
+        if row:
+            out["last_video_thumb"] = row[0]
+            if row[1]:
+                out["last_video_url"] = row[1]
+        if nm and nm[0]:
+            out["name"] = nm[0]
+    except Exception as e:  # noqa: BLE001 — 갱신 실패가 목록을 막지 않는다
+        print(f"fav_channel probe 실패(무해) {platform}/{channel_id}: {e}", file=sys.stderr)
+    return out
+
+
 @app.post("/api/enrich")
 def api_enrich(request: Request, body: dict):
     """레퍼런스(바구니 카드 등)의 소스 링크를 보강정보(채널명·구독자·조회수·인기댓글 등)로
@@ -1778,6 +1938,69 @@ def api_discover_add(request: Request, username: str, name: str = ""):
     return {"ok": True, "username": username}
 
 
+def _resolve_uploader(url: str, username: str = ""):
+    """게시물 URL에서 (채널아이디, 표시명)을 해석한다. username이 오면 그대로 쓴다.
+    ★여기 한 곳에서만 정한다 — 📌채널수집과 ⭐볼채널등록이 같은 답을 써야 한다
+    (0순위-B: 같은 판단을 두 군데 적으면 언젠가 어긋난다)."""
+    uname, disp = (username or "").strip().lstrip("@"), ""
+    if not uname and url:
+        try:
+            import subprocess, sys, json
+            r = subprocess.run([sys.executable, "-m", "yt_dlp", "-j", "--no-warnings", url],
+                               capture_output=True, text=True, timeout=60)
+            d = json.loads(r.stdout) if r.returncode == 0 and r.stdout.strip() else {}
+            uname = (d.get("uploader_id") or "").strip().lstrip("@")
+            # 인스타는 uploader_id가 숫자 pk로 오기도 한다 → channel(핸들)을 우선
+            ch = (d.get("channel") or "").strip().lstrip("@")
+            if ch and not ch.isdigit():
+                disp = (d.get("uploader") or "").strip()
+                if uname.isdigit() or not uname:
+                    uname = ch
+            else:
+                disp = (d.get("uploader") or "").strip()
+        except Exception:
+            pass
+    return uname, disp
+
+
+@app.get("/api/fav_channel/grab", response_class=HTMLResponse)
+def api_fav_channel_grab(request: Request, url: str = "", username: str = "",
+                         thumb: str = ""):
+    """⭐볼채널등록 버튼(유저스크립트)용 — 회원이 인스타·틱톡·유튜브 화면에서 바로
+    자기 즐겨찾기에 담는다. popup GET이라 세션 쿠키가 실린다(📌채널수집·📥담기와 동일).
+
+    ★📌채널수집(/api/discover/add_by_url)과 다른 점: 저기는 **관리자 전용 + 전역
+    수집 시드**다. 여기는 **회원 개인 북마크**라 수집 대상을 1건도 늘리지 않는다."""
+    cid = _verify_session(request.cookies.get("dash_auth")) if _AUTH_ON else 0
+    if cid is None:      # ★cid==0(관리자)은 정상 로그인이다 — not cid로 판정 금지
+        return HTMLResponse(_chadd_html("⛔ 로그인 필요",
+                                        "shoppingshorts.duckdns.org에 로그인 후 다시 눌러주세요."))
+    plat = _fav_channel_platform(url)
+    chid = (username or "").strip().lstrip("@")
+    disp = ""
+    if not chid:
+        plat2, chid = _fav_channel_from_url(url)     # 프로필 URL이면 여기서 끝난다
+        plat = plat or plat2 or ""
+    if not chid:
+        chid, disp = _resolve_uploader(url)          # 게시물 URL → yt-dlp로 채널 해석
+    if not plat or not chid or chid.isdigit():
+        return HTMLResponse(_chadd_html("❌ 채널을 못 찾았어요",
+                                        "영상 또는 채널(프로필) 화면에서 다시 눌러주세요."))
+    store = Store(DB_PATH)
+    added = store.fav_channel_add(plat, chid, name=(disp or chid), url=url,
+                                  last_video_thumb=thumb, customer_id=cid)
+    if added is None:
+        return HTMLResponse(_chadd_html("⚠ 자리가 다 찼어요",
+                                        f"볼채널은 최대 {store.FAV_CHANNEL_CAP}개입니다. "
+                                        "즐겨찾기에서 안 보는 채널을 빼주세요."))
+    if not added:
+        return HTMLResponse(_chadd_html("✔ 이미 담긴 채널",
+                                        f"@{chid} — 왼쪽 ⭐볼채널등록에서 볼 수 있어요."))
+    return HTMLResponse(_chadd_html("✅ 볼채널에 담았어요",
+                                    f"@{chid}{'·' + disp if disp else ''} — "
+                                    "왼쪽 ⭐볼채널등록에서 확인하세요."))
+
+
 @app.get("/api/discover/add_by_url", response_class=HTMLResponse)
 def api_discover_add_by_url(request: Request, url: str = "", username: str = ""):
     """인스타 담기 유저스크립트의 '📌 채널등록' 버튼용(2026-08-03 사장님 요청).
@@ -1845,24 +2068,7 @@ def api_discover_add_by_url(request: Request, url: str = "", username: str = "")
         store.add_seed("youtube", "account", ch_url)
         return HTMLResponse(_chadd_html("✅ 유튜브 채널 등록 완료",
                                         f"{ch_title or ch_url} — 다음 유튜브 수집부터 랭킹에 잡힙니다."))
-    uname, disp = (username or "").strip().lstrip("@"), ""
-    if not uname and url:
-        try:
-            import subprocess, sys, json
-            r = subprocess.run([sys.executable, "-m", "yt_dlp", "-j", "--no-warnings", url],
-                               capture_output=True, text=True, timeout=60)
-            d = json.loads(r.stdout) if r.returncode == 0 and r.stdout.strip() else {}
-            uname = (d.get("uploader_id") or "").strip().lstrip("@")
-            # 인스타는 uploader_id가 숫자 pk로 오기도 한다 → channel(핸들)을 우선
-            ch = (d.get("channel") or "").strip().lstrip("@")
-            if ch and not ch.isdigit():
-                disp = (d.get("uploader") or "").strip()
-                if uname.isdigit() or not uname:
-                    uname = ch
-            else:
-                disp = (d.get("uploader") or "").strip()
-        except Exception:
-            pass
+    uname, disp = _resolve_uploader(url, username)
     if not uname or uname.isdigit():
         return HTMLResponse(_chadd_html("❌ 채널을 못 찾았어요", "게시물/릴스 화면에서 다시 눌러주세요."))
     key = uname.lower()
@@ -8349,6 +8555,11 @@ _FREE_EXACT_ANY = {"/login", "/signup", "/api/login", "/api/signup", "/logout",
                    #   402라 아무 데도 못 간다. 실제로 체험판 고객이 이 상태에 갇혔다.
                    #   ⚠️ 정보를 받는 화면이지 유료 기능이 아니다. GET·POST 둘 다 연다.
                    "/welcome", "/api/welcome",
+                   # ★볼채널등록 담기/빼기/갱신(2026-09-02)은 POST라 _FREE_EXACT_GET로는
+                   #   안 열린다(저 세트는 method=="GET"에서만 본다). 개인 북마크라
+                   #   과금 요소가 없어 등급과 무관하게 연다 — 로그인 여부는 핸들러가 본다.
+                   "/api/fav_channel/add", "/api/fav_channel/remove",
+                   "/api/fav_channel/refresh",
 
                    "/api/mix/basket/toggle",
                    "/api/lens/search", "/api/lens/trace_url",
@@ -8378,6 +8589,10 @@ _FREE_EXACT_GET = {"/", "/pricing", "/account", "/api/me", "/api/reference", "/a
                    "/settings", "/api/settings/points", "/api/settings/keys",
                    # ★2026-08-20 체험판: 즐겨찾기 목록·모음집 화면.
                    "/collection", "/api/mix/basket",
+                   # ★볼채널등록(2026-09-02) — 사이드바 free:true와 짝. 여기 안 넣으면
+                   #   체험 사용자가 메뉴는 보이는데 눌러도 페이월만 본다(sidebar.js 주석).
+                   #   목록·갱신·빼기는 개인 북마크라 과금 요소가 없다.
+                   "/fav_channels", "/api/fav_channel/list", "/api/fav_channel/grab",
                    # ★2026-08-20 체험판: 제작소는 HTML만 연다(소개 페이지가 뜬다).
                    #   /api/produce/* 는 열지 않는다 — 과금 기능은 계속 막힌다.
                    "/produce", "/produce.html",
@@ -18234,7 +18449,7 @@ except Exception:                                  # noqa: BLE001 — 이 기능
 # ★"produce"는 여기서 뺐다(2026-08-20) — 등급에 따라 다른 파일을 서빙해야 해서
 #   아래 _produce_page 명시 라우트로 옮겼다(voice_tune·refs와 같은 패턴).
 for _pg in ("discover", "find", "library", "mix", "outreach", "collection",
-            "scene_library", "pattern_bank", "longform", "settings"):
+            "fav_channels", "scene_library", "pattern_bank", "longform", "settings"):
     app.add_api_route(
         f"/{_pg}",
         (lambda n=_pg: FileResponse(_STATIC / f"{n}.html", media_type="text/html",
