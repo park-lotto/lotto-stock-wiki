@@ -252,7 +252,11 @@ def record(service, outcome, *, pool=None, key=None, key_idx=None, owner=None,
                 (now.isoformat(), _kst_day(now), service, pool,
                  key_tail(key), key_idx, owner, op, model, job_id,
                  None if customer_id is None else str(customer_id),
-                 outcome, http, (str(detail)[:500] if detail else None),
+                 # ★1200자(2026-09-02). 500자에선 구글 429의 뒷줄이 잘려
+                 #   "PerDay인가 PerMinute인가"를 사람이 확인할 수 없었다 —
+                 #   분류는 전체 문자열로 하는데 기록만 잘려, 경보가 의심스러울 때
+                 #   근거를 되짚을 방법이 없다.
+                 outcome, http, (str(detail)[:1200] if detail else None),
                  dur_ms, _proc_kind()))
             conn.commit()
         finally:
