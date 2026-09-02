@@ -3850,15 +3850,15 @@ def _explain_key_failure(service: str, code: int, body: str) -> str:
     if code == 0:
         return "인터넷 연결이 불안정해 확인하지 못했습니다. 잠시 뒤 다시 시도해주세요."
     if service == keyroute.SVC_ELEVENLABS:
-        # 실측(2026-08-24): 고객이 키 목록의 **ID**를 붙여넣었다.
-        #   ElevenLabs가 "API key ID used as API key"라고 정확히 알려주는데 우리가 버렸다.
-        if "api key id used as api key" in low or "key id" in low:
-            return ("키가 아니라 **키 ID**를 붙여넣으셨어요. ElevenLabs에서 키를 새로 만들 때 "
-                    "한 번만 보이는 `sk_`로 시작하는 값을 넣어주세요.")
-        if "invalid_api_key" in low or code in (401, 403):
+        # ★판단은 eleven_voices.explain_error 한 곳뿐이다(0순위-B). 여기에 또 적으면
+        #   어긋난다 — 실제로 2026-09-02에 어긋나 있었다: 권한 부족(voices_read)을
+        #   "키를 새로 만들라"로 잘못 안내해 고객이 고칠 수 없는 쳇바퀴를 돌았다.
+        from shopping_shorts import eleven_voices
+        why = eleven_voices.explain_error(code, body or "")
+        if why:
+            return why
+        if "invalid_api_key" in low:
             return "ElevenLabs가 이 키를 인식하지 못합니다. 키를 새로 만들어 다시 넣어주세요."
-        if code == 429:
-            return "요청이 너무 많습니다. 잠시 뒤 다시 확인해주세요."
     if code in (401, 403):
         return "키가 인식되지 않습니다(권한 없음). 값을 다시 확인해주세요."
     if code == 429:
