@@ -21,7 +21,11 @@ _GROUP_ENV_PREFIX = {
     "briefing": "GEMINI_BRIEFING_KEY",
 }
 
-_MAX_KEYS_PER_GROUP = 30  # 안전 상한 — 이 이상은 .env에 추가해도 무시
+# ★상한을 30 → 120으로 올린다(2026-08-31 실사고). 회원 키를 .env에 넣어 응급 복구할 때
+#   `GEMINI_API_KEY_31` 이상이 **조용히 무시돼** 49개 중 23개만 들어갔다. 화면에도 로그에도
+#   아무 표시가 없어 "넣었는데 왜 그대로냐"가 된다. 이 상한은 무한루프 방지용일 뿐이라
+#   넉넉히 잡아도 비용이 없다(없는 번호는 그냥 건너뛴다).
+_MAX_KEYS_PER_GROUP = 120
 
 
 def _read_env_file() -> dict[str, str]:
@@ -132,6 +136,7 @@ class _FileLock:
 
 def mark_exhausted(group: str, key: str) -> None:
     """키를 당일 소진으로 기록(그룹별). 이후 프로세스는 재시도하지 않는다."""
+    marked_idx = None
     with _FileLock(_LOCK_PATH):
         keys = get_keys(group)
         if key not in keys:
@@ -145,6 +150,18 @@ def mark_exhausted(group: str, key: str) -> None:
             with open(tmp_path, "w", encoding="utf-8") as f:
                 json.dump(state, f)
             os.replace(tmp_path, _STATE_PATH)
+            marked_idx = idx
+    # ★기록은 락 **밖**에서(2026-09-01 리뷰 확정) — DB가 붐비면 record가 수 초를
+    #   먹는데 그동안 락을 쥐면 다른 프로세스가 5초 타임아웃 후 '락 없이 진행'으로
+    #   떨어져 소진표시가 유실될 수 있다(comment_gen도 락 밖에서 기록한다).
+    if marked_idx is not None:
+        try:                        # 관측판 — 쇼핑쇼츠 없는 환경이면 조용히 통과
+            from shopping_shorts import api_health
+            api_health.record("gemini", api_health.OUT_LOCK,
+                              pool=f"vault-{group}", key_idx=marked_idx, key=key,
+                              detail="당일 낙인(vault엔 TTL 없음)")
+        except Exception:           # noqa: BLE001
+            pass
 
 
 def get_live_keys(group: str) -> list[str]:
@@ -192,24 +209,89 @@ def get_client_for_key(key: str) -> genai.Client:
         # shopping_shorts에 하드 의존하면 안 된다 — 없으면 조용히 원본을 쓴다.
         try:
             from shopping_shorts import usage_meter
-            cl = usage_meter.wrap(cl)
+            # pool/key(2026-09-01, API 관측판): 어느 풀의 어느 키인지 귀속.
+            # 그룹은 여기서 모르므로 vault로 뭉뚱그린다 — 그룹 구분은 스냅샷이 한다.
+            cl = usage_meter.wrap(cl, pool="vault", key=key)
         except Exception:      # noqa: BLE001 — 계측은 있으면 좋고 없어도 돈다
             pass
         _client_cache[key] = cl
     return _client_cache[key]
 
 
+# ── 분산(2026-09-01) — 키가 많아도 1개만 때리던 것을 고친다 ────────────────
+# ★실측(최근 6시간, api_events): 쇼핑쇼츠 web은 68개 키로 360콜에 rpm 0건인데
+#   주식위키 server는 13개 키로 983콜에 rpm 398건이었다. report_ingest는 키 1개로
+#   64콜을 쳐서 **64건 전부** 분당한도. 같은 시각·같은 구글 한도인데 결과가 정반대다.
+#   차이는 나눠 쓰느냐뿐이었다 — 키를 더 살 문제가 아니다.
+#
+# comment_gen이 쓰는 방식을 그대로 가져온다(그쪽은 실측 rpm 0~1건):
+#   ① 호출마다 다음 키로 넘기는 라운드로빈 커서
+#   ② 키마다 최소 간격을 둬서 **애초에 429를 안 맞게** 한다
+#      (무료등급 실측 상한은 키당 분당 5건 — comment_gen._RPM_PER_KEY와 같은 근거)
+_RR_CURSOR = {"i": 0}
+_KEY_LAST_USED: dict[str, float] = {}
+_RPM_PER_KEY = int(os.environ.get("VAULT_RPM_PER_KEY",
+                                 os.environ.get("SHORTS_RPM_PER_KEY", "5")))
+_MIN_GAP_S = 60.0 / max(1, _RPM_PER_KEY)
+
+
+def _pick_key(live: list[str]) -> str:
+    """라이브 키 중 '지금 쓸 수 있는' 것을 하나 고른다(라운드로빈 + 최소 간격).
+
+    전부 쿨다운 중이면 가장 빨리 풀리는 키가 풀릴 때까지만 잔다(최대 _MIN_GAP_S).
+    키가 많아질수록 대기는 0에 수렴한다 — 키를 늘리면 그대로 빨라진다.
+    ⚠️프로세스 로컬이다(comment_gen도 같다). 여러 프로세스가 같이 돌면 실효 RPM이
+      프로세스 수만큼 곱해질 수 있다 — 그래도 '1개만 때리기'보다는 압도적으로 낫다.
+    """
+    if not live:
+        return ""
+    while True:
+        now = time.monotonic()
+        start = _RR_CURSOR["i"] % len(live)
+        _RR_CURSOR["i"] = start + 1
+        soonest = None
+        for off in range(len(live)):
+            k = live[(start + off) % len(live)]
+            ready_at = _KEY_LAST_USED.get(k, 0.0) + _MIN_GAP_S
+            if ready_at <= now:
+                _KEY_LAST_USED[k] = now
+                return k
+            if soonest is None or ready_at < soonest:
+                soonest = ready_at
+        time.sleep(min(max(0.0, (soonest or now) - now), _MIN_GAP_S))
+
+
+def pick_paced_key(live: list[str]) -> str:
+    """키 목록에서 **지금 쓸 수 있는** 키를 하나 고른다(라운드로빈 + 분당 최소 간격).
+
+    ★왜 공개하나(2026-09-01): 목록을 직접 순회하는 호출부(script_generate·seo_generate·
+      thumb_title·pattern_bank)는 get_client(group)를 안 거쳐 **페이서를 통째로 우회**했다.
+      실측(오늘 KST 12·15시 피크): 대본생성 web 407콜 중 429 분당한도 149건(36.6%).
+      `for key in keys:`가 간격 0으로 연타하고, 429가 나면 대기 없이 다음 키로 넘어가
+      키 76개를 순식간에 다 태운다.
+
+    ★get_client_for_key 안에 넣지 않는 이유: 그 함수는 클라이언트만 얻고 실제로는
+      호출하지 않는 자리에서도 불린다 — 거기서 재우면 엉뚱한 곳이 느려진다.
+      **호출 직전에** 이 함수로 키를 고르는 게 맞다.
+
+    내부 구현은 _pick_key 하나뿐이다(0순위-B: 같은 판단을 두 번 적지 않는다).
+    """
+    return _pick_key(live)
+
+
 def get_client(group: str) -> genai.Client:
-    """그룹의 현재 활성 키로 클라이언트 반환. 그룹이 다 소진되면 다른 그룹 키로 폴백."""
+    """그룹의 키로 클라이언트 반환. 그룹이 다 소진되면 다른 그룹 키로 폴백.
+
+    ★2026-09-01: 늘 live[0]을 주던 것을 **라운드로빈 + 분당 페이서**로 바꿨다
+      (_pick_key). 위 주석의 실측 참조 — 이 한 줄이 rpm 398건의 원인이었다.
+    """
     all_keys = get_keys(group)
     if not all_keys:
         raise RuntimeError(f"key_vault: '{group}' 그룹에 설정된 Gemini 키가 없습니다 (.env 확인)")
     live = get_live_keys_cascade(group)  # cross-group 폴백
     if not live:
         live = all_keys[-1:]  # 전체 소진 시 최후로 마지막 키 시도
-    idx = min(_active_idx.get(group, 0), len(live) - 1) if live else 0
-    key = live[idx] if live else ""
-    return get_client_for_key(key)
+    return get_client_for_key(_pick_key(live))
 
 
 client = get_client  # 드롭인 헬퍼 별칭 — genai.Client(api_key=...) 대체용

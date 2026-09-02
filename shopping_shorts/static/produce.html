@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="utf-8"/>
@@ -193,10 +193,15 @@
     /* 반짝: 등장할 때 여러 번 깜빡이며 시선을 끄는 집중 효과(CTA·훅) */
     @keyframes capSparkle{0%{opacity:0;transform:translate(-50%,-50%) scale(.85)}10%{opacity:1;transform:translate(-50%,-50%) scale(1.05)}18%{opacity:.35}26%{opacity:1}34%{opacity:.5}42%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:1;transform:translate(-50%,-50%) scale(1)}}
     @keyframes twinkle{0%,100%{opacity:0;transform:scale(.4)}50%{opacity:1;transform:scale(1)}}
-    .eff-fade{animation:capFade 2.2s ease-in-out infinite}
-    .eff-slide{animation:capSlide 2.2s ease-in-out infinite}
-    .eff-pop{animation:capPop 2.2s ease-in-out infinite}
-    .eff-sparkle{animation:capSparkle 2.6s ease-in-out infinite}
+    /* ★infinite를 뺐다(2026-09-01 고객 제보 "화면이 불규칙"). 효과는 2.2초 주기로 무한
+       반복인데 구절 표시시간은 1.0~1.5초라 서로 미끄러져, 같은 문구가 두 번 깜빡이거나
+       자막이 통째로 사라지는 구간이 생겼다(녹화 실측: 3.33~4.00초 자막 0). 실제 렌더는
+       구절이 새로 뜰 때 효과가 **한 번** 나므로, 미리보기도 1회 재생 후 그대로 둔다
+       (both = 끝난 상태 유지). 재시작은 updateCaption이 문구가 바뀔 때만 건다. */
+    .eff-fade{animation:capFade 2.2s ease-in-out both}
+    .eff-slide{animation:capSlide 2.2s ease-in-out both}
+    .eff-pop{animation:capPop 2.2s ease-in-out both}
+    .eff-sparkle{animation:capSparkle 2.6s ease-in-out both}
     .cap-spark{position:absolute;font-size:.5em;color:#fff;pointer-events:none;text-shadow:0 0 4px #fff;animation:twinkle 1.3s ease-in-out infinite}
     /* 헤드카피 번들 폰트 22종(브라우저 미리보기 = 실제 렌더 일치, ttf/otf만) */
 /* @@FONTS:BEGIN — tools/sync_fonts.py가 생성. 직접 고치지 마라 */
@@ -1426,6 +1431,9 @@
   .s2-bank .bk-or::after{content:"";flex:1;height:1px;background:var(--line)}
   /* 재생성 도는 동안 — 그 칸만 흐리게 + 클릭 잠금(다른 칸은 계속 쓸 수 있다). */
   .s2-row.s2-busy .s2-sent{opacity:.6;font-style:italic}
+  /* ✍ 내가 직접 쓰기 — 빈 칸에 '여기에 쓰세요'를 흐리게 띄운다(2026-09-01).
+     빈 contenteditable은 아무 안내가 없어 "고장난 칸"으로 읽힌다. */
+  .s2-sent:empty::before{content:attr(data-ph);opacity:.38}
   .s2-row.s2-busy .s2-swap{pointer-events:none;opacity:.4}
   .s2-cand .fq{margin-left:auto;flex:none;font-size:11px;color:var(--s2-sub);background:var(--inset);border-radius:4px;padding:2px 7px;white-space:nowrap}
   .s2-dfoot{display:none}
@@ -1681,10 +1689,23 @@
               <div id="mixUrls">
                 <div class="row" style="margin-bottom:6px;display:flex;gap:6px;align-items:center"><input class="mixUrl" type="text" placeholder="인스타/유튜브/틱톡 URL" style="flex:1;min-width:0;background:var(--inset);border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px"><button class="urlDel" title="이 칸 지우기" onclick="removeMixUrlRow(this)" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:16px;padding:0 4px">✕</button></div>
               </div>
-              <div style="display:flex;gap:8px;margin-top:2px">
+              <div style="display:flex;gap:8px;margin-top:2px;flex-wrap:wrap">
                 <button class="btn-prev" style="padding:8px 14px" onclick="addMixUrl()">+ URL 추가</button>
                 <button class="btn-next" style="padding:8px 14px" onclick="confirmMixUrls()">✔ 확정(영상풀에 담기)</button>
               </div>
+            </div>
+          </details>
+          <!-- 📁 내 영상파일 담기(2026-08-31) — 링크가 없는 영상(직접 찍은 것·편집해
+               뽑은 것)도 재료가 되게 한다. 올리면 서버가 URL 하나로 바꿔주고, 그 아래
+               흐름(추출·매칭·렌더)은 URL로 담은 영상과 **똑같이** 돈다. -->
+          <details style="margin-top:6px">
+            <summary style="cursor:pointer;font-size:12px;color:var(--sub)">📁 내 영상파일 올리기 ▾</summary>
+            <div style="margin-top:8px">
+              <input id="footageFile" type="file" accept="video/mp4,video/quicktime,video/webm,.mp4,.mov,.m4v,.webm" multiple
+                     style="display:none" onchange="uploadFootageFiles(this.files)">
+              <button class="btn-next" style="padding:8px 14px"
+                      onclick="document.getElementById('footageFile').click()">＋ 영상파일 고르기</button>
+              <div id="footageUpMsg" class="hint" style="margin-top:8px">mp4·mov·m4v·webm · 한 개당 최대 500MB · 여러 개 한 번에 됩니다.</div>
             </div>
           </details>
       </div>
@@ -1750,6 +1771,13 @@
           <div id="cleanPreviewWrap" style="margin-top:14px;display:none">
             <!-- 문구: "내 영상으로 미리보기"는 뭘 하는 버튼인지 안 보였다 → 행동을 그대로 쓴다(2026-07-30 사장님 지시) -->
             <button id="btnCleanPreview" class="cta" onclick="startCleanPreview()">✨ 자막제거 시작하기</button>
+            <!-- ★가격을 누르기 **전에** 보여준다(2026-09-02). 종전엔 이 패널 어디에도
+                 P·포인트·차감이라는 글자가 없었고, 아래 안내의 "추가 비용 없이"만 보여
+                 오히려 무료로 읽혔다. 실제로는 _charge_clean이 선차감하고, 고객이 금액을
+                 처음 보는 곳은 **잔액 부족으로 실패한 뒤**였다.
+                 값은 /api/settings/points(단가표·잔액)에서 가져온다 — 화면에 숫자를 박으면
+                 사장님이 단가를 바꿨을 때 거짓말이 된다(0순위-B). -->
+            <div id="cleanCost" class="ctahint" style="margin-top:6px"></div>
             <div class="ctahint">미리 확인하면 최종 렌더가 이 결과를 그대로 써서 추가 비용 없이 빨라져요</div>
             <div id="cleanPreview" style="margin-top:12px"></div>
           </div>
@@ -1983,7 +2011,7 @@
              인라인 커스텀 프로퍼티는 스타일시트가 !important로도 못 이겨서, 화면 크기별로
              키우려면 정의 자체가 CSS에 있어야 한다(2026-08-19 사장님 "더 크게"). -->
         <div class="previewSlot decoMirror" style="flex:0 0 auto;width:var(--pvw)">
-          <div class="hint" style="margin-bottom:4px">🪞 실시간 미리보기 (9:16) — 글자를 <b>드래그</b>해 위치 이동
+          <div class="hint" style="margin-bottom:4px">🪞 실시간 미리보기 (9:16) — 글자를 <b>드래그</b>해 위치 이동 · 화면 가운데 <b>⏸</b>로 멈추고 옮기세요
             <label style="cursor:pointer;margin-left:6px;color:var(--txt)"><input type="checkbox" id="sceneBg" onchange="toggleSceneBg()"> 실장면 배경</label></div>
           <!-- 🖼 이 장면을 썸네일로 (2026-08-30 사장님 "장면들중 썸네일로 쓰고싶은건
                썸네일페이지로 이동시킬수있게"). 여태 썸네일 후보는 **자동 등분 추출뿐**이라,
@@ -2001,6 +2029,21 @@
           <div id="zoomStage" class="zoomStage" style="width:100%;aspect-ratio:9/16">
           <div class="zoomBadge" id="zoomBadge">100%</div>
           <div id="hcPreview" style="position:relative;width:100%;aspect-ratio:9/16;background:#ffffff;border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.4)">
+            <!-- ⏸/▶ 자막·화면 자동흐름 멈춤 (2026-09-01 사장님 "빠르게 장면이랑 대본이
+                 넘어가는데 미리보기 가운데 정지 재생버튼 만들어줘"). _playBeatCaptions가
+                 구절마다 자막과 배경 컷을 계속 돌리는데, 그 사이에 글자를 드래그해 자리를
+                 잡으려면 화면이 자꾸 바뀌어 못 만진다. 멈추면 그 구절에서 고정된다.
+                 z-index 6 — 자막(5) 위라 눌린다. 평소엔 흐리고 손을 올리면 진해진다. -->
+            <button type="button" id="scenePlayBtn" onclick="toggleCapPlay(event)"
+                    title="자막·화면이 자동으로 넘어가는 것을 멈춥니다 (다시 누르면 재생)"
+                    style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+                           z-index:6;width:56px;height:56px;border-radius:50%;border:0;cursor:pointer;
+                           background:rgba(0,0,0,.5);color:#fff;font-size:22px;line-height:1;
+                           display:flex;align-items:center;justify-content:center;opacity:.82;
+                           box-shadow:0 2px 10px rgba(0,0,0,.45);
+                           transition:opacity .15s,background .15s"
+                    onmouseover="this.style.opacity='1';this.style.background='rgba(0,0,0,.68)'"
+                    onmouseout="this.style.opacity=CAP_PAUSED?'1':'.82';this.style.background=CAP_PAUSED?'rgba(220,38,38,.72)':'rgba(0,0,0,.5)'">⏸</button>
             <img id="hcPreviewBg" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none" alt="">
 <!-- 2026-07-27 사장님: "원본 자막이 있던 자리" 점선 박스 제거(필요 없음). 자동 정렬
                  (applyErasedRegion)과 '다시 그 자리로' 버튼은 그대로 — 표시만 뺀 것. -->
@@ -2028,6 +2071,24 @@
             </div>
             <div class="hint" style="margin-top:6px;text-align:center">◀ ▶ 로 장면을 넘겨가며 자막이 어떻게 나오는지 확인</div>
 
+            <!-- ✋ 자막을 끌어 옮길 때 어디까지 바꿀지(2026-08-31 사장님 "자막을 이동하면
+                 한장면씩 적용이랑 모두 적용할수있게"). 종전엔 드래그가 **무조건 전체**였다.
+                 ★뜻만 고른다 — 실제 저장은 /cappos 한 곳(0순위-B). -->
+            <div style="margin-top:10px;background:var(--inset);border:1px solid var(--line);
+                        border-radius:10px;padding:9px 12px">
+              <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:6px">
+                ✋ 자막을 끌어 옮기면 <span class="hint" style="font-weight:400">— 어디에 적용할까요?</span></div>
+              <div id="capScopeBtns" style="display:flex;gap:6px">
+                <button type="button" class="tab on" data-capscope="all" onclick="setCapDragScope('all')"
+                        style="flex:1;min-width:auto;padding:7px 10px;font-size:13px"
+                        title="끌어 옮긴 자리를 영상 전체 자막에 적용합니다">🌐 모든 장면</button>
+                <button type="button" class="tab" data-capscope="one" onclick="setCapDragScope('one')"
+                        style="flex:1;min-width:auto;padding:7px 10px;font-size:13px"
+                        title="지금 보고 있는 이 장면의 자막만 옮깁니다">🎯 이 장면만</button>
+              </div>
+              <div class="hint" id="capScopeMsg" style="margin-top:6px">미리보기 자막을 마우스로 끌어 옮기세요.</div>
+            </div>
+
             <!-- ★이 장면만 손보기(2026-08-25 사장님 "장면당 자막 배치를 수정할 수 있게").
                  둘 다 음성을 다시 만들지 않는다 → 즉시·무료. 대사를 바꾸는 건 다른 자리다. -->
             <div style="margin-top:10px;background:var(--inset);border:1px solid var(--line);
@@ -2035,12 +2096,15 @@
               <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:7px">
                 🎯 이 장면만 손보기 <span class="hint" style="font-weight:400">(다른 장면은 안 바뀌어요)</span></div>
 
+              <div class="hint" id="capCutHint" style="display:none;margin-bottom:6px"></div>
               <div style="font-size:12px;color:var(--sub);margin-bottom:5px">자막 자리 — 제품을 가리면 옮기세요</div>
               <div id="capPosBtns" style="display:flex;gap:6px;flex-wrap:wrap">
                 <button type="button" class="tab" data-cappos="top"    onclick="setBeatCapPos('top')"    style="flex:1;min-width:auto;padding:7px 10px;font-size:13px">⬆ 위</button>
                 <button type="button" class="tab" data-cappos="mid"    onclick="setBeatCapPos('mid')"    style="flex:1;min-width:auto;padding:7px 10px;font-size:13px">⬍ 중간</button>
                 <button type="button" class="tab" data-cappos="bottom" onclick="setBeatCapPos('bottom')" style="flex:1;min-width:auto;padding:7px 10px;font-size:13px">⬇ 아래</button>
               </div>
+              <div class="hint" id="capFreeHint" style="display:none;margin-top:5px">
+                ✋ 이 장면은 <b>끌어서 옮긴 자리</b>를 씁니다 — 버튼을 누르면 그 자리로 되돌아갑니다.</div>
 
               <div style="font-size:12px;color:var(--sub);margin:10px 0 5px">
                 줄 나누기 — <b>Enter</b>=여기서 끊기 · <b>Backspace</b>(줄 맨 앞)=윗줄과 붙이기</div>
@@ -2080,7 +2144,7 @@
             <div id="hcCopyMsg" class="hint" style="margin-top:4px"></div>
           </div>
           <div style="font-size:13px;margin-bottom:4px">헤드카피 문구</div>
-          <textarea id="hcText" rows="2" placeholder="예: 써보면 놀라는 이것" oninput="updateHC()"
+          <textarea id="hcText" rows="2" placeholder="예: 써보면 놀라는 이것" oninput="hcTouched()"
             style="width:100%;background:var(--inset);border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px;margin-bottom:12px;resize:vertical;font-family:inherit;font-size:14px;line-height:1.4"></textarea>
           <!-- 🖍 글자별 색 (2026-08-30 사장님 "바꾸고 싶은 글자만 컬러 바꿀 수 있게").
                ★단어를 **눌러서** 고른다 — 손으로 타이핑하는 옛 UI(2026-08-24에 뺌)는
@@ -2180,28 +2244,28 @@
                 <div hidden style="display:none">
                   <span id="hcFontPicker"><button type="button" id="hcFontBtn" onclick="toggleFontMenu(event)">폰트</button>
                     <div id="hcFontMenu" style="display:none"></div></span>
-                  <select id="hcFont" onchange="updateHC()"></select>
-                  <input id="hcColor" type="color" value="#FF8800" oninput="updateHC()">
-                  <select id="hcWeight" onchange="updateHC()">
+                  <select id="hcFont" onchange="hcTouched()"></select>
+                  <input id="hcColor" type="color" value="#FF8800" oninput="hcTouched()">
+                  <select id="hcWeight" onchange="hcTouched()">
                     <option value="700">굵게</option><option value="900" selected>아주 굵게</option><option value="400">보통</option>
                   </select>
-                  <span id="hcSizeV">64</span><input id="hcSize" type="range" min="28" max="120" value="64" oninput="updateHC()">
-                  <span id="hcYV">14</span><input id="hcY" type="range" min="0" max="100" value="14" oninput="HC_Y_TOUCHED=true;updateHC()">
-                  <span id="hcXV">50</span><input id="hcX" type="range" min="0" max="100" value="50" oninput="updateHC()">
+                  <span id="hcSizeV">64</span><input id="hcSize" type="range" min="28" max="120" value="64" oninput="hcTouched()">
+                  <span id="hcYV">14</span><input id="hcY" type="range" min="0" max="100" value="14" oninput="HC_Y_TOUCHED=true;hcTouched()">
+                  <span id="hcXV">50</span><input id="hcX" type="range" min="0" max="100" value="50" oninput="hcTouched()">
                 </div>
                 <!-- ③ 테두리 · 박스 -->
                 <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px">
                   <div style="font-size:13px;font-weight:700;margin-bottom:8px">🎨 테두리 · 박스</div>
                   <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
-                    <input id="hcOutline" type="checkbox" checked onchange="updateHC()"> 외곽선
-                    <input id="hcOutColor" type="color" value="#000000" oninput="updateHC()">
-                    <span style="color:var(--sub);font-size:12px">두께 <input id="hcOutW" type="range" min="0" max="12" value="6" oninput="updateHC()"></span>
+                    <input id="hcOutline" type="checkbox" checked onchange="hcTouched()"> 외곽선
+                    <input id="hcOutColor" type="color" value="#000000" oninput="hcTouched()">
+                    <span style="color:var(--sub);font-size:12px">두께 <input id="hcOutW" type="range" min="0" max="12" value="6" oninput="hcTouched()"></span>
                   </label>
                   <label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;cursor:pointer">
-                    <input id="hcBox" type="checkbox" onchange="updateHC()"> 배경 박스
-                    <input id="hcBoxColor" type="color" value="#000000" oninput="updateHC()">
-                    <span style="color:var(--sub);font-size:12px">여백 <input id="hcBoxPad" type="range" min="0" max="40" value="16" oninput="updateHC()"></span>
-                    <span style="color:var(--sub);font-size:12px">투명도 <input id="hcBoxOpacity" type="range" min="20" max="100" value="80" oninput="updateHC()"></span>
+                    <input id="hcBox" type="checkbox" onchange="hcTouched()"> 배경 박스
+                    <input id="hcBoxColor" type="color" value="#000000" oninput="hcTouched()">
+                    <span style="color:var(--sub);font-size:12px">여백 <input id="hcBoxPad" type="range" min="0" max="40" value="16" oninput="hcTouched()"></span>
+                    <span style="color:var(--sub);font-size:12px">투명도 <input id="hcBoxOpacity" type="range" min="20" max="100" value="80" oninput="hcTouched()"></span>
                   </label>
                 </div>
                           </div>
@@ -2248,19 +2312,19 @@
                   <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:8px">① 글씨</div>
                   <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
                     <label style="font-size:12px;color:var(--sub)">폰트
-                      <select id="capFont" onchange="updateCaption()" style="background:#0a1017;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:5px 8px"></select></label>
+                      <select id="capFont" onchange="capTouched()" style="background:#0a1017;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:5px 8px"></select></label>
                     <label style="font-size:12px;color:var(--sub)">색상
-                      <input id="capColor" type="color" value="#FFFFFF" oninput="updateCaption()" style="vertical-align:middle;cursor:pointer"></label>
+                      <input id="capColor" type="color" value="#FFFFFF" oninput="capTouched()" style="vertical-align:middle;cursor:pointer"></label>
                   </div>
                   <div style="margin-top:8px;font-size:12px;color:var(--sub)">크기 <b id="capSizeV">54</b>px
-                    <input id="capSize" type="range" min="28" max="96" value="54" oninput="updateCaption()" style="width:100%"></div>
+                    <input id="capSize" type="range" min="28" max="96" value="54" oninput="capTouched()" style="width:100%"></div>
                 </div>
 
                 <!-- ② 자리 -->
                 <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px">
                   <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:8px">② 자리</div>
                   <div style="font-size:12px;color:var(--sub)">세로 위치 <b id="capYV">84</b>%
-                    <input id="capY" type="range" min="0" max="100" value="84" oninput="CAP_POS_TOUCHED=true;updateCaption()" style="width:100%"></div>
+                    <input id="capY" type="range" min="0" max="100" value="84" oninput="CAP_POS_TOUCHED=true;capTouched()" style="width:100%"></div>
                   <!-- ★가로 정렬 버튼(2026-08-25 고객 요청 "자막이 한쪽으로 치우쳐져 있어서
                        정렬하는 부분이 추가되면 좋겠어요"). 자막은 드래그로 가로 이동이 되는데
                        (CAP_X_PCT) **되돌리는 길이 없었다** — 한 번 끌면 중앙으로 못 돌아온다.
@@ -2278,15 +2342,15 @@
                 <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px">
                   <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:8px">③ 테두리 · 박스 · 효과</div>
                   <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
-                    <input id="capOutline" type="checkbox" checked onchange="updateCaption()"> 외곽선
-                    <input id="capOutColor" type="color" value="#000000" oninput="updateCaption()">
-                    <span style="color:var(--sub);font-size:12px">두께 <input id="capOutW" type="range" min="0" max="12" value="5" oninput="updateCaption()"></span>
+                    <input id="capOutline" type="checkbox" checked onchange="capTouched()"> 외곽선
+                    <input id="capOutColor" type="color" value="#000000" oninput="capTouched()">
+                    <span style="color:var(--sub);font-size:12px">두께 <input id="capOutW" type="range" min="0" max="12" value="5" oninput="capTouched()"></span>
                   </label>
                   <label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;cursor:pointer">
-                    <input id="capBox" type="checkbox" onchange="updateCaption()"> 배경 박스
-                    <input id="capBoxColor" type="color" value="#000000" oninput="updateCaption()">
-                    <span style="color:var(--sub);font-size:12px">여백 <input id="capBoxPad" type="range" min="0" max="40" value="12" oninput="updateCaption()"></span>
-                    <span style="color:var(--sub);font-size:12px">투명도 <input id="capBoxOpacity" type="range" min="20" max="100" value="80" oninput="updateCaption()"></span>
+                    <input id="capBox" type="checkbox" onchange="capTouched()"> 배경 박스
+                    <input id="capBoxColor" type="color" value="#000000" oninput="capTouched()">
+                    <span style="color:var(--sub);font-size:12px">여백 <input id="capBoxPad" type="range" min="0" max="40" value="12" oninput="capTouched()"></span>
+                    <span style="color:var(--sub);font-size:12px">투명도 <input id="capBoxOpacity" type="range" min="20" max="100" value="80" oninput="capTouched()"></span>
                   </label>
                   <div class="hint" style="font-size:11px;margin-top:4px"></div>
                   <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;align-items:center">
@@ -2404,6 +2468,10 @@
                   <div style="font-size:13px;font-weight:800;margin-bottom:8px">📰 내용물 있는 틀
                     <span style="font-size:11px;color:var(--sub);font-weight:400">— 커뮤니티 글처럼 보이게</span></div>
                   <div id="frPresets" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px"></div>
+                  <!-- 이미지 틀 올리기(2026-08-31). 목록의 [＋ 내 그림] 카드가 이걸 누른다.
+                       ★캔바에서 만든 그림을 그대로 얹는다 — 코드로 다시 그리면 질감이 죽는다. -->
+                  <input id="frImgFile" type="file" accept="image/png,image/jpeg,image/webp"
+                         onchange="frImgUpload(this)" style="display:none">
                   <div id="frFields" style="display:none">
                     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:12px">
                       <!-- ★안내문은 고른 틀에 따라 바뀐다(2026-08-20). "살림킹왕짱"이 고정으로
@@ -2465,6 +2533,12 @@
                         <input id="frTtSize" type="range" min="0" max="140" step="2" value="0" oninput="frUpdate()" style="width:110px">
                         <span>가로 <b id="frTtXV" style="color:var(--sub)">50%</b></span>
                         <input id="frTtX" type="range" min="0" max="100" value="50" oninput="frUpdate()" style="width:110px">
+                        <!-- 세로위치·바탕끄기(2026-08-31) — 이미지 틀 위에 글자를 놓으려면 필요하다.
+                             ★0%='자동'(띠 바로 아래) — 지금까지의 자리 그대로다. -->
+                        <span>세로 <b id="frTtYV" style="color:var(--sub)">자동</b></span>
+                        <input id="frTtY" type="range" min="0" max="100" value="0" oninput="frUpdate()" style="width:110px">
+                        <label style="display:flex;align-items:center;gap:4px" title="끄면 글자만 얹혀 배경 그림이 그대로 보입니다">
+                          <input id="frHeadBlock" type="checkbox" checked onchange="frUpdate()">바탕</label>
                       </div>
                       <!-- 제목 색·테두리(2026-08-28 사장님 "폰트쪽 꾸미는것 추가").
                            ★색 칸은 빈값이 없어 '자동'을 값으로 못 담는다 → FR_TOUCHED 규약
@@ -2490,6 +2564,8 @@
                         <input id="frChSize" type="range" min="0" max="140" step="2" value="0" oninput="frUpdate()" style="width:110px">
                         <span>가로 <b id="frChXV" style="color:var(--sub)">50%</b></span>
                         <input id="frChX" type="range" min="0" max="100" value="50" oninput="frUpdate()" style="width:110px">
+                        <span>세로 <b id="frChYV" style="color:var(--sub)">자동</b></span>
+                        <input id="frChY" type="range" min="0" max="100" value="0" oninput="frUpdate()" style="width:110px">
                       </div>
                       <div class="hint" style="font-size:11px;margin-top:6px">크기를 맨 왼쪽(자동)에 두면 틀이 정한 크기를 씁니다.</div>
                     </div>
@@ -2840,6 +2916,20 @@
           </div>
           <button class="btn-next" style="width:270px;margin-top:8px" onclick="generateThumb()">썸네일 생성</button>
           <div id="thumbSaveStatus" class="hint" style="margin-top:6px"></div>
+
+          <!-- 🖼 내 프리셋(2026-09-02 사장님 "만들어진것 프리셋으로 저장하는것 만들어줘.
+               자리는 썸네일 생성 바로 아래"). 지금 만든 구성(글자·스티커·도형·배지)을 담아두고
+               다음 영상에서 딸깍 한 번에 그대로 얹는다.
+               ★위쪽 '🖼 프리셋 — 한 번에 스타일 적용'(HC_PRESETS)과 다른 물건이다:
+                 저건 고른 글자 하나의 **색·스타일**만 바꾸고, 이건 **화면 구성 전체**를 바꾼다.
+               ★배경은 안 담는다 — 다음 영상에 쓸 것이라 그 영상의 배경 위에 얹혀야 한다. -->
+          <div style="width:270px;margin-top:14px;border-top:1px solid var(--line);padding-top:10px">
+            <div style="font-size:12px;color:var(--sub);margin-bottom:5px">🖼 내 프리셋 — 지금 구성을 담아 다음 영상에 그대로</div>
+            <button class="tab" style="width:100%;min-width:auto;padding:8px;font-size:12px"
+                    onclick="saveThumbPreset()">💾 지금 구성을 프리셋으로 담기</button>
+            <div id="myThumbPresetStatus" class="hint" style="margin-top:5px;font-size:11px"></div>
+            <div id="myThumbPresets" style="display:flex;flex-wrap:wrap;gap:7px;margin-top:8px"></div>
+          </div>
         </div>
       </div>
     </section>
@@ -3152,8 +3242,23 @@
               </div>
             </div>
           </div>
+          <!-- 훅 감탄사 켜고 끄기(2026-09-01 사장님 "3번": 고객도 정하되 기본은 사장님 값).
+               안 건드리면 관리자 기본값을 따른다 — 그래서 처음엔 '기본'으로 뜬다. -->
+          <div class="s2-regen" style="align-items:center;gap:10px;flex-wrap:wrap">
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px">
+              <input type="checkbox" id="hookOpenerChk" onchange="saveHookOpenerMine()">
+              <span>첫마디에 <b>"와, / 여러분"</b> 붙이기</span>
+            </label>
+            <span class="hint" id="hookOpenerMsg" style="margin:0"></span>
+          </div>
           <div class="s2-regen">
             <button class="btn-next" id="s2GenBtn" onclick="s2Generate()">✨ 이 스타일로 대본 만들기</button>
+            <!-- ✍ 내가 직접 쓰기(2026-09-01 사장님 "그냥 내 대본을 그대로 하고 싶을 때 —
+                 빈칸으로 자리를 만들어주고 쓸 수 있게"). AI를 안 부른다: 빈 칸만 만들고
+                 사장님이 채운 그대로 확정된다(각색 없음). 칸 구성은 고른 스타일을 따른다. -->
+            <button class="btn-ghost" id="s2MineBtn" style="min-width:auto"
+                    title="AI를 부르지 않고 빈 칸을 만들어 드립니다 — 쓰신 문장이 그대로 대본이 됩니다"
+                    onclick="s2AddMineDraft()">✍ 내가 직접 쓰기</button>
             <span class="hint" id="s2GenHint" style="margin:0"></span>
           </div>
         </div>
@@ -3252,16 +3357,16 @@
 //   대본(신규 패널 8)을 2번째로 세우고, 장면 편집(패널 7)을 3번째로 민다.
 //   ★물리 패널 번호(data-step)는 그대로 두고 이 매핑만 바꾼다 — cur===n 분기가
 //   파일 곳곳에 박혀 있어 번호를 다시 매기면 전부 어긋난다.
-const STEP_LABELS = ["영상추출/분석","대본생성","영상대본MIX","고품질 자막제거","TTS음성","장면꾸미기","썸네일","제목·태그","완성본","SNS 예약"];
+const STEP_LABELS = ["영상추출/분석","대본생성","영상대본MIX","TTS음성","고품질 자막제거","장면꾸미기","썸네일","제목·태그","완성본","SNS 예약"];
 // ★도크 라벨은 11px이라 긴 이름이 두 줄로 접힌다 → 도크에서만 줄여 쓴다(패널 제목은 STEP_LABELS 그대로).
 //   빈 문자열이면 STEP_LABELS를 그대로 쓴다 — 두 벌을 다 적지 않기 위해서다(0순위-B).
-const STEP_SHORT = ["영상추출","","","자막제거","","","","","","예약발행"];
+const STEP_SHORT = ["영상추출","","","","자막제거","","","","","예약발행"];
 function stepShort(o){ return STEP_SHORT[o] || STEP_LABELS[o]; }
 // 단계 색(2026-08-26 사장님 확정 K3 색흐름). [선/기본색, 현재일 때 그라디언트 끝색]
 // ★여기가 색의 유일한 출처다 — theme.css는 var(--c)만 읽는다.
 const STEP_COLORS = [
   ["#38bdf8","#0ea5e9"], ["#8c6ef0","#6d4df0"], ["#f472b6","#ec4899"],
-  ["#fb7185","#f43f5e"], ["#7df5db","#14b8a6"], ["#fb923c","#f97316"],
+  ["#7df5db","#14b8a6"], ["#fb7185","#f43f5e"], ["#fb923c","#f97316"],
   ["#facc6b","#f5b53f"], ["#a3e635","#84cc16"], ["#6ee7b7","#10b981"],
   ["#60a5fa","#3b82f6"],   // SNS 예약 — 완성본(초록) 다음이라 파랑으로 끊는다
 ];
@@ -3270,8 +3375,8 @@ const STEP_ICONS = [
   '<rect x="2.5" y="5" width="13" height="11" rx="2"/><path d="M5.5 5v11M12.5 5v11M2.5 10.5h13"/><circle cx="17.5" cy="16" r="4"/><path d="M20.4 18.9 22.5 21"/>',
   '<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h4"/>',
   '<path d="M3 7h4c3 0 3 10 6 10h8"/><path d="M3 17h4c3 0 3-10 6-10h8"/><path d="M18 4l3 3-3 3M18 14l3 3-3 3"/>',
-  '<path d="M8 20h12M14.5 4.5 20 10l-8 8H6.5L4 15.5zM10.5 8.5 16 14"/>',
   '<rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M9 21h6"/>',
+  '<path d="M8 20h12M14.5 4.5 20 10l-8 8H6.5L4 15.5zM10.5 8.5 16 14"/>',
   '<path d="M4 7h9M8.5 7v9M16.5 9 20 17h-7zM14 19.5h6"/>',
   '<rect x="2.5" y="4" width="19" height="16" rx="2.5"/><circle cx="8" cy="9.5" r="1.8"/><path d="M3 16.5 8.5 12l4 3.5L16 13l5 4.5"/>',
   '<path d="M3 4.6h9M3 8h6"/><path d="M21 13.6 13.6 21a1.4 1.4 0 0 1-2 0l-5.9-5.9a1.4 1.4 0 0 1-.4-1V8.4c0-.8.6-1.4 1.4-1.4h5.7c.4 0 .7.1 1 .4l5.6 5.6a1.4 1.4 0 0 1 0 2z"/><circle cx="9.6" cy="10.8" r="1.15"/>',
@@ -3281,7 +3386,7 @@ const STEP_ICONS = [
 ];
 // 표시 오브 → 실제 패널 data-step (대본=신규 8이 2번째, 매칭=7이 3번째)
 // ★SNS 예약(신규 패널 9)은 **완성본 뒤**에 붙는다 — 영상이 나와야 올릴 수 있다.
-const ORB_TO_PANEL = [0, 8, 7, 1, 2, 3, 4, 5, 6, 9];
+const ORB_TO_PANEL = [0, 8, 7, 2, 1, 3, 4, 5, 6, 9];   // 2026-09-01 TTS를 자막제거 앞으로
 const PANEL_TO_ORB = Object.fromEntries(ORB_TO_PANEL.map((p,o)=>[p,o]));
 // ★안내 문구가 단계 번호를 직접 쓰지 않게 한다(2026-08-16). 예전엔 "1단계에서 영상 매칭을
 //   먼저 하세요" 같은 문장이 16곳에 손으로 박혀 있었는데, 9단계 개편으로 매칭이 3단계가
@@ -3742,6 +3847,13 @@ let cur = 0;
 // 무지개 진행띠 + 단계별 고유색 아이콘. 끝난 단계는 체크 배지, 지금 단계만 크게 뜨며 링이 퍼진다.
 // 진행띠 폭은 현재 인덱스/전체로 계산(마지막에서 100%) — 오브바 때와 같은 식이다.
 // ★옛 오브바 마크업은 theme.css에 그대로 남아 있다 — 되돌리려면 이 함수만 되돌리면 된다.
+// 그 단계가 실제로 결과물을 남겼는가 — 단계 체크(done)의 유일한 판단처.
+// 지금은 대본(2단계)만 본다. 다른 단계는 종전대로 '지나왔으면 완료'.
+function stepHasOutput(o){
+  if(STEP_LABELS[o] === '대본생성') return !!(STATE && (STATE.script || '').trim());
+  return true;
+}
+
 function renderSteps(){
   syncPanelTitles();          // 패널 제목의 번호·이름을 STEP_LABELS에 맞춘다(한 벌 원칙)
   const el = document.getElementById('steps');
@@ -3752,7 +3864,13 @@ function renderSteps(){
     `<div class="dockflow"><i class="dfull"></i><i class="drun" style="width:${pct}%"></i></div>`
     + '<div class="dockbar">'
     + STEP_LABELS.map((label, o)=>{
-      const cls = o < oi ? 'dk done' : o === oi ? 'dk cur' : 'dk wait';
+      // ★완료(done)는 '지나왔다'가 아니라 '산출물이 있다'로 판정한다(2026-08-31 실사고).
+      //   대본이 0자인데 2단계에 초록 체크가 켜져, 고객은 다 된 줄 알고 3단계로 갔다가
+      //   "아직 대본이 없어요"를 만났다 — 되돌아가도 체크가 그대로라 뭘 안 했는지
+      //   알 길이 없었다(실측 work e6e61ac6b7e1: step=7 인데 script="").
+      //   지나온 단계 중 **산출물이 비면 done 대신 wait**로 둔다.
+      const _lack = (o < oi) && !stepHasOutput(o);
+      const cls = _lack ? 'dk wait' : (o < oi ? 'dk done' : o === oi ? 'dk cur' : 'dk wait');
       const [c, c2] = STEP_COLORS[o] || ['#3b455e','#3b455e'];
       return `<div class="${cls}" style="--c:${c};--c2:${c2}" title="${label}" onclick="jump(${o})">`
         + `<div class="dkic"><svg viewBox="0 0 24 24">${STEP_ICONS[o]||''}</svg></div>`
@@ -3809,8 +3927,14 @@ async function initMatch(){
     //   ⚠️ 2단계 확정 시점에 걸지 않는 이유는 그대로 유효하다: 대본을 다듬기도 전에
     //      시작하면 2단계가 존재 이유를 잃고, 대본이 바뀌면 매칭을 버려야 한다(=과금 낭비).
     if(!(STATE.script || '').trim()){
-      setMixStatusText('아직 대본이 없어요 — ' + stepName('script')
-        + '에서 대본을 먼저 만들고 확정해주세요.');
+      // ★말만 하지 말고 **데려다 준다**(2026-08-31). 종전엔 문구만 띄워, 고객이
+      //   2단계로 돌아가도 체크가 켜져 있어 뭘 해야 하는지 몰랐다.
+      const _st0 = setMixStatusText('아직 대본이 없어요 — ' + stepName('script')
+        + '에서 대본을 먼저 만들어주세요.');
+      if(_st0) _st0.insertAdjacentHTML('beforeend',
+        '<div style="margin-top:10px"><button class="cta-shine" '
+        + 'onclick="jump(' + stepOrb('script') + ')">'
+        + '✨ ' + stepName('script') + '으로 가서 대본 만들기</button></div>');
       return;
     }
     if(_MIX_AUTOSTARTED) return;    // 실패한 뒤 다시 안 들어오게(요금·무한루프 방지)
@@ -4266,7 +4390,10 @@ function useHeadcopy(i){
 function clearHeadcopy(){
   const t=document.getElementById('hcText'); if(!t) return;
   t.value='';
-  updateHC();          // 미리보기·STATE 반영은 넣을 때와 **같은 경로**를 쓴다(따로 지우지 않는다)
+  // 미리보기·STATE 반영은 넣을 때와 **같은 경로**를 쓴다(따로 지우지 않는다).
+  // ★저장까지 같은 경로로 — hcTouched가 그리기+저장을 함께 한다(2026-09-02).
+  //   updateHC만 부르면 화면에서만 지워지고 새로고침하면 헤드카피가 되살아난다.
+  hcTouched();
 }
 // 🖼 템플릿 — 목록은 서버가 준다(정의처는 deco_templates 하나). 선택은 STATE.deco.template.
 let TPL_LIST=[];
@@ -4396,7 +4523,10 @@ function frameUrl(f){
     sub_bg_c:f.sub_bg_c||'', sub_text_c:f.sub_text_c||'',
     left_icon:f.left_icon||'', right_icon:f.right_icon||'', center_kind:f.center_kind||'',
     // 띠 끝부분 처리(2026-08-28) — solid/0이면 서버가 지금까지의 그림 그대로
-    bar_fx:f.bar_fx||'solid', bar_soft:f.bar_soft??0});
+    bar_fx:f.bar_fx||'solid', bar_soft:f.bar_soft??0,
+    // 이미지 틀(2026-08-31) — 빈값이면 안 깔린다(지금까지와 완전히 같다)
+    bg_image:f.bg_image||'', ch_y:f.ch_y??0, title_y:f.title_y??0,
+    head_block:(f.head_block===false)?'0':'1'});
   // 가림막(2026-08-28) — 배열이라 JSON으로 싣는다. 없으면 아예 안 보낸다(옛 그림 캐시를 그대로 쓰게).
   if(Array.isArray(f.masks) && f.masks.length) q.set('masks', JSON.stringify(f.masks));
   return '/api/produce/frame.png?'+q.toString();
@@ -4410,7 +4540,50 @@ async function loadFramePresets(){
     try{ const d=await (await fetch('/api/produce/frame/presets')).json(); FR_PRESETS=(d&&d.presets)||[]; }
     catch(e){ box.innerHTML='<span class="hint" style="color:var(--fire)">틀 목록을 불러오지 못했어요</span>'; return; }
   }
+  try{ const r=await (await fetch('/api/produce/frame/images')).json(); FR_IMAGES=(r&&r.images)||[]; }
+  catch(e){ FR_IMAGES=[]; }      // 목록 하나 못 읽었다고 틀 고르기가 통째로 막히면 안 된다
   renderFramePresets();
+}
+// ── 🖼 이미지 틀(2026-08-31 사장님 "너가 코드로 다시그리면 느낌이 안나와") ──────────
+// 캔바 등에서 만든 그림을 **그대로** 깐다. 코드로 다시 그리면 질감이 죽는다.
+let FR_IMAGES=[];
+async function frImgUpload(input){
+  const file=input.files&&input.files[0]; if(!file) return;
+  input.value='';                                  // 같은 파일을 다시 골라도 change가 뜨게
+  const fd=new FormData(); fd.append('file', file); fd.append('name', file.name||'');
+  try{
+    const r=await (await fetch('/api/produce/frame/image',{method:'POST',body:fd})).json();
+    if(!r||!r.ok){ alert((r&&r.error)||'그림을 올리지 못했어요'); return; }
+    FR_IMAGES=FR_IMAGES.filter(x=>x.id!==r.id);
+    FR_IMAGES.unshift({id:r.id, name:(file.name||'내 틀').replace(/\.[^.]+$/,'')});
+    frPickImage(r.id);
+  }catch(e){ alert('그림을 올리지 못했어요'); }
+}
+async function frImgDelete(iid, ev){
+  if(ev) ev.stopPropagation();                     // 카드 선택으로 번지지 않게
+  if(!confirm('이 이미지 틀을 목록에서 뺄까요? (다른 작업에 쓰인 그림은 그대로 남습니다)')) return;
+  try{ await fetch('/api/produce/frame/image/'+iid,{method:'DELETE'}); }catch(e){}
+  FR_IMAGES=FR_IMAGES.filter(x=>x.id!==iid);
+  const f=(STATE.deco&&STATE.deco.template&&STATE.deco.template.frame)||null;
+  if(f&&f.bg_image===iid) frPick('');              // 지금 쓰던 걸 뺐으면 틀도 내린다
+  else renderFramePresets();
+}
+function frPickImage(iid){
+  if(!STATE.deco) STATE.deco={extra_texts:[], motion:null};
+  const old=(STATE.deco.template&&STATE.deco.template.frame)||{};
+  const span=(STATE.deco.template&&STATE.deco.template.span)||'full';
+  // ★그림이 곧 틀이다 — 우리가 띠·바탕을 또 그리면 그 위를 덮어 질감이 죽는다.
+  //   그래서 띠 0 · 아이콘 없음 · 제목 바탕 끔으로 시작한다. 글자는 사장님이 자리를 잡는다.
+  // ★틀과 글자색은 **한 세트**다(프리셋 20종에서 배운 것). 색을 안 채우면 크림 틀에
+  //   흰 채널명, 먹지 틀에 검은 제목이 나가 글자가 통째로 사라진다(실측 2026-08-31).
+  const meta=(FR_IMAGES||[]).find(x=>x.id===iid)||{};
+  STATE.deco.template={span:span, frame:{preset:'plain_black', bg_image:iid,
+    bar_h:0, bottom_h:0, icons:false, head_block:false,
+    channel:old.channel||'', title:old.title||'', views:'', comments:'',
+    on_bar_color:meta.on_bar||'', title_color:meta.title||'',
+    // 기본 자리: 채널명은 띠 안, 제목은 그 아래 흰 칸. 사장님이 슬라이더로 옮긴다.
+    ch_y:old.ch_y||7, title_y:old.title_y||17, ad_badge:!!old.ad_badge}};
+  renderFramePresets(); renderTemplateCards(); renderTemplatePreview();
 }
 function renderFramePresets(){
   const box=document.getElementById('frPresets'); if(!box) return;
@@ -4445,8 +4618,24 @@ function renderFramePresets(){
   // 축소판이 커졌으니 한 줄에 4칸(폭이 좁으면 자동으로 줄어든다)
   box.style.cssText='display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:6px;'
     +'max-height:280px;overflow-y:auto;margin-bottom:10px;padding-right:2px';
+  // ★내 그림을 **맨 앞**에 둔다 — 사장님이 올린 게 목록 20칸 뒤에 숨으면 못 찾는다.
+  const upThumb=`<div style="width:${Math.round(TH*9/16)}px;height:${TH}px;border-radius:4px;
+      border:1px dashed var(--line);display:flex;align-items:center;justify-content:center;
+      color:var(--sub);font-size:18px;flex:0 0 auto">＋</div>`;
+  const curImg=f?(f.bg_image||''):'';
+  const imgThumb=i=>`<div style="width:${Math.round(TH*9/16)}px;height:${TH}px;border-radius:4px;
+      overflow:hidden;position:relative;flex:0 0 auto;background:#0a1017">
+      <!-- ★loading="lazy" 금지 — 라이브에서 요청이 안 나가 카드가 통째로 빈다
+           (실측: 랭킹 0/99·발굴 0/79·즐겨찾기 0/591. test_no_lazy_thumbs가 지킨다) -->
+      <img src="/api/produce/frame/image/${i.id}"
+           style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">
+      ${i.mine===false?'':`<span onclick="frImgDelete('${i.id}',event)" title="목록에서 빼기"
+            style="position:absolute;top:1px;right:1px;background:rgba(0,0,0,.6);color:#fff;
+                   border-radius:3px;font-size:10px;line-height:1;padding:2px 3px">×</span>`}</div>`;
   box.innerHTML = card(!f, "frPick('')", noneThumb, '안 씀')
-    + FR_PRESETS.map(p=>card(cur===p.id, `frPick('${p.id}')`, thumbOf(p), esc(p.name))).join('');
+    + card(false, "document.getElementById('frImgFile').click()", upThumb, '내 그림')
+    + FR_IMAGES.map(i=>card(curImg===i.id, `frPickImage('${i.id}')`, imgThumb(i), esc(i.name||'내 틀'))).join('')
+    + FR_PRESETS.map(p=>card(cur===p.id&&!curImg, `frPick('${p.id}')`, thumbOf(p), esc(p.name))).join('');
   const fields=document.getElementById('frFields');
   if(fields) fields.style.display=f?'':'none';
   fillFrameFontSelects();
@@ -4478,6 +4667,9 @@ function frFill(f){
   if(g('frTtFont')) g('frTtFont').value=f.title_font||'';
   if(g('frTtSize')) g('frTtSize').value=f.title_size??0;
   if(g('frTtX')) g('frTtX').value=f.title_x??50;
+  if(g('frChY')) g('frChY').value=f.ch_y??0;
+  if(g('frTtY')) g('frTtY').value=f.title_y??0;
+  if(g('frHeadBlock')) g('frHeadBlock').checked=(f.head_block!==false);
   if(g('frChSizeV')) g('frChSizeV').textContent=(f.ch_size?f.ch_size+'px':'자동');
   if(g('frTtSizeV')) g('frTtSizeV').textContent=(f.title_size?f.title_size+'px':'자동');
   // 틀 색·구성 — ★칸을 **그 틀의 실제 색으로 채워놓고** 시작한다.
@@ -4502,6 +4694,8 @@ function frFill(f){
               ttcolor:!!f.title_color, ttol:!!f.title_ol_c};
   if(g('frChXV')) g('frChXV').textContent=(f.ch_x??50)+'%';
   if(g('frTtXV')) g('frTtXV').textContent=(f.title_x??50)+'%';
+  if(g('frChYV')) g('frChYV').textContent=(f.ch_y?f.ch_y+'%':'자동');
+  if(g('frTtYV')) g('frTtYV').textContent=(f.title_y?f.title_y+'%':'자동');
   fillFrameFontSelects(); syncAdBadge();
 }
 function frPick(preset){
@@ -4569,6 +4763,9 @@ function frUpdate(){
   f.title_font=(g('frTtFont')||{}).value||'';
   f.title_size=parseInt((g('frTtSize')||{}).value||0,10);
   f.title_x=parseInt((g('frTtX')||{}).value||50,10);
+  f.ch_y=parseInt((g('frChY')||{}).value||0,10);
+  f.title_y=parseInt((g('frTtY')||{}).value||0,10);
+  f.head_block=!((g('frHeadBlock')||{}).checked===false);
   // 제목 색·테두리 — 색은 만졌을 때만 값(아래 틀 색과 같은 FR_TOUCHED 규약)
   f.title_color=FR_TOUCHED.ttcolor?((g('frTtColor')||{}).value||''):'';
   f.title_ol_c=FR_TOUCHED.ttol?((g('frTtOlC')||{}).value||''):'';
@@ -4594,6 +4791,8 @@ function frUpdate(){
   lab('frChSizeV',f.ch_size,'px'); lab('frTtSizeV',f.title_size,'px');
   if(g('frChXV')) g('frChXV').textContent=f.ch_x+'%';
   if(g('frTtXV')) g('frTtXV').textContent=f.title_x+'%';
+  if(g('frChYV')) g('frChYV').textContent=(f.ch_y?f.ch_y+'%':'자동');
+  if(g('frTtYV')) g('frTtYV').textContent=(f.title_y?f.title_y+'%':'자동');
   if(g('frBarVal')) g('frBarVal').textContent=f.bar_h+'px';
   if(g('frBottomVal')) g('frBottomVal').textContent=f.bottom_h+'px';
   frHcLabel();          // 제목칸을 직접 고치면 번호도 따라 바뀐다(안 그러면 거짓말이 된다)
@@ -5262,6 +5461,10 @@ function renderTemplatePreview(){
       pv.appendChild(el);
     }
     el.src=frameUrl(t.frame); el.style.display='';
+    // ★이미지 틀은 글자(자막 z5·헤드카피 z5) **아래**로 내린다 — 그림이 화면을 꽉 채워서
+    //   위에 두면 글자가 통째로 묻힌다(2026-08-31). 렌더도 같은 순서다(under_text).
+    //   기존 틀은 8 그대로 — 띠가 글자 위에 와야 하는 경우가 있다(옛 그림 무변경).
+    el.style.zIndex = (t.frame.bg_image ? 1 : 8);
     syncFrameHandles();
     return;
   }
@@ -5398,6 +5601,26 @@ async function fxSuggest(){
     }
   }catch(e){ msg.textContent='오류: '+e; }
 }
+// ★개인 API 키가 없어 막힌 응답을 '등록하러 가기'가 있는 안내로 바꾼다(2026-09-01).
+//   서버(app.py _need_own_key_or_402)가 error_code='need_own_key'로 내려준다.
+//   왜 필요한가: 예전엔 화면이 402를 전부 "포인트가 부족합니다"로 뭉개서, 진짜
+//   원인(키 미등록)도 결제 문제로 읽혔다. 사유가 다르면 처방도 달라야 한다.
+function needKeyHtml(d){
+  if(!d || d.error_code!=='need_own_key') return null;
+  const url = d.settings_url || '/settings#keys';
+  return '<div class="hint" style="color:var(--fire);line-height:1.7">'
+    + '🔑 ' + esc(d.error || 'API 키가 필요합니다')
+    + '<div style="margin-top:8px"><a href="' + esc(url) + '" target="_blank" rel="noopener" '
+    + 'style="display:inline-block;padding:7px 14px;border-radius:8px;'
+    + 'background:var(--fire);color:#fff;text-decoration:none;font-weight:700">'
+    + 'API 키 등록하러 가기 →</a></div></div>';
+}
+// 문구만 필요한 자리(작은 상태줄)용 — 버튼 없이 한 줄.
+function needKeyText(d){
+  if(!d || d.error_code!=='need_own_key') return null;
+  return '🔑 ' + (d.error || 'API 키가 필요합니다');
+}
+
 async function fxRender(){
   if(!MIX_JOB || !FX_PLAN) return;
   const msg=document.getElementById('fxRenderMsg'); msg.textContent='렌더 예약 중…';
@@ -5432,6 +5655,18 @@ let CAP_EFFECT='none';
 let CAP_SHADOW=false;   // 은은한 드롭 그림자(레퍼런스 자막룩). 프리셋이 켬. 두꺼운 테두리 대안.
 // 자막 가로위치(%) — 슬라이더가 아니라 드래그/자동정렬/되돌리기로만 바뀐다. 기본 중앙(50).
 let CAP_X_PCT=50;
+// ✋ 자막 드래그 적용 범위(2026-08-31): 'all'=전체 설정(종전 동작) / 'one'=이 장면만(cap_xy).
+//   ★기본은 'all' — 여태 동작이 그것이라 아무것도 안 고른 사장님에겐 달라지는 게 없다.
+let CAP_DRAG_SCOPE='all';
+function setCapDragScope(v){
+  CAP_DRAG_SCOPE = (v==='one') ? 'one' : 'all';
+  document.querySelectorAll('#capScopeBtns [data-capscope]').forEach(el=>{
+    el.classList.toggle('on', el.dataset.capscope===CAP_DRAG_SCOPE); });
+  const m=document.getElementById('capScopeMsg');
+  if(m){ m.textContent = (CAP_DRAG_SCOPE==='one')
+    ? '이 장면(' + ((typeof BEAT_IDX!=='undefined'?BEAT_IDX:0)+1) + '번)의 자막만 옮깁니다.'
+    : '끌어 옮기면 모든 장면의 자막이 같이 갑니다.'; m.style.color=''; }
+}
 // 지워진 자막영역(자막제거 시 서버가 diff로 구함): {sources:{vid:box}, primary:box}. box=중심x/y·w/h·score(%).
 let CLEAN_REGIONS=null;
 // 사장님이 자막을 직접 드래그로 옮겼나 — true면 '1번 자리' 자동정렬이 그 위치를 덮지 않는다.
@@ -5439,10 +5674,41 @@ let CAP_POS_TOUCHED=false;
 // ★헤드카피 세로위치를 사장님이 한 번이라도 만졌나(2026-08-20). 만졌으면 틀을 바꿔도
 //   그 자리를 지킨다 — 안 그러면 애써 맞춰둔 위치가 매번 맨 위로 튄다.
 let HC_Y_TOUCHED=false;
+let _CAP_FX_TEXT=null;   // 효과를 마지막으로 재생한 자막 문구(바뀔 때만 다시 튼다)
 let PREVIEW_CAP_TEXT='이렇게 자막이 나와요';   // 스텝퍼가 비트별 자막으로 교체
 // ── 🎞 공용 장면 프리뷰 스텝퍼 — 비트마다 프레임+자막 넘겨보기(TTS·검수판 트랙도 재사용) ──
 let BEATS_PREVIEW=[];   // [{i,total,caption}]
 let BEAT_IDX=0;
+
+// ── 훅 감탄사(와,/여러분) 켜고 끄기 — 내 설정. 안 정하면 사장님 기본값을 따른다 ──────
+let HOOK_OPENER_MINE = null;      // null = 내가 안 정함(기본값 따름)
+async function loadHookOpenerMine(){
+  const c=document.getElementById('hookOpenerChk'), m=document.getElementById('hookOpenerMsg');
+  if(!c) return;
+  try{
+    const d=await (await fetch('/api/script/hook_opener')).json();
+    HOOK_OPENER_MINE = (d.mine===undefined) ? null : d.mine;
+    c.checked = !!d.effective;
+    if(m) m.textContent = (HOOK_OPENER_MINE===null)
+      ? ('기본값 따름 — 지금은 ' + (d.default ? '켜짐' : '꺼짐'))
+      : '내 설정';
+  }catch(e){}
+}
+async function saveHookOpenerMine(){
+  const c=document.getElementById('hookOpenerChk'), m=document.getElementById('hookOpenerMsg');
+  if(!c) return;
+  if(m) m.textContent='저장 중…';
+  try{
+    const d=await (await fetch('/api/script/hook_opener/mine',{method:'POST',
+      headers:{'Content-Type':'application/json'}, body:JSON.stringify({on:c.checked})})).json();
+    if(!d.ok) throw new Error(d.error||'실패');
+    HOOK_OPENER_MINE = d.mine;
+    if(m) m.textContent='내 설정으로 저장됨';
+  }catch(e){ if(m) m.textContent='실패: '+e.message; }
+}
+// 페이지가 뜨면 한 번 읽는다(2단계에 안 들어와 있어도 요소는 있다 — 함수가 알아서 빠진다).
+try{ loadHookOpenerMine(); }catch(e){}
+
 async function loadBeatsPreview(){
   const st=document.getElementById('beatStepper');
   if(typeof MIX_JOB==='undefined' || !MIX_JOB){ if(st) st.style.display='none'; return; }
@@ -5455,6 +5721,35 @@ async function loadBeatsPreview(){
   BEAT_IDX=Math.min(BEAT_IDX, BEATS_PREVIEW.length-1);
   showBeat(BEAT_IDX, true);      // true = 처음 불러옴 → 저장된 확대를 **읽기만** 한다
 }
+// ── 장면 프레임 주소는 **여기 한 곳**에서만 만든다(0순위-B) ────────────────
+//   showBeat(보여주기)과 prefetch(미리 받기)가 같은 주소를 써야 한다. 두 벌로 적으면
+//   미리 받아둔 것과 실제로 띄우는 것이 어긋나 prefetch가 통째로 헛돈다(조용히).
+function _beatFrameUrl(b){
+  if(!b || typeof MIX_JOB==='undefined' || !MIX_JOB) return '';
+  return '/api/produce/mix/beatframe/'+MIX_JOB+'/'+_beatNo(b)
+         + (b.cut!=null ? ('?cut='+b.cut) : '');
+}
+// ── 이웃 장면 그림 미리 받기(2026-08-31 사장님 "다음 장면 넘어갈 때 로딩이 느리다") ──
+//   서버 추출은 실측 150~220ms로 병목이 아니었다. 진짜 원인은 ◀▶를 누르는 **그 순간에야**
+//   요청이 나가는 것 — 왕복을 통째로 기다린다. 보고 있는 동안 다음 것을 받아두면 그 대기가
+//   사라진다. 앞(+1,+2)을 뒤(-1)보다 먼저 넣는다 — 사람은 대개 앞으로 넘긴다.
+const _BF_PRE = new Map();          // url → Image. 참조를 쥐고 있어야 GC가 안 걷어간다
+function _prefetchNeighborFrames(i){
+  const sb=document.getElementById('sceneBg');
+  if(!sb || !sb.checked) return;    // 실장면 배경이 꺼져 있으면 애초에 안 쓴다 — 낭비 금지
+  const n=BEATS_PREVIEW.length; if(!n) return;
+  [1, 2, -1].forEach(d=>{
+    const b=BEATS_PREVIEW[((i+d)%n+n)%n];
+    const u=_beatFrameUrl(b);
+    if(!u || _BF_PRE.has(u)) return;
+    const im=new Image();
+    im.decoding='async';
+    im.src=u;                       // 실패해도 그만 — 넘어갈 때 정상 경로가 다시 부른다
+    _BF_PRE.set(u, im);
+  });
+  // 무한 증식 방지 — Map은 넣은 순서를 지키므로 오래된 것부터 버린다
+  while(_BF_PRE.size>24) _BF_PRE.delete(_BF_PRE.keys().next().value);
+}
 function showBeat(i, first){
   if(!BEATS_PREVIEW.length) return;
   BEAT_IDX=(i+BEATS_PREVIEW.length)%BEATS_PREVIEW.length;
@@ -5464,7 +5759,9 @@ function showBeat(i, first){
   const sb=document.getElementById('sceneBg');
   if(bg && sb && sb.checked){
     bg.onerror=()=>{ bg.style.display='none'; };
-    bg.src='/api/produce/mix/beatframe/'+MIX_JOB+'/'+BEAT_IDX;
+    // ★목록 순번(BEAT_IDX)이 아니라 비트번호+컷번호로 부른다(2026-08-31) — 목록이 컷
+    //   단위로 펴지면서 순번과 비트번호가 갈라졌다. 순번으로 부르면 엉뚱한 그림이 뜬다.
+    bg.src=_beatFrameUrl(b);     // ★주소는 _beatFrameUrl 한 곳에서만(prefetch와 같은 주소여야 한다)
     bg.style.display='block';
   }
   // 자막 = 그 비트 대본. ★실제 영상은 2~3어절씩 순차로 바뀐다(서버 segs=_caption_segments).
@@ -5472,31 +5769,162 @@ function showBeat(i, first){
   // 미리보기라 한 장면 안에서 계속 반복한다. 장면을 넘기면 아래 재생을 새로 건다.
   _playBeatCaptions(b);
   const cnt=document.getElementById('beatCount');
-  if(cnt) cnt.textContent=(BEAT_IDX+1)+' / '+BEATS_PREVIEW.length+' 장면';
+  if(cnt) cnt.textContent=(BEAT_IDX+1)+' / '+BEATS_PREVIEW.length+' 장면'
+          + ((b.cut_of>1) ? (' (자막 '+(_beatNo(b)+1)+'번의 '+(b.cut+1)+'/'+b.cut_of+' 컷)') : '');
   renderBeatTools();          // 장면을 넘기면 그 장면의 자리·줄을 보여준다
   // 확대를 이 장면에도 이어갈지는 '모든 장면에 같은 배율' 체크가 정한다(zoomOnBeatChange)
   if(typeof zoomOnBeatChange==='function') zoomOnBeatChange(first);
   // 🔎 강조는 **장면마다 따로**다(확대의 '모든 장면에 같은 배율' 같은 전파가 없다) —
   //   강조는 "이 장면의 이 자리"를 가리키는 것이라 다음 장면에 그대로 옮기면 엉뚱한 곳을 가리킨다.
   if(typeof hlLoadFromBeat==='function') hlLoadFromBeat();
+  // ★지금 장면을 다 그린 **뒤에** 이웃을 받는다 — 먼저 받으면 지금 볼 그림과 대역폭을 다툰다
+  try{ _prefetchNeighborFrames(BEAT_IDX); }catch(e){}
 }
 let CAP_SEQ_TIMER=null;
+// ⏸ 자막·화면 자동흐름 멈춤(2026-09-01 사장님). 멈춘 동안에도 **그 구절은 보여야** 하므로
+// _playBeatCaptions는 첫 그림·첫 구절을 그린 뒤 순환만 걸지 않는다. 칸을 넘겨도 멈춤은 유지된다.
+let CAP_PAUSED=false;
+let CAP_SEQ_GEN=0;      // 재생 세대 — 그림을 기다리는 사이 다른 칸으로 넘어가면 옛 대기를 버린다
+// 🖼 그 칸의 컷 그림을 **전부 병렬로** 미리 받는다(2026-09-01).
+//   실측: 컷 프레임 1장 = 1.7~2.2초인데 구절은 0.58~1.13초마다 바뀐다. 그때그때 bg.src만
+//   갈아끼우면 도착 전에 다음 구절로 넘어가 4컷 중 2장만 화면에 뜬다(사장님 제보).
+function _preloadBeatCuts(cuts){
+  try{
+    return Promise.all((cuts||[]).map(i=>{
+      const u=_beatFrameUrl(BEATS_PREVIEW[i]);
+      if(!u) return Promise.resolve();
+      if(_BF_PRE.has(u)) return Promise.resolve();      // 이미 받아둔 것은 건너뛴다
+      return new Promise(res=>{
+        const im=new Image(); im.decoding='async';
+        im.onload=im.onerror=()=>res();
+        im.src=u; _BF_PRE.set(u, im);
+      });
+    }));
+  }catch(e){ return Promise.resolve(); }
+}
+// 지금 보고 있는 칸의 **컷 목록**(BEATS_PREVIEW 안의 순번들). 목록은 컷 단위로 펴져 있어
+// 같은 beat_idx가 여러 줄이다 — 자막 구절이 넘어갈 때 화면도 그 구절의 컷으로 같이 넘긴다.
+function _cutsOfBeat(i){
+  const b=BEATS_PREVIEW[i]; if(!b) return [i];
+  const no=_beatNo(b);
+  const out=[];
+  BEATS_PREVIEW.forEach((x,k)=>{ if(_beatNo(x)===no) out.push(k); });
+  return out.length ? out : [i];
+}
 function _playBeatCaptions(b){
   if(CAP_SEQ_TIMER){ clearTimeout(CAP_SEQ_TIMER); CAP_SEQ_TIMER=null; }
   const segs=(b && b.segs && b.segs.length) ? b.segs : [ (b&&b.caption)||'' ];
   const durs=(b && b.durs) || null;   // 구절별 실제 표시시간(초). 없으면 균등.
+  // ★자막만 흘러가고 화면은 첫 컷에 고정돼 있었다(2026-09-01 고객 제보 "자막은
+  //   흘러가는데 장면이 첫화면 고정"). 실제 영상은 구절이 넘어갈 때 컷도 넘어간다 —
+  //   미리보기도 그렇게 맞춘다("보는 것 = 나오는 것"). 구절 맞춤 이후 컷 수 = 구절 수라
+  //   대개 1:1이고, 어긋나면 비례로 고른다.
+  const cuts=_cutsOfBeat(BEAT_IDX);
+  const bg=document.getElementById('hcPreviewBg');
+  const sb=document.getElementById('sceneBg');
+  const cnt=document.getElementById('beatCount');
+  // ★어느 구절에 어느 컷인지는 **시간**으로 정한다(2026-09-01 사장님 3단계 대조 지적).
+  //   개수 비례로 나누면 컷 수 ≠ 구절 수인 칸에서 어긋난다(실측: 컷 5개 1.2/0.9/0.9/0.9/0.6
+  //   에 구절 4개 → 2번째 구절 '반전 기능으로'인데 화면은 뒤쪽 컷이 떴다).
+  //   서버가 컷 길이(cut_dur)와 리드인(lead)을 이미 주므로 3단계와 같은 시간축을 쓴다.
+  const _cutEnds=(()=>{                 // 컷 누적 끝시각(초). 하나라도 없으면 null → 개수 비례로 물러선다
+    const out=[]; let t=0;
+    for(const i of cuts){
+      const d=+((BEATS_PREVIEW[i]||{}).cut_dur);
+      if(!(d>0)) return null;
+      t+=d; out.push(t);
+    }
+    return out;
+  })();
+  const _lead=+((b && b.lead) || 0);
+  const _capStarts=(()=>{               // 구절 시작시각(초) — 렌더와 같은 기준점(리드인 포함)
+    const out=[]; let t=_lead;
+    for(let i=0;i<segs.length;i++){
+      out.push(t);
+      t += (durs && durs[i]>0) ? durs[i] : 1.1;
+    }
+    return out;
+  })();
+  const _cutForSeg=(si)=>{
+    if(!_cutEnds) return Math.min(cuts.length-1, Math.floor(si*cuts.length/Math.max(1,segs.length)));
+    const t=_capStarts[si] || 0;
+    for(let k=0;k<_cutEnds.length;k++) if(t < _cutEnds[k] - 0.001) return k;
+    return _cutEnds.length-1;
+  };
+  const paintScene=(si)=>{
+    if(!cuts.length) return;
+    const k=_cutForSeg(si);
+    const idx=cuts[k], x=BEATS_PREVIEW[idx];
+    if(!x) return;
+    BEAT_IDX=idx;                       // '이 장면을 썸네일로'가 지금 보이는 컷을 집게
+    if(bg && sb && sb.checked){
+      const u=_beatFrameUrl(x);
+      if(u && bg.getAttribute('src')!==u){ bg.src=u; bg.style.display='block'; }
+    }
+    if(cnt) cnt.textContent=(idx+1)+' / '+BEATS_PREVIEW.length+' 장면'
+            + ((x.cut_of>1) ? (' (자막 '+(_beatNo(x)+1)+'번의 '+(x.cut+1)+'/'+x.cut_of+' 컷)') : '');
+  };
   let si=0;
   const play=()=>{
     PREVIEW_CAP_TEXT=segs[si]||'';
     if(typeof updateCaption==='function') updateCaption();
+    paintScene(si);
     // 실제 타이밍이 있으면 그걸로, 없으면 1.1초. 너무 짧거나 길지 않게 가둔다.
     const d=(durs && durs[si]>0) ? durs[si]*1000 : 1100;
     si=(si+1)%segs.length;
+    if(CAP_PAUSED) return;      // ⏸ — 지금 구절·지금 그림에서 멈춘다(다음 예약을 안 건다)
     CAP_SEQ_TIMER=setTimeout(play, Math.max(450, Math.min(2600, d)));
   };
-  play();
+  // ★그림을 **다 받아놓고** 순환을 시작한다(2026-09-01 사장님 "믹스에서는 4장면이 나와야
+  //   하는데 장면꾸미기는 2장면이 나옴"). 실측: 컷 프레임 한 장 받는 데 1.7~2.2초인데
+  //   구절은 0.58~1.13초마다 바뀐다 → 그림이 도착하기 전에 다음 구절로 넘어가, 4컷 중
+  //   2장 정도만 실제로 화면에 뜬다(bg.src만 갈아끼우면 도착할 때까지 옛 그림이 남는다).
+  //   4장을 병렬로 받고, 다 받거나 2.5초가 지나면 시작한다 — 첫 바퀴부터 컷이 맞는다.
+  //   ★내가 최신 호출인지는 세대번호(CAP_SEQ_GEN)로 본다 — 기다리는 동안 다른 칸으로
+  //   넘어가면 옛 대기가 깨어나 **두 벌이 겹쳐 돈다**(그러면 자막이 불규칙해진다).
+  const _gen = ++CAP_SEQ_GEN;
+  if(cuts.length>1 && sb && sb.checked){
+    let done=false;
+    const once=()=>{ if(done || _gen!==CAP_SEQ_GEN) return; done=true; play(); };
+    _preloadBeatCuts(cuts).then(once);
+    setTimeout(once, 2500);                    // 느린 회선에서 영영 안 뜨는 일은 없게
+  } else {
+    play();
+  }
 }
-function stepBeat(d){ if(BEATS_PREVIEW.length) showBeat(BEAT_IDX+d); }
+// ◀ ▶ 는 **칸 단위**로 넘긴다(2026-09-01). 컷은 자막을 따라 자동으로 흘러가므로,
+// 예전처럼 컷 단위로 넘기면 같은 칸 안에서 눌러도 아무 일이 없는 것처럼 보인다.
+function stepBeat(d){
+  if(!BEATS_PREVIEW.length) return;
+  const n=BEATS_PREVIEW.length;
+  const cuts=_cutsOfBeat(BEAT_IDX);
+  const next=(d>0) ? (cuts[cuts.length-1]+1) : (cuts[0]-1);
+  const idx=((next%n)+n)%n;
+  showBeat(_cutsOfBeat(idx)[0]);      // 어느 방향이든 그 칸의 첫 컷부터
+}
+
+// ── ⏸/▶ 자막·화면 자동흐름 (2026-09-01) ────────────────────────────────
+// 멈춤은 **예약을 안 거는 것**으로 한다 — 돌고 있는 타이머만 죽이면 다음 바퀴가 또 산다.
+// 재생을 누르면 지금 보고 있는 칸부터 다시 돈다(_playBeatCaptions가 유일한 재생 주인).
+function _capPlayIcon(){
+  const b=document.getElementById('scenePlayBtn'); if(!b) return;
+  b.textContent = CAP_PAUSED ? '▶' : '⏸';
+  b.style.opacity = CAP_PAUSED ? '1' : '.82';
+  // 멈춘 상태를 **색으로도** 알린다 — 아이콘만 바뀌면 작아서 못 알아본다
+  b.style.background = CAP_PAUSED ? 'rgba(220,38,38,.72)' : 'rgba(0,0,0,.5)';
+}
+function toggleCapPlay(ev){
+  if(ev){ ev.preventDefault(); ev.stopPropagation(); }   // 자막 드래그로 새지 않게
+  CAP_PAUSED = !CAP_PAUSED;
+  _capPlayIcon();
+  if(CAP_PAUSED){
+    if(CAP_SEQ_TIMER){ clearTimeout(CAP_SEQ_TIMER); CAP_SEQ_TIMER=null; }
+    return;
+  }
+  const b=BEATS_PREVIEW[BEAT_IDX];
+  if(b && typeof _playBeatCaptions==='function') _playBeatCaptions(b);
+}
+
 
 // ── 🎯 이 장면만 손보기(2026-08-25) ───────────────────────────────────────
 // 자리(cap_pos)와 줄 나누기(caption_lines) 둘 다 **음성을 안 건드린다** → 즉시·무료.
@@ -5510,9 +5938,19 @@ function _capMsg(t, color){ const m=document.getElementById('capLinesMsg');
 function renderBeatTools(){
   const b=_curBeat(); if(!b) return;
   // 자리 버튼 — 지금 값에 불이 들어온다
-  const pos=b.pos||'bottom';
+  const pos = (b.cap_xy ? 'free' : (b.pos||'bottom'));
   document.querySelectorAll('#capPosBtns [data-cappos]').forEach(el=>{
     el.classList.toggle('on', el.dataset.cappos===pos); });
+  // 드래그로 이 장면만 옮겨둔 상태면 버튼엔 불이 안 들어온다 → 왜 그런지 한 줄로 알려준다
+  const fh=document.getElementById('capFreeHint');
+  if(fh) fh.style.display = b.cap_xy ? '' : 'none';
+  // 한 자막(비트)이 여러 컷에 걸쳐 있으면 자막 손질은 그 컷들 전부에 같이 걸린다 — 미리 알린다
+  const cs2=document.getElementById('capCutHint');
+  if(cs2){ cs2.style.display=(b.cut_of>1)?'':'none';
+           cs2.innerHTML='이 자막은 <b>'+b.cut_of+'개 컷</b>에 걸쳐 나옵니다 — 자막 손질은 그 컷 전부에 같이 적용돼요.'; }
+  // 범위 안내는 **장면을 넘길 때마다** 다시 쓴다 — 안 그러면 "이 장면(4번)"이라 적힌 채로
+  //   2번 장면을 보고 있게 된다(2026-08-31 사장님 화면에서 발각).
+  if(typeof setCapDragScope==='function') setCapDragScope(CAP_DRAG_SCOPE);
   // 줄 편집칸 — 렌더와 같은 분할(segs)을 그대로 줄로 보여준다
   const box=document.getElementById('capLinesBox'); if(!box) return;
   const lines=(b.segs && b.segs.length) ? b.segs : [b.caption||''];
@@ -5560,6 +5998,7 @@ async function setBeatCapPos(pos){
     if(!r.ok || !d.ok){ _capMsg(d.error||'저장 실패','var(--fire)'); return; }
     // ★저장 성공 → 화면도 그 자리로 즉시 옮긴다. %는 서버가 준 값을 쓴다(렌더와 같은 표).
     b.pos=d.pos; b.pos_y_pct=(d.y_pct!=null?d.y_pct:null);
+    b.cap_xy=null;                 // 서버도 같이 지운다 — 두 벌로 남기지 않는다
     renderBeatTools();
     if(typeof updateCaption==='function') updateCaption();
     _capMsg('이 장면 자막을 '+({top:'위',mid:'중간',bottom:'아래'}[d.pos]||d.pos)+'로 옮겼어요','var(--ok)');
@@ -5605,6 +6044,39 @@ function renderCapFontSelect(){
 function setCapEffect(e){ CAP_EFFECT=e;
   document.querySelectorAll('.capEff').forEach(b=>b.classList.toggle('active', b.dataset.eff===e));
   updateCaption(); }
+// ── 🎯 자막 미리보기 = 최종렌더와 같은 그림 (2026-08-31, 0순위-B) ──
+// 종전엔 자막 미리보기가 CSS text-shadow 대각선 4방향이라 ffmpeg 렌더와 달랐다. 검정 자막에서 발각:
+//   ① 테두리 모양: ffmpeg borderw는 **전방향 균일 + 글자 뒤**. 대각 4방향 그림자는 두꺼워지면
+//      검은 사본이 글자 **위로** 올라와 획을 메운다(헤드카피가 2026-08-20에 겪은 그 사고).
+//      → 헤드카피와 같이 -webkit-text-stroke + paint-order:stroke fill 로 통일한다.
+//   ② 두께 0: 렌더는 기본값 9가 되살아나 굵은 검정 테두리가 붙었다(video_assemble 고침) → 여기도 0이면 없음.
+//   ③ 그림자: ffmpeg shadowx/y는 **blur가 없다** → 딱딱한 오프셋으로.
+//   ④ 박스 모서리: ffmpeg box/drawbox는 **각진 사각** → borderRadius 0.
+function applyCapStroke(st, cs, scale){
+  const ow=(cs.outline_w||0)*scale;
+  if(cs.outline && ow>0){
+    st.webkitTextStrokeWidth=ow.toFixed(1)+'px';
+    st.webkitTextStrokeColor=cs.outline_color||'#000000';
+    st.paintOrder='stroke fill';
+    st.textShadow='none';
+    return;
+  }
+  st.webkitTextStrokeWidth='0';
+  const sd=Math.max(1,(cs.shadow_d||3)*scale).toFixed(1);
+  st.textShadow = cs.shadow ? `${sd}px ${sd}px 0 rgba(0,0,0,.55)` : 'none';
+}
+// 스타일 카드(축소 썸네일)용 테두리 CSS 문자열 — applyCapStroke와 **같은 규칙**을 쓴다.
+// 카드는 innerHTML로 그려 style 객체가 없으므로 문자열을 돌려준다(그림은 같아야 한다).
+// ★`||` 기본값을 쓰지 않는다 — 두께 0은 "없음"이 아니라 **0**이다(falsy 함정).
+//   렌더 쪽 `_outline_parts(zero_ok=True)`와 같은 판단: 0이면 테두리를 아예 안 그린다.
+function _cardStrokeCss(s, scale){
+  s = s || {};
+  const w = Number(s.outline_w != null ? s.outline_w : 6) * scale;
+  if(!s.outline || !(w > 0)) return '';
+  const col = s.outline_color || '#000';
+  // 대각 4방향 그림자는 두꺼워지면 획을 메운다 → 본 미리보기와 같은 stroke로.
+  return `-webkit-text-stroke:${w.toFixed(2)}px ${col};paint-order:stroke fill;`;
+}
 function updateCaption(){
   const g=id=>document.getElementById(id); if(!g('capFont')) return;
   const cs={ font:g('capFont').value||'NanumGothic-Bold.ttf', color:g('capColor').value, size:+g('capSize').value,
@@ -5628,8 +6100,12 @@ function updateCaption(){
   //   종전엔 전체 설정(cs.y_pct)만 봐서, 장면마다 다르게 저장해도 미리보기는 늘 같은 자리였다.
   //   저장·최종렌더는 정상이었고 **보이는 것만** 안 따라왔다 → "안 먹혔나"로 읽혔다.
   //   %는 서버가 준 값(pos_y_pct)을 쓴다 — 렌더와 같은 표(_CAP_POS_PCT)에서 나온다.
+  //   ★자유 좌표(cap_xy, 드래그 '이 장면만')가 있으면 그게 먼저다 — 렌더(_beat_cap_style)와 같은 우선순위.
   const _b = (typeof BEATS_PREVIEW!=='undefined' && BEATS_PREVIEW[BEAT_IDX]) || null;
-  const _yp = (_b && _b.pos_y_pct != null) ? _b.pos_y_pct : cs.y_pct;
+  const _xy = (_b && _b.cap_xy) || null;
+  const _yp = (_xy && _xy.y_pct!=null) ? _xy.y_pct
+            : ((_b && _b.pos_y_pct != null) ? _b.pos_y_pct : cs.y_pct);
+  if(_xy && _xy.x_pct!=null) el.style.left=_xy.x_pct+'%';
   el.style.top=_yp+'%'; el.style.transform='translate(-50%,-50%)';
   el.style.color=cs.color; el.style.fontWeight=900;
   // 자막은 무조건 한 줄 — 줄바꿈 금지(nowrap). 폭(0.86=안전 여백) 넘으면 폰트 자동축소로 한 줄에 맞춘다.
@@ -5640,20 +6116,40 @@ function updateCaption(){
   el.style.fontSize=capFs+'px';
   const capW=el.scrollWidth;
   if(capW>capAvail){ capFs=Math.max(6, capFs*capAvail/capW); el.style.fontSize=capFs+'px'; }
-  const oc=cs.outline_color, ow=(cs.outline_w*scale).toFixed(1);
-  const sd=Math.max(1,(cs.shadow_d||3)*scale).toFixed(1);
-  el.style.textShadow = cs.outline
-    ? `${ow}px ${ow}px 0 ${oc}, -${ow}px -${ow}px 0 ${oc}, ${ow}px -${ow}px 0 ${oc}, -${ow}px ${ow}px 0 ${oc}`
-    : (cs.shadow ? `0 ${sd}px ${(sd*2)}px rgba(0,0,0,.55), 0 0 ${sd}px rgba(0,0,0,.4)` : 'none');
-  if(cs.box){ el.style.background=hexA(cs.box_color, cs.box_opacity/100); el.style.padding=`${Math.round(cs.box_pad*scale)}px ${Math.round(cs.box_pad*1.5*scale)}px`; el.style.borderRadius='6px'; }
+  applyCapStroke(el.style, cs, scale);
+  if(cs.box){ el.style.background=hexA(cs.box_color, cs.box_opacity/100); el.style.padding=`${Math.round(cs.box_pad*scale)}px ${Math.round(cs.box_pad*1.5*scale)}px`; el.style.borderRadius='0'; }
   else { el.style.background='none'; el.style.padding='2px 6px'; el.style.borderRadius='0'; }
   // 효과 프리뷰: 선택 효과를 미리보기에서 반복 재생(fade/slide/pop/sparkle). 없음이면 정지.
   el.classList.remove('eff-fade','eff-slide','eff-pop','eff-sparkle');
+  // ★문구가 바뀔 때만 효과를 처음부터 다시 튼다. 리플로우(offsetWidth)를 안 읽으면
+  //   클래스를 뗐다 붙여도 브라우저는 '변한 게 없다'로 보고 재시작하지 않는다.
+  //   문구가 그대로일 때(글씨 크기·색 조절 등)는 재시작하지 않는다 — 손볼 때마다
+  //   자막이 깜빡이면 자리를 못 잡는다.
+  if(_CAP_FX_TEXT !== el.textContent){
+    _CAP_FX_TEXT = el.textContent;
+    void el.offsetWidth;
+  }
   if(cs.effect==='fade') el.classList.add('eff-fade');
   else if(cs.effect==='slide') el.classList.add('eff-slide');
   else if(cs.effect==='pop') el.classList.add('eff-pop');
   else if(cs.effect==='sparkle') el.classList.add('eff-sparkle');
   renderSparkles(cs.effect==='sparkle', cs.y_pct);
+}
+// ★저장은 **사람이 만진 그 호출에서만** 한다(2026-09-02).
+//   종전엔 자막 컨트롤 11개가 updateCaption()만 불러 STATE만 채우고 저장을 안 했다
+//   → 색·크기·자리를 바꿔도 새로고침하면 원복(실측: #ff00cc → #ffffff).
+//   ⚠️그래서 updateCaption 끝에 저장을 넣었더니 **저장 루프**가 났다:
+//     자막 미리보기 애니메이션 `play()`(5847행)가 구절을 넘길 때마다(약 1.1초)
+//     updateCaption을 부른다 → "한 번이라도 만졌으면 저장" 플래그가 계속 참이라
+//     초당 0.6회씩 POST가 영원히 나갔다(실측 5초에 3건).
+//   → 플래그(상태)로 가르지 말고, **입력 핸들러에서만 저장을 건다**. updateCaption은
+//     그리기만 한다. 복원·애니메이션이 아무리 불러도 저장은 안 나간다.
+let _CAP_SAVE_T = null;
+function capTouched(){ updateCaption(); _capSaveSoon(); }
+function _capSaveSoon(){
+  if(typeof saveHeadcopy !== 'function') return;   // 하네스엔 없다(슬라이스 테스트 보호)
+  clearTimeout(_CAP_SAVE_T);                       // 슬라이더 드래그는 매 픽셀 뜬다 → 디바운스
+  _CAP_SAVE_T = setTimeout(() => { try{ saveHeadcopy(); }catch(e){} }, 500);
 }
 // 반짝 효과: 자막 주위에 ✨ 입자를 뿌려 깜빡이게(미리보기 연출). 최종 영상은 서버가 알파 깜빡임으로 렌더.
 function renderSparkles(on, ypct){
@@ -5733,16 +6229,11 @@ window.applyPlaySubStyle = function(box){
   st.fontSize = fs + 'px';
   const avail = w * 0.92;
   if (el.scrollWidth > avail) st.fontSize = Math.max(6, fs * avail / el.scrollWidth) + 'px';
-  const ow = ((cs.outline_w || 0) * scale).toFixed(1);
-  const sd = Math.max(1, (cs.shadow_d || 3) * scale).toFixed(1);
-  st.textShadow = cs.outline
-    ? `${ow}px ${ow}px 0 ${cs.outline_color}, -${ow}px -${ow}px 0 ${cs.outline_color}, `
-      + `${ow}px -${ow}px 0 ${cs.outline_color}, -${ow}px ${ow}px 0 ${cs.outline_color}`
-    : (cs.shadow ? `0 ${sd}px ${sd*2}px rgba(0,0,0,.55)` : 'none');
+  applyCapStroke(st, cs, scale);
   if (cs.box){
     st.background = hexA(cs.box_color, (cs.box_opacity || 80) / 100);
     st.padding = `${Math.round((cs.box_pad||12)*scale)}px ${Math.round((cs.box_pad||12)*1.5*scale)}px`;
-    st.borderRadius = '6px';
+    st.borderRadius = '0';
   } else { st.background = 'none'; st.padding = '2px 6px'; st.borderRadius = '0'; }
   // 세로 자리도 실제 값대로 — CSS의 bottom:64px 고정을 덮는다.
   if (cs.y_pct != null){
@@ -5776,6 +6267,24 @@ const STYLE_USE={
 };
 // 대표 완성 스타일(피팅 카드 우선 노출). 나머지는 더보기.
 let STYLE_TOUCHED=false;
+// ★실장면 배경 자동 ON은 **스타일과 별개의 판단**이다(2026-08-31 고객 사고).
+//   종전엔 applyDefaultStyleOnEntry의 `if(STYLE_TOUCHED||DEFAULT_APPLIED) return;` 뒤에
+//   같이 묶여 있었는데, 그 깃발은 "기본 프리셋을 덮어쓰지 마라"는 뜻이지 "배경을 켜지 마라"가
+//   아니다. 한 번이라도 꾸민 사람은 다시 들어올 때 PENDING_STYLE_RESTORE→STYLE_TOUCHED=true가
+//   되어 **배경 ON에 영영 도달하지 못했고**, 체크박스 기본값은 꺼짐이라 toggleSceneBg의
+//   꺼짐 분기(background='#ffffff')가 돌아 **흰 화면에 자막만** 남았다.
+//   증상 재현: 꾸미기 → 나갔다 다시 들어오기. "꾸미고 나면 계속 그렇다"가 정확히 이것이다.
+let BG_AUTO_TRIED=false;   // 페이지 로드당 1회만 자동으로 켠다
+let BG_USER_OFF=false;     // 사용자가 스스로 껐으면 존중한다(자꾸 되켜지면 그게 더 나쁘다)
+function autoSceneBgOnEntry(){
+  if(BG_AUTO_TRIED || BG_USER_OFF) return;
+  const sb=document.getElementById('sceneBg');
+  if(!sb || sb.checked) return;
+  if(typeof MIX_JOB==='undefined' || !MIX_JOB) return;   // 매칭 전이면 켤 그림이 없다
+  BG_AUTO_TRIED=true;
+  sb.checked=true;
+  try{ toggleSceneBg(true); }catch(e){}   // silent — 실패해도 조용히 흰배경(종전과 같다)
+}
 // ★꾸미기 패널은 DOM 입력칸을 진실의 원천으로 읽는다(updateHC/updateCaption이 DOM→STATE) +
 // 진입 시 applyDefaultStyleOnEntry가 기본 프리셋을 자동 적용한다. 그래서 작업 복원이 STATE만
 // 채우면 스타일·꾸미기가 전부 기본값으로 덮인다(C-2 잔여, 라이브 실측 확인). 복원 시 이 플래그를
@@ -5800,12 +6309,19 @@ function styleCardHTML(p, idx, selIdx){
   const bgImg = poster ? `<img src="${poster}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.9" alt="" onerror="this.style.display='none'">` : '';
   // 카드 스케일: 카드폭 92px 기준으로 hc.size(영상 720폭 기준)를 축소 — 메인 프리뷰·렌더와 동일 비율
   const sc = 92/720;
-  const oc = hc.outline_color||'#000', ow = Math.max(1,Math.round((hc.outline_w||6)*sc));
-  const shadow = hc.outline ? `text-shadow:${ow}px ${ow}px 0 ${oc},-${ow}px -${ow}px 0 ${oc},${ow}px -${ow}px 0 ${oc},-${ow}px ${ow}px 0 ${oc};` : '';
+  // ★테두리는 미리보기·렌더와 **같은 규칙**으로 그린다(2026-09-02, 자막렌더불일치 ⏭ 항목).
+  //   종전 두 가지가 틀렸다:
+  //   ① `hc.outline_w || 6` — 두께 **0이 falsy**라 6으로 되살아난다. 서버가 2026-08-31에
+  //      고친 `_ui_px`의 0 무시 버그와 **같은 모양**이다(zero_ok).
+  //   ② 대각 4방향 text-shadow — 두꺼워지면 검은 사본이 글자 **위로** 올라와 획을 메운다
+  //      (헤드카피가 2026-08-20에 겪은 그 사고). 본 미리보기는 이미 stroke로 바꿨는데
+  //      이 카드만 옛 방식으로 남아 **카드와 실제 결과가 다르게** 보였다.
+  //   → strokeCss() 하나로 뽑아 카드·본미리보기가 같은 그림을 그린다(0순위-B).
+  const shadow = _cardStrokeCss(hc, sc);
   const line1 = `<div style="color:${hc.color||'#fff'};font-family:'${fontCss(hc.font)}',sans-serif;font-weight:900;font-size:${Math.max(10,(hc.size||64)*sc)}px;${shadow}line-height:1.1">${esc(sample)}</div>`;
   let line2 = '';
-  if(extra){ const es=92/720; const eoc=extra.outline_color||'#000', eow=Math.max(1,Math.round((extra.outline_w||6)*es));
-    const esh = extra.outline ? `text-shadow:${eow}px ${eow}px 0 ${eoc},-${eow}px -${eow}px 0 ${eoc},${eow}px -${eow}px 0 ${eoc},-${eow}px ${eow}px 0 ${eoc};` : '';
+  if(extra){ const es=92/720;
+    const esh = _cardStrokeCss(extra, es);   // 둘째 줄도 같은 규칙(위 주석 참조)
     line2 = `<div style="color:${extra.color||'#FFE100'};font-family:'${fontCss(extra.font)}',sans-serif;font-weight:900;font-size:${Math.max(10,(extra.size||64)*es)}px;${esh}line-height:1.1;margin-top:2px">${esc(sample)}</div>`; }
   const selBorder = idx===selIdx ? 'outline:2px solid var(--accent2);outline-offset:1px;' : 'border:1px solid var(--line);';
   const isDefault = p.name===DEFAULT_STYLE_NAME;
@@ -5935,16 +6451,14 @@ let DEFAULT_APPLIED=false;
 function applyDefaultStyleOnEntry(){
   // step5 진입 1회: 사용자가 아직 스타일을 안 건드렸으면 기본 스타일 자동 적용 + 실장면 배경 자동 ON.
   // DEFAULT_APPLIED: 페이지 로드당 최초 1회만 자동적용 → 재진입 시 수동 미세조정(카드 미클릭) 보존.
+  // ★배경 켜기가 먼저다 — 아래 게이트(STYLE_TOUCHED)는 **스타일 프리셋** 전용이라
+  //   여기서 걸러지면 배경까지 같이 죽는다(그게 흰 화면 사고의 뿌리였다).
+  autoSceneBgOnEntry();
   if(STYLE_TOUCHED || DEFAULT_APPLIED){ renderStyleCards(); return; }
   DEFAULT_APPLIED=true;
   const di = FULL_PRESETS.findIndex(p=>p.name===DEFAULT_STYLE_NAME);
   if(di>=0) applyFullPreset(di);          // updateHC/updateCaption 내부호출됨
-  // 실장면 배경 자동 ON(매칭된 job 있을 때만). 실패는 조용히 흰배경 유지.
-  const sb=document.getElementById('sceneBg');
-  if(sb && !sb.checked && typeof MIX_JOB!=='undefined' && MIX_JOB){
-    sb.checked=true;
-    try{ toggleSceneBg(true); }catch(e){}
-  }
+  // (실장면 배경 자동 ON은 위 autoSceneBgOnEntry 한 곳으로 옮겼다 — 두 벌로 두지 않는다)
   renderStyleCards();
 }
 // ── 💾 내 프리셋(localStorage) — 사용자가 만든 완성 스타일을 딸깍 축적 ──
@@ -6187,12 +6701,14 @@ function hcWordSetColor(c){
   const rules=_hcRules(); const r=_hcRuleOf(HC_WORD);
   if(r) r.color=c;
   else rules.push({keyword:HC_WORD, color:c, box:false, box_color:'#FF2D2D'});
-  renderHCWords(); updateHC();
+  // ★그리기(updateHC)는 저장을 안 한다 — 저장은 만진 쪽이 건다(저장 루프 방지, 2026-09-02).
+  //   낱말 강조는 STATE.deco.highlight_rules를 바꾸므로 저장이 없으면 새로고침에 날아간다.
+  renderHCWords(); updateHC(); _hcSaveSoon();
 }
 function hcWordClear(){
   if(!HC_WORD) return;
   STATE.deco.highlight_rules=_hcRules().filter(r=>r.keyword!==HC_WORD);
-  renderHCWords(); updateHC();
+  renderHCWords(); updateHC(); _hcSaveSoon();   // 지운 것도 저장돼야 한다(위와 같은 이유)
 }
 
 function renderHighlightRules(){
@@ -6251,6 +6767,9 @@ function updateBgmVol(){ const v=+document.getElementById('bgmVol').value; docum
 // 🖼 실장면 배경 — 매칭된 소스 프레임을 미리보기 배경으로(기본 흰색). 스타일 판단을 실제 영상 위에서.
 function toggleSceneBg(silent){
   const on=document.getElementById('sceneBg').checked;
+  // ★사람이 직접 끈 것만 기억한다(silent=자동 호출은 제외) — 그래야 자동 ON이 사용자의
+  //   선택을 매번 뒤집지 않는다. 켜면 다시 자동 대상이 된다.
+  if(!silent){ BG_USER_OFF = !on; }
   const img=document.getElementById('hcPreviewBg'), pv=document.getElementById('hcPreview');
   if(!on){ img.style.display='none'; pv.style.background='#ffffff'; return; }
   if(!MIX_JOB){ alert(stepName('mix')+'에서 영상 매칭을 먼저 실행하세요'); document.getElementById('sceneBg').checked=false; return; }
@@ -6277,7 +6796,9 @@ async function uploadOverlay(input){
 function updateOverlay(){ if(!STATE.deco||!STATE.deco.overlay) return;
   STATE.deco.overlay.width=+document.getElementById('ovW').value;
   STATE.deco.overlay.alpha=+document.getElementById('ovAlpha').value/100; renderOverlayPreview(); }
-function clearOverlay(){ if(STATE.deco) STATE.deco.overlay=null; const el=document.getElementById('ovFile'); if(el) el.value=''; renderOverlayPreview(); const st=document.getElementById('ovStatus'); if(st) st.textContent='제거됨'; }
+// ★지우기도 **저장**해야 한다(2026-09-02). 종전엔 STATE.deco.overlay만 비우고 끝이라
+//   새로고침하면 지운 오버레이가 되살아났다(넣는 쪽은 saveHeadcopy를 부른다 — 짝이 안 맞았다).
+function clearOverlay(){ if(STATE.deco) STATE.deco.overlay=null; const el=document.getElementById('ovFile'); if(el) el.value=''; renderOverlayPreview(); const st=document.getElementById('ovStatus'); if(st) st.textContent='제거됨'; if(typeof saveHeadcopy==='function') saveHeadcopy(); }
 function renderOverlayPreview(){
   const img=document.getElementById('ovPreview'); if(!img) return;
   const o=STATE.deco&&STATE.deco.overlay, scale=PREVIEW_W/VIDEO_W;
@@ -6597,13 +7118,13 @@ function updateHC(){
   //   테두리는 그대로라 획 사이가 메워져 글자가 뭉개졌다. 줄어든 비율만큼 같이 줄인다.
   const _shrunk=parseFloat(el.style.fontSize)||Math.max(9,hc.size*scale);
   const _ratio=Math.min(1, _shrunk/Math.max(1, hc.size*scale));
-  const oc=hc.outline_color, ow=Math.max(0.5, hc.outline_w*scale*_ratio).toFixed(1);
+  const oc=hc.outline_color, ow=Math.max(0, hc.outline_w*scale*_ratio).toFixed(1);
   // ★진짜 테두리로 그린다(2026-08-20 사장님 "고정문구가 이상하다").
   //   전에는 text-shadow를 대각선 4방향으로만 깔았는데, 두께가 커지면 그 검은 사본이
   //   흰 글자 **위로 올라와 글자를 통째로 메웠다**(실측: 46px 글자에 6.2px 그림자 →
   //   화면이 새까맣게 뭉갬). paint-order:stroke fill은 테두리를 글자 **뒤에** 그려서
   //   두꺼워져도 획이 살아 있다 — 실제 채널 영상의 그 룩이다.
-  if(hc.outline){
+  if(hc.outline && parseFloat(ow)>0){
     el.style.webkitTextStrokeWidth=ow+'px';
     el.style.webkitTextStrokeColor=oc;
     el.style.paintOrder='stroke fill';
@@ -6615,12 +7136,23 @@ function updateHC(){
   if(hc.box){
     el.style.background=hexA(hc.box_color, hc.box_opacity/100);
     el.style.padding=`${Math.round(hc.box_pad*scale)}px ${Math.round(hc.box_pad*1.5*scale)}px`;
-    el.style.borderRadius=Math.round(10*scale*3)+'px';
+    el.style.borderRadius='0';   // ffmpeg drawbox는 각진 사각 — 렌더와 같게(2026-08-31)
   } else { el.style.background='none'; el.style.padding='0 6px'; el.style.borderRadius='0'; }
   hcQuickSync(hc);
   // 🖍 낱말 알약도 같이 갱신 — 문구를 고치면 알약이 따라와야 한다(2026-08-30)
   try{ renderHCWords(); }catch(e){}
   if(document.getElementById('fullPresets')) renderStyleCards();
+}
+// ★자막(capTouched)과 **같은 이유·같은 방식**(2026-09-02).
+//   헤드카피 컨트롤 14개도 updateHC()만 불러서 저장이 안 됐다(실측: #00ff88 → 원복).
+//   저장을 updateHC 안에 넣지 않는다 — 그리기 함수는 복원·리페인트로 수시로 불린다.
+//   입력 핸들러에서만 저장을 건다(자막 쪽에서 저장 루프를 실제로 겪었다).
+let _HC_SAVE_T = null;
+function hcTouched(){ updateHC(); _hcSaveSoon(); }
+function _hcSaveSoon(){
+  if(typeof saveHeadcopy !== 'function') return;   // 하네스 보호(슬라이스 테스트)
+  clearTimeout(_HC_SAVE_T);
+  _HC_SAVE_T = setTimeout(() => { try{ saveHeadcopy(); }catch(e){} }, 500);
 }
 
 // 스타일 프리셋 — 고민없이 누르면 색·크기·외곽선 한 번에 지정(핵심 포인트)
@@ -7129,7 +7661,7 @@ async function pinBeatToThumb(){
   try{
     const r=await fetch('/api/produce/thumb/pin',{method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({job_id:MIX_JOB, beat_idx:idx})});
+      body:JSON.stringify({job_id:MIX_JOB, beat_idx:idx, cut:(b.cut!=null?b.cut:null)})});
     const d=await r.json();
     if(!d.ok) throw new Error(d.error||'실패');
     say('✅ '+(d.label||'장면')+' → '+stepName('thumb')+' 후보 맨 앞에 넣었어요','var(--ok)');
@@ -7282,18 +7814,59 @@ function bindHCDrag(){
 function bindCapDrag(){
   const pv=document.getElementById('hcPreview'), tx=document.getElementById('capPreviewText');
   if(!pv||!tx||tx._dragBound) return; tx._dragBound=true;
-  tx.style.cursor='move'; let drag=false;
+  tx.style.cursor='move'; let drag=false, moved=false;
   const move=e=>{ if(!drag) return; const r=pv.getBoundingClientRect();
     const cx=(e.touches?e.touches[0].clientX:e.clientX), cy=(e.touches?e.touches[0].clientY:e.clientY);
-    CAP_X_PCT=Math.round(Math.max(0,Math.min(100,(cx-r.left)/r.width*100)));
+    const x=Math.round(Math.max(0,Math.min(100,(cx-r.left)/r.width*100)));
     const y=Math.round(Math.max(0,Math.min(100,(cy-r.top)/r.height*100)));
-    document.getElementById('capY').value=y; CAP_POS_TOUCHED=true; updateCaption(); };
-  tx.addEventListener('mousedown', e=>{drag=true; e.preventDefault();});
-  tx.addEventListener('touchstart', e=>{drag=true;}, {passive:true});
+    moved=true;
+    if(CAP_DRAG_SCOPE==='one'){
+      // 🎯 이 장면만 — 전체 설정(CAP_X_PCT/capY)은 **건드리지 않는다**. 장면에만 좌표를 얹는다.
+      const b=(typeof _curBeat==='function') ? _curBeat() : null;
+      if(b){ b.cap_xy={x_pct:x, y_pct:y}; b.pos='free'; b.pos_y_pct=null; }
+    }else{
+      CAP_X_PCT=x; document.getElementById('capY').value=y; CAP_POS_TOUCHED=true;
+    }
+    updateCaption(); };
+  const end=()=>{ if(!drag) return; drag=false; if(!moved) return; moved=false; saveCapDrag(); };
+  tx.addEventListener('mousedown', e=>{drag=true; moved=false; e.preventDefault();});
+  tx.addEventListener('touchstart', e=>{drag=true; moved=false;}, {passive:true});
   document.addEventListener('mousemove', move);
   document.addEventListener('touchmove', move, {passive:true});
-  document.addEventListener('mouseup', ()=>drag=false);
-  document.addEventListener('touchend', ()=>drag=false);
+  document.addEventListener('mouseup', end);
+  document.addEventListener('touchend', end);
+}
+// 손을 뗐을 때 실제로 저장한다(끄는 동안 매 픽셀 저장하면 서버를 두들긴다).
+//   'one' → 이 장면에만 자유 좌표(cap_xy)
+//   'all' → 전체 설정을 저장 + 장면별 덮어쓰기를 **싹 지운다**(안 지우면 손댔던 장면만 안 따라온다)
+async function saveCapDrag(){
+  const msg=document.getElementById('capScopeMsg');
+  const say=(t,c)=>{ if(msg){ msg.textContent=t; msg.style.color=c||''; } };
+  if(typeof MIX_JOB==='undefined' || !MIX_JOB){ say('작업을 아직 못 찾았어요','var(--fire)'); return; }
+  try{
+    if(CAP_DRAG_SCOPE==='one'){
+      const b=(typeof _curBeat==='function') ? _curBeat() : null;
+      if(!b || !b.cap_xy) return;
+      const r=await fetch('/api/produce/mix/'+encodeURIComponent(MIX_JOB)+'/cappos',
+        {method:'POST',headers:{'Content-Type':'application/json'},
+         body:JSON.stringify({beat_idx:_beatNo(b), x_pct:b.cap_xy.x_pct, y_pct:b.cap_xy.y_pct})});
+      const d=await r.json();
+      if(!r.ok || !d.ok){ say(d.error||'저장 실패','var(--fire)'); return; }
+      b.cap_xy={x_pct:d.x_pct, y_pct:d.y_pct}; b.pos='free'; b.pos_y_pct=null;
+      if(typeof renderBeatTools==='function') renderBeatTools();
+      say('이 장면('+(BEAT_IDX+1)+'번) 자막만 옮겼어요','var(--ok)');
+    }else{
+      if(typeof saveHeadcopy==='function') await saveHeadcopy();     // 전체 자막 설정 저장
+      const r=await fetch('/api/produce/mix/'+encodeURIComponent(MIX_JOB)+'/cappos',
+        {method:'POST',headers:{'Content-Type':'application/json'},
+         body:JSON.stringify({apply_all:true})});
+      const d=await r.json();
+      if(!r.ok || !d.ok){ say(d.error||'저장 실패','var(--fire)'); return; }
+      (BEATS_PREVIEW||[]).forEach(b=>{ b.cap_xy=null; b.pos='bottom'; b.pos_y_pct=null; });
+      if(typeof renderBeatTools==='function') renderBeatTools();
+      say('모든 장면 자막을 이 자리로 옮겼어요'+(d.cleared?' (장면별로 따로 두셨던 '+d.cleared+'개도 맞췄어요)':''),'var(--ok)');
+    }
+  }catch(e){ say('네트워크 오류','var(--fire)'); }
 }
 // 지워진 자막영역(primary=넓고 자주 쓰인 1번 자리)이 있으면 '다시 그 자리로' 버튼만 연다.
 // ★2026-07-27 사장님 요청으로 점선 박스 표시(capRegionMarker)는 제거했다 — 미리보기를
@@ -8646,7 +9219,32 @@ async function coupangSave(opts){
 }
 // ── 쿠팡 연결 끝 ── COUPANG-END
 
-function _renderMixReviewBody(d){
+function _renderMixReviewBody(d, failStatus){
+  // ★실패도 여기서 그린다(2026-09-01). #mixReview를 그리는 함수를 새로 만들면 같은 자리를
+  //   덮어쓰는 함수가 늘어 '고쳤는데 또 나는' 버그의 뿌리가 된다(test_dom_owner_budget).
+  //   실패로 끝난 job을 나중에 다시 열면 폴러가 안 돌아 배너가 안 떠, 3단계가 통째로
+  //   빈 화면이었다(사장님 제보, job 46e16b285ca7).
+  if(!d || !d.ok){
+    // ★실패 안내는 #mixStatus에 그린다 — #mixReview는 <details id="matchSceneDetails"> 안이고
+    //   그 부모는 SHOW_OLD_SCENE_TOOLS=false로 display:none이다. 거기 그리면 **보이지 않는다**.
+    //   성공 때는 장면편집 iframe이 따로 떠서 이 함정이 안 드러났고, 실패 때는 그것뿐이라
+    //   3단계가 통째로 빈 화면이었다(2026-09-01 사장님 제보, job 46e16b285ca7·c8a5846c2f70).
+    //   그리는 함수는 늘리지 않는다 — 이미 #mixStatus를 그리는 setMixStatusText를 쓴다(0순위-B).
+    // ⚠️document 없는 하네스(복원 테스트는 이 함수를 node로 잘라 돌린다)에서도 죽지 않게 감싼다.
+    try{
+      const err = (failStatus && failStatus.error) || (d && d.error) || '';
+      const box = setMixStatusText('❌ 영상 매칭이 실패한 채로 남아 있습니다');
+      if(box) box.insertAdjacentHTML('beforeend',
+          (err ? '<div style="margin-top:8px;white-space:pre-wrap;color:var(--fire);font-size:13px">'
+                 + esc(err) + '</div>' : '')
+        + '<div class="hint" style="margin-top:8px">확정한 대본은 그대로 남아 있어요 — 위 사유를 고친 뒤 매칭만 다시 하면 됩니다.</div>'
+        + '<div style="margin-top:10px"><button class="btn-next" style="padding:8px 16px" '
+        + 'onclick="startProduceMix()">✔ 확정한 대본으로 다시 매칭</button></div>');
+      const rev = document.getElementById('mixReview');
+      if(rev) rev.innerHTML = '';
+    }catch(_){ }
+    return;
+  }
   MIX_REVIEW_SUGGESTIONS = d.asset_suggestions || [];
   try{ _syncSceneLab(true); }catch(_){ }   // ② 장면실험실 iframe(정의는 loadMixReview 위)
   if(typeof window!=='undefined') window._mixBeats = d.beats || [];   // 조각 전체 보기(paletteStats)가 읽는다 — 실제 쓴 컷 집계용
@@ -8768,8 +9366,10 @@ async function _restoreMixContext(){
   //   빠져 있어 A/B/C 카드가 화면에서만 사라졌다. 데이터·선택은 멀쩡했다.
   //   ⚠️ 편집안(_renderMixReviewBody)보다 **먼저** 그린다 — 후보 카드가 편집안 위에 있으므로
   //      순서가 뒤집히면 스크롤 위치가 튄다.
+  let _st = null;
   try{
     const s = await (await fetch('/api/mix/status/'+encodeURIComponent(MIX_JOB))).json();
+    _st = s;
     if(s && s.ok && s.candidates && s.candidates.length){
       // 서버가 기억하는 선택을 되살린다. null이면 renderCandidates가 recommended를 따른다.
       CAND_SEL = (typeof s.selected_index === 'number') ? s.selected_index : null;
@@ -8778,7 +9378,7 @@ async function _restoreMixContext(){
   }catch(e){}   // 후보 복원 실패는 부가기능 — 편집안·미리보기 복원을 막지 않는다.
   let d=null;
   try{ d = await (await fetch('/api/mix/result/'+encodeURIComponent(MIX_JOB))).json(); }catch(e){}
-  if(!d || !d.ok) return;
+  if(!d || !d.ok){ _renderMixReviewBody(d, _st); return; }   // 조용한 return 금지 — 사유+[다시 매칭]을 그린다
   _renderMixReviewBody(d);
   if(PREVIEW_STATUS === 'ready') _renderPreviewVideo(MIX_JOB);
 }
@@ -9338,9 +9938,42 @@ function toggleSrcCard(code){
   if (_SRC_CLOSED.has(code)) _SRC_CLOSED.delete(code); else _SRC_CLOSED.add(code);
   renderSourceAnalysis();    // 이미 받아 둔 데이터로 다시 그린다(서버 재요청 없음)
 }
+// ★올린 영상인데 shortcode가 비어 있으면 채워준다(2026-08-31 사장님 제보).
+//   업로드 응답이 shortcode를 주기 **전에** 담은 항목은 코드가 빈 문자열이라,
+//   아래 renderSourceAnalysis가 `if(!code) return`으로 상태를 아예 안 물어
+//   서버는 분석이 끝났는데도 화면만 영영 "분석 중"이었다(실측: video (8).mp4).
+//   규칙은 서버(업로드 응답·자동적재)와 **똑같은** sha1(url) 앞 12자다 — 같은 키를
+//   봐야 어긋나지 않는다(0순위-B). 다시 올릴 필요 없이 그 자리에서 풀린다.
 async function renderSourceAnalysis(){
   const box = document.getElementById('srcAnalysis');
   if(!box) return;
+  // ★빈 shortcode 보정은 **여기 안에서** 한다(2026-08-31). 별도 함수로 빼면
+  //   테스트 하네스(js_harness)가 이 함수만 떼어 실행할 때 ReferenceError로 죽는다 —
+  //   게이트가 실제로 잡았다. 보정 자체가 실패해도 아래 흐름은 종전대로 돈다.
+  // ★2026-09-02: 대상을 **빈 shortcode 전부**로 넓힌다(URL 종류를 안 가린다).
+  //   종전엔 `/api/produce/footage/`(내 파일 올리기)만 보정해서, 「🔗 URL 직접 추가」로
+  //   담은 영상은 shortcode가 ''인 채로 남았다. 그런데 서버(app.py api_produce_autoload)는
+  //   빈 shortcode를 **sha1(url)[:12]로 채워서** 저장한다 — 즉 같은 영상을 두고
+  //   서버는 sha1 키로 쓰고 화면은 ''로 조회해 **영영 만나지 못했다**(0순위-B: 같은
+  //   판단을 두 곳에서 따로 지으면 반드시 어긋난다).
+  //   실측(2026-09-02 라이브, 인스타 릴스 3개): 서버엔 brief·segments가 다 있는데
+  //   (14d95dbf8729·03b8c77e91db·bd2f67e84fce = 각 URL의 sha1) 화면은 "0/3개 읽음 ·
+  //   분석 중"에 영구 고정 → 2단계에서 씨앗 카드가 하나도 안 생겨 **고객이 완전히 막혔다**.
+  //   여기서 서버와 **같은 규칙**(sha1(url) 앞 12자)으로 채우면 조회 키가 일치한다.
+  try{
+    const _need = (HANDOFF||[]).filter(h => h && !h.shortcode && h.url);
+    if(_need.length && typeof crypto !== 'undefined' && crypto.subtle){
+      for(const _h of _need){
+        // ★서버와 **글자 하나까지 같은 입력**으로 해싱한다 — app.py는
+        //   sha1(url.strip())이라 여기서 trim()을 빼면 앞뒤 공백 하나로 키가 갈린다.
+        const _b = await crypto.subtle.digest('SHA-1',
+                         new TextEncoder().encode(String(_h.url||'').trim()));
+        _h.shortcode = Array.from(new Uint8Array(_b))
+                            .map(x=>x.toString(16).padStart(2,'0')).join('').slice(0,12);
+      }
+      if(typeof saveWork === 'function') saveWork();
+    }
+  }catch(e){ console.warn('[shortcode 보정 실패(무해)]', e); }
   const items = HANDOFF.filter(h => h.useFootage);
   if(!items.length){
     // ★담긴 목록이 아직 안 잡혔는데 자동적재는 돌고 있는 순간이 있다(HANDOFF가 채워지기
@@ -9983,6 +10616,41 @@ function removeFootage(i){
 }
 // URL 입력칸에 넣은 URL들을 영상풀 카드로 올린다(2026-07-18 사장님 요청 — 카드로 잘 보이게).
 // 확정 = "이 영상들을 화면에 쓰겠다"이므로 useFootage:true로 담아 바로 믹스 가능하게 한다.
+// 📁 내 영상파일 올려서 담기(2026-08-31 사장님 지시). 올린 파일은 서버가 URL로
+// 바꿔주고, 그 URL을 URL 직접 추가와 **똑같은 모양**으로 HANDOFF에 넣는다 —
+// 담김 이후 흐름(소스분석·AI PICK·매칭·렌더)에 분기를 새로 만들지 않는다.
+async function uploadFootageFiles(files){
+  const msg=document.getElementById('footageUpMsg');
+  const list=Array.from(files||[]);
+  if(!list.length) return;
+  const have=new Set(HANDOFF.map(h=>h.url));
+  let added=0, failed=[];
+  for(let i=0;i<list.length;i++){
+    const f=list[i];
+    if(msg) msg.textContent=`올리는 중… ${i+1}/${list.length} — ${f.name}`;
+    try{
+      const fd=new FormData(); fd.append('file', f);
+      const r=await fetch('/api/produce/footage/upload',{method:'POST',body:fd});
+      const j=await r.json().catch(()=>({}));
+      if(!r.ok || !j.ok || !j.url){ failed.push(`${f.name}: ${j.error||('HTTP '+r.status)}`); continue; }
+      if(have.has(j.url)) continue;
+      have.add(j.url);
+      HANDOFF.push({url:j.url, shortcode:(j.shortcode||''), name:(j.name||f.name), thumbnail:(j.thumbnail||''),
+                    caption:'', pickScript:false, useFootage:true, uploaded:true});
+      added++;
+    }catch(e){ failed.push(`${f.name}: ${e}`); }
+  }
+  // 고른 파일을 비운다 — 같은 파일을 다시 고를 수 있게(change 이벤트가 안 뜨는 것 방지)
+  const inp=document.getElementById('footageFile'); if(inp) inp.value='';
+  if(added){
+    renderPool(); syncFootageToMixUrls(); refreshFinalPeek(); saveWork();
+    if(typeof refreshStep0==='function') refreshStep0();
+  }
+  if(msg){
+    msg.textContent = (added? `✔ ${added}개 담았습니다.` : '담긴 영상이 없습니다.')
+                    + (failed.length? ` 실패 ${failed.length}건 — ${failed.join(' / ')}` : '');
+  }
+}
 function confirmMixUrls(){
   const wrap=document.getElementById('mixUrls'); if(!wrap) return;
   const typed=Array.from(wrap.querySelectorAll('.mixUrl')).map(i=>i.value.trim()).filter(Boolean);
@@ -10535,7 +11203,18 @@ async function startProduceMix(){
     const r=await fetch('/api/produce/mix/start',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify(_mixBody)});
     const d=await r.json();
-    if(!d.ok){ st.textContent='❌ '+(d.error||'실패'); return; }
+    if(!d.ok){
+      // ★#mixStatus를 직접 그리지 않는다(2026-09-02, test_dom_owner_budget).
+      //   같은 자리를 두 함수가 덮어쓰면 '고쳤는데 또 나는' 버그의 뿌리가 된다.
+      //   그리는 일은 drawMixStatus(=setMixStatusText) 하나에 맡기고, 여기선
+      //   문구만 정해 넘긴 뒤 버튼만 덧붙인다.
+      const nk=needKeyText(d);                 // 음성 키 미등록이면 사유를 정확히 알린다
+      const box=setMixStatusText(nk || ('❌ '+(d.error||'실패')));
+      if(nk && box) box.insertAdjacentHTML('beforeend',
+        ' <a href="'+esc(d.settings_url||'/settings#keys')
+        +'" target="_blank" rel="noopener" style="color:var(--fire);font-weight:700">등록하러 가기 →</a>');
+      return;
+    }
     // ★재매칭 = 새 job이다. 옛 job의 미리보기 상태를 물고 있으면 canGoNext()가 그걸 보고
     // **한 번도 본 적 없는 새 영상으로 다음을 열어준다** — 매칭이 끝날 때까지 수십 초~수 분이나
     // 열려 있고, 그 사이 [다음]을 누르면 유료 자막제거로 그냥 넘어간다(재리뷰 C-3).
@@ -10913,7 +11592,7 @@ function _syncSceneLab(on){
 async function loadMixReview(){
   const d=await (await fetch('/api/mix/result/'+MIX_JOB)).json();
   const el=document.getElementById('mixReview');
-  if(!d.ok){ el.innerHTML=`<div class="hint" style="color:var(--fire)">편집안 로드 실패 ${esc(d.error||'')}</div>`; return; }
+  if(!d.ok){ _renderMixReviewBody(d); return; }   // 실패 표시도 렌더 본체 한 곳에서(0순위-B)
   // ★렌더 본체는 _renderMixReviewBody로 뽑았다(2026-07-19) — 새로고침 복원(_restoreMixContext)이
   //   같은 화면을 그려야 하는데 markup을 복제하면 갈라진다. 아래 초기화(게이트 재잠금)는 여기 남는다:
   //   loadMixReview는 "새 매칭"이라 미리보기를 다시 봐야 하고, 복원은 이미 본 것이라 안 잠근다.
@@ -11761,6 +12440,19 @@ async function startCleanPreview(){
   const box=document.getElementById('cleanPreview');
   const btn=document.getElementById('btnCleanPreview');
   if(!MIX_JOB){ box.textContent='⚠️ 2단계에서 영상 매칭을 먼저 실행하세요.'; return; }
+  // ★음성을 먼저 정해야 자막제거가 한 번으로 끝난다 (2026-09-01 실측).
+  //   자막제거는 **조립된 완성본 1편**을 청소하는데, 컷 길이가 음성 발화초에 맞춰져 있다.
+  //   그래서 청소 뒤에 보이스를 바꾸면 컷 길이가 달라져 청소본이 무효가 되고 **다시 청소한다**
+  //   (실측 job 119092fa678d: 12:46 자막제거 → 12:50:46 보이스 변경 → 12:55 렌더가 재청소.
+  //    자막제거 2콜 = 크레딧 100 + 2분 추가). 단계 번호(4=자막제거, 5=TTS음성)가 뒤바뀐 탓에
+  //   순서대로 누른 고객이 그대로 당했다. 순서 자체를 바꾸는 건 DB의 step을 밀어 위험해서
+  //   (진행 중 작업이 1단계로 떨어진 전례) 여기서 안내만 한다.
+  if(!(VOICE.preset_id||VOICE.voice_id)){
+    if(!confirm('음성을 아직 고르지 않았어요.\n\n'
+      +stepName('tts')+'에서 음성을 먼저 정하시면 자막제거가 한 번으로 끝납니다.\n'
+      +'지금 진행하고 나중에 음성을 바꾸면 자막제거를 다시 해야 해요(크레딧 추가).\n\n'
+      +'그래도 지금 자막제거를 할까요?')) return;
+  }
   clearInterval(CLEAN_POLL); CLEAN_POLL=null;
   const myGen=++CLEAN_GEN, myJob=MIX_JOB;
   CLEAN_VIEW={si:0, pos:0.5, job:myJob};   // 새로 돌리면 확인 지점도 처음(영상1·가운데)으로
@@ -11785,7 +12477,13 @@ async function startCleanPreview(){
     const d=await (await fetch('/api/produce/mix/clean',{method:'POST',
       headers:{'Content-Type':'application/json'}, body:JSON.stringify({job_id:myJob})})).json();
     if(CLEAN_GEN!==myGen) return;
-    if(!d.ok){ box.innerHTML='<div class="hint" style="color:var(--fire)">⚠️ '+esc(d.error||'청소 실패')+'</div>'; if(btn) btn.disabled=false; return; }
+    if(!d.ok){
+      // 자막제거 개인 키 미등록이면 '등록하러 가기' 버튼이 있는 안내를 띄운다(2026-09-01).
+      // ★업체명을 쓰지 마라 — 브랜드 정책(test_subclean_ui가 검사한다).
+      box.innerHTML = needKeyHtml(d)
+        || ('<div class="hint" style="color:var(--fire)">⚠️ '+esc(d.error||'청소 실패')+'</div>');
+      if(btn) btn.disabled=false; return;
+    }
     CLEAN_POLL=setInterval(()=>pollClean(myGen,myJob),3000); pollClean(myGen,myJob);
   }catch(e){ if(CLEAN_GEN!==myGen) return; box.innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; if(btn) btn.disabled=false; }
 }
@@ -11838,15 +12536,17 @@ async function pollClean(gen,job){
 //   업체 이름과 충전 주소는 키를 등록하는 설정 화면에 있으므로 그리로 보낸다.
 function cleanFailHtml(kind){
   const redo = '<button class="cp-redo" onclick="startCleanPreview()">↻ 다시 시도</button>';
-  if(kind === 'no_points'){
-    // 우리 포인트가 모자란 경우다(app.py clean_failure_kind). 다시 눌러도 같은 결과라
-    // 재시도 버튼을 **일부러 안 준다** — 오늘 6번 헛누른 고객이 있었다(2026-08-26).
-    // 길은 둘: 본인 키를 등록해 차감 자체를 없애거나, 포인트를 충전하거나.
-    return '<div class="cp-fail"><b>보유 포인트가 모자라 자막 제거를 시작하지 못했습니다.</b><br>'
-      + '<span style="opacity:.85">다시 눌러도 같은 결과가 나옵니다.</span></div>'
-      + '<div class="cp-fail" style="margin-top:8px;opacity:.9">💡 <b>본인 자막제거 키를 등록하시면 포인트가 차감되지 않습니다.</b> '
-      + '등록하신 키로 바로 처리되고, 잔액은 키를 발급받으신 곳에서 충전해 쓰시면 됩니다.</div>'
-      + '<a class="cp-redo" href="/settings.html#keys" target="_blank" rel="noopener" '
+  if(kind === 'no_points' || kind === 'need_own_key'){
+    // ★2026-09-01: 포인트 제도를 없애고 **내 키가 없으면 못 쓰게** 바꿨다.
+    //   옛 kind('no_points')도 같이 받는다 — 배포 직전에 담긴 job이 그 값을 들고 있다.
+    //   재시도 버튼은 **일부러 안 준다**: 키를 등록하기 전엔 같은 결과다
+    //   (2026-08-26에 6번 헛누른 고객이 있었다).
+    return '<div class="cp-fail"><b>자막 지우기는 내 API 키가 있어야 쓸 수 있어요.</b><br>'
+      + '<span style="opacity:.85">아직 키를 등록하지 않으셔서 시작하지 못했습니다.</span></div>'
+      + '<div class="cp-fail" style="margin-top:8px;opacity:.9">💡 설정 화면에서 '
+      + '<b>자막 지우기 키</b>를 등록하시면 바로 이어서 하실 수 있어요. '
+      + '발급 방법은 설정 화면의 <b>📖 그림으로 보는 발급 방법</b>에 있습니다.</div>'
+      + '<a class="cp-redo" href="/settings#keys" target="_blank" rel="noopener" '
       + 'style="display:inline-block;text-decoration:none">🔑 내 키 등록하기</a>';
   }
   if(kind === 'no_credit'){
@@ -11856,11 +12556,11 @@ function cleanFailHtml(kind){
     // ★"등록하신 키"라고 단정하지 않는다 — 키를 등록 안 한 고객은 운영자 키로
     //   돌기 때문에, 그 경우 "내 키"라고 하면 엉뚱한 데를 확인하게 된다(실측 231·174).
     return '<div class="cp-fail"><b>자막제거에 쓰는 키의 크레딧이 모두 소진되었습니다.</b><br>'
-      + '<span style="opacity:.85">숏템메이커 포인트가 아니라 <b>자막제거 서비스 쪽</b> '
-      + '잔액 문제라, 다시 눌러도 같은 결과가 나옵니다. 충전되면 바로 이어서 하실 수 있어요.</span></div>'
-      + '<div class="cp-fail" style="margin-top:8px;opacity:.9">💡 키를 직접 등록해 쓰시는 분은 '
-      + '발급받으신 곳에서 충전하시면 됩니다. 등록 없이 쓰시는 분은 <b>운영자가 충전하면 자동으로 풀립니다</b>.</div>'
-      + '<a class="cp-redo" href="/settings.html#keys" target="_blank" rel="noopener" '
+      + '<span style="opacity:.85"><b>등록하신 자막제거 키</b> 쪽 잔액 문제라, '
+      + '다시 눌러도 같은 결과가 나옵니다. 충전하시면 바로 이어서 하실 수 있어요.</span></div>'
+      + '<div class="cp-fail" style="margin-top:8px;opacity:.9">💡 키를 발급받으신 곳에서 '
+      + '충전하시거나, 다른 키를 추가로 등록하셔도 됩니다.</div>'
+      + '<a class="cp-redo" href="/settings#keys" target="_blank" rel="noopener" '
       + 'style="display:inline-block;text-decoration:none">🔑 키·충전 안내 보기</a>';
   }
   if(kind === 'interrupted'){
@@ -11897,14 +12597,55 @@ function refreshSub(){
   // T7: 못 쓰는 컨트롤은 비활성 노출 대신 숨긴다 — 자막제거 켜짐+매칭됨일 때만 미리보기가 등장.
   const wrap=document.getElementById('cleanPreviewWrap');
   if(wrap) wrap.style.display = (STATE.subtitleRemoval && MIX_JOB) ? '' : 'none';
+  // ★토글을 누르지 않고 이 화면으로 돌아온 경우(작업 복원·단계 이동)에도 가격을 채운다 —
+  //   onSubToggle에만 걸면 "이미 켜둔 채 돌아온" 고객에겐 안내가 영영 안 뜬다.
+  if(STATE.subtitleRemoval && typeof renderCleanCost === 'function') renderCleanCost();
   // 이미 끝난 제거 결과를 서버에서 되살린다(화면 전환으로 DOM이 비워져도 결과는 남는다).
   restoreCleanPreview();
+}
+// 자막제거 단가·잔액을 **누르기 전에** 보여준다(2026-09-02).
+// ★숫자를 화면에 박지 않는다 — 단가는 서버(pricing)가 정하고 사장님이 바꿀 수 있다.
+//   박아두면 단가를 바꾼 날부터 화면이 거짓말을 한다(0순위-B).
+// ★키를 등록한 고객·사장님(cid 0)은 실제로 안 깎인다(_charge_clean의 should_charge).
+//   그 경우까지 "5P 차감"이라고 하면 반대로 겁을 준다 → 서버가 준 값이 0이면 무료라고 쓴다.
+// 실패해도 조용히 넘어간다 — 가격 안내가 안 떠도 기능 자체는 종전대로 돌아야 한다.
+let _cleanCostCache = null;
+async function renderCleanCost(){
+  const el = document.getElementById('cleanCost');
+  if(!el) return;
+  try{
+    if(!_cleanCostCache){
+      const r = await fetch('/api/settings/points', {credentials:'include'});
+      if(!r.ok) return;
+      _cleanCostCache = await r.json();
+    }
+    const d = _cleanCostCache || {};
+    // ★업체명이 들어간 키를 여기서 쓰지 않는다 — 이 파일은 고객 화면이라 벤더명이
+    //   한 글자도 있으면 안 되고, tests/test_subclean_ui.py가 파일 전체를 훑어 막는다
+    //   (주석까지 검사한다. 실제로 이 주석에 이름을 적었다가 게이트에 잡혔다).
+    //   그래서 서버가 중립 이름(subclean_*)으로도 함께 내려준다.
+    const price = Number(d.subclean_price);
+    // ★"깎이는가"는 서버 판정을 그대로 믿는다 — 내 키·관리자 면제·사장님(cid 0)은
+    //   단가가 5P라도 한 푼도 안 나간다. 화면이 그 조건을 다시 세면 어긋난다(0순위-B).
+    //   그 필드가 없는 옛 서버 응답이면 단가만 보고 판단(종전 동작, 회귀 없음).
+    const willCharge = (typeof d.subclean_charged === 'boolean')
+                       ? d.subclean_charged : (price > 0);
+    if(!willCharge || !(price > 0)){
+      el.textContent = '내 키로 처리돼서 포인트는 차감되지 않아요.'; return;
+    }
+    const bal = Number(d.balance);
+    const short = Number.isFinite(bal) && bal < price;
+    el.innerHTML = '💳 이 단계는 <b>' + price + 'P</b>가 차감돼요'
+      + (Number.isFinite(bal) ? ' · 남은 포인트 <b>' + bal + 'P</b>' : '')
+      + (short ? ' <span style="color:var(--fire)">— 포인트가 모자라 지금은 실행할 수 없어요</span>' : '');
+  }catch(e){ /* 가격 안내 실패가 기능을 막으면 안 된다 */ }
 }
 async function onSubToggle(){
   STATE.subtitleRemoval = document.getElementById('subToggle').checked;
   // T7: disabled 노출 대신 숨김 — 자막제거 켜짐+매칭됨일 때만 미리보기 버튼이 나타난다.
   const cwrap=document.getElementById('cleanPreviewWrap');
   if(cwrap) cwrap.style.display = (STATE.subtitleRemoval && MIX_JOB) ? '' : 'none';
+  if(STATE.subtitleRemoval) renderCleanCost();
   const s=document.getElementById('subState');
   if(!MIX_JOB){ if(s) s.textContent='⚠️ 2단계 매칭 후 적용됩니다(설정은 기억됨).'; return; }
   try{
@@ -11951,10 +12692,41 @@ function engineBadge(g){
 // 일레븐랩스에서 성우를 등록·삭제한 뒤 addElevenVoice/removeElevenVoice) — 그래서 fetch와
 // 렌더 순서를 여기 한 곳에만 적는다(0순위-B: 두 벌이면 한쪽만 고쳐져 어긋난다).
 // 실패는 false를 반환하고 카드 자리에 표시한다.
+// 🎙 지난 작업의 성우를 화면에 되살린다(2026-09-02 사장님 "마지막 세팅한 TTS를 기억").
+//   서버(create_mix_job)는 이미 같은 값을 job.voice로 심어 3단계 1차 TTS부터 그 성우로
+//   합성한다. 이 함수는 **화면만** 맞춘다 — 안 맞추면 실제론 내 성우로 합성됐는데 카드는
+//   아무것도 안 골라진 상태라, 자막제거의 "음성을 아직 고르지 않았어요" 경고가 헛나가고
+//   고객이 불필요하게 4단계에서 성우를 다시 눌러 **재합성 비용을 낸다**(이 작업의 목적과 정반대).
+//   ★VOICE를 통째로 갈아끼우지 않고 저장된 스냅샷 값만 옮긴다 — 저장 당시엔 없던 필드가
+//     생겨도 화면 기본값이 살아남는다.
+function restoreLastVoice(lv){
+  if(!lv || !lv.preset_id) return;                 // 신규 고객(기억 없음) → 종전대로
+  if(VOICE.preset_id || VOICE.voice_id) return;    // 이미 고른 게 있으면 덮지 않는다
+  // preset_id로 그룹·톤을 되찾는다. 프리셋이 사라졌으면(성우 삭제) 조용히 포기한다.
+  for(const g of (VOICE_GROUPS||[])){
+    for(const [variant, v] of Object.entries(g.variants||{})){
+      if(v && v.preset_id===lv.preset_id){
+        SEL_VARIANT[g.group_id]=variant;
+        VOICE.preset_id=lv.preset_id;
+        VOICE.voice_id=lv.voice_id||v.voice_id;
+        VOICE.settings=Object.assign({}, v.voice_settings, lv.settings||{});
+        if(lv.speed!=null) VOICE.speed=lv.speed;
+        if(lv.silence_trim!=null) VOICE.silence_trim=lv.silence_trim;
+        if(lv.pace_mode!=null) VOICE.pace_mode=lv.pace_mode;
+        VOICE.group_id=g.group_id; VOICE.variant=variant;
+        const _vc=document.getElementById('voiceControls'); if(_vc) _vc.style.display='block';
+        const _vh=document.getElementById('voiceHint');     if(_vh) _vh.style.display='none';
+        return;
+      }
+    }
+  }
+}
+
 async function loadPresets(){
   try{
     const d=await (await fetch('/api/voice-presets?lang=KR')).json();
     VOICE_GROUPS=d.groups||[];
+    restoreLastVoice(d.last_voice);   // 🎙 지난 작업에서 쓰던 성우를 미리 골라둔다(2026-09-02)
     renderPresetCards();
     syncCurVoiceName();   // 처음 뜰 때도 접힌 줄에 지금 성우를 띄운다(2026-08-18)
     return true;
@@ -12005,7 +12777,7 @@ async function searchVoiceLibrary(page){
   }catch(e){ box.innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; return; }
   if(d && d.need_key){
     box.innerHTML='<div class="hint" style="line-height:1.6">'+esc(d.error||'')
-      +'<br><a href="/keys" style="color:var(--accent2)">→ 내 API 키 등록하러 가기</a></div>';
+      +'<br><a href="/settings#keys" style="color:var(--accent2)">→ 내 API 키 등록하러 가기</a></div>';
     return;
   }
   if(!d || !d.ok){
@@ -12466,7 +13238,15 @@ async function previewVoice(){
   try{
     const r=await fetch('/api/mix/voice/preview',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({job_id:MIX_JOB, preset_id:VOICE.preset_id, voice_id:VOICE.voice_id, settings:VOICE.settings, speed:VOICE.speed, silence_trim:VOICE.silence_trim, pace_mode:VOICE.pace_mode, whisper_roles:_whisperRolesForBody()})});
-    if(!r.ok){ el.textContent='❌ 실패'; return; }
+    if(!r.ok){
+      // ★왜 실패했는지 말한다(2026-09-02). 전엔 '❌ 실패' 한 마디라, 키가 없어 막힌
+      //   사람도 서버가 고장난 줄 알았다. 성공 응답은 blob이지만 실패는 JSON이다.
+      const d = await r.json().catch(()=>null);
+      const need = (typeof needKeyHtml==='function') ? needKeyHtml(d) : null;
+      el.innerHTML = need || ('<span class="hint" style="color:var(--fire)">❌ '
+                    + esc((d && d.error) || '미리듣기를 만들지 못했습니다') + '</span>');
+      return;
+    }
     const b=await r.blob();
     el.innerHTML=`<audio controls autoplay src="${URL.createObjectURL(b)}" style="height:30px"></audio>`;
   }catch(e){ el.textContent='❌ 실패'; }
@@ -12474,10 +13254,34 @@ async function previewVoice(){
 async function applyVoice(){
   const el=document.getElementById('voicePreview');
   if(!MIX_JOB){ el.innerHTML='<span class="hint">🎬 '+stepName('mix')+' 영상 매칭 후 사용할 수 있어요.</span>'; return; }
+  // ★자막제거를 이미 했으면 음성 변경에 값이 붙는다 — 말없이 태우지 않는다(2026-09-01).
+  //   컷 길이가 음성 발화초에 맞춰져 있어, 음성이 바뀌면 청소해 둔 완성본이 무효가 되고
+  //   렌더가 조용히 다시 청소한다(실측 job 119092fa678d: 자막제거 2콜). 막지는 않는다 —
+  //   음성을 바꾸는 건 정당한 작업이고, 다시 청소하는 것도 화면상 맞다. 다만 **누르기 전에**
+  //   알려서 고객이 정하게 한다.
+  try{
+    const st=await (await fetch('/api/mix/status/'+MIX_JOB)).json();
+    if(st && st.clean_status==='ready'){
+      if(!confirm('이미 '+stepName('subtitle')+'를 끝낸 작업이에요.\n\n'
+        +'음성을 바꾸면 컷 길이가 달라져서 자막제거를 다시 해야 합니다(크레딧 추가).\n\n'
+        +'그래도 음성을 바꿀까요?')){ return; }
+    }
+  }catch(e){ /* 상태를 못 받으면 종전대로 그냥 진행한다 — 고지 실패가 작업을 막지 않는다 */ }
   el.textContent='⏳ 전체 음성 생성 중…';
   try{
-    await fetch('/api/mix/voice',{method:'POST',headers:{'Content-Type':'application/json'},
+    // ★응답을 **읽는다**(2026-09-02). 전엔 await fetch만 하고 버려서, 키가 없어 402로
+    //   막혀도 그대로 폴링으로 넘어가 2.5초 뒤 "✅ 완료"를 띄웠다 — 음성은 하나도 안
+    //   만들어졌는데 다 됐다고 말하는 거짓 보고다. 막힌 이유는 needKeyHtml이 안내한다
+    //   (그 헬퍼는 이미 있었는데 이 자리만 안 쓰고 있었다).
+    const r = await fetch('/api/mix/voice',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({job_id:MIX_JOB, preset_id:VOICE.preset_id, voice_id:VOICE.voice_id, settings:VOICE.settings, speed:VOICE.speed, silence_trim:VOICE.silence_trim, pace_mode:VOICE.pace_mode, whisper_roles:_whisperRolesForBody()})});
+    const d = await r.json().catch(()=>null);
+    if(!r.ok || !d || d.ok === false){
+      const need = (typeof needKeyHtml==='function') ? needKeyHtml(d) : null;
+      el.innerHTML = need || ('<span class="hint" style="color:var(--fire)">❌ '
+                    + esc((d && d.error) || '음성 생성을 시작하지 못했습니다') + '</span>');
+      return;
+    }
   }catch(e){ el.textContent='❌ 요청 실패'; return; }
   const poll=setInterval(async()=>{
     try{
@@ -12544,9 +13348,10 @@ async function vpSaveNarr(i){
       body: JSON.stringify({text, regen:true})});
     const j=await r.json().catch(()=>null);
     if(!r.ok || !j || !j.ok){
+      const _nk = (typeof needKeyText==='function') ? needKeyText(j) : null;
       if(m) m.textContent = (r.status===409)
         ? '⏳ 생성 중엔 못 바꿔요 — 전체 생성이 끝나고 다시 눌러요'
-        : ('❌ 저장 실패' + (j&&j.error?(' — '+j.error):''));
+        : (_nk || ('❌ 저장 실패' + (j&&j.error?(' — '+j.error):'')));
       renderTtsBeats(); return;
     }
     // 글자가 같으면 서버가 unchanged로 알려준다 — 헛되이 기다리지 않는다.
@@ -12703,9 +13508,13 @@ function _updateVoiceLen(n, vidLen){
   auds.forEach(a=>{ if(a.readyState>=1) recompute(); else a.addEventListener('loadedmetadata', recompute, {once:true}); });
 }
 // ▶ 프리뷰 — 재생 중인 비트의 9:16 프레임을 vpFrame에, 자막을 vpCap에 서버 cap_segments/cap_durs(+cap_offset) 타이밍으로 표시(가라오케식)
-function _vpShowFrame(i){
+function _vpShowFrame(b){
+  // ★목록 순번이 아니라 **비트번호+컷번호**로 부른다(2026-08-31). 종전엔 순번 i를 그대로
+  //   비트번호로 넘겨, 목록이 컷 단위로 펴진 뒤에는 없는 번호를 불러 404가 났다
+  //   (라이브 실측: 비트가 10개인 job에 /10 ~ /18 요청 9건, ?cut= 도 빠져 있었다).
+  //   주소는 _beatFrameUrl 한 곳에서만 만든다 — showBeat·prefetch와 같은 규칙(0순위-B).
   const f=document.getElementById('vpFrame');
-  if(f && typeof MIX_JOB!=='undefined' && MIX_JOB){ f.style.display='block'; f.src='/api/produce/mix/beatframe/'+MIX_JOB+'/'+i; }
+  if(f && typeof MIX_JOB!=='undefined' && MIX_JOB){ f.style.display='block'; f.src=_beatFrameUrl(b); }
 }
 function _vpCapDurs(b){
   const segs=b.cap_segments||[]; if(!segs.length) return [];
@@ -12735,7 +13544,7 @@ function vpPlayBeat(i){
   const a=document.getElementById('beatAudio'+i); if(!a) return;
   // 다른 오디오 정지
   let k=0; while(document.getElementById('beatAudio'+k)){ const o=document.getElementById('beatAudio'+k); if(o!==a){o.pause();} k++; }
-  _vpShowFrame(i); _vpDriveCaption(a,b); _vpHeard.add(i);
+  _vpShowFrame(b); _vpDriveCaption(a,b); _vpHeard.add(i);   // ★프레임은 비트 객체로(순번 아님)
   // ★강조는 **클래스 하나**로 한다(2026-08-30). 종전엔 style.background를 직접 넣어
   //   재생목록 CSS(.ttsRow.playing)와 규칙이 두 벌이 됐다 — 한쪽만 고치면 어긋난다(0순위-B).
   vpMarkPlaying(i);
@@ -13428,6 +14237,17 @@ function _thumbTrackCss(L, size){
   const t = Number((L && L.tracking) || 0);
   return t ? `${(size * t / 100).toFixed(2)}px` : '0px';
 }
+// ── 행간(줄 간격) ────────────────────────────────────────────────────
+// L.leading = 글자 크기 대비 %(기본 116 = 종전 그대로). 없으면 116 → 옛 저장본 그림 불변.
+// ★자간과 같이 **비율**로 담는다 — px로 담으면 미리보기(270)와 저장(1080)이 어긋난다.
+// ★1.16이 세 군데(자동맞춤·그리기·손잡이높이)에 각각 박혀 있었다(2026-08-30). 한 곳만
+//   고치면 나머지 둘과 어긋나 글자가 넘치거나 손잡이가 뜬다 → 값의 주인을 이 함수 하나로
+//   모은다(0순위-B). 줄 간격을 쓰는 곳은 반드시 이 함수를 부른다.
+function _thumbLH(L, size){
+  const v = Number((L && L.leading != null) ? L.leading : 116);
+  // 글자가 겹쳐 못 읽는 것만 막는다(하한 60%). 상한은 넉넉히 둔다.
+  return size * Math.max(60, Math.min(300, v)) / 100;
+}
 // 구형 브라우저(letterSpacing 미지원)에서도 죽지 않게 — 있으면 걸고 없으면 종전 그림.
 function _setTrack(ctx, L, size){
   try { if ('letterSpacing' in ctx) ctx.letterSpacing = _thumbTrackCss(L, size); } catch (e) {}
@@ -13458,7 +14278,8 @@ function thumbFit(ctx, L, W, H){
   const _hold = (typeof THUMB_FIT_HOLD !== 'undefined' && THUMB_FIT_HOLD.get)
     ? THUMB_FIT_HOLD.get(L) : null;
   if (_hold) size = _hold.ratio * W * scale;
-  if (lines.length * size * 1.16 > maxH) size *= maxH / (lines.length * size * 1.16);  // 높이 상한
+  // 높이 상한 — 행간을 좁히면 그만큼 글자를 더 키울 수 있어야 한다(_thumbLH 하나가 주인)
+  if (lines.length * _thumbLH(L, size) > maxH) size *= maxH / (lines.length * _thumbLH(L, size));
   size = Math.max(W * 0.02, Math.min(size, H * 0.22));            // 안전 하한·상한
   return {lines, size, family};
 }
@@ -13821,7 +14642,7 @@ function drawThumb(ctx, img, layers, W, H){
     if (L.kind === 'badge'){ drawBadge(ctx, L, W, H); return; }
     if (!L.text) return;
     const {lines, size, family} = thumbFit(ctx, L, W, H);      // 자동 2줄 + grow-to-fill
-    const lh = size * 1.16;                                     // 줄 간격
+    const lh = _thumbLH(L, size);                               // 줄 간격(L.leading %)
     ctx.save();
     ctx.translate(L.x * W, L.y * H);                            // 앵커 = 여러 줄 블록의 세로 중앙
     if (L.rot) ctx.rotate(L.rot * Math.PI / 180);
@@ -14100,7 +14921,7 @@ function _thumbHalf(L){
       const ls = _trackPx(ctx, L, size);
       const w = Math.max(1, ...lines.map(l => ctx.measureText(l).width - ls));
       ctx.restore();
-      const h = lines.length * size * 1.16;
+      const h = lines.length * _thumbLH(L, size);
       const pad = size * 0.16;                       // 손잡이가 글자에 붙지 않게 약간 띄운다
       return {hx: (w / 2 + pad) / THUMB_W, hy: (h / 2 + pad) / THUMB_H};
     } catch (e) { /* 못 재면 아래 기본식 — 손잡이가 조금 어긋날 뿐 기능은 산다 */ }
@@ -14302,7 +15123,7 @@ function setThumbField(key, val){
   if (key === 'outline_w'){ L.outline = L.outline || {color: '#000000', w: 0}; L.outline.w = +val; }
   else if (key === 'outline_color'){ L.outline = L.outline || {color: '#000000', w: 4}; L.outline.color = val; }
   else if (key === 'box'){ L.box = val ? {color: '#000000', pad: 16, opacity: 80} : null; }
-  else if (key === 'size' || key === 'rot' || key === 'tracking'){ L[key] = +val; }
+  else if (key === 'size' || key === 'rot' || key === 'tracking' || key === 'leading'){ L[key] = +val; }
   else L[key] = val;
   if (key === 'text') thumbHoldSizeWhileTyping();   // 치는 동안 크기 고정(2026-08-27 고객 제보)
   renderThumbCanvas();
@@ -14580,6 +15401,13 @@ function renderThumbLayers(){
       <span style="color:var(--sub);opacity:.7">(글자 사이 간격 · 0이 기본)</span></label>
     <input type="range" min="-10" max="40" value="${Number(L.tracking || 0)}"
            oninput="setThumbField('tracking', this.value)" style="width:100%">
+    <!-- ★행간(2026-08-30 사장님 "글씨가 작아지면 공백이 넓어진다").
+         지금까지 줄 간격이 1.16 고정이라 손댈 수 있는 게 크기 슬라이더뿐이었고,
+         그래서 글자·자간·줄간격이 한 덩어리로만 움직였다. 자간과 같은 방식(비율)으로 따로 둔다. -->
+    <label style="font-size:11px;color:var(--sub)">행간 ${Number(L.leading != null ? L.leading : 116)}%
+      <span style="color:var(--sub);opacity:.7">(윗줄·아랫줄 사이 · 116이 기본)</span></label>
+    <input type="range" min="60" max="200" step="2" value="${Number(L.leading != null ? L.leading : 116)}"
+           oninput="setThumbField('leading', this.value)" style="width:100%">
     <label style="font-size:11px;color:var(--sub)">회전 ${L.rot}°</label>
     <input type="range" min="-45" max="45" value="${L.rot}" oninput="setThumbField('rot', this.value)" style="width:100%">
     <div style="display:flex;gap:8px;align-items:center;margin-top:6px">
@@ -14827,6 +15655,140 @@ function initThumb(){
   // (같으면 저장된 목록만 돌려준다) 이 호출은 싸고, 프론트의 중복 캐시가 틀린 계층이었다.
   loadThumbFrames();
   renderThumbLayers();
+  loadThumbPresets();   // 🖼 내 프리셋(서버 저장) — 진입할 때마다 물어본다(다른 기기에서 담았을 수 있다)
+}
+
+// ── 🖼 내 썸네일 프리셋(2026-09-02) ─────────────────────────
+// 만든 구성(글자·스티커·도형·배지)을 담아 다음 영상에 그대로 얹는다.
+// ★배경(frame_ts·frame_url·img)은 담지도 얹지도 않는다 — 프리셋을 쓰는 곳은 **다른 영상**이라
+//   그 영상에서 고른 배경 위에 얹혀야 한다. 담으면 남의 영상 장면이 딸려온다.
+let MY_THUMB_PRESETS = [];
+let THUMB_PRESET_BUSY = false;
+
+function _thumbPresetMsg(text, color){
+  const el = document.getElementById('myThumbPresetStatus');
+  if (el){ el.textContent = text || ''; el.style.color = color || 'var(--sub)'; }
+}
+
+async function loadThumbPresets(){
+  try {
+    const r = await fetch('/api/produce/thumb/presets');
+    const d = await r.json().catch(() => ({ok: false}));
+    if (!d.ok) return;
+    MY_THUMB_PRESETS = d.presets || [];
+    renderMyThumbPresets();
+  } catch(e){ /* 목록을 못 불러와도 썸네일 편집 자체는 계속 된다 — 조용히 넘긴다 */ }
+}
+
+function renderMyThumbPresets(){
+  const box = document.getElementById('myThumbPresets');
+  if (!box) return;
+  if (!MY_THUMB_PRESETS.length){
+    box.innerHTML = '<div class="hint" style="font-size:11px;opacity:.75">아직 담은 프리셋이 없어요 — '
+                  + '마음에 드는 썸네일을 만든 뒤 위 버튼으로 담아두면, 다음 영상에서 한 번에 얹혀요.</div>';
+    return;
+  }
+  // 카드 = 그림 + 이름 + (✕ 삭제 / ✏️ 이름). ✕·✏️는 stopPropagation으로 '적용'과 분리한다
+  // — 안 그러면 지우려다 프리셋이 적용돼 편집 중이던 구성이 통째로 바뀐다.
+  box.innerHTML = MY_THUMB_PRESETS.map(p => `
+    <div style="position:relative;width:78px">
+      <div onclick="applyMyThumbPreset('${p.preset_id}')" title="누르면 이 구성으로 바꿔요"
+           style="cursor:pointer;border:2px solid var(--line);border-radius:6px;overflow:hidden;
+                  background:#111;aspect-ratio:9/16;display:flex;align-items:center;justify-content:center">
+        ${p.url ? `<img src="${p.url}" style="width:100%;height:100%;object-fit:cover" alt="">`
+                : `<span style="font-size:20px">🖼</span>`}
+      </div>
+      <div style="font-size:10px;line-height:1.3;margin-top:3px;word-break:break-all">${esc(p.name)}</div>
+      <button onclick="event.stopPropagation();renameMyThumbPreset('${p.preset_id}')" title="이름 바꾸기"
+              style="position:absolute;top:2px;left:2px;width:20px;height:20px;border:0;border-radius:50%;
+                     background:rgba(0,0,0,.62);color:#fff;font-size:10px;cursor:pointer;padding:0">✏️</button>
+      <button onclick="event.stopPropagation();deleteMyThumbPreset('${p.preset_id}')" title="지우기"
+              style="position:absolute;top:2px;right:2px;width:20px;height:20px;border:0;border-radius:50%;
+                     background:rgba(0,0,0,.62);color:#fff;font-size:11px;cursor:pointer;padding:0">✕</button>
+    </div>`).join('');
+}
+
+async function saveThumbPreset(){
+  if (THUMB_PRESET_BUSY) return;            // 연타로 같은 구성이 두 번 담기는 것을 막는다
+  const layers = THUMB_STATE.layers || [];
+  if (!layers.length){
+    _thumbPresetMsg('담을 것이 없어요 — 글자나 스티커를 먼저 얹어주세요', 'var(--fire)');
+    return;
+  }
+  const name = (prompt('프리셋 이름 (예: 빨강 강조형)', '') || '').trim();
+  if (!name) return;                        // 취소 — 조용히 아무것도 안 한다
+
+  THUMB_PRESET_BUSY = true;
+  _thumbPresetMsg('담는 중…');
+  try {
+    // 카드 그림 = 지금 미리보기 그대로. 폰트 로드까지 기다린 뒤 그려야 첫 저장부터 맞는
+    // 글꼴로 나간다(generateThumb과 같은 이유).
+    await renderThumbCanvas();
+    const cv = document.getElementById('thumbCanvas');
+    const blob = await new Promise(res => cv.toBlob(res, 'image/png'));
+    const fd = new FormData();
+    fd.append('name', name);
+    fd.append('layers', JSON.stringify(layers));
+    if (blob) fd.append('file', blob, 'preset.png');   // 이름은 서버가 무시한다(경로순회 방지)
+    const r = await fetch('/api/produce/thumb/presets', {method: 'POST', body: fd});
+    const d = await r.json().catch(() => ({ok: false}));
+    if (!r.ok || !d.ok){
+      _thumbPresetMsg(r.status === 401 ? '로그인이 풀렸습니다 — 새로고침 후 다시 시도하세요'
+                                       : (d.error || '담기 실패'), 'var(--fire)');
+      return;
+    }
+    MY_THUMB_PRESETS.unshift(d.preset);     // 최신순 — 서버 정렬(updated_at DESC)과 같은 순서
+    renderMyThumbPresets();
+    _thumbPresetMsg('✅ “' + name + '” 담았어요 — 다음 영상에서 눌러 쓰세요', 'var(--ok)');
+  } catch(e){
+    _thumbPresetMsg('담기 실패 — 연결을 확인하세요', 'var(--fire)');
+  } finally {
+    THUMB_PRESET_BUSY = false;
+  }
+}
+
+function applyMyThumbPreset(pid){
+  const p = MY_THUMB_PRESETS.find(x => x.preset_id === pid);
+  if (!p || !Array.isArray(p.layers)) return;
+  // ★깊은 복사로 얹는다. 얕게 넣으면 편집이 MY_THUMB_PRESETS 안의 원본을 같이 고쳐,
+  //   같은 프리셋을 다시 눌러도 처음 모습으로 안 돌아온다(조용한 오염).
+  THUMB_STATE.layers = JSON.parse(JSON.stringify(p.layers));
+  // 글자 레이어를 고른 상태로 둔다 — 얹자마자 문구를 고치는 것이 다음 할 일이다.
+  const ti = THUMB_STATE.layers.findIndex(L => !['sticker', 'shape', 'badge'].includes(L.kind));
+  THUMB_STATE.sel = ti >= 0 ? ti : 0;
+  renderThumbLayers(); renderThumbCanvas();
+  _thumbPresetMsg('“' + p.name + '” 얹었어요 — 문구만 바꾸면 끝이에요', 'var(--ok)');
+}
+
+async function renameMyThumbPreset(pid){
+  const p = MY_THUMB_PRESETS.find(x => x.preset_id === pid);
+  if (!p) return;
+  const name = (prompt('새 이름', p.name) || '').trim();
+  if (!name || name === p.name) return;
+  try {
+    const r = await fetch('/api/produce/thumb/presets/' + pid + '/rename',
+                          {method: 'POST', headers: {'Content-Type': 'application/json'},
+                           body: JSON.stringify({name})});
+    const d = await r.json().catch(() => ({ok: false}));
+    if (!r.ok || !d.ok){ _thumbPresetMsg(d.error || '이름 변경 실패', 'var(--fire)'); return; }
+    p.name = d.name;                         // 서버가 확정한 이름(길이 잘림 반영)
+    renderMyThumbPresets();
+    _thumbPresetMsg('');
+  } catch(e){ _thumbPresetMsg('이름 변경 실패 — 연결을 확인하세요', 'var(--fire)'); }
+}
+
+async function deleteMyThumbPreset(pid){
+  const p = MY_THUMB_PRESETS.find(x => x.preset_id === pid);
+  if (!p) return;
+  if (!confirm('“' + p.name + '” 프리셋을 지울까요?')) return;
+  try {
+    const r = await fetch('/api/produce/thumb/presets/' + pid, {method: 'DELETE'});
+    const d = await r.json().catch(() => ({ok: false}));
+    if (!r.ok || !d.ok){ _thumbPresetMsg(d.error || '삭제 실패', 'var(--fire)'); return; }
+    MY_THUMB_PRESETS = MY_THUMB_PRESETS.filter(x => x.preset_id !== pid);
+    renderMyThumbPresets();
+    _thumbPresetMsg('');
+  } catch(e){ _thumbPresetMsg('삭제 실패 — 연결을 확인하세요', 'var(--fire)'); }
 }
 // ── 썸네일 끝 ────────────────────────────────────────────────
 
@@ -15189,6 +16151,11 @@ function s2RenderSeeds(){
         text:c.text||'', structure:c.structure||{}, tiles:c.tiles||{}, pick:false});
     });
   }catch(e){}
+  // ★사장님이 직접 쓴 대본은 **AI PICK 목록에 없다** — 이 함수가 매번 S2.seeds를 새로
+  //   만들기 때문에, 다시 얹어주지 않으면 카드가 조용히 사라진다(2026-09-01 실사고:
+  //   "씨앗이 내 대본인데 씨앗을 고르라고 한다" — 원문 칸엔 내 대본이 보이는데
+  //   카드 선택은 1번 영상에 켜져 있었다). 보관처는 S2.manualSeed 한 곳(0순위-B).
+  if(S2.manualSeed && String(S2.manualSeed.text||'').trim()) S2.seeds.push(S2.manualSeed);
   // ★씨앗은 **지금 담긴 영상**을 따라간다(2026-08-18). 예전엔 `!S2.seed`일 때만
   //   채워서, 한 번 정해진 씨앗이 1단계에서 영상을 바꿔도 그대로 굳었다 —
   //   담긴 영상과 무관한 옛 영상이 대표로 남아 대본이 그쪽으로 끌려갔다.
@@ -15273,7 +16240,12 @@ function s2SeedSentences(text){
 //   ⚠️대본 **재료**는 씨앗 선택과 무관하게 담긴 영상 전부를 쓴다(그건 그대로다).
 function s2SeedOn(i){
   const s=S2.seeds[i]; if(!s) return false;
-  // 고른 게 있으면 그것, 없으면 대표(AI PICK)가 켜진 것으로 본다.
+  if(S2.seed===s) return true;                       // 같은 것을 고른 경우
+  // ★직접 쓴 대본이 씨앗이면 **영상 카드는 전부 꺼진다**(2026-09-01). 종전엔
+  //   shortcode가 없다는 이유로 대표(AI PICK)가 켜진 것처럼 보여, 사장님 대본을
+  //   넣어도 화면은 1번 영상을 가리켰다 — 화면이 진실과 다르게 말한 것이다.
+  if(S2.seed && !S2.seed.shortcode)
+    return !s.shortcode && String(s.text||'')===String(S2.seed.text||'');
   if(S2.seed && S2.seed.shortcode) return S2.seed.shortcode===s.shortcode;
   return !!s.pick;
 }
@@ -15298,8 +16270,10 @@ function s2ShowSeedText(i){
 function s2ManualSeed(){
   const t=prompt('씨앗으로 쓸 대본을 붙여넣으세요');
   if(!t || !t.trim()) return;
-  S2.seed={shortcode:'', title:'직접 쓴 대본', thumb:'', category:PM_CATEGORY||'', text:t.trim(), structure:{}, tiles:{}};
-  S2.seeds.push(S2.seed); s2RenderSeeds();
+  S2.manualSeed={shortcode:'', title:'✍ 직접 쓴 대본', thumb:'', category:PM_CATEGORY||'',
+                 text:t.trim(), structure:{}, tiles:{}, manual:true};
+  S2.seed=S2.manualSeed;            // 넣자마자 이게 씨앗이다
+  s2RenderSeeds(); saveWork();
 }
 // 고른 씨앗의 뼈대 — 첫 문장·칸 구성·밀도. 전부 데이터다(설명글을 늘리지 않는다).
 function s2RenderSeedInfo(){
@@ -15458,9 +16432,17 @@ function s2RenderStyles(){
   }).join('');
   row.innerHTML=auto+cards;
   const hint=document.getElementById('s2GenHint');
-  if(hint) hint.textContent = S2.picked.length
-    ? (S2.picked.length+'개 스타일 → '+S2.picked.length+'안이 나옵니다')
-    : 'AI가 스타일까지 골라 2안을 만듭니다';
+  // ★안의 개수는 s2AnCount() 한 곳에서만 센다(0순위-B). 종전엔 여기에 '2안'이
+  //   손으로 박혀 있었는데, 스타일을 하나도 안 고르면 실제로는 픽업 1안만 나온다
+  //   (실측 2026-09-02: s2AnCount()=1, drafts=1인데 화면은 "2안을 만듭니다").
+  //   생성 뒤 부족 경고도 s2AnCount()를 기준으로 도므로 경고조차 안 뜬다 —
+  //   즉 **안내만 거짓말**이었다. 같은 함수로 세면 어긋날 수가 없다.
+  if(hint){
+    const _n = s2AnCount();
+    hint.textContent = S2.picked.length
+      ? (S2.picked.length+'개 스타일 → '+_n+'안이 나옵니다')
+      : ('AI가 스타일까지 골라 '+_n+'안을 만듭니다');
+  }
 }
 function s2ClearStyles(){ S2.picked=[]; s2RenderStyles(); }
 // ★안은 최대 2개다(종전 그대로). 픽업도 한 안을 차지하므로 **함께 세어** 상한을 건다 —
@@ -15487,6 +16469,11 @@ function s2ToggleStyle(id){
   s2RenderStyles();
 }
 // ── 생성 ─────────────────────────────────────────────────────
+// 씨앗이 준비됐나 — **판정은 여기 한 곳**(0순위-B). 담긴 영상 카드(shortcode)든
+// 「직접 쓰기」로 넣은 내 대본(text)이든 재료가 있으면 생성할 수 있다.
+function s2SeedReady(s){
+  return !!(s && (s.shortcode || String((s && s.text) || '').trim()));
+}
 // ★생성 경로는 기존 pmRunGen과 **같은 엔드포인트**를 쓴다(판정·프롬프트가 한 벌, 0순위-B).
 async function s2Generate(){
   // ★누른 버튼을 잡아둔다(2026-08-21 사장님 "전체 다시 만들기를 눌러도 안 된다").
@@ -15498,7 +16485,19 @@ async function s2Generate(){
   const _hitOn = (txt, dis) => { if(_hit && _hit!==document.getElementById('s2GenBtn')){
       _hit.disabled=!!dis; _hit.textContent=txt; } };
   const s=S2.seed;
-  if(!s || !s.shortcode){ toast('먼저 씨앗 영상을 고르세요 (직접 쓴 대본은 아직 생성 대상이 아닙니다)'); return; }
+  // ★'직접 쓴 대본'도 씨앗이다(2026-09-01 사장님 제보 — 붙여넣어도 생성이 막혔다).
+  //   shortcode만 보던 탓에 직접 쓴 대본은 영원히 통과 못 했다. 서버는 원래부터
+  //   shortcode 없이 base_script만으로 생성한다(app.py api_wiki_generate 실측) —
+  //   막고 있던 건 이 화면의 판정 한 줄뿐이었다.
+  if(!s2SeedReady(s)){
+    // ★토스트만 띄우면 3초 뒤 사라져 "눌렀는데 아무 일도 안 난다"가 된다(2026-08-31).
+    //   버튼 옆 힌트에 **남겨** 무엇을 해야 하는지 계속 보이게 한다.
+    toast('먼저 씨앗을 고르세요 — 담긴 영상 카드 또는 「직접 쓰기」');
+    const _h=document.getElementById('s2GenHint');
+    if(_h){ _h.style.color='var(--fire)';
+      _h.textContent='① 재료에서 씨앗 영상을 고르거나, 「직접 쓰기」에 내 대본을 넣어주세요.'; }
+    return;
+  }
   const btn=document.getElementById('s2GenBtn'), hint=document.getElementById('s2GenHint');
   const orig=btn?btn.textContent:'';
   if(btn){ btn.disabled=true; btn.textContent='⏳ 대본 만드는 중… (15~40초)'; }
@@ -15543,10 +16542,32 @@ async function s2Generate(){
     }
     if(S2.picked.length) _reqs.push({...body, style_ids:S2.picked});
     if(!_reqs.length) _reqs.push({...body, auto_style:true});   // 둘 다 없으면 종전 그대로
-    const _outs=await Promise.all(_reqs.map(b=>
-      fetch('/api/wiki/generate?shortcode='+encodeURIComponent(s.shortcode),
-        {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)})
-        .then(r=>r.json()).catch(()=>({ok:false,error:'네트워크 오류'}))));
+    // ★한 방에 다 쏘지 마라(2026-08-31 사장님 "왜 한 개만 나오나"). 두 요청을 동시에
+    //   보내면 같은 Gemini 키를 한꺼번에 때려 한쪽이 429(RESOURCE_EXHAUSTED)→502로 죽는다.
+    //   실측 서버로그: 같은 shortcode에 200 하나 / 502 하나가 12초 간격으로 나란히 찍혔다.
+    //   그래서 ①요청 사이를 띄우고 ②429·502면 한 번 더 시도한다.
+    const _sleep=ms=>new Promise(r=>setTimeout(r,ms));
+    const _one=async(b)=>{
+      for(let t=0;t<2;t++){
+        try{
+          const r=await fetch('/api/wiki/generate?shortcode='+encodeURIComponent(s.shortcode),
+            {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});
+          const j=await r.json().catch(()=>({ok:false,error:'응답을 읽지 못했습니다'}));
+          if(j&&j.ok) return j;
+          // 키 소진·게이트웨이 오류는 잠깐 뒤 다시 하면 대개 산다(다른 키로 돌아간다).
+          if(t===0 && (r.status===502||r.status===429)){ await _sleep(2500); continue; }
+          return j||{ok:false,error:'생성 실패'};
+        }catch(e){
+          if(t===0){ await _sleep(2500); continue; }
+          return {ok:false,error:'네트워크 오류'};
+        }
+      }
+    };
+    const _outs=[];
+    for(let i=0;i<_reqs.length;i++){
+      if(i) await _sleep(900);              // 키를 겹쳐 때리지 않게 살짝 어긋내 보낸다
+      _outs.push(await _one(_reqs[i]));
+    }
     // 하나만 실패해도 나머지는 살린다 — 둘 다 실패했을 때만 오류로 본다.
     const _good=_outs.filter(x=>x&&x.ok);
     const d = _good.length
@@ -15565,9 +16586,16 @@ async function s2Generate(){
     S2.cps=d.cps||null;   // 글자→초 환산계수(서버 상수). 없으면 초 표시를 아예 안 한다
     // ★고른 스타일 수와 나온 안의 수가 다르면 조용히 넘어가지 마라 — 실제로 2개를 골랐는데
     //   1안만 나온 적이 있다(서버가 카테고리로 걸러냈다). 조용한 실패가 제일 나쁘다.
-    if(S2.picked.length && S2.drafts.length < S2.picked.length && hint){
-      hint.innerHTML='<span style="color:var(--gold)">⚠️ 스타일 '+S2.picked.length
-        +'개 중 '+S2.drafts.length+'개만 만들어졌어요 — 나머지는 생성에 실패했습니다(다시 시도해 보세요)</span>';
+    // ★기준은 '고른 스타일 수'가 아니라 **기대한 안의 수**다(2026-08-31 수정).
+    //   종전엔 스타일 1개 + 픽업 ON = 2안을 기대했는데 픽업 요청이 502로 죽어 1안만 나와도
+    //   `1 < 1`이 거짓이라 경고가 안 떴다 — 조용히 삼켜졌다. s2AnCount()가 진짜 기대치다.
+    const _want=s2AnCount();
+    if(_want && S2.drafts.length < _want && hint){
+      const _err=(_outs.find(x=>x&&!x.ok)||{}).error||'';
+      hint.innerHTML='<span style="color:var(--gold)">⚠️ '+_want+'안을 요청했는데 '
+        +S2.drafts.length+'안만 만들어졌어요'
+        +(_err?(' — '+esc(_err)):' — 나머지는 생성에 실패했습니다')
+        +' (다시 만들기를 눌러보세요)</span>';
     }
     // ★픽업영상 대본에서 걸러낸 안이 있으면 **왜** 걸렀는지 말한다(조용한 폴백 금지).
     //   안이 줄어든 이유를 안 알려주면 "왜 2안만 나오지?"가 된다.
@@ -15707,7 +16735,9 @@ function s2DraftHtml(dr,i){
   const tries=(dr.tries||[]).length;
   const again=tries>1?(' <small>· 다시 쓴 횟수 '+(tries-1)+'</small>'):'';
   // 통과는 조용히 뱃지 하나. 실패는 못 지킨 항목을 그대로 — 조용히 통과시키지 않는 게 핵심.
-  const gate=(dr.checks&&dr.checks.length)
+  // ★내 대본엔 스타일 게이트를 붙이지 않는다 — AI가 만든 게 아니라 사장님이 쓴 것이다.
+  //   'hook 문장틀 준수' 같은 빨간 줄을 띄우면 사장님 문장을 틀렸다고 말하는 꼴이 된다.
+  const gate=dr.mine?'':(dr.checks&&dr.checks.length)
     ? (dr.passed
         ? `<span class="s2-gate pass" title="게이트 통과 — 스타일 구조를 지켰습니다">✅ 구조 지킴${again}</span>`
         : `<span class="s2-gate fail">⚠️ ${esc(bad.map(c=>c.name).join(' · '))}</span>`)
@@ -15718,9 +16748,10 @@ function s2DraftHtml(dr,i){
     return `<div class="s2-row${isBad?' bad':''}" id="s2r-${i}-${j}" data-role="${esc(b.role||'')}">
       <div class="s2-row-in">
         <div class="s2-role"><div class="rn">${esc(s2RoleName(b.role))}</div><span id="s2sec-${i}-${j}">${s2SecTag(s2SecOf(b.text))}</span></div>
-        <div class="s2-sent" contenteditable="true" oninput="s2EditBeat(${i},${j},this)">${esc(b.text||'')}${chk}</div>
+        <div class="s2-sent" contenteditable="true" data-ph="${esc(s2RoleName(b.role).replace(/^\S+\s*/,''))} — 여기에 쓰세요"
+             oninput="s2EditBeat(${i},${j},this)">${esc(b.text||'')}${chk}</div>
         <div class="s2-acts">
-          <button class="s2-swap" onclick="s2OpenBank(${i},${j})">바꾸기</button>
+          ${dr.mine?'':`<button class="s2-swap" onclick="s2OpenBank(${i},${j})">바꾸기</button>`}
           <button class="s2-del" title="이 줄을 대본에서 아주 뺍니다 — 3단계에서 이 장면 칸도 안 생깁니다"
             onclick="s2DelBeat(${i},${j})">🗑 빼기</button>
         </div>
@@ -15728,21 +16759,63 @@ function s2DraftHtml(dr,i){
       <div class="s2-bank" id="s2b-${i}-${j}"><div class="hint">불러오는 중…</div></div>
     </div>`;
   }).join('');
-  const fix=(!dr.passed && bad.length)
+  const fix=(!dr.mine && !dr.passed && bad.length)
     ? `<div class="s2-fix">
          <div class="fx-t">⚠️ ${esc(bad.map(c=>c.name).join(' · '))} — 이 스타일에서 벗어났어요</div>
          <div class="fx-d">그대로 써도 되지만, 위 칸의 <b>바꾸기</b>로 틀에서 고르거나 전체를 다시 만들면 더 맞습니다.</div>
          <button class="fx-re" onclick="s2Generate()">🔄 전체 다시 만들기</button>
        </div>` : '';
   return `<div class="s2-draft ${i===0?'da':'db'}${i===S2.curDraft?' on':''}" id="s2d-${i}">
-    <div class="s2-dhead"><span class="s2-dname">${String.fromCharCode(65+i)}안${dr.style_name?(`<span class="sty"> · ${esc(dr.style_name)}</span>`):''}</span>
+    <div class="s2-dhead"><span class="s2-dname">${dr.mine?'✍ 내 대본':(String.fromCharCode(65+i)+'안'+(dr.style_name?(`<span class="sty"> · ${esc(dr.style_name)}</span>`):''))}</span>
       <span id="s2tot-${i}" title="우리 보이스 실측 속도로 환산한 예상 길이 — 릴스 기본은 30초 이내">${s2SecTag(s2DraftSec(dr), 30)}</span>${gate}</div>
     ${rows}${fix}
     <div class="s2-dfoot">
-      <button class="btn-next" onclick="s2Confirm(${i})">✔ ${String.fromCharCode(65+i)}안으로 확정</button>
+      ${dr.mine?`<button class="btn-ghost" style="min-width:auto" title="칸을 하나 더 만듭니다" onclick="s2MineAddRow(${i})">＋ 칸 추가</button>`:''}
+      <button class="btn-next" onclick="s2Confirm(${i})">✔ ${dr.mine?'내 대본으로 확정':(String.fromCharCode(65+i)+'안으로 확정')}</button>
       <button class="btn-ghost" title="지금 작업은 그대로 두고, 담긴 영상까지 그대로 복제한 새 작업을 만들어 이 안을 넣습니다(다채널용 2편)" onclick="s2ConfirmToNewWork(${i})">＋ 이 안으로 새 작업</button>
     </div>
   </div>`;
+}
+
+// ── ✍ 내가 직접 쓰기(2026-09-01) ─────────────────────────────────────────────
+// 사장님이 칸을 직접 채워 **각색 없이 그대로** 확정하는 안. AI를 부르지 않는다.
+//: 스타일을 안 골랐을 때 쓰는 기본 칸 구성(가장 흔한 쇼츠 뼈대).
+const S2_MINE_ROLES = ['hook', 'problem', 'method', 'proof', 'cta'];
+// 칸 구성은 **지금 보고 있는 안**을 따라간다 — 스타일을 골라 만들어 본 뒤 "이 틀로
+// 내가 쓰겠다"가 자연스러운 순서다. 없으면 기본 뼈대.
+function s2MineRoles(){
+  const dr = (S2.drafts || [])[S2.curDraft];
+  const roles = dr && !dr.mine ? s2Beats(dr).map(b => (b && b.role) || '').filter(Boolean) : [];
+  return roles.length ? roles : S2_MINE_ROLES.slice();
+}
+function s2AddMineDraft(){
+  const roles = s2MineRoles();
+  const dr = {mine: true, style_name: '내가 직접 쓴 대본',
+              beats: roles.map(r => ({role: r, text: ''})),
+              script: '', checks: [], passed: false, tries: []};
+  S2.drafts = (S2.drafts || []).concat([dr]);
+  S2.curDraft = S2.drafts.length - 1;
+  const band = document.getElementById('s2ResultBand'); if (band) band.style.display = '';
+  s2RenderDrafts(); saveWork();
+  toast('✍ 빈 칸을 만들었어요 — 칸을 눌러 쓰시면 그대로 대본이 됩니다');
+  // 첫 칸에 바로 커서를 둔다(어디를 눌러야 하는지 묻지 않게).
+  try{
+    const first = document.querySelector('#s2d-' + S2.curDraft + ' .s2-sent');
+    if (first && first.focus){ first.focus(); first.scrollIntoView({block: 'center'}); }
+  }catch(e){}
+}
+
+// 칸을 하나 더 — 역할은 마지막 칸을 따라간다(모르면 비운다: 이름 없는 칸도 정상).
+function s2MineAddRow(i){
+  const dr=S2.drafts[i]; if(!dr || !dr.mine) return;
+  const beats=s2Beats(dr).slice();
+  beats.push({role:'', text:''});
+  dr.beats=beats;
+  s2RenderDrafts(); saveWork();
+  try{
+    const rows=document.querySelectorAll('#s2d-'+i+' .s2-sent');
+    const last=rows[rows.length-1]; if(last&&last.focus){ last.focus(); last.scrollIntoView({block:'center'}); }
+  }catch(e){}
 }
 function s2PickDraft(i){ S2.curDraft=i; s2RenderDrafts(); saveWork(); }   // 보던 안도 그대로 돌아오게
 // 문장 편집 — beats가 원본이고 script는 거기서 다시 만든다(두 벌 유지 금지, 0순위-B).
@@ -15774,14 +16847,21 @@ function s2DelBeat(i,j){
   if(!beats[j]) return;
   // 마지막 한 줄까지 빼면 대본이 통째로 사라져 확정도 못 한다(s2Confirm이 빈 대본을 막는다).
   // 지울 게 아니라 **고쳐 쓸** 상황이므로 여기서 갈라 말해준다.
-  if(beats.filter(x=>((x&&x.text)||'').trim()).length<=1){
-    toast('마지막 한 줄은 뺄 수 없어요 — 문장을 고쳐서 쓰세요'); return;
+  // ★단 ✍내 대본은 **아직 안 쓴 빈 칸이 정상**이다(2026-09-01 사장님 "빼기가 안 된다").
+  //   글자 수로 세면 한 칸만 쓴 상태에서 나머지 빈 칸을 하나도 못 뺀다 — 여기선 **칸 수**로 센다.
+  const _left = dr.mine ? beats.length
+                        : beats.filter(x=>((x&&x.text)||'').trim()).length;
+  if(_left<=1){
+    toast(dr.mine ? '칸이 하나만 남았어요 — 여기에 쓰시면 됩니다'
+                  : '마지막 한 줄은 뺄 수 없어요 — 문장을 고쳐서 쓰세요'); return;
   }
   const b=beats[j];
   const label=s2RoleName(b.role||'').replace(/^·\s*/,'') || '이 줄';
   const txt=(b.text||'').trim();
   const head=txt.slice(0,24)+(txt.length>24?'…':'');
-  if(!confirm(label+' — "'+head+'"\n\n이 줄을 대본에서 뺍니다. 계속할까요?')) return;
+  // 빈 칸은 잃을 게 없다 — 물어보지 않고 바로 뺀다(칸을 여러 개 지울 때 매번
+  // 확인창이 뜨면 그게 더 방해다). 쓴 글이 있는 줄만 확인한다.
+  if(txt && !confirm(label+' — "'+head+'"\n\n이 줄을 대본에서 뺍니다. 계속할까요?')) return;
   beats.splice(j,1);
   dr.beats=beats;
   // script는 beats에서 다시 만든다 — 두 벌을 따로 고치지 않는다(0순위-B, s2EditBeat와 동일).

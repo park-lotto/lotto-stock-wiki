@@ -1,6 +1,5 @@
 """벤치마킹 엑셀 → 채널 목록 로더 + 활동성 선별(2026-07-22)."""
 import re
-from openpyxl import load_workbook
 from shopping_shorts.config import EXCEL_PATH, MAX_CHANNELS, MAX_TRACKED
 
 _IG_RE = re.compile(r"instagram\.com/([A-Za-z0-9_.]+)")
@@ -94,6 +93,12 @@ def select_tracked(excel_channels, discovered, removed=None, dead=None,
 def load_channels(excel_path=EXCEL_PATH):
     """엑셀 파일 열어 채널 리스트 전체 반환. 팔로워 컷 없음(2026-07-22 — 선별은
     select_tracked가 활동성으로 담당). cap_channels는 기존 테스트 보존용으로만 남김."""
+    # ★openpyxl은 **여기서** 불러온다(2026-08-31 실사고). 최상위 import면 이 모듈을
+    #   거쳐가는 모든 경로가 openpyxl을 요구한다 — 서버엔 안 깔려 있어서
+    #   channel_archive.slot_proxy(유튜브 프록시 슬롯 조립)를 import하는 순간
+    #   ModuleNotFoundError가 났고, 프록시 회전이 통째로 무력화돼 슬롯 하나만 쓰였다
+    #   (실측: 회전 결과가 30,30,30,30…). 엑셀을 실제로 읽을 때만 필요한 의존이다.
+    from openpyxl import load_workbook
     wb = load_workbook(excel_path, data_only=True, read_only=True)
     ws = wb.worksheets[0]
     rows = list(ws.iter_rows(values_only=True))

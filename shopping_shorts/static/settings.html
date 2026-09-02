@@ -261,6 +261,24 @@
   </section>
 
   <section class="pane" id="paneAccount">
+    <!-- ═══════ 🖥 내 PC 등록 (2026-08-31 사장님 "마이페이지에 pc등록칸 만들고 직접 할수있게") ═══════
+         ★자동 등록은 없앴다: 페이지 하나 열 때 나가는 동시 요청들이 각각 다른 기기
+           도장을 만들어 **한 PC가 두 칸을 먹었다**(라이브 사고, 4명 전원 같은 IP).
+           사람이 이 버튼을 한 번 누를 때만 등록한다.
+         ★해제 버튼은 일부러 없다 — 스스로 풀 수 있으면 등록 제한이 의미가 없다. -->
+    <div class="card" id="pcCard" style="margin-bottom:14px">
+      <h3 style="margin:0 0 8px;font-size:16px">🖥 내 PC 등록 <span id="pcReq" style="font-size:12px;color:#f0b429"></span></h3>
+      <p class="hint" style="margin:0 0 10px">
+        계정 보호를 위해 <b>PC 2대</b>까지 등록해서 쓸 수 있어요.
+        휴대폰·태블릿은 등록 없이 그냥 쓰시면 됩니다.</p>
+      <div id="pcList" style="margin-bottom:10px"></div>
+      <button id="pcBtn" onclick="pcRegister()" style="padding:9px 16px;border-radius:8px;
+        border:1px solid #2f6b45;background:#16241c;color:#7ee787;cursor:pointer;font-size:14px">
+        이 PC 등록하기</button>
+      <span id="pcMsg" style="margin-left:10px;font-size:13px"></span>
+      <p class="hint" style="margin:10px 0 0;font-size:12px;color:#5f6773">
+        PC를 바꾸셨거나 자리가 다 찼으면 문의해 주세요 — 바로 비워드립니다.</p>
+    </div>
     <!-- ═══════ 💳 1기 참가비 결제 안내 (2026-08-30) ═══════
          Pro가 아닌 회원(체험·무료)에게만 뜬다. 판단은 /api/me의 plan·is_admin을
          그대로 쓴다 — 결제 여부를 여기서 새로 계산하면 언젠가 어긋난다(0순위-B).
@@ -411,6 +429,7 @@ var GUIDE_VIDEO = {
   gemini: "",      // 구글(제미나이) 키 받는 법
   vmake: "",       // VMake 키 받는 법
   elevenlabs: "",  // ElevenLabs 키 받는 법
+  typecast: "",    // 타입캐스트 키 받는 법
   youtube: "",     // 유튜브 Data API 키 받는 법
   serpapi: "",     // SerpApi 키 받는 법(렌즈 검색)
   buffer: ""       // Buffer 키 받는 법(SNS 예약발행)
@@ -421,10 +440,26 @@ var SERVICES = [
   { id: "gemini",     icon: "🤖", name: "구글 (제미나이)",
     desc: "대본 뽑기 · 영상 분석 · 썸네일에 씁니다", multi: true,
     ph: "여러 개를 한 번에 붙여넣어도 됩니다" },
+  /* ★2026-09-01 사장님 확정: "v메이크랑 tts는 없으면 못하게 막아".
+     전엔 키가 없으면 사장님 키로 나가고 포인트만 깎였다 — 회원들은 그 사실을
+     몰랐고(아무도 설명 못 들음), 포인트가 남은 회원만 조용히 통과했다.
+     실측: 최근 30일 제작 46명 중 16명이 음성 키 없이 86건을 만들었다. */
   { id: "vmake",      icon: "🎬", name: "자막 지우기 (VMake)",
-    desc: "", multi: false, ph: "키 붙여넣기", freeOp: "vmake" },
+    desc: "이 키가 있어야 자막 지우기를 쓸 수 있습니다", multi: false,
+    ph: "키 붙여넣기", mustOwn: true },
   { id: "elevenlabs", icon: "🔊", name: "목소리 (ElevenLabs)",
-    desc: "영상에 넣을 목소리를 만듭니다", multi: false, ph: "키 붙여넣기" },
+    desc: "영상에 넣을 목소리를 만듭니다 — 목소리 키(이것 또는 타입캐스트)가 "
+        + "있어야 영상을 만들 수 있습니다",
+    multi: false, ph: "키 붙여넣기", mustOwn: true },
+  /* ★타입캐스트는 목소리의 **두 번째 엔진**입니다. 성우를 고를 때 정해집니다 —
+     필재·김건·박창수·용식이 같은 남자 성우가 여기 있습니다(ElevenLabs에 없는 라인업).
+     그래서 두 칸이 따로입니다: 고른 성우가 어느 쪽이냐에 따라 쓰이는 키가 다릅니다. */
+  { id: "typecast",   icon: "🎤", name: "목소리 (타입캐스트)",
+    desc: "한국 성우 목소리를 만듭니다 — ElevenLabs 대신 이 키만 있어도 됩니다",
+    multi: false, ph: "키 붙여넣기", mustOwn: true,
+    note: "성우 목록에서 <b>필재·김건·박창수·용식이</b> 같은 한국 성우를 고르면 " +
+          "이 키가 쓰입니다. 다른 성우는 위의 <b>ElevenLabs</b> 키를 씁니다 — " +
+          "두 곳 다 쓰시려면 키도 둘 다 넣어주세요." },
   { id: "youtube",    icon: "📺", name: "유튜브",
     desc: "유튜브 영상 정보를 가져올 때 씁니다", multi: false, ph: "키 붙여넣기" },
   /* ★렌즈 검색은 클릭 1번에 SerpApi를 3회 씁니다 — 코드에 박힌 값입니다
@@ -499,6 +534,9 @@ function showTab(which){
   if (which === "setup") {
     try { localStorage.setItem(FIRST_KEY, "1"); } catch (e) {}   // 봤다 → 다음부터 내 계정
   }
+  // 🖥 PC 등록 칸은 '내 계정' 탭에 있다 — 탭을 열 때마다 최신 상태로 다시 읽는다
+  // (다른 PC에서 등록했을 수 있다). 실패해도 탭 전환은 막지 않는다.
+  if (which === "account") { try { pcLoad(); } catch (e) {} }
   window.scrollTo(0, 0);
 }
 
@@ -506,6 +544,13 @@ function showTab(which){
    저장이 막힌 브라우저(시크릿 등)에서는 매번 안내가 먼저 뜬다 — 안 뜨는 것보다 낫다. */
 var FIRST_KEY = "ss_setup_seen";
 (function initTab(){
+  // ★PC 등록 안내에서 온 사람(#pc)은 무조건 '내 계정'으로 — 설치안내가 먼저 뜨면
+  //   등록 버튼을 못 찾는다(막혀서 온 사람이다).
+  if (location.hash === "#pc") { showTab("account"); return; }
+  // ★#keys로 온 사람은 '내 키 등록'으로(2026-09-02). 키가 없어 막힌 화면이
+  //   settings_url='/settings#keys'로 보내는데, 이 해시를 아무도 안 읽어서
+  //   '설치와 준비'가 뜨고 등록 칸을 못 찾았다 — 막아만 놓고 길은 안 알려준 셈이다.
+  if (location.hash === "#keys") { showTab("keys"); return; }
   var seen = false;
   try { seen = localStorage.getItem(FIRST_KEY) === "1"; } catch (e) {}
   showTab(seen ? "account" : "setup");
@@ -588,13 +633,13 @@ function renderKeys(){
   el("adminNotice").style.display = PERSONAL ? "none" : "";
   el("svcCards").innerHTML = SERVICES.map(function(s){
     var mine = keysOf(s.id);
-    /* ★포인트로 대신 쓸 수 있는 서비스에만 '포인트로 사용중'을 쓴다.
-       Buffer처럼 **내 키가 없으면 아예 못 쓰는** 서비스(mustOwn)에 그 말을 붙이면
-       "안 넣어도 포인트로 되는구나"로 읽혀 거짓말이 된다(2026-08-30 사장님 지적). */
+    /* ★2026-09-01: 포인트 제도를 없앴다. 이제 갈래는 둘뿐이다 —
+       내 키가 없으면 **못 쓰는** 서비스(mustOwn)와, 회사 풀로 무료인 서비스
+       (제미니·유튜브. 키 1개 내면 풀 전체를 쓰는 거래). 중간은 없다. */
     var badge = mine.length
       ? '<span class="svcBadge on">✓ ' + mine.length + '개 등록됨</span>'
       : (s.mustOwn ? '<span class="svcBadge off">내 키 필요</span>'
-                   : '<span class="svcBadge off">포인트로 사용중</span>');
+                   : '<span class="svcBadge off">무료로 사용중</span>');
 
     /* 설명 — 단가는 실제 값으로 보여준다(하드코딩하지 않는다).
        ★예전엔 freeOp가 있으면 desc를 통째로 덮어썼다. 렌즈처럼 desc에 꼭 필요한
@@ -605,8 +650,7 @@ function renderKeys(){
        거짓말이고, 서버도 그렇게 안 준다(keyroute.should_charge). */
     var freeTxt = (s.freeOp && PRICES[s.freeOp] != null && WIRED.indexOf(s.id) >= 0)
       ? "등록하면 " + num(PRICES[s.freeOp]) + "P → 0P" : "";
-    /* ★공용 풀 서비스는 "내 키로 돈다"가 아니다 — 키를 풀에 넣어주는 대신 무료로 쓴다.
-       사실대로 적는다: 내 키 1개만 내면 풀 전체를 쓰게 되고 포인트가 안 깎인다. */
+    /* ★공용 풀 서비스는 "내 키로 돈다"가 아니다 — 키를 풀에 넣어주는 대신 무료로 쓴다. */
     var isPooled = POOLED.indexOf(s.id) >= 0;
 
     var rows = mine.map(function(k){
@@ -766,6 +810,53 @@ async function verifyKeys(svc, quiet){
     if (!quiet) notice("확인하지 못했습니다.\n\n" + e.message);
     return null;
   }
+}
+
+/* ── 🖥 내 PC 등록 (2026-08-31) ────────────────────────────
+   ★등록만 있고 해제는 없다 — 스스로 풀 수 있으면 제한이 무의미하다(사장님 결정). */
+async function pcLoad(){
+  const list=document.getElementById('pcList'); if(!list) return;
+  let d;
+  try{ d=await (await fetch('/api/my/devices')).json(); }
+  catch(e){ list.innerHTML='<span class=hint>등록 정보를 못 읽었어요</span>'; return; }
+  if(!d||!d.ok) return;
+  // ★관리자는 게이트 대상이 아니다 — 칸 자체를 숨긴다. 눌러도 안 되는 버튼을
+  //   보여주면 "고장났다"로 보인다(2026-08-31 실측: 사장님 계정에서 그랬다).
+  const card=document.getElementById('pcCard');
+  if(d.exempt){ if(card) card.style.display='none'; return; }
+  if(card) card.style.display='';
+  const req=document.getElementById('pcReq');
+  if(req) req.textContent = d.required ? '(필수)' : '';
+  const rows=(d.devices||[]).map(function(x){
+    var when = x.last_seen ? new Date(x.last_seen*1000).toLocaleDateString('ko-KR') : '';
+    return '<div style="padding:6px 0;border-bottom:1px solid #1e2732;font-size:13px">'
+      + '<b>' + x.slot + '번 PC</b>'
+      + (x.is_this ? ' <span style="color:#7ee787">← 지금 이 PC</span>' : '')
+      + ' <span style="color:#5f6773">· 마지막 ' + when + '</span></div>';
+  }).join('');
+  list.innerHTML = rows || '<span class=hint>아직 등록한 PC가 없어요.</span>';
+  const btn=document.getElementById('pcBtn');
+  if(btn){
+    if(d.this_registered){
+      btn.disabled=true; btn.textContent='이 PC는 등록돼 있어요 ('+d.this_slot+'번)';
+      btn.style.opacity=.6; btn.style.cursor='default';
+    }else if((d.devices||[]).length >= d.slots){
+      btn.disabled=true; btn.textContent='자리가 다 찼어요 (문의 필요)';
+      btn.style.opacity=.6; btn.style.cursor='default';
+    }else{
+      btn.disabled=false; btn.textContent='이 PC 등록하기';
+      btn.style.opacity=1; btn.style.cursor='pointer';
+    }
+  }
+}
+async function pcRegister(){
+  const msg=document.getElementById('pcMsg'); if(msg) msg.textContent='등록 중…';
+  try{
+    const r=await (await fetch('/api/my/devices/register',{method:'POST'})).json();
+    if(msg){ msg.textContent = r.ok ? ('✅ ' + (r.message||'등록했어요')) : ('⚠️ ' + (r.error||'등록하지 못했어요'));
+             msg.style.color = r.ok ? '#7ee787' : '#ff6b6b'; }
+  }catch(e){ if(msg){ msg.textContent='⚠️ 등록하지 못했어요'; msg.style.color='#ff6b6b'; } }
+  pcLoad();
 }
 
 /* ── 👤 내 계정 ─────────────────────────────────────────

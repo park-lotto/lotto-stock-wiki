@@ -236,24 +236,32 @@ def test_ack_keeps_trial_and_removes_from_pending(tmp_path, monkeypatch):
     s = Store(str(tmp_path / "t.db"))
     cid = s.create_customer("acked", "pw12", approved=False)
     assert app.access_level(cid) == "ranking_only"            # 가입 즉시 체험(랭킹만)
-    assert any(p["id"] == cid for p in s.pending_customers())  # 대기실에 있다
+    # ★2026-08-30: 가입이 곧 '확인함'이라 대기실을 아예 안 거친다.
+    assert not any(p["id"] == cid for p in s.pending_customers())
 
-    assert s.ack_customer(cid) is True
-    assert not any(p["id"] == cid for p in s.pending_customers())  # 대기실에서 내려감
+    assert s.ack_customer(cid) is False                        # 이미 내려가 있다
     assert app.access_level(cid) == "ranking_only"            # ★확인 뒤에도 그대로 랭킹만
     # ★유료 기간 필드는 손대지 않는다 — 여기가 채워지면 전기능이 열린다.
     assert not s.get_customer(cid)["full_access_until"]
-    assert s.get_customer(cid)["approved_at"] is not None      # 대기실에서만 내려간다
+    # ★approved_at은 비어 있어야 한다 — 채우면 access_level이 체험창을 안 봐서
+    #   3일이 지나도 안 잠긴다(사장님 "72시간 후 차단 유지").
+    assert s.get_customer(cid)["approved_at"] is None
 
 
 def test_ack_is_idempotent(tmp_path):
-    """두 번 눌러도 기간이 늘거나 줄지 않는다."""
+    """두 번 눌러도 기간이 늘거나 줄지 않는다.
+
+    ★2026-08-30: 가입이 이미 확인 처리하므로 **첫 호출부터 False**다(할 일이 없다).
+      중요한 건 반환값이 아니라 몇 번을 불러도 기간이 안 변하는 것이다.
+    """
     s = Store(str(tmp_path / "t.db"))
     cid = s.create_customer("twice", "pw12", approved=False)
-    assert s.ack_customer(cid) is True
     fau = s.get_customer(cid)["full_access_until"]
-    assert s.ack_customer(cid) is False        # 이미 내려간 고객
+    tre = s.get_customer(cid)["trial_ends_at"]
+    assert s.ack_customer(cid) is False        # 가입 시점에 이미 내려가 있다
+    assert s.ack_customer(cid) is False        # 몇 번을 눌러도 같다
     assert s.get_customer(cid)["full_access_until"] == fau
+    assert s.get_customer(cid)["trial_ends_at"] == tre     # 체험창도 그대로
 
 
 def test_ack_expires_after_trial(tmp_path, monkeypatch):
@@ -279,3 +287,90 @@ def test_ack_does_not_touch_already_approved(tmp_path):
     before = s.get_customer(cid)["full_access_until"]
     assert s.ack_customer(cid) is False
     assert s.get_customer(cid)["full_access_until"] == before
+
+
+# ── 2026-08-30 사장님 "가입하면 그냥 자동으로 체험판 랭킹만으로 한번에 다 해주고
+#    포인트 50 넣고 / 지금 승인대기중도 다 내려서 체험판 랭킹만으로" ──────────────
+def test_signup_never_enters_waiting_room(tmp_path, monkeypatch):
+    """가입만 하면 승인대기 목록에 **안 뜬다**(버튼 누를 일이 없다)."""
+    import shopping_shorts.app as app
+    monkeypatch.setattr(app, "DB_PATH", str(tmp_path / "t.db"))
+    s = Store(str(tmp_path / "t.db"))
+    cid = s.create_customer("auto", "pw12", approved=False)
+    assert s.pending_customers() == []                     # 대기실이 비어 있다
+    assert s.get_customer(cid)["acked_at"] is not None      # 가입 시점에 확인됨
+    assert app.access_level(cid) == "ranking_only"          # 랭킹만 열린다
+
+
+def test_auto_ack_still_expires_after_72h(tmp_path, monkeypatch):
+    """★대기실에서 내려가도 **72시간 뒤엔 잠긴다**(사장님 "72시간 후 차단 유지").
+
+    approved_at을 채워서 목록을 비웠다면 access_level이 체험창을 아예 안 봐서
+    영구 무료가 됐을 것이다. acked_at으로 분리했기 때문에 만료가 살아있다.
+    """
+    import sqlite3
+    import shopping_shorts.app as app
+    monkeypatch.setattr(app, "DB_PATH", str(tmp_path / "t.db"))
+    s = Store(str(tmp_path / "t.db"))
+    cid = s.create_customer("expire", "pw12", approved=False)
+    assert app.access_level(cid) == "ranking_only"
+    c = sqlite3.connect(str(tmp_path / "t.db"))            # 체험창을 과거로 밀어 만료 재현
+    c.execute("UPDATE customers SET trial_ends_at=? WHERE id=?", (int(time.time()) - 10, cid))
+    c.commit()
+    c.close()
+    assert app.access_level(cid) == "pending"              # 창 밖 = 전면차단
+
+
+def test_paid_customer_unaffected_by_auto_ack(tmp_path, monkeypatch):
+    """결제 승인 고객은 그대로 전기능 — 자동확인이 유료 경로를 건드리지 않는다."""
+    import shopping_shorts.app as app
+    monkeypatch.setattr(app, "DB_PATH", str(tmp_path / "t.db"))
+    s = Store(str(tmp_path / "t.db"))
+    cid = s.create_customer("payer", "pw12", approved=False)
+    s.approve_customer(cid, 30, 100000, "계좌")
+    assert app.access_level(cid) == "full"
+    assert s.pending_customers() == []
+
+
+def test_existing_pending_backfilled_on_migration(tmp_path):
+    """기존 승인대기 62명을 한 번에 내린다 — acked_at 백필이 도는지 실제로 확인.
+
+    옛 DB(acked_at 컬럼 없음)를 만들어 미승인 고객을 심고, Store를 다시 열어
+    마이그레이션을 태운다.
+    """
+    import sqlite3
+    db = str(tmp_path / "t.db")
+    s = Store(db)
+    cid = s.create_customer("old", "pw12", approved=False)
+    c = sqlite3.connect(db)                                # 컬럼을 지워 '옛 DB'로 되돌린다
+    cols = [r[1] for r in c.execute("PRAGMA table_info(customers)")]
+    keep = [x for x in cols if x != "acked_at"]
+    c.execute("CREATE TABLE _c2 AS SELECT %s FROM customers" % ",".join(keep))
+    c.execute("DROP TABLE customers")
+    c.execute("ALTER TABLE _c2 RENAME TO customers")
+    c.commit()
+    c.close()
+    s2 = Store(db)                                          # 재기동 = 마이그레이션
+    assert s2.get_customer(cid)["acked_at"] is not None     # 백필로 내려감
+    assert s2.pending_customers() == []
+
+
+def test_approved_customers_never_appear_in_waiting_room(tmp_path):
+    """★라이브 실사고 재현(2026-08-30): 승인된 고객이 대기실에 나타나면 안 된다.
+
+    백필을 '미승인만'으로 좁게 내보냈더니, acked_at이 NULL인 **이미 승인된 263명**이
+    새 판정에서 통째로 대기실에 떴다(62명을 내렸더니 263명이 생김). 컬럼이 이미 있는
+    서버에선 ALTER가 except로 빠져 넓힌 백필이 영영 안 돈다 — 그래서 보정을 분리했다.
+    """
+    import sqlite3
+    db = str(tmp_path / "t.db")
+    s = Store(db)
+    cid = s.create_customer("paid", "pw12", approved=False)
+    s.approve_customer(cid, 30, 50000, "계좌")
+    c = sqlite3.connect(db)                     # 좁은 백필이 나갔던 상태를 재현
+    c.execute("UPDATE customers SET acked_at=NULL WHERE id=?", (cid,))
+    c.commit()
+    c.close()
+    s2 = Store(db)                              # 재기동 = 보정이 돈다(컬럼은 이미 있다)
+    assert s2.get_customer(cid)["acked_at"] is not None
+    assert s2.pending_customers() == []         # 승인 고객은 대기실에 없다

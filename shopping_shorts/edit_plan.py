@@ -15,6 +15,7 @@ import math
 import os
 import re
 import sys
+import threading
 import time
 
 from google.genai import types
@@ -2240,7 +2241,15 @@ def _is_transient_api_error(msg):
     return is_transient_api_error(msg)
 
 
-def _vault_call(prompt, schema, max_tries=8, key_offset=0):
+_KEY_TRY_LIMIT = 40             # 한 호출에서 최대 몇 개의 키까지 돌아볼 것인가
+# ★종전 4/8이 오늘 사고의 마지막 뿌리였다(2026-08-31). build_edit_plan의
+#   max_retries 기본값 4가 그대로 _vault_call(max_tries=4)로 흘러 **keys[:4]**,
+#   즉 키가 33개 살아 있어도 **앞의 4개만 두들기고 포기**했다.
+#   그래서 회원 키를 넣어 풀을 11→34개로 늘려도 고객 실패가 그대로였다
+#   (실측 job 96786f4a0e44: "키 4개를 다 돌았는데 결과 없음 — 429").
+#   성공하면 즉시 반환하므로 값을 크게 잡아도 손해가 없다 — 429로 튕긴 키는
+#   대기 없이 다음으로 넘어가므로 비용은 거의 없다.
+def _vault_call_once(prompt, schema, max_tries=_KEY_TRY_LIMIT, key_offset=0):
     """key_vault 캐스케이드 예비키풀로 JSON 생성 호출 → raw dict. 무키/실패면 None.
 
     build_edit_plan이 comment_gen 전용키(1개, 쉽게 소진) 대신 배치된 예비키를
@@ -2255,27 +2264,39 @@ def _vault_call(prompt, schema, max_tries=8, key_offset=0):
       후보 인덱스·워커 PID를 섞어 오프셋을 주면 서로 다른 키로 나가 429 자체가
       안 난다. 실패 시 동작은 종전과 같다 — 대기 없이 다음 키로 순차 회전."""
     keys = keyroute.gemini_keys("general")
-    if not keys:
-        # ★위키 예비풀(general/ingest/embed/briefing)이 전멸하면 SHORTS 전용풀의
-        #   살아있는 키로라도 대본을 만든다(2026-08-10 실사고). 이날 위키 4개 그룹이
-        #   전부 라이브 0이 돼 _vault_call이 None을 돌려 → scene_first 후보 0 →
-        #   build_edit_plan beats 0 → "EDL 비어있음"으로 제작소가 통째로 실패했다.
-        #   추출(script_extract)은 SHORTS 키로 정상이었는데 대본 쓰기만 위키 풀에
-        #   묶여 있어 죽은 것 — 같은 lite 모델이라 SHORTS 키로 그대로 생성된다.
-        try:
-            from shopping_shorts import comment_gen as _cg
-            keys = [_cg.SHORTS_GEMINI_KEYS[i] for i in _cg._live_key_indices()]
-            if keys:
-                print("edit_plan._vault_call: 위키 예비풀 전멸 → SHORTS 전용풀로 폴백",
-                      file=sys.stderr)
-        except Exception:
-            keys = []
+    # ★위키 예비풀(general/ingest/embed/briefing)이 마르면 SHORTS 전용풀의 살아있는
+    #   키로라도 대본을 만든다(2026-08-10 실사고). 그날 위키 4개 그룹이 전부 라이브 0이
+    #   돼 _vault_call이 None → scene_first 후보 0 → beats 0 → "EDL 비어있음"으로
+    #   제작소가 통째로 실패했다. 추출은 SHORTS 키로 정상인데 대본 쓰기만 위키 풀에
+    #   묶여 있어 죽은 것 — 같은 lite 모델이라 SHORTS 키로 그대로 생성된다.
+    # ★SHORTS 전용풀을 **항상 뒤에 이어붙인다**(2026-08-31 실사고).
+    #   종전엔 위 `if not keys:` 안에서만 폴백했다 — 즉 위키 예비풀이 **0개일 때만**
+    #   SHORTS 풀을 봤다. 실측 job 862d10fefd1c: 예비풀 라이브가 4개였고 그 4개가
+    #   전부 429 RPM이라 3라운드(45초) 재시도가 **같은 4개만** 두들기다 포기 →
+    #   "EDL 비어있음(extract_thin)"으로 사장님 제작이 죽었다. 그때 SHORTS 풀엔
+    #   키가 56개(사장님 12 + 회원 44) 놀고 있었다 — 있는 키를 안 쓴 것이다.
+    #   순서는 그대로라 예비풀이 먼저 쓰이고(종전 동작 보존), 그게 다 막혔을 때만
+    #   SHORTS 키로 이어진다. 같은 lite 모델이라 결과 품질은 동일하다.
+    try:
+        from shopping_shorts import comment_gen as _cg
+        _seen = set(keys)
+        _extra = [k for k in (_cg.SHORTS_GEMINI_KEYS[i]
+                              for i in _cg._live_key_indices())
+                  if k and k not in _seen]
+        if _extra:
+            print("edit_plan._vault_call: SHORTS 전용풀 %d개를 뒤에 이어붙임"
+                  " (예비풀 %d개)" % (len(_extra), len(keys)), file=sys.stderr)
+            keys = list(keys) + _extra
+    except Exception as _e:      # noqa: BLE001 — 보강 실패가 본 호출을 죽이지 않는다
+        print("edit_plan._vault_call: SHORTS 풀 이어붙이기 실패(무해): %r" % (_e,),
+              file=sys.stderr)
     if not keys:
         return None
     if key_offset:
         _o = int(key_offset) % len(keys)
         keys = keys[_o:] + keys[:_o]
-    _last_err = ""
+    global _LAST_VAULT_ERR
+    _LAST_VAULT_ERR = ""
     for key in keys[:max_tries]:
         try:
             resp = key_vault.get_client_for_key(key).models.generate_content(
@@ -2292,11 +2313,11 @@ def _vault_call(prompt, schema, max_tries=8, key_offset=0):
             #   재시도는 다른 키로 나가므로 429·일시 장애와도 자연히 갈린다.
             if not (resp.text or "").strip():
                 print("edit_plan._vault_call: 빈 응답 → 다음 키로 재시도", file=sys.stderr)
-                _last_err = "모델이 빈 응답을 돌려줌"
+                _LAST_VAULT_ERR = "모델이 빈 응답을 돌려줌"
                 continue
             return json.loads(resp.text)
         except Exception as e:  # noqa: BLE001
-            _last_err = repr(e)[:200]
+            _LAST_VAULT_ERR = repr(e)[:200]
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
                 key_vault.mark_exhausted(key_vault._owner_group(key) or "general", key)
                 continue
@@ -2325,12 +2346,90 @@ def _vault_call(prompt, schema, max_tries=8, key_offset=0):
             if _is_transient_api_error(m) or "high demand" in m:
                 time.sleep(2)
                 continue
+            _LAST_VAULT_ERR = repr(e)[:200]
             print(f"edit_plan._vault_call: {e!r}", file=sys.stderr)
             return None
     # ★키를 다 돌고도 못 받았으면 **왜**인지 남긴다(2026-08-27). 종전엔 조용히 None이라
     #   운영사고엔 "편집안이 비었습니다"만 뜨고 로그엔 아무것도 없어 원인을 못 짚었다.
     print(f"edit_plan._vault_call: 키 {min(len(keys), max_tries)}개를 다 돌았는데 결과 없음 "
-          f"— 마지막 사유 {(_last_err or '빈 응답')!r}", file=sys.stderr)
+          f"— 마지막 사유 {(_LAST_VAULT_ERR or '빈 응답')!r}", file=sys.stderr)
+    return None
+
+
+_LAST_VAULT_ERR = ""            # _vault_call_once 가 남기는 마지막 실패 사유
+_RPM_WAIT_SECS = 22             # 분당 한도는 60초 창이라 20여 초면 대개 풀린다
+_RPM_MAX_ROUNDS = 3
+
+
+def _is_per_minute_quota(m):
+    """429가 **분당(RPM) 한도**인가 — 일일 소진과 갈라야 처방이 달라진다.
+
+    분당 한도는 잠깐 쉬면 저절로 풀린다. 일일 소진·계정 차단은 쉬어도 안 풀린다."""
+    m = str(m)
+    if not ("429" in m or "RESOURCE_EXHAUSTED" in m):
+        return False
+    low = m.lower()
+    return ("per minute" in low or "perminute" in low or "per-minute" in low
+            or "requests per min" in low)
+
+
+_AUTO_OFF_LOCK = threading.Lock()
+_AUTO_OFF_SEQ = 0
+
+
+def _auto_key_offset():
+    """호출마다 **다른 키부터** 시작하게 하는 기본 오프셋(2026-08-31 실사고).
+
+    ★왜: get_live_keys_cascade는 매번 **같은 순서**를 돌려준다. 그런데 _vault_call을
+      offset 없이 부르는 곳이 대부분이라(오프셋을 주던 곳은 후보생성 1곳뿐) 대본
+      생성·비트다듬기·장면재선택·태깅이 전부 keys[0]부터 두들겼다. 워커가 12개
+      동시에 도니 무료등급 분당 15회는 몇 초 만에 넘는다.
+      실측 08-31: 제미니 호출 1,825건 중 **816건(45%)이 429**, 분당 피크 115건.
+      429 상세 사유는 전부 '분당' 한도였고 '하루' 한도는 0건 — 즉 키가 모자란 게
+      아니라 **앞쪽 키에 몰린 것**이 원인이었다.
+
+    PID로 워커 12개를 갈라놓고, 호출 순번으로 같은 워커 안 연속 호출도 갈라놓는다.
+    키풀 길이는 여기서 모른다(그때그때 다르다) — 나머지 연산은 _vault_call_once가
+    실제 키 개수로 한다. 여기선 '서로 다른 수'만 보장하면 된다."""
+    global _AUTO_OFF_SEQ
+    with _AUTO_OFF_LOCK:
+        _AUTO_OFF_SEQ += 1
+        seq = _AUTO_OFF_SEQ
+    return os.getpid() * 7 + seq
+
+
+def _vault_call(prompt, schema, max_tries=_KEY_TRY_LIMIT, key_offset=0):
+    """키풀을 한 바퀴 돌리되, **분당 한도(429 RPM)면 쉬었다 다시 돈다**(2026-08-31 실사고).
+
+    ★왜: 종전엔 429를 만나면 대기 없이 다음 키로 넘어가기만 했다. 살아있는 키가
+      적을 때(실측 그때 general 라이브 4개) **0.7초 안에 4키를 전부 429로 태우고
+      포기**했고 -> beats 0 -> 운영사고 "편집안(EDL)이 비었습니다 [생성기=legacy]"가
+      떴다(실측 job 498afe4046a3, 08-31 13:28:01~02, 429 4연발).
+      그런데 그 429는 **분당** 한도였다 — 20여 초만 쉬면 저절로 풀리는 것을
+      영구 실패로 보고한 셈이다. 그래서 라운드를 나눠 쉬었다 다시 돈다.
+
+    쉬는 건 **분당 한도일 때만**이다. 일일 소진·403 계정차단은 쉬어도 안 풀리므로
+    종전대로 즉시 포기한다(무의미한 대기를 만들지 않는다)."""
+    # ★offset을 안 주면 **자동으로 갈라준다**(2026-08-31). 종전 기본값 0은 모든
+    #   호출을 keys[0]으로 몰아 429를 만들었다. 명시적으로 준 값은 그대로 존중한다.
+    off = key_offset or _auto_key_offset()
+    for _round in range(_RPM_MAX_ROUNDS):
+        got = _vault_call_once(prompt, schema, max_tries=max_tries,
+                               key_offset=off)
+        if got is not None:
+            # ★성공하면 사유를 비운다(2026-08-31). 안 비우면 앞선 호출의 429가 전역에
+            #   남아, 뒤에 다른 이유로 EDL이 비었을 때 "키 문제"로 잘못 보고된다.
+            global _LAST_VAULT_ERR
+            _LAST_VAULT_ERR = ""
+            return got
+        if not _is_per_minute_quota(_LAST_VAULT_ERR):
+            return None
+        if _round >= _RPM_MAX_ROUNDS - 1:
+            break
+        print(f"edit_plan._vault_call: 분당 한도(429 RPM)로 키풀 전멸 — "
+              f"{_RPM_WAIT_SECS}초 쉬고 재시도 "
+              f"(라운드 {_round + 2}/{_RPM_MAX_ROUNDS})", file=sys.stderr)
+        time.sleep(_RPM_WAIT_SECS)
     return None
 
 
@@ -3929,7 +4028,7 @@ def _repick_weak_beats(beats, seg_map, call=_vault_call, min_fit=4):
 
 
 def build_edit_plan(source_scripts, target_seconds, structure="template", video_type=None,
-                    n_alternates=2, max_retries=4, quota_sleep=8, given_script=None,
+                    n_alternates=2, max_retries=_KEY_TRY_LIMIT, quota_sleep=8, given_script=None,
                     is_recipe=False):
     """소스 대본들 → 그라운딩·표절검사된 EDL(설계 §3-2). 실패 시 빈 EDL.
 
@@ -4082,7 +4181,8 @@ def _backbone_order_block(backbone_video, source_scripts):
 
 
 def _single_source_candidates(source_scripts, seg_map, target_seconds,
-                              n_candidates, call, detected, judge=False):
+                              n_candidates, call, detected, judge=False,
+                              hook_opener=None):
     """1소스 전용 대본 생성(2026-08-04, handoff 남은작업①의 '핵심 배선').
 
     기존 경로는 목표길이 조정+훅 주입'만' 하고 생성은 범용 생성기가 해서
@@ -4438,7 +4538,8 @@ def _single_source_candidates(source_scripts, seg_map, target_seconds,
             _forced_store = bool(beats) and (beats[0].get("narration") or "") != _before_h
         # ★LLM이 아니라 **코드가** 붙인다 — fix 프롬프트로 "첫 문장 맨 앞에만"이라 시켰더니
         #   모델이 6문장 전부에 "아니,"를 붙였다(실측). 한 단어 얹는 데 모델은 불필요하다.
-        if not _forced_store and single_source.hook_opener_missing(beats, _hap_style):
+        if not _forced_store and single_source.hook_opener_missing(beats, _hap_style,
+                                                                    on=hook_opener):
             beats = single_source.add_hook_opener(beats)
         # covers → 화면 배정. 모델이 빠뜨린 컷은 직전 비트에 붙여 **컷 100% 커버**를 코드가
         # 보장한다(화면 총길이 == used == 예산 → 길이 하한이 프롬프트 아닌 코드로 지켜진다).
@@ -4726,7 +4827,7 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
                            n_candidates=3, video_type=None, call=None, ping_pong=False,
                            backbone_meta=None, backbone_forced=None, bank_context="",
                            avoid_hooks=None, backbone_base=False, judge=False,
-                           is_recipe=False, engine=None):
+                           is_recipe=False, engine=None, hook_opener=None):
     """장면 우선 대본 모드: 팔레트+헌장으로 후보 n개 생성 → 각 EDL grounding·채점 →
     최고 score에 recommended=True. 각 candidate.plan은 build_edit_plan 반환형(하류 렌더 호환).
     후보 0개면 candidates=[](호출부가 기존 build_edit_plan로 폴백).
@@ -4749,7 +4850,8 @@ def build_scene_first_plan(source_scripts, reference_text, target_seconds,
     from shopping_shorts import single_source as _ss
     if _ss.is_single_source(source_scripts):
         _ss_result = _single_source_candidates(
-            source_scripts, seg_map, target_seconds, n_candidates, _call, detected, judge=judge)
+            source_scripts, seg_map, target_seconds, n_candidates, _call, detected, judge=judge,
+            hook_opener=hook_opener)
         if _ss_result and _ss_result.get("candidates"):
             return _ss_result
         print("[1소스대본] 전용 생성 실패 — 기존 경로 폴백", file=sys.stderr)

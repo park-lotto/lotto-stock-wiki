@@ -70,8 +70,23 @@ def is_typecast(model_id):
     return str(model_id or "").lower().startswith(_MODEL_PREFIX)
 
 
-def api_key():
-    """합성에 쓸 타입캐스트 키. 없으면 "" — 호출부가 무음 mock으로 내려앉는다."""
+def api_key(customer_id=0):
+    """합성에 쓸 타입캐스트 키. 회원이 등록했으면 그 키, 아니면 사장님 키.
+    아무데도 없으면 "" — 호출부가 무음 mock으로 내려앉는다.
+
+    ★누구 키를 쓸지는 keyroute가 유일한 판단처다(0순위-B) — 여기서 따로 고르지 마라.
+      일레븐랩스(tts._api_key)와 **같은 모양**으로 맞춘 것이다: 두 엔진이 서로 다른
+      규칙으로 키를 고르면 "등록했는데 한쪽만 내 키로 나간다"가 조용히 생긴다.
+    customer_id=0(기본)은 사장님/관리자 — keys_for가 회사 키를 준다."""
+    from shopping_shorts import keyroute
+    from shopping_shorts.store import Store
+    try:
+        keys, _ = keyroute.keys_for(Store(config.DB_PATH), customer_id,
+                                    keyroute.SVC_TYPECAST)
+    except Exception:                      # DB가 없는 경로(스크립트·테스트)도 살린다
+        keys = []
+    if keys:
+        return keys[0]
     return config.TYPECAST_API_KEY or ""
 
 
@@ -136,12 +151,12 @@ def build_payload(text, voice_id, *, speed=None, emotion=None, intensity=None,
 
 def synthesize(text, out_path, *, voice_id, speed=None, emotion=None, intensity=None,
                model_id=None, seed=None, previous_text=None, next_text=None,
-               timeout=120):
+               timeout=120, customer_id=0):
     """text → mp3(out_path). (alignment dict|None) 반환. 실패 시 예외를 올린다.
 
     타임스탬프 엔드포인트만 쓴다 — 일반 엔드포인트는 정렬이 없어 자막이 ASR로 강등된다.
     같은 합성이고 추가 과금이 없으므로 굳이 갈라 쓸 이유가 없다."""
-    key = api_key()
+    key = api_key(customer_id)
     if not key:
         raise RuntimeError("타입캐스트 키가 없습니다")
     body = build_payload(text, voice_id, speed=speed, emotion=emotion,
@@ -158,11 +173,11 @@ def synthesize(text, out_path, *, voice_id, speed=None, emotion=None, intensity=
     return to_alignment(data.get("characters"))
 
 
-def list_voices(timeout=30):
+def list_voices(timeout=30, customer_id=0):
     """계정에서 쓸 수 있는 성우 목록. 반환 {"ok","voices","error"} — eleven_voices와 같은 모양.
 
     voices 항목: voice_id·name·model·emotions."""
-    key = api_key()
+    key = api_key(customer_id)
     if not key:
         return {"ok": False, "voices": [], "error": "타입캐스트 키가 없습니다"}
     try:

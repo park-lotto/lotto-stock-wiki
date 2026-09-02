@@ -386,13 +386,40 @@ function planClips(segIds, ttsDur, spread, beatIdx){
       const bounds = [0];
       for (let k = 1; k < caps.length; k++) bounds.push(Math.min(ttsDur, caps[k].start));
       bounds.push(ttsDur);
-      const nCut = Math.min(caps.length, segments.length);
-      for (let k = 0; k < nCut; k++) {
-        const isLast = k === nCut - 1;
-        const endB = isLast ? bounds[bounds.length - 1] : bounds[k + 1];  // 재료 부족 → 마지막이 남은 구절 커버
+      // ★구절이 재료보다 많으면 **담은 조각의 뒷부분을 한 바퀴 더 쓴다**(2026-08-31 사장님
+      //   "대본이 길어지니까 뒤에까지 장면이 안 붙는다").
+      //   종전 nCut=min(caps, segments)는 조각 3·구절 6일 때 컷을 3개만 만들고 마지막 컷이
+      //   남은 구절 전부를 덮었다 — 뒤쪽 말에는 화면 전환이 없고 한 장면이 멈춘 듯 나온다.
+      //   실측(job 33377557599e): 칸 4개 모두 조각 3 < 구절 3~6인데 재료는 오히려 1.0~2.5초
+      //   **남는다**(over). 길이가 아니라 **개수**가 모자란 것이다.
+      //   ★첫 바퀴는 종전 그대로 담은 순서대로 1:1 — 안 그러면 커서가 먼저 앞 조각을 두 번
+      //     쓰고 **담은 장면 하나가 통째로 안 나온다**(실측으로 잡은 회귀). 두 바퀴째부터만
+      //     뒤가 남은 조각을 돌아가며 이어 쓴다. 재료가 진짜 떨어지면 그때만 종전 동작.
+      const nPhrase = caps.length;
+      const pos = segments.map(s => s.start);
+      let ri = 0;
+      for (let k = 0; k < nPhrase; k++) {
+        const isLast = k === nPhrase - 1;
+        const endB = isLast ? bounds[bounds.length - 1] : bounds[k + 1];
         const d = Math.max(0.1, endB - bounds[k]);
-        const seg = segments[k];
-        clips.push({ seg_id: seg.seg_id, video_id: seg.video_id, start: seg.start, dur: Math.round(d * 100) / 100 });
+        let idx = -1;
+        if (k < segments.length){
+          idx = k;                                   // 첫 바퀴 = 담은 순서대로(종전과 같다)
+        } else {
+          for (let t = 0; t < segments.length; t++){ // 두 바퀴째 = 뒤가 남은 조각을 돌아가며
+            const j = (ri + t) % segments.length;
+            if (segments[j].end - pos[j] >= Math.min(d, MIN_CLIP) - EPS){ idx = j; break; }
+          }
+          if (idx < 0){                              // 재료 소진 → 종전대로 마지막 컷이 커버
+            if (clips.length) clips[clips.length - 1].dur =
+              Math.round((clips[clips.length - 1].dur + (bounds[bounds.length - 1] - bounds[k])) * 100) / 100;
+            break;
+          }
+          ri = (idx + 1) % segments.length;
+        }
+        const seg = segments[idx];
+        clips.push({ seg_id: seg.seg_id, video_id: seg.video_id, start: pos[idx], dur: Math.round(d * 100) / 100 });
+        pos[idx] += d;
       }
       return clips;
     }
@@ -666,6 +693,7 @@ function stopPlay(){
   clearSfxTimers();                              // 예약된 효과음도 끈다 — 안 끄면 멈춘 뒤에 울린다
   if (sfxAudio) { try{ sfxAudio.pause(); }catch(e){} }
   playKey = null; seqPaused = false;
+  holdShot(null, false);            // 멈추면 되감기 그림도 걷는다
   // 재생을 멈추면 겹쳐뒀던 꾸미기도 걷는다 — 안 걷으면 멈춘 화면 위에 남는다.
   // ★remove()가 없는 DOM 스텁도 있다(테스트 하네스) — 있는지 보고 부른다.
   const _pd = document.getElementById('playDeco');
@@ -688,7 +716,13 @@ function playSeg(sid, ev){
   const s = DATA.segments[sid];
   if (!s) return;
   // ★한 번 누르면 재생, 같은 것을 다시 누르면 정지(2026-08-14 사장님 "정지 버튼이 없다").
-  if (playKey === 'seg:' + sid && !vid().paused){ stopPlay(); return; }
+  // ★vid()는 **첫 재생 전이면 null**이다(curVid는 showVid가 놓기 전까지 null이고,
+  //   #vid 요소는 이 화면에 없다 — 영상은 vidFor가 그때그때 만든다). 그래서 playKey만
+  //   남고 재생기가 없는 상태에서 같은 조각을 다시 누르면 `null.paused`로 죽고,
+  //   그 뒤 재생이 통째로 안 먹는다(2026-08-31 실측: 이 세션에서 실제로 터졌다).
+  //   위아래 다른 줄은 전부 `const v = vid(); if (v)`로 막고 있는데 여기만 무방비였다.
+  const _v = vid();
+  if (playKey === 'seg:' + sid && _v && !_v.paused){ stopPlay(); return; }
   playKey = 'seg:' + sid;
   seqLabel = '장면 미리보기';
   clearInterval(subTimer); seqBeat = null;
@@ -711,7 +745,8 @@ function playSegs(sids, label){
   }
   if (!clips.length) return;
   const key = 'segs:' + (sids || []).join(',');
-  if (playKey === key && !vid().paused){ stopPlay(); return; }   // 같은 것 다시 누르면 정지
+  const _v2 = vid();                                             // ★null 가능 — 위 playSeg와 같은 함정
+  if (playKey === key && _v2 && !_v2.paused){ stopPlay(); return; }   // 같은 것 다시 누르면 정지
   playKey = key;
   seqLabel = label || `이어 보기 - 조각 ${clips.length}개`;
   clearInterval(subTimer); seqBeat = null;
@@ -843,6 +878,31 @@ function startSeq(clips, slot0){
   updatePlayBtns();
   step();
 }
+// 컷을 보여주기 전에 되감기를 기다리는 시간(ms). 컷 길이의 60%를 넘기지 않는다 —
+// 기다림이 컷보다 길면 화면을 켜기도 전에 그 컷이 끝나 검은 화면만 보인다.
+function cutWaitMs(c){
+  const d = (c && +c.dur) || 0;
+  return Math.max(300, Math.min(1500, Math.round(d * 1000 * 0.6)));
+}
+// 🖼 되감는 동안 깔아두는 정지 그림 — 그 조각의 썸네일(seg_thumb)이라 '검은 화면'이 안 남는다.
+//   자막(#subbox z-index:3)보다 아래(z-index:2)라 내 자막은 그대로 보인다.
+function holdShot(c, on){
+  let box; try{ box = document.getElementById('vidbox'); }catch(e){ box = null; }
+  if (!box || typeof box.appendChild !== 'function') return;
+  let im = document.getElementById('seekshot');
+  if (!on){ if (im) im.style.display = 'none'; return; }
+  if (!c || !c.seg_id) return;
+  if (!im){
+    im = document.createElement('img');
+    im.id = 'seekshot';
+    im.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:contain;'
+                     + 'background:#000;z-index:2;pointer-events:none';
+    box.appendChild(im);
+  }
+  const s = SL.thumb(c.seg_id);
+  if (im.getAttribute('src') !== s) im.src = s;
+  im.style.display = 'block';
+}
 function step(){
   if (seqI >= seq.length){
     document.getElementById('pinfo').textContent = `${seqLabel} — 재생 끝 (${seq.length}컷)`;
@@ -871,17 +931,30 @@ function step(){
       showVid(v);
       v.play().catch(()=>{});
       paintCut();
+      // ★아직 첫 프레임이 없으면 썸네일을 **걷지 않는다** — 걷으면 그 자리가 검게 남는다.
+      //   준비되는 순간(canplay/seeked) 걷어 실제 영상으로 바뀐다.
+      if (v.readyState >= 2) holdShot(null, false);
+      else {
+        const late = () => { v.oncanplay = null; v.onseeked = null; holdShot(null, false); };
+        v.oncanplay = late; v.onseeked = late;
+      }
       if (seq[seqI + 1]) seat(seq[seqI + 1]);   // 다음 컷은 숨은 재생기에 미리 앉힌다
       schedStep(c.dur * 1000);                  // ← 여기서부터 시간을 잰다
     };
     if (Math.abs(v.currentTime - c.start) < 0.05 && v.readyState >= 2) show();
     else {
+      // 되감는 동안 검은 화면 대신 그 조각의 썸네일을 깔아둔다(2026-09-01 사장님 제보).
+      holdShot(c, true);
       let done = false;
       const once = () => { if (done) return; done = true; v.onseeked = null; v.oncanplay = null; show(); };
       v.onseeked = once;
       v.oncanplay = once;
       v.currentTime = c.start;
-      setTimeout(once, 1500);      // 그래도 안 오면(느린 네트워크) 1.5초 뒤 진행
+      // ★기다리는 시간은 **컷 길이보다 짧아야 한다**(2026-09-01 실사고).
+      //   1.5초 고정이던 것이 컷 1.0초짜리(구절 맞춤으로 컷이 짧아진 뒤)에서는
+      //   '컷이 끝난 뒤에야 화면을 켜는' 꼴이 돼, 그 칸이 통째로 검게 지나갔다
+      //   (실측 job 591432e714ca 8번 칸: 컷 1.0초·1.1초, 첫 소재는 시크가 느린 AV1).
+      setTimeout(once, cutWaitMs(c));
     }
   };
   if (v.readyState >= 1) go();           // 이미 열려 있으면 즉시

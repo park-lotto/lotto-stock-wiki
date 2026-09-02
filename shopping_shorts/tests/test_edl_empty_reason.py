@@ -54,3 +54,25 @@ def test_None과_빈값에도_안전하다():
     assert _edl_empty_reason(None, None)[0] == "no_source"
     assert _edl_empty_reason([{}], {})[0] == "extract_empty"
     assert _edl_empty_reason([{"full_text": None}], None)[0] == "extract_empty"
+
+
+# ── 2026-08-31 실사고: 라벨이 사후 추측이라 오진을 낳았다 ──────────────────
+
+def test_API가_말한_사유가_소스글자수를_이긴다():
+    """★키가 429+401로 다 튕긴 job이 'extract_empty'(소스 대사 0자)로 떴다.
+    그 라벨을 믿고 "대사 없는 영상이라 안 된다"고 사장님께 잘못 보고했다(cid 193).
+    대사가 없어도 확정 대본이 있으면 scene_desc로 정상 매칭된다 — 실제로 그 job은
+    상한을 고친 뒤 그대로 재실행해 ready_for_review까지 통과했다.
+    소스 글자수는 원인이 아니다. API가 실제로 뱉은 말이 원인이다."""
+    srcs = [{"full_text": ""}, {"full_text": ""}]
+    code, why = _edl_empty_reason(
+        srcs, {}, api_reason="429 RESOURCE_EXHAUSTED ... per minute")
+    assert code == "api_failed", "API 실패를 '추출 실패'로 부르면 엉뚱한 데를 본다"
+    assert "429" in why, "무엇 때문인지 원문을 보여줘야 진단이 된다"
+
+
+def test_사유가_없으면_종전판정_그대로():
+    """회귀 0 — api_reason이 없을 때는 예전과 똑같이 동작해야 한다."""
+    srcs = [{"full_text": ""}, {"full_text": ""}]
+    assert _edl_empty_reason(srcs, {})[0] == "extract_empty"
+    assert _edl_empty_reason([{"full_text": "가" * 900}], {})[0] == "plan_empty"

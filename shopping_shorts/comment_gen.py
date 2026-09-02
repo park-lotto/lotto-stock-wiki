@@ -103,6 +103,14 @@ def _mark_key_exhausted(idx, retry_after=None):
             cur[int(idx)] = until
             state["exhausted"] = {str(k): v for k, v in cur.items()}
             _save_state(state)
+    try:                                   # 관측판(2026-09-01): 잠금 이벤트를 남긴다
+        from shopping_shorts import api_health
+        api_health.record(
+            "gemini", api_health.OUT_LOCK, pool="shorts", key_idx=int(idx),
+            key=(SHORTS_GEMINI_KEYS[int(idx)] if int(idx) < len(SHORTS_GEMINI_KEYS) else None),
+            detail=f"ttl={int(ttl)}s")
+    except Exception:                      # noqa: BLE001 — 관측이 본작업을 죽이면 안 된다
+        pass
 
 
 # 풀이 이 비율 이하로 줄면 '거의 전멸'로 보고 재검증한다(2026-08-09).
@@ -208,6 +216,12 @@ def _recheck_exhausted_keys():
             _save_state(state)
         print(f"comment_gen: 소진표시 오탐 해제 — 키 {revived} 되살림(실호출 200 확인)",
               file=sys.stderr)
+        try:                               # 관측판(2026-09-01): 되살림 이벤트
+            from shopping_shorts import api_health
+            api_health.record("gemini", api_health.OUT_REVIVE, pool="shorts",
+                              detail=f"revived={revived}")
+        except Exception:                  # noqa: BLE001
+            pass
     return revived
 
 
@@ -217,7 +231,8 @@ def _client_for_key(key):
         # 기존 재시도 로직(quota/503 등)이 아예 발동을 못 한다(2026-07-14 실사고: extracting
         # 단계가 5분+ 멈춤, 에러도 안 남음). 타임아웃을 줘서 느린 요청이 예외로 떨어지게 한다.
         _client_cache[key] = usage_meter.wrap(
-            genai.Client(api_key=key, http_options=types.HttpOptions(timeout=120_000)))
+            genai.Client(api_key=key, http_options=types.HttpOptions(timeout=120_000)),
+            pool="shorts", key=key)   # 관측판 귀속(2026-09-01)
     return _client_cache[key]
 
 _PROMPT = """너는 인스타에서 활발히 소통하는 진짜 사람이다.

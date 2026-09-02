@@ -109,7 +109,9 @@ def test_every_gemini_key_fetch_goes_through_the_single_exit():
     root = pathlib.Path(__file__).resolve().parents[1]
     offenders = []
     for f in root.glob("*.py"):
-        if f.name in ("keyroute.py", "keyctx.py"):
+        # api_health.py는 관측판 데이터층(2026-09-01) — 풀 구성을 **읽기만** 하고
+        # 그 키로 Gemini를 호출하지 않는다(스냅샷 표시용). 과금 구멍이 아니다.
+        if f.name in ("keyroute.py", "keyctx.py", "api_health.py"):
             continue
         txt = f.read_text(encoding="utf-8")
         if re.search(r"get_live_keys_cascade\(|get_live_keys\(|key_vault\.get_keys\(", txt):

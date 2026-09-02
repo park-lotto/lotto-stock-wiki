@@ -761,14 +761,44 @@ def _plan_phrase_clips(beat, segs, tts_dur):
             t += d
             bounds.append(min(tts_dur, t))
         bounds.append(tts_dur)
-        n_cut = min(len(durs), len(segs))
+        # ★구절이 재료보다 많으면 **담은 조각의 뒷부분을 한 바퀴 더 쓴다**(2026-08-31 사장님
+        #   "대본이 길어지니까 뒤에까지 장면이 안 붙는다"). 화면(scene_play.js planClips의
+        #   구절맞춤 분기)과 **같은 규칙의 서버판**이다 — 한쪽만 고치면 미리보기와 결과물이
+        #   어긋난다(0순위-B). 종전 n_cut=min(구절, 재료)는 조각 3·구절 6이면 컷을 3개만
+        #   만들고 마지막 컷이 남은 구절 전부를 덮어, 뒤쪽 말에 화면 전환이 없었다.
+        #   실측(job 33377557599e): 칸 4개 모두 조각 3 < 구절 3~6인데 길이는 1.0~2.5초씩
+        #   남았다 — 길이가 아니라 **개수**가 모자란 것이다.
+        #   ★첫 바퀴는 종전 그대로 1:1(담은 장면이 하나도 빠지지 않게), 두 바퀴째부터만
+        #     뒤가 남은 조각을 돌아가며 쓴다.
         plan = []
-        for k in range(n_cut):
-            end_b = bounds[-1] if k == n_cut - 1 else bounds[k + 1]  # 재료 부족 → 마지막이 커버
+        pos = [float(g["start"]) for g in segs]
+        ri = 0
+        for k in range(len(durs)):
+            end_b = bounds[-1] if k == len(durs) - 1 else bounds[k + 1]
             d = max(0.1, end_b - bounds[k])
-            seg = segs[k]
-            plan.append({"video_id": seg["video_id"], "start": float(seg["start"]),
+            if k < len(segs):
+                idx = k                                  # 첫 바퀴 = 담은 순서대로(종전과 같다)
+            else:
+                idx = -1
+                for t2 in range(len(segs)):              # 두 바퀴째 = 뒤가 남은 조각을 돌아가며
+                    j2 = (ri + t2) % len(segs)
+                    # ★end를 모르는 재료는 '남은 게 없다'로 본다 → 종전 동작(마지막이 커버).
+                    #   지어내서 조각 밖을 읽으면 엉뚱한 화면이 나온다.
+                    _end = segs[j2].get("end")
+                    if _end is None:
+                        continue
+                    if float(_end) - pos[j2] >= min(d, _MIN_CLIP) - 1e-3:
+                        idx = j2
+                        break
+                if idx < 0:                              # 재료 소진 → 종전대로 마지막 컷이 커버
+                    if plan:
+                        plan[-1]["src_dur"] += bounds[-1] - bounds[k]
+                        plan[-1]["out_dur"] = plan[-1]["src_dur"]
+                    break
+                ri = (idx + 1) % len(segs)
+            plan.append({"video_id": segs[idx]["video_id"], "start": pos[idx],
                          "src_dur": d, "out_dur": d})
+            pos[idx] += d
         return plan
     except Exception:      # noqa: BLE001 — 계획 실패가 렌더를 죽이면 안 된다(폴백이 있다)
         return None
@@ -1204,8 +1234,14 @@ def _caption_durations(segs, dur, real_durs=None):
     n = len(segs)
     if n == 0:
         return []
-    if _CAP_MIN_DUR * n >= dur:      # 하한조차 못 채우면 균등분할
-        return [dur / n] * n
+    # ★실측(ASR)이 있으면 **하한 폴백보다 먼저** 쓴다(2026-09-01 사장님 "4장면으로 싱크 맞춰").
+    #   종전엔 아래 하한 폴백이 위에 있어서, 짧고 구절 많은 칸(하한 1.0초 × 4구절 ≥ 칸 3.55초)은
+    #   애써 잰 실측을 통째로 버리고 균등분할했다 — 실측 job 84b5f66a8e1f 칸0(hook):
+    #     실측 0.58/0.78/1.13/0.78  →  균등 0.89/0.89/0.89/0.89
+    #   구절 맞춤은 컷 경계를 이 값으로 잡으므로 **컷까지 균등**이 되어, 자막 4구절과
+    #   화면 4컷이 서로 밀렸다(사장님 3단계↔6단계 캡처 대조로 발각).
+    #   바로 아래 주석이 "실측이 있으면 하한을 건너뛴다"라고 이미 못박아 뒀는데, 그 위의
+    #   폴백이 먼저 걸려 통째로 무력이었다(CLAUDE.md 0순위-B: 조건부 값을 위에서 덮어쓰기).
     if real_durs is not None and len(real_durs) == len(segs) and sum(real_durs) > 0:
         # ★실측값은 그대로 쓴다 — dur로 되늘리지 않는다(2026-08-06).
         # 예전 `dur * d / s` 정규화는 리드인(자막 밖 무음)까지 구절에 비례배분해 자막을
@@ -1218,6 +1254,8 @@ def _caption_durations(segs, dur, real_durs=None):
         #   앞서 들렸다). 하한은 글자수 '추정'이 만든 찰나 구절을 막으려는 장치다 —
         #   실제로 그 길이로 말한 구절을 늘리면 싱크가 깨진다. 짧게 말했으면 짧게 띄운다.
         return raw
+    if _CAP_MIN_DUR * n >= dur:      # 하한조차 못 채우면 균등분할 (실측이 없을 때만)
+        return [dur / n] * n
     weights = [max(1, len(s.replace("\n", ""))) for s in segs]
     total_w = sum(weights)
     raw = [dur * w / total_w for w in weights]
@@ -1729,6 +1767,24 @@ def _hex_to_ff(c, default="0xFFFFFF"):
     return f"0x{c.upper()}" if len(c) == 6 and all(ch in "0123456789ABCDEFabcdef" for ch in c) else default
 
 
+def _outline_parts(style):
+    """외곽선 drawtext 조각. **꺼져 있거나 두께 0이면 아무것도 안 붙인다.**
+
+    ★2026-08-31 실사고: 종전 `borderw=max(1, _ui_px(outline_w, 9))`는 UI에서 두께를
+      0으로 내려도 _ui_px가 0을 "값 없음"으로 보고 기본값 9를 되살렸다. 그래서
+      미리보기엔 없는 **굵은 검정 테두리**가 최종렌더에만 붙었다(흰 자막에선 원래
+      테두리처럼 보여 안 걸리고, 검정 자막에서 글자가 뭉개져 발각).
+      0은 box_pad와 똑같이 "없음"이라는 뜻이다 → zero_ok로 읽는다.
+    같은 판단이 자막·헤드카피 두 곳에 따로 적혀 있어 한 곳만 고치면 어긋난다 → 함수 하나."""
+    if not style.get("outline"):
+        return []
+    w = max(0, _ui_px(style.get("outline_w"), 9, zero_ok=True))
+    if w <= 0:
+        return []
+    return [f"borderw={w}",
+            f"bordercolor={_hex_to_ff(style.get('outline_color'), '0x000000')}"]
+
+
 def _missing_glyphs(font_path, text):
     """→ font_glyphs.missing_glyphs (판정은 한 곳에서만 — 0순위-B)."""
     return _fg.missing_glyphs(font_path, text)
@@ -1993,17 +2049,20 @@ def _segmented_drawtext(text, base_style, work, key_prefix, x_pct, y_pct,
                     f"fontsize={size}",
                     f"x={int(cx)}", f"y={int(line_y)}",
                 ]
-                if base_style.get("outline"):
-                    seg_parts.append(f"borderw={max(1, _ui_px(base_style.get('outline_w'), 9))}")
-                    seg_parts.append(f"bordercolor={_hex_to_ff(base_style.get('outline_color'), '0x000000')}")
+                seg_parts += _outline_parts(base_style)
                 if base_style.get("shadow"):
                     # 은은한 드롭 그림자(레퍼런스 자막룩) — 두꺼운 테두리 대신 부드러운 가독성.
                     sc = _hex_to_ff(base_style.get("shadow_color"), "0x000000")
                     sd = max(1, _ui_px(base_style.get("shadow_d"), 5))
                     seg_parts += [f"shadowcolor={sc}@0.55", f"shadowx={sd}", f"shadowy={sd}"]
                 if seg_box:
+                    # ★강조 단어 박스도 **자막 박스와 같은 투명도·여백**을 쓴다(0순위-B).
+                    #   종전엔 @0.90 / boxborderw=12 하드코딩이라 화면에서 정한 값이
+                    #   통째로 무시됐다(2026-08-31). 색만 강조 규칙의 것을 쓴다.
                     bc = _hex_to_ff(seg_box_color, "0x000000")
-                    seg_parts += ["box=1", f"boxcolor={bc}@0.90", "boxborderw=12"]
+                    _op = max(0.0, min(1.0, (base_style.get("box_opacity") or 90) / 100.0))
+                    _pad = max(0, _ui_px(base_style.get("box_pad"), 12, zero_ok=True))
+                    seg_parts += ["box=1", f"boxcolor={bc}@{_op:.2f}", f"boxborderw={_pad}"]
                 elif base_style.get("box") and block_box:
                     pass          # 배경은 아래에서 **블록 하나**로 미리 그렸다(줄마다 안 그린다)
                 elif base_style.get("box") and not seg_box:
@@ -2044,9 +2103,7 @@ def _fixed_drawtext(spec, work, key, default_color="0xFFFFFF"):
     ]
     if spec.get("alpha") is not None:
         parts.append(f"alpha={max(0.0, min(1.0, float(spec.get('alpha')))):.2f}")
-    if spec.get("outline"):
-        parts.append(f"borderw={max(1, _ui_px(spec.get('outline_w'), 9))}")
-        parts.append(f"bordercolor={_hex_to_ff(spec.get('outline_color'), '0x000000')}")
+    parts += _outline_parts(spec)
     if spec.get("box"):
         bc = _hex_to_ff(spec.get("box_color"), "0x000000")
         op = max(0.0, min(1.0, (spec.get("box_opacity") or 80) / 100.0))
@@ -2130,6 +2187,7 @@ def _beat_timeline(edit_plan, tts_paths):
             # 장면별 자막 자리(2026-08-25). 여기서 안 실으면 저장위치≠읽기위치가 되어
             # 사장님이 고친 자리가 렌더에 반영되지 않는다(위 cap_durs와 같은 함정).
             "cap_pos": beat.get("cap_pos"),
+            "cap_xy": beat.get("cap_xy"),                  # 드래그로 옮긴 장면별 자유 좌표(2026-08-31)
             "sfx": beat.get("sfx"),                        # 효과음 매칭(있으면) — position 읽기용
             "head_trim": beat.get("head_trim", 0.0),
         })
@@ -2147,8 +2205,21 @@ _CAP_POS_PCT = {"top": 18.0, "mid": 50.0}
 
 
 def _beat_cap_style(caption_style, beat):
-    """이 비트에 쓸 자막 스타일. beat['cap_pos']가 있으면 세로 위치만 덮어쓴다.
-    없으면 **원본 객체를 그대로** 돌려준다(복사 비용도, 동작 변화도 없음)."""
+    """이 비트에 쓸 자막 스타일.
+
+    두 가지 장면별 덮어쓰기를 같은 곳에서 푼다(0순위-B — 해석은 한 군데):
+      1) beat['cap_xy'] = {"x_pct","y_pct"}  드래그로 옮긴 자유 좌표(2026-08-31).
+         가로·세로 둘 다 덮는다. **cap_pos보다 우선**한다(나중에 손댄 뜻).
+      2) beat['cap_pos'] = top|mid          버튼으로 고른 세로 자리(2026-08-25).
+    둘 다 없으면 **원본 객체를 그대로** 돌려준다(복사 비용도, 동작 변화도 없음)."""
+    xy = (beat or {}).get("cap_xy") or None
+    if isinstance(xy, dict) and (xy.get("x_pct") is not None or xy.get("y_pct") is not None):
+        st = dict(caption_style or {})
+        if xy.get("x_pct") is not None:
+            st["x_pct"] = float(xy["x_pct"])
+        if xy.get("y_pct") is not None:
+            st["y_pct"] = float(xy["y_pct"])
+        return st
     pos = (beat or {}).get("cap_pos")
     ypct = _CAP_POS_PCT.get(pos)
     if ypct is None:
@@ -2243,6 +2314,39 @@ def headcopy_layer_png(headcopy, out_path, work, caption_style=None, deco=None):
         print(f"[캡컷] 머리카피 PNG 실패(건너뜀): {e!r}", file=sys.stderr)
         return None
     return str(out_path) if Path(out_path).exists() else None
+
+
+def _pre_compose_under_text(in_video, deco, work):
+    """틀 그림을 자막·글자 **밑에** 깔아 영상에 미리 굽는다 → (새 영상, 틀을 뺀 deco).
+
+    ★언제 도나: deco.template.under_text가 참일 때만(이미지 틀). 기존 틀은 안 탄다 —
+      옛 작업의 그림이 한 픽셀도 안 바뀐다.
+    ★왜 별도 패스인가: 자막은 -vf drawtext 체인이라 두 번째 입력(PNG)을 못 섞는다.
+      순서를 바꾸려면 합성을 먼저 끝내고 그 결과를 자막 패스에 넘기는 수밖에 없다.
+    실패하면 원본을 그대로 돌려준다 — 틀 하나 때문에 렌더가 죽으면 안 된다(fail-open).
+    """
+    tpl = (deco or {}).get("template") or {}
+    png = tpl.get("_abspath")
+    if not (tpl.get("under_text") and png and os.path.exists(png)):
+        return in_video, deco
+    out = Path(work) / "under_tpl.mp4"
+    try:
+        _run_ffmpeg([
+            "ffmpeg", "-y", "-i", str(in_video), "-i", str(png),
+            "-filter_complex", f"[1:v]scale={_OUT_W}:{_OUT_H}[tpl];[0:v][tpl]overlay=0:0[v]",
+            "-map", "[v]", "-map", "0:a?", "-c:a", "copy",
+            "-c:v", "libx264", "-preset", _mid_preset(), "-crf", _mid_crf(),
+            *_threads_args(), "-pix_fmt", "yuv420p", str(out),
+        ], cwd=str(work))
+    except Exception as e:      # noqa: BLE001
+        print(f"[틀] 밑에 깔기 실패 — 예전처럼 위에 얹는다: {e!r}", file=sys.stderr)
+        return in_video, deco
+    if not out.exists():
+        return in_video, deco
+    # ★틀 슬롯을 비운다 — 안 비우면 뒤에서 **또** 얹어 결국 글자를 덮는다(두 번 그리기 금지).
+    deco = dict(deco or {})
+    deco["template"] = {k: v for k, v in tpl.items() if k not in ("_abspath",)}
+    return str(out), deco
 
 
 def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None, caption_style=None, deco=None, sfx_paths=None):
@@ -2431,6 +2535,13 @@ def assemble(edit_plan, tts_paths, source_video_paths, out_path, clean_fn=None, 
             import shutil
             shutil.copyfile(base_video, out_path)
             return out_path
+        # 🖼 이미지 틀은 **자막·글자보다 아래**여야 한다(2026-08-31 사장님: "그림위로
+        #   올라가는게 해드카피만있고 자막 제목등 다 안된다").
+        #   지금까지 틀은 맨 마지막에 얹혔다 — 기존 20종은 띠 말고 전부 투명이라 덮을 게
+        #   없어 문제가 안 보였을 뿐이다. 화면을 꽉 채우는 이미지 틀에선 글자가 통째로 묻힌다.
+        #   → 그림을 **자막 굽기 전에** 먼저 영상에 합성하고, 틀 슬롯은 비운다(두 번 얹으면
+        #     또 덮는다). 순서를 정하는 곳은 여기 한 곳이다(0순위-B).
+        base_video, deco = _pre_compose_under_text(base_video, deco, work)
         return _burn_captions(base_video, edit_plan, tts_paths, out_path, work, headcopy, caption_style, deco, sfx_paths=sfx_paths)
     finally:
         try:

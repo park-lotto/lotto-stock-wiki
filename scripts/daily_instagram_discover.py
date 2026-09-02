@@ -35,15 +35,37 @@ def main():
         discover_jobs._run(DAYS, MAX_TOTAL, accumulate=False, auto_register=False)
     except Exception as e:  # noqa: BLE001 — 크론이 죽어도 서비스는 무사, 로그만 남긴다
         print(f"[daily_instagram_discover] 실패: {e!r}", file=sys.stderr)
+        _watch(DB_PATH, 0, t0, error=repr(e))
         return 1
     st = discover_jobs.status(include_items=False)
     if st.get("status") == "error":
         print(f"[daily_instagram_discover] 실패: {st.get('error')}", file=sys.stderr)
+        _watch(DB_PATH, 0, t0, error=str(st.get("error")))
         return 1
     print(f"[daily_instagram_discover] {st.get('count')}건 발굴 · "
           f"{st.get('registered')}건 자동등록 · "
           f"인물채널 {st.get('skipped_face', 0)}건 제외 · {time.time() - t0:.1f}s")
+    _watch(DB_PATH, int(st.get("count") or 0), t0)
     return 0
+
+
+def _watch(db_path, count, t0, error=""):
+    """🕸 관측판에 이 회차를 남긴다(2026-09-01).
+
+    ★실패 경로에서도 반드시 남긴다 — 2026-08-31 발굴이 죽었는데 화면으로는 알 수
+      없었던 게 이 관측판을 만든 이유다(핸드오프 '발굴 0건일 때 경고 알림').
+      성공만 기록하면 정작 알아야 할 날에 아무것도 안 남는다.
+    ⚠️ 관측이 발굴을 죽이면 안 된다 — 실패해도 사유만 남기고 넘어간다.
+    """
+    try:
+        from shopping_shorts import crawl_watch
+        crawl_watch.record_run(
+            db_path, "instagram_discover",
+            tally={"found": count, **({"error": 1} if error else {})},
+            verdicts=[], items=count, seconds=time.time() - t0)
+        crawl_watch.check_and_alert(db_path)   # 나쁘면 텔레그램·쪽지로 밀어준다
+    except Exception as e:  # noqa: BLE001
+        print(f"[daily_instagram_discover] 관측 기록 실패(무해): {e!r}", file=sys.stderr)
 
 
 if __name__ == "__main__":

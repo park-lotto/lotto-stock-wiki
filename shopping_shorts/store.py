@@ -206,6 +206,24 @@ def style_spine_rank(sp):
             -(sp.get("id") or 0))
 
 
+# ── PC / 모바일 판별 (2026-08-31) ─────────────────────────────────────────────
+# ★여기 한 곳에서만 정한다(0순위-B). 돌려쓰기 판정이 이 한 줄에 걸려 있어서,
+#   두 군데에 적히면 화면과 서버가 서로 다른 답을 낸다.
+# ★왜 필요한가: 모바일은 IP가 계속 바뀐다(LTE↔와이파이·기지국 이동). 모바일 IP까지
+#   세면 혼자 쓰는 회원도 7일이면 IP 대여섯 개가 되어 공유 의심이 켜진다.
+_MOBILE_UA_MARKS = ("android", "iphone", "ipad", "ipod", "mobile", "windows phone")
+
+
+def _is_mobile_ua(ua):
+    """UA 문자열이 모바일·태블릿이면 True. 빈 UA는 판단 불가라 PC로 본다(엄격한 쪽).
+
+    ★'mobile'만 보면 안 된다: 아이패드 사파리 UA에는 Mobile이 있지만, 안드로이드
+      태블릿에는 없다. 그래서 기기 이름도 같이 본다.
+    """
+    u = (ua or "").lower()
+    return any(m in u for m in _MOBILE_UA_MARKS)
+
+
 class Store:
     def __init__(self, db_path):
         self.db_path = Path(db_path)
@@ -856,6 +874,28 @@ class Store:
             """)
             c.execute("CREATE INDEX IF NOT EXISTS idx_produce_works_customer "
                       "ON produce_works(customer_id, updated_at DESC)")
+            # 🖼 내 썸네일 프리셋(2026-09-02, 영상제작 7단계) — 만든 썸네일의 **구성**을 통째로
+            # 담아두고 다음 영상에 그대로 얹는다. 사장님이 매번 스티커·도형·색을 다시 만들던
+            # 일을 딸깍 한 번으로 끝낸다.
+            # ★배경(frame)은 담지 않는다 — 프리셋은 **다른 영상**에 쓰는 것이라 그 영상의
+            #   배경 프레임 위에 얹혀야 한다. 담으면 남의 영상 장면이 딸려온다.
+            # ★layers_json 하나에 다 넣는다(글자·스티커·도형·배지가 한 배열). THUMB_STATE.layers
+            #   모양 그대로라 프런트가 변환 없이 쓴다 — 모양을 두 군데서 정하면 어긋난다(0순위-B).
+            # thumb_file: 저장 당시 만든 PNG 사본(카드 그림). 원본 job이 지워져도 남아야 하므로
+            #   job 폴더가 아니라 프리셋 전용 폴더에 따로 복사해 둔다.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS thumb_presets (
+                    preset_id TEXT PRIMARY KEY,
+                    customer_id INTEGER NOT NULL DEFAULT 0,
+                    name TEXT NOT NULL,
+                    layers_json TEXT NOT NULL,
+                    thumb_file TEXT,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                )
+            """)
+            c.execute("CREATE INDEX IF NOT EXISTS idx_thumb_presets_customer "
+                      "ON thumb_presets(customer_id, updated_at DESC)")
             # 보이스 프리셋(2026-07-14, 영상제작 4단계) — 큐레이션된 목소리 카드.
             c.execute("""
                 CREATE TABLE IF NOT EXISTS voice_presets (
@@ -1455,6 +1495,35 @@ class Store:
                         ua TEXT NOT NULL,
                         PRIMARY KEY (customer_id, day, ip, ua)
                     )""")
+        # ── 📅 기간제 이용권(2026-08-31 사장님 "시작일을 내일부터 1년으로") ──────────
+        #    ★왜 full_access_until을 안 쓰나: pro 48명 중 **26명**이 이미 지난 날짜를
+        #      갖고 있다(체험 때 잔재). 그 필드로 만료를 판정하면 결제 고객 26명이
+        #      즉시 랭킹만으로 추락한다(실측 2026-08-31). 새 개념은 새 칸에 담는다.
+        #    ★비어 있으면(NULL/0) 지금까지와 완전히 같다 = 무기한. 기존 전원 무영향.
+        # ★이미 있으면 조용히 넘어간다 — 다만 '왜 무해한지'를 코드가 말하게 둔다.
+        #   컬럼 목록을 먼저 보고 없을 때만 추가하면 예외를 삼킬 일이 아예 없다.
+        _cols = {r[1] for r in c.execute("PRAGMA table_info(customers)")}
+        for _col in ("pro_from", "pro_until"):
+            if _col not in _cols:
+                c.execute(f"ALTER TABLE customers ADD COLUMN {_col} INTEGER DEFAULT 0")
+        # ── 🖥 PC 등록(2026-08-31 사장님 "pc를 등록하게 해줘 1번pc 2번pc 다른곳에선 안되게") ──
+        #    ★IP로 판정하지 않는다. 가정용 인터넷은 대부분 유동 IP라 재접속마다 바뀌고,
+        #      같은 PC인데도 잠긴다. 브라우저에 찍은 **기기 도장(랜덤 id)**으로 본다.
+        #    ★모바일은 아예 안 센다(_is_mobile_ua) — 사장님: "모바일은 상관없고".
+        #    slot은 1 또는 2. (customer_id, slot) 유니크 = 계정당 PC 2대.
+        c.execute("""CREATE TABLE IF NOT EXISTS customer_devices (
+                        customer_id INTEGER NOT NULL,
+                        slot INTEGER NOT NULL,
+                        device_id TEXT NOT NULL,
+                        first_seen INTEGER NOT NULL,
+                        last_seen INTEGER NOT NULL,
+                        ua TEXT DEFAULT '',
+                        ip TEXT DEFAULT '',
+                        PRIMARY KEY (customer_id, slot)
+                    )""")
+        # 같은 기기가 두 칸을 먹지 않게(재등록 경합) — 조회도 이 인덱스를 탄다
+        c.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_cust_device "
+                  "ON customer_devices(customer_id, device_id)")
         # ── 활동 로그(2026-07-22): '몇 번 전 뭘 했다' 트레일. 미들웨어가 의미있는 액션만 기록. ──
         c.execute("""CREATE TABLE IF NOT EXISTS customer_activity (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -1528,6 +1597,18 @@ class Store:
         except sqlite3.OperationalError:
             pass  # 이미 존재
 
+        # ── 🎙 마지막 성우 기억(2026-09-02 사장님 "마지막 본인이 세팅한 TTS를 다음작업에도"). ──
+        #    왜 필요한가: job.voice가 비면 mix_pipeline._voice_params가 _DEFAULT_VOICE(미나)로
+        #    폴백한다. 그래서 3단계 매칭의 1차 TTS가 **항상 미나**로 나가고, 고객은 4단계에서
+        #    자기 성우로 바꿔야 했다. 그 '적용'이 resynth_tts_job(skip_existing 없음 = 전 비트
+        #    재합성)이라 **편당 TTS가 2회** 나갔다. 여기 기억해 둔 값을 create_mix_job이
+        #    job.voice 초기값으로 넣으면 1차부터 본인 성우 → 4단계를 누를 이유가 없어진다.
+        #    값은 /api/mix/voice가 만드는 voice 스냅샷 JSON 그대로(같은 모양이라야 재가공이 없다).
+        try:
+            c.execute("ALTER TABLE customers ADD COLUMN last_voice_json TEXT")
+        except sqlite3.OperationalError:
+            pass  # 이미 존재. 기존 고객은 NULL = 종전대로 미나 폴백(동작 불변).
+
         # ── 관리자 지정(2026-07-22): admin=1이면 관리자(권한 관리자와 동일). 사장님이 UI로 부여/회수. ──
         try:
             c.execute("ALTER TABLE customers ADD COLUMN admin INTEGER NOT NULL DEFAULT 0")
@@ -1547,6 +1628,34 @@ class Store:
             c.execute("ALTER TABLE customers ADD COLUMN welcome_due INTEGER NOT NULL DEFAULT 0")
         except sqlite3.OperationalError:
             pass  # 이미 존재
+
+        # ── 가입 자동확인(2026-08-30 사장님 "가입하면 그냥 자동으로 체험판 랭킹만으로
+        #    한번에 다 해주고, 지금 승인대기중도 다 내려서 체험판 랭킹만으로") ──
+        #    승인대기 목록은 지금까지 approved_at NULL로 판정했는데, 그 필드는 동시에
+        #    **체험창(trial_ends_at)을 무시하고 영구 개방**하는 권한 필드이기도 하다
+        #    (access_level: approved_at이 있으면 체험창을 아예 안 본다).
+        #    그래서 "대기실에서만 내린다"고 approved_at을 채우면 3일 체험이 영구가 된다
+        #    — 2026-08-26에 같은 필드를 공유해서 이미 한 번 사고가 났다(0순위-B).
+        #    → 목록 판정용 acked_at을 따로 둔다. 권한은 approved_at·plan이 그대로 정한다.
+        #    NULL=아직 안 내려감. 기존 미승인 고객은 아래 백필이 한 번에 내린다.
+        try:
+            c.execute("ALTER TABLE customers ADD COLUMN acked_at INTEGER")
+            # 이번에 처음 생긴 경우에만 백필 — **기존 고객 전원**을 '확인함'으로 내린다.
+            # ★미승인(approved_at NULL)만 내리면 안 된다: 이미 승인된 고객 263명도
+            #   acked_at이 NULL이라 **새 판정에서 통째로 대기실에 나타난다**(실측
+            #   2026-08-30 라이브: 62명을 내렸더니 263명이 새로 떴다). 승인된 고객은
+            #   정의상 이미 처리된 사람이므로 같이 내린다. 체험창은 손대지 않는다.
+            _now_ack = int(datetime.now(timezone.utc).timestamp())
+            c.execute("UPDATE customers SET acked_at=? WHERE acked_at IS NULL", (_now_ack,))
+        except sqlite3.OperationalError:
+            pass  # 이미 존재
+        # ★위 백필을 좁게(미승인만) 내보낸 판이 라이브에 한 번 나갔다(2026-08-30).
+        #   그 서버는 ALTER가 이미 끝나 위 except로 빠지므로 **넓힌 백필이 영영 안 돈다**
+        #   → 승인된 263명이 대기실에 남는다. 컬럼이 이미 있어도 도는 보정을 따로 둔다.
+        #   조건이 좁아 평상시엔 0행이고(가입이 acked_at을 채운다), 한 번 정리되면 끝난다.
+        _fix = int(datetime.now(timezone.utc).timestamp())
+        c.execute("UPDATE customers SET acked_at=? "
+                  "WHERE acked_at IS NULL AND approved_at IS NOT NULL", (_fix,))
 
         # ── 성별·연령대(2026-08-24): 가입 마무리 화면에서 이름·전화와 함께 받는다. ──
         #   NULL=아직 안 받음. 기존 고객은 NULL로 남고 다음 접속 때 한 번 물어본다(백필).
@@ -2249,6 +2358,21 @@ class Store:
                             "ORDER BY id DESC LIMIT 1", (platform, shortcode)).fetchone()
         return row[0] if row else None
 
+    def prev_base_map(self, platform):
+        """플랫폼의 {shortcode: 직전 수집 조회수} 전부 — delta 계산용.
+
+        ★단건(prev_base_platform)을 수천 번 부르면 그만큼 왕복이 난다(네이버클립은
+          한 번에 4,000건이 넘는다). 마지막 base만 필요하므로 한 방에 가져온다.
+          `MAX(id)` 기준으로 각 shortcode의 **최신 회차**를 고른다.
+        """
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT shortcode, base FROM platform_snapshots "
+                "WHERE platform=? AND id IN ("
+                "  SELECT MAX(id) FROM platform_snapshots WHERE platform=? GROUP BY shortcode)",
+                (platform, platform)).fetchall()
+        return {r[0]: r[1] for r in rows if r[0] is not None and r[1] is not None}
+
     def prev_delta_platform(self, platform, shortcode):
         with self._conn() as c:
             row = c.execute("SELECT delta FROM platform_snapshots WHERE platform=? AND shortcode=? "
@@ -2334,8 +2458,34 @@ class Store:
                       key=lambda i: (i.get("age_hours") is None,
                                      i.get("age_hours") if i.get("age_hours") is not None else 0))
 
+    def _fill_delta(self, platform, items):
+        """delta·is_new가 없는 항목을 채운다 — **모든 플랫폼이 지나는 자리**(0순위-B).
+
+        ★2026-08-31 사장님 제보 "+undefined": 유튜브·인스타·틱톡은 ranking.py를
+          거치며 delta를 얻는데 네이버클립·핀터레스트는 그 경로를 안 타 두 키가
+          통째로 없었다(실측 4,492/4,492 · 2,259/2,259). 화면이 `'+'+i.delta`로
+          이어붙여 "+undefined"가 그대로 찍혔다.
+          호출부마다 붙이면 **새 플랫폼이 생길 때마다 또 빠뜨린다** — 저장을
+          담당하는 여기서 한 번에 채운다(락을 여기 둔 것과 같은 이유).
+        ★이미 채워진 항목은 건드리지 않는다 — ranking.py가 계산한 값이 더 정확하다
+          (가속·직전 delta까지 본다).
+        """
+        need = [x for x in (items or [])
+                if isinstance(x, dict) and x.get("delta") is None]
+        if not need:
+            return items
+        try:
+            from shopping_shorts import ranking
+            ranking.attach_delta(need, self.prev_base_map(platform))
+        except Exception as e:      # noqa: BLE001 — delta를 못 채워도 수집은 살린다
+            logging.warning("delta 채우기 실패(%s): %s", platform, type(e).__name__)
+            for x in need:          # 그래도 undefined는 막는다
+                x.setdefault("delta", 0)
+                x.setdefault("is_new", True)
+        return items
+
     def save_last_run_platform(self, platform, items, collected_at):
-        items = self._trim_for_store(items)
+        items = self._trim_for_store(self._fill_delta(platform, items))
         with self._conn() as c:
             c.execute("INSERT OR REPLACE INTO settings(key, value) VALUES(?,?)",
                       (f"last_run::{platform}", json.dumps({"items": items, "collected_at": collected_at}, ensure_ascii=False)))
@@ -2366,7 +2516,7 @@ class Store:
             have = {x.get(key) or x.get("video_url") for x in prev}
             fresh = [x for x in (new_items or [])
                      if (x.get(key) or x.get("video_url")) not in have]
-            items = self._trim_for_store(fresh + prev)
+            items = self._trim_for_store(self._fill_delta(platform, fresh) + prev)
             c.execute("INSERT OR REPLACE INTO settings(key, value) VALUES(?,?)",
                       (f"last_run::{platform}",
                        json.dumps({"items": items, "collected_at": collected_at},
@@ -2512,17 +2662,27 @@ class Store:
         return out
 
     def mix_basket_set_meta(self, shortcode, customer_id=LEGACY_CUSTOMER_ID,
-                            thumbnail=None, name=None, meta=None):
+                            thumbnail=None, name=None, meta=None, overwrite=False):
         """원클릭 담기 항목의 보강값 갱신(백그라운드 enrich용). None인 필드는 안 건드린다.
         thumbnail/name은 기존 값이 빈 경우에만 채운다(사용자·유저스크립트가 준 값 우선).
-        meta=dict면 JSON으로 직렬화해 meta_json에 저장."""
+        meta=dict면 JSON으로 직렬화해 meta_json에 저장.
+
+        overwrite=True면 thumbnail/name을 **기존 값이 있어도 덮어쓴다**(2026-09-01).
+          왜: 유튜브 쇼츠는 SPA라 스크롤로 다음 영상에 가도 og:image/og:title이 처음
+          로드한 영상 것으로 남는다 → 담기가 보낸 제목·썸네일이 **다른 영상 것**이다
+          (실측: url=L8mYlaYXVFI(집코드)인데 name·thumbnail은 B_O4a0x_MmU(홈모아)).
+          주소는 항상 정확하므로 URL로 다시 조회한 값이 진실이다.
+          ⚠️기본값은 False로 둔다 — 늘 덮어쓰면 사용자가 손으로 고친 이름을
+            백그라운드 보강이 조용히 되돌린다. 호출부가 '틀렸다고 아는' 때만 켠다."""
         with self._conn() as c:
             sets, args = [], []
             if thumbnail:
-                sets.append("thumbnail=COALESCE(NULLIF(thumbnail,''), ?)")
+                sets.append("thumbnail=?" if overwrite
+                            else "thumbnail=COALESCE(NULLIF(thumbnail,''), ?)")
                 args.append(thumbnail)
             if name:
-                sets.append("name=COALESCE(NULLIF(name,''), ?)")
+                sets.append("name=?" if overwrite
+                            else "name=COALESCE(NULLIF(name,''), ?)")
                 args.append(name)
             if meta:
                 # ★기존 meta_json에 병합 — yt-dlp 추출이 간헐 실패(틱톡 rehydration 등)해도
@@ -4438,19 +4598,27 @@ class Store:
             None이면 자동 선정(인스타/유튜브·댓글수 규칙). run_mix_job이 인덱스→video_id로 푼다."""
         now = datetime.now(timezone.utc).isoformat()
         bb = None if backbone_main is None else int(backbone_main)
+        # ★🎙 마지막 성우를 job에 미리 심는다(2026-09-02) — 이중 TTS 차단의 핵심.
+        #   여기서 안 심으면 3단계 매칭의 1차 TTS가 _DEFAULT_VOICE(미나)로 나가고, 고객이
+        #   4단계에서 바꾸는 순간 resynth_tts_job이 **전 비트를 다시 합성**한다(편당 2회).
+        #   ★반드시 이 한 곳에서만 심는다(0순위-B): create_mix_job 호출부가 4군데
+        #   (app.py 3390·3527·14730, auto_run.py 134)라 호출부마다 심으면 언젠가 어긋난다.
+        #   기억이 없으면(신규 고객) None → 종전대로 미나 폴백이라 동작이 안 바뀐다.
+        last_voice = self.get_last_voice(customer_id)
         with self._conn() as c:
             c.execute(
                 "INSERT INTO mix_jobs(job_id, urls_json, target_seconds, structure, "
                 "status, created_at, updated_at, subtitle_removal, given_script, "
                 "script_structure_json, customer_id, render_charge_day, scene_first, backbone_main, "
-                "mix_charged) "
-                "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                "mix_charged, voice_json) "
+                "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 (job_id, json.dumps(urls, ensure_ascii=False), target_seconds,
                  structure, "downloading", now, now, 1 if subtitle_removal else 0,
                  given_script or None,
                  json.dumps(script_structure, ensure_ascii=False) if script_structure else None,
                  customer_id, render_charge_day, 1 if scene_first else 0, bb,
-                 None if mix_charged is None else int(mix_charged)),
+                 None if mix_charged is None else int(mix_charged),
+                 json.dumps(last_voice, ensure_ascii=False) if last_voice else None),
             )
 
     def get_mix_job(self, job_id):
@@ -4822,6 +4990,78 @@ class Store:
         with self._conn() as c:
             return c.execute("DELETE FROM produce_works WHERE work_id=? AND customer_id=?",
                              (work_id, customer_id)).rowcount > 0
+
+    # ── 🖼 내 썸네일 프리셋(2026-09-02, 영상제작 7단계) ──
+    # 만든 썸네일의 구성(레이어 배열)을 담아두고 다음 영상에 그대로 얹는다.
+    # customer_id를 WHERE에 항상 끼운다 — produce_works와 같은 관례라 남의 프리셋은
+    # 읽지도 지우지도 못한다.
+    def add_thumb_preset(self, preset_id, name, layers, thumb_file=None,
+                         customer_id=LEGACY_CUSTOMER_ID):
+        """프리셋 1건 저장. 저장된 dict를 돌려준다.
+
+        layers는 THUMB_STATE.layers 모양 그대로(글자·스티커·도형·배지가 한 배열)."""
+        now = datetime.now(timezone.utc).isoformat()
+        with self._conn() as c:
+            c.execute(
+                "INSERT INTO thumb_presets (preset_id, customer_id, name, layers_json, "
+                "thumb_file, created_at, updated_at) VALUES (?,?,?,?,?,?,?)",
+                (preset_id, customer_id, name,
+                 json.dumps(layers, ensure_ascii=False), thumb_file, now, now),
+            )
+        return {"preset_id": preset_id, "name": name, "layers": layers,
+                "thumb_file": thumb_file, "created_at": now, "updated_at": now}
+
+    def list_thumb_presets(self, customer_id=LEGACY_CUSTOMER_ID, limit=60):
+        """내 프리셋 목록(최신순). layers까지 함께 싣는다 — 카드를 누르는 즉시 적용해야
+        하는데 목록과 상세를 나누면 왕복이 한 번 더 늘고, 레이어는 원래 작다(수 KB)."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT preset_id, name, layers_json, thumb_file, updated_at "
+                "FROM thumb_presets WHERE customer_id=? "
+                "ORDER BY updated_at DESC, rowid DESC LIMIT ?",
+                (customer_id, limit),
+            ).fetchall()
+        out = []
+        for r in rows:
+            try:
+                layers = json.loads(r[2])
+            except Exception:
+                continue          # 깨진 행 하나가 목록 전체를 죽이지 않게 한다
+            out.append({"preset_id": r[0], "name": r[1], "layers": layers,
+                        "thumb_file": r[3], "updated_at": r[4]})
+        return out
+
+    def get_thumb_preset(self, preset_id, customer_id=LEGACY_CUSTOMER_ID):
+        """프리셋 1건. 없거나 남의 것이면 None."""
+        with self._conn() as c:
+            row = c.execute(
+                "SELECT preset_id, name, layers_json, thumb_file, updated_at "
+                "FROM thumb_presets WHERE preset_id=? AND customer_id=?",
+                (preset_id, customer_id),
+            ).fetchone()
+        if not row:
+            return None
+        try:
+            layers = json.loads(row[2])
+        except Exception:
+            return None
+        return {"preset_id": row[0], "name": row[1], "layers": layers,
+                "thumb_file": row[3], "updated_at": row[4]}
+
+    def rename_thumb_preset(self, preset_id, name, customer_id=LEGACY_CUSTOMER_ID):
+        """이름 바꾸기. 성공하면 True — 남의 것/없으면 False."""
+        with self._conn() as c:
+            return c.execute(
+                "UPDATE thumb_presets SET name=?, updated_at=? "
+                "WHERE preset_id=? AND customer_id=?",
+                (name, datetime.now(timezone.utc).isoformat(), preset_id, customer_id),
+            ).rowcount > 0
+
+    def delete_thumb_preset(self, preset_id, customer_id=LEGACY_CUSTOMER_ID):
+        """지운다. 실제로 지워졌으면(내 것이었으면) True."""
+        with self._conn() as c:
+            return c.execute("DELETE FROM thumb_presets WHERE preset_id=? AND customer_id=?",
+                             (preset_id, customer_id)).rowcount > 0
 
     # ── 보이스 프리셋(2026-07-14, 영상제작 4단계) ──
     def upsert_voice_preset(self, p):
@@ -5222,8 +5462,14 @@ class Store:
                         name=None, phone=None, welcome_due=False, gender=None, age_band=None):
         """신규 고객 계정 생성. username 중복이면 ValueError. 성공 시 customer_id 반환.
         approved=True(기본): 가입 즉시 승인+무료체험 시작(full_access_until=now+trial_days).
-        approved=False: 대기중(approved_at=NULL) + 체험 미시작(full_access_until=0).
-        체험은 사장님 승인 시점(approve_customer)에 시작된다."""
+        approved=False: 체험판(랭킹만) + 체험창(trial_ends_at) 시작. full_access_until=0.
+
+        ★2026-08-30 사장님 "가입하면 그냥 자동으로 체험판 랭킹만으로 한번에 다 해주고
+          포인트 50 넣고": acked_at을 **가입 시점에 바로 채운다** → 승인대기 목록에
+          아예 안 들어간다(버튼 누를 일이 없다). 포인트 50P는 app.py의 _signup_topup이
+          같은 가입 경로에서 넣는다.
+        ⚠️ approved_at은 여기서 채우지 않는다 — 채우면 access_level이 체험창을
+          안 보게 돼 3일 체험이 영구 개방이 된다."""
         salt = secrets.token_hex(16)
         pw_hash = self._hash_password(password, salt)
         now_ts = int(datetime.now(timezone.utc).timestamp())
@@ -5243,8 +5489,9 @@ class Store:
             #   기본값을 72시간으로 둔다 — 설정을 안 건드려도 켜진다(서버 settings는 미설정).
             #   0으로 바꾸면 옛 동작(가입 직후 잠김, 사장님이 줘야 시작)으로 돌아간다.
             #   ⚠️ 이 창은 approved_at이 비어 있을 때만 유효하다(access_level).
-            #      사장님이 '확인'을 누르면 ack_customer가 남은 시간을 full_access_until로
-            #      옮겨 체험이 끊기지 않게 한다.
+            #      그래서 '확인'(ack_customer)은 approved_at을 건드리지 않는다 —
+            #      건드리면 체험창이 무시돼 영구 개방이 된다(2026-08-30).
+            #      창이 끝나면 access_level이 pending으로 떨어져 전면차단된다.
             try:
                 trial_hours = int(self.get_setting("trial_event_hours", 72))
             except (TypeError, ValueError):
@@ -5255,11 +5502,11 @@ class Store:
                 cur = c.execute(
                     "INSERT INTO customers(username, password_hash, salt, created_at, "
                     "plan, full_access_until, email, google_sub, approved_at, name, phone, "
-                    "trial_ends_at, welcome_due, gender, age_band) "
-                    "VALUES(?,?,?,datetime('now'),'free',?,?,?,?,?,?,?,?,?,?)",
+                    "trial_ends_at, welcome_due, gender, age_band, acked_at) "
+                    "VALUES(?,?,?,datetime('now'),'free',?,?,?,?,?,?,?,?,?,?,?)",
                     (username, pw_hash, salt, full_access_until, email, google_sub,
                      approved_at, name, phone, trial_ends_at, 1 if welcome_due else 0,
-                     gender, age_band),
+                     gender, age_band, now_ts),
                 )
             except sqlite3.IntegrityError:
                 raise ValueError(f"이미 존재하는 아이디: {username}")
@@ -5286,12 +5533,18 @@ class Store:
             return _ret(row[0] if row else None, False)  # 경합 패자는 알림 안 울림(승자만 1번)
 
     def pending_customers(self):
-        """승인 대기(approved_at IS NULL) 고객 목록 — 관리자 알림 폴링용(가벼운 쿼리).
-        최근 가입 먼저. 사장님(0) 제외. → [{id, username, name, phone, email, created_at}]."""
+        """승인 대기(acked_at IS NULL) 고객 목록 — 관리자 알림 폴링용(가벼운 쿼리).
+        최근 가입 먼저. 사장님(0) 제외. → [{id, username, name, phone, email, created_at}].
+
+        ★2026-08-30: 판정 기준이 approved_at → **acked_at**으로 바뀌었다.
+          approved_at은 '체험창을 무시하고 영구 개방'이라는 권한 의미를 겸하고 있어
+          목록에서 내리려고 채우면 3일 체험이 영구가 된다(0순위-B, 08-26 동일 사고).
+          이제 가입이 acked_at을 바로 채우므로 이 목록은 **상시 비어 있는 게 정상**이다.
+          권한은 여전히 approved_at·plan·trial_ends_at이 정한다 — 여기선 안 본다."""
         with self._conn() as c:
             rows = c.execute(
                 "SELECT id, username, name, phone, email, created_at FROM customers "
-                "WHERE id != 0 AND approved_at IS NULL ORDER BY id DESC"
+                "WHERE id != 0 AND acked_at IS NULL ORDER BY id DESC"
             ).fetchall()
         return [{"id": r[0], "username": r[1], "name": r[2], "phone": r[3],
                  "email": r[4], "created_at": r[5]} for r in rows]
@@ -5315,12 +5568,15 @@ class Store:
         """
         now_ts = int(datetime.now(timezone.utc).timestamp())
         with self._conn() as c:
-            row = c.execute("SELECT approved_at, trial_ends_at, full_access_until "
-                            "FROM customers WHERE id=?", (int(customer_id),)).fetchone()
+            row = c.execute("SELECT acked_at FROM customers WHERE id=?",
+                            (int(customer_id),)).fetchone()
             if row is None or row[0] is not None:
                 return False                       # 없는 고객이거나 이미 내려간 고객
-            # ★full_access_until은 손대지 않는다(위 설명). 유료 기간 필드다.
-            c.execute("UPDATE customers SET approved_at=? WHERE id=?",
+            # ★approved_at도 full_access_until도 손대지 않는다(2026-08-30).
+            #   둘 다 **권한** 필드다: approved_at은 체험창을 무시하게 만들고,
+            #   full_access_until은 입금으로 부여한 유료 기간이다. '봤다'는 표시를
+            #   권한 필드에 적으면 확인 한 번에 3일 체험이 영구가 된다.
+            c.execute("UPDATE customers SET acked_at=? WHERE id=?",
                       (now_ts, int(customer_id)))
         return True
 
@@ -5339,13 +5595,44 @@ class Store:
             return customer_id
         return None
 
+    # ── 🎙 마지막 성우 기억(2026-09-02) ──────────────────────────────────────
+    #  이 두 함수가 last_voice_json을 만지는 **유일한 출구**다(0순위-B). 다른 곳에서
+    #  customers.last_voice_json을 직접 SELECT/UPDATE 하지 마라 — JSON 파싱 규칙이
+    #  갈리면 "기억은 했는데 안 불러와진다"가 된다.
+    def get_last_voice(self, customer_id):
+        """고객이 마지막으로 적용한 voice 스냅샷 dict. 없거나 깨졌으면 None
+        (→ 호출부는 종전대로 _DEFAULT_VOICE 폴백 = 동작 불변)."""
+        if not customer_id:
+            return None
+        with self._conn() as c:
+            row = c.execute("SELECT last_voice_json FROM customers WHERE id=?",
+                            (customer_id,)).fetchone()
+        if not row or not row[0]:
+            return None
+        try:
+            v = json.loads(row[0])
+        except (ValueError, TypeError):
+            return None      # 깨진 값이 영상제작을 막지 않는다
+        return v if isinstance(v, dict) and v.get("voice_id") else None
+
+    def set_last_voice(self, customer_id, voice):
+        """이 고객의 다음 작업 기본 성우를 저장(upsert). voice=None이면 지운다.
+        ⚠️voice_id 없는 스냅샷은 저장하지 않는다 — 넣어봐야 get_last_voice가 거른다."""
+        if not customer_id:
+            return
+        val = None
+        if isinstance(voice, dict) and voice.get("voice_id"):
+            val = json.dumps(voice, ensure_ascii=False)
+        with self._conn() as c:
+            c.execute("UPDATE customers SET last_voice_json=? WHERE id=?", (val, customer_id))
+
     def get_customer(self, customer_id):
         """customer_id → {id, username, created_at, plan, full_access_until, google_sub, email, approved_at, name, phone} 또는 None."""
         with self._conn() as c:
             row = c.execute(
                 "SELECT id, username, created_at, plan, full_access_until, google_sub, email, "
                 "approved_at, name, phone, trial_ends_at, admin, welcome_due, "
-                "gender, age_band "
+                "gender, age_band, acked_at, pro_from, pro_until "
                 "FROM customers WHERE id=?", (customer_id,)
             ).fetchone()
         if not row:
@@ -5355,7 +5642,11 @@ class Store:
                 "google_sub": row[5], "email": row[6], "approved_at": row[7],
                 "name": row[8], "phone": row[9], "trial_ends_at": row[10],
                 "admin": bool(row[11]), "welcome_due": bool(row[12]),
-                "gender": row[13], "age_band": row[14]}
+                "gender": row[13], "age_band": row[14],
+                # ★대기실 판정 전용(2026-08-30). 권한은 approved_at·plan이 정한다.
+                "acked_at": row[15],
+                # 📅 기간제 이용권(2026-08-31). 0이면 무기한 — 기존 고객 전원이 0이다.
+                "pro_from": row[16] or 0, "pro_until": row[17] or 0}
 
     def clear_welcome_due(self, customer_id):
         """가입 마무리(이름·전화) 입력을 마쳤다 → 다시 묻지 않는다."""
@@ -5496,7 +5787,7 @@ class Store:
         """관리자용 전체 고객 목록(사장님 cid0 제외). 최근 가입 먼저. 최근 결제 요약 포함."""
         with self._conn() as c:
             rows = c.execute(
-                "SELECT id, username, email, plan, full_access_until, created_at, approved_at, name, phone, trial_ends_at, admin, last_seen, gender, age_band "
+                "SELECT id, username, email, plan, full_access_until, created_at, approved_at, name, phone, trial_ends_at, admin, last_seen, gender, age_band, acked_at, pro_from, pro_until "
                 "FROM customers WHERE id != 0 ORDER BY id DESC"
             ).fetchall()
             out = []
@@ -5509,6 +5800,11 @@ class Store:
                             "full_access_until": r[4] or 0, "created_at": r[5], "approved_at": r[6],
                             "name": r[7], "phone": r[8], "trial_ends_at": r[9], "admin": bool(r[10]),
                             "last_seen": r[11], "gender": r[12], "age_band": r[13],
+                            # ★대기실 판정은 acked_at 하나로 본다(2026-08-30). approved_at은
+                            #   권한 필드라 대기 목록 판정에 쓰면 체험이 영구가 된다.
+                            "acked_at": r[14],
+                            # 📅 기간제 이용권(2026-08-31) — 0이면 무기한
+                            "pro_from": r[15] or 0, "pro_until": r[16] or 0,
                             "last_payment": ({"amount": p[0], "paid_at": p[1]} if p else None),
                             "payment_count": cnt})
         return out
@@ -5567,6 +5863,98 @@ class Store:
         return [{"at": r[0], "action": r[1]} for r in rows]
 
     # ── 돌려쓰기 소프트감지(2026-07-22): 접속 IP·기기 기록 + 요약 ──
+    # ── 🖥 PC 등록/차단 (2026-08-31) ─────────────────────────────────────────
+    PC_SLOTS = 2          # ★계정당 PC 2대. 늘리려면 여기 한 곳만 고친다
+
+    def set_pro_term(self, customer_id, start_ts, until_ts):
+        """기간제 이용권 설정(시작·만료). 0을 주면 그 칸을 비운다(=무기한).
+
+        ★full_access_until은 **건드리지 않는다** — 그건 체험·입금승인 기간이라
+          의미가 다르고, 이미 지난 값이 pro 26명에게 박혀 있다(2026-08-31 실측).
+        """
+        with self._conn() as c:
+            c.execute("UPDATE customers SET pro_from=?, pro_until=? WHERE id=?",
+                      (int(start_ts or 0), int(until_ts or 0), int(customer_id)))
+
+    def device_check(self, customer_id, device_id, ua="", ip=""):
+        """이 기기가 등록된 PC인가 → (허용?, 슬롯번호, 등록된수). **등록은 하지 않는다.**
+
+        ★2026-08-31 실사고로 자동등록을 없앴다: 도장이 없는 상태에서 브라우저가 보내는
+          **동시 요청마다 서로 다른 도장**이 만들어져, 한 PC가 두 칸을 먹었다.
+          라이브에서 2칸이 찬 계정 4명이 전부 같은 IP였다(= 전부 한 PC).
+          → 등록은 사람이 마이페이지에서 **직접 한 번 누를 때만** 한다(device_register).
+        ★모바일 판정은 여기서 안 한다 — 부르는 쪽(미들웨어)이 PC일 때만 부른다.
+        """
+        if not (customer_id and device_id):
+            return True, None, 0        # 판단 불가면 막지 않는다(fail-open)
+        now = int(datetime.now(timezone.utc).timestamp())
+        with self._conn() as c:
+            rows = c.execute("SELECT slot, device_id FROM customer_devices "
+                             "WHERE customer_id=?", (customer_id,)).fetchall()
+            used = {r[0]: r[1] for r in rows}
+            for slot, did in used.items():
+                if did == device_id:
+                    c.execute("UPDATE customer_devices SET last_seen=?, ua=?, ip=? "
+                              "WHERE customer_id=? AND slot=?",
+                              (now, (ua or "")[:200], (ip or "")[:64], customer_id, slot))
+                    return True, slot, len(used)
+            return False, None, len(used)
+
+    def device_register(self, customer_id, device_id, ua="", ip=""):
+        """이 PC를 빈 칸에 등록 → (성공?, 슬롯|None, 사유).
+
+        ★사람이 마이페이지에서 직접 누를 때만 불린다. 미들웨어는 절대 부르지 않는다 —
+          그게 '한 PC가 두 칸' 사고의 뿌리였다.
+        """
+        if not (customer_id and device_id):
+            return False, None, "기기를 확인할 수 없어요"
+        now = int(datetime.now(timezone.utc).timestamp())
+        with self._conn() as c:
+            rows = c.execute("SELECT slot, device_id FROM customer_devices "
+                             "WHERE customer_id=?", (customer_id,)).fetchall()
+            used = {r[0]: r[1] for r in rows}
+            for slot, did in used.items():
+                if did == device_id:
+                    return True, slot, "이미 등록된 PC예요"
+            for slot in range(1, self.PC_SLOTS + 1):
+                if slot not in used:
+                    try:
+                        c.execute(
+                            "INSERT INTO customer_devices"
+                            "(customer_id, slot, device_id, first_seen, last_seen, ua, ip) "
+                            "VALUES(?,?,?,?,?,?,?)",
+                            (customer_id, slot, device_id, now, now,
+                             (ua or "")[:200], (ip or "")[:64]))
+                    except sqlite3.IntegrityError:
+                        return True, None, "이미 등록된 PC예요"
+                    return True, slot, ""
+            return False, None, f"PC {self.PC_SLOTS}대가 이미 등록돼 있어요"
+
+    def device_list(self, customer_id):
+        """등록된 PC 목록(관리자 화면용)."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT slot, device_id, first_seen, last_seen, ua, ip "
+                "FROM customer_devices WHERE customer_id=? ORDER BY slot", (customer_id,)).fetchall()
+        return [{"slot": r[0], "device_id": r[1], "first_seen": r[2],
+                 "last_seen": r[3], "ua": r[4] or "", "ip": r[5] or ""} for r in rows]
+
+    def device_list_all(self):
+        """{customer_id: 등록된 PC 수} — 목록 화면이 1인당 쿼리를 돌지 않게(N+1 방지)."""
+        with self._conn() as c:
+            rows = c.execute("SELECT customer_id, COUNT(*) FROM customer_devices "
+                             "GROUP BY customer_id").fetchall()
+        return {r[0]: r[1] for r in rows}
+
+    def device_reset(self, customer_id, slot=None):
+        """등록 해제. slot을 주면 그 칸만, 없으면 전부. 사장님만 부른다."""
+        with self._conn() as c:
+            if slot:
+                c.execute("DELETE FROM customer_devices WHERE customer_id=? AND slot=?",
+                          (customer_id, int(slot)))
+            else:
+                c.execute("DELETE FROM customer_devices WHERE customer_id=?", (customer_id,))
+
     def record_access(self, customer_id, ip, ua, day):
         """계정 접속 1건 기록. (cid, day, ip, ua) 유니크 → 같은 조합 재접속은 무시(하루 1행)."""
         ua = (ua or "")[:200]                       # UA는 길어 절단(admin 표시·중복판정엔 충분)
@@ -5576,25 +5964,46 @@ class Store:
                       "VALUES(?,?,?,?)", (customer_id, day, ip, ua))
 
     def access_summary(self, customer_id, since_day):
-        """since_day(포함) 이후의 고유 IP 수·고유 기기(UA) 수. 공유 의심 지표."""
+        """since_day(포함) 이후의 고유 IP 수·고유 기기(UA) 수·PC IP 수. 공유 의심 지표.
+
+        ★일괄판(access_summary_all)과 **같은 칸**을 돌려줘야 한다 — 한쪽에만 pc_ips를
+          넣었다가 "일괄판=낱개판" 계약을 깼다(2026-08-31, 게이트가 잡았다).
+        """
         with self._conn() as c:
-            row = c.execute(
-                "SELECT COUNT(DISTINCT ip), COUNT(DISTINCT ua) FROM customer_access "
-                "WHERE customer_id=? AND day>=?", (customer_id, since_day)).fetchone()
-        return {"ips": (row[0] or 0), "devices": (row[1] or 0)}
+            rows = c.execute(
+                "SELECT ip, ua FROM customer_access WHERE customer_id=? AND day>=?",
+                (customer_id, since_day)).fetchall()
+        ips = {r[0] for r in rows}
+        uas = {r[1] for r in rows}
+        pc_ips = {r[0] for r in rows if not _is_mobile_ua(r[1])}
+        return {"ips": len(ips), "devices": len(uas), "pc_ips": len(pc_ips)}
 
     # ── 관리자 목록용 일괄 조회 (2026-08-24) ──
     #    ★고객 1명당 쿼리를 도는 구조(N+1)라 155명에서 775번을 돌았다.
     #      목록이 뜨는 데 3.7초가 걸렸고, 그동안 화면은 비어 있다.
     #      아래 세 함수는 **한 번의 쿼리로** 전원 몫을 가져온다.
     def access_summary_all(self, since_day):
-        """{customer_id: {"ips": n, "devices": n}} — access_summary의 일괄판."""
+        """{customer_id: {"ips": n, "devices": n, "pc_ips": n}} — access_summary의 일괄판.
+
+        ★pc_ips가 왜 따로 필요한가(2026-08-31 사장님 "pc등록ip를 두개씩, 모바일은 상관없고"):
+          모바일은 **IP가 계속 바뀐다**(LTE↔와이파이, 기지국 이동). 그래서 혼자 쓰는
+          정상 회원도 7일이면 IP가 대여섯 개로 불어나 공유 의심 빨간불이 켜졌다.
+          IP로 돌려쓰기를 볼 수 있는 건 **PC뿐**이다 — 모바일 IP는 세지 않는다.
+        ★판별은 UA 한 곳에서만 한다(_is_mobile_ua) — 두 군데서 갈리면 화면과 서버가 어긋난다.
+        """
+        rows_by_cid = {}
         with self._conn() as c:
-            rows = c.execute(
-                "SELECT customer_id, COUNT(DISTINCT ip), COUNT(DISTINCT ua) "
-                "FROM customer_access WHERE day>=? GROUP BY customer_id",
-                (since_day,)).fetchall()
-        return {r[0]: {"ips": (r[1] or 0), "devices": (r[2] or 0)} for r in rows}
+            for cid, ip, ua in c.execute(
+                    "SELECT customer_id, ip, ua FROM customer_access WHERE day>=?",
+                    (since_day,)):
+                d = rows_by_cid.setdefault(cid, {"ips": set(), "uas": set(), "pc_ips": set()})
+                d["ips"].add(ip)
+                d["uas"].add(ua)
+                if not _is_mobile_ua(ua):
+                    d["pc_ips"].add(ip)
+        return {cid: {"ips": len(d["ips"]), "devices": len(d["uas"]),
+                      "pc_ips": len(d["pc_ips"])}
+                for cid, d in rows_by_cid.items()}
 
     def usage_all(self, day):
         """{customer_id: {op: count}} — usage_get의 일괄판."""
@@ -6623,6 +7032,25 @@ class Store:
                     customer_id, service, key_id, type(e).__name__)
                 continue
         return out
+
+    def list_all_customer_keys(self, service=None):
+        """관리자용 — 회원 등록 키 전체(누가·언제·상태). **키 원문은 안 준다.**
+
+        ★2026-09-01 사고에서 나온 필요: "등록 안 했다"는 회원 계정에 키 5개가 있었다.
+          누가 언제 넣었는지 화면에서 못 보면 그때마다 서버 DB를 직접 열어야 한다.
+        label(마스킹 문자열)까지만 노출한다 — 복호는 하지 않는다.
+        """
+        q = ("SELECT k.id, k.customer_id, k.service, k.label, k.status, "
+             "k.created_at, k.checked_at, c.name, c.email "
+             "FROM customer_keys k LEFT JOIN customers c ON c.id = k.customer_id")
+        args = ()
+        if service:
+            q += " WHERE k.service=?"
+            args = (service,)
+        q += " ORDER BY k.created_at DESC LIMIT 500"
+        with self._conn() as c:
+            c.row_factory = sqlite3.Row
+            return [dict(r) for r in c.execute(q, args)]
 
     def delete_customer_key(self, customer_id, key_id):
         """★customer_id를 조건에 반드시 넣는다 — 안 넣으면 id만 알면 남의 키를 지운다."""

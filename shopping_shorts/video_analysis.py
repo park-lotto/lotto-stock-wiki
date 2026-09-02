@@ -114,7 +114,8 @@ def _client_for_key(key):
         # 타임아웃 미지정 시 느린 Gemini 응답에 무한 대기할 수 있음(comment_gen._client_for_key
         # 참고 — 2026-07-14 실사고).
         _client_cache[key] = usage_meter.wrap(
-            genai.Client(api_key=key, http_options=types.HttpOptions(timeout=120_000)))
+            genai.Client(api_key=key, http_options=types.HttpOptions(timeout=120_000)),
+            pool="shorts", key=key)   # 관측판 귀속(2026-09-01)
     return _client_cache[key]
 
 

@@ -202,6 +202,22 @@ def pinterest_videos(keyword, max_results):
     return out
 
 
+def naverclip_videos(keyword, max_results):
+    """네이버 클립 키워드 검색(2026-08-30) — 무료·로그인/프록시 없음.
+
+    핀터레스트와 달리 **브라우저를 안 띄운다** — HTTP 2번이 전부다.
+    상세 조회수·좋아요·mp4 직링크까지 한 번에 온다(`naverclip_search` 참고).
+
+    ⚠️`play_url`에는 만료(`hdnts=exp=...`)가 붙는다. 카드에 인라인 재생용으로
+      바로 쓰는 건 되지만, 저장해 두고 나중에 쓰면 실패한다."""
+    try:
+        from shopping_shorts import naverclip_search
+        rows = naverclip_search.search(keyword, max_results=max_results)
+    except Exception:          # noqa: BLE001 — 백엔드 계약: 예외를 밖으로 던지지 않는다
+        return []
+    return [cn_backends.normalize(r, "naverclip") for r in rows if r.get("url")]
+
+
 def youtube(keyword, max_results):
     """유튜브 키워드 검색(무료 쿼터). 렌즈와 같은 조건 — 숏폼·한국어.
 

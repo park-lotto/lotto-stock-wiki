@@ -864,6 +864,8 @@ def _fillers(text, cfg, ctx):
     _lead = _LEADING_INTERJECTION_PAT.match(_body)
     if _lead and _lead.group(1) in _INTERJECTIONS:
         return text
+    if _LEADING_ADDRESS_PAT.match(_body):      # "여러분 …" — 이미 부름말로 열었다
+        return text
     if intensity <= 0 or cap <= 0:
         return text
     bi = ctx.get("beat_index") or 0
@@ -1198,6 +1200,11 @@ _WHISPER_TAG = "[whispers]"
 _INTERJECTIONS = {"와", "오", "우와", "헐", "이야", "음", "아", "그", "뭐", "자", "어", "어머"}
 # 문두 추임새 = 한글 1~2자 + 쉼표. 태그 묶음은 미리 벗겨내고 본다.
 _LEADING_INTERJECTION_PAT = re.compile(r"^\s*([가-힣]{1,2})\s*,")
+# ★부름말도 '이미 열었다'로 본다(2026-09-01 사장님 "대본 없는데 tts는 있는경우").
+#   대본 생성기(single_source.add_hook_opener)가 훅 앞에 얹는 건 "와, "와 "여러분 " 둘인데,
+#   위 패턴은 **1~2자+쉼표**만 보아 "여러분 "을 못 잡았다 → 대본 "여러분 다이소…"에
+#   TTS가 "와, 여러분 다이소…"를 만들어 **자막에 없는 말이 들렸다**(실측).
+_LEADING_ADDRESS_PAT = re.compile(r"^\s*(여러분|여러부운|다들)\s")
 
 
 def _whisper(text, cfg, ctx):

@@ -666,8 +666,8 @@ body:not(.tight) #pvfoldbtn{display:none}
 #rollbay:empty::before{content:'🎞 조각의 [필름 펼치기]를 누르면 여기에 필름이 펼쳐집니다';
   display:flex;align-items:center;height:34px;padding:0 12px;font-size:11.5px;color:var(--dim);
   border:1px dashed var(--line);border-radius:8px;background:var(--panel)}
-body:not(.tight) #rollbay:empty{min-height:0}
-body:not(.tight) #rollbay:empty::before{display:none}
+/* ★2026-08-30: '넓게'에서 필름 자리를 죽이던 두 줄을 걷었다 — 자리는 모드와 무관하다.
+   증상: 넓게에서 [필름 펼치기]를 눌러도 펼쳐질 자리가 없었다(사장님 실측). */
 
 /* ══ 위쪽 3단 배치(2026-08-26 사장님 스케치) ══
      ┌──────────┬─────────────────────────────┐
@@ -678,16 +678,21 @@ body:not(.tight) #rollbay:empty::before{display:none}
      아래는 소스 목록이 화면 전체 폭을 쓴다.
    ★자리를 '고정'한다 = 무엇을 하든 이 세 칸의 위치가 안 바뀐다. 필름을 접었다 폈다
      할 때 아래가 튀던 문제도 여기서 같이 사라진다. */
-body.tight #topband{display:flex;gap:10px;align-items:stretch;margin-bottom:8px}
-body.tight #topband > #playerhost{flex:0 0 var(--pv-w,240px);max-width:var(--pv-w,240px);
+/* ★2026-08-30: body.tight 게이트를 뗐다 — 이 '자리'는 모드와 무관하게 늘 같아야 한다.
+   증상: [▤ 넓게]를 누른 브라우저(sceneLab:tight='0')에서 미리보기가 훅 옆이 아니라
+   칸들 **아래**로 떨어졌다(고객 제보 + 사장님 화면 실측). '넓게'는 글자를 다 보여주는
+   모드일 뿐, 배치를 바꾸는 모드가 아니다. 글자 접기 규칙(.tbsay/.tbsegs/.meta)은
+   그대로 body.tight에 남는다. */
+#topband{display:flex;gap:10px;align-items:stretch;margin-bottom:8px}
+#topband > #playerhost{flex:0 0 var(--pv-w,240px);max-width:var(--pv-w,240px);
   order:0;padding:0;overflow:hidden;border:1px solid var(--line);border-radius:10px;
   background:var(--panel)}
-body.tight #topband > #topright{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
-body.tight #topband #topzone{margin:0}
-body.tight #topband #rollbay{margin:0;min-height:150px}   /* 필름 자리 — 늘 이만큼 잡는다 */
-body.tight #rollbay:empty::before{height:150px;align-items:center;justify-content:center}
+#topband > #topright{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+#topband #topzone{margin:0}
+#topband #rollbay{margin:0;min-height:150px}   /* 필름 자리 — 늘 이만큼 잡는다 */
+#rollbay:empty::before{height:150px;align-items:center;justify-content:center}
 /* 접기 버튼은 이 배치에선 필요 없다(자리가 고정이라 접을 이유가 없다) */
-body.tight #pvfoldbtn{display:none}
+#pvfoldbtn{display:none}
 
 .filmbtn{margin-left:8px;font-size:11.5px}
 /* ★필름 위/아래 '다른 장면으로' 띠(2026-08-28 사장님). 가로로 길게 둬서 조준이 필요 없다 —
@@ -710,8 +715,8 @@ body.tight #pvfoldbtn{display:none}
    ⚠️키우고 싶으면 여기 숫자를 올리기 전에 **끌어서** 맞춰봐라 — 미리보기 오른쪽
    가장자리(pvgrip)를 끌면 280~900px로 조절되고 localStorage(pvW)가 이 값을 이긴다.
    즉 이미 끌어본 적이 있으면 이 기본값을 바꿔도 화면은 안 바뀐다(그 땐 끌어서 맞춘다). */
-body.tight{--pv-w:330px}
-body.tight #playerhost{padding:6px}
+body{--pv-w:330px}
+#playerhost{padding:6px}
 body.tight #player .phead,                 /* '미리보기 / 닫기✕' 머리줄 */
 body.tight #player .pinfo,                 /* '화면에 박힌 글자는…' 안내 2줄 */
 body.tight #player #ptime,                 /* 0:00 / 0:05 */
@@ -727,17 +732,25 @@ body.tight #playerhost .lbl label{display:none}   /* 1장=1컷 — 사장님 "�
    ★값은 880px/86vh → 700px/72vh (2026-08-29 사장님 "3단계 미리보기가 너무 크다").
      880은 미리보기 450px(9:16 = 800px)을 품으려던 높이였다. 미리보기를 330px로
      되돌렸으니(9:16 ≈ 587px) 밴드도 같이 내린다 — 한쪽만 내리면 빈 세로가 남는다. */
+/* ★높이 고정은 '촘촘히' 전용이다(2026-08-30 브라우저 실측). 700px은 글자를 접었을 때
+   맞춘 값이라(촘촘히 실측: 칸 473 + 필름 221 = 694) 넓게에선 글자가 다 보여 776px이
+   되고, #topright{overflow:hidden}에 잘려 필름 자리가 빈 검은 칸으로 보인다.
+   → 자리(어디에 있나)는 모드 무관, 높이(얼마나 눌러 담나)는 촘촘히 전용. */
 body.tight #topband{height:min(700px,72vh)}
-body.tight #topband > #playerhost{height:100%;display:flex;flex-direction:column;min-height:0}
+body:not(.tight) #topband{height:auto}
+body:not(.tight) #topband > #topright{overflow:visible}
+/* 밴드가 auto면 height:100%가 안 먹는다(실측 playerhost 287px) — stretch로 채운다 */
+body:not(.tight) #topband > #playerhost{height:auto;align-self:stretch}
+#topband > #playerhost{height:100%;display:flex;flex-direction:column;min-height:0}
 /* ★display를 여기서 주면 안 된다 — #player는 원래 재생 중(.on)일 때만 보인다.
    내가 display:flex를 박는 바람에 **재생 전에도 빈 검은 재생창+진행바**가 떠서
    안내문과 두 겹으로 보였다(2026-08-26 사장님 F5 제보). 켜는 판단은 .on 한 곳뿐이다. */
-body.tight #player.on{flex:1;min-height:0;flex-direction:column}
-body.tight #player #vidbox{flex:1;min-height:0;width:auto;max-width:100%;height:auto;margin:0 auto}
-body.tight #player #vidbox video{width:100%;height:100%;object-fit:contain}
-body.tight #topband > #topright{min-height:0;overflow:hidden}
-body.tight #topband #topzone{overflow-x:auto;overflow-y:hidden}
-body.tight #topband #rollbay{flex:0 0 auto}
+#player.on{flex:1;min-height:0;flex-direction:column}
+#player #vidbox{flex:1;min-height:0;width:auto;max-width:100%;height:auto;margin:0 auto}
+#player #vidbox video{width:100%;height:100%;object-fit:contain}
+#topband > #topright{min-height:0;overflow:hidden}
+#topband #topzone{overflow-x:auto;overflow-y:hidden}
+#topband #rollbay{flex:0 0 auto}
 /* ★영상이 커지려면 **세로를 먹는 것**을 마저 걷어야 한다(실측: 박스 560인데 영상은 328).
    범인은 자르기 안내 2줄·자막칸·전체재생 줄이었다. 자르기 버튼은 남기고 설명만 접는다. */
 body.tight #player #trimbar .hint,
@@ -764,11 +777,11 @@ body.tight .pidleTxt{font-size:11px}
 .fr .frbar .frhint{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fr .frzoom,.fr .frstep,.fr .frclose{flex:0 0 auto}
 /* 가운데 필름도 훅 컷과 같은 높이(--cutw의 9:16) — 자리마다 크기가 다르면 눈이 흔들린다 */
-body.tight #rollbay .frwin{height:calc(var(--cutw,112px) * 16 / 9);min-height:0;flex:0 0 auto}
-body.tight #rollbay .fr{display:flex;flex-direction:column;height:100%}
-body.tight #topband #rollbay{flex:1 1 auto;min-height:170px;display:flex}
-body.tight #topband #rollbay .frslot{flex:1;min-width:0;display:flex}
-body.tight #topband #rollbay .frslot > .fr{flex:1}
+#rollbay .frwin{height:calc(var(--cutw,112px) * 16 / 9);min-height:0;flex:0 0 auto}
+#rollbay .fr{display:flex;flex-direction:column;height:100%}
+#topband #rollbay{flex:1 1 auto;min-height:170px;display:flex}
+#topband #rollbay .frslot{flex:1;min-width:0;display:flex}
+#topband #rollbay .frslot > .fr{flex:1}
 
 /* ══ 소스 영역도 타이트하게(2026-08-26 사장님 "여기도 필요없는 글자 삭제하고
      최대한 타이트하게 위로 올려") ══
@@ -792,8 +805,8 @@ body.tight #binmsg:not(.on){display:none}
   cursor:pointer;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;
   padding-left:5px;transition:transform .12s,background .12s}
 #pvbigplay:hover{background:var(--accent);color:#06231a;transform:scale(1.06)}
-body:not(.tight) #pvbigplay{display:none}
-body.tight #playerIdle{display:flex;flex-direction:column;align-items:center;justify-content:center;
+/* (넓게에서 큰 재생버튼을 숨기던 줄 제거 — #playerIdle이 이제 늘 같은 자리다) */
+#playerIdle{display:flex;flex-direction:column;align-items:center;justify-content:center;
   flex:1;min-height:0;background:#000;border-radius:6px}
 /* ✂ 여기부터 자르기 — 필름에서 하므로 없앤다(2026-08-26 사장님 "기능 없어도 된다").
    ★JS가 재생을 시작하며 style.display를 직접 켜므로 !important가 필요하다
@@ -804,22 +817,22 @@ body.tight #trimbar{display:none !important}
    .lbl(전체 재생 줄)과 #playerIdle은 마크업/JS가 style="display:…"를 직접 박는다.
    인라인은 보통 규칙을 이기므로 여기서만 !important를 쓴다(다른 데선 쓰지 않는다). */
 body.tight #playerhost .lbl{display:none !important}
-body.tight #playerhost[data-pane="draft"] #playerIdle{display:flex !important;
+#playerhost[data-pane="draft"] #playerIdle{display:flex !important;
   flex-direction:column;align-items:center;justify-content:center;flex:1;min-height:0;
   background:#000;border-radius:6px;border-style:solid}
-body.tight #playerhost:has(#player.on) #playerIdle{display:none !important}
+#playerhost:has(#player.on) #playerIdle{display:none !important}
 
 /* ══ 필름 박스 하단까지 꽉(2026-08-26 사장님 "박스안에 하단부분도 꽉채워서 해줘") ══
    필름 창을 높였는데 썸네일 띠(.frbelt)와 칸(.fc)이 72px 고정이라 아래가 검게 남았다.
    창 높이에 맞춰 늘린다 — 자막줄·손잡이가 쓰는 자리는 남긴다. */
-body.tight #rollbay .frbelt{top:4px;height:calc(100% - 30px)}
-body.tight #rollbay .fc{height:100%}
+#rollbay .frbelt{top:4px;height:calc(100% - 30px)}
+#rollbay .fc{height:100%}
 /* ★.frcaps는 top:80px 고정이라 belt가 커지면 그 위에 겹친다 — top을 풀고 아래에 붙인다. */
-body.tight #rollbay .frcaps{top:auto;bottom:4px}
-body.tight #rollbay .frhead{top:4px;bottom:28px}
+#rollbay .frcaps{top:auto;bottom:4px}
+#rollbay .frhead{top:4px;bottom:28px}
 
 /* 주황 구간 박스도 필름 높이에 맞춘다 — 72px 고정이라 아래가 비어 있었다 */
-body.tight #rollbay .frboxes .bx{top:4px;height:calc(100% - 30px)}
+#rollbay .frboxes .bx{top:4px;height:calc(100% - 30px)}
 
 /* ══ 타임프레임 가로 스크롤바 감추기(2026-08-26 사장님 "이것도 안보이게 하고 마우스로
      잡고 옆으로 이동되게 지금 필름형에 적용된것처럼") ══
@@ -867,11 +880,11 @@ body.tight .frslot.inbeat .frcaps{top:auto;bottom:4px}
    ★크기 정의처는 안 늘린다 — 폭 고정을 풀고 높이 캡만 주면 나머지는 기존 규칙
    (aspect-ratio·--cutw·fitPlayer)이 알아서 맞춘다. */
 @media (max-width: 720px){
-  body.tight #topband{flex-direction:column;height:auto}
+  #topband{flex-direction:column;height:auto}
   /* ★vh 금지 — grow 모드에선 100vh=iframe높이=내용높이라 자기참조로 부푼다(위 body.grow 참조) */
-  body.tight #topband > #playerhost{flex:0 0 auto;max-width:none;width:100%;height:320px}
-  body.tight #topband > #topright{flex:0 0 auto;overflow:visible}
-  body.tight #topband #topzone{overflow-x:auto}   /* 칸들 — 손가락 가로 스크롤 */
+  #topband > #playerhost{flex:0 0 auto;max-width:none;width:100%;height:320px}
+  #topband > #topright{flex:0 0 auto;overflow:visible}
+  #topband #topzone{overflow-x:auto}   /* 칸들 — 손가락 가로 스크롤 */
 }
 /* 필름 좌우 밀기를 터치에 연다 — pan-y: 세로 제스처는 브라우저(페이지 스크롤)가 갖고,
    가로 끌기는 pointermove가 우리에게 온다(auto면 브라우저가 가로채 pointercancel).
@@ -1065,6 +1078,15 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
             title="담은 편성을 처음부터 이어서 봅니다">▶</button>
     <div class="pidleIcon">🪞</div>
     <div class="pidleTxt">위 <b>띠의 조각</b>이나 아래 <b>장면</b>을 누르면<br>여기서 재생됩니다</div>
+    <!-- ★미리보기는 **꾸미기를 일부러 뺀다**(mix_pipeline.run_preview: caption_style=None,
+         deco={} — "스펙 §9 꾸미기 제외"). 자막은 기본 흰색으로 구워지고 헤드카피·템플릿도 없다.
+         그런데 그 사실이 화면 어디에도 없어서, 6단계에서 자막색을 검정으로 바꾸고 여기를 보면
+         **안 바뀐 것처럼 보인다**(실측 2026-09-02: 미리보기 자막 흰색, 최종본은 검정).
+         진짜 저장 버그와 증상이 똑같아 고객이 구별할 수 없다 → 한 줄로 미리 알린다. -->
+    <div class="pidleTxt" style="margin-top:8px;opacity:.72;font-size:12px;line-height:1.5">
+      장면·순서 확인용이라 <b>꾸미기(자막 색·헤드카피)는 빠져 있어요</b><br>
+      꾸민 그대로 보려면 <b>완성본 만들기</b>를 눌러주세요
+    </div>
   </div>
   <div id="player">
       <div class="phead"><b>미리보기</b> <span class="x" onclick="stopPlay()">닫기 ✕</span></div>
@@ -1695,7 +1717,7 @@ function toggleTight(){
   localStorage.setItem(TIGHT_KEY, document.body.classList.contains('tight') ? '0' : '1');
   _tightApply();
 }
-const BUILD_TAG = 'F24';   // 필름롤러 — 화면이 아래로 점점 늘어나던 것(grow×100vh 자기참조) 수리
+const BUILD_TAG = 'F28';   // 밴드 높이 고정은 촘촘히 전용 — 넓게는 내용만큼 자란다
 (function(){ const b=document.getElementById('buildtag'); if(b) b.textContent = BUILD_TAG; })();
 
 function toggleHints(){
@@ -1816,10 +1838,15 @@ function renderRollHosts(beatIdx, slot){
     anchor = document.querySelector(`.srcfilm[data-vid="${CSS.escape(id)}"]`);
     vidOnly = true;
   }
-  // ★촘촘히에서는 필름 자리가 **고정**이라 anchor가 필요 없다. 종전엔 카드 옆에 끼우던
-  //   잔재로 anchor를 못 찾으면 통째로 return해서, 소스별에서 [🎞 필름]을 눌러도
-  //   아무 일도 안 일어났다(실측 2026-08-26).
-  if (!anchor && !document.body.classList.contains('tight')){ markRollBtns(); return; }
+  // ★anchor가 실제로 필요한 건 **위 칸의 컷(cut)**뿐이다 — 그 칸 안(.tbcuts)에서 펼치므로.
+  //   영상 전체(src)·아래 카드(seg)는 고정 자리(#rollbay)에 펴서 anchor를 쓰지 않는다.
+  //   ★2026-08-31 사장님 "왜 필름이 안 펼쳐지나": 종전 가드는 tight일 때만 anchor를 면제했는데,
+  //     제작소 안(body.inside-studio)은 tight가 아니다. 그런데 소스별 묶음의 헤더 [🎞 필름]은
+  //     `.srcfilm` 표식 없이 버튼만 그린다(.srcfilm은 '필름형' 그룹에서만 생긴다) →
+  //     anchor를 못 찾아 통째로 return, **누르면 아무 일도 안 일어났다**.
+  //     실측(라이브 work=33377557599e): src 클릭 후 #rollbay 자식 0 / seg 클릭은 1(정상).
+  //     셀렉터와 표식이 짝이 아니면 가드가 엉뚱한 걸 막는다 — 필요한 곳에서만 막는다.
+  if (kind === 'cut' && !anchor){ markRollBtns(); return; }
 
   // ★맨 위 고정 자리에 편다(2026-08-26 사장님 "필름 펼치면 맨위도 가게").
   //   카드 옆에 끼우면 카드 폭(150px)에 눌려 필름이 제구실을 못 한다.
@@ -2695,10 +2722,18 @@ function render(){
       <div class="bhead">
         <span class="role">${i+1}. ${b.role || '칸'}</span>
         ${i===sel ? '<span class="selbadge">✔ 선택됨 — 여기에 담깁니다</span>' : ''}
-        <span class="chip ${lack > 0.1 ? (stretching ? 'warn' : 'bad') : 'good'}">재료 ${have.toFixed(1)}/멘트 ${needSec.toFixed(1)}초${
+        <span class="chip ${lack > 0.1 ? (stretching ? 'warn' : 'bad')
+                            : (f.over > 0.1 ? 'warn' : 'good')}">재료 ${have.toFixed(1)}/멘트 ${needSec.toFixed(1)}초${
           f.empty ? ` · <b>장면이 없어요 — 아래에서 담아주세요</b>`
                   : lack > 0.1 ? (stretching ? ` · 재료 ${lack.toFixed(1)}초 모자라 늘려 채우는 중`
-                                   : ` · <b>${lack.toFixed(1)}초 부족 — 장면 ${Math.ceil(lack / MAX_SHOT)}장 더 담아주세요</b>`) : ' · 다 채웠어요'}</span>
+                                   : ` · <b>${lack.toFixed(1)}초 부족 — 장면 ${Math.ceil(lack / MAX_SHOT)}장 더 담아주세요</b>`)
+                  // ★남는 재료도 여기서 말한다(2026-09-02). 위 타임라인(2487행)은 08-21에
+                  //   "N초는 안 나와요"를 넣었는데 **이 줄만 안 고쳤다** → 같은 칸을 두고
+                  //   위는 "3.4초는 안 나와요", 아래는 "다 채웠어요"라고 서로 다른 말을 했다
+                  //   (실측 job 353493f20d31: 5칸 합쳐 5.8초가 버려지는데 전부 '다 채웠어요').
+                  //   판단은 같은 f.over 하나를 쓴다 — 문구만 자리에 맞게 다르다(0순위-B).
+                  : f.over > 0.1 ? ` · ${f.over.toFixed(1)}초는 안 나와요(재료가 남아요)`
+                  : ' · 다 채웠어요'}</span>
         ${(lack > 0.1 || AUTOADD[i]) ? `<button class="act" style="${AUTOADD[i]?'':'border-color:var(--good);color:var(--good)'}"
           title="${AUTOADD[i] ? '자동으로 담아준 장면을 도로 뺍니다 — 내가 담은 것은 그대로'
                               : '부족한 만큼 안 쓴 장면을 골라 자동으로 담아줍니다(늘리지 않고 진짜 재료로) · 다시 누르면 되돌아갑니다'}"
@@ -2835,8 +2870,9 @@ function render(){
     const host = document.getElementById('playerhost');
     // ★촘촘히에서는 미리보기가 **왼쪽 위 고정 자리**(#topband)에 산다. 여기서 .wrap으로
     //   옮기면 그 배치를 되돌린다 — 어디에 둘지는 한 곳에서만 정한다(0순위-B).
-    const wrap = document.body.classList.contains('tight')
-      ? document.getElementById('topband') : document.querySelector('.wrap');
+    // ★2026-08-30: 모드로 갈리던 것을 없앴다(0순위-B). '넓게'에서 .wrap으로 옮기면
+    //   미리보기가 칸들 아래로 떨어진다 — 자리는 한 곳(#topband)으로 고정한다.
+    const wrap = document.getElementById('topband') || document.querySelector('.wrap');
     if (host && wrap && host.parentElement !== wrap){
       host.style.display = '';            // 위에서 감추던 것을 되살린다
       wrap.insertBefore(host, wrap.firstChild);

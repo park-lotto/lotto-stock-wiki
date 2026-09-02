@@ -245,13 +245,19 @@ def test_tiktok_free_path_wins_when_it_returns_rows(monkeypatch):
 
 
 def test_real_chain_has_the_four_platforms():
-    """실제 배선이 네 플랫폼을 다 갖고 있나(모킹된 테스트만 통과하면 의미 없다).
-    핀터레스트는 2026-08-29 합류 — 렌즈 시각검색이 영상 핀을 안 물어와서(실측 0개)."""
-    assert set(kw_search._CHAIN) == {"instagram", "tiktok", "youtube", "pinterest"}
+    """실제 배선이 플랫폼을 다 갖고 있나(모킹된 테스트만 통과하면 의미 없다).
+    핀터레스트는 2026-08-29 합류 — 렌즈 시각검색이 영상 핀을 안 물어와서(실측 0개).
+    네이버 클립은 2026-08-30 합류 — 국내 숏폼, 무료(HTTP 2번, 브라우저도 안 띄운다).
+
+    ★이름은 'four'로 남아 있지만 플랫폼은 다섯이다. 이름을 고치면 이 테스트가
+      'is_new'로 보여 게이트의 기준선 비교가 흔들린다 — 목록 자체가 정본이다."""
+    assert set(kw_search._CHAIN) == {"instagram", "tiktok", "youtube",
+                                     "pinterest", "naverclip"}
     assert kw_search._CHAIN["instagram"] == [kw_backends.instagram]
     assert kw_search._CHAIN["tiktok"] == [kw_backends.pw_tiktok, kw_backends.apify_tiktok]
     assert kw_search._CHAIN["youtube"] == [kw_backends.youtube]
     assert kw_search._CHAIN["pinterest"] == [kw_backends.pinterest_videos]
+    assert kw_search._CHAIN["naverclip"] == [kw_backends.naverclip_videos]
 
 
 # ── 핀터레스트 백엔드 (2026-08-29) ───────────────────────────────

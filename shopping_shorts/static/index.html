@@ -372,6 +372,10 @@ body.is-admin .admin-only{display:block}
            ★관리자 전용 — admin-only 클래스가 body.is-admin일 때만 보이게 한다(기존 방식 그대로).
              고객 화면엔 아예 안 뜬다. 새 방식을 만들지 않는다(0순위-B). -->
       <div class="ctype admin-only" data-platform="pinterest" onclick="switchPlatform('pinterest',this)">📌 핀터레스트</div>
+      <!-- 네이버 클립(2026-08-30 사장님 "핀터레스트 옆에 네이버클립 카테고리").
+           국내 숏폼. 핀터레스트와 달리 조회수·좋아요·댓글·발행시각이 다 와서
+           속도·참여율이 정상 계산된다. 무료·로그인 없음(HTTP 2번). -->
+      <div class="ctype admin-only" data-platform="naverclip" onclick="switchPlatform('naverclip',this)">🟩 네이버클립</div>
       <div class="ctype" data-platform="tiktok" onclick="switchPlatform('tiktok',this)" style="display:none">🎵 틱톡</div>
       <div class="ctype" data-platform="xiaohongshu" onclick="switchPlatform('xiaohongshu',this)" style="display:none">📕 샤오홍슈</div>
       <div class="ctype" data-platform="douyin" onclick="switchPlatform('douyin',this)" style="display:none">🎬 도우인</div>
@@ -397,6 +401,27 @@ body.is-admin .admin-only{display:block}
         <label style="font-size:12px;color:var(--sub);margin-left:10px">월 예산($) <input id="ttBudget" type="number" min="0" step="0.5" style="width:64px;padding:4px;border-radius:6px;border:1px solid var(--line);background:var(--inset);color:var(--txt)"></label>
         <button onclick="saveTtSettings()" style="margin-left:8px">저장</button>
         <div id="ttStatus" style="margin-top:6px;font-size:11px;color:var(--sub)"></div>
+      </div>
+    </div>
+    <!-- 네이버 클립 수집(2026-08-30) — 관리자 전용. switchPlatform이 켜고 끈다.
+         핀터레스트 패널과 같은 모양으로 둔다(사장님이 배우는 조작이 하나여야 한다). -->
+    <div id="ncPanel" style="display:none;margin-bottom:12px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--inset)">
+      <input id="ncKw" placeholder="검색어(한국어, 쉼표로 여러 개) — 비우면 뷰티"
+             style="width:min(560px,72%);padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--txt);font-size:13px">
+      <button onclick="ncCollect(this)" style="margin-left:8px">🟩 수집해서 쌓기</button>
+      <button onclick="ncCollect(this,true)" style="margin-left:4px" title="지금까지 쌓은 것을 비우고 새로 시작합니다">🗑 비우고 새로</button>
+      <span id="ncMsg" style="font-size:12px;color:var(--sub);margin-left:8px"></span>
+      <!-- 벤치마킹 채널 수집(2026-08-31) — 키워드와 다른 축이다.
+           키워드 = "뷰티에서 뭐가 터지나"(넓게) / 채널 = "이 15명이 오늘 뭘 올렸나"(매일). -->
+      <div style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)">
+        <span style="font-size:12px;color:var(--sub)">벤치마킹 채널</span>
+        <button onclick="ncChannels(this)" style="margin-left:8px">👥 채널 수집</button>
+        <button onclick="ncSeedDefaults(this)" style="margin-left:4px"
+                title="사장님이 고른 기본 15채널을 시드로 등록합니다">⭐ 기본 15채널 등록</button>
+        <input id="ncHandle" placeholder="채널 추가 — @핸들 또는 clip.naver.com 주소"
+               style="margin-left:6px;width:min(300px,44%);padding:6px 9px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--txt);font-size:12px">
+        <button onclick="ncSeedAdd(this)" style="margin-left:4px">➕ 추가</button>
+        <span id="ncChMsg" style="font-size:12px;color:var(--sub);margin-left:8px"></span>
       </div>
     </div>
     <!-- 핀터레스트 수집(2026-08-28) — 관리자 전용. switchPlatform이 켜고 끈다. -->
@@ -837,6 +862,9 @@ const DESC_BY_PLATFORM = {
   // ★핀터레스트는 조회수·좋아요를 안 준다 — 지표가 없으니 **없다고 말한다**(지어내지 않는다).
   //   깨끗한 원본(자막·워터마크 없음)을 찾는 게 목적이라 순위보다 '무엇이 있나'가 중요하다.
   pinterest: '검색어로 모은 <b>영상 핀</b>입니다. 자막·워터마크 없는 <b>깨끗한 원본</b>이 많아 자막제거 없이 바로 씁니다. (무료 수집 · 관리자 전용)',
+  // 네이버 클립은 핀터레스트와 달리 지표가 진짜로 온다 — 그래서 '지표 없음'이라
+  // 말하지 않는다(설명이 화면과 어긋나면 그게 거짓말이 된다).
+  naverclip: '검색어로 모은 <b>네이버 클립</b> 숏폼을 <b>조회수</b> 기반으로 랭킹합니다. 국내 소재라 번역 없이 바로 참고합니다. (무료 수집 · 관리자 전용)',
 };
 const TAB_TIP = {
   instagram: {speed:'댓글 ÷ 경과시간', density:'댓글 ÷ 조회수', fan_density:'댓글 ÷ 팔로워수'},
@@ -846,6 +874,7 @@ const TAB_TIP = {
   xiaohongshu: {speed:'(좋아요+댓글+수집+공유) ÷ 경과시간', density:'(수집+공유) ÷ (좋아요+댓글+수집+공유)'},
   threads:   {speed:'댓글 ÷ 경과시간', density:'댓글 ÷ 조회수'},
   pinterest: {},          // 지표 없음 — 핀터레스트가 조회수·좋아요를 안 준다
+  naverclip: {speed:'조회수 ÷ 경과시간', density:'(좋아요+댓글) ÷ 조회수 = 반응률'},
 };
 // ── 지표 '이름'도 플랫폼마다 다르다(2026-08-24 사장님 "이름고치고") ──────────────
 // 여태 툴팁(TAB_TIP)만 갈리고 **글자는 한 벌**이라, 유튜브에서 조회수÷시간으로
@@ -859,6 +888,9 @@ const METRIC_LABELS = {
   xiaohongshu: {speed:'시간당반응', density:'저장·공유율'},
   threads:     {speed:'시간당댓글', density:'조회수당댓글'},
   pinterest:   {},        // 비워 두면 정렬 탭이 자동으로 숨는다(위 주석 규약)
+  // fan_density(구독자 대비)는 없다 — 클립 카드 API가 구독자수를 안 준다.
+  // 지어내지 않고 키를 비워 그 탭이 자동으로 숨게 둔다.
+  naverclip:   {speed:'시간당조회수', density:'반응률'},
 };
 // 지표 이름 하나 — 모르는 플랫폼·지표는 인스타 이름으로 떨어진다(빈 화면보다 낫다).
 // 카드 툴팁 = 그 플랫폼의 실제 식(TAB_TIP). 이름과 식을 한 곳에서 짝지어 준다.
@@ -944,6 +976,9 @@ function switchPlatform(p, el){
   // 핀터레스트 수집 패널 — 관리자 + 그 탭일 때만(샤오홍슈와 같은 방식, 0순위-B).
   const _pp=document.getElementById('pinPanel');
   if(_pp) _pp.style.display = (p==='pinterest' && window.IS_ADMIN) ? 'block' : 'none';
+  // 네이버 클립 수집 패널 — 핀터레스트와 같은 방식(0순위-B: 새 방식을 만들지 않는다).
+  const _nc=document.getElementById('ncPanel');
+  if(_nc) _nc.style.display = (p==='naverclip' && window.IS_ADMIN) ? 'block' : 'none';
   const _xd=document.getElementById('xhsDiscoverPanel');
   if(_xd){
     const showXhs = (p==='xiaohongshu' && window.IS_ADMIN);
@@ -1019,6 +1054,92 @@ async function pinCollect(btn, reset){
   }catch(e){
     // ★조용히 실패하지 않는다 — 0건이 '없음'인지 '고장'인지 화면이 말해야 한다.
     if(msg) msg.textContent = '⚠️ '+(e&&e.message||e);
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent=orig; }
+  }
+}
+// 네이버 클립 수집(2026-08-30 사장님 "핀터레스트 옆에 / 뷰티쪽으로").
+// pinCollect와 같은 모양이다 — 다른 건 대기 문구뿐(브라우저를 안 띄워서 훨씬 빠르다).
+async function ncCollect(btn, reset){
+  const kwEl=document.getElementById('ncKw'), msg=document.getElementById('ncMsg');
+  const kws=(kwEl&&kwEl.value||'').split(',').map(s=>s.trim()).filter(Boolean);
+  if(reset && !confirm('지금까지 쌓은 네이버 클립 목록을 비우고 새로 시작할까요?')) return;
+  const orig=btn?btn.textContent:'';
+  if(btn){ btn.disabled=true; btn.textContent='수집 중…'; }
+  if(msg) msg.textContent = '네이버 클립 검색 중… (검색어 '+(kws.length||1)+'개)';
+  try{
+    const r=await fetch('/api/naverclip/collect',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({keywords:kws, reset:!!reset})});
+    const d=await r.json();
+    if(!d||!d.ok) throw new Error((d&&d.error)||('실패 '+r.status));
+    if(msg) msg.textContent = '✅ 새로 '+(d.added!=null?d.added:d.count)+'개 추가 · 지금까지 '+d.count+'개';
+    if(PLATFORM==='naverclip') load();     // 그 탭이면 즉시 다시 그린다
+  }catch(e){
+    if(msg) msg.textContent = '⚠️ '+(e&&e.message||e);
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent=orig; }
+  }
+}
+// ── 네이버 클립 벤치마킹 채널(2026-08-31) ───────────────────────────
+// 키워드 수집과 **다른 축**이다: 키워드는 넓게 훑고, 채널은 정해둔 사람들만 매일 본다.
+// 저장은 같은 platform("naverclip")이라 같은 목록에 쌓인다.
+async function ncChannels(btn){
+  const msg=document.getElementById('ncChMsg');
+  const orig=btn?btn.textContent:'';
+  if(btn){ btn.disabled=true; btn.textContent='수집 중…'; }
+  if(msg) msg.textContent='등록된 벤치마킹 채널을 훑는 중…';
+  try{
+    const r=await fetch('/api/naverclip/channels/collect',{method:'POST',
+      headers:{'Content-Type':'application/json'}, body:JSON.stringify({})});
+    const d=await r.json();
+    if(!d||!d.ok) throw new Error((d&&d.error)||('실패 '+r.status));
+    if(msg) msg.textContent='✅ 채널 '+d.channels+'개에서 새로 '
+      +(d.added!=null?d.added:d.count)+'개 추가 · 지금까지 '+d.count+'개';
+    if(PLATFORM==='naverclip') load();
+  }catch(e){
+    if(msg) msg.textContent='⚠️ '+(e&&e.message||e);
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent=orig; }
+  }
+}
+async function ncSeedDefaults(btn){
+  const msg=document.getElementById('ncChMsg');
+  const orig=btn?btn.textContent:'';
+  if(btn){ btn.disabled=true; btn.textContent='등록 중…'; }
+  try{
+    const r=await fetch('/api/naverclip/channels/seed',{method:'POST',
+      headers:{'Content-Type':'application/json'}, body:JSON.stringify({defaults:true})});
+    const d=await r.json();
+    if(!d||!d.ok) throw new Error((d&&d.error)||('실패 '+r.status));
+    if(msg) msg.textContent='✅ 기본 '+d.added+'채널을 시드로 등록했어요. 이제 [채널 수집]을 누르세요.';
+  }catch(e){
+    if(msg) msg.textContent='⚠️ '+(e&&e.message||e);
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent=orig; }
+  }
+}
+async function ncSeedAdd(btn){
+  const el=document.getElementById('ncHandle'), msg=document.getElementById('ncChMsg');
+  const v=(el&&el.value||'').trim();
+  if(!v){ if(msg) msg.textContent='@핸들이나 채널 주소를 넣어 주세요'; return; }
+  const orig=btn?btn.textContent:'';
+  if(btn){ btn.disabled=true; btn.textContent='확인 중…'; }
+  try{
+    const r=await fetch('/api/naverclip/channels/seed',{method:'POST',
+      headers:{'Content-Type':'application/json'}, body:JSON.stringify({handles:[v]})});
+    const d=await r.json();
+    if(!d||!d.ok) throw new Error((d&&d.error)||('실패 '+r.status));
+    // ★없는 채널은 서버가 거부한다 — 오타를 심으면 매일 0건을 긁게 되므로.
+    if(d.not_found&&d.not_found.length){
+      if(msg) msg.textContent='⚠️ 네이버 클립에서 못 찾았어요: '+d.not_found.join(', ')
+        +' — 채널 주소(clip.naver.com/@핸들)로 다시 시도해 보세요';
+    }else{
+      if(msg) msg.textContent='✅ 추가했어요: '+(d.added||[]).join(', ');
+      if(el) el.value='';
+    }
+  }catch(e){
+    if(msg) msg.textContent='⚠️ '+(e&&e.message||e);
   }finally{
     if(btn){ btn.disabled=false; btn.textContent=orig; }
   }
@@ -2030,8 +2151,8 @@ function render(opts){
         ${i.caption?`<div class="cap${i.thumbnail?'':' cap-only'}" onclick="toggleCap(this)">${esc(i.caption)}</div><div class="capmore" style="display:none" onclick="toggleCap(this.previousElementSibling)">⌄ 더보기</div>`:''}
         <div class="ch"><span class="chname" title="이 채널 영상만 보기(지난 한 달 포함)" style="cursor:pointer" onclick="searchChannel('${esc(i.username||'')}')">${i.name||i.username} <span class="grade">${i.grade||''}</span></span><button class="copy" title="릴스 링크 복사" onclick="copyLink('${i.url}', this)">🔗 복사</button></div>
         ${(i.followers||i.duration!=null)?`<div class="folw">${i.followers?`<span title="채널 팔로워(구독자) 수 — 수집이 실어온 실시간 값">👥 팔로워 ${i.followers.toLocaleString()}</span>`:''}${i.duration!=null?`<span class="dur" title="영상 길이">🎬 ${_fmtDur(i.duration)}</span>`:''}</div>`:''}
-        ${i.views?`<div class="stat" title="조회수 — 옆의 +숫자는 직전 수집 대비 증가분(= '전체' 탭 정렬 기준)"><span>조회수</span><b>${i.views.toLocaleString()} <span class="delta-up">${i.is_new?'신규':'+'+i.delta}</span></b></div>`:''}
-        <div class="stat" title="댓글 수 그대로"><span>댓글</span><b>${i.comments.toLocaleString()}${i.views?'':` <span class="delta-up">${i.is_new?'신규':'+'+i.delta}</span>`}</b></div>
+        ${i.views?`<div class="stat" title="조회수 — 옆의 +숫자는 직전 수집 대비 증가분(= '전체' 탭 정렬 기준)"><span>조회수</span><b>${i.views.toLocaleString()} ${_delta(i)}</b></div>`:''}
+        <div class="stat" title="댓글 수 그대로"><span>댓글</span><b>${Number(i.comments||0).toLocaleString()}${i.views?'':` ${_delta(i)}`}</b></div>
         <div class="stat" title="${_mtip('speed')}"><span>${_mlabel('speed')}</span><b>${_num(i.speed,1)}</b></div>
         ${i.views?`<div class="stat" title="${_mtip('density')}"><span>${_mlabel('density')}</span><b>${_pct(i.density)}</b></div>`:''}
         ${(i.likes&&!i.views)?`<div class="stat" title="좋아요 수 그대로 — 쓰레드는 조회수를 안 준다"><span>좋아요</span><b>${i.likes.toLocaleString()}</b></div>`:''}
@@ -2343,6 +2464,18 @@ function _bankIngestEl(){
 }
 function _sumBuckets(by,keys){ return keys.reduce((s,k)=>s+(by&&by[k]||0),0); }
 function _pct(x){ return (x===null||x===undefined)?'—':Math.round(x*100)+'%'; }
+// 조회수 옆 증가분 배지. ★값이 없으면 **아무것도 안 그린다**(2026-08-31 사장님 제보).
+//   전엔 `'+'+i.delta`로 이어붙여, 수집이 delta를 안 실은 플랫폼(네이버클립·핀터레스트)
+//   에서 "+undefined"가 그대로 찍혔다. 서버도 고쳤지만 **이미 저장된 옛 수집분**은
+//   그대로라, 화면에서도 막아야 사용자 눈에서 사라진다.
+function _delta(i){
+  if(!i) return '';
+  if(i.is_new) return '<span class="delta-up">신규</span>';
+  const d = i.delta;
+  if(d===null||d===undefined||isNaN(d)) return '';   // 모르면 침묵한다(거짓말 금지)
+  if(d<=0) return '';                                 // +0은 정보가 없다
+  return '<span class="delta-up">+'+Number(d).toLocaleString()+'</span>';
+}
 // 흡수 리포트 + 제미니 검열을 한 패널로. 신호등(🟢🟡🔴) + 3지표 + 경고사유.
 function _renderBankPanel(rep){
   const by=rep.by_bucket||{};
@@ -4296,6 +4429,19 @@ fetch('/api/me').then(r=>r.ok?r.json():null).then(d=>{
     document.body.classList.add('is-admin');   // 카드의 🚫 차단 버튼을 CSS로 켠다(재렌더 불필요)
     ['collectBtn','censusBtn','refRegister','statusBox'].forEach(id=>{
       const el=document.getElementById(id); if(el) el.style.display='';
+    });
+  }
+  // ★관리자가 아니어도 **탭만** 열어주는 길(2026-08-31 사장님 지시).
+  //   판단은 서버(/api/me.features)가 한다 — 화면이 스스로 정하면 두 벌이 된다(0순위-B).
+  //   ★기능 이름을 여기 적지 않는다: 서버가 준 목록을 그대로 돈다. 기능이 늘 때
+  //     화면도 같이 고쳐야 하면 언젠가 한쪽만 고쳐 조용히 안 열린다.
+  //   보기만 연다: 수집 패널(_pp·_nc)은 위 IS_ADMIN 조건 그대로라 잠긴 채다.
+  const F = (d && d.features) || {};
+  if(!window.IS_ADMIN){
+    Object.keys(F).forEach(name=>{
+      if(!F[name]) return;
+      const tab = document.querySelector('[data-platform="'+name+'"]');
+      if(tab) tab.style.display = 'block';
     });
   }
 }).catch(()=>{});

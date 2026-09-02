@@ -83,7 +83,10 @@ _WALL_URL_HINTS = ("/accounts/scraping_warning", "update_risky_contactpoint",
 
 # 풀별 프록시 출구 오프셋 — 같은 kr-N을 두 계정이 나눠 쓰지 않게 번호대를 갈라둔다.
 # reference를 10부터 둔 이유: 아카이브 계정이 10개까지 늘어도 겹치지 않는다.
-_POOL_PROXY_OFFSET = {"archive": 0, "reference": 10}
+# ★"ytdlp" 풀 추가(2026-08-31): 유튜브 다운로드용. 인스타 계정 슬롯(archive 1~,
+#   reference 11~)과 겹치면 계정↔IP 1:1이 깨져 인스타가 한 기계로 묶어 본다 —
+#   넉넉히 30 뒤로 물린다(kr-31..).
+_POOL_PROXY_OFFSET = {"archive": 0, "reference": 10, "ytdlp": 30}
 
 # 풀 이름 상수 — 문자열 오타로 조용히 상위 폴더 폴백되는 걸 막는다.
 POOL_ARCHIVE = "archive"

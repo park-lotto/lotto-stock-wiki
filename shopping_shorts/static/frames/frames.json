@@ -1,0 +1,38 @@
+[
+ {
+  "id": "glass_navy",
+  "name": "유리 · 네이비",
+  "on_bar": "#EAF1FF",
+  "title": "#12203A"
+ },
+ {
+  "id": "paper_cream",
+  "name": "종이 · 크림",
+  "on_bar": "#3A2E1B",
+  "title": "#2A2115"
+ },
+ {
+  "id": "bold_red",
+  "name": "굵은 띠 · 레드",
+  "on_bar": "#FFFFFF",
+  "title": "#1A1A1A"
+ },
+ {
+  "id": "ink_gold",
+  "name": "먹지 · 골드라인",
+  "on_bar": "#E8D9A8",
+  "title": "#F5EBC8"
+ },
+ {
+  "id": "sky_fade",
+  "name": "그라데이션 · 하늘",
+  "on_bar": "#FFFFFF",
+  "title": "#123059"
+ },
+ {
+  "id": "float_mint",
+  "name": "떠 있는 카드 · 민트",
+  "on_bar": "#06302A",
+  "title": "#0A2A24"
+ }
+]

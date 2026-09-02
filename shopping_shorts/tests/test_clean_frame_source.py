@@ -23,7 +23,7 @@ def _plan(n=3):
 class Test청소화면_출처판단:
     def test_소스별_청소본이_있으면_그걸_쓴다(self, tmp_path):
         job = {"clean_sources": {"s0": "/clean/s0.mp4"}, "clean_status": "ready"}
-        srcs, final, ratio, tag = A._clean_frame_src(job, tmp_path, 0)
+        srcs, final, ratio, tag, _fresh = A._clean_frame_src(job, tmp_path, 0)
         assert srcs == {"s0": "/clean/s0.mp4"}
         assert final is None and tag == "_clean"
 
@@ -32,7 +32,7 @@ class Test청소화면_출처판단:
         cvp.write_text("x")
         job = {"clean_sources": None, "clean_status": "ready",
                "clean_video_path": str(cvp), "edit_plan": _plan()}
-        srcs, final, ratio, tag = A._clean_frame_src(job, tmp_path, 1)
+        srcs, final, ratio, tag, _fresh = A._clean_frame_src(job, tmp_path, 1)
         assert srcs == {}
         assert final == str(cvp), "완성본을 안 쓰면 원본 자막이 그대로 보인다"
         assert 0.3 < ratio < 0.7, ratio          # 3칸 중 가운데
@@ -40,7 +40,7 @@ class Test청소화면_출처판단:
 
     def test_청소_전이면_아무것도_안_준다(self, tmp_path):
         job = {"clean_status": None, "edit_plan": _plan()}
-        assert A._clean_frame_src(job, tmp_path, 0) == ({}, None, None, "")
+        assert A._clean_frame_src(job, tmp_path, 0) [:4] == ({}, None, None, "")
 
     def test_청소중이면_아직_원본(self, tmp_path):
         cvp = tmp_path / "clean_preview.mp4"; cvp.write_text("x")
@@ -50,7 +50,7 @@ class Test청소화면_출처판단:
     def test_파일이_사라졌으면_원본으로_폴백(self, tmp_path):
         job = {"clean_status": "ready", "clean_video_path": str(tmp_path / "없다.mp4"),
                "edit_plan": _plan()}
-        assert A._clean_frame_src(job, tmp_path, 0) == ({}, None, None, "")
+        assert A._clean_frame_src(job, tmp_path, 0) [:4] == ({}, None, None, "")
 
     def test_칸마다_다른_지점(self, tmp_path):
         cvp = tmp_path / "c.mp4"; cvp.write_text("x")

@@ -315,6 +315,19 @@ TTS_MAX_WORKERS = int(os.getenv("TTS_MAX_WORKERS", "3"))
 # 넣으면 서버가 직접 유튜브를 그 IP로 받아 PC 없이 24/7·고객 다중 동시 처리된다(업체 무관, 형식
 # http://user:pass@host:port). 우선순위: 프록시 > 릴레이(A) > 직접. 미설정이면 기존 A/직접 그대로(회귀0).
 YTDLP_PROXY = os.getenv("YTDLP_PROXY", "")
+# ★유튜브 프록시를 **몇 개 슬롯으로 돌릴지**(2026-08-31 사장님 "프록시 몇 개 붙여야
+#   되는 거 아닌가"). 슬롯 하나로 고정하면 (1) 고객이 동시에 제작할 때 같은 출구 IP로
+#   몰려 유튜브가 다시 막고 (2) 그 IP가 죽으면 유튜브가 통째로 멈춘다.
+#   Webshare 자격증명(WEBSHARE_USER/PASS)이 있으면 kr-31.. 로 회전한다. 0이면
+#   종전대로 YTDLP_PROXY 한 개만 쓴다(회귀 0).
+YTDLP_PROXY_SLOTS = int(os.getenv("YTDLP_PROXY_SLOTS", "4"))
+
+# 네이버 클립 벤치마킹 채널 매일 자동수집(2026-08-31). 샤홍·인스타 발굴과 같은
+# 계약으로 **기본은 꺼둔다** — 켜는 건 서버 env에서 한다(병합만으로 라이브 동작이
+# 바뀌면 안 된다). 실측 부담: 15채널 915건에 4.2초라 배치에 얹어도 티가 안 난다.
+NAVERCLIP_AUTO_COLLECT = os.getenv("NAVERCLIP_AUTO_COLLECT", "") == "1"
+# 채널당 몇 편까지 볼 것인가. 매일 도는 거라 신규만 잡으면 되므로 크게 둘 이유가 없다.
+NAVERCLIP_AUTO_PER_CHANNEL = int(os.getenv("NAVERCLIP_AUTO_PER_CHANNEL", "60"))
 
 YT_RELAY_ENABLED = os.getenv("YT_RELAY_ENABLED", "") == "1"
 YT_RELAY_KEY = os.getenv("YT_RELAY_KEY", "")
@@ -408,6 +421,13 @@ CATEGORIES = ["홈템", "레시피", "뷰티", "기타"]
 # 경로(플랫폼별 별도 — 계정 다르면 쿠키도 다르다). 파일이 없으면 빈 문자열이고,
 # media_download.py는 빈 값이면 --cookies 없이(기존처럼) 시도해 회귀가 없다.
 YTDLP_COOKIES_YOUTUBE = os.environ.get("YTDLP_COOKIES_YOUTUBE", "")
+# ★파일 스냅샷보다 브라우저 직독이 낫다(2026-08-31 실측): 브라우저에서 한 번 뽑아둔
+# cookies.txt는 그 브라우저로 유튜브를 계속 쓰면 유튜브가 세션을 회전시켜 30분 만에
+# 죽는다("Sign in to confirm you're not a bot" 재발). 이 값이 있으면 매 호출 브라우저에서
+# 직접 읽어 항상 최신 쿠키를 쓴다. 값 = yt-dlp의 --cookies-from-browser 인자(예: "firefox",
+# "firefox:<프로필경로>"). 크롬은 App-Bound Encryption(127+)으로 복호 불가라 못 쓴다.
+# 릴레이 PC에서만 켠다 — 서버엔 브라우저가 없다.
+YTDLP_COOKIES_BROWSER_YOUTUBE = os.environ.get("YTDLP_COOKIES_BROWSER_YOUTUBE", "")
 YTDLP_COOKIES_TIKTOK = os.environ.get("YTDLP_COOKIES_TIKTOK", "")
 
 # ── 쿠팡 상품검색 크롤(2026-07-29) ──

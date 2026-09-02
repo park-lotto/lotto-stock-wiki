@@ -30,8 +30,13 @@ def _cookies_arg(url):
     (이미 캐시 있으면 그냥 빠르게 스킵 — 매 호출 재다운로드 아님)."""
     u = (url or "").lower()
     if "youtube.com" in u or "youtu.be" in u:
-        path = config.YTDLP_COOKIES_YOUTUBE
         extra = ["--remote-components", "ejs:github"]
+        # 브라우저 직독이 파일 스냅샷보다 우선한다 — 스냅샷은 유튜브의 세션 회전으로
+        # 조용히 죽는다(2026-08-31 실측: 09:32 추출본이 10:15에 봇확인 재발, 같은
+        # 브라우저에서 새로 읽으면 즉시 성공). 설정돼 있으면 매번 최신 쿠키를 쓴다.
+        if config.YTDLP_COOKIES_BROWSER_YOUTUBE:
+            return ["--cookies-from-browser", config.YTDLP_COOKIES_BROWSER_YOUTUBE] + extra
+        path = config.YTDLP_COOKIES_YOUTUBE
     elif "tiktok.com" in u:
         path = config.YTDLP_COOKIES_TIKTOK
         extra = []
@@ -85,16 +90,48 @@ def _ig_cookies_file():
         return ""
 
 
+_YT_SLOT_LOCK = threading.Lock()
+_YT_SLOT_SEQ = 0
+
+
+def _youtube_proxy_url():
+    """이번 호출에 쓸 유튜브 프록시 주소. 없으면 "".
+
+    ★슬롯을 돌린다(2026-08-31 사장님 "프록시 몇 개 붙여야 되는 거 아닌가"). 하나로
+      고정하면 고객이 동시에 제작할 때 같은 출구 IP로 몰려 유튜브가 다시 막고, 그 IP가
+      죽으면 유튜브가 통째로 멈춘다. _download_ytdlp는 재시도(3회)마다 _proxy_arg를
+      다시 부르므로 **재시도가 곧 다른 IP로의 재시도**가 된다.
+
+    주소 조립은 channel_archive.slot_proxy 한 곳에서만 한다(0순위-B) — 인스타가 쓰는
+    그 규칙 그대로다. 자격증명이 없거나 슬롯 0이면 종전처럼 config.YTDLP_PROXY를 쓴다.
+    """
+    global _YT_SLOT_SEQ
+    n = int(getattr(config, "YTDLP_PROXY_SLOTS", 0) or 0)
+    if n > 0:
+        try:
+            from shopping_shorts.channel_archive import slot_proxy
+            with _YT_SLOT_LOCK:
+                _YT_SLOT_SEQ += 1
+                i = _YT_SLOT_SEQ % n
+            p = slot_proxy(i, "ytdlp")
+            if p:
+                return p
+        except Exception as e:      # noqa: BLE001 — 슬롯 조립 실패는 단일 프록시로 견딘다
+            print(f"[ytdlp프록시] 슬롯 조립 실패(무해): {e!r}", file=sys.stderr)
+    return config.YTDLP_PROXY
+
+
 def _proxy_arg(url):
-    """B안(2026-07-24): 유튜브만 프록시로 보낸다(config.YTDLP_PROXY 설정 시). 서버 데이터센터 IP가
+    """B안(2026-07-24): 유튜브만 프록시로 보낸다. 서버 데이터센터 IP가
     유튜브에 봇차단당하는 걸 주거용 프록시로 우회 → PC 릴레이 없이 서버가 직접 받는다. 틱톡·샤오홍슈
     등은 서버서도 되므로 프록시를 안 태워(대역폭·비용 절약). 미설정이면 [](회귀0)."""
     u = (url or "").lower()
-    if config.YTDLP_PROXY and ("youtube.com" in u or "youtu.be" in u):
+    _px = _youtube_proxy_url()
+    if _px and ("youtube.com" in u or "youtu.be" in u):
         # 회전 주거용 프록시는 죽은 IP로 라우팅되면 502(Tunnel failed)를 뱉는다 — 재시도하면
         # 새 IP로 성공한다(2026-07-24 실측: GB풀 불량, DE/CA/FR 정상). 재시도를 넉넉히 줘서
         # 드문 502에 소스가 통째로 스킵되지 않게 한다.
-        return ["--proxy", config.YTDLP_PROXY,
+        return ["--proxy", _px,
                 "--extractor-retries", "10", "--retries", "10", "--socket-timeout", "30"]
     return []
 
@@ -384,6 +421,11 @@ def _download_douyin_inner(url, dest_dir, timeout):
     return path, ""
 
 
+# 유튜브 다운로드 시도별 player_client(2026-08-31). None=기본(종전 동작).
+# 기본이 403으로 막히는 영상이 있고, android로는 그대로 받아진다(실측 3/3).
+_YTDLP_CLIENTS = [None, "android", "ios"]
+
+
 def _download_ytdlp(url, dest_dir, max_attempts=3):
     """유튜브/틱톡 다운로드 → (mp4경로, caption). yt-dlp 경로는 캡션 없음(빈 문자열).
 
@@ -399,11 +441,34 @@ def _download_ytdlp(url, dest_dir, max_attempts=3):
         #   단일 스트림)를 먼저 잡아 유튜브에서 720p·360p 저화질을 받았다(원본이 고화질이어도).
         #   최고 해상도 영상+음성을 따로 받아 mp4로 머지한다 — 이래야 원본 해상도가 천장이 된다.
         #   (틱톡 등 분리 스트림이 없으면 best 단일로 폴백; 그 best는 보통 원본 해상도다.)
+        # ★화질 상한 1080p(2026-08-31 실사고). 상한이 없으면 유튜브 4K 원본을 받으러
+        #   간다 — 실측 GhBaFe-99RU는 **668MiB**였고, 주거용 프록시 속도로는 ETA 2시간
+        #   26분이라 그 사이 재생 URL이 만료돼 **HTTP 403**으로 죽었다(12건 중 3건이
+        #   전부 이 모양이었다). 같은 영상을 단일 스트림으로 받으면 29.6MB로 정상 완료된다.
+        #   최종 출력이 1080x1920이라 4K는 화면에 쓰이지도 않는다 — 받을 이유가 없다.
+        #   ★대역폭도 같이 지킨다: 668MB 몇 건이면 월 25GB 프록시 플랜이 날아간다
+        #   (2026-08-17 실제로 초과해 인스타 수집이 402로 멈춘 적이 있다).
+        #   상한을 넘는 영상만 영향을 받고, 1080p 이하 원본은 종전 그대로다.
+        # ★재시도마다 **다른 player_client**로 바꾼다(2026-08-31 실사고).
+        #   증상: 프록시를 켜 봇차단은 풀렸는데 12건 중 3건이 다운로드 단계에서
+        #   HTTP 403. 동시성·IP고정·파일크기·스트림종류·화질·연령제한을 하나씩
+        #   배제한 끝에, 같은 영상이 `player_client=android`로는 **그대로 받아졌다**
+        #   (12.8MB/10.5s · 43.6MB/15.7s · 21.6MB/17.8s — 3건 전부).
+        #   즉 403은 기본 클라이언트가 막힌 것이고 영상 문제가 아니다.
+        #   ⚠️ yt-dlp의 클라이언트 폴백은 **추출 단계**에만 걸린다 — 다운로드 403은
+        #     자동으로 안 넘어가므로 우리 재시도 루프가 직접 바꿔줘야 한다.
+        #   1차는 기본 그대로라 잘 되던 영상은 종전 경로를 탄다(회귀 0).
+        _client = _YTDLP_CLIENTS[attempt] if attempt < len(_YTDLP_CLIENTS) else None
+        _client_arg = (["--extractor-args", f"youtube:player_client={_client}"]
+                       if _client and ("youtube.com" in (url or "").lower()
+                                       or "youtu.be" in (url or "").lower()) else [])
         r = subprocess.run(
             [sys.executable, "-m", "yt_dlp",
-             "-f", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio/best",
+             "-f", ("bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/"
+                    "bestvideo[height<=1080]+bestaudio/best[height<=1080]/best"),
              "--merge-output-format", "mp4",
-             "--no-playlist", *_cookies_arg(url), *_proxy_arg(url), "-o", out, url],
+             "--no-playlist", *_cookies_arg(url), *_proxy_arg(url), *_client_arg,
+             "-o", out, url],
             capture_output=True, text=True, timeout=300)
         if r.returncode == 0:
             files = sorted(Path(dest_dir).glob(stem + "*"))
@@ -481,8 +546,68 @@ def _download_pinterest(url, dest_dir):
     return str(download_video(info["video_url"], Path(dest_dir))), caption
 
 
+# ────────────────────────────────────────────────────────────────────────────
+# 사장님이 직접 올린 영상파일(2026-08-31). 링크가 없는 영상 — 직접 찍은 것, 편집해서
+# 뽑은 것 — 도 재료가 되게 한다. 파일은 서버에 두고 **URL 하나로 바꿔** 넘기므로
+# 그 아래 파이프라인(추출·매칭·렌더)은 종전 그대로 돈다.
+# ★판정은 여기 한 곳뿐이다(0순위-B). app.py의 업로드·서빙 라우트도 이 함수를 쓴다 —
+#   같은 판단을 두 곳에 적으면 언젠가 반드시 어긋난다.
+FOOTAGE_DIR = Path(__file__).parent / "data" / "footage_uploads"
+FOOTAGE_EXT = {".mp4", ".mov", ".m4v", ".webm"}
+FOOTAGE_URL_PREFIX = "/api/produce/footage/"
+
+
+def uploaded_footage_path(url):
+    """URL이 **우리가 보관 중인 업로드 파일**을 가리키면 실제 경로, 아니면 None.
+
+    토큰 모양(32자리 hex)과 확장자를 함께 검사한다 — 경로 탈출(../)은 이 검사에서
+    통째로 막힌다(이름이 토큰 모양이 아니면 무조건 None)."""
+    try:
+        path = urllib.parse.urlparse(str(url or "")).path or str(url or "")
+    except Exception:      # noqa: BLE001
+        return None
+    if FOOTAGE_URL_PREFIX not in path:
+        return None
+    name = path.rsplit("/", 1)[-1]
+    stem, _dot, ext = name.rpartition(".")
+    if not re.fullmatch(r"[0-9a-f]{32}", stem or "") or ("." + ext) not in FOOTAGE_EXT:
+        return None
+    f = FOOTAGE_DIR / name
+    return f if f.exists() else None
+
+
+def uploaded_footage_poster_path(url):
+    """업로드 영상의 **썸네일(jpg)** 경로. 아니면 None.
+
+    영상 본체는 uploaded_footage_path가 본다 — 확장자만 다르고 판정 규칙은 같다."""
+    try:
+        path = urllib.parse.urlparse(str(url or "")).path or str(url or "")
+    except Exception:      # noqa: BLE001
+        return None
+    if FOOTAGE_URL_PREFIX not in path:
+        return None
+    name = path.rsplit("/", 1)[-1]
+    if not re.fullmatch(r"[0-9a-f]{32}_poster\.jpg", name or ""):
+        return None
+    f = FOOTAGE_DIR / name
+    return f if f.exists() else None
+
+
 def download_any(url, dest_dir):
     """소스 URL 다운로드 → (mp4경로, caption) 튜플. caption은 인스타에서만 채워짐."""
+    # ★사장님이 **직접 올린 영상파일**이면 받을 게 없다 — 이미 서버에 있다(2026-08-31).
+    #   링크 없는 영상(직접 찍은 것·편집해 뽑은 것)을 재료로 쓰려고 만든 경로다.
+    #   판정은 app._uploaded_footage_path 한 곳에만 있다(0순위-B: 같은 판단을 두 번
+    #   적지 마라). 작업 폴더로 **복사**해서 넘긴다 — 파이프라인이 원본을 건드려
+    #   보관본을 망가뜨리는 일을 원천 차단한다.
+    _up = uploaded_footage_path(url)
+    if _up is not None:
+        import shutil
+        dst = Path(dest_dir) / _up.name
+        Path(dest_dir).mkdir(parents=True, exist_ok=True)
+        if str(dst) != str(_up):
+            shutil.copy2(str(_up), str(dst))
+        return str(dst), ""
     u = (url or "").lower()
     # ★yt-dlp는 rednote.com 도메인을 모른다(Unsupported URL) — 같은 사이트인 xiaohongshu.com으로
     # 정규화해야 추출기가 인식한다. 렌즈가 로그인벽 우회용으로 '원본 열기'를 rednote로 바꾼 URL이
