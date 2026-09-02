@@ -1898,6 +1898,17 @@
           <div id="vlibList" style="margin-top:10px;max-height:340px;overflow:auto"></div>
         </div>
       </div>
+      <!-- ★내 계정 목소리(2026-09-02 사장님 "본인이 클론한 음성을 불러다 쓸 수 있나").
+           공개 라이브러리에는 **남이 공개한 것**만 있다 — 내가 클론한 목소리는 내 계정에만
+           있으므로 계정을 직접 읽는다. 담기(add)가 없다: 이미 내 것이라 복사할 이유가 없다. -->
+      <div id="vmineBox">
+        <button class="btn-prev findBtn" onclick="toggleMyVoices()">🎤 내가 만든 목소리 쓰기</button>
+        <div id="vminePanel" style="display:none;margin-top:8px;border:1px solid var(--line);border-radius:9px;padding:10px">
+          <div class="hint">내 일레븐랩스 계정에 있는 목소리를 그대로 성우 카드로 만듭니다 —
+            <b>내가 클론한 목소리</b>도 여기에 나옵니다.</div>
+          <div id="vmineList" style="margin-top:10px;max-height:340px;overflow:auto"></div>
+        </div>
+      </div>
       <!-- 타입캐스트 성우 찾기(2026-08-30) — 일레븐 '목소리 찾기'의 짝.
            ★담기가 없다: 타입캐스트는 서버 키로 곧장 부르는 공용 목록이라(1125명 실측)
              고르면 바로 쓴다. 인기순도 없다 — API가 그 지표를 안 준다. -->
@@ -12838,6 +12849,81 @@ async function searchVoiceLibrary(page){
     + (d.has_more ? '<button class="btn-prev" style="padding:6px 12px" onclick="searchVoiceLibrary('+(VLIB_PAGE+1)+')">다음 →</button>' : '')
     + '</div>';
   box.innerHTML = rows + nav;
+}
+
+// ── 내가 만든 목소리(내 일레븐랩스 계정) ────────────────────────────────
+//   ★공개 라이브러리 검색과 **다른 축**이다: 저건 남이 공개한 것, 이건 내 계정에 있는 것.
+//     내가 클론한 목소리는 공개 라이브러리에 없으므로 이 길로만 불러올 수 있다.
+let VMINE_LOADED = false;
+function toggleMyVoices(){
+  const p = document.getElementById('vminePanel'); if(!p) return;
+  const open = p.style.display === 'none';
+  p.style.display = open ? '' : 'none';
+  if (open && !VMINE_LOADED) loadMyVoices();
+}
+async function loadMyVoices(){
+  const box = document.getElementById('vmineList'); if(!box) return;
+  box.innerHTML = '<div class="hint">불러오는 중…</div>';
+  let d;
+  try { d = await (await fetch('/api/voice-library/mine')).json(); }
+  catch(e){ box.innerHTML = '<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; return; }
+  if (d && d.need_key){
+    box.innerHTML = '<div class="hint" style="line-height:1.6">' + esc(d.error||'')
+      + '<br><a href="/settings#keys" style="color:var(--accent2)">→ 내 API 키 등록하러 가기</a></div>';
+    return;
+  }
+  if (!d || !d.ok){
+    box.innerHTML = '<div class="hint" style="color:var(--fire)">' + esc((d&&d.error)||'불러오지 못했습니다') + '</div>';
+    return;
+  }
+  VMINE_LOADED = true;
+  const vs = d.voices || [];
+  if (!vs.length){
+    box.innerHTML = '<div class="hint">계정에 목소리가 없습니다. 일레븐랩스에서 먼저 만들어 주세요.</div>';
+    return;
+  }
+  /* 내가 만든 것(클론)을 위로 올린다 — 이 화면을 여는 이유가 그것이다. */
+  vs.sort(function(a,b){
+    const ac = /clon|generated|professional/i.test(a.category||'') ? 0 : 1;
+    const bc = /clon|generated|professional/i.test(b.category||'') ? 0 : 1;
+    return ac - bc;
+  });
+  box.innerHTML = vs.map(function(v){
+    const 내것 = /clon|generated|professional/i.test(v.category||'');
+    const done = v.registered_group;
+    return '<div style="display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)">'
+      + '<div style="flex:1 1 auto;min-width:0">'
+      +   '<b>' + esc(v.name) + '</b>'
+      +   (내것 ? ' <span class="r" style="color:var(--accent2)">내가 만든 것</span>' : '')
+      +   (v.category ? ' <span class="hint">· ' + esc(v.category) + '</span>' : '')
+      + '</div>'
+      + (v.preview_url ? '<button class="btn-prev" style="padding:6px 10px" onclick="new Audio(' + JSON.stringify(v.preview_url) + ').play()">▶ 듣기</button>' : '')
+      + (done
+          ? '<span class="hint" style="color:var(--ok)">✔ 등록됨</span>'
+          : '<button class="btn-next" style="padding:6px 12px" onclick="registerMyVoice(' + JSON.stringify(v.voice_id) + ',' + JSON.stringify(v.name) + ',this)">내 성우로 추가</button>')
+      + '</div>';
+  }).join('');
+}
+async function registerMyVoice(voiceId, name, btn){
+  /* ★샘플 4건을 실제로 굽는다 = 내 크레딧이 쓰인다. 그래서 한 번 묻는다. */
+  if (!confirm('「' + name + '」을(를) 내 성우 카드로 추가합니다.\n\n미리듣기 샘플 4개를 만드느라 '
+             + '내 일레븐랩스 크레딧이 조금 쓰입니다. 계속할까요?')) return;
+  if (btn){ btn.disabled = true; btn.textContent = '만드는 중…'; }
+  let d;
+  try {
+    d = await (await fetch('/api/voice-library/mine/register', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({voice_id: voiceId, name: name})})).json();
+  } catch(e){ d = null; }
+  if (!d || !d.ok){
+    alert((d && d.error) || '추가하지 못했습니다.');
+    if (btn){ btn.disabled = false; btn.textContent = '내 성우로 추가'; }
+    return;
+  }
+  VMINE_LOADED = false;
+  await loadMyVoices();
+  if (typeof loadPresets === 'function') await loadPresets();   /* 카드 목록 새로고침 — 공개 라이브러리 담기와 같은 함수(0순위-B) */
+  alert('「' + name + '」이(가) 내 성우에 추가됐습니다.');
 }
 
 // ── 타입캐스트 성우 찾기 ──────────────────────────────────────────────

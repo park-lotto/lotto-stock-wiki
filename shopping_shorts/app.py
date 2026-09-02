@@ -5810,6 +5810,75 @@ def api_voice_library_search(request: Request, q: str = "", language: str = "",
                                        sort=(sort or None))
 
 
+@app.get("/api/voice-library/mine")
+def api_voice_library_mine(request: Request):
+    """★내 일레븐랩스 계정에 **이미 있는** 목소리 목록 (2026-09-02 사장님 요청).
+
+    공개 라이브러리(search)는 남이 공개한 목소리뿐이라, **내가 클론한 목소리**는
+    거기에 없다 — 그건 내 계정에만 있다. 그래서 계정을 직접 읽어 보여준다.
+
+    ★관리자 라우트(/api/admin/eleven-voices)와 **같은 함수**를 쓴다(0순위-B).
+      다른 점은 넘기는 cid 하나뿐이다 — 관리자는 0(사장님 계정), 여기는 요청자 본인.
+    ★본인 키가 있어야 한다. 남의 계정 목소리를 우리가 대신 보여줄 방법도, 이유도 없다.
+      키에 voices_read 권한이 꺼져 있으면 일레븐랩스가 그렇게 알려주고, 그 문구는
+      eleven_voices.explain_error가 한국어로 바꾼다.
+    """
+    cid = getattr(request.state, "customer_id", 0) or 0
+    from shopping_shorts import eleven_voices, keyroute
+    keys, is_user = keyroute.keys_for(Store(DB_PATH), cid, keyroute.SVC_ELEVENLABS)
+    if not keys or not is_user:
+        return {"ok": False, "voices": [], "need_key": True,
+                "error": "내 일레븐랩스 키를 등록하면 내가 만든 목소리를 그대로 쓸 수 있어요."}
+    res = eleven_voices.list_account_voices(cid)
+    # 이미 카드로 만든 것은 화면에서 '등록됨'으로 보여준다 — 두 번 등록하면 카드가 겹친다.
+    mine = {}
+    for pr in Store(DB_PATH).list_voice_presets():
+        if pr.get("base_voice_id") and int(pr.get("owner_customer_id") or 0) == int(cid):
+            mine[pr["base_voice_id"]] = pr.get("group_id")
+    for v in res.get("voices") or []:
+        v["registered_group"] = mine.get(v["voice_id"])
+    return res
+
+
+@app.post("/api/voice-library/mine/register")
+async def api_voice_library_mine_register(request: Request):
+    """내 계정 목소리 하나를 성우 카드로 만든다. body: {voice_id, name, one_liner?}
+
+    ★담기(add_shared)를 하지 않는다 — **이미 내 계정에 있는** 목소리라 담을 필요가 없다.
+      공개 라이브러리 경로는 남의 것을 내 계정으로 복사해야 해서 담기가 있는 것이다.
+    ★카드 등록은 기존 register() 하나를 그대로 탄다(0순위-B) — 톤 4종·샘플 굽기·
+      본인에게만 보이기(owner_customer_id)가 전부 그 안에 있다.
+    ⚠️샘플 4건은 실제 TTS라 **본인 크레딧**을 쓴다(bake_sample에 cid를 넘긴다).
+    """
+    cid = getattr(request.state, "customer_id", 0) or 0
+    from shopping_shorts import eleven_voices, keyroute
+    keys, is_user = keyroute.keys_for(Store(DB_PATH), cid, keyroute.SVC_ELEVENLABS)
+    if not keys or not is_user:
+        return JSONResponse({"ok": False, "need_key": True,
+                             "error": "내 일레븐랩스 키를 먼저 등록해주세요."}, status_code=400)
+    body = await request.json()
+    vid = ((body or {}).get("voice_id") or "").strip()
+    name = ((body or {}).get("name") or "내 목소리").strip()[:40]
+    if not vid:
+        return JSONResponse({"ok": False, "error": "목소리를 골라 주세요."}, status_code=400)
+    # ★내 계정에 **정말 있는** voice_id인지 확인하고 등록한다 — 화면 값만 믿고 등록하면
+    #   남의 voice_id로 카드를 만들 수 있고, 그 카드는 합성 때 반드시 실패한다.
+    acc = eleven_voices.list_account_voices(cid)
+    if not acc.get("ok"):
+        return JSONResponse({"ok": False, "error": acc.get("error") or "계정 목소리를 읽지 못했습니다."},
+                            status_code=502)
+    if not any(v.get("voice_id") == vid for v in (acc.get("voices") or [])):
+        return JSONResponse({"ok": False, "error": "내 계정에 없는 목소리입니다."}, status_code=400)
+    try:
+        res = eleven_voices.register(Store(DB_PATH), vid, name,
+                                     one_liner=((body or {}).get("one_liner") or "")[:60],
+                                     lang="KR", bake=True, owner_customer_id=cid)
+    except Exception as e:      # noqa: BLE001
+        print(f"[voice-mine] 카드 등록 실패: {e!r}", file=sys.stderr)
+        return JSONResponse({"ok": False, "error": "성우 카드 등록에 실패했습니다."}, status_code=502)
+    return {"ok": True, "group_id": res["group_id"], "sample_failed": res.get("sample_failed") or []}
+
+
 @app.post("/api/voice-library/add")
 async def api_voice_library_add(request: Request):
     """고른 공개 음성을 **내 계정에 담고 성우 카드까지 만든다**.
