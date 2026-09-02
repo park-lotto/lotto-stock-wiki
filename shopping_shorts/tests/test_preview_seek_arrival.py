@@ -44,3 +44,14 @@ def test_진행중인_시크를_다시_꽂지_않는다():
     src = _src()
     assert "if (!(v.seeking && Math.abs(v.currentTime - c.start) < 0.05)) v.currentTime = c.start;" in src, \
         "진행 중인 시크에 currentTime을 재대입하지 않는 가드가 사라졌다"
+
+
+def test_도착_전에는_가림막을_걷지_않는다():
+    """대기 타이머(cutWaitMs)는 시크가 안 끝나도 show()로 온다. 그때 썸네일을 걷으면
+    도착 못 한 앞부분이 그대로 보인다 — 실측(job 8b5aed8af66b): 훅 마지막 컷이
+    s4@10.06인데 그 앞 9초대가 노출됐고, 다음 칸도 같은 s4(0.75~)를 써서 미리 앉히기와
+    시크가 겹쳐 느려진 상황이었다. readyState는 '열려 있다'일 뿐 '그 자리에 왔다'가 아니다."""
+    src = _src()
+    assert "if (v.readyState >= 2 && !v.seeking) holdShot(null, false);" in src, (
+        "가림막(썸네일)을 걷는 판정에서 seeking이 빠졌다 — 도착 전에 걷으면 꼬다리가 다시 난다"
+    )
