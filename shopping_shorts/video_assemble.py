@@ -1865,8 +1865,13 @@ def _build_segments(line, base_color, highlight_rules):
     base = (base_color, False, None)
     marks = [None] * len(line)
     rules = [r for r in (highlight_rules or []) if r.get("keyword")]
-    # 긴 키워드 먼저 — 짧은 규칙이 먼저 자리를 잡으면 긴 규칙이 조각나 색이 튄다.
-    for rule in sorted(rules, key=lambda r: -len(r["keyword"])):
+    # ★사람이 고른 낱말이 **틀(_fromFrame)보다 먼저** 자리를 잡는다(2026-09-02).
+    #   틀(템플릿)은 2줄째 통째를 키워드로 규칙을 하나 넣는데(produce.html applyHeadcopySet),
+    #   길이만으로 정렬하면 그 긴 규칙이 사람이 고른 짧은 낱말을 통째로 덮어
+    #   **색을 바꿔도 안 바뀐다**(marks가 이미 찼으므로 나중 규칙이 못 들어간다).
+    #   화면(hlSegments)과 **같은 규칙**이어야 미리보기와 렌더가 안 어긋난다(0순위-B).
+    # 길이 우선은 같은 등급 안에서만 — 짧은 규칙이 먼저 자리를 잡으면 긴 규칙이 조각나 색이 튄다.
+    for rule in sorted(rules, key=lambda r: (bool(r.get("_fromFrame")), -len(r["keyword"]))):
         kw = rule["keyword"]
         style = (rule.get("color"), bool(rule.get("box")), rule.get("box_color"))
         pos = line.find(kw)
