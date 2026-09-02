@@ -6656,6 +6656,20 @@ class Store:
     # 워커를 여러 개 띄울 때 같은 계정으로 동시 접속해 플래그되는 걸 막는다.
     _EXCLUSIVE_TASKS = ("durfill", "prewarm")
 
+    # ★배타는 **인스타 때문**이다 — 인스타를 안 건드리는 소스까지 줄 세울 이유가 없다.
+    #   (2026-09-02 고객 제보 "소스 추가할 때 바로 반영이 안 돼요, 나중에 한꺼번에 또
+    #    반영돼요" — 실측 job_queue: 담긴 순서대로 대기 72초→536초(9분)까지 계단식.
+    #    그런데 워커는 놀았다: 25분 구간 총 점유 2,404초 / 워커 12개 = 용량 18,000초.)
+    #   최근 200건 실측: 인스타 72건(36%) / 틱톡·샤오홍슈·유튜브 128건(64%).
+    #   ★화이트리스트로만 푼다 — "인스타가 아니다"를 확신할 때만 병렬. 모르면 직렬이다.
+    #     계정은 IP보다 비싸다(2026-08-05: 동시 접속으로 계정 2개 소실, 복구 불가).
+    _PARALLEL_SAFE_MARKS = ("tiktok", "xiaohongshu", "douyin", "youtube", "youtu.be", "naver")
+    # 계정별 동시 상한을 **작업 무게로** 가른다. 공평 분배는 무거운 작업(render·mix)이
+    # 한 사람에게 독점되는 걸 막으려던 규칙인데, 가벼운 사전분석까지 1개로 묶여 있었다
+    # — 그래서 소스를 5개 담으면 하나씩 줄줄이 기다렸다(위 제보의 두 번째 병목).
+    # prewarm은 대개 0~60초라 몇 개 돌아도 서버가 안 눕는다(워커 12개 한도 안에서 돈다).
+    _LIGHT_TASKS = ("durfill", "prewarm")
+
     # 하트비트가 이만큼 끊긴 running은 '살아있는 렌더'로 치지 않는다(2026-08-27).
     _HEAVY_STALE_MINUTES = 15
 
@@ -6700,6 +6714,14 @@ class Store:
             #   ★같은 UPDATE 문 안에서 검사한다 — 파이썬으로 먼저 세면 워커 3개가
             #   동시에 "지금 0개"를 보고 셋 다 집는 경합이 난다.
             ph = ",".join("?" * len(self._EXCLUSIVE_TASKS))
+            lph = ",".join("?" * len(self._LIGHT_TASKS))
+
+            def _nonig(al):
+                """이 작업이 **인스타가 아님을 확신**할 수 있나. 표식이 있고 instagram이 없어야 한다
+                (캡션에 'instagram'이 섞인 틱톡까지 병렬로 내보내면 계정이 위험하다)."""
+                marks = " OR ".join(f"{al}.args_json LIKE '%{m}%'" for m in self._PARALLEL_SAFE_MARKS)
+                return f"(({marks}) AND {al}.args_json NOT LIKE '%instagram%')"
+            _safe, _safe_r = _nonig("q"), _nonig("r")
             row = c.execute(
                 "UPDATE job_queue SET state='running', "
                 "       claimed_at=datetime('now'), heartbeat_at=datetime('now') "
@@ -6709,16 +6731,26 @@ class Store:
                 #   돌리며 확인하는 운용). 일반 고객은 종전대로 1개(공평 분배 유지).
                 #   N은 ADMIN_CONCURRENT_JOBS(기본 2).
                 "               AND (q.owner IS NULL OR "
-                "                    (SELECT COUNT(*) FROM job_queue "
-                "                      WHERE state='running' AND owner=q.owner) "
-                "                    < CASE WHEN q.owner='0' THEN ? ELSE 1 END) "
-                f"               AND (q.task NOT IN ({ph}) OR NOT EXISTS "
+                "                    (SELECT COUNT(*) FROM job_queue w "
+                "                      WHERE w.state='running' AND w.owner=q.owner "
+                f"                       AND (w.task IN (" + lph + ")) = (q.task IN (" + lph + "))) "
+                f"                    < CASE WHEN q.owner='0' THEN ? "
+                f"                           WHEN q.task IN (" + lph + ") THEN ? ELSE 1 END) "
+                f"               AND (q.task NOT IN ({ph}) OR {_safe} OR NOT EXISTS "
                 "                    (SELECT 1 FROM job_queue r "
-                f"                     WHERE r.state='running' AND r.task IN ({ph}))) "
+                f"                     WHERE r.state='running' AND r.task IN ({ph}) "
+                f"                       AND NOT ({_safe_r}))) "
                 "             ORDER BY COALESCE(q.prio, 5), q.id LIMIT 1) "
                 "RETURNING id, task, args_json",
-                (int(os.environ.get("ADMIN_CONCURRENT_JOBS", "2") or 2),)
-                + self._EXCLUSIVE_TASKS * 2).fetchone()
+                # ★인자는 SQL에 물음표가 나오는 **순서 그대로**다:
+                #   lph, lph (카운트 조건) → admin (CASE 첫 THEN) → lph → light → ph, ph
+                #   한 칸이라도 어긋나면 조건이 조용히 뒤집힌다(2026-09-02에 실제로 어긋나
+                #   관리자 동시 2개 제한이 풀렸고, 회귀 테스트가 그걸 잡았다).
+                (self._LIGHT_TASKS * 2
+                 + (int(os.environ.get("ADMIN_CONCURRENT_JOBS", "2") or 2),)
+                 + self._LIGHT_TASKS
+                 + (int(os.environ.get("LIGHT_CONCURRENT_JOBS", "3") or 3),)
+                 + self._EXCLUSIVE_TASKS * 2)).fetchone()
             if not row:
                 return None
             return {"id": row[0], "task": row[1], "args": json.loads(row[2])}
