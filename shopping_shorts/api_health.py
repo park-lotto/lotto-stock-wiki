@@ -512,12 +512,16 @@ def aggregates(hours=24):
                 f"GROUP BY service, pool, key_tail ORDER BY total DESC LIMIT 300",
                 (*_REQUEST_OUTCOMES, pt_start))]
 
+            # ★KST 시각을 **서버가** 붙인다(2026-09-02). 화면에서 UTC→KST를 다시
+            #   계산하면 같은 판단이 두 곳에 생긴다(0순위-B). 축 라벨이 여기서 나온다.
             out["hourly"] = [dict(r) for r in conn.execute(
                 f"SELECT substr(ts, 1, 13) hour_utc, "
                 f"SUM(CASE WHEN outcome='ok' THEN 1 ELSE 0 END) ok, "
                 f"SUM(CASE WHEN outcome IN ({fail_in}) THEN 1 ELSE 0 END) fail "
                 f"FROM api_events WHERE ts >= ? GROUP BY hour_utc ORDER BY hour_utc",
                 (*FAIL_OUTCOMES, since))]
+            for _h in out["hourly"]:
+                _h["kst_hour"] = _kst_hour_of(_h.get("hour_utc"))
 
             # ★죽은 키는 '호출 몇 번'이 아니라 '키 몇 개'로 센다(2026-09-01 사장님 지적).
             #   실측: 죽은 키 1개를 34분간 12번 때린 것이 "12건 사망"으로 읽혀,
@@ -665,3 +669,89 @@ def budget(snap=None, agg=None):
         }
     except Exception as e:                # noqa: BLE001
         return {"error": str(e)[:200]}
+
+
+# ══════════════════════════════════════════════════════════════════════
+# 🔑 키별 실시간 흐름 (2026-09-02 사장님)
+#   "제미니가 실제 사람들이 들어오면 몇 번 키가 어떻게 붙어서 움직이고
+#    활동하는지 생생하게 볼수있음 좋겠어"
+#
+# ★기존 keys_today는 '오늘 합계'라 **지금 이 순간 누가 일하는지**를 못 본다.
+#   여기서는 짧은 창(기본 60분)의 **낱개 호출**을 키별로 묶어 준다 —
+#   화면이 그걸 시간축에 점으로 찍으면 키가 살아 움직이는 게 보인다.
+# ══════════════════════════════════════════════════════════════════════
+
+def _kst_hour_of(hour_utc):
+    """'2026-09-01T03' → KST 시(12). 축 라벨의 유일한 출처다."""
+    try:
+        h = int(str(hour_utc)[11:13])
+        return (h + 9) % 24
+    except Exception:      # noqa: BLE001 — 라벨 하나 때문에 화면이 죽으면 안 된다
+        return None
+
+
+def key_timeline(minutes=60, service="gemini", limit_keys=40, limit_events=300):
+    """최근 `minutes`분 동안 키별로 실제 호출이 어떻게 흘렀나.
+
+    반환: [{key_tail, pool, owner, ok, fail, last_ts, events:[{ts,outcome,op,dur_ms}]}]
+    ★바쁜 키가 앞에 온다 — 지금 일하는 키가 화면 맨 위에 보여야 한다.
+    """
+    out = []
+    try:
+        conn = _connect()
+        conn.row_factory = sqlite3.Row
+        try:
+            since = (_utcnow() - timedelta(minutes=int(minutes))).isoformat()
+            rows = [dict(r) for r in conn.execute(
+                "SELECT ts, service, pool, key_tail, owner, op, outcome, dur_ms "
+                "FROM api_events WHERE ts >= ? AND key_tail IS NOT NULL "
+                "AND (? = '' OR service = ?) "
+                "ORDER BY id DESC LIMIT ?",
+                (since, service or "", service or "", int(limit_events)))]
+        finally:
+            conn.close()
+    except Exception:      # noqa: BLE001 — 관측이 화면을 죽이면 안 된다
+        return []
+
+    by = {}
+    for r in rows:
+        k = r.get("key_tail")
+        g = by.get(k)
+        if g is None:
+            g = by[k] = {"key_tail": k, "pool": r.get("pool"), "owner": r.get("owner"),
+                         "service": r.get("service"), "ok": 0, "fail": 0,
+                         "last_ts": r.get("ts"), "events": []}
+        # owner는 비어 있는 행이 섞일 수 있다 — 한 번이라도 값이 오면 그걸 쓴다.
+        if not g.get("owner") and r.get("owner"):
+            g["owner"] = r["owner"]
+        oc = r.get("outcome")
+        if oc == "ok":
+            g["ok"] += 1
+        elif oc in FAIL_OUTCOMES:
+            g["fail"] += 1
+        if r.get("ts") and r["ts"] > (g["last_ts"] or ""):
+            g["last_ts"] = r["ts"]
+        g["events"].append({"ts": r.get("ts"), "outcome": oc,
+                            "op": r.get("op"), "dur_ms": r.get("dur_ms")})
+    out = list(by.values())
+    for g in out:
+        g["events"].sort(key=lambda e: e.get("ts") or "")     # 화면은 시간순으로 그린다
+        g["total"] = g["ok"] + g["fail"]
+    # 바쁜 순 → 같으면 최근 순
+    out.sort(key=lambda g: (-g["total"], g["last_ts"] or ""), reverse=False)
+    out.sort(key=lambda g: -g["total"])
+    return out[:int(limit_keys)]
+
+
+def member_keys(store, service="gemini"):
+    """회원이 등록한 키 목록(관리자 화면용). 키 원문은 절대 안 준다 — 라벨만.
+
+    ★왜 관측판에 있나: 2026-09-01에 "등록 안 했다"는 회원 계정에 키 5개가 있었다.
+      누가·언제 넣었는지 화면에서 못 보면 그때마다 서버 DB를 열어야 한다.
+    """
+    try:
+        rows = store.list_all_customer_keys(service) if hasattr(
+            store, "list_all_customer_keys") else []
+        return [dict(r) for r in (rows or [])]
+    except Exception:      # noqa: BLE001
+        return []

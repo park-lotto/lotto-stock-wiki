@@ -2181,6 +2181,9 @@ _MIX_WORK_DIR = Path(__file__).parent / "data" / "mix_jobs"
 _WIKI_MEDIA_DIR = Path(__file__).parent / "data" / "wiki_media"   # 도서관 원본 영구보관
 _SCENE_ASSETS_DIR = Path(__file__).parent / "data" / "scene_assets"  # 장면 라이브러리 자산 영구보관
 _THUMB_DIR = Path(__file__).parent / "data" / "thumbs"   # 5단계 썸네일 프레임·산출물
+# 🖼 내 썸네일 프리셋의 카드 그림(2026-09-02). job 폴더가 아니라 **따로** 둔다 —
+# 프리셋은 그 job보다 오래 살아야 하는데, job 폴더는 정리(disk_cleanup)에 지워진다.
+_THUMB_PRESET_DIR = Path(__file__).parent / "data" / "thumb_presets"
 
 
 def _download_item_video(item, work_dir):
@@ -3920,9 +3923,28 @@ def api_points(request: Request):
            pricing.OP_LENS, pricing.OP_SCRIPT)
     history = [{**h, "delta": pricing.to_display(h["delta"])}
                for h in store.points_history(cid, 20)]
+    # ★"이 사람에게 실제로 깎이는가"를 서버가 판정해서 준다(2026-09-02).
+    #   단가표(prices)만으로는 화면이 알 수 없다 — 내 키 사용·관리자 면제·cid 0(사장님)은
+    #   단가가 5P라도 한 푼도 안 깎인다(_charge_clean의 keyroute.should_charge/as_cid).
+    #   화면이 이 조건을 다시 구현하면 판단이 두 곳이 된다(0순위-B) → 여기서 한 번만 본다.
+    #   실패해도 단가표는 그대로 나간다(면제 조회가 화면을 죽이면 안 된다).
+    charged = {}
+    for op in ops:
+        try:
+            charged[op] = bool(cid) and keyroute.should_charge(store, cid, op)
+        except Exception:      # noqa: BLE001 — 판정 실패는 '깎인다'로 보수적 처리
+            charged[op] = bool(cid)
+    # ★자막제거 단가·과금여부는 **업체명이 아닌 이름**으로도 함께 내보낸다(2026-09-02).
+    #   produce.html은 고객이 보는 화면이라 벤더명이 한 글자도 들어가면 안 되고,
+    #   그걸 test_no_vmake_anywhere_in_produce_html이 실제로 막는다(게이트가 나를 잡았다).
+    #   기존 키(prices/charged)는 관리·설정 화면이 쓰고 있으므로 그대로 두고 별칭만 더한다.
+    _clean_op = pricing.OP_VMAKE
     return {"ok": True,
             "balance": pricing.to_display(points.balance(store, cid)),
             "prices": {op: pricing.to_display(pricing.cost(store, op)) for op in ops},
+            "charged": charged,
+            "subclean_price": pricing.to_display(pricing.cost(store, _clean_op)),
+            "subclean_charged": charged.get(_clean_op, bool(cid)),
             "history": history}
 
 
@@ -5494,7 +5516,19 @@ def api_voice_presets(request: Request, lang: str = "KR"):
             "default_silence_trim": p["default_silence_trim"],
             "sample_url": f"/api/voice-presets/{p['preset_id']}/sample" if p["sample_file"] else None,
         }
-    return {"ok": True, "groups": list(groups.values())}
+    # 🎙 마지막으로 쓴 성우(2026-09-02) — 화면이 그 성우를 미리 골라둔 상태로 연다.
+    #   ★왜 여기냐: 이 라우트는 이미 로그인 고객 기준(_cid)이고 4단계가 열릴 때 한 번 부른다.
+    #     /api/mix/status는 **인증이 없어**(job_id만 알면 열림) 거기 실으면 남의 선택이 샌다.
+    #   화면은 이 값으로 VOICE만 채운다 — 실제 합성에 쓰이는 값은 job.voice(서버가 이미
+    #   create_mix_job에서 같은 기억으로 심었다)라, 둘이 어긋날 일이 없다.
+    #   ★기억 조회 실패가 **성우 목록을 죽이면 안 된다**(부가기능 < 본기능). 실제로
+    #     Store를 가짜로 바꿔치는 테스트들이 여기서 AttributeError로 터졌다 — 라이브에서도
+    #     DB 스키마가 옛것이면 같은 일이 난다. 못 읽으면 그냥 기억 없음(=종전 동작)으로 둔다.
+    try:
+        _last = Store(DB_PATH).get_last_voice(_cid)
+    except Exception:      # noqa: BLE001
+        _last = None
+    return {"ok": True, "groups": list(groups.values()), "last_voice": _last}
 
 
 # ── 일레븐랩스 계정 보이스 → 성우 카드 등록 (2026-08-18, 관리자 전용) ─────────────
@@ -5872,6 +5906,17 @@ def api_mix_voice(background_tasks: BackgroundTasks, body: dict):
         return JSONResponse(status_code=404, content={"ok": False, "error": "job/plan 없음"})
     voice = _voice_snapshot(store, body)
     store.update_mix_job(job_id, voice=voice)
+    # 🎙 이 선택을 고객의 '다음 작업 기본 성우'로 기억한다(2026-09-02 사장님 지시).
+    #   → 다음 작업은 create_mix_job이 이 값을 job.voice로 심어 3단계 1차 TTS부터 본인
+    #     성우로 나간다. 그러면 4단계에서 이 버튼을 누를 이유가 없어져 **편당 TTS 1회**가 된다
+    #     (다른 합성 지점 3곳은 전부 skip_existing=True라 재과금 0).
+    #   ★주인은 요청자가 아니라 **작업의 주인**이다 — 미리듣기(위 preview)가 같은 이유로
+    #     job.customer_id를 쓴다. 관리자가 남의 작업을 손봐도 그 고객 기억이 바뀌어야 맞다.
+    #   기억 저장 실패가 성우 적용을 막지 않는다(부가기능이 본작업을 죽이면 안 된다).
+    try:
+        store.set_last_voice(job.get("customer_id", 0), voice)
+    except Exception as _e:      # noqa: BLE001
+        print(f"[성우기억] 저장 실패(무해): {_e!r}", file=sys.stderr)
     background_tasks.add_task(resynth_tts_job, job_id, DB_PATH, _MIX_WORK_DIR)
     return {"ok": True}
 
@@ -6784,6 +6829,122 @@ def api_thumb_selected(job_id: str):
     name = thumb.get("selected")
     return {"ok": True, "name": name, "intro": intro,
             "url": f"/api/produce/thumb/file/{job_id}/{name}"}
+
+
+# ── 🖼 내 썸네일 프리셋(2026-09-02 사장님 "만들어진것 프리셋으로 저장") ──
+# 만든 썸네일의 **구성**(글자·스티커·도형·배지)을 담아 다음 영상에 딸깍 한 번에 얹는다.
+# ★배경은 담지 않는다 — 프리셋을 쓰는 곳은 **다른 영상**이라 그 영상의 배경 위에 얹혀야 한다.
+# ★HC_PRESETS(내장 색 프리셋)와 다른 물건이다: 저건 고른 글자 레이어 **하나의 스타일**만
+#   바꾸고, 이건 화면 구성을 통째로 바꾼다. 섞지 않는다(0순위-B — 판단이 두 곳에 생긴다).
+THUMB_PRESET_NAME_MAX = 30
+_THUMB_PRESET_MAX = 60          # 1인당. 카드가 무한히 늘면 고르는 화면이 못 쓰게 된다
+
+
+def _thumb_preset_file(fname: str):
+    """프리셋 카드 그림의 실제 경로. 경로순회를 여기 한 곳에서 막는다(_thumb_dir과 같은 관례)."""
+    safe = os.path.basename(fname or "")
+    if not safe or safe != fname or safe in (".", ".."):
+        return None
+    return _THUMB_PRESET_DIR / safe
+
+
+@app.get("/api/produce/thumb/presets")
+def api_thumb_presets(request: Request):
+    """내 프리셋 목록. 카드에 그림과 구성이 같이 필요하므로 layers까지 함께 내려준다."""
+    rows = Store(DB_PATH).list_thumb_presets(customer_id=_cid(request))
+    return {"ok": True, "presets": [
+        {"preset_id": p["preset_id"], "name": p["name"], "layers": p["layers"],
+         "updated_at": p["updated_at"],
+         "url": f"/api/produce/thumb/preset-image/{p['thumb_file']}" if p["thumb_file"] else None}
+        for p in rows]}
+
+
+@app.post("/api/produce/thumb/presets")
+async def api_thumb_preset_add(request: Request, name: str = Form(...),
+                               layers: str = Form(...),
+                               file: UploadFile = File(None)):
+    """지금 편집 중인 썸네일 구성을 프리셋으로 담는다.
+
+    file(PNG)은 카드에 보여줄 그림 — 없어도 저장은 된다(그림 없는 카드로 뜬다).
+    """
+    import json as _json          # app.py 관례(:1448·:1482) — 최상위 import 아님
+    cid = _cid(request)
+    store = Store(DB_PATH)
+
+    name = (name or "").strip()[:THUMB_PRESET_NAME_MAX]
+    if not name:
+        return JSONResponse(status_code=400, content={"ok": False, "error": "이름을 입력하세요"})
+    try:
+        layers_obj = _json.loads(layers)
+    except (ValueError, TypeError):
+        return JSONResponse(status_code=400, content={"ok": False, "error": "layers 파싱 실패"})
+    # ★list인지 본다. dict를 받아 그대로 넣으면 불러올 때 프런트가 layers.map에서 죽는다.
+    if not isinstance(layers_obj, list) or not layers_obj:
+        return JSONResponse(status_code=400,
+                            content={"ok": False, "error": "담을 것이 없습니다 — 글자나 스티커를 먼저 얹으세요"})
+
+    if len(store.list_thumb_presets(customer_id=cid, limit=_THUMB_PRESET_MAX + 1)) >= _THUMB_PRESET_MAX:
+        return JSONResponse(status_code=400, content={
+            "ok": False, "error": f"프리셋은 {_THUMB_PRESET_MAX}개까지예요 — 안 쓰는 것을 지우고 담아주세요"})
+
+    thumb_file = None
+    if file is not None:
+        data = await file.read()
+        if data:
+            if not data.startswith(b"\x89PNG\r\n\x1a\n"):     # PNG 시그니처(save와 같은 검사)
+                return JSONResponse(status_code=400, content={"ok": False, "error": "PNG가 아님"})
+            _THUMB_PRESET_DIR.mkdir(parents=True, exist_ok=True)
+            thumb_file = f"tp_{uuid.uuid4().hex[:12]}.png"    # 파일명은 서버가 부여(경로순회 차단)
+            (_THUMB_PRESET_DIR / thumb_file).write_bytes(data)
+
+    p = store.add_thumb_preset(f"tp_{uuid.uuid4().hex[:12]}", name, layers_obj,
+                               thumb_file=thumb_file, customer_id=cid)
+    return {"ok": True, "preset": {
+        "preset_id": p["preset_id"], "name": p["name"], "layers": p["layers"],
+        "updated_at": p["updated_at"],
+        "url": f"/api/produce/thumb/preset-image/{thumb_file}" if thumb_file else None}}
+
+
+@app.post("/api/produce/thumb/presets/{preset_id}/rename")
+async def api_thumb_preset_rename(preset_id: str, request: Request):
+    body = await request.json()
+    name = str(body.get("name") or "").strip()[:THUMB_PRESET_NAME_MAX]
+    if not name:
+        return JSONResponse(status_code=400, content={"ok": False, "error": "이름을 입력하세요"})
+    if not Store(DB_PATH).rename_thumb_preset(preset_id, name, customer_id=_cid(request)):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "없는 프리셋"})
+    return {"ok": True, "name": name}
+
+
+@app.delete("/api/produce/thumb/presets/{preset_id}")
+def api_thumb_preset_delete(preset_id: str, request: Request):
+    store = Store(DB_PATH)
+    cid = _cid(request)
+    p = store.get_thumb_preset(preset_id, customer_id=cid)      # 그림 경로를 먼저 알아둔다
+    if not store.delete_thumb_preset(preset_id, customer_id=cid):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "없는 프리셋"})
+    # 행을 지웠으면 그림도 치운다 — 안 하면 안 쓰이는 PNG가 영원히 쌓인다.
+    if p and p.get("thumb_file"):
+        fp = _thumb_preset_file(p["thumb_file"])
+        if fp is not None:
+            try:
+                fp.unlink(missing_ok=True)
+            except OSError as e:  # noqa: BLE001 — DB 행은 이미 지웠다. 그림 한 장이
+                # 안 지워져도 사장님 눈엔 프리셋이 사라진 것이라 요청은 성공으로 둔다.
+                # 다만 조용히 넘기면 안 쓰이는 PNG가 쌓이는 걸 아무도 모른다 → 사유를 남긴다.
+                print(f"[thumb_preset] 그림 삭제 실패(무해, 고아 파일 남음): {e!r}",
+                      file=sys.stderr)
+    return {"ok": True}
+
+
+@app.get("/api/produce/thumb/preset-image/{fname}")
+def api_thumb_preset_image(fname: str):
+    """프리셋 카드 그림 서빙. is_file()로 본다(디렉터리면 FileResponse가 500을 낸다 — 위 참조)."""
+    path = _thumb_preset_file(fname)
+    if path is None or not path.is_file():
+        return JSONResponse(status_code=404, content={"ok": False})
+    # 파일명이 uuid라 내용이 안 바뀐다 → 길게 캐시해도 안전하다(썸네일 파일과 다른 점).
+    return FileResponse(str(path), headers={"Cache-Control": "public, max-age=31536000, immutable"})
 
 
 def _reject_cdn_proxy(url: str, allowed_hosts) -> bool:
@@ -12353,6 +12514,31 @@ def _apiwatch_contract():
     return out
 
 
+@app.post("/api/admin/apiwatch/key/delete")
+def _api_apiwatch_key_delete(request: Request, body: dict):
+    """관리자가 **회원 키를 뺀다**(2026-09-02 사장님 "제미니 키 추가 삭제").
+
+    ★왜 관리자 전용 경로가 따로 필요한가: 기존 /api/settings/keys/delete는 로그인한
+      본인 키만 지운다(customer_id를 조건에 박는다 — 그게 맞다). 관리자는 **남의**
+      이상한 키를 빼야 하므로 별도 입구가 있어야 하고, 그래서 _require_admin이 필수다.
+    ★뺀 키는 공용 풀에서도 즉시 빠져야 한다 — 안 그러면 지운 키를 계속 때려 429/401.
+    """
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    try:
+        cid = int(body.get("customer_id") or 0)
+        kid = int(body.get("id") or 0)
+    except (TypeError, ValueError):
+        return {"ok": False, "error": "customer_id·id는 숫자여야 합니다"}
+    if not cid or not kid:
+        return {"ok": False, "error": "customer_id와 id가 필요합니다"}
+    store = Store(DB_PATH)
+    store.delete_customer_key(cid, kid)
+    _resync_pools(store)          # 풀에서도 즉시 뺀다(idempotent)
+    return {"ok": True, "member_keys": store.list_all_customer_keys("gemini")}
+
+
 @app.get("/api/admin/apiwatch")
 def _api_apiwatch(request: Request, hours: int = 24):
     """API 관측판 데이터 — 키풀 스냅샷 + 이벤트 집계 + 판정 한 줄 + RPD 예산 + 계약.
@@ -12370,6 +12556,18 @@ def _api_apiwatch(request: Request, hours: int = 24):
                "verdict": api_health.verdict(snap=snap, agg=agg1),
                "budget": api_health.budget(snap=snap, agg=agg),
                "contract": _apiwatch_contract()}
+        # 🔑 키별 실시간 흐름 + 회원 등록 키 목록(2026-09-02 사장님).
+        #   한 구역이 깨져도 나머지 관측판은 살아야 한다 — 각각 따로 감싼다.
+        try:
+            out["keyflow"] = api_health.key_timeline(minutes=60)
+        except Exception as e:                    # noqa: BLE001
+            out["keyflow"] = []
+            print(f"[apiwatch] keyflow 실패(무해): {e!r}", file=sys.stderr)
+        try:
+            out["member_keys"] = api_health.member_keys(Store(DB_PATH), service="gemini")
+        except Exception as e:                    # noqa: BLE001
+            out["member_keys"] = []
+            print(f"[apiwatch] member_keys 실패(무해): {e!r}", file=sys.stderr)
         api_health.purge()
         return out
     except Exception as e:                        # noqa: BLE001 — 관측이 죽어도 사유는 보이게
@@ -14145,9 +14343,15 @@ def api_produce_source_brief(request: Request, shortcode: str):
     #   그대로 빌려 쓴다(0순위-B). 전엔 여기도 가로>세로 비교를 따로 적어서, 문턱을
     #   한쪽만 고치면 "화면은 괜찮다는데 제작은 실패"가 났다.
     from shopping_shorts.mix_pipeline import is_landscape_wh
+    # ★is_landscape_wh는 **못 재면 None**을 준다("모르면 막지 않는다"가 그 함수의 설계).
+    #   종전엔 bool()로 감싸 None이 False(=세로형 확실)로 뭉개졌다 — 즉 "안 재봤다"와
+    #   "세로형이다"가 화면에서 같은 값이 됐다(2026-09-02 실측: URL로 담은 3편이
+    #   video_w/h null인데 landscape:false로 내려가 안전한 것처럼 보였다).
+    #   None을 그대로 실어 화면이 "모름"을 알 수 있게 한다 — 기존 프론트는
+    #   `b.landscape ? 경고 : ''` 라 None에서도 종전과 똑같이 조용하다(회귀 없음).
     return {"ok": True, "brief": data.get("source_brief") or {}, "segments": segs,
             "video_w": _w, "video_h": _h,
-            "landscape": bool(is_landscape_wh(_w, _h))}
+            "landscape": is_landscape_wh(_w, _h)}
 
 
 @app.get("/api/produce/aipick")
@@ -14409,6 +14613,23 @@ def api_produce_autoload(request: Request, body: dict):
             except Exception as ex:  # noqa: BLE001
                 e["status"], e["error"] = "failed_download", str(ex)
                 return e
+            # ★화면 방향을 여기서도 재둔다(2026-09-02). 종전엔 prewarm.py에만 있어서
+            #   («담기 예열»을 안 거친 경로 — 특히 「🔗 URL 직접 추가」 — 는 video_w/h가
+            #   영영 null이었다. 실측: URL로 담은 인스타 3편 전부 null → 1단계가
+            #   "가로형(롱폼)" 경고를 못 띄우고, 가로 영상이면 다운로드·추출 비용을
+            #   다 쓴 뒤 3단계 믹스에서야 _block_landscape로 막힌다.
+            #   prewarm과 **같은 함수**를 쓴다(0순위-B) — 방향 판정은 한 곳에서만.
+            #   못 재도 그냥 넘어간다: 이건 보조 정보라 이걸로 적재를 실패시키면 안 된다.
+            try:
+                from shopping_shorts.mix_pipeline import _probe_wh_dur
+                _vw, _vh, _vd = _probe_wh_dur(e["video_path"])
+                if _vw and _vh:
+                    result["video_w"], result["video_h"] = _vw, _vh
+            except Exception as _we:   # noqa: BLE001 — 측정 실패가 적재를 막으면 안 된다
+                # ★traceback은 이 파일에 모듈 최상단 import가 없다 — 여기서 부르면
+                #   NameError로 오히려 적재가 죽는다(예외 처리 안에서 나는 예외).
+                print(f"[autoload] 화면 방향 측정 실패(무해) {code}: {_we!r}",
+                      file=sys.stderr)
             # ★재료가 하나도 안 나왔을 때만 버린다(2026-08-16 기준 교체).
             #   예전엔 full_text(말)만 봐서 **무음 영상이 통째로 버려졌다** — 도우인
             #   제품 영상이 여기 걸렸다. 화면 태깅만 나와도 쓸 수 있는 재료다.

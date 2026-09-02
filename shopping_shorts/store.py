@@ -874,6 +874,28 @@ class Store:
             """)
             c.execute("CREATE INDEX IF NOT EXISTS idx_produce_works_customer "
                       "ON produce_works(customer_id, updated_at DESC)")
+            # 🖼 내 썸네일 프리셋(2026-09-02, 영상제작 7단계) — 만든 썸네일의 **구성**을 통째로
+            # 담아두고 다음 영상에 그대로 얹는다. 사장님이 매번 스티커·도형·색을 다시 만들던
+            # 일을 딸깍 한 번으로 끝낸다.
+            # ★배경(frame)은 담지 않는다 — 프리셋은 **다른 영상**에 쓰는 것이라 그 영상의
+            #   배경 프레임 위에 얹혀야 한다. 담으면 남의 영상 장면이 딸려온다.
+            # ★layers_json 하나에 다 넣는다(글자·스티커·도형·배지가 한 배열). THUMB_STATE.layers
+            #   모양 그대로라 프런트가 변환 없이 쓴다 — 모양을 두 군데서 정하면 어긋난다(0순위-B).
+            # thumb_file: 저장 당시 만든 PNG 사본(카드 그림). 원본 job이 지워져도 남아야 하므로
+            #   job 폴더가 아니라 프리셋 전용 폴더에 따로 복사해 둔다.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS thumb_presets (
+                    preset_id TEXT PRIMARY KEY,
+                    customer_id INTEGER NOT NULL DEFAULT 0,
+                    name TEXT NOT NULL,
+                    layers_json TEXT NOT NULL,
+                    thumb_file TEXT,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                )
+            """)
+            c.execute("CREATE INDEX IF NOT EXISTS idx_thumb_presets_customer "
+                      "ON thumb_presets(customer_id, updated_at DESC)")
             # 보이스 프리셋(2026-07-14, 영상제작 4단계) — 큐레이션된 목소리 카드.
             c.execute("""
                 CREATE TABLE IF NOT EXISTS voice_presets (
@@ -1574,6 +1596,18 @@ class Store:
             c.execute("ALTER TABLE customers ADD COLUMN setup_due INTEGER NOT NULL DEFAULT 0")
         except sqlite3.OperationalError:
             pass  # 이미 존재
+
+        # ── 🎙 마지막 성우 기억(2026-09-02 사장님 "마지막 본인이 세팅한 TTS를 다음작업에도"). ──
+        #    왜 필요한가: job.voice가 비면 mix_pipeline._voice_params가 _DEFAULT_VOICE(미나)로
+        #    폴백한다. 그래서 3단계 매칭의 1차 TTS가 **항상 미나**로 나가고, 고객은 4단계에서
+        #    자기 성우로 바꿔야 했다. 그 '적용'이 resynth_tts_job(skip_existing 없음 = 전 비트
+        #    재합성)이라 **편당 TTS가 2회** 나갔다. 여기 기억해 둔 값을 create_mix_job이
+        #    job.voice 초기값으로 넣으면 1차부터 본인 성우 → 4단계를 누를 이유가 없어진다.
+        #    값은 /api/mix/voice가 만드는 voice 스냅샷 JSON 그대로(같은 모양이라야 재가공이 없다).
+        try:
+            c.execute("ALTER TABLE customers ADD COLUMN last_voice_json TEXT")
+        except sqlite3.OperationalError:
+            pass  # 이미 존재. 기존 고객은 NULL = 종전대로 미나 폴백(동작 불변).
 
         # ── 관리자 지정(2026-07-22): admin=1이면 관리자(권한 관리자와 동일). 사장님이 UI로 부여/회수. ──
         try:
@@ -4564,19 +4598,27 @@ class Store:
             None이면 자동 선정(인스타/유튜브·댓글수 규칙). run_mix_job이 인덱스→video_id로 푼다."""
         now = datetime.now(timezone.utc).isoformat()
         bb = None if backbone_main is None else int(backbone_main)
+        # ★🎙 마지막 성우를 job에 미리 심는다(2026-09-02) — 이중 TTS 차단의 핵심.
+        #   여기서 안 심으면 3단계 매칭의 1차 TTS가 _DEFAULT_VOICE(미나)로 나가고, 고객이
+        #   4단계에서 바꾸는 순간 resynth_tts_job이 **전 비트를 다시 합성**한다(편당 2회).
+        #   ★반드시 이 한 곳에서만 심는다(0순위-B): create_mix_job 호출부가 4군데
+        #   (app.py 3390·3527·14730, auto_run.py 134)라 호출부마다 심으면 언젠가 어긋난다.
+        #   기억이 없으면(신규 고객) None → 종전대로 미나 폴백이라 동작이 안 바뀐다.
+        last_voice = self.get_last_voice(customer_id)
         with self._conn() as c:
             c.execute(
                 "INSERT INTO mix_jobs(job_id, urls_json, target_seconds, structure, "
                 "status, created_at, updated_at, subtitle_removal, given_script, "
                 "script_structure_json, customer_id, render_charge_day, scene_first, backbone_main, "
-                "mix_charged) "
-                "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                "mix_charged, voice_json) "
+                "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 (job_id, json.dumps(urls, ensure_ascii=False), target_seconds,
                  structure, "downloading", now, now, 1 if subtitle_removal else 0,
                  given_script or None,
                  json.dumps(script_structure, ensure_ascii=False) if script_structure else None,
                  customer_id, render_charge_day, 1 if scene_first else 0, bb,
-                 None if mix_charged is None else int(mix_charged)),
+                 None if mix_charged is None else int(mix_charged),
+                 json.dumps(last_voice, ensure_ascii=False) if last_voice else None),
             )
 
     def get_mix_job(self, job_id):
@@ -4948,6 +4990,78 @@ class Store:
         with self._conn() as c:
             return c.execute("DELETE FROM produce_works WHERE work_id=? AND customer_id=?",
                              (work_id, customer_id)).rowcount > 0
+
+    # ── 🖼 내 썸네일 프리셋(2026-09-02, 영상제작 7단계) ──
+    # 만든 썸네일의 구성(레이어 배열)을 담아두고 다음 영상에 그대로 얹는다.
+    # customer_id를 WHERE에 항상 끼운다 — produce_works와 같은 관례라 남의 프리셋은
+    # 읽지도 지우지도 못한다.
+    def add_thumb_preset(self, preset_id, name, layers, thumb_file=None,
+                         customer_id=LEGACY_CUSTOMER_ID):
+        """프리셋 1건 저장. 저장된 dict를 돌려준다.
+
+        layers는 THUMB_STATE.layers 모양 그대로(글자·스티커·도형·배지가 한 배열)."""
+        now = datetime.now(timezone.utc).isoformat()
+        with self._conn() as c:
+            c.execute(
+                "INSERT INTO thumb_presets (preset_id, customer_id, name, layers_json, "
+                "thumb_file, created_at, updated_at) VALUES (?,?,?,?,?,?,?)",
+                (preset_id, customer_id, name,
+                 json.dumps(layers, ensure_ascii=False), thumb_file, now, now),
+            )
+        return {"preset_id": preset_id, "name": name, "layers": layers,
+                "thumb_file": thumb_file, "created_at": now, "updated_at": now}
+
+    def list_thumb_presets(self, customer_id=LEGACY_CUSTOMER_ID, limit=60):
+        """내 프리셋 목록(최신순). layers까지 함께 싣는다 — 카드를 누르는 즉시 적용해야
+        하는데 목록과 상세를 나누면 왕복이 한 번 더 늘고, 레이어는 원래 작다(수 KB)."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT preset_id, name, layers_json, thumb_file, updated_at "
+                "FROM thumb_presets WHERE customer_id=? "
+                "ORDER BY updated_at DESC, rowid DESC LIMIT ?",
+                (customer_id, limit),
+            ).fetchall()
+        out = []
+        for r in rows:
+            try:
+                layers = json.loads(r[2])
+            except Exception:
+                continue          # 깨진 행 하나가 목록 전체를 죽이지 않게 한다
+            out.append({"preset_id": r[0], "name": r[1], "layers": layers,
+                        "thumb_file": r[3], "updated_at": r[4]})
+        return out
+
+    def get_thumb_preset(self, preset_id, customer_id=LEGACY_CUSTOMER_ID):
+        """프리셋 1건. 없거나 남의 것이면 None."""
+        with self._conn() as c:
+            row = c.execute(
+                "SELECT preset_id, name, layers_json, thumb_file, updated_at "
+                "FROM thumb_presets WHERE preset_id=? AND customer_id=?",
+                (preset_id, customer_id),
+            ).fetchone()
+        if not row:
+            return None
+        try:
+            layers = json.loads(row[2])
+        except Exception:
+            return None
+        return {"preset_id": row[0], "name": row[1], "layers": layers,
+                "thumb_file": row[3], "updated_at": row[4]}
+
+    def rename_thumb_preset(self, preset_id, name, customer_id=LEGACY_CUSTOMER_ID):
+        """이름 바꾸기. 성공하면 True — 남의 것/없으면 False."""
+        with self._conn() as c:
+            return c.execute(
+                "UPDATE thumb_presets SET name=?, updated_at=? "
+                "WHERE preset_id=? AND customer_id=?",
+                (name, datetime.now(timezone.utc).isoformat(), preset_id, customer_id),
+            ).rowcount > 0
+
+    def delete_thumb_preset(self, preset_id, customer_id=LEGACY_CUSTOMER_ID):
+        """지운다. 실제로 지워졌으면(내 것이었으면) True."""
+        with self._conn() as c:
+            return c.execute("DELETE FROM thumb_presets WHERE preset_id=? AND customer_id=?",
+                             (preset_id, customer_id)).rowcount > 0
 
     # ── 보이스 프리셋(2026-07-14, 영상제작 4단계) ──
     def upsert_voice_preset(self, p):
@@ -5480,6 +5594,37 @@ class Store:
         if _hmac.compare_digest(self._hash_password(password, salt), stored_hash):
             return customer_id
         return None
+
+    # ── 🎙 마지막 성우 기억(2026-09-02) ──────────────────────────────────────
+    #  이 두 함수가 last_voice_json을 만지는 **유일한 출구**다(0순위-B). 다른 곳에서
+    #  customers.last_voice_json을 직접 SELECT/UPDATE 하지 마라 — JSON 파싱 규칙이
+    #  갈리면 "기억은 했는데 안 불러와진다"가 된다.
+    def get_last_voice(self, customer_id):
+        """고객이 마지막으로 적용한 voice 스냅샷 dict. 없거나 깨졌으면 None
+        (→ 호출부는 종전대로 _DEFAULT_VOICE 폴백 = 동작 불변)."""
+        if not customer_id:
+            return None
+        with self._conn() as c:
+            row = c.execute("SELECT last_voice_json FROM customers WHERE id=?",
+                            (customer_id,)).fetchone()
+        if not row or not row[0]:
+            return None
+        try:
+            v = json.loads(row[0])
+        except (ValueError, TypeError):
+            return None      # 깨진 값이 영상제작을 막지 않는다
+        return v if isinstance(v, dict) and v.get("voice_id") else None
+
+    def set_last_voice(self, customer_id, voice):
+        """이 고객의 다음 작업 기본 성우를 저장(upsert). voice=None이면 지운다.
+        ⚠️voice_id 없는 스냅샷은 저장하지 않는다 — 넣어봐야 get_last_voice가 거른다."""
+        if not customer_id:
+            return
+        val = None
+        if isinstance(voice, dict) and voice.get("voice_id"):
+            val = json.dumps(voice, ensure_ascii=False)
+        with self._conn() as c:
+            c.execute("UPDATE customers SET last_voice_json=? WHERE id=?", (val, customer_id))
 
     def get_customer(self, customer_id):
         """customer_id → {id, username, created_at, plan, full_access_until, google_sub, email, approved_at, name, phone} 또는 None."""
@@ -6887,6 +7032,25 @@ class Store:
                     customer_id, service, key_id, type(e).__name__)
                 continue
         return out
+
+    def list_all_customer_keys(self, service=None):
+        """관리자용 — 회원 등록 키 전체(누가·언제·상태). **키 원문은 안 준다.**
+
+        ★2026-09-01 사고에서 나온 필요: "등록 안 했다"는 회원 계정에 키 5개가 있었다.
+          누가 언제 넣었는지 화면에서 못 보면 그때마다 서버 DB를 직접 열어야 한다.
+        label(마스킹 문자열)까지만 노출한다 — 복호는 하지 않는다.
+        """
+        q = ("SELECT k.id, k.customer_id, k.service, k.label, k.status, "
+             "k.created_at, k.checked_at, c.name, c.email "
+             "FROM customer_keys k LEFT JOIN customers c ON c.id = k.customer_id")
+        args = ()
+        if service:
+            q += " WHERE k.service=?"
+            args = (service,)
+        q += " ORDER BY k.created_at DESC LIMIT 500"
+        with self._conn() as c:
+            c.row_factory = sqlite3.Row
+            return [dict(r) for r in c.execute(q, args)]
 
     def delete_customer_key(self, customer_id, key_id):
         """★customer_id를 조건에 반드시 넣는다 — 안 넣으면 id만 알면 남의 키를 지운다."""
