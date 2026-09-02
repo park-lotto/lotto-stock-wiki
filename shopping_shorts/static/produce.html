@@ -4390,7 +4390,10 @@ function useHeadcopy(i){
 function clearHeadcopy(){
   const t=document.getElementById('hcText'); if(!t) return;
   t.value='';
-  updateHC();          // 미리보기·STATE 반영은 넣을 때와 **같은 경로**를 쓴다(따로 지우지 않는다)
+  // 미리보기·STATE 반영은 넣을 때와 **같은 경로**를 쓴다(따로 지우지 않는다).
+  // ★저장까지 같은 경로로 — hcTouched가 그리기+저장을 함께 한다(2026-09-02).
+  //   updateHC만 부르면 화면에서만 지워지고 새로고침하면 헤드카피가 되살아난다.
+  hcTouched();
 }
 // 🖼 템플릿 — 목록은 서버가 준다(정의처는 deco_templates 하나). 선택은 STATE.deco.template.
 let TPL_LIST=[];
@@ -6678,12 +6681,14 @@ function hcWordSetColor(c){
   const rules=_hcRules(); const r=_hcRuleOf(HC_WORD);
   if(r) r.color=c;
   else rules.push({keyword:HC_WORD, color:c, box:false, box_color:'#FF2D2D'});
-  renderHCWords(); updateHC();
+  // ★그리기(updateHC)는 저장을 안 한다 — 저장은 만진 쪽이 건다(저장 루프 방지, 2026-09-02).
+  //   낱말 강조는 STATE.deco.highlight_rules를 바꾸므로 저장이 없으면 새로고침에 날아간다.
+  renderHCWords(); updateHC(); _hcSaveSoon();
 }
 function hcWordClear(){
   if(!HC_WORD) return;
   STATE.deco.highlight_rules=_hcRules().filter(r=>r.keyword!==HC_WORD);
-  renderHCWords(); updateHC();
+  renderHCWords(); updateHC(); _hcSaveSoon();   // 지운 것도 저장돼야 한다(위와 같은 이유)
 }
 
 function renderHighlightRules(){
@@ -6771,7 +6776,9 @@ async function uploadOverlay(input){
 function updateOverlay(){ if(!STATE.deco||!STATE.deco.overlay) return;
   STATE.deco.overlay.width=+document.getElementById('ovW').value;
   STATE.deco.overlay.alpha=+document.getElementById('ovAlpha').value/100; renderOverlayPreview(); }
-function clearOverlay(){ if(STATE.deco) STATE.deco.overlay=null; const el=document.getElementById('ovFile'); if(el) el.value=''; renderOverlayPreview(); const st=document.getElementById('ovStatus'); if(st) st.textContent='제거됨'; }
+// ★지우기도 **저장**해야 한다(2026-09-02). 종전엔 STATE.deco.overlay만 비우고 끝이라
+//   새로고침하면 지운 오버레이가 되살아났다(넣는 쪽은 saveHeadcopy를 부른다 — 짝이 안 맞았다).
+function clearOverlay(){ if(STATE.deco) STATE.deco.overlay=null; const el=document.getElementById('ovFile'); if(el) el.value=''; renderOverlayPreview(); const st=document.getElementById('ovStatus'); if(st) st.textContent='제거됨'; if(typeof saveHeadcopy==='function') saveHeadcopy(); }
 function renderOverlayPreview(){
   const img=document.getElementById('ovPreview'); if(!img) return;
   const o=STATE.deco&&STATE.deco.overlay, scale=PREVIEW_W/VIDEO_W;
