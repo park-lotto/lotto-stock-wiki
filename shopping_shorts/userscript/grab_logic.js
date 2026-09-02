@@ -999,7 +999,7 @@
   //   자리 판단은 **여기 한 곳에서만** 한다(0순위-B) — 만드는 쪽은 right:18px로 두고,
   //   이 함수가 매 tick에 left로 덮어쓴다. 못 정하면 종전 자리 그대로 둔다.
   // 위→아래 순서. 지금 화면에 있는 것만 골라 빈칸 없이 연속으로 쌓는다.
-  var DOCK_IDS = ["ss-adopt-btn", "ss-lens-btn", "ss-chadd-btn", "ss-grab-btn"];
+  var DOCK_IDS = ["ss-adopt-btn", "ss-favch-btn", "ss-lens-btn", "ss-chadd-btn", "ss-grab-btn"];
   var DOCK_STEP = 52;      // 버튼 세로 간격
   function _dockAnchor() {
     // 가장 큰 <video>가 지금 보는 영상이다.
