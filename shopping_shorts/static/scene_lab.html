@@ -1174,9 +1174,17 @@ function pvTab(which){
 //     (#mixPreviewRail)을 감췄으면 null을 준다. _RAIL_OFF=true라 평소 늘 감춰져 있어
 //     여기서 쓰면 렌더가 **영영 안 걸린다**. 여긴 "재생을 어디서 하나"가 아니라
 //     "부모에게 렌더를 시킨다"라서 판정 기준이 다르다(0순위-B: 다른 판단은 따로 둔다).
-function _askRender(){
+async function _askRender(){
   var body = document.getElementById('confirmBody');
   if (!body || body.innerHTML.trim()) return;        // 이미 있다(또는 만드는 중) — 그대로 본다
+  // ★밀린 편집을 **먼저** 서버에 얹고 렌더한다(2026-09-02 사장님 제보: "컷 편집이 적용 안 됨").
+  //   autoApply는 1.2초 디바운스라, 컷을 조정하고 바로 이 탭을 누르면 렌더가 먼저 출발해
+  //   **옛 편성으로** 만들어졌다(실측: 0ms 렌더 / 901ms 저장 — 순서가 거꾸로).
+  //   여기서 기다리면 저장이 반드시 앞선다. 실패해도 렌더는 진행한다 — 막으면 더 나쁘다.
+  body.innerHTML = '<div class="cfLoad">⏳ 편집 내용 저장 중…</div>';
+  try{ if (typeof flushApply === 'function') await flushApply(); }
+  catch(e){ console.warn('편집 반영 실패(렌더는 계속)', e); }
+  body.innerHTML = '';                               // startPreview가 자기 로더를 그린다
   try{
     var up = window.parent;
     if (up && up !== window && typeof up.startPreview === 'function'){ up.startPreview(); return; }
@@ -3014,6 +3022,22 @@ function autoApply(){
   clearTimeout(_autoApplyTimer);
   _autoApplyTimer = setTimeout(() => { applyServer({auto: true}); }, 1200);
 }
+// ★밀린 저장을 **지금 당장** 끝낸다 — 렌더를 걸기 전에 부른다(2026-09-02 사장님 제보).
+//   재현: 컷 길이를 조정하고 바로 [완성본 만들기]를 누르면 편집이 빠진 채로 만들어진다.
+//   실측 순서가 정확히 거꾸로였다 →  0ms 렌더시작(preview POST) / 901ms 편집저장(apply POST)
+//   autoApply가 1.2초 디바운스라, 그 안에 누르면 **서버는 옛 편성으로** 렌더를 시작한다.
+//   (디바운스 자체는 필요하다 — 슬라이더·연속 편집마다 POST가 나가면 안 된다.
+//    그래서 없애지 않고 "지금 비운다"를 따로 만든다.)
+async function flushApply(){
+  if (!SL.server) return;
+  clearTimeout(_autoApplyTimer); _autoApplyTimer = null;
+  await applyServer({auto: true});        // 보내는 중이면 applyServer가 알아서 한 번 더 보낸다
+  // 보내는 중이었다면 _autoApplyAgain으로 재전송이 예약된다 — 그것까지 끝나길 짧게 기다린다.
+  for (let i = 0; i < 40 && (_autoApplyBusy || _autoApplyAgain); i++){
+    await new Promise(r => setTimeout(r, 100));
+  }
+}
+window.flushApply = flushApply;
 // ★내 저장본 vs 서버 편성 — **새 쪽**을 쓴다(2026-08-21 버그리뷰 P1).
 //   종전엔 localStorage가 무조건 이겼다. 그래서 화면에 보이는 편성과 실제로 렌더되는
 //   편성이 다른 상태가 계속 유지됐다(실측 job 14e75ac6024a: 화면은 2번 칸 '장면 없음'인데
