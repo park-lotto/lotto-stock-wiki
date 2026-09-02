@@ -1078,6 +1078,15 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
             title="담은 편성을 처음부터 이어서 봅니다">▶</button>
     <div class="pidleIcon">🪞</div>
     <div class="pidleTxt">위 <b>띠의 조각</b>이나 아래 <b>장면</b>을 누르면<br>여기서 재생됩니다</div>
+    <!-- ★미리보기는 **꾸미기를 일부러 뺀다**(mix_pipeline.run_preview: caption_style=None,
+         deco={} — "스펙 §9 꾸미기 제외"). 자막은 기본 흰색으로 구워지고 헤드카피·템플릿도 없다.
+         그런데 그 사실이 화면 어디에도 없어서, 6단계에서 자막색을 검정으로 바꾸고 여기를 보면
+         **안 바뀐 것처럼 보인다**(실측 2026-09-02: 미리보기 자막 흰색, 최종본은 검정).
+         진짜 저장 버그와 증상이 똑같아 고객이 구별할 수 없다 → 한 줄로 미리 알린다. -->
+    <div class="pidleTxt" style="margin-top:8px;opacity:.72;font-size:12px;line-height:1.5">
+      장면·순서 확인용이라 <b>꾸미기(자막 색·헤드카피)는 빠져 있어요</b><br>
+      꾸민 그대로 보려면 <b>완성본 만들기</b>를 눌러주세요
+    </div>
   </div>
   <div id="player">
       <div class="phead"><b>미리보기</b> <span class="x" onclick="stopPlay()">닫기 ✕</span></div>
