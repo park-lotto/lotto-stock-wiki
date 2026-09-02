@@ -2572,6 +2572,28 @@ def clean_final_matches_plan(job, work):
         return False
 
 
+def clean_any_final_path(job, work):
+    """자막이 **지워진** 완성본이면 아무거나 — 지금 편성 것이 없을 때 쓸 대안 (2026-09-02).
+
+    ★사장님 지시: "원본 자막이 남아있지 않게 하면 되지."
+      종전엔 지금 편성 청소본이 없으면 **원본**으로 떨어져 자막이 그대로 보였다.
+      장면이 조금 어긋나는 것과 자막이 보이는 것 중 후자가 훨씬 나쁘다 —
+      고객은 '자막제거가 안 됐다'로 읽는다. 그래서 옛 편성 청소본이라도 쓴다.
+    가장 최근 것을 준다(편성이 여러 번 바뀌었으면 마지막이 지금과 가장 가깝다).
+    """
+    try:
+        cands = [f for f in Path(work).glob("final_clean_*.mp4")
+                 if f.stat().st_size > 1024]
+        if cands:
+            return max(cands, key=lambda f: f.stat().st_mtime)
+        cvp = (job or {}).get("clean_video_path")
+        if cvp and Path(cvp).exists() and Path(cvp).stat().st_size > 1024:
+            return Path(cvp)
+        return None
+    except Exception:      # noqa: BLE001
+        return None
+
+
 def clean_final_path_for_plan(job, work):
     """지금 편성으로 청소한 완성본 파일 경로. 없으면 None (2026-09-02).
 

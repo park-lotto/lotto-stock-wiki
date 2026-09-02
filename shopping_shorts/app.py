@@ -16484,6 +16484,16 @@ def _clean_frame_src(job, work, beat_idx, cut=None):
     fresh = _fresh_path is not None
     if fresh:
         cvp = str(_fresh_path)
+    else:
+        # ★원본으로 떨어지지 않는다(2026-09-02 사장님 "원본 자막이 남아있지 않게 하면 되지").
+        #   지금 편성 청소본이 없어도 **옛 청소본**이 있으면 그것을 쓴다. 장면이 조금
+        #   어긋나는 것보다 자막이 보이는 것이 훨씬 나쁘다 — 고객은 그걸 '자막제거가
+        #   안 됐다'로 읽는다(제보 3건: 08-27, 09-01, 09-02).
+        #   청소본이 하나도 없을 때만 원본이고, 그건 자막제거를 안 한 작업이라 정상이다.
+        _alt = mix_pipeline.clean_any_final_path(job, work)
+        if _alt is not None:
+            cvp = str(_alt)
+            fresh = True      # 청소본에서 뜬다 — 좌표는 근사, 자막은 확실히 없다
     # ★컷 단위로 찾는다(2026-08-27) — 비트에 재료가 여럿이면 비트 한가운데는
     #   다른 소스 자리다. 화면에 나가는 최소 단위는 컷이다(clean_thumb과 같은 기준).
     _plan = job.get("edit_plan") or {}
