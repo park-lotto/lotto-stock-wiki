@@ -4956,10 +4956,19 @@ def _seg_strip_thumb(src, dest_dir, seg, filename):
     a, b = float(seg["start"]), float(seg["end"])
     if b - a < 0.35:                     # 너무 짧으면 3장이 같은 그림이다 — 한 장으로
         return extract_frame_at(src, dest_dir, (a + b) / 2, filename=filename)
-    pts = [a + (b - a) * r for r in (0.06, 0.5, 0.94)]
+    # ★가로가 아니라 **세로로 쌓는다**(2026-09-02). 카드는 4:5 세로에 잘라 맞추기(cover,
+    #   scene_lab.html `.seg img`)라, 가로 3:1 띠를 넣으면 **가운데만 확대되고 시작·끝이
+    #   잘려** 고치기 전과 똑같아 보인다. 세로로 쌓으면 카드 모양 그대로 세 시점이 다 보인다.
+    # ★결과물은 **카드 비율(4:5) 안에** 들어와야 한다(2026-09-02, 눈으로 확인하며 두 번 고침).
+    #   카드는 4:5에 잘라 맞추기(cover, scene_lab.html `.seg img`)라
+    #     · 가로 3:1 띠  → 가운데만 확대되고 시작·끝이 잘린다
+    #     · 세로 1:2.67 → 위아래가 잘린다
+    #   그래서 **시작·끝 2장을 나란히** 놓고 4:5 캔버스에 레터박스로 맞춘다. 2장이면 각 장이
+    #   카드 폭의 절반이라 눈에 들어오고, 겹친 조각도 끝 그림이 달라 바로 갈린다(그게 목적이다).
+    pts = [a + (b - a) * r for r in (0.06, 0.94)]
     fc = ";".join(
-        f"[0:v]trim=start={t:.3f}:end={t + 0.05:.3f},setpts=PTS-STARTPTS,scale=213:-2[v{i}]"
-        for i, t in enumerate(pts)) + ";[v0][v1][v2]hstack=inputs=3[out]"
+        f"[0:v]trim=start={t:.3f}:end={t + 0.05:.3f},setpts=PTS-STARTPTS,scale=200:-2[v{i}]"
+        for i, t in enumerate(pts)) +         ";[v0][v1]hstack=inputs=2,pad=400:500:(ow-iw)/2:(oh-ih)/2:color=black[out]"
     try:
         r = subprocess.run(
             ["ffmpeg", "-y", "-v", "error", "-i", str(src),
