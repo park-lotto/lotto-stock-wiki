@@ -64,3 +64,18 @@ def test_render_failure_does_not_block():
     """저장이 실패해도 렌더는 계속돼야 한다 — 막으면 아무것도 못 만든다."""
     body = _body(_src(), "async function _askRender()")
     assert "catch" in body, "flushApply 실패가 렌더를 통째로 막는다"
+
+
+# ── 9단계 최종 렌더도 같은 보호 (가장 비싼 작업이라 '혹시'를 안 남긴다) ──
+PRODUCE_HTML = pathlib.Path(__file__).resolve().parents[1] / "static" / "produce.html"
+
+
+def test_final_render_flushes_too():
+    """renderFinal도 밀린 3단계 편집을 먼저 얹는다 — 미리보기와 같은 뿌리."""
+    src = PRODUCE_HTML.read_text(encoding="utf-8")
+    i = src.index("async function renderFinal()")
+    body = src[i:src.index("/api/mix/render", i)]
+    assert "flushApply" in body, (
+        "최종 렌더가 밀린 컷 편집을 안 비운다 — 옛 편성으로 만들어질 수 있다")
+    assert "saveHeadcopy" in body, "꾸미기 저장(기존 보호)이 사라졌다"
+    assert "catch" in body, "저장 실패가 최종 렌더를 통째로 막는다"
