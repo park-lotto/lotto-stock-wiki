@@ -610,8 +610,8 @@
     var want = !!_chQuery();
     if (b && !want) { b.remove(); return; }
     if (b || !want) return;
-    _miniBtn("ss-favch-btn", "⭐ 볼채널등록",
-             "이 채널을 내 즐겨찾기(볼채널등록)에 담습니다 — 수집 목록과는 별개", 278, "#d1a054",
+    _miniBtn("ss-favch-btn", "⭐ 나만의 채널등록",
+             "이 채널을 내 즐겨찾기(나만의 채널등록)에 담습니다 — 수집 목록과는 별개", 278, "#d1a054",
              function () {
                var q = "url=" + encodeURIComponent(location.href);
                var t = _ssPageThumb();

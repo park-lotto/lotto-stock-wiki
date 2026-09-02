@@ -1585,7 +1585,7 @@ def api_fav_channel_add(request: Request, body: dict):
         customer_id=cid,
     )
     if added is None:
-        return {"ok": False, "error": f"볼채널은 최대 {store.FAV_CHANNEL_CAP}개까지예요"}
+        return {"ok": False, "error": f"나만의 채널은 최대 {store.FAV_CHANNEL_CAP}개까지예요"}
     n = len(store.fav_channel_list(customer_id=cid))
     return {"ok": True, "added": bool(added), "platform": plat, "channel_id": chid, "count": n}
 
@@ -1991,14 +1991,14 @@ def api_fav_channel_grab(request: Request, url: str = "", username: str = "",
                                   last_video_thumb=thumb, customer_id=cid)
     if added is None:
         return HTMLResponse(_chadd_html("⚠ 자리가 다 찼어요",
-                                        f"볼채널은 최대 {store.FAV_CHANNEL_CAP}개입니다. "
+                                        f"나만의 채널은 최대 {store.FAV_CHANNEL_CAP}개입니다. "
                                         "즐겨찾기에서 안 보는 채널을 빼주세요."))
     if not added:
         return HTMLResponse(_chadd_html("✔ 이미 담긴 채널",
-                                        f"@{chid} — 왼쪽 ⭐볼채널등록에서 볼 수 있어요."))
-    return HTMLResponse(_chadd_html("✅ 볼채널에 담았어요",
+                                        f"@{chid} — 왼쪽 ⭐나만의 채널등록에서 볼 수 있어요."))
+    return HTMLResponse(_chadd_html("✅ 나만의 채널에 담았어요",
                                     f"@{chid}{'·' + disp if disp else ''} — "
-                                    "왼쪽 ⭐볼채널등록에서 확인하세요."))
+                                    "왼쪽 ⭐나만의 채널등록에서 확인하세요."))
 
 
 @app.get("/api/discover/add_by_url", response_class=HTMLResponse)
