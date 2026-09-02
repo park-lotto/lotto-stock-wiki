@@ -4942,44 +4942,18 @@ def api_mix_segments(job_id: str):
 
 
 def _seg_strip_thumb(src, dest_dir, seg, filename):
-    """조각 하나 → **시작·중간·끝 3장을 가로로 이어붙인 띠 썸네일** (2026-09-02).
+    """조각 하나 → **그 조각의 첫 장면** 한 장 (2026-09-02 사장님 "앞 장면만 나오면 될 것 같은데").
 
-    왜: 조각이 겹치면 가운데 한 장만으론 서로 구분이 안 된다(사장님 "같은 썸네일이 두 장
-    들어갔는데 실제는 다른 조각들이야"). 3장이면 시작·끝이 달라 한눈에 갈린다.
-    ffmpeg 한 번으로 만든다(3회 seek 대신 hstack) — 실패하면 종전처럼 가운데 1장으로
-    폴백한다. 썸네일이 안 나오는 것보다 한 장이라도 나오는 게 낫다.
+    ★가운데(mid)가 아니라 **시작**이다. 종전엔 가운데 한 장이었는데, 조각이 서로 겹치면
+      가운데 시점이 0.2~0.5초밖에 안 달라 그림이 사실상 같았다 — "같은 썸네일이 두 장
+      들어갔는데 실제는 다른 조각"(실측 job 097db91ebd84: 6.70~8.27 / 6.89~7.60 / 7.25~8.82).
+      시작은 조각마다 분명히 다르므로 그것만으로 갈린다. 카드도 한 장이라 단순하다.
+      (시작·끝 2장을 붙여도 봤지만 사장님이 앞 장면만으로 충분하다고 정했다)
+    ★맨 첫 프레임(정확히 start)은 전환 중이라 흐릴 수 있어 아주 살짝 뒤를 뜬다.
     """
-    import subprocess          # app.py는 전역 import가 없다 — 이 함수 안에서만 쓴다
-    dest_dir = Path(dest_dir)
-    dest_dir.mkdir(parents=True, exist_ok=True)
-    out = dest_dir / filename
     a, b = float(seg["start"]), float(seg["end"])
-    if b - a < 0.35:                     # 너무 짧으면 3장이 같은 그림이다 — 한 장으로
-        return extract_frame_at(src, dest_dir, (a + b) / 2, filename=filename)
-    # ★가로가 아니라 **세로로 쌓는다**(2026-09-02). 카드는 4:5 세로에 잘라 맞추기(cover,
-    #   scene_lab.html `.seg img`)라, 가로 3:1 띠를 넣으면 **가운데만 확대되고 시작·끝이
-    #   잘려** 고치기 전과 똑같아 보인다. 세로로 쌓으면 카드 모양 그대로 세 시점이 다 보인다.
-    # ★결과물은 **카드 비율(4:5) 안에** 들어와야 한다(2026-09-02, 눈으로 확인하며 두 번 고침).
-    #   카드는 4:5에 잘라 맞추기(cover, scene_lab.html `.seg img`)라
-    #     · 가로 3:1 띠  → 가운데만 확대되고 시작·끝이 잘린다
-    #     · 세로 1:2.67 → 위아래가 잘린다
-    #   그래서 **시작·끝 2장을 나란히** 놓고 4:5 캔버스에 레터박스로 맞춘다. 2장이면 각 장이
-    #   카드 폭의 절반이라 눈에 들어오고, 겹친 조각도 끝 그림이 달라 바로 갈린다(그게 목적이다).
-    pts = [a + (b - a) * r for r in (0.06, 0.94)]
-    fc = ";".join(
-        f"[0:v]trim=start={t:.3f}:end={t + 0.05:.3f},setpts=PTS-STARTPTS,scale=200:-2[v{i}]"
-        for i, t in enumerate(pts)) +         ";[v0][v1]hstack=inputs=2,pad=400:500:(ow-iw)/2:(oh-ih)/2:color=black[out]"
-    try:
-        r = subprocess.run(
-            ["ffmpeg", "-y", "-v", "error", "-i", str(src),
-             "-filter_complex", fc, "-map", "[out]", "-frames:v", "1", str(out)],
-            capture_output=True, check=False, stdin=subprocess.DEVNULL, timeout=60)
-        if r.returncode == 0 and out.exists() and out.stat().st_size > 1000:
-            return str(out)
-    except Exception as e:               # noqa: BLE001 — 폴백이 있다
-        print(f"[seg_thumb] 띠 생성 실패(가운데 1장으로): {e!r}", file=sys.stderr)
-    return extract_frame_at(src, dest_dir, (a + b) / 2, filename=filename)
-
+    at = a + min(0.08, max(0.0, (b - a) * 0.05))
+    return extract_frame_at(src, dest_dir, at, filename=filename)
 
 def _film_seg_from_id(seg_id: str, job: dict):
     """`film_<video_id>_<start>_<end>` → {video_id,start,end}. 아니면 None.
