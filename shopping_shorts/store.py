@@ -6037,6 +6037,36 @@ class Store:
                 out[cid] = {"made": made or 0, "charged": charged or 0}
         return out
 
+    def production_feed(self, since_iso, limit=300):
+        """[제작 현황판] 그 시각 이후 만들어진 믹스 job 전부 — 최신 먼저.
+
+        사장님 요청(2026-09-02): "회원들이 오늘 영상 만드는 걸 한 페이지에서,
+        통계랑 실제 만든 영상까지 보게 해달라."
+
+        ★고객 이름은 여기서 붙인다 — 화면이 고객 목록을 따로 불러 맞추면 두 벌이 된다(0순위-B).
+        ★영상 원문 경로는 내보내지 않는다. 있는지 여부(has_video)만 준다 — 재생은
+          기존 /api/mix/video/{job_id}가 담당한다(서빙 경로를 두 벌로 만들지 않는다).
+        """
+        with self._conn() as c:
+            c.row_factory = sqlite3.Row
+            rows = c.execute(
+                "SELECT m.job_id, m.customer_id, m.status, m.error, m.created_at, m.updated_at, "
+                "       m.target_seconds, m.structure, m.subtitle_removal, m.render_charge_day, "
+                "       IFNULL(m.video_path,'') AS video_path, "
+                "       c.username, c.name, c.email "
+                "FROM mix_jobs m LEFT JOIN customers c ON c.id = m.customer_id "
+                "WHERE m.created_at >= ? ORDER BY m.created_at DESC LIMIT ?",
+                (since_iso, int(limit))).fetchall()
+        out = []
+        for r in rows:
+            d = dict(r)
+            d["has_video"] = bool((d.pop("video_path") or "").strip())
+            d["who"] = (d.get("name") or d.get("username")
+                        or (d.get("email") or "").split("@")[0] or f"cid{d.get('customer_id')}")
+            out.append(d)
+        return out
+
+
     def points_balance_all(self):
         """{customer_id: 잔액} — points_balance의 일괄판(내부 단위 그대로)."""
         with self._conn() as c:

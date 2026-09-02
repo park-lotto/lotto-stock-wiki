@@ -12046,6 +12046,55 @@ def _admin_page(request: Request):
                         media_type="text/html; charset=utf-8", headers=_NOCACHE)
 
 
+# ── 오늘 제작 현황판(2026-09-02) ────────────────────────────────────────────
+#   사장님 요청: "회원들이 오늘 영상 만드는 걸 따로 페이지에서, 통계랑 실제 만든
+#   영상까지 내가 편하게 보게 해달라."
+#   ★날짜 경계는 KST다 — 서버는 UTC라 '오늘'이 9시간 어긋난다(_kst_day와 같은 기준).
+#   ★단계 이름·집계는 여기 한 곳에서만 정한다. 화면이 또 분류하면 두 벌이 된다(0순위-B).
+_PROD_RUNNING = ("downloading", "extracting", "planning", "tts",
+                 "rendering", "ready_for_review")
+
+
+def _prod_since_iso(days: int):
+    """KST 기준 'days일 전 0시'를 mix_jobs.created_at과 같은 UTC ISO로."""
+    now_kst = datetime.now(_KST)
+    start_kst = (now_kst - timedelta(days=max(0, int(days)))).replace(
+        hour=0, minute=0, second=0, microsecond=0)
+    return start_kst.astimezone(timezone.utc).isoformat()
+
+
+@app.get("/api/admin/production")
+def _admin_production(request: Request, days: int = 0, limit: int = 300):
+    """제작 현황 — 통계 + job 목록. days=0이면 오늘(KST). admin 전용."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    jobs = Store(DB_PATH).production_feed(_prod_since_iso(days), limit)
+    stat = {"total": len(jobs), "done": 0, "running": 0, "failed": 0,
+            "made": 0, "people": 0}
+    for j in jobs:
+        st = j.get("status")
+        if st == "done":
+            stat["done"] += 1
+        elif st == "failed":
+            stat["failed"] += 1
+        elif st in _PROD_RUNNING:
+            stat["running"] += 1
+        if j.get("has_video"):
+            stat["made"] += 1
+    stat["people"] = len({j.get("customer_id") for j in jobs})
+    return {"ok": True, "days": days, "since": _prod_since_iso(days),
+            "stat": stat, "jobs": jobs, "running_states": list(_PROD_RUNNING)}
+
+
+@app.get("/admin/production", response_class=HTMLResponse)
+def _admin_production_page(request: Request):
+    if not _is_admin(getattr(request.state, "customer_id", None)):
+        return HTMLResponse("<h2 style='font-family:sans-serif'>관리자 전용입니다</h2>", status_code=403)
+    return FileResponse(Path(__file__).parent / "static" / "admin_production.html",
+                        media_type="text/html; charset=utf-8", headers=_NOCACHE)
+
+
 @app.get("/admin/customer/{customer_id}", response_class=HTMLResponse)
 def _admin_customer_page(request: Request, customer_id: int):
     """고객 1명 상세 시트 화면(2026-08-29).
