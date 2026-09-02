@@ -75,7 +75,8 @@ def embed_text(text: str) -> list[float]:
     embed 전용 키 풀(key_vault 'embed' 그룹)을 한 바퀴 돌고,
     그래도 다 막히면 20초 대기 후 한 번 더 전체를 재시도한다."""
     for attempt in range(2):
-        keys = key_vault.get_live_keys("embed")
+        # ★회전: 매번 같은 순서를 받으면 성공은 늘 keys[0]에서 나 앞쪽 키만 얻어맞는다.
+        keys = key_vault.rotated(key_vault.get_live_keys_cascade("embed"))
         for key in keys:
             try:
                 resp = key_vault.get_client_for_key(key).models.embed_content(
