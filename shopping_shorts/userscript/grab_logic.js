@@ -343,6 +343,25 @@
     if (y < 2010 || y > 2100) return "";        // 공식이 안 맞는 ID면 표시 안 함
     return y + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
   }
+  // 재생바를 **담기 버튼 바로 아래**에 붙인다 (2026-09-02 사장님 "댓글을 못 써서 자리를 옮겨줘").
+  //
+  // ★왜 고정 좌표를 버렸나: 종전엔 bottom:174px 고정이었는데, 인스타는 화면 아래쪽에
+  //   **댓글 입력창**을 두므로 창 크기·기기에 따라 재생바가 그 위를 덮어 댓글을 못 썼다.
+  //   담기 버튼도 bottom 고정이라 둘의 사이가 창마다 달라진다 — 두 값을 따로 적어두면
+  //   언젠가 반드시 어긋난다(0순위-B). 그래서 **담기 버튼의 실제 위치를 읽어** 그 아래에 건다.
+  //   담기 버튼이 아직 없으면 종전 자리를 그대로 둔다(회귀 없음).
+  function _placeSeekBar(box) {
+    try {
+      var anchorBtn = document.getElementById("ss-grab-btn");
+      if (!anchorBtn) return;                       // 아직 안 그려졌다 — 다음 주기에 붙는다
+      var r = anchorBtn.getBoundingClientRect();
+      if (!r || (!r.width && !r.height)) return;    // 숨어 있으면 좌표가 0이다 — 건드리지 않는다
+      box.style.bottom = "auto";
+      box.style.top = Math.round(r.bottom + 10) + "px";
+      box.style.right = Math.round(window.innerWidth - r.right) + "px";
+    } catch (e) { /* 자리 못 잡아도 재생바 자체는 살아 있어야 한다 */ }
+  }
+
   function syncSeekBar() {
     if (!_playerPlat()) return;
     var box = document.getElementById("ss-seek");
@@ -352,6 +371,7 @@
     if (!box) {
       box = document.createElement("div");
       box.id = "ss-seek";
+      // ★자리는 _placeSeekBar가 정한다 — 여기 값은 첫 그림 전 잠깐 쓰는 초기값이다.
       box.style.cssText = "position:fixed;right:18px;bottom:174px;z-index:2147483647;background:rgba(20,20,20,.92);" +
         "border:1px solid #444;border-radius:12px;padding:5px 8px;display:flex;align-items:center;gap:6px;" +
         "font-family:system-ui,sans-serif;color:#fff;font-size:11px;box-shadow:0 4px 14px rgba(0,0,0,.35)";
@@ -380,6 +400,7 @@
         this.textContent = vv.paused ? "▶" : "⏸";
       });
     }
+    _placeSeekBar(box);        // 창을 줄이거나 화면이 바뀌어도 담기 버튼을 따라간다
     var r2 = document.getElementById("ss-seek-r"), t2 = document.getElementById("ss-seek-t"),
         p2 = document.getElementById("ss-seek-p");
     if (r2 && t2) {
