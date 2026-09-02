@@ -356,7 +356,15 @@
       if (!anchorBtn) return;                       // 아직 안 그려졌다 — 다음 주기에 붙는다
       var r = anchorBtn.getBoundingClientRect();
       if (!r || (!r.width && !r.height)) return;    // 숨어 있으면 좌표가 0이다 — 건드리지 않는다
-      box.style.bottom = "auto";
+      // ★top과 bottom이 **같이** 걸리면 그 사이만큼 상자가 늘어난다 — 화면 아래까지
+      //   시커먼 판이 깔려 인스타 아이콘을 덮는다(2026-09-02 사장님 스크린샷).
+      //   그래서 자리를 잡을 때마다 크기를 못 박는다: bottom·left는 풀고, 높이·너비는
+      //   내용물만큼(auto). setProperty로 important를 걸어 어떤 CSS도 못 늘리게 한다.
+      box.style.setProperty("bottom", "auto", "important");
+      box.style.setProperty("left", "auto", "important");
+      box.style.setProperty("height", "auto", "important");
+      box.style.setProperty("max-height", "none", "important");
+      box.style.setProperty("width", "auto", "important");
       box.style.top = Math.round(r.bottom + 10) + "px";
       box.style.right = Math.round(window.innerWidth - r.right) + "px";
     } catch (e) { /* 자리 못 잡아도 재생바 자체는 살아 있어야 한다 */ }
@@ -372,7 +380,7 @@
       box = document.createElement("div");
       box.id = "ss-seek";
       // ★자리는 _placeSeekBar가 정한다 — 여기 값은 첫 그림 전 잠깐 쓰는 초기값이다.
-      box.style.cssText = "position:fixed;right:18px;bottom:174px;z-index:2147483647;background:rgba(20,20,20,.92);" +
+      box.style.cssText = "position:fixed;right:18px;bottom:174px;height:auto;width:auto;z-index:2147483647;background:rgba(20,20,20,.92);" +
         "border:1px solid #444;border-radius:12px;padding:5px 8px;display:flex;align-items:center;gap:6px;" +
         "font-family:system-ui,sans-serif;color:#fff;font-size:11px;box-shadow:0 4px 14px rgba(0,0,0,.35)";
       box.innerHTML = "<button id='ss-seek-p' title='일시정지/재생' style='background:none;border:none;" +

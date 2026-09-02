@@ -40,7 +40,11 @@ def _run(body):
 
 _STUB = """
 function mk(rect){
+  // ★진짜 style(CSSStyleDeclaration)에는 setProperty가 있다 — 하네스가 그걸 빼먹으면
+  //   코드가 예외로 죽는데 catch에 삼켜져 **아무 일도 안 한 채 초록**이 된다(실측 2026-09-02).
+  //   하네스는 호출부가 실제로 쓰는 형태를 그대로 흉내내야 한다.
   const box={style:{}};
+  box.style.setProperty=(k,v)=>{ box.style[k]=v; };
   global.window={innerWidth:1000};
   global.document={getElementById:(id)=> id==='ss-grab-btn'
      ? (rect? {getBoundingClientRect:()=>rect} : null) : null};
@@ -86,3 +90,21 @@ def test_고정_bottom_174는_더이상_유일한_자리가_아니다():
     """자리 계산이 실제로 코드에 걸려 있어야 한다(주석만 남고 호출이 빠지는 걸 막는다)."""
     src = JS.read_text(encoding="utf-8")
     assert "_placeSeekBar(box);" in src, "syncSeekBar가 자리 함수를 안 부른다"
+
+
+def test_상자가_아래로_늘어나지_않게_크기를_못박는다():
+    """top을 걸 때 bottom·height를 함께 풀지 않으면 상자가 화면 끝까지 늘어난다.
+
+    2026-09-02 사장님 스크린샷: 재생바 아래로 검은 판이 깔려 인스타 아이콘을 덮었다.
+    top과 bottom이 같이 걸리면 그 사이만큼 높이가 된다 — 자리를 잡을 때마다 못 박는다.
+    """
+    out = _run(_STUB + """
+const box = mk({width:100,height:34,right:982,bottom:300});
+box.style.bottom = '174px';          // 첫 그림 때 쓰던 초기값이 남아 있는 상태
+_placeSeekBar(box);
+console.log(JSON.stringify(box.style));
+""")
+    st = eval(out.replace("null", "None"))
+    assert st["bottom"] == "auto", st
+    assert st["height"] == "auto", st
+    assert st["max-height"] == "none", st
