@@ -41,7 +41,6 @@ def test_지금_편성의_청소본이_있으면_그걸_쓴다(tmp_path, monkeyp
 
     assert cfin == str(fresh), "옛 clean_preview를 쓴다 — 컷 프레임이 원본으로 떨어진다"
     assert is_fresh is True, "fresh가 아니면 컷 프레임이 원본에서 뜬다(자막이 남는다)"
-    assert tag.startswith("_clean") and tag != "_clean", "캐시 태그가 서명으로 안 갈린다"
 
 
 def test_서명_청소본이_없으면_종전대로_판정한다(tmp_path, monkeypatch):

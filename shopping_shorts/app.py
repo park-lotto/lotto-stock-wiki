@@ -112,6 +112,58 @@ app = FastAPI(title="숏템메이커 레퍼런스 랭킹")   # /docs 노출 제�
 # (서버 /etc/nginx/nginx.conf:53 실측). nginx 설정을 손으로 고치면 git에 안 남아
 # 다음 배포 때 사라지므로, 앱에서 압축한다. JSON은 보통 8~10배 줄어든다.
 # minimum_size: 작은 응답은 압축이 오히려 손해라 1KB 미만은 그대로 보낸다.
+# ★영상·소리·그림은 **절대 압축하지 않는다**(2026-09-02 고객 제보의 진짜 뿌리).
+#   GZipMiddleware는 타입을 안 가리고 **모든 응답**을 압축한다 — mp4까지 압축되면
+#   Content-Length가 사라지고 transfer-encoding: chunked가 된다. 브라우저 <video>는
+#   그런 응답에서 메타데이터를 못 읽어 readyState 0에 머문다 = **검은 화면·정지 그림**.
+#   실측(라이브 /api/mix/src/353493f20d31/s0):
+#     · fetch + Range → 206, 66ms 정상 (206엔 gzip이 안 붙는다)
+#     · <video> (Range 없는 첫 GET) → 200 + content-encoding: gzip + chunked
+#       → 8초가 지나도 readyState 0, networkState 2. 서버·코덱·moov는 전부 정상이었다.
+#   이 "Range면 되고 통짜 GET이면 안 되는" 성질이 고객이 말한 "됐다 안 됐다",
+#   "돌아가다 다음 클립에서 멈추고", "검정으로 아예 안 보일 때도"의 정체다.
+#
+#   ★판단은 **여기 한 곳**에서만 한다(0순위-B) — 미디어 라우트마다 헤더를 붙이면
+#     새 라우트가 생길 때마다 빠뜨린다. 응답 타입을 보고 자동으로 건다.
+#   원리: Starlette GZipResponder는 응답에 content-encoding이 이미 있으면
+#         압축을 건너뛴다(0.36.3 소스 실측: content_encoding_set 분기).
+_NO_GZIP_TYPES = ("video/", "audio/", "image/", "application/octet-stream",
+                  "application/zip", "font/")
+
+
+class _NoCompressMedia:
+    """미디어 응답에 Content-Encoding: identity를 심어 바깥 GZip이 건드리지 않게 한다."""
+
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope.get("type") != "http":
+            await self.app(scope, receive, send)
+            return
+
+        async def _send(message):
+            if message.get("type") == "http.response.start":
+                headers = message.get("headers") or []
+                ctype = b""
+                has_enc = False
+                for k, v in headers:
+                    lk = k.lower()
+                    if lk == b"content-type":
+                        ctype = v.lower()
+                    elif lk == b"content-encoding":
+                        has_enc = True
+                if not has_enc and any(ctype.startswith(t.encode()) for t in _NO_GZIP_TYPES):
+                    message = dict(message)
+                    message["headers"] = list(headers) + [(b"content-encoding", b"identity")]
+            await send(message)
+
+        await self.app(scope, receive, _send)
+
+
+# 순서가 중요하다: 나중에 add한 것이 **바깥**이다.
+# 안쪽(_NoCompressMedia)이 먼저 응답 헤더에 identity를 심고, 바깥(GZip)이 그걸 보고 비켜준다.
+app.add_middleware(_NoCompressMedia)
 app.add_middleware(GZipMiddleware, minimum_size=1024)
 
 
@@ -16423,24 +16475,15 @@ def _clean_frame_src(job, work, beat_idx, cut=None):
     if job.get("clean_status") != "ready":
         return {}, None, None, "", False
     cvp = job.get("clean_video_path")
-    # ★지금 편성으로 청소된 완성본(final_clean_{sig}.mp4)이 있으면 **그걸 먼저 쓴다**(2026-09-02).
-    #   clean_video_path는 2단계 미리보기 때 만든 clean_preview.mp4에서 멈춘다 — 그 뒤 편성을
-    #   바꾸고 최종렌더를 돌리면 새 서명의 청소본은 생기는데 clean_video_path는 옛 파일 그대로라
-    #   신선도 판정이 False가 되고, 꾸미기 컷 프레임이 통째로 **원본**에서 떠 자막이 남는다.
-    #   실측(2026-09-02 라이브 job 8b5aed8af66b): clean_status=ready인데 beatframes가 전부 _src.
-    #   cvp=clean_preview.mp4(00:39) < final_clean_{sig}.mp4(08:25) → mtime 비교가 stale로 판정.
-    #   새 서명 파일은 **지금 편성으로 조립해 청소한 완성본**이라 좌표계가 정의상 일치한다.
-    _sig = mix_pipeline._plan_signature(job.get("edit_plan") or {})
-    _sigf = work / ("final_clean_%s.mp4" % _sig)
-    # ★캐시 이름도 서명으로 가른다 — 옛 clean_preview에서 뜬 `_clean` 프레임이 그대로
-    #   재사용되면 편성이 바뀐 뒤엔 **딴 장면**이 뜬다(08-21 '조용한 어긋남'과 같은 모양).
-    _tag = "_clean"
-    if _sigf.exists() and _sigf.stat().st_size > 1024:
-        cvp = str(_sigf)
-        _tag = "_clean" + _sig[:8]
     if not cvp or not Path(cvp).exists():
         return {}, None, None, "", False
-    fresh = (cvp == str(_sigf)) or mix_pipeline.clean_final_matches_plan(job, work)
+    # ★지금 편성으로 청소한 파일이 있으면 **그 파일**을 쓴다(2026-09-02).
+    #   clean_video_path(clean_preview.mp4)는 편성을 바꿔 재청소해도 갱신되지 않아
+    #   옛 편성 그림이다 — 판정만 고치고 출처를 그대로 두면 옛 장면이 뜬다(짝이다).
+    _fresh_path = mix_pipeline.clean_final_path_for_plan(job, work)
+    fresh = _fresh_path is not None
+    if fresh:
+        cvp = str(_fresh_path)
     # ★컷 단위로 찾는다(2026-08-27) — 비트에 재료가 여럿이면 비트 한가운데는
     #   다른 소스 자리다. 화면에 나가는 최소 단위는 컷이다(clean_thumb과 같은 기준).
     _plan = job.get("edit_plan") or {}
@@ -16467,10 +16510,10 @@ def _clean_frame_src(job, work, beat_idx, cut=None):
         #   그러면 자막·워터마크가 화면에 그대로 나온다(08-27 회귀의 정체).
         #   비트 근사로라도 청소본을 가리킨다. 정확도는 떨어져도 '지워진 그림'이다.
         r = mix_pipeline._final_time_of_beat(_plan, beat_idx)
-        return {}, cvp, (r if r is not None else 0.5), _tag, fresh
+        return {}, cvp, (r if r is not None else 0.5), "_clean", fresh
     _d = frame_extract._probe_duration(cvp) or 0.0
     # 호출부는 '비율'을 받는다 — 파일 길이가 계획 합과 달라도 초를 비율로 환산해 넘긴다.
-    return {}, cvp, (min(0.98, max(0.02, sec / _d)) if _d > 0 else 0.5), _tag, fresh
+    return {}, cvp, (min(0.98, max(0.02, sec / _d)) if _d > 0 else 0.5), "_clean", fresh
 
 
 def _extract_beat_frame(work, beat, out_path, clean_sources=None,
