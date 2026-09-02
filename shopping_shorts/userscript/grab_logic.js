@@ -979,10 +979,24 @@
     var x = rr ? rr.right : 0;
     // 버튼 4개: 영상 칸 오른쪽 + **위에서부터** 아래로(2026-09-01 사장님 요청 —
     // 종전엔 아래에 깔려 사이트 액션 아이콘·'메시지' 팝업과 겹쳤다).
+    // ★스크롤로 영상이 화면 위로 밀리면 rr.top이 음수가 된다. 종전엔 각 버튼이
+    //   Math.max(8, rr.top + 8 + slot*STEP)라 **전부 top:8로 눌려 한 자리에 포개졌다**
+    //   (2026-09-02 사장님 "스크롤 조금 내리면 합쳐진다"). 바닥값을 버튼별로 두지 말고
+    //   **기준선 하나를 먼저 정하고** 거기서 간격을 더한다 — 그러면 절대 겹치지 않는다.
+    var live = [];
+    for (var i0 = 0; i0 < DOCK_IDS.length; i0++) {
+      var e0 = document.getElementById(DOCK_IDS[i0]);
+      if (e0) live.push(e0);
+    }
+    // 영상이 화면에서 거의 사라졌으면 버튼도 숨긴다(엉뚱한 자리에 떠 있는 것보다 낫다).
+    var gone = !!rr && (rr.bottom < 120 || rr.top > window.innerHeight - 80);
+    var base = rr ? Math.max(8, Math.min(rr.top + 8,
+                 window.innerHeight - 8 - live.length * DOCK_STEP)) : 0;
     var slot = 0;
-    for (var i = 0; i < DOCK_IDS.length; i++) {
-      var el = document.getElementById(DOCK_IDS[i]);
-      if (!el) continue;
+    for (var i = 0; i < live.length; i++) {
+      var el = live[i];
+      el.style.display = gone ? "none" : "";
+      if (gone) continue;
       // 화면 밖으로 밀리면(좁은 창) 종전 오른쪽 아래 자리로 되돌린다.
       var w = el.offsetWidth || 150;
       if (!rr || x + 16 + w + 12 > window.innerWidth) {
@@ -990,13 +1004,15 @@
       } else {
         el.style.right = "auto"; el.style.left = (x + 16) + "px";
         el.style.bottom = "auto";
-        el.style.top = Math.max(8, rr.top + 8 + slot * DOCK_STEP) + "px";
+        el.style.top = (base + slot * DOCK_STEP) + "px";
         slot++;
       }
     }
     // 시크바: 버튼과 겹치지 않게 **영상 아래쪽**에 붙인다(폭은 만들 때 줄여둔다).
     var sk = document.getElementById("ss-seek");
     if (sk) {
+      sk.style.display = gone ? "none" : "";
+      if (gone) return;
       if (!rr) { sk.style.left = ""; sk.style.right = "18px"; sk.style.bottom = "174px"; }
       else {
         var sw = sk.offsetWidth || 260;
