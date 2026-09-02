@@ -48,17 +48,26 @@ def test_update_caption_saves():
     assert "_capSaveSoon()" in body, "updateCaption이 저장을 안 부른다"
 
 
-def test_restore_path_does_not_overwrite():
-    """★복원·초기 렌더에서는 저장하면 안 된다 — 저장된 스타일을 기본값으로 덮는다."""
+def test_draw_function_does_not_save():
+    """★그리기 함수(updateCaption/updateHC)는 저장하면 안 된다 — 저장 루프가 난다.
+
+    2026-09-02 실사고(내가 냈다): updateCaption 끝에 저장을 넣었더니
+    자막 미리보기 애니메이션 `play()`가 구절을 넘길 때마다(약 1.1초) updateCaption을
+    부르는 바람에 **POST가 영원히 나갔다**(실측 5초에 3건 = 초당 0.6회).
+    복원·리페인트도 이 함수를 부르므로, 저장은 **입력 핸들러에서만** 걸어야 한다.
+    """
     src = _src()
-    guard = src[src.index("function _capSaveSoon()"):]
-    guard = guard[:400]
-    assert "_CAP_USER_EDIT" in guard, (
-        "사람이 만졌는지 가리는 가드가 없다 — 패널에 들어오기만 해도 저장돼 "
-        "저장된 자막 스타일이 기본값으로 덮인다")
-    # capTouched만 그 플래그를 세워야 한다(내부 호출은 안 된다)
-    assert re.search(r"function capTouched\(\)\{\s*_CAP_USER_EDIT\s*=\s*true", src), \
-        "capTouched가 사용자 편집 표시를 안 한다"
+    for fn in ("function updateCaption(){", "function updateHC(){"):
+        start = src.index(fn)
+        # 그 함수의 **본문만** 자른다 — 다음 `\n}` 까지(뒤에 오는 Touched 헬퍼는 제외).
+        body = src[start:src.index("\n}", start) + 2]
+        assert "_capSaveSoon()" not in body and "_hcSaveSoon()" not in body, (
+            f"{fn} 안에서 저장을 부른다 — 애니메이션·복원이 부를 때마다 POST가 나간다")
+    # 저장은 Touched 핸들러가 건다
+    assert re.search(r"function capTouched\(\)\{\s*updateCaption\(\);\s*_capSaveSoon\(\)", src), \
+        "capTouched가 그리기+저장을 함께 하지 않는다"
+    assert re.search(r"function hcTouched\(\)\{\s*updateHC\(\);\s*_hcSaveSoon\(\)", src), \
+        "hcTouched가 그리기+저장을 함께 하지 않는다"
 
 
 def test_debounced_not_per_pixel():
@@ -87,11 +96,9 @@ def test_every_headcopy_control_goes_through_touched():
         "이 헤드카피 컨트롤들은 저장 경로를 안 탄다 — 화면만 바뀐다: %r" % missed)
 
 
-def test_update_hc_saves_and_guards_restore():
-    """updateHC도 저장하되, 복원·초기 렌더에서는 저장하지 않아야 한다."""
+def test_hc_save_is_debounced():
+    """헤드카피 저장도 디바운스 — 슬라이더 드래그로 초당 수십 번 POST가 나가면 안 된다."""
     src = _src()
-    assert "_hcSaveSoon()" in src, "updateHC가 저장을 안 부른다"
+    assert "_hcSaveSoon()" in src, "헤드카피 저장 경로가 없다"
     guard = src[src.index("function _hcSaveSoon()"):][:400]
-    assert "_HC_USER_EDIT" in guard, (
-        "사람이 만졌는지 가리는 가드가 없다 — 패널 진입만으로 저장돼 스타일이 덮인다")
     assert "setTimeout" in guard and "clearTimeout" in guard, "디바운스가 없다"

@@ -6042,6 +6042,18 @@ function applyCapStroke(st, cs, scale){
   const sd=Math.max(1,(cs.shadow_d||3)*scale).toFixed(1);
   st.textShadow = cs.shadow ? `${sd}px ${sd}px 0 rgba(0,0,0,.55)` : 'none';
 }
+// 스타일 카드(축소 썸네일)용 테두리 CSS 문자열 — applyCapStroke와 **같은 규칙**을 쓴다.
+// 카드는 innerHTML로 그려 style 객체가 없으므로 문자열을 돌려준다(그림은 같아야 한다).
+// ★`||` 기본값을 쓰지 않는다 — 두께 0은 "없음"이 아니라 **0**이다(falsy 함정).
+//   렌더 쪽 `_outline_parts(zero_ok=True)`와 같은 판단: 0이면 테두리를 아예 안 그린다.
+function _cardStrokeCss(s, scale){
+  s = s || {};
+  const w = Number(s.outline_w != null ? s.outline_w : 6) * scale;
+  if(!s.outline || !(w > 0)) return '';
+  const col = s.outline_color || '#000';
+  // 대각 4방향 그림자는 두꺼워지면 획을 메운다 → 본 미리보기와 같은 stroke로.
+  return `-webkit-text-stroke:${w.toFixed(2)}px ${col};paint-order:stroke fill;`;
+}
 function updateCaption(){
   const g=id=>document.getElementById(id); if(!g('capFont')) return;
   const cs={ font:g('capFont').value||'NanumGothic-Bold.ttf', color:g('capColor').value, size:+g('capSize').value,
@@ -6099,32 +6111,21 @@ function updateCaption(){
   else if(cs.effect==='pop') el.classList.add('eff-pop');
   else if(cs.effect==='sparkle') el.classList.add('eff-sparkle');
   renderSparkles(cs.effect==='sparkle', cs.y_pct);
-  // ★여기서 저장한다(2026-09-02). 종전엔 이 함수가 STATE.captionStyle을 채우고
-  //   **미리보기만** 그렸다 — 저장(saveHeadcopy)은 안 불렀다. 그래서 자막 색·크기·
-  //   위치·외곽선·박스를 손보면 화면은 바뀌는데 새로고침하면 원래대로 돌아갔고,
-  //   최종 렌더도 옛 스타일로 나갔다("미리보기엔 보이는데 영상엔 안 나온다").
-  //   실측 2026-09-02: capColor를 #ff00cc로 바꿔 미리보기는 마젠타가 됐지만
-  //   새로고침 후 #ffffff. 서버 caption_style도 흰색 그대로였다.
-  //   ★자막 컨트롤 11개에 saveHeadcopy()를 각각 붙이지 않는다 — 하나만 빠뜨려도
-  //     같은 병이 재발하고, 나중에 컨트롤이 늘면 또 빠진다. 값을 만드는 이 한 곳에서
-  //     저장까지 한다(0순위-B).
-  //   ★디바운스: 슬라이더는 드래그 중 oninput이 매 픽셀 뜬다. 그대로 쏘면 초당 수십 번
-  //     POST가 나간다 — 손을 멈춘 뒤 한 번만 보낸다.
-  _capSaveSoon();
 }
+// ★저장은 **사람이 만진 그 호출에서만** 한다(2026-09-02).
+//   종전엔 자막 컨트롤 11개가 updateCaption()만 불러 STATE만 채우고 저장을 안 했다
+//   → 색·크기·자리를 바꿔도 새로고침하면 원복(실측: #ff00cc → #ffffff).
+//   ⚠️그래서 updateCaption 끝에 저장을 넣었더니 **저장 루프**가 났다:
+//     자막 미리보기 애니메이션 `play()`(5847행)가 구절을 넘길 때마다(약 1.1초)
+//     updateCaption을 부른다 → "한 번이라도 만졌으면 저장" 플래그가 계속 참이라
+//     초당 0.6회씩 POST가 영원히 나갔다(실측 5초에 3건).
+//   → 플래그(상태)로 가르지 말고, **입력 핸들러에서만 저장을 건다**. updateCaption은
+//     그리기만 한다. 복원·애니메이션이 아무리 불러도 저장은 안 나간다.
 let _CAP_SAVE_T = null;
-// ★"사람이 만진 뒤"에만 저장한다. updateCaption은 패널에 들어올 때도 불리는데(복원 경로),
-//   그때 DOM이 아직 기본값이면 **저장된 스타일을 기본값으로 덮어쓴다** — 이 파일이 이미
-//   같은 사고를 겪었다("색이 #ffe100→#ff8800으로 죽었다", 5510행 주석). 복원은
-//   applyConfig가 DOM을 채운 뒤 updateCaption을 부르므로 값은 맞지만, 복원할 게 없는
-//   경우(PENDING_STYLE_RESTORE=false)까지 저장하면 새 사고를 내가 만드는 셈이다.
-//   그래서 **입력 이벤트에서 온 호출만** 저장한다.
-let _CAP_USER_EDIT = false;
-function capTouched(){ _CAP_USER_EDIT = true; updateCaption(); }
+function capTouched(){ updateCaption(); _capSaveSoon(); }
 function _capSaveSoon(){
-  if(!_CAP_USER_EDIT) return;                      // 복원·초기 렌더는 저장하지 않는다
   if(typeof saveHeadcopy !== 'function') return;   // 하네스엔 없다(슬라이스 테스트 보호)
-  clearTimeout(_CAP_SAVE_T);
+  clearTimeout(_CAP_SAVE_T);                       // 슬라이더 드래그는 매 픽셀 뜬다 → 디바운스
   _CAP_SAVE_T = setTimeout(() => { try{ saveHeadcopy(); }catch(e){} }, 500);
 }
 // 반짝 효과: 자막 주위에 ✨ 입자를 뿌려 깜빡이게(미리보기 연출). 최종 영상은 서버가 알파 깜빡임으로 렌더.
@@ -6285,12 +6286,19 @@ function styleCardHTML(p, idx, selIdx){
   const bgImg = poster ? `<img src="${poster}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.9" alt="" onerror="this.style.display='none'">` : '';
   // 카드 스케일: 카드폭 92px 기준으로 hc.size(영상 720폭 기준)를 축소 — 메인 프리뷰·렌더와 동일 비율
   const sc = 92/720;
-  const oc = hc.outline_color||'#000', ow = Math.max(1,Math.round((hc.outline_w||6)*sc));
-  const shadow = hc.outline ? `text-shadow:${ow}px ${ow}px 0 ${oc},-${ow}px -${ow}px 0 ${oc},${ow}px -${ow}px 0 ${oc},-${ow}px ${ow}px 0 ${oc};` : '';
+  // ★테두리는 미리보기·렌더와 **같은 규칙**으로 그린다(2026-09-02, 자막렌더불일치 ⏭ 항목).
+  //   종전 두 가지가 틀렸다:
+  //   ① `hc.outline_w || 6` — 두께 **0이 falsy**라 6으로 되살아난다. 서버가 2026-08-31에
+  //      고친 `_ui_px`의 0 무시 버그와 **같은 모양**이다(zero_ok).
+  //   ② 대각 4방향 text-shadow — 두꺼워지면 검은 사본이 글자 **위로** 올라와 획을 메운다
+  //      (헤드카피가 2026-08-20에 겪은 그 사고). 본 미리보기는 이미 stroke로 바꿨는데
+  //      이 카드만 옛 방식으로 남아 **카드와 실제 결과가 다르게** 보였다.
+  //   → strokeCss() 하나로 뽑아 카드·본미리보기가 같은 그림을 그린다(0순위-B).
+  const shadow = _cardStrokeCss(hc, sc);
   const line1 = `<div style="color:${hc.color||'#fff'};font-family:'${fontCss(hc.font)}',sans-serif;font-weight:900;font-size:${Math.max(10,(hc.size||64)*sc)}px;${shadow}line-height:1.1">${esc(sample)}</div>`;
   let line2 = '';
-  if(extra){ const es=92/720; const eoc=extra.outline_color||'#000', eow=Math.max(1,Math.round((extra.outline_w||6)*es));
-    const esh = extra.outline ? `text-shadow:${eow}px ${eow}px 0 ${eoc},-${eow}px -${eow}px 0 ${eoc},${eow}px -${eow}px 0 ${eoc},-${eow}px ${eow}px 0 ${eoc};` : '';
+  if(extra){ const es=92/720;
+    const esh = _cardStrokeCss(extra, es);   // 둘째 줄도 같은 규칙(위 주석 참조)
     line2 = `<div style="color:${extra.color||'#FFE100'};font-family:'${fontCss(extra.font)}',sans-serif;font-weight:900;font-size:${Math.max(10,(extra.size||64)*es)}px;${esh}line-height:1.1;margin-top:2px">${esc(sample)}</div>`; }
   const selBorder = idx===selIdx ? 'outline:2px solid var(--accent2);outline-offset:1px;' : 'border:1px solid var(--line);';
   const isDefault = p.name===DEFAULT_STYLE_NAME;
@@ -7107,17 +7115,14 @@ function updateHC(){
   // 🖍 낱말 알약도 같이 갱신 — 문구를 고치면 알약이 따라와야 한다(2026-08-30)
   try{ renderHCWords(); }catch(e){}
   if(document.getElementById('fullPresets')) renderStyleCards();
-  // ★자막(updateCaption)과 **같은 이유·같은 방식**으로 저장한다(2026-09-02).
-  //   헤드카피 컨트롤 13개도 전부 updateHC()만 불러서, 색·크기·자리를 바꾸면
-  //   미리보기만 바뀌고 새로고침하면 되돌아갔다(실측: #00ff88 → 새로고침 후 #ffffff).
-  //   저장은 사람이 만졌을 때만 — 복원·초기 렌더에서 저장하면 빈 DOM 기본값이
-  //   저장된 스타일을 덮는다(이 파일의 "#ffe100→#ff8800" 사고와 같은 자리).
-  _hcSaveSoon();
 }
-let _HC_SAVE_T = null, _HC_USER_EDIT = false;
-function hcTouched(){ _HC_USER_EDIT = true; updateHC(); }
+// ★자막(capTouched)과 **같은 이유·같은 방식**(2026-09-02).
+//   헤드카피 컨트롤 14개도 updateHC()만 불러서 저장이 안 됐다(실측: #00ff88 → 원복).
+//   저장을 updateHC 안에 넣지 않는다 — 그리기 함수는 복원·리페인트로 수시로 불린다.
+//   입력 핸들러에서만 저장을 건다(자막 쪽에서 저장 루프를 실제로 겪었다).
+let _HC_SAVE_T = null;
+function hcTouched(){ updateHC(); _hcSaveSoon(); }
 function _hcSaveSoon(){
-  if(!_HC_USER_EDIT) return;                       // 복원·초기 렌더는 저장하지 않는다
   if(typeof saveHeadcopy !== 'function') return;   // 하네스 보호(슬라이스 테스트)
   clearTimeout(_HC_SAVE_T);
   _HC_SAVE_T = setTimeout(() => { try{ saveHeadcopy(); }catch(e){} }, 500);
