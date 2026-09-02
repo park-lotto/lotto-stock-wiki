@@ -11192,10 +11192,16 @@ async function startProduceMix(){
       body:JSON.stringify(_mixBody)});
     const d=await r.json();
     if(!d.ok){
+      // ★#mixStatus를 직접 그리지 않는다(2026-09-02, test_dom_owner_budget).
+      //   같은 자리를 두 함수가 덮어쓰면 '고쳤는데 또 나는' 버그의 뿌리가 된다.
+      //   그리는 일은 drawMixStatus(=setMixStatusText) 하나에 맡기고, 여기선
+      //   문구만 정해 넘긴 뒤 버튼만 덧붙인다.
       const nk=needKeyText(d);                 // 음성 키 미등록이면 사유를 정확히 알린다
-      if(nk){ st.innerHTML=esc(nk)+' <a href="'+esc(d.settings_url||'/settings#keys')
-        +'" target="_blank" rel="noopener" style="color:var(--fire);font-weight:700">등록하러 가기 →</a>'; return; }
-      st.textContent='❌ '+(d.error||'실패'); return;
+      const box=setMixStatusText(nk || ('❌ '+(d.error||'실패')));
+      if(nk && box) box.insertAdjacentHTML('beforeend',
+        ' <a href="'+esc(d.settings_url||'/settings#keys')
+        +'" target="_blank" rel="noopener" style="color:var(--fire);font-weight:700">등록하러 가기 →</a>');
+      return;
     }
     // ★재매칭 = 새 job이다. 옛 job의 미리보기 상태를 물고 있으면 canGoNext()가 그걸 보고
     // **한 번도 본 적 없는 새 영상으로 다음을 열어준다** — 매칭이 끝날 때까지 수십 초~수 분이나
