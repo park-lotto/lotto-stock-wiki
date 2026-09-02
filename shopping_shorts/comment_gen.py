@@ -94,7 +94,13 @@ def _mark_key_exhausted(idx, retry_after=None):
         ttl = float(retry_after) if retry_after else _EXHAUST_TTL_S
     except (TypeError, ValueError):
         ttl = _EXHAUST_TTL_S
-    ttl = max(30.0, min(ttl, 6 * 3600.0))     # 30초~6시간 — 영구 낙인을 만들지 않는다
+    # ★상한을 24시간으로 넓힌다(2026-09-02). 6시간은 **분당 한도** 기준의 안전장치였는데,
+    #   일일 소진은 태평양 자정까지 최대 24시간을 기다려야 한다 — 한국 새벽~오전에
+    #   소진되면 자정까지 15시간이 남는데 6시간으로 잘려, 6시간 뒤 되살아나 또 때린다.
+    #   (retry_delay_seconds가 일일 소진이면 자정까지의 초를 준다 — 그 값을 여기서
+    #    잘라버리면 고친 의미가 없다. 핸드오프 '함정' 항목에 예고돼 있던 지점이다.)
+    #   그래도 무한은 아니다: 24시간이면 반드시 한 번은 다시 시험해 본다.
+    ttl = max(30.0, min(ttl, 24 * 3600.0))    # 30초~24시간 — 영구 낙인은 만들지 않는다
     with _STATE_LOCK:
         state = _load_state()
         cur = _exhausted_map(state)

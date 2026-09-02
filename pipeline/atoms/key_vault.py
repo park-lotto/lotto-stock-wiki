@@ -6,7 +6,7 @@ import sys
 import time
 import urllib.request
 import urllib.parse
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from google import genai
 
@@ -335,14 +335,37 @@ def is_daily_exhausted_error(exc: Exception) -> bool:
     return ("429" in m or "RESOURCE_EXHAUSTED" in m) and ("PerDay" in m or "limit: 500" in m)
 
 
+def seconds_until_quota_reset() -> float:
+    """일일 한도가 풀리는 시각까지 남은 초(구글은 **태평양시 자정**에 리셋).
+
+    ★서머타임 근사로 UTC-7을 쓴다(한국시간 오후 4~5시경). 정확히 몇 분 어긋나도
+      "57초 뒤"보다는 비교할 수 없이 낫다 — 여기서 필요한 건 분 단위 정밀도가
+      아니라 "오늘은 이 키를 그만 쓴다"는 판단이다.
+    """
+    now = datetime.now(timezone.utc)
+    pac = now - timedelta(hours=7)
+    nxt = (pac + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+    return max(60.0, (nxt - pac).total_seconds())
+
+
 def retry_delay_seconds(exc: Exception):
-    """429 본문의 'Please retry in 45.5s' → 45.5. 없으면 None.
+    """이 키를 **언제 다시 써도 되나**(초). 모르면 None.
 
     왜 필요한가(2026-08-09 실측): 무료등급 분당 한도 초과 시 서버는 **45초 뒤에
     오라**고 알려주는데, 호출부는 고정 8초만 자고 재시도했다. max_retries=3이면
     24초 만에 시도가 소진돼 조용히 빈 결과를 반환한다 — 태거가 `0/40건`을
     수백 채널 연속으로 찍은 원인. 서버가 알려준 값을 쓰면 한 번만 제대로 자고
-    성공한다. None이면 호출부가 기존 기본값을 쓰도록 둔다(동작 보존)."""
+    성공한다. None이면 호출부가 기존 기본값을 쓰도록 둔다(동작 보존).
+
+    ★일일 소진이면 그 'retry in'을 **믿지 않는다**(2026-09-02 실사고).
+      구글은 하루치를 다 쓴 429에도 'Please retry in 57.4s'를 함께 준다.
+      그 값을 그대로 쓰면 57초 뒤 키가 풀려 또 때리고 또 막힌다 — 사장님이 본
+      "죽은 키 1개를 18번 헛되이 호출" 경보가 정확히 이 되풀이였다.
+      일일 한도는 태평양 자정까지 안 풀리므로 그때까지를 준다.
+      ⚠️호출부 27곳이 전부 이 함수를 거친다 — 고칠 곳은 여기 하나다(0순위-B).
+    """
+    if is_daily_exhausted_error(exc):
+        return seconds_until_quota_reset()
     m = re.search(r"retry in ([0-9]+(?:\.[0-9]+)?)\s*s", str(exc), re.IGNORECASE)
     return float(m.group(1)) if m else None
 
