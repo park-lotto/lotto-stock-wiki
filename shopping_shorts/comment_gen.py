@@ -133,8 +133,8 @@ def _mark_key_dead(idx, detail=None):
         api_health.record("gemini", api_health.OUT_AUTH, pool="shorts",
                           key_idx=int(idx), key=key,
                           detail=f"영구 제외(dead) {detail or ''}"[:300])
-    except Exception:                      # noqa: BLE001
-        pass
+    except Exception as e:                 # noqa: BLE001 — 관측 실패가 제외를 막으면 안 된다
+        print(f"[관측] 키사망 기록 실패(무시): {e!r}", file=sys.stderr)
 
 
 def _mark_key_exhausted(idx, retry_after=None, exc=None):
