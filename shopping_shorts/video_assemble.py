@@ -1800,6 +1800,16 @@ def _outline_parts(style):
     w = max(0, _ui_px(style.get("outline_w"), 9, zero_ok=True))
     if w <= 0:
         return []
+    # ★화면의 절반으로 그린다(2026-09-02 사장님 제보: "프로그램에서 얇게 해도
+    #   보이는 것보다 더 두껍게 아웃풋이 나와요. 그래서 캡컷 가서 다시 자막 작업").
+    #   뿌리는 **테두리를 그리는 방식이 두 곳에서 다른 것**이다(0순위-B):
+    #     · 미리보기(produce.html applyCapStroke/헤드카피)= CSS -webkit-text-stroke
+    #       → 획선 **가운데**에 걸쳐 그려지고 paint-order:stroke fill로 안쪽 절반은
+    #         글자가 덮는다 → 눈에 보이는 두께 = w/2
+    #     · 최종렌더(여기) = ffmpeg drawtext borderw → **전부 바깥쪽** = w
+    #   그래서 정확히 2배로 나왔다. 미리보기가 정본이므로(사장님이 보고 정한 값)
+    #   렌더를 절반으로 맞춘다. 1px은 0으로 사라지지 않게 바닥을 둔다.
+    w = max(1, int(round(w / 2)))
     return [f"borderw={w}",
             f"bordercolor={_hex_to_ff(style.get('outline_color'), '0x000000')}"]
 

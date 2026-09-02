@@ -367,7 +367,8 @@ def test_headcopy_drawtext_no_highlight_matches_single_block(tmp_path):
     dt = va._headcopy_drawtext_parts(hc, tmp_path)[0]
     assert dt is not None
     assert "fontcolor=0xFF8800" in dt
-    assert f"borderw={round(7 * va._OUT_W / va._UI_REF_W)}" in dt
+    # 외곽선은 미리보기(획 가운데 걸침)와 맞추려 **절반**으로 그린다(2026-09-02)
+    assert f"borderw={round(round(7 * va._OUT_W / va._UI_REF_W) / 2)}" in dt
     assert f"fontsize={round(60 * va._OUT_W / va._UI_REF_W)}" in dt
     assert "bordercolor=0x000000" in dt
 
