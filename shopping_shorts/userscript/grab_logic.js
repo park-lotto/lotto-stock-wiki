@@ -14,7 +14,7 @@
   // 원인 찾는 데 한참 걸렸다. 그래서 버전을 숫자로 박고 큰 쪽이 이어받게 한다.
   // (옛 코드는 이 숫자가 없다 → 0으로 보고 새 로직이 이긴다. 옛 인터벌은 남지만
   //  버튼은 id 선점이라 서로 안 덮고, 새 화면(유튜브·쓰레드)은 새 로직이 그린다.)
-  var LOGIC_VER = 20260907;
+  var LOGIC_VER = 20260908;
   if ((window.__ssGrabVer || 0) >= LOGIC_VER) return;   // 같거나 더 새것이 이미 돎
   if (window.__ssGrabLoaded && !window.__ssGrabVer) {
     // 옛 로직이 이미 돌고 있다 — 그 버튼을 걷어내고 새 로직이 다시 그린다.
@@ -1054,10 +1054,18 @@
     // ★조상 칸을 쓰되 '영상보다 지나치게 넓은 칸'은 버린다(2026-09-01 실사고).
     //   유튜브 쇼츠의 ytd-reel-video-renderer는 **화면 전체 폭**이라, 그걸 그대로 쓰면
     //   버튼이 브라우저 오른쪽 끝(주소창 밑)까지 날아갔다. 액션열까지만 감싸는 칸이 목표다.
+    // ★인스타 '모달'(프로필에서 영상을 클릭했을 때)은 왼쪽 영상 + 오른쪽 캡션판이 한 칸이다
+    //   (2026-09-02 사장님 스샷). 영상 오른쪽만 보면 버튼이 **캡션 글자 위를 덮는다** —
+    //   모달 칸 자체를 넘어 그 바깥(오른쪽 빈 공간)에 세워야 한다. 그래서 dialog·article은
+    //   폭 가드(영상의 1.6배)를 면제한다. 나머지 칸은 종전대로 — 유튜브 쇼츠의 화면 전체폭
+    //   조상을 집어 버튼이 브라우저 끝까지 날아갔던 사고(2026-09-01)를 막아야 한다.
     var el = best.parentElement, guard = 0;
-    while (el && guard++ < 6) {
+    while (el && guard++ < 10) {
       var rr = el.getBoundingClientRect();
-      if (rr.width <= v.width * 1.6 && rr.right > right && rr.right < window.innerWidth) right = rr.right;
+      var isModal = (el.getAttribute && el.getAttribute("role") === "dialog") ||
+                    el.tagName === "ARTICLE";
+      if (rr.right > right && rr.right < window.innerWidth &&
+          (isModal || rr.width <= v.width * 1.6)) right = rr.right;
       el = el.parentElement;
     }
     // 액션열(좋아요·댓글·공유)이 영상 **바깥 형제**인 경우(유튜브 쇼츠) — 따로 찾아 넘는다.
