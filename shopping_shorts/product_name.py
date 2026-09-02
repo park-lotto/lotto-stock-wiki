@@ -118,7 +118,7 @@ def _identify_one(image_bytes):
                     (d.get("made_by") or "").strip())
         except Exception as e:      # noqa: BLE001
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
-                comment_gen._mark_key_exhausted(idx, key_vault.retry_delay_seconds(e))
+                comment_gen._mark_key_exhausted(idx, key_vault.retry_delay_seconds(e), exc=e)
                 continue           # 다음 키로 (죽은 키 8·11번이 여기서 걸러진다)
             if key_vault.is_quota_error(e):
                 continue           # 429는 다음 키로 — 기다리지 않는다(검색은 대화형이다)
