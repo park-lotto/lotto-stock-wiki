@@ -1503,6 +1503,160 @@ def api_mix_basket(request: Request):
             "shortcodes": sorted(store.mix_basket_shortcodes(customer_id=cid))}
 
 
+# ══ 볼채널등록 (개인 채널 즐겨찾기, 2026-09-02) ═══════════════════════════════
+#  ★전역 수집(platform_seeds·discovered_channels)과 **절대 섞지 않는다**.
+#    /api/discover/add_by_url(📌 채널수집)은 관리자 전용 + 전역 시드라 회원에게 열 수
+#    없다 — 회원이 등록한 채널이 주기크롤 대상이 되면 채널 수만큼 API 쿼터·Apify
+#    비용이 늘어난다. 여기는 순수 북마크: 담아도 수집량은 1건도 늘지 않는다.
+
+_FAV_CH_PATTERNS = [
+    ("instagram",   r"instagram\.com/(?:reels?/[^/?#]+/?\?[^#]*|)?(?!p/|reel/|reels/|explore/|stories/)([A-Za-z0-9._]+)"),
+    ("tiktok",      r"tiktok\.com/@([\w.\-]+)"),
+    ("youtube",     r"youtube\.com/(?:@([\w.\-가-힣]+)|channel/([\w\-]+)|c/([\w\-가-힣]+))"),
+    ("threads",     r"threads\.(?:net|com)/@([\w.\-]+)"),
+    ("xiaohongshu", r"(?:xiaohongshu|rednote)\.com/user/profile/([\w]+)"),
+]
+
+
+def _fav_channel_from_url(url: str):
+    """URL에서 (platform, channel_id)를 뽑는다. 못 뽑으면 (None, None).
+    ★프로필 URL만 확실히 처리한다 — 게시물 URL(릴스·shorts)은 채널을 알 수 없으므로
+    호출부가 username을 함께 넘겨야 한다(유저스크립트는 화면에서 읽어 넘긴다)."""
+    u = url or ""
+    for plat, pat in _FAV_CH_PATTERNS:
+        m = re.search(pat, u, re.I)
+        if m:
+            cid = next((g for g in m.groups() if g), "")
+            if cid and cid.lower() not in ("p", "reel", "reels", "shorts", "explore", "watch"):
+                return plat, cid
+    return None, None
+
+
+def _fav_channel_platform(url: str) -> str:
+    """URL 호스트로 플랫폼만 가린다(username을 따로 받은 경우)."""
+    h = (url or "").lower()
+    for plat in ("instagram", "tiktok", "youtube", "threads"):
+        if plat + ".com" in h:
+            return plat
+    if "xiaohongshu.com" in h or "rednote.com" in h:
+        return "xiaohongshu"
+    if "douyin.com" in h:
+        return "douyin"
+    return ""
+
+
+@app.get("/api/fav_channel/list")
+def api_fav_channel_list(request: Request):
+    """내 볼채널 목록. 지표 갱신은 여기서 하지 않는다 — 화면이 refresh를 따로 부른다
+    (열 때 1회·6시간 캐시. 목록 조회마다 외부 API를 때리면 카드 수만큼 비용이 난다)."""
+    store = Store(DB_PATH)
+    items = store.fav_channel_list(customer_id=_cid(request))
+    return {"ok": True, "items": items, "cap": store.FAV_CHANNEL_CAP}
+
+
+@app.post("/api/fav_channel/add")
+def api_fav_channel_add(request: Request, body: dict):
+    """볼채널 담기(멱등). body: {url, username?, platform?, name?, avatar?, thumb?}"""
+    cid = _cid(request)
+    if not cid:
+        return {"ok": False, "error": "로그인이 필요합니다"}
+    url = (body.get("url") or "").strip()
+    uname = (body.get("username") or "").strip().lstrip("@")
+    plat = (body.get("platform") or "").strip().lower()
+    if uname:
+        plat = plat or _fav_channel_platform(url)
+        chid = uname
+    else:
+        plat2, chid = _fav_channel_from_url(url)
+        plat = plat or plat2 or ""
+    if not plat or not chid:
+        return {"ok": False, "error": "채널을 못 찾았어요 — 채널(프로필) 주소로 눌러주세요"}
+    store = Store(DB_PATH)
+    added = store.fav_channel_add(
+        plat, chid,
+        name=(body.get("name") or chid),
+        url=(body.get("channel_url") or url),
+        avatar=(body.get("avatar") or ""),
+        last_video_thumb=(body.get("thumb") or ""),
+        last_video_url=(body.get("video_url") or ""),
+        customer_id=cid,
+    )
+    if added is None:
+        return {"ok": False, "error": f"볼채널은 최대 {store.FAV_CHANNEL_CAP}개까지예요"}
+    n = len(store.fav_channel_list(customer_id=cid))
+    return {"ok": True, "added": bool(added), "platform": plat, "channel_id": chid, "count": n}
+
+
+@app.post("/api/fav_channel/remove")
+def api_fav_channel_remove(request: Request, body: dict):
+    store = Store(DB_PATH)
+    cid = _cid(request)
+    store.fav_channel_remove((body.get("platform") or ""), (body.get("channel_id") or ""),
+                             customer_id=cid)
+    return {"ok": True, "count": len(store.fav_channel_list(customer_id=cid))}
+
+
+# 갱신 캐시 — 사장님 확정(2026-09-02): "열 때 1회". 6시간 안에 이미 갱신했으면 건너뛴다.
+_FAV_CH_TTL_SEC = 6 * 3600
+
+
+@app.post("/api/fav_channel/refresh")
+def api_fav_channel_refresh(request: Request):
+    """화면을 열 때 1회 호출. 6시간 지난 카드만 지표를 다시 채운다.
+    실패해도 목록은 그대로 보인다(옛 값 유지) — 갱신 실패가 화면을 비우면 안 된다."""
+    store = Store(DB_PATH)
+    cid = _cid(request)
+    items = store.fav_channel_list(customer_id=cid)
+    now = time.time()
+    done = 0
+    for it in items:
+        ts = it.get("refreshed_at")
+        if ts:
+            try:
+                if now - datetime.strptime(ts, "%Y-%m-%d %H:%M:%S").replace(
+                        tzinfo=timezone.utc).timestamp() < _FAV_CH_TTL_SEC:
+                    continue
+            except (ValueError, TypeError):
+                pass
+        meta = _fav_channel_probe(it.get("platform"), it.get("channel_id"), it.get("url") or "")
+        if meta:
+            store.fav_channel_set_meta(it.get("platform"), it.get("channel_id"),
+                                       customer_id=cid, **meta)
+            done += 1
+    return {"ok": True, "refreshed": done,
+            "items": store.fav_channel_list(customer_id=cid)}
+
+
+def _fav_channel_probe(platform, channel_id, url=""):
+    """채널 1개의 표시용 메타(팔로워·프로필·최근영상 썸네일)를 얻는다.
+    ★유료 API를 새로 부르지 않는다 — 우리가 이미 가진 아카이브를 먼저 본다.
+    아카이브에 없으면 빈 dict(카드는 이름만 뜨고, 그게 정상이다)."""
+    out = {}
+    try:
+        store = Store(DB_PATH)
+        with store._conn() as c:
+            # channel_archive의 실제 컬럼(실측 store.py:655): username·shortcode·url·
+            # thumbnail·views·likes·comments·posted_at·first_seen·last_seen.
+            # 채널 표시명은 여기 없고 channel_names 표에 따로 있다(설계 의도).
+            row = c.execute(
+                "SELECT thumbnail, url FROM channel_archive "
+                "WHERE lower(username)=? AND COALESCE(thumbnail,'')!='' "
+                "ORDER BY COALESCE(posted_at, last_seen) DESC LIMIT 1",
+                ((channel_id or "").lower(),),
+            ).fetchone()
+            nm = c.execute("SELECT name FROM channel_names WHERE lower(username)=?",
+                           ((channel_id or "").lower(),)).fetchone()
+        if row:
+            out["last_video_thumb"] = row[0]
+            if row[1]:
+                out["last_video_url"] = row[1]
+        if nm and nm[0]:
+            out["name"] = nm[0]
+    except Exception as e:  # noqa: BLE001 — 갱신 실패가 목록을 막지 않는다
+        print(f"fav_channel probe 실패(무해) {platform}/{channel_id}: {e}", file=sys.stderr)
+    return out
+
+
 @app.post("/api/enrich")
 def api_enrich(request: Request, body: dict):
     """레퍼런스(바구니 카드 등)의 소스 링크를 보강정보(채널명·구독자·조회수·인기댓글 등)로

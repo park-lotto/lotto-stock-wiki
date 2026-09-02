@@ -326,6 +326,29 @@ class Store:
                     PRIMARY KEY (customer_id, shortcode)
                 )
             """)
+            # ── 볼채널등록(개인 채널 즐겨찾기, 2026-09-02 사장님 요청) ──────────────
+            #   영상 즐겨찾기(mix_basket)의 채널판. ★전역 수집과 철저히 분리한다 —
+            #   여기 담긴 채널은 platform_seeds/discovered_channels에 **넣지 않는다**.
+            #   (회원 100명이 20채널씩 등록하면 2,000채널 주기크롤이 되어 API 쿼터·
+            #    Apify 비용·mp4 캐시가 동시에 터진다. 즐겨찾기는 '북마크'일 뿐이다.)
+            #   지표(팔로워·최근영상 썸네일)는 화면을 열 때 1회만 갱신하고
+            #   refreshed_at으로 6시간 캐시한다 — 카드 개수만큼 API를 때리지 않기 위해.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS fav_channel (
+                    customer_id INTEGER NOT NULL DEFAULT 0,
+                    platform TEXT NOT NULL,
+                    channel_id TEXT NOT NULL,
+                    name TEXT,
+                    url TEXT,
+                    avatar TEXT,
+                    followers INTEGER,
+                    last_video_thumb TEXT,
+                    last_video_url TEXT,
+                    added_at TEXT,
+                    refreshed_at TEXT,
+                    PRIMARY KEY (customer_id, platform, channel_id)
+                )
+            """)
             # 부품은행 흡수 실패 재큐(2026-07-24). 503(모델 용량)으로 실패한 상위영상은 다음
             # 수집 때 상위권 밖으로 밀리면 영구 유실될 수 있다 → url당 1행으로 담아 지수 백오프로
             # 재시도한다. fail_count가 상한을 넘으면 흡수 루프가 스스로 폐기(영구불량 영상 방어).
@@ -2710,6 +2733,84 @@ class Store:
                 "SELECT shortcode FROM mix_basket WHERE customer_id=?", (customer_id,)
             ).fetchall()
         return {r[0] for r in rows}
+
+    # ── 볼채널등록(개인 채널 즐겨찾기) ─────────────────────────────────────
+    #   ★수집 트리거가 아니다. 여기 담아도 크롤 대상은 늘지 않는다(설계 의도).
+    FAV_CHANNEL_CAP = 50          # 인당 상한 — 없으면 한 명이 수천 건을 밀어넣는다
+
+    def fav_channel_add(self, platform, channel_id, name="", url="", avatar="",
+                        followers=None, last_video_thumb="", last_video_url="",
+                        customer_id=LEGACY_CUSTOMER_ID):
+        """있으면 메타만 갱신(멱등), 없으면 추가. 새로 담겼으면 True.
+        상한을 넘으면 CapExceeded 대신 None을 돌려준다 — 호출부가 안내 문구를 고른다."""
+        platform = (platform or "").strip().lower()
+        channel_id = (channel_id or "").strip().lstrip("@")
+        if not platform or not channel_id:
+            return False
+        with self._conn() as c:
+            exists = c.execute(
+                "SELECT 1 FROM fav_channel WHERE customer_id=? AND platform=? AND channel_id=?",
+                (customer_id, platform, channel_id),
+            ).fetchone()
+            if exists:
+                # 빈 칸만 채운다 — 다시 등록하는 것이 곧 메타 구제 수단이 된다
+                # (mix_basket_add의 video_url 처리와 같은 원리).
+                c.execute(
+                    "UPDATE fav_channel SET "
+                    "  name=CASE WHEN COALESCE(name,'')='' THEN ? ELSE name END,"
+                    "  url=CASE WHEN COALESCE(url,'')='' THEN ? ELSE url END,"
+                    "  avatar=CASE WHEN COALESCE(avatar,'')='' THEN ? ELSE avatar END "
+                    "WHERE customer_id=? AND platform=? AND channel_id=?",
+                    (name, url, avatar, customer_id, platform, channel_id),
+                )
+                return False
+            n = c.execute("SELECT COUNT(*) FROM fav_channel WHERE customer_id=?",
+                          (customer_id,)).fetchone()[0]
+            if n >= self.FAV_CHANNEL_CAP:
+                return None
+            c.execute(
+                "INSERT INTO fav_channel(customer_id, platform, channel_id, name, url, avatar,"
+                " followers, last_video_thumb, last_video_url, added_at)"
+                " VALUES(?,?,?,?,?,?,?,?,?, datetime('now'))",
+                (customer_id, platform, channel_id, name, url, avatar,
+                 followers, last_video_thumb, last_video_url),
+            )
+            return True
+
+    def fav_channel_remove(self, platform, channel_id, customer_id=LEGACY_CUSTOMER_ID):
+        with self._conn() as c:
+            c.execute(
+                "DELETE FROM fav_channel WHERE customer_id=? AND platform=? AND channel_id=?",
+                (customer_id, (platform or "").lower(), (channel_id or "").lstrip("@")),
+            )
+
+    def fav_channel_list(self, customer_id=LEGACY_CUSTOMER_ID):
+        """담은 순서대로 dict 리스트."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT platform, channel_id, name, url, avatar, followers,"
+                " last_video_thumb, last_video_url, added_at, refreshed_at"
+                " FROM fav_channel WHERE customer_id=? ORDER BY added_at ASC, rowid ASC",
+                (customer_id,),
+            ).fetchall()
+        keys = ("platform", "channel_id", "name", "url", "avatar", "followers",
+                "last_video_thumb", "last_video_url", "added_at", "refreshed_at")
+        return [dict(zip(keys, r)) for r in rows]
+
+    def fav_channel_set_meta(self, platform, channel_id, customer_id=LEGACY_CUSTOMER_ID,
+                             **fields):
+        """열 때 1회 갱신용 — 준 칸만 덮고 refreshed_at을 찍는다."""
+        allowed = ("name", "url", "avatar", "followers", "last_video_thumb", "last_video_url")
+        sets, vals = [], []
+        for k in allowed:
+            if k in fields and fields[k] not in (None, ""):
+                sets.append(k + "=?")
+                vals.append(fields[k])
+        sets.append("refreshed_at=datetime('now')")
+        vals += [customer_id, (platform or "").lower(), (channel_id or "").lstrip("@")]
+        with self._conn() as c:
+            c.execute("UPDATE fav_channel SET " + ", ".join(sets) +
+                      " WHERE customer_id=? AND platform=? AND channel_id=?", vals)
 
     def produce_pick_toggle(self, shortcode, customer_id=LEGACY_CUSTOMER_ID):
         """도서관 대본을 영상제작 목록에 담기/빼기 토글. 담기면 True."""
