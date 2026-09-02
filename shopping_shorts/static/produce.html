@@ -13958,7 +13958,10 @@ function renderExport(opts){
     + '<div style="font-size:14px;font-weight:600;margin-bottom:4px">📤 내보내기</div>'
     // ★1순위: 캡컷으로 바로 보내기(원클릭). 60대 북극성 — 클릭 한 번이면 캡컷에 프로젝트가 생긴다.
     + (capcutOk
-        ? `<button class="btn-next" style="${big};border:0;cursor:pointer;font-size:15px" onclick="sendToCapCut()">🎬 캡컷으로 보내기</button>`
+        ? `<button id="btnCapCut" class="btn-next" style="${big};border:0;cursor:pointer;font-size:15px" onclick="sendToCapCut()">🎬 캡컷으로 보내기</button>`
+          // ★진행표시 자리(2026-09-02) — 에셋 복사가 수십 초~수 분인데 종전엔 화면이 전혀
+          //   안 변해 "안 된다"로 보였다. JSON만 들어간 00:00짜리 빈 프로젝트의 원인 후보.
+          + `<div id="ccProgress" style="display:none;margin:0 0 10px"></div>`
           // ★경로에 `/static/`을 붙이지 마라 — 정적 파일은 **루트에 마운트**돼 있다
           //   (app.py `app.mount("/", ...)`). 2026-08-22 실측: `/static/capcut_setup.bat`은
           //   404였고, 그래서 고객은 자동설정 파일도 그림 매뉴얼도 **한 번도 못 받았다**
@@ -14016,6 +14019,41 @@ async function _ccPerm(h){ const opt={mode:'readwrite'};
   return (await h.requestPermission(opt))==='granted'; }
 async function resetCapCutFolder(){ localStorage.removeItem('capcut_path'); _ccHandle=null; await _ccDel('dir').catch(()=>{});
   alert('캡컷 폴더를 초기화했어요. 다음에 보낼 때 다시 지정합니다.'); }
+// ── 캡컷 보내기 진행표시(2026-09-02) ──
+// 왜: 에셋(mp4·mp3 수십 개, 50~70MB)을 한 개씩 받아 쓰는 동안 화면이 전혀 안 변했다.
+//     사용자는 멈춘 줄 알고 캡컷을 열어봤고, 거기 보이는 건 JSON만 들어간 00:00 빈 프로젝트였다.
+//     ★사장님 기각(2026-09-02): '충분히 기다렸다' — 즉 조기이탈만으로는 설명이 안 된다.
+//     그래서 이건 안내이자 **계측**이다: 몇 번째 재료에서 멈추는지, 재료가 0개인지가
+//     화면에 남는다. 다음 제보 때 원인이 바로 갈린다.
+let _ccBusy = false;
+function _ccBeforeUnload(e){ e.preventDefault(); e.returnValue=''; return ''; }
+function _ccProgShow(html, pct){
+  const el=document.getElementById('ccProgress'); if(!el) return;
+  el.style.display='block';
+  el.innerHTML = '<div style="border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--inset)">'
+    + '<div style="font-size:13px;font-weight:700;color:var(--fg);margin-bottom:6px">'+html+'</div>'
+    + (pct==null ? ''
+       : '<div style="height:8px;border-radius:6px;background:var(--line);overflow:hidden">'
+         + '<div style="height:100%;width:'+pct.toFixed(0)+'%;background:var(--accent2);transition:width .2s"></div></div>')
+    + '<div class="hint" style="margin-top:6px">다 끝날 때까지 <b>이 창을 닫지 마세요</b>. 끝나면 알려드립니다.</div>'
+    + '</div>';
+}
+function _ccProgDone(msg, ok){
+  const el=document.getElementById('ccProgress'); if(!el) return;
+  el.style.display='block';
+  el.innerHTML = '<div style="border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--inset);'
+    + 'font-size:13px;font-weight:700;color:'+(ok?'var(--accent2)':'#e2544a')+'">'+msg+'</div>';
+}
+function _ccBusyOn(){
+  _ccBusy=true; window.addEventListener('beforeunload', _ccBeforeUnload);
+  const b=document.getElementById('btnCapCut');
+  if(b){ if(b.dataset.orig==null) b.dataset.orig=b.innerHTML; b.disabled=true; b.innerHTML='<span class="skm-spin">🔄</span> 캡컷으로 보내는 중…'; }
+}
+function _ccBusyOff(){
+  _ccBusy=false; window.removeEventListener('beforeunload', _ccBeforeUnload);
+  const b=document.getElementById('btnCapCut');
+  if(b){ b.disabled=false; if(b.dataset.orig!=null){ b.innerHTML=b.dataset.orig; delete b.dataset.orig; } }
+}
 async function sendToCapCut(){
   if(!('showDirectoryPicker' in window)){ alert('캡컷으로 바로 보내기는 Chrome 또는 Edge에서만 됩니다.\n지금은 「📦 캡컷용 ZIP(수동)」을 받아 캡컷에 올려 주세요.'); return; }
   if(!MIX_JOB){ alert('먼저 영상을 만들어 주세요'); return; }
@@ -14032,21 +14070,40 @@ async function sendToCapCut(){
     // draft가 에셋을 절대경로로 참조하는데 브라우저는 고른 폴더의 경로를 안 알려주므로 이 표준 경로에 의존.
     // 비표준 위치를 쓰는 사용자는 localStorage.capcut_path로 바꿀 수 있다('폴더 다시 지정' 후 재설정).
     const path = localStorage.getItem('capcut_path') || CAPCUT_DEFAULT_PATH;
+    _ccBusyOn();
+    _ccProgShow('📦 캡컷 프로젝트 준비 중…', null);
     const m=await (await fetch('/api/mix/capcut/'+encodeURIComponent(MIX_JOB)+'?base='+encodeURIComponent(path))).json();
-    if(!m.ok){ alert('캡컷 프로젝트 생성 실패: '+(m.error||'')); return; }
+    if(!m.ok){ _ccProgDone('❌ 캡컷 프로젝트 생성 실패: '+(m.error||''), false); alert('캡컷 프로젝트 생성 실패: '+(m.error||'')); return; }
     const proj=await _ccHandle.getDirectoryHandle(m.project,{create:true});
     for(const name of Object.keys(m.texts)){
       const fh=await proj.getFileHandle(name,{create:true}); const w=await fh.createWritable(); await w.write(m.texts[name]); await w.close();
     }
+    // ★에셋이 0개면 캡컷엔 00:00짜리 빈 프로젝트가 생긴다 — 조용히 성공이라 하지 않는다.
+    const total=(m.assets||[]).length;
+    if(!total){
+      _ccProgDone('❌ 보낼 영상 재료가 하나도 없습니다 — 관리자에게 알려주세요(작업번호 '+MIX_JOB+')', false);
+      alert('보낼 영상 재료가 없습니다.\n캡컷에 빈 프로젝트만 생기므로 중단했습니다.\n작업번호: '+MIX_JOB); return;
+    }
+    let done=0;
     for(const a of m.assets){
+      _ccProgShow('📤 영상 재료 보내는 중… <b>'+(done+1)+' / '+total+'</b>', done/total*100);
       const buf=await (await fetch(a.url)).arrayBuffer();
       const fh=await proj.getFileHandle(a.name,{create:true}); const w=await fh.createWritable(); await w.write(buf); await w.close();
+      done++;
     }
+    _ccProgDone('✅ 다 보냈어요 — 캡컷에서 「'+m.project+'」를 여세요 (재료 '+done+'개)', true);
     alert('✅ 캡컷으로 보냈어요!\n\n캡컷을 열면 「'+m.project+'」 프로젝트가 보입니다.\n안 보이면 캡컷을 완전히 껐다 다시 켜 주세요.');
   }catch(e){
-    if(e&&e.name==='AbortError') return;   // 사용자가 폴더 선택 취소
+    if(e&&e.name==='AbortError'){ const el=document.getElementById('ccProgress'); if(el){ el.style.display='none'; el.innerHTML=''; } return; }   // 사용자가 폴더 선택 취소
+    _ccProgDone('❌ 보내기가 중간에 끊겼습니다 — 캡컷 프로젝트가 비어 있을 수 있어요. 다시 눌러주세요.<br><span style="font-weight:400">('+((e&&e.message)||e)+')</span>', false);
     alert('캡컷 보내기 실패: '+((e&&e.message)||e)+'\n\n대신 「📦 캡컷용 ZIP(수동)」을 받으실 수 있어요.');
-  }finally{ renderExport({rendered:true}); }
+  }finally{
+    _ccBusyOff();
+    // renderExport가 exportBox를 통째로 다시 그려 진행표시가 날아간다 — 결과 문구를 되살린다.
+    const _p=document.getElementById('ccProgress'), _h=_p?_p.innerHTML:'';
+    renderExport({rendered:true});
+    const _p2=document.getElementById('ccProgress'); if(_p2&&_h){ _p2.style.display='block'; _p2.innerHTML=_h; }
+  }
 }
 // ⚡ 최종 렌더 — 2단계 매칭처럼 동적 피드백: 버튼 스피너 + 진행 박스 + 완성 영상 미리보기 자리(#finalVideo).
 function _finalRenderRestore(msg){
