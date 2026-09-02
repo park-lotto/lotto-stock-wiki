@@ -16423,9 +16423,24 @@ def _clean_frame_src(job, work, beat_idx, cut=None):
     if job.get("clean_status") != "ready":
         return {}, None, None, "", False
     cvp = job.get("clean_video_path")
+    # ★지금 편성으로 청소된 완성본(final_clean_{sig}.mp4)이 있으면 **그걸 먼저 쓴다**(2026-09-02).
+    #   clean_video_path는 2단계 미리보기 때 만든 clean_preview.mp4에서 멈춘다 — 그 뒤 편성을
+    #   바꾸고 최종렌더를 돌리면 새 서명의 청소본은 생기는데 clean_video_path는 옛 파일 그대로라
+    #   신선도 판정이 False가 되고, 꾸미기 컷 프레임이 통째로 **원본**에서 떠 자막이 남는다.
+    #   실측(2026-09-02 라이브 job 8b5aed8af66b): clean_status=ready인데 beatframes가 전부 _src.
+    #   cvp=clean_preview.mp4(00:39) < final_clean_{sig}.mp4(08:25) → mtime 비교가 stale로 판정.
+    #   새 서명 파일은 **지금 편성으로 조립해 청소한 완성본**이라 좌표계가 정의상 일치한다.
+    _sig = mix_pipeline._plan_signature(job.get("edit_plan") or {})
+    _sigf = work / ("final_clean_%s.mp4" % _sig)
+    # ★캐시 이름도 서명으로 가른다 — 옛 clean_preview에서 뜬 `_clean` 프레임이 그대로
+    #   재사용되면 편성이 바뀐 뒤엔 **딴 장면**이 뜬다(08-21 '조용한 어긋남'과 같은 모양).
+    _tag = "_clean"
+    if _sigf.exists() and _sigf.stat().st_size > 1024:
+        cvp = str(_sigf)
+        _tag = "_clean" + _sig[:8]
     if not cvp or not Path(cvp).exists():
         return {}, None, None, "", False
-    fresh = mix_pipeline.clean_final_matches_plan(job, work)
+    fresh = (cvp == str(_sigf)) or mix_pipeline.clean_final_matches_plan(job, work)
     # ★컷 단위로 찾는다(2026-08-27) — 비트에 재료가 여럿이면 비트 한가운데는
     #   다른 소스 자리다. 화면에 나가는 최소 단위는 컷이다(clean_thumb과 같은 기준).
     _plan = job.get("edit_plan") or {}
@@ -16452,10 +16467,10 @@ def _clean_frame_src(job, work, beat_idx, cut=None):
         #   그러면 자막·워터마크가 화면에 그대로 나온다(08-27 회귀의 정체).
         #   비트 근사로라도 청소본을 가리킨다. 정확도는 떨어져도 '지워진 그림'이다.
         r = mix_pipeline._final_time_of_beat(_plan, beat_idx)
-        return {}, cvp, (r if r is not None else 0.5), "_clean", fresh
+        return {}, cvp, (r if r is not None else 0.5), _tag, fresh
     _d = frame_extract._probe_duration(cvp) or 0.0
     # 호출부는 '비율'을 받는다 — 파일 길이가 계획 합과 달라도 초를 비율로 환산해 넘긴다.
-    return {}, cvp, (min(0.98, max(0.02, sec / _d)) if _d > 0 else 0.5), "_clean", fresh
+    return {}, cvp, (min(0.98, max(0.02, sec / _d)) if _d > 0 else 0.5), _tag, fresh
 
 
 def _extract_beat_frame(work, beat, out_path, clean_sources=None,
