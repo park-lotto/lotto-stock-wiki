@@ -3408,7 +3408,7 @@ def api_mix_start(request: Request, background_tasks: BackgroundTasks, body: dic
 
 
 @app.post("/api/mix/candidate")
-def api_mix_candidate(body: dict):
+def api_mix_candidate(request: Request, body: dict):
     """장면 우선 대본 모드(2026-07-20, Task6): 후보 선택 — 고른 후보의 plan을 edit_plan으로
     세팅한다(미리보기/렌더가 이걸 읽는다).
 
@@ -3424,6 +3424,12 @@ def api_mix_candidate(body: dict):
       (mix_pipeline._beat_tts_path) 글자가 바뀌면 tts_path가 안 맞아 그 비트만 다시 합성된다.
       그래서 여기선 tts_path를 지울 필요도, 별도 재합성을 부를 필요도 없다.
     """
+    # ★키 없으면 여기서 막는다(2026-09-02). 안 막으면 TTS가 무음 mp3로 폴백해
+    #   **소리 없는 영상**이 끝까지 만들어지고 화면은 "완료"라고 말한다 — 사장님 지시
+    #   ("실패했을 때 안내문구를 띄우면 된다")의 정반대다. 판단은 keyroute 한 곳(0순위-B).
+    _blocked = _need_own_key_or_402(_cid(request), tts=True)
+    if _blocked:
+        return _blocked
     job_id = (body.get("job_id") or "").strip()
     idx = int(body.get("index") or 0)
     store = Store(DB_PATH)
@@ -4930,7 +4936,7 @@ def api_mix_scene_lab_apply(job_id: str, body: dict):
 
 
 @app.post("/api/mix/render")
-def api_mix_render(background_tasks: BackgroundTasks, body: dict):
+def api_mix_render(request: Request, background_tasks: BackgroundTasks, body: dict):
     """최종 렌더 예약. 미리보기(/api/produce/mix/preview)와 같은 중복예약 가드를 건다 —
     이쪽이 오히려 **돈이 나가는** 경로다(subtitle_removal이 켜져 있으면 VMake 유료 호출).
 
@@ -4940,6 +4946,12 @@ def api_mix_render(background_tasks: BackgroundTasks, body: dict):
     수십 ms 간격의 POST 2건이 둘 다 아직 이전 status를 보고 통과한다(TOCTOU).
     → 여기서 **동기적으로** 선기록한다.
     """
+    # ★키 없으면 여기서 막는다(2026-09-02). 안 막으면 TTS가 무음 mp3로 폴백해
+    #   **소리 없는 영상**이 끝까지 만들어지고 화면은 "완료"라고 말한다 — 사장님 지시
+    #   ("실패했을 때 안내문구를 띄우면 된다")의 정반대다. 판단은 keyroute 한 곳(0순위-B).
+    _blocked = _need_own_key_or_402(_cid(request), tts=True)
+    if _blocked:
+        return _blocked
     job_id = body.get("job_id")
     store = Store(DB_PATH)
     job = store.get_mix_job(job_id)
@@ -5031,11 +5043,17 @@ def _render_is_stale(job) -> bool:
 
 
 @app.post("/api/produce/mix/preview")
-def api_produce_mix_preview(background_tasks: BackgroundTasks, body: dict):
+def api_produce_mix_preview(request: Request, background_tasks: BackgroundTasks, body: dict):
     """1단계 미리보기 렌더 예약 — 유료 자막제거 없이(0원). 스펙 §6.3.
 
     다음 단계(자막제거)가 VMake 유료 API라, 컷·대본이 틀린 채 넘어가면 그 돈이 날아간다.
     그래서 여기서 먼저 공짜로 보여주고 OK를 받는다."""
+    # ★키 없으면 여기서 막는다(2026-09-02). 안 막으면 TTS가 무음 mp3로 폴백해
+    #   **소리 없는 영상**이 끝까지 만들어지고 화면은 "완료"라고 말한다 — 사장님 지시
+    #   ("실패했을 때 안내문구를 띄우면 된다")의 정반대다. 판단은 keyroute 한 곳(0순위-B).
+    _blocked = _need_own_key_or_402(_cid(request), tts=True)
+    if _blocked:
+        return _blocked
     job_id = body.get("job_id")
     store = Store(DB_PATH)
     job = store.get_mix_job(job_id)

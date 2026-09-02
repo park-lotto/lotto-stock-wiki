@@ -561,7 +561,7 @@ def beat_screen_budget(beat):
     return sum(max(0.0, float(s["end"]) - float(s["start"])) for s in segs if s) * _MAX_SLOWMO
 
 
-def _conform_beats(beats, tts_dir, *, voice, global_pron=None):
+def _conform_beats(beats, tts_dir, *, voice, global_pron=None, customer_id=0):
     """싱크 콘폼 패스(2026-07-20 설계 T3) — 대사가 영상 예산을 넘는 비트만 표면 재단.
 
     예산 = beat_screen_budget(재료 구간 길이 합 × _MAX_SLOWMO — 실험실 편성·트림 반영).
@@ -604,7 +604,7 @@ def _conform_beats(beats, tts_dir, *, voice, global_pron=None):
                 beat_index=i, beat_total=total,
                 previous_text=beats[i - 1]["narration"] if i > 0 else None,
                 next_text=beats[i + 1]["narration"] if i < total - 1 else None,
-                global_pron=global_pron,
+                global_pron=global_pron, customer_id=customer_id,
             )
         except Exception:
             traceback.print_exc(file=sys.stderr)
@@ -1542,7 +1542,10 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     # 4.5) 싱크 콘폼(2026-07-20) — 대사가 영상 예산을 넘는 비트만 압축 리라이트 + 그 비트 재TTS.
     # 저장(아래) 전에 돌므로 preview·final 렌더 모두 자동 적용. 실패해도 job을 죽이지 않는다.
     try:
-        _conform_beats(plan["beats"], work / "tts", voice=voice, global_pron=global_pron)
+        # ★customer_id를 반드시 넘긴다(2026-09-02). 안 넘기면 cid 0으로 떨어져
+        #   **회원의 재합성이 사장님 키로** 나간다 — 막으려던 누수가 이 경로로 되살아난다.
+        _conform_beats(plan["beats"], work / "tts", voice=voice, global_pron=global_pron,
+                       customer_id=customer_id)
     except Exception:
         traceback.print_exc(file=sys.stderr)
 
@@ -3106,6 +3109,8 @@ def resynth_one_beat(job_id, beat_idx, voice_override, db_path, work_root):
     if not job or not job.get("edit_plan"):
         return
     plan = job["edit_plan"]
+    # ★이 job의 주인. 안 꺼내면 아래 TTS가 cid 0(사장님 키)으로 나간다(2026-09-02).
+    _cid_of_job = job.get("customer_id") or 0
     beat = next((b for b in plan["beats"] if b["beat_idx"] == beat_idx), None)
     if beat is None:
         return
@@ -3127,7 +3132,7 @@ def resynth_one_beat(job_id, beat_idx, voice_override, db_path, work_root):
             beat_index=i, beat_total=total,
             previous_text=plan["beats"][i - 1]["narration"] if i > 0 else None,
             next_text=plan["beats"][i + 1]["narration"] if i < total - 1 else None,
-            global_pron=pron_corrections.load(store),
+            global_pron=pron_corrections.load(store), customer_id=_cid_of_job,
         )
         beat["tts_path"] = str(out)
         beat["voice_override"] = voice_override
@@ -3161,7 +3166,7 @@ def resynth_one_beat(job_id, beat_idx, voice_override, db_path, work_root):
         # _conform_beats가 갱신한다). 한 칸짜리 리스트로 부르므로 앞뒤 문맥은 없지만
         # 판정·교정 규칙은 렌더와 완전히 같다.
         try:
-            _conform_beats([beat], tts_dir, voice=voice_override,
+            _conform_beats([beat], tts_dir, voice=voice_override, customer_id=_cid_of_job,
                            global_pron=pron_corrections.load(store))
         except Exception:      # noqa: BLE001 — 교정 실패로 재합성을 죽이지 않는다
             traceback.print_exc(file=sys.stderr)
