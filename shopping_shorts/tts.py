@@ -35,19 +35,44 @@ def _estimate_seconds(text):
     return max(_MIN_MOCK_SEC, min(_MAX_MOCK_SEC, n / _CHARS_PER_SEC))
 
 
-def _record_tts_event(service, exc, *, silent=False, customer_id=None):
-    """관측판 배선(2026-09-01) — TTS 실패·무음폴백을 api_events에 남긴다.
+def _record_tts_event(service, exc, *, silent=False, customer_id=None, ok=False,
+                      dur_ms=None):
+    """관측판 배선(2026-09-01) — TTS 성공·실패·무음폴백을 api_events에 남긴다.
 
     ★무음 폴백은 그동안 완전한 사각이었다: 키가 없으면 조용히 무음 mp3를 만들어
-      고객이 '무음 영상'을 받아도 어디에도 흔적이 없었다. 기록 실패는 삼킨다."""
+      고객이 '무음 영상'을 받아도 어디에도 흔적이 없었다.
+
+    ★성공도 기록한다(2026-09-02). 종전엔 실패만 남겨 **분모가 없었다** — 화면은
+      "최근 1시간 실패율 100% (14/14건)"을 띄웠는데, 실제로는 그 시간에 성공한
+      호출이 기록되지 않았을 뿐이었다(실측: 409를 겪은 고객들의 완성 mp3도
+      mean_volume -15~-18dB로 소리가 정상이었다). 거짓 경보는 진짜 사고를 가린다.
+
+    ★실패는 **응답 본문까지** 남긴다. 종전엔 "409 Client Error: Conflict"만 남아
+      일레븐랩스가 무슨 이유로 거절했는지 알 길이 없었다 — 원인을 못 정하면
+      처방도 못 정한다. 본문은 200자로 자른다(원장이 부풀지 않게).
+
+    기록 실패는 삼킨다 — 관측이 본작업을 죽이면 안 된다."""
     try:
         from shopping_shorts import api_health
         if silent:
             api_health.record(service, api_health.OUT_SILENT,
                               customer_id=customer_id, detail="키 없음 → 무음 mp3 폴백")
+        elif ok:
+            api_health.record(service, api_health.OUT_OK,
+                              customer_id=customer_id, dur_ms=dur_ms)
         else:
-            http = getattr(getattr(exc, "response", None), "status_code", None)
-            api_health.record_failure(service, exc, http=http, customer_id=customer_id)
+            resp = getattr(exc, "response", None)
+            http = getattr(resp, "status_code", None)
+            detail = str(exc)
+            body = ""
+            try:                            # 상대가 말한 사유 — 여기에만 있다
+                body = (resp.text or "")[:200] if resp is not None else ""
+            except Exception:               # noqa: BLE001 — 본문을 못 읽어도 기록은 남긴다
+                body = ""
+            if body:
+                detail = detail + " | " + body
+            api_health.record_failure(service, exc, http=http,
+                                      customer_id=customer_id, detail=detail)
     except Exception:                      # noqa: BLE001 — 관측이 본작업을 죽이면 안 된다
         pass
 
@@ -141,6 +166,7 @@ def synthesize_tts(text, out_path, voice_id=None, voice_settings=None,
     while attempt < max_retries:
         try:
             u = _ENDPOINT_TS.format(voice_id=vid) if want_ts else url
+            _t0 = time.monotonic()
             r = requests.post(u, headers=headers, json=payload, timeout=60)
             r.raise_for_status()
             if want_ts:
@@ -151,9 +177,13 @@ def synthesize_tts(text, out_path, voice_id=None, voice_settings=None,
                 with open(out_path, "wb") as f:
                     f.write(audio)
                 tts_timestamps.save(out_path, alignment)
+                _record_tts_event("elevenlabs", None, ok=True, customer_id=customer_id,
+                                  dur_ms=int((time.monotonic() - _t0) * 1000))
                 return out_path
             with open(out_path, "wb") as f:
                 f.write(r.content)
+            _record_tts_event("elevenlabs", None, ok=True, customer_id=customer_id,
+                              dur_ms=int((time.monotonic() - _t0) * 1000))
             return out_path
         except requests.RequestException as e:
             _record_tts_event("elevenlabs", e, customer_id=customer_id)
@@ -193,6 +223,7 @@ def _synthesize_typecast(text, out_path, *, voice_id, voice_settings, speed,
     attempt = 0
     while True:
         try:
+            _t0 = time.monotonic()
             alignment = typecast_tts.synthesize(
                 text, out_path, voice_id=voice_id, speed=speed, emotion=emotion,
                 intensity=intensity, model_id=model_id, seed=seed,
@@ -200,6 +231,9 @@ def _synthesize_typecast(text, out_path, *, voice_id, voice_settings, speed,
                 customer_id=customer_id)
             if alignment:
                 tts_timestamps.save(out_path, alignment)
+            # ★성공도 남긴다 — 엔진이 둘인데 한쪽만 세면 분모가 또 어긋난다(0순위-B).
+            _record_tts_event("typecast", None, ok=True, customer_id=customer_id,
+                              dur_ms=int((time.monotonic() - _t0) * 1000))
             return out_path
         except requests.RequestException as e:
             _record_tts_event("typecast", e, customer_id=customer_id)
