@@ -14475,7 +14475,23 @@ def _adopt_into_ranking(store, platform, url, meta):
 # ── 1기 챌린지 (2026-08-24) ──────────────────────────────────────────
 # 하루 2영상 챌린지. 판정 로직은 shopping_shorts/challenge.py에 모아 두었다
 # (app.py가 13,000줄을 넘어 더 얹지 않는다). 여기 라우트는 얇게 유지한다.
-_CHALLENGE_PLATFORMS = ("instagram", "youtube", "tiktok")
+_CHALLENGE_PLATFORMS = ("instagram", "youtube", "tiktok", "naverclip")
+# 네이버 클립 호스트. _GRAB_DOMAINS에 넣지 않는 이유: 그 목록은 "담기(확장)로
+# 받아올 수 있는 플랫폼"이고 네이버 클립은 담기 경로가 없다(수집은 별도 API 축).
+# 여기서 묻는 질문은 "챌린지 제출로 인정할 주소인가"라 서로 다른 판단이다.
+_CHALLENGE_NAVER_HOSTS = ("naver.com", "naver.me")
+
+
+def _challenge_platform(url):
+    """챌린지 제출 주소의 플랫폼. 담기 목록에 없는 네이버 클립만 여기서 더 본다."""
+    p = _grab_platform(url)
+    if p:
+        return p
+    host = (urllib.parse.urlparse(url or "").hostname or "").lower()
+    if any(host == d or host.endswith("." + d) for d in _CHALLENGE_NAVER_HOSTS):
+        return "naverclip"
+    return ""
+
 _DAY_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")   # 빈칸 클릭으로 넘어온 날짜 검증
 
 
@@ -14490,7 +14506,20 @@ def _challenge_period(store):
             goal)
 
 
-def _challenge_fetch(sub_id, url, platform):
+def _challenge_naverclip_meta(url, code=""):
+    """네이버 클립 제출건의 메타. 카드 API 한 곳에서만 읽는다(0순위-B).
+
+    code(=seedMediaId)가 없으면 URL에서 다시 뽑는다 — 단축주소(naver.me)처럼
+    ID가 안 보이는 주소는 빈 dict가 되고, 호출부가 fetch_status='failed'로 남긴다.
+    """
+    from shopping_shorts import naverclip_search as _nc
+    mid = (code or "").strip() or challenge.video_code(url, "naverclip")
+    if not mid:
+        return {}
+    return _nc._fetch_card(mid) or {}
+
+
+def _challenge_fetch(sub_id, url, platform, code=""):
     """제출 영상의 썸네일·조회수를 채운다(백그라운드).
 
     ★실패해도 예외를 밖으로 내보내지 않는다 — 제출 행은 이미 저장돼 있고
@@ -14512,7 +14541,12 @@ def _challenge_fetch(sub_id, url, platform):
     #   영상 탭이 링크 대신 카드로 보이고, AI 코멘트를 쓸 재료가 생긴다.
     #   조회수가 없다고 'failed'로 떨어뜨리지 않는다 — meta가 비어 있을 때만 failed다.
     try:
-        meta = probe_grab_meta(url) or {}
+        if platform == "naverclip":
+            # ★yt-dlp는 네이버 클립을 모른다(Unsupported URL — handoff/네이버클립.md).
+            #   수집 축이 쓰는 카드 API를 그대로 태운다: 제목·썸네일·채널·조회수·좋아요·댓글.
+            meta = _challenge_naverclip_meta(url, code)
+        else:
+            meta = probe_grab_meta(url) or {}
     except Exception as e:  # noqa: BLE001 — 수집 실패가 제출을 무효로 만들지 않는다
         import sys as _sys
         print(f"[challenge] 수집 실패 sub_id={sub_id} url={url}: {e!r}", file=_sys.stderr)
@@ -14555,11 +14589,11 @@ def api_challenge_submit(request: Request, background_tasks: BackgroundTasks,
         return JSONResponse(status_code=403,
                             content={"ok": False, "error": "1기 챌린지 참가자만 제출할 수 있어요"})
     u = (url or "").strip()
-    platform = _grab_platform(u)
+    platform = _challenge_platform(u)
     if platform not in _CHALLENGE_PLATFORMS:
         return JSONResponse(status_code=422, content={
             "ok": False,
-            "error": "인스타그램·유튜브·틱톡 영상 주소를 넣어주세요"})
+            "error": "인스타그램·유튜브·틱톡·네이버클립 영상 주소를 넣어주세요"})
     start, end, goal = _challenge_period(store)
     today = challenge.kst_day()
     # 빈칸 클릭으로 지난 날짜를 지정했나. 오늘이면 지정하지 않은 것과 같게 둔다.
@@ -14583,7 +14617,7 @@ def api_challenge_submit(request: Request, background_tasks: BackgroundTasks,
     if not sub_id:
         return JSONResponse(status_code=422,
                             content={"ok": False, "error": "이미 제출한 영상이에요"})
-    background_tasks.add_task(_challenge_fetch, sub_id, u, platform)   # 썸네일·조회수 등 보강
+    background_tasks.add_task(_challenge_fetch, sub_id, u, platform, code)   # 썸네일·조회수 등 보강
     n = sum(1 for s in store.list_challenge_submissions(customer_id=cid)
             if s["submit_day"] == sday)
     return {"ok": True, "id": sub_id, "today": n, "goal": goal, "day": sday,
