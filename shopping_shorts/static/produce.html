@@ -13220,7 +13220,15 @@ async function previewVoice(){
   try{
     const r=await fetch('/api/mix/voice/preview',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({job_id:MIX_JOB, preset_id:VOICE.preset_id, voice_id:VOICE.voice_id, settings:VOICE.settings, speed:VOICE.speed, silence_trim:VOICE.silence_trim, pace_mode:VOICE.pace_mode, whisper_roles:_whisperRolesForBody()})});
-    if(!r.ok){ el.textContent='❌ 실패'; return; }
+    if(!r.ok){
+      // ★왜 실패했는지 말한다(2026-09-02). 전엔 '❌ 실패' 한 마디라, 키가 없어 막힌
+      //   사람도 서버가 고장난 줄 알았다. 성공 응답은 blob이지만 실패는 JSON이다.
+      const d = await r.json().catch(()=>null);
+      const need = (typeof needKeyHtml==='function') ? needKeyHtml(d) : null;
+      el.innerHTML = need || ('<span class="hint" style="color:var(--fire)">❌ '
+                    + esc((d && d.error) || '미리듣기를 만들지 못했습니다') + '</span>');
+      return;
+    }
     const b=await r.blob();
     el.innerHTML=`<audio controls autoplay src="${URL.createObjectURL(b)}" style="height:30px"></audio>`;
   }catch(e){ el.textContent='❌ 실패'; }
@@ -13243,8 +13251,19 @@ async function applyVoice(){
   }catch(e){ /* 상태를 못 받으면 종전대로 그냥 진행한다 — 고지 실패가 작업을 막지 않는다 */ }
   el.textContent='⏳ 전체 음성 생성 중…';
   try{
-    await fetch('/api/mix/voice',{method:'POST',headers:{'Content-Type':'application/json'},
+    // ★응답을 **읽는다**(2026-09-02). 전엔 await fetch만 하고 버려서, 키가 없어 402로
+    //   막혀도 그대로 폴링으로 넘어가 2.5초 뒤 "✅ 완료"를 띄웠다 — 음성은 하나도 안
+    //   만들어졌는데 다 됐다고 말하는 거짓 보고다. 막힌 이유는 needKeyHtml이 안내한다
+    //   (그 헬퍼는 이미 있었는데 이 자리만 안 쓰고 있었다).
+    const r = await fetch('/api/mix/voice',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({job_id:MIX_JOB, preset_id:VOICE.preset_id, voice_id:VOICE.voice_id, settings:VOICE.settings, speed:VOICE.speed, silence_trim:VOICE.silence_trim, pace_mode:VOICE.pace_mode, whisper_roles:_whisperRolesForBody()})});
+    const d = await r.json().catch(()=>null);
+    if(!r.ok || !d || d.ok === false){
+      const need = (typeof needKeyHtml==='function') ? needKeyHtml(d) : null;
+      el.innerHTML = need || ('<span class="hint" style="color:var(--fire)">❌ '
+                    + esc((d && d.error) || '음성 생성을 시작하지 못했습니다') + '</span>');
+      return;
+    }
   }catch(e){ el.textContent='❌ 요청 실패'; return; }
   const poll=setInterval(async()=>{
     try{
@@ -13311,9 +13330,10 @@ async function vpSaveNarr(i){
       body: JSON.stringify({text, regen:true})});
     const j=await r.json().catch(()=>null);
     if(!r.ok || !j || !j.ok){
+      const _nk = (typeof needKeyText==='function') ? needKeyText(j) : null;
       if(m) m.textContent = (r.status===409)
         ? '⏳ 생성 중엔 못 바꿔요 — 전체 생성이 끝나고 다시 눌러요'
-        : ('❌ 저장 실패' + (j&&j.error?(' — '+j.error):''));
+        : (_nk || ('❌ 저장 실패' + (j&&j.error?(' — '+j.error):'')));
       renderTtsBeats(); return;
     }
     // 글자가 같으면 서버가 unchanged로 알려준다 — 헛되이 기다리지 않는다.

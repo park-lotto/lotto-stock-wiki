@@ -150,6 +150,12 @@ def test_성우적용_라우트가_기억을_남긴다(monkeypatch, tmp_path):
     monkeypatch.setattr(appmod, "resynth_tts_job", lambda *a, **k: None)  # 실합성 차단
     _preset(store)
     cid = store.create_customer("u1", "pw")
+    # ★음성 키 게이트를 통과시킨다(2026-09-02). 이 테스트가 만들어질 땐 키 필수 차단이
+    #   없어서 맨 고객으로 /api/mix/voice가 200이었다. 지금은 키가 없으면 402로 막는 게
+    #   **정상**(사장님 확정 "v메이크랑 tts는 없으면 못하게 막아") — 이 테스트가 보려는 건
+    #   게이트가 아니라 '성우 기억이 남는가'라, 통과한 상태에서 확인한다.
+    #   실키 등록(add_customer_key)은 BYOK_MASTER_KEY가 있어야 해서 테스트에선 못 쓴다.
+    monkeypatch.setattr(appmod.keyroute, "tts_block_reason", lambda *a, **k: None)
     store.create_mix_job("j1", ["u0"], 20, "free", customer_id=cid)
     store.update_mix_job("j1", edit_plan={"structure": "free", "beats": [
         {"beat_idx": 0, "role": "훅", "narration": "n", "target_seconds": 2,
@@ -170,6 +176,12 @@ def test_다음_작업이_그_성우로_시작한다(monkeypatch, tmp_path):
     monkeypatch.setattr(appmod, "resynth_tts_job", lambda *a, **k: None)
     _preset(store)
     cid = store.create_customer("u1", "pw")
+    # ★음성 키 게이트를 통과시킨다(2026-09-02). 이 테스트가 만들어질 땐 키 필수 차단이
+    #   없어서 맨 고객으로 /api/mix/voice가 200이었다. 지금은 키가 없으면 402로 막는 게
+    #   **정상**(사장님 확정 "v메이크랑 tts는 없으면 못하게 막아") — 이 테스트가 보려는 건
+    #   게이트가 아니라 '성우 기억이 남는가'라, 통과한 상태에서 확인한다.
+    #   실키 등록(add_customer_key)은 BYOK_MASTER_KEY가 있어야 해서 테스트에선 못 쓴다.
+    monkeypatch.setattr(appmod.keyroute, "tts_block_reason", lambda *a, **k: None)
     store.create_mix_job("j1", ["u0"], 20, "free", customer_id=cid)
     store.update_mix_job("j1", edit_plan={"structure": "free", "beats": [
         {"beat_idx": 0, "role": "훅", "narration": "n", "target_seconds": 2,

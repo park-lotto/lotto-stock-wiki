@@ -547,6 +547,10 @@ var FIRST_KEY = "ss_setup_seen";
   // ★PC 등록 안내에서 온 사람(#pc)은 무조건 '내 계정'으로 — 설치안내가 먼저 뜨면
   //   등록 버튼을 못 찾는다(막혀서 온 사람이다).
   if (location.hash === "#pc") { showTab("account"); return; }
+  // ★#keys로 온 사람은 '내 키 등록'으로(2026-09-02). 키가 없어 막힌 화면이
+  //   settings_url='/settings#keys'로 보내는데, 이 해시를 아무도 안 읽어서
+  //   '설치와 준비'가 뜨고 등록 칸을 못 찾았다 — 막아만 놓고 길은 안 알려준 셈이다.
+  if (location.hash === "#keys") { showTab("keys"); return; }
   var seen = false;
   try { seen = localStorage.getItem(FIRST_KEY) === "1"; } catch (e) {}
   showTab(seen ? "account" : "setup");

@@ -61,3 +61,37 @@ def test_게이트는_판단을_스스로_하지_않는다():
     for fn in ("api_mix_render", "api_produce_mix_preview", "api_mix_candidate"):
         b = _body(app, fn)
         assert "customer_keys" not in b, f"{fn}: 키를 직접 조회한다 — keyroute와 갈라진다"
+
+
+def test_막을때_하루횟수를_돌려준다():
+    """게이트가 막으면 check_and_count로 깎은 횟수를 되돌려야 한다.
+
+    ★안 돌려주면 아무것도 못 만들고 오늘 한 번을 잃는다 — 막힌 사람을 두 번 벌한다.
+      원본(api_mix_start)엔 있었는데 복제 경로(api_mix_candidate_clone)에만 빠져 있었다.
+    """
+    app = _src("app.py")
+    # check_and_count 뒤에 오는 _need_own_key_or_402 블록마다 uncount가 붙어야 한다
+    for m in re.finditer(r"check_and_count\(cid, \"render\"\)", app):
+        tail = app[m.end():m.end() + 1800]
+        gate = tail.find("_need_own_key_or_402")
+        if gate < 0:
+            continue
+        block = tail[gate:gate + 260]
+        assert "uncount" in block, (
+            "게이트가 하루 횟수를 안 돌려준다 — 막힌 사람이 오늘 1회를 잃는다:\n" + block[:200])
+
+
+def test_전체음성_생성이_응답을_읽는다():
+    """POST 결과를 안 읽으면 402로 막혀도 2.5초 뒤 '완료'를 띄운다(거짓 보고)."""
+    pr = _src("static/produce.html")
+    i = pr.index("async function applyVoice(")
+    body = pr[i:i + 2600]
+    assert "await fetch('/api/mix/voice'" in body
+    assert "r.ok" in body or "d.ok" in body, "응답을 안 읽는다 — 거짓 '완료'가 뜬다"
+    assert "needKeyHtml" in body, "막힌 이유(키 없음)를 안내하지 않는다"
+
+
+def test_settings_keys_해시가_키탭을_연다():
+    """안내가 /settings#keys로 보내는데 그 해시를 안 읽으면 엉뚱한 탭이 열린다."""
+    st = _src("static/settings.html")
+    assert '"#keys"' in st and 'showTab("keys")' in st, "#keys 해시를 아무도 안 읽는다"

@@ -3534,12 +3534,17 @@ def api_mix_candidate_clone(request: Request, body: dict):
             "ok": False, "error_code": "daily_limit",
             "error": "오늘 영상 만들기 횟수를 다 썼어요. 결제하면 더 만들 수 있어요."})
     # ★음성 키가 없으면 제작을 막는다(2026-09-01 사장님 확정) — keyroute가 판단처.
+    # ⚠️여기서 막을 땐 위 check_and_count로 **이미 깎은 하루 횟수를 돌려준다**(2026-09-02).
+    #   안 돌려주면 아무것도 못 만들고 오늘 한 번을 잃는다 — 막힌 사람을 두 번 벌하는 꼴이다.
+    #   원본 경로(api_mix_start)엔 이 되돌림이 있는데 이 복제 경로만 빠져 있었다.
     _blocked = _need_own_key_or_402(cid, tts=True)
     if _blocked:
+        uncount(cid, "render")
         return _blocked
     _charged = {}                      # ★깎은 액수를 그대로 job에 남긴다(환불이 재판단하지 않게)
     _denied = _charge_or_402(cid, pricing.OP_MIX, keyroute.SVC_GEMINI, out=_charged)
     if _denied:
+        uncount(cid, "render")          # 같은 이유 — 시작도 못 했으면 횟수도 없던 일로
         return _denied
     global_incr_and_alert("render")
     urls = src.get("urls") or []
@@ -5962,6 +5967,12 @@ def api_mix_voice(background_tasks: BackgroundTasks, body: dict):
         store.set_last_voice(job.get("customer_id", 0), voice)
     except Exception as _e:      # noqa: BLE001
         print(f"[성우기억] 저장 실패(무해): {_e!r}", file=sys.stderr)
+    # ★status를 **여기서 동기적으로** 찍는다(2026-09-02). resynth_tts_job도 안에서 찍지만
+    #   그건 응답을 보낸 뒤에야 도는지라, 화면 폴러(2.5초)가 그 전에 옛 'ready_for_review'를
+    #   보고 **"✅ 완료"를 띄운다** — 음성은 아직 만들어지는 중인데 다 됐다고 말한다.
+    #   preview·render가 쓰는 선기록 패턴과 같다(TOCTOU). 'tts'는 _MIX_ACTIVE_STAGES라
+    #   중간에 죽어도 staleness 가드가 failed로 알려준다.
+    store.update_mix_job(job_id, status="tts")
     background_tasks.add_task(resynth_tts_job, job_id, DB_PATH, _MIX_WORK_DIR)
     return {"ok": True}
 
@@ -15001,8 +15012,14 @@ def api_produce_mix_start(request: Request, background_tasks: BackgroundTasks, b
             "ok": False, "error_code": "daily_limit",
             "error": "오늘 영상 만들기 횟수를 다 썼어요. 결제하면 더 만들 수 있어요."})
     # ★음성 키가 없으면 제작을 막는다(2026-09-01 사장님 확정) — keyroute가 판단처.
+    # ⚠️막을 때 **횟수와 클레임을 둘 다 되돌린다**(2026-09-02). 바로 아래 포인트 실패
+    #   경로엔 이 되돌림이 있는데 키 게이트만 빠져 있었다 — 그래서 키 없는 사람은
+    #   아무것도 못 만들고 오늘 1회를 잃고(체험이면 평생 1회), 30초간 409로 재시도도
+    #   막혔다. 막힌 사람을 두 번 벌하는 꼴이다.
     _blocked = _need_own_key_or_402(cid, tts=True)
     if _blocked:
+        uncount(cid, "render")
+        _store.release_mix_claim(_fp)
         return _blocked
     _charged = {}                      # ★깎은 액수를 그대로 job에 남긴다(환불이 재판단하지 않게)
     _denied = _charge_or_402(cid, pricing.OP_MIX, keyroute.SVC_GEMINI, out=_charged)
