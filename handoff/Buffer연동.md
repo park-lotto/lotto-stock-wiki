@@ -37,3 +37,33 @@
 - support.buffer.com/en-us/articles/using-buffers-api-GtIYIQilz5 (요금제·채널·키)
 - developers.buffer.com/guides/hosting-media.html (공개 URL 방식, 업로드 엔드포인트 없음)
 - postproxy.dev / zernio.com 정리글 (제3자 OAuth 미개방)
+
+## 2026-09-02 — 유튜브 예약이 통째로 거절되던 것 (해결, 게이트 대기)
+
+**증상**: 버퍼 예약발행에서 유튜브만 안 됨. 인스타·틱톡은 됨.
+
+**뿌리(라이브 로그 실측, 9/1~9/2 6회 전부 동일)**
+```
+Field "type" is not defined by type "YoutubePostMetadataInput"
+```
+`_post_metadata`가 유튜브에 `{"type":"short","privacy":...}`를 보냈는데
+**type이라는 칸이 유튜브 스키마엔 없다**(인스타에만 있는 축이었다).
+GraphQL 검증 단계에서 죽어 유튜브는 100% 실패.
+
+**introspection 실측 — YoutubePostMetadataInput 8필드**
+categoryId · title · embeddable · isAiGenerated · license · madeForKids ·
+notifySubscribers · privacy
+
+**고친 것** (`shopping_shorts/buffer_api.py`)
+- 유튜브: type 제거 → `title`(본문 첫 줄, 100자·<> 정리) + `categoryId="22"` + `privacy`
+- 틱톡: `TiktokPostMetadataInput` **자체가 없음**을 확인 → metadata 안 붙이는 현행이 정답
+- 인스타: type/shouldShareToFeed 맞음. 단 **개인 프로필 계정이면 Buffer가 거절**
+  ("personal profile channels require notification scheduling") → `_humanize`로
+  한국어 안내 변환(프로페셔널 계정 전환 안내)
+
+**검증**: 없는 channelId로 3개 SNS 모두 createPost를 실제 Buffer에 보내
+스키마 검증을 통과해 "Channel not found"까지 도달함을 확인(게시는 안 됨).
+
+⏭ 다음
+- track finish 게이트 통과 확인 → 라이브에서 유튜브 실제 예약 1건 성공 확인
+- 인스타는 계정을 프로페셔널로 전환한 뒤 재시도
