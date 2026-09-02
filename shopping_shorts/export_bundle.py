@@ -89,9 +89,45 @@ def safe_name(s, default="export"):
     return (s or default)[:60]
 
 
+def _playable(path):
+    """이 mp4에 **실제로 볼 수 있는 화면이 들었나**. 못 재면 False.
+
+    ★크기로는 못 가린다(2026-09-03). 아래 _cut_clip 주석 참조 — ffmpeg가 rc=0으로
+      남기는 빈 껍데기는 262바이트지만 0바이트는 아니다. 스트림을 직접 물어봐야 한다.
+    ffprobe가 없거나 못 재면 **True로 둔다** — 판정 못 하는 것을 실패로 몰면
+    멀쩡한 조각까지 버린다(있던 기능이 죽는 쪽이 더 나쁘다).
+    """
+    try:
+        r = subprocess.run(
+            ["ffprobe", "-v", "error", "-select_streams", "v:0",
+             "-show_entries", "stream=codec_type", "-of", "csv=p=0", str(path)],
+            capture_output=True, stdin=subprocess.DEVNULL, timeout=30)
+    except Exception:      # noqa: BLE001 — ffprobe가 없는 환경도 있다
+        return True
+    if r.returncode != 0:
+        return True        # 판정 실패 — 조각을 살린다(위 주석)
+    return b"video" in (r.stdout or b"")
+
+
 def _cut_clip(src, start, end, out_path):
     """소스에서 [start,end] 구간을 잘라 out_path(mp4)로. 프레임 정확 재인코딩(짧은 클립).
-    실패하면 예외를 삼키고 False — 한 클립 실패가 번들 전체를 막지 않는다."""
+    실패하면 예외를 삼키고 False — 한 클립 실패가 번들 전체를 막지 않는다.
+
+    ## ★크기가 아니라 '재생 가능한가'로 본다 (2026-09-03 고객 제보)
+
+    고객 캡컷에 **파일 손상됨 22개**가 떴다. 전부 `cut_*.mp4`였고 `beat_*.mp3`는 멀쩡했다
+    — mp3는 shutil.copy고 mp4만 여기를 지나기 때문이다.
+
+    범인: ffmpeg는 **소스 끝 너머를 -ss로 잡으면 오류를 안 낸다.** rc=0으로 정상 종료하면서
+    스트림이 하나도 없는 껍데기 mp4를 남긴다(실측 ffmpeg 8.1.2: 5초 소스에 `-ss 20` →
+    rc=0, 262바이트, nb_frames 없음, duration=N/A). 종전 `size > 0`은 이걸 **성공이라 했고**,
+    그 파일이 캡컷까지 그대로 갔다. 프론트의 2048바이트 가드도 우회한다 — 조각이
+    부분적으로 겹쳐 조금 커지면 크기 문턱을 넘어버린다.
+
+    그래서 크기 대신 **화면 스트림이 실제로 있는지** 묻는다. 없으면 파일을 지우고 False —
+    남겨두면 캡컷 보관함이 그걸 집어가 '파일 손상됨'이 된다. 호출부는 False면
+    그 조각을 건너뛰므로(`if _cut_clip(...)`) 나머지 조각은 그대로 나간다.
+    """
     dur = max(0.1, float(end) - float(start))
     try:
         subprocess.run(
@@ -99,7 +135,18 @@ def _cut_clip(src, start, end, out_path):
              "-t", f"{dur:.3f}", "-c:v", "libx264", "-pix_fmt", "yuv420p", "-an",
              "-r", "30", str(out_path)],
             check=True, capture_output=True, stdin=subprocess.DEVNULL)
-        return out_path.exists() and out_path.stat().st_size > 0
+        if not (out_path.exists() and out_path.stat().st_size > 0):
+            return False
+        if not _playable(out_path):
+            # 재생 불가 껍데기 — 남기면 캡컷이 집어간다. 왜 비었는지 사람이 읽게 남긴다.
+            print("컷 조각이 비어서 버린다(%s): 소스 %s의 %.3f초는 범위 밖일 수 있다"
+                  % (getattr(out_path, "name", out_path), src, float(start)), file=sys.stderr)
+            try:
+                out_path.unlink()
+            except OSError:
+                pass
+            return False
+        return True
     except Exception:
         import traceback
         traceback.print_exc(file=sys.stderr)
