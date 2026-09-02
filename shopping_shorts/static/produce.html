@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="utf-8"/>
@@ -1431,6 +1431,9 @@
   .s2-bank .bk-or::after{content:"";flex:1;height:1px;background:var(--line)}
   /* 재생성 도는 동안 — 그 칸만 흐리게 + 클릭 잠금(다른 칸은 계속 쓸 수 있다). */
   .s2-row.s2-busy .s2-sent{opacity:.6;font-style:italic}
+  /* ✍ 내가 직접 쓰기 — 빈 칸에 '여기에 쓰세요'를 흐리게 띄운다(2026-09-01).
+     빈 contenteditable은 아무 안내가 없어 "고장난 칸"으로 읽힌다. */
+  .s2-sent:empty::before{content:attr(data-ph);opacity:.38}
   .s2-row.s2-busy .s2-swap{pointer-events:none;opacity:.4}
   .s2-cand .fq{margin-left:auto;flex:none;font-size:11px;color:var(--s2-sub);background:var(--inset);border-radius:4px;padding:2px 7px;white-space:nowrap}
   .s2-dfoot{display:none}
@@ -1768,6 +1771,13 @@
           <div id="cleanPreviewWrap" style="margin-top:14px;display:none">
             <!-- 문구: "내 영상으로 미리보기"는 뭘 하는 버튼인지 안 보였다 → 행동을 그대로 쓴다(2026-07-30 사장님 지시) -->
             <button id="btnCleanPreview" class="cta" onclick="startCleanPreview()">✨ 자막제거 시작하기</button>
+            <!-- ★가격을 누르기 **전에** 보여준다(2026-09-02). 종전엔 이 패널 어디에도
+                 P·포인트·차감이라는 글자가 없었고, 아래 안내의 "추가 비용 없이"만 보여
+                 오히려 무료로 읽혔다. 실제로는 _charge_clean이 선차감하고, 고객이 금액을
+                 처음 보는 곳은 **잔액 부족으로 실패한 뒤**였다.
+                 값은 /api/settings/points(단가표·잔액)에서 가져온다 — 화면에 숫자를 박으면
+                 사장님이 단가를 바꿨을 때 거짓말이 된다(0순위-B). -->
+            <div id="cleanCost" class="ctahint" style="margin-top:6px"></div>
             <div class="ctahint">미리 확인하면 최종 렌더가 이 결과를 그대로 써서 추가 비용 없이 빨라져요</div>
             <div id="cleanPreview" style="margin-top:12px"></div>
           </div>
@@ -2134,7 +2144,7 @@
             <div id="hcCopyMsg" class="hint" style="margin-top:4px"></div>
           </div>
           <div style="font-size:13px;margin-bottom:4px">헤드카피 문구</div>
-          <textarea id="hcText" rows="2" placeholder="예: 써보면 놀라는 이것" oninput="updateHC()"
+          <textarea id="hcText" rows="2" placeholder="예: 써보면 놀라는 이것" oninput="hcTouched()"
             style="width:100%;background:var(--inset);border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px;margin-bottom:12px;resize:vertical;font-family:inherit;font-size:14px;line-height:1.4"></textarea>
           <!-- 🖍 글자별 색 (2026-08-30 사장님 "바꾸고 싶은 글자만 컬러 바꿀 수 있게").
                ★단어를 **눌러서** 고른다 — 손으로 타이핑하는 옛 UI(2026-08-24에 뺌)는
@@ -2234,28 +2244,28 @@
                 <div hidden style="display:none">
                   <span id="hcFontPicker"><button type="button" id="hcFontBtn" onclick="toggleFontMenu(event)">폰트</button>
                     <div id="hcFontMenu" style="display:none"></div></span>
-                  <select id="hcFont" onchange="updateHC()"></select>
-                  <input id="hcColor" type="color" value="#FF8800" oninput="updateHC()">
-                  <select id="hcWeight" onchange="updateHC()">
+                  <select id="hcFont" onchange="hcTouched()"></select>
+                  <input id="hcColor" type="color" value="#FF8800" oninput="hcTouched()">
+                  <select id="hcWeight" onchange="hcTouched()">
                     <option value="700">굵게</option><option value="900" selected>아주 굵게</option><option value="400">보통</option>
                   </select>
-                  <span id="hcSizeV">64</span><input id="hcSize" type="range" min="28" max="120" value="64" oninput="updateHC()">
-                  <span id="hcYV">14</span><input id="hcY" type="range" min="0" max="100" value="14" oninput="HC_Y_TOUCHED=true;updateHC()">
-                  <span id="hcXV">50</span><input id="hcX" type="range" min="0" max="100" value="50" oninput="updateHC()">
+                  <span id="hcSizeV">64</span><input id="hcSize" type="range" min="28" max="120" value="64" oninput="hcTouched()">
+                  <span id="hcYV">14</span><input id="hcY" type="range" min="0" max="100" value="14" oninput="HC_Y_TOUCHED=true;hcTouched()">
+                  <span id="hcXV">50</span><input id="hcX" type="range" min="0" max="100" value="50" oninput="hcTouched()">
                 </div>
                 <!-- ③ 테두리 · 박스 -->
                 <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px">
                   <div style="font-size:13px;font-weight:700;margin-bottom:8px">🎨 테두리 · 박스</div>
                   <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
-                    <input id="hcOutline" type="checkbox" checked onchange="updateHC()"> 외곽선
-                    <input id="hcOutColor" type="color" value="#000000" oninput="updateHC()">
-                    <span style="color:var(--sub);font-size:12px">두께 <input id="hcOutW" type="range" min="0" max="12" value="6" oninput="updateHC()"></span>
+                    <input id="hcOutline" type="checkbox" checked onchange="hcTouched()"> 외곽선
+                    <input id="hcOutColor" type="color" value="#000000" oninput="hcTouched()">
+                    <span style="color:var(--sub);font-size:12px">두께 <input id="hcOutW" type="range" min="0" max="12" value="6" oninput="hcTouched()"></span>
                   </label>
                   <label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;cursor:pointer">
-                    <input id="hcBox" type="checkbox" onchange="updateHC()"> 배경 박스
-                    <input id="hcBoxColor" type="color" value="#000000" oninput="updateHC()">
-                    <span style="color:var(--sub);font-size:12px">여백 <input id="hcBoxPad" type="range" min="0" max="40" value="16" oninput="updateHC()"></span>
-                    <span style="color:var(--sub);font-size:12px">투명도 <input id="hcBoxOpacity" type="range" min="20" max="100" value="80" oninput="updateHC()"></span>
+                    <input id="hcBox" type="checkbox" onchange="hcTouched()"> 배경 박스
+                    <input id="hcBoxColor" type="color" value="#000000" oninput="hcTouched()">
+                    <span style="color:var(--sub);font-size:12px">여백 <input id="hcBoxPad" type="range" min="0" max="40" value="16" oninput="hcTouched()"></span>
+                    <span style="color:var(--sub);font-size:12px">투명도 <input id="hcBoxOpacity" type="range" min="20" max="100" value="80" oninput="hcTouched()"></span>
                   </label>
                 </div>
                           </div>
@@ -2302,19 +2312,19 @@
                   <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:8px">① 글씨</div>
                   <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
                     <label style="font-size:12px;color:var(--sub)">폰트
-                      <select id="capFont" onchange="updateCaption()" style="background:#0a1017;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:5px 8px"></select></label>
+                      <select id="capFont" onchange="capTouched()" style="background:#0a1017;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:5px 8px"></select></label>
                     <label style="font-size:12px;color:var(--sub)">색상
-                      <input id="capColor" type="color" value="#FFFFFF" oninput="updateCaption()" style="vertical-align:middle;cursor:pointer"></label>
+                      <input id="capColor" type="color" value="#FFFFFF" oninput="capTouched()" style="vertical-align:middle;cursor:pointer"></label>
                   </div>
                   <div style="margin-top:8px;font-size:12px;color:var(--sub)">크기 <b id="capSizeV">54</b>px
-                    <input id="capSize" type="range" min="28" max="96" value="54" oninput="updateCaption()" style="width:100%"></div>
+                    <input id="capSize" type="range" min="28" max="96" value="54" oninput="capTouched()" style="width:100%"></div>
                 </div>
 
                 <!-- ② 자리 -->
                 <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px">
                   <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:8px">② 자리</div>
                   <div style="font-size:12px;color:var(--sub)">세로 위치 <b id="capYV">84</b>%
-                    <input id="capY" type="range" min="0" max="100" value="84" oninput="CAP_POS_TOUCHED=true;updateCaption()" style="width:100%"></div>
+                    <input id="capY" type="range" min="0" max="100" value="84" oninput="CAP_POS_TOUCHED=true;capTouched()" style="width:100%"></div>
                   <!-- ★가로 정렬 버튼(2026-08-25 고객 요청 "자막이 한쪽으로 치우쳐져 있어서
                        정렬하는 부분이 추가되면 좋겠어요"). 자막은 드래그로 가로 이동이 되는데
                        (CAP_X_PCT) **되돌리는 길이 없었다** — 한 번 끌면 중앙으로 못 돌아온다.
@@ -2332,15 +2342,15 @@
                 <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px">
                   <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:8px">③ 테두리 · 박스 · 효과</div>
                   <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
-                    <input id="capOutline" type="checkbox" checked onchange="updateCaption()"> 외곽선
-                    <input id="capOutColor" type="color" value="#000000" oninput="updateCaption()">
-                    <span style="color:var(--sub);font-size:12px">두께 <input id="capOutW" type="range" min="0" max="12" value="5" oninput="updateCaption()"></span>
+                    <input id="capOutline" type="checkbox" checked onchange="capTouched()"> 외곽선
+                    <input id="capOutColor" type="color" value="#000000" oninput="capTouched()">
+                    <span style="color:var(--sub);font-size:12px">두께 <input id="capOutW" type="range" min="0" max="12" value="5" oninput="capTouched()"></span>
                   </label>
                   <label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;cursor:pointer">
-                    <input id="capBox" type="checkbox" onchange="updateCaption()"> 배경 박스
-                    <input id="capBoxColor" type="color" value="#000000" oninput="updateCaption()">
-                    <span style="color:var(--sub);font-size:12px">여백 <input id="capBoxPad" type="range" min="0" max="40" value="12" oninput="updateCaption()"></span>
-                    <span style="color:var(--sub);font-size:12px">투명도 <input id="capBoxOpacity" type="range" min="20" max="100" value="80" oninput="updateCaption()"></span>
+                    <input id="capBox" type="checkbox" onchange="capTouched()"> 배경 박스
+                    <input id="capBoxColor" type="color" value="#000000" oninput="capTouched()">
+                    <span style="color:var(--sub);font-size:12px">여백 <input id="capBoxPad" type="range" min="0" max="40" value="12" oninput="capTouched()"></span>
+                    <span style="color:var(--sub);font-size:12px">투명도 <input id="capBoxOpacity" type="range" min="20" max="100" value="80" oninput="capTouched()"></span>
                   </label>
                   <div class="hint" style="font-size:11px;margin-top:4px"></div>
                   <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;align-items:center">
@@ -2906,6 +2916,20 @@
           </div>
           <button class="btn-next" style="width:270px;margin-top:8px" onclick="generateThumb()">썸네일 생성</button>
           <div id="thumbSaveStatus" class="hint" style="margin-top:6px"></div>
+
+          <!-- 🖼 내 프리셋(2026-09-02 사장님 "만들어진것 프리셋으로 저장하는것 만들어줘.
+               자리는 썸네일 생성 바로 아래"). 지금 만든 구성(글자·스티커·도형·배지)을 담아두고
+               다음 영상에서 딸깍 한 번에 그대로 얹는다.
+               ★위쪽 '🖼 프리셋 — 한 번에 스타일 적용'(HC_PRESETS)과 다른 물건이다:
+                 저건 고른 글자 하나의 **색·스타일**만 바꾸고, 이건 **화면 구성 전체**를 바꾼다.
+               ★배경은 안 담는다 — 다음 영상에 쓸 것이라 그 영상의 배경 위에 얹혀야 한다. -->
+          <div style="width:270px;margin-top:14px;border-top:1px solid var(--line);padding-top:10px">
+            <div style="font-size:12px;color:var(--sub);margin-bottom:5px">🖼 내 프리셋 — 지금 구성을 담아 다음 영상에 그대로</div>
+            <button class="tab" style="width:100%;min-width:auto;padding:8px;font-size:12px"
+                    onclick="saveThumbPreset()">💾 지금 구성을 프리셋으로 담기</button>
+            <div id="myThumbPresetStatus" class="hint" style="margin-top:5px;font-size:11px"></div>
+            <div id="myThumbPresets" style="display:flex;flex-wrap:wrap;gap:7px;margin-top:8px"></div>
+          </div>
         </div>
       </div>
     </section>
@@ -3229,6 +3253,12 @@
           </div>
           <div class="s2-regen">
             <button class="btn-next" id="s2GenBtn" onclick="s2Generate()">✨ 이 스타일로 대본 만들기</button>
+            <!-- ✍ 내가 직접 쓰기(2026-09-01 사장님 "그냥 내 대본을 그대로 하고 싶을 때 —
+                 빈칸으로 자리를 만들어주고 쓸 수 있게"). AI를 안 부른다: 빈 칸만 만들고
+                 사장님이 채운 그대로 확정된다(각색 없음). 칸 구성은 고른 스타일을 따른다. -->
+            <button class="btn-ghost" id="s2MineBtn" style="min-width:auto"
+                    title="AI를 부르지 않고 빈 칸을 만들어 드립니다 — 쓰신 문장이 그대로 대본이 됩니다"
+                    onclick="s2AddMineDraft()">✍ 내가 직접 쓰기</button>
             <span class="hint" id="s2GenHint" style="margin:0"></span>
           </div>
         </div>
@@ -6089,6 +6119,33 @@ function updateCaption(){
   else if(cs.effect==='pop') el.classList.add('eff-pop');
   else if(cs.effect==='sparkle') el.classList.add('eff-sparkle');
   renderSparkles(cs.effect==='sparkle', cs.y_pct);
+  // ★여기서 저장한다(2026-09-02). 종전엔 이 함수가 STATE.captionStyle을 채우고
+  //   **미리보기만** 그렸다 — 저장(saveHeadcopy)은 안 불렀다. 그래서 자막 색·크기·
+  //   위치·외곽선·박스를 손보면 화면은 바뀌는데 새로고침하면 원래대로 돌아갔고,
+  //   최종 렌더도 옛 스타일로 나갔다("미리보기엔 보이는데 영상엔 안 나온다").
+  //   실측 2026-09-02: capColor를 #ff00cc로 바꿔 미리보기는 마젠타가 됐지만
+  //   새로고침 후 #ffffff. 서버 caption_style도 흰색 그대로였다.
+  //   ★자막 컨트롤 11개에 saveHeadcopy()를 각각 붙이지 않는다 — 하나만 빠뜨려도
+  //     같은 병이 재발하고, 나중에 컨트롤이 늘면 또 빠진다. 값을 만드는 이 한 곳에서
+  //     저장까지 한다(0순위-B).
+  //   ★디바운스: 슬라이더는 드래그 중 oninput이 매 픽셀 뜬다. 그대로 쏘면 초당 수십 번
+  //     POST가 나간다 — 손을 멈춘 뒤 한 번만 보낸다.
+  _capSaveSoon();
+}
+let _CAP_SAVE_T = null;
+// ★"사람이 만진 뒤"에만 저장한다. updateCaption은 패널에 들어올 때도 불리는데(복원 경로),
+//   그때 DOM이 아직 기본값이면 **저장된 스타일을 기본값으로 덮어쓴다** — 이 파일이 이미
+//   같은 사고를 겪었다("색이 #ffe100→#ff8800으로 죽었다", 5510행 주석). 복원은
+//   applyConfig가 DOM을 채운 뒤 updateCaption을 부르므로 값은 맞지만, 복원할 게 없는
+//   경우(PENDING_STYLE_RESTORE=false)까지 저장하면 새 사고를 내가 만드는 셈이다.
+//   그래서 **입력 이벤트에서 온 호출만** 저장한다.
+let _CAP_USER_EDIT = false;
+function capTouched(){ _CAP_USER_EDIT = true; updateCaption(); }
+function _capSaveSoon(){
+  if(!_CAP_USER_EDIT) return;                      // 복원·초기 렌더는 저장하지 않는다
+  if(typeof saveHeadcopy !== 'function') return;   // 하네스엔 없다(슬라이스 테스트 보호)
+  clearTimeout(_CAP_SAVE_T);
+  _CAP_SAVE_T = setTimeout(() => { try{ saveHeadcopy(); }catch(e){} }, 500);
 }
 // 반짝 효과: 자막 주위에 ✨ 입자를 뿌려 깜빡이게(미리보기 연출). 최종 영상은 서버가 알파 깜빡임으로 렌더.
 function renderSparkles(on, ypct){
@@ -7070,6 +7127,20 @@ function updateHC(){
   // 🖍 낱말 알약도 같이 갱신 — 문구를 고치면 알약이 따라와야 한다(2026-08-30)
   try{ renderHCWords(); }catch(e){}
   if(document.getElementById('fullPresets')) renderStyleCards();
+  // ★자막(updateCaption)과 **같은 이유·같은 방식**으로 저장한다(2026-09-02).
+  //   헤드카피 컨트롤 13개도 전부 updateHC()만 불러서, 색·크기·자리를 바꾸면
+  //   미리보기만 바뀌고 새로고침하면 되돌아갔다(실측: #00ff88 → 새로고침 후 #ffffff).
+  //   저장은 사람이 만졌을 때만 — 복원·초기 렌더에서 저장하면 빈 DOM 기본값이
+  //   저장된 스타일을 덮는다(이 파일의 "#ffe100→#ff8800" 사고와 같은 자리).
+  _hcSaveSoon();
+}
+let _HC_SAVE_T = null, _HC_USER_EDIT = false;
+function hcTouched(){ _HC_USER_EDIT = true; updateHC(); }
+function _hcSaveSoon(){
+  if(!_HC_USER_EDIT) return;                       // 복원·초기 렌더는 저장하지 않는다
+  if(typeof saveHeadcopy !== 'function') return;   // 하네스 보호(슬라이스 테스트)
+  clearTimeout(_HC_SAVE_T);
+  _HC_SAVE_T = setTimeout(() => { try{ saveHeadcopy(); }catch(e){} }, 500);
 }
 
 // 스타일 프리셋 — 고민없이 누르면 색·크기·외곽선 한 번에 지정(핵심 포인트)
@@ -9867,12 +9938,24 @@ async function renderSourceAnalysis(){
   // ★빈 shortcode 보정은 **여기 안에서** 한다(2026-08-31). 별도 함수로 빼면
   //   테스트 하네스(js_harness)가 이 함수만 떼어 실행할 때 ReferenceError로 죽는다 —
   //   게이트가 실제로 잡았다. 보정 자체가 실패해도 아래 흐름은 종전대로 돈다.
+  // ★2026-09-02: 대상을 **빈 shortcode 전부**로 넓힌다(URL 종류를 안 가린다).
+  //   종전엔 `/api/produce/footage/`(내 파일 올리기)만 보정해서, 「🔗 URL 직접 추가」로
+  //   담은 영상은 shortcode가 ''인 채로 남았다. 그런데 서버(app.py api_produce_autoload)는
+  //   빈 shortcode를 **sha1(url)[:12]로 채워서** 저장한다 — 즉 같은 영상을 두고
+  //   서버는 sha1 키로 쓰고 화면은 ''로 조회해 **영영 만나지 못했다**(0순위-B: 같은
+  //   판단을 두 곳에서 따로 지으면 반드시 어긋난다).
+  //   실측(2026-09-02 라이브, 인스타 릴스 3개): 서버엔 brief·segments가 다 있는데
+  //   (14d95dbf8729·03b8c77e91db·bd2f67e84fce = 각 URL의 sha1) 화면은 "0/3개 읽음 ·
+  //   분석 중"에 영구 고정 → 2단계에서 씨앗 카드가 하나도 안 생겨 **고객이 완전히 막혔다**.
+  //   여기서 서버와 **같은 규칙**(sha1(url) 앞 12자)으로 채우면 조회 키가 일치한다.
   try{
-    const _need = (HANDOFF||[]).filter(h => h && !h.shortcode
-                                        && String(h.url||'').includes('/api/produce/footage/'));
+    const _need = (HANDOFF||[]).filter(h => h && !h.shortcode && h.url);
     if(_need.length && typeof crypto !== 'undefined' && crypto.subtle){
       for(const _h of _need){
-        const _b = await crypto.subtle.digest('SHA-1', new TextEncoder().encode(_h.url));
+        // ★서버와 **글자 하나까지 같은 입력**으로 해싱한다 — app.py는
+        //   sha1(url.strip())이라 여기서 trim()을 빼면 앞뒤 공백 하나로 키가 갈린다.
+        const _b = await crypto.subtle.digest('SHA-1',
+                         new TextEncoder().encode(String(_h.url||'').trim()));
         _h.shortcode = Array.from(new Uint8Array(_b))
                             .map(x=>x.toString(16).padStart(2,'0')).join('').slice(0,12);
       }
@@ -12496,14 +12579,55 @@ function refreshSub(){
   // T7: 못 쓰는 컨트롤은 비활성 노출 대신 숨긴다 — 자막제거 켜짐+매칭됨일 때만 미리보기가 등장.
   const wrap=document.getElementById('cleanPreviewWrap');
   if(wrap) wrap.style.display = (STATE.subtitleRemoval && MIX_JOB) ? '' : 'none';
+  // ★토글을 누르지 않고 이 화면으로 돌아온 경우(작업 복원·단계 이동)에도 가격을 채운다 —
+  //   onSubToggle에만 걸면 "이미 켜둔 채 돌아온" 고객에겐 안내가 영영 안 뜬다.
+  if(STATE.subtitleRemoval && typeof renderCleanCost === 'function') renderCleanCost();
   // 이미 끝난 제거 결과를 서버에서 되살린다(화면 전환으로 DOM이 비워져도 결과는 남는다).
   restoreCleanPreview();
+}
+// 자막제거 단가·잔액을 **누르기 전에** 보여준다(2026-09-02).
+// ★숫자를 화면에 박지 않는다 — 단가는 서버(pricing)가 정하고 사장님이 바꿀 수 있다.
+//   박아두면 단가를 바꾼 날부터 화면이 거짓말을 한다(0순위-B).
+// ★키를 등록한 고객·사장님(cid 0)은 실제로 안 깎인다(_charge_clean의 should_charge).
+//   그 경우까지 "5P 차감"이라고 하면 반대로 겁을 준다 → 서버가 준 값이 0이면 무료라고 쓴다.
+// 실패해도 조용히 넘어간다 — 가격 안내가 안 떠도 기능 자체는 종전대로 돌아야 한다.
+let _cleanCostCache = null;
+async function renderCleanCost(){
+  const el = document.getElementById('cleanCost');
+  if(!el) return;
+  try{
+    if(!_cleanCostCache){
+      const r = await fetch('/api/settings/points', {credentials:'include'});
+      if(!r.ok) return;
+      _cleanCostCache = await r.json();
+    }
+    const d = _cleanCostCache || {};
+    // ★업체명이 들어간 키를 여기서 쓰지 않는다 — 이 파일은 고객 화면이라 벤더명이
+    //   한 글자도 있으면 안 되고, tests/test_subclean_ui.py가 파일 전체를 훑어 막는다
+    //   (주석까지 검사한다. 실제로 이 주석에 이름을 적었다가 게이트에 잡혔다).
+    //   그래서 서버가 중립 이름(subclean_*)으로도 함께 내려준다.
+    const price = Number(d.subclean_price);
+    // ★"깎이는가"는 서버 판정을 그대로 믿는다 — 내 키·관리자 면제·사장님(cid 0)은
+    //   단가가 5P라도 한 푼도 안 나간다. 화면이 그 조건을 다시 세면 어긋난다(0순위-B).
+    //   그 필드가 없는 옛 서버 응답이면 단가만 보고 판단(종전 동작, 회귀 없음).
+    const willCharge = (typeof d.subclean_charged === 'boolean')
+                       ? d.subclean_charged : (price > 0);
+    if(!willCharge || !(price > 0)){
+      el.textContent = '내 키로 처리돼서 포인트는 차감되지 않아요.'; return;
+    }
+    const bal = Number(d.balance);
+    const short = Number.isFinite(bal) && bal < price;
+    el.innerHTML = '💳 이 단계는 <b>' + price + 'P</b>가 차감돼요'
+      + (Number.isFinite(bal) ? ' · 남은 포인트 <b>' + bal + 'P</b>' : '')
+      + (short ? ' <span style="color:var(--fire)">— 포인트가 모자라 지금은 실행할 수 없어요</span>' : '');
+  }catch(e){ /* 가격 안내 실패가 기능을 막으면 안 된다 */ }
 }
 async function onSubToggle(){
   STATE.subtitleRemoval = document.getElementById('subToggle').checked;
   // T7: disabled 노출 대신 숨김 — 자막제거 켜짐+매칭됨일 때만 미리보기 버튼이 나타난다.
   const cwrap=document.getElementById('cleanPreviewWrap');
   if(cwrap) cwrap.style.display = (STATE.subtitleRemoval && MIX_JOB) ? '' : 'none';
+  if(STATE.subtitleRemoval) renderCleanCost();
   const s=document.getElementById('subState');
   if(!MIX_JOB){ if(s) s.textContent='⚠️ 2단계 매칭 후 적용됩니다(설정은 기억됨).'; return; }
   try{
@@ -12550,10 +12674,41 @@ function engineBadge(g){
 // 일레븐랩스에서 성우를 등록·삭제한 뒤 addElevenVoice/removeElevenVoice) — 그래서 fetch와
 // 렌더 순서를 여기 한 곳에만 적는다(0순위-B: 두 벌이면 한쪽만 고쳐져 어긋난다).
 // 실패는 false를 반환하고 카드 자리에 표시한다.
+// 🎙 지난 작업의 성우를 화면에 되살린다(2026-09-02 사장님 "마지막 세팅한 TTS를 기억").
+//   서버(create_mix_job)는 이미 같은 값을 job.voice로 심어 3단계 1차 TTS부터 그 성우로
+//   합성한다. 이 함수는 **화면만** 맞춘다 — 안 맞추면 실제론 내 성우로 합성됐는데 카드는
+//   아무것도 안 골라진 상태라, 자막제거의 "음성을 아직 고르지 않았어요" 경고가 헛나가고
+//   고객이 불필요하게 4단계에서 성우를 다시 눌러 **재합성 비용을 낸다**(이 작업의 목적과 정반대).
+//   ★VOICE를 통째로 갈아끼우지 않고 저장된 스냅샷 값만 옮긴다 — 저장 당시엔 없던 필드가
+//     생겨도 화면 기본값이 살아남는다.
+function restoreLastVoice(lv){
+  if(!lv || !lv.preset_id) return;                 // 신규 고객(기억 없음) → 종전대로
+  if(VOICE.preset_id || VOICE.voice_id) return;    // 이미 고른 게 있으면 덮지 않는다
+  // preset_id로 그룹·톤을 되찾는다. 프리셋이 사라졌으면(성우 삭제) 조용히 포기한다.
+  for(const g of (VOICE_GROUPS||[])){
+    for(const [variant, v] of Object.entries(g.variants||{})){
+      if(v && v.preset_id===lv.preset_id){
+        SEL_VARIANT[g.group_id]=variant;
+        VOICE.preset_id=lv.preset_id;
+        VOICE.voice_id=lv.voice_id||v.voice_id;
+        VOICE.settings=Object.assign({}, v.voice_settings, lv.settings||{});
+        if(lv.speed!=null) VOICE.speed=lv.speed;
+        if(lv.silence_trim!=null) VOICE.silence_trim=lv.silence_trim;
+        if(lv.pace_mode!=null) VOICE.pace_mode=lv.pace_mode;
+        VOICE.group_id=g.group_id; VOICE.variant=variant;
+        const _vc=document.getElementById('voiceControls'); if(_vc) _vc.style.display='block';
+        const _vh=document.getElementById('voiceHint');     if(_vh) _vh.style.display='none';
+        return;
+      }
+    }
+  }
+}
+
 async function loadPresets(){
   try{
     const d=await (await fetch('/api/voice-presets?lang=KR')).json();
     VOICE_GROUPS=d.groups||[];
+    restoreLastVoice(d.last_voice);   // 🎙 지난 작업에서 쓰던 성우를 미리 골라둔다(2026-09-02)
     renderPresetCards();
     syncCurVoiceName();   // 처음 뜰 때도 접힌 줄에 지금 성우를 띄운다(2026-08-18)
     return true;
@@ -15462,6 +15617,140 @@ function initThumb(){
   // (같으면 저장된 목록만 돌려준다) 이 호출은 싸고, 프론트의 중복 캐시가 틀린 계층이었다.
   loadThumbFrames();
   renderThumbLayers();
+  loadThumbPresets();   // 🖼 내 프리셋(서버 저장) — 진입할 때마다 물어본다(다른 기기에서 담았을 수 있다)
+}
+
+// ── 🖼 내 썸네일 프리셋(2026-09-02) ─────────────────────────
+// 만든 구성(글자·스티커·도형·배지)을 담아 다음 영상에 그대로 얹는다.
+// ★배경(frame_ts·frame_url·img)은 담지도 얹지도 않는다 — 프리셋을 쓰는 곳은 **다른 영상**이라
+//   그 영상에서 고른 배경 위에 얹혀야 한다. 담으면 남의 영상 장면이 딸려온다.
+let MY_THUMB_PRESETS = [];
+let THUMB_PRESET_BUSY = false;
+
+function _thumbPresetMsg(text, color){
+  const el = document.getElementById('myThumbPresetStatus');
+  if (el){ el.textContent = text || ''; el.style.color = color || 'var(--sub)'; }
+}
+
+async function loadThumbPresets(){
+  try {
+    const r = await fetch('/api/produce/thumb/presets');
+    const d = await r.json().catch(() => ({ok: false}));
+    if (!d.ok) return;
+    MY_THUMB_PRESETS = d.presets || [];
+    renderMyThumbPresets();
+  } catch(e){ /* 목록을 못 불러와도 썸네일 편집 자체는 계속 된다 — 조용히 넘긴다 */ }
+}
+
+function renderMyThumbPresets(){
+  const box = document.getElementById('myThumbPresets');
+  if (!box) return;
+  if (!MY_THUMB_PRESETS.length){
+    box.innerHTML = '<div class="hint" style="font-size:11px;opacity:.75">아직 담은 프리셋이 없어요 — '
+                  + '마음에 드는 썸네일을 만든 뒤 위 버튼으로 담아두면, 다음 영상에서 한 번에 얹혀요.</div>';
+    return;
+  }
+  // 카드 = 그림 + 이름 + (✕ 삭제 / ✏️ 이름). ✕·✏️는 stopPropagation으로 '적용'과 분리한다
+  // — 안 그러면 지우려다 프리셋이 적용돼 편집 중이던 구성이 통째로 바뀐다.
+  box.innerHTML = MY_THUMB_PRESETS.map(p => `
+    <div style="position:relative;width:78px">
+      <div onclick="applyMyThumbPreset('${p.preset_id}')" title="누르면 이 구성으로 바꿔요"
+           style="cursor:pointer;border:2px solid var(--line);border-radius:6px;overflow:hidden;
+                  background:#111;aspect-ratio:9/16;display:flex;align-items:center;justify-content:center">
+        ${p.url ? `<img src="${p.url}" style="width:100%;height:100%;object-fit:cover" alt="">`
+                : `<span style="font-size:20px">🖼</span>`}
+      </div>
+      <div style="font-size:10px;line-height:1.3;margin-top:3px;word-break:break-all">${esc(p.name)}</div>
+      <button onclick="event.stopPropagation();renameMyThumbPreset('${p.preset_id}')" title="이름 바꾸기"
+              style="position:absolute;top:2px;left:2px;width:20px;height:20px;border:0;border-radius:50%;
+                     background:rgba(0,0,0,.62);color:#fff;font-size:10px;cursor:pointer;padding:0">✏️</button>
+      <button onclick="event.stopPropagation();deleteMyThumbPreset('${p.preset_id}')" title="지우기"
+              style="position:absolute;top:2px;right:2px;width:20px;height:20px;border:0;border-radius:50%;
+                     background:rgba(0,0,0,.62);color:#fff;font-size:11px;cursor:pointer;padding:0">✕</button>
+    </div>`).join('');
+}
+
+async function saveThumbPreset(){
+  if (THUMB_PRESET_BUSY) return;            // 연타로 같은 구성이 두 번 담기는 것을 막는다
+  const layers = THUMB_STATE.layers || [];
+  if (!layers.length){
+    _thumbPresetMsg('담을 것이 없어요 — 글자나 스티커를 먼저 얹어주세요', 'var(--fire)');
+    return;
+  }
+  const name = (prompt('프리셋 이름 (예: 빨강 강조형)', '') || '').trim();
+  if (!name) return;                        // 취소 — 조용히 아무것도 안 한다
+
+  THUMB_PRESET_BUSY = true;
+  _thumbPresetMsg('담는 중…');
+  try {
+    // 카드 그림 = 지금 미리보기 그대로. 폰트 로드까지 기다린 뒤 그려야 첫 저장부터 맞는
+    // 글꼴로 나간다(generateThumb과 같은 이유).
+    await renderThumbCanvas();
+    const cv = document.getElementById('thumbCanvas');
+    const blob = await new Promise(res => cv.toBlob(res, 'image/png'));
+    const fd = new FormData();
+    fd.append('name', name);
+    fd.append('layers', JSON.stringify(layers));
+    if (blob) fd.append('file', blob, 'preset.png');   // 이름은 서버가 무시한다(경로순회 방지)
+    const r = await fetch('/api/produce/thumb/presets', {method: 'POST', body: fd});
+    const d = await r.json().catch(() => ({ok: false}));
+    if (!r.ok || !d.ok){
+      _thumbPresetMsg(r.status === 401 ? '로그인이 풀렸습니다 — 새로고침 후 다시 시도하세요'
+                                       : (d.error || '담기 실패'), 'var(--fire)');
+      return;
+    }
+    MY_THUMB_PRESETS.unshift(d.preset);     // 최신순 — 서버 정렬(updated_at DESC)과 같은 순서
+    renderMyThumbPresets();
+    _thumbPresetMsg('✅ “' + name + '” 담았어요 — 다음 영상에서 눌러 쓰세요', 'var(--ok)');
+  } catch(e){
+    _thumbPresetMsg('담기 실패 — 연결을 확인하세요', 'var(--fire)');
+  } finally {
+    THUMB_PRESET_BUSY = false;
+  }
+}
+
+function applyMyThumbPreset(pid){
+  const p = MY_THUMB_PRESETS.find(x => x.preset_id === pid);
+  if (!p || !Array.isArray(p.layers)) return;
+  // ★깊은 복사로 얹는다. 얕게 넣으면 편집이 MY_THUMB_PRESETS 안의 원본을 같이 고쳐,
+  //   같은 프리셋을 다시 눌러도 처음 모습으로 안 돌아온다(조용한 오염).
+  THUMB_STATE.layers = JSON.parse(JSON.stringify(p.layers));
+  // 글자 레이어를 고른 상태로 둔다 — 얹자마자 문구를 고치는 것이 다음 할 일이다.
+  const ti = THUMB_STATE.layers.findIndex(L => !['sticker', 'shape', 'badge'].includes(L.kind));
+  THUMB_STATE.sel = ti >= 0 ? ti : 0;
+  renderThumbLayers(); renderThumbCanvas();
+  _thumbPresetMsg('“' + p.name + '” 얹었어요 — 문구만 바꾸면 끝이에요', 'var(--ok)');
+}
+
+async function renameMyThumbPreset(pid){
+  const p = MY_THUMB_PRESETS.find(x => x.preset_id === pid);
+  if (!p) return;
+  const name = (prompt('새 이름', p.name) || '').trim();
+  if (!name || name === p.name) return;
+  try {
+    const r = await fetch('/api/produce/thumb/presets/' + pid + '/rename',
+                          {method: 'POST', headers: {'Content-Type': 'application/json'},
+                           body: JSON.stringify({name})});
+    const d = await r.json().catch(() => ({ok: false}));
+    if (!r.ok || !d.ok){ _thumbPresetMsg(d.error || '이름 변경 실패', 'var(--fire)'); return; }
+    p.name = d.name;                         // 서버가 확정한 이름(길이 잘림 반영)
+    renderMyThumbPresets();
+    _thumbPresetMsg('');
+  } catch(e){ _thumbPresetMsg('이름 변경 실패 — 연결을 확인하세요', 'var(--fire)'); }
+}
+
+async function deleteMyThumbPreset(pid){
+  const p = MY_THUMB_PRESETS.find(x => x.preset_id === pid);
+  if (!p) return;
+  if (!confirm('“' + p.name + '” 프리셋을 지울까요?')) return;
+  try {
+    const r = await fetch('/api/produce/thumb/presets/' + pid, {method: 'DELETE'});
+    const d = await r.json().catch(() => ({ok: false}));
+    if (!r.ok || !d.ok){ _thumbPresetMsg(d.error || '삭제 실패', 'var(--fire)'); return; }
+    MY_THUMB_PRESETS = MY_THUMB_PRESETS.filter(x => x.preset_id !== pid);
+    renderMyThumbPresets();
+    _thumbPresetMsg('');
+  } catch(e){ _thumbPresetMsg('삭제 실패 — 연결을 확인하세요', 'var(--fire)'); }
 }
 // ── 썸네일 끝 ────────────────────────────────────────────────
 
@@ -15824,6 +16113,11 @@ function s2RenderSeeds(){
         text:c.text||'', structure:c.structure||{}, tiles:c.tiles||{}, pick:false});
     });
   }catch(e){}
+  // ★사장님이 직접 쓴 대본은 **AI PICK 목록에 없다** — 이 함수가 매번 S2.seeds를 새로
+  //   만들기 때문에, 다시 얹어주지 않으면 카드가 조용히 사라진다(2026-09-01 실사고:
+  //   "씨앗이 내 대본인데 씨앗을 고르라고 한다" — 원문 칸엔 내 대본이 보이는데
+  //   카드 선택은 1번 영상에 켜져 있었다). 보관처는 S2.manualSeed 한 곳(0순위-B).
+  if(S2.manualSeed && String(S2.manualSeed.text||'').trim()) S2.seeds.push(S2.manualSeed);
   // ★씨앗은 **지금 담긴 영상**을 따라간다(2026-08-18). 예전엔 `!S2.seed`일 때만
   //   채워서, 한 번 정해진 씨앗이 1단계에서 영상을 바꿔도 그대로 굳었다 —
   //   담긴 영상과 무관한 옛 영상이 대표로 남아 대본이 그쪽으로 끌려갔다.
@@ -15908,7 +16202,12 @@ function s2SeedSentences(text){
 //   ⚠️대본 **재료**는 씨앗 선택과 무관하게 담긴 영상 전부를 쓴다(그건 그대로다).
 function s2SeedOn(i){
   const s=S2.seeds[i]; if(!s) return false;
-  // 고른 게 있으면 그것, 없으면 대표(AI PICK)가 켜진 것으로 본다.
+  if(S2.seed===s) return true;                       // 같은 것을 고른 경우
+  // ★직접 쓴 대본이 씨앗이면 **영상 카드는 전부 꺼진다**(2026-09-01). 종전엔
+  //   shortcode가 없다는 이유로 대표(AI PICK)가 켜진 것처럼 보여, 사장님 대본을
+  //   넣어도 화면은 1번 영상을 가리켰다 — 화면이 진실과 다르게 말한 것이다.
+  if(S2.seed && !S2.seed.shortcode)
+    return !s.shortcode && String(s.text||'')===String(S2.seed.text||'');
   if(S2.seed && S2.seed.shortcode) return S2.seed.shortcode===s.shortcode;
   return !!s.pick;
 }
@@ -15933,8 +16232,10 @@ function s2ShowSeedText(i){
 function s2ManualSeed(){
   const t=prompt('씨앗으로 쓸 대본을 붙여넣으세요');
   if(!t || !t.trim()) return;
-  S2.seed={shortcode:'', title:'직접 쓴 대본', thumb:'', category:PM_CATEGORY||'', text:t.trim(), structure:{}, tiles:{}};
-  S2.seeds.push(S2.seed); s2RenderSeeds();
+  S2.manualSeed={shortcode:'', title:'✍ 직접 쓴 대본', thumb:'', category:PM_CATEGORY||'',
+                 text:t.trim(), structure:{}, tiles:{}, manual:true};
+  S2.seed=S2.manualSeed;            // 넣자마자 이게 씨앗이다
+  s2RenderSeeds(); saveWork();
 }
 // 고른 씨앗의 뼈대 — 첫 문장·칸 구성·밀도. 전부 데이터다(설명글을 늘리지 않는다).
 function s2RenderSeedInfo(){
@@ -16093,9 +16394,17 @@ function s2RenderStyles(){
   }).join('');
   row.innerHTML=auto+cards;
   const hint=document.getElementById('s2GenHint');
-  if(hint) hint.textContent = S2.picked.length
-    ? (S2.picked.length+'개 스타일 → '+S2.picked.length+'안이 나옵니다')
-    : 'AI가 스타일까지 골라 2안을 만듭니다';
+  // ★안의 개수는 s2AnCount() 한 곳에서만 센다(0순위-B). 종전엔 여기에 '2안'이
+  //   손으로 박혀 있었는데, 스타일을 하나도 안 고르면 실제로는 픽업 1안만 나온다
+  //   (실측 2026-09-02: s2AnCount()=1, drafts=1인데 화면은 "2안을 만듭니다").
+  //   생성 뒤 부족 경고도 s2AnCount()를 기준으로 도므로 경고조차 안 뜬다 —
+  //   즉 **안내만 거짓말**이었다. 같은 함수로 세면 어긋날 수가 없다.
+  if(hint){
+    const _n = s2AnCount();
+    hint.textContent = S2.picked.length
+      ? (S2.picked.length+'개 스타일 → '+_n+'안이 나옵니다')
+      : ('AI가 스타일까지 골라 '+_n+'안을 만듭니다');
+  }
 }
 function s2ClearStyles(){ S2.picked=[]; s2RenderStyles(); }
 // ★안은 최대 2개다(종전 그대로). 픽업도 한 안을 차지하므로 **함께 세어** 상한을 건다 —
@@ -16122,6 +16431,11 @@ function s2ToggleStyle(id){
   s2RenderStyles();
 }
 // ── 생성 ─────────────────────────────────────────────────────
+// 씨앗이 준비됐나 — **판정은 여기 한 곳**(0순위-B). 담긴 영상 카드(shortcode)든
+// 「직접 쓰기」로 넣은 내 대본(text)이든 재료가 있으면 생성할 수 있다.
+function s2SeedReady(s){
+  return !!(s && (s.shortcode || String((s && s.text) || '').trim()));
+}
 // ★생성 경로는 기존 pmRunGen과 **같은 엔드포인트**를 쓴다(판정·프롬프트가 한 벌, 0순위-B).
 async function s2Generate(){
   // ★누른 버튼을 잡아둔다(2026-08-21 사장님 "전체 다시 만들기를 눌러도 안 된다").
@@ -16133,13 +16447,17 @@ async function s2Generate(){
   const _hitOn = (txt, dis) => { if(_hit && _hit!==document.getElementById('s2GenBtn')){
       _hit.disabled=!!dis; _hit.textContent=txt; } };
   const s=S2.seed;
-  if(!s || !s.shortcode){
+  // ★'직접 쓴 대본'도 씨앗이다(2026-09-01 사장님 제보 — 붙여넣어도 생성이 막혔다).
+  //   shortcode만 보던 탓에 직접 쓴 대본은 영원히 통과 못 했다. 서버는 원래부터
+  //   shortcode 없이 base_script만으로 생성한다(app.py api_wiki_generate 실측) —
+  //   막고 있던 건 이 화면의 판정 한 줄뿐이었다.
+  if(!s2SeedReady(s)){
     // ★토스트만 띄우면 3초 뒤 사라져 "눌렀는데 아무 일도 안 난다"가 된다(2026-08-31).
     //   버튼 옆 힌트에 **남겨** 무엇을 해야 하는지 계속 보이게 한다.
-    toast('먼저 씨앗 영상을 고르세요 (직접 쓴 대본은 아직 생성 대상이 아닙니다)');
+    toast('먼저 씨앗을 고르세요 — 담긴 영상 카드 또는 「직접 쓰기」');
     const _h=document.getElementById('s2GenHint');
     if(_h){ _h.style.color='var(--fire)';
-      _h.textContent='① 재료에서 씨앗 영상을 하나 고른 뒤 눌러주세요 — 아직 안 골라졌어요.'; }
+      _h.textContent='① 재료에서 씨앗 영상을 고르거나, 「직접 쓰기」에 내 대본을 넣어주세요.'; }
     return;
   }
   const btn=document.getElementById('s2GenBtn'), hint=document.getElementById('s2GenHint');
@@ -16379,7 +16697,9 @@ function s2DraftHtml(dr,i){
   const tries=(dr.tries||[]).length;
   const again=tries>1?(' <small>· 다시 쓴 횟수 '+(tries-1)+'</small>'):'';
   // 통과는 조용히 뱃지 하나. 실패는 못 지킨 항목을 그대로 — 조용히 통과시키지 않는 게 핵심.
-  const gate=(dr.checks&&dr.checks.length)
+  // ★내 대본엔 스타일 게이트를 붙이지 않는다 — AI가 만든 게 아니라 사장님이 쓴 것이다.
+  //   'hook 문장틀 준수' 같은 빨간 줄을 띄우면 사장님 문장을 틀렸다고 말하는 꼴이 된다.
+  const gate=dr.mine?'':(dr.checks&&dr.checks.length)
     ? (dr.passed
         ? `<span class="s2-gate pass" title="게이트 통과 — 스타일 구조를 지켰습니다">✅ 구조 지킴${again}</span>`
         : `<span class="s2-gate fail">⚠️ ${esc(bad.map(c=>c.name).join(' · '))}</span>`)
@@ -16390,9 +16710,10 @@ function s2DraftHtml(dr,i){
     return `<div class="s2-row${isBad?' bad':''}" id="s2r-${i}-${j}" data-role="${esc(b.role||'')}">
       <div class="s2-row-in">
         <div class="s2-role"><div class="rn">${esc(s2RoleName(b.role))}</div><span id="s2sec-${i}-${j}">${s2SecTag(s2SecOf(b.text))}</span></div>
-        <div class="s2-sent" contenteditable="true" oninput="s2EditBeat(${i},${j},this)">${esc(b.text||'')}${chk}</div>
+        <div class="s2-sent" contenteditable="true" data-ph="${esc(s2RoleName(b.role).replace(/^\S+\s*/,''))} — 여기에 쓰세요"
+             oninput="s2EditBeat(${i},${j},this)">${esc(b.text||'')}${chk}</div>
         <div class="s2-acts">
-          <button class="s2-swap" onclick="s2OpenBank(${i},${j})">바꾸기</button>
+          ${dr.mine?'':`<button class="s2-swap" onclick="s2OpenBank(${i},${j})">바꾸기</button>`}
           <button class="s2-del" title="이 줄을 대본에서 아주 뺍니다 — 3단계에서 이 장면 칸도 안 생깁니다"
             onclick="s2DelBeat(${i},${j})">🗑 빼기</button>
         </div>
@@ -16400,21 +16721,63 @@ function s2DraftHtml(dr,i){
       <div class="s2-bank" id="s2b-${i}-${j}"><div class="hint">불러오는 중…</div></div>
     </div>`;
   }).join('');
-  const fix=(!dr.passed && bad.length)
+  const fix=(!dr.mine && !dr.passed && bad.length)
     ? `<div class="s2-fix">
          <div class="fx-t">⚠️ ${esc(bad.map(c=>c.name).join(' · '))} — 이 스타일에서 벗어났어요</div>
          <div class="fx-d">그대로 써도 되지만, 위 칸의 <b>바꾸기</b>로 틀에서 고르거나 전체를 다시 만들면 더 맞습니다.</div>
          <button class="fx-re" onclick="s2Generate()">🔄 전체 다시 만들기</button>
        </div>` : '';
   return `<div class="s2-draft ${i===0?'da':'db'}${i===S2.curDraft?' on':''}" id="s2d-${i}">
-    <div class="s2-dhead"><span class="s2-dname">${String.fromCharCode(65+i)}안${dr.style_name?(`<span class="sty"> · ${esc(dr.style_name)}</span>`):''}</span>
+    <div class="s2-dhead"><span class="s2-dname">${dr.mine?'✍ 내 대본':(String.fromCharCode(65+i)+'안'+(dr.style_name?(`<span class="sty"> · ${esc(dr.style_name)}</span>`):''))}</span>
       <span id="s2tot-${i}" title="우리 보이스 실측 속도로 환산한 예상 길이 — 릴스 기본은 30초 이내">${s2SecTag(s2DraftSec(dr), 30)}</span>${gate}</div>
     ${rows}${fix}
     <div class="s2-dfoot">
-      <button class="btn-next" onclick="s2Confirm(${i})">✔ ${String.fromCharCode(65+i)}안으로 확정</button>
+      ${dr.mine?`<button class="btn-ghost" style="min-width:auto" title="칸을 하나 더 만듭니다" onclick="s2MineAddRow(${i})">＋ 칸 추가</button>`:''}
+      <button class="btn-next" onclick="s2Confirm(${i})">✔ ${dr.mine?'내 대본으로 확정':(String.fromCharCode(65+i)+'안으로 확정')}</button>
       <button class="btn-ghost" title="지금 작업은 그대로 두고, 담긴 영상까지 그대로 복제한 새 작업을 만들어 이 안을 넣습니다(다채널용 2편)" onclick="s2ConfirmToNewWork(${i})">＋ 이 안으로 새 작업</button>
     </div>
   </div>`;
+}
+
+// ── ✍ 내가 직접 쓰기(2026-09-01) ─────────────────────────────────────────────
+// 사장님이 칸을 직접 채워 **각색 없이 그대로** 확정하는 안. AI를 부르지 않는다.
+//: 스타일을 안 골랐을 때 쓰는 기본 칸 구성(가장 흔한 쇼츠 뼈대).
+const S2_MINE_ROLES = ['hook', 'problem', 'method', 'proof', 'cta'];
+// 칸 구성은 **지금 보고 있는 안**을 따라간다 — 스타일을 골라 만들어 본 뒤 "이 틀로
+// 내가 쓰겠다"가 자연스러운 순서다. 없으면 기본 뼈대.
+function s2MineRoles(){
+  const dr = (S2.drafts || [])[S2.curDraft];
+  const roles = dr && !dr.mine ? s2Beats(dr).map(b => (b && b.role) || '').filter(Boolean) : [];
+  return roles.length ? roles : S2_MINE_ROLES.slice();
+}
+function s2AddMineDraft(){
+  const roles = s2MineRoles();
+  const dr = {mine: true, style_name: '내가 직접 쓴 대본',
+              beats: roles.map(r => ({role: r, text: ''})),
+              script: '', checks: [], passed: false, tries: []};
+  S2.drafts = (S2.drafts || []).concat([dr]);
+  S2.curDraft = S2.drafts.length - 1;
+  const band = document.getElementById('s2ResultBand'); if (band) band.style.display = '';
+  s2RenderDrafts(); saveWork();
+  toast('✍ 빈 칸을 만들었어요 — 칸을 눌러 쓰시면 그대로 대본이 됩니다');
+  // 첫 칸에 바로 커서를 둔다(어디를 눌러야 하는지 묻지 않게).
+  try{
+    const first = document.querySelector('#s2d-' + S2.curDraft + ' .s2-sent');
+    if (first && first.focus){ first.focus(); first.scrollIntoView({block: 'center'}); }
+  }catch(e){}
+}
+
+// 칸을 하나 더 — 역할은 마지막 칸을 따라간다(모르면 비운다: 이름 없는 칸도 정상).
+function s2MineAddRow(i){
+  const dr=S2.drafts[i]; if(!dr || !dr.mine) return;
+  const beats=s2Beats(dr).slice();
+  beats.push({role:'', text:''});
+  dr.beats=beats;
+  s2RenderDrafts(); saveWork();
+  try{
+    const rows=document.querySelectorAll('#s2d-'+i+' .s2-sent');
+    const last=rows[rows.length-1]; if(last&&last.focus){ last.focus(); last.scrollIntoView({block:'center'}); }
+  }catch(e){}
 }
 function s2PickDraft(i){ S2.curDraft=i; s2RenderDrafts(); saveWork(); }   // 보던 안도 그대로 돌아오게
 // 문장 편집 — beats가 원본이고 script는 거기서 다시 만든다(두 벌 유지 금지, 0순위-B).
@@ -16446,14 +16809,21 @@ function s2DelBeat(i,j){
   if(!beats[j]) return;
   // 마지막 한 줄까지 빼면 대본이 통째로 사라져 확정도 못 한다(s2Confirm이 빈 대본을 막는다).
   // 지울 게 아니라 **고쳐 쓸** 상황이므로 여기서 갈라 말해준다.
-  if(beats.filter(x=>((x&&x.text)||'').trim()).length<=1){
-    toast('마지막 한 줄은 뺄 수 없어요 — 문장을 고쳐서 쓰세요'); return;
+  // ★단 ✍내 대본은 **아직 안 쓴 빈 칸이 정상**이다(2026-09-01 사장님 "빼기가 안 된다").
+  //   글자 수로 세면 한 칸만 쓴 상태에서 나머지 빈 칸을 하나도 못 뺀다 — 여기선 **칸 수**로 센다.
+  const _left = dr.mine ? beats.length
+                        : beats.filter(x=>((x&&x.text)||'').trim()).length;
+  if(_left<=1){
+    toast(dr.mine ? '칸이 하나만 남았어요 — 여기에 쓰시면 됩니다'
+                  : '마지막 한 줄은 뺄 수 없어요 — 문장을 고쳐서 쓰세요'); return;
   }
   const b=beats[j];
   const label=s2RoleName(b.role||'').replace(/^·\s*/,'') || '이 줄';
   const txt=(b.text||'').trim();
   const head=txt.slice(0,24)+(txt.length>24?'…':'');
-  if(!confirm(label+' — "'+head+'"\n\n이 줄을 대본에서 뺍니다. 계속할까요?')) return;
+  // 빈 칸은 잃을 게 없다 — 물어보지 않고 바로 뺀다(칸을 여러 개 지울 때 매번
+  // 확인창이 뜨면 그게 더 방해다). 쓴 글이 있는 줄만 확인한다.
+  if(txt && !confirm(label+' — "'+head+'"\n\n이 줄을 대본에서 뺍니다. 계속할까요?')) return;
   beats.splice(j,1);
   dr.beats=beats;
   // script는 beats에서 다시 만든다 — 두 벌을 따로 고치지 않는다(0순위-B, s2EditBeat와 동일).

@@ -1653,16 +1653,24 @@ class NotEnoughPoints(Exception):
     """포인트가 모자라 시작조차 못 함. 반만 청소되는 것보다 아예 안 하는 게 낫다."""
 
 
-def _charge_clean(store, customer_id, n_sources):
+def _charge_clean(store, customer_id, n_calls):
     """자막제거 관문 — **내 키가 없으면 거절**한다. 반환값은 항상 0(과금 없음).
 
-    ★2026-09-01 사장님 확정: "v메이크랑 tts는 없으면 못하게 막아".
+    ★2026-09-01 사장님 확정: "v메이크랑 tts는 없으면 못하게 막아",
+      2026-09-02 재확인: "포인트로 내가 tts·v메이커 막아주는 건 없어".
       전엔 키가 없으면 사장님 키로 돌리고 포인트를 깎았다. 회원들은 포인트를 쓰는
       줄도 몰랐고(설명받은 적 없음), 포인트가 남은 회원만 조용히 통과해
       "어떤 사람은 되고 어떤 사람은 안 되는" 상태가 됐다. 이제 길은 하나다 —
-      키를 등록하면 되고, 없으면 안 된다.
+      키를 등록하면 되고, 없으면 안 된다. **대납은 없다.**
 
-    ★함수 이름을 그대로 둔 이유: 호출부 3곳(2521·2559·2580)과 환불 짝(_refund_clean),
+    ★인자 이름이 n_calls인 이유(2026-09-02 병합): 단위는 **자막제거 콜 수**다
+      (소스 개수가 아니다). 호출부(_ensure_clean_sources)가 소스를 이어붙여 보내므로
+      콜 수 = 묶음 수이고 보통 1이다. 2026-08-25 이전엔 소스 수로 깎아서, 안내는
+      "영상 1편당"인데 소스 4개짜리 하나에 4배가 나간 실사고가 있었다(3a573e381).
+      지금은 과금 자체가 없어 액수 사고는 안 나지만, **이름이 뜻을 속이면 다음 사람이
+      또 소스 수로 착각한다** — 이름은 정확한 채로 둔다.
+
+    ★함수 이름을 그대로 둔 이유: 호출부 3곳과 환불 짝(_refund_clean),
       실패 분류(app.py clean_failure_kind)가 이 이름에 걸려 있다. 이름을 바꾸면
       그 전부를 같이 고쳐야 하고, 하나라도 빠뜨리면 관문이 통째로 사라진다.
       **관문이라는 역할은 그대로고, 통행료가 없어졌을 뿐이다.**
@@ -1672,7 +1680,7 @@ def _charge_clean(store, customer_id, n_sources):
       생기지 않는다(환불 코드는 그대로 두어도 안전하다).
     """
     from shopping_shorts import keyroute
-    if n_sources <= 0:
+    if n_calls <= 0:
         return 0
     # ★cid 0 = 사장님 본인(store.LEGACY_CUSTOMER_ID)은 막지 않는다 — 회사 자산 작업이
     #   여기서 막히면 서비스가 통째로 선다. 정규화는 keyroute.as_cid 하나만 쓴다(0순위-B).
@@ -1681,6 +1689,7 @@ def _charge_clean(store, customer_id, n_sources):
     # ★차단 판단은 keyroute 한 곳(block_reason). 여기서 키 유무를 또 검사하면
     #   웹 진입(app.py _need_own_key_or_402)과 어긋난다 — 한쪽만 막히면 큐에 남은
     #   작업이 그대로 통과한다(웹만 막고 워커를 안 막으면 나는 사고).
+    # ★points·pricing은 더 이상 부르지 않는다(2026-09-02 사장님 "포인트로 대납 없어").
     hit = keyroute.block_reason(store, customer_id, keyroute.SVC_VMAKE)
     if hit:
         raise NotEnoughPoints(hit[1])   # 예외 타입은 유지 — 호출부 3곳이 이걸 잡는다
@@ -1826,8 +1835,8 @@ def _clean_one(item, keys, work):
 
     ★간헐 실패 자동 재시도(2026-08-19): VMake는 멀쩡한 영상에도 가끔 10101을 준다.
       예전엔 그 한 번으로 작업 전체가 실패로 끝나 사장님이 손으로 다시 눌러야 했다.
-      **재과금은 없다** — 과금은 호출부(_ensure_clean_sources)에서 소스 개수로 선차감하고
-      여기선 같은 소스를 다시 시도할 뿐이다. VMake 쪽도 실패한 작업은 크레딧을 안 깎는다
+      **재과금은 없다** — 과금은 호출부(_ensure_clean_sources)에서 **콜(묶음) 수**로
+      선차감하고 여기선 같은 소스를 다시 시도할 뿐이다. VMake 쪽도 실패한 작업은 크레딧을 안 깎는다
       (실측: 실패 3건 동안 잔액이 그대로였다)."""
     vid, src = item
     out = str(Path(work) / f"clean_src_{vid}.mp4")
