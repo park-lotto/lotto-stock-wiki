@@ -640,7 +640,9 @@ function vidFor(videoId, slot){
   _vids[key] = v;
   return v;
 }
-// 컷을 숨은 재생기에 미리 앉힌다(시크 완료까지 기다린다). 반환은 그 재생기.
+// 컷을 숨은 재생기에 미리 앉힌다. ⚠️**시크 완료를 기다리지 않는다** — currentTime만 꽂고
+// 바로 돌아온다(예전 주석은 "완료까지 기다린다"고 적혀 있었으나 사실이 아니었고,
+// 그 오해가 2026-09-02 '훅 뒤 꼬다리'를 낳았다). 도착 여부는 쓰는 쪽에서 v.seeking으로 본다.
 function seat(c){
   const v = vidFor(c.video_id, c._slot);
   if (Math.abs(v.currentTime - c.start) > 0.05) v.currentTime = c.start;
@@ -950,7 +952,14 @@ function step(){
       if (seq[seqI + 1]) seat(seq[seqI + 1]);   // 다음 컷은 숨은 재생기에 미리 앉힌다
       schedStep(c.dur * 1000);                  // ← 여기서부터 시간을 잰다
     };
-    if (Math.abs(v.currentTime - c.start) < 0.05 && v.readyState >= 2) show();
+    // ★currentTime만 보면 '도착했다'가 아니라 '도착하라고 시켰다'를 본다(2026-09-02 사장님
+    //   "훅 뒤에 꼬다리가 나온다"). currentTime은 시크를 요청한 즉시 그 값으로 바뀌고
+    //   실제 프레임은 나중에 온다 — 그래서 v.seeking을 같이 봐야 한다.
+    //   ★전체 재생에서만 났던 이유: runAllFrom이 다음 칸 첫 컷을 seat()으로 미리 앉히는데
+    //   seat은 currentTime만 꽂고 **기다리지 않는다**(주석과 달리). 그 상태로 칸이 넘어오면
+    //   이 조건이 참이 돼 가림막 없이 바로 보여줘, 아직 도착 못 한 **앞부분**이 노출됐다.
+    //   칸별 재생은 미리 앉히기가 없어 늘 else(썸네일로 가리고 대기)로 갔다 — 그래서 멀쩡했다.
+    if (Math.abs(v.currentTime - c.start) < 0.05 && v.readyState >= 2 && !v.seeking) show();
     else {
       // 되감는 동안 검은 화면 대신 그 조각의 썸네일을 깔아둔다(2026-09-01 사장님 제보).
       holdShot(c, true);
@@ -958,7 +967,10 @@ function step(){
       const once = () => { if (done) return; done = true; v.onseeked = null; v.oncanplay = null; show(); };
       v.onseeked = once;
       v.oncanplay = once;
-      v.currentTime = c.start;
+      // ★이미 그 자리로 가는 중이면 다시 꽂지 않는다 — 같은 값을 재대입하면 브라우저가
+      //   seeked를 안 쏘아, 진행 중이던 시크의 완료 신호까지 놓치고 아래 타이머로만
+      //   깨어난다(컷 시작이 최대 cutWaitMs 늦어진다). 미리 앉힌 컷이 정확히 이 경우다.
+      if (!(v.seeking && Math.abs(v.currentTime - c.start) < 0.05)) v.currentTime = c.start;
       // ★기다리는 시간은 **컷 길이보다 짧아야 한다**(2026-09-01 실사고).
       //   1.5초 고정이던 것이 컷 1.0초짜리(구절 맞춤으로 컷이 짧아진 뒤)에서는
       //   '컷이 끝난 뒤에야 화면을 켜는' 꼴이 돼, 그 칸이 통째로 검게 지나갔다
