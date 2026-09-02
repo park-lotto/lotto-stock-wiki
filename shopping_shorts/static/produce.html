@@ -12335,6 +12335,15 @@ async function pollPreview(gen, job){
       // <video> 렌더는 _renderPreviewVideo로 뽑았다(2026-07-19) — 새로고침 복원과 단일 출처.
       // (?t= 캐시버스터·display:block 하단검정라인 주의는 그 함수 주석 참조.)
       _renderPreviewVideo(job);
+      // 편성이 바뀐 뒤의 미리보기는 **낡은 화면**이다 — 말해주지 않으면 완성본과 다를 때
+      // "영상이 두 개다"가 된다(2026-09-02 고객 제보의 뿌리).
+      if(d.preview_stale){
+        const box=document.getElementById('mixPreview');
+        if(box) box.insertAdjacentHTML('afterbegin',
+          '<div class="hint" style="color:var(--gold);border:1px solid var(--gold);border-radius:8px;'
+          +'padding:6px 9px;margin-bottom:6px">⚠️ 이 미리보기는 <b>바뀌기 전 편성</b>으로 만든 거예요 — '
+          +'지금 내용과 다릅니다. 다시 만들어 확인하세요.</div>');
+      }
       refreshNextBtn();
     } else if(d.preview_status === 'failed'){
       clearInterval(PREVIEW_POLL); PREVIEW_POLL = null; PREVIEW_STATUS='failed';

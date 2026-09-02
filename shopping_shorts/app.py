@@ -3994,6 +3994,25 @@ def api_set_smart_mix(body: dict):
 _MIX_ACTIVE_STAGES = ("downloading", "extracting", "planning", "tts")
 
 
+def _preview_is_stale(job) -> bool:
+    """미리보기 파일이 **지금 편성과 다른 편성**으로 만들어졌나(2026-09-02).
+
+    왜: 미리보기를 만든 뒤 대본·컷이 바뀌어도 파일은 그대로 남는다. 고객은 낡은
+    미리보기와 새 완성본을 나란히 보고 "영상이 달라졌다"고 느낀다(실사고 76665d680876).
+    지문 만드는 곳은 mix_pipeline.plan_signature 한 곳이다 — 여기선 비교만 한다.
+    지문 파일이 없으면(옛 작업) **모른다 = False** — 멀쩡한 미리보기에 경고를 붙이지 않는다.
+    """
+    try:
+        if (job or {}).get("preview_status") != "ready":
+            return False
+        sig_path = mix_pipeline.preview_sig_path(_MIX_WORK_DIR, job["job_id"])
+        if not sig_path.exists():
+            return False
+        return sig_path.read_text(encoding="utf-8").strip() !=             mix_pipeline.plan_signature(job.get("edit_plan") or {})
+    except Exception:
+        return False
+
+
 # 내부 사정이 드러나는 조각들 → 일반 사용자용 문장으로 갈아끼운다(관리자는 원문을 본다).
 # "무엇이 막혔고 사용자가 뭘 하면 되는지"만 남긴다. 벤더명·토큰수·경로·스택은 전부 감춘다.
 _USER_ERROR_RULES = (
@@ -4167,6 +4186,8 @@ def api_mix_status(job_id: str, request: Request):
             # preview_path는 서버 내부 경로라 안 내보낸다 — 파일은 전용 라우트로만 서빙.
             "preview_status": preview_status,
             "preview_error": preview_error,
+            # 미리보기를 만든 뒤 편성(대본·컷)이 바뀌었나 — 화면이 "낡았다"고 말할 수 있게(2026-09-02).
+            "preview_stale": _preview_is_stale(job),
             "clean_status": clean_status,
             "clean_error": clean_error,
             # ★실패 '종류'를 함께 준다(2026-08-25). 프론트가 원문을 문자열 검사하면
@@ -4971,7 +4992,12 @@ def api_mix_render(request: Request, background_tasks: BackgroundTasks, body: di
         thumb = job.get("thumbnail") or {}
         thumb["intro"] = bool(body.get("thumb_intro"))
         store.update_mix_job(job_id, thumbnail=thumb)
-    store.update_mix_job(job_id, status="rendering", error=None)
+    # ★옛 완성본을 **즉시 무효로** 만든다(2026-09-02 실사고). 종전엔 렌더를 다시 걸어도
+    #   video_path가 이전 렌더 파일을 계속 가리켰고, 파일도 새 렌더가 끝날 때까지 옛 내용
+    #   그대로였다. 그 사이에 [완성 영상(MP4)]을 누른 고객은 **옛 영상**을 받았고, 끝난 뒤
+    #   다시 받아 "전후 영상이 둘 다 있다 · 영상이 달라졌다"가 됐다(고객 박세현 제보).
+    #   비워두면 완성본 카드·다운로드·QR이 전부 자동으로 사라진다 — 막는 판단이 한 곳이다.
+    store.update_mix_job(job_id, status="rendering", error=None, video_path="")
     Store(DB_PATH).enqueue("render", {"job_id": job_id})
     return {"ok": True, "status": "rendering"}
 
@@ -6008,6 +6034,11 @@ def api_mix_voice_preview(body: dict):
 @app.get("/api/mix/video/{job_id}")
 def api_mix_video(job_id: str, request: Request, dl: int = 0):
     job = Store(DB_PATH).get_mix_job(job_id)
+    # ★만드는 중이면 옛 파일을 주지 않는다(2026-09-02). 화면이 버튼을 숨겨도 주소를
+    #   기억한 브라우저·다운로드 관리자가 그대로 다시 부른다 — 서버가 막아야 끝난다.
+    if job and job.get("status") in ("rendering", "removing_subtitles"):
+        return JSONResponse(status_code=409,
+                            content={"ok": False, "error": "영상을 만드는 중이에요 — 끝나면 새 영상이 나옵니다"})
     if not job or not job.get("video_path") or not Path(job["video_path"]).exists():
         return JSONResponse(status_code=404, content={"ok": False})
     if dl:   # ?dl=1 → 첨부 다운로드(Content-Disposition attachment). 없으면 인라인 재생(기존).
