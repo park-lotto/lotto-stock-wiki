@@ -1932,6 +1932,69 @@ def api_discover_add(request: Request, username: str, name: str = ""):
     return {"ok": True, "username": username}
 
 
+def _resolve_uploader(url: str, username: str = ""):
+    """게시물 URL에서 (채널아이디, 표시명)을 해석한다. username이 오면 그대로 쓴다.
+    ★여기 한 곳에서만 정한다 — 📌채널수집과 ⭐볼채널등록이 같은 답을 써야 한다
+    (0순위-B: 같은 판단을 두 군데 적으면 언젠가 어긋난다)."""
+    uname, disp = (username or "").strip().lstrip("@"), ""
+    if not uname and url:
+        try:
+            import subprocess, sys, json
+            r = subprocess.run([sys.executable, "-m", "yt_dlp", "-j", "--no-warnings", url],
+                               capture_output=True, text=True, timeout=60)
+            d = json.loads(r.stdout) if r.returncode == 0 and r.stdout.strip() else {}
+            uname = (d.get("uploader_id") or "").strip().lstrip("@")
+            # 인스타는 uploader_id가 숫자 pk로 오기도 한다 → channel(핸들)을 우선
+            ch = (d.get("channel") or "").strip().lstrip("@")
+            if ch and not ch.isdigit():
+                disp = (d.get("uploader") or "").strip()
+                if uname.isdigit() or not uname:
+                    uname = ch
+            else:
+                disp = (d.get("uploader") or "").strip()
+        except Exception:
+            pass
+    return uname, disp
+
+
+@app.get("/api/fav_channel/grab", response_class=HTMLResponse)
+def api_fav_channel_grab(request: Request, url: str = "", username: str = "",
+                         thumb: str = ""):
+    """⭐볼채널등록 버튼(유저스크립트)용 — 회원이 인스타·틱톡·유튜브 화면에서 바로
+    자기 즐겨찾기에 담는다. popup GET이라 세션 쿠키가 실린다(📌채널수집·📥담기와 동일).
+
+    ★📌채널수집(/api/discover/add_by_url)과 다른 점: 저기는 **관리자 전용 + 전역
+    수집 시드**다. 여기는 **회원 개인 북마크**라 수집 대상을 1건도 늘리지 않는다."""
+    cid = _cid(request)
+    if not cid:
+        return HTMLResponse(_chadd_html("⛔ 로그인 필요",
+                                        "shoppingshorts.duckdns.org에 로그인 후 다시 눌러주세요."))
+    plat = _fav_channel_platform(url)
+    chid = (username or "").strip().lstrip("@")
+    disp = ""
+    if not chid:
+        plat2, chid = _fav_channel_from_url(url)     # 프로필 URL이면 여기서 끝난다
+        plat = plat or plat2 or ""
+    if not chid:
+        chid, disp = _resolve_uploader(url)          # 게시물 URL → yt-dlp로 채널 해석
+    if not plat or not chid or chid.isdigit():
+        return HTMLResponse(_chadd_html("❌ 채널을 못 찾았어요",
+                                        "영상 또는 채널(프로필) 화면에서 다시 눌러주세요."))
+    store = Store(DB_PATH)
+    added = store.fav_channel_add(plat, chid, name=(disp or chid), url=url,
+                                  last_video_thumb=thumb, customer_id=cid)
+    if added is None:
+        return HTMLResponse(_chadd_html("⚠ 자리가 다 찼어요",
+                                        f"볼채널은 최대 {store.FAV_CHANNEL_CAP}개입니다. "
+                                        "즐겨찾기에서 안 보는 채널을 빼주세요."))
+    if not added:
+        return HTMLResponse(_chadd_html("✔ 이미 담긴 채널",
+                                        f"@{chid} — 왼쪽 ⭐볼채널등록에서 볼 수 있어요."))
+    return HTMLResponse(_chadd_html("✅ 볼채널에 담았어요",
+                                    f"@{chid}{'·' + disp if disp else ''} — "
+                                    "왼쪽 ⭐볼채널등록에서 확인하세요."))
+
+
 @app.get("/api/discover/add_by_url", response_class=HTMLResponse)
 def api_discover_add_by_url(request: Request, url: str = "", username: str = ""):
     """인스타 담기 유저스크립트의 '📌 채널등록' 버튼용(2026-08-03 사장님 요청).
@@ -1999,24 +2062,7 @@ def api_discover_add_by_url(request: Request, url: str = "", username: str = "")
         store.add_seed("youtube", "account", ch_url)
         return HTMLResponse(_chadd_html("✅ 유튜브 채널 등록 완료",
                                         f"{ch_title or ch_url} — 다음 유튜브 수집부터 랭킹에 잡힙니다."))
-    uname, disp = (username or "").strip().lstrip("@"), ""
-    if not uname and url:
-        try:
-            import subprocess, sys, json
-            r = subprocess.run([sys.executable, "-m", "yt_dlp", "-j", "--no-warnings", url],
-                               capture_output=True, text=True, timeout=60)
-            d = json.loads(r.stdout) if r.returncode == 0 and r.stdout.strip() else {}
-            uname = (d.get("uploader_id") or "").strip().lstrip("@")
-            # 인스타는 uploader_id가 숫자 pk로 오기도 한다 → channel(핸들)을 우선
-            ch = (d.get("channel") or "").strip().lstrip("@")
-            if ch and not ch.isdigit():
-                disp = (d.get("uploader") or "").strip()
-                if uname.isdigit() or not uname:
-                    uname = ch
-            else:
-                disp = (d.get("uploader") or "").strip()
-        except Exception:
-            pass
+    uname, disp = _resolve_uploader(url, username)
     if not uname or uname.isdigit():
         return HTMLResponse(_chadd_html("❌ 채널을 못 찾았어요", "게시물/릴스 화면에서 다시 눌러주세요."))
     key = uname.lower()

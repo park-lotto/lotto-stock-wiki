@@ -1,6 +1,6 @@
 // 로또 · 원클릭 담기 — 실제 로직 (grab.user.js 로더가 서버에서 이 파일을 매번 불러와 실행).
 // ★이 파일을 고치면 모든 사용자가 다음 새로고침에 자동 반영된다(재설치 불필요).
-// 로직 버전: 2026-09-01-d  (버튼 도킹·유튜브 렌즈/시크바·재생속도 — LOGIC_VER가 정본)
+// 로직 버전: 2026-09-02-a  (⭐볼채널등록 — 회원용 개인 채널 즐겨찾기 · LOGIC_VER가 정본)
 (function () {
   "use strict";
   // ── 중복 실행 방지 → '새 로직이 이긴다'로 교체(2026-08-18 실사고) ──────────
@@ -10,7 +10,7 @@
   // 원인 찾는 데 한참 걸렸다. 그래서 버전을 숫자로 박고 큰 쪽이 이어받게 한다.
   // (옛 코드는 이 숫자가 없다 → 0으로 보고 새 로직이 이긴다. 옛 인터벌은 남지만
   //  버튼은 id 선점이라 서로 안 덮고, 새 화면(유튜브·쓰레드)은 새 로직이 그린다.)
-  var LOGIC_VER = 20260904;
+  var LOGIC_VER = 20260905;
   if ((window.__ssGrabVer || 0) >= LOGIC_VER) return;   // 같거나 더 새것이 이미 돎
   if (window.__ssGrabLoaded && !window.__ssGrabVer) {
     // 옛 로직이 이미 돌고 있다 — 그 버튼을 걷어내고 새 로직이 다시 그린다.
@@ -198,6 +198,10 @@
   function addChannelBtn() {
     if (document.getElementById("ss-chadd-btn") || !document.body) return;
     if (!_chQuery()) return;
+    // 회원에겐 아예 안 붙인다(관리자 전용 API라 눌러도 "관리자 필요"만 뜬다).
+    // ★syncExtraBtns에서 지우기만 하면 붙였다 지웠다를 반복해 깜빡인다 —
+    //   붙이는 쪽에서 막는 게 유일한 정답이다. 아직 모르는 동안(null)도 안 붙인다.
+    if (window.__ssIsAdmin !== true) return;
     var b = document.createElement("button");
     b.id = "ss-chadd-btn";
     b.textContent = "📌 채널수집";
@@ -573,6 +577,46 @@
         }
       });
   }
+  // ── ⭐볼채널등록(2026-09-02 사장님) — 회원용 개인 채널 즐겨찾기 ────────────
+  //  📌채널수집·⭐레퍼런스등록은 **관리자 전용 + 전역 수집**이라 회원이 눌러도
+  //  "관리자 필요"만 뜬다. 회원에겐 이 버튼이 그 자리를 대신한다.
+  //  ★담아도 크롤 대상은 안 늘어난다(순수 북마크) — 서버 주석과 같은 이유.
+  var _ssIsAdmin = null;      // null=아직 모름, true/false=확정
+  function _ssWhoAmI(cb) {
+    if (_ssIsAdmin !== null) { cb(_ssIsAdmin); return; }
+    _gmGet(BASE + "/api/me", function (st, text) {
+      try {
+        var d = (st === 200) ? JSON.parse(text) : null;
+        _ssIsAdmin = !!(d && d.is_admin);
+      } catch (e) { _ssIsAdmin = false; }
+      window.__ssIsAdmin = _ssIsAdmin;   // addChannelBtn이 읽는다(같은 판정 한 곳)
+      cb(_ssIsAdmin);
+    }, function () { _ssIsAdmin = false; window.__ssIsAdmin = false; cb(false); });
+  }
+  // 지금 화면의 대표 썸네일(카드에 그림을 채우는 용도 — 없으면 이름만 뜬다).
+  function _ssPageThumb() {
+    var v = document.querySelector("video[poster]");
+    if (v && v.getAttribute("poster")) return v.getAttribute("poster");
+    var og = document.querySelector("meta[property='og:image']");
+    return og ? (og.getAttribute("content") || "") : "";
+  }
+  function addFavChannelBtn() {
+    var b = document.getElementById("ss-favch-btn");
+    // 대상 판정은 📌채널수집과 **같은 함수**를 쓴다 — 여기서 또 정하면 어긋난다.
+    var want = !!_chQuery();
+    if (b && !want) { b.remove(); return; }
+    if (b || !want) return;
+    _miniBtn("ss-favch-btn", "⭐ 볼채널등록",
+             "이 채널을 내 즐겨찾기(볼채널등록)에 담습니다 — 수집 목록과는 별개", 278, "#d1a054",
+             function () {
+               var q = "url=" + encodeURIComponent(location.href);
+               var t = _ssPageThumb();
+               if (t) q += "&thumb=" + encodeURIComponent(t);
+               window.open(BASE + "/api/fav_channel/grab?" + q,
+                           "ss_favch", "width=400,height=250");
+             });
+  }
+
   function syncExtraBtns() {
     var lens = document.getElementById("ss-lens-btn");
     if (_playerPlat() && _isVideoPage()) {
@@ -584,8 +628,17 @@
     //   담기(📥)는 내 즐겨찾기로만 가고, 채널수집(📌)은 다음 수집까지 기다려야 했다.
     //   이 버튼은 **영상+채널을 한 번에** 넣고 그 영상을 지금 랭킹 스냅샷에 끼워 넣는다.
     //   ★영상 페이지에서만 띄운다 — 피드·프로필에선 "어느 영상"이 정해지지 않는다.
+    // ★회원에겐 관리자 전용 버튼(📌채널수집·⭐레퍼런스등록)을 감추고 ⭐볼채널등록을
+    //   대신 띄운다. 관리자(사장님)는 넷 다 보인다 — 개인 즐겨찾기도 쓰기 때문.
+    _ssWhoAmI(function (isAdmin) {
+      addFavChannelBtn();
+      if (!isAdmin) {   // 판정 전에 이미 붙은 것이 있으면 걷어낸다
+        var ch = document.getElementById("ss-chadd-btn"); if (ch) ch.remove();
+        var ad = document.getElementById("ss-adopt-btn"); if (ad) ad.remove();
+      }
+    });
     var adopt = document.getElementById("ss-adopt-btn");
-    var wantAdopt = !!_chPlat() && _isVideoPage();
+    var wantAdopt = !!_chPlat() && _isVideoPage() && window.__ssIsAdmin === true;
     if (adopt && !wantAdopt) adopt.remove();
     else if (!adopt && wantAdopt) {
       _miniBtn("ss-adopt-btn", "⭐ 레퍼런스 등록",
