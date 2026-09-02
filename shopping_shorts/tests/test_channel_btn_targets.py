@@ -21,7 +21,11 @@ LOADER = BASE / "userscript" / "grab.user.js"
 MANIFEST = BASE / "extension" / "manifest.json"
 
 _FUNCS = ["_chPlat", "_thProfile", "_ytTarget", "_chQuery",
-          "_igProfileName", "_ttProfile", "isSinglePost"]
+          "_igProfileName", "_ttProfile", "isSinglePost", "_igAuthor"]
+
+# _igAuthor는 화면(DOM)을 읽는다 — 기본 스텁은 '아무것도 못 읽음'이라 종전과 답이 같다.
+_DOC_EMPTY = ("var document = { querySelectorAll: function () { return []; },"
+              " body: { innerHTML: '' } };\n")
 
 
 def _fn(src, name):
@@ -40,7 +44,7 @@ def _fn(src, name):
     pytest.fail("%s 끝을 못 찾음" % name)
 
 
-def _run(cases):
+def _run(cases, doc=None):
     if not shutil.which("node"):
         pytest.skip("node 없음")
     src = LOGIC.read_text(encoding="utf-8")
@@ -49,7 +53,7 @@ def _run(cases):
     head = src[i:src.index("};", i) + 2]
     body = head + "\n" + "\n".join(_fn(src, n) for n in _FUNCS)
     script = (
-        "var location;\n" + body + "\n" +
+        "var location;\n" + (doc or _DOC_EMPTY) + body + "\n" +
         "var out = {};\n"
         "for (var href of " + json.dumps(cases) + ") {\n"
         "  var u = new URL(href);\n"
@@ -160,3 +164,19 @@ def test_화면_숫자를_읽어_붙인다():
     assert stats == {"views": 12000, "likes": 207, "comments": 1202, "followers": 221000}
     assert man == 1950000 and chun == 6300
     assert empty == 0, "못 읽으면 0 — 서버는 0을 안 쓰고 종전 값을 유지한다"
+
+
+def test_릴스에서_작성자를_화면에서_읽어_보낸다():
+    """서버 yt-dlp가 인스타를 못 읽어 '채널을 못 찾았어요'가 뜨던 것(2026-09-02 사장님 제보).
+    화면에 이미 떠 있는 계정명을 읽어 username으로 함께 보낸다."""
+    rect = "function () { return { width: 400, height: 700 }; }"
+    doc = ("var _a = { getAttribute: function () { return '/sua_play/'; } };\n"
+           "var _box = { querySelectorAll: function () { return [_a]; },"
+           " parentElement: null, getBoundingClientRect: " + rect + " };\n"
+           "var _v = { parentElement: _box, getBoundingClientRect: " + rect + " };\n"
+           "var document = { querySelectorAll: function (s) {"
+           " return s === 'video' ? [_v] : []; }, body: { innerHTML: '' } };\n")
+    url = "https://www.instagram.com/reels/Dcvn_VGS497/"
+    out = _run([url], doc=doc)
+    assert out[url].startswith("url="), "URL도 함께 보내야 한다"
+    assert "username=sua_play" in out[url], out[url]
