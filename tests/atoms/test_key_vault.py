@@ -88,7 +88,15 @@ def test_mark_exhausted_is_scoped_per_group(monkeypatch, tmp_path):
     assert kv.get_live_keys("ingest") == ["i1"]  # 다른 그룹은 영향 없음
 
 
-def test_state_resets_on_new_day(monkeypatch, tmp_path):
+def test_old_format_lock_expires_by_ttl(monkeypatch, tmp_path):
+    """옛 형식(list) 소진 기록도 **TTL로 풀린다** — 날짜로 풀지 않는다.
+
+    ★2026-09-01에 '하루 낙인'을 TTL로 바꿨다(잠긴 키 11개를 찔러보니 8개가 HTTP 200).
+      그래서 이 테스트도 "날짜가 바뀌면 리셋"이 아니라 "TTL이 지나면 풀린다"를 본다.
+      옛 형식엔 만료시각이 없어 _exhausted_map이 기본 TTL을 붙인다 — 그동안은 잠겨
+      있어야 하고(안 그러면 소진 키를 즉시 다시 때린다) TTL이 지나면 자동으로 풀린다.
+      (2026-09-02: auto 커밋 83be8aa62가 이 설계를 되돌린 것을 복구하며 함께 갱신)
+    """
     state_path = tmp_path / "state.json"
     state_path.write_text(
         '{"date": "2020-01-01", "exhausted": {"embed": [0]}}', encoding="utf-8"
@@ -99,7 +107,12 @@ def test_state_resets_on_new_day(monkeypatch, tmp_path):
     monkeypatch.setattr(kv, "_STATE_PATH", state_path)
     monkeypatch.setattr(kv, "_LOCK_PATH", tmp_path / "state.lock")
 
-    assert kv.get_live_keys("embed") == ["e1"]  # 어제자 소진 기록은 무시됨
+    assert kv.get_live_keys("embed") == []          # TTL 안에는 잠겨 있다
+    # 만료시각이 이미 지난 기록(새 형식)은 자동으로 풀려야 한다.
+    state_path.write_text(
+        '{"date": "2020-01-01", "exhausted": {"embed": {"0": 1.0}}}', encoding="utf-8"
+    )
+    assert kv.get_live_keys("embed") == ["e1"]
 
 
 def test_mark_exhausted_survives_concurrent_writers(monkeypatch, tmp_path):
