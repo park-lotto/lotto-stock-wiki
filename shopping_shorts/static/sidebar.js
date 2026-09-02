@@ -35,8 +35,8 @@
       //   서버만 열고 여기를 안 열면 체험 사용자는 눌러도 페이월 모달만 보고 못 들어간다.
       // 즐겨찾기 2칸(2026-09-02 사장님) — 채널과 영상을 갈라 담는다.
       // 둘 다 개인 북마크라 전역 수집(레퍼런스 채널 관리)과 성격이 다르다.
-      { icon: "⭐", text: "볼채널등록",     href: "/fav_channels", free: true },
-      { icon: "⭐", text: "볼영상등록",     href: "/collection", free: true },
+      { icon: "⭐", text: "나만의 채널등록", href: "/fav_channels", free: true },
+      { icon: "⭐", text: "영상 즐겨찾기",  href: "/collection", free: true },
       { icon: "🔎", text: "신규채널 픽업",   href: "/discover" },
       { icon: "🎞️", text: "장면 라이브러리", href: "/scene_library" },
       { icon: "🏆", text: "역대 히트작",     href: "/archive", admin: true },
