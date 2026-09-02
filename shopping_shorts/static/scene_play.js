@@ -932,11 +932,25 @@ function step(){
       v.play().catch(()=>{});
       paintCut();
       // ★아직 첫 프레임이 없으면 썸네일을 **걷지 않는다** — 걷으면 그 자리가 검게 남는다.
-      //   준비되는 순간(canplay/seeked) 걷어 실제 영상으로 바뀐다.
+      //   준비되는 순간(canplay/seeked/timeupdate) 걷어 실제 영상으로 바뀐다.
+      // ★★반드시 걷힌다 — 이벤트만 믿으면 안 된다(2026-09-02 고객 제보).
+      //   canplay·seeked는 **이 줄에 닿기 전에 이미 지나갔을 수 있다**. 그러면 다시
+      //   오지 않아 썸네일이 영영 남고, 소리와 컷은 흐르는데 **그림만 정지**한다 —
+      //   "분명 영상인데 사진처럼 멈춰서 확인이 불가", "돌아가다 다음 클립에서 멈추고
+      //   또 돌아가다 멈추고"가 정확히 이 모양이다(컷마다 이벤트를 놓치냐 마냐로 갈린다).
+      //   걷는 길이 stopPlay 하나뿐이었던 것이 문제다. 안전핀을 같이 건다.
       if (v.readyState >= 2) holdShot(null, false);
       else {
-        const late = () => { v.oncanplay = null; v.onseeked = null; holdShot(null, false); };
+        let tmr = 0;
+        const late = () => {
+          v.oncanplay = null; v.onseeked = null; v.ontimeupdate = null;
+          if (tmr) { clearTimeout(tmr); tmr = 0; }
+          holdShot(null, false);
+        };
         v.oncanplay = late; v.onseeked = late;
+        v.ontimeupdate = late;              // 실제로 흐르기 시작했으면 그림은 더 필요 없다
+        // 안전핀: 이벤트를 하나도 못 받아도 **이 컷 안에서** 걷는다.
+        tmr = setTimeout(late, Math.max(120, Math.min(600, Math.round((c.dur || 0) * 1000 * 0.5))));
       }
       if (seq[seqI + 1]) seat(seq[seqI + 1]);   // 다음 컷은 숨은 재생기에 미리 앉힌다
       schedStep(c.dur * 1000);                  // ← 여기서부터 시간을 잰다
