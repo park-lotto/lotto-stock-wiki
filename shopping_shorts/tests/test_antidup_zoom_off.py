@@ -43,3 +43,12 @@ def test_환경변수로_되돌릴_수_있다(monkeypatch):
     finally:
         monkeypatch.delenv("SHORTS_ANTIDUP_ZOOM", raising=False)
         importlib.reload(va)
+
+
+def test_정지구간_줌은_같이_꺼지지_않는다():
+    """대사가 소스보다 길어 마지막 프레임을 정지로 늘릴 때의 줌은 **반중복과 목적이 다르다**.
+    "뚝 멈춰 어색하다"는 사장님 육안 피드백(2026-07-19)으로 넣은 것이라 살아 있어야 한다.
+    (반중복 확대를 끄면서 이것까지 죽여 test_freeze_motion이 깨졌던 것을 고정한다)"""
+    assert va._FREEZE_ZOOM > 1.0
+    vf = va._kenburns_vf(2.0, zoom_end=va._FREEZE_ZOOM)
+    assert "zoompan" in vf and "*on" in vf

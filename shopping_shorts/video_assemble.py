@@ -174,6 +174,11 @@ _FONT_FALLBACK_RATIO = 0.5
 #       "자막제거를 하면 확대된다"로 보였다.
 #   되돌리려면 SHORTS_ANTIDUP_ZOOM=1 (옛 값 1.04/1.10으로 복귀).
 _ANTIDUP_ZOOM_ON = os.environ.get("SHORTS_ANTIDUP_ZOOM", "0") not in ("0", "", "off", "false")
+# ★정지 구간(_extend_with_frozen_motion)의 줌은 **반중복과 목적이 다르다** — 끄지 않는다.
+#   대사가 소스보다 길면 마지막 프레임을 정지로 늘리는데, 그냥 두면 픽셀까지 똑같아
+#   "뚝 멈춰 어색하다"고 사장님이 육안으로 짚어 넣은 기능이다(2026-07-19).
+#   반중복 확대를 끈다고 이것까지 죽으면 그 제보가 그대로 재발한다.
+_FREEZE_ZOOM = 1.10
 _BASE_ZOOM = 1.04 if _ANTIDUP_ZOOM_ON else 1.0      # 전 비트 기본 확대율(정적, 저비용)
 _KENBURNS_ZOOM = 1.10 if _ANTIDUP_ZOOM_ON else 1.0  # 중요 비트 최종 확대율(동적)
 _IMPORTANT_ROLES = {"훅", "반전"}  # edit_plan.py _REQUIRED_ROLES와 동일 어휘
@@ -1423,7 +1428,8 @@ def _extend_with_frozen_motion(sub_path, play_out, freeze, out_path):
     total = play_out + freeze
     _run_ffmpeg([
         "ffmpeg", "-y", "-i", str(sub_path),
-        "-vf", f"tpad=stop_mode=clone:stop_duration={freeze:.3f},{_kenburns_vf(total)}",
+        "-vf", (f"tpad=stop_mode=clone:stop_duration={freeze:.3f},"
+                f"{_kenburns_vf(total, zoom_end=_FREEZE_ZOOM)}"),
         "-r", "30", "-an", "-t", f"{total:.3f}",
         "-c:v", "libx264", "-preset", _mid_preset(), "-crf", _mid_crf(), *_threads_args(), "-pix_fmt", "yuv420p", str(out_path),
     ])
