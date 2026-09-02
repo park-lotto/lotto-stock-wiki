@@ -3994,6 +3994,22 @@ def api_set_smart_mix(body: dict):
 _MIX_ACTIVE_STAGES = ("downloading", "extracting", "planning", "tts")
 
 
+def _letterbox_note(job):
+    """완성본에 위아래 검은 여백이 있는 구간이 있나(mix_pipeline이 렌더 끝에 재둔다).
+
+    ★재는 곳은 mix_pipeline.letterbox_report 한 곳 — 여기선 읽기만 한다(0순위-B).
+    파일이 없으면(옛 작업·측정 실패) None = 아무 말도 하지 않는다. 모르면 비운다.
+    """
+    try:
+        f = Path(_MIX_WORK_DIR) / job["job_id"] / "letterbox.json"
+        if not f.exists():
+            return None
+        d = json.loads(f.read_text(encoding="utf-8"))
+        return d if (d or {}).get("pct") else None
+    except Exception:
+        return None
+
+
 # 내부 사정이 드러나는 조각들 → 일반 사용자용 문장으로 갈아끼운다(관리자는 원문을 본다).
 # "무엇이 막혔고 사용자가 뭘 하면 되는지"만 남긴다. 벤더명·토큰수·경로·스택은 전부 감춘다.
 _USER_ERROR_RULES = (
@@ -4210,6 +4226,8 @@ def api_mix_status(job_id: str, request: Request):
             "preview_error": preview_error,
             "clean_status": clean_status,
             "clean_error": clean_error,
+            # ⬛ 원본에서 딸려온 위아래 여백(2026-09-02) — 고치지 않고 안내만 한다.
+            "letterbox": _letterbox_note(job),
             # ★실패 '종류'를 함께 준다(2026-08-25). 프론트가 원문을 문자열 검사하면
             #   같은 판단이 두 곳에 흩어진다(0순위-B) — 분류는 서버 한 곳에서만.
             "clean_error_kind": clean_failure_kind(clean_error) if clean_status == "failed" else None,

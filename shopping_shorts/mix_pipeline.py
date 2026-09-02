@@ -2952,6 +2952,66 @@ def is_faststart(path) -> bool:
     return False                        # 64바이트 안에 moov가 없다 = 뒤에 있다
 
 
+# ── ⬛ 위아래 검은 여백 감지(2026-09-02 사장님 "그건 그냥 냅둬 — 안내를 하나 해주면 좋다") ──
+# 왜: 담아온 원본 중에 4:3쯤 되는 그림을 9:16 캔버스에 얹어 올린 것이 있다. 그 컷은
+# 완성본에서도 위아래가 검게 남는다(실측 job 76665d680876: 위105/아래108px, 두 구간).
+# **우리가 만든 게 아니라 원본에 구워진 것**이라 고치지 않는다 — 대신 화면이 말해준다.
+# ⚠️ffmpeg cropdetect는 못 쓴다: 그 검은 자리에 [광고]·워터마크 글자가 얹혀 있어 늘
+#   "여백 없음"으로 나온다(실측). 그래서 가운데 열만 보고 줄 밝기의 중앙값으로 판정한다.
+def letterbox_report(video_path, samples=24):
+    """완성본에 위아래 여백이 있는 구간이 얼마나 되나. {'pct':0~100,'spots':[초]}.
+
+    ★표본은 촘촘해야 한다(실측): 8개로 나눠 재니 여백 구간(7.5~10초·13.5~15초)을
+      전부 비껴가 0%가 나왔다. 컷 하나가 3초 안팎이라 그보다 촘촘히 찍어야 잡힌다.
+    """
+    import subprocess
+    import tempfile
+    from statistics import median
+    try:
+        from PIL import Image
+    except Exception:
+        return {"pct": 0, "spots": []}
+    dur = 0.0
+    try:
+        r = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration",
+                            "-of", "csv=p=0", str(video_path)], capture_output=True, text=True)
+        dur = float((r.stdout or "0").strip() or 0)
+    except Exception:
+        return {"pct": 0, "spots": []}
+    if dur <= 0:
+        return {"pct": 0, "spots": []}
+    spots, checked = [], 0
+    with tempfile.TemporaryDirectory() as td:
+        png = Path(td) / "f.png"
+        for i in range(samples):
+            t = dur * (i + 0.5) / samples
+            try:
+                subprocess.run(["ffmpeg", "-v", "error", "-ss", f"{t:.2f}", "-i", str(video_path),
+                                "-frames:v", "1", "-vf", "scale=120:-1", str(png), "-y"],
+                               capture_output=True)
+                if not png.exists():
+                    continue
+                im = Image.open(png).convert("L")
+                w, h = im.size
+                px = im.load()
+                rows = [median([px[x, y] for x in range(int(w * .1), int(w * .9), 3)])
+                        for y in range(h)]
+                bright = [y for y, v in enumerate(rows) if v > 20]
+                checked += 1
+                if not bright:
+                    continue
+                top, bot = bright[0] / h, (h - 1 - bright[-1]) / h
+                # ★위·아래가 **둘 다** 있어야 여백으로 본다(실측 교정): 한쪽만 어두운 건
+                #   어두운 장면·페이드다. 그것까지 세면 멀쩡한 영상이 8%로 잡혔다.
+                if top > 0.08 and bot > 0.08:
+                    spots.append(round(t, 1))
+            except Exception:
+                continue
+    if not checked:
+        return {"pct": 0, "spots": []}
+    return {"pct": round(len(spots) * 100 / checked), "spots": spots[:6]}
+
+
 def ensure_faststart(path):
     """moov가 뒤에 있으면 앞으로 옮긴다. 이미 앞이면 아무것도 안 한다.
 
@@ -3089,6 +3149,13 @@ def run_render(job_id, db_path, work_root):
         #   재인코딩이 아니라 -c copy 리멕스라 화질 손실도 시간도 거의 없다.
         #   ★여기 한 곳에서만 한다 — 완성본 경로를 DB에 박는 유일한 출구다(0순위-B).
         ensure_faststart(out_path)
+        # ⬛ 원본에서 딸려온 위아래 여백을 재둔다 — 고치진 않고 화면이 안내만 한다.
+        #   실패해도 완성본은 그대로(안내가 없을 뿐) — 안내 때문에 영상을 잃지 않는다.
+        try:
+            (work / "letterbox.json").write_text(
+                json.dumps(letterbox_report(out_path), ensure_ascii=False), encoding="utf-8")
+        except Exception:
+            print(f"[letterbox] {job_id}: 여백 측정 실패(무시)", file=sys.stderr)
         store.update_mix_job(job_id, status="done", video_path=str(out_path))
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
