@@ -386,4 +386,7 @@ def gemini_keys(group="general", customer_id=None):
 
     # cid는 더 이상 '누구 키를 쓸까'를 가르지 않는다(공용 풀). 소진 로그·디버깅용으로만 읽는다.
     _ = as_cid(customer_id if customer_id is not None else keyctx.owner_cid())
-    return key_vault.get_live_keys_cascade(group)
+    # ★회전해서 준다 — 이 목록을 `for key in keys`로 도는 호출부(대본생성·SEO·
+    #   썸네일문구·부품은행)가 전부 keys[0]부터 시작하면 앞쪽 키에만 몰린다.
+    #   어느 키부터 쓸지는 **여기 한 곳**에서만 정한다(0순위-B).
+    return key_vault.rotated(key_vault.get_live_keys_cascade(group))

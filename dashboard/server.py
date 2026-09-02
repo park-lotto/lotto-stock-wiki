@@ -121,8 +121,16 @@ def _env_key(name):
 
 
 def _gemini_interactive_keys():
-    """대화형(리서치·이미지·비전) Gemini 키 — key_vault 'general' 그룹."""
-    return key_vault.get_keys("general")
+    """대화형(리서치·이미지·비전) Gemini 키.
+
+    ★2026-09-01: get_keys → get_live_keys_cascade + 회전. 종전엔 두 가지가 겹쳐
+      분당 한도를 자초했다 —
+      ① **소진 낙인된 키를 안 걸러** 죽은 키가 앞에 남아 매번 다시 얻어맞았다
+      ② general 13개만 봐서 나머지 69개가 놀았다(실측: rpm 990건 중 server 639건=65%)
+      회전까지 붙여 호출마다 다른 키부터 시작한다.
+      (2026-09-02 복구: auto 커밋 83be8aa62가 이 개선을 통째로 되돌려 놓았었다)"""
+    live = key_vault.get_live_keys_cascade("general")
+    return key_vault.rotated(live or key_vault.get_keys("general"))
 
 
 def _summary_keys():
@@ -131,7 +139,7 @@ def _summary_keys():
     (이전엔 general+ingest 9개만 써서 그 두 그룹이 마르면 embed/briefing 놀아도 요약이 죽었음)"""
     live = key_vault.get_live_keys_cascade("general")  # 전 그룹 라이브, general 먼저
     if live:
-        return live
+        return key_vault.rotated(live)          # ★호출마다 시작점을 돌린다(2026-09-01)
     seen, out = set(), []
     for g in ("general", "ingest", "embed", "briefing"):
         for k in key_vault.get_keys(g):
@@ -144,7 +152,7 @@ def _summary_keys():
 def _briefing_keys():
     """실시간 시장 브리핑 종합 전용 키 풀 — key_vault 'briefing' 그룹, 없으면 요약 풀로 폴백."""
     dedicated = key_vault.get_keys("briefing")
-    return dedicated or _summary_keys()
+    return key_vault.rotated(dedicated) if dedicated else _summary_keys()
 
 
 # 텍스트 생성 모델 폴백: 프리뷰(최고품질) → 안정모델. 프리뷰가 503 과부하일 때 안정모델로 자동 전환.

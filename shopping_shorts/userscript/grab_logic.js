@@ -1,6 +1,10 @@
 // 로또 · 원클릭 담기 — 실제 로직 (grab.user.js 로더가 서버에서 이 파일을 매번 불러와 실행).
 // ★이 파일을 고치면 모든 사용자가 다음 새로고침에 자동 반영된다(재설치 불필요).
-// 로직 버전: 2026-09-02-a  (⭐볼채널등록 — 회원용 개인 채널 즐겨찾기 · LOGIC_VER가 정본)
+// 로직 버전: 2026-09-02-b  (LOGIC_VER가 정본)
+//   · ⭐볼채널등록 — 회원용 개인 채널 즐겨찾기
+//   · 유튜브는 쇼츠에서만 동작 — 메인·롱폼 차단
+//   ★두 트랙이 같은 날 각각 20260905를 달아 병합에서 부딪혔다. 합친 파일이라
+//     번호를 한 칸 올린다 — 버전은 "무엇이 들어있나"의 유일한 표식이다.
 (function () {
   "use strict";
   // ── 중복 실행 방지 → '새 로직이 이긴다'로 교체(2026-08-18 실사고) ──────────
@@ -10,7 +14,7 @@
   // 원인 찾는 데 한참 걸렸다. 그래서 버전을 숫자로 박고 큰 쪽이 이어받게 한다.
   // (옛 코드는 이 숫자가 없다 → 0으로 보고 새 로직이 이긴다. 옛 인터벌은 남지만
   //  버튼은 id 선점이라 서로 안 덮고, 새 화면(유튜브·쓰레드)은 새 로직이 그린다.)
-  var LOGIC_VER = 20260905;
+  var LOGIC_VER = 20260906;
   if ((window.__ssGrabVer || 0) >= LOGIC_VER) return;   // 같거나 더 새것이 이미 돎
   if (window.__ssGrabLoaded && !window.__ssGrabVer) {
     // 옛 로직이 이미 돌고 있다 — 그 버튼을 걷어내고 새 로직이 다시 그린다.
@@ -1032,10 +1036,24 @@
     var x = rr ? rr.right : 0;
     // 버튼 4개: 영상 칸 오른쪽 + **위에서부터** 아래로(2026-09-01 사장님 요청 —
     // 종전엔 아래에 깔려 사이트 액션 아이콘·'메시지' 팝업과 겹쳤다).
+    // ★스크롤로 영상이 화면 위로 밀리면 rr.top이 음수가 된다. 종전엔 각 버튼이
+    //   Math.max(8, rr.top + 8 + slot*STEP)라 **전부 top:8로 눌려 한 자리에 포개졌다**
+    //   (2026-09-02 사장님 "스크롤 조금 내리면 합쳐진다"). 바닥값을 버튼별로 두지 말고
+    //   **기준선 하나를 먼저 정하고** 거기서 간격을 더한다 — 그러면 절대 겹치지 않는다.
+    var live = [];
+    for (var i0 = 0; i0 < DOCK_IDS.length; i0++) {
+      var e0 = document.getElementById(DOCK_IDS[i0]);
+      if (e0) live.push(e0);
+    }
+    // 영상이 화면에서 거의 사라졌으면 버튼도 숨긴다(엉뚱한 자리에 떠 있는 것보다 낫다).
+    var gone = !!rr && (rr.bottom < 120 || rr.top > window.innerHeight - 80);
+    var base = rr ? Math.max(8, Math.min(rr.top + 8,
+                 window.innerHeight - 8 - live.length * DOCK_STEP)) : 0;
     var slot = 0;
-    for (var i = 0; i < DOCK_IDS.length; i++) {
-      var el = document.getElementById(DOCK_IDS[i]);
-      if (!el) continue;
+    for (var i = 0; i < live.length; i++) {
+      var el = live[i];
+      el.style.display = gone ? "none" : "";
+      if (gone) continue;
       // 화면 밖으로 밀리면(좁은 창) 종전 오른쪽 아래 자리로 되돌린다.
       var w = el.offsetWidth || 150;
       if (!rr || x + 16 + w + 12 > window.innerWidth) {
@@ -1043,13 +1061,15 @@
       } else {
         el.style.right = "auto"; el.style.left = (x + 16) + "px";
         el.style.bottom = "auto";
-        el.style.top = Math.max(8, rr.top + 8 + slot * DOCK_STEP) + "px";
+        el.style.top = (base + slot * DOCK_STEP) + "px";
         slot++;
       }
     }
     // 시크바: 버튼과 겹치지 않게 **영상 아래쪽**에 붙인다(폭은 만들 때 줄여둔다).
     var sk = document.getElementById("ss-seek");
     if (sk) {
+      sk.style.display = gone ? "none" : "";
+      if (gone) return;
       if (!rr) { sk.style.left = ""; sk.style.right = "18px"; sk.style.bottom = "174px"; }
       else {
         var sw = sk.offsetWidth || 260;
@@ -1061,7 +1081,31 @@
     }
   }
 
-  function tick() { try{addFloatBtn();}catch(e){} try{addCardBtns();}catch(e){} try{addAnchorCardBtns();}catch(e){} try{addDouyinCardBtns();}catch(e){} try{syncFloat();}catch(e){} try{syncChannelBtn();}catch(e){} try{syncExtraBtns();}catch(e){} try{syncSeekBar();}catch(e){} try{syncGridBadges();}catch(e){} try{_dockBtns();}catch(e){} }
+  // ── 유튜브는 '쇼츠'에서만 동작한다 (2026-09-02 사장님 요청) ──────────────
+  //   메인·구독·검색·채널 등 목록 화면과 **롱폼(watch)** 에선 버튼을 아예 띄우지 않는다.
+  //   예외: 공유 링크로 열린 쇼츠는 /watch?v=... 로 뜨기도 한다 → 재생 중인 영상 길이가
+  //   3분 이하이면 쇼츠로 보고 허용한다(길이를 못 읽으면 롱폼으로 간주해 끈다).
+  function _ytOff() {
+    var h = location.host;
+    if (h.indexOf("youtube.com") < 0 && h.indexOf("youtu.be") < 0) return false;
+    if (/^\/shorts\//.test(location.pathname)) return false;      // 쇼츠 = 동작
+    if (/^\/watch/.test(location.pathname) || h.indexOf("youtu.be") >= 0) {
+      var v = document.querySelector("video");
+      var d = v && isFinite(v.duration) ? v.duration : 0;
+      if (d > 0 && d <= 180) return false;                        // watch로 열린 쇼츠
+    }
+    return true;                                                  // 그 외 유튜브 = 끔
+  }
+  // 유튜브 비대상 화면에서 이미 붙은 것들을 걷어낸다(SPA 이동 대응).
+  function _ytClear() {
+    try {
+      var els = document.querySelectorAll(
+        "#ss-grab-btn,#ss-chadd-btn,#ss-lens-btn,#ss-adopt-btn,#ss-seek,.ss-card-grab");
+      for (var i = 0; i < els.length; i++) els[i].remove();
+    } catch (e) {}
+  }
+
+  function tick() { if (_ytOff()) { _ytClear(); return; } try{addFloatBtn();}catch(e){} try{addCardBtns();}catch(e){} try{addAnchorCardBtns();}catch(e){} try{addDouyinCardBtns();}catch(e){} try{syncFloat();}catch(e){} try{syncChannelBtn();}catch(e){} try{syncExtraBtns();}catch(e){} try{syncSeekBar();}catch(e){} try{syncGridBadges();}catch(e){} try{_dockBtns();}catch(e){} }
   tick();
   // SPA라 스크롤·재검색으로 카드가 갈아끼워져도 버튼을 계속 유지한다.
   // 핸들을 남긴다 — 더 새로운 로직이 로드되면 위 가드가 이걸 끄고 이어받는다.
