@@ -14,7 +14,7 @@
   // 원인 찾는 데 한참 걸렸다. 그래서 버전을 숫자로 박고 큰 쪽이 이어받게 한다.
   // (옛 코드는 이 숫자가 없다 → 0으로 보고 새 로직이 이긴다. 옛 인터벌은 남지만
   //  버튼은 id 선점이라 서로 안 덮고, 새 화면(유튜브·쓰레드)은 새 로직이 그린다.)
-  var LOGIC_VER = 20260906;
+  var LOGIC_VER = 20260907;
   if ((window.__ssGrabVer || 0) >= LOGIC_VER) return;   // 같거나 더 새것이 이미 돎
   if (window.__ssGrabLoaded && !window.__ssGrabVer) {
     // 옛 로직이 이미 돌고 있다 — 그 버튼을 걷어내고 새 로직이 다시 그린다.
@@ -157,6 +157,40 @@
     var m = location.pathname.match(/^\/([^/]+)\/?(reels\/?)?$/);
     return (m && !_IG_RESERVED[m[1]]) ? m[1] : "";
   }
+  // ── 릴스/게시물 화면의 **작성자 핸들**을 화면에서 읽는다 (2026-09-02 사장님 제보) ──
+  //   증상: 릴스에서 📌채널수집을 누르면 "❌ 채널을 못 찾았어요"만 떴다.
+  //   원인: 서버가 username 없이 오면 yt-dlp로 인스타를 해석하는데, 로그인 없는 서버는
+  //         자주 막힌다(_resolve_uploader). 그런데 **화면에는 계정명이 이미 떠 있다** —
+  //         담기가 조회수를 화면에서 읽어 보내는 것과 같은 처방으로, 여기서 읽어 보낸다.
+  //   ★영상 근처(조상 6단계 안)의 프로필 링크만 고른다 — 사이드바 추천 계정을 집으면
+  //     엉뚱한 채널이 등록된다.
+  function _igAuthor() {
+    var ok = function (h) {
+      var m = String(h || "").match(/^\/([A-Za-z0-9._]+)\/?(\?|$)/);
+      return (m && !_IG_RESERVED[m[1]]) ? m[1] : "";
+    };
+    var vs = document.querySelectorAll("video"), best = null, area = 0;
+    for (var i = 0; i < vs.length; i++) {
+      var r = vs[i].getBoundingClientRect();
+      if (r.width * r.height > area) { area = r.width * r.height; best = vs[i]; }
+    }
+    var el = best && best.parentElement, guard = 0;
+    while (el && guard++ < 6) {
+      var as = el.querySelectorAll('a[href^="/"]');
+      for (var k = 0; k < as.length; k++) {
+        var u = ok(as[k].getAttribute("href"));
+        if (u) return u;
+      }
+      el = el.parentElement;
+    }
+    // 폴백: 페이지 안 JSON에 owner.username이 들어 있는 경우
+    try {
+      var m2 = (document.body.innerHTML || "").match(/"owner":\{[^}]*"username":"([A-Za-z0-9._]+)"/);
+      if (m2) return m2[1];
+    } catch (e) {}
+    return "";
+  }
+
   // ── 채널수집 버튼 — 인스타·틱톡에 이어 유튜브·쓰레드까지(2026-08-18 사장님 요청) ──
   // 플랫폼마다 '어디에 넣어야 수집이 잡느냐'가 다르다(인스타=discovered_channels,
   // 나머지=platform_seeds account). 그 갈래는 **서버 한 곳**(/api/discover/add_by_url)
@@ -189,7 +223,11 @@
     if (plat === "instagram") {
       var ig = _igProfileName();
       if (ig) return "username=" + encodeURIComponent(ig);
-      return isSinglePost() ? "url=" + encodeURIComponent(location.href) : "";
+      if (!isSinglePost()) return "";
+      var q = "url=" + encodeURIComponent(location.href);
+      var au = _igAuthor();
+      if (au) q += "&username=" + encodeURIComponent(au);   // 서버 yt-dlp 해석을 건너뛴다
+      return q;
     }
     if (plat === "tiktok")
       return (_ttProfile() || isSinglePost()) ? "url=" + encodeURIComponent(location.href) : "";
@@ -607,7 +645,9 @@
   function addFavChannelBtn() {
     var b = document.getElementById("ss-favch-btn");
     // 대상 판정은 📌채널수집과 **같은 함수**를 쓴다 — 여기서 또 정하면 어긋난다.
-    var want = !!_chQuery();
+    // ★관리자(사장님)에겐 안 띄운다 — 📌채널수집과 자리가 겹쳐 헷갈린다(2026-09-02 사장님).
+    //   회원에겐 그대로 필요하다(회원은 📌채널수집을 못 쓴다).
+    var want = !!_chQuery() && window.__ssIsAdmin !== true;
     if (b && !want) { b.remove(); return; }
     if (b || !want) return;
     _miniBtn("ss-favch-btn", "⭐ 볼채널등록",
