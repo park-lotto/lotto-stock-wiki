@@ -1619,8 +1619,11 @@ def api_fav_channel_refresh(request: Request):
                 if now - datetime.strptime(ts, "%Y-%m-%d %H:%M:%S").replace(
                         tzinfo=timezone.utc).timestamp() < _FAV_CH_TTL_SEC:
                     continue
-            except (ValueError, TypeError):
-                pass
+            except (ValueError, TypeError) as e:  # noqa: BLE001 — 형식이 깨진 값은
+                # 캐시를 못 믿는다는 뜻이라 그냥 갱신한다(무해). 다만 조용히 넘기면
+                # 매번 전부 재갱신하는 상태를 눈치채지 못한다 → 로그는 남긴다.
+                print(f"[볼채널] refreshed_at 파싱 실패(갱신 진행): {ts!r} {e!r}",
+                      file=sys.stderr)
         meta = _fav_channel_probe(it.get("platform"), it.get("channel_id"), it.get("url") or "")
         if meta:
             store.fav_channel_set_meta(it.get("platform"), it.get("channel_id"),
