@@ -402,24 +402,19 @@ function planClips(segIds, ttsDur, spread, beatIdx){
         const isLast = k === nPhrase - 1;
         const endB = isLast ? bounds[bounds.length - 1] : bounds[k + 1];
         const d = Math.max(0.1, endB - bounds[k]);
-        let idx = -1;
-        if (k < segments.length){
-          idx = k;                                   // 첫 바퀴 = 담은 순서대로(종전과 같다)
-        } else {
-          for (let t = 0; t < segments.length; t++){ // 두 바퀴째 = 뒤가 남은 조각을 돌아가며
-            const j = (ri + t) % segments.length;
-            if (segments[j].end - pos[j] >= Math.min(d, MIN_CLIP) - EPS){ idx = j; break; }
-          }
-          if (idx < 0){                              // 재료 소진 → 종전대로 마지막 컷이 커버
-            if (clips.length) clips[clips.length - 1].dur =
-              Math.round((clips[clips.length - 1].dur + (bounds[bounds.length - 1] - bounds[k])) * 100) / 100;
-            break;
-          }
-          ri = (idx + 1) % segments.length;
-        }
+        // ★재료가 구절보다 적으면 **담은 순서대로 돌아간다**(1,2,3,1,2,3…) — 2026-09-02 사장님
+        //   "하나를 올렸더니 2·3번 자리에 배치되고 같은 내용이 두 번 반복돼야 하는데 다른 게
+        //   3번에 붙는다". 종전엔 '뒤가 남은 조각의 이어지는 구간'을 골라서, 어느 자리에 무엇이
+        //   올지 사람이 예측할 수 없었다. 더 나쁜 건 조각을 하나 빼면 그 뒤 배치가 통째로
+        //   밀려 "하나 뺐는데 둘이 사라진 것처럼" 보인 것이다.
+        //   순환 반복은 자리↔조각 관계가 단순해 넣고 빼도 앞자리가 흔들리지 않는다.
+        const idx = k % segments.length;
         const seg = segments[idx];
-        clips.push({ seg_id: seg.seg_id, video_id: seg.video_id, start: pos[idx], dur: Math.round(d * 100) / 100 });
-        pos[idx] += d;
+        // 조각 뒤가 남았으면 이어서, 다 썼으면 그 조각의 처음부터 다시 본다(같은 내용 반복).
+        let st = pos[idx];
+        if (seg.end != null && seg.end - st < Math.min(d, MIN_CLIP) - EPS) st = seg.start;
+        clips.push({ seg_id: seg.seg_id, video_id: seg.video_id, start: st, dur: Math.round(d * 100) / 100 });
+        pos[idx] = st + d;
       }
       return clips;
     }
