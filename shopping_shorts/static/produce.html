@@ -4732,7 +4732,8 @@ function frPick(preset){
       channel:old.channel||MY_CHANNEL||'숏템메이커', title:old.title||hc,
       views:(old.views!=null&&old.views!=='')?old.views:(meta.has_head?(meta.demo_views||''):''),
       comments:(old.comments!=null&&old.comments!=='')?old.comments:(meta.has_head?(meta.demo_comments||''):''),
-      ad_badge:!!old.ad_badge, icons:old.icons!==false}};
+      // ★지금 틀에 값이 있으면 그것, 없으면 **마지막에 고른 것**(2026-09-02)
+      ad_badge:(old.ad_badge!=null?!!old.ad_badge:lastAdBadge()), icons:old.icons!==false}};
     // ★틀과 글자는 한 세트(사장님: "해드카피도 이 템플릿들과 맞춰서 한 세트로").
     //   값의 주인은 여전히 hcFont/hcSize/… 진짜 입력칸 하나 — 여기선 그 칸에 써넣고
     //   updateHC()가 돌게 한다(0순위-B). 새 값을 STATE.headcopy에 직접 넣지 않는다.
@@ -5374,7 +5375,9 @@ function setAdBadge(on){
   if(!hasFrame){
     // ★틀이 없어도 쓸 수 있어야 한다(2026-08-22 사장님 지시).
     //   끄는 거면 만들 것도 없다.
-    if(!on){ if(real) real.checked=false; return; }
+    if(!on){ if(real) real.checked=false;
+      try{ localStorage.setItem('fr_ad_badge_last','0'); }catch(e){} return; }
+    try{ localStorage.setItem('fr_ad_badge_last','1'); }catch(e){}
     // 띠 0 · 글자 없음 = **[광고]만 있는 빈 틀**. 서버가 띠 없이 뱃지만 그린다.
     STATE.deco.template={span:(STATE.deco.template&&STATE.deco.template.span)||'full',
       frame:{preset:'news_coral', bar_h:0, bottom_h:0, channel:'', title:'',
@@ -5384,8 +5387,12 @@ function setAdBadge(on){
     return;
   }
   if(real) real.checked=!!on;
+  try{ localStorage.setItem('fr_ad_badge_last', on?'1':'0'); }catch(e){}
   frUpdate();
 }
+// 마지막으로 고른 [광고] 표시 — 틀을 갈아탈 때 기본값으로 되살린다(2026-09-02 사장님:
+// "광고표시도 제 템플릿 설정으로 해도 항상 또 설정을 해야 돼요").
+function lastAdBadge(){ try{ return localStorage.getItem('fr_ad_badge_last')==='1'; }catch(e){ return false; } }
 // 틀을 고르거나 작업을 다시 열 때 스위치를 실제 값에 맞춘다
 function syncAdBadge(){
   const box=document.getElementById('adBadgeOn'); if(!box) return;
@@ -5524,6 +5531,7 @@ function initHeadcopy(){
   if(PENDING_STYLE_RESTORE){
     PENDING_STYLE_RESTORE = false;
     STYLE_TOUCHED = true;
+    CAP_STYLE_TOUCHED = true;   // 복원한 자막을 틀 고르기가 덮지 않게(2026-09-02)
     renderCapFontSelect();   // capFont 옵션을 먼저 채워야 applyConfig의 capFont value가 먹는다
     applyConfig(STATE.headcopy, STATE.captionStyle);   // DOM 입력칸 채움(+updateHC/updateCaption 내부호출)
     // ★워터마크도 같은 이유로 여기서 채운다(2026-08-27). 아래 updateDeco()가 먼저 돌면
@@ -6145,7 +6153,11 @@ function updateCaption(){
 //   → 플래그(상태)로 가르지 말고, **입력 핸들러에서만 저장을 건다**. updateCaption은
 //     그리기만 한다. 복원·애니메이션이 아무리 불러도 저장은 안 나간다.
 let _CAP_SAVE_T = null;
-function capTouched(){ updateCaption(); _capSaveSoon(); }
+// ★사장님이 자막 모양을 직접 만졌다는 표식(2026-09-02 제보: "자막 설정하고 갔다가
+//   다음 템플릿 가서 제꺼를 선택하면 또 폰트 자막 색깔이 검정으로 바뀌어 있어요").
+//   자리(CAP_POS_TOUCHED)만 지키고 색·외곽선·박스는 안 지켜서 매번 두 번 일했다.
+let CAP_STYLE_TOUCHED=false;
+function capTouched(){ CAP_STYLE_TOUCHED=true; updateCaption(); _capSaveSoon(); }
 function _capSaveSoon(){
   if(typeof saveHeadcopy !== 'function') return;   // 하네스엔 없다(슬라이스 테스트 보호)
   clearTimeout(_CAP_SAVE_T);                       // 슬라이더 드래그는 매 픽셀 뜬다 → 디바운스
@@ -6471,7 +6483,7 @@ function saveMyPreset(){
   localStorage.setItem('hc_my_presets', JSON.stringify(list));
   document.getElementById('myPresetName').value=''; renderMyPresets();
 }
-function applyMyPreset(i){ const p=myPresets()[i]; if(p) applyConfig(p.hc, p.cap); }
+function applyMyPreset(i){ const p=myPresets()[i]; if(!p) return; CAP_STYLE_TOUCHED=true; applyConfig(p.hc, p.cap); }
 function deleteMyPreset(i){ const list=myPresets(); list.splice(i,1); localStorage.setItem('hc_my_presets', JSON.stringify(list)); renderMyPresets(); }
 // ── 🖼 내 템플릿(2026-08-25 사장님 "내 템플릿 등록 하나 해주고") ──────────────
 // ★기존 '내 프리셋'(hc_my_presets)은 **헤드카피+자막만** 담는다 — 틀은 안 담긴다.
@@ -6503,6 +6515,11 @@ function applyFrTemplate(i){
   STATE.deco.template={span, frame:Object.assign({}, t.frame,
     {title:cur.title||'', views:cur.views||'', comments:cur.comments||''})};
   renderFramePresets();          // 고른 칸 표시 + frFill로 입력칸 복원
+  // ★frPick과 **같은 갱신 묶음**을 돈다(0순위-B). 종전엔 renderTemplateCards()를
+  //   안 불러 장면별 틀 카드가 앞 템플릿 그림 그대로였고, 그래서 사장님이
+  //   "'안 씀'을 먼저 눌러야 내 프리셋이 선택된다"고 제보했다(2026-09-02).
+  renderTemplateCards(); renderTemplatePreview();
+  frHcLabel();
   frUpdate();
 }
 function deleteFrTemplate(i){
@@ -6531,7 +6548,7 @@ function saveCapPreset(){
   localStorage.setItem('cap_presets', JSON.stringify(list));
   el.value=''; renderCapPresets();
 }
-function applyCapPreset(i){ const p=capPresets()[i]; if(p) applyConfig(null, p.cap); }   // 자막만 적용
+function applyCapPreset(i){ const p=capPresets()[i]; if(!p) return; CAP_STYLE_TOUCHED=true; applyConfig(null, p.cap); }   // 자막만 적용
 function deleteCapPreset(i){ const list=capPresets(); list.splice(i,1); localStorage.setItem('cap_presets', JSON.stringify(list)); renderCapPresets(); }
 function renderCapPresets(){
   const box=document.getElementById('capPresets'); if(!box) return;
@@ -6932,14 +6949,24 @@ function repaintFontLists(){
   if(menu) menu._built=false;
   const qmenu=document.getElementById('hcFontQMenu');   // ⚡빠른 조절 메뉴도 같은 목록이다
   if(qmenu){ qmenu._built=false; if(typeof buildQFontMenu==='function') buildQFontMenu(); }
+  // ★고르개를 비우기 전에 **지금 고른 값을 기억**한다(2026-09-02 사장님 제보:
+  //   "새로고침 하면 프리셋에 설정됐던 폰트가 그냥 기본폰트로 자꾸 바뀌는 오류").
+  //   뿌리: loadFontFavs가 비동기라 화면이 다 뜬 **뒤에** 이 함수가 돌면서 select를
+  //   통째로 비운다 → 브라우저가 첫 항목으로 되돌리고, 그 뒤 updateCaption/frUpdate가
+  //   그 기본값을 읽어 STATE에 굳혀버렸다. hcFont만 아래에서 복원하고 있었다.
+  const _keep={};
   ['hcFont','capFont','frTtFont','frChFont'].forEach(id=>{
     const el=document.getElementById(id);
-    if(el) el.innerHTML='';
+    if(el){ _keep[id]=el.value; el.innerHTML=''; }
   });
   if(typeof renderFontSelect==='function') renderFontSelect();
   if(typeof renderCapFontSelect==='function') renderCapFontSelect();
   if(typeof fillFrameFontSelects==='function') fillFrameFontSelects();
   // 선택돼 있던 값은 유지한다(다시 그리면 select가 첫 항목으로 튄다)
+  ['capFont','frTtFont','frChFont'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el && _keep[id]!=null) el.value=_keep[id];
+  });
   if(typeof HC_FONT_COMMITTED!=='undefined') setFontVal(HC_FONT_COMMITTED);
   if(typeof syncFontBtn==='function') syncFontBtn();
 }
@@ -7247,6 +7274,9 @@ function applyCaptionSet(p){
   // ★값의 주인은 입력칸 하나뿐이다(0순위-B). STATE.captionStyle을 직접 만지지 않고
   //   칸에 써넣고 updateCaption()이 돌게 한다.
   if(!p) return;                       // 옛 4종(news_*)엔 caption이 없다 → 안 건드림
+  // ★한 번이라도 자막을 직접 꾸몄으면 **마지막 기억을 지킨다** — 틀을 바꿔도 덮지 않는다
+  //   (2026-09-02 사장님: "이렇게 2번 작업하는 일이 많아져요"). 자리 규약과 같은 모양.
+  if(CAP_STYLE_TOUCHED) return;
   const g=id=>document.getElementById(id);
   if(!g('capColor')) return;           // 자막 UI가 아직 안 그려졌으면 조용히 통과
   const set=(id,v)=>{ const el=g(id); if(el && v!=null) el.value=v; };
@@ -14976,10 +15006,29 @@ function renderThumbHandles(){
   //   [크기 미세조정]·[회전] 슬라이더가 있다. 같은 일을 두 방법으로 두지 않는다.
   //   ⚠️남기는 것: ✕(삭제)는 슬라이더로 대신할 수 없고(2026-08-27 "배지 넣고 취소하는거
   //   없어"로 넣은 것), 점선 네모는 "지금 뭐가 골라져 있나"를 보여주는 표시다.
+  // ★크기·각도 손잡이를 되살린다(2026-09-02 고객 제보 "썸네일 스티커 크기 각도 조절이
+  //   미리보기 창에서 조절이 안돼요", 사장님 승인). 2026-08-28에 뺐던 이유는 감도였고,
+  //   그 뿌리는 **모서리 하나로 크기와 회전을 같이** 잡게 한 것이다(사장님: "둘다 조정하는
+  //   감도가 안좋아") — 조금만 돌려도 커지고, 키우려면 돌아갔다.
+  //   그래서 이번엔 **손잡이를 갈라서** 각각 한 가지만 한다:
+  //     ⤢ 오른아래 = 크기만(중심에서의 거리 비율 — 끈 만큼 그대로 커진다)
+  //     ↻ 오른위  = 각도만(중심 기준 각도차 · 5° 스냅)
+  //   슬라이더는 그대로 둔다 — 미세조정은 슬라이더가 정확하다(같은 값의 주인은 L 하나).
   box.innerHTML =
     `<div style="position:absolute;${pos(L.x - hx, L.y - hy)};width:${(hx * 200).toFixed(2)}%;
         height:${(hy * 200).toFixed(2)}%;border:1.5px dashed rgba(255,255,255,.65);border-radius:4px"></div>` +
-    btn('del', L.x - hx, L.y - hy, '✕', '삭제', 'pointer');
+    btn('del', L.x - hx, L.y - hy, '✕', '삭제', 'pointer') +
+    btn('rot', L.x + hx, L.y - hy, '↻', '끌어서 각도 (5°씩)', 'grab') +
+    btn('size', L.x + hx, L.y + hy, '⤢', '끌어서 크기', 'nwse-resize');
+}
+// 손잡이로 바꿀 수 있는 크기 범위 — 편집칸 슬라이더와 **같은 값**이어야 한다(0순위-B).
+// 손잡이로 슬라이더 밖 값까지 가면, 슬라이더를 다시 잡는 순간 값이 튄다.
+function _thumbSizeRange(L){
+  if (!L) return {min: 2, max: 60};
+  if (L.kind === 'sticker') return {min: 5, max: 60};
+  if (L.kind === 'shape')   return {min: 5, max: 60};
+  if (L.kind === 'badge')   return {min: 2, max: 14};
+  return {min: 2, max: 30};                      // 글자
 }
 
 // 손잡이 드래그 — 캔버스 드래그(이동)와 겹치지 않게 손잡이에서 시작한 것만 여기서 처리한다.
@@ -14990,11 +15039,54 @@ function renderThumbHandles(){
 //   캔버스 드래그(위치 옮기기)는 그대로다 — 그건 슬라이더로 못 하는 일이다.
 function initThumbHandleDrag(){
   const box = document.getElementById('thumbHandles'); if (!box || !box.addEventListener) return;
-  box.addEventListener('mousedown', e => {
+  const start = e => {
     const b = e.target.closest('button[data-h]'); if (!b) return;
     e.preventDefault(); e.stopPropagation();      // 캔버스 이동 드래그가 같이 붙는 걸 막는다
-    if (b.getAttribute('data-h') === 'del') removeThumbLayer(THUMB_STATE.sel);
-  });
+    const kind = b.getAttribute('data-h');
+    if (kind === 'del'){ removeThumbLayer(THUMB_STATE.sel); return; }
+    const L = (THUMB_STATE.layers || [])[THUMB_STATE.sel]; if (!L) return;
+    const pt = ev => (ev.touches && ev.touches[0]) || ev;
+    const r = box.getBoundingClientRect();
+    if (!r.width || !r.height) return;
+    // 중심(px) — 레이어 좌표는 0~1 비율이다
+    const cx = r.left + L.x * r.width, cy = r.top + L.y * r.height;
+    const p0 = pt(e);
+    const d0 = Math.hypot(p0.clientX - cx, p0.clientY - cy);
+    const a0 = Math.atan2(p0.clientY - cy, p0.clientX - cx);
+    const size0 = +L.size || 1, rot0 = +L.rot || 0;
+    const {min, max} = _thumbSizeRange(L);
+    const move = ev => {
+      const p = pt(ev);
+      if (ev.cancelable) ev.preventDefault();
+      if (kind === 'size'){
+        const d = Math.hypot(p.clientX - cx, p.clientY - cy);
+        if (d0 < 4) return;                       // 중심에서 시작하면 비율이 폭주한다
+        const v = size0 * (d / d0);
+        L.size = Math.round(Math.min(max, Math.max(min, v)) * 10) / 10;
+      } else {
+        const a = Math.atan2(p.clientY - cy, p.clientX - cx);
+        let deg = rot0 + (a - a0) * 180 / Math.PI;
+        deg = Math.round(deg / 5) * 5;            // 5° 스냅 — 손떨림으로 1°씩 흔들리지 않게
+        L.rot = Math.max(-180, Math.min(180, deg));
+      }
+      renderThumbCanvas();
+      renderThumbHandles();                       // 점선 박스·손잡이가 같이 따라온다
+    };
+    const up = () => {
+      document.removeEventListener('mousemove', move);
+      document.removeEventListener('mouseup', up);
+      document.removeEventListener('touchmove', move);
+      document.removeEventListener('touchend', up);
+      renderThumbLayers();                        // 편집칸 슬라이더를 새 값으로 맞춘다
+      renderThumbHandles();
+    };
+    document.addEventListener('mousemove', move);
+    document.addEventListener('mouseup', up);
+    document.addEventListener('touchmove', move, {passive: false});
+    document.addEventListener('touchend', up);
+  };
+  box.addEventListener('mousedown', start);
+  box.addEventListener('touchstart', start, {passive: false});
 }
 
 // 새 글자를 어디에 놓을지 — **이미 있는 글자와 겹치지 않는 첫 자리**를 고른다.
