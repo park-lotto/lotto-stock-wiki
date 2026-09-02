@@ -4941,6 +4941,37 @@ def api_mix_segments(job_id: str):
 
 
 
+def _seg_strip_thumb(src, dest_dir, seg, filename):
+    """조각 하나 → **시작·중간·끝 3장을 가로로 이어붙인 띠 썸네일** (2026-09-02).
+
+    왜: 조각이 겹치면 가운데 한 장만으론 서로 구분이 안 된다(사장님 "같은 썸네일이 두 장
+    들어갔는데 실제는 다른 조각들이야"). 3장이면 시작·끝이 달라 한눈에 갈린다.
+    ffmpeg 한 번으로 만든다(3회 seek 대신 hstack) — 실패하면 종전처럼 가운데 1장으로
+    폴백한다. 썸네일이 안 나오는 것보다 한 장이라도 나오는 게 낫다.
+    """
+    import subprocess          # app.py는 전역 import가 없다 — 이 함수 안에서만 쓴다
+    dest_dir = Path(dest_dir)
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    out = dest_dir / filename
+    a, b = float(seg["start"]), float(seg["end"])
+    if b - a < 0.35:                     # 너무 짧으면 3장이 같은 그림이다 — 한 장으로
+        return extract_frame_at(src, dest_dir, (a + b) / 2, filename=filename)
+    pts = [a + (b - a) * r for r in (0.06, 0.5, 0.94)]
+    fc = ";".join(
+        f"[0:v]trim=start={t:.3f}:end={t + 0.05:.3f},setpts=PTS-STARTPTS,scale=213:-2[v{i}]"
+        for i, t in enumerate(pts)) + ";[v0][v1][v2]hstack=inputs=3[out]"
+    try:
+        r = subprocess.run(
+            ["ffmpeg", "-y", "-v", "error", "-i", str(src),
+             "-filter_complex", fc, "-map", "[out]", "-frames:v", "1", str(out)],
+            capture_output=True, check=False, stdin=subprocess.DEVNULL, timeout=60)
+        if r.returncode == 0 and out.exists() and out.stat().st_size > 1000:
+            return str(out)
+    except Exception as e:               # noqa: BLE001 — 폴백이 있다
+        print(f"[seg_thumb] 띠 생성 실패(가운데 1장으로): {e!r}", file=sys.stderr)
+    return extract_frame_at(src, dest_dir, (a + b) / 2, filename=filename)
+
+
 def _film_seg_from_id(seg_id: str, job: dict):
     """`film_<video_id>_<start>_<end>` → {video_id,start,end}. 아니면 None.
 
@@ -4988,8 +5019,12 @@ def api_mix_seg_thumb(job_id: str, seg_id: str):
             src = _resolve_sources(job, work)[seg["video_id"]]
         except Exception:
             return JSONResponse(status_code=404, content={"ok": False, "error": "소스 없음"})
-        mid = (seg["start"] + seg["end"]) / 2
-        frame = extract_frame_at(src, work / "seg_thumbs", mid, filename=f"{seg_id}.jpg")
+        # ★한 장이 아니라 **시작·중간·끝 3장을 이어 붙인다**(2026-09-02 사장님 "겹친 거").
+        #   조각들이 서로 겹치면(실측 job 097db91ebd84: 6.70~8.27 / 6.89~7.60 / 7.25~8.82)
+        #   가운데 시점이 0.2~0.5초밖에 안 달라 **그림이 사실상 같아** 구분이 안 됐다.
+        #   "같은 썸네일이 두 장 들어갔는데 실제는 다른 조각"이 그것이다.
+        #   3장을 보면 조각이 어디서 시작해 어디서 끝나는지가 눈에 보인다.
+        frame = _seg_strip_thumb(src, work / "seg_thumbs", seg, f"{seg_id}.jpg")
         if not frame:
             return JSONResponse(status_code=404, content={"ok": False, "error": "프레임 추출 실패"})
     # 장면실험실(2026-08-15): 썸네일이 확보된 김에 phash(8x8 평균해시)도 함께 캐시한다.
