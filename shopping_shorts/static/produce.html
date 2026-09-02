@@ -14055,6 +14055,7 @@ function _ccBusyOff(){
   if(b){ b.disabled=false; if(b.dataset.orig!=null){ b.innerHTML=b.dataset.orig; delete b.dataset.orig; } }
 }
 async function sendToCapCut(){
+  let _ccDone=0, _ccTotal=0;   // ★실패 문구에 '몇 개까지 갔는지'를 남기기 위해 함수 스코프에 둔다
   if(!('showDirectoryPicker' in window)){ alert('캡컷으로 바로 보내기는 Chrome 또는 Edge에서만 됩니다.\n지금은 「📦 캡컷용 ZIP(수동)」을 받아 캡컷에 올려 주세요.'); return; }
   if(!MIX_JOB){ alert('먼저 영상을 만들어 주세요'); return; }
   let firstTime = false;
@@ -14079,7 +14080,7 @@ async function sendToCapCut(){
       const fh=await proj.getFileHandle(name,{create:true}); const w=await fh.createWritable(); await w.write(m.texts[name]); await w.close();
     }
     // ★에셋이 0개면 캡컷엔 00:00짜리 빈 프로젝트가 생긴다 — 조용히 성공이라 하지 않는다.
-    const total=(m.assets||[]).length;
+    const total=(m.assets||[]).length; _ccTotal=total;
     if(!total){
       _ccProgDone('❌ 보낼 영상 재료가 하나도 없습니다 — 관리자에게 알려주세요(작업번호 '+MIX_JOB+')', false);
       alert('보낼 영상 재료가 없습니다.\n캡컷에 빈 프로젝트만 생기므로 중단했습니다.\n작업번호: '+MIX_JOB); return;
@@ -14089,13 +14090,13 @@ async function sendToCapCut(){
       _ccProgShow('📤 영상 재료 보내는 중… <b>'+(done+1)+' / '+total+'</b>', done/total*100);
       const buf=await (await fetch(a.url)).arrayBuffer();
       const fh=await proj.getFileHandle(a.name,{create:true}); const w=await fh.createWritable(); await w.write(buf); await w.close();
-      done++;
+      done++; _ccDone=done;
     }
     _ccProgDone('✅ 다 보냈어요 — 캡컷에서 「'+m.project+'」를 여세요 (재료 '+done+'개)', true);
     alert('✅ 캡컷으로 보냈어요!\n\n캡컷을 열면 「'+m.project+'」 프로젝트가 보입니다.\n안 보이면 캡컷을 완전히 껐다 다시 켜 주세요.');
   }catch(e){
     if(e&&e.name==='AbortError'){ const el=document.getElementById('ccProgress'); if(el){ el.style.display='none'; el.innerHTML=''; } return; }   // 사용자가 폴더 선택 취소
-    _ccProgDone('❌ 보내기가 중간에 끊겼습니다 — 캡컷 프로젝트가 비어 있을 수 있어요. 다시 눌러주세요.<br><span style="font-weight:400">('+((e&&e.message)||e)+')</span>', false);
+    _ccProgDone('❌ 보내기가 중간에 끊겼습니다 — 재료 '+_ccTotal+'개 중 <b>'+_ccDone+'개</b>까지 갔습니다. 캡컷 프로젝트가 비어 있을 수 있어요, 다시 눌러주세요.<br><span style="font-weight:400">('+((e&&e.message)||e)+')</span>', false);
     alert('캡컷 보내기 실패: '+((e&&e.message)||e)+'\n\n대신 「📦 캡컷용 ZIP(수동)」을 받으실 수 있어요.');
   }finally{
     _ccBusyOff();
