@@ -114,7 +114,10 @@ function render(){
   });
 }
 function card(it){
-  const thumb=it.last_video_thumb||it.avatar||'';
+  // ★프로필(avatar)이 있으면 그걸 먼저 쓴다(2026-09-02 사장님 "채널 프로필 썸네일").
+  //   유튜브만 채워진다 — 인스타·틱톡은 서버에서 프로필을 못 긁어(yt-dlp 실패 실측)
+  //   종전대로 최근 영상 썸네일로 떨어진다. 그림이 아예 없으면 안내 문구.
+  const thumb=it.avatar||it.last_video_thumb||'';
   const inner = thumb
     ? '<img data-thumb="1" src="'+esc(thumb)+'">'
     : '<div class="none">아직 받아온 그림이 없어요<br>수집된 영상이 생기면 채워집니다</div>';
@@ -125,8 +128,10 @@ function card(it){
       '<div class="id">@'+esc(it.channel_id||'')+'</div>'+
       (it.followers?'<div class="fol">'+esc(fmtFollowers(it.followers))+'</div>':'')+
       '<div class="btns">'+
-        '<a class="view" href="/?q='+encodeURIComponent(it.channel_id||'')+'">채널 보기</a>'+
-        (it.url?'<a href="'+esc(it.url)+'" target="_blank" rel="noopener">원본</a>':'')+
+        // [채널이동] = 그 채널 홈으로. 주소는 서버가 정해 내려준다(home_url) —
+        // 저장된 url은 '담을 때 보던 화면'이라 영상 페이지일 수 있다.
+        (it.home_url?'<a class="view" href="'+esc(it.home_url)+'" target="_blank" '+
+                     'rel="noopener">채널이동</a>':'')+
         '<button class="del" data-plat="'+esc(it.platform||'')+'" data-cid="'+esc(it.channel_id||'')+'" '+
           'onclick="removeChannel(this)">빼기</button>'+
       '</div>'+
