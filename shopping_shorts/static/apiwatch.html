@@ -212,8 +212,12 @@ function renderVerdict(v){
   $('#verdict').className='verdict '+lv;
   const extra=(v.level!=='ok' && (v.warns||[]).length)
     ? `<div style="color:var(--sub);font-size:12.5px;margin-top:6px">지켜볼 것: ${esc((v.warns||[]).join(' · '))}</div>`:'';
+  // ★언제 기준인지 함께 적는다(2026-09-01 사장님 "시간을 표시해줘") — 시각이 없으면
+  //   이미 끝난 일을 지금 사고로 읽는다(04:11에 고친 키를 04:08 경보로 다시 쫓았다).
+  const when=v.checked_at?`<span style="float:right;color:var(--sub);font-size:12px;font-weight:400">`
+    +`${esc(v.checked_at)} 기준 · ${esc(v.window||'최근 1시간')}</span>`:'';
   $('#verdict').innerHTML=`<b>${icon} ${v.level==='danger'?'지금 조치가 필요합니다'
-    :v.level==='warn'?'지켜봐야 합니다':'지금은 괜찮습니다'}</b>${esc(v.msg||'')}${extra}`;
+    :v.level==='warn'?'지켜봐야 합니다':'지금은 괜찮습니다'}${when}</b>${esc(v.msg||'')}${extra}`;
 }
 
 function poolCards(snap,agg,budget){

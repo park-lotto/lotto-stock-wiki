@@ -75,7 +75,11 @@ def test_generate_cascades_on_exhausted_key(monkeypatch):
     monkeypatch.setattr(seo_generate.key_vault, "mark_exhausted", lambda g, k: marked.append(k))
     got = seo_generate.generate(_JOB)
     assert got["title"] == "샐 걱정 ZERO 텀블러"
-    assert marked == ["k1"]
+    # ★어느 키를 먼저 쓰는지는 이제 정해져 있지 않다(2026-09-01). 키를 페이서로
+    #   고르면서 라운드로빈이 들어갔기 때문이다 — 그게 429를 막는 장치라 되돌리면 안 된다.
+    #   이 테스트가 지켜야 할 것은 순서가 아니라 **소진된 키 하나를 마킹하고 다음으로
+    #   넘어가 결과를 낸다**는 계약이다.
+    assert len(marked) == 1 and marked[0] in ("k1", "k2"), marked
 
 
 def test_generate_bad_json_returns_none(monkeypatch):

@@ -561,7 +561,7 @@ def beat_screen_budget(beat):
     return sum(max(0.0, float(s["end"]) - float(s["start"])) for s in segs if s) * _MAX_SLOWMO
 
 
-def _conform_beats(beats, tts_dir, *, voice, global_pron=None):
+def _conform_beats(beats, tts_dir, *, voice, global_pron=None, customer_id=0):
     """싱크 콘폼 패스(2026-07-20 설계 T3) — 대사가 영상 예산을 넘는 비트만 표면 재단.
 
     예산 = beat_screen_budget(재료 구간 길이 합 × _MAX_SLOWMO — 실험실 편성·트림 반영).
@@ -604,7 +604,7 @@ def _conform_beats(beats, tts_dir, *, voice, global_pron=None):
                 beat_index=i, beat_total=total,
                 previous_text=beats[i - 1]["narration"] if i > 0 else None,
                 next_text=beats[i + 1]["narration"] if i < total - 1 else None,
-                global_pron=global_pron,
+                global_pron=global_pron, customer_id=customer_id,
             )
         except Exception:
             traceback.print_exc(file=sys.stderr)
@@ -1542,7 +1542,10 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     # 4.5) 싱크 콘폼(2026-07-20) — 대사가 영상 예산을 넘는 비트만 압축 리라이트 + 그 비트 재TTS.
     # 저장(아래) 전에 돌므로 preview·final 렌더 모두 자동 적용. 실패해도 job을 죽이지 않는다.
     try:
-        _conform_beats(plan["beats"], work / "tts", voice=voice, global_pron=global_pron)
+        # ★customer_id를 반드시 넘긴다(2026-09-02). 안 넘기면 cid 0으로 떨어져
+        #   **회원의 재합성이 사장님 키로** 나간다 — 막으려던 누수가 이 경로로 되살아난다.
+        _conform_beats(plan["beats"], work / "tts", voice=voice, global_pron=global_pron,
+                       customer_id=customer_id)
     except Exception:
         traceback.print_exc(file=sys.stderr)
 
@@ -1654,32 +1657,46 @@ class NotEnoughPoints(Exception):
 
 
 def _charge_clean(store, customer_id, n_calls):
-    """자막제거 선차감. 깎은 액수를 반환(0=무료). 모자라면 NotEnoughPoints.
+    """자막제거 관문 — **내 키가 없으면 거절**한다. 반환값은 항상 0(과금 없음).
 
-    ★단위는 **자막제거 콜 수**다(소스 개수가 아니다). 호출부(_ensure_clean_sources)가
-      소스를 이어붙여 보내므로 콜 수 = 묶음 수이고 보통 1이다.
-      2026-08-25 이전엔 len(todo)(=소스 수)로 깎아서, 화면 안내는 "영상 1편당"인데
-      소스 4개짜리 영상 하나에 4배가 나가는 실사고가 있었다(3a573e381로 수정).
-      ⚠️이 독스트링이 2026-09-02까지 옛 설명("소스 개수만큼 곱한다")으로 남아 있어
-        코드와 정반대를 말했다 — 인자 이름도 n_sources였다. 되돌리지 마라.
+    ★2026-09-01 사장님 확정: "v메이크랑 tts는 없으면 못하게 막아",
+      2026-09-02 재확인: "포인트로 내가 tts·v메이커 막아주는 건 없어".
+      전엔 키가 없으면 사장님 키로 돌리고 포인트를 깎았다. 회원들은 포인트를 쓰는
+      줄도 몰랐고(설명받은 적 없음), 포인트가 남은 회원만 조용히 통과해
+      "어떤 사람은 되고 어떤 사람은 안 되는" 상태가 됐다. 이제 길은 하나다 —
+      키를 등록하면 되고, 없으면 안 된다. **대납은 없다.**
+
+    ★인자 이름이 n_calls인 이유(2026-09-02 병합): 단위는 **자막제거 콜 수**다
+      (소스 개수가 아니다). 호출부(_ensure_clean_sources)가 소스를 이어붙여 보내므로
+      콜 수 = 묶음 수이고 보통 1이다. 2026-08-25 이전엔 소스 수로 깎아서, 안내는
+      "영상 1편당"인데 소스 4개짜리 하나에 4배가 나간 실사고가 있었다(3a573e381).
+      지금은 과금 자체가 없어 액수 사고는 안 나지만, **이름이 뜻을 속이면 다음 사람이
+      또 소스 수로 착각한다** — 이름은 정확한 채로 둔다.
+
+    ★함수 이름을 그대로 둔 이유: 호출부 3곳과 환불 짝(_refund_clean),
+      실패 분류(app.py clean_failure_kind)가 이 이름에 걸려 있다. 이름을 바꾸면
+      그 전부를 같이 고쳐야 하고, 하나라도 빠뜨리면 관문이 통째로 사라진다.
+      **관문이라는 역할은 그대로고, 통행료가 없어졌을 뿐이다.**
+
+    ★반환 0의 의미: 호출부는 이 값을 charged로 들고 다니다 실패 시 _refund_clean에
+      넘긴다. 0이면 환불이 아무 일도 안 한다 — 없는 포인트를 돌려주는 유령 지급이
+      생기지 않는다(환불 코드는 그대로 두어도 안전하다).
     """
-    from shopping_shorts import keyroute, points, pricing
+    from shopping_shorts import keyroute
     if n_calls <= 0:
         return 0
-    # ★cid 0 = 사장님 본인(store.LEGACY_CUSTOMER_ID). 자기 키로 자기한테 청구하는 꼴이라
-    #   과금 대상이 아니다. keyroute도 cid 0은 개인키 조회를 아예 건너뛴다.
-    #   정규화는 keyroute.as_cid를 그대로 쓴다 — 여기서 int()를 또 부르면
-    #   같은 판단이 두 곳에 흩어진다(0순위-B).
+    # ★cid 0 = 사장님 본인(store.LEGACY_CUSTOMER_ID)은 막지 않는다 — 회사 자산 작업이
+    #   여기서 막히면 서비스가 통째로 선다. 정규화는 keyroute.as_cid 하나만 쓴다(0순위-B).
     if not keyroute.as_cid(customer_id):
         return 0
-    if not keyroute.should_charge(store, customer_id, keyroute.SVC_VMAKE):
-        return 0                                    # 내 키 → 무료
-    need = pricing.cost(store, pricing.OP_VMAKE) * n_calls
-    if not points.deduct(store, customer_id, need, pricing.OP_VMAKE):
-        raise NotEnoughPoints(
-            f"포인트가 부족합니다 (필요 {pricing.to_display(need)}P, "
-            f"보유 {pricing.to_display(points.balance(store, customer_id))}P)")
-    return need
+    # ★차단 판단은 keyroute 한 곳(block_reason). 여기서 키 유무를 또 검사하면
+    #   웹 진입(app.py _need_own_key_or_402)과 어긋난다 — 한쪽만 막히면 큐에 남은
+    #   작업이 그대로 통과한다(웹만 막고 워커를 안 막으면 나는 사고).
+    # ★points·pricing은 더 이상 부르지 않는다(2026-09-02 사장님 "포인트로 대납 없어").
+    hit = keyroute.block_reason(store, customer_id, keyroute.SVC_VMAKE)
+    if hit:
+        raise NotEnoughPoints(hit[1])   # 예외 타입은 유지 — 호출부 3곳이 이걸 잡는다
+    return 0
 
 
 def _refund_clean(store, customer_id, amount):
@@ -3092,6 +3109,8 @@ def resynth_one_beat(job_id, beat_idx, voice_override, db_path, work_root):
     if not job or not job.get("edit_plan"):
         return
     plan = job["edit_plan"]
+    # ★이 job의 주인. 안 꺼내면 아래 TTS가 cid 0(사장님 키)으로 나간다(2026-09-02).
+    _cid_of_job = job.get("customer_id") or 0
     beat = next((b for b in plan["beats"] if b["beat_idx"] == beat_idx), None)
     if beat is None:
         return
@@ -3113,7 +3132,7 @@ def resynth_one_beat(job_id, beat_idx, voice_override, db_path, work_root):
             beat_index=i, beat_total=total,
             previous_text=plan["beats"][i - 1]["narration"] if i > 0 else None,
             next_text=plan["beats"][i + 1]["narration"] if i < total - 1 else None,
-            global_pron=pron_corrections.load(store),
+            global_pron=pron_corrections.load(store), customer_id=_cid_of_job,
         )
         beat["tts_path"] = str(out)
         beat["voice_override"] = voice_override
@@ -3147,7 +3166,7 @@ def resynth_one_beat(job_id, beat_idx, voice_override, db_path, work_root):
         # _conform_beats가 갱신한다). 한 칸짜리 리스트로 부르므로 앞뒤 문맥은 없지만
         # 판정·교정 규칙은 렌더와 완전히 같다.
         try:
-            _conform_beats([beat], tts_dir, voice=voice_override,
+            _conform_beats([beat], tts_dir, voice=voice_override, customer_id=_cid_of_job,
                            global_pron=pron_corrections.load(store))
         except Exception:      # noqa: BLE001 — 교정 실패로 재합성을 죽이지 않는다
             traceback.print_exc(file=sys.stderr)

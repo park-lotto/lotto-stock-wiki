@@ -88,7 +88,15 @@ def _vault_fallback(prompt, schema, max_tries=4):
     keys = keyroute.gemini_keys("general")
     if not keys:
         return None
-    for key in keys[:max_tries]:
+    # ★키를 페이서로 골라 쓴다(2026-09-01) — 종전 `for key in keys:`는 간격 0으로
+    #   연타해 키를 순식간에 다 태웠다. 사유·실측은 key_vault.pick_paced_key 참조.
+    #   시도 횟수·실패 처리는 종전과 같다.
+    pool = list(keys)
+    for _ in range(min(max_tries, len(pool))):   # 시도 상한은 종전과 동일
+        key = kv.pick_paced_key(pool)
+        if not key:
+            break
+        pool.remove(key)
         try:
             resp = kv.get_client_for_key(key).models.generate_content(
                 model=_MODEL, contents=prompt,
