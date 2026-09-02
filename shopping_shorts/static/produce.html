@@ -14095,6 +14095,16 @@ async function renderFinal(){
   </div>`;
   _rfStart=Date.now(); clearInterval(_rfTimer); _rfTimer=setInterval(_rfTick,1000); _rfTick();
   await saveHeadcopy();   // 헤드카피 설정을 job에 반영 후 렌더
+  // ★3단계 편집(컷 길이·편성)도 밀린 게 있으면 먼저 얹는다(2026-09-02).
+  //   미리보기 경로(_askRender)에서 실제로 난 사고와 **같은 뿌리**다: 편집 저장은
+  //   1.2초 디바운스라 렌더가 먼저 출발하면 옛 편성으로 만들어진다(실측 0ms 렌더 / 901ms 저장).
+  //   여기선 보통 단계를 옮겨오며 시간이 지나 안 걸리지만, 최종 렌더는 가장 비싼
+  //   작업이라 "혹시"를 남기지 않는다. 함수가 없으면(옛 화면·하네스) 조용히 통과.
+  try{
+    const _sl = document.getElementById('sceneLabFrame');
+    const _w = _sl && _sl.contentWindow;
+    if (_w && typeof _w.flushApply === 'function') await _w.flushApply();
+  }catch(e){ console.warn('편집 반영 실패(렌더는 계속)', e); }
   // 썸네일 인트로 체크는 렌더 요청과 **같이** 보낸다 — 따로 저장하는 경로를 만들면
   // '체크했는데 안 붙었다'가 난다(저장 실패를 아무도 모른다).
   const _intro = !!(document.getElementById('thumbIntro')||{}).checked;
@@ -14133,7 +14143,19 @@ const HL_SWATCHES = ['#FFD400','#FF3B30','#2EE6C5','#35C3FF','#FF5FA2','#2FD873'
 function hlSegments(line, rules, baseColor){
   const list=(rules||[]).filter(r=>r&&r.keyword);
   const marks=new Array(line.length).fill(null);
-  list.slice().sort((a,b)=>b.keyword.length-a.keyword.length).forEach(r=>{
+  // ★사람이 고른 낱말이 **틀(_fromFrame)보다 먼저** 자리를 잡는다(2026-09-02 사장님 제보).
+  //   재현: 낱말 색 지정 → 템플릿 적용 → 그 낱말 색을 다시 바꿔도 화면이 안 바뀐다.
+  //   원인: 템플릿은 **2줄째 통째**를 키워드로 규칙을 하나 넣는다(applyHeadcopySet, _fromFrame).
+  //   여기 정렬이 "긴 것 먼저"라 9자짜리 틀 규칙이 2자짜리 내 낱말을 통째로 덮었다
+  //   (marks[i]==null 이라 나중 규칙은 못 들어간다). 데이터는 바뀌는데 화면만 안 바뀌어
+  //   "색이 안 먹는다"로 보였다 — 실측: 내 규칙 #2EE6C5인데 세그는 전부 #000000.
+  //   → 사람 규칙(_fromFrame 아님)을 먼저 깔고, 남은 자리를 틀 규칙이 채운다.
+  //     길이 우선은 **같은 등급 안에서만** 유지한다(짧은 규칙이 긴 규칙을 조각내지 않게).
+  list.slice().sort((a,b)=>{
+    const af=a._fromFrame?1:0, bf=b._fromFrame?1:0;
+    if(af!==bf) return af-bf;                     // 사람 규칙 먼저
+    return b.keyword.length-a.keyword.length;     // 그 안에선 긴 것 먼저(종전과 같다)
+  }).forEach(r=>{
     let pos=line.indexOf(r.keyword);
     while(pos>=0){
       for(let i=pos;i<pos+r.keyword.length;i++) if(marks[i]==null) marks[i]=r;

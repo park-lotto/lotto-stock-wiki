@@ -1029,7 +1029,7 @@ def generate_variations(structure, full_text, elem_modes, category_lookup, mode=
         except Exception as e:  # noqa: BLE001 — 생성 실패는 치명적 아님(빈 리스트)
             if (comment_gen.key_vault.is_daily_exhausted_error(e)
                     or comment_gen.key_vault.is_account_disabled_error(e)):
-                comment_gen._mark_key_exhausted(ki, key_vault.retry_delay_seconds(e))
+                comment_gen._mark_key_exhausted(ki, key_vault.retry_delay_seconds(e), exc=e)
                 continue
             return []
     return []
@@ -1090,7 +1090,7 @@ def _refine(prompt, max_key_tries=3):
         except Exception as e:  # noqa: BLE001 — 재생성 실패는 치명적 아님(빈 문자열)
             if (comment_gen.key_vault.is_daily_exhausted_error(e)
                     or comment_gen.key_vault.is_account_disabled_error(e)):
-                comment_gen._mark_key_exhausted(ki, key_vault.retry_delay_seconds(e))
+                comment_gen._mark_key_exhausted(ki, key_vault.retry_delay_seconds(e), exc=e)
                 continue
             return ""
     return ""
@@ -1242,7 +1242,7 @@ def detect_subject(full_text, max_key_tries=3):
         except Exception as e:  # noqa: BLE001 — 감지 실패는 치명적 아님(빈 문자열)
             if (comment_gen.key_vault.is_daily_exhausted_error(e)
                     or comment_gen.key_vault.is_account_disabled_error(e)):
-                comment_gen._mark_key_exhausted(ki, key_vault.retry_delay_seconds(e))
+                comment_gen._mark_key_exhausted(ki, key_vault.retry_delay_seconds(e), exc=e)
                 continue
             return ""
     return ""

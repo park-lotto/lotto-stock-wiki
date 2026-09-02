@@ -5,6 +5,7 @@ pipeline.atoms.key_vault의 공유 풀과 분리(2026-07-09, 공유 풀이 다�
 하루 종일 같이 소모되다 예고 없이 소진된 사고 이후). 소진 판정 로직(429/
 PerDay 문자열 매칭)만 key_vault의 순수 함수를 재사용하고, 로테이션·상태
 저장은 이 모듈 자체 상태 파일로 완전히 독립."""
+import hashlib
 import json
 import os
 import sys
@@ -88,13 +89,74 @@ def _live_exhausted(state=None):
     return {i: t for i, t in _exhausted_map(st).items() if t > now}
 
 
-def _mark_key_exhausted(idx, retry_after=None):
-    """키를 **한시적으로** 잠근다. retry_after(초)를 주면 그만큼, 없으면 기본 TTL."""
+def _key_fingerprint(key):
+    """키를 원문 없이 식별하는 지문. 풀 순서(idx)는 회원 키 합류로 바뀌므로,
+    '영구 사망' 같은 오래 가는 표시는 반드시 이 지문으로 남긴다(2026-09-02)."""
+    return hashlib.sha256((key or "").encode()).hexdigest()[:16]
+
+
+def _dead_fingerprints(state=None):
+    """되살릴 수 없는 키(401/403 계정 사망)의 지문 집합."""
+    st = state if state is not None else _load_state()
+    raw = st.get("dead_keys") or {}
+    return set(raw) if isinstance(raw, dict) else set(raw)
+
+
+def _mark_key_dead(idx, detail=None):
+    """키를 **영구 제외**한다 — 401/403은 시간이 지나도 절대 안 풀린다.
+
+    ★왜 TTL 잠금과 갈랐나(2026-09-02 사장님 지적, 관측판 실측):
+      죽은 키(…nIWJaw)를 34분간 10~12번 반복 호출하고 있었다. 401/403도 429와 똑같이
+      30분 TTL 잠금만 걸려서, 만료되면 로테이션이 다시 그 키를 집어 또 실패했다.
+      쿼터(429)는 회복되지만 계정 삭제·비활성(401/403)은 회복되지 않는다.
+      → 지문으로 영구 표시하고, 되살림(_recheck_exhausted_keys)도 건드리지 않는다.
+      키를 실제로 빼는 것(env·회원키 삭제)은 여전히 사람 몫이지만, 그때까지
+      **호출을 한 번도 더 낭비하지 않는다.**
+    """
+    try:
+        key = SHORTS_GEMINI_KEYS[int(idx)]
+    except (IndexError, TypeError, ValueError):
+        return
+    fp = _key_fingerprint(key)
+    with _STATE_LOCK:
+        state = _load_state()
+        dead = state.get("dead_keys")
+        dead = dict(dead) if isinstance(dead, dict) else {f: 0 for f in (dead or [])}
+        if fp not in dead:
+            dead[fp] = time.time()
+            state["dead_keys"] = dead
+            _save_state(state)
+            print(f"comment_gen: 키 영구 제외 — idx={idx} …{(key or '')[-6:]} ({detail or '401/403'})",
+                  file=sys.stderr)
+    try:                                   # 관측판: 사망 확정 이벤트
+        from shopping_shorts import api_health
+        api_health.record("gemini", api_health.OUT_AUTH, pool="shorts",
+                          key_idx=int(idx), key=key,
+                          detail=f"영구 제외(dead) {detail or ''}"[:300])
+    except Exception as e:                 # noqa: BLE001 — 관측 실패가 제외를 막으면 안 된다
+        print(f"[관측] 키사망 기록 실패(무시): {e!r}", file=sys.stderr)
+
+
+def _mark_key_exhausted(idx, retry_after=None, exc=None):
+    """키를 **한시적으로** 잠근다. retry_after(초)를 주면 그만큼, 없으면 기본 TTL.
+
+    ★exc를 주면 401/403(계정 사망)인지 여기서 갈라 **영구 제외**로 보낸다.
+      판정을 호출부 25곳에 또 적지 않는다(0순위-B: 같은 결정을 두 번 적지 마라).
+    """
+    if exc is not None and key_vault.is_account_disabled_error(exc):
+        _mark_key_dead(idx, detail=str(exc)[:120])
+        return
     try:
         ttl = float(retry_after) if retry_after else _EXHAUST_TTL_S
     except (TypeError, ValueError):
         ttl = _EXHAUST_TTL_S
-    ttl = max(30.0, min(ttl, 6 * 3600.0))     # 30초~6시간 — 영구 낙인을 만들지 않는다
+    # ★상한을 24시간으로 넓힌다(2026-09-02). 6시간은 **분당 한도** 기준의 안전장치였는데,
+    #   일일 소진은 태평양 자정까지 최대 24시간을 기다려야 한다 — 한국 새벽~오전에
+    #   소진되면 자정까지 15시간이 남는데 6시간으로 잘려, 6시간 뒤 되살아나 또 때린다.
+    #   (retry_delay_seconds가 일일 소진이면 자정까지의 초를 준다 — 그 값을 여기서
+    #    잘라버리면 고친 의미가 없다. 핸드오프 '함정' 항목에 예고돼 있던 지점이다.)
+    #   그래도 무한은 아니다: 24시간이면 반드시 한 번은 다시 시험해 본다.
+    ttl = max(30.0, min(ttl, 24 * 3600.0))    # 30초~24시간 — 영구 낙인은 만들지 않는다
     with _STATE_LOCK:
         state = _load_state()
         cur = _exhausted_map(state)
@@ -121,7 +183,10 @@ _REVIVE_BELOW_RATIO = float(os.environ.get("SHORTS_KEY_REVIVE_RATIO", "0.2"))
 
 def _live_key_indices():
     exhausted = set(_live_exhausted())      # 만료된 잠금은 자동 해제된다
-    live = [i for i in range(len(SHORTS_GEMINI_KEYS)) if i not in exhausted]
+    dead = _dead_fingerprints()             # 401/403 — 시간이 지나도 안 풀린다
+    live = [i for i in range(len(SHORTS_GEMINI_KEYS))
+            if i not in exhausted
+            and (not dead or _key_fingerprint(SHORTS_GEMINI_KEYS[i]) not in dead)]
     scarce = len(live) <= max(1, int(len(SHORTS_GEMINI_KEYS) * _REVIVE_BELOW_RATIO))
     if scarce and exhausted and SHORTS_GEMINI_KEYS:
         # ★풀이 거의 다 잠겼으면 표시를 믿지 말고 실제로 찔러본다(2026-08-07 실사고).
@@ -193,11 +258,15 @@ def _recheck_exhausted_keys():
         _last_recheck["t"] = time.monotonic()
         marked = sorted(_live_exhausted())
     with _STATE_LOCK:
-        burned = set(_load_state().get("revived_once") or [])
+        _st = _load_state()
+        burned = set(_st.get("revived_once") or [])
+        dead_fps = _dead_fingerprints(_st)
     revived = []
     for idx in marked:
         if idx >= len(SHORTS_GEMINI_KEYS):
             continue
+        if _key_fingerprint(SHORTS_GEMINI_KEYS[idx]) in dead_fps:
+            continue                       # 401/403 영구 사망 — 프로브도 낭비다
         if idx in burned:
             # ★한 번 되살렸는데 또 소진됐다 = 프로브가 이 키를 잘못 읽고 있다.
             #   오늘은 더 안 믿는다(2026-08-27 실사고, 아래 _probe_key_alive 주석 참조).
@@ -378,7 +447,7 @@ def generate(caption, channel, category, max_retries=4, quota_sleep=8):
         except Exception as e:
             m = str(e)
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
-                _mark_key_exhausted(idx)  # 확실한 일일 한도 소진·계정비활성 영구 제외
+                _mark_key_exhausted(idx, key_vault.retry_delay_seconds(e), exc=e)
                 continue
             if key_vault.is_quota_error(e):
                 # 분당 제한 등 "일일 소진"까지는 확인 안 되는 429 — 키를 영구
