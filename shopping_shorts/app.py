@@ -4008,6 +4008,12 @@ _USER_ERROR_RULES = (
     # ★아래 3줄은 2026-09-01에 늘렸다. 이 사유들이 최근 30일 실패 100건 중 36건인데
     #   전부 "처리 중 문제가 발생했습니다"로 뭉개져, 고객이 자기 잘못인 줄 알고 헤맸다.
     #   셋 다 **고객이 고칠 수 없는 우리 쪽 문제**라 그렇게 분명히 말한다.
+    # 자기 키인데 잔액이 아닌 실패(429 한도·409 충돌) — 기다리면 대개 풀린다.
+    # 여기서 '충전하세요'라고 하면 헛돈을 쓰게 만든다. 위 _byok_credit_message가
+    # 잔액 건을 먼저 걷어내므로, 여기 오는 건 잔액이 아닌 것들이다.
+    (("api.elevenlabs.io", "api.typecast.ai"),
+     "음성 서비스가 잠시 몰려 응답하지 않았습니다. 1~2분 뒤 다시 시도해 주세요. "
+     "(반복되면 설정 > 🔑 내 키 등록에서 키 상태를 확인해 주세요)"),
     (("payment required", "402", "not enough credits", "[600", "insufficient"),
      "영상 처리 서비스의 사용 한도에 걸렸습니다. 고객님 잘못이 아니에요 — "
      "관리자에게 알려주시면 바로 풀어드립니다."),
@@ -4049,6 +4055,38 @@ def _looks_user_written(msg):
     return ko >= 20
 
 
+# 고객이 **자기 돈으로 쓰는** 외부 서비스. 잔액이 없으면 관리자가 못 풀어준다.
+#   (벤더 표식, 사람이 부르는 이름, 충전하러 갈 곳)
+_BYOK_VENDORS = (
+    (("api.elevenlabs.io", "elevenlabs"), "음성 서비스(ElevenLabs)", "elevenlabs.io"),
+    (("api.typecast.ai", "typecast"), "음성 서비스(타입캐스트)", "typecast.ai"),
+    (("vmake",), "자막 제거 서비스(VMake)", "vmake.ai"),
+)
+# '잔액이 없다'는 신호. 429(분당·월 한도)는 **여기 넣지 않는다** — 기다리면 풀리는데
+# 충전하라고 하면 고객이 헛돈을 쓴다(2026-09-02 실수, 만들자마자 잡았다).
+_OUT_OF_CREDIT = ("402", "payment required", "not enough credits", "insufficient",
+                  "[600", "quota exceeded for your plan")
+
+
+def _byok_credit_message(low):
+    """고객 자기 키의 **잔액 소진**이면 충전 안내를, 아니면 None.
+
+    ★왜(2026-09-02 사장님 "충전이 안 되서 오류가 나는 거면 고객한테도 화면에 표시를
+      해줘야 한다"): 종전엔 402를 전부 "고객님 잘못이 아니에요 — 관리자에게
+      알려주세요"로 뭉갰다. 실측으로 한 회원이 그 문구를 보며 402를 57번 맞았다.
+      정작 사장님은 풀어줄 방법이 없다 — 그 회원의 일레븐랩스 계정이기 때문이다.
+    ★벤더와 잔액신호를 **둘 다** 봐야 한다. 벤더만 보면 429(기다리면 풀림)까지
+      '충전하세요'가 되고, 잔액신호만 보면 우리 쪽 한도와 구분이 안 된다.
+    """
+    if not any(k in low for k in _OUT_OF_CREDIT):
+        return None
+    for marks, name, where in _BYOK_VENDORS:
+        if any(m in low for m in marks):
+            return (f"{name} 크레딧이 부족합니다. {where}에서 충전하신 뒤 다시 시도해 주세요. "
+                    "(설정 > 🔑 내 키 등록에서 다른 키로 바꿔도 됩니다)")
+    return None
+
+
 def _user_facing_error(msg):
     """실패 사유를 일반 사용자에게 보여줄 문장으로 바꾼다. 관리자에겐 쓰지 않는다."""
     # ★이미 사람 말로 쓴 안내는 **그대로 내보낸다**. 순화 규칙보다 먼저 판정한다 —
@@ -4056,6 +4094,9 @@ def _user_facing_error(msg):
     if _looks_user_written(msg):
         return msg
     low = (msg or "").lower()
+    byok = _byok_credit_message(low)      # 고객이 충전해야 풀리는 건 그렇게 말한다
+    if byok:
+        return byok
     for keys, friendly in _USER_ERROR_RULES:
         if any(k in low for k in keys):
             return friendly
