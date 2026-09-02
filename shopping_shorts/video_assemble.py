@@ -166,8 +166,16 @@ _FONT_FALLBACK_RATIO = 0.5
 # ②중요 비트(훅·반전)만 서서히 확대되는 켄번즈 줌(더 눈에 띄는 변형+시선 유도 효과 겸함).
 # 좌우반전은 제외 — 원본 화면 속 글자·로고가 있으면 뒤집혀서 오염돼 보일 위험이 있어
 # "화질 오염 없이"라는 기준에 안 맞는다고 판단(2026-07-14).
-_BASE_ZOOM = 1.04          # 전 비트 기본 확대율(정적, 저비용)
-_KENBURNS_ZOOM = 1.10       # 중요 비트 최종 확대율(동적)
+# ★2026-09-02 사장님 지시로 **꺼졌다**("반중복? 그 확대를 꺼").
+#   이 확대는 사장님이 요청한 기능이 아니다 — 2026-07-14 커밋 424974989에서
+#   "말 안 해도 항상 적용"으로 넣은 자동 효과였고, 그 결과:
+#     · 원본 구도가 늘 잘려 나갔다(왼쪽·오른쪽 물건이 화면 밖으로).
+#     · 5단계 자막제거 화면의 BEFORE(원본)/AFTER(조립본)가 서로 다른 배율이 돼
+#       "자막제거를 하면 확대된다"로 보였다.
+#   되돌리려면 SHORTS_ANTIDUP_ZOOM=1 (옛 값 1.04/1.10으로 복귀).
+_ANTIDUP_ZOOM_ON = os.environ.get("SHORTS_ANTIDUP_ZOOM", "0") not in ("0", "", "off", "false")
+_BASE_ZOOM = 1.04 if _ANTIDUP_ZOOM_ON else 1.0      # 전 비트 기본 확대율(정적, 저비용)
+_KENBURNS_ZOOM = 1.10 if _ANTIDUP_ZOOM_ON else 1.0  # 중요 비트 최종 확대율(동적)
 _IMPORTANT_ROLES = {"훅", "반전"}  # edit_plan.py _REQUIRED_ROLES와 동일 어휘
 
 
@@ -186,6 +194,11 @@ def _kenburns_vf(duration_sec, fps=30, zoom_end=_KENBURNS_ZOOM):
     비디오 입력(정지이미지 아님)에서 상태가 안 이어져 매 프레임 그대로 있는 버그가
     있어(2026-07-14 로컬 실측: 89px→89px, 안 움직임), 출력 프레임번호 'on'을 직접
     식에 넣는 방식으로 고쳤다('on' 사용 시 89px→97px로 실제 확대 확인됨)."""
+    # ★확대가 꺼져 있으면(SHORTS_ANTIDUP_ZOOM=0, 2026-09-02 기본) 켄번즈도 돌지 않는다.
+    #   zoom_end=1로 두면 1.3배 확대했다가 다시 줄이는 헛일이라 화질만 손해다.
+    #   판정은 여기 한 곳 — 호출부 3곳이 각자 분기하면 반드시 어긋난다(0순위-B).
+    if zoom_end <= 1.0001:
+        return _base_zoom_vf(None)
     frames = max(1, round(duration_sec * fps))
     step = (zoom_end - 1) / frames
     pre_w, pre_h = int(_OUT_W * 1.3), int(_OUT_H * 1.3)  # zoompan 전에 여유있게 확대해둬야 크롭 여백이 남는다
