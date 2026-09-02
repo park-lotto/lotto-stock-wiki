@@ -14074,7 +14074,19 @@ const HL_SWATCHES = ['#FFD400','#FF3B30','#2EE6C5','#35C3FF','#FF5FA2','#2FD873'
 function hlSegments(line, rules, baseColor){
   const list=(rules||[]).filter(r=>r&&r.keyword);
   const marks=new Array(line.length).fill(null);
-  list.slice().sort((a,b)=>b.keyword.length-a.keyword.length).forEach(r=>{
+  // ★사람이 고른 낱말이 **틀(_fromFrame)보다 먼저** 자리를 잡는다(2026-09-02 사장님 제보).
+  //   재현: 낱말 색 지정 → 템플릿 적용 → 그 낱말 색을 다시 바꿔도 화면이 안 바뀐다.
+  //   원인: 템플릿은 **2줄째 통째**를 키워드로 규칙을 하나 넣는다(applyHeadcopySet, _fromFrame).
+  //   여기 정렬이 "긴 것 먼저"라 9자짜리 틀 규칙이 2자짜리 내 낱말을 통째로 덮었다
+  //   (marks[i]==null 이라 나중 규칙은 못 들어간다). 데이터는 바뀌는데 화면만 안 바뀌어
+  //   "색이 안 먹는다"로 보였다 — 실측: 내 규칙 #2EE6C5인데 세그는 전부 #000000.
+  //   → 사람 규칙(_fromFrame 아님)을 먼저 깔고, 남은 자리를 틀 규칙이 채운다.
+  //     길이 우선은 **같은 등급 안에서만** 유지한다(짧은 규칙이 긴 규칙을 조각내지 않게).
+  list.slice().sort((a,b)=>{
+    const af=a._fromFrame?1:0, bf=b._fromFrame?1:0;
+    if(af!==bf) return af-bf;                     // 사람 규칙 먼저
+    return b.keyword.length-a.keyword.length;     // 그 안에선 긴 것 먼저(종전과 같다)
+  }).forEach(r=>{
     let pos=line.indexOf(r.keyword);
     while(pos>=0){
       for(let i=pos;i<pos+r.keyword.length;i++) if(marks[i]==null) marks[i]=r;
