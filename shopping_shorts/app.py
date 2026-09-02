@@ -1545,12 +1545,44 @@ def _fav_channel_platform(url: str) -> str:
     return ""
 
 
+_FAV_CH_HOME = {
+    "instagram":   "https://www.instagram.com/{id}/",
+    "tiktok":      "https://www.tiktok.com/@{id}",
+    "youtube":     "https://www.youtube.com/@{id}",
+    "threads":     "https://www.threads.com/@{id}",
+    "xiaohongshu": "https://www.xiaohongshu.com/user/profile/{id}",
+    "douyin":      "https://www.douyin.com/user/{id}",
+}
+
+
+def _fav_channel_home_url(platform, channel_id, fallback=""):
+    """채널 홈(프로필) 주소. ★저장된 url은 '담을 때 보던 주소'라 영상 페이지일 수
+    있다 — [채널이동]은 채널 홈으로 가야 하므로 여기서 다시 만든다.
+    유튜브 채널ID(UC...)는 @핸들이 아니므로 /channel/ 형태로 간다."""
+    plat = (platform or "").lower()
+    cid = (channel_id or "").lstrip("@")
+    if not cid:
+        return fallback
+    if plat == "youtube" and cid.startswith("UC") and len(cid) == 24:
+        return "https://www.youtube.com/channel/" + cid
+    tpl = _FAV_CH_HOME.get(plat)
+    return tpl.format(id=cid) if tpl else fallback
+
+
+def _fav_channel_decorate(items):
+    """목록에 화면이 쓸 파생값을 붙인다(저장은 안 한다)."""
+    for it in items:
+        it["home_url"] = _fav_channel_home_url(
+            it.get("platform"), it.get("channel_id"), it.get("url") or "")
+    return items
+
+
 @app.get("/api/fav_channel/list")
 def api_fav_channel_list(request: Request):
     """내 볼채널 목록. 지표 갱신은 여기서 하지 않는다 — 화면이 refresh를 따로 부른다
     (열 때 1회·6시간 캐시. 목록 조회마다 외부 API를 때리면 카드 수만큼 비용이 난다)."""
     store = Store(DB_PATH)
-    items = store.fav_channel_list(customer_id=_cid(request))
+    items = _fav_channel_decorate(store.fav_channel_list(customer_id=_cid(request)))
     return {"ok": True, "items": items, "cap": store.FAV_CHANNEL_CAP}
 
 
@@ -1612,6 +1644,10 @@ def api_fav_channel_refresh(request: Request):
     items = store.fav_channel_list(customer_id=cid)
     now = time.time()
     done = 0
+    # ★유튜브 조회는 채널당 수십 초다(yt-dlp). 50개를 한 번에 돌면 화면이 통째로
+    #   멈춘다 → 한 번에 이만큼만 갱신하고 나머지는 다음에 열 때 이어서 한다.
+    #   6시간 캐시가 있어 몇 번 열면 전부 채워진다.
+    slow_left = 3
     for it in items:
         ts = it.get("refreshed_at")
         if ts:
@@ -1624,19 +1660,61 @@ def api_fav_channel_refresh(request: Request):
                 # 매번 전부 재갱신하는 상태를 눈치채지 못한다 → 로그는 남긴다.
                 print(f"[볼채널] refreshed_at 파싱 실패(갱신 진행): {ts!r} {e!r}",
                       file=sys.stderr)
+        if (it.get("platform") or "").lower() == "youtube":
+            if slow_left <= 0:
+                continue
+            slow_left -= 1
         meta = _fav_channel_probe(it.get("platform"), it.get("channel_id"), it.get("url") or "")
         if meta:
             store.fav_channel_set_meta(it.get("platform"), it.get("channel_id"),
                                        customer_id=cid, **meta)
             done += 1
     return {"ok": True, "refreshed": done,
-            "items": store.fav_channel_list(customer_id=cid)}
+            "items": _fav_channel_decorate(store.fav_channel_list(customer_id=cid))}
+
+
+def _fav_channel_yt_probe(channel_id):
+    """유튜브 채널의 프로필 이미지·채널명·구독자 수(2026-09-02 사장님 "프로필 썸네일").
+    yt-dlp 채널 메타만 읽는다(--playlist-items 0 = 영상 목록을 안 받는다) — 무료.
+
+    ★인스타·틱톡은 이 방법이 안 된다(실측 2026-09-02):
+        instagram: "Unable to extract data"  /  tiktok: "Unable to extract secondary user ID"
+      그래서 그 둘은 종전대로 '최근 영상 썸네일'을 쓴다. 프로필을 넣겠다고
+      유료 크롤을 붙이지 않는다 — 카드 그림 하나에 과금이 붙는 건 남는 장사가 아니다."""
+    out = {}
+    try:
+        import subprocess, sys, json
+        r = subprocess.run(
+            [sys.executable, "-m", "yt_dlp", "-J", "--no-warnings",
+             "--playlist-items", "0", _fav_channel_home_url("youtube", channel_id)],
+            capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=90)
+        d = json.loads(r.stdout) if r.returncode == 0 and r.stdout.strip() else {}
+    except Exception as e:  # noqa: BLE001 — 갱신 실패가 목록을 막지 않는다
+        print(f"[볼채널] 유튜브 채널조회 실패(무해) {channel_id}: {e!r}", file=sys.stderr)
+        return out
+    if d.get("channel"):
+        out["name"] = d["channel"]
+    if d.get("channel_follower_count") is not None:
+        out["followers"] = d["channel_follower_count"]
+    # 아바타(정사각)를 고른다 — 배너(가로로 긴 것)를 쓰면 카드가 흉해진다.
+    best = None
+    for t in (d.get("thumbnails") or []):
+        w, h = t.get("width") or 0, t.get("height") or 0
+        if not t.get("url") or not w or not h:
+            continue
+        if abs(w - h) <= 2 and (best is None or w > best[0]):   # 정사각 중 가장 큰 것
+            best = (w, t["url"])
+    if best:
+        out["avatar"] = best[1]
+    return out
 
 
 def _fav_channel_probe(platform, channel_id, url=""):
     """채널 1개의 표시용 메타(팔로워·프로필·최근영상 썸네일)를 얻는다.
     ★유료 API를 새로 부르지 않는다 — 우리가 이미 가진 아카이브를 먼저 본다.
     아카이브에 없으면 빈 dict(카드는 이름만 뜨고, 그게 정상이다)."""
+    if (platform or "").lower() == "youtube":
+        return _fav_channel_yt_probe(channel_id)
     out = {}
     try:
         store = Store(DB_PATH)
