@@ -56,23 +56,26 @@ console.log(JSON.stringify(out));
     return json.loads(run_js(script))
 
 
-RECT = {"width": 500, "height": 880, "top": 10, "bottom": 890, "right": 560, "left": 60}
+# ★영상 칸은 사이트 **헤더 아래**에서 시작한다(인스타·유튜브 모두 60px 안팎).
+#   종전 top:10은 헤더 위라 현실에 없는 배치였고, 그 값에 맞춘 기대값 때문에
+#   "헤더를 덮지 마라"는 새 규칙이 회귀처럼 보였다.
+RECT = {"width": 500, "height": 880, "top": 100, "bottom": 890, "right": 560, "left": 60}
 
 
 def test_버튼은_영상칸_오른쪽_위에서부터_쌓인다():
     st = _run(1280, RECT)
     assert st["ss-adopt-btn"]["left"] == "576px"
-    assert st["ss-adopt-btn"]["top"] == "18px"       # rect.top + 8
-    assert st["ss-lens-btn"]["top"] == "70px"        # +52
-    assert st["ss-grab-btn"]["top"] == "174px"
+    assert st["ss-adopt-btn"]["top"] == "108px"      # rect.top + 8
+    assert st["ss-lens-btn"]["top"] == "160px"       # +52
+    assert st["ss-grab-btn"]["top"] == "264px"
     assert st["ss-adopt-btn"]["bottom"] == "auto"
 
 
 def test_없는_버튼은_빈칸을_남기지_않는다():
     """⭐레퍼런스 등록은 영상 페이지에서만 뜬다 — 없을 때 첫 칸부터 채워야 한다."""
     st = _run(1280, RECT, present=["ss-lens-btn", "ss-grab-btn"])
-    assert st["ss-lens-btn"]["top"] == "18px"
-    assert st["ss-grab-btn"]["top"] == "70px"
+    assert st["ss-lens-btn"]["top"] == "108px"
+    assert st["ss-grab-btn"]["top"] == "160px"
 
 
 def test_시크바는_영상_아래쪽에_붙는다():
@@ -103,3 +106,14 @@ def test_액션열이_형제면_그_오른쪽으로_비켜난다():
     """유튜브 쇼츠의 좋아요·공유 열은 영상 바깥에 있다 — 그 위에 얹히면 안 된다."""
     st = _run(1800, RECT, rail={"left": 570, "right": 660, "width": 90, "height": 400})
     assert st["ss-grab-btn"]["left"] == "676px"      # 액션열 오른쪽 + 16
+
+
+def test_버튼이_사이트_헤더를_덮지_않는다():
+    """2026-09-02 사장님 "이거때매 계정 눌러지지가 않는다".
+
+    영상이 화면 위로 올라가면 버튼이 top:8까지 붙어 인스타 헤더의 계정 아이콘을
+    덮었다. 헤더(60px 안팎) 아래로만 내려온다.
+    """
+    up = dict(RECT, top=-200, bottom=680)      # 스크롤로 영상이 위로 밀린 상태
+    st = _run(1280, up)
+    assert st["ss-adopt-btn"]["top"] == "72px", st["ss-adopt-btn"]

@@ -1124,7 +1124,12 @@
     }
     // 영상이 화면에서 거의 사라졌으면 버튼도 숨긴다(엉뚱한 자리에 떠 있는 것보다 낫다).
     var gone = !!rr && (rr.bottom < 120 || rr.top > window.innerHeight - 80);
-    var base = rr ? Math.max(8, Math.min(rr.top + 8,
+    // ★사이트 **헤더 아래로만** 내려온다(2026-09-02 사장님 "이거때매 계정 눌러지지가
+    //   않는다"). 종전 바닥값 8px은 화면 맨 위라, 영상이 위로 올라간 화면에서 담기 버튼이
+    //   인스타 헤더의 **계정 아이콘 위를 덮어** 프로필을 못 눌렀다. 인스타·유튜브·틱톡
+    //   헤더가 모두 60px 안팎이라 그 아래(72px)를 바닥으로 둔다.
+    var HEADER_SAFE = 72;
+    var base = rr ? Math.max(HEADER_SAFE, Math.min(rr.top + 8,
                  window.innerHeight - 8 - live.length * DOCK_STEP)) : 0;
     var slot = 0;
     for (var i = 0; i < live.length; i++) {
