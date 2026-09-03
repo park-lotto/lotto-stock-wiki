@@ -2274,7 +2274,7 @@
                     <option value="700">굵게</option><option value="900" selected>아주 굵게</option><option value="400">보통</option>
                   </select>
                   <span id="hcSizeV">64</span><input id="hcSize" type="range" min="28" max="120" value="64" oninput="hcTouched()">
-                  <span id="hcYV">14</span><input id="hcY" type="range" min="0" max="100" value="14" oninput="HC_Y_TOUCHED=true;hcTouched()">
+                  <span id="hcYV">14</span><input id="hcY" type="range" min="0" max="100" step="0.5" value="14" oninput="HC_Y_TOUCHED=true;hcTouched()">
                   <span id="hcXV">50</span><input id="hcX" type="range" min="0" max="100" value="50" oninput="hcTouched()">
                 </div>
                 <!-- ③ 테두리 · 박스 -->
@@ -7891,13 +7891,20 @@ function bindZoom(){
 function bindHCDrag(){
   const pv=document.getElementById('hcPreview'), tx=document.getElementById('hcPreviewText');
   if(!pv||!tx||tx._dragBound) return; tx._dragBound=true;
-  tx.style.cursor='move'; let drag=false;
+  tx.style.cursor='move'; let drag=false, grabY=0, y0=0;
+  // ★잡은 지점 기준으로 **움직인 만큼만** 옮긴다(2026-09-03 사장님 "감도가 안 좋아
+  //   이상한 방향으로 간다"). 종전엔 커서의 **절대 위치**를 그대로 y로 썼다 —
+  //   글자 가장자리를 잡으면 글자 중심이 커서로 **순간이동**해 손이 안 간 방향으로 튀었고,
+  //   1%(≈19px, 1920 기준)로 반올림해 계단처럼 끊겼다. 0.5% 단위로 잡아 두 배 곱게 움직인다.
+  const _grab=e=>{ drag=true; grabY=(e.touches?e.touches[0].clientY:e.clientY);
+                   y0=parseFloat(document.getElementById('hcY').value)||0; };
   const move=e=>{ if(!drag) return; const r=pv.getBoundingClientRect();  // 세로만 이동(가로는 위치버튼으로)
     const cy=(e.touches?e.touches[0].clientY:e.clientY);
-    let y=Math.round(Math.max(0,Math.min(100,(cy-r.top)/r.height*100)));
+    const dy=(cy-grabY)/r.height*100;
+    let y=Math.round(Math.max(0,Math.min(100, y0+dy))*2)/2;
     document.getElementById('hcY').value=y; HC_Y_TOUCHED=true; updateHC(); };
-  tx.addEventListener('mousedown', e=>{drag=true; e.preventDefault();});
-  tx.addEventListener('touchstart', e=>{drag=true;}, {passive:true});
+  tx.addEventListener('mousedown', e=>{ _grab(e); e.preventDefault();});
+  tx.addEventListener('touchstart', e=>{ _grab(e); }, {passive:true});
   document.addEventListener('mousemove', move);
   document.addEventListener('touchmove', move, {passive:true});
   document.addEventListener('mouseup', ()=>drag=false);
@@ -12492,11 +12499,34 @@ function _cleanAfterMissing(img){
     img.style.display='none';
     var cell=img.closest('.cp-cell'); if(!cell) return;
     var cap=cell.querySelector('.cp-cap');
-    if(cap){ cap.textContent='이 영상은 완성본에 안 쓰였습니다'; cap.className='cp-cap'; }
+    if(cap){ cap.textContent=CLEAN_STALE ? '장면을 바꾼 뒤라 옛 청소본과 맞출 수 없어요 — ↻ 다시 미리보기' : '이 영상은 완성본에 안 쓰였습니다'; cap.className='cp-cap'; }
     var chk=cell.querySelector('.cp-chk'); if(chk) chk.style.display='none';
   }catch(e){}
 }
-function cleanGo(si,pos){
+// ★컷 단위 넘기기(2026-09-03 사장님 "5장면밖에 안 나오는 것도 문제"). 종전엔 소스(담은 영상)
+//   단위라 소스 5개면 5장 — 완성본 컷 20개 중 각 소스 첫 컷만 보였다. 5단계 장면매칭처럼
+//   컷마다 한 장씩 넘긴다. 비용 0 — 이미 끝난 파일에서 ffmpeg로 1장씩 꺼낼 뿐(청소 재호출 없음).
+//   목록은 서버(/clean_clips)가 준다 — 화면이 스스로 세면 판정이 두 곳이 된다(0순위-B).
+//   stale=true면 장면편집 뒤라 청소본이 옛 편성이다. 좌우는 청소 당시 편성으로 짝을 맞춰
+//   같은 장면이지만, 렌더 땐 다시 청소된다(크레딧 추가) — 그 사실을 화면에 적는다.
+let CLEAN_CLIPS=null, CLEAN_CLIPS_JOB=null, CLEAN_STALE=false;
+async function loadCleanClips(job){
+  if(CLEAN_CLIPS_JOB===job) return;
+  try{
+    const d=await (await fetch('/api/produce/mix/clean_clips/'+encodeURIComponent(job))).json();
+    CLEAN_CLIPS=(d && d.clips && d.clips.length)? d.clips : null;
+    CLEAN_STALE=!!(d && d.stale);
+  }catch(e){ CLEAN_CLIPS=null; CLEAN_STALE=false; }
+  CLEAN_CLIPS_JOB=job;
+}
+function cleanGo(si,pos,ci){
+  if(CLEAN_CLIPS){                       // 컷 모드 — ci(컷 번호)로 움직인다
+    const n=CLEAN_CLIPS.length;
+    if(typeof ci!=='number') ci=CLEAN_VIEW.ci||0;
+    ci=Math.max(0,Math.min(n-1,ci));
+    CLEAN_VIEW={ci:ci, si:CLEAN_CLIPS[ci].si, pos:pos, job:CLEAN_VIEW.job};
+    renderCleanReady(CLEAN_VIEW.job||MIX_JOB); return;
+  }
   // 목록에 없는 번호로는 가지 않는다 — 안 쓰인 소스는 AFTER를 뽑을 수 없다.
   const L=_cleanIdxList();
   if(L.indexOf(si)<0){
@@ -12504,24 +12534,45 @@ function cleanGo(si,pos){
     si = (si>CLEAN_VIEW.si) ? (L[Math.min(L.length-1,cur+1)]) : (L[Math.max(0,cur-1)]);
     if(typeof si!=='number') si=L[0];
   }
-  CLEAN_VIEW={si:si, pos:pos};
+  CLEAN_VIEW={si:si, pos:pos, job:CLEAN_VIEW.job};
   renderCleanReady(CLEAN_VIEW.job||MIX_JOB);
 }
 function renderCleanReady(job){
   const box=document.getElementById('cleanPreview'); if(!box) return;
   CLEAN_VIEW.job=job;
-  const si=CLEAN_VIEW.si, pos=CLEAN_VIEW.pos;
+  if(CLEAN_CLIPS_JOB!==job){             // 컷 목록을 한 번 받아온 뒤 그린다
+    loadCleanClips(job).then(()=>{ if(CLEAN_VIEW.job===job) renderCleanReady(job); });
+    return;
+  }
+  const pos=CLEAN_VIEW.pos;
+  let si=CLEAN_VIEW.si, ci=-1, srcNav='';
+  const _cut = CLEAN_CLIPS ? (CLEAN_CLIPS[Math.max(0,Math.min(CLEAN_CLIPS.length-1,CLEAN_VIEW.ci||0))]) : null;
+  if(_cut){ ci=_cut.ci; si=(_cut.si==null?0:_cut.si); CLEAN_VIEW.ci=ci; CLEAN_VIEW.si=si; }
   const t=Date.now(), u='/api/produce/mix/clean_thumb/'+encodeURIComponent(job)
-    +'?si='+si+'&pos='+pos+'&t='+t;
+    +'?si='+si+'&pos='+pos+(ci>=0?('&ci='+ci):'')+'&t='+t;
+  const _go = (p)=> _cut ? ('cleanGo('+si+','+p+','+ci+')') : ('cleanGo('+si+','+p+')');
   const posBtns=CLEAN_POSNAMES.map(([p,lbl])=>
-    '<button class="cp-pg'+(Math.abs(pos-parseFloat(p))<0.01?' on':'')+'" onclick="cleanGo('+si+','+p+')">'+lbl+'</button>').join('');
-  // ★번호가 아니라 **목록에서 몇 번째인지**로 표시한다(2026-08-27).
-  const _L=_cleanIdxList(), _at=Math.max(0,_L.indexOf(si));
-  const srcNav = _L.length>1
-    ? '<span class="cp-pgsep"></span>'
-      +'<button class="cp-pg" onclick="cleanGo('+(_L[Math.max(0,_at-1)])+','+pos+')"'+(_at<=0?' disabled':'')+'>◀</button>'
-      +'<span class="cp-pgnum">영상 '+(_at+1)+' / '+_L.length+'</span>'
-      +'<button class="cp-pg" onclick="cleanGo('+(_L[Math.min(_L.length-1,_at+1)])+','+pos+')"'+(_at>=_L.length-1?' disabled':'')+'>▶</button>'
+    '<button class="cp-pg'+(Math.abs(pos-parseFloat(p))<0.01?' on':'')+'" onclick="'+_go(p)+'">'+lbl+'</button>').join('');
+  if(_cut){
+    const n=CLEAN_CLIPS.length;
+    srcNav = n>1
+      ? '<span class="cp-pgsep"></span>'
+        +'<button class="cp-pg" onclick="cleanGo('+si+','+pos+','+(ci-1)+')"'+(ci<=0?' disabled':'')+'>◀</button>'
+        +'<span class="cp-pgnum">장면 '+(ci+1)+' / '+n+' <small>(영상 '+(si+1)+')</small></span>'
+        +'<button class="cp-pg" onclick="cleanGo('+si+','+pos+','+(ci+1)+')"'+(ci>=n-1?' disabled':'')+'>▶</button>'
+      : '';
+  } else {
+    // ★번호가 아니라 **목록에서 몇 번째인지**로 표시한다(2026-08-27). 컷 목록을 못 받았을 때의 옛 화면.
+    const _L=_cleanIdxList(), _at=Math.max(0,_L.indexOf(si));
+    srcNav = _L.length>1
+      ? '<span class="cp-pgsep"></span>'
+        +'<button class="cp-pg" onclick="cleanGo('+(_L[Math.max(0,_at-1)])+','+pos+')"'+(_at<=0?' disabled':'')+'>◀</button>'
+        +'<span class="cp-pgnum">영상 '+(_at+1)+' / '+_L.length+'</span>'
+        +'<button class="cp-pg" onclick="cleanGo('+(_L[Math.min(_L.length-1,_at+1)])+','+pos+')"'+(_at>=_L.length-1?' disabled':'')+'>▶</button>'
+      : '';
+  }
+  const staleNote = CLEAN_STALE
+    ? '<div class="hint" style="text-align:center;color:var(--fire)">⚠️ 장면을 바꾼 뒤라 이 결과는 바꾸기 전 편성 기준이에요 — 최종 렌더 때 새 편성으로 다시 지웁니다(크레딧 추가). 지금 확인하려면 ↻ 다시 미리보기.</div>'
     : '';
   box.innerHTML='<div class="cp-compare">'
     +'<div class="cp-cell"><div class="cp-frame"><img src="'+u+'&kind=original"><span class="cp-lbl">BEFORE</span></div><div class="cp-cap">원본</div></div>'
@@ -12529,6 +12580,7 @@ function renderCleanReady(job){
     +'<div class="cp-cell"><div class="cp-frame"><img src="'+u+'&kind=clean" onerror="_cleanAfterMissing(this)"><span class="cp-lbl on">AFTER</span><span class="cp-chk">✓</span></div><div class="cp-cap good">자막 제거됨</div></div>'
     +'</div>'
     +'<div class="cp-pgbar">'+posBtns+srcNav+'</div>'
+    +staleNote
     +'<div class="hint" style="text-align:center">다른 장면도 넘겨서 확인해 보세요 — 추가 비용은 없어요.</div>'
     +'<button class="cp-redo" onclick="startCleanPreview()">↻ 다시 미리보기</button>';
   const sc=document.getElementById('cleanShowcase'); if(sc) sc.style.display='none';
@@ -12633,6 +12685,7 @@ async function pollClean(gen,job){
       if(d.clean_regions) CLEAN_REGIONS=d.clean_regions;   // 지워진 자막 자리(5단계 꾸미기가 씀)
       CLEAN_SRC_N = d.clean_source_count || 1;
       CLEAN_SRC_IDX = (d.clean_source_indices && d.clean_source_indices.length) ? d.clean_source_indices : null;
+      CLEAN_CLIPS_JOB=null;                 // 방금 청소가 끝났다 — 컷 목록·stale을 새로 받는다
       renderCleanReady(job);
       if(btn) btn.disabled=false;
     } else if(d.clean_status==='failed'){
