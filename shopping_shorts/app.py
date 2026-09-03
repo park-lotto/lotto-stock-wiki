@@ -4398,6 +4398,21 @@ _BYOK_VENDORS = (
     (("api.typecast.ai", "typecast"), "음성 서비스(타입캐스트)", "typecast.ai"),
     (("vmake",), "자막 제거 서비스(VMake)", "vmake.ai"),
 )
+
+# ── 자막제거 키 잔액 바로가기 (2026-09-04 사장님 "바로가기탭으로 조회") ───────────
+# 자막제거 업체엔 잔액 조회 API가 없다(번들 SDK의 경로는 config·consume 둘뿐, 문서에도 없음).
+# 잔액·사용내역은 업체 **개발자 대시보드**(로그인 후 우상단 Credit + Usage Details)에만 있다.
+# produce.html은 브랜드 정책상 업체명을 한 글자도 못 쓰므로(test_subclean_ui) 주소는
+# 여기 한 곳에만 두고 화면은 /go/subclean-credits 로 온다(0순위-B — 주소가 바뀌면 여기만).
+_SUBCLEAN_CREDITS_URL = "https://vmake.ai/developers"
+
+
+@app.get("/go/subclean-credits", include_in_schema=False)
+def _go_subclean_credits():
+    """자막제거 키 잔액·사용내역 페이지로 새 탭 이동(화면 버튼이 부른다)."""
+    return RedirectResponse(url=_SUBCLEAN_CREDITS_URL, status_code=302)
+
+
 # '잔액이 없다'는 신호. 429(분당·월 한도)는 **여기 넣지 않는다** — 기다리면 풀리는데
 # 충전하라고 하면 고객이 헛돈을 쓴다(2026-09-02 실수, 만들자마자 잡았다).
 _OUT_OF_CREDIT = ("402", "payment required", "not enough credits", "insufficient",

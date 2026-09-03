@@ -1784,6 +1784,14 @@
                  사장님이 단가를 바꿨을 때 거짓말이 된다(0순위-B). -->
             <div id="cleanCost" class="ctahint" style="margin-top:6px"></div>
             <div class="ctahint">미리 확인하면 최종 렌더가 이 결과를 그대로 써서 추가 비용 없이 빨라져요</div>
+            <!-- ★내 키 잔액 바로가기(2026-09-04 사장님 "바로가기탭으로 조회"). 자막제거 업체엔
+                 잔액 API가 없어 여기에 숫자를 띄울 수 없다 — 업체 대시보드(로그인 후 우상단
+                 Credit·사용내역)를 새 탭으로 연다. 주소는 서버 /go/subclean-credits 한 곳
+                 (이 파일엔 업체명을 못 쓴다). 크레딧 소진 실패 문구(cleanFailHtml)에도 같은 링크. -->
+            <div class="ctahint" style="margin-top:4px">
+              <a href="/go/subclean-credits" target="_blank" rel="noopener" style="color:var(--accent2)">💳 내 자막제거 키 잔액·사용내역 확인 ↗</a>
+              <span style="opacity:.75">— 키를 발급받은 곳의 대시보드가 새 탭으로 열려요(그쪽 로그인 필요)</span>
+            </div>
             <div id="cleanPreview" style="margin-top:12px"></div>
           </div>
         </div>
@@ -12761,6 +12769,9 @@ function cleanFailHtml(kind){
       + '다시 눌러도 같은 결과가 나옵니다. 충전하시면 바로 이어서 하실 수 있어요.</span></div>'
       + '<div class="cp-fail" style="margin-top:8px;opacity:.9">💡 키를 발급받으신 곳에서 '
       + '충전하시거나, 다른 키를 추가로 등록하셔도 됩니다.</div>'
+      // ★잔액 확인·충전은 그 자리에서(2026-09-04 사장님). /go/subclean-credits = 업체 대시보드.
+      + '<a class="cp-redo" href="/go/subclean-credits" target="_blank" rel="noopener" '
+      + 'style="display:inline-block;text-decoration:none">💳 잔액 확인·충전하러 가기 ↗</a> '
       + '<a class="cp-redo" href="/settings#keys" target="_blank" rel="noopener" '
       + 'style="display:inline-block;text-decoration:none">🔑 키·충전 안내 보기</a>';
   }
