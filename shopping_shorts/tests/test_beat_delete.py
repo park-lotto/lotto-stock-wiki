@@ -68,3 +68,30 @@ def test_생성중에는_못_지운다(monkeypatch, tmp_path):
     r = client.post("/api/mix/scene_lab/j1/beat/1/delete")
     assert r.status_code == 409
     assert len(store.get_mix_job("j1")["edit_plan"]["beats"]) == 3
+
+
+def test_뒷단계_완성본이_무효화된다(monkeypatch, tmp_path):
+    """지운 칸이 든 옛 mp4를 그대로 쓰면 9단계 완성본이 지운 문장을 계속 말하고,
+    캡컷은 그 옛 완성본을 새 타임라인으로 잘라(split_final_into_beat_clips) 어긋난다."""
+    client, store = _client(monkeypatch, tmp_path)
+    _seed(store)
+    store.update_mix_job("j1", video_path="/w/final.mp4", clean_video_path="/w/clean.mp4",
+                         fx_path="/w/fx.mp4", fx_status="done")
+    r = client.post("/api/mix/scene_lab/j1/beat/1/delete")
+    assert r.status_code == 200, r.text
+    job = store.get_mix_job("j1")
+    assert not job.get("video_path"), "옛 완성본이 남으면 지운 문장이 계속 나온다"
+    assert not job.get("clean_video_path"), "옛 청소 조립본을 새 타임라인으로 자르면 캡컷이 어긋난다"
+    assert not job.get("fx_path") and not job.get("fx_status")
+
+
+def test_소스별_청소본은_안_건드린다(monkeypatch, tmp_path):
+    """clean_sources는 소스 영상 기준이라 칸과 무관 — 지우면 VMake를 다시 태워 돈이 나간다."""
+    client, store = _client(monkeypatch, tmp_path)
+    _seed(store)
+    store.update_mix_job("j1", clean_status="ready")
+    before = store.get_mix_job("j1").get("clean_sources")
+    client.post("/api/mix/scene_lab/j1/beat/1/delete")
+    after = store.get_mix_job("j1")
+    assert after.get("clean_sources") == before
+    assert after.get("clean_status") == "ready", "clean_status를 지우면 자막제거를 다시 돌리게 된다"

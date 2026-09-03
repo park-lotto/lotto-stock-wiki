@@ -5773,8 +5773,22 @@ def api_mix_scene_lab_beat_delete(job_id: str, beat_idx: int):
                             content={"ok": False, "error": "마지막 한 칸은 지울 수 없어요"})
     plan["beats"] = [b for b in beats if b["beat_idx"] != beat_idx]
     store.update_mix_job(job_id, edit_plan=plan)
+    # ★뒷단계까지 반영되게 — **이미 만들어 둔 결과물**을 무효화한다(2026-09-03 사장님
+    #   "뒷단계들까지 모두 렌더·캡컷까지 반영되게").
+    #   렌더·캡컷·자막·꾸미기는 매번 edit_plan에서 새로 파생하므로(_beat_timeline) 저절로
+    #   반영된다. 위험한 건 **캐시된 완성본**이다: 지운 칸이 든 옛 mp4를 그대로 쓰면
+    #   - 9단계 완성본이 지운 문장을 계속 말하고,
+    #   - 캡컷은 그 옛 완성본을 **새 타임라인으로 잘라**(split_final_into_beat_clips)
+    #     조각이 통째로 어긋난다. 둘 다 조용히 잘못 나가는 실패다.
+    #   비우기만 하면 각 단계가 다시 만든다. 재과금은 없다 — 자가치유 조립
+    #   (assemble_clean_video)은 clean_fn 없이 불려 유료 청소를 다시 타지 않는다.
+    #   ★clean_sources(소스별 청소본)는 **건드리지 않는다** — 소스 영상 기준이라 칸과 무관하고,
+    #     지우면 VMake를 다시 태워 돈이 나간다.
+    store.update_mix_job(job_id, video_path=None, clean_video_path=None,
+                         fx_path=None, fx_status=None)
     return {"ok": True, "deleted": beat_idx, "left": len(plan["beats"]),
-            "text": (beat.get("narration") or "")[:120]}
+            "text": (beat.get("narration") or "")[:120],
+            "invalidated": ["video_path", "clean_video_path", "fx_path"]}
 
 
 @app.post("/api/mix/scene_lab/{job_id}/swap_log")

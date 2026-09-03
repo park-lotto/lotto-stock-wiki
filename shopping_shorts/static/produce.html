@@ -13785,6 +13785,11 @@ async function vpDeleteBeat(i){
       return;
     }
     renderTtsBeats();        // 목록을 서버 기준으로 다시 그린다
+    // 이미 만들어 둔 완성본·청소 조립본은 서버가 비웠다(옛 mp4를 쓰면 지운 문장이 계속
+    // 나오고, 캡컷은 그 옛 완성본을 새 타임라인으로 잘라 어긋난다). 그래서 다시 만들어야 한다.
+    if(typeof toast==='function') toast('문장 칸을 지웠어요 — 완성본은 9단계에서 다시 렌더해 주세요');
+    else alert('문장 칸을 지웠어요.' + String.fromCharCode(10)
+               + '완성본·캡컷에 반영하려면 9단계에서 다시 렌더해 주세요.');
   }catch(e){ if(m) m.textContent='❌ 삭제 실패: '+(e.message||e); }
 }
 async function vpNudge(i,dir){
