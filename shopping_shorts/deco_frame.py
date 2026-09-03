@@ -470,6 +470,8 @@ DEFAULTS = {
     "sub_line_w": 0,       # 박스 폭 px(0=글자 폭+80). 실측 이븐쇼핑형은 거의 화면 폭(≈940)
     "sub_line_soft": 0,    # 가장자리 번짐 px(0=딱 자름). 실측 6~10
     "sub_line_grad": 0,    # 아래쪽으로 옅어지는 정도 %(0=없음)
+    "sub_line_font": "",   # 소제목 폰트 파일명(빈값=제목 폰트)
+    "sub_line_size": 0,    # 소제목 글자 크기 UI px(0=박스 높이의 절반). 정하면 박스가 글자에 맞춰 자란다
 }
 
 _FONTS = {
@@ -681,7 +683,8 @@ def normalize(spec):
                       ("ad_alpha", 0, 100),
                       ("hook_band_h", 0, 1200), ("hook_band_alpha", 0, 100),
                       ("sub_line_h", 0, 300), ("head_h", 0, 1400),
-                      ("sub_line_w", 0, 1080), ("sub_line_soft", 0, 40), ("sub_line_grad", 0, 100)):
+                      ("sub_line_w", 0, 1080), ("sub_line_soft", 0, 40), ("sub_line_grad", 0, 100),
+                      ("sub_line_size", 0, 200)):
         try:
             s[k] = int(s[k])
         except (TypeError, ValueError):
@@ -979,10 +982,14 @@ def render(spec):
         ImageDraw.Draw(_band).rectangle([0, bar_h, W, bar_h + s["hook_band_h"]], fill=(_bc[0], _bc[1], _bc[2], _al))
         im.alpha_composite(_band)
     if s["sub_line"]:
-        _sh = s["sub_line_h"] or 84
-        # 실측(썰칩12·쇼핑치트키·럭키박스): 박스는 어두운 띠 **아래 경계에 걸쳐** 있다(띠 안이 아니다)
+        if s["sub_line_size"] > 0:                       # 글자 크기가 주인 → 박스가 따라 자란다
+            _spx = int(round(s["sub_line_size"] * 1.5))
+            _sh = int(_spx * 1.7)
+        else:
+            _sh = s["sub_line_h"] or 84
+            _spx = int(_sh * 0.5)
         _sy = (bar_h + s["hook_band_h"] - int(_sh * 0.35)) if s["hook_band_h"] > 0 else (bar_h + 24)
-        _sf = _font("title", int(_sh * 0.5))
+        _sf = _font("title", _spx, s["sub_line_font"])
         _sw = s["sub_line_w"] or (int(d.textlength(s["sub_line"], font=_sf)) + 80)
         _sw = min(W - 40, _sw)
         _sx = (W - _sw) // 2
@@ -1003,7 +1010,7 @@ def render(spec):
             _box = _box.filter(ImageFilter.GaussianBlur(_soft))
         im.alpha_composite(_box)
         d = ImageDraw.Draw(im)
-        _fg.draw_text(d, (W // 2, _sy + _sh // 2), s["sub_line"], _sf, _rgb(s["sub_line_color"] or "#111111"), "mm", int(_sh * 0.5))
+        _fg.draw_text(d, (W // 2, _sy + _sh // 2), s["sub_line"], _sf, _rgb(s["sub_line_color"] or "#111111"), "mm", _spx)
 
     # 제목·메타가 얹히는 흰 블록 — 내용이 있을 때만 그린다(빈 블록이 영상을 가리면 손해).
     # ★0 = "안 정했음" → 지금까지처럼 띠 바로 아래(옛 그림 무변경).
