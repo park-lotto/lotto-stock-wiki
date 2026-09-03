@@ -8832,25 +8832,49 @@ def _own_keys_plain(store, cid, service):
     return list(store.get_customer_keys_plain(cid, service) or [])
 
 
+def _credit_mode(store, cid, service):
+    """누구 잔액을 보여줄지 — ★판단은 여기 한 곳(0순위-B). 반환 (mode, keys).
+
+      own   : 내가 등록한 키 → 내 잔액
+      owner : 관리자에게만 — 운영자 키(서버 env / vmake는 전역 설정)로 회사 잔액
+      none  : 보여줄 게 없다. ★사장님 키를 빌려 쓰는 고객(면제 명단)이 여기 들어온다 —
+              남의(운영자) 잔액은 절대 안 내보낸다(2026-09-04 사장님 "내꺼 쓰는 고객은 보여주면 안 돼")
+    """
+    keys = _own_keys_plain(store, cid, service)
+    if keys:
+        return "own", keys
+    if _is_admin(cid):
+        ok = (keyroute._owner_vmake_key(store) if service == keyroute.SVC_VMAKE
+              else keyroute._owner_keys(service))
+        if ok:
+            return "owner", list(ok)
+    return "none", []
+
+
 @app.get("/api/produce/tts/credits")
 def api_tts_credits(request: Request, refresh: int = 0):
-    """5단계 화면의 '내 음성 키 잔액'. 등록한 키마다 한 줄(키 끝 4자로 구분)."""
+    """5단계 '내 음성 키 잔액' + 4단계 '크레딧 확인하기' 아이콘의 노출 여부.
+    등록한 키마다 한 줄(키 끝 4자로 구분). 관리자는 운영자 키로 본다(mode=owner)."""
     cid = keyroute.as_cid(_cid(request))
     now = time.time()
     hit = _TTS_CREDIT_CACHE.get(cid)
     if hit and not refresh and hit[0] > now:
         return hit[1]
     store = Store(DB_PATH)
-    out = {"ok": True, "services": []}
+    out = {"ok": True, "services": [],
+           # 키가 없을 때 "등록하세요"를 띄울지 — 면제(운영자 키 사용) 고객에겐 안 띄운다
+           "need_own_key": not keyroute.is_block_exempt(cid)}
     for svc, v in _TTS_CREDIT_VENDORS.items():
-        keys = _own_keys_plain(store, cid, svc)
-        row = {"service": svc, "label": v["label"], "unit": v["unit"],
-               "dashboard": v["dashboard"], "registered": bool(keys), "keys": []}
+        mode, keys = _credit_mode(store, cid, svc)
+        row = {"service": svc, "label": v["label"], "unit": v["unit"], "mode": mode,
+               "dashboard": v["dashboard"], "registered": mode != "none", "keys": []}
         for k in keys[:3]:                      # 키를 여러 개 넣어도 3개까지만 묻는다
             r = _tts_credit_probe(svc, k)
             r["key_tail"] = str(k)[-4:]
             row["keys"].append(r)
         out["services"].append(row)
+    sub_mode, _ = _credit_mode(store, cid, keyroute.SVC_VMAKE)
+    out["subclean"] = {"mode": sub_mode, "show": sub_mode != "none"}
     out["cached_at"] = int(now)
     _TTS_CREDIT_CACHE[cid] = (now + _TTS_CREDIT_CACHE_SEC, out)
     return out
