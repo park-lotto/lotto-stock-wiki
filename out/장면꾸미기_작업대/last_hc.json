@@ -1,0 +1,18 @@
+{
+ "wrap": true,
+ "font": "BlackHanSans.ttf",
+ "size": 85,
+ "color": "#111111",
+ "color2": "#111111",
+ "y": 22,
+ "x": 44,
+ "weight": 900,
+ "outline": false,
+ "outline_color": "#FFFFFF",
+ "outline_w": 5,
+ "box": false,
+ "box_color": "#FFFFFF",
+ "box_pad": 16,
+ "box_opacity": 100,
+ "text": "개발자도 예상 못\n미친 사용법"
+}

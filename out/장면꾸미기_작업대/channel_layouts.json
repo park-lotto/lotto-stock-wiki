@@ -1,0 +1,1036 @@
+{
+ "_meta": "2026-09-03 10채널×3편 실제 프레임(서버 다운로드) 실측. px는 1080x1920 기준, hc/cap size는 UI(720폭) px. 빈값은 프리셋 기본. 폰트는 견본 대조 추정.",
+ "sul_hwaryong": {
+  "name": "활용정점.",
+  "hook": {
+   "spec": {
+    "bar_color": "#C94143",
+    "on_bar_color": "#FFFFFF",
+    "bar_h": 250,
+    "center_kind": "검색창",
+    "hook_band_h": 384,
+    "hook_band_color": "#000000",
+    "hook_band_alpha": 55,
+    "head_block": false
+   },
+   "hc": {
+    "font": "TmonMonsori.ttf",
+    "size": 86,
+    "color": "#FFFFFF",
+    "color2": "#5EEAD4",
+    "y": 23,
+    "outline": true,
+    "outline_color": "#000000",
+    "outline_w": 10,
+    "box": false,
+    "shadow": true,
+    "shadow_color": "#000000",
+    "shadow_d": 4
+   }
+  },
+  "body": {
+   "spec": {
+    "bar_color": "#C94143",
+    "on_bar_color": "#FFFFFF",
+    "bar_h": 250,
+    "center_kind": "검색창",
+    "head_h": 384,
+    "title_size": 50,
+    "title_color": "#111111",
+    "views": "1,416,214",
+    "comments": ""
+   },
+   "hc": {
+    "text": ""
+   }
+  },
+  "cap": {
+   "font": "Pretendard-SemiBold.otf",
+   "size": 30,
+   "color": "#111111",
+   "outline": false,
+   "box": false,
+   "y_pct": 27
+  },
+  "sample": "코스트코 본사도 몰랐던\n천재 아이디어"
+ },
+ "sul_salrim": {
+  "name": "살림킹왕짱",
+  "hook": {
+   "spec": {
+    "bar_color": "#EE7481",
+    "on_bar_color": "#FFFFFF",
+    "bar_h": 270,
+    "bar_fx": "blur",
+    "bar_soft": 30,
+    "hook_band_h": 440,
+    "hook_band_color": "#FFFFFF",
+    "hook_band_alpha": 100,
+    "head_block": false
+   },
+   "hc": {
+    "font": "BlackHanSans.ttf",
+    "size": 84,
+    "color": "#111111",
+    "color2": "#111111",
+    "y": 26,
+    "outline": false,
+    "box": false
+   }
+  },
+  "body": {
+   "spec": {
+    "bar_color": "#EE7481",
+    "on_bar_color": "#FFFFFF",
+    "bar_h": 270,
+    "head_h": 365,
+    "title_size": 48,
+    "title_color": "#111111",
+    "views": "919만",
+    "comments": "818"
+   },
+   "hc": {
+    "text": ""
+   }
+  },
+  "cap": {
+   "font": "Pretendard-SemiBold.otf",
+   "size": 30,
+   "color": "#111111",
+   "outline": false,
+   "box": false,
+   "y_pct": 27
+  },
+  "sample": "개발자도 예상 못한\n미친 사용법"
+ },
+ "sul_sulchip": {
+  "name": "썰칩12",
+  "hook": {
+   "spec": {
+    "bar_color": "#3A3A32",
+    "on_bar_color": "#FFFFFF",
+    "bar_h": 135,
+    "center_kind": "검색창",
+    "hook_band_h": 365,
+    "hook_band_color": "#000000",
+    "hook_band_alpha": 88,
+    "sub_line": "다이소도 감탄한 반전의 스티커",
+    "sub_line_h": 84,
+    "head_block": false,
+    "sub_line_w": 940,
+    "sub_line_soft": 6,
+    "sub_line_grad": 25
+   },
+   "hc": {
+    "font": "SpoqaHanSansNeo-Bold.otf",
+    "size": 86,
+    "color": "#FFFFFF",
+    "color2": "#4ADE80",
+    "y": 17,
+    "outline": true,
+    "outline_color": "#000000",
+    "outline_w": 10,
+    "box": false,
+    "shadow": true,
+    "shadow_color": "#000000",
+    "shadow_d": 4
+   }
+  },
+  "body": {
+   "spec": {
+    "bar_color": "#EEE7B3",
+    "on_bar_color": "#333333",
+    "bar_h": 250,
+    "center_kind": "검색창",
+    "head_h": 384,
+    "title_size": 46,
+    "title_color": "#111111",
+    "views": "1,765,243",
+    "comments": ""
+   },
+   "hc": {
+    "text": ""
+   }
+  },
+  "cap": {
+   "font": "Pretendard-SemiBold.otf",
+   "size": 30,
+   "color": "#111111",
+   "outline": false,
+   "box": false,
+   "y_pct": 27
+  },
+  "sample": "다이소도 감탄한\n반전의 스티커"
+ },
+ "sul_bangkkul": {
+  "name": "방구석꿀템",
+  "hook": {
+   "spec": {
+    "bar_color": "#F14C60",
+    "on_bar_color": "#FFFFFF",
+    "bar_h": 270,
+    "hook_band_h": 384,
+    "hook_band_color": "#FFFFFF",
+    "hook_band_alpha": 100,
+    "head_block": false
+   },
+   "hc": {
+    "font": "Pretendard-Bold.otf",
+    "size": 66,
+    "color": "#111111",
+    "color2": "#22C55E",
+    "y": 24,
+    "outline": true,
+    "outline_color": "#FFFFFF",
+    "outline_w": 10,
+    "box": false,
+    "shadow": true,
+    "shadow_color": "#000000",
+    "shadow_d": 4
+   }
+  },
+  "body": {
+   "spec": {
+    "bar_color": "#F14C60",
+    "on_bar_color": "#FFFFFF",
+    "bar_h": 270,
+    "head_h": 288,
+    "title_size": 44,
+    "title_color": "#111111",
+    "views": "389,282",
+    "comments": "685"
+   },
+   "hc": {
+    "text": ""
+   }
+  },
+  "cap": {
+   "font": "Pretendard-SemiBold.otf",
+   "size": 30,
+   "color": "#111111",
+   "outline": false,
+   "box": false,
+   "y_pct": 24
+  },
+  "sample": "다이소 기획자도 감탄한\n미친 활용법"
+ },
+ "sul_lucky": {
+  "name": "럭키박스",
+  "hook": {
+   "spec": {
+    "bar_color": "#3A1F24",
+    "on_bar_color": "#FFFFFF",
+    "bar_h": 190,
+    "left_icon": "bookmark",
+    "right_icon": "hamburger",
+    "hook_band_h": 422,
+    "hook_band_color": "#000000",
+    "hook_band_alpha": 85,
+    "sub_line": "포스트잇 최대 단점을 삭제한 결과",
+    "sub_line_h": 84,
+    "head_block": false,
+    "sub_line_w": 940,
+    "sub_line_soft": 6,
+    "sub_line_grad": 25
+   },
+   "hc": {
+    "font": "Pretendard-ExtraBold.otf",
+    "size": 86,
+    "color": "#FFFFFF",
+    "color2": "#FF5C8A",
+    "y": 21,
+    "outline": true,
+    "outline_color": "#000000",
+    "outline_w": 10,
+    "box": false,
+    "shadow": true,
+    "shadow_color": "#000000",
+    "shadow_d": 4
+   }
+  },
+  "body": {
+   "spec": {
+    "bar_color": "#F37583",
+    "on_bar_color": "#FFFFFF",
+    "bar_h": 230,
+    "left_icon": "bookmark",
+    "right_icon": "hamburger",
+    "head_h": 270,
+    "title_size": 42,
+    "title_color": "#111111",
+    "views": "146,785",
+    "comments": ""
+   },
+   "hc": {
+    "text": ""
+   }
+  },
+  "cap": {
+   "font": "Pretendard-SemiBold.otf",
+   "size": 30,
+   "color": "#111111",
+   "outline": false,
+   "box": false,
+   "y_pct": 23
+  },
+  "sample": "포스트잇 단점을\n삭제한 결과"
+ },
+ "sul_cheat": {
+  "name": "쇼핑 치트키",
+  "hook": {
+   "spec": {
+    "bar_color": "#3F5230",
+    "on_bar_color": "#FFFFFF",
+    "bar_h": 115,
+    "hook_band_h": 365,
+    "hook_band_color": "#000000",
+    "hook_band_alpha": 85,
+    "sub_line": "부모들을 오열하게 만든 다이소 제품",
+    "sub_line_h": 84,
+    "head_block": false,
+    "sub_line_w": 940,
+    "sub_line_soft": 6,
+    "sub_line_grad": 25
+   },
+   "hc": {
+    "font": "TmonMonsori.ttf",
+    "size": 90,
+    "color": "#FFFFFF",
+    "color2": "#FF3B30",
+    "y": 15,
+    "outline": true,
+    "outline_color": "#000000",
+    "outline_w": 10,
+    "box": false,
+    "shadow": true,
+    "shadow_color": "#000000",
+    "shadow_d": 4
+   }
+  },
+  "body": {
+   "spec": {
+    "bar_color": "#B0DC86",
+    "on_bar_color": "#222222",
+    "bar_h": 211,
+    "head_h": 288,
+    "title_size": 42,
+    "title_color": "#111111",
+    "views": "264만",
+    "comments": "587"
+   },
+   "hc": {
+    "text": ""
+   }
+  },
+  "cap": {
+   "font": "Pretendard-Bold.otf",
+   "size": 30,
+   "color": "#111111",
+   "outline": false,
+   "box": false,
+   "y_pct": 22
+  },
+  "sample": "부모들을 오열하게 만든\n다이소 제품 ㄷㄷ"
+ },
+ "sul_gongami": {
+  "name": "공가미",
+  "hook": {
+   "spec": {
+    "bar_color": "#262626",
+    "on_bar_color": "#FFFFFF",
+    "bar_h": 154,
+    "hook_band_h": 250,
+    "hook_band_color": "#262626",
+    "hook_band_alpha": 100,
+    "sub_line": "샤넬도 예상 못한 일본의 천재적 발상",
+    "sub_line_h": 84,
+    "head_block": false,
+    "sub_line_w": 940,
+    "sub_line_soft": 6,
+    "sub_line_grad": 25
+   },
+   "hc": {
+    "font": "Pretendard-ExtraBold.otf",
+    "size": 80,
+    "color": "#FFFFFF",
+    "color2": "#5EEAD4",
+    "y": 15,
+    "outline": true,
+    "outline_color": "#000000",
+    "outline_w": 10,
+    "box": false,
+    "shadow": true,
+    "shadow_color": "#000000",
+    "shadow_d": 4
+   }
+  },
+  "body": {
+   "spec": {
+    "bar_color": "#262626",
+    "on_bar_color": "#FFFFFF",
+    "bar_h": 154,
+    "sub_bg_c": "#262626",
+    "sub_text_c": "#BBBBBB",
+    "head_h": 211,
+    "title_size": 40,
+    "title_color": "#FFFFFF",
+    "views": "1000만",
+    "comments": "10,204"
+   },
+   "hc": {
+    "text": ""
+   }
+  },
+  "cap": {
+   "font": "Pretendard-SemiBold.otf",
+   "size": 30,
+   "color": "#111111",
+   "outline": false,
+   "box": true,
+   "box_color": "#FFFFFF",
+   "box_opacity": 100,
+   "box_pad": 18,
+   "y_pct": 22
+  },
+  "sample": "샤넬도 예상 못한\n일본의 천재적 발상"
+ },
+ "sul_core": {
+  "name": "코어장바구니(박카사이다)",
+  "hook": {
+   "spec": {
+    "bar_color": "#243481",
+    "on_bar_color": "#FFFFFF",
+    "bar_h": 230,
+    "layout": "community",
+    "head_h": 576,
+    "title_size": 40,
+    "title_color": "#111111",
+    "post_author": "익명",
+    "post_time": "11/29 20:33"
+   },
+   "hc": {
+    "text": ""
+   }
+  },
+  "body": {
+   "spec": {
+    "bar_color": "#243481",
+    "on_bar_color": "#FFFFFF",
+    "bar_h": 230,
+    "layout": "community",
+    "head_h": 576,
+    "title_size": 40,
+    "title_color": "#111111",
+    "post_author": "익명",
+    "post_time": "11/29 20:33"
+   },
+   "hc": {
+    "text": ""
+   }
+  },
+  "cap": {
+   "font": "Pretendard-SemiBold.otf",
+   "size": 28,
+   "color": "#111111",
+   "outline": false,
+   "box": false,
+   "y_pct": 18
+  },
+  "sample": "증명하세요에 서양인이\n열광한 진짜 이유"
+ },
+ "sul_jangchak": {
+  "name": "살림장착",
+  "hook": {
+   "spec": {
+    "bar_color": "#141518",
+    "on_bar_color": "#FFFFFF",
+    "bar_h": 270,
+    "left_icon": "none",
+    "right_icon": "none",
+    "center_kind": "채널명",
+    "hook_band_h": 290,
+    "hook_band_color": "#000000",
+    "hook_band_alpha": 100,
+    "sub_line": "와… 이건 진짜 기발한데?!",
+    "sub_line_h": 84,
+    "bottom_h": 270,
+    "head_block": false,
+    "sub_line_w": 940,
+    "sub_line_soft": 6,
+    "sub_line_grad": 25
+   },
+   "hc": {
+    "font": "GmarketSansBold.otf",
+    "size": 80,
+    "color": "#FFFFFF",
+    "color2": "#FF7AB6",
+    "y": 22,
+    "outline": true,
+    "outline_color": "#000000",
+    "outline_w": 10,
+    "box": false,
+    "shadow": true,
+    "shadow_color": "#000000",
+    "shadow_d": 4
+   }
+  },
+  "body": {
+   "spec": {
+    "bar_color": "#CAD9F0",
+    "on_bar_color": "#333333",
+    "bar_h": 480,
+    "left_icon": "none",
+    "right_icon": "none",
+    "center_kind": "채널명",
+    "bottom_h": 270
+   },
+   "hc": {
+    "text": ""
+   }
+  },
+  "cap": {
+   "font": "Pretendard-Bold.otf",
+   "size": 36,
+   "color": "#111111",
+   "outline": false,
+   "box": false,
+   "y_pct": 17
+  },
+  "sample": "비맞던 육아맘들 구원한\n일본 천재의 발명품"
+ },
+ "sul_chunjae": {
+  "name": "쇼핑천재",
+  "hook": {
+   "spec": {
+    "bar_color": "#000000",
+    "on_bar_color": "#FFFFFF",
+    "bar_h": 460,
+    "left_icon": "none",
+    "right_icon": "none",
+    "center_kind": "없음",
+    "sub_line": "발편한 걸로 유명한 운동화 TOP3",
+    "sub_line_h": 84,
+    "head_block": false,
+    "sub_line_w": 940,
+    "sub_line_soft": 6,
+    "sub_line_grad": 25
+   },
+   "hc": {
+    "font": "GmarketSansBold.otf",
+    "size": 70,
+    "color": "#FFE600",
+    "color2": "#FFFFFF",
+    "y": 12,
+    "outline": false,
+    "box": false
+   }
+  },
+  "body": {
+   "spec": {
+    "bar_color": "#FFFFFF",
+    "on_bar_color": "#333333",
+    "bar_h": 154,
+    "left_icon": "none",
+    "right_icon": "bookmark",
+    "center_kind": "채널명",
+    "head_h": 460,
+    "title_size": 44,
+    "title_color": "#111111",
+    "views": "241,206",
+    "comments": ""
+   },
+   "hc": {
+    "text": ""
+   }
+  },
+  "cap": {
+   "font": "Pretendard-SemiBold.otf",
+   "size": 30,
+   "color": "#111111",
+   "outline": false,
+   "box": false,
+   "y_pct": 26
+  },
+  "sample": "발편한 걸로\n유명한 운동화 top3"
+ },
+ "sul_even": {
+  "name": "이븐쇼핑",
+  "sample": "천재가 왜 게으른지\n알수있는 제품",
+  "hook": {
+   "spec": {
+    "bar_color": "#2A2A2A",
+    "on_bar_color": "#FFFFFF",
+    "bar_h": 135,
+    "hook_band_h": 365,
+    "hook_band_color": "#111111",
+    "hook_band_alpha": 90,
+    "head_block": false,
+    "sub_line_w": 940,
+    "sub_line_soft": 6,
+    "sub_line_grad": 25,
+    "sub_line_h": 84,
+    "sub_line": "천재가 왜 게으른지 알 수있는 제품?"
+   },
+   "hc": {
+    "font": "SpoqaHanSansNeo-Bold.otf",
+    "size": 86,
+    "color": "#FFFFFF",
+    "color2": "#5EEAD4",
+    "outline": true,
+    "outline_color": "#000000",
+    "outline_w": 10,
+    "shadow": true,
+    "shadow_color": "#000000",
+    "shadow_d": 4,
+    "box": false
+   }
+  },
+  "body": {
+   "spec": {
+    "bar_color": "#2A2A2A",
+    "on_bar_color": "#FFFFFF",
+    "bar_h": 154,
+    "head_h": 384,
+    "title_size": 44,
+    "title_color": "#111111",
+    "views": "235만",
+    "comments": "697"
+   },
+   "hc": {
+    "text": ""
+   }
+  },
+  "cap": {
+   "font": "Pretendard-SemiBold.otf",
+   "size": 30,
+   "color": "#111111",
+   "outline": false,
+   "box": false,
+   "y_pct": 27
+  }
+ },
+ "sul_igeo": {
+  "name": "이거였네",
+  "sample": "이케아도 예상 못한\n미친 활용법",
+  "hook": {
+   "spec": {
+    "bar_color": "#1F6B6B",
+    "on_bar_color": "#FFFFFF",
+    "bar_h": 135,
+    "bar_fx": "blur",
+    "bar_soft": 30,
+    "hook_band_h": 330,
+    "hook_band_color": "#FFFFFF",
+    "hook_band_alpha": 100,
+    "head_block": false
+   },
+   "hc": {
+    "font": "Pretendard-ExtraBold.otf",
+    "size": 72,
+    "color": "#111111",
+    "color2": "#111111",
+    "outline": false,
+    "box": false
+   }
+  },
+  "body": {
+   "spec": {
+    "bar_color": "#1F6B6B",
+    "on_bar_color": "#FFFFFF",
+    "bar_h": 154,
+    "head_h": 330,
+    "title_size": 44,
+    "title_color": "#111111",
+    "views": "77만",
+    "comments": "7천"
+   },
+   "hc": {
+    "text": ""
+   }
+  },
+  "cap": {
+   "font": "Pretendard-SemiBold.otf",
+   "size": 30,
+   "color": "#111111",
+   "outline": false,
+   "box": false,
+   "y_pct": 26
+  }
+ },
+ "sul_dalrae": {
+  "name": "달래샵",
+  "sample": "다이소 직원들도\n쟁여둔다는 만능 후크",
+  "body_keep_hc": true,
+  "hook": {
+   "spec": {
+    "bar_color": "#000000",
+    "on_bar_color": "#FFFFFF",
+    "bar_h": 250,
+    "hook_band_h": 0,
+    "hook_band_color": "#111111",
+    "hook_band_alpha": 90,
+    "head_block": false,
+    "sub_line_w": 940,
+    "sub_line_soft": 6,
+    "sub_line_grad": 25,
+    "sub_line_h": 84,
+    "left_icon": "none",
+    "right_icon": "none",
+    "center_kind": "없음",
+    "sub_line": "다이소 직원들도 쟁여둔다는 만능 후크"
+   },
+   "hc": {
+    "font": "Pretendard-ExtraBold.otf",
+    "size": 80,
+    "color": "#FFFFFF",
+    "color2": "#FFE600",
+    "outline": true,
+    "outline_color": "#000000",
+    "outline_w": 10,
+    "shadow": true,
+    "shadow_color": "#000000",
+    "shadow_d": 4,
+    "box": false
+   }
+  },
+  "body": {
+   "spec": {
+    "bar_color": "#000000",
+    "on_bar_color": "#FFFFFF",
+    "bar_h": 250,
+    "left_icon": "none",
+    "right_icon": "none",
+    "center_kind": "없음"
+   },
+   "hc": {}
+  },
+  "cap": {
+   "font": "Pretendard-Bold.otf",
+   "size": 28,
+   "color": "#FFFFFF",
+   "outline": false,
+   "box": true,
+   "box_color": "#000000",
+   "box_opacity": 75,
+   "box_pad": 14,
+   "y_pct": 76
+  }
+ },
+ "sul_kkultip": {
+  "name": "꿀팁꿀템",
+  "sample": "요잘알이 재발견해\n돈방석 앉은 국산 발명품",
+  "body_keep_hc": true,
+  "hook": {
+   "spec": {
+    "bar_color": "#000000",
+    "on_bar_color": "#FFFFFF",
+    "bar_h": 270,
+    "hook_band_h": 0,
+    "hook_band_color": "#111111",
+    "hook_band_alpha": 90,
+    "head_block": false,
+    "sub_line_w": 940,
+    "sub_line_soft": 6,
+    "sub_line_grad": 25,
+    "sub_line_h": 84,
+    "center_kind": "채널명",
+    "sub_line": "요잘알이 재발견해 돈방석 앉은 미친 발명품"
+   },
+   "hc": {
+    "font": "TmonMonsori.ttf",
+    "size": 80,
+    "color": "#FFFFFF",
+    "color2": "#5EEAD4",
+    "outline": true,
+    "outline_color": "#000000",
+    "outline_w": 10,
+    "shadow": true,
+    "shadow_color": "#000000",
+    "shadow_d": 4,
+    "box": false
+   }
+  },
+  "body": {
+   "spec": {
+    "bar_color": "#000000",
+    "on_bar_color": "#FFFFFF",
+    "bar_h": 270,
+    "center_kind": "채널명"
+   },
+   "hc": {}
+  },
+  "cap": {
+   "font": "Pretendard-Bold.otf",
+   "size": 26,
+   "color": "#FFFFFF",
+   "outline": false,
+   "box": true,
+   "box_color": "#000000",
+   "box_opacity": 75,
+   "box_pad": 14,
+   "y_pct": 24
+  }
+ },
+ "sul_daissue": {
+  "name": "다있슈",
+  "sample": "사무용품 제작사도\n놀란 미친 활용법",
+  "hook": {
+   "spec": {
+    "bar_color": "#7FD1C0",
+    "on_bar_color": "#FFFFFF",
+    "bar_h": 135,
+    "hook_band_h": 365,
+    "hook_band_color": "#111111",
+    "hook_band_alpha": 90,
+    "head_block": false,
+    "sub_line_w": 940,
+    "sub_line_soft": 6,
+    "sub_line_grad": 25,
+    "sub_line_h": 84,
+    "sub_line": "사무용품 제작사도 놀란 미친 활용법"
+   },
+   "hc": {
+    "font": "GmarketSansBold.otf",
+    "size": 86,
+    "color": "#FFFFFF",
+    "color2": "#5EEAD4",
+    "outline": true,
+    "outline_color": "#000000",
+    "outline_w": 10,
+    "shadow": true,
+    "shadow_color": "#000000",
+    "shadow_d": 4,
+    "box": false
+   }
+  },
+  "body": {
+   "spec": {
+    "bar_color": "#7FD1C0",
+    "on_bar_color": "#FFFFFF",
+    "bar_h": 154,
+    "head_h": 330,
+    "title_size": 44,
+    "title_color": "#111111",
+    "views": "631,328",
+    "comments": "458"
+   },
+   "hc": {
+    "text": ""
+   }
+  },
+  "cap": {
+   "font": "Pretendard-SemiBold.otf",
+   "size": 30,
+   "color": "#111111",
+   "outline": false,
+   "box": false,
+   "y_pct": 26
+  }
+ },
+ "sul_insaeng": {
+  "name": "인생갓템",
+  "sample": "이케아 개발진도\n당황한 아이디어ㄷㄷ",
+  "hook": {
+   "spec": {
+    "bar_color": "#F5E9B8",
+    "on_bar_color": "#333333",
+    "bar_h": 115,
+    "hook_band_h": 300,
+    "hook_band_color": "#000000",
+    "hook_band_alpha": 55,
+    "head_block": false,
+    "sub_line_w": 940,
+    "sub_line_soft": 6,
+    "sub_line_grad": 25,
+    "sub_line_h": 84,
+    "sub_line": "이케아 개발진도 당황한 천재아이디어"
+   },
+   "hc": {
+    "font": "GmarketSansBold.otf",
+    "size": 76,
+    "color": "#FFFFFF",
+    "color2": "#FFE600",
+    "outline": true,
+    "outline_color": "#000000",
+    "outline_w": 10,
+    "shadow": true,
+    "shadow_color": "#000000",
+    "shadow_d": 4,
+    "box": false
+   }
+  },
+  "body": {
+   "spec": {
+    "bar_color": "#F5E9B8",
+    "on_bar_color": "#333333",
+    "bar_h": 115,
+    "head_h": 300,
+    "title_size": 40,
+    "title_color": "#111111",
+    "views": "811,710",
+    "comments": ""
+   },
+   "hc": {
+    "text": ""
+   }
+  },
+  "cap": {
+   "font": "Pretendard-SemiBold.otf",
+   "size": 30,
+   "color": "#111111",
+   "outline": false,
+   "box": false,
+   "y_pct": 24
+  }
+ },
+ "sul_namanto": {
+  "name": "나만또모르고있었지",
+  "sample": "판매자도 예상못한 압축봉 활용법",
+  "hook": {
+   "spec": {
+    "bar_color": "#2B2B2B",
+    "on_bar_color": "#FFFFFF",
+    "bar_h": 115,
+    "center_kind": "검색창",
+    "right_icon": "bookmark",
+    "head_h": 330,
+    "title_size": 40,
+    "title_color": "#111111",
+    "views": "100만"
+   },
+   "hc": {
+    "text": ""
+   }
+  },
+  "body": {
+   "spec": {
+    "bar_color": "#2B2B2B",
+    "on_bar_color": "#FFFFFF",
+    "bar_h": 115,
+    "head_h": 330,
+    "title_size": 40,
+    "title_color": "#111111",
+    "views": "100만",
+    "comments": "",
+    "center_kind": "검색창",
+    "right_icon": "bookmark"
+   },
+   "hc": {
+    "text": ""
+   }
+  },
+  "cap": {
+   "font": "Pretendard-SemiBold.otf",
+   "size": 34,
+   "color": "#111111",
+   "outline": false,
+   "box": false,
+   "y_pct": 24
+  }
+ },
+ "sul_yosae": {
+  "name": "요새난리",
+  "sample": "알고나면 소름돋는다는\n이 여자의 행동",
+  "body_keep_hc": true,
+  "hook": {
+   "spec": {
+    "bar_color": "#000000",
+    "on_bar_color": "#FFFFFF",
+    "bar_h": 154,
+    "hook_band_h": 0,
+    "hook_band_color": "#111111",
+    "hook_band_alpha": 90,
+    "head_block": false,
+    "left_icon": "none",
+    "right_icon": "none",
+    "center_kind": "없음"
+   },
+   "hc": {
+    "font": "Pretendard-ExtraBold.otf",
+    "size": 60,
+    "color": "#FFFFFF",
+    "color2": "#5EEAD4",
+    "outline": true,
+    "outline_color": "#000000",
+    "outline_w": 10,
+    "shadow": true,
+    "shadow_color": "#000000",
+    "shadow_d": 4,
+    "box": false
+   }
+  },
+  "body": {
+   "spec": {
+    "bar_color": "#000000",
+    "on_bar_color": "#FFFFFF",
+    "bar_h": 154,
+    "left_icon": "none",
+    "right_icon": "none",
+    "center_kind": "없음"
+   },
+   "hc": {}
+  },
+  "cap": {
+   "font": "Pretendard-Bold.otf",
+   "size": 28,
+   "color": "#FFFFFF",
+   "outline": false,
+   "box": true,
+   "box_color": "#000000",
+   "box_opacity": 75,
+   "box_pad": 14,
+   "y_pct": 60
+  }
+ },
+ "sul_museun": {
+  "name": "무슨템",
+  "sample": "옷가게 사장님들이\n가장 싫어하는 액체",
+  "hook": {
+   "spec": {
+    "bar_color": "#000000",
+    "on_bar_color": "#FFFFFF",
+    "bar_h": 135,
+    "hook_band_h": 365,
+    "hook_band_color": "#111111",
+    "hook_band_alpha": 90,
+    "head_block": false
+   },
+   "hc": {
+    "font": "NotoSansKR-Bold.otf",
+    "size": 80,
+    "color": "#FFFFFF",
+    "color2": "#FFE600",
+    "outline": true,
+    "outline_color": "#000000",
+    "outline_w": 10,
+    "shadow": true,
+    "shadow_color": "#000000",
+    "shadow_d": 4,
+    "box": false
+   }
+  },
+  "body": {
+   "spec": {
+    "bar_color": "#000000",
+    "on_bar_color": "#FFFFFF",
+    "bar_h": 135,
+    "head_h": 350,
+    "title_size": 44,
+    "title_color": "#111111",
+    "views": "260만",
+    "comments": "725"
+   },
+   "hc": {
+    "text": ""
+   }
+  },
+  "cap": {
+   "font": "Pretendard-SemiBold.otf",
+   "size": 30,
+   "color": "#111111",
+   "outline": false,
+   "box": false,
+   "y_pct": 27
+  }
+ }
+}
