@@ -13044,9 +13044,11 @@ function ttsCreditLine(s){
       const n = v => Number(v||0).toLocaleString('ko-KR');
       const reset = k.reset_at ? ' · '+new Date(k.reset_at*1000).toLocaleDateString('ko-KR',{month:'numeric',day:'numeric'})+' 리셋' : '';
       const plan = k.plan ? ' · '+esc(String(k.plan)) : '';
-      // 한 업체 = 한 줄(.credLine, flex-wrap). 링크·↻는 nowrap이라 "대시보드 ↗"만 다음 줄로 떨어지지 않는다.
-      return '<div class="credLine"><span>🎙 '+esc(s.label)+' '+tail+'<b>'+n(k.remaining)+esc(s.unit)+' 남음</b></span>'
-        + '<span style="opacity:.75">(사용 '+n(k.used)+' / '+n(k.limit)+plan+reset+')</span>'+dash+'</div>';
+      // 한 업체 = 한 줄(.credLine). 560px 칸이라 **남은 양만** 보이고 사용/한도·플랜은 마우스를
+      // 올리면(title) 나온다 — 다 적으면 두 줄로 꺾여 "대시보드 ↗"가 혼자 떨어졌다(라이브 실측).
+      const detail = '사용 '+n(k.used)+' / 한도 '+n(k.limit)+esc(s.unit)+plan+reset;
+      return '<div class="credLine" title="'+detail+'"><span>🎙 '+esc(s.label)+' '+tail+'<b>'+n(k.remaining)+esc(s.unit)+' 남음</b>'
+        + (reset?'<span style="opacity:.7">'+reset+'</span>':'')+'</span>'+dash+'</div>';
     }
     // ★일레븐랩스 제한키는 잔액 조회 권한(user_read)이 없을 수 있다 — 키가 틀린 게 아니다.
     const why = k.error_kind==='no_permission' ? '이 키엔 잔액 조회 권한이 없어요(음성 생성은 됩니다)'
@@ -13070,7 +13072,7 @@ async function loadTtsCredits(force){
     const redo=' <button type="button" onclick="loadTtsCredits(1)" title="다시 조회" style="border:0;background:none;cursor:pointer;color:var(--sub);font-size:12px">↻</button>';
     if(lines.length){
       box.innerHTML = lines.join('');
-      const last=box.querySelector('.credLine:last-child'); if(last) last.insertAdjacentHTML('beforeend', redo);   // ↻는 마지막 줄 끝에
+      const first=box.querySelector('.credLine'); if(first) first.insertAdjacentHTML('beforeend', redo);   // ↻는 첫 줄 끝에
     }
     else if(d.need_own_key) box.innerHTML = '🎙 <span style="opacity:.8">등록한 내 음성 키가 없어요 — </span><a href="/settings#keys" target="_blank" rel="noopener" style="color:var(--accent2)">🔑 키 등록</a>';
     else box.innerHTML = '';                                  // 운영자 키를 빌려 쓰는 고객: 남의 잔액은 안 보여준다
