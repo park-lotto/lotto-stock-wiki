@@ -1238,10 +1238,15 @@ function showConfirmVideo(src){
   RENDERED_SIG = PENDING_SIG;
   // ★영상 아래에 **늘 보이는** 탐색바를 함께 그린다(2026-09-03 사장님 제보:
   //   "완성본 만들기하면 중간 구간으로 이동해서 클릭할 수 있는 바가 없다").
-  //   <video controls>의 네이티브 막대는 재생 중 자동으로 숨고, 세로(9:16) 영상에선
+  //   controls 속성이 주는 네이티브 막대는 재생 중 자동으로 숨고, 세로(9:16) 영상에선
   //   영상 위에 겹쳐 떠서 잘 안 보인다. 그래서 별도 막대를 영상 **밖에** 둔다.
+  //   ★controls는 그대로 둔다 — 전체화면·배속은 네이티브가 낫고, 우리 막대는 '늘 보이는'
+  //     탐색 수단을 더하는 것이지 대체가 아니다(test_preview_video_is_muted_by_default가
+  //     지키는 계약이기도 하다: 열자마자 muted + 음소거 해제·탐색 수단이 있을 것).
+  //   ⚠️이 주석에 video 태그를 그대로 쓰지 마라 — test_preview_video_is_muted_by_default가
+  //     주석을 안 걷고 정규식으로 태그를 찾아서, 주석 속 예시를 진짜 태그로 오인한다.
   body.innerHTML =
-      '<video id="cfVid" muted playsinline autoplay src="' + src + '"></video>'
+      '<video id="cfVid" controls muted playsinline autoplay src="' + src + '"></video>'
     + '<div class="cfbar">'
     +   '<button type="button" class="cfbtn" id="cfPlay" title="재생/정지">⏸</button>'
     +   '<button type="button" class="cfbtn" id="cfMute" title="소리 켜기">🔇</button>'
