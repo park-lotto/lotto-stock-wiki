@@ -2126,7 +2126,13 @@
 
               <div style="font-size:12px;color:var(--sub);margin:10px 0 5px">
                 줄 나누기 — <b>Enter</b>=여기서 끊기 · <b>Backspace</b>(줄 맨 앞)=윗줄과 붙이기</div>
-              <div id="capLinesBox"></div>
+              <!-- ★높이를 고정한다(2026-09-03 사장님 "장면을 넘길때 미리보기창 크기가 바뀌는
+                   지점들이 생긴다"). 실측(태킹건 20컷): 줄 나누기 칸이 자막 줄 수를 따라
+                   82 / 123 / 164px로 바뀌었고(2·3·4줄 × 41px), 그때마다 미리보기 슬롯 전체가
+                   1430 / 1471 / 1512px로 튀었다. 슬롯이 sticky라 높이가 변하면 미리보기가
+                   위아래로 밀려 "크기가 바뀐 것처럼" 보인다. 상자 자체는 460x818 고정이었다.
+                   4줄분을 늘 잡아두고 그보다 많으면 이 칸 안에서만 스크롤한다. -->
+              <div id="capLinesBox" style="height:164px;overflow-y:auto"></div>
               <div style="display:flex;gap:8px;align-items:center;margin-top:7px">
                 <button type="button" class="tab" onclick="saveBeatCapLines()" style="min-width:auto;padding:6px 14px;font-size:12px">💾 이 장면 줄 저장</button>
                 <button type="button" class="tab" onclick="resetBeatCapLines()" style="min-width:auto;padding:6px 12px;font-size:12px">↩ 자동으로</button>
