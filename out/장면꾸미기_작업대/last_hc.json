@@ -1,18 +1,28 @@
 {
  "wrap": true,
- "font": "BlackHanSans.ttf",
- "size": 85,
- "color": "#111111",
- "color2": "#111111",
- "y": 22,
- "x": 44,
+ "font": "SpoqaHanSansNeo-Bold.otf",
+ "size": 86,
+ "color": "#FFFFFF",
+ "color2": "#4ADE80",
+ "y": 17,
+ "x": 49,
  "weight": 900,
- "outline": false,
- "outline_color": "#FFFFFF",
- "outline_w": 5,
+ "outline": true,
+ "outline_color": "#000000",
+ "outline_w": 10,
  "box": false,
  "box_color": "#FFFFFF",
  "box_pad": 16,
  "box_opacity": 100,
- "text": "개발자도 예상 못\n미친 사용법"
+ "shadow": true,
+ "shadow_color": "#000000",
+ "shadow_d": 4,
+ "text": "다이소도 감탄한\n반전의 스티커",
+ "highlight_rules": [
+  {
+   "keyword": "반전의 스티커",
+   "color": "#4ADE80",
+   "box": false
+  }
+ ]
 }
