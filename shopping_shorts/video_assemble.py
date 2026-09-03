@@ -2024,7 +2024,20 @@ def _segmented_drawtext(text, base_style, work, key_prefix, x_pct, y_pct,
     # 줄 간격 — 1.2는 두꺼운 한글 폰트에서 윗줄 받침과 아랫줄 머리가 맞닿아 **겹쳐 보인다**
     # (2026-08-30 사장님 제보, job 36a02e5ad1ef '방충망 먼지 빨리 해결/다이소 꿀템').
     # 미리보기(produce.html #hcPreviewText line-height)와 **같은 값**이어야 한다(0순위-B).
-    line_h = size * 1.34
+    # ── 줄 사이(leading)·글자 사이(tracking) — 2026-09-03 사장님 "자간 행간은 접어서 고급옵션에".
+    #   ★안 주면(빈값/0) 종전과 **완전히 같다**: 줄 간격 1.34, 글자 사이 0. 옛 작업 회귀 0.
+    #   leading = 글자 크기 대비 배율(1.0~2.5). tracking = 화면(720폭) px → _ui_px로 출력 환산.
+    try:
+        _lead = float(base_style.get("leading") or 0) or 1.34
+    except (TypeError, ValueError):
+        _lead = 1.34
+    _lead = max(1.0, min(2.5, _lead))
+    try:
+        _track = int(round(float(base_style.get("tracking") or 0) * 1.5))
+    except (TypeError, ValueError):
+        _track = 0
+    _track = max(-30, min(90, _track))
+    line_h = size * _lead
     total_h = line_h * len(lines)
     parts = []
     # ── 🟨 배경 박스는 **블록 하나**로 (2026-08-30 사장님 "헤드커피 부분이 분리되서 나옴")
@@ -2038,7 +2051,7 @@ def _segmented_drawtext(text, base_style, work, key_prefix, x_pct, y_pct,
         _widest = 0
         for _ln in lines:
             _segs = _build_segments(_ln, base_color_raw, highlight_rules or [])
-            _widest = max(_widest, sum(_text_px(pil_font, s[0], size) for s in _segs))
+            _widest = max(_widest, sum(_text_px(pil_font, s[0], size) + _track * len(s[0]) for s in _segs))
         if _widest > 0:
             _bw = _widest + _pad * 3            # 좌우 각각 pad*1.5
             _bh = total_h + _pad * 2
@@ -2052,7 +2065,7 @@ def _segmented_drawtext(text, base_style, work, key_prefix, x_pct, y_pct,
         segs = _build_segments(line, base_color_raw, highlight_rules or [])
         if not segs:
             continue
-        widths = [_text_px(pil_font, s[0], size) for s in segs]
+        widths = [_text_px(pil_font, s[0], size) + _track * len(s[0]) for s in segs]
         line_w = sum(widths)
         start_x = x_center - line_w / 2
         line_y = y_top - total_h / 2 + li * line_h
@@ -2069,8 +2082,15 @@ def _segmented_drawtext(text, base_style, work, key_prefix, x_pct, y_pct,
                 continue
             chunks = ([t for t in seg_text.split(" ") if t] if no_space
                       else [seg_text.rstrip()])
+            # ★글자 사이(tracking)가 있으면 drawtext가 자간을 모르므로 **한 글자씩** 그린다.
+            #   0이면 종전대로 어절/문장 단위 한 번에 — 회귀 0. 공백은 글자로 안 그린다(⊠ 방지).
+            if _track:
+                chunks = [ch for t in chunks for ch in t]
             cx = run_x
             for chunk in chunks:
+                if _track and not chunk.strip():      # 한 글자씩 그릴 때 공백은 좌표만 벌린다
+                    cx += gap + _track
+                    continue
                 key = f"{key_prefix}_{li}_{len(parts)}"
                 (work / f"txt_{key}.txt").write_text(chunk, encoding="utf-8")
                 seg_parts = [
@@ -2101,7 +2121,10 @@ def _segmented_drawtext(text, base_style, work, key_prefix, x_pct, y_pct,
                     pad = max(0, _ui_px(base_style.get("box_pad"), 24, zero_ok=True))
                     seg_parts += ["box=1", f"boxcolor={bc}@{op:.2f}", f"boxborderw={pad}"]
                 parts.append(":".join(seg_parts))
-                cx += pil_font.getlength(chunk) + gap
+                if _track:
+                    cx += pil_font.getlength(chunk) + (_track if chunk != " " else gap + _track)
+                else:
+                    cx += pil_font.getlength(chunk) + gap
             run_x += w
     return parts
 
