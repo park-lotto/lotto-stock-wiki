@@ -117,7 +117,11 @@
     //   옮기면서 맞는 장면을 찾는다"). 바꿀 컷의 길이로 박스 하나가 처음부터 떠 있고,
     //   늘리고 줄이고 지우는 조작은 전부 잠긴다 — 옮기기와 🔁(교체)만 남는다.
     //   그래야 올리는 순간 초가 항상 딱 맞는다.
-    const LOCK = +opt.lockLen > 0;
+    // ★const가 아니라 let — ＋ 구간을 누르면 잠금을 푼다(2026-09-03 사장님 캡쳐 1042·1043
+    //   "구간박스 만들기는 박스 만들기를 하면 없어지고 새로고침을 해야 돌아온다.
+    //   구간박스 만들 수 있는 건 항상 고정으로 둬라"). 종전엔 잠금 헤더가 ＋ 구간을
+    //   아예 안 그려서 Esc·새로고침 말고는 돌아올 길이 없었다.
+    let LOCK = +opt.lockLen > 0;
     if (LOCK) {
       const a = Math.max(0, +opt.lockFrom || 0);
       BOXES = [{ s: Math.round(a * 100) / 100,
@@ -346,11 +350,13 @@
         // ★키 안내(2026-08-28 사장님 "시작Q 종료W 담기E 이렇게 써줘").
         //   기능은 이미 있었지만 화면에 없으니 아무도 몰랐다 — 없는 기능과 같다.
         //   잠금 모드에선 만들기·지우기 키가 다 잠기므로 안내도 옮기기 안내로 바뀐다.
+        // ★잠금 박스도 양끝을 당겨 크기를 바꿀 수 있다(2026-09-03 사장님 캡쳐 1044
+        //   "박스 자동으로 만들어진 것도 박스 크기 조절할 수 있게"). 잠기는 건 지우기뿐.
         (LOCK
-          ? `<span class="k">길이 고정 — 끌어서 맞는 장면 위에 놓고 <b>🔁 교체</b></span>`
-          : `<span class="k">시작 <b>Q</b> · 종료 <b>W</b> · 담기 <b>E</b></span>` +
-            `<span class="e l" data-edge="l"></span><span class="e r" data-edge="r"></span>` +
-            `<span class="x" data-del="${i}">×</span>`) +
+          ? `<span class="k">끌어서 맞는 장면 위에 놓고 <b>🔁 교체</b> · 양끝을 당기면 길이가 바뀝니다</span>`
+          : `<span class="k">시작 <b>Q</b> · 종료 <b>W</b> · 담기 <b>E</b></span>`) +
+        `<span class="e l" data-edge="l"></span><span class="e r" data-edge="r"></span>` +
+        (LOCK ? '' : `<span class="x" data-del="${i}">×</span>`) +
         // ★2026-08-26 사장님 "주황색 박스 만들면 위쪽 훅 있는 윗칸으로 더블클릭이나
         //   드래그로 옮기기". 박스 본체는 pointerdown에서 preventDefault를 하므로
         //   HTML5 dragstart가 안 뜬다(이동·양끝조절이 그 위에 서 있다) — 그래서
@@ -364,7 +370,7 @@
 
     function wireBoxes() {
       boxesEl.querySelectorAll('.bx').forEach(el => {
-        let mode = null, sx = 0, s0 = 0, e0 = 0, moved = false;
+        let mode = null, sx = 0, s0 = 0, e0 = 0, moved = false, off0 = 0;
         el.addEventListener('pointerdown', ev => {
           const i = +el.dataset.i, b = BOXES[i]; if (!b) return;
           // ★두 번 누르기 = 담기. dblclick 이벤트는 **실제 마우스에서 안 온다**
@@ -388,27 +394,52 @@
             ACTBOX = null; drawBoxes(); drawBar(); return;
           }
           ev.stopPropagation(); ev.preventDefault();
-          mode = LOCK ? 'move' : (ev.target.dataset.edge || 'move');   // 잠금 = 옮기기만
-          sx = ev.clientX; s0 = b.s; e0 = b.e; moved = false;
+          mode = ev.target.dataset.edge || 'move';   // 잠금 박스도 양끝 조절 가능(2026-09-03)
+          sx = ev.clientX; s0 = b.s; e0 = b.e; moved = false; off0 = off;
           ACTBOX = i; el.classList.add('dragging');
           try { el.setPointerCapture(ev.pointerId); } catch (_) {}
         });
-        el.addEventListener('pointermove', ev => {
-          if (!mode) return;
+        // ★창 가장자리 자동 밀기(2026-09-03 사장님 캡쳐 1045 "옆으로 이동하면 옆으로
+        //   이동될 수 있게 감도 좋게"). 종전엔 박스를 창 끝까지 끌면 거기서 막혀
+        //   보이는 범위 밖으로는 못 갔다. 가장자리 28px 안이면 off를 밀어 필름이
+        //   따라 흐른다 — 좌표는 (clientX + off)라 밀린 만큼 박스도 같이 간다.
+        let panTimer = 0, panDir = 0, lastEv = null;
+        const stopPan = () => { if (panTimer) { clearInterval(panTimer); panTimer = 0; } panDir = 0; };
+        const stepPan = () => {
+          if (!mode || !panDir) { stopPan(); return; }
+          const before = off;
+          off = clamp(off + panDir * Math.max(6, winW() * 0.02));
+          if (off === before) { stopPan(); return; }
+          panW();
+          if (lastEv) applyMove(lastEv);
+        };
+        const applyMove = ev => {
           const i = +el.dataset.i, b = BOXES[i]; if (!b) return;
-          const d = (ev.clientX - sx) / pps();
-          if (Math.abs(ev.clientX - sx) > 3) moved = true;
+          // 끌기 시작 이후 off가 밀린 만큼을 더한다(off0 = 잡을 때의 off)
+          const d = (ev.clientX - sx + (off - off0)) / pps();
           if (mode === 'l') b.s = Math.max(0, Math.min(e0 - 0.1, s0 + d));
           else if (mode === 'r') b.e = Math.min(DUR, Math.max(s0 + 0.1, e0 + d));
           else { const len = e0 - s0, ns = Math.max(0, Math.min(DUR - len, s0 + d)); b.s = ns; b.e = ns + len; }
           b.s = Math.round(b.s * 100) / 100; b.e = Math.round(b.e * 100) / 100;
-          el.style.left = (b.s * pps()) + 'px';   // 절대좌표 — drawBoxes와 같은 규약
+          el.style.left = (b.s * pps()) + 'px';
           el.style.width = Math.max(8, (b.e - b.s) * pps()) + 'px';
-          const lab = el.querySelector('.t'); if (lab) lab.textContent = (b.e - b.s).toFixed(2) + '초';
+          const lab = el.querySelector('.t'); if (lab) lab.textContent = (b.e - b.s).toFixed(2) + '초' + (LOCK ? ' 🔒' : '');
+        };
+        el.addEventListener('pointermove', ev => {
+          if (!mode) return;
+          const i = +el.dataset.i, b = BOXES[i]; if (!b) return;
+          lastEv = ev;
+          const r = win.getBoundingClientRect(), EDGE = 28;
+          const dir = (ev.clientX > r.right - EDGE) ? 1 : (ev.clientX < r.left + EDGE) ? -1 : 0;
+          if (dir !== panDir) { stopPan(); panDir = dir; if (dir) panTimer = setInterval(stepPan, 40); }
+          const d = (ev.clientX - sx + (off - off0)) / pps();
+          if (Math.abs(ev.clientX - sx) > 3) moved = true;
+          applyMove(ev);            // 절대좌표 — drawBoxes와 같은 규약(계산은 한 곳)
           ev.stopPropagation();
         });
         const end = ev => {
           if (!mode) return;
+          stopPan(); lastEv = null;
           mode = null; el.classList.remove('dragging');
           const b = BOXES[+el.dataset.i];
           BOXES.sort((x, y) => x.s - y.s);
@@ -500,6 +531,18 @@
       addBox(a, b); moveHead(t);
     }
 
+    /* 🔓 잠금을 풀고 평소 필름으로 — 잠금 박스는 보통 박스로 남긴다(늘리고·줄이고·지울 수 있다).
+       부모(타임라인 📦 박스 모드)에게도 알려 모드를 접게 한다(onUnlock). 🔁는 잠금 전용
+       (그 컷 교체)이었으므로 부모가 준 onReplaceUnlocked(없으면 없음)로 되돌린다. */
+    function unlockAndMake() {
+      if (!LOCK) { makeBox(); return; }
+      LOCK = false;
+      opt.onReplace = (typeof opt.onReplaceUnlocked === 'function') ? opt.onReplaceUnlocked : null;
+      if (typeof opt.onUnlock === 'function') { try { opt.onUnlock(); } catch (e) {} }
+      makeBox();
+      drawBoxes(); drawBar();
+    }
+
     function makeBox() {
       if (LOCK) return;                       // 길이 잠금 — 새 박스 금지
       const el = host.querySelector('.frlen');
@@ -540,7 +583,14 @@
           `<span class="frhint">🔒 ${(+opt.lockLen).toFixed(2)}초 고정 — 박스를 끌어 맞는 장면 위에 놓으세요</span>` +
           `<button type="button" class="frbtn" data-act="play">▶ 미리보기에서 듣기</button>` +
           (typeof opt.onReplace === 'function'
-            ? `<button type="button" class="frbtn rep">🔁 이 장면으로 교체</button>` : '');
+            ? `<button type="button" class="frbtn rep">🔁 이 장면으로 교체</button>` : '') +
+          // ★＋ 구간은 잠금 중에도 항상 있다(2026-09-03 사장님). 누르면 잠금이 풀리고
+          //   바로 박스가 생긴다 — 새로고침 없이 평소 필름으로 돌아온다.
+          `<span class="frmk"><button type="button" class="frbtn mk" title="박스 모드를 끄고 구간 박스를 만듭니다">＋ 구간</button>` +
+          `<input type="number" class="frlen" step="0.1" min="0.1" value="${BOXLEN}"><span class="frhint">초</span></span>`;
+        const mk2 = barEl.querySelector('.mk'); if (mk2) mk2.onclick = unlockAndMake;
+        const len2 = barEl.querySelector('.frlen');
+        if (len2) len2.oninput = () => { const v = parseFloat(len2.value); if (v > 0) BOXLEN = v; };
         const rep2 = barEl.querySelector('.rep');
         if (rep2) rep2.onclick = () => {
           if (BOXES.length === 1 && typeof opt.onReplace === 'function')

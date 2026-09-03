@@ -196,6 +196,8 @@
       // 조각이 이 영상 것이면 박스를 그 조각 자리에 놓는다(다른 영상이면 0초부터).
       lockFrom: (REPLACE.vid === vid ? REPLACE.from : 0),
       onReplace: r => tlReplaceApply(vid, r),
+      // ＋ 구간을 눌러 필름 쪽에서 잠금을 풀면 여기 모드도 접는다(필름은 그대로 — 다시 안 연다).
+      onUnlock: () => { if (REPLACE) { REPLACE = null; render(); nsay('📦 박스 모드를 끄고 구간 박스로 바꿨어요'); } },
     };
   };
 
@@ -233,7 +235,7 @@
           cap_text: cap.text || '', cap_sec: rep.len }) });
     } catch (e) {}
     render();
-    nsay(`🔁 교체 완료 — ${rep.len.toFixed(2)}초 그대로 새 장면이 들어갔습니다`);
+    nsay(`🔁 교체 완료 — ${(r.e - r.s).toFixed(2)}초로 새 장면이 들어갔습니다`);
   }
 
   // ── ⑥ 구절 경계 편집 ────────────────────────────────────────────────
