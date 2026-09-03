@@ -1,0 +1,28 @@
+{
+ "wrap": true,
+ "font": "Pretendard-ExtraBold.otf",
+ "size": 60,
+ "color": "#FFFFFF",
+ "color2": "#FFE600",
+ "y": 15,
+ "x": 50,
+ "weight": 900,
+ "outline": true,
+ "outline_color": "#000000",
+ "outline_w": 10,
+ "box": false,
+ "box_color": "#000000",
+ "box_pad": 16,
+ "box_opacity": 100,
+ "shadow": true,
+ "shadow_color": "#000000",
+ "shadow_d": 4,
+ "text": "다이소 직원들도\n쟁여둔다는 만능 후크",
+ "highlight_rules": [
+  {
+   "keyword": "쟁여둔다는 만능 후크",
+   "color": "#FFE600",
+   "box": false
+  }
+ ]
+}
