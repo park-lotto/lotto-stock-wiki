@@ -22,7 +22,7 @@ def _dock_src():
 
 
 def _run(inner_width, video_rect, present=None, inner_height=900, btn_width=150,
-         ancestor=None, rail=None):
+         ancestor=None, rail=None, ancestor_textarea=False):
     """present=None이면 버튼 4개 + 시크바 전부 있는 화면."""
     ids = ["ss-adopt-btn", "ss-lens-btn", "ss-chadd-btn", "ss-grab-btn"]
     present = ids + ["ss-seek"] if present is None else present
@@ -34,6 +34,7 @@ var vid = {{
   getBoundingClientRect: function () {{ return {json.dumps(video_rect)}; }},
   closest: function () {{ return null; }},
   parentElement: anc ? {{ getBoundingClientRect: function () {{ return anc; }},
+                         querySelector: function () {{ return {'{}' if ancestor_textarea else 'null'}; }},
                          parentElement: null }} : null
 }};
 var els = {{}};
@@ -78,12 +79,6 @@ def test_없는_버튼은_빈칸을_남기지_않는다():
     assert st["ss-grab-btn"]["top"] == "160px"
 
 
-def test_시크바는_영상_아래쪽에_붙는다():
-    st = _run(1280, RECT)
-    assert st["ss-seek"]["bottom"] == "18px"          # innerHeight - rect.bottom + 8
-    assert st["ss-seek"]["left"] == "576px"
-
-
 def test_좁은_창이면_종전_오른쪽_아래_자리로_되돌린다():
     st = _run(700, {"width": 500, "height": 880, "top": 10, "bottom": 890, "right": 620, "left": 120})
     assert st["ss-grab-btn"]["right"] == "18px" and st["ss-grab-btn"]["top"] == ""
@@ -117,3 +112,23 @@ def test_버튼이_사이트_헤더를_덮지_않는다():
     up = dict(RECT, top=-200, bottom=680)      # 스크롤로 영상이 위로 밀린 상태
     st = _run(1280, up)
     assert st["ss-adopt-btn"]["top"] == "72px", st["ss-adopt-btn"]
+
+
+def test_시크바는_담기_버튼_아래_한_칸():
+    """2026-09-03: 영상 아래쪽(bottom)이 아니라 담기 버튼 밑(top)이다. bottom은 auto."""
+    st = _run(1280, RECT)
+    assert st["ss-seek"]["top"] == "316px"           # 264(담기) + 52
+    assert st["ss-seek"]["bottom"] == "auto"
+    assert st["ss-seek"]["left"] == "576px"
+
+
+def test_릴_직접주소_화면은_댓글판_바깥_오른쪽으로():
+    """/reel/ 직접 주소: dialog·article이 아닌 칸이 영상+댓글판을 감싼다(2026-09-03 사장님 스샷).
+    댓글 입력창(textarea)을 품은 칸이면 그 오른쪽 바깥으로 넘긴다."""
+    st = _run(1673, RECT, ancestor={"width": 940, "right": 1345, "left": 405}, ancestor_textarea=True)
+    assert st["ss-grab-btn"]["left"] == "1361px"     # 1345 + 16
+
+
+def test_화면_거의_전체를_덮는_칸은_textarea가_있어도_버린다():
+    st = _run(1673, RECT, ancestor={"width": 1600, "right": 1650, "left": 50}, ancestor_textarea=True)
+    assert st["ss-grab-btn"]["left"] == "576px"
