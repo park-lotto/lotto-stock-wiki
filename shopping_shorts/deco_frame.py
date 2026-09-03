@@ -456,6 +456,16 @@ DEFAULTS = {
     "post_author": "",     # 커뮤니티형: 작성자
     "post_time": "",       # 커뮤니티형: 작성 시간
     "post_likes": "",      # 커뮤니티형: 추천 수
+    # ── 후킹/본문 배치(2026-09-03 사장님 "템플릿 모양 배치까지 그대로" · 10채널 30편 프레임 실측) ──
+    # ★전부 0/빈값 = 종전과 완전히 같다(회귀 0).
+    "hook_band_h": 0,      # 후킹: 띠 아래 어두운 띠 높이 px(헤드라인이 앉는 자리). 실측 20~30%=384~576
+    "hook_band_color": "", # 그 띠 색(빈값=#000000)
+    "hook_band_alpha": 0,  # 그 띠 진하기 %(0=안 정함→60)
+    "sub_line": "",        # 후킹: 어두운 띠 아래 흰 한 줄 박스 문구(빈값=안 그림)
+    "sub_line_h": 0,       # 그 박스 높이 px(0=84)
+    "sub_line_bg": "",     # 그 박스 색(빈값=#FFFFFF)
+    "sub_line_color": "",  # 그 박스 글자색(빈값=#111111)
+    "head_h": 0,           # 본문: 흰 제목 블록 높이 px(0=내용만큼). 자막이 흰 영역 안에 앉게 25~33%=480~630
 }
 
 _FONTS = {
@@ -664,7 +674,9 @@ def normalize(spec):
                       ("ch_y", 0, 100), ("title_y", 0, 100),
                       ("title_ol_w", 0, 20),
                       ("ad_size", 0, 200), ("ad_x", 0, 100), ("ad_y", 0, 100),
-                      ("ad_alpha", 0, 100)):
+                      ("ad_alpha", 0, 100),
+                      ("hook_band_h", 0, 1200), ("hook_band_alpha", 0, 100),
+                      ("sub_line_h", 0, 300), ("head_h", 0, 1400)):
         try:
             s[k] = int(s[k])
         except (TypeError, ValueError):
@@ -954,10 +966,26 @@ def render(spec):
     if s["bottom_h"] > 0:
         im.alpha_composite(_bar_layer(bar_col, s["bottom_h"], s["bar_fx"], s["bar_soft"], False))
 
+    # ── 후킹 배치: 띠 아래 어두운 띠 + 흰 한 줄 박스 (실측: 썰칩12·쇼핑천재·공가미·살림장착 등) ──
+    if s["hook_band_h"] > 0:
+        _bc = _rgb(s["hook_band_color"] or "#000000")
+        _al = int(255 * (s["hook_band_alpha"] or 60) / 100.0)
+        _band = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        ImageDraw.Draw(_band).rectangle([0, bar_h, W, bar_h + s["hook_band_h"]], fill=(_bc[0], _bc[1], _bc[2], _al))
+        im.alpha_composite(_band)
+    if s["sub_line"]:
+        _sh = s["sub_line_h"] or 84
+        _sy = (bar_h + s["hook_band_h"] - _sh - 24) if s["hook_band_h"] > 0 else (bar_h + 24)
+        _sf = _font("title", int(_sh * 0.5))
+        _sw = int(d.textlength(s["sub_line"], font=_sf)) + 80
+        _sx = (W - _sw) // 2
+        d.rounded_rectangle([_sx, _sy, _sx + _sw, _sy + _sh], radius=14, fill=_rgb(s["sub_line_bg"] or "#FFFFFF"))
+        _fg.draw_text(d, (W // 2, _sy + _sh // 2), s["sub_line"], _sf, _rgb(s["sub_line_color"] or "#111111"), "mm", int(_sh * 0.5))
+
     # 제목·메타가 얹히는 흰 블록 — 내용이 있을 때만 그린다(빈 블록이 영상을 가리면 손해).
     # ★0 = "안 정했음" → 지금까지처럼 띠 바로 아래(옛 그림 무변경).
     y = int(H * s["title_y"] / 100.0) if s["title_y"] else bar_h
-    if s["title"] or s["views"] or s["comments"]:
+    if s["title"] or s["views"] or s["comments"] or s["head_h"] > 0:
         tsize = s["title_size"] or 62
         ft = _font("title", tsize, s["title_font"])
         fm = _font("meta", 30)
@@ -975,6 +1003,8 @@ def render(spec):
         if s["comments"]:
             meta = (meta + " | " if meta else "") + f"댓글 {s['comments']}개"
         block_h = 36 + len(lines) * line_h + (52 if meta else 0) + 24
+        if s["head_h"] > 0:                      # 실측 채널은 자막까지 흰 블록 안에 앉는다
+            block_h = max(block_h, s["head_h"])
         # ★제목 블록의 **바탕색·글자색도 채널마다 다르다**(실측 sub_bg 5가지·sub_text 9가지).
         #   2026-08-25까지 소비처 0곳이라 흰 바탕+검은 글자 한 벌로만 나갔다(center_kind와 같은 사고).
         #   사장님이 화면에서 직접 정한 head_bg가 있으면 그게 먼저다(사람 손 > 실측).
