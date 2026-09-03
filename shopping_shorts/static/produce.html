@@ -13632,6 +13632,8 @@ async function renderTtsBeats(){
           <select id="vpTone${i}" style="padding:3px">${Object.entries(VARIANT_LABELS).map(([k,lab])=>`<option value="${k}"${(b.tts_tone||'stable')===k?' selected':''}>${lab}</option>`).join('')}</select>
           <button class="btn-prev" style="padding:3px 8px" onclick="vpRegenTone(${i})">🔁 톤 바꿔 다시</button>
           ${window.IS_ADMIN?`<button class="btn-prev" style="padding:3px 8px" onclick="pronReport(this,${i})">🩺 발음 이상해요</button>`:''}
+          <button class="btn-prev" style="padding:3px 8px;color:#fca5a5;border-color:#7f1d1d"
+                  onclick="vpDeleteBeat(${i})" title="이 문장 칸을 통째로 지웁니다">🗑 이 문장 삭제</button>
           <span id="vpMsg${i}" class="hint"></span>
         </div>`:''}
       </div>`;
@@ -13762,6 +13764,28 @@ function vpMore(i){
   const open = el.style.display==='none';
   document.querySelectorAll('.ttsMore').forEach(e=>{ e.style.display='none'; });
   el.style.display = open ? 'flex' : 'none';
+}
+// 🗑 문장 칸 통째로 삭제 — 2026-09-03 고객(이유준) "음성이 두 번 되어서 마지막 것을 삭제".
+// 여태 칸은 고치거나 다시 뽑을 수만 있었다. 중복 생성된 칸을 빼려면 글자를 지워야 하는데
+// 저장 API가 "대본이 비었어요"로 막아 앱 안에 빠져나갈 구멍이 없었다.
+// ★서버가 주인이다 — 응답이 성공해야 화면을 다시 그린다(낙관적 갱신 금지).
+async function vpDeleteBeat(i){
+  const b=VP_BEATS[i], m=document.getElementById('vpMsg'+i);
+  if(!b || !MIX_JOB) return;
+  const txt=(b.narration||'').trim();
+  if(!confirm('이 문장 칸을 지울까요?' + String.fromCharCode(10,10) + (txt.length>60?txt.slice(0,60)+'…':txt) + String.fromCharCode(10,10) + '음성·자막이 함께 빠지고 되돌릴 수 없어요.')) return;
+  if(m) m.textContent='🗑 지우는 중…';
+  try{
+    const r=await fetch('/api/mix/scene_lab/'+MIX_JOB+'/beat/'+b.beat_idx+'/delete',{method:'POST'});
+    const j=await r.json().catch(()=>null);
+    if(!r.ok || !j || !j.ok){
+      if(m) m.textContent = (r.status===409)
+        ? '⏳ 생성 중엔 못 지워요 — 끝나고 다시 눌러요'
+        : ('❌ 삭제 실패' + (j&&j.error?(' — '+j.error):''));
+      return;
+    }
+    renderTtsBeats();        // 목록을 서버 기준으로 다시 그린다
+  }catch(e){ if(m) m.textContent='❌ 삭제 실패: '+(e.message||e); }
 }
 async function vpNudge(i,dir){
   const b=VP_BEATS[i]; if(!b) return;
