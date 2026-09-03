@@ -13069,7 +13069,7 @@ async function loadTtsCredits(force){
     if(btn) btn.hidden = !(d.subclean && d.subclean.show);
     if(!box) return;
     const lines=(d.services||[]).map(ttsCreditLine).filter(Boolean);
-    const redo=' <button type="button" onclick="loadTtsCredits(1)" title="다시 조회" style="border:0;background:none;cursor:pointer;color:var(--sub);font-size:12px">↻</button>';
+    const redo=' <button type="button" onclick="loadTtsCredits(1)" title="다시 조회" style="border:0;background:none;cursor:pointer;color:var(--sub);font-size:12px;padding:0 4px;line-height:1">↻</button>';
     if(lines.length){
       box.innerHTML = lines.join('');
       const first=box.querySelector('.credLine'); if(first) first.insertAdjacentHTML('beforeend', redo);   // ↻는 첫 줄 끝에
