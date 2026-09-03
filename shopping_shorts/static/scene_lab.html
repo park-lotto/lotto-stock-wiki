@@ -2056,6 +2056,8 @@ function renderRollHosts(beatIdx, slot){
     // ★타임라인 🔁 교체 모드(2026-08-29 설계 ⑧)면 여기서 잠금 옵션이 덮인다:
     //   lockLen(고정길이 박스)+onReplace(그 컷 교체). 마지막에 펼쳐야 위 onReplace를 이긴다.
     ...(typeof tlLockOpts === 'function' ? tlLockOpts(kind, vid) : {}),
+    // ＋ 구간으로 잠금을 풀었을 때 되돌릴 원래 onReplace(src는 없음 → null).
+    onReplaceUnlocked: (kind === 'src') ? null : (r => replaceRoll(sid, vid, r)),
   });
   markRollBtns();
 }
