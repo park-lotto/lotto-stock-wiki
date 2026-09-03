@@ -1854,6 +1854,10 @@
              세로 90px을 먹어 정작 누를 것들이 화면 아래로 밀렸다. 지금 성우 한 줄만 남긴다.
              ★#curVoiceName은 지우지 않는다 — syncCurVoiceName()이 이 id 하나만 찾는다. -->
         <div id="curVoiceName" style="font-size:12.5px;color:var(--sub);margin-bottom:9px">— 기본 성우로 완성됨</div>
+        <!-- ★내 음성 키 잔액(2026-09-04 사장님 "tts에도 api연동해서 본인크레딧"). 두 업체 다
+             구독 조회 API가 있어 숫자를 그대로 띄운다(/api/produce/tts/credits, 60초 캐시).
+             loadTtsCredits()가 5단계로 들어올 때 채운다. 등록한 키가 없으면 한 줄 안내만. -->
+        <div id="ttsCredits" class="hint" style="margin:-4px 0 10px;line-height:1.7"></div>
       <!-- ★좌우를 뒤집었다(2026-08-18). 예전엔 [설정 | 성우카드] 순서라, 성우를 고르기 전
            왼쪽 큰 칸이 안내문 한 줄(높이 47px)만 담은 채 폭 1226px을 먹어 **세로 381px짜리
            빈 구멍**이 생겼다(실측). 순서를 [성우카드 | 설정]으로 바꾸면 먼저 할 일(고르기)이
@@ -12948,7 +12952,43 @@ async function loadPresets(){
   }
 }
 
+// ── 내 음성 키 잔액(2026-09-04) ──────────────────────────────────────────
+// 서버가 업체(일레븐랩스·타입캐스트) 구독 API를 대신 물어 숫자를 준다. 이 칸이 죽어도
+// 5단계 본작업(성우 고르기)은 돌아야 하므로 loadTtsBeats와 따로 돌고 실패는 삼킨다.
+function ttsCreditLine(s){
+  const dash = '<a href="'+esc(s.dashboard)+'" target="_blank" rel="noopener" style="color:var(--accent2)">대시보드 ↗</a>';
+  if(!s.registered) return '';                              // 등록 안 한 업체는 줄을 안 만든다
+  return (s.keys||[]).map(k=>{
+    const tail = k.key_tail ? '<span style="opacity:.6">(…'+esc(k.key_tail)+')</span> ' : '';
+    if(k.ok){
+      const n = v => Number(v||0).toLocaleString('ko-KR');
+      const reset = k.reset_at ? ' · '+new Date(k.reset_at*1000).toLocaleDateString('ko-KR',{month:'numeric',day:'numeric'})+' 리셋' : '';
+      const plan = k.plan ? ' · '+esc(String(k.plan)) : '';
+      return '🎙 '+esc(s.label)+' '+tail+'<b>'+n(k.remaining)+esc(s.unit)+' 남음</b> '
+        + '<span style="opacity:.75">(사용 '+n(k.used)+' / '+n(k.limit)+plan+reset+')</span> '+dash;
+    }
+    // ★일레븐랩스 제한키는 잔액 조회 권한(user_read)이 없을 수 있다 — 키가 틀린 게 아니다.
+    const why = k.error_kind==='no_permission' ? '이 키엔 잔액 조회 권한이 없어요(음성 생성은 됩니다)'
+              : k.error_kind==='bad_key'       ? '키가 유효하지 않아요'
+              : k.error_kind==='rate_limited'  ? '업체가 잠시 조회를 막았어요(잠시 후 ↻)'
+              : k.error_kind==='network'       ? '업체 응답이 없어요'
+              : '조회 실패'+(k.http?'('+k.http+')':'');
+    return '🎙 '+esc(s.label)+' '+tail+'<span style="opacity:.8">'+why+'</span> — '+dash;
+  }).join('<br>');
+}
+async function loadTtsCredits(force){
+  const box=document.getElementById('ttsCredits'); if(!box) return;
+  try{
+    const d=await (await fetch('/api/produce/tts/credits'+(force?'?refresh=1':''))).json();
+    const lines=(d.services||[]).map(ttsCreditLine).filter(Boolean);
+    const redo=' <button type="button" onclick="loadTtsCredits(1)" title="다시 조회" style="border:0;background:none;cursor:pointer;color:var(--sub);font-size:12px">↻</button>';
+    box.innerHTML = lines.length ? lines.join('<br>')+redo
+      : '🎙 <span style="opacity:.8">등록한 내 음성 키가 없어요 — </span><a href="/settings#keys" target="_blank" rel="noopener" style="color:var(--accent2)">🔑 키 등록</a>';
+  }catch(e){ box.innerHTML=''; }
+}
+
 async function loadTtsBeats(){
+  loadTtsCredits();   // ★잔액은 따로 돈다 — 아래 프리셋 로드가 실패해도 잔액 줄은 뜬다
   // 프리셋 카드는 job(영상매칭) 없이도 항상 표시 — 둘러보기·샘플 미리듣기 가능
   if(!await loadPresets()) return;
   // 관리자에게만 '＋ 일레븐랩스에서 성우 추가'를 연다(등록은 실TTS 4회 = 크레딧).
