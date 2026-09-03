@@ -225,7 +225,7 @@ def test_caption_style_reaches_draft():
                               caption_style=_STYLE)
     t = _texts(draft)[0]
     assert t["text_color"] == "#ffcc00", f"글자색이 안 갔다: {t['text_color']}"
-    assert t["font_size"] > 16.0, f"크기(70)가 기본(16) 그대로다: {t['font_size']}"
+    assert t["font_size"] > cd._CC_BASE_FONT_SIZE, f"크기(70)가 기본 그대로다: {t['font_size']}"
     assert t["border_color"] == "#000000" and t["border_width"] > 0, "외곽선이 안 갔다"
     assert t["has_shadow"] is True and t["shadow_color"] == "#111111", "그림자가 안 갔다"
     # content(0~1 RGB)에도 같은 색이 들어가야 한다 — 캡컷은 둘 다 본다
@@ -238,7 +238,8 @@ def test_no_style_keeps_old_output():
     draft, _ = cd.build_draft(plan=_PLAN, timeline=_TIMELINE, source_video_paths=_SRC,
                               tts_paths=_TTS, asset_paths=_ASSET, project_name="t")
     t = _texts(draft)[0]
-    assert t["text_color"] == "#ffffff" and t["font_size"] == 16.0
+    assert t["text_color"] == "#ffffff" and t["font_size"] == round(cd._CC_BASE_FONT_SIZE, 2)
+    assert t["background_style"] == 0 and t["background_alpha"] == 0.0
     assert t["border_color"] == "" and t["has_shadow"] is False
 
 
@@ -270,8 +271,38 @@ def test_size_is_clamped():
     tiny, _ = cd.build_draft(plan=_PLAN, timeline=_TIMELINE, source_video_paths=_SRC,
                              tts_paths=_TTS, asset_paths=_ASSET, project_name="t",
                              caption_style={"size": 1})
-    assert _texts(big)[0]["font_size"] <= 16.0 * 3
-    assert _texts(tiny)[0]["font_size"] >= 16.0 * 0.3
+    assert _texts(big)[0]["font_size"] <= cd._CC_BASE_FONT_SIZE * 3
+    assert _texts(tiny)[0]["font_size"] >= round(cd._CC_BASE_FONT_SIZE * 0.3, 2)
+
+
+def test_font_size_matches_render_pixels():
+    """★2026-09-03 고객 제보: 캡컷 글자가 렌더보다 1.7배 컸다. 렌더 px(UI×1.5)를 캡컷 단위로
+    나눈 값이어야 하고, 종전 값(UI 50→16)보다 확실히 작아야 한다."""
+    draft, _ = cd.build_draft(plan=_PLAN, timeline=_TIMELINE, source_video_paths=_SRC,
+                              tts_paths=_TTS, asset_paths=_ASSET, project_name="t",
+                              caption_style={"size": 44})
+    fs = _texts(draft)[0]["font_size"]
+    assert abs(fs - round(44 * 1080 / 720 / cd._CC_PX_PER_UNIT, 2)) < 0.02, fs
+    assert fs < 16.0 * 44 / 50, f"종전 비례식 그대로다: {fs}"
+
+
+def test_caption_box_reaches_draft():
+    """★2026-09-03 고객 제보 "바탕(배경박스)이 없다": box=True면 캡컷 캡션의 배경 필드
+    (background_style=1·color·alpha)가 실린다 — 실물 캡컷 캡션 파일과 같은 형태."""
+    draft, _ = cd.build_draft(plan=_PLAN, timeline=_TIMELINE, source_video_paths=_SRC,
+                              tts_paths=_TTS, asset_paths=_ASSET, project_name="t",
+                              caption_style={"box": True, "box_color": "#ffffff",
+                                             "box_opacity": 80, "box_pad": 12})
+    t = _texts(draft)[0]
+    assert t["background_style"] == 1, "배경박스가 안 갔다"
+    assert t["background_color"] == "#ffffff" and abs(t["background_alpha"] - 0.8) < 0.001, t
+    # 캡션(subtitle) 타입은 그대로여야 한다
+    assert t["type"] == "subtitle"
+    # 끄면 안 간다
+    off, _ = cd.build_draft(plan=_PLAN, timeline=_TIMELINE, source_video_paths=_SRC,
+                            tts_paths=_TTS, asset_paths=_ASSET, project_name="t",
+                            caption_style={"box": False, "box_color": "#ffffff"})
+    assert _texts(off)[0]["background_style"] == 0 and _texts(off)[0]["background_alpha"] == 0.0
 
 
 # ── 워터마크(채널 닉네임)도 따라간다 — 고객 제보 2단계 ─────────────────────

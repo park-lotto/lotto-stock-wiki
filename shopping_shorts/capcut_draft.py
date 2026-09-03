@@ -148,10 +148,18 @@ def _text_content(text, font_path, color=(1.0, 1.0, 1.0), size=15.0):
         "text": text}, ensure_ascii=False)
 
 
-# 캡컷 캡션의 기본 글자 크기(실측: 캡컷이 만든 캡션 머티리얼의 font_size).
-_CC_BASE_FONT_SIZE = 16.0
 # 우리 화면(제작소 자막꾸미기)의 기본 글자 크기 — caption_style_json의 size 기본값.
 _UI_BASE_FONT_SIZE = 50.0
+# 꾸미기 UI 기준 폭 → 렌더 출력 폭 (video_assemble._ui_px와 같은 환산: px × 1080/720).
+_UI_REF_W, _OUT_W_PX = 720, 1080
+# ★캡컷 font_size 1단위가 1080폭 출력에서 차지하는 글자(em) 픽셀 — 2026-09-03 실측 추정.
+#   고객 제보(박세희, job fb62adf0aad0) 캡컷 화면과 우리 렌더 화면을 같은 폭으로 놓고 재니
+#   캡컷 글자가 약 1.7배 컸다(캡컷 17.5px vs 렌더 10px, 미리보기 235px 폭 기준).
+#   종전 식(우리 50 = 캡컷 16)은 추정이었고 그 결과가 1.7배였다 → 16/1.7 ≈ 9.4 = 75px/8.0.
+#   캡컷이 만든 캡션의 기본 font_size가 16(실측)이라 클램프 범위는 그 근처로 둔다.
+#   ⚠️정확한 단위는 캡컷 렌더 실측으로만 확정된다. 틀리면 **이 상수 하나만** 바꾼다.
+_CC_PX_PER_UNIT = 8.0
+_CC_BASE_FONT_SIZE = round(_UI_BASE_FONT_SIZE * _OUT_W_PX / _UI_REF_W / _CC_PX_PER_UNIT, 3)  # 9.375
 
 
 def _caption_style_to_cc(style):
@@ -172,15 +180,30 @@ def _caption_style_to_cc(style):
     # 글자색 — content(0~1 RGB)와 머티리얼(#rrggbb) 둘 다 캡컷이 본다.
     out["rgb"] = _hex_rgb(st.get("color"), (1.0, 1.0, 1.0))
     out["text_color"] = _hex_norm(st.get("color"))
-    # 크기 — 캡컷 단위로 환산(우리 50 = 캡컷 16 기준 비례).
-    #   ⚠️이 비율은 **추정**이다(캡컷 size 단위를 실측한 자료가 없다). 사장님이 실물에서
-    #     보고 조정할 수 있게 한 곳(_CC_BASE_FONT_SIZE/_UI_BASE_FONT_SIZE)에만 적는다.
+    # 크기 — 렌더와 같은 픽셀(UI px × 1080/720)을 캡컷 단위로 나눈다(_CC_PX_PER_UNIT 참고).
+    #   종전 "우리 50 = 캡컷 16" 비례식은 실물에서 1.7배 크게 나왔다(2026-09-03 고객 제보).
     try:
         ui = float(st.get("size") or _UI_BASE_FONT_SIZE)
     except (TypeError, ValueError):
         ui = _UI_BASE_FONT_SIZE
     ratio = max(0.3, min(3.0, ui / _UI_BASE_FONT_SIZE))       # 과한 값은 잘라 안전하게
     out["font_size"] = round(_CC_BASE_FONT_SIZE * ratio, 2)
+    # 배경 박스 — 실측(캡컷이 만든 캡션): background_style=1 + background_color(#rrggbb)
+    #   + background_alpha(0~1). 종전엔 전부 0/""로 고정이라 박스가 **한 번도** 안 갔다
+    #   (2026-09-03 고객 제보 "바탕이 없다"). 렌더는 box_color@box_opacity/100 로 그린다.
+    #   ⚠️여백(background_height/width 0.14)·모서리는 캡컷 단위 미실측 → 기본값 그대로 둔다.
+    if st.get("box"):
+        try:
+            op = float(st.get("box_opacity") if st.get("box_opacity") is not None else 80)
+        except (TypeError, ValueError):
+            op = 80.0
+        out["background_style"] = 1
+        out["background_color"] = _hex_norm(st.get("box_color"), "#000000")
+        out["background_alpha"] = round(max(0.0, min(1.0, op / 100.0)), 3)
+    else:
+        out["background_style"] = 0
+        out["background_color"] = ""
+        out["background_alpha"] = 0.0
     # 외곽선 — 캡컷 캡션 기본 border_width=0.24(실측). 우리 outline_w(px)를 그 비율로.
     if st.get("outline"):
         try:
@@ -235,8 +258,9 @@ def _text_material(text, font_path, style=None):
             "line_spacing": 0.02, "text_size": int(round(cc["font_size"])),
             "border_width": cc["border_width"], "border_alpha": cc["border_alpha"],
             "border_color": cc["border_color"], "border_mode": 0, "bold_width": 0.0,
-            "has_shadow": cc["has_shadow"], "background_alpha": 0.0, "background_color": "",
-            "background_style": 0, "background_round_radius": 0.0,
+            "has_shadow": cc["has_shadow"],
+            "background_alpha": cc["background_alpha"], "background_color": cc["background_color"],
+            "background_style": cc["background_style"], "background_round_radius": 0.0,
             "background_height": 0.14, "background_width": 0.14,
             "background_horizontal_offset": 0.0, "background_vertical_offset": 0.0,
             "layer_weight": 1, "line_max_width": 10.0,
