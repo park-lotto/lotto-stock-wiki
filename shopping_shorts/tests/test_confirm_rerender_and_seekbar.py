@@ -103,3 +103,23 @@ def test_여는_콜백은_한_번만_돈다():
     """metadata와 안전핀이 겹쳐 go()가 두 번 돌면 컷이 앞질러 간다."""
     body = _fn(_code("scene_play.js"), "step")
     assert "if (opened) return;" in body, "중복 실행 가드가 없다"
+
+
+def test_탐색바가_틀_밖으로_밀려나지_않는다():
+    """라이브 실측으로 잡은 것 — #playerhost는 overflow:hidden(700px)인데 video의
+    9:16 강제 높이(768px)가 막대를 y=817로 밀어내 **화면에 아예 안 보였다**.
+    정적 검사만으론 못 잡으니, 다시는 그 CSS로 돌아가지 않게 여기서 못 박는다."""
+    import re
+    raw = (_STATIC / "scene_lab.html").read_text(encoding="utf-8")
+    # ★CSS 주석을 걷어내고 본다 — 안 그러면 "aspect-ratio를 쓰지 않는다"고 적은
+    #   주석 자체가 검사에 걸린다(이 테스트를 쓰면서 실제로 걸렸다).
+    css = re.sub(r"/\*.*?\*/", "", raw, flags=re.S)
+    block = css.split("#confirmBody video{")[1].split("}")[0]
+    # 비율은 반드시 살아 있어야 한다(test_preview_size_single_source의 계약).
+    assert "--shorts-pv-ar" in block, "비율 변수가 사라졌다 — 크기 정의처가 갈라진다"
+    # 넘칠 때 줄어들 수 있어야 막대가 안 잘린다. height 고정이면 다시 밀려난다.
+    assert "max-height:100%" in block and "min-height:0" in block, "넘칠 때 줄어들지 않는다"
+    assert "width:auto" in block, "폭이 고정이면 높이를 깎을 때 비율이 깨진다"
+    body = css.split("#confirmBody{")[1].split("}")[0]
+    assert "display:flex" in body and "flex-direction:column" in body, \
+        "#confirmBody가 세로 flex가 아니면 막대가 틀 밖으로 밀려난다"

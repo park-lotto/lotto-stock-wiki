@@ -524,17 +524,23 @@ def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
                 cut_track["segments"].append(_cseg)
 
         # ── 자막 트랙: 비트 나레이션 ──
-        text = (tl.get("narration") or "").strip()
-        if text:
+        #   ★렌더와 같은 구절 나누기·시간표(video_assemble.caption_schedule, 0순위-B).
+        #     종전엔 비트 문장 통째로 캡션 하나 → 캡컷 화면 밖으로 넘쳤다(2026-09-03 실측).
+        from shopping_shorts.video_assemble import caption_schedule
+        _tail = 0.5 if tl is timeline[-1] else 0.0
+        for _txt, _s, _e in caption_schedule(tl, tail=_tail):
+            _txt = (_txt or "").strip()
+            if not _txt or _e - _s <= 0.05:
+                continue
             anim = _sticker_animation()
             mats["material_animations"].append(anim)
-            tm = _text_material(text, font_path, caption_style)
+            tm = _text_material(_txt, font_path, caption_style)
             mats["texts"].append(tm)
             # ★실측(캡컷이 만든 캡션 세그먼트): render_index=0 · track_render_index=2.
             #   종전엔 render_index=14000(텍스트 관례)이라 자막 패널에서 다르게 다뤄졌다.
-            seg = _base_segment(tm["id"], t0, dur, source_timerange=False,
+            seg = _base_segment(tm["id"], _us(_s), _us(_e - _s), source_timerange=False,
                                 render_index=0, extra_refs=[anim["id"]])
-            seg["track_render_index"] = 2
+            seg["track_render_index"] = 3      # 소스(0)·머리카피(1)·틀(2) 위 = 맨 위
             txt_track["segments"].append(seg)
 
     # ── 🖼 꾸미기 틀(템플릿) — 영상 위에 얹는 투명 PNG (2026-08-28 고객 제보 3단계) ──
@@ -560,7 +566,7 @@ def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
             mats["videos"].append(pm)
             tseg = _base_segment(pm["id"], 0, _tdur, source_start=0, source_dur=_tdur,
                                  render_index=0, volume=0.0)
-            tseg["track_render_index"] = 1     # 소스 영상(0) 위, 자막(2) 아래
+            tseg["track_render_index"] = 2     # 소스(0)·머리카피(1) 위, 자막 아래
             try:
                 a = float(_tpl.get("alpha", 1))
             except (TypeError, ValueError):
@@ -583,7 +589,9 @@ def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
             mats["videos"].append(hm)
             hseg = _base_segment(hm["id"], _ht0, _hdur, source_start=0, source_dur=_hdur,
                                  render_index=0, volume=0.0)
-            hseg["track_render_index"] = 2     # 틀(1) 위
+            # ★렌더는 머리카피를 먼저 그리고 그 위에 틀을 얹는다(_burn_captions 순서) —
+            #   캡컷도 같은 쌓임이어야 한다. 종전 "틀 위"는 실물에서 틀 제목과 겹쳤다(2026-09-03).
+            hseg["track_render_index"] = 1     # 소스(0) 위, 틀(2) 아래
             hc_track["segments"].append(hseg)
 
     # ── 🎵 배경음악(BGM) — 영상 전체에 한 칸, 볼륨은 제작소 설정 그대로 ──
@@ -637,7 +645,7 @@ def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
         wseg["track_render_index"] = 3        # 자막(2)보다 위
         wm_track["segments"].append(wseg)
 
-    tracks = [t for t in (vid_track, cut_track, tpl_track, hc_track,
+    tracks = [t for t in (vid_track, cut_track, hc_track, tpl_track,   # 머리카피가 틀 아래
                           aud_track, bgm_track, sfx_track, txt_track, wm_track)
               if t["segments"]]
     draft = _skeleton(project_name, cw, ch, total_us)

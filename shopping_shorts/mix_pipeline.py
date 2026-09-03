@@ -2634,16 +2634,107 @@ def _final_clean_fn(store, job, job_id, work, keys, customer_id=0):
         out = Path(work) / f"final_clean_{sig}.mp4"
         if out.exists() and out.stat().st_size > 1024:
             print(f"[clean] 완성본 재사용(편성 그대로, 과금 0): {out.name}", file=sys.stderr)
+            _save_clean_plan_snapshot(work, sig, job.get("edit_plan"))
             return str(out)
         charged = _charge_clean(store, customer_id, 1)
         try:
             print(f"[clean] 완성본 1편만 청소 시작 sig={sig}", file=sys.stderr)
-            return _vmake_clean(str(mix_raw), keys, str(out))
+            res = _vmake_clean(str(mix_raw), keys, str(out))
         except Exception:
             if charged:
                 _refund_clean(store, customer_id, charged)
             raise
+        _save_clean_plan_snapshot(work, sig, job.get("edit_plan"))
+        return res
     return _clean
+
+
+def _clean_plan_snapshot_path(work, sig):
+    return Path(work) / ("final_clean_%s.plan.json" % sig)
+
+
+def _save_clean_plan_snapshot(work, sig, plan):
+    """청소한 완성본 옆에 **그때의 편성**을 남긴다 (2026-09-03).
+
+    ★왜: 청소본(final_clean_{sig}.mp4)의 시간축은 청소 **그 시점** 편성의 것이다.
+      그 뒤 장면편집·삭제로 편성이 바뀌면 지금 편성의 컷 시각을 옛 파일에 대면
+      딴 장면이 뜬다(실측 job fb62adf0aad0: 10:23 청소 → 16:03~16:27 장면편집 30회 →
+      BEFORE 줄무늬 셔츠 여성 / AFTER 보라 옷 여성). 편성 스냅샷이 있으면
+      **그 편성으로** 좌우를 다시 펴서 같은 장면을 보여줄 수 있다.
+    실패해도 청소 결과에 영향 없다(비교 화면만 스냅샷 없이 동작)."""
+    try:
+        p = _clean_plan_snapshot_path(work, sig)
+        if p.exists():
+            return
+        p.write_text(json.dumps(plan or {}, ensure_ascii=False), encoding="utf-8")
+    except Exception as e:      # noqa: BLE001
+        print("[clean] 편성 스냅샷 저장 실패(무해): %s" % e, file=sys.stderr)
+
+
+def _src_durs_for(job, work):
+    """소스별 길이(초). 컷 계획(plan_beat_clips_for)이 필요로 한다."""
+    try:
+        return {v: (_probe_duration(p) or 0.0)
+                for v, p in _resolve_sources(job, Path(work)).items()}
+    except Exception:      # noqa: BLE001
+        return {}
+
+
+def clean_compare_clips(job, work):
+    """자막제거 전/후 비교의 **정본** — 어느 청소본을, 어느 편성으로 펼지 한 곳에서 정한다
+    (2026-09-03, 0순위-B).
+
+    반환: {"clips": [{ci, si, video_id, beat_idx, src, fin, dur}, ...] 또는 None,
+           "clean_path": 청소본 경로 또는 None,
+           "stale": 지금 편성으로 만든 청소본이 아니면 True,
+           "plan_used": "current" | "snapshot" | None}
+
+    순서:
+      1) 지금 편성 서명의 청소본이 있으면 → 지금 편성으로 편다(stale=False).
+      2) 없으면 가장 최근 청소본 + 그 옆 편성 스냅샷으로 편다(stale=True).
+         좌우 모두 **스냅샷 편성**의 컷이라 같은 장면이다. 렌더 땐 다시 청소된다.
+      3) 스냅샷도 없으면 clips=None — 호출부는 틀린 그림 대신 사실을 말한다.
+    소스별 청소본(clean_sources) 경로는 좌우 시간축이 같아 여기 대상이 아니다(None).
+    """
+    out = {"clips": None, "clean_path": None, "stale": False, "plan_used": None}
+    try:
+        if (job or {}).get("clean_sources"):
+            return out
+        work = Path(work)
+        plan = None
+        fresh = clean_final_path_for_plan(job, work)
+        if fresh is not None:
+            plan, out["clean_path"], out["plan_used"] = (job.get("edit_plan") or {}), str(fresh), "current"
+        else:
+            out["stale"] = True
+            cands = [f for f in work.glob("final_clean_*.mp4") if f.stat().st_size > 1024]
+            for f in sorted(cands, key=lambda f: f.stat().st_mtime, reverse=True):
+                sig = f.stem[len("final_clean_"):]
+                sp = _clean_plan_snapshot_path(work, sig)
+                if sp.exists():
+                    try:
+                        plan = json.loads(sp.read_text(encoding="utf-8"))
+                    except Exception:      # noqa: BLE001
+                        continue
+                    out["clean_path"], out["plan_used"] = str(f), "snapshot"
+                    break
+        if plan is None:
+            return out
+        tts = {b["beat_idx"]: b["tts_path"] for b in (plan.get("beats") or [])
+               if b.get("tts_path")}
+        clips = []
+        for i, c in enumerate(final_clip_pairs(plan, tts, _src_durs_for(job, work))):
+            vid = c.get("video_id") or ""
+            try:
+                si = int(str(vid)[1:]) if str(vid).startswith("s") else None
+            except ValueError:
+                si = None
+            clips.append({"ci": i, "si": si, "video_id": vid, "beat_idx": c.get("beat_idx"),
+                          "src": c["src"], "fin": c["fin"], "dur": c["dur"]})
+        out["clips"] = clips
+        return out
+    except Exception:      # noqa: BLE001
+        return out
 
 
 def _ensure_clean_sources(store, job, job_id, work, keys, customer_id=0):

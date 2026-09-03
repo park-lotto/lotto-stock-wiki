@@ -1482,6 +1482,11 @@
   .pool-lscape{display:inline-block;margin-left:7px;padding:1px 7px;border-radius:999px;
                background:#4a1414;color:#ff8a8a;border:1px solid #7a2b2b;
                font-size:11px;font-weight:700;vertical-align:middle}
+  /* 가로형은 1단계에서 아예 못 고른다(2026-09-03) — 흐리게 + 카드 위에 사유 */
+  .pool-card.lscape{opacity:.5;cursor:not-allowed;filter:grayscale(.6)}
+  .pool-card.lscape::after{content:"가로형(롱폼) · 못 씀";position:absolute;left:50%;top:50%;
+               transform:translate(-50%,-50%);background:#4a1414;color:#ff8a8a;border:1px solid #7a2b2b;
+               border-radius:999px;padding:3px 9px;font-size:11.5px;font-weight:800;white-space:nowrap;pointer-events:none}
   /* ▶ TTS 재생목록 한 줄(2026-08-30) — 칸을 고정해 겹치지 않게 한다.
      [번호][대사=남는 폭][길이][▶][✏ 수정][⋯] */
   .ttsRow{border:1px solid var(--line);border-radius:10px;margin-bottom:7px;
@@ -2037,6 +2042,19 @@
           <!-- ★세로 크기는 화면 안에 들어와야 한다(2026-08-18 사장님 지시). 380px면 9:16이라
                675px가 돼 노트북 화면에서 아래가 잘려 하단 띠·자막 위치를 확인할 수 없다.
                폭은 부모의 --pvw를 그대로 받는다(정의처 한 곳) — aspect-ratio가 높이를 따라온다. -->
+          <!-- ◀▶ 를 미리보기 **위**로 올린다(2026-09-03 사장님 "넘기다보면 미리보기가 달라진다").
+               실측: 미리보기 슬롯 전체 높이 1430px인데 뷰포트는 918px — 512px이 넘쳐서
+               ◀▶(top 1345)가 **화면 밖**이었다. 누르려면 스크롤해야 하고, 그러면 sticky여도
+               미리보기 위쪽이 잘려 "크기가 달라진 것처럼" 보인다(상자 자체는 460x818 고정 —
+               12컷 연속 실측). 위로 올리면 미리보기를 온전히 본 채로 넘길 수 있다. -->
+          <div id="beatNav" style="display:none;margin:6px 0 8px">
+            <div style="display:flex;align-items:center;justify-content:center;gap:16px">
+              <button type="button" class="tab" onclick="stepBeat(-1)" style="min-width:auto;padding:8px 14px;font-size:16px">◀</button>
+              <span id="beatCount" style="font-size:13px;color:var(--sub);min-width:76px;text-align:center">1 / 1 장면</span>
+              <button type="button" class="tab" onclick="stepBeat(1)" style="min-width:auto;padding:8px 14px;font-size:16px">▶</button>
+            </div>
+            <div class="hint" style="margin-top:4px;text-align:center">◀ ▶ 로 장면을 한 컷씩 넘겨가며 자막이 어떻게 나오는지 확인</div>
+          </div>
           <div id="zoomStage" class="zoomStage" style="width:100%;aspect-ratio:9/16">
           <div class="zoomBadge" id="zoomBadge">100%</div>
           <div id="hcPreview" style="position:relative;width:100%;aspect-ratio:9/16;background:#ffffff;border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.4)">
@@ -2075,12 +2093,6 @@
           </div>
           </div><!-- /#zoomStage -->
           <div id="beatStepper" style="display:none;margin-top:10px">
-            <div style="display:flex;align-items:center;justify-content:center;gap:16px">
-              <button type="button" class="tab" onclick="stepBeat(-1)" style="min-width:auto;padding:8px 14px;font-size:16px">◀</button>
-              <span id="beatCount" style="font-size:13px;color:var(--sub);min-width:76px;text-align:center">1 / 1 장면</span>
-              <button type="button" class="tab" onclick="stepBeat(1)" style="min-width:auto;padding:8px 14px;font-size:16px">▶</button>
-            </div>
-            <div class="hint" style="margin-top:6px;text-align:center">◀ ▶ 로 장면을 넘겨가며 자막이 어떻게 나오는지 확인</div>
 
             <!-- ✋ 자막을 끌어 옮길 때 어디까지 바꿀지(2026-08-31 사장님 "자막을 이동하면
                  한장면씩 적용이랑 모두 적용할수있게"). 종전엔 드래그가 **무조건 전체**였다.
@@ -2119,7 +2131,13 @@
 
               <div style="font-size:12px;color:var(--sub);margin:10px 0 5px">
                 줄 나누기 — <b>Enter</b>=여기서 끊기 · <b>Backspace</b>(줄 맨 앞)=윗줄과 붙이기</div>
-              <div id="capLinesBox"></div>
+              <!-- ★높이를 고정한다(2026-09-03 사장님 "장면을 넘길때 미리보기창 크기가 바뀌는
+                   지점들이 생긴다"). 실측(태킹건 20컷): 줄 나누기 칸이 자막 줄 수를 따라
+                   82 / 123 / 164px로 바뀌었고(2·3·4줄 × 41px), 그때마다 미리보기 슬롯 전체가
+                   1430 / 1471 / 1512px로 튀었다. 슬롯이 sticky라 높이가 변하면 미리보기가
+                   위아래로 밀려 "크기가 바뀐 것처럼" 보인다. 상자 자체는 460x818 고정이었다.
+                   4줄분을 늘 잡아두고 그보다 많으면 이 칸 안에서만 스크롤한다. -->
+              <div id="capLinesBox" style="height:164px;overflow-y:auto"></div>
               <div style="display:flex;gap:8px;align-items:center;margin-top:7px">
                 <button type="button" class="tab" onclick="saveBeatCapLines()" style="min-width:auto;padding:6px 14px;font-size:12px">💾 이 장면 줄 저장</button>
                 <button type="button" class="tab" onclick="resetBeatCapLines()" style="min-width:auto;padding:6px 12px;font-size:12px">↩ 자동으로</button>
@@ -2261,7 +2279,7 @@
                     <option value="700">굵게</option><option value="900" selected>아주 굵게</option><option value="400">보통</option>
                   </select>
                   <span id="hcSizeV">64</span><input id="hcSize" type="range" min="28" max="120" value="64" oninput="hcTouched()">
-                  <span id="hcYV">14</span><input id="hcY" type="range" min="0" max="100" value="14" oninput="HC_Y_TOUCHED=true;hcTouched()">
+                  <span id="hcYV">14</span><input id="hcY" type="range" min="0" max="100" step="0.5" value="14" oninput="HC_Y_TOUCHED=true;hcTouched()">
                   <span id="hcXV">50</span><input id="hcX" type="range" min="0" max="100" value="50" oninput="hcTouched()">
                 </div>
                 <!-- ③ 테두리 · 박스 -->
@@ -5730,13 +5748,16 @@ try{ loadHookOpenerMine(); }catch(e){}
 
 async function loadBeatsPreview(){
   const st=document.getElementById('beatStepper');
-  if(typeof MIX_JOB==='undefined' || !MIX_JOB){ if(st) st.style.display='none'; return; }
+  if(typeof MIX_JOB==='undefined' || !MIX_JOB){ if(st) st.style.display='none';
+    const nv0=document.getElementById('beatNav'); if(nv0) nv0.style.display='none'; return; }
   try{
     const r=await fetch('/api/produce/mix/beats_preview/'+MIX_JOB);
     const d=await r.json(); BEATS_PREVIEW=d.beats||[];
   }catch(e){ BEATS_PREVIEW=[]; }
-  if(!BEATS_PREVIEW.length){ if(st) st.style.display='none'; return; }
+  const nv=document.getElementById('beatNav');
+  if(!BEATS_PREVIEW.length){ if(st) st.style.display='none'; if(nv) nv.style.display='none'; return; }
   if(st) st.style.display='block';
+  if(nv) nv.style.display='block';
   BEAT_IDX=Math.min(BEAT_IDX, BEATS_PREVIEW.length-1);
   showBeat(BEAT_IDX, true);      // true = 처음 불러옴 → 저장된 확대를 **읽기만** 한다
 }
@@ -7875,13 +7896,20 @@ function bindZoom(){
 function bindHCDrag(){
   const pv=document.getElementById('hcPreview'), tx=document.getElementById('hcPreviewText');
   if(!pv||!tx||tx._dragBound) return; tx._dragBound=true;
-  tx.style.cursor='move'; let drag=false;
+  tx.style.cursor='move'; let drag=false, grabY=0, y0=0;
+  // ★잡은 지점 기준으로 **움직인 만큼만** 옮긴다(2026-09-03 사장님 "감도가 안 좋아
+  //   이상한 방향으로 간다"). 종전엔 커서의 **절대 위치**를 그대로 y로 썼다 —
+  //   글자 가장자리를 잡으면 글자 중심이 커서로 **순간이동**해 손이 안 간 방향으로 튀었고,
+  //   1%(≈19px, 1920 기준)로 반올림해 계단처럼 끊겼다. 0.5% 단위로 잡아 두 배 곱게 움직인다.
+  const _grab=e=>{ drag=true; grabY=(e.touches?e.touches[0].clientY:e.clientY);
+                   y0=parseFloat(document.getElementById('hcY').value)||0; };
   const move=e=>{ if(!drag) return; const r=pv.getBoundingClientRect();  // 세로만 이동(가로는 위치버튼으로)
     const cy=(e.touches?e.touches[0].clientY:e.clientY);
-    let y=Math.round(Math.max(0,Math.min(100,(cy-r.top)/r.height*100)));
+    const dy=(cy-grabY)/r.height*100;
+    let y=Math.round(Math.max(0,Math.min(100, y0+dy))*2)/2;
     document.getElementById('hcY').value=y; HC_Y_TOUCHED=true; updateHC(); };
-  tx.addEventListener('mousedown', e=>{drag=true; e.preventDefault();});
-  tx.addEventListener('touchstart', e=>{drag=true;}, {passive:true});
+  tx.addEventListener('mousedown', e=>{ _grab(e); e.preventDefault();});
+  tx.addEventListener('touchstart', e=>{ _grab(e); }, {passive:true});
   document.addEventListener('mousemove', move);
   document.addEventListener('touchmove', move, {passive:true});
   document.addEventListener('mouseup', ()=>drag=false);
@@ -9694,7 +9722,7 @@ function renderPool(){
     //   카드 본체 클릭은 종전대로 pickFootage(메인 지정) — 배지만 stopPropagation.
     const canPlay = _poolCanPlay(it);
     return `<div class="pool-cell">`
-      + `<div class="pool-card${it.useFootage?' on':''}${isPick?' pick':''}" onclick="pickFootage(${i})" title="${esc(it.name||('영상 '+(i+1)))}">`
+      + `<div class="pool-card${it.useFootage?' on':''}${isPick?' pick':''}${it.landscape?' lscape':''}" onclick="pickFootage(${i})" title="${esc(it.landscape?'가로형(롱폼) — 세로 숏폼에 못 씁니다':(it.name||('영상 '+(i+1))))}">`
       + (it.thumbnail?`<img src="${it.thumbnail.includes('gstatic.com')?it.thumbnail:('/api/thumb?url='+encodeURIComponent(it.thumbnail))}" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'">`:'')
       + (canPlay?`<span class="pool-play" title="미리보기 재생" onclick="event.stopPropagation();poolPlay(this,${i})">▶</span>`:'')
       + (isPick?'<span class="pickbadge">🤖 AI PICK</span>':'<span class="badge">'+(it.useFootage?'✓':'')+'</span>')
@@ -10088,6 +10116,7 @@ async function renderSourceAnalysis(){
       //   '아직 도는 중'과 '받기부터 실패해 포기'를 화면이 구별할 수 없다.
       //   포기(gave_up)까지 실려 있어야 "기다려도 소용없다"를 말해줄 수 있다.
       _SRC_BRIEF[code] = d || null;
+      _applyLandscapeGate(code, d);   // 가로형이면 1단계에서 바로 뺀다
     }catch(e){ _SRC_BRIEF[code] = null; }
     finally{ _SRC_INFLIGHT.delete(code); }
   }));
@@ -10786,8 +10815,31 @@ function removeMixUrlRow(btn){
   btn.closest('.row').remove();
 }
 // 썸네일 클릭 = 이 영상을 AI PICK으로 지정(그 대본이 카드에 뜬다). 담김도 자동 ON.
+// ★가로형(롱폼)은 1단계에서 막는다(2026-09-03 사장님 "매칭에서 막으니까 돌아오게 되니까").
+//   종전엔 배지만 붙이고 3단계 믹스(_block_landscape)에서야 실패시켜, 분석·다운로드를
+//   다 치르고 1단계로 되돌아와야 했다. 판정은 서버가 준 landscape 그대로(0순위-B) —
+//   여기서 w/h를 다시 재지 않는다. null(못 잼)은 막지 않는다(서버 설계와 같다).
+function _applyLandscapeGate(code, d){
+  if(!d || d.landscape !== true) return false;
+  let changed=false;
+  HANDOFF.forEach(h=>{
+    if(!h || h.shortcode!==code) return;
+    h.landscape=true;
+    if(h.useFootage || h.bbMain){ h.useFootage=false; h.bbMain=false; changed=true; }
+  });
+  if(changed){
+    if(typeof toast==='function')
+      toast(`가로형(롱폼) 영상이라 재료에서 뺐어요${d.video_w?` (${d.video_w}x${d.video_h})`:''} — 세로 숏폼엔 못 씁니다`);
+    if(typeof syncFootageToMixUrls==='function') syncFootageToMixUrls();
+    if(typeof renderPool==='function') renderPool();
+    if(typeof saveWork==='function') saveWork();
+    if(typeof refreshStep0==='function') refreshStep0();
+  }
+  return changed;
+}
 function pickFootage(i){
   if(!HANDOFF[i]) return;
+  if(HANDOFF[i].landscape){ if(typeof toast==='function') toast('가로형(롱폼) 영상은 세로 숏폼에 못 씁니다 — 다른 영상을 골라주세요'); return; }
   HANDOFF.forEach(h=>{ h.bbMain=false; });
   HANDOFF[i].bbMain=true; HANDOFF[i].useFootage=true;
   if(typeof syncFootageToMixUrls==='function') syncFootageToMixUrls();
@@ -12476,11 +12528,34 @@ function _cleanAfterMissing(img){
     img.style.display='none';
     var cell=img.closest('.cp-cell'); if(!cell) return;
     var cap=cell.querySelector('.cp-cap');
-    if(cap){ cap.textContent='이 영상은 완성본에 안 쓰였습니다'; cap.className='cp-cap'; }
+    if(cap){ cap.textContent=CLEAN_STALE ? '장면을 바꾼 뒤라 옛 청소본과 맞출 수 없어요 — ↻ 다시 미리보기' : '이 영상은 완성본에 안 쓰였습니다'; cap.className='cp-cap'; }
     var chk=cell.querySelector('.cp-chk'); if(chk) chk.style.display='none';
   }catch(e){}
 }
-function cleanGo(si,pos){
+// ★컷 단위 넘기기(2026-09-03 사장님 "5장면밖에 안 나오는 것도 문제"). 종전엔 소스(담은 영상)
+//   단위라 소스 5개면 5장 — 완성본 컷 20개 중 각 소스 첫 컷만 보였다. 5단계 장면매칭처럼
+//   컷마다 한 장씩 넘긴다. 비용 0 — 이미 끝난 파일에서 ffmpeg로 1장씩 꺼낼 뿐(청소 재호출 없음).
+//   목록은 서버(/clean_clips)가 준다 — 화면이 스스로 세면 판정이 두 곳이 된다(0순위-B).
+//   stale=true면 장면편집 뒤라 청소본이 옛 편성이다. 좌우는 청소 당시 편성으로 짝을 맞춰
+//   같은 장면이지만, 렌더 땐 다시 청소된다(크레딧 추가) — 그 사실을 화면에 적는다.
+let CLEAN_CLIPS=null, CLEAN_CLIPS_JOB=null, CLEAN_STALE=false;
+async function loadCleanClips(job){
+  if(CLEAN_CLIPS_JOB===job) return;
+  try{
+    const d=await (await fetch('/api/produce/mix/clean_clips/'+encodeURIComponent(job))).json();
+    CLEAN_CLIPS=(d && d.clips && d.clips.length)? d.clips : null;
+    CLEAN_STALE=!!(d && d.stale);
+  }catch(e){ CLEAN_CLIPS=null; CLEAN_STALE=false; }
+  CLEAN_CLIPS_JOB=job;
+}
+function cleanGo(si,pos,ci){
+  if(CLEAN_CLIPS){                       // 컷 모드 — ci(컷 번호)로 움직인다
+    const n=CLEAN_CLIPS.length;
+    if(typeof ci!=='number') ci=CLEAN_VIEW.ci||0;
+    ci=Math.max(0,Math.min(n-1,ci));
+    CLEAN_VIEW={ci:ci, si:CLEAN_CLIPS[ci].si, pos:pos, job:CLEAN_VIEW.job};
+    renderCleanReady(CLEAN_VIEW.job||MIX_JOB); return;
+  }
   // 목록에 없는 번호로는 가지 않는다 — 안 쓰인 소스는 AFTER를 뽑을 수 없다.
   const L=_cleanIdxList();
   if(L.indexOf(si)<0){
@@ -12488,24 +12563,45 @@ function cleanGo(si,pos){
     si = (si>CLEAN_VIEW.si) ? (L[Math.min(L.length-1,cur+1)]) : (L[Math.max(0,cur-1)]);
     if(typeof si!=='number') si=L[0];
   }
-  CLEAN_VIEW={si:si, pos:pos};
+  CLEAN_VIEW={si:si, pos:pos, job:CLEAN_VIEW.job};
   renderCleanReady(CLEAN_VIEW.job||MIX_JOB);
 }
 function renderCleanReady(job){
   const box=document.getElementById('cleanPreview'); if(!box) return;
   CLEAN_VIEW.job=job;
-  const si=CLEAN_VIEW.si, pos=CLEAN_VIEW.pos;
+  if(CLEAN_CLIPS_JOB!==job){             // 컷 목록을 한 번 받아온 뒤 그린다
+    loadCleanClips(job).then(()=>{ if(CLEAN_VIEW.job===job) renderCleanReady(job); });
+    return;
+  }
+  const pos=CLEAN_VIEW.pos;
+  let si=CLEAN_VIEW.si, ci=-1, srcNav='';
+  const _cut = CLEAN_CLIPS ? (CLEAN_CLIPS[Math.max(0,Math.min(CLEAN_CLIPS.length-1,CLEAN_VIEW.ci||0))]) : null;
+  if(_cut){ ci=_cut.ci; si=(_cut.si==null?0:_cut.si); CLEAN_VIEW.ci=ci; CLEAN_VIEW.si=si; }
   const t=Date.now(), u='/api/produce/mix/clean_thumb/'+encodeURIComponent(job)
-    +'?si='+si+'&pos='+pos+'&t='+t;
+    +'?si='+si+'&pos='+pos+(ci>=0?('&ci='+ci):'')+'&t='+t;
+  const _go = (p)=> _cut ? ('cleanGo('+si+','+p+','+ci+')') : ('cleanGo('+si+','+p+')');
   const posBtns=CLEAN_POSNAMES.map(([p,lbl])=>
-    '<button class="cp-pg'+(Math.abs(pos-parseFloat(p))<0.01?' on':'')+'" onclick="cleanGo('+si+','+p+')">'+lbl+'</button>').join('');
-  // ★번호가 아니라 **목록에서 몇 번째인지**로 표시한다(2026-08-27).
-  const _L=_cleanIdxList(), _at=Math.max(0,_L.indexOf(si));
-  const srcNav = _L.length>1
-    ? '<span class="cp-pgsep"></span>'
-      +'<button class="cp-pg" onclick="cleanGo('+(_L[Math.max(0,_at-1)])+','+pos+')"'+(_at<=0?' disabled':'')+'>◀</button>'
-      +'<span class="cp-pgnum">영상 '+(_at+1)+' / '+_L.length+'</span>'
-      +'<button class="cp-pg" onclick="cleanGo('+(_L[Math.min(_L.length-1,_at+1)])+','+pos+')"'+(_at>=_L.length-1?' disabled':'')+'>▶</button>'
+    '<button class="cp-pg'+(Math.abs(pos-parseFloat(p))<0.01?' on':'')+'" onclick="'+_go(p)+'">'+lbl+'</button>').join('');
+  if(_cut){
+    const n=CLEAN_CLIPS.length;
+    srcNav = n>1
+      ? '<span class="cp-pgsep"></span>'
+        +'<button class="cp-pg" onclick="cleanGo('+si+','+pos+','+(ci-1)+')"'+(ci<=0?' disabled':'')+'>◀</button>'
+        +'<span class="cp-pgnum">장면 '+(ci+1)+' / '+n+' <small>(영상 '+(si+1)+')</small></span>'
+        +'<button class="cp-pg" onclick="cleanGo('+si+','+pos+','+(ci+1)+')"'+(ci>=n-1?' disabled':'')+'>▶</button>'
+      : '';
+  } else {
+    // ★번호가 아니라 **목록에서 몇 번째인지**로 표시한다(2026-08-27). 컷 목록을 못 받았을 때의 옛 화면.
+    const _L=_cleanIdxList(), _at=Math.max(0,_L.indexOf(si));
+    srcNav = _L.length>1
+      ? '<span class="cp-pgsep"></span>'
+        +'<button class="cp-pg" onclick="cleanGo('+(_L[Math.max(0,_at-1)])+','+pos+')"'+(_at<=0?' disabled':'')+'>◀</button>'
+        +'<span class="cp-pgnum">영상 '+(_at+1)+' / '+_L.length+'</span>'
+        +'<button class="cp-pg" onclick="cleanGo('+(_L[Math.min(_L.length-1,_at+1)])+','+pos+')"'+(_at>=_L.length-1?' disabled':'')+'>▶</button>'
+      : '';
+  }
+  const staleNote = CLEAN_STALE
+    ? '<div class="hint" style="text-align:center;color:var(--fire)">⚠️ 장면을 바꾼 뒤라 이 결과는 바꾸기 전 편성 기준이에요 — 최종 렌더 때 새 편성으로 다시 지웁니다(크레딧 추가). 지금 확인하려면 ↻ 다시 미리보기.</div>'
     : '';
   box.innerHTML='<div class="cp-compare">'
     +'<div class="cp-cell"><div class="cp-frame"><img src="'+u+'&kind=original"><span class="cp-lbl">BEFORE</span></div><div class="cp-cap">원본</div></div>'
@@ -12513,6 +12609,7 @@ function renderCleanReady(job){
     +'<div class="cp-cell"><div class="cp-frame"><img src="'+u+'&kind=clean" onerror="_cleanAfterMissing(this)"><span class="cp-lbl on">AFTER</span><span class="cp-chk">✓</span></div><div class="cp-cap good">자막 제거됨</div></div>'
     +'</div>'
     +'<div class="cp-pgbar">'+posBtns+srcNav+'</div>'
+    +staleNote
     +'<div class="hint" style="text-align:center">다른 장면도 넘겨서 확인해 보세요 — 추가 비용은 없어요.</div>'
     +'<button class="cp-redo" onclick="startCleanPreview()">↻ 다시 미리보기</button>';
   const sc=document.getElementById('cleanShowcase'); if(sc) sc.style.display='none';
@@ -12617,6 +12714,7 @@ async function pollClean(gen,job){
       if(d.clean_regions) CLEAN_REGIONS=d.clean_regions;   // 지워진 자막 자리(5단계 꾸미기가 씀)
       CLEAN_SRC_N = d.clean_source_count || 1;
       CLEAN_SRC_IDX = (d.clean_source_indices && d.clean_source_indices.length) ? d.clean_source_indices : null;
+      CLEAN_CLIPS_JOB=null;                 // 방금 청소가 끝났다 — 컷 목록·stale을 새로 받는다
       renderCleanReady(job);
       if(btn) btn.disabled=false;
     } else if(d.clean_status==='failed'){
@@ -13616,6 +13714,8 @@ async function renderTtsBeats(){
           <select id="vpTone${i}" style="padding:3px">${Object.entries(VARIANT_LABELS).map(([k,lab])=>`<option value="${k}"${(b.tts_tone||'stable')===k?' selected':''}>${lab}</option>`).join('')}</select>
           <button class="btn-prev" style="padding:3px 8px" onclick="vpRegenTone(${i})">🔁 톤 바꿔 다시</button>
           ${window.IS_ADMIN?`<button class="btn-prev" style="padding:3px 8px" onclick="pronReport(this,${i})">🩺 발음 이상해요</button>`:''}
+          <button class="btn-prev" style="padding:3px 8px;color:#fca5a5;border-color:#7f1d1d"
+                  onclick="vpDeleteBeat(${i})" title="이 문장 칸을 통째로 지웁니다">🗑 이 문장 삭제</button>
           <span id="vpMsg${i}" class="hint"></span>
         </div>`:''}
       </div>`;
@@ -13746,6 +13846,33 @@ function vpMore(i){
   const open = el.style.display==='none';
   document.querySelectorAll('.ttsMore').forEach(e=>{ e.style.display='none'; });
   el.style.display = open ? 'flex' : 'none';
+}
+// 🗑 문장 칸 통째로 삭제 — 2026-09-03 고객(이유준) "음성이 두 번 되어서 마지막 것을 삭제".
+// 여태 칸은 고치거나 다시 뽑을 수만 있었다. 중복 생성된 칸을 빼려면 글자를 지워야 하는데
+// 저장 API가 "대본이 비었어요"로 막아 앱 안에 빠져나갈 구멍이 없었다.
+// ★서버가 주인이다 — 응답이 성공해야 화면을 다시 그린다(낙관적 갱신 금지).
+async function vpDeleteBeat(i){
+  const b=VP_BEATS[i], m=document.getElementById('vpMsg'+i);
+  if(!b || !MIX_JOB) return;
+  const txt=(b.narration||'').trim();
+  if(!confirm('이 문장 칸을 지울까요?' + String.fromCharCode(10,10) + (txt.length>60?txt.slice(0,60)+'…':txt) + String.fromCharCode(10,10) + '음성·자막이 함께 빠지고 되돌릴 수 없어요.')) return;
+  if(m) m.textContent='🗑 지우는 중…';
+  try{
+    const r=await fetch('/api/mix/scene_lab/'+MIX_JOB+'/beat/'+b.beat_idx+'/delete',{method:'POST'});
+    const j=await r.json().catch(()=>null);
+    if(!r.ok || !j || !j.ok){
+      if(m) m.textContent = (r.status===409)
+        ? '⏳ 생성 중엔 못 지워요 — 끝나고 다시 눌러요'
+        : ('❌ 삭제 실패' + (j&&j.error?(' — '+j.error):''));
+      return;
+    }
+    renderTtsBeats();        // 목록을 서버 기준으로 다시 그린다
+    // 이미 만들어 둔 완성본·청소 조립본은 서버가 비웠다(옛 mp4를 쓰면 지운 문장이 계속
+    // 나오고, 캡컷은 그 옛 완성본을 새 타임라인으로 잘라 어긋난다). 그래서 다시 만들어야 한다.
+    if(typeof toast==='function') toast('문장 칸을 지웠어요 — 완성본은 9단계에서 다시 렌더해 주세요');
+    else alert('문장 칸을 지웠어요.' + String.fromCharCode(10)
+               + '완성본·캡컷에 반영하려면 9단계에서 다시 렌더해 주세요.');
+  }catch(e){ if(m) m.textContent='❌ 삭제 실패: '+(e.message||e); }
 }
 async function vpNudge(i,dir){
   const b=VP_BEATS[i]; if(!b) return;
@@ -14267,6 +14394,26 @@ async function _ccDetectRoot(dir){
     return [...tally.entries()].sort((a,b)=>b[1]-a[1])[0][0];
   }catch(e){ return null; }
 }
+// ★파일 하나 쓰기 — 두 루프(JSON·재료)가 같은 방식으로 쓴다(0순위-B: 쓰는 법은 한 곳).
+//   2026-09-03 사장님 재현: 같은 프로젝트를 **캡컷이 열어 둔 채** 다시 보내니 1/37에서
+//   "An operation that depends on state cached in an interface object was made but the state
+//   had changed since it was read from disk" — 브라우저 파일쓰기가, 그 파일을 다른 프로그램이
+//   붙잡고 바꾸는 중이라 덮어쓰기를 거부한 것이다. 한 번은 지우고 새로 만들어 다시 써 보고,
+//   그래도 안 되면 무엇을 해야 하는지(캡컷 끄기) 사람 말로 알린다.
+async function _ccWriteFile(proj, name, data){
+  const once=async()=>{ const fh=await proj.getFileHandle(name,{create:true}); const w=await fh.createWritable(); await w.write(data); await w.close(); };
+  try{ await once(); return; }
+  catch(e){
+    if(e&&e.name==='AbortError') throw e;
+    try{ await proj.removeEntry(name); }catch(_){ }
+    try{ await once(); return; }
+    catch(e2){
+      const stale=/state cached|InvalidState|NoModificationAllowed|NotAllowed/i.test(String((e2&&e2.name)||'')+' '+String((e2&&e2.message)||''));
+      throw new Error((stale?'캡컷이 이 프로젝트를 열어 두고 있어 파일('+name+')을 덮어쓸 수 없습니다. 캡컷을 완전히 끄고 다시 눌러주세요'
+                            :'파일 쓰기 실패('+name+'): '+((e2&&e2.message)||e2)));
+    }
+  }
+}
 async function sendToCapCut(){
   let _ccDone=0, _ccTotal=0;   // ★실패 문구에 '몇 개까지 갔는지'를 남기기 위해 함수 스코프에 둔다
   if(!('showDirectoryPicker' in window)){ alert('캡컷으로 바로 보내기는 Chrome 또는 Edge에서만 됩니다.\n지금은 「📦 캡컷용 ZIP(수동)」을 받아 캡컷에 올려 주세요.'); return; }
@@ -14307,7 +14454,7 @@ async function sendToCapCut(){
     if(!m.ok){ _ccProgDone('❌ 캡컷 프로젝트 생성 실패: '+(m.error||''), false); alert('캡컷 프로젝트 생성 실패: '+(m.error||'')); return; }
     const proj=await _ccHandle.getDirectoryHandle(m.project,{create:true});
     for(const name of Object.keys(m.texts)){
-      const fh=await proj.getFileHandle(name,{create:true}); const w=await fh.createWritable(); await w.write(m.texts[name]); await w.close();
+      await _ccWriteFile(proj, name, m.texts[name]);
     }
     // ★에셋이 0개면 캡컷엔 00:00짜리 빈 프로젝트가 생긴다 — 조용히 성공이라 하지 않는다.
     const total=(m.assets||[]).length; _ccTotal=total;
@@ -14330,7 +14477,7 @@ async function sendToCapCut(){
       const buf=await res.arrayBuffer();
       // 영상·음성이 이렇게 작을 수는 없다 = 에러 본문을 받은 것이다.
       if(buf.byteLength<2048) throw new Error('재료가 깨져서 왔습니다('+a.name+', '+buf.byteLength+'바이트) — 다시 시도해 주세요');
-      const fh=await proj.getFileHandle(a.name,{create:true}); const w=await fh.createWritable(); await w.write(buf); await w.close();
+      await _ccWriteFile(proj, a.name, buf);
       done++; _ccDone=done;
     }
     _ccProgDone('✅ 다 보냈어요 — 캡컷에서 「'+m.project+'」를 여세요 (재료 '+done+'개)', true);

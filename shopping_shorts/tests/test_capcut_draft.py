@@ -42,7 +42,8 @@ def test_timeline_microseconds():
     txt = next(t for t in draft["tracks"] if t["type"] == "text")
     # 둘째 자막은 t0=2.0s → 2_000_000μs 에서 시작, 길이 1.5s
     seg1 = txt["segments"][1]
-    assert seg1["target_timerange"] == {"start": 2_000_000, "duration": 1_500_000}
+    # 마지막 비트의 마지막 구절은 렌더처럼 0.5초 여운(caption_schedule tail) → 1.5+0.5
+    assert seg1["target_timerange"] == {"start": 2_000_000, "duration": 2_000_000}
     assert seg1["source_timerange"] is None   # 텍스트는 source 없음
     assert draft["duration"] == 3_500_000     # 전체 = 마지막 끝
 
@@ -141,11 +142,12 @@ def test_capcut_project_name_uses_headcopy_for_findability():
     '쇼핑쇼츠_...169a1'처럼 잘려 구분 불가). 없으면 첫 대사, 그것도 없으면 옛 폴백."""
     from shopping_shorts import app as a
     n = a._capcut_project_name("454169a1zzzz", {"headcopy": {"text": "써보면 놀라는 이것"}}, {})
-    assert n.startswith("써보면 놀라는 이것") and n.endswith("4541")   # 제목 앞, 짧은 id 접미
+    assert n.startswith("써보면 놀라는 이것") and " 4541 " in n           # 제목 앞, 짧은 id
+    assert n.split()[-1].isdigit() and len(n.split()[-1]) == 4            # 보낸 시각(HHMM) — 매번 새 프로젝트
     n2 = a._capcut_project_name("454169a1zzzz", {}, {"beats": [{"narration": "딱 한 뼘이면 OK"}]})
     assert n2.startswith("딱 한 뼘이면 OK")                          # 헤드카피 없으면 첫 대사
     n3 = a._capcut_project_name("454169a1zzzz", {}, {})
-    assert n3 == "쇼핑쇼츠_454169a1"                                  # 둘 다 없으면 옛 폴백
+    assert n3.startswith("쇼핑쇼츠_454169a1")                         # 둘 다 없으면 옛 폴백(+시각)
 
 
 def test_capcut_audio_reflects_head_trim():
@@ -201,7 +203,7 @@ def test_세그먼트_렌더인덱스가_캡션기준이다():
     draft, _ = _build()
     seg = [tr for tr in draft["tracks"] if tr["type"] == "text"][0]["segments"][0]
     assert seg["render_index"] == 0, "텍스트 관례(14000)가 남아 있다"
-    assert seg["track_render_index"] == 2
+    assert seg["track_render_index"] == 3     # 소스0·머리카피1·틀2 위
 
 
 # ── 자막 스타일이 캡컷으로 따라간다(2026-08-28 고객 제보) ────────────────────
@@ -447,7 +449,7 @@ def test_머리카피_PNG가_영상트랙에_얹힌다():
     seg = next(s for t in _tracks_of(draft, "video") for s in t["segments"]
                if s["material_id"] in {m["id"] for m in photos})
     assert seg["target_timerange"] == {"start": 0, "duration": 2_000_000}
-    assert seg["track_render_index"] == 2, "틀(1) 위에 와야 한다"
+    assert seg["track_render_index"] == 1, "틀(2) 아래·소스(0) 위여야 한다(렌더 쌓임과 동일)"
 
 
 def test_머리카피_구간은_렌더규칙과_같다():
@@ -535,3 +537,27 @@ def test_재료가_없으면_트랙도_안_생긴다():
     draft, _ = _build()
     assert {t["type"]: len(t["segments"]) for t in draft["tracks"]} == {
         "video": 2, "audio": 2, "text": 2}
+
+
+def test_caption_split_into_phrases_like_render():
+    """★2026-09-03 실물: 캡컷엔 비트 문장이 통째로 한 줄이라 화면 밖으로 넘쳤다.
+    렌더와 같은 규칙(video_assemble.caption_schedule)으로 구절을 쪼개 순차 세그먼트로 싣는다."""
+    from shopping_shorts.video_assemble import caption_schedule
+    long_tl = [{"beat_idx": 0, "t0": 0.0, "dur": 6.0,
+                "narration": "요즘 사람들 사이에서 엉뚱한 용도로 대박 난 물건이 하나 있음 원래대로라면 의류 상표나 택을 붙이는 용도로 쓰는 게 정석이었음"}]
+    long_plan = {"beats": [{"beat_idx": 0, "narration": long_tl[0]["narration"],
+                            "primary": {"video_id": "s0", "start": 0, "end": 6.0}}]}
+    draft, _ = cd.build_draft(plan=long_plan, timeline=long_tl, source_video_paths=_SRC,
+                              tts_paths=_TTS, asset_paths=_ASSET, project_name="t")
+    txt = next(t for t in draft["tracks"] if t["type"] == "text")
+    sched = caption_schedule(long_tl[0], tail=0.5)
+    assert len(sched) >= 2, "긴 문장이 안 쪼개졌다"
+    assert len(txt["segments"]) == len(sched), "캡컷 세그먼트 수 ≠ 렌더 구절 수"
+    starts = [s["target_timerange"]["start"] for s in txt["segments"]]
+    assert starts == sorted(starts) and starts[0] == 0
+    for s, (phrase, st, en) in zip(txt["segments"], sched):
+        assert s["target_timerange"]["start"] == cd._us(st)
+        assert s["target_timerange"]["duration"] == cd._us(en - st)
+    texts = {m["id"]: json.loads(m["content"])["text"] for m in draft["materials"]["texts"]}
+    assert " ".join(texts[s["material_id"]] for s in txt["segments"]).replace(" ", "") \
+        == "".join(p for p, _, _ in sched).replace(" ", "")
