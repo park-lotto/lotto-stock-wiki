@@ -580,7 +580,7 @@
       //   영상을 갈아 끼워도 이 줄 모양이 그대로라 "박스가 고정돼 있다"가 화면에서 읽힌다.
       if (LOCK) {
         barEl.innerHTML =
-          `<span class="frhint">🔒 ${(+opt.lockLen).toFixed(2)}초 고정 — 박스를 끌어 맞는 장면 위에 놓으세요</span>` +
+          `<span class="frhint">🔒 ${(BOXES[0] ? BOXES[0].e - BOXES[0].s : +opt.lockLen).toFixed(2)}초 — 박스를 끌어 맞는 장면 위에 놓으세요 (양끝을 당기면 길이가 바뀝니다)</span>` +
           `<button type="button" class="frbtn" data-act="play">▶ 미리보기에서 듣기</button>` +
           (typeof opt.onReplace === 'function'
             ? `<button type="button" class="frbtn rep">🔁 이 장면으로 교체</button>` : '') +
