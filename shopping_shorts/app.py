@@ -14901,17 +14901,30 @@ def api_basket_analyze(request: Request, body: dict):
     """
     cid = _cid(request)
     codes = [c for c in (body.get("shortcodes") or []) if isinstance(c, str) and c.strip()][:100]
+    # ★제작소 1단계의 '다시 분석'(2026-09-03)이 쓰는 두 인자.
+    #   reset  — 실패 기록을 지워 포기(gave_up)한 영상도 한 번 더 돌게 한다.
+    #            '다시 담기'가 하던 일(app.py api_grab의 autoload_reset)과 같은 뜻인데,
+    #            그 화면까지 가지 않고 실패 카드에서 바로 누를 수 있게 열어 준 것.
+    #   urls   — 제작소 소스는 즐겨찾기에 없을 수 있다(URL 직접추가·렌즈에서 바로 보낸 것).
+    #            바구니에 있으면 그쪽이 정본, 없을 때만 화면이 준 주소를 쓴다.
+    reset = bool(body.get("reset"))
+    urls = body.get("urls") if isinstance(body.get("urls"), dict) else {}
     store = Store(DB_PATH)
     basket = {i.get("shortcode"): i for i in store.mix_basket_list(customer_id=cid)}
     out, queued, skipped = {}, 0, 0
     for c in codes:
+        if reset:
+            store.autoload_reset(c)
+            mc = _media_code(c)
+            if mc and mc != c:
+                store.autoload_reset(mc)
         _data, st = _analysis_state(store, c)
         if st["state"] == "done":
             out[c] = "done"
             skipped += 1
             continue
         it = basket.get(c) or {}
-        url = (it.get("url") or "").strip()
+        url = (it.get("url") or "").strip() or str(urls.get(c) or "").strip()
         if not url:
             # ★조용히 실패하지 않는다(2026-08-28). URL이 없으면 워커가 받을 게 없어
             #   큐에 아무것도 안 남고, 화면은 몇 초 뒤 '분석 전'으로 되돌아간다.
