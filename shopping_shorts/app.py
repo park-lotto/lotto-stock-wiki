@@ -5900,6 +5900,29 @@ def api_typecast_voices(request: Request, q: str = "", limit: int = 60):
     return {"ok": True, "voices": out, "total": len(d.get("voices") or []), "error": None}
 
 
+@app.get("/api/typecast/voices/mine")
+def api_typecast_voices_mine(request: Request):
+    """내 타입캐스트 계정의 **내가 만든 목소리**(2026-09-04) — 일레븐 /api/voice-library/mine의 짝.
+
+    타입캐스트는 별도 '내 목소리' API가 없고, 목록 API에 공식 성우(tc_…)와 내가 만든
+    목소리(uc_…)가 섞여 나온다(voice_id 접두로 갈린다). 그래서 **내 키로** 목록을 받아
+    uc_만 거른다. 운영자 키로 부르면 사장님 계정 것이 나오므로 내 키가 없으면 need_key
+    (관리자는 운영자 키 = 본인 계정이라 그대로 본다).
+    """
+    from shopping_shorts import typecast_tts
+    cid = _cid(request)
+    store = Store(DB_PATH)
+    if not keyroute.has_own_key(store, cid, keyroute.SVC_TYPECAST) and not _is_admin(cid):
+        return {"ok": False, "need_key": True, "voices": [],
+                "error": "내 타입캐스트 키를 등록해야 내 계정에서 만든 목소리를 볼 수 있어요."}
+    d = typecast_tts.list_voices(customer_id=cid)
+    if not d.get("ok"):
+        return {"ok": False, "voices": [], "error": d.get("error") or "성우 목록을 못 불러왔습니다"}
+    allv = d.get("voices") or []
+    mine = [v for v in allv if str(v.get("voice_id") or "").startswith("uc_")]
+    return {"ok": True, "voices": mine, "total": len(allv), "error": None}
+
+
 @app.get("/api/voice-library/search")
 def api_voice_library_search(request: Request, q: str = "", language: str = "",
                              gender: str = "", page: int = 0, sort: str = ""):
@@ -6053,7 +6076,9 @@ async def api_typecast_adopt(request: Request):
         return JSONResponse({"ok": False, "error": f"타입캐스트 모델이 아닙니다({model})."},
                             status_code=400)
     # 실제로 있는 성우인지 목록에서 확인한다 — 화면이 보낸 값을 그대로 믿지 않는다.
-    listed = typecast_tts.list_voices()
+    # ★내 키가 있으면 내 계정 목록으로 검증한다(2026-09-04) — 내가 만든 목소리(uc_)는
+    #   운영자 키 목록엔 없어서 종전엔 "찾지 못했습니다"로 막혔다. 키가 없으면 종전대로 운영자 키.
+    listed = typecast_tts.list_voices(customer_id=cid)
     if not listed.get("ok"):
         return JSONResponse({"ok": False, "error": listed.get("error") or "성우 목록 조회 실패"},
                             status_code=502)
