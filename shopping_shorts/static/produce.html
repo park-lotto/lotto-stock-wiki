@@ -1537,6 +1537,9 @@
   .findBtn{width:100%;padding:9px 10px;min-height:44px;font-size:13px;text-align:left;white-space:nowrap;
            overflow:hidden;text-overflow:ellipsis}
   .findBtn .hint{font-size:11px}
+  /* 내 음성 키 잔액 줄(#ttsCredits) — 업체당 한 줄, 링크·↻는 안 쪼개진다 */
+  .credLine{display:flex;flex-wrap:wrap;gap:2px 6px;align-items:baseline;line-height:1.5}
+  .credLine a, .credLine button{white-space:nowrap}
   /* ★열 머리는 **크고 진하게**(2026-08-30 사장님) — 11.5px 회색이라 카드에 묻혀
      어느 쪽이 어느 엔진인지 눈에 안 걸렸다. 로고 원을 앞에 달아 한눈에 가른다. */
   .voiceColHead{display:flex;align-items:center;gap:7px;font-size:14px;color:var(--txt);
@@ -13041,8 +13044,9 @@ function ttsCreditLine(s){
       const n = v => Number(v||0).toLocaleString('ko-KR');
       const reset = k.reset_at ? ' · '+new Date(k.reset_at*1000).toLocaleDateString('ko-KR',{month:'numeric',day:'numeric'})+' 리셋' : '';
       const plan = k.plan ? ' · '+esc(String(k.plan)) : '';
-      return '🎙 '+esc(s.label)+' '+tail+'<b>'+n(k.remaining)+esc(s.unit)+' 남음</b> '
-        + '<span style="opacity:.75">(사용 '+n(k.used)+' / '+n(k.limit)+plan+reset+')</span> '+dash;
+      // 한 업체 = 한 줄(.credLine, flex-wrap). 링크·↻는 nowrap이라 "대시보드 ↗"만 다음 줄로 떨어지지 않는다.
+      return '<div class="credLine"><span>🎙 '+esc(s.label)+' '+tail+'<b>'+n(k.remaining)+esc(s.unit)+' 남음</b></span>'
+        + '<span style="opacity:.75">(사용 '+n(k.used)+' / '+n(k.limit)+plan+reset+')</span>'+dash+'</div>';
     }
     // ★일레븐랩스 제한키는 잔액 조회 권한(user_read)이 없을 수 있다 — 키가 틀린 게 아니다.
     const why = k.error_kind==='no_permission' ? '이 키엔 잔액 조회 권한이 없어요(음성 생성은 됩니다)'
@@ -13050,8 +13054,8 @@ function ttsCreditLine(s){
               : k.error_kind==='rate_limited'  ? '업체가 잠시 조회를 막았어요(잠시 후 ↻)'
               : k.error_kind==='network'       ? '업체 응답이 없어요'
               : '조회 실패'+(k.http?'('+k.http+')':'');
-    return '🎙 '+esc(s.label)+' '+tail+'<span style="opacity:.8">'+why+'</span> — '+dash;
-  }).join('<br>');
+    return '<div class="credLine"><span>🎙 '+esc(s.label)+' '+tail+'<span style="opacity:.8">'+why+'</span></span>'+dash+'</div>';
+  }).join('');
 }
 async function loadTtsCredits(force){
   const box=document.getElementById('ttsCredits');
@@ -13064,7 +13068,10 @@ async function loadTtsCredits(force){
     if(!box) return;
     const lines=(d.services||[]).map(ttsCreditLine).filter(Boolean);
     const redo=' <button type="button" onclick="loadTtsCredits(1)" title="다시 조회" style="border:0;background:none;cursor:pointer;color:var(--sub);font-size:12px">↻</button>';
-    if(lines.length) box.innerHTML = lines.join('<br>')+redo;
+    if(lines.length){
+      box.innerHTML = lines.join('');
+      const last=box.querySelector('.credLine:last-child'); if(last) last.insertAdjacentHTML('beforeend', redo);   // ↻는 마지막 줄 끝에
+    }
     else if(d.need_own_key) box.innerHTML = '🎙 <span style="opacity:.8">등록한 내 음성 키가 없어요 — </span><a href="/settings#keys" target="_blank" rel="noopener" style="color:var(--accent2)">🔑 키 등록</a>';
     else box.innerHTML = '';                                  // 운영자 키를 빌려 쓰는 고객: 남의 잔액은 안 보여준다
   }catch(e){ if(box) box.innerHTML=''; }
