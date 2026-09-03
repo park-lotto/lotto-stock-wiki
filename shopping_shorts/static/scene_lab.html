@@ -537,10 +537,24 @@ button.act.play:hover{background:var(--accent);color:#fff;border-color:var(--acc
 #playerhost[data-pane="confirm"] #confirmPane{display:block}
 #playerhost[data-pane="confirm"] #playerIdle,
 #playerhost[data-pane="confirm"] #player{display:none}
-#confirmBody video{width:100%;aspect-ratio:var(--shorts-pv-ar,9/16);object-fit:contain;
-  border-radius:8px;background:#000;display:block}
+#confirmBody video{object-fit:contain;
+  border-radius:8px;background:#000;display:block;
+  /* 비율의 정의처는 scene_play.js PV_AR 한 곳이다(test_preview_size_single_source가
+     강제한다 — 2026-08-20 '미리보기 크기가 자꾸 틀어지던' 사고의 처방). 그러니 비율은
+     그대로 두고, **넘칠 때만 줄어들게** 한다: 높이를 틀에 맞춰 깎으면 폭은 비율이
+     알아서 따라온다(width:auto). 실측 322x572 = 0.562 ≒ 9/16. */
+  aspect-ratio:var(--shorts-pv-ar,9/16);
+  width:auto;height:auto;max-width:100%;max-height:100%;
+  flex:0 1 auto;min-height:0;margin:0 auto}
 /* 완성본 탐색바(2026-09-03) — 네이티브 controls는 재생 중 숨어서 "바가 없다"가 된다 */
-#confirmBody .cfbar{display:flex;align-items:center;gap:8px;margin-top:8px}
+/* ★막대가 잘려 안 보이던 것(라이브 실측으로 잡았다). #playerhost는 높이 700px에
+   overflow:hidden인데, 9:16 비율이 강제한 video 높이(768px)가 #confirmBody를
+   805px까지 밀어내 막대가 y=817로 **틀 밖**에 있었다 — 정적 검사로는 절대 안 잡힌다.
+   고치는 자리는 body 하나다: #confirmPane은 flex:1로 제 높이(658px)를 이미 받고 있다.
+   body를 그 높이에 가두고, video는 비율 강제를 풀어 남는 공간만 쓰게 한다
+   (object-fit:contain이라 높이가 줄어도 화면은 안 찌그러진다). 실측: video 620 + 막대 30. */
+#confirmBody{height:100%;min-height:0;display:flex;flex-direction:column}
+#confirmBody .cfbar{display:flex;align-items:center;gap:8px;margin-top:8px;flex:0 0 auto}
 #confirmBody .cfbtn{flex:0 0 auto;width:30px;height:30px;padding:0;border:1px solid var(--line);
   border-radius:8px;background:var(--inset);color:var(--fg);font-size:13px;line-height:1;cursor:pointer}
 #confirmBody .cfbtn:hover{border-color:var(--accent)}
@@ -550,7 +564,8 @@ button.act.play:hover{background:var(--accent);color:#fff;border-color:var(--acc
   background:var(--accent);border-radius:7px;pointer-events:none}
 #confirmBody .cfTime{flex:0 0 auto;font-size:12px;color:var(--sub);
   font-variant-numeric:tabular-nums;min-width:78px;text-align:right}
-#confirmBody .cfLoad{aspect-ratio:var(--shorts-pv-ar,9/16);width:100%;display:flex;
+#confirmBody .cfLoad{flex:0 1 auto;min-height:0;width:100%;
+  aspect-ratio:var(--shorts-pv-ar,9/16);max-height:100%;display:flex;
   align-items:center;justify-content:center;border:1px dashed var(--line);
   border-radius:10px;color:var(--dim);font-size:13px;text-align:center;padding:14px}
 .pidleIcon{font-size:30px;opacity:.55}
