@@ -2037,6 +2037,19 @@
           <!-- ★세로 크기는 화면 안에 들어와야 한다(2026-08-18 사장님 지시). 380px면 9:16이라
                675px가 돼 노트북 화면에서 아래가 잘려 하단 띠·자막 위치를 확인할 수 없다.
                폭은 부모의 --pvw를 그대로 받는다(정의처 한 곳) — aspect-ratio가 높이를 따라온다. -->
+          <!-- ◀▶ 를 미리보기 **위**로 올린다(2026-09-03 사장님 "넘기다보면 미리보기가 달라진다").
+               실측: 미리보기 슬롯 전체 높이 1430px인데 뷰포트는 918px — 512px이 넘쳐서
+               ◀▶(top 1345)가 **화면 밖**이었다. 누르려면 스크롤해야 하고, 그러면 sticky여도
+               미리보기 위쪽이 잘려 "크기가 달라진 것처럼" 보인다(상자 자체는 460x818 고정 —
+               12컷 연속 실측). 위로 올리면 미리보기를 온전히 본 채로 넘길 수 있다. -->
+          <div id="beatNav" style="display:none;margin:6px 0 8px">
+            <div style="display:flex;align-items:center;justify-content:center;gap:16px">
+              <button type="button" class="tab" onclick="stepBeat(-1)" style="min-width:auto;padding:8px 14px;font-size:16px">◀</button>
+              <span id="beatCount" style="font-size:13px;color:var(--sub);min-width:76px;text-align:center">1 / 1 장면</span>
+              <button type="button" class="tab" onclick="stepBeat(1)" style="min-width:auto;padding:8px 14px;font-size:16px">▶</button>
+            </div>
+            <div class="hint" style="margin-top:4px;text-align:center">◀ ▶ 로 장면을 한 컷씩 넘겨가며 자막이 어떻게 나오는지 확인</div>
+          </div>
           <div id="zoomStage" class="zoomStage" style="width:100%;aspect-ratio:9/16">
           <div class="zoomBadge" id="zoomBadge">100%</div>
           <div id="hcPreview" style="position:relative;width:100%;aspect-ratio:9/16;background:#ffffff;border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.4)">
@@ -2075,12 +2088,6 @@
           </div>
           </div><!-- /#zoomStage -->
           <div id="beatStepper" style="display:none;margin-top:10px">
-            <div style="display:flex;align-items:center;justify-content:center;gap:16px">
-              <button type="button" class="tab" onclick="stepBeat(-1)" style="min-width:auto;padding:8px 14px;font-size:16px">◀</button>
-              <span id="beatCount" style="font-size:13px;color:var(--sub);min-width:76px;text-align:center">1 / 1 장면</span>
-              <button type="button" class="tab" onclick="stepBeat(1)" style="min-width:auto;padding:8px 14px;font-size:16px">▶</button>
-            </div>
-            <div class="hint" style="margin-top:6px;text-align:center">◀ ▶ 로 장면을 넘겨가며 자막이 어떻게 나오는지 확인</div>
 
             <!-- ✋ 자막을 끌어 옮길 때 어디까지 바꿀지(2026-08-31 사장님 "자막을 이동하면
                  한장면씩 적용이랑 모두 적용할수있게"). 종전엔 드래그가 **무조건 전체**였다.
@@ -5730,13 +5737,16 @@ try{ loadHookOpenerMine(); }catch(e){}
 
 async function loadBeatsPreview(){
   const st=document.getElementById('beatStepper');
-  if(typeof MIX_JOB==='undefined' || !MIX_JOB){ if(st) st.style.display='none'; return; }
+  if(typeof MIX_JOB==='undefined' || !MIX_JOB){ if(st) st.style.display='none';
+    const nv0=document.getElementById('beatNav'); if(nv0) nv0.style.display='none'; return; }
   try{
     const r=await fetch('/api/produce/mix/beats_preview/'+MIX_JOB);
     const d=await r.json(); BEATS_PREVIEW=d.beats||[];
   }catch(e){ BEATS_PREVIEW=[]; }
-  if(!BEATS_PREVIEW.length){ if(st) st.style.display='none'; return; }
+  const nv=document.getElementById('beatNav');
+  if(!BEATS_PREVIEW.length){ if(st) st.style.display='none'; if(nv) nv.style.display='none'; return; }
   if(st) st.style.display='block';
+  if(nv) nv.style.display='block';
   BEAT_IDX=Math.min(BEAT_IDX, BEATS_PREVIEW.length-1);
   showBeat(BEAT_IDX, true);      // true = 처음 불러옴 → 저장된 확대를 **읽기만** 한다
 }
