@@ -466,6 +466,10 @@ DEFAULTS = {
     "sub_line_bg": "",     # 그 박스 색(빈값=#FFFFFF)
     "sub_line_color": "",  # 그 박스 글자색(빈값=#111111)
     "head_h": 0,           # 본문: 흰 제목 블록 높이 px(0=내용만큼). 자막이 흰 영역 안에 앉게 25~33%=480~630
+    # 작은제목 박스 디테일(2026-09-03 사장님 "그라데이션처럼 네모박스 효과도 있고 디테일 살려봐")
+    "sub_line_w": 0,       # 박스 폭 px(0=글자 폭+80). 실측 이븐쇼핑형은 거의 화면 폭(≈940)
+    "sub_line_soft": 0,    # 가장자리 번짐 px(0=딱 자름). 실측 6~10
+    "sub_line_grad": 0,    # 아래쪽으로 옅어지는 정도 %(0=없음)
 }
 
 _FONTS = {
@@ -676,7 +680,8 @@ def normalize(spec):
                       ("ad_size", 0, 200), ("ad_x", 0, 100), ("ad_y", 0, 100),
                       ("ad_alpha", 0, 100),
                       ("hook_band_h", 0, 1200), ("hook_band_alpha", 0, 100),
-                      ("sub_line_h", 0, 300), ("head_h", 0, 1400)):
+                      ("sub_line_h", 0, 300), ("head_h", 0, 1400),
+                      ("sub_line_w", 0, 1080), ("sub_line_soft", 0, 40), ("sub_line_grad", 0, 100)):
         try:
             s[k] = int(s[k])
         except (TypeError, ValueError):
@@ -978,9 +983,26 @@ def render(spec):
         # 실측(썰칩12·쇼핑치트키·럭키박스): 박스는 어두운 띠 **아래 경계에 걸쳐** 있다(띠 안이 아니다)
         _sy = (bar_h + s["hook_band_h"] - int(_sh * 0.35)) if s["hook_band_h"] > 0 else (bar_h + 24)
         _sf = _font("title", int(_sh * 0.5))
-        _sw = int(d.textlength(s["sub_line"], font=_sf)) + 80
+        _sw = s["sub_line_w"] or (int(d.textlength(s["sub_line"], font=_sf)) + 80)
+        _sw = min(W - 40, _sw)
         _sx = (W - _sw) // 2
-        d.rounded_rectangle([_sx, _sy, _sx + _sw, _sy + _sh], radius=14, fill=_rgb(s["sub_line_bg"] or "#FFFFFF"))
+        _bgc = _rgb(s["sub_line_bg"] or "#FFFFFF")
+        _soft = s["sub_line_soft"]
+        # 박스는 별도 층에 그려 가장자리를 번지게(그라데이션 느낌) 한 뒤 얹는다 — 0이면 종전처럼 딱 자른다
+        _box = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        ImageDraw.Draw(_box).rounded_rectangle([_sx, _sy, _sx + _sw, _sy + _sh], radius=14, fill=_bgc)
+        if s["sub_line_grad"] > 0:   # 아래로 갈수록 옅어짐
+            _al = _box.split()[3]
+            _g = Image.new("L", (W, H), 255); _gd = ImageDraw.Draw(_g)
+            for _i in range(_sh):
+                _v = 255 - int(255 * s["sub_line_grad"] / 100.0 * (_i / max(1, _sh - 1)))
+                _gd.line([(0, _sy + _i), (W, _sy + _i)], fill=_v)
+            from PIL import ImageChops
+            _box.putalpha(ImageChops.multiply(_al, _g))
+        if _soft > 0:
+            _box = _box.filter(ImageFilter.GaussianBlur(_soft))
+        im.alpha_composite(_box)
+        d = ImageDraw.Draw(im)
         _fg.draw_text(d, (W // 2, _sy + _sh // 2), s["sub_line"], _sf, _rgb(s["sub_line_color"] or "#111111"), "mm", int(_sh * 0.5))
 
     # 제목·메타가 얹히는 흰 블록 — 내용이 있을 때만 그린다(빈 블록이 영상을 가리면 손해).
