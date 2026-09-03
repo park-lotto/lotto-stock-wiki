@@ -8072,7 +8072,12 @@ const STATE = { script: "", script_src_idx: null, script_from_wiki: null, subtit
 // manual(✍️ 직접 쓰기)만 남긴다. mode 매개변수는 향후 모드가 늘 가능성을 열어둔 채 유지.
 const SCRIPT_MODE_HTML = {
   manual: () => `<textarea id="scriptText" placeholder="여기에 대본을 직접 입력하세요…" oninput="onScriptInput()">${esc(STATE.script)}</textarea>
-    <div class="hint" id="lenHint">${lenText(STATE.script)}</div>`,
+    <div class="hint" id="lenHint">${lenText(STATE.script)}</div>
+    <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+      <button class="btn-prev" onclick="scriptCopyAll(this)">📋 대본 전체 복사</button>
+      <button class="btn-prev" onclick="scriptPasteAll(this)">📥 붙여넣기</button>
+      <span class="hint" style="align-self:center">줄바꿈 하나 = 칸 하나로 나뉩니다</span>
+    </div>`,
 };
 function setScriptMode(mode){
   const body=document.getElementById('scriptModeBody');
@@ -8092,6 +8097,41 @@ function lenText(t){ t=t||''; const c=t.replace(/\s/g,'').length; return `${t.le
 // 영상 없이 대본만 확정한 작업이 다시 저장되지 않는다 — 그게 사장님이 잃어버린 구간이다.
 // 가드는 이제 saveWork() 안에 있다(대본만 있어도 저장).
 function onScriptInput(){ const ta=document.getElementById('scriptText'); STATE.script=ta.value; STATE.script_carryover=false; document.getElementById('lenHint').textContent=lenText(STATE.script); refreshFinalPeek(); saveWork(); }
+
+// ★대본 전체 복사·붙여넣기 (2026-09-04 사장님 요청). 지금까지는 대본을 밖으로 옮기려면
+//   마우스로 긁어야 했고, 밖에서 쓴 대본을 가져올 방법도 없었다.
+//   복사는 `dmCopy`를 그대로 쓴다 — 권한 거부·비보안 컨텍스트 폴백과 "복사 실패" 정직
+//   표시가 이미 들어 있다(새로 짜면 그 처리가 빠진 채 조용히 실패한다).
+function scriptCopyAll(btn){
+  const t=(STATE.script||'').trim();
+  if(!t){ toast('복사할 대본이 없습니다'); return; }
+  dmCopy(btn, t);
+}
+
+// ★붙여넣은 대본의 **줄이 곧 칸**이다 — 서버 `script_sentences()`와 같은 규칙이다
+//   (2026-09-03 사장님 확정: "줄을 준 사람의 단위를 서버가 마침표로 다시 자르지 않는다").
+//   여기서 새 분리 규칙을 만들지 않는다(0순위-B) — 빈 줄만 걷어내고 그대로 넘긴다.
+//   빈 줄을 걷는 이유: 워드·메모장에서 복사하면 문단 사이 빈 줄이 딸려오는데, 그게
+//   그대로 가면 서버가 빈 칸을 하나 세어 대본 없는 칸이 생긴다.
+async function scriptPasteAll(btn){
+  let txt='';
+  try{ txt = await navigator.clipboard.readText(); }
+  catch(e){
+    // 권한 거부·비보안 컨텍스트 — 읽기는 쓰기와 달리 execCommand 폴백이 없다.
+    // 못 하면 못 한다고 말한다(조용히 아무 일도 안 일어나면 고장으로 보인다).
+    toast('붙여넣기 권한이 막혔습니다 — 칸을 누르고 Ctrl+V 하세요'); return;
+  }
+  txt=(txt||'').replace(/\r\n?/g,'\n').split('\n').map(s=>s.trim()).filter(Boolean).join('\n');
+  if(!txt){ toast('클립보드가 비어 있습니다'); return; }
+  const ta=document.getElementById('scriptText');
+  if(ta) ta.value=txt;
+  // ★반드시 onScriptInput을 거친다 — STATE.script 갱신·길이표시·saveWork()가 전부
+  //   거기 붙어 있다. 여기서 STATE만 고치면 화면은 바뀌는데 저장이 안 된다
+  //   (전례: 미리보기만 바뀌고 저장 안 됨).
+  onScriptInput();
+  const n=txt.split('\n').length;
+  toast(`붙여넣었습니다 — ${n}줄 = ${n}칸`);
+}
 
 // 이전 작업에서 복원된 대본을 한 번에 지운다 — 새 영상 작업인데 옛 대본이 매칭·제목까지
 // 실려 들어가는 사고(2026-07-25 '책상' 제목)의 원클릭 탈출구. 영상풀은 그대로 둔다.
