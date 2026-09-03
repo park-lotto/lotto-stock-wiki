@@ -410,7 +410,20 @@
       background-size:300% 300%;animation:borderflow 6s ease infinite}
     @keyframes borderflow{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
     .hero-in{background:radial-gradient(120% 140% at 15% 0%,#12241e,#0b1310 60%);border-radius:16.5px;padding:20px}
-    .hbar{display:flex;align-items:center;gap:14px;cursor:pointer;position:relative}
+    .hbar{display:flex;align-items:center;gap:14px;cursor:pointer;position:relative;flex:1;min-width:0}
+    /* 우상단 [크레딧 아이콘 / 토글] 세로 2단(2026-09-04). .sw-input이 absolute라 .sw-wrap을
+       positioned 부모로 둬야 토글 자리에 정확히 겹친다(hbar 밖으로 나왔으니). */
+    .hbar-row{display:flex;align-items:center;gap:14px}
+    .hright{display:flex;flex-direction:column;align-items:center;gap:8px;margin-left:auto;flex:none}
+    .sw-wrap{position:relative;display:inline-block;width:46px;height:26px}
+    .credit-ico{display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;
+      color:var(--sub);font-size:10.5px;line-height:1;white-space:nowrap}
+    .credit-ico .ico{width:36px;height:36px;border-radius:11px;display:flex;align-items:center;justify-content:center;
+      font-size:19px;background:linear-gradient(135deg,#123a30,#0c221c);border:1px solid var(--accent2);
+      box-shadow:0 0 12px rgba(55,224,189,.25);transition:transform .15s ease,filter .15s ease}
+    .credit-ico:hover .ico{transform:translateY(-1px);filter:brightness(1.25)}
+    .credit-ico:hover{color:var(--accent2)}
+    .credit-ico[hidden]{display:none}
     .hicon{width:52px;height:52px;border-radius:14px;flex:none;display:flex;align-items:center;justify-content:center;
       font-size:26px;background:linear-gradient(135deg,#123a30,#0c221c);border:1px solid var(--accent2);
       box-shadow:0 0 20px rgba(55,224,189,.25);animation:iconpulse 2.6s ease-in-out infinite}
@@ -1750,15 +1763,28 @@
       <h3 data-steptitle="subtitle">4 · 고품질 자막제거</h3>
       <div class="hero rise">
         <div class="hero-in">
-          <label class="hbar">
-            <span class="hicon">🧼</span>
-            <span class="hmeta">
-              <span class="htitle">숏템 고품질 자막제거기 <span class="hpill">HD</span></span>
-              <span class="htag">채널 자막·워터마크를 AI가 감쪽같이 지우고, 우리 자막을 새로 입혀요</span>
+          <!-- ★우상단을 [아이콘 버튼 / 토글] 세로 2단으로(2026-09-04 사장님 "토글 위에 아이폰
+               아이콘 형태로 크레딧 확인하기"). 버튼은 label 밖에 둔다 — 안에 두면 누를 때
+               토글이 같이 뒤집힌다. 제목 쪽 label은 for=로 토글과 묶는다(클릭해 켜기 유지).
+               버튼은 서버가 "보여도 되는 사람"(내 키 등록자·관리자)이라 할 때만 켠다 —
+               사장님 키를 빌려 쓰는 고객에게 남의 잔액 대시보드를 열어주면 안 된다. -->
+          <div class="hbar-row">
+            <label class="hbar" for="subToggle">
+              <span class="hicon">🧼</span>
+              <span class="hmeta">
+                <span class="htitle">숏템 고품질 자막제거기 <span class="hpill">HD</span></span>
+                <span class="htag">채널 자막·워터마크를 AI가 감쪽같이 지우고, 우리 자막을 새로 입혀요</span>
+              </span>
+            </label>
+            <span class="hright">
+              <a id="cleanCreditBtn" class="credit-ico" href="/go/subclean-credits" target="_blank" rel="noopener" hidden
+                 title="키를 발급받은 곳의 대시보드(잔액·사용내역)가 새 탭으로 열려요"><span class="ico">💳</span><span>크레딧 확인하기</span></a>
+              <span class="sw-wrap">
+                <input type="checkbox" id="subToggle" onchange="onSubToggle()" class="sw-input">
+                <span class="sw-track"><span class="sw-knob"></span></span>
+              </span>
             </span>
-            <input type="checkbox" id="subToggle" onchange="onSubToggle()" class="sw-input">
-            <span class="sw-track"><span class="sw-knob"></span></span>
-          </label>
+          </div>
           <div id="cleanShowcase">
             <div class="show">
               <div class="demotag">Live demo</div>
@@ -1784,14 +1810,6 @@
                  사장님이 단가를 바꿨을 때 거짓말이 된다(0순위-B). -->
             <div id="cleanCost" class="ctahint" style="margin-top:6px"></div>
             <div class="ctahint">미리 확인하면 최종 렌더가 이 결과를 그대로 써서 추가 비용 없이 빨라져요</div>
-            <!-- ★내 키 잔액 바로가기(2026-09-04 사장님 "바로가기탭으로 조회"). 자막제거 업체엔
-                 잔액 API가 없어 여기에 숫자를 띄울 수 없다 — 업체 대시보드(로그인 후 우상단
-                 Credit·사용내역)를 새 탭으로 연다. 주소는 서버 /go/subclean-credits 한 곳
-                 (이 파일엔 업체명을 못 쓴다). 크레딧 소진 실패 문구(cleanFailHtml)에도 같은 링크. -->
-            <div class="ctahint" style="margin-top:4px">
-              <a href="/go/subclean-credits" target="_blank" rel="noopener" style="color:var(--accent2)">💳 내 자막제거 키 잔액·사용내역 확인 ↗</a>
-              <span style="opacity:.75">— 키를 발급받은 곳의 대시보드가 새 탭으로 열려요(그쪽 로그인 필요)</span>
-            </div>
             <div id="cleanPreview" style="margin-top:12px"></div>
           </div>
         </div>
@@ -12998,8 +13016,10 @@ async function loadPresets(){
 function ttsCreditLine(s){
   const dash = '<a href="'+esc(s.dashboard)+'" target="_blank" rel="noopener" style="color:var(--accent2)">대시보드 ↗</a>';
   if(!s.registered) return '';                              // 등록 안 한 업체는 줄을 안 만든다
+  // mode: own=내가 등록한 키 / owner=관리자에게만 보이는 운영자 키(서버 env)
+  const who = s.mode==='owner' ? '<span style="opacity:.6">(운영자 키)</span> ' : '';
   return (s.keys||[]).map(k=>{
-    const tail = k.key_tail ? '<span style="opacity:.6">(…'+esc(k.key_tail)+')</span> ' : '';
+    const tail = who || (k.key_tail ? '<span style="opacity:.6">(…'+esc(k.key_tail)+')</span> ' : '');
     if(k.ok){
       const n = v => Number(v||0).toLocaleString('ko-KR');
       const reset = k.reset_at ? ' · '+new Date(k.reset_at*1000).toLocaleDateString('ko-KR',{month:'numeric',day:'numeric'})+' 리셋' : '';
@@ -13017,15 +13037,24 @@ function ttsCreditLine(s){
   }).join('<br>');
 }
 async function loadTtsCredits(force){
-  const box=document.getElementById('ttsCredits'); if(!box) return;
+  const box=document.getElementById('ttsCredits');
+  const btn=document.getElementById('cleanCreditBtn');      // 4단계 우상단 '크레딧 확인하기' 아이콘
   try{
     const d=await (await fetch('/api/produce/tts/credits'+(force?'?refresh=1':''))).json();
+    // ★보여도 되는 사람인지는 서버가 정한다(내 키 등록자·관리자). 사장님 키를 빌려 쓰는
+    //   고객은 show=false → 남의 잔액 대시보드를 열어주지 않는다.
+    if(btn) btn.hidden = !(d.subclean && d.subclean.show);
+    if(!box) return;
     const lines=(d.services||[]).map(ttsCreditLine).filter(Boolean);
     const redo=' <button type="button" onclick="loadTtsCredits(1)" title="다시 조회" style="border:0;background:none;cursor:pointer;color:var(--sub);font-size:12px">↻</button>';
-    box.innerHTML = lines.length ? lines.join('<br>')+redo
-      : '🎙 <span style="opacity:.8">등록한 내 음성 키가 없어요 — </span><a href="/settings#keys" target="_blank" rel="noopener" style="color:var(--accent2)">🔑 키 등록</a>';
-  }catch(e){ box.innerHTML=''; }
+    if(lines.length) box.innerHTML = lines.join('<br>')+redo;
+    else if(d.need_own_key) box.innerHTML = '🎙 <span style="opacity:.8">등록한 내 음성 키가 없어요 — </span><a href="/settings#keys" target="_blank" rel="noopener" style="color:var(--accent2)">🔑 키 등록</a>';
+    else box.innerHTML = '';                                  // 운영자 키를 빌려 쓰는 고객: 남의 잔액은 안 보여준다
+  }catch(e){ if(box) box.innerHTML=''; }
 }
+// 4단계 아이콘 버튼은 5단계에 들어오기 전에도 보여야 하므로 페이지가 뜰 때 한 번 판정한다.
+if(document.readyState === 'loading') addEventListener('DOMContentLoaded', () => loadTtsCredits());
+else loadTtsCredits();
 
 async function loadTtsBeats(){
   loadTtsCredits();   // ★잔액은 따로 돈다 — 아래 프리셋 로드가 실패해도 잔액 줄은 뜬다

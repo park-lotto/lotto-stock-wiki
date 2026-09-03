@@ -24,13 +24,20 @@ def test_redirect_goes_to_vendor_dashboard(monkeypatch):
     assert r.headers["location"] == "https://vmake.ai/developers"
 
 
-def test_link_in_subtitle_step_panel():
-    """4단계 자막제거 패널(시작 버튼 아래)에 새 탭 링크가 있다."""
-    # ★'id="cleanPreview"'는 'id="cleanPreviewWrap"'(더 앞)에도 부분일치 — 시작점 뒤에서 찾는다
-    start = HTML.index('id="btnCleanPreview"')
-    seg = HTML[start:HTML.index('id="cleanPreview" ', start)]
-    assert GO in seg
-    assert 'target="_blank"' in seg[seg.index(GO):seg.index(GO) + 120]
+def test_icon_button_above_toggle_outside_label():
+    """4단계 카드 우상단: 토글 **위**의 아이콘 버튼(2026-09-04 사장님 "아이폰 아이콘 형태").
+    ★label 밖에 있어야 한다 — 안에 두면 누를 때 토글이 같이 뒤집힌다. 제목 label은 for=로 묶는다."""
+    start = HTML.index('class="hero rise"')
+    seg = HTML[start:HTML.index('id="subState"', start)]
+    btn = seg.index('id="cleanCreditBtn"')
+    assert GO in seg[btn:btn + 200] and 'target="_blank"' in seg[btn:btn + 200]
+    assert "크레딧 확인하기" in seg[btn:btn + 400]
+    assert " hidden" in seg[btn:btn + 200]                     # 기본은 숨김 — 서버가 켠다
+    assert seg.index("</label>") < btn < seg.index('id="subToggle"')   # label 닫힌 뒤, 토글 앞
+    assert 'for="subToggle"' in seg
+    # 종전 CTA 아래 링크는 옮겨졌다(두 벌이면 하나가 썩는다)
+    tail = HTML[HTML.index('id="btnCleanPreview"'):HTML.index('id="cleanPreview" ', HTML.index('id="btnCleanPreview"'))]
+    assert GO not in tail
 
 
 def test_link_in_no_credit_failure_message():
