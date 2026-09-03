@@ -984,8 +984,38 @@ function step(){
       setTimeout(once, cutWaitMs(c));
     }
   };
-  if (v.readyState >= 1) go();           // 이미 열려 있으면 즉시
-  else v.onloadedmetadata = go;
+  // ★여는 것에도 안전핀을 건다(2026-09-03 사장님 "전체재생하면 중간에 화면이 멈춘다").
+  //   종전엔 `else v.onloadedmetadata = go;` 한 줄이라, 이 이벤트가 **안 오면 go()가
+  //   영영 안 불리고 schedStep도 안 걸려 그 컷에서 통째로 멈췄다**. 안 오는 경우는
+  //   실제로 있다 — 소재 요청이 실패(404·403·네트워크 끊김)하거나, 같은 재생기를
+  //   앞 컷이 쓰다가 src를 갈아끼워 로딩이 다시 시작되는 순간에 걸릴 때다.
+  //   컷 안의 시크에는 안전핀(cutWaitMs)이 이미 있었는데 **여는 단계에만 없었다**.
+  //   ⚠️건너뛰지 않는다 — 컷을 빼면 화면이 음성보다 빨라져 싱크가 통째로 어긋난다.
+  //   그 컷의 시간은 그대로 쓰되 썸네일을 깔고 다음 컷으로 정상 진행한다.
+  if (v.readyState >= 1){ go(); return; }
+  let opened = false;
+  let openT = 0;
+  const open = () => {
+    if (opened) return;                  // go()가 두 번 돌면 컷이 앞질러 간다
+    opened = true;
+    v.onloadedmetadata = null; v.onerror = null;
+    if (openT) { clearTimeout(openT); openT = 0; }
+    go();
+  };
+  const giveUp = () => {
+    if (opened) return;
+    opened = true;
+    v.onloadedmetadata = null; v.onerror = null;
+    if (openT) { clearTimeout(openT); openT = 0; }
+    holdShot(c, true);                   // 검은 화면 대신 그 조각의 썸네일
+    paintCut();
+    if (seq[seqI + 1]) seat(seq[seqI + 1]);
+    schedStep(c.dur * 1000);             // 음성과 어긋나지 않게 이 컷 시간은 그대로 쓴다
+  };
+  v.onloadedmetadata = open;
+  v.onerror = giveUp;                    // 소재를 못 받았다 — 멈추지 말고 넘어간다
+  // 컷 길이의 60%까지만 기다린다(cutWaitMs와 같은 기준 — 기다림이 컷보다 길면 무의미).
+  openT = setTimeout(giveUp, cutWaitMs(c));
 }
 
 // ── 컷 표시 한 곳(2026-08-15 사장님 "왼쪽은 3개인데 컷이 4/4" 혼란) ─────────────────
