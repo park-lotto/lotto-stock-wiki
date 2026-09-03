@@ -1482,6 +1482,11 @@
   .pool-lscape{display:inline-block;margin-left:7px;padding:1px 7px;border-radius:999px;
                background:#4a1414;color:#ff8a8a;border:1px solid #7a2b2b;
                font-size:11px;font-weight:700;vertical-align:middle}
+  /* 가로형은 1단계에서 아예 못 고른다(2026-09-03) — 흐리게 + 카드 위에 사유 */
+  .pool-card.lscape{opacity:.5;cursor:not-allowed;filter:grayscale(.6)}
+  .pool-card.lscape::after{content:"가로형(롱폼) · 못 씀";position:absolute;left:50%;top:50%;
+               transform:translate(-50%,-50%);background:#4a1414;color:#ff8a8a;border:1px solid #7a2b2b;
+               border-radius:999px;padding:3px 9px;font-size:11.5px;font-weight:800;white-space:nowrap;pointer-events:none}
   /* ▶ TTS 재생목록 한 줄(2026-08-30) — 칸을 고정해 겹치지 않게 한다.
      [번호][대사=남는 폭][길이][▶][✏ 수정][⋯] */
   .ttsRow{border:1px solid var(--line);border-radius:10px;margin-bottom:7px;
@@ -9717,7 +9722,7 @@ function renderPool(){
     //   카드 본체 클릭은 종전대로 pickFootage(메인 지정) — 배지만 stopPropagation.
     const canPlay = _poolCanPlay(it);
     return `<div class="pool-cell">`
-      + `<div class="pool-card${it.useFootage?' on':''}${isPick?' pick':''}" onclick="pickFootage(${i})" title="${esc(it.name||('영상 '+(i+1)))}">`
+      + `<div class="pool-card${it.useFootage?' on':''}${isPick?' pick':''}${it.landscape?' lscape':''}" onclick="pickFootage(${i})" title="${esc(it.landscape?'가로형(롱폼) — 세로 숏폼에 못 씁니다':(it.name||('영상 '+(i+1))))}">`
       + (it.thumbnail?`<img src="${it.thumbnail.includes('gstatic.com')?it.thumbnail:('/api/thumb?url='+encodeURIComponent(it.thumbnail))}" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'">`:'')
       + (canPlay?`<span class="pool-play" title="미리보기 재생" onclick="event.stopPropagation();poolPlay(this,${i})">▶</span>`:'')
       + (isPick?'<span class="pickbadge">🤖 AI PICK</span>':'<span class="badge">'+(it.useFootage?'✓':'')+'</span>')
@@ -10111,6 +10116,7 @@ async function renderSourceAnalysis(){
       //   '아직 도는 중'과 '받기부터 실패해 포기'를 화면이 구별할 수 없다.
       //   포기(gave_up)까지 실려 있어야 "기다려도 소용없다"를 말해줄 수 있다.
       _SRC_BRIEF[code] = d || null;
+      _applyLandscapeGate(code, d);   // 가로형이면 1단계에서 바로 뺀다
     }catch(e){ _SRC_BRIEF[code] = null; }
     finally{ _SRC_INFLIGHT.delete(code); }
   }));
@@ -10809,8 +10815,31 @@ function removeMixUrlRow(btn){
   btn.closest('.row').remove();
 }
 // 썸네일 클릭 = 이 영상을 AI PICK으로 지정(그 대본이 카드에 뜬다). 담김도 자동 ON.
+// ★가로형(롱폼)은 1단계에서 막는다(2026-09-03 사장님 "매칭에서 막으니까 돌아오게 되니까").
+//   종전엔 배지만 붙이고 3단계 믹스(_block_landscape)에서야 실패시켜, 분석·다운로드를
+//   다 치르고 1단계로 되돌아와야 했다. 판정은 서버가 준 landscape 그대로(0순위-B) —
+//   여기서 w/h를 다시 재지 않는다. null(못 잼)은 막지 않는다(서버 설계와 같다).
+function _applyLandscapeGate(code, d){
+  if(!d || d.landscape !== true) return false;
+  let changed=false;
+  HANDOFF.forEach(h=>{
+    if(!h || h.shortcode!==code) return;
+    h.landscape=true;
+    if(h.useFootage || h.bbMain){ h.useFootage=false; h.bbMain=false; changed=true; }
+  });
+  if(changed){
+    if(typeof toast==='function')
+      toast(`가로형(롱폼) 영상이라 재료에서 뺐어요${d.video_w?` (${d.video_w}x${d.video_h})`:''} — 세로 숏폼엔 못 씁니다`);
+    if(typeof syncFootageToMixUrls==='function') syncFootageToMixUrls();
+    if(typeof renderPool==='function') renderPool();
+    if(typeof saveWork==='function') saveWork();
+    if(typeof refreshStep0==='function') refreshStep0();
+  }
+  return changed;
+}
 function pickFootage(i){
   if(!HANDOFF[i]) return;
+  if(HANDOFF[i].landscape){ if(typeof toast==='function') toast('가로형(롱폼) 영상은 세로 숏폼에 못 씁니다 — 다른 영상을 골라주세요'); return; }
   HANDOFF.forEach(h=>{ h.bbMain=false; });
   HANDOFF[i].bbMain=true; HANDOFF[i].useFootage=true;
   if(typeof syncFootageToMixUrls==='function') syncFootageToMixUrls();
