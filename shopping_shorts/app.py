@@ -6790,7 +6790,12 @@ def _capcut_project_name(job_id, job, plan):
         beats = (plan or {}).get("beats") or []
         head = ((beats[0].get("narration") if beats else "") or "").strip()
     head = " ".join(head.split())[:24]
-    return f"{head} {job_id[:4]}" if head else f"쇼핑쇼츠_{job_id[:8]}"
+    # ★보낼 때마다 **새 프로젝트**가 되게 시각을 붙인다(2026-09-03 사장님 재현).
+    #   같은 이름으로 다시 보내면 캡컷이 자기 캐시로 옛 프로젝트를 되살려 우리가 새로 쓴
+    #   draft_content.json을 **덮어쓴다**(실측: 서버 8.25·배경ON → 캡컷 폴더 14.08·배경OFF,
+    #   캡컷이 연 2분 뒤 재저장). 이름이 다르면 캐시가 없어 파일 그대로 읽는다.
+    stamp = datetime.now().strftime("%H%M")
+    return f"{head} {job_id[:4]} {stamp}" if head else f"쇼핑쇼츠_{job_id[:8]} {stamp}"
 
 
 @app.get("/api/mix/capcut/{job_id}")
