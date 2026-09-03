@@ -89,6 +89,15 @@ def test_admin_sees_owner_keys(monkeypatch, tmp_path):
     appmod._TTS_CREDIT_CACHE.clear()
 
 
+def test_owner_typecast_key_comes_from_env(monkeypatch):
+    """운영자 타입캐스트 키(env TYPECAST_API_KEY)가 _owner_keys에 잡혀야 관리자 잔액에 뜬다."""
+    from shopping_shorts import config, keyroute
+    monkeypatch.setattr(config, "TYPECAST_API_KEY", "tc_owner_key_1")
+    assert keyroute._owner_keys(keyroute.SVC_TYPECAST) == ["tc_owner_key_1"]
+    monkeypatch.setattr(config, "TYPECAST_API_KEY", "")
+    assert keyroute._owner_keys(keyroute.SVC_TYPECAST) == []
+
+
 def test_exempt_customer_using_owner_keys_sees_nothing(monkeypatch, tmp_path):
     """★사장님 키를 빌려 쓰는 고객(면제 명단): 잔액도 버튼도 '키 등록하세요'도 없다."""
     _setup(monkeypatch, tmp_path, own={}, owner={"elevenlabs": ["OWNER_ELV"], "vmake": ["vk:owner"]},
