@@ -4399,113 +4399,6 @@ _BYOK_VENDORS = (
     (("vmake",), "자막 제거 서비스(VMake)", "vmake.ai"),
 )
 
-# ── 자막제거 키 잔액 바로가기 (2026-09-04 사장님 "바로가기탭으로 조회") ───────────
-# 자막제거 업체엔 잔액 조회 API가 없다(번들 SDK의 경로는 config·consume 둘뿐, 문서에도 없음).
-# 잔액·사용내역은 업체 **개발자 대시보드**(로그인 후 우상단 Credit + Usage Details)에만 있다.
-# produce.html은 브랜드 정책상 업체명을 한 글자도 못 쓰므로(test_subclean_ui) 주소는
-# 여기 한 곳에만 두고 화면은 /go/subclean-credits 로 온다(0순위-B — 주소가 바뀌면 여기만).
-_SUBCLEAN_CREDITS_URL = "https://vmake.ai/developers"
-
-
-@app.get("/go/subclean-credits", include_in_schema=False)
-def _go_subclean_credits():
-    """자막제거 키 잔액·사용내역 페이지로 새 탭 이동(화면 버튼이 부른다)."""
-    return RedirectResponse(url=_SUBCLEAN_CREDITS_URL, status_code=302)
-
-
-# ── 음성(TTS) 키 잔액 조회 (2026-09-04 사장님 "tts에도 api연동해서 본인크레딧 나오게") ──
-# 자막제거 업체와 달리 음성 두 업체는 **구독 조회 API가 있다** → 숫자를 그대로 띄운다.
-#   일레븐랩스  GET /v1/user/subscription     (xi-api-key) → character_count / character_limit /
-#               next_character_count_reset_unix / tier
-#   타입캐스트  GET /v1/users/me/subscription (X-API-KEY) → credits.plan_credits / used_credits / plan
-#               (리셋 시각은 응답에 없다 — 문서 실측 2026-09-04)
-# ★일레븐랩스 제한키(restricted)는 user_read 권한이 없으면 이 조회만 401이고 TTS는 멀쩡하다
-#   (2026-08-24 라이브 실측, 위 _check_key 주석). 그걸 "키가 틀렸다"로 보이면 고객이 멀쩡한
-#   키를 지운다 → 'no_permission'으로 갈라서 "대시보드에서 확인"으로 안내한다.
-# ★조회는 돈을 안 쓰지만 업체 429가 있다 → 고객당 60초 캐시.
-_TTS_CREDIT_VENDORS = {
-    "elevenlabs": {"label": "일레븐랩스", "unit": "자",
-                   "url": "https://api.elevenlabs.io/v1/user/subscription",
-                   "header": "xi-api-key",
-                   "dashboard": "https://elevenlabs.io/app/subscription"},
-    "typecast":   {"label": "타입캐스트", "unit": "크레딧",
-                   "url": "https://api.typecast.ai/v1/users/me/subscription",
-                   "header": "X-API-KEY",
-                   "dashboard": "https://typecast.ai/developers"},
-}
-_TTS_CREDIT_CACHE_SEC = 60
-_TTS_CREDIT_CACHE = {}          # cid → (expires_epoch, payload)
-
-
-def _tts_credit_parse(service, status, body):
-    """업체 응답 → 화면용 dict. 네트워크 없이 순수 파싱(테스트가 이걸 직접 찌른다)."""
-    if status == 401:
-        txt = str(body if isinstance(body, str) else json.dumps(body, ensure_ascii=False))
-        kind = "no_permission" if "user_read" in txt else "bad_key"
-        return {"ok": False, "error_kind": kind}
-    if status == 429:
-        return {"ok": False, "error_kind": "rate_limited"}
-    if status != 200:
-        return {"ok": False, "error_kind": "http", "http": int(status)}
-    j = body if isinstance(body, dict) else {}
-    if service == "elevenlabs":
-        used = int(j.get("character_count") or 0)
-        limit = int(j.get("character_limit") or 0)
-        reset = j.get("next_character_count_reset_unix")
-        plan = j.get("tier") or j.get("status")
-    else:
-        cr = j.get("credits") or {}
-        used = int(cr.get("used_credits") or 0)
-        limit = int(cr.get("plan_credits") or 0)
-        reset = None
-        plan = j.get("plan")
-    return {"ok": True, "used": used, "limit": limit, "remaining": max(limit - used, 0),
-            "reset_at": int(reset) if reset else None, "plan": plan}
-
-
-def _tts_credit_probe(service, key):
-    """키 하나의 잔액을 업체에 묻는다. 실패해도 예외를 올리지 않는다(화면 한 줄이 죽을 뿐)."""
-    v = _TTS_CREDIT_VENDORS[service]
-    try:
-        r = requests.get(v["url"], headers={v["header"]: key}, timeout=8)
-    except requests.RequestException as e:
-        return {"ok": False, "error_kind": "network", "error": str(e)[:120]}
-    try:
-        body = r.json()
-    except ValueError:
-        body = r.text[:300]
-    return _tts_credit_parse(service, r.status_code, body)
-
-
-def _own_keys_plain(store, cid, service):
-    """고객이 **직접 등록한** 키만(사장님 공용 키는 섞지 않는다 — '본인 크레딧'이니까)."""
-    return list(store.get_customer_keys_plain(cid, service) or [])
-
-
-@app.get("/api/produce/tts/credits")
-def api_tts_credits(request: Request, refresh: int = 0):
-    """5단계 화면의 '내 음성 키 잔액'. 등록한 키마다 한 줄(키 끝 4자로 구분)."""
-    cid = keyroute.as_cid(_cid(request))
-    now = time.time()
-    hit = _TTS_CREDIT_CACHE.get(cid)
-    if hit and not refresh and hit[0] > now:
-        return hit[1]
-    store = Store(DB_PATH)
-    out = {"ok": True, "services": []}
-    for svc, v in _TTS_CREDIT_VENDORS.items():
-        keys = _own_keys_plain(store, cid, svc)
-        row = {"service": svc, "label": v["label"], "unit": v["unit"],
-               "dashboard": v["dashboard"], "registered": bool(keys), "keys": []}
-        for k in keys[:3]:                      # 키를 여러 개 넣어도 3개까지만 묻는다
-            r = _tts_credit_probe(svc, k)
-            r["key_tail"] = str(k)[-4:]
-            row["keys"].append(r)
-        out["services"].append(row)
-    out["cached_at"] = int(now)
-    _TTS_CREDIT_CACHE[cid] = (now + _TTS_CREDIT_CACHE_SEC, out)
-    return out
-
-
 # '잔액이 없다'는 신호. 429(분당·월 한도)는 **여기 넣지 않는다** — 기다리면 풀리는데
 # 충전하라고 하면 고객이 헛돈을 쓴다(2026-09-02 실수, 만들자마자 잡았다).
 _OUT_OF_CREDIT = ("402", "payment required", "not enough credits", "insufficient",
@@ -8854,6 +8747,114 @@ async def api_lens_yt(request: Request, frame: UploadFile = File(None),
             rank = {"same": 0, "similar": 1, "no": 2}
             rows.sort(key=lambda r: rank.get(r.get("sim"), 1))   # 관련있는 것부터
     return {"ok": True, "items": rows, "count": len(rows), "keyword": keyword}
+
+
+# ── 자막제거 키 잔액 바로가기 (2026-09-04 사장님 "바로가기탭으로 조회") ───────────
+# 자막제거 업체엔 잔액 조회 API가 없다(번들 SDK의 경로는 config·consume 둘뿐, 문서에도 없음).
+# 잔액·사용내역은 업체 **개발자 대시보드**(로그인 후 우상단 Credit + Usage Details)에만 있다.
+# produce.html은 브랜드 정책상 업체명을 한 글자도 못 쓰므로(test_subclean_ui) 주소는
+# 여기 한 곳에만 두고 화면은 /go/subclean-credits 로 온다(0순위-B — 주소가 바뀌면 여기만).
+_SUBCLEAN_CREDITS_URL = "https://vmake.ai/developers"
+
+
+@app.get("/go/subclean-credits", include_in_schema=False)
+def _go_subclean_credits():
+    """자막제거 키 잔액·사용내역 페이지로 새 탭 이동(화면 버튼이 부른다)."""
+    return RedirectResponse(url=_SUBCLEAN_CREDITS_URL, status_code=302)
+
+
+# ── 음성(TTS) 키 잔액 조회 (2026-09-04 사장님 "tts에도 api연동해서 본인크레딧 나오게") ──
+# 자막제거 업체와 달리 음성 두 업체는 **구독 조회 API가 있다** → 숫자를 그대로 띄운다.
+#   일레븐랩스  GET /v1/user/subscription     (xi-api-key) → character_count / character_limit /
+#               next_character_count_reset_unix / tier
+#   타입캐스트  GET /v1/users/me/subscription (X-API-KEY) → credits.plan_credits / used_credits / plan
+#               (리셋 시각은 응답에 없다 — 문서 실측 2026-09-04)
+# ★일레븐랩스 제한키(restricted)는 user_read 권한이 없으면 이 조회만 401이고 TTS는 멀쩡하다
+#   (2026-08-24 라이브 실측, 위 _check_key 주석). 그걸 "키가 틀렸다"로 보이면 고객이 멀쩡한
+#   키를 지운다 → 'no_permission'으로 갈라서 "대시보드에서 확인"으로 안내한다.
+# ★조회는 돈을 안 쓰지만 업체 429가 있다 → 고객당 60초 캐시.
+_TTS_CREDIT_VENDORS = {
+    "elevenlabs": {"label": "일레븐랩스", "unit": "자",
+                   "url": "https://api.elevenlabs.io/v1/user/subscription",
+                   "header": "xi-api-key",
+                   "dashboard": "https://elevenlabs.io/app/subscription"},
+    "typecast":   {"label": "타입캐스트", "unit": "크레딧",
+                   "url": "https://api.typecast.ai/v1/users/me/subscription",
+                   "header": "X-API-KEY",
+                   "dashboard": "https://typecast.ai/developers"},
+}
+_TTS_CREDIT_CACHE_SEC = 60
+_TTS_CREDIT_CACHE = {}          # cid → (expires_epoch, payload)
+
+
+def _tts_credit_parse(service, status, body):
+    """업체 응답 → 화면용 dict. 네트워크 없이 순수 파싱(테스트가 이걸 직접 찌른다)."""
+    if status == 401:
+        txt = str(body if isinstance(body, str) else json.dumps(body, ensure_ascii=False))
+        kind = "no_permission" if "user_read" in txt else "bad_key"
+        return {"ok": False, "error_kind": kind}
+    if status == 429:
+        return {"ok": False, "error_kind": "rate_limited"}
+    if status != 200:
+        return {"ok": False, "error_kind": "http", "http": int(status)}
+    j = body if isinstance(body, dict) else {}
+    if service == "elevenlabs":
+        used = int(j.get("character_count") or 0)
+        limit = int(j.get("character_limit") or 0)
+        reset = j.get("next_character_count_reset_unix")
+        plan = j.get("tier") or j.get("status")
+    else:
+        cr = j.get("credits") or {}
+        used = int(cr.get("used_credits") or 0)
+        limit = int(cr.get("plan_credits") or 0)
+        reset = None
+        plan = j.get("plan")
+    return {"ok": True, "used": used, "limit": limit, "remaining": max(limit - used, 0),
+            "reset_at": int(reset) if reset else None, "plan": plan}
+
+
+def _tts_credit_probe(service, key):
+    """키 하나의 잔액을 업체에 묻는다. 실패해도 예외를 올리지 않는다(화면 한 줄이 죽을 뿐)."""
+    v = _TTS_CREDIT_VENDORS[service]
+    try:
+        r = requests.get(v["url"], headers={v["header"]: key}, timeout=8)
+    except requests.RequestException as e:
+        return {"ok": False, "error_kind": "network", "error": str(e)[:120]}
+    try:
+        body = r.json()
+    except ValueError:
+        body = r.text[:300]
+    return _tts_credit_parse(service, r.status_code, body)
+
+
+def _own_keys_plain(store, cid, service):
+    """고객이 **직접 등록한** 키만(사장님 공용 키는 섞지 않는다 — '본인 크레딧'이니까)."""
+    return list(store.get_customer_keys_plain(cid, service) or [])
+
+
+@app.get("/api/produce/tts/credits")
+def api_tts_credits(request: Request, refresh: int = 0):
+    """5단계 화면의 '내 음성 키 잔액'. 등록한 키마다 한 줄(키 끝 4자로 구분)."""
+    cid = keyroute.as_cid(_cid(request))
+    now = time.time()
+    hit = _TTS_CREDIT_CACHE.get(cid)
+    if hit and not refresh and hit[0] > now:
+        return hit[1]
+    store = Store(DB_PATH)
+    out = {"ok": True, "services": []}
+    for svc, v in _TTS_CREDIT_VENDORS.items():
+        keys = _own_keys_plain(store, cid, svc)
+        row = {"service": svc, "label": v["label"], "unit": v["unit"],
+               "dashboard": v["dashboard"], "registered": bool(keys), "keys": []}
+        for k in keys[:3]:                      # 키를 여러 개 넣어도 3개까지만 묻는다
+            r = _tts_credit_probe(svc, k)
+            r["key_tail"] = str(k)[-4:]
+            row["keys"].append(r)
+        out["services"].append(row)
+    out["cached_at"] = int(now)
+    _TTS_CREDIT_CACHE[cid] = (now + _TTS_CREDIT_CACHE_SEC, out)
+    return out
+
 
 
 @app.get("/healthz")
