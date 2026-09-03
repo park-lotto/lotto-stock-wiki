@@ -1393,6 +1393,31 @@ def _caption_drawtexts(narration, dur, work, idx, t0=0.0, style=None, real_durs=
     return parts
 
 
+def caption_schedule(beat, tail=0.0):
+    """비트 하나의 자막 구절 시간표 [(구절, 시작초, 끝초)] — **_caption_drawtexts와 같은 규칙**(0순위-B).
+
+    캡컷 내보내기가 쓴다(2026-09-03 사장님 실측: 캡컷엔 비트 문장이 통째로 한 줄이라 화면 밖으로
+    넘쳤다 — 렌더는 짧은 구절로 쪼개 순차 표시한다). 구절 나누기·길이 배분·리드인·오프셋을
+    렌더의 같은 함수·같은 키(caption_lines/cap_durs/cap_lead/cap_offset)로 계산한다.
+    tail: 마지막 구절 여운(렌더는 마지막 비트에만 0.5).
+    """
+    segs = _caption_segments((beat.get("narration") or ""), preset=beat.get("caption_lines"))
+    if not segs:
+        return []
+    dur = float(beat.get("dur") or 0.0)
+    durs = _caption_durations(segs, dur, real_durs=beat.get("cap_durs"))
+    t0 = float(beat.get("t0") or 0.0)
+    off = float(beat.get("cap_offset") or 0.0)
+    t = max(0.0, float(beat.get("cap_lead") or 0.0))
+    out = []
+    for i, (seg, d) in enumerate(zip(segs, durs)):
+        start = max(0.0, t + t0 + off)
+        t += d
+        end = (dur + tail if i == len(segs) - 1 else t) + t0 + off
+        out.append((seg, start, max(start, end)))
+    return out
+
+
 def _caption_vf(narration, dur, has_font, work, idx):
     """비트 영상용 -vf 필터 문자열. scale/crop으로 규격 통일 후, 폰트가 있으면
     하단 바 + 나레이션을 **짧은 구절 단위**로 순차 표시하는 drawtext들을 얹는다.
