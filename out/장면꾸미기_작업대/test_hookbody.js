@@ -62,6 +62,23 @@ console.log('=== T7. 카드 클릭 시 후킹과 본문은 서로 다른 모양�
  }
  chk('후킹==본문인 채널 없음(sul_core 제외)', bad.filter(x=>x!=='sul_core').length===0, bad);}
 
+
+
+console.log('=== T8. 「같게」로 본문이 헤드카피 구조가 돼도 편집칸/그림이 안 어긋난다 ===');
+{SPECS.hook={};SPECS.body={};part='hook';SPEC=SPECS.hook;
+ applyLayout('sul_gongami');
+ go('hook'); setBig('text','샤넬도 예상 못한'+String.fromCharCode(10)+'일본의 천재적 발상');
+ if(!SPECS.body._sameBackup){const bk=JSON.parse(JSON.stringify(SPECS.body));delete bk._sameBackup;
+   SPECS.body=JSON.parse(JSON.stringify(SPECS.hook));SPECS.body._sameBackup=bk;SPECS.body._touched=true;}
+ go('body');
+ const shown=_isBody()?(SPEC.title||''):((SPEC.hc||{}).text||'');
+ const drawn=((SPEC.hc||{}).text||'').trim()?((SPEC.hc||{}).text):(SPEC.title||'');
+ chk('편집칸 == 그림', shown.trim()===drawn.trim(), {pan:shown,drawn:drawn});
+ const before=(SPEC.hc||{}).size;
+ bumpBig(4);
+ const after=(SPEC.hc||{}).size;
+ chk('크기 +4 가 실제 그려지는 글에 먹는다', after===before+4, {before:before,after:after,title_size:SPEC.title_size});}
+
 console.log('');
 console.log(fail===0?'ALL PASS':(fail+' FAILED'));
 process.exit(fail?1:0);
