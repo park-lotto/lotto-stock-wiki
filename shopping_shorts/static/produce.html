@@ -5757,7 +5757,9 @@ function _prefetchNeighborFrames(i){
   const sb=document.getElementById('sceneBg');
   if(!sb || !sb.checked) return;    // 실장면 배경이 꺼져 있으면 애초에 안 쓴다 — 낭비 금지
   const n=BEATS_PREVIEW.length; if(!n) return;
-  [1, 2, -1].forEach(d=>{
+  // ★컷 단위로 넘기게 되면서(2026-09-03) 연타가 잦다 — 앞을 3장까지 받아둔다.
+  //   실측(라이브 fb62adf0aad0): 안 받아둔 컷 2.29초 vs 받아둔 컷 1ms.
+  [1, 2, 3, -1].forEach(d=>{
     const b=BEATS_PREVIEW[((i+d)%n+n)%n];
     const u=_beatFrameUrl(b);
     if(!u || _BF_PRE.has(u)) return;
