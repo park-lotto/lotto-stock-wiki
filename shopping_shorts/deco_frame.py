@@ -975,7 +975,8 @@ def render(spec):
         im.alpha_composite(_band)
     if s["sub_line"]:
         _sh = s["sub_line_h"] or 84
-        _sy = (bar_h + s["hook_band_h"] - _sh - 24) if s["hook_band_h"] > 0 else (bar_h + 24)
+        # 실측(썰칩12·쇼핑치트키·럭키박스): 박스는 어두운 띠 **아래 경계에 걸쳐** 있다(띠 안이 아니다)
+        _sy = (bar_h + s["hook_band_h"] - int(_sh * 0.35)) if s["hook_band_h"] > 0 else (bar_h + 24)
         _sf = _font("title", int(_sh * 0.5))
         _sw = int(d.textlength(s["sub_line"], font=_sf)) + 80
         _sx = (W - _sw) // 2
