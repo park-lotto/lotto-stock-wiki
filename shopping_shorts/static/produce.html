@@ -17522,7 +17522,7 @@ async function s2ConfirmToNewWork(i){
   const idx=(i==null)?S2.curDraft:i;
   const dr=S2.drafts[idx];
   if(!dr){ toast('먼저 대본을 만들어 주세요'); return; }
-  const script=(dr.script||'').trim();
+  const script=s2ScriptLines(dr);       // ★칸을 줄로(2026-09-03) — s2Confirm과 같은 단위
   if(!script){ toast('대본이 비어 있습니다'); return; }
   try{ _pushWorkNow(); }catch(e){}          // 지금 작업부터 확실히 저장(디바운스 대기 금지)
   const st=_workState();                    // 소스·장면·2안 스냅샷까지 그대로 복제
@@ -17542,11 +17542,20 @@ async function s2ConfirmToNewWork(i){
   if(!(d && d.ok && d.work_id)){ toast('새 작업 만들기에 실패했어요'); return; }
   location.href='/produce?work='+encodeURIComponent(d.work_id);
 }
+function s2ScriptLines(dr){
+  // 칸이 있으면 칸 텍스트를 줄로, 없으면(내 대본·옛 초안) 원문 그대로.
+  const bs=(dr&&dr.beats&&dr.beats.length)?dr.beats:null;
+  if(bs) return bs.map(b=>((b&&b.text)||'').trim()).filter(Boolean).join('\n');
+  return ((dr&&dr.script)||'').trim();
+}
 function s2Confirm(i){
   const idx=(i==null)?S2.curDraft:i;
   const dr=S2.drafts[idx];
   if(!dr){ toast('먼저 대본을 만들어 주세요'); return; }
-  STATE.script=(dr.script||'').trim();
+  // ★칸(첫말/문제/…)을 **줄로** 넘긴다(2026-09-03 사장님 "훅이랑 문제가 믹스에서 합쳐진다").
+  //   서버 초안의 script는 공백으로 이어 붙인 통짜라 3단계가 마침표로 다시 잘라 칸을 잃었다.
+  //   줄 하나 = 3단계 칸 하나(서버 script_sentences가 줄을 단위로 본다).
+  STATE.script=s2ScriptLines(dr);
   if(!STATE.script){ toast('대본이 비어 있습니다'); return; }
   STATE.script_from_wiki=(S2.seed&&S2.seed.shortcode)||'';
   STATE.script_carryover=false;
