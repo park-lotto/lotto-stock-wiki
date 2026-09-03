@@ -2006,8 +2006,11 @@ def _segmented_drawtext(text, base_style, work, key_prefix, x_pct, y_pct,
             except OSError:
                 pass
         lines = [one]
-    elif fit_lines:
+    elif fit_lines and not base_style.get("wrap"):
         # 헤드카피: 줄 수는 그대로, 가장 넓은 줄이 폭에 들어가게 폰트만 줄인다.
+        # ★style.wrap=True면 이 축소를 건너뛰고 아래 '자동 줄바꿈'을 탄다(2026-09-03 사장님
+        #   "글자를 치면 비율에 맞게 줄어드는 게 아니라 썸네일처럼" — 썸네일은 크기를 잡아두고
+        #   글이 길면 줄을 늘린다). 빈값이면 종전 그대로(회귀 0).
         widest = max((_text_px(pil_font, ln, size) for ln in lines if ln), default=0)
         if widest > max_w:
             size = max(8, int(size * max_w / widest))
