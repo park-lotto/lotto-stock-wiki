@@ -5523,9 +5523,31 @@ def api_produce_mix_clean(background_tasks: BackgroundTasks, body: dict):
     return {"ok": True, "status": "cleaning"}
 
 
+@app.get("/api/produce/mix/clean_clips/{job_id}")
+def api_produce_mix_clean_clips(job_id: str):
+    """자막제거 전/후 비교에서 넘겨볼 **컷 목록**(2026-09-03 사장님 "5장면밖에 안 나온다").
+
+    종전엔 소스(담은 영상) 단위로 넘겼다 — 소스 5개면 5장. 완성본은 컷 20개인데
+    각 소스의 **첫 컷**만 보였다. 5단계 장면매칭처럼 컷마다 한 장씩 넘긴다.
+    ★비용: 프레임은 이미 끝난 파일에서 ffmpeg로 1장씩 꺼낼 뿐(유료 재호출 0) —
+      컷이 20개든 40개든 청소는 다시 안 돈다.
+    stale=True면 지금 편성으로 만든 청소본이 아니다(장면편집 뒤). 좌우는 청소 당시
+    편성으로 짝을 맞추므로 같은 장면이지만, 렌더 땐 다시 청소된다(크레딧 추가)."""
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
+    if job.get("clean_status") != "ready":
+        return {"ok": True, "clips": [], "stale": False, "ready": False}
+    r = mix_pipeline.clean_compare_clips(job, _MIX_WORK_DIR / job_id)
+    clips = [{"ci": c["ci"], "si": c["si"], "beat_idx": c["beat_idx"],
+              "dur": round(float(c["dur"]), 3)} for c in (r.get("clips") or [])]
+    return {"ok": True, "ready": True, "clips": clips, "stale": bool(r.get("stale")),
+            "plan_used": r.get("plan_used"), "count": len(clips)}
+
+
 @app.get("/api/produce/mix/clean_thumb/{job_id}")
 def api_produce_mix_clean_thumb(job_id: str, kind: str = "original",
-                                si: int = 0, pos: float = 0.5):
+                                si: int = 0, pos: float = 0.5, ci: int = -1):
     """소스 si의 pos(0~1) 지점 프레임 JPG. kind=original|clean.
     clean은 clean_status=ready + 클린파일 존재일 때만(아니면 404). 양쪽 같은 t로 정렬.
     ★si·pos 추가(2026-08-18 사장님 "한 장만 샘플이라 다음 것도 넘겨 보고 싶다"):
@@ -5547,20 +5569,34 @@ def api_produce_mix_clean_thumb(job_id: str, kind: str = "original",
     #   (앞/가운데/뒷부분 버튼도 그 장면 안에서 움직인다).
     #   소스별 청소본이 있던 옛 경로는 좌우 길이가 같아 종전대로 pos를 쓴다.
     _src_sec = _final_sec = None
+    _clean_path = None
+    _cc = {}
     if not (job.get("clean_sources") or {}):
         # ★짝은 **컷(clip) 단위**로 맞춘다 — 비트 하나에 재료가 여럿 섞이므로
         #   비트 전체를 그 소스 자리로 보면 다른 소스 구간을 짚는다(실측 job 9a3ff19fbceb
         #   beat9: s0·s4·s0·s4 4조각). 계획은 렌더가 쓰는 plan_beat_clips_for에서 온다.
-        _plan = job.get("edit_plan") or {}
-        _tts = {b["beat_idx"]: b["tts_path"] for b in (_plan.get("beats") or [])
-                if b.get("tts_path")}
-        try:
-            _sd = {v: (frame_extract._probe_duration(pth) or 0.0)
-                   for v, pth in _resolve_sources(job, work).items()}
-        except Exception:      # noqa: BLE001
-            _sd = {}
-        _src_sec, _final_sec = mix_pipeline.final_pair_for_source(
-            _plan, vid, pos, tts_paths=_tts, src_durs=_sd)
+        # ★어느 청소본을 어느 편성으로 펴는지는 mix_pipeline.clean_compare_clips 한 곳이
+        #   정한다(2026-09-03). 종전엔 **지금 편성**의 컷 시각을 **옛 청소본**에 대서
+        #   장면편집 뒤엔 딴 그림이 떴다(job fb62adf0aad0: 10:23 청소 → 16시 장면편집 30회 →
+        #   BEFORE 줄무늬 셔츠 / AFTER 보라 옷). 청소 당시 편성 스냅샷으로 좌우를 함께 편다.
+        #   ci(컷 번호)가 오면 그 컷, 아니면 si 소스의 첫 컷(옛 화면 호환).
+        _cc = mix_pipeline.clean_compare_clips(job, work)
+        _clean_path = _cc.get("clean_path")
+        _clips = _cc.get("clips")
+        _hit = None
+        if _clips:
+            if ci >= 0:
+                _hit = _clips[ci] if ci < len(_clips) else None
+            else:
+                _hit = next((c for c in _clips if c.get("video_id") == vid), None)
+        if _hit is not None:
+            _src_sec = _hit["src"] + _hit["dur"] * pos
+            _final_sec = _hit["fin"] + _hit["dur"] * pos
+            vid = _hit.get("video_id") or vid
+        elif _clips is None and not _cc.get("stale"):
+            # 컷 계획을 못 세운 경우(소스 길이 등) — 종전 비트 기준 근사로 물러선다.
+            _plan = job.get("edit_plan") or {}
+            _src_sec, _final_sec = mix_pipeline.final_pair_for_source(_plan, vid, pos)
     if kind == "clean":
         if job.get("clean_status") != "ready":
             return JSONResponse(status_code=404, content={"ok": False, "error": "클린 소스 없음"})
@@ -5568,9 +5604,10 @@ def api_produce_mix_clean_thumb(job_id: str, kind: str = "original",
         if not src or not Path(src).exists():
             # ★소스별 청소본이 없다 = 완성본 1편만 청소하는 경로다(2026-08-27).
             #   청소 결과는 조립된 완성본 하나뿐이라, 그 안에서 이 소스가 나오는
-            #   지점을 찾아 프레임을 뽑는다. 못 찾으면 원본과 같은 pos 비율로 뽑는다.
-            #   (안 고치면 AFTER 칸이 통째로 404 — 화면이 검게 나온다)
-            src = job.get("clean_video_path")
+            #   지점을 찾아 프레임을 뽑는다. 파일은 clean_compare_clips가 고른 것
+            #   (지금 편성 것 / 없으면 스냅샷이 있는 최근 것) — clean_video_path는
+            #   옛 편성 파일일 수 있어 판정과 출처가 갈린다(0순위-B).
+            src = _clean_path or job.get("clean_video_path")
             if not src or not Path(src).exists():
                 return JSONResponse(status_code=404, content={"ok": False, "error": "클린 소스 없음"})
             # ★자리를 못 찾으면 **주지 않는다**(사장님 "다른 영상이 나옴" 제보 2건).
@@ -5578,6 +5615,11 @@ def api_produce_mix_clean_thumb(job_id: str, kind: str = "original",
             #   넘어가 원본 기준 pos를 완성본 전체에 적용해 **딴 그림**을 보여줬다.
             #   조용한 폴백이 틀린 그림을 그리느니 404로 사실을 알린다(0순위 규칙).
             if _final_sec is None:
+                # 편성이 바뀐 뒤라 청소본 시간축을 모르는 경우(옛 job, 스냅샷 없음)는 따로 말한다.
+                if _cc.get("stale") and _cc.get("clips") is None:
+                    return JSONResponse(status_code=404,
+                                        content={"ok": False, "error": "편성이 바뀌어 옛 청소본과 맞출 수 없음",
+                                                 "reason": "stale"})
                 return JSONResponse(status_code=404,
                                     content={"ok": False, "error": "완성본에 안 쓰인 소스",
                                              "reason": "not_in_final"})
