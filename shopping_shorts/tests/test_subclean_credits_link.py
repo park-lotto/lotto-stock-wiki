@@ -35,6 +35,8 @@ def test_icon_button_above_toggle_outside_label():
     assert " hidden" in seg[btn:btn + 200]                     # 기본은 숨김 — 서버가 켠다
     assert seg.index("</label>") < btn < seg.index('id="subToggle"')   # label 닫힌 뒤, 토글 앞
     assert 'for="subToggle"' in seg
+    # ★토글 래퍼는 inline-flex — inline-block이면 .sw-track(span)이 0×0이 돼 트랙이 사라진다(라이브 실측)
+    assert ".sw-wrap{position:relative;display:inline-flex;" in HTML
     # 종전 CTA 아래 링크는 옮겨졌다(두 벌이면 하나가 썩는다)
     tail = HTML[HTML.index('id="btnCleanPreview"'):HTML.index('id="cleanPreview" ', HTML.index('id="btnCleanPreview"'))]
     assert GO not in tail

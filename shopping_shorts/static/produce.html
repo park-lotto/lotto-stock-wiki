@@ -415,7 +415,10 @@
        positioned 부모로 둬야 토글 자리에 정확히 겹친다(hbar 밖으로 나왔으니). */
     .hbar-row{display:flex;align-items:center;gap:14px}
     .hright{display:flex;flex-direction:column;align-items:center;gap:8px;margin-left:auto;flex:none}
-    .sw-wrap{position:relative;display:inline-block;width:46px;height:26px}
+    /* ★inline-flex여야 한다 — inline-block이면 안의 .sw-track(span)이 인라인이 돼 width/height가
+       무시되고 트랙이 0×0으로 사라진다(2026-09-04 라이브 실측: 흰 손잡이만 떠 있었다).
+       원래 .hbar(flex) 안에 있을 땐 flex 아이템이라 크기가 먹었다. */
+    .sw-wrap{position:relative;display:inline-flex;width:46px;height:26px}
     .credit-ico{display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;
       color:var(--sub);font-size:10.5px;line-height:1;white-space:nowrap}
     .credit-ico .ico{width:36px;height:36px;border-radius:11px;display:flex;align-items:center;justify-content:center;
