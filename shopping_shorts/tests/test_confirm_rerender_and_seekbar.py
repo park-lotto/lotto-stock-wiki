@@ -115,8 +115,11 @@ def test_탐색바가_틀_밖으로_밀려나지_않는다():
     #   주석 자체가 검사에 걸린다(이 테스트를 쓰면서 실제로 걸렸다).
     css = re.sub(r"/\*.*?\*/", "", raw, flags=re.S)
     block = css.split("#confirmBody video{")[1].split("}")[0]
-    assert "aspect-ratio" not in block, "video에 aspect-ratio가 돌아왔다 — 막대가 다시 잘린다"
-    assert "flex:1 1 auto" in block and "min-height:0" in block, "video가 남는 공간만 쓰게 안 돼 있다"
+    # 비율은 반드시 살아 있어야 한다(test_preview_size_single_source의 계약).
+    assert "--shorts-pv-ar" in block, "비율 변수가 사라졌다 — 크기 정의처가 갈라진다"
+    # 넘칠 때 줄어들 수 있어야 막대가 안 잘린다. height 고정이면 다시 밀려난다.
+    assert "max-height:100%" in block and "min-height:0" in block, "넘칠 때 줄어들지 않는다"
+    assert "width:auto" in block, "폭이 고정이면 높이를 깎을 때 비율이 깨진다"
     body = css.split("#confirmBody{")[1].split("}")[0]
     assert "display:flex" in body and "flex-direction:column" in body, \
         "#confirmBody가 세로 flex가 아니면 막대가 틀 밖으로 밀려난다"
