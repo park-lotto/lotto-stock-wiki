@@ -1,4 +1,5 @@
 """Dynamically load Gemini API keys from .env by scanning numbered suffixes (_2, _3, ...)."""
+import hashlib
 import json
 import os
 import re
@@ -194,7 +195,9 @@ def mark_exhausted(group: str, key: str, retry_after=None) -> None:
     #     (최대 24시간)를 주는데 여기서 6시간으로 깎인다. 지금은 호출부가 retry_after를
     #     안 넘겨(전부 2인자 호출) 아무 차이가 없지만, 넘기기 시작하면 일일 소진 키가
     #     6시간 뒤 풀려 또 얻어맞는다. 그때는 이 상한도 같이 올려라(25시간).
-    ttl = max(30.0, min(ttl, 6 * 3600.0))
+    #   ★2026-09-03: 그 함정이 터졌다. mark_failure가 retry_delay_seconds를 넘기기
+    #     시작했으므로 상한도 25시간으로 올린다(comment_gen이 09-02에 같은 이유로 24시간).
+    ttl = max(30.0, min(ttl, 25 * 3600.0))
     marked_idx = None
     with _FileLock(_LOCK_PATH):
         keys = get_keys(group)
@@ -228,10 +231,95 @@ def mark_exhausted(group: str, key: str, retry_after=None) -> None:
             pass
 
 
+def _key_fingerprint(key: str) -> str:
+    """키를 원문 없이 식별하는 지문. 풀 순서(idx)는 회원 키 합류·.env 편집으로 바뀌므로
+    '영구 사망' 같은 오래 가는 표시는 반드시 이 지문으로 남긴다.
+    (comment_gen._key_fingerprint와 같은 정의 — 상태파일이 서로 달라 각자 계산하지만
+     값은 같으므로, 한쪽에서 죽은 키를 다른 쪽 파일에 옮겨 적을 수도 있다)"""
+    return hashlib.sha256((key or "").encode()).hexdigest()[:16]
+
+
+def dead_fingerprints(state=None) -> set:
+    """되살릴 수 없는 키(401/403 계정 사망)의 지문 집합."""
+    st = state if state is not None else _load_state()
+    raw = st.get("dead_keys") or {}
+    return set(raw) if isinstance(raw, (dict, list, set)) else set()
+
+
+def mark_dead(key: str, detail=None) -> None:
+    """키를 **영구 제외**한다 — 401/403은 시간이 지나도 절대 안 풀린다.
+
+    ★왜 TTL 잠금과 갈랐나(2026-09-03 실측): 죽은 키 …nIWJaw가 09-01 22:10부터
+      사흘째 403 PERMISSION_DENIED("Your project has been denied access")를 내는데도
+      매일 다시 호출됐다(09-02 92건, 09-03 21건). 쿼터(429)는 회복되지만 계정
+      비활성(401/403)은 회복되지 않는다 — TTL로 잠그면 만료 후 또 얻어맞는다.
+      쇼핑쇼츠 comment_gen은 09-02에 같은 처방을 받았는데 vault(대시보드)만 없었다.
+      키를 실제로 빼는 것(.env 편집)은 사람 몫이지만, 그때까지 호출을 한 번도 더
+      낭비하지 않는다."""
+    if not key:
+        return
+    fp = _key_fingerprint(key)
+    newly = False
+    with _FileLock(_LOCK_PATH):
+        state = _load_state()
+        raw = state.get("dead_keys")
+        dead = dict(raw) if isinstance(raw, dict) else {f: 0 for f in (raw or [])}
+        if fp not in dead:
+            dead[fp] = time.time()
+            state["dead_keys"] = dead
+            tmp_path = _STATE_PATH.with_suffix(".json.tmp")
+            with open(tmp_path, "w", encoding="utf-8") as f:
+                json.dump(state, f)
+            os.replace(tmp_path, _STATE_PATH)
+            newly = True
+    if newly:      # 관측·경보는 락 밖에서(mark_exhausted와 같은 이유)
+        print(f"key_vault: 키 영구 제외 — …{key[-6:]} ({detail or '401/403'})", file=sys.stderr)
+        try:
+            from shopping_shorts import api_health
+            api_health.record("gemini", api_health.OUT_AUTH, pool="vault", key=key,
+                              detail=f"영구 제외(dead) {detail or ''}"[:300])
+        except Exception:           # noqa: BLE001 — 관측 실패가 제외를 막으면 안 된다
+            pass
+
+
+def without_dead(keys) -> list[str]:
+    """목록에서 영구 사망 키만 뺀다(잠금은 건드리지 않는다).
+
+    ★"전부 소진이면 원본 목록으로 최후 시도"하는 폴백 경로용이다. 소진은 시간이
+      풀어주니 최후에 한 번 더 찔러볼 값어치가 있지만, 401/403은 몇 번을 찔러도
+      실패다 — 폴백에서까지 넣으면 사망 키가 다시 목록 앞에 서게 된다."""
+    dead = dead_fingerprints()
+    if not dead:
+        return list(keys or [])
+    return [k for k in (keys or []) if _key_fingerprint(k) not in dead]
+
+
+def mark_failure(key: str, exc: Exception, group: str = None) -> None:
+    """호출 실패 하나를 받아 **어떤 표시를 남길지 여기서만 정한다**(0순위-B).
+
+    401/403 → 영구 제외 / 429 → 서버가 준 재시도 시각만큼 한시 잠금 / 그 외 → 무시.
+    ★대기하지 않는다. 표시만 남기면 다음 호출의 get_live_keys가 그 키를 빼주므로,
+      호출부는 기다릴 필요 없이 **아직 안 맞은 키로 곧장** 간다(2026-09-03 설계).
+    """
+    if not key or exc is None:
+        return
+    if is_account_disabled_error(exc):
+        mark_dead(key, detail=str(exc)[:120])
+        return
+    if is_quota_error(exc):
+        owner = group or _owner_group(key)
+        if owner:
+            mark_exhausted(owner, key, retry_delay_seconds(exc))
+
+
 def get_live_keys(group: str) -> list[str]:
-    """잠긴 키를 뺀 그룹의 키 목록. ★만료된 잠금은 자동으로 풀린다(2026-09-01)."""
-    exhausted = _live_exhausted(group)         # 만료분은 여기서 걸러진다
-    return [k for i, k in enumerate(get_keys(group)) if i not in exhausted]
+    """잠긴 키를 뺀 그룹의 키 목록. ★만료된 잠금은 자동으로 풀린다(2026-09-01).
+    ★영구 사망 키(401/403)는 지문으로 걸러진다 — 만료가 없다(2026-09-03)."""
+    state = _load_state()
+    exhausted = _live_exhausted(group, state)  # 만료분은 여기서 걸러진다
+    dead = dead_fingerprints(state)
+    return [k for i, k in enumerate(get_keys(group))
+            if i not in exhausted and (not dead or _key_fingerprint(k) not in dead)]
 
 
 def _cascade_groups(group: str) -> list[str]:
