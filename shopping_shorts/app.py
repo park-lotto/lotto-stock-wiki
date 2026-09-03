@@ -5740,6 +5740,43 @@ def api_mix_scene_lab_narration(job_id: str, beat_idx: int, body: dict,
             "tts_ver": beat.get("tts_ver") or 0}
 
 
+@app.post("/api/mix/scene_lab/{job_id}/beat/{beat_idx}/delete")
+def api_mix_scene_lab_beat_delete(job_id: str, beat_idx: int):
+    """문장 칸 하나를 통째로 지운다 — 2026-09-03 고객(이유준) "음성이 두 번 되어서
+    마지막 것을 삭제해야 한다".
+
+    여태 칸은 **고치거나 다시 뽑을 수만** 있었다(narration/regen). 대본이 중복 생성돼
+    같은 말이 두 번 들어간 경우, 글자를 지우면 저장 API가 "대본이 비었어요"로 막고
+    (api_mix_scene_lab_narration), 남겨두면 영상에 같은 말이 두 번 나온다 — 앱 안에
+    빠져나갈 구멍이 없었다.
+
+    ★beat_idx는 **다시 매기지 않는다.** mp3 파일 이름(beat_{beat_idx}_*.mp3)과
+    tts_paths·final_time_of_beat이 전부 beat_idx로 짝을 찾는다(mix_pipeline). 번호를
+    당기면 남은 칸들이 남의 음성을 물고 간다. 목록에서 빼기만 하면 하류는 그대로 맞는다.
+    화면에 보이는 순번(1,2,3…)은 위치로 매기므로 저절로 당겨진다.
+    """
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job or not job.get("edit_plan"):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    # narration 저장과 **같은 가드**(0순위-B) — 만드는 중에 칸을 빼면 만들던 음성과 어긋난다.
+    if job.get("status") in _MIX_ACTIVE_STAGES + ("rendering", "removing_subtitles"):
+        return JSONResponse(status_code=409,
+                            content={"ok": False, "error": "생성·렌더 중에는 칸을 지울 수 없어요"})
+    plan = job["edit_plan"]
+    beats = plan.get("beats") or []
+    beat = next((b for b in beats if b["beat_idx"] == beat_idx), None)
+    if beat is None:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "비트 없음"})
+    if len(beats) <= 1:
+        return JSONResponse(status_code=422,
+                            content={"ok": False, "error": "마지막 한 칸은 지울 수 없어요"})
+    plan["beats"] = [b for b in beats if b["beat_idx"] != beat_idx]
+    store.update_mix_job(job_id, edit_plan=plan)
+    return {"ok": True, "deleted": beat_idx, "left": len(plan["beats"]),
+            "text": (beat.get("narration") or "")[:120]}
+
+
 @app.post("/api/mix/scene_lab/{job_id}/swap_log")
 def api_mix_scene_lab_swap_log(job_id: str, body: dict):
     """칸 타임라인 ⑧ 교체 로그 — "AI 픽 → 사람이 바꾼 장면" 쌍을 기록만 한다.
