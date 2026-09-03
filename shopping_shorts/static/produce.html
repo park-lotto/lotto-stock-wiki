@@ -5830,6 +5830,36 @@ function _cutsOfBeat(i){
   BEATS_PREVIEW.forEach((x,k)=>{ if(_beatNo(x)===no) out.push(k); });
   return out.length ? out : [i];
 }
+// ── 구절 → 컷 고르기는 **여기 한 곳**에서만 한다(0순위-B) ──────────────────
+//   자동흐름(_playBeatCaptions)과 ◀▶ 수동 넘기기(showCutOnly)가 같은 규칙을 써야
+//   "▶로 본 그림"과 "자동으로 흐르는 그림"이 어긋나지 않는다.
+//   ★어느 구절에 어느 컷인지는 **시간**으로 정한다(2026-09-01 사장님 3단계 대조 지적).
+//   개수 비례로 나누면 컷 수 ≠ 구절 수인 칸에서 어긋난다(실측: 컷 5개 1.2/0.9/0.9/0.9/0.6
+//   에 구절 4개 → 2번째 구절 '반전 기능으로'인데 화면은 뒤쪽 컷이 떴다).
+function _cutForSegOf(b, cuts, si){
+  const segs=(b && b.segs && b.segs.length) ? b.segs : [ (b&&b.caption)||'' ];
+  const durs=(b && b.durs) || null;
+  const ends=(()=>{                     // 컷 누적 끝시각(초). 하나라도 없으면 null → 개수 비례
+    const out=[]; let t=0;
+    for(const i of cuts){
+      const d=+((BEATS_PREVIEW[i]||{}).cut_dur);
+      if(!(d>0)) return null;
+      t+=d; out.push(t);
+    }
+    return out;
+  })();
+  if(!ends) return Math.min(cuts.length-1, Math.floor(si*cuts.length/Math.max(1,segs.length)));
+  let t=+((b && b.lead) || 0);
+  for(let i=0;i<si;i++) t += (durs && durs[i]>0) ? durs[i] : 1.1;
+  for(let k=0;k<ends.length;k++) if(t < ends[k] - 0.001) return k;
+  return ends.length-1;
+}
+// 그 컷(cuts 안 순번 k)에 걸리는 **첫 구절**. ◀▶로 컷을 집었을 때 자막도 같이 맞춘다.
+function _segForCutOf(b, cuts, k){
+  const segs=(b && b.segs && b.segs.length) ? b.segs : [ (b&&b.caption)||'' ];
+  for(let si=0; si<segs.length; si++) if(_cutForSegOf(b, cuts, si)===k) return si;
+  return Math.min(segs.length-1, k);    // 구절보다 컷이 많으면 가까운 것으로
+}
 function _playBeatCaptions(b){
   if(CAP_SEQ_TIMER){ clearTimeout(CAP_SEQ_TIMER); CAP_SEQ_TIMER=null; }
   const segs=(b && b.segs && b.segs.length) ? b.segs : [ (b&&b.caption)||'' ];
@@ -5846,30 +5876,7 @@ function _playBeatCaptions(b){
   //   개수 비례로 나누면 컷 수 ≠ 구절 수인 칸에서 어긋난다(실측: 컷 5개 1.2/0.9/0.9/0.9/0.6
   //   에 구절 4개 → 2번째 구절 '반전 기능으로'인데 화면은 뒤쪽 컷이 떴다).
   //   서버가 컷 길이(cut_dur)와 리드인(lead)을 이미 주므로 3단계와 같은 시간축을 쓴다.
-  const _cutEnds=(()=>{                 // 컷 누적 끝시각(초). 하나라도 없으면 null → 개수 비례로 물러선다
-    const out=[]; let t=0;
-    for(const i of cuts){
-      const d=+((BEATS_PREVIEW[i]||{}).cut_dur);
-      if(!(d>0)) return null;
-      t+=d; out.push(t);
-    }
-    return out;
-  })();
-  const _lead=+((b && b.lead) || 0);
-  const _capStarts=(()=>{               // 구절 시작시각(초) — 렌더와 같은 기준점(리드인 포함)
-    const out=[]; let t=_lead;
-    for(let i=0;i<segs.length;i++){
-      out.push(t);
-      t += (durs && durs[i]>0) ? durs[i] : 1.1;
-    }
-    return out;
-  })();
-  const _cutForSeg=(si)=>{
-    if(!_cutEnds) return Math.min(cuts.length-1, Math.floor(si*cuts.length/Math.max(1,segs.length)));
-    const t=_capStarts[si] || 0;
-    for(let k=0;k<_cutEnds.length;k++) if(t < _cutEnds[k] - 0.001) return k;
-    return _cutEnds.length-1;
-  };
+  const _cutForSeg=(si)=>_cutForSegOf(b, cuts, si);
   const paintScene=(si)=>{
     if(!cuts.length) return;
     const k=_cutForSeg(si);
@@ -5911,15 +5918,43 @@ function _playBeatCaptions(b){
     play();
   }
 }
-// ◀ ▶ 는 **칸 단위**로 넘긴다(2026-09-01). 컷은 자막을 따라 자동으로 흘러가므로,
-// 예전처럼 컷 단위로 넘기면 같은 칸 안에서 눌러도 아무 일이 없는 것처럼 보인다.
+// ◀ ▶ 는 **컷 한 장씩** 넘긴다(2026-09-03 사장님 "1장씩 넘어가야 하는데 단락별로
+// 3~4장씩 넘어간다"). 예전엔 칸 단위였다 — 컷이 자동으로 흘러가니 칸으로 묶었는데,
+// 그러면 한 번 누를 때 그 칸의 컷 3~4개를 통째로 건너뛴다.
+// 수동으로 넘기는 순간 자동흐름은 멈춘다 — 안 그러면 다음 바퀴가 그 칸 첫 컷으로 되돌린다.
 function stepBeat(d){
   if(!BEATS_PREVIEW.length) return;
   const n=BEATS_PREVIEW.length;
-  const cuts=_cutsOfBeat(BEAT_IDX);
-  const next=(d>0) ? (cuts[cuts.length-1]+1) : (cuts[0]-1);
-  const idx=((next%n)+n)%n;
-  showBeat(_cutsOfBeat(idx)[0]);      // 어느 방향이든 그 칸의 첫 컷부터
+  showCutOnly((((BEAT_IDX + (d>0?1:-1)) % n) + n) % n);
+}
+// 컷 한 장을 **그 자리에서 즉시** 그린다 — 미리받기를 기다리지 않는다(느림의 원인이었다).
+// 자막은 그 컷에 걸리는 구절로 맞춘다(자동흐름과 같은 규칙: _cutForSegOf).
+function showCutOnly(idx){
+  const x=BEATS_PREVIEW[idx]; if(!x) return;
+  if(CAP_SEQ_TIMER){ clearTimeout(CAP_SEQ_TIMER); CAP_SEQ_TIMER=null; }
+  CAP_SEQ_GEN++;                       // 기다리던 옛 재생이 깨어나 덮어쓰지 못하게
+  CAP_PAUSED=true;
+  if(typeof _capPlayIcon==='function') _capPlayIcon();
+  BEAT_IDX=idx;
+  const cuts=_cutsOfBeat(idx);
+  const k=Math.max(0, cuts.indexOf(idx));
+  const segs=(x.segs && x.segs.length) ? x.segs : [ x.caption||'' ];
+  PREVIEW_CAP_TEXT = segs[_segForCutOf(x, cuts, k)] || '';
+  if(typeof updateCaption==='function') updateCaption();
+  const bg=document.getElementById('hcPreviewBg');
+  const sb=document.getElementById('sceneBg');
+  if(bg && sb && sb.checked){
+    const u=_beatFrameUrl(x);
+    if(u && bg.getAttribute('src')!==u){ bg.onerror=()=>{ bg.style.display='none'; }; bg.src=u; }
+    bg.style.display='block';
+  }
+  const cnt=document.getElementById('beatCount');
+  if(cnt) cnt.textContent=(idx+1)+' / '+BEATS_PREVIEW.length+' 장면'
+          + ((x.cut_of>1) ? (' (자막 '+(_beatNo(x)+1)+'번의 '+(x.cut+1)+'/'+x.cut_of+' 컷)') : '');
+  renderBeatTools();
+  if(typeof zoomOnBeatChange==='function') zoomOnBeatChange(false);
+  if(typeof hlLoadFromBeat==='function') hlLoadFromBeat();
+  try{ _prefetchNeighborFrames(idx); }catch(e){}
 }
 
 // ── ⏸/▶ 자막·화면 자동흐름 (2026-09-01) ────────────────────────────────
