@@ -155,10 +155,15 @@ def test_retry_after_is_used(tmp_path, monkeypatch):
 
 
 def test_lock_is_clamped(tmp_path, monkeypatch):
-    """★영구 낙인을 만들지 않는다 — 상한 6시간. 아무리 큰 값이 와도 하루를 안 넘긴다."""
+    """★영구 낙인을 만들지 않는다 — 상한 25시간. 아무리 큰 값이 와도 반드시 한 번은 다시 시험한다.
+
+    ★6시간 → 25시간(2026-09-03). 코드 주석에 예고돼 있던 함정이 터졌다: mark_failure가
+      retry_delay_seconds를 넘기기 시작했는데, **일일** 소진은 태평양 자정까지 최대 24시간을
+      기다려야 한다. 6시간으로 깎으면 그 키가 6시간 뒤 풀려 또 얻어맞는다(comment_gen이
+      09-02에 같은 이유로 24시간으로 올렸다)."""
     import time
     monkeypatch.setattr(kv, "_STATE_PATH", _tmp_state(tmp_path, {"date": "x", "exhausted": {}}))
     monkeypatch.setattr(kv, "_LOCK_PATH", tmp_path / "s.lock")
     monkeypatch.setattr(kv, "get_keys", lambda g: ["K0", "K1"])
     kv.mark_exhausted("general", "K0", 999999)
-    assert kv._live_exhausted("general")[0] - time.time() <= 6 * 3600 + 5
+    assert kv._live_exhausted("general")[0] - time.time() <= 25 * 3600 + 5
