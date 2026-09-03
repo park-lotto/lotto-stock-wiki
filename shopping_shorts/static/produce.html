@@ -5922,11 +5922,6 @@ function _playBeatCaptions(b){
 // 3~4장씩 넘어간다"). 예전엔 칸 단위였다 — 컷이 자동으로 흘러가니 칸으로 묶었는데,
 // 그러면 한 번 누를 때 그 칸의 컷 3~4개를 통째로 건너뛴다.
 // 수동으로 넘기는 순간 자동흐름은 멈춘다 — 안 그러면 다음 바퀴가 그 칸 첫 컷으로 되돌린다.
-function stepBeat(d){
-  if(!BEATS_PREVIEW.length) return;
-  const n=BEATS_PREVIEW.length;
-  showCutOnly((((BEAT_IDX + (d>0?1:-1)) % n) + n) % n);
-}
 // 컷 한 장을 **그 자리에서 즉시** 그린다 — 미리받기를 기다리지 않는다(느림의 원인이었다).
 // 자막은 그 컷에 걸리는 구절로 맞춘다(자동흐름과 같은 규칙: _cutForSegOf).
 function showCutOnly(idx){
@@ -5951,10 +5946,15 @@ function showCutOnly(idx){
   const cnt=document.getElementById('beatCount');
   if(cnt) cnt.textContent=(idx+1)+' / '+BEATS_PREVIEW.length+' 장면'
           + ((x.cut_of>1) ? (' (자막 '+(_beatNo(x)+1)+'번의 '+(x.cut+1)+'/'+x.cut_of+' 컷)') : '');
-  renderBeatTools();
+  if(typeof renderBeatTools==='function') renderBeatTools();
   if(typeof zoomOnBeatChange==='function') zoomOnBeatChange(false);
   if(typeof hlLoadFromBeat==='function') hlLoadFromBeat();
   try{ _prefetchNeighborFrames(idx); }catch(e){}
+}
+function stepBeat(d){
+  if(!BEATS_PREVIEW.length) return;
+  const n=BEATS_PREVIEW.length;
+  showCutOnly((((BEAT_IDX + (d>0?1:-1)) % n) + n) % n);
 }
 
 // ── ⏸/▶ 자막·화면 자동흐름 (2026-09-01) ────────────────────────────────
