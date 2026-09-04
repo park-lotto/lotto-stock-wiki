@@ -1,11 +1,11 @@
 {
  "wrap": true,
- "font": "Pretendard-ExtraBold.otf",
- "size": 60,
+ "font": "TmonMonsori.ttf",
+ "size": 62,
  "color": "#FFFFFF",
- "color2": "#FFE600",
+ "color2": "#FF3B30",
  "y": 15,
- "x": 50,
+ "x": 51,
  "weight": 900,
  "outline": true,
  "outline_color": "#000000",
@@ -17,11 +17,11 @@
  "shadow": true,
  "shadow_color": "#000000",
  "shadow_d": 4,
- "text": "다이소 직원들도\n쟁여둔다는 만능 후크",
+ "text": "부모들을 오열하게 만든\n다이소 제품 ㄷㄷ",
  "highlight_rules": [
   {
-   "keyword": "쟁여둔다는 만능 후크",
-   "color": "#FFE600",
+   "keyword": "다이소 제품 ㄷㄷ",
+   "color": "#FF3B30",
    "box": false
   }
  ]
