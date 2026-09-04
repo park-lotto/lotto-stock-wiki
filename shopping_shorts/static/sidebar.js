@@ -1025,7 +1025,7 @@
           '<img src="' + _cfEsc(it.image || "") + '" style="width:100%;aspect-ratio:1;object-fit:contain;border-radius:6px;background:#fff" onerror="this.style.visibility=\'hidden\'">' +
           '<div style="font-size:11px;line-height:1.35;margin-top:4px;max-height:44px;overflow:hidden" title="' + _cfEsc(it.name) + '">' + _cfEsc(it.name) + '</div>' +
           '<div style="font-size:12px;font-weight:700;margin-top:3px">' + _cfEsc(it.price || "") + (it.is_rocket ? ' <span style="font-size:10px;color:#5fe3d6">🚀로켓</span>' : '') + '</div>' +
-          '<div id="cfLink' + i + '" style="font-size:10px;color:#37e0bd;word-break:break-all;margin-top:4px">' + (it.short_url ? _cfEsc(it.short_url) : '') + '</div>' +
+          '<div id="cfLink' + i + '" onclick="window.ssCoupangFind.link(' + i + ')" title="누르면 복사" style="font-size:11px;color:#37e0bd;word-break:break-all;margin-top:4px;cursor:pointer;font-weight:700">' + (it.short_url ? '📋 ' + _cfEsc(it.short_url) : '') + '</div>' +
           '<div style="display:flex;gap:4px;margin-top:6px">' +
             '<button onclick="window.ssCoupangFind.link(' + i + ')" style="flex:1;padding:6px 4px;font-size:11px;border-radius:7px;border:1px solid #b8860b;background:linear-gradient(90deg,#3a2f0d,#2a2408);color:#ffd76b;cursor:pointer">🔗 내 링크</button>' +
             '<button onclick="window.open(\'' + _cfEsc(it.url) + '\',\'_blank\')" style="padding:6px 6px;font-size:11px;border-radius:7px;border:1px solid #1e2a24;background:#0f1512;color:#e6efe9;cursor:pointer">보기</button>' +
@@ -1065,7 +1065,8 @@
         }
         _cfRender(_cfState.items.length + "개 있음 — " + (d.source === "api_shared"
           ? "쿠팡에 있습니다. 추적 링크는 내 파트너스 키를 등록해야 만들어집니다(검색만 가능)"
-          : "🔗 내 링크를 누르면 추적 링크가 만들어집니다" + (d.source === "api" ? "" : " (내 파트너스 키를 등록하면 더 빠르고 정확합니다)")));
+          : (d.source === "api" ? "내 추적 링크를 만드는 중…" : "🔗 내 링크를 누르면 추적 링크가 만들어집니다 (내 파트너스 키를 등록하면 더 빠르고 정확합니다)")));
+        if (d.source === "api") _cfAutoLinks();     /* 키 있는 회원: 카드 전부에 짧은 링크를 한 번에 */
         if (!_cfState.chips.length) _cfSuggest(q);
       })
       .catch(function () { _cfRender("네트워크 오류", "#ff8080"); });
@@ -1076,6 +1077,21 @@
       .then(function (r) { return r.json(); })
       .then(function (d) { var qs = (d && d.queries) || []; if (qs.length) { _cfState.chips = [q].concat(qs.filter(function (x) { return x && x !== q; })).slice(0, 6); _cfRender((_cfEl("cfMsg") || {}).textContent, (_cfEl("cfMsg") || {}).style ? _cfEl("cfMsg").style.color : ""); } })
       .catch(function () {});
+  }
+  /* 검색 결과 전부에 짧은 추적 링크를 **한 번의 호출로** 붙인다(2026-09-04 사장님 "누르면 링크까지").
+     실패하면 카드의 🔗 내 링크 버튼이 그대로 남는다(단건 재시도). */
+  function _cfAutoLinks() {
+    var urls = _cfState.items.map(function (it) { return it.url; }).filter(Boolean);
+    if (!urls.length) return;
+    fetch("/api/coupang/deeplink", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ urls: urls }) })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        var by = {}; ((d && d.links) || []).forEach(function (l) { if (l.shorten_url) by[l.url] = l.shorten_url; });
+        var n = 0;
+        _cfState.items.forEach(function (it) { if (by[it.url]) { it.short_url = by[it.url]; n++; } });
+        _cfRender(n ? (_cfState.items.length + "개 있음 — 내 추적 링크 " + n + "개 준비됨. 카드의 링크를 누르면 복사됩니다") : (_cfState.items.length + "개 있음 — 🔗 내 링크를 누르면 추적 링크가 만들어집니다"), n ? "#5fe3d6" : "");
+      })
+      .catch(function () { _cfRender(_cfState.items.length + "개 있음 — 🔗 내 링크를 누르면 추적 링크가 만들어집니다"); });
   }
   function _cfLink(i) {
     var it = _cfState.items[i]; if (!it) return;

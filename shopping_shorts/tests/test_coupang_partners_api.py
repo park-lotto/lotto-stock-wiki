@@ -259,3 +259,17 @@ def test_save_without_key_drops_foreign_tagged_link(monkeypatch, tmp_path):
     body = r if isinstance(r, dict) else json.loads(r.body)
     assert body["ok"] and body["product"]["partner_url"] == "" and "내 파트너스 키" in body["product"]["partner_error"]
     assert body["final_link"] == "https://www.coupang.com/vp/products/1"
+
+
+
+def test_deeplink_endpoint_batch(monkeypatch):
+    """검색 결과 카드 전부에 링크를 한 번에 — urls 일괄 지원."""
+    from shopping_shorts import app as a
+    monkeypatch.setattr(a, "_coupang_member_key", lambda customer_id=None: ("AK", "SK"))
+    monkeypatch.setattr(cp, "_record", lambda *a_, **k: None)
+    monkeypatch.setattr(cp, "_call", lambda m, p, ak, sk, body=None, timeout=15: (200, {"rCode": "0", "data": [
+        {"originalUrl": u, "shortenUrl": "https://link.coupang.com/a/S" + u[-1], "landingUrl": ""} for u in body["coupangUrls"]]}))
+    r = a.api_coupang_deeplink({"urls": ["https://www.coupang.com/vp/products/1", "https://naver.com/x",
+                                          "https://link.coupang.com/re/AFFSDP?lptag=AF_X&pageKey=2"]})
+    assert r["ok"] and [l["shorten_url"] for l in r["links"]] == ["https://link.coupang.com/a/S1", "https://link.coupang.com/a/S2"]
+    assert r["links"][1]["url"] == "https://www.coupang.com/vp/products/2"
