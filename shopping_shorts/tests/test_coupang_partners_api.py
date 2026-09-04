@@ -273,3 +273,15 @@ def test_deeplink_endpoint_batch(monkeypatch):
                                           "https://link.coupang.com/re/AFFSDP?lptag=AF_X&pageKey=2"]})
     assert r["ok"] and [l["shorten_url"] for l in r["links"]] == ["https://link.coupang.com/a/S1", "https://link.coupang.com/a/S2"]
     assert r["links"][1]["url"] == "https://www.coupang.com/vp/products/2"
+
+
+
+def test_search_limit_is_capped_at_10(monkeypatch):
+    """★라이브 실측: limit=12면 파트너스 API가 실패해 릴레이 60초 대기로 떨어졌다. 상한 10을 코드가 지킨다."""
+    seen = {}
+    monkeypatch.setattr(cp, "_record", lambda *a, **k: None)
+    monkeypatch.setattr(cp, "_call", lambda m, p, ak, sk, body=None, timeout=15: (seen.update(path=p), (200, {"rCode": "0", "data": {"productData": []}}))[1])
+    cp.search_products("x", limit=12, access_key="AK", secret_key="SK")
+    assert seen["path"].endswith("&limit=10")
+    cp.search_products("x", limit=0, access_key="AK", secret_key="SK")
+    assert seen["path"].endswith("&limit=10")

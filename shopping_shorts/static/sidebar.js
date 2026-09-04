@@ -1054,7 +1054,7 @@
     _cfState.kw = q; var inp = _cfEl("cfQuery"); if (inp) inp.value = q;
     var out = _cfEl("cfOut"); if (out) out.href = "https://www.coupang.com/np/search?q=" + encodeURIComponent(q);
     _cfState.items = []; _cfRender("쿠팡에서 찾는 중…");
-    fetch("/api/coupang/search?q=" + encodeURIComponent(q) + "&limit=12")
+    fetch("/api/coupang/search?q=" + encodeURIComponent(q) + "&limit=10")
       .then(function (r) { return r.json(); })
       .then(function (d) {
         _cfState.items = (d && d.items) || [];
