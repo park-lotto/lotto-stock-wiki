@@ -19,9 +19,10 @@ def take(name):
 
 names=['function _restoreBody(','function _healDefaults(','function _isBody(','function _touchBody(','function setBig(','function bumpBig(',
        'function setSub(','function bumpSub(','function _mirrorHc(','function setHc(',
-       'function bumpHc(','function set(','function bump(','function applyLayout(','function toggleSame(']
+       'function bumpHc(','function set(','function bump(','function applyLayout(','function toggleSame(',
+       'function setCh(','function _chanReset(','function _chanFor(']
 # 함수들이 쓰는 상수도 원본에서 그대로 떼어온다(손으로 베끼면 원본과 어긋난다)
-consts=[l for l in src if l.strip().startswith('const _BODY_KEEP_KEYS=')]
+consts=[l for l in src if l.strip().startswith('const _BODY_KEEP_KEYS=') or l.strip().startswith('let CH_MINE=')]
 assert consts, '_BODY_KEEP_KEYS 를 못 찾았다'
 parts=[c.strip() for c in consts]+[take(n) for n in names]
 open(sys.argv[1],'w',encoding='utf-8').write('\n'.join(parts))

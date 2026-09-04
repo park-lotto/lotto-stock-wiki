@@ -1,18 +1,18 @@
 {
  "wrap": true,
- "font": "Pretendard-ExtraBold.otf",
- "size": 81,
+ "font": "NotoSansKR-Bold.otf",
+ "size": 70,
  "color": "#FFFFFF",
- "color2": "#64E9CC",
+ "color2": "#FFFFFF",
  "y": 38,
  "x": 50,
  "weight": 900,
  "outline": true,
- "outline_color": "#111111",
- "outline_w": 7,
- "box": false,
- "box_color": "#222222",
+ "outline_color": "#000000",
+ "outline_w": 5,
+ "box": true,
+ "box_color": "#000000",
  "box_pad": 16,
  "box_opacity": 100,
- "text": ""
+ "text": "다이소 직원들도\n쟁여둔다는 만능 후크"
 }

@@ -130,7 +130,7 @@ details .inner{padding:10px 0 0;display:flex;flex-direction:column;gap:12px}
  </div><div class="sec"><div class="t">틀 고르기 <small>— ★는 실제 채널 실측 · 지금 <b id="partName">후킹</b> 틀</small></div>
     <div id="tplGroups"></div></div>
    <div class="sec"><div class="t">채널명 <small>— 맨 위 띠 가운데</small></div>
-    <div class="row"><input type="text" id="channel" value="살림킹왕짱" placeholder="채널명" oninput="set('channel',this.value)" style="width:120px">
+    <div class="row"><input type="text" id="channel" value="살림킹왕짱" placeholder="채널명" oninput="setCh(this.value)" style="width:120px">
      <select id="ch_font" onchange="set('ch_font',this.value)"><option value="">채널 폰트</option></select>
      <button onclick="bump('ch_size',-4,40)">−</button><span class="num" id="ch_size_v">기본</span><button onclick="bump('ch_size',4,40)">＋</button>
      <span class="lbl" style="min-width:auto">글자색</span><input type="color" id="on_bar_color" value="#ffffff" oninput="set('on_bar_color',this.value)">
@@ -316,12 +316,17 @@ const MY=(()=>{try{return JSON.parse(localStorage.getItem('deco_mypresets')||'[]
 function _save(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}pushStateFile();}
 function _msg(t){const m=$('#saveMsg');m.textContent=t;setTimeout(()=>{if(m.textContent===t)m.textContent='';},4000);}
 function saveAsDefault(){const id=SPECS.hook.preset;if(!id)return;DEF[id]={hook:JSON.parse(JSON.stringify(SPECS.hook)),body:JSON.parse(JSON.stringify(SPECS.body)),cap:CAPS?{style:CAPS.style,pos:CAPS.beats[0].pos,y_pct:CAPS.beats[0].y_pct}:null};_save('deco_defaults',DEF);_msg('이 채널의 기본값으로 저장했어요. 다음에 이 틀을 고르면 이 값으로 열립니다');}
-function clearDefault(){const id=SPECS.hook.preset;if(DEF[id]){delete DEF[id];_save('deco_defaults',DEF);}if(LAYOUTS[id])applyLayout(id);_msg('채널 원래 값으로 되돌렸어요');}
+function clearDefault(){const id=SPECS.hook.preset;_chanReset();if(DEF[id]){delete DEF[id];_save('deco_defaults',DEF);}if(LAYOUTS[id])applyLayout(id);_msg('채널 원래 값으로 되돌렸어요');}
 function saveMyPreset(){const id=SPECS.hook.preset;const base=(LAYOUTS[id]&&LAYOUTS[id].name)||(PRESETS.find(p=>p.id===id)||{}).name||id;const name=base+' · 내 설정 '+(MY.length+1);MY.push({name,hook:JSON.parse(JSON.stringify(SPECS.hook)),body:JSON.parse(JSON.stringify(SPECS.body)),cap:CAPS?{style:CAPS.style,pos:CAPS.beats[0].pos,y_pct:CAPS.beats[0].y_pct}:null});_save('deco_mypresets',MY);renderMyCards();_msg('⭐ "'+name+'" 로 저장했어요. 「내 것」에서 고를 수 있어요');}
 function renderMyCards(){const row=document.querySelector('.cards.tpl[data-g="mine"]');if(!row)return;row.querySelectorAll('[data-tpl="myp"]').forEach(e=>e.remove());MY.forEach((m,i)=>{const d=document.createElement('div');d.dataset.tpl='myp';d.dataset.i=i;d.innerHTML='<i style="display:flex;align-items:center;justify-content:center;font-size:20px">⭐</i><b>'+m.name+'</b>';row.appendChild(d);});}
 function loadMyPreset(i){const m=MY[i];if(!m)return;SPECS.hook=JSON.parse(JSON.stringify(m.hook));SPECS.body=JSON.parse(JSON.stringify(m.body));SPEC=SPECS[part];capSwitchTo(SPECS.hook.preset);if(m.cap&&CAPS){CAPS.style=Object.assign({},CAP_DEFAULT,m.cap.style||{});CAPS.beats.forEach(b=>{b.pos=m.cap.pos||'mid';b.y_pct=m.cap.y_pct;});capSave();capSyncUI();capRender();}syncFromSpec();render();hint.textContent='⭐ '+m.name;}
 // 사장님이 본문을 한 번이라도 직접 고쳤으면, 카드를 갈아타도 본문에 적어둔 글·크기·색은 지킨다.
 // (틀 모양·띠는 새 카드 것으로 바뀐다) — 카드 경로와 저장값(DEF) 복원 경로가 같은 함수를 쓴다.
+let CH_MINE=false;  // 사장님이 채널명을 직접 고쳐 썼나 (고쳤으면 카드를 갈아타도 그 이름을 지킨다)
+function setCh(v){CH_MINE=true;$('#channel').value=v;set('channel',v);}
+function _chanReset(){CH_MINE=false;}  // ↩ 채널 원래 값으로 되돌릴 때 '직접 친 이름' 표시도 푼다
+// 카드를 골랐을 때 띠에 뜰 이름을 정하는 곳 — 여기 한 군데서만 정한다
+function _chanFor(id){if(CH_MINE)return $('#channel').value;const L=(typeof LAYOUTS!=='undefined'&&LAYOUTS[id])||{};return L.name||$('#channel').value;}
 const _BODY_KEEP_KEYS=['title','title_size','title_font','title_color','views','comments','sub_text_c'];
 // 옛 「후킹 → 본문 같게」 버그로 본문이 후킹 복사본으로 굳어버린 저장값을 되살린다.
 // (그 버튼이 본문을 통째로 덮고 그대로 기본값에 저장돼, 카드를 다시 눌러도 안 돌아왔다)
@@ -342,13 +347,13 @@ function _restoreBody(keep){if(!keep||!SPECS.body)return;SPECS.body._touched=tru
  for(const k of _BODY_KEEP_KEYS)if(keep[k]!==undefined)SPECS.body[k]=keep[k];
  if(keep.hc&&keep.hc.text)SPECS.body.hc=Object.assign({},SPECS.body.hc,{text:keep.hc.text});}
 function applyLayout(id){const _keepBody=(SPECS.body&&SPECS.body._touched)?JSON.parse(JSON.stringify(SPECS.body)):null;
- BODY_BACKUP=null;const _sb=document.getElementById('sameBtn');if(_sb){_sb.textContent='후킹 → 본문 같게';_sb.classList.remove('on');}const L=LAYOUTS[id],p=PRESETS.find(x=>x.id===id)||{};const keepText=L.sample||((SPECS.hook.hc||{}).text)||$('#hcText').value||'';const ch=$('#channel').value;
+ BODY_BACKUP=null;const _sb=document.getElementById('sameBtn');if(_sb){_sb.textContent='후킹 → 본문 같게';_sb.classList.remove('on');}const L=LAYOUTS[id],p=PRESETS.find(x=>x.id===id)||{};const keepText=L.sample||((SPECS.hook.hc||{}).text)||$('#hcText').value||'';const ch=_chanFor(id);if($('#channel').value!==ch)$('#channel').value=ch;
  const mk=(part)=>{const d=L[part]||{};const hc=Object.assign({},HC_DEFAULT,p.headcopy||{},d.hc||{});const noHc=(d.hc&&d.hc.text==='');if((part==='hook'&&!noHc)||(part==='body'&&L.body_keep_hc))hc.text=keepText;else hc.text='';if(part==='body'&&L.body_keep_hc)Object.assign(hc,L.hook.hc||{},{text:keepText});hc.x=hc.x||50;
   const sp=Object.assign({},BASE,{preset:id,channel:ch,title:((part==='body'&&!L.body_keep_hc)||noHc)?keepText.replace(/\s*\r?\n\s*/g,' '):''},d.spec||{},{hc});if(!('sub_line' in (d.spec||{}))&&part==='hook'&&L.hook&&L.hook.spec&&L.hook.spec.sub_line)sp.sub_line=L.hook.spec.sub_line;return sp;};
  SPECS.hook=mk('hook');SPECS.body=mk('body');_restoreBody(_keepBody);
  if(SPECS.hook.sub_line&&!SPECS.hook.sub_line_size)SPECS.hook.sub_line_size=28;SPEC=SPECS[part];
  if(typeof capSwitchTo==='function')capSwitchTo(id);
- $('#hcText').value=keepText;$('#bar_color').value=(SPEC.bar_color||p.bar||'#ffffff');$('#on_bar_color').value=(SPEC.on_bar_color||p.on_bar||'#111111');if(DEF[id]){const keep=SPECS.hook.hc.text;SPECS.hook=JSON.parse(JSON.stringify(DEF[id].hook));SPECS.body=JSON.parse(JSON.stringify(DEF[id].body));SPECS.hook.hc.text=keep;_restoreBody(_keepBody);SPEC=SPECS[part];syncFromSpec();render();hcFit(SPECS.hook,true);hint.textContent='내가 만진 값 그대로 열었습니다 (↩ 채널 원래 값으로 되돌릴 수 있어요)';return;}
+ $('#hcText').value=keepText;$('#bar_color').value=(SPEC.bar_color||p.bar||'#ffffff');$('#on_bar_color').value=(SPEC.on_bar_color||p.on_bar||'#111111');if(DEF[id]){const keep=SPECS.hook.hc.text;SPECS.hook=JSON.parse(JSON.stringify(DEF[id].hook));SPECS.body=JSON.parse(JSON.stringify(DEF[id].body));SPECS.hook.hc.text=keep;_restoreBody(_keepBody);SPEC=SPECS[part];SPECS.hook.channel=SPECS.body.channel=ch;$('#channel').value=ch;syncFromSpec();render();hcFit(SPECS.hook,true);hint.textContent='내가 만진 값 그대로 열었습니다 (↩ 채널 원래 값으로 되돌릴 수 있어요)';return;}
  syncUI();render();hcFit(SPECS.hook);hint.textContent='★ '+(L.name||id)+' 완성 화면을 올렸습니다. 문구만 바꾸세요';}
 function pickTpl(t){const k=t.dataset.tpl;if(k==='myp'){loadMyPreset(+t.dataset.i);return;}tplImg.style.display='none';hcHtml.style.display='none';
  if(k==='preset'&&LAYOUTS[t.dataset.id]){applyLayout(t.dataset.id);return;}
