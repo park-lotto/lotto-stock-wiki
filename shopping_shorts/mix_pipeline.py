@@ -3024,6 +3024,31 @@ def run_clean_sources(job_id, db_path, work_root):
 
 
 @_owned_job
+# ── 편성 지문(2026-09-02) ───────────────────────────────────────────────────
+# 왜: 미리보기를 만든 뒤 편성(대본·컷)이 바뀌어도 **미리보기 파일은 그대로 남는다**.
+# 고객은 낡은 미리보기와 새 최종을 나란히 받아 "영상이 두 개다 / 장면이 바뀌었다"로 본다
+# (실사고 job 76665d680876: 미리보기 09-01 23:31 vs 최종 09-02 10:05, 8개 시점 전부 다른 컷).
+# 그래서 **무엇으로 만들었는지**를 지문으로 남기고, 달라졌으면 화면이 말하게 한다.
+# ★지문 만드는 곳은 여기 한 곳이다(0순위-B) — 만들 때와 비교할 때가 어긋나면 소용없다.
+def plan_signature(plan):
+    """편성 지문 — 화면에 보이는 것이 달라지는 값만 넣는다(문장·컷·길이)."""
+    import hashlib
+    import json as _json
+    beats = ((plan or {}).get("beats") or [])
+    body = [{
+        "n": (b or {}).get("narration") or "",
+        "s": (b or {}).get("seg_ids") or [],
+        "c": (b or {}).get("cutaway") or "",
+        "d": round(float((b or {}).get("seconds") or 0), 2),
+    } for b in beats]
+    raw = _json.dumps(body, ensure_ascii=False, sort_keys=True)
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:16]
+
+
+def preview_sig_path(work_root, job_id):
+    return Path(work_root) / job_id / "preview.sig"
+
+
 def run_preview(job_id, db_path, work_root):
     """1단계 미리보기: 유료 자막제거(VMake)·꾸미기 없이 믹스+음성+기본자막만 렌더.
 
@@ -3082,6 +3107,12 @@ def run_preview(job_id, db_path, work_root):
             ensure_faststart(out_path)
         except Exception as e:      # 실패해도 원본은 그대로 — 미리보기를 못 쓰게 만들진 않는다
             print(f"[preview] faststart 보장 실패(원본 유지): {type(e).__name__}", file=sys.stderr)
+        # 이 미리보기가 **무슨 편성으로** 만들어졌는지 남긴다 — 나중에 편성이 바뀌면
+        # 화면이 "낡았다"고 말할 수 있다(못 써도 미리보기 자체는 정상이라 조용히 넘어간다).
+        try:
+            preview_sig_path(work_root, job_id).write_text(plan_signature(plan), encoding="utf-8")
+        except Exception:
+            print("[preview] 편성 지문 기록 실패(무시)", file=sys.stderr)
         store.update_mix_job(job_id, preview_status="ready", preview_path=str(out_path))
     except Exception as e:  # noqa: BLE001 — BackgroundTasks라 밖에서 아무도 안 받는다
         traceback.print_exc(file=sys.stderr)

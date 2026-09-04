@@ -25,7 +25,7 @@ def test_컷마다_프레임_파일명이_전부_다르다():
         get_boundaries=lambda p: [0.0, 3.0, 6.0, 9.0],
         extract_frame_at=fake_frame_at, extract_audio=lambda v, o: None,
         transcribe_words=lambda m: None,
-        tag_frames=lambda groups, c, s: [{"scene_desc": "x", "shot_role": "완성"}] * len(s))
+        tag_frames=lambda groups, c, s, b=None: [{"scene_desc": "x", "shot_role": "완성"}] * len(s))
     assert names and all(names), "파일명 없이 부르면 기본값(frame_hint.jpg)에 덮어쓴다"
     assert len(set(names)) == len(names), f"중복 파일명: {names}"
     assert len(names) == 3 * fs.FRAMES_PER_CUT
@@ -34,8 +34,9 @@ def test_컷마다_프레임_파일명이_전부_다르다():
 def test_태깅에는_구간별_묶음으로_넘긴다():
     got = {}
 
-    def fake_tag(groups, caption, segs):
+    def fake_tag(groups, caption, segs, brief=None):
         got["groups"] = groups
+        got["brief"] = brief
         return [{"scene_desc": "a", "shot_role": "완성"}] * len(segs)
 
     fs.extract_script_frames(
@@ -67,20 +68,70 @@ def test_구간의_프레임들은_띠_한_장으로_합쳐져_구간당_이미�
 
     got = {}
 
-    def fake_tag(groups, caption, segs):
+    def fake_tag(groups, caption, segs, brief=None):
         got["groups"] = groups
+        got["brief"] = brief
         return [{"scene_desc": "a", "shot_role": "완성"}] * len(segs)
 
-    fs.extract_script_frames(
+    briefs = []
+
+    def fake_brief(grid, caption, transcript):
+        briefs.append(grid)
+        return {"product": "쿠키", "flow": "0~3초 반죽 → 3~6초 완성", "confidence": "높음"}
+
+    out = fs.extract_script_frames(
         "v.mp4", "s1", _no_classic=True,
         get_boundaries=lambda p: [0.0, 3.0, 6.0],
         extract_frame_at=real_frame_at, extract_audio=lambda v, o: None,
-        transcribe_words=lambda m: None, tag_frames=fake_tag)
+        transcribe_words=lambda m: None, tag_frames=fake_tag, story_brief=fake_brief)
     groups = got["groups"]
     assert len(groups) == 2 and all(len(g) == 1 for g in groups)
     strip = Image.open(groups[0][0])
     assert strip.height == fs.STRIP_HEIGHT
     assert strip.width > fs.STRIP_HEIGHT * 64 / 36 * 2, "띠 폭이 프레임 3장 합보다 작다 — 안 합쳐졌다"
+    # ★1차 브리프: 격자 한 장이 만들어져 브리프 함수에 갔고, 그 결과가 2차 태깅과 반환값에 실린다
+    assert briefs and briefs[0] and Image.open(briefs[0]).height == fs.GRID_HEIGHT
+    assert got["brief"]["product"] == "쿠키"
+    assert out["source_brief"]["flow"].startswith("0~3초")
+
+
+def test_brief_block_은_불명이면_보수_지시를_붙이고_비면_빈문자열():
+    assert fs.brief_block({}) == ""
+    b = fs.brief_block({"product": "방충망 청소 도구", "flow": "0~4초 문제 → 4~15초 사용", "confidence": "불명"})
+    assert "방충망 청소 도구" in b and "0~4초 문제" in b and "지어내지 마라" in b
+    assert "지어내지 마라" not in fs.brief_block({"product": "x", "confidence": "높음"})
+
+
+def test_태깅_프롬프트에_브리프와_공용_필드정의가_들어간다(monkeypatch, tmp_path):
+    from shopping_shorts import comment_gen, script_extract
+    seen = {}
+
+    class _M:
+        def generate_content(self, model, contents, config):
+            seen["prompt"] = contents[0]
+            return _FakeResp('{"tags": [{"seg_no": 1, "scene_desc": "a", "shot_role": "완성", '
+                             '"label": "완성품 클로즈업", "use_point": "마무리 대목에", "change": "매끈해졌다", '
+                             '"action": "없음", "has_effect": true}]}')
+
+    class _C:
+        models = _M()
+
+    monkeypatch.setattr(comment_gen, "_current_key_and_idx", lambda: ("k", 0))
+    monkeypatch.setattr(comment_gen, "_client_for_key", lambda k: _C())
+    f = tmp_path / "a.jpg"; f.write_bytes(b"\xff\xd8x")
+    tags = fs._gemini_tag_frames([[str(f)]], "", [{"start": 0, "end": 1, "text": ""}],
+                                 brief={"product": "방충망 청소 도구", "flow": "0~4초 문제"})
+    p = seen["prompt"]
+    assert "방충망 청소 도구" in p and "0~4초 문제" in p
+    # 필드 정의는 script_extract 한 곳의 문장 그대로다(복사본이면 갈라진다)
+    assert "- use_point:" in script_extract._SEG_FIELD_GUIDE and "- use_point:" in p
+    assert "- label:" in p and "- change:" in p and "has_effect" in p
+    assert tags[0]["label"] == "완성품 클로즈업" and tags[0]["change"] == "매끈해졌다" and tags[0]["has_effect"] is True
+    # merge → _assign_seg_ids를 지나면 통째 업로드 추출과 같은 정규화가 걸린다
+    merged = fs.merge_frame_tags([{"start": 0, "end": 1, "text": ""}], tags)
+    segs = script_extract._assign_seg_ids("v", merged)
+    assert segs[0]["label"] == "완성품 클로즈업" and segs[0]["use_point"] == "마무리 대목에"
+    assert segs[0]["change"] == "매끈해졌다" and segs[0]["has_effect"] is True and segs[0]["action"] is None
 
 
 def test_make_strip_은_한_장이면_None():
@@ -207,3 +258,151 @@ def test_판정기는_첫_모델이_죽으면_다음_모델로(monkeypatch, tmp_
     f = tmp_path / "a.jpg"; f.write_bytes(b"\xff\xd8x")
     v = tag_qa_frames._judge([str(f)], [(0, {"scene_desc": "x"})])
     assert seen == list(fs.TAG_MODELS[:2]) and v[0]["verdict"] == "부분"
+
+
+# ── 2차: 배치 호출·관대한 JSON·격자 시각 ───────────────────────────────────
+def test_loads_lenient_는_뒤에_붙은_쓰레기와_코드펜스를_견딘다():
+    assert fs.loads_lenient('{"tags": [1]}\n\n설명 몇 줄') == {"tags": [1]}
+    assert fs.loads_lenient('```json\n{"a": 1}\n```') == {"a": 1}
+    with pytest.raises(ValueError):
+        fs.loads_lenient("")
+
+
+def test_태깅은_TAG_BATCH_구간씩_나눠_부르고_자리를_전체_기준으로_되돌린다(monkeypatch, tmp_path):
+    from shopping_shorts import comment_gen
+    calls = []
+
+    class _M:
+        def generate_content(self, model, contents, config):
+            n_img = len(contents) - 1
+            calls.append(n_img)
+            tags = [{"seg_no": k + 1, "scene_desc": f"batch{len(calls)}-{k+1}", "shot_role": "완성"}
+                    for k in range(n_img)]
+            return _FakeResp('{"tags": ' + __import__("json").dumps(tags, ensure_ascii=False) + '}')
+
+    class _C:
+        models = _M()
+
+    monkeypatch.setattr(comment_gen, "_current_key_and_idx", lambda: ("k", 0))
+    monkeypatch.setattr(comment_gen, "_client_for_key", lambda k: _C())
+    n = fs.TAG_BATCH * 2 + 3
+    groups = []
+    for i in range(n):
+        f = tmp_path / f"{i}.jpg"; f.write_bytes(b"\xff\xd8x")
+        groups.append([str(f)])
+    segs = [{"start": i, "end": i + 1, "text": ""} for i in range(n)]
+    tags = fs._gemini_tag_frames(groups, "", segs)
+    assert calls == [fs.TAG_BATCH, fs.TAG_BATCH, 3], "한 호출에 TAG_BATCH장씩"
+    assert len(tags) == n
+    assert tags[0]["scene_desc"] == "batch1-1"
+    assert tags[fs.TAG_BATCH]["scene_desc"] == "batch2-1", "두 번째 묶음의 1번이 전체 13번 자리에"
+    assert tags[-1]["scene_desc"] == "batch3-3"
+
+
+def test_격자에는_컷_시각이_찍힌다(tmp_path):
+    from PIL import Image
+    paths = []
+    for i in range(3):
+        p = tmp_path / f"m{i}.jpg"
+        Image.new("RGB", (64, 36), (200, 200, 200)).save(p)
+        paths.append(str(p))
+    out = fs.make_grid(paths, str(tmp_path / "grid.jpg"), times=[0.5, 12.7, 30.0])
+    assert out
+    g = Image.open(out)
+    assert g.height == fs.GRID_HEIGHT
+    # 시각 라벨(검정 상자)이 첫 칸 왼쪽 위에 찍혀 원래 회색이 아니다
+    assert g.getpixel((2, 2)) != (200, 200, 200)
+
+
+# ── 말 트랙: 언어 자동 감지 + 외국어 번역(text_ko) ────────────────────────
+def test_is_foreign_text():
+    assert fs.is_foreign_text("This is a butter cookie recipe, 300g butter") is True
+    assert fs.is_foreign_text("黄油曲奇饼干 黄油300g") is True
+    assert fs.is_foreign_text("버터 쿠키 만드는 법 300g") is False
+    assert fs.is_foreign_text("") is False and fs.is_foreign_text("...") is False
+
+
+def test_기본_전사는_언어_자동감지로_부른다(monkeypatch):
+    """옛 코드는 language="ko" 고정 → 외국 영상을 한국어로 엉터리 받아씀."""
+    from shopping_shorts import asr_check
+    seen = {}
+
+    def fake_tw(mp3, language="ko"):
+        seen["language"] = language
+        return None
+
+    monkeypatch.setattr(asr_check, "transcribe_words", fake_tw)
+    fs.extract_script_frames(
+        "v.mp4", "s1", _no_classic=True,
+        get_boundaries=lambda p: [0.0, 3.0],
+        extract_frame_at=lambda p, d, t, f=None: f"{d}/{f}",
+        extract_audio=lambda v, o: o,
+        tag_frames=lambda g, c, s, b=None: [{"scene_desc": "a", "shot_role": "완성"}],
+        story_brief=lambda *a: {}, translate=lambda texts: [])
+    assert "language" in seen and seen["language"] is None
+
+
+def test_asr_transcribe_words_는_language_None이면_언어를_안_보낸다(monkeypatch):
+    from shopping_shorts import asr_check, config
+    sent = {}
+
+    class _R:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {"words": [{"word": "hello", "start": 0.0, "end": 0.5}]}
+
+    def fake_post(url, headers=None, files=None, data=None, timeout=None):
+        sent.update(data)
+        return _R()
+
+    monkeypatch.setattr(config, "GROQ_API_KEY", "k")
+    monkeypatch.setattr(asr_check.requests, "post", fake_post)
+    import tempfile, os
+    p = os.path.join(tempfile.mkdtemp(), "a.mp3"); open(p, "wb").write(b"x")
+    assert asr_check.transcribe_words(p, language=None) == [{"word": "hello", "start": 0.0, "end": 0.5}]
+    assert "language" not in sent
+    asr_check.transcribe_words(p)
+    assert sent.get("language") == "ko", "기본값은 종전 그대로 ko(TTS 검수용)"
+
+
+def test_외국어_전사면_구간마다_text_ko가_붙고_full_text_ko가_나온다():
+    words = [{"word": "Mix", "start": 0.2, "end": 0.5}, {"word": "butter", "start": 0.6, "end": 1.0},
+             {"word": "Bake", "start": 3.5, "end": 4.0}]
+    out = fs.extract_script_frames(
+        "v.mp4", "s1", _no_classic=True,
+        get_boundaries=lambda p: [0.0, 3.0, 6.0],
+        extract_frame_at=lambda p, d, t, f=None: f"{d}/{f}",
+        extract_audio=lambda v, o: o, transcribe_words=lambda m: words,
+        tag_frames=lambda g, c, s, b=None: [{"scene_desc": "a", "shot_role": "완성"}] * len(s),
+        story_brief=lambda *a: {},
+        translate=lambda texts: ["버터를 섞어요" if "Mix" in t else "구워요" for t in texts])
+    segs = out["segments"]
+    assert segs[0]["text"] == "Mix butter" and segs[0]["text_ko"] == "버터를 섞어요"
+    assert segs[1]["text"] == "Bake" and segs[1]["text_ko"] == "구워요"
+    assert out["full_text"] == "Mix butter Bake" and out["full_text_ko"] == "버터를 섞어요 구워요"
+
+
+def test_한국어_전사면_번역을_부르지_않는다():
+    called = []
+    words = [{"word": "버터를", "start": 0.2, "end": 0.5}, {"word": "섞어요", "start": 0.6, "end": 1.0}]
+    out = fs.extract_script_frames(
+        "v.mp4", "s1", _no_classic=True,
+        get_boundaries=lambda p: [0.0, 3.0],
+        extract_frame_at=lambda p, d, t, f=None: f"{d}/{f}",
+        extract_audio=lambda v, o: o, transcribe_words=lambda m: words,
+        tag_frames=lambda g, c, s, b=None: [{"scene_desc": "a", "shot_role": "완성"}],
+        story_brief=lambda *a: {}, translate=lambda texts: called.append(1) or [])
+    assert not called and out["segments"][0]["text_ko"] == "" and out["full_text_ko"] == ""
+
+
+def test_인벤토리와_2단계_장면목록은_text_ko를_말로_쓴다():
+    from shopping_shorts import edit_plan, script_generate
+    seg = {"seg_id": "s0-1", "start": 0.0, "end": 2.0, "text": "Mix butter", "text_ko": "버터를 섞어요",
+           "scene_desc": "볼에 버터"}
+    _, inv = edit_plan._build_inventory([{"video_id": "s0", "segments": [seg]}])
+    assert "말:버터를 섞어요" in inv and "Mix butter" not in inv
+    block = script_generate._mix_source_block([{"name": "x", "full_text": "Mix butter", "structure": {},
+                                                "segments": [seg]}])
+    assert "말:버터를 섞어요" in block
