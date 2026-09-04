@@ -440,3 +440,90 @@ def test_extract는_띠마다_전체_번호_라벨을_준다(tmp_path):
     finally:
         fs.make_strip = real_make_strip
     assert seen == ["#1 0.0s", "#2 3.0s", "#3 6.0s"]
+
+
+# ── 실패를 숨기지 않는다(2026-09-05) ───────────────────────────────────────
+def test_empty_ratio():
+    assert fs.empty_ratio([]) == 1.0
+    assert fs.empty_ratio([{"scene_desc": "a"}, {}, {"scene_desc": ""}]) == 2 / 3
+    assert fs.empty_ratio([{"scene_desc": "a"}]) == 0.0
+
+
+def test_묘사가_많이_비면_태깅_실패로_보고_옛_추출로_넘긴다(monkeypatch):
+    from shopping_shorts import script_extract
+    called = []
+    monkeypatch.setattr(script_extract, "extract_script", lambda *a, **k: called.append(1) or {"segments": [{"seg_id": "c-0"}], "full_text": ""})
+    half_empty = lambda g, c, s, b=None: [{"scene_desc": "a", "shot_role": "완성"}] + [{}] * (len(s) - 1)
+    out = fs.extract_script_frames("v.mp4", "s1", get_boundaries=lambda p: [0.0, 3.0, 6.0, 9.0, 12.0],
+                                   extract_frame_at=lambda p, d, t, f=None: f"{d}/{f}", extract_audio=lambda v, o: None,
+                                   transcribe_words=lambda m: None, story_brief=lambda *a: {}, tag_frames=half_empty)
+    assert called and out["segments"][0]["seg_id"] == "c-0", "75%가 비었는데 성공으로 저장됐다"
+    # _no_classic이면 빈 채로 돌려주되 비율을 숫자로 남긴다
+    out2 = fs.extract_script_frames("v.mp4", "s1", _no_classic=True, get_boundaries=lambda p: [0.0, 3.0, 6.0, 9.0, 12.0],
+                                    extract_frame_at=lambda p, d, t, f=None: f"{d}/{f}", extract_audio=lambda v, o: None,
+                                    transcribe_words=lambda m: None, story_brief=lambda *a: {}, tag_frames=half_empty)
+    assert out2["tag_empty_ratio"] == 0.75 and len(out2["segments"]) == 4
+
+
+def test_묶음이_실패하면_반으로_갈라_다시_시도한다(monkeypatch, tmp_path):
+    from shopping_shorts import comment_gen
+    sizes = []
+
+    class _M:
+        def generate_content(self, model, contents, config):
+            n = len(contents) - 1
+            sizes.append(n)
+            if n > 6:
+                raise RuntimeError("503 UNAVAILABLE")          # 큰 묶음은 죽는다
+            # 실제 모델은 띠에 찍힌 전체 번호(#n)로 답한다 — 프롬프트의 '#n (' 을 읽어 흉내낸다
+            import re
+            nos = [int(x) for x in re.findall(r"#(\d+) \(", contents[0])]
+            tags = [{"seg_no": no, "scene_desc": f"d{no}", "shot_role": "완성"} for no in nos[:n]]
+            return _FakeResp('{"tags": ' + __import__("json").dumps(tags) + '}')
+
+    class _C:
+        models = _M()
+
+    monkeypatch.setattr(comment_gen, "_current_key_and_idx", lambda: ("k", 0))
+    monkeypatch.setattr(comment_gen, "_client_for_key", lambda k: _C())
+    groups = []
+    for i in range(12):
+        f = tmp_path / f"{i}.jpg"; f.write_bytes(b"\xff\xd8x"); groups.append([str(f)])
+    segs = [{"start": i, "end": i + 1, "text": ""} for i in range(12)]
+    tags = fs._gemini_tag_frames(groups, "", segs)
+    assert 12 in sizes and 6 in sizes, f"갈라서 재시도하지 않았다: {sizes}"
+    assert sum(1 for t in tags if t) == 12, "갈라서 성공한 묶음의 태그가 안 들어갔다"
+
+
+def test_판정기는_빈_묘사를_대상에서_뺀다():
+    from shopping_shorts import tag_qa_frames as T
+    assert T._usable({"start": 0, "end": 2, "scene_desc": "a"})
+    assert not T._usable({"start": 0, "end": 2, "scene_desc": ""})
+    assert not T._usable({"start": 0, "end": 2})
+
+
+def test_판정기는_JUDGE_BATCH장씩_나눠_부르고_image_no를_전체_번호로(monkeypatch, tmp_path):
+    from shopping_shorts import comment_gen, tag_qa_frames as T
+    calls = []
+
+    class _M:
+        def generate_content(self, model, contents, config):
+            n = len(contents) - 1
+            calls.append(n)
+            return _FakeResp('{"verdicts": ' + __import__("json").dumps(
+                [{"image_no": k + 1, "verdict": "맞음" if k % 2 == 0 else "틀림"} for k in range(n)]) + '}')
+
+    class _C:
+        models = _M()
+
+    monkeypatch.setattr(comment_gen, "_current_key_and_idx", lambda: ("k", 0))
+    monkeypatch.setattr(comment_gen, "_client_for_key", lambda k: _C())
+    n = T.JUDGE_BATCH + 5
+    paths, picked = [], []
+    for i in range(n):
+        f = tmp_path / f"q{i}.jpg"; f.write_bytes(b"\xff\xd8x"); paths.append(str(f)); picked.append((i, {"scene_desc": f"d{i}"}))
+    v = T._judge(paths, picked)
+    assert calls == [T.JUDGE_BATCH, 5]
+    assert [x["image_no"] for x in v] == list(range(1, n + 1)), "두 번째 묶음의 번호가 전체 번호로 안 돌아왔다"
+    score, detail = T.score_verdicts(v, picked)
+    assert len(detail) == n

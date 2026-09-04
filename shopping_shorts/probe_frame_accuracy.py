@@ -28,6 +28,7 @@ _LOCK = threading.Lock()
 def _judge_all(segments, video_path, tmp_dir):
     """세그 전부를 프레임 대조 → (점수 0~1 or None, 대조 건수, 맞음/부분/틀림)."""
     from shopping_shorts import tag_qa_frames as T
+    # ★빈 묘사는 판정 대상에서 빠진다(_usable) — 대신 여기서 따로 세어 결과에 남긴다(맞음으로 세지 않는다)
     picked = [(i, s) for i, s in enumerate(segments or []) if T._usable(s)]
     if not picked:
         return None, 0, {}
@@ -87,6 +88,10 @@ def summarize(results):
         "tie": sum(1 for r in both if r["b1_score"] == r["classic_score"]),
         "b1_secs_avg": round(sum(r.get("b1_secs") or 0 for r in results) / max(1, len(results)), 1),
         "b1_fail": sum(1 for r in results if r.get("b1_error")),
+        # ★빈 묘사는 점수에 안 들어간다 — 그래서 따로 센다. 이 수가 0이 아니면 위 평균은 '판정된 것만'의 평균이다.
+        "b1_empty_segs": sum(int(r.get("b1_empty") or 0) for r in results),
+        "b1_segs_total": sum(int(r.get("b1_segs") or 0) for r in results),
+        "classic_empty_segs": sum(int(r.get("classic_empty") or 0) for r in results),
     }
 
 
@@ -119,8 +124,11 @@ def _run(store, work_dir, n, out_dir):
                 r["b1_transcript_chars"] = len(b1.get("full_text") or "")
                 r["b1_ko_chars"] = len(b1.get("full_text_ko") or "")
                 r["b1_brief"] = (b1.get("source_brief") or {}).get("flow", "")[:120]
+                r["b1_empty"] = sum(1 for x in (b1.get("segments") or []) if not (x.get("scene_desc") or "").strip())
+                r["b1_empty_ratio"] = b1.get("tag_empty_ratio")
                 r["b1_score"], r["b1_n"], r["b1_counts"] = _judge_all(b1.get("segments"), s["path"],
                                                                      tempfile.mkdtemp(prefix="probe_fb_"))
+                r["classic_empty"] = sum(1 for x in (s["classic"] or []) if not (x.get("scene_desc") or "").strip())
             except Exception as e:      # noqa: BLE001
                 r["b1_error"] = repr(e)[:200]
             with _LOCK:
