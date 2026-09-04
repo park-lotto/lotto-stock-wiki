@@ -30,11 +30,50 @@ def _err(store, task):
 
 
 def test_배경작업은_고장이_아니라고_적는다(store):
-    for t in ("durfill", "prewarm", "overseas"):
+    # prewarm은 2026-09-04부터 failed가 아니라 **다시 큐에 들어간다**(아래 테스트).
+    for t in ("durfill", "overseas"):
         _stale(store, t)
     store.reap_stale(minutes=2)
-    for t in ("durfill", "prewarm", "overseas"):
+    for t in ("durfill", "overseas"):
         assert "고장 아님" in _err(store, t), f"{t}가 고장으로 집계된다"
+
+
+def _state(store, task):
+    with store._conn() as c:
+        return c.execute("SELECT state, args_json, claimed_at FROM job_queue WHERE task=?",
+                         (task,)).fetchone()
+
+
+def test_끊긴_담기는_다시_큐에_들어간다(store):
+    """2026-09-04 실사고: 문구만 '자동 재시도 대상'이고 재시도 코드가 없어 고객이 다시 담아야 했다."""
+    _stale(store, "prewarm")
+    assert store.reap_stale(minutes=2) == 1
+    st, args, claimed = _state(store, "prewarm")
+    assert st == "queued" and claimed is None
+    assert '"_restart_retry": 1' in args
+    assert "다시 시작" in _err(store, "prewarm")
+
+
+def test_담기_재시도는_상한이_있다(store):
+    """영원히 되살리면 배포가 끝나도 좀비가 큐를 돈다 — 상한에 닿으면 종전대로 failed."""
+    import json
+    with store._conn() as c:
+        c.execute("INSERT INTO job_queue(task,args_json,state,heartbeat_at,created_at) "
+                  "VALUES('prewarm',?,'running',datetime('now','-10 minutes'),datetime('now'))",
+                  (json.dumps({"_restart_retry": Store.PREWARM_RESTART_RETRIES}),))
+    store.reap_stale(minutes=2)
+    st, _, _ = _state(store, "prewarm")
+    assert st == "failed"
+    assert "고장 아님" in _err(store, "prewarm")
+
+
+def test_재큐된_담기는_고객작업_전파를_안_건드린다(store):
+    """prewarm은 mix_jobs 상태칸이 없다 — 재큐가 다른 job 상태를 바꾸면 안 된다."""
+    _stale(store, "prewarm")
+    _stale(store, "mix")
+    store.reap_stale(minutes=2)
+    assert _state(store, "prewarm")[0] == "queued"
+    assert _err(store, "mix") == "워커가 중단됐습니다"
 
 
 def test_고객작업은_종전대로_실패로_적는다(store):

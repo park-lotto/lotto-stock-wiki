@@ -6939,6 +6939,15 @@ class Store:
                 "        OR datetime(heartbeat_at) < datetime('now', ?))",
                 (f"-{int(minutes)} minutes",)).fetchall()
 
+            # ★담기(prewarm)는 **실제로 다시 큐에 넣는다**(2026-09-04 실사고).
+            #   문구는 "자동 재시도 대상"이라고 적혀 있었지만 재시도하는 코드가 없었다 —
+            #   durfill·overseas는 크론이 다시 넣어 주지만 담기는 고객이 그 순간 한 번
+            #   누른 것이라 아무도 다시 넣지 않는다. 실측: 09-04 배포 재시작 5회로 끊긴
+            #   담기 3건(틱톡 1·샤오홍슈 2) 재큐 0건 → 고객이 다시 담아야 했다.
+            #   같은 행을 queued로 되돌린다(새 행을 만들면 id·owner·prio가 바뀐다).
+            #   무한 반복 방지: args_json의 _restart_retry가 상한에 닿으면 종전대로 failed.
+            requeued = self._requeue_interrupted_prewarm(c, dead)
+
             cur = c.execute(
                 "UPDATE job_queue SET state='failed', "
                 "       error=CASE WHEN task IN (" + marks + ") "
@@ -6958,7 +6967,38 @@ class Store:
             #   실측: 이 구멍 때문에 extracting 6 / downloading 5 / planning 3 / tts 1건이
             #   진행중인 채로 굳어 있었다(2026-08-27 라이브 집계).
             self._propagate_dead_to_jobs(c, dead)
-            return cur.rowcount
+            return cur.rowcount + requeued
+
+    #: 배포 재시작으로 끊긴 담기를 몇 번까지 자동으로 이어가나. 배포가 3~10분 간격으로
+    #  연달아 오던 날(09-04 5회)에도 살아남게 넉넉히, 그러나 영원히는 아니게.
+    PREWARM_RESTART_RETRIES = 3
+
+    def _requeue_interrupted_prewarm(self, c, dead_rows):
+        """죽은 running 중 prewarm을 queued로 되돌린다. 되돌린 건수를 반환한다.
+        되돌린 행은 dead_rows에서 빼지 않는다 — 호출부의 UPDATE는 state='running'만
+        건드리므로 이미 queued가 된 행은 지나간다."""
+        n = 0
+        for qid, task, args_json in dead_rows:
+            if task != "prewarm":
+                continue
+            try:
+                args = json.loads(args_json or "{}")
+            except Exception:              # noqa: BLE001 — 깨진 args면 종전대로 failed
+                continue
+            if not isinstance(args, dict):
+                continue
+            tries = int(args.get("_restart_retry") or 0)
+            if tries >= self.PREWARM_RESTART_RETRIES:
+                continue
+            args["_restart_retry"] = tries + 1
+            cur = c.execute(
+                "UPDATE job_queue SET state='queued', claimed_at=NULL, heartbeat_at=NULL, "
+                "       finished_at=NULL, args_json=?, "
+                "       error='배포 재시작으로 중단 → 자동으로 다시 시작(' || ? || '회)' "
+                " WHERE id=? AND state='running'",
+                (json.dumps(args, ensure_ascii=False), tries + 1, qid))
+            n += cur.rowcount
+        return n
 
     # task별로 화면이 읽는 상태 칸이 다르다. 한 군데서만 정한다(0순위-B) —
     # 여기가 갈리면 어떤 단계는 실패가 안 뜨고 또 멈춘 것처럼 보인다.

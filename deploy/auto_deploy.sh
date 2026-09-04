@@ -55,6 +55,23 @@ WEB_HARD_MAX_SEC=2400                # 강제여도 렌더가 도는 중이면 �
 PREWARM_MAX_DEFER_SEC=900            # 담기 분석 때문에 워커를 미루는 상한(15분). 넘으면 진행
 DB="$REPO/shopping_shorts/data/reference.db"
 ACTIVE_WINDOW_SEC=300                # 이 시간 안에 활동한 고객이 있으면 '접속 중'으로 본다
+# ── 배포 시간창(2026-09-04 사장님 확정) ───────────────────────────
+# 실사고: 09-04 13:45~14:15 트랙 5개가 연달아 병합돼 워커가 30분에 5번 재시작. 담기 3건이
+# 끊기고 14:15엔 웹까지 강제 재시작돼 "다들 계속 안 된다" 제보. 병합은 낮에 아무 때나 해도
+# 되지만 **서버 반영은 고객이 없는 시간창에 모아서** 한다. 급한 건 사장님만 즉시 내보낸다.
+#   · 시간창: KST $DEPLOY_WINDOW_START시 ~ $DEPLOY_WINDOW_END시 (기본 02~06시). 이 밖에선
+#     shopping_shorts/ 를 건드리는 커밋을 **가져오지도 않는다**(reset을 하면 HTML은 새 것,
+#     파이썬은 옛 것으로 어긋난다). stockbrain(대시보드·scripts)만 바뀐 커밋은 종전대로 즉시.
+#   · 긴급: ① 커밋 제목에 [긴급] 또는 [deploy-now] 가 있으면 즉시  ② 서버에
+#     $DEPLOY_NOW_FLAG 파일이 있으면 즉시(배포 후 자동 삭제).
+#     예) ssh 서버 'touch /home/ubuntu/DEPLOY_NOW'
+#   · 값은 $DEPLOY_WINDOW_CONF 가 있으면 그 파일이 덮어쓴다(코드 수정·재배포 없이 조절).
+DEPLOY_WINDOW_START=2
+DEPLOY_WINDOW_END=6
+DEPLOY_NOW_FLAG=/home/ubuntu/DEPLOY_NOW
+DEPLOY_WINDOW_CONF=/home/ubuntu/deploy_window.conf
+HELD_MARK=/tmp/ss_deploy_held        # 시간창 밖에서 붙잡아둔 커밋(로그 중복 방지용)
+[ -f "$DEPLOY_WINDOW_CONF" ] && . "$DEPLOY_WINDOW_CONF"
 exec 9>/tmp/auto_deploy.lock
 flock -n 9 || exit 0
 cd "$REPO" || exit 1
@@ -164,7 +181,37 @@ if [ "$LOCAL" = "$REMOTE" ] && [ ! -f "$PENDING" ]; then
   exit 0
 fi
 
+# ── 시간창 판정: 고객 서비스(shopping_shorts/)가 바뀌는 커밋만 붙잡는다 ──
+_in_deploy_window() {
+  local h; h=$(TZ=Asia/Seoul date +%-H)
+  [ "$h" -ge "$DEPLOY_WINDOW_START" ] && [ "$h" -lt "$DEPLOY_WINDOW_END" ]
+}
+_urgent_commit() {
+  # LOCAL..REMOTE 제목 중 하나라도 표식이 있으면 긴급. 병합 커밋도 포함된다.
+  git log --format=%s "$LOCAL..$REMOTE" 2>/dev/null | grep -qE '\[(긴급|deploy-now)\]'
+}
+LOCAL_HELD=""   # set -u 대비 — 창 밖에서 붙잡으면 1
 if [ "$LOCAL" != "$REMOTE" ]; then
+  if git diff --name-only "$LOCAL" "$REMOTE" | grep -qE '^shopping_shorts/'; then
+    if [ -f "$DEPLOY_NOW_FLAG" ]; then
+      echo "$(date '+%F %T') 긴급 플래그($DEPLOY_NOW_FLAG) → 시간창 무시하고 배포" >>"$LOG"
+      rm -f "$DEPLOY_NOW_FLAG"
+    elif _urgent_commit; then
+      echo "$(date '+%F %T') 커밋 제목 [긴급] → 시간창 무시하고 배포" >>"$LOG"
+    elif ! _in_deploy_window; then
+      # 붙잡는다. 같은 커밋을 3분마다 반복해 적지 않는다 — 붙잡은 커밋이 바뀔 때만 한 줄.
+      if [ "$(cat "$HELD_MARK" 2>/dev/null)" != "$REMOTE" ]; then
+        echo "$(date '+%F %T') 배포 대기(시간창 ${DEPLOY_WINDOW_START}~${DEPLOY_WINDOW_END}시 밖) ${LOCAL:0:7}->${REMOTE:0:7} — 급하면 [긴급] 커밋 또는 touch $DEPLOY_NOW_FLAG" >>"$LOG"
+        echo "$REMOTE" >"$HELD_MARK"
+      fi
+      # 대기 목록(이미 가져온 옛 커밋의 재시작)은 종전대로 아래에서 처리한다.
+      [ -f "$PENDING" ] || exit 0
+      LOCAL_HELD=1
+    fi
+  fi
+fi
+if [ "$LOCAL" != "$REMOTE" ] && [ -z "$LOCAL_HELD" ]; then
+  rm -f "$HELD_MARK"
   echo "$(date '+%F %T') 새커밋 ${LOCAL:0:7}->${REMOTE:0:7} 배포시작" >>"$LOG"
   # [2026-07-16] pull --ff-only → reset --hard: 서버는 main의 '거울'이지 작업 사본이 아니다.
   # pull은 서버 워킹트리에 수정된 추적파일이 하나라도 있으면 거부하고 배포를 조용히 스킵했다.
