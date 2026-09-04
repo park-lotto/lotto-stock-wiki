@@ -431,3 +431,43 @@ def test_alert_signature_unchanged_suppresses_repeat():
     assert ops_alert.signature_unchanged(st, "k", "A") is True    # 그대로 — 억제
     assert ops_alert.signature_unchanged(st, "k", "B") is False   # 바뀜 — 올린다
     assert ops_alert.signature_unchanged(st, "k", None) is False  # 서명 없음 — 종전 동작
+
+
+
+def test_alert_grade_defaults_and_resolve():
+    """★2026-09-04 사장님 "다 큰 사고처럼 보인다": 등급 기본값과 '해결됨' 닫힘."""
+    from shopping_shorts import ops_alert
+    assert ops_alert.grade_for("api_key_dead_gemini") == ops_alert.GRADE_OPS
+    assert ops_alert.grade_for("source_download") == ops_alert.GRADE_CUSTOMER
+    assert ops_alert.grade_for("deposit_claim") == ops_alert.GRADE_INFO
+    assert ops_alert.grade_for("anything", grade="고객영향") == "고객영향"
+
+    class _St:
+        def __init__(self):
+            self.d = {}
+
+        def get_setting(self, k, default=None):
+            return self.d.get(k, default)
+
+        def set_setting(self, k, v):
+            self.d[k] = v
+
+    import json as _j
+    st = _St()
+    st.d["ops_alerts"] = _j.dumps([{"id": 1, "kind": "api_health_danger", "title": "x"},
+                                   {"id": 2, "kind": "other", "title": "y"}])
+    st.d["ops_alert_sig_api_health_danger"] = "SIG"
+    assert ops_alert.resolve_kind("api_health_danger", store=st) == 1
+    cur = _j.loads(st.d["ops_alerts"])
+    assert cur[0]["resolved"] and not cur[1].get("resolved")
+    assert st.d["ops_alert_sig_api_health_danger"] == ""          # 다음에 같은 문제면 새 경보
+
+
+def test_verdict_ok_resolves_open_danger(tmp_db, monkeypatch):
+    """문제가 사라지면 verdict가 열린 사고 쪽지를 닫는다 — '조치가 됐는지'를 화면이 말한다."""
+    from shopping_shorts import ops_alert
+    called = []
+    monkeypatch.setattr(ops_alert, "resolve_kind", lambda kind, store=None: called.append(kind) or 1)
+    v = api_health.verdict(snap={"gemini": [], "others": [], "collectors": []},
+                           agg=api_health.aggregates(hours=1))
+    assert v["level"] == "ok" and called == ["api_health_danger"]

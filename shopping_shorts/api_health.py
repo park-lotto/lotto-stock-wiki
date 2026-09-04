@@ -280,7 +280,11 @@ def record(service, outcome, *, pool=None, key=None, key_idx=None, owner=None,
                 # ★시각을 제목에 박는다 — 없으면 이미 고친 일을 '지금 사고'로 읽는다
                 #   (2026-09-01: 04:11에 키를 뺐는데 04:08 경보를 보고 다시 쫓았다).
                 f"[API {when}] {service} 키 사망({'…' + (key_tail(key) or '?')})",
-                f"[발생 {when} KST] " + f"{detail or ''}"[:280] + cure)
+                f"[발생 {when} KST] " + f"{detail or ''}"[:280] + cure,
+                grade=ops_alert.GRADE_OPS,
+                auto="이 키는 자동 제외됐고 다른 키로 계속 돕니다 — 서비스 중단 아님",
+                todo=("env에서 그 키를 빼면 정리 끝" if service in ("gemini", "youtube")
+                      else "회원 키면 회원에게 키 교체 안내"))
         except Exception as e:            # noqa: BLE001 — 경보 실패가 기록을 막으면 안 된다
             log.warning("api_health: 키사망 경보 실패(무시) %r", e)
 
@@ -688,16 +692,29 @@ def verdict(snap=None, agg=None):
     else:
         level, msg = "ok", "모든 API가 정상 동작 중입니다."
 
+    if level != "danger":
+        # ★문제가 사라지면 쪽지를 '해결됨'으로 닫는다(2026-09-04) — 사장님이 "조치가 됐는지"를 알 수 있게.
+        try:
+            from shopping_shorts import ops_alert as _oa
+            _oa.resolve_kind("api_health_danger")
+        except Exception:                 # noqa: BLE001
+            pass
     if level == "danger":
         try:
             from shopping_shorts import ops_alert
             # ★같은 내용이면 30분마다 다시 올리지 않는다(2026-09-04 사장님 "계속 뜬다").
             #   내용(어떤 키·어떤 서비스)이 바뀔 때만 새 경보. 시각·횟수는 서명에서 뺀다.
+            # 등급: 고객이 잘못된 결과를 받는 문제(무음 폴백·풀 전멸·실패율)면 고객영향, 죽은 키만이면 운영주의.
+            _cust = any(("무음" in p or "전멸" in p or "실패율" in p) for p in problems)
             ops_alert.raise_alert(
                 "api_health_danger",
                 f"[API관측판 {checked_at}] " + problems[0],
                 f"[{checked_at} KST · 최근 1시간 기준]\n" + " / ".join(problems)[:450],
-                signature=_problem_signature(problems))
+                signature=_problem_signature(problems),
+                grade=(ops_alert.GRADE_CUSTOMER if _cust else ops_alert.GRADE_OPS),
+                auto=("" if _cust else "죽은 키는 자동 제외되어 다른 키로 돌고 있습니다 — 서비스 정상"),
+                todo=("지금 확인 필요 — 고객이 잘못된 결과를 받고 있을 수 있습니다" if _cust
+                      else "env에서 죽은 키를 빼면 이 경보는 사라집니다"))
         except Exception as e:            # noqa: BLE001 — 경보 실패가 판정을 막으면 안 된다
             log.warning("api_health: danger 경보 실패(무시) %r", e)
     return {"level": level, "msg": msg, "problems": problems, "warns": warns,

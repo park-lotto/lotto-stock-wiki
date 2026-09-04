@@ -33,6 +33,45 @@ def _store():
 
 _SIG_KEY_FMT = "ops_alert_sig_{}"
 
+# ★등급 — 사장님이 "이게 큰 사고인지, 조치가 되고 있는지"를 한눈에 알게(2026-09-04).
+#   종전엔 모든 쪽지가 같은 빨간 "🚨 운영 사고"라 죽은 키 하나가 무음 영상 사고와 같은 무게로 보였다.
+#   GRADE_CUSTOMER: 고객이 지금 잘못된 결과를 받는다 — 사람이 즉시 봐야 한다
+#   GRADE_OPS     : 시스템이 자동으로 우회했고 서비스는 돈다 — 시간 날 때 정리
+#   GRADE_INFO    : 알림일 뿐(입금 청구 등)
+GRADE_CUSTOMER, GRADE_OPS, GRADE_INFO = "고객영향", "운영주의", "정보"
+_GRADE_BY_KIND = {
+    "source_download": GRADE_CUSTOMER,
+    "edl_empty": GRADE_CUSTOMER,
+    "deposit_claim": GRADE_INFO,
+}
+
+
+def grade_for(kind, grade=None):
+    """kind 기본 등급. api_key_dead_*·crawl_watch 계열은 자동 우회되므로 운영주의."""
+    if grade:
+        return grade
+    return _GRADE_BY_KIND.get(kind, GRADE_OPS)
+
+
+def resolve_kind(kind, store=None):
+    """그 종류의 미해결 쪽지를 '해결됨'으로 닫는다(판정이 사라졌을 때 호출). 닫은 건수 반환.
+    서명도 지워 같은 문제가 다시 나면 새 경보가 올라간다."""
+    try:
+        st = store or _store()
+        cur = json.loads(st.get_setting(_ALERT_KEY) or "[]")
+        n = 0
+        now = int(time.time())
+        for a in cur:
+            if a.get("kind") == kind and not a.get("resolved"):
+                a["resolved"] = now
+                n += 1
+        if n:
+            st.set_setting(_ALERT_KEY, json.dumps(cur, ensure_ascii=False))
+        st.set_setting(_SIG_KEY_FMT.format(kind), "")
+        return n
+    except Exception:                                 # noqa: BLE001
+        return 0
+
 
 def signature_unchanged(st, kind, signature):
     """같은 kind의 직전 경보와 내용 서명이 같으면 True(=다시 올리지 않는다). 서명은 갱신한다.
@@ -51,7 +90,7 @@ def signature_unchanged(st, kind, signature):
 
 
 def raise_alert(kind, title, detail="", *, cooldown_sec=_DEFAULT_COOLDOWN_SEC, store=None,
-                signature=None):
+                signature=None, grade=None, auto=None, todo=None):
     """사고를 관리자에게 올린다. kind가 같으면 쿨다운 안에선 한 번만 나간다.
     signature를 주면 **내용이 바뀌지 않은 한** 쿨다운이 지나도 다시 올리지 않는다(2026-09-04 —
     같은 죽은 키 하나로 30분마다 "운영사고"가 반복돼 진짜 사고가 묻혔다).
@@ -91,13 +130,23 @@ def raise_alert(kind, title, detail="", *, cooldown_sec=_DEFAULT_COOLDOWN_SEC, s
         except Exception:                             # noqa: BLE001 — 깨졌으면 새로 시작
             cur = []
         cur.insert(0, {"id": now, "kind": kind, "title": title,
-                       "detail": (detail or "")[:1000], "ts": now, "read": False})
+                       "detail": (detail or "")[:1000], "ts": now, "read": False,
+                       "grade": grade_for(kind, grade),          # 고객영향 | 운영주의 | 정보
+                       "auto": (auto or "")[:200],                # 시스템이 이미 한 일
+                       "todo": (todo or "")[:200],                # 사람이 할 일
+                       "resolved": None})                        # 해결 시각(자동 닫힘)
         st.set_setting(_ALERT_KEY, json.dumps(cur[:_MAX_KEEP], ensure_ascii=False))
 
         # ② 텔레그램(부가채널 — 실패해도 쪽지는 이미 남았다)
         try:
             from shopping_shorts import notify
-            body = f"🚨 {title}"
+            g = grade_for(kind, grade)
+            icon = "🚨" if g == GRADE_CUSTOMER else ("⚠️" if g == GRADE_OPS else "ℹ️")
+            body = f"{icon} [{g}] {title}"
+            if auto:
+                body += f"\n✅ 자동 조치: {auto}"
+            if todo:
+                body += f"\n👉 할 일: {todo}"
             if detail:
                 body += f"\n\n{detail[:500]}"
             body += "\n\n→ 제작소 관리자 화면에서 확인하세요."
