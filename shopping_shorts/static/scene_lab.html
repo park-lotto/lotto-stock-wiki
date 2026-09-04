@@ -2648,7 +2648,13 @@ function renderBand(){
              style="color:var(--warn)">🔊 음성·자막 다시 뽑는 중… (10~20초)</span></div>` : ''}
       </div>`;
   }).join('');
+  // ★보던 자리를 지킨다(2026-09-04 고객 접수 "CTA 조각을 미리 들으려고 누르면 작업화면이
+  //   딴 데로 가 있다"). innerHTML을 갈아끼우면 브라우저가 가로 스크롤을 0으로 되돌린다 —
+  //   칸이 18개라 오른쪽 끝(5.cta)을 보다가 조각 하나만 눌러도 맨 앞으로 튕겼다.
+  //   재생·담기·빼기 전부 renderBand를 부르므로 여기 한 곳에서 지킨다(0순위-B).
+  const keepLeft = row.scrollLeft;
   row.innerHTML = html;
+  if (keepLeft) row.scrollLeft = keepLeft;   // 내용이 줄었으면 브라우저가 알아서 끝까지만
   // 칸 타임라인(2026-08-29) — 선택된 칸의 .tl-host를 채운다. 그리기 직후라 폭이 잡혀 있다.
   if (typeof tlMount === 'function') { try { tlMount(); } catch (e) { console.error('[tl]', e); } }
   // ★칸을 다시 그리면 그 안에 펼쳐둔 필름도 함께 지워진다 — 곧바로 다시 붙인다.
