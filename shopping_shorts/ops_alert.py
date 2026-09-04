@@ -31,8 +31,30 @@ def _store():
     return Store(DB_PATH)
 
 
-def raise_alert(kind, title, detail="", *, cooldown_sec=_DEFAULT_COOLDOWN_SEC, store=None):
+_SIG_KEY_FMT = "ops_alert_sig_{}"
+
+
+def signature_unchanged(st, kind, signature):
+    """같은 kind의 직전 경보와 내용 서명이 같으면 True(=다시 올리지 않는다). 서명은 갱신한다.
+    signature가 None이면 항상 False(종전 동작 = 쿨다운만)."""
+    if signature is None:
+        return False
+    sk = _SIG_KEY_FMT.format(kind)
+    try:
+        prev = st.get_setting(sk) or ""
+    except Exception:                                 # noqa: BLE001
+        prev = ""
+    if prev == signature:
+        return True
+    st.set_setting(sk, signature)
+    return False
+
+
+def raise_alert(kind, title, detail="", *, cooldown_sec=_DEFAULT_COOLDOWN_SEC, store=None,
+                signature=None):
     """사고를 관리자에게 올린다. kind가 같으면 쿨다운 안에선 한 번만 나간다.
+    signature를 주면 **내용이 바뀌지 않은 한** 쿨다운이 지나도 다시 올리지 않는다(2026-09-04 —
+    같은 죽은 키 하나로 30분마다 "운영사고"가 반복돼 진짜 사고가 묻혔다).
 
     kind   : 사고 종류 키(쿨다운 단위). 예 "instagram_download"
     title  : 한 줄 요약(쪽지·텔레 제목)
@@ -57,6 +79,8 @@ def raise_alert(kind, title, detail="", *, cooldown_sec=_DEFAULT_COOLDOWN_SEC, s
             last = 0
         if last and (now - last) < cooldown_sec:
             return False                              # 도배 방지 — 조용히 넘어간다
+        if signature_unchanged(st, kind, signature):
+            return False                              # 같은 사고가 그대로다 — 이미 알렸다
         st.set_setting(ck, str(now))
 
         # ① 관리자 쪽지함에 적재(대시보드가 폴링해서 띄운다)

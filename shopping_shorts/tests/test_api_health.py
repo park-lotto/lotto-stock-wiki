@@ -376,3 +376,58 @@ def test_dead_key_problem_includes_last_seen(tmp_db):
                            agg=api_health.aggregates(hours=1))
     msg = " ".join(v["problems"])
     assert "마지막" in msg and ("방금" in msg or "분 전" in msg or "시간" in msg)
+
+
+
+def test_member_dead_key_is_warn_not_danger(tmp_db):
+    """★2026-09-04 사장님 "계속 운영사고가 뜬다": typecast 183건·elevenlabs 252건이 전부 회원이 넣은
+    키(customer_id 있음)였는데 '죽은 키 1개()'로 danger. 회원 키는 회원이 바꿔야 하니 warn + 회원 번호."""
+    for _ in range(5):
+        api_health.record("typecast", api_health.OUT_AUTH, customer_id="340",
+                          detail="403 Client Error: Forbidden")
+    v = api_health.verdict(snap={"gemini": [], "others": [], "collectors": []},
+                           agg=api_health.aggregates(hours=1))
+    assert v["level"] == "warn", v
+    assert any("회원 340" in w and "typecast" in w for w in v["warns"]), v["warns"]
+    assert not v["problems"]
+
+
+def test_owner_dead_key_still_danger_beside_member(tmp_db):
+    """운영 키(customer_id 없음)가 죽은 건 여전히 danger — 회원 키 분리가 운영 사고를 가리면 안 된다."""
+    api_health.record("gemini", api_health.OUT_AUTH, pool="vault", key="X" * 20 + "sJbmaQ", detail=_AUTH_MSG)
+    api_health.record("elevenlabs", api_health.OUT_AUTH, customer_id="268", detail="401 Unauthorized")
+    v = api_health.verdict(snap={"gemini": [], "others": [], "collectors": []},
+                           agg=api_health.aggregates(hours=1))
+    assert v["level"] == "danger"
+    assert any("sJbmaQ" in p for p in v["problems"])
+    assert not any("elevenlabs" in p for p in v["problems"])
+    assert any("회원 268" in w for w in v["warns"])
+
+
+def test_problem_signature_ignores_counts_and_times():
+    a = ["gemini: 죽은 키 1개(…sJbmaQ)를 3번 헛되이 호출(마지막 09:41, 40분 전) — 빼라"]
+    b = ["gemini: 죽은 키 1개(…sJbmaQ)를 11번 헛되이 호출(마지막 10:12, 2분 전) — 빼라"]
+    c = ["gemini: 죽은 키 1개(…nIWJaw)를 11번 헛되이 호출(마지막 10:12, 2분 전) — 빼라"]
+    assert api_health._problem_signature(a) == api_health._problem_signature(b)
+    assert api_health._problem_signature(a) != api_health._problem_signature(c)
+
+
+def test_alert_signature_unchanged_suppresses_repeat():
+    """같은 서명이면 두 번째는 억제, 내용이 바뀌면 다시 올린다."""
+    from shopping_shorts import ops_alert
+
+    class _St:
+        def __init__(self):
+            self.d = {}
+
+        def get_setting(self, k, default=None):
+            return self.d.get(k, default)
+
+        def set_setting(self, k, v):
+            self.d[k] = v
+
+    st = _St()
+    assert ops_alert.signature_unchanged(st, "k", "A") is False   # 처음 — 올린다
+    assert ops_alert.signature_unchanged(st, "k", "A") is True    # 그대로 — 억제
+    assert ops_alert.signature_unchanged(st, "k", "B") is False   # 바뀜 — 올린다
+    assert ops_alert.signature_unchanged(st, "k", None) is False  # 서명 없음 — 종전 동작
