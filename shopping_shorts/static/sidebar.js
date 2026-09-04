@@ -1173,14 +1173,14 @@
     if (!todo.length) return;
     todo.forEach(function (it) { _cfWarmed[it.shortcode] = 1; });
     fetch("/api/coupang/identify_batch", { method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ items: todo.map(function (it) { return { shortcode: it.shortcode, thumbnail: it.thumbnail }; }) }) })
+      body: JSON.stringify({ items: todo.map(function (it) { return { shortcode: it.shortcode, thumbnail: it.thumbnail, caption: (it.caption || "").slice(0, 2000) }; }) }) })
       .then(function (r) { return r.json(); })
       .then(function (d) {
         var pm = (d && d.products) || {};
         Object.keys(pm).forEach(function (sc) {
           var name = pm[sc]; if (!name) return;
           var btn = document.querySelector('.cp-btn[data-sc="' + sc + '"]');
-          if (btn) { btn.textContent = "🛒 " + (name.length > 10 ? name.slice(0, 10) + "…" : name) + " 쿠팡?"; btn.setAttribute("data-product", name); btn.title = "썸네일에서 알아낸 제품: " + name + " — 누르면 쿠팡 검색과 내 추적 링크까지"; }
+          if (btn) { btn.textContent = "🛒 " + (name.length > 10 ? name.slice(0, 10) + "…" : name) + " 쿠팡검색"; btn.setAttribute("data-product", name); btn.title = "알아낸 제품: " + name + " — 누르면 쿠팡 검색과 내 추적 링크까지"; }
         });
       })
       .catch(function () {});

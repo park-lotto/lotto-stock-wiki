@@ -806,9 +806,15 @@ class Store:
             # shot_type·face_prominent(2026-08-19): 재료로 쓸 수 있는 화면인가.
             # 직촬(리뷰어 얼굴이 주인공)은 쇼핑 얘기를 제대로 해도 재료로 못 쓴다 —
             # 쇼핑비율만 보는 정리 규칙으로는 오히려 우량으로 살아남는다(C단계 실측 17%).
+            # ★shop_product(2026-09-05) — **쿠팡 검색용** 제품명. product와 왜 따로 두나:
+            # product는 "같은 제품 영상 모으기"(same_product)가 쓰는 값이고, 그쪽은 자막을
+            # 일부러 무시한 범주어("벽선반")로도 충분하다 — 오히려 그래야 잘 묶인다.
+            # 쿠팡 검색은 정반대로 살 물건을 특정해야 해서 캡션 글자까지 근거로 쓴다
+            # ("3단 조립식 벽선반"). 같은 칸에 쓰면 묶기 기준이 조용히 바뀐다(0순위-B).
             for col, ddl in (("product", "TEXT"), ("product_at", "TEXT"),
                              ("material", "TEXT"), ("made_by", "TEXT"),
-                             ("shot_type", "TEXT"), ("face_prominent", "INTEGER")):
+                             ("shot_type", "TEXT"), ("face_prominent", "INTEGER"),
+                             ("shop_product", "TEXT"), ("shop_product_at", "TEXT")):
                 try:
                     c.execute(f"ALTER TABLE vision_tags ADD COLUMN {col} {ddl}")
                 except sqlite3.OperationalError:
@@ -3896,6 +3902,39 @@ class Store:
                 ch = codes[i:i + 400]
                 q = ("SELECT shortcode, product FROM vision_tags WHERE product_at IS NOT NULL "
                      "AND shortcode IN (%s)" % ",".join("?" * len(ch)))
+                for sc, p in c.execute(q, ch).fetchall():
+                    out[sc] = p or ""
+        return out
+
+    def save_shop_product(self, shortcode, product):
+        """쿠팡 검색용 제품명 저장(2026-09-05). product(묶기용)는 건드리지 않는다.
+
+        빈 문자열도 저장한다(=근거로도 제품을 못 찾았다) — 그래야 다음에 또 안 태운다.
+        판정 실패(키 소진·네트워크)는 호출부가 아예 안 부른다(재시도 대상이므로)."""
+        with self._conn() as c:
+            c.execute(
+                "INSERT INTO vision_tags(shortcode, subject, keywords_json, created_at, "
+                " shop_product, shop_product_at) "
+                "VALUES(?,'','[]',datetime('now'),?,datetime('now')) "
+                "ON CONFLICT(shortcode) DO UPDATE SET shop_product=excluded.shop_product, "
+                " shop_product_at=excluded.shop_product_at",
+                (shortcode, product or ""))
+            c.commit()
+
+    def shop_products_map(self, shortcodes):
+        """[shortcode] → {shortcode: shop_product}. shop_product_at이 있는 것만.
+
+        products_map과 같은 규약(빈 문자열도 돌려준다 — '안 물어봄'과 '없음'을 가른다)."""
+        codes = [s for s in (shortcodes or []) if s]
+        if not codes:
+            return {}
+        out = {}
+        with self._conn() as c:
+            for i in range(0, len(codes), 400):
+                ch = codes[i:i + 400]
+                q = ("SELECT shortcode, shop_product FROM vision_tags "
+                     "WHERE shop_product_at IS NOT NULL AND shortcode IN (%s)"
+                     % ",".join("?" * len(ch)))
                 for sc, p in c.execute(q, ch).fetchall():
                     out[sc] = p or ""
         return out
