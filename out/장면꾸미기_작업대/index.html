@@ -196,10 +196,17 @@ const SPECS={hook:{},body:{}}; let SPEC=SPECS.hook;
 function curPart(){return beatN<=hookBeats?'hook':'body';}
 function setPart(p){part=p;SPEC=SPECS[p];document.querySelectorAll('#partRow [data-part],#pairRow .pair').forEach(b=>b.classList.toggle('on',b.dataset.part===p));$('#partName').textContent=p==='hook'?'후킹':'본문';if(curPart()!==p){beatN=p==='hook'?1:hookBeats+1;$('#beatNo').textContent=beatN+' / 12';}markCard();syncFromSpec();render();if(typeof capShowBeat==='function')capShowBeat();}
 let BODY_BACKUP=null;
-function toggleSame(){const b=document.getElementById('sameBtn');if(!BODY_BACKUP){BODY_BACKUP=JSON.parse(JSON.stringify(SPECS.body));SPECS.body=JSON.parse(JSON.stringify(SPECS.hook));b.textContent='후킹·본문 다르게';b.classList.add('on');hint.textContent='본문을 후킹과 같게 했어요. 다시 누르면 되돌아갑니다';}else{SPECS.body=BODY_BACKUP;BODY_BACKUP=null;b.textContent='후킹 → 본문 같게';b.classList.remove('on');hint.textContent='본문을 원래대로 되돌렸어요';}if(part==='body'){SPEC=SPECS.body;syncFromSpec();}render();}
+function toggleSame(){const b=document.getElementById('sameBtn');
+ // 되돌릴 원본은 SPECS.body 안에 담아 저장까지 따라가게 한다(예전엔 메모리 변수라
+ // 새로고침하면 되돌리기가 영영 사라졌고, 그 상태가 기본값으로 굳었다).
+ if(!SPECS.body._sameBackup){const bk=JSON.parse(JSON.stringify(SPECS.body));delete bk._sameBackup;
+  SPECS.body=JSON.parse(JSON.stringify(SPECS.hook));SPECS.body._sameBackup=bk;SPECS.body._touched=true;
+  b.textContent='후킹·본문 다르게';b.classList.add('on');hint.textContent='본문을 후킹과 같게 했어요. 다시 누르면 되돌아갑니다';}
+ else{SPECS.body=SPECS.body._sameBackup;b.textContent='후킹 → 본문 같게';b.classList.remove('on');hint.textContent='본문을 원래대로 되돌렸어요';}
+ if(part==='body'){SPEC=SPECS.body;syncFromSpec();}render();}
 function copyPart(){toggleSame();}
 function markCard(){const box=$('#tplGroups');if(!box)return;box.querySelectorAll('div[data-tpl].on').forEach(c=>c.classList.remove('on'));const id=SPEC.preset;const c=id?box.querySelector(`[data-id="${id}"]`):box.querySelector('[data-tpl="none"]');if(c){c.classList.add('on');const g=c.parentElement.dataset.g;box.querySelectorAll('#tplChips button').forEach(x=>x.classList.toggle('on',x.dataset.g===g));box.querySelectorAll('.cards.tpl').forEach(x=>x.classList.toggle('on',x.dataset.g===g));}}
-function syncFromSpec(){const _b=(part==='body'&&!(LAYOUTS[SPEC.preset]||{}).body_keep_hc);$('#hcText').value=_b?(SPEC.title||''):((SPEC.hc||{}).text||'');$('#channel').value=SPEC.channel||'';syncUI();}
+function syncFromSpec(){const _b=(_isBody());$('#hcText').value=_b?(SPEC.title||''):((SPEC.hc||{}).text||'');$('#channel').value=SPEC.channel||'';syncUI();}
 cap.style.fontSize=capSz+'px';
 function tab(n){document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('on',b.dataset.tab===n));document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('on',p.id==='pane-'+n));
  hint.textContent={cap:'글자를 끌어서 옮기기',title:'제목을 끌어 옮기기 · 띠 아래 선을 끌어 높이',scene:'화면을 누르면 그곳이 확대 중심'}[n];}
@@ -229,32 +236,46 @@ function frameSpec(){const s=Object.assign({},SPEC);delete s.hc;const t=(SPEC.ti
 function fitBand(){for(const T of [SPECS.hook,(LAYOUTS[SPECS.hook.preset]||{}).body_keep_hc?SPECS.body:null]){if(!T)continue;fitOne(T);}}
 function fitOne(T,nl){if(!T||!T.hc||!(T.hc.text||'').trim())return;const lines=nl||((T.hc.text||'').split(/\r?\n/).filter(x=>x.trim()).length||1);const px=(+T.hc.size||86)*1.5;const need=Math.round(lines*px*(+T.hc.leading||1.34)+56);if(T.hook_band_h>0){if(T._bandLock){if(T.hook_band_h<need)T.hook_band_h=need;}else T.hook_band_h=need;T.hc.y=Math.round((T.bar_h+T.hook_band_h/2)/1920*100);}else{if((T.bar_h||0)<need)T.bar_h=need;T.hc.y=Math.round((T.bar_h/2+20)/1920*100);}}
 async function hcFit(target,keep){const T=target||SPEC;const hc=Object.assign({},HC_DEFAULT,T.hc||{});if(!(hc.text||'').trim())return;try{const j=await (await fetch('/fit?keep='+(keep?1:0)+'&hc='+encodeURIComponent(JSON.stringify(hc)))).json();if(!keep&&j.size&&j.size<hc.size){T.hc=T.hc||{};T.hc.size=j.size;hint.textContent='글 크기를 폭에 맞춰 '+j.size+'로 잡았습니다';}if(T===SPECS.hook&&LAYOUTS[T.preset]){fitOne(T,j.lines);if((LAYOUTS[T.preset]||{}).body_keep_hc&&SPECS.body.hc){fitOne(SPECS.body,j.lines);}}if(T===SPEC){syncUI();render();}}catch(e){}}
-function _isBody(){return part==='body'&&!(LAYOUTS[SPEC.preset]||{}).body_keep_hc;}
+// 대제목이 어느 칸에 들어있나 — ★판정은 여기 한 곳에서만 한다(0순위-B).
+// "본문인가"만 보면 안 된다: 「후킹 → 본문 같게」를 누르면 본문이 후킹 구조(hc.text)로
+// 바뀌는데, 그때도 title 칸을 보면 편집칸은 비고 그림엔 글자가 남아 크기를 키워도
+// 엉뚱한 게 움직인다(사장님 제보 2026-09-04 "샤넬 개발자 두개, 확대하면 이상해진다").
+function _isBody(T){const S=T||SPEC;
+ if(part!=='body'||(LAYOUTS[S.preset]||{}).body_keep_hc)return false;
+ if(((S.hc||{}).text||'').trim())return false;   // 본문이지만 지금은 헤드카피를 쓰는 중
+ return true;}
 function bumpBar(d){let v=+SPEC.bar_h||((PRESETS.find(p=>p.id===SPEC.preset)||{}).bar_h||190);SPEC.bar_h=Math.max(0,Math.min(900,v+d));syncUI();render();}
 function setBigBox(k,v){if(_isBody()){if(k==='color')set('sub_bg_c',v);return;}if(k==='color')set('hook_band_color',v);}
 function bumpBigBox(k,d){if(_isBody()){if(k==='h'){let v=+SPEC.head_h||300;SPEC.head_h=Math.max(0,v+d);SPEC._bandLock=true;syncUI();render();}return;}
  if(k==='alpha'){let v=+SPEC.hook_band_alpha||60;SPEC.hook_band_alpha=Math.max(0,Math.min(100,v+d));}
  if(k==='h'){let v=+SPEC.hook_band_h||0;SPEC.hook_band_h=Math.max(0,v+d);SPEC._bandLock=true;}syncUI();render();}
 function autoBand(){SPEC._bandLock=false;if(_isBody()){delete SPEC._bandLock;}hcFit(SPEC,true);}
-function setBig(k,v){if(part==='body'&&!(LAYOUTS[SPEC.preset]||{}).body_keep_hc){const m={text:'title',font:'title_font',color:'title_color'};if(k==='text')v=v.replace(/\s*\r?\n\s*/g,' ');if(m[k])set(m[k],v);return;}setHc(k,v);}
-function bumpBig(d){if(part==='body'&&!(LAYOUTS[SPEC.preset]||{}).body_keep_hc){bump('title_size',d,62);return;}bumpHc('size',d);}
-function setSub(k,v){if(part==='body'&&!(LAYOUTS[SPEC.preset]||{}).body_keep_hc){const m={text:'views',color:'sub_text_c'};if(m[k])set(m[k],v);return;}const m={text:'sub_line',font:'sub_line_font',color:'sub_line_color',bg:'sub_line_bg'};set(m[k],v);}
-function bumpSub(d){if(part==='body'&&!(LAYOUTS[SPEC.preset]||{}).body_keep_hc)return;let v=+SPEC.sub_line_size||28;SPEC.sub_line_size=Math.max(12,Math.min(80,v+d));syncUI();render();}
+function setBig(k,v){if(_isBody()){const m={text:'title',font:'title_font',color:'title_color'};if(k==='text')v=v.replace(/\s*\r?\n\s*/g,' ');if(m[k])set(m[k],v);return;}setHc(k,v);}
+function bumpBig(d){if(_isBody()){bump('title_size',d,62);return;}bumpHc('size',d);}
+function setSub(k,v){if(_isBody()){const m={text:'views',color:'sub_text_c'};if(m[k])set(m[k],v);return;}const m={text:'sub_line',font:'sub_line_font',color:'sub_line_color',bg:'sub_line_bg'};set(m[k],v);}
+function bumpSub(d){if(_isBody())return;let v=+SPEC.sub_line_size||28;SPEC.sub_line_size=Math.max(12,Math.min(80,v+d));syncUI();render();}
 function _mirrorHc(k,v){if((LAYOUTS[SPEC.preset]||{}).body_keep_hc){for(const T of [SPECS.hook,SPECS.body]){if(T&&T!==SPEC){T.hc=T.hc||{};T.hc[k]=v;}}}}
-function setHc(k,v){SPEC.hc=SPEC.hc||{};SPEC.hc[k]=v;_mirrorHc(k,v);syncUI();render();if(part==='hook'&&LAYOUTS[SPEC.preset])hcFit(SPEC,true);}
+function setHc(k,v){SPEC.hc=SPEC.hc||{};SPEC.hc[k]=v;_mirrorHc(k,v);_touchBody();syncUI();render();if(part==='hook'&&LAYOUTS[SPEC.preset])hcFit(SPEC,true);}
 function bumpHc2(k,d){SPEC.hc=SPEC.hc||{};let v=+SPEC.hc[k]||(k==='leading'?1.34:0);v=Math.round((v+d)*100)/100;SPEC.hc[k]=(k==='leading'?Math.max(1,Math.min(2.5,v)):Math.max(-20,Math.min(60,v)));syncUI();render();}
-function bumpHc(k,d){SPEC.hc=SPEC.hc||{};let v=+SPEC.hc[k];if(isNaN(v))v=+HC_DEFAULT[k]||0;SPEC.hc[k]=Math.max(0,v+d);_mirrorHc(k,SPEC.hc[k]);syncUI();render();if(part==='hook'&&LAYOUTS[SPEC.preset])hcFit(SPEC,true);}
+function bumpHc(k,d){SPEC.hc=SPEC.hc||{};let v=+SPEC.hc[k];if(isNaN(v))v=+HC_DEFAULT[k]||0;SPEC.hc[k]=Math.max(0,v+d);_mirrorHc(k,SPEC.hc[k]);_touchBody();syncUI();render();if(part==='hook'&&LAYOUTS[SPEC.preset])hcFit(SPEC,true);}
 function resetSpec(){const p=PRESETS.find(x=>x.id===SPEC.preset)||{};const keepText=((SPEC.hc||{}).text)||'';SPEC=SPECS[part]=Object.assign({},BASE,{preset:SPEC.preset,title:'',channel:$('#channel').value,hc:Object.assign({},HC_DEFAULT,p.headcopy||{},{text:keepText,x:50})});$('#title').value='';syncUI();render();}
-function set(k,v){SPEC[k]=v;syncUI();render();}
-function bump(k,d,def){let v=+SPEC[k]||0; if(!v&&def)v=def; v=Math.max(0,v+d); SPEC[k]=v; syncUI(); render();}
+// 손댐 표시는 "지금 본문 파트를 만지고 있나"만 본다 — 본문이 어느 구조(title/hc)인지와
+// 무관하다. _isBody()를 쓰면 「같게」로 헤드카피 구조가 된 본문에서 표시가 안 된다.
+function _touchBody(){if(part==='body'&&SPECS.body)SPECS.body._touched=true;}
+function set(k,v){SPEC[k]=v;_touchBody();syncUI();render();}
+function bump(k,d,def){let v=+SPEC[k]||0; if(!v&&def)v=def; v=Math.max(0,v+d); SPEC[k]=v; _touchBody(); syncUI(); render();}
 const $v=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v;};const $t=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};const $c=(id,cls,on)=>{const e=document.getElementById(id);if(e)e.classList.toggle(cls,on);};
 function syncUI(){const V=(k,fallback)=>{const el=document.getElementById(k+'_v');if(el)el.textContent=SPEC[k]?SPEC[k]:fallback;};
- const hc=Object.assign({},HC_DEFAULT,SPEC.hc||{});$t('hc_size_v',hc.size);$t('hc_olw_v',hc.outline_w);$v('hc_color',hc.color);$v('hc_color2',hc.color2||hc.color);$v('hc_olc',hc.outline_color);$('#hcBox').classList.toggle('on',!!hc.box);$('#hcWrapOn').classList.toggle('on',hc.wrap!==false);$('#hcWrapOff').classList.toggle('on',hc.wrap===false);$v('title_font',hc.font||'');$v('ch_font',SPEC.ch_font||'');$t('bar_h_v2',SPEC.bar_h||((PRESETS.find(p=>p.id===SPEC.preset)||{}).bar_h||190));const _bd=_isBody();$v('band_color',_bd?(SPEC.sub_bg_c||'#ffffff'):(SPEC.hook_band_color||'#000000'));$t('band_alpha_v',_bd?'—':(SPEC.hook_band_alpha||60));document.querySelectorAll('#band_alpha_v').forEach(e=>{const r=e.parentElement;});$t('band_h_v',_bd?(SPEC.head_h||0):(SPEC.hook_band_h||0));$v('on_bar_color',SPEC.on_bar_color||'#ffffff');$v('bar_color',SPEC.bar_color||'#ffffff');$t('sub_size_v',SPEC.sub_line_size||28);$v('sub_font',SPEC.sub_line_font||'');$v('sub_color',SPEC.sub_line_color||'#111111');$v('sub_bg',SPEC.sub_line_bg||'#ffffff');$v('title',part==='body'&&!(LAYOUTS[SPEC.preset]||{}).body_keep_hc?(SPEC.views||''):(SPEC.sub_line||''));const _b=(part==='body'&&!(LAYOUTS[SPEC.preset]||{}).body_keep_hc);$t('bigHint',_b?'— 흰 블록 안 제목 한 줄':'— 큰 글씨 2줄. 엔터로 줄을 나눕니다');$t('subHint',_b?'— 조회수 · 댓글 (제목 아래 작은 줄)':'— 큰 글씨 아래 한 줄 박스. 글자를 키우면 박스도 같이 커집니다');const _c=document.getElementById('comments');if(_c){_c.style.display=_b?'':'none';_c.value=SPEC.comments||'';}document.getElementById('title').placeholder=_b?'조회수 (예: 264만)':'소제목 한 줄 (비우면 없음)';if(_b){$t('hc_size_v',SPEC.title_size||62);$v('title_font',SPEC.title_font||'');$v('hc_color',SPEC.title_color||'#111111');}$t('hc_tracking_v',hc.tracking||0);$t('hc_leading_v',hc.leading||1.34);
+ const hc=Object.assign({},HC_DEFAULT,SPEC.hc||{});$t('hc_size_v',hc.size);$t('hc_olw_v',hc.outline_w);$v('hc_color',hc.color);$v('hc_color2',hc.color2||hc.color);$v('hc_olc',hc.outline_color);$('#hcBox').classList.toggle('on',!!hc.box);$('#hcWrapOn').classList.toggle('on',hc.wrap!==false);$('#hcWrapOff').classList.toggle('on',hc.wrap===false);$v('title_font',hc.font||'');$v('ch_font',SPEC.ch_font||'');$t('bar_h_v2',SPEC.bar_h||((PRESETS.find(p=>p.id===SPEC.preset)||{}).bar_h||190));const _bd=_isBody();$v('band_color',_bd?(SPEC.sub_bg_c||'#ffffff'):(SPEC.hook_band_color||'#000000'));$t('band_alpha_v',_bd?'—':(SPEC.hook_band_alpha||60));document.querySelectorAll('#band_alpha_v').forEach(e=>{const r=e.parentElement;});$t('band_h_v',_bd?(SPEC.head_h||0):(SPEC.hook_band_h||0));$v('on_bar_color',SPEC.on_bar_color||'#ffffff');$v('bar_color',SPEC.bar_color||'#ffffff');$t('sub_size_v',SPEC.sub_line_size||28);$v('sub_font',SPEC.sub_line_font||'');$v('sub_color',SPEC.sub_line_color||'#111111');$v('sub_bg',SPEC.sub_line_bg||'#ffffff');$v('title',_isBody()?(SPEC.views||''):(SPEC.sub_line||''));const _b=(_isBody());$t('bigHint',_b?'— 흰 블록 안 제목 한 줄':'— 큰 글씨 2줄. 엔터로 줄을 나눕니다');$t('subHint',_b?'— 조회수 · 댓글 (제목 아래 작은 줄)':'— 큰 글씨 아래 한 줄 박스. 글자를 키우면 박스도 같이 커집니다');const _c=document.getElementById('comments');if(_c){_c.style.display=_b?'':'none';_c.value=SPEC.comments||'';}document.getElementById('title').placeholder=_b?'조회수 (예: 264만)':'소제목 한 줄 (비우면 없음)';if(_b){$t('hc_size_v',SPEC.title_size||62);$v('title_font',SPEC.title_font||'');$v('hc_color',SPEC.title_color||'#111111');}$t('hc_tracking_v',hc.tracking||0);$t('hc_leading_v',hc.leading||1.34);
  V('title_size','기본');V('bar_h',190);V('bar_soft',0);V('bottom_h',0);V('title_ol_w','기본');V('ch_size','기본');V('ch_x',50);V('ad_size','기본');V('ad_alpha',100);V('ad_x','자동');V('ad_y','자동');
  if(SPEC.bar_color)$v('bar_color',SPEC.bar_color);if(SPEC.on_bar_color)$v('on_bar_color',SPEC.on_bar_color);}
 let rt=null;const hcimg=$('#hcimg');
 function loadImg(el,url){el.classList.add('busy');const im=new Image();im.onload=()=>{el.src=im.src;el.classList.remove('busy');errEl.style.display='none';};im.onerror=()=>{el.classList.remove('busy');fetch(im.src).then(r=>r.json()).then(j=>{errEl.textContent='렌더 실패: '+(j.error||'');errEl.style.display='';}).catch(()=>{});};im.src=url;}
-function persistTitle(){pushStateFile();try{localStorage.setItem('deco_title',JSON.stringify({hook:SPECS.hook,body:SPECS.body,part,beatN,hookBeats}));const id=SPECS.hook&&SPECS.hook.preset;if(id&&typeof DEF!=='undefined'){DEF[id]={hook:JSON.parse(JSON.stringify(SPECS.hook)),body:JSON.parse(JSON.stringify(SPECS.body))};localStorage.setItem('deco_defaults',JSON.stringify(DEF));}}catch(e){}}
+function persistTitle(){pushStateFile();try{localStorage.setItem('deco_title',JSON.stringify({hook:SPECS.hook,body:SPECS.body,part,beatN,hookBeats}));const id=SPECS.hook&&SPECS.hook.preset;if(id&&typeof DEF!=='undefined'){const _b=JSON.parse(JSON.stringify(SPECS.body));
+ // 본문에 후킹 전용 값(검은 반투명 띠)이 섞인 채로는 저장하지 않는다 — 이게 저장되면
+ // 다음에 카드를 눌러도 본문이 후킹 모양으로 열려 "후킹·본문이 똑같다"가 굳는다.
+ const _L=LAYOUTS[id];if(_L&&!_L.body_keep_hc&&!(((_L.body||{}).spec||{}).hook_band_h)){delete _b.hook_band_h;delete _b.hook_band_color;delete _b.hook_band_alpha;}
+ DEF[id]={hook:JSON.parse(JSON.stringify(SPECS.hook)),body:_b};localStorage.setItem('deco_defaults',JSON.stringify(DEF));}}catch(e){}}
 function pairUrls(T){if(!T||!T.preset)return null;const s=Object.assign({},T);delete s.hc;delete s._bandLock;const hc=Object.assign({},HC_DEFAULT,T.hc||{});const txt=(hc.text||'').trim();if(!txt)hc.text='';else{const ls=txt.split(/\r?\n/);if(hc.color2&&hc.color2!==hc.color&&ls[1])hc.highlight_rules=[{keyword:ls[1].trim(),color:hc.color2,box:false}];}return {fr:'/render?spec='+encodeURIComponent(JSON.stringify(s)),hc:'/hc?hc='+encodeURIComponent(JSON.stringify(hc))};}
 function renderPair(){document.querySelectorAll('#pairRow .pair').forEach(el=>{const u=pairUrls(SPECS[el.dataset.part]);if(!u){el.querySelector('.pfr').src='';el.querySelector('.phc').src='';return;}el.querySelector('.pfr').src=u.fr;el.querySelector('.phc').src=u.hc;});hookBeatsLbl();}
 let prt=null;
@@ -266,6 +287,7 @@ function render(){persistTitle();clearTimeout(prt);prt=setTimeout(renderPair,400
 function copySpec(){navigator.clipboard.writeText(JSON.stringify(SPEC,null,1));hint.textContent='값을 복사했습니다';}
 async function loadFrames(){await hydrateFromFile();
  PRESETS=await (await fetch('/presets')).json();try{LAYOUTS=await (await fetch('/channel_layouts.json')).json();}catch(e){LAYOUTS={};}
+ _healDefaults();
  const fonts=await (await fetch('/fonts')).json();
  const FONT_NAMES=[{"name": "⭐ 티몬 몬소리", "file": "TmonMonsori.ttf"}, {"name": "⭐ 배민 주아", "file": "BMJUA.ttf"}, {"name": "배민 도현", "file": "BMDOHYEON.ttf"}, {"name": "⭐ 빙그레", "file": "Binggrae-Bold.otf"}, {"name": "꾸불림체", "file": "Kkubulim.ttf"}, {"name": "⭐ 지마켓 산스", "file": "GmarketSansBold.otf"}, {"name": "SUIT", "file": "SUIT-Bold.otf"}, {"name": "프리텐다드", "file": "Pretendard-ExtraBold.otf"}, {"name": "프리텐다드 Bold", "file": "Pretendard-Bold.otf"}, {"name": "프리텐다드 SemiBold", "file": "Pretendard-SemiBold.otf"}, {"name": "스포카 한 산스", "file": "SpoqaHanSansNeo-Bold.otf"}, {"name": "IBM Plex Sans", "file": "IBMPlexSansKR-Bold.otf"}, {"name": "노토 산스", "file": "NotoSansKR-Bold.otf"}, {"name": "나눔고딕", "file": "NanumGothic-Bold.ttf"}, {"name": "경기천년바탕", "file": "GBatang.otf"}, {"name": "고운바탕", "file": "GowunBatang.ttf"}, {"name": "리디바탕", "file": "RIDIBatang.otf"}, {"name": "프리텐다드 Reg", "file": "Pretendard-Regular.otf"}, {"name": "SUIT Reg", "file": "SUIT-Regular.otf"}, {"name": "스포카 Reg", "file": "SpoqaHanSansNeo-Regular.otf"}, {"name": "IBM Plex Reg", "file": "IBMPlexSansKR-Regular.otf"}, {"name": "손글씨 개구쟁이", "file": "Gaegu-Bold.ttf"}, {"name": "손글씨 나눔펜", "file": "NanumPenScript.ttf"}, {"name": "손글씨 나눔붓", "file": "NanumBrushScript.ttf"}, {"name": "손글씨 하이멜로디", "file": "HiMelody.ttf"}, {"name": "⭐ 손글씨 싱글데이", "file": "SingleDay.ttf"}, {"name": "손글씨 포스터리", "file": "PoorStory.ttf"}, {"name": "손글씨 독도", "file": "Dokdo-Regular.ttf"}, {"name": "손글씨 동해독도", "file": "EastSeaDokdo.ttf"}, {"name": "감자꽃", "file": "GamjaFlower.ttf"}, {"name": "⭐ 귀여운체", "file": "CuteFont.ttf"}, {"name": "⭐ 레트로 킬사인", "file": "KirangHaerang.ttf"}, {"name": "레트로 성실체", "file": "Sunflower-Medium.ttf"}, {"name": "레트로 흑백사진", "file": "BlackAndWhitePicture.ttf"}, {"name": "임팩트 검은고딕", "file": "BlackHanSans.ttf"}, {"name": "임팩트 구기", "file": "Gugi-Regular.ttf"}, {"name": "카페24 아네모네", "file": "Cafe24Ohsquare.ttf"}, {"name": "카페24 단정해", "file": "Cafe24Danjunghae.ttf"}, {"name": "간판체", "file": "KCCGanpan.otf"}, {"name": "손글씨 분필", "file": "HakgyoansimBunpil.ttf"}];
  const known=new Set(FONT_NAMES.map(x=>x.file));const ordered=FONT_NAMES.filter(x=>fonts.includes(x.file)).concat(fonts.filter(f=>!known.has(f)).map(f=>({name:f.replace(/\.(ttf|otf)$/i,''),file:f})));
@@ -282,7 +304,7 @@ async function loadFrames(){await hydrateFromFile();
  $('#tplChips').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;box.querySelectorAll('#tplChips button').forEach(x=>x.classList.toggle('on',x===b));box.querySelectorAll('.cards.tpl').forEach(c=>c.classList.toggle('on',c.dataset.g===b.dataset.g));});
  box.addEventListener('click',e=>{const t=e.target.closest('div[data-tpl]');if(!t)return;box.querySelectorAll('div[data-tpl].on').forEach(c=>c.classList.remove('on'));t.classList.add('on');pickTpl(t);});
  let saved=null;try{saved=JSON.parse(localStorage.getItem('deco_title')||'null');}catch(e){}
- if(saved&&saved.hook&&saved.hook.preset){SPECS.hook=saved.hook;SPECS.body=saved.body||{};hookBeats=saved.hookBeats||1;$('#hookBeats').textContent=hookBeats;beatN=saved.beatN||1;$('#beatNo').textContent=beatN+' / 12';part=curPart();SPEC=SPECS[part];document.querySelectorAll('#partRow [data-part],#pairRow .pair').forEach(b=>b.classList.toggle('on',b.dataset.part===part));$('#partName').textContent=part==='hook'?'후킹':'본문';syncFromSpec();render();if(part==='hook')hcFit(SPEC,true);hint.textContent='마지막 작업 상태로 열었습니다';}
+ if(saved&&saved.hook&&saved.hook.preset){SPECS.hook=saved.hook;SPECS.body=saved.body||{};hookBeats=saved.hookBeats||1;$('#hookBeats').textContent=hookBeats;beatN=saved.beatN||1;$('#beatNo').textContent=beatN+' / 12';part=curPart();SPEC=SPECS[part];document.querySelectorAll('#partRow [data-part],#pairRow .pair').forEach(b=>b.classList.toggle('on',b.dataset.part===part));$('#partName').textContent=part==='hook'?'후킹':'본문';const _sb2=document.getElementById('sameBtn');if(_sb2&&SPECS.body&&SPECS.body._sameBackup){_sb2.textContent='후킹·본문 다르게';_sb2.classList.add('on');}syncFromSpec();render();if(part==='hook')hcFit(SPEC,true);hint.textContent='마지막 작업 상태로 열었습니다';}
  else{part='body';SPEC=SPECS.body;pickTpl(box.querySelector('[data-id="plain_white"]'));SPECS.body.hc.text='';part='hook';SPEC=SPECS.hook;const first=box.querySelector('[data-id="sul_salrim"]');pickTpl(first);}
  markCard();renderMyCards();
 }
@@ -298,12 +320,35 @@ function clearDefault(){const id=SPECS.hook.preset;if(DEF[id]){delete DEF[id];_s
 function saveMyPreset(){const id=SPECS.hook.preset;const base=(LAYOUTS[id]&&LAYOUTS[id].name)||(PRESETS.find(p=>p.id===id)||{}).name||id;const name=base+' · 내 설정 '+(MY.length+1);MY.push({name,hook:JSON.parse(JSON.stringify(SPECS.hook)),body:JSON.parse(JSON.stringify(SPECS.body)),cap:CAPS?{style:CAPS.style,pos:CAPS.beats[0].pos,y_pct:CAPS.beats[0].y_pct}:null});_save('deco_mypresets',MY);renderMyCards();_msg('⭐ "'+name+'" 로 저장했어요. 「내 것」에서 고를 수 있어요');}
 function renderMyCards(){const row=document.querySelector('.cards.tpl[data-g="mine"]');if(!row)return;row.querySelectorAll('[data-tpl="myp"]').forEach(e=>e.remove());MY.forEach((m,i)=>{const d=document.createElement('div');d.dataset.tpl='myp';d.dataset.i=i;d.innerHTML='<i style="display:flex;align-items:center;justify-content:center;font-size:20px">⭐</i><b>'+m.name+'</b>';row.appendChild(d);});}
 function loadMyPreset(i){const m=MY[i];if(!m)return;SPECS.hook=JSON.parse(JSON.stringify(m.hook));SPECS.body=JSON.parse(JSON.stringify(m.body));SPEC=SPECS[part];capSwitchTo(SPECS.hook.preset);if(m.cap&&CAPS){CAPS.style=Object.assign({},CAP_DEFAULT,m.cap.style||{});CAPS.beats.forEach(b=>{b.pos=m.cap.pos||'mid';b.y_pct=m.cap.y_pct;});capSave();capSyncUI();capRender();}syncFromSpec();render();hint.textContent='⭐ '+m.name;}
-function applyLayout(id){BODY_BACKUP=null;const _sb=document.getElementById('sameBtn');if(_sb){_sb.textContent='후킹 → 본문 같게';_sb.classList.remove('on');}const L=LAYOUTS[id],p=PRESETS.find(x=>x.id===id)||{};const keepText=L.sample||((SPECS.hook.hc||{}).text)||$('#hcText').value||'';const ch=$('#channel').value;
+// 사장님이 본문을 한 번이라도 직접 고쳤으면, 카드를 갈아타도 본문에 적어둔 글·크기·색은 지킨다.
+// (틀 모양·띠는 새 카드 것으로 바뀐다) — 카드 경로와 저장값(DEF) 복원 경로가 같은 함수를 쓴다.
+const _BODY_KEEP_KEYS=['title','title_size','title_font','title_color','views','comments','sub_text_c'];
+// 옛 「후킹 → 본문 같게」 버그로 본문이 후킹 복사본으로 굳어버린 저장값을 되살린다.
+// (그 버튼이 본문을 통째로 덮고 그대로 기본값에 저장돼, 카드를 다시 눌러도 안 돌아왔다)
+function _healDefaults(){if(typeof DEF==='undefined'||!DEF)return 0;let n=0;
+ const strip=o=>{const x=JSON.parse(JSON.stringify(o||{}));delete x.hc;delete x._bandLock;delete x._touched;delete x._sameBackup;return JSON.stringify(x);};
+ for(const id of Object.keys(DEF)){const d=DEF[id];if(!d||!d.hook||!d.body)continue;
+  const L=LAYOUTS[id];if(!L||L.body_keep_hc)continue;               // 실측 없는 틀·헤드라인 유지형은 건드리지 않는다
+  const hb=(L.body&&L.body.spec)||{},hh=(L.hook&&L.hook.spec)||{};
+  if(strip(hb)===strip(hh))continue;                                 // 원본부터 같은 채널(코어장바구니)은 정상
+  // 판정은 "둘이 같은가"가 아니라 "본문에 후킹 전용 값이 박혔는가"로 한다.
+  // (같게 만든 뒤 본문 글만 고치면 둘은 달라지지만 틀은 여전히 후킹 모양이다)
+  const bad=(d.body&&d.body.hook_band_h&&!hb.hook_band_h)||(d.body&&d.body.hook_band_color&&!hb.hook_band_color);
+  if(!bad)continue;
+  delete DEF[id];n++;}                                               // 고장난 것만 버려 원본 실측값으로 열리게
+ if(n)try{localStorage.setItem('deco_defaults',JSON.stringify(DEF));}catch(e){}
+ return n;}
+function _restoreBody(keep){if(!keep||!SPECS.body)return;SPECS.body._touched=true;
+ for(const k of _BODY_KEEP_KEYS)if(keep[k]!==undefined)SPECS.body[k]=keep[k];
+ if(keep.hc&&keep.hc.text)SPECS.body.hc=Object.assign({},SPECS.body.hc,{text:keep.hc.text});}
+function applyLayout(id){const _keepBody=(SPECS.body&&SPECS.body._touched)?JSON.parse(JSON.stringify(SPECS.body)):null;
+ BODY_BACKUP=null;const _sb=document.getElementById('sameBtn');if(_sb){_sb.textContent='후킹 → 본문 같게';_sb.classList.remove('on');}const L=LAYOUTS[id],p=PRESETS.find(x=>x.id===id)||{};const keepText=L.sample||((SPECS.hook.hc||{}).text)||$('#hcText').value||'';const ch=$('#channel').value;
  const mk=(part)=>{const d=L[part]||{};const hc=Object.assign({},HC_DEFAULT,p.headcopy||{},d.hc||{});const noHc=(d.hc&&d.hc.text==='');if((part==='hook'&&!noHc)||(part==='body'&&L.body_keep_hc))hc.text=keepText;else hc.text='';if(part==='body'&&L.body_keep_hc)Object.assign(hc,L.hook.hc||{},{text:keepText});hc.x=hc.x||50;
   const sp=Object.assign({},BASE,{preset:id,channel:ch,title:((part==='body'&&!L.body_keep_hc)||noHc)?keepText.replace(/\s*\r?\n\s*/g,' '):''},d.spec||{},{hc});if(!('sub_line' in (d.spec||{}))&&part==='hook'&&L.hook&&L.hook.spec&&L.hook.spec.sub_line)sp.sub_line=L.hook.spec.sub_line;return sp;};
- SPECS.hook=mk('hook');SPECS.body=mk('body');if(SPECS.hook.sub_line&&!SPECS.hook.sub_line_size)SPECS.hook.sub_line_size=28;SPEC=SPECS[part];
+ SPECS.hook=mk('hook');SPECS.body=mk('body');_restoreBody(_keepBody);
+ if(SPECS.hook.sub_line&&!SPECS.hook.sub_line_size)SPECS.hook.sub_line_size=28;SPEC=SPECS[part];
  if(typeof capSwitchTo==='function')capSwitchTo(id);
- $('#hcText').value=keepText;$('#bar_color').value=(SPEC.bar_color||p.bar||'#ffffff');$('#on_bar_color').value=(SPEC.on_bar_color||p.on_bar||'#111111');if(DEF[id]){const keep=SPECS.hook.hc.text;SPECS.hook=JSON.parse(JSON.stringify(DEF[id].hook));SPECS.body=JSON.parse(JSON.stringify(DEF[id].body));SPECS.hook.hc.text=keep;SPEC=SPECS[part];syncFromSpec();render();hcFit(SPECS.hook,true);hint.textContent='내가 만진 값 그대로 열었습니다 (↩ 채널 원래 값으로 되돌릴 수 있어요)';return;}
+ $('#hcText').value=keepText;$('#bar_color').value=(SPEC.bar_color||p.bar||'#ffffff');$('#on_bar_color').value=(SPEC.on_bar_color||p.on_bar||'#111111');if(DEF[id]){const keep=SPECS.hook.hc.text;SPECS.hook=JSON.parse(JSON.stringify(DEF[id].hook));SPECS.body=JSON.parse(JSON.stringify(DEF[id].body));SPECS.hook.hc.text=keep;_restoreBody(_keepBody);SPEC=SPECS[part];syncFromSpec();render();hcFit(SPECS.hook,true);hint.textContent='내가 만진 값 그대로 열었습니다 (↩ 채널 원래 값으로 되돌릴 수 있어요)';return;}
  syncUI();render();hcFit(SPECS.hook);hint.textContent='★ '+(L.name||id)+' 완성 화면을 올렸습니다. 문구만 바꾸세요';}
 function pickTpl(t){const k=t.dataset.tpl;if(k==='myp'){loadMyPreset(+t.dataset.i);return;}tplImg.style.display='none';hcHtml.style.display='none';
  if(k==='preset'&&LAYOUTS[t.dataset.id]){applyLayout(t.dataset.id);return;}

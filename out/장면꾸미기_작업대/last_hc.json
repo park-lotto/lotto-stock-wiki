@@ -1,18 +1,18 @@
 {
  "wrap": true,
- "font": "BlackHanSans.ttf",
- "size": 69,
- "color": "#111111",
- "color2": "#111111",
- "y": 19,
+ "font": "Pretendard-ExtraBold.otf",
+ "size": 81,
+ "color": "#FFFFFF",
+ "color2": "#64E9CC",
+ "y": 38,
  "x": 50,
  "weight": 900,
- "outline": false,
- "outline_color": "#FFFFFF",
- "outline_w": 5,
+ "outline": true,
+ "outline_color": "#111111",
+ "outline_w": 7,
  "box": false,
- "box_color": "#FFFFFF",
+ "box_color": "#222222",
  "box_pad": 16,
  "box_opacity": 100,
- "text": "개발자도 예상 못한\n미친 사용법"
+ "text": ""
 }
