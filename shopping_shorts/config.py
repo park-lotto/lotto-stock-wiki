@@ -322,6 +322,26 @@ YTDLP_PROXY = os.getenv("YTDLP_PROXY", "")
 #   종전대로 YTDLP_PROXY 한 개만 쓴다(회귀 0).
 YTDLP_PROXY_SLOTS = int(os.getenv("YTDLP_PROXY_SLOTS", "4"))
 
+
+# ★"주거용 IP로 나가야 하는 요청"의 프록시를 정하는 곳은 여기 하나다(0순위-B).
+#   2026-09-04 실사고: 핀터레스트가 REDDIT_PROXY만 읽었는데 서버에는 YTDLP_PROXY만
+#   깔려 있어(webshare) 핀터레스트만 데이터센터 IP로 나갔다. 핀터레스트는 그 IP에
+#   SEO용 JSON-LD를 아예 안 내려준다 → pin_video_info가 None → 믹스에서
+#   "영상이 없는 핀이에요(이미지 핀)"로 떨어졌다. 실측(라이브 담긴 핀 2건):
+#     프록시 없음 → None 2/2   /   YTDLP_PROXY 태움 → mp4 직링크 2/2.
+#   같은 자원(주거용 출구 IP)을 이름 두 개로 나눠 적어서 한쪽만 설정된 것이 뿌리다.
+#   전용 노브(REDDIT_PROXY)가 있으면 그것을 먼저 쓰고, 없으면 이미 깔려 있는
+#   YTDLP_PROXY로 넘어간다 — 둘 다 없으면 종전대로 직결(회귀 0).
+def residential_proxy():
+    """주거용 출구 IP 프록시 URL(없으면 빈 문자열)."""
+    return REDDIT_PROXY or YTDLP_PROXY or ""
+
+
+def residential_proxies():
+    """requests용 proxies dict(없으면 None = 직결)."""
+    u = residential_proxy()
+    return {"http": u, "https": u} if u else None
+
 # 네이버 클립 벤치마킹 채널 매일 자동수집(2026-08-31). 샤홍·인스타 발굴과 같은
 # 계약으로 **기본은 꺼둔다** — 켜는 건 서버 env에서 한다(병합만으로 라이브 동작이
 # 바뀌면 안 된다). 실측 부담: 15채널 915건에 4.2초라 배치에 얹어도 티가 안 난다.
