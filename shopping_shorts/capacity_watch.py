@@ -321,6 +321,16 @@ if __name__ == "__main__":      # 크론: */5 * * * * python -m shopping_shorts.
     #    판정이 돌아 danger면 ops_alert(텔레그램+쪽지, 30분 쿨다운)가 나간다.
     #    관측이 크론 본업(용량 표본)을 죽이면 안 되므로 전부 삼킨다.
     try:
+        # ★판정 전에 회원 키를 합류시킨다(2026-09-04 실사고). 이 크론은 별도
+        #   프로세스라 사장님 키만 보였다 — 사장님 키 1개가 일일 한도에 걸리자
+        #   "풀 전멸(살아있는 키 0개)" 고객영향 경보가 났지만, 웹·워커는 회원 키로
+        #   정상 생성 중이었다(shorts 풀 성공 424건). 워커와 같은 방식으로 합류한다.
+        try:
+            from shopping_shorts import keypool
+            from shopping_shorts.store import Store
+            keypool.resync_pools(Store(DB_PATH))
+        except Exception as e:  # noqa: BLE001 — 합류 실패해도 판정은 낸다(사장님 키 기준)
+            print(f"[apiwatch] 회원 키 합류 실패(사장님 키만으로 판정): {e}")
         from shopping_shorts import api_health
         v = api_health.verdict()
         print(f"[apiwatch] {v['level']}: {v['msg'][:120]}")
