@@ -55,7 +55,15 @@ def _run(args, timeout=180):
 
 
 def collect():
-    """통과 채널마다 쇼츠 목록(조회수·id·제목)을 긁어 videos.json에 쌓는다."""
+    """통과 채널마다 쇼츠 목록(조회수·id·제목)을 긁어 videos.json에 쌓는다.
+
+    ⚠️★yt-dlp 제목은 **유튜브 자동번역 영어**로 온다 — 실측 2,707편 중 96%가 영어였다.
+      그래서 이 제목으로 `categorize` 판정을 하면 **전부 '안 걸림'**이 나온다(실측 100%).
+      판정에 쓸 제목은 반드시 **YouTube API**에서 받아라(발굴 루프가 그렇게 해서
+      292편을 제대로 찾았다). 여기서 받은 제목은 **조회수·id 확보용**이고,
+      축 판정은 state.json의 API 제목(sample_titles)이나 API 재조회로 한다.
+      (같은 함정 3번째 — memory: 정적문자열검사_기능오판)
+    """
     st = json.loads(STATE.read_text(encoding="utf-8"))
     have = {}
     if VIDEOS.exists():
@@ -109,9 +117,21 @@ def _clean_vtt(p):
     return " ".join(out)
 
 
-def transcribe(n):
-    vids = json.loads(VIDEOS.read_text(encoding="utf-8"))
-    vids.sort(key=lambda v: -v["views"])
+def transcribe(n, use_pick=True):
+    """★pick.json이 있으면 그걸 쓴다 — 판정기에 **안 걸린** 영상이 우선이다.
+
+    그냥 조회수 순으로 전사하면 이미 아는 축(오용형 등)만 잔뜩 받게 된다.
+    새 축은 판정기가 모르는 영상에 있다(pick_unknown.py 주석 참조).
+    """
+    pick = OUT / "pick.json"
+    if use_pick and pick.exists():
+        vids = json.loads(pick.read_text(encoding="utf-8"))
+        print("pick.json 사용 — unknown %d · known %d"
+              % (sum(1 for v in vids if v.get("group") == "unknown"),
+                 sum(1 for v in vids if v.get("group") == "known")))
+    else:
+        vids = json.loads(VIDEOS.read_text(encoding="utf-8"))
+        vids.sort(key=lambda v: -v["views"])
     todo = [v for v in vids if not (TDIR / ("%s.json" % v["video_id"])).exists()][:n]
     print("전사 대상 %d편 (이미 받은 것 %d편)"
           % (len(todo), len(list(TDIR.glob("*.json")))))
