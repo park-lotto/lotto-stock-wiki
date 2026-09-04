@@ -70,10 +70,10 @@ class TestLensLimitScalesWithKeys:
             assert appmod.check_and_count(cid, "lens") is True
         assert appmod.check_and_count(cid, "lens") is False
 
-    def test_기본값_20이면_키2개는_40회(self, s):
-        """설정을 안 건드린 상태(코드 기본값 20, 2026-09-04)에서 키 2개=40회가 나오는지."""
+    def test_기본값_10이면_키2개는_20회(self, s):
+        """설정을 안 건드린 상태(코드 기본값 10)에서 사장님이 말한 20회가 나오는지."""
         cid = _free_customer(s, keys=2)
-        for i in range(40):
+        for i in range(20):
             assert appmod.check_and_count(cid, "lens") is True, f"{i+1}회째가 막혔다"
         assert appmod.check_and_count(cid, "lens") is False
 
@@ -121,7 +121,7 @@ class TestOffKeysDoNotCount:
         assert appmod.check_and_count(cid, "lens") is False, "꺼둔 키가 한도를 늘렸다"
 
 
-def test_per_key_default_is_20():
-    """2026-09-04 사장님: SerpApi 키를 낸 회원은 키 1개당 하루 20회(종전 10회)."""
+def test_per_key_default_is_10():
+    """사장님 정본(2026-09-04 재확인): SerpApi 키 1개=10회 · 2개=20회."""
     from shopping_shorts.app import _CREDIT_PER_KEY_DEFAULTS
-    assert _CREDIT_PER_KEY_DEFAULTS["lens"] == 20
+    assert _CREDIT_PER_KEY_DEFAULTS["lens"] == 10
