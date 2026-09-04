@@ -248,11 +248,11 @@ def pin_destination(url, timeout=15):
     amzn.to 34 · temu.to 20 · amazon 19 → 쇼핑몰 핀 85개(전부 영상 있음, 중앙값 15.8초).
     """
     import requests
-    from shopping_shorts.reddit_source import _proxies
+    from shopping_shorts.config import residential_proxies
     try:
         r = requests.get(url, headers={"User-Agent": _PIN_PAGE_UA,
                                        "Accept-Encoding": "gzip, deflate"},
-                         proxies=_proxies(), timeout=timeout)
+                         proxies=residential_proxies(), timeout=timeout)
         if r.status_code != 200:
             return None, None
         doms = [d for d in _PIN_DOMAIN_RE.findall(r.text) if d and d != "null"]
@@ -294,12 +294,15 @@ def pin_video_info(url, timeout=8):
     #
     #   ⚠️①만 고치면 **오히려 나빠진다**: 예외(판정불가 → 렌즈가 안 자름)가
     #     None(영상 아님 확정 → 렌즈가 잘라냄)으로 바뀌어 멀쩡한 영상이 사라진다.
-    #   프록시 dict는 reddit_source._proxies()를 재사용한다(0순위-B) — 미설정이면
-    #   None을 주므로 로컬·테스트에서도 안 깨진다.
-    from shopping_shorts.reddit_source import _proxies
+    #   프록시는 config.residential_proxies() 한 곳에서 정한다(0순위-B).
+    #   ★2026-09-04: 종전엔 reddit_source._proxies()(=REDDIT_PROXY만)를 썼는데
+    #     서버엔 YTDLP_PROXY만 깔려 있어 핀터레스트만 직결로 나갔다 → 담은 핀이
+    #     믹스에서 통째로 '이미지 핀'으로 떨어졌다(실측 None 2/2 → 프록시 태우면 2/2 정상).
+    #   미설정이면 None을 주므로 로컬·테스트에서도 안 깨진다.
+    from shopping_shorts.config import residential_proxies
     r = requests.get(url, headers={"User-Agent": _PIN_PAGE_UA,
                                    "Accept-Encoding": "gzip, deflate"},
-                     proxies=_proxies(), timeout=timeout)
+                     proxies=residential_proxies(), timeout=timeout)
     if r.status_code != 200:
         raise RuntimeError(f"핀 페이지 HTTP {r.status_code}: {url}")
     for m in _LD_JSON_RE.finditer(r.text):
