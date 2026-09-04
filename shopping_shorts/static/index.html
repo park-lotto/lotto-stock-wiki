@@ -680,6 +680,8 @@ body.is-admin .admin-only{display:block}
     </div>
   </div>
 <script>
+function cpKw(s){ /* 쿠팡 검색어: 이모지(서로게이트 쌍) 반 토막 방지 — 2026-09-04 라이브 사고: slice(0,60)가 이모지를 반으로 잘라 encodeURIComponent가 URIError를 던져 즐겨찾기·랭킹 카드 전부 안 그려짐 */ try{ return encodeURIComponent(Array.from(String(s==null?'':s).split('
+')[0]).slice(0,60).join('')); }catch(e){ return ''; } }
 // 썸네일 프록시 URL 빌더(2026-08-09). ★v= 를 붙이는 이유:
 // CDN 서명 만료로 /api/thumb가 404를 낸 적이 있으면 브라우저가 그 결과를 기억해,
 // 나중에 서버가 이미지를 복구(디스크 캐시 백필)해도 **재요청을 안 해** 카드가 계속
@@ -2169,7 +2171,7 @@ function render(opts){
             <button class="view" onclick="window.open('${i.url}','_blank')">👁 영상보기</button>
             <button class="save" id="save_${i.shortcode}" onclick="toggleMix('${i.shortcode}', this)">📥 즐겨찾기</button>
             <button class="script-btn" onclick="lensSearch(this,'${i.shortcode}')">🔍 숏템파워검색</button>
-            <button class="cp-btn" title="이 제품이 쿠팡에 있는지 찾고, 있으면 내 추적 링크까지 바로 만듭니다" onclick="window.ssCoupangFind(decodeURIComponent('${encodeURIComponent((i.title||i.caption||'').split('\n')[0].slice(0,60))}'))">🛒 쿠팡에 있나?</button>
+            <button class="cp-btn" title="이 제품이 쿠팡에 있는지 찾고, 있으면 내 추적 링크까지 바로 만듭니다" onclick="window.ssCoupangFind(decodeURIComponent('${cpKw(i.title||i.caption)}'))">🛒 쿠팡에 있나?</button>
             ${window.IS_ADMIN?`<button class="inner-btn" title="우리가 관리하는 채널 아카이브에서 같은 제품·주제의 옛 영상 찾기 (무료·비전태그 매칭)" onclick="archiveSimilar('${i.shortcode}')">🏠 숏템내부검색</button>`:''}
           </div>
         </div>
