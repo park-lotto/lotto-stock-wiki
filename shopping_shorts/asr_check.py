@@ -73,21 +73,27 @@ def transcribe(mp3_path):
         return None
 
 
-def transcribe_words(mp3_path):
+def transcribe_words(mp3_path, language="ko"):
     """GROQ Whisper verbose_json으로 워드 타임스탬프 재전사.
     성공 → [{"word","start","end"}, …](발화 순서). 키 없음·실패·워드 없음 → None.
-    (transcribe와 같은 graceful 계약: 예외를 삼켜 None. 호출부가 폴백한다.)"""
+    (transcribe와 같은 graceful 계약: 예외를 삼켜 None. 호출부가 폴백한다.)
+
+    language: 기본 "ko"(우리 TTS 검수용 — 종전 동작 그대로). **None이면 언어 자동 감지** —
+    소스 영상 전사(frame_script)는 외국 영상이 많아 "ko" 고정이면 중국어·영어를 한국어로
+    엉터리 받아쓴다(2026-09-04). 호출부가 원문 언어를 알아서 번역까지 한다."""
     if not config.GROQ_API_KEY:
         return None
     try:
+        data = {"model": _MODEL, "response_format": "verbose_json",
+                "timestamp_granularities[]": "word"}
+        if language:
+            data["language"] = language
         with open(mp3_path, "rb") as f:
             r = requests.post(
                 _GROQ_URL,
                 headers={"Authorization": f"Bearer {config.GROQ_API_KEY}"},
                 files={"file": (mp3_path, f, "audio/mpeg")},
-                data={"model": _MODEL, "language": "ko",
-                      "response_format": "verbose_json",
-                      "timestamp_granularities[]": "word"},
+                data=data,
                 timeout=60)
         r.raise_for_status()
         raw = r.json().get("words")

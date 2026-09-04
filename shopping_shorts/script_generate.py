@@ -370,7 +370,8 @@ def _mix_source_block(sources):
             block += "\n- 장면 목록(이 대본을 참고해 쓸 때 어느 대목인지 번호로 지목하라):\n" + "\n".join(
                 "  [{sid}] {say}{desc}".format(
                     sid=x.get("seg_id"),
-                    say=("말:" + (x.get("text") or "").strip()[:40] + " ") if (x.get("text") or "").strip() else "",
+                    say=("말:" + (x.get("text_ko") or x.get("text") or "").strip()[:40] + " ")
+                        if (x.get("text_ko") or x.get("text") or "").strip() else "",
                     desc="화면:" + (x.get("scene_desc") or "").strip()[:40])
                 for x in _segs[:20])
         # 무자막 해외영상: 자막·나레이션이 없어 전체대본이 비고 특장점만 있다. 그 특장점을

@@ -18869,7 +18869,8 @@ def _sources_for_generate(item, job, limit=_FACTS_MAX_SOURCES):
             break
         if not isinstance(ex, dict):
             continue
-        txt = (ex.get("full_text") or "").strip()
+        # ★외국 소스는 한국어 번역본(full_text_ko, 컷별 태깅이 채움)이 있으면 그걸 재료로(2026-09-04)
+        txt = (ex.get("full_text_ko") or ex.get("full_text") or "").strip()
         if not txt:
             txt = " ".join((s.get("text") or "").strip()
                            for s in (ex.get("segments") or [])

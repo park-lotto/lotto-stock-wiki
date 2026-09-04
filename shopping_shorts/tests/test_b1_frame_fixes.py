@@ -312,3 +312,97 @@ def test_격자에는_컷_시각이_찍힌다(tmp_path):
     assert g.height == fs.GRID_HEIGHT
     # 시각 라벨(검정 상자)이 첫 칸 왼쪽 위에 찍혀 원래 회색이 아니다
     assert g.getpixel((2, 2)) != (200, 200, 200)
+
+
+# ── 말 트랙: 언어 자동 감지 + 외국어 번역(text_ko) ────────────────────────
+def test_is_foreign_text():
+    assert fs.is_foreign_text("This is a butter cookie recipe, 300g butter") is True
+    assert fs.is_foreign_text("黄油曲奇饼干 黄油300g") is True
+    assert fs.is_foreign_text("버터 쿠키 만드는 법 300g") is False
+    assert fs.is_foreign_text("") is False and fs.is_foreign_text("...") is False
+
+
+def test_기본_전사는_언어_자동감지로_부른다(monkeypatch):
+    """옛 코드는 language="ko" 고정 → 외국 영상을 한국어로 엉터리 받아씀."""
+    from shopping_shorts import asr_check
+    seen = {}
+
+    def fake_tw(mp3, language="ko"):
+        seen["language"] = language
+        return None
+
+    monkeypatch.setattr(asr_check, "transcribe_words", fake_tw)
+    fs.extract_script_frames(
+        "v.mp4", "s1", _no_classic=True,
+        get_boundaries=lambda p: [0.0, 3.0],
+        extract_frame_at=lambda p, d, t, f=None: f"{d}/{f}",
+        extract_audio=lambda v, o: o,
+        tag_frames=lambda g, c, s, b=None: [{"scene_desc": "a", "shot_role": "완성"}],
+        story_brief=lambda *a: {}, translate=lambda texts: [])
+    assert "language" in seen and seen["language"] is None
+
+
+def test_asr_transcribe_words_는_language_None이면_언어를_안_보낸다(monkeypatch):
+    from shopping_shorts import asr_check, config
+    sent = {}
+
+    class _R:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {"words": [{"word": "hello", "start": 0.0, "end": 0.5}]}
+
+    def fake_post(url, headers=None, files=None, data=None, timeout=None):
+        sent.update(data)
+        return _R()
+
+    monkeypatch.setattr(config, "GROQ_API_KEY", "k")
+    monkeypatch.setattr(asr_check.requests, "post", fake_post)
+    import tempfile, os
+    p = os.path.join(tempfile.mkdtemp(), "a.mp3"); open(p, "wb").write(b"x")
+    assert asr_check.transcribe_words(p, language=None) == [{"word": "hello", "start": 0.0, "end": 0.5}]
+    assert "language" not in sent
+    asr_check.transcribe_words(p)
+    assert sent.get("language") == "ko", "기본값은 종전 그대로 ko(TTS 검수용)"
+
+
+def test_외국어_전사면_구간마다_text_ko가_붙고_full_text_ko가_나온다():
+    words = [{"word": "Mix", "start": 0.2, "end": 0.5}, {"word": "butter", "start": 0.6, "end": 1.0},
+             {"word": "Bake", "start": 3.5, "end": 4.0}]
+    out = fs.extract_script_frames(
+        "v.mp4", "s1", _no_classic=True,
+        get_boundaries=lambda p: [0.0, 3.0, 6.0],
+        extract_frame_at=lambda p, d, t, f=None: f"{d}/{f}",
+        extract_audio=lambda v, o: o, transcribe_words=lambda m: words,
+        tag_frames=lambda g, c, s, b=None: [{"scene_desc": "a", "shot_role": "완성"}] * len(s),
+        story_brief=lambda *a: {},
+        translate=lambda texts: ["버터를 섞어요" if "Mix" in t else "구워요" for t in texts])
+    segs = out["segments"]
+    assert segs[0]["text"] == "Mix butter" and segs[0]["text_ko"] == "버터를 섞어요"
+    assert segs[1]["text"] == "Bake" and segs[1]["text_ko"] == "구워요"
+    assert out["full_text"] == "Mix butter Bake" and out["full_text_ko"] == "버터를 섞어요 구워요"
+
+
+def test_한국어_전사면_번역을_부르지_않는다():
+    called = []
+    words = [{"word": "버터를", "start": 0.2, "end": 0.5}, {"word": "섞어요", "start": 0.6, "end": 1.0}]
+    out = fs.extract_script_frames(
+        "v.mp4", "s1", _no_classic=True,
+        get_boundaries=lambda p: [0.0, 3.0],
+        extract_frame_at=lambda p, d, t, f=None: f"{d}/{f}",
+        extract_audio=lambda v, o: o, transcribe_words=lambda m: words,
+        tag_frames=lambda g, c, s, b=None: [{"scene_desc": "a", "shot_role": "완성"}],
+        story_brief=lambda *a: {}, translate=lambda texts: called.append(1) or [])
+    assert not called and out["segments"][0]["text_ko"] == "" and out["full_text_ko"] == ""
+
+
+def test_인벤토리와_2단계_장면목록은_text_ko를_말로_쓴다():
+    from shopping_shorts import edit_plan, script_generate
+    seg = {"seg_id": "s0-1", "start": 0.0, "end": 2.0, "text": "Mix butter", "text_ko": "버터를 섞어요",
+           "scene_desc": "볼에 버터"}
+    _, inv = edit_plan._build_inventory([{"video_id": "s0", "segments": [seg]}])
+    assert "말:버터를 섞어요" in inv and "Mix butter" not in inv
+    block = script_generate._mix_source_block([{"name": "x", "full_text": "Mix butter", "structure": {},
+                                                "segments": [seg]}])
+    assert "말:버터를 섞어요" in block
