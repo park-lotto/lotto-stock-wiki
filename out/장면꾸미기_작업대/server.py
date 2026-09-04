@@ -181,5 +181,12 @@ class H(SimpleHTTPRequestHandler):
 
 if __name__ == "__main__":
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 8766
+    import socket
+    try:
+        _s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM); _s.connect(("8.8.8.8", 80)); lan = _s.getsockname()[0]; _s.close()
+    except Exception:
+        lan = "(IP 확인 실패)"
     print(f"장면꾸미기 작업대: http://127.0.0.1:{port}/  (프리셋 {len(d.PRESETS)}종, 코드={CODE_ROOT})")
-    ThreadingHTTPServer(("127.0.0.1", port), H).serve_forever()
+    print(f"  ★다른 PC에서 열기(같은 와이파이): http://{lan}:{port}/")
+    # 0.0.0.0 = 같은 와이파이의 다른 PC(아무것도 안 깔린 PC)에서 브라우저만으로 접속 (2026-09-04)
+    ThreadingHTTPServer(("0.0.0.0", port), H).serve_forever()

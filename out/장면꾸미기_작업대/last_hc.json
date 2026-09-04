@@ -1,18 +1,28 @@
 {
  "wrap": true,
- "font": "Pretendard-ExtraBold.otf",
- "size": 81,
- "color": "#FFFFFF",
- "color2": "#64E9CC",
- "y": 38,
+ "font": "Pretendard-Bold.otf",
+ "size": 66,
+ "color": "#111111",
+ "color2": "#22C55E",
+ "y": 22,
  "x": 50,
  "weight": 900,
  "outline": true,
- "outline_color": "#111111",
- "outline_w": 7,
+ "outline_color": "#FFFFFF",
+ "outline_w": 10,
  "box": false,
- "box_color": "#222222",
+ "box_color": "#FFFFFF",
  "box_pad": 16,
  "box_opacity": 100,
- "text": ""
+ "shadow": true,
+ "shadow_color": "#000000",
+ "shadow_d": 4,
+ "text": "다이소 기획자도 감탄한\n미친 활용법",
+ "highlight_rules": [
+  {
+   "keyword": "미친 활용법",
+   "color": "#22C55E",
+   "box": false
+  }
+ ]
 }
