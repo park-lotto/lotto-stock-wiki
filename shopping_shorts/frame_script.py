@@ -158,13 +158,16 @@ def frame_times(start, end, k=FRAMES_PER_CUT, margin=0.15):
     return [round(lo + step * i, 3) for i in range(k)]
 
 
-def make_strip(paths, out_path, height=STRIP_HEIGHT):
+def make_strip(paths, out_path, height=STRIP_HEIGHT, label=None):
     """프레임 여러 장을 왼쪽부터 가로로 이어붙인 띠 한 장(JPEG). 실패·1장 이하면 None.
-    구간당 이미지를 1장으로 유지해 모델의 '이미지↔구간' 짝이 못 어긋나게 한다(위 상수 주석)."""
+    구간당 이미지를 1장으로 유지해 모델의 '이미지↔구간' 짝이 못 어긋나게 한다(위 상수 주석).
+    ★label(예 "#12 47.0s")을 주면 띠 왼쪽 위에 **번호를 찍는다**(2026-09-05 실측): 25구간을 한 호출에 넣으면 모델이
+      띠 하나를 건너뛰고 그 뒤 seg_no가 전부 한 칸씩 밀렸다(s3 10번~, s2 17번~ → 판정 44~46%). 번호가 그림에
+      박혀 있으면 "몇 번째 이미지인가"를 세지 않고 읽는다."""
     if not paths or len(paths) < 2:
         return None
     try:
-        from PIL import Image
+        from PIL import Image, ImageDraw
         ims = []
         for p in paths:
             im = Image.open(p).convert("RGB")
@@ -176,6 +179,11 @@ def make_strip(paths, out_path, height=STRIP_HEIGHT):
         for im in ims:
             strip.paste(im, (x, 0))
             x += im.width + gap
+        if label:
+            d = ImageDraw.Draw(strip)
+            txt = str(label)
+            d.rectangle((0, 0, 10 + 7 * len(txt), 18), fill="black")
+            d.text((4, 3), txt, fill="white")
         strip.save(out_path, "JPEG", quality=85)
         return out_path
     except Exception as e:  # noqa: BLE001 — 띠 실패는 중간 한 장으로 간다(fail-open)
@@ -461,8 +469,8 @@ def _gemini_tag_frames(frame_groups, caption, segs, brief=None):
                 except Exception:
                     continue
             seg_lines.append(
-                f"{i - b0 + 1}번 구간({round(s.get('start', 0), 1)}~{round(s.get('end', 0), 1)}초, "
-                f"영상 전체 {n_segs}구간 중 {i + 1}번째) = {'이미지 ' + str(len(parts_img) + 1) + '번' if loaded else '이미지 없음'} | "
+                f"#{i + 1} ({round(s.get('start', 0), 1)}~{round(s.get('end', 0), 1)}초) "
+                f"= {'이미지 ' + str(len(parts_img) + 1) + '번째, 띠 왼쪽 위에 #' + str(i + 1) if loaded else '이미지 없음'} | "
                 f"나레이션:{s.get('text', '') or '(없음)'}")
             parts_img.extend(loaded[:1])          # 구간당 이미지 1장(띠)
         if not parts_img:
@@ -474,8 +482,9 @@ def _gemini_tag_frames(frame_groups, caption, segs, brief=None):
             "띠 안의 변화까지 보고 구간별 태그를 매겨라.\n"
             + (_bb + "\n\n" if _bb else "")
             + "\n".join(seg_lines) + "\n\n"
-            "각 구간마다 seg_no(이번 묶음 안의 구간 번호, 1부터)와 아래 필드를 적어라. scene_desc는 띠 안에서 "
-            "무엇이 보이고 무엇이 바뀌나까지(프레임이 여러 장이면 변화 순서대로).\n"
+            "각 구간마다 seg_no와 아래 필드를 적어라. ★seg_no는 **띠 왼쪽 위에 찍힌 # 번호**다(세지 말고 읽어라 — "
+            "이미지 순서로 세면 하나만 건너뛰어도 뒤가 전부 밀린다). scene_desc는 띠 안에서 무엇이 보이고 무엇이 "
+            "바뀌나까지(프레임이 여러 장이면 변화 순서대로).\n"
             + _guide + "\n\n"
             '출력은 JSON 객체 {"tags": [{"seg_no": 1, "scene_desc": "...", "label": "...", "use_point": "...", '
             '"action": "...", "change": "...", "has_effect": false, "is_key": false, "shot_role": "...", '
@@ -490,7 +499,16 @@ def _gemini_tag_frames(frame_groups, caption, segs, brief=None):
                     config=types.GenerateContentConfig(response_mime_type="application/json"))
                 data = loads_lenient(resp.text)
                 raw = data.get("tags") if isinstance(data, dict) else data
-                tags = normalize_tags(raw, b1 - b0)
+                # seg_no는 띠에 찍힌 전체 번호(#1부터) → 이번 묶음 기준으로 되돌린다. 묶음 밖 번호는 버려진다.
+                fixed = []
+                for t in (raw or []):
+                    if isinstance(t, dict) and t.get("seg_no") is not None:
+                        try:
+                            t = dict(t, seg_no=int(t["seg_no"]) - b0)
+                        except (TypeError, ValueError):
+                            pass
+                    fixed.append(t)
+                tags = normalize_tags(fixed, b1 - b0)
                 if any(tags):
                     got = tags
                     break
@@ -581,7 +599,9 @@ def extract_script_frames(video_path, video_id, caption="", *, _no_classic=False
                 fp = None
             if fp:
                 shots.append(fp)
-        strip = make_strip(shots, os.path.join(frame_dir, f"seg{i:03d}_strip.jpg")) if len(shots) > 1 else None
+        strip = (make_strip(shots, os.path.join(frame_dir, f"seg{i:03d}_strip.jpg"),
+                            label=f"#{i + 1} {float(s['start']):.1f}s")
+                 if len(shots) > 1 else None)
         frame_groups.append([strip] if strip else ([shots[len(shots) // 2]] if shots else []))
         if shots:
             mids.append(shots[len(shots) // 2])
