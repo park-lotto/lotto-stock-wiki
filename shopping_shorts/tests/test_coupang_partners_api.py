@@ -294,7 +294,7 @@ def test_identify_endpoint_turns_thumbnail_into_queries(monkeypatch, tmp_path):
     from shopping_shorts.store import Store
     db = tmp_path / "t.db"; monkeypatch.setattr(a, "DB_PATH", str(db)); Store(str(db))
     monkeypatch.setattr(product_name, "identify_many", lambda items, db_path, **k: {items[0]["shortcode"]: "의류 태깅건"})
-    monkeypatch.setattr(coupang_query, "suggest", lambda target, script: ["옷 태그건", "의류 태깅건", "택건"])
+    monkeypatch.setattr(coupang_query, "suggest", lambda target, script, **kw: ["옷 태그건", "의류 태깅건", "택건"])
     r = a.api_coupang_identify({"shortcode": "ABC", "thumbnail": "https://x/t.jpg"})
     assert r["ok"] and r["product"] == "의류 태깅건" and r["queries"][0] == "의류 태깅건" and "옷 태그건" in r["queries"]
     monkeypatch.setattr(product_name, "identify_many", lambda items, db_path, **k: {})
@@ -315,3 +315,52 @@ def test_identify_batch_prewarms_cache(monkeypatch, tmp_path):
                                                 {"shortcode": "B", "thumbnail": ""}, "junk", {"shortcode": "../C", "thumbnail": "https://x/c.jpg"}]})
     assert r["ok"] and seen["n"] == 2 and r["products"] == {"A": "택총", "C": "택총"}
     assert a.api_coupang_identify_batch({"items": []}) == {"ok": True, "products": {}}
+
+
+
+def test_suggest_body_without_script_is_synonym_only():
+    """썸네일 판독 경로(대본 없음)는 유의어 모드 — '택총→전술 조끼' 같은 종류 이탈을 프롬프트에서 막는다."""
+    from shopping_shorts import coupang_query as cq
+    b = cq.build_body("택총", "", context="주제: 옷 수선 / 재질: 플라스틱")
+    assert "같은 물건의 다른 이름" in b and "다른 종류의 물건은 절대" in b and "주제: 옷 수선" in b
+    b2 = cq.build_body("택총", "대본이 있으면 종전과 같다")
+    assert "대본: 대본이 있으면" in b2 and "같은 물건의 다른 이름" not in b2
+
+
+
+def test_identify_prefers_script_evidence_over_thumbnail(monkeypatch, tmp_path):
+    """★사장님 "썸네일로는 힘들고 대본을 봐야": 대본이 있으면 대본으로 특정, 썸네일 판독은 힌트일 뿐."""
+    from shopping_shorts import app as a, product_name, coupang_query
+    from shopping_shorts.store import Store
+    db = tmp_path / "t.db"; monkeypatch.setattr(a, "DB_PATH", str(db)); st = Store(str(db))
+    monkeypatch.setattr(product_name, "identify_many", lambda items, db_path, **k: {"ABC": "택총"})
+    monkeypatch.setattr(a, "_coupang_evidence", lambda store, sc: ("대본: 이 미니 세탁기 하나로 속옷 빨래 끝", ["대본"]))
+    seen = {}
+    monkeypatch.setattr(coupang_query, "identify_from_evidence", lambda ev, hint="": (seen.update(ev=ev, hint=hint), ("미니 세탁기", ["소형 세탁기", "속옷 세탁기"]))[1])
+    r = a.api_coupang_identify({"shortcode": "ABC", "thumbnail": "https://x/t.jpg"})
+    assert r["ok"] and r["product"] == "미니 세탁기" and r["queries"][:2] == ["미니 세탁기", "소형 세탁기"] and r["basis"] == ["대본"]
+    assert "미니 세탁기" in seen["ev"] and seen["hint"] == "택총"
+    # 근거가 없으면 썸네일 힌트로 폴백
+    monkeypatch.setattr(a, "_coupang_evidence", lambda store, sc: ("", []))
+    monkeypatch.setattr(coupang_query, "suggest", lambda target, script, **kw: ["옷 태그건"])
+    r = a.api_coupang_identify({"shortcode": "ABC", "thumbnail": "https://x/t.jpg"})
+    assert r["ok"] and r["product"] == "택총" and r["basis"] == ["썸네일"]
+    # 둘 다 없으면 대본 추출을 권한다
+    monkeypatch.setattr(product_name, "identify_many", lambda items, db_path, **k: {})
+    r = a.api_coupang_identify({"shortcode": "ABC", "thumbnail": "https://x/t.jpg"})
+    assert r["ok"] is False and "영상 보고 정확히" in r["error"]
+
+
+def test_coupang_evidence_collects_script_analysis_caption(tmp_path):
+    from shopping_shorts import app as a
+    from shopping_shorts.store import Store
+    st = Store(str(tmp_path / "t.db"))
+    class _St:
+        def get_extract(self, sc): return {"full_text": "이 실리콘 집게 진짜 편함", "segments": []}
+        def get_script(self, sc): return None
+        def get_source_analysis(self, sc): return {"keywords": ["실리콘 집게", "주방"]}
+        def _conn(self): return st._conn()
+        def load_last_run(self): return ([{"shortcode": "S1", "caption": "집게 하나로 끝"}], None)
+    ev, used = a._coupang_evidence(_St(), "S1")
+    assert "대본: 이 실리콘 집게" in ev and "분석 키워드: 실리콘 집게" in ev and "캡션: 집게 하나로 끝" in ev
+    assert used == ["대본", "분석", "캡션"]

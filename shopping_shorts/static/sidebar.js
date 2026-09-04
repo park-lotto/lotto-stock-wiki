@@ -1043,6 +1043,7 @@
       '<div style="display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid #1e2a24"><b style="font-size:15px">🛒 쿠팡에 이 제품이 있나요?</b><span style="font-size:11px;color:#8fa39a">— 있으면 그 자리에서 내 추적 링크까지</span><span style="flex:1"></span><button onclick="window.ssCoupangFind.close()" style="background:none;border:none;color:#8fa39a;font-size:18px;cursor:pointer">✕</button></div>' +
       '<div style="padding:12px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><input id="cfQuery" value="' + _cfEsc(keyword || "") + '" placeholder="제품명(예: 의류 태깅건)" style="flex:1;min-width:200px;padding:9px 10px;border-radius:9px;border:1px solid #1e2a24;background:#0c1210;color:#e6efe9;font-size:13px" onkeydown="if(event.key===\'Enter\'){event.preventDefault();window.ssCoupangFind.search();}">' +
       '<button onclick="window.ssCoupangFind.search()" style="padding:9px 16px;border-radius:9px;border:none;background:linear-gradient(180deg,#37e0bd,#2bd4b0);color:#04120e;font-weight:800;cursor:pointer">찾기</button>' +
+      (opts.shortcode ? '<button id="cfDeep" onclick="window.ssCoupangFind.deep()" title="영상 대본을 추출해 제품을 정확히 특정합니다(시간이 조금 걸립니다)" style="padding:9px 12px;border-radius:9px;border:1px solid #b8860b;background:linear-gradient(90deg,#3a2f0d,#2a2408);color:#ffd76b;font-weight:700;cursor:pointer">🎬 영상 보고 정확히</button>' : '') +
       '<a id="cfOut" href="#" target="_blank" rel="noopener" style="font-size:12px;color:#37e0bd">쿠팡에서 직접 ↗</a><span id="cfMsg" style="font-size:12px;color:#8fa39a;width:100%"></span><div id="cfChips" style="width:100%"></div></div>' +
       '<div id="cfResults" style="padding:0 14px 14px"></div></div>';
     wrap.addEventListener("click", function (e) { if (e.target === wrap) _cfClose(); });
@@ -1052,8 +1053,22 @@
     else { var q = _cfEl("cfQuery"); if (q) q.focus(); }
   }
   /* 숏템파워검색처럼 사람이 안 친다(2026-09-04 사장님) — 썸네일 → 제품명 → 첫 후보로 검색 → 링크. */
+  /* 🎬 영상 보고 정확히 — 대본을 추출(기존 /api/extract_script, 캐시되면 무료)한 뒤 근거 우선 판독을 다시 돈다. */
+  function _cfDeep() {
+    if (!_cfState.sc) return;
+    var b = _cfEl("cfDeep"); if (b) { b.disabled = true; b.textContent = "🎬 대본 추출 중…"; }
+    _cfRender("🎬 영상 대본을 추출하는 중… (20~60초, 한 번 하면 다음부터는 바로)");
+    fetch("/api/extract_script?shortcode=" + encodeURIComponent(_cfState.sc), { method: "POST" })
+      .then(function (r) { return r.json().catch(function () { return { ok: false }; }); })
+      .then(function (d) {
+        if (b) { b.disabled = false; b.textContent = "🎬 영상 보고 정확히"; }
+        if (!d || !d.ok) { _cfRender("대본 추출 실패: " + ((d && d.error) || "") + " — 제품명을 직접 넣어 찾아보세요", "#ff8080"); return; }
+        _cfIdentify();
+      })
+      .catch(function () { if (b) { b.disabled = false; b.textContent = "🎬 영상 보고 정확히"; } _cfRender("네트워크 오류", "#ff8080"); });
+  }
   function _cfIdentify() {
-    _cfRender("🔎 썸네일에서 제품을 알아내는 중… (3~8초)");
+    _cfRender("🔎 영상 근거(대본·캡션·썸네일)에서 제품을 알아내는 중… (3~8초)");
     fetch("/api/coupang/identify", { method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ shortcode: _cfState.sc, thumbnail: _cfState.thumb }) })
       .then(function (r) { return r.json(); })
@@ -1064,6 +1079,7 @@
           return;
         }
         _cfState.chips = (d.queries || [d.product]).slice(0, 6);
+        _cfState.basis = (d.basis || []).join("·");
         _cfSearch(_cfState.chips[0]);
       })
       .catch(function () { _cfRender("판독 중 네트워크 오류 — 제품명을 직접 넣어 찾아보세요", "#ff8080"); });
@@ -1109,7 +1125,8 @@
         var by = {}; ((d && d.links) || []).forEach(function (l) { if (l.shorten_url) by[l.url] = l.shorten_url; });
         var n = 0;
         _cfState.items.forEach(function (it) { if (by[it.url]) { it.short_url = by[it.url]; n++; } });
-        _cfRender(n ? ("✅ 쿠팡에 있음 " + _cfState.items.length + "개 — 내 추적 링크 " + n + "개 준비됨. 카드의 링크를 누르면 복사됩니다") : ("✅ 쿠팡에 있음 " + _cfState.items.length + "개 — 🔗 내 링크를 누르면 추적 링크가 만들어집니다"), n ? "#5fe3d6" : "");
+        var basis = _cfState.basis ? " (근거: " + _cfState.basis + ")" : "";
+        _cfRender(n ? ("✅ 쿠팡에 있음 " + _cfState.items.length + "개 — 내 추적 링크 " + n + "개 준비됨. 카드의 링크를 누르면 복사됩니다" + basis) : ("✅ 쿠팡에 있음 " + _cfState.items.length + "개 — 🔗 내 링크를 누르면 추적 링크가 만들어집니다" + basis), n ? "#5fe3d6" : "");
       })
       .catch(function () { _cfRender(_cfState.items.length + "개 있음 — 🔗 내 링크를 누르면 추적 링크가 만들어집니다"); });
   }
@@ -1158,6 +1175,7 @@
   window.ssCoupangFind.search = _cfSearch;
   window.ssCoupangFind.link = _cfLink;
   window.ssCoupangFind.close = _cfClose;
+  window.ssCoupangFind.deep = _cfDeep;
 
   window.ssOpenBugReport = function () {
     css();
