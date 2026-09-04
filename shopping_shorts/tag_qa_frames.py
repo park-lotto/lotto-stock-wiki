@@ -156,7 +156,9 @@ def _judge(frame_paths, picked):
     """프레임 N장 + 각 묘사 → 모델이 일치 여부 판정. 실패는 [](호출부 fail-open)."""
     import json
     from shopping_shorts import comment_gen
-    from shopping_shorts.video_analysis import _MODEL
+    # ★모델 순서는 frame_script.TAG_MODELS 한 곳이 정한다(0순위-B). 판정과 태깅이 같은 병
+    #   (스키마 강제 호출 120초 초과)을 앓았으니 같은 처방을 한 자리에서 나눠 쓴다.
+    from shopping_shorts.frame_script import TAG_MODELS
     try:
         from google.genai import types
     except Exception:
@@ -198,15 +200,24 @@ def _judge(frame_paths, picked):
             # 장수가 어긋나면 판정↔묘사 짝이 밀린다 — 통째로 포기하되 이유는 남긴다.
             log.info("tag_qa_frames._judge 건너뜀 — 프레임을 못 읽었다(%s): %s", fp, e)
             return []
-    try:
-        resp = comment_gen._client_for_key(key).models.generate_content(
-            model=_MODEL, contents=parts,
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json", response_schema=_VERDICT_SCHEMA))
-        return json.loads(resp.text).get("verdicts", []) or []
-    except Exception as e:  # noqa: BLE001
-        log.info("tag_qa_frames._judge 실패(무해) — %s", e)
-        return []
+    # ★response_schema를 **안 쓴다**(2026-09-04 실측: 스키마(enum) 강제 호출이 gemini-3.5-flash에서
+    #   4/4 504 DEADLINE_EXCEEDED — 같은 이미지 10장을 스키마 없이 부르면 8초). 값 검증은
+    #   score_verdicts가 이미 한다(이상한 verdict·image_no는 버림). _VERDICT_SCHEMA는 응답 모양의
+    #   문서로만 남긴다. 모델은 TAG_MODELS 순서로 시도한다.
+    client = comment_gen._client_for_key(key)
+    for model in TAG_MODELS:
+        try:
+            resp = client.models.generate_content(
+                model=model, contents=parts,
+                config=types.GenerateContentConfig(response_mime_type="application/json"))
+            data = json.loads(resp.text or "")
+            verdicts = data.get("verdicts") if isinstance(data, dict) else data
+            if verdicts:
+                return verdicts
+            log.info("tag_qa_frames._judge: %s 응답에 판정 없음 → 다음 모델", model)
+        except Exception as e:  # noqa: BLE001
+            log.info("tag_qa_frames._judge %s 실패(무해) — %s", model, e)
+    return []
 
 
 def spot_check(result, video_path, dest_dir, *, _frames_fn=None, _judge_fn=None):
