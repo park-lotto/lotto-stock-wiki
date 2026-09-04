@@ -483,7 +483,8 @@ class Store:
                     comments INTEGER,
                     first_seen TEXT,
                     last_seen TEXT,
-                    upload_ts TEXT
+                    upload_ts TEXT,
+                    platform TEXT DEFAULT 'instagram'
                 )
             """)
             c.execute("CREATE INDEX IF NOT EXISTS idx_reel_history_user "
@@ -492,6 +493,17 @@ class Store:
                       "ON reel_history(last_seen)")
             # 업로드 시각(2026-07-24): 기존 DB용 마이그레이션. first_seen/last_seen은 '수집' 시각이라
             # 활동여부(채널이 최근 영상을 올렸나)엔 부적합 — 실제 게시 시각(item.timestamp=createdAt)을 저장한다.
+            # 플랫폼 축(2026-09-04 사장님 "유튜브는 48시간으로만 되어있는데 이번주·이번달도").
+            # 여태 이 표는 인스타 전용이라 app.py가 platform!='instagram'이면 빈 목록을 줬다.
+            try:
+                c.execute("ALTER TABLE reel_history ADD COLUMN platform TEXT DEFAULT 'instagram'")
+            except Exception:
+                pass
+            try:
+                c.execute("CREATE INDEX IF NOT EXISTS idx_reel_history_platform "
+                          "ON reel_history(platform, comments)")
+            except Exception:
+                pass
             try:
                 c.execute("ALTER TABLE reel_history ADD COLUMN upload_ts TEXT")
             except sqlite3.OperationalError:
@@ -2512,6 +2524,12 @@ class Store:
         with self._conn() as c:
             c.execute("INSERT OR REPLACE INTO settings(key, value) VALUES(?,?)",
                       (f"last_run::{platform}", json.dumps({"items": items, "collected_at": collected_at}, ensure_ascii=False)))
+            # ★히스토리도 남긴다(2026-09-04) — 여태 인스타(save_last_run)만 쌓아서
+            #   유튜브는 '이번 주/이번 달'이 통째로 빈 목록이었다. 추가 크롤 0이다.
+            try:
+                self._record_history(c, items, collected_at, platform=platform)
+            except Exception:
+                pass  # 히스토리 실패가 수집 저장을 막지 않는다(인스타 쪽과 같은 규칙)
 
     def merge_last_run_platform(self, platform, new_items, collected_at, key="shortcode"):
         """기존 수집분에 새 항목을 **한 트랜잭션 안에서** 합친다. 새로 담긴 개수를 준다.
@@ -3011,7 +3029,7 @@ class Store:
     def _norm_username(u):
         return (u or "").strip().lstrip("@").lower()
 
-    def _record_history(self, c, items, collected_at):
+    def _record_history(self, c, items, collected_at, platform="instagram"):
         """수집 items를 reel_history에 shortcode 기준 upsert하고 30일 지난 행을 정리.
         같은 커넥션(c)에서 실행 — save_last_run과 원자적으로 커밋된다.
         first_seen은 최초값 유지, last_seen·조회수·댓글수·썸네일·캡션·카테고리는 갱신."""
@@ -3023,18 +3041,19 @@ class Store:
             c.execute(
                 "INSERT INTO reel_history"
                 "(shortcode, username, name, category, url, thumb, caption,"
-                " views, comments, first_seen, last_seen, upload_ts) "
-                "VALUES(?,?,?,?,?,?,?,?,?,?,?,?) "
+                " views, comments, first_seen, last_seen, upload_ts, platform) "
+                "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?) "
                 "ON CONFLICT(shortcode) DO UPDATE SET "
                 "  username=excluded.username, name=excluded.name,"
                 "  category=excluded.category, url=excluded.url, thumb=excluded.thumb,"
                 "  caption=excluded.caption, views=excluded.views,"
                 "  comments=excluded.comments, last_seen=excluded.last_seen,"
-                "  upload_ts=COALESCE(NULLIF(excluded.upload_ts,''), reel_history.upload_ts)",
+                "  upload_ts=COALESCE(NULLIF(excluded.upload_ts,''), reel_history.upload_ts),"
+                "  platform=excluded.platform",
                 (sc, user, it.get("name"), it.get("category"), it.get("url"),
                  it.get("thumbnail"), it.get("caption"),
                  int(it.get("views") or 0), int(it.get("comments") or 0),
-                 collected_at, collected_at, str(it.get("timestamp") or "")),
+                 collected_at, collected_at, str(it.get("timestamp") or ""), platform),
             )
         # 30일 정리 — last_seen이 30일보다 오래된 행 삭제(수집이 곧 정리 트리거).
         cutoff = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
@@ -3132,9 +3151,10 @@ class Store:
                 "SELECT shortcode, username, name, category, url, thumb, caption, "
                 "       views, comments, first_seen, upload_ts "
                 "FROM reel_history "
-                "WHERE comments >= ? AND first_seen >= datetime('now', ?) "
+                "WHERE platform = ? AND comments >= ? "
+                "  AND first_seen >= datetime('now', ?) "
                 "ORDER BY comments DESC LIMIT ?",
-                (min_comments, f"-{int(days)} day", int(limit))
+                (platform, min_comments, f"-{int(days)} day", int(limit))
             ).fetchall()
         return [{
             "shortcode": r[0], "username": r[1], "name": r[2] or "",
