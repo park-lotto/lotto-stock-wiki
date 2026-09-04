@@ -9522,7 +9522,7 @@ function _renderMixReviewBody(d, failStatus){
     +`<div id="paletteBox" data-open="0" style="margin-bottom:8px"></div>`
     +(d.beats||[]).map((b,i)=>`
     <div style="border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px;background:var(--inset)">
-      <span style="font-size:11px;background:var(--accent2);padding:2px 8px;border-radius:10px">${esc(b.role||'')}</span>
+      <span style="font-size:11px;background:var(--accent2);padding:2px 8px;border-radius:10px">${esc(b.role||'')}</span>${b.inherited?` <span title="2단계 대본이 지목한 장면을 그대로 붙였습니다(추측 없음)" style="font-size:11px;background:var(--inset);border:1px solid var(--line);padding:2px 8px;border-radius:10px;color:var(--sub)">📎 2단계 장면</span>`:(b.fit_evidence==='broll_fill'?` <span title="이 줄은 특정 화면을 요구하지 않아 앞 장면의 다음 컷으로 채웠습니다" style="font-size:11px;background:var(--inset);border:1px solid var(--line);padding:2px 8px;border-radius:10px;color:var(--sub)">🎞 b-roll</span>`:'')}
       <div style="margin:6px 0;font-size:13px">${esc(b.narration||'')}</div>
       <div class="hint">🎞 ${esc(b.primary?.video_id||'')} · ${b.primary?.start}s~${b.primary?.end}s · ${b.target_seconds}s${b.fit?` · 매칭 ${b.fit}/5`:''}${b.conformed?` · <span style="color:var(--accent)">⏱ 길이 맞춤</span>`:''}</div>
       ${(b.fit&&b.fit<=2&&!b.respined)?`<div style="color:var(--fire);font-size:12px;margin-top:3px">⚠️ 이 문장에 맞는 영상이 부족합니다 — 대본을 살짝 바꾸거나 소스 영상을 추가하세요.</div>`:''}

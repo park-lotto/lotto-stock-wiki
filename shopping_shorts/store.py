@@ -1630,6 +1630,24 @@ class Store:
                     )""")
         c.execute("CREATE INDEX IF NOT EXISTS idx_bugrep_open "
                   "ON bug_reports(status, created_at DESC)")
+        # ★장면 교체 기록(2026-09-04) — 3단계에서 사람이 첫 조각을 바꾼 비트. 매칭의 시험지이자 정답셋 재료.
+        #   픽 로직에 주입하지 않는다(2026-08-29 사장님 확정). 숫자가 쌓인 뒤에만 다음을 정한다.
+        c.execute("""CREATE TABLE IF NOT EXISTS scene_swaps (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        job_id TEXT NOT NULL,
+                        customer_id INTEGER NOT NULL DEFAULT 0,
+                        created_at INTEGER NOT NULL,
+                        beat_idx INTEGER NOT NULL,
+                        narration TEXT,
+                        old_seg TEXT,
+                        new_seg TEXT,
+                        generator TEXT,
+                        inherited INTEGER NOT NULL DEFAULT 0,
+                        fit INTEGER NOT NULL DEFAULT 0,
+                        source TEXT NOT NULL DEFAULT 'apply'
+                    )""")
+        c.execute("CREATE INDEX IF NOT EXISTS idx_scene_swaps_job ON scene_swaps(job_id, beat_idx)")
+        c.execute("CREATE INDEX IF NOT EXISTS idx_scene_swaps_ts ON scene_swaps(created_at DESC)")
         # 답장(쪽지) — 신고한 고객이 자기 화면에서 바로 본다. read_at은 '고객이 봤나'.
         # ★있는 컬럼인지 먼저 보고 없을 때만 붙인다 — try/except로 삼키면 진짜 오류까지
         #   같이 묻힌다(매 기동마다 나는 '이미 있음'을 로그로 흘릴 수도 없다).
@@ -4632,6 +4650,47 @@ class Store:
                 "work_id, step, user_agent, console_json, shot_path) "
                 "VALUES(?,?,?,?,?,?,?,?,?,?)", row)
             return cur.lastrowid
+
+    def add_scene_swaps(self, job_id, customer_id, rows, source="apply"):
+        """교체 행 여러 개를 한 번에(edit_plan.scene_swap_rows 결과). 반환: 저장 건수."""
+        if not rows:
+            return 0
+        now = int(time.time())
+        data = [(str(job_id), int(customer_id or 0), now, int(r.get("beat_idx", -1)),
+                 (r.get("narration") or "")[:200], str(r.get("old_seg") or ""), str(r.get("new_seg") or ""),
+                 str(r.get("generator") or ""), 1 if r.get("inherited") else 0, int(r.get("fit") or 0), source)
+                for r in rows]
+        with self._conn() as c:
+            c.executemany(
+                "INSERT INTO scene_swaps(job_id, customer_id, created_at, beat_idx, narration, old_seg, new_seg, "
+                "generator, inherited, fit, source) VALUES(?,?,?,?,?,?,?,?,?,?,?)", data)
+        return len(data)
+
+    def list_scene_swaps(self, job_id=None, days=30, limit=500):
+        q = ("SELECT id, job_id, customer_id, created_at, beat_idx, IFNULL(narration,''), IFNULL(old_seg,''), "
+             "IFNULL(new_seg,''), IFNULL(generator,''), inherited, fit, source FROM scene_swaps WHERE created_at>=?")
+        args = [int(time.time()) - int(days) * 86400]
+        if job_id:
+            q += " AND job_id=?"
+            args.append(str(job_id))
+        q += " ORDER BY created_at DESC, id DESC LIMIT ?"
+        args.append(int(limit))
+        keys = ("id", "job_id", "customer_id", "created_at", "beat_idx", "narration", "old_seg", "new_seg",
+                "generator", "inherited", "fit", "source")
+        with self._conn() as c:
+            return [dict(zip(keys, r)) for r in c.execute(q, args)]
+
+    def scene_swap_summary(self, days=30):
+        """생성기별 손 횟수 — {generator: {jobs, swaps, inherited_swaps}}. '잡당 몇 번 손이 갔나'가 시험지 점수."""
+        since = int(time.time()) - int(days) * 86400
+        out = {}
+        with self._conn() as c:
+            for gen, jobs, swaps, inh in c.execute(
+                    "SELECT IFNULL(generator,''), COUNT(DISTINCT job_id), COUNT(*), SUM(inherited) "
+                    "FROM scene_swaps WHERE created_at>=? GROUP BY IFNULL(generator,'')", (since,)):
+                out[gen or "(없음)"] = {"jobs": int(jobs), "swaps": int(swaps), "inherited_swaps": int(inh or 0),
+                                        "per_job": round(int(swaps) / max(1, int(jobs)), 2)}
+        return out
 
     def list_bug_reports(self, status=None, limit=200):
         """신고 목록(최신 먼저). status=None이면 전부."""

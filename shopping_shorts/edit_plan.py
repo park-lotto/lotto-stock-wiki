@@ -4112,6 +4112,40 @@ def build_edit_plan(source_scripts, target_seconds, structure="template", video_
     return grounded
 
 
+def first_material_seg(beat):
+    """비트에서 **실제로 먼저 재생되는** 조각의 seg_id(순수 함수) — 실험실 편성(scene_override)이 있으면 그것,
+    없으면 primary. video_assemble._beat_material과 같은 우선순위(0순위-B: 재료 결정은 그 함수가 원본)."""
+    over = (beat or {}).get("scene_override")
+    if over:
+        for s in over:
+            if s and s.get("seg_id"):
+                return str(s["seg_id"])
+    p = (beat or {}).get("primary") or {}
+    return str(p.get("seg_id")) if p.get("seg_id") else None
+
+
+def scene_swap_rows(plan_before, plan_after, job=None):
+    """사람이 3단계에서 **첫 조각을 바꾼 비트**만 골라 기록 행으로(순수 함수). 이게 곧 시험지다
+    (설계 §8-D: 교체를 (줄, 버린 장면, 고른 장면)으로 저장 → 정답셋이 저절로 쌓인다).
+    반환: [{beat_idx, narration, old_seg, new_seg, generator, inherited, fit}] — 안 바뀐 비트는 없다."""
+    before = {b.get("beat_idx"): first_material_seg(b) for b in (plan_before or {}).get("beats") or []}
+    rows = []
+    for b in (plan_after or {}).get("beats") or []:
+        bi = b.get("beat_idx")
+        old, new = before.get(bi), first_material_seg(b)
+        if old is None or new is None or old == new:
+            continue
+        rows.append({
+            "beat_idx": int(bi) if bi is not None else -1,
+            "narration": (b.get("narration") or "")[:200],
+            "old_seg": old, "new_seg": new,
+            "generator": str((plan_after or {}).get("generator") or ""),
+            "inherited": 1 if b.get("inherited") else 0,
+            "fit": int(b.get("fit") or 0),
+        })
+    return rows
+
+
 def build_inherit_plan(source_scripts, given_script, beat_sources, structure="template", video_type=None):
     """3단계 '붙어 온 장면 그대로 쓰기'(2026-09-04, 설계 §3-5·§9 — 사장님 "3단계는 상속만").
 
