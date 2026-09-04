@@ -1132,6 +1132,28 @@
       })
       .catch(function () { if (cell) cell.textContent = "네트워크 오류"; });
   }
+  /* ★사전 판독(2026-09-04 사장님 "바로 뜨게"): 페이지가 카드를 그린 직후 부른다.
+     보이는 카드의 shortcode·thumbnail을 모아 한 번에 판독 → 캐시. 판독된 제품명은 버튼에 바로
+     박아 준다("🛒 택총 쿠팡?") → 사장님이 누르기 전에 무엇인지 알고, 누르면 즉시 검색된다.
+     같은 페이지에서 두 번 부르면 이미 처리한 shortcode는 건너뛴다. */
+  var _cfWarmed = {};
+  window.ssCoupangPrewarm = function (items) {
+    var todo = (items || []).filter(function (it) { return it && it.shortcode && it.thumbnail && !_cfWarmed[it.shortcode]; }).slice(0, 60);
+    if (!todo.length) return;
+    todo.forEach(function (it) { _cfWarmed[it.shortcode] = 1; });
+    fetch("/api/coupang/identify_batch", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ items: todo.map(function (it) { return { shortcode: it.shortcode, thumbnail: it.thumbnail }; }) }) })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        var pm = (d && d.products) || {};
+        Object.keys(pm).forEach(function (sc) {
+          var name = pm[sc]; if (!name) return;
+          var btn = document.querySelector('.cp-btn[data-sc="' + sc + '"]');
+          if (btn) { btn.textContent = "🛒 " + (name.length > 10 ? name.slice(0, 10) + "…" : name) + " 쿠팡?"; btn.setAttribute("data-product", name); btn.title = "썸네일에서 알아낸 제품: " + name + " — 누르면 쿠팡 검색과 내 추적 링크까지"; }
+        });
+      })
+      .catch(function () {});
+  };
   window.ssCoupangFind = function (keyword, opts) { _cfOpen(keyword, opts); };
   window.ssCoupangFind.search = _cfSearch;
   window.ssCoupangFind.link = _cfLink;

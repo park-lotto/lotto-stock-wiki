@@ -4750,6 +4750,30 @@ def api_coupang_identify(body: dict):
     return {"ok": True, "product": product, "queries": [product] + qs[:5]}
 
 
+@app.post("/api/coupang/identify_batch")
+def api_coupang_identify_batch(body: dict):
+    """화면에 보이는 카드들을 **미리** 판독해 캐시한다(2026-09-04 사장님 "바로 뜨게 못 하나").
+    클릭 후 3~8초 걸리던 썸네일 판독이 페이지 로드 직후 뒤에서 돌아, 클릭 땐 캐시 적중으로 즉시 뜬다.
+    한 번 판독한 shortcode는 DB 캐시라 다시 안 묻는다(product_name.identify_many). 상한 60개."""
+    from shopping_shorts import product_name as _pn
+    items = body.get("items") if isinstance(body.get("items"), list) else []
+    todo = []
+    for it in items[:60]:
+        if not isinstance(it, dict):
+            continue
+        sc = os.path.basename(str(it.get("shortcode") or "")).strip()
+        th = str(it.get("thumbnail") or "").strip()
+        if sc and th:
+            todo.append({"shortcode": sc, "thumbnail": th})
+    if not todo:
+        return {"ok": True, "products": {}}
+    try:
+        pmap = _pn.identify_many(todo, DB_PATH)
+    except Exception as e:                                  # noqa: BLE001
+        return {"ok": False, "products": {}, "error": f"판독 실패: {type(e).__name__}"}
+    return {"ok": True, "products": {k: (v or "") for k, v in (pmap or {}).items()}}
+
+
 @app.post("/api/coupang/deeplink")
 def api_coupang_deeplink(body: dict):
     """상품 URL → 이 회원의 짧은 추적 링크(2026-09-04 랭킹 카드 '🛒 쿠팡 상품 있나' 모달용).
