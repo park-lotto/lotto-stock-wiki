@@ -10,12 +10,15 @@ h1{margin:0 0 4px;font-size:17px} .sub{color:var(--sub);font-size:12.5px}
 button{cursor:pointer;font-family:inherit}
 .btn{background:var(--card);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:7px 14px;font-size:13px}
 .btn.acc{background:#123;border-color:var(--acc);color:var(--acc);font-weight:700}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;padding:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;padding:16px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:11px 12px;display:flex;flex-direction:column;gap:8px}
+.thumb{display:block;border-radius:9px;overflow:hidden;background:#0a0f14;aspect-ratio:16/9;flex:0 0 auto}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .15s}
+.thumb:hover img{transform:scale(1.04)}
 .card.o{border-color:var(--ok);box-shadow:0 0 0 1px var(--ok) inset}
 .card.x{opacity:.42}
 .card.h{border-color:var(--hold)}
-.ttl{font-weight:700;font-size:13.5px;word-break:keep-all}
+.ttl{font-weight:700;font-size:13.5px;word-break:keep-all;line-height:1.35;height:2.7em;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .meta{color:var(--sub);font-size:12px;display:flex;gap:8px;flex-wrap:wrap}
 .tag{background:#1b2530;border-radius:6px;padding:1px 7px;font-size:11.5px}
 .acts{display:flex;gap:6px;margin-top:auto}
@@ -53,18 +56,27 @@ const ITEMS = [{"t": "\"슥 닦았더니 새 폰 됐어요!📱\" 안소영·김
 const KEY='sul_judge_v1';
 let M = {}; try{ M=JSON.parse(localStorage.getItem(KEY)||'{}'); }catch(e){ M={}; }
 let FILTER='all';
+const PAGE0=30;
+let PAGE=PAGE0;              // 한 번에 그리는 장수(＋더 보기로 늘린다)
 const g=document.getElementById('g'), dlg=document.getElementById('dlg');
 const esc=s=>String(s==null?'':s).replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));
 function age(a){ if(typeof a!=='number') return ''; return a<1? Math.round(a*60)+'분': (a<48? Math.round(a)+'시간': Math.round(a/24)+'일'); }
 function key(it,i){ return it.sc || (it.u+'|'+i); }
 function render(){
   document.getElementById('tot').textContent=ITEMS.length;
+  let shown=0;
   g.innerHTML = ITEMS.map((it,i)=>{
     const k=key(it,i), v=M[k]||'';
     if(FILTER==='todo' && v) return '';
     if(FILTER==='o' && v!=='o') return '';
+    if(++shown > PAGE) return '';
+    // ★수집에 담긴 oardefault.jpg는 120x90 껍데기다(실측). 영상 id로 hqdefault를 직접 만든다.
+    const th = it.sc ? ('https://i.ytimg.com/vi/'+esc(it.sc)+'/hqdefault.jpg') : (it.th?esc(it.th):'');
     return `<div class="card ${v}" data-k="${esc(k)}">
-      <div class="ttl">${esc(it.t)}</div>
+      ${th?`<a class="thumb" href="${esc(it.url||'#')}" target="_blank" rel="noopener" title="눌러서 영상 보기">
+        <img data-src="${th}" data-sc="${esc(it.sc||'')}" alt="">
+      </a>`:''}
+      <div class="ttl" title="${esc(it.t)}">${esc(String(it.t).split(/\s+#/)[0])}</div>
       <div class="meta"><span class="tag">${esc(it.c||'?')}</span>
         <span>${esc(it.n||'')}</span><span>${age(it.a)} 전</span>
         <span>조회 ${(it.v||0).toLocaleString()}</span></div>
@@ -75,7 +87,20 @@ function render(){
         <button class="h ${v==='h'?'on':''}" onclick="mark('${esc(k)}','h')">보류</button>
       </div></div>`;
   }).join('');
+  // ＋ 더 보기 — 남은 게 있을 때만
+  const rest = ITEMS.filter((it,i)=>{ const v=M[key(it,i)]||'';
+    if(FILTER==='todo' && v) return false; if(FILTER==='o' && v!=='o') return false; return true; }).length - PAGE;
+  const more=document.getElementById('more');
+  if(more) more.remove();
+  if(rest>0){
+    const b=document.createElement('button'); b.id='more'; b.className='btn acc';
+    b.style.cssText='display:block;margin:4px auto 28px;padding:12px 28px;font-size:14px';
+    b.textContent='＋ '+Math.min(30,rest)+'개 더 보기 (남은 '+rest+')';
+    b.onclick=()=>{ PAGE+=30; render(); };
+    g.parentNode.insertBefore(b, g.nextSibling);
+  }
   count();
+  watchThumbs();
 }
 function count(){
   const vals=Object.values(M);
@@ -91,7 +116,34 @@ function mark(k,v){
       b.classList.toggle('on', b.classList.contains(M[k]||'__none__')); }); }
   if(FILTER!=='all') render(); else count();
 }
-function only(f){ FILTER=f; render(); }
+function only(f){ FILTER=f; PAGE=PAGE0; render(); }
+// 🖼 썸네일은 **화면에 들어온 것만** 받는다(2026-09-04 실측).
+//   60장에 src를 한꺼번에 걸었더니 9초가 지나도 0장이 떴다 — 같은 호스트로 몰려 밀린다.
+//   보이는 것부터 6장씩 받으면 스크롤을 따라 바로바로 뜬다.
+// 🖼 썸네일은 **6장씩 줄 세워** 받는다(2026-09-04 실측).
+//   30장에 src를 한꺼번에 걸면 9초가 지나도 0장이 떴다 — 같은 호스트로 몰려 통째로 밀린다.
+//   브라우저가 호스트당 6개까지만 동시에 받으므로, 우리가 6개씩 끊어 넣으면
+//   앞에서부터 차례로 뜬다(먼저 볼 카드가 먼저 뜬다).
+//   ★IntersectionObserver로도 해봤는데 콜백이 안 불려(실측 관찰 30건, 큐 0) 버렸다.
+let QUEUE=[], BUSY=0;
+function pump(){
+  while(BUSY<6 && QUEUE.length){
+    const img=QUEUE.shift();
+    if(!img || !img.dataset.src || img.dataset.done) continue;
+    img.dataset.done='1'; BUSY++;
+    const fin=()=>{ BUSY--; pump(); };
+    img.onload=fin;
+    img.onerror=()=>{   // hqdefault가 없는 영상이 있다 — mq로 한 번만 더
+      if(!img.dataset.retry && img.dataset.sc){ img.dataset.retry='1';
+        img.src='https://i.ytimg.com/vi/'+img.dataset.sc+'/mqdefault.jpg'; return; }
+      fin(); };
+    img.src=img.dataset.src;
+  }
+}
+function watchThumbs(){
+  document.querySelectorAll('.thumb img[data-src]:not([data-done])').forEach(i=>QUEUE.push(i));
+  pump();
+}
 function save(){
   const rows=ITEMS.map((it,i)=>({v:M[key(it,i)]||'', t:it.t, n:it.n, c:it.c})).filter(r=>r.v);
   document.getElementById('out').value=JSON.stringify(rows,null,0);
