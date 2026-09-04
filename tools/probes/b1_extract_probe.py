@@ -1,22 +1,25 @@
 # -*- coding: utf-8 -*-
-"""수리한 트랙 코드(.tracks/B1프레임태깅)의 extract_script_frames를 로컬 4편에 실제로 돌린다.
-키: 예비풀 우회 / Whisper: 로컬 GROQ 없음 → None / 경로: ASCII 상대경로."""
-import sys, json, os, sqlite3, time, shutil
+"""[프로브] 수리한 B1(frame_script.extract_script_frames)을 잡의 소스 전부에 돌려 기존 추출과 나란히 본다.
+사용: py tools/probes/b1_extract_probe.py <job_id> [video_id]   → out/probes/b1_<job>/result.json
+키: SHORTS 풀이 0개인 PC는 예비풀 키로 우회 / Whisper: GROQ 키 없으면 말 트랙 빈칸(시각만 비교)
+경로: 저장소 루트로 chdir 후 ASCII 상대경로(한글 절대경로는 로컬 ffmpeg stderr cp949 크래시)."""
+import sys, json, os, sqlite3, time
+from pathlib import Path
 sys.stdout.reconfigure(encoding="utf-8")
-TRACK = r"C:\Users\CH\Desktop\로또의 주식\.tracks\B1프레임태깅"
-MAIN = r"C:\Users\CH\Desktop\로또의 주식"
-sys.path.insert(0, TRACK)
-os.chdir(MAIN)                                   # 영상·DB는 main 폴더에만 있다
+ROOT = str(Path(__file__).resolve().parents[2])   # 저장소 루트 — 어느 PC/서버든
+sys.path.insert(0, ROOT)
+os.chdir(ROOT)
 from shopping_shorts import keyroute, comment_gen, frame_script
-assert frame_script.__file__.startswith(TRACK), frame_script.__file__
-KEY = keyroute.gemini_keys("general")[0]
-comment_gen._current_key_and_idx = lambda: (KEY, 0)
+if comment_gen._current_key_and_idx()[0] is None:
+    KEY = keyroute.gemini_keys("general")[0]
+    comment_gen._current_key_and_idx = lambda: (KEY, 0)
+    print("(SHORTS 풀 0개 → 예비풀 키로 우회)")
 
-JOB = "409f894230c6"
-ONLY = sys.argv[1] if len(sys.argv) > 1 else None
-ex = json.loads(sqlite3.connect(os.path.join(MAIN, "shopping_shorts", "data", "reference.db")).execute(
+JOB = sys.argv[1] if len(sys.argv) > 1 else "409f894230c6"
+ONLY = sys.argv[2] if len(sys.argv) > 2 else None
+ex = json.loads(sqlite3.connect(os.path.join(ROOT, "shopping_shorts", "data", "reference.db")).execute(
     "select extract_json from mix_jobs where job_id=?", (JOB,)).fetchone()[0])
-out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "b1_track_" + JOB)
+out = os.path.join(ROOT, "out", "probes", "b1_" + JOB)
 os.makedirs(out, exist_ok=True)
 res = {}
 for vid in ex:

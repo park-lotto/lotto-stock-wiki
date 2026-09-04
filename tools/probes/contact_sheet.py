@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
-"""세그먼트별 시작·중간·끝 프레임을 한 장에 모아 시각 정합을 눈으로 확인한다."""
+"""[프로브] 세그먼트별 시작·중간·끝 프레임을 한 장에 모아 시각 정합을 눈으로 확인한다.
+사용: py tools/probes/contact_sheet.py <job_id> <video_id> <seg_lo> <seg_hi>  → out/probes/sheet_*/sheet.png"""
 import sys, json, os, sqlite3, subprocess
+from pathlib import Path
 sys.stdout.reconfigure(encoding="utf-8")
-ROOT = r"C:\Users\CH\Desktop\로또의 주식"
+ROOT = str(Path(__file__).resolve().parents[2])   # 저장소 루트 — 어느 PC/서버든
 sys.path.insert(0, ROOT); os.chdir(ROOT)
 from shopping_shorts.config import DB_PATH
 from PIL import Image, ImageDraw
@@ -12,7 +14,7 @@ ex = json.loads(sqlite3.connect(DB_PATH).execute(
     "select extract_json from mix_jobs where job_id=?", (JOB,)).fetchone()[0])
 segs = ex[VID]["segments"]
 vpath = os.path.join(ROOT, "shopping_shorts", "data", "mix_jobs", JOB, VID, VID + ".mp4")
-out = os.path.join(os.path.dirname(os.path.abspath(__file__)), f"sheet_{VID}_{LO}-{HI}")
+out = os.path.join(ROOT, "out", "probes", f"sheet_{JOB}_{VID}_{LO}-{HI}")
 os.makedirs(out, exist_ok=True)
 W, H = 320, 180
 rows = []

@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
-"""1단계 정확도 파일럿 — 로컬 잡의 소스 전 세그먼트를 프레임 대조(맞음/부분/틀림).
-tag_qa_frames의 _extract_frames/score_verdicts는 그대로 쓰고, 판정 호출만 스키마 없는 JSON으로 대체한다
-(라이브 _judge의 response_schema 강제 호출이 2026-09-04 실측 4/4 504 DEADLINE_EXCEEDED). 라이브는 안 건드린다."""
+"""[프로브] 1단계 정확도 측정 — 잡의 소스 전 세그먼트를 프레임 대조(맞음/부분/틀림).
+사용: py tools/probes/stage1_frame_accuracy.py <job_id> [video_id]   → out/probes/frames_<job>/result.json
+전제: shopping_shorts/data/reference.db의 mix_jobs.extract_json + data/mix_jobs/<job>/<vid>/<vid>.mp4. 서버에서도 그대로 돈다.
+tag_qa_frames의 _extract_frames/score_verdicts는 그대로 쓰고, 판정 호출만 스키마 없는 JSON으로 부른다
+(2026-09-04 실측: 스키마 강제 호출은 4/4 504). 라이브는 안 건드린다."""
 import sys, json, os, sqlite3, time
+from pathlib import Path
 sys.stdout.reconfigure(encoding="utf-8")
-ROOT = r"C:\Users\CH\Desktop\로또의 주식"
+ROOT = str(Path(__file__).resolve().parents[2])   # 저장소 루트 — 어느 PC/서버든
 sys.path.insert(0, ROOT)
 os.chdir(ROOT)
 from shopping_shorts import tag_qa_frames as T
@@ -53,7 +56,7 @@ ONLY = sys.argv[2] if len(sys.argv) > 2 else None
 c = sqlite3.connect(DB_PATH)
 row = c.execute("select extract_json from mix_jobs where job_id=?", (JOB,)).fetchone()
 ex = json.loads(row[0] or "{}")
-tmp = os.path.join(os.path.dirname(os.path.abspath(__file__)), "frames_" + JOB)
+tmp = os.path.join(ROOT, "out", "probes", "frames_" + JOB)
 os.makedirs(tmp, exist_ok=True)
 tot = {"맞음": 0, "부분": 0, "틀림": 0}
 rows = []
