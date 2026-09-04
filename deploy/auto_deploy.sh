@@ -190,6 +190,7 @@ _urgent_commit() {
   # LOCAL..REMOTE 제목 중 하나라도 표식이 있으면 긴급. 병합 커밋도 포함된다.
   git log --format=%s "$LOCAL..$REMOTE" 2>/dev/null | grep -qE '\[(긴급|deploy-now)\]'
 }
+LOCAL_HELD=""   # set -u 대비 — 창 밖에서 붙잡으면 1
 if [ "$LOCAL" != "$REMOTE" ]; then
   if git diff --name-only "$LOCAL" "$REMOTE" | grep -qE '^shopping_shorts/'; then
     if [ -f "$DEPLOY_NOW_FLAG" ]; then
