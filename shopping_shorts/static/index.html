@@ -142,6 +142,12 @@
               border:1px solid #1f6f6b;background:linear-gradient(90deg,#0e2f2e,#0a2422);
               color:#5fe3d6;font-size:11px;cursor:pointer;white-space:nowrap}
   .btns .inner-btn:hover{background:linear-gradient(90deg,#14403e,#0d2e2b)}
+  /* 🛒 쿠팡 상품 찾기(2026-09-04) — 영상을 만들기 전에 "쿠팡에 있나·내 링크 되나"를 카드에서 본다.
+     격자 한 줄을 통째로 차지(내부검색과 같은 규칙). 색은 쿠팡 주황 계열로 파워검색(금색)과 가른다. */
+  .btns .cp-btn{grid-column:1/-1;margin-top:0;padding:7px 4px;border-radius:7px;
+              border:1px solid #8a4b12;background:linear-gradient(90deg,#3a2210,#2a1808);
+              color:#ffb570;font-size:11px;cursor:pointer;white-space:nowrap}
+  .btns .cp-btn:hover{background:linear-gradient(90deg,#4a2c14,#35200a)}
   /* 대본 모달 */
   /* 화면을 막지 않는 이동식(플로팅) 창 — 컨테이너는 클릭 통과, 박스만 잡힘 */
   .modal-bg{display:none;position:fixed;inset:0;z-index:100;pointer-events:none}
@@ -2164,6 +2170,7 @@ function render(opts){
             <button class="comment" onclick="goComment('${i.shortcode}')">💬 댓글소통</button>
             <button class="save" id="save_${i.shortcode}" onclick="toggleMix('${i.shortcode}', this)">📥 즐겨찾기</button>
             <button class="script-btn" onclick="lensSearch(this,'${i.shortcode}')">🔍 숏템파워검색</button>
+            <button class="cp-btn" title="이 제품이 쿠팡에 있는지 찾고, 있으면 내 추적 링크까지 바로 만듭니다" onclick="window.ssCoupangFind(decodeURIComponent('${encodeURIComponent((i.title||i.caption||'').split('\n')[0].slice(0,60))}'))">🛒 쿠팡에 있나?</button>
             ${window.IS_ADMIN?`<button class="inner-btn" title="우리가 관리하는 채널 아카이브에서 같은 제품·주제의 옛 영상 찾기 (무료·비전태그 매칭)" onclick="archiveSimilar('${i.shortcode}')">🏠 숏템내부검색</button>`:''}
           </div>
         </div>
@@ -4484,6 +4491,6 @@ fetch('/api/me').then(r=>r.ok?r.json():null).then(d=>{
   setTimeout(function(){ try{ traceByUrl(lu); }catch(e){} }, 600);
 })();
 </script>
-<script src="/sidebar.js?v=2"></script>
+<script src="/sidebar.js?v=3"></script>
 </body>
 </html>

@@ -4710,6 +4710,25 @@ def _coupang_member_key(customer_id=None):
         return "", ""
 
 
+@app.post("/api/coupang/deeplink")
+def api_coupang_deeplink(body: dict):
+    """상품 URL → 이 회원의 짧은 추적 링크(2026-09-04 랭킹 카드 '🛒 쿠팡 상품 있나' 모달용).
+    키가 없으면 ok:False + 안내(작업은 안 막는다). 남의 추적 파라미터는 상품번호만 남긴다."""
+    from shopping_shorts import keyctx as _kc
+    url = coupang_partners.canonical_product_url(str(body.get("url") or ""))
+    if not coupang_partners.parse_product_url(url):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "쿠팡 상품 URL이 아닙니다"})
+    cid = _kc.owner_cid()
+    ak, sk = _coupang_member_key(cid)
+    if not ak:
+        return {"ok": False, "need_key": True, "url": url,
+                "error": "내 파트너스 API 키가 없습니다 — 마이페이지 → 내 키 등록에서 넣으면 자동으로 만들어집니다"}
+    dl = coupang_partners.to_deeplink([url], ak, sk, customer_id=cid)
+    if dl and dl[0].get("shorten_url"):
+        return {"ok": True, "url": url, "shorten_url": dl[0]["shorten_url"], "landing_url": dl[0].get("landing_url", "")}
+    return {"ok": False, "url": url, "error": (dl[0].get("error") if dl else "딥링크 발급 실패")}
+
+
 @app.get("/api/coupang/search")
 def api_coupang_search(q: str = "", limit: int = 0):
     """키워드 → 쿠팡 상품 후보 카드(승인 전 크롤 경로).
