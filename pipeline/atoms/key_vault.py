@@ -306,7 +306,7 @@ def mark_failure(key: str, exc: Exception, group: str = None) -> None:
     if is_account_disabled_error(exc):
         mark_dead(key, detail=str(exc)[:120])
         return
-    if is_quota_error(exc):
+    if is_quota_error(exc) or is_daily_exhausted_error(exc):
         owner = group or _owner_group(key)
         if owner:
             mark_exhausted(owner, key, retry_delay_seconds(exc))
@@ -568,8 +568,11 @@ def is_account_disabled_error(exc: Exception) -> bool:
       제작소가 _current_key_and_idx()로 늘 같은 죽은 live[0]을 다시 잡아 매 job
       실패했다("로테이션이 바로 안 됨"의 진짜 원인). 403도 계정 문제라 영구 제외한다."""
     m = str(exc)
+    # ★무효 키(API_KEY_INVALID)도 영구다(2026-09-04). 종전엔 edit_plan._is_dead_key_error만
+    #   따로 잡아 **소진(30분 잠금)**으로 표시해, 죽은 키 …sJbmaQ가 09-03 56건·09-04 4건 다시 불렸다.
     return ("UNAUTHENTICATED" in m or "ACCOUNT_STATE_INVALID" in m
             or "PERMISSION_DENIED" in m
+            or "API_KEY_INVALID" in m or "API key not valid" in m
             or "service account is deleted or disabled" in m)
 
 

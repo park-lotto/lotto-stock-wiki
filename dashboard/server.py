@@ -154,7 +154,11 @@ def _briefing_keys():
     """실시간 시장 브리핑 종합 전용 키 풀 — key_vault 'briefing' 그룹, 없으면 요약 풀로 폴백."""
     # ★get_keys가 아니라 get_live_keys로 받는다(2026-09-03) — 종전엔 브리핑 그룹만
     #   잠금·사망을 통째로 무시해 죽은 키를 매번 다시 집었다.
-    dedicated = key_vault.get_live_keys("briefing") or key_vault.without_dead(key_vault.get_keys("briefing"))
+    # ★잠긴 키로 되돌아가지 않는다(2026-09-04 실측: 브리핑 키 3개가 같은 프로젝트라 분당 한도
+    #   429로 전부 잠겼는데, 종전 폴백 `without_dead(get_keys)`가 **잠금을 무시하고** 그 3개를
+    #   다시 줘서 하루 종일 키당 240회 429 + ok 0건 = 브리핑이 통째로 죽어 있었다).
+    #   비어 있으면 요약 풀(다른 그룹 라이브 키)로 간다 — 그게 원래 폴백의 뜻이다.
+    dedicated = key_vault.get_live_keys("briefing")
     return key_vault.rotated(dedicated) if dedicated else _summary_keys()
 
 
