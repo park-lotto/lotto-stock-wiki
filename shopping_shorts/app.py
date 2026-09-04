@@ -3365,7 +3365,8 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
             _styled += script_generate.generate_by_styles(
                 _src, _asm_left, target_seconds=body.get("target_seconds") or 25,
                 bank_context=_bank_ctx, facts_block=_facts_block,
-                reasons=_gen_reasons, seed=_jid)
+                reasons=_gen_reasons, seed=_jid,
+                grounded=_script_grounded(store, _cid(request)))
         if not _styled:
             # ★원인별로 다르게 말한다(2026-08-22). 종전엔 무슨 일이 나든 "키 소진 또는
             #   응답 오류"만 떴다 — 실측(08-22)에서 키가 멀쩡한데도 그 문구가 떠서
@@ -11934,6 +11935,25 @@ def _code_admin(customer_id):
     return email.lower() in _ADMIN_EMAILS
 
 
+def _script_grounded(store, customer_id):
+    """2단계 '본 것만 쓰기' 모드 스위치(2026-09-04). 설정 `script_grounded_enabled`:
+      ""/"0" = 끔(종전 그대로, 기본) · "admin" = 관리자 계정만(사장님 실사용 테스트) · "1" = 전체.
+    ★고객 화면은 사장님이 통과시키기 전엔 한 글자도 안 바뀐다 — 기본이 끔이다."""
+    try:
+        v = (store.get_setting("script_grounded_enabled", "") or "").strip().lower()
+    except Exception:      # noqa: BLE001 — 설정 조회 실패는 '끔'
+        return False
+    if v == "1":
+        return True
+    if v == "admin":
+        return bool(_is_admin(customer_id))
+    if v and v not in ("0", "off", "false"):
+        # "11,42" — 특정 고객만(관리자는 늘 포함). feature_allow_* 목록과 같은 모양.
+        ids = {x.strip() for x in v.split(",") if x.strip().isdigit()}
+        return str(_as_cid(customer_id)) in ids or bool(_is_admin(customer_id))
+    return False
+
+
 def _is_admin(customer_id):
     """관리자 = 사장님(0) 또는 이메일 화이트리스트(코드) 또는 사장님이 UI로 지정(customers.admin=1).
     지정 관리자는 권한이 코드 관리자와 완전히 동일하다."""
@@ -11997,7 +12017,11 @@ _ADMIN_SETTING_KEYS = {"trial_days", "trial_grant_points", "trial_event_hours",
                        # 1기 챌린지(2026-08-24) — 기간·하루 목표
                        "challenge_start", "challenge_end", "challenge_daily_goal",
                        # 기능별 허용 목록(2026-08-31) — "11,42" 처럼 customer_id를 쉼표로
-                       "feature_allow_naverclip", "feature_allow_pinterest"}
+                       "feature_allow_naverclip", "feature_allow_pinterest",
+                       # 1단계 컷별 프레임 태깅(B1) 스위치 — "1"이면 켬(2026-09-04 수리 후 서버 실측 뒤 결정)
+                       "frame_extract_enabled",
+                       # 2단계 '본 것만 쓰기' — ""/"0" 끔 · "admin" 관리자만 · "11,42" 고객 허용 목록 · "1" 전체
+                       "script_grounded_enabled"}
 
 
 # ── 오류 신고(2026-08-24) ────────────────────────────────────────────────
@@ -14286,7 +14310,8 @@ def api_produce_script_mix(request: Request, body: dict):
             return JSONResponse(status_code=422,
                                 content={"ok": False, "error": "고른 스타일을 찾을 수 없음(승인·구조 필요)"})
         styled = script_generate.generate_by_styles(
-            sources, picked, target_seconds=body.get("target_seconds") or 20)
+            sources, picked, target_seconds=body.get("target_seconds") or 20,
+            grounded=_script_grounded(_st, _cid(request)))
         if not styled:
             return JSONResponse(status_code=502,
                                 content={"ok": False, "error": "생성 실패(키 소진 또는 응답 오류)"})
