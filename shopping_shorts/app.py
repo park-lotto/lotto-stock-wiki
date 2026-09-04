@@ -5700,6 +5700,33 @@ def api_mix_scene_lab_apply(job_id: str, body: dict):
     return {"ok": True, "applied": (plan.get("scene_lab") or {}).get("applied", 0), "swapped": _swapped}
 
 
+@app.post("/api/admin/probe/frame_accuracy")
+def api_admin_probe_frame_accuracy_start(request: Request, body: dict = None):
+    """관리자: 1단계 정확도 서버 실측 시작(SSH 없이). body {n: 30}. 결과는 GET으로 폴링.
+    서버가 최근 소스 N개로 [기존 추출 vs B1] 묘사↔프레임 정확도를 같은 판정기로 잰다(백그라운드, 동시 1건)."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import probe_frame_accuracy as _pfa
+    n = int((body or {}).get("n") or 30)
+    ok = _pfa.start(Store(DB_PATH), _MIX_WORK_DIR, Path(__file__).parent / "data" / "probes", n=n)
+    return {"ok": ok, "state": _pfa.state() if ok else "running"}
+
+
+@app.get("/api/admin/probe/frame_accuracy")
+def api_admin_probe_frame_accuracy_state(request: Request, start: int = 0, n: int = 30):
+    """상태 조회. `?start=1&n=30`이면 시작도 한다 — 사장님이 로그인된 브라우저에서 **주소 한 번**으로 돌리게(POST 도구 불필요).
+    도는 중이면 시작 요청은 무시하고 현재 상태만 준다."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts import probe_frame_accuracy as _pfa
+    started = False
+    if start:
+        started = _pfa.start(Store(DB_PATH), _MIX_WORK_DIR, Path(__file__).parent / "data" / "probes", n=n)
+    return {"ok": True, "started": started, **_pfa.state()}
+
+
 @app.get("/api/admin/scene_swaps")
 def api_admin_scene_swaps(request: Request, days: int = 30, job_id: str = ""):
     """관리자: 3단계 손 횟수(생성기별 잡당 교체 수) + 최근 교체 행. 매칭 개선의 시험지 점수판."""
