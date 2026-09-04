@@ -13261,7 +13261,7 @@ async function loadMyVoices(){
       + '</div>'
       + (v.preview_url ? '<button class="btn-prev" style="padding:6px 10px" onclick="new Audio(' + JSON.stringify(v.preview_url) + ').play()">▶ 듣기</button>' : '')
       + (done
-          ? '<span class="hint" style="color:var(--ok)">✔ 등록됨</span>'
+          ? '<button class="btn-prev" style="padding:6px 12px" title="아래 성우 카드에서 이 목소리를 고릅니다" onclick="useMyVoiceCard(' + JSON.stringify(done) + ')">✔ 등록됨 · 이 성우로 쓰기</button>'
           : '<button class="btn-next" style="padding:6px 12px" onclick="registerMyVoice(' + JSON.stringify(v.voice_id) + ',' + JSON.stringify(v.name) + ',this)">내 성우로 추가</button>')
       + '</div>';
   }).join('');
@@ -13285,7 +13285,18 @@ async function registerMyVoice(voiceId, name, btn){
   VMINE_LOADED = false;
   await loadMyVoices();
   if (typeof loadPresets === 'function') await loadPresets();   /* 카드 목록 새로고침 — 공개 라이브러리 담기와 같은 함수(0순위-B) */
-  alert('「' + name + '」이(가) 내 성우에 추가됐습니다.');
+  /* ★등록만 하고 끝내면 "눌러도 아래로 안 내려온다"(고객 문의 2026-09-04). 새 카드는 추천이
+     아니라 열의 '＋ 더보기' 뒤에 접혀 들어가서 화면에 안 보였다. 바로 골라서 펼치고 내려간다. */
+  useMyVoiceCard(d.group_id);
+  alert('「' + name + '」이(가) 내 성우에 추가됐고, 아래에서 이 성우로 골라 두었습니다.');
+}
+/* 내가 만든 목소리 카드를 고르고 그 자리로 내려간다 — 등록 직후·'이 성우로 쓰기' 둘 다 이 한 곳. */
+function useMyVoiceCard(gid){
+  if(!gid) return;
+  if(!VOICE_GROUPS.some(g=>g.group_id===gid)) return;   /* 목록에 아직 없으면(로드 실패) 조용히 둔다 */
+  pickPreset(gid);            /* 고르면 renderPresetCards가 접힌 열을 자동으로 편다(VOICES_OPEN) */
+  const card = document.querySelector('#presetCards .vcard.sel');
+  if(card) card.scrollIntoView({block:'center'});   /* smooth는 재렌더·스로틀에 끊긴다(라이브 실측) — 즉시 */
 }
 
 // ── 타입캐스트 성우 찾기 ──────────────────────────────────────────────
