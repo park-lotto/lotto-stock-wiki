@@ -117,6 +117,20 @@
   .stat{display:flex;justify-content:space-between;font-size:12px;color:var(--sub);margin-top:4px}
   .stat b{color:var(--txt)}
   .grade{font-size:14px}
+  /* 🏅 조회수 뱃지(2026-09-04 사장님 "몇만뷰 몇십만뷰 이런거 의미있는건 뱃지를 달아야해").
+     기준은 실측 분위수다(유튜브 9,170편): 10만+ 상위 8.2% · 30만+ 3.5% · 50만+ 2.1% · 100만+ 0.8%.
+     ★10만 미만은 안 단다 — 절반이 3,676뷰(중앙값)라 뱃지가 흔해지면 뱃지가 아니다. */
+  /* ★이름 주의: .vbadge 는 **이미** 썸네일 위 영상길이 뱃지가 쓰고 있다(position:absolute).
+     같은 이름을 쓰면 조회수 뱃지가 카드 밖으로 튀어나간다(실측: x=1828, 카드는 x=306).
+     그래서 .viewbadge 로 가른다. */
+  .viewbadge{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:800;
+          padding:1px 7px;border-radius:99px;margin-left:5px;vertical-align:middle;
+          letter-spacing:-.2px;white-space:nowrap}
+  .vb1{background:#1e3a5f;color:#93c5fd}                      /* 10만+ */
+  .vb2{background:#3b2f0b;color:#fcd34d}                      /* 30만+ */
+  .vb3{background:#4a1d1d;color:#fca5a5}                      /* 50만+ */
+  .vb4{background:linear-gradient(90deg,#7c2d12,#b45309);color:#fde68a;
+       box-shadow:0 0 0 1px #f59e0b55}                        /* 100만+ */
   .delta-up{color:var(--fire)}
   .links{display:flex;gap:8px;margin-top:10px}
   .links a{font-size:12px;color:var(--accent);text-decoration:none}
@@ -1617,6 +1631,24 @@ document.querySelectorAll('.tab').forEach(x=> x.onclick=()=>setTab(x.dataset.tab
 // -1e15로 같아져 최신순이 통째로 무효**가 됐다(사장님 제보 "최신순인데 2일 전").
 const RECENCY_FIELDS = ['posted_at', 'upload_ts', 'first_seen'];
 
+// 🏅 조회수 뱃지 — 의미 있는 것만 단다(2026-09-04).
+// 기준은 실측 분위수(유튜브 9,170편): 10만+ 754편(상위 8.2%) · 30만+ 325(3.5%)
+//   · 50만+ 196(2.1%) · 100만+ 72(0.8%). 10만 미만은 안 단다(중앙값이 3,676뷰다).
+const _VBADGES = [
+  [10000000, 'vb4', '🏆', '1000만'],
+  [ 5000000, 'vb4', '👑', '500만'],
+  [ 1000000, 'vb4', '👑', '100만'],
+  [  500000, 'vb3', '💥', '50만'],
+  [  300000, 'vb2', '🔥', '30만'],
+  [  100000, 'vb1', '📈', '10만'],
+];
+function viewBadge(v){
+  const n = Number(v || 0);
+  for (const [th, cls, icon, label] of _VBADGES){
+    if (n >= th) return `<span class="viewbadge ${cls}" title="조회수 ${n.toLocaleString()} — ${label}뷰 이상">${icon} ${label}뷰</span>`;
+  }
+  return '';                                    // 10만 미만은 뱃지 없음
+}
 function recencyMs(i){
   for (const f of RECENCY_FIELDS){
     const v = i[f];
@@ -2154,7 +2186,7 @@ function render(opts){
         ${(i.video_url||i.platform==='youtube'||i.platform==='tiktok'||(i.platform||PLATFORM)==='instagram')?'<span class="play-badge">▶</span>':''}
       </div>`:''}
       <div class="body">
-        <div class="rank"><span>#${idx+1} · ${i.category} · ${fmtAgo(i)}</span><button class="blockbtn" title="이 채널을 영구 차단 — 지금 바로 가리고, 다음 수집·업데이트에도 안 올라옵니다" onclick="blockChannel('${esc(i.username||'')}','${esc(i.name||'')}',this)">🚫 차단</button></div>
+        <div class="rank"><span>#${idx+1} · ${i.category} · ${fmtAgo(i)}${viewBadge(i.views)}</span><button class="blockbtn" title="이 채널을 영구 차단 — 지금 바로 가리고, 다음 수집·업데이트에도 안 올라옵니다" onclick="blockChannel('${esc(i.username||'')}','${esc(i.name||'')}',this)">🚫 차단</button></div>
         ${i.caption?`<div class="cap${i.thumbnail?'':' cap-only'}" onclick="toggleCap(this)">${esc(i.caption)}</div><div class="capmore" style="display:none" onclick="toggleCap(this.previousElementSibling)">⌄ 더보기</div>`:''}
         <div class="ch"><span class="chname" title="이 채널 영상만 보기(지난 한 달 포함)" style="cursor:pointer" onclick="searchChannel('${esc(i.username||'')}')">${i.name||i.username} <span class="grade">${i.grade||''}</span></span><button class="copy" title="릴스 링크 복사" onclick="copyLink('${i.url}', this)">🔗 복사</button></div>
         ${(i.followers||i.duration!=null)?`<div class="folw">${i.followers?`<span title="채널 팔로워(구독자) 수 — 수집이 실어온 실시간 값">👥 팔로워 ${i.followers.toLocaleString()}</span>`:''}${i.duration!=null?`<span class="dur" title="영상 길이">🎬 ${_fmtDur(i.duration)}</span>`:''}</div>`:''}
