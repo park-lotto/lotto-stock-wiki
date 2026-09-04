@@ -73,38 +73,65 @@ def _apply_beat_sources(beats, structure, seg_map):
     ★지어낸 번호는 무시한다 — seg_map에 실재하는 것만 쓴다(환각 방어).
     ★이미 그 장면을 쓰고 있으면 그대로 둔다. 다른 장면이면 primary를 갈아끼우고
       원래 primary는 alternates 맨 앞으로 살려 둔다(화면 재고를 버리지 않는다).
-    ★역할(role)이 맞는 것끼리만 짝짓는다 — 순서만 믿으면 비트 수가 다를 때 어긋난다.
+    ★역할(role)이 맞는 것끼리 먼저 짝짓는다 — 순서만 믿으면 비트 수가 다를 때 어긋난다.
+
+    ★순서 폴백(2026-08-31) — 역할 이름이 두 단계에서 갈려 출처가 버려지던 것.
+      실측(라이브 44잡·출처 329건): 역할 이름으로 붙는 건 **23%뿐**이었다.
+          2단계 어휘: hook, escalation, reveal, result, origin, spread…
+          3단계 어휘: hook, problem, solution, benefit, demonstration…
+      우연히 같은 hook·cta만 통과하고 가운데는 전부 버려진다(한쪽 영어·한쪽 한글이라
+      0건인 잡도 40개 중 5개). **비트 수가 같을 때만** i번째끼리 이어 살린다 —
+      개수가 같으면 i번째 문장 = i번째 출처가 보장된다(실측 80%가 해당).
+      개수가 다르면 짝지을 근거가 없으므로 종전대로 역할 매칭만 쓴다.
+      `BEAT_SRC_ORDER=off`로 끄면 종전 동작(A/B 대조용).
     """
     srcs = (structure or {}).get("beat_sources")
     if not srcs or not isinstance(srcs, list):
         return beats
-    by_role = {}
-    for i, x in enumerate(srcs):
-        if isinstance(x, dict) and x.get("seg"):
-            by_role.setdefault(str(x.get("role") or "").lower(), []).append(x["seg"])
-    if not by_role:
+    valid = [x for x in srcs if isinstance(x, dict) and x.get("seg")]
+    if not valid:
         return beats
     from shopping_shorts import edit_plan as _ep
-    for b in beats:
-        role = str(b.get("role") or "").lower()
-        want = by_role.get(role)
-        if not want:
-            continue
-        sid = want.pop(0)
+
+    def _put(b, sid):
+        """비트에 출처 장면을 꽂는다 — 판단은 여기 한 곳에서만 한다(0순위-B).
+        붙였으면 True. 지어낸 번호·이미 쓰는 장면이면 False(종전 화면 유지)."""
         if sid not in seg_map:
-            continue                      # 지어낸 번호 — 무시하고 종전 화면을 쓴다
+            return False                  # 지어낸 번호 — 무시하고 종전 화면을 쓴다
         cur = (b.get("primary") or {}).get("seg_id")
         if cur == sid:
-            continue
+            return False
         g = _ep._ground_ref({"seg_id": sid}, seg_map)
         if not g:
-            continue
+            return False
         alts = list(b.get("alternates") or [])
         if b.get("primary"):
             alts.insert(0, b["primary"])
         b["primary"] = g
         b["alternates"] = [a for a in alts if (a or {}).get("seg_id") != sid]
         b["src_seg_applied"] = sid        # 사후에 '출처를 따라갔는가'를 셀 수 있게 남긴다
+        return True
+
+    # ★개수가 같으면 **자리로** 잇는다(2026-08-31). 2단계는 칸 순서대로 beats를 내고
+    #   3단계도 그 대본을 순서대로 쪼개므로, 개수가 같으면 i번째끼리가 곧 같은 문장이다.
+    #   이름은 두 단계가 따로 지어 믿을 수 없다 — 실측 44잡 중 **36잡이 '일부만 겹침'**
+    #   (hook·cta만 우연히 같고 가운데는 escalation↔problem처럼 갈림). 자리로 이으면
+    #   그 36잡이 통째로 살아난다(역할 매칭만 쓰면 329건 중 75건=23%만 붙었다).
+    #   `BEAT_SRC_ORDER=off`면 종전 동작(A/B 대조용).
+    if (len(valid) == len(beats)
+            and (os.getenv("BEAT_SRC_ORDER", "on") or "on").strip().lower()
+            not in ("off", "0", "false")):
+        for b, x in zip(beats, valid):
+            _put(b, x["seg"])
+        return beats
+    # 개수가 다르면 자리를 믿을 수 없다 — 종전대로 역할 이름으로만 짝짓는다.
+    by_role = {}
+    for x in valid:
+        by_role.setdefault(str(x.get("role") or "").lower(), []).append(x["seg"])
+    for b in beats:
+        want = by_role.get(str(b.get("role") or "").lower())
+        if want:
+            _put(b, want.pop(0))
     return beats
 
 
