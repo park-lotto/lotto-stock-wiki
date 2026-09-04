@@ -318,7 +318,7 @@
     .clean-meta .ttl{font-size:15px}
     .clean-meta .desc{color:var(--sub);font-size:12px}
     /* 프리미엄 스위치 — 체크박스는 시각 숨김, 접근성 유지 */
-    .sw-input{position:absolute;opacity:0;width:46px;height:26px;margin:0;right:0;cursor:pointer}
+    .sw-input{position:absolute;opacity:0;width:46px;height:26px;margin:0;right:0;cursor:pointer;z-index:1}
     .sw-track{margin-left:auto;width:46px;height:26px;border-radius:20px;flex:none;position:relative;
       background:#26332e;box-shadow:inset 0 0 0 1px rgba(255,255,255,.05)}
     .sw-knob{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#c9d6d1}
@@ -411,10 +411,14 @@
     @keyframes borderflow{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
     .hero-in{background:radial-gradient(120% 140% at 15% 0%,#12241e,#0b1310 60%);border-radius:16.5px;padding:20px}
     .hbar{display:flex;align-items:center;gap:14px;cursor:pointer;position:relative;flex:1;min-width:0}
-    /* 우상단 [크레딧 아이콘 / 토글] 세로 2단(2026-09-04). .sw-input이 absolute라 .sw-wrap을
-       positioned 부모로 둬야 토글 자리에 정확히 겹친다(hbar 밖으로 나왔으니). */
+    /* 우상단 [크레딧 아이콘 | 토글] 가로 나란히(2026-09-04 사장님 "옆으로 나란히"). .sw-input이
+       absolute라 .sw-wrap을 positioned 부모로 둬야 토글 자리에 정확히 겹친다(hbar 밖으로 나왔으니).
+       ★.sw-input에 z-index:1 — 투명 체크박스가 DOM상 .sw-track **앞**이라 뒤 형제(track, position:
+       relative)가 위에 그려져 **토글 자체를 클릭하면 아무 일도 안 났다**(2026-09-04 라이브 실측:
+       track 중앙 클릭 → checked 그대로). 제목 label(for=)로만 켜져 "활성화가 안 된다" 제보가 여럿.
+       예전엔 .hbar(label) 안에 있어 label이 대신 눌러줬는데 09-04에 밖으로 빼며 드러났다. */
     .hbar-row{display:flex;align-items:center;gap:14px}
-    .hright{display:flex;flex-direction:column;align-items:center;gap:8px;margin-left:auto;flex:none}
+    .hright{display:flex;flex-direction:row;align-items:center;gap:12px;margin-left:auto;flex:none}
     /* ★inline-flex여야 한다 — inline-block이면 안의 .sw-track(span)이 인라인이 돼 width/height가
        무시되고 트랙이 0×0으로 사라진다(2026-09-04 라이브 실측: 흰 손잡이만 떠 있었다).
        원래 .hbar(flex) 안에 있을 땐 flex 아이템이라 크기가 먹었다. */
