@@ -11123,8 +11123,9 @@ _CREDIT_PRO_DEFAULTS = {"lens": 10, "render": 10, "script": 200}  # 하루 영�
 #   ⚠️ render·script는 pro와 같은 값을 유지한다 — SerpApi 키는 렌즈에만 쓰인다.
 _CREDIT_BYOK_DEFAULTS = {"lens": 20, "render": 10, "script": 200}
 # 자기 SerpApi 키를 낸 회원 — **키 1개당** 하루 렌즈 회수(2026-08-26 사장님).
-#   키 1개=10회 · 2개=20회 · 3개=30회. 종전엔 개수와 무관하게 20회 고정이었다.
-_CREDIT_PER_KEY_DEFAULTS = {"lens": 10}
+#   키 1개=20회 · 2개=40회 · 3개=60회 (2026-09-04 사장님: 키 낸 회원 전원 10→20).
+#   종전: 키 1개=10회(08-26). 그 전엔 개수와 무관하게 20회 고정이었다.
+_CREDIT_PER_KEY_DEFAULTS = {"lens": 20}
 _GLOBAL_CAP_DEFAULTS = {"lens": 200, "render": 100, "script": 400}
 
 
