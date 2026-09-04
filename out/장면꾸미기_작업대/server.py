@@ -104,10 +104,25 @@ def cap_png(style, text, size):
 class H(SimpleHTTPRequestHandler):
     def __init__(self, *a, **k): super().__init__(*a, directory=str(HERE), **k)
     def log_message(self, *a): pass
+    def end_headers(self):
+        self.send_header("Cache-Control", "no-store")   # 정적 파일도 캐시 금지 — 고치고 새로고침하면 바로 새 화면
+        super().end_headers()
     def _send(self, body, ctype):
         self.send_response(200); self.send_header("Content-Type", ctype)
         self.send_header("Content-Length", str(len(body))); self.send_header("Cache-Control", "no-store"); self.end_headers()
         self.wfile.write(body)
+    def do_POST(self):
+        u = urllib.parse.urlparse(self.path)
+        if u.path == "/state":   # 브라우저가 만진 값 전부(기본값·프리셋·자막세트·마지막 상태) → state.json
+            n = int(self.headers.get("Content-Length") or 0)
+            body = self.rfile.read(n)
+            try:
+                json.loads(body.decode("utf-8"))
+                (HERE / "state.json").write_bytes(body)
+                return self._send(b'{"ok":true}', "application/json")
+            except Exception as e:
+                return self._send(json.dumps({"ok": False, "error": repr(e)}).encode(), "application/json")
+        self.send_response(404); self.end_headers()
     def do_GET(self):
         u = urllib.parse.urlparse(self.path); q = urllib.parse.parse_qs(u.query)
         try:

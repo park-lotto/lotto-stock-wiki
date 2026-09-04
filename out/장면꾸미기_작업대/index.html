@@ -35,7 +35,9 @@ button.big{padding:10px 8px;font-weight:800;flex:1;font-size:15px}
 .pane{display:none}.pane.on{display:block}
 .sec{margin-bottom:12px;border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#fbfbfd}.sec .t{font-size:15px;font-weight:800;color:var(--ink);margin-bottom:8px;display:flex;align-items:center;gap:8px}.sec .t small{color:var(--sub);font-weight:400;font-size:12px}.sec .t::before{content:'';width:6px;height:16px;border-radius:3px;background:var(--acc)}
 
-.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}.chips button{padding:5px 11px;font-size:13px;border-radius:20px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.pair{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 10px;border:2px solid var(--line);border-radius:12px;cursor:pointer;background:#fff;min-width:130px}.pair.on{border-color:var(--acc);background:var(--acc2)}.pair b{font-size:13px}.pair small{font-size:11px;color:var(--sub)}
+.pairImg{position:relative;width:90px;height:160px;border-radius:8px;overflow:hidden;background:#111}.pairImg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.chips button{padding:5px 11px;font-size:13px;border-radius:20px}
 .cards.tpl{display:none}.cards.tpl.on{display:flex}
 .cards{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px}
 .cards div{flex:0 0 72px;border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;background:#fafafa;cursor:pointer;text-align:center;padding:5px 3px}
@@ -73,7 +75,7 @@ details .inner{padding:10px 0 0;display:flex;flex-direction:column;gap:12px}
    <div class="pop" id="pop"></div>
    <div class="hint" id="hint">글자를 끌어서 옮기기</div>
   </div>
-  <div class="nav"><button onclick="beat(-1)">◀</button><b id="beatNo">1 / 12</b><button onclick="beat(1)">▶</button><button>▶ 재생</button><button>🖼 썸네일로</button></div>
+  <div class="nav"><button onclick="beat(-1)">◀</button><b id="beatNo">1 / 12</b><button onclick="beat(1)">▶</button><button id="playBtn" onclick="togglePlay()">▶ 재생</button><button>🖼 썸네일로</button></div>
  </div>
 
  <div class="panel">
@@ -85,7 +87,7 @@ details .inner{padding:10px 0 0;display:flex;flex-direction:column;gap:12px}
 
   <!-- 자막 -->
   <div class="pane" id="pane-cap">
-   <div class="sec"><div class="t">스타일 고르기 <small style="font-weight:400">— 라이브 자막 렌더 그대로</small></div>
+   <div class="sec"><div class="t">자막 즐겨찾기 <small>— 누르면 그 모양으로. ⭐내 스타일에 저장해두면 다음에도</small></div>
     <div class="cards" id="capCards">
      <div class="on" data-st="basic"><i style="background:#333;color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:12px;text-shadow:0 0 3px #000">기본</i><b>기본</b></div>
      <div data-st="yellow"><i style="background:#333;color:#ffe600;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:12px;text-shadow:0 0 3px #000">노랑</i><b>노랑강조</b></div>
@@ -94,20 +96,19 @@ details .inner{padding:10px 0 0;display:flex;flex-direction:column;gap:12px}
      <div data-st="whitebox"><i style="background:#888;display:flex;align-items:center;justify-content:center"><span style="background:#fff;color:#000;font-size:11px;padding:2px 6px;border-radius:9px">둥근</span></i><b>둥근띠</b></div>
      <div data-st="mine"><i style="display:flex;align-items:center;justify-content:center;font-size:20px">⭐</i><b>내 스타일</b></div>
     </div></div>
-   <div class="sec"><div class="t">자리 <small style="font-weight:400">— 미리보기에서 끌어도 됩니다 · <b id="capScopeLbl">모든 장면에</b> 적용</small></div>
-    <div class="row" id="capPos"><button data-pos="top">⬆ 위</button><button data-pos="mid">중간</button><button class="on" data-pos="bottom">⬇ 아래</button><span style="width:10px"></span><button class="on" id="capAll" onclick="capScope(!CAPS.all)">모든 장면에</button><button id="capOne" onclick="capScope(false)">이 장면만</button></div></div>
-   <div class="sec"><div class="t">글씨</div>
+   <div class="sec"><div class="t">자막 위치 <small>— 미리보기에서 끌어도 됩니다 · <b id="capScopeLbl">모든 장면에</b> 적용</small></div>
+    <div class="row" id="capPos"><button data-pos="top">⬆ 위</button><button class="on" data-pos="mid">가운데</button><button data-pos="bottom">⬇ 아래</button><span style="width:10px"></span><button class="on" id="capAll" onclick="capScope(!CAPS.all)">모든 장면에</button><button id="capOne" onclick="capScope(false)">이 장면만</button></div></div>
+   <div class="sec"><div class="t">자막 폰트</div>
     <div class="row"><select id="cap_font" onchange="capStyle('font',this.value)"><option value="">기본 폰트</option></select>
      <button onclick="capBump('size',-4)">−</button><span class="num" id="cap_size_v">52</span><button onclick="capBump('size',4)">＋</button>
      <span style="width:6px"></span><span class="lbl" style="min-width:auto">글자색</span><input type="color" id="cap_color" value="#ffffff" oninput="capStyle('color',this.value)">
-     <span class="lbl" style="min-width:auto">테두리</span><input type="color" id="cap_olc" value="#000000" oninput="capStyle('outline_color',this.value)"></div></div>
-   <div class="sec"><div class="t">이 장면 자막 줄 나누기 <small style="font-weight:400">— Enter=여기서 끊기 · Backspace(줄 맨 앞)=윗줄과 붙이기</small></div>
+     <span class="lbl" style="min-width:auto">테두리</span><input type="color" id="cap_olc" value="#000000" oninput="capStyle('outline_color',this.value)"><button onclick="capBump('outline_w',-1)">−</button><span class="num" id="cap_olw_v">6</span><button onclick="capBump('outline_w',1)">＋</button></div>
+    <div class="row" style="margin-top:6px"><span class="lbl">글자 뒤 박스</span><button id="capBoxBtn" onclick="capStyle('box',!CAPS.style.box)">켜기/끄기</button><input type="color" id="cap_boxc" value="#000000" oninput="capStyle('box_color',this.value)">
+     <span class="lbl" style="min-width:auto">진하기</span><button onclick="capBump('box_opacity',-10)">−</button><span class="num" id="cap_boxo_v">80</span><button onclick="capBump('box_opacity',10)">＋</button></div></div>
+   <div class="sec"><div class="t">자막 줄바꾸기 <small>— 이 장면 자막. Enter=여기서 끊기 · Backspace(줄 맨 앞)=윗줄과 붙이기</small></div>
     <div id="capLinesBox"></div>
     <div class="row"><button onclick="capSaveLines()">💾 이 장면 줄 저장</button><button onclick="capAutoLines()">↩ 자동으로</button><button onclick="capNextLine()">▸ 다음 줄 보기 <span id="capLineNo">1/1</span></button><span id="capMsg" style="font-size:12px;color:#16a34a"></span></div></div>
    <details><summary>⚙ 세부 설정</summary><div class="inner">
-    <div class="row"><span class="lbl">테두리 두께</span><button onclick="capBump('outline_w',-1)">−</button><span class="num" id="cap_olw_v">6</span><button onclick="capBump('outline_w',1)">＋</button>
-     <span class="lbl" style="min-width:auto;margin-left:8px">글자 뒤 박스</span><button id="capBoxBtn" onclick="capStyle('box',!CAPS.style.box)">켜기/끄기</button><input type="color" id="cap_boxc" value="#000000" oninput="capStyle('box_color',this.value)">
-     <button onclick="capBump('box_opacity',-10)">−</button><span class="num" id="cap_boxo_v">80</span><button onclick="capBump('box_opacity',10)">＋</button></div>
     <div class="row"><span class="lbl">효과</span><select onchange="capStyle('effect',this.value)"><option value="fade">페이드</option><option value="none">없음</option><option value="slide">슬라이드</option><option value="pop">팝</option><option value="sparkle">✦ 반짝</option></select>
      <span class="lbl" style="min-width:auto;margin-left:8px">그림자</span><button id="capShBtn" onclick="capStyle('shadow',!CAPS.style.shadow)">켜기/끄기</button></div>
     <div class="row"><button onclick="capResetStyle()">↩ 스타일 기본값으로</button><button onclick="capSaveMine()">💾 내 스타일로 저장</button><button onclick="capResetAllPos()">↩ 모든 장면 자리 초기화</button></div>
@@ -117,9 +118,15 @@ details .inner{padding:10px 0 0;display:flex;flex-direction:column;gap:12px}
 
   <!-- 제목 -->
   <div class="pane on" id="pane-title">
-   <div class="sec"><div class="t">어느 장면의 틀인가요</div><div class="row" id="partRow" style="margin-bottom:10px"><button class="on" data-part="hook" onclick="setPart('hook')">🎯 후킹 틀 <small>(앞 장면)</small></button><button data-part="body" onclick="setPart('body')">📄 본문 틀</button>
+   <div class="sec"><div class="t">템플릿 <small>— 후킹 → 본문이 한 벌입니다. 고치고 싶은 쪽을 누르세요</small></div>
+    <div class="row" id="pairRow" style="align-items:stretch;gap:14px;margin-bottom:8px">
+     <div class="pair on" data-part="hook" onclick="setPart('hook')"><div class="pairImg"><img class="pbg" src="bg.jpg"><img class="pfr"><img class="phc"></div><b>🎯 후킹 템플릿</b><small>앞 <span id="hookBeatsLbl">1</span>장면</small></div>
+     <div style="align-self:center;font-size:22px;color:var(--sub)">→</div>
+     <div class="pair" data-part="body" onclick="setPart('body')"><div class="pairImg"><img class="pbg" src="bg.jpg"><img class="pfr"><img class="phc"><img class="pcap"></div><b>📄 본문 템플릿</b><small>나머지 장면</small></div>
+    </div>
+    <div class="row" id="partRow" style="margin-bottom:4px"><span style="display:none"><button class="on" data-part="hook" onclick="setPart('hook')">후킹</button><button data-part="body" onclick="setPart('body')">본문</button></span>
  <span class="lbl" style="min-width:auto;margin-left:8px">후킹 장면 수</span><button onclick="hookBeats=Math.max(1,hookBeats-1);$('#hookBeats').textContent=hookBeats;beat(0)">−</button><span class="num" id="hookBeats">1</span><button onclick="hookBeats=Math.min(11,hookBeats+1);$('#hookBeats').textContent=hookBeats;beat(0)">＋</button>
- <button onclick="copyPart()" title="후킹 값을 본문에 복사">후킹 → 본문 같게</button></div>
+ <button id="sameBtn" onclick="toggleSame()" title="후킹 값을 본문에 복사 / 다시 누르면 되돌림">후킹 → 본문 같게</button></div>
  </div><div class="sec"><div class="t">틀 고르기 <small>— ★는 실제 채널 실측 · 지금 <b id="partName">후킹</b> 틀</small></div>
     <div id="tplGroups"></div></div>
    <div class="sec"><div class="t">채널명 <small>— 맨 위 띠 가운데</small></div>
@@ -158,7 +165,7 @@ details .inner{padding:10px 0 0;display:flex;flex-direction:column;gap:12px}
     <div class="row"><span class="lbl">조회수·댓글</span><input type="text" style="width:90px" placeholder="264만" oninput="set('views',this.value)"><input type="text" style="width:70px" placeholder="587" oninput="set('comments',this.value)"><button onclick="set('icons',!SPEC.icons)">☰🔍 아이콘 켜고끄기</button></div>
     <div class="row"><button onclick="resetSpec()">↩ 이 틀 기본값으로</button><button>💾 내 틀로 저장</button><button onclick="copySpec()">📋 지금 값 복사(개발용)</button></div>
    </div></details>
-   <div class="save">✓ 자동 저장됨</div>
+   <div class="save">✓ 자동 저장됨 <span id="fileSaved"></span></div>
   </div>
 
   <!-- 장면 -->
@@ -187,14 +194,25 @@ const $=s=>document.querySelector(s), hint=$('#hint'), cap=$('#cap'), bg=$('#bg'
 let beatN=1, capSz=22, zoom=1, PRESETS=[], LAYOUTS={}, curTpl='', hookBeats=1, part='hook';
 const SPECS={hook:{},body:{}}; let SPEC=SPECS.hook;
 function curPart(){return beatN<=hookBeats?'hook':'body';}
-function setPart(p){part=p;SPEC=SPECS[p];document.querySelectorAll('#partRow [data-part]').forEach(b=>b.classList.toggle('on',b.dataset.part===p));$('#partName').textContent=p==='hook'?'후킹':'본문';if(curPart()!==p){beatN=p==='hook'?1:hookBeats+1;$('#beatNo').textContent=beatN+' / 12';}markCard();syncFromSpec();render();}
-function copyPart(){SPECS.body=JSON.parse(JSON.stringify(SPECS.hook));if(part==='body')SPEC=SPECS.body;render();}
+function setPart(p){part=p;SPEC=SPECS[p];document.querySelectorAll('#partRow [data-part],#pairRow .pair').forEach(b=>b.classList.toggle('on',b.dataset.part===p));$('#partName').textContent=p==='hook'?'후킹':'본문';if(curPart()!==p){beatN=p==='hook'?1:hookBeats+1;$('#beatNo').textContent=beatN+' / 12';}markCard();syncFromSpec();render();if(typeof capShowBeat==='function')capShowBeat();}
+let BODY_BACKUP=null;
+function toggleSame(){const b=document.getElementById('sameBtn');if(!BODY_BACKUP){BODY_BACKUP=JSON.parse(JSON.stringify(SPECS.body));SPECS.body=JSON.parse(JSON.stringify(SPECS.hook));b.textContent='후킹·본문 다르게';b.classList.add('on');hint.textContent='본문을 후킹과 같게 했어요. 다시 누르면 되돌아갑니다';}else{SPECS.body=BODY_BACKUP;BODY_BACKUP=null;b.textContent='후킹 → 본문 같게';b.classList.remove('on');hint.textContent='본문을 원래대로 되돌렸어요';}if(part==='body'){SPEC=SPECS.body;syncFromSpec();}render();}
+function copyPart(){toggleSame();}
 function markCard(){const box=$('#tplGroups');if(!box)return;box.querySelectorAll('div[data-tpl].on').forEach(c=>c.classList.remove('on'));const id=SPEC.preset;const c=id?box.querySelector(`[data-id="${id}"]`):box.querySelector('[data-tpl="none"]');if(c){c.classList.add('on');const g=c.parentElement.dataset.g;box.querySelectorAll('#tplChips button').forEach(x=>x.classList.toggle('on',x.dataset.g===g));box.querySelectorAll('.cards.tpl').forEach(x=>x.classList.toggle('on',x.dataset.g===g));}}
 function syncFromSpec(){const _b=(part==='body'&&!(LAYOUTS[SPEC.preset]||{}).body_keep_hc);$('#hcText').value=_b?(SPEC.title||''):((SPEC.hc||{}).text||'');$('#channel').value=SPEC.channel||'';syncUI();}
 cap.style.fontSize=capSz+'px';
 function tab(n){document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('on',b.dataset.tab===n));document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('on',p.id==='pane-'+n));
  hint.textContent={cap:'글자를 끌어서 옮기기',title:'제목을 끌어 옮기기 · 띠 아래 선을 끌어 높이',scene:'화면을 누르면 그곳이 확대 중심'}[n];}
-function beat(d){beatN=Math.min(12,Math.max(1,beatN+d));$('#beatNo').textContent=beatN+' / 12';const p=curPart();if(p!==part){part=p;SPEC=SPECS[p];document.querySelectorAll('#partRow [data-part]').forEach(b=>b.classList.toggle('on',b.dataset.part===p));$('#partName').textContent=p==='hook'?'후킹':'본문';markCard();syncFromSpec();}render();capShowBeat();}
+let PLAY=null;
+function togglePlay(){const btn=document.getElementById('playBtn');if(PLAY){clearInterval(PLAY);PLAY=null;btn.textContent='▶ 재생';btn.classList.remove('on');return;}
+ btn.textContent='⏸ 멈춤';btn.classList.add('on');beatN=0;let lineTick=0;
+ const step=()=>{const b=CAPS&&CAPS.beats[beatN-1];const n=(b&&b.lines&&b.lines.length)||1;
+  if(beatN===0||lineTick>=n){beatN=beatN>=12?1:beatN+1;lineTick=0;beat(0);}
+  else{if(b){b.cur=lineTick;document.getElementById('capLineNo').textContent=(b.cur+1)+'/'+n;capRender();}}
+  lineTick++;};
+ step();PLAY=setInterval(step,1300);}
+function beat(d){beatN=Math.min(12,Math.max(1,beatN+d));$('#beatNo').textContent=beatN+' / 12';const p=curPart();if(p!==part){part=p;SPEC=SPECS[p];document.querySelectorAll('#partRow [data-part],#pairRow .pair').forEach(b=>b.classList.toggle('on',b.dataset.part===p));$('#partName').textContent=p==='hook'?'후킹':'본문';markCard();syncFromSpec();}render();capShowBeat();}
+function hookBeatsLbl(){const e=document.getElementById('hookBeatsLbl');if(e)e.textContent=hookBeats;}
 function pick(container,fn){container.addEventListener('click',e=>{const t=e.target.closest('div[data-st],div[data-pos],button[data-pos],button[data-z],button[data-e],div[data-tpl]');if(!t)return;[...container.querySelectorAll('.on')].forEach(c=>c.classList.remove('on'));t.classList.add('on');fn(t);});}
 
 
@@ -235,14 +253,17 @@ function syncUI(){const V=(k,fallback)=>{const el=document.getElementById(k+'_v'
  if(SPEC.bar_color)$v('bar_color',SPEC.bar_color);if(SPEC.on_bar_color)$v('on_bar_color',SPEC.on_bar_color);}
 let rt=null;const hcimg=$('#hcimg');
 function loadImg(el,url){el.classList.add('busy');const im=new Image();im.onload=()=>{el.src=im.src;el.classList.remove('busy');errEl.style.display='none';};im.onerror=()=>{el.classList.remove('busy');fetch(im.src).then(r=>r.json()).then(j=>{errEl.textContent='렌더 실패: '+(j.error||'');errEl.style.display='';}).catch(()=>{});};im.src=url;}
-function persistTitle(){try{localStorage.setItem('deco_title',JSON.stringify({hook:SPECS.hook,body:SPECS.body,part,beatN,hookBeats}));const id=SPECS.hook&&SPECS.hook.preset;if(id&&typeof DEF!=='undefined'){DEF[id]={hook:JSON.parse(JSON.stringify(SPECS.hook)),body:JSON.parse(JSON.stringify(SPECS.body))};localStorage.setItem('deco_defaults',JSON.stringify(DEF));}}catch(e){}}
-function render(){persistTitle();clearTimeout(rt);rt=setTimeout(()=>{if(!SPEC.preset){frame.style.display='none';hcimg.style.display='none';return;}frame.style.display='';hcimg.style.display='';
+function persistTitle(){pushStateFile();try{localStorage.setItem('deco_title',JSON.stringify({hook:SPECS.hook,body:SPECS.body,part,beatN,hookBeats}));const id=SPECS.hook&&SPECS.hook.preset;if(id&&typeof DEF!=='undefined'){DEF[id]={hook:JSON.parse(JSON.stringify(SPECS.hook)),body:JSON.parse(JSON.stringify(SPECS.body))};localStorage.setItem('deco_defaults',JSON.stringify(DEF));}}catch(e){}}
+function pairUrls(T){if(!T||!T.preset)return null;const s=Object.assign({},T);delete s.hc;delete s._bandLock;const hc=Object.assign({},HC_DEFAULT,T.hc||{});const txt=(hc.text||'').trim();if(!txt)hc.text='';else{const ls=txt.split(/\r?\n/);if(hc.color2&&hc.color2!==hc.color&&ls[1])hc.highlight_rules=[{keyword:ls[1].trim(),color:hc.color2,box:false}];}return {fr:'/render?spec='+encodeURIComponent(JSON.stringify(s)),hc:'/hc?hc='+encodeURIComponent(JSON.stringify(hc))};}
+function renderPair(){document.querySelectorAll('#pairRow .pair').forEach(el=>{const u=pairUrls(SPECS[el.dataset.part]);if(!u){el.querySelector('.pfr').src='';el.querySelector('.phc').src='';return;}el.querySelector('.pfr').src=u.fr;el.querySelector('.phc').src=u.hc;});hookBeatsLbl();}
+let prt=null;
+function render(){persistTitle();clearTimeout(prt);prt=setTimeout(renderPair,400);clearTimeout(rt);rt=setTimeout(()=>{if(!SPEC.preset){frame.style.display='none';hcimg.style.display='none';return;}frame.style.display='';hcimg.style.display='';
  loadImg(hcimg,'/hc?hc='+encodeURIComponent(JSON.stringify(hcPayload())));frame.classList.add('busy');
  const im=new Image();im.onload=()=>{frame.src=im.src;frame.classList.remove('busy');errEl.style.display='none';};
  im.onerror=()=>{frame.classList.remove('busy');fetch(im.src).then(r=>r.json()).then(j=>{errEl.textContent='렌더 실패: '+(j.error||'');errEl.style.display='';}).catch(()=>{});};
  im.src='/render?spec='+encodeURIComponent(JSON.stringify(frameSpec()))+'&_='+Date.now();},120);}
 function copySpec(){navigator.clipboard.writeText(JSON.stringify(SPEC,null,1));hint.textContent='값을 복사했습니다';}
-async function loadFrames(){
+async function loadFrames(){await hydrateFromFile();
  PRESETS=await (await fetch('/presets')).json();try{LAYOUTS=await (await fetch('/channel_layouts.json')).json();}catch(e){LAYOUTS={};}
  const fonts=await (await fetch('/fonts')).json();
  const FONT_NAMES=[{"name": "⭐ 티몬 몬소리", "file": "TmonMonsori.ttf"}, {"name": "⭐ 배민 주아", "file": "BMJUA.ttf"}, {"name": "배민 도현", "file": "BMDOHYEON.ttf"}, {"name": "⭐ 빙그레", "file": "Binggrae-Bold.otf"}, {"name": "꾸불림체", "file": "Kkubulim.ttf"}, {"name": "⭐ 지마켓 산스", "file": "GmarketSansBold.otf"}, {"name": "SUIT", "file": "SUIT-Bold.otf"}, {"name": "프리텐다드", "file": "Pretendard-ExtraBold.otf"}, {"name": "프리텐다드 Bold", "file": "Pretendard-Bold.otf"}, {"name": "프리텐다드 SemiBold", "file": "Pretendard-SemiBold.otf"}, {"name": "스포카 한 산스", "file": "SpoqaHanSansNeo-Bold.otf"}, {"name": "IBM Plex Sans", "file": "IBMPlexSansKR-Bold.otf"}, {"name": "노토 산스", "file": "NotoSansKR-Bold.otf"}, {"name": "나눔고딕", "file": "NanumGothic-Bold.ttf"}, {"name": "경기천년바탕", "file": "GBatang.otf"}, {"name": "고운바탕", "file": "GowunBatang.ttf"}, {"name": "리디바탕", "file": "RIDIBatang.otf"}, {"name": "프리텐다드 Reg", "file": "Pretendard-Regular.otf"}, {"name": "SUIT Reg", "file": "SUIT-Regular.otf"}, {"name": "스포카 Reg", "file": "SpoqaHanSansNeo-Regular.otf"}, {"name": "IBM Plex Reg", "file": "IBMPlexSansKR-Regular.otf"}, {"name": "손글씨 개구쟁이", "file": "Gaegu-Bold.ttf"}, {"name": "손글씨 나눔펜", "file": "NanumPenScript.ttf"}, {"name": "손글씨 나눔붓", "file": "NanumBrushScript.ttf"}, {"name": "손글씨 하이멜로디", "file": "HiMelody.ttf"}, {"name": "⭐ 손글씨 싱글데이", "file": "SingleDay.ttf"}, {"name": "손글씨 포스터리", "file": "PoorStory.ttf"}, {"name": "손글씨 독도", "file": "Dokdo-Regular.ttf"}, {"name": "손글씨 동해독도", "file": "EastSeaDokdo.ttf"}, {"name": "감자꽃", "file": "GamjaFlower.ttf"}, {"name": "⭐ 귀여운체", "file": "CuteFont.ttf"}, {"name": "⭐ 레트로 킬사인", "file": "KirangHaerang.ttf"}, {"name": "레트로 성실체", "file": "Sunflower-Medium.ttf"}, {"name": "레트로 흑백사진", "file": "BlackAndWhitePicture.ttf"}, {"name": "임팩트 검은고딕", "file": "BlackHanSans.ttf"}, {"name": "임팩트 구기", "file": "Gugi-Regular.ttf"}, {"name": "카페24 아네모네", "file": "Cafe24Ohsquare.ttf"}, {"name": "카페24 단정해", "file": "Cafe24Danjunghae.ttf"}, {"name": "간판체", "file": "KCCGanpan.otf"}, {"name": "손글씨 분필", "file": "HakgyoansimBunpil.ttf"}];
@@ -260,30 +281,33 @@ async function loadFrames(){
  $('#tplChips').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;box.querySelectorAll('#tplChips button').forEach(x=>x.classList.toggle('on',x===b));box.querySelectorAll('.cards.tpl').forEach(c=>c.classList.toggle('on',c.dataset.g===b.dataset.g));});
  box.addEventListener('click',e=>{const t=e.target.closest('div[data-tpl]');if(!t)return;box.querySelectorAll('div[data-tpl].on').forEach(c=>c.classList.remove('on'));t.classList.add('on');pickTpl(t);});
  let saved=null;try{saved=JSON.parse(localStorage.getItem('deco_title')||'null');}catch(e){}
- if(saved&&saved.hook&&saved.hook.preset){SPECS.hook=saved.hook;SPECS.body=saved.body||{};hookBeats=saved.hookBeats||1;$('#hookBeats').textContent=hookBeats;beatN=saved.beatN||1;$('#beatNo').textContent=beatN+' / 12';part=curPart();SPEC=SPECS[part];document.querySelectorAll('#partRow [data-part]').forEach(b=>b.classList.toggle('on',b.dataset.part===part));$('#partName').textContent=part==='hook'?'후킹':'본문';syncFromSpec();render();if(part==='hook')hcFit(SPEC,true);hint.textContent='마지막 작업 상태로 열었습니다';}
+ if(saved&&saved.hook&&saved.hook.preset){SPECS.hook=saved.hook;SPECS.body=saved.body||{};hookBeats=saved.hookBeats||1;$('#hookBeats').textContent=hookBeats;beatN=saved.beatN||1;$('#beatNo').textContent=beatN+' / 12';part=curPart();SPEC=SPECS[part];document.querySelectorAll('#partRow [data-part],#pairRow .pair').forEach(b=>b.classList.toggle('on',b.dataset.part===part));$('#partName').textContent=part==='hook'?'후킹':'본문';syncFromSpec();render();if(part==='hook')hcFit(SPEC,true);hint.textContent='마지막 작업 상태로 열었습니다';}
  else{part='body';SPEC=SPECS.body;pickTpl(box.querySelector('[data-id="plain_white"]'));SPECS.body.hc.text='';part='hook';SPEC=SPECS.hook;const first=box.querySelector('[data-id="sul_salrim"]');pickTpl(first);}
  markCard();renderMyCards();
 }
+const STATE_KEYS=['deco_defaults','deco_mypresets','deco_caps_by','deco_title'];
+async function hydrateFromFile(){try{const has=STATE_KEYS.some(k=>localStorage.getItem(k));if(has)return;const r=await fetch('/state.json?_='+Date.now());if(!r.ok)return;const j=await r.json();for(const k of STATE_KEYS){if(j[k]!=null)localStorage.setItem(k,typeof j[k]==='string'?j[k]:JSON.stringify(j[k]));}location.reload();}catch(e){}}
+let stT=null;function pushStateFile(){clearTimeout(stT);stT=setTimeout(()=>{const o={};for(const k of STATE_KEYS){try{o[k]=JSON.parse(localStorage.getItem(k)||'null');}catch(e){o[k]=null;}}o._saved=new Date().toISOString();fetch('/state',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(o)}).then(r=>r.json()).then(j=>{const e=document.getElementById('fileSaved');if(e)e.textContent=j.ok?'· 파일에도 저장됨(state.json)':'· 파일 저장 실패';}).catch(()=>{});},1200);}
 const DEF=(()=>{try{return JSON.parse(localStorage.getItem('deco_defaults')||'{}');}catch(e){return {};}})();
 const MY=(()=>{try{return JSON.parse(localStorage.getItem('deco_mypresets')||'[]');}catch(e){return [];}})();
-function _save(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+function _save(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}pushStateFile();}
 function _msg(t){const m=$('#saveMsg');m.textContent=t;setTimeout(()=>{if(m.textContent===t)m.textContent='';},4000);}
 function saveAsDefault(){const id=SPECS.hook.preset;if(!id)return;DEF[id]={hook:JSON.parse(JSON.stringify(SPECS.hook)),body:JSON.parse(JSON.stringify(SPECS.body)),cap:CAPS?{style:CAPS.style,pos:CAPS.beats[0].pos,y_pct:CAPS.beats[0].y_pct}:null};_save('deco_defaults',DEF);_msg('이 채널의 기본값으로 저장했어요. 다음에 이 틀을 고르면 이 값으로 열립니다');}
 function clearDefault(){const id=SPECS.hook.preset;if(DEF[id]){delete DEF[id];_save('deco_defaults',DEF);}if(LAYOUTS[id])applyLayout(id);_msg('채널 원래 값으로 되돌렸어요');}
 function saveMyPreset(){const id=SPECS.hook.preset;const base=(LAYOUTS[id]&&LAYOUTS[id].name)||(PRESETS.find(p=>p.id===id)||{}).name||id;const name=base+' · 내 설정 '+(MY.length+1);MY.push({name,hook:JSON.parse(JSON.stringify(SPECS.hook)),body:JSON.parse(JSON.stringify(SPECS.body)),cap:CAPS?{style:CAPS.style,pos:CAPS.beats[0].pos,y_pct:CAPS.beats[0].y_pct}:null});_save('deco_mypresets',MY);renderMyCards();_msg('⭐ "'+name+'" 로 저장했어요. 「내 것」에서 고를 수 있어요');}
 function renderMyCards(){const row=document.querySelector('.cards.tpl[data-g="mine"]');if(!row)return;row.querySelectorAll('[data-tpl="myp"]').forEach(e=>e.remove());MY.forEach((m,i)=>{const d=document.createElement('div');d.dataset.tpl='myp';d.dataset.i=i;d.innerHTML='<i style="display:flex;align-items:center;justify-content:center;font-size:20px">⭐</i><b>'+m.name+'</b>';row.appendChild(d);});}
-function loadMyPreset(i){const m=MY[i];if(!m)return;SPECS.hook=JSON.parse(JSON.stringify(m.hook));SPECS.body=JSON.parse(JSON.stringify(m.body));SPEC=SPECS[part];if(m.cap&&CAPS){CAPS.style=Object.assign({},CAP_DEFAULT,m.cap.style||{});CAPS.beats.forEach(b=>{b.pos=m.cap.pos||'bottom';b.y_pct=m.cap.y_pct;});capSave();capSyncUI();capRender();}syncFromSpec();render();hint.textContent='⭐ '+m.name;}
-function applyLayout(id){const L=LAYOUTS[id],p=PRESETS.find(x=>x.id===id)||{};const keepText=L.sample||((SPECS.hook.hc||{}).text)||$('#hcText').value||'';const ch=$('#channel').value;
+function loadMyPreset(i){const m=MY[i];if(!m)return;SPECS.hook=JSON.parse(JSON.stringify(m.hook));SPECS.body=JSON.parse(JSON.stringify(m.body));SPEC=SPECS[part];capSwitchTo(SPECS.hook.preset);if(m.cap&&CAPS){CAPS.style=Object.assign({},CAP_DEFAULT,m.cap.style||{});CAPS.beats.forEach(b=>{b.pos=m.cap.pos||'mid';b.y_pct=m.cap.y_pct;});capSave();capSyncUI();capRender();}syncFromSpec();render();hint.textContent='⭐ '+m.name;}
+function applyLayout(id){BODY_BACKUP=null;const _sb=document.getElementById('sameBtn');if(_sb){_sb.textContent='후킹 → 본문 같게';_sb.classList.remove('on');}const L=LAYOUTS[id],p=PRESETS.find(x=>x.id===id)||{};const keepText=L.sample||((SPECS.hook.hc||{}).text)||$('#hcText').value||'';const ch=$('#channel').value;
  const mk=(part)=>{const d=L[part]||{};const hc=Object.assign({},HC_DEFAULT,p.headcopy||{},d.hc||{});const noHc=(d.hc&&d.hc.text==='');if((part==='hook'&&!noHc)||(part==='body'&&L.body_keep_hc))hc.text=keepText;else hc.text='';if(part==='body'&&L.body_keep_hc)Object.assign(hc,L.hook.hc||{},{text:keepText});hc.x=hc.x||50;
   const sp=Object.assign({},BASE,{preset:id,channel:ch,title:((part==='body'&&!L.body_keep_hc)||noHc)?keepText.replace(/\s*\r?\n\s*/g,' '):''},d.spec||{},{hc});if(!('sub_line' in (d.spec||{}))&&part==='hook'&&L.hook&&L.hook.spec&&L.hook.spec.sub_line)sp.sub_line=L.hook.spec.sub_line;return sp;};
  SPECS.hook=mk('hook');SPECS.body=mk('body');if(SPECS.hook.sub_line&&!SPECS.hook.sub_line_size)SPECS.hook.sub_line_size=28;SPEC=SPECS[part];
- if(L.cap&&typeof CAPS!=='undefined'&&CAPS){CAPS.style=Object.assign({},CAP_DEFAULT,L.cap);CAPS.preset='mine';CAPS.mine=Object.assign({},CAPS.style);CAPS.beats.forEach(b=>{b.pos='top';b.y_pct=L.cap.y_pct||null;b.x_pct=null;});capSave();capSyncUI();capRender();}
- $('#hcText').value=keepText;$('#bar_color').value=(SPEC.bar_color||p.bar||'#ffffff');$('#on_bar_color').value=(SPEC.on_bar_color||p.on_bar||'#111111');if(DEF[id]){const keep=SPECS.hook.hc.text;SPECS.hook=JSON.parse(JSON.stringify(DEF[id].hook));SPECS.body=JSON.parse(JSON.stringify(DEF[id].body));SPECS.hook.hc.text=keep;SPEC=SPECS[part];syncFromSpec();render();hint.textContent='내가 만진 값 그대로 열었습니다 (↩ 채널 원래 값으로 되돌릴 수 있어요)';return;}
+ if(typeof capSwitchTo==='function')capSwitchTo(id);
+ $('#hcText').value=keepText;$('#bar_color').value=(SPEC.bar_color||p.bar||'#ffffff');$('#on_bar_color').value=(SPEC.on_bar_color||p.on_bar||'#111111');if(DEF[id]){const keep=SPECS.hook.hc.text;SPECS.hook=JSON.parse(JSON.stringify(DEF[id].hook));SPECS.body=JSON.parse(JSON.stringify(DEF[id].body));SPECS.hook.hc.text=keep;SPEC=SPECS[part];syncFromSpec();render();hcFit(SPECS.hook,true);hint.textContent='내가 만진 값 그대로 열었습니다 (↩ 채널 원래 값으로 되돌릴 수 있어요)';return;}
  syncUI();render();hcFit(SPECS.hook);hint.textContent='★ '+(L.name||id)+' 완성 화면을 올렸습니다. 문구만 바꾸세요';}
 function pickTpl(t){const k=t.dataset.tpl;if(k==='myp'){loadMyPreset(+t.dataset.i);return;}tplImg.style.display='none';hcHtml.style.display='none';
  if(k==='preset'&&LAYOUTS[t.dataset.id]){applyLayout(t.dataset.id);return;}
- if(k==='preset'&&DEF[t.dataset.id]&&!LAYOUTS[t.dataset.id]){const keep=(SPECS.hook.hc||{}).text;SPECS.hook=JSON.parse(JSON.stringify(DEF[t.dataset.id].hook));SPECS.body=JSON.parse(JSON.stringify(DEF[t.dataset.id].body||{}));if(keep&&SPECS.hook.hc)SPECS.hook.hc.text=keep;SPEC=SPECS[part];syncFromSpec();render();hint.textContent='내가 만진 값 그대로 열었습니다';return;}
- if(k==='preset'){const p=PRESETS.find(x=>x.id===t.dataset.id);const keepText=((SPEC.hc||{}).text)||$('#hcText').value;SPEC=SPECS[part]=Object.assign({},BASE,{preset:t.dataset.id,title:$('#title').value,channel:$('#channel').value,hc:Object.assign({},HC_DEFAULT,p.headcopy||{},{text:keepText,x:50})});$('#bar_color').value=p.bar||'#ffffff';$('#on_bar_color').value=p.on_bar||'#111111';syncUI();render();hcFit();return;}
+ if(k==='preset'&&DEF[t.dataset.id]&&!LAYOUTS[t.dataset.id]){const keep=(SPECS.hook.hc||{}).text;SPECS.hook=JSON.parse(JSON.stringify(DEF[t.dataset.id].hook));SPECS.body=JSON.parse(JSON.stringify(DEF[t.dataset.id].body||{}));if(keep&&SPECS.hook.hc)SPECS.hook.hc.text=keep;SPEC=SPECS[part];syncFromSpec();render();capSwitchTo(t.dataset.id);hint.textContent='내가 만진 값 그대로 열었습니다';return;}
+ if(k==='preset'){const p=PRESETS.find(x=>x.id===t.dataset.id);const keepText=((SPEC.hc||{}).text)||$('#hcText').value;SPEC=SPECS[part]=Object.assign({},BASE,{preset:t.dataset.id,title:$('#title').value,channel:$('#channel').value,hc:Object.assign({},HC_DEFAULT,p.headcopy||{},{text:keepText,x:50})});$('#bar_color').value=p.bar||'#ffffff';$('#on_bar_color').value=p.on_bar||'#111111';syncUI();render();hcFit();capSwitchTo(t.dataset.id);return;}
  SPEC=SPECS[part]={};frame.style.display='none';
  if(k==='band'){tplImg.src='/tpl/tpl_'+t.dataset.n+'.png';tplImg.style.display='';hcHtml.style.display='block';hcHtml.textContent=$('#title').value;hcHtml.style.top='4%';hcHtml.style.color='#111';hcHtml.style.fontSize='24px';}
 }
@@ -312,16 +336,19 @@ loadFrames();
 const CAP_DEFAULT={font:'',size:52,color:'#FFFFFF',outline:true,outline_color:'#000000',outline_w:6,box:false,box_color:'#000000',box_opacity:80,box_pad:12,effect:'fade',shadow:false};
 const CAP_PRESET={basic:{},yellow:{color:'#FFE600'},box:{box:true,box_color:'#000000',box_opacity:80,outline:false},white:{color:'#FFFFFF',outline:true,outline_color:'#000000',outline_w:8},whitebox:{box:true,box_color:'#FFFFFF',box_opacity:95,color:'#111111',outline:false}};
 const SAMPLE_NARR=['제조사도 예상 못한 의류 수선 태깅 건의 활용법','바닥 세정제 이거 하나면 얼룩이 싹 사라져요','물걸레질 필요 없이 닦기만 하면 끝나요','향도 은은해서 청소 후에 기분까지 좋아요','다이소에서 3천 원이면 살 수 있어요','한 번 써보면 다시 돌아가기 힘들어요','아이 있는 집이라면 더 추천해요','주방 기름때에도 똑같이 잘 들어요','유리창은 물자국 없이 깨끗하게 닦여요','세탁실 곰팡이에도 뿌려두면 돼요','한 통으로 한 달은 넉넉히 써요','댓글에 링크 남겨둘게요'];
-let CAPS=null;
-function capLoad(){try{const j=localStorage.getItem('deco_caps');if(j){CAPS=JSON.parse(j);if(CAPS&&CAPS.beats&&CAPS.beats.length===12)return;}}catch(e){}
- CAPS={style:Object.assign({},CAP_DEFAULT),preset:'basic',all:true,mine:null,beats:SAMPLE_NARR.map(t=>({text:t,lines:null,pos:'bottom',y_pct:null,x_pct:null,cur:0}))};}
-function capSave(){try{localStorage.setItem('deco_caps',JSON.stringify(CAPS));}catch(e){}const el=$('#capSaved');if(el){el.textContent='✓ 자동 저장됨 '+new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});}}
+let CAPS=null;const CAPS_BY=(()=>{try{return JSON.parse(localStorage.getItem('deco_caps_by')||'{}');}catch(e){return {};}})();
+function capKey(){return (SPECS&&SPECS.hook&&SPECS.hook.preset)||'_none';}
+function capFresh(pid){const L=(typeof LAYOUTS!=='undefined'&&LAYOUTS[pid])||null;const st=Object.assign({},CAP_DEFAULT,(L&&L.cap)||{});return {style:st,preset:L&&L.cap?'mine':'basic',all:true,mine:L&&L.cap?Object.assign({},st):null,beats:SAMPLE_NARR.map(t=>({text:t,lines:null,pos:'mid',y_pct:null,x_pct:null,cur:0}))};}
+function capSwitchTo(pid){pid=pid||capKey();if(CAPS_BY[pid]&&CAPS_BY[pid].beats&&CAPS_BY[pid].beats.length===12){CAPS=CAPS_BY[pid];}else{CAPS=capFresh(pid);CAPS_BY[pid]=CAPS;}if(typeof capSyncUI==='function'&&document.getElementById('cap_font')){capSyncUI();capShowBeat();}}
+function capLoad(){const k=capKey();if(CAPS_BY[k]&&CAPS_BY[k].beats&&CAPS_BY[k].beats.length===12){CAPS=CAPS_BY[k];return;}try{const j=localStorage.getItem('deco_caps');if(j){CAPS=JSON.parse(j);if(CAPS&&CAPS.beats&&CAPS.beats.length===12){CAPS_BY[k]=CAPS;return;}}}catch(e){}
+ CAPS=capFresh(capKey());CAPS_BY[capKey()]=CAPS;}
+function capSave(){pushStateFile();try{CAPS_BY[capKey()]=CAPS;localStorage.setItem('deco_caps_by',JSON.stringify(CAPS_BY));}catch(e){}const el=$('#capSaved');if(el){el.textContent='✓ 자동 저장됨 '+new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});}}
 function capBeat(){return CAPS.beats[beatN-1];}
 function capMsg(t,bad){const m=$('#capMsg');m.textContent=t;m.style.color=bad?'#b91c1c':'#16a34a';}
-function capPosY(b){if(b.y_pct!=null)return b.y_pct;return {top:12,mid:50,bottom:null}[b.pos||'bottom'];}
+function capPosY(b){if(b.y_pct!=null)return b.y_pct;return {top:12,mid:50,bottom:null}[b.pos||'mid'];}
 async function capEnsureLines(b){if(b.lines&&b.lines.length)return b.lines;try{b.lines=await (await fetch('/segs?text='+encodeURIComponent(b.text))).json();}catch(e){b.lines=[b.text];}if(!b.lines||!b.lines.length)b.lines=[b.text];b.auto=true;return b.lines;}
 async function capShowBeat(){const b=capBeat();await capEnsureLines(b);if(b.cur>=b.lines.length)b.cur=0;
- capRenderLinesBox(b);document.querySelectorAll('#capPos [data-pos]').forEach(x=>x.classList.toggle('on',x.dataset.pos===(b.pos||'bottom')));
+ capRenderLinesBox(b);document.querySelectorAll('#capPos [data-pos]').forEach(x=>x.classList.toggle('on',x.dataset.pos===(b.pos||'mid')));
  $('#capLineNo').textContent=(b.cur+1)+'/'+b.lines.length;capRender();}
 function capRenderLinesBox(b){const box=$('#capLinesBox');box.innerHTML='';(b.lines||[]).forEach((ln,i)=>box.appendChild(capLineInput(ln,i)));}
 function capLineInput(text,i){const inp=document.createElement('input');inp.type='text';inp.value=text;inp.dataset.capline='1';
@@ -332,13 +359,13 @@ function capSaveLines(){const b=capBeat();const lines=[...document.querySelector
 async function capAutoLines(){const b=capBeat();b.lines=null;await capEnsureLines(b);b.cur=0;capSave();capMsg('자동 줄 나누기로 되돌렸어요');capShowBeat();}
 function capNextLine(){const b=capBeat();b.cur=(b.cur+1)%b.lines.length;$('#capLineNo').textContent=(b.cur+1)+'/'+b.lines.length;capRender();}
 function capScope(all){CAPS.all=all;$('#capAll').classList.toggle('on',all);$('#capOne').classList.toggle('on',!all);$('#capScopeLbl').textContent=all?'모든 장면에':'이 장면('+beatN+'번)만';capSave();}
-function capSetPos(pos){const apply=b=>{b.pos=pos;b.y_pct=null;b.x_pct=null;};if(CAPS.all)CAPS.beats.forEach(apply);else apply(capBeat());capSave();capShowBeat();}
-function capStyle(k,v){CAPS.style[k]=v;capSyncUI();capSave();capRender();}
-function capBump(k,d){let v=+CAPS.style[k];if(isNaN(v))v=+CAP_DEFAULT[k]||0;CAPS.style[k]=Math.max(0,v+d);capSyncUI();capSave();capRender();}
-function capApplyPreset(p){CAPS.preset=p;CAPS.style=Object.assign({},CAP_DEFAULT,p==='mine'?(CAPS.mine||{}):(CAP_PRESET[p]||{}));capSyncUI();capSave();capRender();}
+function capSetPos(pos){CAPS.touched=true;const apply=b=>{b.pos=pos;b.y_pct=null;b.x_pct=null;};if(CAPS.all)CAPS.beats.forEach(apply);else apply(capBeat());capSave();capShowBeat();}
+function capStyle(k,v){CAPS.style[k]=v;CAPS.touched=true;capSyncUI();capSave();capRender();}
+function capBump(k,d){let v=+CAPS.style[k];if(isNaN(v))v=+CAP_DEFAULT[k]||0;CAPS.style[k]=Math.max(0,v+d);CAPS.touched=true;capSyncUI();capSave();capRender();}
+function capApplyPreset(p){CAPS.touched=true;CAPS.preset=p;CAPS.style=Object.assign({},CAP_DEFAULT,p==='mine'?(CAPS.mine||{}):(CAP_PRESET[p]||{}));capSyncUI();capSave();capRender();}
 function capResetStyle(){capApplyPreset(CAPS.preset||'basic');capMsg('스타일을 기본값으로 되돌렸어요');}
 function capSaveMine(){CAPS.mine=Object.assign({},CAPS.style);CAPS.preset='mine';capSave();capMsg('내 스타일로 저장했어요');document.querySelectorAll('#capCards [data-st]').forEach(c=>c.classList.toggle('on',c.dataset.st==='mine'));}
-function capResetAllPos(){CAPS.beats.forEach(b=>{b.pos='bottom';b.y_pct=null;b.x_pct=null;});capSave();capShowBeat();capMsg('모든 장면 자리를 아래로 되돌렸어요');}
+function capResetAllPos(){CAPS.beats.forEach(b=>{b.pos='mid';b.y_pct=null;b.x_pct=null;});capSave();capShowBeat();capMsg('모든 장면 위치를 가운데로 되돌렸어요');}
 function capSyncUI(){const st=CAPS.style;$('#cap_size_v').textContent=st.size;$('#cap_olw_v').textContent=st.outline_w;$('#cap_boxo_v').textContent=st.box_opacity;$('#cap_color').value=st.color;$('#cap_olc').value=st.outline_color;$('#cap_boxc').value=st.box_color;$('#cap_font').value=st.font||'';$('#capBoxBtn').classList.toggle('on',!!st.box);$('#capShBtn').classList.toggle('on',!!st.shadow);
  document.querySelectorAll('#capCards [data-st]').forEach(c=>c.classList.toggle('on',c.dataset.st===CAPS.preset));capScope(CAPS.all);}
 const capimg=$('#capimg');let capT=null;
@@ -351,7 +378,7 @@ let capDrag=null;
 mirror.addEventListener('pointerdown',e=>{if(!$('#pane-cap').classList.contains('on'))return;if(e.target.closest('.mask,.sticker,.pop'))return;capDrag={r:mirror.getBoundingClientRect()};mirror.setPointerCapture(e.pointerId);});
 mirror.addEventListener('pointermove',e=>{if(!capDrag)return;const r=capDrag.r;const px=Math.round(Math.max(0,Math.min(100,(e.clientX-r.left)/r.width*100))),py=Math.round(Math.max(0,Math.min(100,(e.clientY-r.top)/r.height*100)));
  const apply=b=>{b.y_pct=py;b.x_pct=px;};if(CAPS.all)CAPS.beats.forEach(apply);else apply(capBeat());document.querySelectorAll('#capPos [data-pos]').forEach(x=>x.classList.remove('on'));capRender();});
-mirror.addEventListener('pointerup',()=>{if(capDrag){capDrag=null;capSave();}});
-(async()=>{capLoad();capSyncUI();capShowBeat();})();
+mirror.addEventListener('pointerup',()=>{if(capDrag){capDrag=null;CAPS.touched=true;capSave();}});
+(async()=>{await new Promise(r=>setTimeout(r,800));capLoad();capSyncUI();capShowBeat();})();
 </script>
 </body></html>

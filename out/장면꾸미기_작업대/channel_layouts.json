@@ -402,11 +402,12 @@
     "on_bar_color": "#FFFFFF",
     "bar_h": 230,
     "layout": "community",
-    "head_h": 576,
+    "head_h": 330,
     "title_size": 40,
     "title_color": "#111111",
     "post_author": "익명",
-    "post_time": "11/29 20:33"
+    "post_time": "11/29 20:33",
+    "post_likes": "1,204"
    },
    "hc": {
     "text": ""
@@ -418,11 +419,12 @@
     "on_bar_color": "#FFFFFF",
     "bar_h": 230,
     "layout": "community",
-    "head_h": 576,
+    "head_h": 330,
     "title_size": 40,
     "title_color": "#111111",
     "post_author": "익명",
-    "post_time": "11/29 20:33"
+    "post_time": "11/29 20:33",
+    "post_likes": "1,204"
    },
    "hc": {
     "text": ""
@@ -434,7 +436,7 @@
    "color": "#111111",
    "outline": false,
    "box": false,
-   "y_pct": 18
+   "y_pct": 22
   },
   "sample": "증명하세요에 서양인이\n열광한 진짜 이유"
  },

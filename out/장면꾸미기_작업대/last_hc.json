@@ -1,11 +1,11 @@
 {
  "wrap": true,
- "font": "SpoqaHanSansNeo-Bold.otf",
- "size": 86,
+ "font": "TmonMonsori.ttf",
+ "size": 80,
  "color": "#FFFFFF",
- "color2": "#4ADE80",
- "y": 17,
- "x": 49,
+ "color2": "#5EEAD4",
+ "y": 15,
+ "x": 50,
  "weight": 900,
  "outline": true,
  "outline_color": "#000000",
@@ -17,11 +17,11 @@
  "shadow": true,
  "shadow_color": "#000000",
  "shadow_d": 4,
- "text": "다이소도 감탄한\n반전의 스티커",
+ "text": "요잘알이 재발견해\n돈방석 앉은 국산 발명품",
  "highlight_rules": [
   {
-   "keyword": "반전의 스티커",
-   "color": "#4ADE80",
+   "keyword": "돈방석 앉은 국산 발명품",
+   "color": "#5EEAD4",
    "box": false
   }
  ]
