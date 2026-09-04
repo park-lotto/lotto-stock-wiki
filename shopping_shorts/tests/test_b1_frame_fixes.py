@@ -527,3 +527,17 @@ def test_판정기는_JUDGE_BATCH장씩_나눠_부르고_image_no를_전체_번�
     assert [x["image_no"] for x in v] == list(range(1, n + 1)), "두 번째 묶음의 번호가 전체 번호로 안 돌아왔다"
     score, detail = T.score_verdicts(v, picked)
     assert len(detail) == n
+
+
+def test_구간_길이에_따라_프레임_수가_달라진다():
+    assert fs.frames_for_span(0.5) == 1 and fs.frames_for_span(3.0) == fs.FRAMES_PER_CUT and fs.frames_for_span(6.4) == 5
+    assert fs.frames_for_span("x") == fs.FRAMES_PER_CUT
+    names = []
+    fs.extract_script_frames("v.mp4", "s1", _no_classic=True, get_boundaries=lambda p: [0.0, 0.5, 3.5, 10.0],
+                             extract_frame_at=lambda p, d, t, f=None: names.append(f) or f"{d}/{f}",
+                             extract_audio=lambda v, o: None, transcribe_words=lambda m: None, story_brief=lambda *a: {},
+                             tag_frames=lambda g, c, s, b=None: [{"scene_desc": "a", "shot_role": "완성"}] * len(s))
+    per = {}
+    for n in names:
+        per.setdefault(n.split("_")[0], 0); per[n.split("_")[0]] += 1
+    assert per == {"seg000": 1, "seg001": 3, "seg002": 5}

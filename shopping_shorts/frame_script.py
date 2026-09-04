@@ -145,6 +145,20 @@ def split_long_spans(bounds, max_span=MAX_SPAN_SEC):
     return out
 
 
+def frames_for_span(duration):
+    """구간 길이에 맞는 프레임 수(순수 함수, 2026-09-05). 원테이크를 7초로 강제 분할한 구간은 동작이 여럿이라
+    5장, 보통 컷은 3장, 1초 미만은 1장. (종전 무조건 3장 → 긴 구간의 변화를 놓치고 짧은 컷에 낭비)"""
+    try:
+        d = float(duration)
+    except (TypeError, ValueError):
+        return FRAMES_PER_CUT
+    if d < 1.0:
+        return 1
+    if d >= 6.0:
+        return 5
+    return FRAMES_PER_CUT
+
+
 def frame_times(start, end, k=FRAMES_PER_CUT, margin=0.15):
     """한 구간에서 뽑을 프레임 시각 k개(순수 함수). 시작·끝은 전환 순간을 피해 margin만큼 안쪽.
     구간이 짧으면(margin*2보다 작으면) 중간 한 장만."""
@@ -628,7 +642,8 @@ def extract_script_frames(video_path, video_id, caption="", *, _no_classic=False
     frame_groups, mids, mid_times = [], [], []
     for i, s in enumerate(segs):
         shots = []
-        for j, t in enumerate(frame_times(s["start"], s["end"], FRAMES_PER_CUT)):
+        for j, t in enumerate(frame_times(s["start"], s["end"],
+                                          frames_for_span(float(s["end"]) - float(s["start"])))):
             try:
                 fp = extract_frame_at(video_path, frame_dir, t, f"seg{i:03d}_{j}.jpg")
             except Exception:

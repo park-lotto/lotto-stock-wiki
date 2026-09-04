@@ -4204,11 +4204,26 @@ def build_inherit_plan(source_scripts, given_script, beat_sources, structure="te
                     return s["seg_id"]
         return None
 
+    def _fill_for(role, prev_sid):
+        """장면 없는 줄의 b-roll. ★훅·CTA처럼 역할이 결을 요구하면 **한 곳의 규칙표**(_ROLE_WANT_SHOTS →
+        _want_shots_for_role)대로 미사용 컷 중 그 결(★핵심 우선)을 고른다(2026-09-05). 표에 없는 역할·맞는 결이
+        없으면 종전대로 앞 비트의 다음 컷."""
+        from shopping_shorts import shot_roles as _sr
+        avail = {(s.get("shot_role") or "") for s in usable.values()}
+        shots, _why = _want_shots_for_role(role, available=avail)
+        if shots:
+            cands = [s for s in usable.values() if s["seg_id"] not in used
+                     and _sr.matches(s.get("shot_role") or "", tuple(shots))]
+            if cands:
+                cands.sort(key=lambda s: (0 if s.get("is_key") else 1, float(s.get("start") or 0)))
+                return cands[0]["seg_id"]
+        return _next_cut(prev_sid)
+
     beats, prev_sid = [], None
     for i, (line, ids) in enumerate(zip(lines, per_line)):
         inherited = bool(ids)
         if not ids:
-            fill = _next_cut(prev_sid)
+            fill = _fill_for(srcs[i].get("role"), prev_sid)
             if fill:
                 ids = [fill]
                 used.add(fill)

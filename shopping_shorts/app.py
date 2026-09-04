@@ -5721,10 +5721,10 @@ def api_admin_probe_frame_accuracy_state(request: Request, start: int = 0, n: in
     if denied:
         return denied
     from shopping_shorts import probe_frame_accuracy as _pfa
-    started = False
+    start_ok = False
     if start:
-        started = _pfa.start(Store(DB_PATH), _MIX_WORK_DIR, Path(__file__).parent / "data" / "probes", n=n)
-    return {"ok": True, "started": started, **_pfa.state()}
+        start_ok = _pfa.start(Store(DB_PATH), _MIX_WORK_DIR, Path(__file__).parent / "data" / "probes", n=n)
+    return {"ok": True, "start_ok": start_ok, **_pfa.state()}    # state()의 started(시각)와 이름을 가른다
 
 
 @app.get("/api/admin/scene_swaps")

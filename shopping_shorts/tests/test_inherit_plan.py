@@ -75,3 +75,20 @@ def test_mix_pipeline은_스위치가_켜진_잡에서만_상속을_시도한다
     # 호출부 2곳 모두 넘긴다
     body = inspect.getsource(MP)
     assert body.count("script_structure=job.get(\"script_structure\")") == 2
+
+
+def test_훅과_CTA의_b_roll은_규칙표의_결로_고른다():
+    """장면 없는 훅 줄 → _ROLE_WANT_SHOTS(훅=완성·after, ★핵심 우선)대로. 표에 없는 역할은 종전대로 다음 컷."""
+    segs = [{"seg_id": f"s0-{i}", "start": float(i * 2), "end": float(i * 2 + 2), "text": "", "scene_desc": f"화면{i}",
+             "shot_role": "사용중"} for i in range(8)]
+    segs[5]["shot_role"] = "완성"; segs[6]["shot_role"] = "완성"; segs[6]["is_key"] = True
+    src = [{"video_id": "s0", "segments": segs}]
+    srcs = [{"role": "hook", "seg": "", "segs": []},
+            {"role": "demo", "seg": "s0-2", "segs": ["s0-2"]},
+            {"role": "misc", "seg": "", "segs": []},
+            {"role": "cta", "seg": "", "segs": []}]
+    plan = EP.build_inherit_plan(src, SCRIPT, srcs)
+    b = plan["beats"]
+    assert b[0]["primary"]["seg_id"] == "s0-6", "훅은 완성 결 중 ★핵심을 먼저"
+    assert b[2]["primary"]["seg_id"] == "s0-3", "표에 없는 역할(misc)은 앞 비트(s0-2)의 다음 컷"
+    assert b[3]["primary"]["seg_id"] == "s0-5", "CTA는 남은 완성 결"
