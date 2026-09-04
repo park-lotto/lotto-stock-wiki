@@ -145,6 +145,20 @@ def split_long_spans(bounds, max_span=MAX_SPAN_SEC):
     return out
 
 
+def frames_for_span(duration):
+    """구간 길이에 맞는 프레임 수(순수 함수, 2026-09-05). 원테이크를 7초로 강제 분할한 구간은 동작이 여럿이라
+    5장, 보통 컷은 3장, 1초 미만은 1장. (종전 무조건 3장 → 긴 구간의 변화를 놓치고 짧은 컷에 낭비)"""
+    try:
+        d = float(duration)
+    except (TypeError, ValueError):
+        return FRAMES_PER_CUT
+    if d < 1.0:
+        return 1
+    if d >= 6.0:
+        return 5
+    return FRAMES_PER_CUT
+
+
 def frame_times(start, end, k=FRAMES_PER_CUT, margin=0.15):
     """한 구간에서 뽑을 프레임 시각 k개(순수 함수). 시작·끝은 전환 순간을 피해 margin만큼 안쪽.
     구간이 짧으면(margin*2보다 작으면) 중간 한 장만."""
@@ -390,7 +404,7 @@ def _gemini_story_brief(grid_path, caption, transcript):
         return {}
     prompt = (
         "아래 이미지는 한 영상을 장면전환마다 자른 대표 프레임을 **왼쪽→오른쪽, 위→아래 시간순**으로 격자에 "
-        "모은 것이다. **각 칸 왼쪽 위의 숫자(예 12.7s)가 그 컷의 실제 시각(초)**이다 — flow의 초는 이 숫자로 적어라. "
+        f"모은 것이다(최대 {GRID_MAX}컷 — 그보다 길면 뒷부분은 안 실렸다). **각 칸 왼쪽 위의 숫자(예 12.7s)가 그 컷의 실제 시각(초)**이다 — flow의 초는 이 숫자로 적어라. "
         "영상 전체를 먼저 파악해 source_brief를 정리해라.\n\n"
         + script_extract._BRIEF_GUIDE
         + f"\n\n캡션(참고용, 화면이 우선): {caption or '(없음)'}"
@@ -455,8 +469,11 @@ def _gemini_tag_frames(frame_groups, caption, segs, brief=None):
     client = comment_gen._client_for_key(key)
     out = [{} for _ in segs]
     n_segs = len(segs)
-    for b0 in range(0, n_segs, TAG_BATCH):
-        b1 = min(n_segs, b0 + TAG_BATCH)
+    # ★묶음이 통째로 실패하면(모델 둘 다 503 등) **반으로 갈라 다시** 시도한다(2026-09-05 실측: s3 묶음 둘이
+    #   죽어 27구간 중 24구간의 묘사가 비었는데 아무 표시 없이 통과했다). 3구간 이하까지 갈라도 안 되면 그 구간은 빈다.
+    queue = [(b0, min(n_segs, b0 + TAG_BATCH)) for b0 in range(0, n_segs, TAG_BATCH)]
+    while queue:
+        b0, b1 = queue.pop(0)
         parts_img, seg_lines = [], []
         for i in range(b0, b1):
             s = segs[i]
@@ -506,9 +523,20 @@ def _gemini_tag_frames(frame_groups, caption, segs, brief=None):
                     data = loads_lenient(resp.text)
                     raw = data.get("tags") if isinstance(data, dict) else data
                     # seg_no는 띠에 찍힌 전체 번호(#1부터) → 이번 묶음 기준으로 되돌린다. 묶음 밖 번호는 버려진다.
+                    # ★모델이 묶음 **상대 번호**(1..k)로 답하면 되돌린 번호가 전부 범위 밖이 되어 12구간이 조용히 비었다
+                    #   (2026-09-05 리뷰 M3). 원번호가 전부 1..k 안이고 되돌린 것이 전부 범위 밖이면 상대 번호로 본다.
+                    nos = [t.get("seg_no") for t in (raw or []) if isinstance(t, dict) and t.get("seg_no") is not None]
+                    try:
+                        nos_i = [int(x) for x in nos]
+                    except (TypeError, ValueError):
+                        nos_i = []
+                    relative = bool(nos_i) and b0 > 0 and all(1 <= x <= (b1 - b0) for x in nos_i)
+                    if relative:
+                        print(f"frame_script._gemini_tag_frames: 묶음 {b0+1}~{b1} 응답이 상대 번호 — 그대로 해석",
+                              file=__import__('sys').stderr)
                     fixed = []
                     for t in (raw or []):
-                        if isinstance(t, dict) and t.get("seg_no") is not None:
+                        if isinstance(t, dict) and t.get("seg_no") is not None and not relative:
                             try:
                                 t = dict(t, seg_no=int(t["seg_no"]) - b0)
                             except (TypeError, ValueError):
@@ -532,7 +560,26 @@ def _gemini_tag_frames(frame_groups, caption, segs, brief=None):
                 break
         if got:
             out[b0:b1] = got
+        elif b1 - b0 > 3:
+            mid = (b0 + b1) // 2
+            print(f"frame_script._gemini_tag_frames: 묶음 {b0+1}~{b1} 실패 → 반으로 갈라 재시도", file=__import__('sys').stderr)
+            queue[:0] = [(b0, mid), (mid, b1)]
+        else:
+            print(f"frame_script._gemini_tag_frames: 묶음 {b0+1}~{b1} 끝내 실패 — 이 구간 묘사가 빈다", file=__import__('sys').stderr)
     return out if any(out) else []
+
+
+def empty_ratio(tags):
+    """태그 목록에서 묘사가 빈 비율(순수 함수). 태깅 실패를 숨기지 않기 위한 척도."""
+    tags = list(tags or [])
+    if not tags:
+        return 1.0
+    empty = sum(1 for t in tags if not isinstance(t, dict) or not (t.get("scene_desc") or "").strip())
+    return empty / len(tags)
+
+
+# 묘사가 빈 구간이 이 비율을 넘으면 태깅 실패로 본다(옛 추출로 폴백). 0.25 = 27구간 중 7구간.
+EMPTY_FAIL_RATIO = 0.25
 
 
 def extract_script_frames(video_path, video_id, caption="", *, _no_classic=False,
@@ -567,11 +614,30 @@ def extract_script_frames(video_path, video_id, caption="", *, _no_classic=False
     boundaries = get_boundaries(video_path)
     if len(boundaries or []) < 2:
         return dict(_EMPTY)
+    # ★임시폴더는 끝나면 지운다(2026-09-05 리뷰 M6) — 컷당 3~5장+띠+격자+mp3가 추출마다 /tmp에 쌓였다.
+    import shutil
+    _tmp_dirs = []
+    try:
+        return _extract_script_frames_body(video_path, video_id, caption, _no_classic, extract_frame_at,
+                                           extract_audio, transcribe_words, tag_frames, story_brief, translate,
+                                           _tmp_dirs, boundaries)
+    finally:
+        for _d in _tmp_dirs:
+            shutil.rmtree(_d, ignore_errors=True)
+
+
+def _extract_script_frames_body(video_path, video_id, caption, _no_classic, extract_frame_at, extract_audio,
+                                transcribe_words, tag_frames, story_brief, translate, _tmp_dirs, boundaries):
+    """extract_script_frames의 본체 — 래퍼가 임시폴더(_tmp_dirs)를 finally에서 지운다."""
+    import tempfile
+    from pathlib import Path
+    from shopping_shorts import script_extract
 
     # 오디오 전사(실패·키없음 → None, text 빈칸 fail-open)
     words = None
     try:
         work = Path(tempfile.mkdtemp(prefix="frame_asr_"))
+        _tmp_dirs.append(str(work))
         mp3 = extract_audio(video_path, str(work / "audio.mp3"))
         if mp3:
             words = transcribe_words(mp3)
@@ -603,10 +669,12 @@ def extract_script_frames(video_path, video_id, caption="", *, _no_classic=False
     #     묘사가 2배로 압축돼 밀렸다(s3: 12.73초 재료표가 37.23초 칸에). 띠로 합치면 이미지 수 =
     #     구간 수라 짝이 구조적으로 못 어긋난다. 합치기 실패(PIL 없음 등)면 중간 한 장만 쓴다.
     frame_dir = tempfile.mkdtemp(prefix="frame_tag_")
+    _tmp_dirs.append(frame_dir)
     frame_groups, mids, mid_times = [], [], []
     for i, s in enumerate(segs):
         shots = []
-        for j, t in enumerate(frame_times(s["start"], s["end"], FRAMES_PER_CUT)):
+        for j, t in enumerate(frame_times(s["start"], s["end"],
+                                          frames_for_span(float(s["end"]) - float(s["start"])))):
             try:
                 fp = extract_frame_at(video_path, frame_dir, t, f"seg{i:03d}_{j}.jpg")
             except Exception:
@@ -631,6 +699,16 @@ def extract_script_frames(video_path, video_id, caption="", *, _no_classic=False
         brief = {}
 
     tags = tag_frames(frame_groups, caption, segs, brief) or []
+    # ★실패를 숨기지 않는다(2026-09-05): 묘사가 빈 구간이 EMPTY_FAIL_RATIO를 넘으면 태깅 실패로 친다.
+    #   종전엔 태그가 **전부** 비었을 때만 실패였다 — 묶음 하나가 죽어 절반이 비어도 '성공'으로 저장됐고,
+    #   판정기까지 빈 묘사를 맞음으로 세어 100%가 찍혔다. 부분 실패는 옛 추출로 넘기고(_no_classic이면
+    #   빈 채로 두되 표시), 어느 쪽이든 stderr에 남긴다.
+    _er = empty_ratio(tags) if tags else 1.0
+    if tags and _er > EMPTY_FAIL_RATIO:
+        print(f"frame_script: 묘사 빈 구간 {_er:.0%} > {EMPTY_FAIL_RATIO:.0%} → 태깅 실패로 처리"
+              f"({'옛 추출로 폴백' if not _no_classic else '빈 채로 반환·표시'})", file=__import__("sys").stderr)
+        if not _no_classic:
+            tags = []
     # 태깅이 실패(빈 태그: 제미니 503 과부하 등)면 장면 설명이 전부 비어 매칭이 망가진다.
     # 이땐 검증된 기존 추출(extract_script, 503 폴백모델 내장)로 넘겨 품질을 지킨다(2026-07-29 실측:
     # gemini 503 spike 때 프레임태깅이 죄다 실패했다). _no_classic=True면 폴백 안 함(테스트/재귀방지).
@@ -644,6 +722,7 @@ def extract_script_frames(video_path, video_id, caption="", *, _no_classic=False
         "full_text": full_text_of(segments),
         "product_benefits": script_extract._collect_benefits(segments),
         "source_brief": brief,       # 1차 브리프(product·role·core·summary·flow·confidence), 없으면 {}
+        "tag_empty_ratio": round(_er, 3),   # 묘사 빈 비율 — 0이 정상. 실패를 숫자로 남긴다(2026-09-05)
         # 외국 소스의 한국어 전사 전문(대본 재료용). 한국어 소스는 빈칸 → 호출부가 full_text로 폴백.
         "full_text_ko": " ".join((s.get("text_ko") or "").strip() for s in segments
                                  if (s.get("text_ko") or "").strip()),

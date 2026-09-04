@@ -75,3 +75,44 @@ def test_mix_pipeline은_스위치가_켜진_잡에서만_상속을_시도한다
     # 호출부 2곳 모두 넘긴다
     body = inspect.getsource(MP)
     assert body.count("script_structure=job.get(\"script_structure\")") == 2
+
+
+def test_훅과_CTA의_b_roll은_규칙표의_결로_고른다():
+    """장면 없는 훅 줄 → _ROLE_WANT_SHOTS(훅=완성·after, ★핵심 우선)대로. 표에 없는 역할은 종전대로 다음 컷."""
+    segs = [{"seg_id": f"s0-{i}", "start": float(i * 2), "end": float(i * 2 + 2), "text": "", "scene_desc": f"화면{i}",
+             "shot_role": "사용중"} for i in range(8)]
+    segs[5]["shot_role"] = "완성"; segs[6]["shot_role"] = "완성"; segs[6]["is_key"] = True
+    src = [{"video_id": "s0", "segments": segs}]
+    srcs = [{"role": "hook", "seg": "", "segs": []},
+            {"role": "demo", "seg": "s0-2", "segs": ["s0-2"]},
+            {"role": "misc", "seg": "", "segs": []},
+            {"role": "cta", "seg": "", "segs": []}]
+    plan = EP.build_inherit_plan(src, SCRIPT, srcs)
+    b = plan["beats"]
+    assert b[0]["primary"]["seg_id"] == "s0-6", "훅은 완성 결 중 ★핵심을 먼저"
+    assert b[2]["primary"]["seg_id"] == "s0-3", "표에 없는 역할(misc)은 앞 비트(s0-2)의 다음 컷"
+    assert b[3]["primary"]["seg_id"] == "s0-5", "CTA는 남은 완성 결"
+
+
+def test_명시된_출처는_첫_끝_컷이라도_잇고_자동_채움만_edge를_뺀다():
+    """리뷰 H2: 2단계 장면 목록은 전부를 보여주는데 상속이 첫·끝 컷을 빼서 훅 출처가 조용히 b-roll로 바뀌었다."""
+    srcs = [{"role": "hook", "seg": "s0-0", "segs": []},          # 첫 컷 = 명시 출처 → 그대로
+            {"role": "demo", "seg": "s0-2", "segs": []},
+            {"role": "misc", "seg": "", "segs": []},                # 자동 채움 → edge(s0-0·s0-7) 제외
+            {"role": "cta", "seg": "s0-7", "segs": []}]             # 끝 컷 = 명시 출처 → 그대로
+    plan = EP.build_inherit_plan(_src(), SCRIPT, srcs)
+    b = plan["beats"]
+    assert b[0]["primary"]["seg_id"] == "s0-0" and b[0]["inherited"]
+    assert b[3]["primary"]["seg_id"] == "s0-7" and b[3]["inherited"]
+    assert b[2]["primary"]["seg_id"] not in ("s0-0", "s0-7")
+
+
+def test_상속_계획은_게이트_재픽을_지나지_않는다(monkeypatch):
+    """리뷰 H1: _run_gate_correction(repick_for_gate)이 상속 primary를 뒤에서 바꿨다."""
+    import inspect
+    from shopping_shorts import mix_pipeline as MP
+    src = inspect.getsource(MP._plan_and_tts)
+    i = src.index('generator") == "inherit"')
+    j = src.index("_run_gate_correction(plan, source_scripts, target_seconds)")
+    assert i < j, "inherit 분기가 게이트 교정 호출 앞에 있어야 한다"
+    assert 'plan["gate"] = {"skipped": "inherit"' in src

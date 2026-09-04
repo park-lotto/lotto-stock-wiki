@@ -71,12 +71,14 @@ def test_구간의_프레임들은_띠_한_장으로_합쳐져_구간당_이미�
     def fake_tag(groups, caption, segs, brief=None):
         got["groups"] = groups
         got["brief"] = brief
+        # 임시폴더는 반환 뒤 지워지므로(리뷰 M6) 띠 크기는 **여기서** 잰다
+        got["strip_size"] = Image.open(groups[0][0]).size
         return [{"scene_desc": "a", "shot_role": "완성"}] * len(segs)
 
     briefs = []
 
     def fake_brief(grid, caption, transcript):
-        briefs.append(grid)
+        briefs.append(Image.open(grid).height if grid else None)
         return {"product": "쿠키", "flow": "0~3초 반죽 → 3~6초 완성", "confidence": "높음"}
 
     out = fs.extract_script_frames(
@@ -86,11 +88,11 @@ def test_구간의_프레임들은_띠_한_장으로_합쳐져_구간당_이미�
         transcribe_words=lambda m: None, tag_frames=fake_tag, story_brief=fake_brief)
     groups = got["groups"]
     assert len(groups) == 2 and all(len(g) == 1 for g in groups)
-    strip = Image.open(groups[0][0])
-    assert strip.height == fs.STRIP_HEIGHT
-    assert strip.width > fs.STRIP_HEIGHT * 64 / 36 * 2, "띠 폭이 프레임 3장 합보다 작다 — 안 합쳐졌다"
+    w, h = got["strip_size"]
+    assert h == fs.STRIP_HEIGHT
+    assert w > fs.STRIP_HEIGHT * 64 / 36 * 2, "띠 폭이 프레임 3장 합보다 작다 — 안 합쳐졌다"
     # ★1차 브리프: 격자 한 장이 만들어져 브리프 함수에 갔고, 그 결과가 2차 태깅과 반환값에 실린다
-    assert briefs and briefs[0] and Image.open(briefs[0]).height == fs.GRID_HEIGHT
+    assert briefs and briefs[0] == fs.GRID_HEIGHT
     assert got["brief"]["product"] == "쿠키"
     assert out["source_brief"]["flow"].startswith("0~3초")
 
@@ -440,3 +442,145 @@ def test_extract는_띠마다_전체_번호_라벨을_준다(tmp_path):
     finally:
         fs.make_strip = real_make_strip
     assert seen == ["#1 0.0s", "#2 3.0s", "#3 6.0s"]
+
+
+# ── 실패를 숨기지 않는다(2026-09-05) ───────────────────────────────────────
+def test_empty_ratio():
+    assert fs.empty_ratio([]) == 1.0
+    assert fs.empty_ratio([{"scene_desc": "a"}, {}, {"scene_desc": ""}]) == 2 / 3
+    assert fs.empty_ratio([{"scene_desc": "a"}]) == 0.0
+
+
+def test_묘사가_많이_비면_태깅_실패로_보고_옛_추출로_넘긴다(monkeypatch):
+    from shopping_shorts import script_extract
+    called = []
+    monkeypatch.setattr(script_extract, "extract_script", lambda *a, **k: called.append(1) or {"segments": [{"seg_id": "c-0"}], "full_text": ""})
+    half_empty = lambda g, c, s, b=None: [{"scene_desc": "a", "shot_role": "완성"}] + [{}] * (len(s) - 1)
+    out = fs.extract_script_frames("v.mp4", "s1", get_boundaries=lambda p: [0.0, 3.0, 6.0, 9.0, 12.0],
+                                   extract_frame_at=lambda p, d, t, f=None: f"{d}/{f}", extract_audio=lambda v, o: None,
+                                   transcribe_words=lambda m: None, story_brief=lambda *a: {}, tag_frames=half_empty)
+    assert called and out["segments"][0]["seg_id"] == "c-0", "75%가 비었는데 성공으로 저장됐다"
+    # _no_classic이면 빈 채로 돌려주되 비율을 숫자로 남긴다
+    out2 = fs.extract_script_frames("v.mp4", "s1", _no_classic=True, get_boundaries=lambda p: [0.0, 3.0, 6.0, 9.0, 12.0],
+                                    extract_frame_at=lambda p, d, t, f=None: f"{d}/{f}", extract_audio=lambda v, o: None,
+                                    transcribe_words=lambda m: None, story_brief=lambda *a: {}, tag_frames=half_empty)
+    assert out2["tag_empty_ratio"] == 0.75 and len(out2["segments"]) == 4
+
+
+def test_묶음이_실패하면_반으로_갈라_다시_시도한다(monkeypatch, tmp_path):
+    from shopping_shorts import comment_gen
+    sizes = []
+
+    class _M:
+        def generate_content(self, model, contents, config):
+            n = len(contents) - 1
+            sizes.append(n)
+            if n > 6:
+                raise RuntimeError("503 UNAVAILABLE")          # 큰 묶음은 죽는다
+            # 실제 모델은 띠에 찍힌 전체 번호(#n)로 답한다 — 프롬프트의 '#n (' 을 읽어 흉내낸다
+            import re
+            nos = [int(x) for x in re.findall(r"#(\d+) \(", contents[0])]
+            tags = [{"seg_no": no, "scene_desc": f"d{no}", "shot_role": "완성"} for no in nos[:n]]
+            return _FakeResp('{"tags": ' + __import__("json").dumps(tags) + '}')
+
+    class _C:
+        models = _M()
+
+    monkeypatch.setattr(comment_gen, "_current_key_and_idx", lambda: ("k", 0))
+    monkeypatch.setattr(comment_gen, "_client_for_key", lambda k: _C())
+    groups = []
+    for i in range(12):
+        f = tmp_path / f"{i}.jpg"; f.write_bytes(b"\xff\xd8x"); groups.append([str(f)])
+    segs = [{"start": i, "end": i + 1, "text": ""} for i in range(12)]
+    tags = fs._gemini_tag_frames(groups, "", segs)
+    assert 12 in sizes and 6 in sizes, f"갈라서 재시도하지 않았다: {sizes}"
+    assert sum(1 for t in tags if t) == 12, "갈라서 성공한 묶음의 태그가 안 들어갔다"
+
+
+def test_판정기는_빈_묘사를_대상에서_뺀다():
+    from shopping_shorts import tag_qa_frames as T
+    assert T._usable({"start": 0, "end": 2, "scene_desc": "a"})
+    assert not T._usable({"start": 0, "end": 2, "scene_desc": ""})
+    assert not T._usable({"start": 0, "end": 2})
+
+
+def test_판정기는_JUDGE_BATCH장씩_나눠_부르고_image_no를_전체_번호로(monkeypatch, tmp_path):
+    from shopping_shorts import comment_gen, tag_qa_frames as T
+    calls = []
+
+    class _M:
+        def generate_content(self, model, contents, config):
+            n = len(contents) - 1
+            calls.append(n)
+            return _FakeResp('{"verdicts": ' + __import__("json").dumps(
+                [{"image_no": k + 1, "verdict": "맞음" if k % 2 == 0 else "틀림"} for k in range(n)]) + '}')
+
+    class _C:
+        models = _M()
+
+    monkeypatch.setattr(comment_gen, "_current_key_and_idx", lambda: ("k", 0))
+    monkeypatch.setattr(comment_gen, "_client_for_key", lambda k: _C())
+    n = T.JUDGE_BATCH + 5
+    paths, picked = [], []
+    for i in range(n):
+        f = tmp_path / f"q{i}.jpg"; f.write_bytes(b"\xff\xd8x"); paths.append(str(f)); picked.append((i, {"scene_desc": f"d{i}"}))
+    v = T._judge(paths, picked)
+    assert calls == [T.JUDGE_BATCH, 5]
+    assert [x["image_no"] for x in v] == list(range(1, n + 1)), "두 번째 묶음의 번호가 전체 번호로 안 돌아왔다"
+    score, detail = T.score_verdicts(v, picked)
+    assert len(detail) == n
+
+
+def test_구간_길이에_따라_프레임_수가_달라진다():
+    assert fs.frames_for_span(0.5) == 1 and fs.frames_for_span(3.0) == fs.FRAMES_PER_CUT and fs.frames_for_span(6.4) == 5
+    assert fs.frames_for_span("x") == fs.FRAMES_PER_CUT
+    names = []
+    fs.extract_script_frames("v.mp4", "s1", _no_classic=True, get_boundaries=lambda p: [0.0, 0.5, 3.5, 10.0],
+                             extract_frame_at=lambda p, d, t, f=None: names.append(f) or f"{d}/{f}",
+                             extract_audio=lambda v, o: None, transcribe_words=lambda m: None, story_brief=lambda *a: {},
+                             tag_frames=lambda g, c, s, b=None: [{"scene_desc": "a", "shot_role": "완성"}] * len(s))
+    per = {}
+    for n in names:
+        per.setdefault(n.split("_")[0], 0); per[n.split("_")[0]] += 1
+    assert per == {"seg000": 1, "seg001": 3, "seg002": 5}
+
+
+def test_묶음_상대번호_응답은_상대로_해석해_버리지_않는다(monkeypatch, tmp_path):
+    """리뷰 M3: 2번째 묶음이 seg_no 1..k로 답하면 오프셋을 빼 범위 밖 → 12구간이 조용히 비었다."""
+    from shopping_shorts import comment_gen
+    calls = []
+
+    class _M:
+        def generate_content(self, model, contents, config):
+            n = len(contents) - 1
+            calls.append(n)
+            tags = [{"seg_no": k + 1, "scene_desc": f"rel{k}", "shot_role": "완성"} for k in range(n)]   # 항상 상대 번호
+            return _FakeResp('{"tags": ' + __import__("json").dumps(tags) + '}')
+
+    class _C:
+        models = _M()
+
+    monkeypatch.setattr(comment_gen, "_current_key_and_idx", lambda: ("k", 0))
+    monkeypatch.setattr(comment_gen, "_client_for_key", lambda k: _C())
+    n = fs.TAG_BATCH + 4
+    groups = []
+    for i in range(n):
+        f = tmp_path / f"{i}.jpg"; f.write_bytes(b"\xff\xd8x"); groups.append([str(f)])
+    tags = fs._gemini_tag_frames(groups, "", [{"start": i, "end": i + 1, "text": ""} for i in range(n)])
+    assert all(t.get("scene_desc") for t in tags), "두 번째 묶음이 비었다"
+    assert tags[fs.TAG_BATCH]["scene_desc"] == "rel0"
+
+
+def test_임시폴더는_끝나면_지운다(tmp_path, monkeypatch):
+    import tempfile, os
+    made = []
+    real = tempfile.mkdtemp
+
+    def spy(*a, **k):
+        d = real(*a, **k); made.append(d); return d
+    monkeypatch.setattr(tempfile, "mkdtemp", spy)
+    fs.extract_script_frames("v.mp4", "s1", _no_classic=True, get_boundaries=lambda p: [0.0, 3.0],
+                             extract_frame_at=lambda p, d, t, f=None: f"{d}/{f}", extract_audio=lambda v, o: None,
+                             transcribe_words=lambda m: None, story_brief=lambda *a: {},
+                             tag_frames=lambda g, c, s, b=None: [{"scene_desc": "a", "shot_role": "완성"}])
+    assert made and all(not os.path.exists(d) for d in made), f"남은 임시폴더: {[d for d in made if os.path.exists(d)]}"

@@ -14,6 +14,7 @@
 """
 import json
 import os
+import shutil
 import sys
 import tempfile
 import threading
@@ -28,6 +29,7 @@ _LOCK = threading.Lock()
 def _judge_all(segments, video_path, tmp_dir):
     """세그 전부를 프레임 대조 → (점수 0~1 or None, 대조 건수, 맞음/부분/틀림)."""
     from shopping_shorts import tag_qa_frames as T
+    # ★빈 묘사는 판정 대상에서 빠진다(_usable) — 대신 여기서 따로 세어 결과에 남긴다(맞음으로 세지 않는다)
     picked = [(i, s) for i, s in enumerate(segments or []) if T._usable(s)]
     if not picked:
         return None, 0, {}
@@ -46,6 +48,13 @@ def _judge_all(segments, video_path, tmp_dir):
         v = d.get("verdict") if isinstance(d, dict) else None
         if v:
             counts[v] = counts.get(v, 0) + 1
+    # ★판정 커버리지(2026-09-05 리뷰 M2): 판정이 절반만 돌아오면 그 점수는 '판정된 것만'의 평균이다.
+    #   80% 미만이면 점수를 믿지 않는다(None) — 숫자가 있는데 틀린 것보다 없는 게 낫다.
+    judged = len(detail or [])
+    counts["_judged"] = judged
+    counts["_kept"] = len(kept)
+    if kept and judged < 0.8 * len(kept):
+        return None, len(kept), counts
     return score, len(kept), counts
 
 
@@ -75,18 +84,25 @@ def pick_sources(store, work_dir, n=30):
 
 def summarize(results):
     """[{classic_score, b1_score, ...}] → 평균·우위 건수(순수 함수)."""
-    cs = [r["classic_score"] for r in results if r.get("classic_score") is not None]
-    bs = [r["b1_score"] for r in results if r.get("b1_score") is not None]
+    # ★평균은 **둘 다 판정된 영상**에서만(2026-09-05 리뷰 M2) — 한쪽만 빠진 집합끼리 비교하면 편향된다
     both = [r for r in results if r.get("classic_score") is not None and r.get("b1_score") is not None]
+    cs = [r["classic_score"] for r in both]
+    bs = [r["b1_score"] for r in both]
     return {
         "videos": len(results),
+        "compared": len(both),
         "classic_avg": round(sum(cs) / len(cs), 3) if cs else None,
         "b1_avg": round(sum(bs) / len(bs), 3) if bs else None,
+        "unjudged": sum(1 for r in results if r.get("classic_score") is None or r.get("b1_score") is None),
         "b1_better": sum(1 for r in both if r["b1_score"] > r["classic_score"]),
         "classic_better": sum(1 for r in both if r["b1_score"] < r["classic_score"]),
         "tie": sum(1 for r in both if r["b1_score"] == r["classic_score"]),
         "b1_secs_avg": round(sum(r.get("b1_secs") or 0 for r in results) / max(1, len(results)), 1),
         "b1_fail": sum(1 for r in results if r.get("b1_error")),
+        # ★빈 묘사는 점수에 안 들어간다 — 그래서 따로 센다. 이 수가 0이 아니면 위 평균은 '판정된 것만'의 평균이다.
+        "b1_empty_segs": sum(int(r.get("b1_empty") or 0) for r in results),
+        "b1_segs_total": sum(int(r.get("b1_segs") or 0) for r in results),
+        "classic_empty_segs": sum(int(r.get("classic_empty") or 0) for r in results),
     }
 
 
@@ -119,14 +135,26 @@ def _run(store, work_dir, n, out_dir):
                 r["b1_transcript_chars"] = len(b1.get("full_text") or "")
                 r["b1_ko_chars"] = len(b1.get("full_text_ko") or "")
                 r["b1_brief"] = (b1.get("source_brief") or {}).get("flow", "")[:120]
-                r["b1_score"], r["b1_n"], r["b1_counts"] = _judge_all(b1.get("segments"), s["path"],
-                                                                     tempfile.mkdtemp(prefix="probe_fb_"))
+                r["b1_empty"] = sum(1 for x in (b1.get("segments") or []) if not (x.get("scene_desc") or "").strip())
+                r["b1_empty_ratio"] = b1.get("tag_empty_ratio")
+                # ★태깅 실패는 '정확도 낮음'이 아니라 '실패'다(2026-09-05 리뷰 M1) — 점수 대신 오류로 남긴다
+                if (r["b1_empty_ratio"] or 0) > frame_script.EMPTY_FAIL_RATIO:
+                    r["b1_error"] = "태깅 실패(묘사 빈 비율 %.0f%%)" % (100 * r["b1_empty_ratio"])
+                    with _LOCK:
+                        _STATE["results"].append(r)
+                        _STATE["done"] += 1
+                        _STATE["summary"] = summarize(_STATE["results"])
+                    shutil.rmtree(tmp, ignore_errors=True)
+                    continue
+                r["b1_score"], r["b1_n"], r["b1_counts"] = _judge_all(b1.get("segments"), s["path"], tmp)
+                r["classic_empty"] = sum(1 for x in (s["classic"] or []) if not (x.get("scene_desc") or "").strip())
             except Exception as e:      # noqa: BLE001
                 r["b1_error"] = repr(e)[:200]
             with _LOCK:
                 _STATE["results"].append(r)
                 _STATE["done"] += 1
                 _STATE["summary"] = summarize(_STATE["results"])
+            shutil.rmtree(tmp, ignore_errors=True)          # 프레임 임시폴더 정리(리뷰 M6)
         path = Path(out_dir) / ("frame_accuracy_%s.json" % time.strftime("%Y%m%d_%H%M%S"))
         path.parent.mkdir(parents=True, exist_ok=True)
         with _LOCK:

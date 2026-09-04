@@ -14,7 +14,8 @@ def test_summarize():
                      {"classic_score": 0.5, "b1_score": 0.5, "b1_secs": 30},
                      {"classic_score": 0.6, "b1_error": "x"}])
     assert s["videos"] == 4 and s["b1_better"] == 1 and s["classic_better"] == 1 and s["tie"] == 1
-    assert s["classic_avg"] == 0.7 and s["b1_avg"] == 0.733 and s["b1_fail"] == 1
+    # 평균은 둘 다 판정된 3편에서만(리뷰 M2) — 4번째(b1 없음)는 unjudged
+    assert s["compared"] == 3 and s["classic_avg"] == 0.733 and s["b1_avg"] == 0.733 and s["b1_fail"] == 1
 
 
 def test_pick_sources_는_영상이_남아_있는_소스만_고른다():
@@ -53,3 +54,21 @@ def test_api_배선(monkeypatch):
     src = inspect.getsource(A)
     assert '@app.post("/api/admin/probe/frame_accuracy")' in src and '@app.get("/api/admin/probe/frame_accuracy")' in src
     assert "_require_admin(request)" in inspect.getsource(A.api_admin_probe_frame_accuracy_start)
+
+
+def test_summarize_는_둘_다_판정된_영상만_평균한다():
+    s = P.summarize([{"classic_score": 0.8, "b1_score": 1.0}, {"classic_score": 1.0, "b1_score": None},
+                     {"classic_score": None, "b1_score": 1.0}])
+    assert s["compared"] == 1 and s["unjudged"] == 2 and s["classic_avg"] == 0.8 and s["b1_avg"] == 1.0
+
+
+def test_판정_커버리지가_낮으면_점수를_안_믿는다(monkeypatch, tmp_path):
+    from shopping_shorts import tag_qa_frames as T
+    segs = [{"start": i, "end": i + 2, "scene_desc": f"d{i}"} for i in range(10)]
+    monkeypatch.setattr(T, "_extract_frames", lambda v, picked, d: ([f"f{i}" for i, _ in picked], picked))
+    monkeypatch.setattr(T, "_judge", lambda paths, kept: [{"image_no": 1, "verdict": "맞음"}, {"image_no": 2, "verdict": "맞음"}])
+    score, n, counts = P._judge_all(segs, "v.mp4", str(tmp_path))
+    assert score is None and n == 10 and counts["_judged"] == 2
+    monkeypatch.setattr(T, "_judge", lambda paths, kept: [{"image_no": k + 1, "verdict": "맞음"} for k in range(9)])
+    score2, _, counts2 = P._judge_all(segs, "v.mp4", str(tmp_path))
+    assert score2 == 1.0 and counts2["_judged"] == 9
