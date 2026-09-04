@@ -13250,6 +13250,9 @@ async function loadMyVoices(){
     const bc = /clon|generated|professional/i.test(b.category||'') ? 0 : 1;
     return ac - bc;
   });
+  /* ★onclick="…" 안에 JSON.stringify 값을 그대로 넣으면 큰따옴표가 속성을 끊어 버튼이 **아무 반응이 없다**
+     (고객 문의 2026-09-04 "내 성우로 추가 눌러도 반응 없음"). 다른 자리(hcWordPick·addThumbBadge)와 같은 방식으로 &quot; 이스케이프. */
+  const jq = function(x){ return JSON.stringify(x).replace(/"/g,'&quot;'); };
   box.innerHTML = vs.map(function(v){
     const 내것 = /clon|generated|professional/i.test(v.category||'');
     const done = v.registered_group;
@@ -13259,10 +13262,10 @@ async function loadMyVoices(){
       +   (내것 ? ' <span class="r" style="color:var(--accent2)">내가 만든 것</span>' : '')
       +   (v.category ? ' <span class="hint">· ' + esc(v.category) + '</span>' : '')
       + '</div>'
-      + (v.preview_url ? '<button class="btn-prev" style="padding:6px 10px" onclick="new Audio(' + JSON.stringify(v.preview_url) + ').play()">▶ 듣기</button>' : '')
+      + (v.preview_url ? '<button class="btn-prev" style="padding:6px 10px" onclick="new Audio(' + jq(v.preview_url) + ').play()">▶ 듣기</button>' : '')
       + (done
-          ? '<button class="btn-prev" style="padding:6px 12px" title="아래 성우 카드에서 이 목소리를 고릅니다" onclick="useMyVoiceCard(' + JSON.stringify(done) + ')">✔ 등록됨 · 이 성우로 쓰기</button>'
-          : '<button class="btn-next" style="padding:6px 12px" onclick="registerMyVoice(' + JSON.stringify(v.voice_id) + ',' + JSON.stringify(v.name) + ',this)">내 성우로 추가</button>')
+          ? '<button class="btn-prev" style="padding:6px 12px" title="아래 성우 카드에서 이 목소리를 고릅니다" onclick="useMyVoiceCard(' + jq(done) + ')">✔ 등록됨 · 이 성우로 쓰기</button>'
+          : '<button class="btn-next" style="padding:6px 12px" onclick="registerMyVoice(' + jq(v.voice_id) + ',' + jq(v.name) + ',this)">내 성우로 추가</button>')
       + '</div>';
   }).join('');
 }
