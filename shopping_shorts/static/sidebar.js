@@ -1060,7 +1060,9 @@
           if (!_cfState.chips.length) _cfSuggest(q);
           return;
         }
-        _cfRender(_cfState.items.length + "개 있음 — 🔗 내 링크를 누르면 추적 링크가 만들어집니다" + (d.source === "api" ? "" : " (내 파트너스 키를 등록하면 더 빠르고 정확합니다)"));
+        _cfRender(_cfState.items.length + "개 있음 — " + (d.source === "api_shared"
+          ? "쿠팡에 있습니다. 추적 링크는 내 파트너스 키를 등록해야 만들어집니다(검색만 가능)"
+          : "🔗 내 링크를 누르면 추적 링크가 만들어집니다" + (d.source === "api" ? "" : " (내 파트너스 키를 등록하면 더 빠르고 정확합니다)")));
         if (!_cfState.chips.length) _cfSuggest(q);
       })
       .catch(function () { _cfRender("네트워크 오류", "#ff8080"); });
