@@ -3591,6 +3591,42 @@ function bufTextFor(service){
   return lines.join('\n');
 }
 
+/* ★쿠팡 링크·고지문구를 예약발행 글에 **자동으로** 붙인다(2026-09-04 사장님 "예약발행까지 하면
+   자동으로 따라 들어가나?" — 종전엔 8단계 버튼을 눌러야만 설명란에 들어갔다).
+   cp = /api/mix/product 응답({final_link, description_block}). 없으면 글 그대로.
+   · 유튜브·쓰레드: 링크가 눌리는 곳 → 블록 전체(상품명·링크·고지문구)
+   · 인스타·틱톡: 캡션 링크가 안 눌린다 → 고지문구 + "프로필 링크" 안내만
+   이미 링크나 고지문구가 들어 있으면 두 번 붙이지 않는다(8단계 버튼과 공존). */
+function bufWithCoupang(text, service, cp){
+  var t = String(text || '');
+  if (!cp || !cp.final_link || !cp.description_block) return t;
+  if (t.indexOf(cp.final_link) >= 0) return t;
+  var sv = (service || '').toLowerCase();
+  var lines = String(cp.description_block).split('\n');
+  var disclosure = lines[lines.length - 1] || '';
+  var add;
+  if (sv === 'youtube' || sv === 'threads') add = cp.description_block;
+  else {
+    if (disclosure && t.indexOf(disclosure) >= 0) return t;
+    add = '🛒 제품은 프로필 링크에서 확인하세요' + (disclosure ? '\n' + disclosure : '');
+  }
+  return t ? (t.replace(/\s+$/, '') + '\n\n' + add) : add;
+}
+
+/* 이 job의 쿠팡 정보를 한 번만 받아 둔다(10단계는 8단계와 별개 화면이라 COUPANG이 비어 있을 수 있다). */
+function bufLoadCoupang(){
+  if (!MIX_JOB) return Promise.resolve(null);
+  if (BUF.coupangFor === MIX_JOB) return Promise.resolve(BUF.coupang || null);
+  return fetch('/api/mix/product/' + encodeURIComponent(MIX_JOB))
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      BUF.coupangFor = MIX_JOB;
+      BUF.coupang = (d && d.ok && d.final_link) ? { final_link: d.final_link, description_block: d.description_block || '' } : null;
+      return BUF.coupang;
+    })
+    .catch(function(){ return null; });   /* 쿠팡 정보 실패가 예약발행을 막으면 안 된다 */
+}
+
 function bufText(){
   /* 8단계에서 만든 것을 그대로 쓴다. 없으면 빈 칸으로 둔다(지어내지 않는다). */
   /* ★window.SEO로 보면 **항상 비어 있다** — 이 파일의 SEO는 let 전역이라
@@ -3819,6 +3855,16 @@ function bufRenderTexts(){
     var ta = document.getElementById('bufTx-' + c.id);
     ta.value = bufTextFor(c.service);
     bufRenderPicker(c);
+  });
+  /* ★쿠팡 링크·고지문구 자동 동봉(2026-09-04). 기본글 그대로인 칸에만 붙인다. */
+  bufLoadCoupang().then(function(cp){
+    if (!cp) return;
+    ids.forEach(function(c){
+      var ta = document.getElementById('bufTx-' + c.id);
+      if (!ta) return;
+      var base = bufTextFor(c.service);
+      if (ta.value === base || ta.value === '') ta.value = bufWithCoupang(base, c.service, cp);
+    });
   });
   /* 뺀 채널의 칸은 치운다 */
   BUF.channels.forEach(function(c){

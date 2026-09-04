@@ -157,3 +157,34 @@ def test_long_tracking_partner_url_is_shortened_on_save(monkeypatch, tmp_path):
                            "name": "x", "partner_url": long_url})
     body = r if isinstance(r, dict) else json.loads(r.body)
     assert body["product"]["partner_url"] == long_url and not body["product"].get("partner_error")
+
+
+def test_buffer_text_gets_coupang_block_automatically():
+    """★2026-09-04 사장님 "예약발행까지 하면 자동으로 따라 들어가나?" — 이제 예약발행 글에
+    쿠팡 링크·고지문구가 자동으로 붙는다. 유튜브·쓰레드=블록 전체 / 인스타·틱톡=고지문구+프로필 안내.
+    이미 들어 있으면 두 번 안 붙는다. produce.html의 bufWithCoupang(순수 함수)을 node로 실행."""
+    import pathlib, subprocess, tempfile
+    html = (pathlib.Path(__file__).resolve().parents[1] / "static" / "produce.html").read_text(encoding="utf-8")
+    i = html.index("function bufWithCoupang(")
+    j = html.index("function bufLoadCoupang(")
+    js = html[i:j] + r'''
+const cp = {final_link: "https://link.coupang.com/a/AB", description_block: "🛒 상품\nhttps://link.coupang.com/a/AB\n\n이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다."};
+const yt = bufWithCoupang("제목\n\n설명", "youtube", cp);
+const th = bufWithCoupang("제목", "threads", cp);
+const ig = bufWithCoupang("캡션 #태그", "instagram", cp);
+const twice = bufWithCoupang(yt, "youtube", cp);
+const none = bufWithCoupang("제목", "youtube", null);
+const ig2 = bufWithCoupang(ig, "instagram", cp);
+console.log(JSON.stringify({yt, th, ig, twice_same: twice === yt, none, ig2_same: ig2 === ig}));
+'''
+    with tempfile.NamedTemporaryFile("w", suffix=".js", delete=False, encoding="utf-8") as f:
+        f.write(js)
+        path = f.name
+    out = subprocess.run(["node", path], capture_output=True, text=True, encoding="utf-8")
+    assert out.returncode == 0, out.stderr
+    r = json.loads(out.stdout.strip().splitlines()[-1])
+    assert r["yt"].endswith(cp_block := "이에 따른 일정액의 수수료를 제공받습니다.") and "link.coupang.com/a/AB" in r["yt"]
+    assert r["th"].count("link.coupang.com/a/AB") == 1
+    assert "link.coupang.com" not in r["ig"] and "프로필 링크" in r["ig"] and r["ig"].endswith(cp_block)
+    assert r["twice_same"] and r["ig2_same"]
+    assert r["none"] == "제목"
