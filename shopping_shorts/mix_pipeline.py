@@ -254,7 +254,8 @@ def _hook_opener_on(customer_id):
 
 def synthesize_line(narration, out_path, *, voice=None, profile=None, beat_role=None,
                     beat_index=None, beat_total=None, previous_text=None, next_text=None,
-                    ranker=asr_ranker, global_pron=None, customer_id=0, hook_opener=None):
+                    ranker=asr_ranker, global_pron=None, customer_id=0, hook_opener=None,
+                    script_endings=False):
     """한 줄을 naturalize→TTS(N-best·연속성)→후처리까지 합성하고 변환텍스트를 반환.
 
     **튜닝 작업대와 실제 렌더가 공유하는 단일 경로**다. 양쪽이 각자 파이프라인을 조립하면
@@ -263,6 +264,11 @@ def synthesize_line(narration, out_path, *, voice=None, profile=None, beat_role=
 
     profile 미지정 시 voice 스냅샷의 naturalize_profile을 쓴다. seed/n_best는 merge_profile을
     거친 값으로 읽어 텍스트와 오디오가 같은 기준을 보게 한다(S10).
+
+    script_endings: **대본이 정한 어미가 이긴다**(2026-09-04 사장님 제보 "대본생성 어미
+    ~다. 수정 > 미리듣기 ~요 자동 수정됨"). True면 `spoken_style`(문어체→구어체 어미
+    치환)만 끄고 나머지 단계는 그대로 돈다. 기본 False = 종전 동작(회귀 0).
+    자세한 근거는 아래 그 처리 자리 주석 참조.
 
     customer_id: **누구 키로 합성하나**(2026-08-24). 0=사장님 키(기존 동작 그대로).
     하류는 이미 다 뚫려 있었다 — synthesize_best(**kw)가 그대로 넘기고
@@ -280,6 +286,20 @@ def synthesize_line(narration, out_path, *, voice=None, profile=None, beat_role=
     if hook_opener is False or (hook_opener is None and not _hook_opener_on(customer_id)):
         prof = copy.deepcopy(prof)
         prof.setdefault("fillers", {})["on"] = False
+    # ★대본이 정한 어미는 대본이 이긴다(2026-09-04 사장님 제보 "대본생성 어미 ~다. 수정 >
+    #   영상대본MIX 미리듣기 ~요< 자동 수정됨"). 뿌리는 0순위-B — 어미를 정하는 곳이
+    #   둘이었다: ①대본생성(스타일·프롬프트, 사장님이 손으로 고침) ②여기 naturalize의
+    #   `spoken_style`(_SPOKEN_MAP: 습니다→어요, 입니다→이에요…). ②가 ①을 덮어썼다.
+    #   ★더 나쁜 건 통째로 바꾸는 게 아니라는 점이다 — intensity(기본 0.4)가 "앞에서부터
+    #   그 비율만" 바꾸므로 한 대본 안에서 어미가 **섞인다**. 실측:
+    #     '가격도 착합니다. 성능도 좋습니다. 후회 없습니다.'
+    #       → '가격도 착해요… 성능도 좋아요. 후회 없습니다.'
+    #   자막은 대본(습니다)인데 소리는 어요라 **글자와 말이 어긋난다**.
+    #   ⚠️naturalize를 통째로 끄지 않는다 — 감탄사·속삭임·발음교정·억양은 TTS가 사람처럼
+    #   읽게 하는 별개 기능이다. 어미 치환 한 단계만 대본에 양보한다.
+    if script_endings:
+        prof = copy.deepcopy(prof)      # 호출자 프리셋 오염 금지(얕은복사 원본오염 전례)
+        prof.setdefault("spoken_style", {})["on"] = False
     natural = naturalize(narration, prof, beat_role=beat_role,
                          beat_index=beat_index, beat_total=beat_total)
     # 오독 자동회피(2026-07-22): Whisper 랭커(GROQ 키)가 실동작할 때만 n을 최소 2로
@@ -368,9 +388,28 @@ def mismatched_beats(beats):
     return [b.get("beat_idx") for b in (beats or []) if not tts_matches_narration(b)]
 
 
+def job_script_endings(job):
+    """이 잡은 **대본이 어미를 정하는** 잡인가 (2026-09-04).
+
+    참이면 음성 합성이 `spoken_style`(문어체→구어체 어미 치환)을 건너뛴다 — 사장님이
+    2단계에서 확정·수정한 어미가 미리듣기·렌더에 그대로 나간다.
+
+    판정 기준 = `given_script`(1단계에서 확정한 대본)이 있나. 그 잡의 나레이션은 사람이
+    쓰거나 승인한 문장이므로 어미도 사람 것이다. 반대로 given_script가 없는 잡은 AI가
+    나레이션을 새로 쓰므로 종전대로 구어체 다듬기를 받는다(회귀 0).
+
+    ★판정을 여기 한 곳에만 둔다 — 호출부 5곳이 각자 `job.get("given_script")`를 보면
+    언젠가 한 곳이 어긋난다(0순위-B: 같은 판단 두 군데 = 반드시 어긋난다).
+    """
+    return bool((job or {}).get("given_script") or "")
+
+
 def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron=None,
-                      customer_id=0):
+                      customer_id=0, script_endings=False):
     """비트별로 synthesize_line 호출. beat['tts_path']를 채운다.
+
+    script_endings: 확정 대본(given_script) 잡인가 — 참이면 대본이 정한 어미를 음성이
+    덮어쓰지 않는다(2026-09-04). 판정은 `job_script_endings()` 한 곳에서만 한다.
     연속성(previous_text/next_text)은 인접 비트의 '원문'(naturalize 전) narration을 쓴다
     — naturalize된 텍스트(오디오 태그·추임새 포함)를 연속성으로 넘기면 ElevenLabs가
     태그를 발화 텍스트로 오인할 수 있어서다.
@@ -404,6 +443,7 @@ def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron
             previous_text=beats[i - 1]["narration"] if i > 0 else None,
             next_text=beats[i + 1]["narration"] if i < total - 1 else None,
             global_pron=global_pron, customer_id=customer_id,
+            script_endings=script_endings,
         )
         beat["tts_path"] = str(out)
         # ★비트 끝 무음 트림(2026-07-22) — 각 비트 TTS 뒤 자연 무음(호흡·여백)을 잘라 이어붙임을
@@ -1531,7 +1571,8 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     # 4) 비트별 TTS (naturalize + N-best + 연속성 + 프리셋 후처리)
     store.update_mix_job(job_id, status="tts")
     _synthesize_beats(plan["beats"], work / "tts", voice=voice, global_pron=global_pron,
-                      customer_id=customer_id)
+                      customer_id=customer_id,
+                      script_endings=job_script_endings({"given_script": given_script}))
 
     # 4.2) 프리즈 뿌리 fix(2026-07-21) — 화면을 **실 TTS 길이**만큼 재보정한다. fill은 plan
     # 시점에 나레이션 추정(글자÷5.7)으로 채웠는데, 빠른 보이스면 실제 TTS가 추정과 달라 생긴
@@ -2908,7 +2949,8 @@ def run_clean_sources(job_id, db_path, work_root):
             try:
                 _synthesize_beats(plan_for_tts["beats"], work / "tts", voice=job.get("voice"),
                                   skip_existing=True, global_pron=_gpron,
-                                  customer_id=job.get("customer_id", 0))
+                                  customer_id=job.get("customer_id", 0),
+                                  script_endings=job_script_endings(job))
                 # ★훅 시작점도 여기서 확정한다 — 조립(_render_mix)이 첫 장면 start를
                 #   피크 시점으로 **in-place로 옮긴다**(video_assemble._apply_hook_inpoint).
                 #   그게 청소 뒤에 일어나면 서명이 또 바뀌어 렌더에서 재청소된다.
@@ -3014,7 +3056,8 @@ def run_preview(job_id, db_path, work_root):
         #   조립 직전 스스로 낫는다 — 이미 있는 비트는 skip(재과금 0), 빠진 비트만 합성.
         #   합성 결과(tts_path)를 edit_plan에 되박아 최종 렌더가 재합성 없이 재사용하게 한다.
         _synthesize_beats(plan["beats"], work / "tts", voice=job.get("voice"), skip_existing=True,
-                          global_pron=_gpron, customer_id=job.get("customer_id", 0))
+                          global_pron=_gpron, customer_id=job.get("customer_id", 0),
+                          script_endings=job_script_endings(job))
         store.update_mix_job(job_id, edit_plan=plan)
         tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan["beats"] if b.get("tts_path")}
         source_video_paths = _resolve_sources(job, work)
@@ -3142,7 +3185,8 @@ def run_render(job_id, db_path, work_root):
         # ★TTS 보장(2026-07-21) — run_preview와 같은 방어심층. 미리보기를 건너뛰고 바로 렌더에
         #   와도(또는 TTS 없는 후보가 edit_plan에 있어도) 조립 직전 스스로 낫는다. 이미 있으면 skip.
         _synthesize_beats(plan["beats"], work / "tts", voice=job.get("voice"), skip_existing=True,
-                          global_pron=_gpron, customer_id=job.get("customer_id", 0))
+                          global_pron=_gpron, customer_id=job.get("customer_id", 0),
+                          script_endings=job_script_endings(job))
         store.update_mix_job(job_id, edit_plan=plan)
         tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan["beats"] if b.get("tts_path")}
         source_video_paths = _resolve_sources(job, work)
@@ -3325,7 +3369,8 @@ def resynth_tts_job(job_id, db_path, work_root):
     try:
         _synthesize_beats(plan["beats"], work / "tts", voice=job.get("voice"),
                           global_pron=pron_corrections.load(store),
-                          customer_id=job.get("customer_id", 0))
+                          customer_id=job.get("customer_id", 0),
+                          script_endings=job_script_endings(job))
         store.update_mix_job(job_id, edit_plan=plan, status="ready_for_review")
     except Exception as e:
         traceback.print_exc(file=sys.stderr)

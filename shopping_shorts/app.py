@@ -4398,6 +4398,7 @@ _BYOK_VENDORS = (
     (("api.typecast.ai", "typecast"), "음성 서비스(타입캐스트)", "typecast.ai"),
     (("vmake",), "자막 제거 서비스(VMake)", "vmake.ai"),
 )
+
 # '잔액이 없다'는 신호. 429(분당·월 한도)는 **여기 넣지 않는다** — 기다리면 풀리는데
 # 충전하라고 하면 고객이 헛돈을 쓴다(2026-09-02 실수, 만들자마자 잡았다).
 _OUT_OF_CREDIT = ("402", "payment required", "not enough credits", "insufficient",
@@ -5899,6 +5900,29 @@ def api_typecast_voices(request: Request, q: str = "", limit: int = 60):
     return {"ok": True, "voices": out, "total": len(d.get("voices") or []), "error": None}
 
 
+@app.get("/api/typecast/voices/mine")
+def api_typecast_voices_mine(request: Request):
+    """내 타입캐스트 계정의 **내가 만든 목소리**(2026-09-04) — 일레븐 /api/voice-library/mine의 짝.
+
+    타입캐스트는 별도 '내 목소리' API가 없고, 목록 API에 공식 성우(tc_…)와 내가 만든
+    목소리(uc_…)가 섞여 나온다(voice_id 접두로 갈린다). 그래서 **내 키로** 목록을 받아
+    uc_만 거른다. 운영자 키로 부르면 사장님 계정 것이 나오므로 내 키가 없으면 need_key
+    (관리자는 운영자 키 = 본인 계정이라 그대로 본다).
+    """
+    from shopping_shorts import typecast_tts
+    cid = _cid(request)
+    store = Store(DB_PATH)
+    if not keyroute.has_own_key(store, cid, keyroute.SVC_TYPECAST) and not _is_admin(cid):
+        return {"ok": False, "need_key": True, "voices": [],
+                "error": "내 타입캐스트 키를 등록해야 내 계정에서 만든 목소리를 볼 수 있어요."}
+    d = typecast_tts.list_voices(customer_id=cid)
+    if not d.get("ok"):
+        return {"ok": False, "voices": [], "error": d.get("error") or "성우 목록을 못 불러왔습니다"}
+    allv = d.get("voices") or []
+    mine = [v for v in allv if str(v.get("voice_id") or "").startswith("uc_")]
+    return {"ok": True, "voices": mine, "total": len(allv), "error": None}
+
+
 @app.get("/api/voice-library/search")
 def api_voice_library_search(request: Request, q: str = "", language: str = "",
                              gender: str = "", page: int = 0, sort: str = ""):
@@ -6052,7 +6076,9 @@ async def api_typecast_adopt(request: Request):
         return JSONResponse({"ok": False, "error": f"타입캐스트 모델이 아닙니다({model})."},
                             status_code=400)
     # 실제로 있는 성우인지 목록에서 확인한다 — 화면이 보낸 값을 그대로 믿지 않는다.
-    listed = typecast_tts.list_voices()
+    # ★내 키가 있으면 내 계정 목록으로 검증한다(2026-09-04) — 내가 만든 목소리(uc_)는
+    #   운영자 키 목록엔 없어서 종전엔 "찾지 못했습니다"로 막혔다. 키가 없으면 종전대로 운영자 키.
+    listed = typecast_tts.list_voices(customer_id=cid)
     if not listed.get("ok"):
         return JSONResponse({"ok": False, "error": listed.get("error") or "성우 목록 조회 실패"},
                             status_code=502)
@@ -8746,6 +8772,138 @@ async def api_lens_yt(request: Request, frame: UploadFile = File(None),
             rank = {"same": 0, "similar": 1, "no": 2}
             rows.sort(key=lambda r: rank.get(r.get("sim"), 1))   # 관련있는 것부터
     return {"ok": True, "items": rows, "count": len(rows), "keyword": keyword}
+
+
+# ── 자막제거 키 잔액 바로가기 (2026-09-04 사장님 "바로가기탭으로 조회") ───────────
+# 자막제거 업체엔 잔액 조회 API가 없다(번들 SDK의 경로는 config·consume 둘뿐, 문서에도 없음).
+# 잔액·사용내역은 업체 **개발자 대시보드**(로그인 후 우상단 Credit + Usage Details)에만 있다.
+# produce.html은 브랜드 정책상 업체명을 한 글자도 못 쓰므로(test_subclean_ui) 주소는
+# 여기 한 곳에만 두고 화면은 /go/subclean-credits 로 온다(0순위-B — 주소가 바뀌면 여기만).
+_SUBCLEAN_CREDITS_URL = "https://vmake.ai/developers"
+
+
+@app.get("/go/subclean-credits", include_in_schema=False)
+def _go_subclean_credits():
+    """자막제거 키 잔액·사용내역 페이지로 새 탭 이동(화면 버튼이 부른다)."""
+    return RedirectResponse(url=_SUBCLEAN_CREDITS_URL, status_code=302)
+
+
+# ── 음성(TTS) 키 잔액 조회 (2026-09-04 사장님 "tts에도 api연동해서 본인크레딧 나오게") ──
+# 자막제거 업체와 달리 음성 두 업체는 **구독 조회 API가 있다** → 숫자를 그대로 띄운다.
+#   일레븐랩스  GET /v1/user/subscription     (xi-api-key) → character_count / character_limit /
+#               next_character_count_reset_unix / tier
+#   타입캐스트  GET /v1/users/me/subscription (X-API-KEY) → credits.plan_credits / used_credits / plan
+#               (리셋 시각은 응답에 없다 — 문서 실측 2026-09-04)
+# ★일레븐랩스 제한키(restricted)는 user_read 권한이 없으면 이 조회만 401이고 TTS는 멀쩡하다
+#   (2026-08-24 라이브 실측, 위 _check_key 주석). 그걸 "키가 틀렸다"로 보이면 고객이 멀쩡한
+#   키를 지운다 → 'no_permission'으로 갈라서 "대시보드에서 확인"으로 안내한다.
+# ★조회는 돈을 안 쓰지만 업체 429가 있다 → 고객당 60초 캐시.
+_TTS_CREDIT_VENDORS = {
+    "elevenlabs": {"label": "일레븐랩스", "unit": "자",
+                   "url": "https://api.elevenlabs.io/v1/user/subscription",
+                   "header": "xi-api-key",
+                   "dashboard": "https://elevenlabs.io/app/subscription"},
+    "typecast":   {"label": "타입캐스트", "unit": "크레딧",
+                   "url": "https://api.typecast.ai/v1/users/me/subscription",
+                   "header": "X-API-KEY",
+                   "dashboard": "https://typecast.ai/developers"},
+}
+_TTS_CREDIT_CACHE_SEC = 60
+_TTS_CREDIT_CACHE = {}          # cid → (expires_epoch, payload)
+
+
+def _tts_credit_parse(service, status, body):
+    """업체 응답 → 화면용 dict. 네트워크 없이 순수 파싱(테스트가 이걸 직접 찌른다)."""
+    if status == 401:
+        txt = str(body if isinstance(body, str) else json.dumps(body, ensure_ascii=False))
+        kind = "no_permission" if "user_read" in txt else "bad_key"
+        return {"ok": False, "error_kind": kind}
+    if status == 429:
+        return {"ok": False, "error_kind": "rate_limited"}
+    if status != 200:
+        return {"ok": False, "error_kind": "http", "http": int(status)}
+    j = body if isinstance(body, dict) else {}
+    if service == "elevenlabs":
+        used = int(j.get("character_count") or 0)
+        limit = int(j.get("character_limit") or 0)
+        reset = j.get("next_character_count_reset_unix")
+        plan = j.get("tier") or j.get("status")
+    else:
+        cr = j.get("credits") or {}
+        used = int(cr.get("used_credits") or 0)
+        limit = int(cr.get("plan_credits") or 0)
+        reset = None
+        plan = j.get("plan")
+    return {"ok": True, "used": used, "limit": limit, "remaining": max(limit - used, 0),
+            "reset_at": int(reset) if reset else None, "plan": plan}
+
+
+def _tts_credit_probe(service, key):
+    """키 하나의 잔액을 업체에 묻는다. 실패해도 예외를 올리지 않는다(화면 한 줄이 죽을 뿐)."""
+    v = _TTS_CREDIT_VENDORS[service]
+    try:
+        r = requests.get(v["url"], headers={v["header"]: key}, timeout=8)
+    except requests.RequestException as e:
+        return {"ok": False, "error_kind": "network", "error": str(e)[:120]}
+    try:
+        body = r.json()
+    except ValueError:
+        body = r.text[:300]
+    return _tts_credit_parse(service, r.status_code, body)
+
+
+def _own_keys_plain(store, cid, service):
+    """고객이 **직접 등록한** 키만(사장님 공용 키는 섞지 않는다 — '본인 크레딧'이니까)."""
+    return list(store.get_customer_keys_plain(cid, service) or [])
+
+
+def _credit_mode(store, cid, service):
+    """누구 잔액을 보여줄지 — ★판단은 여기 한 곳(0순위-B). 반환 (mode, keys).
+
+      own   : 내가 등록한 키 → 내 잔액
+      owner : 관리자에게만 — 운영자 키(서버 env / vmake는 전역 설정)로 회사 잔액
+      none  : 보여줄 게 없다. ★사장님 키를 빌려 쓰는 고객(면제 명단)이 여기 들어온다 —
+              남의(운영자) 잔액은 절대 안 내보낸다(2026-09-04 사장님 "내꺼 쓰는 고객은 보여주면 안 돼")
+    """
+    keys = _own_keys_plain(store, cid, service)
+    if keys:
+        return "own", keys
+    if _is_admin(cid):
+        ok = (keyroute._owner_vmake_key(store) if service == keyroute.SVC_VMAKE
+              else keyroute._owner_keys(service))
+        if ok:
+            return "owner", list(ok)
+    return "none", []
+
+
+@app.get("/api/produce/tts/credits")
+def api_tts_credits(request: Request, refresh: int = 0):
+    """5단계 '내 음성 키 잔액' + 4단계 '크레딧 확인하기' 아이콘의 노출 여부.
+    등록한 키마다 한 줄(키 끝 4자로 구분). 관리자는 운영자 키로 본다(mode=owner)."""
+    cid = keyroute.as_cid(_cid(request))
+    now = time.time()
+    hit = _TTS_CREDIT_CACHE.get(cid)
+    if hit and not refresh and hit[0] > now:
+        return hit[1]
+    store = Store(DB_PATH)
+    out = {"ok": True, "services": [],
+           # 키가 없을 때 "등록하세요"를 띄울지 — 면제(운영자 키 사용) 고객에겐 안 띄운다
+           "need_own_key": not keyroute.is_block_exempt(cid)}
+    for svc, v in _TTS_CREDIT_VENDORS.items():
+        mode, keys = _credit_mode(store, cid, svc)
+        row = {"service": svc, "label": v["label"], "unit": v["unit"], "mode": mode,
+               "dashboard": v["dashboard"], "registered": mode != "none", "keys": []}
+        for k in keys[:3]:                      # 키를 여러 개 넣어도 3개까지만 묻는다
+            r = _tts_credit_probe(svc, k)
+            r["key_tail"] = str(k)[-4:]
+            row["keys"].append(r)
+        out["services"].append(row)
+    sub_mode, _ = _credit_mode(store, cid, keyroute.SVC_VMAKE)
+    out["subclean"] = {"mode": sub_mode, "show": sub_mode != "none"}
+    out["cached_at"] = int(now)
+    _TTS_CREDIT_CACHE[cid] = (now + _TTS_CREDIT_CACHE_SEC, out)
+    return out
+
 
 
 @app.get("/healthz")

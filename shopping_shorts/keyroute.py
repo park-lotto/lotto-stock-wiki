@@ -278,6 +278,13 @@ def _owner_keys(service):
     if service == SVC_ELEVENLABS:
         k = getattr(config, "ELEVENLABS_API_KEY", "")
         return [k] if k else []
+    if service == SVC_TYPECAST:
+        # 2026-09-04 사장님 "타입캐스트 키 내 것도 등록해줘" — 운영자 키는 env(TYPECAST_API_KEY)에
+        # 이미 있는데 여기만 빠져 있어 관리자 잔액 조회(app._credit_mode owner)에 안 잡혔다.
+        # typecast_tts._api_key는 종전에도 keys_for가 비면 config로 폴백했으므로 실제 TTS 경로의
+        # 결과 키는 그대로다(폴백이 한 단계 앞당겨질 뿐).
+        k = getattr(config, "TYPECAST_API_KEY", "")
+        return [k] if k else []
     if service == SVC_SERPAPI:
         # 렌즈 검색용. gemini/youtube와 같은 env 다중키 방식(SERPAPI_KEY~_30).
         return list(getattr(config, "SERPAPI_KEYS", []) or [])

@@ -2199,7 +2199,7 @@ _SCRIPTED_PROMPT = """너는 숏폼 쇼핑 영상 편집 감독이다. **나레�
 {inventory}
 
 규칙(반드시 지켜라):
-- 확정 대본을 순서대로 비트로 쪼개라. 각 비트의 narration은 **확정 대본의 실제 구절
+{line_rule}- 확정 대본을 순서대로 비트로 쪼개라. 각 비트의 narration은 **확정 대본의 실제 구절
   그대로**(표현·어미 바꾸지 말 것). 대본 전체가 빠짐없이 비트로 커버되게 해라.
 - 각 비트마다 그 대사에 어울리는 소스 구간을, **화면에 이어서 재생할 순서대로** 골라라.
   primary가 가장 잘 맞는 첫 구간, alternates는 그 뒤로 **이어붙일 추가 구간들**(대안이 아니라
@@ -2319,7 +2319,8 @@ def _vault_call_once(prompt, schema, max_tries=_KEY_TRY_LIMIT, key_offset=0):
         except Exception as e:  # noqa: BLE001
             _LAST_VAULT_ERR = repr(e)[:200]
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
-                key_vault.mark_exhausted(key_vault._owner_group(key) or "general", key)
+                # ★401/403/무효키=영구 사망, 429=한시 — 판정은 mark_failure 한 곳(2026-09-04)
+                key_vault.mark_failure(key, e, group=key_vault._owner_group(key) or "general")
                 continue
             if key_vault.is_quota_error(e):
                 continue
@@ -2331,7 +2332,7 @@ def _vault_call_once(prompt, schema, max_tries=_KEY_TRY_LIMIT, key_offset=0):
             #   아예 안 뽑히게 하고, 지금 호출은 다음 키로 계속한다.
             if _is_dead_key_error(e):
                 try:
-                    key_vault.mark_exhausted(key_vault._owner_group(key) or "general", key)
+                    key_vault.mark_dead(key, detail=str(e)[:120])   # 영구 — 30분 뒤 되살리지 않는다
                 except Exception:
                     pass
                 continue
@@ -4048,6 +4049,12 @@ def build_edit_plan(source_scripts, target_seconds, structure="template", video_
         prompt = _SCRIPTED_PROMPT.format(
             given_script=given_script.strip()[:4000], inventory=inventory, n_alternates=n_alternates,
             label_hint=_INVENTORY_LABEL_HINT,
+            # ★줄 하나 = 비트 하나(2026-09-03). 2단계가 칸을 나눠 줬으면 그 단위를 지킨다 —
+            #   저장 출구(enforce_script_order)가 줄 단위로 되돌리지만, 화면 선택은 여기서
+            #   비트 단위로 되므로 처음부터 같은 단위로 고르게 한다.
+            line_rule=("- **대본이 줄로 나뉘어 있다: 줄 하나 = 비트 하나, 총 %d개.** 줄을 합치거나 "
+                       "한 줄을 두 비트로 쪼개지 마라.\n" % len(script_sentences(given_script))
+                       if script_has_lines(given_script) else ""),
             # ★scene_first와 **같은 문장**을 쓴다(2026-08-18) — 이 경로엔 종전에 화면 배치
             #   지시가 통째로 없어서 "대사랑 어울리게" 한 줄로만 골랐다.
             scene_placement=_scene_placement_block())
@@ -5485,8 +5492,21 @@ def _narr_key(s):
     return re.sub(r"[^0-9A-Za-z가-힣]+", "", s or "")
 
 
+def script_has_lines(script):
+    """2단계가 **줄로 나눠 준** 대본인가(줄 하나 = 칸 하나). 개행이 2줄 이상이면 참."""
+    return len([ln for ln in (script or "").split("\n") if ln.strip()]) >= 2
+
+
 def script_sentences(script):
-    """확정 대본을 문장 단위로. 빈 조각은 버린다."""
+    """확정 대본을 칸 단위로. 빈 조각은 버린다.
+
+    ★줄이 있으면 **줄이 곧 단위**다(2026-09-03 사장님 "훅이랑 문제가 믹스에서 합쳐진다").
+      2단계 B안은 첫말/문제/반전… 8줄인데 마침표로 다시 자르면 "펜 뒤 팁으로… 사라져요.
+      이게 끝이에요."가 두 칸으로 갈리고, 반대로 첫말+문제가 한 칸(훅 5.5초)에 뭉쳤다
+      (job 8b86200f50b3 실측). 줄을 준 사람의 단위를 서버가 마침표로 다시 자르지 않는다.
+      줄이 없는 통짜 대본(내가 직접 쓰기·옛 초안)은 종전대로 문장 분리."""
+    if script_has_lines(script):
+        return [ln.strip() for ln in script.split("\n") if ln.strip()]
     return [s.strip() for s in _SENT_SPLIT.split(script or "") if s.strip()]
 
 
@@ -5585,8 +5605,21 @@ def enforce_script_order(beats, given_script):
     # 비교는 **재배분 대상 칸만** 이어붙여 본다 — 사람이 고친 칸의 문장은 대본에 없어서
     # 통째로 이으면 절대 안 맞고, 그러면 멀쩡한 계획도 매번 흔들린다.
     joined = _narr_key("".join(beats[i].get("narration") or "" for i in targets))
-    if joined == _narr_key(given_script):
+    # ★줄 모드에선 글자가 다 맞아도 **칸 수가 줄 수와 다르면** 제자리가 아니다(2026-09-03 —
+    #   훅에 두 줄이 뭉친 job 8b86200f50b3는 글자만 보면 완벽히 "순서대로"였다).
+    _lines_mode = script_has_lines(given_script)
+    if joined == _narr_key(given_script) and (not _lines_mode or len(targets) == len(sents)):
         return beats, 0
+
+    # ★줄 모드(2026-09-03): 칸 수가 줄 수와 다르면 **줄마다 칸 하나로 다시 짠다**.
+    #   AI가 한 줄("펜 뒤 팁으로… 사라져요. 이게 끝이에요.")을 두 칸으로 쪼개거나 두 줄을
+    #   한 칸(훅)에 뭉치면, 비례 배분으론 1:1이 안 나온다. 각 칸의 대사가 어느 줄에서
+    #   왔는지로 화면을 그 줄에 몰아 준다(화면 재고를 버리지 않는다). 사람이 고친 칸이
+    #   있으면 손대지 않는다(칸 수를 바꾸면 그 칸의 자리가 흔들린다).
+    if _lines_mode and len(targets) != len(sents) and len(targets) == len(beats):
+        rebuilt = _rebuild_beats_by_lines(beats, sents)
+        beats[:] = rebuilt
+        return beats, len(beats)
 
     n = len(targets)
     # 칸 길이 비례로 문장을 나눈다 — 긴 칸에 더 많이. 길이 정보가 없으면 균등.
@@ -5658,6 +5691,70 @@ def enforce_script_order(beats, given_script):
         _drop_stale_tts(b)                # 대사가 바뀌면 옛 음성은 버린다(2026-08-19 실사고)
         fixed += 1
     return beats, fixed
+
+
+def _lines_of_beat(narr, sents):
+    """칸의 대사가 걸친 줄 번호들(순서대로). 한 줄 안의 조각이면 [그 줄], 두 줄이 뭉친 칸이면
+    [a, b], 어느 줄에도 안 닿으면 []."""
+    k = _narr_key(narr)
+    if not k:
+        return []
+    for j, ln in enumerate(sents):
+        if k in _narr_key(ln):
+            return [j]
+    hit = [j for j, ln in enumerate(sents) if _narr_key(ln) and _narr_key(ln) in k]
+    return hit
+
+
+def _rebuild_beats_by_lines(beats, sents):
+    """줄마다 칸 하나로 다시 짠다 — 화면은 '그 줄에서 온 칸'의 것을 모아 준다.
+
+    · 한 줄이 여러 칸으로 갈렸으면 → 그 칸들의 화면을 순서대로 한 칸에 모은다
+    · 한 칸에 여러 줄이 뭉쳤으면 → 그 칸의 화면을 줄마다 하나씩 나눠 준다(모자라면 마지막 화면 반복)
+    · 어느 줄인지 모르는 칸 → 직전 줄에 화면만 보탠다(버리지 않는다)
+    role·target_seconds는 그 줄에 처음 기여한 칸 것을 물려받고, 초는 기여한 칸의 합.
+    """
+    per = [{"screens": [], "sec": 0.0, "base": None} for _ in sents]
+    last = 0
+    for b in beats:
+        screens = ([b["primary"]] if b.get("primary") else []) + list(b.get("alternates") or [])
+        lines = _lines_of_beat(b.get("narration"), sents) or [last]
+        sec_each = float(b.get("target_seconds") or 0) / max(1, len(lines))
+        for k, j in enumerate(lines):
+            slot = per[j]
+            if slot["base"] is None:
+                slot["base"] = b
+            slot["sec"] += sec_each
+            if len(lines) == 1:
+                slot["screens"].extend(screens)
+            elif screens:
+                slot["screens"].append(screens[min(k, len(screens) - 1)])
+                if k == len(lines) - 1:
+                    slot["screens"].extend(screens[len(lines):])
+        last = lines[-1]
+    out = []
+    for j, ln in enumerate(sents):
+        slot = per[j]
+        base = slot["base"] or (beats[min(j, len(beats) - 1)] if beats else {})
+        nb = dict(base)
+        seen, uniq = set(), []
+        for s in slot["screens"]:
+            sid = (s or {}).get("seg_id")
+            if sid in seen:
+                continue
+            seen.add(sid)
+            uniq.append(s)
+        if not uniq and base.get("primary"):
+            uniq = [base["primary"]]
+        nb["primary"] = uniq[0] if uniq else None
+        nb["alternates"] = uniq[1:]
+        nb["narration"] = ln
+        nb["target_seconds"] = round(slot["sec"] or (len(ln) / _SYLLABLES_PER_SEC), 2)
+        nb["narration_reordered"] = True
+        nb.pop("narration_manual", None)
+        _drop_stale_tts(nb)
+        out.append(nb)
+    return out
 
 
 def _drop_stale_tts(beat):
