@@ -3168,7 +3168,8 @@ class Store:
             return [], None
         return json.loads(row[0]), row[1]
 
-    def hits_since(self, days, min_comments=500, limit=400, platform="instagram"):
+    def hits_since(self, days, min_comments=500, limit=400, platform="instagram",
+                   min_views=0):
         """최근 N일 수집분 중 '터진 것'만 → 카드 items(마지막수집과 같은 모양).
 
         ★추가 크롤 0 — 이미 받아둔 reel_history를 다시 보여줄 뿐이다. 상단(48시간 신규)이
@@ -3176,16 +3177,23 @@ class Store:
 
         댓글 기준인 이유: 사장님이 실제 제작에 쓴 영상의 댓글 중앙값이 1,473(전체 P90 579)
         이라 조회수보다 손이 가는 것을 잘 가른다(channel_tier 참고).
-        reel_history는 30일 롤링이라 days=30이 사실상 전체다."""
+        reel_history는 30일 롤링이라 days=30이 사실상 전체다.
+
+        ★min_views(2026-09-04 사장님 "유튭은 댓글이 필요없어, 조회수 기반이야").
+          플랫폼마다 '터진 것'의 잣대가 다르다 — 실측 댓글 중앙값이
+          인스타 60 / 유튜브 **1**이라, 유튜브에 댓글 문턱을 쓰면 이번 주가 48편밖에 안 남는다.
+          min_views를 주면 그 값으로 거르고 **정렬도 조회수**로 바꾼다."""
         with self._conn() as c:
             rows = c.execute(
                 "SELECT shortcode, username, name, category, url, thumb, caption, "
                 "       views, comments, first_seen, upload_ts "
                 "FROM reel_history "
-                "WHERE platform = ? AND comments >= ? "
+                "WHERE platform = ? AND comments >= ? AND views >= ? "
                 "  AND first_seen >= datetime('now', ?) "
-                "ORDER BY comments DESC LIMIT ?",
-                (platform, min_comments, f"-{int(days)} day", int(limit))
+                # ★조회수 기준일 땐 조회수로 세운다 — 유튜브는 댓글이 거의 안 달린다
+                #   (실측 2026-09-04: 유튜브 댓글 중앙 1개 vs 인스타 60개).
+                "ORDER BY " + ("views" if min_views else "comments") + " DESC LIMIT ?",
+                (platform, min_comments, int(min_views), f"-{int(days)} day", int(limit))
             ).fetchall()
         return [{
             "shortcode": r[0], "username": r[1], "name": r[2] or "",

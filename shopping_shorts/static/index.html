@@ -2628,13 +2628,23 @@ let ARC_MIN = 10000;                 // 역대 탭 문턱(1만+ 기본). 실측 
 // (실측 2026-08-17: 셋 다 400건·1위 동일) → 구간으로 끊어 겹치지 않게 한다.
 let ARC_MAX = 0;
 const _SPAN_MIN_COMMENTS = {7: 500, 30: 1000};
+// ★플랫폼마다 '터진 것'의 잣대가 다르다(2026-09-04 사장님 "유튭은 댓글이 필요없어, 조회수 기반이야").
+//   실측 댓글 중앙값: 인스타 60 / 유튜브 **1**. 유튜브에 댓글 문턱을 쓰면 이번 주가 48편,
+//   이번 달이 27편밖에 안 남아 사실상 빈 화면이 된다.
+//   유튜브 조회수 분포(9,170편): P90 7만 · P95 20만 → 10만+ 754편 / 50만+ 196편.
+//   인스타 기간탭 규모(이번주 594 · 이번달 281)와 비슷하게 맞춘 값이다.
+const _SPAN_MIN_VIEWS = {youtube: {7: 100000, 30: 500000}};
 
 async function loadLast(){
   let url = "/api/reference?platform="+PLATFORM;
   if(SPAN_DAYS < 0){
     url += "&archive=1&min_comments="+ARC_MIN+"&max_comments="+ARC_MAX;
   } else if(SPAN_DAYS > 0){
-    url += "&days="+SPAN_DAYS+"&min_comments="+(_SPAN_MIN_COMMENTS[SPAN_DAYS]||500);
+    const mv = (_SPAN_MIN_VIEWS[PLATFORM]||{})[SPAN_DAYS] || 0;
+    // 조회수 기준 플랫폼은 댓글 문턱을 0으로 내린다 — 두 잣대를 함께 걸면 아무것도 안 남는다.
+    url += "&days="+SPAN_DAYS
+         + "&min_comments="+(mv ? 0 : (_SPAN_MIN_COMMENTS[SPAN_DAYS]||500))
+         + (mv ? "&min_views="+mv : "");
   }
   const d = await (await fetch(url)).json();
   STATE.items = d.items || [];   // 결과 없어도 무조건 갈아끼움 — 이전 플랫폼 카드 잔존 방지
