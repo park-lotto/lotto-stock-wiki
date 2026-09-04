@@ -1032,9 +1032,10 @@
           '</div></div>';
       }).join("") + '</div>';
   }
-  function _cfOpen(keyword) {
+  function _cfOpen(keyword, opts) {
     _cfClose();
-    _cfState = { kw: keyword || "", items: [], chips: [] };
+    opts = opts || {};
+    _cfState = { kw: keyword || "", items: [], chips: [], sc: opts.shortcode || "", thumb: opts.thumbnail || "" };
     var wrap = document.createElement("div");
     wrap.id = "ssCoupangFind";
     wrap.style.cssText = "position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:16px";
@@ -1046,7 +1047,26 @@
       '<div id="cfResults" style="padding:0 14px 14px"></div></div>';
     wrap.addEventListener("click", function (e) { if (e.target === wrap) _cfClose(); });
     document.body.appendChild(wrap);
-    if (keyword) _cfSearch(keyword); else { var q = _cfEl("cfQuery"); if (q) q.focus(); }
+    if (keyword) _cfSearch(keyword);
+    else if (_cfState.sc) _cfIdentify();          /* ★자동: 썸네일에서 제품을 알아내 바로 찾는다 */
+    else { var q = _cfEl("cfQuery"); if (q) q.focus(); }
+  }
+  /* 숏템파워검색처럼 사람이 안 친다(2026-09-04 사장님) — 썸네일 → 제품명 → 첫 후보로 검색 → 링크. */
+  function _cfIdentify() {
+    _cfRender("🔎 썸네일에서 제품을 알아내는 중… (3~8초)");
+    fetch("/api/coupang/identify", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ shortcode: _cfState.sc, thumbnail: _cfState.thumb }) })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (!d || !d.ok || !d.product) {
+          _cfRender((d && d.error) || "제품을 특정하지 못했습니다 — 제품명을 직접 넣어 찾아보세요", "#ff8080");
+          var q = _cfEl("cfQuery"); if (q) q.focus();
+          return;
+        }
+        _cfState.chips = (d.queries || [d.product]).slice(0, 6);
+        _cfSearch(_cfState.chips[0]);
+      })
+      .catch(function () { _cfRender("판독 중 네트워크 오류 — 제품명을 직접 넣어 찾아보세요", "#ff8080"); });
   }
   function _cfSearch(forced) {
     var q = (forced || (_cfEl("cfQuery") || {}).value || "").trim();
@@ -1059,7 +1079,7 @@
       .then(function (d) {
         _cfState.items = (d && d.items) || [];
         if (!_cfState.items.length) {
-          _cfRender("쿠팡에 없습니다 — 이 검색어로는 링크를 만들 수 없어요. 제품명을 바꿔 다시 찾거나 '쿠팡에서 직접'으로 확인하세요." + (d && d.notice ? " (" + d.notice + ")" : ""), "#ff8080");
+          _cfRender("❌ 쿠팡에 없습니다 — 이 검색어로는 링크를 만들 수 없어요. 다른 검색어 칩을 눌러 보거나 '쿠팡에서 직접'으로 확인하세요." + (d && d.notice ? " (" + d.notice + ")" : ""), "#ff8080");
           if (!_cfState.chips.length) _cfSuggest(q);
           return;
         }
@@ -1089,7 +1109,7 @@
         var by = {}; ((d && d.links) || []).forEach(function (l) { if (l.shorten_url) by[l.url] = l.shorten_url; });
         var n = 0;
         _cfState.items.forEach(function (it) { if (by[it.url]) { it.short_url = by[it.url]; n++; } });
-        _cfRender(n ? (_cfState.items.length + "개 있음 — 내 추적 링크 " + n + "개 준비됨. 카드의 링크를 누르면 복사됩니다") : (_cfState.items.length + "개 있음 — 🔗 내 링크를 누르면 추적 링크가 만들어집니다"), n ? "#5fe3d6" : "");
+        _cfRender(n ? ("✅ 쿠팡에 있음 " + _cfState.items.length + "개 — 내 추적 링크 " + n + "개 준비됨. 카드의 링크를 누르면 복사됩니다") : ("✅ 쿠팡에 있음 " + _cfState.items.length + "개 — 🔗 내 링크를 누르면 추적 링크가 만들어집니다"), n ? "#5fe3d6" : "");
       })
       .catch(function () { _cfRender(_cfState.items.length + "개 있음 — 🔗 내 링크를 누르면 추적 링크가 만들어집니다"); });
   }
@@ -1112,7 +1132,7 @@
       })
       .catch(function () { if (cell) cell.textContent = "네트워크 오류"; });
   }
-  window.ssCoupangFind = function (keyword) { _cfOpen(keyword); };
+  window.ssCoupangFind = function (keyword, opts) { _cfOpen(keyword, opts); };
   window.ssCoupangFind.search = _cfSearch;
   window.ssCoupangFind.link = _cfLink;
   window.ssCoupangFind.close = _cfClose;
