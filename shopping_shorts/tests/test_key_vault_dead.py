@@ -45,3 +45,12 @@ def test_429_is_temporary_and_comes_back(vault, monkeypatch):
 def test_non_key_errors_leave_no_mark(vault):
     vault.mark_failure("K1", Exception("503 UNAVAILABLE high demand"))
     assert vault.get_live_keys("general") == ["K0", "K1", "K2"]
+
+
+def test_invalid_api_key_is_permanently_excluded(vault):
+    """★2026-09-04: 'API key not valid'(API_KEY_INVALID)도 영구 사망. 종전엔 쇼핑쇼츠 호출부가
+    30분 잠금으로만 표시해 죽은 키 …sJbmaQ가 이틀째 다시 불렸다."""
+    kv = vault
+    kv.mark_failure("K1", Exception("400 INVALID_ARGUMENT. API key not valid. Please pass a valid API key. API_KEY_INVALID"))
+    assert "K1" not in kv.get_live_keys("general")
+    assert "K1" not in kv.without_dead(["K0", "K1"])

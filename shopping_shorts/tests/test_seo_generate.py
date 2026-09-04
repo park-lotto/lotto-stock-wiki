@@ -72,7 +72,7 @@ def test_generate_cascades_on_exhausted_key(monkeypatch):
     monkeypatch.setattr(seo_generate.key_vault, "is_daily_exhausted_error", lambda e: True)
     monkeypatch.setattr(seo_generate.key_vault, "is_account_disabled_error", lambda e: False)
     monkeypatch.setattr(seo_generate.key_vault, "_owner_group", lambda k: "general")
-    monkeypatch.setattr(seo_generate.key_vault, "mark_exhausted", lambda g, k: marked.append(k))
+    monkeypatch.setattr(seo_generate.key_vault, "mark_exhausted", lambda g, k, *a: marked.append(k))  # mark_failure가 재시도초를 넘긴다(2026-09-04)
     got = seo_generate.generate(_JOB)
     assert got["title"] == "샐 걱정 ZERO 텀블러"
     # ★어느 키를 먼저 쓰는지는 이제 정해져 있지 않다(2026-09-01). 키를 페이서로
