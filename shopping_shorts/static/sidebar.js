@@ -1104,7 +1104,7 @@
           return;
         }
         _cfRender(_cfState.items.length + "개 있음 — " + (d.source === "api_shared"
-          ? "쿠팡에 있습니다. 추적 링크는 내 파트너스 키를 등록해야 만들어집니다(검색만 가능)"
+          ? "쿠팡에 있습니다. 🔗 내 링크를 누르면 상품 URL을 복사하고 파트너스 링크 생성 창을 엽니다(내 API 키를 등록하면 자동)"
           : (d.source === "api" ? "내 추적 링크를 만드는 중…" : "🔗 내 링크를 누르면 추적 링크가 만들어집니다 (내 파트너스 키를 등록하면 더 빠르고 정확합니다)")));
         if (d.source === "api") _cfAutoLinks();     /* 키 있는 회원: 카드 전부에 짧은 링크를 한 번에 */
         if (!_cfState.chips.length) _cfSuggest(q);
@@ -1149,7 +1149,17 @@
       .then(function (d) {
         if (d && d.ok && d.shorten_url) { done(d.shorten_url); return; }
         if (it.partner_url) { done(it.partner_url); return; }   /* API 검색 카드엔 긴 추적 링크가 이미 있다 */
-        if (cell) cell.innerHTML = d && d.need_key ? '<a href="/settings#keys" style="color:#ffd76b">내 키 등록하면 자동 ↗</a>' : _cfEsc((d && d.error) || "실패");
+        if (d && d.need_key) {
+          /* ★키 없는 회원(2026-09-04 사장님 판단): 남의 링크를 대신 걸지 않는다. 파트너스 웹에서 **본인 링크**를
+             만들게 돕는다 — 상품 URL을 복사해 두고 링크 생성 화면을 연다(8단계 coupangMakeLink와 같은 방식).
+             링크 생성은 파트너스 가입 즉시 되고, 15만원 실적이 쌓이면 API가 열려 그때부터 자동이 된다. */
+          try { navigator.clipboard.writeText(it.url); } catch (e) {}
+          window.open("https://partners.coupang.com/#affiliate/ws/link", "_blank");
+          if (cell) cell.innerHTML = '상품 URL 복사됨 → 열린 파트너스 창에 붙여넣어 <b>내 링크</b>를 만드세요 · <a href="/settings#keys" style="color:#ffd76b">API 키 등록하면 자동 ↗</a>';
+          _cfRender("상품 URL을 복사했습니다. 파트너스 '링크 생성' 창에 붙여넣으면 내 추적 링크가 나옵니다(가입 즉시 가능). 판매 15만원이 쌓여 API 키를 받으면 여기서 자동으로 만들어집니다.", "#ffd76b");
+          return;
+        }
+        if (cell) cell.innerHTML = _cfEsc((d && d.error) || "실패");
       })
       .catch(function () { if (cell) cell.textContent = "네트워크 오류"; });
   }
