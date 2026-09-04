@@ -1,28 +1,18 @@
 {
  "wrap": true,
- "font": "TmonMonsori.ttf",
- "size": 62,
- "color": "#FFFFFF",
- "color2": "#FF3B30",
- "y": 15,
- "x": 51,
+ "font": "BlackHanSans.ttf",
+ "size": 69,
+ "color": "#111111",
+ "color2": "#111111",
+ "y": 19,
+ "x": 50,
  "weight": 900,
- "outline": true,
- "outline_color": "#000000",
- "outline_w": 10,
+ "outline": false,
+ "outline_color": "#FFFFFF",
+ "outline_w": 5,
  "box": false,
- "box_color": "#000000",
+ "box_color": "#FFFFFF",
  "box_pad": 16,
  "box_opacity": 100,
- "shadow": true,
- "shadow_color": "#000000",
- "shadow_d": 4,
- "text": "부모들을 오열하게 만든\n다이소 제품 ㄷㄷ",
- "highlight_rules": [
-  {
-   "keyword": "다이소 제품 ㄷㄷ",
-   "color": "#FF3B30",
-   "box": false
-  }
- ]
+ "text": "개발자도 예상 못한\n미친 사용법"
 }
