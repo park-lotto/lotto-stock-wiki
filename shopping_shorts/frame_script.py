@@ -106,6 +106,26 @@ MAX_SPAN_SEC = 7.0
 #   lite를 앞에 둔 이유: 25장까지 16초로 안정적이었고(4편 실측), 3.5-flash는 503 spike 이력이 있다.
 TAG_MODELS = ("gemini-3.1-flash-lite", "gemini-3.5-flash")
 
+# 2차 태깅 응답의 모양(문서 + 어휘 계약). ★response_schema로 **보내지 않는다**(위 TAG_MODELS 주석 —
+# 스키마 강제 호출이 120초 초과로 죽었다). 값 검증은 normalize_tags → script_extract._assign_seg_ids가 한다.
+# shot_role enum은 shot_roles.SHOT_ROLES 한 목록에서 나온다(test_shot_role_axis가 어휘 일치를 검사한다).
+_TAGS_SCHEMA = {
+    "type": "object",
+    "properties": {"tags": {"type": "array", "items": {"type": "object", "properties": {
+        "seg_no": {"type": "integer"},
+        "scene_desc": {"type": "string"},
+        "label": {"type": "string"},
+        "use_point": {"type": "string"},
+        "action": {"type": "string"},
+        "change": {"type": "string"},
+        "has_effect": {"type": "boolean"},
+        "is_key": {"type": "boolean"},
+        "shot_role": {"type": "string", "enum": list(_shot_roles.SHOT_ROLES)},
+        "product_benefits": {"type": "array", "items": {"type": "string"}},
+    }, "required": ["seg_no", "scene_desc", "shot_role"]}}},
+    "required": ["tags"],
+}
+
 
 def split_long_spans(bounds, max_span=MAX_SPAN_SEC):
     """max_span보다 긴 구간을 균등 분할한 경계 목록(순수 함수).
