@@ -4720,18 +4720,24 @@ def api_coupang_deeplink(body: dict):
     """상품 URL → 이 회원의 짧은 추적 링크(2026-09-04 랭킹 카드 '🛒 쿠팡 상품 있나' 모달용).
     키가 없으면 ok:False + 안내(작업은 안 막는다). 남의 추적 파라미터는 상품번호만 남긴다."""
     from shopping_shorts import keyctx as _kc
-    url = coupang_partners.canonical_product_url(str(body.get("url") or ""))
-    if not coupang_partners.parse_product_url(url):
+    # 단건(url) 또는 일괄(urls) — 검색 결과 카드 전부에 링크를 한 번에 붙일 때 일괄로 부른다(2026-09-04
+    #   사장님 "누르면 쿠파스 링크까지 찾아주는 걸로"). 쿠팡 딥링크 API는 URL 목록을 받는다.
+    raw_urls = body.get("urls") if isinstance(body.get("urls"), list) else [body.get("url")]
+    urls = [coupang_partners.canonical_product_url(str(u or "")) for u in raw_urls]
+    urls = [u for u in urls if coupang_partners.parse_product_url(u)]
+    if not urls:
         return JSONResponse(status_code=422, content={"ok": False, "error": "쿠팡 상품 URL이 아닙니다"})
     cid = _kc.owner_cid()
     ak, sk = _coupang_member_key(cid)
     if not ak:
-        return {"ok": False, "need_key": True, "url": url,
+        return {"ok": False, "need_key": True, "url": urls[0], "links": [],
                 "error": "내 파트너스 API 키가 없습니다 — 마이페이지 → 내 키 등록에서 넣으면 자동으로 만들어집니다"}
-    dl = coupang_partners.to_deeplink([url], ak, sk, customer_id=cid)
-    if dl and dl[0].get("shorten_url"):
-        return {"ok": True, "url": url, "shorten_url": dl[0]["shorten_url"], "landing_url": dl[0].get("landing_url", "")}
-    return {"ok": False, "url": url, "error": (dl[0].get("error") if dl else "딥링크 발급 실패")}
+    dl = coupang_partners.to_deeplink(urls[:20], ak, sk, customer_id=cid)
+    links = [{"url": d.get("original_url"), "shorten_url": d.get("shorten_url", ""), "error": d.get("error", "")} for d in (dl or [])]
+    first = links[0] if links else {}
+    if first.get("shorten_url"):
+        return {"ok": True, "url": first["url"], "shorten_url": first["shorten_url"], "links": links}
+    return {"ok": False, "url": urls[0], "links": links, "error": (first.get("error") or "딥링크 발급 실패")}
 
 
 def _coupang_search_creds(customer_id):

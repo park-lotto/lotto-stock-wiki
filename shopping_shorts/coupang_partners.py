@@ -180,7 +180,9 @@ def search_products(keyword, limit=10, access_key="", secret_key="", customer_id
                       "검색 링크를 열어 상품 URL을 복사해 붙여넣으세요.",
         }
     t0 = time.time()
-    path = f"{_API_BASE}/products/search?keyword={urllib.parse.quote(kw)}&limit={int(limit or 10)}"
+    # ★파트너스 검색 API는 limit 상한이 10이다(2026-09-04 라이브 실측: 12로 부르면 실패 → 릴레이 60초 대기로
+    #   떨어져 "찾는 중"에 멈춘 것처럼 보였다). 넘는 값은 여기서 자른다(호출부마다 적지 않는다, 0순위-B).
+    path = f"{_API_BASE}/products/search?keyword={urllib.parse.quote(kw)}&limit={max(1, min(int(limit or 10), 10))}"
     st, d = _call("GET", path, access_key, secret_key)
     oc = _outcome(st, d)
     _record(oc, op="search", customer_id=customer_id, http=(st or None),

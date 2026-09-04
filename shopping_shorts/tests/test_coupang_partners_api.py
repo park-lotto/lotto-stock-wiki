@@ -259,3 +259,29 @@ def test_save_without_key_drops_foreign_tagged_link(monkeypatch, tmp_path):
     body = r if isinstance(r, dict) else json.loads(r.body)
     assert body["ok"] and body["product"]["partner_url"] == "" and "내 파트너스 키" in body["product"]["partner_error"]
     assert body["final_link"] == "https://www.coupang.com/vp/products/1"
+
+
+
+def test_deeplink_endpoint_batch(monkeypatch):
+    """검색 결과 카드 전부에 링크를 한 번에 — urls 일괄 지원."""
+    from shopping_shorts import app as a
+    monkeypatch.setattr(a, "_coupang_member_key", lambda customer_id=None: ("AK", "SK"))
+    monkeypatch.setattr(cp, "_record", lambda *a_, **k: None)
+    monkeypatch.setattr(cp, "_call", lambda m, p, ak, sk, body=None, timeout=15: (200, {"rCode": "0", "data": [
+        {"originalUrl": u, "shortenUrl": "https://link.coupang.com/a/S" + u[-1], "landingUrl": ""} for u in body["coupangUrls"]]}))
+    r = a.api_coupang_deeplink({"urls": ["https://www.coupang.com/vp/products/1", "https://naver.com/x",
+                                          "https://link.coupang.com/re/AFFSDP?lptag=AF_X&pageKey=2"]})
+    assert r["ok"] and [l["shorten_url"] for l in r["links"]] == ["https://link.coupang.com/a/S1", "https://link.coupang.com/a/S2"]
+    assert r["links"][1]["url"] == "https://www.coupang.com/vp/products/2"
+
+
+
+def test_search_limit_is_capped_at_10(monkeypatch):
+    """★라이브 실측: limit=12면 파트너스 API가 실패해 릴레이 60초 대기로 떨어졌다. 상한 10을 코드가 지킨다."""
+    seen = {}
+    monkeypatch.setattr(cp, "_record", lambda *a, **k: None)
+    monkeypatch.setattr(cp, "_call", lambda m, p, ak, sk, body=None, timeout=15: (seen.update(path=p), (200, {"rCode": "0", "data": {"productData": []}}))[1])
+    cp.search_products("x", limit=12, access_key="AK", secret_key="SK")
+    assert seen["path"].endswith("&limit=10")
+    cp.search_products("x", limit=0, access_key="AK", secret_key="SK")
+    assert seen["path"].endswith("&limit=10")
