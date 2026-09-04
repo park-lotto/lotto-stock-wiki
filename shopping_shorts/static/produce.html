@@ -9155,6 +9155,7 @@ function renderCoupangSlot(d){
   COUPANG.partners_page=d.partners_link_page||'';
   COUPANG.product=d.product||null;
   COUPANG.dm_set=d.dm_set||null;   // 인포크 붙여넣기용 3줄(서버가 번호까지 붙여 보낸다)
+  COUPANG.suggestNo=d.suggest_number||0;   // ★내 마지막 번호+1 제안(2026-09-04)
   if(typeof d.has_partner_key!=='undefined') COUPANG.hasKey=!!d.has_partner_key;   // 회원 파트너스 키(2026-09-04)
   COUPANG.editing=false;
   const slot=document.getElementById('coupangSlot');
@@ -9249,7 +9250,7 @@ function coupangDmSet(){
       ${numTxt ? `<span class="hint">— ${esc(numTxt)}번</span>` : '<span class="hint">— 번호 없음</span>'}</div>
     <div style="display:flex;gap:6px;align-items:center;margin-top:7px">
       <span class="hint" style="min-width:74px">번호</span>
-      <input id="inpockNum" value="${esc(numTxt)}" placeholder="예) 29 — 비워두면 번호 없이 나갑니다"
+      <input id="inpockNum" value="${esc(numTxt || (COUPANG.suggestNo ? String(COUPANG.suggestNo) : ''))}" placeholder="예) 29 — 비워두면 번호 없이 나갑니다"
              inputmode="numeric" onkeydown="if(event.key==='Enter')saveInpockNumber()"
              style="flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);
                     border-radius:6px;padding:6px 8px;color:var(--txt);font-size:12px">
@@ -9262,7 +9263,9 @@ function coupangDmSet(){
     ${row('설명(고지)', d.dm_desc)}
     <div class="hint" style="margin-top:8px">${numTxt
       ? `인포크에 이 이름으로 올리면 시청자가 <b>${esc(numTxt)}</b>을 검색해 찾습니다.`
-      : '번호를 넣고 <b>번호 저장</b>을 누르면 위 문구에 번호가 붙습니다. 비워두면 번호 없이 나갑니다.'}</div>
+      : (COUPANG.suggestNo
+          ? `내 마지막 번호 다음인 <b>${COUPANG.suggestNo}</b>번을 넣어뒀습니다 — <b>번호 저장</b>을 누르면 위 문구에 붙습니다(고쳐도 됩니다).`
+          : '번호를 넣고 <b>번호 저장</b>을 누르면 위 문구에 번호가 붙습니다. 비워두면 번호 없이 나갑니다.')}</div>
   </div>`;
 }
 // 번호만 고쳐 저장한다. ★기존 상품 저장(/api/mix/product)과 **같은 출구**를 쓴다 —
