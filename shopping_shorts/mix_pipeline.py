@@ -760,7 +760,8 @@ def _prepare_sources(urls, work, store=None):
             ops_alert.raise_alert(
                 "source_download",
                 "소스 영상 다운로드가 전부 실패했습니다 — 수집 통로가 끊겼을 수 있습니다",
-                detail, store=store)
+                detail, store=store,
+                todo="고객 작업이 멈춥니다 — 소스 링크를 직접 열어 통로(인스타·유튜브)가 막혔는지 확인")
         except Exception as _ae:      # noqa: BLE001 — 알림 실패가 본작업을 막지 않는다
             # ★사유는 남긴다(2026-08-19 F-2). 알림이 조용히 죽으면 "사고가 났는데
             #   아무도 모른다"가 되고, 그게 이 알림을 만든 이유(08-03 실사고)였다.
