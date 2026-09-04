@@ -838,9 +838,12 @@ def api_reference(platform: str = "instagram", days: int = 0, min_comments: int 
         items, collected_at = store.archive_hits(
             min_comments=min_comments, max_comments=max_comments), None
     elif days > 0:
-        if platform != "instagram":
-            return {"ok": True, "items": [], "collected_at": None}
-        items, collected_at = store.hits_since(days, min_comments=min_comments), None
+        # ★플랫폼 그대로 넘긴다(2026-09-04 사장님 "유튜브는 48시간으로만 되어있는데
+        #   이번주 터진것·이번달도"). 여태 인스타가 아니면 빈 목록을 줬다 —
+        #   reel_history가 인스타 전용이었기 때문이고, 이제 platform 축이 생겼다.
+        #   추가 크롤은 그대로 0이다(이미 받아둔 것을 다시 보여줄 뿐).
+        items, collected_at = store.hits_since(
+            days, min_comments=min_comments, platform=platform), None
     elif platform == "instagram":
         items, collected_at = store.load_last_run()
     else:
@@ -11935,12 +11938,13 @@ def _code_admin(customer_id):
     return email.lower() in _ADMIN_EMAILS
 
 
-def _script_grounded(store, customer_id):
-    """2단계 '본 것만 쓰기' 모드 스위치(2026-09-04). 설정 `script_grounded_enabled`:
-      ""/"0" = 끔(종전 그대로, 기본) · "admin" = 관리자 계정만(사장님 실사용 테스트) · "1" = 전체.
-    ★고객 화면은 사장님이 통과시키기 전엔 한 글자도 안 바뀐다 — 기본이 끔이다."""
+def _setting_gate(store, key, customer_id):
+    """단계별 스위치 공용 판정(2026-09-04). 설정값:
+      ""/"0" = 끔(종전 그대로, 기본) · "admin" = 관리자 계정만(사장님 실사용 테스트) · "11,42" = 고객 목록 · "1" = 전체.
+    ★고객 화면은 사장님이 통과시키기 전엔 한 글자도 안 바뀐다 — 기본이 끔이다.
+    키: script_grounded_enabled(2단계 본 것만 쓰기) · edl_inherit_enabled(3단계 붙어 온 장면 그대로)."""
     try:
-        v = (store.get_setting("script_grounded_enabled", "") or "").strip().lower()
+        v = (store.get_setting(key, "") or "").strip().lower()
     except Exception:      # noqa: BLE001 — 설정 조회 실패는 '끔'
         return False
     if v == "1":
@@ -11952,6 +11956,11 @@ def _script_grounded(store, customer_id):
         ids = {x.strip() for x in v.split(",") if x.strip().isdigit()}
         return str(_as_cid(customer_id)) in ids or bool(_is_admin(customer_id))
     return False
+
+
+def _script_grounded(store, customer_id):
+    """2단계 '본 것만 쓰기' 스위치 — `_setting_gate` 참조."""
+    return _setting_gate(store, "script_grounded_enabled", customer_id)
 
 
 def _is_admin(customer_id):
@@ -12021,7 +12030,9 @@ _ADMIN_SETTING_KEYS = {"trial_days", "trial_grant_points", "trial_event_hours",
                        # 1단계 컷별 프레임 태깅(B1) 스위치 — "1"이면 켬(2026-09-04 수리 후 서버 실측 뒤 결정)
                        "frame_extract_enabled",
                        # 2단계 '본 것만 쓰기' — ""/"0" 끔 · "admin" 관리자만 · "11,42" 고객 허용 목록 · "1" 전체
-                       "script_grounded_enabled"}
+                       "script_grounded_enabled",
+                       # 3단계 '붙어 온 장면 그대로'(Gemini 0회·추측 층 없음) — 값 규약은 위와 같다
+                       "edl_inherit_enabled"}
 
 
 # ── 오류 신고(2026-08-24) ────────────────────────────────────────────────
@@ -16154,6 +16165,11 @@ def api_produce_mix_start(request: Request, background_tasks: BackgroundTasks, b
     script_structure = body.get("script_structure") or None
     if not isinstance(script_structure, dict):
         script_structure = None   # 잘못된 형식은 조용히 버린다(보관 전용이라 무해)
+    # ★3단계 상속 스위치(2026-09-04): 켜져 있으면 잡에 표식을 남겨 mix_pipeline이 2단계 출처 장면을 그대로 잇는다
+    #   (Gemini 0회·추측 층 없음). 기본 꺼짐 — 고객 화면 불변.
+    if _setting_gate(Store(DB_PATH), "edl_inherit_enabled", getattr(request.state, "customer_id", 0)):
+        script_structure = dict(script_structure or {})
+        script_structure["inherit_scenes"] = True
     # 유료게이트(2026-07-20 E): 제작소 2단계도 결국 run_mix_job→렌더로 돈이 나간다. /api/mix/start와
     # 동일하게 render 과금+글로벌캡을 건다 — 안 걸면 제작소 흐름으로 하루 상한·전역 상한을 통째로
     # 우회할 수 있다(1단계 script 과금은 별개 자원이라 render 과금을 대체하지 못한다). 검증(위 ssrf·

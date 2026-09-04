@@ -17827,7 +17827,9 @@ function s2Confirm(i){
   //   ⚠️새 통로를 만들지 않는다 — script_structure는 이미 dict로 3단계까지 가는 자리다.
   //   src_seg가 하나도 없으면(옛 대본·무자막 소스) 키를 안 만든다 = 종전 그대로.
   try{
-    const _srcs=(dr.beats||[]).map(b=>({role:(b&&b.role)||'', seg:(b&&b.src_seg)||''}));
+    // segs: 2단계 grounded가 남긴 장면 전부(첫 번째=대표). 3단계 상속(edl_inherit)이 alternates로 쓴다(2026-09-04).
+    const _srcs=(dr.beats||[]).map(b=>({role:(b&&b.role)||'', seg:(b&&b.src_seg)||'',
+      segs:Array.isArray(b&&b.src_segs)?b.src_segs.filter(Boolean):[]}));
     if(_srcs.some(x=>x.seg)) STATE.script_beat_sources=_srcs;
     else delete STATE.script_beat_sources;
   }catch(e){}

@@ -73,38 +73,65 @@ def _apply_beat_sources(beats, structure, seg_map):
     ★지어낸 번호는 무시한다 — seg_map에 실재하는 것만 쓴다(환각 방어).
     ★이미 그 장면을 쓰고 있으면 그대로 둔다. 다른 장면이면 primary를 갈아끼우고
       원래 primary는 alternates 맨 앞으로 살려 둔다(화면 재고를 버리지 않는다).
-    ★역할(role)이 맞는 것끼리만 짝짓는다 — 순서만 믿으면 비트 수가 다를 때 어긋난다.
+    ★역할(role)이 맞는 것끼리 먼저 짝짓는다 — 순서만 믿으면 비트 수가 다를 때 어긋난다.
+
+    ★순서 폴백(2026-08-31) — 역할 이름이 두 단계에서 갈려 출처가 버려지던 것.
+      실측(라이브 44잡·출처 329건): 역할 이름으로 붙는 건 **23%뿐**이었다.
+          2단계 어휘: hook, escalation, reveal, result, origin, spread…
+          3단계 어휘: hook, problem, solution, benefit, demonstration…
+      우연히 같은 hook·cta만 통과하고 가운데는 전부 버려진다(한쪽 영어·한쪽 한글이라
+      0건인 잡도 40개 중 5개). **비트 수가 같을 때만** i번째끼리 이어 살린다 —
+      개수가 같으면 i번째 문장 = i번째 출처가 보장된다(실측 80%가 해당).
+      개수가 다르면 짝지을 근거가 없으므로 종전대로 역할 매칭만 쓴다.
+      `BEAT_SRC_ORDER=off`로 끄면 종전 동작(A/B 대조용).
     """
     srcs = (structure or {}).get("beat_sources")
     if not srcs or not isinstance(srcs, list):
         return beats
-    by_role = {}
-    for i, x in enumerate(srcs):
-        if isinstance(x, dict) and x.get("seg"):
-            by_role.setdefault(str(x.get("role") or "").lower(), []).append(x["seg"])
-    if not by_role:
+    valid = [x for x in srcs if isinstance(x, dict) and x.get("seg")]
+    if not valid:
         return beats
     from shopping_shorts import edit_plan as _ep
-    for b in beats:
-        role = str(b.get("role") or "").lower()
-        want = by_role.get(role)
-        if not want:
-            continue
-        sid = want.pop(0)
+
+    def _put(b, sid):
+        """비트에 출처 장면을 꽂는다 — 판단은 여기 한 곳에서만 한다(0순위-B).
+        붙였으면 True. 지어낸 번호·이미 쓰는 장면이면 False(종전 화면 유지)."""
         if sid not in seg_map:
-            continue                      # 지어낸 번호 — 무시하고 종전 화면을 쓴다
+            return False                  # 지어낸 번호 — 무시하고 종전 화면을 쓴다
         cur = (b.get("primary") or {}).get("seg_id")
         if cur == sid:
-            continue
+            return False
         g = _ep._ground_ref({"seg_id": sid}, seg_map)
         if not g:
-            continue
+            return False
         alts = list(b.get("alternates") or [])
         if b.get("primary"):
             alts.insert(0, b["primary"])
         b["primary"] = g
         b["alternates"] = [a for a in alts if (a or {}).get("seg_id") != sid]
         b["src_seg_applied"] = sid        # 사후에 '출처를 따라갔는가'를 셀 수 있게 남긴다
+        return True
+
+    # ★개수가 같으면 **자리로** 잇는다(2026-08-31). 2단계는 칸 순서대로 beats를 내고
+    #   3단계도 그 대본을 순서대로 쪼개므로, 개수가 같으면 i번째끼리가 곧 같은 문장이다.
+    #   이름은 두 단계가 따로 지어 믿을 수 없다 — 실측 44잡 중 **36잡이 '일부만 겹침'**
+    #   (hook·cta만 우연히 같고 가운데는 escalation↔problem처럼 갈림). 자리로 이으면
+    #   그 36잡이 통째로 살아난다(역할 매칭만 쓰면 329건 중 75건=23%만 붙었다).
+    #   `BEAT_SRC_ORDER=off`면 종전 동작(A/B 대조용).
+    if (len(valid) == len(beats)
+            and (os.getenv("BEAT_SRC_ORDER", "on") or "on").strip().lower()
+            not in ("off", "0", "false")):
+        for b, x in zip(beats, valid):
+            _put(b, x["seg"])
+        return beats
+    # 개수가 다르면 자리를 믿을 수 없다 — 종전대로 역할 이름으로만 짝짓는다.
+    by_role = {}
+    for x in valid:
+        by_role.setdefault(str(x.get("role") or "").lower(), []).append(x["seg"])
+    for b in beats:
+        want = by_role.get(str(b.get("role") or "").lower())
+        if want:
+            _put(b, want.pop(0))
     return beats
 
 
@@ -483,7 +510,8 @@ class Store:
                     comments INTEGER,
                     first_seen TEXT,
                     last_seen TEXT,
-                    upload_ts TEXT
+                    upload_ts TEXT,
+                    platform TEXT DEFAULT 'instagram'
                 )
             """)
             c.execute("CREATE INDEX IF NOT EXISTS idx_reel_history_user "
@@ -492,6 +520,20 @@ class Store:
                       "ON reel_history(last_seen)")
             # 업로드 시각(2026-07-24): 기존 DB용 마이그레이션. first_seen/last_seen은 '수집' 시각이라
             # 활동여부(채널이 최근 영상을 올렸나)엔 부적합 — 실제 게시 시각(item.timestamp=createdAt)을 저장한다.
+            # 플랫폼 축(2026-09-04 사장님 "유튜브는 48시간으로만 되어있는데 이번주·이번달도").
+            # 여태 이 표는 인스타 전용이라 app.py가 platform!='instagram'이면 빈 목록을 줬다.
+            # 이미 있으면 sqlite가 "duplicate column"으로 던진다 — 정상이라 넘어가되
+            # 조용히 넘기지는 않는다(다른 사유로 실패하면 기간탭이 통째로 빈다).
+            try:
+                c.execute("ALTER TABLE reel_history ADD COLUMN platform TEXT DEFAULT 'instagram'")
+            except Exception as e:  # noqa: BLE001 — 이미 있는 컬럼이면 정상
+                if "duplicate column" not in str(e).lower():
+                    print(f"[경고] reel_history.platform 추가 실패: {e!r}", file=sys.stderr)
+            try:
+                c.execute("CREATE INDEX IF NOT EXISTS idx_reel_history_platform "
+                          "ON reel_history(platform, comments)")
+            except Exception as e:  # noqa: BLE001 — 인덱스는 성능용이라 없어도 동작한다
+                print(f"[경고] reel_history platform 인덱스 실패: {e!r}", file=sys.stderr)
             try:
                 c.execute("ALTER TABLE reel_history ADD COLUMN upload_ts TEXT")
             except sqlite3.OperationalError:
@@ -2512,6 +2554,13 @@ class Store:
         with self._conn() as c:
             c.execute("INSERT OR REPLACE INTO settings(key, value) VALUES(?,?)",
                       (f"last_run::{platform}", json.dumps({"items": items, "collected_at": collected_at}, ensure_ascii=False)))
+            # ★히스토리도 남긴다(2026-09-04) — 여태 인스타(save_last_run)만 쌓아서
+            #   유튜브는 '이번 주/이번 달'이 통째로 빈 목록이었다. 추가 크롤 0이다.
+            try:
+                self._record_history(c, items, collected_at, platform=platform)
+            except Exception as e:  # noqa: BLE001 — 히스토리 실패가 수집 저장을 막지 않는다
+                # ★조용히 넘기면 "이번 주 탭이 왜 비지?"를 영영 못 찾는다(인스타 쪽 교훈).
+                print(f"[경고] {platform} 히스토리 적재 실패: {e!r}", file=sys.stderr)
 
     def merge_last_run_platform(self, platform, new_items, collected_at, key="shortcode"):
         """기존 수집분에 새 항목을 **한 트랜잭션 안에서** 합친다. 새로 담긴 개수를 준다.
@@ -3011,7 +3060,7 @@ class Store:
     def _norm_username(u):
         return (u or "").strip().lstrip("@").lower()
 
-    def _record_history(self, c, items, collected_at):
+    def _record_history(self, c, items, collected_at, platform="instagram"):
         """수집 items를 reel_history에 shortcode 기준 upsert하고 30일 지난 행을 정리.
         같은 커넥션(c)에서 실행 — save_last_run과 원자적으로 커밋된다.
         first_seen은 최초값 유지, last_seen·조회수·댓글수·썸네일·캡션·카테고리는 갱신."""
@@ -3023,18 +3072,19 @@ class Store:
             c.execute(
                 "INSERT INTO reel_history"
                 "(shortcode, username, name, category, url, thumb, caption,"
-                " views, comments, first_seen, last_seen, upload_ts) "
-                "VALUES(?,?,?,?,?,?,?,?,?,?,?,?) "
+                " views, comments, first_seen, last_seen, upload_ts, platform) "
+                "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?) "
                 "ON CONFLICT(shortcode) DO UPDATE SET "
                 "  username=excluded.username, name=excluded.name,"
                 "  category=excluded.category, url=excluded.url, thumb=excluded.thumb,"
                 "  caption=excluded.caption, views=excluded.views,"
                 "  comments=excluded.comments, last_seen=excluded.last_seen,"
-                "  upload_ts=COALESCE(NULLIF(excluded.upload_ts,''), reel_history.upload_ts)",
+                "  upload_ts=COALESCE(NULLIF(excluded.upload_ts,''), reel_history.upload_ts),"
+                "  platform=excluded.platform",
                 (sc, user, it.get("name"), it.get("category"), it.get("url"),
                  it.get("thumbnail"), it.get("caption"),
                  int(it.get("views") or 0), int(it.get("comments") or 0),
-                 collected_at, collected_at, str(it.get("timestamp") or "")),
+                 collected_at, collected_at, str(it.get("timestamp") or ""), platform),
             )
         # 30일 정리 — last_seen이 30일보다 오래된 행 삭제(수집이 곧 정리 트리거).
         cutoff = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
@@ -3132,9 +3182,10 @@ class Store:
                 "SELECT shortcode, username, name, category, url, thumb, caption, "
                 "       views, comments, first_seen, upload_ts "
                 "FROM reel_history "
-                "WHERE comments >= ? AND first_seen >= datetime('now', ?) "
+                "WHERE platform = ? AND comments >= ? "
+                "  AND first_seen >= datetime('now', ?) "
                 "ORDER BY comments DESC LIMIT ?",
-                (min_comments, f"-{int(days)} day", int(limit))
+                (platform, min_comments, f"-{int(days)} day", int(limit))
             ).fetchall()
         return [{
             "shortcode": r[0], "username": r[1], "name": r[2] or "",

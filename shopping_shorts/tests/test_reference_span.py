@@ -73,8 +73,9 @@ class TestApiWiring:
         seen = {}
 
         class _S:
-            def hits_since(self, days, min_comments=500):
+            def hits_since(self, days, min_comments=500, platform="instagram"):
                 seen["days"], seen["min"] = days, min_comments
+                seen["platform"] = platform          # 2026-09-04: 플랫폼도 전달돼야 한다
                 return []
 
             def removed_usernames(self):
@@ -85,7 +86,29 @@ class TestApiWiring:
         monkeypatch.setattr(app_mod, "_attach_durations", lambda *a, **k: None)
         monkeypatch.setattr(app_mod, "_attach_posted_at", lambda *a, **k: None)
         app_mod.api_reference(platform="instagram", days=7, min_comments=500)
-        assert seen == {"days": 7, "min": 500}
+        assert seen == {"days": 7, "min": 500, "platform": "instagram"}
+
+    def test_유튜브도_기간탭이_열린다(self, monkeypatch):
+        """★2026-09-04 사장님 "유튜브는 48시간으로만 되어있는데 이번주·이번달도".
+        여태 platform!='instagram'이면 **빈 목록**을 돌려줘 유튜브는 기간탭이 통째로 죽어 있었다.
+        이제 플랫폼을 그대로 store로 넘긴다(추가 크롤은 여전히 0)."""
+        from shopping_shorts import app as app_mod
+        seen = {}
+
+        class _S:
+            def hits_since(self, days, min_comments=500, platform="instagram"):
+                seen["platform"] = platform
+                return []
+
+            def removed_usernames(self):
+                return set()
+
+        monkeypatch.setattr(app_mod, "Store", lambda *a, **k: _S())
+        monkeypatch.setattr(app_mod, "_attach_vision_tags", lambda *a, **k: None)
+        monkeypatch.setattr(app_mod, "_attach_durations", lambda *a, **k: None)
+        monkeypatch.setattr(app_mod, "_attach_posted_at", lambda *a, **k: None)
+        app_mod.api_reference(platform="youtube", days=7, min_comments=500)
+        assert seen.get("platform") == "youtube", "유튜브가 store까지 안 갔다(옛 인스타 전용 차단)"
 
 
 class TestFrontend:
