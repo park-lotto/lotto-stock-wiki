@@ -59,3 +59,34 @@ def test_기간은_first_seen으로_걸린다(tmp_path):
             (old, now))
     assert [r["shortcode"] for r in s.hits_since(7, min_comments=500, platform="youtube")] == []
     assert [r["shortcode"] for r in s.hits_since(30, min_comments=500, platform="youtube")] == ["old1"]
+
+
+def test_유튜브는_조회수로_거른다(tmp_path):
+    """★2026-09-04 사장님 "유튭은 댓글이 필요없어, 조회수 기반이야".
+
+    플랫폼마다 '터진 것'의 잣대가 다르다 — 실측 댓글 중앙값이 인스타 60 / 유튜브 **1**이라
+    유튜브에 댓글 문턱(500/1000)을 쓰면 이번 주 48편·이번 달 27편밖에 안 남아 빈 화면이 된다.
+    """
+    from datetime import datetime, timezone
+    s = Store(tmp_path / "t.db")
+    now = datetime.now(timezone.utc).isoformat()
+    s.save_last_run_platform("youtube", [
+        {"shortcode": "big", "username": "c1", "name": "채널", "category": "",
+         "url": "u", "thumbnail": "t", "caption": "천재가 만든 제품의 정체",
+         "views": 300000, "comments": 3},          # 조회수 크고 댓글 거의 없음 = 유튜브의 '터진 것'
+        {"shortcode": "mid", "username": "c2", "name": "채널", "category": "",
+         "url": "u", "thumbnail": "t", "caption": "살림팁", "views": 50000, "comments": 900},
+    ], now)
+
+    by_views = [r["shortcode"] for r in
+                s.hits_since(7, min_comments=0, platform="youtube", min_views=100000)]
+    assert by_views == ["big"], "조회수 문턱이 안 걸린다 — 유튜브 기간탭이 엉뚱해진다"
+
+    by_comments = [r["shortcode"] for r in
+                   s.hits_since(7, min_comments=500, platform="youtube")]
+    assert by_comments == ["mid"], "댓글 기준은 종전대로여야 한다(인스타가 이걸 쓴다)"
+
+    # 정렬도 조회수 — 댓글 많은 것이 위로 오면 안 된다
+    both = [r["shortcode"] for r in
+            s.hits_since(7, min_comments=0, platform="youtube", min_views=1000)]
+    assert both == ["big", "mid"], f"조회수순이 아니다: {both}"

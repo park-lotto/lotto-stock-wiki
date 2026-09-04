@@ -73,9 +73,11 @@ class TestApiWiring:
         seen = {}
 
         class _S:
-            def hits_since(self, days, min_comments=500, platform="instagram"):
+            def hits_since(self, days, min_comments=500, platform="instagram",
+                           min_views=0):
                 seen["days"], seen["min"] = days, min_comments
                 seen["platform"] = platform          # 2026-09-04: 플랫폼도 전달돼야 한다
+                seen["min_views"] = min_views        # 2026-09-04: 유튜브는 조회수 기준
                 return []
 
             def removed_usernames(self):
@@ -86,7 +88,7 @@ class TestApiWiring:
         monkeypatch.setattr(app_mod, "_attach_durations", lambda *a, **k: None)
         monkeypatch.setattr(app_mod, "_attach_posted_at", lambda *a, **k: None)
         app_mod.api_reference(platform="instagram", days=7, min_comments=500)
-        assert seen == {"days": 7, "min": 500, "platform": "instagram"}
+        assert seen == {"days": 7, "min": 500, "platform": "instagram", "min_views": 0}
 
     def test_유튜브도_기간탭이_열린다(self, monkeypatch):
         """★2026-09-04 사장님 "유튜브는 48시간으로만 되어있는데 이번주·이번달도".
@@ -96,8 +98,10 @@ class TestApiWiring:
         seen = {}
 
         class _S:
-            def hits_since(self, days, min_comments=500, platform="instagram"):
+            def hits_since(self, days, min_comments=500, platform="instagram",
+                           min_views=0):
                 seen["platform"] = platform
+                seen["min_views"] = min_views
                 return []
 
             def removed_usernames(self):
@@ -107,8 +111,9 @@ class TestApiWiring:
         monkeypatch.setattr(app_mod, "_attach_vision_tags", lambda *a, **k: None)
         monkeypatch.setattr(app_mod, "_attach_durations", lambda *a, **k: None)
         monkeypatch.setattr(app_mod, "_attach_posted_at", lambda *a, **k: None)
-        app_mod.api_reference(platform="youtube", days=7, min_comments=500)
+        app_mod.api_reference(platform="youtube", days=7, min_comments=0, min_views=100000)
         assert seen.get("platform") == "youtube", "유튜브가 store까지 안 갔다(옛 인스타 전용 차단)"
+        assert seen.get("min_views") == 100000, "조회수 문턱이 store까지 안 갔다"
 
 
 class TestFrontend:
