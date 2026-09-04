@@ -276,7 +276,9 @@ def test_태깅은_TAG_BATCH_구간씩_나눠_부르고_자리를_전체_기준�
         def generate_content(self, model, contents, config):
             n_img = len(contents) - 1
             calls.append(n_img)
-            tags = [{"seg_no": k + 1, "scene_desc": f"batch{len(calls)}-{k+1}", "shot_role": "완성"}
+            # 모델은 띠에 찍힌 **전체 번호**로 답한다(2026-09-05) — 묶음 시작 오프셋을 더해 흉내낸다
+            b0 = sum(calls[:-1])
+            tags = [{"seg_no": b0 + k + 1, "scene_desc": f"batch{len(calls)}-{k+1}", "shot_role": "완성"}
                     for k in range(n_img)]
             return _FakeResp('{"tags": ' + __import__("json").dumps(tags, ensure_ascii=False) + '}')
 
@@ -406,3 +408,35 @@ def test_인벤토리와_2단계_장면목록은_text_ko를_말로_쓴다():
     block = script_generate._mix_source_block([{"name": "x", "full_text": "Mix butter", "structure": {},
                                                 "segments": [seg]}])
     assert "말:버터를 섞어요" in block
+
+
+def test_띠에는_구간_번호가_찍힌다(tmp_path):
+    from PIL import Image
+    paths = []
+    for i in range(3):
+        p = tmp_path / f"f{i}.jpg"; Image.new("RGB", (64, 36), (200, 200, 200)).save(p); paths.append(str(p))
+    out = fs.make_strip(paths, str(tmp_path / "strip.jpg"), label="#12 47.0s")
+    g = Image.open(out)
+    assert g.getpixel((2, 2)) != (200, 200, 200), "왼쪽 위 번호 상자가 없다"
+    assert fs.make_strip(paths, str(tmp_path / "strip2.jpg")) and Image.open(str(tmp_path / "strip2.jpg")).getpixel((2, 2)) == (200, 200, 200)
+
+
+def test_extract는_띠마다_전체_번호_라벨을_준다(tmp_path):
+    from PIL import Image
+    seen = []
+    real_make_strip = fs.make_strip
+
+    def spy(paths, out_path, height=fs.STRIP_HEIGHT, label=None):
+        seen.append(label)
+        return real_make_strip(paths, out_path, height, label)
+    fs.make_strip = spy
+    try:
+        def real_frame_at(path, dest, ts, filename=None):
+            p = tmp_path / filename; Image.new("RGB", (64, 36), (1, 2, 3)).save(p); return str(p)
+        fs.extract_script_frames("v.mp4", "s1", _no_classic=True, get_boundaries=lambda p: [0.0, 3.0, 6.0, 9.0],
+                                 extract_frame_at=real_frame_at, extract_audio=lambda v, o: None,
+                                 transcribe_words=lambda m: None, story_brief=lambda *a: {},
+                                 tag_frames=lambda g, c, s, b=None: [{"scene_desc": "a", "shot_role": "완성"}] * len(s))
+    finally:
+        fs.make_strip = real_make_strip
+    assert seen == ["#1 0.0s", "#2 3.0s", "#3 6.0s"]
