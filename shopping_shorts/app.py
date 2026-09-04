@@ -838,9 +838,12 @@ def api_reference(platform: str = "instagram", days: int = 0, min_comments: int 
         items, collected_at = store.archive_hits(
             min_comments=min_comments, max_comments=max_comments), None
     elif days > 0:
-        if platform != "instagram":
-            return {"ok": True, "items": [], "collected_at": None}
-        items, collected_at = store.hits_since(days, min_comments=min_comments), None
+        # ★플랫폼 그대로 넘긴다(2026-09-04 사장님 "유튜브는 48시간으로만 되어있는데
+        #   이번주 터진것·이번달도"). 여태 인스타가 아니면 빈 목록을 줬다 —
+        #   reel_history가 인스타 전용이었기 때문이고, 이제 platform 축이 생겼다.
+        #   추가 크롤은 그대로 0이다(이미 받아둔 것을 다시 보여줄 뿐).
+        items, collected_at = store.hits_since(
+            days, min_comments=min_comments, platform=platform), None
     elif platform == "instagram":
         items, collected_at = store.load_last_run()
     else:
