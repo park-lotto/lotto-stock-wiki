@@ -285,3 +285,19 @@ def test_search_limit_is_capped_at_10(monkeypatch):
     assert seen["path"].endswith("&limit=10")
     cp.search_products("x", limit=0, access_key="AK", secret_key="SK")
     assert seen["path"].endswith("&limit=10")
+
+
+
+def test_identify_endpoint_turns_thumbnail_into_queries(monkeypatch, tmp_path):
+    """'🛒 쿠팡에 있나?'는 사람이 검색어를 안 친다 — 썸네일 판독(product_name) → 검색어 후보."""
+    from shopping_shorts import app as a, product_name, coupang_query
+    from shopping_shorts.store import Store
+    db = tmp_path / "t.db"; monkeypatch.setattr(a, "DB_PATH", str(db)); Store(str(db))
+    monkeypatch.setattr(product_name, "identify_many", lambda items, db_path, **k: {items[0]["shortcode"]: "의류 태깅건"})
+    monkeypatch.setattr(coupang_query, "suggest", lambda target, script: ["옷 태그건", "의류 태깅건", "택건"])
+    r = a.api_coupang_identify({"shortcode": "ABC", "thumbnail": "https://x/t.jpg"})
+    assert r["ok"] and r["product"] == "의류 태깅건" and r["queries"][0] == "의류 태깅건" and "옷 태그건" in r["queries"]
+    monkeypatch.setattr(product_name, "identify_many", lambda items, db_path, **k: {})
+    r = a.api_coupang_identify({"shortcode": "ABC", "thumbnail": "https://x/t.jpg"})
+    assert r["ok"] is False and "직접" in r["error"]
+    assert a.api_coupang_identify({"shortcode": ""}).status_code == 422

@@ -4715,6 +4715,41 @@ def _coupang_member_key(customer_id=None):
         return "", ""
 
 
+@app.post("/api/coupang/identify")
+def api_coupang_identify(body: dict):
+    """랭킹·담기 카드의 '🛒 쿠팡에 있나?' — 사람이 검색어를 치지 않는다(2026-09-04 사장님 "숏템파워검색처럼
+    자동으로"). 썸네일을 비전 모델에 보여 **실물 제품명**을 뽑고(product_name.identify_many, 캐시됨),
+    그 이름을 쿠팡 검색어 후보로 다듬어(coupang_query.suggest) 돌려준다. 화면은 첫 후보로 바로 검색한다."""
+    from shopping_shorts import product_name as _pn, coupang_query
+    sc = os.path.basename(str(body.get("shortcode") or "")).strip()
+    thumb = str(body.get("thumbnail") or "").strip()
+    if not sc:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "shortcode 없음"})
+    store = Store(DB_PATH)
+    if not thumb:
+        try:
+            with store._conn() as c:
+                row = c.execute("SELECT thumbnail FROM channel_archive WHERE shortcode=?", (sc,)).fetchone()
+                thumb = (row[0] or "") if row else ""
+        except Exception:                                   # noqa: BLE001
+            thumb = ""
+        if not thumb:
+            thumb = _last_run_thumb(store, sc)
+    try:
+        pmap = _pn.identify_many([{"shortcode": sc, "thumbnail": thumb}], DB_PATH)
+    except Exception as e:                                  # noqa: BLE001 — 판독 실패가 500이면 안 된다
+        return {"ok": False, "product": "", "queries": [], "error": f"판독 실패: {type(e).__name__}"}
+    product = (pmap.get(sc) or "").strip()
+    if not product:
+        return {"ok": False, "product": "", "queries": [],
+                "error": "썸네일에서 제품을 특정하지 못했습니다 — 제품명을 직접 넣어 찾아보세요"}
+    try:
+        qs = [q for q in (coupang_query.suggest(product, "") or []) if q and q != product]
+    except Exception:                                       # noqa: BLE001
+        qs = []
+    return {"ok": True, "product": product, "queries": [product] + qs[:5]}
+
+
 @app.post("/api/coupang/deeplink")
 def api_coupang_deeplink(body: dict):
     """상품 URL → 이 회원의 짧은 추적 링크(2026-09-04 랭킹 카드 '🛒 쿠팡 상품 있나' 모달용).
