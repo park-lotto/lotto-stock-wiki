@@ -541,9 +541,10 @@ def aggregates(hours=24):
             #   실측: 죽은 키 1개를 34분간 12번 때린 것이 "12건 사망"으로 읽혀,
             #   무더기 사고로 오인됐다. 처방(키를 빼라)의 단위도 키 개수다.
             out["dead_keys"] = [dict(r) for r in conn.execute(
-                "SELECT service, pool, key_tail, COUNT(*) hits, MIN(ts) first_ts, MAX(ts) last_ts "
+                "SELECT service, pool, key_tail, customer_id, COUNT(*) hits, "
+                "MIN(ts) first_ts, MAX(ts) last_ts "
                 "FROM api_events WHERE outcome=? AND ts >= ? "
-                "GROUP BY service, pool, key_tail ORDER BY hits DESC LIMIT 50",
+                "GROUP BY service, pool, key_tail, customer_id ORDER BY hits DESC LIMIT 50",
                 (OUT_AUTH, since))]
 
             out["heartbeats"] = [dict(r) for r in conn.execute(
@@ -577,6 +578,12 @@ def _when_suffix(ts):
         return ""
 
 
+def _problem_signature(problems):
+    """경보 중복 판정용 서명 — 숫자(횟수·시각·분 전)를 지워 '무엇이 문제인가'만 남긴다."""
+    import re as _re
+    return "|".join(sorted(_re.sub(r"[0-9]+", "#", p) for p in problems))
+
+
 def verdict(snap=None, agg=None):
     """지금 상태 한 줄 + 처방. danger가 새로 켜지면 ops_alert로 사람에게 민다."""
     if not _enabled():                           # 기록을 껐으면 묵은 이벤트로 경보하지 않는다(리뷰 13)
@@ -605,14 +612,23 @@ def verdict(snap=None, agg=None):
                 problems.append(f"{svc}: 무음 폴백 {row['n']}건 — 고객이 무음 영상을 받았다")
             # OUT_AUTH는 아래에서 '키 개수' 기준으로 따로 판정한다(호출 건수로 세지 않는다).
         # ★죽은 키 판정 — 키 개수가 본체, 호출 횟수는 "얼마나 헛되이 때렸나"의 근거.
-        dead_by_svc = {}
+        #   ★회원이 직접 넣은 키(customer_id 있음)가 죽은 것은 **운영사고가 아니다**(2026-09-04
+        #     사장님 "계속 운영사고가 뜬다" — 실측: typecast 183건·elevenlabs 252건이 전부 회원 340·268의
+        #     키였는데 "죽은 키 1개()"로 danger가 울렸다). 그 키는 회원이 바꿔야 풀린다 → warn으로
+        #     회원 번호를 붙여 알린다. 운영 키(customer_id 없음)만 danger.
+        dead_by_svc, member_dead = {}, {}
         for d in (agg.get("dead_keys") or []):
             s = d.get("service")
+            tail = ("…" + str(d["key_tail"])) if d.get("key_tail") else "꼬리 미기록"
+            if d.get("customer_id"):
+                m = member_dead.setdefault((s, str(d["customer_id"])), {"hits": 0, "last": ""})
+                m["hits"] += d.get("hits", 0)
+                m["last"] = max(m["last"], d.get("last_ts") or "")
+                continue
             e = dead_by_svc.setdefault(s, {"keys": 0, "hits": 0, "tails": [], "last": ""})
             e["keys"] += 1
             e["hits"] += d.get("hits", 0)
-            if d.get("key_tail"):
-                e["tails"].append("…" + str(d["key_tail"]))
+            e["tails"].append(tail)
             lt = d.get("last_ts") or ""
             if lt > e["last"]:
                 e["last"] = lt
@@ -620,6 +636,10 @@ def verdict(snap=None, agg=None):
             problems.append(
                 f"{s}: 죽은 키 {e['keys']}개({', '.join(e['tails'][:3])})를 "
                 f"{e['hits']}번 헛되이 호출{_when_suffix(e['last'])} — 그 키를 빼야 시간을 안 버린다")
+        for (s, cid), m in member_dead.items():
+            warns.append(
+                f"{s}: 회원 {cid}의 키가 죽음({m['hits']}번 실패{_when_suffix(m['last'])}) — "
+                f"회원이 키를 바꿔야 한다(운영 키 문제 아님)")
 
         # 실패율은 **진짜 실패만** 센다(분당 한도는 아래에서 따로 본다).
         for svc, f in fails.items():
@@ -671,10 +691,13 @@ def verdict(snap=None, agg=None):
     if level == "danger":
         try:
             from shopping_shorts import ops_alert
+            # ★같은 내용이면 30분마다 다시 올리지 않는다(2026-09-04 사장님 "계속 뜬다").
+            #   내용(어떤 키·어떤 서비스)이 바뀔 때만 새 경보. 시각·횟수는 서명에서 뺀다.
             ops_alert.raise_alert(
                 "api_health_danger",
                 f"[API관측판 {checked_at}] " + problems[0],
-                f"[{checked_at} KST · 최근 1시간 기준]\n" + " / ".join(problems)[:450])
+                f"[{checked_at} KST · 최근 1시간 기준]\n" + " / ".join(problems)[:450],
+                signature=_problem_signature(problems))
         except Exception as e:            # noqa: BLE001 — 경보 실패가 판정을 막으면 안 된다
             log.warning("api_health: danger 경보 실패(무시) %r", e)
     return {"level": level, "msg": msg, "problems": problems, "warns": warns,
