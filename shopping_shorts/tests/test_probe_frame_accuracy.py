@@ -1,0 +1,55 @@
+# -*- coding: utf-8 -*-
+"""1단계 정확도 서버 실측 프로브(SSH 없이 관리자 API) — 순수 부분과 배선."""
+import json
+import os
+import tempfile
+from pathlib import Path
+
+from shopping_shorts import probe_frame_accuracy as P
+
+
+def test_summarize():
+    s = P.summarize([{"classic_score": 0.8, "b1_score": 1.0, "b1_secs": 10},
+                     {"classic_score": 0.9, "b1_score": 0.7, "b1_secs": 20},
+                     {"classic_score": 0.5, "b1_score": 0.5, "b1_secs": 30},
+                     {"classic_score": 0.6, "b1_error": "x"}])
+    assert s["videos"] == 4 and s["b1_better"] == 1 and s["classic_better"] == 1 and s["tie"] == 1
+    assert s["classic_avg"] == 0.7 and s["b1_avg"] == 0.733 and s["b1_fail"] == 1
+
+
+def test_pick_sources_는_영상이_남아_있는_소스만_고른다():
+    from shopping_shorts.store import Store
+    d = tempfile.mkdtemp()
+    st = Store(os.path.join(d, "t.db"))
+    work = Path(d) / "work"
+    ex = {"s0": {"segments": [{"start": 0, "end": 1, "scene_desc": "a"}]},
+          "s1": {"segments": [{"start": 0, "end": 1, "scene_desc": "b"}]}}
+    with st._conn() as c:
+        c.execute("INSERT INTO mix_jobs(job_id, urls_json, target_seconds, structure, status, extract_json, created_at, updated_at) "
+                  "VALUES('j1','[]',25,'template','done',?,'2026-09-05T00:00:00','2026-09-05T00:00:00')",
+                  (json.dumps(ex),))
+    (work / "j1" / "s0").mkdir(parents=True)
+    (work / "j1" / "s0" / "s0.mp4").write_bytes(b"x")          # s0만 영상이 남아 있다
+    got = P.pick_sources(st, work, n=10)
+    assert [(g["job_id"], g["vid"]) for g in got] == [("j1", "s0")]
+    assert got[0]["classic"] and got[0]["path"].endswith("s0.mp4")
+
+
+def test_start_는_동시_1건(monkeypatch):
+    import threading
+    started = []
+    monkeypatch.setattr(P, "_run", lambda *a: started.append(a) or threading.Event().wait(0.2))
+    P._STATE.update(status="idle")
+    assert P.start(None, "w", "o", n=5) is True
+    assert P.start(None, "w", "o", n=5) is False      # 도는 중엔 거절
+    assert P.state()["status"] == "running"
+    import time; time.sleep(0.4)
+    P._STATE.update(status="idle")
+
+
+def test_api_배선(monkeypatch):
+    import inspect
+    from shopping_shorts import app as A
+    src = inspect.getsource(A)
+    assert '@app.post("/api/admin/probe/frame_accuracy")' in src and '@app.get("/api/admin/probe/frame_accuracy")' in src
+    assert "_require_admin(request)" in inspect.getsource(A.api_admin_probe_frame_accuracy_start)

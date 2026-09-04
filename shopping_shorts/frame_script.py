@@ -492,30 +492,44 @@ def _gemini_tag_frames(frame_groups, caption, segs, brief=None):
             f"\n캡션(참고):{caption or '(없음)'}")
         parts = [prompt] + parts_img
         got = None
+        # ★묶음마다 키를 새로 고른다(2026-09-05) — _current_key_and_idx는 라운드로빈이라 부를 때마다 다음 키.
+        #   종전엔 함수 시작에 한 번만 골라 한 영상의 모든 묶음이 같은 키를 때렸다(분당 한도·503 스파이크에 취약,
+        #   실측 s3 133~280초 흔들림). 503/429면 같은 모델을 다른 키로 한 번 더 시도한 뒤 다음 모델로.
         for model in TAG_MODELS:
-            try:
-                resp = client.models.generate_content(
-                    model=model, contents=parts,
-                    config=types.GenerateContentConfig(response_mime_type="application/json"))
-                data = loads_lenient(resp.text)
-                raw = data.get("tags") if isinstance(data, dict) else data
-                # seg_no는 띠에 찍힌 전체 번호(#1부터) → 이번 묶음 기준으로 되돌린다. 묶음 밖 번호는 버려진다.
-                fixed = []
-                for t in (raw or []):
-                    if isinstance(t, dict) and t.get("seg_no") is not None:
-                        try:
-                            t = dict(t, seg_no=int(t["seg_no"]) - b0)
-                        except (TypeError, ValueError):
-                            pass
-                    fixed.append(t)
-                tags = normalize_tags(fixed, b1 - b0)
-                if any(tags):
-                    got = tags
+            for attempt in range(2):
+                _k2, _ = comment_gen._current_key_and_idx()
+                client = comment_gen._client_for_key(_k2 or key)
+                try:
+                    resp = client.models.generate_content(
+                        model=model, contents=parts,
+                        config=types.GenerateContentConfig(response_mime_type="application/json"))
+                    data = loads_lenient(resp.text)
+                    raw = data.get("tags") if isinstance(data, dict) else data
+                    # seg_no는 띠에 찍힌 전체 번호(#1부터) → 이번 묶음 기준으로 되돌린다. 묶음 밖 번호는 버려진다.
+                    fixed = []
+                    for t in (raw or []):
+                        if isinstance(t, dict) and t.get("seg_no") is not None:
+                            try:
+                                t = dict(t, seg_no=int(t["seg_no"]) - b0)
+                            except (TypeError, ValueError):
+                                pass
+                        fixed.append(t)
+                    tags = normalize_tags(fixed, b1 - b0)
+                    if any(tags):
+                        got = tags
+                    else:
+                        print(f"frame_script._gemini_tag_frames: {model} 응답에 쓸 태그 없음 → 다음 모델",
+                              file=__import__('sys').stderr)
                     break
-                print(f"frame_script._gemini_tag_frames: {model} 응답에 쓸 태그 없음 → 다음 모델",
-                      file=__import__('sys').stderr)
-            except Exception as e:  # noqa: BLE001 — 다음 모델로
-                print(f"frame_script._gemini_tag_frames: {model} 실패 — {e!r}", file=__import__('sys').stderr)
+                except Exception as e:  # noqa: BLE001
+                    msg = repr(e)
+                    transient = any(c in msg for c in ("429", "503", "UNAVAILABLE", "RESOURCE_EXHAUSTED", "overloaded"))
+                    print(f"frame_script._gemini_tag_frames: {model} 실패({'다른 키로 재시도' if transient and attempt == 0 else '다음 모델'}) — {msg[:120]}",
+                          file=__import__('sys').stderr)
+                    if not (transient and attempt == 0):
+                        break
+            if got:
+                break
         if got:
             out[b0:b1] = got
     return out if any(out) else []
