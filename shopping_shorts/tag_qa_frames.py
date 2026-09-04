@@ -210,7 +210,8 @@ def _judge(frame_paths, picked):
             resp = client.models.generate_content(
                 model=model, contents=parts,
                 config=types.GenerateContentConfig(response_mime_type="application/json"))
-            data = json.loads(resp.text or "")
+            from shopping_shorts.frame_script import loads_lenient
+            data = loads_lenient(resp.text)
             verdicts = data.get("verdicts") if isinstance(data, dict) else data
             if verdicts:
                 return verdicts
