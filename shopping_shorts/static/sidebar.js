@@ -1035,7 +1035,10 @@
   function _cfOpen(keyword, opts) {
     _cfClose();
     opts = opts || {};
-    _cfState = { kw: keyword || "", items: [], chips: [], sc: opts.shortcode || "", thumb: opts.thumbnail || "" };
+    /* ★hint(사전 판독한 썸네일 제품명)는 검색어로 쓰지 않는다(2026-09-04 사장님 "바디필로우로 검색되는데
+       대본엔 토닥인형") — 클릭하면 항상 근거 우선 판독(/api/coupang/identify)을 거친다. 판독이 캐시·근거로
+       빠르게 끝나므로 체감 지연은 거의 없다. hint는 결과가 달라졌을 때 "썸네일 추정→대본 근거" 안내에만 쓴다. */
+    _cfState = { kw: keyword || "", items: [], chips: [], sc: opts.shortcode || "", thumb: opts.thumbnail || "", hint: opts.hint || "" };
     var wrap = document.createElement("div");
     wrap.id = "ssCoupangFind";
     wrap.style.cssText = "position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:16px";
@@ -1080,6 +1083,7 @@
         }
         _cfState.chips = (d.queries || [d.product]).slice(0, 6);
         _cfState.basis = (d.basis || []).join("·");
+        if (_cfState.hint && d.product && d.product !== _cfState.hint) _cfState.basis += " · 썸네일 추정 '" + _cfState.hint + "' 대신 근거로 특정";
         _cfSearch(_cfState.chips[0]);
       })
       .catch(function () { _cfRender("판독 중 네트워크 오류 — 제품명을 직접 넣어 찾아보세요", "#ff8080"); });
