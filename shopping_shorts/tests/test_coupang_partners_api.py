@@ -216,7 +216,10 @@ def test_ranking_and_collection_have_coupang_find_button():
     sb = (st / "sidebar.js").read_text(encoding="utf-8")
     assert "window.ssCoupangFind = function" in sb and "/api/coupang/deeplink" in sb
     for name in ("index.html", "collection.html"):
-        assert "/api/coupang/deeplink" not in (st / name).read_text(encoding="utf-8"), name
+        txt = (st / name).read_text(encoding="utf-8")
+        assert "/api/coupang/deeplink" not in txt, name
+        # ★클릭은 항상 근거 우선 판독을 거친다 — 사전 판독 제품명을 검색어로 바로 쓰지 않는다(바디필로우≠토닥인형)
+        assert "window.ssCoupangFind(''," in txt and "hint:this.getAttribute('data-product')" in txt, name
 
 
 
