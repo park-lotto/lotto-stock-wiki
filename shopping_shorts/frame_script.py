@@ -306,6 +306,59 @@ def brief_block(brief):
     return "\n".join(lines)
 
 
+def is_foreign_text(text):
+    """전사가 한국어가 아닌가(순수 함수). 글자 중 한글 비율이 30% 미만이면 외국어로 본다.
+    글자가 없으면(무자막) False — 번역할 게 없다."""
+    letters = [c for c in (text or "") if c.isalpha()]
+    if len(letters) < 4:
+        return False
+    hangul = sum(1 for c in letters if "가" <= c <= "힣")
+    return hangul / len(letters) < 0.3
+
+
+def _gemini_translate(texts):
+    """구간별 원문 목록 → 같은 길이의 한국어 번역 목록(빈 원문은 ""). 실패는 [](fail-open).
+    텍스트만 보내는 한 호출. 번역은 **자연스러운 구어체 한국어**로, 숫자·제품명은 보존."""
+    import json
+    from shopping_shorts import comment_gen
+    try:
+        from google.genai import types
+    except Exception:
+        return []
+    key, _ = comment_gen._current_key_and_idx()
+    if key is None:
+        return []
+    items = [{"no": i + 1, "text": (t or "").strip()} for i, t in enumerate(texts or [])]
+    if not any(x["text"] for x in items):
+        return []
+    prompt = (
+        "아래는 숏폼 영상의 구간별 나레이션·자막 원문이다(영어·중국어 등). 각 항목을 **자연스러운 구어체 한국어**로 "
+        "번역해라. 숫자·단위·제품명·브랜드는 그대로 보존하고, 빈 원문은 빈 문자열로.\n"
+        + json.dumps(items, ensure_ascii=False)
+        + '\n\n출력은 JSON 객체 {"items": [{"no": 1, "ko": "..."}, ...]} 만. 항목을 빠짐없이.')
+    client = comment_gen._client_for_key(key)
+    for model in TAG_MODELS:
+        try:
+            resp = client.models.generate_content(
+                model=model, contents=[prompt],
+                config=types.GenerateContentConfig(response_mime_type="application/json"))
+            data = loads_lenient(resp.text)
+            raw = data.get("items") if isinstance(data, dict) else data
+            out = [""] * len(items)
+            for r in raw or []:
+                try:
+                    k = int(r.get("no")) - 1
+                except (TypeError, ValueError, AttributeError):
+                    continue
+                if 0 <= k < len(out):
+                    out[k] = str(r.get("ko") or "").strip()
+            if any(out):
+                return out
+        except Exception as e:  # noqa: BLE001
+            print(f"frame_script._gemini_translate: {model} 실패 — {e!r}", file=__import__("sys").stderr)
+    return []
+
+
 def _gemini_story_brief(grid_path, caption, transcript):
     """1차 — 컷 대표 프레임 격자 한 장 + 캡션 + 전사로 영상 전체의 스토리 브리프를 뽑는다.
     실패는 {}(fail-open — 2차 태깅은 브리프 없이 종전대로 돈다).
@@ -453,7 +506,7 @@ def _gemini_tag_frames(frame_groups, caption, segs, brief=None):
 def extract_script_frames(video_path, video_id, caption="", *, _no_classic=False,
                           get_boundaries=None, extract_frame_at=None,
                           extract_audio=None, transcribe_words=None, tag_frames=None,
-                          story_brief=None):
+                          story_brief=None, translate=None):
     """B1 조립기: 영상 통째 업로드 없이 {segments, full_text, product_benefits, source_brief} 반환.
     출력 스키마는 script_extract.extract_script와 100% 동일(다운스트림 무변경).
     모든 I/O는 주입 가능(기본은 실제 구현) — 단위테스트가 목킹한다. 컷 못 만들면 빈 결과.
@@ -472,9 +525,12 @@ def extract_script_frames(video_path, video_id, caption="", *, _no_classic=False
         extract_audio = scene_assets.extract_audio
     if transcribe_words is None:
         from shopping_shorts import asr_check
-        transcribe_words = asr_check.transcribe_words
+        # ★언어 자동 감지(2026-09-04) — 소스는 외국 영상이 많다. "ko" 고정이면 중국어·영어를 한국어로
+        #   엉터리 받아쓴다. 원문 언어로 받아쓰고 아래 translate가 한국어(text_ko)를 붙인다.
+        transcribe_words = lambda mp3: asr_check.transcribe_words(mp3, language=None)  # noqa: E731
     tag_frames = tag_frames or _gemini_tag_frames
     story_brief = story_brief or _gemini_story_brief
+    translate = translate or _gemini_translate
 
     boundaries = get_boundaries(video_path)
     if len(boundaries or []) < 2:
@@ -493,6 +549,18 @@ def extract_script_frames(video_path, video_id, caption="", *, _no_classic=False
     segs = segments_from_cuts_and_words(boundaries, words)
     if not segs:
         return dict(_EMPTY)
+
+    # ★외국어 전사면 한국어 번역(text_ko)을 붙인다(2026-09-04). 원문(text)은 그대로 둔다 —
+    #   인벤토리·2단계 장면 목록은 text_ko를 '말:'로 쓰고, 대본 재료는 full_text_ko를 쓴다.
+    if is_foreign_text(full_text_of(segs)):
+        try:
+            ko = translate([s.get("text", "") for s in segs]) or []
+        except Exception as e:  # noqa: BLE001 — 번역 실패는 원문만으로 간다(fail-open)
+            print(f"frame_script: 번역 실패(무해) — {e!r}", file=__import__("sys").stderr)
+            ko = []
+        for s, t in zip(segs, ko):
+            if t:
+                s["text_ko"] = t
 
     # ★구간마다 프레임 k장(시작·중간·끝) — 파일명을 **구간·장마다 다르게** 준다(2026-09-04 수리).
     #   종전엔 파일명 없이 불러 기본값 `frame_hint.jpg`에 전부 덮어썼다 → frame_paths가 같은 경로
@@ -542,4 +610,7 @@ def extract_script_frames(video_path, video_id, caption="", *, _no_classic=False
         "full_text": full_text_of(segments),
         "product_benefits": script_extract._collect_benefits(segments),
         "source_brief": brief,       # 1차 브리프(product·role·core·summary·flow·confidence), 없으면 {}
+        # 외국 소스의 한국어 전사 전문(대본 재료용). 한국어 소스는 빈칸 → 호출부가 full_text로 폴백.
+        "full_text_ko": " ".join((s.get("text_ko") or "").strip() for s in segments
+                                 if (s.get("text_ko") or "").strip()),
     }

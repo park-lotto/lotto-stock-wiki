@@ -1738,7 +1738,7 @@ def _build_inventory(source_scripts):
             _up = (seg.get("use_point") or "").strip()
             _up_s = f" | 활용:{_up}" if _up else ""
             lines.append(
-                f"[{sid}] ({length}s) 화면:{seg.get('scene_desc','')} | 말:{seg.get('text','')}"
+                f"[{sid}] ({length}s) 화면:{seg.get('scene_desc','')} | 말:{seg.get('text_ko') or seg.get('text','')}"
                 f"{_lab_s}{_up_s}{_act_s}{_chg_s}{_ben_s}{_ml_s}{_role_s}{_key_s}"
             )
     return seg_map, "\n".join(lines)
