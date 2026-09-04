@@ -58,8 +58,7 @@
   <div class="cards" id="cards"></div>
 </main>
 <script>
-function cpKw(s){ /* 쿠팡 검색어: 이모지(서로게이트 쌍) 반 토막 방지 — 2026-09-04 라이브 사고: slice(0,60)가 이모지를 반으로 잘라 encodeURIComponent가 URIError를 던져 즐겨찾기·랭킹 카드 전부 안 그려짐 */ try{ return encodeURIComponent(Array.from(String(s==null?'':s).split('
-')[0]).slice(0,60).join('')); }catch(e){ return ''; } }
+function cpKw(s){ /* 쿠팡 검색어: 이모지(서로게이트 쌍) 반 토막 방지 — 2026-09-04 라이브 사고: slice(0,60)가 이모지를 반으로 잘라 encodeURIComponent가 URIError를 던져 즐겨찾기·랭킹 카드 전부 안 그려짐 */ try{ return encodeURIComponent(Array.from(String(s==null?'':s).split('\n')[0]).slice(0,60).join('')); }catch(e){ return ''; } }
 function esc(s){ return (s==null?"":String(s)).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 let ITEMS=[];
 const SELECTED=new Set();
