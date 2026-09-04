@@ -5687,9 +5687,28 @@ def api_mix_scene_lab_apply(job_id: str, body: dict):
     if not payload.get("beats"):
         return JSONResponse(status_code=422, content={"ok": False, "error": "payload.beats 필요"})
     seg_map, _ = _edit_plan._build_inventory(list((job.get("extract") or {}).values()))
+    # ★교체 기록(2026-09-04): 적용 전후 '첫 조각'이 바뀐 비트를 DB에 남긴다 — 매칭의 시험지. 픽 로직엔 안 쓴다.
+    _before = {"beats": [dict(b) for b in plan.get("beats") or []], "generator": plan.get("generator")}
     _edit_plan.apply_scene_lab(plan, seg_map, payload)
     store.update_mix_job(job_id, edit_plan=plan)
-    return {"ok": True, "applied": (plan.get("scene_lab") or {}).get("applied", 0)}
+    _swapped = 0
+    try:
+        _rows = _edit_plan.scene_swap_rows(_before, plan)
+        _swapped = store.add_scene_swaps(job_id, job.get("customer_id", 0), _rows)
+    except Exception as _e:      # noqa: BLE001 — 기록 실패가 적용을 막으면 안 된다
+        print(f"[scene_swaps] 기록 실패(무해): {_e!r}", file=sys.stderr)
+    return {"ok": True, "applied": (plan.get("scene_lab") or {}).get("applied", 0), "swapped": _swapped}
+
+
+@app.get("/api/admin/scene_swaps")
+def api_admin_scene_swaps(request: Request, days: int = 30, job_id: str = ""):
+    """관리자: 3단계 손 횟수(생성기별 잡당 교체 수) + 최근 교체 행. 매칭 개선의 시험지 점수판."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    st = Store(DB_PATH)
+    return {"ok": True, "days": days, "summary": st.scene_swap_summary(days=days),
+            "rows": st.list_scene_swaps(job_id=job_id or None, days=days, limit=300)}
 
 
 @app.post("/api/mix/render")
