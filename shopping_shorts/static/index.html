@@ -2170,7 +2170,7 @@ function render(opts){
             <button class="view" onclick="window.open('${i.url}','_blank')">👁 영상보기</button>
             <button class="save" id="save_${i.shortcode}" onclick="toggleMix('${i.shortcode}', this)">📥 즐겨찾기</button>
             <button class="script-btn" onclick="lensSearch(this,'${i.shortcode}')">🔍 숏템파워검색</button>
-            <button class="cp-btn" title="이 제품이 쿠팡에 있는지 찾고, 있으면 내 추적 링크까지 바로 만듭니다" onclick="window.ssCoupangFind('', {shortcode:'${i.shortcode}', thumbnail:decodeURIComponent('${encodeURIComponent(i.thumbnail||'')}')})">🛒 쿠팡에 있나?</button>
+            <button class="cp-btn" data-sc="${i.shortcode}" title="이 제품이 쿠팡에 있는지 찾고, 있으면 내 추적 링크까지 바로 만듭니다" onclick="window.ssCoupangFind(this.getAttribute('data-product')||'', {shortcode:'${i.shortcode}', thumbnail:decodeURIComponent('${encodeURIComponent(i.thumbnail||'')}')})">🛒 쿠팡에 있나?</button>
             ${window.IS_ADMIN?`<button class="inner-btn" title="우리가 관리하는 채널 아카이브에서 같은 제품·주제의 옛 영상 찾기 (무료·비전태그 매칭)" onclick="archiveSimilar('${i.shortcode}')">🏠 숏템내부검색</button>`:''}
           </div>
         </div>
@@ -2192,6 +2192,18 @@ function render(opts){
   if(searching && users.length===1){
     _renderChannelHistory(users[0], items.map(i=>i.shortcode));
   }
+  /* ★쿠팡 사전 판독(2026-09-04) — 그린 카드의 제품을 뒤에서 미리 알아내 캐시한다(클릭 즉시 뜨게). */
+  try {
+    if (window.ssCoupangPrewarm) {
+      var _cpItems = [];
+      document.querySelectorAll('.cp-btn[data-sc]').forEach(function (b) {
+        var sc = b.getAttribute('data-sc');
+        var it = STATE.items.find(function (x) { return x.shortcode === sc; });
+        if (it && it.thumbnail) _cpItems.push({ shortcode: sc, thumbnail: it.thumbnail });
+      });
+      window.ssCoupangPrewarm(_cpItems.slice(0, 48));
+    }
+  } catch (e) { /* 사전 판독 실패가 랭킹 화면을 막으면 안 된다 */ }
 }
 // 문구 접기/펴기(2026-08-18 사장님 "문구는 짤리는데 접었다 펴는걸로 글자 다 볼수있게")
 // 실제로 잘린 카드에만 [더보기]를 띄운다 — 안 잘린 카드에 버튼이 붙으면 거짓 안내가 된다.

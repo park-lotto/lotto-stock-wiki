@@ -301,3 +301,17 @@ def test_identify_endpoint_turns_thumbnail_into_queries(monkeypatch, tmp_path):
     r = a.api_coupang_identify({"shortcode": "ABC", "thumbnail": "https://x/t.jpg"})
     assert r["ok"] is False and "직접" in r["error"]
     assert a.api_coupang_identify({"shortcode": ""}).status_code == 422
+
+
+
+def test_identify_batch_prewarms_cache(monkeypatch, tmp_path):
+    """페이지 로드 직후 보이는 카드를 미리 판독한다 — 클릭 땐 캐시 적중으로 즉시(사장님 "바로 뜨게")."""
+    from shopping_shorts import app as a, product_name
+    from shopping_shorts.store import Store
+    db = tmp_path / "t.db"; monkeypatch.setattr(a, "DB_PATH", str(db)); Store(str(db))
+    seen = {}
+    monkeypatch.setattr(product_name, "identify_many", lambda items, db_path, **k: (seen.update(n=len(items)), {it["shortcode"]: "택총" for it in items})[1])
+    r = a.api_coupang_identify_batch({"items": [{"shortcode": "A", "thumbnail": "https://x/a.jpg"},
+                                                {"shortcode": "B", "thumbnail": ""}, "junk", {"shortcode": "../C", "thumbnail": "https://x/c.jpg"}]})
+    assert r["ok"] and seen["n"] == 2 and r["products"] == {"A": "택총", "C": "택총"}
+    assert a.api_coupang_identify_batch({"items": []}) == {"ok": True, "products": {}}
