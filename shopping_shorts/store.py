@@ -1351,6 +1351,15 @@ class Store:
                 #   차감된 뒤 키를 지우고 일부러 실패시키면 없던 포인트가 생겼다
                 #   (2026-08-23 점검). 차감할 때 정한 값을 그대로 돌려주기 위한 칸이다.
                 ("mix_charged", "INTEGER"),
+                # ★CTA 잘라내기(2026-09-05) — CTA 비트가 시작하는 절대 시각(초).
+                #   유튜브엔 댓글 유도 CTA를 빼고 올리려고, 완성본에서 이 지점 뒤를
+                #   `-c copy`로 잘라낸다(재인코딩 없음 = 1초 내·화질 손실 0).
+                #   렌더가 끝난 뒤엔 이 값을 다시 구할 방법이 마땅치 않다 — 비트별
+                #   절대시각은 어디에도 저장되지 않고, TTS mp3로 재계산해야 하는데
+                #   그 작업폴더는 청소 대상이다(asm_ 321개=21GB 사고). 그래서 렌더할 때
+                #   구해서 여기 박아둔다. NULL=옛 job(그때는 mp3 폴백으로 계산).
+                #   ★인트로(prepend_still)를 붙인 뒤 밀린 값이 저장된다 = final.mp4 기준.
+                ("cta_cut_sec", "REAL"),
             ):
                 try:
                     c.execute(f"ALTER TABLE mix_jobs ADD COLUMN {col} {ddl}")
@@ -4853,7 +4862,7 @@ class Store:
                 "thumbnail_json, seo_json, "
                 "clean_sources_json, clean_status, clean_error, customer_id, render_charge_day, "
                 "scene_first, backbone_main, clean_regions_json, product_json, "
-                "mix_charged "
+                "mix_charged, cta_cut_sec "
                 "FROM mix_jobs WHERE job_id=?", (job_id,),
             ).fetchone()
         if not row:
@@ -4886,6 +4895,8 @@ class Store:
             "product": json.loads(row[35]) if row[35] else None,
             # 실제로 깎은 영상제작 포인트. None = 이 칸이 생기기 전의 옛 job.
             "mix_charged": row[36],
+            # CTA 비트 시작 시각(초, final.mp4 기준). None = 옛 job이거나 CTA 없는 대본.
+            "cta_cut_sec": row[37],
         }
 
     def set_mix_product(self, job_id, product):
@@ -4909,7 +4920,10 @@ class Store:
                   # 1단계 미리보기(2026-07-17) — 여기 없으면 update_mix_job(preview_status=...)이
                   # 에러도 없이 조용히 무시된다(이 화이트리스트가 이 배선의 함정).
                   "preview_status", "preview_path", "preview_error",
-                  "clean_status", "clean_error"):
+                  "clean_status", "clean_error",
+                  # CTA 잘라내기(2026-09-05). ★이 화이트리스트에 없으면
+                  # update_mix_job(cta_cut_sec=..)이 에러 없이 조용히 무시된다.
+                  "cta_cut_sec"):
             if k in fields:
                 cols.append(f"{k}=?"); vals.append(fields[k])
         if "subtitle_removal" in fields:

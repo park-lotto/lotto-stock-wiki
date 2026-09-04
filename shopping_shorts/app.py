@@ -7013,6 +7013,132 @@ def api_mix_video(job_id: str, request: Request, dl: int = 0):
     return _range_mp4_response(job["video_path"], request)
 
 
+# ── ✂ CTA 잘라낸 판 (2026-09-05 사장님 "CTA 있는 걸로 만들고 유튜브 올릴 땐 뒷부분만 잘라내고 싶다") ──
+#   인스타·틱톡엔 댓글 유도 CTA가 있는 완성본을, 유튜브엔 그 CTA를 뺀 판을 올린다.
+#   ★재렌더가 아니다. 이미 만든 final.mp4를 `-c copy`로 앞부분만 복사한다 —
+#     1초 내에 끝나고 화질 손실이 0이며 AI 비용도 안 든다. 렌더가 그 지점에
+#     키프레임을 박아뒀기 때문에(video_assemble._keyframe_args) 프레임 단위로 맞는다.
+# 완성본 프레임레이트. 렌더가 `-r 30`으로 고정해 내보낸다(video_assemble).
+_NOCTA_FPS = 30
+
+
+def _nocta_path(job_id):
+    """CTA 잘라낸 판의 경로. final.mp4와 같은 폴더에 둔다(청소·삭제가 같이 돌게)."""
+    return _MIX_WORK_DIR / job_id / "final_nocta.mp4"
+
+
+def _cta_cut_for_job(job):
+    """이 job을 어디서 자를지(초). (값, 사유) 튜플 — 못 자르면 (None, 사용자용 사유).
+
+    ★사유를 뭉개지 않는다(메모리 '오류표본·뭉갠사유'): "CTA 칸이 없다"와 "옛 영상이라
+      원본 음성이 지워졌다"는 사장님이 할 일이 서로 다르다.
+    """
+    # ① 렌더가 저장해둔 값(2026-09-05 이후 렌더분) — 키프레임까지 박혀 있어 정확하다.
+    cut = job.get("cta_cut_sec")
+    if cut:
+        return float(cut), ""
+    plan = job.get("edit_plan") or {}
+    beats = plan.get("beats") or []
+    if not beats:
+        return None, "대본 정보가 없어요"
+    # CTA 칸 자체가 없으면 자를 게 없다 — 이건 옛 영상 문제가 아니다.
+    from shopping_shorts.edit_plan import _is_cta
+    if not any(_is_cta(b) for b in beats):
+        return None, "이 대본엔 CTA 칸이 없어요 — 잘라낼 뒷부분이 없습니다"
+    # ② 옛 job 폴백: TTS mp3가 남아 있으면 그때 계산한다.
+    #   ★target_seconds(계획값) 누적 폴백은 **쓰지 않는다**. 실제 TTS 길이와 미세
+    #     드리프트가 있어(app.py:18053 주석) CTA 첫마디가 잘려 들어갈 수 있다.
+    #     효과 배치 미리보기와 달리 여기선 그 오차가 곧 사고다.
+    tts_paths = {b["beat_idx"]: b["tts_path"] for b in beats
+                 if b.get("tts_path") and Path(b["tts_path"]).exists()}
+    if len(tts_paths) != len(beats):
+        return None, ("이 영상은 CTA 잘라내기가 생기기 전에 만들어졌고, 원본 음성 파일이 "
+                      "정리돼 자를 지점을 알 수 없어요 — 다시 렌더하면 쓸 수 있습니다")
+    try:
+        cut = video_assemble.cta_cut_sec(video_assemble._beat_timeline(plan, tts_paths))
+    except Exception:
+        import traceback as _tb
+        _tb.print_exc(file=sys.stderr)
+        return None, "자를 지점을 계산하지 못했어요"
+    if not cut:
+        return None, "이 대본엔 CTA 칸이 없어요 — 잘라낼 뒷부분이 없습니다"
+    # ⚠️ 폴백 경로는 인트로(prepend_still) 보정이 안 들어간다 — 인트로를 켰다면 그만큼 민다.
+    _thumb = job.get("thumbnail") or {}
+    if _thumb.get("intro"):
+        cut += float(_thumb.get("intro_sec") or 1.2)
+    return float(cut), ""
+
+
+@app.post("/api/mix/trim_cta/{job_id}")
+def api_mix_trim_cta(job_id: str):
+    """완성본에서 CTA 구간을 잘라낸 판을 만든다(재인코딩 없음)."""
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업을 찾을 수 없어요"})
+    if job.get("status") in ("rendering", "removing_subtitles"):
+        return JSONResponse(status_code=409,
+                            content={"ok": False, "error": "영상을 만드는 중이에요 — 끝나면 다시 눌러주세요"})
+    src = job.get("video_path")
+    if not src or not Path(src).exists():
+        return JSONResponse(status_code=404, content={"ok": False, "error": "완성 영상이 없어요"})
+    cut, why = _cta_cut_for_job(job)
+    if not cut:
+        return JSONResponse(status_code=400, content={"ok": False, "error": why})
+    src_p, out_p = Path(src), _nocta_path(job_id)
+    # 자를 지점이 영상보다 뒤면(데이터가 어긋난 경우) 자르는 의미가 없다 — 조용히 통과시키면
+    # 원본과 똑같은 파일이 "잘렸다"며 나간다.
+    try:
+        _total = float(video_assemble._probe_duration(str(src_p)) or 0.0)
+    except Exception:
+        _total = 0.0
+    if _total and cut >= _total - 0.1:
+        return JSONResponse(status_code=400, content={
+            "ok": False, "error": "자를 지점이 영상 끝과 같아요 — 잘라낼 뒷부분이 없습니다"})
+    # 캐시: 완성본보다 새 파일이 이미 있으면 다시 만들지 않는다(다시 렌더하면 무효가 된다).
+    if out_p.exists() and out_p.stat().st_mtime >= src_p.stat().st_mtime:
+        return {"ok": True, "cut_sec": round(cut, 3), "cached": True,
+                "url": f"/api/mix/video_nocta/{job_id}"}
+    # ★`-t {초}`가 아니라 **프레임 수**로 자른다 — 2026-09-05 실측:
+    #   -t 27.4 → 824프레임(27.47초, 2프레임 넘침). B프레임 때문에 초 단위 -t는
+    #   요청보다 조금 더 담는다. -frames:v 822 → 정확히 27.400초.
+    #   (키프레임 강제는 필요 없다 — 뒤를 자르는 건 키프레임과 무관하다. 근거는
+    #    video_assemble.cta_cut_sec 위 주석의 실측표.)
+    _frames = max(1, int(round(cut * _NOCTA_FPS)))
+    try:
+        video_assemble._run_ffmpeg(["ffmpeg", "-y", "-i", str(src_p),
+                                    "-frames:v", str(_frames), "-c", "copy", str(out_p)])
+        mix_pipeline.ensure_faststart(out_p)
+    except Exception as e:      # noqa: BLE001 — 사유를 사장님 화면까지 올린다
+        import traceback as _tb
+        _tb.print_exc(file=sys.stderr)
+        return JSONResponse(status_code=500,
+                            content={"ok": False, "error": f"잘라내기에 실패했어요: {e}"})
+    if not out_p.exists():
+        return JSONResponse(status_code=500, content={"ok": False, "error": "잘라낸 파일이 만들어지지 않았어요"})
+    return {"ok": True, "cut_sec": round(cut, 3), "cached": False,
+            "url": f"/api/mix/video_nocta/{job_id}"}
+
+
+@app.get("/api/mix/video_nocta/{job_id}")
+def api_mix_video_nocta(job_id: str, request: Request, dl: int = 0):
+    """CTA 잘라낸 판 재생·다운로드. 없으면 404(화면이 먼저 만들기를 호출한다)."""
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False})
+    out_p = _nocta_path(job_id)
+    if not out_p.exists():
+        return JSONResponse(status_code=404, content={"ok": False})
+    # ★완성본을 다시 렌더했으면 이 파일은 옛 영상이다 — 주지 않는다(api_mix_video와 같은 규약).
+    src = job.get("video_path")
+    if src and Path(src).exists() and out_p.stat().st_mtime < Path(src).stat().st_mtime:
+        return JSONResponse(status_code=409,
+                            content={"ok": False, "error": "새로 렌더된 영상이 있어요 — 다시 잘라주세요"})
+    if dl:
+        return FileResponse(str(out_p), media_type="video/mp4",
+                            filename=export_bundle.safe_name(job_id) + "_noCTA.mp4")
+    return _range_mp4_response(str(out_p), request)
+
+
 # ── QR '폰으로 보내기' (2026-07-23) ──
 # 흐름: 제작소(로그인됨)에서 /api/share/link/{job} 호출 → 단축링크+QR(SVG) 발급 → 화면에 QR 표시.
 #       폰이 스캔 → /s/{sid}(로그인 불필요, 미들웨어 allowlist) → 영상+카톡공유 버튼.

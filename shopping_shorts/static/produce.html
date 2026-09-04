@@ -14514,6 +14514,35 @@ async function showShareQr(job){
     cp.addEventListener('click',async()=>{ try{ await navigator.clipboard.writeText(d.url); cp.textContent='복사됨 ✓'; }catch(e){ cp.textContent='복사 실패 — 길게 눌러 복사'; } });
   }catch(e){ box.innerHTML='<div style="padding:24px">오류가 났어요. 다시 시도해 주세요.</div>'; }
 }
+// ── ✂ CTA 잘라낸 판 만들기(2026-09-05) ──
+// 서버가 완성본에서 CTA 비트 앞까지만 복사해 준다(-frames:v, 재인코딩 없음 = 1초 내).
+// 자를 지점은 서버 한 곳에서 정한다(video_assemble.cta_cut_sec) — 화면이 초를 계산하지 않는다.
+async function trimCta(j){
+  const btn=document.getElementById('btnTrimCta');
+  const hint=document.getElementById('trimCtaHint');
+  if(!btn) return;
+  const old=btn.textContent;
+  btn.disabled=true; btn.textContent='✂ 잘라내는 중…';
+  try{
+    const r=await fetch('/api/mix/trim_cta/'+encodeURIComponent(j),{method:'POST'});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok || !d.ok){
+      // ★사유를 그대로 보여준다 — "CTA 칸이 없다"와 "옛 영상이라 다시 렌더해야 한다"는
+      //   사장님이 할 일이 다르다(뭉개면 무엇을 해야 할지 알 수 없다).
+      btn.textContent=old; btn.disabled=false;
+      if(hint) hint.innerHTML='⚠️ '+(d.error||'잘라내지 못했어요')+'';
+      return;
+    }
+    btn.textContent='✅ 잘린 영상 받기 ('+(d.cut_sec||0).toFixed(1)+'초)';
+    btn.disabled=false;
+    btn.onclick=()=>{ location.href='/api/mix/video_nocta/'+encodeURIComponent(j)+'?dl=1'; };
+    if(hint) hint.innerHTML='CTA 앞 <b>'+(d.cut_sec||0).toFixed(1)+'초</b>까지 남겼습니다. 버튼을 누르면 받습니다.';
+  }catch(e){
+    btn.textContent=old; btn.disabled=false;
+    if(hint) hint.innerHTML='⚠️ 잘라내기에 실패했어요 — 잠시 뒤 다시 눌러주세요.';
+  }
+}
+
 // ── 내보내기(다운로드 + 캡컷 편집용) — 설계 2026-07-20 T1 ──
 // 웹앱이라 캡컷 자동실행은 불가 → 캡컷 편집용 ZIP(장면영상·음성·SRT·대본)을 내려받아 캡컷에 올린다.
 function renderExport(opts){
@@ -14546,6 +14575,13 @@ function renderExport(opts){
         : '<div class="hint" style="margin-bottom:10px">💡 캡컷으로 바로 보내기는 <b>Chrome·Edge</b>에서만 됩니다. 지금 브라우저에선 아래 ZIP을 받아 캡컷에 올리세요. '
             + '<a href="/capcut_manual.html" target="_blank" rel="noopener" style="color:var(--accent2)">📖 그림으로 보는 준비 방법</a></div>')
     + (rendered?`<a class="btn-next" style="${big}" href="/api/mix/video/${j}?dl=1" download>⬇ 완성 영상(MP4)</a>`:'')
+    // ✂ CTA 잘라낸 판(2026-09-05 사장님 "CTA 있는 걸로 만들고 유튜브 올릴 땐 뒷부분만 잘라내고 싶다").
+    //   인스타·틱톡엔 위 완성본(CTA 있음), 유튜브엔 이 판을 올린다.
+    //   ★재렌더가 아니라 이미 만든 영상을 그대로 복사해 앞부분만 남긴다 — 1초면 끝나고
+    //     화질도 그대로다. 그래서 "다시 만드는 중" 같은 긴 대기 표시가 필요 없다.
+    //   CTA 칸이 있는지는 서버가 판단한다(대본마다 다르다) — 눌렀을 때 사유를 말해준다.
+    + (rendered?`<button id="btnTrimCta" class="btn-next" style="${big};border:0;cursor:pointer" onclick="trimCta('${j}')">✂ 유튜브용 — CTA 잘라낸 영상</button>`:'')
+    + (rendered?'<div class="hint" id="trimCtaHint" style="margin:2px 0 8px">유튜브엔 <b>댓글 유도(CTA)를 뺀 판</b>을 올릴 때 쓰세요. 인스타·틱톡엔 위 「완성 영상」 그대로.</div>':'')
     // ★완성본을 받은 뒤 바로 예약으로(2026-08-29 사장님 "완성본도 만든 뒤 다운을 누르면
     //   예약발행에도 들어가게"). 파일을 어디에 다시 올릴 필요가 없다 — 예약 단계가
     //   **같은 작업(MIX_JOB)의 완성본**을 그대로 쓴다.

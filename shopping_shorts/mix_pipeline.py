@@ -33,7 +33,7 @@ from shopping_shorts import usage_meter
 from shopping_shorts import single_source
 from shopping_shorts import script_lang
 from shopping_shorts.video_assemble import assemble, _beat_timeline, _beat_material, _probe_duration, _MAX_SLOWMO, preview_preset
-from shopping_shorts.video_assemble import prepend_still
+from shopping_shorts.video_assemble import prepend_still, cta_cut_sec
 from shopping_shorts.motion_assets import resolve_layers, DEFAULT_ASSETS_DIR
 from shopping_shorts.motion_packs import build_plan, load_packs
 from shopping_shorts.vmake_client import remove_subtitles
@@ -3298,16 +3298,37 @@ def run_render(job_id, db_path, work_root):
         #   켠 경우에만 돈다. 실패해도 렌더 자체는 살린다 — 인트로 때문에 완성 영상을
         #   통째로 잃는 게 더 나쁘다(실패는 로그로만 남기고 원본 final.mp4를 그대로 쓴다).
         _thumb = job.get("thumbnail") or {}
+        # 인트로가 실제로 붙은 길이(초). CTA 잘라내기가 이만큼 밀어서 저장한다.
+        # ★prepend_still은 성공 여부를 bool로 돌려준다 — 켰는데 실패했을 수 있으므로
+        #   "켰다"가 아니라 "붙었다"로 판단한다(실패했는데 밀면 그만큼 일찍 잘린다).
+        _intro_shift = 0.0
         if _thumb.get("intro"):
             try:
                 _png = _thumb_intro_png(job, _thumb)
                 if _png:
-                    prepend_still(str(out_path), str(_png),
-                                                 seconds=float(_thumb.get("intro_sec") or 1.2))
+                    _intro_sec = float(_thumb.get("intro_sec") or 1.2)
+                    if prepend_still(str(out_path), str(_png), seconds=_intro_sec):
+                        _intro_shift = _intro_sec
                 else:
                     print(f"[thumb-intro] {job_id}: 붙일 썸네일 PNG를 못 찾음", file=sys.stderr)
             except Exception:
                 traceback.print_exc(file=sys.stderr)
+        # ✂ CTA 잘라내기(2026-09-05 사장님 "유튜브 올릴 땐 뒷부분만 잘라내고 싶다").
+        #   완성본에서 CTA 비트가 시작하는 시각을 지금 구해 DB에 박아둔다. 렌더가 끝나면
+        #   이 값을 다시 구하기가 어렵다 — 비트별 절대시각은 어디에도 저장되지 않고,
+        #   TTS mp3로 재계산해야 하는데 그 작업폴더는 청소 대상이라 언젠가 사라진다.
+        #   ★자를 지점을 정하는 곳은 video_assemble.cta_cut_sec 하나다(0순위-B) —
+        #     여기서 role을 다시 검사하면 렌더가 박은 키프레임과 어긋난다.
+        #   ★인트로(prepend_still)를 붙였으면 그만큼 **밀어서** 저장한다. 안 밀면
+        #     인트로를 켠 영상만 그 길이만큼 일찍 잘린다.
+        #   실패해도 렌더는 살린다 — 잘라내기 버튼 하나 때문에 완성본을 잃을 수 없다.
+        try:
+            _cta_cut = cta_cut_sec(_beat_timeline(plan, tts_paths))
+            if _cta_cut:
+                _cta_cut += _intro_shift
+            store.update_mix_job(job_id, cta_cut_sec=_cta_cut)
+        except Exception:
+            traceback.print_exc(file=sys.stderr)
         # ★moov 앞으로(faststart). 안 하면 moov가 파일 끝에 남아, 헤더만 읽어 판단하는
         #   외부 수집기가 영상을 못 읽는다 — Buffer 실측 2026-08-30:
         #   "Invalid post: Video could not be read from its URL"(HEAD 200인데 거절).
