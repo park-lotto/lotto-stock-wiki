@@ -19,8 +19,102 @@ search_links.py가 앞서 같은 길을 갔다(외부 API 품질/제약에 막�
 ★링크는 영상 픽셀에 안 들어간다. 상품 확정만 앞단(매칭 검토)에서 하고, 링크는
 SEO 설명란·인포크링크 등록에서 꺼내 쓴다.
 """
+import hashlib
+import hmac
+import json
 import re
+import time
+import urllib.error
 import urllib.parse
+import urllib.request
+
+# ★2026-09-04 사장님 키로 실측: 딥링크·상품검색 둘 다 200. 승인 전 회원은 키가 없어
+#   종전 수동 흐름이 그대로 남는다(search_products/to_deeplink의 첫 분기).
+API_DOMAIN = "https://api-gateway.coupang.com"
+_API_BASE = "/v2/providers/affiliate_open_api/apis/openapi"
+_PAGEKEY_RE = re.compile(r"[?&]pageKey=(\d+)")
+# 키 생사 확인용 상품(딥링크 1회 = 무과금). 08-18 사례의 미니세탁기 상품번호.
+_PROBE_URL = "https://www.coupang.com/vp/products/9572701928"
+
+
+def split_key(raw):
+    """키등록 화면의 한 줄 'AccessKey:SecretKey' → (ak, sk). 모양이 아니면 ('', '')."""
+    parts = (raw or "").strip().split(":", 1)
+    if len(parts) != 2:
+        return "", ""
+    ak, sk = parts[0].strip(), parts[1].strip()
+    return (ak, sk) if ak and sk else ("", "")
+
+
+def canonical_product_url(url):
+    """남의 추적링크·잡 파라미터를 걷어내고 **상품 URL**로 만든다.
+
+    ★남의 추적링크를 그대로 쓰면 수수료가 그쪽으로 간다(2026-08-18 채이홈 사례).
+      `link.coupang.com/re/AFFSDP?...&pageKey=123` / `coupang.com/vp/products/123?...` →
+      `https://www.coupang.com/vp/products/123`. 단축링크(`link.coupang.com/a/xxx`)는
+      상품번호를 알 수 없어 그대로 둔다(그건 사람이 상품 URL로 바꿔 넣어야 한다)."""
+    u = (url or "").strip()
+    m = _PAGEKEY_RE.search(u) or _PRODUCT_RE.search(u)
+    return f"https://www.coupang.com/vp/products/{m.group(1)}" if m else u
+
+
+def _auth_header(method, path_with_query, ak, sk):
+    """쿠팡 CEA HMAC-SHA256 서명. 메시지 = signed-date + method + path + query(물음표 제외)."""
+    dt = time.strftime("%y%m%dT%H%M%SZ", time.gmtime())
+    path, _, query = path_with_query.partition("?")
+    sig = hmac.new(sk.encode(), (dt + method + path + query).encode(), hashlib.sha256).hexdigest()
+    return f"CEA algorithm=HmacSHA256, access-key={ak}, signed-date={dt}, signature={sig}"
+
+
+def _call(method, path, ak, sk, body=None, timeout=15):
+    """(http status, 파싱된 JSON dict). 네트워크 실패는 (0, {'error': …}) — 예외를 밖으로 안 낸다."""
+    req = urllib.request.Request(API_DOMAIN + path, method=method,
+                                 data=(json.dumps(body).encode() if body is not None else None))
+    req.add_header("Authorization", _auth_header(method, path, ak, sk))
+    req.add_header("Content-Type", "application/json;charset=UTF-8")
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            return r.status, json.loads(r.read().decode("utf-8", "replace") or "{}")
+    except urllib.error.HTTPError as e:
+        try:
+            return e.code, json.loads(e.read().decode("utf-8", "replace") or "{}")
+        except Exception:                                   # noqa: BLE001
+            return e.code, {"error": f"HTTP {e.code}"}
+    except Exception as e:                                  # noqa: BLE001 — 네트워크·타임아웃
+        return 0, {"error": str(e)[:200]}
+
+
+def _outcome(status, data):
+    """관측판 outcome — 판정은 여기 한 곳(0순위-B)."""
+    if status in (401, 403):
+        return "auth_dead"
+    if status == 429:
+        return "rpm"
+    if status >= 500:
+        return "server"
+    if status == 0:
+        return "network"
+    if str((data or {}).get("rCode", "0")) != "0":
+        return "error"
+    return "ok"
+
+
+def _record(outcome, *, op, customer_id=None, http=None, detail=None, dur_ms=None):
+    """api_events에 남긴다(관측판·회원 키 사망 경보가 여기서 나온다). 실패해도 본작업을 안 막는다."""
+    try:
+        from shopping_shorts import api_health
+        api_health.record("coupang", outcome, op=op, customer_id=customer_id,
+                          http=http, detail=(detail or "")[:300], dur_ms=dur_ms)
+    except Exception:                                       # noqa: BLE001
+        pass
+
+
+def probe_key(ak, sk):
+    """키가 살아있나 — 딥링크 1회(무과금). 등록 시점에 죽은 키를 걸러낸다."""
+    if not (ak and sk):
+        return False
+    st, d = _call("POST", f"{_API_BASE}/v1/deeplink", ak, sk, {"coupangUrls": [_PROBE_URL]})
+    return st == 200 and str(d.get("rCode", "")) == "0"
 
 # 파트너스 웹에서 추적 링크를 직접 만드는 화면 — 승인 전엔 여기서 수동 생성한다.
 PARTNERS_LINK_PAGE = "https://partners.coupang.com/#affiliate/ws/link"
@@ -69,7 +163,7 @@ def parse_product_url(url):
     return {"product_id": m.group(1), "url": clean}
 
 
-def search_products(keyword, limit=10, access_key="", secret_key=""):
+def search_products(keyword, limit=10, access_key="", secret_key="", customer_id=None):
     """키워드 → 상품 후보. 승인 전(키 없음)엔 items=[] + search_url만 준다.
 
     반환 형태를 승인 후와 동일하게 고정해둔다 — 실제 API를 붙일 때 호출부는
@@ -85,22 +179,66 @@ def search_products(keyword, limit=10, access_key="", secret_key=""):
             "notice": "파트너스 오픈API 최종 승인 전이라 자동 검색을 못 합니다 — "
                       "검색 링크를 열어 상품 URL을 복사해 붙여넣으세요.",
         }
-    raise NotImplementedError(
-        "파트너스 승인 후 구현 — /v2/providers/affiliate_open_api/apis/openapi/"
-        "products/search 를 HMAC 서명해 호출하고 items를 채운다."
-    )
+    t0 = time.time()
+    path = f"{_API_BASE}/products/search?keyword={urllib.parse.quote(kw)}&limit={int(limit or 10)}"
+    st, d = _call("GET", path, access_key, secret_key)
+    oc = _outcome(st, d)
+    _record(oc, op="search", customer_id=customer_id, http=(st or None),
+            detail=(d.get("rMessage") or d.get("error")) if oc != "ok" else None,
+            dur_ms=int((time.time() - t0) * 1000))
+    base = {"search_url": search_url(kw), "requires_approval": False, "source": "api"}
+    if oc != "ok":
+        why = {"auth_dead": "파트너스 키가 거부됐습니다 — 키등록에서 다시 넣어주세요",
+               "rpm": "파트너스 API 호출 한도 — 잠시 뒤 다시", "server": "쿠팡 API 서버 오류",
+               "network": "쿠팡 API에 연결하지 못했습니다"}.get(oc, str(d.get("rMessage") or d.get("error") or "실패")[:120])
+        return dict(base, ok=False, items=[], notice=why)
+    items = []
+    for it in ((d.get("data") or {}).get("productData") or []):
+        pid = str(it.get("productId") or "").strip()
+        if not pid:
+            continue
+        price = it.get("productPrice")
+        try:
+            price_txt = f"{int(float(price)):,}원" if price not in (None, "") else ""
+        except (TypeError, ValueError):
+            price_txt = str(price)
+        items.append({
+            "product_id": pid, "name": (it.get("productName") or "").strip(),
+            "url": f"https://www.coupang.com/vp/products/{pid}",
+            # 검색 응답의 productUrl은 **이 키 주인의 추적태그가 이미 붙은** 링크다 — 딥링크를 또 부를 필요 없다.
+            "partner_url": (it.get("productUrl") or "").strip(),
+            "image": (it.get("productImage") or "").strip(), "price": price_txt,
+            "rating": "", "is_ad": False, "is_rocket": bool(it.get("isRocket")),
+        })
+    return dict(base, ok=True, items=items)
 
 
-def to_deeplink(urls, access_key="", secret_key=""):
+def to_deeplink(urls, access_key="", secret_key="", customer_id=None):
     """상품 URL 목록 → 파트너스 추적 링크. 승인 전엔 원본을 통과시키고
     requires_approval=True — 파트너스 웹에서 만든 링크를 사람이 붙여넣는다."""
     urls = [u for u in (urls or []) if u]
     if not (access_key and secret_key):
         return [{"original_url": u, "shorten_url": "", "requires_approval": True}
                 for u in urls]
-    raise NotImplementedError(
-        "파트너스 승인 후 구현 — .../openapi/v1/deeplink 를 HMAC 서명해 호출."
-    )
+    if not urls:
+        return []
+    t0 = time.time()
+    st, d = _call("POST", f"{_API_BASE}/v1/deeplink", access_key, secret_key, {"coupangUrls": urls})
+    oc = _outcome(st, d)
+    _record(oc, op="deeplink", customer_id=customer_id, http=(st or None),
+            detail=(d.get("rMessage") or d.get("error")) if oc != "ok" else None,
+            dur_ms=int((time.time() - t0) * 1000))
+    if oc != "ok":
+        err = str(d.get("rMessage") or d.get("error") or oc)[:160]
+        return [{"original_url": u, "shorten_url": "", "landing_url": "",
+                 "requires_approval": False, "error": err} for u in urls]
+    by_orig = {(x.get("originalUrl") or ""): x for x in (d.get("data") or [])}
+    out = []
+    for u in urls:
+        x = by_orig.get(u) or {}
+        out.append({"original_url": u, "shorten_url": (x.get("shortenUrl") or "").strip(),
+                    "landing_url": (x.get("landingUrl") or "").strip(), "requires_approval": False})
+    return out
 
 
 def build_product(keyword="", url="", name="", partner_url="", memo=""):

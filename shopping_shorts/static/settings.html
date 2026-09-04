@@ -432,7 +432,8 @@ var GUIDE_VIDEO = {
   typecast: "",    // 타입캐스트 키 받는 법
   youtube: "",     // 유튜브 Data API 키 받는 법
   serpapi: "",     // SerpApi 키 받는 법(렌즈 검색)
-  buffer: ""       // Buffer 키 받는 법(SNS 예약발행)
+  buffer: "",      // Buffer 키 받는 법(SNS 예약발행)
+  coupang: ""      // 쿠팡 파트너스 API 키 받는 법
 };
 
 /* 서비스 정의 — 이름·설명·복수허용 여부를 한 곳에서만 정한다(CLAUDE.md 0순위-B). */
@@ -482,7 +483,15 @@ var SERVICES = [
           "반드시 내 Buffer 키가 있어야 합니다.",
     /* ★내 키가 없으면 **아예 못 쓰는** 서비스다(포인트로 대신 못 쓴다).
        배지·안내가 다른 서비스와 달라야 한다 — renderKeys의 mustOwn 분기 참조. */
-    mustOwn: true }
+    mustOwn: true },
+  /* ★쿠팡 파트너스(2026-09-04) — 8단계에서 상품 카드를 클릭하면 **내 추적 링크**가 자동으로
+     만들어집니다. 키가 없으면 종전처럼 파트너스 사이트에서 손으로 만들어 붙여넣습니다. */
+  { id: "coupang",    icon: "🛒", name: "쿠팡 파트너스",
+    desc: "영상에 붙일 쿠팡 상품을 찾고, 내 추적 링크(수수료가 나에게 오는 링크)를 자동으로 만듭니다",
+    multi: false, ph: "AccessKey:SecretKey (두 값을 : 로 이어서)",
+    note: "파트너스 사이트 → <b>링크 생성 › API Key 발급</b>에서 받은 <b>Access Key</b>와 " +
+          "<b>Secret Key</b>를 가운데 <b>:</b> 로 이어 한 줄로 넣으세요. " +
+          "API 키는 <b>최종 승인</b>(판매 실적 발생)된 계정에만 발급됩니다. 유효기간 180일이라 만료되면 다시 발급해 넣어 주세요." }
 ];
 
 var STATUS = {

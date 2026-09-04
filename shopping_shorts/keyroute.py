@@ -28,9 +28,10 @@ SVC_YOUTUBE = "youtube"
 SVC_SERPAPI = "serpapi"
 SVC_BUFFER = "buffer"      # SNS 예약발행. 고객이 자기 Buffer 개인 키를 넣는다
 SVC_TYPECAST = "typecast"  # 목소리 두 번째 백엔드. 프리셋 model_id가 `ssfm-*`면 이쪽으로 나간다
+SVC_COUPANG = "coupang"    # 쿠팡 파트너스 오픈API(상품검색·딥링크). 값은 'AccessKey:SecretKey' 한 줄. 개인 전용·폴백 없음(2026-09-04)
 
 SERVICES = (SVC_GEMINI, SVC_VMAKE, SVC_ELEVENLABS, SVC_TYPECAST, SVC_YOUTUBE,
-            SVC_SERPAPI, SVC_BUFFER)
+            SVC_SERPAPI, SVC_BUFFER, SVC_COUPANG)
 
 # ★등록은 받지만 **실제 호출에 쓰이는** 서비스는 아직 이 둘뿐이다(2026-08-17 실측).
 #   - vmake     : job의 customer_id → mix_pipeline._vmake_keys → keys_for (목록 전체)
@@ -68,7 +69,7 @@ SERVICES = (SVC_GEMINI, SVC_VMAKE, SVC_ELEVENLABS, SVC_TYPECAST, SVC_YOUTUBE,
 #     호출부는 이미 customer_id를 흘리고 있었고(일레븐랩스 배선 때 뚫린 길),
 #     타입캐스트 분기만 그 인자를 버리고 config 키를 쓰고 있었다.
 WIRED = (SVC_VMAKE, SVC_SERPAPI, SVC_ELEVENLABS, SVC_TYPECAST, SVC_GEMINI,
-         SVC_YOUTUBE, SVC_BUFFER)
+         SVC_YOUTUBE, SVC_BUFFER, SVC_COUPANG)   # coupang: app.py 쿠팡 검색·상품 저장이 keys_for로 읽는다
 
 # ★공용 풀 모델(2026-08-24 사장님 결정) — 이 서비스들은 회원 키를 **우리 풀에 합류**시키고
 #   회원은 풀 전체를 무료로 쓴다. 키 1개만 받는데 그 1개로만 돌리면 곧바로 한도에 걸려
