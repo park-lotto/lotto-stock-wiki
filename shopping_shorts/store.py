@@ -495,15 +495,18 @@ class Store:
             # 활동여부(채널이 최근 영상을 올렸나)엔 부적합 — 실제 게시 시각(item.timestamp=createdAt)을 저장한다.
             # 플랫폼 축(2026-09-04 사장님 "유튜브는 48시간으로만 되어있는데 이번주·이번달도").
             # 여태 이 표는 인스타 전용이라 app.py가 platform!='instagram'이면 빈 목록을 줬다.
+            # 이미 있으면 sqlite가 "duplicate column"으로 던진다 — 정상이라 넘어가되
+            # 조용히 넘기지는 않는다(다른 사유로 실패하면 기간탭이 통째로 빈다).
             try:
                 c.execute("ALTER TABLE reel_history ADD COLUMN platform TEXT DEFAULT 'instagram'")
-            except Exception:
-                pass
+            except Exception as e:  # noqa: BLE001 — 이미 있는 컬럼이면 정상
+                if "duplicate column" not in str(e).lower():
+                    print(f"[경고] reel_history.platform 추가 실패: {e!r}", file=sys.stderr)
             try:
                 c.execute("CREATE INDEX IF NOT EXISTS idx_reel_history_platform "
                           "ON reel_history(platform, comments)")
-            except Exception:
-                pass
+            except Exception as e:  # noqa: BLE001 — 인덱스는 성능용이라 없어도 동작한다
+                print(f"[경고] reel_history platform 인덱스 실패: {e!r}", file=sys.stderr)
             try:
                 c.execute("ALTER TABLE reel_history ADD COLUMN upload_ts TEXT")
             except sqlite3.OperationalError:
@@ -2528,8 +2531,9 @@ class Store:
             #   유튜브는 '이번 주/이번 달'이 통째로 빈 목록이었다. 추가 크롤 0이다.
             try:
                 self._record_history(c, items, collected_at, platform=platform)
-            except Exception:
-                pass  # 히스토리 실패가 수집 저장을 막지 않는다(인스타 쪽과 같은 규칙)
+            except Exception as e:  # noqa: BLE001 — 히스토리 실패가 수집 저장을 막지 않는다
+                # ★조용히 넘기면 "이번 주 탭이 왜 비지?"를 영영 못 찾는다(인스타 쪽 교훈).
+                print(f"[경고] {platform} 히스토리 적재 실패: {e!r}", file=sys.stderr)
 
     def merge_last_run_platform(self, platform, new_items, collected_at, key="shortcode"):
         """기존 수집분에 새 항목을 **한 트랜잭션 안에서** 합친다. 새로 담긴 개수를 준다.
