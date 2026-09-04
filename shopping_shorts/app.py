@@ -4743,8 +4743,17 @@ def api_coupang_identify(body: dict):
     if not product:
         return {"ok": False, "product": "", "queries": [],
                 "error": "썸네일에서 제품을 특정하지 못했습니다 — 제품명을 직접 넣어 찾아보세요"}
+    # 판독 때 같이 나온 주제어·재질을 붙여 준다 — 유의어 모드가 물건 종류를 안 헷갈리게(2026-09-04 '택총→전술 조끼')
+    ctx = ""
     try:
-        qs = [q for q in (coupang_query.suggest(product, "") or []) if q and q != product]
+        with store._conn() as c:
+            row = c.execute("SELECT subject, material FROM vision_tags WHERE shortcode=?", (sc,)).fetchone()
+        if row:
+            ctx = " / ".join([x for x in (("주제: " + row[0]) if row[0] else "", ("재질: " + row[1]) if row[1] else "") if x])
+    except Exception:                                       # noqa: BLE001
+        ctx = ""
+    try:
+        qs = [q for q in (coupang_query.suggest(product, "", context=ctx) or []) if q and q != product]
     except Exception:                                       # noqa: BLE001
         qs = []
     return {"ok": True, "product": product, "queries": [product] + qs[:5]}

@@ -294,7 +294,7 @@ def test_identify_endpoint_turns_thumbnail_into_queries(monkeypatch, tmp_path):
     from shopping_shorts.store import Store
     db = tmp_path / "t.db"; monkeypatch.setattr(a, "DB_PATH", str(db)); Store(str(db))
     monkeypatch.setattr(product_name, "identify_many", lambda items, db_path, **k: {items[0]["shortcode"]: "의류 태깅건"})
-    monkeypatch.setattr(coupang_query, "suggest", lambda target, script: ["옷 태그건", "의류 태깅건", "택건"])
+    monkeypatch.setattr(coupang_query, "suggest", lambda target, script, **kw: ["옷 태그건", "의류 태깅건", "택건"])
     r = a.api_coupang_identify({"shortcode": "ABC", "thumbnail": "https://x/t.jpg"})
     assert r["ok"] and r["product"] == "의류 태깅건" and r["queries"][0] == "의류 태깅건" and "옷 태그건" in r["queries"]
     monkeypatch.setattr(product_name, "identify_many", lambda items, db_path, **k: {})
@@ -315,3 +315,13 @@ def test_identify_batch_prewarms_cache(monkeypatch, tmp_path):
                                                 {"shortcode": "B", "thumbnail": ""}, "junk", {"shortcode": "../C", "thumbnail": "https://x/c.jpg"}]})
     assert r["ok"] and seen["n"] == 2 and r["products"] == {"A": "택총", "C": "택총"}
     assert a.api_coupang_identify_batch({"items": []}) == {"ok": True, "products": {}}
+
+
+
+def test_suggest_body_without_script_is_synonym_only():
+    """썸네일 판독 경로(대본 없음)는 유의어 모드 — '택총→전술 조끼' 같은 종류 이탈을 프롬프트에서 막는다."""
+    from shopping_shorts import coupang_query as cq
+    b = cq.build_body("택총", "", context="주제: 옷 수선 / 재질: 플라스틱")
+    assert "같은 물건의 다른 이름" in b and "다른 종류의 물건은 절대" in b and "주제: 옷 수선" in b
+    b2 = cq.build_body("택총", "대본이 있으면 종전과 같다")
+    assert "대본: 대본이 있으면" in b2 and "같은 물건의 다른 이름" not in b2

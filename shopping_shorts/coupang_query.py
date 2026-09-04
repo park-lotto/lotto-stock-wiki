@@ -56,8 +56,26 @@ def parse_queries(raw, limit=3):
     return out[:limit]
 
 
-def suggest(target, script="", limit=3):
-    """(대본, 타깃) → 쿠팡 검색어 후보. 실패하면 [target]으로 조용히 폴백한다."""
+def build_body(target, script="", context=""):
+    """모델에 줄 본문 — 판단은 여기 한 곳. ★대본이 없을 때(썸네일 판독으로 온 제품명)는
+    **같은 물건의 다른 이름**만 허용한다(2026-09-04 사장님 실측: '택총'이 '전술 조끼·탄창 파우치'로
+    번져 나왔다 — 대본 없이 이름 하나만 주면 모델이 물건 종류부터 추측한다)."""
+    target = (target or "").strip()
+    if (script or "").strip():
+        return "연결 대상: " + target + "\n대본: " + (script or "")[:900]
+    lines = ["연결 대상: " + target]
+    if (context or "").strip():
+        lines.append("판독 정보: " + context.strip())
+    lines.append("대본: (없음 — 이 상품명은 영상 썸네일에서 비전 판독한 **실물 제품**이다)")
+    lines.append("★대본이 없으므로 '연결 대상'과 **같은 물건의 다른 이름·유의어·표기 변형**만 2~3개 제안해라. "
+                 "다른 종류의 물건은 절대 넣지 마라. 예: '택총' → '옷 태그건', '의류 택건', '태깅건'(됨) / "
+                 "'전술 조끼', '탄창 파우치'(안 됨 — 다른 물건).")
+    return "\n".join(lines)
+
+
+def suggest(target, script="", limit=3, context=""):
+    """(대본, 타깃) → 쿠팡 검색어 후보. 실패하면 [target]으로 조용히 폴백한다.
+    script가 없으면(썸네일 판독 경로) 유의어 모드 — build_body 참조."""
     target = (target or "").strip()
     if not target and not script:
         return []
@@ -69,7 +87,7 @@ def suggest(target, script="", limit=3):
     except Exception:
         return fallback
 
-    body = (f"연결 대상: {target}\n대본: {(script or '')[:900]}")
+    body = build_body(target, script, context)
     for _ in range(3):
         # 라운드로빈 — _current_key_and_idx는 늘 live[0]만 줘서 1번 키만 때린다(2026-07-23 교훈).
         key, ki = comment_gen._next_live_key_and_idx()
