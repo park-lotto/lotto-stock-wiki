@@ -75,9 +75,10 @@ def test_extract_script_frames_composes(tmp_path):
     def fake_boundaries(path):
         return [0.0, 3.0, 6.0]                       # 2구간
 
-    def fake_frame_at(path, dest, ts):
+    def fake_frame_at(path, dest, ts, filename=None):
         calls.setdefault("frame_ts", []).append(ts)
-        return f"{dest}/f_{ts}.jpg"                    # 실제 파일 안 만듦(태깅도 목)
+        calls.setdefault("names", []).append(filename)
+        return f"{dest}/{filename or ts}.jpg"         # 실제 파일 안 만듦(태깅도 목)
 
     def fake_transcribe(mp3):
         return [{"word": "우유", "start": 0.5, "end": 1.0},
@@ -97,7 +98,10 @@ def test_extract_script_frames_composes(tmp_path):
         get_boundaries=fake_boundaries, extract_frame_at=fake_frame_at,
         extract_audio=fake_extract_audio, transcribe_words=fake_transcribe, tag_frames=fake_tag)
 
-    assert calls["n_frames"] == 2                      # 구간당 프레임 1장
+    assert calls["n_frames"] == 2                      # 구간별 묶음 2개(구간 수와 같다)
+    # ★2026-09-04: 구간당 프레임 3장(시작·중간·끝), 파일명은 전부 다르다(덮어쓰기 버그 재발 방지)
+    assert len(calls["frame_ts"]) == 6
+    assert len(set(calls["names"])) == 6 and all(calls["names"])
     segs = out["segments"]
     assert len(segs) == 2
     assert all(s.get("seg_id") for s in segs)         # seg_id 부여됨(다운스트림 계약)
