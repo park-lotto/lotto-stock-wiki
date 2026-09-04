@@ -326,6 +326,29 @@ class Store:
                     PRIMARY KEY (customer_id, shortcode)
                 )
             """)
+            # ── 볼채널등록(개인 채널 즐겨찾기, 2026-09-02 사장님 요청) ──────────────
+            #   영상 즐겨찾기(mix_basket)의 채널판. ★전역 수집과 철저히 분리한다 —
+            #   여기 담긴 채널은 platform_seeds/discovered_channels에 **넣지 않는다**.
+            #   (회원 100명이 20채널씩 등록하면 2,000채널 주기크롤이 되어 API 쿼터·
+            #    Apify 비용·mp4 캐시가 동시에 터진다. 즐겨찾기는 '북마크'일 뿐이다.)
+            #   지표(팔로워·최근영상 썸네일)는 화면을 열 때 1회만 갱신하고
+            #   refreshed_at으로 6시간 캐시한다 — 카드 개수만큼 API를 때리지 않기 위해.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS fav_channel (
+                    customer_id INTEGER NOT NULL DEFAULT 0,
+                    platform TEXT NOT NULL,
+                    channel_id TEXT NOT NULL,
+                    name TEXT,
+                    url TEXT,
+                    avatar TEXT,
+                    followers INTEGER,
+                    last_video_thumb TEXT,
+                    last_video_url TEXT,
+                    added_at TEXT,
+                    refreshed_at TEXT,
+                    PRIMARY KEY (customer_id, platform, channel_id)
+                )
+            """)
             # 부품은행 흡수 실패 재큐(2026-07-24). 503(모델 용량)으로 실패한 상위영상은 다음
             # 수집 때 상위권 밖으로 밀리면 영구 유실될 수 있다 → url당 1행으로 담아 지수 백오프로
             # 재시도한다. fail_count가 상한을 넘으면 흡수 루프가 스스로 폐기(영구불량 영상 방어).
@@ -2710,6 +2733,84 @@ class Store:
                 "SELECT shortcode FROM mix_basket WHERE customer_id=?", (customer_id,)
             ).fetchall()
         return {r[0] for r in rows}
+
+    # ── 볼채널등록(개인 채널 즐겨찾기) ─────────────────────────────────────
+    #   ★수집 트리거가 아니다. 여기 담아도 크롤 대상은 늘지 않는다(설계 의도).
+    FAV_CHANNEL_CAP = 50          # 인당 상한 — 없으면 한 명이 수천 건을 밀어넣는다
+
+    def fav_channel_add(self, platform, channel_id, name="", url="", avatar="",
+                        followers=None, last_video_thumb="", last_video_url="",
+                        customer_id=LEGACY_CUSTOMER_ID):
+        """있으면 메타만 갱신(멱등), 없으면 추가. 새로 담겼으면 True.
+        상한을 넘으면 CapExceeded 대신 None을 돌려준다 — 호출부가 안내 문구를 고른다."""
+        platform = (platform or "").strip().lower()
+        channel_id = (channel_id or "").strip().lstrip("@")
+        if not platform or not channel_id:
+            return False
+        with self._conn() as c:
+            exists = c.execute(
+                "SELECT 1 FROM fav_channel WHERE customer_id=? AND platform=? AND channel_id=?",
+                (customer_id, platform, channel_id),
+            ).fetchone()
+            if exists:
+                # 빈 칸만 채운다 — 다시 등록하는 것이 곧 메타 구제 수단이 된다
+                # (mix_basket_add의 video_url 처리와 같은 원리).
+                c.execute(
+                    "UPDATE fav_channel SET "
+                    "  name=CASE WHEN COALESCE(name,'')='' THEN ? ELSE name END,"
+                    "  url=CASE WHEN COALESCE(url,'')='' THEN ? ELSE url END,"
+                    "  avatar=CASE WHEN COALESCE(avatar,'')='' THEN ? ELSE avatar END "
+                    "WHERE customer_id=? AND platform=? AND channel_id=?",
+                    (name, url, avatar, customer_id, platform, channel_id),
+                )
+                return False
+            n = c.execute("SELECT COUNT(*) FROM fav_channel WHERE customer_id=?",
+                          (customer_id,)).fetchone()[0]
+            if n >= self.FAV_CHANNEL_CAP:
+                return None
+            c.execute(
+                "INSERT INTO fav_channel(customer_id, platform, channel_id, name, url, avatar,"
+                " followers, last_video_thumb, last_video_url, added_at)"
+                " VALUES(?,?,?,?,?,?,?,?,?, datetime('now'))",
+                (customer_id, platform, channel_id, name, url, avatar,
+                 followers, last_video_thumb, last_video_url),
+            )
+            return True
+
+    def fav_channel_remove(self, platform, channel_id, customer_id=LEGACY_CUSTOMER_ID):
+        with self._conn() as c:
+            c.execute(
+                "DELETE FROM fav_channel WHERE customer_id=? AND platform=? AND channel_id=?",
+                (customer_id, (platform or "").lower(), (channel_id or "").lstrip("@")),
+            )
+
+    def fav_channel_list(self, customer_id=LEGACY_CUSTOMER_ID):
+        """담은 순서대로 dict 리스트."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT platform, channel_id, name, url, avatar, followers,"
+                " last_video_thumb, last_video_url, added_at, refreshed_at"
+                " FROM fav_channel WHERE customer_id=? ORDER BY added_at ASC, rowid ASC",
+                (customer_id,),
+            ).fetchall()
+        keys = ("platform", "channel_id", "name", "url", "avatar", "followers",
+                "last_video_thumb", "last_video_url", "added_at", "refreshed_at")
+        return [dict(zip(keys, r)) for r in rows]
+
+    def fav_channel_set_meta(self, platform, channel_id, customer_id=LEGACY_CUSTOMER_ID,
+                             **fields):
+        """열 때 1회 갱신용 — 준 칸만 덮고 refreshed_at을 찍는다."""
+        allowed = ("name", "url", "avatar", "followers", "last_video_thumb", "last_video_url")
+        sets, vals = [], []
+        for k in allowed:
+            if k in fields and fields[k] not in (None, ""):
+                sets.append(k + "=?")
+                vals.append(fields[k])
+        sets.append("refreshed_at=datetime('now')")
+        vals += [customer_id, (platform or "").lower(), (channel_id or "").lstrip("@")]
+        with self._conn() as c:
+            c.execute("UPDATE fav_channel SET " + ", ".join(sets) +
+                      " WHERE customer_id=? AND platform=? AND channel_id=?", vals)
 
     def produce_pick_toggle(self, shortcode, customer_id=LEGACY_CUSTOMER_ID):
         """도서관 대본을 영상제작 목록에 담기/빼기 토글. 담기면 True."""
@@ -6037,6 +6138,36 @@ class Store:
                 out[cid] = {"made": made or 0, "charged": charged or 0}
         return out
 
+    def production_feed(self, since_iso, limit=300):
+        """[제작 현황판] 그 시각 이후 만들어진 믹스 job 전부 — 최신 먼저.
+
+        사장님 요청(2026-09-02): "회원들이 오늘 영상 만드는 걸 한 페이지에서,
+        통계랑 실제 만든 영상까지 보게 해달라."
+
+        ★고객 이름은 여기서 붙인다 — 화면이 고객 목록을 따로 불러 맞추면 두 벌이 된다(0순위-B).
+        ★영상 원문 경로는 내보내지 않는다. 있는지 여부(has_video)만 준다 — 재생은
+          기존 /api/mix/video/{job_id}가 담당한다(서빙 경로를 두 벌로 만들지 않는다).
+        """
+        with self._conn() as c:
+            c.row_factory = sqlite3.Row
+            rows = c.execute(
+                "SELECT m.job_id, m.customer_id, m.status, m.error, m.created_at, m.updated_at, "
+                "       m.target_seconds, m.structure, m.subtitle_removal, m.render_charge_day, "
+                "       IFNULL(m.video_path,'') AS video_path, "
+                "       c.username, c.name, c.email "
+                "FROM mix_jobs m LEFT JOIN customers c ON c.id = m.customer_id "
+                "WHERE m.created_at >= ? ORDER BY m.created_at DESC LIMIT ?",
+                (since_iso, int(limit))).fetchall()
+        out = []
+        for r in rows:
+            d = dict(r)
+            d["has_video"] = bool((d.pop("video_path") or "").strip())
+            d["who"] = (d.get("name") or d.get("username")
+                        or (d.get("email") or "").split("@")[0] or f"cid{d.get('customer_id')}")
+            out.append(d)
+        return out
+
+
     def points_balance_all(self):
         """{customer_id: 잔액} — points_balance의 일괄판(내부 단위 그대로)."""
         with self._conn() as c:
@@ -6525,6 +6656,20 @@ class Store:
     # 워커를 여러 개 띄울 때 같은 계정으로 동시 접속해 플래그되는 걸 막는다.
     _EXCLUSIVE_TASKS = ("durfill", "prewarm")
 
+    # ★배타는 **인스타 때문**이다 — 인스타를 안 건드리는 소스까지 줄 세울 이유가 없다.
+    #   (2026-09-02 고객 제보 "소스 추가할 때 바로 반영이 안 돼요, 나중에 한꺼번에 또
+    #    반영돼요" — 실측 job_queue: 담긴 순서대로 대기 72초→536초(9분)까지 계단식.
+    #    그런데 워커는 놀았다: 25분 구간 총 점유 2,404초 / 워커 12개 = 용량 18,000초.)
+    #   최근 200건 실측: 인스타 72건(36%) / 틱톡·샤오홍슈·유튜브 128건(64%).
+    #   ★화이트리스트로만 푼다 — "인스타가 아니다"를 확신할 때만 병렬. 모르면 직렬이다.
+    #     계정은 IP보다 비싸다(2026-08-05: 동시 접속으로 계정 2개 소실, 복구 불가).
+    _PARALLEL_SAFE_MARKS = ("tiktok", "xiaohongshu", "douyin", "youtube", "youtu.be", "naver")
+    # 계정별 동시 상한을 **작업 무게로** 가른다. 공평 분배는 무거운 작업(render·mix)이
+    # 한 사람에게 독점되는 걸 막으려던 규칙인데, 가벼운 사전분석까지 1개로 묶여 있었다
+    # — 그래서 소스를 5개 담으면 하나씩 줄줄이 기다렸다(위 제보의 두 번째 병목).
+    # prewarm은 대개 0~60초라 몇 개 돌아도 서버가 안 눕는다(워커 12개 한도 안에서 돈다).
+    _LIGHT_TASKS = ("durfill", "prewarm")
+
     # 하트비트가 이만큼 끊긴 running은 '살아있는 렌더'로 치지 않는다(2026-08-27).
     _HEAVY_STALE_MINUTES = 15
 
@@ -6569,6 +6714,14 @@ class Store:
             #   ★같은 UPDATE 문 안에서 검사한다 — 파이썬으로 먼저 세면 워커 3개가
             #   동시에 "지금 0개"를 보고 셋 다 집는 경합이 난다.
             ph = ",".join("?" * len(self._EXCLUSIVE_TASKS))
+            lph = ",".join("?" * len(self._LIGHT_TASKS))
+
+            def _nonig(al):
+                """이 작업이 **인스타가 아님을 확신**할 수 있나. 표식이 있고 instagram이 없어야 한다
+                (캡션에 'instagram'이 섞인 틱톡까지 병렬로 내보내면 계정이 위험하다)."""
+                marks = " OR ".join(f"{al}.args_json LIKE '%{m}%'" for m in self._PARALLEL_SAFE_MARKS)
+                return f"(({marks}) AND {al}.args_json NOT LIKE '%instagram%')"
+            _safe, _safe_r = _nonig("q"), _nonig("r")
             row = c.execute(
                 "UPDATE job_queue SET state='running', "
                 "       claimed_at=datetime('now'), heartbeat_at=datetime('now') "
@@ -6578,16 +6731,26 @@ class Store:
                 #   돌리며 확인하는 운용). 일반 고객은 종전대로 1개(공평 분배 유지).
                 #   N은 ADMIN_CONCURRENT_JOBS(기본 2).
                 "               AND (q.owner IS NULL OR "
-                "                    (SELECT COUNT(*) FROM job_queue "
-                "                      WHERE state='running' AND owner=q.owner) "
-                "                    < CASE WHEN q.owner='0' THEN ? ELSE 1 END) "
-                f"               AND (q.task NOT IN ({ph}) OR NOT EXISTS "
+                "                    (SELECT COUNT(*) FROM job_queue w "
+                "                      WHERE w.state='running' AND w.owner=q.owner "
+                f"                       AND (w.task IN (" + lph + ")) = (q.task IN (" + lph + "))) "
+                f"                    < CASE WHEN q.owner='0' THEN ? "
+                f"                           WHEN q.task IN (" + lph + ") THEN ? ELSE 1 END) "
+                f"               AND (q.task NOT IN ({ph}) OR {_safe} OR NOT EXISTS "
                 "                    (SELECT 1 FROM job_queue r "
-                f"                     WHERE r.state='running' AND r.task IN ({ph}))) "
+                f"                     WHERE r.state='running' AND r.task IN ({ph}) "
+                f"                       AND NOT ({_safe_r}))) "
                 "             ORDER BY COALESCE(q.prio, 5), q.id LIMIT 1) "
                 "RETURNING id, task, args_json",
-                (int(os.environ.get("ADMIN_CONCURRENT_JOBS", "2") or 2),)
-                + self._EXCLUSIVE_TASKS * 2).fetchone()
+                # ★인자는 SQL에 물음표가 나오는 **순서 그대로**다:
+                #   lph, lph (카운트 조건) → admin (CASE 첫 THEN) → lph → light → ph, ph
+                #   한 칸이라도 어긋나면 조건이 조용히 뒤집힌다(2026-09-02에 실제로 어긋나
+                #   관리자 동시 2개 제한이 풀렸고, 회귀 테스트가 그걸 잡았다).
+                (self._LIGHT_TASKS * 2
+                 + (int(os.environ.get("ADMIN_CONCURRENT_JOBS", "2") or 2),)
+                 + self._LIGHT_TASKS
+                 + (int(os.environ.get("LIGHT_CONCURRENT_JOBS", "3") or 3),)
+                 + self._EXCLUSIVE_TASKS * 2)).fetchone()
             if not row:
                 return None
             return {"id": row[0], "task": row[1], "args": json.loads(row[2])}
@@ -6776,6 +6939,15 @@ class Store:
                 "        OR datetime(heartbeat_at) < datetime('now', ?))",
                 (f"-{int(minutes)} minutes",)).fetchall()
 
+            # ★담기(prewarm)는 **실제로 다시 큐에 넣는다**(2026-09-04 실사고).
+            #   문구는 "자동 재시도 대상"이라고 적혀 있었지만 재시도하는 코드가 없었다 —
+            #   durfill·overseas는 크론이 다시 넣어 주지만 담기는 고객이 그 순간 한 번
+            #   누른 것이라 아무도 다시 넣지 않는다. 실측: 09-04 배포 재시작 5회로 끊긴
+            #   담기 3건(틱톡 1·샤오홍슈 2) 재큐 0건 → 고객이 다시 담아야 했다.
+            #   같은 행을 queued로 되돌린다(새 행을 만들면 id·owner·prio가 바뀐다).
+            #   무한 반복 방지: args_json의 _restart_retry가 상한에 닿으면 종전대로 failed.
+            requeued = self._requeue_interrupted_prewarm(c, dead)
+
             cur = c.execute(
                 "UPDATE job_queue SET state='failed', "
                 "       error=CASE WHEN task IN (" + marks + ") "
@@ -6795,7 +6967,38 @@ class Store:
             #   실측: 이 구멍 때문에 extracting 6 / downloading 5 / planning 3 / tts 1건이
             #   진행중인 채로 굳어 있었다(2026-08-27 라이브 집계).
             self._propagate_dead_to_jobs(c, dead)
-            return cur.rowcount
+            return cur.rowcount + requeued
+
+    #: 배포 재시작으로 끊긴 담기를 몇 번까지 자동으로 이어가나. 배포가 3~10분 간격으로
+    #  연달아 오던 날(09-04 5회)에도 살아남게 넉넉히, 그러나 영원히는 아니게.
+    PREWARM_RESTART_RETRIES = 3
+
+    def _requeue_interrupted_prewarm(self, c, dead_rows):
+        """죽은 running 중 prewarm을 queued로 되돌린다. 되돌린 건수를 반환한다.
+        되돌린 행은 dead_rows에서 빼지 않는다 — 호출부의 UPDATE는 state='running'만
+        건드리므로 이미 queued가 된 행은 지나간다."""
+        n = 0
+        for qid, task, args_json in dead_rows:
+            if task != "prewarm":
+                continue
+            try:
+                args = json.loads(args_json or "{}")
+            except Exception:              # noqa: BLE001 — 깨진 args면 종전대로 failed
+                continue
+            if not isinstance(args, dict):
+                continue
+            tries = int(args.get("_restart_retry") or 0)
+            if tries >= self.PREWARM_RESTART_RETRIES:
+                continue
+            args["_restart_retry"] = tries + 1
+            cur = c.execute(
+                "UPDATE job_queue SET state='queued', claimed_at=NULL, heartbeat_at=NULL, "
+                "       finished_at=NULL, args_json=?, "
+                "       error='배포 재시작으로 중단 → 자동으로 다시 시작(' || ? || '회)' "
+                " WHERE id=? AND state='running'",
+                (json.dumps(args, ensure_ascii=False), tries + 1, qid))
+            n += cur.rowcount
+        return n
 
     # task별로 화면이 읽는 상태 칸이 다르다. 한 군데서만 정한다(0순위-B) —
     # 여기가 갈리면 어떤 단계는 실패가 안 뜨고 또 멈춘 것처럼 보인다.

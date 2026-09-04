@@ -178,7 +178,7 @@ def analyze_video(video_path, caption, max_retries=5, quota_sleep=8):
         except Exception as e:
             m = str(e)
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
-                comment_gen._mark_key_exhausted(idx, key_vault.retry_delay_seconds(e))  # 확실한 일일 한도 소진·계정비활성 영구 제외
+                comment_gen._mark_key_exhausted(idx, key_vault.retry_delay_seconds(e), exc=e)  # 확실한 일일 한도 소진·계정비활성 영구 제외
                 continue
             if key_vault.is_quota_error(e):
                 # 분당 제한 등 "일일 소진"까지는 확인 안 되는 429 — 키를 영구
@@ -241,7 +241,7 @@ def translate_keyword(keyword, max_retries=3, quota_sleep=8):
             return result
         except Exception as e:
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
-                comment_gen._mark_key_exhausted(idx, key_vault.retry_delay_seconds(e))
+                comment_gen._mark_key_exhausted(idx, key_vault.retry_delay_seconds(e), exc=e)
                 continue
             if key_vault.is_quota_error(e):
                 # 서버가 "N초 뒤에 오라"고 알려주면 그만큼 잔다(2026-08-09).
@@ -288,7 +288,7 @@ def cn_search_keyword(caption, max_retries=3, quota_sleep=8):
             return (json.loads(resp.text).get("zh") or "").strip()
         except Exception as e:
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
-                comment_gen._mark_key_exhausted(idx, key_vault.retry_delay_seconds(e))
+                comment_gen._mark_key_exhausted(idx, key_vault.retry_delay_seconds(e), exc=e)
                 continue
             if key_vault.is_quota_error(e):
                 # 서버가 "N초 뒤에 오라"고 알려주면 그만큼 잔다(2026-08-09).
@@ -384,7 +384,7 @@ def subject_tags_vision(image_bytes, caption, max_retries=3, quota_sleep=8):
                     "shot_type": shot, "face_prominent": bool(data.get("face_prominent"))}
         except Exception as e:
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
-                comment_gen._mark_key_exhausted(idx, key_vault.retry_delay_seconds(e))
+                comment_gen._mark_key_exhausted(idx, key_vault.retry_delay_seconds(e), exc=e)
                 continue
             if key_vault.is_quota_error(e):
                 # 서버가 "N초 뒤에 오라"고 알려주면 그만큼 잔다(2026-08-09).
@@ -440,7 +440,7 @@ def face_forward_vision(image_bytes, max_retries=3, quota_sleep=8):
             return bool(json.loads(resp.text).get("face_forward"))
         except Exception as e:  # noqa: BLE001 — 판정 실패는 None(제외 안 함)으로 흘린다
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
-                comment_gen._mark_key_exhausted(idx, key_vault.retry_delay_seconds(e))
+                comment_gen._mark_key_exhausted(idx, key_vault.retry_delay_seconds(e), exc=e)
                 continue
             if key_vault.is_quota_error(e):
                 # 서버가 "N초 뒤에 오라"고 알려주면 그만큼 잔다(2026-08-09).
@@ -496,7 +496,7 @@ def text_level_vision(image_bytes, max_retries=3, quota_sleep=8):
             return {"text_level": level}
         except Exception as e:
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
-                comment_gen._mark_key_exhausted(idx, key_vault.retry_delay_seconds(e))
+                comment_gen._mark_key_exhausted(idx, key_vault.retry_delay_seconds(e), exc=e)
                 continue
             if key_vault.is_quota_error(e):
                 # 서버가 "N초 뒤에 오라"고 알려주면 그만큼 잔다(2026-08-09).
@@ -648,7 +648,7 @@ def cn_search_keyword_vision(image_bytes, caption, max_retries=3, quota_sleep=8)
             return {"product": product, "zh": zh}
         except Exception as e:
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
-                comment_gen._mark_key_exhausted(idx, key_vault.retry_delay_seconds(e))
+                comment_gen._mark_key_exhausted(idx, key_vault.retry_delay_seconds(e), exc=e)
                 continue
             if key_vault.is_quota_error(e):
                 # 서버가 "N초 뒤에 오라"고 알려주면 그만큼 잔다(2026-08-09).
@@ -758,7 +758,7 @@ def cn_search_candidates(image_bytes, caption, max_retries=3, quota_sleep=8, exc
             return {"product": product, "candidates": cands}
         except Exception as e:
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
-                comment_gen._mark_key_exhausted(idx, key_vault.retry_delay_seconds(e))
+                comment_gen._mark_key_exhausted(idx, key_vault.retry_delay_seconds(e), exc=e)
                 continue
             if key_vault.is_quota_error(e):
                 # 서버가 "N초 뒤에 오라"고 알려주면 그만큼 잔다(2026-08-09).
@@ -858,7 +858,7 @@ def expand_search_keywords(keyword, n=6, exclude=None, max_retries=3, quota_slee
             return out
         except Exception as e:
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
-                comment_gen._mark_key_exhausted(idx, key_vault.retry_delay_seconds(e))
+                comment_gen._mark_key_exhausted(idx, key_vault.retry_delay_seconds(e), exc=e)
                 continue
             if key_vault.is_quota_error(e):
                 time.sleep(key_vault.retry_delay_seconds(e) or quota_sleep)
@@ -909,7 +909,7 @@ def judge_same_product(product, titles, max_retries=2, quota_sleep=8):
             return v if len(v) == len(titles) else []
         except Exception as e:
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
-                comment_gen._mark_key_exhausted(idx, key_vault.retry_delay_seconds(e))
+                comment_gen._mark_key_exhausted(idx, key_vault.retry_delay_seconds(e), exc=e)
                 continue
             if key_vault.is_quota_error(e):
                 # 서버가 "N초 뒤에 오라"고 알려주면 그만큼 잔다(2026-08-09).

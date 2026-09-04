@@ -3,6 +3,7 @@
 유닛(test_export_bundle)은 순수 로직·zip을 보지만, 실 사고는 배선(저장위치≠읽기위치)에서 난다.
 여기선 실제 job을 시딩하고 work 폴더에 실 mp4/mp3를 두고 HTTP로 호출해 zip이 나오는지 본다.
 """
+from shopping_shorts import capcut_draft as _cd
 import subprocess
 import zipfile
 from pathlib import Path
@@ -141,7 +142,7 @@ def test_capcut_carries_caption_style(monkeypatch, tmp_path):
     draft = __import__("json").loads(r.json()["texts"]["draft_content.json"])
     t = draft["materials"]["texts"][0]
     assert t["text_color"] == "#ffcc00", f"글자색이 캡컷까지 안 갔다: {t['text_color']}"
-    assert t["font_size"] > 16.0, f"크기가 기본 그대로다: {t['font_size']}"
+    assert t["font_size"] > _cd._CC_BASE_FONT_SIZE, f"크기가 기본 그대로다: {t['font_size']}"
     assert t["border_color"] == "#000000", "외곽선이 안 갔다"
     assert t["has_shadow"] is True, "그림자가 안 갔다"
     assert t["type"] == "subtitle", "캡션이 아니라 텍스트가 됐다"
@@ -154,7 +155,7 @@ def test_capcut_without_style_still_exports(monkeypatch, tmp_path):
     assert r.status_code == 200
     draft = __import__("json").loads(r.json()["texts"]["draft_content.json"])
     t = draft["materials"]["texts"][0]
-    assert t["text_color"] == "#ffffff" and t["font_size"] == 16.0
+    assert t["text_color"] == "#ffffff" and t["font_size"] == round(_cd._CC_BASE_FONT_SIZE, 2)
 
 
 def test_capcut_carries_watermark(monkeypatch, tmp_path):

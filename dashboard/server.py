@@ -121,8 +121,17 @@ def _env_key(name):
 
 
 def _gemini_interactive_keys():
-    """대화형(리서치·이미지·비전) Gemini 키 — key_vault 'general' 그룹."""
-    return key_vault.get_keys("general")
+    """대화형(리서치·이미지·비전) Gemini 키.
+
+    ★2026-09-01: get_keys → get_live_keys_cascade + 회전. 종전엔 두 가지가 겹쳐
+      분당 한도를 자초했다 —
+      ① **소진 낙인된 키를 안 걸러** 죽은 키가 앞에 남아 매번 다시 얻어맞았다
+      ② general 13개만 봐서 나머지 69개가 놀았다(실측: rpm 990건 중 server 639건=65%)
+      회전까지 붙여 호출마다 다른 키부터 시작한다.
+      (2026-09-02 복구: auto 커밋 83be8aa62가 이 개선을 통째로 되돌려 놓았었다)"""
+    live = key_vault.get_live_keys_cascade("general")
+    # ★최후 폴백에서도 사망 키는 뺀다(2026-09-03) — 401/403은 몇 번 찔러도 실패다
+    return key_vault.rotated(live or key_vault.without_dead(key_vault.get_keys("general")))
 
 
 def _summary_keys():
@@ -131,20 +140,26 @@ def _summary_keys():
     (이전엔 general+ingest 9개만 써서 그 두 그룹이 마르면 embed/briefing 놀아도 요약이 죽었음)"""
     live = key_vault.get_live_keys_cascade("general")  # 전 그룹 라이브, general 먼저
     if live:
-        return live
+        return key_vault.rotated(live)          # ★호출마다 시작점을 돌린다(2026-09-01)
     seen, out = set(), []
     for g in ("general", "ingest", "embed", "briefing"):
         for k in key_vault.get_keys(g):
             if k and k not in seen:
                 seen.add(k)
                 out.append(k)
-    return out
+    return key_vault.without_dead(out)   # ★사망 키는 최후 폴백에서도 뺀다(2026-09-03)
 
 
 def _briefing_keys():
     """실시간 시장 브리핑 종합 전용 키 풀 — key_vault 'briefing' 그룹, 없으면 요약 풀로 폴백."""
-    dedicated = key_vault.get_keys("briefing")
-    return dedicated or _summary_keys()
+    # ★get_keys가 아니라 get_live_keys로 받는다(2026-09-03) — 종전엔 브리핑 그룹만
+    #   잠금·사망을 통째로 무시해 죽은 키를 매번 다시 집었다.
+    # ★잠긴 키로 되돌아가지 않는다(2026-09-04 실측: 브리핑 키 3개가 같은 프로젝트라 분당 한도
+    #   429로 전부 잠겼는데, 종전 폴백 `without_dead(get_keys)`가 **잠금을 무시하고** 그 3개를
+    #   다시 줘서 하루 종일 키당 240회 429 + ok 0건 = 브리핑이 통째로 죽어 있었다).
+    #   비어 있으면 요약 풀(다른 그룹 라이브 키)로 간다 — 그게 원래 폴백의 뜻이다.
+    dedicated = key_vault.get_live_keys("briefing")
+    return key_vault.rotated(dedicated) if dedicated else _summary_keys()
 
 
 # 텍스트 생성 모델 폴백: 프리뷰(최고품질) → 안정모델. 프리뷰가 503 과부하일 때 안정모델로 자동 전환.
@@ -190,6 +205,13 @@ def _gemini_text(prompt, keys=None, models=None, timeout=45):
                 last = str(e)
                 if any(s in last for s in ("503", "UNAVAILABLE", "overloaded")):
                     break   # 503은 모델 전체 과부하 → 키 순회 중단, 곧장 다음 모델로 폴백
+                # ★실패를 **표시로 남긴다**(2026-09-03). 종전엔 아무것도 안 남기고
+                #   다음 키로만 넘어가서, ①403으로 죽은 키를 사흘째 매번 다시 집었고
+                #   ②429 맞은 키가 다음 요청에도 그대로 목록 앞에 남아 계속 얻어맞았다
+                #   (실측 09-03: rpm 429 1,062건 중 874건이 키 3개에 몰림).
+                #   표시만 남기면 다음 호출의 get_live_keys가 그 키를 빼주므로
+                #   **대기 없이** 아직 안 맞은 키로 곧장 간다. 여기서 재우지 않는다.
+                key_vault.mark_failure(k, e)
                 # 429(키 쿼터 소진)·기타 오류 → 다음 키 시도
     # 사용자에게는 원본 API 에러(JSON 뭉치)를 그대로 보여주지 않고 짧은 안내문으로 변환
     if "429" in last or "RESOURCE_EXHAUSTED" in last:

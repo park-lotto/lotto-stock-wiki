@@ -56,8 +56,26 @@ def parse_queries(raw, limit=3):
     return out[:limit]
 
 
-def suggest(target, script="", limit=3):
-    """(대본, 타깃) → 쿠팡 검색어 후보. 실패하면 [target]으로 조용히 폴백한다."""
+def build_body(target, script="", context=""):
+    """모델에 줄 본문 — 판단은 여기 한 곳. ★대본이 없을 때(썸네일 판독으로 온 제품명)는
+    **같은 물건의 다른 이름**만 허용한다(2026-09-04 사장님 실측: '택총'이 '전술 조끼·탄창 파우치'로
+    번져 나왔다 — 대본 없이 이름 하나만 주면 모델이 물건 종류부터 추측한다)."""
+    target = (target or "").strip()
+    if (script or "").strip():
+        return "연결 대상: " + target + "\n대본: " + (script or "")[:900]
+    lines = ["연결 대상: " + target]
+    if (context or "").strip():
+        lines.append("판독 정보: " + context.strip())
+    lines.append("대본: (없음 — 이 상품명은 영상 썸네일에서 비전 판독한 **실물 제품**이다)")
+    lines.append("★대본이 없으므로 '연결 대상'과 **같은 물건의 다른 이름·유의어·표기 변형**만 2~3개 제안해라. "
+                 "다른 종류의 물건은 절대 넣지 마라. 예: '택총' → '옷 태그건', '의류 택건', '태깅건'(됨) / "
+                 "'전술 조끼', '탄창 파우치'(안 됨 — 다른 물건).")
+    return "\n".join(lines)
+
+
+def suggest(target, script="", limit=3, context=""):
+    """(대본, 타깃) → 쿠팡 검색어 후보. 실패하면 [target]으로 조용히 폴백한다.
+    script가 없으면(썸네일 판독 경로) 유의어 모드 — build_body 참조."""
     target = (target or "").strip()
     if not target and not script:
         return []
@@ -69,7 +87,7 @@ def suggest(target, script="", limit=3):
     except Exception:
         return fallback
 
-    body = (f"연결 대상: {target}\n대본: {(script or '')[:900]}")
+    body = build_body(target, script, context)
     for _ in range(3):
         # 라운드로빈 — _current_key_and_idx는 늘 live[0]만 줘서 1번 키만 때린다(2026-07-23 교훈).
         key, ki = comment_gen._next_live_key_and_idx()
@@ -88,7 +106,60 @@ def suggest(target, script="", limit=3):
         except Exception as e:  # noqa: BLE001 — 검색어 제안 실패가 기능을 죽이면 안 된다
             if (comment_gen.key_vault.is_daily_exhausted_error(e)
                     or comment_gen.key_vault.is_account_disabled_error(e)):
-                comment_gen._mark_key_exhausted(ki, comment_gen.key_vault.retry_delay_seconds(e))
+                comment_gen._mark_key_exhausted(ki, comment_gen.key_vault.retry_delay_seconds(e), exc=e)
                 continue
             return fallback
     return fallback
+
+
+# ── 영상 근거(대본·캡션·분석 키워드) → 팔 제품 특정 (2026-09-04) ─────────────
+# 사장님: "썸네일로는 힘들고 대본이나 영상을 봐야 어떤 건지 알 수 있다".
+# 썸네일 비전은 자막 타이포에 끌리고 제품이 안 보이는 컷이 많다. 대본·캡션이 있으면 그것이 정본이다.
+_EVIDENCE_PROMPT = """너는 한국 쇼핑 검색 도우미다. 아래는 한 쇼츠 영상의 근거(대본·캡션·분석 키워드·썸네일 판독)다.
+이 영상이 **실제로 소개·판매하는 실물 제품 하나**를 특정하고, 그 제품을 쿠팡에서 찾을 검색어를 만들어라.
+
+규칙:
+- product: 구체적 상품명 2~4단어(브랜드 제외). 범주·분위기어("살림템", "주방용품") 금지.
+- 제품이 여러 개면 영상의 **주인공 제품 하나**만.
+- queries: product와 **같은 물건**의 다른 이름·표기 2~3개(다른 종류 물건 금지).
+- 근거에 제품이 전혀 없으면 product를 빈 문자열로.
+
+출력은 JSON만: {"product": "...", "queries": ["...", "..."]}
+
+"""
+
+
+def identify_from_evidence(evidence, hint=""):
+    """근거 텍스트 → (product, queries). 실패·근거 없음이면 ("", [])."""
+    ev = (evidence or "").strip()
+    if not ev:
+        return "", []
+    try:
+        from google.genai import types
+
+        from shopping_shorts import comment_gen
+    except Exception:                                       # noqa: BLE001
+        return "", []
+    body = _EVIDENCE_PROMPT + ("썸네일 판독 힌트: " + hint + "\n" if hint else "") + "근거:\n" + ev[:2500]
+    for _ in range(3):
+        key, ki = comment_gen._next_live_key_and_idx()
+        if key is None:
+            return "", []
+        try:
+            resp = comment_gen._client_for_key(key).models.generate_content(
+                model=_MODEL, contents=body,
+                config=types.GenerateContentConfig(response_mime_type="application/json"),
+            )
+            data = json.loads(resp.text)
+            product = _clean(str(data.get("product") or ""))
+            qs = [q for q in (_clean(x) for x in (data.get("queries") or [])) if q and q != product][:3]
+            return product, qs
+        except Exception as e:                              # noqa: BLE001
+            if (comment_gen.key_vault.is_daily_exhausted_error(e)
+                    or comment_gen.key_vault.is_account_disabled_error(e)):
+                comment_gen._mark_key_exhausted(ki, comment_gen.key_vault.retry_delay_seconds(e), exc=e)
+                continue
+            if comment_gen.key_vault.is_quota_error(e):
+                continue
+            return "", []
+    return "", []

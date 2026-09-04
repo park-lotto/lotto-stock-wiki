@@ -1,4 +1,5 @@
 """Dynamically load Gemini API keys from .env by scanning numbered suffixes (_2, _3, ...)."""
+import hashlib
 import json
 import os
 import re
@@ -6,7 +7,7 @@ import sys
 import time
 import urllib.request
 import urllib.parse
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from google import genai
 
@@ -80,11 +81,56 @@ def _today_str() -> str:
     return datetime.now().strftime("%Y-%m-%d")
 
 
+# 소진 잠금 유효시간(초). 만료되면 자동으로 풀린다.
+# ★2026-09-01: 종전엔 **하루 낙인**이었다(날짜가 바뀔 때만 해제). 실측으로 그게
+#   틀렸음이 드러났다 — 잠긴 키 11개를 구글에 직접 찔러보니 8개가 HTTP 200이었다.
+#   ①"오늘"이 한국 자정 기준인데 구글은 태평양시 자정(한국 오후 4~5시)에 리셋하고
+#   ②분당 한도를 일일 소진으로 잘못 낙인한 것도 섞였다.
+#   쇼핑쇼츠 풀은 2026-08-27에 같은 이유로 이미 TTL로 바꿨다(comment_gen._EXHAUST_TTL_S).
+#   서버가 'Please retry in 45.5s'로 알려주면 그 값을 쓰고, 없으면 이 기본값.
+_EXHAUST_TTL_S = float(os.environ.get("VAULT_KEY_EXHAUST_TTL",
+                                     os.environ.get("SHORTS_KEY_EXHAUST_TTL", "1800")))
+
+
+def _exhausted_map(state) -> dict:
+    """state의 exhausted를 {그룹: {인덱스: 만료ts}}로 읽는다.
+
+    ★옛 형식({group: [idx, ...]})도 그대로 받는다 — 배포 순간에 파일이 옛 모양이다.
+      옛 항목엔 만료시각이 없는데 '오늘 내내'로 두면 **바로 그 영구 낙인**이라
+      배포 직후에도 증상이 그대로다. 그래서 기본 TTL이 붙은 것으로 본다
+      (comment_gen이 2026-08-27에 같은 함정을 밟고 배운 것).
+    """
+    raw = state.get("exhausted") or {}
+    out = {}
+    for g, v in raw.items():
+        if isinstance(v, dict):
+            slot = {}
+            for k, t in v.items():
+                try:
+                    slot[int(k)] = float(t)
+                except (TypeError, ValueError):
+                    continue
+            out[g] = slot
+        else:                                  # 옛 형식 list[int] — 기본 TTL을 붙인다
+            fallback = time.time() + _EXHAUST_TTL_S
+            out[g] = {int(i): fallback for i in (v or []) if isinstance(i, (int, float))}
+    return out
+
+
+def _live_exhausted(group: str, state=None) -> dict:
+    """그 그룹에서 **아직 유효한** 잠금만 {인덱스: 만료ts}. 만료분은 여기서 걸러진다."""
+    st = state if state is not None else _load_state()
+    now = time.time()
+    return {i: t for i, t in _exhausted_map(st).get(group, {}).items() if t > now}
+
+
 def _load_state() -> dict:
+    """★날짜로 버리지 않는다(2026-09-01) — 만료 판단은 TTL이 한다.
+    종전엔 date가 다르면 통째로 버려 '한국 자정에만 해제'가 됐다."""
     try:
         with open(_STATE_PATH, encoding="utf-8") as f:
             state = json.load(f)
-        if state.get("date") == _today_str() and isinstance(state.get("exhausted"), dict):
+        if isinstance(state.get("exhausted"), dict):
             return state
     except Exception:
         pass
@@ -134,8 +180,24 @@ class _FileLock:
         self._fh.close()
 
 
-def mark_exhausted(group: str, key: str) -> None:
-    """키를 당일 소진으로 기록(그룹별). 이후 프로세스는 재시도하지 않는다."""
+def mark_exhausted(group: str, key: str, retry_after=None) -> None:
+    """키를 **한시적으로** 잠근다(그룹별). retry_after(초)를 주면 그만큼, 없으면 기본 TTL.
+
+    ★2026-09-01: '당일 소진'에서 TTL로 바꿨다. 하루 낙인은 멀쩡한 키를 놀렸다
+      (실측: 잠긴 11개 중 8개가 HTTP 200). 위 _EXHAUST_TTL_S 주석 참조.
+    """
+    try:
+        ttl = float(retry_after) if retry_after else _EXHAUST_TTL_S
+    except (TypeError, ValueError):
+        ttl = _EXHAUST_TTL_S
+    # ⚠️상한 6시간 — 영구 낙인을 만들지 않는다.
+    #   ★함정(아직 안 터졌다): retry_delay_seconds는 **일일** 소진에 '태평양 자정까지'
+    #     (최대 24시간)를 주는데 여기서 6시간으로 깎인다. 지금은 호출부가 retry_after를
+    #     안 넘겨(전부 2인자 호출) 아무 차이가 없지만, 넘기기 시작하면 일일 소진 키가
+    #     6시간 뒤 풀려 또 얻어맞는다. 그때는 이 상한도 같이 올려라(25시간).
+    #   ★2026-09-03: 그 함정이 터졌다. mark_failure가 retry_delay_seconds를 넘기기
+    #     시작했으므로 상한도 25시간으로 올린다(comment_gen이 09-02에 같은 이유로 24시간).
+    ttl = max(30.0, min(ttl, 25 * 3600.0))
     marked_idx = None
     with _FileLock(_LOCK_PATH):
         keys = get_keys(group)
@@ -143,9 +205,14 @@ def mark_exhausted(group: str, key: str) -> None:
             return
         idx = keys.index(key)
         state = _load_state()
-        bucket = state["exhausted"].setdefault(group, [])
-        if idx not in bucket:
-            bucket.append(idx)
+        cur = _exhausted_map(state)
+        slot = cur.setdefault(group, {})
+        until = time.time() + ttl
+        if slot.get(idx, 0.0) < until:
+            slot[idx] = until
+            state["date"] = _today_str()      # 사람이 파일을 열어볼 때의 참고용
+            state["exhausted"] = {g: {str(i): t for i, t in v.items()}
+                                  for g, v in cur.items()}
             tmp_path = _STATE_PATH.with_suffix(".json.tmp")
             with open(tmp_path, "w", encoding="utf-8") as f:
                 json.dump(state, f)
@@ -159,16 +226,100 @@ def mark_exhausted(group: str, key: str) -> None:
             from shopping_shorts import api_health
             api_health.record("gemini", api_health.OUT_LOCK,
                               pool=f"vault-{group}", key_idx=marked_idx, key=key,
-                              detail="당일 낙인(vault엔 TTL 없음)")
+                              detail=f"소진 잠금 {int(_EXHAUST_TTL_S)}초(TTL)")
         except Exception:           # noqa: BLE001
             pass
 
 
+def _key_fingerprint(key: str) -> str:
+    """키를 원문 없이 식별하는 지문. 풀 순서(idx)는 회원 키 합류·.env 편집으로 바뀌므로
+    '영구 사망' 같은 오래 가는 표시는 반드시 이 지문으로 남긴다.
+    (comment_gen._key_fingerprint와 같은 정의 — 상태파일이 서로 달라 각자 계산하지만
+     값은 같으므로, 한쪽에서 죽은 키를 다른 쪽 파일에 옮겨 적을 수도 있다)"""
+    return hashlib.sha256((key or "").encode()).hexdigest()[:16]
+
+
+def dead_fingerprints(state=None) -> set:
+    """되살릴 수 없는 키(401/403 계정 사망)의 지문 집합."""
+    st = state if state is not None else _load_state()
+    raw = st.get("dead_keys") or {}
+    return set(raw) if isinstance(raw, (dict, list, set)) else set()
+
+
+def mark_dead(key: str, detail=None) -> None:
+    """키를 **영구 제외**한다 — 401/403은 시간이 지나도 절대 안 풀린다.
+
+    ★왜 TTL 잠금과 갈랐나(2026-09-03 실측): 죽은 키 …nIWJaw가 09-01 22:10부터
+      사흘째 403 PERMISSION_DENIED("Your project has been denied access")를 내는데도
+      매일 다시 호출됐다(09-02 92건, 09-03 21건). 쿼터(429)는 회복되지만 계정
+      비활성(401/403)은 회복되지 않는다 — TTL로 잠그면 만료 후 또 얻어맞는다.
+      쇼핑쇼츠 comment_gen은 09-02에 같은 처방을 받았는데 vault(대시보드)만 없었다.
+      키를 실제로 빼는 것(.env 편집)은 사람 몫이지만, 그때까지 호출을 한 번도 더
+      낭비하지 않는다."""
+    if not key:
+        return
+    fp = _key_fingerprint(key)
+    newly = False
+    with _FileLock(_LOCK_PATH):
+        state = _load_state()
+        raw = state.get("dead_keys")
+        dead = dict(raw) if isinstance(raw, dict) else {f: 0 for f in (raw or [])}
+        if fp not in dead:
+            dead[fp] = time.time()
+            state["dead_keys"] = dead
+            tmp_path = _STATE_PATH.with_suffix(".json.tmp")
+            with open(tmp_path, "w", encoding="utf-8") as f:
+                json.dump(state, f)
+            os.replace(tmp_path, _STATE_PATH)
+            newly = True
+    if newly:      # 관측·경보는 락 밖에서(mark_exhausted와 같은 이유)
+        print(f"key_vault: 키 영구 제외 — …{key[-6:]} ({detail or '401/403'})", file=sys.stderr)
+        try:
+            from shopping_shorts import api_health
+            api_health.record("gemini", api_health.OUT_AUTH, pool="vault", key=key,
+                              detail=f"영구 제외(dead) {detail or ''}"[:300])
+        except Exception:           # noqa: BLE001 — 관측 실패가 제외를 막으면 안 된다
+            pass
+
+
+def without_dead(keys) -> list[str]:
+    """목록에서 영구 사망 키만 뺀다(잠금은 건드리지 않는다).
+
+    ★"전부 소진이면 원본 목록으로 최후 시도"하는 폴백 경로용이다. 소진은 시간이
+      풀어주니 최후에 한 번 더 찔러볼 값어치가 있지만, 401/403은 몇 번을 찔러도
+      실패다 — 폴백에서까지 넣으면 사망 키가 다시 목록 앞에 서게 된다."""
+    dead = dead_fingerprints()
+    if not dead:
+        return list(keys or [])
+    return [k for k in (keys or []) if _key_fingerprint(k) not in dead]
+
+
+def mark_failure(key: str, exc: Exception, group: str = None) -> None:
+    """호출 실패 하나를 받아 **어떤 표시를 남길지 여기서만 정한다**(0순위-B).
+
+    401/403 → 영구 제외 / 429 → 서버가 준 재시도 시각만큼 한시 잠금 / 그 외 → 무시.
+    ★대기하지 않는다. 표시만 남기면 다음 호출의 get_live_keys가 그 키를 빼주므로,
+      호출부는 기다릴 필요 없이 **아직 안 맞은 키로 곧장** 간다(2026-09-03 설계).
+    """
+    if not key or exc is None:
+        return
+    if is_account_disabled_error(exc):
+        mark_dead(key, detail=str(exc)[:120])
+        return
+    if is_quota_error(exc) or is_daily_exhausted_error(exc):
+        owner = group or _owner_group(key)
+        if owner:
+            mark_exhausted(owner, key, retry_delay_seconds(exc))
+
+
 def get_live_keys(group: str) -> list[str]:
-    """당일 소진 기록된 키를 제외한 그룹의 키 목록."""
+    """잠긴 키를 뺀 그룹의 키 목록. ★만료된 잠금은 자동으로 풀린다(2026-09-01).
+    ★영구 사망 키(401/403)는 지문으로 걸러진다 — 만료가 없다(2026-09-03)."""
     state = _load_state()
-    exhausted = set(state["exhausted"].get(group, []))
-    return [k for i, k in enumerate(get_keys(group)) if i not in exhausted]
+    exhausted = _live_exhausted(group, state)  # 만료분은 여기서 걸러진다
+    dead = dead_fingerprints(state)
+    return [k for i, k in enumerate(get_keys(group))
+            if i not in exhausted and (not dead or _key_fingerprint(k) not in dead)]
 
 
 def _cascade_groups(group: str) -> list[str]:
@@ -228,11 +379,40 @@ def get_client_for_key(key: str) -> genai.Client:
 #   ① 호출마다 다음 키로 넘기는 라운드로빈 커서
 #   ② 키마다 최소 간격을 둬서 **애초에 429를 안 맞게** 한다
 #      (무료등급 실측 상한은 키당 분당 5건 — comment_gen._RPM_PER_KEY와 같은 근거)
-_RR_CURSOR = {"i": 0}
+# ★프로세스마다 **다른 지점**에서 출발한다(2026-09-01). 워커는 스레드가 아니라
+#   systemd 템플릿 유닛(shopping-shorts-worker@)으로 뜨는 **독립 프로세스 12개**라
+#   이 커서를 공유하지 않는다. 0에서 다 같이 출발하면 12개가 동시에 live[0]을 때린다
+#   — edit_plan._auto_key_offset이 os.getpid()를 쓰는 것과 같은 이유.
+_RR_CURSOR = {"i": os.getpid()}
+
 _KEY_LAST_USED: dict[str, float] = {}
 _RPM_PER_KEY = int(os.environ.get("VAULT_RPM_PER_KEY",
                                  os.environ.get("SHORTS_RPM_PER_KEY", "5")))
 _MIN_GAP_S = 60.0 / max(1, _RPM_PER_KEY)
+
+
+def rotated(live):
+    """키 목록을 **다음 시작점부터** 돌려준다. 원소는 그대로, 순서만 회전.
+
+    ★왜 필요한가(2026-09-01 사장님 "다같이 1번부터 써서 그런 거 아닌가" → 맞다):
+      get_live_keys_cascade는 매번 **같은 순서**를 준다. 그래서 이 목록을 받아
+      `for key in keys`로 도는 호출부는 성공하면 **항상 keys[0]**에서 끝난다.
+      실측(최근 5분): 쓸 수 있는 키 82개 중 **21개만** 쓰이고 61개가 놀았다.
+      rpm 990건의 88%가 "한 주체가 앞쪽 키에 혼자 몰아친" 것이었다.
+
+    ★_pick_key와 짝이다: 저건 클라이언트 1개를 주고(get_client 경로), 이건 목록을
+      준다(for문 경로). **커서를 공유**해야 두 경로가 서로 안 겹친다.
+
+    ★호출부마다 offset을 심지 않는 이유(0순위-B): 어느 키부터 쓸지를 8군데에 적으면
+      반드시 어긋난다. 2026-08-31에 edit_plan만 고쳐지고 나머지가 안 고쳐진 사고가
+      정확히 그 구조의 산물이다. **목록을 나눠주는 곳에서 한 번만** 돌린다.
+    """
+    live = list(live or [])
+    if len(live) < 2:
+        return live                      # 0·1개면 돌릴 것이 없다(단일키 크론도 무해)
+    i = _RR_CURSOR["i"] % len(live)
+    _RR_CURSOR["i"] = i + 1
+    return live[i:] + live[:i]
 
 
 def _pick_key(live: list[str]) -> str:
@@ -335,14 +515,37 @@ def is_daily_exhausted_error(exc: Exception) -> bool:
     return ("429" in m or "RESOURCE_EXHAUSTED" in m) and ("PerDay" in m or "limit: 500" in m)
 
 
+def seconds_until_quota_reset() -> float:
+    """일일 한도가 풀리는 시각까지 남은 초(구글은 **태평양시 자정**에 리셋).
+
+    ★서머타임 근사로 UTC-7을 쓴다(한국시간 오후 4~5시경). 정확히 몇 분 어긋나도
+      "57초 뒤"보다는 비교할 수 없이 낫다 — 여기서 필요한 건 분 단위 정밀도가
+      아니라 "오늘은 이 키를 그만 쓴다"는 판단이다.
+    """
+    now = datetime.now(timezone.utc)
+    pac = now - timedelta(hours=7)
+    nxt = (pac + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+    return max(60.0, (nxt - pac).total_seconds())
+
+
 def retry_delay_seconds(exc: Exception):
-    """429 본문의 'Please retry in 45.5s' → 45.5. 없으면 None.
+    """이 키를 **언제 다시 써도 되나**(초). 모르면 None.
 
     왜 필요한가(2026-08-09 실측): 무료등급 분당 한도 초과 시 서버는 **45초 뒤에
     오라**고 알려주는데, 호출부는 고정 8초만 자고 재시도했다. max_retries=3이면
     24초 만에 시도가 소진돼 조용히 빈 결과를 반환한다 — 태거가 `0/40건`을
     수백 채널 연속으로 찍은 원인. 서버가 알려준 값을 쓰면 한 번만 제대로 자고
-    성공한다. None이면 호출부가 기존 기본값을 쓰도록 둔다(동작 보존)."""
+    성공한다. None이면 호출부가 기존 기본값을 쓰도록 둔다(동작 보존).
+
+    ★일일 소진이면 그 'retry in'을 **믿지 않는다**(2026-09-02 실사고).
+      구글은 하루치를 다 쓴 429에도 'Please retry in 57.4s'를 함께 준다.
+      그 값을 그대로 쓰면 57초 뒤 키가 풀려 또 때리고 또 막힌다 — 사장님이 본
+      "죽은 키 1개를 18번 헛되이 호출" 경보가 정확히 이 되풀이였다.
+      일일 한도는 태평양 자정까지 안 풀리므로 그때까지를 준다.
+      ⚠️호출부 27곳이 전부 이 함수를 거친다 — 고칠 곳은 여기 하나다(0순위-B).
+    """
+    if is_daily_exhausted_error(exc):
+        return seconds_until_quota_reset()
     m = re.search(r"retry in ([0-9]+(?:\.[0-9]+)?)\s*s", str(exc), re.IGNORECASE)
     return float(m.group(1)) if m else None
 
@@ -365,8 +568,11 @@ def is_account_disabled_error(exc: Exception) -> bool:
       제작소가 _current_key_and_idx()로 늘 같은 죽은 live[0]을 다시 잡아 매 job
       실패했다("로테이션이 바로 안 됨"의 진짜 원인). 403도 계정 문제라 영구 제외한다."""
     m = str(exc)
+    # ★무효 키(API_KEY_INVALID)도 영구다(2026-09-04). 종전엔 edit_plan._is_dead_key_error만
+    #   따로 잡아 **소진(30분 잠금)**으로 표시해, 죽은 키 …sJbmaQ가 09-03 56건·09-04 4건 다시 불렸다.
     return ("UNAUTHENTICATED" in m or "ACCOUNT_STATE_INVALID" in m
             or "PERMISSION_DENIED" in m
+            or "API_KEY_INVALID" in m or "API key not valid" in m
             or "service account is deleted or disabled" in m)
 
 

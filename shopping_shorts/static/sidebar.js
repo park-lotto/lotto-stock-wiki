@@ -33,7 +33,10 @@
       { icon: "📊", text: "레퍼런스 랭킹",   href: "/", free: true },
       // ★free:true = 잠금(🔒) 대상에서 뺀다. 서버 화이트리스트(_FREE_EXACT_GET)와 짝이다 —
       //   서버만 열고 여기를 안 열면 체험 사용자는 눌러도 페이월 모달만 보고 못 들어간다.
-      { icon: "⭐", text: "영상 즐겨찾기",   href: "/collection", free: true },
+      // 즐겨찾기 2칸(2026-09-02 사장님) — 채널과 영상을 갈라 담는다.
+      // 둘 다 개인 북마크라 전역 수집(레퍼런스 채널 관리)과 성격이 다르다.
+      { icon: "⭐", text: "나만의 채널등록", href: "/fav_channels", free: true },
+      { icon: "⭐", text: "영상 즐겨찾기",  href: "/collection", free: true },
       { icon: "🔎", text: "신규채널 픽업",   href: "/discover" },
       { icon: "🎞️", text: "장면 라이브러리", href: "/scene_library" },
       { icon: "🏆", text: "역대 히트작",     href: "/archive", admin: true },
@@ -777,10 +780,20 @@
       document.body.appendChild(box);
     }
     var card = document.createElement("div");
-    card.style.cssText = "background:#160c0c;color:#f7e9e9;border:1px solid #7a2b2b;border-left:4px solid #ff5a5a;border-radius:12px;padding:14px 16px;box-shadow:0 8px 28px rgba(0,0,0,.45);animation:ssSlideIn .25s ease";
+    // ★등급별 색·문구(2026-09-04 사장님 "다 큰 사고처럼 보이고 조치가 되는지 모르겠다").
+    //   고객영향=빨강(즉시) / 운영주의=주황(자동 우회됨) / 정보=회색. 자동조치·할 일을 함께 보여준다.
+    var g = alert.grade || "운영주의";
+    var th = (g === "고객영향")
+      ? { bg: "#160c0c", fg: "#f7e9e9", bd: "#7a2b2b", bar: "#ff5a5a", lc: "#ff8080", label: "🚨 고객 영향 사고 — 지금 확인" }
+      : (g === "정보")
+        ? { bg: "#0f1412", fg: "#e6efe9", bd: "#2a3a33", bar: "#8fa1a0", lc: "#b7c5c0", label: "ℹ️ 알림" }
+        : { bg: "#171205", fg: "#f6efe0", bd: "#6a4a10", bar: "#f5a623", lc: "#ffc85c", label: "⚠️ 운영 주의 — 자동 우회됨, 서비스 정상" };
+    card.style.cssText = "background:" + th.bg + ";color:" + th.fg + ";border:1px solid " + th.bd + ";border-left:4px solid " + th.bar + ";border-radius:12px;padding:14px 16px;box-shadow:0 8px 28px rgba(0,0,0,.45);animation:ssSlideIn .25s ease";
     card.innerHTML =
-      '<div style="font-size:13px;font-weight:800;color:#ff8080;margin-bottom:4px">🚨 운영 사고</div>' +
+      '<div style="font-size:13px;font-weight:800;color:' + th.lc + ';margin-bottom:4px">' + th.label + '</div>' +
       '<div style="font-size:14px;font-weight:700;line-height:1.35">' + _ssEsc(alert.title || "") + '</div>' +
+      (alert.auto ? '<div style="margin-top:6px;font-size:12px;opacity:.9">✅ 자동 조치: ' + _ssEsc(alert.auto) + '</div>' : '') +
+      (alert.todo ? '<div style="margin-top:4px;font-size:12px;opacity:.9">👉 할 일: ' + _ssEsc(alert.todo) + '</div>' : '') +
       (alert.detail
         ? '<details style="margin-top:8px"><summary style="cursor:pointer;font-size:12px;color:#ffb3b3">상세 사유 보기</summary>' +
           '<div style="margin-top:6px;font-size:11px;color:#e0c0c0;white-space:pre-wrap;word-break:break-all;max-height:180px;overflow:auto">' +
@@ -825,7 +838,7 @@
           try {
             var shown = window.__ssOpsShown || (window.__ssOpsShown = {});
             (d.alerts || []).forEach(function (a) {
-              if (!a || a.read || shown[a.id]) return;
+              if (!a || a.read || a.resolved || shown[a.id]) return;   // 해결된 건 다시 안 띄운다
               shown[a.id] = 1;
               _ssDing();
               _ssOpsToast(a);
@@ -988,6 +1001,195 @@
       if (del) del.onclick = function () { SHOT = null; box.innerHTML = ""; };
     });
   }
+
+  /* ★🛒 쿠팡 상품 찾기 모달(2026-09-04 사장님 "쿠팡에 링크가 만들어지는 상품인지 검색 — 없는 상품이 많아서").
+     영상을 만들기 **전에** 카드에서 바로 "이 제품이 쿠팡에 있나 → 내 링크"를 본다.
+     한 곳(sidebar.js)에만 두고 페이지들은 버튼만 단다(0순위-B). 페이지 모달에 기대지 않는다. */
+  /* ★_ssEsc는 다른 함수 안에 갇혀 있어 여기서 안 보인다(2026-09-04 라이브 실측: 클릭해도
+     "_ssEsc is not defined"로 모달이 안 떴다). 이 블록 전용 이스케이프를 둔다. */
+  function _cfEsc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  var _cfState = { kw: "", items: [], chips: [] };
+  function _cfEl(id) { return document.getElementById(id); }
+  function _cfClose() { var m = _cfEl("ssCoupangFind"); if (m) m.remove(); }
+  function _cfRender(msg, msgColor) {
+    var box = _cfEl("cfResults"); if (!box) return;
+    var m = _cfEl("cfMsg"); if (m) { m.textContent = msg || ""; m.style.color = msgColor || "#8fa39a"; }
+    var chips = _cfEl("cfChips");
+    if (chips) chips.innerHTML = (_cfState.chips.length < 2) ? "" : _cfState.chips.map(function (c) {
+      return '<button onclick="window.ssCoupangFind.search(decodeURIComponent(\'' + encodeURIComponent(c) + '\'))" style="padding:4px 10px;font-size:12px;border-radius:999px;border:1px solid ' + (c === _cfState.kw ? '#37e0bd' : '#1e2a24') + ';background:#0c1210;color:#e6efe9;cursor:pointer;margin:0 6px 6px 0">' + _cfEsc(c) + '</button>';
+    }).join("");
+    if (!_cfState.items.length) { box.innerHTML = ""; return; }
+    box.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;max-height:52vh;overflow-y:auto">' +
+      _cfState.items.map(function (it, i) {
+        return '<div style="border:1px solid #1e2a24;border-radius:10px;padding:8px;background:#0c1210">' +
+          '<img src="' + _cfEsc(it.image || "") + '" style="width:100%;aspect-ratio:1;object-fit:contain;border-radius:6px;background:#fff" onerror="this.style.visibility=\'hidden\'">' +
+          '<div style="font-size:11px;line-height:1.35;margin-top:4px;max-height:44px;overflow:hidden" title="' + _cfEsc(it.name) + '">' + _cfEsc(it.name) + '</div>' +
+          '<div style="font-size:12px;font-weight:700;margin-top:3px">' + _cfEsc(it.price || "") + (it.is_rocket ? ' <span style="font-size:10px;color:#5fe3d6">🚀로켓</span>' : '') + '</div>' +
+          '<div id="cfLink' + i + '" onclick="window.ssCoupangFind.link(' + i + ')" title="누르면 복사" style="font-size:11px;color:#37e0bd;word-break:break-all;margin-top:4px;cursor:pointer;font-weight:700">' + (it.short_url ? '📋 ' + _cfEsc(it.short_url) : '') + '</div>' +
+          '<div style="display:flex;gap:4px;margin-top:6px">' +
+            '<button onclick="window.ssCoupangFind.link(' + i + ')" style="flex:1;padding:6px 4px;font-size:11px;border-radius:7px;border:1px solid #b8860b;background:linear-gradient(90deg,#3a2f0d,#2a2408);color:#ffd76b;cursor:pointer">🔗 내 링크</button>' +
+            '<button onclick="window.open(\'' + _cfEsc(it.url) + '\',\'_blank\')" style="padding:6px 6px;font-size:11px;border-radius:7px;border:1px solid #1e2a24;background:#0f1512;color:#e6efe9;cursor:pointer">보기</button>' +
+          '</div></div>';
+      }).join("") + '</div>';
+  }
+  function _cfOpen(keyword, opts) {
+    _cfClose();
+    opts = opts || {};
+    /* ★hint(사전 판독한 썸네일 제품명)는 검색어로 쓰지 않는다(2026-09-04 사장님 "바디필로우로 검색되는데
+       대본엔 토닥인형") — 클릭하면 항상 근거 우선 판독(/api/coupang/identify)을 거친다. 판독이 캐시·근거로
+       빠르게 끝나므로 체감 지연은 거의 없다. hint는 결과가 달라졌을 때 "썸네일 추정→대본 근거" 안내에만 쓴다. */
+    _cfState = { kw: keyword || "", items: [], chips: [], sc: opts.shortcode || "", thumb: opts.thumbnail || "", hint: opts.hint || "" };
+    var wrap = document.createElement("div");
+    wrap.id = "ssCoupangFind";
+    wrap.style.cssText = "position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:16px";
+    wrap.innerHTML = '<div style="background:#0f1512;color:#e6efe9;border:1px solid #1e2a24;border-radius:14px;width:min(900px,96vw);max-height:90vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.6)">' +
+      '<div style="display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid #1e2a24"><b style="font-size:15px">🛒 쿠팡에 이 제품이 있나요?</b><span style="font-size:11px;color:#8fa39a">— 있으면 그 자리에서 내 추적 링크까지</span><span style="flex:1"></span><button onclick="window.ssCoupangFind.close()" style="background:none;border:none;color:#8fa39a;font-size:18px;cursor:pointer">✕</button></div>' +
+      '<div style="padding:12px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><input id="cfQuery" value="' + _cfEsc(keyword || "") + '" placeholder="제품명(예: 의류 태깅건)" style="flex:1;min-width:200px;padding:9px 10px;border-radius:9px;border:1px solid #1e2a24;background:#0c1210;color:#e6efe9;font-size:13px" onkeydown="if(event.key===\'Enter\'){event.preventDefault();window.ssCoupangFind.search();}">' +
+      '<button onclick="window.ssCoupangFind.search()" style="padding:9px 16px;border-radius:9px;border:none;background:linear-gradient(180deg,#37e0bd,#2bd4b0);color:#04120e;font-weight:800;cursor:pointer">찾기</button>' +
+      (opts.shortcode ? '<button id="cfDeep" onclick="window.ssCoupangFind.deep()" title="영상 대본을 추출해 제품을 정확히 특정합니다(시간이 조금 걸립니다)" style="padding:9px 12px;border-radius:9px;border:1px solid #b8860b;background:linear-gradient(90deg,#3a2f0d,#2a2408);color:#ffd76b;font-weight:700;cursor:pointer">🎬 영상 보고 정확히</button>' : '') +
+      '<a id="cfOut" href="#" target="_blank" rel="noopener" style="font-size:12px;color:#37e0bd">쿠팡에서 직접 ↗</a><span id="cfMsg" style="font-size:12px;color:#8fa39a;width:100%"></span><div id="cfChips" style="width:100%"></div></div>' +
+      '<div id="cfResults" style="padding:0 14px 14px"></div></div>';
+    wrap.addEventListener("click", function (e) { if (e.target === wrap) _cfClose(); });
+    document.body.appendChild(wrap);
+    if (keyword) _cfSearch(keyword);
+    else if (_cfState.sc) _cfIdentify();          /* ★자동: 썸네일에서 제품을 알아내 바로 찾는다 */
+    else { var q = _cfEl("cfQuery"); if (q) q.focus(); }
+  }
+  /* 숏템파워검색처럼 사람이 안 친다(2026-09-04 사장님) — 썸네일 → 제품명 → 첫 후보로 검색 → 링크. */
+  /* 🎬 영상 보고 정확히 — 대본을 추출(기존 /api/extract_script, 캐시되면 무료)한 뒤 근거 우선 판독을 다시 돈다. */
+  function _cfDeep() {
+    if (!_cfState.sc) return;
+    var b = _cfEl("cfDeep"); if (b) { b.disabled = true; b.textContent = "🎬 대본 추출 중…"; }
+    _cfRender("🎬 영상 대본을 추출하는 중… (20~60초, 한 번 하면 다음부터는 바로)");
+    fetch("/api/extract_script?shortcode=" + encodeURIComponent(_cfState.sc), { method: "POST" })
+      .then(function (r) { return r.json().catch(function () { return { ok: false }; }); })
+      .then(function (d) {
+        if (b) { b.disabled = false; b.textContent = "🎬 영상 보고 정확히"; }
+        if (!d || !d.ok) { _cfRender("대본 추출 실패: " + ((d && d.error) || "") + " — 제품명을 직접 넣어 찾아보세요", "#ff8080"); return; }
+        _cfIdentify();
+      })
+      .catch(function () { if (b) { b.disabled = false; b.textContent = "🎬 영상 보고 정확히"; } _cfRender("네트워크 오류", "#ff8080"); });
+  }
+  function _cfIdentify() {
+    _cfRender("🔎 영상 근거(대본·캡션·썸네일)에서 제품을 알아내는 중… (3~8초)");
+    fetch("/api/coupang/identify", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ shortcode: _cfState.sc, thumbnail: _cfState.thumb }) })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (!d || !d.ok || !d.product) {
+          _cfRender((d && d.error) || "제품을 특정하지 못했습니다 — 제품명을 직접 넣어 찾아보세요", "#ff8080");
+          var q = _cfEl("cfQuery"); if (q) q.focus();
+          return;
+        }
+        _cfState.chips = (d.queries || [d.product]).slice(0, 6);
+        _cfState.basis = (d.basis || []).join("·");
+        if (_cfState.hint && d.product && d.product !== _cfState.hint) _cfState.basis += " · 썸네일 추정 '" + _cfState.hint + "' 대신 근거로 특정";
+        _cfSearch(_cfState.chips[0]);
+      })
+      .catch(function () { _cfRender("판독 중 네트워크 오류 — 제품명을 직접 넣어 찾아보세요", "#ff8080"); });
+  }
+  function _cfSearch(forced) {
+    var q = (forced || (_cfEl("cfQuery") || {}).value || "").trim();
+    if (!q) { _cfRender("제품명을 넣으세요", "#ff8080"); return; }
+    _cfState.kw = q; var inp = _cfEl("cfQuery"); if (inp) inp.value = q;
+    var out = _cfEl("cfOut"); if (out) out.href = "https://www.coupang.com/np/search?q=" + encodeURIComponent(q);
+    _cfState.items = []; _cfRender("쿠팡에서 찾는 중…");
+    fetch("/api/coupang/search?q=" + encodeURIComponent(q) + "&limit=10")
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        _cfState.items = (d && d.items) || [];
+        if (!_cfState.items.length) {
+          _cfRender("❌ 쿠팡에 없습니다 — 이 검색어로는 링크를 만들 수 없어요. 다른 검색어 칩을 눌러 보거나 '쿠팡에서 직접'으로 확인하세요." + (d && d.notice ? " (" + d.notice + ")" : ""), "#ff8080");
+          if (!_cfState.chips.length) _cfSuggest(q);
+          return;
+        }
+        _cfRender(_cfState.items.length + "개 있음 — " + (d.source === "api_shared"
+          ? "쿠팡에 있습니다. 🔗 내 링크를 누르면 상품 URL을 복사하고 파트너스 링크 생성 창을 엽니다(내 API 키를 등록하면 자동)"
+          : (d.source === "api" ? "내 추적 링크를 만드는 중…" : "🔗 내 링크를 누르면 추적 링크가 만들어집니다 (내 파트너스 키를 등록하면 더 빠르고 정확합니다)")));
+        if (d.source === "api") _cfAutoLinks();     /* 키 있는 회원: 카드 전부에 짧은 링크를 한 번에 */
+        if (!_cfState.chips.length) _cfSuggest(q);
+      })
+      .catch(function () { _cfRender("네트워크 오류", "#ff8080"); });
+  }
+  function _cfSuggest(q) {
+    /* 검색어 다듬기(제작소 8단계와 같은 API) — 서술형 제목을 살 만한 상품명 후보로 */
+    fetch("/api/coupang/suggest", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ target: q, script: "" }) })
+      .then(function (r) { return r.json(); })
+      .then(function (d) { var qs = (d && d.queries) || []; if (qs.length) { _cfState.chips = [q].concat(qs.filter(function (x) { return x && x !== q; })).slice(0, 6); _cfRender((_cfEl("cfMsg") || {}).textContent, (_cfEl("cfMsg") || {}).style ? _cfEl("cfMsg").style.color : ""); } })
+      .catch(function () {});
+  }
+  /* 검색 결과 전부에 짧은 추적 링크를 **한 번의 호출로** 붙인다(2026-09-04 사장님 "누르면 링크까지").
+     실패하면 카드의 🔗 내 링크 버튼이 그대로 남는다(단건 재시도). */
+  function _cfAutoLinks() {
+    var urls = _cfState.items.map(function (it) { return it.url; }).filter(Boolean);
+    if (!urls.length) return;
+    fetch("/api/coupang/deeplink", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ urls: urls }) })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        var by = {}; ((d && d.links) || []).forEach(function (l) { if (l.shorten_url) by[l.url] = l.shorten_url; });
+        var n = 0;
+        _cfState.items.forEach(function (it) { if (by[it.url]) { it.short_url = by[it.url]; n++; } });
+        var basis = _cfState.basis ? " (근거: " + _cfState.basis + ")" : "";
+        _cfRender(n ? ("✅ 쿠팡에 있음 " + _cfState.items.length + "개 — 내 추적 링크 " + n + "개 준비됨. 카드의 링크를 누르면 복사됩니다" + basis) : ("✅ 쿠팡에 있음 " + _cfState.items.length + "개 — 🔗 내 링크를 누르면 추적 링크가 만들어집니다" + basis), n ? "#5fe3d6" : "");
+      })
+      .catch(function () { _cfRender(_cfState.items.length + "개 있음 — 🔗 내 링크를 누르면 추적 링크가 만들어집니다"); });
+  }
+  function _cfLink(i) {
+    var it = _cfState.items[i]; if (!it) return;
+    var cell = _cfEl("cfLink" + i);
+    function done(url) {
+      it.short_url = url; if (cell) cell.textContent = url;
+      try { navigator.clipboard.writeText(url); } catch (e) {}
+      _cfRender("링크를 복사했습니다: " + url, "#5fe3d6");
+    }
+    if (it.short_url) { done(it.short_url); return; }
+    if (cell) cell.textContent = "만드는 중…";
+    fetch("/api/coupang/deeplink", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url: it.url }) })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (d && d.ok && d.shorten_url) { done(d.shorten_url); return; }
+        if (it.partner_url) { done(it.partner_url); return; }   /* API 검색 카드엔 긴 추적 링크가 이미 있다 */
+        if (d && d.need_key) {
+          /* ★키 없는 회원(2026-09-04 사장님 판단): 남의 링크를 대신 걸지 않는다. 파트너스 웹에서 **본인 링크**를
+             만들게 돕는다 — 상품 URL을 복사해 두고 링크 생성 화면을 연다(8단계 coupangMakeLink와 같은 방식).
+             링크 생성은 파트너스 가입 즉시 되고, 15만원 실적이 쌓이면 API가 열려 그때부터 자동이 된다. */
+          try { navigator.clipboard.writeText(it.url); } catch (e) {}
+          window.open("https://partners.coupang.com/#affiliate/ws/link", "_blank");
+          if (cell) cell.innerHTML = '상품 URL 복사됨 → 열린 파트너스 창에 붙여넣어 <b>내 링크</b>를 만드세요 · <a href="/settings#keys" style="color:#ffd76b">API 키 등록하면 자동 ↗</a>';
+          _cfRender("상품 URL을 복사했습니다. 파트너스 '링크 생성' 창에 붙여넣으면 내 추적 링크가 나옵니다(가입 즉시 가능). 판매 15만원이 쌓여 API 키를 받으면 여기서 자동으로 만들어집니다.", "#ffd76b");
+          return;
+        }
+        if (cell) cell.innerHTML = _cfEsc((d && d.error) || "실패");
+      })
+      .catch(function () { if (cell) cell.textContent = "네트워크 오류"; });
+  }
+  /* ★사전 판독(2026-09-04 사장님 "바로 뜨게"): 페이지가 카드를 그린 직후 부른다.
+     보이는 카드의 shortcode·thumbnail을 모아 한 번에 판독 → 캐시. 판독된 제품명은 버튼에 바로
+     박아 준다("🛒 택총 쿠팡?") → 사장님이 누르기 전에 무엇인지 알고, 누르면 즉시 검색된다.
+     같은 페이지에서 두 번 부르면 이미 처리한 shortcode는 건너뛴다. */
+  var _cfWarmed = {};
+  window.ssCoupangPrewarm = function (items) {
+    var todo = (items || []).filter(function (it) { return it && it.shortcode && it.thumbnail && !_cfWarmed[it.shortcode]; }).slice(0, 60);
+    if (!todo.length) return;
+    todo.forEach(function (it) { _cfWarmed[it.shortcode] = 1; });
+    fetch("/api/coupang/identify_batch", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ items: todo.map(function (it) { return { shortcode: it.shortcode, thumbnail: it.thumbnail }; }) }) })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        var pm = (d && d.products) || {};
+        Object.keys(pm).forEach(function (sc) {
+          var name = pm[sc]; if (!name) return;
+          var btn = document.querySelector('.cp-btn[data-sc="' + sc + '"]');
+          if (btn) { btn.textContent = "🛒 " + (name.length > 10 ? name.slice(0, 10) + "…" : name) + " 쿠팡?"; btn.setAttribute("data-product", name); btn.title = "썸네일에서 알아낸 제품: " + name + " — 누르면 쿠팡 검색과 내 추적 링크까지"; }
+        });
+      })
+      .catch(function () {});
+  };
+  window.ssCoupangFind = function (keyword, opts) { _cfOpen(keyword, opts); };
+  window.ssCoupangFind.search = _cfSearch;
+  window.ssCoupangFind.link = _cfLink;
+  window.ssCoupangFind.close = _cfClose;
+  window.ssCoupangFind.deep = _cfDeep;
 
   window.ssOpenBugReport = function () {
     css();

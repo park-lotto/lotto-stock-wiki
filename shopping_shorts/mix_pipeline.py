@@ -254,7 +254,8 @@ def _hook_opener_on(customer_id):
 
 def synthesize_line(narration, out_path, *, voice=None, profile=None, beat_role=None,
                     beat_index=None, beat_total=None, previous_text=None, next_text=None,
-                    ranker=asr_ranker, global_pron=None, customer_id=0, hook_opener=None):
+                    ranker=asr_ranker, global_pron=None, customer_id=0, hook_opener=None,
+                    script_endings=False):
     """한 줄을 naturalize→TTS(N-best·연속성)→후처리까지 합성하고 변환텍스트를 반환.
 
     **튜닝 작업대와 실제 렌더가 공유하는 단일 경로**다. 양쪽이 각자 파이프라인을 조립하면
@@ -263,6 +264,11 @@ def synthesize_line(narration, out_path, *, voice=None, profile=None, beat_role=
 
     profile 미지정 시 voice 스냅샷의 naturalize_profile을 쓴다. seed/n_best는 merge_profile을
     거친 값으로 읽어 텍스트와 오디오가 같은 기준을 보게 한다(S10).
+
+    script_endings: **대본이 정한 어미가 이긴다**(2026-09-04 사장님 제보 "대본생성 어미
+    ~다. 수정 > 미리듣기 ~요 자동 수정됨"). True면 `spoken_style`(문어체→구어체 어미
+    치환)만 끄고 나머지 단계는 그대로 돈다. 기본 False = 종전 동작(회귀 0).
+    자세한 근거는 아래 그 처리 자리 주석 참조.
 
     customer_id: **누구 키로 합성하나**(2026-08-24). 0=사장님 키(기존 동작 그대로).
     하류는 이미 다 뚫려 있었다 — synthesize_best(**kw)가 그대로 넘기고
@@ -280,6 +286,20 @@ def synthesize_line(narration, out_path, *, voice=None, profile=None, beat_role=
     if hook_opener is False or (hook_opener is None and not _hook_opener_on(customer_id)):
         prof = copy.deepcopy(prof)
         prof.setdefault("fillers", {})["on"] = False
+    # ★대본이 정한 어미는 대본이 이긴다(2026-09-04 사장님 제보 "대본생성 어미 ~다. 수정 >
+    #   영상대본MIX 미리듣기 ~요< 자동 수정됨"). 뿌리는 0순위-B — 어미를 정하는 곳이
+    #   둘이었다: ①대본생성(스타일·프롬프트, 사장님이 손으로 고침) ②여기 naturalize의
+    #   `spoken_style`(_SPOKEN_MAP: 습니다→어요, 입니다→이에요…). ②가 ①을 덮어썼다.
+    #   ★더 나쁜 건 통째로 바꾸는 게 아니라는 점이다 — intensity(기본 0.4)가 "앞에서부터
+    #   그 비율만" 바꾸므로 한 대본 안에서 어미가 **섞인다**. 실측:
+    #     '가격도 착합니다. 성능도 좋습니다. 후회 없습니다.'
+    #       → '가격도 착해요… 성능도 좋아요. 후회 없습니다.'
+    #   자막은 대본(습니다)인데 소리는 어요라 **글자와 말이 어긋난다**.
+    #   ⚠️naturalize를 통째로 끄지 않는다 — 감탄사·속삭임·발음교정·억양은 TTS가 사람처럼
+    #   읽게 하는 별개 기능이다. 어미 치환 한 단계만 대본에 양보한다.
+    if script_endings:
+        prof = copy.deepcopy(prof)      # 호출자 프리셋 오염 금지(얕은복사 원본오염 전례)
+        prof.setdefault("spoken_style", {})["on"] = False
     natural = naturalize(narration, prof, beat_role=beat_role,
                          beat_index=beat_index, beat_total=beat_total)
     # 오독 자동회피(2026-07-22): Whisper 랭커(GROQ 키)가 실동작할 때만 n을 최소 2로
@@ -368,9 +388,28 @@ def mismatched_beats(beats):
     return [b.get("beat_idx") for b in (beats or []) if not tts_matches_narration(b)]
 
 
+def job_script_endings(job):
+    """이 잡은 **대본이 어미를 정하는** 잡인가 (2026-09-04).
+
+    참이면 음성 합성이 `spoken_style`(문어체→구어체 어미 치환)을 건너뛴다 — 사장님이
+    2단계에서 확정·수정한 어미가 미리듣기·렌더에 그대로 나간다.
+
+    판정 기준 = `given_script`(1단계에서 확정한 대본)이 있나. 그 잡의 나레이션은 사람이
+    쓰거나 승인한 문장이므로 어미도 사람 것이다. 반대로 given_script가 없는 잡은 AI가
+    나레이션을 새로 쓰므로 종전대로 구어체 다듬기를 받는다(회귀 0).
+
+    ★판정을 여기 한 곳에만 둔다 — 호출부 5곳이 각자 `job.get("given_script")`를 보면
+    언젠가 한 곳이 어긋난다(0순위-B: 같은 판단 두 군데 = 반드시 어긋난다).
+    """
+    return bool((job or {}).get("given_script") or "")
+
+
 def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron=None,
-                      customer_id=0):
+                      customer_id=0, script_endings=False):
     """비트별로 synthesize_line 호출. beat['tts_path']를 채운다.
+
+    script_endings: 확정 대본(given_script) 잡인가 — 참이면 대본이 정한 어미를 음성이
+    덮어쓰지 않는다(2026-09-04). 판정은 `job_script_endings()` 한 곳에서만 한다.
     연속성(previous_text/next_text)은 인접 비트의 '원문'(naturalize 전) narration을 쓴다
     — naturalize된 텍스트(오디오 태그·추임새 포함)를 연속성으로 넘기면 ElevenLabs가
     태그를 발화 텍스트로 오인할 수 있어서다.
@@ -404,6 +443,7 @@ def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron
             previous_text=beats[i - 1]["narration"] if i > 0 else None,
             next_text=beats[i + 1]["narration"] if i < total - 1 else None,
             global_pron=global_pron, customer_id=customer_id,
+            script_endings=script_endings,
         )
         beat["tts_path"] = str(out)
         # ★비트 끝 무음 트림(2026-07-22) — 각 비트 TTS 뒤 자연 무음(호흡·여백)을 잘라 이어붙임을
@@ -720,7 +760,8 @@ def _prepare_sources(urls, work, store=None):
             ops_alert.raise_alert(
                 "source_download",
                 "소스 영상 다운로드가 전부 실패했습니다 — 수집 통로가 끊겼을 수 있습니다",
-                detail, store=store)
+                detail, store=store,
+                todo="고객 작업이 멈춥니다 — 소스 링크를 직접 열어 통로(인스타·유튜브)가 막혔는지 확인")
         except Exception as _ae:      # noqa: BLE001 — 알림 실패가 본작업을 막지 않는다
             # ★사유는 남긴다(2026-08-19 F-2). 알림이 조용히 죽으면 "사고가 났는데
             #   아무도 모른다"가 되고, 그게 이 알림을 만든 이유(08-03 실사고)였다.
@@ -1531,7 +1572,8 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     # 4) 비트별 TTS (naturalize + N-best + 연속성 + 프리셋 후처리)
     store.update_mix_job(job_id, status="tts")
     _synthesize_beats(plan["beats"], work / "tts", voice=voice, global_pron=global_pron,
-                      customer_id=customer_id)
+                      customer_id=customer_id,
+                      script_endings=job_script_endings({"given_script": given_script}))
 
     # 4.2) 프리즈 뿌리 fix(2026-07-21) — 화면을 **실 TTS 길이**만큼 재보정한다. fill은 plan
     # 시점에 나레이션 추정(글자÷5.7)으로 채웠는데, 빠른 보이스면 실제 TTS가 추정과 달라 생긴
@@ -2567,13 +2609,56 @@ def clean_final_matches_plan(job, work):
             return False
         if job.get("clean_sources"):
             return True     # 소스별 청소본 — 좌표계가 원본과 같아 애초에 안 썩는다
-        sig = _plan_signature(job.get("edit_plan") or {})
-        f = Path(work) / ("final_clean_%s.mp4" % sig)
-        if not (f.exists() and f.stat().st_size > 1024):
-            return False    # 편성이 바뀐 뒤 다시 청소하지 않았다
-        return Path(cvp).stat().st_mtime >= f.stat().st_mtime - 1
+        return clean_final_path_for_plan(job, work) is not None
     except Exception:      # noqa: BLE001
         return False
+
+
+def clean_any_final_path(job, work):
+    """자막이 **지워진** 완성본이면 아무거나 — 지금 편성 것이 없을 때 쓸 대안 (2026-09-02).
+
+    ★사장님 지시: "원본 자막이 남아있지 않게 하면 되지."
+      종전엔 지금 편성 청소본이 없으면 **원본**으로 떨어져 자막이 그대로 보였다.
+      장면이 조금 어긋나는 것과 자막이 보이는 것 중 후자가 훨씬 나쁘다 —
+      고객은 '자막제거가 안 됐다'로 읽는다. 그래서 옛 편성 청소본이라도 쓴다.
+    가장 최근 것을 준다(편성이 여러 번 바뀌었으면 마지막이 지금과 가장 가깝다).
+    """
+    try:
+        cands = [f for f in Path(work).glob("final_clean_*.mp4")
+                 if f.stat().st_size > 1024]
+        if cands:
+            return max(cands, key=lambda f: f.stat().st_mtime)
+        cvp = (job or {}).get("clean_video_path")
+        if cvp and Path(cvp).exists() and Path(cvp).stat().st_size > 1024:
+            return Path(cvp)
+        return None
+    except Exception:      # noqa: BLE001
+        return None
+
+
+def clean_final_path_for_plan(job, work):
+    """지금 편성으로 청소한 완성본 파일 경로. 없으면 None (2026-09-02).
+
+    ★파일 시각(mtime)으로 판정하지 않는다 — 어제(09-01) 넣은 판정이
+      "clean_preview.mp4가 그 서명 파일보다 새것이냐"를 함께 봤는데, 편성을 바꿔
+      **다시 청소하면 새 청소본이 clean_preview보다 당연히 더 새것**이라 판정이
+      늘 False가 됐다. 그러면 꾸미기 화면이 조용히 원본으로 떨어져 "자막제거는
+      완료인데 자막이 보인다"가 된다(2026-09-02 이유준님 job 210a0c33c32d 실측:
+      청소본 17:54:28 vs clean_preview 17:44:46 → False).
+      좌표계 보증은 **서명 그 자체**다. 시각은 아무것도 보증하지 않는다.
+    ★경로를 함께 돌려준다 — 화면이 clean_video_path(옛 편성 파일)를 쓰면
+      판정만 고쳐도 옛 그림이 나온다. 판정과 출처는 짝이다(0순위-B).
+    """
+    try:
+        if (job or {}).get("clean_sources"):
+            return None     # 소스별 청소본 경로 — 호출부가 그 맵을 그대로 쓴다
+        sig = _plan_signature((job or {}).get("edit_plan") or {})
+        f = Path(work) / ("final_clean_%s.mp4" % sig)
+        if f.exists() and f.stat().st_size > 1024:
+            return f
+        return None
+    except Exception:      # noqa: BLE001
+        return None
 
 
 def _final_clean_fn(store, job, job_id, work, keys, customer_id=0):
@@ -2591,16 +2676,107 @@ def _final_clean_fn(store, job, job_id, work, keys, customer_id=0):
         out = Path(work) / f"final_clean_{sig}.mp4"
         if out.exists() and out.stat().st_size > 1024:
             print(f"[clean] 완성본 재사용(편성 그대로, 과금 0): {out.name}", file=sys.stderr)
+            _save_clean_plan_snapshot(work, sig, job.get("edit_plan"))
             return str(out)
         charged = _charge_clean(store, customer_id, 1)
         try:
             print(f"[clean] 완성본 1편만 청소 시작 sig={sig}", file=sys.stderr)
-            return _vmake_clean(str(mix_raw), keys, str(out))
+            res = _vmake_clean(str(mix_raw), keys, str(out))
         except Exception:
             if charged:
                 _refund_clean(store, customer_id, charged)
             raise
+        _save_clean_plan_snapshot(work, sig, job.get("edit_plan"))
+        return res
     return _clean
+
+
+def _clean_plan_snapshot_path(work, sig):
+    return Path(work) / ("final_clean_%s.plan.json" % sig)
+
+
+def _save_clean_plan_snapshot(work, sig, plan):
+    """청소한 완성본 옆에 **그때의 편성**을 남긴다 (2026-09-03).
+
+    ★왜: 청소본(final_clean_{sig}.mp4)의 시간축은 청소 **그 시점** 편성의 것이다.
+      그 뒤 장면편집·삭제로 편성이 바뀌면 지금 편성의 컷 시각을 옛 파일에 대면
+      딴 장면이 뜬다(실측 job fb62adf0aad0: 10:23 청소 → 16:03~16:27 장면편집 30회 →
+      BEFORE 줄무늬 셔츠 여성 / AFTER 보라 옷 여성). 편성 스냅샷이 있으면
+      **그 편성으로** 좌우를 다시 펴서 같은 장면을 보여줄 수 있다.
+    실패해도 청소 결과에 영향 없다(비교 화면만 스냅샷 없이 동작)."""
+    try:
+        p = _clean_plan_snapshot_path(work, sig)
+        if p.exists():
+            return
+        p.write_text(json.dumps(plan or {}, ensure_ascii=False), encoding="utf-8")
+    except Exception as e:      # noqa: BLE001
+        print("[clean] 편성 스냅샷 저장 실패(무해): %s" % e, file=sys.stderr)
+
+
+def _src_durs_for(job, work):
+    """소스별 길이(초). 컷 계획(plan_beat_clips_for)이 필요로 한다."""
+    try:
+        return {v: (_probe_duration(p) or 0.0)
+                for v, p in _resolve_sources(job, Path(work)).items()}
+    except Exception:      # noqa: BLE001
+        return {}
+
+
+def clean_compare_clips(job, work):
+    """자막제거 전/후 비교의 **정본** — 어느 청소본을, 어느 편성으로 펼지 한 곳에서 정한다
+    (2026-09-03, 0순위-B).
+
+    반환: {"clips": [{ci, si, video_id, beat_idx, src, fin, dur}, ...] 또는 None,
+           "clean_path": 청소본 경로 또는 None,
+           "stale": 지금 편성으로 만든 청소본이 아니면 True,
+           "plan_used": "current" | "snapshot" | None}
+
+    순서:
+      1) 지금 편성 서명의 청소본이 있으면 → 지금 편성으로 편다(stale=False).
+      2) 없으면 가장 최근 청소본 + 그 옆 편성 스냅샷으로 편다(stale=True).
+         좌우 모두 **스냅샷 편성**의 컷이라 같은 장면이다. 렌더 땐 다시 청소된다.
+      3) 스냅샷도 없으면 clips=None — 호출부는 틀린 그림 대신 사실을 말한다.
+    소스별 청소본(clean_sources) 경로는 좌우 시간축이 같아 여기 대상이 아니다(None).
+    """
+    out = {"clips": None, "clean_path": None, "stale": False, "plan_used": None}
+    try:
+        if (job or {}).get("clean_sources"):
+            return out
+        work = Path(work)
+        plan = None
+        fresh = clean_final_path_for_plan(job, work)
+        if fresh is not None:
+            plan, out["clean_path"], out["plan_used"] = (job.get("edit_plan") or {}), str(fresh), "current"
+        else:
+            out["stale"] = True
+            cands = [f for f in work.glob("final_clean_*.mp4") if f.stat().st_size > 1024]
+            for f in sorted(cands, key=lambda f: f.stat().st_mtime, reverse=True):
+                sig = f.stem[len("final_clean_"):]
+                sp = _clean_plan_snapshot_path(work, sig)
+                if sp.exists():
+                    try:
+                        plan = json.loads(sp.read_text(encoding="utf-8"))
+                    except Exception:      # noqa: BLE001
+                        continue
+                    out["clean_path"], out["plan_used"] = str(f), "snapshot"
+                    break
+        if plan is None:
+            return out
+        tts = {b["beat_idx"]: b["tts_path"] for b in (plan.get("beats") or [])
+               if b.get("tts_path")}
+        clips = []
+        for i, c in enumerate(final_clip_pairs(plan, tts, _src_durs_for(job, work))):
+            vid = c.get("video_id") or ""
+            try:
+                si = int(str(vid)[1:]) if str(vid).startswith("s") else None
+            except ValueError:
+                si = None
+            clips.append({"ci": i, "si": si, "video_id": vid, "beat_idx": c.get("beat_idx"),
+                          "src": c["src"], "fin": c["fin"], "dur": c["dur"]})
+        out["clips"] = clips
+        return out
+    except Exception:      # noqa: BLE001
+        return out
 
 
 def _ensure_clean_sources(store, job, job_id, work, keys, customer_id=0):
@@ -2774,7 +2950,8 @@ def run_clean_sources(job_id, db_path, work_root):
             try:
                 _synthesize_beats(plan_for_tts["beats"], work / "tts", voice=job.get("voice"),
                                   skip_existing=True, global_pron=_gpron,
-                                  customer_id=job.get("customer_id", 0))
+                                  customer_id=job.get("customer_id", 0),
+                                  script_endings=job_script_endings(job))
                 # ★훅 시작점도 여기서 확정한다 — 조립(_render_mix)이 첫 장면 start를
                 #   피크 시점으로 **in-place로 옮긴다**(video_assemble._apply_hook_inpoint).
                 #   그게 청소 뒤에 일어나면 서명이 또 바뀌어 렌더에서 재청소된다.
@@ -2905,7 +3082,8 @@ def run_preview(job_id, db_path, work_root):
         #   조립 직전 스스로 낫는다 — 이미 있는 비트는 skip(재과금 0), 빠진 비트만 합성.
         #   합성 결과(tts_path)를 edit_plan에 되박아 최종 렌더가 재합성 없이 재사용하게 한다.
         _synthesize_beats(plan["beats"], work / "tts", voice=job.get("voice"), skip_existing=True,
-                          global_pron=_gpron, customer_id=job.get("customer_id", 0))
+                          global_pron=_gpron, customer_id=job.get("customer_id", 0),
+                          script_endings=job_script_endings(job))
         store.update_mix_job(job_id, edit_plan=plan)
         tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan["beats"] if b.get("tts_path")}
         source_video_paths = _resolve_sources(job, work)
@@ -3039,7 +3217,8 @@ def run_render(job_id, db_path, work_root):
         # ★TTS 보장(2026-07-21) — run_preview와 같은 방어심층. 미리보기를 건너뛰고 바로 렌더에
         #   와도(또는 TTS 없는 후보가 edit_plan에 있어도) 조립 직전 스스로 낫는다. 이미 있으면 skip.
         _synthesize_beats(plan["beats"], work / "tts", voice=job.get("voice"), skip_existing=True,
-                          global_pron=_gpron, customer_id=job.get("customer_id", 0))
+                          global_pron=_gpron, customer_id=job.get("customer_id", 0),
+                          script_endings=job_script_endings(job))
         store.update_mix_job(job_id, edit_plan=plan)
         tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan["beats"] if b.get("tts_path")}
         source_video_paths = _resolve_sources(job, work)
@@ -3222,7 +3401,8 @@ def resynth_tts_job(job_id, db_path, work_root):
     try:
         _synthesize_beats(plan["beats"], work / "tts", voice=job.get("voice"),
                           global_pron=pron_corrections.load(store),
-                          customer_id=job.get("customer_id", 0))
+                          customer_id=job.get("customer_id", 0),
+                          script_endings=job_script_endings(job))
         store.update_mix_job(job_id, edit_plan=plan, status="ready_for_review")
     except Exception as e:
         traceback.print_exc(file=sys.stderr)

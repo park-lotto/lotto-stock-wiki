@@ -252,7 +252,11 @@ def record(service, outcome, *, pool=None, key=None, key_idx=None, owner=None,
                 (now.isoformat(), _kst_day(now), service, pool,
                  key_tail(key), key_idx, owner, op, model, job_id,
                  None if customer_id is None else str(customer_id),
-                 outcome, http, (str(detail)[:500] if detail else None),
+                 # ★1200자(2026-09-02). 500자에선 구글 429의 뒷줄이 잘려
+                 #   "PerDay인가 PerMinute인가"를 사람이 확인할 수 없었다 —
+                 #   분류는 전체 문자열로 하는데 기록만 잘려, 경보가 의심스러울 때
+                 #   근거를 되짚을 방법이 없다.
+                 outcome, http, (str(detail)[:1200] if detail else None),
                  dur_ms, _proc_kind()))
             conn.commit()
         finally:
@@ -276,7 +280,11 @@ def record(service, outcome, *, pool=None, key=None, key_idx=None, owner=None,
                 # ★시각을 제목에 박는다 — 없으면 이미 고친 일을 '지금 사고'로 읽는다
                 #   (2026-09-01: 04:11에 키를 뺐는데 04:08 경보를 보고 다시 쫓았다).
                 f"[API {when}] {service} 키 사망({'…' + (key_tail(key) or '?')})",
-                f"[발생 {when} KST] " + f"{detail or ''}"[:280] + cure)
+                f"[발생 {when} KST] " + f"{detail or ''}"[:280] + cure,
+                grade=ops_alert.GRADE_OPS,
+                auto="이 키는 자동 제외됐고 다른 키로 계속 돕니다 — 서비스 중단 아님",
+                todo=("env에서 그 키를 빼면 정리 끝" if service in ("gemini", "youtube")
+                      else "회원 키면 회원에게 키 교체 안내"))
         except Exception as e:            # noqa: BLE001 — 경보 실패가 기록을 막으면 안 된다
             log.warning("api_health: 키사망 경보 실패(무시) %r", e)
 
@@ -537,9 +545,10 @@ def aggregates(hours=24):
             #   실측: 죽은 키 1개를 34분간 12번 때린 것이 "12건 사망"으로 읽혀,
             #   무더기 사고로 오인됐다. 처방(키를 빼라)의 단위도 키 개수다.
             out["dead_keys"] = [dict(r) for r in conn.execute(
-                "SELECT service, pool, key_tail, COUNT(*) hits, MIN(ts) first_ts, MAX(ts) last_ts "
+                "SELECT service, pool, key_tail, customer_id, COUNT(*) hits, "
+                "MIN(ts) first_ts, MAX(ts) last_ts "
                 "FROM api_events WHERE outcome=? AND ts >= ? "
-                "GROUP BY service, pool, key_tail ORDER BY hits DESC LIMIT 50",
+                "GROUP BY service, pool, key_tail, customer_id ORDER BY hits DESC LIMIT 50",
                 (OUT_AUTH, since))]
 
             out["heartbeats"] = [dict(r) for r in conn.execute(
@@ -573,6 +582,12 @@ def _when_suffix(ts):
         return ""
 
 
+def _problem_signature(problems):
+    """경보 중복 판정용 서명 — 숫자(횟수·시각·분 전)를 지워 '무엇이 문제인가'만 남긴다."""
+    import re as _re
+    return "|".join(sorted(_re.sub(r"[0-9]+", "#", p) for p in problems))
+
+
 def verdict(snap=None, agg=None):
     """지금 상태 한 줄 + 처방. danger가 새로 켜지면 ops_alert로 사람에게 민다."""
     if not _enabled():                           # 기록을 껐으면 묵은 이벤트로 경보하지 않는다(리뷰 13)
@@ -601,14 +616,23 @@ def verdict(snap=None, agg=None):
                 problems.append(f"{svc}: 무음 폴백 {row['n']}건 — 고객이 무음 영상을 받았다")
             # OUT_AUTH는 아래에서 '키 개수' 기준으로 따로 판정한다(호출 건수로 세지 않는다).
         # ★죽은 키 판정 — 키 개수가 본체, 호출 횟수는 "얼마나 헛되이 때렸나"의 근거.
-        dead_by_svc = {}
+        #   ★회원이 직접 넣은 키(customer_id 있음)가 죽은 것은 **운영사고가 아니다**(2026-09-04
+        #     사장님 "계속 운영사고가 뜬다" — 실측: typecast 183건·elevenlabs 252건이 전부 회원 340·268의
+        #     키였는데 "죽은 키 1개()"로 danger가 울렸다). 그 키는 회원이 바꿔야 풀린다 → warn으로
+        #     회원 번호를 붙여 알린다. 운영 키(customer_id 없음)만 danger.
+        dead_by_svc, member_dead = {}, {}
         for d in (agg.get("dead_keys") or []):
             s = d.get("service")
+            tail = ("…" + str(d["key_tail"])) if d.get("key_tail") else "꼬리 미기록"
+            if d.get("customer_id"):
+                m = member_dead.setdefault((s, str(d["customer_id"])), {"hits": 0, "last": ""})
+                m["hits"] += d.get("hits", 0)
+                m["last"] = max(m["last"], d.get("last_ts") or "")
+                continue
             e = dead_by_svc.setdefault(s, {"keys": 0, "hits": 0, "tails": [], "last": ""})
             e["keys"] += 1
             e["hits"] += d.get("hits", 0)
-            if d.get("key_tail"):
-                e["tails"].append("…" + str(d["key_tail"]))
+            e["tails"].append(tail)
             lt = d.get("last_ts") or ""
             if lt > e["last"]:
                 e["last"] = lt
@@ -616,6 +640,10 @@ def verdict(snap=None, agg=None):
             problems.append(
                 f"{s}: 죽은 키 {e['keys']}개({', '.join(e['tails'][:3])})를 "
                 f"{e['hits']}번 헛되이 호출{_when_suffix(e['last'])} — 그 키를 빼야 시간을 안 버린다")
+        for (s, cid), m in member_dead.items():
+            warns.append(
+                f"{s}: 회원 {cid}의 키가 죽음({m['hits']}번 실패{_when_suffix(m['last'])}) — "
+                f"회원이 키를 바꿔야 한다(운영 키 문제 아님)")
 
         # 실패율은 **진짜 실패만** 센다(분당 한도는 아래에서 따로 본다).
         for svc, f in fails.items():
@@ -640,8 +668,19 @@ def verdict(snap=None, agg=None):
                 continue
             if pool.get("pool") == "shorts":
                 total, live = pool.get("total", 0), pool.get("live", 0)
+                # ★사장님 키와 회원 키를 갈라 본다(2026-09-04). 사장님 키만 다 잠겨도
+                #   회원 키가 살아 있으면 고객은 정상 결과를 받는다 → danger가 아니라
+                #   "오늘 키 보충" 운영주의. 진짜 전멸(회원 키까지 0)만 danger.
+                _ks = pool.get("keys") or []
+                _owner_live = sum(1 for k in _ks if k.get("owner") == "owner" and k.get("state") == "live")
+                _owner_tot = sum(1 for k in _ks if k.get("owner") == "owner")
+                _member_live = sum(1 for k in _ks if k.get("owner") == "member" and k.get("state") == "live")
                 if total and live == 0:
                     problems.append("쇼핑쇼츠 제미니 풀 전멸(살아있는 키 0개)")
+                elif _owner_tot and _owner_live == 0 and _member_live:
+                    warns.append(
+                        f"쇼핑쇼츠 사장님 키 {_owner_tot}개 전부 잠김 — 회원 키 {_member_live}개로 "
+                        f"버티는 중. 오늘 키를 보충하라")
                 elif total and live / total < 0.3:
                     warns.append(f"쇼핑쇼츠 제미니 풀 잔여 {live}/{total}개")
             else:
@@ -664,13 +703,29 @@ def verdict(snap=None, agg=None):
     else:
         level, msg = "ok", "모든 API가 정상 동작 중입니다."
 
+    if level != "danger":
+        # ★문제가 사라지면 쪽지를 '해결됨'으로 닫는다(2026-09-04) — 사장님이 "조치가 됐는지"를 알 수 있게.
+        try:
+            from shopping_shorts import ops_alert as _oa
+            _oa.resolve_kind("api_health_danger")
+        except Exception:                 # noqa: BLE001
+            pass
     if level == "danger":
         try:
             from shopping_shorts import ops_alert
+            # ★같은 내용이면 30분마다 다시 올리지 않는다(2026-09-04 사장님 "계속 뜬다").
+            #   내용(어떤 키·어떤 서비스)이 바뀔 때만 새 경보. 시각·횟수는 서명에서 뺀다.
+            # 등급: 고객이 잘못된 결과를 받는 문제(무음 폴백·풀 전멸·실패율)면 고객영향, 죽은 키만이면 운영주의.
+            _cust = any(("무음" in p or "전멸" in p or "실패율" in p) for p in problems)
             ops_alert.raise_alert(
                 "api_health_danger",
                 f"[API관측판 {checked_at}] " + problems[0],
-                f"[{checked_at} KST · 최근 1시간 기준]\n" + " / ".join(problems)[:450])
+                f"[{checked_at} KST · 최근 1시간 기준]\n" + " / ".join(problems)[:450],
+                signature=_problem_signature(problems),
+                grade=(ops_alert.GRADE_CUSTOMER if _cust else ops_alert.GRADE_OPS),
+                auto=("" if _cust else "죽은 키는 자동 제외되어 다른 키로 돌고 있습니다 — 서비스 정상"),
+                todo=("지금 확인 필요 — 고객이 잘못된 결과를 받고 있을 수 있습니다" if _cust
+                      else "env에서 죽은 키를 빼면 이 경보는 사라집니다"))
         except Exception as e:            # noqa: BLE001 — 경보 실패가 판정을 막으면 안 된다
             log.warning("api_health: danger 경보 실패(무시) %r", e)
     return {"level": level, "msg": msg, "problems": problems, "warns": warns,

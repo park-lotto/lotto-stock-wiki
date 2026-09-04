@@ -1,3 +1,4 @@
+import pytest
 from pathlib import Path
 from fastapi.testclient import TestClient
 from shopping_shorts import app as app_module
@@ -42,7 +43,7 @@ def test_segments_404_when_no_extract(monkeypatch, tmp_path):
     assert client.get("/api/mix/segments/js2").status_code == 404
 
 
-def test_seg_thumb_extracts_midpoint_and_caches(monkeypatch, tmp_path):
+def test_seg_thumb_extracts_first_frame_and_caches(monkeypatch, tmp_path):
     client, store = _client(monkeypatch, tmp_path)
     store.create_mix_job("jt", ["u0"], 20, "free")
     store.update_mix_job("jt", extract=_EXTRACT)
@@ -62,7 +63,10 @@ def test_seg_thumb_extracts_midpoint_and_caches(monkeypatch, tmp_path):
     monkeypatch.setattr(app_module, "extract_frame_at", _fake_extract)
     r = client.get("/api/mix/seg_thumb/jt/s0-1")
     assert r.status_code == 200 and r.content == b"\xff\xd8jpeg"
-    assert calls == [3.0]                       # (2.0+4.0)/2 중간지점
+    # ★가운데(3.0)가 아니라 **첫 장면**이다(2026-09-02 사장님 "앞 장면만 나오면 될 것 같은데").
+    #   가운데는 조각이 겹칠 때 0.2~0.5초밖에 안 달라 서로 같은 그림이 됐다.
+    #   정확히 start(2.0)는 전환 중이라 흐릴 수 있어 아주 살짝(구간의 5%, 최대 0.08초) 뒤.
+    assert calls == [pytest.approx(2.08, abs=1e-6)]
     r2 = client.get("/api/mix/seg_thumb/jt/s0-1")
     assert r2.status_code == 200
     assert len(calls) == 1                       # 캐시 히트 — 재추출 없음

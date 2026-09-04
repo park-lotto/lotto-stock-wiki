@@ -61,3 +61,40 @@ def test_모르는_사유도_최소한_말은_된다():
     f = _load()
     out = f("zzz unknown weirdness 12345")
     assert out and "처리 중 문제" in out
+
+
+def test_고객이_충전해야_풀리는건_그렇게_말한다():
+    """★사장님 지시(2026-09-02) "충전이 안 되서 오류가 나는 거면 고객한테도 화면에 표시를".
+
+    고객 자기 키의 잔액 소진은 **관리자가 못 풀어준다** — 그 회원의 계정이기 때문이다.
+    그런데 종전엔 402를 전부 "고객님 잘못이 아니에요, 관리자에게 알려주세요"로 뭉갰다.
+    실측: 한 회원이 그 문구를 보며 402를 57번 맞았다. 연락받은 사장님도 할 일이 없다.
+    """
+    f = _load()
+    out = f("402 Client Error: Payment Required for url: https://api.elevenlabs.io/v1/x")
+    assert "크레딧" in out and "elevenlabs.io" in out, out
+    assert "관리자에게" not in out, "관리자는 남의 계정 잔액을 못 채운다"
+
+    out = f("402 Client Error: Payment Required for url: https://api.vmake.ai/v1/x")
+    assert "vmake.ai" in out and "충전" in out
+
+
+def test_기다리면_풀리는건_충전하라고_하지_않는다():
+    """429·409는 한도·충돌이라 시간이 약이다. '충전하세요'는 헛돈을 쓰게 만든다.
+
+    ★만들다가 실제로 낸 실수다(2026-09-02): 벤더 이름만 보고 규칙을 걸었더니
+      elevenlabs 429까지 '크레딧 부족'으로 나갔다. 벤더와 잔액신호를 **둘 다** 봐야 한다.
+    """
+    f = _load()
+    for raw in ("429 Client Error: Too Many Requests for url: https://api.elevenlabs.io/v1/x",
+                "409 Client Error: Conflict for url: https://api.elevenlabs.io/v1/x"):
+        out = f(raw)
+        assert "충전" not in out and "크레딧" not in out, out
+        assert "다시 시도" in out
+
+
+def test_우리쪽_402는_여전히_관리자에게():
+    """벤더 표식이 없는 402는 우리 계정 문제 — 고객은 할 수 있는 게 없다."""
+    f = _load()
+    out = f("402 Client Error: Payment Required for url: https://api.other-service.com/x")
+    assert "고객님 잘못이 아니" in out and "충전" not in out

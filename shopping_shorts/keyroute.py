@@ -28,9 +28,10 @@ SVC_YOUTUBE = "youtube"
 SVC_SERPAPI = "serpapi"
 SVC_BUFFER = "buffer"      # SNS 예약발행. 고객이 자기 Buffer 개인 키를 넣는다
 SVC_TYPECAST = "typecast"  # 목소리 두 번째 백엔드. 프리셋 model_id가 `ssfm-*`면 이쪽으로 나간다
+SVC_COUPANG = "coupang"    # 쿠팡 파트너스 오픈API(상품검색·딥링크). 값은 'AccessKey:SecretKey' 한 줄. 개인 전용·폴백 없음(2026-09-04)
 
 SERVICES = (SVC_GEMINI, SVC_VMAKE, SVC_ELEVENLABS, SVC_TYPECAST, SVC_YOUTUBE,
-            SVC_SERPAPI, SVC_BUFFER)
+            SVC_SERPAPI, SVC_BUFFER, SVC_COUPANG)
 
 # ★등록은 받지만 **실제 호출에 쓰이는** 서비스는 아직 이 둘뿐이다(2026-08-17 실측).
 #   - vmake     : job의 customer_id → mix_pipeline._vmake_keys → keys_for (목록 전체)
@@ -68,7 +69,7 @@ SERVICES = (SVC_GEMINI, SVC_VMAKE, SVC_ELEVENLABS, SVC_TYPECAST, SVC_YOUTUBE,
 #     호출부는 이미 customer_id를 흘리고 있었고(일레븐랩스 배선 때 뚫린 길),
 #     타입캐스트 분기만 그 인자를 버리고 config 키를 쓰고 있었다.
 WIRED = (SVC_VMAKE, SVC_SERPAPI, SVC_ELEVENLABS, SVC_TYPECAST, SVC_GEMINI,
-         SVC_YOUTUBE, SVC_BUFFER)
+         SVC_YOUTUBE, SVC_BUFFER, SVC_COUPANG)   # coupang: app.py 쿠팡 검색·상품 저장이 keys_for로 읽는다
 
 # ★공용 풀 모델(2026-08-24 사장님 결정) — 이 서비스들은 회원 키를 **우리 풀에 합류**시키고
 #   회원은 풀 전체를 무료로 쓴다. 키 1개만 받는데 그 1개로만 돌리면 곧바로 한도에 걸려
@@ -143,7 +144,13 @@ SERVICE_LABEL = {
 #   ⚠️ 여기에 cid를 더하면 그 회원의 VMake·TTS 비용을 회사가 계속 부담한다.
 #      사장님 지시 없이 늘리지 마라. 빼는 것은 언제든 안전하다.
 #   ⚠️ 이름으로 판단하지 마라 — 동명이인이 있다(민정훈 cid 234는 면제 대상이 아니다).
-BLOCK_EXEMPT_CIDS = frozenset({4, 5, 9, 11, 12})
+#   ⚠️ 291 최일환 — **2026-09-03 하루만** 사장님 지시로 음성(TTS)을 열어둔 것이다.
+#      ("최일환 고객 tts 오늘만 무료로 내꺼로 열어줘")
+#      ★2026-09-04에 반드시 291을 이 줄에서 뺀다. 안 빼면 영구 무료가 된다.
+#      이 명단엔 기간 개념이 없어서 손으로 빼는 것 말고는 만료가 없다.
+#      그는 vmake 키를 이미 등록했으므로(실측) 자막 지우기는 자기 키로 나간다 —
+#      이 면제로 회사가 부담하는 건 음성뿐이다.
+BLOCK_EXEMPT_CIDS = frozenset({4, 5, 9, 11, 12, 291})
 
 
 def is_block_exempt(customer_id):
@@ -272,6 +279,13 @@ def _owner_keys(service):
     if service == SVC_ELEVENLABS:
         k = getattr(config, "ELEVENLABS_API_KEY", "")
         return [k] if k else []
+    if service == SVC_TYPECAST:
+        # 2026-09-04 사장님 "타입캐스트 키 내 것도 등록해줘" — 운영자 키는 env(TYPECAST_API_KEY)에
+        # 이미 있는데 여기만 빠져 있어 관리자 잔액 조회(app._credit_mode owner)에 안 잡혔다.
+        # typecast_tts._api_key는 종전에도 keys_for가 비면 config로 폴백했으므로 실제 TTS 경로의
+        # 결과 키는 그대로다(폴백이 한 단계 앞당겨질 뿐).
+        k = getattr(config, "TYPECAST_API_KEY", "")
+        return [k] if k else []
     if service == SVC_SERPAPI:
         # 렌즈 검색용. gemini/youtube와 같은 env 다중키 방식(SERPAPI_KEY~_30).
         return list(getattr(config, "SERPAPI_KEYS", []) or [])
@@ -386,4 +400,7 @@ def gemini_keys(group="general", customer_id=None):
 
     # cid는 더 이상 '누구 키를 쓸까'를 가르지 않는다(공용 풀). 소진 로그·디버깅용으로만 읽는다.
     _ = as_cid(customer_id if customer_id is not None else keyctx.owner_cid())
-    return key_vault.get_live_keys_cascade(group)
+    # ★회전해서 준다 — 이 목록을 `for key in keys`로 도는 호출부(대본생성·SEO·
+    #   썸네일문구·부품은행)가 전부 keys[0]부터 시작하면 앞쪽 키에만 몰린다.
+    #   어느 키부터 쓸지는 **여기 한 곳**에서만 정한다(0순위-B).
+    return key_vault.rotated(key_vault.get_live_keys_cascade(group))

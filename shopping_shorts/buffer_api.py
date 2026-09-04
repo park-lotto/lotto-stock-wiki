@@ -29,6 +29,11 @@ log = logging.getLogger(__name__)
 API_URL = "https://api.buffer.com"          # GraphQL 하나뿐이다
 _TIMEOUT = 20
 
+# 유튜브 카테고리 id. 22 = People & Blogs(어떤 채널에도 무난하고 유튜브가 거절하지 않는다).
+# ★틱톡은 metadata 입력형 자체가 없다(스키마 실측 2026-09-02: TiktokPostMetadataInput 없음)
+#   — 그래서 아래 _post_metadata가 틱톡에 아무것도 안 붙이는 것이 맞다.
+_YT_CATEGORY = "22"
+
 
 class BufferError(Exception):
     """Buffer가 거절했다. message는 **사용자에게 보여줄 수 있는** 한국어로 만든다."""
@@ -64,7 +69,7 @@ def _call(key: str, query: str, variables: dict | None = None) -> dict:
     if errs:
         log.warning("buffer GraphQL errors 원문: %s", json.dumps(errs, ensure_ascii=False)[:1500])
         msg = (errs[0] or {}).get("message") or "알 수 없는 오류"
-        raise BufferError(f"Buffer: {msg}")
+        raise BufferError(_humanize(msg))
     return out.get("data") or {}
 
 
@@ -120,6 +125,26 @@ def channels(key: str) -> list[dict]:
     return out
 
 
+# Buffer가 돌려주는 영어 거절문 중 **고객이 스스로 고칠 수 있는 것**만 한국어로 바꾼다.
+# ★모르는 문구는 원문 그대로 둔다 — 뭉뚱그린 안내는 진짜 원인을 숨긴다.
+_HUMAN = [
+    ("personal profile channels require notification scheduling",
+     "인스타 계정이 **개인 프로필**이라 자동 발행이 안 됩니다. "
+     "인스타 앱에서 프로페셔널(비즈니스·크리에이터) 계정으로 바꾼 뒤 Buffer에서 다시 연결해 주세요."),
+    ("Video could not be read from its URL",
+     "Buffer가 영상을 읽지 못했습니다. 세로 9:16 완성본인지 확인하고 잠시 뒤 다시 시도해 주세요."),
+    ("require a title",
+     "유튜브는 제목이 필요합니다. 글의 첫 줄이 제목이 되니 첫 줄을 비우지 말아 주세요."),
+]
+
+
+def _humanize(msg: str) -> str:
+    for needle, ko in _HUMAN:
+        if needle.lower() in (msg or "").lower():
+            return ko
+    return f"Buffer: {msg}"
+
+
 _CREATE = """
 mutation CreatePost($input: CreatePostInput!) {
   createPost(input: $input) {
@@ -147,7 +172,24 @@ def _service_of(key: str, channel_id: str) -> str:
     return _SERVICE_CACHE.get(channel_id, "")
 
 
-def _post_metadata(key: str, channel_id: str, privacy: str = "") -> dict:
+def _yt_title(text: str) -> str:
+    """유튜브 제목. **본문 첫 줄**이 곧 제목이다(화면 8단계가 그렇게 조립한다).
+
+    ★유튜브는 title이 필수다(실측 2026-09-02: title을 안 보내면 createPost가
+      "Youtube posts require a title"로 거절한다). 100자를 넘으면 유튜브가 거절하고,
+      제목에 < > 를 넣어도 거절한다 — 여기서 미리 다듬는다.
+    """
+    for line in (text or "").splitlines():
+        t = line.strip()
+        if t.startswith("#"):      # 해시태그 줄은 제목이 아니다 — 건너뛴다
+            continue
+        if t:
+            return t.replace("<", "(").replace(">", ")")[:100]
+    return "숏폼"
+
+
+def _post_metadata(key: str, channel_id: str, privacy: str = "",
+                   text: str = "") -> dict:
     """SNS마다 요구하는 부가정보. **없으면 Buffer가 거절한다.**
 
     ★인스타는 type이 **필수**다(실측 2026-08-30 라이브 오류:
@@ -162,10 +204,15 @@ def _post_metadata(key: str, channel_id: str, privacy: str = "") -> dict:
     if svc == "instagram":
         return {"instagram": {"type": "reel", "shouldShareToFeed": True}}
     if svc == "youtube":
-        # ★유튜브만 공개범위를 받는다(스키마 실측: YoutubePrivacy = public/unlisted/private).
-        #   인스타는 이 축이 **아예 없다** — InstagramPostMetadataInput 7필드에 없다.
+        # ★YoutubePostMetadataInput에는 **type이 없다**(스키마 실측 2026-09-02).
+        #   type을 보내면 글 전체가 거절됐다 — 라이브에서 유튜브만 안 올라간 뿌리다:
+        #   'Field "type" is not defined by type "YoutubePostMetadataInput"'.
+        #   실제 8필드: categoryId title embeddable isAiGenerated license
+        #             madeForKids notifySubscribers privacy
+        #   ★title은 실질 필수다(없으면 거절). 세로 완성본은 유튜브가 알아서 Shorts로 본다.
         pv = privacy if privacy in ("public", "unlisted", "private") else "public"
-        return {"youtube": {"type": "short", "privacy": pv}}
+        return {"youtube": {"title": _yt_title(text), "privacy": pv,
+                            "categoryId": _YT_CATEGORY}}
     return {}
 
 
@@ -187,7 +234,7 @@ def schedule_video(key: str, channel_id: str, text: str, video_url: str,
         asset["video"]["metadata"] = {"thumbnailOffset": int(thumb_ms)}
     inp = {"channelId": channel_id, "text": text or "",
            "schedulingType": "automatic", "assets": [asset]}
-    meta = _post_metadata(key, channel_id, privacy)
+    meta = _post_metadata(key, channel_id, privacy, text or "")
     if meta:
         inp["metadata"] = meta
     # ★올리는 방식은 셋 중 하나다(스키마 실측 ShareMode: addToQueue/customScheduled/
@@ -210,7 +257,7 @@ def schedule_video(key: str, channel_id: str, text: str, video_url: str,
         #     **규격 미달**(예: 9:16이 아닌 영상)에도 같은 문구로 온다 — 실측 2026-08-30.
         log.warning("buffer createPost 거절: %s / 보낸것: %s",
                     res["message"], json.dumps(inp, ensure_ascii=False)[:800])
-        raise BufferError(f"Buffer: {res['message']}")
+        raise BufferError(_humanize(res["message"]))
     post = res.get("post") or {}
     if not post.get("id"):
         raise BufferError("Buffer가 예약 결과를 주지 않았습니다.")

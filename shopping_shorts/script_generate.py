@@ -86,7 +86,9 @@ def _call_json(prompt, schema, note=None):
             return json.loads(resp.text)
         except Exception as e:  # noqa: BLE001 — 생성 실패는 치명적 아님
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
-                key_vault.mark_exhausted(key_vault._owner_group(key) or _GEN_GROUP, key)
+                # ★표시는 mark_failure가 정한다: 401/403/무효키=영구, 429=한시(2026-09-04).
+                #   종전 mark_exhausted는 죽은 키를 30분 뒤 다시 살려 매번 재호출됐다.
+                key_vault.mark_failure(key, e, group=key_vault._owner_group(key) or _GEN_GROUP)
                 if note is not None:
                     note["reason"] = "exhausted"     # 돌다가 다 말랐다 = 진짜 소진
                 continue
@@ -368,7 +370,8 @@ def _mix_source_block(sources):
             block += "\n- 장면 목록(이 대본을 참고해 쓸 때 어느 대목인지 번호로 지목하라):\n" + "\n".join(
                 "  [{sid}] {say}{desc}".format(
                     sid=x.get("seg_id"),
-                    say=("말:" + (x.get("text") or "").strip()[:40] + " ") if (x.get("text") or "").strip() else "",
+                    say=("말:" + (x.get("text_ko") or x.get("text") or "").strip()[:40] + " ")
+                        if (x.get("text_ko") or x.get("text") or "").strip() else "",
                     desc="화면:" + (x.get("scene_desc") or "").strip()[:40])
                 for x in _segs[:20])
         # 무자막 해외영상: 자막·나레이션이 없어 전체대본이 비고 특장점만 있다. 그 특장점을
@@ -1029,7 +1032,7 @@ def generate_variations(structure, full_text, elem_modes, category_lookup, mode=
         except Exception as e:  # noqa: BLE001 — 생성 실패는 치명적 아님(빈 리스트)
             if (comment_gen.key_vault.is_daily_exhausted_error(e)
                     or comment_gen.key_vault.is_account_disabled_error(e)):
-                comment_gen._mark_key_exhausted(ki, key_vault.retry_delay_seconds(e))
+                comment_gen._mark_key_exhausted(ki, key_vault.retry_delay_seconds(e), exc=e)
                 continue
             return []
     return []
@@ -1090,7 +1093,7 @@ def _refine(prompt, max_key_tries=3):
         except Exception as e:  # noqa: BLE001 — 재생성 실패는 치명적 아님(빈 문자열)
             if (comment_gen.key_vault.is_daily_exhausted_error(e)
                     or comment_gen.key_vault.is_account_disabled_error(e)):
-                comment_gen._mark_key_exhausted(ki, key_vault.retry_delay_seconds(e))
+                comment_gen._mark_key_exhausted(ki, key_vault.retry_delay_seconds(e), exc=e)
                 continue
             return ""
     return ""
@@ -1242,7 +1245,7 @@ def detect_subject(full_text, max_key_tries=3):
         except Exception as e:  # noqa: BLE001 — 감지 실패는 치명적 아님(빈 문자열)
             if (comment_gen.key_vault.is_daily_exhausted_error(e)
                     or comment_gen.key_vault.is_account_disabled_error(e)):
-                comment_gen._mark_key_exhausted(ki, key_vault.retry_delay_seconds(e))
+                comment_gen._mark_key_exhausted(ki, key_vault.retry_delay_seconds(e), exc=e)
                 continue
             return ""
     return ""

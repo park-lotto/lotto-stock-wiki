@@ -142,6 +142,12 @@
               border:1px solid #1f6f6b;background:linear-gradient(90deg,#0e2f2e,#0a2422);
               color:#5fe3d6;font-size:11px;cursor:pointer;white-space:nowrap}
   .btns .inner-btn:hover{background:linear-gradient(90deg,#14403e,#0d2e2b)}
+  /* 🛒 쿠팡 상품 찾기(2026-09-04) — 영상을 만들기 전에 "쿠팡에 있나·내 링크 되나"를 카드에서 본다.
+     격자 한 줄을 통째로 차지(내부검색과 같은 규칙). 색은 쿠팡 주황 계열로 파워검색(금색)과 가른다. */
+  .btns .cp-btn{margin-top:0;padding:7px 4px;border-radius:7px;   /* 댓글소통을 빼서(2026-09-04 사장님) 2×2의 4번째 칸 */
+              border:1px solid #8a4b12;background:linear-gradient(90deg,#3a2210,#2a1808);
+              color:#ffb570;font-size:11px;cursor:pointer;white-space:nowrap}
+  .btns .cp-btn:hover{background:linear-gradient(90deg,#4a2c14,#35200a)}
   /* 대본 모달 */
   /* 화면을 막지 않는 이동식(플로팅) 창 — 컨테이너는 클릭 통과, 박스만 잡힘 */
   .modal-bg{display:none;position:fixed;inset:0;z-index:100;pointer-events:none}
@@ -674,6 +680,7 @@ body.is-admin .admin-only{display:block}
     </div>
   </div>
 <script>
+function cpKw(s){ /* 쿠팡 검색어: 이모지(서로게이트 쌍) 반 토막 방지 — 2026-09-04 라이브 사고: slice(0,60)가 이모지를 반으로 잘라 encodeURIComponent가 URIError를 던져 즐겨찾기·랭킹 카드 전부 안 그려짐 */ try{ return encodeURIComponent(Array.from(String(s==null?'':s).split('\n')[0]).slice(0,60).join('')); }catch(e){ return ''; } }
 // 썸네일 프록시 URL 빌더(2026-08-09). ★v= 를 붙이는 이유:
 // CDN 서명 만료로 /api/thumb가 404를 낸 적이 있으면 브라우저가 그 결과를 기억해,
 // 나중에 서버가 이미지를 복구(디스크 캐시 백필)해도 **재요청을 안 해** 카드가 계속
@@ -2161,9 +2168,9 @@ function render(opts){
         <div class="actions">
           <div class="btns">
             <button class="view" onclick="window.open('${i.url}','_blank')">👁 영상보기</button>
-            <button class="comment" onclick="goComment('${i.shortcode}')">💬 댓글소통</button>
             <button class="save" id="save_${i.shortcode}" onclick="toggleMix('${i.shortcode}', this)">📥 즐겨찾기</button>
             <button class="script-btn" onclick="lensSearch(this,'${i.shortcode}')">🔍 숏템파워검색</button>
+            <button class="cp-btn" data-sc="${i.shortcode}" title="이 제품이 쿠팡에 있는지 찾고, 있으면 내 추적 링크까지 바로 만듭니다" onclick="window.ssCoupangFind('', {shortcode:'${i.shortcode}', thumbnail:decodeURIComponent('${encodeURIComponent(i.thumbnail||'')}'), hint:this.getAttribute('data-product')||''})">🛒 쿠팡에 있나?</button>
             ${window.IS_ADMIN?`<button class="inner-btn" title="우리가 관리하는 채널 아카이브에서 같은 제품·주제의 옛 영상 찾기 (무료·비전태그 매칭)" onclick="archiveSimilar('${i.shortcode}')">🏠 숏템내부검색</button>`:''}
           </div>
         </div>
@@ -2185,6 +2192,18 @@ function render(opts){
   if(searching && users.length===1){
     _renderChannelHistory(users[0], items.map(i=>i.shortcode));
   }
+  /* ★쿠팡 사전 판독(2026-09-04) — 그린 카드의 제품을 뒤에서 미리 알아내 캐시한다(클릭 즉시 뜨게). */
+  try {
+    if (window.ssCoupangPrewarm) {
+      var _cpItems = [];
+      document.querySelectorAll('.cp-btn[data-sc]').forEach(function (b) {
+        var sc = b.getAttribute('data-sc');
+        var it = STATE.items.find(function (x) { return x.shortcode === sc; });
+        if (it && it.thumbnail) _cpItems.push({ shortcode: sc, thumbnail: it.thumbnail });
+      });
+      window.ssCoupangPrewarm(_cpItems.slice(0, 48));
+    }
+  } catch (e) { /* 사전 판독 실패가 랭킹 화면을 막으면 안 된다 */ }
 }
 // 문구 접기/펴기(2026-08-18 사장님 "문구는 짤리는데 접었다 펴는걸로 글자 다 볼수있게")
 // 실제로 잘린 카드에만 [더보기]를 띄운다 — 안 잘린 카드에 버튼이 붙으면 거짓 안내가 된다.
@@ -4484,6 +4503,6 @@ fetch('/api/me').then(r=>r.ok?r.json():null).then(d=>{
   setTimeout(function(){ try{ traceByUrl(lu); }catch(e){} }, 600);
 })();
 </script>
-<script src="/sidebar.js?v=2"></script>
+<script src="/sidebar.js?v=3"></script>
 </body>
 </html>

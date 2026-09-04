@@ -55,7 +55,7 @@ def _setup(monkeypatch, clients_by_key, marks):
     monkeypatch.setattr(comment_gen, "_load_state", _no_exhausted)
     monkeypatch.setattr(comment_gen, "_client_for_key",
                         lambda key: _FakeClient(clients_by_key[key]))
-    monkeypatch.setattr(comment_gen, "_mark_key_exhausted", lambda idx, retry_after=None: marks.append(idx))
+    monkeypatch.setattr(comment_gen, "_mark_key_exhausted", lambda idx, retry_after=None, **kw: marks.append(idx))
     comment_gen._rr_cursor["i"] = 0
     # 앞선 테스트가 남긴 키 사용시각을 지운다(2026-08-09). 안 지우면 페이서가
     # 쿨다운으로 12초를 자며 다른 키를 골라 이 테스트가 단독으론 통과하고

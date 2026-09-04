@@ -112,10 +112,13 @@ def build_group(voice_id, name, one_liner="", lang="KR", group_id=None):
     return rows
 
 
-def bake_sample(preset):
+def bake_sample(preset, customer_id=0):
     """프리셋 1건의 미리듣기 mp3를 굽는다. 실패해도 등록은 살린다(샘플 없으면 카드에 재생버튼만 없음).
 
-    ★synthesize_line을 쓴다 — 이유는 파일 머리말 ②."""
+    ★synthesize_line을 쓴다 — 이유는 파일 머리말 ②.
+    ★customer_id = **누구 크레딧으로 굽나**(2026-09-02). 이걸 안 넘기던 동안에는
+      고객이 자기 목소리를 담아도 샘플 4건이 **사장님 키**로 나갔다. 등록하는 사람이
+      제 몫을 쓰는 게 맞다. 0이면 종전대로 사장님 키(관리자 등록 경로가 그렇다)."""
     from shopping_shorts.mix_pipeline import synthesize_line
     voice_presets.SAMPLES_DIR.mkdir(parents=True, exist_ok=True)
     out = voice_presets.SAMPLES_DIR / preset["sample_file"]
@@ -126,7 +129,7 @@ def bake_sample(preset):
                "silence_trim": preset.get("default_silence_trim", "off"),
                "naturalize_profile": None,
                "model_id": preset.get("model_id")},
-        beat_role="훅", beat_index=0, beat_total=5)
+        beat_role="훅", beat_index=0, beat_total=5, customer_id=int(customer_id or 0))
     return out
 
 
@@ -173,7 +176,7 @@ def register(store, voice_id, name, one_liner="", lang="KR", bake=True,
     for p in rows:
         if bake:
             try:
-                bake_sample(p)
+                bake_sample(p, customer_id=owner_customer_id)
             except Exception as e:                 # 크레딧·네트워크 등 — 등록 자체는 진행
                 failed.append(f"{p['preset_id']}: {e}")
                 p["sample_file"] = None
@@ -196,6 +199,41 @@ def register(store, voice_id, name, one_liner="", lang="KR", bake=True,
 #   담아도 합성이 사장님 키로 나가 실패한다 — 호출부가 키 유무를 먼저 막아야 한다.
 _SHARED_ENDPOINT = "https://api.elevenlabs.io/v1/shared-voices"
 _ADD_ENDPOINT = "https://api.elevenlabs.io/v1/voices/add/{owner}/{vid}"
+
+
+# ★일레븐랩스가 **무엇이 잘못됐는지 정확히 말해주는데** 우리가 버리고 있었다
+#   (실사고 2026-09-02): 사장님 화면엔 "검색 실패 (HTTP 401)"만 떴고 서버 로그엔
+#   "키를 새로 만들어 다시 넣어주세요"가 찍혔다. 그런데 응답 본문의 진짜 사유는
+#     "The API key you used is missing the permission voices_read to execute this operation."
+#   — **키는 멀쩡하고 권한 한 칸이 빠진 것**이었다. 새 키를 만들어도 그 칸을 안 켜면
+#   똑같이 실패한다. 안내가 틀리면 고객은 고칠 수 없는 쳇바퀴를 돈다.
+#   ★판단은 여기 한 곳에서만 한다(0순위-B) — app._explain_key_failure도 이걸 부른다.
+_PERM_KO = {
+    "voices_read":   "목소리 보기(voices_read)",
+    "voices_write":  "목소리 담기/수정(voices_write)",
+    "text_to_speech": "음성 합성(text_to_speech)",
+    "user_read":     "내 정보 보기(user_read)",
+}
+
+
+def explain_error(code: int, body: str) -> str:
+    """일레븐랩스 응답 → 고객이 **무엇을 눌러야 하는지** 아는 한 줄. 모르면 빈 문자열."""
+    low = (body or "").lower()
+    if "api key id used as api key" in low or "key id" in low:
+        return ("키가 아니라 **키 ID**를 붙여넣으셨어요. ElevenLabs에서 키를 새로 만들 때 "
+                "한 번만 보이는 `sk_`로 시작하는 값을 넣어주세요.")
+    if "missing the permission" in low:
+        m = re.search(r"missing the permission ([a-z_]+)", low)
+        perm = (m.group(1) if m else "")
+        ko = _PERM_KO.get(perm, f"`{perm}`" if perm else "필요한 권한")
+        return (f"키는 정상인데 **{ko} 권한**이 꺼져 있습니다. "
+                "ElevenLabs → 내 프로필 → API Keys에서 그 키를 편집해 이 권한을 켜주세요 "
+                "(키를 새로 만들어도 권한을 안 켜면 똑같이 실패합니다).")
+    if code in (401, 403):
+        return "ElevenLabs가 이 키를 인식하지 못합니다. 키를 새로 만들어 다시 넣어주세요."
+    if code == 429:
+        return "요청이 너무 많습니다. 잠시 뒤 다시 시도해주세요."
+    return ""
 
 
 def search_shared(customer_id=0, query="", language=None, gender=None,
@@ -233,8 +271,10 @@ def search_shared(customer_id=0, query="", language=None, gender=None,
     except Exception as e:                                   # 네트워크 자체 실패
         return {"ok": False, "voices": [], "has_more": False, "error": f"검색 실패: {e}"}
     if r.status_code != 200:
+        # ★본문의 진짜 사유를 버리지 않는다 — "HTTP 401"만 보여주면 고객이 못 고친다.
+        why = explain_error(r.status_code, r.text or "")
         return {"ok": False, "voices": [], "has_more": False,
-                "error": f"검색 실패 (HTTP {r.status_code})"}
+                "error": why or f"검색 실패 (HTTP {r.status_code})"}
     try:
         body = r.json()
     except Exception:
