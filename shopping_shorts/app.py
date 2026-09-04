@@ -4711,7 +4711,8 @@ def _coupang_member_key(customer_id=None):
         cid = customer_id if customer_id is not None else keyctx.owner_cid()
         keys, _ = keyroute.keys_for(Store(DB_PATH), cid, keyroute.SVC_COUPANG)
         return coupang_partners.split_key(keys[0]) if keys else ("", "")
-    except Exception:                                       # noqa: BLE001 — 키 조회 실패가 화면을 막으면 안 된다
+    except Exception as _e:  # noqa: BLE001 — 키 조회 실패가 화면을 막으면 안 된다
+        print(f"[coupang:member_key] 실패(무해): {_e!r}", file=sys.stderr)
         return "", ""
 
 
@@ -4731,7 +4732,8 @@ def api_coupang_identify(body: dict):
             with store._conn() as c:
                 row = c.execute("SELECT thumbnail FROM channel_archive WHERE shortcode=?", (sc,)).fetchone()
                 thumb = (row[0] or "") if row else ""
-        except Exception:                                   # noqa: BLE001
+        except Exception as _e:  # noqa: BLE001
+            print(f"[coupang:identify.thumb] 실패(무해): {_e!r}", file=sys.stderr)
             thumb = ""
         if not thumb:
             thumb = _last_run_thumb(store, sc)
@@ -4742,13 +4744,15 @@ def api_coupang_identify(body: dict):
     try:
         pmap = _pn.identify_many([{"shortcode": sc, "thumbnail": thumb}], DB_PATH) if thumb else {}
         hint = (pmap.get(sc) or "").strip()
-    except Exception:                                       # noqa: BLE001
+    except Exception as _e:  # noqa: BLE001
+        print(f"[coupang:identify.vision] 실패(무해): {_e!r}", file=sys.stderr)
         pmap, hint = {}, ""
     product, qs = ("", [])
     if evidence:
         try:
             product, qs = coupang_query.identify_from_evidence(evidence, hint=hint)
-        except Exception:                                   # noqa: BLE001
+        except Exception as _e:  # noqa: BLE001
+            print(f"[coupang:identify.evidence] 실패(무해): {_e!r}", file=sys.stderr)
             product, qs = "", []
     if product:
         return {"ok": True, "product": product, "queries": [product] + qs[:5], "basis": used}
@@ -4765,11 +4769,13 @@ def api_coupang_identify(body: dict):
             row = c.execute("SELECT subject, material FROM vision_tags WHERE shortcode=?", (sc,)).fetchone()
         if row:
             ctx = " / ".join([x for x in (("주제: " + row[0]) if row[0] else "", ("재질: " + row[1]) if row[1] else "") if x])
-    except Exception:                                       # noqa: BLE001
+    except Exception as _e:  # noqa: BLE001
+        print(f"[coupang:evidence.script] 실패(무해): {_e!r}", file=sys.stderr)
         ctx = ""
     try:
         qs = [q for q in (coupang_query.suggest(product, "", context=ctx) or []) if q and q != product]
-    except Exception:                                       # noqa: BLE001
+    except Exception as _e:  # noqa: BLE001
+        print(f"[coupang:evidence.analysis] 실패(무해): {_e!r}", file=sys.stderr)
         qs = []
     return {"ok": True, "product": product, "queries": [product] + qs[:5], "basis": used or ["썸네일"]}
 
@@ -4785,14 +4791,16 @@ def _coupang_evidence(store, sc):
             txt = (ex.get("full_text") or " ".join((s.get("text") or "") for s in (ex.get("segments") or []))).strip()
         if txt:
             parts.append("대본: " + txt[:1500]); used.append("대본")
-    except Exception:                                       # noqa: BLE001
+    except Exception as _e:  # noqa: BLE001
+        print(f"[coupang:evidence.caption_archive] 실패(무해): {_e!r}", file=sys.stderr)
         pass
     try:
         sa = store.get_source_analysis(sc)
         kws = (sa or {}).get("keywords") or []
         if kws:
             parts.append("분석 키워드: " + ", ".join(str(k) for k in kws[:20])); used.append("분석")
-    except Exception:                                       # noqa: BLE001
+    except Exception as _e:  # noqa: BLE001
+        print(f"[coupang:evidence.caption_lastrun] 실패(무해): {_e!r}", file=sys.stderr)
         pass
     cap = ""
     try:
