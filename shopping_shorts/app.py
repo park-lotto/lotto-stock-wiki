@@ -4895,6 +4895,7 @@ def _inpock_next_number(store, customer_id):
 def _coupang_evidence(store, sc):
     """이 영상의 텍스트 근거를 모은다 → (근거 문자열, 쓴 출처 목록). 판단은 여기 한 곳.
     출처: 대본 추출(script_extracts full_text) / 담기 분석 키워드(source_analysis) / 캡션(랭킹·아카이브)."""
+    from shopping_shorts import coupang_query
     parts, used = [], []
     try:
         ex = store.get_extract(sc) or store.get_script(sc)
@@ -4930,8 +4931,12 @@ def _coupang_evidence(store, sc):
                     break
         except Exception:                                   # noqa: BLE001
             cap = ""
-    if cap.strip():
-        parts.append("캡션: " + cap.strip()[:600]); used.append("캡션")
+    # ★해시태그를 떼고 쓴다(2026-09-05) — 통째로 주면 분위기어가 근거를 오염시킨다
+    #   (실측 product_name.py:9 — 아카이브 최빈 태그가 ‘살림꿀팁’ 15%).
+    #   규칙은 coupang_query.caption_body 한 곳(프리워밍도 같은 함수 — 0순위-B).
+    cap_body = coupang_query.caption_body(cap, limit=600)
+    if cap_body:
+        parts.append("캡션: " + cap_body); used.append("캡션")
     return "\n".join(parts), used
 
 
@@ -4939,7 +4944,14 @@ def _coupang_evidence(store, sc):
 def api_coupang_identify_batch(body: dict):
     """화면에 보이는 카드들을 **미리** 판독해 캐시한다(2026-09-04 사장님 "바로 뜨게 못 하나").
     클릭 후 3~8초 걸리던 썸네일 판독이 페이지 로드 직후 뒤에서 돌아, 클릭 땐 캐시 적중으로 즉시 뜬다.
-    한 번 판독한 shortcode는 DB 캐시라 다시 안 묻는다(product_name.identify_many). 상한 60개."""
+    한 번 판독한 shortcode는 DB 캐시라 다시 안 묻는다(identify_shop_many). 상한 60개.
+
+    ★캡션을 같이 받는다(2026-09-05 사장님 "너무 일반화된 키워드"). 종전에는 **썸네일
+      이미지만** 보내 "벽선반"·"프라이팬" 같은 범주어가 나왔다 — 캡션은 카드에 이미
+      그려져 있는데(index.html) 서버로 안 보내 버려지고 있었다. 모델 호출은 그대로
+      **1회**라 추가 비용·지연이 0이다(대본 추출은 영상 업로드 = 0.1P 과금, 완전 별건).
+    ⚠️ identify_many(묶기용)가 아니라 identify_shop_many를 부른다 — 캐시·프롬프트가
+       따로다. 같이 쓰면 아카이브 유사도 묶기가 조용히 바뀐다(0순위-B)."""
     from shopping_shorts import product_name as _pn
     items = body.get("items") if isinstance(body.get("items"), list) else []
     todo = []
@@ -4948,12 +4960,14 @@ def api_coupang_identify_batch(body: dict):
             continue
         sc = os.path.basename(str(it.get("shortcode") or "")).strip()
         th = str(it.get("thumbnail") or "").strip()
-        if sc and th:
-            todo.append({"shortcode": sc, "thumbnail": th})
+        cap = str(it.get("caption") or "")[:2000]
+        # 캡션만 있어도 판독할 값어치가 있다(캡션이 이미지보다 정확한 경우가 있다).
+        if sc and (th or cap.strip()):
+            todo.append({"shortcode": sc, "thumbnail": th, "caption": cap})
     if not todo:
         return {"ok": True, "products": {}}
     try:
-        pmap = _pn.identify_many(todo, DB_PATH)
+        pmap = _pn.identify_shop_many(todo, DB_PATH)
     except Exception as e:                                  # noqa: BLE001
         return {"ok": False, "products": {}, "error": f"판독 실패: {type(e).__name__}"}
     return {"ok": True, "products": {k: (v or "") for k, v in (pmap or {}).items()}}
