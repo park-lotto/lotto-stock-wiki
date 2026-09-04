@@ -956,6 +956,32 @@ function updatePlatformCopy(p){
   });
   applyMetricLabels(p);          // 툴팁만 바꾸고 글자를 안 바꾸면 이름이 거짓말을 한다
 }
+// 🎯 플랫폼마다 쓸모없는 지표는 **숨긴다**(2026-09-04 사장님 "반응률은 빼 / 유튜브에서
+// 단순지표 댓글순이랑 팔로워순은 빼고 … 뾰족하게 만들어줘야대").
+//   유튜브 쇼츠는 댓글이 거의 안 달린다(실측 중앙값 1개 vs 인스타 60개) —
+//   댓글에서 파생된 지표는 전부 0에 몰려 줄세우기가 무의미하다.
+//   ★버튼을 지우지 않고 숨긴다: 인스타로 돌아가면 그대로 살아야 한다.
+const _HIDE_METRICS = {
+  youtube:    ['density', 'fan_density', 'rawcomments', 'followers'],
+  naverclip:  ['fan_density', 'followers'],
+  pinterest:  ['fan_density', 'followers'],
+  threads:    ['density'],            // 쓰레드는 조회수를 안 준다 → 조회수당댓글이 늘 빈다
+};
+function applyMetricTabsFor(p){
+  const hide = _HIDE_METRICS[p] || [];
+  let hidActive = false;
+  document.querySelectorAll('#tabs .tab[data-tab]').forEach(el=>{
+    const off = hide.includes(el.dataset.tab);
+    el.style.display = off ? 'none' : '';
+    if(off && el.classList.contains('active')) hidActive = true;
+  });
+  // ★숨긴 탭이 눌려 있던 채로 두면 목록이 통째로 빈다 — 기본 탭으로 되돌린다.
+  if(hidActive){
+    const fallback = document.querySelector('#tabs .tab[data-tab="comments"]');
+    if(fallback){ document.querySelectorAll('#tabs .tab').forEach(x=>x.classList.remove('active'));
+                  fallback.classList.add('active'); STATE.tab='comments'; }
+  }
+}
 function ttMode(){ const r=document.querySelector('input[name="ttmode"]:checked'); return r?r.value:'account'; }
 function switchPlatform(p, el){
   PLATFORM=p;
@@ -965,6 +991,7 @@ function switchPlatform(p, el){
   // ★카테고리 줄도 다시 그린다(2026-08-26) — 플랫폼마다 숨기는 버튼이 다르다.
   //   안 부르면 유튜브에서 인스타로 갈아타도 썰쇼핑·장비템 버튼이 그대로 남는다.
   renderCtypes(); renderCats();
+  applyMetricTabsFor(p);          // 플랫폼에 안 맞는 지표는 아예 숨긴다
   document.querySelectorAll('#platformTabs .ctype').forEach(x=>x.classList.remove('active'));
   el.classList.add('active');
   const isTrend = (p==='douyin');
