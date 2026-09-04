@@ -780,10 +780,20 @@
       document.body.appendChild(box);
     }
     var card = document.createElement("div");
-    card.style.cssText = "background:#160c0c;color:#f7e9e9;border:1px solid #7a2b2b;border-left:4px solid #ff5a5a;border-radius:12px;padding:14px 16px;box-shadow:0 8px 28px rgba(0,0,0,.45);animation:ssSlideIn .25s ease";
+    // ★등급별 색·문구(2026-09-04 사장님 "다 큰 사고처럼 보이고 조치가 되는지 모르겠다").
+    //   고객영향=빨강(즉시) / 운영주의=주황(자동 우회됨) / 정보=회색. 자동조치·할 일을 함께 보여준다.
+    var g = alert.grade || "운영주의";
+    var th = (g === "고객영향")
+      ? { bg: "#160c0c", fg: "#f7e9e9", bd: "#7a2b2b", bar: "#ff5a5a", lc: "#ff8080", label: "🚨 고객 영향 사고 — 지금 확인" }
+      : (g === "정보")
+        ? { bg: "#0f1412", fg: "#e6efe9", bd: "#2a3a33", bar: "#8fa1a0", lc: "#b7c5c0", label: "ℹ️ 알림" }
+        : { bg: "#171205", fg: "#f6efe0", bd: "#6a4a10", bar: "#f5a623", lc: "#ffc85c", label: "⚠️ 운영 주의 — 자동 우회됨, 서비스 정상" };
+    card.style.cssText = "background:" + th.bg + ";color:" + th.fg + ";border:1px solid " + th.bd + ";border-left:4px solid " + th.bar + ";border-radius:12px;padding:14px 16px;box-shadow:0 8px 28px rgba(0,0,0,.45);animation:ssSlideIn .25s ease";
     card.innerHTML =
-      '<div style="font-size:13px;font-weight:800;color:#ff8080;margin-bottom:4px">🚨 운영 사고</div>' +
+      '<div style="font-size:13px;font-weight:800;color:' + th.lc + ';margin-bottom:4px">' + th.label + '</div>' +
       '<div style="font-size:14px;font-weight:700;line-height:1.35">' + _ssEsc(alert.title || "") + '</div>' +
+      (alert.auto ? '<div style="margin-top:6px;font-size:12px;opacity:.9">✅ 자동 조치: ' + _ssEsc(alert.auto) + '</div>' : '') +
+      (alert.todo ? '<div style="margin-top:4px;font-size:12px;opacity:.9">👉 할 일: ' + _ssEsc(alert.todo) + '</div>' : '') +
       (alert.detail
         ? '<details style="margin-top:8px"><summary style="cursor:pointer;font-size:12px;color:#ffb3b3">상세 사유 보기</summary>' +
           '<div style="margin-top:6px;font-size:11px;color:#e0c0c0;white-space:pre-wrap;word-break:break-all;max-height:180px;overflow:auto">' +
@@ -828,7 +838,7 @@
           try {
             var shown = window.__ssOpsShown || (window.__ssOpsShown = {});
             (d.alerts || []).forEach(function (a) {
-              if (!a || a.read || shown[a.id]) return;
+              if (!a || a.read || a.resolved || shown[a.id]) return;   // 해결된 건 다시 안 띄운다
               shown[a.id] = 1;
               _ssDing();
               _ssOpsToast(a);
