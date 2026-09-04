@@ -1101,6 +1101,7 @@ def run_mix_job(job_id, db_path, work_root):
                           job["structure"], None, work, given_script=job.get("given_script"),
                           voice=job.get("voice"), customer_id=job.get("customer_id", 0),
                           scene_first=job.get("scene_first", False),
+                          script_structure=job.get("script_structure"),
                           reference_text=job.get("given_script") or "",
                           # 핑퐁(대본↔장면 왕복 행위매칭): 전역 설정으로 on/off(기본 off·회귀0).
                           # 스키마 컬럼 없이 한 스위치로 켠다 — store.set_setting('ping_pong_enabled','1').
@@ -1361,7 +1362,7 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
                   given_script=None, voice=None, customer_id=0,
                   scene_first=False, reference_text="", ping_pong=False,
                   backbone_meta=None, backbone_forced=None, backbone_base=False,
-                  global_pron=None):
+                  global_pron=None, script_structure=None):
     """EDL 생성(3) + 비트별 TTS(4) → edit_plan 저장 + ready_for_review.
     run_mix_job(자동판별, video_type=None)과 retype_mix_job(사용자 선택 유형)이 공유.
     given_script: 있으면 확정 대본을 그대로 비트로 쪼개 영상만 매칭(영상제작 2단계).
@@ -1414,7 +1415,21 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
         print("[mix] 확정 대본이 있어 scene_first를 끈다 — 대본은 그대로, 화면만 매칭"
               " (%d자)" % len((given_script or "").strip()), file=sys.stderr)
         scene_first = False
-    if scene_first:
+    # ★3단계 상속(2026-09-04, 스위치 edl_inherit_enabled → script_structure.inherit_scenes): 2단계가 줄마다
+    #   남긴 출처 장면을 그대로 잇는다(Gemini 0회, 추측 층 없음). 못 이으면(줄·출처 개수 불일치 등) None →
+    #   아래 옛 경로 그대로(회귀 0).
+    plan = None
+    _ss = script_structure if isinstance(script_structure, dict) else {}
+    if (given_script or "").strip() and _ss.get("inherit_scenes") and _ss.get("beat_sources"):
+        from shopping_shorts.edit_plan import build_inherit_plan
+        plan = build_inherit_plan(source_scripts, given_script, _ss.get("beat_sources"),
+                                  structure=structure, video_type=video_type)
+        print("[mix] 3단계 상속: %s" % ("비트 %d개(출처 %d줄)" % (
+            len(plan["beats"]), sum(1 for b in plan["beats"] if b.get("inherited")))
+            if plan else "이을 수 없어 옛 경로로"), file=sys.stderr)
+    if plan is not None:
+        pass
+    elif scene_first:
         from shopping_shorts.edit_plan import build_scene_first_plan
         # 부품은행 주입(P0-2): 설정 bank_enabled=1일 때만 승인 훅·어미·부사·CTA·스파인을 조립해
         # 영상 대본 프롬프트에 실어준다. 기본 off → 회귀0. 매 job 상위 perf 풀에서 로테이션
@@ -1623,7 +1638,7 @@ def retype_mix_job(job_id, video_type, db_path, work_root):
         _plan_and_tts(store, job_id, source_scripts, job["target_seconds"],
                       job["structure"], video_type, work, given_script=job.get("given_script"),
                       voice=job.get("voice"), customer_id=job.get("customer_id", 0),
-                      global_pron=_gpron)
+                      global_pron=_gpron, script_structure=job.get("script_structure"))
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
         store.update_mix_job(job_id, status="failed", error=str(e))

@@ -4112,6 +4112,103 @@ def build_edit_plan(source_scripts, target_seconds, structure="template", video_
     return grounded
 
 
+def build_inherit_plan(source_scripts, given_script, beat_sources, structure="template", video_type=None):
+    """3단계 '붙어 온 장면 그대로 쓰기'(2026-09-04, 설계 §3-5·§9 — 사장님 "3단계는 상속만").
+
+    2단계가 줄마다 남긴 출처 장면(beat_sources[i] = {role, seg, segs})을 **줄 = 비트**로 그대로 잇는다.
+    Gemini 호출 0회. 추측 층(_chronological_respine·_verify_fits·_repick_weak_beats·_reconcile_weak_beats)은
+    이 경로에서 **부르지 않는다** — 정하는 곳은 2단계 한 곳이다(0순위-B).
+      · 출처가 있는 줄: primary = 첫 번호, alternates = 나머지(전부 인벤토리에 실재해야 한다)
+      · 출처가 없는 줄(훅·감정·가격·약속 = 2단계가 needs_scene=false로 둔 줄): 앞 비트 장면의 **다음 컷**(같은
+        소스, 시간순, 미사용)을 b-roll로 — 없으면 미사용 아무 컷. `inherited=False`로 표시해 화면이 구분한다
+      · 화면 길이 ≥ 대사 길이는 종전 보루(_fill_beat_screen_time)로 채운다
+    쓸 수 없으면 None(호출부가 옛 경로로 폴백): 줄이 없거나, 출처 개수 ≠ 줄 개수, 실재 출처가 하나도 없음.
+    """
+    from shopping_shorts.script_gate import parse_src_segs
+    if not (given_script or "").strip() or not beat_sources:
+        return None
+    lines = [s for s in script_sentences(given_script) if _narr_key(s)]
+    srcs = [x if isinstance(x, dict) else {} for x in (beat_sources or [])]
+    if not lines or len(srcs) != len(lines):
+        return None
+    seg_map, _ = _build_inventory(source_scripts)
+    usable = non_edge_segs(seg_map)
+    if not usable:
+        return None
+
+    def _ids_of(x):
+        ids = list(x.get("segs") or []) or parse_src_segs(x.get("seg"))
+        out = []
+        for sid in ids:
+            sid = str(sid).strip()
+            if sid in usable and sid not in out:
+                out.append(sid)
+        return out
+
+    per_line = [_ids_of(x) for x in srcs]
+    if not any(per_line):
+        return None
+
+    # 소스별 시간순 목록(장면 없는 줄의 '다음 컷' 후보)
+    by_video = {}
+    for sid, s in usable.items():
+        by_video.setdefault(s.get("video_id"), []).append(s)
+    for v in by_video.values():
+        v.sort(key=lambda s: float(s.get("start") or 0))
+    used = {sid for ids in per_line for sid in ids}
+
+    def _next_cut(prev_sid):
+        """앞 비트 장면의 다음 컷(같은 소스·시간순·미사용) → 없으면 미사용 아무 컷 → None."""
+        prev = usable.get(prev_sid) if prev_sid else None
+        if prev:
+            for s in by_video.get(prev.get("video_id"), []):
+                if float(s.get("start") or 0) > float(prev.get("start") or 0) and s["seg_id"] not in used:
+                    return s["seg_id"]
+        for v in by_video.values():
+            for s in v:
+                if s["seg_id"] not in used:
+                    return s["seg_id"]
+        return None
+
+    beats, prev_sid = [], None
+    for i, (line, ids) in enumerate(zip(lines, per_line)):
+        inherited = bool(ids)
+        if not ids:
+            fill = _next_cut(prev_sid)
+            if fill:
+                ids = [fill]
+                used.add(fill)
+        if not ids:
+            ids = [prev_sid] if prev_sid else [next(iter(usable))]
+        refs = [_ground_ref({"seg_id": sid}, usable) for sid in ids]
+        refs = [r for r in refs if r]
+        if not refs:
+            continue
+        n = len(line)
+        beats.append({
+            "beat_idx": len(beats),
+            "role": str(srcs[i].get("role") or ""),
+            "narration": line,
+            "target_seconds": round(max(1.5, n / _SYLLABLES_PER_SEC), 1),
+            "primary": refs[0],
+            "alternates": refs[1:],
+            "effect": "cut",
+            # fit은 자기신고가 아니라 **출처가 있으면 5, 채운 b-roll이면 3**(설계 §2 "fit은 계산값").
+            "fit": 5 if inherited else 3,
+            "fit_evidence": "inherited" if inherited else "broll_fill",
+            "inherited": inherited,
+            "visual_verb": inherited,
+            "src_seg_applied": refs[0]["seg_id"] if inherited else None,
+        })
+        prev_sid = refs[-1]["seg_id"]
+    if not beats:
+        return None
+    beats = _fill_beat_screen_time(beats, seg_map)
+    return {"structure": structure, "beats": beats, "plagiarism_flags": [],
+            "detected_type": _normalize_video_type(video_type), "affiliate_target": "",
+            "generator": "inherit"}
+
+
 def _verify_fits(beats):
     """fit 자기신고 검증(2026-07-22 페이블 점검): fit은 생성 Gemini의 자기채점이라 전부 5/5로
     나와 — 화면의 '매칭 5/5' 표시, 추천점수의 avg_fit(50%), fit≤2 스왑버튼, fit≤3 약비트
