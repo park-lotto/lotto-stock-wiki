@@ -1005,6 +1005,9 @@
   /* ★🛒 쿠팡 상품 찾기 모달(2026-09-04 사장님 "쿠팡에 링크가 만들어지는 상품인지 검색 — 없는 상품이 많아서").
      영상을 만들기 **전에** 카드에서 바로 "이 제품이 쿠팡에 있나 → 내 링크"를 본다.
      한 곳(sidebar.js)에만 두고 페이지들은 버튼만 단다(0순위-B). 페이지 모달에 기대지 않는다. */
+  /* ★_ssEsc는 다른 함수 안에 갇혀 있어 여기서 안 보인다(2026-09-04 라이브 실측: 클릭해도
+     "_ssEsc is not defined"로 모달이 안 떴다). 이 블록 전용 이스케이프를 둔다. */
+  function _cfEsc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   var _cfState = { kw: "", items: [], chips: [] };
   function _cfEl(id) { return document.getElementById(id); }
   function _cfClose() { var m = _cfEl("ssCoupangFind"); if (m) m.remove(); }
@@ -1013,19 +1016,19 @@
     var m = _cfEl("cfMsg"); if (m) { m.textContent = msg || ""; m.style.color = msgColor || "#8fa39a"; }
     var chips = _cfEl("cfChips");
     if (chips) chips.innerHTML = (_cfState.chips.length < 2) ? "" : _cfState.chips.map(function (c) {
-      return '<button onclick="window.ssCoupangFind.search(decodeURIComponent(\'' + encodeURIComponent(c) + '\'))" style="padding:4px 10px;font-size:12px;border-radius:999px;border:1px solid ' + (c === _cfState.kw ? '#37e0bd' : '#1e2a24') + ';background:#0c1210;color:#e6efe9;cursor:pointer;margin:0 6px 6px 0">' + _ssEsc(c) + '</button>';
+      return '<button onclick="window.ssCoupangFind.search(decodeURIComponent(\'' + encodeURIComponent(c) + '\'))" style="padding:4px 10px;font-size:12px;border-radius:999px;border:1px solid ' + (c === _cfState.kw ? '#37e0bd' : '#1e2a24') + ';background:#0c1210;color:#e6efe9;cursor:pointer;margin:0 6px 6px 0">' + _cfEsc(c) + '</button>';
     }).join("");
     if (!_cfState.items.length) { box.innerHTML = ""; return; }
     box.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;max-height:52vh;overflow-y:auto">' +
       _cfState.items.map(function (it, i) {
         return '<div style="border:1px solid #1e2a24;border-radius:10px;padding:8px;background:#0c1210">' +
-          '<img src="' + _ssEsc(it.image || "") + '" style="width:100%;aspect-ratio:1;object-fit:contain;border-radius:6px;background:#fff" onerror="this.style.visibility=\'hidden\'">' +
-          '<div style="font-size:11px;line-height:1.35;margin-top:4px;max-height:44px;overflow:hidden" title="' + _ssEsc(it.name) + '">' + _ssEsc(it.name) + '</div>' +
-          '<div style="font-size:12px;font-weight:700;margin-top:3px">' + _ssEsc(it.price || "") + (it.is_rocket ? ' <span style="font-size:10px;color:#5fe3d6">🚀로켓</span>' : '') + '</div>' +
-          '<div id="cfLink' + i + '" style="font-size:10px;color:#37e0bd;word-break:break-all;margin-top:4px">' + (it.short_url ? _ssEsc(it.short_url) : '') + '</div>' +
+          '<img src="' + _cfEsc(it.image || "") + '" style="width:100%;aspect-ratio:1;object-fit:contain;border-radius:6px;background:#fff" onerror="this.style.visibility=\'hidden\'">' +
+          '<div style="font-size:11px;line-height:1.35;margin-top:4px;max-height:44px;overflow:hidden" title="' + _cfEsc(it.name) + '">' + _cfEsc(it.name) + '</div>' +
+          '<div style="font-size:12px;font-weight:700;margin-top:3px">' + _cfEsc(it.price || "") + (it.is_rocket ? ' <span style="font-size:10px;color:#5fe3d6">🚀로켓</span>' : '') + '</div>' +
+          '<div id="cfLink' + i + '" style="font-size:10px;color:#37e0bd;word-break:break-all;margin-top:4px">' + (it.short_url ? _cfEsc(it.short_url) : '') + '</div>' +
           '<div style="display:flex;gap:4px;margin-top:6px">' +
             '<button onclick="window.ssCoupangFind.link(' + i + ')" style="flex:1;padding:6px 4px;font-size:11px;border-radius:7px;border:1px solid #b8860b;background:linear-gradient(90deg,#3a2f0d,#2a2408);color:#ffd76b;cursor:pointer">🔗 내 링크</button>' +
-            '<button onclick="window.open(\'' + _ssEsc(it.url) + '\',\'_blank\')" style="padding:6px 6px;font-size:11px;border-radius:7px;border:1px solid #1e2a24;background:#0f1512;color:#e6efe9;cursor:pointer">보기</button>' +
+            '<button onclick="window.open(\'' + _cfEsc(it.url) + '\',\'_blank\')" style="padding:6px 6px;font-size:11px;border-radius:7px;border:1px solid #1e2a24;background:#0f1512;color:#e6efe9;cursor:pointer">보기</button>' +
           '</div></div>';
       }).join("") + '</div>';
   }
@@ -1037,7 +1040,7 @@
     wrap.style.cssText = "position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:16px";
     wrap.innerHTML = '<div style="background:#0f1512;color:#e6efe9;border:1px solid #1e2a24;border-radius:14px;width:min(900px,96vw);max-height:90vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.6)">' +
       '<div style="display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid #1e2a24"><b style="font-size:15px">🛒 쿠팡에 이 제품이 있나요?</b><span style="font-size:11px;color:#8fa39a">— 있으면 그 자리에서 내 추적 링크까지</span><span style="flex:1"></span><button onclick="window.ssCoupangFind.close()" style="background:none;border:none;color:#8fa39a;font-size:18px;cursor:pointer">✕</button></div>' +
-      '<div style="padding:12px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><input id="cfQuery" value="' + _ssEsc(keyword || "") + '" placeholder="제품명(예: 의류 태깅건)" style="flex:1;min-width:200px;padding:9px 10px;border-radius:9px;border:1px solid #1e2a24;background:#0c1210;color:#e6efe9;font-size:13px" onkeydown="if(event.key===\'Enter\'){event.preventDefault();window.ssCoupangFind.search();}">' +
+      '<div style="padding:12px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><input id="cfQuery" value="' + _cfEsc(keyword || "") + '" placeholder="제품명(예: 의류 태깅건)" style="flex:1;min-width:200px;padding:9px 10px;border-radius:9px;border:1px solid #1e2a24;background:#0c1210;color:#e6efe9;font-size:13px" onkeydown="if(event.key===\'Enter\'){event.preventDefault();window.ssCoupangFind.search();}">' +
       '<button onclick="window.ssCoupangFind.search()" style="padding:9px 16px;border-radius:9px;border:none;background:linear-gradient(180deg,#37e0bd,#2bd4b0);color:#04120e;font-weight:800;cursor:pointer">찾기</button>' +
       '<a id="cfOut" href="#" target="_blank" rel="noopener" style="font-size:12px;color:#37e0bd">쿠팡에서 직접 ↗</a><span id="cfMsg" style="font-size:12px;color:#8fa39a;width:100%"></span><div id="cfChips" style="width:100%"></div></div>' +
       '<div id="cfResults" style="padding:0 14px 14px"></div></div>';
@@ -1089,7 +1092,7 @@
       .then(function (d) {
         if (d && d.ok && d.shorten_url) { done(d.shorten_url); return; }
         if (it.partner_url) { done(it.partner_url); return; }   /* API 검색 카드엔 긴 추적 링크가 이미 있다 */
-        if (cell) cell.innerHTML = d && d.need_key ? '<a href="/settings#keys" style="color:#ffd76b">내 키 등록하면 자동 ↗</a>' : _ssEsc((d && d.error) || "실패");
+        if (cell) cell.innerHTML = d && d.need_key ? '<a href="/settings#keys" style="color:#ffd76b">내 키 등록하면 자동 ↗</a>' : _cfEsc((d && d.error) || "실패");
       })
       .catch(function () { if (cell) cell.textContent = "네트워크 오류"; });
   }
