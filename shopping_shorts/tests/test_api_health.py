@@ -135,6 +135,30 @@ def test_verdict_ok_when_quiet(tmp_db):
     assert v["level"] == "ok"
 
 
+def _shorts_snap(keys):
+    return {"gemini": [{"pool": "shorts", "total": len(keys),
+                        "live": sum(1 for k in keys if k["state"] == "live"),
+                        "keys": keys}], "others": [], "collectors": []}
+
+
+def test_verdict_owner_locked_but_member_live_is_warn(tmp_db):
+    """2026-09-04 실사고: 사장님 키 1개가 일일 한도에 잠겼는데 회원 키로 정상 생성 중이었다.
+    고객영향(danger)이 아니라 '키 보충' 운영주의(warn)여야 한다."""
+    keys = [{"idx": 0, "tail": "QoPcbg", "owner": "owner", "state": "locked"},
+            {"idx": 1, "tail": "FbavLs", "owner": "member", "state": "live"}]
+    v = api_health.verdict(snap=_shorts_snap(keys), agg=api_health.aggregates(hours=1))
+    assert v["level"] == "warn"
+    assert any("회원 키 1개" in w and "보충" in w for w in v["warns"])
+
+
+def test_verdict_shorts_pool_truly_dead_is_danger(tmp_db):
+    keys = [{"idx": 0, "tail": "QoPcbg", "owner": "owner", "state": "locked"},
+            {"idx": 1, "tail": "FbavLs", "owner": "member", "state": "locked"}]
+    v = api_health.verdict(snap=_shorts_snap(keys), agg=api_health.aggregates(hours=1))
+    assert v["level"] == "danger"
+    assert any("전멸" in p for p in v["problems"])
+
+
 def test_verdict_auth_dead_is_danger(tmp_db):
     api_health.record("gemini", api_health.OUT_AUTH, detail=_AUTH_MSG)
     v = api_health.verdict(snap={"gemini": [], "others": [], "collectors": []},

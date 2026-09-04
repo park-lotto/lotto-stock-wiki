@@ -318,7 +318,7 @@
     .clean-meta .ttl{font-size:15px}
     .clean-meta .desc{color:var(--sub);font-size:12px}
     /* 프리미엄 스위치 — 체크박스는 시각 숨김, 접근성 유지 */
-    .sw-input{position:absolute;opacity:0;width:46px;height:26px;margin:0;right:0;cursor:pointer}
+    .sw-input{position:absolute;opacity:0;width:46px;height:26px;margin:0;right:0;cursor:pointer;z-index:1}
     .sw-track{margin-left:auto;width:46px;height:26px;border-radius:20px;flex:none;position:relative;
       background:#26332e;box-shadow:inset 0 0 0 1px rgba(255,255,255,.05)}
     .sw-knob{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#c9d6d1}
@@ -411,10 +411,14 @@
     @keyframes borderflow{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
     .hero-in{background:radial-gradient(120% 140% at 15% 0%,#12241e,#0b1310 60%);border-radius:16.5px;padding:20px}
     .hbar{display:flex;align-items:center;gap:14px;cursor:pointer;position:relative;flex:1;min-width:0}
-    /* 우상단 [크레딧 아이콘 / 토글] 세로 2단(2026-09-04). .sw-input이 absolute라 .sw-wrap을
-       positioned 부모로 둬야 토글 자리에 정확히 겹친다(hbar 밖으로 나왔으니). */
+    /* 우상단 [크레딧 아이콘 | 토글] 가로 나란히(2026-09-04 사장님 "옆으로 나란히"). .sw-input이
+       absolute라 .sw-wrap을 positioned 부모로 둬야 토글 자리에 정확히 겹친다(hbar 밖으로 나왔으니).
+       ★.sw-input에 z-index:1 — 투명 체크박스가 DOM상 .sw-track **앞**이라 뒤 형제(track, position:
+       relative)가 위에 그려져 **토글 자체를 클릭하면 아무 일도 안 났다**(2026-09-04 라이브 실측:
+       track 중앙 클릭 → checked 그대로). 제목 label(for=)로만 켜져 "활성화가 안 된다" 제보가 여럿.
+       예전엔 .hbar(label) 안에 있어 label이 대신 눌러줬는데 09-04에 밖으로 빼며 드러났다. */
     .hbar-row{display:flex;align-items:center;gap:14px}
-    .hright{display:flex;flex-direction:column;align-items:center;gap:8px;margin-left:auto;flex:none}
+    .hright{display:flex;flex-direction:row;align-items:center;gap:12px;margin-left:auto;flex:none}
     /* ★inline-flex여야 한다 — inline-block이면 안의 .sw-track(span)이 인라인이 돼 width/height가
        무시되고 트랙이 0×0으로 사라진다(2026-09-04 라이브 실측: 흰 손잡이만 떠 있었다).
        원래 .hbar(flex) 안에 있을 땐 flex 아이템이라 크기가 먹었다. */
@@ -3591,6 +3595,42 @@ function bufTextFor(service){
   return lines.join('\n');
 }
 
+/* ★쿠팡 링크·고지문구를 예약발행 글에 **자동으로** 붙인다(2026-09-04 사장님 "예약발행까지 하면
+   자동으로 따라 들어가나?" — 종전엔 8단계 버튼을 눌러야만 설명란에 들어갔다).
+   cp = /api/mix/product 응답({final_link, description_block}). 없으면 글 그대로.
+   · 유튜브·쓰레드: 링크가 눌리는 곳 → 블록 전체(상품명·링크·고지문구)
+   · 인스타·틱톡: 캡션 링크가 안 눌린다 → 고지문구 + "프로필 링크" 안내만
+   이미 링크나 고지문구가 들어 있으면 두 번 붙이지 않는다(8단계 버튼과 공존). */
+function bufWithCoupang(text, service, cp){
+  var t = String(text || '');
+  if (!cp || !cp.final_link || !cp.description_block) return t;
+  if (t.indexOf(cp.final_link) >= 0) return t;
+  var sv = (service || '').toLowerCase();
+  var lines = String(cp.description_block).split('\n');
+  var disclosure = lines[lines.length - 1] || '';
+  var add;
+  if (sv === 'youtube' || sv === 'threads') add = cp.description_block;
+  else {
+    if (disclosure && t.indexOf(disclosure) >= 0) return t;
+    add = '🛒 제품은 프로필 링크에서 확인하세요' + (disclosure ? '\n' + disclosure : '');
+  }
+  return t ? (t.replace(/\s+$/, '') + '\n\n' + add) : add;
+}
+
+/* 이 job의 쿠팡 정보를 한 번만 받아 둔다(10단계는 8단계와 별개 화면이라 COUPANG이 비어 있을 수 있다). */
+function bufLoadCoupang(){
+  if (!MIX_JOB) return Promise.resolve(null);
+  if (BUF.coupangFor === MIX_JOB) return Promise.resolve(BUF.coupang || null);
+  return fetch('/api/mix/product/' + encodeURIComponent(MIX_JOB))
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      BUF.coupangFor = MIX_JOB;
+      BUF.coupang = (d && d.ok && d.final_link) ? { final_link: d.final_link, description_block: d.description_block || '' } : null;
+      return BUF.coupang;
+    })
+    .catch(function(){ return null; });   /* 쿠팡 정보 실패가 예약발행을 막으면 안 된다 */
+}
+
 function bufText(){
   /* 8단계에서 만든 것을 그대로 쓴다. 없으면 빈 칸으로 둔다(지어내지 않는다). */
   /* ★window.SEO로 보면 **항상 비어 있다** — 이 파일의 SEO는 let 전역이라
@@ -3819,6 +3859,16 @@ function bufRenderTexts(){
     var ta = document.getElementById('bufTx-' + c.id);
     ta.value = bufTextFor(c.service);
     bufRenderPicker(c);
+  });
+  /* ★쿠팡 링크·고지문구 자동 동봉(2026-09-04). 기본글 그대로인 칸에만 붙인다. */
+  bufLoadCoupang().then(function(cp){
+    if (!cp) return;
+    ids.forEach(function(c){
+      var ta = document.getElementById('bufTx-' + c.id);
+      if (!ta) return;
+      var base = bufTextFor(c.service);
+      if (ta.value === base || ta.value === '') ta.value = bufWithCoupang(base, c.service, cp);
+    });
   });
   /* 뺀 채널의 칸은 치운다 */
   BUF.channels.forEach(function(c){
@@ -9105,6 +9155,7 @@ function renderCoupangSlot(d){
   COUPANG.partners_page=d.partners_link_page||'';
   COUPANG.product=d.product||null;
   COUPANG.dm_set=d.dm_set||null;   // 인포크 붙여넣기용 3줄(서버가 번호까지 붙여 보낸다)
+  if(typeof d.has_partner_key!=='undefined') COUPANG.hasKey=!!d.has_partner_key;   // 회원 파트너스 키(2026-09-04)
   COUPANG.editing=false;
   const slot=document.getElementById('coupangSlot');
   if(!slot) return;
@@ -9155,8 +9206,10 @@ function coupangInner(){
       ✅ <b>${esc(p.name||p.keyword||'선택한 상품')}</b>
       ${p.product_id?`<span class="hint">· ${esc(p.product_id)}</span>`:''}
       ${p.partner_url
-        ? '<span style="color:var(--ok)"> · 파트너스 링크 ✓</span>'
-        : '<span style="color:var(--fire)"> · 파트너스 링크 없음 (수수료 미적립)</span>'}
+        ? '<span style="color:var(--ok)"> · 파트너스 링크 ✓'+(p.partner_auto?' (자동 발급)':'')+'</span>'
+        : (p.partner_error
+            ? '<span style="color:var(--fire)"> · 자동 발급 실패: '+esc(p.partner_error)+'</span>'
+            : '<span style="color:var(--fire)"> · 파트너스 링크 없음 (수수료 미적립)</span>')}
       <div style="word-break:break-all;color:var(--accent);margin-top:4px;font-size:12px">${esc(final)}</div>
       <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
         ${p.partner_url?'':`<button class="btn-next" style="padding:6px 12px;font-size:12px" onclick="coupangMakeLink()">🔗 파트너스에서 링크 만들기</button>`}
@@ -9267,7 +9320,9 @@ function coupangForm(){
     <div id="cpChips"></div>
     <div id="cpResults"></div>
     <div class="hint" style="margin-bottom:5px">찾기가 막히면(또는 원하는 게 안 나오면) 위 검색 링크에서 상품을 고른 뒤 주소창 URL을 붙여넣으세요.
-      ${COUPANG.partners_page?`파트너스 추적 링크는 <a href="${esc(COUPANG.partners_page)}" target="_blank" rel="noopener" style="color:var(--accent)">파트너스 링크 만들기 ↗</a>에서 생성해 아래 칸에.`:''}</div>
+      ${COUPANG.hasKey
+        ? '내 파트너스 키가 등록돼 있어 <b>추적 링크는 저장할 때 자동으로</b> 만들어집니다.'
+        : (COUPANG.partners_page?`파트너스 추적 링크는 <a href="${esc(COUPANG.partners_page)}" target="_blank" rel="noopener" style="color:var(--accent)">파트너스 링크 만들기 ↗</a>에서 생성해 아래 칸에. <a href="/settings.html" style="color:var(--accent)">내 파트너스 API 키를 등록</a>하면 자동으로 만들어집니다.`:'')}</div>
     <input id="cpUrl" style="${inp}" placeholder="쿠팡 상품 URL (https://www.coupang.com/vp/products/...)" value="${esc(p.url||'')}">
     <input id="cpName" style="${inp}" placeholder="상품명 (선택 — 설명란·인포크 버튼 이름으로 씁니다)" value="${esc(p.name||COUPANG.target||'')}">
     <input id="cpPartner" style="${inp}" placeholder="파트너스 추적 링크 (선택 — https://link.coupang.com/...)" value="${esc(p.partner_url||'')}">
@@ -9331,7 +9386,7 @@ async function coupangCrawl(forced){
       return;
     }
     COUPANG.results=d.items;
-    if(msg){ msg.style.color='var(--sub)'; msg.textContent=d.items.length+'개 — 클릭하면 이 영상의 상품으로 확정됩니다'; }
+    if(msg){ msg.style.color='var(--sub)'; msg.textContent=d.items.length+'개 — 클릭하면 이 영상의 상품으로 확정됩니다'+(d.source==='api_shared'?' (내 파트너스 키가 없어 검색만 — 추적 링크는 키 등록 후)':''); }
     if(box) box.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-bottom:10px;max-height:340px;overflow-y:auto">`
       + d.items.map((it,i)=>`<div onclick="coupangPick(${i})" title="${esc(it.name)}"
            style="cursor:pointer;border:1px solid var(--line);border-radius:8px;padding:6px;background:var(--bg)">
@@ -9363,9 +9418,10 @@ async function coupangLens(){
 // 카드 클릭 = 상품 확정. 입력칸을 채운 뒤 곧바로 저장한다(클릭 한 번으로 끝나게).
 function coupangPick(i){
   const it=(COUPANG.results||[])[i]; if(!it) return;
-  const url=document.getElementById('cpUrl'), name=document.getElementById('cpName');
+  const url=document.getElementById('cpUrl'), name=document.getElementById('cpName'), pu=document.getElementById('cpPartner');
   if(url) url.value=it.url;
   if(name) name.value=it.name;
+  if(pu && it.partner_url) pu.value=it.partner_url;   // API 검색 카드엔 내 추적 링크가 이미 붙어 있다(2026-09-04)
   coupangSave();
 }
 // 🔗 파트너스에서 링크 만들기 — 상품 URL을 클립보드에 담고 파트너스 링크 생성화면을 연다.
@@ -13205,7 +13261,7 @@ async function loadMyVoices(){
       + '</div>'
       + (v.preview_url ? '<button class="btn-prev" style="padding:6px 10px" onclick="new Audio(' + JSON.stringify(v.preview_url) + ').play()">▶ 듣기</button>' : '')
       + (done
-          ? '<span class="hint" style="color:var(--ok)">✔ 등록됨</span>'
+          ? '<button class="btn-prev" style="padding:6px 12px" title="아래 성우 카드에서 이 목소리를 고릅니다" onclick="useMyVoiceCard(' + JSON.stringify(done) + ')">✔ 등록됨 · 이 성우로 쓰기</button>'
           : '<button class="btn-next" style="padding:6px 12px" onclick="registerMyVoice(' + JSON.stringify(v.voice_id) + ',' + JSON.stringify(v.name) + ',this)">내 성우로 추가</button>')
       + '</div>';
   }).join('');
@@ -13229,7 +13285,18 @@ async function registerMyVoice(voiceId, name, btn){
   VMINE_LOADED = false;
   await loadMyVoices();
   if (typeof loadPresets === 'function') await loadPresets();   /* 카드 목록 새로고침 — 공개 라이브러리 담기와 같은 함수(0순위-B) */
-  alert('「' + name + '」이(가) 내 성우에 추가됐습니다.');
+  /* ★등록만 하고 끝내면 "눌러도 아래로 안 내려온다"(고객 문의 2026-09-04). 새 카드는 추천이
+     아니라 열의 '＋ 더보기' 뒤에 접혀 들어가서 화면에 안 보였다. 바로 골라서 펼치고 내려간다. */
+  useMyVoiceCard(d.group_id);
+  alert('「' + name + '」이(가) 내 성우에 추가됐고, 아래에서 이 성우로 골라 두었습니다.');
+}
+/* 내가 만든 목소리 카드를 고르고 그 자리로 내려간다 — 등록 직후·'이 성우로 쓰기' 둘 다 이 한 곳. */
+function useMyVoiceCard(gid){
+  if(!gid) return;
+  if(!VOICE_GROUPS.some(g=>g.group_id===gid)) return;   /* 목록에 아직 없으면(로드 실패) 조용히 둔다 */
+  pickPreset(gid);            /* 고르면 renderPresetCards가 접힌 열을 자동으로 편다(VOICES_OPEN) */
+  const card = document.querySelector('#presetCards .vcard.sel');
+  if(card) card.scrollIntoView({block:'center'});   /* smooth는 재렌더·스로틀에 끊긴다(라이브 실측) — 즉시 */
 }
 
 // ── 타입캐스트 성우 찾기 ──────────────────────────────────────────────

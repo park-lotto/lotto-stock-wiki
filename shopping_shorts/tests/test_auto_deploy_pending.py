@@ -25,7 +25,10 @@ pytestmark = pytest.mark.skipif(not BASH or not SRC.exists(),
 
 
 def _harness(tmp_path, *, local="aaa", remote="bbb", changed="shopping_shorts/app.py",
-             users_online=False, worker_busy=False, pending=None, since_epoch=None):
+             users_online=False, worker_busy=False, pending=None, since_epoch=None,
+             window=(0, 24), subjects=("fix",), now_flag=False):
+    """window=(시작시, 끝시) — 기본 (0,24)=언제나 창 안(종전 테스트가 시간대에 안 흔들리게).
+    subjects=LOCAL..REMOTE 커밋 제목(가짜 git log). now_flag=DEPLOY_NOW 플래그 파일 존재."""
     """스크립트를 tmp 환경으로 복제하고 가짜 git/systemctl/python3을 심는다."""
     root = tmp_path
     bin_dir = root / "bin"
@@ -44,6 +47,7 @@ case "$*" in
   *"rev-parse origin/main"*) echo "{remote}" ;;
   *"rev-parse --short"*) echo "{remote[:7]}" ;;
   *"diff --name-only"*) printf '%s\\n' {changed!r} ;;
+  *"log --format=%s"*) printf '%s\\n' {" ".join(repr(x) for x in subjects)} ;;
   *"reset --hard"*) echo "git reset" >>"{calls}" ;;
   *) : ;;
 esac
@@ -90,6 +94,15 @@ exit 1
     # git-bash에는 flock이 없어 그 줄에서 스크립트가 그냥 종료된다(실측). 락은 서버에서만
     # 의미가 있으므로 테스트에서만 통과시킨다 — 스크립트 본문은 그대로 둔다.
     text = text.replace("flock -n 9 || exit 0", "true   # 테스트 하네스: flock 없음")
+    # 배포 시간창(2026-09-04): 플래그·conf·held 표식을 tmp로 돌리고 창은 conf로 준다.
+    conf = root / "deploy_window.conf"
+    conf.write_text(f"DEPLOY_WINDOW_START={window[0]}\nDEPLOY_WINDOW_END={window[1]}\n",
+                    encoding="utf-8")
+    text = text.replace("DEPLOY_NOW_FLAG=/home/ubuntu/DEPLOY_NOW", f'DEPLOY_NOW_FLAG="{root}/DEPLOY_NOW"')
+    text = text.replace("DEPLOY_WINDOW_CONF=/home/ubuntu/deploy_window.conf", f'DEPLOY_WINDOW_CONF="{conf}"')
+    text = text.replace("HELD_MARK=/tmp/ss_deploy_held", f'HELD_MARK="{root}/held"')
+    if now_flag:
+        (root / "DEPLOY_NOW").write_text("", encoding="utf-8")
     script.write_text(text, encoding="utf-8")
     os.chmod(script, 0o755)
 
@@ -101,6 +114,7 @@ exit 1
         "log": log.read_text(encoding="utf-8") if log.exists() else "",
         "pending": pend.read_text(encoding="utf-8") if pend.exists() else "",
         "since_exists": since.exists(),
+        "now_flag_exists": (root / "DEPLOY_NOW").exists(),
     }
 
 
@@ -160,3 +174,46 @@ def test_worker_never_force_restarted(tmp_path):
                  pending=["shopping-shorts-worker"], since_epoch=1)
     assert "restart:shopping-shorts-worker" not in r["calls"]
     assert "shopping-shorts-worker\n" in r["pending"]
+
+
+# ── 배포 시간창(2026-09-04 실사고: 낮에 트랙 5개 연속 병합 → 워커 30분에 5회 재시작) ──
+def test_outside_window_holds_shorts_commit(tmp_path):
+    """창 밖이면 shopping_shorts 커밋은 가져오지도(reset) 재시작하지도 않는다."""
+    r = _harness(tmp_path, window=(2, 2))          # 빈 창 = 항상 밖
+    assert "git reset" not in r["calls"]
+    assert "restart:" not in r["calls"]
+    assert "배포 대기(시간창" in r["log"]
+
+
+def test_outside_window_still_deploys_stockbrain_only_commit(tmp_path):
+    """주식 대시보드만 바뀐 커밋은 고객 서비스와 무관 — 창 밖에도 즉시."""
+    r = _harness(tmp_path, window=(2, 2), changed="dashboard/server.py")
+    assert "git reset" in r["calls"]
+    assert "restart:stockbrain" in r["calls"]
+
+
+def test_urgent_commit_subject_bypasses_window(tmp_path):
+    r = _harness(tmp_path, window=(2, 2), subjects=("Merge branch", "[긴급] 결제 오류"))
+    assert "git reset" in r["calls"]
+    assert "restart:shopping-shorts" in r["calls"]
+    assert "[긴급]" in r["log"]
+
+
+def test_now_flag_bypasses_window_and_is_consumed(tmp_path):
+    r = _harness(tmp_path, window=(2, 2), now_flag=True)
+    assert "git reset" in r["calls"]
+    assert "restart:shopping-shorts" in r["calls"]
+    assert not r["now_flag_exists"]                 # 한 번 쓰면 지운다
+
+
+def test_inside_window_deploys(tmp_path):
+    r = _harness(tmp_path, window=(0, 24))
+    assert "git reset" in r["calls"]
+    assert "restart:shopping-shorts" in r["calls"]
+
+
+def test_held_commit_does_not_block_pending_restart(tmp_path):
+    """창 밖에 새 커밋이 붙잡혀 있어도, 이미 가져온 옛 커밋의 대기 재시작은 종전대로 처리한다."""
+    r = _harness(tmp_path, window=(2, 2), pending=["shopping-shorts-worker"])
+    assert "git reset" not in r["calls"]
+    assert "restart:shopping-shorts-worker" in r["calls"]

@@ -668,8 +668,19 @@ def verdict(snap=None, agg=None):
                 continue
             if pool.get("pool") == "shorts":
                 total, live = pool.get("total", 0), pool.get("live", 0)
+                # ★사장님 키와 회원 키를 갈라 본다(2026-09-04). 사장님 키만 다 잠겨도
+                #   회원 키가 살아 있으면 고객은 정상 결과를 받는다 → danger가 아니라
+                #   "오늘 키 보충" 운영주의. 진짜 전멸(회원 키까지 0)만 danger.
+                _ks = pool.get("keys") or []
+                _owner_live = sum(1 for k in _ks if k.get("owner") == "owner" and k.get("state") == "live")
+                _owner_tot = sum(1 for k in _ks if k.get("owner") == "owner")
+                _member_live = sum(1 for k in _ks if k.get("owner") == "member" and k.get("state") == "live")
                 if total and live == 0:
                     problems.append("쇼핑쇼츠 제미니 풀 전멸(살아있는 키 0개)")
+                elif _owner_tot and _owner_live == 0 and _member_live:
+                    warns.append(
+                        f"쇼핑쇼츠 사장님 키 {_owner_tot}개 전부 잠김 — 회원 키 {_member_live}개로 "
+                        f"버티는 중. 오늘 키를 보충하라")
                 elif total and live / total < 0.3:
                     warns.append(f"쇼핑쇼츠 제미니 풀 잔여 {live}/{total}개")
             else:

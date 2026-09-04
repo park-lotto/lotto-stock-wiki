@@ -243,3 +243,20 @@
 - `track/API관측판-경보` — 오늘 배포분 전부. main과 동기
 - `track/API관측판` — **VMake·TTS 차단(미배포)**. 감사가 찾은 결함 11건을 고쳐야 배포 가능
   (무음 렌더·거짓 완료·사장님 키 잔존·DOM 가드 초과 — 위 handoff 3차 항목 참조)
+
+## 2026-09-04 11:00 — "쇼핑쇼츠 제미니 풀 전멸" 고객영향 경보 = 오진, 크론이 회원 키를 몰랐다
+
+### 실측(서버 3.35.251.172 — ★CLAUDE.md의 43.200.48.69는 SSH 타임아웃, 도메인은 3.35.251.172를 가리킴)
+- `/etc/shopping-shorts.env` 사장님 SHORTS 키는 **1개**(QoPcbg). KEY_2~12는 08-31 `#죽은키_한도0` 주석.
+- QoPcbg가 09:57 KST rpd(일일 한도) → 16:00 KST까지 잠김(`shorts_gemini_state.json` exhausted idx0).
+- 경보 발화 = 5분 크론 `capacity_watch`. 별도 프로세스라 `resync_pools`를 안 불러 사장님 키만 봄 → total 1/live 0 → danger.
+- 웹·워커는 회원 키로 정상: 09-04 shorts 풀 ok 424건, 잠긴 뒤 10:50~10:54에도 회원 키(FbavLs·Ri3YAc…) ok.
+
+### 고침
+- `capacity_watch.__main__`: verdict 전 `keypool.resync_pools(Store(DB_PATH))` (워커와 같은 방식).
+- `api_health.verdict`: shorts 풀을 사장님/회원으로 갈라 판정. 회원 키 살아있으면 warn("사장님 키 N개 전부 잠김 — 회원 키 M개로 버팀. 오늘 키 보충"), 회원까지 0이면 danger 유지.
+- 테스트 2건 신설(test_api_health 44 passed).
+
+### ⏭ 다음
+- **사장님 오늘 키 보충**(08-31 한도0 11개 대신 새 프로젝트 키). env 넣은 뒤 shopping-shorts 재시작 필요.
+- CLAUDE.md 서버 IP(43.200.48.69) 실제와 다름 — 확인 후 갱신.

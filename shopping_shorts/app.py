@@ -4021,6 +4021,14 @@ def _key_format_hint(service: str, key: str) -> str:
                     "(예: 앞의값:뒤의값)")
         if any(ch.isspace() for ch in k):
             return "키 안에 띄어쓰기가 들어 있습니다. 공백 없이 붙여넣어 주세요."
+    if service == keyroute.SVC_COUPANG:
+        # 파트너스도 값이 두 개(Access Key / Secret Key). VMake와 같은 규칙으로 `:`로 잇는다.
+        ak, sk = coupang_partners.split_key(k)
+        if not (ak and sk):
+            return ("쿠팡 파트너스는 값이 두 개입니다 — 파트너스 사이트 'API Key 발급'의 "
+                    "**Access Key**와 **Secret Key**를 가운데 `:` 로 이어 한 줄로 넣어 주세요. (예: 앞의값:뒤의값)")
+        if any(ch.isspace() for ch in k):
+            return "키 안에 띄어쓰기가 들어 있습니다. 공백 없이 붙여넣어 주세요."
     return ""
 
 
@@ -4041,6 +4049,13 @@ def _probe_user_key(service: str, key: str) -> bool:
         # 문서가 첫 예제로 쓰는 account 쿼리 하나. 돈이 안 들고 401이면 바로 갈린다.
         from shopping_shorts.buffer_api import probe as _buffer_probe
         return _buffer_probe(key)
+    if service == keyroute.SVC_COUPANG:
+        # 딥링크 1회(무과금)로 서명까지 실제 확인 — 죽은 키를 "등록 완료"로 두지 않는다.
+        ak, sk = coupang_partners.split_key(key)
+        ok = coupang_partners.probe_key(ak, sk)
+        if not ok:
+            _remember_key_failure(service, 0, "파트너스 API가 키를 거부했습니다(서명 불일치 또는 미승인 계정)")
+        return ok
     if service == keyroute.SVC_GEMINI:
         from shopping_shorts.comment_gen import _probe_key_alive
         return _probe_key_alive(key)
@@ -4632,12 +4647,36 @@ def api_mix_product(body: dict):
         return {"ok": True, "product": None, "final_link": ""}
     try:
         product = coupang_partners.build_product(
-            keyword=body.get("keyword", ""), url=body.get("url", ""),
+            keyword=body.get("keyword", ""),
+            # ★남의 추적링크(pageKey=…)가 오면 상품번호만 남긴다 — 수수료가 남에게 가지 않게(2026-08-18).
+            url=coupang_partners.canonical_product_url(body.get("url", "")),
             name=body.get("name", ""), partner_url=body.get("partner_url", ""),
             memo=body.get("memo", ""),
         )
     except ValueError as e:
         return JSONResponse(status_code=422, content={"ok": False, "error": str(e)})
+    # ★회원 파트너스 키가 있고 추적 링크가 비어 있으면 **딥링크를 자동 발급**한다(2026-09-04).
+    #   실패해도 저장은 된다(원본 URL 유지 + 사유) — 링크는 부가물이지 관문이 아니다.
+    # ★긴 추적 URL(검색 카드의 productUrl, `link.coupang.com/re/AFFSDP?...` 수백 자)은 짧은 링크로 바꾼다
+    #   (2026-09-04 사장님 "짧은 링크로 바꿔") — 인포크·설명란에 넣을 건 `link.coupang.com/a/…`다.
+    _pu = product.get("partner_url") or ""
+    _needs_short = bool(_pu) and not re.match(r"^https?://link\.coupang\.com/a/", _pu)
+    ak, sk = _coupang_member_key()
+    if _pu and not ak and re.search(r"[?&]lptag=", _pu):
+        # ★내 키가 없는데 남의 추적태그(lptag)가 든 링크가 오면 버린다(2026-09-04 사장님) —
+        #   검색 결과에서 떼어내지만, 붙여넣기로 들어오는 경로도 같은 규칙이어야 한다(0순위-B).
+        product["partner_url"] = _pu = ""
+        product["partner_error"] = "추적 링크는 내 파트너스 키로만 만들 수 있습니다 — 마이페이지에서 키를 등록하세요"
+    if (not _pu or _needs_short) and product.get("url"):
+        if ak:
+            from shopping_shorts import keyctx as _kc2
+            dl = coupang_partners.to_deeplink([product["url"]], ak, sk, customer_id=_kc2.owner_cid())
+            if dl and dl[0].get("shorten_url"):
+                product["partner_url"] = dl[0]["shorten_url"]
+                product["partner_auto"] = True
+            elif dl and not _pu:
+                product["partner_error"] = dl[0].get("error") or "딥링크 발급 실패"
+            # 긴 링크가 있는데 단축만 실패한 경우엔 긴 링크를 그대로 둔다 — 수수료는 똑같이 잡힌다.
     # 등록완료 체크는 저장할 때마다 초기화하지 않는다 — 링크만 고쳤는데 "인포크에
     # 이미 올렸다"는 사실이 지워지면 사장님이 중복 등록하게 된다.
     prev = job.get("product") or {}
@@ -4665,6 +4704,185 @@ def api_mix_product(body: dict):
                                               product.get("name"))}
 
 
+def _coupang_member_key(customer_id=None):
+    """이 회원의 파트너스 (ak, sk). 없으면 ('', ''). 판단은 keyroute.keys_for 한 곳(0순위-B)."""
+    try:
+        from shopping_shorts import keyctx
+        cid = customer_id if customer_id is not None else keyctx.owner_cid()
+        keys, _ = keyroute.keys_for(Store(DB_PATH), cid, keyroute.SVC_COUPANG)
+        return coupang_partners.split_key(keys[0]) if keys else ("", "")
+    except Exception as _e:  # noqa: BLE001 — 키 조회 실패가 화면을 막으면 안 된다
+        print(f"[coupang:member_key] 실패(무해): {_e!r}", file=sys.stderr)
+        return "", ""
+
+
+@app.post("/api/coupang/identify")
+def api_coupang_identify(body: dict):
+    """랭킹·담기 카드의 '🛒 쿠팡에 있나?' — 사람이 검색어를 치지 않는다(2026-09-04 사장님 "숏템파워검색처럼
+    자동으로"). 썸네일을 비전 모델에 보여 **실물 제품명**을 뽑고(product_name.identify_many, 캐시됨),
+    그 이름을 쿠팡 검색어 후보로 다듬어(coupang_query.suggest) 돌려준다. 화면은 첫 후보로 바로 검색한다."""
+    from shopping_shorts import product_name as _pn, coupang_query
+    sc = os.path.basename(str(body.get("shortcode") or "")).strip()
+    thumb = str(body.get("thumbnail") or "").strip()
+    if not sc:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "shortcode 없음"})
+    store = Store(DB_PATH)
+    if not thumb:
+        try:
+            with store._conn() as c:
+                row = c.execute("SELECT thumbnail FROM channel_archive WHERE shortcode=?", (sc,)).fetchone()
+                thumb = (row[0] or "") if row else ""
+        except Exception as _e:  # noqa: BLE001
+            print(f"[coupang:identify.thumb] 실패(무해): {_e!r}", file=sys.stderr)
+            thumb = ""
+        if not thumb:
+            thumb = _last_run_thumb(store, sc)
+    # ★근거 우선(2026-09-04 사장님 "썸네일로는 힘들고 대본이나 영상을 봐야"): 대본 추출 결과·담기 분석
+    #   키워드·캡션이 있으면 그것으로 제품을 특정한다. 썸네일 비전은 근거가 없을 때의 폴백이다.
+    evidence, used = _coupang_evidence(store, sc)
+    hint = ""
+    try:
+        pmap = _pn.identify_many([{"shortcode": sc, "thumbnail": thumb}], DB_PATH) if thumb else {}
+        hint = (pmap.get(sc) or "").strip()
+    except Exception as _e:  # noqa: BLE001
+        print(f"[coupang:identify.vision] 실패(무해): {_e!r}", file=sys.stderr)
+        pmap, hint = {}, ""
+    product, qs = ("", [])
+    if evidence:
+        try:
+            product, qs = coupang_query.identify_from_evidence(evidence, hint=hint)
+        except Exception as _e:  # noqa: BLE001
+            print(f"[coupang:identify.evidence] 실패(무해): {_e!r}", file=sys.stderr)
+            product, qs = "", []
+    if product:
+        return {"ok": True, "product": product, "queries": [product] + qs[:5], "basis": used}
+    product = hint
+    if not product:
+        return {"ok": False, "product": "", "queries": [], "basis": used,
+                "has_script": "대본" in used,
+                "error": ("근거로는 제품을 특정하지 못했습니다 — 🎬 영상 보고 정확히(대본 추출) 또는 제품명을 직접 넣어 보세요"
+                          if "대본" not in used else "대본에서도 제품을 특정하지 못했습니다 — 제품명을 직접 넣어 찾아보세요")}
+    # 판독 때 같이 나온 주제어·재질을 붙여 준다 — 유의어 모드가 물건 종류를 안 헷갈리게(2026-09-04 '택총→전술 조끼')
+    ctx = ""
+    try:
+        with store._conn() as c:
+            row = c.execute("SELECT subject, material FROM vision_tags WHERE shortcode=?", (sc,)).fetchone()
+        if row:
+            ctx = " / ".join([x for x in (("주제: " + row[0]) if row[0] else "", ("재질: " + row[1]) if row[1] else "") if x])
+    except Exception as _e:  # noqa: BLE001
+        print(f"[coupang:evidence.script] 실패(무해): {_e!r}", file=sys.stderr)
+        ctx = ""
+    try:
+        qs = [q for q in (coupang_query.suggest(product, "", context=ctx) or []) if q and q != product]
+    except Exception as _e:  # noqa: BLE001
+        print(f"[coupang:evidence.analysis] 실패(무해): {_e!r}", file=sys.stderr)
+        qs = []
+    return {"ok": True, "product": product, "queries": [product] + qs[:5], "basis": used or ["썸네일"]}
+
+
+def _coupang_evidence(store, sc):
+    """이 영상의 텍스트 근거를 모은다 → (근거 문자열, 쓴 출처 목록). 판단은 여기 한 곳.
+    출처: 대본 추출(script_extracts full_text) / 담기 분석 키워드(source_analysis) / 캡션(랭킹·아카이브)."""
+    parts, used = [], []
+    try:
+        ex = store.get_extract(sc) or store.get_script(sc)
+        txt = ""
+        if ex:
+            txt = (ex.get("full_text") or " ".join((s.get("text") or "") for s in (ex.get("segments") or []))).strip()
+        if txt:
+            parts.append("대본: " + txt[:1500]); used.append("대본")
+    except Exception as _e:  # noqa: BLE001
+        print(f"[coupang:evidence.caption_archive] 실패(무해): {_e!r}", file=sys.stderr)
+        pass
+    try:
+        sa = store.get_source_analysis(sc)
+        kws = (sa or {}).get("keywords") or []
+        if kws:
+            parts.append("분석 키워드: " + ", ".join(str(k) for k in kws[:20])); used.append("분석")
+    except Exception as _e:  # noqa: BLE001
+        print(f"[coupang:evidence.caption_lastrun] 실패(무해): {_e!r}", file=sys.stderr)
+        pass
+    cap = ""
+    try:
+        with store._conn() as c:
+            row = c.execute("SELECT caption FROM channel_archive WHERE shortcode=?", (sc,)).fetchone()
+            cap = (row[0] or "") if row else ""
+    except Exception:                                       # noqa: BLE001
+        cap = ""
+    if not cap:
+        try:
+            items, _ = store.load_last_run()
+            for it in items or []:
+                if it.get("shortcode") == sc:
+                    cap = it.get("caption") or ""
+                    break
+        except Exception:                                   # noqa: BLE001
+            cap = ""
+    if cap.strip():
+        parts.append("캡션: " + cap.strip()[:600]); used.append("캡션")
+    return "\n".join(parts), used
+
+
+@app.post("/api/coupang/identify_batch")
+def api_coupang_identify_batch(body: dict):
+    """화면에 보이는 카드들을 **미리** 판독해 캐시한다(2026-09-04 사장님 "바로 뜨게 못 하나").
+    클릭 후 3~8초 걸리던 썸네일 판독이 페이지 로드 직후 뒤에서 돌아, 클릭 땐 캐시 적중으로 즉시 뜬다.
+    한 번 판독한 shortcode는 DB 캐시라 다시 안 묻는다(product_name.identify_many). 상한 60개."""
+    from shopping_shorts import product_name as _pn
+    items = body.get("items") if isinstance(body.get("items"), list) else []
+    todo = []
+    for it in items[:60]:
+        if not isinstance(it, dict):
+            continue
+        sc = os.path.basename(str(it.get("shortcode") or "")).strip()
+        th = str(it.get("thumbnail") or "").strip()
+        if sc and th:
+            todo.append({"shortcode": sc, "thumbnail": th})
+    if not todo:
+        return {"ok": True, "products": {}}
+    try:
+        pmap = _pn.identify_many(todo, DB_PATH)
+    except Exception as e:                                  # noqa: BLE001
+        return {"ok": False, "products": {}, "error": f"판독 실패: {type(e).__name__}"}
+    return {"ok": True, "products": {k: (v or "") for k, v in (pmap or {}).items()}}
+
+
+@app.post("/api/coupang/deeplink")
+def api_coupang_deeplink(body: dict):
+    """상품 URL → 이 회원의 짧은 추적 링크(2026-09-04 랭킹 카드 '🛒 쿠팡 상품 있나' 모달용).
+    키가 없으면 ok:False + 안내(작업은 안 막는다). 남의 추적 파라미터는 상품번호만 남긴다."""
+    from shopping_shorts import keyctx as _kc
+    # 단건(url) 또는 일괄(urls) — 검색 결과 카드 전부에 링크를 한 번에 붙일 때 일괄로 부른다(2026-09-04
+    #   사장님 "누르면 쿠파스 링크까지 찾아주는 걸로"). 쿠팡 딥링크 API는 URL 목록을 받는다.
+    raw_urls = body.get("urls") if isinstance(body.get("urls"), list) else [body.get("url")]
+    urls = [coupang_partners.canonical_product_url(str(u or "")) for u in raw_urls]
+    urls = [u for u in urls if coupang_partners.parse_product_url(u)]
+    if not urls:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "쿠팡 상품 URL이 아닙니다"})
+    cid = _kc.owner_cid()
+    ak, sk = _coupang_member_key(cid)
+    if not ak:
+        return {"ok": False, "need_key": True, "url": urls[0], "links": [],
+                "error": "내 파트너스 API 키가 없습니다 — 마이페이지 → 내 키 등록에서 넣으면 자동으로 만들어집니다"}
+    dl = coupang_partners.to_deeplink(urls[:20], ak, sk, customer_id=cid)
+    links = [{"url": d.get("original_url"), "shorten_url": d.get("shorten_url", ""), "error": d.get("error", "")} for d in (dl or [])]
+    first = links[0] if links else {}
+    if first.get("shorten_url"):
+        return {"ok": True, "url": first["url"], "shorten_url": first["shorten_url"], "links": links}
+    return {"ok": False, "url": urls[0], "links": links, "error": (first.get("error") or "딥링크 발급 실패")}
+
+
+def _coupang_search_creds(customer_id):
+    """검색에 쓸 (ak, sk, shared). 회원 키가 있으면 그것(shared=False). 없으면 **사장님(cid0) 키로 검색만**
+    (shared=True) — 2026-09-04 사장님 "본인 API 없는 사람은 제품검색만". shared면 호출부가 추적 링크를
+    전부 떼어낸다(사장님 태그가 회원 영상에 실리면 수수료가 사장님 주소로 들어간다)."""
+    ak, sk = _coupang_member_key(customer_id)
+    if ak:
+        return ak, sk, False
+    oak, osk = _coupang_member_key(0)
+    return (oak, osk, True) if oak else ("", "", False)
+
+
 @app.get("/api/coupang/search")
 def api_coupang_search(q: str = "", limit: int = 0):
     """키워드 → 쿠팡 상품 후보 카드(승인 전 크롤 경로).
@@ -4674,8 +4892,31 @@ def api_coupang_search(q: str = "", limit: int = 0):
     실패해도 200 + ok:False로 돌려준다 — 화면은 이때 기존 수동 흐름(검색 링크
     새 탭 + URL 붙여넣기)으로 조용히 되돌아간다."""
     from shopping_shorts import coupang_partners, coupang_relay, coupang_search
+    # ★회원 파트너스 키가 있으면 **오픈API 검색**이 먼저다(2026-09-04). 크롤·릴레이보다
+    #   빠르고 차단이 없으며, 카드마다 이 회원의 추적 링크가 이미 붙어 온다.
+    #   실패(키 죽음·한도)하면 종전 경로로 조용히 내려간다 — 화면은 같은 카드 형태를 받는다.
+    from shopping_shorts import keyctx as _kc
+    _cid_now = _kc.owner_cid()
+    ak, sk, _shared = _coupang_search_creds(_cid_now)
+    if ak:
+        got = coupang_partners.search_products(q, limit=limit or 10, access_key=ak, secret_key=sk,
+                                               customer_id=(None if _shared else _cid_now))
+        if got.get("ok") and got.get("items"):
+            if _shared:
+                # ★검색만 — 사장님 태그가 붙은 productUrl을 **전부 떼어낸다**. 링크는 본인 키로만.
+                for it in got["items"]:
+                    it["partner_url"] = ""
+                got["source"] = "api_shared"
+                got["notice"] = "내 파트너스 키가 없어 검색만 됩니다 — 추적 링크는 마이페이지에서 내 키를 등록하면 만들어집니다"
+            return got
+        _api_notice = got.get("notice") or ""
+    else:
+        _api_notice = ""
     if config.COUPANG_SEARCH_MODE != "relay":
-        return coupang_search.search(q, limit=limit or None)
+        _r = coupang_search.search(q, limit=limit or None)
+        if _api_notice and not (_r or {}).get("items"):
+            _r["notice"] = f"파트너스 API: {_api_notice} / " + str(_r.get("notice") or "")
+        return _r
     # 릴레이 모드 — 서버는 한국 IP가 없어 직접 못 긁는다(coupang_relay.py 참고).
     kw = (q or "").strip()
     manual = {"ok": False, "items": [], "source": "relay",
@@ -4861,6 +5102,8 @@ def api_mix_product_get(job_id: str):
             "description_block": coupang_partners.description_block(product),
             "partners_link_page": coupang_partners.PARTNERS_LINK_PAGE,
             "inpock_page": coupang_partners.INPOCK_PAGE,
+            # 회원 파트너스 키 유무 — 화면이 "파트너스에서 링크 만들기" 안내를 낼지 정한다(2026-09-04)
+            "has_partner_key": bool(_coupang_member_key()[0]),
             "affiliate_target": target,
             "coupang_search_url": coupang_partners.search_url(target),
             # 인포크에 붙여넣을 세 줄(등록이름·DM 타이틀·버튼). 상품이 없으면 None.
@@ -11065,6 +11308,7 @@ _CREDIT_PRO_DEFAULTS = {"lens": 10, "render": 10, "script": 200}  # 하루 영�
 _CREDIT_BYOK_DEFAULTS = {"lens": 20, "render": 10, "script": 200}
 # 자기 SerpApi 키를 낸 회원 — **키 1개당** 하루 렌즈 회수(2026-08-26 사장님).
 #   키 1개=10회 · 2개=20회 · 3개=30회. 종전엔 개수와 무관하게 20회 고정이었다.
+#   (2026-09-04 잠깐 20으로 올렸다가 사장님 정정으로 10 복귀 — 키당 10이 정본)
 _CREDIT_PER_KEY_DEFAULTS = {"lens": 10}
 _GLOBAL_CAP_DEFAULTS = {"lens": 200, "render": 100, "script": 400}
 
