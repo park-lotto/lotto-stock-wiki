@@ -2526,8 +2526,39 @@ function beatFill(i, clips){
            stretching: !!STRETCH[i] && cuts.length > 0 };
 }
 
+// ★타임프레임이 보던 자리를 지킨다(2026-09-04 고객 접수: "CTA 구간을 재생하려고
+//   칸의 검정 빈자리를 누르면 작업화면이 딴 데로 가 있다").
+//   라이브 실측(mix job fb62adf0aad0, 칸 7개): 검정 빈자리 클릭 → scrollLeft
+//   4608 → 4270으로 **338px 깎였다** = 화면이 칸 반쯤 앞으로 밀린다.
+//   왜: renderBand가 innerHTML을 갈아끼우면 칸 안에 펼쳐둔 필름(422px)이 통째로
+//   사라져 가로 스크롤 최대값이 줄고, 브라우저가 scrollLeft를 그만큼 깎는다(clamp).
+//   필름은 나중에 다시 붙어 폭은 돌아오지만 깎인 스크롤은 그대로 남는다.
+//   ★innerHTML 직후에 한 번 되돌리는 것으로는 부족하다 — 그 순간은 아직 좁아 또 깎인다.
+//   실측해 보니 폭이 돌아오는 것은 클릭 후 **약 2.9초 뒤**였다(영상 메타데이터 로드).
+//   그래서 폭이 충분히 돌아올 때까지 짧게 지켜본다.
+//   ⚠ rAF는 탭이 숨으면 멈춰서 못 쓴다(실측으로 확인) — setInterval로 감시한다.
+//   ★사용자가 직접 끌거나 휠을 굴리면 즉시 손을 뗀다 — 내 조작을 되돌리면 안 된다.
+let _bandKeepLeft = null, _bandKeepTok = 0;
+function _bandKeepScroll(row){
+  const keep = _bandKeepLeft;
+  if (!keep){ _bandKeepLeft = null; return; }
+  const tok = ++_bandKeepTok, t0 = Date.now();
+  let alive = true;
+  const stop = () => { alive = false; _bandKeepLeft = null; };
+  row.addEventListener('pointerdown', stop, {once:true});
+  row.addEventListener('wheel', stop, {once:true, passive:true});
+  const iv = setInterval(() => {
+    if (!alive || tok !== _bandKeepTok){ clearInterval(iv); return; }
+    // 폭이 돌아왔을 때만 되돌린다 — 좁은 동안 넣어봐야 또 깎일 뿐이다.
+    if (row.scrollLeft !== keep && row.scrollWidth - row.clientWidth >= keep) row.scrollLeft = keep;
+    if (Date.now() - t0 > 5000){ clearInterval(iv); _bandKeepLeft = null;
+      row.removeEventListener('pointerdown', stop); row.removeEventListener('wheel', stop); }
+  }, 16);
+}
+
 function renderBand(){
   const row = document.getElementById('tbrow'); if (!row) return;
+  if (_bandKeepLeft === null) _bandKeepLeft = row.scrollLeft;   // 한 번의 클릭에서 첫 호출값만 기준
   let total = 0;
   const html = DATA.beats.map((b, i) => {
     const clips = planClips(lists[i] || [], beatDur(i), STRETCH[i], i);
@@ -2649,6 +2680,7 @@ function renderBand(){
       </div>`;
   }).join('');
   row.innerHTML = html;
+  _bandKeepScroll(row);   // 다시 그려도 보던 자리에 머물게 한다(위 설명)
   // 칸 타임라인(2026-08-29) — 선택된 칸의 .tl-host를 채운다. 그리기 직후라 폭이 잡혀 있다.
   if (typeof tlMount === 'function') { try { tlMount(); } catch (e) { console.error('[tl]', e); } }
   // ★칸을 다시 그리면 그 안에 펼쳐둔 필름도 함께 지워진다 — 곧바로 다시 붙인다.
