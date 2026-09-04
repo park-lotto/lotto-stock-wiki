@@ -1,5 +1,6 @@
 """쿠팡 파트너스 오픈API 연동(2026-09-04) — HMAC 호출·응답 파싱·정규화·BYOK 배선.
 실제 네트워크는 안 탄다(_call을 가짜로 갈아끼움). 실호출 검증은 핸드오프의 사장님 키 실측."""
+import re
 import json
 
 import pytest
@@ -208,11 +209,17 @@ def test_deeplink_endpoint_needs_key_and_canonicalizes(monkeypatch):
 
 
 def test_ranking_and_collection_have_coupang_find_button():
-    """랭킹·담기 카드에 '🛒 쿠팡에 있나?' 버튼이 있고, 모달 본체는 sidebar.js 한 곳에만 있다(0순위-B)."""
+    """랭킹·담기 카드에 '🛒 쿠팡검색' 버튼이 있고, 모달 본체는 sidebar.js 한 곳에만 있다(0순위-B)."""
     import pathlib
     st = pathlib.Path(__file__).resolve().parents[1] / "static"
-    assert "쿠팡에 있나?" in (st / "index.html").read_text(encoding="utf-8")
-    assert "쿠팡에 있나?" in (st / "collection.html").read_text(encoding="utf-8")
+    # ★파일 어딘가가 아니라 **cp-btn 버튼의 문구**여야 한다(2026-09-05 사보타주로 확인:
+    #   그냥 in 검사는 다른 버튼 문구에 걸려 라벨을 되돌려도 통과했다).
+    import re as _re
+    for _page in ("index.html", "collection.html"):
+        _txt = (st / _page).read_text(encoding="utf-8")
+        _m = _re.search(r'class="cp-btn".*?>([^<>]+)</button>', _txt, _re.S)
+        assert _m, _page
+        assert _m.group(1).strip().endswith("쿠팡검색"), (_page, _m.group(1))
     sb = (st / "sidebar.js").read_text(encoding="utf-8")
     assert "window.ssCoupangFind = function" in sb and "/api/coupang/deeplink" in sb
     for name in ("index.html", "collection.html"):
@@ -220,6 +227,22 @@ def test_ranking_and_collection_have_coupang_find_button():
         assert "/api/coupang/deeplink" not in txt, name
         # ★클릭은 항상 근거 우선 판독을 거친다 — 사전 판독 제품명을 검색어로 바로 쓰지 않는다(바디필로우≠토닥인형)
         assert "window.ssCoupangFind(''," in txt and "hint:this.getAttribute('data-product')" in txt, name
+        # ★프리워밍에 캡션을 실어 보내는가(2026-09-05) — 서버·모델을 아무리 고쳐도
+        #   호출부가 안 실으면 도착을 안 한다(실제로 두 곳 다 안 싣고 있었다).
+        #   ⚠️그냥 "caption" 검색은 빈 단언이다 — 이 파일엔 caption:이 9번,
+        #   shortcode..thumbnail..caption 모양도 5곳 넘게 있다(담기·아카이브 등 무관한 곳).
+        #   그래서 **프리워밍 호출 주변**으로 좁혀 본다(사보타주로 확인: 안 좁히면
+        #   진짜 배선을 빼도 통과했다).
+        # 프리워밍 **호출부**를 겨눈다 — `if (window.ssCoupangPrewarm)` 가드에 먼저
+        # 걸리면 창이 어긋난다(실제로 밟았다).
+        _call = [m.start() for m in _re.finditer(r"ssCoupangPrewarm\(", txt)]
+        assert _call, name
+        _win = txt[max(0, _call[-1] - 1200):_call[-1] + 400]
+        #   ⚠️주석에도 "caption"이 있어 그냥 찾으면 빈 단언이 된다(실제로 밟았다).
+        #   판독기에 넘기는 **객체의 속성**(caption: ...)인지를 본다 — 주석 줄은 뺀다.
+        _code = [l for l in _win.splitlines()
+                 if not l.strip().startswith(("//", "/*", "*"))]
+        assert any(_re.search(r"caption\s*:", l) for l in _code), name
 
 
 
@@ -313,10 +336,17 @@ def test_identify_batch_prewarms_cache(monkeypatch, tmp_path):
     from shopping_shorts.store import Store
     db = tmp_path / "t.db"; monkeypatch.setattr(a, "DB_PATH", str(db)); Store(str(db))
     seen = {}
-    monkeypatch.setattr(product_name, "identify_many", lambda items, db_path, **k: (seen.update(n=len(items)), {it["shortcode"]: "택총" for it in items})[1])
-    r = a.api_coupang_identify_batch({"items": [{"shortcode": "A", "thumbnail": "https://x/a.jpg"},
-                                                {"shortcode": "B", "thumbnail": ""}, "junk", {"shortcode": "../C", "thumbnail": "https://x/c.jpg"}]})
+    # ★identify_shop_many(쿠팡용)를 부른다 — identify_many(묶기용)가 아니다.
+    #   프롬프트·캐시가 따로라 섞으면 아카이브 유사도가 흔들린다(0순위-B).
+    monkeypatch.setattr(product_name, "identify_shop_many", lambda items, db_path, **k: (seen.update(n=len(items), caps=[i.get("caption") for i in items]), {it["shortcode"]: "택총" for it in items})[1])
+    r = a.api_coupang_identify_batch({"items": [
+        {"shortcode": "A", "thumbnail": "https://x/a.jpg", "caption": "무선 노래방 마이크"},
+        {"shortcode": "B", "thumbnail": ""},          # 근거가 아예 없다 → 제외
+        "junk",
+        {"shortcode": "../C", "thumbnail": "https://x/c.jpg"}]})
     assert r["ok"] and seen["n"] == 2 and r["products"] == {"A": "택총", "C": "택총"}
+    # ★캡션이 판독기까지 실제로 가는가(2026-09-05)
+    assert any("노래방 마이크" in (c or "") for c in seen["caps"])
     assert a.api_coupang_identify_batch({"items": []}) == {"ok": True, "products": {}}
 
 
