@@ -1555,6 +1555,67 @@ def api_mix_basket(request: Request):
             "shortcodes": sorted(store.mix_basket_shortcodes(customer_id=cid))}
 
 
+# ── 영상 즐겨찾기: 원본 mp4 내려받기 (2026-09-04 사장님 "프로등급만·횟수제한 없음·
+#    영상즐겨찾기 페이지만·파일명 넣고") ─────────────────────────────────────────
+#  ★새 다운로드 경로를 만들지 않는다 — /api/play가 쓰는 것과 **같은** download_any와
+#    같은 캐시 폴더를 쓴다(0순위-B). 다른 함수로 받으면 어떤 플랫폼은 되고 어떤 건
+#    안 되는 어긋남이 반드시 생긴다.
+#  ★대상 URL은 **회원 자기 바구니**에서만 꺼낸다. 클라이언트가 준 url을 그대로 받으면
+#    아무 주소나 서버로 받게 하는 통로가 된다(SSRF).
+def _safe_download_name(raw, fallback="video"):
+    """저장 파일명 — 경로문자·제어문자를 지우고 길이를 자른다. 항상 .mp4로 끝난다.
+
+    ★이모지 서로게이트 반토막 사고(2026-09-04 cpKw)의 계보: 파이썬 str은 코드포인트
+      단위라 슬라이스로 반토막 나지 않지만, 길이는 **바이트가 아니라 글자**로 자른다."""
+    name = re.sub(r"[\\\/:*?\"<>|\r\n\t]", " ", str(raw or "")).strip()
+    name = re.sub(r"\s+", " ", name)[:60].strip(" .")
+    return f"{name or fallback}.mp4"
+
+
+@app.get("/api/mix/basket/download")
+def api_mix_basket_download(request: Request, sc: str):
+    """즐겨찾기에 담아둔 영상의 원본 mp4를 파일로 내려준다(프로 등급 전용).
+
+    횟수 제한은 두지 않는다(사장님 지시) — 대신 등급 게이트는 access_level 한 곳에서
+    본다. 무료·체험(ranking_only)은 402로 막고 화면이 안내를 띄운다."""
+    from fastapi.responses import FileResponse
+    cid = _cid(request)
+    if access_level(cid) != "full":
+        return JSONResponse(status_code=402, content={
+            "ok": False, "error_code": "need_pro",
+            "error": "영상 내려받기는 이용권 회원만 쓸 수 있어요."})
+    sc = (sc or "").strip()
+    item = next((i for i in Store(DB_PATH).mix_basket_list(customer_id=cid)
+                 if i.get("shortcode") == sc), None)
+    if not item or not item.get("url"):
+        return JSONResponse(status_code=404, content={
+            "ok": False, "error": "즐겨찾기에 없는 영상입니다."})
+    url = item["url"]
+    key = hashlib.sha1(f"dl:{url}".encode()).hexdigest()[:16]
+    out = _PLAY_CACHE_DIR / f"{key}.mp4"
+    if not out.exists():
+        _PLAY_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+        tmp_dir = _PLAY_CACHE_DIR / f"tmp_{key}"
+        try:
+            tmp_dir.mkdir(parents=True, exist_ok=True)
+            got, _cap = download_any(url, tmp_dir)
+            if not got or not Path(got).exists():
+                return JSONResponse(status_code=502, content={
+                    "ok": False, "error": "원본을 받지 못했어요. 잠시 후 다시 시도해 주세요."})
+            Path(got).replace(out)
+        except Exception as e:                       # noqa: BLE001 — 사유는 로그로
+            print(f"[basket-dl] {sc} 실패: {e!r}", file=sys.stderr)
+            return JSONResponse(status_code=502, content={
+                "ok": False, "error": "원본을 받지 못했어요. 잠시 후 다시 시도해 주세요."})
+        finally:
+            shutil.rmtree(tmp_dir, ignore_errors=True)
+        _play_cache_trim()
+    # 파일명: 담을 때 저장한 제목 → 캡션 → shortcode 순. FileResponse가 한글도
+    # filename*=utf-8'' 로 내보낸다(Starlette).
+    fname = _safe_download_name(item.get("name") or item.get("caption") or sc, fallback=sc)
+    return FileResponse(str(out), media_type="video/mp4", filename=fname)
+
+
 # ══ 볼채널등록 (개인 채널 즐겨찾기, 2026-09-02) ═══════════════════════════════
 #  ★전역 수집(platform_seeds·discovered_channels)과 **절대 섞지 않는다**.
 #    /api/discover/add_by_url(📌 채널수집)은 관리자 전용 + 전역 시드라 회원에게 열 수
