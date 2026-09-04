@@ -4661,8 +4661,13 @@ def api_mix_product(body: dict):
     #   (2026-09-04 사장님 "짧은 링크로 바꿔") — 인포크·설명란에 넣을 건 `link.coupang.com/a/…`다.
     _pu = product.get("partner_url") or ""
     _needs_short = bool(_pu) and not re.match(r"^https?://link\.coupang\.com/a/", _pu)
+    ak, sk = _coupang_member_key()
+    if _pu and not ak and re.search(r"[?&]lptag=", _pu):
+        # ★내 키가 없는데 남의 추적태그(lptag)가 든 링크가 오면 버린다(2026-09-04 사장님) —
+        #   검색 결과에서 떼어내지만, 붙여넣기로 들어오는 경로도 같은 규칙이어야 한다(0순위-B).
+        product["partner_url"] = _pu = ""
+        product["partner_error"] = "추적 링크는 내 파트너스 키로만 만들 수 있습니다 — 마이페이지에서 키를 등록하세요"
     if (not _pu or _needs_short) and product.get("url"):
-        ak, sk = _coupang_member_key()
         if ak:
             from shopping_shorts import keyctx as _kc2
             dl = coupang_partners.to_deeplink([product["url"]], ak, sk, customer_id=_kc2.owner_cid())
@@ -4729,6 +4734,17 @@ def api_coupang_deeplink(body: dict):
     return {"ok": False, "url": url, "error": (dl[0].get("error") if dl else "딥링크 발급 실패")}
 
 
+def _coupang_search_creds(customer_id):
+    """검색에 쓸 (ak, sk, shared). 회원 키가 있으면 그것(shared=False). 없으면 **사장님(cid0) 키로 검색만**
+    (shared=True) — 2026-09-04 사장님 "본인 API 없는 사람은 제품검색만". shared면 호출부가 추적 링크를
+    전부 떼어낸다(사장님 태그가 회원 영상에 실리면 수수료가 사장님 주소로 들어간다)."""
+    ak, sk = _coupang_member_key(customer_id)
+    if ak:
+        return ak, sk, False
+    oak, osk = _coupang_member_key(0)
+    return (oak, osk, True) if oak else ("", "", False)
+
+
 @app.get("/api/coupang/search")
 def api_coupang_search(q: str = "", limit: int = 0):
     """키워드 → 쿠팡 상품 후보 카드(승인 전 크롤 경로).
@@ -4743,11 +4759,17 @@ def api_coupang_search(q: str = "", limit: int = 0):
     #   실패(키 죽음·한도)하면 종전 경로로 조용히 내려간다 — 화면은 같은 카드 형태를 받는다.
     from shopping_shorts import keyctx as _kc
     _cid_now = _kc.owner_cid()
-    ak, sk = _coupang_member_key(_cid_now)
+    ak, sk, _shared = _coupang_search_creds(_cid_now)
     if ak:
-        got = coupang_partners.search_products(q, limit=limit or 10, access_key=ak,
-                                               secret_key=sk, customer_id=_cid_now)
+        got = coupang_partners.search_products(q, limit=limit or 10, access_key=ak, secret_key=sk,
+                                               customer_id=(None if _shared else _cid_now))
         if got.get("ok") and got.get("items"):
+            if _shared:
+                # ★검색만 — 사장님 태그가 붙은 productUrl을 **전부 떼어낸다**. 링크는 본인 키로만.
+                for it in got["items"]:
+                    it["partner_url"] = ""
+                got["source"] = "api_shared"
+                got["notice"] = "내 파트너스 키가 없어 검색만 됩니다 — 추적 링크는 마이페이지에서 내 키를 등록하면 만들어집니다"
             return got
         _api_notice = got.get("notice") or ""
     else:

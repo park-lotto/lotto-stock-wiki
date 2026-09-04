@@ -217,3 +217,45 @@ def test_ranking_and_collection_have_coupang_find_button():
     assert "window.ssCoupangFind = function" in sb and "/api/coupang/deeplink" in sb
     for name in ("index.html", "collection.html"):
         assert "/api/coupang/deeplink" not in (st / name).read_text(encoding="utf-8"), name
+
+
+
+def test_search_without_own_key_uses_owner_key_but_strips_links(monkeypatch):
+    """★2026-09-04 사장님 "본인 API 없는 사람은 제품검색만": 사장님(cid0) 키로 검색은 되지만
+    사장님 태그가 든 추적 링크는 전부 떼어낸다. 회원 키가 있으면 그대로."""
+    from shopping_shorts import app as a
+    from shopping_shorts import keyctx
+    keys = {0: ("OWN_AK", "OWN_SK"), 7: ("M_AK", "M_SK")}
+    monkeypatch.setattr(a, "_coupang_member_key", lambda customer_id=None: keys.get(keyctx.owner_cid() if customer_id is None else customer_id, ("", "")))
+    seen = []
+    def fake_search(q, limit=10, access_key="", secret_key="", customer_id=None):
+        seen.append((access_key, customer_id))
+        return {"ok": True, "source": "api", "items": [{"product_id": "1", "name": "x", "url": "https://www.coupang.com/vp/products/1",
+                                                          "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF_OWNER&pageKey=1"}]}
+    monkeypatch.setattr(a.coupang_partners, "search_products", fake_search)
+    tok = keyctx.set_owner(9)                       # 키 없는 회원
+    try:
+        got = a.api_coupang_search("태깅건", 5)
+    finally:
+        keyctx.reset_owner(tok)
+    assert seen[-1] == ("OWN_AK", None) and got["source"] == "api_shared"
+    assert got["items"][0]["partner_url"] == "" and "검색만" in got["notice"]
+    tok = keyctx.set_owner(7)                       # 자기 키 있는 회원
+    try:
+        got = a.api_coupang_search("태깅건", 5)
+    finally:
+        keyctx.reset_owner(tok)
+    assert seen[-1] == ("M_AK", 7) and got["source"] == "api" and got["items"][0]["partner_url"]
+
+
+def test_save_without_key_drops_foreign_tagged_link(monkeypatch, tmp_path):
+    from shopping_shorts import app as a
+    from shopping_shorts.store import Store
+    db = tmp_path / "t.db"; monkeypatch.setattr(a, "DB_PATH", str(db))
+    Store(str(db)).create_mix_job("j1", ["u0"], 20, "free")
+    monkeypatch.setattr(a, "_coupang_member_key", lambda customer_id=None: ("", ""))
+    r = a.api_mix_product({"job_id": "j1", "url": "https://www.coupang.com/vp/products/1", "name": "x",
+                           "partner_url": "https://link.coupang.com/re/AFFSDP?lptag=AF_OWNER&pageKey=1"})
+    body = r if isinstance(r, dict) else json.loads(r.body)
+    assert body["ok"] and body["product"]["partner_url"] == "" and "내 파트너스 키" in body["product"]["partner_error"]
+    assert body["final_link"] == "https://www.coupang.com/vp/products/1"

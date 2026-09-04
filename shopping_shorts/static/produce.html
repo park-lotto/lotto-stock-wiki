@@ -9382,7 +9382,7 @@ async function coupangCrawl(forced){
       return;
     }
     COUPANG.results=d.items;
-    if(msg){ msg.style.color='var(--sub)'; msg.textContent=d.items.length+'개 — 클릭하면 이 영상의 상품으로 확정됩니다'; }
+    if(msg){ msg.style.color='var(--sub)'; msg.textContent=d.items.length+'개 — 클릭하면 이 영상의 상품으로 확정됩니다'+(d.source==='api_shared'?' (내 파트너스 키가 없어 검색만 — 추적 링크는 키 등록 후)':''); }
     if(box) box.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-bottom:10px;max-height:340px;overflow-y:auto">`
       + d.items.map((it,i)=>`<div onclick="coupangPick(${i})" title="${esc(it.name)}"
            style="cursor:pointer;border:1px solid var(--line);border-radius:8px;padding:6px;background:var(--bg)">
