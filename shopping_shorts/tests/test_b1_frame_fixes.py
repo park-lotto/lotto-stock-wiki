@@ -71,12 +71,14 @@ def test_구간의_프레임들은_띠_한_장으로_합쳐져_구간당_이미�
     def fake_tag(groups, caption, segs, brief=None):
         got["groups"] = groups
         got["brief"] = brief
+        # 임시폴더는 반환 뒤 지워지므로(리뷰 M6) 띠 크기는 **여기서** 잰다
+        got["strip_size"] = Image.open(groups[0][0]).size
         return [{"scene_desc": "a", "shot_role": "완성"}] * len(segs)
 
     briefs = []
 
     def fake_brief(grid, caption, transcript):
-        briefs.append(grid)
+        briefs.append(Image.open(grid).height if grid else None)
         return {"product": "쿠키", "flow": "0~3초 반죽 → 3~6초 완성", "confidence": "높음"}
 
     out = fs.extract_script_frames(
@@ -86,11 +88,11 @@ def test_구간의_프레임들은_띠_한_장으로_합쳐져_구간당_이미�
         transcribe_words=lambda m: None, tag_frames=fake_tag, story_brief=fake_brief)
     groups = got["groups"]
     assert len(groups) == 2 and all(len(g) == 1 for g in groups)
-    strip = Image.open(groups[0][0])
-    assert strip.height == fs.STRIP_HEIGHT
-    assert strip.width > fs.STRIP_HEIGHT * 64 / 36 * 2, "띠 폭이 프레임 3장 합보다 작다 — 안 합쳐졌다"
+    w, h = got["strip_size"]
+    assert h == fs.STRIP_HEIGHT
+    assert w > fs.STRIP_HEIGHT * 64 / 36 * 2, "띠 폭이 프레임 3장 합보다 작다 — 안 합쳐졌다"
     # ★1차 브리프: 격자 한 장이 만들어져 브리프 함수에 갔고, 그 결과가 2차 태깅과 반환값에 실린다
-    assert briefs and briefs[0] and Image.open(briefs[0]).height == fs.GRID_HEIGHT
+    assert briefs and briefs[0] == fs.GRID_HEIGHT
     assert got["brief"]["product"] == "쿠키"
     assert out["source_brief"]["flow"].startswith("0~3초")
 
@@ -541,3 +543,44 @@ def test_구간_길이에_따라_프레임_수가_달라진다():
     for n in names:
         per.setdefault(n.split("_")[0], 0); per[n.split("_")[0]] += 1
     assert per == {"seg000": 1, "seg001": 3, "seg002": 5}
+
+
+def test_묶음_상대번호_응답은_상대로_해석해_버리지_않는다(monkeypatch, tmp_path):
+    """리뷰 M3: 2번째 묶음이 seg_no 1..k로 답하면 오프셋을 빼 범위 밖 → 12구간이 조용히 비었다."""
+    from shopping_shorts import comment_gen
+    calls = []
+
+    class _M:
+        def generate_content(self, model, contents, config):
+            n = len(contents) - 1
+            calls.append(n)
+            tags = [{"seg_no": k + 1, "scene_desc": f"rel{k}", "shot_role": "완성"} for k in range(n)]   # 항상 상대 번호
+            return _FakeResp('{"tags": ' + __import__("json").dumps(tags) + '}')
+
+    class _C:
+        models = _M()
+
+    monkeypatch.setattr(comment_gen, "_current_key_and_idx", lambda: ("k", 0))
+    monkeypatch.setattr(comment_gen, "_client_for_key", lambda k: _C())
+    n = fs.TAG_BATCH + 4
+    groups = []
+    for i in range(n):
+        f = tmp_path / f"{i}.jpg"; f.write_bytes(b"\xff\xd8x"); groups.append([str(f)])
+    tags = fs._gemini_tag_frames(groups, "", [{"start": i, "end": i + 1, "text": ""} for i in range(n)])
+    assert all(t.get("scene_desc") for t in tags), "두 번째 묶음이 비었다"
+    assert tags[fs.TAG_BATCH]["scene_desc"] == "rel0"
+
+
+def test_임시폴더는_끝나면_지운다(tmp_path, monkeypatch):
+    import tempfile, os
+    made = []
+    real = tempfile.mkdtemp
+
+    def spy(*a, **k):
+        d = real(*a, **k); made.append(d); return d
+    monkeypatch.setattr(tempfile, "mkdtemp", spy)
+    fs.extract_script_frames("v.mp4", "s1", _no_classic=True, get_boundaries=lambda p: [0.0, 3.0],
+                             extract_frame_at=lambda p, d, t, f=None: f"{d}/{f}", extract_audio=lambda v, o: None,
+                             transcribe_words=lambda m: None, story_brief=lambda *a: {},
+                             tag_frames=lambda g, c, s, b=None: [{"scene_desc": "a", "shot_role": "완성"}])
+    assert made and all(not os.path.exists(d) for d in made), f"남은 임시폴더: {[d for d in made if os.path.exists(d)]}"

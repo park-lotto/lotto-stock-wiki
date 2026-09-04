@@ -4171,11 +4171,14 @@ def build_inherit_plan(source_scripts, given_script, beat_sources, structure="te
         return None
 
     def _ids_of(x):
+        """2단계가 **명시한** 출처는 첫·끝 컷(edge)이라도 그대로 잇는다(2026-09-05 리뷰 H2) — 2단계 장면 목록은
+        전부를 보여주므로 훅=첫 컷이 가장 흔한데, usable(non_edge)로 거르면 로그 없이 b-roll로 바뀌었다.
+        edge 제외는 **자동으로 채우는** b-roll(_next_cut·_fill_for)에만 적용한다."""
         ids = list(x.get("segs") or []) or parse_src_segs(x.get("seg"))
         out = []
         for sid in ids:
             sid = str(sid).strip()
-            if sid in usable and sid not in out:
+            if sid in seg_map and sid not in out:
                 out.append(sid)
         return out
 
@@ -4229,7 +4232,7 @@ def build_inherit_plan(source_scripts, given_script, beat_sources, structure="te
                 used.add(fill)
         if not ids:
             ids = [prev_sid] if prev_sid else [next(iter(usable))]
-        refs = [_ground_ref({"seg_id": sid}, usable) for sid in ids]
+        refs = [_ground_ref({"seg_id": sid}, seg_map) for sid in ids]
         refs = [r for r in refs if r]
         if not refs:
             continue

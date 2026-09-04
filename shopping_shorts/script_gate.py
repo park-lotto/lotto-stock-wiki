@@ -612,9 +612,11 @@ def scene_grounding_check(beats, scene_ids, is_recipe=False, min_ratio=0.34):
     if missing:
         problems.append("장면이 필요한 줄인데 src_seg가 비었다: " + "; ".join(missing[:4])
                         + " — 그 내용이 보이는 장면 번호를 적거나, 장면에 없는 장점이면 그 줄을 빼라")
-    if not is_recipe and beats and with_scene < max(1, int(len(beats) * min_ratio + 0.999)):
-        problems.append("장면이 붙은 줄이 %d/%d — 절반 이상은 장면 목록에서 온 줄이어야 한다(제품형)"
-                        % (with_scene, len(beats)))
+    need = max(1, int(len(beats) * min_ratio + 0.999)) if beats else 0
+    if not is_recipe and beats and with_scene < need:
+        # 문구의 기준은 상수에서 만든다(리뷰 L1: '절반'이라 적혀 있는데 실제는 1/3이었다)
+        problems.append("장면이 붙은 줄이 %d/%d — 최소 %d줄(전체의 %d%%)은 장면 목록에서 온 줄이어야 한다(제품형)"
+                        % (with_scene, len(beats), need, int(min_ratio * 100)))
     return (not problems), ("; ".join(problems) if problems else "OK(%d/%d줄에 장면)" % (with_scene, len(beats)))
 
 

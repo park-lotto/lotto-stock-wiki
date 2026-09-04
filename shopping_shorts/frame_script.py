@@ -404,7 +404,7 @@ def _gemini_story_brief(grid_path, caption, transcript):
         return {}
     prompt = (
         "아래 이미지는 한 영상을 장면전환마다 자른 대표 프레임을 **왼쪽→오른쪽, 위→아래 시간순**으로 격자에 "
-        "모은 것이다. **각 칸 왼쪽 위의 숫자(예 12.7s)가 그 컷의 실제 시각(초)**이다 — flow의 초는 이 숫자로 적어라. "
+        f"모은 것이다(최대 {GRID_MAX}컷 — 그보다 길면 뒷부분은 안 실렸다). **각 칸 왼쪽 위의 숫자(예 12.7s)가 그 컷의 실제 시각(초)**이다 — flow의 초는 이 숫자로 적어라. "
         "영상 전체를 먼저 파악해 source_brief를 정리해라.\n\n"
         + script_extract._BRIEF_GUIDE
         + f"\n\n캡션(참고용, 화면이 우선): {caption or '(없음)'}"
@@ -523,9 +523,20 @@ def _gemini_tag_frames(frame_groups, caption, segs, brief=None):
                     data = loads_lenient(resp.text)
                     raw = data.get("tags") if isinstance(data, dict) else data
                     # seg_no는 띠에 찍힌 전체 번호(#1부터) → 이번 묶음 기준으로 되돌린다. 묶음 밖 번호는 버려진다.
+                    # ★모델이 묶음 **상대 번호**(1..k)로 답하면 되돌린 번호가 전부 범위 밖이 되어 12구간이 조용히 비었다
+                    #   (2026-09-05 리뷰 M3). 원번호가 전부 1..k 안이고 되돌린 것이 전부 범위 밖이면 상대 번호로 본다.
+                    nos = [t.get("seg_no") for t in (raw or []) if isinstance(t, dict) and t.get("seg_no") is not None]
+                    try:
+                        nos_i = [int(x) for x in nos]
+                    except (TypeError, ValueError):
+                        nos_i = []
+                    relative = bool(nos_i) and b0 > 0 and all(1 <= x <= (b1 - b0) for x in nos_i)
+                    if relative:
+                        print(f"frame_script._gemini_tag_frames: 묶음 {b0+1}~{b1} 응답이 상대 번호 — 그대로 해석",
+                              file=__import__('sys').stderr)
                     fixed = []
                     for t in (raw or []):
-                        if isinstance(t, dict) and t.get("seg_no") is not None:
+                        if isinstance(t, dict) and t.get("seg_no") is not None and not relative:
                             try:
                                 t = dict(t, seg_no=int(t["seg_no"]) - b0)
                             except (TypeError, ValueError):
@@ -603,11 +614,30 @@ def extract_script_frames(video_path, video_id, caption="", *, _no_classic=False
     boundaries = get_boundaries(video_path)
     if len(boundaries or []) < 2:
         return dict(_EMPTY)
+    # ★임시폴더는 끝나면 지운다(2026-09-05 리뷰 M6) — 컷당 3~5장+띠+격자+mp3가 추출마다 /tmp에 쌓였다.
+    import shutil
+    _tmp_dirs = []
+    try:
+        return _extract_script_frames_body(video_path, video_id, caption, _no_classic, extract_frame_at,
+                                           extract_audio, transcribe_words, tag_frames, story_brief, translate,
+                                           _tmp_dirs, boundaries)
+    finally:
+        for _d in _tmp_dirs:
+            shutil.rmtree(_d, ignore_errors=True)
+
+
+def _extract_script_frames_body(video_path, video_id, caption, _no_classic, extract_frame_at, extract_audio,
+                                transcribe_words, tag_frames, story_brief, translate, _tmp_dirs, boundaries):
+    """extract_script_frames의 본체 — 래퍼가 임시폴더(_tmp_dirs)를 finally에서 지운다."""
+    import tempfile
+    from pathlib import Path
+    from shopping_shorts import script_extract
 
     # 오디오 전사(실패·키없음 → None, text 빈칸 fail-open)
     words = None
     try:
         work = Path(tempfile.mkdtemp(prefix="frame_asr_"))
+        _tmp_dirs.append(str(work))
         mp3 = extract_audio(video_path, str(work / "audio.mp3"))
         if mp3:
             words = transcribe_words(mp3)
@@ -639,6 +669,7 @@ def extract_script_frames(video_path, video_id, caption="", *, _no_classic=False
     #     묘사가 2배로 압축돼 밀렸다(s3: 12.73초 재료표가 37.23초 칸에). 띠로 합치면 이미지 수 =
     #     구간 수라 짝이 구조적으로 못 어긋난다. 합치기 실패(PIL 없음 등)면 중간 한 장만 쓴다.
     frame_dir = tempfile.mkdtemp(prefix="frame_tag_")
+    _tmp_dirs.append(frame_dir)
     frame_groups, mids, mid_times = [], [], []
     for i, s in enumerate(segs):
         shots = []

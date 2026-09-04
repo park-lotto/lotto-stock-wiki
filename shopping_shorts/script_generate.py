@@ -11,6 +11,7 @@ import json
 import os
 import random
 import re
+import sys
 
 from google.genai import types
 
@@ -548,6 +549,12 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
     # grounded(2026-09-04): 장면 전부 + 규칙 + 게이트 '장면 근거'. 아니면 종전 문장 그대로.
     _is_recipe = any("레시피" in (s.get("name") or "") for s in (sources or []))
     _scene_ids = scene_ids_of(sources) if grounded else None
+    # ★장면 목록이 비면(세그 없는 소스) grounded는 구조적으로 3회 다 실패한다(2026-09-05 리뷰 M7) → 종전 모드로 강등하고 남긴다
+    if grounded and not _scene_ids:
+        print("generate_one_style: 장면 목록 0개 — grounded를 끄고 종전 모드로", file=sys.stderr)
+        if isinstance(note, dict):
+            note["grounded_downgraded"] = "장면 목록 0개"
+        grounded, _scene_ids = False, None
     base = (_MIX_PROMPT.format(sources=_mix_source_block((sources or [])[:SOURCE_MAX],
                                                          full_scenes=bool(grounded)),
                                seconds=seconds, words=max(15, round(seconds * 2.3)), n=1,

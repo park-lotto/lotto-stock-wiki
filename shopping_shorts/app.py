@@ -5714,7 +5714,7 @@ def api_admin_probe_frame_accuracy_start(request: Request, body: dict = None):
 
 
 @app.get("/api/admin/probe/frame_accuracy")
-def api_admin_probe_frame_accuracy_state(request: Request, start: int = 0, n: int = 30):
+def api_admin_probe_frame_accuracy_state(request: Request, start: int = 0, n: int = 30, force: int = 0):
     """상태 조회. `?start=1&n=30`이면 시작도 한다 — 사장님이 로그인된 브라우저에서 **주소 한 번**으로 돌리게(POST 도구 불필요).
     도는 중이면 시작 요청은 무시하고 현재 상태만 준다."""
     denied = _require_admin(request)
@@ -5722,7 +5722,9 @@ def api_admin_probe_frame_accuracy_state(request: Request, start: int = 0, n: in
         return denied
     from shopping_shorts import probe_frame_accuracy as _pfa
     start_ok = False
-    if start:
+    # ★GET은 새로고침으로 재실행되기 쉽다(리뷰 L4: done 뒤 F5 한 번이면 30편 다시 = 키 RPD 소모).
+    #   결과가 이미 있으면(done/error) `force=1` 없이는 시작하지 않는다.
+    if start and (_pfa.state().get("status") in ("idle", "") or force):
         start_ok = _pfa.start(Store(DB_PATH), _MIX_WORK_DIR, Path(__file__).parent / "data" / "probes", n=n)
     return {"ok": True, "start_ok": start_ok, **_pfa.state()}    # state()의 started(시각)와 이름을 가른다
 

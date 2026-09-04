@@ -1036,6 +1036,11 @@ def run_mix_job(job_id, db_path, work_root):
                     segs = None
                 if segs and all(s.get("seg_id") for s in segs):
                     r = {"segments": segs, "full_text": (cached.get("full_text") or "")}
+                    # ★B1 산출(번역 전문·빈 묘사 비율)도 캐시에서 물려준다(2026-09-05 리뷰 M5) — 빠지면 외국 소스의
+                    #   대본 재료(app: full_text_ko or full_text)가 원문으로 떨어진다.
+                    for _k in ("full_text_ko", "tag_empty_ratio"):
+                        if cached.get(_k) not in (None, ""):
+                            r[_k] = cached[_k]
                     # ★영상 단위 요약을 함께 물려준다(2026-08-17). 여기서 캐시의 **일부
                     #   필드만** 골라 담기 때문에 source_brief가 통째로 떨어져 나갔다 —
                     #   도서관 추출본엔 있는데 job의 extract엔 없어서, 재태깅을 해도
@@ -1609,10 +1614,16 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     # 4.9) ★게이트 교정 루프(2026-07-25) — 최종 plan(refill·conform 뒤)을 보고 위반이면
     # 통과할 때까지 재픽(상한 3). 경고만 하던 관문을 '통과시키는 관문'으로. 순수·무과금·
     # 나레이션 불변. 실패해도 job은 안 죽인다(순수 계산).
-    try:
-        _run_gate_correction(plan, source_scripts, target_seconds)
-    except Exception:
-        traceback.print_exc(file=sys.stderr)
+    # ★상속 계획(generator="inherit")은 게이트 재픽을 **지나지 않는다**(2026-09-05 리뷰 H1). 재픽의 "인접 컷 연속 끊기"
+    #   규칙이 상속의 "앞 비트 다음 컷" b-roll과 정면 충돌해 primary를 뒤에서 바꿨다 — 그러면 inherited·fit·배지·교체 기록이
+    #   전부 거짓이 된다. 결정하는 곳은 2단계 한 곳이다(0순위-B). gate엔 건너뛴 이유만 남긴다.
+    if (plan or {}).get("generator") == "inherit":
+        plan["gate"] = {"skipped": "inherit", "why": "2단계 출처 상속 — 재픽·교정 층을 지나지 않는다"}
+    else:
+        try:
+            _run_gate_correction(plan, source_scripts, target_seconds)
+        except Exception:
+            traceback.print_exc(file=sys.stderr)
 
     # ★카드=TTS 일치(2026-07-27 실사고 "대본이랑 TTS가 다르게 나온다"): 추천 후보는 위에서
     #   _conform_beats/_refill로 나레이션이 재작성됐는데, candidates_json(카드가 읽는 것)은

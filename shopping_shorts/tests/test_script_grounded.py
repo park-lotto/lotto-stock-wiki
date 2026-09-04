@@ -141,3 +141,25 @@ def test_src_seg_는_여러_번호를_허용하고_첫_번째가_대표다(monke
                               {"id": "t", "name": "t", "beat_roles": ["hook"], "chars_per_30s": 60},
                               target_seconds=10, grounded=True)
     assert d["beats"][0]["src_seg"] == "s0-1" and d["beats"][0]["src_segs"] == ["s0-1", "s0-2"]
+
+
+def test_장면_목록이_비면_grounded를_끄고_남긴다(monkeypatch):
+    """리뷰 M7: 세그 없는 소스에 grounded면 '장면 근거'가 구조적으로 3회 실패."""
+    from shopping_shorts import bank_assemble
+    seen = []
+    monkeypatch.setattr(bank_assemble, "style_block", lambda style, seconds=30, seed="": "[스타일]")
+    monkeypatch.setattr(SG, "_style_extra", lambda: "")
+    monkeypatch.setattr(SG, "_speaker_judge", None)
+    monkeypatch.setattr(SG, "_call_json", lambda prompt, schema, note=None: seen.append(prompt) or
+                        {"beats": [{"role": "hook", "text": "a", "src_seg": ""}]})
+    note = {}
+    d = SG.generate_one_style([{"name": "홈템", "full_text": "x", "structure": {}, "segments": []}],
+                              {"id": "t", "name": "t", "beat_roles": ["hook"], "chars_per_30s": 60},
+                              target_seconds=10, grounded=True, note=note)
+    assert "[장면에 보이는 것만 써라" not in seen[0] and note.get("grounded_downgraded")
+    assert not any(c["name"] == "장면 근거" for c in d["checks"])
+
+
+def test_장면근거_문구는_상수에서_나온다():
+    ok, det = GT.scene_grounding_check([{"text": f"줄{i}", "src_seg": "", "needs_scene": False} for i in range(6)], {"s0-0"})
+    assert not ok and "절반" not in det and "34%" in det
