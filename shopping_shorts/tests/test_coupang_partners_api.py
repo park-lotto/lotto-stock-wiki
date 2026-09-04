@@ -127,3 +127,33 @@ def test_product_save_auto_deeplinks_with_member_key(monkeypatch, tmp_path):
     r = a.api_mix_product({"job_id": "j1", "url": "https://www.coupang.com/vp/products/556", "name": "t2"})
     body = r if isinstance(r, dict) else json.loads(r.body)
     assert body["ok"] and body["product"]["partner_url"] == "" and "timeout" in body["product"]["partner_error"]
+
+
+def test_long_tracking_partner_url_is_shortened_on_save(monkeypatch, tmp_path):
+    """검색 카드의 긴 추적 URL을 저장하면 짧은 링크로 바뀐다. 단축 실패면 긴 링크 유지(수수료는 같다)."""
+    from shopping_shorts import app as a
+    from shopping_shorts.store import Store
+    db = tmp_path / "t.db"
+    monkeypatch.setattr(a, "DB_PATH", str(db))
+    Store(str(db)).create_mix_job("j1", ["u0"], 20, "free")
+    monkeypatch.setattr(a, "_coupang_member_key", lambda customer_id=None: ("AK", "SK"))
+    monkeypatch.setattr(cp, "_record", lambda *a_, **k: None)
+    long_url = "https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=9474858792&traceid=V0-1&token=abc"
+    monkeypatch.setattr(cp, "_call", lambda m, p, ak, sk, body=None, timeout=15: (200, {"rCode": "0", "data": [
+        {"originalUrl": body["coupangUrls"][0], "shortenUrl": "https://link.coupang.com/a/SHORT", "landingUrl": ""}]}))
+    r = a.api_mix_product({"job_id": "j1", "url": "https://www.coupang.com/vp/products/9474858792",
+                           "name": "x", "partner_url": long_url})
+    body = r if isinstance(r, dict) else json.loads(r.body)
+    assert body["product"]["partner_url"] == "https://link.coupang.com/a/SHORT"
+    # 이미 짧은 링크면 API를 안 부른다
+    monkeypatch.setattr(cp, "_call", lambda *a_, **k: (_ for _ in ()).throw(AssertionError("부르면 안 된다")))
+    r = a.api_mix_product({"job_id": "j1", "url": "https://www.coupang.com/vp/products/9474858792",
+                           "name": "x", "partner_url": "https://link.coupang.com/a/SHORT"})
+    body = r if isinstance(r, dict) else json.loads(r.body)
+    assert body["product"]["partner_url"] == "https://link.coupang.com/a/SHORT"
+    # 단축 실패 → 긴 링크 유지, 에러 표시 없음
+    monkeypatch.setattr(cp, "_call", lambda *a_, **k: (0, {"error": "timeout"}))
+    r = a.api_mix_product({"job_id": "j1", "url": "https://www.coupang.com/vp/products/9474858792",
+                           "name": "x", "partner_url": long_url})
+    body = r if isinstance(r, dict) else json.loads(r.body)
+    assert body["product"]["partner_url"] == long_url and not body["product"].get("partner_error")

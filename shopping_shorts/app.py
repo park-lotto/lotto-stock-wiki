@@ -4657,7 +4657,11 @@ def api_mix_product(body: dict):
         return JSONResponse(status_code=422, content={"ok": False, "error": str(e)})
     # ★회원 파트너스 키가 있고 추적 링크가 비어 있으면 **딥링크를 자동 발급**한다(2026-09-04).
     #   실패해도 저장은 된다(원본 URL 유지 + 사유) — 링크는 부가물이지 관문이 아니다.
-    if not product.get("partner_url") and product.get("url"):
+    # ★긴 추적 URL(검색 카드의 productUrl, `link.coupang.com/re/AFFSDP?...` 수백 자)은 짧은 링크로 바꾼다
+    #   (2026-09-04 사장님 "짧은 링크로 바꿔") — 인포크·설명란에 넣을 건 `link.coupang.com/a/…`다.
+    _pu = product.get("partner_url") or ""
+    _needs_short = bool(_pu) and not re.match(r"^https?://link\.coupang\.com/a/", _pu)
+    if (not _pu or _needs_short) and product.get("url"):
         ak, sk = _coupang_member_key()
         if ak:
             from shopping_shorts import keyctx as _kc2
@@ -4665,8 +4669,9 @@ def api_mix_product(body: dict):
             if dl and dl[0].get("shorten_url"):
                 product["partner_url"] = dl[0]["shorten_url"]
                 product["partner_auto"] = True
-            elif dl:
+            elif dl and not _pu:
                 product["partner_error"] = dl[0].get("error") or "딥링크 발급 실패"
+            # 긴 링크가 있는데 단축만 실패한 경우엔 긴 링크를 그대로 둔다 — 수수료는 똑같이 잡힌다.
     # 등록완료 체크는 저장할 때마다 초기화하지 않는다 — 링크만 고쳤는데 "인포크에
     # 이미 올렸다"는 사실이 지워지면 사장님이 중복 등록하게 된다.
     prev = job.get("product") or {}
