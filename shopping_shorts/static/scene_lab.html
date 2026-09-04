@@ -1243,6 +1243,17 @@ function showConfirmLoading(msg){
   _cfEnable(true);
   pvTab('confirm');
 }
+// ★지문 없는 확정본에 **지금 편성**을 지문으로 찍는다 — 두 번 불린다(0순위-B: 판정은 여기 한 곳).
+//   ① showConfirmVideo 때: 부모가 옛 미리보기를 넣는 순간. 그런데 페이지 복원 경로에선
+//      boot()가 DATA를 받기 **전**이라 _editPayload가 DATA.beats에서 터져 빈 채로 남는다
+//      (라이브 실측 2026-09-04: 배포 뒤에도 RENDERED_SIG_len 0, 나중에 다시 부르면 882).
+//   ② boot() 끝: 편성이 다 실린 뒤 한 번 더. 이때 영상이 있고 지문이 비었으면 찍는다.
+function stampConfirmSigIfMissing(){
+  if (RENDERED_SIG) return;
+  var body = document.getElementById('confirmBody');
+  if (!body || !body.querySelector('video')) return;     // 영상이 없으면 찍을 게 없다
+  try{ RENDERED_SIG = (typeof _editSig === 'function') ? _editSig() : ''; }catch(e){ RENDERED_SIG = ''; }
+}
 // 렌더 끝 — 같은 자리에 진짜 영상.
 function showConfirmVideo(src){
   var body = document.getElementById('confirmBody');
@@ -1260,9 +1271,7 @@ function showConfirmVideo(src){
   //   → 지문이 없으면 **지금 편성**을 이 영상의 지문으로 삼는다. 이후 진짜 바뀌면 지워진다.
   //     (편집 상태가 아직 안 실린 순간이면 빈 지문이 남고, 첫 편집 저장에서 걸러진다 — 공짜 렌더 1회.)
   RENDERED_SIG = PENDING_SIG;
-  if (!RENDERED_SIG){
-    try{ RENDERED_SIG = (typeof _editSig === 'function') ? _editSig() : ''; }catch(e){ RENDERED_SIG = ''; }
-  }
+  if (!RENDERED_SIG) stampConfirmSigIfMissing();
   // ★영상 아래에 **늘 보이는** 탐색바를 함께 그린다(2026-09-03 사장님 제보:
   //   "완성본 만들기하면 중간 구간으로 이동해서 클릭할 수 있는 바가 없다").
   //   controls 속성이 주는 네이티브 막대는 재생 중 자동으로 숨고, 세로(9:16) 영상에선
@@ -3988,6 +3997,7 @@ async function boot(){
   loadSfxList().then(l => { if (l && l.length) renderBand(); });
   autoOpenRoll();                  // 필름 자리를 켠 채로 연다
   autoMakeTts();
+  stampConfirmSigIfMissing();      // 복원된 옛 미리보기에 지금 편성 지문을 — 편성이 다 실린 뒤라야 계산된다
 }
 
 
