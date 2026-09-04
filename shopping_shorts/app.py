@@ -4021,6 +4021,14 @@ def _key_format_hint(service: str, key: str) -> str:
                     "(예: 앞의값:뒤의값)")
         if any(ch.isspace() for ch in k):
             return "키 안에 띄어쓰기가 들어 있습니다. 공백 없이 붙여넣어 주세요."
+    if service == keyroute.SVC_COUPANG:
+        # 파트너스도 값이 두 개(Access Key / Secret Key). VMake와 같은 규칙으로 `:`로 잇는다.
+        ak, sk = coupang_partners.split_key(k)
+        if not (ak and sk):
+            return ("쿠팡 파트너스는 값이 두 개입니다 — 파트너스 사이트 'API Key 발급'의 "
+                    "**Access Key**와 **Secret Key**를 가운데 `:` 로 이어 한 줄로 넣어 주세요. (예: 앞의값:뒤의값)")
+        if any(ch.isspace() for ch in k):
+            return "키 안에 띄어쓰기가 들어 있습니다. 공백 없이 붙여넣어 주세요."
     return ""
 
 
@@ -4041,6 +4049,13 @@ def _probe_user_key(service: str, key: str) -> bool:
         # 문서가 첫 예제로 쓰는 account 쿼리 하나. 돈이 안 들고 401이면 바로 갈린다.
         from shopping_shorts.buffer_api import probe as _buffer_probe
         return _buffer_probe(key)
+    if service == keyroute.SVC_COUPANG:
+        # 딥링크 1회(무과금)로 서명까지 실제 확인 — 죽은 키를 "등록 완료"로 두지 않는다.
+        ak, sk = coupang_partners.split_key(key)
+        ok = coupang_partners.probe_key(ak, sk)
+        if not ok:
+            _remember_key_failure(service, 0, "파트너스 API가 키를 거부했습니다(서명 불일치 또는 미승인 계정)")
+        return ok
     if service == keyroute.SVC_GEMINI:
         from shopping_shorts.comment_gen import _probe_key_alive
         return _probe_key_alive(key)
@@ -4632,12 +4647,26 @@ def api_mix_product(body: dict):
         return {"ok": True, "product": None, "final_link": ""}
     try:
         product = coupang_partners.build_product(
-            keyword=body.get("keyword", ""), url=body.get("url", ""),
+            keyword=body.get("keyword", ""),
+            # ★남의 추적링크(pageKey=…)가 오면 상품번호만 남긴다 — 수수료가 남에게 가지 않게(2026-08-18).
+            url=coupang_partners.canonical_product_url(body.get("url", "")),
             name=body.get("name", ""), partner_url=body.get("partner_url", ""),
             memo=body.get("memo", ""),
         )
     except ValueError as e:
         return JSONResponse(status_code=422, content={"ok": False, "error": str(e)})
+    # ★회원 파트너스 키가 있고 추적 링크가 비어 있으면 **딥링크를 자동 발급**한다(2026-09-04).
+    #   실패해도 저장은 된다(원본 URL 유지 + 사유) — 링크는 부가물이지 관문이 아니다.
+    if not product.get("partner_url") and product.get("url"):
+        ak, sk = _coupang_member_key()
+        if ak:
+            from shopping_shorts import keyctx as _kc2
+            dl = coupang_partners.to_deeplink([product["url"]], ak, sk, customer_id=_kc2.owner_cid())
+            if dl and dl[0].get("shorten_url"):
+                product["partner_url"] = dl[0]["shorten_url"]
+                product["partner_auto"] = True
+            elif dl:
+                product["partner_error"] = dl[0].get("error") or "딥링크 발급 실패"
     # 등록완료 체크는 저장할 때마다 초기화하지 않는다 — 링크만 고쳤는데 "인포크에
     # 이미 올렸다"는 사실이 지워지면 사장님이 중복 등록하게 된다.
     prev = job.get("product") or {}
@@ -4665,6 +4694,17 @@ def api_mix_product(body: dict):
                                               product.get("name"))}
 
 
+def _coupang_member_key(customer_id=None):
+    """이 회원의 파트너스 (ak, sk). 없으면 ('', ''). 판단은 keyroute.keys_for 한 곳(0순위-B)."""
+    try:
+        from shopping_shorts import keyctx
+        cid = customer_id if customer_id is not None else keyctx.owner_cid()
+        keys, _ = keyroute.keys_for(Store(DB_PATH), cid, keyroute.SVC_COUPANG)
+        return coupang_partners.split_key(keys[0]) if keys else ("", "")
+    except Exception:                                       # noqa: BLE001 — 키 조회 실패가 화면을 막으면 안 된다
+        return "", ""
+
+
 @app.get("/api/coupang/search")
 def api_coupang_search(q: str = "", limit: int = 0):
     """키워드 → 쿠팡 상품 후보 카드(승인 전 크롤 경로).
@@ -4674,8 +4714,25 @@ def api_coupang_search(q: str = "", limit: int = 0):
     실패해도 200 + ok:False로 돌려준다 — 화면은 이때 기존 수동 흐름(검색 링크
     새 탭 + URL 붙여넣기)으로 조용히 되돌아간다."""
     from shopping_shorts import coupang_partners, coupang_relay, coupang_search
+    # ★회원 파트너스 키가 있으면 **오픈API 검색**이 먼저다(2026-09-04). 크롤·릴레이보다
+    #   빠르고 차단이 없으며, 카드마다 이 회원의 추적 링크가 이미 붙어 온다.
+    #   실패(키 죽음·한도)하면 종전 경로로 조용히 내려간다 — 화면은 같은 카드 형태를 받는다.
+    from shopping_shorts import keyctx as _kc
+    _cid_now = _kc.owner_cid()
+    ak, sk = _coupang_member_key(_cid_now)
+    if ak:
+        got = coupang_partners.search_products(q, limit=limit or 10, access_key=ak,
+                                               secret_key=sk, customer_id=_cid_now)
+        if got.get("ok") and got.get("items"):
+            return got
+        _api_notice = got.get("notice") or ""
+    else:
+        _api_notice = ""
     if config.COUPANG_SEARCH_MODE != "relay":
-        return coupang_search.search(q, limit=limit or None)
+        _r = coupang_search.search(q, limit=limit or None)
+        if _api_notice and not (_r or {}).get("items"):
+            _r["notice"] = f"파트너스 API: {_api_notice} / " + str(_r.get("notice") or "")
+        return _r
     # 릴레이 모드 — 서버는 한국 IP가 없어 직접 못 긁는다(coupang_relay.py 참고).
     kw = (q or "").strip()
     manual = {"ok": False, "items": [], "source": "relay",
@@ -4861,6 +4918,8 @@ def api_mix_product_get(job_id: str):
             "description_block": coupang_partners.description_block(product),
             "partners_link_page": coupang_partners.PARTNERS_LINK_PAGE,
             "inpock_page": coupang_partners.INPOCK_PAGE,
+            # 회원 파트너스 키 유무 — 화면이 "파트너스에서 링크 만들기" 안내를 낼지 정한다(2026-09-04)
+            "has_partner_key": bool(_coupang_member_key()[0]),
             "affiliate_target": target,
             "coupang_search_url": coupang_partners.search_url(target),
             # 인포크에 붙여넣을 세 줄(등록이름·DM 타이틀·버튼). 상품이 없으면 None.

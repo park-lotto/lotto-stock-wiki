@@ -9105,6 +9105,7 @@ function renderCoupangSlot(d){
   COUPANG.partners_page=d.partners_link_page||'';
   COUPANG.product=d.product||null;
   COUPANG.dm_set=d.dm_set||null;   // 인포크 붙여넣기용 3줄(서버가 번호까지 붙여 보낸다)
+  if(typeof d.has_partner_key!=='undefined') COUPANG.hasKey=!!d.has_partner_key;   // 회원 파트너스 키(2026-09-04)
   COUPANG.editing=false;
   const slot=document.getElementById('coupangSlot');
   if(!slot) return;
@@ -9155,8 +9156,10 @@ function coupangInner(){
       ✅ <b>${esc(p.name||p.keyword||'선택한 상품')}</b>
       ${p.product_id?`<span class="hint">· ${esc(p.product_id)}</span>`:''}
       ${p.partner_url
-        ? '<span style="color:var(--ok)"> · 파트너스 링크 ✓</span>'
-        : '<span style="color:var(--fire)"> · 파트너스 링크 없음 (수수료 미적립)</span>'}
+        ? '<span style="color:var(--ok)"> · 파트너스 링크 ✓'+(p.partner_auto?' (자동 발급)':'')+'</span>'
+        : (p.partner_error
+            ? '<span style="color:var(--fire)"> · 자동 발급 실패: '+esc(p.partner_error)+'</span>'
+            : '<span style="color:var(--fire)"> · 파트너스 링크 없음 (수수료 미적립)</span>')}
       <div style="word-break:break-all;color:var(--accent);margin-top:4px;font-size:12px">${esc(final)}</div>
       <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
         ${p.partner_url?'':`<button class="btn-next" style="padding:6px 12px;font-size:12px" onclick="coupangMakeLink()">🔗 파트너스에서 링크 만들기</button>`}
@@ -9267,7 +9270,9 @@ function coupangForm(){
     <div id="cpChips"></div>
     <div id="cpResults"></div>
     <div class="hint" style="margin-bottom:5px">찾기가 막히면(또는 원하는 게 안 나오면) 위 검색 링크에서 상품을 고른 뒤 주소창 URL을 붙여넣으세요.
-      ${COUPANG.partners_page?`파트너스 추적 링크는 <a href="${esc(COUPANG.partners_page)}" target="_blank" rel="noopener" style="color:var(--accent)">파트너스 링크 만들기 ↗</a>에서 생성해 아래 칸에.`:''}</div>
+      ${COUPANG.hasKey
+        ? '내 파트너스 키가 등록돼 있어 <b>추적 링크는 저장할 때 자동으로</b> 만들어집니다.'
+        : (COUPANG.partners_page?`파트너스 추적 링크는 <a href="${esc(COUPANG.partners_page)}" target="_blank" rel="noopener" style="color:var(--accent)">파트너스 링크 만들기 ↗</a>에서 생성해 아래 칸에. <a href="/settings.html" style="color:var(--accent)">내 파트너스 API 키를 등록</a>하면 자동으로 만들어집니다.`:'')}</div>
     <input id="cpUrl" style="${inp}" placeholder="쿠팡 상품 URL (https://www.coupang.com/vp/products/...)" value="${esc(p.url||'')}">
     <input id="cpName" style="${inp}" placeholder="상품명 (선택 — 설명란·인포크 버튼 이름으로 씁니다)" value="${esc(p.name||COUPANG.target||'')}">
     <input id="cpPartner" style="${inp}" placeholder="파트너스 추적 링크 (선택 — https://link.coupang.com/...)" value="${esc(p.partner_url||'')}">
@@ -9363,9 +9368,10 @@ async function coupangLens(){
 // 카드 클릭 = 상품 확정. 입력칸을 채운 뒤 곧바로 저장한다(클릭 한 번으로 끝나게).
 function coupangPick(i){
   const it=(COUPANG.results||[])[i]; if(!it) return;
-  const url=document.getElementById('cpUrl'), name=document.getElementById('cpName');
+  const url=document.getElementById('cpUrl'), name=document.getElementById('cpName'), pu=document.getElementById('cpPartner');
   if(url) url.value=it.url;
   if(name) name.value=it.name;
+  if(pu && it.partner_url) pu.value=it.partner_url;   // API 검색 카드엔 내 추적 링크가 이미 붙어 있다(2026-09-04)
   coupangSave();
 }
 // 🔗 파트너스에서 링크 만들기 — 상품 URL을 클립보드에 담고 파트너스 링크 생성화면을 연다.

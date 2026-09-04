@@ -1,0 +1,129 @@
+"""쿠팡 파트너스 오픈API 연동(2026-09-04) — HMAC 호출·응답 파싱·정규화·BYOK 배선.
+실제 네트워크는 안 탄다(_call을 가짜로 갈아끼움). 실호출 검증은 핸드오프의 사장님 키 실측."""
+import json
+
+import pytest
+
+from shopping_shorts import coupang_partners as cp
+from shopping_shorts import keyroute
+
+
+def test_split_key_and_format():
+    assert cp.split_key("abc:def") == ("abc", "def")
+    assert cp.split_key("abc") == ("", "")
+    assert cp.split_key(":def") == ("", "")
+
+
+@pytest.mark.parametrize("url,want", [
+    ("https://link.coupang.com/re/AFFSDP?lptag=AF9628186&pageKey=9572701928&traceid=V0-1",
+     "https://www.coupang.com/vp/products/9572701928"),
+    ("https://www.coupang.com/vp/products/123?itemId=9&vendorItemId=8&lptag=AF1",
+     "https://www.coupang.com/vp/products/123"),
+    ("https://link.coupang.com/a/gLcKSPsbwO", "https://link.coupang.com/a/gLcKSPsbwO"),   # 단축은 상품번호를 모른다
+])
+def test_canonical_product_url_strips_foreign_tracking(url, want):
+    """★남의 추적링크(pageKey)를 그대로 쓰면 수수료가 남에게 간다 — 상품번호만 남긴다."""
+    assert cp.canonical_product_url(url) == want
+
+
+def test_auth_header_shape():
+    h = cp._auth_header("GET", "/v2/x/products/search?keyword=a&limit=5", "AK", "SK")
+    assert h.startswith("CEA algorithm=HmacSHA256, access-key=AK, signed-date=")
+    assert ", signature=" in h and len(h.rsplit("signature=", 1)[1]) == 64
+
+
+def test_search_products_parses_api_items(monkeypatch):
+    seen = {}
+
+    def fake_call(method, path, ak, sk, body=None, timeout=15):
+        seen.update(method=method, path=path, ak=ak)
+        return 200, {"rCode": "0", "data": {"productData": [
+            {"productId": 9474858792, "productName": "태깅건 세트", "productPrice": 11900,
+             "productImage": "https://img/x.jpg", "productUrl": "https://link.coupang.com/re/AFFSDP?lptag=AF1&pageKey=9474858792",
+             "isRocket": True}]}}
+    monkeypatch.setattr(cp, "_call", fake_call)
+    monkeypatch.setattr(cp, "_record", lambda *a, **k: None)
+    got = cp.search_products("의류 태깅건", limit=5, access_key="AK", secret_key="SK")
+    assert got["ok"] and got["source"] == "api" and got["requires_approval"] is False
+    assert seen["method"] == "GET" and "products/search?keyword=" in seen["path"] and seen["ak"] == "AK"
+    it = got["items"][0]
+    assert it["product_id"] == "9474858792" and it["url"] == "https://www.coupang.com/vp/products/9474858792"
+    assert it["partner_url"].startswith("https://link.coupang.com/") and it["price"] == "11,900원"
+    assert it["image"] and it["name"] == "태깅건 세트"
+
+
+def test_search_products_without_keys_keeps_manual_flow(monkeypatch):
+    monkeypatch.setattr(cp, "_call", lambda *a, **k: (_ for _ in ()).throw(AssertionError("호출하면 안 된다")))
+    got = cp.search_products("x")
+    assert got["ok"] and got["items"] == [] and got["requires_approval"] is True
+
+
+def test_search_products_auth_dead_is_reported(monkeypatch):
+    rec = []
+    monkeypatch.setattr(cp, "_call", lambda *a, **k: (401, {"rCode": "401", "rMessage": "unauthorized"}))
+    monkeypatch.setattr(cp, "_record", lambda outcome, **k: rec.append((outcome, k.get("customer_id"))))
+    got = cp.search_products("x", access_key="AK", secret_key="SK", customer_id=340)
+    assert not got["ok"] and got["items"] == [] and "키" in got["notice"]
+    assert rec == [("auth_dead", 340)]        # 관측판 '회원 340의 키가 죽음'으로 이어진다
+
+
+def test_to_deeplink_parses_and_passes_through_on_failure(monkeypatch):
+    monkeypatch.setattr(cp, "_record", lambda *a, **k: None)
+    monkeypatch.setattr(cp, "_call", lambda m, p, ak, sk, body=None, timeout=15: (200, {"rCode": "0", "data": [
+        {"originalUrl": "https://www.coupang.com/vp/products/1", "shortenUrl": "https://link.coupang.com/a/AB",
+         "landingUrl": "https://link.coupang.com/re/AFFSDP?pageKey=1"}]}))
+    out = cp.to_deeplink(["https://www.coupang.com/vp/products/1"], "AK", "SK")
+    assert out[0]["shorten_url"] == "https://link.coupang.com/a/AB" and out[0]["requires_approval"] is False
+    monkeypatch.setattr(cp, "_call", lambda *a, **k: (0, {"error": "timeout"}))
+    out = cp.to_deeplink(["https://www.coupang.com/vp/products/1"], "AK", "SK")
+    assert out[0]["shorten_url"] == "" and "timeout" in out[0]["error"]
+    assert cp.to_deeplink([], "AK", "SK") == []
+
+
+def test_probe_key_true_only_on_rcode_zero(monkeypatch):
+    monkeypatch.setattr(cp, "_call", lambda *a, **k: (200, {"rCode": "0", "data": []}))
+    assert cp.probe_key("AK", "SK") is True
+    monkeypatch.setattr(cp, "_call", lambda *a, **k: (401, {"rCode": "401"}))
+    assert cp.probe_key("AK", "SK") is False
+    assert cp.probe_key("", "") is False
+
+
+def test_keyroute_coupang_is_personal_only():
+    """회원 키만 쓴다 — 사장님 키로 폴백하면 수수료가 사장님에게 간다."""
+    assert keyroute.SVC_COUPANG in keyroute.SERVICES and keyroute.SVC_COUPANG in keyroute.WIRED
+    assert keyroute.SVC_COUPANG not in keyroute.POOLED
+    assert keyroute._owner_keys(keyroute.SVC_COUPANG) == []
+
+    class _St:
+        def get_customer_keys_plain(self, cid, service):
+            return ["AK:SK"] if cid == 7 else []
+    keys, mine = keyroute.keys_for(_St(), 7, keyroute.SVC_COUPANG)
+    assert keys == ["AK:SK"] and mine is True
+    keys, mine = keyroute.keys_for(_St(), 8, keyroute.SVC_COUPANG)
+    assert keys == [] and mine is False
+
+
+def test_product_save_auto_deeplinks_with_member_key(monkeypatch, tmp_path):
+    """★핵심 계약: 키 있는 회원이 상품을 저장하면 추적 링크가 자동으로 붙는다. 실패해도 저장은 된다."""
+    from shopping_shorts import app as a
+    from shopping_shorts.store import Store
+    db = tmp_path / "t.db"
+    monkeypatch.setattr(a, "DB_PATH", str(db))
+    st = Store(str(db))
+    st.create_mix_job("j1", ["u0"], 20, "free")          # test_app_product._ready와 같은 호출 형태
+    monkeypatch.setattr(a, "_coupang_member_key", lambda customer_id=None: ("AK", "SK"))
+    monkeypatch.setattr(cp, "_record", lambda *a_, **k: None)
+    monkeypatch.setattr(cp, "_call", lambda m, p, ak, sk, body=None, timeout=15: (200, {"rCode": "0", "data": [
+        {"originalUrl": body["coupangUrls"][0], "shortenUrl": "https://link.coupang.com/a/AUTO", "landingUrl": ""}]}))
+    r = a.api_mix_product({"job_id": "j1", "url": "https://link.coupang.com/re/AFFSDP?lptag=AF_OTHER&pageKey=555",
+                           "name": "테스트"})
+    body = r if isinstance(r, dict) else json.loads(r.body)
+    assert body["ok"], body
+    assert body["product"]["url"] == "https://www.coupang.com/vp/products/555"      # 남의 추적 파라미터 제거
+    assert body["product"]["partner_url"] == "https://link.coupang.com/a/AUTO" and body["product"]["partner_auto"]
+    assert body["final_link"] == "https://link.coupang.com/a/AUTO"
+    # 실패 경로 — 저장은 되고 사유가 남는다
+    monkeypatch.setattr(cp, "_call", lambda *a_, **k: (0, {"error": "timeout"}))
+    r = a.api_mix_product({"job_id": "j1", "url": "https://www.coupang.com/vp/products/556", "name": "t2"})
+    body = r if isinstance(r, dict) else json.loads(r.body)
+    assert body["ok"] and body["product"]["partner_url"] == "" and "timeout" in body["product"]["partner_error"]
