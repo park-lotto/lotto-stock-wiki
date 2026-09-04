@@ -4788,7 +4788,10 @@ def api_mix_product(body: dict):
             "final_link": coupang_partners.final_link(product),
             "description_block": coupang_partners.description_block(product),
             "dm_set": coupang_partners.dm_set(product.get("inpock_number"),
-                                              product.get("name"))}
+                                              product.get("name")),
+            # ★번호 자동 제안(2026-09-04) — **이 회원의** 마지막 번호 다음. 전역 카운터를 쓰던
+            #   옛 방식은 고객끼리 번호를 나눠 써 사고가 났다(2026-08-28). 제안일 뿐 저장은 사람이 한다.
+            "suggest_number": _inpock_next_number(store, job.get("customer_id"))}
 
 
 def _coupang_member_key(customer_id=None):
@@ -4865,6 +4868,28 @@ def api_coupang_identify(body: dict):
         print(f"[coupang:evidence.analysis] 실패(무해): {_e!r}", file=sys.stderr)
         qs = []
     return {"ok": True, "product": product, "queries": [product] + qs[:5], "basis": used or ["썸네일"]}
+
+
+def _inpock_next_number(store, customer_id):
+    """이 회원이 쓴 인포크 번호의 최댓값 + 1. 하나도 없으면 1. 판단은 여기 한 곳(0순위-B)."""
+    try:
+        cid = keyroute.as_cid(customer_id)
+        last = 0
+        with store._conn() as c:
+            rows = c.execute(
+                "SELECT product_json FROM mix_jobs WHERE customer_id=? AND product_json IS NOT NULL "
+                "ORDER BY updated_at DESC LIMIT 200", (cid,)).fetchall()
+        for (pj,) in rows:
+            try:
+                v = int(str((json.loads(pj) or {}).get("inpock_number") or "").strip())
+            except (TypeError, ValueError):
+                continue
+            if v > last:
+                last = v
+        return coupang_partners.next_number(last if last else None)
+    except Exception as _e:      # noqa: BLE001 — 제안 실패가 저장을 막으면 안 된다
+        print(f"[inpock:next_number] 실패(무해): {_e!r}", file=sys.stderr)
+        return 1
 
 
 def _coupang_evidence(store, sc):
@@ -5194,6 +5219,7 @@ def api_mix_product_get(job_id: str):
             "affiliate_target": target,
             "coupang_search_url": coupang_partners.search_url(target),
             # 인포크에 붙여넣을 세 줄(등록이름·DM 타이틀·버튼). 상품이 없으면 None.
+            "suggest_number": _inpock_next_number(Store(DB_PATH), job.get("customer_id")),
             "dm_set": coupang_partners.dm_set((product or {}).get("inpock_number"),
                                               (product or {}).get("name"))}
 
