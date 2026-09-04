@@ -188,3 +188,32 @@ console.log(JSON.stringify({yt, th, ig, twice_same: twice === yt, none, ig2_same
     assert "link.coupang.com" not in r["ig"] and "프로필 링크" in r["ig"] and r["ig"].endswith(cp_block)
     assert r["twice_same"] and r["ig2_same"]
     assert r["none"] == "제목"
+
+
+
+def test_deeplink_endpoint_needs_key_and_canonicalizes(monkeypatch):
+    """랭킹 카드 '🛒 쿠팡에 있나?' 모달의 딥링크 API — 키 없으면 안내(need_key), 있으면 짧은 링크."""
+    from shopping_shorts import app as a
+    monkeypatch.setattr(a, "_coupang_member_key", lambda customer_id=None: ("", ""))
+    r = a.api_coupang_deeplink({"url": "https://link.coupang.com/re/AFFSDP?lptag=AF_X&pageKey=777"})
+    assert r["ok"] is False and r["need_key"] and r["url"] == "https://www.coupang.com/vp/products/777"
+    monkeypatch.setattr(a, "_coupang_member_key", lambda customer_id=None: ("AK", "SK"))
+    monkeypatch.setattr(cp, "_record", lambda *a_, **k: None)
+    monkeypatch.setattr(cp, "_call", lambda m, p, ak, sk, body=None, timeout=15: (200, {"rCode": "0", "data": [
+        {"originalUrl": body["coupangUrls"][0], "shortenUrl": "https://link.coupang.com/a/ZZ", "landingUrl": ""}]}))
+    r = a.api_coupang_deeplink({"url": "https://www.coupang.com/vp/products/777"})
+    assert r["ok"] and r["shorten_url"] == "https://link.coupang.com/a/ZZ"
+    bad = a.api_coupang_deeplink({"url": "https://naver.com/x"})
+    assert bad.status_code == 422
+
+
+def test_ranking_and_collection_have_coupang_find_button():
+    """랭킹·담기 카드에 '🛒 쿠팡에 있나?' 버튼이 있고, 모달 본체는 sidebar.js 한 곳에만 있다(0순위-B)."""
+    import pathlib
+    st = pathlib.Path(__file__).resolve().parents[1] / "static"
+    assert "쿠팡에 있나?" in (st / "index.html").read_text(encoding="utf-8")
+    assert "쿠팡에 있나?" in (st / "collection.html").read_text(encoding="utf-8")
+    sb = (st / "sidebar.js").read_text(encoding="utf-8")
+    assert "window.ssCoupangFind = function" in sb and "/api/coupang/deeplink" in sb
+    for name in ("index.html", "collection.html"):
+        assert "/api/coupang/deeplink" not in (st / name).read_text(encoding="utf-8"), name
