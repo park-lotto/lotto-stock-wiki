@@ -98,3 +98,19 @@ def test_우리쪽_402는_여전히_관리자에게():
     f = _load()
     out = f("402 Client Error: Payment Required for url: https://api.other-service.com/x")
     assert "고객님 잘못이 아니" in out and "충전" not in out
+
+
+# ── 음성 서비스 오류 원인별 안내(2026-09-05, 고객 신고 cid 260) ──────────────────
+def test_음성서비스_오류는_원인별로_갈라_말한다():
+    from shopping_shorts.app import _user_facing_error as f
+    base = " for url: https://api.elevenlabs.io/v1/text-to-speech/abc"
+    assert "인식하지 못합니다" in f("401 Client Error: Unauthorized" + base)
+    assert "권한" in f("401 Client Error: missing the permission text_to_speech" + base)
+    assert "비정상 사용" in f("401 Client Error detected_unusual_activity" + base)
+    assert "목소리" in f("422 Client Error: voice_not_found" + base)
+    assert "잠시 몰려" in f("429 Client Error: Too Many Requests" + base)
+    assert "장애" in f("503 Server Error" + base)
+    # 잔액 소진은 종전대로 충전 안내가 먼저
+    assert "크레딧이 부족" in f("401 Client Error: quota_exceeded" + base)
+    # 음성 서비스가 아닌 오류는 종전 규칙 그대로
+    assert "영상을 가져오지" in f("apify 다운로드 실패")

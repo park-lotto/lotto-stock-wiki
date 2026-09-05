@@ -4502,7 +4502,37 @@ _BYOK_VENDORS = (
 # '잔액이 없다'는 신호. 429(분당·월 한도)는 **여기 넣지 않는다** — 기다리면 풀리는데
 # 충전하라고 하면 고객이 헛돈을 쓴다(2026-09-02 실수, 만들자마자 잡았다).
 _OUT_OF_CREDIT = ("402", "payment required", "not enough credits", "insufficient",
-                  "[600", "quota exceeded for your plan")
+                  "[600", "quota exceeded for your plan", "quota_exceeded", "exceeds your quota")
+
+# ★음성 서비스(BYOK) 오류를 원인별로 가른다(2026-09-05 고객 신고 cid 260 "3단계에서 계속 실패" — 화면엔
+#   "음성 서비스가 잠시 몰려"만 떠서 키 문제인지 한도인지 장애인지 고객도 사장님도 알 수 없었다).
+#   ElevenLabs/타입캐스트 HTTP 오류 문구(요청 라이브러리의 "401 Client Error … for url: https://api.elevenlabs.io/…")를
+#   상태코드·상세로 갈라 **고객이 할 수 있는 일**을 말한다. 순서가 곧 우선순위다.
+_TTS_VENDOR_RULES = (
+    (("detected_unusual_activity", "unusual activity"),
+     "음성 서비스(ElevenLabs)가 무료 요금제의 비정상 사용으로 이 키를 막았습니다. 유료 요금제로 바꾸거나 "
+     "설정 > 🔑 내 키 등록에서 다른 키를 넣어 주세요."),
+    (("missing the permission", "missing_permissions"),
+     "음성 서비스 키는 맞지만 필요한 권한(text_to_speech 등)이 꺼져 있습니다. ElevenLabs → API Keys에서 그 키의 권한을 켜 주세요."),
+    (("401", "403", "invalid_api_key", "unauthorized", "forbidden"),
+     "음성 서비스가 내 키를 인식하지 못합니다. 설정 > 🔑 내 키 등록에서 키를 다시 확인하거나 새 키를 넣어 주세요."),
+    (("voice_not_found", "voice not found", "422"),
+     "선택한 목소리를 음성 서비스가 찾지 못합니다. TTS 단계에서 목소리를 다시 골라 주세요."),
+    (("429", "too many requests", "rate limit"),
+     "음성 서비스가 잠시 몰려 응답하지 않았습니다. 1~2분 뒤 다시 시도해 주세요."),
+    (("500", "502", "503", "504", "server error", "timed out", "timeout"),
+     "음성 서비스 쪽 장애(또는 응답 지연)입니다. 몇 분 뒤 다시 시도해 주세요. 계속되면 관리자에게 알려주세요."),
+)
+
+
+def _tts_vendor_message(low):
+    """음성 서비스 오류면 원인별 안내를, 아니면 None. 잔액 소진은 _byok_credit_message가 먼저 본다."""
+    if not any(m in low for m in ("api.elevenlabs.io", "api.typecast.ai", "elevenlabs", "typecast")):
+        return None
+    for keys, friendly in _TTS_VENDOR_RULES:
+        if any(k in low for k in keys):
+            return friendly
+    return None
 
 
 def _byok_credit_message(low):
@@ -4534,6 +4564,9 @@ def _user_facing_error(msg):
     byok = _byok_credit_message(low)      # 고객이 충전해야 풀리는 건 그렇게 말한다
     if byok:
         return byok
+    tts_msg = _tts_vendor_message(low)    # 키·권한·목소리·한도·장애를 갈라 말한다(2026-09-05)
+    if tts_msg:
+        return tts_msg
     for keys, friendly in _USER_ERROR_RULES:
         if any(k in low for k in keys):
             return friendly
