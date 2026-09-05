@@ -94,6 +94,9 @@ def summarize(results):
         "classic_avg": round(sum(cs) / len(cs), 3) if cs else None,
         "b1_avg": round(sum(bs) / len(bs), 3) if bs else None,
         "unjudged": sum(1 for r in results if r.get("classic_score") is None or r.get("b1_score") is None),
+        # 전사 사유별 편수(2026-09-05: 서버 30편 전사 0/30인데 키·오디오·API 중 무엇인지 몰랐다)
+        "transcript_status": dict(__import__("collections").Counter(
+            str(r.get("b1_transcript_status") or "?") for r in results if r.get("b1_transcript_status") is not None)),
         "b1_better": sum(1 for r in both if r["b1_score"] > r["classic_score"]),
         "classic_better": sum(1 for r in both if r["b1_score"] < r["classic_score"]),
         "tie": sum(1 for r in both if r["b1_score"] == r["classic_score"]),
@@ -134,6 +137,7 @@ def _run(store, work_dir, n, out_dir):
                 r["b1_segs"] = len(b1.get("segments") or [])
                 r["b1_transcript_chars"] = len(b1.get("full_text") or "")
                 r["b1_ko_chars"] = len(b1.get("full_text_ko") or "")
+                r["b1_transcript_status"] = b1.get("transcript_status")
                 r["b1_brief"] = (b1.get("source_brief") or {}).get("flow", "")[:120]
                 r["b1_empty"] = sum(1 for x in (b1.get("segments") or []) if not (x.get("scene_desc") or "").strip())
                 r["b1_empty_ratio"] = b1.get("tag_empty_ratio")

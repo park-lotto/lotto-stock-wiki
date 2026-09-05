@@ -73,6 +73,9 @@ def transcribe(mp3_path):
         return None
 
 
+_LAST = __import__("threading").local()   # 직전 실패 사유(스레드별) — last_error()
+
+
 def transcribe_words(mp3_path, language="ko"):
     """GROQ Whisper verbose_json으로 워드 타임스탬프 재전사.
     성공 → [{"word","start","end"}, …](발화 순서). 키 없음·실패·워드 없음 → None.
@@ -81,7 +84,9 @@ def transcribe_words(mp3_path, language="ko"):
     language: 기본 "ko"(우리 TTS 검수용 — 종전 동작 그대로). **None이면 언어 자동 감지** —
     소스 영상 전사(frame_script)는 외국 영상이 많아 "ko" 고정이면 중국어·영어를 한국어로
     엉터리 받아쓴다(2026-09-04). 호출부가 원문 언어를 알아서 번역까지 한다."""
+    _LAST.error = ""
     if not config.GROQ_API_KEY:
+        _LAST.error = "no_groq_key"
         return None
     try:
         data = {"model": _MODEL, "response_format": "verbose_json",
@@ -95,15 +100,28 @@ def transcribe_words(mp3_path, language="ko"):
                 files={"file": (mp3_path, f, "audio/mpeg")},
                 data=data,
                 timeout=60)
-        r.raise_for_status()
+        if r.status_code >= 400:
+            # ★사유를 남긴다(2026-09-05): 종전엔 raise_for_status→except가 삼켜 429·401을 구분할 길이 없었다
+            #   (서버 30편 전사 0/30인데 원인 모름). 계약(None 반환)은 그대로다.
+            _LAST.error = f"HTTP {r.status_code} {(r.text or '')[:120]}"
+            return None
         raw = r.json().get("words")
         if not raw:
+            _LAST.error = "no_words"
             return None
         out = []
         for w in raw:
             if "word" in w and "start" in w and "end" in w:
                 out.append({"word": w["word"], "start": float(w["start"]),
                             "end": float(w["end"])})
+        if not out:
+            _LAST.error = "no_words"
         return out or None
-    except Exception:
+    except Exception as e:  # noqa: BLE001 — graceful 계약 유지, 사유만 남긴다
+        _LAST.error = f"exception: {e!r}"[:160]
         return None
+
+
+def last_error():
+    """직전 transcribe_words 실패 사유(스레드별). 성공이면 ""."""
+    return getattr(_LAST, "error", "") or ""
