@@ -100,7 +100,7 @@ def transcribe_words(mp3_path, language="ko"):
                 files={"file": (mp3_path, f, "audio/mpeg")},
                 data=data,
                 timeout=60)
-        if r.status_code >= 400:
+        if getattr(r, "status_code", 200) >= 400:      # 테스트 가짜 응답엔 status_code가 없다
             # ★사유를 남긴다(2026-09-05): 종전엔 raise_for_status→except가 삼켜 429·401을 구분할 길이 없었다
             #   (서버 30편 전사 0/30인데 원인 모름). 계약(None 반환)은 그대로다.
             _LAST.error = f"HTTP {r.status_code} {(r.text or '')[:120]}"

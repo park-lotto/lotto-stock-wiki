@@ -225,6 +225,12 @@ def make_strip(paths, out_path, height=STRIP_HEIGHT, label=None):
         return None
 
 
+def _default_transcribe(mp3):
+    """기본 전사기 — Whisper 언어 자동 감지(외국 영상). 본체가 `is`로 식별하므로 람다로 바꾸지 마라."""
+    from shopping_shorts import asr_check
+    return asr_check.transcribe_words(mp3, language=None)
+
+
 def _default_boundaries(video_path):
     """실 컷 경계 리스트 [0, cut1, ..., duration]. detect_cuts(내부 컷)+길이로 조립.
     감지 실패/짧으면 길이만 알면 통구간 1개([0,dur])라도 만든다(호출부 폴백 최소화).
@@ -626,7 +632,7 @@ def extract_script_frames(video_path, video_id, caption="", *, _no_classic=False
         from shopping_shorts import asr_check
         # ★언어 자동 감지(2026-09-04) — 소스는 외국 영상이 많다. "ko" 고정이면 중국어·영어를 한국어로
         #   엉터리 받아쓴다. 원문 언어로 받아쓰고 아래 translate가 한국어(text_ko)를 붙인다.
-        transcribe_words = lambda mp3: asr_check.transcribe_words(mp3, language=None)  # noqa: E731
+        transcribe_words = _default_transcribe
     tag_frames = tag_frames or _gemini_tag_frames
     story_brief = story_brief or _gemini_story_brief
     translate = translate or _gemini_translate
@@ -667,7 +673,8 @@ def _extract_script_frames_body(video_path, video_id, caption, _no_classic, extr
             words = transcribe_words(mp3)
             if words is None:
                 from shopping_shorts import config as _cfg, asr_check as _asr
-                why = _asr.last_error() if hasattr(_asr, "last_error") else ""
+                # 사유는 기본 전사기를 썼을 때만 읽는다 — 주입된 전사기(테스트)는 asr_check를 안 거쳐 옛 사유가 샌다
+                why = _asr.last_error() if transcribe_words is _default_transcribe else ""
                 transcript_status = ("no_groq_key" if not getattr(_cfg, "GROQ_API_KEY", "")
                                      else (f"asr_none: {why}" if why else "asr_none"))
             elif not words:
