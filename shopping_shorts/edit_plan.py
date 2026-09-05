@@ -6010,6 +6010,16 @@ def _rebuild_beats_by_lines(beats, sents):
         nb.pop("narration_manual", None)
         _drop_stale_tts(nb)
         out.append(nb)
+    # ★beat_idx 재부여 (2026-09-06 고객 "아래칸 대본을 안 읽고 위의 대사를 반복 / 수정도
+    #   삭제도 안 됨"). 위 `nb = dict(base)`는 **base의 beat_idx를 그대로 복사**한다.
+    #   한 칸의 대사가 대본 여러 줄에 걸치면 그 칸 하나가 N개 칸의 원본이 되므로
+    #   **번호가 같은 칸이 N개** 생긴다(실측 job 3ec9df659411: [0,1,3,2,5,5,5] — 5가 셋).
+    #   또 출력은 '대본 줄 순서'인데 base는 '그 줄에 걸린 칸'이라 번호가 섞이기도 한다(3,2).
+    #   하류는 전부 beat_idx를 **유일 키로** 쓴다 — mp3 이름(beat_{idx}.mp3), tts_paths dict,
+    #   app.py의 next(...첫 매치)라 겹치면 조용히 남의 칸에 저장·삭제·재생된다.
+    #   여기가 이 함수의 유일한 출구다(0순위-B: 번호는 한 곳에서만 정한다).
+    for i, b in enumerate(out):
+        b["beat_idx"] = i
     return out
 
 

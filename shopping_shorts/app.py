@@ -6390,11 +6390,39 @@ def api_produce_mix_clean_thumb(job_id: str, kind: str = "original",
     return FileResponse(str(frame), media_type="image/jpeg")
 
 
+def _find_beat(beats, beat_idx):
+    """beat_idx로 비트 하나를 찾는다 — **판단은 여기 한 곳뿐**(0순위-B).
+
+    ★왜 그냥 next(...)를 쓰면 안 되나 (2026-09-06 고객 실측):
+      라이브 job 3ec9df659411의 beat_idx가 [0,1,3,2,5,5,5]로 **중복**돼 있었다
+      (실측: edit_plan 있는 1438잡 중 6잡. 중복은 늘 꼬리 쪽이다).
+      기존 코드는 전부 `next(b for b in beats if b["beat_idx"]==beat_idx)` = **첫 번째만**
+      집어 조용히 엉뚱한 칸에 작업했다. 고객이 본 증상 그대로다:
+        - 저장  → 6번 칸을 고쳤는데 5번 칸(첫 5)에 써서 "수정이 안 된다"
+        - 삭제  → `!= beat_idx` 필터라 같은 번호 **셋이 한꺼번에** 지워진다
+        - 미리듣기 → 첫 5의 mp3가 나와 "아래칸 대본을 안 읽고 위의 대사를 반복"
+      번호가 겹칠 땐 **조용히 아무거나 고르지 않는다** — 어느 칸인지 모른다고 밝힌다
+      (조용한 오작동보다 낫다). 반환: (beat, error_or_None)
+    """
+    hits = [b for b in beats if b.get("beat_idx") == beat_idx]
+    if not hits:
+        return None, "비트 없음"
+    if len(hits) > 1:
+        return None, ("이 작업은 문장 번호가 겹쳐 있어 어느 칸인지 가릴 수 없어요 "
+                      "— 3단계에서 '대본 다시 배치'로 번호를 정리한 뒤 다시 시도해 주세요")
+    return hits[0], None
+
+
 @app.get("/api/mix/tts/{job_id}/{beat_idx}")
 def api_mix_tts(job_id: str, beat_idx: int):
     job = Store(DB_PATH).get_mix_job(job_id)
     if not job or not job.get("edit_plan"):
         return JSONResponse(status_code=404, content={"ok": False})
+    # ★번호가 겹치면 첫 칸의 mp3를 주지 않는다 — 그게 "아래칸 대본을 안 읽고 위의 대사를
+    #   반복해요"의 정체다(2026-09-06 고객). 어느 소리인지 모르면 안 들려주는 게 맞다.
+    _b0, _e0 = _find_beat(job["edit_plan"]["beats"], beat_idx)
+    if _b0 is None and _e0 and "겹쳐" in _e0:
+        return JSONResponse(status_code=409, content={"ok": False, "dup": True, "error": _e0})
     for b in job["edit_plan"]["beats"]:
         if b["beat_idx"] == beat_idx and b.get("tts_path") and Path(b["tts_path"]).exists():
             # ★대본과 어긋난 음성은 **주지 않는다**(2026-08-19 사장님 "tts가 우리 대본을
@@ -6487,9 +6515,9 @@ def api_mix_scene_lab_narration(job_id: str, beat_idx: int, body: dict,
         return JSONResponse(status_code=409,
                             content={"ok": False, "error": "생성·렌더 중에는 대본을 고칠 수 없어요"})
     plan = job["edit_plan"]
-    beat = next((b for b in plan["beats"] if b["beat_idx"] == beat_idx), None)
+    beat, _err = _find_beat(plan["beats"], beat_idx)      # 번호 중복이면 조용히 고르지 않는다
     if beat is None:
-        return JSONResponse(status_code=404, content={"ok": False, "error": "비트 없음"})
+        return JSONResponse(status_code=404, content={"ok": False, "error": _err})
     if text == (beat.get("narration") or "").strip():
         # ★글자가 그대로여도 **음성이 옛 대본 것이면** 여기서 다시 뽑는다(2026-08-19 사장님
         #   "대본수정 눌러 다시뽑기 했는데 안 된다"). 2단계에서 자막을 고치면 narration만
@@ -6530,6 +6558,45 @@ def api_mix_scene_lab_narration(job_id: str, beat_idx: int, body: dict,
             "tts_ver": beat.get("tts_ver") or 0}
 
 
+@app.post("/api/mix/scene_lab/{job_id}/renumber")
+def api_mix_scene_lab_renumber(job_id: str):
+    """겹친 문장 번호(beat_idx)를 0..n-1로 다시 매긴다 — 막기만 하면 고객이 갇힌다.
+
+    ★평소엔 번호를 다시 매기지 않는다(삭제 API 주석 참고): mp3 파일 이름이
+      beat_{beat_idx}_{key}.mp3라(mix_pipeline._tts_path) 번호를 당기면 남은 칸이
+      **남의 음성**을 물고 간다. 그래서 이 문은 **번호가 실제로 겹쳤을 때만** 열고,
+      번호가 바뀐 칸의 음성은 **버린다**(tts_path/tts_ver 제거 → 다시 뽑게 한다).
+      옛 mp3를 그대로 두면 그게 바로 "위의 대사를 반복"이다.
+    """
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job or not job.get("edit_plan"):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "작업 없음"})
+    if job.get("status") in _MIX_ACTIVE_STAGES + ("rendering", "removing_subtitles"):
+        return JSONResponse(status_code=409,
+                            content={"ok": False, "error": "생성·렌더 중에는 정리할 수 없어요"})
+    plan = job["edit_plan"]
+    beats = plan.get("beats") or []
+    idxs = [b.get("beat_idx") for b in beats]
+    if len(set(idxs)) == len(idxs):
+        return {"ok": True, "changed": 0, "note": "번호가 겹치지 않아 그대로 둡니다"}
+    changed = 0
+    for i, b in enumerate(beats):
+        if b.get("beat_idx") != i:
+            b["beat_idx"] = i
+            # 번호가 바뀐 칸의 옛 음성은 버린다 — 이름이 번호로 묶여 남의 소리가 된다.
+            b.pop("tts_path", None)
+            b.pop("tts_ver", None)
+            changed += 1
+    plan["beats"] = beats
+    store.update_mix_job(job_id, edit_plan=plan)
+    # 이미 만든 완성본은 옛 번호 기준이라 무효(삭제 API와 같은 판단).
+    store.update_mix_job(job_id, video_path=None, clean_video_path=None,
+                         fx_path=None, fx_status=None)
+    return {"ok": True, "changed": changed, "beats": len(beats),
+            "note": "번호를 정리했어요 — 음성 만들기를 다시 눌러주세요"}
+
+
 @app.post("/api/mix/scene_lab/{job_id}/beat/{beat_idx}/delete")
 def api_mix_scene_lab_beat_delete(job_id: str, beat_idx: int):
     """문장 칸 하나를 통째로 지운다 — 2026-09-03 고객(이유준) "음성이 두 번 되어서
@@ -6555,9 +6622,11 @@ def api_mix_scene_lab_beat_delete(job_id: str, beat_idx: int):
                             content={"ok": False, "error": "생성·렌더 중에는 칸을 지울 수 없어요"})
     plan = job["edit_plan"]
     beats = plan.get("beats") or []
-    beat = next((b for b in beats if b["beat_idx"] == beat_idx), None)
+    # ★번호가 겹치면 지우지 않는다 — 아래 필터가 `!= beat_idx`라 같은 번호를 **전부**
+    #   날린다(2026-09-06 실측 job 3ec9df659411: beat_idx=5가 셋 → 한 번에 3칸 삭제).
+    beat, _err = _find_beat(beats, beat_idx)
     if beat is None:
-        return JSONResponse(status_code=404, content={"ok": False, "error": "비트 없음"})
+        return JSONResponse(status_code=404, content={"ok": False, "error": _err})
     if len(beats) <= 1:
         return JSONResponse(status_code=422,
                             content={"ok": False, "error": "마지막 한 칸은 지울 수 없어요"})

@@ -13922,6 +13922,9 @@ async function vpSaveNarr(i){
       body: JSON.stringify({text, regen:true})});
     const j=await r.json().catch(()=>null);
     if(!r.ok || !j || !j.ok){
+      // ★문장 번호가 겹친 작업(2026-09-06 고객)은 "생성 중" 문구로 뭉개지 말고 **고치는 길**을
+      //   준다 — 막기만 하면 고객이 갇힌다. 서버 문구를 그대로 보여주고 정리 버튼을 붙인다.
+      if(vpIsDupErr(j)){ vpShowDupFix(m); renderTtsBeats(); return; }
       const _nk = (typeof needKeyText==='function') ? needKeyText(j) : null;
       if(m) m.textContent = (r.status===409)
         ? '⏳ 생성 중엔 못 바꿔요 — 전체 생성이 끝나고 다시 눌러요'
@@ -13945,6 +13948,32 @@ async function vpSaveNarr(i){
     if(m) m.textContent='❌ 저장 실패: '+(e.message||e);
     renderTtsBeats();
   }
+}
+
+// ── 문장 번호 겹침(2026-09-06 고객 "수정도 삭제도 안 되고 먹통") ────────────────
+// 라이브 실측: 1438잡 중 6잡의 beat_idx가 겹쳐 있었다(예 [0,1,3,2,5,5,5]).
+// 서버가 이제 "어느 칸인지 못 가린다"고 막는다 — 화면은 그 막힘을 **고칠 수 있는 것**으로
+// 바꿔준다(막기만 하면 고객은 그냥 갇힌다). 판단은 여기 두 함수뿐(0순위-B).
+function vpIsDupErr(j){ return !!(j && (j.dup || String(j.error||'').indexOf('겹쳐')>=0)); }
+function vpShowDupFix(m){
+  if(!m) return;
+  m.innerHTML = '⚠ 문장 번호가 겹쳐 어느 칸인지 못 가려요 '
+    + '<button class="btn-prev" style="padding:2px 8px;margin-left:4px" '
+    + 'onclick="vpRenumber()">번호 정리하기</button>';
+}
+async function vpRenumber(){
+  if(!MIX_JOB) return;
+  if(!confirm('겹친 문장 번호를 1,2,3…으로 다시 매깁니다.'
+      + String.fromCharCode(10,10)
+      + '번호가 바뀐 칸은 음성을 다시 뽑아야 해요(그대로 두면 남의 목소리가 나옵니다).')) return;
+  try{
+    const r=await fetch('/api/mix/scene_lab/'+MIX_JOB+'/renumber',{method:'POST'});
+    const j=await r.json().catch(()=>null);
+    if(!r.ok || !j || !j.ok){ alert('정리 실패' + (j&&j.error?(' — '+j.error):'')); return; }
+    await renderTtsBeats();
+    alert('문장 번호를 정리했어요(' + (j.changed||0) + '칸).'
+          + String.fromCharCode(10) + '🔊 음성 만들기를 다시 눌러주세요.');
+  }catch(e){ alert('정리 실패: '+(e.message||e)); }
 }
 
 // 장면 줄 파형 — 길이를 눈으로 가늠하게 하는 **장식**이다(오디오 분석이 아니다).
@@ -14116,6 +14145,17 @@ function _vpDriveCaption(aud, b){
   aud.ontimeupdate=upd; upd();
 }
 function vpPlayBeat(i){
+  // ★고치는 중인 줄은 재생하지 않는다 (2026-09-06 고객 "아래칸 대본을 안 읽고 위의 대사를
+  //   반복해요 / 수정도 삭제도 안 되고 먹통").
+  //   편집칸(textarea)은 #vpSay{i} 안에 들어가는데, 그 부모 .ttsRowMain에 onclick=vpPlayBeat이
+  //   걸려 있다. 그래서 **글자를 고치려고 칸을 클릭하는 것만으로** 이 함수가 불렸다:
+  //     - 옛 mp3(고치기 전 대사)가 재생돼 "위의 대사를 반복"으로 들리고,
+  //     - scrollIntoView가 화면을 끌어당겨 누르려던 [저장]·[취소]·[삭제] 버튼이 손 밑에서
+  //       움직인다 → "눌러도 안 된다 = 먹통"으로 보인다.
+  //   실측(playwright): 텍스트칸 클릭 1회 → 부모 핸들러 1회 발화. 저장/취소 버튼 클릭도 마찬가지.
+  //   ★판단은 여기 한 곳에서만 한다(0순위-B) — 줄 클릭·▶ 버튼·버블링이 전부 이 문을 지난다.
+  //   버튼마다 stopPropagation을 뿌리면 새 버튼이 늘 때마다 빠뜨려 같은 사고가 재발한다.
+  if(VP_NARR_EDIT[i]) return;
   const b=VP_BEATS[i]; if(!b) return;
   const a=document.getElementById('beatAudio'+i); if(!a) return;
   // 다른 오디오 정지
@@ -14162,11 +14202,18 @@ async function vpDeleteBeat(i){
     const r=await fetch('/api/mix/scene_lab/'+MIX_JOB+'/beat/'+b.beat_idx+'/delete',{method:'POST'});
     const j=await r.json().catch(()=>null);
     if(!r.ok || !j || !j.ok){
+      // 번호 겹침이면 "삭제 실패"로 뭉개지 않는다 — 지우면 같은 번호가 통째로 날아간다.
+      if(vpIsDupErr(j)){ vpShowDupFix(m); return; }
       if(m) m.textContent = (r.status===409)
         ? '⏳ 생성 중엔 못 지워요 — 끝나고 다시 눌러요'
         : ('❌ 삭제 실패' + (j&&j.error?(' — '+j.error):''));
       return;
     }
+    // ★지운 칸의 편집칸을 먼저 닫는다 (2026-09-06 고객 "삭제도 안 되고 먹통").
+    //   편집칸이 열려 있으면 renderTtsBeats가 vpIsEditing()으로 **즉시 되돌아간다**(입력 보호).
+    //   그래서 서버는 지웠는데 화면은 그대로 남아 "삭제가 안 먹는다"로 보였다.
+    //   ⚠️VP_NARR_EDIT 전체를 비우지 않는다 — 다른 줄을 고치던 중이면 그 입력이 날아간다.
+    delete VP_NARR_EDIT[i];
     renderTtsBeats();        // 목록을 서버 기준으로 다시 그린다
     // 이미 만들어 둔 완성본·청소 조립본은 서버가 비웠다(옛 mp4를 쓰면 지운 문장이 계속
     // 나오고, 캡컷은 그 옛 완성본을 새 타임라인으로 잘라 어긋난다). 그래서 다시 만들어야 한다.
