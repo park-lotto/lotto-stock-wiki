@@ -298,3 +298,25 @@ def test_소스분산_배선_gate가_판정에_흘려보낸다():
     assert calls, "scene_grounding_check 호출을 못 찾았다"
     bare = [n.lineno for n in calls if not any(k.arg == "source_count" for k in n.keywords)]
     assert not bare, f"source_count를 안 넘기는 줄: {bare}"
+
+
+def test_소스분산_한_소스만_썼어도_보조로_다른_소스를_봤으면_통과():
+    """★2026-09-05 실측으로 드러난 결함: '두 소스를 다 썼나'만 보면 **소재가 다른 제품**일 때
+    모델이 게이트를 통과하려고 억지로 섞는다(비비크림+방수패드 실측: 8칸 중 4칸이 딴 제품 화면).
+    지시문엔 이미 "소재가 다른 제품이면 억지로 섞지 마라"고 적혀 있는데 판정이 그걸 안 봤다.
+
+    → 판정을 완화한다: 대표(primary)가 한 소스뿐이어도 **보조 번호로라도 다른 소스를 참고**했으면
+      통과. 다른 소스를 아예 안 본 경우(=목록을 훑지도 않은 경우)만 반려한다."""
+    beats = [{"text": "가", "src_seg": "s0-0, s1-3", "needs_scene": True},
+             {"text": "나", "src_seg": "s0-1", "needs_scene": True},
+             {"text": "다", "src_seg": "s0-2", "needs_scene": True}]
+    ok, det = GT.scene_grounding_check(beats, {"s0-0", "s0-1", "s0-2", "s1-3"}, source_count=2)
+    assert ok, det
+
+
+def test_소스분산_다른_소스를_아예_안_보면_여전히_반려():
+    beats = [{"text": "가", "src_seg": "s0-0", "needs_scene": True},
+             {"text": "나", "src_seg": "s0-1", "needs_scene": True},
+             {"text": "다", "src_seg": "s0-2", "needs_scene": True}]
+    ok, _ = GT.scene_grounding_check(beats, {"s0-0", "s0-1", "s0-2", "s1-0"}, source_count=2)
+    assert not ok

@@ -605,6 +605,7 @@ def scene_grounding_check(beats, scene_ids, is_recipe=False, min_ratio=0.34, sou
     beats = beats or []
     invented, missing, with_scene = [], [], 0
     primary_at = {}      # 대표 장면 번호 -> 처음 쓴 칸 번호
+    all_used = set()     # 대표+보조 전부(소스 분산 판정용)
     repeats = []         # (뒤 칸, 앞 칸, 번호, 뒤 칸 앞머리)
     for i, b in enumerate(beats, 1):
         sids = parse_src_segs(b.get("src_seg"))
@@ -616,6 +617,7 @@ def scene_grounding_check(beats, scene_ids, is_recipe=False, min_ratio=0.34, sou
         elif sids:
             with_scene += 1
             head = sids[0]                    # ★대표만 본다(보조는 겹쳐도 정당하다 — _GROUNDED_RULE)
+            all_used.update(sids)             # 소스 분산 판정은 보조 번호까지 본다(아래 주석)
             if head in primary_at:
                 repeats.append((i, primary_at[head], head, text))
             else:
@@ -643,7 +645,11 @@ def scene_grounding_check(beats, scene_ids, is_recipe=False, min_ratio=0.34, sou
     #   ⚠️장면 붙은 줄이 소스 수보다 적으면 다 쓰는 게 불가능하다 → 면제.
     if not is_recipe and source_count and source_count > 1 and with_scene >= source_count:
         have = {str(x).rsplit("-", 1)[0] for x in ids}          # 목록에 실제로 있는 소스들
-        got = {str(x).rsplit("-", 1)[0] for x in primary_at}    # 대본이 대표로 쓴 소스들
+        # ★대표뿐 아니라 **보조 번호까지** 본다(2026-09-05 실측으로 완화). 대표만 보면 소재가
+        #   서로 다른 제품일 때 모델이 게이트를 통과하려고 **억지로 섞는다** — 실측(비비크림+방수패드)
+        #   에서 8칸 중 4칸이 딴 제품 화면이 됐다. 지시문엔 이미 "다른 제품이면 억지로 섞지 마라"가
+        #   있으므로, 판정은 "다른 소스를 **아예 안 봤나**"만 잡는다.
+        got = {str(x).rsplit("-", 1)[0] for x in all_used}
         missing = sorted(have - got)
         if len(have) > 1 and missing:
             problems.append("재료 영상 %d편 중 %s 장면을 한 줄도 안 썼다(%s만 썼다) — 여러 영상에서 "

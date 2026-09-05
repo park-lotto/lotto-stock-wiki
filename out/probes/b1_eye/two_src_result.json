@@ -1,106 +1,100 @@
 {
  "draft": {
-  "style_id": 57,
-  "style_name": "다이소 내부인형",
+  "style_id": 60,
+  "style_name": "유튜브 발명품형",
   "beats": [
    {
-    "role": "hook",
-    "text": "와 여러분 다이소 가면 이 비비크림 무조건 사오세요.",
+    "role": "title",
+    "text": "아픈 아내를 위해 만든 독일 리스트 위젯의 소름 돋는 기능",
     "src_seg": "",
     "needs_scene": false,
-    "sec": 2.8,
+    "sec": 3.1,
     "src_segs": []
    },
    {
-    "role": "problem",
-    "text": "그동안 파운데이션이 피부톤에 안 맞아서 매번 칙칙해지는 게 진짜 스트레스였거든요.",
+    "role": "story",
+    "text": "손목 통증으로 고생하던 아내를 위해 탄생한 이 보호대가 사람들 사이에서 조용히 퍼지기 시작했음",
+    "src_seg": "s0-0",
+    "needs_scene": true,
+    "sec": 5.4,
+    "src_segs": [
+     "s0-0"
+    ]
+   },
+   {
+    "role": "authority",
+    "text": "이미 해외 리뷰에서 난리 난 제품인데 직접 써보니까 그 이유를 바로 알겠더라고",
+    "src_seg": "s1-31",
+    "needs_scene": true,
+    "sec": 4.3,
+    "src_segs": [
+     "s1-31"
+    ]
+   },
+   {
+    "role": "benefit",
+    "text": "이게 미친 포인트인 게 벨크로 홀만 당기면 내 손목에 딱 맞게 압박 조절이 가능함",
     "src_seg": "s0-2",
     "needs_scene": true,
-    "sec": 4.7,
+    "sec": 4.3,
     "src_segs": [
      "s0-2"
     ]
    },
    {
-    "role": "reveal",
-    "text": "제 지인이 다이소 매니저로 있거든요.",
-    "src_seg": "",
-    "needs_scene": false,
-    "sec": 2.0,
-    "src_segs": []
-   },
-   {
-    "role": "proof",
-    "text": "어떤 피부톤이든 자연스럽게 어울려서 매장에 깔리기 무섭게 사라지는 요즘 가장 핫한 아이템이에요.",
-    "src_seg": "s1-1",
+    "role": "escalate",
+    "text": "심지어 두께도 얇아서 일상생활에서 착용해도 전혀 불편함이 없다는 거",
+    "src_seg": "s1-15",
     "needs_scene": true,
-    "sec": 5.5,
+    "sec": 3.9,
     "src_segs": [
-     "s1-1"
+     "s1-15"
     ]
    },
    {
-    "role": "demo",
-    "text": "방법도 간단해요. 제품을 손에 들고 얼굴에 쓱 바르면, 이게 끝이에요.",
-    "src_seg": "s0-3",
-    "needs_scene": true,
-    "sec": 3.6,
-    "src_segs": [
-     "s0-3"
-    ]
-   },
-   {
-    "role": "result",
-    "text": "와 결점은 커버되면서 피부톤은 한 번에 살아나는 거 있죠.",
+    "role": "twist",
+    "text": "근데 진짜 충격적인 건 손목 압박 위치를 내 마음대로 정할 수 있다는 거임",
     "src_seg": "s0-4",
     "needs_scene": true,
-    "sec": 3.1,
+    "sec": 3.9,
     "src_segs": [
      "s0-4"
     ]
-   },
-   {
-    "role": "price",
-    "text": "다이소에서 이 가격에 이게 가능하다는 게 신기해요.",
-    "src_seg": "s1-8",
-    "needs_scene": true,
-    "sec": 2.8,
-    "src_segs": [
-     "s1-8"
-    ]
-   },
-   {
-    "role": "cta",
-    "text": "어떤 제품인지 궁금하시면 댓글 남겨주세요 바로 제품 정보 대댓글로 드릴게요.",
-    "src_seg": "",
-    "needs_scene": false,
-    "sec": 4.3,
-    "src_segs": []
    }
   ],
-  "script": "와 여러분 다이소 가면 이 비비크림 무조건 사오세요. 그동안 파운데이션이 피부톤에 안 맞아서 매번 칙칙해지는 게 진짜 스트레스였거든요. 제 지인이 다이소 매니저로 있거든요. 어떤 피부톤이든 자연스럽게 어울려서 매장에 깔리기 무섭게 사라지는 요즘 가장 핫한 아이템이에요. 방법도 간단해요. 제품을 손에 들고 얼굴에 쓱 바르면, 이게 끝이에요. 와 결점은 커버되면서 피부톤은 한 번에 살아나는 거 있죠. 다이소에서 이 가격에 이게 가능하다는 게 신기해요. 어떤 제품인지 궁금하시면 댓글 남겨주세요 바로 제품 정보 대댓글로 드릴게요.",
-  "hook": "와 여러분 다이소 가면 이 비비크림 무조건 사오세요.",
+  "script": "아픈 아내를 위해 만든 독일 리스트 위젯의 소름 돋는 기능 손목 통증으로 고생하던 아내를 위해 탄생한 이 보호대가 사람들 사이에서 조용히 퍼지기 시작했음 이미 해외 리뷰에서 난리 난 제품인데 직접 써보니까 그 이유를 바로 알겠더라고 이게 미친 포인트인 게 벨크로 홀만 당기면 내 손목에 딱 맞게 압박 조절이 가능함 심지어 두께도 얇아서 일상생활에서 착용해도 전혀 불편함이 없다는 거 근데 진짜 충격적인 건 손목 압박 위치를 내 마음대로 정할 수 있다는 거임",
+  "hook": "아픈 아내를 위해 만든 독일 리스트 위젯의 소름 돋는 기능",
   "checks": [
    {
     "name": "구간 순서",
     "ok": true,
-    "detail": "기대 ['hook', 'problem', 'reveal', 'proof', 'demo', 'result', 'price', 'cta'] / 실제 ['hook', 'problem', 'reveal', 'proof', 'demo', 'result', 'price', 'cta']"
+    "detail": "기대 ['title', 'story', 'authority', 'benefit', 'escalate', 'twist'] / 실제 ['title', 'story', 'authority', 'benefit', 'escalate', 'twist']"
    },
    {
-    "name": "CTA 단어유도",
+    "name": "CTA 금지(유튜브 썰)",
     "ok": true,
-    "detail": " 제품인지 궁금하시면 댓글 남겨주세요 바로 제품 정보 대댓글로 드릴게요."
+    "detail": "OK"
    },
    {
-    "name": "말 밀도(153~222자)",
+    "name": "말끝(반말체)",
     "ok": true,
-    "detail": "215자 / 이 스타일 히트작 219자",
+    "detail": "OK"
+   },
+   {
+    "name": "말 밀도(139~222자)",
+    "ok": true,
+    "detail": "185자 / 이 스타일 히트작 199자",
     "over": false
    },
    {
     "name": "고조 심화(1회)",
     "ok": false,
-    "detail": "고조 연결어가 없다 — 해결 뒤에 '심지어/더 대박인 건'으로 새로운 장점 하나를 더 얹어라"
+    "detail": "2번 나왔다 — 한 번만 써라(남발하면 죽는다)"
+   },
+   {
+    "name": "훅 3초 서론금지",
+    "ok": true,
+    "detail": "OK(아픈아내를위해만든독일리스트위젯의소름돋…)"
    },
    {
     "name": "화자 일관성",
@@ -110,86 +104,54 @@
    {
     "name": "장면 근거",
     "ok": true,
-    "detail": "OK(5/8줄에 장면)"
+    "detail": "OK(5/6줄에 장면)"
    }
   ],
   "passed": false,
   "tries": [
    {
-    "chars": 213,
+    "chars": 247,
     "fails": [
+     "말 밀도(139~222자)",
      "장면 근거"
     ]
    },
    {
-    "chars": 215,
+    "chars": 185,
     "fails": [
      "고조 심화(1회)"
     ]
    },
    {
-    "chars": 250,
+    "chars": 213,
     "fails": [
-     "구간 순서",
-     "말 밀도(153~222자)",
      "고조 심화(1회)",
      "장면 근거"
     ]
    }
   ],
-  "chars": 215,
-  "sec": 29.0
+  "chars": 185,
+  "sec": 25.0
  },
  "plan": {
   "structure": "template",
   "beats": [
    {
     "beat_idx": 0,
-    "role": "hook",
-    "narration": "와 여러분 다이소 가면 이 비비크림 무조건 사오세요.",
-    "target_seconds": 5.1,
+    "role": "title",
+    "narration": "아픈 아내를 위해 만든 독일 리스트 위젯의 소름 돋는 기능",
+    "target_seconds": 5.6,
     "primary": {
-     "video_id": "s1",
-     "seg_id": "s1-2",
-     "start": 6.067,
-     "end": 7.1,
-     "scene_desc": "제품 안쪽에 액체를 부어 방수 기능을 직접적으로 시연합니다.",
+     "video_id": "s0",
+     "seg_id": "s0-1",
+     "start": 6.126,
+     "end": 12.252,
+     "scene_desc": "손목에 빨간색 리스트 위젯 보호대를 착용하고 있는 클로즈업 모습이 보임.",
      "is_key": true,
-     "change": "액체가 표면에 맺히고 흡수되지 않음",
-     "shot_role": "실증"
+     "change": "손목에 보호대가 장착된 상태임",
+     "shot_role": "설치"
     },
-    "alternates": [
-     {
-      "video_id": "s1",
-      "seg_id": "s1-3",
-      "start": 7.1,
-      "end": 8.767,
-      "scene_desc": "액체가 부어진 제품 안쪽을 펼쳐 보여주고, 아이들이 변기에 앉아있는 상황을 연출합니다.",
-      "is_key": false,
-      "change": "방수면이 액체를 튕겨내고 있음",
-      "shot_role": "문제"
-     },
-     {
-      "video_id": "s1",
-      "seg_id": "s1-4",
-      "start": 8.767,
-      "end": 10.467,
-      "scene_desc": "바닥에 액체가 쏟아진 상황과 밤에 잠든 아이의 모습을 교차로 보여줍니다.",
-      "is_key": false,
-      "change": "바닥에 액체가 퍼져있음",
-      "shot_role": "문제"
-     },
-     {
-      "video_id": "s1",
-      "seg_id": "s1-6",
-      "start": 11.333,
-      "end": 12.03,
-      "scene_desc": "이불과 매트리스를 세탁하는 모습과 제품을 펼쳐 치마 형태로 만드는 모습을 보여줍니다.",
-      "is_key": true,
-      "change": "세탁물이 치마 형태로 변함",
-      "shot_role": "실증"
-     }
-    ],
+    "alternates": [],
     "effect": "cut",
     "fit": 3,
     "fit_evidence": "broll_fill",
@@ -199,39 +161,117 @@
    },
    {
     "beat_idx": 1,
-    "role": "problem",
-    "narration": "그동안 파운데이션이 피부톤에 안 맞아서 매번 칙칙해지는 게 진짜 스트레스였거든요.",
-    "target_seconds": 7.9,
+    "role": "story",
+    "narration": "손목 통증으로 고생하던 아내를 위해 탄생한 이 보호대가 사람들 사이에서 조용히 퍼지기 시작했음",
+    "target_seconds": 9.1,
     "primary": {
      "video_id": "s0",
-     "seg_id": "s0-2",
-     "start": 5.405,
-     "end": 10.511,
-     "scene_desc": "전문가가 고객의 얼굴에 메이크업을 진행하며 고객이 질문을 던진다.",
+     "seg_id": "s0-0",
+     "start": 0.0,
+     "end": 6.126,
+     "scene_desc": "보호대 브랜드 로고가 화면 중앙에 노출되며 브랜드 정보와 구독을 독려하는 그래픽이 함께 나타남.",
      "is_key": false,
      "change": "",
-     "shot_role": "도포"
+     "shot_role": "기타"
     },
     "alternates": [
      {
-      "video_id": "s1",
-      "seg_id": "s1-5",
-      "start": 10.467,
-      "end": 11.333,
-      "scene_desc": "침대에 기존 방수패드를 깔지만, 아이의 뒤척임으로 패드가 밀려있는 모습을 보여줍니다.",
-      "is_key": true,
-      "change": "방수패드가 침대 위에서 밀려남",
-      "shot_role": "문제"
+      "video_id": "s0",
+      "seg_id": "s0-7",
+      "start": 34.635,
+      "end": 36.637,
+      "scene_desc": "두 가지 다른 형태의 손목 보호대를 평면에 나란히 놓아 비교함.",
+      "is_key": false,
+      "change": "",
+      "shot_role": "기타"
      },
      {
       "video_id": "s0",
       "seg_id": "s0-3",
-      "start": 10.511,
-      "end": 12.44,
-      "scene_desc": "전문가가 비비크림 제품을 손에 들고 보여준 뒤, 고객의 얼굴에 다시 제품을 바른다.",
+      "start": 18.379,
+      "end": 19.35,
+      "scene_desc": "손목에 보호대를 감고 벨크로를 이용해 조여 고정하는 과정을 상세히 보여줌.",
       "is_key": true,
-      "change": "제품이 전문가의 손에 들려 등장하고 얼굴에 도포됨",
+      "change": "벨크로가 손목에 밀착되어 고정됨",
+      "shot_role": "설치"
+     }
+    ],
+    "effect": "cut",
+    "fit": 5,
+    "fit_evidence": "inherited",
+    "inherited": true,
+    "visual_verb": true,
+    "src_seg_applied": "s0-0"
+   },
+   {
+    "beat_idx": 2,
+    "role": "authority",
+    "narration": "이미 해외 리뷰에서 난리 난 제품인데 직접 써보니까 그 이유를 바로 알겠더라고",
+    "target_seconds": 7.5,
+    "primary": {
+     "video_id": "s1",
+     "seg_id": "s1-31",
+     "start": 66.5,
+     "end": 68.5,
+     "scene_desc": "손목을 쥐었다 펴는 동작을 통해 보호대의 유연함을 보여줌.",
+     "is_key": true,
+     "change": "손목이 쥐었다 펴지며 보호대의 유연함이 확인됨",
+     "shot_role": "실증"
+    },
+    "alternates": [
+     {
+      "video_id": "s1",
+      "seg_id": "s1-1",
+      "start": 2.0,
+      "end": 6.0,
+      "scene_desc": "손목에 보호대를 착용하고 주먹을 쥐었다 펴며 손목 움직임을 보여준다.",
+      "is_key": true,
+      "change": "보호대를 착용한 손목이 움직이며 고정력을 보여준다.",
       "shot_role": "실증"
+     },
+     {
+      "video_id": "s1",
+      "seg_id": "s1-2",
+      "start": 6.0,
+      "end": 8.0,
+      "scene_desc": "손이 보호대의 벨크로 스트랩을 당겨 조절하는 모습이 클로즈업된다.",
+      "is_key": true,
+      "change": "스트랩이 당겨지며 손목에 밀착된다.",
+      "shot_role": "조작"
+     }
+    ],
+    "effect": "cut",
+    "fit": 5,
+    "fit_evidence": "inherited",
+    "inherited": true,
+    "visual_verb": true,
+    "src_seg_applied": "s1-31"
+   },
+   {
+    "beat_idx": 3,
+    "role": "benefit",
+    "narration": "이게 미친 포인트인 게 벨크로 홀만 당기면 내 손목에 딱 맞게 압박 조절이 가능함",
+    "target_seconds": 7.9,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-2",
+     "start": 12.252,
+     "end": 18.379,
+     "scene_desc": "손으로 보호대 벨크로 구멍에 끈을 통과시킨 뒤 당겨서 고정하는 과정을 보여줌.",
+     "is_key": true,
+     "change": "끈이 홀을 통과해 당겨지며 고정됨",
+     "shot_role": "조작"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-5",
+      "start": 30.631,
+      "end": 32.633,
+      "scene_desc": "착용된 보호대를 손으로 잡고 제품의 외형을 보여주며 다음 제품 소개를 예고함.",
+      "is_key": false,
+      "change": "",
+      "shot_role": "기타"
      }
     ],
     "effect": "cut",
@@ -242,84 +282,50 @@
     "src_seg_applied": "s0-2"
    },
    {
-    "beat_idx": 2,
-    "role": "reveal",
-    "narration": "제 지인이 다이소 매니저로 있거든요.",
-    "target_seconds": 3.5,
-    "primary": {
-     "video_id": "s0",
-     "seg_id": "s0-1",
-     "start": 4.505,
-     "end": 5.405,
-     "scene_desc": "벽에 붙은 지드래곤의 사진이 클로즈업되어 보여진다.",
-     "is_key": false,
-     "change": "",
-     "shot_role": "기타"
-    },
-    "alternates": [
-     {
-      "video_id": "s0",
-      "seg_id": "s0-2",
-      "start": 5.405,
-      "end": 8.0,
-      "scene_desc": "전문가가 고객의 얼굴에 메이크업을 진행하며 고객이 질문을 던진다.",
-      "is_key": false,
-      "change": "",
-      "shot_role": "도포"
-     }
-    ],
-    "effect": "cut",
-    "fit": 3,
-    "fit_evidence": "broll_fill",
-    "inherited": false,
-    "visual_verb": false,
-    "src_seg_applied": null
-   },
-   {
-    "beat_idx": 3,
-    "role": "proof",
-    "narration": "어떤 피부톤이든 자연스럽게 어울려서 매장에 깔리기 무섭게 사라지는 요즘 가장 핫한 아이템이에요.",
-    "target_seconds": 9.3,
+    "beat_idx": 4,
+    "role": "escalate",
+    "narration": "심지어 두께도 얇아서 일상생활에서 착용해도 전혀 불편함이 없다는 거",
+    "target_seconds": 6.5,
     "primary": {
      "video_id": "s1",
-     "seg_id": "s1-1",
-     "start": 2.033,
-     "end": 6.067,
-     "scene_desc": "아이에게 치마처럼 생긴 방수 패드를 입히고, 평소 복장처럼 보이는 제품 전체 모습을 보여줍니다.",
+     "seg_id": "s1-15",
+     "start": 46.0,
+     "end": 47.0,
+     "scene_desc": "손등이 위로 향하게 한 손의 모습이 클로즈업됨",
      "is_key": true,
-     "change": "치마 형태의 의류가 전체적으로 펼쳐짐",
-     "shot_role": "before"
+     "change": "",
+     "shot_role": "사용중"
     },
     "alternates": [
      {
       "video_id": "s1",
       "seg_id": "s1-3",
-      "start": 7.1,
-      "end": 8.767,
-      "scene_desc": "액체가 부어진 제품 안쪽을 펼쳐 보여주고, 아이들이 변기에 앉아있는 상황을 연출합니다.",
-      "is_key": false,
-      "change": "방수면이 액체를 튕겨내고 있음",
-      "shot_role": "문제"
+      "start": 8.0,
+      "end": 10.0,
+      "scene_desc": "손목 보호대를 손에 끼우고 스트랩을 손목 둘레에 맞춰 조이는 과정이다.",
+      "is_key": true,
+      "change": "보호대가 손목에 맞춰 단단하게 고정된다.",
+      "shot_role": "조작"
      },
      {
       "video_id": "s1",
       "seg_id": "s1-4",
-      "start": 8.767,
-      "end": 10.467,
-      "scene_desc": "바닥에 액체가 쏟아진 상황과 밤에 잠든 아이의 모습을 교차로 보여줍니다.",
-      "is_key": false,
-      "change": "바닥에 액체가 퍼져있음",
-      "shot_role": "문제"
+      "start": 10.0,
+      "end": 12.0,
+      "scene_desc": "착용된 손목 보호대의 엄지 홀과 손목 고정 부위를 자세히 보여준다.",
+      "is_key": true,
+      "change": "",
+      "shot_role": "실증"
      },
      {
       "video_id": "s1",
-      "seg_id": "s1-6",
-      "start": 11.333,
-      "end": 13.23,
-      "scene_desc": "이불과 매트리스를 세탁하는 모습과 제품을 펼쳐 치마 형태로 만드는 모습을 보여줍니다.",
+      "seg_id": "s1-5",
+      "start": 12.0,
+      "end": 14.0,
+      "scene_desc": "보호대를 착용한 손이 키보드 타이핑을 하는 모습이 보인다.",
       "is_key": true,
-      "change": "세탁물이 치마 형태로 변함",
-      "shot_role": "실증"
+      "change": "착용한 상태로도 손가락이 키보드를 편하게 움직인다.",
+      "shot_role": "사용중"
      }
     ],
     "effect": "cut",
@@ -327,67 +333,33 @@
     "fit_evidence": "inherited",
     "inherited": true,
     "visual_verb": true,
-    "src_seg_applied": "s1-1"
+    "src_seg_applied": "s1-15"
    },
    {
-    "beat_idx": 4,
-    "role": "demo",
-    "narration": "방법도 간단해요. 제품을 손에 들고 얼굴에 쓱 바르면, 이게 끝이에요.",
-    "target_seconds": 6.8,
+    "beat_idx": 5,
+    "role": "twist",
+    "narration": "근데 진짜 충격적인 건 손목 압박 위치를 내 마음대로 정할 수 있다는 거임",
+    "target_seconds": 7.2,
     "primary": {
      "video_id": "s0",
-     "seg_id": "s0-3",
-     "start": 10.511,
-     "end": 17.251,
-     "scene_desc": "전문가가 비비크림 제품을 손에 들고 보여준 뒤, 고객의 얼굴에 다시 제품을 바른다.",
+     "seg_id": "s0-4",
+     "start": 24.505,
+     "end": 30.631,
+     "scene_desc": "착용된 상태에서 특정 부위가 조여지지 않도록 주의사항을 그래픽으로 강조함.",
      "is_key": true,
-     "change": "제품이 전문가의 손에 들려 등장하고 얼굴에 도포됨",
+     "change": "",
      "shot_role": "실증"
     },
     "alternates": [
      {
       "video_id": "s0",
-      "seg_id": "s0-2",
-      "start": 5.405,
-      "end": 5.46,
-      "scene_desc": "전문가가 고객의 얼굴에 메이크업을 진행하며 고객이 질문을 던진다.",
+      "seg_id": "s0-6",
+      "start": 32.633,
+      "end": 34.635,
+      "scene_desc": "마누메드 액티브 제품 패키지와 현재 착용한 빨간색 보호대를 나란히 배치함.",
       "is_key": false,
       "change": "",
-      "shot_role": "도포"
-     }
-    ],
-    "effect": "cut",
-    "fit": 5,
-    "fit_evidence": "inherited",
-    "inherited": true,
-    "visual_verb": true,
-    "src_seg_applied": "s0-3"
-   },
-   {
-    "beat_idx": 5,
-    "role": "result",
-    "narration": "와 결점은 커버되면서 피부톤은 한 번에 살아나는 거 있죠.",
-    "target_seconds": 5.6,
-    "primary": {
-     "video_id": "s0",
-     "seg_id": "s0-4",
-     "start": 17.251,
-     "end": 18.454,
-     "scene_desc": "전문가가 메이크업을 마무리하고 고객이 의자에 편안하게 앉아있다.",
-     "is_key": false,
-     "change": "",
-     "shot_role": "완성"
-    },
-    "alternates": [
-     {
-      "video_id": "s0",
-      "seg_id": "s0-2",
-      "start": 5.405,
-      "end": 10.511,
-      "scene_desc": "전문가가 고객의 얼굴에 메이크업을 진행하며 고객이 질문을 던진다.",
-      "is_key": false,
-      "change": "",
-      "shot_role": "도포"
+      "shot_role": "기타"
      }
     ],
     "effect": "cut",
@@ -396,84 +368,6 @@
     "inherited": true,
     "visual_verb": true,
     "src_seg_applied": "s0-4"
-   },
-   {
-    "beat_idx": 6,
-    "role": "price",
-    "narration": "다이소에서 이 가격에 이게 가능하다는 게 신기해요.",
-    "target_seconds": 4.9,
-    "primary": {
-     "video_id": "s1",
-     "seg_id": "s1-8",
-     "start": 20.667,
-     "end": 21.474,
-     "scene_desc": "제품 원단을 손으로 잡고 흔들며 디테일한 질감을 보여줍니다.",
-     "is_key": false,
-     "change": "원단이 유연하게 흔들림",
-     "shot_role": "완성"
-    },
-    "alternates": [
-     {
-      "video_id": "s1",
-      "seg_id": "s1-1",
-      "start": 2.033,
-      "end": 6.067,
-      "scene_desc": "아이에게 치마처럼 생긴 방수 패드를 입히고, 평소 복장처럼 보이는 제품 전체 모습을 보여줍니다.",
-      "is_key": true,
-      "change": "치마 형태의 의류가 전체적으로 펼쳐짐",
-      "shot_role": "before"
-     },
-     {
-      "video_id": "s1",
-      "seg_id": "s1-3",
-      "start": 7.1,
-      "end": 7.16,
-      "scene_desc": "액체가 부어진 제품 안쪽을 펼쳐 보여주고, 아이들이 변기에 앉아있는 상황을 연출합니다.",
-      "is_key": false,
-      "change": "방수면이 액체를 튕겨내고 있음",
-      "shot_role": "문제"
-     }
-    ],
-    "effect": "cut",
-    "fit": 5,
-    "fit_evidence": "inherited",
-    "inherited": true,
-    "visual_verb": true,
-    "src_seg_applied": "s1-8"
-   },
-   {
-    "beat_idx": 7,
-    "role": "cta",
-    "narration": "어떤 제품인지 궁금하시면 댓글 남겨주세요 바로 제품 정보 대댓글로 드릴게요.",
-    "target_seconds": 7.4,
-    "primary": {
-     "video_id": "s1",
-     "seg_id": "s1-7",
-     "start": 16.967,
-     "end": 20.667,
-     "scene_desc": "아이가 뒤척이며 자는 모습과 제품의 부드러운 재질을 손으로 만지며 확인합니다.",
-     "is_key": true,
-     "change": "원단이 부드럽게 구겨짐",
-     "shot_role": "after"
-    },
-    "alternates": [
-     {
-      "video_id": "s1",
-      "seg_id": "s1-1",
-      "start": 2.033,
-      "end": 6.067,
-      "scene_desc": "아이에게 치마처럼 생긴 방수 패드를 입히고, 평소 복장처럼 보이는 제품 전체 모습을 보여줍니다.",
-      "is_key": true,
-      "change": "치마 형태의 의류가 전체적으로 펼쳐짐",
-      "shot_role": "before"
-     }
-    ],
-    "effect": "cut",
-    "fit": 3,
-    "fit_evidence": "broll_fill",
-    "inherited": false,
-    "visual_verb": false,
-    "src_seg_applied": null
    }
   ],
   "plagiarism_flags": [],
@@ -482,8 +376,8 @@
   "generator": "inherit"
  },
  "sources": [
-  "tmp_src14",
-  "tmp_src40"
+  "tmp_src7",
+  "tmp_src9"
  ],
  "dups_stage2": 0,
  "used_src": {
