@@ -10537,7 +10537,9 @@ def api_produce_frame_png(request: Request):
     from shopping_shorts import deco_frame
     q = dict(request.query_params)
     spec = {k: q.get(k) for k in deco_frame.DEFAULTS if k in q}
-    for b in ("ad_badge", "icons"):
+    # ★불리언은 여기서 갈라 준다 — 쿼리스트링은 전부 문자열이라 "0"도 참이 된다.
+    #   새 불리언을 DEFAULTS에 넣을 땐 이 목록에도 반드시 추가할 것(2026-08-23 sep_line).
+    for b in ("ad_badge", "icons", "sep_line"):
         if b in spec:
             spec[b] = str(spec[b]).lower() in ("1", "true", "on", "yes")
     out = deco_frame.render_to(spec, deco_frame.cache_path(spec))

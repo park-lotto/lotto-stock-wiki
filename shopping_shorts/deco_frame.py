@@ -10,6 +10,7 @@
 import hashlib
 import json
 import pathlib
+import re
 
 from PIL import Image, ImageDraw, ImageFont
 
@@ -300,6 +301,11 @@ DEFAULTS = {
     "preset": "news_coral",
     "bar_h": 190,          # 상단 띠 높이(px)
     "bottom_h": 0,         # 하단 띠 높이(px) — 0이면 없음
+    # 제목(흰 블록) 높이(px). ★0 = "안 정했음" → 줄 수로 자동 계산(지금까지의 동작).
+    #   2026-08-23 사장님: "칸높이 조정이 제목칸 채널명칸 두개다 따로 조정이 되도록
+    #   해줘 — 어떤곳에 두줄이 들어갈지 모름". 채널명칸(bar_h)과 **따로** 움직여야 해서
+    #   값을 갈라 뒀다. 기존 작업물엔 이 값이 없으므로 0(자동)이 기본이어야 회귀가 없다.
+    "head_h": 0,
     "channel": "",         # 가짜 채널명
     "ad_badge": False,     # [광고] 뱃지
     # ── [광고] 표시 다듬기(2026-08-22 사장님 "크기나 마우스로 위치조정 흐리기") ──
@@ -313,6 +319,8 @@ DEFAULTS = {
     "views": "",           # "264만"
     "comments": "",        # "587"
     "head_bg": "#FFFFFF",  # 제목·메타가 얹히는 흰 블록
+    # 채널명칸↔제목칸 경계선(2026-08-23). 기본 ON — 실제 커뮤니티 글이 대개 선이 있다.
+    "sep_line": True,
     # ── 글자 꾸미기(2026-08-22 신설) ─────────────────────────────
     # ★비워두면(""/None) **프리셋이 정한 값**을 쓴다 — 기존 20여 종의 생김새가
     #   그대로 유지되게 하려면 "안 정했음"과 "0으로 정했음"을 갈라야 한다.
@@ -322,6 +330,8 @@ DEFAULTS = {
     "title_font": "",      # 제목 폰트(빈값=Pretendard-ExtraBold)
     "title_size": 0,       # 제목 크기(0=62, 기존 값)
     "title_x": 50,         # 제목 가로 위치 %
+    # 제목 글자색. ★기본 #141414 = 예전에 박혀 있던 (20,20,20)과 같은 값이라 회귀 없음.
+    "title_color": "#141414",
 }
 
 _FONTS = {
@@ -387,10 +397,32 @@ def normalize(spec):
         except (TypeError, ValueError):
             s[k] = DEFAULTS[k]
         s[k] = max(0, min(400, s[k]))    # 0이면 띠 없음, 400 넘으면 화면을 먹는다
+    # 제목칸은 두 줄이 들어갈 수 있어 띠보다 상한이 높다(자동값도 2줄이면 250을 넘는다).
+    # 0 = 자동(줄 수로 계산) — 여기서 0을 살려둬야 기존 그림이 안 바뀐다.
+    try:
+        s["head_h"] = int(s["head_h"])
+    except (TypeError, ValueError):
+        s["head_h"] = DEFAULTS["head_h"]
+    s["head_h"] = max(0, min(700, s["head_h"]))
     for k in ("channel", "title", "views", "comments"):
         s[k] = str(s[k] or "").strip()[:60]
+    # ★제목만 줄바꿈을 살린다(사장님이 엔터로 나눈 자리 = _wrap이 그대로 지킨다).
+    #   나머지는 한 줄짜리 칸이라 줄바꿈이 들어오면 공백으로 눕힌다 — 안 그러면
+    #   채널명에 엔터가 섞였을 때 띠 밖으로 삐져나간다.
+    for k in ("channel", "views", "comments"):
+        s[k] = " ".join(s[k].split())
     s["ad_badge"] = bool(s["ad_badge"])
     s["icons"] = bool(s["icons"])
+    s["sep_line"] = bool(s["sep_line"])
+    # ── 색은 반드시 #RRGGBB로 걸러 낸다 ──
+    # ★_rgb()는 형식을 안 따지고 int(...,16)을 해서, 이상한 값이 들어오면 그림이 아니라
+    #   **500 에러**가 난다. 쿼리스트링으로 아무 문자열이나 올 수 있으니 여기서 막는다.
+    #   (여기 한 곳에서만 자른다 — 위 숫자 clamp와 같은 원칙)
+    for k in ("head_bg", "title_color"):
+        v = str(s.get(k) or "").strip()
+        if not re.fullmatch(r"#[0-9A-Fa-f]{6}", v):
+            v = DEFAULTS[k]
+        s[k] = v
     # ── 글자 꾸미기 값도 **여기 한 곳에서만** 자른다(위 bar_h와 같은 원칙) ──
     # ★0은 "안 정했음"이라 살려둔다 — 그림 그릴 때 프리셋 기본으로 되돌아간다.
     for k, lo, hi in (("ch_size", 0, 200), ("title_size", 0, 200),
@@ -417,19 +449,29 @@ def cache_key(spec):
 
 
 def _wrap(draw, text, font, max_w):
-    """글자 단위가 아니라 어절 단위로 접는다(한국어는 어절이 끊기면 못 읽는다)."""
+    """어절 단위로 접는다(한국어는 어절이 끊기면 못 읽는다).
+
+    ★사장님이 **엔터로 직접 나눈 줄은 그대로 지킨다**(2026-08-23 "제목에서 엔터로
+      아래로 줄바꾸기 해줘"). 예전엔 `text.split()`이 줄바꿈을 공백과 똑같이 취급해
+      엔터를 쳐도 한 덩어리로 다시 이어졌다. 이제 줄바꿈으로 먼저 쪼개고,
+      **각 줄이 폭을 넘칠 때만** 자동으로 접는다.
+    """
     if not text:
         return []
-    lines, cur = [], ""
-    for word in text.split():
-        trial = (cur + " " + word).strip()
-        if draw.textlength(trial, font=font) <= max_w or not cur:
-            cur = trial
-        else:
+    lines = []
+    for para in str(text).replace("\r\n", "\n").replace("\r", "\n").split("\n"):
+        if not para.strip():
+            continue                     # 빈 줄은 자리만 먹으므로 버린다
+        cur = ""
+        for word in para.split():
+            trial = (cur + " " + word).strip()
+            if draw.textlength(trial, font=font) <= max_w or not cur:
+                cur = trial
+            else:
+                lines.append(cur)
+                cur = word
+        if cur:
             lines.append(cur)
-            cur = word
-    if cur:
-        lines.append(cur)
     return lines[:3]        # 4줄부터는 제목이 아니라 본문이다
 
 
@@ -555,11 +597,21 @@ def render(spec):
             meta = f"조회수 {s['views']}"
         if s["comments"]:
             meta = (meta + " | " if meta else "") + f"댓글 {s['comments']}개"
-        block_h = 36 + len(lines) * line_h + (52 if meta else 0) + 24
+        # ★높이 = 사장님이 정했으면 그 값, 아니면 지금까지처럼 줄 수로 자동(0=자동).
+        #   두 줄짜리 제목이 어느 칸에 들어갈지 모르니 손으로도 잡을 수 있어야 한다
+        #   (2026-08-23 지시). 자동식은 **건드리지 않는다** — 기존 그림 보존.
+        auto_h = 36 + len(lines) * line_h + (52 if meta else 0) + 24
+        block_h = s["head_h"] or auto_h
         d.rectangle([0, y, W, y + block_h - 1], fill=_rgb(s["head_bg"]))
-        ty = y + 36
+        # ★채널명칸과 제목칸 사이 구분선(2026-08-23 사장님 "제목과 체널명사이 선 그어주면 좋아").
+        #   흰 블록 위에 얹는 얇은 회색 선 — 띠가 없으면(bar_h=0) 그을 경계 자체가 없다.
+        if s["sep_line"] and bar_h > 0:
+            d.rectangle([0, y, W, y + 2], fill=(214, 214, 214, 255))
+        # 손으로 키웠으면 남는 공간을 위아래로 나눠 글이 가운데 오게 한다.
+        # (자동일 땐 auto_h == block_h라 pad=36 그대로 = 기존과 동일)
+        ty = y + max(0, (block_h - auto_h) // 2) + 36
         for ln in lines:
-            d.text((tx, ty), ln, font=ft, fill=(20, 20, 20, 255), anchor="ma")
+            d.text((tx, ty), ln, font=ft, fill=_rgb(s["title_color"]), anchor="ma")
             ty += line_h
         if meta:
             d.text((60, ty + 6), meta, font=fm, fill=(120, 120, 120, 255), anchor="la")
