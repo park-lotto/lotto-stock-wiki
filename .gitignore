@@ -167,3 +167,6 @@ shopping_shorts/assets/voice_samples/*.cuts.json
 scripts/gemini_session/
 **/Default/Network/Cookies
 **/Default/Login Data
+out/sul_survey/transcripts/
+out/sul_survey/pick.json
+out/sul_survey/videos.json
