@@ -635,9 +635,14 @@ class Store:
             # 보여줄 수 있고, 매번 다시 판정하지 않는다.
             # ⚠️판정 규칙이 바뀌면 이 값은 낡는다 — 재판정 스크립트로 다시 채워라
             #   (scripts/backfill_hook_axis.py).
+            # extract_method(2026-09-05): 이 행을 **어느 방식으로** 뽑았나 — "classic"(통째 업로드)
+            #   또는 "frames"(B1 컷별 프레임 태깅). 캐시 키가 shortcode 하나뿐이라 방식을 구분하지
+            #   못했고, 그래서 frame_extract_enabled를 켜도 본 적 있는 영상은 옛 결과가 그대로
+            #   나왔다(끄면 그 반대). 켜기 판단(서버 재측정)이 바로 여기 막힌다.
+            #   ⚠️NULL(이미 쌓인 행) = classic으로 친다 — 전부 버리면 라이브에서 재추출 폭풍.
             for col, ddl in (("category", "TEXT"), ("structure_json", "TEXT"),
                               ("structure_analyzed_at", "TEXT"), ("category_source", "TEXT"),
-                              ("hook_axis", "TEXT")):
+                              ("hook_axis", "TEXT"), ("extract_method", "TEXT")):
                 try:
                     c.execute(f"ALTER TABLE script_extracts ADD COLUMN {col} {ddl}")
                 except sqlite3.OperationalError:
@@ -3301,7 +3306,7 @@ class Store:
             "comments": r[6] or 0, "upload_ts": r[7] or "",
         } for r in rows]
 
-    def save_script(self, shortcode, script, category=None):
+    def save_script(self, shortcode, script, category=None, method=None):
         """대본추출 결과({segments, full_text}) 저장(덮어쓰기). category가 오면
         같이 저장(학습소재 통계의 그룹핑 키, 2026-07-13). 구조분석은 별도
         save_extract_structure()로 나중에 채워진다.
@@ -3325,14 +3330,18 @@ class Store:
         with self._conn() as c:
             c.execute(
                 "INSERT INTO script_extracts(shortcode, script_json, extracted_at, "
-                "                            category, hook_axis) "
-                "VALUES(?,?,datetime('now'),?,?) ON CONFLICT(shortcode) DO UPDATE SET "
+                "                            category, hook_axis, extract_method) "
+                "VALUES(?,?,datetime('now'),?,?,?) ON CONFLICT(shortcode) DO UPDATE SET "
                 "script_json=excluded.script_json, extracted_at=excluded.extracted_at, "
                 # category는 넘어왔을 때만 바꾼다 — 안 넘어오면 기존 값 유지
                 "category=COALESCE(excluded.category, script_extracts.category), "
                 # ★hook_axis는 항상 덮어쓴다(NULL 포함) — 낡은 축이 남지 않게
-                "hook_axis=excluded.hook_axis",
-                (shortcode, json.dumps(script, ensure_ascii=False), category, axis),
+                "hook_axis=excluded.hook_axis, "
+                # ★extract_method도 항상 덮어쓴다 — 방식이 바뀌었는데 옛 표식이 남으면
+                #   그 캐시를 계속 재사용해 켜기·끄기가 먹지 않는다(이 컬럼을 만든 이유 자체).
+                "extract_method=excluded.extract_method",
+                (shortcode, json.dumps(script, ensure_ascii=False), category, axis,
+                 (method or None)),
             )
 
     def update_extract_category(self, shortcode, category, source=None):
@@ -3350,17 +3359,25 @@ class Store:
                 c.execute("UPDATE script_extracts SET category=?, category_source=? "
                           "WHERE shortcode=?", (category, source, shortcode))
 
-    def get_extract(self, shortcode):
-        """대본추출 결과 + category + 구조분석(있으면). 없으면 None."""
+    def get_extract(self, shortcode, method=None):
+        """대본추출 결과 + category + 구조분석(있으면). 없으면 None.
+
+        method(2026-09-05): 지금 쓰려는 추출 방식("classic"|"frames"). 주면 **다른 방식으로
+        뽑힌 캐시는 돌려주지 않는다**(None → 호출부가 다시 뽑는다). 안 주면 종전과 완전히
+        같다(회귀 0).
+        ⚠️extract_method가 NULL인 행(이 컬럼 생기기 전에 쌓인 것)은 classic으로 친다 —
+          전부 무효로 치면 라이브에서 재추출 폭풍이 나고 크레딧이 탄다."""
         with self._conn() as c:
             row = c.execute(
                 "SELECT script_json, extracted_at, category, structure_json, "
-                "structure_analyzed_at, category_source, hook_axis "
+                "structure_analyzed_at, category_source, hook_axis, extract_method "
                 "FROM script_extracts WHERE shortcode=?",
                 (shortcode,),
             ).fetchone()
         if not row:
             return None
+        if method and (row[7] or "classic") != method:
+            return None          # 방식이 다르다 → 캐시 미스로 취급(다시 뽑는다)
         data = json.loads(row[0])
         data["extracted_at"] = row[1]
         data["category"] = row[2]

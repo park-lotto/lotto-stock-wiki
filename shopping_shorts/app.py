@@ -42,6 +42,7 @@ from shopping_shorts.frame_extract import (download_video, extract_frames,
                                            extract_frame_at, extract_grid_frames,
                                            GRID_FRAMES_DEFAULT)
 from shopping_shorts.script_extract import (extract_script, extract_auto, storable,
+                                           current_method,
                                             KeyPoolExhausted, has_usable_result,
                                             empty_reason)
 from shopping_shorts.structure_analyze import analyze_structure
@@ -1422,7 +1423,7 @@ def _enqueue_prewarm(store, shortcode, url, *, caption="", customer_id="0", cate
     try:
         if not (shortcode and (url or "").strip()):
             return False
-        cached = store.get_extract(shortcode)
+        cached = store.get_extract(shortcode, method=current_method())
         # ★'유효 캐시'의 기준은 한 곳에서만 정한다(2026-08-16 리뷰). 여기만 full_text로
         #   보고 있어, 무자막 영상(화면 태깅만 있는 것)은 이미 저장돼 있는데도 매번
         #   "캐시 없음"으로 큐에 다시 들어갔다. 워커가 걸러 재과금은 없지만 큐가 더러워진다.
@@ -2673,7 +2674,7 @@ def api_extract_script(request: Request, shortcode: str):
         if not result.get("full_text") and not result.get("segments"):
             return JSONResponse(status_code=502, content={"ok": False, "error": "대본 추출 실패(Gemini 키 소진 또는 영상 인식 실패) — 잠시 후 재시도"})
 
-        store.save_script(code, result, category=item.get("category"))
+        store.save_script(code, result, category=item.get("category"), method=current_method())
         ok = True
         return {"ok": True, "cached": False, **result}
     finally:
@@ -2800,7 +2801,7 @@ def api_produce_extract_from_url(request: Request, body: dict, background_tasks:
     #   force면 캐시를 건너뛰고 아래 정식 추출 경로로 내려간다 — 크레딧 차감·일일한도·
     #   실패 시 환불이 전부 그 경로에 이미 있으므로 과금 규칙이 따로 갈리지 않는다.
     force = bool(body.get("force"))
-    cached = None if force else store.get_extract(code)
+    cached = None if force else store.get_extract(code, method=current_method())
     if cached:
         caption_for_infer = body.get("caption") or cached.get("full_text", "")
         category = body_category or cached.get("category") or categorize(name, caption_for_infer) or None
@@ -2856,7 +2857,7 @@ def api_produce_extract_from_url(request: Request, body: dict, background_tasks:
         if not result.get("full_text") and not result.get("segments"):
             return JSONResponse(status_code=502, content={"ok": False, "error": "대본 추출 실패 — 잠시 후 재시도"})
         category = body_category or categorize(name, caption) or None
-        store.save_script(code, result, category=category)
+        store.save_script(code, result, category=category, method=current_method())
         ok = True    # 저장 성공 = 과금 확정. 아래 구조분석은 실패해도 응답·과금엔 영향 없음.
         structure = None
         try:
@@ -2972,7 +2973,7 @@ def api_wiki_save(request: Request, shortcode: str, background_tasks: Background
         script = extract_auto(video_path, code, caption=item.get("caption", ""))
         if not script.get("full_text") and not script.get("segments"):
             return JSONResponse(status_code=502, content={"ok": False, "error": "대본 추출 실패 — 잠시 후 재시도"})
-        store.save_script(code, script, category=item.get("category"))
+        store.save_script(code, script, category=item.get("category"), method=current_method())
 
     # 원본 영상 영구보관(도서관 인라인 재생용) — 만료되는 CDN URL 대신 파일로 남긴다.
     media_target = _WIKI_MEDIA_DIR / f"{hashed}.mp4"
@@ -3034,7 +3035,7 @@ def api_produce_save_to_wiki(request: Request, body: dict, background_tasks: Bac
     work_dir = _FIND_TMP_DIR / hashed
     video_path = None  # 추출 중 다운로드했으면 영상보관 때 재다운로드 없이 재사용
 
-    cached = store.get_extract(code)
+    cached = store.get_extract(code, method=current_method())
     if cached and (cached.get("full_text") or cached.get("segments")):
         script = {"full_text": cached.get("full_text", ""), "segments": cached.get("segments") or []}
         category = body_category or cached.get("category") or None
@@ -3063,7 +3064,7 @@ def api_produce_save_to_wiki(request: Request, body: dict, background_tasks: Bac
             return JSONResponse(status_code=502, content={"ok": False, "error": "대본 추출 실패 — 잠시 후 재시도"})
         category = body_category or None
         script = storable(result)   # 손으로 추리면 tag_qa가 저장에서 샌다(2026-08-01)
-        store.save_script(code, script, category=category)
+        store.save_script(code, script, category=category, method=current_method())
         structure = None
 
     if not structure:
@@ -16441,7 +16442,7 @@ def api_produce_autoload(request: Request, body: dict):
         #   무자막 영상은 저장돼 있어도 캐시미스가 돼 매번 제미니를 다시 태우고, 시도
         #   횟수만 쌓여 결국 영구 래치된다(2026-08-16 저장 기준을 '말 또는 화면'으로
         #   바꾼 것과 짝인데, 읽는 쪽 두 곳이 옛 기준으로 남아 있었다).
-        cached = store.get_extract(code)
+        cached = store.get_extract(code, method=current_method())
         cache_ok = has_usable_result(cached)
         if not cache_ok:
             # ②-b DB 래치 — 상한까지 실패한 영상은 다시 태우지 않는다(무한루프 차단의 핵심)
@@ -16611,7 +16612,7 @@ def api_produce_autoload(request: Request, body: dict):
             slots[e["i"]] = {"shortcode": code, "status": e["status"]}
             continue
         if e.get("save_script"):
-            store.save_script(code, e["script"], category=e["category"])
+            store.save_script(code, e["script"], category=e["category"], method=current_method())
         store.save_to_wiki({
             "shortcode": code,
             "name": item.get("name"),
