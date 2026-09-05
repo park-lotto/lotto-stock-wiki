@@ -10,3 +10,5 @@ frame_salrim.png
 tpl_v2.png
 tpl_demo.png
 ai_tpl.png
+_tplcache/
+tpl/tmp*

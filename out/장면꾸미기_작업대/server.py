@@ -1,6 +1,6 @@
 # 장면꾸미기 작업대 — 로컬 전용. 라이브 렌더 코드(deco_frame.render)를 그대로 불러 PNG를 돌려준다.
 # 실행: 시작.bat  (또는 py server.py) → http://127.0.0.1:8766
-import sys, os, io, json, hashlib, pathlib, urllib.parse
+import sys, os, io, re, json, hashlib, pathlib, urllib.parse
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 
 HERE = pathlib.Path(__file__).resolve().parent
@@ -149,11 +149,50 @@ class H(SimpleHTTPRequestHandler):
     def do_GET(self):
         u = urllib.parse.urlparse(self.path); q = urllib.parse.parse_qs(u.query)
         try:
+            if u.path == "/tpl_png":
+                # HTML 틀 + 문구 → 투명 PNG. 화면 카드와 미리보기가 같은 그림을 쓴다.
+                import tpl_render as _tr
+                name = q.get("tpl", [""])[0]
+                vals = json.loads(q.get("v", ["{}"])[0])
+                key = hashlib.sha1((name + json.dumps(vals, sort_keys=True)).encode()).hexdigest()[:16]
+                cache = HERE / "_tplcache"
+                cache.mkdir(exist_ok=True)
+                fp = cache / (key + ".png")
+                if not fp.exists():
+                    _tr.render_many(name, [vals], str(cache))
+                    (cache / "000.png").replace(fp)
+                return self._send(fp.read_bytes(), "image/png")
+            if u.path == "/tpl_list":
+                # ★HTML 틀 목록 — tpl/ 에 파일을 떨어뜨리면 그게 곧 등록이다(등록 절차 없음).
+                #   사장님이 코덱스로 틀을 계속 만들어 넣어도 화면이 자동으로 는다.
+                import glob as _g
+                out = []
+                for fp in sorted(_g.glob(str(HERE / "tpl" / "*.html"))):
+                    nm = os.path.splitext(os.path.basename(fp))[0]
+                    if nm.startswith("tmp"):
+                        continue
+                    try:
+                        head = open(fp, encoding="utf-8").read(400)
+                        m = re.search(r"<!--설명:\s*(.*?)-->", head)
+                        desc = m.group(1).strip() if m else ""
+                    except Exception:
+                        desc = ""
+                    out.append({"id": nm, "name": nm.replace("_", " · "), "desc": desc})
+                return self._send(json.dumps(out, ensure_ascii=False).encode(), "application/json")
             if u.path == "/presets":
                 return self._send(json.dumps(presets(), ensure_ascii=False).encode(), "application/json")
             if u.path == "/fonts":
                 fs = sorted(f.name for f in FONT_DIR.iterdir() if f.suffix.lower() in (".ttf", ".otf"))
                 return self._send(json.dumps(fs, ensure_ascii=False).encode(), "application/json")
+            if u.path.startswith("/fonts/"):
+                # ★HTML 틀이 @font-face로 실제 폰트 파일을 불러 쓴다(2026-09-05).
+                #   렌더(Pillow)와 화면(브라우저)이 같은 파일을 써야 글자가 어긋나지 않는다.
+                fn = os.path.basename(u.path.split("/", 2)[2])
+                fp = FONT_DIR / fn
+                if fp.exists() and fp.suffix.lower() in (".ttf", ".otf"):
+                    mime = "font/ttf" if fp.suffix.lower() == ".ttf" else "font/otf"
+                    return self._send(fp.read_bytes(), mime)
+                self.send_response(404); self.end_headers(); return
             if u.path.startswith("/thumb/"):
                 pid = u.path.split("/", 2)[2]
                 # ★카드 썸네일도 화면과 같은 채널명을 쓴다(2026-09-05 사장님):
