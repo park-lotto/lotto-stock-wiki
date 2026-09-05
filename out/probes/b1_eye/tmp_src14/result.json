@@ -1,0 +1,108 @@
+{
+ "segments": [
+  {
+   "seg_id": "s0-0",
+   "start": 0.0,
+   "end": 4.505,
+   "text": "여기는 지금 산다라방 누나 댕기고 배성이 형 다니고 우리 슈퍼 대스타 GD 형님 25년째",
+   "text_ko": "",
+   "scene_desc": "남성이 청담동 헤어·메이크업 샵 내부를 둘러보며 벽에 붙은 연예인 사진들을 소개한다.",
+   "label": "샵 방문 및 도입",
+   "use_point": "유명한 장소의 신뢰도를 활용해 시청자들의 주목을 끌고 영상의 주제를 제시하는 도입부로 쓰기 좋습니다.",
+   "action": "담다",
+   "change": "",
+   "has_effect": true,
+   "is_key": false,
+   "shot_role": "기타",
+   "product_benefits": [],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-1",
+   "start": 4.505,
+   "end": 5.405,
+   "text": "",
+   "text_ko": "",
+   "scene_desc": "벽에 붙은 지드래곤의 사진이 클로즈업되어 보여진다.",
+   "label": "연예인 단골 강조",
+   "use_point": "해당 샵이 연예인들이 애용하는 곳임을 시각적으로 증명하여 영상의 신뢰도를 높이는 장면에 적합합니다.",
+   "action": null,
+   "change": "",
+   "has_effect": true,
+   "is_key": false,
+   "shot_role": "기타",
+   "product_benefits": [],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-2",
+   "start": 5.405,
+   "end": 10.511,
+   "text": "누나 써본 것 중에 이거 참 어떤 피부톤이든 평균한다는 가성비템 있어?",
+   "text_ko": "",
+   "scene_desc": "전문가가 고객의 얼굴에 메이크업을 진행하며 고객이 질문을 던진다.",
+   "label": "전문가 시연 시작",
+   "use_point": "메이크업 샵의 분위기를 보여주고 전문가에게 질문을 던져 제품 소개로 자연스럽게 연결하는 구간입니다.",
+   "action": "바르다",
+   "change": "",
+   "has_effect": true,
+   "is_key": false,
+   "shot_role": "도포",
+   "product_benefits": [],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-3",
+   "start": 10.511,
+   "end": 17.251,
+   "text": "완전 가성비템 최근에 진짜 완전 흠뻑 빠진 듯 BB크림인데 커버력도 있어 호불호 없이 제일",
+   "text_ko": "",
+   "scene_desc": "전문가가 비비크림 제품을 손에 들고 보여준 뒤, 고객의 얼굴에 다시 제품을 바른다.",
+   "label": "제품 소개 및 시연",
+   "use_point": "추천 제품을 직접 화면에 보여주고 전문가가 실제로 사용하는 모습을 노출하여 제품의 성능을 강조할 때 사용합니다.",
+   "action": "바르다",
+   "change": "제품이 전문가의 손에 들려 등장하고 얼굴에 도포됨",
+   "has_effect": true,
+   "is_key": true,
+   "shot_role": "실증",
+   "product_benefits": [
+    "커버력이 우수하여 호불호 없이 사용할 수 있다.",
+    "어떤 피부톤에도 무난하게 어울리는 제품이다."
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-4",
+   "start": 17.251,
+   "end": 18.454,
+   "text": "많이 쓰는 제품",
+   "text_ko": "",
+   "scene_desc": "전문가가 메이크업을 마무리하고 고객이 의자에 편안하게 앉아있다.",
+   "label": "메이크업 마무리",
+   "use_point": "전문가에게 관리를 받은 후의 결과를 보여주며 제품에 대한 만족도를 시각적으로 정리하는 마무리 대목에 적합합니다.",
+   "action": null,
+   "change": "",
+   "has_effect": true,
+   "is_key": false,
+   "shot_role": "완성",
+   "product_benefits": [],
+   "motion_level": null
+  }
+ ],
+ "full_text": "여기는 지금 산다라방 누나 댕기고 배성이 형 다니고 우리 슈퍼 대스타 GD 형님 25년째 누나 써본 것 중에 이거 참 어떤 피부톤이든 평균한다는 가성비템 있어? 완전 가성비템 최근에 진짜 완전 흠뻑 빠진 듯 BB크림인데 커버력도 있어 호불호 없이 제일 많이 쓰는 제품",
+ "product_benefits": [
+  "커버력이 우수하여 호불호 없이 사용할 수 있다.",
+  "어떤 피부톤에도 무난하게 어울리는 제품이다."
+ ],
+ "source_brief": {
+  "product": "비비크림",
+  "role": "유명 청담동 헤어·메이크업 샵에서 사용하는 가성비 화장품 추천",
+  "core": "연예인들이 다니는 샵에서 호불호 없이 사용하는 커버력 좋은 가성비 비비크림 소개",
+  "summary": "연예인들이 25년째 다니는 청담동 샵을 방문하여 전문가가 추천하는 가성비 뷰티 아이템을 확인한다. 어떤 피부톤이든 잘 어울리고 커버력이 우수하여 호불호 없이 가장 많이 사용하는 비비크림의 특징을 보여준다.",
+  "flow": "0~5초 청담동 샵 방문 및 배경 소개 → 5~13초 전문가의 메이크업 시연 → 13~18초 추천 비비크림 제품 확인 및 마무리",
+  "confidence": "높음"
+ },
+ "tag_empty_ratio": 0.0,
+ "transcript_status": "ok",
+ "full_text_ko": ""
+}

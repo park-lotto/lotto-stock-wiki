@@ -452,7 +452,14 @@ def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
     #   → 스타일이 no_cta를 선언하면 **검사 항목 자체를 만들지 않는다**(ok=True로
     #     통과시키면 재작성 지시문에 CTA 얘기가 섞인다). 기본값은 기존 동작 = 회귀 0.
     if not style.get("no_cta"):
-        checks.append({"name": "CTA 단어유도", "ok": "남겨주" in norm(full),
+        # ★어간을 하나만 보면 **스타일 자신의 템플릿을 자기 게이트가 떨어뜨린다**
+        #   (2026-09-05 실측: spine 57 '다이소 내부인형'의 cta 템플릿 6개 중 2개가
+        #    "댓글 **달아주시면**"·"**물어봐 주시면**"이라, 모델이 그걸 고르면 무조건 FAIL.
+        #    취지인 "받는 게 보이는가"는 완벽히 만족하는 문장인데도 재작성 3회를 돌았다).
+        #   요구하는 형태는 여전히 위 헌장 그대로다 — 시청자에게 **행동을 청하는 말**.
+        _CTA_ASKS = ("남겨주", "달아주", "물어봐", "물어보", "말씀해주", "적어주")
+        checks.append({"name": "CTA 단어유도",
+                       "ok": any(w in norm(full) for w in _CTA_ASKS),
                        "detail": full[-40:]})
     else:
         # ★반대 방향 검사가 통째로 없었다(2026-08-19 라이브 실측). no_cta는 'CTA 검사를

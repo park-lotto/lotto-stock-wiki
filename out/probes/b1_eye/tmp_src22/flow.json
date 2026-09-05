@@ -1,0 +1,546 @@
+{
+ "draft": {
+  "style_id": 60,
+  "style_name": "유튜브 발명품형",
+  "beats": [
+   {
+    "role": "title",
+    "text": "독일에서 난리 난 고압 세척기의 정체",
+    "src_seg": "",
+    "needs_scene": false,
+    "sec": 2.0,
+    "src_segs": []
+   },
+   {
+    "role": "story",
+    "text": "세차장 갈 시간 없던 캠핑족 때문에 탄생한 이 제품이 사람들 사이에서 조용히 퍼지기 시작했음",
+    "src_seg": "s0-0",
+    "needs_scene": true,
+    "sec": 5.1,
+    "src_segs": [
+     "s0-0"
+    ]
+   },
+   {
+    "role": "authority",
+    "text": "유튜브에서 난리 난 발명품인데 왜 이제야 알았나 싶음",
+    "src_seg": "s0-3",
+    "needs_scene": true,
+    "sec": 3.0,
+    "src_segs": [
+     "s0-3"
+    ]
+   },
+   {
+    "role": "benefit",
+    "text": "핵심은 이거임. 바로 빈 생수병 하나만 끼우면 즉시 초강력 수압이 뿜어져 나옴",
+    "src_seg": "s0-4",
+    "needs_scene": true,
+    "sec": 4.2,
+    "src_segs": [
+     "s0-4",
+     "s0-5",
+     "s0-6"
+    ]
+   },
+   {
+    "role": "escalate",
+    "text": "심지어 노즐을 돌려 수압 패턴을 마음대로 바꾸니 창틀 찌든 때도 한 방에 날아감",
+    "src_seg": "s0-8",
+    "needs_scene": true,
+    "sec": 4.3,
+    "src_segs": [
+     "s0-8",
+     "s0-10"
+    ]
+   },
+   {
+    "role": "twist",
+    "text": "근데 이거 반으로 접혀 트렁크에 쏙 들어간다는 게 진짜 물건인 이유임",
+    "src_seg": "s0-14",
+    "needs_scene": true,
+    "sec": 3.8,
+    "src_segs": [
+     "s0-14",
+     "s0-15"
+    ]
+   }
+  ],
+  "script": "독일에서 난리 난 고압 세척기의 정체 세차장 갈 시간 없던 캠핑족 때문에 탄생한 이 제품이 사람들 사이에서 조용히 퍼지기 시작했음 유튜브에서 난리 난 발명품인데 왜 이제야 알았나 싶음 핵심은 이거임. 바로 빈 생수병 하나만 끼우면 즉시 초강력 수압이 뿜어져 나옴 심지어 노즐을 돌려 수압 패턴을 마음대로 바꾸니 창틀 찌든 때도 한 방에 날아감 근데 이거 반으로 접혀 트렁크에 쏙 들어간다는 게 진짜 물건인 이유임",
+  "hook": "독일에서 난리 난 고압 세척기의 정체",
+  "checks": [
+   {
+    "name": "구간 순서",
+    "ok": true,
+    "detail": "기대 ['title', 'story', 'authority', 'benefit', 'escalate', 'twist'] / 실제 ['title', 'story', 'authority', 'benefit', 'escalate', 'twist']"
+   },
+   {
+    "name": "CTA 금지(유튜브 썰)",
+    "ok": true,
+    "detail": "OK"
+   },
+   {
+    "name": "말끝(반말체)",
+    "ok": true,
+    "detail": "OK"
+   },
+   {
+    "name": "말 밀도(139~222자)",
+    "ok": true,
+    "detail": "166자 / 이 스타일 히트작 199자",
+    "over": false
+   },
+   {
+    "name": "고조 심화(1회)",
+    "ok": true,
+    "detail": "OK"
+   },
+   {
+    "name": "훅 3초 서론금지",
+    "ok": true,
+    "detail": "OK(독일에서난리난고압세척기의정체세차장갈시…)"
+   },
+   {
+    "name": "화자 일관성",
+    "ok": true,
+    "detail": "OK"
+   },
+   {
+    "name": "장면 근거",
+    "ok": true,
+    "detail": "OK(5/6줄에 장면)"
+   }
+  ],
+  "passed": true,
+  "tries": [
+   {
+    "chars": 248,
+    "fails": [
+     "말 밀도(139~222자)",
+     "고조 심화(1회)"
+    ]
+   },
+   {
+    "chars": 223,
+    "fails": [
+     "말 밀도(139~222자)"
+    ]
+   },
+   {
+    "chars": 166,
+    "fails": []
+   }
+  ],
+  "chars": 166,
+  "sec": 22.4
+ },
+ "plan": {
+  "structure": "template",
+  "beats": [
+   {
+    "beat_idx": 0,
+    "role": "title",
+    "narration": "독일에서 난리 난 고압 세척기의 정체",
+    "target_seconds": 3.5,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-1",
+     "start": 2.436,
+     "end": 4.071,
+     "scene_desc": "고압 세척기로 차량 휠의 오염된 부위에 물을 분사하여 깨끗하게 세척함.",
+     "is_key": true,
+     "change": "휠 표면의 오염물질이 물줄기에 씻겨 나간다.",
+     "shot_role": "실증"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-2",
+      "start": 4.071,
+      "end": 6.773,
+      "scene_desc": "오토바이에 장착된 고압 세척기로 물을 분사하여 청소하는 모습.",
+      "is_key": true,
+      "change": "오토바이 차체의 오염이 물줄기에 씻겨 나간다.",
+      "shot_role": "실증"
+     }
+    ],
+    "effect": "cut",
+    "fit": 3,
+    "fit_evidence": "broll_fill",
+    "inherited": false,
+    "visual_verb": false,
+    "src_seg_applied": null
+   },
+   {
+    "beat_idx": 1,
+    "role": "story",
+    "narration": "세차장 갈 시간 없던 캠핑족 때문에 탄생한 이 제품이 사람들 사이에서 조용히 퍼지기 시작했음",
+    "target_seconds": 8.9,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-0",
+     "start": 0.0,
+     "end": 2.436,
+     "scene_desc": "손에 든 휴대용 고압 세척기에 생수병이 결합되어 있고, 차량 문에 고압 물줄기를 쏘아 흙먼지를 제거함.",
+     "is_key": true,
+     "change": "차량 표면의 흙먼지가 물줄기에 씻겨 나간다.",
+     "shot_role": "실증"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-7",
+      "start": 13.013,
+      "end": 14.514,
+      "scene_desc": "거품이 섞인 물줄기를 차량에 분사하여 세차하는 모습.",
+      "is_key": true,
+      "change": "차량 전체가 하얀 거품으로 뒤덮이며 세정된다.",
+      "shot_role": "실증"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-9",
+      "start": 16.383,
+      "end": 17.985,
+      "scene_desc": "유리창에 고압 물줄기를 쏘아 창틀과 유리면을 청소하는 모습.",
+      "is_key": true,
+      "change": "유리창의 먼지가 물줄기에 씻겨 나간다.",
+      "shot_role": "실증"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-11",
+      "start": 18.919,
+      "end": 20.354,
+      "scene_desc": "바닥의 돌 틈 사이에 낀 이끼와 오염물을 물줄기로 씻어내는 모습.",
+      "is_key": true,
+      "change": "돌 표면의 이끼가 물줄기에 씻겨 나가 깨끗해진다.",
+      "shot_role": "실증"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-12",
+      "start": 20.354,
+      "end": 21.788,
+      "scene_desc": "고압 세척기로 배수관 덮개의 오염물을 분사하여 씻어내는 모습",
+      "is_key": true,
+      "change": "오염되었던 덮개 표면이 물줄기에 닿자마자 깨끗하게 닦인다.",
+      "shot_role": "실증"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-13",
+      "start": 21.788,
+      "end": 23.056,
+      "scene_desc": "손으로 세척기 하단부의 고무 덮개를 열어 C타입 충전 단자를 보여준다.",
+      "is_key": true,
+      "change": "고무 덮개가 열리며 숨겨져 있던 충전 단자가 드러난다.",
+      "shot_role": "조작"
+     }
+    ],
+    "effect": "cut",
+    "fit": 5,
+    "fit_evidence": "inherited",
+    "inherited": true,
+    "visual_verb": true,
+    "src_seg_applied": "s0-0"
+   },
+   {
+    "beat_idx": 2,
+    "role": "authority",
+    "narration": "유튜브에서 난리 난 발명품인데 왜 이제야 알았나 싶음",
+    "target_seconds": 5.1,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-3",
+     "start": 6.773,
+     "end": 7.374,
+     "scene_desc": "손으로 노란색 휴대용 고압 세척기 본체를 들고 있는 모습.",
+     "is_key": false,
+     "change": "",
+     "shot_role": "사용중"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-16",
+      "start": 25.692,
+      "end": 26.894,
+      "scene_desc": "손에 든 세척기에 급수 호스를 결합하는 모습.",
+      "is_key": true,
+      "change": "연결 부위에 호스가 결합되어 고정된다.",
+      "shot_role": "설치"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-17",
+      "start": 26.894,
+      "end": 27.594,
+      "scene_desc": "호스가 달린 세척기를 가방 안에 넣는 모습.",
+      "is_key": false,
+      "change": "세척기가 호스와 함께 가방 내부로 들어간다.",
+      "shot_role": "정리"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-1",
+      "start": 2.436,
+      "end": 4.071,
+      "scene_desc": "고압 세척기로 차량 휠의 오염된 부위에 물을 분사하여 깨끗하게 세척함.",
+      "is_key": true,
+      "change": "휠 표면의 오염물질이 물줄기에 씻겨 나간다.",
+      "shot_role": "실증"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-2",
+      "start": 4.071,
+      "end": 5.03,
+      "scene_desc": "오토바이에 장착된 고압 세척기로 물을 분사하여 청소하는 모습.",
+      "is_key": true,
+      "change": "오토바이 차체의 오염이 물줄기에 씻겨 나간다.",
+      "shot_role": "실증"
+     }
+    ],
+    "effect": "cut",
+    "fit": 5,
+    "fit_evidence": "inherited",
+    "inherited": true,
+    "visual_verb": true,
+    "src_seg_applied": "s0-3"
+   },
+   {
+    "beat_idx": 3,
+    "role": "benefit",
+    "narration": "핵심은 이거임. 바로 빈 생수병 하나만 끼우면 즉시 초강력 수압이 뿜어져 나옴",
+    "target_seconds": 7.5,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-4",
+     "start": 7.374,
+     "end": 9.476,
+     "scene_desc": "빈 생수병을 손에 쥐고 제품 본체와 나란히 보여줌.",
+     "is_key": true,
+     "change": "",
+     "shot_role": "조작"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-5",
+      "start": 9.476,
+      "end": 10.477,
+      "scene_desc": "제품 본체 하단 나사선에 빈 생수병을 돌려 끼우는 모습.",
+      "is_key": true,
+      "change": "생수병이 제품 본체에 견고하게 고정된다.",
+      "shot_role": "설치"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-6",
+      "start": 10.477,
+      "end": 13.013,
+      "scene_desc": "생수병이 장착된 세척기로 검은색 차량의 흙먼지를 씻어내는 모습.",
+      "is_key": true,
+      "change": "차량 표면의 흙탕물이 물줄기를 따라 제거된다.",
+      "shot_role": "실증"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-1",
+      "start": 2.436,
+      "end": 4.071,
+      "scene_desc": "고압 세척기로 차량 휠의 오염된 부위에 물을 분사하여 깨끗하게 세척함.",
+      "is_key": true,
+      "change": "휠 표면의 오염물질이 물줄기에 씻겨 나간다.",
+      "shot_role": "실증"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-2",
+      "start": 4.071,
+      "end": 4.3,
+      "scene_desc": "오토바이에 장착된 고압 세척기로 물을 분사하여 청소하는 모습.",
+      "is_key": true,
+      "change": "오토바이 차체의 오염이 물줄기에 씻겨 나간다.",
+      "shot_role": "실증"
+     }
+    ],
+    "effect": "cut",
+    "fit": 5,
+    "fit_evidence": "inherited",
+    "inherited": true,
+    "visual_verb": true,
+    "src_seg_applied": "s0-4"
+   },
+   {
+    "beat_idx": 4,
+    "role": "escalate",
+    "narration": "심지어 노즐을 돌려 수압 패턴을 마음대로 바꾸니 창틀 찌든 때도 한 방에 날아감",
+    "target_seconds": 7.7,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-8",
+     "start": 14.514,
+     "end": 16.383,
+     "scene_desc": "세척기 노즐 끝부분을 돌려 물줄기 패턴을 일자에서 분사형으로 변경하는 모습.",
+     "is_key": true,
+     "change": "물줄기가 일직선에서 부챗살 형태로 넓게 퍼지게 바뀐다.",
+     "shot_role": "조작"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-10",
+      "start": 17.985,
+      "end": 18.919,
+      "scene_desc": "고압 세척기에서 뿜어져 나오는 강한 물줄기가 창틀 틈새의 먼지를 밀어내는 모습.",
+      "is_key": true,
+      "change": "창틀 사이의 이물질이 물줄기에 튕겨 나간다.",
+      "shot_role": "실증"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-1",
+      "start": 2.436,
+      "end": 4.071,
+      "scene_desc": "고압 세척기로 차량 휠의 오염된 부위에 물을 분사하여 깨끗하게 세척함.",
+      "is_key": true,
+      "change": "휠 표면의 오염물질이 물줄기에 씻겨 나간다.",
+      "shot_role": "실증"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-2",
+      "start": 4.071,
+      "end": 6.773,
+      "scene_desc": "오토바이에 장착된 고압 세척기로 물을 분사하여 청소하는 모습.",
+      "is_key": true,
+      "change": "오토바이 차체의 오염이 물줄기에 씻겨 나간다.",
+      "shot_role": "실증"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-4",
+      "start": 7.374,
+      "end": 7.93,
+      "scene_desc": "빈 생수병을 손에 쥐고 제품 본체와 나란히 보여줌.",
+      "is_key": true,
+      "change": "",
+      "shot_role": "조작"
+     }
+    ],
+    "effect": "cut",
+    "fit": 5,
+    "fit_evidence": "inherited",
+    "inherited": true,
+    "visual_verb": true,
+    "src_seg_applied": "s0-8"
+   },
+   {
+    "beat_idx": 5,
+    "role": "twist",
+    "narration": "근데 이거 반으로 접혀 트렁크에 쏙 들어간다는 게 진짜 물건인 이유임",
+    "target_seconds": 6.7,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-14",
+     "start": 23.056,
+     "end": 24.124,
+     "scene_desc": "세척기를 반으로 접어 차량 내 작은 수납공간에 집어넣는다.",
+     "is_key": true,
+     "change": "길쭉하던 제품이 반으로 접히며 부피가 줄어든다.",
+     "shot_role": "정리"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-15",
+      "start": 24.124,
+      "end": 25.692,
+      "scene_desc": "접힌 세척기를 차량 트렁크 가방 안에 넣는 모습.",
+      "is_key": true,
+      "change": "제품이 트렁크 수납 가방 안으로 깔끔하게 들어간다.",
+      "shot_role": "정리"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-1",
+      "start": 2.436,
+      "end": 4.071,
+      "scene_desc": "고압 세척기로 차량 휠의 오염된 부위에 물을 분사하여 깨끗하게 세척함.",
+      "is_key": true,
+      "change": "휠 표면의 오염물질이 물줄기에 씻겨 나간다.",
+      "shot_role": "실증"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-2",
+      "start": 4.071,
+      "end": 6.773,
+      "scene_desc": "오토바이에 장착된 고압 세척기로 물을 분사하여 청소하는 모습.",
+      "is_key": true,
+      "change": "오토바이 차체의 오염이 물줄기에 씻겨 나간다.",
+      "shot_role": "실증"
+     }
+    ],
+    "effect": "cut",
+    "fit": 5,
+    "fit_evidence": "inherited",
+    "inherited": true,
+    "visual_verb": true,
+    "src_seg_applied": "s0-14"
+   }
+  ],
+  "plagiarism_flags": [],
+  "detected_type": "generic",
+  "affiliate_target": "",
+  "generator": "inherit"
+ },
+ "beat_sources": [
+  {
+   "role": "title",
+   "seg": "",
+   "segs": []
+  },
+  {
+   "role": "story",
+   "seg": "s0-0",
+   "segs": [
+    "s0-0"
+   ]
+  },
+  {
+   "role": "authority",
+   "seg": "s0-3",
+   "segs": [
+    "s0-3"
+   ]
+  },
+  {
+   "role": "benefit",
+   "seg": "s0-4",
+   "segs": [
+    "s0-4",
+    "s0-5",
+    "s0-6"
+   ]
+  },
+  {
+   "role": "escalate",
+   "seg": "s0-8",
+   "segs": [
+    "s0-8",
+    "s0-10"
+   ]
+  },
+  {
+   "role": "twist",
+   "seg": "s0-14",
+   "segs": [
+    "s0-14",
+    "s0-15"
+   ]
+  }
+ ]
+}

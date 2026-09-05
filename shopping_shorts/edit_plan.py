@@ -1695,6 +1695,10 @@ def _build_inventory(source_scripts):
                 "action": seg.get("action"),
                 "change": (seg.get("change") or "").strip(),
                 "is_key": bool(seg.get("is_key")),
+                # ★원본 제작자가 박은 자막·효과(2026-09-05 추가). 다른 인벤토리 빌더는 이미 싣는데
+                #   여기만 빠져 있어, 상속 경로의 훅 채점이 '남의 효과가 박힌 컷'을 못 걸렀다.
+                #   프롬프트 줄에는 안 싣는다(모델이 보는 인벤토리 불변 = 자동 배치 회귀 0).
+                "has_effect": bool(seg.get("has_effect")),
                 "shot_role": seg.get("shot_role") or "기타",
                 "product_benefits": _seg_benefits(seg),
                 "motion_level": seg.get("motion_level"),
@@ -3755,8 +3759,13 @@ _FILL_SCHEMA = {
 #   ⚠️ scene_lab.html의 useTags와 짝이다 — 한쪽만 고치면 화면과 서버가 다른 걸 고른다.
 _ROLE_WANT_SHOTS = (
     # (역할 낱말들, 1순위 shot_role, 차선 shot_role, 사람이 읽을 설명)
-    (("훅", "hook"), ("완성", "after"), (),
-     "시선을 끄는 **완성된 그림**(단면·완성품·전후 변화)"),
+    # ★훅 후보에 '실증'을 넣었다(2026-09-05 사장님): "훅에서는 제일 자극적인 비포애프터나
+    #   완벽한 시선끌림" — 효과를 눈으로 증명하는 컷(실증)이 완성품만큼, 때로 더 세다.
+    #   종전엔 완성/after만 후보라 실증 컷이 **후보에 들지도 못했다**(실측: 훅 채점을 붙여도
+    #   무력). 어느 컷이 더 센가는 `_hook_score`가 가른다.
+    (("훅", "hook"), ("완성", "after", "실증"), ("문제", "before"),
+     "시선을 끄는 **완성된 그림**(단면·완성품·전후 변화)이나 **눈으로 증명되는 순간**(실증) — "
+     "없으면 불편을 보여주는 공감형 훅"),
     (("cta", "마무리"), ("완성", "after"), (),
      "완성되는 그림(오븐에서 꺼내기·그릇에 담기·완성 단면)"),
     # ★해결·결과 = 조리(사용중) 구간. 여기가 영상이 맞아 보이는지를 가르는 분기점이다.
@@ -3769,6 +3778,49 @@ _ROLE_WANT_SHOTS = (
     (("문제", "problem", "페인", "pain"), ("before", "문제"), ("사용중", "조리"),
      "쓰기 전 상황 — 없으면 재료·준비 장면"),
 )
+
+
+# ★훅 채점(2026-09-05 사장님): "훅에서는 제일 자극적인 비포애프터나 완벽한 시선끌림 —
+#   이런 걸 채점을 해서" / "CTA는 완성품 쪽으로 마지막을 가면 된다. 이건 인스타 스타일이고
+#   유튜브는 CTA가 없으니 참고".
+#   `_ROLE_WANT_SHOTS`가 **어느 결을 볼지**를 정한다면, 여기는 그 결 안에서 **어느 컷이 더 센가**를 정한다.
+#   재료는 1단계 태깅이 이미 주는 것뿐이다(새 모델 호출 0회).
+_HOOK_ROLES = ("훅", "hook", "title", "bait", "cta", "마무리")
+_REVERSAL_WORDS = ("쏙", "통째", "순식간", "바로", "한 번에", "싹", "확", "그대로", "안 흘러", "안 새")
+
+
+def _is_hookish(role):
+    """훅·CTA처럼 '어느 컷이 더 센가'를 따져야 하는 자리인가."""
+    return str(role or "").strip().lower() in {r.lower() for r in _HOOK_ROLES}
+
+
+def _hook_score(seg):
+    """훅·CTA 후보 컷의 세기 점수(클수록 앞). 사장님 채점 기준을 그대로 옮긴 것.
+
+    가점: 실증+핵심(효과를 눈으로 증명) · 완성/after(절정) · 변화 문장에 반전 표현 · 문제(공감형 훅)
+    감점: has_effect(원본 자막·효과가 박혀 이물감) · 아주 짧은 조각(훅으로 못 쓴다)
+    ★애매하면 0 — 점수가 같으면 아래 정렬 기준(대사 낱말 겹침 → is_key → 시간순)이 이어서 가른다."""
+    role = (seg.get("shot_role") or "").strip()
+    ch = (seg.get("change") or "").strip()
+    sc = 0
+    if role == "실증" and seg.get("is_key"):
+        sc += 3
+    if role in ("완성", "after"):
+        sc += 2
+    if role == "문제":
+        sc += 2
+    if ch and any(w in ch for w in _REVERSAL_WORDS):
+        sc += 2
+    if seg.get("is_key"):
+        sc += 1
+    if seg.get("has_effect"):
+        sc -= 3
+    try:
+        if float(seg.get("end") or 0) - float(seg.get("start") or 0) < 1.0:
+            sc -= 2
+    except (TypeError, ValueError):
+        pass
+    return sc
 
 
 def _want_shots_for_role(role, available=None):
@@ -4207,10 +4259,19 @@ def build_inherit_plan(source_scripts, given_script, beat_sources, structure="te
                     return s["seg_id"]
         return None
 
-    def _fill_for(role, prev_sid):
+    def _fill_for(role, prev_sid, narration=""):
         """장면 없는 줄의 b-roll. ★훅·CTA처럼 역할이 결을 요구하면 **한 곳의 규칙표**(_ROLE_WANT_SHOTS →
-        _want_shots_for_role)대로 미사용 컷 중 그 결(★핵심 우선)을 고른다(2026-09-05). 표에 없는 역할·맞는 결이
-        없으면 종전대로 앞 비트의 다음 컷."""
+        _want_shots_for_role)대로 미사용 컷 중 그 결을 고른다(2026-09-05). 표에 없는 역할·맞는 결이
+        없으면 종전대로 앞 비트의 다음 컷.
+
+        ★그 결 안에서 무엇을 고르나(2026-09-05 사장님 지적으로 수리):
+          종전엔 `is_key 먼저 → 시간순 첫 번째`라 **대사를 한 글자도 안 읽었다**. 실측(다이소 굿즈 영상):
+          "다이어리 꾸밀 때마다 스티커가 자꾸 들떠서 고생했거든요"(problem)에 `사용중` 첫 컷인
+          **인형 팔찌 착용**이 붙었다 — 결만 맞고 내용은 딴소리다.
+          → `_word_hits`(낱말 일치 판정의 단일 소스)로 **대사와 낱말이 겹치는 컷을 먼저** 고른다.
+             겹침이 없으면 종전 순서(is_key → 시간순) 그대로 = 회귀 0.
+          훅은 결 안에서도 **더 센 그림**을 앞세운다(사장님: "제일 자극적인 비포애프터·완벽한 시선끌림").
+        """
         from shopping_shorts import shot_roles as _sr
         avail = {(s.get("shot_role") or "") for s in usable.values()}
         shots, _why = _want_shots_for_role(role, available=avail)
@@ -4218,7 +4279,23 @@ def build_inherit_plan(source_scripts, given_script, beat_sources, structure="te
             cands = [s for s in usable.values() if s["seg_id"] not in used
                      and _sr.matches(s.get("shot_role") or "", tuple(shots))]
             if cands:
-                cands.sort(key=lambda s: (0 if s.get("is_key") else 1, float(s.get("start") or 0)))
+                want = _stems(narration or "")
+                cands.sort(key=lambda s: (-_hook_score(s) if _is_hookish(role) else 0,
+                                          -(_word_hits(want, s) if want else 0),
+                                          0 if s.get("is_key") else 1,
+                                          float(s.get("start") or 0)))
+                return cands[0]["seg_id"]
+        # ★규칙표에 없는 역할(reveal·story·authority…)도 **대사는 읽는다**(2026-09-05 실측 수리).
+        #   종전엔 표에 없으면 곧장 _next_cut(앞 컷의 다음)이라 대사를 한 글자도 안 봤다 —
+        #   "지인이 다이소 매니저로 있거든요"(reveal)에 '매장 입구 바닥'이 붙은 자리다.
+        #   겹치는 낱말이 하나도 없으면 종전대로 _next_cut = 회귀 0.
+        want = _stems(narration or "")
+        if want:
+            cands = [x for x in usable.values() if x["seg_id"] not in used and _word_hits(want, x)]
+            if cands:
+                cands.sort(key=lambda x: (-_word_hits(want, x),
+                                          0 if x.get("is_key") else 1,
+                                          float(x.get("start") or 0)))
                 return cands[0]["seg_id"]
         return _next_cut(prev_sid)
 
@@ -4226,7 +4303,8 @@ def build_inherit_plan(source_scripts, given_script, beat_sources, structure="te
     for i, (line, ids) in enumerate(zip(lines, per_line)):
         inherited = bool(ids)
         if not ids:
-            fill = _fill_for(srcs[i].get("role"), prev_sid)
+            # ★대사를 함께 넘긴다 — 안 넘기면 b-roll이 결만 보고 딴소리 컷을 집는다(위 주석).
+            fill = _fill_for(srcs[i].get("role"), prev_sid, line)
             if fill:
                 ids = [fill]
                 used.add(fill)

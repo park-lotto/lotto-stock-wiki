@@ -1,0 +1,162 @@
+{
+ "segments": [
+  {
+   "seg_id": "s0-0",
+   "start": 0.0,
+   "end": 2.233,
+   "text": "Positively voodoo,",
+   "text_ko": "",
+   "scene_desc": "여성이 보라색 의류용 태거를 손에 들고 태그 핀을 장착하는 모습을 보여줌",
+   "label": "제품 소개",
+   "use_point": "영상 도입부에서 생소할 수 있는 의류 수선 도구의 형태를 빠르게 보여주어 시청자의 호기심을 유발하기 좋습니다.",
+   "action": "끼우다",
+   "change": "태그 핀이 제품 본체에 장착됨",
+   "has_effect": false,
+   "is_key": false,
+   "shot_role": "기타",
+   "product_benefits": [
+    "간편하게 의류 수선이 가능한 핸디형 도구"
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-1",
+   "start": 2.233,
+   "end": 4.7,
+   "text": "everything that you do Did you",
+   "text_ko": "",
+   "scene_desc": "보라색 태거를 손에 든 채 카메라를 응시하며 사용 준비를 마친 여성의 모습",
+   "label": "제품 준비",
+   "use_point": "제품을 활용한 수선 과정을 시작하기 전, 신뢰감을 주는 모델의 모습을 보여주어 시청자가 다음 행동에 집중하게 만듭니다.",
+   "action": null,
+   "change": "",
+   "has_effect": false,
+   "is_key": false,
+   "shot_role": "기타",
+   "product_benefits": [],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-2",
+   "start": 4.7,
+   "end": 5.9,
+   "text": "know exactly how",
+   "text_ko": "",
+   "scene_desc": "소매 부분을 태거로 집어 고정하려고 손을 움직이는 모습",
+   "label": "사용 전 확인",
+   "use_point": "수선이 필요한 의류의 위치를 정확히 짚어주어 문제 상황을 명확히 정의하는 대목에 쓰기 좋습니다.",
+   "action": null,
+   "change": "",
+   "has_effect": false,
+   "is_key": false,
+   "shot_role": "before",
+   "product_benefits": [],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-3",
+   "start": 5.9,
+   "end": 6.967,
+   "text": "magical you are?",
+   "text_ko": "",
+   "scene_desc": "태거를 이용해 셔츠 소매 단을 안쪽에서 찔러 고정하는 모습",
+   "label": "소매 수선 시연",
+   "use_point": "의류의 벌어진 단을 태거로 간단히 고정하는 모습을 통해 간편한 수선 기능을 실증하는 대목에 적합합니다.",
+   "action": "누르다",
+   "change": "소매 단이 태그 핀으로 고정되어 깔끔해짐",
+   "has_effect": false,
+   "is_key": true,
+   "shot_role": "실증",
+   "product_benefits": [
+    "바느질 없이 소매 길이를 원하는 대로 줄일 수 있음"
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-4",
+   "start": 6.967,
+   "end": 7.767,
+   "text": "",
+   "text_ko": "",
+   "scene_desc": "수선이 완료된 소매 부분을 손으로 보여주는 모습",
+   "label": "수선 결과 확인",
+   "use_point": "도구를 사용한 후의 결과물을 클로즈업하여 시청자에게 확실한 수선 효과를 확인시켜주는 대목에 쓰기 좋습니다.",
+   "action": null,
+   "change": "셔츠 소매가 단정하게 고정되어 있음",
+   "has_effect": false,
+   "is_key": true,
+   "shot_role": "after",
+   "product_benefits": [
+    "옷감을 손상하지 않고 깔끔하게 고정함"
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-5",
+   "start": 7.767,
+   "end": 9.667,
+   "text": "Whoopsie daisy, you, yelling",
+   "text_ko": "",
+   "scene_desc": "셔츠 깃 부분의 벌어진 틈을 태거로 집어 고정하는 모습",
+   "label": "깃 고정 시연",
+   "use_point": "벌어진 셔츠 깃을 단정하게 정리하는 모습을 보여주어 옷맵시를 살려주는 기능을 강조하는 대목에 활용하기 좋습니다.",
+   "action": "누르다",
+   "change": "셔츠 깃이 밀착되어 단정해짐",
+   "has_effect": false,
+   "is_key": true,
+   "shot_role": "실증",
+   "product_benefits": [
+    "옷의 벌어진 틈을 감쪽같이 메워줌"
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-6",
+   "start": 9.667,
+   "end": 15.4,
+   "text": "I love you Out to my white feather, cocktail de la terre",
+   "text_ko": "",
+   "scene_desc": "다른 옷(꽃무늬 원피스)을 입고 태거를 이용해 허리 라인을 잡는 모습",
+   "label": "원피스 핏 조절 시연",
+   "use_point": "셔츠뿐만 아니라 다양한 의류의 핏을 자유롭게 조절할 수 있음을 보여주어 활용 범위가 넓음을 강조하기 좋습니다.",
+   "action": "누르다",
+   "change": "헐렁했던 원피스 허리가 조절되어 핏이 살아남",
+   "has_effect": false,
+   "is_key": true,
+   "shot_role": "실증",
+   "product_benefits": [
+    "원하는 대로 옷 핏을 조절 가능"
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-7",
+   "start": 15.4,
+   "end": 16.483311,
+   "text": "Take my hand",
+   "text_ko": "",
+   "scene_desc": "태거를 들고 카메라 쪽으로 다가오며 마무리하는 모습",
+   "label": "마무리 CTA",
+   "use_point": "영상의 마지막에서 도구의 효용을 다시 한번 인지시키고 다음 행동을 유도하는 마무리 대목에 적합합니다.",
+   "action": null,
+   "change": "",
+   "has_effect": false,
+   "is_key": false,
+   "shot_role": "기타",
+   "product_benefits": [],
+   "motion_level": null
+  }
+ ],
+ "full_text": "Positively voodoo, everything that you do Did you know exactly how magical you are? Whoopsie daisy, you, yelling I love you Out to my white feather, cocktail de la terre Take my hand",
+ "product_benefits": [
+  "간편하게 의류 수선이 가능한 핸디형 도구",
+  "바느질 없이 소매 길이를 원하는 대로 줄일 수 있음",
+  "옷감을 손상하지 않고 깔끔하게 고정함",
+  "옷의 벌어진 틈을 감쪽같이 메워줌",
+  "원하는 대로 옷 핏을 조절 가능"
+ ],
+ "source_brief": {},
+ "tag_empty_ratio": 0.0,
+ "transcript_status": "ok",
+ "full_text_ko": ""
+}
