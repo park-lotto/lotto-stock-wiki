@@ -66,10 +66,14 @@ const SELECTED=new Set();
 // ★버튼은 이용권 회원에게만 보인다. 판정은 서버(/api/me level)만 믿는다 — 화면에서
 //   따로 등급을 계산하면 서버 게이트와 어긋난다(0순위-B). 화면을 속여도 서버가 402로 막는다.
 let CAN_DL = false;
+// 제작소로 보낼 수 있는 영상 수 — **서버가 정본**(script_generate.SOURCE_MAX)이다.
+// 여기 값은 /api/me가 오기 전까지만 쓰는 임시값이라 숫자를 두 번 정하는 게 아니다.
+let SOURCE_MAX = 8;
 async function loadMe(){
   try{
     const d = await (await fetch('/api/me')).json();
     CAN_DL = (d && d.level === 'full');
+    if(d && d.source_max) SOURCE_MAX = d.source_max;
   }catch(e){ CAN_DL = false; }
 }
 async function downloadOne(sc, btn){
@@ -255,8 +259,8 @@ function _doSend(target){
 }
 function sendToProduce(){
   // 영상당 역할(대본용/화면용)을 제작소에서 배정하려면 url뿐 아니라 shortcode·name·
-  // thumbnail·caption도 넘겨야 한다(대본 추출은 shortcode로). 최대 5개(2단계 입력 상한).
-  const picks=ITEMS.filter(i=>SELECTED.has(i.shortcode)).slice(0,5).map(i=>({
+  // thumbnail·caption도 넘겨야 한다(대본 추출은 shortcode로). 상한은 서버값(SOURCE_MAX).
+  const picks=ITEMS.filter(i=>SELECTED.has(i.shortcode)).slice(0,SOURCE_MAX).map(i=>({
     url:i.url||'', shortcode:i.shortcode||'', name:i.name||'',
     thumbnail:i.thumbnail||'', caption:i.caption||'', play_url:i.play_url||'',
     // ★지표 3종(2026-08-23 사장님 "여기로 온 영상들 댓글이랑 팔로워수 끌고오는거").

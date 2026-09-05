@@ -39,6 +39,11 @@ _SEP = "\n\n"
 # 실패 시 전부를 잃는다. 숏폼 대본(30~60초)은 보통 300자 안팎이다.
 _MAX_CHARS = int(os.getenv("TTS_JOINED_MAX_CHARS", "2500") or 2500)
 
+# 조각 앞뒤 여백(초). 앞은 자음이 깎이지 않을 만큼만, 뒤는 말끝이 뚝 끊기지 않을
+# 만큼만 남긴다. audio_post.trim_tail_silence의 pad(0.08)와 같은 취지다.
+_HEAD_PAD = 0.03
+_TAIL_PAD = 0.08
+
 
 def enabled():
     """통짜 합성을 쓸 것인가. 기본 off — 라이브에서 실측한 뒤 켠다(CLAUDE.md:
@@ -144,21 +149,23 @@ def synthesize_joined(beats, naturals, out_paths, *, voice_id, settings, speed,
 
     st = align["character_start_times_seconds"]
     en = align["character_end_times_seconds"]
-    # 자를 지점: 앞 비트 마지막 글자의 끝과 다음 비트 첫 글자의 시작 **중간**.
-    # 사이 무음을 절반씩 나눠 가지므로 조각을 다시 붙이면 원본과 같다.
-    cuts = [0.0]
-    for i in range(len(spans) - 1):
-        cuts.append((en[spans[i][1] - 1] + st[spans[i + 1][0]]) / 2.0)
-    cuts.append(None)                                  # 마지막은 파일 끝까지
+    # ★자를 지점은 **발화 경계**다(2026-09-05 서버 실측으로 고침).
+    #   처음엔 앞뒤 비트의 중간점에서 잘랐다 — "붙이면 원본과 같다"는 게 근거였는데,
+    #   실측해 보니 조각이 발화보다 길어졌다(2.26초 → 2.66초). 문단 사이 호흡 무음이
+    #   조각에 통째로 남은 것이다. 칸 길이 = 조각 길이라 그만큼 화면이 늘어지고,
+    #   이음매 뒤 0.3초가 무음이라 레벨이 60dB씩 튀었다(레퍼런스 릴스는 무음 0).
+    #   무음을 버려도 **음색은 안 바뀐다** — 통짜의 값어치(한 번의 발화)는 그대로다.
+    starts = [max(0.0, st[c0] - _HEAD_PAD) for c0, _ in spans]
+    ends = [en[c1 - 1] + _TAIL_PAD for _, c1 in spans]
 
     for i, (c0, c1) in enumerate(spans):
         dst = str(out_paths[i])
         try:
-            _cut(full, dst, cuts[i], cuts[i + 1])
+            _cut(full, dst, starts[i], ends[i])
         except Exception:      # noqa: BLE001
             traceback.print_exc(file=sys.stderr)
             return False
         tts_timestamps.clear(dst)                      # 옛 정렬 stale 방지
-        tts_timestamps.save(dst, _slice_alignment(align, c0, c1, cuts[i]))
+        tts_timestamps.save(dst, _slice_alignment(align, c0, c1, starts[i]))
     print(f"[tts_joined] {len(spans)}비트 통짜 합성 완료 ({len(full_text)}자)", file=sys.stderr)
     return True

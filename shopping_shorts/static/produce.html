@@ -8584,9 +8584,14 @@ const MIX_LABEL={downloading:'영상 다운로드 중…',extracting:'대본 분
 //   "이거 2개는 삭제하고"). 매칭이 끝나도 화면에 남아 자리만 먹었고, 상태는 아래
 //   MIX_LABEL 한 줄 글자로 이미 다 보인다(진행바만 뺀다 — 글자는 남긴다).
 //   ※지웠던 것: const MIX_STAGE_ORDER, SBLoader.pipeline(#mixStatus._sblPipe).
+// 재료 영상 상한 — **서버가 정본**(script_generate.SOURCE_MAX). 아래 값은 /api/me가
+// 도착하기 전까지 쓰는 임시값이다(숫자를 두 곳에서 정하는 게 아니다).
+let SOURCE_MAX = 8;
+fetch('/api/me').then(r=>r.json()).then(d=>{ if(d && d.source_max) SOURCE_MAX = d.source_max; })
+                .catch(()=>{});
 function addMixUrl(){
   const wrap=document.getElementById('mixUrls');
-  if(wrap.querySelectorAll('.mixUrl').length>=5) return;
+  if(wrap.querySelectorAll('.mixUrl').length>=SOURCE_MAX) return;
   const d=document.createElement('div'); d.className='row'; d.style.marginBottom='6px';
   d.style.display='flex'; d.style.gap='6px'; d.style.alignItems='center';
   d.innerHTML='<input class="mixUrl" type="text" placeholder="인스타/유튜브/틱톡 URL" style="flex:1;min-width:0;background:var(--inset);border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px"><button class="urlDel" title="이 칸 지우기" onclick="removeMixUrlRow(this)" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:16px;padding:0 4px">✕</button>';
