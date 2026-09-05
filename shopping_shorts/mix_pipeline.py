@@ -489,7 +489,8 @@ def _try_joined(beats, tts_dir, *, voice, skip_existing, global_pron,
     ok = tts_joined.synthesize_joined(
         beats, naturals, [str(o) for o in outs], voice_id=voice_id, settings=settings,
         speed=speed, model_id=model_id, extra_tempo=extra_tempo,
-        customer_id=customer_id, seed=seed, work_dir=tts_dir)
+        customer_id=customer_id, seed=seed, work_dir=tts_dir,
+        silence_trim=trim, pace_mode=pace_mode)
     if not ok:
         return False
     for beat, out in zip(beats, outs):

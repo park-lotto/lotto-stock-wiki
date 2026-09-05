@@ -92,7 +92,8 @@ def _spans(align_chars, naturals):
 
 
 def synthesize_joined(beats, naturals, out_paths, *, voice_id, settings, speed,
-                      model_id, extra_tempo, customer_id=0, seed=None, work_dir=None):
+                      model_id, extra_tempo, customer_id=0, seed=None, work_dir=None,
+                      silence_trim="off", pace_mode=False):
     """비트 전체를 한 번에 합성해 out_paths[i]에 조각을 쓴다. 성공하면 True.
 
     naturals[i] = 그 비트의 naturalize된 텍스트(호출부가 line_profile로 만든 것).
@@ -124,19 +125,36 @@ def synthesize_joined(beats, naturals, out_paths, *, voice_id, settings, speed,
         return False
 
     # ★후처리는 통짜에 **한 번만**. 이게 원인 ③④를 없애는 자리다.
-    #   silence_trim/pace_mode는 여기서 쓰지 않는다 — 내부 무음을 지우면 정렬 시각이
-    #   비선형으로 밀려 조각 경계가 어긋난다(1차 범위 밖, 필요하면 measure_removed_spans로 보정).
     # 무음 mock에 loudnorm을 걸면 무음 바닥을 노이즈로 끌어올린다
     # (reference_local_tts_silent_mock_trap). 타입캐스트는 위에서 이미 배제했으므로
     # 판정 기준은 synthesize_line의 일레븐랩스 가지와 같다.
     has_voice_key = bool(config.ELEVENLABS_API_KEY)
+    # ★무음 삭제(속도감 모드)는 **재기 전에** 어디를 자를지 측정한다(2026-09-05 실측).
+    #   처음엔 통짜에서 이걸 통째로 껐다가 조각이 늘어졌다(마지막 칸 3.45초 vs 비트별
+    #   2.26초) — 비트별 경로는 speed 프리셋의 silence_trim="mid"+pace_mode로 문장
+    #   내부 쉼까지 잘라내고 있었기 때문이다. 무음 삭제는 조각별 시간왜곡이라 선형
+    #   보정으로는 못 맞추므로, measure_removed_spans로 구간을 재고 정렬을 그만큼 당긴다
+    #   (audio_post 주석의 원래 설계 그대로 — 새 방식을 발명하지 않는다).
+    removed = []
+    if silence_trim != "off" or pace_mode:
+        try:
+            removed = audio_post.measure_removed_spans(str(full))
+        except Exception:      # noqa: BLE001
+            traceback.print_exc(file=sys.stderr)
+            removed = []       # 측정 실패 = 무음 삭제도 포기(어긋난 자막보다 낫다)
+            silence_trim, pace_mode = "off", False
     try:
         audio_post.post_process(str(full), str(full), tempo=extra_tempo,
-                                silence_trim="off", pace_mode=False,
+                                silence_trim=silence_trim, pace_mode=pace_mode,
                                 loudnorm=has_voice_key)
     except Exception:      # noqa: BLE001
         traceback.print_exc(file=sys.stderr)
         return False
+    # 순서가 중요하다: 잘라낸 구간은 **원본 타임라인** 기준이므로 먼저 당기고,
+    # 그 다음 atempo 배율로 나눈다(post_process도 무음삭제 → 배속 순으로 건다).
+    if removed:
+        for k in ("character_start_times_seconds", "character_end_times_seconds"):
+            align[k] = [tts_timestamps._shift_by_removed(t, removed) for t in align[k]]
     # atempo는 시간축을 선형으로 줄인다 → 정렬 시각도 같은 배율로 나눈다.
     if extra_tempo and abs(extra_tempo - 1.0) > 1e-6:
         for k in ("character_start_times_seconds", "character_end_times_seconds"):
