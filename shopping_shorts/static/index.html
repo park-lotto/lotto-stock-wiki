@@ -2229,7 +2229,7 @@ function render(opts){
             <button class="view" onclick="window.open('${i.url}','_blank')">👁 영상보기</button>
             <button class="save" id="save_${i.shortcode}" onclick="toggleMix('${i.shortcode}', this)">📥 즐겨찾기</button>
             <button class="script-btn" onclick="lensSearch(this,'${i.shortcode}')">🔍 숏템파워검색</button>
-            <button class="cp-btn" data-sc="${i.shortcode}" title="이 제품이 쿠팡에 있는지 찾고, 있으면 내 추적 링크까지 바로 만듭니다" onclick="window.ssCoupangFind('', {shortcode:'${i.shortcode}', thumbnail:decodeURIComponent('${encodeURIComponent(i.thumbnail||'')}'), hint:this.getAttribute('data-product')||''})">🛒 쿠팡검색</button>
+            <button class="cp-btn" data-sc="${i.shortcode}" title="이 제품이 쿠팡에 있는지 찾고, 있으면 내 추적 링크까지 바로 만듭니다" onclick="window.ssCoupangFind('', {shortcode:'${i.shortcode}', thumbnail:decodeURIComponent('${encodeURIComponent(i.thumbnail||'')}'), hint:this.getAttribute('data-product')||'', noProduct:this.getAttribute('data-noproduct')==='1'})">🛒 쿠팡검색</button>
             ${window.IS_ADMIN?`<button class="inner-btn" title="우리가 관리하는 채널 아카이브에서 같은 제품·주제의 옛 영상 찾기 (무료·비전태그 매칭)" onclick="archiveSimilar('${i.shortcode}')">🏠 숏템내부검색</button>`:''}
           </div>
         </div>

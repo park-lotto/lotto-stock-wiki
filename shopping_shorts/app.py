@@ -8,6 +8,7 @@ import io
 import ipaddress
 import json
 import logging
+import math
 import os
 import re
 import secrets
@@ -5050,7 +5051,13 @@ def api_coupang_identify_batch(body: dict):
         pmap = _pn.identify_shop_many(todo, DB_PATH)
     except Exception as e:                                  # noqa: BLE001
         return {"ok": False, "products": {}, "error": f"판독 실패: {type(e).__name__}"}
-    return {"ok": True, "products": {k: (v or "") for k, v in (pmap or {}).items()}}
+    out = {k: (v or "") for k, v in (pmap or {}).items()}
+    # ★"살 물건 없음"을 화면이 알아볼 수 있게 따로 준다(2026-09-05).
+    #   products의 ""는 "판정했는데 제품이 없다"는 뜻인데, 화면이 그걸 "아직 안 됨"과
+    #   구분 못 해 조용히 건너뛰었다 → 맛집·방법영상도 그냥 검색 버튼이라 헛클릭이 난다.
+    #   ⚠️products 규약(빈 문자열=없음)은 그대로 두고 **덧붙이기만** 한다(옛 화면 보호).
+    return {"ok": True, "products": out,
+            "no_product": sorted(k for k, v in out.items() if not v)}
 
 
 @app.post("/api/coupang/deeplink")
@@ -5421,14 +5428,91 @@ def _film_seg_from_id(seg_id: str, job: dict):
     vid, a, b = m.group(1), float(m.group(2)), float(m.group(3))
     if not (b > a >= 0):
         return None
-    known = set()
+    # ★id의 video_id는 **씻긴 값**이다 — 화면(_extraId)이 `[^\w.]+`를 `_`로 바꿔서 만든다.
+    #   그래서 `abc-1` 소스는 id에 `abc_1`로 박힌다. 날것끼리 비교하면 하이픈이 든
+    #   소스가 전부 "모르는 소스"로 떨어져 **썸네일 404 = 검은 칸**이 된다
+    #   (2026-09-05 고객 다수 제보의 검은 칸 절반이 이것).
+    #   씻긴 형태로 맞춰 보되, 돌려주는 건 **원본 video_id**다 — 하류(_resolve_sources)는
+    #   원본 키로만 소스를 찾는다.
+    def _wash(s):
+        return _re.sub(r"[^\w.]+", "_", str(s))
+
+    known = {}
     for ex in (job.get("extract") or {}).values():
         v = (ex or {}).get("video_id")
         if v:
-            known.add(str(v))
-    if vid not in known:
+            known.setdefault(_wash(v), str(v))
+    real = known.get(vid)
+    if real is None:
         return None
-    return {"video_id": vid, "start": a, "end": b, "seg_id": seg_id}
+    return {"video_id": real, "start": a, "end": b, "seg_id": seg_id}
+
+
+def _with_film_segs(seg_map, plan, job):
+    """추출 인벤토리(seg_map)에 **사람이 필름에서 오려낸 조각**을 되살려 합친 사본을 준다.
+
+    ★왜 필요한가 (2026-09-05, 고객 다수 제보 "자막제거 후 다시 장면매칭으로 오면
+      다 지워지고 까만색으로 된다" — 박세희·왕혜원·다운 등):
+      오려낸 조각(`film_<vid>_<start>_<end>`)은 `apply_scene_lab`이 seg_map **사본**에만
+      병합하고 버린다. DB에 남는 건 `scene_override`의 **id 문자열뿐**이고, 화면을 다시
+      열 때 segments는 `job["extract"]`에서만 만들어지므로 그 id는 가리킬 곳이 없다.
+      → 화면에서 srcNo()·segNo()가 둘 다 0이 되어 배지가 '0-0', 길이 0.0,
+        띠는 '장면 없음', 썸네일은 404라 **검은 칸**이 된다.
+      종전엔 브라우저 localStorage(hydrateExtra)가 이걸 가려주고 있었다 — 자막제거를
+      다녀와 서버 편성 분기로 열리면 그 복원이 안 돌아 통째로 증발한다.
+
+    되살리는 재료는 **둘**이고, 순서가 중요하다:
+      ① `plan["scene_lab"]["extra_segs"]` — 앞으로 저장되는 값. label·text까지 온전하다.
+      ② id 문자열 파싱(`_film_seg_from_id`) — **옛 job 복구용**. 구간이 id에 들어 있어
+         저장본이 없어도 화면·렌더가 되살아난다(그래서 고객이 다시 담을 필요가 없다).
+    ①이 먼저다 — 사람이 붙인 이름을 파싱 결과(빈 label)로 덮으면 안 된다.
+
+    ★진짜 조각(추출본)은 절대 덮지 않는다 — `apply_scene_lab`의 규칙①과 같은 약속이다.
+    ★호출자의 seg_map은 안 건드린다(사본 반환) — 같은 dict를 다른 용도로 다시 쓴다.
+    """
+    out = dict(seg_map or {})
+    saved = ((plan or {}).get("scene_lab") or {}).get("extra_segs") or {}
+    if not isinstance(saved, dict):
+        saved = {}
+
+    def _put(sid, vid, a, b, label="", text=""):
+        if not sid or sid in out:
+            return                      # 추출본이 이긴다
+        out[sid] = {
+            "video_id": vid, "seg_id": sid, "start": a, "end": b,
+            "scene_desc": "", "text": text, "label": label or "",
+            "shot_role": "기타", "is_key": False,
+            "action": "", "change": "", "product_benefits": [],
+        }
+
+    # ① 저장된 것부터 — 사람이 만든 이름·자막이 살아 있다. 클라이언트가 만든 값이었으므로
+    #    apply_scene_lab과 **같은 강도로** 검증한다(숫자 아님·뒤집힘·nan/inf·소스 미상 버림).
+    for sid, s in saved.items():
+        if not isinstance(s, dict):
+            continue
+        try:
+            a, b = float(s.get("start")), float(s.get("end"))
+        except (TypeError, ValueError):
+            continue
+        if not (math.isfinite(a) and math.isfinite(b) and b > a):
+            continue
+        vid = s.get("video_id")
+        vid = vid.strip() if isinstance(vid, str) else ""
+        if not vid:
+            continue
+        _put(sid, vid, a, b, str(s.get("label") or "")[:60], str(s.get("text") or "")[:300])
+
+    # ② 편성에 남은 id를 파싱해 마저 되살린다 — 저장본이 없던 **옛 job이 여기서 산다**.
+    for beat in ((plan or {}).get("beats") or []):
+        for s in (beat.get("scene_override") or []):
+            sid = s.get("seg_id") if isinstance(s, dict) else None
+            if not sid or sid in out:
+                continue
+            got = _film_seg_from_id(sid, job)
+            if got:
+                _put(sid, got["video_id"], got["start"], got["end"],
+                     "필름 %.1f~%.1f초" % (got["start"], got["end"]))
+    return out
 
 
 @app.get("/api/mix/seg_thumb/{job_id}/{seg_id}")
@@ -5571,6 +5655,9 @@ def api_mix_scene_lab_data(job_id: str):
         return JSONResponse(status_code=404,
                             content={"ok": False, "error": "편집안이 아직 없어요 — 매칭을 먼저 완료하세요"})
     seg_map, _ = _edit_plan._build_inventory(list(job["extract"].values()))
+    # ★사람이 필름에서 오려낸 조각을 되살려 함께 내려보낸다(2026-09-05 고객 다수 제보).
+    #   안 하면 편성엔 id가 있는데 segments엔 없어 화면이 '0-0'·검은 칸이 된다.
+    seg_map = _with_film_segs(seg_map, plan, job)
     work = _MIX_WORK_DIR / job_id
     # 소스 실길이 — 범위초과 세그(실체 없는 화면) 표시용. 소스가 없으면 {}로 폴백(표시만 꺼진다).
     src_duration = {}

@@ -1052,6 +1052,12 @@
     wrap.addEventListener("click", function (e) { if (e.target === wrap) _cfClose(); });
     document.body.appendChild(wrap);
     if (keyword) _cfSearch(keyword);
+    else if (opts.noProduct) {
+      /* ★이미 "살 물건 없음"으로 판정된 카드(2026-09-05) — 같은 판독을 또 돌려
+         기다리게 하지 않는다. 이유를 바로 보여주고 직접 칠 수 있게 둔다. */
+      _cfRender("이 영상엔 팔 만한 물건이 안 보입니다 — 장소·방법 소개 영상일 수 있어요. 찾으실 제품명이 있으면 직접 넣어 보세요.", "#ffd76b");
+      var _q0 = _cfEl("cfQuery"); if (_q0) _q0.focus();
+    }
     else if (_cfState.sc) _cfIdentify();          /* ★자동: 썸네일에서 제품을 알아내 바로 찾는다 */
     else { var q = _cfEl("cfQuery"); if (q) q.focus(); }
   }
@@ -1169,7 +1175,9 @@
      같은 페이지에서 두 번 부르면 이미 처리한 shortcode는 건너뛴다. */
   var _cfWarmed = {};
   window.ssCoupangPrewarm = function (items) {
-    var todo = (items || []).filter(function (it) { return it && it.shortcode && it.thumbnail && !_cfWarmed[it.shortcode]; }).slice(0, 60);
+    // ★캡션만 있는 카드도 보낸다(2026-09-05) — 종전엔 it.thumbnail을 요구해
+    //   서버·모델을 고쳐도 **여기서 잘려** 도착조차 안 했다.
+    var todo = (items || []).filter(function (it) { return it && it.shortcode && (it.thumbnail || (it.caption || "").trim()) && !_cfWarmed[it.shortcode]; }).slice(0, 60);
     if (!todo.length) return;
     todo.forEach(function (it) { _cfWarmed[it.shortcode] = 1; });
     fetch("/api/coupang/identify_batch", { method: "POST", headers: { "Content-Type": "application/json" },
@@ -1178,9 +1186,21 @@
       .then(function (d) {
         var pm = (d && d.products) || {};
         Object.keys(pm).forEach(function (sc) {
-          var name = pm[sc]; if (!name) return;
           var btn = document.querySelector('.cp-btn[data-sc="' + sc + '"]');
-          if (btn) { btn.textContent = "🛒 " + (name.length > 10 ? name.slice(0, 10) + "…" : name) + " 쿠팡검색"; btn.setAttribute("data-product", name); btn.title = "알아낸 제품: " + name + " — 누르면 쿠팡 검색과 내 추적 링크까지"; }
+          if (!btn) return;
+          var name = pm[sc];
+          if (!name) {
+            /* ★살 물건이 없는 영상(맛집·장소·방법 알려주기 등) — 회색으로 내려
+               헛클릭을 막는다(2026-09-05 실측: 10건 중 4건이 이런 영상이었다).
+               ⚠️버튼을 없애지는 않는다 — 판독이 틀렸을 때 사장님이 직접 찾을 길은 남긴다. */
+            btn.textContent = "🛒 살 물건 없음";
+            btn.setAttribute("data-noproduct", "1");
+            btn.style.opacity = "0.45";
+            btn.style.filter = "grayscale(1)";
+            btn.title = "이 영상엔 팔 만한 물건이 안 보입니다(장소·방법 소개 등). 눌러서 직접 찾아볼 수는 있습니다.";
+            return;
+          }
+          btn.textContent = "🛒 " + (name.length > 10 ? name.slice(0, 10) + "…" : name) + " 쿠팡검색"; btn.setAttribute("data-product", name); btn.title = "알아낸 제품: " + name + " — 누르면 쿠팡 검색과 내 추적 링크까지";
         });
       })
       .catch(function () {});
