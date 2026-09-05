@@ -30,6 +30,8 @@ def test_관리자_진단은_회원키로_세_단계를_치고_키값은_안_싣
 
     def fake_get(url, headers=None, timeout=None):
         calls.append(("get", url, headers["X-API-KEY"]))
+        if url.endswith("/users/me/subscription"):
+            return _R(200, {"plan": "free", "credits": {"plan_credits": 15000, "used_credits": 15000}})
         return _R(200, [{"voice_id": "tc_a"}, {"voice_id": "tc_b"}])
 
     def fake_post(url, headers=None, json=None, timeout=None):
@@ -41,6 +43,7 @@ def test_관리자_진단은_회원키로_세_단계를_치고_키값은_안_싣
     assert out["voices_count"] == 2 and out["voice_in_list"] is False
     steps = {s["step"]: s for s in out["steps"]}
     assert steps["voices"]["status"] == 200
+    assert steps["subscription"]["status"] == 200 and out["api_plan"] == "free" and out["credits"]["left"] == 0
     assert steps["with_timestamps"]["status"] == 403 and "custom voice" in steps["with_timestamps"]["body"]
     assert steps["plain"]["status"] == 403
     assert [c[2] for c in calls if c[0] == "post"] == ["uc_zzz", "uc_zzz"]

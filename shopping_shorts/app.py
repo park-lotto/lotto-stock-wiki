@@ -5926,6 +5926,18 @@ def diag_typecast(store, customer_id, voice_id="", model_id="", text="안녕하�
         except Exception as e:      # noqa: BLE001 — 네트워크 예외도 한 줄로
             out["steps"].append({"step": name, "status": 0, "body": f"예외: {e!r}"[:300]})
             return None
+    # ★API 구독 상태 — 타입캐스트는 **스튜디오(앱) 요금제와 API 요금제가 별개**(공식: 따로 구독·따로 과금).
+    #   "타입캐스트 유료"라도 API 플랜은 free(월 15k~30k 크레딧)일 수 있다. plan·크레딧을 그대로 싣는다.
+    rsub = _step("subscription", lambda: get("https://api.typecast.ai/v1/users/me/subscription", headers=hdr, timeout=15))
+    if rsub is not None and rsub.status_code == 200:
+        try:
+            js = rsub.json() or {}
+            cr = js.get("credits") or {}
+            out["api_plan"] = js.get("plan")
+            out["credits"] = {"plan": cr.get("plan_credits"), "used": cr.get("used_credits"),
+                              "left": (cr.get("plan_credits") or 0) - (cr.get("used_credits") or 0)}
+        except Exception as e:      # noqa: BLE001
+            out["subscription_parse_error"] = repr(e)[:200]
     rv = _step("voices", lambda: get(typecast_tts._VOICES_ENDPOINT, headers=hdr, timeout=15))
     if rv is not None and rv.status_code == 200:
         try:
