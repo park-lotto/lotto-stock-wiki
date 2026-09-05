@@ -4502,7 +4502,37 @@ _BYOK_VENDORS = (
 # '잔액이 없다'는 신호. 429(분당·월 한도)는 **여기 넣지 않는다** — 기다리면 풀리는데
 # 충전하라고 하면 고객이 헛돈을 쓴다(2026-09-02 실수, 만들자마자 잡았다).
 _OUT_OF_CREDIT = ("402", "payment required", "not enough credits", "insufficient",
-                  "[600", "quota exceeded for your plan")
+                  "[600", "quota exceeded for your plan", "quota_exceeded", "exceeds your quota")
+
+# ★음성 서비스(BYOK) 오류를 원인별로 가른다(2026-09-05 고객 신고 cid 260 "3단계에서 계속 실패" — 화면엔
+#   "음성 서비스가 잠시 몰려"만 떠서 키 문제인지 한도인지 장애인지 고객도 사장님도 알 수 없었다).
+#   ElevenLabs/타입캐스트 HTTP 오류 문구(요청 라이브러리의 "401 Client Error … for url: https://api.elevenlabs.io/…")를
+#   상태코드·상세로 갈라 **고객이 할 수 있는 일**을 말한다. 순서가 곧 우선순위다.
+_TTS_VENDOR_RULES = (
+    (("detected_unusual_activity", "unusual activity"),
+     "음성 서비스(ElevenLabs)가 무료 요금제의 비정상 사용으로 이 키를 막았습니다. 유료 요금제로 바꾸거나 "
+     "설정 > 🔑 내 키 등록에서 다른 키를 넣어 주세요."),
+    (("missing the permission", "missing_permissions"),
+     "음성 서비스 키는 맞지만 필요한 권한(text_to_speech 등)이 꺼져 있습니다. ElevenLabs → API Keys에서 그 키의 권한을 켜 주세요."),
+    (("401", "403", "invalid_api_key", "unauthorized", "forbidden"),
+     "음성 서비스가 내 키를 인식하지 못합니다. 설정 > 🔑 내 키 등록에서 키를 다시 확인하거나 새 키를 넣어 주세요."),
+    (("voice_not_found", "voice not found", "422"),
+     "선택한 목소리를 음성 서비스가 찾지 못합니다. TTS 단계에서 목소리를 다시 골라 주세요."),
+    (("429", "too many requests", "rate limit"),
+     "음성 서비스가 잠시 몰려 응답하지 않았습니다. 1~2분 뒤 다시 시도해 주세요."),
+    (("500", "502", "503", "504", "server error", "timed out", "timeout"),
+     "음성 서비스 쪽 장애(또는 응답 지연)입니다. 몇 분 뒤 다시 시도해 주세요. 계속되면 관리자에게 알려주세요."),
+)
+
+
+def _tts_vendor_message(low):
+    """음성 서비스 오류면 원인별 안내를, 아니면 None. 잔액 소진은 _byok_credit_message가 먼저 본다."""
+    if not any(m in low for m in ("api.elevenlabs.io", "api.typecast.ai", "elevenlabs", "typecast")):
+        return None
+    for keys, friendly in _TTS_VENDOR_RULES:
+        if any(k in low for k in keys):
+            return friendly
+    return None
 
 
 def _byok_credit_message(low):
@@ -4534,6 +4564,9 @@ def _user_facing_error(msg):
     byok = _byok_credit_message(low)      # 고객이 충전해야 풀리는 건 그렇게 말한다
     if byok:
         return byok
+    tts_msg = _tts_vendor_message(low)    # 키·권한·목소리·한도·장애를 갈라 말한다(2026-09-05)
+    if tts_msg:
+        return tts_msg
     for keys, friendly in _USER_ERROR_RULES:
         if any(k in low for k in keys):
             return friendly
@@ -5741,6 +5774,77 @@ def api_admin_probe_frame_accuracy_state(request: Request, start: int = 0, n: in
     if start and (_pfa.state().get("status") in ("idle", "") or force):
         start_ok = _pfa.start(Store(DB_PATH), _MIX_WORK_DIR, Path(__file__).parent / "data" / "probes", n=n)
     return {"ok": True, "start_ok": start_ok, **_pfa.state()}    # state()의 started(시각)와 이름을 가른다
+
+
+def diag_work(store, work_id, work_dir):
+    """작업번호(work 또는 job) → 서버 상태 한 장(순수 조회, 2026-09-05 사장님 "오류신고 들어왔는데 지금같이밖에 못 하나").
+    SSH 없이 관리자 화면에서 원인을 갈라 보기 위한 것: 잡 상태·오류·단계별 상태·계획 요약·작업 폴더 파일·신고 목록."""
+    out = {"work_id": work_id, "found": False}
+    job_id = None
+    with store._conn() as c:
+        row = c.execute("SELECT work_id, customer_id, title, job_id, step, updated_at, state_json FROM produce_works "
+                        "WHERE work_id=?", (work_id,)).fetchone()
+    if row:
+        st = {}
+        try:
+            st = json.loads(row[6] or "{}")
+        except Exception as e:      # noqa: BLE001 — 진단은 상태를 못 읽어도 나머지를 보여준다(사유는 남긴다)
+            print(f"[diag_work] state_json 파싱 실패({work_id}): {e!r}", file=sys.stderr)
+        out.update(found=True, kind="work", customer_id=row[1], title=row[2], job_id=row[3], step=row[4],
+                   updated_at=row[5], state_keys=sorted(k for k in (st or {}).keys())[:40],
+                   given_script_chars=len(((st.get("s2") or {}).get("confirmed") or st.get("given_script") or "")
+                                          if isinstance(st, dict) else ""))
+        job_id = row[3]
+    else:
+        job_id = work_id
+    job = store.get_mix_job(job_id) if job_id else None
+    if job:
+        out["found"] = True
+        plan = job.get("edit_plan") or {}
+        beats = plan.get("beats") or []
+        out["job"] = {
+            "job_id": job_id, "status": job.get("status"), "error": (job.get("error") or "")[:500],
+            "customer_id": job.get("customer_id"), "target_seconds": job.get("target_seconds"),
+            "given_script_chars": len(job.get("given_script") or ""),
+            "script_structure": {k: (v if k != "beat_sources" else len(v or [])) for k, v in (job.get("script_structure") or {}).items()}
+                                if isinstance(job.get("script_structure"), dict) else None,
+            "extract_sources": len(job.get("extract") or {}),
+            "extract_segments": sum(len((e or {}).get("segments") or []) for e in (job.get("extract") or {}).values() if isinstance(e, dict)),
+            "plan": {"generator": plan.get("generator"), "beats": len(beats),
+                     "inherited": sum(1 for b in beats if b.get("inherited")),
+                     "tts_files": sum(1 for b in beats if b.get("tts_path")),
+                     "gate": plan.get("gate") if isinstance(plan.get("gate"), dict) else None},
+            "preview": {"status": job.get("preview_status"), "error": (job.get("preview_error") or "")[:300]},
+            "clean": {"status": job.get("clean_status"), "error": (job.get("clean_error") or "")[:300]},
+            "fx_status": job.get("fx_status"), "video_path": job.get("video_path"),
+            "created_at": job.get("created_at"), "updated_at": job.get("updated_at"),
+        }
+        d = Path(work_dir) / str(job_id)
+        files = {}
+        if d.exists():
+            for p in sorted(d.rglob("*"))[:400]:
+                if p.is_file():
+                    rel = str(p.relative_to(d))
+                    top = rel.split(os.sep)[0]
+                    files[top] = files.get(top, 0) + 1
+        out["work_dir"] = {"exists": d.exists(), "files_by_dir": files}
+    try:
+        reps = [r for r in store.list_bug_reports(limit=500) if r.get("work_id") == work_id or r.get("job_id") == job_id]
+        out["bug_reports"] = [{"id": r["id"], "created_at": r["created_at"], "message": r["message"][:200],
+                               "step": r.get("step"), "console": (r.get("console_json") or "")[:600],
+                               "status": r.get("status")} for r in reps[:10]]
+    except Exception:      # noqa: BLE001
+        out["bug_reports"] = []
+    return out
+
+
+@app.get("/api/admin/diag/work/{work_id}")
+def api_admin_diag_work(request: Request, work_id: str):
+    """관리자: 작업번호(work 또는 job) 진단 한 장 — 오류 신고를 SSH 없이 갈라 본다."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    return {"ok": True, **diag_work(Store(DB_PATH), work_id, _MIX_WORK_DIR)}
 
 
 @app.get("/api/admin/scene_swaps")
