@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>대본 틀 — 전문과 템플릿</title>
+<style>
+:root{
+  --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --line:#2b303c;
+  --ink:#e9ecf1; --dim:#9aa3b2; --faint:#6b7482;
+  --gold:#f2c14e; --hot:#ff6b4a; --bad:#f2545b; --blue:#63b3ff; --mint:#4ade80;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Pretendard","Malgun Gothic","맑은 고딕",system-ui,sans-serif;
+  line-height:1.6;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1200px;margin:0 auto;padding:42px 24px 90px}
+header.top{border-bottom:1px solid var(--line);padding-bottom:24px;margin-bottom:20px}
+h1{font-size:28px;margin:0 0 9px;letter-spacing:-.5px}
+.sub{color:var(--dim);font-size:14px;max-width:880px}
+.src{margin-top:13px;font-size:12.5px;color:var(--faint);
+  background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:9px 14px;display:inline-block}
+.src b{color:var(--dim);font-weight:600}
+h2{font-size:18px;margin:40px 0 13px;padding-left:12px;border-left:3px solid var(--gold)}
+
+.vars{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:15px 20px;margin-bottom:8px;font-size:13px;color:var(--dim)}
+.vars b{color:var(--ink)}
+.v{display:inline-block;background:#12151c;border:1px solid #3a3f4c;color:var(--blue);
+  border-radius:5px;padding:2px 8px;margin:3px 4px 3px 0;font-family:Consolas,monospace;font-size:12px}
+
+.tpl{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:20px}
+.thead{display:flex;align-items:baseline;gap:11px;padding:15px 20px;background:var(--panel2);
+  border-bottom:1px solid var(--line);flex-wrap:wrap}
+.tno{font-size:12px;color:var(--faint);font-variant-numeric:tabular-nums;min-width:18px}
+.tname{font-size:17px;font-weight:800;letter-spacing:-.3px}
+.tmeta{font-size:11.5px;color:var(--faint)}
+.tv{margin-left:auto;font-size:16px;font-weight:800;color:var(--hot);font-variant-numeric:tabular-nums}
+.tv small{font-size:11px;color:var(--faint);font-weight:500;margin-left:4px}
+
+.two{display:grid;grid-template-columns:1fr 1fr}
+@media(max-width:900px){.two{grid-template-columns:1fr}}
+.pane{padding:0}
+.pane+.pane{border-left:1px solid #20242e}
+@media(max-width:900px){.pane+.pane{border-left:none;border-top:1px solid #20242e}}
+.ptitle{font-size:11px;letter-spacing:1.2px;font-weight:800;padding:11px 20px;
+  border-bottom:1px solid #20242e;background:#13161d}
+.ptitle.l{color:var(--hot)} .ptitle.r{color:var(--mint)}
+.ptitle span{color:var(--faint);font-weight:600;letter-spacing:0;margin-left:6px;font-size:11px}
+.full{padding:16px 20px;font-size:13.2px;color:#ded7c6;line-height:1.85}
+.full em{color:var(--gold);font-style:normal;font-weight:700}
+
+.slot{display:grid;grid-template-columns:96px 1fr;gap:12px;padding:10px 20px;border-bottom:1px solid #1c202a;font-size:12.8px}
+.slot:last-child{border-bottom:none}
+.slot .r{font-family:Consolas,"D2Coding",monospace;font-size:11.5px;color:var(--blue);padding-top:2px}
+.slot .r.hook{color:var(--gold)} .slot .r.cta{color:var(--mint)} .slot .r.key{color:var(--gold);font-weight:700}
+.slot .t{color:#cfd6e0;line-height:1.72}
+.slot .t code{background:#12151c;border:1px solid #3a3f4c;color:var(--blue);
+  border-radius:4px;padding:1px 5px;font-family:Consolas,monospace;font-size:11.5px}
+.fix{color:var(--gold);font-weight:700}
+
+.note{font-size:12.5px;color:var(--faint);padding:11px 20px;border-top:1px solid var(--line);background:#13161d}
+.note b{color:var(--hot)}
+.limit{background:#1a1216;border:1px solid #4a2630;border-radius:12px;padding:17px 22px;font-size:13.5px;color:#e3c9cd}
+.limit h3{margin:0 0 9px;font-size:14px;color:var(--bad)}
+.limit ul{margin:0;padding-left:18px} .limit li{margin-bottom:5px}
+footer{margin-top:44px;padding-top:17px;border-top:1px solid var(--line);font-size:12px;color:var(--faint)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <h1>대본 틀 3종 — 실제 전문과 빈칸 템플릿</h1>
+  <div class="sub">
+    <b>새로운_대본틀_8종</b>에 이름·구조만 있던 틀을, <b>7종 문서와 같은 형식</b>으로 채운 것이다.
+    왼쪽은 <b>실제로 터진 대본 전문</b>(자르지 않았다), 오른쪽은 그걸 칸으로 나눠 <b>빈칸으로 바꾼 템플릿</b>이다.
+    빈칸 이름은 지금 등록된 스파인이 쓰는 <b>변수를 그대로</b> 썼다.
+  </div>
+  <div class="src">
+    <b>대본</b> script_wiki 원문 &nbsp;·&nbsp;
+    <b>조회수</b> source_enrichment.views 실측 &nbsp;·&nbsp;
+    <b>측정</b> 2026-09-05 &nbsp;·&nbsp; <b>로컬 전용</b>
+  </div>
+</header>
+
+<div class="vars">
+  <b>★ 세 편 모두 같은 채널이다 — <span style="color:#f2c14e">@썰풀다</span></b>
+  <div style="margin-top:7px;color:#cfd6e0;line-height:1.75">
+    구독자 <b>1.29만~1.35만</b>인데 조회수는 <b>64만·217만·65만</b>이다.
+    구독자와 조회수가 무관하게 돈다 — 이 채널은 <b>구독이 아니라 대본으로</b> 돌린다.
+    그래서 세 틀 다 <b>CTA가 없다</b>. 아래 대본 어디에도 “댓글 남겨주세요”가 없다
+    (인스타 본진 틀은 전부 CTA로 끝난다 — 여기가 갈리는 지점이다).
+  </div>
+</div>
+
+<div class="vars">
+  <b>기존 시스템이 쓰는 빈칸 변수</b> — 새로 만들지 않고 이것만 썼다:
+  <div style="margin-top:7px">
+    <span class="v">{효과}</span><span class="v">{적용대상}</span><span class="v">{사용법}</span><span class="v">{불편함}</span>
+    <span class="v">{제품군}</span><span class="v">{나라}</span><span class="v">{차별점}</span><span class="v">{효능}</span>
+    <span class="v">{제품}</span><span class="v">{본래용도}</span><span class="v">{속성}</span><span class="v">{용도}</span>
+    <span class="v">{용도2}</span><span class="v">{수치}</span><span class="v">{계기}</span><span class="v">{효능2}</span>
+  </div>
+</div>
+
+<h2>3종</h2>
+
+<!-- 1 -->
+<div class="tpl">
+  <div class="thead"><span class="tno">01</span><span class="tname">셀프 반박형</span>
+    <span class="tmeta">반복 25편 · @썰풀다 · 구독 1.29만 · 26-08-23</span><span class="tv">64만<small>실측</small></span></div>
+  <div class="two">
+    <div class="pane">
+      <div class="ptitle l">실제 대본 전문 <span>357자 · 파스타 쿠커</span></div>
+      <div class="full">
+        <em>셰프들이 보면 뒷목 잡을 변태적 설계의 파스타 쿠커</em>
+        보통 파스타 삶으려면 큰 냄비 꺼내고 롱면 삐져나와서 타거나 불 앞에서 서성거리는 개고생을 해야 했는데
+        어떤 요리 미친 자가 용기 하나로 다 끝내겠다며 괴물 쿠커를 만들어 버림
+        29cm 길이라 롱면이 부러뜨릴 필요 없이 쏙 들어가고
+        소금 치고 전자레인지 돌리는 동안 화구가 텅텅 비어서 옆에서 바로 소스 볶아버리면 조리 시간이 절반으로 줄어듦
+        <em>에이 전자레인지로 돌리면 면 불어서 맛없는 거 아님?</em>
+        적은 물에 삶아져서 갇힌 녹말 때문에 오히려 소스가 면에 쫙 배어들어 미친 맛이 나고
+        심지어 뚜껑 구멍으로 물만 따르고 채반 설거지까지 싹 파괴해 버린다고
+        파스타 면 태워먹던 요린이의 삶을 바꾼 미친 아이템
+      </div>
+    </div>
+    <div class="pane">
+      <div class="ptitle r">빈칸 템플릿 <span>8칸 · CTA 없음</span></div>
+      <div class="slot"><div class="r hook">hook</div><div class="t"><span class="fix">{제품군} 전문가들이 보면 뒷목 잡을</span> 변태적 설계의 <code>{제품}</code></div></div>
+      <div class="slot"><div class="r">problem</div><div class="t">보통 <code>{본래용도}</code> 하려면 <code>{불편함}</code> 하는 개고생을 해야 했는데</div></div>
+      <div class="slot"><div class="r">reveal</div><div class="t">어떤 <span class="fix">{제품군} 미친 자가</span> <code>{차별점}</code> 하나로 다 끝내겠다며 괴물 <code>{제품군}</code>를 만들어 버림</div></div>
+      <div class="slot"><div class="r">spec</div><div class="t"><code>{수치}</code>라 <code>{불편함}</code> 없이 쏙 들어가고</div></div>
+      <div class="slot"><div class="r">mechanism</div><div class="t"><code>{사용법}</code> 하는 동안 <code>{효과}</code> 해서 <code>{효능}</code>이 <span class="fix">절반으로 줄어듦</span></div></div>
+      <div class="slot"><div class="r key">conflict</div><div class="t"><span class="fix">“에이 {사용법} 하면 {불편함} 거 아님?”</span></div></div>
+      <div class="slot"><div class="r key">rebut</div><div class="t"><code>{속성}</code> 때문에 <span class="fix">오히려</span> <code>{효능2}</code> 나고</div></div>
+      <div class="slot"><div class="r">bonus</div><div class="t"><span class="fix">심지어</span> <code>{차별점}</code><span class="fix">까지 싹 파괴해 버린다고</span></div></div>
+    </div>
+  </div>
+  <div class="note"><b>★ 반박을 따옴표 대사로 넣는 게 이 틀의 정체다.</b> “에이 ~ 아님?”은 시청자가 속으로 할 말을 먼저 뺏는 것이다 — 설명조(“걱정하실 수 있는데요”)로 쓰면 힘이 빠진다. 반박 뒤에는 반드시 <b>“오히려”</b>가 온다: 약점이라 여긴 것이 곧 강점이라는 뒤집기. 훅도 <b>전문가가 싫어할 물건</b>이라 권위인용형의 정반대다.</div>
+</div>
+
+<!-- 2 -->
+<div class="tpl">
+  <div class="thead"><span class="tno">02</span><span class="tname">회사 실수 대박형</span>
+    <span class="tmeta">반복 6편(경계) · @썰풀다 · 구독 1.35만 · 26-08-21</span><span class="tv">217만<small>실측</small></span></div>
+  <div class="two">
+    <div class="pane">
+      <div class="ptitle l">실제 대본 전문 <span>233자 · 씨앗연필</span></div>
+      <div class="full">
+        <em>덴마크 회사의 실수로 대박난 미친 연필</em>
+        최근 한 브랜드가 버려지는 연필을 줄이려고 씨앗연필을 만들었는데
+        임원진이 <em>“얼마나 팔리겠어 막 만들어 가”</em> 하면서 원가 생각 안 하고 100% 유기농 씨앗을 때려 박아버림
+        디자이너가 <em>“사장님 이래서 남습니까”</em> 했는데
+        반전은 전 세계에서 난리가 나버림
+        몽당연필을 흙에 꽂기만 하면 진짜 토마토가 자라나니까
+        오바마 재단부터 이케아까지 단체 주문을 싹 쓸어 담으며 5천만 자루가 팔려나갔다고
+      </div>
+    </div>
+    <div class="pane">
+      <div class="ptitle r">빈칸 템플릿 <span>7칸 · CTA 없음</span></div>
+      <div class="slot"><div class="r hook">hook</div><div class="t"><code>{나라}</code> <span class="fix">회사의 실수로 대박난 미친</span> <code>{제품군}</code></div></div>
+      <div class="slot"><div class="r">origin</div><div class="t">최근 한 브랜드가 <code>{계기}</code> 하려고 <code>{제품}</code>을 만들었는데</div></div>
+      <div class="slot"><div class="r key">mistake</div><div class="t">임원진이 <span class="fix">“얼마나 팔리겠어”</span> 하면서 <span class="fix">원가 생각 안 하고</span> <code>{차별점}</code>을 때려 박아버림</div></div>
+      <div class="slot"><div class="r key">conflict</div><div class="t">디자이너가 <span class="fix">“사장님 이래서 남습니까”</span> 했는데</div></div>
+      <div class="slot"><div class="r">twist</div><div class="t"><span class="fix">반전은</span> 전 세계에서 난리가 나버림</div></div>
+      <div class="slot"><div class="r">mechanism</div><div class="t"><code>{사용법}</code> 하기만 하면 진짜 <code>{효능}</code> 자라나니까</div></div>
+      <div class="slot"><div class="r">scale</div><div class="t"><code>{적용대상들}</code>까지 단체 주문을 싹 쓸어 담으며 <code>{수치}</code>가 팔려나갔다고</div></div>
+    </div>
+  </div>
+  <div class="note"><b>★ 등장인물 두 사람의 대사가 이야기를 만든다.</b> 임원(“얼마나 팔리겠어”) → 디자이너(“이래서 남습니까”) 순서다. 사람 없이 설명만 하면 이 틀은 죽는다. 화자는 <b>전지적 관찰자</b>(<code>~해버림</code>·<code>~했다고</code>) — 파는 사람이 아니다. 발명품형이 <b>성공한 탄생기</b>인 것과 달리 이건 <b>실패담으로 연다</b>. <b>주의</b>: 반복 6편으로 기준(3편)은 넘지만 <b>경계</b>다 — “실수로 만들었다”는 서사가 실제로 성립하는 제품에만 쓸 수 있다.</div>
+</div>
+
+<!-- 3 -->
+<div class="tpl">
+  <div class="thead"><span class="tno">03</span><span class="tname">제조사도 몰랐던 쓰임형</span>
+    <span class="tmeta">반복 22편 · @썰풀다 · 구독 1.32만 · 26-08-15</span><span class="tv">65만<small>실측</small></span></div>
+  <div class="two">
+    <div class="pane">
+      <div class="ptitle l">실제 대본 전문 <span>229자 · 아일렛 타공기</span></div>
+      <div class="full">
+        <em>다이소 기획자도 감탄한 공간 활용 끝판왕 — 당황했던 역대급 실수</em>
+        원래는 가죽이나 천막 구멍 뚫을 때나 쓰던 아일렛 타공기였음
+        제작자가 <em>“아, 손가락 찍히는 건 진짜 못 참지”</em> 하면서 헤드에 자석을 때려 박아버린 건데
+        이걸 본 자취생들이 <em>“어, 이거 고무장갑 뚫으면 대박이겠는데?”</em> 라며
+        싹 다 뚫어서 벽에 걸어버리기 시작했다는 거
+        심지어 별도로 구멍을 안 뚫어도 집는 순간 절단과 압착이 동시에 완벽하게 끝난다고
+      </div>
+    </div>
+    <div class="pane">
+      <div class="ptitle r">빈칸 템플릿 <span>6칸 · CTA 없음</span></div>
+      <div class="slot"><div class="r hook">hook</div><div class="t"><code>{제품군}</code> 기획자도 감탄한 <code>{효능}</code> 끝판왕 <span class="fix">— 당황했던 역대급 실수</span></div></div>
+      <div class="slot"><div class="r">origin</div><div class="t"><span class="fix">원래는</span> <code>{본래용도}</code> 때나 쓰던 <code>{제품}</code>였음</div></div>
+      <div class="slot"><div class="r key">maker</div><div class="t">제작자가 <span class="fix">“아, {불편함}는 진짜 못 참지”</span> 하면서 <code>{차별점}</code>을 때려 박아버린 건데</div></div>
+      <div class="slot"><div class="r key">user</div><div class="t">이걸 본 <code>{적용대상들}</code>이 <span class="fix">“어, 이거 {용도} 하면 대박이겠는데?”</span> 라며</div></div>
+      <div class="slot"><div class="r">spread</div><div class="t">싹 다 <code>{용도2}</code> 하기 시작했다는 거</div></div>
+      <div class="slot"><div class="r">escalation</div><div class="t"><span class="fix">심지어</span> <code>{속성}</code> 안 해도 <code>{효능2}</code> 동시에 완벽하게 끝난다고</div></div>
+    </div>
+  </div>
+  <div class="note"><b>★ 대사 2개가 짝이다: 만든 사람의 말 → 쓰는 사람의 말.</b> 그 사이의 간격이 곧 재미다 — 제작자는 <b>손가락</b>을 걱정했는데 사용자는 <b>고무장갑</b>을 뚫었다. <b>오용형과 다르다</b>: 오용형은 사용자가 다르게 쓰는 이야기지만, 이건 <b>제조사가 딴 이유로 넣은 기능</b>이 엉뚱하게 대박난 이야기다. 그래서 <b>제작자의 의도가 반드시 먼저</b> 나와야 한다.</div>
+</div>
+
+<h2>세 틀의 공통 문법 — 인스타 본진과 갈리는 지점</h2>
+<div class="vars">
+  <table style="width:100%;border-collapse:collapse;font-size:13px;color:#cfd6e0">
+    <tr style="color:#9aa3b2;font-size:12px;text-align:left">
+      <th style="padding:7px 10px;border-bottom:1px solid #2b303c">축</th>
+      <th style="padding:7px 10px;border-bottom:1px solid #2b303c">이 3종(@썰풀다)</th>
+      <th style="padding:7px 10px;border-bottom:1px solid #2b303c">인스타 본진 틀</th>
+    </tr>
+    <tr><td style="padding:7px 10px">화자</td><td style="padding:7px 10px;color:#f2c14e">관찰자 · 분석가(제3자)</td><td style="padding:7px 10px">직접(나)</td></tr>
+    <tr><td style="padding:7px 10px">말끝</td><td style="padding:7px 10px;color:#f2c14e">~해버림 · ~했다고 · ~였음</td><td style="padding:7px 10px">~하더라고요 · ~했어요</td></tr>
+    <tr><td style="padding:7px 10px">CTA</td><td style="padding:7px 10px;color:#f2c14e">없음(3편 전부)</td><td style="padding:7px 10px">“댓글에 ○○ 남겨주세요”</td></tr>
+    <tr><td style="padding:7px 10px">대사</td><td style="padding:7px 10px;color:#f2c14e">따옴표 대사가 뼈대(2~3개)</td><td style="padding:7px 10px">거의 없음</td></tr>
+    <tr><td style="padding:7px 10px">전환어</td><td style="padding:7px 10px;color:#f2c14e">반전은 · 오히려 · 심지어</td><td style="padding:7px 10px">그런데 · 근데</td></tr>
+  </table>
+  <div style="margin-top:11px;font-size:12.5px;color:#9aa3b2">
+    ★ <b>말끝만 바꿔도 광고 색이 빠진다.</b> 세 틀이 공유하는 건 소재가 아니라 <b>누가 말하느냐</b>다.
+    <b>심지어</b>는 세 편 모두에 나온다 — 마지막 한 방을 얹는 자리다.
+  </div>
+</div>
+
+<h2>한계</h2>
+<div class="limit">
+  <h3>확인한 것과 못 한 것</h3>
+  <ul>
+    <li>왼쪽 <b>대본 전문은 DB 원문 그대로</b>다(띄어쓰기·문장 끊기만 읽기 좋게 정리했다).</li>
+    <li>오른쪽 <b>빈칸 나누기는 내가 한 것</b>이다 — 어디를 고정하고 어디를 빈칸으로 둘지는 A/B로 재본 적 없다.</li>
+    <li><b>조회수는 이번엔 실측으로 붙였다</b>(<code>source_enrichment.views</code>). 다만 <b>대표 1편의 조회수</b>이지 그 틀 전체의 평균이 아니다.</li>
+    <li>세 편 다 <b>같은 채널(@썰풀다) 한 곳</b>이다. 이 문법이 채널 특성인지 유튜브 전체 문법인지는 <b>다른 채널로 대조하지 않았다.</b></li>
+    <li><b>회사 실수 대박형은 반복 6편</b>으로 경계다. “실수로 대박”이 성립하는 제품이 흔치 않아 적용 범위가 좁다.</li>
+    <li>반복 편수(6~25편)는 <b>표식 문구가 반복된다</b>는 뜻이지 전체 구조가 같다는 뜻은 아니다.</li>
+  </ul>
+</div>
+
+<footer>서버 reference.db · script_wiki 원문 3편 · source_enrichment 조회수 실측 · 2026-09-05 · <b>로컬 전용</b></footer>
+
+</div>
+</body>
+</html>
