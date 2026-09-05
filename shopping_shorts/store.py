@@ -3093,6 +3093,34 @@ class Store:
     def _norm_username(u):
         return (u or "").strip().lstrip("@").lower()
 
+    @staticmethod
+    def _upload_ts_of(it, collected_at):
+        """이 영상이 **올라온 시각**(발행시각). 없으면 age_hours로 역산한다.
+
+        ★왜 필요한가(2026-09-05 사장님 제보 "유튜브 기간 탭에서 최신순이 안 먹는다").
+          종전엔 it["timestamp"]만 봤는데 **수집 items에 그 키가 아예 없다**
+          (랭킹 빌더가 주는 시간 필드는 age_hours 하나뿐) → upload_ts가
+          reel_history에 **한 건도** 안 쌓였다(실측 유튜브 9,203건 중 0건 / 인스타 4,287건 중 0건).
+          그러면 기간 탭(hits_since)의 최신순은 first_seen(=우리가 수집한 시각)으로
+          밀려나는데, 유튜브는 하루 두 번만 수집해 first_seen이 **값 2개뿐**이라
+          최신순이 통째로 무효가 된다(화면이 전부 "7시간 전"으로 같아진다).
+        age_hours는 '수집 시점 기준 경과시간'이므로 수집시각에서 빼면 발행시각이 나온다.
+        시간을 모르면 빈 문자열 — 위 upsert의 COALESCE가 기존 값을 지우지 않는다."""
+        ts = str(it.get("timestamp") or "").strip()
+        if ts:
+            return ts                       # 원본 발행시각이 있으면 그게 정본
+        try:
+            ah = float(it.get("age_hours"))
+        except (TypeError, ValueError):
+            return ""                       # 시간 정보 없음
+        if ah < 0:
+            return ""
+        try:
+            base = datetime.fromisoformat(str(collected_at))
+        except (TypeError, ValueError):
+            base = datetime.now(timezone.utc)
+        return (base - timedelta(hours=ah)).isoformat()
+
     def _record_history(self, c, items, collected_at, platform="instagram"):
         """수집 items를 reel_history에 shortcode 기준 upsert하고 30일 지난 행을 정리.
         같은 커넥션(c)에서 실행 — save_last_run과 원자적으로 커밋된다.
@@ -3117,7 +3145,7 @@ class Store:
                 (sc, user, it.get("name"), it.get("category"), it.get("url"),
                  it.get("thumbnail"), it.get("caption"),
                  int(it.get("views") or 0), int(it.get("comments") or 0),
-                 collected_at, collected_at, str(it.get("timestamp") or ""), platform),
+                 collected_at, collected_at, self._upload_ts_of(it, collected_at), platform),
             )
         # 30일 정리 — last_seen이 30일보다 오래된 행 삭제(수집이 곧 정리 트리거).
         cutoff = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
