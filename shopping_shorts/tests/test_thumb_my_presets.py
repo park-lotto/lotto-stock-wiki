@@ -18,51 +18,10 @@ def _slice():
     return src[src.index("// ── 6단계 썸네일"):src.index("// ── 썸네일 끝")]
 
 
-def test_스타일만_뽑는다_문구와_위치는_안_담는다():
-    """프리셋에 문구·좌표가 섞이면 남의 썸네일 글자가 튀어나온다."""
-    out = run_js(_slice() + """
-console.log(JSON.stringify(thumbLayerStyle({
-  text:'진짜 이거 대박', font:'BMJUA.ttf', size:80, color:'#fff', color2:'#FFD400',
-  outline:{color:'#000',w:12}, box:null, x:0.3, y:0.7, rot:5, fx:'underline'})));
-""")
-    st = json.loads(out)
-    assert st["font"] == "BMJUA.ttf" and st["color2"] == "#FFD400"
-    assert st["outline"]["w"] == 12
-    for k in ("text", "x", "y", "rot", "fx"):
-        assert k not in st, f"{k}는 프리셋에 담기면 안 된다"
-
-
-def test_내_프리셋_적용은_문구와_위치를_지키지_않는다():
-    """색·폰트만 바뀌고 사장님이 잡은 문구·자리는 그대로여야 한다."""
-    out = run_js(_slice() + """
-THUMB_STATE.sel = 0;            // const라 통째로 바꿀 수 없다 — 안을 갈아끼운다
-THUMB_STATE.layers = [{kind:'text', text:'원래 문구', font:'A.ttf', size:50,
-  color:'#000', x:0.31, y:0.72, rot:7}];
-MY_THUMB_PRESETS = [{name:'내꺼', style:{font:'BMJUA.ttf', size:90, color:'#fff',
-  color2:'#FFD400', outline:{color:'#000',w:10}, box:null}}];
-renderThumbLayers = function(){}; renderThumbCanvas = function(){};
-applyMyThumbPreset(0);
-console.log(JSON.stringify(THUMB_STATE.layers[0]));
-""")
-    L = json.loads(out)
-    assert L["font"] == "BMJUA.ttf" and L["size"] == 90 and L["color2"] == "#FFD400"
-    assert L["text"] == "원래 문구"
-    assert L["x"] == 0.31 and L["y"] == 0.72 and L["rot"] == 7
-
-
-def test_스티커_도형_배지엔_글자스타일을_얹지_않는다():
-    """기존 색 프리셋과 같은 경계 — 얹으면 스티커가 빈 글자로 바뀌어 사라진다."""
-    out = run_js(_slice() + """
-THUMB_STATE.sel = 0;
-THUMB_STATE.layers = [{kind:'sticker', text:'🔥', size:120}];
-MY_THUMB_PRESETS = [{name:'내꺼', style:{font:'BMJUA.ttf', size:90, color:'#fff'}}];
-renderThumbLayers = function(){}; renderThumbCanvas = function(){};
-applyMyThumbPreset(0);
-console.log(JSON.stringify(THUMB_STATE.layers[0]));
-""")
-    L = json.loads(out)
-    assert L["kind"] == "sticker" and L["size"] == 120 and "font" not in L
-
+# ⭐ 글자스타일 '내 프리셋'(2026-09-01)은 **없앴다**(2026-09-05 사장님 "산만하다").
+# 같은 이름의 물건이 화면에 두 개(id=myThumbPresets가 중복)라 어느 쪽이 도는지 알 수 없었고,
+# 실제로 병합 뒤 MY_THUMB_PRESETS가 두 번 선언돼 스크립트가 통째로 죽는 자리였다.
+# 남은 것은 '🖼 내 프리셋 — 구성 전체'(서버 thumb_presets) 하나뿐이다.
 
 def test_재료탭은_한_번에_하나만_보인다():
     out = run_js(_slice() + """

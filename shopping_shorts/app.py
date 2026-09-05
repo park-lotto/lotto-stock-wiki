@@ -6105,19 +6105,15 @@ def api_mix_render(request: Request, background_tasks: BackgroundTasks, body: di
         thumb = job.get("thumbnail") or {}
         thumb["intro"] = bool(body.get("thumb_intro"))
         store.update_mix_job(job_id, thumbnail=thumb)
-<<<<<<< HEAD
         # 이 사람의 '기본값'으로도 남긴다 — 다음 작업은 매번 다시 체크하지 않아도 된다
         # (2026-09-01 사장님 "썸네일 체크박스는 개인별 마지막 저장 기억으로").
         _set_thumb_intro_default(_cid(request), bool(body.get("thumb_intro")))
-    store.update_mix_job(job_id, status="rendering", error=None)
-=======
     # ★옛 완성본을 **즉시 무효로** 만든다(2026-09-02 실사고). 종전엔 렌더를 다시 걸어도
     #   video_path가 이전 렌더 파일을 계속 가리켰고, 파일도 새 렌더가 끝날 때까지 옛 내용
     #   그대로였다. 그 사이에 [완성 영상(MP4)]을 누른 고객은 **옛 영상**을 받았고, 끝난 뒤
     #   다시 받아 "전후 영상이 둘 다 있다 · 영상이 달라졌다"가 됐다(고객 박세현 제보).
     #   비워두면 완성본 카드·다운로드·QR이 전부 자동으로 사라진다 — 막는 판단이 한 곳이다.
     store.update_mix_job(job_id, status="rendering", error=None, video_path="")
->>>>>>> origin/main
     Store(DB_PATH).enqueue("render", {"job_id": job_id})
     return {"ok": True, "status": "rendering"}
 
