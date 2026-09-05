@@ -5047,7 +5047,13 @@ def api_coupang_identify_batch(body: dict):
         pmap = _pn.identify_shop_many(todo, DB_PATH)
     except Exception as e:                                  # noqa: BLE001
         return {"ok": False, "products": {}, "error": f"판독 실패: {type(e).__name__}"}
-    return {"ok": True, "products": {k: (v or "") for k, v in (pmap or {}).items()}}
+    out = {k: (v or "") for k, v in (pmap or {}).items()}
+    # ★"살 물건 없음"을 화면이 알아볼 수 있게 따로 준다(2026-09-05).
+    #   products의 ""는 "판정했는데 제품이 없다"는 뜻인데, 화면이 그걸 "아직 안 됨"과
+    #   구분 못 해 조용히 건너뛰었다 → 맛집·방법영상도 그냥 검색 버튼이라 헛클릭이 난다.
+    #   ⚠️products 규약(빈 문자열=없음)은 그대로 두고 **덧붙이기만** 한다(옛 화면 보호).
+    return {"ok": True, "products": out,
+            "no_product": sorted(k for k, v in out.items() if not v)}
 
 
 @app.post("/api/coupang/deeplink")
