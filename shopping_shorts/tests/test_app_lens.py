@@ -781,3 +781,53 @@ def test_렌즈_검색어_온도가_0이다():
         va._client_for_key = _origc
     assert seen.get("cfg") is not None, "generate_content가 불리지 않았다"
     assert getattr(seen["cfg"], "temperature", None) == 0
+
+
+# ── has_source 신호 + 📝 대본 분석 후 찾기 (2026-09-06 사장님 "대본분석후찾기 버튼 만들고") ──
+# 렌즈는 DB에 **이미 있는** 소재만 읽는다(대본추출을 하지 않는다). 소재가 0자면 검색어는
+# 썸네일 1장만 보고 지어져 매번 달라지고, 틀려도 정답처럼 보인다. 서버가 그 사실을
+# has_source로 알려주고 프론트가 버튼을 띄운다. ★판정은 서버 한 곳(0순위-B) —
+# 프론트가 캡션 길이로 따로 재면 서버가 DB에서 채운 소재를 몰라 반드시 어긋난다.
+
+def test_렌즈_소재가_없으면_has_source_거짓(tmp_path, monkeypatch):
+    """소재 0자 = 썸네일만 보고 찍은 것 → 프론트가 '대본 분석 후 찾기'를 띄운다."""
+    monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
+    monkeypatch.setattr(appmod, "cn_search_candidates",
+                        lambda raw, src, exclude=None: {"product": "", "candidates": []})
+    c = TestClient(appmod.app)
+    r = c.post("/api/lens/cn/keywords",
+               files={"frame": ("f.jpg", _JPG_1PX, "image/jpeg")},
+               data={"source_url": "https://x/reel/NOSRC/"})
+    assert r.json()["has_source"] is False
+
+
+def test_렌즈_대본이_있으면_has_source_참(tmp_path, monkeypatch):
+    """대본추출을 돌린 영상은 소재가 있으므로 버튼을 띄우지 않는다."""
+    monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
+    st = Store(str(tmp_path / "t.db"))
+    st.save_script("HASSRC", {"full_text": "옷 먼지 떼는 실리콘 돌돌이입니다",
+                              "source_brief": {"product": "휴대용 실리콘 롤클리너"}})
+    monkeypatch.setattr(appmod, "cn_search_candidates",
+                        lambda raw, src, exclude=None: {"product": "x", "candidates": []})
+    c = TestClient(appmod.app)
+    r = c.post("/api/lens/cn/keywords",
+               files={"frame": ("f.jpg", _JPG_1PX, "image/jpeg")},
+               data={"source_url": "https://x/reel/HASSRC/"})
+    assert r.json()["has_source"] is True
+
+
+def test_렌즈_비전이_터져도_has_source가_NameError를_안낸다(tmp_path, monkeypatch):
+    """★src를 try 안에서만 만들면 예외 시 has_source가 NameError로 500이 된다."""
+    monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
+
+    def _boom(*a, **k):
+        raise RuntimeError("db down")
+    # ★소재 만들기 자체를 터뜨려야 한다 — cn_search_candidates를 터뜨리면 그 **앞줄**에서
+    #   src가 이미 채워져 NameError가 안 난다(사보타주로 확인: 가짜 단언이었다).
+    monkeypatch.setattr(appmod, "_lens_source_text", _boom)
+    c = TestClient(appmod.app)
+    r = c.post("/api/lens/cn/keywords",
+               files={"frame": ("f.jpg", _JPG_1PX, "image/jpeg")},
+               data={"source_url": "https://x/reel/BOOM/"})
+    assert r.status_code == 200
+    assert r.json()["ok"] is True and r.json()["candidates"] == []

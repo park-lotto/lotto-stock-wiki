@@ -3230,6 +3230,9 @@ async function fetchLensCnKeywords(shortcode, caption, blob, append){
     const d=await (await fetch('/api/lens/cn/keywords',{method:'POST',body:fd})).json();
     const st=LENS_STATE[shortcode]; if(!st) return;
     const got=(d.candidates||[]).filter(c=>c && c.zh);
+    // 소재(캡션·대본)가 있었는지 서버가 알려준다 — 없으면 검색어가 썸네일 1장만 보고
+    // 찍힌 것이라 아래에서 '대본 분석 후 찾기' 버튼을 띄운다(판정은 서버 한 곳, 0순위-B).
+    st.hasSource = (d.has_source !== false);
     if(append){
       // 쌓는다 — 사장님이 4개 이후 다른 것도 열어볼 수 있게. 서버가 이미 걸렀지만
       // 모델이 프롬프트를 안 지킬 수 있어 여기서도 zh 기준 중복 제거(이중 안전).
@@ -3338,6 +3341,34 @@ async function lensKwSearch(shortcode, idx){
 // 🔄 다른 검색어 — 같은 프레임으로 비전에 다시 묻되 '이미 본 것 빼고'를 넘긴다.
 // 검색어가 렌즈 열 때마다 복불복으로 바뀌던 걸(2026-08-14 사장님) 쌓아가는 방식으로 바꾼 것.
 // Gemini 무료쿼터만 쓴다 — Apify·SerpApi 비용 0(후보는 '링크 여는 버튼'일 뿐).
+// 📝 대본 분석 후 찾기 (2026-09-06 사장님 "대본분석후찾기 버튼 만들고").
+// 왜 필요한가 — 렌즈는 DB에 **이미 있는** 캡션·대본만 읽는다(대본추출을 하지 않는다).
+// 그래서 대본추출을 안 한 영상은 소재가 0자라 검색어가 **썸네일 1장만** 보고 지어지고,
+// 누를 때마다 다른 제품이 나온다(실측: 같은 프레임 5회에 5회 전부 다름).
+// 이 버튼은 ①대본추출을 먼저 돌리고 ②그 제품명으로 검색어를 다시 뽑는다.
+// ⚠️ 대본추출은 과금이라 **자동으로 돌리지 않는다** — 사장님이 누를 때만.
+async function lensExtractThenSearch(shortcode){
+  const st=LENS_STATE[shortcode]; if(!st || st.reExtracting) return;
+  st.reExtracting=true; _lensRerender(shortcode);
+  try{
+    const r=await fetch('/api/extract_script?shortcode='+encodeURIComponent(shortcode),{method:'POST'});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok || !d.ok){
+      const st1=LENS_STATE[shortcode];
+      if(st1){ st1.reExtracting=false; st1.cnErr='⚠️ 대본 분석 실패 — '+((d&&d.error)||'잠시 후 다시'); _lensRerender(shortcode); }
+      return;
+    }
+  }catch(e){
+    const st1=LENS_STATE[shortcode];
+    if(st1){ st1.reExtracting=false; st1.cnErr='⚠️ 네트워크 오류 — 잠시 후 다시'; _lensRerender(shortcode); }
+    return;
+  }
+  // 추출 성공 → 검색어를 **처음부터 다시** 뽑는다(append=false).
+  // 옛 후보는 썸네일만 보고 지은 것이라 이어붙이면 틀린 것이 남는다.
+  const st2=LENS_STATE[shortcode];
+  if(st2){ st2.reExtracting=false; st2.cnErr=''; st2.cnCands=[]; st2.cnNoNew=false; st2.cnLoading=true; _lensRerender(shortcode); }
+  await fetchLensCnKeywords(shortcode, (st2&&st2.caption)||'', st2&&st2.frameBlob, false);
+}
 async function lensMoreCnKeywords(shortcode){
   const st=LENS_STATE[shortcode];
   if(!st || st.cnLoading || !st.frameBlob) return;
@@ -3708,7 +3739,7 @@ function renderLens(shortcode, mountId){
       ${st.lensErr?`<span style="color:#e0623d">${st.lensErr}</span>`:''}
       ${st.ytLoading?'<span style="color:var(--sub)">▶️ 유튜브 불러오는 중…</span>':''}
       ${_lensIgDiag(st)}
-      <a href="/grab" target="_blank" rel="noopener" title="샤오홍슈·도우인·틱톡·인스타 영상에 '📥 담기' 버튼이 안 뜨면 여기서 1회 켜기" style="text-decoration:none;font-size:11px;padding:4px 10px;border-radius:8px;border:1px solid var(--accent);background:#1f6feb1a;color:var(--accent);font-weight:700;margin-left:auto;white-space:nowrap">📥 담기 버튼 켜기</a>
+      ${''/* 📥 담기 버튼 켜기 링크 - 2026-09-06 사장님 "담기버튼켜기빼고". 기능은 /grab 페이지에 그대로 있다(사이드바로 갈 수 있음). 되살릴 땐 이 자리에 <a href="/grab">만 다시 넣으면 된다. */}
     </div>
   </div>
   <div style="margin-bottom:8px;padding-top:8px;border-top:1px solid var(--line)">
@@ -3724,6 +3755,9 @@ function renderLens(shortcode, mountId){
         <span style="font-size:12px;color:var(--sub)" title="🔎 여기서 = 인스타·틱톡·유튜브·핀터레스트를 이 페이지 안에서 찾습니다. 나머지 아이콘(📕샤오홍슈 🎶도우인 🎵틱톡 📷인스타)은 그 사이트를 새 탭으로 엽니다">🔎 비슷한 영상 찾기 <span style="opacity:.7">— 🔎는 여기서, 아이콘은 새 탭</span></span>
         ${st.frameBlob?`<button onclick="lensMoreCnKeywords('${shortcode}')" ${st.cnLoading?'disabled':''} title="같은 장면으로 다른 각도의 검색어를 더 뽑습니다(이미 나온 건 빼고 아래에 쌓입니다). 무료 — 추가 비용 없음" style="${btnCss};border-color:var(--accent);color:var(--accent)">${st.cnLoading?'⏳ 뽑는 중…':'🔄 다른 검색어 더'}</button>`:''}
         ${st.cnNoNew?'<span style="font-size:11px;color:var(--sub)">더 나올 게 없어요 — 이 장면에서 뽑을 각도는 다 나왔습니다</span>':''}
+        ${st.cnErr?`<span style="font-size:11px;color:#e0623d">${esc(st.cnErr)}</span>`:''}
+        ${(st.hasSource===false && shortcode!=='__single__')?`<button onclick="lensExtractThenSearch('${shortcode}')" ${st.reExtracting?'disabled':''} title="이 영상의 대본·자막을 먼저 분석해 제품이 무엇인지 알아낸 뒤, 그 제품명으로 검색어를 다시 뽑습니다. 지금 검색어는 썸네일 그림만 보고 지은 것이라 엉뚱할 수 있습니다 (10~30초, 대본추출 1회 과금)" style="${btnCss};border-color:#e0a33d;color:#e0a33d;font-weight:700">${st.reExtracting?'⏳ 대본 분석 중… (10~30초)':'📝 대본 분석 후 찾기'}</button>
+        <span style="font-size:11px;color:#e0a33d">← 지금 검색어는 <b>썸네일 그림만</b> 보고 지은 것입니다</span>`:''}
       </div>
       ${st.cnSearching?`<div style="font-size:11px;color:var(--sub);margin:4px 0">🔎 ${esc(st.cnSearchKw||'')} 검색 중… (10~30초)</div>`:''}
       ${(!st.cnSearching&&st.cnCost!=null)?`<div style="font-size:11px;color:var(--sub);margin:4px 0">${st.cnCost>0?('이번 검색 $'+st.cnCost.toFixed(3)):'무료 검색'}</div>`:''}
