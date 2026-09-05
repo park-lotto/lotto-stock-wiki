@@ -28,6 +28,7 @@ from shopping_shorts.scene_match import match_scene_assets, match_sfx
 from shopping_shorts import tts
 from shopping_shorts import typecast_tts
 from shopping_shorts import audio_post
+from shopping_shorts import tts_joined
 from shopping_shorts import config
 from shopping_shorts import usage_meter
 from shopping_shorts import single_source
@@ -252,29 +253,15 @@ def _hook_opener_on(customer_id):
         return True
 
 
-def synthesize_line(narration, out_path, *, voice=None, profile=None, beat_role=None,
-                    beat_index=None, beat_total=None, previous_text=None, next_text=None,
-                    ranker=asr_ranker, global_pron=None, customer_id=0, hook_opener=None,
-                    script_endings=False):
-    """한 줄을 naturalize→TTS(N-best·연속성)→후처리까지 합성하고 변환텍스트를 반환.
+def line_profile(prof_v, profile=None, *, global_pron=None, hook_opener=None,
+                 customer_id=0, script_endings=False):
+    """한 줄을 합성할 때 쓸 naturalize 프로파일을 만든다 — **판정은 여기 한 곳**.
 
-    **튜닝 작업대와 실제 렌더가 공유하는 단일 경로**다. 양쪽이 각자 파이프라인을 조립하면
-    인자가 갈려 "작업대에서 들은 소리 ≠ 영상 소리"가 된다(2026-07-15 리뷰 S3/S4/S5/S6).
-    새 호출부를 만들지 말고 이 함수를 쓸 것.
-
-    profile 미지정 시 voice 스냅샷의 naturalize_profile을 쓴다. seed/n_best는 merge_profile을
-    거친 값으로 읽어 텍스트와 오디오가 같은 기준을 보게 한다(S10).
-
-    script_endings: **대본이 정한 어미가 이긴다**(2026-09-04 사장님 제보 "대본생성 어미
-    ~다. 수정 > 미리듣기 ~요 자동 수정됨"). True면 `spoken_style`(문어체→구어체 어미
-    치환)만 끄고 나머지 단계는 그대로 돈다. 기본 False = 종전 동작(회귀 0).
-    자세한 근거는 아래 그 처리 자리 주석 참조.
-
-    customer_id: **누구 키로 합성하나**(2026-08-24). 0=사장님 키(기존 동작 그대로).
-    하류는 이미 다 뚫려 있었다 — synthesize_best(**kw)가 그대로 넘기고
-    synthesize_tts→tts._api_key→keyroute.keys_for가 받는다. 여기만 안 받아서
-    회원이 일레븐랩스 키를 등록해도 항상 사장님 키로 돌았다(keyroute.py 주석 참조)."""
-    voice_id, settings, speed, extra_tempo, trim, prof_v, model_id, pace_mode = _voice_params(voice)
+    synthesize_line(비트별 경로)과 tts_joined(통짜 합성 경로)가 같은 프로파일을
+    보게 하려고 뽑았다(0순위-B: 같은 판단을 두 군데 적으면 반드시 어긋난다).
+    prof_v = 보이스 스냅샷의 naturalize_profile. 나머지 인자 의미는
+    synthesize_line의 docstring과 같다.
+    """
     prof = merge_profile(profile if profile is not None else prof_v)
     # 전역 발음교정을 profile 위에 병합(설계 §2-A) — 렌더·작업대 공통 choke.
     prof = pron_corrections.overlay(prof, global_pron or {})
@@ -300,6 +287,35 @@ def synthesize_line(narration, out_path, *, voice=None, profile=None, beat_role=
     if script_endings:
         prof = copy.deepcopy(prof)      # 호출자 프리셋 오염 금지(얕은복사 원본오염 전례)
         prof.setdefault("spoken_style", {})["on"] = False
+    return prof
+
+
+def synthesize_line(narration, out_path, *, voice=None, profile=None, beat_role=None,
+                    beat_index=None, beat_total=None, previous_text=None, next_text=None,
+                    ranker=asr_ranker, global_pron=None, customer_id=0, hook_opener=None,
+                    script_endings=False):
+    """한 줄을 naturalize→TTS(N-best·연속성)→후처리까지 합성하고 변환텍스트를 반환.
+
+    **튜닝 작업대와 실제 렌더가 공유하는 단일 경로**다. 양쪽이 각자 파이프라인을 조립하면
+    인자가 갈려 "작업대에서 들은 소리 ≠ 영상 소리"가 된다(2026-07-15 리뷰 S3/S4/S5/S6).
+    새 호출부를 만들지 말고 이 함수를 쓸 것.
+
+    profile 미지정 시 voice 스냅샷의 naturalize_profile을 쓴다. seed/n_best는 merge_profile을
+    거친 값으로 읽어 텍스트와 오디오가 같은 기준을 보게 한다(S10).
+
+    script_endings: **대본이 정한 어미가 이긴다**(2026-09-04 사장님 제보 "대본생성 어미
+    ~다. 수정 > 미리듣기 ~요 자동 수정됨"). True면 `spoken_style`(문어체→구어체 어미
+    치환)만 끄고 나머지 단계는 그대로 돈다. 기본 False = 종전 동작(회귀 0).
+    자세한 근거는 아래 그 처리 자리 주석 참조.
+
+    customer_id: **누구 키로 합성하나**(2026-08-24). 0=사장님 키(기존 동작 그대로).
+    하류는 이미 다 뚫려 있었다 — synthesize_best(**kw)가 그대로 넘기고
+    synthesize_tts→tts._api_key→keyroute.keys_for가 받는다. 여기만 안 받아서
+    회원이 일레븐랩스 키를 등록해도 항상 사장님 키로 돌았다(keyroute.py 주석 참조)."""
+    voice_id, settings, speed, extra_tempo, trim, prof_v, model_id, pace_mode = _voice_params(voice)
+    prof = line_profile(prof_v, profile, global_pron=global_pron,
+                       hook_opener=hook_opener, customer_id=customer_id,
+                       script_endings=script_endings)
     natural = naturalize(narration, prof, beat_role=beat_role,
                          beat_index=beat_index, beat_total=beat_total)
     # 오독 자동회피(2026-07-22): Whisper 랭커(GROQ 키)가 실동작할 때만 n을 최소 2로
@@ -341,6 +357,51 @@ def synthesize_line(narration, out_path, *, voice=None, profile=None, beat_role=
                             silence_trim=trim, pace_mode=pace_mode,
                             loudnorm=has_voice_key)
     return natural
+
+
+def finalize_beat_audio(beat, out, *, trim_tail=True):
+    """합성된 비트 mp3 하나를 마무리한다 — 무음 트림·실측 길이·자막 타이밍.
+
+    비트별 경로(_synthesize_beats)와 통짜 경로(tts_joined) **둘 다** 이 함수를 쓴다.
+    각자 마무리를 조립하면 "작업대에서 들은 것 ≠ 영상"이 다시 생긴다(0순위-B).
+
+    trim_tail: 통짜 경로는 False다. 통짜는 이미 연속 음성을 중간점에서 자른 것이라
+    조각 끝 무음이 곧 다음 조각의 앞 호흡이다 — 여기서 또 자르면 붙였을 때 원본과
+    달라진다(이음매가 다시 생긴다).
+    """
+    # ★비트 끝 무음 트림(2026-07-22) — 각 비트 TTS 뒤 자연 무음(호흡·여백)을 잘라 이어붙임을
+    # 딱 맞춘다. 안 자르면 비트 경계마다 dead-air가 남아 뚝뚝 끊긴다(레퍼런스 릴스는 무음 0).
+    # 뒤만 자르고 작은 여백을 남겨 급함·클릭 방지. 실패·mock은 원본 유지(무해).
+    if trim_tail:
+        try:
+            audio_post.trim_tail_silence(out, out)
+        except Exception:
+            traceback.print_exc(file=sys.stderr)
+    # UI '영상 길이'는 target_seconds 합인데, 추정(글자÷5.7)은 보이스 speed를 못 봐서
+    # 빠른 보이스(speed>1)면 실제 음성보다 길게 잡혀 '음성이 짧아요' 오경고가 떴다.
+    # 실제 발화초로 덮어 UI·조립(tts_dur)·최종영상을 한 값으로 맞춘다(2026-07-21).
+    # probe 실패(손상·미존재 mp3)는 조용히 추정 유지 — target 덮어쓰기는 부가기능이라 죽이면 안 된다.
+    try:
+        _ad = _probe_duration(str(out))
+    except Exception:
+        _ad = None
+    if _ad and _ad > 0:
+        beat["target_seconds"] = round(_ad, 1)
+    # 자막 타이밍용: 실제 말한 워드 시각으로 구절 표시시간 계산(실패/키없음 → 미설정=폴백).
+    beat["cap_durs"] = None
+    beat["cap_lead"] = 0.0
+    _ensure_breath_lines(beat)   # 폴백 칸이면 Gemini 호흡 끊기(실패=규칙 폴백)
+    words, _wsrc = _beat_words_src(str(out), _ad, removed=tts_timestamps.load_removed(str(out)))
+    _timing = None
+    if words:
+        _timing = caption_sync.phrase_durs_from_words(
+            beat["narration"], words, _ad or 0.0,
+            preset=beat.get("caption_lines"))   # None일 수 있음 → 폴백
+        if _timing:
+            beat["cap_durs"] = _timing.durs
+            beat["cap_lead"] = _timing.lead_in
+    # 산출 단계 기록(⑦a) — 정렬까지 성공해야 그 단이다. 실패하면 글자수 추정.
+    beat["cap_src"] = _wsrc if (words and _timing) else "estimate"
 
 
 def _beat_tts_path(tts_dir, beat):
@@ -404,6 +465,39 @@ def job_script_endings(job):
     return bool((job or {}).get("given_script") or "")
 
 
+def _try_joined(beats, tts_dir, *, voice, skip_existing, global_pron,
+                customer_id, script_endings):
+    """통짜 합성 시도 — 성공하면 True(비트별 경로를 건너뛴다).
+
+    ★"한 칸만 다시"가 없다: 통짜의 값어치는 전 비트가 **한 번의 발화**라는 데 있다.
+    일부만 다시 구우면 그 칸만 톤이 달라져 애초의 증상으로 돌아간다. 그래서
+    skip_existing이어도 다시 구울 비트가 하나라도 있으면 전부 다시 굽는다.
+    (전부 최신이면 굽지 않고 True — 0원, 종전과 같다.)
+    """
+    total = len(beats)
+    outs = [Path(_beat_tts_path(tts_dir, b)) for b in beats]
+    if skip_existing and all(b.get("tts_path") == str(o) and o.exists()
+                             for b, o in zip(beats, outs)):
+        return True
+    voice_id, settings, speed, extra_tempo, trim, prof_v, model_id, pace_mode = _voice_params(voice)
+    prof = line_profile(prof_v, None, global_pron=global_pron,
+                        customer_id=customer_id, script_endings=script_endings)
+    naturals = [naturalize(b["narration"], prof, beat_role=b.get("role"),
+                           beat_index=i, beat_total=total)
+                for i, b in enumerate(beats)]
+    seed = prof.get("seed") if prof.get("seed") is not None else _PINNED_TTS_SEED
+    ok = tts_joined.synthesize_joined(
+        beats, naturals, [str(o) for o in outs], voice_id=voice_id, settings=settings,
+        speed=speed, model_id=model_id, extra_tempo=extra_tempo,
+        customer_id=customer_id, seed=seed, work_dir=tts_dir)
+    if not ok:
+        return False
+    for beat, out in zip(beats, outs):
+        beat["tts_path"] = str(out)
+        finalize_beat_audio(beat, out, trim_tail=False)
+    return True
+
+
 def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron=None,
                       customer_id=0, script_endings=False):
     """비트별로 synthesize_line 호출. beat['tts_path']를 채운다.
@@ -446,40 +540,18 @@ def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron
             script_endings=script_endings,
         )
         beat["tts_path"] = str(out)
-        # ★비트 끝 무음 트림(2026-07-22) — 각 비트 TTS 뒤 자연 무음(호흡·여백)을 잘라 이어붙임을
-        # 딱 맞춘다. 안 자르면 비트 경계마다 dead-air가 남아 뚝뚝 끊긴다(레퍼런스 릴스는 무음 0).
-        # 뒤만 자르고 작은 여백을 남겨 급함·클릭 방지. 실패·mock은 원본 유지(무해).
-        try:
-            audio_post.trim_tail_silence(out, out)
-        except Exception:
-            traceback.print_exc(file=sys.stderr)
-        # UI '영상 길이'는 target_seconds 합인데, 추정(글자÷5.7)은 보이스 speed를 못 봐서
-        # 빠른 보이스(speed>1)면 실제 음성보다 길게 잡혀 '음성이 짧아요' 오경고가 떴다.
-        # 실제 발화초로 덮어 UI·조립(tts_dur)·최종영상을 한 값으로 맞춘다(2026-07-21).
-        # probe 실패(손상·미존재 mp3)는 조용히 추정 유지 — target 덮어쓰기는 부가기능이라 죽이면 안 된다.
-        try:
-            _ad = _probe_duration(str(out))
-        except Exception:
-            _ad = None
-        if _ad and _ad > 0:
-            beat["target_seconds"] = round(_ad, 1)
-        # 자막 타이밍용: 실제 말한 워드 시각으로 구절 표시시간 계산(실패/키없음 → 미설정=폴백).
-        beat["cap_durs"] = None
-        beat["cap_lead"] = 0.0
-        _ensure_breath_lines(beat)   # 폴백 칸이면 Gemini 호흡 끊기(실패=규칙 폴백)
-        words, _wsrc = _beat_words_src(str(out), _ad, removed=tts_timestamps.load_removed(str(out)))
-        _timing = None
-        if words:
-            _timing = caption_sync.phrase_durs_from_words(
-                beat["narration"], words, _ad or 0.0,
-                preset=beat.get("caption_lines"))   # None일 수 있음 → 폴백
-            if _timing:
-                beat["cap_durs"] = _timing.durs
-                beat["cap_lead"] = _timing.lead_in
-        # 산출 단계 기록(⑦a) — 정렬까지 성공해야 그 단이다. 실패하면 글자수 추정.
-        beat["cap_src"] = _wsrc if (words and _timing) else "estimate"
+        finalize_beat_audio(beat, out)
 
     if total == 0:
+        return
+    # ★통짜 합성(2026-09-05) — 자막 전환 지점의 목소리 튐을 뿌리에서 없앤다.
+    #   전부 한 번에 굽고 정렬로 잘라내므로 조각 사이에 톤·볼륨·배속 차이가
+    #   생길 자리가 없다. 실패하면 아래 비트별 경로로 그대로 내려간다(라이브 안전).
+    #   기본 off — TTS_JOINED=1로 켠다(검증 안 된 플래그를 라이브에 켜지 않는다).
+    if tts_joined.enabled() and _try_joined(
+            beats, tts_dir, voice=voice, skip_existing=skip_existing,
+            global_pron=global_pron, customer_id=customer_id,
+            script_endings=script_endings):
         return
     _t0 = datetime.now(timezone.utc)
     workers = max(1, min(config.TTS_MAX_WORKERS, total))
