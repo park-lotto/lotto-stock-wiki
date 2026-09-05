@@ -350,6 +350,15 @@ body.is-admin .admin-only{display:block}
   box-shadow:0 0 0 1px rgba(55,224,189,.4),0 8px 30px -8px rgba(55,224,189,.45)!important}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
+<style>
+/* 에러 설명(error_help.js가 그린다) — 빨간 한 줄로 끝내지 않고 왜·무엇을 함께 보여준다 */
+.errHelp{border-left:3px solid var(--fire,#e5484d);background:rgba(229,72,77,.07);
+  padding:8px 10px;border-radius:6px;margin:6px 0;line-height:1.55;text-align:left}
+.errHelp b{color:var(--fire,#e5484d);font-size:14px}
+.errHelp .errWhy{color:var(--sub,#8b8b8b);font-size:13px;margin-top:3px}
+.errHelp .errTodo{font-size:13px;margin-top:4px}
+</style>
+<script src="/error_help.js"></script>
 </head>
 <body>
   <main class="main">
@@ -1256,7 +1265,7 @@ async function xhsFollowerRate(btn){
     });
     _xhsSort='engagement_rate';
     renderXhsList();
-  }catch(e){ alert('오류: '+e); }
+  }catch(e){ alert(ErrorHelp.text(String(e&&e.message||e))); }
   finally{ btn.disabled=false; btn.textContent=old; }
 }
 function xhsCard(a){
@@ -1288,7 +1297,7 @@ async function xhsAdopt(profileUrlEnc, uid, btn){
     const d=await r.json();
     if(d.ok){ btn.outerHTML='<span style="font-size:11px;color:#2e7d32">✅ 담김</span>'; }
     else{ btn.disabled=false; alert(d.reason==='blacklisted'?'삭제(제외)한 계정입니다.':'담기 실패'); }
-  }catch(e){ btn.disabled=false; alert('담기 오류: '+e); }
+  }catch(e){ btn.disabled=false; alert('담기가 안 됐어요.\n\n'+ErrorHelp.text(String(e&&e.message||e))); }
 }
 async function xhsBlacklist(uid, profileUrlEnc, btn){
   if(!confirm('이 계정을 영구 제외할까요? 발굴·자동등록에서 다시 안 뜹니다.')) return;
@@ -1384,7 +1393,7 @@ async function igAdopt(username, fullName, btn){
     const d=await r.json();
     if(d.ok){ btn.outerHTML='<span style="font-size:11px;color:#2e7d32">✅ 담김</span>'; }
     else{ btn.disabled=false; alert(d.reason==='blacklisted'?'삭제(제외)한 계정입니다.':'담기 실패'); }
-  }catch(e){ btn.disabled=false; alert('담기 오류: '+e); }
+  }catch(e){ btn.disabled=false; alert('담기가 안 됐어요.\n\n'+ErrorHelp.text(String(e&&e.message||e))); }
 }
 async function igBlacklist(username, btn){
   if(!confirm('이 계정을 영구 제외할까요? 발굴·자동등록에서 다시 안 뜹니다.')) return;
@@ -4064,7 +4073,7 @@ async function saveToWiki(btn){
     const d = await r.json();
     if(!d.ok){ btn.disabled=false; btn.textContent='⭐ S급 위키 저장'; alert('저장 실패: '+(d.error||'')); return; }
     btn.textContent='✓ 위키에 저장됨'; btn.classList.add('done');
-  }catch(e){ btn.disabled=false; btn.textContent='⭐ S급 위키 저장'; alert('네트워크 오류'); }
+  }catch(e){ btn.disabled=false; btn.textContent='⭐ S급 위키 저장'; alert(ErrorHelp.text('network')); }
 }
 async function copyFullText(btn){
   const full = (document.querySelector('#scriptBody .sm-full')||{}).innerText || '';
@@ -4241,7 +4250,7 @@ async function runSceneSplit(){
       cb.addEventListener('change', ()=> pickCut(parseInt(cb.dataset.i,10), cb.checked));
     });
     syncSplitButtons();
-  }catch(e){ if(gen === SCENE_GEN){ listEl.innerHTML=''; alert('네트워크 오류'); } }
+  }catch(e){ if(gen === SCENE_GEN){ listEl.innerHTML=''; alert(ErrorHelp.text('network')); } }
   finally{ btn.disabled = false; }
 }
 
@@ -4335,7 +4344,7 @@ async function prepareOne(start, end, startFrame, queueInfo){
     // 여기서 끝 — parseFloat·toFixed 등 산술을 스치지 않는다(스치면 프레임 번호가 사라진다).
     d._start_frame = (d.start_frame != null) ? d.start_frame : startFrame;
     showSceneDraft(d, queueInfo);
-  }catch(e){ if(gen === SCENE_GEN) handlePrepareFail('네트워크 오류', queueInfo); }
+  }catch(e){ if(gen === SCENE_GEN) handlePrepareFail(ErrorHelp.text('network'), queueInfo); }
 }
 
 // prepare 나가는 순간 sceneStep2를 로딩 문구로 갈아치운다 — 낡은 초안의 버튼이 화면에
@@ -4401,7 +4410,7 @@ async function runScenePrepare(){
     if(!d.ok){ handlePrepareFail(d.error||'구간컷 실패', null); return; }
     SCENE_CTX.token = d.token;
     showSceneDraft(d);   // queueInfo 없음 → d._queue=false, 큐와 무관한 단독 초안
-  }catch(e){ if(gen === SCENE_GEN) handlePrepareFail('네트워크 오류', null); }
+  }catch(e){ if(gen === SCENE_GEN) handlePrepareFail(ErrorHelp.text('network'), null); }
   finally{ btn.disabled = false; btn.textContent = '✂ 자르고 AI 태그 뽑기'; }
 }
 
@@ -4506,7 +4515,7 @@ async function commitScene(){
       alert('장면 라이브러리에 담았습니다.');
     }
   }catch(e){
-    alert('네트워크 오류');
+    alert(ErrorHelp.text('network'));
     SCENE_BUSY = false;
     document.querySelectorAll('#sceneStep2 button').forEach(b=> b.disabled=false);
   }
