@@ -19,6 +19,7 @@
 """
 import base64
 import re
+import sys
 
 import requests
 
@@ -163,6 +164,22 @@ def synthesize(text, out_path, *, voice_id, speed=None, emotion=None, intensity=
                          intensity=intensity, model_id=model_id, seed=seed,
                          previous_text=previous_text, next_text=next_text)
     r = requests.post(_ENDPOINT_TS, headers={"X-API-KEY": key}, json=body, timeout=timeout)
+    # ★타임스탬프 엔드포인트가 403/404면 **일반 엔드포인트로 한 번 더**(2026-09-05 고객 cid 260: 14일간 잡 21건 전부
+    #   `403 Forbidden …/with-timestamps`, 키 검사(/v1/voices)는 통과). 요금제·권한이 타임스탬프만 막는 경우를 살린다 —
+    #   정렬(alignment)은 None이 되어 자막이 ASR로 강등되지만 영상은 나온다. 일반도 거부면 그 오류를 그대로 올린다.
+    if r.status_code in (403, 404):
+        print(f"typecast_tts: with-timestamps {r.status_code} → 일반 엔드포인트로 재시도 ({(r.text or '')[:120]!r})",
+              file=sys.stderr)
+        r2 = requests.post(_ENDPOINT, headers={"X-API-KEY": key}, json=body, timeout=timeout)
+        if r2.status_code == 200:
+            data2 = r2.json()
+            audio_b64 = data2.get("audio")
+            if not audio_b64:
+                raise RuntimeError("타입캐스트 응답에 audio가 없습니다")
+            with open(out_path, "wb") as f:
+                f.write(base64.b64decode(audio_b64))
+            return None
+        r2.raise_for_status()
     r.raise_for_status()
     data = r.json()
     audio_b64 = data.get("audio")
