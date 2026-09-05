@@ -339,6 +339,54 @@ def _collect_benefits(segments):
     return out
 
 
+# 조각 경계를 실제 컷 경계에 붙이는 최대 거리(프레임). 1.5프레임 = 반올림 오차만 덮는다.
+# ★넓히지 마라 — 제미니가 **일부러** 컷 중간을 가리킨 경우(한 컷 안에서 문장이 둘)까지
+#   끌어당기면 말과 화면이 어긋난다. 실측(2026-09-06)에서 어긋남은 전부 ±1프레임이었다.
+_SNAP_MAX_FRAMES = 1.5
+
+
+def _snap_to_cuts(raw_segments, cuts, fps):
+    """조각 경계를 가장 가까운 **실제 컷 경계**(프레임)에 앉힌다. 순수 함수.
+
+    ★왜(2026-09-06 사장님 "꼬다리가 튀는 느낌", 서버 lens_instagram_1844uac 실측):
+      제미니는 경계를 **0.1초 단위로 반올림해** 답한다(실제 0.967초 → "1.00초").
+      그 +1프레임 안에 **다음 장면의 첫 프레임**이 들어와 재생하면 툭 튄다.
+      조각 17개 중 9개가 +쪽으로 넘쳐 있었다.
+      같은 뿌리의 경고가 scene_cut 맨 위에 이미 있다("초로 반올림하지 마라").
+
+    ★프레임에 앉히는 이유: 30fps 영상은 1/30초 간격에만 프레임이 존재한다.
+      반올림된 초는 '프레임이 없는 시각'이라 ffmpeg가 다음 프레임에 붙인다.
+
+    반경(_SNAP_MAX_FRAMES) 밖이면 **건드리지 않는다** — 모델이 일부러 컷 중간을
+    가리킨 경우를 존중한다. cuts·fps가 없으면(감지 실패) 원본을 그대로 돌려준다.
+    """
+    if not cuts or not fps or fps <= 0:
+        return raw_segments
+    bounds = sorted({f for c in cuts for f in c})
+    if not bounds:
+        return raw_segments
+    tol = _SNAP_MAX_FRAMES / float(fps)
+
+    def snap(t):
+        try:
+            t = float(t)
+        except (TypeError, ValueError):
+            return t
+        best = min(bounds, key=lambda f: abs(f / fps - t))
+        bt = best / float(fps)
+        return bt if abs(bt - t) <= tol else t
+
+    out = []
+    for seg in raw_segments:
+        s = dict(seg)
+        ns, ne = snap(s.get("start")), snap(s.get("end"))
+        # 붙이다 길이가 0 이하가 되면(아주 짧은 조각) 그 조각은 원본을 지킨다.
+        if isinstance(ns, float) and isinstance(ne, float) and ne > ns:
+            s["start"], s["end"] = ns, ne
+        out.append(s)
+    return out
+
+
 def _merge_too_short(raw_segments, min_clip=None):
     """0.8초 미만 구간을 인접 구간에 합친다 — 태어날 때부터 못 쓰는 조각을 안 만든다.
 
@@ -689,6 +737,10 @@ def extract_script(video_path, video_id, caption="", max_retries=4, quota_sleep=
             #   ⚠️순서 주의: motion_map이 세그먼트 순번으로 seg_id를 만들므로 **병합을 먼저** 해야
             #   한다. 뒤에 하면 모션레벨이 엉뚱한 조각에 붙는다.
             _segs_raw = _merge_too_short(data.get("segments", []))
+            # ★반올림된 경계를 실제 컷 프레임에 앉힌다(2026-09-06) — 안 하면 조각 끝에
+            #   다음 장면 첫 프레임이 딸려와 재생 시 툭 튄다. 병합 뒤·seg_id 부여 전에
+            #   해야 한다(경계가 바뀌므로 모션레벨 매핑도 바뀐 경계를 봐야 맞다).
+            _segs_raw = _snap_to_cuts(_segs_raw, _cuts, _fps)
             motion_map = _compute_motion_map(video_path, _cuts, _fps, _segs_raw, video_id)
             segments = _assign_seg_ids(video_id, _segs_raw, motion_map=motion_map)
             # 소스 단위 특장점: 모델의 최상위 요약을 우선하고, 없으면 세그별 집계로 폴백.
