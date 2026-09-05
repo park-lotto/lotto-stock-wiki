@@ -6105,6 +6105,9 @@ def api_mix_render(request: Request, background_tasks: BackgroundTasks, body: di
         thumb = job.get("thumbnail") or {}
         thumb["intro"] = bool(body.get("thumb_intro"))
         store.update_mix_job(job_id, thumbnail=thumb)
+        # 이 사람의 '기본값'으로도 남긴다 — 다음 작업은 매번 다시 체크하지 않아도 된다
+        # (2026-09-01 사장님 "썸네일 체크박스는 개인별 마지막 저장 기억으로").
+        _set_thumb_intro_default(_cid(request), bool(body.get("thumb_intro")))
     # ★옛 완성본을 **즉시 무효로** 만든다(2026-09-02 실사고). 종전엔 렌더를 다시 걸어도
     #   video_path가 이전 렌더 파일을 계속 가리켰고, 파일도 새 렌더가 끝날 때까지 옛 내용
     #   그대로였다. 그 사이에 [완성 영상(MP4)]을 누른 고객은 **옛 영상**을 받았고, 끝난 뒤
@@ -8333,8 +8336,82 @@ def api_thumb_select(body: dict):
     return {"ok": True}
 
 
+# ── 🖼 썸네일 개인 설정(2026-09-01) ─────────────────────────────────────────
+# 고객별 값은 settings 테이블에 **고객 ID를 붙인 키**로 넣는다. 컬럼·테이블을 새로
+# 파지 않아 마이그레이션이 없고, 키 만드는 곳을 한 곳으로 두어 조회·저장이 안 어긋난다.
+def _thumb_intro_key(cid: int) -> str:
+    return f"thumb_intro_default::{int(cid or 0)}"
+
+
+def _thumb_presets_key(cid: int) -> str:
+    return f"thumb_presets::{int(cid or 0)}"
+
+
+def _get_thumb_intro_default(cid: int) -> bool:
+    return (Store(DB_PATH).get_setting(_thumb_intro_key(cid), "") or "") == "1"
+
+
+def _set_thumb_intro_default(cid: int, on: bool) -> None:
+    Store(DB_PATH).set_setting(_thumb_intro_key(cid), "1" if on else "0")
+
+
+#: 내 프리셋 상한 — 무한정 쌓이면 프리셋 줄이 화면을 덮는다.
+MY_THUMB_PRESET_MAX = 24
+
+
+def _load_my_thumb_presets(cid: int) -> list:
+    try:
+        raw = Store(DB_PATH).get_setting(_thumb_presets_key(cid), "") or "[]"
+        v = json.loads(raw)
+        return v if isinstance(v, list) else []
+    except Exception:
+        return []                      # 깨진 값이 화면을 통째로 막지 않게(조용히 빈 목록)
+
+
+@app.get("/api/produce/thumb/my_presets")
+def api_my_thumb_presets(request: Request):
+    """내가 저장한 썸네일 스타일 목록."""
+    return {"ok": True, "presets": _load_my_thumb_presets(_cid(request))}
+
+
+@app.post("/api/produce/thumb/my_presets")
+async def api_my_thumb_preset_save(request: Request):
+    """지금 글자 스타일을 이름 붙여 저장한다(같은 이름이면 덮어쓴다)."""
+    body = await request.json()
+    name = str(body.get("name") or "").strip()[:20]
+    style = body.get("style")
+    if not name or not isinstance(style, dict):
+        return JSONResponse(status_code=400, content={"ok": False, "error": "이름과 스타일이 필요합니다"})
+    cid = _cid(request)
+    items = [x for x in _load_my_thumb_presets(cid)
+             if isinstance(x, dict) and x.get("name") != name]
+    items.append({"name": name, "style": style})
+    items = items[-MY_THUMB_PRESET_MAX:]
+    Store(DB_PATH).set_setting(_thumb_presets_key(cid), json.dumps(items, ensure_ascii=False))
+    return {"ok": True, "presets": items}
+
+
+@app.post("/api/produce/thumb/my_presets/delete")
+async def api_my_thumb_preset_delete(request: Request):
+    body = await request.json()
+    name = str(body.get("name") or "")
+    cid = _cid(request)
+    items = [x for x in _load_my_thumb_presets(cid)
+             if isinstance(x, dict) and x.get("name") != name]
+    Store(DB_PATH).set_setting(_thumb_presets_key(cid), json.dumps(items, ensure_ascii=False))
+    return {"ok": True, "presets": items}
+
+
+@app.post("/api/produce/thumb/intro_default")
+async def api_thumb_intro_default(request: Request):
+    """체크박스를 누른 그 순간 기억한다 — 렌더까지 안 가도 다음 작업에 이어진다."""
+    body = await request.json()
+    _set_thumb_intro_default(_cid(request), bool(body.get("on")))
+    return {"ok": True}
+
+
 @app.get("/api/produce/thumb/selected/{job_id}")
-def api_thumb_selected(job_id: str):
+def api_thumb_selected(job_id: str, request: Request):
     """8단계(최종렌더)가 '지금 고른 썸네일'을 물어보는 곳(2026-08-04).
 
     THUMB_STATE는 페이지 메모리라 새로고침·작업복원 후엔 비어 있다. 8단계는 DB를 진실로 삼는다.
@@ -8344,11 +8421,17 @@ def api_thumb_selected(job_id: str):
         return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
     thumb = job.get("thumbnail") or {}
     intro = bool(thumb.get("intro"))          # 🖼 '영상 맨 앞에 넣기' 체크 복원용(2026-08-18)
+    # 이 작업에 저장된 값이 없으면 **그 사람의 마지막 값**을 쓴다(2026-09-01).
+    # 판단은 화면이 한다 — 여기서 섞어 내리면 "작업 값이었나 기본값이었나"를 알 수 없다.
+    intro_set = "intro" in thumb
+    intro_default = _get_thumb_intro_default(_cid(request))
     p = _selected_thumb_path(job)
     if not p:
-        return {"ok": True, "name": None, "url": None, "intro": intro}
+        return {"ok": True, "name": None, "url": None, "intro": intro,
+                "intro_set": intro_set, "intro_default": intro_default}
     name = thumb.get("selected")
     return {"ok": True, "name": name, "intro": intro,
+            "intro_set": intro_set, "intro_default": intro_default,
             "url": f"/api/produce/thumb/file/{job_id}/{name}"}
 
 

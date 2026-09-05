@@ -194,13 +194,9 @@ class Test새글자_얹기:
     """
     SRC = PRODUCE_HTML.read_text(encoding="utf-8")
 
-    def test_입력칸_길이제한이_문구를_안_자른다(self):
-        i = self.SRC.index('id="thumbStickerInput"')
-        seg = self.SRC[i:i + 200]
-        assert 'maxlength="8"' not in seg, "8글자 제한이 아직 있다 — 썸네일 문구가 잘린다"
-        import re
-        m = re.search(r'maxlength="(\d+)"', seg)
-        assert m and int(m.group(1)) >= 30, f"제한이 여전히 짧다: {seg[:80]}"
+    def test_스티커_직접입력칸은_없앴다(self):
+        """2026-09-05 사장님 "직접입력은 필요없으니 빼고" — 재료칸을 어지럽히던 자유입력 제거."""
+        assert 'id="thumbStickerInput"' not in self.SRC
 
     def test_새_글자는_기존_글자와_겹치지_않는_자리에_생긴다(self):
         d = _run("""
