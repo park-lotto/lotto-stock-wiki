@@ -5582,11 +5582,25 @@ def apply_scene_lab(plan, seg_map, edits):
         else:
             beat.pop("phrase_sync", None)
         applied += 1
-    # ★이 편성이 서버에 얹힌 시각(2026-08-21). 화면(localStorage)과 서버 중 어느 쪽이
-    #   최신인지 가르는 유일한 기준이다 — mix_jobs.updated_at은 음성 생성 같은 다른
+    # ★오려낸 조각도 함께 남긴다(2026-09-05, 고객 다수 제보 "자막제거 후 다시 오면
+    #   다 지워지고 까만색"). 종전엔 위에서 seg_map **사본**에만 병합하고 버려서,
+    #   DB엔 scene_override의 id만 남고 그 id가 가리킬 조각이 서버 어디에도 없었다
+    #   → 화면을 다시 열면 '0-0'·검은 칸(브라우저 저장본이 있을 때만 가려졌다).
+    #   ★저장하는 것은 **검증을 통과한 값**이다 — 위 seg_map 병합을 그대로 재사용하므로
+    #     날것의 클라이언트 입력이 DB로 새지 않는다(판정을 두 벌로 만들지 않는다).
+    _kept = {}
+    for _sid in _extra:
+        _s = seg_map.get(_sid)
+        if _s:
+            _kept[_sid] = {"video_id": _s["video_id"], "start": _s["start"],
+                           "end": _s["end"], "label": _s.get("label") or "",
+                           "text": _s.get("text") or ""}
+    # ★"at" = 이 편성이 서버에 얹힌 시각(2026-08-21). 화면(localStorage)과 서버 중 어느
+    #   쪽이 최신인지 가르는 유일한 기준이다 — mix_jobs.updated_at은 음성 생성 같은 다른
     #   이유로도 움직여서 편성 시각으로 쓸 수 없다.
     plan["scene_lab"] = {"beats": edits.get("beats") or [], "trims": trims,
                          "merges": merges, "fixlen": fixlen, "applied": applied,
+                         "extra_segs": _kept,
                          "at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
     return plan
 
