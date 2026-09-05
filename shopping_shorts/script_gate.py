@@ -381,7 +381,8 @@ def prior_verdict(checks):
 
 
 def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
-          speaker_judge=None, scene_ids=None, grounded=False, is_recipe=False):
+          speaker_judge=None, scene_ids=None, grounded=False, is_recipe=False,
+          source_count=None):
     """(checks, full_text) 반환. checks = [{name, ok, detail}, ...]
 
     style: {"beat_roles": [...], "templates": {role: [...]}, "chars_per_30s": int}
@@ -570,7 +571,8 @@ def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
     #   규칙은 프롬프트(_GROUNDED_RULE)에 적혀 있고 **여기가 그 판정**이다 — 지시와 판정은 짝
     #   (메모리 '규칙은 있는데 판정이 없다': 지시만 있으면 어겨도 미검출 → 재작성이 안 걸린다).
     if grounded and scene_ids is not None:
-        ok_s, det = scene_grounding_check(beats, scene_ids, is_recipe=is_recipe)
+        ok_s, det = scene_grounding_check(beats, scene_ids, is_recipe=is_recipe,
+                                          source_count=source_count)
         checks.append({"name": "장면 근거", "ok": ok_s, "detail": det})
     return checks, full
 
@@ -590,7 +592,7 @@ def parse_src_segs(raw):
     return out
 
 
-def scene_grounding_check(beats, scene_ids, is_recipe=False, min_ratio=0.34):
+def scene_grounding_check(beats, scene_ids, is_recipe=False, min_ratio=0.34, source_count=None):
     """(ok, detail) — 줄마다 src_seg가 실제 장면 목록에 있는지, 장면이 필요한 줄이 비지 않았는지.
 
     · 지어낸 번호(목록에 없음) → 실패(레시피도)
@@ -634,6 +636,19 @@ def scene_grounding_check(beats, scene_ids, is_recipe=False, min_ratio=0.34):
         problems.append("같은 장면을 두 줄에 썼다: "
                         + "; ".join(f"{i}번 '{t}'이 {j}번과 같은 {sid}" for i, j, sid, t in repeats[:4])
                         + " — 한 장면은 한 줄에만. 뒷줄은 장면 목록에서 다른 번호를 골라라")
+    # ★여러 소스를 넣었는데 한 편만 쓰던 것(2026-09-05 실측 b1_two_sources 3회: 소스 2편을 넣어도
+    #   2단계가 고른 장면이 **전부 첫 소스**였다 — 빠듯/넉넉/같은제품 셋 다 s1 사용 0).
+    #   사장님(2026-08-17): "한 편만 넣으면 그 한 편에 끌려가 편협해진다. 다 넣으면 고를 일이 없어진다."
+    #   중복 때와 같은 병 — 지시도 판정도 없어 앞에서부터 채우면 그만이었다. 지시는 _GROUNDED_RULE.
+    #   ⚠️장면 붙은 줄이 소스 수보다 적으면 다 쓰는 게 불가능하다 → 면제.
+    if not is_recipe and source_count and source_count > 1 and with_scene >= source_count:
+        have = {str(x).rsplit("-", 1)[0] for x in ids}          # 목록에 실제로 있는 소스들
+        got = {str(x).rsplit("-", 1)[0] for x in primary_at}    # 대본이 대표로 쓴 소스들
+        missing = sorted(have - got)
+        if len(have) > 1 and missing:
+            problems.append("재료 영상 %d편 중 %s 장면을 한 줄도 안 썼다(%s만 썼다) — 여러 영상에서 "
+                            "골라 써라. 그 줄에 정말 맞는 장면이 다른 영상에 있으면 그 번호를 적어라"
+                            % (len(have), ", ".join(missing[:3]), ", ".join(sorted(got)[:3])))
     need = max(1, int(len(beats) * min_ratio + 0.999)) if beats else 0
     if not is_recipe and beats and with_scene < need:
         # 문구의 기준은 상수에서 만든다(리뷰 L1: '절반'이라 적혀 있는데 실제는 1/3이었다)

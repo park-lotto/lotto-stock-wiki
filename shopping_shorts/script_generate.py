@@ -391,7 +391,8 @@ _GROUNDED_RULE = (
     "여러 번호를 적되 **첫 번째가 대표 장면**이다.\n"
     "- **한 장면은 한 줄에만 쓴다** — 앞줄에서 대표로 쓴 번호를 뒷줄에서 또 대표로 쓰지 마라. "
     "같은 화면이 두 번 나오면 영상이 반복돼 보인다. 비슷한 장면이 여러 개면 각 줄에 다른 번호를 골라라 "
-    "(보조 번호는 겹쳐도 된다).")
+    "(보조 번호는 겹쳐도 된다).\n"
+    "- 재료 대본이 **여러 영상**이면 장면도 여러 영상에서 골라 써라. 앞에 있는 것부터 채워 **한 영상에서만** 다 가져오지 마라 — 여러 편을 넣는 이유가 한 편에 끌려가지 않기 위해서다. 다만 소재가 서로 다른 제품이면 억지로 섞지 말고 그 줄에 정말 맞는 장면을 골라라.")
 
 
 def scene_ids_of(sources):
@@ -562,6 +563,9 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
         if isinstance(note, dict):
             note["grounded_downgraded"] = "장면 목록 0개"
         grounded, _scene_ids = False, None
+    # ★장면을 실제로 **가진** 소스가 몇 편인가(2026-09-05). 게이트 '장면 근거'가 이 값으로
+    #   "여러 편을 넣었는데 한 편만 썼나"를 본다. 장면 없는 소스는 애초에 고를 수 없으니 세지 않는다.
+    _source_count = sum(1 for s in (sources or [])[:SOURCE_MAX] if (s.get("segments") or [])) or None
     base = (_MIX_PROMPT.format(sources=_mix_source_block((sources or [])[:SOURCE_MAX],
                                                          full_scenes=bool(grounded)),
                                seconds=seconds, words=max(15, round(seconds * 2.3)), n=1,
@@ -598,7 +602,7 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
                                          seconds=seconds,
                                          speaker_judge=_speaker_judge,
                                          scene_ids=_scene_ids, grounded=bool(grounded),
-                                         is_recipe=_is_recipe)
+                                         is_recipe=_is_recipe, source_count=_source_count)
         tries.append({"chars": len(script_gate.norm(full)),
                       "fails": [c["name"] for c in checks if not c["ok"]]})
         if script_gate.passed(checks):
@@ -634,7 +638,7 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
                                          seconds=seconds,
                                          speaker_judge=script_gate.prior_verdict(checks),
                                          scene_ids=_scene_ids, grounded=bool(grounded),
-                                         is_recipe=_is_recipe)
+                                         is_recipe=_is_recipe, source_count=_source_count)
         tries.append({"chars": len(script_gate.norm(full)), "trimmed": True,
                       "fails": [c["name"] for c in checks if not c["ok"]]})
 

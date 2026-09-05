@@ -208,3 +208,93 @@ def test_장면중복_레시피는_면제():
 def test_장면중복_지시가_프롬프트에_있다():
     """지시와 판정은 짝이다 — 판정만 넣으면 모델은 규칙을 모른 채 반려당하고 재작성만 반복한다."""
     assert "한 장면은 한 줄에만" in SG._GROUNDED_RULE
+
+
+# ─── 여러 소스를 넣었는데 한 편만 쓰던 것(2026-09-05 실측) ──────────────────
+# 실측(b1_two_sources 프로브 3회): 소스 2편을 넣어도 2단계가 고른 장면이 **전부 첫 소스**였다.
+#   빠듯 2편(5+9구간)·넉넉 2편(19+22)·같은제품 2편(14+44) — 세 번 다 s1 사용 0.
+# 사장님 지시(2026-08-17, _sources_for_generate 주석): "한 편만 넣으면 그 한 편에 끌려가 편협해진다.
+#   담긴 것을 다 넣으면 고를 일이 없어진다 = 복불복이 사라진다."
+# 원인은 중복 때와 같다 — **지시도 판정도 없었다**. 있는 것 중 앞부터 채우면 그만이었다.
+# ⚠️단, 소스가 서로 다른 제품이면 억지로 섞는 게 오히려 해롭다 → 판정은 "쓸 수 있는데 안 썼나"만 본다.
+
+def test_소스분산_두_소스_중_한쪽만_쓰면_반려():
+    beats = [{"text": "가", "src_seg": "s0-0", "needs_scene": True},
+             {"text": "나", "src_seg": "s0-1", "needs_scene": True},
+             {"text": "다", "src_seg": "s0-2", "needs_scene": True}]
+    ids = {"s0-0", "s0-1", "s0-2", "s1-0", "s1-1", "s1-2"}
+    ok, det = GT.scene_grounding_check(beats, ids, source_count=2)
+    assert not ok, "두 소스를 줬는데 한쪽만 썼다 — 통과하면 안 된다"
+    assert "s1" in det or "소스" in det, det
+
+
+def test_소스분산_양쪽을_쓰면_통과():
+    beats = [{"text": "가", "src_seg": "s0-0", "needs_scene": True},
+             {"text": "나", "src_seg": "s1-0", "needs_scene": True},
+             {"text": "다", "src_seg": "s0-1", "needs_scene": True}]
+    ok, det = GT.scene_grounding_check(beats, {"s0-0", "s0-1", "s1-0"}, source_count=2)
+    assert ok, det
+
+
+def test_소스분산_소스가_하나면_검사_안_한다():
+    beats = [{"text": "가", "src_seg": "s0-0", "needs_scene": True},
+             {"text": "나", "src_seg": "s0-1", "needs_scene": True}]
+    ok, det = GT.scene_grounding_check(beats, {"s0-0", "s0-1"}, source_count=1)
+    assert ok, det
+
+
+def test_소스분산_안_주면_종전과_같다():
+    """source_count 없이 부르는 기존 호출부는 하나도 안 바뀐다(회귀 0)."""
+    beats = [{"text": "가", "src_seg": "s0-0", "needs_scene": True},
+             {"text": "나", "src_seg": "s0-1", "needs_scene": True}]
+    ok, _ = GT.scene_grounding_check(beats, {"s0-0", "s0-1", "s1-0", "s1-1"})
+    assert ok
+
+
+def test_소스분산_장면칸이_소스수보다_적으면_면제():
+    """장면 붙은 줄이 1개뿐인데 2편을 다 쓰라는 건 불가능하다."""
+    beats = [{"text": "가", "src_seg": "s0-0", "needs_scene": True},
+             {"text": "나", "src_seg": "", "needs_scene": False}]
+    ok, det = GT.scene_grounding_check(beats, {"s0-0", "s1-0"}, source_count=2)
+    assert ok, det
+
+
+def test_소스분산_레시피는_면제():
+    beats = [{"text": "가", "src_seg": "s0-0", "needs_scene": True},
+             {"text": "나", "src_seg": "s0-1", "needs_scene": True}]
+    ok, _ = GT.scene_grounding_check(beats, {"s0-0", "s0-1", "s1-0"},
+                                     source_count=2, is_recipe=True)
+    assert ok
+
+
+def test_소스분산_지시가_프롬프트에_있다():
+    assert "여러 영상" in SG._GROUNDED_RULE and "한 영상에서만" in SG._GROUNDED_RULE
+
+
+def test_소스분산_배선_generate가_source_count를_넘긴다():
+    """판정 함수만 고치고 호출부가 안 넘기면 라이브에선 아무 일도 안 일어난다
+    (메모리 '배선은 층마다'). 사보타주로 배선을 지우면 이 테스트가 빨개져야 한다."""
+    import ast
+    import pathlib
+    src = (pathlib.Path(SG.__file__)).read_text(encoding="utf-8")
+    tree = ast.parse(src)
+    calls = [n for n in ast.walk(tree)
+             if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute)
+             and n.func.attr == "check"
+             and isinstance(n.func.value, ast.Name) and n.func.value.id == "script_gate"]
+    assert calls, "script_gate.check 호출을 못 찾았다(테스트가 낡았다)"
+    bare = [n.lineno for n in calls if not any(k.arg == "source_count" for k in n.keywords)]
+    assert not bare, f"source_count 없이 script_gate.check를 부르는 줄: {bare}"
+
+
+def test_소스분산_배선_gate가_판정에_흘려보낸다():
+    import ast
+    import pathlib
+    src = (pathlib.Path(GT.__file__)).read_text(encoding="utf-8")
+    tree = ast.parse(src)
+    calls = [n for n in ast.walk(tree)
+             if isinstance(n, ast.Call) and isinstance(n.func, ast.Name)
+             and n.func.id == "scene_grounding_check"]
+    assert calls, "scene_grounding_check 호출을 못 찾았다"
+    bare = [n.lineno for n in calls if not any(k.arg == "source_count" for k in n.keywords)]
+    assert not bare, f"source_count를 안 넘기는 줄: {bare}"
