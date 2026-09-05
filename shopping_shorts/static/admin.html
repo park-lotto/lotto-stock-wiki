@@ -195,6 +195,16 @@ tbody tr:hover{background:#1b1b22}
   <tbody id=prows></tbody></table></details>
 </div>
 
+<!-- 작업 진단(2026-09-05) — 오류 신고의 작업번호(work=… 또는 job)를 넣으면 서버 상태를 한 장으로(SSH 불필요). -->
+<div class="card wait" id="diagCard">
+  <h2>🩺 작업 진단 <span id=gMsg class=msg></span>
+    <span style="float:right;font-size:13px;font-weight:400">
+      <input type=text id=diagId placeholder="work 또는 job 번호 (예 d43ae07da0a2)" style="width:260px" onkeydown="if(event.key==='Enter')runDiag()">
+      <button onclick="runDiag()" style="margin-left:6px;padding:4px 12px;cursor:pointer">조회</button>
+    </span></h2>
+  <pre id=diagOut style="font-size:12px;white-space:pre-wrap;color:#c9c9d0;max-height:420px;overflow:auto;margin:0">오류 신고의 주소에서 work=… 뒤 번호를 넣고 조회.</pre>
+</div>
+
 <!-- 오류 신고(2026-08-24) — 고객이 사이드바 '🐞 오류 신고'를 누르면 여기 쌓인다.
      ★고객은 한 줄만 쓴다. 페이지·작업번호·단계·화면오류는 화면이 자동으로 담아 보낸다
        (고객에게 job_id를 물어보면 못 받는다 — 실제로 그래서 원인 찾는 데 오래 걸렸다). -->
@@ -1120,6 +1130,28 @@ function startProbe(){
 }
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',loadProbe);
 else loadProbe();
+
+/* ── 작업 진단 카드(2026-09-05) ── 작업번호로 서버 상태 한 장. 사람이 읽기 좋게 줄로 편다. */
+function runDiag(){
+  var id=(document.getElementById('diagId').value||'').trim().replace(/.*work=/,'').replace(/[?&#].*$/,'');
+  if(!id) return;
+  var out=document.getElementById('diagOut'); out.textContent='조회 중…';
+  fetch('/api/admin/diag/work/'+encodeURIComponent(id)).then(function(r){return r.json();}).then(function(d){
+    if(!d.found){ out.textContent='못 찾음: '+id+' (work도 job도 아님)'; return; }
+    var L=[];
+    if(d.kind==='work') L.push('작업 '+d.work_id+' · 고객 '+d.customer_id+' · 제목 '+(d.title||'')+' · 단계 '+d.step+' · 갱신 '+d.updated_at+' · 확정대본 '+d.given_script_chars+'자');
+    var j=d.job||{};
+    if(j.job_id){
+      L.push('잡 '+j.job_id+' · 상태 '+j.status+(j.error?' · ⚠ 오류: '+j.error:'')+' · 고객 '+j.customer_id+' · 목표 '+j.target_seconds+'초');
+      L.push('추출 소스 '+j.extract_sources+'개 / 세그 '+j.extract_segments+' · 확정대본 '+j.given_script_chars+'자 · script_structure '+JSON.stringify(j.script_structure));
+      var p=j.plan||{}; L.push('계획: generator '+p.generator+' · 비트 '+p.beats+' · 상속 '+p.inherited+' · TTS '+p.tts_files+' · gate '+JSON.stringify(p.gate));
+      L.push('미리보기 '+JSON.stringify(j.preview)+' · 자막제거 '+JSON.stringify(j.clean)+' · fx '+j.fx_status+' · video '+(j.video_path||'-'));
+      L.push('작업폴더 '+(d.work_dir&&d.work_dir.exists?'있음 '+JSON.stringify(d.work_dir.files_by_dir):'없음'));
+    } else L.push('잡 없음(work에 job_id가 비었거나 잡이 지워짐)');
+    (d.bug_reports||[]).forEach(function(r){ L.push('🐞 #'+r.id+' ['+r.status+'] '+r.step+' · '+r.message+(r.console?'\n   화면오류: '+r.console:'')); });
+    out.textContent=L.join('\n');
+  }).catch(function(e){ out.textContent='조회 실패: '+e; });
+}
 </script>
 </div>
 <script src="/sidebar.js?v=2"></script>

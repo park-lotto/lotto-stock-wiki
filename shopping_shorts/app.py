@@ -5743,6 +5743,77 @@ def api_admin_probe_frame_accuracy_state(request: Request, start: int = 0, n: in
     return {"ok": True, "start_ok": start_ok, **_pfa.state()}    # state()의 started(시각)와 이름을 가른다
 
 
+def diag_work(store, work_id, work_dir):
+    """작업번호(work 또는 job) → 서버 상태 한 장(순수 조회, 2026-09-05 사장님 "오류신고 들어왔는데 지금같이밖에 못 하나").
+    SSH 없이 관리자 화면에서 원인을 갈라 보기 위한 것: 잡 상태·오류·단계별 상태·계획 요약·작업 폴더 파일·신고 목록."""
+    out = {"work_id": work_id, "found": False}
+    job_id = None
+    with store._conn() as c:
+        row = c.execute("SELECT work_id, customer_id, title, job_id, step, updated_at, state_json FROM produce_works "
+                        "WHERE work_id=?", (work_id,)).fetchone()
+    if row:
+        st = {}
+        try:
+            st = json.loads(row[6] or "{}")
+        except Exception:      # noqa: BLE001
+            pass
+        out.update(found=True, kind="work", customer_id=row[1], title=row[2], job_id=row[3], step=row[4],
+                   updated_at=row[5], state_keys=sorted(k for k in (st or {}).keys())[:40],
+                   given_script_chars=len(((st.get("s2") or {}).get("confirmed") or st.get("given_script") or "")
+                                          if isinstance(st, dict) else ""))
+        job_id = row[3]
+    else:
+        job_id = work_id
+    job = store.get_mix_job(job_id) if job_id else None
+    if job:
+        out["found"] = True
+        plan = job.get("edit_plan") or {}
+        beats = plan.get("beats") or []
+        out["job"] = {
+            "job_id": job_id, "status": job.get("status"), "error": (job.get("error") or "")[:500],
+            "customer_id": job.get("customer_id"), "target_seconds": job.get("target_seconds"),
+            "given_script_chars": len(job.get("given_script") or ""),
+            "script_structure": {k: (v if k != "beat_sources" else len(v or [])) for k, v in (job.get("script_structure") or {}).items()}
+                                if isinstance(job.get("script_structure"), dict) else None,
+            "extract_sources": len(job.get("extract") or {}),
+            "extract_segments": sum(len((e or {}).get("segments") or []) for e in (job.get("extract") or {}).values() if isinstance(e, dict)),
+            "plan": {"generator": plan.get("generator"), "beats": len(beats),
+                     "inherited": sum(1 for b in beats if b.get("inherited")),
+                     "tts_files": sum(1 for b in beats if b.get("tts_path")),
+                     "gate": plan.get("gate") if isinstance(plan.get("gate"), dict) else None},
+            "preview": {"status": job.get("preview_status"), "error": (job.get("preview_error") or "")[:300]},
+            "clean": {"status": job.get("clean_status"), "error": (job.get("clean_error") or "")[:300]},
+            "fx_status": job.get("fx_status"), "video_path": job.get("video_path"),
+            "created_at": job.get("created_at"), "updated_at": job.get("updated_at"),
+        }
+        d = Path(work_dir) / str(job_id)
+        files = {}
+        if d.exists():
+            for p in sorted(d.rglob("*"))[:400]:
+                if p.is_file():
+                    rel = str(p.relative_to(d))
+                    top = rel.split(os.sep)[0]
+                    files[top] = files.get(top, 0) + 1
+        out["work_dir"] = {"exists": d.exists(), "files_by_dir": files}
+    try:
+        reps = [r for r in store.list_bug_reports(limit=500) if r.get("work_id") == work_id or r.get("job_id") == job_id]
+        out["bug_reports"] = [{"id": r["id"], "created_at": r["created_at"], "message": r["message"][:200],
+                               "step": r.get("step"), "console": (r.get("console_json") or "")[:600],
+                               "status": r.get("status")} for r in reps[:10]]
+    except Exception:      # noqa: BLE001
+        out["bug_reports"] = []
+    return out
+
+
+@app.get("/api/admin/diag/work/{work_id}")
+def api_admin_diag_work(request: Request, work_id: str):
+    """관리자: 작업번호(work 또는 job) 진단 한 장 — 오류 신고를 SSH 없이 갈라 본다."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    return {"ok": True, **diag_work(Store(DB_PATH), work_id, _MIX_WORK_DIR)}
+
+
 @app.get("/api/admin/scene_swaps")
 def api_admin_scene_swaps(request: Request, days: int = 30, job_id: str = ""):
     """관리자: 3단계 손 횟수(생성기별 잡당 교체 수) + 최근 교체 행. 매칭 개선의 시험지 점수판."""
