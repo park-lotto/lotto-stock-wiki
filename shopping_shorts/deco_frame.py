@@ -472,6 +472,23 @@ DEFAULTS = {
     "sub_line_grad": 0,    # 아래쪽으로 옅어지는 정도 %(0=없음)
     "sub_line_font": "",   # 소제목 폰트 파일명(빈값=제목 폰트)
     "sub_line_size": 0,    # 소제목 글자 크기 UI px(0=박스 높이의 절반). 정하면 박스가 글자에 맞춰 자란다
+    # ── 실제 히트작 부품(2026-09-05 사장님 "부품부터 만들어 진짜 레퍼런스처럼") ──
+    # 사장님이 보낸 히트작 40여 편에 있는데 렌더에는 없던 것들. 전부 0/빈값 = 안 그림(회귀 0).
+    "profile": "",          # 동그란 채널 프로필 안 글자(보통 채널명 첫 글자). 빈값=안 그림
+    "profile_color": "",    # 그 원 색(빈값=#E8452C)
+    "profile_size": 0,      # 원 지름 px(0=64)
+    "profile_x": 0,         # 가로 위치 %(0=8)
+    "profile_y": 0,         # 세로 위치 %(0=상단 띠 바로 아래)
+    "yt_icons": 0,          # 유튜브 플레이어 아이콘 줄(스피커·CC·톱니). 0=안 그림
+    "yt_icons_color": "",   # 그 색(빈값=#FFFFFF)
+    "progress": 0,          # 하단 빨간 진행바. 0=안 그림, 1~100=진행 %
+    "progress_color": "",   # 진행바 색(빈값=#FF0033)
+    "shorts_logo": 0,       # Shorts 로고(우하단). 0=안 그림
+    "badge_text": "",       # 좌상단 알약 배지 문구. 빈값=안 그림
+    "badge_color": "",      # 배지 바탕색(빈값=#FF2D55)
+    "badge_text_color": "", # 배지 글자색(빈값=#FFFFFF)
+    "title_mark": "",       # 흰 블록 제목 강조: highlight(형광펜) / underline(밑줄) / 빈값=없음
+    "title_mark_color": "", # 그 색(빈값=#FFE600)
 }
 
 _FONTS = {
@@ -684,7 +701,10 @@ def normalize(spec):
                       ("hook_band_h", 0, 1200), ("hook_band_alpha", 0, 100),
                       ("sub_line_h", 0, 300), ("head_h", 0, 1400),
                       ("sub_line_w", 0, 1080), ("sub_line_soft", 0, 40), ("sub_line_grad", 0, 100),
-                      ("sub_line_size", 0, 200)):
+                      ("sub_line_size", 0, 200),
+                      # 히트작 부품(2026-09-05) — 값 범위도 여기 한 곳에서만 자른다
+                      ("profile_size", 0, 300), ("profile_x", 0, 100), ("profile_y", 0, 100),
+                      ("yt_icons", 0, 1), ("progress", 0, 100), ("shorts_logo", 0, 1)):
         try:
             s[k] = int(s[k])
         except (TypeError, ValueError):
@@ -791,6 +811,76 @@ def _bookmark(d, cx, cy, color, w=30, h=42, th=8):
     d.line([cx - w // 2, cy - h // 2, cx + w // 2, cy - h // 2], fill=color, width=th)
     d.line([cx - w // 2, cy + h // 2, cx, cy + h // 6], fill=color, width=th)
     d.line([cx + w // 2, cy + h // 2, cx, cy + h // 6], fill=color, width=th)
+
+
+def _profile(d, cx, cy, r, bg, text, fg=(255, 255, 255, 255)):
+    """동그란 채널 프로필. 사진 대신 색 원 + 첫 글자(실측: 히트작 대부분이 이 모양)."""
+    d.ellipse([cx - r, cy - r, cx + r, cy + r], fill=bg)
+    if text:
+        f = _font("title", max(10, int(r * 1.05)))
+        t = text[0]
+        bb = d.textbbox((0, 0), t, font=f)
+        d.text((cx - (bb[2] - bb[0]) / 2 - bb[0], cy - (bb[3] - bb[1]) / 2 - bb[1]), t, font=f, fill=fg)
+
+
+def _speaker(d, cx, cy, color, s=20, th=6):
+    """스피커 아이콘 — 네모+삼각 몸통에 음파 두 줄."""
+    d.rectangle([cx - s, cy - s * 0.4, cx - s * 0.35, cy + s * 0.4], fill=color)
+    d.polygon([(cx - s * 0.35, cy - s * 0.4), (cx + s * 0.15, cy - s),
+               (cx + s * 0.15, cy + s), (cx - s * 0.35, cy + s * 0.4)], fill=color)
+    for k in (0.55, 0.95):
+        d.arc([cx + s * 0.1, cy - s * k, cx + s * (0.1 + 2 * k), cy + s * k],
+              start=-60, end=60, fill=color, width=max(2, th - 2))
+
+
+def _cc(d, cx, cy, color, w=44, h=30, th=5):
+    """CC(자막) 아이콘 — 둥근 네모 안에 cc."""
+    d.rounded_rectangle([cx - w // 2, cy - h // 2, cx + w // 2, cy + h // 2],
+                        radius=7, outline=color, width=max(2, th - 2))
+    f = _font("bar", max(8, int(h * 0.62)))
+    bb = d.textbbox((0, 0), "cc", font=f)
+    d.text((cx - (bb[2] - bb[0]) / 2 - bb[0], cy - (bb[3] - bb[1]) / 2 - bb[1]), "cc", font=f, fill=color)
+
+
+def _gear(d, cx, cy, color, r=18, th=6):
+    """톱니 아이콘 — 원 + 사방 짧은 막대(작은 크기에서 톱니로 읽힌다)."""
+    d.ellipse([cx - r, cy - r, cx + r, cy + r], outline=color, width=max(2, th - 2))
+    d.ellipse([cx - r * 0.35, cy - r * 0.35, cx + r * 0.35, cy + r * 0.35], fill=color)
+    for dx, dy in ((0, -1), (0, 1), (-1, 0), (1, 0), (-0.7, -0.7), (0.7, 0.7), (-0.7, 0.7), (0.7, -0.7)):
+        d.line([cx + dx * r * 0.95, cy + dy * r * 0.95, cx + dx * r * 1.45, cy + dy * r * 1.45],
+               fill=color, width=max(2, th - 3))
+
+
+def _progress_bar(d, W, y, pct, color, th=8, pad=28):
+    """쇼츠 하단 빨간 진행바 + 동그란 손잡이."""
+    x0, x1 = pad, W - pad
+    d.rounded_rectangle([x0, y - th // 2, x1, y + th // 2], radius=th // 2, fill=(255, 255, 255, 90))
+    px = x0 + (x1 - x0) * max(0, min(100, pct)) / 100.0
+    d.rounded_rectangle([x0, y - th // 2, px, y + th // 2], radius=th // 2, fill=color)
+    d.ellipse([px - th, y - th, px + th, y + th], fill=color)
+
+
+def _shorts_mark(d, cx, cy, scale=1.0):
+    """Shorts 로고 — 빨간 알약에 흰 삼각 + 글자."""
+    w, h = int(150 * scale), int(50 * scale)
+    d.rounded_rectangle([cx - w // 2, cy - h // 2, cx + w // 2, cy + h // 2],
+                        radius=h // 2, fill=(255, 0, 51, 235))
+    tx = cx - w // 2 + int(18 * scale)
+    d.polygon([(tx, cy - h * 0.26), (tx, cy + h * 0.26), (tx + h * 0.34, cy)], fill=(255, 255, 255, 255))
+    f = _font("bar", max(10, int(26 * scale)))
+    bb = d.textbbox((0, 0), "Shorts", font=f)
+    d.text((tx + h * 0.55, cy - (bb[3] - bb[1]) / 2 - bb[1]), "Shorts", font=f, fill=(255, 255, 255, 255))
+
+
+def _pill_badge(d, x, y, text, bg, fg, size=26, pad=16):
+    """좌상단 알약 배지(예: 진짜 봐야할 것). 그린 크기를 돌려준다."""
+    f = _font("bar", size)
+    bb = d.textbbox((0, 0), text, font=f)
+    tw, th = bb[2] - bb[0], bb[3] - bb[1]
+    w, h = tw + pad * 2, th + pad
+    d.rounded_rectangle([x, y, x + w, y + h], radius=h // 2, fill=bg)
+    d.text((x + pad - bb[0], y + (h - th) / 2 - bb[1]), text, font=f, fill=fg)
+    return w, h
 
 
 def _lum(c):
@@ -1080,6 +1170,35 @@ def render(spec):
             d.text((60, ty + 6), meta, font=fm, fill=meta_fill, anchor="la")
             ty += 46
             d.rectangle([60, ty + 8, W - 60, ty + 11], fill=rule_fill)
+
+    # ── 실제 히트작 부품(2026-09-05) — 전부 0/빈값이면 한 줄도 안 그린다(회귀 0).
+    #    사장님 히트작 40여 편에 있는데 렌더에 없던 것들: 프로필 원·플레이어 아이콘·
+    #    진행바·Shorts 로고·알약 배지. 값이 있을 때만 이 층이 돈다.
+    if (s["profile"] or s["yt_icons"] or s["progress"] or s["shorts_logo"] or s["badge_text"]):
+        _pl = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        _pd = ImageDraw.Draw(_pl)
+        if s["badge_text"]:
+            _pill_badge(_pd, int(W * 0.045), int(H * 0.022), s["badge_text"],
+                        _rgb(s["badge_color"] or "#FF2D55"),
+                        _rgb(s["badge_text_color"] or "#FFFFFF"),
+                        size=max(14, int(H * 0.026)))
+        if s["profile"]:
+            _pr = (s["profile_size"] or 64) // 2
+            _px = int(W * ((s["profile_x"] or 8) / 100.0))
+            _py = int(H * (s["profile_y"] / 100.0)) if s["profile_y"] else (bar_h + _pr + 12)
+            _profile(_pd, _px, _py, _pr, _rgb(s["profile_color"] or "#E8452C"), s["profile"])
+        if s["yt_icons"]:
+            _ic = _rgb(s["yt_icons_color"] or "#FFFFFF")
+            _iy = max(bar_h // 2, int(H * 0.035))
+            _speaker(_pd, int(W * 0.60), _iy, _ic, s=int(H * 0.020))
+            _cc(_pd, int(W * 0.72), _iy, _ic, w=int(W * 0.075), h=int(H * 0.030))
+            _gear(_pd, int(W * 0.84), _iy, _ic, r=int(H * 0.019))
+        if s["progress"]:
+            _progress_bar(_pd, W, int(H * 0.93), s["progress"],
+                          _rgb(s["progress_color"] or "#FF0033"), th=max(5, int(H * 0.008)))
+        if s["shorts_logo"]:
+            _shorts_mark(_pd, int(W * 0.82), int(H * 0.885), scale=W / 1080.0)
+        im.alpha_composite(_pl)
 
     # ★가림막은 **맨 마지막**에 얹는다 — 띠·글자보다 위여야 원본 자막을 확실히 덮는다.
     _draw_masks(im, s["masks"])

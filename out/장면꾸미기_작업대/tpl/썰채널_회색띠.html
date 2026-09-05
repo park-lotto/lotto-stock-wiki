@@ -1,0 +1,36 @@
+<!doctype html>
+<!--설명: 회색 띠 · 흰 바-->
+<html><head><meta charset="utf-8">
+<style>
+@font-face{font-family:BHS;src:url('../../../shopping_shorts/static/fonts/BlackHanSans.ttf')}
+@font-face{font-family:PT;src:url('../../../shopping_shorts/static/fonts/Pretendard-ExtraBold.otf')}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;background:transparent}
+.wrap{position:relative;width:1080px;height:1920px;font-family:BHS,PT,sans-serif}
+.head{position:absolute;left:0;top:0;width:100%;padding:96px 0 34px;background:#3A3F45;text-align:center}
+.ad{position:absolute;right:40px;top:34px;color:#fff;font-family:PT;font-size:32px;font-weight:700;opacity:.85;z-index:3}
+
+.l1,.l2{display:block;padding:0 3%;line-height:1.02;letter-spacing:-5px;white-space:nowrap;
+  -webkit-text-stroke:12px #000;paint-order:stroke fill;text-shadow:0 8px 0 #000;
+  transform:scaleX({{SCALEX}}) skewX({{SKEW}}deg)}
+.l1{color:{{COLOR1}};font-size:126px}
+.l2{color:{{COLOR2}};font-size:126px;margin-top:14px}
+.bar{position:absolute;left:0;width:100%;background:#fff;display:flex;align-items:center;justify-content:center}
+.bar span{font-family:PT;font-weight:900;color:#111;letter-spacing:-2px;font-size:46px;white-space:nowrap;padding:0 4%}
+
+</style></head><body>
+<div class="wrap">
+  <div class="ad">[광고]</div>
+  
+  <div class="head" id="h"><span class="l1">{{LINE1}}</span><span class="l2">{{LINE2}}</span></div>
+  <div class="bar" id="b"><span>{{SUB}}</span></div>
+</div>
+<script>
+var h=document.getElementById('h'), b=document.getElementById('b');
+var els=document.querySelectorAll('.l1,.l2');
+for(var i=0;i<els.length;i++){
+  var s=parseInt(getComputedStyle(els[i]).fontSize);
+  while(els[i].scrollWidth>1080 && s>40){ s-=2; els[i].style.fontSize=s+'px'; }
+}
+b.style.top=h.offsetHeight+'px'; b.style.height='128px';
+</script></body></html>
