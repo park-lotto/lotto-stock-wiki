@@ -7,6 +7,7 @@
   디자인(CSS)은 그대로 두고 {{ }} 자리만 갈아끼운다 — 느낌이 안 죽는다.
 """
 import os, re, tempfile
+import time
 from playwright.sync_api import sync_playwright
 
 TPL_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'tpl')
@@ -25,6 +26,66 @@ def fill(tpl_name, values):
     def sub(m):
         return str(values.get(m.group(1), ''))
     return re.sub(r'\{\{([A-Z0-9_]+)\}\}', sub, src)
+
+
+
+# ── 렌더 전용 스레드 하나 ────────────────────────────────────────────────
+# ★2026-09-05: playwright(sync)는 **띄운 스레드에서만** 쓸 수 있다.
+#   웹서버는 요청마다 스레드가 달라서, 브라우저를 공유하면 두 번째 요청부터 500이 난다.
+#   그래서 전용 스레드를 하나 두고 일감을 줄 세워 넘긴다. 브라우저는 한 번만 띄운다
+#   (요청마다 띄우면 1~2초씩 걸려 카드 16장이 동시에 오면 전부 실패한다 — 실측).
+import threading, queue
+
+_Q = queue.Queue()
+_WORKER = None
+
+
+def _worker():
+    with sync_playwright() as p:
+        b = p.chromium.launch()
+        pg = b.new_page(viewport={"width": 1080, "height": 1920}, device_scale_factor=1)
+        while True:
+            job = _Q.get()
+            if job is None:
+                break
+            html, out_png, done = job
+            try:
+                fd, tmp = tempfile.mkstemp(suffix='.html', dir=TPL_DIR)
+                os.close(fd)
+                open(tmp, 'w', encoding='utf-8').write(html)
+                try:
+                    pg.goto('file:///' + tmp.replace(os.sep, '/'))
+                    pg.wait_for_timeout(260)
+                    pg.screenshot(path=out_png, omit_background=True)
+                    done.append(None)
+                finally:
+                    os.remove(tmp)
+            except Exception as e:                      # noqa: BLE001
+                done.append(e)
+            _Q.task_done()
+
+
+def _ensure():
+    global _WORKER
+    if _WORKER is None or not _WORKER.is_alive():
+        _WORKER = threading.Thread(target=_worker, daemon=True)
+        _WORKER.start()
+
+
+def render_one(tpl_name, values, out_png, w=1080, h=1920):
+    """틀 1장 → PNG. 전용 스레드가 그린다."""
+    _ensure()
+    done = []
+    _Q.put((fill(tpl_name, values), out_png, done))
+    for _ in range(400):                                # 최대 20초 대기
+        if done:
+            break
+        time.sleep(0.05)
+    if done and isinstance(done[0], Exception):
+        raise done[0]
+    if not done:
+        raise RuntimeError('렌더 시간 초과')
+    return out_png
 
 
 def render_many(tpl_name, scenes, out_dir, w=1080, h=1920):

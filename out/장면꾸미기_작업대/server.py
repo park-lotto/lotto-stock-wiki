@@ -159,8 +159,7 @@ class H(SimpleHTTPRequestHandler):
                 cache.mkdir(exist_ok=True)
                 fp = cache / (key + ".png")
                 if not fp.exists():
-                    _tr.render_many(name, [vals], str(cache))
-                    (cache / "000.png").replace(fp)
+                    _tr.render_one(name, vals, str(fp))
                 return self._send(fp.read_bytes(), "image/png")
             if u.path == "/tpl_list":
                 # ★HTML 틀 목록 — tpl/ 에 파일을 떨어뜨리면 그게 곧 등록이다(등록 절차 없음).

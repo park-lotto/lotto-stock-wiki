@@ -1,0 +1,180 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>장면꾸미기</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#17181b;color:#e8eaed;font:13px/1.55 "Malgun Gothic",system-ui,sans-serif;
+     display:flex;gap:16px;padding:14px;height:100vh;overflow:hidden;justify-content:center}
+
+/* ── 왼쪽: 템플릿 ── */
+.tplcol{flex:none;width:330px;display:flex;flex-direction:column;min-height:0}
+.tplhd{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
+.tplhd b{font-size:14px}
+.tplhd span{font-size:11px;color:#8b9099}
+.srch{width:100%;padding:7px 10px;border:1px solid #33373d;border-radius:8px;background:#101216;
+  color:#e8eaed;font-size:12px;margin-bottom:8px}
+.chips{display:flex;gap:5px;overflow-x:auto;padding-bottom:7px;margin-bottom:8px}
+.chips::-webkit-scrollbar{height:0}
+.chips button{flex:none;padding:5px 12px;border:0;background:#25282d;color:#aab1bd;border-radius:16px;
+  font-size:11.5px;cursor:pointer;white-space:nowrap}
+.chips button.on{background:#1a73e8;color:#fff;font-weight:700}
+.grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;overflow-y:auto;flex:1;padding-right:4px}
+.grid::-webkit-scrollbar{width:6px}.grid::-webkit-scrollbar-thumb{background:#33373d;border-radius:5px}
+.tcard{position:relative;cursor:pointer}
+.tpv{position:relative;width:100%;aspect-ratio:9/16;background:#000;border-radius:8px;overflow:hidden;
+  border:2px solid transparent}
+.tcard:hover .tpv{border-color:#454a52}
+.tcard.on .tpv{border-color:#1a73e8}
+.tpv img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.tcard.on:after{content:"✔";position:absolute;right:4px;top:4px;width:16px;height:16px;border-radius:50%;
+  background:#1a73e8;color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center}
+.tcard b{display:block;padding:5px 2px 0;font-size:10.5px;font-weight:600;text-align:center;color:#aab1bd;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tcard.on b{color:#8ab4f8}
+.newt{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;
+  aspect-ratio:9/16;border:1px dashed #454a52;border-radius:8px;color:#8b9099;cursor:pointer;font-size:10.5px}
+
+/* ── 가운데: 미리보기 ── */
+.stage{flex:none;display:flex;flex-direction:column;align-items:center;gap:8px}
+.phone{position:relative;width:472px;height:840px;background:#000;overflow:hidden;border-radius:8px}
+.phone .vid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.phone .ovl{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none}
+.nav{display:flex;align-items:center;gap:8px;font-size:12px;color:#9aa0a6}
+.nav button{padding:5px 12px;background:#2a2d31;border:0;border-radius:7px;color:#e8eaed;cursor:pointer}
+
+/* ── 오른쪽: 설정 ── */
+.panel{flex:none;width:330px;background:#1f2125;border-radius:10px;padding:12px 13px;
+       overflow-y:auto;display:flex;flex-direction:column}
+.tabs{display:flex;gap:5px;margin-bottom:10px}
+.tabs button{flex:1;padding:7px 0;border:0;border-radius:7px;background:#2a2d31;color:#c8ccd2;font-size:13px;cursor:pointer}
+.tabs button.on{background:#1a73e8;color:#fff}
+.pane{display:none}.pane.on{display:block}
+label{display:block;font-size:11px;color:#9aa0a6;margin:9px 0 3px}
+label .cnt{float:right;color:#5f6570}
+input[type=text]{width:100%;padding:6px 8px;border:1px solid #33373d;border-radius:6px;
+  background:#141619;color:#e8eaed;font-size:13px;font-family:inherit}
+input[type=range]{width:100%;height:16px}
+input[type=color]{width:100%;height:26px;border:1px solid #33373d;border-radius:6px;background:#141619;padding:1px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.val{float:right;color:#8ab4f8}
+.num{width:100%;padding:4px 6px;border:1px solid #33373d;border-radius:5px;background:#141619;
+     color:#e8eaed;font-size:12px;text-align:center}
+button.act{width:100%;padding:9px;margin-top:11px;border:0;border-radius:7px;background:#2a2d31;
+           color:#e8eaed;font-size:13px;cursor:pointer}
+button.pri{background:#1a73e8;color:#fff;font-weight:700}
+.lines input{margin-bottom:4px}
+.hint{font-size:10px;color:#7c8288;margin:6px 0 2px;line-height:1.5}
+details{margin-top:10px;border-top:1px solid #2a2d31;padding-top:8px}
+summary{font-size:12px;color:#9aa0a6;cursor:pointer;list-style:none}
+summary::-webkit-details-marker{display:none}
+summary:before{content:"\25B8 ";color:#1a73e8}
+details[open] summary:before{content:"\25BE "}
+.sw{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#25282d;
+    border-radius:8px;margin-bottom:6px;font-size:12px;cursor:pointer}
+.sw i{width:34px;height:19px;border-radius:11px;background:#3a3f47;position:relative;transition:background .15s}
+.sw i:after{content:"";position:absolute;left:2px;top:2px;width:15px;height:15px;border-radius:50%;
+  background:#fff;transition:left .15s}
+.sw.on i{background:#1a73e8}
+.sw.on i:after{left:17px}
+</style></head><body>
+
+<div class="tplcol">
+  <div class="tplhd"><b>템플릿</b><span id="cntlbl"></span></div>
+  <input type="text" class="srch" id="q" placeholder="🔍 틀 이름 검색">
+  <div class="chips" id="chips"></div>
+  <div class="grid" id="grid"></div>
+</div>
+
+<div class="stage">
+  <div class="phone" id="phone">
+    <img class="vid" id="vid" src="bg.jpg"><img class="ovl" id="ovl">
+  </div>
+  <div class="nav">
+    <button onclick="mv(-1)">&#9664;</button><span id="no">1 / 26</span><button onclick="mv(1)">&#9654;</button>
+    <span id="part">후킹</span>
+    <button onclick="playAll()">▶ 전체 넘겨보기</button>
+    <span>장면을 넘겨 자막이 어떻게 나오는지 확인</span>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="tabs">
+    <button class="on" data-t="title" onclick="tab('title')">🎨 제목</button>
+    <button data-t="cap" onclick="tab('cap')">💬 자막</button>
+    <button data-t="fx" onclick="tab('fx')">✨ 효과</button>
+  </div>
+
+  <!-- 제목 -->
+  <div class="pane on" id="p-title">
+    <label>노란 제목 <span class="cnt" id="n1"></span></label><input type="text" id="t1">
+    <label>흰색 제목 <span class="cnt" id="n2"></span></label><input type="text" id="t2">
+    <label>중간 흰색 바 문구 <span class="cnt" id="n3"></span></label><input type="text" id="t3">
+    <div class="g2">
+      <div><label>노란색</label><input type="color" id="c1" value="#ffe600"></div>
+      <div><label>흰 제목 색</label><input type="color" id="c2" value="#ffffff"></div>
+    </div>
+    <div class="g3">
+      <div><label>노란 크기</label><input class="num" type="text" id="s1" value="126"></div>
+      <div><label>흰 크기</label><input class="num" type="text" id="s2" value="126"></div>
+      <div><label>바 문구</label><input class="num" type="text" id="s3" value="46"></div>
+    </div>
+    <label>기울기 <span class="val" id="skv">-7°</span></label><input type="range" id="sk" min="-20" max="20" value="-7">
+    <label>가로 압축 <span class="val" id="sxv">94%</span></label><input type="range" id="sx" min="70" max="120" value="94">
+    <label>외곽선 <span class="val" id="olv">14px</span></label><input type="range" id="ol" min="0" max="30" value="14">
+    <details><summary>세부 설정</summary>
+      <label>채널명</label><input type="text" id="ch" value="숏템메이커">
+      <label>글자 간격 <span class="val" id="lsv">-5px</span></label><input type="range" id="ls" min="-15" max="5" value="-5">
+      <label>그림자 깊이 <span class="val" id="shv">10px</span></label><input type="range" id="sh" min="0" max="30" value="10">
+      <label>하단 영상/이미지 교체</label><input type="file" id="file" accept="video/*,image/*">
+    </details>
+  </div>
+
+  <!-- 자막 -->
+  <div class="pane" id="p-cap">
+    <label>이 장면 자막</label><input type="text" id="ct" value="여러분 다이어트할 때 히카마는 무조건">
+    <div class="hint">줄 나누기 — Enter=여기서 끊기 · Backspace(줄 맨 앞)=윗줄과 붙이기</div>
+    <div class="lines" id="lines"></div>
+    <div class="g2" style="margin-top:6px">
+      <button class="act" style="margin:0" onclick="capAuto()">↩ 자동으로</button>
+      <button class="act" style="margin:0" onclick="capAll()">전체 컷에</button>
+    </div>
+    <label>자리</label>
+    <div class="g3">
+      <button class="act" style="margin:0" onclick="capPos('top')">⬆ 위</button>
+      <button class="act" style="margin:0" onclick="capPos('mid')">↕ 중간</button>
+      <button class="act" style="margin:0" onclick="capPos('bot')">⬇ 아래</button>
+    </div>
+    <div class="g2">
+      <div><label>글자색</label><input type="color" id="cc" value="#ffffff"></div>
+      <div><label>크기</label><input class="num" type="text" id="cs" value="52"></div>
+    </div>
+    <details><summary>세부 설정</summary>
+      <label>테두리 <span class="val" id="cov">6px</span></label><input type="range" id="co" min="0" max="20" value="6">
+      <label>테두리 색</label><input type="color" id="cok" value="#000000">
+    </details>
+  </div>
+
+  <!-- 효과 -->
+  <div class="pane" id="p-fx">
+    <div class="hint">화면에 얹는 부품입니다. 끄면 안 그립니다.</div>
+    <div class="sw on" data-k="ad" onclick="fx('ad')"><span>[광고] 표시</span><i></i></div>
+    <div class="sw" data-k="badge" onclick="fx('badge')"><span>좌상단 배지</span><i></i></div>
+    <div class="sw" data-k="profile" onclick="fx('profile')"><span>동그란 채널 프로필</span><i></i></div>
+    <div class="sw" data-k="icons" onclick="fx('icons')"><span>플레이어 아이콘 (🔊 CC ⚙️)</span><i></i></div>
+    <div class="sw" data-k="progress" onclick="fx('progress')"><span>하단 진행바</span><i></i></div>
+    <div class="sw" data-k="shorts" onclick="fx('shorts')"><span>Shorts 로고</span><i></i></div>
+    <details open><summary>세부 설정</summary>
+      <label>배지 문구</label><input type="text" id="badgetxt" value="진짜 봐야할 것">
+      <div class="g2">
+        <div><label>배지 색</label><input type="color" id="badgec" value="#ff2d55"></div>
+        <div><label>프로필 색</label><input type="color" id="profc" value="#e8452c"></div>
+      </div>
+      <label>진행바 위치 <span class="val" id="pgv">38%</span></label><input type="range" id="pg" min="1" max="100" value="38">
+    </details>
+  </div>
+
+  <button class="act pri" onclick="go()">이 틀로 26컷 만들기</button>
+  <button class="act" onclick="saveTpl()">＋ 내 틀로 저장</button>
+</div>
+
+<script src="studio.js"></script>
+</body></html>
