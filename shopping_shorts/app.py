@@ -4013,6 +4013,35 @@ def api_get_vmake_key(request: Request):
 _KEY_FAIL = threading.local()
 
 
+def _probe_typecast_synth(service, key):
+    """타입캐스트 키를 **합성으로** 검사한다 — 목록 조회는 요금제 없이도 되므로 검사가 못 된다.
+    순서: /v1/voices 200 → 첫 voice_id로 /v1/text-to-speech "안녕하세요" → 200이면 ok.
+    403/402는 요금제·크레딧 안내, 그 외는 코드 그대로. 네트워크 예외는 '확인 못 함'."""
+    hdr = {"X-API-KEY": key}
+    try:
+        rv = requests.get("https://api.typecast.ai/v1/voices", headers=hdr, timeout=10)
+        if rv.status_code != 200:
+            _remember_key_failure(service, rv.status_code, rv.text[:300])
+            return False
+        voices = rv.json() if rv.text else []
+        if isinstance(voices, dict):
+            voices = voices.get("voices") or voices.get("items") or []
+        vid = next((v.get("voice_id") for v in voices if isinstance(v, dict) and v.get("voice_id")), None)
+        if not vid:
+            _remember_key_failure(service, 0, "목소리 목록이 비어 있어 합성을 검사하지 못했습니다")
+            return False
+        from shopping_shorts import typecast_tts as _tc
+        body = _tc.build_payload("안녕", vid)
+        rs = requests.post(_tc._ENDPOINT, headers=hdr, json=body, timeout=20)
+        if rs.status_code == 200:
+            return True
+        _remember_key_failure(service, rs.status_code, rs.text[:300])
+        return False
+    except requests.RequestException as e:
+        _remember_key_failure(service, 0, f"네트워크: {e!r}"[:300])
+        return False
+
+
 def _remember_key_failure(service: str, code: int, body: str) -> None:
     """업체가 준 실패 사유를 사람 말로 바꿔 기억해둔다. 로그에도 남긴다."""
     msg = _explain_key_failure(service, code, body)
@@ -4055,6 +4084,13 @@ def _explain_key_failure(service: str, code: int, body: str) -> str:
             return why
         if "invalid_api_key" in low:
             return "ElevenLabs가 이 키를 인식하지 못합니다. 키를 새로 만들어 다시 넣어주세요."
+    if service == keyroute.SVC_TYPECAST:
+        # 타입캐스트는 목록 조회는 되고 합성만 403인 키가 있다(요금제 미가입·만료·크레딧 0). "값 확인"은 틀린 안내.
+        if code == 403:
+            return ("타입캐스트가 이 키의 음성 합성을 거부했습니다(403). 타입캐스트 API 요금제가 활성인지·크레딧이 "
+                    "남았는지 확인해 주세요. 키 값 자체는 맞습니다.")
+        if code == 402:
+            return "타입캐스트 크레딧이 부족합니다. typecast.ai에서 충전해 주세요."
     if code in (401, 403):
         return "키가 인식되지 않습니다(권한 없음). 값을 다시 확인해주세요."
     if code == 429:
@@ -4159,7 +4195,10 @@ def _probe_user_key(service: str, key: str) -> bool:
         # ★일레븐랩스와 같은 규칙: **우리가 실제로 쓰는 기능이 되는가**로 본다.
         #   /v1/voices는 합성이 아니라 성우 목록 조회라 크레딧을 안 쓴다
         #   (확인 버튼이 돈을 쓰면 안 된다). 헤더 이름이 다르다 — X-API-KEY다.
-        url, kw = "https://api.typecast.ai/v1/voices", {"headers": {"X-API-KEY": key}}
+        # ★2026-09-05 뒤집음: /v1/voices는 **요금제 없이도 200**이라 검사가 못 된다. 실측 cid 260 — 등록 검사 ok인데
+        #   14일간 잡 21건 전부 합성 403. "돈을 쓰면 안 된다"보다 "고객이 14일 막힌다"가 더 나쁘다 → "안녕" 2자(2크레딧)를
+        #   진짜로 합성해 본다(_probe_typecast_synth). 403이면 요금제·크레딧 안내가 등록 화면에 바로 뜬다.
+        return _probe_typecast_synth(service, key)
     elif service == keyroute.SVC_YOUTUBE:
         url = ("https://www.googleapis.com/youtube/v3/videos"
                f"?part=id&id=dQw4w9WgXcQ&key={urllib.parse.quote(key)}")
@@ -4509,6 +4548,11 @@ _OUT_OF_CREDIT = ("402", "payment required", "not enough credits", "insufficient
 #   ElevenLabs/타입캐스트 HTTP 오류 문구(요청 라이브러리의 "401 Client Error … for url: https://api.elevenlabs.io/…")를
 #   상태코드·상세로 갈라 **고객이 할 수 있는 일**을 말한다. 순서가 곧 우선순위다.
 _TTS_VENDOR_RULES = (
+    # 타입캐스트 403 = 키는 맞는데 **합성이 거부**(API 요금제 미가입·만료·크레딧 0)인 경우가 대부분 — 목소리 목록은 되고
+    # 합성만 막힌다(실측 cid 260, 14일간 21건 전부). "키를 다시 넣어라"는 틀린 안내다.
+    (("api.typecast.ai", "403"),
+     "타입캐스트가 이 키의 음성 합성을 거부했습니다(403). 타입캐스트 API 요금제가 활성인지·크레딧이 남았는지 확인해 주세요. "
+     "급하면 TTS 단계에서 기본 목소리(ElevenLabs)로 바꾸면 바로 됩니다."),
     (("detected_unusual_activity", "unusual activity"),
      "음성 서비스(ElevenLabs)가 무료 요금제의 비정상 사용으로 이 키를 막았습니다. 유료 요금제로 바꾸거나 "
      "설정 > 🔑 내 키 등록에서 다른 키를 넣어 주세요."),
