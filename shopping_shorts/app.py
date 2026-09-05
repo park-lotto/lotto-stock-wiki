@@ -5788,8 +5788,8 @@ def diag_work(store, work_id, work_dir):
         st = {}
         try:
             st = json.loads(row[6] or "{}")
-        except Exception:      # noqa: BLE001
-            pass
+        except Exception as e:      # noqa: BLE001 — 진단은 상태를 못 읽어도 나머지를 보여준다(사유는 남긴다)
+            print(f"[diag_work] state_json 파싱 실패({work_id}): {e!r}", file=sys.stderr)
         out.update(found=True, kind="work", customer_id=row[1], title=row[2], job_id=row[3], step=row[4],
                    updated_at=row[5], state_keys=sorted(k for k in (st or {}).keys())[:40],
                    given_script_chars=len(((st.get("s2") or {}).get("confirmed") or st.get("given_script") or "")
