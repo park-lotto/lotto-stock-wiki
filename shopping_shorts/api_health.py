@@ -57,9 +57,16 @@ OUT_ERROR = "error"                # 그 외
 # 요청이 실제로 상대 API에 나간 outcome — RPD 예산 계산은 이것만 센다.
 _REQUEST_OUTCOMES = (OUT_OK, OUT_RPM, OUT_RPD, OUT_AUTH, OUT_QUOTA,
                      OUT_SERVER, OUT_TIMEOUT, OUT_EMPTY, OUT_ERROR)
-# 사람이 "사고"로 보는 outcome — 판정·피드 기본 필터.
+# 사람이 "사고"로 보는 outcome — 피드에 싣는 기본 필터.
 FAIL_OUTCOMES = (OUT_RPM, OUT_RPD, OUT_AUTH, OUT_QUOTA, OUT_SERVER,
                  OUT_TIMEOUT, OUT_NETWORK, OUT_EMPTY, OUT_SILENT, OUT_ERROR)
+
+# ★기다리면 저절로 풀리는 것 — **판정에서 실패로 세지 않는다**(2026-09-01).
+#   분당 한도는 로테이션이 정상 동작하는 모습이다. 실측: 아침 크론 시간대에
+#   rpm 66 / ok 56이 나와 "실패율 56% danger" 경보가 떴는데, 실제로는 56건이
+#   정상 처리되고 있었다. 매일 아침 울리는 경보는 진짜 사고를 가린다.
+#   ⚠️ 피드에는 그대로 보인다(FAIL_OUTCOMES) — 숨기는 게 아니라 **등급만** 낮춘다.
+_RETRYABLE_OUTCOMES = (OUT_RPM, OUT_QUOTA, OUT_SERVER)
 
 _KST = timezone(timedelta(hours=9))
 # 구글 무료티어 RPD는 태평양시 자정에 리셋된다(실측 08-27: 오전 429 키가 오후 200).
@@ -245,7 +252,11 @@ def record(service, outcome, *, pool=None, key=None, key_idx=None, owner=None,
                 (now.isoformat(), _kst_day(now), service, pool,
                  key_tail(key), key_idx, owner, op, model, job_id,
                  None if customer_id is None else str(customer_id),
-                 outcome, http, (str(detail)[:500] if detail else None),
+                 # ★1200자(2026-09-02). 500자에선 구글 429의 뒷줄이 잘려
+                 #   "PerDay인가 PerMinute인가"를 사람이 확인할 수 없었다 —
+                 #   분류는 전체 문자열로 하는데 기록만 잘려, 경보가 의심스러울 때
+                 #   근거를 되짚을 방법이 없다.
+                 outcome, http, (str(detail)[:1200] if detail else None),
                  dur_ms, _proc_kind()))
             conn.commit()
         finally:
@@ -263,10 +274,17 @@ def record(service, outcome, *, pool=None, key=None, key_idx=None, owner=None,
                 cure = " — /apiwatch에서 확인, env에서 제거 필요"
             else:
                 cure = " — 회원 등록 키(BYOK)일 수 있음: /apiwatch 피드에서 고객 확인"
+            when = now.astimezone(_KST).strftime("%m-%d %H:%M")
             ops_alert.raise_alert(
                 f"api_key_dead_{service}",
-                f"[API] {service} 키 사망 감지({'…' + (key_tail(key) or '?')})",
-                f"{detail or ''}"[:300] + cure)
+                # ★시각을 제목에 박는다 — 없으면 이미 고친 일을 '지금 사고'로 읽는다
+                #   (2026-09-01: 04:11에 키를 뺐는데 04:08 경보를 보고 다시 쫓았다).
+                f"[API {when}] {service} 키 사망({'…' + (key_tail(key) or '?')})",
+                f"[발생 {when} KST] " + f"{detail or ''}"[:280] + cure,
+                grade=ops_alert.GRADE_OPS,
+                auto="이 키는 자동 제외됐고 다른 키로 계속 돕니다 — 서비스 중단 아님",
+                todo=("env에서 그 키를 빼면 정리 끝" if service in ("gemini", "youtube")
+                      else "회원 키면 회원에게 키 교체 안내"))
         except Exception as e:            # noqa: BLE001 — 경보 실패가 기록을 막으면 안 된다
             log.warning("api_health: 키사망 경보 실패(무시) %r", e)
 
@@ -512,20 +530,25 @@ def aggregates(hours=24):
                 f"GROUP BY service, pool, key_tail ORDER BY total DESC LIMIT 300",
                 (*_REQUEST_OUTCOMES, pt_start))]
 
+            # ★KST 시각을 **서버가** 붙인다(2026-09-02). 화면에서 UTC→KST를 다시
+            #   계산하면 같은 판단이 두 곳에 생긴다(0순위-B). 축 라벨이 여기서 나온다.
             out["hourly"] = [dict(r) for r in conn.execute(
                 f"SELECT substr(ts, 1, 13) hour_utc, "
                 f"SUM(CASE WHEN outcome='ok' THEN 1 ELSE 0 END) ok, "
                 f"SUM(CASE WHEN outcome IN ({fail_in}) THEN 1 ELSE 0 END) fail "
                 f"FROM api_events WHERE ts >= ? GROUP BY hour_utc ORDER BY hour_utc",
                 (*FAIL_OUTCOMES, since))]
+            for _h in out["hourly"]:
+                _h["kst_hour"] = _kst_hour_of(_h.get("hour_utc"))
 
             # ★죽은 키는 '호출 몇 번'이 아니라 '키 몇 개'로 센다(2026-09-01 사장님 지적).
             #   실측: 죽은 키 1개를 34분간 12번 때린 것이 "12건 사망"으로 읽혀,
             #   무더기 사고로 오인됐다. 처방(키를 빼라)의 단위도 키 개수다.
             out["dead_keys"] = [dict(r) for r in conn.execute(
-                "SELECT service, pool, key_tail, COUNT(*) hits, MIN(ts) first_ts, MAX(ts) last_ts "
+                "SELECT service, pool, key_tail, customer_id, COUNT(*) hits, "
+                "MIN(ts) first_ts, MAX(ts) last_ts "
                 "FROM api_events WHERE outcome=? AND ts >= ? "
-                "GROUP BY service, pool, key_tail ORDER BY hits DESC LIMIT 50",
+                "GROUP BY service, pool, key_tail, customer_id ORDER BY hits DESC LIMIT 50",
                 (OUT_AUTH, since))]
 
             out["heartbeats"] = [dict(r) for r in conn.execute(
@@ -539,6 +562,32 @@ def aggregates(hours=24):
 
 # ── 판정 — 맨 위 한 줄 (ops.html 철학: 답 먼저, 근거는 아래) ─────────────────
 
+def _when_suffix(ts):
+    """'(마지막 06:40, 12분 전)' 같은 꼬리표. 빈 값이면 빈 문자열.
+
+    ★왜 '몇 분 전'까지 붙이나: 시각만 있으면 사장님이 지금 시각과 암산해야 한다.
+      이미 끝난 일인지 진행 중인지가 한눈에 보여야 다시 쫓지 않는다."""
+    if not ts:
+        return ""
+    try:
+        t = datetime.fromisoformat(str(ts))
+        if t.tzinfo is None:
+            t = t.replace(tzinfo=timezone.utc)
+        mins = int((_utcnow() - t).total_seconds() // 60)
+        ago = ("방금" if mins < 2 else
+               f"{mins}분 전" if mins < 60 else
+               f"{mins // 60}시간 {mins % 60}분 전")
+        return f"(마지막 {t.astimezone(_KST).strftime('%H:%M')}, {ago})"
+    except Exception:                     # noqa: BLE001 — 표기 실패로 판정을 막지 않는다
+        return ""
+
+
+def _problem_signature(problems):
+    """경보 중복 판정용 서명 — 숫자(횟수·시각·분 전)를 지워 '무엇이 문제인가'만 남긴다."""
+    import re as _re
+    return "|".join(sorted(_re.sub(r"[0-9]+", "#", p) for p in problems))
+
+
 def verdict(snap=None, agg=None):
     """지금 상태 한 줄 + 처방. danger가 새로 켜지면 ops_alert로 사람에게 민다."""
     if not _enabled():                           # 기록을 껐으면 묵은 이벤트로 경보하지 않는다(리뷰 13)
@@ -549,37 +598,68 @@ def verdict(snap=None, agg=None):
     problems, warns = [], []
     try:
         # ① 최근 1시간 실패 비율(서비스별) — silent_fallback은 1건이라도 danger
-        fails = {}
+        fails = {}      # 진짜 실패(사람이 조치해야 하는 것)
+        soft = {}       # 기다리면 풀리는 것(분당 한도·일시 서버오류) — 참고용
         oks = {}
         for row in agg.get("by_service", []):
             svc = row.get("service")
             if row.get("outcome") == OUT_OK:
                 oks[svc] = oks.get(svc, 0) + row.get("n", 0)
+            elif row.get("outcome") in _RETRYABLE_OUTCOMES:
+                # ★분당 한도·일시적 서버 오류는 **사고가 아니다**(2026-09-01 실측).
+                #   아침 크론이 키를 돌려쓰며 정상적으로 부딪히는 것이라, 이걸 실패로
+                #   세면 매일 아침 danger 경보가 울려 진짜 사고가 묻힌다.
+                soft[svc] = soft.get(svc, 0) + row.get("n", 0)
             elif row.get("outcome") in FAIL_OUTCOMES:
                 fails[svc] = fails.get(svc, 0) + row.get("n", 0)
             if row.get("outcome") == OUT_SILENT and row.get("n", 0) > 0:
                 problems.append(f"{svc}: 무음 폴백 {row['n']}건 — 고객이 무음 영상을 받았다")
             # OUT_AUTH는 아래에서 '키 개수' 기준으로 따로 판정한다(호출 건수로 세지 않는다).
         # ★죽은 키 판정 — 키 개수가 본체, 호출 횟수는 "얼마나 헛되이 때렸나"의 근거.
-        dead_by_svc = {}
+        #   ★회원이 직접 넣은 키(customer_id 있음)가 죽은 것은 **운영사고가 아니다**(2026-09-04
+        #     사장님 "계속 운영사고가 뜬다" — 실측: typecast 183건·elevenlabs 252건이 전부 회원 340·268의
+        #     키였는데 "죽은 키 1개()"로 danger가 울렸다). 그 키는 회원이 바꿔야 풀린다 → warn으로
+        #     회원 번호를 붙여 알린다. 운영 키(customer_id 없음)만 danger.
+        dead_by_svc, member_dead = {}, {}
         for d in (agg.get("dead_keys") or []):
             s = d.get("service")
-            e = dead_by_svc.setdefault(s, {"keys": 0, "hits": 0, "tails": []})
+            tail = ("…" + str(d["key_tail"])) if d.get("key_tail") else "꼬리 미기록"
+            if d.get("customer_id"):
+                m = member_dead.setdefault((s, str(d["customer_id"])), {"hits": 0, "last": ""})
+                m["hits"] += d.get("hits", 0)
+                m["last"] = max(m["last"], d.get("last_ts") or "")
+                continue
+            e = dead_by_svc.setdefault(s, {"keys": 0, "hits": 0, "tails": [], "last": ""})
             e["keys"] += 1
             e["hits"] += d.get("hits", 0)
-            if d.get("key_tail"):
-                e["tails"].append("…" + str(d["key_tail"]))
+            e["tails"].append(tail)
+            lt = d.get("last_ts") or ""
+            if lt > e["last"]:
+                e["last"] = lt
         for s, e in dead_by_svc.items():
             problems.append(
                 f"{s}: 죽은 키 {e['keys']}개({', '.join(e['tails'][:3])})를 "
-                f"{e['hits']}번 헛되이 호출 — 그 키를 빼야 시간을 안 버린다")
+                f"{e['hits']}번 헛되이 호출{_when_suffix(e['last'])} — 그 키를 빼야 시간을 안 버린다")
+        for (s, cid), m in member_dead.items():
+            warns.append(
+                f"{s}: 회원 {cid}의 키가 죽음({m['hits']}번 실패{_when_suffix(m['last'])}) — "
+                f"회원이 키를 바꿔야 한다(운영 키 문제 아님)")
 
+        # 실패율은 **진짜 실패만** 센다(분당 한도는 아래에서 따로 본다).
         for svc, f in fails.items():
-            tot = f + oks.get(svc, 0)
+            tot = f + oks.get(svc, 0) + soft.get(svc, 0)
             if tot >= 10 and f / tot > 0.5:
                 problems.append(f"{svc}: 최근 1시간 실패율 {round(100 * f / tot)}% ({f}/{tot}건)")
             elif tot >= 10 and f / tot > 0.2:
                 warns.append(f"{svc}: 최근 1시간 실패율 {round(100 * f / tot)}%")
+        # 분당 한도가 성공보다 많으면 '몰렸다'는 신호 — 처방은 키 추가가 아니라 **분산**이다.
+        # danger로 올리지 않는다: 기다리면 풀리고, 실제로 작업은 나가고 있다.
+        for svc, s in soft.items():
+            ok_n = oks.get(svc, 0)
+            if s >= 20 and s > ok_n:
+                warns.append(
+                    f"{svc}: 분당 한도에 {s}번 걸림(성공 {ok_n}건) — "
+                    f"한 시간에 몰렸다. 키를 늘리기 전에 작업을 분산하라")
 
         # ② 제미니 풀 잔량
         for pool in snap.get("gemini", []):
@@ -588,8 +668,19 @@ def verdict(snap=None, agg=None):
                 continue
             if pool.get("pool") == "shorts":
                 total, live = pool.get("total", 0), pool.get("live", 0)
+                # ★사장님 키와 회원 키를 갈라 본다(2026-09-04). 사장님 키만 다 잠겨도
+                #   회원 키가 살아 있으면 고객은 정상 결과를 받는다 → danger가 아니라
+                #   "오늘 키 보충" 운영주의. 진짜 전멸(회원 키까지 0)만 danger.
+                _ks = pool.get("keys") or []
+                _owner_live = sum(1 for k in _ks if k.get("owner") == "owner" and k.get("state") == "live")
+                _owner_tot = sum(1 for k in _ks if k.get("owner") == "owner")
+                _member_live = sum(1 for k in _ks if k.get("owner") == "member" and k.get("state") == "live")
                 if total and live == 0:
                     problems.append("쇼핑쇼츠 제미니 풀 전멸(살아있는 키 0개)")
+                elif _owner_tot and _owner_live == 0 and _member_live:
+                    warns.append(
+                        f"쇼핑쇼츠 사장님 키 {_owner_tot}개 전부 잠김 — 회원 키 {_member_live}개로 "
+                        f"버티는 중. 오늘 키를 보충하라")
                 elif total and live / total < 0.3:
                     warns.append(f"쇼핑쇼츠 제미니 풀 잔여 {live}/{total}개")
             else:
@@ -604,6 +695,7 @@ def verdict(snap=None, agg=None):
     except Exception as e:                # noqa: BLE001
         warns.append(f"판정 일부 실패: {str(e)[:80]}")
 
+    checked_at = _utcnow().astimezone(_KST).strftime("%m-%d %H:%M")
     if problems:
         level, msg = "danger", " / ".join(problems[:3])
     elif warns:
@@ -611,14 +703,34 @@ def verdict(snap=None, agg=None):
     else:
         level, msg = "ok", "모든 API가 정상 동작 중입니다."
 
+    if level != "danger":
+        # ★문제가 사라지면 쪽지를 '해결됨'으로 닫는다(2026-09-04) — 사장님이 "조치가 됐는지"를 알 수 있게.
+        try:
+            from shopping_shorts import ops_alert as _oa
+            _oa.resolve_kind("api_health_danger")
+        except Exception:                 # noqa: BLE001
+            pass
     if level == "danger":
         try:
             from shopping_shorts import ops_alert
-            ops_alert.raise_alert("api_health_danger", "[API관측판] " + problems[0],
-                                  " / ".join(problems)[:500])
+            # ★같은 내용이면 30분마다 다시 올리지 않는다(2026-09-04 사장님 "계속 뜬다").
+            #   내용(어떤 키·어떤 서비스)이 바뀔 때만 새 경보. 시각·횟수는 서명에서 뺀다.
+            # 등급: 고객이 잘못된 결과를 받는 문제(무음 폴백·풀 전멸·실패율)면 고객영향, 죽은 키만이면 운영주의.
+            _cust = any(("무음" in p or "전멸" in p or "실패율" in p) for p in problems)
+            ops_alert.raise_alert(
+                "api_health_danger",
+                f"[API관측판 {checked_at}] " + problems[0],
+                f"[{checked_at} KST · 최근 1시간 기준]\n" + " / ".join(problems)[:450],
+                signature=_problem_signature(problems),
+                grade=(ops_alert.GRADE_CUSTOMER if _cust else ops_alert.GRADE_OPS),
+                auto=("" if _cust else "죽은 키는 자동 제외되어 다른 키로 돌고 있습니다 — 서비스 정상"),
+                todo=("지금 확인 필요 — 고객이 잘못된 결과를 받고 있을 수 있습니다" if _cust
+                      else "env에서 죽은 키를 빼면 이 경보는 사라집니다"))
         except Exception as e:            # noqa: BLE001 — 경보 실패가 판정을 막으면 안 된다
             log.warning("api_health: danger 경보 실패(무시) %r", e)
-    return {"level": level, "msg": msg, "problems": problems, "warns": warns}
+    return {"level": level, "msg": msg, "problems": problems, "warns": warns,
+            "checked_at": checked_at,        # 화면·경보가 "언제 기준인지" 말할 수 있게
+            "window": "최근 1시간"}
 
 
 # ── RPD 예산 — "모자라지 않은가"에 숫자로 답한다 ───────────────────────────
@@ -665,3 +777,89 @@ def budget(snap=None, agg=None):
         }
     except Exception as e:                # noqa: BLE001
         return {"error": str(e)[:200]}
+
+
+# ══════════════════════════════════════════════════════════════════════
+# 🔑 키별 실시간 흐름 (2026-09-02 사장님)
+#   "제미니가 실제 사람들이 들어오면 몇 번 키가 어떻게 붙어서 움직이고
+#    활동하는지 생생하게 볼수있음 좋겠어"
+#
+# ★기존 keys_today는 '오늘 합계'라 **지금 이 순간 누가 일하는지**를 못 본다.
+#   여기서는 짧은 창(기본 60분)의 **낱개 호출**을 키별로 묶어 준다 —
+#   화면이 그걸 시간축에 점으로 찍으면 키가 살아 움직이는 게 보인다.
+# ══════════════════════════════════════════════════════════════════════
+
+def _kst_hour_of(hour_utc):
+    """'2026-09-01T03' → KST 시(12). 축 라벨의 유일한 출처다."""
+    try:
+        h = int(str(hour_utc)[11:13])
+        return (h + 9) % 24
+    except Exception:      # noqa: BLE001 — 라벨 하나 때문에 화면이 죽으면 안 된다
+        return None
+
+
+def key_timeline(minutes=60, service="gemini", limit_keys=40, limit_events=300):
+    """최근 `minutes`분 동안 키별로 실제 호출이 어떻게 흘렀나.
+
+    반환: [{key_tail, pool, owner, ok, fail, last_ts, events:[{ts,outcome,op,dur_ms}]}]
+    ★바쁜 키가 앞에 온다 — 지금 일하는 키가 화면 맨 위에 보여야 한다.
+    """
+    out = []
+    try:
+        conn = _connect()
+        conn.row_factory = sqlite3.Row
+        try:
+            since = (_utcnow() - timedelta(minutes=int(minutes))).isoformat()
+            rows = [dict(r) for r in conn.execute(
+                "SELECT ts, service, pool, key_tail, owner, op, outcome, dur_ms "
+                "FROM api_events WHERE ts >= ? AND key_tail IS NOT NULL "
+                "AND (? = '' OR service = ?) "
+                "ORDER BY id DESC LIMIT ?",
+                (since, service or "", service or "", int(limit_events)))]
+        finally:
+            conn.close()
+    except Exception:      # noqa: BLE001 — 관측이 화면을 죽이면 안 된다
+        return []
+
+    by = {}
+    for r in rows:
+        k = r.get("key_tail")
+        g = by.get(k)
+        if g is None:
+            g = by[k] = {"key_tail": k, "pool": r.get("pool"), "owner": r.get("owner"),
+                         "service": r.get("service"), "ok": 0, "fail": 0,
+                         "last_ts": r.get("ts"), "events": []}
+        # owner는 비어 있는 행이 섞일 수 있다 — 한 번이라도 값이 오면 그걸 쓴다.
+        if not g.get("owner") and r.get("owner"):
+            g["owner"] = r["owner"]
+        oc = r.get("outcome")
+        if oc == "ok":
+            g["ok"] += 1
+        elif oc in FAIL_OUTCOMES:
+            g["fail"] += 1
+        if r.get("ts") and r["ts"] > (g["last_ts"] or ""):
+            g["last_ts"] = r["ts"]
+        g["events"].append({"ts": r.get("ts"), "outcome": oc,
+                            "op": r.get("op"), "dur_ms": r.get("dur_ms")})
+    out = list(by.values())
+    for g in out:
+        g["events"].sort(key=lambda e: e.get("ts") or "")     # 화면은 시간순으로 그린다
+        g["total"] = g["ok"] + g["fail"]
+    # 바쁜 순 → 같으면 최근 순
+    out.sort(key=lambda g: (-g["total"], g["last_ts"] or ""), reverse=False)
+    out.sort(key=lambda g: -g["total"])
+    return out[:int(limit_keys)]
+
+
+def member_keys(store, service="gemini"):
+    """회원이 등록한 키 목록(관리자 화면용). 키 원문은 절대 안 준다 — 라벨만.
+
+    ★왜 관측판에 있나: 2026-09-01에 "등록 안 했다"는 회원 계정에 키 5개가 있었다.
+      누가·언제 넣었는지 화면에서 못 보면 그때마다 서버 DB를 열어야 한다.
+    """
+    try:
+        rows = store.list_all_customer_keys(service) if hasattr(
+            store, "list_all_customer_keys") else []
+        return [dict(r) for r in (rows or [])]
+    except Exception:      # noqa: BLE001
+        return []

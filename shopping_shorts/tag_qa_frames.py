@@ -26,6 +26,7 @@ _VERDICT_SCORE = {"맞음": 1.0, "부분": 0.5, "틀림": 0.0}
 
 _SAMPLE_N = 3          # 대표 세그 수 — 늘리면 비용이 그대로 늘어난다
 _MIN_SEG_LEN = 0.4     # 이보다 짧은 세그는 중간시각 프레임이 전환 순간에 걸려 안 뽑는다
+JUDGE_BATCH = 12       # 한 호출에 넣는 프레임 수(2026-09-05) — 27장 한 호출은 키 1개로 시간 초과
 
 _VERDICT_SCHEMA = {
     "type": "object",
@@ -51,8 +52,12 @@ def _num(v):
 
 
 def _usable(seg):
-    """중간시각 프레임을 뽑을 수 있는 세그인가 — 시간이 온전하고 너무 짧지 않아야."""
+    """중간시각 프레임을 뽑을 수 있는 세그인가 — 시간이 온전하고 너무 짧지 않아야.
+    ★묘사가 빈 세그는 **판정 대상이 아니다**(2026-09-05 실측: 태깅이 실패해 묘사가 빈 27구간 중 24구간을
+      판정기가 '맞음'으로 세어 100%가 나왔다). 빈 묘사는 호출부(probe)가 따로 센다 — 점수에 섞지 않는다."""
     a, b = _num(seg.get("start")), _num(seg.get("end"))
+    if not (seg.get("scene_desc") or "").strip():
+        return False
     return a is not None and b is not None and b - a >= _MIN_SEG_LEN
 
 
@@ -153,10 +158,13 @@ def _extract_frames(video_path, picked, dest_dir):
 
 
 def _judge(frame_paths, picked):
-    """프레임 N장 + 각 묘사 → 모델이 일치 여부 판정. 실패는 [](호출부 fail-open)."""
-    import json
+    """프레임 N장 + 각 묘사 → 모델이 일치 여부 판정. 실패는 [](호출부 fail-open).
+
+    ★2026-09-05: **JUDGE_BATCH장씩 나눠 부른다.** 27장을 한 호출에 넣으면 키 하나로는 시간 초과로 판정이 통째로
+      비었다(실측 s3 → 점수 None = 서버 30편 실측에 구멍). 묶음 안 번호(1부터)로 판정받아 전체 번호로 되돌린다.
+      모델 순서·스키마 없음은 frame_script.TAG_MODELS/loads_lenient와 같은 처방(0순위-B)."""
     from shopping_shorts import comment_gen
-    from shopping_shorts.video_analysis import _MODEL
+    from shopping_shorts.frame_script import TAG_MODELS, loads_lenient
     try:
         from google.genai import types
     except Exception:
@@ -167,46 +175,69 @@ def _judge(frame_paths, picked):
     if key is None:
         # ★실사고(확대 실측 30회 중 21회): 앞 6건이 성공한 뒤 나머지가 전부 측정 실패로
         #   떨어졌는데 **로그가 한 줄도 없었다** — 예외가 아니라 이 early return이라서다.
-        #   Layer 2를 켜면 담기마다 모델을 한 번 더 쓰므로 키 풀이 먼저 마르는데, 그때
-        #   frame_score가 아무 흔적 없이 빠진다. "측정 못 함"이 안 보이면 그 지표는
-        #   있으나 마나다(이 파일이 None≠0.0으로 지키려던 바로 그 원칙의 관측 쪽 짝).
         log.info("tag_qa_frames._judge 건너뜀 — 쓸 수 있는 Gemini 키가 없다(키 풀 소진?)")
         return []
-    lines = "\n".join(f"{n+1}번 이미지의 묘사: {(s.get('scene_desc') or '(없음)')}"
-                      for n, (_, s) in enumerate(picked))
-    prompt = (
-        f"영상에서 뽑은 프레임 {len(frame_paths)}장이다(순서대로). 각 이미지가 아래 묘사와 "
-        f"맞는지 판정해라.\n{lines}\n\n"
-        "★중요 — 묘사는 **수 초짜리 구간 전체**를 요약한 것이고, 이미지는 그 구간의 "
-        "**중간 한 장**이다. 그러므로 묘사에 적힌 동작이 이 한 장에 다 담겨 있지 않은 것은 "
-        "**정상이며 감점 사유가 아니다**. 예: 묘사가 '가루를 담고 액체를 부어 섞는 과정'인데 "
-        "이미지엔 붓는 장면만 있다면 그것은 '맞음'이다.\n"
-        "판정 기준:\n"
-        "· '맞음' = 묘사의 **주 대상**이 화면의 주 대상과 같고, 이미지가 그 구간의 한 장면으로 "
-        "자연스럽다(동작 일부만 보여도 맞음).\n"
-        "· '부분' = 대상은 맞지만 묘사가 화면과 **모순**된다(예: '깨끗해진 상태'라는데 아직 "
-        "더러움, 전혀 다른 공정).\n"
-        "· '틀림' = 주 대상 자체가 다르다. 배경 소품·장식을 주제품처럼 적었으면 '틀림'이다.\n"
-        "verdicts 배열로 출력하되 **각 항목에 image_no(1부터)를 반드시 넣어라** — 어느 이미지의 "
-        "판정인지 번호로 명시해야 한다. 모든 이미지를 빠짐없이 판정하고, reason은 한국어 한 줄로 짧게.")
-    parts = [prompt]
-    for fp in frame_paths:
-        try:
-            with open(fp, "rb") as fh:
-                parts.append(types.Part.from_bytes(data=fh.read(), mime_type="image/jpeg"))
-        except Exception as e:  # noqa: BLE001
-            # 장수가 어긋나면 판정↔묘사 짝이 밀린다 — 통째로 포기하되 이유는 남긴다.
-            log.info("tag_qa_frames._judge 건너뜀 — 프레임을 못 읽었다(%s): %s", fp, e)
-            return []
-    try:
-        resp = comment_gen._client_for_key(key).models.generate_content(
-            model=_MODEL, contents=parts,
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json", response_schema=_VERDICT_SCHEMA))
-        return json.loads(resp.text).get("verdicts", []) or []
-    except Exception as e:  # noqa: BLE001
-        log.info("tag_qa_frames._judge 실패(무해) — %s", e)
-        return []
+    pairs = list(zip(frame_paths, picked))
+    out = []
+    for b0 in range(0, len(pairs), JUDGE_BATCH):
+        chunk = pairs[b0:b0 + JUDGE_BATCH]
+        lines = "\n".join(f"{n+1}번 이미지의 묘사: {(s.get('scene_desc') or '(없음)')}"
+                          for n, (_, (_, s)) in enumerate(chunk))
+        prompt = (
+            f"영상에서 뽑은 프레임 {len(chunk)}장이다(순서대로). 각 이미지가 아래 묘사와 "
+            f"맞는지 판정해라.\n{lines}\n\n"
+            "★중요 — 묘사는 **수 초짜리 구간 전체**를 요약한 것이고, 이미지는 그 구간의 "
+            "**중간 한 장**이다. 그러므로 묘사에 적힌 동작이 이 한 장에 다 담겨 있지 않은 것은 "
+            "**정상이며 감점 사유가 아니다**. 예: 묘사가 '가루를 담고 액체를 부어 섞는 과정'인데 "
+            "이미지엔 붓는 장면만 있다면 그것은 '맞음'이다.\n"
+            "판정 기준:\n"
+            "· '맞음' = 묘사의 **주 대상**이 화면의 주 대상과 같고, 이미지가 그 구간의 한 장면으로 "
+            "자연스럽다(동작 일부만 보여도 맞음).\n"
+            "· '부분' = 대상은 맞지만 묘사가 화면과 **모순**된다(예: '깨끗해진 상태'라는데 아직 "
+            "더러움, 전혀 다른 공정).\n"
+            "· '틀림' = 주 대상 자체가 다르다. 배경 소품·장식을 주제품처럼 적었으면 '틀림'이다. "
+            "묘사가 '(없음)'이면 판정할 수 없으니 '틀림'으로 적어라.\n"
+            "verdicts 배열로 출력하되 **각 항목에 image_no(1부터)를 반드시 넣어라** — 어느 이미지의 "
+            "판정인지 번호로 명시해야 한다. 모든 이미지를 빠짐없이 판정하고, reason은 한국어 한 줄로 짧게. "
+            'JSON 객체 {"verdicts": [...]} 만.')
+        parts = [prompt]
+        ok_parts = True
+        for fp, _ in chunk:
+            try:
+                with open(fp, "rb") as fh:
+                    parts.append(types.Part.from_bytes(data=fh.read(), mime_type="image/jpeg"))
+            except Exception as e:  # noqa: BLE001
+                log.info("tag_qa_frames._judge 건너뜀 — 프레임을 못 읽었다(%s): %s", fp, e)
+                ok_parts = False
+                break
+        if not ok_parts:
+            continue
+        got = None
+        for model in TAG_MODELS:
+            k2, _ = comment_gen._current_key_and_idx()
+            client = comment_gen._client_for_key(k2 or key)
+            try:
+                resp = client.models.generate_content(
+                    model=model, contents=parts,
+                    config=types.GenerateContentConfig(response_mime_type="application/json"))
+                data = loads_lenient(resp.text)
+                verdicts = data.get("verdicts") if isinstance(data, dict) else data
+                if verdicts:
+                    got = verdicts
+                    break
+                log.info("tag_qa_frames._judge: %s 응답에 판정 없음 → 다음 모델", model)
+            except Exception as e:  # noqa: BLE001
+                log.info("tag_qa_frames._judge %s 실패(무해) — %s", model, e)
+        for v in got or []:
+            if not isinstance(v, dict):
+                continue
+            try:
+                no = int(v.get("image_no"))
+            except (TypeError, ValueError):
+                continue
+            if 1 <= no <= len(chunk):
+                out.append(dict(v, image_no=no + b0))
+    return out
 
 
 def spot_check(result, video_path, dest_dir, *, _frames_fn=None, _judge_fn=None):

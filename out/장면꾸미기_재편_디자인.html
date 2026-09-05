@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<title>장면꾸미기 재편 디자인</title>
+<style>
+:root{--bg:#f4f5f7;--card:#fff;--line:#e3e6ea;--ink:#1c1f24;--sub:#6b7280;--acc:#2f6bff;--acc2:#eaf0ff;--warn:#b45309}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 "Pretendard","Malgun Gothic",system-ui,sans-serif;padding:28px}
+h1{font-size:22px;margin:0 0 6px}h2{font-size:16px;margin:32px 0 10px}p.lead{color:var(--sub);margin:0 0 18px}
+.rule{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:8px}
+.rule div{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.rule b{display:block;font-size:13px;margin-bottom:4px;color:var(--acc)}
+.rule span{font-size:12.5px;color:var(--sub)}
+.boards{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.board{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.board .cap{font-size:12px;color:var(--sub);padding:8px 14px;border-bottom:1px dashed var(--line);background:#fafbfc}
+.screen{display:grid;grid-template-columns:150px 1fr;gap:12px;padding:12px}
+.mirror{background:#111;border-radius:10px;aspect-ratio:9/16;position:relative;color:#fff;font-size:10px}
+.mirror .top{position:absolute;top:8%;left:8%;right:8%;background:#ffd400;color:#000;padding:4px;border-radius:4px;font-weight:800;text-align:center}
+.mirror .btm{position:absolute;bottom:14%;left:8%;right:8%;text-align:center;font-weight:700;text-shadow:0 0 3px #000}
+.mirror .hint{position:absolute;bottom:4%;left:0;right:0;text-align:center;color:#9aa;font-size:9px}
+.mirror .zoom{position:absolute;top:40%;left:30%;width:40%;aspect-ratio:1;border:2px solid #4ff;border-radius:50%}
+.mirror .mask{position:absolute;top:22%;left:60%;width:28%;height:8%;background:#555;border:1px dashed #bbb}
+.nav{display:flex;gap:6px;align-items:center;margin-top:8px;font-size:11px}
+.nav b{flex:1;text-align:center}
+.btn{border:1px solid var(--line);background:#fff;border-radius:7px;padding:5px 9px;font-size:12px;white-space:nowrap}
+.btn.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.tabs{display:flex;gap:4px;margin-bottom:10px}
+.tabs .btn{flex:1;text-align:center;font-weight:700;padding:8px 4px}
+.sec{margin-bottom:12px}
+.sec .t{font-size:12px;font-weight:700;color:var(--sub);margin-bottom:5px}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.cards div{aspect-ratio:1;border:1px solid var(--line);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:10px;background:#fafafa}
+.cards div.on{border:2px solid var(--acc);background:var(--acc2)}
+.row{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+.sel{border:1px solid var(--line);border-radius:7px;padding:5px 8px;font-size:12px;background:#fff}
+.sw{width:22px;height:22px;border-radius:6px;border:1px solid var(--line)}
+.more{border-top:1px solid var(--line);padding-top:8px;color:var(--sub);font-size:12px}
+.more span{color:#9aa;display:block;font-size:11px;margin-top:3px}
+.save{font-size:11px;color:#16a34a;margin-top:6px}
+textarea{width:100%;border:1px solid var(--line);border-radius:7px;font:12px inherit;padding:6px;resize:none}
+table{border-collapse:collapse;width:100%;background:var(--card);font-size:13px}
+td,th{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:#fafbfc}
+.del{color:var(--warn)}
+</style></head><body>
+<h1>장면꾸미기(6단계) 재편 디자인</h1>
+<p class="lead">기준: 하려는 일 3가지로 묶는다 · 한 값은 한 곳에서만 · 처음 보이는 조작은 탭당 3~4개 · 나머지는 「세부 설정」 하나 뒤로</p>
+
+<div class="rule">
+ <div><b>① 탭 3개</b><span>자막 / 제목 / 장면. 지금의 완성스타일·헤드카피·템플릿·효과 4탭 + 위쪽 자막줄 편집바를 이 셋으로 흡수</span></div>
+ <div><b>② 층은 2단까지</b><span>탭 → 세부 설정. 지금은 탭 → 접힘 → 접힘 → 소제목 4단</span></div>
+ <div><b>③ 고르기 먼저, 손보기 나중</b><span>각 탭 맨 위는 카드 고르기. 카드만 눌러도 끝나게. 손보기는 그 아래 한 줄</span></div>
+ <div><b>④ 미리보기에서 직접</b><span>자리 옮기기·확대 위치·띠 높이·[광고] 위치는 전부 미리보기에서 끌기. 슬라이더 없음</span></div>
+</div>
+
+<h2>화면 목업 (좌: 미리보기 고정 / 우: 탭별 컨트롤)</h2>
+<div class="boards">
+
+<div class="board"><div class="cap">탭 1 · 💬 자막 (하단 나레이션)</div>
+<div class="screen">
+ <div><div class="mirror"><div class="top">바닥 세정제 추천</div><div class="btm">이거 하나면 끝나요</div><div class="hint">글자를 끌어서 옮기기</div></div>
+  <div class="nav"><span class="btn">◀</span><b>3 / 12</b><span class="btn">▶</span><span class="btn">▶ 재생</span></div>
+  <div class="nav"><span class="btn" style="flex:1;text-align:center">🖼 이 장면을 썸네일로</span></div></div>
+ <div>
+  <div class="tabs"><span class="btn on">💬 자막</span><span class="btn">🎨 제목</span><span class="btn">🎬 장면</span></div>
+  <div class="sec"><div class="t">스타일 고르기</div><div class="cards"><div class="on">기본</div><div>노랑강조</div><div>검정박스</div><div>흰테두리</div><div>둥근띠</div><div>⭐ 내것</div></div></div>
+  <div class="sec"><div class="t">자리</div><div class="row"><span class="btn">⬆ 위</span><span class="btn">중간</span><span class="btn on">⬇ 아래</span><span class="btn">모든 장면에</span></div></div>
+  <div class="sec"><div class="t">글씨</div><div class="row"><span class="sel">프리텐다드 ▾</span><span class="btn">−</span><b>54</b><span class="btn">＋</span><span class="sw" style="background:#fff"></span><span class="sw" style="background:#000"></span></div></div>
+  <div class="more">⚙ 세부 설정 ▾<span>가로정렬 · 박스 · 효과(없음/페이드/반짝) · 이 장면 줄 고치기 · 지워진 자막 자리 · 프리셋 저장</span></div>
+  <div class="save">✓ 자동 저장됨</div>
+ </div></div></div>
+
+<div class="board"><div class="cap">탭 2 · 🎨 제목 (헤드카피 + 템플릿 틀을 하나로)</div>
+<div class="screen">
+ <div><div class="mirror"><div class="top">바닥 세정제 추천</div><div class="btm">이거 하나면 끝나요</div><div class="hint">띠를 끌어서 높이 조절</div></div>
+  <div class="nav"><span class="btn">◀</span><b>3 / 12</b><span class="btn">▶</span><span class="btn">▶ 재생</span></div></div>
+ <div>
+  <div class="tabs"><span class="btn">💬 자막</span><span class="btn on">🎨 제목</span><span class="btn">🎬 장면</span></div>
+  <div class="sec"><div class="t">틀 고르기</div><div class="cards"><div>없음</div><div class="on">노랑띠</div><div>유튜브형</div><div>위아래띠</div><div>＋ 내 그림</div><div>⭐ 내 틀</div></div></div>
+  <div class="sec"><div class="t">문구</div><textarea rows="2">바닥 세정제 추천
+이거 하나면 끝나요</textarea><div class="row" style="margin-top:4px"><span class="btn">✨ AI 추천 문구</span><span class="sel">채널명: 살림킹왕짱</span></div></div>
+  <div class="sec"><div class="t">글씨 <small style="font-weight:400">— 색을 바꿀 낱말은 미리보기에서 누른다</small></div><div class="row"><span class="sel">검은고딕 ▾</span><span class="btn">−</span><b>64</b><span class="btn">＋</span><span class="sw" style="background:#000"></span><span class="sw" style="background:#ffd400"></span></div></div>
+  <div class="more">⚙ 세부 설정 ▾<span>틀 색·구성 · 테두리·박스 · 글자 세로위치 · 바탕 끄기 · 내 틀로 저장</span></div>
+  <div class="save">✓ 자동 저장됨</div>
+ </div></div></div>
+
+<div class="board"><div class="cap">탭 3 · 🎬 장면 (화면 자체를 손댄다)</div>
+<div class="screen">
+ <div><div class="mirror"><div class="top">바닥 세정제 추천</div><div class="zoom"></div><div class="mask"></div><div class="btm">이거 하나면 끝나요</div><div class="hint">누른 곳이 확대 중심</div></div>
+  <div class="nav"><span class="btn">◀</span><b>3 / 12</b><span class="btn">▶</span><span class="btn">▶ 재생</span></div></div>
+ <div>
+  <div class="tabs"><span class="btn">💬 자막</span><span class="btn">🎨 제목</span><span class="btn on">🎬 장면</span></div>
+  <div class="sec"><div class="t">확대</div><div class="row"><span class="btn on">1×</span><span class="btn">1.5×</span><span class="btn">2×</span><span class="btn">3×</span><span class="btn">모든 장면 같이</span></div></div>
+  <div class="sec"><div class="t">강조</div><div class="row"><span class="btn on">끄기</span><span class="btn">⭕ 원</span><span class="btn">▢ 네모</span></div></div>
+  <div class="sec"><div class="t">가리기</div><div class="row"><span class="btn">＋ 가림막</span><span class="btn">😀 스티커</span><span class="btn">✕ 선택 삭제</span></div></div>
+  <div class="sec"><div class="t">워터마크·[광고]</div><div class="row"><span class="btn">🏷 로고 올리기</span><span class="btn on">[광고] 표시</span></div></div>
+  <div class="more">⚙ 세부 설정 ▾<span>로고 크기·투명도 · [광고] 위치·또렷 · 이미지 오버레이 · 고급 렌더(10P)</span></div>
+  <div class="save">✓ 자동 저장됨</div>
+ </div></div></div>
+</div>
+
+<h2>지금 → 후 : 기능이 어디로 가나 (빠지는 기능 없음)</h2>
+<table>
+<tr><th style="width:26%">지금 위치</th><th style="width:37%">후 위치</th><th>비고</th></tr>
+<tr><td>위쪽 바: 장면 ◀▶, ⏸, 자막 끌기 범위(전체/이 장면), 자막 위/중/하, 이 장면 줄 저장</td><td>◀▶·재생 → 미리보기 아래 공통. 위/중/하+범위 → 자막 탭「자리」. 줄 편집 → 자막 세부</td><td>탭 위에 떠 있던 바 제거</td></tr>
+<tr><td>완성스타일 탭: 카드 · ⚡빠른 조절 · 직접 다듬기(①글씨 ②자리 ③테두리) · 모션팩 · 워터마크</td><td>카드+글씨 → 자막 탭. ③테두리·효과 → 자막 세부. 워터마크 → 장면 탭</td><td class="del">⚡빠른 조절과 ①글씨·②자리는 같은 값 → 하나로 합침. 모션팩(감춤)은 제거</td></tr>
+<tr><td>헤드카피 탭: 문구·AI후보·낱말색·글씨·테두리</td><td>제목 탭「문구」「글씨」. 테두리 → 제목 세부</td><td>낱말 색은 미리보기에서 글자 눌러 지정</td></tr>
+<tr><td>템플릿 탭: 틀 12종·내 그림·채널명·문구 바꾸기·띠 높이·글자 꾸미기·틀 색·내 템플릿</td><td>제목 탭「틀 고르기」. 채널명 → 문구 옆. 띠 높이 → 미리보기 끌기만. 나머지 → 제목 세부</td><td class="del">템플릿의 글자 꾸미기 = 헤드카피 글씨와 같은 값 → 하나로</td></tr>
+<tr><td>효과 탭: 강조 · 장면 확대(슬라이더+−) · 가림막 · 스티커 · 고급 렌더</td><td>장면 탭 그대로. 확대는 슬라이더 대신 1×/1.5×/2×/3× 버튼</td><td>"눌러서 확대" 토글은 유지(기본 꺼짐)</td></tr>
+<tr><td>감춰둔 것: 강조 단어 · 프리셋 줄 · 추가 텍스트 · BGM · 색띠 카드줄 · 고급효과(리모션)</td><td class="del">코드에서 제거</td><td>사장님이 이미 뺀 기능. HTML만 남아 무게만 차지</td></tr>
+</table>
+
+<h2>숫자로 보는 변화 (처음 보이는 조작 기준)</h2>
+<table>
+<tr><th></th><th>지금</th><th>후</th></tr>
+<tr><td>탭</td><td>4 + 위쪽 바 1</td><td>3</td></tr>
+<tr><td>접힘 섹션</td><td>5 (중첩)</td><td>탭당 1 (세부 설정)</td></tr>
+<tr><td>탭 열자마자 보이는 조작</td><td>15~30개</td><td>8~12개</td></tr>
+<tr><td>같은 값을 만지는 자리</td><td>2~3곳</td><td>1곳</td></tr>
+<tr><td>슬라이더</td><td>확대·크기·투명도·띠높이 등</td><td>0 (버튼 −/＋ 또는 미리보기 끌기)</td></tr>
+</table>
+</body></html>

@@ -268,7 +268,10 @@ def test_kenburns_vf_ramps_zoom_via_output_frame_number():
     # 'zoom+step' self-reference는 비디오 입력에서 상태가 안 이어지는 버그가 있어
     # (2026-07-14 로컬 ffmpeg 실측: 프레임 크기 89px→89px, 안 움직임) 출력 프레임
     # 번호 'on'을 직접 식에 넣는 방식으로 고쳤다 — 그 표현이 살아있는지 회귀 방지.
-    vf = va._kenburns_vf(4.0, fps=30)
+    # ★zoom_end를 명시한다(2026-09-02): 반중복 자동확대가 꺼져 기본값이 1.0이 됐고,
+    #   그때 켄번즈는 일부러 돌지 않는다(1.3배 늘렸다 줄이는 헛일). 여기서 검증할 것은
+    #   "켄번즈를 켰을 때 'on' 기반으로 도는가"이므로 배율을 직접 준다.
+    vf = va._kenburns_vf(4.0, fps=30, zoom_end=1.10)
     assert "zoompan" in vf
     assert "*on" in vf          # 'on' 기반 — 'zoom+' 자기참조 방식으로 되돌아가면 실패
     assert "zoom+" not in vf
@@ -276,7 +279,7 @@ def test_kenburns_vf_ramps_zoom_via_output_frame_number():
 
 
 def test_kenburns_vf_handles_zero_duration_without_division_error():
-    vf = va._kenburns_vf(0.0)
+    vf = va._kenburns_vf(0.0, zoom_end=1.10)   # 배율 명시(위 테스트와 같은 이유)
     assert "zoompan" in vf
 
 
@@ -364,7 +367,8 @@ def test_headcopy_drawtext_no_highlight_matches_single_block(tmp_path):
     dt = va._headcopy_drawtext_parts(hc, tmp_path)[0]
     assert dt is not None
     assert "fontcolor=0xFF8800" in dt
-    assert f"borderw={round(7 * va._OUT_W / va._UI_REF_W)}" in dt
+    # 외곽선은 미리보기(획 가운데 걸침)와 맞추려 **절반**으로 그린다(2026-09-02)
+    assert f"borderw={round(round(7 * va._OUT_W / va._UI_REF_W) / 2)}" in dt
     assert f"fontsize={round(60 * va._OUT_W / va._UI_REF_W)}" in dt
     assert "bordercolor=0x000000" in dt
 

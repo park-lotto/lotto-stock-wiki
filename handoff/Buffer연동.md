@@ -37,3 +37,60 @@
 - support.buffer.com/en-us/articles/using-buffers-api-GtIYIQilz5 (요금제·채널·키)
 - developers.buffer.com/guides/hosting-media.html (공개 URL 방식, 업로드 엔드포인트 없음)
 - postproxy.dev / zernio.com 정리글 (제3자 OAuth 미개방)
+
+## 2026-09-02 — 유튜브 예약이 통째로 거절되던 것 (해결, 게이트 대기)
+
+**증상**: 버퍼 예약발행에서 유튜브만 안 됨. 인스타·틱톡은 됨.
+
+**뿌리(라이브 로그 실측, 9/1~9/2 6회 전부 동일)**
+```
+Field "type" is not defined by type "YoutubePostMetadataInput"
+```
+`_post_metadata`가 유튜브에 `{"type":"short","privacy":...}`를 보냈는데
+**type이라는 칸이 유튜브 스키마엔 없다**(인스타에만 있는 축이었다).
+GraphQL 검증 단계에서 죽어 유튜브는 100% 실패.
+
+**introspection 실측 — YoutubePostMetadataInput 8필드**
+categoryId · title · embeddable · isAiGenerated · license · madeForKids ·
+notifySubscribers · privacy
+
+**고친 것** (`shopping_shorts/buffer_api.py`)
+- 유튜브: type 제거 → `title`(본문 첫 줄, 100자·<> 정리) + `categoryId="22"` + `privacy`
+- 틱톡: `TiktokPostMetadataInput` **자체가 없음**을 확인 → metadata 안 붙이는 현행이 정답
+- 인스타: type/shouldShareToFeed 맞음. 단 **개인 프로필 계정이면 Buffer가 거절**
+  ("personal profile channels require notification scheduling") → `_humanize`로
+  한국어 안내 변환(프로페셔널 계정 전환 안내)
+
+**검증**: 없는 channelId로 3개 SNS 모두 createPost를 실제 Buffer에 보내
+스키마 검증을 통과해 "Channel not found"까지 도달함을 확인(게시는 안 됨).
+
+⏭ 다음
+- track finish 게이트 통과 확인 → 라이브에서 유튜브 실제 예약 1건 성공 확인
+- 인스타는 계정을 프로페셔널로 전환한 뒤 재시도
+
+### 2026-09-02 12:59 — 라이브 반영 + 3채널 실예약 검증 완료
+
+사장님이 Buffer에 3채널을 등록한 뒤 실제 예약을 시험했다.
+- 유튜브 `Micro-Universe1` / 인스타 `syospa123` / 틱톡 `parkpotto12`
+
+**검증 방법**(게시하지 않는다): 실제 완성본 `353493f20d31/final.mp4`로 공개링크를 발급해
+**25일 뒤로 customScheduled** 예약 → post id 확인 → **deletePost로 즉시 삭제**.
+shareNow는 쓰지 않았다(되돌릴 수 없다).
+
+| 시점 | 코드 | 유튜브 | 인스타 | 틱톡 |
+|---|---|---|---|---|
+| 12:07 | 라이브(옛 코드) | ❌ `Field "type" is not defined` | ✅ | ✅ |
+| 12:07 | 고친 코드 끼워넣기 | ✅ | ✅ | ✅ |
+| 12:59 | **라이브(반영 후)** | ✅ | ✅ | ✅ |
+
+서버는 12:59:11에 auto_deploy가 재시작해 새 코드로 돌고 있다.
+
+⚠️ 인스타 "개인 프로필" 거절(9/1 로그)은 **다른 고객 계정** 이야기다 — 사장님 계정은
+프로페셔널이라 정상 통과했다. 그 고객에겐 `_humanize`가 한국어 안내를 준다.
+
+⏭ 남은 것
+- HTTP 경로(`POST /api/buffer/schedule`)까지의 실사용 확인은 **고객 실사용 로그로** 본다
+  (관리자 비번으로 대신 로그인하지 않았다). 인스타·틱톡은 이미 그 경로로 200 성공 기록이 있다.
+- 별건: `pipeline/atoms/key_vault.py`의 `rotated()`와 PID 커서 씨딩이 main에서 사라졌다
+  (9/1 커밋 3ae3b2b6c가 넣은 것이 이후 병합에서 되돌려짐). 키 회전이 죽어 429 재발 위험.
+  되돌린 이유를 몰라 손대지 않았다 — 사장님 판단 필요.

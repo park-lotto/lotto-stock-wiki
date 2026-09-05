@@ -58,7 +58,8 @@ def test_no_unwired_service_tab():
       쿠팡 파트너스는 여전히 키 연동이 없으므로 금지 그대로다.
     """
     txt = _HTML.read_text(encoding="utf-8")
-    assert "쿠팡 파트너스" not in txt
+    # ★2026-09-04 파트너스 오픈API 연동 완료 → 카드가 **있어야** 한다(종전 금지 검사 폐기).
+    assert "쿠팡 파트너스" in txt
 
     from shopping_shorts import keyroute
     m = re.search(r"var SERVICES = (\[.*?\n\];)", txt, re.S)

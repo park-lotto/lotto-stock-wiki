@@ -17,6 +17,11 @@ from cryptography.fernet import Fernet
 from shopping_shorts import keyctx, keyroute
 from shopping_shorts.store import Store
 
+# ★순서가 아니라 **집합**으로 본다(2026-09-01). gemini_keys는 호출마다 시작점이
+#   돌아간다(key_vault.rotated) — 모든 호출이 keys[0]만 때려 분당 한도를 자초하던
+#   것을 고친 결과다. 이 테스트가 지키려는 것은 "어떤 키가 나오는가"(개인키 무시,
+#   공용 풀 사용)이지 "몇 번째로 나오는가"가 아니다.
+
 
 @pytest.fixture
 def store(tmp_path, monkeypatch):
@@ -38,7 +43,7 @@ def vault(monkeypatch):
 
 def test_no_owner_uses_company_pool(store, vault):
     """주인이 안 정해졌으면 회사 키. 기존 동작(크론·사장님)이 안 바뀐다."""
-    assert keyroute.gemini_keys() == ["OWNER-1", "OWNER-2"]
+    assert sorted(keyroute.gemini_keys()) == ["OWNER-1", "OWNER-2"]
 
 
 def test_registered_key_actually_joins_the_pool(store, vault, monkeypatch):
@@ -78,7 +83,7 @@ def test_owner_cid_zero_uses_pool(store, vault):
     """cid 0 = 사장님. 개인 키 조회를 아예 안 하고 풀을 쓴다(크론 동작 불변)."""
     store.add_customer_key(0, keyroute.SVC_GEMINI, "SHOULD-NOT-BE-USED")
     with keyctx.owner(0):
-        assert keyroute.gemini_keys() == ["OWNER-1", "OWNER-2"]
+        assert sorted(keyroute.gemini_keys()) == ["OWNER-1", "OWNER-2"]
 
 
 def test_context_is_restored_after_block(store, vault):
@@ -87,7 +92,7 @@ def test_context_is_restored_after_block(store, vault):
     with keyctx.owner(7):
         pass
     assert keyctx.owner_cid() == 0
-    assert keyroute.gemini_keys() == ["OWNER-1", "OWNER-2"]
+    assert sorted(keyroute.gemini_keys()) == ["OWNER-1", "OWNER-2"]
 
 
 def test_string_cid_does_not_crash(store, vault):
@@ -95,7 +100,7 @@ def test_string_cid_does_not_crash(store, vault):
     공용 풀에선 cid가 키 선택을 안 가르지만, 문자열이 와도 터지면 안 된다."""
     store.add_customer_key(7, keyroute.SVC_GEMINI, "MINE-1")
     with keyctx.owner("7"):
-        assert keyroute.gemini_keys() == ["OWNER-1", "OWNER-2"]
+        assert sorted(keyroute.gemini_keys()) == ["OWNER-1", "OWNER-2"]
 
 
 def test_every_gemini_key_fetch_goes_through_the_single_exit():

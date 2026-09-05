@@ -119,3 +119,9 @@ class TestOffKeysDoNotCount:
         assert appmod.check_and_count(cid, "lens") is True
         assert appmod.check_and_count(cid, "lens") is True
         assert appmod.check_and_count(cid, "lens") is False, "꺼둔 키가 한도를 늘렸다"
+
+
+def test_per_key_default_is_10():
+    """사장님 정본(2026-09-04 재확인): SerpApi 키 1개=10회 · 2개=20회."""
+    from shopping_shorts.app import _CREDIT_PER_KEY_DEFAULTS
+    assert _CREDIT_PER_KEY_DEFAULTS["lens"] == 10

@@ -27,6 +27,7 @@ vision_tags의 subject/keywords는 **분위기어가 지배**한다. 아카이�
 """
 import concurrent.futures as _fut
 import json
+import sys
 
 from pipeline.atoms import key_vault
 from shopping_shorts import comment_gen
@@ -118,7 +119,7 @@ def _identify_one(image_bytes):
                     (d.get("made_by") or "").strip())
         except Exception as e:      # noqa: BLE001
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
-                comment_gen._mark_key_exhausted(idx, key_vault.retry_delay_seconds(e))
+                comment_gen._mark_key_exhausted(idx, key_vault.retry_delay_seconds(e), exc=e)
                 continue           # 다음 키로 (죽은 키 8·11번이 여기서 걸러진다)
             if key_vault.is_quota_error(e):
                 continue           # 429는 다음 키로 — 기다리지 않는다(검색은 대화형이다)
@@ -183,3 +184,114 @@ def same_product(a, b):
     # 부분문자열(붙여쓴 상품명 대비): '채칼세트' ⊃ '채칼'
     ja, jb = "".join(sorted(ca)), "".join(sorted(cb))
     return ja in jb or jb in ja
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# 쿠팡 검색용 판독(2026-09-05) — 위 _PROMPT/identify_many와 **목적이 다르다**
+# ════════════════════════════════════════════════════════════════════════════
+# 위쪽은 "같은 제품 영상 모으기"용이다. 자막을 일부러 무시시켜 범주어("벽선반")를
+# 얻는데, same_product가 핵심어 하나만 겹쳐도 같다고 보므로 그게 오히려 잘 묶인다.
+#
+# 쿠팡 검색은 정반대다 — **살 물건 하나를 특정**해야 한다. 실측(2026-09-05 사장님 제보):
+# 랭킹 카드 버튼에 "벽선반"·"청소용 스펀지"·"프라이팬"이 박혀 쿠팡에서 엉뚱한 게 나왔다.
+# 원인은 프리워밍이 **썸네일 이미지만** 보낸 것 + 그 프롬프트가 자막을 껐다는 것 둘 다.
+#
+# ★그래서 여기서는 캡션 본문을 이미지와 **같이** 준다. 모델 호출은 그대로 1회 —
+#   추가 비용·시간이 0이다(대본 추출은 영상 업로드라 완전히 다른 급의 비용: 0.1P 과금).
+# ⚠️ 위 _PROMPT를 고쳐 재사용하지 않는다. identify_many는 아카이브 유사도(app.py 2곳)와
+#    product_backfill이 같이 쓴다 — 프롬프트를 건드리면 그 묶기가 조용히 바뀐다(0순위-B).
+# ⚠️ 캐시도 따로다(vision_tags.shop_product). 같은 칸에 쓰면 위와 같은 사고가 난다.
+_SHOP_PROMPT = """이 이미지는 한국어 쇼츠 영상의 썸네일이고, 아래는 그 영상에 올린 사람이 쓴 설명 글이다.
+
+이 영상이 소개하는 **물건 하나**를 쿠팡에서 검색할 상품명으로 답하라.
+
+★설명 글에 물건 이름이 적혀 있으면 **그것을 최우선으로 믿어라**(이미지보다 정확하다).
+  글에 없으면 이미지에 실물로 찍힌 물건을 보고 답하라.
+  이미지의 큰 자막 문구는 낚시성이라 그대로 베끼지 마라 — 물건 이름만 가져와라.
+
+★구체적으로: 쓰임새·형태·단수를 붙여 실제로 검색할 이름으로.
+  - 좋은 예: "3단 조립식 벽선반", "무선 노래방 마이크", "슬라이더 지우개", "전동 채칼"
+  - 나쁜 예: "벽선반", "프라이팬", "주방용품", "살림꿀템"  (← 범주어·분위기어는 금지)
+
+★product를 반드시 빈 문자열로 둘 경우 — 이게 중요하다:
+  - 살 물건이 없는 영상: 청소·수납 **방법**만 알려주는 영상, 맛집·장소 소개, 여행, 정보 전달
+  - 물건이 여러 개 나열되기만 하고 주인공이 없는 영상
+  - 무엇인지 특정이 안 될 때
+  ⚠️ 억지로 짜내지 마라. 빈 문자열이 틀린 상품명보다 낫다(사장님이 헛클릭한다).
+
+JSON으로만 답하라: {"product": "구체적 상품명 또는 빈 문자열", "why": "근거 한 줄"}"""
+
+_SHOP_SCHEMA = {"type": "object",
+                "properties": {"product": {"type": "string"}, "why": {"type": "string"}},
+                "required": ["product"]}
+
+
+def _identify_shop_one(image_bytes, caption_text):
+    """썸네일 + 캡션본문 → 쿠팡 검색용 상품명. 실패·키소진은 None(재시도 대상).
+
+    ""(빈 문자열)은 '살 물건 없음' 확정이라 캐시에 남긴다 — None과 구분한다.
+    이미지가 없어도 캡션만으로 답할 수 있으면 답한다(캡션이 이미지보다 정확한 경우가 있다)."""
+    try:
+        from google.genai import types
+
+        from shopping_shorts import video_analysis
+    except Exception:      # noqa: BLE001 — 비전 모듈 없으면 조용히 포기
+        return None
+    cap = (caption_text or "").strip()
+    if not image_bytes and not cap:
+        return None                                  # 근거가 아예 없다
+    body = _SHOP_PROMPT + "\n\n설명 글:\n" + (cap if cap else "(없음)")
+    for _ in range(3):
+        key, idx = comment_gen._next_live_key_and_idx()
+        if key is None:
+            return None
+        try:
+            client = video_analysis._client_for_key(key)
+            parts = [body]
+            if image_bytes:
+                parts.append(types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg"))
+            r = client.models.generate_content(
+                model=video_analysis._TRANSLATE_MODEL, contents=parts,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json", response_schema=_SHOP_SCHEMA))
+            return (json.loads(r.text).get("product") or "").strip()
+        except Exception as e:      # noqa: BLE001
+            if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
+                comment_gen._mark_key_exhausted(idx, key_vault.retry_delay_seconds(e), exc=e)
+                continue
+            if key_vault.is_quota_error(e):
+                continue           # 429는 다음 키로 — 화면이 기다리고 있다
+            print(f"[shop_product] 판독 실패(무해): {type(e).__name__}: {e}", file=sys.stderr)
+            return None
+    return None
+
+
+def identify_shop_many(items, db_path, max_workers=_MAX_WORKERS):
+    """[{shortcode, thumbnail, caption}] → {shortcode: 상품명}. 캐시된 건 안 묻는다.
+
+    캐시는 vision_tags.shop_product(묶기용 product와 별도). 판정 실패는 저장하지 않아
+    다음 기회에 다시 시도한다 — 빈 문자열('살 물건 없음')만 확정으로 저장한다."""
+    from shopping_shorts import coupang_query, video_analysis
+    store = Store(db_path)
+    codes = [i.get("shortcode") for i in items if i.get("shortcode")]
+    cached = store.shop_products_map(codes)
+    todo = [i for i in items if i.get("shortcode") and i["shortcode"] not in cached
+            and (i.get("thumbnail") or coupang_query.caption_body(i.get("caption") or ""))]
+    if not todo:
+        return cached
+
+    def _work(it):
+        img = video_analysis.fetch_thumb_bytes(it.get("thumbnail")) if it.get("thumbnail") else None
+        cap = coupang_query.caption_body(it.get("caption") or "")
+        if not img and not cap:
+            return it["shortcode"], None            # 썸네일 만료 + 캡션 없음 → 다음에
+        return it["shortcode"], _identify_shop_one(img, cap)
+
+    out = dict(cached)
+    with _fut.ThreadPoolExecutor(max_workers=max_workers) as ex:
+        for sc, p in ex.map(_work, todo):
+            if p is None:
+                continue            # 판정 실패 — 캐시에 안 남긴다(재시도)
+            store.save_shop_product(sc, p)
+            out[sc] = p
+    return out

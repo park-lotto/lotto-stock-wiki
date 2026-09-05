@@ -143,7 +143,7 @@ def test_화면배치_지시는_두_경로에_모두_실린다():
     mark = "훅(첫 비트)은"
     # ① 확정 대본 경로
     scripted = edit_plan._SCRIPTED_PROMPT.format(
-        given_script="확정 대본", inventory="[S-1] 화면:x", n_alternates=2,
+        given_script="확정 대본", line_rule="", inventory="[S-1] 화면:x", n_alternates=2,
         label_hint="", scene_placement=edit_plan._scene_placement_block())
     assert mark in scripted, "확정 대본 경로에 화면 배치 지시가 없다"
     # ② scene_first 경로

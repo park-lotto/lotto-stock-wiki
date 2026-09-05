@@ -166,8 +166,21 @@ _FONT_FALLBACK_RATIO = 0.5
 # ②중요 비트(훅·반전)만 서서히 확대되는 켄번즈 줌(더 눈에 띄는 변형+시선 유도 효과 겸함).
 # 좌우반전은 제외 — 원본 화면 속 글자·로고가 있으면 뒤집혀서 오염돼 보일 위험이 있어
 # "화질 오염 없이"라는 기준에 안 맞는다고 판단(2026-07-14).
-_BASE_ZOOM = 1.04          # 전 비트 기본 확대율(정적, 저비용)
-_KENBURNS_ZOOM = 1.10       # 중요 비트 최종 확대율(동적)
+# ★2026-09-02 사장님 지시로 **꺼졌다**("반중복? 그 확대를 꺼").
+#   이 확대는 사장님이 요청한 기능이 아니다 — 2026-07-14 커밋 424974989에서
+#   "말 안 해도 항상 적용"으로 넣은 자동 효과였고, 그 결과:
+#     · 원본 구도가 늘 잘려 나갔다(왼쪽·오른쪽 물건이 화면 밖으로).
+#     · 5단계 자막제거 화면의 BEFORE(원본)/AFTER(조립본)가 서로 다른 배율이 돼
+#       "자막제거를 하면 확대된다"로 보였다.
+#   되돌리려면 SHORTS_ANTIDUP_ZOOM=1 (옛 값 1.04/1.10으로 복귀).
+_ANTIDUP_ZOOM_ON = os.environ.get("SHORTS_ANTIDUP_ZOOM", "0") not in ("0", "", "off", "false")
+# ★정지 구간(_extend_with_frozen_motion)의 줌은 **반중복과 목적이 다르다** — 끄지 않는다.
+#   대사가 소스보다 길면 마지막 프레임을 정지로 늘리는데, 그냥 두면 픽셀까지 똑같아
+#   "뚝 멈춰 어색하다"고 사장님이 육안으로 짚어 넣은 기능이다(2026-07-19).
+#   반중복 확대를 끈다고 이것까지 죽으면 그 제보가 그대로 재발한다.
+_FREEZE_ZOOM = 1.10
+_BASE_ZOOM = 1.04 if _ANTIDUP_ZOOM_ON else 1.0      # 전 비트 기본 확대율(정적, 저비용)
+_KENBURNS_ZOOM = 1.10 if _ANTIDUP_ZOOM_ON else 1.0  # 중요 비트 최종 확대율(동적)
 _IMPORTANT_ROLES = {"훅", "반전"}  # edit_plan.py _REQUIRED_ROLES와 동일 어휘
 
 
@@ -186,6 +199,11 @@ def _kenburns_vf(duration_sec, fps=30, zoom_end=_KENBURNS_ZOOM):
     비디오 입력(정지이미지 아님)에서 상태가 안 이어져 매 프레임 그대로 있는 버그가
     있어(2026-07-14 로컬 실측: 89px→89px, 안 움직임), 출력 프레임번호 'on'을 직접
     식에 넣는 방식으로 고쳤다('on' 사용 시 89px→97px로 실제 확대 확인됨)."""
+    # ★확대가 꺼져 있으면(SHORTS_ANTIDUP_ZOOM=0, 2026-09-02 기본) 켄번즈도 돌지 않는다.
+    #   zoom_end=1로 두면 1.3배 확대했다가 다시 줄이는 헛일이라 화질만 손해다.
+    #   판정은 여기 한 곳 — 호출부 3곳이 각자 분기하면 반드시 어긋난다(0순위-B).
+    if zoom_end <= 1.0001:
+        return _base_zoom_vf(None)
     frames = max(1, round(duration_sec * fps))
     step = (zoom_end - 1) / frames
     pre_w, pre_h = int(_OUT_W * 1.3), int(_OUT_H * 1.3)  # zoompan 전에 여유있게 확대해둬야 크롭 여백이 남는다
@@ -558,9 +576,12 @@ _MIN_CLIP_KEEP = 0.5
 # 필요한 시간은 마지막 프레임 정지(freeze)로 떠안는다 → 요리 동작은 자연 속도, 남는 시간만 홀드.
 _MAX_SLOWMO = 1.15
 
-# 마지막 비트 '여운'(초) — 대사가 끝나도 화면을 이만큼 더 살려둔다(2026-07-20 콘폼루프 T4,
-# 사장님 육안 피드백 "붙이면 바로 자르지 말고 대사 끝나고 1초 정도 더 냅두면").
-_LAST_RUNOUT = 1.0
+# 마지막 비트 '여운'(초) — 대사가 끝나도 화면을 이만큼 더 살려둔다.
+# 2026-07-20에 1.0으로 넣었으나(콘폼루프 T4) **2026-09-04 사장님 지시로 0으로 되돌렸다**:
+# "더 나오는게 의미가 없는거 아닌가? 다른 영상들은 다 바로 자르던데" — 숏폼은 대사가 끝나면
+# 바로 끊는 게 표준이고, 남는 시간은 슬로모/정지프레임으로 늘어져 완주율만 깎였다.
+# 0이면 plan_beat_clips_for가 여운 연장을 통째로 건너뛰고 mux -t도 tts_dur 그대로다.
+_LAST_RUNOUT = 0.0
 
 
 def _speed_and_freeze(src_dur, out_dur, max_slowmo=_MAX_SLOWMO):
@@ -776,29 +797,25 @@ def _plan_phrase_clips(beat, segs, tts_dur):
         for k in range(len(durs)):
             end_b = bounds[-1] if k == len(durs) - 1 else bounds[k + 1]
             d = max(0.1, end_b - bounds[k])
-            if k < len(segs):
-                idx = k                                  # 첫 바퀴 = 담은 순서대로(종전과 같다)
-            else:
-                idx = -1
-                for t2 in range(len(segs)):              # 두 바퀴째 = 뒤가 남은 조각을 돌아가며
-                    j2 = (ri + t2) % len(segs)
-                    # ★end를 모르는 재료는 '남은 게 없다'로 본다 → 종전 동작(마지막이 커버).
-                    #   지어내서 조각 밖을 읽으면 엉뚱한 화면이 나온다.
-                    _end = segs[j2].get("end")
-                    if _end is None:
-                        continue
-                    if float(_end) - pos[j2] >= min(d, _MIN_CLIP) - 1e-3:
-                        idx = j2
-                        break
-                if idx < 0:                              # 재료 소진 → 종전대로 마지막 컷이 커버
-                    if plan:
-                        plan[-1]["src_dur"] += bounds[-1] - bounds[k]
-                        plan[-1]["out_dur"] = plan[-1]["src_dur"]
-                    break
-                ri = (idx + 1) % len(segs)
-            plan.append({"video_id": segs[idx]["video_id"], "start": pos[idx],
+            # ★재료가 구절보다 적으면 **담은 순서대로 돌아간다**(1,2,3,1,2,3…).
+            #   2026-09-02 사장님: "하나를 올렸더니 2·3번 자리에 배치되고 같은 내용이 두 번
+            #   반복돼야 하는데 다른 게 3번에 붙는다" / "장면을 빼면 두 개가 없어지고 넣으면
+            #   갑자기 배치가 바뀐다".
+            #   종전엔 두 바퀴째에 '뒤가 남은 조각의 이어지는 구간'을 골랐다(2026-08-31).
+            #   그 규칙은 자리↔조각 관계가 재료 개수·잔량에 따라 달라져, 조각 하나를 빼면
+            #   그 뒤 배치가 통째로 밀렸다 — 사람 눈엔 "하나 뺐는데 둘이 사라졌다".
+            #   순환 반복은 k만 알면 어느 자리에 무엇이 오는지 정해진다(예측 가능).
+            #   ★화면(scene_play.js planClips 구절맞춤 분기)과 **같은 규칙**이어야 한다 —
+            #     한쪽만 고치면 미리보기와 결과물이 어긋난다(0순위-B).
+            idx = k % len(segs)
+            _end = segs[idx].get("end")
+            st = pos[idx]
+            # 조각 뒤가 남았으면 이어서, 다 썼으면 그 조각의 처음부터 다시(같은 내용 반복).
+            if _end is not None and float(_end) - st < min(d, _MIN_CLIP) - 1e-3:
+                st = float(segs[idx]["start"])
+            plan.append({"video_id": segs[idx]["video_id"], "start": st,
                          "src_dur": d, "out_dur": d})
-            pos[idx] += d
+            pos[idx] = st + d
         return plan
     except Exception:      # noqa: BLE001 — 계획 실패가 렌더를 죽이면 안 된다(폴백이 있다)
         return None
@@ -1379,6 +1396,31 @@ def _caption_drawtexts(narration, dur, work, idx, t0=0.0, style=None, real_durs=
     return parts
 
 
+def caption_schedule(beat, tail=0.0):
+    """비트 하나의 자막 구절 시간표 [(구절, 시작초, 끝초)] — **_caption_drawtexts와 같은 규칙**(0순위-B).
+
+    캡컷 내보내기가 쓴다(2026-09-03 사장님 실측: 캡컷엔 비트 문장이 통째로 한 줄이라 화면 밖으로
+    넘쳤다 — 렌더는 짧은 구절로 쪼개 순차 표시한다). 구절 나누기·길이 배분·리드인·오프셋을
+    렌더의 같은 함수·같은 키(caption_lines/cap_durs/cap_lead/cap_offset)로 계산한다.
+    tail: 마지막 구절 여운(렌더는 마지막 비트에만 0.5).
+    """
+    segs = _caption_segments((beat.get("narration") or ""), preset=beat.get("caption_lines"))
+    if not segs:
+        return []
+    dur = float(beat.get("dur") or 0.0)
+    durs = _caption_durations(segs, dur, real_durs=beat.get("cap_durs"))
+    t0 = float(beat.get("t0") or 0.0)
+    off = float(beat.get("cap_offset") or 0.0)
+    t = max(0.0, float(beat.get("cap_lead") or 0.0))
+    out = []
+    for i, (seg, d) in enumerate(zip(segs, durs)):
+        start = max(0.0, t + t0 + off)
+        t += d
+        end = (dur + tail if i == len(segs) - 1 else t) + t0 + off
+        out.append((seg, start, max(start, end)))
+    return out
+
+
 def _caption_vf(narration, dur, has_font, work, idx):
     """비트 영상용 -vf 필터 문자열. scale/crop으로 규격 통일 후, 폰트가 있으면
     하단 바 + 나레이션을 **짧은 구절 단위**로 순차 표시하는 drawtext들을 얹는다.
@@ -1410,7 +1452,8 @@ def _extend_with_frozen_motion(sub_path, play_out, freeze, out_path):
     total = play_out + freeze
     _run_ffmpeg([
         "ffmpeg", "-y", "-i", str(sub_path),
-        "-vf", f"tpad=stop_mode=clone:stop_duration={freeze:.3f},{_kenburns_vf(total)}",
+        "-vf", (f"tpad=stop_mode=clone:stop_duration={freeze:.3f},"
+                f"{_kenburns_vf(total, zoom_end=_FREEZE_ZOOM)}"),
         "-r", "30", "-an", "-t", f"{total:.3f}",
         "-c:v", "libx264", "-preset", _mid_preset(), "-crf", _mid_crf(), *_threads_args(), "-pix_fmt", "yuv420p", str(out_path),
     ])
@@ -1781,6 +1824,16 @@ def _outline_parts(style):
     w = max(0, _ui_px(style.get("outline_w"), 9, zero_ok=True))
     if w <= 0:
         return []
+    # ★화면의 절반으로 그린다(2026-09-02 사장님 제보: "프로그램에서 얇게 해도
+    #   보이는 것보다 더 두껍게 아웃풋이 나와요. 그래서 캡컷 가서 다시 자막 작업").
+    #   뿌리는 **테두리를 그리는 방식이 두 곳에서 다른 것**이다(0순위-B):
+    #     · 미리보기(produce.html applyCapStroke/헤드카피)= CSS -webkit-text-stroke
+    #       → 획선 **가운데**에 걸쳐 그려지고 paint-order:stroke fill로 안쪽 절반은
+    #         글자가 덮는다 → 눈에 보이는 두께 = w/2
+    #     · 최종렌더(여기) = ffmpeg drawtext borderw → **전부 바깥쪽** = w
+    #   그래서 정확히 2배로 나왔다. 미리보기가 정본이므로(사장님이 보고 정한 값)
+    #   렌더를 절반으로 맞춘다. 1px은 0으로 사라지지 않게 바닥을 둔다.
+    w = max(1, int(round(w / 2)))
     return [f"borderw={w}",
             f"bordercolor={_hex_to_ff(style.get('outline_color'), '0x000000')}"]
 
@@ -1865,8 +1918,13 @@ def _build_segments(line, base_color, highlight_rules):
     base = (base_color, False, None)
     marks = [None] * len(line)
     rules = [r for r in (highlight_rules or []) if r.get("keyword")]
-    # 긴 키워드 먼저 — 짧은 규칙이 먼저 자리를 잡으면 긴 규칙이 조각나 색이 튄다.
-    for rule in sorted(rules, key=lambda r: -len(r["keyword"])):
+    # ★사람이 고른 낱말이 **틀(_fromFrame)보다 먼저** 자리를 잡는다(2026-09-02).
+    #   틀(템플릿)은 2줄째 통째를 키워드로 규칙을 하나 넣는데(produce.html applyHeadcopySet),
+    #   길이만으로 정렬하면 그 긴 규칙이 사람이 고른 짧은 낱말을 통째로 덮어
+    #   **색을 바꿔도 안 바뀐다**(marks가 이미 찼으므로 나중 규칙이 못 들어간다).
+    #   화면(hlSegments)과 **같은 규칙**이어야 미리보기와 렌더가 안 어긋난다(0순위-B).
+    # 길이 우선은 같은 등급 안에서만 — 짧은 규칙이 먼저 자리를 잡으면 긴 규칙이 조각나 색이 튄다.
+    for rule in sorted(rules, key=lambda r: (bool(r.get("_fromFrame")), -len(r["keyword"]))):
         kw = rule["keyword"]
         style = (rule.get("color"), bool(rule.get("box")), rule.get("box_color"))
         pos = line.find(kw)
@@ -2193,6 +2251,38 @@ def _beat_timeline(edit_plan, tts_paths):
         })
         t0 += dur
     return timeline
+
+
+# ── CTA 잘라내기(2026-09-05 사장님 "CTA 있는 걸로 만들고 유튜브 올릴 땐 뒷부분만 잘라내고 싶다")
+#   유튜브엔 댓글 유도 CTA를 빼고 올리고, 인스타·틱톡엔 CTA가 있는 판을 쓴다.
+#   ★자를 지점은 여기 한 곳에서만 정한다(0순위-B) — API·렌더가 각자 계산하면 어긋난다.
+#   ★CTA 판정은 edit_plan._is_cta를 **재사용**한다. 여기서 role 문자열을 새로 검사하면
+#     _CTA_ROLES가 늘 때 한쪽만 고쳐진다(계정↔프록시 덮어쓰기와 같은 병).
+def cta_cut_sec(timeline):
+    """CTA 비트가 시작하는 절대 시각(초). CTA가 없으면 None.
+
+    이 값까지 잘라내면 CTA 직전에서 끝난다. timeline은 _beat_timeline의 결과이므로
+    자막·모션·효과음과 **같은 시간축**이다(별도 누적 금지).
+
+    ⚠️ 반환값은 **썸네일 인트로를 붙이기 전** 기준이다. prepend_still로 앞에 인트로가
+       붙으면 그만큼 밀린다 — 보정은 저장하는 쪽(mix_pipeline.run_render)이 한다.
+    """
+    from shopping_shorts.edit_plan import _is_cta   # 지역 import: 순환참조 회피
+    for b in timeline:
+        if _is_cta(b):
+            t0 = float(b.get("t0") or 0.0)
+            # t0=0 = 첫 비트가 CTA. 자르면 빈 영상이 되므로 없는 것으로 친다.
+            return t0 if t0 > 0.05 else None
+    return None
+
+
+# ★잘라내기에 키프레임(-force_key_frames)은 **필요 없다** — 2026-09-05 실측으로 확인.
+#   처음엔 "-c copy는 키프레임에서만 잘려 최대 8초 어긋난다"고 보고 렌더에 키프레임을
+#   박으려 했으나, 그건 **앞을 자르는 -ss** 이야기였다. 뒤를 자르는 -t/-frames:v는
+#   키프레임과 무관하다. 실측(preset=medium, 8.33초 간격 키프레임, 27.4초 자르기):
+#     키프레임 없음 → 824프레임 / 27.400에 키프레임 강제 → 824프레임 (똑같다)
+#   그래서 렌더 경로는 건드리지 않는다. 자르는 쪽만 -frames:v로 정확히 하면 된다
+#   (-t 27.4는 B프레임 때문에 824프레임=27.47초로 2프레임 넘친다 → 822프레임으로 자른다).
 
 
 # 장면별 자막 자리(2026-08-25 사장님 "장면당 자막 배치를 수정할 수 있게").

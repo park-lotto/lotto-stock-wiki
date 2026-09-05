@@ -11,6 +11,7 @@
 를 확인한다(문법검사로는 못 잡는 층).
 """
 import pathlib
+import re
 import shutil
 import subprocess
 
@@ -18,6 +19,13 @@ import pytest
 from shopping_shorts.tests.js_harness import run_js_proc
 
 LOGIC = pathlib.Path(__file__).resolve().parents[1] / "userscript" / "grab_logic.js"
+
+
+def _cur_ver():
+    """정본은 파일 안의 LOGIC_VER — 테스트에 숫자를 박아두면 버전을 올릴 때마다 깨진다."""
+    m = re.search(r"var LOGIC_VER = (\d+);", LOGIC.read_text(encoding="utf-8"))
+    assert m, "LOGIC_VER 선언이 사라졌다"
+    return int(m.group(1))
 
 
 def _guard_src():
@@ -55,12 +63,12 @@ def _run(setup):
 
 def test_옛_로직이_먼저_돌아도_새_로직이_이어받는다():
     out = _run("window.__ssGrabLoaded = true;\n")   # 옛 코드: 버전 표시가 없다
-    assert out["ver"] == 20260904, "새 로직이 버전을 남기며 이어받아야 한다"
+    assert out["ver"] == _cur_ver(), "새 로직이 버전을 남기며 이어받아야 한다"
     assert out["removed"] >= 1, "옛 버튼을 걷어내고 다시 그려야 한다"
 
 
 def test_같은_버전이_이미_돌면_두_번_돌지_않는다():
-    out = _run("window.__ssGrabLoaded = true; window.__ssGrabVer = 20260904;\n")
+    out = _run("window.__ssGrabLoaded = true; window.__ssGrabVer = %d;\n" % _cur_ver())
     assert out["removed"] == 0, "같은 버전이면 손대지 않고 그대로 둔다"
 
 

@@ -28,9 +28,10 @@ SVC_YOUTUBE = "youtube"
 SVC_SERPAPI = "serpapi"
 SVC_BUFFER = "buffer"      # SNS 예약발행. 고객이 자기 Buffer 개인 키를 넣는다
 SVC_TYPECAST = "typecast"  # 목소리 두 번째 백엔드. 프리셋 model_id가 `ssfm-*`면 이쪽으로 나간다
+SVC_COUPANG = "coupang"    # 쿠팡 파트너스 오픈API(상품검색·딥링크). 값은 'AccessKey:SecretKey' 한 줄. 개인 전용·폴백 없음(2026-09-04)
 
 SERVICES = (SVC_GEMINI, SVC_VMAKE, SVC_ELEVENLABS, SVC_TYPECAST, SVC_YOUTUBE,
-            SVC_SERPAPI, SVC_BUFFER)
+            SVC_SERPAPI, SVC_BUFFER, SVC_COUPANG)
 
 # ★등록은 받지만 **실제 호출에 쓰이는** 서비스는 아직 이 둘뿐이다(2026-08-17 실측).
 #   - vmake     : job의 customer_id → mix_pipeline._vmake_keys → keys_for (목록 전체)
@@ -68,7 +69,7 @@ SERVICES = (SVC_GEMINI, SVC_VMAKE, SVC_ELEVENLABS, SVC_TYPECAST, SVC_YOUTUBE,
 #     호출부는 이미 customer_id를 흘리고 있었고(일레븐랩스 배선 때 뚫린 길),
 #     타입캐스트 분기만 그 인자를 버리고 config 키를 쓰고 있었다.
 WIRED = (SVC_VMAKE, SVC_SERPAPI, SVC_ELEVENLABS, SVC_TYPECAST, SVC_GEMINI,
-         SVC_YOUTUBE, SVC_BUFFER)
+         SVC_YOUTUBE, SVC_BUFFER, SVC_COUPANG)   # coupang: app.py 쿠팡 검색·상품 저장이 keys_for로 읽는다
 
 # ★공용 풀 모델(2026-08-24 사장님 결정) — 이 서비스들은 회원 키를 **우리 풀에 합류**시키고
 #   회원은 풀 전체를 무료로 쓴다. 키 1개만 받는데 그 1개로만 돌리면 곧바로 한도에 걸려
@@ -100,6 +101,115 @@ def uses_single_key(service):
 def is_pooled(service):
     """회원 키가 공용 풀에 합류하는 서비스인가. 판단은 여기 한 곳(0순위-B)."""
     return service in POOLED
+
+
+# ★개인 키가 **없으면 아예 못 쓰는** 서비스(2026-09-01 사장님 확정).
+#   "v메이크랑 tts는 없으면 못하게 막아"
+#
+#   왜 생겼나(실사고): 회원이 개인 키를 안 내면 **사장님 키로 조용히 나가고**
+#   포인트만 깎였다. 회원들은 "다 개인 API키로 쓴다"고 알고 있었고 아무도 포인트
+#   얘기를 못 들었다. 포인트가 남은 회원(유영창 9,500P·이정훈 105,530P …)은 계속
+#   사장님 일레븐랩스·VMake 계정을 태웠고, 잔액이 떨어진 회원만 402로 막혀
+#   "어떤 사람은 되고 어떤 사람은 안 되는" 상태가 됐다.
+#   실측(2026-09-01): 최근 30일 제작 46명 중 **16명이 TTS 키 없이** 86건을 만들었다.
+#
+#   그래서 폴백을 없앤다 — 키가 없으면 **기능 자체가 안 열린다**. 포인트로 때우는
+#   길을 막아야 회원이 키를 등록한다.
+#   ⚠️ gemini·youtube는 여기 넣지 마라. 저긴 공용 풀 정책(키 1개 받고 무료)이라
+#      회사 키로 도는 게 **의도된 거래**다.
+REQUIRE_OWN_KEY = (SVC_VMAKE, SVC_ELEVENLABS, SVC_TYPECAST)
+
+#: 차단 안내에 쓸 사람 말 이름 — 화면이 서비스 코드를 그대로 보여주면 안 된다.
+#   ★업체명을 쓰지 마라(브랜드 정책 — test_subclean_ui가 produce.html을 검사한다).
+#     이 문구는 서버가 만들어 그 화면에 그대로 실린다.
+SERVICE_LABEL = {
+    SVC_VMAKE: "자막 지우기",
+    SVC_ELEVENLABS: "목소리(ElevenLabs)",
+    SVC_TYPECAST: "목소리(타입캐스트)",
+    SVC_SERPAPI: "SerpAPI(렌즈 검색)",
+    SVC_BUFFER: "Buffer(SNS 예약)",
+    SVC_GEMINI: "제미니",
+    SVC_YOUTUBE: "유튜브",
+}
+
+
+# ★차단 면제 명단(2026-09-01 사장님 지정) — "박2/관리자/용석/정훈 4명은 제외한다".
+#   이분들은 키를 안 내도 회사 키로 계속 쓰신다(사장님이 비용을 감수하기로 한 계정).
+#   실측으로 확정한 cid:
+#     4  현경   arte.eum@gmail.com        (customers.admin=1 — 관리자)
+#     5  용석   koho851101@gmail.com      ┐ 같은 분의 계정 2개
+#     9  용석   851101ys@gmail.com        ┘
+#     11 이정훈 aijumpers85@gmail.com
+#     12 박2    parklotto20@gmail.com
+#   ⚠️ 여기에 cid를 더하면 그 회원의 VMake·TTS 비용을 회사가 계속 부담한다.
+#      사장님 지시 없이 늘리지 마라. 빼는 것은 언제든 안전하다.
+#   ⚠️ 이름으로 판단하지 마라 — 동명이인이 있다(민정훈 cid 234는 면제 대상이 아니다).
+#   ⚠️ 291 최일환 — **2026-09-03 하루만** 사장님 지시로 음성(TTS)을 열어둔 것이다.
+#      ("최일환 고객 tts 오늘만 무료로 내꺼로 열어줘")
+#      ★2026-09-04에 반드시 291을 이 줄에서 뺀다. 안 빼면 영구 무료가 된다.
+#      이 명단엔 기간 개념이 없어서 손으로 빼는 것 말고는 만료가 없다.
+#      그는 vmake 키를 이미 등록했으므로(실측) 자막 지우기는 자기 키로 나간다 —
+#      이 면제로 회사가 부담하는 건 음성뿐이다.
+BLOCK_EXEMPT_CIDS = frozenset({4, 5, 9, 11, 12, 291})
+
+
+def is_block_exempt(customer_id):
+    """차단 면제 대상인가. cid 0(사장님)과 지정 명단. 판단은 여기 한 곳(0순위-B)."""
+    cid = as_cid(customer_id)
+    return (not cid) or (cid in BLOCK_EXEMPT_CIDS)
+
+
+def requires_own_key(service):
+    """개인 키가 없으면 못 쓰는 서비스인가. 판단은 여기 한 곳(0순위-B)."""
+    return service in REQUIRE_OWN_KEY
+
+
+def has_own_key(store, customer_id, service):
+    """이 회원이 그 서비스의 **자기 키**를 등록했나. 사장님 키는 세지 않는다."""
+    try:
+        return bool(store.get_customer_keys_plain(as_cid(customer_id), service))
+    except AttributeError:      # store 스텁 — 판단 불가면 '없다'로 보지 않는다(작업을 막지 않게)
+        logging.warning("has_own_key: store에 get_customer_keys_plain이 없다 "
+                        "(cid=%r, service=%r) — 있음으로 처리한다", customer_id, service)
+        return True
+    except Exception as e:      # noqa: BLE001 — 조회 실패로 회원을 막으면 안 된다
+        logging.warning("has_own_key 조회 실패(있음으로 처리): %r", e)
+        return True
+
+
+def block_reason(store, customer_id, service):
+    """개인 키가 없어 막아야 하면 (코드, 사람이 읽는 문구), 아니면 None.
+
+    ★차단 판단은 여기 한 곳뿐이다 — 엔드포인트마다 다시 적으면 어긋난다(0순위-B).
+    ★사장님(cid 0)은 막지 않는다: 공용 보이스 굽기·샘플 제작 등 회사 자산 작업이
+      여기서 막히면 서비스가 통째로 선다.
+    """
+    if not requires_own_key(service):
+        return None
+    if is_block_exempt(customer_id):     # cid 0(사장님) + 지정 면제 명단
+        return None
+    if has_own_key(store, customer_id, service):
+        return None
+    label = SERVICE_LABEL.get(service, service)
+    return ("need_own_key",
+            f"{label} API 키를 등록해야 이용할 수 있어요. "
+            f"설정 > 🔑 API 키에서 등록해 주세요.")
+
+
+def tts_block_reason(store, customer_id):
+    """음성(TTS)은 일레븐랩스·타입캐스트 **둘 중 하나만** 있으면 된다.
+
+    ★서비스 하나씩 block_reason을 부르면 "일레븐랩스 없음"으로 막혀, 타입캐스트를
+      등록한 회원(실측 4명)이 억울하게 막힌다 — 그래서 음성은 이 함수가 판단한다.
+    """
+    if is_block_exempt(customer_id):     # cid 0(사장님) + 지정 면제 명단
+        return None
+    if (has_own_key(store, customer_id, SVC_ELEVENLABS)
+            or has_own_key(store, customer_id, SVC_TYPECAST)):
+        return None
+    return ("need_own_key",
+            "음성 생성을 하려면 일레븐랩스 또는 타입캐스트 API 키가 필요해요. "
+            "설정 > 🔑 API 키에서 등록해 주세요.")
 
 
 def uses_customer_key(service):
@@ -168,6 +278,13 @@ def _owner_keys(service):
         return list(config.YOUTUBE_API_KEYS)
     if service == SVC_ELEVENLABS:
         k = getattr(config, "ELEVENLABS_API_KEY", "")
+        return [k] if k else []
+    if service == SVC_TYPECAST:
+        # 2026-09-04 사장님 "타입캐스트 키 내 것도 등록해줘" — 운영자 키는 env(TYPECAST_API_KEY)에
+        # 이미 있는데 여기만 빠져 있어 관리자 잔액 조회(app._credit_mode owner)에 안 잡혔다.
+        # typecast_tts._api_key는 종전에도 keys_for가 비면 config로 폴백했으므로 실제 TTS 경로의
+        # 결과 키는 그대로다(폴백이 한 단계 앞당겨질 뿐).
+        k = getattr(config, "TYPECAST_API_KEY", "")
         return [k] if k else []
     if service == SVC_SERPAPI:
         # 렌즈 검색용. gemini/youtube와 같은 env 다중키 방식(SERPAPI_KEY~_30).
@@ -283,4 +400,7 @@ def gemini_keys(group="general", customer_id=None):
 
     # cid는 더 이상 '누구 키를 쓸까'를 가르지 않는다(공용 풀). 소진 로그·디버깅용으로만 읽는다.
     _ = as_cid(customer_id if customer_id is not None else keyctx.owner_cid())
-    return key_vault.get_live_keys_cascade(group)
+    # ★회전해서 준다 — 이 목록을 `for key in keys`로 도는 호출부(대본생성·SEO·
+    #   썸네일문구·부품은행)가 전부 keys[0]부터 시작하면 앞쪽 키에만 몰린다.
+    #   어느 키부터 쓸지는 **여기 한 곳**에서만 정한다(0순위-B).
+    return key_vault.rotated(key_vault.get_live_keys_cascade(group))

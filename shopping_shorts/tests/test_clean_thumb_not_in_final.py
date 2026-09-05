@@ -75,9 +75,10 @@ class TestCallerHandlesNone:
         text = src.read_text(encoding="utf-8")
         # 2026-08-27: 판정이 비트 단위 -> **컷 단위**(final_pair_for_source)로 바뀌었다.
         #   이름이 아니라 **모양**을 검사한다 — 조용한 폴백이 되돌아오면 증상 재발이다.
-        i = text.find("final_pair_for_source")
+        # 2026-09-03: 자리 판정이 clean_compare_clips(청소 당시 편성 스냅샷) 한 곳으로 옮겨졌다.
+        i = text.find("_cc = mix_pipeline.clean_compare_clips(job, work)")
         assert i > 0, "자리 판정 호출부가 사라졌다 — 이 테스트를 갱신하라"
-        window = text[i:i + 1400]
+        window = text[i:i + 3600]
         assert "not_in_final" in window, \
             "자리를 못 찾을 때 404로 빠지지 않는다 — 엉뚱한 프레임이 나간다"
         assert "if _final_sec is None:" in window, \

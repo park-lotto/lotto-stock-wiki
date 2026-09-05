@@ -402,24 +402,19 @@ function planClips(segIds, ttsDur, spread, beatIdx){
         const isLast = k === nPhrase - 1;
         const endB = isLast ? bounds[bounds.length - 1] : bounds[k + 1];
         const d = Math.max(0.1, endB - bounds[k]);
-        let idx = -1;
-        if (k < segments.length){
-          idx = k;                                   // 첫 바퀴 = 담은 순서대로(종전과 같다)
-        } else {
-          for (let t = 0; t < segments.length; t++){ // 두 바퀴째 = 뒤가 남은 조각을 돌아가며
-            const j = (ri + t) % segments.length;
-            if (segments[j].end - pos[j] >= Math.min(d, MIN_CLIP) - EPS){ idx = j; break; }
-          }
-          if (idx < 0){                              // 재료 소진 → 종전대로 마지막 컷이 커버
-            if (clips.length) clips[clips.length - 1].dur =
-              Math.round((clips[clips.length - 1].dur + (bounds[bounds.length - 1] - bounds[k])) * 100) / 100;
-            break;
-          }
-          ri = (idx + 1) % segments.length;
-        }
+        // ★재료가 구절보다 적으면 **담은 순서대로 돌아간다**(1,2,3,1,2,3…) — 2026-09-02 사장님
+        //   "하나를 올렸더니 2·3번 자리에 배치되고 같은 내용이 두 번 반복돼야 하는데 다른 게
+        //   3번에 붙는다". 종전엔 '뒤가 남은 조각의 이어지는 구간'을 골라서, 어느 자리에 무엇이
+        //   올지 사람이 예측할 수 없었다. 더 나쁜 건 조각을 하나 빼면 그 뒤 배치가 통째로
+        //   밀려 "하나 뺐는데 둘이 사라진 것처럼" 보인 것이다.
+        //   순환 반복은 자리↔조각 관계가 단순해 넣고 빼도 앞자리가 흔들리지 않는다.
+        const idx = k % segments.length;
         const seg = segments[idx];
-        clips.push({ seg_id: seg.seg_id, video_id: seg.video_id, start: pos[idx], dur: Math.round(d * 100) / 100 });
-        pos[idx] += d;
+        // 조각 뒤가 남았으면 이어서, 다 썼으면 그 조각의 처음부터 다시 본다(같은 내용 반복).
+        let st = pos[idx];
+        if (seg.end != null && seg.end - st < Math.min(d, MIN_CLIP) - EPS) st = seg.start;
+        clips.push({ seg_id: seg.seg_id, video_id: seg.video_id, start: st, dur: Math.round(d * 100) / 100 });
+        pos[idx] = st + d;
       }
       return clips;
     }
@@ -645,7 +640,9 @@ function vidFor(videoId, slot){
   _vids[key] = v;
   return v;
 }
-// 컷을 숨은 재생기에 미리 앉힌다(시크 완료까지 기다린다). 반환은 그 재생기.
+// 컷을 숨은 재생기에 미리 앉힌다. ⚠️**시크 완료를 기다리지 않는다** — currentTime만 꽂고
+// 바로 돌아온다(예전 주석은 "완료까지 기다린다"고 적혀 있었으나 사실이 아니었고,
+// 그 오해가 2026-09-02 '훅 뒤 꼬다리'를 낳았다). 도착 여부는 쓰는 쪽에서 v.seeking으로 본다.
 function seat(c){
   const v = vidFor(c.video_id, c._slot);
   if (Math.abs(v.currentTime - c.start) > 0.05) v.currentTime = c.start;
@@ -932,16 +929,43 @@ function step(){
       v.play().catch(()=>{});
       paintCut();
       // ★아직 첫 프레임이 없으면 썸네일을 **걷지 않는다** — 걷으면 그 자리가 검게 남는다.
-      //   준비되는 순간(canplay/seeked) 걷어 실제 영상으로 바뀐다.
-      if (v.readyState >= 2) holdShot(null, false);
+      //   준비되는 순간(canplay/seeked/timeupdate) 걷어 실제 영상으로 바뀐다.
+      // ★★반드시 걷힌다 — 이벤트만 믿으면 안 된다(2026-09-02 고객 제보).
+      //   canplay·seeked는 **이 줄에 닿기 전에 이미 지나갔을 수 있다**. 그러면 다시
+      //   오지 않아 썸네일이 영영 남고, 소리와 컷은 흐르는데 **그림만 정지**한다 —
+      //   "분명 영상인데 사진처럼 멈춰서 확인이 불가", "돌아가다 다음 클립에서 멈추고
+      //   또 돌아가다 멈추고"가 정확히 이 모양이다(컷마다 이벤트를 놓치냐 마냐로 갈린다).
+      //   걷는 길이 stopPlay 하나뿐이었던 것이 문제다. 안전핀을 같이 건다.
+      // ★아직 **도착 전**이면 썸네일을 걷지 않는다(2026-09-02). 대기 타이머(cutWaitMs)는
+      //   시크가 안 끝나도 여기로 온다 — 그때 걷으면 도착 못 한 앞부분이 그대로 보인다
+      //   (사장님 '훅 뒤 꼬다리': 훅 마지막 컷 s4@10.06인데 그 앞 9초대가 노출됐다.
+      //    같은 소스를 다음 칸도 써서 미리 앉히기와 시크가 겹쳐 느려진 것).
+      //   readyState만 보면 '열려 있다'는 뜻일 뿐 '그 자리에 왔다'가 아니다 — seeking을 같이 본다.
+      //   걷는 일은 아래 late()가 seeked/timeupdate 때 하고, 안전핀 타이머가 반드시 걷는다.
+      if (v.readyState >= 2 && !v.seeking) holdShot(null, false);
       else {
-        const late = () => { v.oncanplay = null; v.onseeked = null; holdShot(null, false); };
+        let tmr = 0;
+        const late = () => {
+          v.oncanplay = null; v.onseeked = null; v.ontimeupdate = null;
+          if (tmr) { clearTimeout(tmr); tmr = 0; }
+          holdShot(null, false);
+        };
         v.oncanplay = late; v.onseeked = late;
+        v.ontimeupdate = late;              // 실제로 흐르기 시작했으면 그림은 더 필요 없다
+        // 안전핀: 이벤트를 하나도 못 받아도 **이 컷 안에서** 걷는다.
+        tmr = setTimeout(late, Math.max(120, Math.min(600, Math.round((c.dur || 0) * 1000 * 0.5))));
       }
       if (seq[seqI + 1]) seat(seq[seqI + 1]);   // 다음 컷은 숨은 재생기에 미리 앉힌다
       schedStep(c.dur * 1000);                  // ← 여기서부터 시간을 잰다
     };
-    if (Math.abs(v.currentTime - c.start) < 0.05 && v.readyState >= 2) show();
+    // ★currentTime만 보면 '도착했다'가 아니라 '도착하라고 시켰다'를 본다(2026-09-02 사장님
+    //   "훅 뒤에 꼬다리가 나온다"). currentTime은 시크를 요청한 즉시 그 값으로 바뀌고
+    //   실제 프레임은 나중에 온다 — 그래서 v.seeking을 같이 봐야 한다.
+    //   ★전체 재생에서만 났던 이유: runAllFrom이 다음 칸 첫 컷을 seat()으로 미리 앉히는데
+    //   seat은 currentTime만 꽂고 **기다리지 않는다**(주석과 달리). 그 상태로 칸이 넘어오면
+    //   이 조건이 참이 돼 가림막 없이 바로 보여줘, 아직 도착 못 한 **앞부분**이 노출됐다.
+    //   칸별 재생은 미리 앉히기가 없어 늘 else(썸네일로 가리고 대기)로 갔다 — 그래서 멀쩡했다.
+    if (Math.abs(v.currentTime - c.start) < 0.05 && v.readyState >= 2 && !v.seeking) show();
     else {
       // 되감는 동안 검은 화면 대신 그 조각의 썸네일을 깔아둔다(2026-09-01 사장님 제보).
       holdShot(c, true);
@@ -949,7 +973,10 @@ function step(){
       const once = () => { if (done) return; done = true; v.onseeked = null; v.oncanplay = null; show(); };
       v.onseeked = once;
       v.oncanplay = once;
-      v.currentTime = c.start;
+      // ★이미 그 자리로 가는 중이면 다시 꽂지 않는다 — 같은 값을 재대입하면 브라우저가
+      //   seeked를 안 쏘아, 진행 중이던 시크의 완료 신호까지 놓치고 아래 타이머로만
+      //   깨어난다(컷 시작이 최대 cutWaitMs 늦어진다). 미리 앉힌 컷이 정확히 이 경우다.
+      if (!(v.seeking && Math.abs(v.currentTime - c.start) < 0.05)) v.currentTime = c.start;
       // ★기다리는 시간은 **컷 길이보다 짧아야 한다**(2026-09-01 실사고).
       //   1.5초 고정이던 것이 컷 1.0초짜리(구절 맞춤으로 컷이 짧아진 뒤)에서는
       //   '컷이 끝난 뒤에야 화면을 켜는' 꼴이 돼, 그 칸이 통째로 검게 지나갔다
@@ -957,8 +984,38 @@ function step(){
       setTimeout(once, cutWaitMs(c));
     }
   };
-  if (v.readyState >= 1) go();           // 이미 열려 있으면 즉시
-  else v.onloadedmetadata = go;
+  // ★여는 것에도 안전핀을 건다(2026-09-03 사장님 "전체재생하면 중간에 화면이 멈춘다").
+  //   종전엔 `else v.onloadedmetadata = go;` 한 줄이라, 이 이벤트가 **안 오면 go()가
+  //   영영 안 불리고 schedStep도 안 걸려 그 컷에서 통째로 멈췄다**. 안 오는 경우는
+  //   실제로 있다 — 소재 요청이 실패(404·403·네트워크 끊김)하거나, 같은 재생기를
+  //   앞 컷이 쓰다가 src를 갈아끼워 로딩이 다시 시작되는 순간에 걸릴 때다.
+  //   컷 안의 시크에는 안전핀(cutWaitMs)이 이미 있었는데 **여는 단계에만 없었다**.
+  //   ⚠️건너뛰지 않는다 — 컷을 빼면 화면이 음성보다 빨라져 싱크가 통째로 어긋난다.
+  //   그 컷의 시간은 그대로 쓰되 썸네일을 깔고 다음 컷으로 정상 진행한다.
+  if (v.readyState >= 1){ go(); return; }
+  let opened = false;
+  let openT = 0;
+  const open = () => {
+    if (opened) return;                  // go()가 두 번 돌면 컷이 앞질러 간다
+    opened = true;
+    v.onloadedmetadata = null; v.onerror = null;
+    if (openT) { clearTimeout(openT); openT = 0; }
+    go();
+  };
+  const giveUp = () => {
+    if (opened) return;
+    opened = true;
+    v.onloadedmetadata = null; v.onerror = null;
+    if (openT) { clearTimeout(openT); openT = 0; }
+    holdShot(c, true);                   // 검은 화면 대신 그 조각의 썸네일
+    paintCut();
+    if (seq[seqI + 1]) seat(seq[seqI + 1]);
+    schedStep(c.dur * 1000);             // 음성과 어긋나지 않게 이 컷 시간은 그대로 쓴다
+  };
+  v.onloadedmetadata = open;
+  v.onerror = giveUp;                    // 소재를 못 받았다 — 멈추지 말고 넘어간다
+  // 컷 길이의 60%까지만 기다린다(cutWaitMs와 같은 기준 — 기다림이 컷보다 길면 무의미).
+  openT = setTimeout(giveUp, cutWaitMs(c));
 }
 
 // ── 컷 표시 한 곳(2026-08-15 사장님 "왼쪽은 3개인데 컷이 4/4" 혼란) ─────────────────

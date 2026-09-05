@@ -11,6 +11,7 @@ import json
 import os
 import random
 import re
+import sys
 
 from google.genai import types
 
@@ -66,7 +67,17 @@ def _call_json(prompt, schema, note=None):
         if not keys:
             # ★키가 하나도 안 남았을 때만 진짜 '키 소진'이다.
             note["reason"] = "no_keys"
-    for key in keys:
+    # ★키를 **페이서로 골라 쓴다**(2026-09-01). 종전엔 `for key in keys:`가 간격 0으로
+    #   연타하고 429가 나면 대기 없이 다음 키로 넘어가, 키 76개를 순식간에 다 태웠다.
+    #   실측(오늘 KST 12·15시 피크): 대본생성 web 407콜 중 분당한도 149건(36.6%).
+    #   pick_paced_key는 라운드로빈 + 키당 최소 간격(분당 5회, comment_gen과 같은 근거)을
+    #   지켜 **애초에 429를 안 맞게** 한다. 시도 횟수·실패 처리는 종전과 같다(키 수만큼).
+    pool = list(keys)
+    while pool:
+        key = key_vault.pick_paced_key(pool)
+        if not key:
+            break
+        pool.remove(key)      # 한 키는 한 번만 시도(종전 for문과 같은 계약)
         try:
             resp = key_vault.get_client_for_key(key).models.generate_content(
                 model=_MODEL, contents=prompt,
@@ -76,7 +87,9 @@ def _call_json(prompt, schema, note=None):
             return json.loads(resp.text)
         except Exception as e:  # noqa: BLE001 — 생성 실패는 치명적 아님
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
-                key_vault.mark_exhausted(key_vault._owner_group(key) or _GEN_GROUP, key)
+                # ★표시는 mark_failure가 정한다: 401/403/무효키=영구, 429=한시(2026-09-04).
+                #   종전 mark_exhausted는 죽은 키를 30분 뒤 다시 살려 매번 재호출됐다.
+                key_vault.mark_failure(key, e, group=key_vault._owner_group(key) or _GEN_GROUP)
                 if note is not None:
                     note["reason"] = "exhausted"     # 돌다가 다 말랐다 = 진짜 소진
                 continue
@@ -336,7 +349,55 @@ def _source_benefits(s):
     return [t.strip() for t in raw if isinstance(t, str) and t.strip()]
 
 
-def _mix_source_block(sources):
+# ★2단계 '본 것만 쓰기'(2026-09-04, 사장님 "제품형 대본은 소스 영상에 보이는 것으로만 써야 한다 —
+#   대본을 썼는데 장면이 없다는 건 말이 안 된다"). 종전 장면 목록은 소스당 20개×40자로 잘려 긴
+#   소스의 뒤쪽 장면은 존재조차 몰랐고, src_seg는 "딱히 없으면 빈칸"이라 장면 없는 줄이 통과됐다.
+#   grounded 모드: 장면을 **전부**(상한 GROUNDED_SCENE_MAX) 쓰임·변화·활용까지 보여주고, 장점·효과·
+#   특징·동작·결과 주장은 장면 번호가 **필수**(script_gate '장면 근거' 검사가 반려). 훅·감정·연결·가격·
+#   약속 줄은 장면 없이 허용(needs_scene=false). 플래그 밖에선 종전과 완전히 같다(회귀 0).
+GROUNDED_SCENE_MAX = 60
+
+
+def _scene_line_full(x):
+    """grounded 모드 장면 한 줄: 번호·길이·말(한국어 번역 우선)·화면·쓰임·변화·활용."""
+    try:
+        length = round(float(x.get("end") or 0) - float(x.get("start") or 0), 1)
+    except (TypeError, ValueError):
+        length = 0
+    say = (x.get("text_ko") or x.get("text") or "").strip()[:60]
+    parts = [f"  [{x.get('seg_id')}] ({length}s)"]
+    if say:
+        parts.append("말:" + say)
+    parts.append("화면:" + (x.get("scene_desc") or "").strip()[:70])
+    for key, name in (("label", "쓰임"), ("change", "변화"), ("use_point", "활용")):
+        v = (x.get(key) or "").strip()
+        if v:
+            parts.append(f"{name}:{v[:50]}")
+    return " | ".join(parts)
+
+
+_GROUNDED_RULE = (
+    "\n\n★★[장면에 보이는 것만 써라 — 제품형 규칙]\n"
+    "- 제품의 **장점·효과·특징·동작·결과**를 말하는 줄은 반드시 위 '장면 목록'에 실제로 보이는 장면에서 "
+    "나와야 하고, 그 장면 번호를 src_seg에 적어라(needs_scene=true). 목록에 없는 장점은 쓰지 마라 — "
+    "장면이 없는 장점 한 줄이 들어가면 반려된다.\n"
+    "- 훅·감정·연결·가격·약속·마무리처럼 특정 화면을 요구하지 않는 줄은 src_seg를 빈칸으로 두고 "
+    "needs_scene=false로 표시해라. 단 대본의 3분의 1 이상은 장면이 붙은 줄이어야 한다(시연·결과·증거 칸은 반드시).\n"
+    "- src_seg에는 장면 목록의 번호만 적어라(없는 번호 = 반려). 한 줄이 여러 장면에 걸치면 쉼표로 "
+    "여러 번호를 적되 **첫 번째가 대표 장면**이다.")
+
+
+def scene_ids_of(sources):
+    """장면 목록에 실제로 실린 seg_id 집합(게이트가 '지어낸 번호'를 거르는 기준)."""
+    ids = set()
+    for s in (sources or [])[:SOURCE_MAX]:
+        for x in (s.get("segments") or [])[:GROUNDED_SCENE_MAX]:
+            if isinstance(x, dict) and x.get("seg_id"):
+                ids.add(str(x["seg_id"]))
+    return ids
+
+
+def _mix_source_block(sources, full_scenes=False):
     lines = []
     for i, s in enumerate(sources, 1):
         st = s.get("structure") or {}
@@ -354,11 +415,17 @@ def _mix_source_block(sources):
         #   원래 그 말이 나온 그림이라 가장 정확하다.
         #   ⚠️무자막 소스는 말(text)이 비고 화면 설명만 있다 — 그것도 단서라 함께 준다.
         _segs = [x for x in (s.get("segments") or []) if isinstance(x, dict) and x.get("seg_id")]
-        if _segs:
+        if _segs and full_scenes:
+            # grounded 모드 — 전부(상한) + 쓰임·변화·활용(위 GROUNDED_SCENE_MAX 주석)
+            block += ("\n- 장면 목록(★이 영상에 실제로 보이는 것 전부다. 장점·효과·동작은 여기서만 가져오고 "
+                      "번호를 src_seg에 적어라):\n"
+                      + "\n".join(_scene_line_full(x) for x in _segs[:GROUNDED_SCENE_MAX]))
+        elif _segs:
             block += "\n- 장면 목록(이 대본을 참고해 쓸 때 어느 대목인지 번호로 지목하라):\n" + "\n".join(
                 "  [{sid}] {say}{desc}".format(
                     sid=x.get("seg_id"),
-                    say=("말:" + (x.get("text") or "").strip()[:40] + " ") if (x.get("text") or "").strip() else "",
+                    say=("말:" + (x.get("text_ko") or x.get("text") or "").strip()[:40] + " ")
+                        if (x.get("text_ko") or x.get("text") or "").strip() else "",
                     desc="화면:" + (x.get("scene_desc") or "").strip()[:40])
                 for x in _segs[:20])
         # 무자막 해외영상: 자막·나레이션이 없어 전체대본이 비고 특장점만 있다. 그 특장점을
@@ -434,7 +501,10 @@ _STYLE_SCHEMA = {
                 #   지어낼 수 없게 후보 목록에 있는 것만 쓰라고 프롬프트에서 못 박는다.
                 #   못 고르면 빈 문자열(그때는 종전대로 3단계가 알아서 고른다 = 회귀 0).
                 "properties": {"role": {"type": "string"}, "text": {"type": "string"},
-                               "src_seg": {"type": "string"}},
+                               "src_seg": {"type": "string"},
+                               # grounded 모드(2026-09-04): 이 줄이 특정 화면을 요구하는가(장점·효과·동작·결과).
+                               # 종전 호출은 안 채워도 된다(required 아님 = 회귀 0).
+                               "needs_scene": {"type": "boolean"}},
                 "required": ["role", "text", "src_seg"],
             },
         },
@@ -456,7 +526,7 @@ def _sources_product(sources):
 
 def generate_one_style(sources, style, target_seconds=30, bank_context="", facts_block="",
                        seed="",
-                       note=None):
+                       note=None, grounded=False):
     """스타일 1개로 대본 1안. → {beats, script, hook, checks, passed, tries, style_id, style_name}
 
     ★조용히 통과시키지 않는다: 게이트를 못 넘으면 passed=False로 **표시해서** 돌려준다.
@@ -476,16 +546,31 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
     head = bank_assemble.style_block(style, seconds=seconds, seed=seed)
     if not head:
         return None
-    base = (_MIX_PROMPT.format(sources=_mix_source_block((sources or [])[:SOURCE_MAX]),
+    # grounded(2026-09-04): 장면 전부 + 규칙 + 게이트 '장면 근거'. 아니면 종전 문장 그대로.
+    _is_recipe = any("레시피" in (s.get("name") or "") for s in (sources or []))
+    _scene_ids = scene_ids_of(sources) if grounded else None
+    # ★장면 목록이 비면(세그 없는 소스) grounded는 구조적으로 3회 다 실패한다(2026-09-05 리뷰 M7) → 종전 모드로 강등하고 남긴다
+    if grounded and not _scene_ids:
+        print("generate_one_style: 장면 목록 0개 — grounded를 끄고 종전 모드로", file=sys.stderr)
+        if isinstance(note, dict):
+            note["grounded_downgraded"] = "장면 목록 0개"
+        grounded, _scene_ids = False, None
+    base = (_MIX_PROMPT.format(sources=_mix_source_block((sources or [])[:SOURCE_MAX],
+                                                         full_scenes=bool(grounded)),
                                seconds=seconds, words=max(15, round(seconds * 2.3)), n=1,
                                bank=("\n\n" + bank_context) if bank_context else "")
             + _style_extra()
             + (("\n" + facts_block) if facts_block else "")
             + "\n\n" + head
-            + "\n\n각 칸마다 src_seg에 **그 문장을 쓸 때 참고한 장면 번호**를 적어라"
-              "([대본 N]의 '장면 목록'에 있는 번호만. 3단계가 그 장면을 화면으로 붙인다)."
-              " 참고한 대목이 딱히 없으면 빈 문자열."
-            + "\n\n출력은 위 칸 순서대로 beats 배열 하나만. 각 원소는 {role, text, src_seg}.")
+            + ((_GROUNDED_RULE if not _is_recipe else
+                "\n\n★[장면 번호] 장면을 보고 쓴 줄은 src_seg에 장면 목록의 번호를 적어라(없는 번호 금지). "
+                "레시피는 감각·전개 줄이 장면 없이도 된다(needs_scene=false).") if grounded else
+               "\n\n각 칸마다 src_seg에 **그 문장을 쓸 때 참고한 장면 번호**를 적어라"
+               "([대본 N]의 '장면 목록'에 있는 번호만. 3단계가 그 장면을 화면으로 붙인다)."
+               " 참고한 대목이 딱히 없으면 빈 문자열.")
+            + ("\n\n출력은 위 칸 순서대로 beats 배열 하나만. 각 원소는 {role, text, src_seg, needs_scene}."
+               if grounded else
+               "\n\n출력은 위 칸 순서대로 beats 배열 하나만. 각 원소는 {role, text, src_seg}."))
 
     extra, tries, res, checks, full = "", [], None, [], ""
     # ★재작성이 끝내 통과 못 하면 **마지막 시도**가 아니라 규격에 가장 가까운 시도를 쓴다
@@ -504,7 +589,9 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
         checks, full = script_gate.check(style, res, facts_text=facts_block,
                                          product=_sources_product(sources),
                                          seconds=seconds,
-                                         speaker_judge=_speaker_judge)
+                                         speaker_judge=_speaker_judge,
+                                         scene_ids=_scene_ids, grounded=bool(grounded),
+                                         is_recipe=_is_recipe)
         tries.append({"chars": len(script_gate.norm(full)),
                       "fails": [c["name"] for c in checks if not c["ok"]]})
         if script_gate.passed(checks):
@@ -538,7 +625,9 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
         checks, full = script_gate.check(style, res, facts_text=facts_block,
                                          product=_sources_product(sources),
                                          seconds=seconds,
-                                         speaker_judge=script_gate.prior_verdict(checks))
+                                         speaker_judge=script_gate.prior_verdict(checks),
+                                         scene_ids=_scene_ids, grounded=bool(grounded),
+                                         is_recipe=_is_recipe)
         tries.append({"chars": len(script_gate.norm(full)), "trimmed": True,
                       "fails": [c["name"] for c in checks if not c["ok"]]})
 
@@ -547,6 +636,11 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
     #   다른 수를 말하게 된다 — 초 환산은 script_gate 한 곳에서만 한다(0순위-B).
     for _b in (res or []):
         _b["sec"] = script_gate.est_seconds(_b.get("text", ""))
+        # ★src_seg 정규화(2026-09-04): 모델이 "s3-10,s3-11"처럼 여럿을 적는다. 하류(store._apply_beat_sources·
+        #   produce.html beat_sources)는 번호 하나를 기대하므로 src_seg=대표(첫 번째), 전체는 src_segs에.
+        _ids = script_gate.parse_src_segs(_b.get("src_seg"))
+        _b["src_segs"] = _ids
+        _b["src_seg"] = _ids[0] if _ids else ""
     return {
         "style_id": style.get("id"), "style_name": style.get("name"),
         "beats": res or [], "script": full, "hook": (res or [{}])[0].get("text", ""),
@@ -866,7 +960,7 @@ def regen_one_beat(sources, style, role, beats, template="", target_seconds=30,
 
 
 def generate_by_styles(sources, styles, target_seconds=30, bank_context="", facts_block="",
-                       reasons=None, seed=""):
+                       reasons=None, seed="", grounded=False):
     """스타일 목록(보통 2개) → 각 1안. 실패한 스타일은 건너뛴다(하나라도 나오면 화면은 산다).
 
     facts_block은 그대로 흘려보낸다 — 빈 값이면 기존 경로(회귀 0).
@@ -882,7 +976,7 @@ def generate_by_styles(sources, styles, target_seconds=30, bank_context="", fact
         note = {} if reasons is not None else None
         try:
             d = generate_one_style(sources, st, target_seconds, bank_context, facts_block,
-                                   seed=seed, note=note)
+                                   seed=seed, note=note, grounded=grounded)
         except Exception as e:      # noqa: BLE001 — 한 스타일 실패로 나머지를 죽이지 않는다
             print(f"generate_by_styles 실패(style={st.get('id')}): {e}")
             if reasons is not None:
@@ -1019,7 +1113,7 @@ def generate_variations(structure, full_text, elem_modes, category_lookup, mode=
         except Exception as e:  # noqa: BLE001 — 생성 실패는 치명적 아님(빈 리스트)
             if (comment_gen.key_vault.is_daily_exhausted_error(e)
                     or comment_gen.key_vault.is_account_disabled_error(e)):
-                comment_gen._mark_key_exhausted(ki, key_vault.retry_delay_seconds(e))
+                comment_gen._mark_key_exhausted(ki, key_vault.retry_delay_seconds(e), exc=e)
                 continue
             return []
     return []
@@ -1080,7 +1174,7 @@ def _refine(prompt, max_key_tries=3):
         except Exception as e:  # noqa: BLE001 — 재생성 실패는 치명적 아님(빈 문자열)
             if (comment_gen.key_vault.is_daily_exhausted_error(e)
                     or comment_gen.key_vault.is_account_disabled_error(e)):
-                comment_gen._mark_key_exhausted(ki, key_vault.retry_delay_seconds(e))
+                comment_gen._mark_key_exhausted(ki, key_vault.retry_delay_seconds(e), exc=e)
                 continue
             return ""
     return ""
@@ -1232,7 +1326,7 @@ def detect_subject(full_text, max_key_tries=3):
         except Exception as e:  # noqa: BLE001 — 감지 실패는 치명적 아님(빈 문자열)
             if (comment_gen.key_vault.is_daily_exhausted_error(e)
                     or comment_gen.key_vault.is_account_disabled_error(e)):
-                comment_gen._mark_key_exhausted(ki, key_vault.retry_delay_seconds(e))
+                comment_gen._mark_key_exhausted(ki, key_vault.retry_delay_seconds(e), exc=e)
                 continue
             return ""
     return ""

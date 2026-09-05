@@ -58,12 +58,57 @@
   <div class="cards" id="cards"></div>
 </main>
 <script>
+function cpKw(s){ /* 쿠팡 검색어: 이모지(서로게이트 쌍) 반 토막 방지 — 2026-09-04 라이브 사고: slice(0,60)가 이모지를 반으로 잘라 encodeURIComponent가 URIError를 던져 즐겨찾기·랭킹 카드 전부 안 그려짐 */ try{ return encodeURIComponent(Array.from(String(s==null?'':s).split('\n')[0]).slice(0,60).join('')); }catch(e){ return ''; } }
 function esc(s){ return (s==null?"":String(s)).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 let ITEMS=[];
 const SELECTED=new Set();
+// ── 원본 내려받기(2026-09-04 사장님 "프로등급만·횟수제한 없음·영상즐겨찾기 페이지만") ──
+// ★버튼은 이용권 회원에게만 보인다. 판정은 서버(/api/me level)만 믿는다 — 화면에서
+//   따로 등급을 계산하면 서버 게이트와 어긋난다(0순위-B). 화면을 속여도 서버가 402로 막는다.
+let CAN_DL = false;
+async function loadMe(){
+  try{
+    const d = await (await fetch('/api/me')).json();
+    CAN_DL = (d && d.level === 'full');
+  }catch(e){ CAN_DL = false; }
+}
+async function downloadOne(sc, btn){
+  const old = btn.textContent;
+  btn.disabled = true; btn.textContent = '⏳ 받는 중…';
+  try{
+    // 서버가 원본을 받아 파일로 준다(플랫폼별 처리는 서버 download_any 한 곳).
+    // 링크로 열지 않고 fetch로 받는 이유: 402·502를 **문구로** 안내하기 위해서다.
+    const r = await fetch('/api/mix/basket/download?sc=' + encodeURIComponent(sc));
+    if(!r.ok){
+      let msg = '내려받지 못했어요.';
+      try{ const j = await r.json(); if(j && j.error) msg = j.error; }catch(e){}
+      alert(msg); btn.disabled = false; btn.textContent = old; return;
+    }
+    // 파일명은 서버가 Content-Disposition으로 준다 — 화면에서 다시 만들지 않는다.
+    let fname = '';
+    const cd = r.headers.get('Content-Disposition') || '';
+    const m = cd.match(/filename\*=utf-8''([^;]+)/i) || cd.match(/filename="([^"]+)"/i);
+    if(m){ try{ fname = decodeURIComponent(m[1]); }catch(e){ fname = m[1]; } }
+    const blob = await r.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = fname || (sc + '.mp4');
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href), 30000);
+    btn.textContent = '✅ 저장됨';
+    setTimeout(()=>{ btn.disabled = false; btn.textContent = old; }, 2500);
+  }catch(e){
+    alert('내려받지 못했어요. 잠시 후 다시 시도해 주세요.');
+    btn.disabled = false; btn.textContent = old;
+  }
+}
+
 async function loadItems(){
   try{
-    const d=await (await fetch('/api/mix/basket')).json();
+    const [d] = await Promise.all([
+      (await fetch('/api/mix/basket')).json(),
+      loadMe(),                       // 등급을 같이 읽어 버튼 노출을 정한다
+    ]);
     ITEMS=(d.items||[]).slice().reverse();   // 최근에 담은 게 맨 위로
   }catch(e){ ITEMS=[]; }
   render();                 // 목록부터 즉시 그리고(신호등은 잠깐 '분석 전'),
@@ -397,13 +442,18 @@ function render(){
         ${(ANALYSIS[i.shortcode]||{}).state==='done' ? '' :
           `<button onclick="analyzeOne('${i.shortcode}')" style="width:100%;margin-top:6px;padding:7px;background:#2d333b;color:#adbac7;border:1px solid #555;border-radius:8px;font-weight:700;cursor:pointer">🔎 ${(ANALYSIS[i.shortcode]||{}).state==='gave_up'?'다시 분석':'분석'}</button>`}
         ${i.url?`<button onclick="powerSearch('${esc(i.url)}')" title="구글렌즈로 유튜브·틱톡·인스타·샤오홍슈·도우인에서 비슷한 영상 찾기 (유료·월 한도)" style="width:100%;margin-top:6px;padding:7px;background:#3a2f10;color:#f0c14b;border:1px solid #6b5518;border-radius:8px;font-weight:800;cursor:pointer">🔍 숏템파워검색</button>`:''}
+        <button class="cp-btn" data-sc="${i.shortcode}" onclick="window.ssCoupangFind('', {shortcode:'${i.shortcode}', thumbnail:decodeURIComponent('${encodeURIComponent(i.thumbnail||'')}'), hint:this.getAttribute('data-product')||'', noProduct:this.getAttribute('data-noproduct')==='1'})" title="이 제품이 쿠팡에 있는지 찾고, 있으면 내 추적 링크까지 바로 만듭니다" style="width:100%;margin-top:6px;padding:7px;background:#2a1808;color:#ffb570;border:1px solid #8a4b12;border-radius:8px;font-weight:800;cursor:pointer">🛒 쿠팡검색</button>
+        ${CAN_DL?`<button onclick="downloadOne('${i.shortcode}',this)" title="원본 영상을 mp4 파일로 내 컴퓨터에 저장합니다" style="width:100%;margin-top:6px;padding:7px;background:#10261a;color:#7ee2a8;border:1px solid #1d6b3f;border-radius:8px;font-weight:800;cursor:pointer">💾 영상 저장</button>`:''}
         <button onclick="sendOneToProduce('${i.shortcode}')" style="width:100%;margin-top:6px;padding:8px;background:#1f6feb;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer">🎬 제작소로 보내기</button>
       </div>
     </div>`;
   }).join('');
+  try {
+    if (window.ssCoupangPrewarm) window.ssCoupangPrewarm(ITEMS.filter(function (x) { return x.thumbnail || x.caption; }).map(function (x) { return { shortcode: x.shortcode, thumbnail: x.thumbnail || "", caption: x.caption || "" }; }).slice(0, 48));
+  } catch (e) { /* 사전 판독 실패가 담기 화면을 막으면 안 된다 */ }
 }
 loadItems();
 </script>
-<script src="/sidebar.js?v=2"></script>
+<script src="/sidebar.js?v=3"></script>
 </body>
 </html>

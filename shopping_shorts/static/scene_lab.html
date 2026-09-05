@@ -537,9 +537,35 @@ button.act.play:hover{background:var(--accent);color:#fff;border-color:var(--acc
 #playerhost[data-pane="confirm"] #confirmPane{display:block}
 #playerhost[data-pane="confirm"] #playerIdle,
 #playerhost[data-pane="confirm"] #player{display:none}
-#confirmBody video{width:100%;aspect-ratio:var(--shorts-pv-ar,9/16);object-fit:contain;
-  border-radius:8px;background:#000;display:block}
-#confirmBody .cfLoad{aspect-ratio:var(--shorts-pv-ar,9/16);width:100%;display:flex;
+#confirmBody video{object-fit:contain;
+  border-radius:8px;background:#000;display:block;
+  /* 비율의 정의처는 scene_play.js PV_AR 한 곳이다(test_preview_size_single_source가
+     강제한다 — 2026-08-20 '미리보기 크기가 자꾸 틀어지던' 사고의 처방). 그러니 비율은
+     그대로 두고, **넘칠 때만 줄어들게** 한다: 높이를 틀에 맞춰 깎으면 폭은 비율이
+     알아서 따라온다(width:auto). 실측 322x572 = 0.562 ≒ 9/16. */
+  aspect-ratio:var(--shorts-pv-ar,9/16);
+  width:auto;height:auto;max-width:100%;max-height:100%;
+  flex:0 1 auto;min-height:0;margin:0 auto}
+/* 완성본 탐색바(2026-09-03) — 네이티브 controls는 재생 중 숨어서 "바가 없다"가 된다 */
+/* ★막대가 잘려 안 보이던 것(라이브 실측으로 잡았다). #playerhost는 높이 700px에
+   overflow:hidden인데, 9:16 비율이 강제한 video 높이(768px)가 #confirmBody를
+   805px까지 밀어내 막대가 y=817로 **틀 밖**에 있었다 — 정적 검사로는 절대 안 잡힌다.
+   고치는 자리는 body 하나다: #confirmPane은 flex:1로 제 높이(658px)를 이미 받고 있다.
+   body를 그 높이에 가두고, video는 비율 강제를 풀어 남는 공간만 쓰게 한다
+   (object-fit:contain이라 높이가 줄어도 화면은 안 찌그러진다). 실측: video 620 + 막대 30. */
+#confirmBody{height:100%;min-height:0;display:flex;flex-direction:column}
+#confirmBody .cfbar{display:flex;align-items:center;gap:8px;margin-top:8px;flex:0 0 auto}
+#confirmBody .cfbtn{flex:0 0 auto;width:30px;height:30px;padding:0;border:1px solid var(--line);
+  border-radius:8px;background:var(--inset);color:var(--fg);font-size:13px;line-height:1;cursor:pointer}
+#confirmBody .cfbtn:hover{border-color:var(--accent)}
+#confirmBody .cfSeek{flex:1 1 auto;height:14px;border-radius:7px;background:var(--inset);
+  border:1px solid var(--line);cursor:pointer;position:relative;overflow:hidden}
+#confirmBody .cfSeekFill{position:absolute;left:0;top:0;bottom:0;width:0;
+  background:var(--accent);border-radius:7px;pointer-events:none}
+#confirmBody .cfTime{flex:0 0 auto;font-size:12px;color:var(--sub);
+  font-variant-numeric:tabular-nums;min-width:78px;text-align:right}
+#confirmBody .cfLoad{flex:0 1 auto;min-height:0;width:100%;
+  aspect-ratio:var(--shorts-pv-ar,9/16);max-height:100%;display:flex;
   align-items:center;justify-content:center;border:1px dashed var(--line);
   border-radius:10px;color:var(--dim);font-size:13px;text-align:center;padding:14px}
 .pidleIcon{font-size:30px;opacity:.55}
@@ -1078,6 +1104,15 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
             title="담은 편성을 처음부터 이어서 봅니다">▶</button>
     <div class="pidleIcon">🪞</div>
     <div class="pidleTxt">위 <b>띠의 조각</b>이나 아래 <b>장면</b>을 누르면<br>여기서 재생됩니다</div>
+    <!-- ★미리보기는 **꾸미기를 일부러 뺀다**(mix_pipeline.run_preview: caption_style=None,
+         deco={} — "스펙 §9 꾸미기 제외"). 자막은 기본 흰색으로 구워지고 헤드카피·템플릿도 없다.
+         그런데 그 사실이 화면 어디에도 없어서, 6단계에서 자막색을 검정으로 바꾸고 여기를 보면
+         **안 바뀐 것처럼 보인다**(실측 2026-09-02: 미리보기 자막 흰색, 최종본은 검정).
+         진짜 저장 버그와 증상이 똑같아 고객이 구별할 수 없다 → 한 줄로 미리 알린다. -->
+    <div class="pidleTxt" style="margin-top:8px;opacity:.72;font-size:12px;line-height:1.5">
+      장면·순서 확인용이라 <b>꾸미기(자막 색·헤드카피)는 빠져 있어요</b><br>
+      꾸민 그대로 보려면 <b>완성본 만들기</b>를 눌러주세요
+    </div>
   </div>
   <div id="player">
       <div class="phead"><b>미리보기</b> <span class="x" onclick="stopPlay()">닫기 ✕</span></div>
@@ -1138,6 +1173,11 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
 //   확정 결과가 부모(제작소) 좌측에 또 다른 9:16 칸으로 열리던 것을 이 자리로 가져왔다.
 //   부모는 postMessage가 아니라 이 함수들을 **직접 부른다**(같은 도메인).
 //   (postMessage는 2026-08-15에 조용히 실패해서 버린 경로다 — 되살리지 마라)
+// 지금 화면에 걸린 완성본이 **어떤 편성으로** 만들어졌는지(빈 문자열 = 완성본 없음).
+var RENDERED_SIG = '';
+// 렌더가 도는 중인 편성(출발 시점에 찍고, 영상이 걸릴 때 RENDERED_SIG로 확정).
+var PENDING_SIG = '';
+
 function pvTab(which){
   var host = document.getElementById('playerhost');
   if (!host) return;
@@ -1165,9 +1205,21 @@ function pvTab(which){
 //     (#mixPreviewRail)을 감췄으면 null을 준다. _RAIL_OFF=true라 평소 늘 감춰져 있어
 //     여기서 쓰면 렌더가 **영영 안 걸린다**. 여긴 "재생을 어디서 하나"가 아니라
 //     "부모에게 렌더를 시킨다"라서 판정 기준이 다르다(0순위-B: 다른 판단은 따로 둔다).
-function _askRender(){
+async function _askRender(){
   var body = document.getElementById('confirmBody');
   if (!body || body.innerHTML.trim()) return;        // 이미 있다(또는 만드는 중) — 그대로 본다
+  // ★밀린 편집을 **먼저** 서버에 얹고 렌더한다(2026-09-02 사장님 제보: "컷 편집이 적용 안 됨").
+  //   autoApply는 1.2초 디바운스라, 컷을 조정하고 바로 이 탭을 누르면 렌더가 먼저 출발해
+  //   **옛 편성으로** 만들어졌다(실측: 0ms 렌더 / 901ms 저장 — 순서가 거꾸로).
+  //   여기서 기다리면 저장이 반드시 앞선다. 실패해도 렌더는 진행한다 — 막으면 더 나쁘다.
+  body.innerHTML = '<div class="cfLoad">⏳ 편집 내용 저장 중…</div>';
+  try{ if (typeof flushApply === 'function') await flushApply(); }
+  catch(e){ console.warn('편집 반영 실패(렌더는 계속)', e); }
+  body.innerHTML = '';                               // startPreview가 자기 로더를 그린다
+  // ★렌더에 들어가는 편성을 **출발 시점에** 찍는다(2026-09-03). 완료 시점에 찍으면,
+  //   렌더가 도는 20초 사이에 편집한 것까지 "이 영상에 들어간 것"으로 잘못 기록돼
+  //   낡은 영상을 최신으로 보여주게 된다.
+  try{ PENDING_SIG = (typeof _editSig === 'function') ? _editSig() : ''; }catch(e){ PENDING_SIG = ''; }
   try{
     var up = window.parent;
     if (up && up !== window && typeof up.startPreview === 'function'){ up.startPreview(); return; }
@@ -1191,13 +1243,103 @@ function showConfirmLoading(msg){
   _cfEnable(true);
   pvTab('confirm');
 }
+// ★지문 없는 확정본에 **지금 편성**을 지문으로 찍는다 — 두 번 불린다(0순위-B: 판정은 여기 한 곳).
+//   ① showConfirmVideo 때: 부모가 옛 미리보기를 넣는 순간. 그런데 페이지 복원 경로에선
+//      boot()가 DATA를 받기 **전**이라 _editPayload가 DATA.beats에서 터져 빈 채로 남는다
+//      (라이브 실측 2026-09-04: 배포 뒤에도 RENDERED_SIG_len 0, 나중에 다시 부르면 882).
+//   ② boot() 끝: 편성이 다 실린 뒤 한 번 더. 이때 영상이 있고 지문이 비었으면 찍는다.
+function stampConfirmSigIfMissing(){
+  if (RENDERED_SIG) return;
+  var body = document.getElementById('confirmBody');
+  if (!body || !body.querySelector('video')) return;     // 영상이 없으면 찍을 게 없다
+  try{ RENDERED_SIG = (typeof _editSig === 'function') ? _editSig() : ''; }catch(e){ RENDERED_SIG = ''; }
+}
 // 렌더 끝 — 같은 자리에 진짜 영상.
 function showConfirmVideo(src){
   var body = document.getElementById('confirmBody');
   if (!body) return;
-  body.innerHTML = '<video controls muted playsinline autoplay src="' + src + '"></video>';
+  // ★이 영상이 어떤 편성으로 만들어졌는지 지문을 남긴다(2026-09-03) — applyServer가
+  //   이걸 대조해서 **진짜 바뀌었을 때만** 완성본을 버린다. 안 남기면 옛 동작(무조건
+  //   버리기)으로 돌아가 재렌더가 재발한다.
+  // ★지문 없이 채워지는 경우가 있다(2026-09-04 사장님 제보: "최종렌더 뒤 3단계에서 고치고
+  //   미리보기를 보면 수정이 안 된 걸로 나온다"). 페이지를 다시 열거나 다른 단계에서 돌아오면
+  //   부모(produce)가 **이미 만들어 둔** preview.mp4를 여기로 넣는데, 그 경로엔 _askRender가
+  //   없어 PENDING_SIG가 비어 있다. 그러면 RENDERED_SIG도 비고, applyServer의 낡음 판정은
+  //   `!!RENDERED_SIG && …`라 **영영 낡았다고 못 본다** → 아무리 고쳐도 옛 영상이 안 지워지고
+  //   탭을 눌러도 _askRender가 "이미 있다"며 재렌더를 안 건다. 최종렌더는 무조건 새로
+  //   만드니 거기엔 반영돼 "미리보기만 옛것"이 됐다.
+  //   → 지문이 없으면 **지금 편성**을 이 영상의 지문으로 삼는다. 이후 진짜 바뀌면 지워진다.
+  //     (편집 상태가 아직 안 실린 순간이면 빈 지문이 남고, 첫 편집 저장에서 걸러진다 — 공짜 렌더 1회.)
+  RENDERED_SIG = PENDING_SIG;
+  if (!RENDERED_SIG) stampConfirmSigIfMissing();
+  // ★영상 아래에 **늘 보이는** 탐색바를 함께 그린다(2026-09-03 사장님 제보:
+  //   "완성본 만들기하면 중간 구간으로 이동해서 클릭할 수 있는 바가 없다").
+  //   controls 속성이 주는 네이티브 막대는 재생 중 자동으로 숨고, 세로(9:16) 영상에선
+  //   영상 위에 겹쳐 떠서 잘 안 보인다. 그래서 별도 막대를 영상 **밖에** 둔다.
+  //   ★controls는 그대로 둔다 — 전체화면·배속은 네이티브가 낫고, 우리 막대는 '늘 보이는'
+  //     탐색 수단을 더하는 것이지 대체가 아니다(test_preview_video_is_muted_by_default가
+  //     지키는 계약이기도 하다: 열자마자 muted + 음소거 해제·탐색 수단이 있을 것).
+  //   ⚠️이 주석에 video 태그를 그대로 쓰지 마라 — test_preview_video_is_muted_by_default가
+  //     주석을 안 걷고 정규식으로 태그를 찾아서, 주석 속 예시를 진짜 태그로 오인한다.
+  body.innerHTML =
+      '<video id="cfVid" controls muted playsinline autoplay src="' + src + '"></video>'
+    + '<div class="cfbar">'
+    +   '<button type="button" class="cfbtn" id="cfPlay" title="재생/정지">⏸</button>'
+    +   '<button type="button" class="cfbtn" id="cfMute" title="소리 켜기">🔇</button>'
+    +   '<div class="cfSeek" id="cfSeek"><div class="cfSeekFill" id="cfSeekFill"></div></div>'
+    +   '<div class="cfTime" id="cfTime">0:00 / 0:00</div>'
+    + '</div>';
+  _cfWire();
   _cfEnable(true);
   pvTab('confirm');
+}
+// 완성본 탐색바 배선 — 클릭·드래그로 그 지점으로 건너뛴다.
+function _cfWire(){
+  var v = document.getElementById('cfVid');
+  var seek = document.getElementById('cfSeek');
+  var fill = document.getElementById('cfSeekFill');
+  var time = document.getElementById('cfTime');
+  var play = document.getElementById('cfPlay');
+  var mute = document.getElementById('cfMute');
+  if (!v || !seek) return;
+  function fmt(t){
+    if (!isFinite(t) || t < 0) t = 0;
+    var m = Math.floor(t / 60), sec = Math.floor(t % 60);
+    return m + ':' + (sec < 10 ? '0' : '') + sec;
+  }
+  function paint(){
+    var d = v.duration;
+    // ★duration을 아직 모를 때(메타데이터 전) 나누면 NaN%가 돼 막대가 통째로 사라진다.
+    var pct = (isFinite(d) && d > 0) ? (v.currentTime / d * 100) : 0;
+    fill.style.width = pct + '%';
+    time.textContent = fmt(v.currentTime) + ' / ' + fmt(d);
+  }
+  function jump(ev){
+    var d = v.duration;
+    if (!isFinite(d) || d <= 0) return;          // 아직 길이를 모른다 — 건너뛸 수 없다
+    var r = seek.getBoundingClientRect();
+    var cx = (ev.touches && ev.touches[0]) ? ev.touches[0].clientX : ev.clientX;
+    v.currentTime = Math.max(0, Math.min(1, (cx - r.left) / r.width)) * d;
+    paint();
+  }
+  var dragging = false;
+  seek.addEventListener('mousedown', function(e){ dragging = true; jump(e); });
+  window.addEventListener('mousemove', function(e){ if (dragging) jump(e); });
+  window.addEventListener('mouseup', function(){ dragging = false; });
+  seek.addEventListener('touchstart', function(e){ jump(e); }, {passive:true});
+  seek.addEventListener('touchmove',  function(e){ jump(e); }, {passive:true});
+  v.addEventListener('timeupdate', paint);
+  v.addEventListener('loadedmetadata', paint);   // 길이를 알게 된 순간 눈금이 맞는다
+  v.addEventListener('play',  function(){ play.textContent = '⏸'; });
+  v.addEventListener('pause', function(){ play.textContent = '▶'; });
+  play.addEventListener('click', function(){ if (v.paused) v.play(); else v.pause(); });
+  // 자동재생 정책 때문에 muted로 시작한다 — 눌러서 소리를 켠다.
+  mute.addEventListener('click', function(){
+    v.muted = !v.muted;
+    mute.textContent = v.muted ? '🔇' : '🔊';
+    mute.title = v.muted ? '소리 켜기' : '소리 끄기';
+  });
+  paint();
 }
 // 재매칭 등으로 확정본이 무효가 됐다 — **내용만 비우고** 가조립으로 되돌린다.
 // ★탭을 다시 잠그지 않는다(2026-08-22). 이제 이 탭이 렌더 입구라 항상 눌러야 한다.
@@ -1206,6 +1348,8 @@ function showConfirmVideo(src){
 function clearConfirm(){
   var body = document.getElementById('confirmBody');
   if (body) body.innerHTML = '';
+  RENDERED_SIG = '';                     // 영상이 사라졌으니 지문도 함께 버린다
+  PENDING_SIG = '';
   var host = document.getElementById('playerhost');
   if (host) host.setAttribute('data-pane', 'draft');
   var b = document.querySelector('.pvTab[data-pane="confirm"]');
@@ -1933,6 +2077,8 @@ function renderRollHosts(beatIdx, slot){
     // ★타임라인 🔁 교체 모드(2026-08-29 설계 ⑧)면 여기서 잠금 옵션이 덮인다:
     //   lockLen(고정길이 박스)+onReplace(그 컷 교체). 마지막에 펼쳐야 위 onReplace를 이긴다.
     ...(typeof tlLockOpts === 'function' ? tlLockOpts(kind, vid) : {}),
+    // ＋ 구간으로 잠금을 풀었을 때 되돌릴 원래 onReplace(src는 없음 → null).
+    onReplaceUnlocked: (kind === 'src') ? null : (r => replaceRoll(sid, vid, r)),
   });
   markRollBtns();
 }
@@ -2401,8 +2547,39 @@ function beatFill(i, clips){
            stretching: !!STRETCH[i] && cuts.length > 0 };
 }
 
+// ★타임프레임이 보던 자리를 지킨다(2026-09-04 고객 접수: "CTA 구간을 재생하려고
+//   칸의 검정 빈자리를 누르면 작업화면이 딴 데로 가 있다").
+//   라이브 실측(mix job fb62adf0aad0, 칸 7개): 검정 빈자리 클릭 → scrollLeft
+//   4608 → 4270으로 **338px 깎였다** = 화면이 칸 반쯤 앞으로 밀린다.
+//   왜: renderBand가 innerHTML을 갈아끼우면 칸 안에 펼쳐둔 필름(422px)이 통째로
+//   사라져 가로 스크롤 최대값이 줄고, 브라우저가 scrollLeft를 그만큼 깎는다(clamp).
+//   필름은 나중에 다시 붙어 폭은 돌아오지만 깎인 스크롤은 그대로 남는다.
+//   ★innerHTML 직후에 한 번 되돌리는 것으로는 부족하다 — 그 순간은 아직 좁아 또 깎인다.
+//   실측해 보니 폭이 돌아오는 것은 클릭 후 **약 2.9초 뒤**였다(영상 메타데이터 로드).
+//   그래서 폭이 충분히 돌아올 때까지 짧게 지켜본다.
+//   ⚠ rAF는 탭이 숨으면 멈춰서 못 쓴다(실측으로 확인) — setInterval로 감시한다.
+//   ★사용자가 직접 끌거나 휠을 굴리면 즉시 손을 뗀다 — 내 조작을 되돌리면 안 된다.
+let _bandKeepLeft = null, _bandKeepTok = 0;
+function _bandKeepScroll(row){
+  const keep = _bandKeepLeft;
+  if (!keep){ _bandKeepLeft = null; return; }
+  const tok = ++_bandKeepTok, t0 = Date.now();
+  let alive = true;
+  const stop = () => { alive = false; _bandKeepLeft = null; };
+  row.addEventListener('pointerdown', stop, {once:true});
+  row.addEventListener('wheel', stop, {once:true, passive:true});
+  const iv = setInterval(() => {
+    if (!alive || tok !== _bandKeepTok){ clearInterval(iv); return; }
+    // 폭이 돌아왔을 때만 되돌린다 — 좁은 동안 넣어봐야 또 깎일 뿐이다.
+    if (row.scrollLeft !== keep && row.scrollWidth - row.clientWidth >= keep) row.scrollLeft = keep;
+    if (Date.now() - t0 > 5000){ clearInterval(iv); _bandKeepLeft = null;
+      row.removeEventListener('pointerdown', stop); row.removeEventListener('wheel', stop); }
+  }, 16);
+}
+
 function renderBand(){
   const row = document.getElementById('tbrow'); if (!row) return;
+  if (_bandKeepLeft === null) _bandKeepLeft = row.scrollLeft;   // 한 번의 클릭에서 첫 호출값만 기준
   let total = 0;
   const html = DATA.beats.map((b, i) => {
     const clips = planClips(lists[i] || [], beatDur(i), STRETCH[i], i);
@@ -2442,7 +2619,13 @@ function renderBand(){
     const usedIds = new Set(clips.map(c => c.seg_id));
     const unusedCuts = (lists[i] || []).filter(id => !usedIds.has(id)).map(id => {
       const seg = DATA.segments[id] || {};
-      const why = tooShort(id) ? '너무 짧음' : '자리 없음';
+      // ★조각 자체가 없으면 '자리 없음'이라고 하면 안 된다(2026-09-05 고객 다수 제보).
+      //   서버가 모르는 id는 배지가 '0-0'(srcNo·segNo가 둘 다 0), 길이 0.0, 썸네일 404라
+      //   **검은 칸**이 된다. 종전엔 그 상태를 '자리 없음'으로 그려 사장님이 원인을 알 수
+      //   없었다 — 무슨 일인지 화면이 말하게 한다(다른 3곳은 이미 이 검사를 한다:
+      //   beatFill·notifyEmptyBeats·applyServer).
+      const gone = !DATA.segments[id];
+      const why = gone ? '소스에서 사라진 조각' : (tooShort(id) ? '너무 짧음' : '자리 없음');
       return `<div class="tbcut unused ${isPicked(i, id) ? 'picked' : ''}"
              draggable="true"
              ondragstart="event.stopPropagation();bandDragStart(${i}, '${id}', event)"
@@ -2450,9 +2633,11 @@ function renderBand(){
              ondragover="if(dragFrom){event.preventDefault();event.dataTransfer.dropEffect='move';}"
              ondrop="bandDrop(${i}, '${id}', event)"
              ondblclick="event.stopPropagation();dropCutFromBand(${i}, '${id}')"
-             title="${segMark(id)} · ${seg.label || ''} — 담겨 있지만 이 칸에서는 화면에 안 나옵니다(${why}). 두 번 클릭하면 뺍니다. 다른 칸으로 끌어 옮길 수도 있어요.">
-             <img src="${SL.thumb(id)}"><span class="n">${segMark(id)}</span
-             ><span class="s">${effLen(id).toFixed(1)}</span><span class="off">안 나옴</span
+             title="${gone
+               ? `이 조각이 지금 소스 목록에 없습니다 — 화면에 그릴 수가 없어요(썸네일도 안 나옵니다). 두 번 클릭하면 뺍니다.`
+               : `${segMark(id)} · ${seg.label || ''} — 담겨 있지만 이 칸에서는 화면에 안 나옵니다(${why}). 두 번 클릭하면 뺍니다. 다른 칸으로 끌어 옮길 수도 있어요.`}">
+             <img src="${SL.thumb(id)}"><span class="n">${gone ? '?' : segMark(id)}</span
+             ><span class="s">${gone ? '—' : effLen(id).toFixed(1)}</span><span class="off">${gone ? '조각 없음' : '안 나옴'}</span
              ><input type="checkbox" class="pk" title="빼려면 체크"
                     ${isPicked(i, id) ? 'checked' : ''}
                     onclick="event.stopPropagation();togglePick(${i}, '${id}', this.checked)"
@@ -2524,6 +2709,7 @@ function renderBand(){
       </div>`;
   }).join('');
   row.innerHTML = html;
+  _bandKeepScroll(row);   // 다시 그려도 보던 자리에 머물게 한다(위 설명)
   // 칸 타임라인(2026-08-29) — 선택된 칸의 .tl-host를 채운다. 그리기 직후라 폭이 잡혀 있다.
   if (typeof tlMount === 'function') { try { tlMount(); } catch (e) { console.error('[tl]', e); } }
   // ★칸을 다시 그리면 그 안에 펼쳐둔 필름도 함께 지워진다 — 곧바로 다시 붙인다.
@@ -2713,10 +2899,18 @@ function render(){
       <div class="bhead">
         <span class="role">${i+1}. ${b.role || '칸'}</span>
         ${i===sel ? '<span class="selbadge">✔ 선택됨 — 여기에 담깁니다</span>' : ''}
-        <span class="chip ${lack > 0.1 ? (stretching ? 'warn' : 'bad') : 'good'}">재료 ${have.toFixed(1)}/멘트 ${needSec.toFixed(1)}초${
+        <span class="chip ${lack > 0.1 ? (stretching ? 'warn' : 'bad')
+                            : (f.over > 0.1 ? 'warn' : 'good')}">재료 ${have.toFixed(1)}/멘트 ${needSec.toFixed(1)}초${
           f.empty ? ` · <b>장면이 없어요 — 아래에서 담아주세요</b>`
                   : lack > 0.1 ? (stretching ? ` · 재료 ${lack.toFixed(1)}초 모자라 늘려 채우는 중`
-                                   : ` · <b>${lack.toFixed(1)}초 부족 — 장면 ${Math.ceil(lack / MAX_SHOT)}장 더 담아주세요</b>`) : ' · 다 채웠어요'}</span>
+                                   : ` · <b>${lack.toFixed(1)}초 부족 — 장면 ${Math.ceil(lack / MAX_SHOT)}장 더 담아주세요</b>`)
+                  // ★남는 재료도 여기서 말한다(2026-09-02). 위 타임라인(2487행)은 08-21에
+                  //   "N초는 안 나와요"를 넣었는데 **이 줄만 안 고쳤다** → 같은 칸을 두고
+                  //   위는 "3.4초는 안 나와요", 아래는 "다 채웠어요"라고 서로 다른 말을 했다
+                  //   (실측 job 353493f20d31: 5칸 합쳐 5.8초가 버려지는데 전부 '다 채웠어요').
+                  //   판단은 같은 f.over 하나를 쓴다 — 문구만 자리에 맞게 다르다(0순위-B).
+                  : f.over > 0.1 ? ` · ${f.over.toFixed(1)}초는 안 나와요(재료가 남아요)`
+                  : ' · 다 채웠어요'}</span>
         ${(lack > 0.1 || AUTOADD[i]) ? `<button class="act" style="${AUTOADD[i]?'':'border-color:var(--good);color:var(--good)'}"
           title="${AUTOADD[i] ? '자동으로 담아준 장면을 도로 뺍니다 — 내가 담은 것은 그대로'
                               : '부족한 만큼 안 쓴 장면을 골라 자동으로 담아줍니다(늘리지 않고 진짜 재료로) · 다시 누르면 되돌아갑니다'}"
@@ -2997,6 +3191,22 @@ function autoApply(){
   clearTimeout(_autoApplyTimer);
   _autoApplyTimer = setTimeout(() => { applyServer({auto: true}); }, 1200);
 }
+// ★밀린 저장을 **지금 당장** 끝낸다 — 렌더를 걸기 전에 부른다(2026-09-02 사장님 제보).
+//   재현: 컷 길이를 조정하고 바로 [완성본 만들기]를 누르면 편집이 빠진 채로 만들어진다.
+//   실측 순서가 정확히 거꾸로였다 →  0ms 렌더시작(preview POST) / 901ms 편집저장(apply POST)
+//   autoApply가 1.2초 디바운스라, 그 안에 누르면 **서버는 옛 편성으로** 렌더를 시작한다.
+//   (디바운스 자체는 필요하다 — 슬라이더·연속 편집마다 POST가 나가면 안 된다.
+//    그래서 없애지 않고 "지금 비운다"를 따로 만든다.)
+async function flushApply(){
+  if (!SL.server) return;
+  clearTimeout(_autoApplyTimer); _autoApplyTimer = null;
+  await applyServer({auto: true});        // 보내는 중이면 applyServer가 알아서 한 번 더 보낸다
+  // 보내는 중이었다면 _autoApplyAgain으로 재전송이 예약된다 — 그것까지 끝나길 짧게 기다린다.
+  for (let i = 0; i < 40 && (_autoApplyBusy || _autoApplyAgain); i++){
+    await new Promise(r => setTimeout(r, 100));
+  }
+}
+window.flushApply = flushApply;
 // ★내 저장본 vs 서버 편성 — **새 쪽**을 쓴다(2026-08-21 버그리뷰 P1).
 //   종전엔 localStorage가 무조건 이겼다. 그래서 화면에 보이는 편성과 실제로 렌더되는
 //   편성이 다른 상태가 계속 유지됐다(실측 job 14e75ac6024a: 화면은 2번 칸 '장면 없음'인데
@@ -3328,13 +3538,12 @@ async function retts(i){
 // 지금 화면의 편성·트림·늘려채우기를 라이브 잡 edit_plan에 얹는다(serve.py /apply → apply.py
 // SSH → edit_plan.apply_scene_lab). 원본 primary/alternates는 안 건드리므로 되돌릴 수 있다.
 // 칸 순서를 바꿨어도 beat_idx로 짝을 맞춰 보낸다(화면 순서 ≠ 서버 순서 어긋남 방지).
-async function applyServer(opt){
-  const auto = !!(opt && opt.auto);
-  // 보내는 중에 또 고쳤으면 끝나고 한 번 더 보낸다(마지막 상태가 반드시 서버에 남게).
-  if (_autoApplyBusy){ _autoApplyAgain = true; return; }
-  _autoApplyBusy = true;
-  const msg = document.getElementById('savedmsg');
-  const payload = {
+// 지금 화면의 편성을 서버에 보낼 모양 그대로 만든다.
+// ★한 곳에서만 만든다(0순위-B). 저장(applyServer)과 "완성본이 낡았나" 판정(_editSig)이
+//   각자 payload를 조립하면 언젠가 어긋나고, 그러면 안 바뀌었는데 지우거나(재렌더)
+//   바뀌었는데 옛 영상을 남기는(더 나쁜) 사고가 난다.
+function _editPayload(){
+  return {
     beats: DATA.beats.map((b, i) => ({beat_idx: b.beat_idx,
       list: (lists[i] || []).slice(), stretch: !!STRETCH[i],
       phrase: phraseSyncOn(i)})),   // 구절 맞춤 — 렌더도 같은 경계로(video_assemble)
@@ -3347,6 +3556,17 @@ async function applyServer(opt){
     //   함께 안 보내면 화면엔 담겼는데 렌더에만 안 나온다(가장 나쁜 실패).
     extra_segs: EXTRA,
   };
+}
+// 지금 편성의 지문. 완성본이 만들어진 시점의 지문과 다르면 그 영상은 낡은 것이다.
+function _editSig(){ return JSON.stringify(_editPayload()); }
+
+async function applyServer(opt){
+  const auto = !!(opt && opt.auto);
+  // 보내는 중에 또 고쳤으면 끝나고 한 번 더 보낸다(마지막 상태가 반드시 서버에 남게).
+  if (_autoApplyBusy){ _autoApplyAgain = true; return; }
+  _autoApplyBusy = true;
+  const msg = document.getElementById('savedmsg');
+  const payload = _editPayload();
   if (msg) msg.textContent = auto ? '💾 저장 중…' : '📤 서버에 반영하는 중… (SSH, 몇 초)';
   try{
     const r = await fetch(SL.applyUrl(), {method:'POST', headers:{'Content-Type':'application/json'},
@@ -3359,8 +3579,16 @@ async function applyServer(opt){
     //   아무도 안 비워줬기 때문이다. 재매칭(loadMixReview)만 clearConfirm을 불렀다.
     //   ⚠️여기서 자동으로 다시 렌더하지는 않는다 — 렌더는 20초+ 걸리는 유료 작업이고,
     //     편집 중에는 1.2초마다 이 경로가 돈다. 만드는 건 사장님이 탭을 누를 때다.
-    const _hadConfirm = !!(document.getElementById('confirmBody') || {}).innerHTML.trim();
-    if (_hadConfirm) clearConfirm();
+    // ★"저장이 돌았나"가 아니라 **"편성이 실제로 달라졌나"**로 판정한다(2026-09-03).
+    //   종전엔 저장이 성공하기만 하면 완성본을 지웠다. autoApply는 1.2초 디바운스로
+    //   수시로 도는데다 아무것도 안 바꿔도 다시 보내질 수 있어서, 사장님이 미리보기
+    //   탭을 들렀다 오기만 해도 완성본이 사라지고 **20초짜리 유료 렌더가 다시** 돌았다
+    //   (사장님 제보: "완성본 만들고 미리보기 갔다가 다시 완성본 가면 또 렌더된다").
+    //   지금 보낸 편성의 지문을 렌더 시점 지문과 대조해서, 진짜 달라졌을 때만 지운다.
+    const _sig = JSON.stringify(payload);
+    const _stale = !!RENDERED_SIG && _sig !== RENDERED_SIG;
+    const _hadConfirm = _stale && !!(document.getElementById('confirmBody') || {}).innerHTML.trim();
+    if (_hadConfirm) { clearConfirm(); RENDERED_SIG = ''; }
     if (msg) msg.textContent = _hadConfirm
       ? '✅ 저장됨 — 편성이 바뀌었어요. [완성본 만들기]를 다시 눌러 새로 만들어 주세요'
       : (auto
@@ -3777,6 +4005,7 @@ async function boot(){
   loadSfxList().then(l => { if (l && l.length) renderBand(); });
   autoOpenRoll();                  // 필름 자리를 켠 채로 연다
   autoMakeTts();
+  stampConfirmSigIfMissing();      // 복원된 옛 미리보기에 지금 편성 지문을 — 편성이 다 실린 뒤라야 계산된다
 }
 
 

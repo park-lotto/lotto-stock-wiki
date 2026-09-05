@@ -31,10 +31,27 @@ def test_cut_bounds_equal_phrase_bounds():
     assert sum(durs) == pytest.approx(3.86, abs=1e-6)
 
 
-def test_fewer_materials_last_covers_rest():
+def test_재료가_적으면_담은_순서대로_돌아간다():
+    """2026-09-02 사장님: "장면을 빼면 두 개가 없어지고 넣으면 갑자기 배치가 바뀐다."
+
+    종전 규칙(마지막 컷이 남은 구절을 통째로 덮음 → 뒤에 화면 전환 없음, 그 뒤엔
+    '뒤가 남은 조각을 골라 쓰기')은 자리↔조각 관계가 재료 개수·잔량에 따라 달라져
+    조각 하나를 빼면 뒤 배치가 통째로 밀렸다. 이제는 k % 재료수로 **정해진다**.
+    """
     plan = _plan_phrase_clips(_beat(), SEGS[:2], 3.86)
-    assert len(plan) == 2
-    assert plan[1]["out_dur"] == pytest.approx(3.86 - (0.29 + 1.1), abs=1e-6)
+    assert len(plan) == 3, "구절 수만큼 컷이 만들어져야 한다(마지막이 덮지 않는다)"
+    vids = [c["video_id"] for c in plan]
+    assert vids == [SEGS[0]["video_id"], SEGS[1]["video_id"], SEGS[0]["video_id"]], vids
+    assert sum(c["out_dur"] for c in plan) == pytest.approx(3.86, abs=1e-6)
+
+
+def test_조각을_빼도_앞자리는_그대로다():
+    """이게 제보의 핵심이다 — 하나 뺐는데 둘이 사라진 것처럼 보이던 것."""
+    full = _plan_phrase_clips(_beat(), SEGS, 3.86)
+    less = _plan_phrase_clips(_beat(), SEGS[:2], 3.86)
+    assert full[0]["video_id"] == less[0]["video_id"]
+    assert full[1]["video_id"] == less[1]["video_id"]
+    assert len(full) == len(less), "칸 수(=구절 수)는 재료 개수와 무관하게 유지된다"
 
 
 def test_no_timetable_falls_back_none():

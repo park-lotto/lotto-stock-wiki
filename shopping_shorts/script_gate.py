@@ -381,7 +381,7 @@ def prior_verdict(checks):
 
 
 def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
-          speaker_judge=None):
+          speaker_judge=None, scene_ids=None, grounded=False, is_recipe=False):
     """(checks, full_text) 반환. checks = [{name, ok, detail}, ...]
 
     style: {"beat_roles": [...], "templates": {role: [...]}, "chars_per_30s": int}
@@ -558,7 +558,66 @@ def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
         checks.append({"name": "수치 근거", "ok": ok_g,
                        "detail": ("재료에 없는 수치: " + ", ".join(bad[:5])
                                   + " — 지어내지 말고 확인된 것만 써라") if bad else "OK"})
+
+    # ★장면 근거(2026-09-04, 2단계 '본 것만 쓰기'): grounded 모드에서만 항목을 만든다(종전 호출 = 회귀 0).
+    #   규칙은 프롬프트(_GROUNDED_RULE)에 적혀 있고 **여기가 그 판정**이다 — 지시와 판정은 짝
+    #   (메모리 '규칙은 있는데 판정이 없다': 지시만 있으면 어겨도 미검출 → 재작성이 안 걸린다).
+    if grounded and scene_ids is not None:
+        ok_s, det = scene_grounding_check(beats, scene_ids, is_recipe=is_recipe)
+        checks.append({"name": "장면 근거", "ok": ok_s, "detail": det})
     return checks, full
+
+
+def parse_src_segs(raw):
+    """src_seg 문자열 → 번호 목록(순수 함수). 모델은 한 줄에 여러 장면을 적는다(실측 "s3-10,s3-11,s3-12").
+    쉼표·공백·가운뎃점·슬래시로 가른다. 첫 번째가 대표(3단계 primary)."""
+    import re
+    s = str(raw or "").strip()
+    if not s:
+        return []
+    out = []
+    for tok in re.split(r"[,\s·/;]+", s):
+        tok = tok.strip().strip("[]")
+        if tok and tok not in out:
+            out.append(tok)
+    return out
+
+
+def scene_grounding_check(beats, scene_ids, is_recipe=False, min_ratio=0.34):
+    """(ok, detail) — 줄마다 src_seg가 실제 장면 목록에 있는지, 장면이 필요한 줄이 비지 않았는지.
+
+    · 지어낸 번호(목록에 없음) → 실패(레시피도)
+    · needs_scene=true인데 src_seg 없음 → 실패(레시피도)
+    · 제품형: 장면 붙은 줄이 전체의 min_ratio 미만이면 실패(모델이 전부 needs_scene=false로 도망치는 것 방지)
+      ★min_ratio=0.34(2026-09-04 실측): 5칸 구조(첫말·문제·시연·결과·약속)는 첫말·문제·약속이 정당하게 장면 없음 →
+        절반(0.5)이면 시연·결과가 다 맞아도 2/5로 반려된다. 3분의 1이면 "시연·결과는 반드시"가 남는다.
+    detail은 재작성 지시문에 그대로 들어간다 — 어느 줄이 왜 걸렸는지."""
+    ids = {str(x) for x in (scene_ids or set())}
+    beats = beats or []
+    invented, missing, with_scene = [], [], 0
+    for i, b in enumerate(beats, 1):
+        sids = parse_src_segs(b.get("src_seg"))
+        need = bool(b.get("needs_scene"))
+        text = (b.get("text") or "").strip()[:30]
+        bad_ids = [x for x in sids if x not in ids]
+        if bad_ids:
+            invented.append(f"{i}번 '{text}' src_seg={','.join(bad_ids)}(목록에 없음)")
+        elif sids:
+            with_scene += 1
+        elif need:
+            missing.append(f"{i}번 '{text}'")
+    problems = []
+    if invented:
+        problems.append("지어낸 장면 번호: " + "; ".join(invented[:4]) + " — 장면 목록의 번호만 써라")
+    if missing:
+        problems.append("장면이 필요한 줄인데 src_seg가 비었다: " + "; ".join(missing[:4])
+                        + " — 그 내용이 보이는 장면 번호를 적거나, 장면에 없는 장점이면 그 줄을 빼라")
+    need = max(1, int(len(beats) * min_ratio + 0.999)) if beats else 0
+    if not is_recipe and beats and with_scene < need:
+        # 문구의 기준은 상수에서 만든다(리뷰 L1: '절반'이라 적혀 있는데 실제는 1/3이었다)
+        problems.append("장면이 붙은 줄이 %d/%d — 최소 %d줄(전체의 %d%%)은 장면 목록에서 온 줄이어야 한다(제품형)"
+                        % (with_scene, len(beats), need, int(min_ratio * 100)))
+    return (not problems), ("; ".join(problems) if problems else "OK(%d/%d줄에 장면)" % (with_scene, len(beats)))
 
 
 def passed(checks):

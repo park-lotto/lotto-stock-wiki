@@ -56,8 +56,26 @@ def parse_queries(raw, limit=3):
     return out[:limit]
 
 
-def suggest(target, script="", limit=3):
-    """(대본, 타깃) → 쿠팡 검색어 후보. 실패하면 [target]으로 조용히 폴백한다."""
+def build_body(target, script="", context=""):
+    """모델에 줄 본문 — 판단은 여기 한 곳. ★대본이 없을 때(썸네일 판독으로 온 제품명)는
+    **같은 물건의 다른 이름**만 허용한다(2026-09-04 사장님 실측: '택총'이 '전술 조끼·탄창 파우치'로
+    번져 나왔다 — 대본 없이 이름 하나만 주면 모델이 물건 종류부터 추측한다)."""
+    target = (target or "").strip()
+    if (script or "").strip():
+        return "연결 대상: " + target + "\n대본: " + (script or "")[:900]
+    lines = ["연결 대상: " + target]
+    if (context or "").strip():
+        lines.append("판독 정보: " + context.strip())
+    lines.append("대본: (없음 — 이 상품명은 영상 썸네일에서 비전 판독한 **실물 제품**이다)")
+    lines.append("★대본이 없으므로 '연결 대상'과 **같은 물건의 다른 이름·유의어·표기 변형**만 2~3개 제안해라. "
+                 "다른 종류의 물건은 절대 넣지 마라. 예: '택총' → '옷 태그건', '의류 택건', '태깅건'(됨) / "
+                 "'전술 조끼', '탄창 파우치'(안 됨 — 다른 물건).")
+    return "\n".join(lines)
+
+
+def suggest(target, script="", limit=3, context=""):
+    """(대본, 타깃) → 쿠팡 검색어 후보. 실패하면 [target]으로 조용히 폴백한다.
+    script가 없으면(썸네일 판독 경로) 유의어 모드 — build_body 참조."""
     target = (target or "").strip()
     if not target and not script:
         return []
@@ -69,7 +87,7 @@ def suggest(target, script="", limit=3):
     except Exception:
         return fallback
 
-    body = (f"연결 대상: {target}\n대본: {(script or '')[:900]}")
+    body = build_body(target, script, context)
     for _ in range(3):
         # 라운드로빈 — _current_key_and_idx는 늘 live[0]만 줘서 1번 키만 때린다(2026-07-23 교훈).
         key, ki = comment_gen._next_live_key_and_idx()
@@ -88,7 +106,104 @@ def suggest(target, script="", limit=3):
         except Exception as e:  # noqa: BLE001 — 검색어 제안 실패가 기능을 죽이면 안 된다
             if (comment_gen.key_vault.is_daily_exhausted_error(e)
                     or comment_gen.key_vault.is_account_disabled_error(e)):
-                comment_gen._mark_key_exhausted(ki, comment_gen.key_vault.retry_delay_seconds(e))
+                comment_gen._mark_key_exhausted(ki, comment_gen.key_vault.retry_delay_seconds(e), exc=e)
                 continue
             return fallback
     return fallback
+
+
+# ── 영상 근거(대본·캡션·분석 키워드) → 팔 제품 특정 (2026-09-04) ─────────────
+# 사장님: "썸네일로는 힘들고 대본이나 영상을 봐야 어떤 건지 알 수 있다".
+# 썸네일 비전은 자막 타이포에 끌리고 제품이 안 보이는 컷이 많다. 대본·캡션이 있으면 그것이 정본이다.
+_EVIDENCE_PROMPT = """너는 한국 쇼핑 검색 도우미다. 아래는 한 쇼츠 영상의 근거(대본·캡션·분석 키워드·썸네일 판독)다.
+이 영상이 **실제로 소개·판매하는 실물 제품 하나**를 특정하고, 그 제품을 쿠팡에서 찾을 검색어를 만들어라.
+
+규칙:
+- product: 구체적 상품명 2~4단어(브랜드 제외). 범주·분위기어("살림템", "주방용품") 금지.
+- 제품이 여러 개면 영상의 **주인공 제품 하나**만.
+- queries: product와 **같은 물건**의 다른 이름·표기 2~3개(다른 종류 물건 금지).
+- 근거에 제품이 전혀 없으면 product를 빈 문자열로.
+
+출력은 JSON만: {"product": "...", "queries": ["...", "..."]}
+
+"""
+
+
+def identify_from_evidence(evidence, hint=""):
+    """근거 텍스트 → (product, queries). 실패·근거 없음이면 ("", [])."""
+    ev = (evidence or "").strip()
+    if not ev:
+        return "", []
+    try:
+        from google.genai import types
+
+        from shopping_shorts import comment_gen
+    except Exception:                                       # noqa: BLE001
+        return "", []
+    body = _EVIDENCE_PROMPT + ("썸네일 판독 힌트: " + hint + "\n" if hint else "") + "근거:\n" + ev[:2500]
+    for _ in range(3):
+        key, ki = comment_gen._next_live_key_and_idx()
+        if key is None:
+            return "", []
+        try:
+            resp = comment_gen._client_for_key(key).models.generate_content(
+                model=_MODEL, contents=body,
+                config=types.GenerateContentConfig(response_mime_type="application/json"),
+            )
+            data = json.loads(resp.text)
+            product = _clean(str(data.get("product") or ""))
+            qs = [q for q in (_clean(x) for x in (data.get("queries") or [])) if q and q != product][:3]
+            return product, qs
+        except Exception as e:                              # noqa: BLE001
+            if (comment_gen.key_vault.is_daily_exhausted_error(e)
+                    or comment_gen.key_vault.is_account_disabled_error(e)):
+                comment_gen._mark_key_exhausted(ki, comment_gen.key_vault.retry_delay_seconds(e), exc=e)
+                continue
+            if comment_gen.key_vault.is_quota_error(e):
+                continue
+            return "", []
+    return "", []
+
+
+# ── 캡션 본문 정리(2026-09-05) — 랭킹 카드 프리워밍이 쓰는 유일한 공짜 근거 ──
+# ★왜 필요한가(실측 2026-09-05, last_run 10건): 프리워밍은 **썸네일 이미지만** 모델에
+#   보내고 있었다. product_name._PROMPT가 "자막·문구는 완전히 무시하라"고 지시하므로
+#   (그건 08-04 '같은 제품 영상 모으기'용 — 목적이 다르다) 나오는 답이 "벽선반"·"프라이팬"
+#   같은 **범주어**였다. 캡션은 이미 카드에 그려져 있는데 서버로 안 보내 버려지고 있었다.
+#
+# ★그런데 캡션을 통째로 주면 안 된다 — 해시태그가 분위기어 덩어리다.
+#   실측(product_name.py:9): 아카이브 4,222건 중 최빈 태그가 '살림꿀팁' 638건(15%),
+#   '주방용품' 410건, '살림꿀템' 355건. 태그만 보면 지금 썸네일보다 **더 나쁘다**.
+#   그래서 hook_harvest.clean_hook_candidate와 같은 규칙으로 '#' 앞까지만 쓴다.
+#
+# ⚠️ hook_harvest를 그대로 부르지 않는 이유: 저건 **첫 줄만** 본다(훅 한 줄이 목적).
+#   제품명은 2~3번째 줄에 오는 경우가 많다(실측: "🧷댓글 남겨주시면/최저가 링크…"가
+#   첫 줄이고 제품 얘기는 그 아래). 목적이 다르므로 여기서 따로 정한다 — 저쪽을
+#   고치면 훅 수확이 같이 흔들린다(0순위-B: 남의 판단을 건드리지 말고 내 판단을 갖는다).
+_CAP_NOISE = (
+    "프로필 링크", "링크는 프로필", "댓글 남겨", "댓글 달아", "디엠", "dm ", "DM ",
+    "공구", "공동구매", "협찬", "광고", "유료광고", "제공받", "이벤트", "선착순",
+)
+
+
+def caption_body(caption, limit=400):
+    """캡션 → 제품 판독에 쓸 본문. 해시태그·상투구를 떼고 남은 글. 없으면 ''.
+
+    떼는 것: '#' 이후 전부(해시태그) / 상투 안내줄(프로필 링크·댓글·협찬 고지 등).
+    남는 게 6자 미만이면 쓸모없다고 보고 ''를 준다 — 그러면 호출부가 썸네일로만 간다."""
+    if not caption:
+        return ""
+    head = str(caption).split("#", 1)[0]           # 해시태그 앞까지 (hook_harvest와 같은 규칙)
+    keep = []
+    for ln in head.splitlines():
+        s = ln.strip()
+        if len(s) < 2:
+            continue
+        low = s.lower()
+        if any(n.lower() in low for n in _CAP_NOISE):
+            continue                                # 상투 안내줄 — 제품과 무관하다
+        if not re.sub(r"[^\w가-힣]", "", s):
+            continue                                # 이모지·구분선(➖➖➖)만 남은 줄
+        keep.append(s)
+    body = " ".join(keep).strip()
+    return body[:limit] if len(body) >= 6 else ""
