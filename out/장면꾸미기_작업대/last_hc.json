@@ -1,18 +1,28 @@
 {
  "wrap": true,
- "font": "TmonMonsori.ttf",
- "size": 86,
- "color": "#000000",
- "color2": "#000000",
- "y": 37,
- "x": 50,
+ "font": "SpoqaHanSansNeo-Bold.otf",
+ "size": 62,
+ "color": "#FFFFFF",
+ "color2": "#4ADE80",
+ "y": 15,
+ "x": 49,
  "weight": 900,
  "outline": true,
- "outline_color": "#FFFFFF",
- "outline_w": 5,
- "box": true,
+ "outline_color": "#000000",
+ "outline_w": 10,
+ "box": false,
  "box_color": "#FFFFFF",
  "box_pad": 16,
  "box_opacity": 100,
- "text": ""
+ "shadow": true,
+ "shadow_color": "#000000",
+ "shadow_d": 4,
+ "text": "다이소도 감탄한\n반전의 스티커",
+ "highlight_rules": [
+  {
+   "keyword": "반전의 스티커",
+   "color": "#4ADE80",
+   "box": false
+  }
+ ]
 }
