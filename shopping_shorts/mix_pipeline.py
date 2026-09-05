@@ -33,7 +33,7 @@ from shopping_shorts import usage_meter
 from shopping_shorts import single_source
 from shopping_shorts import script_lang
 from shopping_shorts.video_assemble import assemble, _beat_timeline, _beat_material, _probe_duration, _MAX_SLOWMO, preview_preset
-from shopping_shorts.video_assemble import prepend_still
+from shopping_shorts.video_assemble import prepend_still, cta_cut_sec
 from shopping_shorts.motion_assets import resolve_layers, DEFAULT_ASSETS_DIR
 from shopping_shorts.motion_packs import build_plan, load_packs
 from shopping_shorts.vmake_client import remove_subtitles
@@ -1036,6 +1036,11 @@ def run_mix_job(job_id, db_path, work_root):
                     segs = None
                 if segs and all(s.get("seg_id") for s in segs):
                     r = {"segments": segs, "full_text": (cached.get("full_text") or "")}
+                    # ★B1 산출(번역 전문·빈 묘사 비율)도 캐시에서 물려준다(2026-09-05 리뷰 M5) — 빠지면 외국 소스의
+                    #   대본 재료(app: full_text_ko or full_text)가 원문으로 떨어진다.
+                    for _k in ("full_text_ko", "tag_empty_ratio"):
+                        if cached.get(_k) not in (None, ""):
+                            r[_k] = cached[_k]
                     # ★영상 단위 요약을 함께 물려준다(2026-08-17). 여기서 캐시의 **일부
                     #   필드만** 골라 담기 때문에 source_brief가 통째로 떨어져 나갔다 —
                     #   도서관 추출본엔 있는데 job의 extract엔 없어서, 재태깅을 해도
@@ -1101,6 +1106,7 @@ def run_mix_job(job_id, db_path, work_root):
                           job["structure"], None, work, given_script=job.get("given_script"),
                           voice=job.get("voice"), customer_id=job.get("customer_id", 0),
                           scene_first=job.get("scene_first", False),
+                          script_structure=job.get("script_structure"),
                           reference_text=job.get("given_script") or "",
                           # 핑퐁(대본↔장면 왕복 행위매칭): 전역 설정으로 on/off(기본 off·회귀0).
                           # 스키마 컬럼 없이 한 스위치로 켠다 — store.set_setting('ping_pong_enabled','1').
@@ -1361,7 +1367,7 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
                   given_script=None, voice=None, customer_id=0,
                   scene_first=False, reference_text="", ping_pong=False,
                   backbone_meta=None, backbone_forced=None, backbone_base=False,
-                  global_pron=None):
+                  global_pron=None, script_structure=None):
     """EDL 생성(3) + 비트별 TTS(4) → edit_plan 저장 + ready_for_review.
     run_mix_job(자동판별, video_type=None)과 retype_mix_job(사용자 선택 유형)이 공유.
     given_script: 있으면 확정 대본을 그대로 비트로 쪼개 영상만 매칭(영상제작 2단계).
@@ -1414,7 +1420,21 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
         print("[mix] 확정 대본이 있어 scene_first를 끈다 — 대본은 그대로, 화면만 매칭"
               " (%d자)" % len((given_script or "").strip()), file=sys.stderr)
         scene_first = False
-    if scene_first:
+    # ★3단계 상속(2026-09-04, 스위치 edl_inherit_enabled → script_structure.inherit_scenes): 2단계가 줄마다
+    #   남긴 출처 장면을 그대로 잇는다(Gemini 0회, 추측 층 없음). 못 이으면(줄·출처 개수 불일치 등) None →
+    #   아래 옛 경로 그대로(회귀 0).
+    plan = None
+    _ss = script_structure if isinstance(script_structure, dict) else {}
+    if (given_script or "").strip() and _ss.get("inherit_scenes") and _ss.get("beat_sources"):
+        from shopping_shorts.edit_plan import build_inherit_plan
+        plan = build_inherit_plan(source_scripts, given_script, _ss.get("beat_sources"),
+                                  structure=structure, video_type=video_type)
+        print("[mix] 3단계 상속: %s" % ("비트 %d개(출처 %d줄)" % (
+            len(plan["beats"]), sum(1 for b in plan["beats"] if b.get("inherited")))
+            if plan else "이을 수 없어 옛 경로로"), file=sys.stderr)
+    if plan is not None:
+        pass
+    elif scene_first:
         from shopping_shorts.edit_plan import build_scene_first_plan
         # 부품은행 주입(P0-2): 설정 bank_enabled=1일 때만 승인 훅·어미·부사·CTA·스파인을 조립해
         # 영상 대본 프롬프트에 실어준다. 기본 off → 회귀0. 매 job 상위 perf 풀에서 로테이션
@@ -1594,10 +1614,16 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     # 4.9) ★게이트 교정 루프(2026-07-25) — 최종 plan(refill·conform 뒤)을 보고 위반이면
     # 통과할 때까지 재픽(상한 3). 경고만 하던 관문을 '통과시키는 관문'으로. 순수·무과금·
     # 나레이션 불변. 실패해도 job은 안 죽인다(순수 계산).
-    try:
-        _run_gate_correction(plan, source_scripts, target_seconds)
-    except Exception:
-        traceback.print_exc(file=sys.stderr)
+    # ★상속 계획(generator="inherit")은 게이트 재픽을 **지나지 않는다**(2026-09-05 리뷰 H1). 재픽의 "인접 컷 연속 끊기"
+    #   규칙이 상속의 "앞 비트 다음 컷" b-roll과 정면 충돌해 primary를 뒤에서 바꿨다 — 그러면 inherited·fit·배지·교체 기록이
+    #   전부 거짓이 된다. 결정하는 곳은 2단계 한 곳이다(0순위-B). gate엔 건너뛴 이유만 남긴다.
+    if (plan or {}).get("generator") == "inherit":
+        plan["gate"] = {"skipped": "inherit", "why": "2단계 출처 상속 — 재픽·교정 층을 지나지 않는다"}
+    else:
+        try:
+            _run_gate_correction(plan, source_scripts, target_seconds)
+        except Exception:
+            traceback.print_exc(file=sys.stderr)
 
     # ★카드=TTS 일치(2026-07-27 실사고 "대본이랑 TTS가 다르게 나온다"): 추천 후보는 위에서
     #   _conform_beats/_refill로 나레이션이 재작성됐는데, candidates_json(카드가 읽는 것)은
@@ -1623,7 +1649,7 @@ def retype_mix_job(job_id, video_type, db_path, work_root):
         _plan_and_tts(store, job_id, source_scripts, job["target_seconds"],
                       job["structure"], video_type, work, given_script=job.get("given_script"),
                       voice=job.get("voice"), customer_id=job.get("customer_id", 0),
-                      global_pron=_gpron)
+                      global_pron=_gpron, script_structure=job.get("script_structure"))
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
         store.update_mix_job(job_id, status="failed", error=str(e))
@@ -3024,6 +3050,31 @@ def run_clean_sources(job_id, db_path, work_root):
 
 
 @_owned_job
+# ── 편성 지문(2026-09-02) ───────────────────────────────────────────────────
+# 왜: 미리보기를 만든 뒤 편성(대본·컷)이 바뀌어도 **미리보기 파일은 그대로 남는다**.
+# 고객은 낡은 미리보기와 새 최종을 나란히 받아 "영상이 두 개다 / 장면이 바뀌었다"로 본다
+# (실사고 job 76665d680876: 미리보기 09-01 23:31 vs 최종 09-02 10:05, 8개 시점 전부 다른 컷).
+# 그래서 **무엇으로 만들었는지**를 지문으로 남기고, 달라졌으면 화면이 말하게 한다.
+# ★지문 만드는 곳은 여기 한 곳이다(0순위-B) — 만들 때와 비교할 때가 어긋나면 소용없다.
+def plan_signature(plan):
+    """편성 지문 — 화면에 보이는 것이 달라지는 값만 넣는다(문장·컷·길이)."""
+    import hashlib
+    import json as _json
+    beats = ((plan or {}).get("beats") or [])
+    body = [{
+        "n": (b or {}).get("narration") or "",
+        "s": (b or {}).get("seg_ids") or [],
+        "c": (b or {}).get("cutaway") or "",
+        "d": round(float((b or {}).get("seconds") or 0), 2),
+    } for b in beats]
+    raw = _json.dumps(body, ensure_ascii=False, sort_keys=True)
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:16]
+
+
+def preview_sig_path(work_root, job_id):
+    return Path(work_root) / job_id / "preview.sig"
+
+
 def run_preview(job_id, db_path, work_root):
     """1단계 미리보기: 유료 자막제거(VMake)·꾸미기 없이 믹스+음성+기본자막만 렌더.
 
@@ -3082,6 +3133,12 @@ def run_preview(job_id, db_path, work_root):
             ensure_faststart(out_path)
         except Exception as e:      # 실패해도 원본은 그대로 — 미리보기를 못 쓰게 만들진 않는다
             print(f"[preview] faststart 보장 실패(원본 유지): {type(e).__name__}", file=sys.stderr)
+        # 이 미리보기가 **무슨 편성으로** 만들어졌는지 남긴다 — 나중에 편성이 바뀌면
+        # 화면이 "낡았다"고 말할 수 있다(못 써도 미리보기 자체는 정상이라 조용히 넘어간다).
+        try:
+            preview_sig_path(work_root, job_id).write_text(plan_signature(plan), encoding="utf-8")
+        except Exception:
+            print("[preview] 편성 지문 기록 실패(무시)", file=sys.stderr)
         store.update_mix_job(job_id, preview_status="ready", preview_path=str(out_path))
     except Exception as e:  # noqa: BLE001 — BackgroundTasks라 밖에서 아무도 안 받는다
         traceback.print_exc(file=sys.stderr)
@@ -3252,16 +3309,37 @@ def run_render(job_id, db_path, work_root):
         #   켠 경우에만 돈다. 실패해도 렌더 자체는 살린다 — 인트로 때문에 완성 영상을
         #   통째로 잃는 게 더 나쁘다(실패는 로그로만 남기고 원본 final.mp4를 그대로 쓴다).
         _thumb = job.get("thumbnail") or {}
+        # 인트로가 실제로 붙은 길이(초). CTA 잘라내기가 이만큼 밀어서 저장한다.
+        # ★prepend_still은 성공 여부를 bool로 돌려준다 — 켰는데 실패했을 수 있으므로
+        #   "켰다"가 아니라 "붙었다"로 판단한다(실패했는데 밀면 그만큼 일찍 잘린다).
+        _intro_shift = 0.0
         if _thumb.get("intro"):
             try:
                 _png = _thumb_intro_png(job, _thumb)
                 if _png:
-                    prepend_still(str(out_path), str(_png),
-                                                 seconds=float(_thumb.get("intro_sec") or 1.2))
+                    _intro_sec = float(_thumb.get("intro_sec") or 1.2)
+                    if prepend_still(str(out_path), str(_png), seconds=_intro_sec):
+                        _intro_shift = _intro_sec
                 else:
                     print(f"[thumb-intro] {job_id}: 붙일 썸네일 PNG를 못 찾음", file=sys.stderr)
             except Exception:
                 traceback.print_exc(file=sys.stderr)
+        # ✂ CTA 잘라내기(2026-09-05 사장님 "유튜브 올릴 땐 뒷부분만 잘라내고 싶다").
+        #   완성본에서 CTA 비트가 시작하는 시각을 지금 구해 DB에 박아둔다. 렌더가 끝나면
+        #   이 값을 다시 구하기가 어렵다 — 비트별 절대시각은 어디에도 저장되지 않고,
+        #   TTS mp3로 재계산해야 하는데 그 작업폴더는 청소 대상이라 언젠가 사라진다.
+        #   ★자를 지점을 정하는 곳은 video_assemble.cta_cut_sec 하나다(0순위-B) —
+        #     여기서 role을 다시 검사하면 렌더가 박은 키프레임과 어긋난다.
+        #   ★인트로(prepend_still)를 붙였으면 그만큼 **밀어서** 저장한다. 안 밀면
+        #     인트로를 켠 영상만 그 길이만큼 일찍 잘린다.
+        #   실패해도 렌더는 살린다 — 잘라내기 버튼 하나 때문에 완성본을 잃을 수 없다.
+        try:
+            _cta_cut = cta_cut_sec(_beat_timeline(plan, tts_paths))
+            if _cta_cut:
+                _cta_cut += _intro_shift
+            store.update_mix_job(job_id, cta_cut_sec=_cta_cut)
+        except Exception:
+            traceback.print_exc(file=sys.stderr)
         # ★moov 앞으로(faststart). 안 하면 moov가 파일 끝에 남아, 헤더만 읽어 판단하는
         #   외부 수집기가 영상을 못 읽는다 — Buffer 실측 2026-08-30:
         #   "Invalid post: Video could not be read from its URL"(HEAD 200인데 거절).

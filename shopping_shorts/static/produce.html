@@ -9155,6 +9155,7 @@ function renderCoupangSlot(d){
   COUPANG.partners_page=d.partners_link_page||'';
   COUPANG.product=d.product||null;
   COUPANG.dm_set=d.dm_set||null;   // 인포크 붙여넣기용 3줄(서버가 번호까지 붙여 보낸다)
+  COUPANG.suggestNo=d.suggest_number||0;   // ★내 마지막 번호+1 제안(2026-09-04)
   if(typeof d.has_partner_key!=='undefined') COUPANG.hasKey=!!d.has_partner_key;   // 회원 파트너스 키(2026-09-04)
   COUPANG.editing=false;
   const slot=document.getElementById('coupangSlot');
@@ -9249,7 +9250,7 @@ function coupangDmSet(){
       ${numTxt ? `<span class="hint">— ${esc(numTxt)}번</span>` : '<span class="hint">— 번호 없음</span>'}</div>
     <div style="display:flex;gap:6px;align-items:center;margin-top:7px">
       <span class="hint" style="min-width:74px">번호</span>
-      <input id="inpockNum" value="${esc(numTxt)}" placeholder="예) 29 — 비워두면 번호 없이 나갑니다"
+      <input id="inpockNum" value="${esc(numTxt || (COUPANG.suggestNo ? String(COUPANG.suggestNo) : ''))}" placeholder="예) 29 — 비워두면 번호 없이 나갑니다"
              inputmode="numeric" onkeydown="if(event.key==='Enter')saveInpockNumber()"
              style="flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);
                     border-radius:6px;padding:6px 8px;color:var(--txt);font-size:12px">
@@ -9262,7 +9263,9 @@ function coupangDmSet(){
     ${row('설명(고지)', d.dm_desc)}
     <div class="hint" style="margin-top:8px">${numTxt
       ? `인포크에 이 이름으로 올리면 시청자가 <b>${esc(numTxt)}</b>을 검색해 찾습니다.`
-      : '번호를 넣고 <b>번호 저장</b>을 누르면 위 문구에 번호가 붙습니다. 비워두면 번호 없이 나갑니다.'}</div>
+      : (COUPANG.suggestNo
+          ? `내 마지막 번호 다음인 <b>${COUPANG.suggestNo}</b>번을 넣어뒀습니다 — <b>번호 저장</b>을 누르면 위 문구에 붙습니다(고쳐도 됩니다).`
+          : '번호를 넣고 <b>번호 저장</b>을 누르면 위 문구에 번호가 붙습니다. 비워두면 번호 없이 나갑니다.')}</div>
   </div>`;
 }
 // 번호만 고쳐 저장한다. ★기존 상품 저장(/api/mix/product)과 **같은 출구**를 쓴다 —
@@ -9522,7 +9525,7 @@ function _renderMixReviewBody(d, failStatus){
     +`<div id="paletteBox" data-open="0" style="margin-bottom:8px"></div>`
     +(d.beats||[]).map((b,i)=>`
     <div style="border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px;background:var(--inset)">
-      <span style="font-size:11px;background:var(--accent2);padding:2px 8px;border-radius:10px">${esc(b.role||'')}</span>
+      <span style="font-size:11px;background:var(--accent2);padding:2px 8px;border-radius:10px">${esc(b.role||'')}</span>${b.inherited?` <span title="2단계 대본이 지목한 장면을 그대로 붙였습니다(추측 없음)" style="font-size:11px;background:var(--inset);border:1px solid var(--line);padding:2px 8px;border-radius:10px;color:var(--sub)">📎 2단계 장면</span>`:(b.fit_evidence==='broll_fill'?` <span title="이 줄은 특정 화면을 요구하지 않아 앞 장면의 다음 컷으로 채웠습니다" style="font-size:11px;background:var(--inset);border:1px solid var(--line);padding:2px 8px;border-radius:10px;color:var(--sub)">🎞 b-roll</span>`:'')}
       <div style="margin:6px 0;font-size:13px">${esc(b.narration||'')}</div>
       <div class="hint">🎞 ${esc(b.primary?.video_id||'')} · ${b.primary?.start}s~${b.primary?.end}s · ${b.target_seconds}s${b.fit?` · 매칭 ${b.fit}/5`:''}${b.conformed?` · <span style="color:var(--accent)">⏱ 길이 맞춤</span>`:''}</div>
       ${(b.fit&&b.fit<=2&&!b.respined)?`<div style="color:var(--fire);font-size:12px;margin-top:3px">⚠️ 이 문장에 맞는 영상이 부족합니다 — 대본을 살짝 바꾸거나 소스 영상을 추가하세요.</div>`:''}
@@ -12643,6 +12646,15 @@ async function pollPreview(gen, job){
       // <video> 렌더는 _renderPreviewVideo로 뽑았다(2026-07-19) — 새로고침 복원과 단일 출처.
       // (?t= 캐시버스터·display:block 하단검정라인 주의는 그 함수 주석 참조.)
       _renderPreviewVideo(job);
+      // 편성이 바뀐 뒤의 미리보기는 **낡은 화면**이다 — 말해주지 않으면 완성본과 다를 때
+      // "영상이 두 개다"가 된다(2026-09-02 고객 제보의 뿌리).
+      if(d.preview_stale){
+        const box=document.getElementById('mixPreview');
+        if(box) box.insertAdjacentHTML('afterbegin',
+          '<div class="hint" style="color:var(--gold);border:1px solid var(--gold);border-radius:8px;'
+          +'padding:6px 9px;margin-bottom:6px">⚠️ 이 미리보기는 <b>바뀌기 전 편성</b>으로 만든 거예요 — '
+          +'지금 내용과 다릅니다. 다시 만들어 확인하세요.</div>');
+      }
       refreshNextBtn();
     } else if(d.preview_status === 'failed'){
       clearInterval(PREVIEW_POLL); PREVIEW_POLL = null; PREVIEW_STATUS='failed';
@@ -14502,6 +14514,35 @@ async function showShareQr(job){
     cp.addEventListener('click',async()=>{ try{ await navigator.clipboard.writeText(d.url); cp.textContent='복사됨 ✓'; }catch(e){ cp.textContent='복사 실패 — 길게 눌러 복사'; } });
   }catch(e){ box.innerHTML='<div style="padding:24px">오류가 났어요. 다시 시도해 주세요.</div>'; }
 }
+// ── ✂ CTA 잘라낸 판 만들기(2026-09-05) ──
+// 서버가 완성본에서 CTA 비트 앞까지만 복사해 준다(-frames:v, 재인코딩 없음 = 1초 내).
+// 자를 지점은 서버 한 곳에서 정한다(video_assemble.cta_cut_sec) — 화면이 초를 계산하지 않는다.
+async function trimCta(j){
+  const btn=document.getElementById('btnTrimCta');
+  const hint=document.getElementById('trimCtaHint');
+  if(!btn) return;
+  const old=btn.textContent;
+  btn.disabled=true; btn.textContent='✂ 잘라내는 중…';
+  try{
+    const r=await fetch('/api/mix/trim_cta/'+encodeURIComponent(j),{method:'POST'});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok || !d.ok){
+      // ★사유를 그대로 보여준다 — "CTA 칸이 없다"와 "옛 영상이라 다시 렌더해야 한다"는
+      //   사장님이 할 일이 다르다(뭉개면 무엇을 해야 할지 알 수 없다).
+      btn.textContent=old; btn.disabled=false;
+      if(hint) hint.innerHTML='⚠️ '+(d.error||'잘라내지 못했어요')+'';
+      return;
+    }
+    btn.textContent='✅ 잘린 영상 받기 ('+(d.cut_sec||0).toFixed(1)+'초)';
+    btn.disabled=false;
+    btn.onclick=()=>{ location.href='/api/mix/video_nocta/'+encodeURIComponent(j)+'?dl=1'; };
+    if(hint) hint.innerHTML='CTA 앞 <b>'+(d.cut_sec||0).toFixed(1)+'초</b>까지 남겼습니다. 버튼을 누르면 받습니다.';
+  }catch(e){
+    btn.textContent=old; btn.disabled=false;
+    if(hint) hint.innerHTML='⚠️ 잘라내기에 실패했어요 — 잠시 뒤 다시 눌러주세요.';
+  }
+}
+
 // ── 내보내기(다운로드 + 캡컷 편집용) — 설계 2026-07-20 T1 ──
 // 웹앱이라 캡컷 자동실행은 불가 → 캡컷 편집용 ZIP(장면영상·음성·SRT·대본)을 내려받아 캡컷에 올린다.
 function renderExport(opts){
@@ -14534,6 +14575,13 @@ function renderExport(opts){
         : '<div class="hint" style="margin-bottom:10px">💡 캡컷으로 바로 보내기는 <b>Chrome·Edge</b>에서만 됩니다. 지금 브라우저에선 아래 ZIP을 받아 캡컷에 올리세요. '
             + '<a href="/capcut_manual.html" target="_blank" rel="noopener" style="color:var(--accent2)">📖 그림으로 보는 준비 방법</a></div>')
     + (rendered?`<a class="btn-next" style="${big}" href="/api/mix/video/${j}?dl=1" download>⬇ 완성 영상(MP4)</a>`:'')
+    // ✂ CTA 잘라낸 판(2026-09-05 사장님 "CTA 있는 걸로 만들고 유튜브 올릴 땐 뒷부분만 잘라내고 싶다").
+    //   인스타·틱톡엔 위 완성본(CTA 있음), 유튜브엔 이 판을 올린다.
+    //   ★재렌더가 아니라 이미 만든 영상을 그대로 복사해 앞부분만 남긴다 — 1초면 끝나고
+    //     화질도 그대로다. 그래서 "다시 만드는 중" 같은 긴 대기 표시가 필요 없다.
+    //   CTA 칸이 있는지는 서버가 판단한다(대본마다 다르다) — 눌렀을 때 사유를 말해준다.
+    + (rendered?`<button id="btnTrimCta" class="btn-next" style="${big};border:0;cursor:pointer" onclick="trimCta('${j}')">✂ 유튜브용 — CTA 잘라낸 영상</button>`:'')
+    + (rendered?'<div class="hint" id="trimCtaHint" style="margin:2px 0 8px">유튜브엔 <b>댓글 유도(CTA)를 뺀 판</b>을 올릴 때 쓰세요. 인스타·틱톡엔 위 「완성 영상」 그대로.</div>':'')
     // ★완성본을 받은 뒤 바로 예약으로(2026-08-29 사장님 "완성본도 만든 뒤 다운을 누르면
     //   예약발행에도 들어가게"). 파일을 어디에 다시 올릴 필요가 없다 — 예약 단계가
     //   **같은 작업(MIX_JOB)의 완성본**을 그대로 쓴다.
@@ -17818,7 +17866,9 @@ function s2Confirm(i){
   //   ⚠️새 통로를 만들지 않는다 — script_structure는 이미 dict로 3단계까지 가는 자리다.
   //   src_seg가 하나도 없으면(옛 대본·무자막 소스) 키를 안 만든다 = 종전 그대로.
   try{
-    const _srcs=(dr.beats||[]).map(b=>({role:(b&&b.role)||'', seg:(b&&b.src_seg)||''}));
+    // segs: 2단계 grounded가 남긴 장면 전부(첫 번째=대표). 3단계 상속(edl_inherit)이 alternates로 쓴다(2026-09-04).
+    const _srcs=(dr.beats||[]).map(b=>({role:(b&&b.role)||'', seg:(b&&b.src_seg)||'',
+      segs:Array.isArray(b&&b.src_segs)?b.src_segs.filter(Boolean):[]}));
     if(_srcs.some(x=>x.seg)) STATE.script_beat_sources=_srcs;
     else delete STATE.script_beat_sources;
   }catch(e){}

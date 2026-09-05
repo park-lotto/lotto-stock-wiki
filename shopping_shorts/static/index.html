@@ -117,6 +117,20 @@
   .stat{display:flex;justify-content:space-between;font-size:12px;color:var(--sub);margin-top:4px}
   .stat b{color:var(--txt)}
   .grade{font-size:14px}
+  /* 🏅 조회수 뱃지(2026-09-04 사장님 "몇만뷰 몇십만뷰 이런거 의미있는건 뱃지를 달아야해").
+     기준은 실측 분위수다(유튜브 9,170편): 10만+ 상위 8.2% · 30만+ 3.5% · 50만+ 2.1% · 100만+ 0.8%.
+     ★10만 미만은 안 단다 — 절반이 3,676뷰(중앙값)라 뱃지가 흔해지면 뱃지가 아니다. */
+  /* ★이름 주의: .vbadge 는 **이미** 썸네일 위 영상길이 뱃지가 쓰고 있다(position:absolute).
+     같은 이름을 쓰면 조회수 뱃지가 카드 밖으로 튀어나간다(실측: x=1828, 카드는 x=306).
+     그래서 .viewbadge 로 가른다. */
+  .viewbadge{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:800;
+          padding:1px 7px;border-radius:99px;margin-left:5px;vertical-align:middle;
+          letter-spacing:-.2px;white-space:nowrap}
+  .vb1{background:#1e3a5f;color:#93c5fd}                      /* 10만+ */
+  .vb2{background:#3b2f0b;color:#fcd34d}                      /* 30만+ */
+  .vb3{background:#4a1d1d;color:#fca5a5}                      /* 50만+ */
+  .vb4{background:linear-gradient(90deg,#7c2d12,#b45309);color:#fde68a;
+       box-shadow:0 0 0 1px #f59e0b55}                        /* 100만+ */
   .delta-up{color:var(--fire)}
   .links{display:flex;gap:8px;margin-top:10px}
   .links a{font-size:12px;color:var(--accent);text-decoration:none}
@@ -942,6 +956,32 @@ function updatePlatformCopy(p){
   });
   applyMetricLabels(p);          // 툴팁만 바꾸고 글자를 안 바꾸면 이름이 거짓말을 한다
 }
+// 🎯 플랫폼마다 쓸모없는 지표는 **숨긴다**(2026-09-04 사장님 "반응률은 빼 / 유튜브에서
+// 단순지표 댓글순이랑 팔로워순은 빼고 … 뾰족하게 만들어줘야대").
+//   유튜브 쇼츠는 댓글이 거의 안 달린다(실측 중앙값 1개 vs 인스타 60개) —
+//   댓글에서 파생된 지표는 전부 0에 몰려 줄세우기가 무의미하다.
+//   ★버튼을 지우지 않고 숨긴다: 인스타로 돌아가면 그대로 살아야 한다.
+const _HIDE_METRICS = {
+  youtube:    ['density', 'fan_density', 'rawcomments', 'followers'],
+  naverclip:  ['fan_density', 'followers'],
+  pinterest:  ['fan_density', 'followers'],
+  threads:    ['density'],            // 쓰레드는 조회수를 안 준다 → 조회수당댓글이 늘 빈다
+};
+function applyMetricTabsFor(p){
+  const hide = _HIDE_METRICS[p] || [];
+  let hidActive = false;
+  document.querySelectorAll('#tabs .tab[data-tab]').forEach(el=>{
+    const off = hide.includes(el.dataset.tab);
+    el.style.display = off ? 'none' : '';
+    if(off && el.classList.contains('active')) hidActive = true;
+  });
+  // ★숨긴 탭이 눌려 있던 채로 두면 목록이 통째로 빈다 — 기본 탭으로 되돌린다.
+  if(hidActive){
+    const fallback = document.querySelector('#tabs .tab[data-tab="comments"]');
+    if(fallback){ document.querySelectorAll('#tabs .tab').forEach(x=>x.classList.remove('active'));
+                  fallback.classList.add('active'); STATE.tab='comments'; }
+  }
+}
 function ttMode(){ const r=document.querySelector('input[name="ttmode"]:checked'); return r?r.value:'account'; }
 function switchPlatform(p, el){
   PLATFORM=p;
@@ -951,6 +991,7 @@ function switchPlatform(p, el){
   // ★카테고리 줄도 다시 그린다(2026-08-26) — 플랫폼마다 숨기는 버튼이 다르다.
   //   안 부르면 유튜브에서 인스타로 갈아타도 썰쇼핑·장비템 버튼이 그대로 남는다.
   renderCtypes(); renderCats();
+  applyMetricTabsFor(p);          // 플랫폼에 안 맞는 지표는 아예 숨긴다
   document.querySelectorAll('#platformTabs .ctype').forEach(x=>x.classList.remove('active'));
   el.classList.add('active');
   const isTrend = (p==='douyin');
@@ -1617,6 +1658,24 @@ document.querySelectorAll('.tab').forEach(x=> x.onclick=()=>setTab(x.dataset.tab
 // -1e15로 같아져 최신순이 통째로 무효**가 됐다(사장님 제보 "최신순인데 2일 전").
 const RECENCY_FIELDS = ['posted_at', 'upload_ts', 'first_seen'];
 
+// 🏅 조회수 뱃지 — 의미 있는 것만 단다(2026-09-04).
+// 기준은 실측 분위수(유튜브 9,170편): 10만+ 754편(상위 8.2%) · 30만+ 325(3.5%)
+//   · 50만+ 196(2.1%) · 100만+ 72(0.8%). 10만 미만은 안 단다(중앙값이 3,676뷰다).
+const _VBADGES = [
+  [10000000, 'vb4', '🏆', '1000만'],
+  [ 5000000, 'vb4', '👑', '500만'],
+  [ 1000000, 'vb4', '👑', '100만'],
+  [  500000, 'vb3', '💥', '50만'],
+  [  300000, 'vb2', '🔥', '30만'],
+  [  100000, 'vb1', '📈', '10만'],
+];
+function viewBadge(v){
+  const n = Number(v || 0);
+  for (const [th, cls, icon, label] of _VBADGES){
+    if (n >= th) return `<span class="viewbadge ${cls}" title="조회수 ${n.toLocaleString()} — ${label}뷰 이상">${icon} ${label}뷰</span>`;
+  }
+  return '';                                    // 10만 미만은 뱃지 없음
+}
 function recencyMs(i){
   for (const f of RECENCY_FIELDS){
     const v = i[f];
@@ -2154,7 +2213,7 @@ function render(opts){
         ${(i.video_url||i.platform==='youtube'||i.platform==='tiktok'||(i.platform||PLATFORM)==='instagram')?'<span class="play-badge">▶</span>':''}
       </div>`:''}
       <div class="body">
-        <div class="rank"><span>#${idx+1} · ${i.category} · ${fmtAgo(i)}</span><button class="blockbtn" title="이 채널을 영구 차단 — 지금 바로 가리고, 다음 수집·업데이트에도 안 올라옵니다" onclick="blockChannel('${esc(i.username||'')}','${esc(i.name||'')}',this)">🚫 차단</button></div>
+        <div class="rank"><span>#${idx+1} · ${i.category} · ${fmtAgo(i)}${viewBadge(i.views)}</span><button class="blockbtn" title="이 채널을 영구 차단 — 지금 바로 가리고, 다음 수집·업데이트에도 안 올라옵니다" onclick="blockChannel('${esc(i.username||'')}','${esc(i.name||'')}',this)">🚫 차단</button></div>
         ${i.caption?`<div class="cap${i.thumbnail?'':' cap-only'}" onclick="toggleCap(this)">${esc(i.caption)}</div><div class="capmore" style="display:none" onclick="toggleCap(this.previousElementSibling)">⌄ 더보기</div>`:''}
         <div class="ch"><span class="chname" title="이 채널 영상만 보기(지난 한 달 포함)" style="cursor:pointer" onclick="searchChannel('${esc(i.username||'')}')">${i.name||i.username} <span class="grade">${i.grade||''}</span></span><button class="copy" title="릴스 링크 복사" onclick="copyLink('${i.url}', this)">🔗 복사</button></div>
         ${(i.followers||i.duration!=null)?`<div class="folw">${i.followers?`<span title="채널 팔로워(구독자) 수 — 수집이 실어온 실시간 값">👥 팔로워 ${i.followers.toLocaleString()}</span>`:''}${i.duration!=null?`<span class="dur" title="영상 길이">🎬 ${_fmtDur(i.duration)}</span>`:''}</div>`:''}
@@ -2170,7 +2229,7 @@ function render(opts){
             <button class="view" onclick="window.open('${i.url}','_blank')">👁 영상보기</button>
             <button class="save" id="save_${i.shortcode}" onclick="toggleMix('${i.shortcode}', this)">📥 즐겨찾기</button>
             <button class="script-btn" onclick="lensSearch(this,'${i.shortcode}')">🔍 숏템파워검색</button>
-            <button class="cp-btn" data-sc="${i.shortcode}" title="이 제품이 쿠팡에 있는지 찾고, 있으면 내 추적 링크까지 바로 만듭니다" onclick="window.ssCoupangFind('', {shortcode:'${i.shortcode}', thumbnail:decodeURIComponent('${encodeURIComponent(i.thumbnail||'')}'), hint:this.getAttribute('data-product')||''})">🛒 쿠팡에 있나?</button>
+            <button class="cp-btn" data-sc="${i.shortcode}" title="이 제품이 쿠팡에 있는지 찾고, 있으면 내 추적 링크까지 바로 만듭니다" onclick="window.ssCoupangFind('', {shortcode:'${i.shortcode}', thumbnail:decodeURIComponent('${encodeURIComponent(i.thumbnail||'')}'), hint:this.getAttribute('data-product')||'', noProduct:this.getAttribute('data-noproduct')==='1'})">🛒 쿠팡검색</button>
             ${window.IS_ADMIN?`<button class="inner-btn" title="우리가 관리하는 채널 아카이브에서 같은 제품·주제의 옛 영상 찾기 (무료·비전태그 매칭)" onclick="archiveSimilar('${i.shortcode}')">🏠 숏템내부검색</button>`:''}
           </div>
         </div>
@@ -2199,7 +2258,8 @@ function render(opts){
       document.querySelectorAll('.cp-btn[data-sc]').forEach(function (b) {
         var sc = b.getAttribute('data-sc');
         var it = STATE.items.find(function (x) { return x.shortcode === sc; });
-        if (it && it.thumbnail) _cpItems.push({ shortcode: sc, thumbnail: it.thumbnail });
+        // caption도 같이 보낸다(2026-09-05) — 썸네일만으로는 범주어가 나온다.
+        if (it && (it.thumbnail || it.caption)) _cpItems.push({ shortcode: sc, thumbnail: it.thumbnail || "", caption: it.caption || "" });
       });
       window.ssCoupangPrewarm(_cpItems.slice(0, 48));
     }
@@ -2628,13 +2688,23 @@ let ARC_MIN = 10000;                 // 역대 탭 문턱(1만+ 기본). 실측 
 // (실측 2026-08-17: 셋 다 400건·1위 동일) → 구간으로 끊어 겹치지 않게 한다.
 let ARC_MAX = 0;
 const _SPAN_MIN_COMMENTS = {7: 500, 30: 1000};
+// ★플랫폼마다 '터진 것'의 잣대가 다르다(2026-09-04 사장님 "유튭은 댓글이 필요없어, 조회수 기반이야").
+//   실측 댓글 중앙값: 인스타 60 / 유튜브 **1**. 유튜브에 댓글 문턱을 쓰면 이번 주가 48편,
+//   이번 달이 27편밖에 안 남아 사실상 빈 화면이 된다.
+//   유튜브 조회수 분포(9,170편): P90 7만 · P95 20만 → 10만+ 754편 / 50만+ 196편.
+//   인스타 기간탭 규모(이번주 594 · 이번달 281)와 비슷하게 맞춘 값이다.
+const _SPAN_MIN_VIEWS = {youtube: {7: 100000, 30: 500000}};
 
 async function loadLast(){
   let url = "/api/reference?platform="+PLATFORM;
   if(SPAN_DAYS < 0){
     url += "&archive=1&min_comments="+ARC_MIN+"&max_comments="+ARC_MAX;
   } else if(SPAN_DAYS > 0){
-    url += "&days="+SPAN_DAYS+"&min_comments="+(_SPAN_MIN_COMMENTS[SPAN_DAYS]||500);
+    const mv = (_SPAN_MIN_VIEWS[PLATFORM]||{})[SPAN_DAYS] || 0;
+    // 조회수 기준 플랫폼은 댓글 문턱을 0으로 내린다 — 두 잣대를 함께 걸면 아무것도 안 남는다.
+    url += "&days="+SPAN_DAYS
+         + "&min_comments="+(mv ? 0 : (_SPAN_MIN_COMMENTS[SPAN_DAYS]||500))
+         + (mv ? "&min_views="+mv : "");
   }
   const d = await (await fetch(url)).json();
   STATE.items = d.items || [];   // 결과 없어도 무조건 갈아끼움 — 이전 플랫폼 카드 잔존 방지

@@ -1738,7 +1738,7 @@ def _build_inventory(source_scripts):
             _up = (seg.get("use_point") or "").strip()
             _up_s = f" | 활용:{_up}" if _up else ""
             lines.append(
-                f"[{sid}] ({length}s) 화면:{seg.get('scene_desc','')} | 말:{seg.get('text','')}"
+                f"[{sid}] ({length}s) 화면:{seg.get('scene_desc','')} | 말:{seg.get('text_ko') or seg.get('text','')}"
                 f"{_lab_s}{_up_s}{_act_s}{_chg_s}{_ben_s}{_ml_s}{_role_s}{_key_s}"
             )
     return seg_map, "\n".join(lines)
@@ -4112,6 +4112,155 @@ def build_edit_plan(source_scripts, target_seconds, structure="template", video_
     return grounded
 
 
+def first_material_seg(beat):
+    """비트에서 **실제로 먼저 재생되는** 조각의 seg_id(순수 함수) — 실험실 편성(scene_override)이 있으면 그것,
+    없으면 primary. video_assemble._beat_material과 같은 우선순위(0순위-B: 재료 결정은 그 함수가 원본)."""
+    over = (beat or {}).get("scene_override")
+    if over:
+        for s in over:
+            if s and s.get("seg_id"):
+                return str(s["seg_id"])
+    p = (beat or {}).get("primary") or {}
+    return str(p.get("seg_id")) if p.get("seg_id") else None
+
+
+def scene_swap_rows(plan_before, plan_after, job=None):
+    """사람이 3단계에서 **첫 조각을 바꾼 비트**만 골라 기록 행으로(순수 함수). 이게 곧 시험지다
+    (설계 §8-D: 교체를 (줄, 버린 장면, 고른 장면)으로 저장 → 정답셋이 저절로 쌓인다).
+    반환: [{beat_idx, narration, old_seg, new_seg, generator, inherited, fit}] — 안 바뀐 비트는 없다."""
+    before = {b.get("beat_idx"): first_material_seg(b) for b in (plan_before or {}).get("beats") or []}
+    rows = []
+    for b in (plan_after or {}).get("beats") or []:
+        bi = b.get("beat_idx")
+        old, new = before.get(bi), first_material_seg(b)
+        if old is None or new is None or old == new:
+            continue
+        rows.append({
+            "beat_idx": int(bi) if bi is not None else -1,
+            "narration": (b.get("narration") or "")[:200],
+            "old_seg": old, "new_seg": new,
+            "generator": str((plan_after or {}).get("generator") or ""),
+            "inherited": 1 if b.get("inherited") else 0,
+            "fit": int(b.get("fit") or 0),
+        })
+    return rows
+
+
+def build_inherit_plan(source_scripts, given_script, beat_sources, structure="template", video_type=None):
+    """3단계 '붙어 온 장면 그대로 쓰기'(2026-09-04, 설계 §3-5·§9 — 사장님 "3단계는 상속만").
+
+    2단계가 줄마다 남긴 출처 장면(beat_sources[i] = {role, seg, segs})을 **줄 = 비트**로 그대로 잇는다.
+    Gemini 호출 0회. 추측 층(_chronological_respine·_verify_fits·_repick_weak_beats·_reconcile_weak_beats)은
+    이 경로에서 **부르지 않는다** — 정하는 곳은 2단계 한 곳이다(0순위-B).
+      · 출처가 있는 줄: primary = 첫 번호, alternates = 나머지(전부 인벤토리에 실재해야 한다)
+      · 출처가 없는 줄(훅·감정·가격·약속 = 2단계가 needs_scene=false로 둔 줄): 앞 비트 장면의 **다음 컷**(같은
+        소스, 시간순, 미사용)을 b-roll로 — 없으면 미사용 아무 컷. `inherited=False`로 표시해 화면이 구분한다
+      · 화면 길이 ≥ 대사 길이는 종전 보루(_fill_beat_screen_time)로 채운다
+    쓸 수 없으면 None(호출부가 옛 경로로 폴백): 줄이 없거나, 출처 개수 ≠ 줄 개수, 실재 출처가 하나도 없음.
+    """
+    from shopping_shorts.script_gate import parse_src_segs
+    if not (given_script or "").strip() or not beat_sources:
+        return None
+    lines = [s for s in script_sentences(given_script) if _narr_key(s)]
+    srcs = [x if isinstance(x, dict) else {} for x in (beat_sources or [])]
+    if not lines or len(srcs) != len(lines):
+        return None
+    seg_map, _ = _build_inventory(source_scripts)
+    usable = non_edge_segs(seg_map)
+    if not usable:
+        return None
+
+    def _ids_of(x):
+        """2단계가 **명시한** 출처는 첫·끝 컷(edge)이라도 그대로 잇는다(2026-09-05 리뷰 H2) — 2단계 장면 목록은
+        전부를 보여주므로 훅=첫 컷이 가장 흔한데, usable(non_edge)로 거르면 로그 없이 b-roll로 바뀌었다.
+        edge 제외는 **자동으로 채우는** b-roll(_next_cut·_fill_for)에만 적용한다."""
+        ids = list(x.get("segs") or []) or parse_src_segs(x.get("seg"))
+        out = []
+        for sid in ids:
+            sid = str(sid).strip()
+            if sid in seg_map and sid not in out:
+                out.append(sid)
+        return out
+
+    per_line = [_ids_of(x) for x in srcs]
+    if not any(per_line):
+        return None
+
+    # 소스별 시간순 목록(장면 없는 줄의 '다음 컷' 후보)
+    by_video = {}
+    for sid, s in usable.items():
+        by_video.setdefault(s.get("video_id"), []).append(s)
+    for v in by_video.values():
+        v.sort(key=lambda s: float(s.get("start") or 0))
+    used = {sid for ids in per_line for sid in ids}
+
+    def _next_cut(prev_sid):
+        """앞 비트 장면의 다음 컷(같은 소스·시간순·미사용) → 없으면 미사용 아무 컷 → None."""
+        prev = usable.get(prev_sid) if prev_sid else None
+        if prev:
+            for s in by_video.get(prev.get("video_id"), []):
+                if float(s.get("start") or 0) > float(prev.get("start") or 0) and s["seg_id"] not in used:
+                    return s["seg_id"]
+        for v in by_video.values():
+            for s in v:
+                if s["seg_id"] not in used:
+                    return s["seg_id"]
+        return None
+
+    def _fill_for(role, prev_sid):
+        """장면 없는 줄의 b-roll. ★훅·CTA처럼 역할이 결을 요구하면 **한 곳의 규칙표**(_ROLE_WANT_SHOTS →
+        _want_shots_for_role)대로 미사용 컷 중 그 결(★핵심 우선)을 고른다(2026-09-05). 표에 없는 역할·맞는 결이
+        없으면 종전대로 앞 비트의 다음 컷."""
+        from shopping_shorts import shot_roles as _sr
+        avail = {(s.get("shot_role") or "") for s in usable.values()}
+        shots, _why = _want_shots_for_role(role, available=avail)
+        if shots:
+            cands = [s for s in usable.values() if s["seg_id"] not in used
+                     and _sr.matches(s.get("shot_role") or "", tuple(shots))]
+            if cands:
+                cands.sort(key=lambda s: (0 if s.get("is_key") else 1, float(s.get("start") or 0)))
+                return cands[0]["seg_id"]
+        return _next_cut(prev_sid)
+
+    beats, prev_sid = [], None
+    for i, (line, ids) in enumerate(zip(lines, per_line)):
+        inherited = bool(ids)
+        if not ids:
+            fill = _fill_for(srcs[i].get("role"), prev_sid)
+            if fill:
+                ids = [fill]
+                used.add(fill)
+        if not ids:
+            ids = [prev_sid] if prev_sid else [next(iter(usable))]
+        refs = [_ground_ref({"seg_id": sid}, seg_map) for sid in ids]
+        refs = [r for r in refs if r]
+        if not refs:
+            continue
+        n = len(line)
+        beats.append({
+            "beat_idx": len(beats),
+            "role": str(srcs[i].get("role") or ""),
+            "narration": line,
+            "target_seconds": round(max(1.5, n / _SYLLABLES_PER_SEC), 1),
+            "primary": refs[0],
+            "alternates": refs[1:],
+            "effect": "cut",
+            # fit은 자기신고가 아니라 **출처가 있으면 5, 채운 b-roll이면 3**(설계 §2 "fit은 계산값").
+            "fit": 5 if inherited else 3,
+            "fit_evidence": "inherited" if inherited else "broll_fill",
+            "inherited": inherited,
+            "visual_verb": inherited,
+            "src_seg_applied": refs[0]["seg_id"] if inherited else None,
+        })
+        prev_sid = refs[-1]["seg_id"]
+    if not beats:
+        return None
+    beats = _fill_beat_screen_time(beats, seg_map)
+    return {"structure": structure, "beats": beats, "plagiarism_flags": [],
+            "detected_type": _normalize_video_type(video_type), "affiliate_target": "",
+            "generator": "inherit"}
+
+
 def _verify_fits(beats):
     """fit 자기신고 검증(2026-07-22 페이블 점검): fit은 생성 Gemini의 자기채점이라 전부 5/5로
     나와 — 화면의 '매칭 5/5' 표시, 추천점수의 avg_fit(50%), fit≤2 스왑버튼, fit≤3 약비트
@@ -5433,11 +5582,25 @@ def apply_scene_lab(plan, seg_map, edits):
         else:
             beat.pop("phrase_sync", None)
         applied += 1
-    # ★이 편성이 서버에 얹힌 시각(2026-08-21). 화면(localStorage)과 서버 중 어느 쪽이
-    #   최신인지 가르는 유일한 기준이다 — mix_jobs.updated_at은 음성 생성 같은 다른
+    # ★오려낸 조각도 함께 남긴다(2026-09-05, 고객 다수 제보 "자막제거 후 다시 오면
+    #   다 지워지고 까만색"). 종전엔 위에서 seg_map **사본**에만 병합하고 버려서,
+    #   DB엔 scene_override의 id만 남고 그 id가 가리킬 조각이 서버 어디에도 없었다
+    #   → 화면을 다시 열면 '0-0'·검은 칸(브라우저 저장본이 있을 때만 가려졌다).
+    #   ★저장하는 것은 **검증을 통과한 값**이다 — 위 seg_map 병합을 그대로 재사용하므로
+    #     날것의 클라이언트 입력이 DB로 새지 않는다(판정을 두 벌로 만들지 않는다).
+    _kept = {}
+    for _sid in _extra:
+        _s = seg_map.get(_sid)
+        if _s:
+            _kept[_sid] = {"video_id": _s["video_id"], "start": _s["start"],
+                           "end": _s["end"], "label": _s.get("label") or "",
+                           "text": _s.get("text") or ""}
+    # ★"at" = 이 편성이 서버에 얹힌 시각(2026-08-21). 화면(localStorage)과 서버 중 어느
+    #   쪽이 최신인지 가르는 유일한 기준이다 — mix_jobs.updated_at은 음성 생성 같은 다른
     #   이유로도 움직여서 편성 시각으로 쓸 수 없다.
     plan["scene_lab"] = {"beats": edits.get("beats") or [], "trims": trims,
                          "merges": merges, "fixlen": fixlen, "applied": applied,
+                         "extra_segs": _kept,
                          "at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
     return plan
 

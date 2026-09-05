@@ -434,6 +434,9 @@ def _assign_seg_ids(video_id, raw_segments, motion_map=None):
             "start": float(seg.get("start") or 0.0),
             "end": float(seg.get("end") or 0.0),
             "text": seg.get("text", ""),
+            # ★외국어 나레이션의 한국어 번역(2026-09-04, 컷별 태깅이 채움). 한국어 소스는 빈칸.
+            #   인벤토리·2단계 장면 목록은 text_ko가 있으면 그걸 '말:'로 보여준다.
+            "text_ko": (seg.get("text_ko") or "").strip(),
             "scene_desc": seg.get("scene_desc", ""),
             # 짧은 이름(2026-08-16). 옛 추출본엔 없어 ""로 떨어진다(fail-open) — 표시하는 쪽이
             # 비면 scene_desc로 되돌아가므로 기존 잡은 지금과 똑같이 보인다.

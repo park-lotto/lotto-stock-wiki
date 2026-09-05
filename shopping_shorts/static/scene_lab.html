@@ -1243,6 +1243,17 @@ function showConfirmLoading(msg){
   _cfEnable(true);
   pvTab('confirm');
 }
+// ★지문 없는 확정본에 **지금 편성**을 지문으로 찍는다 — 두 번 불린다(0순위-B: 판정은 여기 한 곳).
+//   ① showConfirmVideo 때: 부모가 옛 미리보기를 넣는 순간. 그런데 페이지 복원 경로에선
+//      boot()가 DATA를 받기 **전**이라 _editPayload가 DATA.beats에서 터져 빈 채로 남는다
+//      (라이브 실측 2026-09-04: 배포 뒤에도 RENDERED_SIG_len 0, 나중에 다시 부르면 882).
+//   ② boot() 끝: 편성이 다 실린 뒤 한 번 더. 이때 영상이 있고 지문이 비었으면 찍는다.
+function stampConfirmSigIfMissing(){
+  if (RENDERED_SIG) return;
+  var body = document.getElementById('confirmBody');
+  if (!body || !body.querySelector('video')) return;     // 영상이 없으면 찍을 게 없다
+  try{ RENDERED_SIG = (typeof _editSig === 'function') ? _editSig() : ''; }catch(e){ RENDERED_SIG = ''; }
+}
 // 렌더 끝 — 같은 자리에 진짜 영상.
 function showConfirmVideo(src){
   var body = document.getElementById('confirmBody');
@@ -1250,7 +1261,17 @@ function showConfirmVideo(src){
   // ★이 영상이 어떤 편성으로 만들어졌는지 지문을 남긴다(2026-09-03) — applyServer가
   //   이걸 대조해서 **진짜 바뀌었을 때만** 완성본을 버린다. 안 남기면 옛 동작(무조건
   //   버리기)으로 돌아가 재렌더가 재발한다.
+  // ★지문 없이 채워지는 경우가 있다(2026-09-04 사장님 제보: "최종렌더 뒤 3단계에서 고치고
+  //   미리보기를 보면 수정이 안 된 걸로 나온다"). 페이지를 다시 열거나 다른 단계에서 돌아오면
+  //   부모(produce)가 **이미 만들어 둔** preview.mp4를 여기로 넣는데, 그 경로엔 _askRender가
+  //   없어 PENDING_SIG가 비어 있다. 그러면 RENDERED_SIG도 비고, applyServer의 낡음 판정은
+  //   `!!RENDERED_SIG && …`라 **영영 낡았다고 못 본다** → 아무리 고쳐도 옛 영상이 안 지워지고
+  //   탭을 눌러도 _askRender가 "이미 있다"며 재렌더를 안 건다. 최종렌더는 무조건 새로
+  //   만드니 거기엔 반영돼 "미리보기만 옛것"이 됐다.
+  //   → 지문이 없으면 **지금 편성**을 이 영상의 지문으로 삼는다. 이후 진짜 바뀌면 지워진다.
+  //     (편집 상태가 아직 안 실린 순간이면 빈 지문이 남고, 첫 편집 저장에서 걸러진다 — 공짜 렌더 1회.)
   RENDERED_SIG = PENDING_SIG;
+  if (!RENDERED_SIG) stampConfirmSigIfMissing();
   // ★영상 아래에 **늘 보이는** 탐색바를 함께 그린다(2026-09-03 사장님 제보:
   //   "완성본 만들기하면 중간 구간으로 이동해서 클릭할 수 있는 바가 없다").
   //   controls 속성이 주는 네이티브 막대는 재생 중 자동으로 숨고, 세로(9:16) 영상에선
@@ -2526,8 +2547,39 @@ function beatFill(i, clips){
            stretching: !!STRETCH[i] && cuts.length > 0 };
 }
 
+// ★타임프레임이 보던 자리를 지킨다(2026-09-04 고객 접수: "CTA 구간을 재생하려고
+//   칸의 검정 빈자리를 누르면 작업화면이 딴 데로 가 있다").
+//   라이브 실측(mix job fb62adf0aad0, 칸 7개): 검정 빈자리 클릭 → scrollLeft
+//   4608 → 4270으로 **338px 깎였다** = 화면이 칸 반쯤 앞으로 밀린다.
+//   왜: renderBand가 innerHTML을 갈아끼우면 칸 안에 펼쳐둔 필름(422px)이 통째로
+//   사라져 가로 스크롤 최대값이 줄고, 브라우저가 scrollLeft를 그만큼 깎는다(clamp).
+//   필름은 나중에 다시 붙어 폭은 돌아오지만 깎인 스크롤은 그대로 남는다.
+//   ★innerHTML 직후에 한 번 되돌리는 것으로는 부족하다 — 그 순간은 아직 좁아 또 깎인다.
+//   실측해 보니 폭이 돌아오는 것은 클릭 후 **약 2.9초 뒤**였다(영상 메타데이터 로드).
+//   그래서 폭이 충분히 돌아올 때까지 짧게 지켜본다.
+//   ⚠ rAF는 탭이 숨으면 멈춰서 못 쓴다(실측으로 확인) — setInterval로 감시한다.
+//   ★사용자가 직접 끌거나 휠을 굴리면 즉시 손을 뗀다 — 내 조작을 되돌리면 안 된다.
+let _bandKeepLeft = null, _bandKeepTok = 0;
+function _bandKeepScroll(row){
+  const keep = _bandKeepLeft;
+  if (!keep){ _bandKeepLeft = null; return; }
+  const tok = ++_bandKeepTok, t0 = Date.now();
+  let alive = true;
+  const stop = () => { alive = false; _bandKeepLeft = null; };
+  row.addEventListener('pointerdown', stop, {once:true});
+  row.addEventListener('wheel', stop, {once:true, passive:true});
+  const iv = setInterval(() => {
+    if (!alive || tok !== _bandKeepTok){ clearInterval(iv); return; }
+    // 폭이 돌아왔을 때만 되돌린다 — 좁은 동안 넣어봐야 또 깎일 뿐이다.
+    if (row.scrollLeft !== keep && row.scrollWidth - row.clientWidth >= keep) row.scrollLeft = keep;
+    if (Date.now() - t0 > 5000){ clearInterval(iv); _bandKeepLeft = null;
+      row.removeEventListener('pointerdown', stop); row.removeEventListener('wheel', stop); }
+  }, 16);
+}
+
 function renderBand(){
   const row = document.getElementById('tbrow'); if (!row) return;
+  if (_bandKeepLeft === null) _bandKeepLeft = row.scrollLeft;   // 한 번의 클릭에서 첫 호출값만 기준
   let total = 0;
   const html = DATA.beats.map((b, i) => {
     const clips = planClips(lists[i] || [], beatDur(i), STRETCH[i], i);
@@ -2567,7 +2619,13 @@ function renderBand(){
     const usedIds = new Set(clips.map(c => c.seg_id));
     const unusedCuts = (lists[i] || []).filter(id => !usedIds.has(id)).map(id => {
       const seg = DATA.segments[id] || {};
-      const why = tooShort(id) ? '너무 짧음' : '자리 없음';
+      // ★조각 자체가 없으면 '자리 없음'이라고 하면 안 된다(2026-09-05 고객 다수 제보).
+      //   서버가 모르는 id는 배지가 '0-0'(srcNo·segNo가 둘 다 0), 길이 0.0, 썸네일 404라
+      //   **검은 칸**이 된다. 종전엔 그 상태를 '자리 없음'으로 그려 사장님이 원인을 알 수
+      //   없었다 — 무슨 일인지 화면이 말하게 한다(다른 3곳은 이미 이 검사를 한다:
+      //   beatFill·notifyEmptyBeats·applyServer).
+      const gone = !DATA.segments[id];
+      const why = gone ? '소스에서 사라진 조각' : (tooShort(id) ? '너무 짧음' : '자리 없음');
       return `<div class="tbcut unused ${isPicked(i, id) ? 'picked' : ''}"
              draggable="true"
              ondragstart="event.stopPropagation();bandDragStart(${i}, '${id}', event)"
@@ -2575,9 +2633,11 @@ function renderBand(){
              ondragover="if(dragFrom){event.preventDefault();event.dataTransfer.dropEffect='move';}"
              ondrop="bandDrop(${i}, '${id}', event)"
              ondblclick="event.stopPropagation();dropCutFromBand(${i}, '${id}')"
-             title="${segMark(id)} · ${seg.label || ''} — 담겨 있지만 이 칸에서는 화면에 안 나옵니다(${why}). 두 번 클릭하면 뺍니다. 다른 칸으로 끌어 옮길 수도 있어요.">
-             <img src="${SL.thumb(id)}"><span class="n">${segMark(id)}</span
-             ><span class="s">${effLen(id).toFixed(1)}</span><span class="off">안 나옴</span
+             title="${gone
+               ? `이 조각이 지금 소스 목록에 없습니다 — 화면에 그릴 수가 없어요(썸네일도 안 나옵니다). 두 번 클릭하면 뺍니다.`
+               : `${segMark(id)} · ${seg.label || ''} — 담겨 있지만 이 칸에서는 화면에 안 나옵니다(${why}). 두 번 클릭하면 뺍니다. 다른 칸으로 끌어 옮길 수도 있어요.`}">
+             <img src="${SL.thumb(id)}"><span class="n">${gone ? '?' : segMark(id)}</span
+             ><span class="s">${gone ? '—' : effLen(id).toFixed(1)}</span><span class="off">${gone ? '조각 없음' : '안 나옴'}</span
              ><input type="checkbox" class="pk" title="빼려면 체크"
                     ${isPicked(i, id) ? 'checked' : ''}
                     onclick="event.stopPropagation();togglePick(${i}, '${id}', this.checked)"
@@ -2648,13 +2708,8 @@ function renderBand(){
              style="color:var(--warn)">🔊 음성·자막 다시 뽑는 중… (10~20초)</span></div>` : ''}
       </div>`;
   }).join('');
-  // ★보던 자리를 지킨다(2026-09-04 고객 접수 "CTA 조각을 미리 들으려고 누르면 작업화면이
-  //   딴 데로 가 있다"). innerHTML을 갈아끼우면 브라우저가 가로 스크롤을 0으로 되돌린다 —
-  //   칸이 18개라 오른쪽 끝(5.cta)을 보다가 조각 하나만 눌러도 맨 앞으로 튕겼다.
-  //   재생·담기·빼기 전부 renderBand를 부르므로 여기 한 곳에서 지킨다(0순위-B).
-  const keepLeft = row.scrollLeft;
   row.innerHTML = html;
-  if (keepLeft) row.scrollLeft = keepLeft;   // 내용이 줄었으면 브라우저가 알아서 끝까지만
+  _bandKeepScroll(row);   // 다시 그려도 보던 자리에 머물게 한다(위 설명)
   // 칸 타임라인(2026-08-29) — 선택된 칸의 .tl-host를 채운다. 그리기 직후라 폭이 잡혀 있다.
   if (typeof tlMount === 'function') { try { tlMount(); } catch (e) { console.error('[tl]', e); } }
   // ★칸을 다시 그리면 그 안에 펼쳐둔 필름도 함께 지워진다 — 곧바로 다시 붙인다.
@@ -3950,6 +4005,7 @@ async function boot(){
   loadSfxList().then(l => { if (l && l.length) renderBand(); });
   autoOpenRoll();                  // 필름 자리를 켠 채로 연다
   autoMakeTts();
+  stampConfirmSigIfMissing();      // 복원된 옛 미리보기에 지금 편성 지문을 — 편성이 다 실린 뒤라야 계산된다
 }
 
 

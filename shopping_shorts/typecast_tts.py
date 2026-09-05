@@ -19,6 +19,7 @@
 """
 import base64
 import re
+import sys
 
 import requests
 
@@ -149,6 +150,17 @@ def build_payload(text, voice_id, *, speed=None, emotion=None, intensity=None,
     return body
 
 
+def raise_with_body(r):
+    """4xx/5xx면 **업체가 준 본문**을 문구에 실어 올린다(2026-09-05). 종전 raise_for_status는
+    '403 Client Error: Forbidden for url: …'만 남겨 잡 오류에 사유가 없었다 — 고객 cid 260이 키·요금제·
+    크레딧 전부 정상인데 403이 14일간 21건이었고, 본문을 못 봐 '요금제' 오진을 냈다. 타입캐스트 문서는
+    403을 정의하지 않는다(402=크레딧 부족, 404=voice 없음) → 본문만이 사유다. HTTPError 유지(재시도 루프가 잡는다)."""
+    if r.status_code < 400:
+        return
+    body = (r.text or "").strip().replace("\n", " ")[:200]
+    raise requests.HTTPError(f"{r.status_code} {r.reason or ''} {r.url or ''} | 본문: {body or '(없음)'}", response=r)
+
+
 def synthesize(text, out_path, *, voice_id, speed=None, emotion=None, intensity=None,
                model_id=None, seed=None, previous_text=None, next_text=None,
                timeout=120, customer_id=0):
@@ -163,7 +175,23 @@ def synthesize(text, out_path, *, voice_id, speed=None, emotion=None, intensity=
                          intensity=intensity, model_id=model_id, seed=seed,
                          previous_text=previous_text, next_text=next_text)
     r = requests.post(_ENDPOINT_TS, headers={"X-API-KEY": key}, json=body, timeout=timeout)
-    r.raise_for_status()
+    # ★타임스탬프 엔드포인트가 403/404면 **일반 엔드포인트로 한 번 더**(2026-09-05 고객 cid 260: 14일간 잡 21건 전부
+    #   `403 Forbidden …/with-timestamps`, 키 검사(/v1/voices)는 통과). 요금제·권한이 타임스탬프만 막는 경우를 살린다 —
+    #   정렬(alignment)은 None이 되어 자막이 ASR로 강등되지만 영상은 나온다. 일반도 거부면 그 오류를 그대로 올린다.
+    if r.status_code in (403, 404):
+        print(f"typecast_tts: with-timestamps {r.status_code} → 일반 엔드포인트로 재시도 ({(r.text or '')[:120]!r})",
+              file=sys.stderr)
+        r2 = requests.post(_ENDPOINT, headers={"X-API-KEY": key}, json=body, timeout=timeout)
+        if r2.status_code == 200:
+            data2 = r2.json()
+            audio_b64 = data2.get("audio")
+            if not audio_b64:
+                raise RuntimeError("타입캐스트 응답에 audio가 없습니다")
+            with open(out_path, "wb") as f:
+                f.write(base64.b64decode(audio_b64))
+            return None
+        raise_with_body(r2)
+    raise_with_body(r)
     data = r.json()
     audio_b64 = data.get("audio")
     if not audio_b64:
