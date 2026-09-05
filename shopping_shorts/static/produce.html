@@ -1651,6 +1651,15 @@
 
   </style>
   <link rel="stylesheet" href="theme.css?v=1">
+<style>
+/* 에러 설명(error_help.js가 그린다) — 빨간 한 줄로 끝내지 않고 왜·무엇을 함께 보여준다 */
+.errHelp{border-left:3px solid var(--fire,#e5484d);background:rgba(229,72,77,.07);
+  padding:8px 10px;border-radius:6px;margin:6px 0;line-height:1.55;text-align:left}
+.errHelp b{color:var(--fire,#e5484d);font-size:14px}
+.errHelp .errWhy{color:var(--sub,#8b8b8b);font-size:13px;margin-top:3px}
+.errHelp .errTodo{font-size:13px;margin-top:4px}
+</style>
+<script src="/error_help.js"></script>
 </head>
 <body>
   <div class="aurora-bg"></div>
@@ -2943,26 +2952,34 @@
           </div>
           <div id="thumbLayers" style="display:flex;flex-direction:column;gap:4px"></div>
 
-          <div style="font-size:12px;color:var(--sub);margin:10px 0 4px">😀 스티커 — 누르면 썸네일에 얹혀요 (드래그로 옮기고, 크기 조절)</div>
-          <div id="thumbStickers" style="display:flex;gap:4px;flex-wrap:wrap"></div>
-          <div style="display:flex;gap:6px;align-items:center;margin-top:6px">
-            <!-- ★maxlength 8 → 40 (2026-08-28 사장님 "고쳐"). 8글자면 "아이 생일 엄마들 다
-                 이거 쓰네요" 같은 썸네일 문구가 통째로 잘려 **안 얹힌 것처럼** 보였다.
-                 이모지는 어차피 firstGrapheme으로 첫 덩어리만 쓰므로 길이를 풀어도 무해하다. -->
-            <input id="thumbStickerInput" maxlength="40" placeholder="직접 입력 — 이모지 😀 또는 넣고 싶은 글자"
-                   onkeydown="if(event.key==='Enter'){addThumbStickerFromInput();return false}"
-                   style="flex:1;padding:7px 9px;font-size:15px">
-            <button class="tab" style="flex:0 0 auto;min-width:auto;padding:7px 13px"
-                    onclick="addThumbStickerFromInput()">얹기</button>
+          <!-- 🧰 얹을 재료 — 스티커·도형·배지를 **한 번에 한 줄만** 보여준다(2026-09-01 사장님
+               "여기 좀 깔끔하게"). 종전엔 셋이 세로로 다 펼쳐져 편집칸이 화면 두 개를 먹었고,
+               정작 자주 쓰는 스티커가 위로 밀렸다. 고르는 판단은 showThumbKit 한 곳(0순위-B). -->
+          <div style="border:1px solid var(--line);border-radius:12px;padding:10px;margin:12px 0 4px">
+            <div style="display:flex;gap:6px;margin-bottom:8px">
+              <button class="tab" id="thKitTab_sticker" style="flex:1;min-width:auto;padding:6px 8px;font-size:12px"
+                      onclick="showThumbKit('sticker')">😀 스티커</button>
+              <button class="tab" id="thKitTab_shape" style="flex:1;min-width:auto;padding:6px 8px;font-size:12px"
+                      onclick="showThumbKit('shape')">🎨 도형</button>
+              <button class="tab" id="thKitTab_badge" style="flex:1;min-width:auto;padding:6px 8px;font-size:12px"
+                      onclick="showThumbKit('badge')">🏷 배지</button>
+            </div>
+
+            <div id="thKit_sticker">
+              <div class="hint" style="margin-bottom:6px">누르면 얹혀요 · 드래그로 옮기고 크기 조절</div>
+              <div id="thumbStickers" style="display:flex;gap:4px;flex-wrap:wrap"></div>
+                          </div>
+
+            <div id="thKit_shape" hidden>
+              <div class="hint" style="margin-bottom:6px">화살표·강조 — 색·크기·각도까지 조절돼요</div>
+              <div id="thumbShapes" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+            </div>
+
+            <div id="thKit_badge" hidden>
+              <div class="hint" style="margin-bottom:6px">누르면 얹혀요 — 문구·색을 바꿀 수 있어요</div>
+              <div id="thumbBadges" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+            </div>
           </div>
-          <div id="thumbStickerInputHint" class="hint" style="font-size:10px;opacity:.7;margin-top:3px">
-            이모지는 스티커로, 글자는 글자 레이어로 얹혀요 (윈도우 이모지판 ⊞+마침표)</div>
-
-          <div style="font-size:12px;color:var(--sub);margin:12px 0 4px">🎨 고급 도형 — 화살표·강조 (색·크기·각도 조절돼요)</div>
-          <div id="thumbShapes" style="display:flex;gap:6px;flex-wrap:wrap"></div>
-
-          <div style="font-size:12px;color:var(--sub);margin:12px 0 4px">🏷 배지 — 누르면 얹혀요 (문구·색 바꿀 수 있어요)</div>
-          <div id="thumbBadges" style="display:flex;gap:6px;flex-wrap:wrap"></div>
 
           <button class="btn-next" style="width:100%;margin:10px 0 4px;padding:10px;font-size:14px"
                   onclick="suggestThumbTitles()">🪄 원본 영상 보고 제목 추천받기</button>
@@ -3056,7 +3073,7 @@
                체크는 렌더 요청과 같이 서버로 가고 thumbnail JSON에 남아, 다시 열어도 유지된다.
                라벨 전체가 클릭 영역이고 44px — 주 사용자가 60대다. -->
           <label id="thumbIntroWrap" style="display:flex;align-items:center;gap:8px;margin-top:10px;cursor:pointer;min-height:44px">
-            <input type="checkbox" id="thumbIntro">
+            <input type="checkbox" id="thumbIntro" onchange="rememberThumbIntro(this.checked)">
             <span style="font-size:13px">🖼 <b>썸네일을 영상 맨 앞에</b> 넣기
               <span class="hint" style="margin-left:4px">약 1.2초 표지처럼 보여줍니다</span></span>
           </label>
@@ -4373,7 +4390,7 @@ async function seoAppendCoupang(){
   if(!MIX_JOB){ set(stepName('mix')+' 영상 매칭을 먼저 하세요','var(--fire)'); return; }
   let d;
   try{ d=await (await fetch('/api/mix/product/'+encodeURIComponent(MIX_JOB))).json(); }
-  catch(e){ set('네트워크 오류','var(--fire)'); return; }
+  catch(e){ set(ErrorHelp.text('network'),'var(--fire)'); return; }
   // ★안내는 "위를 보세요"다(2026-08-18) — 상품 확정 UI가 이 버튼 바로 위에 있다.
   //   예전엔 3단계로 보냈는데 그 화면은 이제 비어 있어 헛걸음이 됐다.
   if(!d || !d.ok || !d.product){
@@ -5784,7 +5801,7 @@ async function fxPoll(){
           'style="width:100%;max-width:280px;border-radius:10px;display:block;background:#000"></video>'+
           '<a href="'+d.fx_url+'" download style="display:inline-block;margin-top:6px;font-size:12px;color:var(--accent2)">⬇ 영상 다운로드</a>'; } }
     else if(d.fx_status==='failed'){ clearInterval(FX_POLL); FX_POLL=null;
-      msg.textContent='렌더 실패 (포인트는 환불됨) — 다시 시도해 주세요'; }
+      msg.innerHTML=ErrorHelp.html('render_fail'); }
   }catch(e){}
 }
 // ── 자막 스타일(나레이션 자막) ──────────────
@@ -6179,7 +6196,7 @@ async function setBeatCapPos(pos){
     renderBeatTools();
     if(typeof updateCaption==='function') updateCaption();
     _capMsg('이 장면 자막을 '+({top:'위',mid:'중간',bottom:'아래'}[d.pos]||d.pos)+'로 옮겼어요','var(--ok)');
-  }catch(e){ _capMsg('네트워크 오류','var(--fire)'); }
+  }catch(e){ _capMsg(ErrorHelp.text('network'),'var(--fire)'); }
 }
 
 async function saveBeatCapLines(){
@@ -6196,7 +6213,7 @@ async function saveBeatCapLines(){
     b.segs=d.lines; b.durs=null;                 // 표시시간은 서버가 다시 잰다
     _capMsg('저장했어요'+(d.timed?'':' (표시시간은 글자수 기준)'),'var(--ok)');
     _playBeatCaptions(b);                        // 바뀐 줄로 미리보기 다시 재생
-  }catch(e){ _capMsg('네트워크 오류','var(--fire)'); }
+  }catch(e){ _capMsg(ErrorHelp.text('network'),'var(--fire)'); }
 }
 
 async function resetBeatCapLines(){
@@ -6212,7 +6229,7 @@ async function resetBeatCapLines(){
     b.segs=d.lines; b.durs=null; renderBeatTools();
     _capMsg('자동 분할로 되돌렸어요','var(--ok)');
     _playBeatCaptions(b);
-  }catch(e){ _capMsg('네트워크 오류','var(--fire)'); }
+  }catch(e){ _capMsg(ErrorHelp.text('network'),'var(--fire)'); }
 }
 function renderCapFontSelect(){
   const s=document.getElementById('capFont');
@@ -7376,6 +7393,20 @@ const HC_PRESETS=[
   {cat:'내용', name:'하단 블랙박스',     font:'SUIT-Bold.otf',            color:'#FFFFFF', weight:900, size:54, y:84, outline:false, outline_color:'#000000', outline_w:0, box:true, box_color:'#000000', box_pad:16, box_opacity:84},
   {cat:'내용', name:'하단 민트박스',     font:'GmarketSansBold.otf',      color:'#FFFFFF', weight:900, size:52, y:82, outline:false, outline_color:'#000000', outline_w:0, box:true, box_color:'#0B8F7A', box_pad:14, box_opacity:92},
   {cat:'내용', name:'하단 심플',         font:'NanumGothic-Bold.ttf',     color:'#FFFFFF', weight:900, size:54, y:86, outline:true, outline_color:'#000000', outline_w:5},
+  // ── 썸네일형 추가분(2026-09-05 사장님 "프리셋을 많이 잘 만드는게 최우선") ──
+  // 위 11종은 전부 '검은 외곽선 + 흰→색 투톤'이라 눌러봐도 차이가 작았다. 여기서는
+  // **틀 자체가 다른 것**만 넣는다: 색박스형 / 색외곽선형 / 검은바탕형 / 단색 임팩트형.
+  // ★배열 끝에 붙인다 — applyPreset(i)가 raw 인덱스를 쓰므로 중간에 끼우면 기존 칩이 밀린다.
+  {cat:'썸네일', name:'레드박스',   font:'BMDOHYEON.ttf',       color:'#FFFFFF', weight:900, size:82, y:14, outline:false, outline_color:'#000000', outline_w:0, box:true, box_color:'#E11D2E', box_pad:16, box_opacity:100},
+  {cat:'썸네일', name:'블랙박스',   font:'BMDOHYEON.ttf',       color:'#FFE100', weight:900, size:82, y:14, outline:false, outline_color:'#000000', outline_w:0, box:true, box_color:'#000000', box_pad:18, box_opacity:88},
+  {cat:'썸네일', name:'민트박스',   font:'BMJUA.ttf',           color:'#06211C', weight:900, size:82, y:14, outline:false, outline_color:'#000000', outline_w:0, box:true, box_color:'#2EE6C5', box_pad:16, box_opacity:100},
+  {cat:'썸네일', name:'화이트박스', font:'GmarketSansBold.otf', color:'#111111', color2:'#E11D2E', weight:900, size:80, y:14, outline:false, outline_color:'#000000', outline_w:0, box:true, box_color:'#FFFFFF', box_pad:16, box_opacity:96},
+  {cat:'썸네일', name:'노랑+빨강테', font:'BMDOHYEON.ttf',      color:'#FFE100', weight:900, size:94, y:14, outline:true, outline_color:'#C1121F', outline_w:14},
+  {cat:'썸네일', name:'흰+파랑테',   font:'BMDOHYEON.ttf',      color:'#FFFFFF', weight:900, size:94, y:14, outline:true, outline_color:'#1D4ED8', outline_w:14},
+  {cat:'썸네일', name:'검정+흰테',   font:'TmonMonsori.ttf',    color:'#111111', weight:900, size:94, y:14, outline:true, outline_color:'#FFFFFF', outline_w:14},
+  {cat:'썸네일', name:'형광 임팩트', font:'BMDOHYEON.ttf',      color:'#CCFF00', weight:900, size:98, y:13, outline:true, outline_color:'#000000', outline_w:14},
+  {cat:'썸네일', name:'주황 임팩트', font:'BMJUA.ttf',          color:'#FF6B00', weight:900, size:98, y:13, outline:true, outline_color:'#FFFFFF', outline_w:12},
+  {cat:'썸네일', name:'하단 큰자막', font:'BMDOHYEON.ttf',      color:'#FFFFFF', color2:'#FFD400', weight:900, size:88, y:74, outline:true, outline_color:'#000000', outline_w:12},
 ];
 function renderPresets(){
   const box=document.getElementById('hcPresets'); if(!box) return;
@@ -8072,7 +8103,7 @@ async function saveCapDrag(){
       if(typeof renderBeatTools==='function') renderBeatTools();
       say('모든 장면 자막을 이 자리로 옮겼어요'+(d.cleared?' (장면별로 따로 두셨던 '+d.cleared+'개도 맞췄어요)':''),'var(--ok)');
     }
-  }catch(e){ say('네트워크 오류','var(--fire)'); }
+  }catch(e){ say(ErrorHelp.text('network'),'var(--fire)'); }
 }
 // 지워진 자막영역(primary=넓고 자주 쓰인 1번 자리)이 있으면 '다시 그 자리로' 버튼만 연다.
 // ★2026-07-27 사장님 요청으로 점선 박스 표시(capRegionMarker)는 제거했다 — 미리보기를
@@ -8283,7 +8314,7 @@ async function mixSyncEdit(card){
 async function mixUpgrade(btn){
   const card=btn.closest('.mixdraft');
   const synced=await mixSyncEdit(card);
-  if(!synced){ alert('편집 내용 저장에 실패했어요. 잠시 후 다시 시도해 주세요.'); return; }
+  if(!synced){ alert(ErrorHelp.text('save_fail')); return; }
   const did=card.dataset.draftId;
   if(!did){ alert('이 초안은 서버에 저장된 버전이 없어 업그레이드를 지원하지 않습니다. 직접 편집하거나 확정하세요.'); return; }
   const elements=[...card.querySelectorAll('.mixelem[data-on="1"]')].map(b=>b.dataset.key);
@@ -8304,7 +8335,7 @@ async function mixUpgrade(btn){
     const lp=card.querySelector('.mixlen'); if(lp) lp.textContent=lenText(d.script_text);
     card.querySelectorAll('.mixelem[data-on="1"]').forEach(b=>{ b.dataset.on=''; b.style.background='var(--inset)'; b.style.color='var(--txt)'; });
     if(!elements.length) card.querySelector('.mixinst').value='';
-  }catch(e){ alert('네트워크 오류'); }
+  }catch(e){ alert(ErrorHelp.text('network')); }
   finally{ btn.disabled=false; btn.textContent=o; }
 }
 // ★이름·시그니처 유지(테스트 3개가 이 선언 앵커를 슬라이스). 본문만 강화 —
@@ -8327,7 +8358,7 @@ async function postDrafts(url, payload, boxId){
     const d=await r.json();
     if(!d.ok){ box.innerHTML=`<div class="hint" style="color:var(--fire)">${esc(d.error||'실패')}</div>`; return; }
     renderDrafts(d.drafts, boxId);
-  }catch(e){ box.innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; }
+  }catch(e){ box.innerHTML=ErrorHelp.html('network'); }
 }
 
 // ★Task 4(2026-07-23): switchMixSource·MIX_SRC(믹스탭 '담긴 대본'/'위키 전체' 전환)는
@@ -8584,9 +8615,14 @@ const MIX_LABEL={downloading:'영상 다운로드 중…',extracting:'대본 분
 //   "이거 2개는 삭제하고"). 매칭이 끝나도 화면에 남아 자리만 먹었고, 상태는 아래
 //   MIX_LABEL 한 줄 글자로 이미 다 보인다(진행바만 뺀다 — 글자는 남긴다).
 //   ※지웠던 것: const MIX_STAGE_ORDER, SBLoader.pipeline(#mixStatus._sblPipe).
+// 재료 영상 상한 — **서버가 정본**(script_generate.SOURCE_MAX). 아래 값은 /api/me가
+// 도착하기 전까지 쓰는 임시값이다(숫자를 두 곳에서 정하는 게 아니다).
+let SOURCE_MAX = 8;
+fetch('/api/me').then(r=>r.json()).then(d=>{ if(d && d.source_max) SOURCE_MAX = d.source_max; })
+                .catch(()=>{});
 function addMixUrl(){
   const wrap=document.getElementById('mixUrls');
-  if(wrap.querySelectorAll('.mixUrl').length>=5) return;
+  if(wrap.querySelectorAll('.mixUrl').length>=SOURCE_MAX) return;
   const d=document.createElement('div'); d.className='row'; d.style.marginBottom='6px';
   d.style.display='flex'; d.style.gap='6px'; d.style.alignItems='center';
   d.innerHTML='<input class="mixUrl" type="text" placeholder="인스타/유튜브/틱톡 URL" style="flex:1;min-width:0;background:var(--inset);border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:10px"><button class="urlDel" title="이 칸 지우기" onclick="removeMixUrlRow(this)" style="background:none;border:none;color:var(--sub);cursor:pointer;font-size:16px;padding:0 4px">✕</button>';
@@ -9287,7 +9323,7 @@ async function saveInpockNumber(){
     COUPANG.product = d.product; COUPANG.dm_set = d.dm_set || null;
     redrawCoupang();
     toast(v ? v + '번으로 저장했어요' : '번호를 비웠어요');
-  }catch(e){ toast('네트워크 오류'); }
+  }catch(e){ toast(ErrorHelp.text('network')); }
 }
 async function dmCopy(btn, text){
   // ★writeText는 Promise다 — 동기 try/catch로는 거부를 못 잡아 unhandled rejection이
@@ -9398,7 +9434,7 @@ async function coupangCrawl(forced){
           <div style="font-size:12px;font-weight:700;margin-top:3px">${esc(it.price||'')}</div>
           <div class="hint" style="font-size:10px">${esc(it.rating||'')}${it.is_ad?' · 광고':''}</div>
         </div>`).join('')+`</div>`;
-  }catch(e){ if(msg){ msg.style.color='var(--fire)'; msg.textContent='네트워크 오류'; } }
+  }catch(e){ if(msg){ msg.style.color='var(--fire)'; msg.textContent=ErrorHelp.text('network'); } }
 }
 // 🔍 화면으로 정확히 — 영상 프레임을 역검색해 브랜드·모델까지 찾는다(유료라 누를 때만).
 // 찾아낸 이름은 칩 맨 앞에 꽂고 그걸로 바로 재검색한다. 못 찾으면 지금 결과를 그대로 둔다.
@@ -9416,7 +9452,7 @@ async function coupangLens(){
     }
     COUPANG.chips=[d.name].concat((COUPANG.chips||[]).filter(c=>c!==d.name));
     coupangCrawl(d.name);
-  }catch(e){ if(msg){ msg.style.color='var(--fire)'; msg.textContent='네트워크 오류'; } }
+  }catch(e){ if(msg){ msg.style.color='var(--fire)'; msg.textContent=ErrorHelp.text('network'); } }
 }
 // 카드 클릭 = 상품 확정. 입력칸을 채운 뒤 곧바로 저장한다(클릭 한 번으로 끝나게).
 function coupangPick(i){
@@ -9470,7 +9506,7 @@ async function coupangSave(opts){
     if(!r.ok||!d.ok){ if(msg) msg.textContent=d.error||'저장 실패'; return; }
     COUPANG.product=d.product; COUPANG.dm_set=d.dm_set||null;
     COUPANG.editing=false; redrawCoupang();
-  }catch(e){ if(msg) msg.textContent='네트워크 오류'; }
+  }catch(e){ if(msg) msg.textContent=ErrorHelp.text('network'); }
 }
 // ── 쿠팡 연결 끝 ── COUPANG-END
 
@@ -11126,7 +11162,7 @@ async function openScriptModal(i, force){
     if(PM_GEN!==myGen) return;   // 요소옵션 로딩 중에도 가져갈 수 있다 — 그 뒤 소재프리필까지 막는다
     pmToggleTopic();                    // 소재칸 표시상태를 현재 모드에 맞춤
     pmPrefillSubject(PM_SHORTCODE);     // shortcode 없으면(직행 URL) 손입력만 열어둔다
-  }catch(e){ if(PM_GEN===myGen) document.getElementById('pmResults').innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; }
+  }catch(e){ if(PM_GEN===myGen) document.getElementById('pmResults').innerHTML=ErrorHelp.html('network'); }
 }
 function pmUseRaw(){ STATE.script=PM_BASE_SCRIPT; STATE.script_carryover=false; STATE.script_src_idx=PM_IDX; STATE.script_from_wiki=PM_FROM_WIKI; pmClose(); setScriptMode('manual'); refreshFinalPeek(); setFinalCategoryValue(PM_CATEGORY); saveWork(); }
 function pmClose(){ document.getElementById('pmModal').classList.remove('open'); }
@@ -11248,7 +11284,7 @@ async function pmRunGen(){
       {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();
     if(!d.ok){ res.innerHTML='<div class="hint" style="color:var(--fire)">⚠️ '+esc(d.error||'생성 실패')+'</div>'; return; }
     pmRenderDrafts(d.drafts||[]);
-  }catch(e){ res.innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; }
+  }catch(e){ res.innerHTML=ErrorHelp.html('network'); }
   finally{ btn.disabled=false; }
 }
 // 스타일 검사 결과 — 통과면 한 줄, 못 넘었으면 **무엇을 못 지켰는지** 그대로 보여준다.
@@ -11325,7 +11361,7 @@ async function pmRefineDraft(btn, mode){
     textarea.value=d.script_text;
     card.dataset.draftId=d.draft_id;
     card.querySelector('.refine-inst').value='';
-  }catch(e){ alert('네트워크 오류'); }
+  }catch(e){ alert(ErrorHelp.text('network')); }
   finally{ btn.disabled=false; btn.textContent=orig; }
 }
 async function pmToggleHistory(el){
@@ -11452,7 +11488,7 @@ async function saveScriptToWiki(btn){
         category:category, name:src.name||undefined, video_url:src.video_url||src.url})})).json();
     if(!d.ok){ alert(d.error||'저장 실패'); btn.textContent=o; return; }
     btn.textContent='✓ 원본 영상 위키에 담김(학습 반영)'; btn.classList.add('sent');
-  }catch(e){ alert('네트워크 오류'); btn.textContent=o; }
+  }catch(e){ alert(ErrorHelp.text('network')); btn.textContent=o; }
   finally{ btn.disabled=false; }
 }
 // ✨ 스마트 믹스 토글 — 부품은행 주입+반복회피(novelty)+핑퐁 마스터 스위치(전역 설정).
@@ -12102,7 +12138,7 @@ async function pickCandidate(idx){
     // 서버가 편집을 받아 후보 목록에까지 되썼다 = 이제 이게 원문이다. 기준선을 갱신해
     //   같은 편집이 다음 클릭에 또 실려 가지 않게 한다(그래도 무해하지만 payload가 깔끔하다).
     if(r.edited && _c) _c._lines0 = _candLines(_c).slice();
-  }catch(e){ alert('네트워크 오류'); CAND_SEL = prev; renderCandidates(CAND_LIST); return; }
+  }catch(e){ alert(ErrorHelp.text('network')); CAND_SEL = prev; renderCandidates(CAND_LIST); return; }
   loadMixReview();   // edit_plan이 바뀌었다 = 새 매칭과 동일하게 취급(미리보기 게이트도 다시 잠긴다)
   _syncPreviewCandHint(lbl);   // loadMixReview가 편집안을 다시 그려도 미리보기 힌트는 지금 대본을 가리킨다
   const cs2 = document.getElementById('candStatus');   // '바꾸는 중' → 정착 메시지로(loadMixReview는 후보를 다시 안 그린다)
@@ -12153,13 +12189,13 @@ async function cloneCandidate(idx){
         body: JSON.stringify({job_id: MIX_JOB, index: idx, narrations: _candLines(_pre)})})).json();
       if(!_r || !_r.ok){ alert((_r && _r.error) || '고친 대본 저장 실패'); return; }
       _pre._lines0 = _candLines(_pre).slice();
-    }catch(e){ alert('네트워크 오류'); return; }
+    }catch(e){ alert(ErrorHelp.text('network')); return; }
   }
   let d=null;
   try{
     d = await (await fetch('/api/mix/candidate/clone', {method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({job_id: MIX_JOB, index: idx})})).json();
-  }catch(e){ alert('네트워크 오류'); return; }
+  }catch(e){ alert(ErrorHelp.text('network')); return; }
   if(!d || !d.ok){ alert((d && d.error) || '복제 실패'); return; }
   // ★새 job = 한 번도 미리보기를 본 적 없다. 재매칭(3779줄)과 같은 초기화를 그대로 건다 —
   //   안 걸면 옛 job의 preview_status를 물고 유료 자막제거로 그냥 넘어간다.
@@ -12235,7 +12271,7 @@ async function toggleCutaway(idx, assetId){
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({beat_idx: idx, asset_id: assetId})})).json();
     if(!r.ok){ if(box) box.innerHTML='<div class="hint" style="color:var(--fire)">⚠️ '+esc(r.error||'실패')+'</div>'; return; }
-  }catch(e){ if(box) box.innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; return; }
+  }catch(e){ if(box) box.innerHTML=ErrorHelp.html('network'); return; }
   // 그 비트 행만 다시 그린다 — 편집안 전체(loadMixReview)를 다시 그리지 않는다.
   const d = await (await fetch('/api/mix/result/'+MIX_JOB)).json();
   if(!d.ok) return;
@@ -12268,7 +12304,7 @@ async function removeSfx(idx){
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({beat_idx: idx})})).json();
     if(!r.ok){ if(box) box.innerHTML='<div class="hint" style="color:var(--fire)">⚠️ '+esc(r.error||'실패')+'</div>'; return; }
-  }catch(e){ if(box) box.innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; return; }
+  }catch(e){ if(box) box.innerHTML=ErrorHelp.html('network'); return; }
   const d = await (await fetch('/api/mix/result/'+MIX_JOB)).json();
   if(!d.ok) return;
   const beat = (d.beats||[])[idx];
@@ -12310,7 +12346,7 @@ async function openSwapPicker(idx){
   if(box) box.innerHTML = '<div class="hint">⏳ 화면 목록 불러오는 중…</div>';
   let d;
   try{ d = await (await fetch('/api/mix/segments/'+encodeURIComponent(MIX_JOB))).json(); }
-  catch(e){ if(box) box.innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; return; }
+  catch(e){ if(box) box.innerHTML=ErrorHelp.html('network'); return; }
   if(!d.ok){ if(box) box.innerHTML='<div class="hint" style="color:var(--fire)">목록 실패</div>'; return; }
   const cards = (d.segments||[]).map(s=>`
     <div onclick="doSwap(${idx},'${esc(s.seg_id)}')" style="flex:0 0 96px;cursor:pointer;opacity:${s.used?0.4:1}">
@@ -12333,7 +12369,7 @@ async function doSwap(idx, segId){
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({job_id: MIX_JOB, beat_idx: idx, seg_id: segId})})).json();
     if(!r.ok){ if(box) box.innerHTML='<div class="hint" style="color:var(--fire)">⚠️ '+esc(r.error||'실패')+'</div>'; return; }
-  }catch(e){ if(box) box.innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; return; }
+  }catch(e){ if(box) box.innerHTML=ErrorHelp.html('network'); return; }
   loadMixReview();   // 화면이 바뀜=옛 미리보기 무효 → 전체 재로드가 프리뷰까지 정리(2360 규율)
 }
 // ─── SWAP-END
@@ -12363,7 +12399,7 @@ async function doShorten(idx){
     r=await (await fetch('/api/produce/mix/'+encodeURIComponent(MIX_JOB)+'/shorten',{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({beat_idx:idx})})).json();
-  }catch(e){ if(box) box.innerHTML='<span class="hint" style="color:var(--fire)">네트워크 오류</span>'; return; }
+  }catch(e){ if(box) box.innerHTML=ErrorHelp.html('network'); return; }
   if(!r.ok){ if(box) box.innerHTML='<span class="hint" style="color:var(--fire)">⚠️ '+esc(r.error||'실패')+'</span>'; return; }
   if(!r.changed){ if(box) box.innerHTML='<span class="hint" style="color:var(--sub)">'+esc(r.note||'더 줄일 여지가 없어요')+'</span>'; return; }
   loadMixReview();   // 대사·길이 바뀜=옛 미리보기 무효 → 전체 재로드(트림과 동일 규율)
@@ -12377,7 +12413,7 @@ async function doTrim(idx, edge, mode){
     r = await (await fetch('/api/produce/mix/'+encodeURIComponent(MIX_JOB)+'/trim',{
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({beat_idx: idx, edge, mode, step: 0.3})})).json();
-  }catch(e){ if(box) box.innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; return; }
+  }catch(e){ if(box) box.innerHTML=ErrorHelp.html('network'); return; }
   if(!r.ok){ if(box) box.innerHTML='<div class="hint" style="color:var(--fire)">⚠️ '+esc(r.error||'실패')+'</div>'; return; }
   if(mode==='auto' && edge==='tail' && !r.tail_trim){
     if(box) box.innerHTML = renderTrimControls({tail_trim:0,head_trim:r.head_trim}, idx)
@@ -12416,7 +12452,7 @@ async function openPaletteView(){
   box.innerHTML = '<div class="hint">⏳ 조각 불러오는 중…</div>';
   let d;
   try{ d = await (await fetch('/api/mix/segments/'+encodeURIComponent(MIX_JOB))).json(); }
-  catch(e){ box.innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; return; }
+  catch(e){ box.innerHTML=ErrorHelp.html('network'); return; }
   if(!d.ok){ box.innerHTML='<div class="hint" style="color:var(--fire)">'+esc(d.error||'조각 불러오기 실패')+'</div>'; return; }
   const beats = (window._mixBeats || []);
   const st = paletteStats(beats);
@@ -12843,7 +12879,7 @@ async function startCleanPreview(){
       if(btn) btn.disabled=false; return;
     }
     CLEAN_POLL=setInterval(()=>pollClean(myGen,myJob),3000); pollClean(myGen,myJob);
-  }catch(e){ if(CLEAN_GEN!==myGen) return; box.innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; if(btn) btn.disabled=false; }
+  }catch(e){ if(CLEAN_GEN!==myGen) return; box.innerHTML=ErrorHelp.html('network'); if(btn) btn.disabled=false; }
 }
 // 진행 문구 갱신(2026-08-19). 자막제거는 소스 1편당 수 분이라 전체 25분이 걸려도 정상인데,
 // 예전엔 화면이 처음부터 끝까지 똑같아 "실패했나/멈췄나"로 읽혔다. 끝난 소스 수를 보여준다.
@@ -13189,7 +13225,7 @@ async function searchVoiceLibrary(page){
     d=await (await fetch('/api/voice-library/search?language=ko&page='+VLIB_PAGE
       +'&q='+encodeURIComponent(q)+'&gender='+encodeURIComponent(g)
       +'&sort='+encodeURIComponent(srt))).json();
-  }catch(e){ box.innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; return; }
+  }catch(e){ box.innerHTML=ErrorHelp.html('network'); return; }
   if(d && d.need_key){
     box.innerHTML='<div class="hint" style="line-height:1.6">'+esc(d.error||'')
       +'<br><a href="/settings#keys" style="color:var(--accent2)">→ 내 API 키 등록하러 가기</a></div>';
@@ -13240,7 +13276,7 @@ async function loadMyVoices(){
   box.innerHTML = '<div class="hint">불러오는 중…</div>';
   let d;
   try { d = await (await fetch('/api/voice-library/mine')).json(); }
-  catch(e){ box.innerHTML = '<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; return; }
+  catch(e){ box.innerHTML = ErrorHelp.html('network'); return; }
   if (d && d.need_key){
     box.innerHTML = '<div class="hint" style="line-height:1.6">' + esc(d.error||'')
       + '<br><a href="/settings#keys" style="color:var(--accent2)">→ 내 API 키 등록하러 가기</a></div>';
@@ -13329,7 +13365,7 @@ async function searchTypecastVoices(){
   const q=(document.getElementById('tcvQ')||{}).value||'';
   let d;
   try{ d=await (await fetch('/api/typecast/voices?limit=60&q='+encodeURIComponent(q))).json(); }
-  catch(e){ box.innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; return; }
+  catch(e){ box.innerHTML=ErrorHelp.html('network'); return; }
   if(!d || !d.ok){
     box.innerHTML='<div class="hint" style="color:var(--fire)">'+esc((d&&d.error)||'불러오지 못했습니다')+'</div>'; return; }
   TCV_RESULTS = d.voices||[];
@@ -13362,7 +13398,7 @@ async function loadTypecastMine(){
   box.innerHTML='<div class="hint">불러오는 중…</div>';
   let d;
   try{ d=await (await fetch('/api/typecast/voices/mine')).json(); }
-  catch(e){ box.innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; return; }
+  catch(e){ box.innerHTML=ErrorHelp.html('network'); return; }
   if(d && d.need_key){
     box.innerHTML='<div class="hint" style="line-height:1.6">'+esc(d.error||'')
       +'<br><a href="/settings#keys" style="color:var(--accent2)">→ 내 API 키 등록하러 가기</a></div>';
@@ -14395,7 +14431,9 @@ async function refreshFinalThumb(){
     const d=await (await fetch('/api/produce/thumb/selected/'+encodeURIComponent(MIX_JOB))).json();
     // 🖼 '영상 맨 앞에 넣기' 체크 복원 — THUMB_STATE는 페이지 메모리라 새로고침하면 비지만
     //    이 값은 DB(thumbnail_json)에서 온다. 이 API를 8단계가 이미 부르고 있어 여기 얹는다.
-    { const cb=document.getElementById('thumbIntro'); if(cb && d) cb.checked=!!d.intro; }
+    // 이 작업에 저장된 값이 있으면 그것, 없으면 **이 사람의 마지막 값**(2026-09-01 사장님).
+    { const cb=document.getElementById('thumbIntro');
+      if(cb && d) cb.checked = d.intro_set ? !!d.intro : !!d.intro_default; }
     if(d && d.ok && d.url){
       FINAL_THUMB_URL=d.url;
       box.innerHTML=`<img src="${esc(d.url)}" alt="선택 썸네일" style="border-radius:12px;border:2px solid var(--accent2)">`
@@ -15931,6 +15969,24 @@ function removeThumbLayer(i){
   renderThumbLayers(); renderThumbCanvas();
 }
 
+
+// ── 🧰 얹을 재료 탭 · ⭐ 내 프리셋(2026-09-01) ──────────────────────────────
+// 어느 줄을 보여줄지 정하는 곳은 여기 하나다(0순위-B) — 탭이 늘어도 여기만 고친다.
+const THUMB_KITS = ['sticker', 'shape', 'badge'];
+let THUMB_KIT = 'sticker';
+function showThumbKit(kind){
+  if (THUMB_KITS.indexOf(kind) < 0) return;
+  THUMB_KIT = kind;
+  THUMB_KITS.forEach(k => {
+    const pane = document.getElementById('thKit_' + k);
+    if (pane) pane.hidden = (k !== kind);
+    const tab = document.getElementById('thKitTab_' + k);
+    // .on은 이 페이지의 탭 활성 표시다(다른 탭들과 같은 규약을 그대로 쓴다).
+    // 하네스·옛 화면엔 classList가 없는 대역 요소가 온다 — 없으면 조용히 건너뛴다.
+    if (tab && tab.classList) tab.classList.toggle('on', k === kind);
+  });
+}
+
 function applyThumbPreset(i){
   const p = HC_PRESETS.filter(x => x.cat === '썸네일')[i]; if (!p) return;
   if (!THUMB_STATE.layers.length) addThumbLayer();   // 레이어 없어도 샘플 누르면 바로 만들어 적용
@@ -16045,7 +16101,14 @@ function applyThumbTitle(i){
   renderThumbCanvas();    // 미리보기에 즉시 반영(자동 줄바꿈·크기맞춤은 drawThumb이 처리)
 }
 
+// 체크 상태를 이 사람의 기본값으로 남긴다 — 실패해도 화면은 그대로 둔다(렌더 때 다시 보낸다).
+function rememberThumbIntro(on){
+  try{ fetch('/api/produce/thumb/intro_default', {method:'POST',
+    headers:{'Content-Type':'application/json'}, body:JSON.stringify({on: !!on})}); }catch(e){}
+}
+
 function renderThumbLayers(){
+  showThumbKit(THUMB_KIT);      // 탭 표시(활성 칠·숨김)를 매번 상태와 맞춘다
   document.getElementById('thumbLayers').innerHTML = THUMB_STATE.layers.map((L, i) => `
     <div onclick="selectThumbLayer(${i})" style="display:flex;justify-content:space-between;
          align-items:center;padding:6px 9px;border-radius:6px;cursor:pointer;
@@ -16097,6 +16160,7 @@ function renderThumbLayers(){
       `<button class="tab" style="flex:0 0 auto;min-width:auto;padding:5px 11px;font-size:12px;
         border-left:10px solid ${p.box ? p.box_color : (p.color2 || p.color)}"
         onclick="applyThumbPreset(${i})">${p.name}</button>`).join('');
+  renderMyThumbPresets();
   const L = THUMB_STATE.layers[THUMB_STATE.sel];
   // 도형은 이모지와 달리 **색이 먹는다**(벡터로 직접 그리므로) — 색 고르개를 준다.
   if (L && L.kind === 'shape'){
@@ -16267,7 +16331,6 @@ function renderThumbLayers(){
 // ✨강조 효과 버튼 — 고민 없이 딸깍(꾸미기 프리셋 철학). 켜짐/꺼짐 토글이라 되돌리기도 한 번.
 const THUMB_FX_BTNS = [
   {key: 'underline', val: 'line',  label: '밑줄'},
-  {key: 'underline', val: 'brush', label: '붓 밑줄'},
   {key: 'marker',    val: true,    label: '형광펜'},
   {key: 'glow',      val: true,    label: '네온'},
 ];
@@ -17149,10 +17212,10 @@ async function s2LoadStyles(){
     const d=await (await fetch('/api/script/styles'+(cat?('?category='+encodeURIComponent(cat)):''))).json();
     if(!d.ok){ row.innerHTML='<div class="hint" style="color:var(--fire)">스타일을 불러오지 못했습니다</div>'; return; }
     S2.styles=d.styles||[]; S2.category=d.category||''; S2.loadedStyles=true;
-  }catch(e){ row.innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; return; }
+  }catch(e){ row.innerHTML=ErrorHelp.html('network'); return; }
   // ★렌더는 try 밖에서 부른다(2026-08-27 사장님 "대본스타일 안 나옴").
   //   종전엔 이 호출이 위 try 안에 있어서, **화면 그리다 난 예외**까지 catch가 삼켜
-  //   '네트워크 오류'로 찍혔다. 실제 원인은 씨앗 영상의 structure가 아직 없을 때
+  //   ErrorHelp.text('network')로 찍혔다. 실제 원인은 씨앗 영상의 structure가 아직 없을 때
   //   `.segments.map`이 터진 것이라, 분석이 끝나면 "갑자기 또 되는" 모양이 됐다.
   try{ s2RenderStyles(); }
   catch(e){
@@ -17390,7 +17453,7 @@ async function s2Generate(){
           return j||{ok:false,error:'생성 실패'};
         }catch(e){
           if(t===0){ await _sleep(2500); continue; }
-          return {ok:false,error:'네트워크 오류'};
+          return {ok:false,error:ErrorHelp.text('network')};
         }
       }
     };
@@ -17738,7 +17801,7 @@ async function s2OpenBank(i,j){
             + list.map((t,k)=>`<div class="s2-cand"><span class="tx" onclick="s2PickTmpl(${i},${j},${k})">${s2Tmpl(t)}</span><button class="s2-raw" title="AI를 안 거치고 틀 원문을 그대로 넣습니다 — {빈칸}은 직접 채우셔야 합니다" onclick="event.stopPropagation();s2UseTmplRaw(${i},${j},${k})">이대로</button></div>`).join('')
           : '<div class="hint" style="margin-top:8px">이 칸은 고를 수 있는 문장틀이 없습니다 — 위 [AI 자동 생성]으로 새로 쓰거나 문장을 직접 고치세요.</div>');
     S2._tmpl=list;
-  }catch(e){ bank.innerHTML='<div class="hint" style="color:var(--fire)">네트워크 오류</div>'; }
+  }catch(e){ bank.innerHTML=ErrorHelp.html('network'); }
 }
 // 틀을 고르면 **그 자리에서 이 대본 소재로 새 문장을 만든다**(2026-08-17 사장님 B안).
 // ★예전엔 틀 원문을 그대로 꽂아 `이것 때문에 {가족}한테…`처럼 중괄호가 남았다.

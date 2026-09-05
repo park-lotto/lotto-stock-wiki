@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>대본 스타일 축 12종</title>
+<style>
+:root{
+  --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --line:#2b303c;
+  --ink:#e9ecf1; --dim:#9aa3b2; --faint:#6b7482;
+  --gold:#f2c14e; --hot:#ff6b4a; --bad:#f2545b; --blue:#63b3ff; --mint:#4ade80;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Pretendard","Malgun Gothic","맑은 고딕",system-ui,sans-serif;
+  line-height:1.6;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1160px;margin:0 auto;padding:42px 24px 90px}
+header.top{border-bottom:1px solid var(--line);padding-bottom:24px;margin-bottom:20px}
+h1{font-size:28px;margin:0 0 9px;letter-spacing:-.5px}
+.sub{color:var(--dim);font-size:14px;max-width:860px}
+.src{margin-top:13px;font-size:12.5px;color:var(--faint);
+  background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:9px 14px;display:inline-block}
+.src b{color:var(--dim);font-weight:600}
+h2{font-size:18px;margin:40px 0 13px;padding-left:12px;border-left:3px solid var(--gold)}
+.lead{color:var(--dim);font-size:13.5px;margin:-3px 0 15px;padding-left:15px}
+
+.rule{background:#141b18;border:1px solid #2a4d33;border-radius:12px;padding:17px 21px;margin:16px 0 8px;font-size:14px;color:#cfe6d6}
+.rule b{color:var(--mint)}
+.rule code{background:#0d1310;padding:1px 6px;border-radius:4px;font-size:13px;color:var(--gold)}
+
+table{width:100%;border-collapse:collapse;font-size:13.5px;background:var(--panel);
+  border:1px solid var(--line);border-radius:11px;overflow:hidden}
+th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--panel2);font-size:11.5px;letter-spacing:.8px;color:var(--dim);font-weight:700}
+tr:last-child td{border-bottom:none}
+td.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+.hi{color:var(--gold)} .lo{color:var(--bad)} .ok{color:var(--mint)}
+.tw{overflow-x:auto}
+
+.ax{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:15px}
+.ax.big{border-color:#5a4a1e}
+.ahead{display:flex;align-items:baseline;gap:11px;padding:14px 20px;background:var(--panel2);
+  border-bottom:1px solid var(--line);flex-wrap:wrap}
+.ano{font-size:12px;color:var(--faint);font-variant-numeric:tabular-nums;min-width:18px}
+.aname{font-size:17px;font-weight:800;letter-spacing:-.3px}
+.anew{font-size:10px;letter-spacing:.8px;background:#2a4d33;color:var(--mint);border-radius:4px;padding:2px 7px;font-weight:800}
+.aold{font-size:10px;letter-spacing:.8px;background:#3a2f1a;color:var(--gold);border-radius:4px;padding:2px 7px;font-weight:800}
+.acnt{margin-left:auto;font-size:16px;font-weight:800;color:var(--gold);font-variant-numeric:tabular-nums}
+.acnt small{font-size:11px;color:var(--faint);font-weight:500;margin-left:4px}
+.mark{padding:12px 20px;background:#191614;border-bottom:1px solid var(--line);font-size:14.5px;color:var(--gold);font-weight:600;font-family:Consolas,"D2Coding",monospace}
+.mark span{font-size:11px;color:var(--faint);font-weight:700;letter-spacing:1px;display:block;margin-bottom:5px;font-family:inherit}
+.body2{display:grid;grid-template-columns:1fr 1fr}
+@media(max-width:780px){.body2{grid-template-columns:1fr}}
+.col{padding:14px 20px}
+.col+.col{border-left:1px solid #20242e}
+@media(max-width:780px){.col+.col{border-left:none;border-top:1px solid #20242e}}
+.lab{font-size:11px;letter-spacing:1.1px;color:var(--faint);font-weight:700;margin-bottom:7px}
+.real{font-size:12.8px;color:#ded7c6;line-height:1.7}
+.real em{color:var(--gold);font-style:normal;font-weight:700}
+.when{font-size:12.8px;color:var(--dim)}
+.when b{color:var(--ink)}
+.note{font-size:12.5px;color:var(--faint);padding:10px 20px;border-top:1px solid var(--line);background:#13161d}
+.note b{color:var(--hot)}
+.limit{background:#1a1216;border:1px solid #4a2630;border-radius:12px;padding:17px 22px;font-size:13.5px;color:#e3c9cd}
+.limit h3{margin:0 0 9px;font-size:14px;color:var(--bad)}
+.limit ul{margin:0;padding-left:18px} .limit li{margin-bottom:5px}
+footer{margin-top:44px;padding-top:17px;border-top:1px solid var(--line);font-size:12px;color:var(--faint)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <h1>대본 스타일 축 12종</h1>
+  <div class="sub">한 편짜리 대본이 아니라 <b>여러 편에서 반복되는 구조</b>만 골랐다. 데이터가 스스로 내놓은 반복 표현에서 뽑았다.</div>
+  <div class="src">
+    <b>표본</b> 한국어 대본 1,971편 (script_wiki) &nbsp;·&nbsp;
+    <b>방법</b> 2~3어절 반복구 자동 추출 → 소재 교차 확인 &nbsp;·&nbsp;
+    <b>측정</b> 2026-09-05 &nbsp;·&nbsp; <b>로컬 전용</b>
+  </div>
+</header>
+
+<div class="rule">
+  <b>★ 스타일인가, 그냥 한 편인가 — 판정 기준</b><br>
+  <code>반복 3편 이상</code> + <code>소재 2종 이상</code>을 넘어야 스타일로 인정했다.
+  기존 등록 스파인도 근거 편수를 갖고 있다(식당 사장님 비밀 레시피형 58편 · 발명품형 23편).<br>
+  <span style="color:var(--bad)">이 기준으로 앞서 만든 <b>‘해외 거주자형’은 2편이라 탈락</b>했다</span> — 그건 스타일이 아니라 그 영상 한 편이었다.
+</div>
+
+<h2>축 12종 — 반복 편수 순</h2>
+
+<!-- 1 -->
+<div class="ax big">
+  <div class="ahead"><span class="ano">01</span><span class="aname">되나? 의문 훅</span><span class="anew">기존에 없음</span>
+    <span class="acnt">320편<small>소재 전종</small></span></div>
+  <div class="mark"><span>표식</span>훅을 물음표로 끝낸다 — “~하면 요리 완성?” “~된다고?”</div>
+  <div class="body2">
+    <div class="col"><div class="lab">실제 예</div><div class="real">
+      종이에 써있는대로 올리면 <em>요리 완성?</em><br>
+      이대로 오븐에 넣는다고<em>?</em>
+    </div></div>
+    <div class="col"><div class="when"><div class="lab">왜 통하나</div>
+      단정하지 않고 <b>의심을 대신 말해준다</b>. 시청자는 확인하러 끝까지 본다.
+      기존 44개 훅은 전부 단정형(“~하세요”·“~입니다”)이라 <b>이 축이 통째로 비어 있다</b>.
+    </div></div>
+  </div>
+  <div class="note"><b>가장 큰 축</b>이고 모든 소재에 걸린다. 어떤 틀에든 훅만 물음표로 바꿔 얹을 수 있다.</div>
+</div>
+
+<!-- 2 -->
+<div class="ax big">
+  <div class="ahead"><span class="ano">02</span><span class="aname">관찰자 어미</span><span class="anew">기존에 없음</span>
+    <span class="acnt">81편<small>소재 4종</small></span></div>
+  <div class="mark"><span>표식</span>“~해버림” · “~했다고” · “~라는데” · “~된다는 거”</div>
+  <div class="body2">
+    <div class="col"><div class="lab">실제 예</div><div class="real">
+      원가 생각 안 하고 유기농 씨앗을 <em>때려 박아버림</em><br>
+      5천만 자루가 <em>팔려나갔다고</em><br>
+      싹 다 뚫어서 벽에 걸어버리기 시작<em>했다는 거</em>
+    </div></div>
+    <div class="col"><div class="when"><div class="lab">왜 통하나</div>
+      <b>말투 하나로 화자가 바뀐다.</b> 파는 사람(“~해요”)이 아니라 <b>구경하는 사람</b>이 된다.
+      기존 44개는 화자가 거의 전부 “직접(나)”라 광고 색이 짙다.
+    </div></div>
+  </div>
+  <div class="note">축이라기보다 <b>다른 축에 얹는 말투 스위치</b>다. 어떤 틀이든 이 어미로 바꾸면 제3자 시점이 된다.</div>
+</div>
+
+<!-- 3 -->
+<div class="ax big">
+  <div class="ahead"><span class="ano">03</span><span class="aname">어디서 샀냐고</span><span class="anew">기존에 없음</span>
+    <span class="acnt">63편<small>소재 5종</small></span></div>
+  <div class="mark"><span>표식</span>마무리에 “지인들마다 이거 어디서 샀냐고 물어보더라고요”</div>
+  <div class="body2">
+    <div class="col"><div class="lab">실제 대본 (13만)</div><div class="real">
+      … 활용도가 진짜 좋은데 <em>차에 타는 지인들마다 이거 어디서 샀냐고 항상 물어보더라고요</em>
+    </div></div>
+    <div class="col"><div class="when"><div class="lab">왜 통하나</div>
+      내가 좋다고 말하는 대신 <b>남이 궁금해했다</b>고 말한다.
+      사회증거형은 “남들이 다 쓴다”인데 이건 <b>“남들이 나한테 물어본다”</b> — 자랑이 아니라 증거다.
+    </div></div>
+  </div>
+  <div class="note"><b>끝에 붙이는 한 문장</b>이다. 다른 틀 어디에나 마지막 칸으로 얹을 수 있다.</div>
+</div>
+
+<!-- 4 -->
+<div class="ax">
+  <div class="ahead"><span class="ano">04</span><span class="aname">솔직 혹평</span><span class="anew">기존에 없음</span>
+    <span class="acnt">45편<small>소재 4종</small></span></div>
+  <div class="mark"><span>표식</span>“맛없” · “아쉬” · “별로” · “기대 이하” · “굳이 살”</div>
+  <div class="body2">
+    <div class="col"><div class="lab">실제 대본 (105만)</div><div class="real">
+      … 9분 정도만 돌렸고 면 꺼내서 먹어봤는데 <em>이거 뭐 면 식감이 나쁘지…</em>
+      <div style="margin-top:6px;color:var(--faint);font-size:12px">→ 결론: “그냥 냄비에 삶아 먹으라”</div>
+    </div></div>
+    <div class="col"><div class="when"><div class="lab">왜 통하나</div>
+      기존 44개는 <b>전부 좋다고만 한다</b>. 한 번 솔직하면 그 다음 추천이 믿긴다.
+    </div></div>
+  </div>
+  <div class="note"><b>주의</b> 파는 물건엔 못 쓴다. <b>대안·경쟁품</b>을 깎는 쪽으로 변형해 쓴다.</div>
+</div>
+
+<!-- 5 -->
+<div class="ax">
+  <div class="ahead"><span class="ano">05</span><span class="aname">남의 집 비교</span><span class="anew">기존에 없음</span>
+    <span class="acnt">38편<small>소재 4종</small></span></div>
+  <div class="mark"><span>표식</span>“우리 집은 ~ / 근데 친구네는 ~”</div>
+  <div class="body2">
+    <div class="col"><div class="lab">실제 대본</div><div class="real">
+      <em>우리 집 현관은</em> 신발들이 널브러져 난장판이거든요 <em>근데 친구네는</em> 슬림한 수납장에 신발이 싹 숨겨져 있더라고요
+    </div></div>
+    <div class="col"><div class="when"><div class="lab">왜 통하나</div>
+      <b>내 집을 못난 쪽에 둔다.</b> 자랑이 아니라 부러워하는 위치라 거부감이 없다.
+      기존 44개에 <b>비교 축이 없다</b>.
+    </div></div>
+  </div>
+  <div class="note">비교는 <b>공간·상태</b>로 한다. 가격으로 바꾸면 예산 선언형과 겹친다.</div>
+</div>
+
+<!-- 6 -->
+<div class="ax">
+  <div class="ahead"><span class="ano">06</span><span class="aname">~인 줄 알았는데</span><span class="anew">기존에 없음</span>
+    <span class="acnt">35편<small>소재 4종</small></span></div>
+  <div class="mark"><span>표식</span>“그냥 ○○인 줄 알았는데 알고 보니 ~”</div>
+  <div class="body2">
+    <div class="col"><div class="lab">실제 대본</div><div class="real">
+      … <em>그냥 낙서인 줄 알았는데</em> 엄마한텐 이런 것까지 다 추억이구나 싶어서 괜히 뭉클하더라고요
+    </div></div>
+    <div class="col"><div class="when"><div class="lab">왜 통하나</div>
+      <b>내가 먼저 오해했다</b>고 인정하고 뒤집는다.
+      정체의문형은 감추는 것이고 이건 <b>잘못 알고 있었다</b>는 고백이라 결이 다르다.
+    </div></div>
+  </div>
+  <div class="note">감정으로 닫는 편이 많다(뭉클·괜히). 정보형보다 <b>사연형</b>에 맞는다.</div>
+</div>
+
+<!-- 7 -->
+<div class="ax">
+  <div class="ahead"><span class="ano">07</span><span class="aname">보고 진짜 충격받았어요</span><span class="anew">기존에 없음</span>
+    <span class="acnt">28편<small>소재 7종</small></span></div>
+  <div class="mark"><span>표식</span>“저 이거 보고 진짜 충격받았어요” — 첫 문장 고정</div>
+  <div class="body2">
+    <div class="col"><div class="lab">실제 대본 (12만)</div><div class="real">
+      <em>저 이거 보고 진짜 충격받았어요.</em> 전셋집으로 이사 왔는데 바닥이 완전 까맣고 더러운 거예요 … 30년 묵은 때들이 싹 녹아버리고
+    </div></div>
+    <div class="col"><div class="when"><div class="lab">왜 통하나</div>
+      <b>소재 7종에 걸린다</b> — 이번에 뽑은 축 중 <b>가장 폭이 넓다</b>.
+      결과를 먼저 감정으로 선언하고 사연을 푼다.
+    </div></div>
+  </div>
+  <div class="note">“충격”의 대상이 <b>제품이 아니라 결과</b>여야 한다. 제품에 충격받으면 광고로 읽힌다.</div>
+</div>
+
+<!-- 8 -->
+<div class="ax">
+  <div class="ahead"><span class="ano">08</span><span class="aname">셀프 반박</span><span class="anew">기존에 없음</span>
+    <span class="acnt">25편<small>소재 4종</small></span></div>
+  <div class="mark"><span>표식</span>예상 반론을 <b>따옴표 대사</b>로 먼저 말하고 깬다</div>
+  <div class="body2">
+    <div class="col"><div class="lab">실제 대본 (64만)</div><div class="real">
+      <em>“에이 전자레인지로 돌리면 면 불어서 맛없는 거 아님?”</em>
+      적은 물에 삶아져서 갇힌 녹말 때문에 오히려 소스가 면에 쫙 배어들어
+    </div></div>
+    <div class="col"><div class="when"><div class="lab">왜 통하나</div>
+      보는 사람이 <b>반박할 게 뻔한 제품</b>에 쓴다. 기존 44개는 반론을 아예 다루지 않는다.
+    </div></div>
+  </div>
+  <div class="note">반박은 반드시 <b>대사체</b>로. 설명조(“~라고 생각하실 수 있는데”)로 쓰면 힘이 빠진다.</div>
+</div>
+
+<!-- 9 -->
+<div class="ax">
+  <div class="ahead"><span class="ano">09</span><span class="aname">제조사도 몰랐던 쓰임</span><span class="anew">기존에 없음</span>
+    <span class="acnt">22편<small>소재 4종</small></span></div>
+  <div class="mark"><span>표식</span>“원래는 ○○용이었음” → 만든 사람 대사 → 쓰는 사람 대사</div>
+  <div class="body2">
+    <div class="col"><div class="lab">실제 대본 (65만)</div><div class="real">
+      <em>원래는</em> 가죽 구멍 뚫을 때 쓰던 타공기였음. 제작자가 <em>“손가락 찍히는 건 못 참지”</em> 하면서 자석을 박은 건데
+      자취생들이 <em>“이거 고무장갑 뚫으면 대박이겠는데?”</em> 라며
+    </div></div>
+    <div class="col"><div class="when"><div class="lab">왜 통하나</div>
+      오용형과 다르다 — 오용형은 사용자가 다르게 쓰는 것, 이건 <b>제조사가 딴 이유로 넣은 기능</b>이 대박난 것.
+    </div></div>
+  </div>
+  <div class="note">대사 <b>2개가 짝</b>이다. 만든 사람 → 쓰는 사람. 그 간격이 재미다.</div>
+</div>
+
+<!-- 10 -->
+<div class="ax">
+  <div class="ahead"><span class="ano">10</span><span class="aname">이게 뭐냐고 했더니</span><span class="anew">기존에 없음</span>
+    <span class="acnt">19편<small>소재 4종</small></span></div>
+  <div class="mark"><span>표식</span>“(가족이) 이런 걸 달아둔 거예요 — 이게 뭐냐고 했더니”</div>
+  <div class="body2">
+    <div class="col"><div class="lab">실제 대본 (15만)</div><div class="real">
+      남편한테 잠깐 둘째 맡겼더니 애 몸에 이런 걸 달아둔 거예요 <em>이게 뭐냐고 했더니</em> 쌍둥이 키우는 친구가 … 쥐여줬다는 거예요
+    </div></div>
+    <div class="col"><div class="when"><div class="lab">왜 통하나</div>
+      내가 산 게 아니라 <b>남이 먼저 쓰고 있었다</b>. 발견자가 아니라 <b>목격자</b>라 광고 색이 옅다.
+      가족갈등 반전형과 인접하지만 <b>갈등이 없다</b>.
+    </div></div>
+  </div>
+  <div class="note">출처가 2단계다(남편 ← 친구). 한 다리 건너면 더 자연스럽다.</div>
+</div>
+
+<!-- 11 -->
+<div class="ax">
+  <div class="ahead"><span class="ano">11</span><span class="aname">제일 잘 산 거 꼽으라면</span><span class="anew">기존에 없음</span>
+    <span class="acnt">19편<small>소재 2종</small></span></div>
+  <div class="mark"><span>표식</span>“○○ 중에 제일 잘 산 아이템 꼽으라면 이게 1등”</div>
+  <div class="body2">
+    <div class="col"><div class="lab">실제 대본 (13만)</div><div class="real">
+      <em>차량용품 중에 제일 잘 산 아이템 꼽으라면 이게 1등이더라고요</em> 커피 홀더에 물 놔두려고 하면 항상 꽉 차 있고 …
+    </div></div>
+    <div class="col"><div class="when"><div class="lab">왜 통하나</div>
+      나열형의 <b>반대</b>다 — 여러 개를 늘어놓지 않고 <b>딱 하나만</b> 꼽는다.
+      “많이 써봤다”는 경험이 전제로 깔려 권위가 생긴다.
+    </div></div>
+  </div>
+  <div class="note">소재 2종에만 걸려 <b>범위가 좁다</b>. 차량·주방처럼 품목이 많은 분야에서만 성립한다.</div>
+</div>
+
+<!-- 12 -->
+<div class="ax">
+  <div class="ahead"><span class="ano">12</span><span class="aname">절대 버리지 마세요</span><span class="aold">금지경고형 변형</span>
+    <span class="acnt">13편<small>소재 4종</small></span></div>
+  <div class="mark"><span>표식</span>“목 늘어난 티셔츠 절대 버리지 마세요”</div>
+  <div class="body2">
+    <div class="col"><div class="lab">실제 대본</div><div class="real">
+      <em>목 늘어난 티셔츠 절대 버리지 마세요</em> … 세탁소 사장님이 서비스로 우글거리던 목 라인을 새 옷처럼 만들어 주셨더라고요 … 물에 살짝 풀어서 목 부분만 쏙 담갔더니
+    </div></div>
+    <div class="col"><div class="when"><div class="lab">기존과의 차이</div>
+      금지경고형은 <b>하지 마라(위험)</b>인데 이건 <b>버리지 마라(살릴 수 있다)</b>다.
+      경고가 아니라 <b>구제</b>라서 뒤에 오는 감정이 다르다.
+    </div></div>
+  </div>
+  <div class="note">이미 있는 <b>망가진 물건</b>이 전제다. 새 물건 소개에는 못 쓴다.</div>
+</div>
+
+<h2>12종 한눈에</h2>
+<div class="tw">
+<table>
+  <tr><th>#</th><th>축</th><th style="text-align:right">반복</th><th style="text-align:right">소재</th><th>성격</th></tr>
+  <tr><td>01</td><td><b>되나? 의문 훅</b></td><td class="num hi">320</td><td class="num">전종</td><td class="ok">훅 스위치 — 어느 틀에나 얹는다</td></tr>
+  <tr><td>02</td><td><b>관찰자 어미</b></td><td class="num hi">81</td><td class="num">4</td><td class="ok">말투 스위치 — 화자를 바꾼다</td></tr>
+  <tr><td>03</td><td><b>어디서 샀냐고</b></td><td class="num hi">63</td><td class="num">5</td><td class="ok">마무리 칸 — 어느 틀에나 얹는다</td></tr>
+  <tr><td>04</td><td>솔직 혹평</td><td class="num">45</td><td class="num">4</td><td>독립 틀</td></tr>
+  <tr><td>05</td><td>남의 집 비교</td><td class="num">38</td><td class="num">4</td><td>독립 틀</td></tr>
+  <tr><td>06</td><td>~인 줄 알았는데</td><td class="num">35</td><td class="num">4</td><td>독립 틀</td></tr>
+  <tr><td>07</td><td>보고 진짜 충격받았어요</td><td class="num">28</td><td class="num hi">7</td><td>독립 틀 — <b>소재 폭 최대</b></td></tr>
+  <tr><td>08</td><td>셀프 반박</td><td class="num">25</td><td class="num">4</td><td>중간 칸 — 얹을 수 있다</td></tr>
+  <tr><td>09</td><td>제조사도 몰랐던 쓰임</td><td class="num">22</td><td class="num">4</td><td>독립 틀</td></tr>
+  <tr><td>10</td><td>이게 뭐냐고 했더니</td><td class="num">19</td><td class="num">4</td><td>독립 틀</td></tr>
+  <tr><td>11</td><td>제일 잘 산 거 꼽으라면</td><td class="num">19</td><td class="num lo">2</td><td>독립 틀 — 범위 좁음</td></tr>
+  <tr><td>12</td><td>절대 버리지 마세요</td><td class="num">13</td><td class="num">4</td><td>기존 금지경고형의 변형</td></tr>
+  <tr><td colspan="5" style="color:var(--bad);font-size:12.5px">탈락 — 해외 거주자형 <b>2편</b> · 대사 인용 <b>2편</b> : 반복이 없어 스타일이 아니다</td></tr>
+</table>
+</div>
+
+<h2>★ 이번에 알게 된 것</h2>
+<div class="rule" style="background:#191614;border-color:#4a3f22;color:#e5d9b8">
+  <b style="color:var(--gold)">축에는 두 종류가 있다.</b><br>
+  <b style="color:var(--gold)">① 독립 틀</b> — 대본 전체 구조를 정한다 (04·05·06·07·09·10·11·12)<br>
+  <b style="color:var(--gold)">② 스위치</b> — 어느 틀에든 얹는 부품이다 (01 훅 · 02 말투 · 03 마무리 · 08 중간 반박)<br>
+  <span style="color:var(--dim)">스위치 4개를 독립 틀 8개에 곱하면 조합이 크게 늘어난다. 기존 44개는 전부 ①만 있다.</span>
+</div>
+
+<h2>한계</h2>
+<div class="limit">
+  <h3>확인한 것과 못 한 것</h3>
+  <ul>
+    <li>반복 편수·소재 종수는 <b>1,971편 실측</b>이다. 다만 <b>표현 사전은 내가 짠 정규식</b>이라 놓친 표현이 있을 수 있다.</li>
+    <li><b>조회수와 연결하지 않았다</b> — “몇 편에서 반복되나”만 쟀고 “그래서 잘 되나”는 안 쟀다. 표본 대부분에 조회수가 안 붙어 있다.</li>
+    <li>즉 <b>이 12종은 ‘많이 쓰인다’는 뜻이지 ‘잘 된다’는 뜻이 아니다.</b></li>
+    <li>기존 44개와는 <b>이름·상황유형·beat_roles</b>로만 대조했다. templates 문장까지는 안 봤다.</li>
+    <li>칸 배열(어느 role을 어떤 순서로)은 이 문서에 넣지 않았다 — 축을 먼저 확정한 뒤 짜는 게 맞다.</li>
+  </ul>
+</div>
+
+<footer>서버 reference.db · script_wiki 한국어 1,971편 · spine 44개 대조 · 2026-09-05 · <b>로컬 전용</b></footer>
+
+</div>
+</body>
+</html>

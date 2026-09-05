@@ -1020,7 +1020,16 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
 /* 구절 맞춤 — 이 카드들이 구절 수만큼 들어간다는 표시(2026-08-29 사장님 "파란색 테두리") */
 .tbcut.inuse{outline:2px solid #4ac1ff;outline-offset:-2px}
 .boxbtn{color:#ffd24a}
-</style></head><body>
+</style><style>
+/* 에러 설명(error_help.js가 그린다) — 빨간 한 줄로 끝내지 않고 왜·무엇을 함께 보여준다 */
+.errHelp{border-left:3px solid var(--fire,#e5484d);background:rgba(229,72,77,.07);
+  padding:8px 10px;border-radius:6px;margin:6px 0;line-height:1.55;text-align:left}
+.errHelp b{color:var(--fire,#e5484d);font-size:14px}
+.errHelp .errWhy{color:var(--sub,#8b8b8b);font-size:13px;margin-top:3px}
+.errHelp .errTodo{font-size:13px;margin-top:4px}
+</style>
+<script src="/error_help.js"></script>
+</head><body>
 
 <header style="display:none">
   <div>
@@ -1051,6 +1060,8 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
       <input type="checkbox" onchange="toggleOne(this.checked)"> 1장=1컷</label>
     <button type="button" id="ttsBtn" class="act" style="padding:3px 10px;font-size:11.5px"
             onclick="makeTts()" title="음성이 없는 칸의 음성을 만듭니다(1~2분)">🔊 음성 만들기</button>
+    <button type="button" class="act" id="undobtn" style="padding:3px 10px;font-size:11.5px" disabled
+            title="되돌릴 편집이 아직 없습니다" onclick="undoWork()">↩ 되돌리기</button>
     <button type="button" class="act" id="tightbtn" title="글자를 접고 화면(영상)을 크게 봅니다" onclick="toggleTight()">▦ 촘촘히</button>
     <!-- ★지금 화면이 새 코드인지 눈으로 바로 알 수 있게(2026-08-26). 이게 없어서
          '고쳤는데 안 된다'가 캐시 때문인지 진짜 버그인지 매번 헤맸다. -->
@@ -1852,7 +1863,7 @@ function toggleTight(){
   localStorage.setItem(TIGHT_KEY, document.body.classList.contains('tight') ? '0' : '1');
   _tightApply();
 }
-const BUILD_TAG = 'F28';   // 밴드 높이 고정은 촘촘히 전용 — 넓게는 내용만큼 자란다
+const BUILD_TAG = 'F29';   // 밴드 높이 고정은 촘촘히 전용 — 넓게는 내용만큼 자란다
 (function(){ const b=document.getElementById('buildtag'); if(b) b.textContent = BUILD_TAG; })();
 
 function toggleHints(){
@@ -3165,16 +3176,67 @@ function beatDrop(i, ev){
 //   네가 만든 걸로 되어 있어"). 새로고침·페이지 재빌드에도 남는다. 잡별로 따로 저장하므로
 //   다른 잡을 열어도 안 섞인다. '처음으로'를 누르면 지운다.
 // SAVE_KEY는 boot()가 job_id 확정 후 채운다(위 let 선언).
+// 지금 편집 상태를 통째로 뜨는다. 저장본·되돌리기 스냅샷이 **같은 모양**이라
+// applyWork 하나로 둘 다 복원된다(0순위-B).
+function snapWork(){
+  return {
+    mode, lists, chosen: [...chosen], narr: NARR, trims: TRIMS, merges: MERGES,
+    stretch: STRETCH, autoadd: AUTOADD, extra: EXTRA,
+    fixlen: FIXLEN,        // ✋ 손으로 정한 컷 길이(2026-08-29 — "저장을 빼먹어" 경고의 해소)
+    phraseOff: PHRASE_SYNC  // 구절 맞춤 끔 표시(기본 켬이라 끈 칸만 남는다)
+    // ★at(저장 시각)은 일부러 미포함 — 매번 달라져 "바뀜 것이 없으면 안 쌓는다"를
+    //   통째로 무력화한다. 저장할 때만 saveWork가 붙인다.
+  };
+}
+// ══ ↩ 되돌리기(2026-09-05 사장님 "장면을 변경하고 다시 뒤로가기 버튼이 있으면 좋겠어") ══
+//   모든 편집은 끝나면 saveWork를 부른다 — 그래서 되돌리기를 **그 한 곳에만** 달았다.
+//   조작 30여 곳에 push를 뿌리면 반드시 몇 군데를 빼먹고, 그 조작만 조용히 못 되돌린다.
+const UNDO = [];              // 이전 상태들(오래된 것부터). 상한까지만 든다
+const UNDO_MAX = 60;
+let _undoCur = null;          // 지금 화면의 상태(문자열) — 다음 편집 때 이게 스택으로 간다
+let _undoing = false;         // 되돌리는 중 — 그 저장은 스택에 쌓지 않는다
+function undoMark(){          // boot 끝에 한 번 — 첫 편집도 되돌릴 수 있게 기준점을 박는다
+  // 화면을 여는 동안에도 render→saveWork가 여러 번 돌고(자동 음성·필름 열기 등),
+  // 그건 사람의 편집이 아니다. 그래서 여기서 스택을 비운다 — 안 비우면
+  // 화면을 열자마자 [되돌리기]가 켜져 있고, 누르면 내가 하지도 않은 것이 되돌려진다.
+  UNDO.length = 0;
+  try{ _undoCur = JSON.stringify(snapWork()); }catch(e){ _undoCur = null; }
+  undoBtnSync();
+}
+function undoBtnSync(){
+  const b = document.getElementById('undobtn');
+  if (!b) return;
+  b.disabled = !UNDO.length;
+  b.style.opacity = UNDO.length ? '1' : '.4';
+  b.title = UNDO.length ? ('방금 한 편집을 한 단계 되돌립니다 (Ctrl+Z) · ' + UNDO.length + '단계 남음')
+                        : '되돌릴 편집이 아직 없습니다';
+}
+function undoWork(){
+  if (!UNDO.length){ nsay('되돌릴 편집이 없어요'); return; }
+  const prev = UNDO.pop();
+  let w = null;
+  try{ w = JSON.parse(prev); }catch(e){}
+  if (!w || !applyWork(w)){ nsay('⚠ 되돌리지 못했어요 — 저장본 모양이 달라졌습니다'); undoBtnSync(); return; }
+  _undoing = true;                      // 되돌린 저장이 다시 스택에 쌓이면 무한루프다
+  try{ render(); }                      // render가 끝에서 saveWork를 부른다 → 화면·저장·서버 한꺼번에
+  finally{ _undoing = false; }
+  _undoCur = prev;
+  undoBtnSync();
+  nsay('↩ 한 단계 되돌렸어요' + (UNDO.length ? (' (' + UNDO.length + '단계 더 되돌릴 수 있어요)') : ''));
+}
 function saveWork(){
-  try{
-    localStorage.setItem(SAVE_KEY, JSON.stringify({
-      mode, lists, chosen: [...chosen], narr: NARR, trims: TRIMS, merges: MERGES,
-      stretch: STRETCH, autoadd: AUTOADD, extra: EXTRA,
-      fixlen: FIXLEN,        // ✋ 손으로 정한 컷 길이(2026-08-29 — "저장을 빼먹어" 경고의 해소)
-      phraseOff: PHRASE_SYNC, // 구절 맞춤 끔 표시(기본 켬이라 끈 칸만 남는다)
-      at: new Date().toISOString()
-    }));
-  }catch(e){}
+  let snap = null, cur = null;
+  try{ snap = snapWork(); cur = JSON.stringify(snap); }catch(e){}
+  // 달라졌을 때만 직전 상태를 스택에 쌓는다 — 똑같은 저장이 연달아 오면
+  // 되돌리기를 여러 번 눌러도 화면이 안 변하는 빈 단계가 생긴다.
+  if (!_undoing && _undoCur && cur && _undoCur !== cur){
+    UNDO.push(_undoCur);
+    if (UNDO.length > UNDO_MAX) UNDO.shift();
+  }
+  if (cur) _undoCur = cur;
+  undoBtnSync();
+  // 저장본에는 at을 붙인다 — serverEditIsNewer가 이 시각을 본다.
+  try{ if (snap) localStorage.setItem(SAVE_KEY, JSON.stringify(Object.assign({}, snap, {at: new Date().toISOString()}))); }catch(e){}
   const el = document.getElementById('savedmsg');
   if (el) el.textContent = '💾 내 편집 저장됨 (새로고침해도 남습니다)';
   autoApply();          // ★서버에도 자동으로 얹는다(아래)
@@ -3250,7 +3312,17 @@ function loadWork(){
   try{
     const raw = localStorage.getItem(SAVE_KEY);
     if (!raw) return false;
-    const w = JSON.parse(raw);
+    if (!applyWork(JSON.parse(raw))) return false;
+    const el = document.getElementById('savedmsg');
+    if (el) el.textContent = '💾 이어서 편집 중 (저장된 배치를 불러왔습니다)';
+    return true;
+  }catch(e){ return false; }
+}
+// ★저장본 하나(=saveWork가 만드는 모양)을 화면 상태에 그대로 얹는다.
+//   저장본 불러오기와 되돌리기(undoWork)가 **같은 함수**를 쓴다 —
+//   복원 규칙을 두 군데 적으면 반드시 어긋난다(0순위-B).
+function applyWork(w){
+  try{
     if (!w || !Array.isArray(w.lists) || w.lists.length !== DATA.beats.length) return false;
     mode = w.mode || 'hand';
     // ★같은 조각이 한 칸에 두 번 들어 있으면 자리 찾기(indexOf)가 늘 첫 번째를 집어
@@ -3280,8 +3352,6 @@ function loadWork(){
       const b = document.getElementById('m-' + x);
       if (b) b.classList.toggle('on', x === mode);
     });
-    const el = document.getElementById('savedmsg');
-    if (el) el.textContent = '💾 이어서 편집 중 (저장된 배치를 불러왔습니다)';
     return true;
   }catch(e){ return false; }
 }
@@ -4005,6 +4075,7 @@ async function boot(){
   loadSfxList().then(l => { if (l && l.length) renderBand(); });
   autoOpenRoll();                  // 필름 자리를 켠 채로 연다
   autoMakeTts();
+  undoMark();                      // ↩ 되돌리기 기준점 — 이걸 안 박으면 **첫 편집**이 되돌려지지 않는다
   stampConfirmSigIfMissing();      // 복원된 옛 미리보기에 지금 편성 지문을 — 편성이 다 실린 뒤라야 계산된다
 }
 
@@ -4098,4 +4169,16 @@ function wireBandPan(){
   }, true);
 }
 boot();
+</script>
+<script>
+// ★Ctrl+Z(mac ⌘Z) = 한 단계 되돌리기. 글자를 치는 칸(대본·숫자)에서는 손대지 않는다
+// — 거긴 브라우저가 주는 글자 되돌리기가 맞다(거기서 가로채면 타이핑을 못 되돌린다).
+document.addEventListener('keydown', function(e){
+  if (!(e.ctrlKey || e.metaKey) || e.shiftKey || e.altKey) return;
+  if ((e.key || '').toLowerCase() !== 'z') return;
+  const t = e.target;
+  if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+  e.preventDefault();
+  if (typeof undoWork === 'function') undoWork();
+});
 </script></body></html>

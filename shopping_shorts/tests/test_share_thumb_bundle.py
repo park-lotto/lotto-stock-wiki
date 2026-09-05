@@ -147,7 +147,12 @@ def test_selected_endpoint_null_when_none(env):
     assert r.status_code == 200
     # intro = 🖼 '썸네일을 영상 맨 앞에 넣기' 체크 상태(2026-08-18 신설). 안 골랐어도 함께 준다
     # — 8단계가 이 응답 하나로 카드와 체크박스를 같이 복원한다.
-    assert r.json() == {"ok": True, "name": None, "url": None, "intro": False}
+    # intro_default·intro_set = 이 사람의 마지막 체크값(2026-09-01 신설). 아직 안 고른 job은
+    # 이 둘을 보고 기본값을 정한다 → 응답에 늘 따라온다. 그래서 통째 비교가 아니라
+    # **이 네 칸이 이 값인지**만 잠근다(새 칸이 늘 때마다 이 테스트가 깨지면 안 된다).
+    got = r.json()
+    for k, v in {"ok": True, "name": None, "url": None, "intro": False}.items():
+        assert got.get(k) == v, f"{k}: {got}"
 
 
 def test_selected_endpoint_404_unknown_job(env):

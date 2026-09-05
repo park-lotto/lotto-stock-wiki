@@ -1,0 +1,28 @@
+{
+ "wrap": true,
+ "font": "TmonMonsori.ttf",
+ "size": 80,
+ "color": "#FFFFFF",
+ "color2": "#5EEAD4",
+ "y": 15,
+ "x": 50,
+ "weight": 900,
+ "outline": true,
+ "outline_color": "#000000",
+ "outline_w": 10,
+ "box": false,
+ "box_color": "#FFFFFF",
+ "box_pad": 16,
+ "box_opacity": 100,
+ "shadow": true,
+ "shadow_color": "#000000",
+ "shadow_d": 4,
+ "text": "요잘알이 재발견해\n돈방석 앉은 국산 발명품",
+ "highlight_rules": [
+  {
+   "keyword": "돈방석 앉은 국산 발명품",
+   "color": "#5EEAD4",
+   "box": false
+  }
+ ]
+}
