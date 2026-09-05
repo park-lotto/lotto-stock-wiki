@@ -24,7 +24,7 @@ GROUPS = [
                    "src_timeout", "src_ai_busy", "yt_blocked"]),
     ("미리보기", ["preview_black", "preview_frozen", "preview_stale"]),
     ("제작·내보내기", ["render_fail", "tts_silent", "caption_remove_fail",
-                  "capcut_bat", "point_short", "save_fail"]),
+                  "capcut_bat", "save_fail"]),
 ]
 
 

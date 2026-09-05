@@ -128,7 +128,7 @@
     /* ── 제작·렌더 ────────────────────────────────────────────── */
     render_fail: {
       title: '영상 만들기가 중간에 실패했어요',
-      why: '차감된 포인트는 자동으로 돌려드렸습니다.',
+      why: '만드는 도중에 멈췄습니다. 만들던 내용은 그대로 남아 있습니다.',
       todo: '다시 만들기를 눌러 주세요. 두 번 이상 실패하면 오류 신고를 눌러 주세요.'
     },
     tts_silent: {
@@ -149,11 +149,6 @@
       todo: '자동설정 파일을 다시 내려받아 실행해 주세요.',
       src: 'log.d/내보내기캡컷 09-03'
     },
-    point_short: {
-      title: '남은 포인트가 모자라요',
-      why: '영상 1편을 만들 만큼 포인트가 남지 않았습니다.',
-      todo: '마이페이지에서 남은 포인트를 확인해 주세요.'
-    },
     save_fail: {
       title: '편집 내용이 저장되지 않았어요',
       why: '저장 중 통신이 끊기면 생깁니다. 방금 만진 내용이 서버에 안 갔을 수 있습니다.',
@@ -173,7 +168,6 @@
     if (/키 소진|소진됐|exhausted/.test(t)) return E.gen_exhausted;
     if (/분당|rate limit|429/.test(s)) return E.gen_rate_limit;
     if (/네트워크|failed to fetch|networkerror/.test(s)) return E.network;
-    if (/포인트|크레딧|credit/.test(t)) return E.point_short;
     if (/렌더 실패|만들기 실패/.test(t)) return E.render_fail;
     if (/로그인/.test(t)) return E.src_login_required;
     if (/비공개|삭제/.test(t)) return E.src_private;
