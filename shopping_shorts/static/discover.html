@@ -127,6 +127,15 @@
     .cards{grid-template-columns:repeat(2,1fr);gap:10px}
   }
 </style>
+<style>
+/* 에러 설명(error_help.js가 그린다) — 빨간 한 줄로 끝내지 않고 왜·무엇을 함께 보여준다 */
+.errHelp{border-left:3px solid var(--fire,#e5484d);background:rgba(229,72,77,.07);
+  padding:8px 10px;border-radius:6px;margin:6px 0;line-height:1.55;text-align:left}
+.errHelp b{color:var(--fire,#e5484d);font-size:14px}
+.errHelp .errWhy{color:var(--sub,#8b8b8b);font-size:13px;margin-top:3px}
+.errHelp .errTodo{font-size:13px;margin-top:4px}
+</style>
+<script src="/error_help.js"></script>
 </head>
 <body>
   <main class="main">
@@ -312,7 +321,7 @@ async function blockChannel(username, name, btn){
     DSTATE.items = DSTATE.items.filter(i=> _normUser(i.username)!==u);
     renderDiscover();
   }catch(e){
-    alert('차단 실패: '+e.message);
+    alert('차단이 안 됐어요.\n\n'+ErrorHelp.text(String(e&&e.message||e)));
     if(btn){ btn.disabled=false; btn.textContent='🚫 차단'; }
   }
 }

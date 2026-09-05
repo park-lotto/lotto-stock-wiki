@@ -1020,7 +1020,16 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
 /* 구절 맞춤 — 이 카드들이 구절 수만큼 들어간다는 표시(2026-08-29 사장님 "파란색 테두리") */
 .tbcut.inuse{outline:2px solid #4ac1ff;outline-offset:-2px}
 .boxbtn{color:#ffd24a}
-</style></head><body>
+</style><style>
+/* 에러 설명(error_help.js가 그린다) — 빨간 한 줄로 끝내지 않고 왜·무엇을 함께 보여준다 */
+.errHelp{border-left:3px solid var(--fire,#e5484d);background:rgba(229,72,77,.07);
+  padding:8px 10px;border-radius:6px;margin:6px 0;line-height:1.55;text-align:left}
+.errHelp b{color:var(--fire,#e5484d);font-size:14px}
+.errHelp .errWhy{color:var(--sub,#8b8b8b);font-size:13px;margin-top:3px}
+.errHelp .errTodo{font-size:13px;margin-top:4px}
+</style>
+<script src="/error_help.js"></script>
+</head><body>
 
 <header style="display:none">
   <div>
