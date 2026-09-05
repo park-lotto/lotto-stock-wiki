@@ -1,20 +1,20 @@
 {
  "font": "BlackHanSans.ttf",
- "size": 76,
- "y": 15,
+ "size": 66,
+ "y": 11,
  "leading": 1.15,
  "color": "#FFFFFF",
  "color2": "#3EE8C6",
  "outline": true,
  "outline_color": "#000000",
  "outline_w": 10,
+ "text": "코스트코 본사도 몰랐던\n천재 아이디어",
  "wrap": true,
  "x": 50,
  "weight": 900,
- "text": "제조사도 당황한\n의외의 사용자",
  "highlight_rules": [
   {
-   "keyword": "의외의 사용자",
+   "keyword": "천재 아이디어",
    "color": "#3EE8C6",
    "box": false,
    "box_color": "#3EE8C6"
