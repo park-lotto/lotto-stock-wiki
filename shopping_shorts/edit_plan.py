@@ -5481,6 +5481,21 @@ def apply_scene_lab(plan, seg_map, edits):
     _extra = edits.get("extra_segs")
     if not isinstance(_extra, dict):
         _extra = {}
+    # ★서버에 저장해 둔 조각을 **먼저 깐다**(2026-09-05 사장님 재현).
+    #   09-05 낮 수정으로 검증 통과한 extra_segs를 plan["scene_lab"]에 저장하게 됐지만,
+    #   **다시 읽는 곳이 없었다** — 병합 재료가 클라 payload 하나뿐이라, 화면이 어떤
+    #   이유로든 EXTRA를 못 채운 채 저장하면(자동저장 autoApply는 1.2초마다 돈다)
+    #   film_ id가 seg_map에 없어 아래 필터에 걸리고 scene_override에서 **영구 소멸**한다.
+    #   실측(job fb62adf0aad0): 최종 렌더 직후 hook 재료 [film_s1_0.74_1.67, lens_…-4]가
+    #   페이지를 다시 여는 것만으로 [lens_…-4] 하나로 줄었다 → 편성 서명이 a873ba…→
+    #   2716cd…로 바뀌어 **방금 만든 자막제거 청소본이 그 자리에서 낡은 것이 됐다**
+    #   ("완성본을 만들어도 자막제거·꾸미기에 반영이 안 된다"의 뿌리).
+    #   저장본은 이미 이 함수가 검증해 남긴 값이라 그대로 재사용해도 안전하다.
+    #   같은 id를 클라가 다시 보내면 **클라 것이 이긴다**(사람이 고친 이름·구간 반영).
+    _saved = (plan.get("scene_lab") or {}).get("extra_segs") \
+        if isinstance(plan.get("scene_lab"), dict) else None
+    if isinstance(_saved, dict) and _saved:
+        _extra = {**_saved, **_extra}
     for _sid, _s in _extra.items():
         if not _sid or _sid in seg_map:
             continue                       # ① 진짜 조각을 덮지 않는다
