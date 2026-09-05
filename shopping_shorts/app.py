@@ -9175,6 +9175,23 @@ def _lens_source_text(url, front_caption="", store=None):
             sc = m.group(1) if m else ""
             if sc:
                 sd = st.get_script(sc) or {}
+                # ★source_brief를 **맨 앞에** 붙인다(2026-09-06 사장님 "자막을 다 보고
+                #   제품명에 가까운 내용을 검색어로 뽑아야 한다").
+                #   왜 맨 앞인가 — 아래 프롬프트가 소재를 앞에서부터 자르므로(_CN_CANDIDATES_PROMPT),
+                #   가장 중요한 제품명이 **절대 안 잘리는 자리**에 있어야 한다.
+                #   왜 이게 필요한가 — product는 추출기가 **자막·화면까지 다 보고** 정한 제품명이라
+                #   나레이션(full_text)에 없는 이름도 들고 있다. 서버 실측(2026-09-06):
+                #   09월 추출분 1,970건 중 1,969건(99%)에 product가 있고, **나레이션이 0자인
+                #   280건 중 279건**도 product는 채워져 있다 — 무자막·무음성 영상에서
+                #   렌즈가 썸네일만 보고 찍던 것을 살리는 유일한 재료다.
+                _brief = sd.get("source_brief") or {}
+                if isinstance(_brief, dict):
+                    _prod = (_brief.get("product") or "").strip()
+                    _core = (_brief.get("core") or "").strip()
+                    if _prod:
+                        parts.append(f"[제품] {_prod}")
+                    if _core:
+                        parts.append(f"[요지] {_core}")
                 txt = (sd.get("full_text") or "").strip()
                 if txt:
                     parts.append(txt)
@@ -9575,7 +9592,7 @@ async def api_lens_cn_keywords(request: Request, frame: UploadFile = File(None),
     # ★source_url이 있으면 캡션이 비어도 진행한다 — DB에서 캡션·대본을 찾아올 수 있다
     #   (프론트 캡션은 거의 항상 비어 있다: 실측 300건 중 1건).
     if frame is None and not (source_caption or "").strip() and not (source_url or "").strip():
-        return {"ok": True, "product": "", "candidates": []}
+        return {"ok": True, "product": "", "candidates": [], "has_source": False}
     raw = None
     if frame is not None:
         try:
@@ -9584,6 +9601,7 @@ async def api_lens_cn_keywords(request: Request, frame: UploadFile = File(None),
             raw = None
     # exclude: 프론트 '🔄 다른 검색어'가 이미 보여준 후보를 개행으로 붙여 보낸다.
     seen = [s.strip() for s in (exclude or "").split("\n") if s.strip()][:20]
+    src = ""          # ★try 밖에서 초기화 - 예외 시 아래 has_source가 NameError로 죽는다
     try:
         # ★ to_thread 필수 — cn_search_candidates는 Gemini SDK를 **블로킹**으로 부른다.
         #   async def 안에서 그냥 부르면 이벤트루프가 그 5~10초 동안 통째로 멈춰,
@@ -9594,8 +9612,14 @@ async def api_lens_cn_keywords(request: Request, frame: UploadFile = File(None),
         v = await asyncio.to_thread(cn_search_candidates, raw, src, exclude=seen)
     except Exception:
         v = {}
+    # ★소재가 있었는지 프론트에 알린다(2026-09-06 사장님 "대본분석후찾기 버튼 만들고").
+    #   소재가 0자면 모델은 **썸네일 1장만 보고 찍는다** — 그때 나온 검색어는 매번 달라지고
+    #   틀려도 정답처럼 보인다. 프론트는 이 값을 보고 '📝 대본 분석 후 찾기' 버튼을 띄운다.
+    #   ⚠️ 판정은 **여기 한 곳에서만** 한다(0순위-B) — 프론트가 캡션 길이로 따로 재면
+    #   서버가 DB에서 채운 소재를 모르니 반드시 어긋난다.
     return {"ok": True, "product": v.get("product", ""),
-            "candidates": v.get("candidates", [])}
+            "candidates": v.get("candidates", []),
+            "has_source": bool((src or "").strip())}
 
 
 @app.post("/api/lens/kw/expand")

@@ -674,3 +674,160 @@ def test_lens_소재수집_DB오류여도_죽지_않는다(tmp_path, monkeypatch
         def get_enrichment(self, *a, **k): raise RuntimeError("db down")
         def get_script(self, *a, **k): raise RuntimeError("db down")
     assert appmod._lens_source_text("https://x/reel/X/", "원본캡션", store=_Boom()) == "원본캡션"
+
+
+# ── 제품명(source_brief.product) 합류 (2026-09-06 사장님 "자막을 다 보고 제품명에
+#    가까운 내용을 검색어로 뽑아야 한다" / 목적 = 샤오홍슈에서 원본 영상 찾기) ──
+# 왜: 추출기는 **자막·화면까지 다 보고** 제품명을 정해 source_brief.product에 넣는데
+#     렌즈는 full_text만 읽어 그 값을 한 번도 안 봤다. 서버 실측(2026-09-06):
+#     09월 추출분 1,970건 중 1,969건(99%)에 product가 있고, **나레이션이 0자인 280건
+#     중 279건**도 product는 채워져 있다 — 무자막 영상을 살리는 유일한 재료다.
+
+def test_lens_소재수집_제품명을_쓴다(tmp_path, monkeypatch):
+    """★source_brief.product가 소재에 들어간다 — 이게 빠지면 렌즈가 썸네일만 보고 찍는다."""
+    monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
+    st = Store(str(tmp_path / "t.db"))
+    st.save_script("PRD", {"full_text": "반년째 쓰는데 아직도 새거같은 이유는",
+                           "source_brief": {"product": "휴대용 실리콘 롤클리너",
+                                            "core": "물로 씻어 반영구 재사용"}})
+    got = appmod._lens_source_text("https://x/reel/PRD/", "", store=st)
+    assert "휴대용 실리콘 롤클리너" in got
+    assert "물로 씻어 반영구 재사용" in got
+
+
+def test_lens_소재수집_제품명이_맨앞이다(tmp_path, monkeypatch):
+    """★맨 앞이어야 한다 — 프롬프트가 소재를 **앞에서부터** 자르므로, 뒤에 있으면
+    긴 대본에서 제품명이 통째로 잘려나간다(2026-09-06 실측: 잘린 112자에 핵심어 4개)."""
+    monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
+    st = Store(str(tmp_path / "t.db"))
+    st.save_script("HEAD", {"full_text": "안녕하세요 " * 400,      # 상한을 훌쩍 넘기는 대본
+                            "source_brief": {"product": "실리콘 롤클리너"}})
+    got = appmod._lens_source_text("https://x/reel/HEAD/", "", store=st)
+    assert got.startswith("[제품] 실리콘 롤클리너")
+    assert "실리콘 롤클리너" in got            # 길이 상한에 잘려나가지 않았다
+
+
+def test_lens_소재수집_나레이션이_0자여도_제품명은_남는다(tmp_path, monkeypatch):
+    """★무자막·무음성 영상(서버 실측 280건)에서 유일한 재료다. 예전엔 빈 문자열이었다."""
+    monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
+    st = Store(str(tmp_path / "t.db"))
+    st.save_script("MUTE", {"full_text": "", "source_brief": {"product": "스팀 알밤"}})
+    got = appmod._lens_source_text("https://x/reel/MUTE/", "", store=st)
+    assert "스팀 알밤" in got
+
+
+def test_lens_소재수집_옛추출본은_그대로_지나간다(tmp_path, monkeypatch):
+    """source_brief가 없는 옛 추출본(07월분 204건)에서 터지지 않는다 — full_text만 쓴다."""
+    monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
+    st = Store(str(tmp_path / "t.db"))
+    st.save_script("OLD", {"full_text": "옛날 대본"})
+    got = appmod._lens_source_text("https://x/reel/OLD/", "", store=st)
+    assert got == "옛날 대본"
+
+
+def test_lens_소재수집_source_brief가_문자열이어도_안죽는다(tmp_path, monkeypatch):
+    """★source_brief는 dict인데 옛 데이터엔 문자열로 들어간 것이 있다(app.py:19736 주석).
+    dict가 아니면 조용히 건너뛴다 — 여기서 터지면 렌즈가 통째로 죽는다."""
+    monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
+    st = Store(str(tmp_path / "t.db"))
+    st.save_script("STR", {"full_text": "본문", "source_brief": "문자열로 들어간 옛 데이터"})
+    got = appmod._lens_source_text("https://x/reel/STR/", "", store=st)
+    assert got == "본문"
+
+
+def test_렌즈_검색어_길이상한이_캐시키와_같다():
+    """★캐시키와 프롬프트가 **같은 상수**를 써야 한다(0순위-B).
+    다르면 서로 다른 소재가 한 캐시칸을 공유해 오답이 TTL 동안 굳는다
+    (memory `reference_캐시키_불일치함정`)."""
+    from shopping_shorts import video_analysis as va
+    long_src = "가" * 5000
+    k1 = va._frame_cache_key(b"x", long_src[:va._LENS_PROMPT_SRC_MAX])
+    k2 = va._frame_cache_key(b"x", long_src)
+    assert k1 == k2          # 상한을 넘는 부분은 키에 영향을 주지 않는다
+
+
+def test_렌즈_검색어_온도가_0이다():
+    """★같은 영상을 다시 눌러도 같은 답이 나와야 한다(2026-09-06 사장님
+    "이번에는 완전 다른거 나왔어"). 실측: 기본 온도로 같은 입력 5회에 5회 전부
+    다른 제품(버터커터기/에어팟케이스/미니커터/미니칼/실패)이 나왔다.
+    ★문자열 검색이 아니라 **실제 config 객체**를 잡아 값을 본다."""
+    import types as _t
+    from shopping_shorts import video_analysis as va
+    seen = {}
+
+    class _Resp:
+        text = '{"product":"x","candidates":[{"ko":"a","zh":"b"}]}'
+
+    class _Models:
+        def generate_content(self, **kw):
+            seen["cfg"] = kw.get("config")
+            return _Resp()
+
+    class _Client:
+        models = _Models()
+
+    va_keys = va.SHORTS_GEMINI_KEYS
+    try:
+        va.SHORTS_GEMINI_KEYS = ["k"]
+        import shopping_shorts.comment_gen as cg
+        _orig = cg._next_live_key_and_idx
+        cg._next_live_key_and_idx = lambda: ("k", 0)
+        _origc = va._client_for_key
+        va._client_for_key = lambda key: _Client()
+        va.cn_search_candidates(b"jpegbytes", "소재")
+    finally:
+        va.SHORTS_GEMINI_KEYS = va_keys
+        cg._next_live_key_and_idx = _orig
+        va._client_for_key = _origc
+    assert seen.get("cfg") is not None, "generate_content가 불리지 않았다"
+    assert getattr(seen["cfg"], "temperature", None) == 0
+
+
+# ── has_source 신호 + 📝 대본 분석 후 찾기 (2026-09-06 사장님 "대본분석후찾기 버튼 만들고") ──
+# 렌즈는 DB에 **이미 있는** 소재만 읽는다(대본추출을 하지 않는다). 소재가 0자면 검색어는
+# 썸네일 1장만 보고 지어져 매번 달라지고, 틀려도 정답처럼 보인다. 서버가 그 사실을
+# has_source로 알려주고 프론트가 버튼을 띄운다. ★판정은 서버 한 곳(0순위-B) —
+# 프론트가 캡션 길이로 따로 재면 서버가 DB에서 채운 소재를 몰라 반드시 어긋난다.
+
+def test_렌즈_소재가_없으면_has_source_거짓(tmp_path, monkeypatch):
+    """소재 0자 = 썸네일만 보고 찍은 것 → 프론트가 '대본 분석 후 찾기'를 띄운다."""
+    monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
+    monkeypatch.setattr(appmod, "cn_search_candidates",
+                        lambda raw, src, exclude=None: {"product": "", "candidates": []})
+    c = TestClient(appmod.app)
+    r = c.post("/api/lens/cn/keywords",
+               files={"frame": ("f.jpg", _JPG_1PX, "image/jpeg")},
+               data={"source_url": "https://x/reel/NOSRC/"})
+    assert r.json()["has_source"] is False
+
+
+def test_렌즈_대본이_있으면_has_source_참(tmp_path, monkeypatch):
+    """대본추출을 돌린 영상은 소재가 있으므로 버튼을 띄우지 않는다."""
+    monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
+    st = Store(str(tmp_path / "t.db"))
+    st.save_script("HASSRC", {"full_text": "옷 먼지 떼는 실리콘 돌돌이입니다",
+                              "source_brief": {"product": "휴대용 실리콘 롤클리너"}})
+    monkeypatch.setattr(appmod, "cn_search_candidates",
+                        lambda raw, src, exclude=None: {"product": "x", "candidates": []})
+    c = TestClient(appmod.app)
+    r = c.post("/api/lens/cn/keywords",
+               files={"frame": ("f.jpg", _JPG_1PX, "image/jpeg")},
+               data={"source_url": "https://x/reel/HASSRC/"})
+    assert r.json()["has_source"] is True
+
+
+def test_렌즈_비전이_터져도_has_source가_NameError를_안낸다(tmp_path, monkeypatch):
+    """★src를 try 안에서만 만들면 예외 시 has_source가 NameError로 500이 된다."""
+    monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
+
+    def _boom(*a, **k):
+        raise RuntimeError("db down")
+    # ★소재 만들기 자체를 터뜨려야 한다 — cn_search_candidates를 터뜨리면 그 **앞줄**에서
+    #   src가 이미 채워져 NameError가 안 난다(사보타주로 확인: 가짜 단언이었다).
+    monkeypatch.setattr(appmod, "_lens_source_text", _boom)
+    c = TestClient(appmod.app)
+    r = c.post("/api/lens/cn/keywords",
+               files={"frame": ("f.jpg", _JPG_1PX, "image/jpeg")},
+               data={"source_url": "https://x/reel/BOOM/"})
+    assert r.status_code == 200
+    assert r.json()["ok"] is True and r.json()["candidates"] == []
