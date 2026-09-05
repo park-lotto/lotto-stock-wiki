@@ -163,3 +163,48 @@ def test_장면_목록이_비면_grounded를_끄고_남긴다(monkeypatch):
 def test_장면근거_문구는_상수에서_나온다():
     ok, det = GT.scene_grounding_check([{"text": f"줄{i}", "src_seg": "", "needs_scene": False} for i in range(6)], {"s0-0"})
     assert not ok and "절반" not in det and "34%" in det
+
+
+# ─── 같은 장면이 두 칸에 중복(2026-09-05 실측) ────────────────────────────────
+# 실측(b1_eye 15편 flow.json): 장면 붙은 칸 66개 중 6개가 중복(9%), 6건 중 5건이 **이웃한 두 칸**.
+# 원인은 재고 부족이 아니었다 — 44구간짜리 영상에서도 났고, 15편 전부 장면 수 ≥ 필요 칸 수였다.
+# 진짜 원인: _GROUNDED_RULE에 "같은 장면 두 번 쓰지 마라"가 없고 게이트도 안 봤다(지시·판정 둘 다 없음).
+
+def test_장면중복_같은_번호가_두_칸에_있으면_반려():
+    beats = [{"text": "때가 쏙 빠져요", "src_seg": "s0-3", "needs_scene": True},
+             {"text": "심지어 향까지 좋아요", "src_seg": "s0-3", "needs_scene": True},
+             {"text": "이건 진짜 물건이에요", "src_seg": "s0-4", "needs_scene": True}]
+    ok, det = GT.scene_grounding_check(beats, {"s0-3", "s0-4", "s0-5"})
+    assert not ok, "같은 장면을 두 칸에 썼는데 통과했다"
+    assert "s0-3" in det and ("2번" in det or "1번" in det), det
+
+
+def test_장면중복_대표장면만_본다_보조는_겹쳐도_된다():
+    """한 줄이 여러 장면에 걸치면 쉼표로 적고 첫 번째가 대표다(_GROUNDED_RULE).
+    보조 장면까지 막으면 정당한 '여러 장면에 걸친 줄'이 통째로 반려된다."""
+    beats = [{"text": "물이 세게 나와요", "src_seg": "s0-1, s0-2", "needs_scene": True},
+             {"text": "창틀 때도 지워져요", "src_seg": "s0-2, s0-1", "needs_scene": True}]
+    ok, det = GT.scene_grounding_check(beats, {"s0-1", "s0-2"})
+    assert ok, det
+
+
+def test_장면중복_재고가_칸보다_적으면_봐준다():
+    """장면이 2개뿐인데 3칸을 채워야 하면 중복이 불가피하다 — 그런 소재까지 영영 반려하면 안 된다.
+    (실측 15편엔 이런 소재가 없었지만, 구간 5개짜리 영상이 있었다)"""
+    beats = [{"text": "가", "src_seg": "s0-0", "needs_scene": True},
+             {"text": "나", "src_seg": "s0-1", "needs_scene": True},
+             {"text": "다", "src_seg": "s0-0", "needs_scene": True}]
+    ok, det = GT.scene_grounding_check(beats, {"s0-0", "s0-1"})
+    assert ok, det
+
+
+def test_장면중복_레시피는_면제():
+    beats = [{"text": "가", "src_seg": "s0-0", "needs_scene": True},
+             {"text": "나", "src_seg": "s0-0", "needs_scene": True}]
+    ok, _ = GT.scene_grounding_check(beats, {"s0-0", "s0-1", "s0-2"}, is_recipe=True)
+    assert ok
+
+
+def test_장면중복_지시가_프롬프트에_있다():
+    """지시와 판정은 짝이다 — 판정만 넣으면 모델은 규칙을 모른 채 반려당하고 재작성만 반복한다."""
+    assert "한 장면은 한 줄에만" in SG._GROUNDED_RULE

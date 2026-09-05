@@ -1,50 +1,45 @@
 {
  "draft": {
-  "style_id": 60,
-  "style_name": "유튜브 발명품형",
+  "style_id": 57,
+  "style_name": "다이소 내부인형",
   "beats": [
    {
-    "role": "title",
-    "text": "한국에서 난리 난 피부톤 정착템의 정체",
+    "role": "hook",
+    "text": "여러분 다이소 가면 이거 무조건 사오세요.",
     "src_seg": "",
     "needs_scene": false,
-    "sec": 2.2,
+    "sec": 2.3,
     "src_segs": []
    },
    {
-    "role": "story",
-    "text": "유명 샵 전문가들이 고객들 피부톤 맞추느라 고생하다 탄생한 제품이 사람들 사이에서 조용히 퍼지기 시작했는데",
-    "src_seg": "s0-2",
-    "needs_scene": true,
-    "sec": 6.2,
-    "src_segs": [
-     "s0-2"
-    ]
+    "role": "problem",
+    "text": "매번 아침마다 피부톤이 칙칙해서 화장하는 게 진짜 스트레스였거든요.",
+    "src_seg": "",
+    "needs_scene": false,
+    "sec": 3.9,
+    "src_segs": []
    },
    {
-    "role": "authority",
-    "text": "이미 연예인들 샵 필수템으로 난리 난 제품인데 왜 이제야 알았나 싶음",
-    "src_seg": "s0-0",
+    "role": "reveal",
+    "text": "다이소에서 일하는 친한 언니한테 들었는데요.",
+    "src_seg": "",
+    "needs_scene": false,
+    "sec": 2.6,
+    "src_segs": []
+   },
+   {
+    "role": "proof",
+    "text": "재고 부족으로 난리 난 게 바로 이 BB크림이라는 사실, 보이면 바로 사라고 하더라고요.",
+    "src_seg": "s0-1",
     "needs_scene": true,
-    "sec": 3.8,
+    "sec": 4.7,
     "src_segs": [
-     "s0-0",
      "s0-1"
     ]
    },
    {
-    "role": "benefit",
-    "text": "핵심은 이거임 바로 어떤 피부톤이든 평균을 만들어주는 커버력임",
-    "src_seg": "s0-3",
-    "needs_scene": true,
-    "sec": 3.6,
-    "src_segs": [
-     "s0-3"
-    ]
-   },
-   {
-    "role": "escalate",
-    "text": "심지어 호불호 없는 사용감 덕분에 데일리로 쓰기 최적임",
+    "role": "demo",
+    "text": "적당량 짜서 얇게 펴 바르면 커버력까지 한 번에 끝이에요.",
     "src_seg": "s0-3",
     "needs_scene": true,
     "sec": 3.1,
@@ -53,49 +48,55 @@
     ]
    },
    {
-    "role": "twist",
-    "text": "근데 이거 진짜 물건인 이유가 따로 있는데 바른 뒤에 느껴지는 깔끔한 마무리감이 대박임",
+    "role": "result",
+    "text": "와 어떤 피부톤에도 자연스럽게 스며드는 거 있죠, 이걸 진작 알았으면 고생 안 했을 텐데 싶더라고요.",
     "src_seg": "s0-4",
     "needs_scene": true,
-    "sec": 4.9,
+    "sec": 5.4,
     "src_segs": [
      "s0-4"
     ]
+   },
+   {
+    "role": "price",
+    "text": "심지어 이 퀄리티에 이 가격이라니 솔직히 믿기지가 않네요.",
+    "src_seg": "",
+    "needs_scene": false,
+    "sec": 3.2,
+    "src_segs": []
+   },
+   {
+    "role": "cta",
+    "text": "궁금하신 분들은 댓글 남겨주세요 바로 제품 정보 대댓글로 드릴게요.",
+    "src_seg": "",
+    "needs_scene": false,
+    "sec": 3.8,
+    "src_segs": []
    }
   ],
-  "script": "한국에서 난리 난 피부톤 정착템의 정체 유명 샵 전문가들이 고객들 피부톤 맞추느라 고생하다 탄생한 제품이 사람들 사이에서 조용히 퍼지기 시작했는데 이미 연예인들 샵 필수템으로 난리 난 제품인데 왜 이제야 알았나 싶음 핵심은 이거임 바로 어떤 피부톤이든 평균을 만들어주는 커버력임 심지어 호불호 없는 사용감 덕분에 데일리로 쓰기 최적임 근데 이거 진짜 물건인 이유가 따로 있는데 바른 뒤에 느껴지는 깔끔한 마무리감이 대박임",
-  "hook": "한국에서 난리 난 피부톤 정착템의 정체",
+  "script": "여러분 다이소 가면 이거 무조건 사오세요. 매번 아침마다 피부톤이 칙칙해서 화장하는 게 진짜 스트레스였거든요. 다이소에서 일하는 친한 언니한테 들었는데요. 재고 부족으로 난리 난 게 바로 이 BB크림이라는 사실, 보이면 바로 사라고 하더라고요. 적당량 짜서 얇게 펴 바르면 커버력까지 한 번에 끝이에요. 와 어떤 피부톤에도 자연스럽게 스며드는 거 있죠, 이걸 진작 알았으면 고생 안 했을 텐데 싶더라고요. 심지어 이 퀄리티에 이 가격이라니 솔직히 믿기지가 않네요. 궁금하신 분들은 댓글 남겨주세요 바로 제품 정보 대댓글로 드릴게요.",
+  "hook": "여러분 다이소 가면 이거 무조건 사오세요.",
   "checks": [
    {
     "name": "구간 순서",
     "ok": true,
-    "detail": "기대 ['title', 'story', 'authority', 'benefit', 'escalate', 'twist'] / 실제 ['title', 'story', 'authority', 'benefit', 'escalate', 'twist']"
+    "detail": "기대 ['hook', 'problem', 'reveal', 'proof', 'demo', 'result', 'price', 'cta'] / 실제 ['hook', 'problem', 'reveal', 'proof', 'demo', 'result', 'price', 'cta']"
    },
    {
-    "name": "CTA 금지(유튜브 썰)",
+    "name": "CTA 단어유도",
     "ok": true,
-    "detail": "OK"
+    "detail": "요. 궁금하신 분들은 댓글 남겨주세요 바로 제품 정보 대댓글로 드릴게요."
    },
    {
-    "name": "말끝(반말체)",
+    "name": "말 밀도(153~222자)",
     "ok": true,
-    "detail": "OK"
-   },
-   {
-    "name": "말 밀도(139~222자)",
-    "ok": true,
-    "detail": "176자 / 이 스타일 히트작 199자",
+    "detail": "215자 / 이 스타일 히트작 219자",
     "over": false
    },
    {
     "name": "고조 심화(1회)",
     "ok": true,
     "detail": "OK"
-   },
-   {
-    "name": "훅 3초 서론금지",
-    "ok": true,
-    "detail": "OK(한국에서난리난피부톤정착템의정체유명샵전…)"
    },
    {
     "name": "화자 일관성",
@@ -105,49 +106,38 @@
    {
     "name": "장면 근거",
     "ok": true,
-    "detail": "OK(5/6줄에 장면)"
+    "detail": "OK(3/8줄에 장면)"
    }
   ],
   "passed": true,
   "tries": [
    {
-    "chars": 176,
+    "chars": 215,
     "fails": []
    }
   ],
-  "chars": 176,
-  "sec": 23.8
+  "chars": 215,
+  "sec": 29.0
  },
  "plan": {
   "structure": "template",
   "beats": [
    {
     "beat_idx": 0,
-    "role": "title",
-    "narration": "한국에서 난리 난 피부톤 정착템의 정체",
-    "target_seconds": 3.7,
+    "role": "hook",
+    "narration": "여러분 다이소 가면 이거 무조건 사오세요.",
+    "target_seconds": 4.0,
     "primary": {
      "video_id": "s0",
-     "seg_id": "s0-1",
-     "start": 4.505,
-     "end": 5.405,
-     "scene_desc": "벽에 붙은 지드래곤의 사진이 클로즈업되어 보여진다.",
+     "seg_id": "s0-2",
+     "start": 5.405,
+     "end": 10.511,
+     "scene_desc": "전문가가 고객의 얼굴에 메이크업을 진행하며 고객이 질문을 던진다.",
      "is_key": false,
      "change": "",
-     "shot_role": "기타"
+     "shot_role": "도포"
     },
-    "alternates": [
-     {
-      "video_id": "s0",
-      "seg_id": "s0-2",
-      "start": 5.405,
-      "end": 8.21,
-      "scene_desc": "전문가가 고객의 얼굴에 메이크업을 진행하며 고객이 질문을 던진다.",
-      "is_key": false,
-      "change": "",
-      "shot_role": "도포"
-     }
-    ],
+    "alternates": [],
     "effect": "cut",
     "fit": 3,
     "fit_evidence": "broll_fill",
@@ -157,9 +147,9 @@
    },
    {
     "beat_idx": 1,
-    "role": "story",
-    "narration": "유명 샵 전문가들이 고객들 피부톤 맞추느라 고생하다 탄생한 제품이 사람들 사이에서 조용히 퍼지기 시작했는데",
-    "target_seconds": 10.4,
+    "role": "problem",
+    "narration": "매번 아침마다 피부톤이 칙칙해서 화장하는 게 진짜 스트레스였거든요.",
+    "target_seconds": 6.5,
     "primary": {
      "video_id": "s0",
      "seg_id": "s0-2",
@@ -175,7 +165,74 @@
       "video_id": "s0",
       "seg_id": "s0-3",
       "start": 10.511,
-      "end": 15.81,
+      "end": 11.91,
+      "scene_desc": "전문가가 비비크림 제품을 손에 들고 보여준 뒤, 고객의 얼굴에 다시 제품을 바른다.",
+      "is_key": true,
+      "change": "제품이 전문가의 손에 들려 등장하고 얼굴에 도포됨",
+      "shot_role": "실증"
+     }
+    ],
+    "effect": "cut",
+    "fit": 3,
+    "fit_evidence": "broll_fill",
+    "inherited": false,
+    "visual_verb": false,
+    "src_seg_applied": null
+   },
+   {
+    "beat_idx": 2,
+    "role": "reveal",
+    "narration": "다이소에서 일하는 친한 언니한테 들었는데요.",
+    "target_seconds": 4.2,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-2",
+     "start": 5.405,
+     "end": 10.511,
+     "scene_desc": "전문가가 고객의 얼굴에 메이크업을 진행하며 고객이 질문을 던진다.",
+     "is_key": false,
+     "change": "",
+     "shot_role": "도포"
+    },
+    "alternates": [],
+    "effect": "cut",
+    "fit": 3,
+    "fit_evidence": "broll_fill",
+    "inherited": false,
+    "visual_verb": false,
+    "src_seg_applied": null
+   },
+   {
+    "beat_idx": 3,
+    "role": "proof",
+    "narration": "재고 부족으로 난리 난 게 바로 이 BB크림이라는 사실, 보이면 바로 사라고 하더라고요.",
+    "target_seconds": 8.6,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-1",
+     "start": 4.505,
+     "end": 5.405,
+     "scene_desc": "벽에 붙은 지드래곤의 사진이 클로즈업되어 보여진다.",
+     "is_key": false,
+     "change": "",
+     "shot_role": "기타"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-2",
+      "start": 5.405,
+      "end": 10.511,
+      "scene_desc": "전문가가 고객의 얼굴에 메이크업을 진행하며 고객이 질문을 던진다.",
+      "is_key": false,
+      "change": "",
+      "shot_role": "도포"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-3",
+      "start": 10.511,
+      "end": 13.1,
       "scene_desc": "전문가가 비비크림 제품을 손에 들고 보여준 뒤, 고객의 얼굴에 다시 제품을 바른다.",
       "is_key": true,
       "change": "제품이 전문가의 손에 들려 등장하고 얼굴에 도포됨",
@@ -187,80 +244,13 @@
     "fit_evidence": "inherited",
     "inherited": true,
     "visual_verb": true,
-    "src_seg_applied": "s0-2"
-   },
-   {
-    "beat_idx": 2,
-    "role": "authority",
-    "narration": "이미 연예인들 샵 필수템으로 난리 난 제품인데 왜 이제야 알았나 싶음",
-    "target_seconds": 6.7,
-    "primary": {
-     "video_id": "s0",
-     "seg_id": "s0-0",
-     "start": 0.0,
-     "end": 4.505,
-     "scene_desc": "남성이 청담동 헤어·메이크업 샵 내부를 둘러보며 벽에 붙은 연예인 사진들을 소개한다.",
-     "is_key": false,
-     "change": "",
-     "shot_role": "기타"
-    },
-    "alternates": [
-     {
-      "video_id": "s0",
-      "seg_id": "s0-1",
-      "start": 4.505,
-      "end": 5.405,
-      "scene_desc": "벽에 붙은 지드래곤의 사진이 클로즈업되어 보여진다.",
-      "is_key": false,
-      "change": "",
-      "shot_role": "기타"
-     },
-     {
-      "video_id": "s0",
-      "seg_id": "s0-2",
-      "start": 5.405,
-      "end": 6.7,
-      "scene_desc": "전문가가 고객의 얼굴에 메이크업을 진행하며 고객이 질문을 던진다.",
-      "is_key": false,
-      "change": "",
-      "shot_role": "도포"
-     }
-    ],
-    "effect": "cut",
-    "fit": 5,
-    "fit_evidence": "inherited",
-    "inherited": true,
-    "visual_verb": true,
-    "src_seg_applied": "s0-0"
-   },
-   {
-    "beat_idx": 3,
-    "role": "benefit",
-    "narration": "핵심은 이거임 바로 어떤 피부톤이든 평균을 만들어주는 커버력임",
-    "target_seconds": 6.0,
-    "primary": {
-     "video_id": "s0",
-     "seg_id": "s0-3",
-     "start": 10.511,
-     "end": 17.251,
-     "scene_desc": "전문가가 비비크림 제품을 손에 들고 보여준 뒤, 고객의 얼굴에 다시 제품을 바른다.",
-     "is_key": true,
-     "change": "제품이 전문가의 손에 들려 등장하고 얼굴에 도포됨",
-     "shot_role": "실증"
-    },
-    "alternates": [],
-    "effect": "cut",
-    "fit": 5,
-    "fit_evidence": "inherited",
-    "inherited": true,
-    "visual_verb": true,
-    "src_seg_applied": "s0-3"
+    "src_seg_applied": "s0-1"
    },
    {
     "beat_idx": 4,
-    "role": "escalate",
-    "narration": "심지어 호불호 없는 사용감 덕분에 데일리로 쓰기 최적임",
-    "target_seconds": 5.3,
+    "role": "demo",
+    "narration": "적당량 짜서 얇게 펴 바르면 커버력까지 한 번에 끝이에요.",
+    "target_seconds": 5.6,
     "primary": {
      "video_id": "s0",
      "seg_id": "s0-3",
@@ -281,9 +271,9 @@
    },
    {
     "beat_idx": 5,
-    "role": "twist",
-    "narration": "근데 이거 진짜 물건인 이유가 따로 있는데 바른 뒤에 느껴지는 깔끔한 마무리감이 대박임",
-    "target_seconds": 8.4,
+    "role": "result",
+    "narration": "와 어떤 피부톤에도 자연스럽게 스며드는 거 있죠, 이걸 진작 알았으면 고생 안 했을 텐데 싶더라고요.",
+    "target_seconds": 9.8,
     "primary": {
      "video_id": "s0",
      "seg_id": "s0-4",
@@ -309,7 +299,7 @@
       "video_id": "s0",
       "seg_id": "s0-3",
       "start": 10.511,
-      "end": 12.6,
+      "end": 14.0,
       "scene_desc": "전문가가 비비크림 제품을 손에 들고 보여준 뒤, 고객의 얼굴에 다시 제품을 바른다.",
       "is_key": true,
       "change": "제품이 전문가의 손에 들려 등장하고 얼굴에 도포됨",
@@ -322,6 +312,84 @@
     "inherited": true,
     "visual_verb": true,
     "src_seg_applied": "s0-4"
+   },
+   {
+    "beat_idx": 6,
+    "role": "price",
+    "narration": "심지어 이 퀄리티에 이 가격이라니 솔직히 믿기지가 않네요.",
+    "target_seconds": 5.6,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-4",
+     "start": 17.251,
+     "end": 18.454,
+     "scene_desc": "전문가가 메이크업을 마무리하고 고객이 의자에 편안하게 앉아있다.",
+     "is_key": false,
+     "change": "",
+     "shot_role": "완성"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-2",
+      "start": 5.405,
+      "end": 10.511,
+      "scene_desc": "전문가가 고객의 얼굴에 메이크업을 진행하며 고객이 질문을 던진다.",
+      "is_key": false,
+      "change": "",
+      "shot_role": "도포"
+     }
+    ],
+    "effect": "cut",
+    "fit": 3,
+    "fit_evidence": "broll_fill",
+    "inherited": false,
+    "visual_verb": false,
+    "src_seg_applied": null
+   },
+   {
+    "beat_idx": 7,
+    "role": "cta",
+    "narration": "궁금하신 분들은 댓글 남겨주세요 바로 제품 정보 대댓글로 드릴게요.",
+    "target_seconds": 6.5,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-4",
+     "start": 17.251,
+     "end": 18.454,
+     "scene_desc": "전문가가 메이크업을 마무리하고 고객이 의자에 편안하게 앉아있다.",
+     "is_key": false,
+     "change": "",
+     "shot_role": "완성"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-2",
+      "start": 5.405,
+      "end": 10.511,
+      "scene_desc": "전문가가 고객의 얼굴에 메이크업을 진행하며 고객이 질문을 던진다.",
+      "is_key": false,
+      "change": "",
+      "shot_role": "도포"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-3",
+      "start": 10.511,
+      "end": 10.7,
+      "scene_desc": "전문가가 비비크림 제품을 손에 들고 보여준 뒤, 고객의 얼굴에 다시 제품을 바른다.",
+      "is_key": true,
+      "change": "제품이 전문가의 손에 들려 등장하고 얼굴에 도포됨",
+      "shot_role": "실증"
+     }
+    ],
+    "effect": "cut",
+    "fit": 3,
+    "fit_evidence": "broll_fill",
+    "inherited": false,
+    "visual_verb": false,
+    "src_seg_applied": null
    }
   ],
   "plagiarism_flags": [],
@@ -331,45 +399,50 @@
  },
  "beat_sources": [
   {
-   "role": "title",
+   "role": "hook",
    "seg": "",
    "segs": []
   },
   {
-   "role": "story",
-   "seg": "s0-2",
-   "segs": [
-    "s0-2"
-   ]
+   "role": "problem",
+   "seg": "",
+   "segs": []
   },
   {
-   "role": "authority",
-   "seg": "s0-0",
+   "role": "reveal",
+   "seg": "",
+   "segs": []
+  },
+  {
+   "role": "proof",
+   "seg": "s0-1",
    "segs": [
-    "s0-0",
     "s0-1"
    ]
   },
   {
-   "role": "benefit",
+   "role": "demo",
    "seg": "s0-3",
    "segs": [
     "s0-3"
    ]
   },
   {
-   "role": "escalate",
-   "seg": "s0-3",
-   "segs": [
-    "s0-3"
-   ]
-  },
-  {
-   "role": "twist",
+   "role": "result",
    "seg": "s0-4",
    "segs": [
     "s0-4"
    ]
+  },
+  {
+   "role": "price",
+   "seg": "",
+   "segs": []
+  },
+  {
+   "role": "cta",
+   "seg": "",
+   "segs": []
   }
  ]
 }

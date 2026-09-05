@@ -602,6 +602,8 @@ def scene_grounding_check(beats, scene_ids, is_recipe=False, min_ratio=0.34):
     ids = {str(x) for x in (scene_ids or set())}
     beats = beats or []
     invented, missing, with_scene = [], [], 0
+    primary_at = {}      # 대표 장면 번호 -> 처음 쓴 칸 번호
+    repeats = []         # (뒤 칸, 앞 칸, 번호, 뒤 칸 앞머리)
     for i, b in enumerate(beats, 1):
         sids = parse_src_segs(b.get("src_seg"))
         need = bool(b.get("needs_scene"))
@@ -611,6 +613,11 @@ def scene_grounding_check(beats, scene_ids, is_recipe=False, min_ratio=0.34):
             invented.append(f"{i}번 '{text}' src_seg={','.join(bad_ids)}(목록에 없음)")
         elif sids:
             with_scene += 1
+            head = sids[0]                    # ★대표만 본다(보조는 겹쳐도 정당하다 — _GROUNDED_RULE)
+            if head in primary_at:
+                repeats.append((i, primary_at[head], head, text))
+            else:
+                primary_at[head] = i
         elif need:
             missing.append(f"{i}번 '{text}'")
     problems = []
@@ -619,6 +626,14 @@ def scene_grounding_check(beats, scene_ids, is_recipe=False, min_ratio=0.34):
     if missing:
         problems.append("장면이 필요한 줄인데 src_seg가 비었다: " + "; ".join(missing[:4])
                         + " — 그 내용이 보이는 장면 번호를 적거나, 장면에 없는 장점이면 그 줄을 빼라")
+    # ★같은 장면이 두 칸에(2026-09-05 실측 15편: 장면 붙은 칸 66개 중 6개 중복, 5건이 이웃 칸).
+    #   재고 부족이 아니었다 — 44구간 영상에서도 났고 15편 전부 장면 수 ≥ 필요 칸 수였다.
+    #   지시(_GROUNDED_RULE '한 장면은 한 줄에만')와 이 판정은 짝이다.
+    #   ⚠️재고가 필요 칸보다 적으면 중복이 불가피하다 → 그런 소재는 면제(영영 반려 방지).
+    if not is_recipe and repeats and len(ids) >= with_scene:
+        problems.append("같은 장면을 두 줄에 썼다: "
+                        + "; ".join(f"{i}번 '{t}'이 {j}번과 같은 {sid}" for i, j, sid, t in repeats[:4])
+                        + " — 한 장면은 한 줄에만. 뒷줄은 장면 목록에서 다른 번호를 골라라")
     need = max(1, int(len(beats) * min_ratio + 0.999)) if beats else 0
     if not is_recipe and beats and with_scene < need:
         # 문구의 기준은 상수에서 만든다(리뷰 L1: '절반'이라 적혀 있는데 실제는 1/3이었다)

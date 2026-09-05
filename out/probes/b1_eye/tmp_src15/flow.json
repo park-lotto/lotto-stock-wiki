@@ -1,101 +1,103 @@
 {
  "draft": {
-  "style_id": 60,
-  "style_name": "유튜브 발명품형",
+  "style_id": 57,
+  "style_name": "다이소 내부인형",
   "beats": [
    {
-    "role": "title",
-    "text": "일본에서 난리 난 다이소 히노키 바디로션의 정체",
+    "role": "hook",
+    "text": "여러분 다이소 가면 히노키 바디로션 이거 무조건 사오세요.",
     "src_seg": "",
     "needs_scene": false,
-    "sec": 2.7,
+    "sec": 3.2,
     "src_segs": []
    },
    {
-    "role": "story",
-    "text": "건조한 피부를 위해 탄생한 이 제품이 사람들 사이에서 조용히 퍼지기 시작했는데, 가격 대비 향이 좋아서 입소문이 났더라고.",
-    "src_seg": "s0-20",
-    "needs_scene": true,
-    "sec": 6.7,
-    "src_segs": [
-     "s0-20"
-    ]
+    "role": "problem",
+    "text": "매번 샤워 후 건조함 때문에 속상해서 하루 종일 예민했거든요.",
+    "src_seg": "",
+    "needs_scene": false,
+    "sec": 3.4,
+    "src_segs": []
    },
    {
-    "role": "authority",
-    "text": "출시되자마자 한국에서 품절 대란을 일으킨 전설의 아이템인데 써보니까 이유가 있더라고.",
+    "role": "reveal",
+    "text": "다이소에서 일하는 친한 언니한테 들었는데요.",
+    "src_seg": "",
+    "needs_scene": false,
+    "sec": 2.6,
+    "src_segs": []
+   },
+   {
+    "role": "proof",
+    "text": "진열하자마자 품절되는 요즘 가장 핫한 아이템이라며 보이면 바로 사라고 하더라고요.",
     "src_seg": "s0-36",
     "needs_scene": true,
-    "sec": 5.0,
+    "sec": 4.7,
     "src_segs": [
      "s0-36"
     ]
    },
    {
-    "role": "benefit",
-    "text": "이게 미친 포인트인 게 피부에 매끄럽게 밀착되는 발림성인데, 고농축이라 소량으로도 충분하더라.",
+    "role": "demo",
+    "text": "펌핑해서 몸에 펴 바르기만 하면 끝이에요.",
+    "src_seg": "s0-37",
+    "needs_scene": true,
+    "sec": 2.3,
+    "src_segs": [
+     "s0-37",
+     "s0-39"
+    ]
+   },
+   {
+    "role": "result",
+    "text": "와 매끄럽게 흡수되니까 피부 결이 달라지는 거 있죠.",
     "src_seg": "s0-39",
     "needs_scene": true,
-    "sec": 5.4,
+    "sec": 2.8,
     "src_segs": [
-     "s0-39",
-     "s0-37"
+     "s0-39"
     ]
    },
    {
-    "role": "escalate",
-    "text": "심지어 향까지 좋아서 바르는 내내 기분이 좋아지는 게 압도적이네.",
-    "src_seg": "s0-38",
-    "needs_scene": true,
+    "role": "price",
+    "text": "심지어 이걸 다이소에서 판다는 게 더 놀랍더라고요.",
+    "src_seg": "",
+    "needs_scene": false,
+    "sec": 2.8,
+    "src_segs": []
+   },
+   {
+    "role": "cta",
+    "text": "다이소 꿀템 정보 필요하신 분 댓글 달아주시면 바로 보내드릴게요.",
+    "src_seg": "",
+    "needs_scene": false,
     "sec": 3.6,
-    "src_segs": [
-     "s0-38"
-    ]
-   },
-   {
-    "role": "twist",
-    "text": "하지만 정작 써 본 사람들 사이에선 은은한 히노키 잔향이 오래 남는 게 대박임.",
-    "src_seg": "s0-38",
-    "needs_scene": true,
-    "sec": 4.2,
-    "src_segs": [
-     "s0-38"
-    ]
+    "src_segs": []
    }
   ],
-  "script": "일본에서 난리 난 다이소 히노키 바디로션의 정체 건조한 피부를 위해 탄생한 이 제품이 사람들 사이에서 조용히 퍼지기 시작했는데, 가격 대비 향이 좋아서 입소문이 났더라고. 출시되자마자 한국에서 품절 대란을 일으킨 전설의 아이템인데 써보니까 이유가 있더라고. 이게 미친 포인트인 게 피부에 매끄럽게 밀착되는 발림성인데, 고농축이라 소량으로도 충분하더라. 심지어 향까지 좋아서 바르는 내내 기분이 좋아지는 게 압도적이네. 하지만 정작 써 본 사람들 사이에선 은은한 히노키 잔향이 오래 남는 게 대박임.",
-  "hook": "일본에서 난리 난 다이소 히노키 바디로션의 정체",
+  "script": "여러분 다이소 가면 히노키 바디로션 이거 무조건 사오세요. 매번 샤워 후 건조함 때문에 속상해서 하루 종일 예민했거든요. 다이소에서 일하는 친한 언니한테 들었는데요. 진열하자마자 품절되는 요즘 가장 핫한 아이템이라며 보이면 바로 사라고 하더라고요. 펌핑해서 몸에 펴 바르기만 하면 끝이에요. 와 매끄럽게 흡수되니까 피부 결이 달라지는 거 있죠. 심지어 이걸 다이소에서 판다는 게 더 놀랍더라고요. 다이소 꿀템 정보 필요하신 분 댓글 달아주시면 바로 보내드릴게요.",
+  "hook": "여러분 다이소 가면 히노키 바디로션 이거 무조건 사오세요.",
   "checks": [
    {
     "name": "구간 순서",
     "ok": true,
-    "detail": "기대 ['title', 'story', 'authority', 'benefit', 'escalate', 'twist'] / 실제 ['title', 'story', 'authority', 'benefit', 'escalate', 'twist']"
+    "detail": "기대 ['hook', 'problem', 'reveal', 'proof', 'demo', 'result', 'price', 'cta'] / 실제 ['hook', 'problem', 'reveal', 'proof', 'demo', 'result', 'price', 'cta']"
    },
    {
-    "name": "CTA 금지(유튜브 썰)",
+    "name": "CTA 단어유도",
     "ok": true,
-    "detail": "OK"
+    "detail": "고요. 다이소 꿀템 정보 필요하신 분 댓글 달아주시면 바로 보내드릴게요."
    },
    {
-    "name": "말끝(반말체)",
+    "name": "말 밀도(153~222자)",
     "ok": true,
-    "detail": "OK"
-   },
-   {
-    "name": "말 밀도(139~222자)",
-    "ok": true,
-    "detail": "205자 / 이 스타일 히트작 199자",
+    "detail": "189자 / 이 스타일 히트작 219자",
     "over": false
    },
    {
     "name": "고조 심화(1회)",
-    "ok": false,
-    "detail": "2번 나왔다 — 한 번만 써라(남발하면 죽는다)"
-   },
-   {
-    "name": "훅 3초 서론금지",
     "ok": true,
-    "detail": "OK(일본에서난리난다이소히노키바디로션의정체…)"
+    "detail": "OK"
    },
    {
     "name": "화자 일관성",
@@ -105,74 +107,55 @@
    {
     "name": "장면 근거",
     "ok": true,
-    "detail": "OK(5/6줄에 장면)"
+    "detail": "OK(3/8줄에 장면)"
    }
   ],
-  "passed": false,
+  "passed": true,
   "tries": [
    {
-    "chars": 248,
+    "chars": 234,
     "fails": [
-     "말 밀도(139~222자)"
+     "말 밀도(153~222자)"
     ]
    },
    {
-    "chars": 209,
+    "chars": 229,
     "fails": [
-     "고조 심화(1회)"
+     "말 밀도(153~222자)"
     ]
    },
    {
-    "chars": 241,
-    "fails": [
-     "말 밀도(139~222자)"
-    ]
-   },
-   {
-    "chars": 205,
-    "trimmed": true,
-    "fails": [
-     "고조 심화(1회)"
-    ]
+    "chars": 189,
+    "fails": []
    }
   ],
-  "chars": 205,
-  "sec": 27.7
+  "chars": 189,
+  "sec": 25.5
  },
  "plan": {
   "structure": "template",
   "beats": [
    {
     "beat_idx": 0,
-    "role": "title",
-    "narration": "일본에서 난리 난 다이소 히노키 바디로션의 정체",
-    "target_seconds": 4.6,
+    "role": "hook",
+    "narration": "여러분 다이소 가면 히노키 바디로션 이거 무조건 사오세요.",
+    "target_seconds": 5.6,
     "primary": {
      "video_id": "s0",
-     "seg_id": "s0-35",
-     "start": 43.067,
-     "end": 44.0,
-     "scene_desc": "다이소 히노키 바디로션을 손에 들고 보여주는 모습. 제품 라벨이 정면을 향함.",
+     "seg_id": "s0-20",
+     "start": 24.9,
+     "end": 29.6,
+     "scene_desc": "스크럽 제품 통을 들고 손등에 발라 문지르며 제형과 사용감을 테스트합니다.",
      "is_key": true,
-     "change": "제품 패키지가 잘 보이게 들어짐",
-     "shot_role": "도포"
+     "change": "피부에 스크럽이 도포되어 매끄럽게 문질러집니다.",
+     "shot_role": "실증"
     },
     "alternates": [
      {
       "video_id": "s0",
-      "seg_id": "s0-1",
-      "start": 1.033,
-      "end": 3.733,
-      "scene_desc": "태블릿 화면 속 영상을 보여주며 샤워 시간에 대해 나레이션이 흐름",
-      "is_key": false,
-      "change": "",
-      "shot_role": "문제"
-     },
-     {
-      "video_id": "s0",
       "seg_id": "s0-4",
       "start": 6.133,
-      "end": 7.1,
+      "end": 7.03,
       "scene_desc": "출연자가 타이머를 보여주며 샤워 시작을 알림",
       "is_key": false,
       "change": "",
@@ -188,30 +171,20 @@
    },
    {
     "beat_idx": 1,
-    "role": "story",
-    "narration": "건조한 피부를 위해 탄생한 이 제품이 사람들 사이에서 조용히 퍼지기 시작했는데, 가격 대비 향이 좋아서 입소문이 났더라고.",
-    "target_seconds": 11.9,
+    "role": "problem",
+    "narration": "매번 샤워 후 건조함 때문에 속상해서 하루 종일 예민했거든요.",
+    "target_seconds": 6.0,
     "primary": {
      "video_id": "s0",
-     "seg_id": "s0-20",
-     "start": 24.9,
-     "end": 29.6,
-     "scene_desc": "스크럽 제품 통을 들고 손등에 발라 문지르며 제형과 사용감을 테스트합니다.",
-     "is_key": true,
-     "change": "피부에 스크럽이 도포되어 매끄럽게 문질러집니다.",
-     "shot_role": "실증"
+     "seg_id": "s0-1",
+     "start": 1.033,
+     "end": 3.733,
+     "scene_desc": "태블릿 화면 속 영상을 보여주며 샤워 시간에 대해 나레이션이 흐름",
+     "is_key": false,
+     "change": "",
+     "shot_role": "문제"
     },
     "alternates": [
-     {
-      "video_id": "s0",
-      "seg_id": "s0-5",
-      "start": 8.367,
-      "end": 10.4,
-      "scene_desc": "클렌징 제품을 흔들고 얼굴에 바르는 모습",
-      "is_key": true,
-      "change": "제품 내용물이 손에 담긴 후 얼굴에 도포됨",
-      "shot_role": "도포"
-     },
      {
       "video_id": "s0",
       "seg_id": "s0-10",
@@ -224,9 +197,43 @@
      },
      {
       "video_id": "s0",
+      "seg_id": "s0-5",
+      "start": 8.367,
+      "end": 9.0,
+      "scene_desc": "클렌징 제품을 흔들고 얼굴에 바르는 모습",
+      "is_key": true,
+      "change": "제품 내용물이 손에 담긴 후 얼굴에 도포됨",
+      "shot_role": "도포"
+     }
+    ],
+    "effect": "cut",
+    "fit": 3,
+    "fit_evidence": "broll_fill",
+    "inherited": false,
+    "visual_verb": false,
+    "src_seg_applied": null
+   },
+   {
+    "beat_idx": 2,
+    "role": "reveal",
+    "narration": "다이소에서 일하는 친한 언니한테 들었는데요.",
+    "target_seconds": 4.2,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-35",
+     "start": 43.067,
+     "end": 44.0,
+     "scene_desc": "다이소 히노키 바디로션을 손에 들고 보여주는 모습. 제품 라벨이 정면을 향함.",
+     "is_key": true,
+     "change": "제품 패키지가 잘 보이게 들어짐",
+     "shot_role": "도포"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
       "seg_id": "s0-19",
       "start": 21.0,
-      "end": 23.5,
+      "end": 24.9,
       "scene_desc": "샤워볼에 풍성한 거품을 내어 몸을 씻는 과정이 반복적으로 나타납니다.",
       "is_key": true,
       "change": "몸에 거품이 풍성하게 생깁니다.",
@@ -234,17 +241,17 @@
      }
     ],
     "effect": "cut",
-    "fit": 5,
-    "fit_evidence": "inherited",
-    "inherited": true,
-    "visual_verb": true,
-    "src_seg_applied": "s0-20"
+    "fit": 3,
+    "fit_evidence": "broll_fill",
+    "inherited": false,
+    "visual_verb": false,
+    "src_seg_applied": null
    },
    {
-    "beat_idx": 2,
-    "role": "authority",
-    "narration": "출시되자마자 한국에서 품절 대란을 일으킨 전설의 아이템인데 써보니까 이유가 있더라고.",
-    "target_seconds": 8.2,
+    "beat_idx": 3,
+    "role": "proof",
+    "narration": "진열하자마자 품절되는 요즘 가장 핫한 아이템이라며 보이면 바로 사라고 하더라고요.",
+    "target_seconds": 7.9,
     "primary": {
      "video_id": "s0",
      "seg_id": "s0-36",
@@ -256,16 +263,6 @@
      "shot_role": "사용중"
     },
     "alternates": [
-     {
-      "video_id": "s0",
-      "seg_id": "s0-40",
-      "start": 48.4,
-      "end": 50.0,
-      "scene_desc": "인물이 스마트폰 타이머 화면을 보여준다.",
-      "is_key": false,
-      "change": "",
-      "shot_role": "사용중"
-     },
      {
       "video_id": "s0",
       "seg_id": "s0-2",
@@ -335,70 +332,6 @@
       "is_key": false,
       "change": "",
       "shot_role": "사용중"
-     }
-    ],
-    "effect": "cut",
-    "fit": 5,
-    "fit_evidence": "inherited",
-    "inherited": true,
-    "visual_verb": true,
-    "src_seg_applied": "s0-36"
-   },
-   {
-    "beat_idx": 3,
-    "role": "benefit",
-    "narration": "이게 미친 포인트인 게 피부에 매끄럽게 밀착되는 발림성인데, 고농축이라 소량으로도 충분하더라.",
-    "target_seconds": 9.1,
-    "primary": {
-     "video_id": "s0",
-     "seg_id": "s0-39",
-     "start": 47.6,
-     "end": 48.4,
-     "scene_desc": "인물이 팔에 바디로션을 바르며 부드럽게 문지르는 모습이 클로즈업된다.",
-     "is_key": true,
-     "change": "피부에 로션이 고르게 도포되어 매끄럽게 발린다.",
-     "shot_role": "도포"
-    },
-    "alternates": [
-     {
-      "video_id": "s0",
-      "seg_id": "s0-37",
-      "start": 45.5,
-      "end": 46.967,
-      "scene_desc": "제품의 펌프를 손가락으로 눌러 바디로션을 짜내는 모습이 클로즈업된다.",
-      "is_key": true,
-      "change": "펌프가 아래로 눌리면서 내용물이 토출된다.",
-      "shot_role": "조작"
-     },
-     {
-      "video_id": "s0",
-      "seg_id": "s0-24",
-      "start": 32.3,
-      "end": 33.367,
-      "scene_desc": "샤워기로 머리카락을 헹구는 모습. 흐르는 물에 머리카락이 미역처럼 부드럽게 씻겨 내려감.",
-      "is_key": true,
-      "change": "머리카락이 물에 젖어 매끄럽게 정돈됨",
-      "shot_role": "사용중"
-     },
-     {
-      "video_id": "s0",
-      "seg_id": "s0-25",
-      "start": 33.367,
-      "end": 34.0,
-      "scene_desc": "샤워기 거품으로 팔을 씻는 모습. 거품이 풍성하게 팔 전체에 묻어 있음.",
-      "is_key": true,
-      "change": "피부에 거품이 덮여 있음",
-      "shot_role": "사용중"
-     },
-     {
-      "video_id": "s0",
-      "seg_id": "s0-26",
-      "start": 34.0,
-      "end": 35.2,
-      "scene_desc": "샤워기를 들고 어깨와 몸을 헹구는 모습. 샤워기 헤드가 프레임 안으로 들어옴.",
-      "is_key": true,
-      "change": "피부에 묻은 거품이 씻겨 내려감",
-      "shot_role": "사용중"
      },
      {
       "video_id": "s0",
@@ -419,6 +352,40 @@
       "is_key": false,
       "change": "",
       "shot_role": "사용중"
+     }
+    ],
+    "effect": "cut",
+    "fit": 5,
+    "fit_evidence": "inherited",
+    "inherited": true,
+    "visual_verb": true,
+    "src_seg_applied": "s0-36"
+   },
+   {
+    "beat_idx": 4,
+    "role": "demo",
+    "narration": "펌핑해서 몸에 펴 바르기만 하면 끝이에요.",
+    "target_seconds": 4.0,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-37",
+     "start": 45.5,
+     "end": 46.967,
+     "scene_desc": "제품의 펌프를 손가락으로 눌러 바디로션을 짜내는 모습이 클로즈업된다.",
+     "is_key": true,
+     "change": "펌프가 아래로 눌리면서 내용물이 토출된다.",
+     "shot_role": "조작"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-39",
+      "start": 47.6,
+      "end": 48.4,
+      "scene_desc": "인물이 팔에 바디로션을 바르며 부드럽게 문지르는 모습이 클로즈업된다.",
+      "is_key": true,
+      "change": "피부에 로션이 고르게 도포되어 매끄럽게 발린다.",
+      "shot_role": "도포"
      },
      {
       "video_id": "s0",
@@ -449,6 +416,50 @@
       "is_key": true,
       "change": "머리카락에 헤어팩이 골고루 도포됩니다.",
       "shot_role": "도포"
+     }
+    ],
+    "effect": "cut",
+    "fit": 5,
+    "fit_evidence": "inherited",
+    "inherited": true,
+    "visual_verb": true,
+    "src_seg_applied": "s0-37"
+   },
+   {
+    "beat_idx": 5,
+    "role": "result",
+    "narration": "와 매끄럽게 흡수되니까 피부 결이 달라지는 거 있죠.",
+    "target_seconds": 5.1,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-39",
+     "start": 47.6,
+     "end": 48.4,
+     "scene_desc": "인물이 팔에 바디로션을 바르며 부드럽게 문지르는 모습이 클로즈업된다.",
+     "is_key": true,
+     "change": "피부에 로션이 고르게 도포되어 매끄럽게 발린다.",
+     "shot_role": "도포"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-24",
+      "start": 32.3,
+      "end": 33.367,
+      "scene_desc": "샤워기로 머리카락을 헹구는 모습. 흐르는 물에 머리카락이 미역처럼 부드럽게 씻겨 내려감.",
+      "is_key": true,
+      "change": "머리카락이 물에 젖어 매끄럽게 정돈됨",
+      "shot_role": "사용중"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-32",
+      "start": 39.667,
+      "end": 40.467,
+      "scene_desc": "샤워 후 잠옷을 입고 있는 얼굴 클로즈업. 물기가 약간 남아 있는 피부 상태.",
+      "is_key": false,
+      "change": "피부 표면에 물기가 보임",
+      "shot_role": "before"
      },
      {
       "video_id": "s0",
@@ -469,6 +480,16 @@
       "is_key": false,
       "change": "시간 숫자가 줄어듭니다.",
       "shot_role": "기타"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-21",
+      "start": 29.6,
+      "end": 30.567,
+      "scene_desc": "욕조에 다리를 뻗고 앉아 있는 인물의 모습이 원형 프레임 안에 강조되어 나타납니다.",
+      "is_key": false,
+      "change": "",
+      "shot_role": "기타"
      }
     ],
     "effect": "cut",
@@ -479,31 +500,21 @@
     "src_seg_applied": "s0-39"
    },
    {
-    "beat_idx": 4,
-    "role": "escalate",
-    "narration": "심지어 향까지 좋아서 바르는 내내 기분이 좋아지는 게 압도적이네.",
-    "target_seconds": 6.3,
+    "beat_idx": 6,
+    "role": "price",
+    "narration": "심지어 이걸 다이소에서 판다는 게 더 놀랍더라고요.",
+    "target_seconds": 4.9,
     "primary": {
      "video_id": "s0",
-     "seg_id": "s0-38",
-     "start": 46.967,
-     "end": 47.6,
-     "scene_desc": "인물이 손을 모아 얼굴 가까이에 대고 향을 맡으며 만족스러운 표정을 짓는다.",
-     "is_key": true,
+     "seg_id": "s0-40",
+     "start": 48.4,
+     "end": 50.0,
+     "scene_desc": "인물이 스마트폰 타이머 화면을 보여준다.",
+     "is_key": false,
      "change": "",
-     "shot_role": "실증"
+     "shot_role": "사용중"
     },
     "alternates": [
-     {
-      "video_id": "s0",
-      "seg_id": "s0-21",
-      "start": 29.6,
-      "end": 30.567,
-      "scene_desc": "욕조에 다리를 뻗고 앉아 있는 인물의 모습이 원형 프레임 안에 강조되어 나타납니다.",
-      "is_key": false,
-      "change": "",
-      "shot_role": "기타"
-     },
      {
       "video_id": "s0",
       "seg_id": "s0-22",
@@ -524,6 +535,50 @@
       "change": "헤어캡이 제거됩니다.",
       "shot_role": "사용중"
      },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-25",
+      "start": 33.367,
+      "end": 34.0,
+      "scene_desc": "샤워기 거품으로 팔을 씻는 모습. 거품이 풍성하게 팔 전체에 묻어 있음.",
+      "is_key": true,
+      "change": "피부에 거품이 덮여 있음",
+      "shot_role": "사용중"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-26",
+      "start": 34.0,
+      "end": 35.2,
+      "scene_desc": "샤워기를 들고 어깨와 몸을 헹구는 모습. 샤워기 헤드가 프레임 안으로 들어옴.",
+      "is_key": true,
+      "change": "피부에 묻은 거품이 씻겨 내려감",
+      "shot_role": "사용중"
+     }
+    ],
+    "effect": "cut",
+    "fit": 3,
+    "fit_evidence": "broll_fill",
+    "inherited": false,
+    "visual_verb": false,
+    "src_seg_applied": null
+   },
+   {
+    "beat_idx": 7,
+    "role": "cta",
+    "narration": "다이소 꿀템 정보 필요하신 분 댓글 달아주시면 바로 보내드릴게요.",
+    "target_seconds": 6.3,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-41",
+     "start": 50.0,
+     "end": 50.9,
+     "scene_desc": "인물이 카메라를 보며 의아한 표정으로 손짓한다.",
+     "is_key": false,
+     "change": "",
+     "shot_role": "기타"
+    },
+    "alternates": [
      {
       "video_id": "s0",
       "seg_id": "s0-27",
@@ -563,31 +618,7 @@
       "is_key": true,
       "change": "머리카락의 물기가 빠져나감",
       "shot_role": "사용중"
-     }
-    ],
-    "effect": "cut",
-    "fit": 5,
-    "fit_evidence": "inherited",
-    "inherited": true,
-    "visual_verb": true,
-    "src_seg_applied": "s0-38"
-   },
-   {
-    "beat_idx": 5,
-    "role": "twist",
-    "narration": "하지만 정작 써 본 사람들 사이에선 은은한 히노키 잔향이 오래 남는 게 대박임.",
-    "target_seconds": 7.7,
-    "primary": {
-     "video_id": "s0",
-     "seg_id": "s0-38",
-     "start": 46.967,
-     "end": 47.6,
-     "scene_desc": "인물이 손을 모아 얼굴 가까이에 대고 향을 맡으며 만족스러운 표정을 짓는다.",
-     "is_key": true,
-     "change": "",
-     "shot_role": "실증"
-    },
-    "alternates": [
+     },
      {
       "video_id": "s0",
       "seg_id": "s0-31",
@@ -600,16 +631,6 @@
      },
      {
       "video_id": "s0",
-      "seg_id": "s0-32",
-      "start": 39.667,
-      "end": 40.467,
-      "scene_desc": "샤워 후 잠옷을 입고 있는 얼굴 클로즈업. 물기가 약간 남아 있는 피부 상태.",
-      "is_key": false,
-      "change": "피부 표면에 물기가 보임",
-      "shot_role": "before"
-     },
-     {
-      "video_id": "s0",
       "seg_id": "s0-33",
       "start": 40.467,
       "end": 41.833,
@@ -617,54 +638,14 @@
       "is_key": false,
       "change": "타이머 숫자가 줄어듦",
       "shot_role": "기타"
-     },
-     {
-      "video_id": "s0",
-      "seg_id": "s0-34",
-      "start": 41.833,
-      "end": 43.067,
-      "scene_desc": "손바닥을 위로 향해 내밀고 있는 모습. 스마트폰에 12분 남은 타이머가 보임.",
-      "is_key": false,
-      "change": "시간이 경과함",
-      "shot_role": "기타"
-     },
-     {
-      "video_id": "s0",
-      "seg_id": "s0-41",
-      "start": 50.0,
-      "end": 50.9,
-      "scene_desc": "인물이 카메라를 보며 의아한 표정으로 손짓한다.",
-      "is_key": false,
-      "change": "",
-      "shot_role": "기타"
-     },
-     {
-      "video_id": "s0",
-      "seg_id": "s0-42",
-      "start": 50.9,
-      "end": 51.733,
-      "scene_desc": "인물이 화면을 바라보며 질문하는 표정을 짓는다.",
-      "is_key": false,
-      "change": "",
-      "shot_role": "기타"
-     },
-     {
-      "video_id": "s0",
-      "seg_id": "s0-36",
-      "start": 44.0,
-      "end": 45.5,
-      "scene_desc": "인플루언서가 다이소 히노키 바디로션 제품을 손에 들고 정면으로 보여주고 있다.",
-      "is_key": false,
-      "change": "",
-      "shot_role": "사용중"
      }
     ],
     "effect": "cut",
-    "fit": 5,
-    "fit_evidence": "inherited",
-    "inherited": true,
-    "visual_verb": true,
-    "src_seg_applied": "s0-38"
+    "fit": 3,
+    "fit_evidence": "broll_fill",
+    "inherited": false,
+    "visual_verb": false,
+    "src_seg_applied": null
    }
   ],
   "plagiarism_flags": [],
@@ -674,45 +655,51 @@
  },
  "beat_sources": [
   {
-   "role": "title",
+   "role": "hook",
    "seg": "",
    "segs": []
   },
   {
-   "role": "story",
-   "seg": "s0-20",
-   "segs": [
-    "s0-20"
-   ]
+   "role": "problem",
+   "seg": "",
+   "segs": []
   },
   {
-   "role": "authority",
+   "role": "reveal",
+   "seg": "",
+   "segs": []
+  },
+  {
+   "role": "proof",
    "seg": "s0-36",
    "segs": [
     "s0-36"
    ]
   },
   {
-   "role": "benefit",
+   "role": "demo",
+   "seg": "s0-37",
+   "segs": [
+    "s0-37",
+    "s0-39"
+   ]
+  },
+  {
+   "role": "result",
    "seg": "s0-39",
    "segs": [
-    "s0-39",
-    "s0-37"
+    "s0-39"
    ]
   },
   {
-   "role": "escalate",
-   "seg": "s0-38",
-   "segs": [
-    "s0-38"
-   ]
+   "role": "price",
+   "seg": "",
+   "segs": []
   },
   {
-   "role": "twist",
-   "seg": "s0-38",
-   "segs": [
-    "s0-38"
-   ]
+   "role": "cta",
+   "seg": "",
+   "segs": []
   }
  ]
 }
