@@ -72,3 +72,28 @@ def test_판정_커버리지가_낮으면_점수를_안_믿는다(monkeypatch, t
     monkeypatch.setattr(T, "_judge", lambda paths, kept: [{"image_no": k + 1, "verdict": "맞음"} for k in range(9)])
     score2, _, counts2 = P._judge_all(segs, "v.mp4", str(tmp_path))
     assert score2 == 1.0 and counts2["_judged"] == 9
+
+
+def test_라벨_일치_판정은_빈_묘사를_분모에서_빼고_키값을_돌려준다():
+    from shopping_shorts import probe_frame_accuracy as P
+    segs = [{"scene_desc": "손이 병뚜껑을 연다", "shot_role": "사용", "label": "뚜껑 열기"},
+            {"scene_desc": "", "shot_role": "기타", "label": ""},
+            {"scene_desc": "제품 정면", "shot_role": "제품", "label": "제품 소개"}]
+    seen = {}
+
+    def fake(prompt):
+        seen["prompt"] = prompt
+        return '{"items":[{"no":1,"role_ok":true,"label_ok":false},{"no":3,"role_ok":true,"label_ok":true}]}'
+    assert P.judge_labels(segs, _call=fake) == (2, 1, 2)
+    assert '"no": 2' not in seen["prompt"] and "판정 규칙" in seen["prompt"]
+    assert P.judge_labels([], _call=fake) == (0, 0, 0)
+    assert P.judge_labels(segs, _call=lambda p: "not json") == (0, 0, 2)
+
+
+def test_summarize_에_라벨_백분율이_실린다():
+    from shopping_shorts.probe_frame_accuracy import summarize
+    rs = [{"classic_role_ok": 3, "classic_label_ok": 1, "classic_label_n": 4, "b1_role_ok": 4, "b1_label_ok": 4, "b1_label_n": 4},
+          {"classic_role_ok": 1, "classic_label_ok": 1, "classic_label_n": 2, "b1_role_ok": 1, "b1_label_ok": 2, "b1_label_n": 2}]
+    sm = summarize(rs)
+    assert (sm["classic_role_pct"], sm["classic_label_pct"], sm["b1_role_pct"], sm["b1_label_pct"]) == (66, 33, 83, 100)
+    assert summarize([{}])["b1_role_pct"] is None

@@ -58,4 +58,4 @@ def test_키_등록_검사는_실제_합성으로_403을_잡는다(monkeypatch):
 def test_고객_화면_문구는_타입캐스트_403을_요금제로_안내한다():
     from shopping_shorts.app import _user_facing_error as f
     m = f("403 Client Error: Forbidden for url: https://api.typecast.ai/v1/text-to-speech/with-timestamps")
-    assert "타입캐스트" in m and "요금제" in m and "기본 목소리" in m
+    assert "타입캐스트" in m and "요금제" in m and "ElevenLabs" not in m and "오류 신고" in m

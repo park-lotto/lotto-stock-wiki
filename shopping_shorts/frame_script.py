@@ -100,6 +100,7 @@ TAG_BATCH = 12
 # ★원테이크(컷 없음) 강제 분할 상한. 실측 s1: 컷 3개 → 51초짜리 세그 1개 = 한 줄 묘사로 51초를 덮어
 #   중간 프레임이 다른 장면. 이보다 긴 구간은 균등 분할한다.
 MAX_SPAN_SEC = 7.0
+MIN_SPAN_SEC = 0.5   # 이보다 짧은 조각은 앞 구간에 합친다(끝의 한 프레임 조각 → 빈 묘사 방지, 2026-09-05)
 # ★태깅·판정에 쓰는 모델 순서. response_schema(enum) 강제 호출은 gemini-3.5-flash에서 120초를 넘겨
 #   죽었다(2026-09-04 실측: 판정 4/4·태깅 1/1 DEADLINE_EXCEEDED). 같은 이미지 10장을 스키마 없이
 #   부르면 lite 8초·3.5-flash 5초. 그래서 **스키마 없이** 부르고 값은 코드가 검증한다.
@@ -125,6 +126,25 @@ _TAGS_SCHEMA = {
     }, "required": ["seg_no", "scene_desc", "shot_role"]}}},
     "required": ["tags"],
 }
+
+
+def merge_slivers(bounds, min_span=MIN_SPAN_SEC):
+    """min_span보다 짧은 조각을 앞 구간에 합친 경계 목록(순수 함수, 2026-09-05).
+    실측(서버 30편): detect_cuts의 마지막 컷 끝이 영상 끝보다 한 프레임 앞이라 **끝에 0.03초 조각**이 24편에서
+    생겼고, 그 조각은 프레임이 없어 묘사가 비었다(편당 빈 묘사 1개, 짧은 영상은 "태깅 실패 33%" 오판까지).
+    첫·끝·중간 어디든 짧은 조각은 경계를 지워 앞 구간에 붙인다. 0과 끝은 반드시 남긴다."""
+    ts = sorted({float(b) for b in (bounds or [])})
+    if len(ts) < 3 or not min_span or min_span <= 0:
+        return ts
+    out = [ts[0]]
+    for b in ts[1:-1]:
+        if b - out[-1] < min_span:      # 이 경계를 지우면 짧은 조각이 앞 구간에 합쳐진다
+            continue
+        out.append(b)
+    if ts[-1] - out[-1] < min_span and len(out) > 1:   # 끝 조각이 짧으면 마지막 경계를 지운다
+        out.pop()
+    out.append(ts[-1])
+    return out
 
 
 def split_long_spans(bounds, max_span=MAX_SPAN_SEC):
@@ -205,6 +225,12 @@ def make_strip(paths, out_path, height=STRIP_HEIGHT, label=None):
         return None
 
 
+def _default_transcribe(mp3):
+    """기본 전사기 — Whisper 언어 자동 감지(외국 영상). 본체가 `is`로 식별하므로 람다로 바꾸지 마라."""
+    from shopping_shorts import asr_check
+    return asr_check.transcribe_words(mp3, language=None)
+
+
 def _default_boundaries(video_path):
     """실 컷 경계 리스트 [0, cut1, ..., duration]. detect_cuts(내부 컷)+길이로 조립.
     감지 실패/짧으면 길이만 알면 통구간 1개([0,dur])라도 만든다(호출부 폴백 최소화).
@@ -237,7 +263,7 @@ def _default_boundaries(video_path):
               file=__import__("sys").stderr)
         cuts = set()
     bounds = sorted({0.0, dur} | {round(c, 3) for c in cuts if 0.0 < c < dur})
-    return split_long_spans(bounds, MAX_SPAN_SEC)
+    return split_long_spans(merge_slivers(bounds, MIN_SPAN_SEC), MAX_SPAN_SEC)
 
 
 def normalize_tags(tags, n_segs):
@@ -606,7 +632,7 @@ def extract_script_frames(video_path, video_id, caption="", *, _no_classic=False
         from shopping_shorts import asr_check
         # ★언어 자동 감지(2026-09-04) — 소스는 외국 영상이 많다. "ko" 고정이면 중국어·영어를 한국어로
         #   엉터리 받아쓴다. 원문 언어로 받아쓰고 아래 translate가 한국어(text_ko)를 붙인다.
-        transcribe_words = lambda mp3: asr_check.transcribe_words(mp3, language=None)  # noqa: E731
+        transcribe_words = _default_transcribe
     tag_frames = tag_frames or _gemini_tag_frames
     story_brief = story_brief or _gemini_story_brief
     translate = translate or _gemini_translate
@@ -635,14 +661,27 @@ def _extract_script_frames_body(video_path, video_id, caption, _no_classic, extr
 
     # 오디오 전사(실패·키없음 → None, text 빈칸 fail-open)
     words = None
+    # ★전사가 왜 비었는지 숫자 옆에 사유를 남긴다(2026-09-05 서버 30편 전사 0/30 — 키·오디오·API 중 무엇인지 몰랐다)
+    transcript_status = "ok"
     try:
         work = Path(tempfile.mkdtemp(prefix="frame_asr_"))
         _tmp_dirs.append(str(work))
         mp3 = extract_audio(video_path, str(work / "audio.mp3"))
-        if mp3:
+        if not mp3:
+            transcript_status = "audio_extract_failed"
+        else:
             words = transcribe_words(mp3)
-    except Exception:
+            if words is None:
+                from shopping_shorts import config as _cfg, asr_check as _asr
+                # 사유는 기본 전사기를 썼을 때만 읽는다 — 주입된 전사기(테스트)는 asr_check를 안 거쳐 옛 사유가 샌다
+                why = _asr.last_error() if transcribe_words is _default_transcribe else ""
+                transcript_status = ("no_groq_key" if not getattr(_cfg, "GROQ_API_KEY", "")
+                                     else (f"asr_none: {why}" if why else "asr_none"))
+            elif not words:
+                transcript_status = "asr_empty"
+    except Exception as e:  # noqa: BLE001 — 전사 실패는 무해(말 없이 간다), 사유만 남긴다
         words = None
+        transcript_status = f"exception: {e!r}"[:160]
 
     segs = segments_from_cuts_and_words(boundaries, words)
     if not segs:
@@ -723,6 +762,7 @@ def _extract_script_frames_body(video_path, video_id, caption, _no_classic, extr
         "product_benefits": script_extract._collect_benefits(segments),
         "source_brief": brief,       # 1차 브리프(product·role·core·summary·flow·confidence), 없으면 {}
         "tag_empty_ratio": round(_er, 3),   # 묘사 빈 비율 — 0이 정상. 실패를 숫자로 남긴다(2026-09-05)
+        "transcript_status": transcript_status,   # ok | no_groq_key | audio_extract_failed | asr_none | asr_empty | exception: …
         # 외국 소스의 한국어 전사 전문(대본 재료용). 한국어 소스는 빈칸 → 호출부가 full_text로 폴백.
         "full_text_ko": " ".join((s.get("text_ko") or "").strip() for s in segments
                                  if (s.get("text_ko") or "").strip()),

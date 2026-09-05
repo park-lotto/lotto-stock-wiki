@@ -4549,11 +4549,14 @@ _OUT_OF_CREDIT = ("402", "payment required", "not enough credits", "insufficient
 #   ElevenLabs/타입캐스트 HTTP 오류 문구(요청 라이브러리의 "401 Client Error … for url: https://api.elevenlabs.io/…")를
 #   상태코드·상세로 갈라 **고객이 할 수 있는 일**을 말한다. 순서가 곧 우선순위다.
 _TTS_VENDOR_RULES = (
-    # 타입캐스트 403 = 키는 맞는데 **합성이 거부**(API 요금제 미가입·만료·크레딧 0)인 경우가 대부분 — 목소리 목록은 되고
-    # 합성만 막힌다(실측 cid 260, 14일간 21건 전부). "키를 다시 넣어라"는 틀린 안내다.
+    # 타입캐스트 403 = 키는 맞는데 **합성이 거부** — 목소리 목록은 되고 합성만 막힌다(실측 cid 260, 14일간 21건 전부).
+    # ⚠️요금제·크레딧 정상인데도 났다(09-05 사장님 확인) — 타입캐스트 문서에 403 정의가 없다(402=크레딧, 404=voice 없음).
+    #   남은 후보는 그 voice_id를 이 키로 못 쓰는 경우(uc_ 커스텀 목소리는 만든 계정 전용). "키를 다시 넣어라"는 틀린 안내다.
     (("api.typecast.ai", "403"),
-     "타입캐스트가 이 키의 음성 합성을 거부했습니다(403). 타입캐스트 API 요금제가 활성인지·크레딧이 남았는지 확인해 주세요. "
-     "급하면 TTS 단계에서 기본 목소리(ElevenLabs)로 바꾸면 바로 됩니다."),
+     # ⚠️"ElevenLabs로 바꾸세요"는 빼라 — 타입캐스트를 등록한 회원은 일레븐이 무료 계정인 경우가 있다(cid 260, 사장님 확인).
+     "타입캐스트가 이 키로의 음성 합성을 거부했습니다(403). 선택한 목소리가 이 키(계정)에서 쓸 수 있는 목소리인지, "
+     "타입캐스트 API 요금제·크레딧이 정상인지 확인해 주세요. 그래도 안 되면 다른 목소리로 바꿔 한 번 더 시도하고, "
+     "오류 신고를 남겨 주시면 확인해 드립니다."),
     (("detected_unusual_activity", "unusual activity"),
      "음성 서비스(ElevenLabs)가 무료 요금제의 비정상 사용으로 이 키를 막았습니다. 유료 요금제로 바꾸거나 "
      "설정 > 🔑 내 키 등록에서 다른 키를 넣어 주세요."),
@@ -5949,6 +5952,9 @@ def diag_work(store, work_id, work_dir):
             "clean": {"status": job.get("clean_status"), "error": (job.get("clean_error") or "")[:300]},
             "fx_status": job.get("fx_status"), "video_path": job.get("video_path"),
             "created_at": job.get("created_at"), "updated_at": job.get("updated_at"),
+            # 목소리 스냅샷(어느 엔진·어느 voice_id로 나갔나) — 타입캐스트 403(cid 260)을 갈라 보려면 필수.
+            #   voice_id 접두사: tc_=내장 / uc_=커스텀(그 계정 전용 → 남의 키로는 거부된다)
+            "voice": _diag_voice(job.get("voice")),
         }
         d = Path(work_dir) / str(job_id)
         files = {}
@@ -5967,6 +5973,85 @@ def diag_work(store, work_id, work_dir):
     except Exception:      # noqa: BLE001
         out["bug_reports"] = []
     return out
+
+
+def _diag_voice(v):
+    """job.voice 스냅샷 → 진단용 요약(설정 덩어리는 뺀다)."""
+    if not isinstance(v, dict):
+        return None
+    vid = str(v.get("voice_id") or "")
+    mid = str(v.get("model_id") or "")
+    return {"voice_id": vid, "model_id": mid, "preset_id": v.get("preset_id"),
+            "engine": "typecast" if typecast_tts.is_typecast(mid) else "elevenlabs",
+            "voice_kind": ("custom(uc_)" if vid.startswith("uc_") else "builtin(tc_)" if vid.startswith("tc_") else "?")}
+
+
+def diag_typecast(store, customer_id, voice_id="", model_id="", text="안녕하세요", *, post=None, get=None):
+    """관리자 진단: **그 회원의 타입캐스트 키로 실제 합성**을 쳐서 업체 응답을 그대로 본다(2026-09-05, cid 260).
+    키 값은 절대 싣지 않는다(own_key 여부·길이만). 순서: /v1/voices(목록·그 voice_id 포함 여부) →
+    with-timestamps → 일반 엔드포인트. 각각 status와 본문 앞 300자를 돌려준다."""
+    from shopping_shorts import keyroute
+    post = post or requests.post
+    get = get or requests.get
+    try:
+        keys, own = keyroute.keys_for(store, customer_id, keyroute.SVC_TYPECAST)
+    except Exception as e:      # noqa: BLE001 — 진단은 키 조회 실패도 결과로 보여준다
+        return {"ok": False, "error": f"키 조회 실패: {e!r}"}
+    if not keys:
+        return {"ok": False, "error": "타입캐스트 키 없음(회원·사장님 둘 다)", "own_key": bool(own)}
+    key = keys[0]
+    hdr = {"X-API-KEY": key}
+    out = {"ok": True, "customer_id": customer_id, "own_key": bool(own), "key_len": len(key),
+           "voice_id": voice_id, "model_id": model_id or "ssfm-v30", "steps": []}
+
+    def _step(name, fn):
+        try:
+            r = fn()
+            body = (r.text or "")[:300]
+            out["steps"].append({"step": name, "status": r.status_code, "body": body})
+            return r
+        except Exception as e:      # noqa: BLE001 — 네트워크 예외도 한 줄로
+            out["steps"].append({"step": name, "status": 0, "body": f"예외: {e!r}"[:300]})
+            return None
+    # ★API 구독 상태 — 타입캐스트는 **스튜디오(앱) 요금제와 API 요금제가 별개**(공식: 따로 구독·따로 과금).
+    #   "타입캐스트 유료"라도 API 플랜은 free(월 15k~30k 크레딧)일 수 있다. plan·크레딧을 그대로 싣는다.
+    rsub = _step("subscription", lambda: get("https://api.typecast.ai/v1/users/me/subscription", headers=hdr, timeout=15))
+    if rsub is not None and rsub.status_code == 200:
+        try:
+            js = rsub.json() or {}
+            cr = js.get("credits") or {}
+            out["api_plan"] = js.get("plan")
+            out["credits"] = {"plan": cr.get("plan_credits"), "used": cr.get("used_credits"),
+                              "left": (cr.get("plan_credits") or 0) - (cr.get("used_credits") or 0)}
+        except Exception as e:      # noqa: BLE001
+            out["subscription_parse_error"] = repr(e)[:200]
+    rv = _step("voices", lambda: get(typecast_tts._VOICES_ENDPOINT, headers=hdr, timeout=15))
+    if rv is not None and rv.status_code == 200:
+        try:
+            vs = rv.json()
+            if isinstance(vs, dict):
+                vs = vs.get("voices") or vs.get("items") or []
+            ids = [v.get("voice_id") for v in vs if isinstance(v, dict)]
+            out["voices_count"] = len(ids)
+            out["voice_in_list"] = (voice_id in ids) if voice_id else None
+            if not voice_id and ids:
+                voice_id = out["voice_id"] = ids[0]
+        except Exception as e:      # noqa: BLE001
+            out["voices_parse_error"] = repr(e)[:200]
+    if voice_id:
+        body = typecast_tts.build_payload(text, voice_id, model_id=model_id or None)
+        _step("with_timestamps", lambda: post(typecast_tts._ENDPOINT_TS, headers=hdr, json=body, timeout=30))
+        _step("plain", lambda: post(typecast_tts._ENDPOINT, headers=hdr, json=body, timeout=30))
+    return out
+
+
+@app.get("/api/admin/diag/typecast/{customer_id}")
+def api_admin_diag_typecast(request: Request, customer_id: int, voice_id: str = "", model_id: str = ""):
+    """관리자: 회원 키로 타입캐스트 실제 합성을 쳐 업체 응답(403 본문 등)을 본다. 키 값은 안 싣는다."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    return diag_typecast(Store(DB_PATH), customer_id, voice_id=voice_id, model_id=model_id)
 
 
 @app.get("/api/admin/diag/work/{work_id}")

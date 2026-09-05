@@ -150,6 +150,17 @@ def build_payload(text, voice_id, *, speed=None, emotion=None, intensity=None,
     return body
 
 
+def raise_with_body(r):
+    """4xx/5xx면 **업체가 준 본문**을 문구에 실어 올린다(2026-09-05). 종전 raise_for_status는
+    '403 Client Error: Forbidden for url: …'만 남겨 잡 오류에 사유가 없었다 — 고객 cid 260이 키·요금제·
+    크레딧 전부 정상인데 403이 14일간 21건이었고, 본문을 못 봐 '요금제' 오진을 냈다. 타입캐스트 문서는
+    403을 정의하지 않는다(402=크레딧 부족, 404=voice 없음) → 본문만이 사유다. HTTPError 유지(재시도 루프가 잡는다)."""
+    if r.status_code < 400:
+        return
+    body = (r.text or "").strip().replace("\n", " ")[:200]
+    raise requests.HTTPError(f"{r.status_code} {r.reason or ''} {r.url or ''} | 본문: {body or '(없음)'}", response=r)
+
+
 def synthesize(text, out_path, *, voice_id, speed=None, emotion=None, intensity=None,
                model_id=None, seed=None, previous_text=None, next_text=None,
                timeout=120, customer_id=0):
@@ -179,8 +190,8 @@ def synthesize(text, out_path, *, voice_id, speed=None, emotion=None, intensity=
             with open(out_path, "wb") as f:
                 f.write(base64.b64decode(audio_b64))
             return None
-        r2.raise_for_status()
-    r.raise_for_status()
+        raise_with_body(r2)
+    raise_with_body(r)
     data = r.json()
     audio_b64 = data.get("audio")
     if not audio_b64:

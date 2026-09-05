@@ -94,6 +94,9 @@ def summarize(results):
         "classic_avg": round(sum(cs) / len(cs), 3) if cs else None,
         "b1_avg": round(sum(bs) / len(bs), 3) if bs else None,
         "unjudged": sum(1 for r in results if r.get("classic_score") is None or r.get("b1_score") is None),
+        # 전사 사유별 편수(2026-09-05: 서버 30편 전사 0/30인데 키·오디오·API 중 무엇인지 몰랐다)
+        "transcript_status": dict(__import__("collections").Counter(
+            str(r.get("b1_transcript_status") or "?") for r in results if r.get("b1_transcript_status") is not None)),
         "b1_better": sum(1 for r in both if r["b1_score"] > r["classic_score"]),
         "classic_better": sum(1 for r in both if r["b1_score"] < r["classic_score"]),
         "tie": sum(1 for r in both if r["b1_score"] == r["classic_score"]),
@@ -103,7 +106,80 @@ def summarize(results):
         "b1_empty_segs": sum(int(r.get("b1_empty") or 0) for r in results),
         "b1_segs_total": sum(int(r.get("b1_segs") or 0) for r in results),
         "classic_empty_segs": sum(int(r.get("classic_empty") or 0) for r in results),
+        # 라벨(결·쓰임) 일치율 — 목표표 3번(2026-09-05 서버 측정). 텍스트 판정(관대)이라 상대 비교만.
+        "classic_role_pct": _pct(results, "classic_role_ok", "classic_label_n"),
+        "classic_label_pct": _pct(results, "classic_label_ok", "classic_label_n"),
+        "b1_role_pct": _pct(results, "b1_role_ok", "b1_label_n"),
+        "b1_label_pct": _pct(results, "b1_label_ok", "b1_label_n"),
     }
+
+
+def _pct(results, ok_key, n_key):
+    """라벨 판정된 구간 합계 기준 백분율(정수). 판정이 하나도 없으면 None."""
+    n = sum(int(r.get(n_key) or 0) for r in results)
+    if not n:
+        return None
+    return int(100 * sum(int(r.get(ok_key) or 0) for r in results) / n)
+
+
+_LABEL_MODELS = ("gemini-3.1-flash-lite", "gemini-3.5-flash")
+
+
+def judge_labels(segs, *, _call=None):
+    """결(shot_role)·쓰임(label)이 묘사·변화에 맞게 붙었는지 텍스트로 판정(영상당 1회). → (결 맞음, 쓰임 맞음, 판정 구간 수).
+    tools/probes/label_agreement.py의 판정을 서버 프로브에 옮긴 것(목표표 3번 — 서버에서 재야 한다).
+    빈 묘사 구간은 분모에서 뺀다(둘 다 false로 세면 빈 묘사가 이중 벌점). 실패·키 없음 → (0, 0, 0)."""
+    from shopping_shorts import frame_script
+    items = [{"no": i + 1, "scene_desc": s.get("scene_desc", ""), "change": s.get("change", ""),
+              "shot_role": s.get("shot_role", ""), "label": s.get("label", "")}
+             for i, s in enumerate(segs or []) if (s.get("scene_desc") or "").strip()]
+    if not items:
+        return 0, 0, 0
+    try:
+        from shopping_shorts import shot_roles
+        guide = shot_roles.guide_block()
+    except Exception:      # noqa: BLE001
+        guide = ""
+    prompt = ("아래는 영상 구간마다 AI가 적은 [묘사(scene_desc)·변화(change)]와 거기에 붙인 [결(shot_role)·쓰임(label)]이다. "
+              "묘사·변화를 사실로 보고, 결과 쓰임이 그 묘사에 **맞게 붙었는지** 항목마다 판정해라.\n결 어휘 정의:\n" + guide
+              + "\n판정 규칙: role_ok = 결이 묘사와 맞으면 true(묘사에 근거가 없거나 반대면 false). "
+              "label_ok = 쓰임이 '왜 이 장면이 여기 있나'를 묘사에 맞게 12자 안팎으로 잡았으면 true(빈칸·묘사 반복·무관하면 false).\n"
+              + json.dumps(items, ensure_ascii=False)
+              + '\n출력은 JSON {"items":[{"no":1,"role_ok":true,"label_ok":true,"why":"한 줄"}]} 만.')
+    text = None
+    if _call is not None:
+        text = _call(prompt)
+    else:
+        try:
+            from google import genai
+            from google.genai import types
+            from shopping_shorts import comment_gen
+            for model in _LABEL_MODELS:
+                key, _ = comment_gen._current_key_and_idx()
+                if key is None:
+                    return 0, 0, 0
+                try:
+                    cli = genai.Client(api_key=key, http_options=types.HttpOptions(timeout=150_000))
+                    text = cli.models.generate_content(model=model, contents=[prompt],
+                                                       config=types.GenerateContentConfig(
+                                                           response_mime_type="application/json")).text
+                    break
+                except Exception as e:      # noqa: BLE001 — 다음 모델·키로
+                    print(f"probe.judge_labels: {model} 실패 {str(e)[:80]}", file=sys.stderr)
+                    time.sleep(3)
+        except Exception as e:      # noqa: BLE001
+            print(f"probe.judge_labels: 건너뜀 {e!r}"[:160], file=sys.stderr)
+            return 0, 0, 0
+    try:
+        data = frame_script.loads_lenient(text or "") or {}
+    except Exception:      # noqa: BLE001 — JSON이 아니면 판정 0(분모는 남긴다)
+        data = {}
+    res = data.get("items") if isinstance(data, dict) else data
+    by = {int(x.get("no", 0)): x for x in (res or []) if isinstance(x, dict)}
+    nos = [it["no"] for it in items]
+    ro = sum(1 for n in nos if by.get(n, {}).get("role_ok") is True)
+    lo = sum(1 for n in nos if by.get(n, {}).get("label_ok") is True)
+    return ro, lo, len(nos)
 
 
 def _run(store, work_dir, n, out_dir):
@@ -134,6 +210,7 @@ def _run(store, work_dir, n, out_dir):
                 r["b1_segs"] = len(b1.get("segments") or [])
                 r["b1_transcript_chars"] = len(b1.get("full_text") or "")
                 r["b1_ko_chars"] = len(b1.get("full_text_ko") or "")
+                r["b1_transcript_status"] = b1.get("transcript_status")
                 r["b1_brief"] = (b1.get("source_brief") or {}).get("flow", "")[:120]
                 r["b1_empty"] = sum(1 for x in (b1.get("segments") or []) if not (x.get("scene_desc") or "").strip())
                 r["b1_empty_ratio"] = b1.get("tag_empty_ratio")
@@ -148,6 +225,10 @@ def _run(store, work_dir, n, out_dir):
                     continue
                 r["b1_score"], r["b1_n"], r["b1_counts"] = _judge_all(b1.get("segments"), s["path"], tmp)
                 r["classic_empty"] = sum(1 for x in (s["classic"] or []) if not (x.get("scene_desc") or "").strip())
+                # 라벨 일치(결·쓰임) — 기존·B1 각 1회 텍스트 판정. 실패해도 점수 판정엔 영향 없다.
+                for name, segs in (("classic", s["classic"]), ("b1", b1.get("segments") or [])):
+                    ro, lo, n = judge_labels(segs)
+                    r[name + "_role_ok"], r[name + "_label_ok"], r[name + "_label_n"] = ro, lo, n
             except Exception as e:      # noqa: BLE001
                 r["b1_error"] = repr(e)[:200]
             with _LOCK:

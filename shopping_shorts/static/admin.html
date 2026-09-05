@@ -1109,6 +1109,8 @@ function renderProbe(d){
   var s=d.summary||{};
   sum.innerHTML = Object.keys(s).length ? '<tr><td>'+_pf(s.compared)+'</td><td>'+_pf(s.classic_avg)+'</td><td><b>'+_pf(s.b1_avg)+'</b></td><td>'+_pf(s.b1_better)+'</td><td>'+_pf(s.classic_better)+'</td><td>'+_pf(s.tie)+'</td><td>'+_pf(s.unjudged)+'</td><td>'+_pf(s.b1_empty_segs)+' / '+_pf(s.b1_segs_total)+'</td><td>'+_pf(s.b1_secs_avg)+'</td></tr>'
                                         : '<tr><td colspan=9 class=empty>—</td></tr>';
+  var ex=document.getElementById('probeExtra'); if(!ex && sum.closest){ ex=document.createElement('div'); ex.id='probeExtra'; ex.className='muted'; ex.style.marginTop='4px'; var tb=sum.closest('table'); if(tb) tb.insertAdjacentElement('afterend', ex); }
+  if(ex) ex.textContent = Object.keys(s).length ? ('라벨 일치(결/쓰임) 기존 '+_pf(s.classic_role_pct)+'%/'+_pf(s.classic_label_pct)+'% · B1 '+_pf(s.b1_role_pct)+'%/'+_pf(s.b1_label_pct)+'% · 전사 사유 '+JSON.stringify(s.transcript_status||{})) : '';
   var rs=d.results||[];
   rows.innerHTML = rs.length ? rs.map(function(r){
       return '<tr><td>'+(r.job_id||'').slice(0,8)+'</td><td>'+(r.vid||'')+'</td><td>'+_pf(r.classic_score)+'</td><td>'+_pf(r.b1_score)+'</td><td>'+_pf(r.classic_segs)+'→'+_pf(r.b1_segs)+'</td><td>'+_pf(r.b1_empty)+'</td><td>'+_pf(r.b1_secs)+'</td><td style="color:#c33">'+(r.b1_error||r.classic_error||'')+'</td></tr>';
