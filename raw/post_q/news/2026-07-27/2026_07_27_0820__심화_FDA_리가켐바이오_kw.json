@@ -1,0 +1,36 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "리가켐바이오",
+      "signal": "bull",
+      "reason": "ADC 기술 플랫폼의 FDA 희귀의약품 지정 및 임상 승인 등 글로벌 기술 입증",
+      "ts": "2026-07-27",
+      "quote": "리가켐바이오 'ADC 기술력' 입증…美 FDA 승인·글로벌 무대서 수상",
+      "sector": "바이오"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "리가켐바이오 ADC 기술 적용 신약, 美 FDA 희귀의약품 지정",
+      "ts": "2026-06-04",
+      "quote": "리가켐바이오 ADC 기술 적용 신약, 美 FDA 희귀의약품 지정"
+    },
+    {
+      "fact": "리가켐바이오, ESMO 2026서 CLDN18.2 ADC ‘LCB02A’ 연구 2건 발표",
+      "ts": "2026-07-20",
+      "quote": "리가켐바이오, ESMO 2026서 CLDN18.2 ADC ‘LCB02A’ 연구 2건 발표"
+    },
+    {
+      "fact": "리가켐바이오, 美 FDA서 CLDN18.2 ADC 임상 1/2상 IND 승인",
+      "ts": "2026-05-14",
+      "quote": "리가켐바이오, 美 FDA서 CLDN18.2 ADC 임상 1/2상 IND 승인"
+    },
+    {
+      "fact": "소티오, 리가켐 'LRRC15 ADC' 골육종 FDA ODD 지정",
+      "ts": "2026-06-04",
+      "quote": "소티오, 리가켐 'LRRC15 ADC' 골육종 \"FDA ODD 지정\""
+    }
+  ],
+  "quote": "리가켐바이오, 'ADC 기술력' 입증…美 FDA 승인·글로벌 무대서 수상"
+}
