@@ -1,28 +1,23 @@
 {
- "wrap": true,
- "font": "SpoqaHanSansNeo-Bold.otf",
- "size": 62,
- "color": "#FFFFFF",
- "color2": "#4ADE80",
- "y": 15,
- "x": 49,
- "weight": 900,
- "outline": true,
+ "font": "BlackHanSans.ttf",
+ "size": 76,
+ "y": 8,
+ "leading": 1.15,
+ "color": "#111111",
+ "color2": "#E8452C",
+ "outline": false,
  "outline_color": "#000000",
  "outline_w": 10,
- "box": false,
- "box_color": "#FFFFFF",
- "box_pad": 16,
- "box_opacity": 100,
- "shadow": true,
- "shadow_color": "#000000",
- "shadow_d": 4,
- "text": "다이소도 감탄한\n반전의 스티커",
+ "wrap": true,
+ "x": 50,
+ "weight": 900,
+ "text": "제조사도 당황한\n의외의 사용자",
  "highlight_rules": [
   {
-   "keyword": "반전의 스티커",
-   "color": "#4ADE80",
-   "box": false
+   "keyword": "의외의 사용자",
+   "color": "#E8452C",
+   "box": false,
+   "box_color": "#E8452C"
   }
  ]
 }

@@ -156,7 +156,14 @@ class H(SimpleHTTPRequestHandler):
                 return self._send(json.dumps(fs, ensure_ascii=False).encode(), "application/json")
             if u.path.startswith("/thumb/"):
                 pid = u.path.split("/", 2)[2]
-                return self._send(render_png(dict(SAMPLE, preset=pid), (135, 240), on_bg=True), "image/png")
+                # ★카드 썸네일도 화면과 같은 채널명을 쓴다(2026-09-05 사장님):
+                #   예전엔 SAMPLE의 "살림킹왕짱" 고정이라, 화면엔 채널명이 있는데
+                #   카드엔 다른 이름이 박혀 "들어가는 것/안 들어가는 것"이 섞여 보였다.
+                #   channel 인자가 오면 그 값을 쓰고, 빈 문자열이면 아예 안 그린다.
+                sp = dict(SAMPLE, preset=pid)
+                if "channel" in q:
+                    sp["channel"] = q.get("channel", [""])[0]
+                return self._send(render_png(sp, (135, 240), on_bg=True), "image/png")
             if u.path == "/render":
                 spec = json.loads(q.get("spec", ["{}"])[0])
                 return self._send(render_png(spec, (540, 960)), "image/png")

@@ -1,0 +1,322 @@
+[
+ {
+  "id": "tpl_01",
+  "name": "검정띠·민트강조",
+  "boxed": false,
+  "spec": {
+   "bar_color": "#111111",
+   "on_bar_color": "#FFFFFF",
+   "bar_h": 60,
+   "hook_band_h": 200,
+   "hook_band_color": "#000000",
+   "hook_band_alpha": 55,
+   "sub_line_h": 84,
+   "sub_line_w": 940,
+   "sub_line_soft": 6,
+   "sub_line_grad": 25,
+   "sub_line_bg": "#FFFFFF",
+   "sub_line_color": "#111111",
+   "sub_line_size": 36,
+   "head_block": false
+  },
+  "hc": {
+   "font": "BlackHanSans.ttf",
+   "size": 76,
+   "y": 8,
+   "leading": 1.15,
+   "color": "#FFFFFF",
+   "color2": "#3EE8C6",
+   "outline": true,
+   "outline_color": "#000000",
+   "outline_w": 10
+  }
+ },
+ {
+  "id": "tpl_02",
+  "name": "검정띠·노랑강조",
+  "boxed": false,
+  "spec": {
+   "bar_color": "#111111",
+   "on_bar_color": "#FFFFFF",
+   "bar_h": 60,
+   "hook_band_h": 200,
+   "hook_band_color": "#000000",
+   "hook_band_alpha": 55,
+   "sub_line_h": 84,
+   "sub_line_w": 940,
+   "sub_line_soft": 6,
+   "sub_line_grad": 25,
+   "sub_line_bg": "#FFFFFF",
+   "sub_line_color": "#111111",
+   "sub_line_size": 36,
+   "head_block": false
+  },
+  "hc": {
+   "font": "BlackHanSans.ttf",
+   "size": 76,
+   "y": 8,
+   "leading": 1.15,
+   "color": "#FFFFFF",
+   "color2": "#FFE600",
+   "outline": true,
+   "outline_color": "#000000",
+   "outline_w": 10
+  }
+ },
+ {
+  "id": "tpl_03",
+  "name": "검정띠·민트박스",
+  "boxed": true,
+  "spec": {
+   "bar_color": "#111111",
+   "on_bar_color": "#FFFFFF",
+   "bar_h": 60,
+   "hook_band_h": 200,
+   "hook_band_color": "#000000",
+   "hook_band_alpha": 55,
+   "sub_line_h": 84,
+   "sub_line_w": 940,
+   "sub_line_soft": 6,
+   "sub_line_grad": 25,
+   "sub_line_bg": "#FFFFFF",
+   "sub_line_color": "#111111",
+   "sub_line_size": 36,
+   "head_block": false
+  },
+  "hc": {
+   "font": "BlackHanSans.ttf",
+   "size": 76,
+   "y": 8,
+   "leading": 1.15,
+   "color": "#FFFFFF",
+   "color2": "#3EE8C6",
+   "outline": true,
+   "outline_color": "#000000",
+   "outline_w": 10
+  }
+ },
+ {
+  "id": "tpl_04",
+  "name": "검정띠·노랑박스",
+  "boxed": true,
+  "spec": {
+   "bar_color": "#111111",
+   "on_bar_color": "#FFFFFF",
+   "bar_h": 60,
+   "hook_band_h": 200,
+   "hook_band_color": "#000000",
+   "hook_band_alpha": 55,
+   "sub_line_h": 84,
+   "sub_line_w": 940,
+   "sub_line_soft": 6,
+   "sub_line_grad": 25,
+   "sub_line_bg": "#FFFFFF",
+   "sub_line_color": "#111111",
+   "sub_line_size": 36,
+   "head_block": false
+  },
+  "hc": {
+   "font": "BlackHanSans.ttf",
+   "size": 76,
+   "y": 8,
+   "leading": 1.15,
+   "color": "#FFFFFF",
+   "color2": "#FFE600",
+   "outline": true,
+   "outline_color": "#000000",
+   "outline_w": 10
+  }
+ },
+ {
+  "id": "tpl_05",
+  "name": "검정띠·연두강조",
+  "boxed": false,
+  "spec": {
+   "bar_color": "#111111",
+   "on_bar_color": "#FFFFFF",
+   "bar_h": 60,
+   "hook_band_h": 200,
+   "hook_band_color": "#000000",
+   "hook_band_alpha": 55,
+   "sub_line_h": 84,
+   "sub_line_w": 940,
+   "sub_line_soft": 6,
+   "sub_line_grad": 25,
+   "sub_line_bg": "#FFFFFF",
+   "sub_line_color": "#111111",
+   "sub_line_size": 36,
+   "head_block": false
+  },
+  "hc": {
+   "font": "BlackHanSans.ttf",
+   "size": 76,
+   "y": 8,
+   "leading": 1.15,
+   "color": "#FFFFFF",
+   "color2": "#B6FF3C",
+   "outline": true,
+   "outline_color": "#000000",
+   "outline_w": 10
+  }
+ },
+ {
+  "id": "tpl_06",
+  "name": "남색띠·민트강조",
+  "boxed": false,
+  "spec": {
+   "bar_color": "#1B3A6B",
+   "on_bar_color": "#FFFFFF",
+   "bar_h": 60,
+   "hook_band_h": 200,
+   "hook_band_color": "#000000",
+   "hook_band_alpha": 55,
+   "sub_line_h": 84,
+   "sub_line_w": 940,
+   "sub_line_soft": 6,
+   "sub_line_grad": 25,
+   "sub_line_bg": "#FFFFFF",
+   "sub_line_color": "#111111",
+   "sub_line_size": 36,
+   "head_block": false
+  },
+  "hc": {
+   "font": "BlackHanSans.ttf",
+   "size": 76,
+   "y": 8,
+   "leading": 1.15,
+   "color": "#FFFFFF",
+   "color2": "#3EE8C6",
+   "outline": true,
+   "outline_color": "#000000",
+   "outline_w": 10
+  }
+ },
+ {
+  "id": "tpl_07",
+  "name": "초록띠·노랑강조",
+  "boxed": false,
+  "spec": {
+   "bar_color": "#1E7A46",
+   "on_bar_color": "#FFFFFF",
+   "bar_h": 60,
+   "hook_band_h": 200,
+   "hook_band_color": "#000000",
+   "hook_band_alpha": 55,
+   "sub_line_h": 84,
+   "sub_line_w": 940,
+   "sub_line_soft": 6,
+   "sub_line_grad": 25,
+   "sub_line_bg": "#FFFFFF",
+   "sub_line_color": "#111111",
+   "sub_line_size": 36,
+   "head_block": false
+  },
+  "hc": {
+   "font": "BlackHanSans.ttf",
+   "size": 76,
+   "y": 8,
+   "leading": 1.15,
+   "color": "#FFFFFF",
+   "color2": "#FFE600",
+   "outline": true,
+   "outline_color": "#000000",
+   "outline_w": 10
+  }
+ },
+ {
+  "id": "tpl_08",
+  "name": "보라띠·노랑강조",
+  "boxed": false,
+  "spec": {
+   "bar_color": "#4B2E83",
+   "on_bar_color": "#FFFFFF",
+   "bar_h": 60,
+   "hook_band_h": 200,
+   "hook_band_color": "#000000",
+   "hook_band_alpha": 55,
+   "sub_line_h": 84,
+   "sub_line_w": 940,
+   "sub_line_soft": 6,
+   "sub_line_grad": 25,
+   "sub_line_bg": "#FFFFFF",
+   "sub_line_color": "#111111",
+   "sub_line_size": 36,
+   "head_block": false
+  },
+  "hc": {
+   "font": "BlackHanSans.ttf",
+   "size": 76,
+   "y": 8,
+   "leading": 1.15,
+   "color": "#FFFFFF",
+   "color2": "#FFD24A",
+   "outline": true,
+   "outline_color": "#000000",
+   "outline_w": 10
+  }
+ },
+ {
+  "id": "tpl_09",
+  "name": "빨강띠·노랑강조",
+  "boxed": false,
+  "spec": {
+   "bar_color": "#C9202A",
+   "on_bar_color": "#FFFFFF",
+   "bar_h": 60,
+   "hook_band_h": 200,
+   "hook_band_color": "#000000",
+   "hook_band_alpha": 55,
+   "sub_line_h": 84,
+   "sub_line_w": 940,
+   "sub_line_soft": 6,
+   "sub_line_grad": 25,
+   "sub_line_bg": "#FFFFFF",
+   "sub_line_color": "#111111",
+   "sub_line_size": 36,
+   "head_block": false
+  },
+  "hc": {
+   "font": "BlackHanSans.ttf",
+   "size": 76,
+   "y": 8,
+   "leading": 1.15,
+   "color": "#FFFFFF",
+   "color2": "#FFE600",
+   "outline": true,
+   "outline_color": "#000000",
+   "outline_w": 10
+  }
+ },
+ {
+  "id": "tpl_10",
+  "name": "회색띠·민트강조",
+  "boxed": false,
+  "spec": {
+   "bar_color": "#4A4F57",
+   "on_bar_color": "#FFFFFF",
+   "bar_h": 60,
+   "hook_band_h": 200,
+   "hook_band_color": "#000000",
+   "hook_band_alpha": 55,
+   "sub_line_h": 84,
+   "sub_line_w": 940,
+   "sub_line_soft": 6,
+   "sub_line_grad": 25,
+   "sub_line_bg": "#FFFFFF",
+   "sub_line_color": "#111111",
+   "sub_line_size": 36,
+   "head_block": false
+  },
+  "hc": {
+   "font": "BlackHanSans.ttf",
+   "size": 76,
+   "y": 8,
+   "leading": 1.15,
+   "color": "#FFFFFF",
+   "color2": "#3EE8C6",
+   "outline": true,
+   "outline_color": "#000000",
+   "outline_w": 10
+  }
+ }
+]

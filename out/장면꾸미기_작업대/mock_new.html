@@ -1,0 +1,65 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>새 화면안</title>
+<style>
+:root{--line:#e3e6ea;--sub:#6b7280;--acc:#2563eb;--acc2:#eef4ff;--bg:#f6f7f9}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.5 "Malgun Gothic",system-ui,sans-serif;background:var(--bg);color:#111;
+     height:100vh;overflow:hidden;display:flex;gap:18px;padding:16px}
+.left{width:330px;flex:none;display:flex;flex-direction:column;align-items:center;gap:10px}
+.phone{width:100%;aspect-ratio:9/16;border-radius:14px;overflow:hidden;background:#111;position:relative;box-shadow:0 6px 24px #0002}
+.phone>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.navrow{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--sub)}
+.navrow button{padding:6px 12px;border:1px solid var(--line);background:#fff;border-radius:8px;cursor:pointer}
+.right{flex:1;min-width:0;overflow-y:auto;padding-right:6px}
+.tabs{display:flex;gap:8px;margin-bottom:14px}
+.tabs button{flex:1;padding:11px;border:1px solid var(--line);background:#fff;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer}
+.tabs button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.step{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:14px}
+.step h3{margin:0 0 12px;font-size:17px;display:flex;align-items:center;gap:8px}
+.num{display:inline-flex;width:26px;height:26px;border-radius:50%;background:var(--acc);color:#fff;align-items:center;justify-content:center;font-size:14px;flex:none}
+.cards{display:flex;gap:12px;overflow-x:auto;padding-bottom:10px}
+.cards::-webkit-scrollbar{height:9px}.cards::-webkit-scrollbar-thumb{background:#c8ccd2;border-radius:6px}
+.card{flex:0 0 124px;border:3px solid transparent;border-radius:12px;cursor:pointer;overflow:hidden;background:#fff;transition:transform .12s}
+.card:hover{transform:translateY(-3px)}
+.card.on{border-color:var(--acc);box-shadow:0 0 0 4px var(--acc2)}
+.tpv{position:relative;width:100%;aspect-ratio:9/16;background:#111;overflow:hidden}
+.tpv img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.card b{display:block;padding:7px 4px;font-size:12px;font-weight:600;text-align:center}
+.spot{position:absolute;left:4%;right:4%;border:2px dashed transparent;border-radius:8px;cursor:pointer;z-index:5}
+.spot:hover{border-color:#2563eb;background:#2563eb1a}
+.spot.on{border-color:#2563eb;background:#2563eb26}
+.spot b{position:absolute;left:6px;top:-11px;background:var(--acc);color:#fff;font-size:10px;padding:2px 7px;border-radius:20px;opacity:0;white-space:nowrap}
+.spot:hover b,.spot.on b{opacity:1}
+.edit{background:#fff;border:2px solid var(--acc);border-radius:14px;padding:16px 18px;margin-bottom:14px}
+.edit h4{margin:0 0 14px;font-size:16px;display:flex;align-items:center;gap:8px}
+.edit h4 span{margin-left:auto;font-size:13px;color:var(--sub);cursor:pointer;font-weight:400}
+.row{display:flex;align-items:center;gap:10px;margin-bottom:11px}
+.row>label{width:64px;flex:none;color:var(--sub);font-size:13px}
+.row input[type=text],.row textarea{flex:1;padding:10px 12px;font-size:15px;border:1px solid var(--line);border-radius:8px;font-family:inherit;resize:none}
+.row input[type=color]{width:44px;height:34px;border:1px solid var(--line);border-radius:8px;background:#fff;padding:2px}
+.stp{display:flex;align-items:center;gap:6px}
+.stp button{width:38px;height:36px;font-size:19px;border:1px solid var(--line);background:#fff;border-radius:9px;cursor:pointer}
+.stp b{min-width:44px;text-align:center;font-size:15px}
+.undo{margin-left:auto;padding:8px 14px;border:1px solid var(--line);background:#fff;border-radius:9px;cursor:pointer;font-size:13px}
+.ask{background:#fff;border:1px dashed var(--line);border-radius:14px;padding:22px;text-align:center;color:var(--sub);margin-bottom:14px}
+.tip{background:#fffbe6;border:1px solid #ffe58f;border-radius:10px;padding:11px 14px;font-size:13px;margin-bottom:14px}
+.badge{position:absolute;left:8px;top:8px;background:#0009;color:#fff;font-size:11px;padding:3px 8px;border-radius:20px;z-index:6}
+</style></head><body>
+<div class="left">
+  <div class="phone">
+    <img id="bg" src="bg.jpg"><img id="fr"><img id="hc">
+    <div class="badge" id="badge">후킹 · 1번 장면</div>
+    <div class="spot" data-k="ch"   style="top:3%;height:8%"><b>채널명</b></div>
+    <div class="spot" data-k="head" style="top:13%;height:17%"><b>큰 제목</b></div>
+    <div class="spot" data-k="sub"  style="top:31%;height:8%"><b>작은 제목</b></div>
+  </div>
+  <div class="navrow"><button onclick="mv(-1)">◀</button><span id="no">1 / 12</span><button onclick="mv(1)">▶</button></div>
+</div>
+<div class="right">
+  <div class="tabs"><button class="on">🎨 템플릿</button><button>💬 자막</button><button>🎬 장면</button></div>
+  <div class="tip">💡 템플릿 하나만 고르면 끝. 고칠 게 있으면 <b>미리보기에서 그 글자를 누르세요.</b></div>
+  <div class="step"><h3><span class="num">1</span> 템플릿을 골라주세요</h3><div class="cards" id="cards"></div></div>
+  <div id="editSlot"></div>
+  <div class="ask" id="askBox">✏️ 고치고 싶으면 <b>왼쪽 미리보기에서 그 글자를 누르세요</b><br><span style="font-size:12px">그 하나만 여기에 나옵니다</span></div>
+</div>
+<script src="mock_new.js"></script>
+</body></html>
