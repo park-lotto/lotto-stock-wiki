@@ -1,7 +1,7 @@
 {
  "font": "BlackHanSans.ttf",
  "size": 76,
- "y": 8,
+ "y": 15,
  "leading": 1.15,
  "color": "#FFFFFF",
  "color2": "#3EE8C6",
@@ -16,7 +16,8 @@
   {
    "keyword": "의외의 사용자",
    "color": "#3EE8C6",
-   "box": false
+   "box": false,
+   "box_color": "#3EE8C6"
   }
  ]
 }

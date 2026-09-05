@@ -1,13 +1,11 @@
 [
  {
   "id": "tpl_01",
-  "name": "검정띠·민트강조",
+  "name": "배지·민트",
   "boxed": false,
   "spec": {
-   "bar_color": "#111111",
-   "on_bar_color": "#FFFFFF",
-   "bar_h": 60,
-   "hook_band_h": 200,
+   "bar_h": 0,
+   "hook_band_h": 518,
    "hook_band_color": "#000000",
    "hook_band_alpha": 55,
    "sub_line_h": 84,
@@ -17,12 +15,13 @@
    "sub_line_bg": "#FFFFFF",
    "sub_line_color": "#111111",
    "sub_line_size": 36,
-   "head_block": false
+   "badge_text": "진짜 봐야할 것",
+   "badge_color": "#FF2D55"
   },
   "hc": {
    "font": "BlackHanSans.ttf",
    "size": 76,
-   "y": 8,
+   "y": 11,
    "leading": 1.15,
    "color": "#FFFFFF",
    "color2": "#3EE8C6",
@@ -33,13 +32,11 @@
  },
  {
   "id": "tpl_02",
-  "name": "검정띠·노랑강조",
+  "name": "배지·노랑",
   "boxed": false,
   "spec": {
-   "bar_color": "#111111",
-   "on_bar_color": "#FFFFFF",
-   "bar_h": 60,
-   "hook_band_h": 200,
+   "bar_h": 0,
+   "hook_band_h": 518,
    "hook_band_color": "#000000",
    "hook_band_alpha": 55,
    "sub_line_h": 84,
@@ -49,12 +46,13 @@
    "sub_line_bg": "#FFFFFF",
    "sub_line_color": "#111111",
    "sub_line_size": 36,
-   "head_block": false
+   "badge_text": "진짜 봐야할 것",
+   "badge_color": "#FF2D55"
   },
   "hc": {
    "font": "BlackHanSans.ttf",
    "size": 76,
-   "y": 8,
+   "y": 11,
    "leading": 1.15,
    "color": "#FFFFFF",
    "color2": "#FFE600",
@@ -65,13 +63,11 @@
  },
  {
   "id": "tpl_03",
-  "name": "검정띠·민트박스",
-  "boxed": true,
+  "name": "채널띠·노랑",
+  "boxed": false,
   "spec": {
-   "bar_color": "#111111",
-   "on_bar_color": "#FFFFFF",
-   "bar_h": 60,
-   "hook_band_h": 200,
+   "bar_h": 120,
+   "hook_band_h": 456,
    "hook_band_color": "#000000",
    "hook_band_alpha": 55,
    "sub_line_h": 84,
@@ -81,44 +77,13 @@
    "sub_line_bg": "#FFFFFF",
    "sub_line_color": "#111111",
    "sub_line_size": 36,
-   "head_block": false
-  },
-  "hc": {
-   "font": "BlackHanSans.ttf",
-   "size": 76,
-   "y": 8,
-   "leading": 1.15,
-   "color": "#FFFFFF",
-   "color2": "#3EE8C6",
-   "outline": true,
-   "outline_color": "#000000",
-   "outline_w": 10
-  }
- },
- {
-  "id": "tpl_04",
-  "name": "검정띠·노랑박스",
-  "boxed": true,
-  "spec": {
    "bar_color": "#111111",
-   "on_bar_color": "#FFFFFF",
-   "bar_h": 60,
-   "hook_band_h": 200,
-   "hook_band_color": "#000000",
-   "hook_band_alpha": 55,
-   "sub_line_h": 84,
-   "sub_line_w": 940,
-   "sub_line_soft": 6,
-   "sub_line_grad": 25,
-   "sub_line_bg": "#FFFFFF",
-   "sub_line_color": "#111111",
-   "sub_line_size": 36,
-   "head_block": false
+   "on_bar_color": "#FFFFFF"
   },
   "hc": {
    "font": "BlackHanSans.ttf",
    "size": 76,
-   "y": 8,
+   "y": 14,
    "leading": 1.15,
    "color": "#FFFFFF",
    "color2": "#FFE600",
@@ -128,14 +93,12 @@
   }
  },
  {
-  "id": "tpl_05",
-  "name": "검정띠·연두강조",
-  "boxed": false,
+  "id": "tpl_04",
+  "name": "채널띠·민트박스",
+  "boxed": true,
   "spec": {
-   "bar_color": "#111111",
-   "on_bar_color": "#FFFFFF",
-   "bar_h": 60,
-   "hook_band_h": 200,
+   "bar_h": 120,
+   "hook_band_h": 456,
    "hook_band_color": "#000000",
    "hook_band_alpha": 55,
    "sub_line_h": 84,
@@ -145,15 +108,50 @@
    "sub_line_bg": "#FFFFFF",
    "sub_line_color": "#111111",
    "sub_line_size": 36,
-   "head_block": false
+   "bar_color": "#111111",
+   "on_bar_color": "#FFFFFF"
   },
   "hc": {
    "font": "BlackHanSans.ttf",
    "size": 76,
-   "y": 8,
+   "y": 14,
    "leading": 1.15,
    "color": "#FFFFFF",
-   "color2": "#B6FF3C",
+   "color2": "#3EE8C6",
+   "outline": true,
+   "outline_color": "#000000",
+   "outline_w": 10
+  }
+ },
+ {
+  "id": "tpl_05",
+  "name": "쇼츠UI·노랑",
+  "boxed": false,
+  "spec": {
+   "bar_h": 120,
+   "hook_band_h": 456,
+   "hook_band_color": "#000000",
+   "hook_band_alpha": 55,
+   "sub_line_h": 84,
+   "sub_line_w": 940,
+   "sub_line_soft": 6,
+   "sub_line_grad": 25,
+   "sub_line_bg": "#FFFFFF",
+   "sub_line_color": "#111111",
+   "sub_line_size": 36,
+   "bar_color": "#111111",
+   "on_bar_color": "#FFFFFF",
+   "yt_icons": 1,
+   "progress": 48,
+   "shorts_logo": 1
+  },
+  "hc": {
+   "font": "BlackHanSans.ttf",
+   "size": 76,
+   "y": 14,
+   "leading": 1.15,
+   "color": "#FFFFFF",
+   "color2": "#FFE600",
    "outline": true,
    "outline_color": "#000000",
    "outline_w": 10
@@ -161,13 +159,11 @@
  },
  {
   "id": "tpl_06",
-  "name": "남색띠·민트강조",
+  "name": "프로필·민트",
   "boxed": false,
   "spec": {
-   "bar_color": "#1B3A6B",
-   "on_bar_color": "#FFFFFF",
-   "bar_h": 60,
-   "hook_band_h": 200,
+   "bar_h": 130,
+   "hook_band_h": 465,
    "hook_band_color": "#000000",
    "hook_band_alpha": 55,
    "sub_line_h": 84,
@@ -177,12 +173,18 @@
    "sub_line_bg": "#FFFFFF",
    "sub_line_color": "#111111",
    "sub_line_size": 36,
-   "head_block": false
+   "bar_color": "#1B3A6B",
+   "on_bar_color": "#FFFFFF",
+   "profile": "숏",
+   "profile_color": "#F2C94C",
+   "profile_size": 88,
+   "profile_x": 10,
+   "profile_y": 9
   },
   "hc": {
    "font": "BlackHanSans.ttf",
    "size": 76,
-   "y": 8,
+   "y": 15,
    "leading": 1.15,
    "color": "#FFFFFF",
    "color2": "#3EE8C6",
@@ -193,13 +195,11 @@
  },
  {
   "id": "tpl_07",
-  "name": "초록띠·노랑강조",
+  "name": "프로필·배지",
   "boxed": false,
   "spec": {
-   "bar_color": "#1E7A46",
-   "on_bar_color": "#FFFFFF",
-   "bar_h": 60,
-   "hook_band_h": 200,
+   "bar_h": 130,
+   "hook_band_h": 465,
    "hook_band_color": "#000000",
    "hook_band_alpha": 55,
    "sub_line_h": 84,
@@ -209,12 +209,20 @@
    "sub_line_bg": "#FFFFFF",
    "sub_line_color": "#111111",
    "sub_line_size": 36,
-   "head_block": false
+   "bar_color": "#4B2E83",
+   "on_bar_color": "#FFFFFF",
+   "profile": "숏",
+   "profile_color": "#FFFFFF",
+   "profile_size": 88,
+   "profile_x": 10,
+   "profile_y": 9,
+   "badge_text": "반응 좋음",
+   "badge_color": "#FF7A00"
   },
   "hc": {
    "font": "BlackHanSans.ttf",
    "size": 76,
-   "y": 8,
+   "y": 15,
    "leading": 1.15,
    "color": "#FFFFFF",
    "color2": "#FFE600",
@@ -225,13 +233,11 @@
  },
  {
   "id": "tpl_08",
-  "name": "보라띠·노랑강조",
+  "name": "초록띠·연두",
   "boxed": false,
   "spec": {
-   "bar_color": "#4B2E83",
-   "on_bar_color": "#FFFFFF",
-   "bar_h": 60,
-   "hook_band_h": 200,
+   "bar_h": 120,
+   "hook_band_h": 456,
    "hook_band_color": "#000000",
    "hook_band_alpha": 55,
    "sub_line_h": 84,
@@ -241,15 +247,16 @@
    "sub_line_bg": "#FFFFFF",
    "sub_line_color": "#111111",
    "sub_line_size": 36,
-   "head_block": false
+   "bar_color": "#1E7A46",
+   "on_bar_color": "#FFFFFF"
   },
   "hc": {
    "font": "BlackHanSans.ttf",
    "size": 76,
-   "y": 8,
+   "y": 14,
    "leading": 1.15,
    "color": "#FFFFFF",
-   "color2": "#FFD24A",
+   "color2": "#B6FF3C",
    "outline": true,
    "outline_color": "#000000",
    "outline_w": 10
@@ -257,13 +264,11 @@
  },
  {
   "id": "tpl_09",
-  "name": "빨강띠·노랑강조",
-  "boxed": false,
+  "name": "빨강띠·노랑박스",
+  "boxed": true,
   "spec": {
-   "bar_color": "#C9202A",
-   "on_bar_color": "#FFFFFF",
-   "bar_h": 60,
-   "hook_band_h": 200,
+   "bar_h": 120,
+   "hook_band_h": 456,
    "hook_band_color": "#000000",
    "hook_band_alpha": 55,
    "sub_line_h": 84,
@@ -273,12 +278,13 @@
    "sub_line_bg": "#FFFFFF",
    "sub_line_color": "#111111",
    "sub_line_size": 36,
-   "head_block": false
+   "bar_color": "#C9202A",
+   "on_bar_color": "#FFFFFF"
   },
   "hc": {
    "font": "BlackHanSans.ttf",
    "size": 76,
-   "y": 8,
+   "y": 14,
    "leading": 1.15,
    "color": "#FFFFFF",
    "color2": "#FFE600",
@@ -289,13 +295,11 @@
  },
  {
   "id": "tpl_10",
-  "name": "회색띠·민트강조",
+  "name": "풀UI·민트",
   "boxed": false,
   "spec": {
-   "bar_color": "#4A4F57",
-   "on_bar_color": "#FFFFFF",
-   "bar_h": 60,
-   "hook_band_h": 200,
+   "bar_h": 130,
+   "hook_band_h": 465,
    "hook_band_color": "#000000",
    "hook_band_alpha": 55,
    "sub_line_h": 84,
@@ -305,12 +309,23 @@
    "sub_line_bg": "#FFFFFF",
    "sub_line_color": "#111111",
    "sub_line_size": 36,
-   "head_block": false
+   "bar_color": "#111111",
+   "on_bar_color": "#FFFFFF",
+   "yt_icons": 1,
+   "progress": 32,
+   "shorts_logo": 1,
+   "profile": "숏",
+   "profile_color": "#E8452C",
+   "profile_size": 88,
+   "profile_x": 10,
+   "profile_y": 9,
+   "badge_text": "진짜 봐야할 것",
+   "badge_color": "#FF2D55"
   },
   "hc": {
    "font": "BlackHanSans.ttf",
    "size": 76,
-   "y": 8,
+   "y": 15,
    "leading": 1.15,
    "color": "#FFFFFF",
    "color2": "#3EE8C6",

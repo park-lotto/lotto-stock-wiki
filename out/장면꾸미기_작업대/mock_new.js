@@ -21,8 +21,18 @@ function hilite(t) {
   return [{ keyword: ls[1].trim(), color: t.boxed ? '#111111' : t.hc.color2,
             box: !!t.boxed, box_color: t.hc.color2 }];
 }
+// 어두운 띠는 큰제목 2줄 끝보다 아래에서 끝나야 한다 — 안 그러면 흰 박스가 제목 위로 올라와
+// 글자를 뭉갠다(2026-09-05 실측). 글자 수가 바뀌어도 안 깨지게 여기서 매번 다시 잰다.
+function bandFor(barH, yPct, size, lines) {
+  var H = 1920, lead = 1.15, subH = 84, gap = 16;
+  return Math.round(H * yPct / 100 + size * 1.5 * lead * (lines || 2) + gap - barH + 0.35 * subH);
+}
 function specOf(t, hook) {
   var sp = Object.assign({ preset: 'plain_black', channel: CHNAME }, t.spec);
+  if (hook && sp.hook_band_h) {
+    var lines = TITLE.split(NL).filter(function (x) { return x.trim(); }).length || 2;
+    sp.hook_band_h = bandFor(sp.bar_h || 0, t.hc.y, FITCACHE[t.id + '|' + TITLE] || t.hc.size, lines);
+  }
   sp.title = hook ? '' : oneLine(TITLE);
   sp.sub_line = SUB || oneLine(TITLE);
   return sp;
