@@ -381,7 +381,8 @@ def prior_verdict(checks):
 
 
 def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
-          speaker_judge=None, scene_ids=None, grounded=False, is_recipe=False):
+          speaker_judge=None, scene_ids=None, grounded=False, is_recipe=False,
+          source_count=None):
     """(checks, full_text) 반환. checks = [{name, ok, detail}, ...]
 
     style: {"beat_roles": [...], "templates": {role: [...]}, "chars_per_30s": int}
@@ -452,7 +453,14 @@ def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
     #   → 스타일이 no_cta를 선언하면 **검사 항목 자체를 만들지 않는다**(ok=True로
     #     통과시키면 재작성 지시문에 CTA 얘기가 섞인다). 기본값은 기존 동작 = 회귀 0.
     if not style.get("no_cta"):
-        checks.append({"name": "CTA 단어유도", "ok": "남겨주" in norm(full),
+        # ★어간을 하나만 보면 **스타일 자신의 템플릿을 자기 게이트가 떨어뜨린다**
+        #   (2026-09-05 실측: spine 57 '다이소 내부인형'의 cta 템플릿 6개 중 2개가
+        #    "댓글 **달아주시면**"·"**물어봐 주시면**"이라, 모델이 그걸 고르면 무조건 FAIL.
+        #    취지인 "받는 게 보이는가"는 완벽히 만족하는 문장인데도 재작성 3회를 돌았다).
+        #   요구하는 형태는 여전히 위 헌장 그대로다 — 시청자에게 **행동을 청하는 말**.
+        _CTA_ASKS = ("남겨주", "달아주", "물어봐", "물어보", "말씀해주", "적어주")
+        checks.append({"name": "CTA 단어유도",
+                       "ok": any(w in norm(full) for w in _CTA_ASKS),
                        "detail": full[-40:]})
     else:
         # ★반대 방향 검사가 통째로 없었다(2026-08-19 라이브 실측). no_cta는 'CTA 검사를
@@ -563,7 +571,8 @@ def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
     #   규칙은 프롬프트(_GROUNDED_RULE)에 적혀 있고 **여기가 그 판정**이다 — 지시와 판정은 짝
     #   (메모리 '규칙은 있는데 판정이 없다': 지시만 있으면 어겨도 미검출 → 재작성이 안 걸린다).
     if grounded and scene_ids is not None:
-        ok_s, det = scene_grounding_check(beats, scene_ids, is_recipe=is_recipe)
+        ok_s, det = scene_grounding_check(beats, scene_ids, is_recipe=is_recipe,
+                                          source_count=source_count)
         checks.append({"name": "장면 근거", "ok": ok_s, "detail": det})
     return checks, full
 
@@ -583,7 +592,7 @@ def parse_src_segs(raw):
     return out
 
 
-def scene_grounding_check(beats, scene_ids, is_recipe=False, min_ratio=0.34):
+def scene_grounding_check(beats, scene_ids, is_recipe=False, min_ratio=0.34, source_count=None):
     """(ok, detail) — 줄마다 src_seg가 실제 장면 목록에 있는지, 장면이 필요한 줄이 비지 않았는지.
 
     · 지어낸 번호(목록에 없음) → 실패(레시피도)
@@ -595,6 +604,9 @@ def scene_grounding_check(beats, scene_ids, is_recipe=False, min_ratio=0.34):
     ids = {str(x) for x in (scene_ids or set())}
     beats = beats or []
     invented, missing, with_scene = [], [], 0
+    primary_at = {}      # 대표 장면 번호 -> 처음 쓴 칸 번호
+    all_used = set()     # 대표+보조 전부(소스 분산 판정용)
+    repeats = []         # (뒤 칸, 앞 칸, 번호, 뒤 칸 앞머리)
     for i, b in enumerate(beats, 1):
         sids = parse_src_segs(b.get("src_seg"))
         need = bool(b.get("needs_scene"))
@@ -604,6 +616,12 @@ def scene_grounding_check(beats, scene_ids, is_recipe=False, min_ratio=0.34):
             invented.append(f"{i}번 '{text}' src_seg={','.join(bad_ids)}(목록에 없음)")
         elif sids:
             with_scene += 1
+            head = sids[0]                    # ★대표만 본다(보조는 겹쳐도 정당하다 — _GROUNDED_RULE)
+            all_used.update(sids)             # 소스 분산 판정은 보조 번호까지 본다(아래 주석)
+            if head in primary_at:
+                repeats.append((i, primary_at[head], head, text))
+            else:
+                primary_at[head] = i
         elif need:
             missing.append(f"{i}번 '{text}'")
     problems = []
@@ -612,6 +630,31 @@ def scene_grounding_check(beats, scene_ids, is_recipe=False, min_ratio=0.34):
     if missing:
         problems.append("장면이 필요한 줄인데 src_seg가 비었다: " + "; ".join(missing[:4])
                         + " — 그 내용이 보이는 장면 번호를 적거나, 장면에 없는 장점이면 그 줄을 빼라")
+    # ★같은 장면이 두 칸에(2026-09-05 실측 15편: 장면 붙은 칸 66개 중 6개 중복, 5건이 이웃 칸).
+    #   재고 부족이 아니었다 — 44구간 영상에서도 났고 15편 전부 장면 수 ≥ 필요 칸 수였다.
+    #   지시(_GROUNDED_RULE '한 장면은 한 줄에만')와 이 판정은 짝이다.
+    #   ⚠️재고가 필요 칸보다 적으면 중복이 불가피하다 → 그런 소재는 면제(영영 반려 방지).
+    if not is_recipe and repeats and len(ids) >= with_scene:
+        problems.append("같은 장면을 두 줄에 썼다: "
+                        + "; ".join(f"{i}번 '{t}'이 {j}번과 같은 {sid}" for i, j, sid, t in repeats[:4])
+                        + " — 한 장면은 한 줄에만. 뒷줄은 장면 목록에서 다른 번호를 골라라")
+    # ★여러 소스를 넣었는데 한 편만 쓰던 것(2026-09-05 실측 b1_two_sources 3회: 소스 2편을 넣어도
+    #   2단계가 고른 장면이 **전부 첫 소스**였다 — 빠듯/넉넉/같은제품 셋 다 s1 사용 0).
+    #   사장님(2026-08-17): "한 편만 넣으면 그 한 편에 끌려가 편협해진다. 다 넣으면 고를 일이 없어진다."
+    #   중복 때와 같은 병 — 지시도 판정도 없어 앞에서부터 채우면 그만이었다. 지시는 _GROUNDED_RULE.
+    #   ⚠️장면 붙은 줄이 소스 수보다 적으면 다 쓰는 게 불가능하다 → 면제.
+    if not is_recipe and source_count and source_count > 1 and with_scene >= source_count:
+        have = {str(x).rsplit("-", 1)[0] for x in ids}          # 목록에 실제로 있는 소스들
+        # ★대표뿐 아니라 **보조 번호까지** 본다(2026-09-05 실측으로 완화). 대표만 보면 소재가
+        #   서로 다른 제품일 때 모델이 게이트를 통과하려고 **억지로 섞는다** — 실측(비비크림+방수패드)
+        #   에서 8칸 중 4칸이 딴 제품 화면이 됐다. 지시문엔 이미 "다른 제품이면 억지로 섞지 마라"가
+        #   있으므로, 판정은 "다른 소스를 **아예 안 봤나**"만 잡는다.
+        got = {str(x).rsplit("-", 1)[0] for x in all_used}
+        missing = sorted(have - got)
+        if len(have) > 1 and missing:
+            problems.append("재료 영상 %d편 중 %s 장면을 한 줄도 안 썼다(%s만 썼다) — 여러 영상에서 "
+                            "골라 써라. 그 줄에 정말 맞는 장면이 다른 영상에 있으면 그 번호를 적어라"
+                            % (len(have), ", ".join(missing[:3]), ", ".join(sorted(got)[:3])))
     need = max(1, int(len(beats) * min_ratio + 0.999)) if beats else 0
     if not is_recipe and beats and with_scene < need:
         # 문구의 기준은 상수에서 만든다(리뷰 L1: '절반'이라 적혀 있는데 실제는 1/3이었다)

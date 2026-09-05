@@ -770,6 +770,20 @@ def _frame_flag_on():
         return False
 
 
+# 추출 방식 이름 — 캐시(script_extracts.extract_method)에 그대로 저장된다.
+METHOD_CLASSIC = "classic"   # 통째 업로드 추출(종전)
+METHOD_FRAMES = "frames"     # B1 컷별 프레임 태깅
+
+
+def current_method(use_frames=None):
+    """지금 설정으로 **어느 방식이 쓰이는가**(2026-09-05). 캐시 조회·저장이 같은 이름을 쓰게
+    하는 단일 출처다(0순위-B) — 호출부 7곳이 각자 판단하면 언젠가 반드시 어긋나고, 어긋나면
+    캐시가 영원히 미스거나 반대로 옛 결과가 계속 새어 나온다.
+    use_frames를 주면 그대로(테스트·명시 호출), 안 주면 설정을 읽는다."""
+    on = _frame_flag_on() if use_frames is None else bool(use_frames)
+    return METHOD_FRAMES if on else METHOD_CLASSIC
+
+
 def extract_auto(video_path, video_id, caption="", *, use_frames=None,
                  _frames_fn=None, _classic_fn=None):
     """추출 디스패처(2026-07-29): 플래그 켜지면 B1 프레임추출, 아니면 기존 영상추출.

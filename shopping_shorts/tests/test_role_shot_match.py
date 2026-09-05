@@ -22,12 +22,15 @@
 import pytest
 
 from shopping_shorts.edit_plan import _want_shots_for_role
+from shopping_shorts import shot_roles as _shot_roles
 
 
-# 라이브에 실재하는 shot_role 값(2026-08-17 실측 분포):
-#   사용중 2956 · 완성 1032 · 기타 601 · after 522 · 조리 220 · 문제 158 · before 145
-# ★권장 결은 반드시 이 안에 있어야 한다. 없는 값을 적으면 조용히 0건이 된다.
-_LIVE_SHOT_ROLES = {"사용중", "완성", "기타", "after", "조리", "문제", "before"}
+# 권장 결은 반드시 **실재하는 shot_role** 안에 있어야 한다 — 없는 값을 적으면 조용히 0건이 된다.
+# ★2026-09-05: 이 목록을 손으로 적어 두었더니(2026-08-17 실측 분포 7개) 코드에 '실증'이 추가된 날
+#   테스트만 옛 목록에 남아 **멀쩡한 코드를 반려**했다(0순위-B: 같은 판단을 두 군데 적지 마라).
+#   그래서 정의처에서 그대로 가져온다 — 어휘가 늘어도 다시는 어긋나지 않는다.
+#   (라이브 실측 분포 참고: 사용중 2956 · 완성 1032 · 기타 601 · after 522 · 조리 220 · 문제 158 · before 145)
+_LIVE_SHOT_ROLES = set(_shot_roles.SHOT_ROLES) | {"조리"}   # '조리'는 레시피 소재에만 나오는 옛 값
 
 # 라이브에 실재하는 비트 role 값(같은 job에서 실측): 훅·해결·결과·CTA
 _LIVE_BEAT_ROLES = ["훅", "해결", "결과", "CTA"]
@@ -50,9 +53,15 @@ def test_권장결은_라이브에_실재하는_값만_쓴다():
 
 
 def test_훅은_시선끄는_완성품을_고른다():
-    """훅 = 첫 3초. 실험실 useTags의 '완성·after → 후킹용'과 같아야 한다."""
+    """훅 = 첫 3초. 실험실 useTags의 '완성·after → 후킹용'과 같아야 한다.
+
+    ★2026-09-05 '실증' 추가: 사전 지시(_SCENE_PLACEMENT_RULES)는 처음부터
+      "**'역할:완성' 또는 '실증:Y'**인 장면으로 연다"였는데 이 규칙표만 완성·after로 좁아
+      **지시대로 실증컷을 고른 후보가 사후 판정에서 벌받았다**(0순위-B: 지시와 판정이 다른 축).
+      표를 지시에 맞춘 것이므로 여기도 함께 넓힌다 — 순서는 완성 → after → 실증(완성이 1순위)."""
     shots, _ = _want_shots_for_role("훅")
-    assert shots == ("완성", "after")
+    assert shots[:2] == ("완성", "after"), "완성이 여전히 1순위여야 한다"
+    assert "실증" in shots, "지시문의 '실증:Y'가 규칙표에도 있어야 한다"
 
 
 def test_cta는_완성되는_그림():
@@ -90,7 +99,7 @@ def test_차선도_없으면_억지배정하지_않는다():
 
 def test_영문_역할도_잡는다():
     """모델이 한글·영문 아무거나 쓴다(_KNOWN_ROLE_WORDS와 같은 전제)."""
-    assert _want_shots_for_role("hook")[0] == ("완성", "after")
+    assert _want_shots_for_role("hook")[0][:2] == ("완성", "after")
     assert _want_shots_for_role("cta")[0] == ("완성", "after")
     assert _want_shots_for_role("solution")[0] == ("사용중", "조리")
     assert "before" in _want_shots_for_role("problem")[0]

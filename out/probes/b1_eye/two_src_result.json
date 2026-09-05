@@ -1,0 +1,387 @@
+{
+ "draft": {
+  "style_id": 60,
+  "style_name": "유튜브 발명품형",
+  "beats": [
+   {
+    "role": "title",
+    "text": "아픈 아내를 위해 만든 독일 리스트 위젯의 소름 돋는 기능",
+    "src_seg": "",
+    "needs_scene": false,
+    "sec": 3.1,
+    "src_segs": []
+   },
+   {
+    "role": "story",
+    "text": "손목 통증으로 고생하던 아내를 위해 탄생한 이 보호대가 사람들 사이에서 조용히 퍼지기 시작했음",
+    "src_seg": "s0-0",
+    "needs_scene": true,
+    "sec": 5.4,
+    "src_segs": [
+     "s0-0"
+    ]
+   },
+   {
+    "role": "authority",
+    "text": "이미 해외 리뷰에서 난리 난 제품인데 직접 써보니까 그 이유를 바로 알겠더라고",
+    "src_seg": "s1-31",
+    "needs_scene": true,
+    "sec": 4.3,
+    "src_segs": [
+     "s1-31"
+    ]
+   },
+   {
+    "role": "benefit",
+    "text": "이게 미친 포인트인 게 벨크로 홀만 당기면 내 손목에 딱 맞게 압박 조절이 가능함",
+    "src_seg": "s0-2",
+    "needs_scene": true,
+    "sec": 4.3,
+    "src_segs": [
+     "s0-2"
+    ]
+   },
+   {
+    "role": "escalate",
+    "text": "심지어 두께도 얇아서 일상생활에서 착용해도 전혀 불편함이 없다는 거",
+    "src_seg": "s1-15",
+    "needs_scene": true,
+    "sec": 3.9,
+    "src_segs": [
+     "s1-15"
+    ]
+   },
+   {
+    "role": "twist",
+    "text": "근데 진짜 충격적인 건 손목 압박 위치를 내 마음대로 정할 수 있다는 거임",
+    "src_seg": "s0-4",
+    "needs_scene": true,
+    "sec": 3.9,
+    "src_segs": [
+     "s0-4"
+    ]
+   }
+  ],
+  "script": "아픈 아내를 위해 만든 독일 리스트 위젯의 소름 돋는 기능 손목 통증으로 고생하던 아내를 위해 탄생한 이 보호대가 사람들 사이에서 조용히 퍼지기 시작했음 이미 해외 리뷰에서 난리 난 제품인데 직접 써보니까 그 이유를 바로 알겠더라고 이게 미친 포인트인 게 벨크로 홀만 당기면 내 손목에 딱 맞게 압박 조절이 가능함 심지어 두께도 얇아서 일상생활에서 착용해도 전혀 불편함이 없다는 거 근데 진짜 충격적인 건 손목 압박 위치를 내 마음대로 정할 수 있다는 거임",
+  "hook": "아픈 아내를 위해 만든 독일 리스트 위젯의 소름 돋는 기능",
+  "checks": [
+   {
+    "name": "구간 순서",
+    "ok": true,
+    "detail": "기대 ['title', 'story', 'authority', 'benefit', 'escalate', 'twist'] / 실제 ['title', 'story', 'authority', 'benefit', 'escalate', 'twist']"
+   },
+   {
+    "name": "CTA 금지(유튜브 썰)",
+    "ok": true,
+    "detail": "OK"
+   },
+   {
+    "name": "말끝(반말체)",
+    "ok": true,
+    "detail": "OK"
+   },
+   {
+    "name": "말 밀도(139~222자)",
+    "ok": true,
+    "detail": "185자 / 이 스타일 히트작 199자",
+    "over": false
+   },
+   {
+    "name": "고조 심화(1회)",
+    "ok": false,
+    "detail": "2번 나왔다 — 한 번만 써라(남발하면 죽는다)"
+   },
+   {
+    "name": "훅 3초 서론금지",
+    "ok": true,
+    "detail": "OK(아픈아내를위해만든독일리스트위젯의소름돋…)"
+   },
+   {
+    "name": "화자 일관성",
+    "ok": true,
+    "detail": "OK"
+   },
+   {
+    "name": "장면 근거",
+    "ok": true,
+    "detail": "OK(5/6줄에 장면)"
+   }
+  ],
+  "passed": false,
+  "tries": [
+   {
+    "chars": 247,
+    "fails": [
+     "말 밀도(139~222자)",
+     "장면 근거"
+    ]
+   },
+   {
+    "chars": 185,
+    "fails": [
+     "고조 심화(1회)"
+    ]
+   },
+   {
+    "chars": 213,
+    "fails": [
+     "고조 심화(1회)",
+     "장면 근거"
+    ]
+   }
+  ],
+  "chars": 185,
+  "sec": 25.0
+ },
+ "plan": {
+  "structure": "template",
+  "beats": [
+   {
+    "beat_idx": 0,
+    "role": "title",
+    "narration": "아픈 아내를 위해 만든 독일 리스트 위젯의 소름 돋는 기능",
+    "target_seconds": 5.6,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-1",
+     "start": 6.126,
+     "end": 12.252,
+     "scene_desc": "손목에 빨간색 리스트 위젯 보호대를 착용하고 있는 클로즈업 모습이 보임.",
+     "is_key": true,
+     "change": "손목에 보호대가 장착된 상태임",
+     "shot_role": "설치"
+    },
+    "alternates": [],
+    "effect": "cut",
+    "fit": 3,
+    "fit_evidence": "broll_fill",
+    "inherited": false,
+    "visual_verb": false,
+    "src_seg_applied": null
+   },
+   {
+    "beat_idx": 1,
+    "role": "story",
+    "narration": "손목 통증으로 고생하던 아내를 위해 탄생한 이 보호대가 사람들 사이에서 조용히 퍼지기 시작했음",
+    "target_seconds": 9.1,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-0",
+     "start": 0.0,
+     "end": 6.126,
+     "scene_desc": "보호대 브랜드 로고가 화면 중앙에 노출되며 브랜드 정보와 구독을 독려하는 그래픽이 함께 나타남.",
+     "is_key": false,
+     "change": "",
+     "shot_role": "기타"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-7",
+      "start": 34.635,
+      "end": 36.637,
+      "scene_desc": "두 가지 다른 형태의 손목 보호대를 평면에 나란히 놓아 비교함.",
+      "is_key": false,
+      "change": "",
+      "shot_role": "기타"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-3",
+      "start": 18.379,
+      "end": 19.35,
+      "scene_desc": "손목에 보호대를 감고 벨크로를 이용해 조여 고정하는 과정을 상세히 보여줌.",
+      "is_key": true,
+      "change": "벨크로가 손목에 밀착되어 고정됨",
+      "shot_role": "설치"
+     }
+    ],
+    "effect": "cut",
+    "fit": 5,
+    "fit_evidence": "inherited",
+    "inherited": true,
+    "visual_verb": true,
+    "src_seg_applied": "s0-0"
+   },
+   {
+    "beat_idx": 2,
+    "role": "authority",
+    "narration": "이미 해외 리뷰에서 난리 난 제품인데 직접 써보니까 그 이유를 바로 알겠더라고",
+    "target_seconds": 7.5,
+    "primary": {
+     "video_id": "s1",
+     "seg_id": "s1-31",
+     "start": 66.5,
+     "end": 68.5,
+     "scene_desc": "손목을 쥐었다 펴는 동작을 통해 보호대의 유연함을 보여줌.",
+     "is_key": true,
+     "change": "손목이 쥐었다 펴지며 보호대의 유연함이 확인됨",
+     "shot_role": "실증"
+    },
+    "alternates": [
+     {
+      "video_id": "s1",
+      "seg_id": "s1-1",
+      "start": 2.0,
+      "end": 6.0,
+      "scene_desc": "손목에 보호대를 착용하고 주먹을 쥐었다 펴며 손목 움직임을 보여준다.",
+      "is_key": true,
+      "change": "보호대를 착용한 손목이 움직이며 고정력을 보여준다.",
+      "shot_role": "실증"
+     },
+     {
+      "video_id": "s1",
+      "seg_id": "s1-2",
+      "start": 6.0,
+      "end": 8.0,
+      "scene_desc": "손이 보호대의 벨크로 스트랩을 당겨 조절하는 모습이 클로즈업된다.",
+      "is_key": true,
+      "change": "스트랩이 당겨지며 손목에 밀착된다.",
+      "shot_role": "조작"
+     }
+    ],
+    "effect": "cut",
+    "fit": 5,
+    "fit_evidence": "inherited",
+    "inherited": true,
+    "visual_verb": true,
+    "src_seg_applied": "s1-31"
+   },
+   {
+    "beat_idx": 3,
+    "role": "benefit",
+    "narration": "이게 미친 포인트인 게 벨크로 홀만 당기면 내 손목에 딱 맞게 압박 조절이 가능함",
+    "target_seconds": 7.9,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-2",
+     "start": 12.252,
+     "end": 18.379,
+     "scene_desc": "손으로 보호대 벨크로 구멍에 끈을 통과시킨 뒤 당겨서 고정하는 과정을 보여줌.",
+     "is_key": true,
+     "change": "끈이 홀을 통과해 당겨지며 고정됨",
+     "shot_role": "조작"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-5",
+      "start": 30.631,
+      "end": 32.633,
+      "scene_desc": "착용된 보호대를 손으로 잡고 제품의 외형을 보여주며 다음 제품 소개를 예고함.",
+      "is_key": false,
+      "change": "",
+      "shot_role": "기타"
+     }
+    ],
+    "effect": "cut",
+    "fit": 5,
+    "fit_evidence": "inherited",
+    "inherited": true,
+    "visual_verb": true,
+    "src_seg_applied": "s0-2"
+   },
+   {
+    "beat_idx": 4,
+    "role": "escalate",
+    "narration": "심지어 두께도 얇아서 일상생활에서 착용해도 전혀 불편함이 없다는 거",
+    "target_seconds": 6.5,
+    "primary": {
+     "video_id": "s1",
+     "seg_id": "s1-15",
+     "start": 46.0,
+     "end": 47.0,
+     "scene_desc": "손등이 위로 향하게 한 손의 모습이 클로즈업됨",
+     "is_key": true,
+     "change": "",
+     "shot_role": "사용중"
+    },
+    "alternates": [
+     {
+      "video_id": "s1",
+      "seg_id": "s1-3",
+      "start": 8.0,
+      "end": 10.0,
+      "scene_desc": "손목 보호대를 손에 끼우고 스트랩을 손목 둘레에 맞춰 조이는 과정이다.",
+      "is_key": true,
+      "change": "보호대가 손목에 맞춰 단단하게 고정된다.",
+      "shot_role": "조작"
+     },
+     {
+      "video_id": "s1",
+      "seg_id": "s1-4",
+      "start": 10.0,
+      "end": 12.0,
+      "scene_desc": "착용된 손목 보호대의 엄지 홀과 손목 고정 부위를 자세히 보여준다.",
+      "is_key": true,
+      "change": "",
+      "shot_role": "실증"
+     },
+     {
+      "video_id": "s1",
+      "seg_id": "s1-5",
+      "start": 12.0,
+      "end": 14.0,
+      "scene_desc": "보호대를 착용한 손이 키보드 타이핑을 하는 모습이 보인다.",
+      "is_key": true,
+      "change": "착용한 상태로도 손가락이 키보드를 편하게 움직인다.",
+      "shot_role": "사용중"
+     }
+    ],
+    "effect": "cut",
+    "fit": 5,
+    "fit_evidence": "inherited",
+    "inherited": true,
+    "visual_verb": true,
+    "src_seg_applied": "s1-15"
+   },
+   {
+    "beat_idx": 5,
+    "role": "twist",
+    "narration": "근데 진짜 충격적인 건 손목 압박 위치를 내 마음대로 정할 수 있다는 거임",
+    "target_seconds": 7.2,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-4",
+     "start": 24.505,
+     "end": 30.631,
+     "scene_desc": "착용된 상태에서 특정 부위가 조여지지 않도록 주의사항을 그래픽으로 강조함.",
+     "is_key": true,
+     "change": "",
+     "shot_role": "실증"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-6",
+      "start": 32.633,
+      "end": 34.635,
+      "scene_desc": "마누메드 액티브 제품 패키지와 현재 착용한 빨간색 보호대를 나란히 배치함.",
+      "is_key": false,
+      "change": "",
+      "shot_role": "기타"
+     }
+    ],
+    "effect": "cut",
+    "fit": 5,
+    "fit_evidence": "inherited",
+    "inherited": true,
+    "visual_verb": true,
+    "src_seg_applied": "s0-4"
+   }
+  ],
+  "plagiarism_flags": [],
+  "detected_type": "generic",
+  "affiliate_target": "",
+  "generator": "inherit"
+ },
+ "sources": [
+  "tmp_src7",
+  "tmp_src9"
+ ],
+ "dups_stage2": 0,
+ "used_src": {
+  "s0": 3,
+  "s1": 2
+ }
+}

@@ -1,0 +1,389 @@
+{
+ "draft": {
+  "style_id": 60,
+  "style_name": "유튜브 발명품형",
+  "beats": [
+   {
+    "role": "title",
+    "text": "한국에서 난리 난 의류용 태깅 건의 정체",
+    "src_seg": "",
+    "needs_scene": false,
+    "sec": 2.2,
+    "src_segs": []
+   },
+   {
+    "role": "story",
+    "text": "매번 옷 태그 떼고 정리하기 귀찮아서 만들어진 이 제품이 요즘 쇼핑몰 사장들 사이에서 조용히 퍼지기 시작했음.",
+    "src_seg": "s0-0",
+    "needs_scene": true,
+    "sec": 6.1,
+    "src_segs": [
+     "s0-0"
+    ]
+   },
+   {
+    "role": "authority",
+    "text": "이미 SNS에서 난리 난 인싸템인데, 출시되자마자 품절 대란 일으킨 전설의 아이템이라 이유가 있네.",
+    "src_seg": "s0-2",
+    "needs_scene": true,
+    "sec": 5.5,
+    "src_segs": [
+     "s0-2"
+    ]
+   },
+   {
+    "role": "benefit",
+    "text": "이게 말도 안 되는 게 바늘 잠금장치가 있어서 초보자도 1초 만에 태그 장착이 가능함.",
+    "src_seg": "s0-5",
+    "needs_scene": true,
+    "sec": 4.6,
+    "src_segs": [
+     "s0-5",
+     "s0-6"
+    ]
+   },
+   {
+    "role": "escalate",
+    "text": "심지어 트리거를 누르면 천에 태그가 깔끔하게 고정되니까 옷 정리가 순식간에 끝남.",
+    "src_seg": "s0-9",
+    "needs_scene": true,
+    "sec": 4.6,
+    "src_segs": [
+     "s0-9"
+    ]
+   },
+   {
+    "role": "twist",
+    "text": "근데 이거 물건인 이유는 가위로 툭 자르면 옷감 손상 없이 즉시 제거가 된다는 거임.",
+    "src_seg": "s0-10",
+    "needs_scene": true,
+    "sec": 4.5,
+    "src_segs": [
+     "s0-10",
+     "s0-11"
+    ]
+   }
+  ],
+  "script": "한국에서 난리 난 의류용 태깅 건의 정체 매번 옷 태그 떼고 정리하기 귀찮아서 만들어진 이 제품이 요즘 쇼핑몰 사장들 사이에서 조용히 퍼지기 시작했음. 이미 SNS에서 난리 난 인싸템인데, 출시되자마자 품절 대란 일으킨 전설의 아이템이라 이유가 있네. 이게 말도 안 되는 게 바늘 잠금장치가 있어서 초보자도 1초 만에 태그 장착이 가능함. 심지어 트리거를 누르면 천에 태그가 깔끔하게 고정되니까 옷 정리가 순식간에 끝남. 근데 이거 물건인 이유는 가위로 툭 자르면 옷감 손상 없이 즉시 제거가 된다는 거임.",
+  "hook": "한국에서 난리 난 의류용 태깅 건의 정체",
+  "checks": [
+   {
+    "name": "구간 순서",
+    "ok": true,
+    "detail": "기대 ['title', 'story', 'authority', 'benefit', 'escalate', 'twist'] / 실제 ['title', 'story', 'authority', 'benefit', 'escalate', 'twist']"
+   },
+   {
+    "name": "CTA 금지(유튜브 썰)",
+    "ok": true,
+    "detail": "OK"
+   },
+   {
+    "name": "말끝(반말체)",
+    "ok": true,
+    "detail": "OK"
+   },
+   {
+    "name": "말 밀도(139~222자)",
+    "ok": true,
+    "detail": "203자 / 이 스타일 히트작 199자",
+    "over": false
+   },
+   {
+    "name": "고조 심화(1회)",
+    "ok": true,
+    "detail": "OK"
+   },
+   {
+    "name": "훅 3초 서론금지",
+    "ok": true,
+    "detail": "OK(한국에서난리난의류용태깅건의정체매번옷태…)"
+   },
+   {
+    "name": "화자 일관성",
+    "ok": true,
+    "detail": "OK"
+   },
+   {
+    "name": "장면 근거",
+    "ok": true,
+    "detail": "OK(5/6줄에 장면)"
+   }
+  ],
+  "passed": true,
+  "tries": [
+   {
+    "chars": 230,
+    "fails": [
+     "말 밀도(139~222자)"
+    ]
+   },
+   {
+    "chars": 210,
+    "fails": []
+   },
+   {
+    "chars": 203,
+    "trimmed": true,
+    "fails": []
+   }
+  ],
+  "chars": 203,
+  "sec": 27.4
+ },
+ "plan": {
+  "structure": "template",
+  "beats": [
+   {
+    "beat_idx": 0,
+    "role": "title",
+    "narration": "한국에서 난리 난 의류용 태깅 건의 정체",
+    "target_seconds": 3.9,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-8",
+     "start": 38.667,
+     "end": 45.219,
+     "scene_desc": "천 조각을 접어 태깅 건의 니들을 관통시키는 모습",
+     "is_key": true,
+     "change": "니들이 천을 뚫고 통과한다",
+     "shot_role": "실증"
+    },
+    "alternates": [],
+    "effect": "cut",
+    "fit": 3,
+    "fit_evidence": "broll_fill",
+    "inherited": false,
+    "visual_verb": false,
+    "src_seg_applied": null
+   },
+   {
+    "beat_idx": 1,
+    "role": "story",
+    "narration": "매번 옷 태그 떼고 정리하기 귀찮아서 만들어진 이 제품이 요즘 쇼핑몰 사장들 사이에서 조용히 퍼지기 시작했음.",
+    "target_seconds": 10.7,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-0",
+     "start": 0.0,
+     "end": 6.0,
+     "scene_desc": "손으로 갈색 박스 테이프를 뜯어내고 박스 덮개를 여는 모습",
+     "is_key": false,
+     "change": "박스가 열려 내부가 보인다",
+     "shot_role": "설치"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-3",
+      "start": 12.296,
+      "end": 17.0,
+      "scene_desc": "플라스틱 재질의 의류용 태그 묶음을 꺼내 손으로 흔들어 보여주는 모습",
+      "is_key": false,
+      "change": "태그 묶음이 손에 쥐어져 있다",
+      "shot_role": "설치"
+     }
+    ],
+    "effect": "cut",
+    "fit": 5,
+    "fit_evidence": "inherited",
+    "inherited": true,
+    "visual_verb": true,
+    "src_seg_applied": "s0-0"
+   },
+   {
+    "beat_idx": 2,
+    "role": "authority",
+    "narration": "이미 SNS에서 난리 난 인싸템인데, 출시되자마자 품절 대란 일으킨 전설의 아이템이라 이유가 있네.",
+    "target_seconds": 9.6,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-2",
+     "start": 7.519,
+     "end": 12.296,
+     "scene_desc": "제품 박스 패키지 정면을 보여주는 모습",
+     "is_key": false,
+     "change": "",
+     "shot_role": "설치"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-1",
+      "start": 6.0,
+      "end": 7.519,
+      "scene_desc": "박스 안에 들어있던 제품 설명서 종이를 보여주는 모습",
+      "is_key": false,
+      "change": "",
+      "shot_role": "설치"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-4",
+      "start": 17.0,
+      "end": 20.3,
+      "scene_desc": "포장지를 벗기고 태깅 건 본체를 손에 쥐어 돌려가며 보여주는 모습",
+      "is_key": false,
+      "change": "태깅 건이 포장에서 분리된다",
+      "shot_role": "설치"
+     }
+    ],
+    "effect": "cut",
+    "fit": 5,
+    "fit_evidence": "inherited",
+    "inherited": true,
+    "visual_verb": true,
+    "src_seg_applied": "s0-2"
+   },
+   {
+    "beat_idx": 3,
+    "role": "benefit",
+    "narration": "이게 말도 안 되는 게 바늘 잠금장치가 있어서 초보자도 1초 만에 태그 장착이 가능함.",
+    "target_seconds": 8.4,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-5",
+     "start": 22.0,
+     "end": 25.519,
+     "scene_desc": "태깅 건의 상단부 니들(바늘) 잠금장치를 손으로 만지는 모습",
+     "is_key": true,
+     "change": "잠금장치가 조작 가능한 상태가 된다",
+     "shot_role": "조작"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-6",
+      "start": 25.519,
+      "end": 32.093,
+      "scene_desc": "T자 형태의 태그 묶음을 태깅 건 상단 슬롯에 밀어 넣어 장착하는 모습",
+      "is_key": true,
+      "change": "태그가 건 상단에 고정된다",
+      "shot_role": "조작"
+     }
+    ],
+    "effect": "cut",
+    "fit": 5,
+    "fit_evidence": "inherited",
+    "inherited": true,
+    "visual_verb": true,
+    "src_seg_applied": "s0-5"
+   },
+   {
+    "beat_idx": 4,
+    "role": "escalate",
+    "narration": "심지어 트리거를 누르면 천에 태그가 깔끔하게 고정되니까 옷 정리가 순식간에 끝남.",
+    "target_seconds": 7.9,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-9",
+     "start": 45.219,
+     "end": 51.77,
+     "scene_desc": "태깅 건의 트리거를 당겨 태그를 천에 고정하는 모습",
+     "is_key": true,
+     "change": "트리거를 당기자 태그가 천에 박힌다",
+     "shot_role": "실증"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-7",
+      "start": 32.093,
+      "end": 33.44,
+      "scene_desc": "태깅 건 니들의 보호 캡을 제거하고 본격적인 사용을 준비하는 모습",
+      "is_key": true,
+      "change": "니들의 캡이 제거되어 끝이 드러난다",
+      "shot_role": "조작"
+     }
+    ],
+    "effect": "cut",
+    "fit": 5,
+    "fit_evidence": "inherited",
+    "inherited": true,
+    "visual_verb": true,
+    "src_seg_applied": "s0-9"
+   },
+   {
+    "beat_idx": 5,
+    "role": "twist",
+    "narration": "근데 이거 물건인 이유는 가위로 툭 자르면 옷감 손상 없이 즉시 제거가 된다는 거임.",
+    "target_seconds": 8.2,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-10",
+     "start": 51.77,
+     "end": 58.322,
+     "scene_desc": "천에 고정된 태그를 가위로 잘라 제거하는 모습",
+     "is_key": false,
+     "change": "가위로 인해 태그가 천에서 떨어진다",
+     "shot_role": "정리"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-11",
+      "start": 58.322,
+      "end": 64.873696,
+      "scene_desc": "잘려 나간 태그 파편을 보여주며 영상이 종료되는 모습",
+      "is_key": false,
+      "change": "",
+      "shot_role": "기타"
+     }
+    ],
+    "effect": "cut",
+    "fit": 5,
+    "fit_evidence": "inherited",
+    "inherited": true,
+    "visual_verb": true,
+    "src_seg_applied": "s0-10"
+   }
+  ],
+  "plagiarism_flags": [],
+  "detected_type": "generic",
+  "affiliate_target": "",
+  "generator": "inherit"
+ },
+ "beat_sources": [
+  {
+   "role": "title",
+   "seg": "",
+   "segs": []
+  },
+  {
+   "role": "story",
+   "seg": "s0-0",
+   "segs": [
+    "s0-0"
+   ]
+  },
+  {
+   "role": "authority",
+   "seg": "s0-2",
+   "segs": [
+    "s0-2"
+   ]
+  },
+  {
+   "role": "benefit",
+   "seg": "s0-5",
+   "segs": [
+    "s0-5",
+    "s0-6"
+   ]
+  },
+  {
+   "role": "escalate",
+   "seg": "s0-9",
+   "segs": [
+    "s0-9"
+   ]
+  },
+  {
+   "role": "twist",
+   "seg": "s0-10",
+   "segs": [
+    "s0-10",
+    "s0-11"
+   ]
+  }
+ ]
+}

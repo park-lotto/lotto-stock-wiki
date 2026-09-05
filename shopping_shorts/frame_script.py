@@ -364,6 +364,41 @@ def is_foreign_text(text):
     return hangul / len(letters) < 0.3
 
 
+def _is_transient(msg):
+    """일시 오류(다른 키로 재시도할 가치가 있는 것)인가 — **판정은 여기 한 곳**(0순위-B).
+    종전엔 _gemini_tag_frames 안에만 있어서 번역·브리프는 429에도 같은 키로 모델만 바꿔 또 죽었다."""
+    return any(c in str(msg) for c in ("429", "503", "UNAVAILABLE", "RESOURCE_EXHAUSTED", "overloaded"))
+
+
+def _call_with_key_rotation(make_call, *, what=""):
+    """모델을 차례로 시도하되 **일시 오류면 다른 키로 한 번 더**(2026-09-05).
+
+    make_call(client, model) → 결과(참이면 성공) / 예외.
+    ★왜: 태깅에만 키 회전이 있었고 번역·브리프는 키 하나 고정이었다. 로컬 실측에서
+      힌디어 영상의 text_ko가 통째로 비었고(429), 브리프도 같은 이유로 자주 비었다.
+      _current_key_and_idx는 라운드로빈이라 부를 때마다 다음 키를 준다."""
+    import sys as _sys
+    from shopping_shorts import comment_gen
+    for model in TAG_MODELS:
+        for attempt in range(2):
+            key, _ = comment_gen._current_key_and_idx()
+            if key is None:
+                return None
+            try:
+                got = make_call(comment_gen._client_for_key(key), model)
+                if got:
+                    return got
+                break                      # 응답은 왔는데 쓸 게 없다 → 다음 모델
+            except Exception as e:         # noqa: BLE001 — fail-open(호출부가 빈 값을 감당한다)
+                tr = _is_transient(repr(e))
+                print("frame_script.%s: %s 실패(%s) — %r" % (
+                    what or "call", model,
+                    "다른 키로 재시도" if tr and attempt == 0 else "다음 모델", e), file=_sys.stderr)
+                if not (tr and attempt == 0):
+                    break
+    return None
+
+
 def _gemini_translate(texts):
     """구간별 원문 목록 → 같은 길이의 한국어 번역 목록(빈 원문은 ""). 실패는 [](fail-open).
     텍스트만 보내는 한 호출. 번역은 **자연스러운 구어체 한국어**로, 숫자·제품명은 보존."""
@@ -384,27 +419,25 @@ def _gemini_translate(texts):
         "번역해라. 숫자·단위·제품명·브랜드는 그대로 보존하고, 빈 원문은 빈 문자열로.\n"
         + json.dumps(items, ensure_ascii=False)
         + '\n\n출력은 JSON 객체 {"items": [{"no": 1, "ko": "..."}, ...]} 만. 항목을 빠짐없이.')
-    client = comment_gen._client_for_key(key)
-    for model in TAG_MODELS:
-        try:
-            resp = client.models.generate_content(
-                model=model, contents=[prompt],
-                config=types.GenerateContentConfig(response_mime_type="application/json"))
-            data = loads_lenient(resp.text)
-            raw = data.get("items") if isinstance(data, dict) else data
-            out = [""] * len(items)
-            for r in raw or []:
-                try:
-                    k = int(r.get("no")) - 1
-                except (TypeError, ValueError, AttributeError):
-                    continue
-                if 0 <= k < len(out):
-                    out[k] = str(r.get("ko") or "").strip()
-            if any(out):
-                return out
-        except Exception as e:  # noqa: BLE001
-            print(f"frame_script._gemini_translate: {model} 실패 — {e!r}", file=__import__("sys").stderr)
-    return []
+    def _once(client, model):
+        resp = client.models.generate_content(
+            model=model, contents=[prompt],
+            config=types.GenerateContentConfig(response_mime_type="application/json"))
+        data = loads_lenient(resp.text)
+        raw = data.get("items") if isinstance(data, dict) else data
+        out = [""] * len(items)
+        for r in raw or []:
+            try:
+                k = int(r.get("no")) - 1
+            except (TypeError, ValueError, AttributeError):
+                continue
+            if 0 <= k < len(out):
+                out[k] = str(r.get("ko") or "").strip()
+        return out if any(out) else None
+
+    # ★키를 돌린다(2026-09-05 실측): 종전엔 키 하나로 모델만 바꿔, 429가 나면 힌디어 영상의
+    #   text_ko가 12구간 전부 빈 채로 나갔다. 판정·재시도는 _call_with_key_rotation 한 곳.
+    return _call_with_key_rotation(_once, what="_gemini_translate") or []
 
 
 def _gemini_story_brief(grid_path, caption, transcript):
@@ -437,20 +470,17 @@ def _gemini_story_brief(grid_path, caption, transcript):
         + f"\n들리는 말/자막(참고용, 없으면 화면만으로): {(transcript or '').strip()[:1500] or '(없음)'}"
         + '\n\n출력은 JSON 객체 {"source_brief": {"product": "...", "role": "...", "core": "...", "summary": "...", '
           '"flow": "...", "confidence": "높음|낮음|불명"}} 만.')
-    client = comment_gen._client_for_key(key)
-    for model in TAG_MODELS:
-        try:
-            resp = client.models.generate_content(
-                model=model, contents=[prompt, img],
-                config=types.GenerateContentConfig(response_mime_type="application/json"))
-            data = loads_lenient(resp.text)
-            raw = data.get("source_brief") if isinstance(data, dict) and "source_brief" in data else data
-            brief = script_extract._norm_brief(raw)
-            if brief:
-                return brief
-        except Exception as e:  # noqa: BLE001
-            print(f"frame_script._gemini_story_brief: {model} 실패 — {e!r}", file=__import__("sys").stderr)
-    return {}
+    def _once(client, model):
+        resp = client.models.generate_content(
+            model=model, contents=[prompt, img],
+            config=types.GenerateContentConfig(response_mime_type="application/json"))
+        data = loads_lenient(resp.text)
+        raw = data.get("source_brief") if isinstance(data, dict) and "source_brief" in data else data
+        return script_extract._norm_brief(raw) or None
+
+    # ★번역과 같은 이유로 키를 돌린다(2026-09-05) — 브리프가 비면 2차 태깅이 큰 그림 없이 돌고
+    #   화면에도 "흐름 -"으로 뜬다(로컬 실측에서 여러 편이 그랬다).
+    return _call_with_key_rotation(_once, what="_gemini_story_brief") or {}
 
 
 def loads_lenient(text):

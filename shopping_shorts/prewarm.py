@@ -45,6 +45,12 @@ _DAILY_KEY = "prewarm_daily"     # settings: "YYYY-MM-DD|n"
 _DAILY_MANUAL_KEY = "prewarm_daily_manual"
 
 
+def _method_now():
+    """지금 쓰이는 추출 방식(캐시 조회 키). script_extract.current_method 한 곳에서만 정한다."""
+    from shopping_shorts.script_extract import current_method
+    return current_method()
+
+
 def _log_tag_qa(shortcode, result):
     """태깅 QA 점수를 로그 한 줄로 — "이 영상이 왜 이상한가"를 나중에 추적하는 실마리.
 
@@ -171,6 +177,7 @@ def run_prewarm(shortcode, url, *, caption="", customer_id="0", video_url="",
     예외를 밖으로 던지지 않는다 — 예열은 보조작업이라 실패해도 무해해야 한다."""
     from shopping_shorts.media_download import download_any
     from shopping_shorts.script_extract import (extract_auto, storable, KeyPoolExhausted,
+                                               current_method as script_extract_current_method,
                                                 has_usable_result, empty_reason)
     from shopping_shorts.structure_analyze import analyze_structure
 
@@ -184,7 +191,7 @@ def run_prewarm(shortcode, url, *, caption="", customer_id="0", video_url="",
     #   full_text만 보면 **무자막 영상은 저장돼 있어도 캐시미스**가 돼 매번 다시 태우고,
     #   시도 횟수만 쌓여 결국 영구 래치된다(서버 실측: lens_tiktok_1cfb55 —
     #   화면 태깅이 저장돼 있는데 attempts=2까지 다시 탔다).
-    cached = store.get_extract(code)
+    cached = store.get_extract(code, method=_method_now())
     if has_usable_result(cached):
         if not cached.get("structure"):
             _fill_structure(store, code, cached.get("full_text") or "", analyze_structure)
@@ -264,7 +271,8 @@ def run_prewarm(shortcode, url, *, caption="", customer_id="0", video_url="",
         full_text = (result.get("full_text") or "").strip()
         # storable()로 추린다 — 손으로 dict를 다시 만들면 tag_qa가 저장에서 누락된다
         # (담기 예열이 라이브 주경로라 여기서 새면 QA 점수가 아예 안 쌓인다).
-        store.save_script(code, storable(result), category=category)
+        store.save_script(code, storable(result), category=category,
+                          method=script_extract_current_method())
         _log_tag_qa(code, result)
         ok = True
     finally:

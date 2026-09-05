@@ -1,0 +1,485 @@
+{
+ "draft": {
+  "style_id": 57,
+  "style_name": "다이소 내부인형",
+  "beats": [
+   {
+    "role": "hook",
+    "text": "여러분 다이소 가면 이거 무조건 사오세요.",
+    "src_seg": "",
+    "needs_scene": false,
+    "sec": 2.3,
+    "src_segs": []
+   },
+   {
+    "role": "problem",
+    "text": "매번 여름마다 인테리어는 바꾸고 싶은데 예산 때문에 매번 고민하느라 속상했거든요.",
+    "src_seg": "",
+    "needs_scene": false,
+    "sec": 4.7,
+    "src_segs": []
+   },
+   {
+    "role": "reveal",
+    "text": "다이소에서 일하는 친한 언니한테 들었는데요.",
+    "src_seg": "",
+    "needs_scene": false,
+    "sec": 2.6,
+    "src_segs": []
+   },
+   {
+    "role": "proof",
+    "text": "진열하자마자 품절되는 제품이라며 보이면 바로 사라고 하더라고요.",
+    "src_seg": "s0-1",
+    "needs_scene": true,
+    "sec": 3.8,
+    "src_segs": [
+     "s0-1",
+     "s0-6"
+    ]
+   },
+   {
+    "role": "demo",
+    "text": "이거처럼 인형을 파우치에 넣기만 하면 끝이에요.",
+    "src_seg": "s0-3",
+    "needs_scene": true,
+    "sec": 2.7,
+    "src_segs": [
+     "s0-3"
+    ]
+   },
+   {
+    "role": "result",
+    "text": "와 침실 분위기 한 번에 바뀌는 거 있죠.",
+    "src_seg": "s0-19",
+    "needs_scene": true,
+    "sec": 2.0,
+    "src_segs": [
+     "s0-19"
+    ]
+   },
+   {
+    "role": "price",
+    "text": "심지어 가격도 진짜 착하게 나와서 놀랐어요.",
+    "src_seg": "",
+    "needs_scene": false,
+    "sec": 2.4,
+    "src_segs": []
+   },
+   {
+    "role": "cta",
+    "text": "어떤 제품인지 궁금하시면 댓글 남겨주세요 바로 알려드릴게요.",
+    "src_seg": "s0-20",
+    "needs_scene": true,
+    "sec": 3.5,
+    "src_segs": [
+     "s0-20"
+    ]
+   }
+  ],
+  "script": "여러분 다이소 가면 이거 무조건 사오세요. 매번 여름마다 인테리어는 바꾸고 싶은데 예산 때문에 매번 고민하느라 속상했거든요. 다이소에서 일하는 친한 언니한테 들었는데요. 진열하자마자 품절되는 제품이라며 보이면 바로 사라고 하더라고요. 이거처럼 인형을 파우치에 넣기만 하면 끝이에요. 와 침실 분위기 한 번에 바뀌는 거 있죠. 심지어 가격도 진짜 착하게 나와서 놀랐어요. 어떤 제품인지 궁금하시면 댓글 남겨주세요 바로 알려드릴게요.",
+  "hook": "여러분 다이소 가면 이거 무조건 사오세요.",
+  "checks": [
+   {
+    "name": "구간 순서",
+    "ok": true,
+    "detail": "기대 ['hook', 'problem', 'reveal', 'proof', 'demo', 'result', 'price', 'cta'] / 실제 ['hook', 'problem', 'reveal', 'proof', 'demo', 'result', 'price', 'cta']"
+   },
+   {
+    "name": "CTA 단어유도",
+    "ok": true,
+    "detail": " 놀랐어요. 어떤 제품인지 궁금하시면 댓글 남겨주세요 바로 알려드릴게요."
+   },
+   {
+    "name": "말 밀도(153~222자)",
+    "ok": true,
+    "detail": "178자 / 이 스타일 히트작 219자",
+    "over": false
+   },
+   {
+    "name": "고조 심화(1회)",
+    "ok": true,
+    "detail": "OK"
+   },
+   {
+    "name": "화자 일관성",
+    "ok": true,
+    "detail": "OK"
+   },
+   {
+    "name": "장면 근거",
+    "ok": true,
+    "detail": "OK(4/8줄에 장면)"
+   }
+  ],
+  "passed": true,
+  "tries": [
+   {
+    "chars": 178,
+    "fails": []
+   }
+  ],
+  "chars": 178,
+  "sec": 24.0
+ },
+ "plan": {
+  "structure": "template",
+  "beats": [
+   {
+    "beat_idx": 0,
+    "role": "hook",
+    "narration": "여러분 다이소 가면 이거 무조건 사오세요.",
+    "target_seconds": 4.0,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-4",
+     "start": 7.641,
+     "end": 12.346,
+     "scene_desc": "캐릭터가 그려진 노트를 펼치고, 다른 손이 볼펜을 쥐고 종이에 글씨를 쓰는 흉내를 낸다.",
+     "is_key": true,
+     "change": "노트가 펼쳐지고 볼펜이 움직인다",
+     "shot_role": "실증"
+    },
+    "alternates": [],
+    "effect": "cut",
+    "fit": 3,
+    "fit_evidence": "broll_fill",
+    "inherited": false,
+    "visual_verb": false,
+    "src_seg_applied": null
+   },
+   {
+    "beat_idx": 1,
+    "role": "problem",
+    "narration": "매번 여름마다 인테리어는 바꾸고 싶은데 예산 때문에 매번 고민하느라 속상했거든요.",
+    "target_seconds": 7.9,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-5",
+     "start": 12.346,
+     "end": 17.05,
+     "scene_desc": "볼펜 사용 후, 손이 핀셋을 이용해 캐릭터 스티커를 시트에서 떼어내는 모습을 보여준다.",
+     "is_key": true,
+     "change": "스티커가 시트에서 분리된다",
+     "shot_role": "실증"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-8",
+      "start": 24.558,
+      "end": 27.127,
+      "scene_desc": "다양한 종류의 거실화를 발에 신은 모습들을 차례로 보여준다.",
+      "is_key": true,
+      "change": "",
+      "shot_role": "실증"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-9",
+      "start": 27.127,
+      "end": 27.75,
+      "scene_desc": "손이 이불 표면을 부드럽게 쓸어내리며 원단과 디자인을 확인한다.",
+      "is_key": true,
+      "change": "이불 표면이 손길을 따라 매끄럽게 정리된다",
+      "shot_role": "실증"
+     }
+    ],
+    "effect": "cut",
+    "fit": 3,
+    "fit_evidence": "broll_fill",
+    "inherited": false,
+    "visual_verb": false,
+    "src_seg_applied": null
+   },
+   {
+    "beat_idx": 2,
+    "role": "reveal",
+    "narration": "다이소에서 일하는 친한 언니한테 들었는데요.",
+    "target_seconds": 4.2,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-7",
+     "start": 23.457,
+     "end": 24.558,
+     "scene_desc": "손으로 발매트의 표면을 쓸어내리며 재질감을 확인시켜준다.",
+     "is_key": true,
+     "change": "매트 표면이 손길에 따라 살짝 눌린다",
+     "shot_role": "실증"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-10",
+      "start": 30.797,
+      "end": 32.466,
+      "scene_desc": "침대 위에 베개 커버를 씌우며 매무새를 정리하는 모습.",
+      "is_key": true,
+      "change": "베개 커버가 베개에 깔끔하게 씌워진다",
+      "shot_role": "정리"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-11",
+      "start": 32.466,
+      "end": 34.234,
+      "scene_desc": "의자 위에 놓인 방석의 푹신함을 손으로 꾹 눌러서 실증한다.",
+      "is_key": true,
+      "change": "방석이 손의 압력에 따라 푹신하게 들어간다",
+      "shot_role": "실증"
+     }
+    ],
+    "effect": "cut",
+    "fit": 3,
+    "fit_evidence": "broll_fill",
+    "inherited": false,
+    "visual_verb": false,
+    "src_seg_applied": null
+   },
+   {
+    "beat_idx": 3,
+    "role": "proof",
+    "narration": "진열하자마자 품절되는 제품이라며 보이면 바로 사라고 하더라고요.",
+    "target_seconds": 6.1,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-1",
+     "start": 1.668,
+     "end": 3.504,
+     "scene_desc": "해파리 인형과 보라색 문어 인형, 투명 파우치가 화면에 정적으로 배치되어 있다.",
+     "is_key": false,
+     "change": "",
+     "shot_role": "기타"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-6",
+      "start": 17.05,
+      "end": 23.457,
+      "scene_desc": "손이 파우치를 열어 내부를 보여준 후, 바닥에 펼쳐진 발매트를 정리한다.",
+      "is_key": false,
+      "change": "파우치가 열리고 발매트가 펴진다",
+      "shot_role": "정리"
+     }
+    ],
+    "effect": "cut",
+    "fit": 5,
+    "fit_evidence": "inherited",
+    "inherited": true,
+    "visual_verb": true,
+    "src_seg_applied": "s0-1"
+   },
+   {
+    "beat_idx": 4,
+    "role": "demo",
+    "narration": "이거처럼 인형을 파우치에 넣기만 하면 끝이에요.",
+    "target_seconds": 4.6,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-3",
+     "start": 5.205,
+     "end": 7.641,
+     "scene_desc": "손이 분홍색 별 인형을 투명한 어항 모양 파우치 안으로 넣는다.",
+     "is_key": true,
+     "change": "인형이 파우치 안으로 쏙 들어간다",
+     "shot_role": "실증"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-12",
+      "start": 34.234,
+      "end": 35.869,
+      "scene_desc": "손이 의자 위에 사각 방석을 놓아 고정하는 모습.",
+      "is_key": true,
+      "change": "사각 방석이 의자 위에 안정적으로 위치했다.",
+      "shot_role": "설치"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-13",
+      "start": 35.869,
+      "end": 36.4,
+      "scene_desc": "손으로 조개 모양 쿠션의 표면을 쓸어내리며 촉감을 보여주는 모습.",
+      "is_key": true,
+      "change": "손이 쿠션 표면을 지나가며 부드러운 질감을 강조한다.",
+      "shot_role": "실증"
+     }
+    ],
+    "effect": "cut",
+    "fit": 5,
+    "fit_evidence": "inherited",
+    "inherited": true,
+    "visual_verb": true,
+    "src_seg_applied": "s0-3"
+   },
+   {
+    "beat_idx": 5,
+    "role": "result",
+    "narration": "와 침실 분위기 한 번에 바뀌는 거 있죠.",
+    "target_seconds": 4.0,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-19",
+     "start": 50.784,
+     "end": 57.491,
+     "scene_desc": "우산에 키링을 매달고, 다양한 여름 인테리어 소품과 침구류가 세팅된 침실 전경을 보여줌.",
+     "is_key": false,
+     "change": "",
+     "shot_role": "완성"
+    },
+    "alternates": [],
+    "effect": "cut",
+    "fit": 5,
+    "fit_evidence": "inherited",
+    "inherited": true,
+    "visual_verb": true,
+    "src_seg_applied": "s0-19"
+   },
+   {
+    "beat_idx": 6,
+    "role": "price",
+    "narration": "심지어 가격도 진짜 착하게 나와서 놀랐어요.",
+    "target_seconds": 4.2,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-2",
+     "start": 3.504,
+     "end": 5.205,
+     "scene_desc": "손이 조개 모양의 해파리 키링을 쥐고 흔들며 제품 디자인을 보여준다.",
+     "is_key": false,
+     "change": "키링이 좌우로 흔들리며 매달려 있다",
+     "shot_role": "사용중"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-14",
+      "start": 39.306,
+      "end": 41.108,
+      "scene_desc": "하늘 배경 앞에 유리 풍등이 걸려 있으며, 캐릭터가 그려진 종이가 살짝 흔들리고 있다.",
+      "is_key": false,
+      "change": "유리 풍등 하단의 종이가 바람에 살짝 흔들린다.",
+      "shot_role": "사용중"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-15",
+      "start": 41.108,
+      "end": 41.8,
+      "scene_desc": "메쉬 파우치 안에 옷을 넣고 지퍼를 닫아 정리하는 모습이 클로즈업되어 보인다.",
+      "is_key": true,
+      "change": "파우치 지퍼가 닫히며 내용물이 깔끔하게 정리된다.",
+      "shot_role": "정리"
+     }
+    ],
+    "effect": "cut",
+    "fit": 3,
+    "fit_evidence": "broll_fill",
+    "inherited": false,
+    "visual_verb": false,
+    "src_seg_applied": null
+   },
+   {
+    "beat_idx": 7,
+    "role": "cta",
+    "narration": "어떤 제품인지 궁금하시면 댓글 남겨주세요 바로 알려드릴게요.",
+    "target_seconds": 5.8,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-20",
+     "start": 57.491,
+     "end": 59.014,
+     "scene_desc": "흰 배경에 '국민가게 다이소' 로고가 서서히 나타남.",
+     "is_key": false,
+     "change": "로고가 중앙에 정렬되어 나타난다.",
+     "shot_role": "기타"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-16",
+      "start": 43.176,
+      "end": 46.38,
+      "scene_desc": "걸이식 세면백에 화장품을 넣고 지퍼를 닫은 뒤, 고리를 걸어 보관하는 모습.",
+      "is_key": true,
+      "change": "세면백 안에 화장품이 깔끔하게 수납되고 고리에 걸려 보관된다.",
+      "shot_role": "사용중"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-17",
+      "start": 46.38,
+      "end": 47.45,
+      "scene_desc": "캐리어 손잡이 부분에 버클 형태의 캐리어 벨트를 연결하여 고정하는 모습.",
+      "is_key": true,
+      "change": "벨트의 버클이 맞물리며 캐리어 손잡이 주위를 단단히 고정한다.",
+      "shot_role": "조작"
+     }
+    ],
+    "effect": "cut",
+    "fit": 5,
+    "fit_evidence": "inherited",
+    "inherited": true,
+    "visual_verb": true,
+    "src_seg_applied": "s0-20"
+   }
+  ],
+  "plagiarism_flags": [],
+  "detected_type": "generic",
+  "affiliate_target": "",
+  "generator": "inherit"
+ },
+ "beat_sources": [
+  {
+   "role": "hook",
+   "seg": "",
+   "segs": []
+  },
+  {
+   "role": "problem",
+   "seg": "",
+   "segs": []
+  },
+  {
+   "role": "reveal",
+   "seg": "",
+   "segs": []
+  },
+  {
+   "role": "proof",
+   "seg": "s0-1",
+   "segs": [
+    "s0-1",
+    "s0-6"
+   ]
+  },
+  {
+   "role": "demo",
+   "seg": "s0-3",
+   "segs": [
+    "s0-3"
+   ]
+  },
+  {
+   "role": "result",
+   "seg": "s0-19",
+   "segs": [
+    "s0-19"
+   ]
+  },
+  {
+   "role": "price",
+   "seg": "",
+   "segs": []
+  },
+  {
+   "role": "cta",
+   "seg": "s0-20",
+   "segs": [
+    "s0-20"
+   ]
+  }
+ ]
+}

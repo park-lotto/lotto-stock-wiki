@@ -1,0 +1,490 @@
+{
+ "draft": {
+  "style_id": 57,
+  "style_name": "다이소 내부인형",
+  "beats": [
+   {
+    "role": "hook",
+    "text": "여러분 다이소 가면 이거 무조건 사오세요.",
+    "src_seg": "",
+    "needs_scene": false,
+    "sec": 2.3,
+    "src_segs": []
+   },
+   {
+    "role": "problem",
+    "text": "아니, 다이어리 꾸밀 때마다 풀칠이 삐져나와서 종이가 끈적해지니까 진짜 스트레스였거든요.",
+    "src_seg": "",
+    "needs_scene": false,
+    "sec": 5.1,
+    "src_segs": []
+   },
+   {
+    "role": "reveal",
+    "text": "다이소에서 일하는 친한 언니한테 들었는데요.",
+    "src_seg": "",
+    "needs_scene": false,
+    "sec": 2.6,
+    "src_segs": []
+   },
+   {
+    "role": "proof",
+    "text": "매장에 깔리기 무섭게 사라지는 요즘 가장 핫한 아이템이에요.",
+    "src_seg": "",
+    "needs_scene": false,
+    "sec": 3.4,
+    "src_segs": []
+   },
+   {
+    "role": "demo",
+    "text": "노트 위에 대고 가볍게 슥 문지르면 얇게 발리는데 이게 끝이에요.",
+    "src_seg": "s0-10",
+    "needs_scene": true,
+    "sec": 3.5,
+    "src_segs": [
+     "s0-10"
+    ]
+   },
+   {
+    "role": "result",
+    "text": "와, 덕분에 사진도 깔끔하게 붙고 종이가 우는 일도 없어서 너무 만족스러운데요.",
+    "src_seg": "s0-11",
+    "needs_scene": true,
+    "sec": 4.3,
+    "src_segs": [
+     "s0-11"
+    ]
+   },
+   {
+    "role": "price",
+    "text": "심지어 가격도 진짜 착하게 나와서 더 놀랐어요.",
+    "src_seg": "",
+    "needs_scene": false,
+    "sec": 2.6,
+    "src_segs": []
+   },
+   {
+    "role": "cta",
+    "text": "궁금하신 분들은 댓글 남겨주세요, 바로 제품 정보 대댓글로 드릴게요.",
+    "src_seg": "",
+    "needs_scene": false,
+    "sec": 3.8,
+    "src_segs": []
+   }
+  ],
+  "script": "여러분 다이소 가면 이거 무조건 사오세요. 아니, 다이어리 꾸밀 때마다 풀칠이 삐져나와서 종이가 끈적해지니까 진짜 스트레스였거든요. 다이소에서 일하는 친한 언니한테 들었는데요. 매장에 깔리기 무섭게 사라지는 요즘 가장 핫한 아이템이에요. 노트 위에 대고 가볍게 슥 문지르면 얇게 발리는데 이게 끝이에요. 와, 덕분에 사진도 깔끔하게 붙고 종이가 우는 일도 없어서 너무 만족스러운데요. 심지어 가격도 진짜 착하게 나와서 더 놀랐어요. 궁금하신 분들은 댓글 남겨주세요, 바로 제품 정보 대댓글로 드릴게요.",
+  "hook": "여러분 다이소 가면 이거 무조건 사오세요.",
+  "checks": [
+   {
+    "name": "구간 순서",
+    "ok": true,
+    "detail": "기대 ['hook', 'problem', 'reveal', 'proof', 'demo', 'result', 'price', 'cta'] / 실제 ['hook', 'problem', 'reveal', 'proof', 'demo', 'result', 'price', 'cta']"
+   },
+   {
+    "name": "CTA 단어유도",
+    "ok": true,
+    "detail": ". 궁금하신 분들은 댓글 남겨주세요, 바로 제품 정보 대댓글로 드릴게요."
+   },
+   {
+    "name": "말 밀도(153~222자)",
+    "ok": true,
+    "detail": "204자 / 이 스타일 히트작 219자",
+    "over": false
+   },
+   {
+    "name": "고조 심화(1회)",
+    "ok": true,
+    "detail": "OK"
+   },
+   {
+    "name": "화자 일관성",
+    "ok": true,
+    "detail": "OK"
+   },
+   {
+    "name": "장면 근거",
+    "ok": false,
+    "detail": "장면이 붙은 줄이 2/8 — 최소 3줄(전체의 34%)은 장면 목록에서 온 줄이어야 한다(제품형)"
+   }
+  ],
+  "passed": false,
+  "tries": [
+   {
+    "chars": 204,
+    "fails": [
+     "장면 근거"
+    ]
+   },
+   {
+    "chars": 263,
+    "fails": [
+     "말 밀도(153~222자)"
+    ]
+   },
+   {
+    "chars": 165,
+    "fails": [
+     "장면 근거"
+    ]
+   }
+  ],
+  "chars": 204,
+  "sec": 27.5
+ },
+ "plan": {
+  "structure": "template",
+  "beats": [
+   {
+    "beat_idx": 0,
+    "role": "hook",
+    "narration": "여러분 다이소 가면 이거 무조건 사오세요.",
+    "target_seconds": 4.0,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-4",
+     "start": 7.841,
+     "end": 11.378,
+     "scene_desc": "접이식 투명 미니 가위를 펼친 뒤 마스킹 테이프를 일직선으로 가볍게 싹둑 자르는 클로즈업",
+     "is_key": true,
+     "change": "마스킹 테이프가 가위질 한 번에 가볍게 잘려 나간다.",
+     "shot_role": "실증"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-1",
+      "start": 1.768,
+      "end": 2.23,
+      "scene_desc": "미니 커터칼 뒤편의 오프너 기능을 이용해 노란 우편 봉투를 부드럽게 개봉하는 손길",
+      "is_key": true,
+      "change": "봉투의 접힌 틈새가 막힘없이 깔끔하게 갈라진다.",
+      "shot_role": "실증"
+     }
+    ],
+    "effect": "cut",
+    "fit": 3,
+    "fit_evidence": "broll_fill",
+    "inherited": false,
+    "visual_verb": false,
+    "src_seg_applied": null
+   },
+   {
+    "beat_idx": 1,
+    "role": "problem",
+    "narration": "아니, 다이어리 꾸밀 때마다 풀칠이 삐져나와서 종이가 끈적해지니까 진짜 스트레스였거든요.",
+    "target_seconds": 8.6,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-2",
+     "start": 4.571,
+     "end": 6.406,
+     "scene_desc": "손가락으로 비스킷 모양의 아주 작은 미니 키링 계산기 버튼을 차례로 누르는 클로즈업",
+     "is_key": true,
+     "change": "버튼을 누를 때마다 화면에 숫자가 표시된다.",
+     "shot_role": "조작"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-6",
+      "start": 13.881,
+      "end": 18.118,
+      "scene_desc": "스테이플러를 투명 미니 전용 케이스에 넣고, 미니 메쉬 파우치 안에 든 사무용품들을 보여주는 장면",
+      "is_key": false,
+      "change": "작은 필기구들이 전용 케이스와 파우치 안에 쏙 들어간다.",
+      "shot_role": "정리"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-7",
+      "start": 18.118,
+      "end": 19.82,
+      "scene_desc": "클립들이 가득 찬 미니 메쉬 파우치 고리를 남색 바지 벨트 고리에 걸어 매다는 장면",
+      "is_key": true,
+      "change": "파우치 고리가 바지 고리에 단단히 걸려 고정된다.",
+      "shot_role": "설치"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-9",
+      "start": 23.223,
+      "end": 24.05,
+      "scene_desc": "미니 노트에 하늘색 볼펜으로 손글씨를 쓴 뒤, 미니 북엔드 사이에 노트를 깔끔히 정리해 세우는 과정",
+      "is_key": true,
+      "change": "노트가 북엔드 사이에 끼워져 깔끔하게 세워진다.",
+      "shot_role": "정리"
+     }
+    ],
+    "effect": "cut",
+    "fit": 3,
+    "fit_evidence": "broll_fill",
+    "inherited": false,
+    "visual_verb": false,
+    "src_seg_applied": null
+   },
+   {
+    "beat_idx": 2,
+    "role": "reveal",
+    "narration": "다이소에서 일하는 친한 언니한테 들었는데요.",
+    "target_seconds": 4.2,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-3",
+     "start": 6.406,
+     "end": 7.841,
+     "scene_desc": "한 손바닥 위에 올려진 미니 키링 계산기를 들어 올려 전체적인 외관 크기를 보여주는 장면",
+     "is_key": false,
+     "change": "",
+     "shot_role": "사용중"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-1",
+      "start": 1.768,
+      "end": 4.571,
+      "scene_desc": "미니 커터칼 뒤편의 오프너 기능을 이용해 노란 우편 봉투를 부드럽게 개봉하는 손길",
+      "is_key": true,
+      "change": "봉투의 접힌 틈새가 막힘없이 깔끔하게 갈라진다.",
+      "shot_role": "실증"
+     }
+    ],
+    "effect": "cut",
+    "fit": 3,
+    "fit_evidence": "broll_fill",
+    "inherited": false,
+    "visual_verb": false,
+    "src_seg_applied": null
+   },
+   {
+    "beat_idx": 3,
+    "role": "proof",
+    "narration": "매장에 깔리기 무섭게 사라지는 요즘 가장 핫한 아이템이에요.",
+    "target_seconds": 5.8,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-5",
+     "start": 11.378,
+     "end": 13.881,
+     "scene_desc": "A4 종이 두 장을 정렬하고 작은 미니 스테이플러로 깔끔하게 찍어 철하는 측면 구도",
+     "is_key": true,
+     "change": "스테이플러 심이 종이를 관통해 단단히 고정된다.",
+     "shot_role": "실증"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-1",
+      "start": 1.768,
+      "end": 4.571,
+      "scene_desc": "미니 커터칼 뒤편의 오프너 기능을 이용해 노란 우편 봉투를 부드럽게 개봉하는 손길",
+      "is_key": true,
+      "change": "봉투의 접힌 틈새가 막힘없이 깔끔하게 갈라진다.",
+      "shot_role": "실증"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-2",
+      "start": 4.571,
+      "end": 5.06,
+      "scene_desc": "손가락으로 비스킷 모양의 아주 작은 미니 키링 계산기 버튼을 차례로 누르는 클로즈업",
+      "is_key": true,
+      "change": "버튼을 누를 때마다 화면에 숫자가 표시된다.",
+      "shot_role": "조작"
+     }
+    ],
+    "effect": "cut",
+    "fit": 3,
+    "fit_evidence": "broll_fill",
+    "inherited": false,
+    "visual_verb": false,
+    "src_seg_applied": null
+   },
+   {
+    "beat_idx": 4,
+    "role": "demo",
+    "narration": "노트 위에 대고 가볍게 슥 문지르면 얇게 발리는데 이게 끝이에요.",
+    "target_seconds": 6.3,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-10",
+     "start": 28.77,
+     "end": 34.317,
+     "scene_desc": "미니 풀테이프 본체 디자인을 보여준 뒤, 노트 종이 위에 대고 가볍게 슥 문질러 부착선을 그리는 동작",
+     "is_key": true,
+     "change": "종이 표면에 끈적이는 풀 테이프가 얇게 발라진다.",
+     "shot_role": "도포"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-4",
+      "start": 7.841,
+      "end": 8.59,
+      "scene_desc": "접이식 투명 미니 가위를 펼친 뒤 마스킹 테이프를 일직선으로 가볍게 싹둑 자르는 클로즈업",
+      "is_key": true,
+      "change": "마스킹 테이프가 가위질 한 번에 가볍게 잘려 나간다.",
+      "shot_role": "실증"
+     }
+    ],
+    "effect": "cut",
+    "fit": 5,
+    "fit_evidence": "inherited",
+    "inherited": true,
+    "visual_verb": true,
+    "src_seg_applied": "s0-10"
+   },
+   {
+    "beat_idx": 5,
+    "role": "result",
+    "narration": "와, 덕분에 사진도 깔끔하게 붙고 종이가 우는 일도 없어서 너무 만족스러운데요.",
+    "target_seconds": 7.7,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-11",
+     "start": 34.317,
+     "end": 39.865,
+     "scene_desc": "풀테이프를 바른 자리에 사진을 붙이고 미니 테이프 커터에서 테이프를 끊어 쓴 후 병아리 연필깎이 소품 비추기",
+     "is_key": true,
+     "change": "테이프가 롤에서 부드럽게 풀려 나와 끊어진다.",
+     "shot_role": "실증"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-1",
+      "start": 1.768,
+      "end": 4.571,
+      "scene_desc": "미니 커터칼 뒤편의 오프너 기능을 이용해 노란 우편 봉투를 부드럽게 개봉하는 손길",
+      "is_key": true,
+      "change": "봉투의 접힌 틈새가 막힘없이 깔끔하게 갈라진다.",
+      "shot_role": "실증"
+     }
+    ],
+    "effect": "cut",
+    "fit": 5,
+    "fit_evidence": "inherited",
+    "inherited": true,
+    "visual_verb": true,
+    "src_seg_applied": "s0-11"
+   },
+   {
+    "beat_idx": 6,
+    "role": "price",
+    "narration": "심지어 가격도 진짜 착하게 나와서 더 놀랐어요.",
+    "target_seconds": 4.6,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-12",
+     "start": 39.865,
+     "end": 45.412,
+     "scene_desc": "노란색 연필깎이 클로즈업 화면에서 시작하여 책상 위의 다양한 문구류가 배치된 전체 샷으로 전환되며 '가을 신학기 미니 문구' 타이틀 로고가 나타남.",
+     "is_key": false,
+     "change": "",
+     "shot_role": "완성"
+    },
+    "alternates": [],
+    "effect": "cut",
+    "fit": 3,
+    "fit_evidence": "broll_fill",
+    "inherited": false,
+    "visual_verb": false,
+    "src_seg_applied": null
+   },
+   {
+    "beat_idx": 7,
+    "role": "cta",
+    "narration": "궁금하신 분들은 댓글 남겨주세요, 바로 제품 정보 대댓글로 드릴게요.",
+    "target_seconds": 6.7,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-8",
+     "start": 19.82,
+     "end": 23.223,
+     "scene_desc": "컬러 캡이 달린 미니 볼펜들에 이어 고양이 발바닥 문양이 달린 귀여운 4색 볼펜 외관 줌아웃",
+     "is_key": false,
+     "change": "",
+     "shot_role": "완성"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-1",
+      "start": 1.768,
+      "end": 4.571,
+      "scene_desc": "미니 커터칼 뒤편의 오프너 기능을 이용해 노란 우편 봉투를 부드럽게 개봉하는 손길",
+      "is_key": true,
+      "change": "봉투의 접힌 틈새가 막힘없이 깔끔하게 갈라진다.",
+      "shot_role": "실증"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-2",
+      "start": 4.571,
+      "end": 5.07,
+      "scene_desc": "손가락으로 비스킷 모양의 아주 작은 미니 키링 계산기 버튼을 차례로 누르는 클로즈업",
+      "is_key": true,
+      "change": "버튼을 누를 때마다 화면에 숫자가 표시된다.",
+      "shot_role": "조작"
+     }
+    ],
+    "effect": "cut",
+    "fit": 3,
+    "fit_evidence": "broll_fill",
+    "inherited": false,
+    "visual_verb": false,
+    "src_seg_applied": null
+   }
+  ],
+  "plagiarism_flags": [],
+  "detected_type": "generic",
+  "affiliate_target": "",
+  "generator": "inherit"
+ },
+ "beat_sources": [
+  {
+   "role": "hook",
+   "seg": "",
+   "segs": []
+  },
+  {
+   "role": "problem",
+   "seg": "",
+   "segs": []
+  },
+  {
+   "role": "reveal",
+   "seg": "",
+   "segs": []
+  },
+  {
+   "role": "proof",
+   "seg": "",
+   "segs": []
+  },
+  {
+   "role": "demo",
+   "seg": "s0-10",
+   "segs": [
+    "s0-10"
+   ]
+  },
+  {
+   "role": "result",
+   "seg": "s0-11",
+   "segs": [
+    "s0-11"
+   ]
+  },
+  {
+   "role": "price",
+   "seg": "",
+   "segs": []
+  },
+  {
+   "role": "cta",
+   "seg": "",
+   "segs": []
+  }
+ ]
+}

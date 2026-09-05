@@ -1,0 +1,462 @@
+{
+ "draft": {
+  "style_id": 60,
+  "style_name": "유튜브 발명품형",
+  "beats": [
+   {
+    "role": "title",
+    "text": "독일에서 난리 난 손목 보호대의 정체",
+    "src_seg": "",
+    "needs_scene": false,
+    "sec": 2.0,
+    "src_segs": []
+   },
+   {
+    "role": "story",
+    "text": "손목 통증으로 고생하던 개발자가 직접 고안한 이 제품이 입소문을 타기 시작했는데 손목 움직임이 잦은 직장인들 사이에서 조용히 퍼지기 시작했음",
+    "src_seg": "s0-5",
+    "needs_scene": true,
+    "sec": 8.1,
+    "src_segs": [
+     "s0-5"
+    ]
+   },
+   {
+    "role": "authority",
+    "text": "출시되자마자 유럽에서 품절 대란을 일으킨 전설의 아이템인데 써보니까 납득이 가더라",
+    "src_seg": "s0-13",
+    "needs_scene": true,
+    "sec": 4.9,
+    "src_segs": [
+     "s0-13"
+    ]
+   },
+   {
+    "role": "benefit",
+    "text": "핵심은 이거임 인체공학적 설계라 장시간 착용해도 손목이 편안함",
+    "src_seg": "s0-4",
+    "needs_scene": true,
+    "sec": 3.6,
+    "src_segs": [
+     "s0-4",
+     "s0-6"
+    ]
+   },
+   {
+    "role": "escalate",
+    "text": "심지어 벨크로 방식이라 굵기 상관없이 누구나 맞게 고정 가능하더라고",
+    "src_seg": "s0-2",
+    "needs_scene": true,
+    "sec": 3.9,
+    "src_segs": [
+     "s0-2",
+     "s0-3"
+    ]
+   },
+   {
+    "role": "twist",
+    "text": "근데 이거 물건인 이유가 따로 있는데 2개 세트 구성이라 양손 번갈아 쓰기 딱 좋음",
+    "src_seg": "s0-7",
+    "needs_scene": true,
+    "sec": 4.5,
+    "src_segs": [
+     "s0-7",
+     "s0-8"
+    ]
+   }
+  ],
+  "script": "독일에서 난리 난 손목 보호대의 정체 손목 통증으로 고생하던 개발자가 직접 고안한 이 제품이 입소문을 타기 시작했는데 손목 움직임이 잦은 직장인들 사이에서 조용히 퍼지기 시작했음 출시되자마자 유럽에서 품절 대란을 일으킨 전설의 아이템인데 써보니까 납득이 가더라 핵심은 이거임 인체공학적 설계라 장시간 착용해도 손목이 편안함 심지어 벨크로 방식이라 굵기 상관없이 누구나 맞게 고정 가능하더라고 근데 이거 물건인 이유가 따로 있는데 2개 세트 구성이라 양손 번갈아 쓰기 딱 좋음",
+  "hook": "독일에서 난리 난 손목 보호대의 정체",
+  "checks": [
+   {
+    "name": "구간 순서",
+    "ok": true,
+    "detail": "기대 ['title', 'story', 'authority', 'benefit', 'escalate', 'twist'] / 실제 ['title', 'story', 'authority', 'benefit', 'escalate', 'twist']"
+   },
+   {
+    "name": "CTA 금지(유튜브 썰)",
+    "ok": true,
+    "detail": "OK"
+   },
+   {
+    "name": "말끝(반말체)",
+    "ok": true,
+    "detail": "OK"
+   },
+   {
+    "name": "말 밀도(139~222자)",
+    "ok": true,
+    "detail": "200자 / 이 스타일 히트작 199자",
+    "over": false
+   },
+   {
+    "name": "고조 심화(1회)",
+    "ok": true,
+    "detail": "OK"
+   },
+   {
+    "name": "훅 3초 서론금지",
+    "ok": true,
+    "detail": "OK(독일에서난리난손목보호대의정체손목통증으…)"
+   },
+   {
+    "name": "화자 일관성",
+    "ok": true,
+    "detail": "OK"
+   },
+   {
+    "name": "장면 근거",
+    "ok": true,
+    "detail": "OK(5/6줄에 장면)"
+   }
+  ],
+  "passed": true,
+  "tries": [
+   {
+    "chars": 236,
+    "fails": [
+     "말 밀도(139~222자)"
+    ]
+   },
+   {
+    "chars": 207,
+    "fails": []
+   },
+   {
+    "chars": 200,
+    "trimmed": true,
+    "fails": []
+   }
+  ],
+  "chars": 200,
+  "sec": 27.0
+ },
+ "plan": {
+  "structure": "template",
+  "beats": [
+   {
+    "beat_idx": 0,
+    "role": "title",
+    "narration": "독일에서 난리 난 손목 보호대의 정체",
+    "target_seconds": 3.5,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-29",
+     "start": 62.5,
+     "end": 64.5,
+     "scene_desc": "손목에 검은색 'Daydayz' 보호대를 착용한 모습이 클로즈업됨.",
+     "is_key": true,
+     "change": "",
+     "shot_role": "사용중"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-30",
+      "start": 64.5,
+      "end": 66.5,
+      "scene_desc": "착용된 손목 보호대의 측면과 앞부분이 상세히 보이도록 손목을 돌림.",
+      "is_key": true,
+      "change": "",
+      "shot_role": "사용중"
+     }
+    ],
+    "effect": "cut",
+    "fit": 3,
+    "fit_evidence": "broll_fill",
+    "inherited": false,
+    "visual_verb": false,
+    "src_seg_applied": null
+   },
+   {
+    "beat_idx": 1,
+    "role": "story",
+    "narration": "손목 통증으로 고생하던 개발자가 직접 고안한 이 제품이 입소문을 타기 시작했는데 손목 움직임이 잦은 직장인들 사이에서 조용히 퍼지기 시작했음",
+    "target_seconds": 13.7,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-5",
+     "start": 12.0,
+     "end": 14.0,
+     "scene_desc": "보호대를 착용한 손이 키보드 타이핑을 하는 모습이 보인다.",
+     "is_key": true,
+     "change": "착용한 상태로도 손가락이 키보드를 편하게 움직인다.",
+     "shot_role": "사용중"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-1",
+      "start": 2.0,
+      "end": 6.0,
+      "scene_desc": "손목에 보호대를 착용하고 주먹을 쥐었다 펴며 손목 움직임을 보여준다.",
+      "is_key": true,
+      "change": "보호대를 착용한 손목이 움직이며 고정력을 보여준다.",
+      "shot_role": "실증"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-12",
+      "start": 34.0,
+      "end": 36.0,
+      "scene_desc": "손목 보호대 제품과 구성품이 나란히 배치되어 있음",
+      "is_key": false,
+      "change": "",
+      "shot_role": "기타"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-10",
+      "start": 23.0,
+      "end": 28.5,
+      "scene_desc": "화면 중앙에 스판덱스 소재 설명과 제품 관련 그래픽이 등장한다.",
+      "is_key": true,
+      "change": "화면 위에 기능 정보 그래픽이 추가된다.",
+      "shot_role": "실증"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-11",
+      "start": 28.5,
+      "end": 28.7,
+      "scene_desc": "제품의 주요 장점들이 그래픽으로 나열되며 영상이 마무리된다.",
+      "is_key": false,
+      "change": "제품의 장점들이 그래픽으로 떠오른다.",
+      "shot_role": "완성"
+     }
+    ],
+    "effect": "cut",
+    "fit": 5,
+    "fit_evidence": "inherited",
+    "inherited": true,
+    "visual_verb": true,
+    "src_seg_applied": "s0-5"
+   },
+   {
+    "beat_idx": 2,
+    "role": "authority",
+    "narration": "출시되자마자 유럽에서 품절 대란을 일으킨 전설의 아이템인데 써보니까 납득이 가더라",
+    "target_seconds": 7.9,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-13",
+     "start": 36.0,
+     "end": 42.0,
+     "scene_desc": "손목 보호대가 배치된 모습에서 착용된 손목 사진으로 전환됨",
+     "is_key": true,
+     "change": "제품 배치 화면에서 실제 손목 착용 컷으로 전환됨",
+     "shot_role": "사용중"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-14",
+      "start": 42.0,
+      "end": 43.9,
+      "scene_desc": "텍스트 자막이 올라가며 제품 특징이 나열됨",
+      "is_key": false,
+      "change": "화면 중앙에 텍스트가 순차적으로 등장하며 기능 강조",
+      "shot_role": "기타"
+     }
+    ],
+    "effect": "cut",
+    "fit": 5,
+    "fit_evidence": "inherited",
+    "inherited": true,
+    "visual_verb": true,
+    "src_seg_applied": "s0-13"
+   },
+   {
+    "beat_idx": 3,
+    "role": "benefit",
+    "narration": "핵심은 이거임 인체공학적 설계라 장시간 착용해도 손목이 편안함",
+    "target_seconds": 6.0,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-4",
+     "start": 10.0,
+     "end": 12.0,
+     "scene_desc": "착용된 손목 보호대의 엄지 홀과 손목 고정 부위를 자세히 보여준다.",
+     "is_key": true,
+     "change": "",
+     "shot_role": "실증"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-6",
+      "start": 14.0,
+      "end": 16.0,
+      "scene_desc": "착용한 손목 보호대 위로 손을 얹어 통기성 소재의 질감을 보여준다.",
+      "is_key": true,
+      "change": "통기성 소재가 쾌적함을 시각적으로 전달한다.",
+      "shot_role": "실증"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-31",
+      "start": 66.5,
+      "end": 68.5,
+      "scene_desc": "손목을 쥐었다 펴는 동작을 통해 보호대의 유연함을 보여줌.",
+      "is_key": true,
+      "change": "손목이 쥐었다 펴지며 보호대의 유연함이 확인됨",
+      "shot_role": "실증"
+     }
+    ],
+    "effect": "cut",
+    "fit": 5,
+    "fit_evidence": "inherited",
+    "inherited": true,
+    "visual_verb": true,
+    "src_seg_applied": "s0-4"
+   },
+   {
+    "beat_idx": 4,
+    "role": "escalate",
+    "narration": "심지어 벨크로 방식이라 굵기 상관없이 누구나 맞게 고정 가능하더라고",
+    "target_seconds": 6.5,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-2",
+     "start": 6.0,
+     "end": 8.0,
+     "scene_desc": "손이 보호대의 벨크로 스트랩을 당겨 조절하는 모습이 클로즈업된다.",
+     "is_key": true,
+     "change": "스트랩이 당겨지며 손목에 밀착된다.",
+     "shot_role": "조작"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-3",
+      "start": 8.0,
+      "end": 10.0,
+      "scene_desc": "손목 보호대를 손에 끼우고 스트랩을 손목 둘레에 맞춰 조이는 과정이다.",
+      "is_key": true,
+      "change": "보호대가 손목에 맞춰 단단하게 고정된다.",
+      "shot_role": "조작"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-17",
+      "start": 48.0,
+      "end": 50.5,
+      "scene_desc": "보호대 끝부분 벨크로를 당기며 고정력을 보여줌",
+      "is_key": true,
+      "change": "벨크로 부분이 손에 의해 조절되며 탄탄하게 고정됨",
+      "shot_role": "조작"
+     }
+    ],
+    "effect": "cut",
+    "fit": 5,
+    "fit_evidence": "inherited",
+    "inherited": true,
+    "visual_verb": true,
+    "src_seg_applied": "s0-2"
+   },
+   {
+    "beat_idx": 5,
+    "role": "twist",
+    "narration": "근데 이거 물건인 이유가 따로 있는데 2개 세트 구성이라 양손 번갈아 쓰기 딱 좋음",
+    "target_seconds": 8.1,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-7",
+     "start": 16.0,
+     "end": 21.0,
+     "scene_desc": "손목 보호대를 착용한 손을 여러 각도로 돌려보며 밀착력을 보여준다.",
+     "is_key": true,
+     "change": "",
+     "shot_role": "실증"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-8",
+      "start": 21.0,
+      "end": 22.0,
+      "scene_desc": "착용된 손목 보호대의 로고 부분을 클로즈업하며 보여준다.",
+      "is_key": false,
+      "change": "",
+      "shot_role": "기타"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-32",
+      "start": 68.5,
+      "end": 70.5,
+      "scene_desc": "제품을 착용한 상태로 손목을 돌려 다양한 각도에서 보여줌.",
+      "is_key": true,
+      "change": "",
+      "shot_role": "사용중"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-33",
+      "start": 70.5,
+      "end": 70.6,
+      "scene_desc": "보호대 끝부분 마감과 슬림한 두께가 잘 보이도록 클로즈업됨.",
+      "is_key": true,
+      "change": "",
+      "shot_role": "실증"
+     }
+    ],
+    "effect": "cut",
+    "fit": 5,
+    "fit_evidence": "inherited",
+    "inherited": true,
+    "visual_verb": true,
+    "src_seg_applied": "s0-7"
+   }
+  ],
+  "plagiarism_flags": [],
+  "detected_type": "generic",
+  "affiliate_target": "",
+  "generator": "inherit"
+ },
+ "beat_sources": [
+  {
+   "role": "title",
+   "seg": "",
+   "segs": []
+  },
+  {
+   "role": "story",
+   "seg": "s0-5",
+   "segs": [
+    "s0-5"
+   ]
+  },
+  {
+   "role": "authority",
+   "seg": "s0-13",
+   "segs": [
+    "s0-13"
+   ]
+  },
+  {
+   "role": "benefit",
+   "seg": "s0-4",
+   "segs": [
+    "s0-4",
+    "s0-6"
+   ]
+  },
+  {
+   "role": "escalate",
+   "seg": "s0-2",
+   "segs": [
+    "s0-2",
+    "s0-3"
+   ]
+  },
+  {
+   "role": "twist",
+   "seg": "s0-7",
+   "segs": [
+    "s0-7",
+    "s0-8"
+   ]
+  }
+ ]
+}

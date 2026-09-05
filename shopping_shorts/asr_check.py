@@ -1,6 +1,7 @@
 """Whisper(GROQ)로 TTS mp3를 재전사해 원문과 diff → 오독/탈락 자동경보(튜닝 작업대용).
 
 키 없으면 transcribe가 None(작업대는 diff 없이 재생만). 순수 diff는 키와 무관하게 동작."""
+import os
 import re
 import difflib
 
@@ -93,11 +94,15 @@ def transcribe_words(mp3_path, language="ko"):
                 "timestamp_granularities[]": "word"}
         if language:
             data["language"] = language
+        # ★파일명은 반드시 str — Path를 그대로 주면 requests가 .translate()를 불러
+        #   AttributeError로 죽는다(2026-09-05 서버 실측: 전사 0/30의 뿌리).
+        #   경로 전체가 아니라 basename만 보낸다(한글 절대경로·서버 경로 노출 방지).
+        fname = os.path.basename(str(mp3_path)) or "audio.mp3"
         with open(mp3_path, "rb") as f:
             r = requests.post(
                 _GROQ_URL,
                 headers={"Authorization": f"Bearer {config.GROQ_API_KEY}"},
-                files={"file": (mp3_path, f, "audio/mpeg")},
+                files={"file": (fname, f, "audio/mpeg")},
                 data=data,
                 timeout=60)
         if getattr(r, "status_code", 200) >= 400:      # 테스트 가짜 응답엔 status_code가 없다
