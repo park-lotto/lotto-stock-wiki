@@ -339,6 +339,65 @@ def _media_code(url):
     return m.group(1) if m else (url or "")
 
 
+# 랭킹이 다루는 플랫폼 스냅샷들(settings['last_run::<platform>']).
+# 인스타만 last_run 테이블(id=1)을 쓰고 나머지는 전부 여기에 저장된다.
+_SNAPSHOT_PLATFORMS = ("youtube", "tiktok", "threads", "naverclip",
+                       "pinterest", "xiaohongshu", "douyin")
+
+
+def _find_collected_item(store, shortcode):
+    """shortcode → 수집항목(item). 없으면 None.
+
+    ★2026-09-06 실사고(사장님 제보): 유튜브 카드에서 「🎬 영상 보고 정확히」가
+      **언제나** "해당 항목 없음 — 재수집 필요"였다. 영상이 없어서가 아니라
+      **엉뚱한 서랍을 뒤졌기 때문**이다.
+
+        랭킹이 유튜브 카드를 꺼내는 곳 : load_last_run_platform("youtube")  (app.py:852)
+        대본추출이 항목을 찾던 곳      : load_last_run()  = 인스타 전용
+
+      유튜브 수집은 save_last_run을 아예 안 부르므로(위 api_collect 참고)
+      last_run(id=1)엔 **원리적으로** 절대 없다.
+
+      라이브 실측(서버 reference.db 직접 조회): last_run 134건(전부 인스타) vs
+      last_run::youtube 8,524건, **겹치는 것 0건**. 대본캐시 보유율도 인스타
+      19%(25/134) vs 유튜브 0.5%(40/8,524)로 갈렸다.
+
+    0순위-B: 이 "항목 찾기"가 네 군데에 따로 적혀 있었다(대본추출·위키저장·영상분석 등).
+      같은 판단을 여러 번 적으면 반드시 어긋난다 → 여기 하나로 모으고 전부 이걸 부른다.
+      새 플랫폼이 늘어도 _SNAPSHOT_PLATFORMS만 고치면 전 경로가 같이 따라온다.
+
+    인스타를 먼저 본다(종전 동작 유지 — 같은 코드가 양쪽에 있으면 결과가 안 바뀐다).
+    스냅샷 하나가 깨져도 나머지는 계속 본다 — 한 곳의 고장이 전체를 죽이면 안 된다.
+    """
+    if not shortcode:
+        return None
+    target_code = _media_code(shortcode)
+
+    def _pick(items):
+        return next((i for i in (items or [])
+                     if i.get("shortcode") == shortcode
+                     or _media_code(i.get("shortcode") or "") == target_code), None)
+
+    try:
+        item = _pick(store.load_last_run()[0])
+        if item:
+            return item
+    except Exception as e:  # noqa: BLE001 — 한 스냅샷의 고장이 나머지를 막지 않는다
+        import sys as _sys
+        print(f"[find_item] last_run 조회 실패(계속 진행): {e!r}", file=_sys.stderr)
+
+    for platform in _SNAPSHOT_PLATFORMS:
+        try:
+            item = _pick(store.load_last_run_platform(platform)[0])
+        except Exception as e:  # noqa: BLE001
+            import sys as _sys
+            print(f"[find_item] {platform} 스냅샷 조회 실패(계속 진행): {e!r}", file=_sys.stderr)
+            continue
+        if item:
+            return item
+    return None
+
+
 @app.post("/api/collect")
 def api_collect(request: Request, background_tasks: BackgroundTasks, limit: int | None = None, platform: str = "instagram", category: str | None = None):
     """지금 수집 버튼. limit=채널 수 상한(테스트용). platform=플랫폼(기본 인스타).
@@ -2601,8 +2660,14 @@ def _download_item_video(item, work_dir):
     if url:
         return download_video(url, work_dir)
     page = (item.get("url") or "").strip()
+    # ★릴스 주소 조립은 **인스타 항목에만**(2026-09-06). _find_collected_item으로
+    #   유튜브·틱톡 항목이 여기 들어오게 됐는데, 종전엔 platform을 안 보고 무조건
+    #   instagram.com/reel/<shortcode>를 만들어 **없는 주소**를 받으러 갔다.
+    #   실패 사유가 "인스타 다운로드 실패"로 뭉개지면 원인 추적이 막힌다.
     if not page and item.get("shortcode"):
-        page = f"https://www.instagram.com/reel/{item['shortcode']}/"
+        _plat = (item.get("platform") or "instagram").strip().lower()
+        if _plat == "instagram":
+            page = f"https://www.instagram.com/reel/{item['shortcode']}/"
     if not page:
         raise RuntimeError("영상 주소가 없습니다 — 재수집 필요")
     path, _caption = download_any(page, str(work_dir))
@@ -2618,12 +2683,13 @@ def api_extract_script(request: Request, shortcode: str):
     실패할 수 있어(오래된 항목) 통째로 감싸 502로 안내한다.
 
     유료게이트(2026-07-19): Gemini 추출은 실제 비용 → 캐시미스에만 'script' 크레딧을 건다.
-    캐시히트는 무료. 다운로드·추출이 실패하면 예약한 크레딧을 환불한다(성공 저장만 과금)."""
+    캐시히트는 무료. 다운로드·추출이 실패하면 예약한 크레딧을 환불한다(성공 저장만 과금).
+
+    ★2026-09-06: 항목 찾기를 _find_collected_item으로 옮겼다 — 여태 인스타 스냅샷
+      (last_run)만 뒤져서 **유튜브 카드는 100% "해당 항목 없음"**이었다(실측: 유튜브
+      8,524건 중 last_run에도 있는 것 0건). 그 함수 주석에 사고 전말이 있다."""
     store = Store(DB_PATH)
-    items, _ = store.load_last_run()
-    target_code = _media_code(shortcode)
-    item = next((i for i in items if i["shortcode"] == shortcode
-                 or _media_code(i["shortcode"]) == target_code), None)
+    item = _find_collected_item(store, shortcode)
     if not item:
         return JSONResponse(status_code=404, content={"ok": False, "error": "해당 항목 없음 — 재수집 필요"})
     code = item["shortcode"]
@@ -2950,12 +3016,11 @@ def _bank_ingest_collected_bg(db_path, items, collected_at):
 @app.post("/api/wiki/save")
 def api_wiki_save(request: Request, shortcode: str, background_tasks: BackgroundTasks):
     """S급 대본을 위키(도서관)에 저장 — 대본 확보(캐시/즉석추출) → 구조분석 → 저장.
-    저장 직후 그 카테고리를 즉시 재학습(예약 안 기다림, 2026-07-14)."""
+    저장 직후 그 카테고리를 즉시 재학습(예약 안 기다림, 2026-07-14).
+
+    ★2026-09-06: 항목 찾기를 _find_collected_item으로 통일(유튜브 등 전 플랫폼)."""
     store = Store(DB_PATH)
-    items, _ = store.load_last_run()
-    target_code = _media_code(shortcode)
-    item = next((i for i in items if i["shortcode"] == shortcode
-                 or _media_code(i["shortcode"]) == target_code), None)
+    item = _find_collected_item(store, shortcode)
     if not item:
         return JSONResponse(status_code=404, content={"ok": False, "error": "해당 항목 없음 — 재수집 필요"})
     code = item["shortcode"]
@@ -3556,12 +3621,13 @@ def api_find_analyze(shortcode: str):
 
     다운로드→추출→분석 구간은 각각 실패 가능(인스타 CDN 서명URL 만료로 인한
     다운로드 403/404, ffmpeg 실패, Gemini 키 미설정)해서 통째로 감싼다
-    (2026-07-09, 최종 리뷰 Finding 1 — 무가드 상태로 raw 500이 나던 문제)."""
+    (2026-07-09, 최종 리뷰 Finding 1 — 무가드 상태로 raw 500이 나던 문제).
+
+    ★2026-09-06: 항목 찾기를 _find_collected_item으로 통일 — 유튜브·틱톡 카드도
+      이제 수집 스냅샷에서 찾힌다. 못 찾았을 때의 Apify 폴백은 종전대로
+      인스타 URL 전용이다(그 액터가 인스타 전용이라 아래에서 막는다)."""
     store = Store(DB_PATH)
-    items, _ = store.load_last_run()
-    target_code = _media_code(shortcode)
-    item = next((i for i in items if i["shortcode"] == shortcode
-                 or _media_code(i["shortcode"]) == target_code), None)
+    item = _find_collected_item(store, shortcode)
 
     if not item:
         # 추적 목록에 없는 URL — Apify 단일조회로 즉시 가져오기 시도.
