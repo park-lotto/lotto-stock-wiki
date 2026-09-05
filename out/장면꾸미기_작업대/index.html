@@ -120,7 +120,7 @@ details .inner{padding:10px 0 0;display:flex;flex-direction:column;gap:12px}
   <div class="pane on" id="pane-title">
    <div class="sec"><div class="t">템플릿 <small>— 후킹 → 본문이 한 벌입니다. 고치고 싶은 쪽을 누르세요</small></div>
     <div class="row" id="pairRow" style="align-items:stretch;gap:14px;margin-bottom:8px">
-     <div class="pair on" data-part="hook" onclick="setPart('hook')"><div class="pairImg"><img class="pbg" src="bg.jpg"><img class="pfr"><img class="phc"></div><b>🎯 후킹 템플릿</b><small>앞 <span id="hookBeatsLbl">1</span>장면</small></div>
+     <div class="pair on" data-part="hook" onclick="setPart('hook')"><div class="pairImg"><img class="pbg" src="bg.jpg"><img class="pfr"><img class="phc"><img class="pcap"></div><b>🎯 후킹 템플릿</b><small>앞 <span id="hookBeatsLbl">1</span>장면</small></div>
      <div style="align-self:center;font-size:22px;color:var(--sub)">→</div>
      <div class="pair" data-part="body" onclick="setPart('body')"><div class="pairImg"><img class="pbg" src="bg.jpg"><img class="pfr"><img class="phc"><img class="pcap"></div><b>📄 본문 템플릿</b><small>나머지 장면</small></div>
     </div>
@@ -277,7 +277,8 @@ function persistTitle(){pushStateFile();try{localStorage.setItem('deco_title',JS
  const _L=LAYOUTS[id];if(_L&&!_L.body_keep_hc&&!(((_L.body||{}).spec||{}).hook_band_h)){delete _b.hook_band_h;delete _b.hook_band_color;delete _b.hook_band_alpha;}
  DEF[id]={hook:JSON.parse(JSON.stringify(SPECS.hook)),body:_b};localStorage.setItem('deco_defaults',JSON.stringify(DEF));}}catch(e){}}
 function pairUrls(T){if(!T||!T.preset)return null;const s=Object.assign({},T);delete s.hc;delete s._bandLock;const hc=Object.assign({},HC_DEFAULT,T.hc||{});const txt=(hc.text||'').trim();if(!txt)hc.text='';else{const ls=txt.split(/\r?\n/);if(hc.color2&&hc.color2!==hc.color&&ls[1])hc.highlight_rules=[{keyword:ls[1].trim(),color:hc.color2,box:false}];}return {fr:'/render?spec='+encodeURIComponent(JSON.stringify(s)),hc:'/hc?hc='+encodeURIComponent(JSON.stringify(hc))};}
-function renderPair(){document.querySelectorAll('#pairRow .pair').forEach(el=>{const u=pairUrls(SPECS[el.dataset.part]);if(!u){el.querySelector('.pfr').src='';el.querySelector('.phc').src='';return;}el.querySelector('.pfr').src=u.fr;el.querySelector('.phc').src=u.hc;});hookBeatsLbl();}
+function pairCapUrl(part){if(!CAPS)return '';const i=part==='hook'?0:Math.min(11,hookBeats);const b=CAPS.beats[i]||CAPS.beats[0];if(!b)return '';const text=(b.lines||[b.text])[b.cur||0]||b.text||'';if(!text)return '';const st=Object.assign({},CAPS.style,{y_pct:capPosY(b),x_pct:b.x_pct==null?50:b.x_pct});if(st.y_pct==null)delete st.y_pct;return '/cap?style='+encodeURIComponent(JSON.stringify(st))+'&text='+encodeURIComponent(text);}
+function renderPair(){document.querySelectorAll('#pairRow .pair').forEach(el=>{const u=pairUrls(SPECS[el.dataset.part]);const pc=el.querySelector('.pcap');if(pc)pc.src=pairCapUrl(el.dataset.part);if(!u){el.querySelector('.pfr').src='';el.querySelector('.phc').src='';return;}el.querySelector('.pfr').src=u.fr;el.querySelector('.phc').src=u.hc;});hookBeatsLbl();}
 let prt=null;
 function render(){persistTitle();clearTimeout(prt);prt=setTimeout(renderPair,400);clearTimeout(rt);rt=setTimeout(()=>{if(!SPEC.preset){frame.style.display='none';hcimg.style.display='none';return;}frame.style.display='';hcimg.style.display='';
  loadImg(hcimg,'/hc?hc='+encodeURIComponent(JSON.stringify(hcPayload())));frame.classList.add('busy');
@@ -415,8 +416,8 @@ function capResetAllPos(){CAPS.beats.forEach(b=>{b.pos='mid';b.y_pct=null;b.x_pc
 function capSyncUI(){const st=CAPS.style;$('#cap_size_v').textContent=st.size;$('#cap_olw_v').textContent=st.outline_w;$('#cap_boxo_v').textContent=st.box_opacity;$('#cap_color').value=st.color;$('#cap_olc').value=st.outline_color;$('#cap_boxc').value=st.box_color;$('#cap_font').value=st.font||'';$('#capBoxBtn').classList.toggle('on',!!st.box);$('#capShBtn').classList.toggle('on',!!st.shadow);
  document.querySelectorAll('#capCards [data-st]').forEach(c=>c.classList.toggle('on',c.dataset.st===CAPS.preset));capScope(CAPS.all);}
 const capimg=$('#capimg');let capT=null;
-function capRender(){clearTimeout(capT);capT=setTimeout(()=>{if(typeof curPart==='function'&&curPart()==='hook'&&LAYOUTS[(SPECS.hook||{}).preset]){capimg.style.display='none';return;}capimg.style.display='';const b=capBeat();const text=(b.lines||[b.text])[b.cur]||'';const st=Object.assign({},CAPS.style,{y_pct:capPosY(b),x_pct:b.x_pct==null?50:b.x_pct});if(st.y_pct==null)delete st.y_pct;
- loadImg(capimg,'/cap?style='+encodeURIComponent(JSON.stringify(st))+'&text='+encodeURIComponent(text));},120);}
+function capRender(){clearTimeout(capT);capT=setTimeout(()=>{capimg.style.display='';const b=capBeat();const text=(b.lines||[b.text])[b.cur]||'';const st=Object.assign({},CAPS.style,{y_pct:capPosY(b),x_pct:b.x_pct==null?50:b.x_pct});if(st.y_pct==null)delete st.y_pct;
+ loadImg(capimg,'/cap?style='+encodeURIComponent(JSON.stringify(st))+'&text='+encodeURIComponent(text));if(typeof renderPair==='function')renderPair();},120);}
 $('#capCards').addEventListener('click',e=>{const t=e.target.closest('[data-st]');if(!t)return;capApplyPreset(t.dataset.st);});
 $('#capPos').addEventListener('click',e=>{const t=e.target.closest('[data-pos]');if(!t)return;capSetPos(t.dataset.pos);});
 // 미리보기 끌기(자막 탭): 끄는 자리로 y·x. 범위는 '모든 장면에/이 장면만'을 따른다
