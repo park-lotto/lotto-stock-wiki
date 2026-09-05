@@ -101,6 +101,28 @@ def cap_png(style, text, size):
     _cache[key] = b.getvalue()
     return _cache[key]
 
+def _backup_state():
+    """state.json을 덮어쓰기 직전에 backup/ 으로 복사한다.
+
+    2026-09-05 사고: 다른 PC에서 마무리한 값을, 이 PC 브라우저를 여는 것만으로
+    덮어써 잃을 뻔했다(hydrateFromFile은 파일이 더 새로울 때만 이긴다).
+    되돌릴 수단이 하나도 없던 게 진짜 문제였다 — 그래서 여기서 무조건 남긴다.
+    """
+    src = HERE / "state.json"
+    if not src.exists():
+        return
+    try:
+        import shutil, time as _t
+        bdir = HERE / "backup"
+        bdir.mkdir(exist_ok=True)
+        shutil.copy2(src, bdir / ("state_%s.json" % _t.strftime("%m%d_%H%M%S")))
+        olds = sorted(bdir.glob("state_*.json"))
+        for f in olds[:-20]:      # 최근 20벌만 남긴다
+            f.unlink()
+    except Exception:
+        pass
+
+
 class H(SimpleHTTPRequestHandler):
     def __init__(self, *a, **k): super().__init__(*a, directory=str(HERE), **k)
     def log_message(self, *a): pass
@@ -118,6 +140,7 @@ class H(SimpleHTTPRequestHandler):
             body = self.rfile.read(n)
             try:
                 json.loads(body.decode("utf-8"))
+                _backup_state()          # ★덮어쓰기 전에 직전 값을 남긴다(2026-09-05 유실 사고)
                 (HERE / "state.json").write_bytes(body)
                 return self._send(b'{"ok":true}', "application/json")
             except Exception as e:

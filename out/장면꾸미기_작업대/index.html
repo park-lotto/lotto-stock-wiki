@@ -275,6 +275,12 @@ function persistTitle(){pushStateFile();try{localStorage.setItem('deco_title',JS
  // 본문에 후킹 전용 값(검은 반투명 띠)이 섞인 채로는 저장하지 않는다 — 이게 저장되면
  // 다음에 카드를 눌러도 본문이 후킹 모양으로 열려 "후킹·본문이 똑같다"가 굳는다.
  const _L=LAYOUTS[id];if(_L&&!_L.body_keep_hc&&!(((_L.body||{}).spec||{}).hook_band_h)){delete _b.hook_band_h;delete _b.hook_band_color;delete _b.hook_band_alpha;}
+ // ★2026-09-05: 실측 채널 틀(LAYOUTS에 있는 19개)은 자동 기본값을 만들지 않는다.
+ // 렌더마다 DEF[id]를 써놓으니, 그 틀을 한 번만 보면 덧개가 생겨 실측 원본을
+ // 다시는 못 본다(applyLayout 352행이 DEF를 우선함). 사장님 제보 "다 이상하게 변해있다"의 뿌리.
+ // 손으로 만든 값은 ⭐내 프리셋(명시 저장)으로 남긴다. 예전 동작은 deco_autodef='1'.
+ const _autodef=(function(){try{return localStorage.getItem('deco_autodef')==='1';}catch(e){return false;}})();
+ if(_L&&!_autodef){if(DEF[id]){delete DEF[id];localStorage.setItem('deco_defaults',JSON.stringify(DEF));}return;}
  DEF[id]={hook:JSON.parse(JSON.stringify(SPECS.hook)),body:_b};localStorage.setItem('deco_defaults',JSON.stringify(DEF));}}catch(e){}}
 function pairUrls(T){if(!T||!T.preset)return null;const s=Object.assign({},T);delete s.hc;delete s._bandLock;const hc=Object.assign({},HC_DEFAULT,T.hc||{});const txt=(hc.text||'').trim();if(!txt)hc.text='';else{const ls=txt.split(/\r?\n/);if(hc.color2&&hc.color2!==hc.color&&ls[1])hc.highlight_rules=[{keyword:ls[1].trim(),color:hc.color2,box:false}];}return {fr:'/render?spec='+encodeURIComponent(JSON.stringify(s)),hc:'/hc?hc='+encodeURIComponent(JSON.stringify(hc))};}
 function pairCapUrl(part){if(!CAPS)return '';const i=part==='hook'?0:Math.min(11,hookBeats);const b=CAPS.beats[i]||CAPS.beats[0];if(!b)return '';const text=(b.lines||[b.text])[b.cur||0]||b.text||'';if(!text)return '';const st=Object.assign({},CAPS.style,{y_pct:capPosY(b),x_pct:b.x_pct==null?50:b.x_pct});if(st.y_pct==null)delete st.y_pct;return '/cap?style='+encodeURIComponent(JSON.stringify(st))+'&text='+encodeURIComponent(text);}
@@ -340,8 +346,14 @@ function _healDefaults(){if(typeof DEF==='undefined'||!DEF)return 0;let n=0;
  if(n)try{localStorage.setItem('deco_defaults',JSON.stringify(DEF));}catch(e){}
  return n;}
 function _restoreBody(keep){if(!keep||!SPECS.body)return;SPECS.body._touched=true;
- for(const k of _BODY_KEEP_KEYS)if(keep[k]!==undefined)SPECS.body[k]=keep[k];
- if(keep.hc&&keep.hc.text)SPECS.body.hc=Object.assign({},SPECS.body.hc,{text:keep.hc.text});}
+ // ★빈 제목은 덮지 않는다 — 본문 제목은 후킹 문구에서 자동으로 채워지는 값인데,
+ //   한 번 비어버린 옛 값이 계속 전파돼 흰 블록이 빈 채로 굳었다(2026-09-05).
+ for(const k of _BODY_KEEP_KEYS)if(keep[k]!==undefined&&!(k==='title'&&keep[k]===''))SPECS.body[k]=keep[k];
+ // ★2026-09-05: 새로 고른 틀의 본문이 헤드카피를 안 쓰는 유형이면(mk가 hc.text='')
+ //   옛 문구를 되살리지 않는다. 되살리면 제목이 들어갈 흰 블록 위에 큰 글씨가
+ //   겹쳐 그려져 뭉갠다(사장님 제보: 본문 템플릿 미니가 겹쳐 보임).
+ //   본문 제목은 title 칸이 맡는다 — 두 곳이 같은 자리를 그리면 안 된다(0순위-B).
+ if(keep.hc&&keep.hc.text&&(SPECS.body.hc||{}).text)SPECS.body.hc=Object.assign({},SPECS.body.hc,{text:keep.hc.text});}
 function applyLayout(id){const _keepBody=(SPECS.body&&SPECS.body._touched)?JSON.parse(JSON.stringify(SPECS.body)):null;
  BODY_BACKUP=null;const _sb=document.getElementById('sameBtn');if(_sb){_sb.textContent='후킹 → 본문 같게';_sb.classList.remove('on');}const L=LAYOUTS[id],p=PRESETS.find(x=>x.id===id)||{};const keepText=L.sample||((SPECS.hook.hc||{}).text)||$('#hcText').value||'';const ch=$('#channel').value;
  const mk=(part)=>{const d=L[part]||{};const hc=Object.assign({},HC_DEFAULT,p.headcopy||{},d.hc||{});const noHc=(d.hc&&d.hc.text==='');if((part==='hook'&&!noHc)||(part==='body'&&L.body_keep_hc))hc.text=keepText;else hc.text='';if(part==='body'&&L.body_keep_hc)Object.assign(hc,L.hook.hc||{},{text:keepText});hc.x=hc.x||50;
@@ -349,7 +361,7 @@ function applyLayout(id){const _keepBody=(SPECS.body&&SPECS.body._touched)?JSON.
  SPECS.hook=mk('hook');SPECS.body=mk('body');_restoreBody(_keepBody);
  if(SPECS.hook.sub_line&&!SPECS.hook.sub_line_size)SPECS.hook.sub_line_size=28;SPEC=SPECS[part];
  if(typeof capSwitchTo==='function')capSwitchTo(id);
- $('#hcText').value=keepText;$('#bar_color').value=(SPEC.bar_color||p.bar||'#ffffff');$('#on_bar_color').value=(SPEC.on_bar_color||p.on_bar||'#111111');if(DEF[id]){const keep=SPECS.hook.hc.text;SPECS.hook=JSON.parse(JSON.stringify(DEF[id].hook));SPECS.body=JSON.parse(JSON.stringify(DEF[id].body));SPECS.hook.hc.text=keep;_restoreBody(_keepBody);SPEC=SPECS[part];syncFromSpec();render();hcFit(SPECS.hook,true);hint.textContent='내가 만진 값 그대로 열었습니다 (↩ 채널 원래 값으로 되돌릴 수 있어요)';return;}
+ $('#hcText').value=keepText;$('#bar_color').value=(SPEC.bar_color||p.bar||'#ffffff');$('#on_bar_color').value=(SPEC.on_bar_color||p.on_bar||'#111111');if(DEF[id]&&(function(){try{return localStorage.getItem('deco_autodef')==='1';}catch(e){return false;}})()){const keep=SPECS.hook.hc.text;SPECS.hook=JSON.parse(JSON.stringify(DEF[id].hook));SPECS.body=JSON.parse(JSON.stringify(DEF[id].body));SPECS.hook.hc.text=keep;_restoreBody(_keepBody);SPEC=SPECS[part];syncFromSpec();render();hcFit(SPECS.hook,true);hint.textContent='내가 만진 값 그대로 열었습니다 (↩ 채널 원래 값으로 되돌릴 수 있어요)';return;}
  syncUI();render();hcFit(SPECS.hook);hint.textContent='★ '+(L.name||id)+' 완성 화면을 올렸습니다. 문구만 바꾸세요';}
 function pickTpl(t){const k=t.dataset.tpl;if(k==='myp'){loadMyPreset(+t.dataset.i);return;}tplImg.style.display='none';hcHtml.style.display='none';
  if(k==='preset'&&LAYOUTS[t.dataset.id]){applyLayout(t.dataset.id);return;}
