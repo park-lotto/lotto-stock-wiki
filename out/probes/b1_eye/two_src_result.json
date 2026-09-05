@@ -5,65 +5,67 @@
   "beats": [
    {
     "role": "title",
-    "text": "아픈 아내를 위해 만든 독일 리스트 위젯의 소름 돋는 기능",
+    "text": "아픈 손목 위해 만든 독일 기술 리스트 위젯, 알고 보니 숨겨진 반전이 있다",
     "src_seg": "",
     "needs_scene": false,
-    "sec": 3.1,
+    "sec": 3.9,
     "src_segs": []
    },
    {
     "role": "story",
-    "text": "손목 통증으로 고생하던 아내를 위해 탄생한 이 보호대가 사람들 사이에서 조용히 퍼지기 시작했음",
+    "text": "손목 통증으로 고생하던 사람을 위해 탄생한 이 보호대가 입소문을 타기 시작했는데",
     "src_seg": "s0-0",
     "needs_scene": true,
-    "sec": 5.4,
+    "sec": 4.6,
     "src_segs": [
      "s0-0"
     ]
    },
    {
     "role": "authority",
-    "text": "이미 해외 리뷰에서 난리 난 제품인데 직접 써보니까 그 이유를 바로 알겠더라고",
-    "src_seg": "s1-31",
+    "text": "독일에서 출시되자마자 품절 대란 일으킨 전설의 아이템인데 써보니까 바로 납득이 가더라",
+    "src_seg": "s0-1",
     "needs_scene": true,
-    "sec": 4.3,
+    "sec": 5.0,
     "src_segs": [
-     "s1-31"
+     "s0-1"
     ]
    },
    {
     "role": "benefit",
-    "text": "이게 미친 포인트인 게 벨크로 홀만 당기면 내 손목에 딱 맞게 압박 조절이 가능함",
+    "text": "이게 미친 포인트인 게 벨크로 홀에 끈만 통과시켜 당기면 손목이 꽉 조여진다는 거임",
     "src_seg": "s0-2",
     "needs_scene": true,
-    "sec": 4.3,
+    "sec": 4.6,
     "src_segs": [
-     "s0-2"
+     "s0-2",
+     "s0-3"
     ]
    },
    {
     "role": "escalate",
-    "text": "심지어 두께도 얇아서 일상생활에서 착용해도 전혀 불편함이 없다는 거",
-    "src_seg": "s1-15",
+    "text": "심지어 특정 부위 압박을 정밀하게 조절해서 쓸 수 있음",
+    "src_seg": "s0-4",
     "needs_scene": true,
-    "sec": 3.9,
+    "sec": 3.0,
     "src_segs": [
-     "s1-15"
+     "s0-4"
     ]
    },
    {
     "role": "twist",
-    "text": "근데 진짜 충격적인 건 손목 압박 위치를 내 마음대로 정할 수 있다는 거임",
-    "src_seg": "s0-4",
+    "text": "다들 모르시는 게 하나 있는데 사실 파트2에서 설명할 다음 보호대와 세트로 써야 압권임",
+    "src_seg": "s0-5",
     "needs_scene": true,
-    "sec": 3.9,
+    "sec": 4.9,
     "src_segs": [
-     "s0-4"
+     "s0-5",
+     "s0-6"
     ]
    }
   ],
-  "script": "아픈 아내를 위해 만든 독일 리스트 위젯의 소름 돋는 기능 손목 통증으로 고생하던 아내를 위해 탄생한 이 보호대가 사람들 사이에서 조용히 퍼지기 시작했음 이미 해외 리뷰에서 난리 난 제품인데 직접 써보니까 그 이유를 바로 알겠더라고 이게 미친 포인트인 게 벨크로 홀만 당기면 내 손목에 딱 맞게 압박 조절이 가능함 심지어 두께도 얇아서 일상생활에서 착용해도 전혀 불편함이 없다는 거 근데 진짜 충격적인 건 손목 압박 위치를 내 마음대로 정할 수 있다는 거임",
-  "hook": "아픈 아내를 위해 만든 독일 리스트 위젯의 소름 돋는 기능",
+  "script": "아픈 손목 위해 만든 독일 기술 리스트 위젯, 알고 보니 숨겨진 반전이 있다 손목 통증으로 고생하던 사람을 위해 탄생한 이 보호대가 입소문을 타기 시작했는데 독일에서 출시되자마자 품절 대란 일으킨 전설의 아이템인데 써보니까 바로 납득이 가더라 이게 미친 포인트인 게 벨크로 홀에 끈만 통과시켜 당기면 손목이 꽉 조여진다는 거임 심지어 특정 부위 압박을 정밀하게 조절해서 쓸 수 있음 다들 모르시는 게 하나 있는데 사실 파트2에서 설명할 다음 보호대와 세트로 써야 압권임",
+  "hook": "아픈 손목 위해 만든 독일 기술 리스트 위젯, 알고 보니 숨겨진 반전이 있다",
   "checks": [
    {
     "name": "구간 순서",
@@ -83,7 +85,7 @@
    {
     "name": "말 밀도(139~222자)",
     "ok": true,
-    "detail": "185자 / 이 스타일 히트작 199자",
+    "detail": "192자 / 이 스타일 히트작 199자",
     "over": false
    },
    {
@@ -94,7 +96,7 @@
    {
     "name": "훅 3초 서론금지",
     "ok": true,
-    "detail": "OK(아픈아내를위해만든독일리스트위젯의소름돋…)"
+    "detail": "OK(아픈손목위해만든독일기술리스트위젯알고보…)"
    },
    {
     "name": "화자 일관성",
@@ -103,35 +105,36 @@
    },
    {
     "name": "장면 근거",
-    "ok": true,
-    "detail": "OK(5/6줄에 장면)"
+    "ok": false,
+    "detail": "재료 영상 2편을 줬는데 s0 것만 썼다 — 한 영상에만 기대지 말고 최소 2편에서 골라라(그 줄에 정말 맞는 장면이 있는 영상을 쓰면 된다)"
    }
   ],
   "passed": false,
   "tries": [
    {
-    "chars": 247,
+    "chars": 192,
     "fails": [
-     "말 밀도(139~222자)",
+     "고조 심화(1회)",
      "장면 근거"
     ]
    },
    {
-    "chars": 185,
+    "chars": 253,
     "fails": [
+     "말 밀도(139~222자)",
      "고조 심화(1회)"
     ]
    },
    {
-    "chars": 213,
+    "chars": 185,
     "fails": [
      "고조 심화(1회)",
      "장면 근거"
     ]
    }
   ],
-  "chars": 185,
-  "sec": 25.0
+  "chars": 192,
+  "sec": 25.9
  },
  "plan": {
   "structure": "template",
@@ -139,75 +142,8 @@
    {
     "beat_idx": 0,
     "role": "title",
-    "narration": "아픈 아내를 위해 만든 독일 리스트 위젯의 소름 돋는 기능",
-    "target_seconds": 5.6,
-    "primary": {
-     "video_id": "s0",
-     "seg_id": "s0-1",
-     "start": 6.126,
-     "end": 12.252,
-     "scene_desc": "손목에 빨간색 리스트 위젯 보호대를 착용하고 있는 클로즈업 모습이 보임.",
-     "is_key": true,
-     "change": "손목에 보호대가 장착된 상태임",
-     "shot_role": "설치"
-    },
-    "alternates": [],
-    "effect": "cut",
-    "fit": 3,
-    "fit_evidence": "broll_fill",
-    "inherited": false,
-    "visual_verb": false,
-    "src_seg_applied": null
-   },
-   {
-    "beat_idx": 1,
-    "role": "story",
-    "narration": "손목 통증으로 고생하던 아내를 위해 탄생한 이 보호대가 사람들 사이에서 조용히 퍼지기 시작했음",
-    "target_seconds": 9.1,
-    "primary": {
-     "video_id": "s0",
-     "seg_id": "s0-0",
-     "start": 0.0,
-     "end": 6.126,
-     "scene_desc": "보호대 브랜드 로고가 화면 중앙에 노출되며 브랜드 정보와 구독을 독려하는 그래픽이 함께 나타남.",
-     "is_key": false,
-     "change": "",
-     "shot_role": "기타"
-    },
-    "alternates": [
-     {
-      "video_id": "s0",
-      "seg_id": "s0-7",
-      "start": 34.635,
-      "end": 36.637,
-      "scene_desc": "두 가지 다른 형태의 손목 보호대를 평면에 나란히 놓아 비교함.",
-      "is_key": false,
-      "change": "",
-      "shot_role": "기타"
-     },
-     {
-      "video_id": "s0",
-      "seg_id": "s0-3",
-      "start": 18.379,
-      "end": 19.35,
-      "scene_desc": "손목에 보호대를 감고 벨크로를 이용해 조여 고정하는 과정을 상세히 보여줌.",
-      "is_key": true,
-      "change": "벨크로가 손목에 밀착되어 고정됨",
-      "shot_role": "설치"
-     }
-    ],
-    "effect": "cut",
-    "fit": 5,
-    "fit_evidence": "inherited",
-    "inherited": true,
-    "visual_verb": true,
-    "src_seg_applied": "s0-0"
-   },
-   {
-    "beat_idx": 2,
-    "role": "authority",
-    "narration": "이미 해외 리뷰에서 난리 난 제품인데 직접 써보니까 그 이유를 바로 알겠더라고",
-    "target_seconds": 7.5,
+    "narration": "아픈 손목 위해 만든 독일 기술 리스트 위젯, 알고 보니 숨겨진 반전이 있다",
+    "target_seconds": 7.4,
     "primary": {
      "video_id": "s1",
      "seg_id": "s1-31",
@@ -231,13 +167,47 @@
      },
      {
       "video_id": "s1",
-      "seg_id": "s1-2",
-      "start": 6.0,
-      "end": 8.0,
-      "scene_desc": "손이 보호대의 벨크로 스트랩을 당겨 조절하는 모습이 클로즈업된다.",
+      "seg_id": "s1-3",
+      "start": 8.0,
+      "end": 10.0,
+      "scene_desc": "손목 보호대를 손에 끼우고 스트랩을 손목 둘레에 맞춰 조이는 과정이다.",
       "is_key": true,
-      "change": "스트랩이 당겨지며 손목에 밀착된다.",
+      "change": "보호대가 손목에 맞춰 단단하게 고정된다.",
       "shot_role": "조작"
+     }
+    ],
+    "effect": "cut",
+    "fit": 3,
+    "fit_evidence": "broll_fill",
+    "inherited": false,
+    "visual_verb": false,
+    "src_seg_applied": null
+   },
+   {
+    "beat_idx": 1,
+    "role": "story",
+    "narration": "손목 통증으로 고생하던 사람을 위해 탄생한 이 보호대가 입소문을 타기 시작했는데",
+    "target_seconds": 7.7,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-0",
+     "start": 0.0,
+     "end": 6.126,
+     "scene_desc": "보호대 브랜드 로고가 화면 중앙에 노출되며 브랜드 정보와 구독을 독려하는 그래픽이 함께 나타남.",
+     "is_key": false,
+     "change": "",
+     "shot_role": "기타"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-7",
+      "start": 34.635,
+      "end": 36.637,
+      "scene_desc": "두 가지 다른 형태의 손목 보호대를 평면에 나란히 놓아 비교함.",
+      "is_key": false,
+      "change": "",
+      "shot_role": "기타"
      }
     ],
     "effect": "cut",
@@ -245,13 +215,57 @@
     "fit_evidence": "inherited",
     "inherited": true,
     "visual_verb": true,
-    "src_seg_applied": "s1-31"
+    "src_seg_applied": "s0-0"
+   },
+   {
+    "beat_idx": 2,
+    "role": "authority",
+    "narration": "독일에서 출시되자마자 품절 대란 일으킨 전설의 아이템인데 써보니까 바로 납득이 가더라",
+    "target_seconds": 8.2,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-1",
+     "start": 6.126,
+     "end": 12.252,
+     "scene_desc": "손목에 빨간색 리스트 위젯 보호대를 착용하고 있는 클로즈업 모습이 보임.",
+     "is_key": true,
+     "change": "손목에 보호대가 장착된 상태임",
+     "shot_role": "설치"
+    },
+    "alternates": [
+     {
+      "video_id": "s0",
+      "seg_id": "s0-8",
+      "start": 36.637,
+      "end": 38.639,
+      "scene_desc": "비교되는 두 제품의 전면 모습을 전체적으로 보여줌.",
+      "is_key": false,
+      "change": "",
+      "shot_role": "기타"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-9",
+      "start": 38.639,
+      "end": 38.71,
+      "scene_desc": "또 다른 제품 구성품들을 펼쳐 놓으며 파트 2를 예고함.",
+      "is_key": false,
+      "change": "",
+      "shot_role": "기타"
+     }
+    ],
+    "effect": "cut",
+    "fit": 5,
+    "fit_evidence": "inherited",
+    "inherited": true,
+    "visual_verb": true,
+    "src_seg_applied": "s0-1"
    },
    {
     "beat_idx": 3,
     "role": "benefit",
-    "narration": "이게 미친 포인트인 게 벨크로 홀만 당기면 내 손목에 딱 맞게 압박 조절이 가능함",
-    "target_seconds": 7.9,
+    "narration": "이게 미친 포인트인 게 벨크로 홀에 끈만 통과시켜 당기면 손목이 꽉 조여진다는 거임",
+    "target_seconds": 8.1,
     "primary": {
      "video_id": "s0",
      "seg_id": "s0-2",
@@ -265,13 +279,13 @@
     "alternates": [
      {
       "video_id": "s0",
-      "seg_id": "s0-5",
-      "start": 30.631,
-      "end": 32.633,
-      "scene_desc": "착용된 보호대를 손으로 잡고 제품의 외형을 보여주며 다음 제품 소개를 예고함.",
-      "is_key": false,
-      "change": "",
-      "shot_role": "기타"
+      "seg_id": "s0-3",
+      "start": 18.379,
+      "end": 24.505,
+      "scene_desc": "손목에 보호대를 감고 벨크로를 이용해 조여 고정하는 과정을 상세히 보여줌.",
+      "is_key": true,
+      "change": "벨크로가 손목에 밀착되어 고정됨",
+      "shot_role": "설치"
      }
     ],
     "effect": "cut",
@@ -284,62 +298,8 @@
    {
     "beat_idx": 4,
     "role": "escalate",
-    "narration": "심지어 두께도 얇아서 일상생활에서 착용해도 전혀 불편함이 없다는 거",
-    "target_seconds": 6.5,
-    "primary": {
-     "video_id": "s1",
-     "seg_id": "s1-15",
-     "start": 46.0,
-     "end": 47.0,
-     "scene_desc": "손등이 위로 향하게 한 손의 모습이 클로즈업됨",
-     "is_key": true,
-     "change": "",
-     "shot_role": "사용중"
-    },
-    "alternates": [
-     {
-      "video_id": "s1",
-      "seg_id": "s1-3",
-      "start": 8.0,
-      "end": 10.0,
-      "scene_desc": "손목 보호대를 손에 끼우고 스트랩을 손목 둘레에 맞춰 조이는 과정이다.",
-      "is_key": true,
-      "change": "보호대가 손목에 맞춰 단단하게 고정된다.",
-      "shot_role": "조작"
-     },
-     {
-      "video_id": "s1",
-      "seg_id": "s1-4",
-      "start": 10.0,
-      "end": 12.0,
-      "scene_desc": "착용된 손목 보호대의 엄지 홀과 손목 고정 부위를 자세히 보여준다.",
-      "is_key": true,
-      "change": "",
-      "shot_role": "실증"
-     },
-     {
-      "video_id": "s1",
-      "seg_id": "s1-5",
-      "start": 12.0,
-      "end": 14.0,
-      "scene_desc": "보호대를 착용한 손이 키보드 타이핑을 하는 모습이 보인다.",
-      "is_key": true,
-      "change": "착용한 상태로도 손가락이 키보드를 편하게 움직인다.",
-      "shot_role": "사용중"
-     }
-    ],
-    "effect": "cut",
-    "fit": 5,
-    "fit_evidence": "inherited",
-    "inherited": true,
-    "visual_verb": true,
-    "src_seg_applied": "s1-15"
-   },
-   {
-    "beat_idx": 5,
-    "role": "twist",
-    "narration": "근데 진짜 충격적인 건 손목 압박 위치를 내 마음대로 정할 수 있다는 거임",
-    "target_seconds": 7.2,
+    "narration": "심지어 특정 부위 압박을 정밀하게 조절해서 쓸 수 있음",
+    "target_seconds": 5.3,
     "primary": {
      "video_id": "s0",
      "seg_id": "s0-4",
@@ -349,6 +309,29 @@
      "is_key": true,
      "change": "",
      "shot_role": "실증"
+    },
+    "alternates": [],
+    "effect": "cut",
+    "fit": 5,
+    "fit_evidence": "inherited",
+    "inherited": true,
+    "visual_verb": true,
+    "src_seg_applied": "s0-4"
+   },
+   {
+    "beat_idx": 5,
+    "role": "twist",
+    "narration": "다들 모르시는 게 하나 있는데 사실 파트2에서 설명할 다음 보호대와 세트로 써야 압권임",
+    "target_seconds": 8.4,
+    "primary": {
+     "video_id": "s0",
+     "seg_id": "s0-5",
+     "start": 30.631,
+     "end": 32.633,
+     "scene_desc": "착용된 보호대를 손으로 잡고 제품의 외형을 보여주며 다음 제품 소개를 예고함.",
+     "is_key": false,
+     "change": "",
+     "shot_role": "기타"
     },
     "alternates": [
      {
@@ -360,6 +343,26 @@
       "is_key": false,
       "change": "",
       "shot_role": "기타"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-10",
+      "start": 40.641,
+      "end": 43.677,
+      "scene_desc": "사람이 앉아서 제품 패키지를 직접 들어 보이며 설명함.",
+      "is_key": false,
+      "change": "패키지가 손에 들려 있음",
+      "shot_role": "기타"
+     },
+     {
+      "video_id": "s0",
+      "seg_id": "s0-11",
+      "start": 43.677,
+      "end": 45.04,
+      "scene_desc": "보호대, 인솔, 컴프레션 제품군의 아이콘이 순차적으로 그래픽 처리되어 나타남.",
+      "is_key": false,
+      "change": "",
+      "shot_role": "기타"
      }
     ],
     "effect": "cut",
@@ -367,7 +370,7 @@
     "fit_evidence": "inherited",
     "inherited": true,
     "visual_verb": true,
-    "src_seg_applied": "s0-4"
+    "src_seg_applied": "s0-5"
    }
   ],
   "plagiarism_flags": [],
@@ -381,7 +384,6 @@
  ],
  "dups_stage2": 0,
  "used_src": {
-  "s0": 3,
-  "s1": 2
+  "s0": 5
  }
 }

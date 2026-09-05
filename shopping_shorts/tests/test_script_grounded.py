@@ -225,7 +225,7 @@ def test_소스분산_두_소스_중_한쪽만_쓰면_반려():
     ids = {"s0-0", "s0-1", "s0-2", "s1-0", "s1-1", "s1-2"}
     ok, det = GT.scene_grounding_check(beats, ids, source_count=2)
     assert not ok, "두 소스를 줬는데 한쪽만 썼다 — 통과하면 안 된다"
-    assert "s1" in det or "소스" in det, det
+    assert "영상" in det and "s0" in det, det
 
 
 def test_소스분산_양쪽을_쓰면_통과():
@@ -315,6 +315,47 @@ def test_소스분산_한_소스만_썼어도_보조로_다른_소스를_봤으�
 
 
 def test_소스분산_다른_소스를_아예_안_보면_여전히_반려():
+    beats = [{"text": "가", "src_seg": "s0-0", "needs_scene": True},
+             {"text": "나", "src_seg": "s0-1", "needs_scene": True},
+             {"text": "다", "src_seg": "s0-2", "needs_scene": True}]
+    ok, _ = GT.scene_grounding_check(beats, {"s0-0", "s0-1", "s0-2", "s1-0"}, source_count=2)
+    assert not ok
+
+
+# ─── 소스가 많을 때 "전부 다 써라"는 무리한 요구다(2026-09-05 라이브 실측) ──────
+# 실측(work 2ed27b0d45f3, 토마토주스): 재료 영상 **6편**·장면 붙은 칸 **6칸**인데 게이트가
+#   "Dc13ofjzmB0, lens_youtube_gkn3rh 장면을 한 줄도 안 썼다"로 4회 전부 반려했다.
+#   → 한 영상당 1칸씩 억지 배분을 강요당해, **더 맞는 장면을 못 골랐다**:
+#     "아이 건강 걱정 없이"에 붙었어야 할 o4y3f0-9("아이가 주스를 크게 머금고 마시는 근접 샷")
+#     대신 1sfxq7t-7("완성 주스컵을 손으로 들어 보여줌")이 붙었다 — o4y3f0은 이미 한 번 썼다는 이유로.
+# 원래 취지는 "한 편에 끌려가지 마라"(사장님 2026-08-17)이지 "전부 균등 배분하라"가 아니다.
+
+def test_소스분산_소스가_많으면_전부_안_써도_통과():
+    """6편 중 3편을 썼으면 '한 편에 끌려간' 게 아니다 — 통과해야 한다."""
+    ids = {f"s{v}-{i}" for v in range(6) for i in range(5)}
+    beats = [{"text": "가", "src_seg": "s0-0", "needs_scene": True},
+             {"text": "나", "src_seg": "s1-0", "needs_scene": True},
+             {"text": "다", "src_seg": "s2-0", "needs_scene": True},
+             {"text": "라", "src_seg": "s0-1", "needs_scene": True},
+             {"text": "마", "src_seg": "s1-1", "needs_scene": True},
+             {"text": "바", "src_seg": "s2-1", "needs_scene": True}]
+    ok, det = GT.scene_grounding_check(beats, ids, source_count=6)
+    assert ok, det
+
+
+def test_소스분산_한_편에만_몰리면_여전히_반려():
+    """원래 잡으려던 것 — 여러 편을 넣었는데 한 편만 쓰는 것."""
+    ids = {f"s{v}-{i}" for v in range(6) for i in range(5)}
+    beats = [{"text": "가", "src_seg": "s0-0", "needs_scene": True},
+             {"text": "나", "src_seg": "s0-1", "needs_scene": True},
+             {"text": "다", "src_seg": "s0-2", "needs_scene": True},
+             {"text": "라", "src_seg": "s0-3", "needs_scene": True}]
+    ok, det = GT.scene_grounding_check(beats, ids, source_count=6)
+    assert not ok, "6편 중 1편만 썼는데 통과했다"
+
+
+def test_소스분산_두_편_넣고_한_편만_쓰면_반려():
+    """소스가 2편일 때는 종전 그대로 — 2편 중 1편만 쓰면 그게 곧 '한 편에 끌려간' 것."""
     beats = [{"text": "가", "src_seg": "s0-0", "needs_scene": True},
              {"text": "나", "src_seg": "s0-1", "needs_scene": True},
              {"text": "다", "src_seg": "s0-2", "needs_scene": True}]

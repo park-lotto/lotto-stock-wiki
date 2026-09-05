@@ -642,19 +642,27 @@ def scene_grounding_check(beats, scene_ids, is_recipe=False, min_ratio=0.34, sou
     #   2단계가 고른 장면이 **전부 첫 소스**였다 — 빠듯/넉넉/같은제품 셋 다 s1 사용 0).
     #   사장님(2026-08-17): "한 편만 넣으면 그 한 편에 끌려가 편협해진다. 다 넣으면 고를 일이 없어진다."
     #   중복 때와 같은 병 — 지시도 판정도 없어 앞에서부터 채우면 그만이었다. 지시는 _GROUNDED_RULE.
-    #   ⚠️장면 붙은 줄이 소스 수보다 적으면 다 쓰는 게 불가능하다 → 면제.
-    if not is_recipe and source_count and source_count > 1 and with_scene >= source_count:
+    #   ⚠️면제: 장면 붙은 줄이 2개 미만이면 두 영상에서 고르는 것 자체가 불가능하다
+    #     (요구가 '최소 2편'이므로 면제 기준도 2다 — 옛 기준 `>= source_count`는 요구를 낮춘 뒤
+    #      낡아서, 6편 중 1편만 쓴 대본을 그냥 통과시켰다).
+    if not is_recipe and source_count and source_count > 1 and with_scene >= 2:
         have = {str(x).rsplit("-", 1)[0] for x in ids}          # 목록에 실제로 있는 소스들
         # ★대표뿐 아니라 **보조 번호까지** 본다(2026-09-05 실측으로 완화). 대표만 보면 소재가
         #   서로 다른 제품일 때 모델이 게이트를 통과하려고 **억지로 섞는다** — 실측(비비크림+방수패드)
         #   에서 8칸 중 4칸이 딴 제품 화면이 됐다. 지시문엔 이미 "다른 제품이면 억지로 섞지 마라"가
         #   있으므로, 판정은 "다른 소스를 **아예 안 봤나**"만 잡는다.
         got = {str(x).rsplit("-", 1)[0] for x in all_used}
-        missing = sorted(have - got)
-        if len(have) > 1 and missing:
-            problems.append("재료 영상 %d편 중 %s 장면을 한 줄도 안 썼다(%s만 썼다) — 여러 영상에서 "
-                            "골라 써라. 그 줄에 정말 맞는 장면이 다른 영상에 있으면 그 번호를 적어라"
-                            % (len(have), ", ".join(missing[:3]), ", ".join(sorted(got)[:3])))
+        # ★"전부 다 써라"가 아니다(2026-09-05 라이브 실측으로 재완화). 영상 6편·장면 칸 6개인
+        #   실제 작업에서 "2편을 한 줄도 안 썼다"로 4회 전부 반려당했고, 그 결과 **한 영상당 1칸씩
+        #   억지 배분**을 강요당해 더 맞는 장면을 못 골랐다("아이 건강"에 붙었어야 할 '아이가 주스를
+        #   마시는 근접 샷' 대신 '완성 컵 들어 보여주기' — 그 영상을 이미 한 번 썼다는 이유로).
+        #   사장님 취지(2026-08-17)는 "**한 편에 끌려가지 마라**"이지 "균등 배분하라"가 아니다.
+        #   → 하한만 본다: 최소 2편. 소스가 2편이면 둘 다(=여전히 한 편 몰빵을 잡는다).
+        want_srcs = 2 if len(have) > 2 else len(have)
+        if len(have) > 1 and len(got) < want_srcs:
+            problems.append("재료 영상 %d편을 줬는데 %s 것만 썼다 — 한 영상에만 기대지 말고 "
+                            "최소 %d편에서 골라라(그 줄에 정말 맞는 장면이 있는 영상을 쓰면 된다)"
+                            % (len(have), ", ".join(sorted(got)[:3]) or "아무것도", want_srcs))
     need = max(1, int(len(beats) * min_ratio + 0.999)) if beats else 0
     if not is_recipe and beats and with_scene < need:
         # 문구의 기준은 상수에서 만든다(리뷰 L1: '절반'이라 적혀 있는데 실제는 1/3이었다)
