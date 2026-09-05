@@ -178,6 +178,23 @@ tbody tr:hover{background:#1b1b22}
 
 <h2 class=grouphead>🔔 오늘 처리할 일</h2>
 
+<!-- 1단계 정확도 측정(2026-09-05) — 서버가 최근 소스 N편으로 [기존 추출 vs B1 컷별 프레임 태깅]의
+     묘사↔프레임 정확도를 같은 판정기로 잰다(SSH 불필요). 사장님 "주소 치는 거 말고 job처럼" → 여기 카드.
+     ★숫자 읽는 법: 판정기는 관대하다 — 절대값보다 classic/b1 **상대 비교**. 빈 묘사·미판정이 0이 아니면 믿지 않는다. -->
+<div class="card wait" id="probeCard">
+  <h2>🎞 1단계 정확도 측정 <span id=pMsg class=msg></span>
+    <span style="float:right;font-size:13px;font-weight:400">
+      소스 <input type=number id=probeN value=30 min=1 max=40 style="width:52px"> 편
+      <button id=probeStart onclick="startProbe()" style="margin-left:6px;padding:4px 12px;cursor:pointer">▶ 측정 시작</button>
+    </span></h2>
+  <div id=pProg style="font-size:13px;color:#8a8a92;margin:4px 0 8px">아직 안 돌렸습니다.</div>
+  <table><thead><tr><th>비교 편수</th><th>기존(classic)</th><th>B1</th><th>B1 우위</th><th>기존 우위</th><th>동점</th><th>미판정</th><th>B1 빈 묘사</th><th>B1 편당 초</th></tr></thead>
+  <tbody id=psum><tr><td colspan=9 class=empty>—</td></tr></tbody></table>
+  <details style="margin-top:6px"><summary style="cursor:pointer;font-size:13px;color:#8a8a92">편별 상세</summary>
+  <table><thead><tr><th>작업</th><th>소스</th><th>기존</th><th>B1</th><th>세그(기존→B1)</th><th>빈 묘사</th><th>초</th><th>오류</th></tr></thead>
+  <tbody id=prows></tbody></table></details>
+</div>
+
 <!-- 오류 신고(2026-08-24) — 고객이 사이드바 '🐞 오류 신고'를 누르면 여기 쌓인다.
      ★고객은 한 줄만 쓴다. 페이지·작업번호·단계·화면오류는 화면이 자동으로 담아 보낸다
        (고객에게 job_id를 물어보면 못 받는다 — 실제로 그래서 원인 찾는 데 오래 걸렸다). -->
@@ -1067,6 +1084,42 @@ function reopenBug(id){
 }
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',loadBugs);
 else loadBugs();
+
+/* ── 1단계 정확도 측정 카드(2026-09-05) ── 서버 API probe/frame_accuracy를 화면으로. 도는 동안 15초마다 새로 그린다. */
+var _probeTimer=null;
+function _pf(v){ return (v===null||v===undefined)?'—':(typeof v==='number'?v.toFixed(3):String(v)); }
+function renderProbe(d){
+  var prog=document.getElementById('pProg'), sum=document.getElementById('psum'), rows=document.getElementById('prows'), btn=document.getElementById('probeStart');
+  if(!prog) return;
+  var st=d.status||'idle';
+  if(st==='running'){ prog.textContent='측정 중… '+(d.done||0)+' / '+(d.total||'?')+' 편 (시작 '+(d.started||'')+')'+(d.error?' · ⚠ '+d.error:''); btn.disabled=true; }
+  else if(st==='done'){ prog.textContent='완료 · '+(d.done||0)+' 편 · 결과 파일 '+(d.path||'')+(d.error?' · ⚠ '+d.error:''); btn.disabled=false; }
+  else if(st==='error'){ prog.textContent='실패: '+(d.error||''); btn.disabled=false; }
+  else { prog.textContent='아직 안 돌렸습니다.'; btn.disabled=false; }
+  var s=d.summary||{};
+  sum.innerHTML = Object.keys(s).length ? '<tr><td>'+_pf(s.compared)+'</td><td>'+_pf(s.classic_avg)+'</td><td><b>'+_pf(s.b1_avg)+'</b></td><td>'+_pf(s.b1_better)+'</td><td>'+_pf(s.classic_better)+'</td><td>'+_pf(s.tie)+'</td><td>'+_pf(s.unjudged)+'</td><td>'+_pf(s.b1_empty_segs)+' / '+_pf(s.b1_segs_total)+'</td><td>'+_pf(s.b1_secs_avg)+'</td></tr>'
+                                        : '<tr><td colspan=9 class=empty>—</td></tr>';
+  var rs=d.results||[];
+  rows.innerHTML = rs.length ? rs.map(function(r){
+      return '<tr><td>'+(r.job_id||'').slice(0,8)+'</td><td>'+(r.vid||'')+'</td><td>'+_pf(r.classic_score)+'</td><td>'+_pf(r.b1_score)+'</td><td>'+_pf(r.classic_segs)+'→'+_pf(r.b1_segs)+'</td><td>'+_pf(r.b1_empty)+'</td><td>'+_pf(r.b1_secs)+'</td><td style="color:#c33">'+(r.b1_error||r.classic_error||'')+'</td></tr>';
+    }).join('') : '<tr><td colspan=8 class=empty>—</td></tr>';
+  if(st==='running' && !_probeTimer){ _probeTimer=setInterval(function(){ _probeTimer=null; loadProbe(); }, 15000); }
+}
+function loadProbe(){
+  if(_probeTimer){ clearInterval(_probeTimer); _probeTimer=null; }
+  fetch('/api/admin/probe/frame_accuracy').then(function(r){return r.json();}).then(renderProbe).catch(function(){});
+}
+function startProbe(){
+  var n=parseInt(document.getElementById('probeN').value||'30',10)||30;
+  document.getElementById('pMsg').textContent='';
+  fetch('/api/admin/probe/frame_accuracy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({n:n})})
+    .then(function(r){return r.json();}).then(function(d){
+      if(!d.ok){ document.getElementById('pMsg').textContent='이미 도는 중이거나 시작 실패'; }
+      loadProbe();
+    }).catch(function(e){ document.getElementById('pMsg').textContent='시작 실패: '+e; });
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',loadProbe);
+else loadProbe();
 </script>
 </div>
 <script src="/sidebar.js?v=2"></script>
