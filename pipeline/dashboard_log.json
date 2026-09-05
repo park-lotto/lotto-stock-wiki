@@ -870,15 +870,57 @@
   {
     "date": "2026-09-05",
     "category": "스탁브레인",
+    "track": "고객에러설명문구",
+    "summary": "고객 제보 에러 구간 설명문구 작업 착수. 대상 페이지 후보(apiwatch/help/ops/신규)를 조사했으나 '그 페이지'가 어디인지 미확정이라 사장님 확인 대기 중.",
+    "next": "대상 페이지 확정 후, 제보된 에러 구간 수집(handoff·log.d·메모리)해서 원인 설명문구 삽입"
+  },
+  {
+    "date": "2026-09-05",
+    "category": "스탁브레인",
+    "track": "에러백과",
+    "summary": "고객이 에러를 만나는 화면에 '뭐가 잘못됐는지' 설명이 뜨도록 정본 사전 error_help.js 신설(24항목, 실제 제보 기록 근거 표기). 제작소·홈·발굴 화면의 뭉갠 '네트워크 오류' 40여 곳을 사전에 연결. 문구 검수용 미리보기 생성기(tools/error_help_preview.py) 추가 — 바탕화면에 HTML 배포.",
+    "next": "사장님 문구 확정 대기 → 확정되면 finish(배포) 후 실제 화면에서 에러를 내서 실측. 남은 것: library.html 미배선, 서버 쪽 뭉갠 문구(app.py '키 소진 또는 응답 오류' 2곳)를 사유 코드로 교체."
+  },
+  {
+    "date": "2026-09-05",
+    "category": "스탁브레인",
+    "track": "썸네일프리셋",
+    "summary": "썸네일 편집칸 정리 완료·main 병합됨(01e8de0): 붓밑줄·스티커 직접입력 제거, 재료 3탭 반영, 중복 '내 프리셋' 통합(같은 id·같은 let 변수명 → 병합 시 SyntaxError로 제작소 스크립트 전멸할 자리였음), 프리셋 11→21종. 게이트 새 실패 1건(selected 응답 통째비교)도 수리.",
+    "next": "★라이브 미반영 — auto_deploy 시간창(새벽 2~6시)에 붙잡혀 대기 중. 새벽 2시 자동배포 후 브라우저에서 프리셋 21개·재료탭 3개 실제로 눌러 확인(급하면 서버에 touch /home/ubuntu/DEPLOY_NOW)"
+  },
+  {
+    "date": "2026-09-05",
+    "category": "스탁브레인",
     "track": "보이스",
-    "summary": "자막 전환 지점에서 목소리가 튀는 원인 조사(코드 실측). 비트별 개별 TTS 합성 구조가 뿌리 — ①역할별 whisper/intonation/fillers 태그가 칸마다 켜졌다 꺼짐(narration_naturalize.py:36-40, 802) ②best-of-2가 칸마다 다른 seed take 선택(mix_pipeline.py:312) ③칸별 loudnorm(audio_post.py:46) ④칸별 atempo(mix_pipeline.py:233).",
-    "next": "완화안 선택 대기: (A)연속 합성 후 타임스탬프 분할 (B)seed 고정+n_best=1 (C)loudnorm을 믹스 합본에 1회만. 선택 후 실제 job으로 전/후 소리 비교"
+    "summary": "TTS 영어 음성 지원 여부 코드 확인. 일레븐랩스(eleven_multilingual_v2)는 영어 가능, 타입캐스트는 typecast_tts.py:127에 language=kor 하드코딩이라 불가.",
+    "next": "영어 대본 실제 job 실측 또는 타입캐스트 language를 프리셋 인자로 개방"
+  },
+  {
+    "date": "2026-09-05",
+    "category": "스탁브레인",
+    "track": "장면편집되돌리기",
+    "summary": "장면편집(scene_lab)에 ↩ 되돌리기 버튼 + Ctrl+Z 추가(최대 60단계). render() 끝의 saveWork() 한 출구에만 스택을 달아 모든 편집이 자동으로 잡히게 했다. loadWork 복원부를 applyWork(w)로 분리해 저장본 불러오기와 되돌리기가 같은 함수를 쓰게 했고, 스냅샷에서 at(시각)을 빼 '변경 없음' 판정이 무력화되던 문제를 막았다. main 병합 16f673925, BUILD_TAG F29.",
+    "next": "라이브 실측 미완 — 자동배포 시간창(2~6시) 밖이라 대기 중. 배포 후 화면 뱃지가 v F29인지 확인하고 /scene_lab.html?job=<실제job>에서 장면 이동→되돌리기 실제 동작·빈단계 없음·새로고침 유지·서버 편성 반영을 확인할 것(체크리스트: handoff/장면편집되돌리기.md)."
+  },
+  {
+    "date": "2026-09-05",
+    "category": "스탁브레인",
+    "track": "랭킹최신순",
+    "summary": "정렬 버그 2건. ①기간 탭(#spanTabs)도 class=tab이라 setTab(undefined)이 돌아 STATE.tab이 지워지고 정렬이 통째로 무효 → 셀렉터를 .tab[data-tab]로 좁힘(배포·브라우저 실측 완료). ②발행시각 upload_ts가 한 건도 안 쌓임(수집 items에 timestamp 키 자체가 없음, 실측 유튜브 9203건 중 0) → age_hours로 역산 저장. 저장→hits_since 왕복 실측 통과.",
+    "next": "②커밋 finish 게이트 결과 확인 후 배포(시간창 2~6시). 배포 뒤 유튜브 기간 탭(7일)에서 최신순이 실제로 갈리는지 브라우저 실측. 옛 9203건은 재수집돼야 채워지는 점 확인"
   },
   {
     "date": "2026-09-05",
     "category": "스탁브레인",
     "track": "목소리이음매",
-    "summary": "①자막 전환 목소리 튐 뿌리 수정: 통짜 합성 tts_joined.py 신규(전 비트 1회 합성→with-timestamps 정렬로 중간점 분할). 원인 4가지(역할 태그·best-of-N·칸별 loudnorm·칸별 atempo) 제거. TTS_JOINED=1 플래그, 기본 off. main 병합됨(0a7f0ff59). ②1단계 재료 영상 상한 5→8, SOURCE_MAX 한 곳+/api/me source_max로 화면 두 벌 제거(e62920d0e, finish 진행중)",
-    "next": "①서버 배포 후 verify_joined.py 실행 — 비트별 vs 통짜 조각 LUFS 편차·이음매 RMS 점프 측정하고 두 mp3 바탕화면으로 전달, 사장님 청취 판정 후 /etc/shopping-shorts.env에 TTS_JOINED=1 ②배포본 브라우저에서 URL 칸 8개·모음집 8개 보내기 실동작 확인"
+    "summary": "자막 전환 목소리 튐: 통짜 합성(tts_joined.py) 완성·main 병합, 서버 실측으로 이음매 레벨 튐 8.53→3.77dB. 남은 3.77은 이음매 결함 아님(붙이기 전 조각끼리도 4.73) = 말 자체 크기 차이. 기본 off. 1단계 재료 영상 상한 5→8도 병합. 사장님 승인으로 DEPLOY_NOW 배포 트리거(14:56)",
+    "next": "①배포 반영 확인 후 서비스 정상·URL칸 8개 실동작 브라우저 확인 ②사장님 청취 판정(목소리비교_1/2.mp3) 후 TTS_JOINED=1 ③툭툭 끊기면 쉼 0.05~0.1초 남기기 또는 크로스페이드"
+  },
+  {
+    "date": "2026-09-05",
+    "category": "스탁브레인",
+    "track": "장면꾸미기재편",
+    "summary": "후킹 템플릿에 자막이 빠져 있던 것 수정(커밋 981f9ff55) — 후킹 pair에 pcap 없음 + renderPair가 pcap을 안 채움 + capRender가 후킹 자막을 숨김, 세 뿌리 전부 처리. 브라우저 실측 확인. 미리보기 겹침은 bg.jpg가 자막제거(clean) 안 거친 원본이라 그런 것으로 확인.",
+    "next": "① 실측 후킹 틀(살림킹왕짱류) 자막을 소제목 박스와 겹칠지/아래로 내릴지 사장님 결정 ② 작업대 bg.jpg를 청소본 프레임으로 교체 ③ state.json을 gitignore로 빼 PC간 덮어쓰기 차단"
   }
 ]
