@@ -12441,6 +12441,9 @@ def _api_me(request: Request):
             member_days = None
     return {"customer_id": cid, "level": access_level(cid, now), "plan": plan,
             "days_left": days_left, "is_admin": is_admin,
+            # 1단계에서 담을 수 있는 재료 영상 상한 — 화면이 숫자를 다시 적지 않도록
+            # 서버가 내려준다. 정본은 script_generate.SOURCE_MAX 한 곳뿐(0순위-B).
+            "source_max": script_generate.SOURCE_MAX,
             # 관리자가 아니어도 열어준 기능들(2026-08-31). 화면은 이 값만 보고 켠다.
             "features": {f: _feature_allowed(st, cid, f) for f in _FEATURE_KEYS},
             "email": email, "name": name, "member_days": member_days,
