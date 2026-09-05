@@ -565,10 +565,22 @@ _lens_cache = {}                 # key → (저장시각, product, zh)
 _lens_cache_lock = threading.Lock()
 
 
+# 검색어용 소재를 프롬프트에 얼마나 실을지 — **여기 한 곳에서만** 정한다(0순위-B).
+# ★캐시키(_frame_cache_key)와 프롬프트(cn_search_candidates)가 반드시 같은 값을 써야 한다.
+#   다르면 서로 다른 소재가 같은 캐시칸을 쓰거나(오답 고착), 캐시가 영영 안 맞는다
+#   (memory `reference_캐시키_불일치함정`).
+# 900 = app._LENS_SRC_MAX와 맞춘 값. 400에서 올린 이유(2026-09-06 실측):
+#   쇼츠 대본은 앞부분이 인사·후킹이라 앞에서 400자를 자르면 제품 특징이 통째로 날아갔다
+#   (실측: 잘려나간 112자에 '칼날·키링·안전·박스 테이프'가 전부 있었다).
+#   비용은 거의 없다 — 400자 11.75초 → 900자 12.57초(각 3회 평균, +0.8초)이고,
+#   이 호출은 /api/lens/search와 **병렬**이라 체감 지연은 사실상 0이다.
+_LENS_PROMPT_SRC_MAX = int(os.environ.get("LENS_PROMPT_SRC_MAX", "900"))
+
+
 def _frame_cache_key(image_bytes, caption):
     """프레임+캡션 → 캐시 키. ★저장·조회가 반드시 이 함수를 거친다."""
     h = hashlib.sha1(image_bytes or b"").hexdigest()
-    return f"{h}:{(caption or '')[:400]}"
+    return f"{h}:{(caption or '')[:_LENS_PROMPT_SRC_MAX]}"
 
 
 def _lens_cache_get(key):
@@ -719,7 +731,8 @@ def cn_search_candidates(image_bytes, caption, max_retries=3, quota_sleep=8, exc
         return empty
     seen = {str(s).strip() for s in (exclude or []) if str(s or "").strip()}
     seen_initial = bool(seen)   # '🔄 다른 검색어' 재요청인가 (아래 캐시 저장 판단에 쓴다)
-    prompt = _CN_CANDIDATES_PROMPT.format(caption=(caption or "(캡션 없음)")[:400])
+    prompt = _CN_CANDIDATES_PROMPT.format(
+        caption=(caption or "(캡션 없음)")[:_LENS_PROMPT_SRC_MAX])
     if seen:
         prompt += ("\n\n※ 아래 검색어들은 **이미 사용자에게 보여준 것**이다. 이것들과 "
                    "겹치지 않는 **완전히 다른 각도**의 후보만 만들라(재료·조리법·모양·"
@@ -738,6 +751,12 @@ def cn_search_candidates(image_bytes, caption, max_retries=3, quota_sleep=8, exc
                     response_mime_type="application/json",
                     http_options=_lens_http_options(),
                     response_schema=_CN_CANDIDATES_SCHEMA,
+                    # ★온도 고정(2026-09-06 사장님 "이번에는 완전 다른거 나왔어").
+                    #   기본 온도로 두면 **같은 영상을 다시 눌러도 매번 다른 제품**이 나온다
+                    #   — 실측: 같은 프레임·같은 입력 5회에 버터커터기/에어팟케이스/미니커터/
+                    #   미니칼/실패로 5회 전부 달랐다. 소재를 제대로 주면 5/5 일치한다.
+                    #   검색어는 창작이 아니라 **판독**이라 흔들릴 이유가 없다.
+                    temperature=0,
                 ),
             )
             data = json.loads(resp.text)

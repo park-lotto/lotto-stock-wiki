@@ -9106,6 +9106,23 @@ def _lens_source_text(url, front_caption="", store=None):
             sc = m.group(1) if m else ""
             if sc:
                 sd = st.get_script(sc) or {}
+                # ★source_brief를 **맨 앞에** 붙인다(2026-09-06 사장님 "자막을 다 보고
+                #   제품명에 가까운 내용을 검색어로 뽑아야 한다").
+                #   왜 맨 앞인가 — 아래 프롬프트가 소재를 앞에서부터 자르므로(_CN_CANDIDATES_PROMPT),
+                #   가장 중요한 제품명이 **절대 안 잘리는 자리**에 있어야 한다.
+                #   왜 이게 필요한가 — product는 추출기가 **자막·화면까지 다 보고** 정한 제품명이라
+                #   나레이션(full_text)에 없는 이름도 들고 있다. 서버 실측(2026-09-06):
+                #   09월 추출분 1,970건 중 1,969건(99%)에 product가 있고, **나레이션이 0자인
+                #   280건 중 279건**도 product는 채워져 있다 — 무자막·무음성 영상에서
+                #   렌즈가 썸네일만 보고 찍던 것을 살리는 유일한 재료다.
+                _brief = sd.get("source_brief") or {}
+                if isinstance(_brief, dict):
+                    _prod = (_brief.get("product") or "").strip()
+                    _core = (_brief.get("core") or "").strip()
+                    if _prod:
+                        parts.append(f"[제품] {_prod}")
+                    if _core:
+                        parts.append(f"[요지] {_core}")
                 txt = (sd.get("full_text") or "").strip()
                 if txt:
                     parts.append(txt)
