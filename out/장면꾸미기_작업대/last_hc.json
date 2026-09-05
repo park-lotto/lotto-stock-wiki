@@ -3,9 +3,9 @@
  "size": 76,
  "y": 8,
  "leading": 1.15,
- "color": "#111111",
- "color2": "#E8452C",
- "outline": false,
+ "color": "#FFFFFF",
+ "color2": "#3EE8C6",
+ "outline": true,
  "outline_color": "#000000",
  "outline_w": 10,
  "wrap": true,
@@ -15,9 +15,8 @@
  "highlight_rules": [
   {
    "keyword": "의외의 사용자",
-   "color": "#E8452C",
-   "box": false,
-   "box_color": "#E8452C"
+   "color": "#3EE8C6",
+   "box": false
   }
  ]
 }
