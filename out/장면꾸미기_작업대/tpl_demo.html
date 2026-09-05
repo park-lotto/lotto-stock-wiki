@@ -1,0 +1,38 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>
+/* 사장님이 GPT에서 받은 CSS를 1080x1920으로 옮긴다.
+   원본 기준 454x804 → 배율 2.378배. 비율만 곱하고 값은 그대로 쓴다. */
+@font-face{font-family:PT;src:url('../../shopping_shorts/static/fonts/Pretendard-ExtraBold.otf')}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;background:transparent;font-family:PT,sans-serif}
+.wrap{position:relative;width:1080px;height:1920px}
+.head{position:absolute;left:0;top:0;width:100%;height:560px;background:#000}
+.ad{position:absolute;right:44px;top:38px;color:#fff;font-size:34px;font-weight:600;opacity:.9}
+.lines{position:absolute;left:0;top:150px;width:100%;text-align:center}
+
+.yellow-title{
+  color:#ffd21a; font-size:90px; font-weight:900; font-style:italic;
+  letter-spacing:-4.8px; line-height:1;
+  -webkit-text-stroke:4.8px #111; text-shadow:0 7px 0 #111;
+  transform:scaleX(0.92) skewX(-7deg);
+  display:block; paint-order:stroke fill;
+}
+.white-title{
+  color:#fff; font-size:86px; font-weight:900;
+  letter-spacing:-4.8px; line-height:1.05;
+  -webkit-text-stroke:3.6px #111; text-shadow:0 7px 0 #111;
+  display:block; margin-top:18px; paint-order:stroke fill;
+}
+.bar{position:absolute;left:0;top:560px;width:100%;height:150px;background:#fff;
+     display:flex;align-items:center;justify-content:center}
+.bar span{font-size:44px;font-weight:800;color:#111;letter-spacing:-1.5px}
+</style></head><body>
+<div class="wrap">
+  <div class="head"></div>
+  <div class="ad">[광고]</div>
+  <div class="lines">
+    <span class="yellow-title">역발상으로 돈방석앉은</span>
+    <span class="white-title">육아천재의 발명품</span>
+  </div>
+  <div class="bar"><span>역발상으로 돈방석앉은 육아천재의 발명품</span></div>
+</div></body></html>
