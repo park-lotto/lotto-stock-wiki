@@ -154,3 +154,57 @@ def test_extra_segs_persisted_in_plan(monkeypatch, tmp_path):
         "extra_segs가 저장되지 않는다 — 화면 저장본(localStorage)에만 있어서 "
         "다른 PC·자막제거 왕복이면 통째로 증발한다")
     assert abs(float(saved[FILM_ID]["start"]) - 7.2) < 0.01
+
+
+# ── ⑥ 저장본 재사용: 클라가 extra_segs를 안 보내도 조각이 살아남아야 한다 ─────
+#    (2026-09-05 2차 — 라이브 재현으로 잡은 진짜 뿌리)
+#
+#    화면은 편집이 멈추면 1.2초 뒤 자동으로 apply를 보낸다(autoApply). 그 payload가
+#    어떤 이유로든 EXTRA를 못 채우면(서버 편성으로 열린 직후 등) film_ id는 seg_map에
+#    없어 걸러지고 **scene_override에서 통째로 사라진다**.
+#    실측(라이브 job fb62adf0aad0): 최종 렌더 직후 hook 재료
+#      [film_s1_0.74_1.67, lens_tiktok_12x7oa1-4] → 페이지를 다시 여는 것만으로
+#      [lens_tiktok_12x7oa1-4] 하나로 줄었다. 편성 서명이 a873ba…→2716cd…로 바뀌어
+#      **방금 만든 자막제거 청소본이 그 자리에서 낡은 것**이 됐다
+#      (= "완성본을 만들어도 자막제거·꾸미기에 반영이 안 된다").
+
+def test_film_seg_survives_apply_without_extra_segs(monkeypatch, tmp_path):
+    """★자동저장이 조각을 지우면 안 된다 — 서버 저장본으로 되살린다."""
+    client, store = _client(monkeypatch, tmp_path)
+    _seed(store)
+    _apply_film_cut(client)                      # ① 사람이 오려 담았다(EXTRA 함께 옴)
+
+    # ② 자동저장: 같은 편성을 **extra_segs 없이** 다시 보낸다(화면이 못 채운 경우)
+    r = client.post("/api/mix/scene_lab/j1/apply", json={"payload": {
+        "beats": [{"beat_idx": 0, "list": [FILM_ID], "stretch": False}],
+    }})
+    assert r.status_code == 200, r.text
+    assert r.json().get("ok"), r.text
+
+    plan = store.get_mix_job("j1")["edit_plan"]
+    ov = [s["seg_id"] for s in (plan["beats"][0].get("scene_override") or [])]
+    assert FILM_ID in ov, (
+        "자동저장 한 번에 오려낸 조각이 증발했다 — 편성 서명이 바뀌어 "
+        f"자막제거 청소본이 즉시 낡은 것이 된다. 남은 것: {ov}")
+
+    # 저장본도 유지돼야 다음 저장에서도 산다(누적되는 안전망)
+    assert FILM_ID in (plan.get("scene_lab") or {}).get("extra_segs", {})
+
+
+def test_client_extra_segs_wins_over_saved(monkeypatch, tmp_path):
+    """사람이 구간을 고쳐 보내면 **클라가 이긴다** — 저장본이 옛 값을 되살리면 안 된다."""
+    client, store = _client(monkeypatch, tmp_path)
+    _seed(store)
+    _apply_film_cut(client)                      # 7.2~9.8로 저장돼 있다
+
+    r = client.post("/api/mix/scene_lab/j1/apply", json={"payload": {
+        "beats": [{"beat_idx": 0, "list": [FILM_ID], "stretch": False}],
+        "extra_segs": {FILM_ID: {"video_id": "s0", "start": 7.5, "end": 9.0,
+                                 "label": "다시 오린 구간", "text": ""}},
+    }})
+    assert r.json().get("ok"), r.text
+
+    plan = store.get_mix_job("j1")["edit_plan"]
+    seg = [s for s in plan["beats"][0]["scene_override"] if s["seg_id"] == FILM_ID][0]
+    assert abs(seg["start"] - 7.5) < 0.01 and abs(seg["end"] - 9.0) < 0.01, (
+        f"클라가 고친 구간이 저장본에 밀렸다: {seg}")
