@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>대본 틀 2종 — 여러 편 공통 골격</title>
+<style>
+:root{
+  --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --line:#2b303c;
+  --ink:#e9ecf1; --dim:#9aa3b2; --faint:#6b7482;
+  --gold:#f2c14e; --hot:#ff6b4a; --bad:#f2545b; --blue:#63b3ff; --mint:#4ade80;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Pretendard","Malgun Gothic","맑은 고딕",system-ui,sans-serif;
+  line-height:1.6;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1200px;margin:0 auto;padding:42px 24px 90px}
+header.top{border-bottom:1px solid var(--line);padding-bottom:24px;margin-bottom:20px}
+h1{font-size:28px;margin:0 0 9px;letter-spacing:-.5px}
+.sub{color:var(--dim);font-size:14px;max-width:880px}
+.src{margin-top:13px;font-size:12.5px;color:var(--faint);
+  background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:9px 14px;display:inline-block}
+.src b{color:var(--dim);font-weight:600}
+h2{font-size:18px;margin:40px 0 13px;padding-left:12px;border-left:3px solid var(--gold)}
+
+.vars{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:15px 20px;margin-bottom:8px;font-size:13px;color:var(--dim)}
+.vars b{color:var(--ink)}
+.v{display:inline-block;background:#12151c;border:1px solid #3a3f4c;color:var(--blue);
+  border-radius:5px;padding:2px 8px;margin:3px 4px 3px 0;font-family:Consolas,monospace;font-size:12px}
+
+.tpl{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:20px}
+.thead{display:flex;align-items:baseline;gap:11px;padding:15px 20px;background:var(--panel2);
+  border-bottom:1px solid var(--line);flex-wrap:wrap}
+.tno{font-size:12px;color:var(--faint);font-variant-numeric:tabular-nums;min-width:18px}
+.tname{font-size:17px;font-weight:800;letter-spacing:-.3px}
+.tmeta{font-size:11.5px;color:var(--faint)}
+.tv{margin-left:auto;font-size:16px;font-weight:800;color:var(--hot);font-variant-numeric:tabular-nums}
+.tv small{font-size:11px;color:var(--faint);font-weight:500;margin-left:4px}
+
+.two{display:grid;grid-template-columns:1fr 1fr}
+@media(max-width:900px){.two{grid-template-columns:1fr}}
+.pane{padding:0}
+.pane+.pane{border-left:1px solid #20242e}
+@media(max-width:900px){.pane+.pane{border-left:none;border-top:1px solid #20242e}}
+.ptitle{font-size:11px;letter-spacing:1.2px;font-weight:800;padding:11px 20px;
+  border-bottom:1px solid #20242e;background:#13161d}
+.ptitle.l{color:var(--hot)} .ptitle.r{color:var(--mint)}
+.ptitle span{color:var(--faint);font-weight:600;letter-spacing:0;margin-left:6px;font-size:11px}
+.full{padding:16px 20px;font-size:13.2px;color:#ded7c6;line-height:1.85}
+.full em{color:var(--gold);font-style:normal;font-weight:700}
+
+.slot{display:grid;grid-template-columns:96px 1fr;gap:12px;padding:10px 20px;border-bottom:1px solid #1c202a;font-size:12.8px}
+.slot:last-child{border-bottom:none}
+.slot .r{font-family:Consolas,"D2Coding",monospace;font-size:11.5px;color:var(--blue);padding-top:2px}
+.slot .r.hook{color:var(--gold)} .slot .r.cta{color:var(--mint)} .slot .r.key{color:var(--gold);font-weight:700}
+.slot .t{color:#cfd6e0;line-height:1.72}
+.slot .t code{background:#12151c;border:1px solid #3a3f4c;color:var(--blue);
+  border-radius:4px;padding:1px 5px;font-family:Consolas,monospace;font-size:11.5px}
+.fix{color:var(--gold);font-weight:700}
+
+.note{font-size:12.5px;color:var(--faint);padding:11px 20px;border-top:1px solid var(--line);background:#13161d}
+.note b{color:var(--hot)}
+.limit{background:#1a1216;border:1px solid #4a2630;border-radius:12px;padding:17px 22px;font-size:13.5px;color:#e3c9cd}
+.limit h3{margin:0 0 9px;font-size:14px;color:var(--bad)}
+.limit ul{margin:0;padding-left:18px} .limit li{margin-bottom:5px}
+footer{margin-top:44px;padding-top:17px;border-top:1px solid var(--line);font-size:12px;color:var(--faint)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <h1>대본 틀 2종 — 여러 편에서 뽑은 공통 골격</h1>
+  <div class="sub">
+    <b>★한 영상에만 맞는 틀은 뺐다.</b> 같은 표식을 가진 대본을 <b>전부 꺼내 중복본을 걷어내고</b>,
+    <b>여러 편에 실제로 반복되는 문장</b>만 고정으로 남겼다.
+    왼쪽은 그 무리의 대표 대본, 오른쪽은 <b>무리 전체에서 뽑은 빈칸 템플릿</b>이다.
+  </div>
+  <div class="src">
+    <b>대본</b> script_wiki 원문 &nbsp;·&nbsp;
+    <b>중복 제거</b> 앞 80자 해시 &nbsp;·&nbsp;
+    <b>측정</b> 2026-09-06 &nbsp;·&nbsp; <b>로컬 전용</b>
+  </div>
+</header>
+
+<div class="limit" style="margin-bottom:20px">
+  <h3>★ 앞선 3종 문서에서 2개를 버렸다 — 실측으로 뒤집힘</h3>
+  <ul>
+    <li><b>회사 실수 대박형 → 폐기.</b> "217만 · 반복 6편"이라고 적혀 있었지만
+      중복본을 걷어내니 <b>고유 1편</b>이었다(같은 씨앗연필 대본의 유튜브·틱톡 판본).
+      <b>틀이 아니라 영상 하나다.</b></li>
+    <li><b>셀프 반박형 → 대표를 갈았다.</b> 표식 <code>아님?</code>으로 묶었더니
+      성격이 <b>정반대인 두 무리</b>가 섞여 있었다 —
+      <b>감탄 10편</b>("천재 아닌가요?") vs <b>반박 1편</b>(파스타 쿠커).
+      내가 고른 파스타 쿠커가 <b>소수파 1편</b>이었다. 고정 문구 6개 중 5개가
+      <b>19편 중 1편(5%)</b>에만 나왔다.</li>
+    <li><b>제조사도 몰랐던 쓰임형 → 유지하되 다시 뽑았다.</b> 표식 12편 중 <code>원래는</code>이 있는 <b>9편</b>이 진짜 같은 구조다. 타공기 하나에 붙어 있던 문구를 <b>9편 공통분모</b>로 낮췄다.</li>
+  </ul>
+</div>
+
+<div class="vars">
+  <b>기존 시스템이 쓰는 빈칸 변수</b> — 새로 만들지 않고 이것만 썼다:
+  <div style="margin-top:7px">
+    <span class="v">{효과}</span><span class="v">{적용대상}</span><span class="v">{사용법}</span><span class="v">{불편함}</span>
+    <span class="v">{제품군}</span><span class="v">{차별점}</span><span class="v">{효능}</span><span class="v">{제품}</span>
+    <span class="v">{본래용도}</span><span class="v">{속성}</span><span class="v">{용도}</span><span class="v">{용도2}</span>
+    <span class="v">{용도3}</span><span class="v">{적용대상들}</span><span class="v">{효능2}</span>
+  </div>
+</div>
+
+<h2>2종</h2>
+
+<!-- 1 -->
+<div class="tpl">
+  <div class="thead"><span class="tno">01</span><span class="tname">천재 감탄형</span>
+    <span class="tmeta">★고유 10편 · 제품 10종 전부 다름 · 화자 10/10 “직접(나)”</span><span class="tv">10편<small>중복 제거 후</small></span></div>
+  <div class="two">
+    <div class="pane">
+      <div class="ptitle l">대표 대본 <span>이어폰 · 인스타</span></div>
+      <div class="full">
+        <em>와 이거 만든 사람 진짜 천재 아닌가요?</em>
+        이건 상황에 따라 바꿔 끼는 이어폰인데 무려 3쌍이나 들어있는 거 있죠
+        퇴근길 지하철에선 커널형으로 차단된 음악을 들을 수 있고
+        밤에 운동 나갈 때 클립형으로 끼워주면 아무리 뛰어도 절대 빠지지가 않아요
+        잘 때 수면용으로 바꿔주면 누워서 드라마 한 편 때리기 딱 좋은데
+        이쪽 저쪽 돌아 누워도 귀가 전혀 안 아프더라고요
+        <em>심지어</em> 급할 때 보조배터리로도 쓸 수 있는데
+        <em>댓글로 나도 남겨주세요</em>
+      </div>
+      <div class="note" style="border-top:1px solid #20242e">
+        <b>같은 틀의 다른 제품 9편</b> — 우유 디저트 · 키링 가방 · 욕실장 선반 · 이동식 수납함 ·
+        파일 캐비넷 · 벽걸이 건조대 · 롤링 안전문 · 손잡이 지퍼백 · 거치형 스피커
+      </div>
+    </div>
+    <div class="pane">
+      <div class="ptitle r">빈칸 템플릿 <span>5칸 · CTA 있음</span></div>
+      <div class="slot"><div class="r hook">hook</div><div class="t"><span class="fix">이거 만든 사람 진짜 천재 아닌가요?</span> <span style="color:#6b7482;font-size:11px">10/10편</span></div></div>
+      <div class="slot"><div class="r">reveal</div><div class="t">이건 <code>{제품}</code>인데 <code>{차별점}</code>인 거 있죠</div></div>
+      <div class="slot"><div class="r key">usecases</div><div class="t"><code>{적용대상들}</code>마다 <code>{용도}</code>·<code>{용도2}</code>·<code>{용도3}</code>로 바꿔 쓴다 <span style="color:#6b7482;font-size:11px">2~4개 나열</span></div></div>
+      <div class="slot"><div class="r">bonus</div><div class="t"><span class="fix">심지어</span> <code>{효능2}</code>로도 쓸 수 있는데</div></div>
+      <div class="slot"><div class="r cta">cta</div><div class="t">댓글에 “<code>{제품}</code>” 남겨주세요 <span style="color:#6b7482;font-size:11px">8/10편</span></div></div>
+    </div>
+  </div>
+  <div class="note"><b>★ 이 틀의 정체는 “감탄”이지 “반박”이 아니다.</b> 훅에서 <b>제품을 만든 사람을 칭찬</b>하고, 본문은 <b>쓰임새를 2~4개 나열</b>한다. 갈등도 반전도 없다 — <b>가장 단순한 틀</b>이라 어떤 제품에도 얹힌다(실측 10편이 전부 다른 품목). 화자는 <b>10/10편 “직접(나)”</b>이고 <b>CTA로 닫는다</b>(8/10편) — 인스타·틱톡 본진 문법이다.</div>
+</div>
+
+<!-- 2 -->
+<div class="tpl">
+  <div class="thead"><span class="tno">02</span><span class="tname">제조사도 몰랐던 쓰임형</span>
+    <span class="tmeta">★고유 9편 · 제품 7종 · 화자 7/9 제3자 관찰자</span><span class="tv">65만<small>대표편 실측</small></span></div>
+  <div class="two">
+    <div class="pane">
+      <div class="ptitle l">대표 대본 <span>펀칭기 · 이 무리의 전형</span></div>
+      <div class="full">
+        <em>개발자도 예측 못한 미친 활용법</em>
+        <em>이게 원래는</em> 가죽 공방에서 튼튼한 구멍을 만들라고 개발된 펀칭기였음
+        <em>그런데 사람들은</em> 어떤 재질이든지 쉽게 뚫린다는 걸 눈치채고 이걸 엉뚱한 용도로 사용하기 시작하는데
+        주방으로 가져가더니 손에 잡히는 온갖 주방용품들 깔끔하게 걸어버리면서
+        <em>심지어</em> 물티슈까지 걸어두고 편하게 뽑아 쓰기 시작했다는 거
+        <em>근데 미친 활용법은 따로 있었는데</em> 집집마다 하나쯤 있는 지퍼락에 구멍을 뚫더니
+        뽑아 쓰는 비닐봉투 디스펜서까지 만들어 버렸다고
+      </div>
+      <div class="note" style="border-top:1px solid #20242e">
+        <b>같은 틀의 다른 제품</b> — 아일렛 타공기(65만) · 스티치건(3편) · 휴대용 실링팬 ·
+        젤 펜 · 다이소 걸이스틱(2편) · 입체 달력
+      </div>
+    </div>
+    <div class="pane">
+      <div class="ptitle r">빈칸 템플릿 <span>5칸 · CTA 선택</span></div>
+      <div class="slot"><div class="r hook">hook</div><div class="t"><code>{제품군}</code> <span class="fix">개발자도 예상 못한 미친 활용법</span> <span style="color:#6b7482;font-size:11px">9/9편</span></div></div>
+      <div class="slot"><div class="r key">origin</div><div class="t"><span class="fix">이게 원래는</span> <code>{본래용도}</code>로 나온 <code>{제품}</code>이었음 <span style="color:#6b7482;font-size:11px">9/9편 · 이 틀의 뿌리</span></div></div>
+      <div class="slot"><div class="r key">notice</div><div class="t"><span class="fix">그런데 사람들은</span> <code>{속성}</code>을 눈치채고 엉뚱한 용도로 쓰기 시작하는데 <span style="color:#6b7482;font-size:11px">9/9편</span></div></div>
+      <div class="slot"><div class="r">spread</div><div class="t"><code>{용도}</code> 하는가 하면 <span class="fix">심지어</span> <code>{용도2}</code>까지 <span style="color:#6b7482;font-size:11px">심지어 7/9편</span></div></div>
+      <div class="slot"><div class="r key">climax</div><div class="t"><span class="fix">근데 미친 활용법은 따로 있었는데</span> <code>{용도3}</code> <span style="color:#6b7482;font-size:11px" title="3/9편">△ 3/9편 — 선택 칸</span></div></div>
+    </div>
+  </div>
+  <div class="note"><b>★ 앞 세 칸이 이 틀의 뼈대다 — 9편 전부에 있다</b>(훅 · <code>이게 원래는</code> · <code>그런데 사람들은</code>). 반대로 <b>최종반전(「근데 진짜는」)은 3/9편뿐</b>이라 <b>필수가 아니다</b> — 있으면 세지만 없어도 이 틀이다. 재료가 3개 이상 나올 때만 쓴다. <b>오용형과 다르다</b>: 오용형은 사용자가 다르게 쓰는 이야기지만, 이건 <b>만든 쪽이 몰랐다</b>는 게 전제라 <code>{본래용도}</code>가 반드시 먼저 나온다(9/9편). 화자는 <b>제3자 관찰자</b>(<code>~였음</code>·<code>~했다는 거</code>)다.</div>
+</div>
+
+<h2>두 틀은 서로 정반대다</h2>
+<div class="vars">
+  <table style="width:100%;border-collapse:collapse;font-size:13px;color:#cfd6e0">
+    <tr style="color:#9aa3b2;font-size:12px;text-align:left">
+      <th style="padding:7px 10px;border-bottom:1px solid #2b303c">축</th>
+      <th style="padding:7px 10px;border-bottom:1px solid #2b303c">01 천재 감탄형</th>
+      <th style="padding:7px 10px;border-bottom:1px solid #2b303c">02 제조사도 몰랐던 쓰임형</th>
+    </tr>
+    <tr><td style="padding:7px 10px">화자</td><td style="padding:7px 10px">직접(나) <b>10/10</b></td><td style="padding:7px 10px;color:#f2c14e">제3자 관찰자 <b>9/11</b></td></tr>
+    <tr><td style="padding:7px 10px">말끝</td><td style="padding:7px 10px">~하더라고요 · ~있죠</td><td style="padding:7px 10px;color:#f2c14e">~였음 · ~했다는 거</td></tr>
+    <tr><td style="padding:7px 10px">구조</td><td style="padding:7px 10px">나열(평평하다)</td><td style="padding:7px 10px;color:#f2c14e">3단 상승(뒤로 갈수록 세다)</td></tr>
+    <tr><td style="padding:7px 10px">CTA</td><td style="padding:7px 10px">있음 <b>8/10</b></td><td style="padding:7px 10px;color:#f2c14e">선택 <b>2/12</b></td></tr>
+    <tr><td style="padding:7px 10px">플랫폼</td><td style="padding:7px 10px">인스타·틱톡</td><td style="padding:7px 10px;color:#f2c14e">유튜브 쇼츠</td></tr>
+    <tr><td style="padding:7px 10px">쓸 자리</td><td style="padding:7px 10px">쓰임새가 많은 제품</td><td style="padding:7px 10px;color:#f2c14e">본래 용도가 뚜렷한 도구</td></tr>
+  </table>
+  <div style="margin-top:11px;font-size:12.5px;color:#9aa3b2">
+    ★ <b>같은 제품에 둘 다 쓸 수 있다.</b> 01은 “좋다”를 나열하고, 02는 “원래 그게 아니었다”로 연다.
+    <b>본래 용도가 뚜렷한 도구</b>(공구·주방기기)면 02가 세고, <b>용도가 여러 개인 생활용품</b>이면 01이 편하다.
+  </div>
+</div>
+
+<h2>한계</h2>
+<div class="limit">
+  <h3>확인한 것과 못 한 것</h3>
+  <ul>
+    <li><b>중복본을 걷어내고 셌다</b>(앞 80자 해시). 같은 대본이 유튜브·틱톡·인스타에 나뉘어 저장돼 있어, 안 걷어내면 편수가 부풀려진다 — <b>앞선 3종 문서가 그렇게 틀렸다.</b></li>
+    <li>고정 문구 옆의 <b>출현율은 실측</b>이다(예: <code>이게 원래는</code> 9/9편). 30% 미만인 문구는 고정에서 뺐다.</li>
+    <li><b>빈칸 나누기는 여전히 내가 한 것</b>이다 — 어디를 고정할지는 A/B로 재본 적 없다.</li>
+    <li><b>조회수와 연결하지 않았다</b>(대표편 1개만 실측). “많이 쓰인다”이지 “잘 된다”가 아니다.</li>
+    <li>표식 검색으로 무리를 모았으므로, <b>같은 구조인데 표현이 다른 대본은 빠졌을 수 있다.</b></li>
+    <li>제조사형은 표식으로 12편이 모였지만 <b>3편은 이 틀이 아니었다</b>(<code>원래는</code>이 없는 정체은폐형·입체달력). <b>9편</b>으로 셌다.</li>
+  </ul>
+</div>
+
+<footer>서버 reference.db · script_wiki 원문 · 중복 제거 후 실측 · 2026-09-06 · <b>로컬 전용</b></footer>
+
+</div>
+</body>
+</html>
