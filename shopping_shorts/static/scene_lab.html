@@ -2669,13 +2669,13 @@ function renderBand(){
                ? `이 칸엔 장면이 없어 자막 ${need.toFixed(1)}초 동안 화면이 비어 있습니다. 아래 소스에서 장면을 담아주세요.`
                : lack > 0.1
                  ? `담은 장면은 ${have.toFixed(1)}초인데 자막은 ${need.toFixed(1)}초 — ${lack.toFixed(1)}초 모자랍니다. `
-                   + (stretching ? '지금은 담긴 장면 전부를 고르게 늘려 채우는 중이라 화면이 그만큼 느리게 흐릅니다.'
-                                 : '모자란 만큼 마지막 컷이 늘어나 그 장면만 오래 나옵니다. 장면을 더 담거나 [늘려 채우기]를 켜세요.')
+                   + (stretching ? '지금은 [전체 늘리기] — 담은 장면을 모두 고르게 늘려 채웁니다(최대 1.15배). 화면이 그만큼 느리게 흐릅니다.'
+                                 : '지금은 [뒷부분 채우기] — 담은 구간 뒤에 이어지는 원본을 더 틀어 채웁니다(1배속). 원본이 모자라면 그때만 마지막 화면이 멈춥니다.')
                  : `담은 장면 ${have.toFixed(1)}초로 자막 ${need.toFixed(1)}초를 다 채웠습니다.`
                    + (f.over > 0.1 ? ` 남는 ${f.over.toFixed(1)}초는 안 나옵니다.` : '')
              }">${have.toFixed(1)}/${need.toFixed(1)}초${
              f.empty ? ' · 장면 없음'
-               : lack > 0.1 ? (stretching ? ' · 늘려 채움' : ` · ${lack.toFixed(1)}초 모자람`)
+               : lack > 0.1 ? (stretching ? ' · 전체 늘림' : ` · ${lack.toFixed(1)}초는 뒷부분으로`)
                // ★남는 재료도 말해준다(2026-08-21 사장님 실측 job a1765d7766e5: CTA 칸에
                //   2.7초 말하는데 9.2초를 담아 6.5초가 안 나왔다. 잡 전체로 45.1초 중
                //   11.8초가 버려졌다). 종전엔 '모자람'만 뜨고 '남음'은 툴팁에만 있어,
@@ -2683,7 +2683,7 @@ function renderBand(){
                : f.over > 0.1 ? ` · ${f.over.toFixed(1)}초는 안 나와요` : ''}</span>${sel === i ? '<span class="picked">여기에 담깁니다</span>' : ''}
           <span class="tbtools" onclick="event.stopPropagation()">
             <label title="컷 경계를 자막 구절 경계에 1:1로 맞춥니다(구절 수만큼 컷·길이도 구절대로). ✋수동 길이가 있으면 수동이 우선"><input type="checkbox" ${phraseSyncOn(i) ? 'checked' : ''} onchange="togglePhraseSync(${i}, this.checked)"> 구절 맞춤</label>
-            <label title="재료가 모자랄 때 마지막 컷만 늘리지 않고 전체를 고르게 늘립니다"><input type="checkbox" ${STRETCH[i] ? 'checked' : ''} onchange="toggleStretch(${i}, this.checked)"> 늘려 채우기</label>
+            <label title="담은 장면이 모자랄 때 어떻게 채울지 고릅니다 — 끄면 [뒷부분 채우기]: 담은 구간 뒤에 이어지는 원본을 1배속으로 더 틉니다(새 화면이 나옵니다). 켜면 [전체 늘리기]: 담은 장면 전부를 고르게 늘려 채웁니다(최대 1.15배, 티가 덜 납니다)"><input type="checkbox" ${STRETCH[i] ? 'checked' : ''} onchange="toggleStretch(${i}, this.checked)"> 전체 늘리기</label>
             <!-- ★칸 순서 바꾸기(◀▶)를 뺐다(2026-08-17 사장님 "필요없는 기능이고 그자리에
                  대본수정 만들고"). 그 자리에 대본수정을 둔다 — 3단계에서 자막을 보다가
                  몇 글자 고치려고 2단계를 왕복하던 것을 없앤다. -->
@@ -2928,9 +2928,9 @@ function render(){
           onclick="event.stopPropagation();autoFill(${i})">${AUTOADD[i] ? `↩ 자동 담은 ${AUTOADD[i].length}장 빼기` : '✨ 자동 채우기'}</button>` : ''}
         <label class="chip" style="cursor:pointer${STRETCH[i]?';border-color:var(--warn);color:#ffd08f':''}"
           onclick="event.stopPropagation()"
-          title="켜면 이 칸만 컷 상한(2.2초)을 풀고, 멘트가 남을 때 마지막 컷에 몰지 않고 담긴 장면 전부를 고르게 늘립니다. 새 장면은 담지 않습니다. (1장=1컷이 켜져 있으면 원래부터 비례 배분이라 이 토글은 변화 없음)"
+          title="담은 장면이 모자랄 때 어떻게 채울지 — 끄면 [뒷부분 채우기]: 담은 구간 뒤 원본을 1배속으로 더 틉니다. 켜면 [전체 늘리기]: 이 칸의 컷 상한(2.2초)을 풀고 담긴 장면 전부를 고르게 늘립니다(최대 1.15배). 새 장면은 담지 않습니다. (1장=1컷이 켜져 있으면 원래부터 비례 배분이라 변화 없음)"
           ><input type="checkbox" ${STRETCH[i]?'checked':''}
-          onchange="toggleStretch(${i},this.checked)"> 늘려 채우기</label>
+          onchange="toggleStretch(${i},this.checked)"> 전체 늘리기</label>
         ${tinyN ? `<span class="chip bad">너무 짧은 장면 ${tinyN}장은 안 나와요</span>` : ''}
         <span class="ord">
           ${mode==='hand' ? `<button class="act" title="이 칸의 장면을 모두 뺍니다" onclick="event.stopPropagation();clearBeat(${i})">비우기</button>` : ''}

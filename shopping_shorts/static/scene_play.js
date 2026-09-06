@@ -14,6 +14,12 @@ const MAX_SHOT = 2.2, MIN_CLIP = 0.8, EPS = 1e-3, LONG_CUT = MAX_SHOT + 0.05;   
 //   2026-09-06 사장님 "1초미만이 수동으로는 들어올수있게". 0.3초 아래는 10프레임 미만이라
 //   사람 눈에 안 잡히므로 그것만 막는다.
 const MANUAL_MIN = 0.3;
+// ★[전체 늘리기]의 재생 배율 상한. **렌더(video_assemble._MAX_SLOWMO)와 같은 값**이어야
+//   한다(0순위-B) — 미리보기만 무제한으로 늘리면 "화면은 부드러운데 결과물엔 멈춤이
+//   생긴다"가 된다(2026-09-06 실측: 칸 2.8초·재료 1.7초에서 미리보기 1.65배 vs 렌더
+//   1.15배+정지 0.85초). 이보다 더 필요한 시간은 렌더가 정지 프레임으로 떠안으므로
+//   미리보기도 마지막 컷을 그만큼 늘려 **정지가 생길 것을 미리 보여준다**.
+const MAX_SLOWMO = 1.15;
 // ★손대지 않은 컷에게 **반드시 남겨줄** 최소 길이. MANUAL_MIN(수동 지정 하한)과 다르다 —
 //   둘을 같은 값으로 쓴 탓에 ✋를 2.5초 이상 잡으면 남의 컷이 0.3초로 눌려 화면에 0.0으로
 //   떴다(2026-09-06 사장님 "장면 하나가 없어진다"). 수동은 0.3초까지 짧게 정할 수 있지만,
@@ -542,7 +548,14 @@ function planClips(segIds, ttsDur, spread, beatIdx){
     // spread(늘려 채우기 토글 ON): 부족분을 마지막 컷에 몰지 않고 전 컷에 비례로 나눈다.
     // 컷마다 조금씩 길어질 뿐 라운드로빈 결과(컷 수·순서·시작점)는 그대로다.
     if (spread && filled > EPS){
-      clips.forEach(c => { c.dur *= ttsDur / filled; });
+      // ★상한(1.15배)까지만 늘린다 — 렌더와 같은 규칙. 남는 시간은 마지막 컷이
+      //   떠안아 **정지가 생길 것을 미리보기에서도 보이게** 한다(거짓 안심 금지).
+      const scale = Math.min(MAX_SLOWMO, ttsDur / filled);
+      // ★실제 소스 길이를 남겨 둔다 — 재생기가 이 값으로 속도를 정한다(applyRate).
+      //   이게 없으면 dur만 늘어나고 재생은 1배속이라 '느려짐'이 아니라 '멈춤'이 된다.
+      clips.forEach(c => { c.src_dur = c.dur; c.dur *= scale; });
+      const rest = ttsDur - clips.reduce((a, c) => a + c.dur, 0);
+      if (rest > EPS) clips[clips.length - 1].dur += rest;   // 이만큼이 정지 프레임
     } else {
       // ★부족분은 **소스 원본의 뒷부분 실프레임**으로 먼저 메운다(2026-08-23 사장님
       //   "미리보기가 좀더 정확하게 보여야 조립을 하는데 헷갈리지 않는다").
@@ -707,6 +720,20 @@ function vidFor(videoId, slot){
 // 컷을 숨은 재생기에 미리 앉힌다. ⚠️**시크 완료를 기다리지 않는다** — currentTime만 꽂고
 // 바로 돌아온다(예전 주석은 "완료까지 기다린다"고 적혀 있었으나 사실이 아니었고,
 // 그 오해가 2026-09-02 '훅 뒤 꼬다리'를 낳았다). 도착 여부는 쓰는 쪽에서 v.seeking으로 본다.
+// ★컷을 틀 때 재생 속도를 건다(2026-09-06 사장님 "켜도 속도가 같음").
+//   화면 시간(dur)이 실제 소스 길이(src_dur)보다 길면 그 비율만큼 느리게 튼다.
+//   상한(MAX_SLOWMO)을 넘는 몫은 렌더와 같게 정지 프레임으로 남는다.
+//   src_dur이 없으면(늘리기를 안 켠 보통 컷) 1배속 — 종전과 똑같이 동작한다.
+function applyRate(v, c){
+  if (!v || !c) return 1;
+  const src = +c.src_dur;
+  let rate = 1;
+  if (src > 0 && c.dur > src + 1e-3){
+    rate = Math.max(1 / MAX_SLOWMO, src / c.dur);   // 느리게 = 1보다 작은 배속
+  }
+  try { if (Math.abs(v.playbackRate - rate) > 1e-3) v.playbackRate = rate; } catch (e) {}
+  return rate;
+}
 function seat(c){
   const v = vidFor(c.video_id, c._slot);
   if (Math.abs(v.currentTime - c.start) > 0.05) v.currentTime = c.start;
@@ -990,6 +1017,7 @@ function step(){
     //   pinfo는 컷 3/3). 폴백도 200ms는 너무 짧아 첫 재생에서 늘 걸렸다.
     const show = () => {
       showVid(v);
+      applyRate(v, c);          // ★[전체 늘리기]면 그 비율만큼 느리게 튼다
       v.play().catch(()=>{});
       paintCut();
       // ★아직 첫 프레임이 없으면 썸네일을 **걷지 않는다** — 걷으면 그 자리가 검게 남는다.
