@@ -392,56 +392,6 @@ function toggleStretch(i, on){ if (on) STRETCH[i] = true; else delete STRETCH[i]
 // ★구절 맞춤(2026-08-29 사장님 "활성화는 자막 분할 개수대로 / 개수+길이까지 1:1") —
 //   컷 경계 = 자막 구절 경계. 컷1이 리드인(첫말 전 무음)을 얹고, 마지막 컷이 꼬리를
 //   얹는다. 기본 **켬**(끄면 종전 배분). ✋수동 길이(FIXLEN)가 있는 칸은 수동이 이긴다.
-// ── 칸 길이로 컷 개수를 정한다(2026-09-06 사장님 "너무 잘게 썰려 정신없다") ──────
-//   실측(대본 1,013구간): 종전엔 컷의 71%가 1초 미만(중앙값 0.88초)이었다.
-//   규칙: 2초 미만 1컷 / 2~4.5초 2컷 / 4.5초 초과 3컷 → 중앙값 1.50초·1초미만 0%.
-//   ★서버(video_assemble.cuts_for_beat/pick_split_bounds)와 **같은 규칙**이다 —
-//     한쪽만 고치면 미리보기와 결과물이 어긋난다(0순위-B).
-// ★BEAT_3CUT_OVER 4.5 → 4.0 (2026-09-06 실측) — 2.5초 초과 컷 3% → 1%.
-const BEAT_1CUT_UNDER = 2.0, BEAT_3CUT_OVER = 4.0;
-// ★nSeg(담은 조각 수)를 주면 그보다 적게 만들지 않는다(2026-09-06 사장님) —
-//   규칙은 자동을 넉넉하게 하려는 것이지 손으로 담은 장면을 지우려는 게 아니다.
-// 0.8초 미만 칸만 이웃과 합친다(서버 merge_tiny_bounds와 같은 규칙 — 0순위-B).
-const TINY_CUT = MIN_CLIP;
-function mergeTinyBounds(bounds, total){
-  if (!bounds || bounds.length < 3) return (bounds || []).slice();
-  const out = [+bounds[0]];
-  for (let i = 1; i < bounds.length - 1; i++){
-    const b = +bounds[i];
-    if (b - out[out.length - 1] >= TINY_CUT - 1e-6) out.push(b);
-  }
-  out.push(+total);
-  while (out.length > 2 && out[out.length - 1] - out[out.length - 2] < TINY_CUT - 1e-6)
-    out.splice(out.length - 2, 1);
-  return out;
-}
-function cutsForBeat(sec, nSeg){
-  sec = +sec;
-  if (!(sec > 0)) return 1;
-  const base = sec < BEAT_1CUT_UNDER ? 1 : (sec > BEAT_3CUT_OVER ? 3 : 2);
-  const n = +nSeg;
-  return (n > 0) ? Math.max(base, Math.floor(n)) : base;
-}
-// 구절 경계 중 **등분 지점에 가까운 자리만** 고른다(자연스러운 자리 = 이미 문장부호·
-// 어절을 본 구절 경계). 쓸 수 있는 내부 경계가 모자라면 있는 것만 쓴다.
-function pickSplitBounds(bounds, total, nCut){
-  total = +total;
-  const lo = bounds && bounds.length ? +bounds[0] : 0;
-  if (nCut <= 1 || !bounds || bounds.length < 3) return [lo, total];
-  const inner = bounds.slice(1, -1).map(Number).filter(b => b > lo && b < total);
-  if (!inner.length) return [lo, total];
-  const picked = [];
-  for (let k = 1; k < nCut; k++){
-    const target = lo + (total - lo) * k / nCut;
-    const cand = inner.filter(b => picked.indexOf(b) < 0);
-    if (!cand.length) break;
-    let best = cand[0];
-    for (const b of cand) if (Math.abs(b - target) < Math.abs(best - target)) best = b;
-    picked.push(best);
-  }
-  picked.sort((x, y) => x - y);
-  return [lo].concat(picked, [total]);
-}
 const PHRASE_SYNC = {};             // beat_idx → false(끔)일 때만 기록. 기본은 켬.
 function phraseSyncOn(i){ return PHRASE_SYNC[i] !== false; }
 function togglePhraseSync(i, on){
@@ -486,7 +436,7 @@ function planClips(segIds, ttsDur, spread, beatIdx){
       //     쓰고 **담은 장면 하나가 통째로 안 나온다**(실측으로 잡은 회귀). 두 바퀴째부터만
       //     뒤가 남은 조각을 돌아가며 이어 쓴다. 재료가 진짜 떨어지면 그때만 종전 동작.
       // ★칸 수는 caps가 아니라 **bounds**가 정한다 — 위에서 컷 개수를 줄였다.
-      const nPhrase = bounds.length - 1;
+      const nPhrase = caps.length;   // ★어제 그대로 — 자막 줄 수가 컷 수다
       const pos = segments.map(s => s.start);
       let ri = 0;
       for (let k = 0; k < nPhrase; k++) {

@@ -571,98 +571,6 @@ _MIN_CLIP = 0.8   # 초. 이보다 짧은 독립 클립은 만들지 않는다(�
 # 그대로 둔다 — 짧게 움직이는 게 정지프레임보다 낫다는 사장님 피드백(2026-07-21).
 _MIN_CLIP_KEEP = 0.5
 
-# ── 칸 길이로 컷 개수를 정한다(2026-09-06 사장님) ──────────────────────────────
-# ★왜: 구절 맞춤이 컷 개수를 **자막 구절 수**로 정해 잘게 썰렸다. 서버 자막이 8자라
-#   3.0초 칸이 구절 4개로 갈라져 컷 0.75초씩 — 실측 대본 1,013구간에서 컷의 **71%가
-#   1초 미만**(중앙값 0.88초)이었고 사장님: "컷이 너무 잘게 썰려나오는게 다들 불만이야
-#   정신없다고".
-# ★규칙: 2초 미만 1컷 / 2초 이상 2컷(자연스러운 중간에서). 실측상 칸의 95%가 4.5초
-#   이하라 그 위만 3컷. 적용 시 중앙값 1.50초·1초미만 0%·1.2~1.8초에 66%.
-# ★상수를 여기 한 곳에서만 정한다(0순위-B) — 화면(scene_play.js)이 같은 값을 쓴다.
-_BEAT_1CUT_UNDER = 2.0     # 이 미만이면 1컷
-# ★4.5 → 4.0 (2026-09-06 실측 조정) — 4.5초를 2컷으로 나누면 뒤 컷이 2.76초까지 늘어
-#   한 화면이 3초 가까이 멈춘 듯 보였다. 4.0으로 낮추니 2.5초 초과 컷이 3% → 1%로 준다
-#   (1초 미만은 4% → 5%로 거의 그대로). 실측 대본 500칸.
-_BEAT_3CUT_OVER = 4.0      # 이 초과면 3컷
-
-
-# 이보다 짧은 칸은 이웃과 합친다(초). 자동 배분 하한(_MIN_CLIP)과 같은 값 —
-# "0.8초 미만은 화면에 안 나온다"는 이 코드베이스의 기존 기준을 그대로 쓴다.
-_TINY_CUT = _MIN_CLIP
-
-
-def merge_tiny_bounds(bounds, total, min_cut=_TINY_CUT):
-    """구절 경계에서 **아주 짧은 칸만** 이웃과 합친다. 총길이는 보존.
-
-    ★2026-09-06 사장님: "구절 0.8초 짧게 끊기는 것만 없애고."
-      컷 개수를 칸 길이로 정하던 규칙(cuts_for_beat)은 담은 장면이 안 나오게 만들어
-      되돌렸다. 대신 자막 구절대로 나누되 0.8초 미만 칸만 없앤다 — 툭 스쳐 지나가는
-      컷은 사라지고, 담은 장면 수만큼 컷이 나오는 종전 동작은 그대로다.
-
-    ★규칙은 여기 한 곳에서만 정한다(0순위-B) — 화면(scene_play.js)이 같은 것을 쓴다.
-    """
-    if not bounds or len(bounds) < 3:
-        return list(bounds)
-    out = [float(bounds[0])]
-    for b in bounds[1:-1]:
-        if float(b) - out[-1] >= min_cut - 1e-6:
-            out.append(float(b))
-    out.append(float(total))
-    # 끝 칸이 너무 짧으면 앞 경계를 지워 앞 컷에 흡수시킨다.
-    while len(out) > 2 and out[-1] - out[-2] < min_cut - 1e-6:
-        del out[-2]
-    return out
-
-
-def cuts_for_beat(sec, n_seg=None):
-    """칸 길이(초) → 컷 개수. 길이를 모르면(0·음수·None) 1컷.
-
-    ★n_seg(담은 조각 수)를 주면 **그보다 적게 만들지 않는다**(2026-09-06 사장님
-      "한 개를 더 올리면 예전처럼 3개씩 안 되나"). 규칙은 자동 배분을 넉넉하게
-      만들려는 것이지, 손으로 담은 장면을 지우려는 게 아니다 — ✋에서 정한
-      "자동은 넉넉히, 수동은 존중"과 같은 원칙이다.
-      n_seg를 안 주는 옛 호출부는 종전과 똑같이 동작한다(하위호환).
-    """
-    try:
-        sec = float(sec)
-    except (TypeError, ValueError):
-        return 1
-    if sec <= 0:
-        return 1
-    base = 1 if sec < _BEAT_1CUT_UNDER else (3 if sec > _BEAT_3CUT_OVER else 2)
-    try:
-        n = int(n_seg)
-    except (TypeError, ValueError):
-        return base
-    return max(base, n) if n > 0 else base
-
-
-def pick_split_bounds(bounds, total, n_cut):
-    """구절 경계 목록에서 **n_cut개 컷이 되도록 쪼갤 자리**만 고른다.
-
-    자막 구절 경계는 문장부호·어절을 이미 본 결과라 그 자체가 '자연스러운 자리'다
-    (새 판정을 만들지 않는다 — 0순위-B). 등분 지점에 가장 가까운 경계를 고른다.
-
-    bounds: [0, b1, …, total] 오름차순. 반환은 [0, …, total]이며 칸이 n_cut개.
-    쓸 수 있는 내부 경계가 모자라면 있는 것만 쓴다(컷이 요청보다 적을 수 있다).
-    """
-    total = float(total)
-    lo = float(bounds[0]) if bounds else 0.0
-    if n_cut <= 1 or not bounds or len(bounds) < 3:
-        return [lo, total]
-    inner = [float(b) for b in bounds[1:-1] if lo < float(b) < total]
-    if not inner:
-        return [lo, total]
-    picked = []
-    for k in range(1, n_cut):
-        target = lo + (total - lo) * k / n_cut
-        cand = [b for b in inner if b not in picked]
-        if not cand:
-            break
-        picked.append(min(cand, key=lambda b: abs(b - target)))
-    return [lo] + sorted(picked) + [total]
-
-
 # 슬로우모션 상한. 소스가 나레이션보다 짧을 때 무제한으로 늘리면(옛 동작) 부자연스러운
 # 슬로우크롤이 됐다(사장님 실측, 2026-07-19). 재생은 최대 이 배율까지만 늘리고, 그 이상
 # 필요한 시간은 마지막 프레임 정지(freeze)로 떠안는다 → 요리 동작은 자연 속도, 남는 시간만 홀드.
@@ -893,9 +801,8 @@ def _plan_phrase_clips(beat, segs, tts_dur):
         plan = []
         pos = [float(g["start"]) for g in segs]
         ri = 0
-        # ★칸 수는 durs가 아니라 **bounds**가 정한다 — 위에서 컷 개수를 줄였다.
-        for k in range(len(bounds) - 1):
-            end_b = bounds[k + 1]
+        for k in range(len(durs)):
+            end_b = bounds[-1] if k == len(durs) - 1 else bounds[k + 1]
             d = max(0.1, end_b - bounds[k])
             # ★재료가 구절보다 적으면 **담은 순서대로 돌아간다**(1,2,3,1,2,3…).
             #   2026-09-02 사장님: "하나를 올렸더니 2·3번 자리에 배치되고 같은 내용이 두 번
