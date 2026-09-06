@@ -401,6 +401,20 @@ function toggleStretch(i, on){ if (on) STRETCH[i] = true; else delete STRETCH[i]
 const BEAT_1CUT_UNDER = 2.0, BEAT_3CUT_OVER = 4.0;
 // ★nSeg(담은 조각 수)를 주면 그보다 적게 만들지 않는다(2026-09-06 사장님) —
 //   규칙은 자동을 넉넉하게 하려는 것이지 손으로 담은 장면을 지우려는 게 아니다.
+// 0.8초 미만 칸만 이웃과 합친다(서버 merge_tiny_bounds와 같은 규칙 — 0순위-B).
+const TINY_CUT = MIN_CLIP;
+function mergeTinyBounds(bounds, total){
+  if (!bounds || bounds.length < 3) return (bounds || []).slice();
+  const out = [+bounds[0]];
+  for (let i = 1; i < bounds.length - 1; i++){
+    const b = +bounds[i];
+    if (b - out[out.length - 1] >= TINY_CUT - 1e-6) out.push(b);
+  }
+  out.push(+total);
+  while (out.length > 2 && out[out.length - 1] - out[out.length - 2] < TINY_CUT - 1e-6)
+    out.splice(out.length - 2, 1);
+  return out;
+}
 function cutsForBeat(sec, nSeg){
   sec = +sec;
   if (!(sec > 0)) return 1;
@@ -459,8 +473,9 @@ function planClips(segIds, ttsDur, spread, beatIdx){
       let bounds = [0];
       for (let k = 1; k < caps.length; k++) bounds.push(Math.min(ttsDur, caps[k].start));
       bounds.push(ttsDur);
-      // ★칸 길이로 컷 개수를 정한다(2026-09-06 사장님) — 서버와 같은 규칙.
-      bounds = pickSplitBounds(bounds, ttsDur, cutsForBeat(ttsDur, segments.length));
+      // ★2026-09-06 완전 되돌림 — 컷 개수를 손대는 규칙을 전부 뺐다(자막 구절 그대로).
+      //   칸 길이로 컷 개수를 정하던 규칙은 담은 장면이 화면에 안 나오게 만들어
+      //   사장님이 라이브 편집을 못 하셨다. 3구절이면 3컷이 종전이자 현재 동작이다.
       // ★구절이 재료보다 많으면 **담은 조각의 뒷부분을 한 바퀴 더 쓴다**(2026-08-31 사장님
       //   "대본이 길어지니까 뒤에까지 장면이 안 붙는다").
       //   종전 nCut=min(caps, segments)는 조각 3·구절 6일 때 컷을 3개만 만들고 마지막 컷이

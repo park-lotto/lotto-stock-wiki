@@ -22,20 +22,19 @@ def _beat(**kw):
 
 
 def test_cut_bounds_equal_phrase_bounds():
-    """★2026-09-06 개정 — 컷 개수는 **칸 길이 + 담은 조각 수**가 정한다.
+    """컷 경계 = 자막 구절 경계. **3구절이면 3컷**이다.
 
-    종전 단언은 "컷 수 = 구절 수"였다. 그 규칙이 화면을 잘게 썰어 컷의 71%가
-    1초 미만이 됐고("정신없다" — 사장님), 칸 길이로 개수를 정하게 바꿨다
-    (2초 미만 1컷 / 2~4초 2컷 / 4초 초과 3컷).
-    다만 **담은 조각이 규칙보다 많으면 조각 수를 따른다**(수동 존중) — 여기서는
-    SEGS가 3개라 3컷이다. 경계는 여전히 **구절 경계 위**에서 고르고 합계도 보존된다.
+    ★2026-09-06: 하루 사이 "칸 길이가 컷 개수를 정한다"·"짧은 칸은 합친다"를 넣었다가
+      **둘 다 되돌렸다** — 담은 장면이 화면에 안 나와 사장님이 라이브 편집을 못 하셨다.
+      컷 개수를 손대는 규칙은 넣지 마라. 짧은 컷이 거슬리면 자막 줄을 합치는 쪽으로
+      풀어야 한다(그건 사장님이 화면에서 직접 하신다).
     """
-    # ★2026-09-06 재개정 — 담은 조각이 규칙보다 많으면 **조각 수를 따른다**
-    #   (사장님 "한 개를 더 올리면 3개씩 안 되나"). SEGS가 3개이므로 3컷이 맞다.
-    #   조각을 적게 담으면 아래 test_재료가_적으면…처럼 규칙(2컷)으로 돌아간다.
     plan = _plan_phrase_clips(_beat(), SEGS, 3.86)
-    assert plan and len(plan) == 3, "조각 3개를 담았으면 3컷(수동 존중)"
+    assert plan and len(plan) == 3, "3구절이면 3컷"
     durs = [c["out_dur"] for c in plan]
+    # 컷1 = 리드인 0.29 + 구절1 1.1 / 컷2 = 구절2 0.68 / 컷3 = 구절3 + 꼬리
+    assert durs[0] == pytest.approx(0.29 + 1.1, abs=1e-6)
+    assert durs[1] == pytest.approx(0.68, abs=1e-6)
     assert sum(durs) == pytest.approx(3.86, abs=1e-6)
 
 
@@ -47,12 +46,9 @@ def test_재료가_적으면_담은_순서대로_돌아간다():
     조각 하나를 빼면 뒤 배치가 통째로 밀렸다. 이제는 k % 재료수로 **정해진다**.
     """
     plan = _plan_phrase_clips(_beat(), SEGS[:2], 3.86)
-    # ★2026-09-06 개정: 컷 수는 구절 수가 아니라 **칸 길이**가 정한다(3.86초 → 2컷).
-    #   이 테스트의 요지는 개수가 아니라 **재료가 담은 순서대로 돈다**는 것이므로
-    #   그 단언은 그대로 지킨다(마지막 컷이 남은 구절을 통째로 덮지 않는다).
-    assert len(plan) == 2, "3.86초 칸은 2컷"
+    assert len(plan) == 3, "구절 수만큼 컷이 만들어져야 한다(마지막이 덮지 않는다)"
     vids = [c["video_id"] for c in plan]
-    assert vids == [SEGS[0]["video_id"], SEGS[1]["video_id"]], vids
+    assert vids == [SEGS[0]["video_id"], SEGS[1]["video_id"], SEGS[0]["video_id"]], vids
     assert sum(c["out_dur"] for c in plan) == pytest.approx(3.86, abs=1e-6)
 
 
@@ -62,10 +58,7 @@ def test_조각을_빼도_앞자리는_그대로다():
     less = _plan_phrase_clips(_beat(), SEGS[:2], 3.86)
     assert full[0]["video_id"] == less[0]["video_id"]
     assert full[1]["video_id"] == less[1]["video_id"]
-    # ★2026-09-06 재개정: 컷 수는 이제 **담은 조각 수**도 본다(수동 존중). 조각을 빼면
-    #   컷도 줄 수 있다 — 이 테스트의 요지는 개수가 아니라 **앞자리가 안 흔들린다**는 것
-    #   ("하나 뺐는데 둘이 사라진 것처럼" 보이던 제보)이므로 위 두 단언이 핵심이다.
-    assert len(full) >= len(less)
+    assert len(full) == len(less), "칸 수(=구절 수)는 재료 개수와 무관하게 유지된다"
 
 
 def test_no_timetable_falls_back_none():

@@ -586,6 +586,34 @@ _BEAT_1CUT_UNDER = 2.0     # 이 미만이면 1컷
 _BEAT_3CUT_OVER = 4.0      # 이 초과면 3컷
 
 
+# 이보다 짧은 칸은 이웃과 합친다(초). 자동 배분 하한(_MIN_CLIP)과 같은 값 —
+# "0.8초 미만은 화면에 안 나온다"는 이 코드베이스의 기존 기준을 그대로 쓴다.
+_TINY_CUT = _MIN_CLIP
+
+
+def merge_tiny_bounds(bounds, total, min_cut=_TINY_CUT):
+    """구절 경계에서 **아주 짧은 칸만** 이웃과 합친다. 총길이는 보존.
+
+    ★2026-09-06 사장님: "구절 0.8초 짧게 끊기는 것만 없애고."
+      컷 개수를 칸 길이로 정하던 규칙(cuts_for_beat)은 담은 장면이 안 나오게 만들어
+      되돌렸다. 대신 자막 구절대로 나누되 0.8초 미만 칸만 없앤다 — 툭 스쳐 지나가는
+      컷은 사라지고, 담은 장면 수만큼 컷이 나오는 종전 동작은 그대로다.
+
+    ★규칙은 여기 한 곳에서만 정한다(0순위-B) — 화면(scene_play.js)이 같은 것을 쓴다.
+    """
+    if not bounds or len(bounds) < 3:
+        return list(bounds)
+    out = [float(bounds[0])]
+    for b in bounds[1:-1]:
+        if float(b) - out[-1] >= min_cut - 1e-6:
+            out.append(float(b))
+    out.append(float(total))
+    # 끝 칸이 너무 짧으면 앞 경계를 지워 앞 컷에 흡수시킨다.
+    while len(out) > 2 and out[-1] - out[-2] < min_cut - 1e-6:
+        del out[-2]
+    return out
+
+
 def cuts_for_beat(sec, n_seg=None):
     """칸 길이(초) → 컷 개수. 길이를 모르면(0·음수·None) 1컷.
 
@@ -850,7 +878,9 @@ def _plan_phrase_clips(beat, segs, tts_dur):
         #   구절 경계는 그대로 쓰되, 그중 **등분 지점에 가까운 자리만** 골라 쪼갠다.
         #   규칙·상수는 cuts_for_beat/pick_split_bounds 한 곳에서만 정하고 화면
         #   (scene_play.js)이 같은 것을 쓴다(0순위-B).
-        bounds = pick_split_bounds(bounds, tts_dur, cuts_for_beat(tts_dur, len(segs)))
+        # ★2026-09-06 완전 되돌림(사장님 "어제 그대로 해 / 3구절이면 3컷으로").
+        #   컷 개수를 손대던 규칙(cuts_for_beat·merge_tiny_bounds)을 **전부 뺐다** —
+        #   담은 장면이 화면에 안 나와 라이브 편집을 못 하셨다. 경계는 자막 구절 그대로다.
         # ★구절이 재료보다 많으면 **담은 조각의 뒷부분을 한 바퀴 더 쓴다**(2026-08-31 사장님
         #   "대본이 길어지니까 뒤에까지 장면이 안 붙는다"). 화면(scene_play.js planClips의
         #   구절맞춤 분기)과 **같은 규칙의 서버판**이다 — 한쪽만 고치면 미리보기와 결과물이
