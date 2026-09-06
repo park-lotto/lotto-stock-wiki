@@ -36,21 +36,42 @@ import urllib.parse
 # ⚠️12개를 넘기지 마라 — 엔드포인트가 kws[:12]로 자른다(뒤쪽이 조용히 사라진다).
 # ⚠️같은 검색어를 또 돌리면 새 핀이 거의 안 나온다(검색어당 10~27개가 한계).
 #   많이 모으려면 화면 입력칸에 **다른 검색어**를 넣어 돌려라.
+# ★2026-09-06 개편 — 감이 아니라 **원본 적중률 실측**으로 갈아끼웠다.
+#   사장님: "테무 제품영상광고처럼 그런건 별로고 우리 쇼핑쇼츠에 들어갈만한걸 찾는게 핵심".
+#
+#   라이브 2,259건에서 검색어별로 쟀다(6건 이상 모인 126종). 원본 = pin_dest가
+#   'Uploaded by user' = 쇼핑몰 링크도 남의 릴스 재업로드도 아닌 것.
+#
+#   읽어낸 규칙 — 검색어를 늘릴 땐 이걸 따르라(test_pinterest_keywords.py가 지킨다):
+#     ① `<물건> gadget` 꼴  → 원본이 잘 나온다. 실사용 장면 위주.       (80~100%)
+#     ② `haul`(하울)        → 언박싱 광고물.                            (원본 0%)
+#     ③ `container`·`rack`·`dispenser` 등 제품 카테고리명 → 쇼핑몰 광고.  (원본 0%)
+#     ④ `asmr`              → 인스타 재업로드 88%.                       (원본 0%)
+#
+#   종전 목록엔 0%짜리 `temu haul kitchen`·`aliexpress gadgets cool`(실측 1건)이
+#   들어 있었고, 100%짜리는 하나도 없었다. 버튼만 눌러도 좋은 게 걸리게 한다.
 DEFAULT_KEYWORDS = [
-    # 쇼핑몰 겨냥(적중률 높은 순)
-    "temu gadgets must have",
-    "temu home gadgets",
-    "temu tools gadget",
-    "temu haul kitchen",
-    "kitchen gadgets amazon finds",
-    "amazon finds under 20 dollars",
-    "aliexpress gadgets cool",
-    # 원래 쓰던 공구·신박템 계열(쇼핑몰 링크는 적지만 영상이 깨끗하다)
-    "welding tool hack",
-    "diy tool invention",
-    "amazing tools gadget",
-    "workshop tool trick",
-    "clever tool idea",
+    # ── 실측 원본 적중률 80%+ (숫자는 2026-09-06 라이브 실측) ──
+    "temu toilet gadget",                # 100% (11건)
+    "viral shopping finds gadget",       # 100% (6건)
+    "temu shower gadget",                #  88% (9건)
+    "weird gadgets that actually work",  #  87% (8건)
+    "farm tool invention",               #  87% (8건)
+    "temu rice gadget",                  #  83% (18건)
+    "construction tool amazing",         #  81% (11건)
+    "temu garden gadget",                #  80% (10건)
+    # ── 실측 65~79% ──
+    "temu kids toy gadget",              #  75% (12건)
+    "temu plant gadget",                 #  75% (8건)
+    "temu fitness gadget",               #  75% (8건)
+    "satisfying gadget demo",            #  71% (14건)
+    "temu camping gadget",               #  66% (12건)
+    "tiktok made me buy it gadget",      #  66% (9건)
+    "farming gadget amazing",            #  66% (9건)
+    # ── 위 ① 규칙(`<물건> gadget`)으로 넓히는 새 축. 다음 수집 뒤 적중률을 재고 정리한다 ──
+    "temu workshop gadget",
+    "temu repair gadget",
+    "temu winter gadget",
 ]
 
 _SEARCH_API_HINT = "BaseSearchResource/get"
