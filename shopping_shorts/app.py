@@ -9267,6 +9267,41 @@ def _lens_source_text(url, front_caption="", store=None):
     return "\n".join(parts)[:_LENS_SRC_MAX]
 
 
+def _lens_has_script(url, store=None):
+    """이 영상의 **대본추출이 돼 있나**(=제품이 무엇인지 아는가). 못 읽으면 False.
+
+    ★캡션만으로 '안다'고 치면 안 된다(2026-09-06 사장님 "버튼없는게 많아").
+      캡션은 후킹 문구라 제품을 특정하지 못하는데(실측: "반년째 쓰는데 아직도
+      새거같은 이유는" — 제품이 뭔지 한 글자도 없다), 서버 실측 결과
+      **캡션만 있고 대본이 없는 영상이 2,624건**이었다. 그걸 '소재 있음'으로
+      쳐버려서 정작 버튼이 필요한 영상에 버튼이 안 떴다.
+    ★판정은 여기 한 곳에서만(0순위-B) — 프론트가 따로 재면 반드시 어긋난다."""
+    st = store
+    if st is None:
+        try:
+            st = Store(DB_PATH)
+        except Exception:                    # noqa: BLE001 — DB 없으면 '모른다'
+            return False
+    if not (st and url):
+        return False
+    try:
+        m = (_IG_SC_RE.search(url)
+             or re.search(r"/(?:video|shorts|reel|reels|p|tv)/([A-Za-z0-9_-]+)", url))
+        sc = m.group(1) if m else ""
+        if not sc:
+            return False
+        sd = st.get_script(sc) or {}
+        if not sd:
+            return False
+        # 제품명이 있으면 확실히 안다. 옛 추출본엔 source_brief가 없으니 대본 본문으로 본다.
+        brief = sd.get("source_brief")
+        if isinstance(brief, dict) and (brief.get("product") or "").strip():
+            return True
+        return bool((sd.get("full_text") or "").strip())
+    except Exception:                        # noqa: BLE001 — 판정 실패는 '모른다'
+        return False
+
+
 def _parse_lens_locales(raw):
     """프론트가 보낸 "ko:kr,ja:jp" → [("ko","kr"), ("ja","jp")]. 비면 [](=전체).
 
@@ -9683,9 +9718,16 @@ async def api_lens_cn_keywords(request: Request, frame: UploadFile = File(None),
     #   틀려도 정답처럼 보인다. 프론트는 이 값을 보고 '📝 대본 분석 후 찾기' 버튼을 띄운다.
     #   ⚠️ 판정은 **여기 한 곳에서만** 한다(0순위-B) — 프론트가 캡션 길이로 따로 재면
     #   서버가 DB에서 채운 소재를 모르니 반드시 어긋난다.
+    # ★캡션이 아니라 **대본추출 여부**로 본다(2026-09-06 사장님 "버튼없는게 많아").
+    #   캡션만 있는 영상이 2,624건인데(서버 실측) 캡션은 후킹 문구라 제품을 특정하지
+    #   못한다 — 그걸 '소재 있음'으로 쳐서 정작 버튼이 필요한 영상에 안 떴다.
+    try:
+        _has = await asyncio.to_thread(_lens_has_script, source_url)
+    except Exception:                       # noqa: BLE001 — 판정 실패로 검색을 죽이지 않는다
+        _has = False
     return {"ok": True, "product": v.get("product", ""),
             "candidates": v.get("candidates", []),
-            "has_source": bool((src or "").strip())}
+            "has_source": _has}
 
 
 @app.post("/api/lens/kw/expand")

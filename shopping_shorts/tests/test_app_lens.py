@@ -831,3 +831,37 @@ def test_렌즈_비전이_터져도_has_source가_NameError를_안낸다(tmp_pat
                data={"source_url": "https://x/reel/BOOM/"})
     assert r.status_code == 200
     assert r.json()["ok"] is True and r.json()["candidates"] == []
+
+
+def test_렌즈_캡션만_있으면_has_source_거짓(tmp_path, monkeypatch):
+    """★캡션만으로는 제품을 모른다 — 버튼이 떠야 한다(2026-09-06 사장님 "버튼없는게 많아").
+
+    실측: 캡션만 있고 대본이 없는 영상이 서버에 2,624건. 캡션은 후킹 문구라
+    ("반년째 쓰는데 아직도 새거같은 이유는") 제품이 뭔지 한 글자도 없다.
+    예전엔 이걸 '소재 있음'으로 쳐서 정작 버튼이 필요한 영상에 안 떴다."""
+    monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
+    st = Store(str(tmp_path / "t.db"))
+    st.upsert_enrichment("https://x/reel/CAPONLY/", "instagram",
+                         {"caption": "반년째 쓰는데 아직도 새거같은 이유는"},
+                         "ok", "2026-09-06T00:00:00")
+    monkeypatch.setattr(appmod, "cn_search_candidates",
+                        lambda raw, src, exclude=None: {"product": "", "candidates": []})
+    c = TestClient(appmod.app)
+    r = c.post("/api/lens/cn/keywords",
+               files={"frame": ("f.jpg", _JPG_1PX, "image/jpeg")},
+               data={"source_url": "https://x/reel/CAPONLY/"})
+    assert r.json()["has_source"] is False
+
+
+def test_렌즈_옛추출본은_대본본문으로_판정(tmp_path, monkeypatch):
+    """source_brief가 없는 옛 추출본(07월분)도 대본 본문이 있으면 '안다'로 본다."""
+    monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
+    st = Store(str(tmp_path / "t.db"))
+    st.save_script("OLDSCRIPT", {"full_text": "이건 옛날 방식으로 뽑은 대본입니다"})
+    monkeypatch.setattr(appmod, "cn_search_candidates",
+                        lambda raw, src, exclude=None: {"product": "x", "candidates": []})
+    c = TestClient(appmod.app)
+    r = c.post("/api/lens/cn/keywords",
+               files={"frame": ("f.jpg", _JPG_1PX, "image/jpeg")},
+               data={"source_url": "https://x/reel/OLDSCRIPT/"})
+    assert r.json()["has_source"] is True
