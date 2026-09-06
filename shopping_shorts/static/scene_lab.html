@@ -649,14 +649,18 @@ body.tight .thumbs{grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap
 body.tight .seg .cutbtn{font-size:10px;padding:2px 5px;right:3px;top:3px;
   opacity:0;transition:opacity .12s}
 body.tight .seg:hover .cutbtn{opacity:1}
-/* ★.tbsay는 max-height 4.5em + pre-wrap이라 line-clamp만으로는 두 줄이 남는다(실측).
-   높이도 함께 잡아야 진짜 한 줄이 된다. */
-body.tight .tbsay{max-height:1.9em;overflow:hidden}
-body.tight .tbsay.open{max-height:none;overflow-y:auto;-webkit-line-clamp:unset}
-
-body.tight .tbsay{                                   /* B. 칸 대본 — 한 줄만 */
-  display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
-body.tight .tbsay.open{-webkit-line-clamp:unset;overflow:visible}
+/* ★촘촘히에서도 **대본은 자르지 않는다** (2026-09-06 고객 "대본이 끝까지 안 나오네요,
+   대본도 씹히는 거 같고요" — 3단계 영상대본MIX).
+   무슨 일이었나: 촘촘히(기본 켜짐)가 대본 칸을 `line-clamp:1 + max-height:1.9em`으로
+   **한 줄만** 남겼다. 실측(고객 잡 3ec9df659411, 67자 문장): 실제 45px 중 27px만 보이고
+   18px이 잘렸다. 게다가 1.9em은 한 줄(1.5em)보다 커서 **둘째 줄이 반쯤 걸쳐** 글자가
+   가로로 잘린 채 보인다 = 고객이 말한 "씹힌다".
+   ★대본은 화면 장식이 아니라 **고객이 확인하러 온 것**이다 — 접을 대상이 아니다.
+   촘촘히가 줄일 것은 썸네일·안내문·KPI지 대본이 아니다(아래 C·D·F 규칙은 그대로 둔다).
+   그래서 촘촘히에서도 기본 규칙(.tbsay의 max-height:4.5em + overflow-y:auto)을 그대로
+   쓴다 — 길면 그 칸 안에서 스크롤되고, 잘려서 사라지지 않는다.
+   ⚠️`.open`(⌄ 버튼)은 그대로 살려 둔다: 아주 긴 문장을 스크롤 없이 통째로 펼치는 용도. */
+body.tight .tbsay.open{max-height:none;overflow-y:auto}
 .saymore{float:right;margin-left:6px;border:0;background:transparent;color:var(--dim);
   cursor:pointer;font-size:12px;padding:0 2px;line-height:1}
 .saymore:hover{color:var(--accent)}
