@@ -168,6 +168,32 @@ def list_alerts(limit=20, store=None):
         return []
 
 
+def resolve_id(alert_id, store=None):
+    """쪽지 **하나**를 손으로 닫는다(관리자 화면 목록의 '닫기'). 닫은 건수 반환.
+
+    ★resolve_kind(자동)와 나란히 둔다 — 판정이 사라져야만 닫히면, 사장님이 이미 손을 쓴
+      사고를 목록에서 내릴 방법이 없다(2026-09-06 상주 목록을 만들며 필요해졌다).
+    ⚠️서명(_SIG_KEY_FMT)은 **안 지운다**. resolve_kind는 "문제가 없어졌다"라서 지우지만,
+      이건 "사람이 확인했다"일 뿐이라 같은 문제가 계속되면 새로 올릴 필요가 없다.
+    """
+    try:
+        st = store or _store()
+        cur = json.loads(st.get_setting(_ALERT_KEY) or "[]")
+        if not isinstance(cur, list):
+            return 0
+        n = 0
+        now = int(time.time())
+        for a in cur:
+            if str(a.get("id")) == str(alert_id) and not a.get("resolved"):
+                a["resolved"] = now
+                n += 1
+        if n:
+            st.set_setting(_ALERT_KEY, json.dumps(cur, ensure_ascii=False))
+        return n
+    except Exception:                                 # noqa: BLE001
+        return 0
+
+
 def mark_read(store=None):
     """전부 읽음 처리 — 배지를 끈다."""
     try:

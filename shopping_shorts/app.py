@@ -13214,6 +13214,24 @@ def _admin_alerts_read(request: Request):
     return {"ok": True, "marked": ops_alert.mark_read()}
 
 
+@app.post("/api/admin/alerts/resolve")
+async def _admin_alerts_resolve(request: Request):
+    """운영 사고 쪽지 하나를 '해결됨'으로 닫는다(관리자 화면 상주 목록의 닫기). body: {id}.
+
+    ★목록이 상주하게 되면서 필요해졌다(2026-09-06) — 자동(resolve_kind)으로만 닫히면
+      이미 손을 쓴 사고가 목록에 영영 남아 진짜 새 사고를 가린다.
+    """
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    try:
+        body = await request.json()
+    except Exception:                                       # noqa: BLE001
+        body = {}
+    from shopping_shorts import ops_alert
+    return {"ok": True, "closed": ops_alert.resolve_id(body.get("id"))}
+
+
 @app.post("/api/admin/customer/update")
 async def _admin_customer_update(request: Request):
     """관리자 정보수정 — 고객 이름·전화. body: {customer_id, name?, phone?}."""
