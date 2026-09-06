@@ -21,8 +21,8 @@ from shopping_shorts.video_assemble import cuts_for_beat, pick_split_bounds
 class Test컷개수:
     @pytest.mark.parametrize("sec, want", [
         (0.9, 1), (1.5, 1), (1.99, 1),      # 2초 미만 = 1컷
-        (2.0, 2), (3.0, 2), (4.5, 2),        # 2~4.5초 = 2컷
-        (4.6, 3), (6.3, 3), (7.4, 3),        # 4.5초 초과 = 3컷
+        (2.0, 2), (3.0, 2), (4.0, 2),        # 2~4.0초 = 2컷
+        (4.1, 3), (4.3, 3), (6.3, 3), (7.4, 3),   # 4.0초 초과 = 3컷
     ])
     def test_칸길이로_정한다(self, sec, want):
         assert cuts_for_beat(sec) == want
