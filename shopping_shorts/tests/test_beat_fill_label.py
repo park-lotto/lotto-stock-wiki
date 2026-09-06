@@ -45,6 +45,13 @@ def _harness(body):
 
     pre = """
 const EPS=0.05, MIN_CLIP=0.6, MAX_SHOT=2.2; let onePerSeg=false; const TRIMS={};
+// ★planClips가 쓰는 상수는 여기에 **빠짐없이** 세워야 한다 — 하나라도 빠지면
+//   ReferenceError로 이 하네스가 통째로 죽는다(2026-09-06 MAX_SLOWMO 추가 때 겪음).
+const MAX_SLOWMO=1.15, MANUAL_MIN=0.3, FREE_MIN=0.6;
+const BEAT_1CUT_UNDER=2.0, BEAT_3CUT_OVER=4.0;
+function cutsForBeat(sec){ sec=+sec; if(!(sec>0)) return 1;
+  return sec<BEAT_1CUT_UNDER?1:(sec>BEAT_3CUT_OVER?3:2); }
+function pickSplitBounds(b,total,n){ return (n<=1||!b||b.length<3)?[b?+b[0]:0,+total]:b.map(Number); }
 let DATA={segments:{}, tts_dur:{}, beats:[{}]};
 let lists=[[]], STRETCH={};
 function mergeSpan(id){ const s=DATA.segments[id]; return s?{...s,video_id:id}:null; }
