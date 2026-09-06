@@ -82,6 +82,23 @@ tbody tr:hover{background:#1b1b22}
 
 /* ── 바로가기(2026-08-24) — 주소를 외우지 않아도 되게 ── */
 .quicknav{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 16px}
+/* 운영 사고 상주 목록(2026-09-06 사장님 "관리자 화면 키면 나오게").
+   토스트는 12초 뒤 사라지고 한 번 읽으면 다시 안 떠서, 자리를 비운 사이 지나간 사고를
+   놓쳤다(실측 09-06: 미해결 13건인데 화면 어디에도 목록이 없었다).
+   ★조치하기 전엔 계속 보인다 — 닫기를 눌러야 사라진다. */
+.alertBoard{margin:0 0 16px}
+.alertBoard .ab{display:flex;gap:10px;align-items:flex-start;border:1px solid;border-left-width:4px;border-radius:10px;padding:10px 12px;margin-bottom:8px}
+.alertBoard .ab.cust{background:#160c0c;color:#f7e9e9;border-color:#7a2b2b;border-left-color:#ff5a5a}
+.alertBoard .ab.ops{background:#171205;color:#f6efe0;border-color:#6a4a10;border-left-color:#f5a623}
+.alertBoard .ab.info{background:#0f1412;color:#e6efe9;border-color:#2a3a33;border-left-color:#8fa1a0}
+.alertBoard .abl{font-size:12px;font-weight:800;margin-bottom:2px}
+.alertBoard .ab.cust .abl{color:#ff8080}
+.alertBoard .ab.ops .abl{color:#ffc85c}
+.alertBoard .ab.info .abl{color:#b7c5c0}
+.alertBoard .abt{font-size:13.5px;font-weight:700;line-height:1.4}
+.alertBoard .abm{font-size:12px;opacity:.9;margin-top:3px;line-height:1.45}
+.alertBoard .abx{margin-left:auto;background:transparent;border:1px solid currentColor;color:inherit;opacity:.65;border-radius:8px;padding:3px 9px;font-size:12px;cursor:pointer;white-space:nowrap}
+.alertBoard .abx:hover{opacity:1}
 .qbtn{display:flex;flex-direction:column;gap:2px;padding:10px 14px;border-radius:10px;
       background:#16161c;border:1px solid #2a2a30;color:#e8e8ea;text-decoration:none;
       font-size:14px;font-weight:700;min-width:132px;transition:border-color .12s,background .12s}
@@ -109,6 +126,10 @@ tbody tr:hover{background:#1b1b22}
 <div class="main">
 <h1>🔐 관리자</h1>
 <div class=sub>결제 확인된 계정을 <b>pro</b>로 승격 / 체험·크레딧 설정 조정</div>
+
+<!-- 운영 사고 — 조치 전까지 여기 상주한다(2026-09-06). 토스트(sidebar.js)는 지나가면
+     끝이라 놓친다. 미해결만 보여주고, 닫기를 누르면 그때 사라진다. -->
+<div class=alertBoard id=alertBoard></div>
 
 <!-- 바로가기(2026-08-24) — 관리자가 자주 오가는 화면을 여기 모은다. 예전엔 주소를
      외워서 쳐야 했다(특히 관측판 /ops는 어디에도 링크가 없었다).
@@ -310,6 +331,55 @@ function fillSummary(customers, pendCount, depCount){
   }
   if(pendCount!==undefined) set('sum_pend', pendCount, true);
   if(depCount!==undefined) set('sum_dep', depCount, true);
+}
+// ── 운영 사고 상주 목록(2026-09-06 사장님 "관리자 화면 키면 나오게") ──────────────
+// 왜 목록인가: sidebar.js 토스트는 **안 읽은 것만** 뜨고 12초 뒤 사라지고 한 번 본 건
+// 다시 안 뜬다(shown[a.id]·a.read). 자리를 비운 사이 지나간 사고는 못 본다.
+// 실측 2026-09-06 15:45: 쪽지 20건 중 **미해결 13건**인데 화면 어디에도 목록이 없었다
+// (admin.html에 'alerts'가 0건). typecast 실패율 63% 같은 고객영향 사고가 잠깐 떴다 끝.
+// ★판정은 resolved 하나다 — read(봤나)가 아니라 **조치됐나**로 본다. 그래서 읽었어도
+//   미해결이면 계속 보인다. 닫기를 눌러야 사라진다.
+// ⚠️토스트를 없애지 않는다 — 저건 '지금 막 났다'를 알리는 것이고 이건 '아직 남았다'를
+//   보여주는 것이라 목적이 다르다.
+function _abEsc(v){ return (v==null?'':String(v)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+async function renderAlertBoard(){
+  const box=document.getElementById('alertBoard'); if(!box) return;
+  let d=null;
+  try{ const r=await fetch('/api/admin/pending',{headers:{'Accept':'application/json'}});
+       if(!r.ok) return; d=await r.json(); }catch(e){ return; }
+  if(!d||!d.ok) return;
+  const open=(d.alerts||[]).filter(a=>a&&!a.resolved);
+  if(!open.length){ box.innerHTML=''; return; }   // 멀쩡할 땐 조용하다(빈 상자를 안 띄운다)
+  // 급한 것부터 — 고객영향 → 운영주의 → 정보. 같은 등급이면 최신순(id는 epoch초).
+  const rank={'고객영향':0,'운영주의':1,'정보':2};
+  open.sort((a,b)=>(rank[a.grade]??1)-(rank[b.grade]??1) || (b.id||0)-(a.id||0));
+  // ⚠️배열 리터럴로 쓰지 마라 — SETTING_FIELDS와 같은 모양(대괄호+따옴표 문자열 두 개)이면
+  //   test_admin_payload가 그걸 설정 필드로 오인해 "화면엔 입력칸이 있는데 서버가 거부"로
+  //   빨개진다(그 테스트는 admin.html을 정규식으로 긁는다). 실제로 두 번 밟았다 —
+  //   클래스명(cust·info·ops)이 걸렸고, 그걸 설명하는 주석의 예시까지 또 걸렸다.
+  //   그래서 객체({c,l})로 쓴다.
+  const TH={'고객영향':{c:'cust',l:'🚨 고객 영향 사고 — 지금 확인'},
+            '정보':{c:'info',l:'ℹ️ 알림'},
+            '운영주의':{c:'ops',l:'⚠️ 운영 주의 — 자동 우회됨, 서비스 정상'}};
+  box.innerHTML=open.map(a=>{
+    const t=TH[a.grade]||TH['운영주의'];
+    return '<div class="ab '+t.c+'"><div style="flex:1;min-width:0">'
+      + '<div class=abl>'+t.l+'</div>'
+      + '<div class=abt>'+_abEsc(a.title)+'</div>'
+      + (a.auto?'<div class=abm>✅ 자동 조치: '+_abEsc(a.auto)+'</div>':'')
+      + (a.todo?'<div class=abm>👉 할 일: '+_abEsc(a.todo)+'</div>':'')
+      + (a.detail?'<details class=abm><summary style="cursor:pointer">상세 사유 보기</summary>'
+          + '<div style="margin-top:5px;font-size:11px;white-space:pre-wrap;word-break:break-all;max-height:180px;overflow:auto">'
+          + _abEsc(a.detail)+'</div></details>':'')
+      + '</div>'
+      + '<button class=abx onclick="closeAlert('+JSON.stringify(a.id)+')">닫기</button></div>';
+  }).join('');
+}
+// 닫기 = '해결됨'. 서버가 resolved를 찍으면 다음 렌더에서 빠진다.
+async function closeAlert(id){
+  try{ await fetch('/api/admin/alerts/resolve',{method:'POST',
+        headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id})}); }catch(e){}
+  renderAlertBoard();
 }
 async function load(){
   const r=await fetch('/api/admin/customers');
@@ -1094,6 +1164,14 @@ function reopenBug(id){
 }
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',loadBugs);
 else loadBugs();
+
+/* 운영 사고 상주 목록(2026-09-06) — 화면을 열 때 한 번, 그 뒤 30초마다.
+   ★loadBugs와 같은 모양으로 건다(0순위-B: 새 초기화 규칙을 만들지 않는다).
+   ⚠️함수만 만들고 여기서 안 부르면 목록이 영영 안 뜬다 — test_admin_alert_board가
+     이 배선(호출 존재)까지 본다. */
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',renderAlertBoard);
+else renderAlertBoard();
+setInterval(renderAlertBoard, 30000);
 
 /* ── 1단계 정확도 측정 카드(2026-09-05) ── 서버 API probe/frame_accuracy를 화면으로. 도는 동안 15초마다 새로 그린다. */
 var _probeTimer=null;
