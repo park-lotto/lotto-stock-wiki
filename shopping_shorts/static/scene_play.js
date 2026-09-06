@@ -399,11 +399,14 @@ function toggleStretch(i, on){ if (on) STRETCH[i] = true; else delete STRETCH[i]
 //     한쪽만 고치면 미리보기와 결과물이 어긋난다(0순위-B).
 // ★BEAT_3CUT_OVER 4.5 → 4.0 (2026-09-06 실측) — 2.5초 초과 컷 3% → 1%.
 const BEAT_1CUT_UNDER = 2.0, BEAT_3CUT_OVER = 4.0;
-function cutsForBeat(sec){
+// ★nSeg(담은 조각 수)를 주면 그보다 적게 만들지 않는다(2026-09-06 사장님) —
+//   규칙은 자동을 넉넉하게 하려는 것이지 손으로 담은 장면을 지우려는 게 아니다.
+function cutsForBeat(sec, nSeg){
   sec = +sec;
   if (!(sec > 0)) return 1;
-  if (sec < BEAT_1CUT_UNDER) return 1;
-  return sec > BEAT_3CUT_OVER ? 3 : 2;
+  const base = sec < BEAT_1CUT_UNDER ? 1 : (sec > BEAT_3CUT_OVER ? 3 : 2);
+  const n = +nSeg;
+  return (n > 0) ? Math.max(base, Math.floor(n)) : base;
 }
 // 구절 경계 중 **등분 지점에 가까운 자리만** 고른다(자연스러운 자리 = 이미 문장부호·
 // 어절을 본 구절 경계). 쓸 수 있는 내부 경계가 모자라면 있는 것만 쓴다.
@@ -457,7 +460,7 @@ function planClips(segIds, ttsDur, spread, beatIdx){
       for (let k = 1; k < caps.length; k++) bounds.push(Math.min(ttsDur, caps[k].start));
       bounds.push(ttsDur);
       // ★칸 길이로 컷 개수를 정한다(2026-09-06 사장님) — 서버와 같은 규칙.
-      bounds = pickSplitBounds(bounds, ttsDur, cutsForBeat(ttsDur));
+      bounds = pickSplitBounds(bounds, ttsDur, cutsForBeat(ttsDur, segments.length));
       // ★구절이 재료보다 많으면 **담은 조각의 뒷부분을 한 바퀴 더 쓴다**(2026-08-31 사장님
       //   "대본이 길어지니까 뒤에까지 장면이 안 붙는다").
       //   종전 nCut=min(caps, segments)는 조각 3·구절 6일 때 컷을 3개만 만들고 마지막 컷이

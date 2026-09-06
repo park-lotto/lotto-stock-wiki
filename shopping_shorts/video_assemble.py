@@ -586,17 +586,27 @@ _BEAT_1CUT_UNDER = 2.0     # 이 미만이면 1컷
 _BEAT_3CUT_OVER = 4.0      # 이 초과면 3컷
 
 
-def cuts_for_beat(sec):
-    """칸 길이(초) → 컷 개수. 길이를 모르면(0·음수·None) 1컷."""
+def cuts_for_beat(sec, n_seg=None):
+    """칸 길이(초) → 컷 개수. 길이를 모르면(0·음수·None) 1컷.
+
+    ★n_seg(담은 조각 수)를 주면 **그보다 적게 만들지 않는다**(2026-09-06 사장님
+      "한 개를 더 올리면 예전처럼 3개씩 안 되나"). 규칙은 자동 배분을 넉넉하게
+      만들려는 것이지, 손으로 담은 장면을 지우려는 게 아니다 — ✋에서 정한
+      "자동은 넉넉히, 수동은 존중"과 같은 원칙이다.
+      n_seg를 안 주는 옛 호출부는 종전과 똑같이 동작한다(하위호환).
+    """
     try:
         sec = float(sec)
     except (TypeError, ValueError):
         return 1
     if sec <= 0:
         return 1
-    if sec < _BEAT_1CUT_UNDER:
-        return 1
-    return 3 if sec > _BEAT_3CUT_OVER else 2
+    base = 1 if sec < _BEAT_1CUT_UNDER else (3 if sec > _BEAT_3CUT_OVER else 2)
+    try:
+        n = int(n_seg)
+    except (TypeError, ValueError):
+        return base
+    return max(base, n) if n > 0 else base
 
 
 def pick_split_bounds(bounds, total, n_cut):
@@ -840,7 +850,7 @@ def _plan_phrase_clips(beat, segs, tts_dur):
         #   구절 경계는 그대로 쓰되, 그중 **등분 지점에 가까운 자리만** 골라 쪼갠다.
         #   규칙·상수는 cuts_for_beat/pick_split_bounds 한 곳에서만 정하고 화면
         #   (scene_play.js)이 같은 것을 쓴다(0순위-B).
-        bounds = pick_split_bounds(bounds, tts_dur, cuts_for_beat(tts_dur))
+        bounds = pick_split_bounds(bounds, tts_dur, cuts_for_beat(tts_dur, len(segs)))
         # ★구절이 재료보다 많으면 **담은 조각의 뒷부분을 한 바퀴 더 쓴다**(2026-08-31 사장님
         #   "대본이 길어지니까 뒤에까지 장면이 안 붙는다"). 화면(scene_play.js planClips의
         #   구절맞춤 분기)과 **같은 규칙의 서버판**이다 — 한쪽만 고치면 미리보기와 결과물이
