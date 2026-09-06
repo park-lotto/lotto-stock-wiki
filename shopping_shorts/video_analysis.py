@@ -527,7 +527,9 @@ def _referer_for(url):
 #   ⚠️ 이미 만료된 과거분은 이걸로 못 살린다(URL이 이미 죽었다). **앞으로 담는 것**을 지킨다.
 # ★한 곳에만 넣는다: 판독 5곳(archive_tagger·discover_jobs·overseas_hot_jobs·product_name 2곳)이
 #   전부 이 함수를 거치므로, 여기 한 번 붙이면 전 경로가 같이 보호된다(0순위-B).
-_THUMB_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "thumbs")
+# ⚠️ data/thumbs는 2026-07-18부터 **영상 프레임·그리드**가 쓰던 폴더다(실측 2GB).
+#    같은 폴더를 나눠 쓰면 나중에 정리하다 서로 지운다 — 별도 폴더에 담는다.
+_THUMB_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "thumb_cache")
 _THUMB_MAX_BYTES = 3 * 1024 * 1024      # 3MB 넘는 건 썸네일이 아니다 — 안 담는다
 
 
