@@ -423,7 +423,10 @@ function planClips(segIds, ttsDur, spread, beatIdx){
     const caps = capsOf(beatIdx) || [];
     if (caps.length >= 1 && ttsDur > 0.1) {
       // 경계: [0, caps[1].start, …, caps[n-1].start, ttsDur] — 리드인·꼬리는 양끝 컷 몫.
-      const bounds = [0];
+      // ★let이어야 한다 — 아래에서 pickSplitBounds 결과로 **재대입**한다(2026-09-06 라이브 장애).
+      //   const이면 여기서 TypeError: Assignment to constant variable로 planClips가 통째로
+      //   죽어 renderBand→render→boot이 전부 멈춘다 = 컷 목록이 빈 화면(사장님·고객 전원).
+      let bounds = [0];
       for (let k = 1; k < caps.length; k++) bounds.push(Math.min(ttsDur, caps[k].start));
       bounds.push(ttsDur);
       // ★칸 길이로 컷 개수를 정한다(2026-09-06 사장님) — 서버와 같은 규칙.
