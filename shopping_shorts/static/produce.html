@@ -12910,6 +12910,21 @@ async function pollClean(gen,job){
       CLEAN_SRC_IDX = (d.clean_source_indices && d.clean_source_indices.length) ? d.clean_source_indices : null;
       CLEAN_CLIPS_JOB=null;                 // 방금 청소가 끝났다 — 컷 목록·stale을 새로 받는다
       renderCleanReady(job);
+      // ★5단계(꾸미기) 미리보기도 청소본으로 갈아준다 (2026-09-06 사장님 질문
+      //   "자막제거 동안 장면꾸미기를 하면 어떻게 되나 / 새로고침하나").
+      //   서버는 이미 준비돼 있다 — _clean_frame_src가 청소 후엔 ctag='_clean'을 주므로
+      //   poster를 **다시 요청만 하면** 자막 지운 판본이 온다(실측 job feeb174bf50a:
+      //   poster_s3@0.03.jpg = 자막 있음 / poster_s3@0.03_clean.jpg = 지워짐, 둘 다 존재).
+      //   그런데 그 요청을 다시 보내는 toggleSceneBg()는 initHeadcopy(5단계 진입)에서만
+      //   불려서, 5단계에 머문 채 청소가 끝나면 **자막이 남은 옛 배경이 그대로** 보였다.
+      //   ★고객은 그걸 "자막제거가 안 됐다"로 읽고 다시 누른다 — 자막 지우기는 유료다
+      //     (실측: 이 job의 clean 작업이 13번 실행됐다, 큐 qid 11485~11516).
+      //   ⚠️여기서만 부른다 — cleaning·failed 분기에 넣으면 아직 자막이 남은 그림을
+      //     헛되이 다시 받아 깜빡인다.
+      try{ if(typeof toggleSceneBg==='function') toggleSceneBg(true); }catch(e){}
+      // 지워진 자막 자리에 새 자막 자동정렬도 같이 건다(사람이 직접 옮겼으면 안 덮는다 —
+      // applyErasedRegion이 CAP_POS_TOUCHED를 본다).
+      try{ if(typeof ensureCleanRegions==='function') ensureCleanRegions(); }catch(e){}
       if(btn) btn.disabled=false;
     } else if(d.clean_status==='failed'){
       clearInterval(CLEAN_POLL); CLEAN_POLL=null;
