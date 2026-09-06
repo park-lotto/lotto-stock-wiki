@@ -361,3 +361,37 @@ def test_소스분산_두_편_넣고_한_편만_쓰면_반려():
              {"text": "다", "src_seg": "s0-2", "needs_scene": True}]
     ok, _ = GT.scene_grounding_check(beats, {"s0-0", "s0-1", "s0-2", "s1-0"}, source_count=2)
     assert not ok
+
+
+# ─── 씨앗은 고정, 장면은 모든 소스에서 좋은 것 우선(2026-09-06 사장님) ────────
+# 실측(work dbddcce899bb, 레트로 카메라, 소스 7편·97구간):
+#   씨앗 J-t6rhxilm4(국내 유튜브, 10구간·249자)에서 4칸을 가져오고,
+#   말이 가장 풍부한 외국 소스 ly1wtm(20구간·1207자·17구간 번역 완료)은 **0칸**.
+#   1snuqcc(16구간·506자·16구간 번역)도 0칸.
+# 원인: _mix_source_block 끝의 "[대본 2] 이하는 말투·전개·표현을 참고만 하고"가
+#   **주제 고정과 장면 선택을 뭉뚱그렸다.** 주제는 대본 1로 못 박는 게 맞지만(다른 제품 섞임 방지),
+#   같은 제품을 여러 각도로 찍은 소스의 **그림**까지 막을 이유가 없다.
+# 사장님: "씨앗으로 모든 장면매칭은 좋은장면 우선."
+
+def _src(name, n, product="레트로 카메라", vid="s0"):
+    return {"name": name, "product": product, "full_text": "말" * 20, "structure": {},
+            "segments": [{"seg_id": f"{vid}-{i}", "start": i, "end": i + 1,
+                          "scene_desc": f"화면{i}", "label": f"쓰임{i}"} for i in range(n)]}
+
+
+def test_주제고정은_유지된다():
+    """다른 제품이 섞이는 것은 여전히 막아야 한다(2026-08-17 치아바타/도마 사고)."""
+    blk = SG._mix_source_block([_src("A", 3), _src("B", 3, vid="s1")], full_scenes=True)
+    assert "주제는 반드시 [대본 1]" in blk
+
+
+def test_장면은_모든_소스에서_고르라고_말한다():
+    """주제 고정 문구가 **그림 선택까지** 막으면 안 된다 — 같은 제품이면 어느 영상의 장면이든 쓴다."""
+    blk = SG._mix_source_block([_src("A", 3), _src("B", 3, vid="s1")], full_scenes=True)
+    assert "장면(그림)은" in blk, "장면은 예외라는 지시가 없다"
+    assert "가장 잘 보여주는" in blk
+
+
+def test_소스가_하나면_그_문구는_안_붙는다():
+    blk = SG._mix_source_block([_src("A", 3)], full_scenes=True)
+    assert "주제는 반드시 [대본 1]" not in blk and "장면(그림)은" not in blk
