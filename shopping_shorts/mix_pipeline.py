@@ -331,17 +331,11 @@ def synthesize_line(narration, out_path, *, voice=None, profile=None, beat_role=
                         voice_id=voice_id, voice_settings=settings, speed=speed,
                         model_id=model_id, previous_text=previous_text, next_text=next_text,
                         customer_id=customer_id)
-    # ★무음 제거 '전에' 어디를 자를지 재서 사이드카에 남긴다(2026-08-06). post_process는
-    # 제자리 덮어쓰기라 뒤에는 원본 타임라인을 알 길이 없다. 이 구간들이 있어야 TTS
-    # 타임스탬프를 조각별로 당겨 자막을 맞출 수 있다(선형사상으론 누적 드리프트가 남는다).
-    # 반환값 대신 사이드카에 쓰는 이유: synthesize_line 호출부가 6곳이고 대부분 반환값을
-    # 대사 텍스트로 쓴다 — 시그니처를 바꾸면 그 전부와 기존 스텁이 깨진다.
-    if pace_mode:
-        try:
-            tts_timestamps.save_removed(str(out_path),
-                                        audio_post.measure_removed_spans(str(out_path)))
-        except Exception:
-            pass                  # 측정 실패 = 선형 폴백(기존 동작), 렌더는 계속
+    # 무음삭제 구간 기록 + 후처리는 audio_post.finish_line_audio **한 곳**에서 한다
+    # (2026-09-06) — 통짜 경로(tts_joined)의 조각도 같은 함수로 마무리해야 쉼·여백이
+    # 갈리지 않는다(0순위-B). 반환값 대신 사이드카에 쓰는 이유: synthesize_line 호출부가
+    # 6곳이고 대부분 반환값을 대사 텍스트로 쓴다 — 시그니처를 바꾸면 그 전부와 기존
+    # 스텁이 깨진다.
     # 비트별 라우드니스 정규화는 **실제 음성일 때만** — 키 없는 개발용 무음 mock에
     # loudnorm을 걸면 무음 바닥을 노이즈로 끌어올린다(reference_local_tts_silent_mock_trap).
     # ★"실제 음성인가"는 그 비트가 쓰는 엔진의 키로 판정한다(2026-08-19). 종전엔
@@ -353,9 +347,8 @@ def synthesize_line(narration, out_path, *, voice=None, profile=None, beat_role=
     has_voice_key = (bool(typecast_tts.api_key(customer_id))
                      if typecast_tts.is_typecast(model_id)
                      else bool(config.ELEVENLABS_API_KEY))
-    audio_post.post_process(str(out_path), str(out_path), tempo=extra_tempo,
-                            silence_trim=trim, pace_mode=pace_mode,
-                            loudnorm=has_voice_key)
+    audio_post.finish_line_audio(str(out_path), tempo=extra_tempo, silence_trim=trim,
+                                 pace_mode=pace_mode, loudnorm=has_voice_key)
     return natural
 
 
@@ -365,9 +358,10 @@ def finalize_beat_audio(beat, out, *, trim_tail=True):
     비트별 경로(_synthesize_beats)와 통짜 경로(tts_joined) **둘 다** 이 함수를 쓴다.
     각자 마무리를 조립하면 "작업대에서 들은 것 ≠ 영상"이 다시 생긴다(0순위-B).
 
-    trim_tail: 통짜 경로는 False다. 통짜는 이미 연속 음성을 중간점에서 자른 것이라
-    조각 끝 무음이 곧 다음 조각의 앞 호흡이다 — 여기서 또 자르면 붙였을 때 원본과
-    달라진다(이음매가 다시 생긴다).
+    trim_tail: 기본 True. 통짜 경로도 True다(2026-09-06) — 통짜 조각은 원음의 문단 사이
+    쉼을 이웃과 나눠 갖고 잘려 나오므로 비트별 조각과 똑같이 끝 무음을 다듬어야 한다.
+    (처음엔 "연속 음성을 중간점에서 잘라 붙이면 원본"이라며 False였는데, 그 전제 자체가
+    무음삭제·apad를 조각별로 거치는 지금 구조에선 성립하지 않는다.)
     """
     # ★비트 끝 무음 트림(2026-07-22) — 각 비트 TTS 뒤 자연 무음(호흡·여백)을 잘라 이어붙임을
     # 딱 맞춘다. 안 자르면 비트 경계마다 dead-air가 남아 뚝뚝 끊긴다(레퍼런스 릴스는 무음 0).
@@ -495,7 +489,7 @@ def _try_joined(beats, tts_dir, *, voice, skip_existing, global_pron,
         return False
     for beat, out in zip(beats, outs):
         beat["tts_path"] = str(out)
-        finalize_beat_audio(beat, out, trim_tail=False)
+        finalize_beat_audio(beat, out)      # 조각도 비트별과 같은 마무리(2026-09-06)
     return True
 
 
