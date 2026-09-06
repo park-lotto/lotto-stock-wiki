@@ -6696,8 +6696,33 @@ def api_mix_scene_lab_beat_delete(job_id: str, beat_idx: int):
     if len(beats) <= 1:
         return JSONResponse(status_code=422,
                             content={"ok": False, "error": "마지막 한 칸은 지울 수 없어요"})
-    plan["beats"] = [b for b in beats if b["beat_idx"] != beat_idx]
+    left = [dict(b) for b in beats if b["beat_idx"] != beat_idx]
+    # ★남은 칸을 '사람이 편집함'으로 못 박는다 (2026-09-06 고객 재제보, job 3ec9df659411).
+    #   안 하면 저장 출구(store._ensure_screen_time)의 확정대본 검사가 **지운 칸을
+    #   되살린다**: given_script는 7줄인데 칸이 6개가 되므로 enforce_script_order의
+    #   줄 모드 분기(`_lines_mode and len(targets) != len(sents)`)가 "줄마다 칸 하나"로
+    #   다시 짜버린다. 라이브 실측 —
+    #       삭제 필터 직후            6칸 [0,1,2,3,4,6]
+    #       enforce_script_order 후   7칸 [0,1,2,3,4,5,6]  ← 부활
+    #   API는 ok:True를 주는데 DB는 그대로여서 "지웠다는데 새로고침하면 있다"가 됐다.
+    #
+    #   ★표식이 곧 뜻이다: 삭제는 사람이 그 문장을 **의도적으로 뺀** 것이므로, 이 계획은
+    #     더 이상 given_script의 사본이 아니다. narration_manual은 이미 문장 수정
+    #     (api_mix_scene_lab_narration)이 같은 이유로 쓰는 표식이라 새 축을 만들지 않는다.
+    #   ⚠️남은 칸 **전부**에 단다 — 한 칸만 달면 targets != beats가 되어 위 분기만 우연히
+    #     비켜갈 뿐, 아래 비례 재배분이 남은 칸의 대사를 섞을 수 있다(0순위-B: 같은 판단을
+    #     두 조건으로 나눠 적지 않는다).
+    for b in left:
+        b["narration_manual"] = True
+    plan["beats"] = left
     store.update_mix_job(job_id, edit_plan=plan)
+    # ★응답의 left는 **실제 저장된 결과**에서 센다. 위 저장 출구가 계획을 손볼 수 있으므로
+    #   메모리의 리스트 길이를 그대로 믿으면 이번 사고처럼 "ok:True, left:7"인데 안 지워진
+    #   조용한 실패를 화면이 알 수 없다.
+    saved = ((store.get_mix_job(job_id) or {}).get("edit_plan") or {}).get("beats") or plan["beats"]
+    if any(b.get("beat_idx") == beat_idx for b in saved):
+        return JSONResponse(status_code=500, content={
+            "ok": False, "error": "삭제가 저장되지 않았어요 — 다시 시도해 주세요"})
     # ★뒷단계까지 반영되게 — **이미 만들어 둔 결과물**을 무효화한다(2026-09-03 사장님
     #   "뒷단계들까지 모두 렌더·캡컷까지 반영되게").
     #   렌더·캡컷·자막·꾸미기는 매번 edit_plan에서 새로 파생하므로(_beat_timeline) 저절로
@@ -6711,7 +6736,7 @@ def api_mix_scene_lab_beat_delete(job_id: str, beat_idx: int):
     #     지우면 VMake를 다시 태워 돈이 나간다.
     store.update_mix_job(job_id, video_path=None, clean_video_path=None,
                          fx_path=None, fx_status=None)
-    return {"ok": True, "deleted": beat_idx, "left": len(plan["beats"]),
+    return {"ok": True, "deleted": beat_idx, "left": len(saved),
             "text": (beat.get("narration") or "")[:120],
             "invalidated": ["video_path", "clean_video_path", "fx_path"]}
 
