@@ -22,13 +22,21 @@ def _beat(**kw):
 
 
 def test_cut_bounds_equal_phrase_bounds():
+    """★2026-09-06 개정 — 컷 개수는 이제 **칸 길이**가 정한다(cuts_for_beat).
+
+    종전 단언은 "컷 수 = 구절 수"(여기선 3개)였다. 그런데 그 규칙이 화면을 잘게
+    썰어 컷의 71%가 1초 미만이 됐고("정신없다" — 사장님), 2초 이상 칸은 2컷으로
+    묶기로 했다. 3.86초 칸이므로 **2컷**이 맞고, 경계는 여전히 **구절 경계 위**에서
+    고른다(등분 지점에 가장 가까운 자리). 합계 보존은 그대로다.
+    """
     plan = _plan_phrase_clips(_beat(), SEGS, 3.86)
-    assert plan and len(plan) == 3
+    assert plan and len(plan) == 2, "3.86초 칸은 2컷(2초 이상 규칙)"
     durs = [c["out_dur"] for c in plan]
-    # 컷1 = 리드인 0.29 + 구절1 1.1 / 컷2 = 구절2 0.68 / 컷3 = 구절3 + 꼬리(합계 보전)
-    assert durs[0] == pytest.approx(0.29 + 1.1, abs=1e-6)
-    assert durs[1] == pytest.approx(0.68, abs=1e-6)
+    # 경계 후보 [0, 1.39, 2.07, 3.86] 중 등분점 1.93에 가장 가까운 2.07을 고른다
+    assert durs[0] == pytest.approx(0.29 + 1.1 + 0.68, abs=1e-6)
     assert sum(durs) == pytest.approx(3.86, abs=1e-6)
+    # 컷이 줄어도 1초 미만이 안 생긴다(이 변경의 목적)
+    assert min(durs) >= 1.0
 
 
 def test_재료가_적으면_담은_순서대로_돌아간다():
@@ -39,9 +47,12 @@ def test_재료가_적으면_담은_순서대로_돌아간다():
     조각 하나를 빼면 뒤 배치가 통째로 밀렸다. 이제는 k % 재료수로 **정해진다**.
     """
     plan = _plan_phrase_clips(_beat(), SEGS[:2], 3.86)
-    assert len(plan) == 3, "구절 수만큼 컷이 만들어져야 한다(마지막이 덮지 않는다)"
+    # ★2026-09-06 개정: 컷 수는 구절 수가 아니라 **칸 길이**가 정한다(3.86초 → 2컷).
+    #   이 테스트의 요지는 개수가 아니라 **재료가 담은 순서대로 돈다**는 것이므로
+    #   그 단언은 그대로 지킨다(마지막 컷이 남은 구절을 통째로 덮지 않는다).
+    assert len(plan) == 2, "3.86초 칸은 2컷"
     vids = [c["video_id"] for c in plan]
-    assert vids == [SEGS[0]["video_id"], SEGS[1]["video_id"], SEGS[0]["video_id"]], vids
+    assert vids == [SEGS[0]["video_id"], SEGS[1]["video_id"]], vids
     assert sum(c["out_dur"] for c in plan) == pytest.approx(3.86, abs=1e-6)
 
 

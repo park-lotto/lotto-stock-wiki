@@ -571,6 +571,57 @@ _MIN_CLIP = 0.8   # 초. 이보다 짧은 독립 클립은 만들지 않는다(�
 # 그대로 둔다 — 짧게 움직이는 게 정지프레임보다 낫다는 사장님 피드백(2026-07-21).
 _MIN_CLIP_KEEP = 0.5
 
+# ── 칸 길이로 컷 개수를 정한다(2026-09-06 사장님) ──────────────────────────────
+# ★왜: 구절 맞춤이 컷 개수를 **자막 구절 수**로 정해 잘게 썰렸다. 서버 자막이 8자라
+#   3.0초 칸이 구절 4개로 갈라져 컷 0.75초씩 — 실측 대본 1,013구간에서 컷의 **71%가
+#   1초 미만**(중앙값 0.88초)이었고 사장님: "컷이 너무 잘게 썰려나오는게 다들 불만이야
+#   정신없다고".
+# ★규칙: 2초 미만 1컷 / 2초 이상 2컷(자연스러운 중간에서). 실측상 칸의 95%가 4.5초
+#   이하라 그 위만 3컷. 적용 시 중앙값 1.50초·1초미만 0%·1.2~1.8초에 66%.
+# ★상수를 여기 한 곳에서만 정한다(0순위-B) — 화면(scene_play.js)이 같은 값을 쓴다.
+_BEAT_1CUT_UNDER = 2.0     # 이 미만이면 1컷
+_BEAT_3CUT_OVER = 4.5      # 이 초과면 3컷
+
+
+def cuts_for_beat(sec):
+    """칸 길이(초) → 컷 개수. 길이를 모르면(0·음수·None) 1컷."""
+    try:
+        sec = float(sec)
+    except (TypeError, ValueError):
+        return 1
+    if sec <= 0:
+        return 1
+    if sec < _BEAT_1CUT_UNDER:
+        return 1
+    return 3 if sec > _BEAT_3CUT_OVER else 2
+
+
+def pick_split_bounds(bounds, total, n_cut):
+    """구절 경계 목록에서 **n_cut개 컷이 되도록 쪼갤 자리**만 고른다.
+
+    자막 구절 경계는 문장부호·어절을 이미 본 결과라 그 자체가 '자연스러운 자리'다
+    (새 판정을 만들지 않는다 — 0순위-B). 등분 지점에 가장 가까운 경계를 고른다.
+
+    bounds: [0, b1, …, total] 오름차순. 반환은 [0, …, total]이며 칸이 n_cut개.
+    쓸 수 있는 내부 경계가 모자라면 있는 것만 쓴다(컷이 요청보다 적을 수 있다).
+    """
+    total = float(total)
+    lo = float(bounds[0]) if bounds else 0.0
+    if n_cut <= 1 or not bounds or len(bounds) < 3:
+        return [lo, total]
+    inner = [float(b) for b in bounds[1:-1] if lo < float(b) < total]
+    if not inner:
+        return [lo, total]
+    picked = []
+    for k in range(1, n_cut):
+        target = lo + (total - lo) * k / n_cut
+        cand = [b for b in inner if b not in picked]
+        if not cand:
+            break
+        picked.append(min(cand, key=lambda b: abs(b - target)))
+    return [lo] + sorted(picked) + [total]
+
+
 # 슬로우모션 상한. 소스가 나레이션보다 짧을 때 무제한으로 늘리면(옛 동작) 부자연스러운
 # 슬로우크롤이 됐다(사장님 실측, 2026-07-19). 재생은 최대 이 배율까지만 늘리고, 그 이상
 # 필요한 시간은 마지막 프레임 정지(freeze)로 떠안는다 → 요리 동작은 자연 속도, 남는 시간만 홀드.
@@ -782,6 +833,11 @@ def _plan_phrase_clips(beat, segs, tts_dur):
             t += d
             bounds.append(min(tts_dur, t))
         bounds.append(tts_dur)
+        # ★칸 길이로 컷 개수를 정한다(2026-09-06 사장님 "너무 잘게 썰려 정신없다").
+        #   구절 경계는 그대로 쓰되, 그중 **등분 지점에 가까운 자리만** 골라 쪼갠다.
+        #   규칙·상수는 cuts_for_beat/pick_split_bounds 한 곳에서만 정하고 화면
+        #   (scene_play.js)이 같은 것을 쓴다(0순위-B).
+        bounds = pick_split_bounds(bounds, tts_dur, cuts_for_beat(tts_dur))
         # ★구절이 재료보다 많으면 **담은 조각의 뒷부분을 한 바퀴 더 쓴다**(2026-08-31 사장님
         #   "대본이 길어지니까 뒤에까지 장면이 안 붙는다"). 화면(scene_play.js planClips의
         #   구절맞춤 분기)과 **같은 규칙의 서버판**이다 — 한쪽만 고치면 미리보기와 결과물이
@@ -794,8 +850,9 @@ def _plan_phrase_clips(beat, segs, tts_dur):
         plan = []
         pos = [float(g["start"]) for g in segs]
         ri = 0
-        for k in range(len(durs)):
-            end_b = bounds[-1] if k == len(durs) - 1 else bounds[k + 1]
+        # ★칸 수는 durs가 아니라 **bounds**가 정한다 — 위에서 컷 개수를 줄였다.
+        for k in range(len(bounds) - 1):
+            end_b = bounds[k + 1]
             d = max(0.1, end_b - bounds[k])
             # ★재료가 구절보다 적으면 **담은 순서대로 돌아간다**(1,2,3,1,2,3…).
             #   2026-09-02 사장님: "하나를 올렸더니 2·3번 자리에 배치되고 같은 내용이 두 번
