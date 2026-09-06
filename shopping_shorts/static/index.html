@@ -464,11 +464,16 @@ body.is-admin .admin-only{display:block}
            ★핀의 목적지(pin_dest)로 고른다 — 수집 때 상세 페이지에서 읽어 담는다. -->
       <div style="margin-top:7px;display:flex;gap:5px;align-items:center;flex-wrap:wrap">
         <span style="font-size:11px;color:var(--sub)">쇼핑몰만 보기:</span>
+        <!-- ★출처축(2026-09-06 사장님 "아마존 테무를 따로 카테고리화할수있나?").
+             건수는 라이브 실측(2,259건): 원본 804 · 재업 682 · 테무 392 · 아마존 166.
+             종전엔 원본·재업 버튼이 없어 **1,486건(66%)을 골라낼 방법이 아예 없었다**.
+             '알리'는 실측 1건뿐이라 뺐다(눌러도 늘 0건 = 고장으로 보인다). -->
         <button class="ftog pinf on" data-dest="" onclick="pinFilter(this)">전체</button>
+        <button class="ftog pinf" data-dest="uploaded by user" onclick="pinFilter(this)">✨ 원본</button>
+        <button class="ftog pinf" data-dest="instagram,tiktok,youtu" onclick="pinFilter(this)">♻️ 재업로드</button>
         <button class="ftog pinf" data-dest="shop" onclick="pinFilter(this)">🛒 쇼핑몰</button>
-        <button class="ftog pinf" data-dest="temu" onclick="pinFilter(this)">테무</button>
-        <button class="ftog pinf" data-dest="aliexpress" onclick="pinFilter(this)">알리</button>
-        <button class="ftog pinf" data-dest="amzn,amazon" onclick="pinFilter(this)">아마존</button>
+        <button class="ftog pinf" data-dest="temu" onclick="pinFilter(this)">🛍 테무</button>
+        <button class="ftog pinf" data-dest="amzn,amazon,amzlink" onclick="pinFilter(this)">📦 아마존</button>
         <span id="pinFilterMsg" style="font-size:11px;color:var(--sub)"></span>
       </div>
       <div style="font-size:11px;color:var(--sub);margin-top:5px">
