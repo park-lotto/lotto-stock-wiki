@@ -10,6 +10,10 @@ const SL = {
   applyUrl: () => SL.server ? `/api/mix/scene_lab/${SL.job}/apply` : '/apply',
 };
 const MAX_SHOT = 2.2, MIN_CLIP = 0.8, EPS = 1e-3, LONG_CUT = MAX_SHOT + 0.05;   // 상한을 넘긴 컷 = 소재가 모자라 늘린 것
+// ★수동(✋)으로 정할 수 있는 최소 컷 길이. 자동 배분의 MIN_CLIP(0.8초)과 **별개**다 —
+//   2026-09-06 사장님 "1초미만이 수동으로는 들어올수있게". 0.3초 아래는 10프레임 미만이라
+//   사람 눈에 안 잡히므로 그것만 막는다.
+const MANUAL_MIN = 0.3;
 
 // ★미리보기(9:16) 크기의 정의처는 여기 한 곳(2026-08-20 사장님 "미리보기 썸네일 크기
 //   고치면 자꾸 틀어지고 커지고 어디서 자꾸 만지는거다").
@@ -216,10 +220,13 @@ function applyFixedLens(clips, beatIdx, ttsDur){
   if (!fixed.length) return clips;
   // 지정분 합계. 칸을 넘기면 지정분끼리 비례로 눌러 담는다(넘쳐서 뒤가 밀리면 안 된다).
   let want = fixed.reduce((a, c) => a + getFix(beatIdx, c.seg_id), 0);
-  const room = ttsDur - free.length * MIN_CLIP;      // 나머지 컷도 최소는 살려둔다
-  const cap = Math.max(MIN_CLIP, free.length ? room : ttsDur);
+  // ★수동(✋)은 사장님이 정한 값을 **그대로** 쓴다(2026-09-06 "1초미만이 수동으로는
+  //   들어올수있게"). 자동 배분만 MIN_CLIP(0.8초)을 지키고, 손으로 정한 건 존중한다.
+  //   나머지 컷 몫도 MIN_CLIP이 아니라 MANUAL_MIN으로만 확보해 지정값이 눌리지 않게 한다.
+  const room = ttsDur - free.length * MANUAL_MIN;      // 나머지 컷도 최소는 살려둔다
+  const cap = Math.max(MANUAL_MIN, free.length ? room : ttsDur);
   const k = want > cap ? cap / want : 1;
-  fixed.forEach(c => { c.dur = Math.max(MIN_CLIP * 0.5, getFix(beatIdx, c.seg_id) * k); });
+  fixed.forEach(c => { c.dur = Math.max(MANUAL_MIN, getFix(beatIdx, c.seg_id) * k); });
   want = fixed.reduce((a, c) => a + c.dur, 0);
   // 나머지는 남은 시간을 **원래 비율대로** 나눠 갖는다.
   const rest = Math.max(0, ttsDur - want);
@@ -358,6 +365,38 @@ function toggleStretch(i, on){ if (on) STRETCH[i] = true; else delete STRETCH[i]
 // ★구절 맞춤(2026-08-29 사장님 "활성화는 자막 분할 개수대로 / 개수+길이까지 1:1") —
 //   컷 경계 = 자막 구절 경계. 컷1이 리드인(첫말 전 무음)을 얹고, 마지막 컷이 꼬리를
 //   얹는다. 기본 **켬**(끄면 종전 배분). ✋수동 길이(FIXLEN)가 있는 칸은 수동이 이긴다.
+// ── 칸 길이로 컷 개수를 정한다(2026-09-06 사장님 "너무 잘게 썰려 정신없다") ──────
+//   실측(대본 1,013구간): 종전엔 컷의 71%가 1초 미만(중앙값 0.88초)이었다.
+//   규칙: 2초 미만 1컷 / 2~4.5초 2컷 / 4.5초 초과 3컷 → 중앙값 1.50초·1초미만 0%.
+//   ★서버(video_assemble.cuts_for_beat/pick_split_bounds)와 **같은 규칙**이다 —
+//     한쪽만 고치면 미리보기와 결과물이 어긋난다(0순위-B).
+const BEAT_1CUT_UNDER = 2.0, BEAT_3CUT_OVER = 4.5;
+function cutsForBeat(sec){
+  sec = +sec;
+  if (!(sec > 0)) return 1;
+  if (sec < BEAT_1CUT_UNDER) return 1;
+  return sec > BEAT_3CUT_OVER ? 3 : 2;
+}
+// 구절 경계 중 **등분 지점에 가까운 자리만** 고른다(자연스러운 자리 = 이미 문장부호·
+// 어절을 본 구절 경계). 쓸 수 있는 내부 경계가 모자라면 있는 것만 쓴다.
+function pickSplitBounds(bounds, total, nCut){
+  total = +total;
+  const lo = bounds && bounds.length ? +bounds[0] : 0;
+  if (nCut <= 1 || !bounds || bounds.length < 3) return [lo, total];
+  const inner = bounds.slice(1, -1).map(Number).filter(b => b > lo && b < total);
+  if (!inner.length) return [lo, total];
+  const picked = [];
+  for (let k = 1; k < nCut; k++){
+    const target = lo + (total - lo) * k / nCut;
+    const cand = inner.filter(b => picked.indexOf(b) < 0);
+    if (!cand.length) break;
+    let best = cand[0];
+    for (const b of cand) if (Math.abs(b - target) < Math.abs(best - target)) best = b;
+    picked.push(best);
+  }
+  picked.sort((x, y) => x - y);
+  return [lo].concat(picked, [total]);
+}
 const PHRASE_SYNC = {};             // beat_idx → false(끔)일 때만 기록. 기본은 켬.
 function phraseSyncOn(i){ return PHRASE_SYNC[i] !== false; }
 function togglePhraseSync(i, on){
@@ -386,6 +425,8 @@ function planClips(segIds, ttsDur, spread, beatIdx){
       const bounds = [0];
       for (let k = 1; k < caps.length; k++) bounds.push(Math.min(ttsDur, caps[k].start));
       bounds.push(ttsDur);
+      // ★칸 길이로 컷 개수를 정한다(2026-09-06 사장님) — 서버와 같은 규칙.
+      bounds = pickSplitBounds(bounds, ttsDur, cutsForBeat(ttsDur));
       // ★구절이 재료보다 많으면 **담은 조각의 뒷부분을 한 바퀴 더 쓴다**(2026-08-31 사장님
       //   "대본이 길어지니까 뒤에까지 장면이 안 붙는다").
       //   종전 nCut=min(caps, segments)는 조각 3·구절 6일 때 컷을 3개만 만들고 마지막 컷이
@@ -395,7 +436,8 @@ function planClips(segIds, ttsDur, spread, beatIdx){
       //   ★첫 바퀴는 종전 그대로 담은 순서대로 1:1 — 안 그러면 커서가 먼저 앞 조각을 두 번
       //     쓰고 **담은 장면 하나가 통째로 안 나온다**(실측으로 잡은 회귀). 두 바퀴째부터만
       //     뒤가 남은 조각을 돌아가며 이어 쓴다. 재료가 진짜 떨어지면 그때만 종전 동작.
-      const nPhrase = caps.length;
+      // ★칸 수는 caps가 아니라 **bounds**가 정한다 — 위에서 컷 개수를 줄였다.
+      const nPhrase = bounds.length - 1;
       const pos = segments.map(s => s.start);
       let ri = 0;
       for (let k = 0; k < nPhrase; k++) {

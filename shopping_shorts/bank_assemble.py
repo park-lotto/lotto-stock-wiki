@@ -353,7 +353,8 @@ def style_block(style, seconds=30, seed=""):
         from shopping_shorts.script_gate import density_target
         target = density_target(style, seconds)
         dens = ("\n- 전체 %d초에 **%d자를 넘기지 마라** — 이 길이가 플랫폼 규격이다(히트작 밀도를 말속도로 환산한 값). "
-                "칸 하나에 평균 %d자 — 한 문장으로 끝내지 말고 2~3문장씩 써라. "
+                "칸 하나에 평균 %d자 — **한 칸은 한 문장으로** 끝내라(2026-09-06 사장님). "
+                "한 칸에 두 문장을 넣으면 그 칸이 6초씩 길어져 화면이 한 장면에 묶인다. "
                 "말이 비면 이 스타일이 아니다." % (seconds, target, max(1, target // len(roles))))
     return ("★[스타일: %s] — 아래 칸을 **이 순서 그대로** 채워라(순서를 바꾸거나 칸을 빼면 반려된다).\n"
             % _sanitize(style.get("name") or "")
