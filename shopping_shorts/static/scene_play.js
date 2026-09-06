@@ -370,7 +370,8 @@ function toggleStretch(i, on){ if (on) STRETCH[i] = true; else delete STRETCH[i]
 //   규칙: 2초 미만 1컷 / 2~4.5초 2컷 / 4.5초 초과 3컷 → 중앙값 1.50초·1초미만 0%.
 //   ★서버(video_assemble.cuts_for_beat/pick_split_bounds)와 **같은 규칙**이다 —
 //     한쪽만 고치면 미리보기와 결과물이 어긋난다(0순위-B).
-const BEAT_1CUT_UNDER = 2.0, BEAT_3CUT_OVER = 4.5;
+// ★BEAT_3CUT_OVER 4.5 → 4.0 (2026-09-06 실측) — 2.5초 초과 컷 3% → 1%.
+const BEAT_1CUT_UNDER = 2.0, BEAT_3CUT_OVER = 4.0;
 function cutsForBeat(sec){
   sec = +sec;
   if (!(sec > 0)) return 1;
