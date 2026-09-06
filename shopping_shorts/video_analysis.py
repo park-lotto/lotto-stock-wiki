@@ -518,8 +518,55 @@ def _referer_for(url):
     return "https://www.instagram.com/"
 
 
+# 썸네일 보관함(2026-09-06) — CDN URL이 만료돼도 판독할 수 있게 원본을 디스크에 남긴다.
+#
+# ★왜 필요한가 (실측 2026-09-06): 랭킹 카드에 "살 물건 없음"이 많다는 제보를 파보니
+#   재판독 대기 3,191건 중 **2,771건(87%)이 인스타 썸네일 만료 + 캡션 없음**이었다.
+#   근거가 0이면 어떤 프롬프트로도 판독할 수 없다 — 프롬프트를 고쳐도 화면은 안 바뀐다.
+#   인스타 CDN URL(scontent-*.cdninstagram.com)은 며칠이면 죽는데, 우리는 URL만 들고 있었다.
+#   ⚠️ 이미 만료된 과거분은 이걸로 못 살린다(URL이 이미 죽었다). **앞으로 담는 것**을 지킨다.
+# ★한 곳에만 넣는다: 판독 5곳(archive_tagger·discover_jobs·overseas_hot_jobs·product_name 2곳)이
+#   전부 이 함수를 거치므로, 여기 한 번 붙이면 전 경로가 같이 보호된다(0순위-B).
+_THUMB_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "thumbs")
+_THUMB_MAX_BYTES = 3 * 1024 * 1024      # 3MB 넘는 건 썸네일이 아니다 — 안 담는다
+
+
+def _thumb_cache_path(url):
+    """URL → 보관 경로. 파일명은 URL 해시라 CDN 쿼리스트링이 바뀌어도 같은 파일을 가리킨다."""
+    import hashlib
+    h = hashlib.md5((url or "").encode("utf-8", "ignore")).hexdigest()
+    return os.path.join(_THUMB_DIR, h[:2], h + ".jpg")
+
+
+def _thumb_cache_read(url):
+    try:
+        with open(_thumb_cache_path(url), "rb") as f:
+            b = f.read()
+        return b or None
+    except Exception:      # noqa: BLE001 — 보관본이 없거나 못 읽으면 그냥 받아온다
+        return None
+
+
+def _thumb_cache_write(url, content):
+    """보관 실패는 무해하다 — 판독은 이미 content로 진행된다."""
+    if not content or len(content) > _THUMB_MAX_BYTES:
+        return
+    try:
+        path = _thumb_cache_path(url)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        tmp = path + ".tmp"
+        with open(tmp, "wb") as f:
+            f.write(content)
+        os.replace(tmp, path)          # 원자적 — 반쯤 쓰인 파일을 남기지 않는다
+    except Exception as e:      # noqa: BLE001
+        print(f"[thumb_cache] 보관 실패(무해): {type(e).__name__}: {e}", file=sys.stderr)
+
+
 def fetch_thumb_bytes(url, timeout=15):
-    """썸네일 URL → 이미지 bytes. 인스타/샤오홍슈 CDN 핫링크 차단 우회 헤더 포함. 실패 시 None."""
+    """썸네일 URL → 이미지 bytes. 인스타/샤오홍슈 CDN 핫링크 차단 우회 헤더 포함.
+
+    ★받아온 이미지는 보관함에 남긴다. CDN URL이 만료되면 보관본으로 답한다(2026-09-06).
+    실패 시 None."""
     if not url:
         return None
     try:
@@ -529,9 +576,14 @@ def fetch_thumb_bytes(url, timeout=15):
             "Referer": _referer_for(url),
         })
         r.raise_for_status()
-        return r.content
+        content = r.content
+        if content:
+            _thumb_cache_write(url, content)
+            return content
     except Exception:
-        return None
+        pass
+    # 여기 오면 CDN이 죽었거나 막혔다 — 예전에 받아둔 게 있으면 그걸로 판독한다
+    return _thumb_cache_read(url)
 
 
 # 렌즈 비전 호출 1회의 상한(초). 이걸 넘으면 그 호출을 끊고 다음 키로 재시도한다.
