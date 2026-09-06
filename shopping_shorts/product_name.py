@@ -285,11 +285,14 @@ def _identify_shop_one(image_bytes, caption_text):
     return None
 
 
-def identify_shop_many(items, db_path, max_workers=_MAX_WORKERS):
+def identify_shop_many(items, db_path, max_workers=_MAX_WORKERS, out_no_evidence=None):
     """[{shortcode, thumbnail, caption}] → {shortcode: 상품명}. 캐시된 건 안 묻는다.
 
     캐시는 vision_tags.shop_product(묶기용 product와 별도). 판정 실패는 저장하지 않아
-    다음 기회에 다시 시도한다 — 빈 문자열('살 물건 없음')만 확정으로 저장한다."""
+    다음 기회에 다시 시도한다 — 빈 문자열('살 물건 없음')만 확정으로 저장한다.
+
+    out_no_evidence: 리스트를 주면 **근거가 0이라 모델을 부르지도 못한** shortcode를 담아준다
+    (썸네일 만료 + 캡션 없음). '살 물건 없음'과 화면에서 갈라 보여주기 위한 것이다."""
     from shopping_shorts import coupang_query, video_analysis
     store = Store(db_path)
     codes = [i.get("shortcode") for i in items if i.get("shortcode")]
@@ -303,14 +306,22 @@ def identify_shop_many(items, db_path, max_workers=_MAX_WORKERS):
         img = video_analysis.fetch_thumb_bytes(it.get("thumbnail")) if it.get("thumbnail") else None
         cap = coupang_query.caption_body(it.get("caption") or "")
         if not img and not cap:
-            return it["shortcode"], None            # 썸네일 만료 + 캡션 없음 → 다음에
-        return it["shortcode"], _identify_shop_one(img, cap)
+            # ★근거가 0이다(썸네일 만료 + 캡션 없음) — 모델을 부를 수조차 없다.
+            #   "살 물건 없음"과 구분해야 한다(2026-09-06): 화면이 둘을 같게 보여주면
+            #   사장님이 "왜 이렇게 없다고 나오나"로 읽는다. 실측 3,191건 중 2,771건(87%).
+            return it["shortcode"], None, True
+        return it["shortcode"], _identify_shop_one(img, cap), False
 
     out = dict(cached)
+    no_evidence = []
     with _fut.ThreadPoolExecutor(max_workers=max_workers) as ex:
-        for sc, p in ex.map(_work, todo):
+        for sc, p, blind in ex.map(_work, todo):
+            if blind:
+                no_evidence.append(sc)
             if p is None:
                 continue            # 판정 실패 — 캐시에 안 남긴다(재시도)
             store.save_shop_product(sc, p)
             out[sc] = p
+    if out_no_evidence is not None:
+        out_no_evidence.extend(no_evidence)    # 호출부가 리스트를 주면 거기 담아준다
     return out

@@ -1185,7 +1185,23 @@
       .then(function (r) { return r.json(); })
       .then(function (d) {
         var pm = (d && d.products) || {};
+        /* ★근거가 없어 판독을 못 한 것(썸네일 만료 + 캡션 없음)은 "살 물건 없음"과 다르다
+           (2026-09-06). 같게 보여주면 판독이 틀린 것처럼 읽힌다 — 실측 3,191건 중
+           2,771건(87%)이 이 경우였다. 인스타 CDN 주소가 며칠이면 죽는 게 원인이다. */
+        var blind = {};
+        ((d && d.no_evidence) || []).forEach(function (sc) { blind[sc] = 1; });
+        Object.keys(blind).forEach(function (sc) {
+          var b = document.querySelector('.cp-btn[data-sc="' + sc + '"]');
+          if (!b) return;
+          b.textContent = "🛒 자료 만료";
+          b.setAttribute("data-noevidence", "1");
+          b.style.opacity = "0.45";
+          b.style.filter = "grayscale(1)";
+          b.title = "썸네일 주소가 만료되고 설명 글도 없어 무엇인지 볼 수 없었습니다. "
+                  + "판독이 틀린 게 아닙니다 — 눌러서 직접 찾아볼 수는 있습니다.";
+        });
         Object.keys(pm).forEach(function (sc) {
+          if (blind[sc]) return;                 /* 위에서 이미 처리했다 */
           var btn = document.querySelector('.cp-btn[data-sc="' + sc + '"]');
           if (!btn) return;
           var name = pm[sc];
