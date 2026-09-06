@@ -14,6 +14,11 @@ const MAX_SHOT = 2.2, MIN_CLIP = 0.8, EPS = 1e-3, LONG_CUT = MAX_SHOT + 0.05;   
 //   2026-09-06 사장님 "1초미만이 수동으로는 들어올수있게". 0.3초 아래는 10프레임 미만이라
 //   사람 눈에 안 잡히므로 그것만 막는다.
 const MANUAL_MIN = 0.3;
+// ★손대지 않은 컷에게 **반드시 남겨줄** 최소 길이. MANUAL_MIN(수동 지정 하한)과 다르다 —
+//   둘을 같은 값으로 쓴 탓에 ✋를 2.5초 이상 잡으면 남의 컷이 0.3초로 눌려 화면에 0.0으로
+//   떴다(2026-09-06 사장님 "장면 하나가 없어진다"). 수동은 0.3초까지 짧게 정할 수 있지만,
+//   **자동으로 밀려나는 컷**은 눈에 보이는 길이를 지켜준다.
+const FREE_MIN = 0.6;
 
 // ★미리보기(9:16) 크기의 정의처는 여기 한 곳(2026-08-20 사장님 "미리보기 썸네일 크기
 //   고치면 자꾸 틀어지고 커지고 어디서 자꾸 만지는거다").
@@ -202,7 +207,10 @@ function setFix(i, sid, sec){
   if (!(sec > 0)) delete FIXLEN[k];
   else {
     FIXLEN[k] = Math.round(sec * 100) / 100;
-    PHRASE_SYNC[i] = false;   // ✋를 만졌다 = 이 칸은 수동 모드(구절맞춤 체크가 꺼진다)
+    // ★구절맞춤을 여기서 끄지 않는다(2026-09-06 사장님 실사용) — ✋는 **길이만** 정한다.
+    //   종전엔 ✋를 만지면 PHRASE_SYNC를 꺼서 컷 배분 규칙이 통째로 바뀌었고, 사장님은
+    //   길이 하나 고쳤을 뿐인데 화면이 확 달라져 이유를 알 수 없었다. 길이 지정은
+    //   applyFixedLens가 어느 모드에서든 뒤에서 반영하므로 끌 이유가 없다.
   }
   (typeof render === 'function' && render());
   // ✋ 정한 길이를 그 자리에서 저장까지(2026-08-29 사장님 "컷 길이 저장하고") —
@@ -216,6 +224,8 @@ function setFix(i, sid, sec){
 function applyFixedLens(clips, beatIdx, ttsDur){
   if (!clips.length || beatIdx == null) return clips;
   const fixed = [], free = [];
+  // 길이를 바꾸기 **전** 값을 남겨 둔다 — 아래에서 '원래 이어져 있던 컷인가'를 판정한다.
+  clips.forEach(c => { c._dur0 = c.dur; });
   clips.forEach(c => (getFix(beatIdx, c.seg_id) > 0 ? fixed : free).push(c));
   if (!fixed.length) return clips;
   // 지정분 합계. 칸을 넘기면 지정분끼리 비례로 눌러 담는다(넘쳐서 뒤가 밀리면 안 된다).
@@ -223,7 +233,7 @@ function applyFixedLens(clips, beatIdx, ttsDur){
   // ★수동(✋)은 사장님이 정한 값을 **그대로** 쓴다(2026-09-06 "1초미만이 수동으로는
   //   들어올수있게"). 자동 배분만 MIN_CLIP(0.8초)을 지키고, 손으로 정한 건 존중한다.
   //   나머지 컷 몫도 MIN_CLIP이 아니라 MANUAL_MIN으로만 확보해 지정값이 눌리지 않게 한다.
-  const room = ttsDur - free.length * MANUAL_MIN;      // 나머지 컷도 최소는 살려둔다
+  const room = ttsDur - free.length * FREE_MIN;      // 나머지 컷도 보이는 길이는 남긴다
   const cap = Math.max(MANUAL_MIN, free.length ? room : ttsDur);
   const k = want > cap ? cap / want : 1;
   fixed.forEach(c => { c.dur = Math.max(MANUAL_MIN, getFix(beatIdx, c.seg_id) * k); });
@@ -238,6 +248,17 @@ function applyFixedLens(clips, beatIdx, ttsDur){
     // 전부 지정이면 합계가 딱 맞도록 마지막 컷으로 보정(반올림 오차 흡수)
     const diff = ttsDur - fixed.reduce((a, c) => a + c.dur, 0);
     fixed[fixed.length - 1].dur += diff;
+  }
+  // ★길이를 바꿨으면 **이어지는 컷의 시작점도 따라와야 한다**(2026-09-06 사장님
+  //   "앞 장면을 줄였는데 재생하면 여전히 같은 장면이 나온다").
+  //   종전엔 dur만 고치고 start를 그대로 둬서, 앞 컷에서 잘라낸 구간이 다음 컷
+  //   **앞부분에 그대로 남아** 다시 나왔다. 같은 소스에서 앞 컷 끝과 이어져 있던
+  //   컷만 당긴다 — 따로 담은 조각은 제 시작점을 지켜야 엉뚱한 데서 재생되지 않는다.
+  for (let i = 1; i < clips.length; i++){
+    const prev = clips[i - 1], cur = clips[i];
+    if (prev.video_id !== cur.video_id) continue;      // 다른 소스면 건드리지 않는다
+    const wasContig = Math.abs(cur.start - (prev.start + (prev._dur0 != null ? prev._dur0 : 0))) < 0.05;
+    if (wasContig) cur.start = prev.start + prev.dur;
   }
   return clips;
 }
