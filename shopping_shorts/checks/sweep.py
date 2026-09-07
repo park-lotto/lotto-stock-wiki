@@ -222,13 +222,19 @@ def _press(session, info, url):
                   dur_ms=int((time.time() - t0) * 1000), evidence_dir=ev)
 
 
-def sweep_url(session, url, reopen=None):
-    """한 URL의 조작 가능한 요소 전부. reopen(page)는 패널을 다시 여는 함수(제작소용)."""
+def sweep_url(session, url, reopen=None, skip=None):
+    """한 URL의 조작 가능한 요소 전부. reopen(page)는 패널을 다시 여는 함수(제작소용).
+    skip(info)가 True를 돌려주는 요소는 아예 안 누른다(제작소 전수가 처음 실제로 패널을 여는 데
+    성공한 2026-09-07에야 드러난 문제: `discover_targets`는 패널이 아니라 페이지 전체를 훑는데,
+    /produce엔 앱 공통 사이드바(로그아웃·작업삭제·다른 화면 이동)까지 같이 있어서 그것들까지
+    실제로 눌러버렸다 — 로그아웃/작업삭제는 판정불가·안전사고로 이어질 수 있다)."""
     page = session.page
     browser.goto_produce(page, session.base_url + url)
     if reopen:
         reopen(page)
     targets = discover_targets(page)
+    if skip:
+        targets = [t for t in targets if not skip(t)]
     out = []
     for info in targets:
         if not hit_test(page, info["idx"]):
@@ -276,6 +282,23 @@ def _apply_throttle_gate(session, results):
                    signature=r.signature, page=r.page, evidence_dir=r.evidence_dir, dur_ms=r.dur_ms) for r in results]
 
 
+_APP_SHELL_ONCLICK_MARKERS = ("__ssLogout", "__ssDelWork", "__ssRenWork", "ssOpenBugReport")
+
+
+def _is_app_shell_nav(info):
+    """제작소 콘텐츠가 아니라 앱 공통 사이드바(.ss-nav)의 항목인가.
+    ★실측(2026-09-07): discover_targets가 패널이 아니라 페이지 전체를 훑어, 이걸 안 거르면
+    제작소 전수가 실제로 '로그아웃'·작업 '✕'(삭제)·'✏️'(이름변경)·'🐞 오류신고' 버튼까지 누른다.
+    이런 요소는 늘 있고(로그인만 하면 어느 화면에서든 동일) 제작소 화면 자체가 바뀌어도 안 바뀌므로
+    B-01(제작소 전수)이 검증하려는 대상이 아니다 — 판정에서 빼되 누르지도 않는다(안전)."""
+    oc = info.get("onclick") or ""
+    if any(m in oc for m in _APP_SHELL_ONCLICK_MARKERS):
+        return True
+    if oc.startswith("location.href="):
+        return True   # 사이드바 메뉴 전부 이 형태 — 다른 화면으로 이동해버려 제작소 전수 취지에 안 맞음
+    return False
+
+
 def sweep_produce(session, panels=range(10)):
     """제작소 10패널: 단계 칩을 눌러 패널을 열고 각각 훑는다. 칩은 STEP_LABELS 텍스트로 찾는다(D7 폴백).
     ★run_ui가 L1 중 제일 먼저 부르는 함수라 여기서 오래된 증거 폴더 정리를 겸한다(정리 실패해도
@@ -295,7 +318,7 @@ def sweep_produce(session, panels=range(10)):
                 # 절대 안 맞는다(flows/base.py click_step과 같은 원인·같은 해법) — title 속성으로 찾는다.
                 pg.locator(f'#steps [title="{label}"]').first.click(timeout=3000)
                 pg.wait_for_timeout(400)
-            out.extend(sweep_url(session, "/produce", reopen=_open))
+            out.extend(sweep_url(session, "/produce", reopen=_open, skip=_is_app_shell_nav))
         return out
 
     results, ok = _run_guarded("제작소 전수", _run)

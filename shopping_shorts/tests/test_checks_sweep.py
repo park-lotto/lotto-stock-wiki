@@ -7,7 +7,7 @@ from types import SimpleNamespace
 import pytest
 
 from shopping_shorts.checks import sweep
-from shopping_shorts.checks.verdict import GRAY, GREEN, RED
+from shopping_shorts.checks.verdict import GRAY, GREEN, RED, Result
 
 NEEDS_SERVER = pytest.mark.skipif(
     not os.environ.get("CHECKS_BASE_URL"), reason="CHECKS_BASE_URL 없음 — 서버/브라우저 실측은 로컬에서 skip"
@@ -257,6 +257,45 @@ def test_hit_test_true_false():
     assert sweep.hit_test(_StubPage(True), 0) is True
     assert sweep.hit_test(_StubPage(False), 0) is False
     assert sweep.hit_test(_StubPage(None), 0) is False
+
+
+# ---- ★Task14 2차 실측: 제작소 전수가 앱 공통 사이드바(로그아웃·작업삭제)까지 누르면 안 된다 ----
+
+def test_is_app_shell_nav_flags_logout_delete_rename_bugreport_and_hrefs():
+    assert sweep._is_app_shell_nav({"onclick": "window.__ssLogout()"}) is True
+    assert sweep._is_app_shell_nav({"onclick": "window.__ssDelWork(event,'abc')"}) is True
+    assert sweep._is_app_shell_nav({"onclick": "window.__ssRenWork(event,'abc')"}) is True
+    assert sweep._is_app_shell_nav({"onclick": "ssOpenBugReport()"}) is True
+    assert sweep._is_app_shell_nav({"onclick": "location.href='/challenge'"}) is True
+    assert sweep._is_app_shell_nav({"onclick": ""}) is False
+    assert sweep._is_app_shell_nav({"onclick": "jump(0)"}) is False   # 제작소 칩 자체는 눌러야 함
+
+
+def test_sweep_url_skip_excludes_matching_targets_before_any_click(monkeypatch):
+    """skip으로 걸러진 요소는 클릭 루프 진입 전에 빠져야 한다(로그아웃 사고 방지) — targets 리스트에서
+    아예 사라지는지를 discover_targets 실제 반환값으로 확인한다."""
+    monkeypatch.setattr(sweep, "discover_targets", lambda page: [
+        {"idx": 0, "tag": "div", "id": "", "onclick": "window.__ssLogout()", "text": "로그아웃",
+         "x": 0, "y": 0, "w": 10, "h": 10},
+        {"idx": 1, "tag": "div", "id": "", "onclick": "jump(0)", "text": "영상추출",
+         "x": 0, "y": 0, "w": 10, "h": 10},
+    ])
+    monkeypatch.setattr(sweep, "hit_test", lambda page, idx: True)
+    pressed = []
+    monkeypatch.setattr(sweep, "_press", lambda session, info, url: pressed.append(info["idx"]) or
+                        Result("L1", info["text"], GREEN, signature=f"L1:{info['idx']}", page=url))
+
+    class _Page:
+        url = "http://x/produce"
+        def evaluate(self, js, *a):
+            return None
+
+    session = SimpleNamespace(page=_Page(), base_url="http://x", errors=None, blocked=[])
+    monkeypatch.setattr(sweep.browser, "goto_produce", lambda page, url, timeout_ms=12000: None)
+
+    out = sweep.sweep_url(session, "/produce", skip=sweep._is_app_shell_nav)
+    assert pressed == [1]              # 로그아웃(idx0)은 클릭 루프에 아예 안 들어감
+    assert [r.signature for r in out] == ["L1:1"]
 
 
 # ---- GRAY 감싸기: Session 생성/로그인 실패·playwright 부재는 판정불가로 ----
