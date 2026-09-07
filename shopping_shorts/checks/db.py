@@ -88,6 +88,18 @@ def last_sample_ts(conn, item):
     return row["ts"] if row else None
 
 
+def last_sample_ts_prefix(conn, module_name):
+    """모듈 단위 마지막 실행 시각. health 모듈의 Sample.item은 항상
+    '<모듈명>::<서브키>'(예: h_ranking_fresh::youtube) 형태라 last_sample_ts(정확일치)로는
+    영원히 못 찾는다(Task4 리뷰 지적) — item이 모듈명 그대로이거나 '<모듈명>::%'인 것 중
+    가장 최근 것을 본다."""
+    row = conn.execute(
+        "SELECT ts FROM health_samples WHERE item=? OR item LIKE ? ORDER BY ts DESC LIMIT 1",
+        (module_name, module_name + "::%"),
+    ).fetchone()
+    return row["ts"] if row else None
+
+
 def save_pytest_baseline(conn, day, head_sha, failed_ids, n_passed):
     conn.execute("INSERT OR REPLACE INTO pytest_baseline VALUES(?,?,?,?,?)",
                  (day, head_sha, json.dumps(sorted(failed_ids)), n_passed, len(failed_ids)))
