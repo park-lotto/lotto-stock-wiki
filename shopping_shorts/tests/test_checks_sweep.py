@@ -32,6 +32,27 @@ def test_classify_red_on_pageerror_or_5xx_or_blank():
 
 # ---- 오탐 방지: classify()가 "정상"을 빨강으로 만들지 않는지 (핵심 검증) ----
 
+def test_classify_normal_shrink_not_red_riview_repro():
+    """리뷰 실측 재현: 모달/패널을 닫아 본문이 1000→80으로 줄어도(페이지 이동 없음, 새 에러 0)
+    빨강이 아니어야 한다 — 절대하한(40) 위라 백지가 아니다."""
+    empty = {"pageerrors": [], "console_errors": [], "client_error_posts": 0, "failed_responses": []}
+    v, _ = sweep.classify(empty, empty, 1000, 80, False)
+    assert v != RED
+
+
+def test_classify_real_blank_still_red_below_floor():
+    """본문이 절대하한(40) 밑으로까지 떨어지면 에러 유무와 무관하게 여전히 빨강이어야 한다."""
+    empty = {"pageerrors": [], "console_errors": [], "client_error_posts": 0, "failed_responses": []}
+    v, _ = sweep.classify(empty, empty, 1000, 5, False)
+    assert v == RED
+
+
+def test_classify_real_blank_with_error_still_red():
+    empty = {"pageerrors": [], "console_errors": [], "client_error_posts": 0, "failed_responses": []}
+    v, _ = sweep.classify(empty, {**empty, "pageerrors": ["TypeError"]}, 1000, 5, False)
+    assert v == RED
+
+
 def test_classify_green_when_navigated_even_if_body_shrinks():
     """다른 페이지로 이동한 뒤엔 본문 길이가 줄어도 '백지'가 아니다 — navigated=True는 예외."""
     empty = {"pageerrors": [], "console_errors": [], "client_error_posts": 0, "failed_responses": []}
@@ -70,6 +91,43 @@ def test_signature_of_never_uses_idx_field():
     import inspect
     src = inspect.getsource(sweep.signature_of)
     assert '"idx"' not in src and "['idx']" not in src and ".get('idx'" not in src.replace('"', "'")
+
+
+# ---- 안전 그물이 막은 요청 때문에 생긴 에러는 판정에서 제외(오탐 방지 #2) ----
+
+def test_filter_blocked_noise_removes_only_blocked_related_errors():
+    """차단된 요청(예: /api/delete_work) 때문에 생긴 콘솔에러·실패응답·client_error 리포트는
+    이 조작 때문에 빨강이 되면 안 된다."""
+    before = {"pageerrors": [], "console_errors": [], "client_error_posts": 0, "failed_responses": []}
+    after = {
+        "pageerrors": [],
+        "console_errors": ["Failed to load resource: /api/delete_work/abc"],
+        "client_error_posts": 1,
+        "failed_responses": [("/api/delete_work/abc", 0)],
+    }
+    filtered = sweep.filter_blocked_noise(after, before, ["/api/delete_work/abc"])
+    v, why = sweep.classify(before, filtered, 500, 480, False)
+    assert v == GREEN, why
+
+
+def test_filter_blocked_noise_keeps_unrelated_real_error():
+    """차단과 무관한 진짜 JS 에러는 그대로 살아 빨강이어야 한다."""
+    before = {"pageerrors": [], "console_errors": [], "client_error_posts": 0, "failed_responses": []}
+    after = {
+        "pageerrors": ["TypeError: cannot read x of undefined"],
+        "console_errors": [],
+        "client_error_posts": 0,
+        "failed_responses": [],
+    }
+    filtered = sweep.filter_blocked_noise(after, before, ["/api/delete_work/abc"])
+    v, _ = sweep.classify(before, filtered, 500, 480, False)
+    assert v == RED
+
+
+def test_filter_blocked_noise_noop_when_nothing_blocked():
+    before = {"pageerrors": [], "console_errors": [], "client_error_posts": 0, "failed_responses": []}
+    after = {"pageerrors": ["boom"], "console_errors": [], "client_error_posts": 0, "failed_responses": []}
+    assert sweep.filter_blocked_noise(after, before, []) == after
 
 
 # ---- discover_targets: 페이지 스텁으로 검증 ----

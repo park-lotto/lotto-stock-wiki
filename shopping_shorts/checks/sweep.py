@@ -39,6 +39,11 @@ _HIT_JS = """(idx) => {
 }"""
 
 _TIMER_THROTTLE_MIN = 25   # browser.timer_probe(3초) 정상≈30, 스로틀=4. 이 밑이면 결과를 못 믿는다.
+_BLANK_FLOOR = 60          # 백지 판정 절대 하한 — 리뷰 실측: 1000→80은 모달/패널이 닫힌 정상 축소일 뿐이라
+                           # 상대비율(10%)로는 오탐. 정상 화면이면 최소 요약문·안내문 정도는 남으므로
+                           # "본문이 60자 미만으로까지 떨어졌다"만 진짜 백지로 본다(에러 동반 여부와 무관하게
+                           # 이 하한 자체가 실질적 백지 신호). 브리프 원 테스트(1000→50=RED)와
+                           # 리뷰 재현(1000→80=GREEN) 둘 다 만족하는 값.
 
 
 def signature_of(info):
@@ -63,8 +68,8 @@ def classify(before, after, body_before, body_after, navigated):
         return RED, f"응답 실패 {new_fail[0][1]} {new_fail[0][0]}"
     if len(after["console_errors"]) > len(before["console_errors"]):
         return RED, "console.error: " + after["console_errors"][-1]
-    if not navigated and body_before > 200 and body_after < body_before * 0.1:
-        return RED, f"백지(본문 {body_before}→{body_after})"
+    if not navigated and body_before > 200 and body_after < _BLANK_FLOOR:
+        return RED, f"백지(본문 {body_before}→{body_after}, 절대하한 {_BLANK_FLOOR} 미만)"
     return GREEN, ""
 
 
@@ -80,9 +85,37 @@ def _body_len(page):
     return page.evaluate("() => (document.body && document.body.innerText || '').length")
 
 
+def _blocked_path(entry):
+    """session.blocked 항목은 browser.py에서 'METHOD /path' 형태로 쌓인다(설계 D10 안전 그물)."""
+    parts = entry.split(" ", 1)
+    return parts[1] if len(parts) == 2 else entry
+
+
+def filter_blocked_noise(after, before, blocked_paths):
+    """안전 그물이 route.abort()로 막은 요청 때문에 생긴 에러는 판정에서 뺀다(오탐 방지 #2).
+    새로 막힌 경로가 없으면 원본 그대로 통과시킨다 — 무관한 진짜 에러는 절대 지우지 않는다."""
+    if not blocked_paths:
+        return after
+
+    def _hits(text):
+        return any(p in text for p in blocked_paths)
+
+    filtered_pageerrors = [e for e in after["pageerrors"] if not _hits(e)]
+    filtered_console = [e for e in after["console_errors"] if not _hits(e)]
+    filtered_failed = [f for f in after["failed_responses"] if not any(p in f[0] for p in blocked_paths)]
+    # client_error_posts는 카운터뿐이라 메시지로 못 거른다 — 이번 조작이 새로 막은 요청 수만큼만
+    # 늘어난 증가분을 깎는다(요청 하나가 대개 리포트 하나를 만든다는 보수적 가정). 그 이상 늘었다면
+    # 진짜 앱 에러가 섞였다는 뜻이라 나머지는 그대로 살려둔다.
+    delta = max(0, after["client_error_posts"] - before["client_error_posts"])
+    adjusted_client_errors = after["client_error_posts"] - min(delta, len(blocked_paths))
+    return {"pageerrors": filtered_pageerrors, "console_errors": filtered_console,
+            "client_error_posts": adjusted_client_errors, "failed_responses": filtered_failed}
+
+
 def _press(session, info, url):
     page, sink = session.page, session.errors
     before, body_before = sink.snapshot(), _body_len(page)
+    blocked_before_n = len(session.blocked)
     t0 = time.time()
     sel = f'[data-chk-idx="{info["idx"]}"]'
     try:
@@ -98,7 +131,9 @@ def _press(session, info, url):
         return Result("L1", info["text"] or info["tag"], RED, reason=f"조작 실패 {type(e).__name__}: {str(e)[:120]}",
                       signature=signature_of(info), page=url, dur_ms=int((time.time() - t0) * 1000))
     navigated = page.url.split("?")[0] != url.split("?")[0]
-    v, why = classify(before, sink.snapshot(), body_before, _body_len(page), navigated)
+    new_blocked = [_blocked_path(e) for e in session.blocked[blocked_before_n:]]
+    after = filter_blocked_noise(sink.snapshot(), before, new_blocked)
+    v, why = classify(before, after, body_before, _body_len(page), navigated)
     return Result("L1", info["text"] or info["tag"], v, reason=why, signature=signature_of(info), page=url,
                   dur_ms=int((time.time() - t0) * 1000))
 
