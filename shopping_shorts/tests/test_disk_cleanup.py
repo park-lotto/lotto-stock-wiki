@@ -121,3 +121,62 @@ def test_run_returns_readable_summary(data_dir):
     msg = disk_cleanup.run(data_dir, store=_FakeStore({"old5": {"status": "done"}}),
                            dry_run=True)
     assert "디스크정리[모의]" in msg and "GB" in msg
+
+
+# ── 완성 영상 보관 기간(2026-09-07 사장님 확정 7일) ─────────────────────
+# 위 테스트들이 "재료 정리는 완성본을 안 건드린다"를 고정한다면, 아래는 그 반대편이다:
+# **별도 함수**(clean_final_videos)만이, **자기 보관 기간이 지난** 영상을 지운다.
+# 두 기간이 다르다는 것 자체가 규칙이므로 그것도 함께 고정한다.
+
+def _age_file(path, days):
+    old = time.time() - days * 86400
+    os.utime(path, (old, old))
+
+
+def test_final_video_deleted_after_keep_days(data_dir):
+    """보관 기간이 지난 완성 영상은 지워진다 — 썸네일은 남는다."""
+    d = _make_job(data_dir, "old_v", age_days=30)
+    (d / "thumb.png").write_bytes(b"T" * 100)
+    for n in ("final.mp4", "preview.mp4", "thumb.png"):
+        _age_file(d / n, 30)
+    store = _FakeStore({"old_v": {"status": "done"}})
+    freed, removed = disk_cleanup.clean_final_videos(data_dir, store=store)
+    assert not (d / "final.mp4").exists(), "보관 기간이 지난 완성본이 안 지워졌다"
+    assert not (d / "preview.mp4").exists()
+    assert (d / "thumb.png").exists(), "썸네일까지 지우면 목록 카드가 깨진다"
+    assert removed == 2 and freed == 2300
+
+
+def test_final_video_within_keep_days_survives(data_dir):
+    """보관 기간 안이면 손대지 않는다."""
+    d = _make_job(data_dir, "new_v", age_days=30)   # 폴더는 오래됐지만
+    _age_file(d / "final.mp4", 1)                   # 영상은 어제 만든 것
+    _age_file(d / "preview.mp4", 1)
+    store = _FakeStore({"new_v": {"status": "done"}})
+    assert disk_cleanup.clean_final_videos(data_dir, store=store) == (0, 0)
+    assert (d / "final.mp4").exists()
+
+
+def test_final_video_of_running_job_survives(data_dir):
+    """진행 중인 작업의 영상은 나이와 무관하게 남긴다 — 렌더 중 파일을 빼면 깨진다."""
+    d = _make_job(data_dir, "busy", age_days=30)
+    _age_file(d / "final.mp4", 30)
+    store = _FakeStore({"busy": {"status": "rendering"}})
+    assert disk_cleanup.clean_final_videos(data_dir, store=store) == (0, 0)
+    assert (d / "final.mp4").exists()
+
+
+def test_final_keep_days_differs_from_material_retention():
+    """영상 7일 / 재료 14일 — 두 기간을 하나로 합치면 안 된다(합치면 이 줄이 깨진다)."""
+    assert disk_cleanup.FINAL_KEEP_DAYS == 7
+    assert disk_cleanup.RETENTION_DAYS == 14
+
+
+def test_material_cleanup_still_never_touches_video(data_dir):
+    """재료 정리는 영상 보관 기간이 지난 뒤에도 영상에 손대지 않는다(역할 분리)."""
+    d = _make_job(data_dir, "old_m", age_days=30)
+    _age_file(d / "final.mp4", 30)
+    store = _FakeStore({"old_m": {"status": "done"}})
+    disk_cleanup.clean_mix_jobs(data_dir, store=store)
+    assert (d / "final.mp4").exists(), "영상 삭제는 clean_final_videos만 해야 한다"
+    assert not (d / "s0").exists(), "재료는 지워졌어야 한다"
