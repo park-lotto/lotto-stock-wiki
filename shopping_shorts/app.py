@@ -18453,7 +18453,28 @@ def api_produce_mix_beats_preview(job_id: str):
     for _k, _o in enumerate(out):
         _o["i"] = _k
         _o["total"] = len(out)
-    return {"beats": out}
+    # ★프레임 주소에 붙일 청소 표식(2026-09-07 고객 박선정 제보: "완성본에는 자막이 없는데
+    #   장면꾸미기에는 아직 살아있다"). 자막제거가 끝나기 전에 6단계로 넘어가면 그때 뜬
+    #   프레임은 **원본에서** 뽑힌다(파일명 _src). 청소가 끝나면 서버는 _clean 파일로
+    #   바꿔 주는데(실측 확인) **주소가 그대로**라 브라우저의 <img>가 이미 받아 둔
+    #   자막 있는 그림을 계속 보여준다 — no-cache도 이미 그려진 img는 다시 안 받는다.
+    #   그래서 어느 출처에서 떴는지를 주소에 실어, 청소가 끝나면 주소가 저절로 달라지게 한다.
+    return {"beats": out, "frame_tag": _frame_tag(job, _MIX_WORK_DIR / job_id)}
+
+
+def _frame_tag(job, work):
+    """장면 프레임이 **어느 출처에서 떴는지**를 나타내는 짧은 표식. 주소에 실어 보낸다.
+    판단은 _clean_frame_src 한 곳을 그대로 빌려 쓴다(0순위-B) — 여기서 따로 재면 갈린다."""
+    if not job:
+        return ""
+    try:
+        _cm, _cfin, _crat, ctag, _fresh = _clean_frame_src(job, work, 0)
+    except Exception:      # noqa: BLE001 — 표식을 못 만들어도 화면은 종전대로 돈다
+        return ""
+    if not ctag:
+        return ""
+    src = Path(_cfin).name if _cfin else "srcs"
+    return f"{ctag.lstrip('_')}-{src[-20:]}"
 
 
 def _beatframe_file(job, job_id: str, i: int, cut=None):

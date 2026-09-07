@@ -748,6 +748,10 @@ body:not(.tight) #pvfoldbtn{display:none}
 body{--pv-w:330px}
 #playerhost{padding:6px}
 body.tight #player .phead,                 /* '미리보기 / 닫기✕' 머리줄 */
+/* ★원본 자막 안내 — 재생 전에도 늘 보인다(제작소 임베드에서도 숨기지 않는다). */
+.srcnote{font-size:11px;line-height:1.45;opacity:.75;margin:4px 2px 0;
+         padding:5px 7px;border-radius:6px;background:rgba(255,255,255,.05)}
+.srcnote b{opacity:.95}
 body.tight #player .pinfo,                 /* '화면에 박힌 글자는…' 안내 2줄 */
 body.tight #player #ptime,                 /* 0:00 / 0:05 */
 body.tight #playerhost .lbl label{display:none}   /* 1장=1컷 — 사장님 "이건 빼도된다" */
@@ -1119,6 +1123,15 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
   </div>
   <!-- ★줄 높이를 줄인다(2026-08-22) — 버튼 자체는 그대로고 위아래 여백만 뗀다. -->
   <div class="lbl" style="display:flex;align-items:center;gap:14px;margin:0;min-height:0"><button class="act play" id="pball" onclick="playAll(event)">▶️ 전체 재생</button><label style="cursor:pointer" title="전체에 적용: 장면마다 컷 하나씩, 멘트 시간을 길이 비례로 나눕니다."><input type="checkbox" onchange="toggleOne(this.checked)"> 1장=1컷</label></div>
+  <!-- ★원본 자막 안내를 **상시로** 세운다(2026-09-07 고객 박선정 문의: "자막제거 창에서는
+       다 지워졌는데 실제 창에서는 글자가 그대로 있어요" → 완성본은 멀쩡했다).
+       미리보기는 원본 소스 mp4를 그대로 튼다(/api/mix/src). 자막제거는 2026-08-27 개편으로
+       소스가 아니라 **완성본 1편만** 지우므로(1콜) 여기에 원본 글자가 남는 게 정상이다.
+       안내문은 원래도 있었지만 paintCut()이 .pinfo에 넣는 줄이라 (1)재생 중에만 보이고
+       (2)제작소 임베드(body.tight)에서는 CSS로 통째로 숨겨져 있었다 — 즉 고객 화면에서만
+       사라졌다. 재생 전에도 보이게 여기 붙박이로 둔다. -->
+  <div class="srcnote">🎞 <b>여기 보이는 원본 글자는 완성본에서 지워져요</b> — 미리보기는 원본
+    영상을 그대로 틀어서 보여줍니다. 자막 제거는 마지막 완성본에 적용돼요.</div>
   <!-- 재생 전 안내(2026-08-16) — 미리보기 칸이 통째로 비어 있으면 "여기가 뭐 하는
        자리인지" 알 수 없다. #player가 켜지면(.on) 이건 자동으로 숨는다. -->
   <div id="playerIdle">
