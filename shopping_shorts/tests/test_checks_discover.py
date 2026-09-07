@@ -1,5 +1,11 @@
+import types
 import sqlite3
 from shopping_shorts.checks import discover, ro
+
+
+class _FakeInfo:
+    def __init__(self, name):
+        self.name = name
 
 
 def test_discover_health_returns_only_modules_with_meta():
@@ -23,3 +29,52 @@ def test_ro_connect_refuses_writes(tmp_path):
         assert False, "쓰기가 됐다"
     except sqlite3.OperationalError:
         pass
+
+
+def test_discover_skips_broken_module_but_records_it(monkeypatch, caplog):
+    real_import = importlib_import_module = discover.importlib.import_module
+    good = types.SimpleNamespace(META={"name": "good", "every": "1h"})
+
+    monkeypatch.setattr(
+        discover.pkgutil, "iter_modules",
+        lambda path: [_FakeInfo("h_bad"), _FakeInfo("h_good")],
+    )
+
+    def fake_import(name):
+        if name.endswith(".h_bad"):
+            raise ValueError("일부러 깨진 모듈")
+        if name.endswith(".h_good"):
+            return good
+        return real_import(name)
+
+    monkeypatch.setattr(discover.importlib, "import_module", fake_import)
+
+    with caplog.at_level("WARNING"):
+        mods = discover.discover("health")
+
+    assert mods == [good]
+    assert any(name.endswith("h_bad") for name, _ in discover.LAST_ERRORS)
+    assert len(discover.LAST_ERRORS) == 1
+    assert any("h_bad" in rec.message for rec in caplog.records)
+
+
+def test_last_errors_empty_when_all_ok(monkeypatch):
+    real_import = discover.importlib.import_module
+    good = types.SimpleNamespace(META={"name": "good", "every": "1h"})
+
+    monkeypatch.setattr(
+        discover.pkgutil, "iter_modules",
+        lambda path: [_FakeInfo("h_good")],
+    )
+
+    def fake_import(name):
+        if name.endswith(".h_good"):
+            return good
+        return real_import(name)
+
+    monkeypatch.setattr(discover.importlib, "import_module", fake_import)
+
+    mods = discover.discover("health")
+
+    assert mods == [good]
+    assert discover.LAST_ERRORS == []
