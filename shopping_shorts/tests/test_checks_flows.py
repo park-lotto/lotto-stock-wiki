@@ -247,3 +247,46 @@ def test_share_flow_red_when_link_dies_after_restart():
         page.server_responses["http://x/api/share/t/sid123"] = FakeResp(403, {"ok": False})
     r = flow_share_link_restart.run(FakeSession(page, restart_web=restart))[0]
     assert r.verdict == "red"
+
+
+def test_share_flow_red_when_share_t_500s_after_restart():
+    """리뷰 Important #1: /api/share/t가 500(서버 오류)이면 링크가 죽은 신호 — 초록 통과 금지."""
+    page = FakePage()
+    page.server_responses["http://x/api/produce/works"] = FakeResp(
+        200, {"ok": True, "works": [{"job_id": "j1"}]})
+    page.server_responses["http://x/api/share/link/j1"] = FakeResp(
+        200, {"ok": True, "url": "http://x/s/sid123", "qr_svg": ""})
+    def restart():
+        page.server_responses["http://x/s/sid123"] = FakeResp(200, {})
+        page.server_responses["http://x/api/share/t/sid123"] = FakeResp(500, {"ok": False})
+    r = flow_share_link_restart.run(FakeSession(page, restart_web=restart))[0]
+    assert r.verdict != "green"
+    assert r.verdict == "red"
+
+
+def test_share_flow_skips_unfinished_jobs_to_find_shareable_one():
+    """리뷰 Important #2: 첫 job이 렌더 전(404)이어도 다음 job을 훑어 완성본을 찾는다."""
+    page = FakePage()
+    page.server_responses["http://x/api/produce/works"] = FakeResp(
+        200, {"ok": True, "works": [{"job_id": "unfinished"}, {"job_id": "done"}]})
+    page.server_responses["http://x/api/share/link/unfinished"] = FakeResp(
+        404, {"ok": False, "error": "완성 영상이 없어요"})
+    page.server_responses["http://x/api/share/link/done"] = FakeResp(
+        200, {"ok": True, "url": "http://x/s/sidDONE", "qr_svg": ""})
+    def restart():
+        page.server_responses["http://x/s/sidDONE"] = FakeResp(200, {})
+        page.server_responses["http://x/api/share/t/sidDONE"] = FakeResp(404, {"ok": False})
+    r = flow_share_link_restart.run(FakeSession(page, restart_web=restart))[0]
+    assert r.verdict == "green" and "sidDONE" in r.page
+
+
+def test_share_flow_gray_with_reason_when_no_job_shareable_after_probing():
+    """리뷰 Important #2: 완성본을 못 찾으면 회색 + 이유 명시(조용한 회색 금지)."""
+    page = FakePage()
+    page.server_responses["http://x/api/produce/works"] = FakeResp(
+        200, {"ok": True, "works": [{"job_id": f"j{i}"} for i in range(3)]})
+    for i in range(3):
+        page.server_responses[f"http://x/api/share/link/j{i}"] = FakeResp(
+            404, {"ok": False, "error": "완성 영상이 없어요"})
+    r = flow_share_link_restart.run(FakeSession(page, restart_web=lambda: None))[0]
+    assert r.verdict == "gray" and "3개" in r.reason and "판정 불가" in r.reason
