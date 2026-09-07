@@ -1810,7 +1810,7 @@ async function openHistory(){
   if (!SL.server || !SL.job){ saylo('이 화면에서는 이전 편성을 불러올 수 없어요'); return; }
   let d;
   try{
-    d = await (await fetch('/api/mix/scene_lab/' + encodeURIComponent(SL.job) + '/history')).json();
+    d = await (await fetch('/api/mix/scene_lab/' + SL.job + '/history')).json();
   }catch(e){ saylo('이전 편성을 불러오지 못했어요'); return; }
   const vs = (d && d.versions) || [];
   if (!vs.length){ saylo('보관된 이전 편성이 아직 없어요 — 편성이 바뀔 때마다 한 벌씩 쌓입니다'); return; }
@@ -1842,7 +1842,7 @@ function closeHistory(){ const b=document.getElementById('histbox'); if(b) b.sty
 async function restoreVersion(i){
   closeHistory();
   try{
-    const r = await fetch('/api/mix/scene_lab/' + encodeURIComponent(SL.job) + '/restore_version',
+    const r = await fetch('/api/mix/scene_lab/' + SL.job + '/restore_version',
       {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({index:i})});
     const d = await r.json();
     if (!d || !d.ok){ saylo('되돌리지 못했어요 — ' + ((d && d.error) || '알 수 없는 오류')); return; }

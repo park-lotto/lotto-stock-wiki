@@ -5789,7 +5789,28 @@ def restore_scene_lab_version(plan, index=0):
 
 
 def revert_scene_lab(plan):
-    """실험실 편성을 전부 걷어내 원래 편집안으로 되돌린다(제자리 수정)."""
+    """실험실 편성을 전부 걷어내 원래 편집안으로 되돌린다(제자리 수정).
+
+    ★걷어내기 전에 판본을 남긴다(2026-09-07). [↩ AI 배치로 되돌리기]는 사람이
+      고친 편성을 **통째로** 지우는 버튼이라, 잘못 눌렀을 때 되돌릴 길이 없으면
+      apply 쪽에 판본을 만들어 둔 뜻이 반쪽이 된다. 저장 경로가 둘(apply·revert)이면
+      한쪽만 남기게 되고, 그 한쪽이 늘 사고가 난다(0순위-B).
+    """
+    _lab = plan.get("scene_lab")
+    if isinstance(_lab, dict) and _lab.get("beats"):
+        _ov = {}
+        for beat in plan.get("beats") or []:
+            _o = beat.get("scene_override")
+            if _o:
+                _ov[str(beat.get("beat_idx"))] = copy.deepcopy(_o)
+        _hist = plan.get("scene_lab_hist")
+        if not isinstance(_hist, list):
+            _hist = []
+        _hist.insert(0, {"at": _lab.get("at") or "",
+                         "beats": copy.deepcopy(_lab.get("beats") or []),
+                         "overrides": _ov,
+                         "extra_segs": copy.deepcopy(_lab.get("extra_segs") or {})})
+        plan["scene_lab_hist"] = _hist[:_LAB_HIST_MAX]
     for beat in plan.get("beats") or []:
         beat.pop("scene_override", None)
         beat.pop("stretch_fill", None)
