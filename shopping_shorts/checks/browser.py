@@ -57,6 +57,11 @@ def _attach(session):
             session.blocked.append(f"{req.method} {path}")
             return route.abort()
         return route.continue_()
+    # ★2026-09-07 리뷰 지적: 이 route 그물은 브라우저(page)가 보내는 요청만 잡는다.
+    # Playwright의 page.request.post(...) 같은 API 컨텍스트 호출은 이 route를 안 거쳐 그대로
+    # 나간다 — 지금은 그런 호출이 코드에 없어 무해하지만, 앞으로 점검 코드에서
+    # page.request.post/put/delete를 쓰면 이 deny-by-default(allow_mutations)를 우회한다.
+    # 검사 코드는 클릭·입력·읽기만 하고 page.request는 쓰지 않는다(설계 D17·D18).
     page.route("**/*", _route)
     page.add_init_script("window.confirm = () => false; window.open = () => null;")
     page.on("dialog", lambda d: d.dismiss())

@@ -14028,7 +14028,12 @@ def _api_checks_summary(request: Request):
     from shopping_shorts.checks.verdict import summarize
     conn = _checks_conn()
     try:
-        run = conn.execute("SELECT * FROM check_runs WHERE finished IS NOT NULL ORDER BY run_id DESC LIMIT 1").fetchone()
+        # ★리뷰 지적(2026-09-07): 트리거 구분 없이 가장 최근 run을 집으면, 5분마다 도는
+        # health run(check_results 없음)이 daily/deploy가 낸 빨강을 5분 뒤 화면에서 지워버린다.
+        # 화면 결과는 항상 deploy/daily(=실제 L0~L2 화면 점검을 도는) run에서만 가져온다.
+        run = conn.execute(
+            "SELECT * FROM check_runs WHERE finished IS NOT NULL AND trigger IN ('deploy','daily') "
+            "ORDER BY run_id DESC LIMIT 1").fetchone()
         if not run:
             return {"ok": True, "run": None, "headline": "아직 점검 실행 기록이 없습니다.", "counts": {}, "newly_red": [],
                     "results": [], "health": []}

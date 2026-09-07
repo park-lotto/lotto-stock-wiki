@@ -32,6 +32,40 @@ def test_needs_ui_run_when_sha_changed(tmp_path):
     assert run_checks.needs_ui_run(conn, "def") is True
 
 
+def test_needs_ui_run_empty_sha_always_runs(tmp_path):
+    """★2026-09-07 리뷰 지적 회귀: sha가 빈 문자열이면(git 실패 등) ""==""로 늘 스킵되던 것을
+    막는다 — sha 못 구했으면 스킵할 근거가 없으니 항상 돈다."""
+    conn = db.open_db(tmp_path / "c.db")
+    rid = db.start_run(conn, "s", "deploy", ""); db.finish_run(conn, rid, GREEN)
+    assert run_checks.needs_ui_run(conn, "") is True
+
+
+def test_gray_alert_only_when_gray_set_changes(tmp_path):
+    """★2026-09-07 리뷰 지적 회귀: 회색이 상수로 계속 있으면(같은 signature) 매 run 알리지 않는다.
+    새로 회색이 된 항목이 있을 때만, 그리고 그 신규 항목만 담아 알린다."""
+    conn = db.open_db(tmp_path / "c.db")
+    sent = []
+    r1 = db.start_run(conn, "s", "deploy", "a")
+    db.add_result(conn, r1, Result("L1", "y", GRAY, signature="gray1"))
+    run_checks.alert_if_needed(conn, r1, [Result("L1", "y", GRAY, signature="gray1")],
+                               send=lambda **kw: sent.append(kw))
+    assert len(sent) == 1 and "신규 1건" in sent[0]["title"]
+
+    # 같은 gray1이 다시 — 새로 회색이 된 게 없으니 조용해야 한다
+    r2 = db.start_run(conn, "s", "deploy", "b")
+    db.add_result(conn, r2, Result("L1", "y", GRAY, signature="gray1"))
+    run_checks.alert_if_needed(conn, r2, [Result("L1", "y", GRAY, signature="gray1")],
+                               send=lambda **kw: sent.append(kw))
+    assert len(sent) == 1  # 늘지 않음
+
+    # 개수는 같지만(1건) 내용이 다른 회색(gray2)로 바뀌면 다시 알려야 한다
+    r3 = db.start_run(conn, "s", "deploy", "c")
+    db.add_result(conn, r3, Result("L1", "z", GRAY, signature="gray2"))
+    run_checks.alert_if_needed(conn, r3, [Result("L1", "z", GRAY, signature="gray2")],
+                               send=lambda **kw: sent.append(kw))
+    assert len(sent) == 2
+
+
 def test_run_with_timeout_returns_within_budget_for_slow_fn():
     """timeout_s를 실제로 강제하는지: 3초 걸리는 가짜 함수를 0.3초 예산으로 돌리면
     0.3초 근방에서 TimeoutError로 돌아와야 한다(3초를 다 기다리면 안 된다)."""

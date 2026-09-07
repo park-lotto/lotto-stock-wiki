@@ -4,7 +4,7 @@ from urllib.parse import parse_qs, urlparse
 
 from shopping_shorts.checks import browser
 from shopping_shorts.checks.verdict import GREEN, RED, GRAY, Result
-from shopping_shorts.checks.sweep import capture_red_evidence  # 단일 출구(0순위-B) — 사진 규칙은 sweep.py 하나뿐
+from shopping_shorts.checks.sweep import attach_evidence  # 단일 출구(0순위-B) — 사진 규칙은 sweep.py 하나뿐
 
 AUTOSAVE_WAIT_MS = 1500     # scene_lab 1.2초 자동저장 창보다 길게
 
@@ -51,19 +51,12 @@ def click_step(page, label):
     page.wait_for_timeout(600)
 
 
-def _attach_evidence(session, results):
-    """빨강 결과가 나온 시점(흐름이 끝난 직후 화면)을 근거 사진으로 남긴다.
-    ★사진 찍기가 실패해도 판정 자체는 그대로 기록된다 — capture_red_evidence가 이미 삼킨다."""
-    for r in results:
-        if r.verdict == RED and not r.evidence_dir:
-            r.evidence_dir = capture_red_evidence(session, r.signature)
-    return results
-
-
 def run_flow(session, module):
+    """★0순위-B(2026-09-07 리뷰 지적): 근거 사진 붙이기가 sweep.py·flows/base.py 두 곳에
+    거의 같은 코드로 있었다 — sweep.attach_evidence 하나로 통일했다."""
     try:
         results = module.run(session)
     except Exception as e:  # noqa: BLE001 — 흐름 하나의 예외가 다음 흐름을 막지 않는다
         return [Result("L2", module.META["name"], GRAY, reason=f"흐름 예외 {type(e).__name__}: {str(e)[:200]}",
                        signature=f"L2:{module.__name__.rsplit('.',1)[-1]}", page="/produce")]
-    return _attach_evidence(session, results)
+    return attach_evidence(session, results)

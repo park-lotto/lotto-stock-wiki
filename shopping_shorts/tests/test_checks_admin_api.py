@@ -25,6 +25,27 @@ def test_summary_marks_newly_red(monkeypatch, tmp_path):
     assert "버튼" in j["headline"]
 
 
+def test_summary_ignores_later_health_run(monkeypatch, tmp_path):
+    """★2026-09-07 리뷰 지적 회귀 테스트: daily run이 낸 빨강이 5분마다 도는 health run(=
+    check_results 없음) 때문에 화면에서 사라지면 안 된다. deploy/daily run만 요약에 쓴다."""
+    conn = db.open_db(tmp_path / "checks.db")
+    r_daily = db.start_run(conn, "s", "daily", "a")
+    db.add_result(conn, r_daily, Result("L1", "버튼", RED, signature="b", reason="pageerror"))
+    db.finish_run(conn, r_daily, RED)
+    # health run이 더 나중에 끝났다 — check_results는 안 남긴다(실제 파이프라인과 동일)
+    r_health = db.start_run(conn, "s", "health", "a")
+    db.finish_run(conn, r_health, GREEN)
+    assert r_health > r_daily  # 더 최근 run임을 확인
+
+    c = _client(monkeypatch, tmp_path)
+    j = c.get("/api/admin/checks/summary").json()
+    assert j["ok"] and j["run"]["run_id"] == r_daily
+    assert j["run"]["trigger"] == "daily"
+    assert j["results"] and j["results"][0]["verdict"] == "red"
+    assert j["counts"]["red"] == 1
+    assert "전부 정상" not in j["headline"]
+
+
 def test_admin_page_requires_admin(monkeypatch, tmp_path):
     c = TestClient(appmod.app)
     r = c.get("/admin/checks")

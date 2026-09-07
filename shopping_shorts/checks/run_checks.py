@@ -91,7 +91,11 @@ def live_head_sha():
 
 def needs_ui_run(conn, sha):
     """직전에 화면 점검(deploy/daily)이 이미 이 sha로 끝났으면 다시 돌 필요 없다.
-    5분 타이머가 계속 부르는데 라이브가 안 바뀌었으면 미리보기를 매번 새로 기동할 이유가 없다."""
+    5분 타이머가 계속 부르는데 라이브가 안 바뀌었으면 미리보기를 매번 새로 기동할 이유가 없다.
+    ★리뷰 지적(2026-09-07): sha가 빈 문자열이면(git 명령 실패 등) "" == "" 비교가 항상 참이 돼
+    배포 점검이 조용히 영구 스킵됐다. sha를 못 구했으면 스킵할 근거가 없으므로 항상 돈다."""
+    if not sha:
+        return True
     row = conn.execute(
         "SELECT head_sha FROM check_runs WHERE trigger IN ('deploy','daily') "
         "AND finished IS NOT NULL ORDER BY run_id DESC LIMIT 1"
@@ -127,10 +131,17 @@ def alert_if_needed(conn, run_id, results, send=None):
                 cooldown_sec=6 * 3600, signature=kw.get("signature"),
             )
 
+    # ★리뷰 지적(2026-09-07): 회색 12건이 상수라 "회색 하나라도 있으면 알림"은 하루 4번
+    # 같은 알림이 영구히 나가는 피로였다. "새로 회색이 된 항목이 있을 때"만 보낸다 —
+    # signature를 그 신규 항목들의 집합으로 만들어, 개수는 같아도 내용(어떤 항목이 회색인지)이
+    # 바뀌면 다른 signature가 돼 쿨다운을 새로 탄다(내용 변화도 잡힌다).
     grays = [r for r in results if r.verdict == GRAY]
-    if grays:
-        send(kind="checks_gray", title=f"[검수] 판정 불가 {len(grays)}건 — 점검기 상태 확인",
-             detail="; ".join(f"{r.name}: {r.reason}" for r in grays[:5]), signature="gray")
+    new_grays = [r for r in grays if db.previous_verdict(conn, r.signature, run_id) != GRAY]
+    if new_grays:
+        send(kind="checks_gray",
+             title=f"[검수] 판정 불가 {len(grays)}건(신규 {len(new_grays)}건) — 점검기 상태 확인",
+             detail="; ".join(f"{r.name}: {r.reason}" for r in new_grays[:5]),
+             signature="gray:" + ",".join(sorted(r.signature for r in new_grays)))
     twice = [r for r in results
              if r.verdict == RED and db.previous_verdict(conn, r.signature, run_id) == RED]
     if twice:

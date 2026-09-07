@@ -223,7 +223,13 @@ def _press(session, info, url):
 
 
 def sweep_url(session, url, reopen=None, skip=None):
-    """한 URL의 조작 가능한 요소 전부. reopen(page)는 패널을 다시 여는 함수(제작소용).
+    """★2026-09-07 리뷰 지적: 지금 run_ui(run_checks.py) 경로에서는 아무도 이 함수를 안 부른다
+    (sweep_produce가 위 주석대로 "패널이 열리는가"만 보는 축소판으로 바뀌었기 때문 — discover_targets·
+    hit_test·_press도 이 함수 안에서만 쓰여 함께 프로덕션 호출부 0). 지우지 않는다 — 복구 조건은
+    위 sweep_produce 주석에 적혀 있다(go(N) 포함 패널전환 조작을 걸러내거나 복귀판정을 URL이 아니라
+    '현재 활성 패널' 기준으로 고치면 다시 켤 수 있다).
+
+    한 URL의 조작 가능한 요소 전부. reopen(page)는 패널을 다시 여는 함수(제작소용).
     skip(info)가 True를 돌려주는 요소는 아예 안 누른다(제작소 전수가 처음 실제로 패널을 여는 데
     성공한 2026-09-07에야 드러난 문제: `discover_targets`는 패널이 아니라 페이지 전체를 훑는데,
     /produce엔 앱 공통 사이드바(로그아웃·작업삭제·다른 화면 이동)까지 같이 있어서 그것들까지
@@ -364,8 +370,10 @@ def sweep_produce(session, panels=range(10)):
     return results
 
 
-def _attach_evidence(session, results):
-    """빨강인데 아직 evidence_dir이 없는 결과만 채운다(다른 곳에서 이미 찍었으면 건드리지 않는다)."""
+def attach_evidence(session, results):
+    """빨강인데 아직 evidence_dir이 없는 결과만 채운다(다른 곳에서 이미 찍었으면 건드리지 않는다).
+    ★0순위-B: flows/base.py가 거의 같은 코드를 따로 갖고 있었다(2026-09-07 리뷰 지적) — 공용화해
+    이 함수 하나로 통일한다."""
     for r in results:
         if r.verdict == RED and not r.evidence_dir:
             r.evidence_dir = capture_red_evidence(session, r.signature)
@@ -395,7 +403,7 @@ def sweep_lists(session):
     results, ok = _run_guarded("목록 카드 무예외", _run)
     if ok:
         results = _apply_throttle_gate(session, results)
-        _attach_evidence(session, results)
+        attach_evidence(session, results)
     return results
 
 
@@ -428,7 +436,7 @@ def sweep_sidebar(session):
     results, ok = _run_guarded("사이드바 쿠팡", _run)
     if ok:
         results = _apply_throttle_gate(session, results)
-        _attach_evidence(session, results)
+        attach_evidence(session, results)
     return results
 
 
@@ -446,5 +454,5 @@ def reporter_alive(session):
 
     results, ok = _run_guarded("리포터 생존", _run)
     if ok:
-        _attach_evidence(session, results)
+        attach_evidence(session, results)
     return results[0]

@@ -3,7 +3,6 @@
 
 판단 불가는 GRAY다(RED 아님) - 패턴을 못 찾았다고 빨강을 내면 거짓 경보가 된다.
 """
-import json
 import re
 from pathlib import Path
 
@@ -193,6 +192,12 @@ def check_tts_path_single(py_sources):
 
 def check_cut_count_rule(plan):
     """컷 수 = 구절(beats) 수 = 자막(captions) 줄 수. 셋 중 하나가 없으면 판단 불가(회색)."""
+    if plan is None:
+        return Result("L0", "컷 수 = 구절 수 = 자막 줄 수", GRAY,
+                       reason="관측 대상 없음 — mix_jobs.edit_plan_json에는 beats만 있고 "
+                              "cuts·captions에 대응하는 필드가 이 코드베이스에 없다(2026-09-07 실측). "
+                              "실제 plan을 물릴 수 있게 되기 전까지는 항상 회색.",
+                       signature="L0:cut_count_rule")
     if not isinstance(plan, dict):
         return Result("L0", "컷 수 = 구절 수 = 자막 줄 수", GRAY, reason="plan이 dict가 아님", signature="L0:cut_count_rule")
     beats, cuts, caps = plan.get("beats"), plan.get("cuts"), plan.get("captions")
@@ -219,11 +224,11 @@ def run_all(repo):
         except OSError:
             continue
 
-    fixture = repo / "shopping_shorts/checks/fixtures/plan_min.json"
-    if fixture.exists():
-        plan = json.loads(fixture.read_text(encoding="utf-8"))
-    else:
-        plan = {"beats": [{"text": "a"}, {"text": "b"}], "cuts": [1, 2], "captions": ["a", "b"]}
+    # ★리뷰 지적(2026-09-07): 커밋된 픽스처(fixtures/plan_min.json, beats=cuts=captions=2)를
+    # 매 run 그대로 물리면 실제 렌더 결과를 절대 관측하지 않아 이 검사가 구조적으로 영원히
+    # 초록이다. cuts·captions에 대응하는 실필드가 이 코드베이스에 없어(store.py·edit_plan.py
+    # 전수 확인) 지금은 진짜 plan을 물릴 수 없다 — 가짜 초록보다 이유 있는 회색이 낫다(check_cut_count_rule(None)).
+    plan = None
 
     return [
         check_step_arrays(html),

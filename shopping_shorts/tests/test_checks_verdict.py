@@ -13,9 +13,11 @@ def test_newly_red_is_red_now_and_not_red_before():
     assert out["overall"] == RED
 
 
-def test_gray_wins_and_first_time_red_counts_as_new():
+def test_red_wins_over_gray_and_first_time_red_counts_as_new():
+    # ★2026-09-07 리뷰 지적으로 우선순위가 바뀌었다: 회색이 상시로 깔려도(RED>GRAY>YELLOW>GREEN)
+    # 종합 신호등이 영구 회색이 되지 않도록 RED가 최우선이다.
     out = summarize([_row("x", GRAY), _row("y", RED)], prev={})
-    assert out["overall"] == GRAY
+    assert out["overall"] == RED
     assert [r["signature"] for r in out["newly_red"]] == ["y"]
 
 
