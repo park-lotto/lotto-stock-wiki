@@ -150,6 +150,13 @@ def _blocked_path(entry):
     return parts[1] if len(parts) == 2 else entry
 
 
+_GENERIC_NETFAIL_MARKERS = ("failed to load resource", "net::err_")
+# ★Task14 2차 실측(2026-09-07): route.abort()로 막힌 요청이 실제 Chromium에서 내는 console 메시지는
+# "Failed to load resource: net::ERR_FAILED"뿐 — 실패한 URL이 텍스트에 안 실린다(원래 필터의 텍스트
+# 부분매칭 전제가 이 경우엔 애초에 성립 안 함). 그래서 client_error_posts와 같은 "개수만큼만 보수적으로
+# 깎는" 방식을 콘솔에러에도 적용한다 — 무관한 진짜 JS 에러(TypeError 등)는 이 마커에 안 걸려 그대로 산다.
+
+
 def filter_blocked_noise(after, before, blocked_paths):
     """안전 그물이 route.abort()로 막은 요청 때문에 생긴 에러는 판정에서 뺀다(오탐 방지 #2).
     새로 막힌 경로가 없으면 원본 그대로 통과시킨다 — 무관한 진짜 에러는 절대 지우지 않는다."""
@@ -159,9 +166,23 @@ def filter_blocked_noise(after, before, blocked_paths):
     def _hits(text):
         return any(p in text for p in blocked_paths)
 
+    def _is_generic_netfail(text):
+        low = text.lower()
+        return any(m in low for m in _GENERIC_NETFAIL_MARKERS)
+
     filtered_pageerrors = [e for e in after["pageerrors"] if not _hits(e)]
-    filtered_console = [e for e in after["console_errors"] if not _hits(e)]
     filtered_failed = [f for f in after["failed_responses"] if not any(p in f[0] for p in blocked_paths)]
+
+    filtered_console = []
+    generic_budget = len(blocked_paths)  # 새로 막힌 요청 수만큼만 "경로 없는 일반 실패 메시지"를 깎는다
+    for e in after["console_errors"]:
+        if _hits(e):
+            continue                      # 경로가 텍스트에 그대로 있으면 확실한 매치
+        if generic_budget > 0 and _is_generic_netfail(e) and e not in before["console_errors"]:
+            generic_budget -= 1
+            continue                      # 경로 없는 일반 네트워크 실패 — 우리가 막은 요청일 가능성이 크다
+        filtered_console.append(e)
+
     # client_error_posts는 카운터뿐이라 메시지로 못 거른다 — 이번 조작이 새로 막은 요청 수만큼만
     # 늘어난 증가분을 깎는다(요청 하나가 대개 리포트 하나를 만든다는 보수적 가정). 그 이상 늘었다면
     # 진짜 앱 에러가 섞였다는 뜻이라 나머지는 그대로 살려둔다.
@@ -270,7 +291,9 @@ def sweep_produce(session, panels=range(10)):
         out = []
         for o in panels:
             def _open(pg, label=labels[o]):
-                pg.locator("#steps").get_by_text(label, exact=True).first.click(timeout=3000)
+                # ★칩 보이는 글자는 STEP_SHORT(줄인 이름)라 STEP_LABELS(전체 이름)와 get_by_text로는
+                # 절대 안 맞는다(flows/base.py click_step과 같은 원인·같은 해법) — title 속성으로 찾는다.
+                pg.locator(f'#steps [title="{label}"]').first.click(timeout=3000)
                 pg.wait_for_timeout(400)
             out.extend(sweep_url(session, "/produce", reopen=_open))
         return out
@@ -295,9 +318,15 @@ def sweep_lists(session):
         out = []
         for url, sel in (("/", ".card, .item, article"), ("/library", ".card, .item"), ("/produce", "#steps .dockbar")):
             session.errors.reset()
+            before = session.errors.snapshot()
+            blocked_before_n = len(session.blocked)
             browser.goto_ready(session.page, session.base_url + url, sel)
             n = session.page.locator(sel).count()
-            snap = session.errors.snapshot()
+            # ★Task14 실측(2026-09-07): filter_blocked_noise가 _press()에만 배선돼 있고 여긴 안 타서
+            # 안전 그물(route.abort)이 막은 요청의 콘솔 에러(net::ERR_FAILED)를 앱 버그로 오판했다
+            # (예: coupang identify_batch 차단 → "/"가 빨강). _press와 같은 필터를 여기도 태운다.
+            new_blocked = [_blocked_path(e) for e in session.blocked[blocked_before_n:]]
+            snap = filter_blocked_noise(session.errors.snapshot(), before, new_blocked)
             bad = snap["pageerrors"] or snap["console_errors"]
             out.append(Result("L1", f"목록 화면이 비지 않나 — {url}", RED if (n == 0 or bad) else GREEN,
                               reason=f"카드 {n}개, 에러 {len(bad)}건", signature=f"L1:list:{url}", page=url))
@@ -311,14 +340,23 @@ def sweep_lists(session):
 
 
 def sweep_sidebar(session):
-    """사이드바 쿠팡 버튼(B-08): 열고 닫은 뒤 콘솔 에러 0."""
+    """사이드바 쿠팡 버튼(B-08): 열고 닫은 뒤 콘솔 에러 0.
+    ★Task14 2차 실측(2026-09-07): 작업 없이 연 `/produce`의 aside/nav/#sidebar(=`.ss-nav`, 앱 전역
+    좌측 메뉴)엔 '쿠팡' 텍스트가 전혀 없다 — 실제 쿠팡 UI('🛒 쿠팡에 있나?')는 랭킹·담기 카드
+    (`/`·`/library`)에 있지, 제작소 사이드바엔 없다(app.py:4959,5138 실측). 즉 B-08이 원래 겨냥한
+    버튼이 지금 화면 구조엔 없거나 다른 화면에 있다는 뜻 — 셀렉터를 고쳐서 억지로 초록을 만들지 않고
+    "이유 있는 회색"으로 남긴다(코디네이터 지시: 억지 초록 금지)."""
     def _run():
         session.errors.reset()
         p = session.page
         browser.goto_produce(p, session.base_url + "/produce")
         btn = p.locator("aside, nav, #sidebar").get_by_text("쿠팡", exact=False).first
         if btn.count() == 0:
-            return [Result("L1", "사이드바 쿠팡 버튼", GRAY, reason="버튼 못 찾음", signature="L1:sidebar:coupang")]
+            return [Result("L1", "사이드바 쿠팡 버튼", GRAY,
+                           reason="사이드바(aside/nav/#sidebar)에 '쿠팡' 텍스트 없음 — 이 화면(작업 없는 "
+                                  "/produce)엔 쿠팡 버튼이 없어 보임(실제 쿠팡 UI는 랭킹·담기 카드에 있음, "
+                                  "B-08 대상 화면 재확인 필요)",
+                           signature="L1:sidebar:coupang")]
         btn.click(timeout=3000)
         p.wait_for_timeout(800)
         p.keyboard.press("Escape")

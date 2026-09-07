@@ -2,6 +2,7 @@
 signature_of·classify·discover_targets 판정 로직은 가짜 dict/스텁으로 검증한다(브리프 지시).
 브라우저·서버가 필요한 sweep_produce 등은 CHECKS_BASE_URL 없으면 skip."""
 import os
+from types import SimpleNamespace
 
 import pytest
 
@@ -128,6 +129,108 @@ def test_filter_blocked_noise_noop_when_nothing_blocked():
     before = {"pageerrors": [], "console_errors": [], "client_error_posts": 0, "failed_responses": []}
     after = {"pageerrors": ["boom"], "console_errors": [], "client_error_posts": 0, "failed_responses": []}
     assert sweep.filter_blocked_noise(after, before, []) == after
+
+
+def test_filter_blocked_noise_removes_generic_netfail_without_path():
+    """★Task14 2차 실측: route.abort()가 실제로 내는 console 메시지는 경로가 안 실린
+    "Failed to load resource: net::ERR_FAILED" 하나뿐이다(예: coupang identify_batch 차단 →
+    "/"가 빨강으로 오판됨). 텍스트 부분매칭이 아니라 개수 기반으로도 걸러져야 한다."""
+    before = {"pageerrors": [], "console_errors": [], "client_error_posts": 0, "failed_responses": []}
+    after = {
+        "pageerrors": [],
+        "console_errors": ["Failed to load resource: net::ERR_FAILED"],
+        "client_error_posts": 0,
+        "failed_responses": [],
+    }
+    filtered = sweep.filter_blocked_noise(after, before, ["/api/coupang/identify_batch"])
+    assert filtered["console_errors"] == []
+    v, why = sweep.classify(before, filtered, 500, 480, False)
+    assert v == GREEN, why
+
+
+def test_filter_blocked_noise_keeps_real_error_alongside_generic_netfail():
+    """경로 없는 일반 실패 메시지는 막힌 요청 수만큼만 깎는다 — 진짜 JS 에러는 예산과 무관하게 산다."""
+    before = {"pageerrors": [], "console_errors": [], "client_error_posts": 0, "failed_responses": []}
+    after = {
+        "pageerrors": [],
+        "console_errors": ["Failed to load resource: net::ERR_FAILED",
+                            "TypeError: cannot read property 'x' of undefined"],
+        "client_error_posts": 0,
+        "failed_responses": [],
+    }
+    filtered = sweep.filter_blocked_noise(after, before, ["/api/coupang/identify_batch"])
+    assert filtered["console_errors"] == ["TypeError: cannot read property 'x' of undefined"]
+    v, _ = sweep.classify(before, filtered, 500, 480, False)
+    assert v == RED   # 무관한 진짜 에러는 여전히 빨강
+
+
+def test_filter_blocked_noise_generic_netfail_budget_capped_by_blocked_count():
+    """일반 실패 메시지가 막힌 요청 수보다 많으면 초과분은 진짜 문제일 수 있어 살려둔다."""
+    before = {"pageerrors": [], "console_errors": [], "client_error_posts": 0, "failed_responses": []}
+    after = {
+        "pageerrors": [], "client_error_posts": 0, "failed_responses": [],
+        "console_errors": ["Failed to load resource: net::ERR_FAILED",
+                            "Failed to load resource: net::ERR_FAILED"],
+    }
+    filtered = sweep.filter_blocked_noise(after, before, ["/api/coupang/identify_batch"])  # 1개만 막힘
+    assert len(filtered["console_errors"]) == 1   # 2개 중 1개(막힌 수만큼)만 깎임
+
+
+class _ListFakePage:
+    """sweep_lists 통합 시험용: goto_ready(browser.py)가 부르는 표면만 흉내낸다.
+    on_goto(url)를 넘기면 goto() 시점(=실제로 안전그물이 요청을 막는 시점)에 노이즈를 주입할 수 있다."""
+    def __init__(self, card_count=1, on_goto=None):
+        self.card_count = card_count
+        self.on_goto = on_goto
+
+    def goto(self, url, wait_until=None, timeout=None):
+        if self.on_goto:
+            self.on_goto(url)
+
+    def wait_for_selector(self, sel, timeout=None, state=None):
+        pass
+
+    def locator(self, sel):
+        return SimpleNamespace(count=lambda: self.card_count)
+
+
+def test_sweep_lists_does_not_redden_on_blocked_request_noise():
+    """★핵심 회귀: coupang identify_batch 같은 차단 요청이 낸 "Failed to load resource: net::ERR_FAILED"
+    콘솔 에러 하나만 있을 때 sweep_lists가 "/"를 빨강으로 오판하면 안 된다(2026-09-07 서버 실측 오탐).
+    실제 타이밍대로 goto() 도중(=안전그물이 요청을 막는 시점)에 blocked·콘솔에러를 주입한다."""
+    from shopping_shorts.checks.browser import ErrorSink
+
+    errors = ErrorSink()
+    session = SimpleNamespace(base_url="http://x", errors=errors, blocked=[])
+
+    def _on_goto(url):
+        if url == "http://x/":   # "/" 방문 때만 차단 노이즈를 흉내낸다
+            session.blocked.append("POST /api/coupang/identify_batch")
+            errors.console_errors.append("Failed to load resource: net::ERR_FAILED")
+
+    session.page = _ListFakePage(card_count=5, on_goto=_on_goto)
+
+    out = sweep.sweep_lists(session)
+    home = [r for r in out if r.page == "/"][0]
+    assert home.verdict == GREEN, home.reason
+
+
+def test_sweep_lists_still_reddens_on_unrelated_real_error():
+    """차단과 무관한 진짜 console 에러는 여전히 빨강이어야 한다(오탐 방지가 검사를 무력화하면 안 됨)."""
+    from shopping_shorts.checks.browser import ErrorSink
+
+    errors = ErrorSink()
+    session = SimpleNamespace(base_url="http://x", errors=errors, blocked=[])
+
+    def _on_goto(url):
+        if url == "http://x/":
+            errors.console_errors.append("TypeError: cannot read property 'x' of undefined")
+
+    session.page = _ListFakePage(card_count=5, on_goto=_on_goto)
+
+    out = sweep.sweep_lists(session)
+    home = [r for r in out if r.page == "/"][0]
+    assert home.verdict == RED
 
 
 # ---- discover_targets: 페이지 스텁으로 검증 ----

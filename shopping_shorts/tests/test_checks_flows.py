@@ -113,6 +113,12 @@ class FakePage:
     def locator(self, sel):
         if sel == "#steps":
             return FakeLocator(self, "steps")
+        if sel.startswith('#steps [title="') and sel.endswith('"]'):
+            # ★click_step이 이제 title 속성으로 칩을 찾는다(칩에 보이는 글자는 STEP_SHORT라 STEP_LABELS
+            # 텍스트로는 못 찾음 — 2026-09-07 서버 실측). 라벨을 뽑아 FakeLocator에 바로 심는다.
+            loc = FakeLocator(self, "steps")
+            loc._text = sel[len('#steps [title="'):-len('"]')]
+            return loc
         if sel == "#hcCopyCards > *":
             return FakeLocator(self, "hccards")
         raise ValueError(sel)

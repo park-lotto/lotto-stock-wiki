@@ -42,7 +42,12 @@ def roundtrip(session, *, name, signature, edit, read_local, read_server, go_awa
 
 
 def click_step(page, label):
-    page.locator("#steps").get_by_text(label, exact=True).first.click(timeout=5000)
+    """단계 칩 클릭. ★Task14 2차 실측(2026-09-07): 칩에 보이는 글자는 STEP_LABELS(전체 이름, 예:
+    '영상추출/분석')가 아니라 STEP_SHORT(줄인 이름, '영상추출')다 — 전체 이름은 `title` 속성에만
+    있다(produce.html dockbar: `title="${STEP_LABELS[i]}"` + `<div class="dkl">${STEP_SHORT[i]}</div>`).
+    그래서 get_by_text(label, exact=True)는 어떤 칩과도 절대 안 맞아 클릭이 항상 타임아웃났다 —
+    title 속성으로 찾는다(전체 이름이 그대로 있음)."""
+    page.locator(f'#steps [title="{label}"]').first.click(timeout=5000)
     page.wait_for_timeout(600)
 
 
