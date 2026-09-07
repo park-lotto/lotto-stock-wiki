@@ -15,6 +15,15 @@ import requests
 from shopping_shorts import tts, typecast_tts, tts_timestamps, mix_pipeline
 
 
+# ★이 파일은 "타입캐스트가 켜져 있을 때의 배선"을 지킨다. 라이브 기본은 꺼짐
+#   (config.TYPECAST_ENABLED=0, 2026-09-07 사장님 "일레븐만 쓴다")이라 켜고 돌린다 —
+#   안 켜면 전부 일레븐랩스로 대체돼 이 계약을 검증할 수 없다.
+@pytest.fixture(autouse=True)
+def _typecast_on(monkeypatch):
+    from shopping_shorts import config
+    monkeypatch.setattr(config, "TYPECAST_ENABLED", True)
+
+
 # ── ① 엔진 분기 ────────────────────────────────────────────────────────────
 @pytest.mark.parametrize("model_id,expected", [
     ("ssfm-v30", True), ("ssfm-v21", True), ("SSFM-V30", True),
