@@ -8262,6 +8262,45 @@ def _grid_phase(round_no):
     return min(0.95, max(0.05, v))
 
 
+def _grid_from_beatframes(job_id, out_dir, grid_round):
+    """비트 프레임(자막 없는 원본 그림)을 썸네일 후보로 복사한다 → [(Path, ts), ...] 또는 None.
+
+    ★왜: 미리보기(preview.mp4)에는 우리 나레이션 자막이 구워져 있어 썸네일 배경으로 못 쓴다
+    (2026-09-07 고객 제보). beatframes/{i}_c{n}_s{si}@{t}_src.jpg는 컷의 **소스 원본**에서
+    뽑은 그림이라 우리 자막이 없다. 렌더 도중 이미 만들어 두므로 추출 비용도 0이다.
+    파일이 없으면(옛 job 등) None을 돌려 호출부가 종전 경로로 폴백한다 — 회귀 0.
+
+    ts는 파일명의 `@초`(소스 안 위치)를 쓴다. 믹스 결과의 시간축은 아니지만 화면은 이 값을
+    라벨로만 쓰므로 순서를 보존하는 것으로 충분하다."""
+    src_dir = _MIX_WORK_DIR / job_id / "beatframes"
+    if not src_dir.is_dir():
+        return None
+    files = sorted(src_dir.glob("*_src.jpg"))
+    if not files:
+        return None
+    # [다른 장면 더 뽑기] — 같은 목록을 라운드만큼 밀어 다른 그림이 앞으로 온다.
+    if grid_round and len(files) > 1:
+        k = (grid_round * GRID_FRAMES_DEFAULT) % len(files)
+        files = files[k:] + files[:k]
+    out_dir.mkdir(parents=True, exist_ok=True)
+    pairs = []
+    for i, f in enumerate(files[:GRID_FRAMES_DEFAULT]):
+        dest = out_dir / f"grid_{i:02d}.jpg"
+        try:
+            shutil.copyfile(f, dest)
+        except OSError:
+            continue
+        ts = 0.0
+        m = re.search(r"@([0-9.]+)_src\.jpg$", f.name)
+        if m:
+            try:
+                ts = float(m.group(1))
+            except ValueError:
+                ts = 0.0
+        pairs.append((dest, ts))
+    return pairs or None
+
+
 @app.post("/api/produce/thumb/frames")
 def api_thumb_frames(body: dict):
     """7단계 썸네일 — 믹스 결과 영상을 등분해 후보 프레임(기본 16장).
@@ -8376,11 +8415,23 @@ def api_thumb_frames(body: dict):
     # 없다 — 재추출이 그냥 덮어쓴다. rmtree를 추출 *전에* 돌리는 것도 문제였다:
     # 추출이 RuntimeError로 실패하면(ffmpeg 일시 오류 등) 폴더는 이미 비었는데 DB의
     # frames는 죽은 URL 10개를 그대로 들고 있어 "실패하면 이전보다 나빠짐"이 됐다.
-    try:
-        pairs = extract_grid_frames(video, out_dir, n=GRID_FRAMES_DEFAULT,
-                                    phase=_grid_phase(grid_round))
-    except RuntimeError as e:
-        return JSONResponse(status_code=502, content={"ok": False, "error": str(e)})
+    # ★미리보기 배경에는 **우리 나레이션 자막이 이미 박혀 있다**(2026-09-07 고객 제보
+    #   "썸네일 단계에 자막이 계속 나온다"). 실측(job 2572d81cff8d, cid 343): 자막제거를
+    #   켜지 않은 회원이라 배경이 preview로 떨어졌고, 뽑힌 grid_01.jpg 하단에 "난리 난
+    #   블라인드라네요?"가 큼직하게 박혀 있었다. run_preview는 clean_fn만 빼고 _burn_captions는
+    #   그대로 태우기 때문이다(mix_pipeline.run_preview 주석은 '원본 자막'만 말해 이 경우가
+    #   빠져 있었다). 썸네일 제목은 위에 새로 얹으므로 배경 자막은 그 자체로 방해다.
+    #   → 비트 프레임(beatframes/*_src.jpg)은 **소스 원본에서 뽑은 그림**이라 우리 자막이 없다.
+    #     이미 만들어져 있으므로 추가 추출·과금 0. 없으면 종전대로 preview에서 뽑는다(회귀 0).
+    pairs = None
+    if bg_kind == "preview":
+        pairs = _grid_from_beatframes(job_id, out_dir, grid_round)
+    if pairs is None:
+        try:
+            pairs = extract_grid_frames(video, out_dir, n=GRID_FRAMES_DEFAULT,
+                                        phase=_grid_phase(grid_round))
+        except RuntimeError as e:
+            return JSONResponse(status_code=502, content={"ok": False, "error": str(e)})
 
     # 추출 *성공 후에만*, 우리 소유 파일(grid_*.jpg)만, 개별로 고아를 정리한다.
     # 부분 실패(extract_frame_at은 실패 시 조용히 None -- 기존 계약)로 새 결과에
