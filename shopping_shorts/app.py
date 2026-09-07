@@ -8262,7 +8262,6 @@ def _grid_phase(round_no):
     return min(0.95, max(0.05, v))
 
 
-@app.post("/api/produce/thumb/frames")
 def _grid_from_beatframes(job_id, out_dir, grid_round):
     """비트 프레임(자막 없는 원본 그림)을 썸네일 후보로 복사한다 → [(Path, ts), ...] 또는 None.
 
@@ -8302,6 +8301,7 @@ def _grid_from_beatframes(job_id, out_dir, grid_round):
     return pairs or None
 
 
+@app.post("/api/produce/thumb/frames")
 def api_thumb_frames(body: dict):
     """7단계 썸네일 — 믹스 결과 영상을 등분해 후보 프레임(기본 16장).
 
