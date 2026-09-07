@@ -65,9 +65,15 @@ def test_알리축은_뺐다():
         f"알리 검색어가 아직 있다(실측 1건): {[k for k in low if 'aliexpress' in k]}"
 
 
-def test_검색어가_충분하다():
-    """수집 버튼 한 번에 도는 개수 — 너무 적으면 한 번에 모이는 양이 적다."""
-    assert len(DEFAULT_KEYWORDS) >= 12, f"검색어가 {len(DEFAULT_KEYWORDS)}개뿐"
+def test_검색어가_한_배치를_꽉_채운다():
+    """★정확히 12개 — `/api/pinterest/collect`가 `kws[:12]`로 자른다(app.py, 폭주 방지).
+
+    더 넣으면 뒤쪽이 **조용히 잘려** 넣어놓고 안 도는 상태가 되고(test_pinterest.py가
+    이걸 잡는다), 적게 넣으면 한 배치에 모이는 양이 준다. 그래서 딱 12개다.
+    새 축은 CANDIDATE_KEYWORDS에 두고 **교체**로 넣는다 — 덧붙이지 않는다.
+    """
+    assert len(DEFAULT_KEYWORDS) == 12, \
+        f"검색어가 {len(DEFAULT_KEYWORDS)}개 — 12개여야 한다(초과분은 kws[:12]에 잘린다)"
 
 
 def test_중복이_없다():

@@ -60,18 +60,31 @@ DEFAULT_KEYWORDS = [
     "temu rice gadget",                  #  83% (18건)
     "construction tool amazing",         #  81% (11건)
     "temu garden gadget",                #  80% (10건)
-    # ── 실측 65~79% ──
+    # ── 실측 71~79% ──
     "temu kids toy gadget",              #  75% (12건)
     "temu plant gadget",                 #  75% (8건)
-    "temu fitness gadget",               #  75% (8건)
-    "satisfying gadget demo",            #  71% (14건)
-    "temu camping gadget",               #  66% (12건)
-    "tiktok made me buy it gadget",      #  66% (9건)
-    "farming gadget amazing",            #  66% (9건)
-    # ── 위 ① 규칙(`<물건> gadget`)으로 넓히는 새 축. 다음 수집 뒤 적중률을 재고 정리한다 ──
+    # ★아마존 축(2026-09-06 사장님 "테무아마존도 좋은게 많다"). 실측으로 골랐다 —
+    #   `amazon finds ~` 계열은 원본 0%(광고 재업)인데 아래 둘은 원본이 잘 나온다.
+    "cheap gadgets amazon finds",        # 원본 100% (3건)
+    "amazon cheap finds",                # 원본  75% + 아마존링크 25% (4건)
+]
+# ★상한 12개 — `/api/pinterest/collect`가 `kws[:12]`로 자른다(app.py, 폭주 방지).
+#   더 넣으면 **뒤쪽이 조용히 잘려** 넣어놓고 안 돌아가는 상태가 된다
+#   (test_pinterest.py::test_기본_키워드가_한_배치에_들어간다가 이걸 지킨다).
+#   새 축을 시험하려면 아래 후보를 화면의 검색어 칸에 직접 넣어 돌리고,
+#   적중률을 재서 위 목록의 낮은 것과 **교체**하라 — 덧붙이지 마라.
+CANDIDATE_KEYWORDS = [
+    # 실측은 좋은데 12칸이 모자라 뺀 것들(넣으려면 위와 교체)
+    "temu fitness gadget",               # 원본 75% (8건)
+    "satisfying gadget demo",            # 원본 71% (14건)
+    # ①규칙(`<물건> gadget`)으로 넓히는 새 축. 실측 전이라 기본값에는 안 넣는다.
     "temu workshop gadget",
     "temu repair gadget",
     "temu winter gadget",
+    # 실측 66% — 12칸이 모자라 뺐다(넣으려면 위와 교체)
+    "temu camping gadget",
+    "tiktok made me buy it gadget",
+    "farming gadget amazing",
 ]
 
 _SEARCH_API_HINT = "BaseSearchResource/get"
