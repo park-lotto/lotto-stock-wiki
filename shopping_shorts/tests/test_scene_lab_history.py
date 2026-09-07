@@ -109,3 +109,16 @@ def test_오려낸_조각도_판본에_남는다():
     assert "film_s0_1.0_2.0" in p["scene_lab_hist"][0]["extra_segs"]
     ep.restore_scene_lab_version(p, 0)
     assert _override_ids(p)[0] == ["film_s0_1.0_2.0"]
+
+
+def test_AI배치로_되돌리기도_판본을_남긴다():
+    """[↩ AI 배치로 되돌리기]는 편성을 통째로 지운다 — 잘못 눌러도 되살릴 수 있어야 한다."""
+    p = _plan()
+    _apply(p, [["a", "b"], ["c"]])
+    ep.revert_scene_lab(p)
+    assert p.get("scene_lab") is None            # 편성은 걷혔고
+    assert _override_ids(p) == [[], []]
+    hist = p.get("scene_lab_hist") or []
+    assert len(hist) == 1                        # 판본은 남았다
+    assert ep.restore_scene_lab_version(p, 0) is True
+    assert _override_ids(p) == [["a", "b"], ["c"]]   # ★되살아난다
