@@ -25,6 +25,7 @@ def test_roundtrip_reports_which_stage_diverged():
         url = "http://x/produce?work=w1"
         def reload(self, **kw): pass
         def wait_for_timeout(self, ms): pass
+        def wait_for_function(self, js, timeout=None): pass
     class FakeSession:
         page = FakePage(); base_url = "http://x"
     r = base.roundtrip(FakeSession(), name="대본 왕복", signature="L2:script",
@@ -91,14 +92,21 @@ class FakePage:
         self.request = _FakeRequest(self)
         self.new_work_clears = True  # ?new=1이 씨앗을 실제로 비우는가(app의 clearWork 흉내)
 
-    def goto(self, url, wait_until=None):
+    def goto(self, url, wait_until=None, timeout=None):
         self.url = url
         if "new=1" in url and self.new_work_clears:
             self.script_state = ""; self.seed = ""; self.handoff_len = 0
-    def reload(self, wait_until=None):
+    def reload(self, wait_until=None, timeout=None):
         pass
     def wait_for_timeout(self, ms):
         pass
+    def wait_for_selector(self, sel, timeout=None, state=None):
+        pass
+    def wait_for_function(self, js, timeout=None):
+        """browser.goto_produce/reload_produce의 준비 표식 흉내: step_labels_len<=0이면
+        '옛 값이 초기화를 깼다'(flow_localstorage_old red 시나리오)를 재현해 타임아웃을 낸다."""
+        if self.step_labels_len <= 0:
+            raise TimeoutError("STEP_LABELS 준비 안 됨(fake)")
     def fill(self, sel, val):
         if sel == "#scriptText":
             self.script_state = val

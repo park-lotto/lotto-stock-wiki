@@ -17,6 +17,7 @@ import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+from shopping_shorts.checks import browser
 from shopping_shorts.checks.verdict import GRAY, GREEN, RED, Result
 
 # ── 빨간 줄 증거 사진(2026-09-07 리뷰 반영) ─────────────────────────────────
@@ -203,7 +204,7 @@ def _press(session, info, url):
 def sweep_url(session, url, reopen=None):
     """한 URL의 조작 가능한 요소 전부. reopen(page)는 패널을 다시 여는 함수(제작소용)."""
     page = session.page
-    page.goto(session.base_url + url, wait_until="networkidle")
+    browser.goto_produce(page, session.base_url + url)
     if reopen:
         reopen(page)
     targets = discover_targets(page)
@@ -216,7 +217,7 @@ def sweep_url(session, url, reopen=None):
             continue
         out.append(_press(session, info, url))
         if page.url.split("?")[0] != (session.base_url + url).split("?")[0]:
-            page.goto(session.base_url + url, wait_until="networkidle")
+            browser.goto_produce(page, session.base_url + url)
             if reopen:
                 reopen(page)
             page.evaluate(_DISCOVER_JS)   # 인덱스 재부여
@@ -262,7 +263,7 @@ def sweep_produce(session, panels=range(10)):
 
     def _run():
         page = session.page
-        page.goto(session.base_url + "/produce?new=1", wait_until="networkidle")
+        browser.goto_produce(page, session.base_url + "/produce?new=1")
         labels = page.evaluate("() => (typeof STEP_LABELS !== 'undefined' ? STEP_LABELS : null)")
         if not labels:
             raise RuntimeError("STEP_LABELS 못 찾음 — 화면 구조가 바뀌었을 수 있음")
@@ -294,7 +295,7 @@ def sweep_lists(session):
         out = []
         for url, sel in (("/", ".card, .item, article"), ("/library", ".card, .item"), ("/produce", "#steps .dockbar")):
             session.errors.reset()
-            session.page.goto(session.base_url + url, wait_until="networkidle")
+            browser.goto_ready(session.page, session.base_url + url, sel)
             n = session.page.locator(sel).count()
             snap = session.errors.snapshot()
             bad = snap["pageerrors"] or snap["console_errors"]
@@ -314,7 +315,7 @@ def sweep_sidebar(session):
     def _run():
         session.errors.reset()
         p = session.page
-        p.goto(session.base_url + "/produce", wait_until="networkidle")
+        browser.goto_produce(p, session.base_url + "/produce")
         btn = p.locator("aside, nav, #sidebar").get_by_text("쿠팡", exact=False).first
         if btn.count() == 0:
             return [Result("L1", "사이드바 쿠팡 버튼", GRAY, reason="버튼 못 찾음", signature="L1:sidebar:coupang")]
@@ -338,7 +339,7 @@ def reporter_alive(session):
     def _run():
         session.errors.reset()
         p = session.page
-        p.goto(session.base_url + "/produce", wait_until="networkidle")
+        browser.goto_produce(p, session.base_url + "/produce")
         p.evaluate("() => setTimeout(() => { throw new Error('CHECKS_REPORTER_PROBE') }, 10)")
         p.wait_for_timeout(1500)
         n = session.errors.client_error_posts

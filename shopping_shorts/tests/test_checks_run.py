@@ -70,3 +70,44 @@ def test_run_flow_with_budget_marks_gray_on_timeout():
 @pytest.mark.skipif(not os.environ.get("CHECKS_BASE_URL"), reason="실서버/브라우저 필요")
 def test_run_ui_smoke():
     pass
+
+
+def test_no_preview_flag_leaves_preview_untouched(tmp_path, monkeypatch):
+    """--no-preview는 "이미 떠 있는 걸 그대로 쓴다"는 뜻이어야 한다(2026-09-07 서버 실측 발견:
+    예전엔 s.restart_web에 무조건 restart_preview가 심어져 flow_share_link_restart가 그 훅을
+    부르는 순간 --no-preview를 줬어도 미리보기가 내려갔다 재기동됐다). preview_start/preview_stop이
+    안 불리고, restart_web 훅도 안 심기는지(getattr 폴백으로 회색 처리되게) 확인한다."""
+    calls = []
+    monkeypatch.setattr(run_checks, "preview_start", lambda sha: calls.append(("start", sha)))
+    monkeypatch.setattr(run_checks, "preview_stop", lambda: calls.append(("stop",)))
+    monkeypatch.setattr(run_checks, "restart_preview", lambda: calls.append(("restart",)))
+    monkeypatch.setattr(run_checks, "live_head_sha", lambda: "deadbeef")
+    monkeypatch.setattr(run_checks, "run_ui", lambda conn, run_id, s, quick=False:
+                         [Result("L1", "가짜", GREEN, signature="L1:fake")])
+    monkeypatch.setattr(run_checks, "run_health", lambda conn, ctx, force=False, run_id=None: [])
+
+    fake_session = SimpleNamespace(context=SimpleNamespace(cookies=lambda: []))
+    seen_session = {}
+
+    def _fake_open_session(base_url, user, password):
+        return fake_session
+
+    def _fake_login(s):
+        seen_session["restart_web_set"] = hasattr(s, "restart_web")
+        return 0
+
+    import shopping_shorts.checks.browser as browser_mod
+    monkeypatch.setattr(browser_mod, "open_session", _fake_open_session)
+    monkeypatch.setattr(browser_mod, "login", _fake_login)
+    monkeypatch.setattr(browser_mod, "close_session", lambda s: None)
+    monkeypatch.setenv("DASH_USER", "u")
+    monkeypatch.setenv("DASH_PASS", "p")
+
+    rc = run_checks.main(["--trigger", "daily", "--force", "--no-preview",
+                          "--db", str(tmp_path / "c.db"), "--base-url", "http://x"])
+
+    assert rc == 0
+    assert ("start", "deadbeef") not in calls
+    assert ("stop",) not in calls
+    assert ("restart",) not in calls        # --no-preview면 restart_web 훅 자체가 안 불림
+    assert seen_session["restart_web_set"] is False   # 훅이 아예 안 심겼다(getattr 폴백으로 회색 처리됨)

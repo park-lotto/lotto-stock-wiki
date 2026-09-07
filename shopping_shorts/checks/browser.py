@@ -90,6 +90,40 @@ def login(s):
     return int(me.get("customer_id", me.get("id", -1)))
 
 
+_PRODUCE_READY_JS = (
+    "() => typeof STEP_LABELS !== 'undefined' && STEP_LABELS.length > 0 "
+    "&& !!document.querySelector('#steps')"
+)
+
+
+def goto_produce(page, url, timeout_ms=12000):
+    """제작소(/produce) 전용 이동. ★실측(2026-09-07 Task14): `wait_until="networkidle"`는
+    /produce에서 폴링·SSE가 계속 돌아 절대 안 온다(15초 타임아웃 vs `load`는 0.18초) — 그래서
+    `load`로 이동한 뒤 화면이 실제로 그려졌다는 표식(STEP_LABELS 정의 + #steps 존재)을 기다린다.
+    표식이 timeout_ms 안에 안 나타나면 TimeoutError를 그대로 던진다(호출부 _run_guarded/run_flow가
+    회색으로 감싼다 — 여기서 삼키지 않는다: 삼키면 "안 열림"과 "느림"을 구분 못 한다)."""
+    page.goto(url, wait_until="load", timeout=timeout_ms)
+    page.wait_for_function(_PRODUCE_READY_JS, timeout=timeout_ms)
+
+
+def reload_produce(page, timeout_ms=12000):
+    """/produce 새로고침판 goto_produce — roundtrip 검사(flows/base.py)가 새로고침 뒤 값을
+    다시 읽기 전에 화면이 실제로 준비됐는지 기다리는 데 쓴다."""
+    page.reload(wait_until="load", timeout=timeout_ms)
+    page.wait_for_function(_PRODUCE_READY_JS, timeout=timeout_ms)
+
+
+def goto_ready(page, url, ready_selector, timeout_ms=12000):
+    """/produce가 아닌 화면(목록·라이브러리 등) 전용: `load` 뒤 그 검사가 실제로 읽는 셀렉터가
+    나타나길 기다린다. ★못 찾아도 예외를 던지지 않는다 — 카드 0개는 그 자체로 유효한 판정 결과일
+    수 있어서, 타임아웃을 "판정 불가"로 승격시키면 진짜 빈 목록까지 회색으로 가려버린다."""
+    page.goto(url, wait_until="load", timeout=timeout_ms)
+    try:
+        page.wait_for_selector(ready_selector, timeout=timeout_ms, state="attached")
+    except Exception:  # noqa: BLE001 — playwright TimeoutError 등: 못 찾았어도 그대로 진행
+        pass
+
+
 def timer_probe(page):
     """자동화 탭 스로틀 측정: 100ms 인터벌이 3초에 몇 번 도나(정상≈30, 스로틀=4)."""
     return page.evaluate("""() => new Promise(res => {

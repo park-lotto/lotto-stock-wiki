@@ -2,6 +2,7 @@
 import time
 from urllib.parse import parse_qs, urlparse
 
+from shopping_shorts.checks import browser
 from shopping_shorts.checks.verdict import GREEN, RED, GRAY, Result
 from shopping_shorts.checks.sweep import capture_red_evidence  # 단일 출구(0순위-B) — 사진 규칙은 sweep.py 하나뿐
 
@@ -20,7 +21,7 @@ def roundtrip(session, *, name, signature, edit, read_local, read_server, go_awa
     go_away(page)
     go_back(page)
     stages = [("복귀 직후", read_local(page))]
-    page.reload(wait_until="networkidle")
+    browser.reload_produce(page)
     stages.append(("새로고침 뒤", read_local(page)))
     page.wait_for_timeout(AUTOSAVE_WAIT_MS)
     # ★새로고침 직후엔 맞아 보여도 자동저장 창(1.5초) 동안 화면 값이 조용히 되돌아갈 수 있다

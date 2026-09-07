@@ -262,7 +262,13 @@ def main(argv=None):
                 preview_start(sha)
             from shopping_shorts.checks import browser
             s = browser.open_session(a.base_url, os.environ["DASH_USER"], os.environ["DASH_PASS"])
-            s.restart_web = restart_preview
+            # ★--no-preview는 "이미 떠 있는 걸 그대로 쓴다"는 뜻이다(2026-09-07 실측 발견: 이 줄이
+            # 무조건 restart_preview를 심어놔서, flow_share_link_restart가 그 훅을 부르는 순간
+            # --no-preview를 줬어도 남이 띄워둔 미리보기가 내려갔다 재기동됐다). --no-preview일 땐
+            # 아예 훅을 안 심는다 — flow_share_link_restart는 훅이 없으면 회색(판정 불가)으로
+            # 정상 후퇴하도록 이미 짜여 있다(getattr(session,"restart_web",None) 폴백).
+            if not a.no_preview:
+                s.restart_web = restart_preview
             try:
                 cid = browser.login(s)
                 if cid != 0:
