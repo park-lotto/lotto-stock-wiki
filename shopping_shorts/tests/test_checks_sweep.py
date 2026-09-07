@@ -268,7 +268,11 @@ def test_is_app_shell_nav_flags_logout_delete_rename_bugreport_and_hrefs():
     assert sweep._is_app_shell_nav({"onclick": "ssOpenBugReport()"}) is True
     assert sweep._is_app_shell_nav({"onclick": "location.href='/challenge'"}) is True
     assert sweep._is_app_shell_nav({"onclick": ""}) is False
-    assert sweep._is_app_shell_nav({"onclick": "jump(0)"}) is False   # 제작소 칩 자체는 눌러야 함
+    # ★284건 빨강 폭증 실측(2026-09-07): 단계 칩(jump(N))도 프레스 루프에 걸리면 다른 패널로
+    # 넘어가버려 그 뒤 요소들이 전부 오탐났다 — _open()이 이미 이 칩으로 패널을 여니 판정 대상에서 뺀다.
+    assert sweep._is_app_shell_nav({"onclick": "jump(0)"}) is True
+    assert sweep._is_app_shell_nav({"onclick": "jump(9)"}) is True
+    assert sweep._is_app_shell_nav({"onclick": "jumpTo(0)"}) is False   # 다른 이름의 함수는 안 건드림
 
 
 def test_sweep_url_skip_excludes_matching_targets_before_any_click(monkeypatch):
@@ -277,7 +281,7 @@ def test_sweep_url_skip_excludes_matching_targets_before_any_click(monkeypatch):
     monkeypatch.setattr(sweep, "discover_targets", lambda page: [
         {"idx": 0, "tag": "div", "id": "", "onclick": "window.__ssLogout()", "text": "로그아웃",
          "x": 0, "y": 0, "w": 10, "h": 10},
-        {"idx": 1, "tag": "div", "id": "", "onclick": "jump(0)", "text": "영상추출",
+        {"idx": 1, "tag": "button", "id": "", "onclick": "removeMixUrlRow(this)", "text": "삭제",
          "x": 0, "y": 0, "w": 10, "h": 10},
     ])
     monkeypatch.setattr(sweep, "hit_test", lambda page, idx: True)
