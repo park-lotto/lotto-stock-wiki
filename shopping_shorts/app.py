@@ -7567,6 +7567,30 @@ def api_mix_voice_preview(body: dict):
 
 
 @app.get("/api/mix/video/{job_id}")
+def _video_gone_reason(job):
+    """완성 영상을 못 주는 이유. 줄 수 있으면 None. **판정은 여기 한 곳뿐**(0순위-B).
+
+    ★왜 만들었나(2026-09-07): 영상 파일을 보관 기간(7일) 뒤 지우기로 하면서
+      (disk_cleanup.clean_final_videos), 지워진 영상을 부르면 종전처럼 맨 404가 났다.
+      고객 눈에는 "영상이 그냥 사라졌다"로 보인다 — 왜 없는지 말해줘야 한다.
+      같은 판정이 네 군데(재생·공유링크·공유페이지·SNS예약)에 각각 적혀 있어서
+      한 곳만 고치면 나머지 셋은 계속 맨 404를 낸다. 그래서 함수로 뽑았다.
+
+    ⚠️`video_path`를 비우지 않는 이유가 여기 있다 — 경로가 남아 있어야
+      "만든 적 없음"과 "만들었는데 지워짐"을 가를 수 있다.
+    """
+    if not job:
+        return "작업을 찾을 수 없어요."
+    if not job.get("video_path"):
+        return "아직 완성된 영상이 없어요."
+    if Path(job["video_path"]).exists():
+        return None
+    # 경로는 있는데 파일이 없다 = 지워졌다. 보관 기간을 넘겼으면 그렇게 말한다.
+    from shopping_shorts.disk_cleanup import FINAL_KEEP_DAYS
+    return ("완성 영상은 %d일만 보관해서 이 영상은 정리됐어요 — "
+            "다시 만들면 새로 받으실 수 있어요." % FINAL_KEEP_DAYS)
+
+
 def api_mix_video(job_id: str, request: Request, dl: int = 0):
     job = Store(DB_PATH).get_mix_job(job_id)
     # ★만드는 중이면 옛 파일을 주지 않는다(2026-09-02). 화면이 버튼을 숨겨도 주소를
@@ -7574,8 +7598,9 @@ def api_mix_video(job_id: str, request: Request, dl: int = 0):
     if job and job.get("status") in ("rendering", "removing_subtitles"):
         return JSONResponse(status_code=409,
                             content={"ok": False, "error": "영상을 만드는 중이에요 — 끝나면 새 영상이 나옵니다"})
-    if not job or not job.get("video_path") or not Path(job["video_path"]).exists():
-        return JSONResponse(status_code=404, content={"ok": False})
+    _gone = _video_gone_reason(job)
+    if _gone:
+        return JSONResponse(status_code=404, content={"ok": False, "error": _gone})
     if dl:   # ?dl=1 → 첨부 다운로드(Content-Disposition attachment). 없으면 인라인 재생(기존).
         return FileResponse(job["video_path"], media_type="video/mp4",
                             filename=export_bundle.safe_name(job_id) + ".mp4")
@@ -7717,8 +7742,9 @@ def api_mix_video_nocta(job_id: str, request: Request, dl: int = 0):
 def api_share_link(job_id: str, request: Request):
     """완성 영상의 QR용 단축 공유링크+QR SVG 발급(로그인 필요 — 미들웨어 게이트 통과분만 도달)."""
     job = Store(DB_PATH).get_mix_job(job_id)
-    if not job or not job.get("video_path") or not Path(job["video_path"]).exists():
-        return JSONResponse(status_code=404, content={"ok": False, "error": "완성 영상이 없어요"})
+    _gone = _video_gone_reason(job)
+    if _gone:
+        return JSONResponse(status_code=404, content={"ok": False, "error": _gone})
     sid = _share_put(job_id)
     if PUBLIC_BASE_URL:
         base = PUBLIC_BASE_URL.rstrip("/")
@@ -7790,8 +7816,9 @@ def api_share_v(request: Request, sid: str, dl: int = 0):
     if not job_id:
         return JSONResponse(status_code=403, content={"ok": False, "error": "링크가 만료됐어요"})
     job = Store(DB_PATH).get_mix_job(job_id)
-    if not job or not job.get("video_path") or not Path(job["video_path"]).exists():
-        return JSONResponse(status_code=404, content={"ok": False})
+    _gone = _video_gone_reason(job)
+    if _gone:
+        return JSONResponse(status_code=404, content={"ok": False, "error": _gone})
     if dl:
         return FileResponse(job["video_path"], media_type="video/mp4",
                             filename=export_bundle.safe_name(job_id) + ".mp4")
@@ -7931,9 +7958,9 @@ async def api_buffer_schedule(request: Request):
                             content={"ok": False, "error": "job_id와 채널을 골라 주세요."})
 
     job = Store(DB_PATH).get_mix_job(job_id)
-    if not job or not job.get("video_path") or not Path(job["video_path"]).exists():
-        return JSONResponse(status_code=404,
-                            content={"ok": False, "error": "완성된 영상이 없습니다."})
+    _gone = _video_gone_reason(job)
+    if _gone:
+        return JSONResponse(status_code=404, content={"ok": False, "error": _gone})
     # 내 작업인지 확인 — 남의 job_id로 남의 영상을 공개 링크로 뽑아낼 수 있으면 안 된다.
     if int(job.get("customer_id") or 0) != _cid(request):
         return JSONResponse(status_code=403, content={"ok": False, "error": "내 작업이 아닙니다."})
