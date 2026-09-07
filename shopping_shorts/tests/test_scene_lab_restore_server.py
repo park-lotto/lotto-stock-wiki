@@ -12,11 +12,12 @@ lists가 무엇이 됐는지로 본다.
 """
 import json
 import os
-import re
-import subprocess
-import tempfile
 
 import pytest
+
+from .js_harness import requires_node, run_js
+
+pytestmark = requires_node
 
 _HTML = os.path.join(os.path.dirname(__file__), "..", "static", "scene_lab.html")
 
@@ -64,16 +65,10 @@ console.log(JSON.stringify({ret: out, lists, mode, rendered, said}));
         _fn(src, "restoreServer"),
         call,
     )
-    with tempfile.NamedTemporaryFile("w", suffix=".mjs", delete=False, encoding="utf-8") as f:
-        f.write(harness)
-        path = f.name
-    try:
-        r = subprocess.run(["node", path], capture_output=True, text=True,
-                           encoding="utf-8", errors="replace")
-        assert r.returncode == 0, r.stderr
-        return json.loads(r.stdout.strip().splitlines()[-1])
-    finally:
-        os.unlink(path)
+    # ★node를 직접 부르지 않는다 — pytest가 stdin을 잡은 상태에서 부르면 윈도우에서
+    #   WinError 6로 간헐 실패해 게이트가 헛돈다(2026-08-21 교훈, js_harness 참조).
+    out = run_js(harness)
+    return json.loads(out.strip().splitlines()[-1])
 
 
 # 서버에 편성이 얹혀 있는 잡 — 박세현 님 441702e0ec14의 모양 그대로(칸마다 scene_override).
