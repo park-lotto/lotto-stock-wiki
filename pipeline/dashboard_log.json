@@ -670,5 +670,54 @@
     "track": "협업질의",
     "summary": "다른 PC/다른 계정 작업자와 동시 작업 시 꼬임 여부 질의 응답. 계정 분리는 무관, 같은 워킹트리 공유 여부가 핵심임을 정리(A: 별개 클론 안전 / B: 원격데스크톱 같은 폴더 위험).",
     "next": "사장님이 A/B 중 어느 상황인지 확인 후 해당 케이스 세팅 절차 정리"
+  },
+  {
+    "date": "2026-09-07",
+    "category": "스탁브레인",
+    "track": "필름조각소실",
+    "summary": "박세현(cid 340) 관련 기록 3건과 어제(09-06) 작업 전량을 읽고 정리. '3단계 갔다오면 작업물 소실' 제보의 알려진 뿌리는 scene_lab 자동저장이 extra_segs(film_ 조각)를 지워 편성 서명이 바뀌는 것이며, 서버 안전망은 09-05 ba4003df6로 이미 배포됨(edit_plan.py:5573 확인). 3번째 재발이면 안전망 미작동이거나 미수정 건(clean_video_path 고정, beat_idx 중복 잔여 5잡)일 가능성.",
+    "next": "박세현의 이번 job id 확보 후 라이브 실측 — final_clean_{sig}.plan.json 스냅샷 vs 현재 edit_plan 비트 재료 대조, scene_lab/*/apply POST 시각과 edit_plan.updated_at 일치 여부 확인"
+  },
+  {
+    "date": "2026-09-07",
+    "category": "스탁브레인",
+    "track": "자료조사",
+    "summary": "노션 글(요즘 쇼츠는 이걸로 만듭니다) + 유튜브 B9ndu9VtCDI(쇼츠 제작 완전 자동화) 두 자료를 실제로 읽고 정리. 1편=수동 워크플로(클로드→ElevenLabs→Flow→CapCut, 30분/편), 2편=5단계 완전자동화(Playwright로 Flow 화면조작, Groq Whisper 자막, YouTube Data API 예약업로드, 워처 방식). Flow 영상생성 API는 과금 지뢰(4분에 6~7만원).",
+    "next": "이 자동화 구조를 숏템메이커/STOCK BRAIN에 붙일지 사장님 판단 대기"
+  },
+  {
+    "date": "2026-09-07",
+    "category": "스탁브레인",
+    "track": "자동점검",
+    "summary": "회귀버그 자동점검 시스템 브레인스토밍. 실측: 파이썬 테스트 850파일 있으나 화면 E2E는 0개(사장님이 겪는 버그가 정확히 그 빈틈). produce.html 18016줄/버튼281/onclick336. merge_gate.py:9에 '전체 pytest 25 failed 정체 미규명' 방치 중. 미리보기서버 8850(deploy/preview.sh) 실재 확인. 2층 구조(전수훑기+한바퀴 깊게) 제안, 승인 대기.",
+    "next": "2층 구조 승인 후 렌더 포함 여부 결정 → 설계문서 작성 → writing-plans"
+  },
+  {
+    "date": "2026-09-07",
+    "category": "스탁브레인",
+    "track": "모델조사",
+    "summary": "2026-09-07 기준 OpenAI 코덱스 모델 전체(Astra/5.6 Sol·Terra·Luna/Codex Spark) 웹 실측 조사. 클로드 라인업과 벤치마크·가격 비교 HTML 작성 → out/모델비교_GPT_vs_Claude_2026-09-07.html + 바탕화면 복사.",
+    "next": "동일 하네스 교차 벤치마크 공개 시 SWE-bench 수치 보강"
+  },
+  {
+    "date": "2026-09-07",
+    "category": "스탁브레인",
+    "track": "건축쇼츠자동화",
+    "summary": "생성된 컷 프레임 4장을 눈으로 대조한 결과 프롬프트 지시 7개 중 4개가 무시됨(단면절개·수위상승·카메라전진·회청색톤 반영 안 됨). 4초는 카메라 무브가 안 들어가고, 3D 단면 다이어그램은 Veo가 못 만드는 것으로 보임 — 원본 채널 화면 전략과 직결되는 문제.",
+    "next": "컷 3개 추가 테스트(8초+지시축소 / 영어프롬프트 / 3D cutaway diagram) — 특히 단면도 가능 여부가 화면 전략을 가른다"
+  },
+  {
+    "date": "2026-09-07",
+    "category": "스탁브레인",
+    "track": "3단계저장",
+    "summary": "박세현 님 조치 완료: ①3단계 소실 버그 수리·배포(00beaae0d) — 서버 편성 복원 폴백+[지금 저장]·[서버에서 불러오기] 버튼, 라이브 실측 통과 ②10번째 영상(lens_instagram_eagw9q, 장면 14개)을 편성 손대지 않고 s9으로 붙임 — urls 9→10, 소스파일 10개 전부 인식, 어제 편성 4·3·3·3·8개 그대로. 백업 /home/ubuntu/bak_441702e0ec14_20260907_121839.json",
+    "next": "★재발방지는 아직 반쪽 — 초기화가 한 번 나면 자동저장이 서버 편성까지 AI 배치로 덮어쓴다(edit_plan.py 빈칸 방어는 '빈 상태'만 막고 'AI 기본배치'는 통과). 제안=저장 직전 직전 판본을 scene_lab_prev로 보관+화면에서 되돌리기. 사장님 승인 대기"
+  },
+  {
+    "date": "2026-09-07",
+    "category": "스탁브레인",
+    "track": "검수뼈대",
+    "summary": "Phase1 구현 착수. SDD 원장 생성, 사전 충돌스캔 12쌍 점검(오타 1건 판정: latest_verdicts→latest_results). Task1 checks.db 저장층 완료(0dcb42457, 3 passed) — verdict.py/db.py. Task1 리뷰 진행 중.",
+    "next": "Task1 리뷰 결과 반영 후 Task2(요약·새로빨강 계산)부터 Task14까지 순차 진행"
   }
 ]
