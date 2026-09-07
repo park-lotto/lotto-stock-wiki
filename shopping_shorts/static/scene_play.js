@@ -1065,20 +1065,41 @@ function step(){
     if (openT) { clearTimeout(openT); openT = 0; }
     go();
   };
-  const giveUp = () => {
+  const giveUp = (fatal) => {
     if (opened) return;
     opened = true;
-    v.onloadedmetadata = null; v.onerror = null;
+    v.onerror = null;
     if (openT) { clearTimeout(openT); openT = 0; }
     holdShot(c, true);                   // 검은 화면 대신 그 조각의 썸네일
     paintCut();
     if (seq[seqI + 1]) seat(seq[seqI + 1]);
+    const myI = seqI, myKey = playKey, t0 = Date.now();
     schedStep(c.dur * 1000);             // 음성과 어긋나지 않게 이 컷 시간은 그대로 쓴다
+    // ★늦게 열렸다고 그 컷을 통째로 '사진'으로 흘려보내지 않는다(2026-09-07 사장님
+    //   "재생할 때 이미지만 재생되는 부분이 있다" — 모든 고객 동일).
+    //   종전엔 여기서 손을 떼 버려(onloadedmetadata=null) 대기창 안에 못 연 컷은
+    //   **끝까지 썸네일만** 보였다. 대기창은 컷 길이의 60%(최소 0.3·최대 1.5초)인데
+    //   구절 맞춤 뒤 1초대 컷이 흔해 0.6초짜리 창이 자주 걸린다 = 정지 그림 구간.
+    //   늦게라도 열리면 그 컷의 **남은 시간**부터 이어 보여준다(타이머·싱크는 그대로).
+    if (fatal){ v.onloadedmetadata = null; return; }
+    v.onloadedmetadata = () => {
+      v.onloadedmetadata = null;
+      if (playKey !== myKey || seqI !== myI || seqPaused) return;   // 이미 지나간 컷이면 무시
+      const off = (Date.now() - t0) / 1000;
+      if (off >= (c.dur || 0) - 0.2) return;   // 거의 끝난 컷은 굳이 갈아끼우지 않는다
+      try{
+        v.currentTime = c.start + off;         // 흘러간 만큼 건너뛰어야 싱크가 안 밀린다
+        showVid(v); applyRate(v, c); v.play().catch(()=>{});
+        const late = () => { v.onseeked = null; v.oncanplay = null; holdShot(null, false); };
+        if (v.readyState >= 2 && !v.seeking) late();
+        else { v.onseeked = late; v.oncanplay = late; }
+      }catch(e){}
+    };
   };
   v.onloadedmetadata = open;
-  v.onerror = giveUp;                    // 소재를 못 받았다 — 멈추지 말고 넘어간다
+  v.onerror = () => giveUp(true);        // 소재를 못 받았다 — 멈추지 말고 넘어간다
   // 컷 길이의 60%까지만 기다린다(cutWaitMs와 같은 기준 — 기다림이 컷보다 길면 무의미).
-  openT = setTimeout(giveUp, cutWaitMs(c));
+  openT = setTimeout(() => giveUp(false), cutWaitMs(c));
 }
 
 // ── 컷 표시 한 곳(2026-08-15 사장님 "왼쪽은 3개인데 컷이 4/4" 혼란) ─────────────────
