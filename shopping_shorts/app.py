@@ -13977,6 +13977,74 @@ def _admin_page(request: Request):
                         media_type="text/html; charset=utf-8", headers=_NOCACHE)
 
 
+# ── 관리점검표(2026-09-07 검수 뼈대) — 결과는 checks.db, 화면은 static/checks.html ──
+#    게이트는 /admin과 같은 인라인 _is_admin(★/bot_admin.html·/challenge/admin처럼 빼먹지 않는다).
+@app.get("/admin/checks", response_class=HTMLResponse)
+def _checks_page(request: Request):
+    if not _is_admin(getattr(request.state, "customer_id", None)):
+        return HTMLResponse("<h2 style='font-family:sans-serif'>관리자 전용입니다</h2>", status_code=403)
+    return FileResponse(Path(__file__).parent / "static" / "checks.html",
+                        media_type="text/html; charset=utf-8", headers=_NOCACHE)
+
+
+def _checks_conn():
+    from shopping_shorts.checks import db as _cdb
+    return _cdb.open_db(_cdb.DEFAULT_PATH)
+
+
+@app.get("/api/admin/checks/summary")
+def _api_checks_summary(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts.checks import db as _cdb
+    from shopping_shorts.checks.verdict import summarize
+    conn = _checks_conn()
+    try:
+        run = conn.execute("SELECT * FROM check_runs WHERE finished IS NOT NULL ORDER BY run_id DESC LIMIT 1").fetchone()
+        if not run:
+            return {"ok": True, "run": None, "headline": "아직 점검 실행 기록이 없습니다.", "counts": {}, "newly_red": [],
+                    "results": [], "health": []}
+        rows = _cdb.latest_results(conn, run["run_id"])
+        prev = {r["signature"]: _cdb.previous_verdict(conn, r["signature"], run["run_id"]) for r in rows}
+        summ = summarize(rows, prev)
+        health = [dict(r) for r in conn.execute(
+            "SELECT h.* FROM health_samples h JOIN (SELECT item, MAX(ts) AS mts FROM health_samples GROUP BY item) m "
+            "ON h.item=m.item AND h.ts=m.mts ORDER BY h.ok, h.item")]
+        return {"ok": True, "run": dict(run), "headline": summ["headline"], "counts": summ["counts"],
+                "newly_red": summ["newly_red"], "results": rows, "health": health}
+    finally:
+        conn.close()
+
+
+@app.get("/api/admin/checks/results")
+def _api_checks_results(request: Request, run: int):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts.checks import db as _cdb
+    conn = _checks_conn()
+    try:
+        return {"ok": True, "results": _cdb.latest_results(conn, run)}
+    finally:
+        conn.close()
+
+
+@app.get("/api/admin/checks/health")
+def _api_checks_health(request: Request, item: str, days: int = 14):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    conn = _checks_conn()
+    try:
+        rows = [dict(r) for r in conn.execute(
+            "SELECT ts, value, ok, detail FROM health_samples WHERE item=? AND ts >= datetime('now', ?) ORDER BY ts",
+            (item, f"-{int(days)} days"))]
+        return {"ok": True, "item": item, "rows": rows}
+    finally:
+        conn.close()
+
+
 # ── 오늘 제작 현황판(2026-09-02) ────────────────────────────────────────────
 #   사장님 요청: "회원들이 오늘 영상 만드는 걸 따로 페이지에서, 통계랑 실제 만든
 #   영상까지 내가 편하게 보게 해달라."
