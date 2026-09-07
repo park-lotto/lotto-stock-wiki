@@ -9,6 +9,7 @@
 build_edit_plan(Gemini 콜)은 Task 4에서 추가.
 """
 
+import copy
 import inspect
 import json
 import math
@@ -5553,6 +5554,22 @@ def apply_scene_lab(plan, seg_map, edits):
     """
     # ★사본에 병합 — 원본 seg_map을 제자리 수정하면 부르는 쪽(app.py)이 같은 dict를
     #   다른 용도로 다시 쓸 때 클라이언트가 만든 조각이 새어 나간다.
+    # ★직전 판본을 **아무것도 덮기 전에** 떠 둔다(2026-09-07). 아래 루프가
+    #   beat["scene_override"]를 새 값으로 갈아끼우므로, 끝에서 뜨면 이미 늦다
+    #   (실제로 한 번 그렇게 짰다가 테스트에 잡혔다 — 판본에 새 배정이 들어갔다).
+    #   실제로 이력에 넣을지는 편성이 달라졌는지 보고 함수 끝에서 정한다.
+    _snap = None
+    _prev_lab = plan.get("scene_lab")
+    if isinstance(_prev_lab, dict) and _prev_lab.get("beats"):
+        _snap_ov = {}
+        for _b in plan.get("beats") or []:
+            _o = _b.get("scene_override")
+            if _o:
+                _snap_ov[str(_b.get("beat_idx"))] = copy.deepcopy(_o)
+        _snap = {"at": _prev_lab.get("at") or "",
+                 "beats": copy.deepcopy(_prev_lab.get("beats") or []),
+                 "overrides": _snap_ov,
+                 "extra_segs": copy.deepcopy(_prev_lab.get("extra_segs") or {})}
     seg_map = dict(seg_map or {})
     # ★`or {}`만으로는 부족하다 — 문자열·리스트는 truthy라 그대로 통과해 .items()에서
     #   AttributeError로 500이 난다(클라 입력이라 어떤 모양이든 올 수 있다).
@@ -5691,11 +5708,84 @@ def apply_scene_lab(plan, seg_map, edits):
     # ★"at" = 이 편성이 서버에 얹힌 시각(2026-08-21). 화면(localStorage)과 서버 중 어느
     #   쪽이 최신인지 가르는 유일한 기준이다 — mix_jobs.updated_at은 음성 생성 같은 다른
     #   이유로도 움직여서 편성 시각으로 쓸 수 없다.
+    # ★덮어쓰기 전에 직전 판본을 남긴다(2026-09-07 사장님 "반쪽짜리를 만들어서 주는 건 뭔데").
+    #   오늘 고친 것은 "화면이 초기화되는 길"을 막은 것이지, 초기화가 한 번 나면
+    #   1.2초 뒤 자동저장(autoApply)이 **서버 편성까지 AI 기본배치로 덮어쓴다**.
+    #   그러면 서버에도 원본이 없어 되살릴 방법이 사라진다 — 원인을 하나씩 막는 대신
+    #   결과를 되돌릴 수 있게 만든다(아직 모르는 경로로 사고가 나도 통한다).
+    #   ⚠️자동저장은 1.2초마다 온다 — 매번 쌓으면 이력이 순식간에 찬다. 그래서
+    #     **편성이 실제로 달라졌을 때만** 쌓는다(_lab_signature 비교).
+    if _snap is not None and _lab_signature(_snap["beats"]) != _lab_signature(edits.get("beats") or []):
+        _hist = plan.get("scene_lab_hist")
+        if not isinstance(_hist, list):
+            _hist = []
+        _hist.insert(0, _snap)
+        plan["scene_lab_hist"] = _hist[:_LAB_HIST_MAX]
     plan["scene_lab"] = {"beats": edits.get("beats") or [], "trims": trims,
                          "merges": merges, "fixlen": fixlen, "applied": applied,
                          "extra_segs": _kept,
                          "at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
     return plan
+
+
+#: 되돌릴 수 있는 판본 수. 5벌이면 사고를 알아채기까지의 자동저장을 넉넉히 덮는다.
+_LAB_HIST_MAX = 5
+
+
+def _lab_signature(beats):
+    """편성이 실제로 달라졌는지 가르는 지문 — 칸별 조각 순서까지 본다.
+
+    ★같은 내용의 자동저장(1.2초마다)이 판본을 밀어내면, 정작 되돌리고 싶은
+      '사고 직전'이 5벌 밖으로 밀려나 없어진다. 그래서 내용이 같으면 안 쌓는다.
+    """
+    out = []
+    for b in beats or []:
+        if not isinstance(b, dict):
+            continue
+        out.append((str(b.get("beat_idx")), tuple(b.get("list") or [])))
+    return tuple(out)
+
+
+def restore_scene_lab_version(plan, index=0):
+    """보관된 판본 하나를 편성에 되돌린다(제자리 수정). 성공하면 True.
+
+    ★되돌리기 자체도 하나의 편집이다 — 지금 편성을 이력 맨 앞에 넣어두어야
+      "되돌렸다가 다시 원래대로"가 된다(안 그러면 되돌리기가 편도가 된다).
+    """
+    hist = plan.get("scene_lab_hist")
+    if not isinstance(hist, list) or not (0 <= index < len(hist)):
+        return False
+    ver = hist[index]
+    if not isinstance(ver, dict) or not ver.get("beats"):
+        return False
+    cur = plan.get("scene_lab")
+    # ★되돌리기 전 배정을 **먼저** 뜬다 — 아래에서 덮고 나면 못 담는다.
+    cur_ov = {}
+    for b in plan.get("beats") or []:
+        o = b.get("scene_override")
+        if o:
+            cur_ov[str(b.get("beat_idx"))] = o
+    ov = ver.get("overrides") or {}
+    for b in plan.get("beats") or []:
+        key = str(b.get("beat_idx"))
+        if key in ov:
+            b["scene_override"] = ov[key]
+        else:
+            b.pop("scene_override", None)
+    plan["scene_lab"] = {"beats": ver.get("beats") or [],
+                         "trims": (cur or {}).get("trims") or {},
+                         "merges": (cur or {}).get("merges") or {},
+                         "fixlen": (cur or {}).get("fixlen") or {},
+                         "applied": len(ver.get("beats") or []),
+                         "extra_segs": ver.get("extra_segs") or {},
+                         "at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
+    rest = [h for i, h in enumerate(hist) if i != index]
+    if isinstance(cur, dict) and cur.get("beats"):
+        rest.insert(0, {"at": cur.get("at") or "", "beats": cur.get("beats") or [],
+                        "overrides": cur_ov,
+                        "extra_segs": cur.get("extra_segs") or {}})
+    plan["scene_lab_hist"] = rest[:_LAB_HIST_MAX]
+    return True
 
 
 def revert_scene_lab(plan):

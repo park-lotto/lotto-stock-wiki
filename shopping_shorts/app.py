@@ -5954,6 +5954,53 @@ def api_mix_scene_lab_apply(job_id: str, body: dict):
     return {"ok": True, "applied": (plan.get("scene_lab") or {}).get("applied", 0), "swapped": _swapped}
 
 
+@app.get("/api/mix/scene_lab/{job_id}/history")
+def api_mix_scene_lab_history(job_id: str):
+    """되돌릴 수 있는 편성 판본 목록(2026-09-07). 화면이 '언제 것'인지 고르게 한다.
+
+    ★조각을 통째로 내려보내지 않는다 — 목록에는 시각과 규모만 싣고, 실제 복원은
+      서버가 한다(같은 판단을 화면에도 적으면 어긋난다, 0순위-B).
+    """
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job or not job.get("edit_plan"):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "편집안 없음"})
+    out = []
+    for i, h in enumerate((job["edit_plan"].get("scene_lab_hist") or [])):
+        if not isinstance(h, dict):
+            continue
+        beats = h.get("beats") or []
+        out.append({"index": i, "at": h.get("at") or "",
+                    "beats": len(beats),
+                    "clips": sum(len((b or {}).get("list") or []) for b in beats)})
+    return {"ok": True, "versions": out}
+
+
+@app.post("/api/mix/scene_lab/{job_id}/restore_version")
+def api_mix_scene_lab_restore_version(job_id: str, body: dict):
+    """보관된 편성 판본으로 되돌린다. body {"index": 0}.
+
+    ★자동저장이 편성을 덮어써 서버에도 원본이 없어지는 사고를 되돌리는 마지막 수단이다
+      (2026-09-07). 되돌리기 전 편성도 이력에 남으므로 왕복이 된다.
+    """
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job or not job.get("edit_plan"):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "편집안 없음"})
+    if job.get("status") in _MIX_ACTIVE_STAGES + ("rendering", "removing_subtitles"):
+        return JSONResponse(status_code=409,
+                            content={"ok": False, "error": "생성·렌더 중에는 되돌릴 수 없어요"})
+    try:
+        idx = int(body.get("index") or 0)
+    except (TypeError, ValueError):
+        idx = 0
+    plan = job["edit_plan"]
+    if not _edit_plan.restore_scene_lab_version(plan, idx):
+        return JSONResponse(status_code=404,
+                            content={"ok": False, "error": "그 판본이 없어요"})
+    store.update_mix_job(job_id, edit_plan=plan)
+    return {"ok": True, "applied": (plan.get("scene_lab") or {}).get("applied", 0)}
+
+
 @app.post("/api/admin/probe/frame_accuracy")
 def api_admin_probe_frame_accuracy_start(request: Request, body: dict = None):
     """관리자: 1단계 정확도 서버 실측 시작(SSH 없이). body {n: 30}. 결과는 GET으로 폴링.
