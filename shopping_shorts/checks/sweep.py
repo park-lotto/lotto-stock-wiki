@@ -97,6 +97,122 @@ _HIT_JS = """(idx) => {
   return !!top && (top === el || el.contains(top) || top.contains(el));
 }"""
 
+_PANEL_DISCOVER_JS = """(rootSel) => {
+  const root = document.querySelector(rootSel);
+  if (!root) return [];
+  const els = [...root.querySelectorAll('button, [onclick], input, select, textarea, a[href^="/"]')];
+  return els.map((el, idx) => {
+    const r = el.getBoundingClientRect();
+    const st = getComputedStyle(el);
+    const visible = r.width > 2 && r.height > 2 && st.visibility !== 'hidden' && st.display !== 'none';
+    el.dataset.chkIdx = idx;
+    return {idx, tag: el.tagName.toLowerCase(), id: el.id || '', onclick: el.getAttribute('onclick') || '',
+            text: (el.innerText || el.value || el.placeholder || '').trim().slice(0, 20),
+            type: el.getAttribute('type') || '', visible, disabled: !!el.disabled,
+            x: r.x + r.width / 2, y: r.y + r.height / 2, w: r.width, h: r.height};
+  }).filter(e => e.visible && !e.disabled);
+}"""
+# ★버튼 전수 훑기 복구(2026-09-07 2차 지시): _DISCOVER_JS(위)는 document 전체를 훑어 사이드바·
+# steps 칩·nav의 "← 이전/다음 →"(go(N))까지 주웠다 — 그게 안전사고(로그아웃 등)와 재현불가
+# (13→259건 들쭉날쭉, go(N)가 패널만 바꿔 뒤 요소 좌표가 옛 패널 기준이 됨)의 공통 원인이었다.
+# 이 버전은 **지금 열려 있는 패널(.panel[data-step=N]) 서브트리 안**만 훑는다 — 구조적으로:
+#   - 사이드바(<aside>, sidebar.js가 document.body 맨 앞에 넣음)는 .panel 밖 → 원천 제외
+#   - #steps 칩·.nav의 go(N)/이전·다음 버튼은 <main> 안이지만 .panel 밖(형제) → 원천 제외
+# "명시적 목록"이 아니라 "이 화면의 구조" 자체가 판별 규칙이다 — 목록이면 새 버튼이 생겨도
+# 안 걸린다. 구조는 안 바뀌는 한 계속 걸린다.
+
+
+def discover_panel_targets(page, panel_selector):
+    return page.evaluate(_PANEL_DISCOVER_JS, panel_selector)
+
+
+_DANGEROUS_ONCLICK_MARKERS = (
+    # 로그아웃·작업관리(구조적으로 이미 .panel 밖이라 안 걸리지만, 다른 자리에 같은 함수가
+    # 나타날 경우까지 대비한 이중 방어 — sweep._is_app_shell_nav와 같은 근거).
+    "logout", "delwork", "renwork", "ssopenbugreport",
+    # 실제 외부 API를 부르는 발송/게시(카카오톡·Buffer·SNS 예약) — 미리보기 DB가 망가지는 건
+    # 무방하지만(사본), 이런 액션은 DB 밖의 진짜 부작용(외부 서비스에 실제로 뭔가 남긴다)을 낸다.
+    "kakao", "buffer(", "loadbuffer", "sendtosns", "publishsns", "snspublish", "snssend",
+    "postbuffer", "schedulebuffer",
+    # 결제·구독 계열(회원 크레딧·과금에 실제로 영향을 줄 수 있는 함수명).
+    "paynow", "checkout", "subscribe(", "unsubscribe(", "cancelsubscription", "chargecredit",
+)
+_NAV_ONCLICK_RE = re.compile(r"^\s*(?:event\.stopPropagation\(\);)?\s*(?:go|jump)\(-?\d+\)\s*;?\s*$")
+
+
+def is_dangerous_button(info):
+    """위험 버튼 판별 — 명시적 화이트/블랙 리스트가 아니라 **규칙**이다(코디네이터 지시
+    2026-09-07 2차: 새 버튼이 생겨도 자동으로 걸러져야 함). 판별 근거:
+    (a) <a> 태그 — 클릭하면 페이지를 벗어난다(뒤 요소가 전부 사라진 화면 기준으로 눌리는
+        연쇄 오탐의 원인이었다, 1차 라운드 3차 실측).
+    (b) onclick이 "location.href="로 시작 — 마찬가지로 페이지 이탈.
+    (c) onclick이 go(N)/jump(N) 단독 호출 — 패널만 바꾸는 조작. 구조적으로 discover_panel_targets가
+        이미 .panel 서브트리 밖의 이 버튼들을 안 줍지만, 혹시 패널 안에 같은 패턴이 있어도
+        방어하도록 정규식으로 한 번 더 막는다(1차 라운드에서 284건 빨강 폭증의 실측 원인).
+    (d) onclick 함수명에 로그아웃·작업삭제/이름변경·외부발송(카카오톡/Buffer/SNS)·결제/구독
+        계열 마커가 섞여 있다 — 미리보기 DB(사본)가 망가지는 건 무방하지만, 이런 액션은
+        DB 밖의 실제 외부 API를 부를 수 있다.
+    ★프리셋/장면/자막 등 **패널 안 콘텐츠**의 삭제·초기화(deleteMyPreset·resetFavs·
+    clearHeadcopy 등)는 여기서 안 뺀다 — 그건 이 전수 훑기가 원래 잡으려는 진짜 테스트
+    대상이고(사장님이 이 시스템을 만든 이유), 미리보기 DB만 건드리는 항목이라 안전하다."""
+    if info.get("tag") == "a":
+        return True
+    oc = (info.get("onclick") or "")
+    if oc.startswith("location.href="):
+        return True
+    if _NAV_ONCLICK_RE.match(oc):
+        return True
+    low = oc.lower()
+    return any(m in low for m in _DANGEROUS_ONCLICK_MARKERS)
+
+
+_BUTTON_SWEEP_BUDGET_S = 180   # 버튼 전수 훑기(모든 패널 합산) 총 시간예산 — 초과분은 이유있는 회색.
+                               # 기존 "패널 열림" 확인(~10초)에 더해 붙는 예산이라 daily run 전체가
+                               # 지나치게 길어지지 않게(코디네이터 지시) 3분으로 잡았다 — 필요하면
+                               # 이 상수만 올리면 된다(단일 출구, 0순위-B).
+
+
+def _sweep_panel_buttons(session, panel_label, active_step, deadline):
+    """지금 열려 있는 패널(data-step=active_step) 서브트리 안 버튼을 전부 눌러본다.
+    ★재현성(코디네이터 지시 2026-09-07 2차, 원장 실측 13→259건 재현불가): idx를 한 번만 매겨
+    쓰지 않는다 — 계획(어떤 서명의 버튼을 누를지)만 패널 진입 시점에 한 번 잡고, 실제로 누르기
+    직전마다 (1) 지금도 같은 패널인지 확인해 아니면 되돌리고 (2) idx를 다시 매겨(re-discover)
+    서명으로 그 버튼을 다시 찾는다 — 앞선 버튼이 DOM을 바꿨어도(칸 추가·카드 재렌더 등) 옛
+    좌표를 믿지 않는다. 서명을 다시 못 찾으면(그 사이 요소가 사라짐 — 정상적인 UI 변화일 수
+    있음) 빨강이 아니라 회색으로 남긴다."""
+    page = session.page
+    panel_sel = f'.panel[data-step="{active_step}"]'
+    plan = [t for t in discover_panel_targets(page, panel_sel) if not is_dangerous_button(t)]
+    ref_url = f"{session.base_url}/produce"   # _press의 navigated 판정 기준(쿼리 무시, pathname만 비교)
+    out = []
+    for planned in plan:
+        if time.time() > deadline:
+            out.append(Result("L1", f"{panel_label} 버튼 나머지 {len(plan) - len(out)}개", GRAY,
+                              reason="시간예산 초과(전수 훑기 총 180초) — 다음 실행에서 이어짐",
+                              signature=f"L1:panel_btns_budget:{panel_label}", page="/produce"))
+            break
+        sig = signature_of(planned)
+        cur = page.evaluate("() => (typeof cur !== 'undefined') ? String(cur) : null")
+        if cur != str(active_step):
+            # 이전 버튼이 다른 패널로 넘겨버렸다(막았어야 할 조작이 새다) — 원래 패널로 되돌리고 계속
+            browser.goto_produce(page, session.base_url + "/produce?new=1")
+            page.locator(f'#steps [title="{panel_label}"]').first.click(timeout=3000)
+            page.wait_for_timeout(400)
+        fresh = discover_panel_targets(page, panel_sel)
+        match = next((f for f in fresh if signature_of(f) == sig), None)
+        if match is None:
+            out.append(Result("L1", planned["text"] or planned["tag"], GRAY,
+                              reason="이전 조작 뒤 이 요소가 사라짐(패널 재렌더로 인한 정상 변화일 수 있음)",
+                              signature=sig, page="/produce"))
+            continue
+        if not hit_test(page, match["idx"]):
+            out.append(Result("L1", planned["text"] or planned["tag"], RED, reason="가려짐(elementFromPoint 불일치)",
+                              signature=sig, page="/produce", evidence_dir=capture_red_evidence(session, sig)))
+            continue
+        out.append(_press(session, match, ref_url))
+    return out
+
+
 _TIMER_THROTTLE_MIN = 25   # browser.timer_probe(3초) 정상≈30, 스로틀=4. 이 밑이면 결과를 못 믿는다.
 _BLANK_FLOOR = 60          # 백지 판정 절대 하한 — 리뷰 실측: 1000→80은 모달/패널이 닫힌 정상 축소일 뿐이라
                            # 상대비율(10%)로는 오탐. 정상 화면이면 최소 요약문·안내문 정도는 남으므로
@@ -325,18 +441,24 @@ def _is_app_shell_nav(info):
 
 
 def sweep_produce(session, panels=range(10)):
-    """제작소 10패널: 단계 칩을 눌러 각 패널이 실제로 열리는지만 확인한다.
-    ★2026-09-07 서버 실측 축소(중요): 원래는 각 패널 안 요소를 discover+press로 전부 눌러봤는데,
-    같은 코드·같은 데이터로 두 번 돌려 빨강이 13건→259건으로 **재현이 안 될 만큼 들쭉날쭉**했다.
-    앱셸(로그아웃 등)·jump(N) 칩·<a href>는 걸렀지만 "← 이전"/"다음 →"(go(N))처럼 **같은 URL 안에서
-    패널만 바꾸는** 조작이 더 있고, 그런 조작이 눌리면 `sweep_url`의 항해-복귀 로직(page.url 비교)이
-    URL이 안 바뀌었으니 "복귀할 필요 없다"고 판단해 그 뒤 요소들은 옛 패널 기준 좌표로 계속 눌려
-    "가려짐/조작실패"가 연쇄 오탐났다 — 그리고 그 순서·타이밍이 매번 달라 결과가 안정적이지 않았다.
-    이유 있는 결과가 매번 달라지면(=재현 안 되면) 그 자체로 못 믿을 신호라, 원인(모든 단계이동 조작을
-    다 걸러내는 것)을 이번 라운드 안에 안전하게 못 끝낼 바엔 **범위를 줄여서라도 안정적으로** 만들었다.
-    각 요소별 조작 훑기(discover+press)는 다시 켜기 전에 반드시: (1) go(N) 포함 모든 "패널을 바꾸는"
-    조작을 원천 배제하거나 (2) sweep_url이 URL이 아니라 '현재 활성 패널'로 복귀 여부를 판정하도록
-    고쳐야 한다 — 코디네이터 판단 필요, 이번 라운드 범위 밖.
+    """제작소 10패널: 단계 칩을 눌러 각 패널이 실제로 열리는지 확인 + **열린 패널 안 버튼을
+    전부 눌러본다**(B-01 본체 — 제작소에만 버튼 281개·onclick 336개, "어느 버튼이 안 되는지"를
+    잡는 게 이 검사의 원래 존재 이유. 2026-09-07 1차 라운드에서 재현불가로 "패널 열림"만 남기고
+    축소했었는데, 그 축소 사유 두 개를 2차 라운드에서 구조적으로 해결했다:
+    (1) go(N) 재현불가 — `_sweep_panel_buttons`가 **패널 서브트리(.panel[data-step=N]) 안만**
+        훑는다(`discover_panel_targets`). #steps 칩·`.nav`의 go(N)("← 이전"/"다음 →")는 그
+        서브트리 밖에 있어 **원천적으로 대상이 아니다** — 블랙리스트가 아니라 DOM 구조 자체가
+        판별 규칙이라 새 버튼이 생겨도 자동으로 안전하다. 정규식(`_NAV_ONCLICK_RE`)으로 한 번
+        더 방어한다(패널 안에 같은 패턴이 생겨도).
+    (2) 안전사고(로그아웃·작업삭제) — 사이드바(`<aside>`, sidebar.js가 `document.body` 맨
+        앞에 넣음)도 `.panel` 밖이라 같은 이유로 원천 제외. `is_dangerous_button`이 외부
+        API를 실제로 부르는 액션(카카오톡·Buffer·SNS 발송·결제)만 추가로 걸러낸다 — 프리셋
+        삭제 같은 패널 안 콘텐츠 조작은 걸러내지 않는다(그게 이 검사가 잡으려는 진짜 대상이고,
+        미리보기 DB만 건드리는 안전한 범위다).
+    재현성은 idx 1회 discover가 아니라 **버튼마다 재-discover + 서명 재매칭**으로 확보한다
+    (`_sweep_panel_buttons` 참조) — 앞선 버튼이 DOM을 바꿔도 옛 좌표를 안 믿는다.
+    시간예산(`_BUTTON_SWEEP_BUDGET_S`, 전 패널 합산 180초)을 넘기면 남은 버튼은 "시간예산
+    초과"로 이유 있는 회색 처리하고 다음으로 넘어간다 — daily run 전체가 무한정 길어지지 않게.
     ★run_ui가 L1 중 제일 먼저 부르는 함수라 여기서 오래된 증거 폴더 정리를 겸한다(정리 실패해도
     점검은 계속 — cleanup_old_evidence 내부에서 이미 삼킨다)."""
     cleanup_old_evidence()
@@ -348,6 +470,7 @@ def sweep_produce(session, panels=range(10)):
         if not labels:
             raise RuntimeError("STEP_LABELS 못 찾음 — 화면 구조가 바뀌었을 수 있음")
         out = []
+        button_deadline = time.time() + _BUTTON_SWEEP_BUDGET_S
         for o in panels:
             label = labels[o]
             try:
@@ -362,6 +485,14 @@ def sweep_produce(session, panels=range(10)):
             except Exception as e:  # noqa: BLE001 — 이 패널만 회색, 다음 패널은 계속 시도
                 out.append(Result("L1", f"패널 열림 — {label}", GRAY, reason=f"{type(e).__name__}: {str(e)[:120]}",
                                   signature=f"L1:panel_open:{label}", page="/produce"))
+                continue
+            if not ok:
+                continue   # 패널이 안 열렸으면 그 안 버튼도 훑을 대상이 없다
+            active_step = page.evaluate(
+                "() => { const p = document.querySelector('.panel.show'); return p ? p.dataset.step : null; }")
+            if active_step is None:
+                continue
+            out.extend(_sweep_panel_buttons(session, label, active_step, button_deadline))
         return out
 
     results, ok = _run_guarded("제작소 전수", _run)

@@ -322,11 +322,11 @@ def test_sweep_produce_wraps_runtime_error_as_gray():
     assert out[0].verdict == GRAY
 
 
-def test_sweep_produce_checks_each_panel_opens_without_full_element_sweep(monkeypatch):
-    """★Task14 6차 실측: 패널 내부 요소를 discover+press로 전수 훑는 방식은 같은 코드·같은 데이터로
-    두 번 돌려도 빨강이 13건→259건으로 재현이 안 될 만큼 들쭉날쭉했다(go(N) 등 URL 안 바뀌는 패널
-    전환 조작이 더 있어 sweep_url의 항해복귀 로직이 못 잡음). 안정적으로 만들기 위해 범위를 "패널이
-    실제로 열리는가"만 확인하는 것으로 좁혔다 — 이 테스트는 그 축소된 계약을 고정한다."""
+def test_sweep_produce_opens_each_panel_and_sweeps_its_buttons(monkeypatch):
+    """★Task14 2026-09-07 2차 지시: 전수 훑기(버튼 하나씩 누르기)를 복구했다 — 패널 서브트리
+    (`.panel[data-step=N]`) 안에서 발견된 버튼만 누른다. 이 fake 패널엔 버튼이 0개이므로
+    (discover_panel_targets가 [] 리턴) '패널 열림' 결과만 남는다 — 버튼 훑기 경로가 예외 없이
+    빈 계획을 정상 처리하는지를 고정한다(회귀 시 즉시 잡히도록)."""
     class _FakePage:
         def __init__(self):
             self.url = "http://x/produce"
@@ -336,6 +336,10 @@ def test_sweep_produce_checks_each_panel_opens_without_full_element_sweep(monkey
                 return ["p0", "p1"]
             if ".dk.cur" in js:
                 return self.cur
+            if ".panel.show" in js:
+                return "0"   # 물리 패널 번호(고정값 — 이 테스트는 버튼 0개 흉내만 확인)
+            if "root.querySelectorAll" in js:
+                return []    # 이 패널엔 버튼이 없다 — 빈 계획 처리 확인이 목적
             return 30   # timer_probe 흉내
         def locator(self, sel):
             # "#steps [title=\"p0\"]" 형태에서 라벨을 뽑아 클릭 시 cur를 갱신한다
@@ -565,3 +569,99 @@ def test_cleanup_old_evidence_never_escapes_root(tmp_path, monkeypatch):
 
     assert outside.exists()
     assert (outside / "keep.txt").exists()
+
+
+# ── 버튼 전수 훑기 복구(2026-09-07 2차) — is_dangerous_button 판별 규칙 ────────────────────
+
+
+def test_is_dangerous_button_excludes_anchor_and_location_href():
+    assert sweep.is_dangerous_button({"tag": "a", "onclick": ""}) is True
+    assert sweep.is_dangerous_button({"tag": "button", "onclick": "location.href='/library'"}) is True
+
+
+def test_is_dangerous_button_excludes_go_and_jump_even_inside_panel():
+    """구조적 배제(.panel 밖)가 뚫려도 정규식이 한 번 더 막는다(방어선 2중)."""
+    assert sweep.is_dangerous_button({"tag": "button", "onclick": "go(-1)"}) is True
+    assert sweep.is_dangerous_button({"tag": "button", "onclick": "go(1)"}) is True
+    assert sweep.is_dangerous_button({"tag": "button", "onclick": "jump(3)"}) is True
+    assert sweep.is_dangerous_button({"tag": "button", "onclick": "event.stopPropagation();go(-1)"}) is True
+
+
+def test_is_dangerous_button_excludes_external_send_and_payment():
+    assert sweep.is_dangerous_button({"tag": "button", "onclick": "sendToKakao()"}) is True
+    assert sweep.is_dangerous_button({"tag": "button", "onclick": "loadBuffer()"}) is True
+    assert sweep.is_dangerous_button({"tag": "button", "onclick": "payNow()"}) is True
+    assert sweep.is_dangerous_button({"tag": "button", "onclick": "__ssLogout()"}) is True
+
+
+def test_is_dangerous_button_keeps_in_panel_content_delete_and_reset():
+    """★프리셋/장면 삭제 같은 패널 안 콘텐츠 조작은 위험 목록이 아니다 — 이게 전수 훑기의
+    진짜 대상이다(코디네이터 지시: 미리보기 DB만 건드리면 안전)."""
+    assert sweep.is_dangerous_button({"tag": "button", "onclick": "deleteMyPreset(0)"}) is False
+    assert sweep.is_dangerous_button({"tag": "button", "onclick": "resetFavs()"}) is False
+    assert sweep.is_dangerous_button({"tag": "button", "onclick": "clearHeadcopy()"}) is False
+    assert sweep.is_dangerous_button({"tag": "div", "onclick": "s2DelBeat(0,1)"}) is False
+
+
+# ── _sweep_panel_buttons — 재현성(서명 재매칭) ────────────────────────────────────────────
+
+
+def test_sweep_panel_buttons_presses_only_discovered_targets_and_reproduces(monkeypatch):
+    """같은 계획(discover_panel_targets)이 두 번 호출돼도 같은 서명 순서로 같은 결과를
+    낸다는 것을 고정한다 — 원장 실측(13→259건 재현불가)의 재발 방지 계약."""
+    calls = {"n": 0}
+
+    def fake_discover(page, sel):
+        calls["n"] += 1
+        return [{"idx": 0, "tag": "button", "id": "b1", "onclick": "doA()", "text": "A",
+                 "type": "", "visible": True, "disabled": False}]
+
+    monkeypatch.setattr(sweep, "discover_panel_targets", fake_discover)
+    monkeypatch.setattr(sweep, "hit_test", lambda page, idx: True)
+    monkeypatch.setattr(sweep, "capture_red_evidence", lambda session, sig: "")
+
+    def fake_press(session, info, url):
+        return Result("L1", info["text"], GREEN, reason="ok", signature=sweep.signature_of(info), page=url)
+
+    monkeypatch.setattr(sweep, "_press", fake_press)
+
+    class _FakePage:
+        base_url_calls = 0
+        def evaluate(self, js, *a):
+            return "3"   # cur == active_step, 되돌릴 필요 없음
+
+    class _Session:
+        page = _FakePage()
+        base_url = "http://x"
+
+    import time as _time
+    out1 = sweep._sweep_panel_buttons(_Session(), "대본생성", "3", _time.time() + 10)
+    out2 = sweep._sweep_panel_buttons(_Session(), "대본생성", "3", _time.time() + 10)
+    assert [r.verdict for r in out1] == [r.verdict for r in out2] == [GREEN]
+    assert [r.signature for r in out1] == [r.signature for r in out2]
+    assert calls["n"] == 4   # 패널당 계획 1회 + 버튼 1개마다 재-discover 1회 = 2 × 2회 실행
+
+
+def test_sweep_panel_buttons_marks_gray_when_signature_disappears(monkeypatch):
+    """앞선 조작으로 DOM이 바뀌어 계획한 서명이 다음 재-discover에서 안 잡히면 빨강이 아니라
+    회색(정상적인 UI 변화일 수 있음)이어야 한다."""
+    def fake_discover_once_then_empty(page, sel, _state={"n": 0}):
+        _state["n"] += 1
+        if _state["n"] == 1:
+            return [{"idx": 0, "tag": "button", "id": "gone", "onclick": "", "text": "사라짐",
+                     "type": "", "visible": True, "disabled": False}]
+        return []   # 재-discover 시점엔 이미 사라짐
+
+    monkeypatch.setattr(sweep, "discover_panel_targets", fake_discover_once_then_empty)
+
+    class _FakePage:
+        def evaluate(self, js, *a):
+            return "3"
+
+    class _Session:
+        page = _FakePage()
+        base_url = "http://x"
+
+    import time as _time
+    out = sweep._sweep_panel_buttons(_Session(), "대본생성", "3", _time.time() + 10)
+    assert len(out) == 1 and out[0].verdict == GRAY and "사라짐" in out[0].reason
