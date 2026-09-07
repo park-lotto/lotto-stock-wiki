@@ -643,7 +643,7 @@ def test_sweep_panel_buttons_presses_only_discovered_targets_and_reproduces(monk
     monkeypatch.setattr(sweep, "capture_red_evidence", lambda session, sig: "")
     monkeypatch.setattr(sweep.browser, "goto_produce", lambda page, url, timeout_ms=12000: None)
 
-    def fake_press(session, info, url):
+    def fake_press(session, info, url, context=None):
         return Result("L1", info["text"], GREEN, reason="ok", signature=sweep.signature_of(info), page=url)
 
     monkeypatch.setattr(sweep, "_press", fake_press)
@@ -683,3 +683,127 @@ def test_sweep_panel_buttons_marks_gray_when_signature_disappears(monkeypatch):
     import time as _time
     out = sweep._sweep_panel_buttons(_Session(), "대본생성", "3", _time.time() + 10)
     assert len(out) == 1 and out[0].verdict == GRAY and "다시 못 찾음" in out[0].reason
+
+
+# ── Task14 정정: "누르지 못함" GRAY vs "눌렀는데 터짐" RED 분리(2026-09-07) ──────────────
+
+
+class _ClickTimeoutPage:
+    """click()이 Playwright TimeoutError류 예외를 던지는 가짜 — '누르지 못함'을 흉내낸다."""
+    url = "http://x/produce"
+
+    def click(self, sel, timeout=3000, no_wait_after=True):
+        raise TimeoutError("Page.click: Timeout 3000ms exceeded.")
+
+    def fill(self, sel, val, timeout=3000):
+        raise TimeoutError("Page.fill: Timeout 3000ms exceeded.")
+
+    def evaluate(self, script, *a):
+        return 100
+
+    def screenshot(self, path):
+        with open(path, "wb") as f:
+            f.write(b"\x89PNG\r\n\x1a\n")
+
+
+def test_press_click_timeout_is_gray_not_red(tmp_path, monkeypatch):
+    """클릭 자체가 3초 안에 안 먹으면(타임아웃) '서비스가 아픔'이 아니라 '점검이 못 함' —
+    회색이어야 한다. 이유 문구도 사람이 읽고 판단 가능해야 한다(코디네이터 지시)."""
+    monkeypatch.setattr(sweep, "EVIDENCE_ROOT", tmp_path)
+    page = _ClickTimeoutPage()
+    sink = _EvidenceSink([_EMPTY_SNAP, _EMPTY_SNAP])
+    session = _EvidenceSession(page, sink)
+
+    result = sweep._press(session, _RED_INFO, "/produce")
+
+    assert result.verdict == GRAY
+    assert "누르지 못함" in result.reason
+    assert "TimeoutError" in result.reason
+
+
+def test_press_real_error_after_successful_click_stays_red(tmp_path, monkeypatch):
+    """클릭 자체는 성공했는데 그 결과 pageerror가 새로 생기면 — 이건 진짜 고장이므로
+    여전히 RED여야 한다(누르지 못함 GRAY화가 진짜 에러까지 덮어버리면 안 됨)."""
+    monkeypatch.setattr(sweep, "EVIDENCE_ROOT", tmp_path)
+    page = _EvidencePage()  # click() 성공
+    sink = _EvidenceSink([_EMPTY_SNAP, {**_EMPTY_SNAP, "pageerrors": ["TypeError: boom"]}])
+    session = _EvidenceSession(page, sink)
+
+    result = sweep._press(session, _RED_INFO, "/produce")
+
+    assert result.verdict == RED
+    assert "TypeError" in result.reason
+
+
+def test_sweep_panel_buttons_hit_test_fail_is_gray_not_red(monkeypatch):
+    """가려짐(elementFromPoint 불일치)도 '누르지 못함' 계열 — RED가 아니라 GRAY."""
+    def fake_discover(page, sel):
+        return [{"idx": 0, "tag": "button", "id": "b1", "onclick": "doA()", "text": "A",
+                 "type": "", "visible": True, "disabled": False}]
+
+    monkeypatch.setattr(sweep, "discover_panel_targets", fake_discover)
+    monkeypatch.setattr(sweep, "hit_test", lambda page, idx: False)
+    monkeypatch.setattr(sweep, "capture_red_evidence", lambda session, sig: "")
+    monkeypatch.setattr(sweep.browser, "goto_produce", lambda page, url, timeout_ms=12000: None)
+
+    class _Session:
+        def __init__(self):
+            self.page = _ResetFakePage()
+        base_url = "http://x"
+
+    import time as _time
+    out = sweep._sweep_panel_buttons(_Session(), "대본생성", "3", _time.time() + 10)
+    assert len(out) == 1
+    assert out[0].verdict == GRAY
+    assert "누르지 못함" in out[0].reason
+
+
+# ── Task14 정정: 사람이 알아볼 수 있는 표시 이름 + signature 안정성(2026-09-07) ──────────
+
+
+def test_display_name_prefers_text_then_aria_then_title_then_onclick_then_ordinal():
+    assert sweep._display_name({"tag": "button", "text": "재생", "idx": 0}) == "재생"
+    assert sweep._display_name(
+        {"tag": "button", "text": "", "aria_label": "TTS 재생", "idx": 0}) == "TTS 재생"
+    assert sweep._display_name(
+        {"tag": "button", "text": "", "aria_label": "", "title": "즐겨찾기", "idx": 0}) == "즐겨찾기"
+    assert sweep._display_name(
+        {"tag": "button", "text": "", "aria_label": "", "title": "", "onclick": "playVoice(this)", "idx": 0}
+    ) == "playVoice"
+    assert sweep._display_name(
+        {"tag": "button", "text": "", "aria_label": "", "title": "", "onclick": "", "idx": 2}
+    ) == "이름 없는 버튼 3번째"
+
+
+def test_display_name_adds_panel_context():
+    info = {"tag": "button", "text": "▶ 재생", "idx": 0}
+    assert sweep._display_name(info, "TTS음성") == "TTS음성 — ▶ 재생"
+
+
+def test_display_name_change_does_not_move_signature():
+    """이름이 바뀌어도(문맥이 붙어도) signature_of는 그대로 — '새로 빨강' 계산이 흔들리면 안 된다."""
+    info = {"tag": "button", "id": "", "onclick": "playVoice(this)", "text": "▶ 재생"}
+    sig_before = sweep.signature_of(info)
+    _ = sweep._display_name(info, "TTS음성")  # 표시용 호출이 signature에 영향 없어야 함
+    assert sweep.signature_of(info) == sig_before == "button@playVoice"
+
+
+# ── Task14 정정: 시간예산 초과 시 패널 회전 시작점(2026-09-07) ──────────────────────────
+
+
+def test_rotation_start_persists_and_advances(tmp_path, monkeypatch):
+    state_path = tmp_path / "rotation.json"
+    monkeypatch.setattr(sweep, "_ROTATION_STATE_PATH", state_path)
+
+    assert sweep._load_rotation_start(10) == 0   # 상태 파일 없음 → 0부터
+    sweep._save_rotation_start(3, 10)
+    assert sweep._load_rotation_start(10) == 3
+    sweep._save_rotation_start(13, 10)            # n을 넘는 값도 모듈로 감싸 저장
+    assert sweep._load_rotation_start(10) == 3
+
+
+def test_rotation_start_survives_corrupt_state_file(tmp_path, monkeypatch):
+    state_path = tmp_path / "rotation.json"
+    state_path.write_text("이건 JSON이 아님", encoding="utf-8")
+    monkeypatch.setattr(sweep, "_ROTATION_STATE_PATH", state_path)
+    assert sweep._load_rotation_start(10) == 0   # 깨진 파일이면 0으로 안전 폴백

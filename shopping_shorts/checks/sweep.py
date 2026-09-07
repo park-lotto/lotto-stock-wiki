@@ -11,6 +11,7 @@ B-09 리포터 생존.
 - signature_of()는 discover_targets가 매기는 idx(DOM 순서 의존, 리렌더마다 바뀔 수 있음)를 절대 쓰지
   않는다 — id > onclick 함수명 > 텍스트 순으로만 정한다.
 """
+import json
 import re
 import shutil
 import time
@@ -29,6 +30,33 @@ from shopping_shorts.checks.verdict import GRAY, GREEN, RED, Result
 EVIDENCE_ROOT = Path(__file__).resolve().parent.parent / "data" / "checks_evidence"
 _EVIDENCE_SAFE_RE = re.compile(r"[^A-Za-z0-9_-]+")
 _EVIDENCE_MAX_AGE_DAYS = 14  # 이보다 오래된 증거 폴더는 다음 sweep_produce() 시작 시 정리
+
+# ── 회전 시작점(2026-09-07 Task 정정 3): "다음 실행에서 이어짐"이 실제로는 거짓이었다 ──────
+#   run_checks.py는 매번 sweep_produce(session)를 인자 없이 부른다(panels=range(10) 기본값) —
+#   즉 시간예산을 넘겨도 다음 run은 항상 패널 0부터 다시 돈다. 뒤쪽 패널(예: 09 TTS음성)은
+#   예산을 늘 못 받아 영원히 안 눌린다. run_checks.py는 수정 금지 목록이라 인자로 이어받을 수
+#   없으므로, sweep.py 안에 마지막으로 시작한 패널을 작은 상태 파일에 남기고 다음 run은 그
+#   다음 패널부터 시작하도록 돌아가며 바꾼다. 상태 파일이 없거나 깨져도(첫 실행·동시 쓰기 등)
+#   0부터 시작하는 것으로 안전하게 폴백한다 — 회전이 안 되는 것뿐, 점검 자체는 안 죽는다.
+_ROTATION_STATE_PATH = Path(__file__).resolve().parent.parent / "data" / "checks_sweep_rotation.json"
+
+
+def _load_rotation_start(n_panels):
+    try:
+        data = json.loads(_ROTATION_STATE_PATH.read_text(encoding="utf-8"))
+        start = int(data.get("next_start", 0))
+        return start % n_panels if n_panels else 0
+    except Exception:  # noqa: BLE001 — 상태 파일이 없거나 깨졌으면 그냥 0부터
+        return 0
+
+
+def _save_rotation_start(next_start, n_panels):
+    try:
+        _ROTATION_STATE_PATH.parent.mkdir(parents=True, exist_ok=True)
+        _ROTATION_STATE_PATH.write_text(
+            json.dumps({"next_start": next_start % n_panels if n_panels else 0}), encoding="utf-8")
+    except Exception:  # noqa: BLE001 — 다음 run이 0부터 시작할 뿐, 이번 run 결과엔 영향 없음
+        pass
 
 
 def _evidence_slug(signature):
@@ -84,6 +112,8 @@ _DISCOVER_JS = """() => {
     el.dataset.chkIdx = idx;
     return {idx, tag: el.tagName.toLowerCase(), id: el.id || '', onclick: el.getAttribute('onclick') || '',
             text: (el.innerText || el.value || el.placeholder || '').trim().slice(0, 20),
+            aria_label: (el.getAttribute('aria-label') || '').trim().slice(0, 40),
+            title: (el.getAttribute('title') || '').trim().slice(0, 40),
             type: el.getAttribute('type') || '', visible, disabled: !!el.disabled,
             x: r.x + r.width / 2, y: r.y + r.height / 2, w: r.width, h: r.height};
   }).filter(e => e.visible && !e.disabled);
@@ -115,6 +145,8 @@ _PANEL_DISCOVER_JS = """(rootSel) => {
     el.dataset.chkIdx = idx;
     return {idx, tag: el.tagName.toLowerCase(), id: el.id || '', onclick: el.getAttribute('onclick') || '',
             text: (el.innerText || el.value || el.placeholder || '').trim().slice(0, 20),
+            aria_label: (el.getAttribute('aria-label') || '').trim().slice(0, 40),
+            title: (el.getAttribute('title') || '').trim().slice(0, 40),
             type: el.getAttribute('type') || '', visible, disabled: !!el.disabled,
             x: r.x + r.width / 2, y: r.y + r.height / 2, w: r.width, h: r.height};
   }).filter(e => e.visible && !e.disabled);
@@ -203,10 +235,14 @@ def _sweep_panel_buttons(session, panel_label, active_step, deadline):
     for planned in plan:
         if time.time() > deadline:
             out.append(Result("L1", f"{panel_label} 버튼 나머지 {len(plan) - len(out)}개", GRAY,
-                              reason=f"시간예산 초과(전수 훑기 총 {_BUTTON_SWEEP_BUDGET_S}초) — 다음 실행에서 이어짐",
+                              reason=(f"시간예산 초과(전수 훑기 총 {_BUTTON_SWEEP_BUDGET_S}초) — "
+                                      "이 패널은 다음 실행에서 이어받는 회전 순번에 있으면 다시 돈다 "
+                                      "(패널 시작 순서를 회전시켜 뒤 패널도 언젠가 점검됨. run_checks.py는 "
+                                      "고정 호출이라 자동 이어받기는 아님)"),
                               signature=f"L1:panel_btns_budget:{panel_label}", page="/produce"))
             break
         sig = signature_of(planned)
+        name = _display_name(planned, panel_label)
         # ★매 버튼마다 항상 같은 깨끗한 시작 상태로 되돌린다(위 docstring 근거) — 앞선 버튼이
         # 모달을 열었든 패널을 옮겼든 여기서 전부 리셋된다.
         browser.goto_produce(page, session.base_url + "/produce?new=1")
@@ -215,15 +251,18 @@ def _sweep_panel_buttons(session, panel_label, active_step, deadline):
         fresh = discover_panel_targets(page, panel_sel)
         match = next((f for f in fresh if signature_of(f) == sig), None)
         if match is None:
-            out.append(Result("L1", planned["text"] or planned["tag"], GRAY,
+            out.append(Result("L1", name, GRAY,
                               reason="이 패널을 새로 열어도 이 요소를 다시 못 찾음(조건부 렌더링일 수 있음)",
                               signature=sig, page="/produce"))
             continue
         if not hit_test(page, match["idx"]):
-            out.append(Result("L1", planned["text"] or planned["tag"], RED, reason="가려짐(elementFromPoint 불일치)",
+            # ★"가려짐"도 클릭 실패 계열(누르지 못함)이지 서비스가 아픈 게 아니다 → GRAY.
+            out.append(Result("L1", name, GRAY,
+                              reason="버튼을 누르지 못함(요소가 화면에 가려져 있거나 스크롤 밖 — "
+                                     "elementFromPoint가 이 요소를 못 찾음)",
                               signature=sig, page="/produce", evidence_dir=capture_red_evidence(session, sig)))
             continue
-        out.append(_press(session, match, ref_url))
+        out.append(_press(session, match, ref_url, context=panel_label))
     return out
 
 
@@ -236,13 +275,38 @@ _BLANK_FLOOR = 60          # 백지 판정 절대 하한 — 리뷰 실측: 1000
 
 
 def signature_of(info):
-    """id > onclick 함수명 > 텍스트 순. discover_targets가 매기는 idx는 절대 쓰지 않는다(DOM 순서 불안정)."""
+    """id > onclick 함수명 > 텍스트 순. discover_targets가 매기는 idx는 절대 쓰지 않는다(DOM 순서 불안정).
+    ★표시용 이름(_display_name)과 분리한다 — 이름이 바뀌어도 signature가 흔들리면 "새로 빨강"
+    계산(verdict.summarize의 prev.get(signature))이 망가진다(2026-09-07 지시)."""
     if info.get("id"):
         return f"{info['tag']}#{info['id']}"
     m = re.match(r"\s*(?:event\.stopPropagation\(\);)?\s*([A-Za-z_$][\w$]*)\s*\(", info.get("onclick") or "")
     if m:
         return f"{info['tag']}@{m.group(1)}"
     return f"{info['tag']}:{info.get('text', '')}"
+
+
+_ONCLICK_FN_RE = re.compile(r"\s*(?:event\.stopPropagation\(\);)?\s*([A-Za-z_$][\w$]*)\s*\(")
+
+
+def _display_name(info, context=None):
+    """사람이 화면에서 읽고 "아, 그 버튼" 하고 알아볼 수 있는 이름(2026-09-07 지시).
+    ★식별(signature_of)과 표시(이 함수)를 분리했다 — 여기서 뭘 바꿔도 이력 연속성엔 영향 없다.
+    우선순위: 버튼 텍스트 → aria-label/title → onclick 함수명 → "이름 없는 버튼 N번째"(idx 기반,
+    최후 폴백). context가 있으면(어느 패널·화면인지) 앞에 붙인다 — 사장님이 목록만 보고 어디
+    버튼인지 알 수 있어야 한다는 게 이 항목의 요구사항이다."""
+    label = (info.get("text") or "").strip()
+    if not label:
+        label = (info.get("aria_label") or "").strip()
+    if not label:
+        label = (info.get("title") or "").strip()
+    if not label:
+        m = _ONCLICK_FN_RE.match(info.get("onclick") or "")
+        if m:
+            label = m.group(1)
+    if not label:
+        label = f"이름 없는 버튼 {int(info.get('idx', 0)) + 1}번째"
+    return f"{context} — {label}" if context else label
 
 
 def classify(before, after, body_before, body_after, navigated):
@@ -322,24 +386,32 @@ def filter_blocked_noise(after, before, blocked_paths):
             "client_error_posts": adjusted_client_errors, "failed_responses": filtered_failed}
 
 
-def _press(session, info, url):
+def _press(session, info, url, context=None):
+    """★2026-09-07 정정(코디네이터 지시): "누르지 못함"(클릭 타임아웃·요소 못 찾음·가려짐·비활성)과
+    "눌렀는데 터짐"(JS 에러·4xx/5xx·백지)은 다른 판정이다 — 전자는 "서비스가 아픔"이 아니라
+    "점검이 판단 못 함"이라 GRAY, 후자만 RED. 이 구분이 무너지면 검사가 무력해지므로 아래 두
+    경로(try/except = 조작 자체 실패 → GRAY / classify() = 조작 뒤 결과 판정 → RED 가능)를
+    반드시 분리해서 유지한다."""
     page, sink = session.page, session.errors
     before, body_before = sink.snapshot(), _body_len(page)
     blocked_before_n = len(session.blocked)
     t0 = time.time()
     sel = f'[data-chk-idx="{info["idx"]}"]'
+    name = _display_name(info, context)
     try:
         if info["tag"] in ("input", "textarea") and info["type"] not in ("checkbox", "radio", "file", "button", "submit"):
             page.fill(sel, "점검" if info["tag"] == "textarea" or info["type"] in ("", "text", "search") else "1", timeout=3000)
         elif info["type"] == "file":
-            return Result("L1", info["text"] or info["tag"], GRAY, reason="파일 입력은 건너뜀",
+            return Result("L1", name, GRAY, reason="파일 입력은 건너뜀",
                           signature=signature_of(info), page=url)
         else:
             page.click(sel, timeout=3000, no_wait_after=True)
         page.wait_for_timeout(1500)
-    except Exception as e:  # noqa: BLE001 — 클릭 실패 자체가 판정 근거
+    except Exception as e:  # noqa: BLE001 — ★"누르지 못함"이지 "서비스가 아픔"이 아니다 → GRAY
         sig = signature_of(info)
-        return Result("L1", info["text"] or info["tag"], RED, reason=f"조작 실패 {type(e).__name__}: {str(e)[:120]}",
+        return Result("L1", name, GRAY,
+                      reason=(f"버튼을 누르지 못함(3초 안에 클릭 불가 — 가려졌거나 비활성일 수 있음): "
+                              f"{type(e).__name__}: {str(e)[:120]}"),
                       signature=sig, page=url, dur_ms=int((time.time() - t0) * 1000),
                       evidence_dir=capture_red_evidence(session, sig))
     navigated = page.url.split("?")[0] != url.split("?")[0]
@@ -348,7 +420,7 @@ def _press(session, info, url):
     v, why = classify(before, after, body_before, _body_len(page), navigated)
     sig = signature_of(info)
     ev = capture_red_evidence(session, sig) if v == RED else ""
-    return Result("L1", info["text"] or info["tag"], v, reason=why, signature=sig, page=url,
+    return Result("L1", name, v, reason=why, signature=sig, page=url,
                   dur_ms=int((time.time() - t0) * 1000), evidence_dir=ev)
 
 
@@ -375,7 +447,10 @@ def sweep_url(session, url, reopen=None, skip=None):
     for info in targets:
         if not hit_test(page, info["idx"]):
             sig = signature_of(info)
-            out.append(Result("L1", info["text"] or info["tag"], RED, reason="가려짐(elementFromPoint 불일치)",
+            name = _display_name(info)
+            out.append(Result("L1", name, GRAY,
+                              reason="버튼을 누르지 못함(요소가 화면에 가려져 있거나 스크롤 밖 — "
+                                     "elementFromPoint가 이 요소를 못 찾음)",
                               signature=sig, page=url, evidence_dir=capture_red_evidence(session, sig)))
             continue
         out.append(_press(session, info, url))
@@ -454,7 +529,7 @@ def _is_app_shell_nav(info):
 
 
 
-def sweep_produce(session, panels=range(10)):
+def sweep_produce(session, panels=None):
     """제작소 10패널: 단계 칩을 눌러 각 패널이 실제로 열리는지 확인 + **열린 패널 안 버튼을
     전부 눌러본다**(B-01 본체 — 제작소에만 버튼 281개·onclick 336개, "어느 버튼이 안 되는지"를
     잡는 게 이 검사의 원래 존재 이유. 2026-09-07 1차 라운드에서 재현불가로 "패널 열림"만 남기고
@@ -485,7 +560,17 @@ def sweep_produce(session, panels=range(10)):
             raise RuntimeError("STEP_LABELS 못 찾음 — 화면 구조가 바뀌었을 수 있음")
         out = []
         button_deadline = time.time() + _BUTTON_SWEEP_BUDGET_S
-        for o in panels:
+        # ★회전 시작점(위 _ROTATION_STATE_PATH 근거): panels를 명시로 안 넘겼으면(daily run이
+        # 항상 이 경우) 이번 run은 지난번 저장해둔 지점부터 시작한다 — 그래야 시간예산에 밀려
+        # 매번 못 도는 뒤쪽 패널도 언젠가 앞자리를 받아 실제로 점검된다.
+        if panels is None:
+            n = len(labels)
+            start = _load_rotation_start(n)
+            order = list(range(start, n)) + list(range(0, start))
+            _save_rotation_start(start + 1, n)
+        else:
+            order = list(panels)
+        for o in order:
             label = labels[o]
             try:
                 page.locator(f'#steps [title="{label}"]').first.click(timeout=3000)
