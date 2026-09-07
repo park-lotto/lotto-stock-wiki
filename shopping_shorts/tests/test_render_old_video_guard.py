@@ -30,7 +30,10 @@ def test_만드는_중이면_완성본을_안_준다():
     assert '"rendering", "removing_subtitles"' in head
     assert "409" in head, "만드는 중이면 409로 막아야 한다(옛 파일 제공 금지)"
     # 막는 검사가 파일 존재 검사보다 **앞**이어야 한다 — 뒤면 옛 파일이 먼저 나간다.
-    assert head.index('"rendering", "removing_subtitles"') < head.index('Path(job["video_path"]).exists()')
+    # ⚠️파일 존재 검사는 2026-09-07에 `_video_gone_reason()`으로 옮겼다(영상 7일 보관을
+    #   넣으며 같은 판정이 네 군데로 흩어져 있던 것을 한 곳으로 모았다). 순서를 지키라는
+    #   이 검사의 뜻은 그대로다 — 부르는 이름만 따라간다.
+    assert head.index('"rendering", "removing_subtitles"') < head.index("_video_gone_reason(job)")
 
 
 def test_안내문구는_사람말이다():

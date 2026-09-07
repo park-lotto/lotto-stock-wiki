@@ -7566,7 +7566,6 @@ def api_mix_voice_preview(body: dict):
     return FileResponse(str(out), media_type="audio/mpeg")
 
 
-@app.get("/api/mix/video/{job_id}")
 def _video_gone_reason(job):
     """완성 영상을 못 주는 이유. 줄 수 있으면 None. **판정은 여기 한 곳뿐**(0순위-B).
 
@@ -7591,6 +7590,7 @@ def _video_gone_reason(job):
             "다시 만들면 새로 받으실 수 있어요." % FINAL_KEEP_DAYS)
 
 
+@app.get("/api/mix/video/{job_id}")
 def api_mix_video(job_id: str, request: Request, dl: int = 0):
     job = Store(DB_PATH).get_mix_job(job_id)
     # ★만드는 중이면 옛 파일을 주지 않는다(2026-09-02). 화면이 버튼을 숨겨도 주소를
