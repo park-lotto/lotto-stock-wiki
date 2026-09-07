@@ -29,3 +29,86 @@ def test_admin_page_requires_admin(monkeypatch, tmp_path):
     c = TestClient(appmod.app)
     r = c.get("/admin/checks")
     assert r.status_code in (303, 401, 403) if appmod._AUTH_ON else r.status_code == 200
+
+
+def test_evidence_serves_real_screenshot(monkeypatch, tmp_path):
+    """정상 케이스: evidence_dir 아래 shot.png가 있으면 200으로 이미지가 내려간다."""
+    monkeypatch.setattr(db, "DEFAULT_PATH", tmp_path / "checks.db")
+    evroot = tmp_path / "checks_evidence"
+    monkeypatch.setattr(appmod, "_EVIDENCE_ROOT", evroot.resolve())
+    conn = db.open_db(tmp_path / "checks.db")
+    r1 = db.start_run(conn, "s", "deploy", "a")
+    result = Result("L1", "장면편집", RED, signature="scene", evidence_dir="run1_scene")
+    db.add_result(conn, r1, result)
+    db.finish_run(conn, r1, RED)
+    result_id = conn.execute("SELECT id FROM check_results ORDER BY id DESC LIMIT 1").fetchone()["id"]
+    shot_dir = evroot / "run1_scene"
+    shot_dir.mkdir(parents=True)
+    (shot_dir / "shot.png").write_bytes(b"\x89PNG\r\n\x1a\n" + b"0" * 16)
+    c = _client(monkeypatch, tmp_path)
+
+    r = c.get(f"/api/admin/checks/evidence/{result_id}/shot.png")
+    assert r.status_code == 200
+    assert r.headers["content-type"].startswith("image/png")
+
+    # summary/results도 evidence_ok=True로 보고해야 화면이 링크를 그린다
+    j = c.get("/api/admin/checks/summary").json()
+    assert j["results"][0]["evidence_ok"] is True
+
+
+def test_evidence_missing_file_returns_friendly_404(monkeypatch, tmp_path):
+    """증거 폴더는 있어도 파일이 없는 정상 케이스 — 404지만 JSON으로 이유를 알린다(날 에러 화면 아님)."""
+    monkeypatch.setattr(db, "DEFAULT_PATH", tmp_path / "checks.db")
+    evroot = tmp_path / "checks_evidence"
+    monkeypatch.setattr(appmod, "_EVIDENCE_ROOT", evroot.resolve())
+    conn = db.open_db(tmp_path / "checks.db")
+    r1 = db.start_run(conn, "s", "deploy", "a")
+    db.add_result(conn, r1, Result("L1", "장면편집", RED, signature="scene", evidence_dir="no_such_dir"))
+    db.finish_run(conn, r1, RED)
+    result_id = conn.execute("SELECT id FROM check_results ORDER BY id DESC LIMIT 1").fetchone()["id"]
+    c = _client(monkeypatch, tmp_path)
+
+    r = c.get(f"/api/admin/checks/evidence/{result_id}/shot.png")
+    assert r.status_code == 404
+    assert r.json()["ok"] is False
+
+    j = c.get("/api/admin/checks/summary").json()
+    assert j["results"][0]["evidence_ok"] is False
+
+
+def test_evidence_path_traversal_blocked(monkeypatch, tmp_path):
+    """경로 탈출 시도가 전부 차단되는지 — 증거 루트 밖 파일이 절대 내려가면 안 된다."""
+    monkeypatch.setattr(db, "DEFAULT_PATH", tmp_path / "checks.db")
+    evroot = tmp_path / "checks_evidence"
+    evroot.mkdir()
+    monkeypatch.setattr(appmod, "_EVIDENCE_ROOT", evroot.resolve())
+    # 루트 밖에 진짜 파일을 하나 심어 둔다 — 이게 절대 내려가면 안 된다
+    secret = tmp_path / "secret.png"
+    secret.write_bytes(b"SECRET")
+    conn = db.open_db(tmp_path / "checks.db")
+    r1 = db.start_run(conn, "s", "deploy", "a")
+    db.add_result(conn, r1, Result("L1", "장면편집", RED, signature="scene", evidence_dir="../"))
+    db.finish_run(conn, r1, RED)
+    result_id = conn.execute("SELECT id FROM check_results ORDER BY id DESC LIMIT 1").fetchone()["id"]
+    c = _client(monkeypatch, tmp_path)
+
+    # ① evidence_dir 자체가 ".." — DB에 이런 값이 들어와도 정규식이 막아야 한다
+    r = c.get(f"/api/admin/checks/evidence/{result_id}/shot.png")
+    assert r.status_code == 404
+    assert r.json()["ok"] is False
+
+    # ② URL의 filename에 상대경로 탈출 시도 (raw ..)
+    r2 = c.get(f"/api/admin/checks/evidence/{result_id}/..%2f..%2fsecret.png")
+    assert r2.status_code in (404, 400)
+    assert b"SECRET" not in r2.content
+
+    # ③ 필터를 우회하려는 이중 인코딩·확장자 위장 시도
+    r3 = c.get(f"/api/admin/checks/evidence/{result_id}/shot.png.exe")
+    assert r3.status_code in (404, 400)
+    r4 = c.get(f"/api/admin/checks/evidence/{result_id}/..secret.png")
+    assert r4.status_code == 404
+    assert b"SECRET" not in r4.content
+
+    # ④ 직접 함수 레벨로도 확인: 루트 밖으로는 절대 못 나간다
+    assert appmod._evidence_shot_path("../../..", "shot.png") is None
+    assert appmod._evidence_shot_path("ok_dir", "../../../secret.png") is None

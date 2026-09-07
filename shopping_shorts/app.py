@@ -13992,6 +13992,33 @@ def _checks_conn():
     return _cdb.open_db(_cdb.DEFAULT_PATH)
 
 
+# ── 증거 사진(스크린샷) — checks.db와 나란히, checks.db 안 만드는 값이라 여기서 정한다 ──
+#    ★경로탈출 방지 3중: ①디렉터리명 화이트리스트 정규식 ②파일명 화이트리스트(.png만)
+#    ③최종 resolve() 후 EVIDENCE_ROOT 밖이면 거부(symlink 우회까지 막는다).
+_EVIDENCE_ROOT = (Path(__file__).parent / "data" / "checks_evidence").resolve()
+_EVIDENCE_DIR_RE = re.compile(r"^[A-Za-z0-9_-]{1,120}$")
+_EVIDENCE_FILE_RE = re.compile(r"^[A-Za-z0-9_-]{1,120}\.png$")
+
+
+def _evidence_shot_path(evidence_dir: str, filename: str):
+    """검증된 evidence_dir·filename에서 실제 파일 경로를 돌려준다. 벗어나면 None."""
+    if not evidence_dir or not _EVIDENCE_DIR_RE.match(evidence_dir):
+        return None
+    if not filename or not _EVIDENCE_FILE_RE.match(filename):
+        return None
+    candidate = (_EVIDENCE_ROOT / evidence_dir / filename).resolve()
+    try:
+        candidate.relative_to(_EVIDENCE_ROOT)
+    except ValueError:
+        return None  # ★.. 등으로 루트를 벗어남 — 절대 내보내지 않는다
+    return candidate
+
+
+def _evidence_exists(evidence_dir: str) -> bool:
+    p = _evidence_shot_path(evidence_dir, "shot.png")
+    return bool(p and p.is_file())
+
+
 @app.get("/api/admin/checks/summary")
 def _api_checks_summary(request: Request):
     denied = _require_admin(request)
@@ -14006,6 +14033,8 @@ def _api_checks_summary(request: Request):
             return {"ok": True, "run": None, "headline": "아직 점검 실행 기록이 없습니다.", "counts": {}, "newly_red": [],
                     "results": [], "health": []}
         rows = _cdb.latest_results(conn, run["run_id"])
+        for r in rows:
+            r["evidence_ok"] = _evidence_exists(r.get("evidence_dir") or "")
         prev = {r["signature"]: _cdb.previous_verdict(conn, r["signature"], run["run_id"]) for r in rows}
         summ = summarize(rows, prev)
         health = [dict(r) for r in conn.execute(
@@ -14025,9 +14054,30 @@ def _api_checks_results(request: Request, run: int):
     from shopping_shorts.checks import db as _cdb
     conn = _checks_conn()
     try:
-        return {"ok": True, "results": _cdb.latest_results(conn, run)}
+        rows = _cdb.latest_results(conn, run)
+        for r in rows:
+            r["evidence_ok"] = _evidence_exists(r.get("evidence_dir") or "")
+        return {"ok": True, "results": rows}
     finally:
         conn.close()
+
+
+@app.get("/api/admin/checks/evidence/{result_id}/{filename}")
+def _api_checks_evidence(request: Request, result_id: int, filename: str):
+    """빨간 줄 → 근거 화면 사진. ★관리자 전용 + 경로탈출 3중 방어(_evidence_shot_path)."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    conn = _checks_conn()
+    try:
+        row = conn.execute("SELECT evidence_dir FROM check_results WHERE id=?", (result_id,)).fetchone()
+    finally:
+        conn.close()
+    evidence_dir = row["evidence_dir"] if row else ""
+    path = _evidence_shot_path(evidence_dir or "", filename)
+    if not path or not path.is_file():
+        return JSONResponse({"ok": False, "error": "화면 사진이 없습니다"}, status_code=404)
+    return FileResponse(path, media_type="image/png", headers=_NOCACHE)
 
 
 @app.get("/api/admin/checks/health")

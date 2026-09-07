@@ -40,7 +40,7 @@ function rowHtml(r,newly){
   return `<div class="row ${newly?'newly':''}"><span class="dot ${esc(dot)}"></span><div>
   <div class="name">${esc(r.name)}${r.verdict==='gray'?'<span class="badge">판정 불가</span>':''} <span class="sub">${esc(r.layer)} · ${esc(r.page||'')}</span></div>
   ${r.reason?`<div class="reason">${esc(r.reason)}</div>`:''}
-  ${r.evidence_dir?` <a href="/api/admin/checks/evidence/${r.id}/shot.png" target="_blank">화면 사진</a>`:''}</div></div>`;
+  ${r.evidence_ok?` <a href="/api/admin/checks/evidence/${r.id}/shot.png" target="_blank">화면 사진</a>`:(r.evidence_dir?'<small> · 화면 사진 없음</small>':'')}</div></div>`;
 }
 function healthRow(h){
   // h_dead_key_recall::member 처럼 항상 ok=True로 고정된 항목은 "판정"이 아니라
