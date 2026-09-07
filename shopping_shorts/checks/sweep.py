@@ -316,16 +316,21 @@ def _is_app_shell_nav(info):
     return False
 
 
-_SWEEP_PRODUCE_BUDGET_S = 90
-# ★실측(2026-09-07): app-shell 필터를 걸고서도 한 패널에 element가 많으면(가려짐·조작실패 판정마다
-# 3초 타임아웃) 패널 하나만도 90초를 넘길 수 있다(패널0 단독 실행이 90초+ 안에 안 끝남). 칩 클릭이
-# 이제 성공하니 discover+press 자체가 처음으로 제 속도를 드러낸 것 — 시간예산을 넘기면 남은 패널은
-# "판정 못 함(시간초과)"으로 명시하고 멈춘다. 무한 대기·외부 timeout에 의한 EPIPE 강제종료보다
-# 이유 있는 회색이 낫다(코디네이터 지시).
 
 
 def sweep_produce(session, panels=range(10)):
-    """제작소 10패널: 단계 칩을 눌러 패널을 열고 각각 훑는다. 칩은 STEP_LABELS 텍스트로 찾는다(D7 폴백).
+    """제작소 10패널: 단계 칩을 눌러 각 패널이 실제로 열리는지만 확인한다.
+    ★2026-09-07 서버 실측 축소(중요): 원래는 각 패널 안 요소를 discover+press로 전부 눌러봤는데,
+    같은 코드·같은 데이터로 두 번 돌려 빨강이 13건→259건으로 **재현이 안 될 만큼 들쭉날쭉**했다.
+    앱셸(로그아웃 등)·jump(N) 칩·<a href>는 걸렀지만 "← 이전"/"다음 →"(go(N))처럼 **같은 URL 안에서
+    패널만 바꾸는** 조작이 더 있고, 그런 조작이 눌리면 `sweep_url`의 항해-복귀 로직(page.url 비교)이
+    URL이 안 바뀌었으니 "복귀할 필요 없다"고 판단해 그 뒤 요소들은 옛 패널 기준 좌표로 계속 눌려
+    "가려짐/조작실패"가 연쇄 오탐났다 — 그리고 그 순서·타이밍이 매번 달라 결과가 안정적이지 않았다.
+    이유 있는 결과가 매번 달라지면(=재현 안 되면) 그 자체로 못 믿을 신호라, 원인(모든 단계이동 조작을
+    다 걸러내는 것)을 이번 라운드 안에 안전하게 못 끝낼 바엔 **범위를 줄여서라도 안정적으로** 만들었다.
+    각 요소별 조작 훑기(discover+press)는 다시 켜기 전에 반드시: (1) go(N) 포함 모든 "패널을 바꾸는"
+    조작을 원천 배제하거나 (2) sweep_url이 URL이 아니라 '현재 활성 패널'로 복귀 여부를 판정하도록
+    고쳐야 한다 — 코디네이터 판단 필요, 이번 라운드 범위 밖.
     ★run_ui가 L1 중 제일 먼저 부르는 함수라 여기서 오래된 증거 폴더 정리를 겸한다(정리 실패해도
     점검은 계속 — cleanup_old_evidence 내부에서 이미 삼킨다)."""
     cleanup_old_evidence()
@@ -337,23 +342,20 @@ def sweep_produce(session, panels=range(10)):
         if not labels:
             raise RuntimeError("STEP_LABELS 못 찾음 — 화면 구조가 바뀌었을 수 있음")
         out = []
-        t0 = time.time()
-        panels_list = list(panels)
-        for i, o in enumerate(panels_list):
-            if time.time() - t0 > _SWEEP_PRODUCE_BUDGET_S:
-                remaining = panels_list[i:]
-                out.append(Result("L1", "제작소 전수(시간예산 초과)", GRAY,
-                                  reason=f"패널 {i}/{len(panels_list)}개까지만 훑고 시간예산"
-                                         f"({_SWEEP_PRODUCE_BUDGET_S}초) 초과 — 남은 패널 {remaining} 판정 못 함",
-                                  signature="L1:gray:제작소 전수 시간초과"))
-                break
-
-            def _open(pg, label=labels[o]):
-                # ★칩 보이는 글자는 STEP_SHORT(줄인 이름)라 STEP_LABELS(전체 이름)와 get_by_text로는
-                # 절대 안 맞는다(flows/base.py click_step과 같은 원인·같은 해법) — title 속성으로 찾는다.
-                pg.locator(f'#steps [title="{label}"]').first.click(timeout=3000)
-                pg.wait_for_timeout(400)
-            out.extend(sweep_url(session, "/produce", reopen=_open, skip=_is_app_shell_nav))
+        for o in panels:
+            label = labels[o]
+            try:
+                page.locator(f'#steps [title="{label}"]').first.click(timeout=3000)
+                page.wait_for_timeout(400)
+                cur = page.evaluate(
+                    "() => { const c = document.querySelector('#steps .dk.cur'); return c ? c.title : null; }")
+                ok = (cur == label)
+                out.append(Result("L1", f"패널 열림 — {label}", GREEN if ok else RED,
+                                  reason="정상" if ok else f"열린 패널이 다름(cur={cur!r})",
+                                  signature=f"L1:panel_open:{label}", page="/produce"))
+            except Exception as e:  # noqa: BLE001 — 이 패널만 회색, 다음 패널은 계속 시도
+                out.append(Result("L1", f"패널 열림 — {label}", GRAY, reason=f"{type(e).__name__}: {str(e)[:120]}",
+                                  signature=f"L1:panel_open:{label}", page="/produce"))
         return out
 
     results, ok = _run_guarded("제작소 전수", _run)

@@ -322,15 +322,34 @@ def test_sweep_produce_wraps_runtime_error_as_gray():
     assert out[0].verdict == GRAY
 
 
-def test_sweep_produce_stops_and_reports_gray_when_time_budget_exceeded(monkeypatch):
-    """★Task14 3차 실측: 칩 클릭이 실제로 성공하게 되자 패널 하나만도 90초를 넘길 수 있음이
-    드러났다(EPIPE로 강제종료됨). 시간예산을 넘기면 무한대기 대신 회색+이유로 멈춰야 한다."""
+def test_sweep_produce_checks_each_panel_opens_without_full_element_sweep(monkeypatch):
+    """★Task14 6차 실측: 패널 내부 요소를 discover+press로 전수 훑는 방식은 같은 코드·같은 데이터로
+    두 번 돌려도 빨강이 13건→259건으로 재현이 안 될 만큼 들쭉날쭉했다(go(N) 등 URL 안 바뀌는 패널
+    전환 조작이 더 있어 sweep_url의 항해복귀 로직이 못 잡음). 안정적으로 만들기 위해 범위를 "패널이
+    실제로 열리는가"만 확인하는 것으로 좁혔다 — 이 테스트는 그 축소된 계약을 고정한다."""
     class _FakePage:
-        url = "http://x/produce"
+        def __init__(self):
+            self.url = "http://x/produce"
+            self.cur = None
         def evaluate(self, js, *a):
             if "STEP_LABELS" in js:
-                return ["p0", "p1", "p2"]  # STEP_LABELS 흉내
-            return 30   # timer_probe(_apply_throttle_gate가 부름) 흉내 — 스로틀 없음
+                return ["p0", "p1"]
+            if ".dk.cur" in js:
+                return self.cur
+            return 30   # timer_probe 흉내
+        def locator(self, sel):
+            # "#steps [title=\"p0\"]" 형태에서 라벨을 뽑아 클릭 시 cur를 갱신한다
+            label = sel[len('#steps [title="'):-len('"]')]
+            page = self
+            class _Loc:
+                @property
+                def first(self):
+                    return self
+                def click(self, timeout=None):
+                    page.cur = label
+            return _Loc()
+        def wait_for_timeout(self, ms):
+            pass
 
     class _Session:
         page = _FakePage()
@@ -338,21 +357,10 @@ def test_sweep_produce_stops_and_reports_gray_when_time_budget_exceeded(monkeypa
 
     monkeypatch.setattr(sweep, "cleanup_old_evidence", lambda: None)
     monkeypatch.setattr(sweep.browser, "goto_produce", lambda page, url, timeout_ms=12000: None)
-    monkeypatch.setattr(sweep, "sweep_url", lambda session, url, reopen=None, skip=None: [
-        Result("L1", "가짜", GREEN, signature="L1:fake")])
 
-    clock = {"t": 0.0}
-    def _fake_time():
-        clock["t"] += 40   # 패널 하나당 40초씩 흐른다고 흉내 — 3번째 패널 전에 90초 예산 초과
-        return clock["t"]
-    monkeypatch.setattr(sweep.time, "time", _fake_time)
-
-    out = sweep.sweep_produce(_Session(), panels=range(3))
-    gray = [r for r in out if r.verdict == GRAY]
-    green = [r for r in out if r.verdict == GREEN]
-    assert len(gray) == 1
-    assert "시간예산" in gray[0].reason
-    assert len(green) < 3   # 패널 3개를 다 못 훑고 도중에 멈췄다는 뜻
+    out = sweep.sweep_produce(_Session(), panels=range(2))
+    assert [r.verdict for r in out] == [GREEN, GREEN]
+    assert all("panel_open" in r.signature for r in out)
 
 
 def test_sweep_lists_wraps_runtime_error_as_gray():
