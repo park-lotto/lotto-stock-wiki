@@ -1173,6 +1173,10 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
   <!-- ★[📤 서버에 반영] 버튼을 없앴다(2026-08-17 사장님 "이걸 사용자들이 어떻게 누르나
        자동으로 되게 하고 없애야지"). 이제 편집이 멈추면 1.2초 뒤 saveWork→autoApply가
        알아서 올린다. 안 눌러서 화면과 렌더가 어긋나던 사고(job 03c6639b1198)의 원인 제거. -->
+  <button class="act" onclick="saveWork()"
+          title="지금 화면의 편성을 이 PC와 서버에 바로 저장합니다(평소엔 1.2초 뒤 자동으로 저장됩니다)">💾 지금 저장</button>
+  <button class="act" onclick="loadFromServer()"
+          title="서버에 저장된 편성을 다시 불러옵니다 — 화면이 초기화된 것처럼 보일 때 누르세요">📥 서버에서 불러오기</button>
   <button class="act" onclick="revertServer()"
           title="내가 고친 편성을 걷어내고 AI가 처음 배치한 편집안으로 되돌립니다(원본은 안 건드렸으므로 100% 복구)">↩ AI 배치로 되돌리기</button>
   <span id="savedmsg" class="hint" style="color:var(--good)"></span>
@@ -1760,6 +1764,35 @@ function serverList(b){
   const out = [];
   ov.forEach(s => { const id = s && s.seg_id; if (id && !out.includes(id)) out.push(id); });
   return out.length ? out : null;
+}
+// 서버에 얹힌 편성이 하나라도 있나 — 없으면 되살릴 것이 없다.
+function hasServerEdit(){
+  return (DATA.beats || []).some(b => (serverList(b) || []).length);
+}
+// ★서버 편성을 화면에 얹는 **단 하나의 자리**. 첫 진입 폴백과 [서버에서 불러오기] 버튼이
+//   같은 함수를 쓴다 — 복원 규칙을 두 군데 적으면 반드시 어긋난다(0순위-B).
+//   되살릴 게 없으면 false를 돌려주어 호출한 쪽이 다음 수단으로 넘어가게 한다(fail-open).
+function restoreServer(msg){
+  if (!hasServerEdit()) return false;
+  lists = DATA.beats.map(b => serverList(b) || baseList(b));
+  hydrateFixlen(fixlenFromBeats());    // ✋ 서버가 기억하는 손 길이도 같이
+  mode = 'hand';                       // 서버 편성 = 사람이 정한 배치다
+  ['live','one','hand','pick'].forEach(x => {
+    const b = document.getElementById('m-' + x);
+    if (b) b.classList.toggle('on', x === mode);
+  });
+  render();
+  if (msg) nsay(msg);
+  return true;
+}
+// [📥 서버에서 불러오기] — 화면이 초기화된 것처럼 보일 때 사람이 직접 누르는 탈출구.
+// 되돌리기 기준점을 먼저 박아 잘못 눌러도 ↩로 돌아온다. 불러온 뒤 저장까지 해서
+// 이 PC에도 남긴다(다음에 열 때 또 안 사라진다).
+function loadFromServer(){
+  if (!hasServerEdit()){ nsay('서버에 저장된 편성이 없어요 — 지금 화면 그대로입니다'); return; }
+  undoMark();
+  restoreServer('📥 서버에 저장된 편성을 불러왔어요 (↩ 되돌리기로 취소할 수 있어요)');
+  saveWork();
 }
 function initLists(){
   lists = DATA.beats.map(b => {
@@ -4063,14 +4096,15 @@ async function boot(){
   if (serverEditIsNewer()){
     // 다른 곳에서 더 최근에 고쳤다 — 내 옛 저장본을 버리고 서버 편성으로 연다.
     clearWork();
-    lists = DATA.beats.map(b => serverList(b) || baseList(b));
-    hydrateFixlen(fixlenFromBeats());    // ✋ 서버가 기억하는 손 길이도 같이
-    mode = 'hand';                       // 서버 편성 = 사람이 정한 배치다
-    render();
-    nsay('🔄 다른 곳에서 편집한 내용이 더 최신이라 서버 편성을 불러왔어요');
+    restoreServer('🔄 다른 곳에서 편집한 내용이 더 최신이라 서버 편성을 불러왔어요');
   }
   else if (loadWork()) render();
   else if (loadSaved()) render();                       // 다른 PC에서 넘어온 조립
+  // ★로컬 저장본이 없거나 버려졌을 때 서버 편성으로 되살린다(2026-09-07 고객 다수 제보:
+  //   "작업하다가 3단계로 가니 다 없어졌다"). 여기가 없으면 아래 initLists가 돌아
+  //   **AI 기본 배치로 초기화**된다 — 서버엔 편성이 멀쩡히 남아 있는데도 그렇다.
+  //   잃은 게 아니라 화면이 안 읽던 것이다(실측 job 441702e0ec14: scene_override 5칸 전부 생존).
+  else if (restoreServer('🔄 저장된 편성을 서버에서 불러왔어요')) { /* 복원됨 */ }
   else if (DATA.picks && (DATA.picks.lists || []).length) setMode('pick');
   else { initLists(); render(); }
   if (SL.server) pollPhash();
