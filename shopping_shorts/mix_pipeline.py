@@ -185,11 +185,10 @@ def _cache_keys_for_url(url):
 # 성우 미선택(2단계 미리보기 등) 기본 성우 = 미나·표현(kr-mina-expressive, 2026-07-25 사장님 확정).
 # 예전 기본은 config.ELEVENLABS_VOICE_ID(Rachel=영어 성우)라 성우를 고르기 전 미리보기가
 # 영어 성우로 한국어를 읽었다. 값은 assets/voice_presets.json의 kr-mina-expressive 스냅샷.
+# ★성우 값의 정본은 typecast_tts.FALLBACK_VOICE 하나다(0순위-B) — 타입캐스트를 껐을 때의
+#   대체 성우와 여기 기본 성우가 같은 값이라, 두 벌로 적으면 언젠가 어긋난다.
 _DEFAULT_VOICE = {
-    "preset_id": "kr-mina-expressive",
-    "voice_id": "aiUUgjHa4mpHf6UenZuf",
-    "model_id": "eleven_v3",
-    "settings": {"stability": 0.35, "similarity_boost": 0.78, "style": 0.4},
+    **typecast_tts.FALLBACK_VOICE,
     # ★1.4 (2026-08-22 사장님 지시 — 2.2는 실제로 들어보니 말도 안 되게 빨랐다).
     #   ⚠️아래 "메종 8.45자/초"는 **자막 글자수 ÷ 영상 길이**로 낸 값이라
     #     사람이 말하는 속도가 아니다(무음·화면전환·자막만 있는 구간이 섞였다).
@@ -223,6 +222,12 @@ def _voice_params(voice):
     스냅샷은 /api/mix/voice가 프리셋에서 통째로 복사해 넣는다 — naturalize_profile·model_id가
     빠지면 튜닝 작업대에서 동결한 값이 렌더에 도달하지 못한다(2026-07-15 whole-branch 리뷰 S1/S8)."""
     v = voice or _DEFAULT_VOICE
+    # ★타입캐스트를 껐으면(TYPECAST_ENABLED=0) 이미 저장된 타입캐스트 스냅샷도 여기서
+    #   일레븐랩스 성우로 갈아끼운다(2026-09-07). 안 갈면 3단계에서 "타입캐스트 오류"가
+    #   그대로 난다 — 고객이 옛날에 고른 성우가 job.voice에 통째로 박혀 있기 때문이다.
+    #   voice_id·model_id·settings는 **짝**이라 함께 바꾼다(0순위-B: 따로 바꾸면 어긋난다).
+    if typecast_tts.use_fallback(v.get("model_id")):
+        v = {**v, **typecast_tts.FALLBACK_VOICE}
     speed = v.get("speed", 1.0)
     model_id = v.get("model_id") or "eleven_v3"
     # ★타입캐스트는 API가 tempo 0.5~2.0을 직접 받는다(2026-08-19). 일레븐랩스처럼

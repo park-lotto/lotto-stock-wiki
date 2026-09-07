@@ -71,6 +71,34 @@ def is_typecast(model_id):
     return str(model_id or "").lower().startswith(_MODEL_PREFIX)
 
 
+def enabled():
+    """타입캐스트를 쓰는가 — ★이 판정도 여기 한 곳뿐이다(0순위-B).
+
+    2026-09-07 사장님: "지금 타입캐스트를 안 쓰고 일레븐만 쓴다." 끄면
+    ①성우 카드에서 타입캐스트 성우가 빠지고(app.api_voice_presets)
+    ②이미 그 성우로 저장된 job은 합성 직전에 일레븐랩스로 대체된다
+      (mix_pipeline._voice_params / tts.synthesize_tts).
+    그래서 3단계에서 나던 "타입캐스트 오류"가 구조적으로 못 난다.
+    되돌리려면 서버 env `TYPECAST_ENABLED=1`."""
+    return bool(config.TYPECAST_ENABLED)
+
+
+# 타입캐스트를 껐을 때 대신 쓸 일레븐랩스 성우 = 미나·표현(kr-mina-expressive).
+# ★값의 정본은 여기 하나다 — mix_pipeline._DEFAULT_VOICE도 이걸 읽는다(0순위-B).
+FALLBACK_VOICE = {
+    "preset_id": "kr-mina-expressive",
+    "voice_id": "aiUUgjHa4mpHf6UenZuf",
+    "model_id": "eleven_v3",
+    "settings": {"stability": 0.35, "similarity_boost": 0.78, "style": 0.4},
+}
+
+
+def use_fallback(model_id):
+    """이 model_id를 **일레븐랩스로 갈아끼워야 하는가**.
+    타입캐스트 프리셋인데 엔진이 꺼져 있으면 True."""
+    return is_typecast(model_id) and not enabled()
+
+
 def api_key(customer_id=0):
     """합성에 쓸 타입캐스트 키. 회원이 등록했으면 그 키, 아니면 사장님 키.
     아무데도 없으면 "" — 호출부가 무음 mock으로 내려앉는다.

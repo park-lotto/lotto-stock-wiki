@@ -7086,6 +7086,11 @@ def api_voice_presets(request: Request, lang: str = "KR"):
         # 아무도 못 잡고, 성우가 통째로 사라지는 쪽이 훨씬 나쁘다.
         if p.get("origin") == "tuned":
             continue
+        # ★타입캐스트를 껐으면 그 성우 카드는 아예 안 보인다(2026-09-07 사장님 "일레븐만
+        #   쓴다"). 고를 수 없으면 3단계에서 타입캐스트 오류가 날 길이 없다. 판정은
+        #   typecast_tts 한 곳(0순위-B) — 프론트가 "tc-" 접두사로 추측하지 않는다.
+        if typecast_tts.use_fallback(p.get("model_id")):
+            continue
         gid = p["group_id"]
         g = groups.setdefault(gid, {
             "group_id": gid, "name": p["name"], "one_liner": p["one_liner"],
