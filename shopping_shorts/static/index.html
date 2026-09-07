@@ -339,6 +339,10 @@ body.is-admin .admin-only{display:block}
 .ftog:hover{color:var(--txt);border-color:var(--txt)}
 .ftog.on{background:var(--accent);border-color:var(--accent);color:#111}
 .fcount{color:var(--sub);font-size:12px;margin-left:2px}
+/* 건수 안내 줄(2026-09-07) — 걸러내기 줄이 숨겨져 있어 이 문구가 안 보이던 것을 바깥으로 뺐다.
+   시니어 가독성 기준(feedback_숨겨도_60대가_쓰기편하게)으로 12px는 너무 작아 13px로 올린다. */
+.fcount-row{margin:6px 0 2px}
+.fcount-row .fcount{font-size:13px}
 /* secondary sub-filter (소재) */
 .cat{transition:all .18s}
 .cat:hover{transform:translateY(-1px);color:var(--txt);border-color:var(--accent)}
@@ -366,7 +370,7 @@ body.is-admin .admin-only{display:block}
     <div class="head">
       <h2>레퍼런스 랭킹</h2>
     </div>
-    <div class="desc">443개 레퍼런스 채널의 48시간 이내 릴스를 강도별로 랭킹합니다.</div>
+    <div class="desc">등록 레퍼런스 채널의 <b>최근 수집분</b>을 강도별로 랭킹합니다. (★'48시간'은 올라온 시각이 아니라 <b>우리가 수집한 시각</b> 기준 — 발행시각은 대부분 수집되지 않는다: 실측 4,255건 중 4,030건 누락)</div>
     <!-- ★상단 줄 정리(2026-08-17 사장님 "4개 삭제") — 요소는 남기고 숨긴다.
          toggleOverseas·switchPlatform이 이 요소들을 잡으므로 지우면 그 코드가 죽는다
          (platformTabs가 2026-07-21에 같은 이유로 숨김 처리된 선례를 따른다).
@@ -567,7 +571,7 @@ body.is-admin .admin-only{display:block}
          아래는 '무엇으로 줄세울까'. 데이터는 이미 받아둔 것이라 추가 크롤 0. -->
     <div class="tabs" id="spanTabs" style="margin-bottom:8px">
       <span class="tab-grp">기간</span>
-      <div class="tab active" data-span="0" title="마지막 수집분 — 48시간 안에 올라온 새 릴스">🆕 48시간 히트작</div>
+      <div class="tab active" data-span="0" title="마지막 수집 회차 — 48시간 안에 ‘우리가 수집한’ 릴스입니다(올라온 시각 기준이 아닙니다)">🆕 48시간 히트작</div>
       <div class="tab" data-span="7" title="최근 7일 수집분 중 댓글 500개 넘은 것 — 이미 받아둔 데이터라 새로 긁지 않습니다">🔥 이번 주 터진 것</div>
       <div class="tab" data-span="30" title="최근 30일 중 댓글 1000개 넘은 것">👑 이번 달 명예의전당</div>
       <div class="tab" data-span="-1" title="지금까지 모아둔 20만 건 중 댓글 1만개 넘은 것 — 새로 긁지 않습니다">🏆 역대 히트작</div>
@@ -611,8 +615,13 @@ body.is-admin .admin-only{display:block}
            최신순 탭이면 최신 2장, 조회수순이면 터진 2장(실측 겹침 62% = 탭마다 다르다). -->
       <button class="ftog on" data-f="perch" onclick="togglePerChannel()"
               title="채널마다 상위 2개만 — 한 채널이 화면을 도배하는 걸 막습니다. 어떤 2개인지는 지금 켠 정렬 탭이 정합니다(최신순이면 최신 2개, 조회수순이면 조회수 상위 2개). 끄면 전부 봅니다">📺 채널당 2개</button>
-      <span class="fcount" id="fcount"></span>
     </div>
+    <!-- ★건수 안내는 걸러내기 줄 **밖에** 둔다(2026-09-07).
+         여태 이 문구는 위 div(#filters) 안에 있었고 그 div가 display:none이라
+         **아무에게도 안 보였다** — 실측: 라이브에서 textContent는
+         "채널당 2개만 (22건 접힘)"으로 잘 채워지는데 화면엔 안 나온다.
+         그래서 "왜 몇 개밖에 없지"를 사장님이 알 방법이 없었다. -->
+    <div class="fcount-row"><span class="fcount" id="fcount"></span></div>
     <!-- 렌즈 검색국가(2026-08-22 사장님 "김밥 렌즈를 해외꺼까지 돌릴 거 없잖아").
          ★위 '걸러내기'와 축이 다르다 — 저건 **이미 받아온 결과**를 거르는 것이고,
            여기는 **검색을 나가기 전에** 어느 나라를 돌릴지 정한다(= SerpApi 비용).
@@ -2173,11 +2182,27 @@ function render(opts){
   const _fc = document.getElementById("fcount");
   if(_fc){
     // ★숨긴 건 반드시 숫자로 알린다 — 안 그러면 "영상이 사라졌다"로 읽힌다.
+    // 2026-09-07: 여태 '걸러내기'와 '채널당 상한'만 알렸다. 그런데 실제로 사장님이
+    // "28개밖에 없다"고 본 화면은 **카테고리·유형·검색**으로 줄어든 것이었고,
+    // 그 세 가지는 아무 안내도 없이 조용히 잘라내고 있었다(걸러내기 줄 자체가
+    // display:none이라 fresh/rising은 켤 수도 없다 = 원인이 될 수 없었다).
+    // 그래서 **줄어든 이유를 종류와 무관하게 한 줄로 항상** 보여준다.
     const parts = [];
-    if(STATE.filters.fresh || STATE.filters.rising)
-      parts.push(`${_beforeFilter}건 중 ${items.length}건 표시 중`);
-    if(_perChCut > 0)
-      parts.push(`채널당 ${PER_CHANNEL_MAX}개만 (${_perChCut}건 접힘)`);
+    const _served = STATE.items.length;          // 서버가 준 원본 건수
+    if(items.length < _served){
+      const why = [];
+      if(searching)                 why.push(`검색 "${STATE.q.trim()}"`);
+      if(!searching && STATE.cat   !== "전체") why.push(`카테고리 ${STATE.cat}`);
+      if(!searching && STATE.ctype !== "전체") why.push(`유형 ${STATE.ctype}`);
+      if(!searching && STATE.style)            why.push(`축 ${STATE.style}`);
+      if(STATE.filters.fresh)  why.push("신작");
+      if(STATE.filters.rising) why.push("급상승");
+      if(_perChCut > 0)        why.push(`채널당 ${PER_CHANNEL_MAX}개`);
+      parts.push(`전체 ${_served}건 중 ${items.length}건 표시`
+                 + (why.length ? ` — ${why.join(" · ")} 때문` : ""));
+    }else{
+      parts.push(`${items.length}건 전부 표시 중`);
+    }
     _fc.textContent = parts.join(" · ");
   }
   // 배지용 백분위 컨텍스트 — 지금 보이는 항목 기준(정렬·필터 반영)
@@ -2705,7 +2730,12 @@ let ARC_MIN = 10000;                 // 역대 탭 문턱(1만+ 기본). 실측 
 // 상한. 0=없음. 문턱만 낮추면 상위 400이 늘 같은 얼굴이라 세 버튼이 똑같아진다
 // (실측 2026-08-17: 셋 다 400건·1위 동일) → 구간으로 끊어 겹치지 않게 한다.
 let ARC_MAX = 0;
-const _SPAN_MIN_COMMENTS = {7: 500, 30: 1000};
+// 2026-09-07 하향(사장님 "검색하면 나오는 게 너무 적다"). 서버 실측 인스타 4,255건 기준:
+//   이번주 댓글 500+ = 148건 / 200+ = 610건
+//   이번달 댓글 1000+ = 292건 / 300+ = 937건
+// 종전 값은 48시간 탭(315건)보다 이번주(148건)가 **더 적어지는** 역전이 나 있었다.
+// 문턱은 '터진 것'을 가르는 장치지 재고를 말리는 장치가 아니다.
+const _SPAN_MIN_COMMENTS = {7: 200, 30: 300};
 // ★플랫폼마다 '터진 것'의 잣대가 다르다(2026-09-04 사장님 "유튭은 댓글이 필요없어, 조회수 기반이야").
 //   실측 댓글 중앙값: 인스타 60 / 유튜브 **1**. 유튜브에 댓글 문턱을 쓰면 이번 주가 48편,
 //   이번 달이 27편밖에 안 남아 사실상 빈 화면이 된다.
