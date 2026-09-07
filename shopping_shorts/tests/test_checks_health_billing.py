@@ -58,6 +58,8 @@ def test_admin_with_payments_and_free_plan_is_not_red(tmp_path):
 
 # ── B-52 0원 전기능 ────────────────────────────────────────────────
 def test_free_customer_with_future_full_access_is_red(tmp_path):
+    """진짜 위반: 승인됐고(approved_at 있음) plan은 free인데 full_access_until만 미래 —
+    access_level()이 'full'을 내는 실제 강등-반대 사고."""
     p, c = _db(tmp_path)
     now = int(time.time())
     c.execute("INSERT INTO customers VALUES(7,'free',?,?,0,NULL,NULL,NULL)", (now + 86400 * 30, now))
@@ -66,12 +68,48 @@ def test_free_customer_with_future_full_access_is_red(tmp_path):
     assert s.ok is False and s.value == 1
 
 
-def test_customer_within_trial_window_is_not_red(tmp_path):
-    """오탐 방지: trial_ends_at 창 안의 정상 무료체험은 빨강이 아니다."""
+def test_pro_without_expiry_and_no_payment_is_still_red(tmp_path):
+    """진짜 위반 2: plan='pro'·pro_until 없음(무기한)인데 결제 0원 — access_level()이 'full'.
+    access_level을 직접 부르므로 이런 위반은 여전히 잡혀야 한다(점검이 무력화되지 않았는지 확인)."""
     p, c = _db(tmp_path)
     now = int(time.time())
-    c.execute("INSERT INTO customers VALUES(8,'free',?,?,0,NULL,NULL,?)",
-              (now + 86400 * 30, now, now + 86400 * 3))
+    c.execute("INSERT INTO customers VALUES(14,'pro',0,?,0,NULL,NULL,NULL)", (now,))
+    c.commit()
+    s = h_free_full_access.measure({"live_db": p, "base_url": None, "now": datetime.now(timezone.utc)})[0]
+    assert s.ok is False and "14" in s.detail
+
+
+def test_trial_plan_with_future_full_access_is_not_red(tmp_path):
+    """★리뷰 Critical 재현 케이스: plan='trial'(2026-08-21 사장님 확정 방식), full_access_until
+    미래, 결제 0원. access_level()은 plan='trial'이면 full_access_until과 무관하게 무조건
+    'ranking_only'를 낸다(app.py:12216) — 정상 체험 계정이라 빨강이면 안 된다.
+    옛 SQL(`plan='pro' OR full_access_until>now`)은 이 케이스를 놓쳐 거짓 빨강을 냈었다."""
+    p, c = _db(tmp_path)
+    now = int(time.time())
+    c.execute("INSERT INTO customers VALUES(15,'trial',?,?,0,NULL,NULL,NULL)", (now + 86400 * 30, now - 100))
+    c.commit()
+    s = h_free_full_access.measure({"live_db": p, "base_url": None, "now": datetime.now(timezone.utc)})[0]
+    assert s.ok is True and s.value == 0 and "15" not in s.detail
+
+
+def test_customer_within_trial_window_is_not_red(tmp_path):
+    """오탐 방지: 미승인(approved_at NULL) + trial_ends_at 창 안의 정상 무료체험 이벤트는
+    access_level()이 'ranking_only'를 낸다 — 빨강이 아니다."""
+    p, c = _db(tmp_path)
+    now = int(time.time())
+    c.execute("INSERT INTO customers VALUES(8,'free',?,NULL,0,NULL,NULL,?)",
+              (now + 86400 * 30, now + 86400 * 3))
+    c.commit()
+    s = h_free_full_access.measure({"live_db": p, "base_url": None, "now": datetime.now(timezone.utc)})[0]
+    assert s.ok is True and s.value == 0
+
+
+def test_pending_unapproved_customer_is_not_red(tmp_path):
+    """오탐 방지(리뷰 지적): 승인 대기(approved_at NULL) + 체험창도 지남 → access_level()은
+    'pending'(전면차단)이지 'full'이 아니다. 승인 대기 계정이 거짓 빨강을 내면 안 된다."""
+    p, c = _db(tmp_path)
+    now = int(time.time())
+    c.execute("INSERT INTO customers VALUES(16,'free',?,NULL,0,NULL,NULL,NULL)", (now + 86400 * 30,))
     c.commit()
     s = h_free_full_access.measure({"live_db": p, "base_url": None, "now": datetime.now(timezone.utc)})[0]
     assert s.ok is True and s.value == 0
