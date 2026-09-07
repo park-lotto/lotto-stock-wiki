@@ -229,8 +229,31 @@ _PIN_DOMAIN_RE = re.compile(r'"domain":"([^"]{2,60})"')
 _PIN_LINK_RE = re.compile(r'"link":"(https?://[^"]{5,300})"')
 
 
+def _ld_video_block(html):
+    """핀 상세 HTML → JSON-LD VideoObject dict / 없으면 None.
+
+    ★pin_destination과 pin_video_info가 **같은 판정을 두 번 적지 않게** 뽑은 함수다
+      (0순위-B). 둘 다 같은 상세 페이지를 읽으므로 파싱은 한 곳에서만 한다.
+    """
+    import json
+    for m in _LD_JSON_RE.finditer(html):
+        try:
+            block = json.loads(m.group(1))
+        except ValueError:
+            continue
+        for it in (block if isinstance(block, list) else [block]):
+            if not (isinstance(it, dict) and it.get("@type") == "VideoObject"):
+                continue
+            if not str(it.get("contentUrl") or ""):
+                continue
+            return it
+    return None
+
+
 def pin_destination(url, timeout=15):
-    """핀 상세 URL → (domain, link). 못 읽으면 (None, None) — 지어내지 않는다.
+    """핀 상세 URL → (domain, link, caption). 못 읽으면 (None, None, "") — 지어내지 않는다.
+
+    ★2026-09-07: 반환이 2개→3개로 늘었다. 호출부를 함께 고쳐야 한다.
 
     ★사장님 "알리 테무에서 나오는 상품들을 중점으로 어떻게 찾을수있나"(2026-08-29)에
       대한 답이다. **검색 응답엔 링크가 없다**(핀 키는 id·images·videos뿐, 25개 전수
@@ -257,9 +280,17 @@ def pin_destination(url, timeout=15):
             return None, None
         doms = [d for d in _PIN_DOMAIN_RE.findall(r.text) if d and d != "null"]
         links = _PIN_LINK_RE.findall(r.text)
-        return (doms[0] if doms else None), (links[0] if links else None)
+        # ★캡션도 여기서 함께 건진다(2026-09-07) — 왕복은 늘지 않는다.
+        #   검색 API가 제목·설명을 아예 안 줘서 라이브 캡션 보유율이 0%(2,259건 중 1건)
+        #   였고, 캡션이 없으면 제작 쪽에서 소재를 고를 근거가 없다.
+        cap = ""
+        it = _ld_video_block(r.text)
+        if it:
+            cap = (str(it.get("name") or "").strip()
+                   or str(it.get("description") or "").strip())[:200]
+        return (doms[0] if doms else None), (links[0] if links else None), cap
     except Exception:                  # noqa: BLE001 — 덤이 본업을 죽이면 안 된다
-        return None, None
+        return None, None, ""
 
 
 # 쇼핑몰 판정용 — 화면 필터와 **같은 목록을 두 번 적지 않는다**(0순위-B).
@@ -305,17 +336,9 @@ def pin_video_info(url, timeout=8):
                      proxies=residential_proxies(), timeout=timeout)
     if r.status_code != 200:
         raise RuntimeError(f"핀 페이지 HTTP {r.status_code}: {url}")
-    for m in _LD_JSON_RE.finditer(r.text):
-        try:
-            block = json.loads(m.group(1))
-        except ValueError:
-            continue
-        for it in (block if isinstance(block, list) else [block]):
-            if not (isinstance(it, dict) and it.get("@type") == "VideoObject"):
-                continue
+    it = _ld_video_block(r.text)      # 파싱은 한 곳에서만(0순위-B)
+    if it:
             vurl = str(it.get("contentUrl") or "")
-            if not vurl:
-                continue
             return {
                 "video_url": vurl,
                 "duration": iso_duration_secs(it.get("duration")),
