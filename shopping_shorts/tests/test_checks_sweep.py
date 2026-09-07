@@ -315,6 +315,39 @@ def test_sweep_produce_wraps_runtime_error_as_gray():
     assert out[0].verdict == GRAY
 
 
+def test_sweep_produce_stops_and_reports_gray_when_time_budget_exceeded(monkeypatch):
+    """★Task14 3차 실측: 칩 클릭이 실제로 성공하게 되자 패널 하나만도 90초를 넘길 수 있음이
+    드러났다(EPIPE로 강제종료됨). 시간예산을 넘기면 무한대기 대신 회색+이유로 멈춰야 한다."""
+    class _FakePage:
+        url = "http://x/produce"
+        def evaluate(self, js, *a):
+            if "STEP_LABELS" in js:
+                return ["p0", "p1", "p2"]  # STEP_LABELS 흉내
+            return 30   # timer_probe(_apply_throttle_gate가 부름) 흉내 — 스로틀 없음
+
+    class _Session:
+        page = _FakePage()
+        base_url = "http://x"
+
+    monkeypatch.setattr(sweep, "cleanup_old_evidence", lambda: None)
+    monkeypatch.setattr(sweep.browser, "goto_produce", lambda page, url, timeout_ms=12000: None)
+    monkeypatch.setattr(sweep, "sweep_url", lambda session, url, reopen=None, skip=None: [
+        Result("L1", "가짜", GREEN, signature="L1:fake")])
+
+    clock = {"t": 0.0}
+    def _fake_time():
+        clock["t"] += 40   # 패널 하나당 40초씩 흐른다고 흉내 — 3번째 패널 전에 90초 예산 초과
+        return clock["t"]
+    monkeypatch.setattr(sweep.time, "time", _fake_time)
+
+    out = sweep.sweep_produce(_Session(), panels=range(3))
+    gray = [r for r in out if r.verdict == GRAY]
+    green = [r for r in out if r.verdict == GREEN]
+    assert len(gray) == 1
+    assert "시간예산" in gray[0].reason
+    assert len(green) < 3   # 패널 3개를 다 못 훑고 도중에 멈췄다는 뜻
+
+
 def test_sweep_lists_wraps_runtime_error_as_gray():
     out = sweep.sweep_lists(_BoomSession())
     assert len(out) == 1

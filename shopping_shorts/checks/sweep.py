@@ -299,6 +299,14 @@ def _is_app_shell_nav(info):
     return False
 
 
+_SWEEP_PRODUCE_BUDGET_S = 90
+# ★실측(2026-09-07): app-shell 필터를 걸고서도 한 패널에 element가 많으면(가려짐·조작실패 판정마다
+# 3초 타임아웃) 패널 하나만도 90초를 넘길 수 있다(패널0 단독 실행이 90초+ 안에 안 끝남). 칩 클릭이
+# 이제 성공하니 discover+press 자체가 처음으로 제 속도를 드러낸 것 — 시간예산을 넘기면 남은 패널은
+# "판정 못 함(시간초과)"으로 명시하고 멈춘다. 무한 대기·외부 timeout에 의한 EPIPE 강제종료보다
+# 이유 있는 회색이 낫다(코디네이터 지시).
+
+
 def sweep_produce(session, panels=range(10)):
     """제작소 10패널: 단계 칩을 눌러 패널을 열고 각각 훑는다. 칩은 STEP_LABELS 텍스트로 찾는다(D7 폴백).
     ★run_ui가 L1 중 제일 먼저 부르는 함수라 여기서 오래된 증거 폴더 정리를 겸한다(정리 실패해도
@@ -312,7 +320,17 @@ def sweep_produce(session, panels=range(10)):
         if not labels:
             raise RuntimeError("STEP_LABELS 못 찾음 — 화면 구조가 바뀌었을 수 있음")
         out = []
-        for o in panels:
+        t0 = time.time()
+        panels_list = list(panels)
+        for i, o in enumerate(panels_list):
+            if time.time() - t0 > _SWEEP_PRODUCE_BUDGET_S:
+                remaining = panels_list[i:]
+                out.append(Result("L1", "제작소 전수(시간예산 초과)", GRAY,
+                                  reason=f"패널 {i}/{len(panels_list)}개까지만 훑고 시간예산"
+                                         f"({_SWEEP_PRODUCE_BUDGET_S}초) 초과 — 남은 패널 {remaining} 판정 못 함",
+                                  signature="L1:gray:제작소 전수 시간초과"))
+                break
+
             def _open(pg, label=labels[o]):
                 # ★칩 보이는 글자는 STEP_SHORT(줄인 이름)라 STEP_LABELS(전체 이름)와 get_by_text로는
                 # 절대 안 맞는다(flows/base.py click_step과 같은 원인·같은 해법) — title 속성으로 찾는다.
