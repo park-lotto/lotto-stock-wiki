@@ -18101,6 +18101,14 @@ fetch('/api/me').then(r=>r.ok?r.json():null).then(d=>{ if(d && d.customer_id===0
 <script src="/scene_play.js"></script>
 <script src="/loader.js"></script>
 <script src="/sidebar.js?v=2">
+
+</script>
+
+<!-- ★독립 script 블록이어야 한다(2026-09-07 실사고): 처음엔 이 코드가
+     <script src="/sidebar.js"> **안에** 들어갔는데, src가 있는 태그의 인라인
+     내용은 브라우저가 통째로 무시한다. node --check는 통과하는데 화면에선
+     함수가 아예 안 만들어져 배너가 영영 안 떴다(라이브에서 잡았다). -->
+<script>
 // ── 🎙 TTS 키 상태 배너(2026-09-07 사장님 "문의가 안 오도록 잘 보이게") ──────
 // 왜 여기서 미리 묻나: 본인키를 낸 고객은 그 키만 쓴다(공용 키로 안 넘어간다).
 // 그래서 키가 마르면 3단계가 통째로 멈춘다 — 실패한 뒤에 알면 이미 늦다.
