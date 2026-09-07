@@ -296,6 +296,12 @@ def _is_app_shell_nav(info):
     ★2차 실측(같은 날): 단계 칩(jump(N))도 안 거르면 프레스 루프가 그 칩을 또 눌러 다른 패널로
     넘어가버려서 그 뒤 요소들이 전부 "가려짐/조작실패"로 연쇄 오탐났다(284건 빨강 폭증의 원인)."""
     oc = info.get("onclick") or ""
+    if info.get("tag") == "a":
+        # ★3차 실측(2026-09-07): "🔐 관리페이지"·"👤 마이페이지" 등은 onclick이 아니라 순수
+        # <a href>라 문자열 마커·location.href 검사에 안 걸리고도 페이지를 통째로 벗어나 같은
+        # 연쇄 오탐(가려짐/조작실패)을 냈다. 이 화면에서 패널 콘텐츠는 div/button/input이지
+        # <a>가 아니다(사이드바·전역 링크만 앵커) — 태그로 통째로 뺀다.
+        return True
     if any(m in oc for m in _APP_SHELL_ONCLICK_MARKERS):
         return True
     if oc.startswith("location.href="):

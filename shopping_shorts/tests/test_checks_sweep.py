@@ -273,6 +273,9 @@ def test_is_app_shell_nav_flags_logout_delete_rename_bugreport_and_hrefs():
     assert sweep._is_app_shell_nav({"onclick": "jump(0)"}) is True
     assert sweep._is_app_shell_nav({"onclick": "jump(9)"}) is True
     assert sweep._is_app_shell_nav({"onclick": "jumpTo(0)"}) is False   # 다른 이름의 함수는 안 건드림
+    # ★4차 실측: <a href>는 onclick 없이도 페이지를 벗어난다(예: "🔐 관리페이지") — 태그로 뺀다.
+    assert sweep._is_app_shell_nav({"tag": "a", "onclick": ""}) is True
+    assert sweep._is_app_shell_nav({"tag": "button", "onclick": "toggleTheme()"}) is False
 
 
 def test_sweep_url_skip_excludes_matching_targets_before_any_click(monkeypatch):
