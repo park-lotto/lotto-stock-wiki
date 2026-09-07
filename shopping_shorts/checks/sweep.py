@@ -92,6 +92,13 @@ _DISCOVER_JS = """() => {
 _HIT_JS = """(idx) => {
   const el = document.querySelector(`[data-chk-idx="${idx}"]`);
   if (!el) return false;
+  // ★2026-09-07 3차 실측(버튼 전수 훑기 서버 검증 중 발견): 패널 서브트리 스코핑으로
+  // 목소리 목록 같은 긴 스크롤 리스트의 버튼까지 계획에 잡히게 됐는데, 화면 밖(스크롤 전)
+  // 요소는 getBoundingClientRect가 뷰포트 밖 좌표를 주고 elementFromPoint(뷰포트 밖)는
+  // null/딴 요소를 돌려줘 "가려짐"으로 오판됐다(실측: TTS 보이스 카드 ☆/▶ 버튼 49건이
+  // 전부 이 사유). Playwright의 기본 .click()은 자동 스크롤하는데 이 hit-test 전용 좌표
+  // 계산엔 그게 없었다 — 판정 직전에 한 번 스크롤해 넣는다("instant"로 애니메이션 대기 없이).
+  el.scrollIntoView({block: "center", inline: "center", behavior: "instant"});
   const r = el.getBoundingClientRect();
   const top = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
   return !!top && (top === el || el.contains(top) || top.contains(el));
