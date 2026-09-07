@@ -1,0 +1,29 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "Fortrea Holdings",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-07-23",
+      "quote": "Fortrea Holdings 주가 52주 신고가 경신, 19.22달러 도달",
+      "sector": "바이오"
+    },
+    {
+      "name": "노보큐어",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-07-23",
+      "quote": "노보큐어 주가 19.49달러 기록, 52주 신고가 경신",
+      "sector": "바이오"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "7월 23일 52주 신고가 종목 및 최근 동향 발표",
+      "ts": "2026-07-23",
+      "quote": "[표]7월 23일 52주 신고가 종목 및 최근 동향"
+    }
+  ],
+  "quote": "7월 23일 52주 신고가 종목 및 최근 동향 (뉴스핌, 07-23 06:40)"
+}
