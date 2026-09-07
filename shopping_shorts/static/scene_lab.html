@@ -1067,6 +1067,14 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
     <button type="button" class="act" id="undobtn" style="padding:3px 10px;font-size:11.5px" disabled
             title="되돌릴 편집이 아직 없습니다" onclick="undoWork()">↩ 되돌리기</button>
     <button type="button" class="act" id="tightbtn" title="글자를 접고 화면(영상)을 크게 봅니다" onclick="toggleTight()">▦ 촘촘히</button>
+    <!-- ★저장·불러오기는 **여기**에 있어야 한다(2026-09-07 실측). 처음엔 아래 footer에
+         뒀는데, 제작소 안(body.inside-studio.grow)에서는 그 줄이 통째로 높이 0으로 접혀
+         버튼도 안내문도 안 보였다 — 사장님이 "작동 안 되는 것 같은데"라고 하신 이유다.
+         이 줄(↩되돌리기·▦촘촘히)은 어느 상태에서도 보인다. -->
+    <button type="button" class="act" id="savenowbtn" style="padding:3px 10px;font-size:11.5px"
+            onclick="saveNow()" title="지금 화면의 편성을 이 PC와 서버에 바로 저장합니다(평소엔 편집이 멈추면 1.2초 뒤 자동으로 저장됩니다)">💾 지금 저장</button>
+    <button type="button" class="act" id="loadsrvbtn" style="padding:3px 10px;font-size:11.5px"
+            onclick="loadFromServer()" title="서버에 저장된 편성을 다시 불러옵니다 — 화면이 초기화된 것처럼 보일 때 누르세요">📥 서버에서 불러오기</button>
     <!-- ★지금 화면이 새 코드인지 눈으로 바로 알 수 있게(2026-08-26). 이게 없어서
          '고쳤는데 안 된다'가 캐시 때문인지 진짜 버그인지 매번 헤맸다. -->
     <span id="buildtag" title="이 화면의 코드 버전 — 새로고침해도 안 바뀌면 캐시입니다"
@@ -1173,10 +1181,6 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
   <!-- ★[📤 서버에 반영] 버튼을 없앴다(2026-08-17 사장님 "이걸 사용자들이 어떻게 누르나
        자동으로 되게 하고 없애야지"). 이제 편집이 멈추면 1.2초 뒤 saveWork→autoApply가
        알아서 올린다. 안 눌러서 화면과 렌더가 어긋나던 사고(job 03c6639b1198)의 원인 제거. -->
-  <button class="act" onclick="saveWork()"
-          title="지금 화면의 편성을 이 PC와 서버에 바로 저장합니다(평소엔 1.2초 뒤 자동으로 저장됩니다)">💾 지금 저장</button>
-  <button class="act" onclick="loadFromServer()"
-          title="서버에 저장된 편성을 다시 불러옵니다 — 화면이 초기화된 것처럼 보일 때 누르세요">📥 서버에서 불러오기</button>
   <button class="act" onclick="revertServer()"
           title="내가 고친 편성을 걷어내고 AI가 처음 배치한 편집안으로 되돌립니다(원본은 안 건드렸으므로 100% 복구)">↩ AI 배치로 되돌리기</button>
   <span id="savedmsg" class="hint" style="color:var(--good)"></span>
@@ -1788,6 +1792,12 @@ function restoreServer(msg){
 // [📥 서버에서 불러오기] — 화면이 초기화된 것처럼 보일 때 사람이 직접 누르는 탈출구.
 // 되돌리기 기준점을 먼저 박아 잘못 눌러도 ↩로 돌아온다. 불러온 뒤 저장까지 해서
 // 이 PC에도 남긴다(다음에 열 때 또 안 사라진다).
+// 사람이 [💾 지금 저장]을 눌렀을 때만 결과를 알린다 — saveWork 자체는 1.2초마다
+// 자동으로도 불리므로 거기에 알림을 넣으면 4초마다 글자가 뜬다.
+function saveNow(){
+  saveWork();
+  saylo('💾 저장했어요 — 이 PC와 서버 양쪽에 저장됐습니다');
+}
 function loadFromServer(){
   if (!hasServerEdit()){ saylo('서버에 저장된 편성이 없어요 — 지금 화면 그대로입니다'); return; }
   // 무엇이 달라졌는지 세어 둔다 — 눌렀는데 화면이 그대로면 사람은 "안 눌렸다"고 읽는다
@@ -3457,6 +3467,31 @@ function saylo(t){
   nsay(t);
   const el = document.getElementById('savedmsg');
   if (el) el.textContent = t;
+  toastlo(t);
+}
+// ★사람이 버튼을 눌러 생긴 결과는 **어떤 상태에서도 보여야 한다**(2026-09-07 실측).
+//   #tbhint는 0x0, #savedmsg는 display:none, footer는 높이 0이었다 — 제작소 안
+//   (body.inside-studio.grow)에서는 footer가 통째로 접혀 안내도 버튼도 안 보인다.
+//   그래서 글자를 어느 칸에 넣는 방식은 전부 실패한다. 화면 위에 직접 띄운다.
+//   ⚠️alert()는 쓰지 않는다 — 브라우저 모달은 화면을 통째로 멈춘다(이 파일의 관례).
+let _TOAST_T = null;
+function toastlo(t){
+  if (!t) return;
+  let box = document.getElementById('lotoast');
+  if (!box){
+    box = document.createElement('div');
+    box.id = 'lotoast';
+    box.style.cssText = 'position:fixed;left:50%;top:18px;transform:translateX(-50%);'
+      + 'z-index:99999;max-width:min(92vw,560px);padding:12px 18px;border-radius:12px;'
+      + 'background:#1b2030;color:#e8ecf5;border:1px solid #3a4560;'
+      + 'box-shadow:0 10px 34px rgba(0,0,0,.5);font-size:15px;font-weight:700;'
+      + 'line-height:1.5;text-align:center;pointer-events:none';
+    document.body.appendChild(box);
+  }
+  box.textContent = t;
+  box.style.display = '';
+  clearTimeout(_TOAST_T);
+  _TOAST_T = setTimeout(function(){ box.style.display = 'none'; }, 4000);
 }
 // ── ✋ 컷 길이 직접 정하기(2026-08-24 사장님 "2번") ──────────────────────────
 // 초 배지를 누르면 그 컷의 길이를 정한다. 이미 정해져 있으면 자동으로 되돌린다.
