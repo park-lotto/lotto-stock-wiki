@@ -685,8 +685,43 @@ const _vids = {};
 //   첫 바퀴를 도는 동안 결국 다 받아지니까.
 //   그래서 만들 때는 **metadata만**(수십 KB) 받고, 실제로 쓸 재생기만 wantFull()로
 //   'auto'로 올려 본문을 당긴다. 동시에 당기는 수가 확 줄어 첫 바퀴부터 제때 열린다.
+// ★같은 파일을 슬롯 수만큼 **따로** 받고 있었다(2026-09-07 사장님 "1번 2번 따로는 렉
+//   없는데 전체 재생하면 렉 있다"). 칸별 재생은 슬롯 0·1만 쓰지만(소스당 2벌), 전체
+//   재생은 칸 넘김에 2·3을 더 써서 **소스당 최대 4벌**이 같은 5MB를 각자 받는다.
+//   <video>는 요소마다 제 버퍼를 갖고, 진행 중인 다운로드는 서로 재활용되지 않는다.
+//   실측(캐시 비운 상태, 같은 소스 7개, 4초 시점 재생 준비): 1벌 7/7 · 4벌 20/28.
+//   대역폭이 4등분 나니 컷 경계마다 걸린다.
+//   처방: 파일을 **한 번만** 받아 blob으로 두고 그 소스의 슬롯 전부가 공유한다.
+//   받고 나면 시크가 메모리 안에서 끝나 컷 넘김도 즉시다.
+//   ⚠️지금 화면에 나오는 재생기(curVid)는 갈아끼우지 않는다 — 재생 중 src를 바꾸면 끊긴다.
+const _blobs = {};                 // videoId -> objectURL (null = 받는 중)
+let _blobBytes = 0, _blobQ = Promise.resolve();
+const BLOB_CAP = 200 * 1024 * 1024;   // 메모리 상한 — 넘으면 예전처럼 각자 받는다
+function shareBlob(videoId){
+  if (!videoId || videoId in _blobs || _blobBytes > BLOB_CAP) return;
+  _blobs[videoId] = null;
+  // ★한 번에 하나씩 받는다 — 7개를 동시에 당기면 굶는 문제가 그대로 돌아온다.
+  _blobQ = _blobQ.then(() => fetch(SL.src(videoId))
+    .then(r => r.ok ? r.blob() : null)
+    .then(b => {
+      if (!b || !b.size){ delete _blobs[videoId]; return; }
+      _blobBytes += b.size;
+      const u = URL.createObjectURL(b);
+      _blobs[videoId] = u;
+      Object.keys(_vids).forEach(k => {
+        const v = _vids[k];
+        if (!v || v._vid !== videoId || v === curVid) return;   // 보이는 것은 그대로 둔다
+        const t = v.currentTime;
+        v._full = 1; v.preload = 'auto'; v.src = u;
+        try{ v.currentTime = t; }catch(e){}
+      });
+    })
+    .catch(() => { delete _blobs[videoId]; }));
+}
 function wantFull(v){
-  if (!v || v._full) return v;
+  if (!v) return v;
+  shareBlob(v._vid);                       // 이 소스는 한 벌만 받아 슬롯끼리 나눠 쓴다
+  if (v._full) return v;
   v._full = 1;
   try{ v.preload = 'auto'; if (v.readyState < 2 && typeof v.load === 'function') v.load(); }catch(e){}
   return v;
@@ -697,7 +732,8 @@ function vidFor(videoId, slot){
   const box = document.getElementById('vidbox');
   const v = document.createElement('video');
   v.muted = true; v.playsInline = true; v.preload = 'metadata';
-  v.src = SL.src(videoId);
+  v._vid = videoId;
+  v.src = _blobs[videoId] || SL.src(videoId);   // 이미 받아 둔 blob이 있으면 그것부터
   v.style.display = 'none';
   box.appendChild(v);
   _vids[key] = v;
