@@ -606,9 +606,31 @@ def test_is_dangerous_button_keeps_in_panel_content_delete_and_reset():
 # ── _sweep_panel_buttons — 재현성(서명 재매칭) ────────────────────────────────────────────
 
 
+class _ResetFakePage:
+    """browser.goto_produce + '#steps [title=...]' 칩 클릭으로 매 버튼마다 되돌리는 코드를
+    흉내낸다(2026-09-07 3차 실측: 모달을 여는 버튼이 cur는 안 바꾸고 뒤 버튼들을 가려
+    '가려짐' 180건 연쇄를 냈다 — 그래서 버튼마다 항상 리셋하도록 바뀜)."""
+    def __init__(self):
+        self.reset_calls = 0
+    def evaluate(self, js, *a):
+        return "3"
+    def locator(self, sel):
+        page = self
+        class _Loc:
+            @property
+            def first(self):
+                return self
+            def click(self, timeout=None):
+                page.reset_calls += 1
+        return _Loc()
+    def wait_for_timeout(self, ms):
+        pass
+
+
 def test_sweep_panel_buttons_presses_only_discovered_targets_and_reproduces(monkeypatch):
     """같은 계획(discover_panel_targets)이 두 번 호출돼도 같은 서명 순서로 같은 결과를
-    낸다는 것을 고정한다 — 원장 실측(13→259건 재현불가)의 재발 방지 계약."""
+    낸다는 것을 고정한다 — 원장 실측(13→259건 재현불가)의 재발 방지 계약. 버튼마다 항상
+    되돌리므로(browser.goto_produce + 칩 클릭) 그 호출 횟수도 함께 고정한다."""
     calls = {"n": 0}
 
     def fake_discover(page, sel):
@@ -619,32 +641,31 @@ def test_sweep_panel_buttons_presses_only_discovered_targets_and_reproduces(monk
     monkeypatch.setattr(sweep, "discover_panel_targets", fake_discover)
     monkeypatch.setattr(sweep, "hit_test", lambda page, idx: True)
     monkeypatch.setattr(sweep, "capture_red_evidence", lambda session, sig: "")
+    monkeypatch.setattr(sweep.browser, "goto_produce", lambda page, url, timeout_ms=12000: None)
 
     def fake_press(session, info, url):
         return Result("L1", info["text"], GREEN, reason="ok", signature=sweep.signature_of(info), page=url)
 
     monkeypatch.setattr(sweep, "_press", fake_press)
 
-    class _FakePage:
-        base_url_calls = 0
-        def evaluate(self, js, *a):
-            return "3"   # cur == active_step, 되돌릴 필요 없음
-
     class _Session:
-        page = _FakePage()
+        def __init__(self):
+            self.page = _ResetFakePage()
         base_url = "http://x"
 
     import time as _time
-    out1 = sweep._sweep_panel_buttons(_Session(), "대본생성", "3", _time.time() + 10)
-    out2 = sweep._sweep_panel_buttons(_Session(), "대본생성", "3", _time.time() + 10)
+    s1, s2 = _Session(), _Session()
+    out1 = sweep._sweep_panel_buttons(s1, "대본생성", "3", _time.time() + 10)
+    out2 = sweep._sweep_panel_buttons(s2, "대본생성", "3", _time.time() + 10)
     assert [r.verdict for r in out1] == [r.verdict for r in out2] == [GREEN]
     assert [r.signature for r in out1] == [r.signature for r in out2]
-    assert calls["n"] == 4   # 패널당 계획 1회 + 버튼 1개마다 재-discover 1회 = 2 × 2회 실행
+    assert calls["n"] == 4  # 2회 실행 × (계획 1회 + 버튼 1개 재-discover 1회) = 4
+    assert s1.page.reset_calls == 1 and s2.page.reset_calls == 1  # 버튼 1개 → 리셋(칩 클릭) 1회
 
 
 def test_sweep_panel_buttons_marks_gray_when_signature_disappears(monkeypatch):
-    """앞선 조작으로 DOM이 바뀌어 계획한 서명이 다음 재-discover에서 안 잡히면 빨강이 아니라
-    회색(정상적인 UI 변화일 수 있음)이어야 한다."""
+    """앞선 조작으로 DOM이 바뀌어 계획한 서명이 되돌린 뒤 재-discover에서도 안 잡히면
+    빨강이 아니라 회색(조건부 렌더링 등 정상적인 UI 변화일 수 있음)이어야 한다."""
     def fake_discover_once_then_empty(page, sel, _state={"n": 0}):
         _state["n"] += 1
         if _state["n"] == 1:
@@ -653,15 +674,12 @@ def test_sweep_panel_buttons_marks_gray_when_signature_disappears(monkeypatch):
         return []   # 재-discover 시점엔 이미 사라짐
 
     monkeypatch.setattr(sweep, "discover_panel_targets", fake_discover_once_then_empty)
-
-    class _FakePage:
-        def evaluate(self, js, *a):
-            return "3"
+    monkeypatch.setattr(sweep.browser, "goto_produce", lambda page, url, timeout_ms=12000: None)
 
     class _Session:
-        page = _FakePage()
+        page = _ResetFakePage()
         base_url = "http://x"
 
     import time as _time
     out = sweep._sweep_panel_buttons(_Session(), "대본생성", "3", _time.time() + 10)
-    assert len(out) == 1 and out[0].verdict == GRAY and "사라짐" in out[0].reason
+    assert len(out) == 1 and out[0].verdict == GRAY and "다시 못 찾음" in out[0].reason

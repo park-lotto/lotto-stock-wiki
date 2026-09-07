@@ -174,12 +174,20 @@ _BUTTON_SWEEP_BUDGET_S = 180   # 버튼 전수 훑기(모든 패널 합산) 총 
 
 def _sweep_panel_buttons(session, panel_label, active_step, deadline):
     """지금 열려 있는 패널(data-step=active_step) 서브트리 안 버튼을 전부 눌러본다.
-    ★재현성(코디네이터 지시 2026-09-07 2차, 원장 실측 13→259건 재현불가): idx를 한 번만 매겨
-    쓰지 않는다 — 계획(어떤 서명의 버튼을 누를지)만 패널 진입 시점에 한 번 잡고, 실제로 누르기
-    직전마다 (1) 지금도 같은 패널인지 확인해 아니면 되돌리고 (2) idx를 다시 매겨(re-discover)
-    서명으로 그 버튼을 다시 찾는다 — 앞선 버튼이 DOM을 바꿨어도(칸 추가·카드 재렌더 등) 옛
-    좌표를 믿지 않는다. 서명을 다시 못 찾으면(그 사이 요소가 사라짐 — 정상적인 UI 변화일 수
-    있음) 빨강이 아니라 회색으로 남긴다."""
+    ★재현성 2차 실측(2026-09-07, 코디네이터 2차 지시 뒤 서버 실측): 처음엔 "cur가 달라졌을
+    때만 되돌리기"로 짰는데, 실제로 돌려보니 **모달/오버레이를 여는 버튼**(프리셋 고르기·
+    미리보기 확대 등)이 패널(cur)은 안 바꾸면서 화면 위에 덮여 뒤 버튼들을 전부 가려서
+    "가려짐" 빨강이 180건 연쇄로 쏟아졌다(go(N)과 증상은 다르지만 뿌리는 같다 — **한 조작이
+    다음 조작의 화면 전제를 깬다**). cur 비교만으론 이런 종류의 오염을 다 못 잡는다.
+    그래서 **버튼마다 항상 처음 상태로 되돌린다**(코디네이터 제안: 느려도 재현되는 쪽을
+    택함) — 매번 `/produce?new=1`을 새로 열고 이 패널을 다시 연 뒤에만 다음 버튼을 찾아
+    누른다. 이전 버튼이 무엇을 열어놨든(모달·다른 패널·확장 카드) 다음 버튼은 항상 같은
+    깨끗한 화면에서 시작하므로 순서·타이밍에 흔들리지 않는다. 비용은 속도뿐이다(버튼당
+    페이지 재로딩 1회) — 시간예산(deadline) 안에서 되는 만큼만 돌고, 못 다 돈 나머지는
+    "시간예산 초과"로 이유 있는 회색 처리한다.
+    서명(id>onclick>text)으로 버튼을 다시 찾는다 — 재로딩 뒤 DOM 순서가 같아도 idx는 안 믿는다.
+    서명을 다시 못 찾으면(그 버튼이 조건부로만 렌더되는 등, 정상적인 UI 변화일 수 있음)
+    빨강이 아니라 회색으로 남긴다."""
     page = session.page
     panel_sel = f'.panel[data-step="{active_step}"]'
     plan = [t for t in discover_panel_targets(page, panel_sel) if not is_dangerous_button(t)]
@@ -188,21 +196,20 @@ def _sweep_panel_buttons(session, panel_label, active_step, deadline):
     for planned in plan:
         if time.time() > deadline:
             out.append(Result("L1", f"{panel_label} 버튼 나머지 {len(plan) - len(out)}개", GRAY,
-                              reason="시간예산 초과(전수 훑기 총 180초) — 다음 실행에서 이어짐",
+                              reason=f"시간예산 초과(전수 훑기 총 {_BUTTON_SWEEP_BUDGET_S}초) — 다음 실행에서 이어짐",
                               signature=f"L1:panel_btns_budget:{panel_label}", page="/produce"))
             break
         sig = signature_of(planned)
-        cur = page.evaluate("() => (typeof cur !== 'undefined') ? String(cur) : null")
-        if cur != str(active_step):
-            # 이전 버튼이 다른 패널로 넘겨버렸다(막았어야 할 조작이 새다) — 원래 패널로 되돌리고 계속
-            browser.goto_produce(page, session.base_url + "/produce?new=1")
-            page.locator(f'#steps [title="{panel_label}"]').first.click(timeout=3000)
-            page.wait_for_timeout(400)
+        # ★매 버튼마다 항상 같은 깨끗한 시작 상태로 되돌린다(위 docstring 근거) — 앞선 버튼이
+        # 모달을 열었든 패널을 옮겼든 여기서 전부 리셋된다.
+        browser.goto_produce(page, session.base_url + "/produce?new=1")
+        page.locator(f'#steps [title="{panel_label}"]').first.click(timeout=3000)
+        page.wait_for_timeout(400)
         fresh = discover_panel_targets(page, panel_sel)
         match = next((f for f in fresh if signature_of(f) == sig), None)
         if match is None:
             out.append(Result("L1", planned["text"] or planned["tag"], GRAY,
-                              reason="이전 조작 뒤 이 요소가 사라짐(패널 재렌더로 인한 정상 변화일 수 있음)",
+                              reason="이 패널을 새로 열어도 이 요소를 다시 못 찾음(조건부 렌더링일 수 있음)",
                               signature=sig, page="/produce"))
             continue
         if not hit_test(page, match["idx"]):
