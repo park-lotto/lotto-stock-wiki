@@ -17961,6 +17961,54 @@ def api_produce_mix_scenehl(job_id: str, body: dict):
     return {"ok": True, "hl": video_assemble.scene_hl_of(hit)}
 
 
+@app.get("/api/tts/quota")
+def api_tts_quota(request: Request):
+    """내 TTS(음성) 키 상태 — 3단계가 **합성 전에** 물어본다(2026-09-07).
+
+    사장님: "나한테 문의가 안오도록 tts등록이 되어있지 않다고 하고
+             결제를 해야한다고 명시를 정확히해줘 잘보이게".
+
+    왜 필요한가(실측): 본인키를 낸 고객은 그 키만 쓴다(keyroute: 공용 키를 안 섞는다).
+    그래서 **키가 마르면 완전히 멈춘다** — 최일환님(cid 291)이 남은 2자로 401 실패했다.
+    반대로 키를 아예 안 낸 고객은 본사 키로 돌아 잘 된다. 성실한 사람이 더 막히는
+    구조라, 마르기 전에 미리 알려주는 자리가 필요하다.
+
+    state 값:
+      none      — 등록 안 함(본사 키로 돌아감 = 포인트 차감). 결제 안내를 띄운다.
+      low       — 본인키 있고 잔액이 문턱 미만. 곧 멈춘다.
+      ok        — 본인키 있고 잔액 넉넉.
+      unknown   — 본인키는 있는데 잔액을 못 읽었다(키에 user_read 권한이 없으면
+                  잔액 조회만 401이 난다 — 실측 7명이 이 경우였고 TTS는 정상이었다).
+                  ★그래서 '못 읽음'을 '죽은 키'로 단정하지 않는다(0순위: 추측 금지).
+      invalid   — 키 자체가 무효(잔액 조회가 invalid_api_key).
+    """
+    cid = _cid(request)
+    store = Store(DB_PATH)
+    LOW = 3000
+    try:
+        keys, own = keyroute.keys_for(store, cid, keyroute.SVC_ELEVENLABS)
+    except Exception as e:  # noqa: BLE001 — 조회 실패로 화면을 막지 않는다
+        return {"ok": True, "state": "unknown", "detail": f"조회 실패: {e}"}
+    if not own or not keys:
+        return {"ok": True, "state": "none", "left": None}
+    import requests as _rq
+    try:
+        r = _rq.get("https://api.elevenlabs.io/v1/user/subscription",
+                    headers={"xi-api-key": keys[0]}, timeout=8)
+        if r.status_code == 200:
+            d = r.json()
+            left = int(d.get("character_limit", 0)) - int(d.get("character_count", 0))
+            return {"ok": True, "state": ("low" if left < LOW else "ok"),
+                    "left": left, "tier": d.get("tier")}
+        body = (r.text or "")
+        if "invalid_api_key" in body:
+            return {"ok": True, "state": "invalid", "left": None}
+        # missing_permissions 등 — 잔액만 못 읽는 것이지 키가 죽은 게 아니다
+        return {"ok": True, "state": "unknown", "left": None}
+    except Exception as e:  # noqa: BLE001
+        return {"ok": True, "state": "unknown", "detail": str(e)[:120]}
+
+
 @app.post("/api/produce/mix/{job_id}/caplines")
 def api_produce_mix_caplines(job_id: str, body: dict):
     """장면 하나의 자막 줄 나누기(2026-08-25). body: {beat_idx, lines: [str, ...]}
