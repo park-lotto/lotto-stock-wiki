@@ -9161,6 +9161,35 @@ function _renderPreviewVideoFallback(job, src){
     + ' src="'+src+'"></video>'
 ;   // 안내 문구 없음(2026-08-15 사장님 "랜더 아래쪽 문구들은 다 지워")
   const btn = document.getElementById('btnPreview'); if(btn) btn.disabled = false;
+  // typeof 가드: 슬라이스 하네스는 이 파일의 함수 부분집합만 node로 돌려 이 함수가
+  //   범위 밖일 수 있다(이 파일의 _RAIL_OFF·_pvShow와 같은 관례). 실제로 한 번 깼다.
+  if (typeof _pvCloseWhenLabReady === 'function') _pvCloseWhenLabReady(src);
+}
+// ★폴백으로 열어둔 레일을 **계속 지켜보다 닫는다**(2026-09-07 사장님 "이 화면 자체가
+//   안 나와야 한다"). 종전엔 2초 안에 iframe이 못 뜨면 폴백으로 레일을 열고 **그것으로
+//   끝**이었다 — iframe이 3초에 떠서 오른쪽에 미리보기가 정상으로 나와도 왼쪽 레일이
+//   그대로 남아 9:16 칸이 둘이 되고 장면편집이 오른쪽으로 밀렸다(실측: iframe x=337).
+//   위 ①②의 성공 분기엔 이미 _pvClose가 있는데 폴백에만 없었다 — 같은 판단을 세 곳에
+//   적어 한 곳만 빠진 모양이다(0순위-B).
+//   ⚠️함수를 따로 뺀 이유: _renderPreviewVideo와 그 안의 video 태그 사이에 코드를 끼우면
+//     그 거리를 재는 테스트(test_preview_size_single_source, 900자)가 깨진다. 실제로 한 번 깼다.
+function _pvCloseWhenLabReady(src){
+  if (typeof _labCall !== 'function' || typeof _pvClose !== 'function') return;
+  let n = 0;
+  const t = setInterval(function(){
+    n++;
+    if (_labCall('showConfirmVideo', src)){   // iframe이 늦게 떴다 — 제자리로 옮기고
+      clearInterval(t);
+      _pvClose();                              // 레일을 닫는다
+      return;
+    }
+    if (n >= 60) clearInterval(t);             // 60 x 500ms = 30초 상한(무한 타이머 금지)
+  }, 500);
+  // ★node 테스트 하네스가 이 타이머 때문에 30초를 붙들고 있다 죽지 않는다(실측:
+  //   test_produce_refresh_persistence가 TimeoutExpired로 실패). 브라우저의
+  //   setInterval은 숫자를 돌려주어 unref가 없고, node는 Timeout 객체라 있다 —
+  //   있을 때만 부르면 브라우저 동작은 그대로 두고 테스트만 제때 끝난다.
+  if (t && typeof t.unref === 'function') t.unref();
 }
 // 편집안(#mixReview) 렌더 본체 — loadMixReview(새 매칭)와 _restoreMixContext(복원)가 공유한다.
 // ★loadMixReview와 달리 PREVIEW_STATUS를 리셋하지 않는다: 리셋은 "새 매칭이라 미리보기 다시 봐야 함"의

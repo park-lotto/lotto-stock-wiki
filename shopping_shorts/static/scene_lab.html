@@ -1789,10 +1789,20 @@ function restoreServer(msg){
 // 되돌리기 기준점을 먼저 박아 잘못 눌러도 ↩로 돌아온다. 불러온 뒤 저장까지 해서
 // 이 PC에도 남긴다(다음에 열 때 또 안 사라진다).
 function loadFromServer(){
-  if (!hasServerEdit()){ nsay('서버에 저장된 편성이 없어요 — 지금 화면 그대로입니다'); return; }
+  if (!hasServerEdit()){ saylo('서버에 저장된 편성이 없어요 — 지금 화면 그대로입니다'); return; }
+  // 무엇이 달라졌는지 세어 둔다 — 눌렀는데 화면이 그대로면 사람은 "안 눌렸다"고 읽는다
+  // (2026-09-07 사장님 "작동 안 되는 것 같은데"). 실제로는 되고 있었고, 아래 saveWork가
+  // 안내문을 '내 편집 저장됨'으로 덮어써서 아무 일도 없어 보였다.
+  const before = (lists || []).map(l => (l || []).length);
   undoMark();
-  restoreServer('📥 서버에 저장된 편성을 불러왔어요 (↩ 되돌리기로 취소할 수 있어요)');
-  saveWork();
+  restoreServer('');                    // 안내문은 여기서 안 쓴다 — 아래에서 결과를 보고 쓴다
+  saveWork();                           // ★이 함수가 savedmsg를 덮는다. 그래서 안내는 그 뒤에.
+  const after = (lists || []).map(l => (l || []).length);
+  let changed = 0;
+  for (let i = 0; i < after.length; i++) if (before[i] !== after[i]) changed++;
+  saylo(changed
+    ? ('📥 서버에서 불러왔어요 — ' + changed + '칸이 되살아났습니다 (↩ 되돌리기로 취소)')
+    : '📥 서버 편성과 지금 화면이 같아요 — 바뀐 것이 없습니다 (작업은 안전합니다)');
 }
 function initLists(){
   lists = DATA.beats.map(b => {
@@ -3438,6 +3448,16 @@ const NARR_BUSY = {};                  // beat_idx → 음성·자막 재생성 
 // 머리글 안내문에 상태를 쓴다. makeTts의 say는 그 함수 안의 지역 클로저라 여기서 못 쓴다
 // (이름만 같다고 쓸 수 있는 게 아니다 — 실제로 확인하고 전용 헬퍼를 뒀다).
 function nsay(t){ const h = document.getElementById('tbhint'); if (h) h.textContent = t; }
+// ★사람이 버튼을 눌러 생긴 결과는 **보이는 자리**에 알린다(2026-09-07 사장님
+//   "지금저장·서버에서불러오기 작동 안 되는 것 같은데").
+//   실측: nsay가 쓰는 #tbhint는 제작소 iframe 안에서 **0x0**이라 글자가 아예 안 보였다.
+//   버튼은 멀쩡히 돌고 있었는데(칸이 실제로 되살아났다) 화면에 아무 반응이 없으니
+//   안 눌린 것으로 읽힌 것이다. #savedmsg(footer)는 보이는 자리라 여기에 함께 쓴다.
+function saylo(t){
+  nsay(t);
+  const el = document.getElementById('savedmsg');
+  if (el) el.textContent = t;
+}
 // ── ✋ 컷 길이 직접 정하기(2026-08-24 사장님 "2번") ──────────────────────────
 // 초 배지를 누르면 그 컷의 길이를 정한다. 이미 정해져 있으면 자동으로 되돌린다.
 // ★칸 전체 길이는 음성에 매여 바꿀 수 없다 — 정한 컷은 그대로 두고
