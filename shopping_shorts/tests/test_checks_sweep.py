@@ -203,3 +203,175 @@ def test_sweep_produce_live():
         assert isinstance(out, list)
     finally:
         browser.close_session(s)
+
+
+# ---- 빨간 줄 증거 사진(2026-09-07 리뷰 반영) ----
+
+class _EvidencePage:
+    """page.screenshot(path=...)만 흉내내는 최소 가짜. 실패 흉내는 raise_on_screenshot로."""
+    def __init__(self, raise_on_screenshot=False):
+        self.url = "http://x/produce"
+        self.raise_on_screenshot = raise_on_screenshot
+        self.screenshot_calls = []
+
+    def click(self, sel, timeout=3000, no_wait_after=True):
+        pass
+
+    def fill(self, sel, val, timeout=3000):
+        pass
+
+    def wait_for_timeout(self, ms):
+        pass
+
+    def evaluate(self, script, *a):
+        return 100  # _body_len 등 — 이 테스트들은 백지 판정 경로를 쓰지 않는다
+
+    def screenshot(self, path):
+        self.screenshot_calls.append(path)
+        if self.raise_on_screenshot:
+            raise RuntimeError("페이지가 이미 닫힘(흉내)")
+        with open(path, "wb") as f:
+            f.write(b"\x89PNG\r\n\x1a\n")
+
+
+class _EvidenceSink:
+    """before/after snapshot()을 순서대로 내주는 가짜(1번째=before, 2번째=after)."""
+    def __init__(self, seq):
+        self._seq = list(seq)
+        self._i = 0
+
+    def snapshot(self):
+        d = self._seq[min(self._i, len(self._seq) - 1)]
+        self._i += 1
+        return d
+
+
+class _EvidenceSession:
+    base_url = "http://x"
+
+    def __init__(self, page, sink):
+        self.page = page
+        self.errors = sink
+        self.blocked = []
+
+
+_EMPTY_SNAP = {"pageerrors": [], "console_errors": [], "client_error_posts": 0, "failed_responses": []}
+_RED_INFO = {"idx": 0, "tag": "button", "id": "", "onclick": "", "text": "빨간버튼", "type": ""}
+
+
+def test_press_red_writes_evidence_file(tmp_path, monkeypatch):
+    """빨강일 때 EVIDENCE_ROOT/<dir>/shot.png가 실제로 생긴다."""
+    monkeypatch.setattr(sweep, "EVIDENCE_ROOT", tmp_path)
+    page = _EvidencePage()
+    sink = _EvidenceSink([_EMPTY_SNAP, {**_EMPTY_SNAP, "pageerrors": ["TypeError: boom"]}])
+    session = _EvidenceSession(page, sink)
+
+    result = sweep._press(session, _RED_INFO, "/produce")
+
+    assert result.verdict == RED
+    assert result.evidence_dir, "빨강인데 evidence_dir이 비어 있음"
+    shot = tmp_path / result.evidence_dir / "shot.png"
+    assert shot.is_file()
+
+
+def test_press_green_writes_no_evidence(tmp_path, monkeypatch):
+    """초록일 때는 스크린샷을 찍지 않는다 — 디스크가 안 찬다."""
+    monkeypatch.setattr(sweep, "EVIDENCE_ROOT", tmp_path)
+    page = _EvidencePage()
+    sink = _EvidenceSink([_EMPTY_SNAP, _EMPTY_SNAP])  # 새 에러 없음
+    session = _EvidenceSession(page, sink)
+
+    result = sweep._press(session, _RED_INFO, "/produce")
+
+    assert result.verdict == GREEN
+    assert result.evidence_dir == ""
+    assert page.screenshot_calls == []
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_press_red_screenshot_failure_keeps_verdict(tmp_path, monkeypatch):
+    """screenshot()이 예외를 던져도(페이지 이미 닫힘 등) 판정 자체는 그대로 RED로 기록되고
+    evidence_dir만 비어 있어야 한다 — 증거 캡처 실패가 점검을 죽이면 안 된다."""
+    monkeypatch.setattr(sweep, "EVIDENCE_ROOT", tmp_path)
+    page = _EvidencePage(raise_on_screenshot=True)
+    sink = _EvidenceSink([_EMPTY_SNAP, {**_EMPTY_SNAP, "pageerrors": ["TypeError: boom"]}])
+    session = _EvidenceSession(page, sink)
+
+    result = sweep._press(session, _RED_INFO, "/produce")
+
+    assert result.verdict == RED  # 판정은 살아있다
+    assert "TypeError" in result.reason
+    assert result.evidence_dir == ""  # 캡처만 실패
+    assert page.screenshot_calls  # 시도는 했다
+
+
+def test_capture_red_evidence_swallows_any_exception(tmp_path, monkeypatch):
+    monkeypatch.setattr(sweep, "EVIDENCE_ROOT", tmp_path)
+
+    class _BoomPage:
+        def screenshot(self, path):
+            raise OSError("disk full(흉내)")
+
+    class _S:
+        page = _BoomPage()
+
+    assert sweep.capture_red_evidence(_S(), "sig") == ""
+
+
+def test_capture_red_evidence_no_page_returns_empty(tmp_path, monkeypatch):
+    monkeypatch.setattr(sweep, "EVIDENCE_ROOT", tmp_path)
+
+    class _NoPage:
+        page = None
+
+    assert sweep.capture_red_evidence(_NoPage(), "sig") == ""
+
+
+def test_cleanup_old_evidence_removes_only_old_dirs(tmp_path, monkeypatch):
+    import os
+    import time as _time
+
+    monkeypatch.setattr(sweep, "EVIDENCE_ROOT", tmp_path)
+    old_dir = tmp_path / "old_sig_1"
+    old_dir.mkdir()
+    (old_dir / "shot.png").write_bytes(b"x")
+    new_dir = tmp_path / "new_sig_1"
+    new_dir.mkdir()
+    (new_dir / "shot.png").write_bytes(b"x")
+    old_ts = _time.time() - 20 * 86400
+    os.utime(old_dir, (old_ts, old_ts))
+
+    removed = sweep.cleanup_old_evidence(max_age_days=14)
+
+    assert removed == 1
+    assert not old_dir.exists()
+    assert new_dir.exists()
+
+
+def test_cleanup_old_evidence_missing_root_is_noop(tmp_path, monkeypatch):
+    monkeypatch.setattr(sweep, "EVIDENCE_ROOT", tmp_path / "does_not_exist")
+    assert sweep.cleanup_old_evidence() == 0
+
+
+def test_cleanup_old_evidence_never_escapes_root(tmp_path, monkeypatch):
+    """심볼릭 링크로 루트 밖을 가리켜도 그 대상은 절대 지우면 안 된다."""
+    evroot = tmp_path / "evroot"
+    evroot.mkdir()
+    monkeypatch.setattr(sweep, "EVIDENCE_ROOT", evroot)
+    outside = tmp_path / "outside_secret"
+    outside.mkdir()
+    (outside / "keep.txt").write_text("keep")
+    link = evroot / "link_out"
+    try:
+        link.symlink_to(outside, target_is_directory=True)
+    except (OSError, NotImplementedError):
+        pytest.skip("이 환경은 심볼릭 링크 생성 권한이 없음")
+    import os
+    import time as _time
+    old_ts = _time.time() - 20 * 86400
+    os.utime(outside, (old_ts, old_ts))
+
+    sweep.cleanup_old_evidence(max_age_days=14)
+
+    assert outside.exists()
+    assert (outside / "keep.txt").exists()

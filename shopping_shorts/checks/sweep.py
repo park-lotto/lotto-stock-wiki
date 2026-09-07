@@ -12,9 +12,67 @@ B-09 리포터 생존.
   않는다 — id > onclick 함수명 > 텍스트 순으로만 정한다.
 """
 import re
+import shutil
 import time
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 from shopping_shorts.checks.verdict import GRAY, GREEN, RED, Result
+
+# ── 빨간 줄 증거 사진(2026-09-07 리뷰 반영) ─────────────────────────────────
+#   ★경로는 app.py의 _EVIDENCE_ROOT·checks.html의 evidence_ok 계약과 반드시 맞아야 한다
+#   (Task13 — /api/admin/checks/evidence/<id>/<filename>이 이 폴더 밑에서 shot.png를 찾는다).
+#   run_checks.py는 수정 금지 목록이라 run_id를 함수 인자로 못 받는다 — 대신 캡처 순간의
+#   ms 타임스탬프로 유일성을 보장한다(같은 run 안 재실행은 없고, check_runs.started~finished
+#   구간과 폴더명 타임스탬프를 대조하면 어느 run인지 되짚을 수 있다).
+EVIDENCE_ROOT = Path(__file__).resolve().parent.parent / "data" / "checks_evidence"
+_EVIDENCE_SAFE_RE = re.compile(r"[^A-Za-z0-9_-]+")
+_EVIDENCE_MAX_AGE_DAYS = 14  # 이보다 오래된 증거 폴더는 다음 sweep_produce() 시작 시 정리
+
+
+def _evidence_slug(signature):
+    s = _EVIDENCE_SAFE_RE.sub("_", signature or "x").strip("_")[:80]
+    return s or "x"
+
+
+def capture_red_evidence(session, signature):
+    """빨강(필요시 회색)으로 판정되는 순간의 화면을 EVIDENCE_ROOT/<slug>_<ms>/shot.png로 남긴다.
+    ★캡처 실패가 점검 자체를 죽이면 안 된다 — 무슨 예외든 삼키고 빈 문자열(증거 없음)로 폴백한다."""
+    try:
+        page = getattr(session, "page", None)
+        if page is None:
+            return ""
+        dirname = f"{_evidence_slug(signature)}_{int(time.time() * 1000)}"
+        outdir = EVIDENCE_ROOT / dirname
+        outdir.mkdir(parents=True, exist_ok=True)
+        page.screenshot(path=str(outdir / "shot.png"))
+        return dirname
+    except Exception:  # noqa: BLE001 — 스크린샷 실패는 판정에 영향을 주지 않는다(evidence_dir="")
+        return ""
+
+
+def cleanup_old_evidence(max_age_days=_EVIDENCE_MAX_AGE_DAYS):
+    """EVIDENCE_ROOT 안의 오래된 증거 폴더만 지운다 — 무한 누적으로 디스크가 차는 것을 막는다.
+    ★삭제 대상이 EVIDENCE_ROOT 밖으로 못 나가게 resolve() 후 relative_to로 재검증(app.py의
+    경로탈출 방어와 같은 원리 — 여기선 우리가 만든 폴더만 지우지만 방어를 한 번 더 겹친다)."""
+    root = EVIDENCE_ROOT.resolve()
+    if not root.is_dir():
+        return 0
+    cutoff = datetime.now(timezone.utc) - timedelta(days=max_age_days)
+    removed = 0
+    for child in root.iterdir():
+        try:
+            candidate = child.resolve()
+            candidate.relative_to(root)  # 루트 밖이면 ValueError → 절대 안 지운다
+            if not candidate.is_dir():
+                continue
+            mtime = datetime.fromtimestamp(candidate.stat().st_mtime, tz=timezone.utc)
+            if mtime < cutoff:
+                shutil.rmtree(candidate, ignore_errors=True)
+                removed += 1
+        except Exception:  # noqa: BLE001 — 정리 실패도 점검을 막으면 안 된다
+            continue
+    return removed
 
 _DISCOVER_JS = """() => {
   const els = [...document.querySelectorAll('button, [onclick], input, select, textarea, a[href^="/"]')];
@@ -128,14 +186,18 @@ def _press(session, info, url):
             page.click(sel, timeout=3000, no_wait_after=True)
         page.wait_for_timeout(1500)
     except Exception as e:  # noqa: BLE001 — 클릭 실패 자체가 판정 근거
+        sig = signature_of(info)
         return Result("L1", info["text"] or info["tag"], RED, reason=f"조작 실패 {type(e).__name__}: {str(e)[:120]}",
-                      signature=signature_of(info), page=url, dur_ms=int((time.time() - t0) * 1000))
+                      signature=sig, page=url, dur_ms=int((time.time() - t0) * 1000),
+                      evidence_dir=capture_red_evidence(session, sig))
     navigated = page.url.split("?")[0] != url.split("?")[0]
     new_blocked = [_blocked_path(e) for e in session.blocked[blocked_before_n:]]
     after = filter_blocked_noise(sink.snapshot(), before, new_blocked)
     v, why = classify(before, after, body_before, _body_len(page), navigated)
-    return Result("L1", info["text"] or info["tag"], v, reason=why, signature=signature_of(info), page=url,
-                  dur_ms=int((time.time() - t0) * 1000))
+    sig = signature_of(info)
+    ev = capture_red_evidence(session, sig) if v == RED else ""
+    return Result("L1", info["text"] or info["tag"], v, reason=why, signature=sig, page=url,
+                  dur_ms=int((time.time() - t0) * 1000), evidence_dir=ev)
 
 
 def sweep_url(session, url, reopen=None):
@@ -148,8 +210,9 @@ def sweep_url(session, url, reopen=None):
     out = []
     for info in targets:
         if not hit_test(page, info["idx"]):
+            sig = signature_of(info)
             out.append(Result("L1", info["text"] or info["tag"], RED, reason="가려짐(elementFromPoint 불일치)",
-                              signature=signature_of(info), page=url))
+                              signature=sig, page=url, evidence_dir=capture_red_evidence(session, sig)))
             continue
         out.append(_press(session, info, url))
         if page.url.split("?")[0] != (session.base_url + url).split("?")[0]:
@@ -192,7 +255,11 @@ def _apply_throttle_gate(session, results):
 
 
 def sweep_produce(session, panels=range(10)):
-    """제작소 10패널: 단계 칩을 눌러 패널을 열고 각각 훑는다. 칩은 STEP_LABELS 텍스트로 찾는다(D7 폴백)."""
+    """제작소 10패널: 단계 칩을 눌러 패널을 열고 각각 훑는다. 칩은 STEP_LABELS 텍스트로 찾는다(D7 폴백).
+    ★run_ui가 L1 중 제일 먼저 부르는 함수라 여기서 오래된 증거 폴더 정리를 겸한다(정리 실패해도
+    점검은 계속 — cleanup_old_evidence 내부에서 이미 삼킨다)."""
+    cleanup_old_evidence()
+
     def _run():
         page = session.page
         page.goto(session.base_url + "/produce?new=1", wait_until="networkidle")
@@ -213,6 +280,14 @@ def sweep_produce(session, panels=range(10)):
     return results
 
 
+def _attach_evidence(session, results):
+    """빨강인데 아직 evidence_dir이 없는 결과만 채운다(다른 곳에서 이미 찍었으면 건드리지 않는다)."""
+    for r in results:
+        if r.verdict == RED and not r.evidence_dir:
+            r.evidence_dir = capture_red_evidence(session, r.signature)
+    return results
+
+
 def sweep_lists(session):
     """목록 화면이 카드 1장 때문에 통째로 비지 않나(B-03): 카드 수>0 & 에러 0."""
     def _run():
@@ -230,6 +305,7 @@ def sweep_lists(session):
     results, ok = _run_guarded("목록 카드 무예외", _run)
     if ok:
         results = _apply_throttle_gate(session, results)
+        _attach_evidence(session, results)
     return results
 
 
@@ -253,6 +329,7 @@ def sweep_sidebar(session):
     results, ok = _run_guarded("사이드바 쿠팡", _run)
     if ok:
         results = _apply_throttle_gate(session, results)
+        _attach_evidence(session, results)
     return results
 
 
@@ -269,4 +346,6 @@ def reporter_alive(session):
                        reason=f"client_error POST {n}건", signature="L1:reporter_alive", page="/produce")]
 
     results, ok = _run_guarded("리포터 생존", _run)
+    if ok:
+        _attach_evidence(session, results)
     return results[0]

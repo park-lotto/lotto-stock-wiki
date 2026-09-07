@@ -290,3 +290,58 @@ def test_share_flow_gray_with_reason_when_no_job_shareable_after_probing():
             404, {"ok": False, "error": "완성 영상이 없어요"})
     r = flow_share_link_restart.run(FakeSession(page, restart_web=lambda: None))[0]
     assert r.verdict == "gray" and "3개" in r.reason and "판정 불가" in r.reason
+
+
+# ---- run_flow: 빨간 결과에 증거 사진을 붙이는지(2026-09-07 리뷰 반영) ----
+
+def test_run_flow_attaches_evidence_on_red(tmp_path, monkeypatch):
+    from shopping_shorts.checks import sweep
+    from shopping_shorts.checks.verdict import Result, RED
+
+    monkeypatch.setattr(sweep, "EVIDENCE_ROOT", tmp_path)
+
+    class _Page:
+        def screenshot(self, path):
+            with open(path, "wb") as f:
+                f.write(b"PNG")
+
+    class _Session:
+        page = _Page()
+
+    class _Module:
+        __name__ = "shopping_shorts.checks.flows.flow_fake"
+        META = {"name": "가짜 흐름"}
+
+        @staticmethod
+        def run(session):
+            return [Result("L2", "가짜 흐름", RED, reason="테스트용 실패", signature="L2:fake")]
+
+    out = base.run_flow(_Session(), _Module())
+    assert len(out) == 1 and out[0].verdict == RED
+    assert out[0].evidence_dir
+    assert (tmp_path / out[0].evidence_dir / "shot.png").is_file()
+
+
+def test_run_flow_green_has_no_evidence(tmp_path, monkeypatch):
+    from shopping_shorts.checks import sweep
+    from shopping_shorts.checks.verdict import Result, GREEN
+
+    monkeypatch.setattr(sweep, "EVIDENCE_ROOT", tmp_path)
+
+    class _Page:
+        def screenshot(self, path):
+            raise AssertionError("초록인데 스크린샷을 찍음")
+
+    class _Session:
+        page = _Page()
+
+    class _Module:
+        __name__ = "shopping_shorts.checks.flows.flow_fake"
+        META = {"name": "가짜 흐름"}
+
+        @staticmethod
+        def run(session):
+            return [Result("L2", "가짜 흐름", GREEN, reason="정상", signature="L2:fake")]
+
+    out = base.run_flow(_Session(), _Module())
+    assert out[0].evidence_dir == ""
