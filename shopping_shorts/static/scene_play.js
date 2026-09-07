@@ -676,12 +676,27 @@ let seq = [], seqI = 0, seqTimer = null, seqLabel = '';
 //   그래서 소스마다 재생기를 **2개**(A/B) 두고 컷마다 번갈아 쓴다. 다음 컷은 항상 **숨은 쪽**에서
 //   미리 자리를 잡아두고, 전환은 보이기만 바꾼다 → 같은 소스든 다른 소스든 프레임 누수 0.
 const _vids = {};
+// ★재생기를 'auto'로 만들면 **만드는 순간 파일 전체를 받기 시작한다**. 소스 7개 x 슬롯
+//   최대 4벌 = 재생기 20개가 한꺼번에 4~7MB짜리를 당기는데, 브라우저는 한 도메인에
+//   동시 연결을 6개까지만 열어준다 → 서로 굶어 **하나도 준비되지 않는다**
+//   (2026-09-07 라이브 실측: video 20개 전부 readyState 0 · networkState 2 · buffered 0).
+//   그 상태에서 컷이 오면 열림 대기창(0.3~1.5초) 안에 못 열려 그 컷은 썸네일만 보인다
+//   = 사장님 "이미지만 재생되는 부분". 두 번째 재생이 멀쩡한 것도 이것 때문이다 —
+//   첫 바퀴를 도는 동안 결국 다 받아지니까.
+//   그래서 만들 때는 **metadata만**(수십 KB) 받고, 실제로 쓸 재생기만 wantFull()로
+//   'auto'로 올려 본문을 당긴다. 동시에 당기는 수가 확 줄어 첫 바퀴부터 제때 열린다.
+function wantFull(v){
+  if (!v || v._full) return v;
+  v._full = 1;
+  try{ v.preload = 'auto'; if (v.readyState < 2 && typeof v.load === 'function') v.load(); }catch(e){}
+  return v;
+}
 function vidFor(videoId, slot){
   const key = videoId + ':' + (slot || 0);
   if (_vids[key]) return _vids[key];
   const box = document.getElementById('vidbox');
   const v = document.createElement('video');
-  v.muted = true; v.playsInline = true; v.preload = 'auto';
+  v.muted = true; v.playsInline = true; v.preload = 'metadata';
   v.src = SL.src(videoId);
   v.style.display = 'none';
   box.appendChild(v);
@@ -706,7 +721,7 @@ function applyRate(v, c){
   return rate;
 }
 function seat(c){
-  const v = vidFor(c.video_id, c._slot);
+  const v = wantFull(vidFor(c.video_id, c._slot));   // 곧 쓸 재생기다 — 여기서만 본문을 당긴다
   if (Math.abs(v.currentTime - c.start) > 0.05) v.currentTime = c.start;
   return v;
 }
@@ -742,9 +757,13 @@ function showVid(v){
 }
 const vid = () => curVid || document.getElementById('vid');
 // 페이지가 열리면 소스들을 미리 열어 둔다(첫 전환도 매끄럽게).
+// 페이지가 열리면 소스들의 **머리말(metadata)만** 미리 받아 둔다 — 본문은 안 당긴다.
+// ★칸 넘김 슬롯(2·3)도 함께 만든다: 전체 재생은 칸마다 첫 컷을 handoffSlot(2·3)으로
+//   쓰는데 예전엔 0·1만 데워 둬서, 그 재생기가 **그 컷에 가서야 처음 만들어졌다**
+//   (readyState 0 → 열림 대기창 초과 → 그 컷은 정지 그림). 머리말만이라 값이 싸다.
 function warmVideos(){
   const ids = new Set(Object.values(DATA.segments).map(s => s.video_id));
-  ids.forEach(id => { vidFor(id, 0); vidFor(id, 1); });   // A/B 두 벌
+  ids.forEach(id => { vidFor(id, 0); vidFor(id, 1); vidFor(id, 2); vidFor(id, 3); });
 }
 
 function stopPlay(){
@@ -977,7 +996,7 @@ function step(){
     return;
   }
   const c = seq[seqI];
-  const v = vidFor(c.video_id, c._slot);
+  const v = wantFull(vidFor(c.video_id, c._slot));   // 지금 쓸 재생기 — 본문을 당긴다
   const go = () => {
     // ★시크가 **끝난 뒤에** 보여준다(2026-08-14 사장님 "3번 솔루션 끝나는 장면 마지막에
     //   2번 첫 장면이 잠깐 보인다"). 칸2와 칸4가 같은 소스(s0)를 쓰는데, 칸4로 넘어갈 때
