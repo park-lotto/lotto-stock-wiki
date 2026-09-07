@@ -41,6 +41,41 @@ def roundtrip(session, *, name, signature, edit, read_local, read_server, go_awa
                   page="/produce", dur_ms=int((time.time() - t0) * 1000))
 
 
+def write_mine_draft(page, text):
+    """대본생성(패널8) → '✍ 내가 직접 쓰기' → 문장칸에 text의 줄을 하나씩 채운다.
+    ★Task14 3차 실측(2026-09-07): 실제 대본 입력 UI는 textarea#scriptText가 아니라
+    s2AddMineDraft()가 만드는 contenteditable 문장칸(`.s2-sent`, id 없음)이다(produce.html
+    S2_MINE_ROLES 기본 5칸: hook·problem·method·proof·cta). 칸이 contenteditable이라
+    page.fill은 못 쓴다 — textContent를 채우고 oninput 핸들러(s2EditBeat)가 걸리도록
+    input 이벤트를 직접 쏜다(핸들러가 STATE 대신 S2.drafts[i].beats[j]를 갱신하고,
+    s2Confirm이 그걸 모아 STATE.script로 만든다).
+    줄 수가 칸 수(5)보다 많으면 넘치는 줄은 마지막 칸에 개행으로 이어 붙인다(칸 부족으로
+    입력한 문장이 조용히 사라지는 것을 막는다) — '+ 칸 추가'(s2MineAddRow)는 아직 안 쓴다."""
+    click_step(page, "대본생성")
+    page.click("#s2MineBtn", timeout=5000)
+    page.wait_for_selector("#s2d-0 .s2-sent", timeout=5000)
+    lines = [l for l in text.split("\n") if l.strip()] or [text]
+    cells = page.locator("#s2d-0 .s2-sent")
+    n = cells.count()
+    if n == 0:
+        return ""
+    filled = lines[:n]
+    if len(lines) > n:
+        filled[-1] = "\n".join([filled[-1]] + lines[n:])
+    for i, line in enumerate(filled):
+        cells.nth(i).evaluate(
+            "(el, t) => { el.textContent = t; el.dispatchEvent(new Event('input', {bubbles:true})); }",
+            line)
+    page.wait_for_timeout(300)
+    return "\n".join(filled)
+
+
+def confirm_mine_draft(page):
+    """'✔ 내 대본으로 확정'(s2Confirm) — STATE.script를 채우고 3단계(화면 붙이기)로 넘어간다."""
+    page.locator("#s2d-0 .s2-dfoot .btn-next").first.click(timeout=5000)
+    page.wait_for_timeout(500)
+
+
 def click_step(page, label):
     """단계 칩 클릭. ★Task14 2차 실측(2026-09-07): 칩에 보이는 글자는 STEP_LABELS(전체 이름, 예:
     '영상추출/분석')가 아니라 STEP_SHORT(줄인 이름, '영상추출')다 — 전체 이름은 `title` 속성에만

@@ -61,8 +61,26 @@ class FakeLocator:
             self.page.current_step = self._text
         elif self.kind == "hccards":
             self.page.headcopy = self.page.next_headcopy
+        elif self.kind == "s2confirm":
+            # s2Confirm 흉내: beats(=mine_cells) 중 빈 칸은 걸러 줄바꿈으로 합친다(s2ScriptLines와 동일 규칙)
+            joined = "\n".join(t.strip() for t in self.page.mine_cells if t.strip())
+            self.page.script_state = joined
     def count(self):
+        if self.kind == "s2cells":
+            return len(self.page.mine_cells)
         return self.page.card_count
+    def nth(self, i):
+        return _FakeCell(self.page, i)
+
+
+class _FakeCell:
+    """#s2d-0 .s2-sent 문장칸 하나(base.write_mine_draft의 cells.nth(i).evaluate(...) 흉내)."""
+    def __init__(self, page, i):
+        self.page = page
+        self.i = i
+    def evaluate(self, js, arg=None):
+        if self.i < len(self.page.mine_cells):
+            self.page.mine_cells[self.i] = arg
 
 
 class FakeErrors:
@@ -91,17 +109,22 @@ class FakePage:
         self.server_responses = {}   # url -> FakeResp
         self.request = _FakeRequest(self)
         self.new_work_clears = True  # ?new=1이 씨앗을 실제로 비우는가(app의 clearWork 흉내)
+        self.mine_cells = []         # base.write_mine_draft/confirm_mine_draft가 쓰는 문장칸(.s2-sent) 흉내
 
     def goto(self, url, wait_until=None, timeout=None):
         self.url = url
         if "new=1" in url and self.new_work_clears:
             self.script_state = ""; self.seed = ""; self.handoff_len = 0
+            self.mine_cells = []
     def reload(self, wait_until=None, timeout=None):
         pass
     def wait_for_timeout(self, ms):
         pass
     def wait_for_selector(self, sel, timeout=None, state=None):
         pass
+    def click(self, sel, timeout=None):
+        if sel == "#s2MineBtn":
+            self.mine_cells = ["", "", "", "", ""]   # S2_MINE_ROLES 기본 5칸
     def wait_for_function(self, js, timeout=None):
         """browser.goto_produce/reload_produce의 준비 표식 흉내: step_labels_len<=0이면
         '옛 값이 초기화를 깼다'(flow_localstorage_old red 시나리오)를 재현해 타임아웃을 낸다."""
@@ -121,6 +144,10 @@ class FakePage:
             return loc
         if sel == "#hcCopyCards > *":
             return FakeLocator(self, "hccards")
+        if sel == "#s2d-0 .s2-sent":
+            return FakeLocator(self, "s2cells")
+        if sel == "#s2d-0 .s2-dfoot .btn-next":
+            return FakeLocator(self, "s2confirm")
         raise ValueError(sel)
     def evaluate(self, js, arg=None):
         if "STATE.headcopy" in js:
@@ -137,6 +164,8 @@ class FakePage:
             return None
         if "S2.seed" in js:
             return {"seed": self.seed, "script": self.script_state, "handoff": self.handoff_len}
+        if "STATE.script" in js:
+            return self.script_state
         raise ValueError(js)
 
 

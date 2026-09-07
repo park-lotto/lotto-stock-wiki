@@ -67,9 +67,12 @@ def test_member_owned_dead_key_recall_does_not_turn_red(tmp_path):
     by = {s.item: s for s in h_dead_key_recall.measure({"live_db": p, "base_url": None, "now": t0})}
     # 운영 키 서브키(기본 item)는 이 회원 키 재호출과 무관하게 초록/재호출없음이어야 한다.
     assert by["h_dead_key_recall"].ok is True and by["h_dead_key_recall"].value == 0
-    # 회원 키는 참고용 서브키로 기록은 되지만 ok(=빨강 아님)여야 한다.
+    # 회원 키는 참고용 서브키로 기록은 되지만 판정 대상이 아니다 — ok=True(강제초록) 대신
+    # ok=None(GRAY·정보성)이어야 한다(코디네이터 지시 2026-09-07: h_dead_key_recall::member는
+    # 판정할 수 없는 값을 ok=True 고정으로 억지 초록 냈던 것을 회색으로 정정).
     assert "h_dead_key_recall::member" in by
-    assert by["h_dead_key_recall::member"].ok is True
+    assert by["h_dead_key_recall::member"].ok is None
+    assert by["h_dead_key_recall::member"].verdict == "gray"
     assert "zzz999" in by["h_dead_key_recall::member"].detail
 
 

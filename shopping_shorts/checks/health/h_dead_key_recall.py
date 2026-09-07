@@ -39,6 +39,10 @@ def measure(ctx):
     member_detail = "; ".join(
         f"{r['service']} 회원{r['customer_id']} …{r['key_tail']} {r['n']-1}회 재호출(회원 개인 키 — 운영 사고 아님)"
         for r in member_rows) or "재호출 없음"
-    out.append(Sample("h_dead_key_recall::member", f"{META['name']} — 회원 키(참고용)",
-                      member_recalls, True, detail=member_detail, evidence_url="/apiwatch"))
+    # ★코디네이터 지시(2026-09-07): ok=True 고정은 화면에 초록으로 뜬다 — 이건 판정이 아니라
+    #   정보성 참고 수치(회원 개인 키 재호출은 운영 사고가 아니라서 애초에 빨강/초록을 매길 대상이
+    #   아니다). ok=None → Sample.verdict가 GRAY(판정 불가)를 낸다(verdict.py 참조) — 억지 초록
+    #   금지 원칙과 같은 이유로, 억지 초록도 만들지 않는다.
+    out.append(Sample("h_dead_key_recall::member", f"{META['name']} — 회원 키(참고용, 정보성)",
+                      member_recalls, None, detail=member_detail, evidence_url="/apiwatch"))
     return out
