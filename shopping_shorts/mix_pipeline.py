@@ -1032,6 +1032,45 @@ def _owned_job(fn):
 
 
 @_owned_job
+def humanize_tts_error(err, has_own_key=None):
+    """TTS 실패 원문을 고객이 읽고 **뭘 해야 하는지 아는** 한 줄로 바꾼다(2026-09-07).
+
+    사장님: "만약에 정말 등록이 안되었으면 tts 키를 재등록해주세요 문구 남겨".
+
+    왜 필요한가(실측): 최일환님(cid 291) job 7ebb65e720da가
+        "401 Client Error: Unauthorized for url: https://api.elevenlabs.io/..."
+    로만 실패해 3단계에서 멈췄다. 원문만 보면 "인증 실패"로 읽히는데 실제 원인은
+    **음성 크레딧 소진**이었다(그 계정 남은 문자 2자). 화면에도 이 원문이 그대로
+    떠서 고객은 무엇을 해야 할지 알 수 없었다.
+
+    ★일레븐랩스는 잔액 소진도 401로 준다 — 코드만 보고 "키가 틀렸다"고 단정하면
+      안 된다. 그래서 안내는 두 가지를 함께 말한다(재등록 / 크레딧 확인).
+    ★원문은 버리지 않고 뒤에 붙인다 — 우리가 원인을 다시 찾을 때 필요하다.
+    """
+    raw = str(err or "")
+    low = raw.lower()
+    tip = None
+    if "elevenlabs" in low or "typecast" in low or "text-to-speech" in low:
+        if "401" in raw or "unauthorized" in low or "invalid_api_key" in low:
+            tip = ("🎙 음성(TTS) 키에 문제가 있어요. "
+                   "설정에서 **TTS 키를 재등록**해 주세요. "
+                   "키가 맞다면 음성 서비스의 **남은 크레딧**을 확인해 주세요 "
+                   "(잔액이 떨어져도 같은 오류가 납니다).")
+        elif "402" in raw or "quota" in low or "credit" in low:
+            tip = ("🎙 음성(TTS) 크레딧이 부족해요. "
+                   "음성 서비스에서 크레딧을 채우거나, 설정에서 **TTS 키를 재등록**해 주세요.")
+        elif "404" in raw or "not found" in low:
+            tip = ("🎙 고른 성우를 그 키로 찾을 수 없어요. "
+                   "다른 성우를 고르거나 설정에서 **TTS 키를 재등록**해 주세요.")
+        elif "429" in raw or "rate" in low:
+            tip = "🎙 음성 서비스가 잠시 붐빕니다. 1~2분 뒤 다시 시도해 주세요."
+    if not tip:
+        return raw
+    if has_own_key is False:
+        tip += " (지금은 등록된 개인 TTS 키가 없어 공용 키로 만들고 있습니다.)"
+    return f"{tip}\n\n[원문] {raw}"
+
+
 def run_mix_job(job_id, db_path, work_root):
     """다운로드→추출→EDL→TTS. 완료 시 status='ready_for_review'."""
     # 이 job 안에서 나가는 모든 Gemini 콜에 job_id·customer_id를 붙인다(2026-08-16).
@@ -1193,7 +1232,7 @@ def run_mix_job(job_id, db_path, work_root):
                           global_pron=_gpron)
         except Exception as e:
             traceback.print_exc(file=sys.stderr)
-            store.update_mix_job(job_id, status="failed", error=str(e))
+            store.update_mix_job(job_id, status="failed", error=humanize_tts_error(e))
             # 유료게이트: 렌더 실패 → 예약한 'render' 크레딧 환불(계정+전역). 실패했는데 크레딧만
             # 날아가면 시니어에겐 '고장'으로 읽힌다(하루 2회뿐). points 실패환불(_fx_render_job)과 대칭.
             # ★render_charge_day가 있는 job만(=/api/mix/start가 실제 과금한 것) 환불하고, 딱 그 날짜로
@@ -1724,7 +1763,7 @@ def retype_mix_job(job_id, video_type, db_path, work_root):
                       global_pron=_gpron, script_structure=job.get("script_structure"))
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
-        store.update_mix_job(job_id, status="failed", error=str(e))
+        store.update_mix_job(job_id, status="failed", error=humanize_tts_error(e))
         # 🎁 무료체험: 재타이핑(유형 변경 후 EDL+TTS 재생성)이 실패해도 체험 1회를 돌려준다.
         #   run_render 실패 환불과 대칭 — 체험자가 재타이핑 실패로 유일한 1회를 잃고 잠기는 걸 막는다.
         #   유료(render_charge_day=날짜)는 미환불(기존 동작). usage_decr는 0 밑으로 안 가 이중환불 안전.
@@ -3421,7 +3460,7 @@ def run_render(job_id, db_path, work_root):
         store.update_mix_job(job_id, status="done", video_path=str(out_path))
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
-        store.update_mix_job(job_id, status="failed", error=str(e))
+        store.update_mix_job(job_id, status="failed", error=humanize_tts_error(e))
         # 🎁 무료체험 이벤트: 최종 렌더(자막제거·조립)가 실패하면 체험 1회를 돌려준다(재도전 가능).
         #   과금은 /api/mix/start(run_mix_job 단계)에서 한 번뿐이고 최종렌더는 같은 job의 뒷단계라,
         #   run_mix_job이 성공해 여기까지 온 체험 job은 실패해도 환불이 안 됐다 → 여기서 메운다.
@@ -3525,4 +3564,4 @@ def resynth_tts_job(job_id, db_path, work_root):
         store.update_mix_job(job_id, edit_plan=plan, status="ready_for_review")
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
-        store.update_mix_job(job_id, status="failed", error=str(e))
+        store.update_mix_job(job_id, status="failed", error=humanize_tts_error(e))
