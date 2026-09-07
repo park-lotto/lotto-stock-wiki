@@ -12733,6 +12733,8 @@ async function pollPreview(gen, job){
 
 // ── 2단계 자막제거 미리보기(소스 원본 청소) ──────────────
 let CLEAN_POLL=null, CLEAN_GEN=0;
+// ★진행도 완료도 아닌 상태(clean_status=null)를 몇 번 보았나 — 무한 복원중 차단용(2026-09-07).
+let CLEAN_NULL_TICKS=0;
 // 완료 화면(BEFORE/AFTER 2칸)을 그리는 곳은 한 군데뿐이다 — 폴러가 끝났을 때와
 // 다른 단계 갔다 돌아왔을 때(restoreCleanPreview)가 같은 함수를 쓴다.
 // 확인 지점(2026-08-18 사장님: "한 장만 샘플이라 다음 것들도 넘겨서 확인하고 싶다").
@@ -12907,7 +12909,8 @@ async function startCleanPreview(){
         || ('<div class="hint" style="color:var(--fire)">⚠️ '+esc(d.error||'청소 실패')+'</div>');
       if(btn) btn.disabled=false; return;
     }
-    CLEAN_POLL=setInterval(()=>pollClean(myGen,myJob),3000); pollClean(myGen,myJob);
+    CLEAN_NULL_TICKS=0;
+  CLEAN_POLL=setInterval(()=>pollClean(myGen,myJob),3000); pollClean(myGen,myJob);
   }catch(e){ if(CLEAN_GEN!==myGen) return; box.innerHTML=ErrorHelp.html('network'); if(btn) btn.disabled=false; }
 }
 // 진행 문구 갱신(2026-08-19). 자막제거는 소스 1편당 수 분이라 전체 25분이 걸려도 정상인데,
@@ -12932,6 +12935,21 @@ async function pollClean(gen,job){
     // 진행 표시(2026-08-19): 소스 1편당 수 분이라 전체 25분도 정상이다. 끝난 개수를
     // 계속 갱신해 "멈춘 게 아니라 돌고 있다"를 보이게 한다.
     if(d.clean_status==='cleaning') updateCleanProgress(d);
+    // ★서버가 '청소 중'이 아니라고 하는데도 화면만 도는 경우를 끝낸다(2026-09-07 김데릭 회원 제보:
+    //   "자연스럽게 복원중 멘트가 무한으로 나온다"). 종전엔 ready/failed에서만 멈췄고
+    //   **null**(청소가 시작된 적 없거나 2단계 재실행으로 초기화됨)은 분기가 아예 없어
+    //   3초마다 영원히 돌았다(실측 job 7c2a695d7e1f: clean_status=null, 큐·호출기록 모두 없음).
+    //   바로 끊지 않고 3틱(9초) 유예한다 — 시작 직후 DB 반영이 닿기 전일 수 있다.
+    if(d.clean_status==='cleaning' || d.clean_status==='ready' || d.clean_status==='failed'){
+      CLEAN_NULL_TICKS=0;
+    }else if(++CLEAN_NULL_TICKS>=3){
+      clearInterval(CLEAN_POLL); CLEAN_POLL=null; CLEAN_NULL_TICKS=0;
+      const _sc=document.getElementById('cleanShowcase'); if(_sc) _sc.style.display='';
+      box.innerHTML='<div class="hint">⚠️ 자막 지우기가 시작되지 않았어요. 아래 버튼을 다시 눌러 주세요.'
+        +'<div style="margin-top:10px"><button class="cta-shine" onclick="startCleanPreview()">자막 지우기 다시 시작</button></div></div>';
+      if(btn) btn.disabled=false;
+      return;
+    }
     if(d.clean_status==='ready'){
       clearInterval(CLEAN_POLL); CLEAN_POLL=null;
       if(d.clean_regions) CLEAN_REGIONS=d.clean_regions;   // 지워진 자막 자리(5단계 꾸미기가 씀)
