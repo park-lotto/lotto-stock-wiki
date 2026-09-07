@@ -14221,8 +14221,12 @@ def _api_pinterest_collect(request: Request, body: dict = None):
     #   ⚠️덤이므로 실패해도 수집은 그대로 산다(pin_destination이 빈 값을 준다).
     if items and body.get("with_dest", True):
         def _dest(it):
-            d, l = pinterest_crawl.pin_destination(it.get("url") or "")
+            d, l, cap = pinterest_crawl.pin_destination(it.get("url") or "")
             it["pin_dest"], it["pin_link"] = d or "", l or ""
+            # 검색 응답엔 제목·설명이 없다 → 상세에서 건진 것으로만 채운다.
+            # 이미 값이 있으면 덮지 않는다(빈 값으로 지우는 사고 방지).
+            if cap and not (it.get("caption") or "").strip():
+                it["caption"] = cap
             return it
         with ThreadPoolExecutor(max_workers=16) as _ex:
             items = list(_ex.map(_dest, items))
