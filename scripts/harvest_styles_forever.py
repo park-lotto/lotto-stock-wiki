@@ -237,6 +237,25 @@ _SEEDS = {
         "UC6FhOTXF3D0oDtOILYnkKow": {"title": "꿀템 보물찾기", "subs": 0, "score": 4},
         "UCXQRYw25xKBXGaMfb4FnnZQ": {"title": "홈템꿀팁 | 살림, 꿀템", "subs": 0, "score": 4},
     },
+    # ★썰쇼핑 씨앗(2026-09-08 신설). 위 주석은 "썰쇼핑도 살림킹왕짱을 심어 뒀다"고
+    #   적혀 있었지만 **실제로는 이 표에 없었다** — 그래서 루프를 돌려도 썰쇼핑 축은
+    #   영영 0이었다(실측: 27분 45채널 발굴분이 전부 '신기템'). 빈 풀은 스스로 못
+    #   벗어난다는 바로 그 함정에 썰쇼핑이 걸려 있었다.
+    # 씨앗은 **사장님이 직접 O로 찍은 채널**에서 골랐다(out/썰쇼핑_판정결과_전체.json,
+    #   587편 채점). score = 그 채널에서 사장님이 O를 준 편수 — 추측이 아니라 사람 판정이다.
+    "썰쇼핑": {
+        "UCf_dI4hEIhyO_Ghbpg-0yXA": {"title": "공가미", "subs": 8070, "score": 7},
+        "UCKppHYI5ul6uw-AXOMCFMiA": {"title": "뽀터언니", "subs": 1350, "score": 6},
+        "UCXteg2LRkVxN8b7umCE7QOQ": {"title": "딸기라떼", "subs": 5130, "score": 6},
+        "UCQRLTJOU9WTtstLwIeM2lmA": {"title": "왜 팔릴까", "subs": 1720, "score": 5},
+        "UC8Wcwts4ChdpCe-nzqpM04A": {"title": "인생갓템", "subs": 30700, "score": 4},
+        "UCo2z7vorOcD2wU8uxL8Wgew": {"title": "럭키박스", "subs": 2340, "score": 4},
+        "UC7-zAnA-Q91i52Ma1ufhGHg": {"title": "달래샵", "subs": 6910, "score": 4},
+        "UCkAv5c_XGwtEhpYk3i-zcFg": {"title": "오늘꿀템", "subs": 1380, "score": 4},
+        # 원본 두 채널 — 이 장르를 정의한 곳이라 어휘 수확 대상으로 계속 둔다.
+        "UCBFu04us6bv9OFcwrJDXdMg": {"title": "살림킹왕짱", "subs": 14600, "score": 4},
+        "UCnD6bgF50o87a92-iK1dI8Q": {"title": "살림도사", "subs": 14500, "score": 4},
+    },
 }
 for _stl, _seed in _SEEDS.items():
     if _stl in STYLES and not st["styles"].get(_stl):
