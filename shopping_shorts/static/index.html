@@ -3844,8 +3844,8 @@ function renderLens(shortcode, mountId){
   const _anyCnt=Object.keys(_cnt).length>0;
   const chips=!_anyCnt?'':`<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px">
     ${LENS_PLATFORMS.map(p=>{
-      const n=_cnt[p.k]||0, on=st.on.has(p.k);
-      return `<button onclick="toggleLensPlatform('${shortcode}','${p.k}')" title="${p.label} ${n}건 — 눌러서 보이기/숨기기" style="font-size:11px;padding:3px 9px;border-radius:8px;cursor:pointer;border:1px solid ${on&&n?'var(--accent)':'var(--line)'};background:${on&&n?'var(--accent)':'transparent'};color:${on&&n?'#fff':'var(--fg,inherit)'};opacity:${n?1:.35}">${p.label} ${n}</button>`;
+      const n=_cnt[p.k]||0, _pOn=st.on.has(p.k);
+      return `<button onclick="toggleLensPlatform('${shortcode}','${p.k}')" title="${p.label} ${n}건 — 눌러서 보이기/숨기기" style="font-size:11px;padding:3px 9px;border-radius:8px;cursor:pointer;border:1px solid ${_pOn&&n?'var(--accent)':'var(--line)'};background:${_pOn&&n?'var(--accent)':'transparent'};color:${_pOn&&n?'#fff':'var(--fg,inherit)'};opacity:${n?1:.35}">${p.label} ${n}</button>`;
     }).join('')}
   </div>`;
   // 필터: 켠 플랫폼 + (숏폼만이면) is_short!==false + (해외만이면) 제목에 한글 없음.
@@ -3930,8 +3930,8 @@ function renderLens(shortcode, mountId){
         <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-top:4px">
           <span style="font-size:11px;color:var(--sub)">🌐 검색 언어</span>
           ${LENS_LANGS.map(L=>{
-            const on=(st.lang||'auto')===L.k;
-            return `<button onclick="setLensLang('${shortcode}','${L.k}')" title="${L.title}" style="font-size:12px;padding:3px 9px;border-radius:8px;cursor:pointer;border:1px solid ${on?'var(--accent)':'var(--line)'};background:${on?'var(--accent)':'transparent'};color:${on?'#fff':'var(--fg,inherit)'};font-weight:${on?'700':'400'}">${L.label}</button>`;
+            const _lOn=(st.lang||'auto')===L.k;
+            return `<button onclick="setLensLang('${shortcode}','${L.k}')" title="${L.title}" style="font-size:12px;padding:3px 9px;border-radius:8px;cursor:pointer;border:1px solid ${_lOn?'var(--accent)':'var(--line)'};background:${_lOn?'var(--accent)':'transparent'};color:${_lOn?'#fff':'var(--fg,inherit)'};font-weight:${_lOn?'700':'400'}">${L.label}</button>`;
           }).join('')}
           ${/* ★자동 모으기 — 검색어 × 언어를 순서대로 한 번씩 돌려 계속 쌓는다.
                「여기서」는 무료 플랫폼만 도니 눌러도 돈이 안 나간다. */''}
