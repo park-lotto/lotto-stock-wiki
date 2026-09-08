@@ -1706,6 +1706,22 @@ document.querySelectorAll('.tab[data-tab]').forEach(x=> x.onclick=()=>setTab(x.d
 // -1e15로 같아져 최신순이 통째로 무효**가 됐다(사장님 제보 "최신순인데 2일 전").
 const RECENCY_FIELDS = ['posted_at', 'upload_ts', 'first_seen'];
 
+// 마지막 수집 시각(epoch ms). 0이면 모른다.
+// ★age_hours를 지금 기준으로 되살리는 데 쓴다 — 아래 ageHoursNow() 한 곳에서만 읽는다.
+let COLLECTED_AT_MS = 0;
+
+// 지금 기준 경과 시간(시). 모르면 null.
+function ageHoursNow(i){
+  const h = i.age_hours;
+  if (h == null) return null;
+  // 수집 시각을 알면 그 뒤로 흐른 시간을 더한다. 모르면 종전대로 스냅샷을 쓴다(회귀 0).
+  if (COLLECTED_AT_MS) {
+    const drift = (Date.now() - COLLECTED_AT_MS) / 3.6e6;
+    if (drift > 0) return h + drift;
+  }
+  return h;
+}
+
 // 🏅 조회수 뱃지 — 의미 있는 것만 단다(2026-09-04).
 // 기준은 실측 분위수(유튜브 9,170편): 10만+ 754편(상위 8.2%) · 30만+ 325(3.5%)
 //   · 50만+ 196(2.1%) · 100만+ 72(0.8%). 10만 미만은 안 단다(중앙값이 3,676뷰다).
@@ -1737,7 +1753,8 @@ function recencyMs(i){
 function recencyKey(i){
   const t = recencyMs(i);
   if (t != null) return t;                         // epoch ms — 클수록 최신
-  if (i.age_hours != null) return -i.age_hours;    // 경과가 적을수록 최신 → 부호를 뒤집는다
+  const h = ageHoursNow(i);
+  if (h != null) return -h;                        // 경과가 적을수록 최신 → 부호를 뒤집는다
   return -1e15;                                    // 시간을 모르는 것은 맨 뒤
 }
 function sortKey(i){
@@ -2428,7 +2445,7 @@ function fmtAgo(i){
   // 고정돼 보였음 — 실제 시각이 있으면 지금 기준으로 계산한다.
   // ★정렬과 **같은 필드 우선순위**를 쓴다(recencyMs). 표시와 정렬이 다른 값을 보면
   //   "최신순인데 위쪽이 더 오래돼 보이는" 어긋남이 난다(0순위-B).
-  let h = i.age_hours || 0;
+  let h = ageHoursNow(i) || 0;
   const t = recencyMs(i);
   if(t != null){
     h = Math.max(0, (Date.now()-t)/3.6e6);
@@ -2796,6 +2813,14 @@ async function loadLast(){
   }
   const d = await (await fetch(url)).json();
   STATE.items = d.items || [];   // 결과 없어도 무조건 갈아끼움 — 이전 플랫폼 카드 잔존 방지
+  // ★수집 시각을 기억한다(2026-09-08 사장님 "이건 진짜 1분전인가").
+  //   age_hours는 **수집한 순간 찍힌 스냅샷**이라 그 뒤로 흐른 시간이 안 더해진다.
+  //   실측: 09:15 수집분을 17:57에 보는데 카드가 "2시간 전"(진짜는 10.4시간 전) —
+  //   8.7시간이 통째로 빠져 있었다. 카드 7장이 전부 "12분 전"으로 뭉쳐 보이던 것도
+  //   같은 이유다(실제 발행 시각이 제각각이면 그렇게 뭉칠 수 없다).
+  //   발행 시각(posted_at)이 있으면 그게 정답이지만 유튜브 랭킹은 **0/156건**이라
+  //   기댈 수 없다. 대신 "수집 시점 경과 + 수집 이후 흐른 시간"으로 되살린다.
+  COLLECTED_AT_MS = d.collected_at ? (Date.parse(d.collected_at) || 0) : 0;
   try{ renderStyles(); }catch(e){}   // 이번 목록에 있는 축만 버튼으로
   render();
   const st = document.getElementById("status");
