@@ -10090,7 +10090,10 @@ async def api_lens_product(request: Request, frame: UploadFile = File(...),
             identify_product_from_lines, lines,
             "", source_caption or "")
     except Exception as e:      # noqa: BLE001 — 실패해도 렌즈 나머지는 살아야 한다
+        # ★차감과 환불은 **짝**이다 — 크레딧만 되돌리고 포인트를 안 되돌리면
+        #   실패할 때마다 잔액이 조용히 깎인다(test_byok_charge_wiring가 이걸 잡는다).
         refund_credit(cid, "lens")
+        _refund_points(cid, pricing.OP_LENS, keyroute.SVC_SERPAPI)
         return {"ok": False, "product": "", "error": f"제품명 찾기 실패: {type(e).__name__}"}
 
     product = (product or "").strip()
