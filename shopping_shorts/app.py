@@ -16278,7 +16278,7 @@ def _ig_reel_one(code):
     """인스타 **릴 1건**만 직접 읽어 수집과 같은 10키 dict로 돌려준다(없으면 None).
 
     ★왜 프로필 스크레이프를 안 쓰나(2026-08-19 실측):
-      fetch_reels(계정)는 **최신 3건만** 판다(config.RESULTS_PER_CHANNEL=3).
+      fetch_reels(계정)는 최신 config.RESULTS_PER_CHANNEL건만 판다(2026-09-08 기준 12).
       사장님이 고른 영상은 대개 그 3건 밖이라 통째로 못 찾는다
       (실사고: DcF2lTqzeiu 등록 → 프로필엔 최신 3건뿐이라 reels=0).
       게다가 프로필 열기는 비싸고 연달아 부르면 인스타가 0건을 준다(실측: 2회차 0건).
@@ -16337,7 +16337,7 @@ def _enrich_instagram_meta(url, meta, store=None):
         return meta, None
     import sys as _sys
     # ① 그 영상 하나만 직접 읽는다 — 계정명이 필요 없고, 오래된 영상도 잡힌다.
-    #    ★프로필 스크레이프는 최신 3건만 파므로(RESULTS_PER_CHANNEL) 대개 못 찾는다.
+    #    ★프로필 스크레이프는 최신 RESULTS_PER_CHANNEL건만 파므로 대개 못 찾는다.
     hit = None
     try:
         hit = _ig_reel_one(code)

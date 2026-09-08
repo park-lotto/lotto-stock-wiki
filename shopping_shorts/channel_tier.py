@@ -24,8 +24,6 @@
 import hashlib
 from datetime import date, timedelta
 
-from shopping_shorts.config import RESULTS_PER_CHANNEL
-
 TIER_A = "A"
 TIER_B = "B"
 TIER_C = "C"
@@ -41,9 +39,14 @@ HIT_MIN_COUNT = 2
 #: 이 기간 업로드가 없으면 휴면(D). 매일 열어야 빈손이다.
 DORMANT_DAYS = 14
 
-#: 채널당 가져올 개수. C·D는 '승격 감지'만 하므로 1개면 된다.
-RESULTS_DEFAULT = RESULTS_PER_CHANNEL
-RESULTS_PROBE = 1
+# ★채널당 개수를 등급으로 깎지 않는다 (2026-09-09 실측으로 폐기).
+# 예전엔 fetch_limit()이 C·D를 1건으로 줄였다("승격 감지기라 1개면 된다").
+# 그런데 그 함수는 **호출부가 한 번도 없었고**, 배선했다면 오히려 해로웠다:
+#   실측 등급 분포 A65·B29·C143·D108 → C+D가 251채널(전체 345의 73%)
+#   이들을 1건으로 깎으면 RESULTS_PER_CHANNEL=12의 효과가 통째로 사라진다.
+# 유실이 몰린 곳이 바로 C(70%)·D(77%)이고 홈템 채널 185개가 거기 있다.
+# 프로필을 한 번 열면 12건이 통째로 오므로 더 받아도 요청·바이트가 0 늘어난다
+# — 깎을 이유 자체가 없다. 등급은 '얼마나 자주 여느냐'(PERIOD_DAYS)만 정한다.
 
 _TIER_ORDER = (TIER_A, TIER_B, TIER_C, TIER_D)
 
@@ -130,17 +133,6 @@ def due_today(tiers, day_index, known=None):
         if n and n not in tiers:
             due.add(n)
     return due
-
-
-def fetch_limit(tier, default=None, probe=RESULTS_PROBE):
-    """이 등급에서 채널당 몇 개를 가져올지.
-
-    C·D는 재료창고가 아니라 **승격 감지기**다 — 최신 1개만 봐도 터졌는지 알 수 있고,
-    터졌으면 다음 계산에서 A로 올라와 다음날부터 매일 긁힌다.
-    """
-    if default is None:
-        default = RESULTS_DEFAULT
-    return probe if tier in (TIER_C, TIER_D) else default
 
 
 def tier_counts(tiers):
