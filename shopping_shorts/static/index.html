@@ -398,7 +398,10 @@ body.is-admin .admin-only{display:block}
          ★2026-09-08 사장님 "메인화면에 핀터레스트는 왜없앴나. 모두 공개로해라" — 전부 다시 켠다.
          숨기기 전 실측(09-08): 유튜브 09-08 · 네이버클립 08-30 · 핀터레스트 08-28 ·
          쓰레드 08-17 · 틱톡/샤오홍슈/도우인 07-30(shortcode가 전부 demo_ 더미 8건).
-         이 사실을 보고한 뒤 지시대로 전부 열었다.
+         이 사실을 보고한 뒤, 사장님이 **틱톡·샤오홍슈·도우인 3개는 다시 닫으라**고 하셨다
+         (그 셋만 실데이터가 0이고 demo_ 더미뿐이라 고객에게 가짜가 보인다).
+         → 지금 노출 = 인스타·유튜브·쓰레드·핀터레스트·네이버클립 5개.
+         그 셋은 수집이 살아나면 그때 연다.
          ⚠️다시 줄일 일이 생기면 요소를 지우지 말고 style="display:none"만 붙여라 —
          switchPlatform·트렌드카드가 이 요소들을 잡으므로 지우면 그 코드가 죽는다
          (2026-07-21 선례). 계약 이력은 tests/test_ranking_platform_tabs.py에 있다. -->
@@ -416,9 +419,9 @@ body.is-admin .admin-only{display:block}
            국내 숏폼. 핀터레스트와 달리 조회수·좋아요·댓글·발행시각이 다 와서
            속도·참여율이 정상 계산된다. 무료·로그인 없음(HTTP 2번). -->
       <div class="ctype" data-platform="naverclip" onclick="switchPlatform('naverclip',this)">🟩 네이버클립</div>
-      <div class="ctype" data-platform="tiktok" onclick="switchPlatform('tiktok',this)">🎵 틱톡</div>
-      <div class="ctype" data-platform="xiaohongshu" onclick="switchPlatform('xiaohongshu',this)">📕 샤오홍슈</div>
-      <div class="ctype" data-platform="douyin" onclick="switchPlatform('douyin',this)">🎬 도우인</div>
+      <div class="ctype" data-platform="tiktok" onclick="switchPlatform('tiktok',this)" style="display:none">🎵 틱톡</div>
+      <div class="ctype" data-platform="xiaohongshu" onclick="switchPlatform('xiaohongshu',this)" style="display:none">📕 샤오홍슈</div>
+      <div class="ctype" data-platform="douyin" onclick="switchPlatform('douyin',this)" style="display:none">🎬 도우인</div>
     </div>
     </details>
     <div id="seedPanel" style="display:none;margin-bottom:12px">
