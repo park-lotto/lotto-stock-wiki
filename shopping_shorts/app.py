@@ -9199,10 +9199,10 @@ def api_thumb(url: str, v: str | None = None, shortcode: str | None = None):
         #   SSRF로 걸린 것과 목록 누락을 갈라 적는다 — 처방이 정반대다(전자는 정상 차단).
         try:
             _h = (urllib.parse.urlparse(url).hostname or "?").lower()
-            _why = "ssrf" if _reject_ssrf(url) is not None else "not-in-allowlist"
-            print("[thumb-host-blocked] %s (%s)" % (_h, _why), flush=True)
-        except Exception:      # noqa: BLE001 — 로깅이 응답을 죽이면 안 된다
-            pass
+        except ValueError:     # urlparse가 던지는 것은 이것뿐이다(포트 파싱 등)
+            _h = "?"
+        _why = "ssrf" if _reject_ssrf(url) is not None else "not-in-allowlist"
+        print("[thumb-host-blocked] %s (%s)" % (_h, _why), flush=True)
         return Response(status_code=400, content=b"invalid host")
     # ★카드 크기에 맞는 가벼운 규격으로 낮춘다(2026-08-30). 화이트리스트 검사를 **통과한
     #   뒤에** 바꾼다 — 순서가 바뀌면 검사 대상이 원본이 아니게 된다. 영상ID는 보존되므로

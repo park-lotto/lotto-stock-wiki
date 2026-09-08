@@ -250,14 +250,31 @@ def test_real_chain_has_the_four_platforms():
     네이버 클립은 2026-08-30 합류 — 국내 숏폼, 무료(HTTP 2번, 브라우저도 안 띄운다).
 
     ★이름은 'four'로 남아 있지만 플랫폼은 다섯이다. 이름을 고치면 이 테스트가
-      'is_new'로 보여 게이트의 기준선 비교가 흔들린다 — 목록 자체가 정본이다."""
-    assert set(kw_search._CHAIN) == {"instagram", "tiktok", "youtube",
-                                     "pinterest", "naverclip"}
-    assert kw_search._CHAIN["instagram"] == [kw_backends.instagram]
-    assert kw_search._CHAIN["tiktok"] == [kw_backends.pw_tiktok, kw_backends.apify_tiktok]
-    assert kw_search._CHAIN["youtube"] == [kw_backends.youtube]
-    assert kw_search._CHAIN["pinterest"] == [kw_backends.pinterest_videos]
-    assert kw_search._CHAIN["naverclip"] == [kw_backends.naverclip_videos]
+      'is_new'로 보여 게이트의 기준선 비교가 흔들린다 — 목록 자체가 정본이다.
+
+    ★2026-09-08 — 배선의 정본은 `_CHAIN_FULL`로 옮겼다. 실제로 도는 `_CHAIN`은
+      거기에 config 노브(인스타 프록시·틱톡 Apify 끄기)를 적용한 결과다. 이 테스트는
+      **원본이 온전한지**를 계속 못박는다 — 노브로 끄는 것과 배선이 조용히 사라지는
+      것은 다른 일이고, 후자를 막는 게 이 테스트의 목적이다."""
+    assert set(kw_search._CHAIN_FULL) == {"instagram", "tiktok", "youtube",
+                                          "pinterest", "naverclip"}
+    assert kw_search._CHAIN_FULL["instagram"] == [kw_backends.instagram]
+    assert kw_search._CHAIN_FULL["tiktok"] == [kw_backends.pw_tiktok,
+                                               kw_backends.apify_tiktok]
+    assert kw_search._CHAIN_FULL["youtube"] == [kw_backends.youtube]
+    assert kw_search._CHAIN_FULL["pinterest"] == [kw_backends.pinterest_videos]
+    assert kw_search._CHAIN_FULL["naverclip"] == [kw_backends.naverclip_videos]
+
+
+def test_knobs_turn_off_the_paid_paths():
+    """돈 나가는 두 경로가 기본으로 꺼져 있고, 노브로 되살아나나 (2026-09-08 사장님
+    "인스타는 막고 / 틱톡은 (무료로)"). 되돌릴 스위치가 실제로 도는지까지 본다."""
+    off = kw_search._apply_knobs(kw_search._CHAIN_FULL)
+    assert "instagram" not in off, "인스타 프록시가 기본으로 살아있다(GB 과금)"
+    assert off["tiktok"] == [kw_backends.pw_tiktok], "틱톡 유료 폴백이 안 꺼졌다"
+    # 무료 플랫폼은 노브와 무관하게 그대로다 — 남는 게 0개가 되면 안 된다.
+    for p in ("youtube", "pinterest", "naverclip"):
+        assert off[p] == kw_search._CHAIN_FULL[p]
 
 
 # ── 핀터레스트 백엔드 (2026-08-29) ───────────────────────────────

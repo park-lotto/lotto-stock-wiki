@@ -45,14 +45,27 @@ _CHAIN = {
     "naverclip": [kw_backends.naverclip_videos],
 }
 
-# ── 노브 적용 (2026-09-08) — 끄는 판단은 config, 반영은 **여기 한 곳**에서만 한다.
-#    호출부·엔드포인트·프론트는 어느 플랫폼이 도는지 모른 채 그대로 돈다.
-#    남는 게 0개가 되는 일은 없다(유튜브·핀터레스트·네이버클립은 노브가 없다).
-if not config.KW_SEARCH_INSTAGRAM:
-    _CHAIN.pop("instagram", None)
-if not config.KW_SEARCH_TIKTOK_APIFY:
-    # 유료 백엔드만 뺀다 — 세션이 생기면 pw_tiktok이 그대로 무료로 성공한다.
-    _CHAIN["tiktok"] = [fn for fn in _CHAIN["tiktok"] if fn is not kw_backends.apify_tiktok]
+# ★위 _CHAIN이 **배선의 정본**이다 — 플랫폼이 조용히 사라지지 않게 원본을 남긴다.
+#   (test_real_chain_has_the_four_platforms가 이걸 못박는다.)
+_CHAIN_FULL = {p: list(fns) for p, fns in _CHAIN.items()}
+
+
+def _apply_knobs(chain):
+    """돈 나가는 경로를 끈다 (2026-09-08) — 끄는 판단은 config, 반영은 **여기 한 곳**.
+
+    호출부·엔드포인트·프론트는 어느 플랫폼이 도는지 모른 채 그대로 돈다.
+    남는 게 0개가 되는 일은 없다(유튜브·핀터레스트·네이버클립엔 노브가 없다).
+    """
+    out = {p: list(fns) for p, fns in chain.items()}
+    if not config.KW_SEARCH_INSTAGRAM:
+        out.pop("instagram", None)
+    if not config.KW_SEARCH_TIKTOK_APIFY and "tiktok" in out:
+        # 유료 백엔드만 뺀다 — 세션이 생기면 pw_tiktok이 그대로 무료로 성공한다.
+        out["tiktok"] = [fn for fn in out["tiktok"] if fn is not kw_backends.apify_tiktok]
+    return out
+
+
+_CHAIN = _apply_knobs(_CHAIN_FULL)
 
 
 # ── 플랫폼별로 **어느 언어로 검색할지** (2026-09-08 사장님 "중국어 영어 일본어까지 배치")
