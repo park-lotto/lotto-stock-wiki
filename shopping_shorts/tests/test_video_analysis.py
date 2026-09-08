@@ -373,8 +373,10 @@ def test_expand_search_keywords_drops_already_seen(monkeypatch):
     _fake_gemini(monkeypatch, '{"candidates":[{"ko":"시금치 빵","zh":"菠菜面包"},'
                               '{"ko":"시금치 스콘","zh":"菠菜司康"}]}', cap)
     out = video_analysis.expand_search_keywords("시금치", exclude=["菠菜面包"])
-    # 맨 앞은 사장님이 넣은 말 그대로(2026-08-16 추가) — zh는 비어 있다.
-    assert out[0] == {"ko": "시금치", "zh": ""}
+    # 맨 앞은 사장님이 넣은 말 그대로(2026-08-16 추가) — 나머지 언어는 비어 있다.
+    # ★언어 칸이 늘어도(en·ja·ru, 2026-09-08) 깨지지 않게 ko/zh만 본다.
+    assert out[0]["ko"] == "시금치" and out[0]["zh"] == ""
+    assert all(out[0][k] == "" for k in ("en", "ja", "ru"))
     assert [c["zh"] for c in out[1:]] == ["菠菜司康"]
     assert "菠菜面包" in cap["prompt"]        # 제외 목록이 프롬프트에도 실린다
 
