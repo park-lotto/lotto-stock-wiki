@@ -3803,7 +3803,7 @@ function renderLens(shortcode, mountId){
           title="넣은 소재로 검색어 조합을 여러 개 만들어 아래에 쌓습니다. 한국어만 넣어도 중국어까지 같이 나옵니다 — 무료" style="${btnCss};border-color:var(--accent);color:var(--accent);font-weight:700">${st.cnLoading?'⏳ 만드는 중…':'✨ 검색어 조합 만들기'}</button>
       </div>
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px">
-        <span style="font-size:12px;color:var(--sub)" title="🔎 여기서 = 인스타·틱톡·유튜브·핀터레스트를 이 페이지 안에서 찾습니다. 나머지 아이콘(📕샤오홍슈 🎶도우인 🎵틱톡 📷인스타)은 그 사이트를 새 탭으로 엽니다">🔎 비슷한 영상 찾기 <span style="opacity:.7">— 🔎는 여기서, 아이콘은 새 탭</span></span>
+        <span style="font-size:12px;color:var(--sub)" title="🔎 여기서 = 유튜브·핀터레스트·네이버클립을 이 페이지 안에서 찾습니다(무료). 나머지 아이콘(📕샤오홍슈 🎶도우인 🎵틱톡 📷인스타)은 그 사이트를 새 탭으로 엽니다 — 우리 비용 0원입니다">🔎 비슷한 영상 찾기 <span style="opacity:.7">— 🔎는 여기서(무료), 아이콘은 새 탭</span></span>
         ${st.frameBlob?`<button onclick="lensMoreCnKeywords('${shortcode}')" ${st.cnLoading?'disabled':''} title="같은 장면으로 다른 각도의 검색어를 더 뽑습니다(이미 나온 건 빼고 아래에 쌓입니다). 무료 — 추가 비용 없음" style="${btnCss};border-color:var(--accent);color:var(--accent)">${st.cnLoading?'⏳ 뽑는 중…':'🔄 다른 검색어 더'}</button>`:''}
         ${st.cnNoNew?'<span style="font-size:11px;color:var(--sub)">더 나올 게 없어요 — 이 장면에서 뽑을 각도는 다 나왔습니다</span>':''}
         ${st.cnErr?`<span style="font-size:11px;color:#e0623d">${esc(st.cnErr)}</span>`:''}
@@ -3812,6 +3812,10 @@ function renderLens(shortcode, mountId){
       </div>
       ${st.cnSearching?`<div style="font-size:11px;color:var(--sub);margin:4px 0">🔎 ${esc(st.cnSearchKw||'')} 검색 중… (10~30초)</div>`:''}
       ${(!st.cnSearching&&st.cnCost!=null)?`<div style="font-size:11px;color:var(--sub);margin:4px 0">${st.cnCost>0?('이번 검색 $'+st.cnCost.toFixed(3)):'무료 검색'}</div>`:''}
+      ${st.kwSearching?`<div style="font-size:11px;color:var(--sub);margin:4px 0">🔎 ${esc(st.kwSearchKw||'')} 검색 중… (10~30초)</div>`:''}
+      ${/* ★kwCost는 2026-09-08까지 값만 담고 화면에 안 그렸다 — 틱톡 Apify가 눈에 안 띈 채
+            나갔다(사장님 지적). cnCost와 같은 자리·같은 문구로 맞춘다. */''}
+      ${(!st.kwSearching&&st.kwCost!=null)?`<div style="font-size:11px;color:var(--sub);margin:4px 0">${st.kwCost>0?('이번 검색 $'+st.kwCost.toFixed(3)):'무료 검색'}</div>`:''}
       <div style="display:flex;flex-direction:column;gap:6px">
         ${(st.cnCands||[]).map((c,idx)=>{
           // 샤오훙슈 검색은 로그아웃 방문자를 로그인으로 막는다(登录后查看搜索结果). 해외판
@@ -3838,7 +3842,7 @@ function renderLens(shortcode, mountId){
               <div style="font-size:14px;font-weight:600;line-height:1.3">${kw}</div>
               <div style="font-size:11px;color:var(--sub)">${c.zh||''}</div></div>
             <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-            ${kw?`<button onclick="lensKwSearch('${shortcode}',${idx})" ${st.kwSearching?'disabled':''} title="인스타·틱톡·유튜브·핀터레스트를 '${kw}'로 검색해 이 페이지 안에 카드로 불러옵니다(이동 없음). 핀터레스트는 영어로 번역해 영상탭을 찾습니다" style="${wide}">🔎 여기서</button>`:''}
+            ${kw?`<button onclick="lensKwSearch('${shortcode}',${idx})" ${st.kwSearching?'disabled':''} title="유튜브·핀터레스트·네이버클립을 '${kw}'로 검색해 이 페이지 안에 카드로 불러옵니다(이동 없음). 전부 무료입니다. 핀터레스트는 영어로 번역해 영상탭을 찾습니다. 인스타(프록시 과금)와 틱톡 유료검색은 꺼져 있습니다 — 아래 📷·🎵 아이콘으로 새 탭에서 보세요" style="${wide}">🔎 여기서</button>`:''}
             ${c.zh?`<a href="${xhs}" target="_blank" rel="noopener" title="샤오홍슈에서 '${c.zh}' 검색 — 새 탭으로 엽니다" style="${ico}">📕</a>
             <a href="${dy}" target="_blank" rel="noopener" title="도우인에서 '${c.zh}' 검색 — 새 탭으로 엽니다" style="${ico}">🎶</a>`:''}
             ${kw?`<a href="${tk}" target="_blank" rel="noopener" title="틱톡에서 '${kw}' 검색 — 새 탭" style="${ico}">🎵</a>

@@ -9,7 +9,7 @@
 검색어가 CN과 다르다 — 여기는 **한국어(ko)**, cn_search는 중국어(zh)다.
 같은 후보 행에서 버튼만 갈린다.
 """
-from shopping_shorts import kw_backends, search_chain
+from shopping_shorts import config, kw_backends, search_chain
 
 # 회당 비용(달러). meta로 화면에 노출한다 — 비용이 조용히 새는 걸 막는다.
 #   유튜브·인스타는 0원이다(유튜브=무료쿼터 / 인스타=우리 프록시. 프록시 바이트
@@ -24,11 +24,16 @@ from shopping_shorts import kw_backends, search_chain
 _COST = {"apify_tiktok": 0.0195}
 
 _CHAIN = {
+    # ★인스타는 기본으로 **빠져 있다**(2026-09-08 사장님 "인스타는 막고").
+    #   Apify는 아니지만 주거용 프록시라 GB 과금이고, 회당 얼마인지 측정된 적이 없다.
+    #   되살리려면 KW_SEARCH_INSTAGRAM=1. 켜고 끄는 판단은 config 한 곳에서만 한다.
     "instagram": [kw_backends.instagram],
     # 틱톡도 프록시로 간다 — 다만 **세션이 있어야** 데이터가 온다(2026-08-17 실측:
     # 프록시로 페이지·API 모두 200인데 본문이 비고 로그인 모달이 뜬다).
     # 세션 파일이 생기는 순간 pw_tiktok이 성공하기 시작해 자동으로 $0이 된다 —
     # 샤오홍슈가 그렇게 무료로 돌고 있고, 도우인이 그 반대 상태다.
+    # ★유료 폴백(apify_tiktok)은 기본으로 빠진다 — 세션 없으면 0건이 되고,
+    #   사장님은 새 탭 아이콘(🎵)으로 간다. 되살리려면 KW_SEARCH_TIKTOK_APIFY=1.
     "tiktok": [kw_backends.pw_tiktok, kw_backends.apify_tiktok],
     "youtube": [kw_backends.youtube],
     # 핀터레스트(2026-08-29) — 렌즈 시각검색이 영상 핀을 사실상 안 물어와서(실측
@@ -39,6 +44,15 @@ _CHAIN = {
     # **인기순 정렬을 우리가** 한다 — 서버 sort 파라미터는 무시된다(실측).
     "naverclip": [kw_backends.naverclip_videos],
 }
+
+# ── 노브 적용 (2026-09-08) — 끄는 판단은 config, 반영은 **여기 한 곳**에서만 한다.
+#    호출부·엔드포인트·프론트는 어느 플랫폼이 도는지 모른 채 그대로 돈다.
+#    남는 게 0개가 되는 일은 없다(유튜브·핀터레스트·네이버클립은 노브가 없다).
+if not config.KW_SEARCH_INSTAGRAM:
+    _CHAIN.pop("instagram", None)
+if not config.KW_SEARCH_TIKTOK_APIFY:
+    # 유료 백엔드만 뺀다 — 세션이 생기면 pw_tiktok이 그대로 무료로 성공한다.
+    _CHAIN["tiktok"] = [fn for fn in _CHAIN["tiktok"] if fn is not kw_backends.apify_tiktok]
 
 
 def search(keyword, max_results=10):
