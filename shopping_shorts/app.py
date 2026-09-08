@@ -14691,6 +14691,14 @@ _NAVERCLIP_BEAUTY_KWS = (
 #     · 꽃보다클립은 네이버 클립에 **없다**(다른 플랫폼 채널로 보인다).
 #
 #   실측(2026-08-31): 15채널 프로필 조회 1.1초, 영상 915건 수집 4.2초.
+#
+#   ★2026-09-08 사장님이 벤치시트(네이버클립벤치시트_2609.xlsx, 101행)를 주셔서 **100개로 늘렸다**.
+#     시트는 채널명 + naver.me 단축링크만 있어, 단축링크를 서버(한국 IP)에서 따라가
+#     link.naver.com/bridge?url=...clip.naver.com/@<핸들>에서 핸들을 뽑았다(99/101 성공).
+#     못 넣은 2건:
+#       · 리뷰매니아 — 시트의 URL이 'https://naver.me/IMZCc2니'로 **끝에 한글이 섞인 오타**다.
+#       · 마지막 행 — 채널이 아니라 gemini 링크 메모였다.
+#     기존 15개 중 14개가 시트에도 있어 겹치는 건 한 번만 넣었다(신규 85개).
 _NAVERCLIP_BENCH_CHANNELS = (
     ("하루홈", "haruhomee"),
     ("결이고운", "pqk2yxfjtn"),
@@ -14707,6 +14715,91 @@ _NAVERCLIP_BENCH_CHANNELS = (
     ("진리뷰티", "youn-youn"),
     ("아름다름뷰티", "areumdareum_beauty"),
     ("미소의꿀템찾기", "mirrorlifetem"),
+    ("핑크라이프", "lovelypinklife"),
+    ("7080쥬", "0umyk3x9cb"),
+    ("뷰티핫딜", "chararab"),
+    ("네모세상", "nemo_view"),
+    ("언니의발견", "bearnco__"),
+    ("뷰티맘스", "beautymomslab"),
+    ("예쁨톡톡", "x2mdotqi5b"),
+    ("링코홈", "ringko00"),
+    ("잇쭁", "itzyong"),
+    ("비밀서랍", "85lasphzce"),
+    ("살리미9단", "sallimy9"),
+    ("우리가족살리미", "always_shine81"),
+    ("우아한은실언니", "clip_chaser"),
+    ("pickinbloom", "pickinbloom"),
+    ("살림숑", "daondays01"),
+    ("팔로우하고이뻐지기", "prohealthyy"),
+    ("오늘도 잘샀다", "bydh60861"),
+    ("일상꿀팁", "bestitempickme"),
+    ("꿀단지", "intalk_01"),
+    ("다시20살", "salim_mommy"),
+    ("뷰티랩", "beauty_tip7"),
+    ("오늘의홈", "gogi_vibe"),
+    ("뷰티캔두", "beauty_cando"),
+    ("꿀팁꿀템", "diapro2026"),
+    ("젊음의 비결", "hsyj1006"),
+    ("도대체 왜 돈을 막쓰는거예요", "information11111"),
+    ("꿀템큐레이터", "honeytemcurator"),
+    ("봉쥬르", "bonjourrbong"),
+    ("핑크로그", "2blueskyy"),
+    ("동안한스푼", "daily_item"),
+    ("언니의파우더룸", "beauty_diary_me"),
+    ("머스트해브꿀템", "musthavehoneytem"),
+    ("오늘의뷰팁", "tipstip"),
+    ("핫템모아", "itmoyamoya"),
+    ("방구석쇼핑", "ppp025088013"),
+    ("토닥이네", "todakene"),
+    ("라라홈", "lalaahome"),
+    ("정보홈", "byul2unni"),
+    ("조아뷰티", "joajung67"),
+    ("베스트 큐레이터", "bestcurator"),
+    ("꽃언니픽", "c01u2a0ojs"),
+    ("뷰밍아웃", "beauty_chacha"),
+    ("송도댁", "bro_hahami"),
+    ("톡톡뷰티살롱", "beauty_tem_1004"),
+    ("꿀템고고", "ggultemgogo"),
+    ("중년여신", "bc0ubk97jg"),
+    ("annyoungpick", "annyoungpick"),
+    ("꿀템언니", "ggultem_unni"),
+    ("하니앳홈", "haniathome"),
+    ("등대", "tjbbc000"),
+    ("헬스픽노트", "chishat"),
+    ("컨텐츠바이브", "contentvive"),
+    ("뷰티꿀연구소", "seulgobe"),
+    ("꿀팁창고", "onepickok"),
+    ("뷰티천사", "vitamin-mams"),
+    ("데일리픽스타일", "dailypickstyle"),
+    ("아이템천재", "itemgenius"),
+    ("온더홈", "on_the_home_"),
+    ("줌마의 일상레시피", "dohee170802"),
+    ("꿀팁저장소", "doohee170802"),
+    ("밤비아Pick", "bambia729"),
+    ("오핫템", "ohotem"),
+    ("뷰티슥삭", "beautyseuksak"),
+    ("뷰티클립샵", "beautyclipshop"),
+    ("다시꽃피다", "homebay_"),
+    ("트미", "cutepetfood"),
+    ("아이쇼핑", "blcho84"),
+    ("믿고사는곳", "trustplace"),
+    ("세월뚝", "everyhack"),
+    ("trustpicks", "trustpicks"),
+    ("예뻐지는이유", "everyalldayhappy"),
+    ("오늘더예뻐", "prettyyoungthing"),
+    ("진주댁의 픽", "okay_8"),
+    ("올다온의 소소한 발견", "alldaon_8"),
+    ("그냥 좋아서", "yinsence09"),
+    ("요술항아리", "worldjaphwa1"),
+    ("언니들픽", "print_88"),
+    ("하잇", "house_it_tem"),
+    ("살림뷰티 꿀템zip", "sunny987654321"),
+    ("봐밤바", "boabamba"),
+    ("뷰티플리", "cp_soonsak"),
+    ("40peroff", "40peroff"),
+    ("쇼핑클립", "bongjaming"),
+    ("뽀살림", "loralora27"),
+    ("기록하는 점장 노트", "8vc0dd5ei4"),
 )
 
 
@@ -14743,7 +14836,9 @@ def collect_channels(handles=None, per_channel=60, reset=False):
                 handles.append(h)
     if not handles:
         handles = [h for _n, h in _NAVERCLIP_BENCH_CHANNELS]
-    handles = handles[:60]
+    # ★상한 120 — 벤치 목록이 15→100으로 늘었다(2026-09-08). 60이면 **뒤 40채널이
+    #   조용히 잘려** 시트를 넣고도 안 걷힌다. 상한 자체는 남긴다(시드 오염 방어).
+    handles = handles[:120]
 
     try:
         per = max(5, min(int(per_channel or 60), 200))
