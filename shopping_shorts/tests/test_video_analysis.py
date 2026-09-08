@@ -355,8 +355,13 @@ def test_expand_search_keywords_returns_ko_zh_pairs(monkeypatch):
     _fake_gemini(monkeypatch, '{"candidates":[{"ko":"시금치 치아바타","zh":"菠菜恰巴塔"},'
                               '{"ko":"시금치 빵","zh":"菠菜面包"}]}', cap)
     out = video_analysis.expand_search_keywords("시금치 치아바타")
-    assert out == [{"ko": "시금치 치아바타", "zh": "菠菜恰巴塔"},
-                   {"ko": "시금치 빵", "zh": "菠菜面包"}]
+    # ★ko/zh 쌍만 본다(2026-09-08) — 후보에 en·ja 칸이 늘었고, 모델이 안 채우면
+    #   빈 문자열로 온다. 딕셔너리 전체를 비교하면 언어를 늘릴 때마다 깨진다.
+    assert [{"ko": c["ko"], "zh": c["zh"]} for c in out] == [
+        {"ko": "시금치 치아바타", "zh": "菠菜恰巴塔"},
+        {"ko": "시금치 빵", "zh": "菠菜面包"}]
+    # 새 칸은 있어야 한다(없으면 화면·링크가 옛 모양으로 되돌아간 것이다)
+    assert all("en" in c and "ja" in c for c in out)
     assert "시금치 치아바타" in cap["prompt"]
     # 텍스트만이라 가벼운 모델 — 비전 쿼터를 먹지 않는다
     assert cap["model"] == video_analysis._TRANSLATE_MODEL

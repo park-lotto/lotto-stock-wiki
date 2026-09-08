@@ -171,3 +171,6 @@ scripts/gemini_session/
 # yt-dlp 등 외부 도구가 작업 디렉터리에 남기는 임시파일(2026-09-08).
 # 트랙 폴더가 dirty가 되어 track.py finish 게이트가 막히던 것을 막는다.
 /*.tmp
+
+# 로그인 세션(storage_state) — 쿠키가 들어 있으므로 절대 커밋하지 않는다.
+/out/*session*.json

@@ -2993,7 +2993,13 @@ const LENS_PLATFORMS=[
   // 핀터레스트(2026-08-29 사장님 "핀터레스트 검색결과도 노출 / 숏폼영상만").
   // 서버(lens_discover)가 핀 페이지를 실조회해 **영상 핀만** 보내준다(이미지 핀은 서버컷).
   // play_url(mp4 직링크)이 실려 와 기존 인라인 재생 경로(/api/video 프록시)로 바로 재생된다.
-  {k:'pinterest',label:'📌 핀터레스트'}];
+  {k:'pinterest',label:'📌 핀터레스트'},
+  // ★네이버클립(2026-09-08 사장님 "네이버랑 핀터레스트는 안 나오는데?").
+  //   kw_search._CHAIN엔 2026-08-30부터 있었는데 **이 목록에만 없었다** —
+  //   카드 필터가 `st.on.has(i.platform)`로 거르므로, 결과를 정상으로 가져와도
+  //   화면에서 통째로 사라진다(백엔드는 멀쩡한데 안 보이는 모양).
+  //   플랫폼을 붙일 때 _CHAIN·화이트리스트와 **함께** 고쳐야 하는 세 번째 자리다.
+  {k:'naverclip',label:'🟩 네이버클립'}];
 // 카드 정렬용 우선순위 — ★위 배열에서 자동 생성한다(손으로 또 적지 않는다).
 const _LENS_ORDER=Object.fromEntries(LENS_PLATFORMS.map((p,i)=>[p.k,i]));
 let LENS_STATE={};   // shortcode → {items, on:Set, saved:Set}
@@ -3679,6 +3685,34 @@ async function renderTrendCards(){
 }
 
 // 플랫폼별 검색 페이지 URL(search_links.py의 _URL_BUILDERS와 동일). 바로가기+담기용.
+// ── 언어 × 플랫폼 (2026-09-08 사장님 "언어별로 누를 수 있게, 사용자들 편하게")
+//    버튼 25개(5언어×5플랫폼)를 한 번에 깔면 60대에게 최악이라, **언어를 한 번 고르면
+//    아이콘 5개가 그 언어로 바뀌는** 방식으로 간다(첫 화면은 늘 아이콘 5개).
+const LENS_LANGS = [
+  {k:'auto', label:'자동',   title:'플랫폼마다 가장 잘 나오는 언어로 — 샤오홍슈·도우인은 중국어, 틱톡·인스타는 한국어, 핀터레스트는 영어'},
+  {k:'ko',   label:'🇰🇷',   title:'한국어로 검색'},
+  {k:'zh',   label:'🇨🇳',   title:'중국어로 검색'},
+  {k:'en',   label:'🇺🇸',   title:'영어로 검색'},
+  {k:'ja',   label:'🇯🇵',   title:'일본어로 검색'},
+  {k:'ru',   label:'🇷🇺',   title:'러시아어로 검색'},
+];
+// '자동'일 때 플랫폼마다 쓰는 언어 — 실측 근거가 있는 값만 박는다.
+//   핀터레스트: 한국어 인덱스가 사실상 없다('인덕션 테이블' 0건 / 'induction table' 12건).
+//   샤오홍슈·도우인: 중국 서비스라 중국어.
+const _LENS_AUTO_LANG = {xiaohongshu:'zh', douyin:'zh', pinterest:'en', tiktok:'ko', instagram:'ko'};
+
+function _lensKwFor(c, platform, lang){
+  // 고른 언어의 검색어. 없으면 ''을 돌려 **버튼을 아예 안 그린다** —
+  // 빈 검색어로 사이트를 열면 엉뚱한 홈으로 떨어진다(기존 규약과 같다).
+  const L = (lang && lang !== 'auto') ? lang : (_LENS_AUTO_LANG[platform] || 'ko');
+  return ((c && c[L]) || '').trim();
+}
+function setLensLang(shortcode, lang){
+  const st = LENS_STATE[shortcode]; if(!st) return;
+  st.lang = lang;
+  renderLens(shortcode);
+}
+
 function _lensSearchUrl(platform, kw){
   if(platform==='instagram') kw=_igKw(kw);
   const q=encodeURIComponent(kw||'');
@@ -3687,6 +3721,11 @@ function _lensSearchUrl(platform, kw){
     instagram:`https://www.instagram.com/explore/search/keyword/?q=${q}`,
     xiaohongshu:`https://www.xiaohongshu.com/search_result?keyword=${q}`,
     douyin:`https://www.douyin.com/search/${q}`,
+    // 유튜브(2026-09-08) — 영어·일본어 검색어로 해외 원본을 찾을 때 쓴다.
+    // &sp=EgIYAQ%253D%253D = 쇼츠(4분 미만) 필터. 우리가 찾는 건 숏폼이다.
+    youtube:`https://www.youtube.com/results?search_query=${q}&sp=EgIYAQ%253D%253D`,
+    // 핀터레스트 영상탭(2026-09-08) — 언어 격자에서 빠져 있었다.
+    pinterest:`https://www.pinterest.com/search/videos/?q=${q}`,
   };
   return B[platform]||'#';
 }
@@ -3826,7 +3865,16 @@ function renderLens(shortcode, mountId){
           title="넣은 소재로 검색어 조합을 여러 개 만들어 아래에 쌓습니다. 한국어만 넣어도 중국어까지 같이 나옵니다 — 무료" style="${btnCss};border-color:var(--accent);color:var(--accent);font-weight:700">${st.cnLoading?'⏳ 만드는 중…':'✨ 검색어 조합 만들기'}</button>
       </div>
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px">
-        <span style="font-size:12px;color:var(--sub)" title="🔎 여기서 = 유튜브·핀터레스트·네이버클립을 이 페이지 안에서 찾습니다(무료). 나머지 아이콘(📕샤오홍슈 🎶도우인 🎵틱톡 📷인스타)은 그 사이트를 새 탭으로 엽니다 — 우리 비용 0원입니다">🔎 비슷한 영상 찾기 <span style="opacity:.7">— 🔎는 여기서(무료), 아이콘은 새 탭</span></span>
+        <span style="font-size:12px;color:var(--sub)" title="🔎 여기서 = 유튜브·핀터레스트·네이버클립을 이 페이지 안에서 찾습니다(무료). 나머지 아이콘(📕샤오홍슈 🎶도우인 🎵틱톡 📷인스타 📌핀터레스트)은 그 사이트를 새 탭으로 엽니다 — 우리 비용 0원입니다">🔎 비슷한 영상 찾기 <span style="opacity:.7">— 🔎는 여기서(무료), 아이콘은 새 탭</span></span>
+        ${/* ★언어 고르기(2026-09-08 사장님 "언어별로 누를 수 있게"). 고르면 아래 행의
+             아이콘 5개가 통째로 그 언어 검색어로 바뀐다 — 버튼 25개를 깔지 않는 이유다. */''}
+        <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-top:4px">
+          <span style="font-size:11px;color:var(--sub)">🌐 검색 언어</span>
+          ${LENS_LANGS.map(L=>{
+            const on=(st.lang||'auto')===L.k;
+            return `<button onclick="setLensLang('${shortcode}','${L.k}')" title="${L.title}" style="font-size:12px;padding:3px 9px;border-radius:8px;cursor:pointer;border:1px solid ${on?'var(--accent)':'var(--line)'};background:${on?'var(--accent)':'transparent'};color:${on?'#fff':'var(--fg,inherit)'};font-weight:${on?'700':'400'}">${L.label}</button>`;
+          }).join('')}
+        </div>
         ${st.frameBlob?`<button onclick="lensMoreCnKeywords('${shortcode}')" ${st.cnLoading?'disabled':''} title="같은 장면으로 다른 각도의 검색어를 더 뽑습니다(이미 나온 건 빼고 아래에 쌓입니다). 무료 — 추가 비용 없음" style="${btnCss};border-color:var(--accent);color:var(--accent)">${st.cnLoading?'⏳ 뽑는 중…':'🔄 다른 검색어 더'}</button>`:''}
         ${st.cnNoNew?'<span style="font-size:11px;color:var(--sub)">더 나올 게 없어요 — 이 장면에서 뽑을 각도는 다 나왔습니다</span>':''}
         ${st.cnErr?`<span style="font-size:11px;color:#e0623d">${esc(st.cnErr)}</span>`:''}
@@ -3846,8 +3894,19 @@ function renderLens(shortcode, mountId){
           // 그대로 두고 '여는 링크'만 _openUrl로 rednote 치환. 도우인은 해외판 없어 그대로.
           // 샤오홍슈/도우인=중국어(c.zh), 틱톡/인스타=한국어(c.ko)로 연다(플랫폼별 언어).
           const kw=c.ko||c.zh;
-          const xhs=_openUrl(_lensSearchUrl('xiaohongshu', c.zh)), dy=_lensSearchUrl('douyin', c.zh);
-          const tk=_lensSearchUrl('tiktok', kw), ig=_lensSearchUrl('instagram', kw);
+          // ★플랫폼 아이콘 5개 = 지금 고른 언어의 검색어로 연다(2026-09-08).
+          //   언어 칩(위)에서 고르면 이 5개가 통째로 그 언어로 바뀐다.
+          const _L=st.lang||'auto';
+          const _plats=[
+            {k:'xiaohongshu', ico:'📕', name:'샤오홍슈'},
+            {k:'douyin',      ico:'🎶', name:'도우인'},
+            {k:'tiktok',      ico:'🎵', name:'틱톡'},
+            {k:'instagram',   ico:'📷', name:'인스타'},
+            {k:'pinterest',   ico:'📌', name:'핀터레스트'},
+          ].map(p=>{
+            const q=_lensKwFor(c, p.k, _L);
+            return Object.assign({}, p, {q, url: q?_lensSearchUrl(p.k, q):''});
+          });
           // 아이콘 버튼(2026-08-22 사장님 "텍스트 위주 말고 보기 편하게").
           // 글자('여기서 찾기'·'틱톡'…)를 빼고 같은 크기 아이콘만 늘어놓는다 → 줄이 짧아지고
           // 눈이 검색어에 먼저 간다. 뭘 하는 버튼인지는 title(마우스 올리면)로 남긴다.
@@ -3863,14 +3922,13 @@ function renderLens(shortcode, mountId){
           return `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:4px 0">
             <div style="min-width:132px;flex:1 1 132px">
               <div style="font-size:14px;font-weight:600;line-height:1.3">${kw}</div>
-              <div style="font-size:11px;color:var(--sub)">${c.zh||''}</div></div>
+              ${/* ko 아래에 나머지 언어를 한 줄로. 옛 후보는 zh만 있어 그대로 호환된다. */''}
+              <div style="font-size:11px;color:var(--sub)">${[c.zh,c.en,c.ja].filter(Boolean).map(esc).join(' · ')}</div></div>
             <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
             ${kw?`<button onclick="lensKwSearch('${shortcode}',${idx})" ${st.kwSearching?'disabled':''} title="유튜브·핀터레스트·네이버클립을 '${kw}'로 검색해 이 페이지 안에 카드로 불러옵니다(이동 없음). 전부 무료입니다. 핀터레스트는 영어로 번역해 영상탭을 찾습니다. 인스타(프록시 과금)와 틱톡 유료검색은 꺼져 있습니다 — 아래 📷·🎵 아이콘으로 새 탭에서 보세요" style="${wide}">🔎 여기서</button>`:''}
-            ${c.zh?`<a href="${xhs}" target="_blank" rel="noopener" title="샤오홍슈에서 '${c.zh}' 검색 — 새 탭으로 엽니다" style="${ico}">📕</a>
-            <a href="${dy}" target="_blank" rel="noopener" title="도우인에서 '${c.zh}' 검색 — 새 탭으로 엽니다" style="${ico}">🎶</a>`:''}
-            ${kw?`<a href="${tk}" target="_blank" rel="noopener" title="틱톡에서 '${kw}' 검색 — 새 탭" style="${ico}">🎵</a>
-            <a href="${ig}" target="_blank" rel="noopener" title="인스타에서 '${_igKw(kw)}' 검색 — 새 탭. 지어낸 조합은 0건이라 실제 쓰는 말로 줄입니다" style="${ico}">📷</a>
-            ${_igShortKw(kw)?`<a href="${_lensSearchUrl('instagram', _igShortKw(kw))}" target="_blank" rel="noopener" title="인스타 결과가 없을 때 — '${_igShortKw(kw)}' 한 단어로 넓게" style="${ico};opacity:.6">📷⁺</a>`:''}`:''}
+            ${_plats.map(p=>p.url?`<a href="${p.k==='xiaohongshu'?_openUrl(p.url):p.url}" target="_blank" rel="noopener" title="${p.name}에서 '${esc(p.q)}'(으)로 검색 — 새 탭" style="${ico}">${p.ico}</a>`:`<span title="${p.name}: 이 언어의 검색어가 없습니다" style="${ico};opacity:.25;cursor:default">${p.ico}</span>`).join('')}
+            ${/* 인스타는 해시태그라 길면 0건 — 한 단어로 넓히는 보조 버튼을 남겨둔다 */''}
+            ${(_L==='auto'||_L==='ko')&&_igShortKw(kw)?`<a href="${_lensSearchUrl('instagram', _igShortKw(kw))}" target="_blank" rel="noopener" title="인스타 결과가 없을 때 — '${_igShortKw(kw)}' 한 단어로 넓게" style="${ico};opacity:.6">📷⁺</a>`:''}
             </div></div>`;
         }).join('')}
         ${(st.cnCands||[]).length?'':`<div style="font-size:11px;color:var(--sub)">아직 검색어가 없습니다 — 위에 소재를 넣고 <b>✨ 검색어 조합 만들기</b>를 누르거나, 화면에서 자동으로 뽑히길 기다려 보세요.</div>`}
