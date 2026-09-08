@@ -19,7 +19,7 @@ from shopping_shorts import cn_backends, config      # noqa: E402
 kw = sys.argv[1] if len(sys.argv) > 1 else '미니 재봉틀'
 
 for name, fn, sess_attr in (
-        ('샤오홍슈 pw_xiaohongshu', cn_backends.pw_xiaohongshu, 'XHS_SESSION_PATH'),
+        ('샤오홍슈 pw_xiaohongshu', cn_backends.pw_xiaohongshu, 'XIAOHONGSHU_SESSION_PATH'),
         ('도우인   pw_douyin', cn_backends.pw_douyin, 'DOUYIN_SESSION_PATH')):
     import os
     p = getattr(config, sess_attr, '')
