@@ -3944,7 +3944,7 @@ function renderLens(shortcode, mountId){
         ${/* ★언어 고르기(2026-09-08 사장님 "언어별로 누를 수 있게"). 고르면 아래 행의
              아이콘 5개가 통째로 그 언어 검색어로 바뀐다 — 버튼 25개를 깔지 않는 이유다. */''}
         <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-top:4px">
-          <span style="font-size:11px;color:var(--sub)">🌐 검색 언어</span>
+          <span style="font-size:11px;color:var(--sub)" title="여기서 고른 언어로 아래 버튼들이 검색합니다">🌐 <b>아래 버튼들이 검색할 언어</b></span>
           ${LENS_LANGS.map(L=>{
             const _lOn=(st.lang||'auto')===L.k;
             return `<button onclick="setLensLang('${shortcode}','${L.k}')" title="${L.title}" style="font-size:12px;padding:3px 9px;border-radius:8px;cursor:pointer;border:1px solid ${_lOn?'var(--accent)':'var(--line)'};background:${_lOn?'var(--accent)':'transparent'};color:${_lOn?'#fff':'var(--fg,inherit)'};font-weight:${_lOn?'700':'400'}">${L.label}</button>`;
@@ -3953,6 +3953,13 @@ function renderLens(shortcode, mountId){
                「여기서」는 무료 플랫폼만 도니 눌러도 돈이 안 나간다. */''}
           ${(st.cnCands||[]).length?`<button onclick="toggleLensAuto('${shortcode}')" title="검색어 ${(st.cnCands||[]).length}개 × 언어(해외·영어·일본어·중국어)를 순서대로 자동으로 검색해 계속 쌓습니다. 무료 플랫폼만 돌아 비용은 0원이고, 다시 누르면 멈춥니다" style="font-size:12px;padding:3px 10px;border-radius:8px;cursor:pointer;margin-left:6px;border:1px solid ${st.autoRun?'#e0623d':'var(--accent)'};background:transparent;color:${st.autoRun?'#e0623d':'var(--accent)'};font-weight:600">${st.autoRun?'■ 멈추기':'▶ 자동 모으기'}</button>`:''}
           ${st.autoRun&&st.autoNote?`<span style="font-size:11px;color:var(--sub)">${esc(st.autoNote)} 진행 중…</span>`:''}
+        </div>
+        ${/* ★셋(언어·여기서·새 탭)의 관계가 화면에 안 보여 헷갈린다는 지적(2026-09-08).
+             한 줄로 설명한다 — 고른 언어가 무엇을 바꾸는지가 핵심이다. */''}
+        <div style="font-size:11px;color:var(--sub);margin:2px 0 6px;line-height:1.5">
+          ${(st.lang||'auto')==='auto'
+            ? '지금은 <b>해외 원본</b> — 샤오홍슈·도우인은 중국어, 틱톡·인스타·핀터레스트는 영어로 엽니다. 한국 영상을 보려면 <b>KR 한국어</b>를 누르세요.'
+            : `지금은 <b>${(LENS_LANGS.find(L=>L.k===st.lang)||{}).label||''}</b> — 아래 다섯 곳을 모두 이 언어로 검색합니다.`}
         </div>
         ${st.frameBlob?`<button onclick="lensMoreCnKeywords('${shortcode}')" ${st.cnLoading?'disabled':''} title="같은 장면으로 다른 각도의 검색어를 더 뽑습니다(이미 나온 건 빼고 아래에 쌓입니다). 무료 — 추가 비용 없음" style="${btnCss};border-color:var(--accent);color:var(--accent)">${st.cnLoading?'⏳ 뽑는 중…':'🔄 다른 검색어 더'}</button>`:''}
         ${st.cnNoNew?'<span style="font-size:11px;color:var(--sub)">더 나올 게 없어요 — 이 장면에서 뽑을 각도는 다 나왔습니다</span>':''}
@@ -4004,7 +4011,8 @@ function renderLens(shortcode, mountId){
               ${/* ko 아래에 나머지 언어를 한 줄로. 옛 후보는 zh만 있어 그대로 호환된다. */''}
               <div style="font-size:11px;color:var(--sub)">${[c.zh,c.en,c.ja].filter(Boolean).map(esc).join(' · ')}</div></div>
             <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-            ${kw?`<button onclick="lensKwSearch('${shortcode}',${idx})" ${st.kwSearching?'disabled':''} title="'${kw}'로 검색해 이 페이지 안에 카드로 불러옵니다(이동 없음, 전부 무료). 이 버튼이 가져오는 곳은 유튜브·핀터레스트·네이버클립입니다(틱톡은 로그인 세션이 결과를 못 받아 현재 0건). 샤오홍슈·도우인·인스타는 아래 버튼으로 새 탭에서 보세요. ※카드에 붙은 '틱톡'은 🔍 숏템파워검색(구글 렌즈)이 따로 물어온 것이라 이 버튼과 무관합니다" style="${wide}">🔎 여기서</button>`:''}
+            ${kw?`<span style="font-size:10px;color:var(--sub);margin-right:2px">이 화면에 담기</span><button onclick="lensKwSearch('${shortcode}',${idx})" ${st.kwSearching?'disabled':''} title="'${kw}'로 검색해 이 페이지 안에 카드로 불러옵니다(이동 없음, 전부 무료). 이 버튼이 가져오는 곳은 유튜브·핀터레스트·네이버클립입니다(틱톡은 로그인 세션이 결과를 못 받아 현재 0건). 샤오홍슈·도우인·인스타는 아래 버튼으로 새 탭에서 보세요. ※카드에 붙은 '틱톡'은 🔍 숏템파워검색(구글 렌즈)이 따로 물어온 것이라 이 버튼과 무관합니다" style="${wide}">🔎 여기서</button>`:''}
+            <span style="font-size:10px;color:var(--sub);margin-left:8px;padding-left:8px;border-left:1px solid var(--line)">새 탭으로 열기</span>
             ${_plats.map(p=>p.url?`<a href="${p.k==='xiaohongshu'?_openUrl(p.url):p.url}" target="_blank" rel="noopener" title="${p.name}를 '${esc(p.q)}'(으)로 검색 — 새 탭으로 엽니다" style="${wide}">${p.ico}</a>`:`<span title="${p.name}: 이 언어의 검색어가 없습니다" style="${wide};opacity:.25;cursor:default">${p.ico}</span>`).join('')}
             ${/* 인스타는 해시태그라 길면 0건 — 한 단어로 넓히는 보조 버튼을 남겨둔다 */''}
             ${(_L==='auto'||_L==='ko')&&_igShortKw(kw)?`<a href="${_lensSearchUrl('instagram', _igShortKw(kw))}" target="_blank" rel="noopener" title="인스타 결과가 없을 때 — '${_igShortKw(kw)}' 한 단어로 넓게" style="${ico};opacity:.6">📷⁺</a>`:''}
