@@ -495,6 +495,24 @@ DOUYIN_SESSION_PATH = os.getenv("DOUYIN_SESSION_PATH", "/home/ubuntu/douyin_sess
 #   이 파일이 생기는 순간 kw_search가 자동으로 무료 경로를 먼저 타고 비용이 0이 된다.
 TIKTOK_SESSION_PATH = os.getenv("TIKTOK_SESSION_PATH", "/home/ubuntu/tiktok_session.json")
 
+# ── 「🔎 여기서」(렌즈 모달 키워드 검색)에서 **돈 나가는 경로를 끈다** (2026-09-08 사장님 지시)
+#    사장님: "인스타는 막고 / 틱톡은 (무료로 긁게)".
+#
+#    왜 껐나 — 이 버튼은 화면상 '무료 검색'처럼 보이는데 실제로는 두 군데서 돈이 샜다:
+#      · 인스타 = Apify는 아니지만 **주거용 프록시**(INSTAGRAM_PROXY)라 GB 과금이다.
+#        코드 주석이 "무료"라고 적어둔 건 *렌즈 예산이 아니라 프록시 예산에서 나간다*는
+#        뜻일 뿐이고, 회당 몇 MB인지 우리는 **측정한 적이 없다**(단가 grep 0건).
+#      · 틱톡 = 세션이 없으면 Apify $0.0195/회로 폴백한다. 화면의 kwCost는 값을
+#        계산해 놓고 **그리지 않아서**(index.html) 사장님 눈에 안 보인 채 나갔다.
+#
+#    끈 뒤의 동작: 두 플랫폼은 「여기서」결과에서 빠지고, 모달의 새 탭 아이콘
+#    (📷 인스타 · 🎵 틱톡)으로 유도된다 — 그 링크는 우리 돈이 0원이다.
+#
+#    ★틱톡은 "유료 폴백만" 끈다. 세션 파일이 생기면 pw_tiktok이 무료로 성공하므로
+#      이 노브를 그대로 둔 채 자동으로 살아난다(_CHAIN·프론트 무수정).
+KW_SEARCH_INSTAGRAM = os.getenv("KW_SEARCH_INSTAGRAM", "0") == "1"
+KW_SEARCH_TIKTOK_APIFY = os.getenv("KW_SEARCH_TIKTOK_APIFY", "0") == "1"
+
 # ── 외부 도구 실행 상한 (2026-08-23 점검: 타임아웃이 없어 행이 걸리면 스레드가 영구 점유됐다)
 #    ★값은 여기서만 정한다 — 파일마다 따로 적으면 어긋난다(0순위-B).
 #    ffprobe/ffmpeg는 audio_post가 쓰던 FFMPEG_TIMEOUT_SEC와 같은 이름을 유지해 호환.

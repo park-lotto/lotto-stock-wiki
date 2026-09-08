@@ -3456,6 +3456,12 @@ function toggleLensKorean(shortcode){
   if(st.koreanOnly) st.foreignOnly=false;
   renderLens(shortcode);
 }
+// 언어 필터(한국만·해외만)를 한 번에 끈다 — '언어 필터로 N건 숨김' 배지의 [해제].
+function lensClearLangFilter(shortcode){
+  const st=LENS_STATE[shortcode]; if(!st) return;
+  st.koreanOnly=false; st.foreignOnly=false;
+  renderLens(shortcode);
+}
 // 🎬 영상만 — 인스타 카드뉴스(사진·카러셀) 가리기(2026-07-30 사장님 제보 "카드뉴스가 많다").
 // 판정은 서버 lens_discover.is_photo_post가 URL 경로로 한다(/p/=사진 후보, /reel·/tv=영상).
 // 렌즈 응답에 동영상 여부 필드가 없고 인스타 실조회는 Apify 유료라 이게 유일한 공짜 신호다.
@@ -3761,6 +3767,22 @@ function renderLens(shortcode, mountId){
   shown=shown.slice().sort((a,b)=>(_LENS_ORDER[a.platform]??9)-(_LENS_ORDER[b.platform]??9));
   const nPhoto=st.items.filter(i=>st.on.has(i.platform) && i.is_photo===true).length;
   const nOff=st.items.filter(i=>st.on.has(i.platform) && i.match===false).length;
+  // ★언어 필터가 몇 개를 숨겼나 (2026-09-08 사장님 "핀터레스트가 계속 추가 안 됨").
+  //   진짜 원인은 백엔드가 아니라 **이 필터**였다 — 서버 실측으로 핀터레스트는 8건씩
+  //   정상 반환하고 키워드를 바꾸면 겹침도 0인데, 화면에서 통째로 잘려나갔다.
+  //   핀터레스트는 한국어 인덱스가 사실상 없어 **영어로 번역해 검색**한다(kw_backends
+  //   주석의 실측: '인덕션 테이블' 0건 / 'induction table' 12건). 그래서 제목이 전부
+  //   영어고, '🇰🇷 한국만'(제목에 한글 요구)과는 **구조적으로 양립할 수 없다**.
+  //   필터를 몰래 무력화하지는 않는다(사장님이 켠 것이다) — 대신 몇 개가 왜 숨었는지
+  //   보여주고 한 번에 풀 수 있게 한다. 조용한 실패 금지.
+  const _langHidden=st.items.filter(i=>{
+    if(!st.on.has(i.platform)) return false;
+    const ko=_HANGUL_RE.test(i.title||'');
+    return (st.koreanOnly && !ko) || (st.foreignOnly && ko);
+  });
+  const nLang=_langHidden.length;
+  const langPlats=[...new Set(_langHidden.map(i=>i.platform))]
+    .map(k=>(LENS_PLATFORMS.find(p=>p.k===k)||{}).label||k).join('·');
   st._shown=shown;
   const selCount=shown.filter(i=>st.sel.has(i.savesc)).length;
   const allSel=shown.length>0 && selCount===shown.length;
@@ -3779,6 +3801,7 @@ function renderLens(shortcode, mountId){
       <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="영상 길이 90초 이하(또는 길이 불명)만 표시"><input type="checkbox" ${st.shortsOnly?'checked':''} onclick="toggleLensShorts('${shortcode}')"> 숏폼만</label>
       <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="제목에 한글이 없는 결과만 표시 — 원본(해외) 영상 찾을 때. 채널명이 아닌 제목 기준 근사치라 완벽하진 않음"><input type="checkbox" ${st.foreignOnly?'checked':''} onclick="toggleLensForeign('${shortcode}')"> 🌍 해외만</label>
       <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="제목에 한글이 있는 결과만 표시 — 국내 레퍼런스를 볼 때. '해외만'과 반대라 둘은 함께 켜지지 않습니다(제목 기준 근사치)"><input type="checkbox" ${st.koreanOnly?'checked':''} onclick="toggleLensKorean('${shortcode}')"> 🇰🇷 한국만</label>
+      ${nLang?`<span style="font-size:11px;color:#e0a33d;display:inline-flex;align-items:center;gap:6px" title="언어 필터(한국만/해외만)가 가린 결과입니다. 핀터레스트는 한국어 인덱스가 없어 영어로 검색하므로 제목이 영어입니다 — '한국만'과 함께 켜면 전부 가려집니다">⚠️ 언어 필터로 ${nLang}건 숨김${langPlats?` (${langPlats})`:''} <button onclick="lensClearLangFilter('${shortcode}')" style="font-size:11px;padding:2px 8px;border-radius:7px;border:1px solid #e0a33d;background:transparent;color:#e0a33d;cursor:pointer">해제</button></span>`:''}
       <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="인스타 카드뉴스(사진·카러셀 게시물)와 영상인지 확인 못 한 핀터레스트 핀을 가립니다. 인스타는 URL이 /p/면 사진으로 보는 근사치라 드물게 옛 동영상도 같이 가려집니다(끄면 다시 보임). 핀터레스트 이미지 핀은 서버가 확인해 아예 빼고, 확인 실패분만 여기서 가립니다"><input type="checkbox" ${st.videoOnly!==false?'checked':''} onclick="toggleLensVideoOnly('${shortcode}')"> 🎬 영상만${nPhoto?` <span style="color:var(--sub)">(카드뉴스 ${nPhoto})</span>`:''}</label>
       <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="소재 키워드가 제목에 하나도 없는 결과(⚠️다른주제?)를 가립니다. 렌즈는 시각 유사도만 보기 때문에 엉뚱한 게시물이 섞입니다. ⚠️중국어·영어 제목은 키워드가 안 맞아 원본(해외) 후보까지 사라질 수 있어 기본 꺼짐"><input type="checkbox" ${st.hideOfftopic?'checked':''} onclick="toggleLensOfftopic('${shortcode}')"> ⚠️ 다른주제 숨기기${nOff?` <span style="color:var(--sub)">(${nOff})</span>`:''}</label>
       <button onclick="lensBulkSave('${shortcode}')" ${selCount?'':'disabled'} style="${btnCss}">📥 선택 담기(${selCount})</button>
@@ -3803,7 +3826,7 @@ function renderLens(shortcode, mountId){
           title="넣은 소재로 검색어 조합을 여러 개 만들어 아래에 쌓습니다. 한국어만 넣어도 중국어까지 같이 나옵니다 — 무료" style="${btnCss};border-color:var(--accent);color:var(--accent);font-weight:700">${st.cnLoading?'⏳ 만드는 중…':'✨ 검색어 조합 만들기'}</button>
       </div>
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px">
-        <span style="font-size:12px;color:var(--sub)" title="🔎 여기서 = 인스타·틱톡·유튜브·핀터레스트를 이 페이지 안에서 찾습니다. 나머지 아이콘(📕샤오홍슈 🎶도우인 🎵틱톡 📷인스타)은 그 사이트를 새 탭으로 엽니다">🔎 비슷한 영상 찾기 <span style="opacity:.7">— 🔎는 여기서, 아이콘은 새 탭</span></span>
+        <span style="font-size:12px;color:var(--sub)" title="🔎 여기서 = 유튜브·핀터레스트·네이버클립을 이 페이지 안에서 찾습니다(무료). 나머지 아이콘(📕샤오홍슈 🎶도우인 🎵틱톡 📷인스타)은 그 사이트를 새 탭으로 엽니다 — 우리 비용 0원입니다">🔎 비슷한 영상 찾기 <span style="opacity:.7">— 🔎는 여기서(무료), 아이콘은 새 탭</span></span>
         ${st.frameBlob?`<button onclick="lensMoreCnKeywords('${shortcode}')" ${st.cnLoading?'disabled':''} title="같은 장면으로 다른 각도의 검색어를 더 뽑습니다(이미 나온 건 빼고 아래에 쌓입니다). 무료 — 추가 비용 없음" style="${btnCss};border-color:var(--accent);color:var(--accent)">${st.cnLoading?'⏳ 뽑는 중…':'🔄 다른 검색어 더'}</button>`:''}
         ${st.cnNoNew?'<span style="font-size:11px;color:var(--sub)">더 나올 게 없어요 — 이 장면에서 뽑을 각도는 다 나왔습니다</span>':''}
         ${st.cnErr?`<span style="font-size:11px;color:#e0623d">${esc(st.cnErr)}</span>`:''}
@@ -3812,6 +3835,10 @@ function renderLens(shortcode, mountId){
       </div>
       ${st.cnSearching?`<div style="font-size:11px;color:var(--sub);margin:4px 0">🔎 ${esc(st.cnSearchKw||'')} 검색 중… (10~30초)</div>`:''}
       ${(!st.cnSearching&&st.cnCost!=null)?`<div style="font-size:11px;color:var(--sub);margin:4px 0">${st.cnCost>0?('이번 검색 $'+st.cnCost.toFixed(3)):'무료 검색'}</div>`:''}
+      ${st.kwSearching?`<div style="font-size:11px;color:var(--sub);margin:4px 0">🔎 ${esc(st.kwSearchKw||'')} 검색 중… (10~30초)</div>`:''}
+      ${/* ★kwCost는 2026-09-08까지 값만 담고 화면에 안 그렸다 — 틱톡 Apify가 눈에 안 띈 채
+            나갔다(사장님 지적). cnCost와 같은 자리·같은 문구로 맞춘다. */''}
+      ${(!st.kwSearching&&st.kwCost!=null)?`<div style="font-size:11px;color:var(--sub);margin:4px 0">${st.kwCost>0?('이번 검색 $'+st.kwCost.toFixed(3)):'무료 검색'}</div>`:''}
       <div style="display:flex;flex-direction:column;gap:6px">
         ${(st.cnCands||[]).map((c,idx)=>{
           // 샤오훙슈 검색은 로그아웃 방문자를 로그인으로 막는다(登录后查看搜索结果). 해외판
@@ -3838,7 +3865,7 @@ function renderLens(shortcode, mountId){
               <div style="font-size:14px;font-weight:600;line-height:1.3">${kw}</div>
               <div style="font-size:11px;color:var(--sub)">${c.zh||''}</div></div>
             <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-            ${kw?`<button onclick="lensKwSearch('${shortcode}',${idx})" ${st.kwSearching?'disabled':''} title="인스타·틱톡·유튜브·핀터레스트를 '${kw}'로 검색해 이 페이지 안에 카드로 불러옵니다(이동 없음). 핀터레스트는 영어로 번역해 영상탭을 찾습니다" style="${wide}">🔎 여기서</button>`:''}
+            ${kw?`<button onclick="lensKwSearch('${shortcode}',${idx})" ${st.kwSearching?'disabled':''} title="유튜브·핀터레스트·네이버클립을 '${kw}'로 검색해 이 페이지 안에 카드로 불러옵니다(이동 없음). 전부 무료입니다. 핀터레스트는 영어로 번역해 영상탭을 찾습니다. 인스타(프록시 과금)와 틱톡 유료검색은 꺼져 있습니다 — 아래 📷·🎵 아이콘으로 새 탭에서 보세요" style="${wide}">🔎 여기서</button>`:''}
             ${c.zh?`<a href="${xhs}" target="_blank" rel="noopener" title="샤오홍슈에서 '${c.zh}' 검색 — 새 탭으로 엽니다" style="${ico}">📕</a>
             <a href="${dy}" target="_blank" rel="noopener" title="도우인에서 '${c.zh}' 검색 — 새 탭으로 엽니다" style="${ico}">🎶</a>`:''}
             ${kw?`<a href="${tk}" target="_blank" rel="noopener" title="틱톡에서 '${kw}' 검색 — 새 탭" style="${ico}">🎵</a>
