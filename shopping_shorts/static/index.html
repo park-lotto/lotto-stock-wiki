@@ -3456,6 +3456,12 @@ function toggleLensKorean(shortcode){
   if(st.koreanOnly) st.foreignOnly=false;
   renderLens(shortcode);
 }
+// 언어 필터(한국만·해외만)를 한 번에 끈다 — '언어 필터로 N건 숨김' 배지의 [해제].
+function lensClearLangFilter(shortcode){
+  const st=LENS_STATE[shortcode]; if(!st) return;
+  st.koreanOnly=false; st.foreignOnly=false;
+  renderLens(shortcode);
+}
 // 🎬 영상만 — 인스타 카드뉴스(사진·카러셀) 가리기(2026-07-30 사장님 제보 "카드뉴스가 많다").
 // 판정은 서버 lens_discover.is_photo_post가 URL 경로로 한다(/p/=사진 후보, /reel·/tv=영상).
 // 렌즈 응답에 동영상 여부 필드가 없고 인스타 실조회는 Apify 유료라 이게 유일한 공짜 신호다.
@@ -3761,6 +3767,22 @@ function renderLens(shortcode, mountId){
   shown=shown.slice().sort((a,b)=>(_LENS_ORDER[a.platform]??9)-(_LENS_ORDER[b.platform]??9));
   const nPhoto=st.items.filter(i=>st.on.has(i.platform) && i.is_photo===true).length;
   const nOff=st.items.filter(i=>st.on.has(i.platform) && i.match===false).length;
+  // ★언어 필터가 몇 개를 숨겼나 (2026-09-08 사장님 "핀터레스트가 계속 추가 안 됨").
+  //   진짜 원인은 백엔드가 아니라 **이 필터**였다 — 서버 실측으로 핀터레스트는 8건씩
+  //   정상 반환하고 키워드를 바꾸면 겹침도 0인데, 화면에서 통째로 잘려나갔다.
+  //   핀터레스트는 한국어 인덱스가 사실상 없어 **영어로 번역해 검색**한다(kw_backends
+  //   주석의 실측: '인덕션 테이블' 0건 / 'induction table' 12건). 그래서 제목이 전부
+  //   영어고, '🇰🇷 한국만'(제목에 한글 요구)과는 **구조적으로 양립할 수 없다**.
+  //   필터를 몰래 무력화하지는 않는다(사장님이 켠 것이다) — 대신 몇 개가 왜 숨었는지
+  //   보여주고 한 번에 풀 수 있게 한다. 조용한 실패 금지.
+  const _langHidden=st.items.filter(i=>{
+    if(!st.on.has(i.platform)) return false;
+    const ko=_HANGUL_RE.test(i.title||'');
+    return (st.koreanOnly && !ko) || (st.foreignOnly && ko);
+  });
+  const nLang=_langHidden.length;
+  const langPlats=[...new Set(_langHidden.map(i=>i.platform))]
+    .map(k=>(LENS_PLATFORMS.find(p=>p.k===k)||{}).label||k).join('·');
   st._shown=shown;
   const selCount=shown.filter(i=>st.sel.has(i.savesc)).length;
   const allSel=shown.length>0 && selCount===shown.length;
@@ -3779,6 +3801,7 @@ function renderLens(shortcode, mountId){
       <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="영상 길이 90초 이하(또는 길이 불명)만 표시"><input type="checkbox" ${st.shortsOnly?'checked':''} onclick="toggleLensShorts('${shortcode}')"> 숏폼만</label>
       <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="제목에 한글이 없는 결과만 표시 — 원본(해외) 영상 찾을 때. 채널명이 아닌 제목 기준 근사치라 완벽하진 않음"><input type="checkbox" ${st.foreignOnly?'checked':''} onclick="toggleLensForeign('${shortcode}')"> 🌍 해외만</label>
       <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="제목에 한글이 있는 결과만 표시 — 국내 레퍼런스를 볼 때. '해외만'과 반대라 둘은 함께 켜지지 않습니다(제목 기준 근사치)"><input type="checkbox" ${st.koreanOnly?'checked':''} onclick="toggleLensKorean('${shortcode}')"> 🇰🇷 한국만</label>
+      ${nLang?`<span style="font-size:11px;color:#e0a33d;display:inline-flex;align-items:center;gap:6px" title="언어 필터(한국만/해외만)가 가린 결과입니다. 핀터레스트는 한국어 인덱스가 없어 영어로 검색하므로 제목이 영어입니다 — '한국만'과 함께 켜면 전부 가려집니다">⚠️ 언어 필터로 ${nLang}건 숨김${langPlats?` (${langPlats})`:''} <button onclick="lensClearLangFilter('${shortcode}')" style="font-size:11px;padding:2px 8px;border-radius:7px;border:1px solid #e0a33d;background:transparent;color:#e0a33d;cursor:pointer">해제</button></span>`:''}
       <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="인스타 카드뉴스(사진·카러셀 게시물)와 영상인지 확인 못 한 핀터레스트 핀을 가립니다. 인스타는 URL이 /p/면 사진으로 보는 근사치라 드물게 옛 동영상도 같이 가려집니다(끄면 다시 보임). 핀터레스트 이미지 핀은 서버가 확인해 아예 빼고, 확인 실패분만 여기서 가립니다"><input type="checkbox" ${st.videoOnly!==false?'checked':''} onclick="toggleLensVideoOnly('${shortcode}')"> 🎬 영상만${nPhoto?` <span style="color:var(--sub)">(카드뉴스 ${nPhoto})</span>`:''}</label>
       <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="소재 키워드가 제목에 하나도 없는 결과(⚠️다른주제?)를 가립니다. 렌즈는 시각 유사도만 보기 때문에 엉뚱한 게시물이 섞입니다. ⚠️중국어·영어 제목은 키워드가 안 맞아 원본(해외) 후보까지 사라질 수 있어 기본 꺼짐"><input type="checkbox" ${st.hideOfftopic?'checked':''} onclick="toggleLensOfftopic('${shortcode}')"> ⚠️ 다른주제 숨기기${nOff?` <span style="color:var(--sub)">(${nOff})</span>`:''}</label>
       <button onclick="lensBulkSave('${shortcode}')" ${selCount?'':'disabled'} style="${btnCss}">📥 선택 담기(${selCount})</button>

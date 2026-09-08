@@ -8932,13 +8932,32 @@ _ALLOWED_THUMB_HOSTS = ("cdninstagram.com", "fbcdn.net", "ytimg.com",
                         # ★같은 사고를 또 냈다(실측: 카드 8장 중 8장이 안 그려지고
                         #   "GET /api/thumb?url=...video-phinf.pstatic.net... 400"). 새 플랫폼을
                         #   붙일 때 이 목록을 같이 고치는 것을 잊지 마라 — 이번이 5번째다.
-                        "pstatic.net")
+                        "pstatic.net",
+                        # ★6번째(2026-09-08 사장님 "틱톡 썸네일 죽는것도"). 이번엔 새 플랫폼이
+                        #   아니라 **이미 붙은 플랫폼이 CDN 도메인을 늘린** 경우다 —
+                        #   목록에 tiktokcdn.com/-us.com만 있고 **-eu.com이 없었다**.
+                        #   서버 로그 3시간치 실측(거부된 호스트 상위):
+                        #     218  sns-web-i10.rednotecdn.com      ← 샤오홍슈가 xhscdn→rednotecdn
+                        #      43  p16-common-sign.tiktokcdn-eu.com
+                        #       6  yt3.googleusercontent.com       ← 유튜브 채널 이미지
+                        #   같은 날 서버에서 _reject_cdn_proxy를 직접 돌려 확인했다
+                        #   (tiktokcdn.com·cdninstagram.com은 reject=False로 정상 통과 —
+                        #    그쪽 400은 CDN 토큰 만료라 이 목록과 무관하다).
+                        "tiktokcdn-eu.com",
+                        # 샤오훙슈 신 CDN. 옛 xhscdn.com은 위에 이미 있다(둘 다 살아 있다).
+                        "rednotecdn.com",
+                        # 유튜브 채널 아바타·배너(yt3.googleusercontent.com).
+                        "googleusercontent.com")
 _ALLOWED_VIDEO_HOSTS = ("cdninstagram.com", "fbcdn.net",
                         # 틱톡·도우인 mp4(2026-08-17). 렌즈 카드 인라인 재생에 필요하다 —
                         # CDN 주소를 브라우저에 직접 주면 리퍼러·IP를 따져 막히고(그래서
                         # 세로로 긴 임베드로 떨어졌다), 이 프록시를 타면 서버가 알맞은
                         # Referer로 받아 same-origin으로 흘려준다.
-                        "tiktokcdn.com", "tiktokcdn-us.com", "tiktokv.com",
+                        # -eu는 썸네일 목록에서 실제로 거부되고 있었다(2026-09-08 실측 43건).
+                        # 영상 쪽은 아직 400이 0건이지만, 같은 서비스의 지역 도메인만
+                        # 빠져 있는 건 명백한 누락이라 같이 채운다(다음 사고 예방).
+                        "tiktokcdn.com", "tiktokcdn-us.com", "tiktokcdn-eu.com",
+                        "tiktokv.com",
                         "douyinvod.com", "douyinpic.com",
                         # 핀터레스트 mp4(v1.pinimg.com) — 카드 인라인 재생용(2026-08-28).
                         # 실측: Referer만 있으면 200이라 프록시를 타면 그대로 흐른다.
@@ -8995,7 +9014,8 @@ def api_thumb64(url: str):
     if _reject_cdn_proxy(url, allowed):
         return JSONResponse(status_code=400, content={"ok": False, "error": "invalid host"})
     ref = "https://www.instagram.com/"
-    if "xhscdn.com" in url:
+    # rednotecdn = 샤오훙슈의 새 CDN(2026-09-08). 같은 서비스라 Referer도 같다.
+    if "xhscdn.com" in url or "rednotecdn.com" in url:
         ref = "https://www.xiaohongshu.com/"
     elif "tiktokcdn" in url:
         ref = "https://www.tiktok.com/"
@@ -9172,6 +9192,17 @@ def api_thumb(url: str, v: str | None = None, shortcode: str | None = None):
         return Response(content=_own.read_bytes(), media_type="image/jpeg",
                         headers={"Cache-Control": "public, max-age=86400"})
     if _reject_cdn_proxy(url, _ALLOWED_THUMB_HOSTS):
+        # ★조용한 실패 금지(2026-09-08). 이 목록 누락으로 카드가 검게 뜨는 사고가
+        #   여섯 번 반복됐는데(xhscdn·douyinpic·gstatic·pinimg·pstatic·tiktokcdn-eu),
+        #   매번 "썸네일이 죽는다"는 제보를 받고서야 로그를 뒤졌다. 호스트를 찍어두면
+        #   `journalctl | grep thumb-host-blocked` 한 줄로 바로 드러난다.
+        #   SSRF로 걸린 것과 목록 누락을 갈라 적는다 — 처방이 정반대다(전자는 정상 차단).
+        try:
+            _h = (urllib.parse.urlparse(url).hostname or "?").lower()
+            _why = "ssrf" if _reject_ssrf(url) is not None else "not-in-allowlist"
+            print("[thumb-host-blocked] %s (%s)" % (_h, _why), flush=True)
+        except Exception:      # noqa: BLE001 — 로깅이 응답을 죽이면 안 된다
+            pass
         return Response(status_code=400, content=b"invalid host")
     # ★카드 크기에 맞는 가벼운 규격으로 낮춘다(2026-08-30). 화이트리스트 검사를 **통과한
     #   뒤에** 바꾼다 — 순서가 바뀌면 검사 대상이 원본이 아니게 된다. 영상ID는 보존되므로
@@ -9184,7 +9215,8 @@ def api_thumb(url: str, v: str | None = None, shortcode: str | None = None):
     # 호스트에 맞는 Referer로 핫링크 차단을 우회한다. xhscdn은 인스타 referer로도 200이
     # 오지만(실측), 만료토큰형 URL 대비 정확한 출처를 보낸다. tiktok도 자기 도메인으로.
     ref = "https://www.instagram.com/"
-    if "xhscdn.com" in url:
+    # rednotecdn = 샤오훙슈의 새 CDN(2026-09-08). 같은 서비스라 Referer도 같다.
+    if "xhscdn.com" in url or "rednotecdn.com" in url:
         ref = "https://www.xiaohongshu.com/"
     elif "tiktokcdn" in url:
         ref = "https://www.tiktok.com/"
