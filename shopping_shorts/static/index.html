@@ -2300,13 +2300,32 @@ function render(opts){
       </div>
     </div>`).join("");
   // 잘린 게 있으면 [더 보기]로 이어붙인다 — 데이터는 그대로 있고 그리기만 나눠 한다.
+  // ★목록 끝에 **두 가지 잘림을 함께** 보여준다(2026-09-08 사장님 "8000개 가까이 있는데
+  //   왜 이렇게 없어 보이지" → "아래 더보기를 클릭하면 되게 하고, 그럼 렉 없는 거 아닌가").
+  //   사장님 말이 맞다 — [더 보기]는 그리기만 나눠 하므로 렉이 안 생긴다. 그런데 그 버튼이
+  //   푸는 건 **렌더 상한뿐**이고, 실제로 더 많이 깎는 `채널당 N개`는 안 풀린다.
+  //   실측(썰쇼핑 탭): 619건 → 채널당2개 315건 → 렌더상한 200장.
+  //     · 렌더 상한이 접은 것  115건  ← [더 보기]가 푼다
+  //     · 채널당 2개가 접은 것 304건  ← 이 버튼이 없으면 영영 못 본다
+  //   위쪽 #fcount에도 같은 안내가 있지만, 200장을 스크롤해 바닥에 온 사람은 그걸 다시
+  //   올라가 읽지 않는다. 잘린 자리에서 바로 풀 수 있어야 한다.
+  const _tail = [];
   if(_total > items.length){
+    _tail.push(`<button onclick="showMoreCards()" style="padding:10px 22px;border-radius:999px;
+        border:1px solid var(--line);background:var(--inset);color:var(--txt);cursor:pointer">
+        더 보기 <span style="color:var(--sub)">(${items.length} / ${_total})</span></button>`);
+  }
+  if(_perChCut > 0){
+    _tail.push(`<button onclick="togglePerChannel()" style="padding:10px 22px;border-radius:999px;
+        border:1px solid var(--fire,#e0a33d);background:transparent;color:var(--fire,#e0a33d);
+        cursor:pointer;font-weight:700"
+        title="지금은 채널마다 상위 ${PER_CHANNEL_MAX}개만 보여주고 있습니다. 누르면 접힌 것까지 전부 나옵니다">
+        📺 채널당 ${PER_CHANNEL_MAX}개로 <b>${_perChCut}건</b>이 접혀 있어요 — 전부 보기</button>`);
+  }
+  if(_tail.length){
     el.insertAdjacentHTML("beforeend",
-      `<div style="grid-column:1/-1;text-align:center;padding:16px 0">
-         <button onclick="showMoreCards()" style="padding:10px 22px;border-radius:999px;
-           border:1px solid var(--line);background:var(--inset);color:var(--txt);cursor:pointer">
-           더 보기 <span style="color:var(--sub)">(${items.length} / ${_total})</span>
-         </button></div>`);
+      `<div style="grid-column:1/-1;text-align:center;padding:16px 0;display:flex;
+         gap:10px;justify-content:center;flex-wrap:wrap">${_tail.join("")}</div>`);
   }
   markSavedButtons();
   markCapOverflow();
