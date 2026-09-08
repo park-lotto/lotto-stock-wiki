@@ -167,3 +167,7 @@ shopping_shorts/assets/voice_samples/*.cuts.json
 scripts/gemini_session/
 **/Default/Network/Cookies
 **/Default/Login Data
+
+# yt-dlp 등 외부 도구가 작업 디렉터리에 남기는 임시파일(2026-09-08).
+# 트랙 폴더가 dirty가 되어 track.py finish 게이트가 막히던 것을 막는다.
+/*.tmp
