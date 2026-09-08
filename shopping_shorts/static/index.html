@@ -3380,20 +3380,36 @@ async function lensCnSearch(shortcode, idx){
 // 📷🎵▶ 여기서 찾기 — 인스타·틱톡·유튜브를 한국어 검색어로 돌려 이 페이지 안에 합류.
 // lensCnSearch(샤오홍슈·도우인)의 형제다. 다른 건 **검색어 언어(ko)와 엔드포인트**뿐이라
 // 담기키·중복제거·늦은응답 가드는 같은 규약을 그대로 따른다(형제끼리 어긋나면 안 된다).
-async function lensKwSearch(shortcode, idx){
+async function lensKwSearch(shortcode, idx, langOverride){
   const st=LENS_STATE[shortcode]; if(!st || st.kwSearching) return;
-  const cand=(st.cnCands||[])[idx]; const ko=cand && (cand.ko||cand.zh); if(!ko) return;
+  const cand=(st.cnCands||[])[idx]; if(!cand) return;
+  // ★고른 언어의 검색어로 돈다(2026-09-08 사장님 "언어를 바꿔가면서 쉽게").
+  //   '🌍 해외'(auto)면 서버가 알아서 여러 언어로 돌리므로 한국어를 그대로 보낸다.
+  //   특정 언어를 고르면 **그 언어만** 돌린다 — 언어를 바꿔 누를 때마다 그 언어
+  //   결과가 추가로 쌓이는 게 사장님이 원한 모양이다.
+  const L=langOverride||st.lang||'auto';
+  const ko=(L==='auto') ? (cand.ko||cand.zh) : ((cand[L]||'').trim()||cand.ko||cand.zh);
+  if(!ko) return;
   st.kwSearching=true; st.kwSearchKw=ko; _lensRerender(shortcode);
   try{
     const fd=new FormData();
     fd.append('keyword', ko);
     fd.append('max_results', 8);
+    if(L!=='auto') fd.append('lang', L);   // 서버가 이 언어만 돌린다(중복 호출 방지)
     const d=await (await fetch('/api/lens/kw/search',{method:'POST',body:fd})).json();
     const st2=LENS_STATE[shortcode]; if(!st2) return;
     const got=(d.items||[]);
     got.forEach(i=>{ if(!i.savesc) i.savesc='lens_'+i.platform+'_'+_lensHash(i.url); });
     const have=new Set((st2.items||[]).map(i=>i.savesc));
-    st2.items.push(...got.filter(i=>i.savesc && !have.has(i.savesc)));
+    // ★방금 온 것에 배치 번호를 찍는다(2026-09-08 사장님 "새로 검색되는 게 중간에
+    //   계속 삽입되니까 새로 추가된 게 어떤 건지 모름"). 카드는 플랫폼 순으로 정렬돼
+    //   새 결과가 목록 중간에 끼어든다 — 번호가 있어야 'NEW'를 붙일 수 있다.
+    st2.batch=(st2.batch||0)+1;
+    st2.lastBatchKw=ko;
+    const fresh=got.filter(i=>i.savesc && !have.has(i.savesc));
+    fresh.forEach(i=>{ i._batch=st2.batch; });
+    st2.items.push(...fresh);
+    st2.lastBatchN=fresh.length;
     st2.kwCost=(d.meta&&Object.values(d.meta).reduce((a,m)=>a+((m&&m.cost_usd)||0),0))||0;
   }catch(e){ /* 실패해도 렌즈 나머지는 정상 */ }
   finally{
@@ -3724,6 +3740,35 @@ function setLensLang(shortcode, lang){
   renderLens(shortcode);
 }
 
+// ── 자동 모으기 (2026-09-08 사장님 "어차피 무료면 키워드별로 계속 쌓이도록 /
+//    어차피 나올 때까지 수동으로 누를 거니까")
+//    검색어 × 언어를 **순서대로 한 번씩** 돌린다. 몇 초마다 갱신하는 방식 대신
+//    한 조합이 끝나면 다음을 부르는 직렬로 간다 — 이유:
+//      · 「여기서」는 무료 플랫폼만 돈다(유튜브·핀터레스트·네이버클립) = 비용 0
+//      · 동시에 여러 개를 던지면 핀터레스트가 브라우저를 여러 개 띄워 서버가 기어간다
+//      · 사장님이 중간에 멈출 수 있어야 한다(다시 누르면 정지)
+const _AUTO_LANGS = ['auto', 'en', 'ja', 'zh'];   // ko는 auto가 이미 포함한다
+
+async function toggleLensAuto(shortcode){
+  const st=LENS_STATE[shortcode]; if(!st) return;
+  if(st.autoRun){ st.autoStop=true; st.autoRun=false; renderLens(shortcode); return; }
+  st.autoRun=true; st.autoStop=false; renderLens(shortcode);
+  const cands=(st.cnCands||[]);
+  outer:
+  for(let i=0;i<cands.length;i++){
+    for(const L of _AUTO_LANGS){
+      const cur=LENS_STATE[shortcode];
+      if(!cur || cur.autoStop || !cur.autoRun) break outer;   // 사용자가 멈췄거나 모달을 닫았다
+      const q=(L==='auto')?(cands[i].ko||cands[i].zh):((cands[i][L]||'').trim());
+      if(!q) continue;                                        // 그 언어 검색어가 없으면 건너뛴다
+      cur.autoNote=`${i+1}/${cands.length} · ${L==='auto'?'해외':L}`;
+      await lensKwSearch(shortcode, i, L);
+    }
+  }
+  const fin=LENS_STATE[shortcode];
+  if(fin){ fin.autoRun=false; fin.autoNote=''; renderLens(shortcode); }
+}
+
 function _lensSearchUrl(platform, kw){
   if(platform==='instagram') kw=_igKw(kw);
   const q=encodeURIComponent(kw||'');
@@ -3795,11 +3840,20 @@ function renderLens(shortcode, mountId){
   // 카드 자리에 바로 뜨게 해달라는 사장님 요청). 안 주면 종전대로 모달 body.
   const box=document.getElementById(mountId||'scriptBody');
   const st=LENS_STATE[shortcode]; if(!st || !box) return;
-  // 플랫폼 칩 줄 제거(2026-08-22 사장님 "이거 없애도 되고"). 샤오홍슈·도우인은 렌즈가
-  // 링크를 안 줘서 항상 0이었고, 카드마다 플랫폼 라벨이 이미 붙어 칩이 정보를 더하지 않았다.
-  // ★st.on은 남긴다 — 아래 필터 4곳이 이 집합을 쓴다(항상 전체이므로 통과만 시킨다).
-  //   칩만 지우고 st.on을 같이 지우면 shown 계산이 통째로 깨진다.
-  const chips='';
+  // 플랫폼 칩 — 2026-08-22에 없앴다가 2026-09-08 사장님 "플랫폼으로 나눠볼 수 있게
+  // 하고"로 되살린다. 그때 없앤 이유는 **항상 0건이라 정보를 안 더해서**였다(렌즈가
+  // 샤오홍슈·도우인 링크를 안 줬다). 지금은 「🔎 여기서」가 유튜브·핀터레스트·
+  // 네이버클립을 실제로 쌓으므로 상황이 다르다 — 다만 같은 실수를 안 하려고
+  // **건수를 함께** 찍고, 0건인 플랫폼은 흐리게 해서 눌러도 소용없음을 드러낸다.
+  const _cnt={};
+  for(const i of st.items) _cnt[i.platform]=(_cnt[i.platform]||0)+1;
+  const _anyCnt=Object.keys(_cnt).length>0;
+  const chips=!_anyCnt?'':`<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px">
+    ${LENS_PLATFORMS.map(p=>{
+      const n=_cnt[p.k]||0, _pOn=st.on.has(p.k);
+      return `<button onclick="toggleLensPlatform('${shortcode}','${p.k}')" title="${p.label} ${n}건 — 눌러서 보이기/숨기기" style="font-size:11px;padding:3px 9px;border-radius:8px;cursor:pointer;border:1px solid ${_pOn&&n?'var(--accent)':'var(--line)'};background:${_pOn&&n?'var(--accent)':'transparent'};color:${_pOn&&n?'#fff':'var(--fg,inherit)'};opacity:${n?1:.35}">${p.label} ${n}</button>`;
+    }).join('')}
+  </div>`;
   // 필터: 켠 플랫폼 + (숏폼만이면) is_short!==false + (해외만이면) 제목에 한글 없음.
   let shown=st.items.filter(i=>st.on.has(i.platform));
   if(st.shortsOnly) shown=shown.filter(i=>i.is_short!==false);
@@ -3882,9 +3936,13 @@ function renderLens(shortcode, mountId){
         <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-top:4px">
           <span style="font-size:11px;color:var(--sub)">🌐 검색 언어</span>
           ${LENS_LANGS.map(L=>{
-            const on=(st.lang||'auto')===L.k;
-            return `<button onclick="setLensLang('${shortcode}','${L.k}')" title="${L.title}" style="font-size:12px;padding:3px 9px;border-radius:8px;cursor:pointer;border:1px solid ${on?'var(--accent)':'var(--line)'};background:${on?'var(--accent)':'transparent'};color:${on?'#fff':'var(--fg,inherit)'};font-weight:${on?'700':'400'}">${L.label}</button>`;
+            const _lOn=(st.lang||'auto')===L.k;
+            return `<button onclick="setLensLang('${shortcode}','${L.k}')" title="${L.title}" style="font-size:12px;padding:3px 9px;border-radius:8px;cursor:pointer;border:1px solid ${_lOn?'var(--accent)':'var(--line)'};background:${_lOn?'var(--accent)':'transparent'};color:${_lOn?'#fff':'var(--fg,inherit)'};font-weight:${_lOn?'700':'400'}">${L.label}</button>`;
           }).join('')}
+          ${/* ★자동 모으기 — 검색어 × 언어를 순서대로 한 번씩 돌려 계속 쌓는다.
+               「여기서」는 무료 플랫폼만 도니 눌러도 돈이 안 나간다. */''}
+          ${(st.cnCands||[]).length?`<button onclick="toggleLensAuto('${shortcode}')" title="검색어 ${(st.cnCands||[]).length}개 × 언어(해외·영어·일본어·중국어)를 순서대로 자동으로 검색해 계속 쌓습니다. 무료 플랫폼만 돌아 비용은 0원이고, 다시 누르면 멈춥니다" style="font-size:12px;padding:3px 10px;border-radius:8px;cursor:pointer;margin-left:6px;border:1px solid ${st.autoRun?'#e0623d':'var(--accent)'};background:transparent;color:${st.autoRun?'#e0623d':'var(--accent)'};font-weight:600">${st.autoRun?'■ 멈추기':'▶ 자동 모으기'}</button>`:''}
+          ${st.autoRun&&st.autoNote?`<span style="font-size:11px;color:var(--sub)">${esc(st.autoNote)} 진행 중…</span>`:''}
         </div>
         ${st.frameBlob?`<button onclick="lensMoreCnKeywords('${shortcode}')" ${st.cnLoading?'disabled':''} title="같은 장면으로 다른 각도의 검색어를 더 뽑습니다(이미 나온 건 빼고 아래에 쌓입니다). 무료 — 추가 비용 없음" style="${btnCss};border-color:var(--accent);color:var(--accent)">${st.cnLoading?'⏳ 뽑는 중…':'🔄 다른 검색어 더'}</button>`:''}
         ${st.cnNoNew?'<span style="font-size:11px;color:var(--sub)">더 나올 게 없어요 — 이 장면에서 뽑을 각도는 다 나왔습니다</span>':''}
@@ -3980,6 +4038,9 @@ function renderLens(shortcode, mountId){
         <span style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.65);color:#fff;font-size:11px;padding:2px 8px;border-radius:10px">${plabel}</span>
         ${i.sim==='same'?'<span title="AI 유사도 판정: 같은 제품" style="position:absolute;bottom:6px;left:6px;background:#1f9d55;color:#fff;font-size:10px;padding:2px 7px;border-radius:10px">✅같은제품</span>':''}
         ${i.match===false?'<span title="AI 유사도 판정: 무관 — 다른 제품일 수 있음" style="position:absolute;bottom:6px;right:6px;background:#e0623d;color:#fff;font-size:10px;padding:2px 7px;border-radius:10px">⚠️다른주제?</span>':''}
+        ${/* ★방금 검색으로 들어온 카드만 NEW — 결과가 플랫폼 순으로 정렬돼 목록
+             중간에 끼어들기 때문에, 이게 없으면 뭐가 새로 온 건지 알 수 없다. */''}
+        ${(i._batch && st.batch && i._batch===st.batch)?'<span title="방금 검색으로 새로 들어온 결과" style="position:absolute;top:6px;left:6px;background:#2ea043;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px">NEW</span>':''}
       </div>
       <div class="body">
         <div class="rank" style="white-space:normal;line-height:1.4;min-height:2.8em">${esc((i.title||'').slice(0,70))}</div>

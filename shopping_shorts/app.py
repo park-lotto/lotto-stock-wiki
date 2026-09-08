@@ -10042,7 +10042,7 @@ async def api_lens_cn_search(request: Request, keyword: str = Form(""),
 
 @app.post("/api/lens/kw/search")
 async def api_lens_kw_search(request: Request, keyword: str = Form(""),
-                              max_results: int = Form(8)):
+                              max_results: int = Form(8), lang: str = Form("")):
     """한국어 검색어 1개 → 인스타+틱톡+유튜브. **백엔드는 kw_search가 정한다.**
     2026-08-17 — 샤오홍슈·도우인(/api/lens/cn/search)을 마무리한 것과 같은 모양이다.
 
@@ -10070,7 +10070,11 @@ async def api_lens_kw_search(request: Request, keyword: str = Form(""),
     # ★to_thread 필수 — 백엔드가 Playwright·Apify·HTTP를 **블로킹**으로 부른다.
     #   안 하면 이벤트루프가 막혀 다른 렌즈 요청이 전부 굶는다(cn/search와 같은 이유).
     try:
-        res = await asyncio.to_thread(kw_search.search, kw, n)
+        # lang이 오면 프론트가 **이미 그 언어로 번역된 검색어**를 보낸 것이다
+        # (2026-09-08 언어 칩). 서버가 또 다국어로 퍼뜨리면 같은 검색을 여러 번
+        # 돌리게 되므로 multilang을 끈다 — 0순위-B(같은 판단을 두 곳에서 하지 않는다).
+        res = await asyncio.to_thread(kw_search.search, kw, n,
+                                      False if (lang or "").strip() else True)
     except Exception:
         # 실패는 과금하지 않는다 — 차감과 환불이 같은 판단을 봐야 잔액이 안 갉힌다.
         refund_credit(cid, "lens")
