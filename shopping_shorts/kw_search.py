@@ -32,8 +32,12 @@ _CHAIN = {
     # 프록시로 페이지·API 모두 200인데 본문이 비고 로그인 모달이 뜬다).
     # 세션 파일이 생기는 순간 pw_tiktok이 성공하기 시작해 자동으로 $0이 된다 —
     # 샤오홍슈가 그렇게 무료로 돌고 있고, 도우인이 그 반대 상태다.
-    # ★유료 폴백(apify_tiktok)은 기본으로 빠진다 — 세션 없으면 0건이 되고,
-    #   사장님은 새 탭 아이콘(🎵)으로 간다. 되살리려면 KW_SEARCH_TIKTOK_APIFY=1.
+    # ★유료 폴백(apify_tiktok)은 기본으로 빠진다. 되살리려면 KW_SEARCH_TIKTOK_APIFY=1.
+    # ★2026-09-08: 세션을 넣어 **무료 경로가 실제로 살아났다**(사장님 파이어폭스
+    #   쿠키 → /home/ubuntu/tiktok_session.json). 서버 실측 pw_tiktok 6건 반환.
+    #   즉 지금은 유료 폴백이 꺼져 있어도 틱톡 결과가 정상으로 나온다.
+    #   세션이 만료되면 0건이 되므로, 그때 tools/tiktok_session_from_firefox.py 로
+    #   다시 뽑으면 된다(코드 수정 불필요).
     "tiktok": [kw_backends.pw_tiktok, kw_backends.apify_tiktok],
     "youtube": [kw_backends.youtube],
     # 핀터레스트(2026-08-29) — 렌즈 시각검색이 영상 핀을 사실상 안 물어와서(실측
