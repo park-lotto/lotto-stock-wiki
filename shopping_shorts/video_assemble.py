@@ -1083,15 +1083,34 @@ def cap_preset_key(txt):
     return "".join(ch for ch in (txt or "") if ch not in drop)
 
 
-def _wrap_long(segs):
+def _wrap_long(segs, manual=False):
     """구절 리스트에서 _CAP_WRAP를 크게 넘는 초장문만 줄바꿈으로 방어(대부분 그대로 1줄).
-    각 줄은 표시용으로 끝 문장부호를 정리한다(2026-07-21 사장님 '봤잖아요.' 마침표 노출)."""
+    각 줄은 표시용으로 끝 문장부호를 정리한다(2026-07-21 사장님 '봤잖아요.' 마침표 노출).
+
+    ★manual=True — **사람이 직접 정한 줄**(caption_lines)일 때는 쪼개지 않는다(2026-09-07).
+      증상: 타임라인에서 자막 경계를 지워 두 구절을 합쳐도 **경계가 도로 살아났다**.
+      실측(job b7af2dd796c5, cta): 저장은 200 OK로 DB에 2줄이 정상 저장되는데,
+      화면을 그리는 _lab_captions → _caption_segments 경로에서 여기가 19자를 넘는
+      첫 줄('다들 모르시는 게 하나 있는데 여행이나 캠핑 갈 때도 이거 하나' = 공백 빼고 25자)을
+      textwrap으로 재분할해 **3구절로 되돌렸다**. 저장이 성공하니 에러도 안 떠서
+      "눌러도 아무 일이 없다"로만 보였다.
+      이 함수의 원래 목적은 docstring대로 "아주 긴 **단일 어절** 방어"인데, 실제로는
+      여러 어절로 된 줄까지 잘라 사람 결정을 덮고 있었다.
+    ★폭 걱정은 안 해도 된다 — 자막 렌더는 single_line=True로 그린다:
+      "절대 줄바꿈하지 않고 한 줄로 두되, 폭을 넘으면 폰트를 자동 축소"
+      (_segmented_drawtext, 사장님 "자막은 무조건 한 줄"). 즉 화면 밖으로 안 나간다.
+      그래서 manual일 때도 **띄어쓰기 없는 단일 어절**만은 방어를 남긴다(줄일 수 없는 것).
+    """
     out = []
     for s in segs:
         s = _strip_cap_tail(s)
         if not s:
             continue
-        if len(s.replace(" ", "")) > _CAP_WRAP:
+        too_long = len(s.replace(" ", "")) > _CAP_WRAP
+        # 사람이 정한 줄은 어절이 둘 이상이면 그대로 존중한다.
+        if manual and len(s.split()) > 1:
+            too_long = False
+        if too_long:
             out.extend(textwrap.wrap(s, _CAP_WRAP) or [s])
         else:
             out.append(s)
@@ -1122,7 +1141,8 @@ def _caption_segments(narration, preset=None):
     if preset and isinstance(preset, (list, tuple)):
         lines = [str(x).strip() for x in preset if str(x).strip()]
         if lines and cap_preset_key("".join(lines)) == cap_preset_key(narr):
-            return _wrap_long(lines)
+            # 사람(또는 대본 AI)이 정한 줄 → 재분할하지 않는다(2026-09-07 경계 버그).
+            return _wrap_long(lines, manual=True)
     words = narr.split()
     out, cur = [], []
     for i, w in enumerate(words):

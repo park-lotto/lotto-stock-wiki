@@ -676,13 +676,64 @@ let seq = [], seqI = 0, seqTimer = null, seqLabel = '';
 //   그래서 소스마다 재생기를 **2개**(A/B) 두고 컷마다 번갈아 쓴다. 다음 컷은 항상 **숨은 쪽**에서
 //   미리 자리를 잡아두고, 전환은 보이기만 바꾼다 → 같은 소스든 다른 소스든 프레임 누수 0.
 const _vids = {};
+// ★재생기를 'auto'로 만들면 **만드는 순간 파일 전체를 받기 시작한다**. 소스 7개 x 슬롯
+//   최대 4벌 = 재생기 20개가 한꺼번에 4~7MB짜리를 당기는데, 브라우저는 한 도메인에
+//   동시 연결을 6개까지만 열어준다 → 서로 굶어 **하나도 준비되지 않는다**
+//   (2026-09-07 라이브 실측: video 20개 전부 readyState 0 · networkState 2 · buffered 0).
+//   그 상태에서 컷이 오면 열림 대기창(0.3~1.5초) 안에 못 열려 그 컷은 썸네일만 보인다
+//   = 사장님 "이미지만 재생되는 부분". 두 번째 재생이 멀쩡한 것도 이것 때문이다 —
+//   첫 바퀴를 도는 동안 결국 다 받아지니까.
+//   그래서 만들 때는 **metadata만**(수십 KB) 받고, 실제로 쓸 재생기만 wantFull()로
+//   'auto'로 올려 본문을 당긴다. 동시에 당기는 수가 확 줄어 첫 바퀴부터 제때 열린다.
+// ★같은 파일을 슬롯 수만큼 **따로** 받고 있었다(2026-09-07 사장님 "1번 2번 따로는 렉
+//   없는데 전체 재생하면 렉 있다"). 칸별 재생은 슬롯 0·1만 쓰지만(소스당 2벌), 전체
+//   재생은 칸 넘김에 2·3을 더 써서 **소스당 최대 4벌**이 같은 5MB를 각자 받는다.
+//   <video>는 요소마다 제 버퍼를 갖고, 진행 중인 다운로드는 서로 재활용되지 않는다.
+//   실측(캐시 비운 상태, 같은 소스 7개, 4초 시점 재생 준비): 1벌 7/7 · 4벌 20/28.
+//   대역폭이 4등분 나니 컷 경계마다 걸린다.
+//   처방: 파일을 **한 번만** 받아 blob으로 두고 그 소스의 슬롯 전부가 공유한다.
+//   받고 나면 시크가 메모리 안에서 끝나 컷 넘김도 즉시다.
+//   ⚠️지금 화면에 나오는 재생기(curVid)는 갈아끼우지 않는다 — 재생 중 src를 바꾸면 끊긴다.
+const _blobs = {};                 // videoId -> objectURL (null = 받는 중)
+let _blobBytes = 0, _blobQ = Promise.resolve();
+const BLOB_CAP = 200 * 1024 * 1024;   // 메모리 상한 — 넘으면 예전처럼 각자 받는다
+function shareBlob(videoId){
+  if (!videoId || videoId in _blobs || _blobBytes > BLOB_CAP) return;
+  _blobs[videoId] = null;
+  // ★한 번에 하나씩 받는다 — 7개를 동시에 당기면 굶는 문제가 그대로 돌아온다.
+  _blobQ = _blobQ.then(() => fetch(SL.src(videoId))
+    .then(r => r.ok ? r.blob() : null)
+    .then(b => {
+      if (!b || !b.size){ delete _blobs[videoId]; return; }
+      _blobBytes += b.size;
+      const u = URL.createObjectURL(b);
+      _blobs[videoId] = u;
+      Object.keys(_vids).forEach(k => {
+        const v = _vids[k];
+        if (!v || v._vid !== videoId || v === curVid) return;   // 보이는 것은 그대로 둔다
+        const t = v.currentTime;
+        v._full = 1; v.preload = 'auto'; v.src = u;
+        try{ v.currentTime = t; }catch(e){}
+      });
+    })
+    .catch(() => { delete _blobs[videoId]; }));
+}
+function wantFull(v){
+  if (!v) return v;
+  shareBlob(v._vid);                       // 이 소스는 한 벌만 받아 슬롯끼리 나눠 쓴다
+  if (v._full) return v;
+  v._full = 1;
+  try{ v.preload = 'auto'; if (v.readyState < 2 && typeof v.load === 'function') v.load(); }catch(e){}
+  return v;
+}
 function vidFor(videoId, slot){
   const key = videoId + ':' + (slot || 0);
   if (_vids[key]) return _vids[key];
   const box = document.getElementById('vidbox');
   const v = document.createElement('video');
-  v.muted = true; v.playsInline = true; v.preload = 'auto';
-  v.src = SL.src(videoId);
+  v.muted = true; v.playsInline = true; v.preload = 'metadata';
+  v._vid = videoId;
+  v.src = _blobs[videoId] || SL.src(videoId);   // 이미 받아 둔 blob이 있으면 그것부터
   v.style.display = 'none';
   box.appendChild(v);
   _vids[key] = v;
@@ -706,7 +757,7 @@ function applyRate(v, c){
   return rate;
 }
 function seat(c){
-  const v = vidFor(c.video_id, c._slot);
+  const v = wantFull(vidFor(c.video_id, c._slot));   // 곧 쓸 재생기다 — 여기서만 본문을 당긴다
   if (Math.abs(v.currentTime - c.start) > 0.05) v.currentTime = c.start;
   return v;
 }
@@ -742,9 +793,13 @@ function showVid(v){
 }
 const vid = () => curVid || document.getElementById('vid');
 // 페이지가 열리면 소스들을 미리 열어 둔다(첫 전환도 매끄럽게).
+// 페이지가 열리면 소스들의 **머리말(metadata)만** 미리 받아 둔다 — 본문은 안 당긴다.
+// ★칸 넘김 슬롯(2·3)도 함께 만든다: 전체 재생은 칸마다 첫 컷을 handoffSlot(2·3)으로
+//   쓰는데 예전엔 0·1만 데워 둬서, 그 재생기가 **그 컷에 가서야 처음 만들어졌다**
+//   (readyState 0 → 열림 대기창 초과 → 그 컷은 정지 그림). 머리말만이라 값이 싸다.
 function warmVideos(){
   const ids = new Set(Object.values(DATA.segments).map(s => s.video_id));
-  ids.forEach(id => { vidFor(id, 0); vidFor(id, 1); });   // A/B 두 벌
+  ids.forEach(id => { vidFor(id, 0); vidFor(id, 1); vidFor(id, 2); vidFor(id, 3); });
 }
 
 function stopPlay(){
@@ -977,7 +1032,7 @@ function step(){
     return;
   }
   const c = seq[seqI];
-  const v = vidFor(c.video_id, c._slot);
+  const v = wantFull(vidFor(c.video_id, c._slot));   // 지금 쓸 재생기 — 본문을 당긴다
   const go = () => {
     // ★시크가 **끝난 뒤에** 보여준다(2026-08-14 사장님 "3번 솔루션 끝나는 장면 마지막에
     //   2번 첫 장면이 잠깐 보인다"). 칸2와 칸4가 같은 소스(s0)를 쓰는데, 칸4로 넘어갈 때
@@ -1065,20 +1120,41 @@ function step(){
     if (openT) { clearTimeout(openT); openT = 0; }
     go();
   };
-  const giveUp = () => {
+  const giveUp = (fatal) => {
     if (opened) return;
     opened = true;
-    v.onloadedmetadata = null; v.onerror = null;
+    v.onerror = null;
     if (openT) { clearTimeout(openT); openT = 0; }
     holdShot(c, true);                   // 검은 화면 대신 그 조각의 썸네일
     paintCut();
     if (seq[seqI + 1]) seat(seq[seqI + 1]);
+    const myI = seqI, myKey = playKey, t0 = Date.now();
     schedStep(c.dur * 1000);             // 음성과 어긋나지 않게 이 컷 시간은 그대로 쓴다
+    // ★늦게 열렸다고 그 컷을 통째로 '사진'으로 흘려보내지 않는다(2026-09-07 사장님
+    //   "재생할 때 이미지만 재생되는 부분이 있다" — 모든 고객 동일).
+    //   종전엔 여기서 손을 떼 버려(onloadedmetadata=null) 대기창 안에 못 연 컷은
+    //   **끝까지 썸네일만** 보였다. 대기창은 컷 길이의 60%(최소 0.3·최대 1.5초)인데
+    //   구절 맞춤 뒤 1초대 컷이 흔해 0.6초짜리 창이 자주 걸린다 = 정지 그림 구간.
+    //   늦게라도 열리면 그 컷의 **남은 시간**부터 이어 보여준다(타이머·싱크는 그대로).
+    if (fatal){ v.onloadedmetadata = null; return; }
+    v.onloadedmetadata = () => {
+      v.onloadedmetadata = null;
+      if (playKey !== myKey || seqI !== myI || seqPaused) return;   // 이미 지나간 컷이면 무시
+      const off = (Date.now() - t0) / 1000;
+      if (off >= (c.dur || 0) - 0.2) return;   // 거의 끝난 컷은 굳이 갈아끼우지 않는다
+      try{
+        v.currentTime = c.start + off;         // 흘러간 만큼 건너뛰어야 싱크가 안 밀린다
+        showVid(v); applyRate(v, c); v.play().catch(()=>{});
+        const late = () => { v.onseeked = null; v.oncanplay = null; holdShot(null, false); };
+        if (v.readyState >= 2 && !v.seeking) late();
+        else { v.onseeked = late; v.oncanplay = late; }
+      }catch(e){}
+    };
   };
   v.onloadedmetadata = open;
-  v.onerror = giveUp;                    // 소재를 못 받았다 — 멈추지 말고 넘어간다
+  v.onerror = () => giveUp(true);        // 소재를 못 받았다 — 멈추지 말고 넘어간다
   // 컷 길이의 60%까지만 기다린다(cutWaitMs와 같은 기준 — 기다림이 컷보다 길면 무의미).
-  openT = setTimeout(giveUp, cutWaitMs(c));
+  openT = setTimeout(() => giveUp(false), cutWaitMs(c));
 }
 
 // ── 컷 표시 한 곳(2026-08-15 사장님 "왼쪽은 3개인데 컷이 4/4" 혼란) ─────────────────

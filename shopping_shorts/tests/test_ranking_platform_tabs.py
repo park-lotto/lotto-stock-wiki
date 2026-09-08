@@ -11,6 +11,13 @@
   인스타·유튜브는 수집 결(48h·댓글 vs 14일·조회수)이 달라 탭으로 가른다.
   쓰레드는 다른 세션이 기초작업 중이라 자리만 잡아두고 비활성.
   틱톡·샤오홍슈·도우인은 요소 보존 + display:none(로직이 잡으므로 삭제 금지).
+- 2026-09-07: 사장님 "지금은 인스타/유튜브이고", "네이버클립은 숨겨" →
+  **인스타·유튜브 2개만** 노출이 지금 계약.
+  숨긴 이유는 필요없어서가 아니라 **자동수집이 꼬져 죽은 데이터를 보여줌**이다
+  (서버 실측: 쓰레드 08-17·21일 / 핀터레스트 08-28·10일 / 네이버클립 08-30·8일,
+   daily_batch 로그가 매일 "샤홍발굴 0 · 네클채널 0").
+  ★핀터레스트는 랭킹 수정 검증 후 다시 켜는 것이 예정된 순서다
+  (사장님: "핀터는 매칭까지 못가고 막혔어") — 삭제 말고 display:none만 떼라.
 - 2026-08-17(4차): 쓰레드 배선 완료 — service._collect_threads()가 생겨 "비활성"
   전제가 사라졌다. 지표·창은 인스타와 동일(댓글 기준·48h, 사장님 결정).
 
@@ -39,17 +46,19 @@ def _tab_tag(html, platform):
     return html[html.rfind("<div", 0, i): html.find(">", i) + 1]
 
 
-def test_three_tabs_shown_rest_hidden():
-    """노출은 인스타·유튜브·쓰레드 3개. 나머지는 요소를 남긴 채 숨긴다(로직 보존)."""
+def test_two_tabs_shown_rest_hidden():
+    """노출은 인스타·유튜브 2개. 나머지는 요소를 남긴 채 숨긴다(로직 보존).
+
+    ★2026-09-07 계약 변경 — 종전 3개(+쓰레드)에서 2개로 줄었다.
+    요소는 남긴다: switchPlatform·트렌드카드가 잡으므로 지우면 그 코드가 죽는다.
+    """
     html = INDEX.read_text(encoding="utf-8")
-    for p in ("instagram", "youtube", "threads"):
+    for p in ("instagram", "youtube"):
         assert "display:none" not in _tab_tag(html, p), f"{p} 탭이 숨겨졌다"
-    for p in ("tiktok", "xiaohongshu", "douyin"):
-        tag = _tab_tag(html, p)
-        assert "display:none" in tag, \
-            f"{p} 탭이 다시 노출됐다 — 3개만 보여야 한다"
-
-
+    for p in ("threads", "pinterest", "naverclip",
+              "tiktok", "xiaohongshu", "douyin"):
+        msg = f"{p} 탭이 다시 노출됐다 — 인스타·유튜브 2개만 보여야 한다"
+        assert "display:none" in _tab_tag(html, p), msg
 def test_threads_tab_is_wired():
     """쓰레드 탭은 배선 완료 — 눌러서 들어가진다(2026-08-17 4차, 계약 뒤집힘).
 

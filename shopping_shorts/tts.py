@@ -122,6 +122,14 @@ def synthesize_tts(text, out_path, voice_id=None, voice_settings=None,
     # ★엔진 분기(2026-08-19). 프리셋의 model_id가 `ssfm-*`면 타입캐스트다 — 판단은
     #   typecast_tts.is_typecast 한 곳뿐이다(0순위-B). 남자 성우 라인업이 일레븐랩스에
     #   없어서 붙였고, 일레븐랩스 경로는 아래 그대로 남는다.
+    # ★엔진이 꺼져 있으면(TYPECAST_ENABLED=0) 타입캐스트로 안 나간다 — 성우·모델을
+    #   일레븐랩스 기본(미나)으로 갈아끼운다(2026-09-07). 여기까지 타입캐스트 값이
+    #   내려오는 길은 mix_pipeline 말고도 있다(튜닝 작업대 미리듣기·미리보기 API).
+    #   판정·대체값은 typecast_tts 한 곳에서만 온다(0순위-B).
+    if typecast_tts.use_fallback(model_id):
+        model_id = typecast_tts.FALLBACK_VOICE["model_id"]
+        voice_id = typecast_tts.FALLBACK_VOICE["voice_id"]
+        voice_settings = dict(typecast_tts.FALLBACK_VOICE["settings"])
     if typecast_tts.is_typecast(model_id):
         return _synthesize_typecast(
             text, out_path, voice_id=voice_id, voice_settings=voice_settings,

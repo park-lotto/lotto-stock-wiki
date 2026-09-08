@@ -297,6 +297,13 @@ ELEVENLABS_TIMESTAMPS = os.getenv("ELEVENLABS_TIMESTAMPS", "1") not in ("0", "fa
 # 판단한다(0순위-B). 키가 없으면 기존과 같이 무음 mock으로 내려앉는다.
 TYPECAST_API_KEY = os.environ.get("TYPECAST_API_KEY", "")
 
+# ★타입캐스트를 쓸 것인가(2026-09-07 사장님 "지금 타입캐스트 안 쓰고 일레븐만 쓴다").
+#   기본 0 = 끔. 끄면 ①성우 카드에서 타입캐스트 성우가 사라지고 ②이미 그 성우로
+#   저장해 둔 job은 합성 직전에 일레븐랩스 성우로 **자동 대체**된다(3단계에서 나던
+#   "타입캐스트 오류"가 그래서 사라진다). 판정은 typecast_tts.enabled() 한 곳뿐(0순위-B).
+#   다시 쓰려면 서버 env에 TYPECAST_ENABLED=1만 넣으면 종전 동작으로 돌아온다.
+TYPECAST_ENABLED = os.environ.get("TYPECAST_ENABLED", "0") not in ("0", "false", "False", "")
+
 # ASR 라운드트립 검증(튜닝 작업대) — Whisper로 TTS를 재전사해 오독 탐지. GROQ 우선.
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 

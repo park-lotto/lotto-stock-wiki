@@ -339,6 +339,10 @@ body.is-admin .admin-only{display:block}
 .ftog:hover{color:var(--txt);border-color:var(--txt)}
 .ftog.on{background:var(--accent);border-color:var(--accent);color:#111}
 .fcount{color:var(--sub);font-size:12px;margin-left:2px}
+/* 건수 안내 줄(2026-09-07) — 걸러내기 줄이 숨겨져 있어 이 문구가 안 보이던 것을 바깥으로 뺐다.
+   시니어 가독성 기준(feedback_숨겨도_60대가_쓰기편하게)으로 12px는 너무 작아 13px로 올린다. */
+.fcount-row{margin:6px 0 2px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.fcount-row .fcount{font-size:13px}
 /* secondary sub-filter (소재) */
 .cat{transition:all .18s}
 .cat:hover{transform:translateY(-1px);color:var(--txt);border-color:var(--accent)}
@@ -366,7 +370,7 @@ body.is-admin .admin-only{display:block}
     <div class="head">
       <h2>레퍼런스 랭킹</h2>
     </div>
-    <div class="desc">443개 레퍼런스 채널의 48시간 이내 릴스를 강도별로 랭킹합니다.</div>
+    <div class="desc">등록 레퍼런스 채널의 <b>최근 수집분</b>을 강도별로 랭킹합니다. (★'48시간'은 올라온 시각이 아니라 <b>우리가 수집한 시각</b> 기준 — 발행시각은 대부분 수집되지 않는다: 실측 4,255건 중 4,030건 누락)</div>
     <!-- ★상단 줄 정리(2026-08-17 사장님 "4개 삭제") — 요소는 남기고 숨긴다.
          toggleOverseas·switchPlatform이 이 요소들을 잡으므로 지우면 그 코드가 죽는다
          (platformTabs가 2026-07-21에 같은 이유로 숨김 처리된 선례를 따른다).
@@ -389,6 +393,10 @@ body.is-admin .admin-only{display:block}
     <!-- ★2026-08-17(3차) 사장님 "인스타랑 유튜브 쓰레드탭 3개를만들어" —
          인스타·유튜브는 결이 완전히 달라(48h·댓글 vs 14일·조회수) 탭을 갈라 관리한다.
          쓰레드는 2026-08-17 배선 완료 — 인스타와 같은 잣대(댓글 기준·48h)로 본다.
+         ★2026-09-07 사장님 "지금은 인스타/유튜브이고" — 쓰레드·핀터레스트·네이버클립도 숨긴다.
+         근거(서버 실측): 자동수집이 꼬져 있어 죽은 데이터를 보여줌 — 쓰레드 08-17(21일) ·
+         핀터레스트 08-28(10일) · 네이버클립 08-30(8일)에서 멈춤.
+         핀터레스트는 이번 작업 검증 뒤 다시 켜다(사장님: "매칭까지 못가고 막혔어").
          틱톡·샤오홍슈·도우인은 요소를 남긴 채 숨긴다 — switchPlatform·트렌드카드가
          이 요소들을 잡으므로 지우면 그 코드가 죽는다(2026-07-21 선례와 같은 이유). -->
     <details id="platformFold" open style="margin-bottom:12px">
@@ -396,15 +404,15 @@ body.is-admin .admin-only{display:block}
     <div class="ctypes" id="platformTabs" style="margin-top:0;margin-bottom:12px">
       <div class="ctype active" data-platform="instagram" onclick="switchPlatform('instagram',this)">📷 인스타</div>
       <div class="ctype" data-platform="youtube" onclick="switchPlatform('youtube',this)">▶️ 유튜브</div>
-      <div class="ctype" data-platform="threads" onclick="switchPlatform('threads',this)">🧵 쓰레드</div>
+      <div class="ctype" data-platform="threads" onclick="switchPlatform('threads',this)" style="display:none">🧵 쓰레드</div>
       <!-- 핀터레스트(2026-08-28 사장님 "깨끗한 영상들이 많아서 / 나만보게 비공개탭").
            ★관리자 전용 — admin-only 클래스가 body.is-admin일 때만 보이게 한다(기존 방식 그대로).
              고객 화면엔 아예 안 뜬다. 새 방식을 만들지 않는다(0순위-B). -->
-      <div class="ctype admin-only" data-platform="pinterest" onclick="switchPlatform('pinterest',this)">📌 핀터레스트</div>
+      <div class="ctype admin-only" data-platform="pinterest" onclick="switchPlatform('pinterest',this)" style="display:none">📌 핀터레스트</div>
       <!-- 네이버 클립(2026-08-30 사장님 "핀터레스트 옆에 네이버클립 카테고리").
            국내 숏폼. 핀터레스트와 달리 조회수·좋아요·댓글·발행시각이 다 와서
            속도·참여율이 정상 계산된다. 무료·로그인 없음(HTTP 2번). -->
-      <div class="ctype admin-only" data-platform="naverclip" onclick="switchPlatform('naverclip',this)">🟩 네이버클립</div>
+      <div class="ctype admin-only" data-platform="naverclip" onclick="switchPlatform('naverclip',this)" style="display:none">🟩 네이버클립</div>
       <div class="ctype" data-platform="tiktok" onclick="switchPlatform('tiktok',this)" style="display:none">🎵 틱톡</div>
       <div class="ctype" data-platform="xiaohongshu" onclick="switchPlatform('xiaohongshu',this)" style="display:none">📕 샤오홍슈</div>
       <div class="ctype" data-platform="douyin" onclick="switchPlatform('douyin',this)" style="display:none">🎬 도우인</div>
@@ -464,11 +472,16 @@ body.is-admin .admin-only{display:block}
            ★핀의 목적지(pin_dest)로 고른다 — 수집 때 상세 페이지에서 읽어 담는다. -->
       <div style="margin-top:7px;display:flex;gap:5px;align-items:center;flex-wrap:wrap">
         <span style="font-size:11px;color:var(--sub)">쇼핑몰만 보기:</span>
+        <!-- ★출처축(2026-09-06 사장님 "아마존 테무를 따로 카테고리화할수있나?").
+             건수는 라이브 실측(2,259건): 원본 804 · 재업 682 · 테무 392 · 아마존 166.
+             종전엔 원본·재업 버튼이 없어 **1,486건(66%)을 골라낼 방법이 아예 없었다**.
+             '알리'는 실측 1건뿐이라 뺐다(눌러도 늘 0건 = 고장으로 보인다). -->
         <button class="ftog pinf on" data-dest="" onclick="pinFilter(this)">전체</button>
+        <button class="ftog pinf" data-dest="uploaded by user" onclick="pinFilter(this)">✨ 원본</button>
+        <button class="ftog pinf" data-dest="instagram,tiktok,youtu" onclick="pinFilter(this)">♻️ 재업로드</button>
         <button class="ftog pinf" data-dest="shop" onclick="pinFilter(this)">🛒 쇼핑몰</button>
-        <button class="ftog pinf" data-dest="temu" onclick="pinFilter(this)">테무</button>
-        <button class="ftog pinf" data-dest="aliexpress" onclick="pinFilter(this)">알리</button>
-        <button class="ftog pinf" data-dest="amzn,amazon" onclick="pinFilter(this)">아마존</button>
+        <button class="ftog pinf" data-dest="temu" onclick="pinFilter(this)">🛍 테무</button>
+        <button class="ftog pinf" data-dest="amzn,amazon,amzlink" onclick="pinFilter(this)">📦 아마존</button>
         <span id="pinFilterMsg" style="font-size:11px;color:var(--sub)"></span>
       </div>
       <div style="font-size:11px;color:var(--sub);margin-top:5px">
@@ -567,7 +580,7 @@ body.is-admin .admin-only{display:block}
          아래는 '무엇으로 줄세울까'. 데이터는 이미 받아둔 것이라 추가 크롤 0. -->
     <div class="tabs" id="spanTabs" style="margin-bottom:8px">
       <span class="tab-grp">기간</span>
-      <div class="tab active" data-span="0" title="마지막 수집분 — 48시간 안에 올라온 새 릴스">🆕 48시간 히트작</div>
+      <div class="tab active" data-span="0" title="마지막 수집 회차 — 48시간 안에 ‘우리가 수집한’ 릴스입니다(올라온 시각 기준이 아닙니다)">🆕 48시간 히트작</div>
       <div class="tab" data-span="7" title="최근 7일 수집분 중 댓글 500개 넘은 것 — 이미 받아둔 데이터라 새로 긁지 않습니다">🔥 이번 주 터진 것</div>
       <div class="tab" data-span="30" title="최근 30일 중 댓글 1000개 넘은 것">👑 이번 달 명예의전당</div>
       <div class="tab" data-span="-1" title="지금까지 모아둔 20만 건 중 댓글 1만개 넘은 것 — 새로 긁지 않습니다">🏆 역대 히트작</div>
@@ -605,10 +618,20 @@ body.is-admin .admin-only{display:block}
               title="올라온 지 24시간 안 된 것만 — 남들보다 먼저 잡으려면 여기">🆕 신작</button>
       <button class="ftog" data-f="rising" onclick="toggleFilter('rising')"
               title="시간당 댓글이 쌓이는 속도가 지금 보이는 것 중 상위 25% — 터지는 중인 것만">🔥 급상승</button>
-      <!-- 채널당 상한(2026-08-18 사장님 "체널당 최신영상 2개까지만 배치하면").
-           한 채널이 최대 53장까지 화면을 도배하던 걸 막는다(실측 5,681장 → 1,347장).
-           ★어떤 2장을 남길지는 여기서 안 정한다 — 지금 켠 정렬 탭이 정한다.
-           최신순 탭이면 최신 2장, 조회수순이면 터진 2장(실측 겹침 62% = 탭마다 다르다). -->
+    </div>
+    <!-- ★건수 안내는 걸러내기 줄 **밖에** 둔다(2026-09-07).
+         여태 이 문구는 위 div(#filters) 안에 있었고 그 div가 display:none이라
+         **아무에게도 안 보였다** — 실측: 라이브에서 textContent는
+         "채널당 2개만 (22건 접힘)"으로 잘 채워지는데 화면엔 안 나온다.
+         그래서 "왜 몇 개밖에 없지"를 사장님이 알 방법이 없었다. -->
+    <!-- ★채널당 2개 버튼을 여기로 옮겼다(2026-09-07).
+         여태 이 버튼은 #filters(display:none) 안에 있어 **한 번도 보인 적이 없다**.
+         그런데 실제로 화면을 가장 많이 깎는 게 이 버튼이다 —
+         라이브 실측: 이번달 393건 → 137건(65% 접힘).
+         "왜 몇 개밖에 없나"의 지금 답이 이것이므로, 이유를 말해주는 건수 안내와
+         **같은 줄에** 둬서 읽고 바로 끌 수 있게 한다.
+         신작·급상승은 2026-08-17 사장님 지시대로 계속 숨긴 채 둔다. -->
+    <div class="fcount-row">
       <button class="ftog on" data-f="perch" onclick="togglePerChannel()"
               title="채널마다 상위 2개만 — 한 채널이 화면을 도배하는 걸 막습니다. 어떤 2개인지는 지금 켠 정렬 탭이 정합니다(최신순이면 최신 2개, 조회수순이면 조회수 상위 2개). 끄면 전부 봅니다">📺 채널당 2개</button>
       <span class="fcount" id="fcount"></span>
@@ -883,8 +906,15 @@ function toggleLensLocale(key){
 }
 // ── 플랫폼별 안내문구·지표 툴팁(2026-07-24, 토글 노출 대응) — 인스타 기준 문구를
 // 그대로 두면 틱톡/유튜브(시드계정·키워드+14일창, 조회수기반)에 거짓 설명이 된다. ──
+// ★이 표가 설명문의 **정본**이다(2026-09-07). HTML의 <div class="desc">를 고쳐도
+//   switchPlatform이 여기 값으로 무조건 덮어써서 화면엔 안 나온다 — 실측으로 잡혔다
+//   (라이브에서 48시간 탭 title은 새 문구인데 .desc만 옛 문구였다). 0순위-B 그대로:
+//   같은 문구를 두 곳에 적으면 반드시 어긋난다. 고칠 땐 여기만 고쳐라.
 const DESC_BY_PLATFORM = {
-  instagram: '등록한 레퍼런스 채널의 <b>48시간</b> 이내 릴스를 강도별로 랭킹합니다.',
+  // '48시간'은 올라온 시각이 아니라 우리가 수집한 시각이다 — 발행시각(upload_ts)이
+  // 서버 실측 4,255건 중 4,030건(94.7%) 비어 있어 last_seen으로 판정하기 때문이다.
+  instagram: '등록 레퍼런스 채널의 <b>최근 수집분</b>을 강도별로 랭킹합니다. '
+           + '(★<b>48시간</b>은 올라온 시각이 아니라 <b>우리가 수집한 시각</b> 기준)',
   tiktok:    '등록한 <b>시드 계정</b>의 최근 <b>14일</b> 숏폼을 조회수 기반 강도로 랭킹합니다. (무료 수집)',
   youtube:   '<b>키워드 시드</b>로 발굴한 최근 <b>14일</b> Shorts를 조회수 기반 강도로 랭킹합니다.',
   xiaohongshu: '등록한 <b>샤오홍슈 채널</b>의 최근 <b>48시간</b> 이내 노트를 참여도 기반 강도로 랭킹합니다. (무료 수집)',
@@ -2173,11 +2203,27 @@ function render(opts){
   const _fc = document.getElementById("fcount");
   if(_fc){
     // ★숨긴 건 반드시 숫자로 알린다 — 안 그러면 "영상이 사라졌다"로 읽힌다.
+    // 2026-09-07: 여태 '걸러내기'와 '채널당 상한'만 알렸다. 그런데 실제로 사장님이
+    // "28개밖에 없다"고 본 화면은 **카테고리·유형·검색**으로 줄어든 것이었고,
+    // 그 세 가지는 아무 안내도 없이 조용히 잘라내고 있었다(걸러내기 줄 자체가
+    // display:none이라 fresh/rising은 켤 수도 없다 = 원인이 될 수 없었다).
+    // 그래서 **줄어든 이유를 종류와 무관하게 한 줄로 항상** 보여준다.
     const parts = [];
-    if(STATE.filters.fresh || STATE.filters.rising)
-      parts.push(`${_beforeFilter}건 중 ${items.length}건 표시 중`);
-    if(_perChCut > 0)
-      parts.push(`채널당 ${PER_CHANNEL_MAX}개만 (${_perChCut}건 접힘)`);
+    const _served = STATE.items.length;          // 서버가 준 원본 건수
+    if(items.length < _served){
+      const why = [];
+      if(searching)                 why.push(`검색 "${STATE.q.trim()}"`);
+      if(!searching && STATE.cat   !== "전체") why.push(`카테고리 ${STATE.cat}`);
+      if(!searching && STATE.ctype !== "전체") why.push(`유형 ${STATE.ctype}`);
+      if(!searching && STATE.style)            why.push(`축 ${STATE.style}`);
+      if(STATE.filters.fresh)  why.push("신작");
+      if(STATE.filters.rising) why.push("급상승");
+      if(_perChCut > 0)        why.push(`채널당 ${PER_CHANNEL_MAX}개`);
+      parts.push(`전체 ${_served}건 중 ${items.length}건 표시`
+                 + (why.length ? ` — ${why.join(" · ")} 때문` : ""));
+    }else{
+      parts.push(`${items.length}건 전부 표시 중`);
+    }
     _fc.textContent = parts.join(" · ");
   }
   // 배지용 백분위 컨텍스트 — 지금 보이는 항목 기준(정렬·필터 반영)
@@ -2705,7 +2751,12 @@ let ARC_MIN = 10000;                 // 역대 탭 문턱(1만+ 기본). 실측 
 // 상한. 0=없음. 문턱만 낮추면 상위 400이 늘 같은 얼굴이라 세 버튼이 똑같아진다
 // (실측 2026-08-17: 셋 다 400건·1위 동일) → 구간으로 끊어 겹치지 않게 한다.
 let ARC_MAX = 0;
-const _SPAN_MIN_COMMENTS = {7: 500, 30: 1000};
+// 2026-09-07 하향(사장님 "검색하면 나오는 게 너무 적다"). 서버 실측 인스타 4,255건 기준:
+//   이번주 댓글 500+ = 148건 / 200+ = 610건
+//   이번달 댓글 1000+ = 292건 / 300+ = 937건
+// 종전 값은 48시간 탭(315건)보다 이번주(148건)가 **더 적어지는** 역전이 나 있었다.
+// 문턱은 '터진 것'을 가르는 장치지 재고를 말리는 장치가 아니다.
+const _SPAN_MIN_COMMENTS = {7: 200, 30: 300};
 // ★플랫폼마다 '터진 것'의 잣대가 다르다(2026-09-04 사장님 "유튭은 댓글이 필요없어, 조회수 기반이야").
 //   실측 댓글 중앙값: 인스타 60 / 유튜브 **1**. 유튜브에 댓글 문턱을 쓰면 이번 주가 48편,
 //   이번 달이 27편밖에 안 남아 사실상 빈 화면이 된다.

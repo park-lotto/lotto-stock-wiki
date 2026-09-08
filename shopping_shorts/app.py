@@ -3483,6 +3483,19 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
     _seed_cta = (body.get("seed_cta") or "").strip()
     if _seed_hook:
         _gen_kw["seed_hook"] = _seed_hook
+    # ★은행 예산을 여기서도 건다(2026-09-07). 스타일 경로(위)에는 재료 글자수로 은행을
+    #   잘라내는 코드가 있는데 **이 픽업 경로에는 없었다** — 같은 판단이 한쪽에만 적힌
+    #   0순위-B다. 실측 work 01e725b98569: 재료 233자인데 은행 1,832자 + 스타일 예시
+    #   1,985자가 실려 남의 제품 이야기가 재료의 16배였고, 대본이 통째로 다른 제품
+    #   ("3D 요술봉 카드케이스")으로 끌려갔다. 같은 사고가 2026-08-18에도 있었다
+    #   (재료 750자 vs 은행 2,822자). 재료를 모르는 채 은행을 짜면 반드시 재발한다.
+    if _gen_kw.get("bank_context"):
+        _pick_chars = len(it.get("full_text") or "")
+        if _pick_chars:
+            _trimmed = bank_assemble.assemble_bank_context(
+                store, it.get("category") or "", source_chars=_pick_chars)
+            if _trimmed:
+                _gen_kw["bank_context"] = _trimmed
     drafts = script_generate.generate_variations(
         it.get("structure") or {}, it.get("full_text") or "", elem_modes, category_lookup, **_gen_kw)
     if not drafts:
@@ -5954,6 +5967,53 @@ def api_mix_scene_lab_apply(job_id: str, body: dict):
     return {"ok": True, "applied": (plan.get("scene_lab") or {}).get("applied", 0), "swapped": _swapped}
 
 
+@app.get("/api/mix/scene_lab/{job_id}/history")
+def api_mix_scene_lab_history(job_id: str):
+    """되돌릴 수 있는 편성 판본 목록(2026-09-07). 화면이 '언제 것'인지 고르게 한다.
+
+    ★조각을 통째로 내려보내지 않는다 — 목록에는 시각과 규모만 싣고, 실제 복원은
+      서버가 한다(같은 판단을 화면에도 적으면 어긋난다, 0순위-B).
+    """
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job or not job.get("edit_plan"):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "편집안 없음"})
+    out = []
+    for i, h in enumerate((job["edit_plan"].get("scene_lab_hist") or [])):
+        if not isinstance(h, dict):
+            continue
+        beats = h.get("beats") or []
+        out.append({"index": i, "at": h.get("at") or "",
+                    "beats": len(beats),
+                    "clips": sum(len((b or {}).get("list") or []) for b in beats)})
+    return {"ok": True, "versions": out}
+
+
+@app.post("/api/mix/scene_lab/{job_id}/restore_version")
+def api_mix_scene_lab_restore_version(job_id: str, body: dict):
+    """보관된 편성 판본으로 되돌린다. body {"index": 0}.
+
+    ★자동저장이 편성을 덮어써 서버에도 원본이 없어지는 사고를 되돌리는 마지막 수단이다
+      (2026-09-07). 되돌리기 전 편성도 이력에 남으므로 왕복이 된다.
+    """
+    store = Store(DB_PATH)
+    job = store.get_mix_job(job_id)
+    if not job or not job.get("edit_plan"):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "편집안 없음"})
+    if job.get("status") in _MIX_ACTIVE_STAGES + ("rendering", "removing_subtitles"):
+        return JSONResponse(status_code=409,
+                            content={"ok": False, "error": "생성·렌더 중에는 되돌릴 수 없어요"})
+    try:
+        idx = int(body.get("index") or 0)
+    except (TypeError, ValueError):
+        idx = 0
+    plan = job["edit_plan"]
+    if not _edit_plan.restore_scene_lab_version(plan, idx):
+        return JSONResponse(status_code=404,
+                            content={"ok": False, "error": "그 판본이 없어요"})
+    store.update_mix_job(job_id, edit_plan=plan)
+    return {"ok": True, "applied": (plan.get("scene_lab") or {}).get("applied", 0)}
+
+
 @app.post("/api/admin/probe/frame_accuracy")
 def api_admin_probe_frame_accuracy_start(request: Request, body: dict = None):
     """관리자: 1단계 정확도 서버 실측 시작(SSH 없이). body {n: 30}. 결과는 GET으로 폴링.
@@ -7039,6 +7099,11 @@ def api_voice_presets(request: Request, lang: str = "KR"):
         # 아무도 못 잡고, 성우가 통째로 사라지는 쪽이 훨씬 나쁘다.
         if p.get("origin") == "tuned":
             continue
+        # ★타입캐스트를 껐으면 그 성우 카드는 아예 안 보인다(2026-09-07 사장님 "일레븐만
+        #   쓴다"). 고를 수 없으면 3단계에서 타입캐스트 오류가 날 길이 없다. 판정은
+        #   typecast_tts 한 곳(0순위-B) — 프론트가 "tc-" 접두사로 추측하지 않는다.
+        if typecast_tts.use_fallback(p.get("model_id")):
+            continue
         gid = p["group_id"]
         g = groups.setdefault(gid, {
             "group_id": gid, "name": p["name"], "one_liner": p["one_liner"],
@@ -7501,6 +7566,30 @@ def api_mix_voice_preview(body: dict):
     return FileResponse(str(out), media_type="audio/mpeg")
 
 
+def _video_gone_reason(job):
+    """완성 영상을 못 주는 이유. 줄 수 있으면 None. **판정은 여기 한 곳뿐**(0순위-B).
+
+    ★왜 만들었나(2026-09-07): 영상 파일을 보관 기간(7일) 뒤 지우기로 하면서
+      (disk_cleanup.clean_final_videos), 지워진 영상을 부르면 종전처럼 맨 404가 났다.
+      고객 눈에는 "영상이 그냥 사라졌다"로 보인다 — 왜 없는지 말해줘야 한다.
+      같은 판정이 네 군데(재생·공유링크·공유페이지·SNS예약)에 각각 적혀 있어서
+      한 곳만 고치면 나머지 셋은 계속 맨 404를 낸다. 그래서 함수로 뽑았다.
+
+    ⚠️`video_path`를 비우지 않는 이유가 여기 있다 — 경로가 남아 있어야
+      "만든 적 없음"과 "만들었는데 지워짐"을 가를 수 있다.
+    """
+    if not job:
+        return "작업을 찾을 수 없어요."
+    if not job.get("video_path"):
+        return "아직 완성된 영상이 없어요."
+    if Path(job["video_path"]).exists():
+        return None
+    # 경로는 있는데 파일이 없다 = 지워졌다. 보관 기간을 넘겼으면 그렇게 말한다.
+    from shopping_shorts.disk_cleanup import FINAL_KEEP_DAYS
+    return ("완성 영상은 %d일만 보관해서 이 영상은 정리됐어요 — "
+            "다시 만들면 새로 받으실 수 있어요." % FINAL_KEEP_DAYS)
+
+
 @app.get("/api/mix/video/{job_id}")
 def api_mix_video(job_id: str, request: Request, dl: int = 0):
     job = Store(DB_PATH).get_mix_job(job_id)
@@ -7509,8 +7598,9 @@ def api_mix_video(job_id: str, request: Request, dl: int = 0):
     if job and job.get("status") in ("rendering", "removing_subtitles"):
         return JSONResponse(status_code=409,
                             content={"ok": False, "error": "영상을 만드는 중이에요 — 끝나면 새 영상이 나옵니다"})
-    if not job or not job.get("video_path") or not Path(job["video_path"]).exists():
-        return JSONResponse(status_code=404, content={"ok": False})
+    _gone = _video_gone_reason(job)
+    if _gone:
+        return JSONResponse(status_code=404, content={"ok": False, "error": _gone})
     if dl:   # ?dl=1 → 첨부 다운로드(Content-Disposition attachment). 없으면 인라인 재생(기존).
         return FileResponse(job["video_path"], media_type="video/mp4",
                             filename=export_bundle.safe_name(job_id) + ".mp4")
@@ -7652,8 +7742,9 @@ def api_mix_video_nocta(job_id: str, request: Request, dl: int = 0):
 def api_share_link(job_id: str, request: Request):
     """완성 영상의 QR용 단축 공유링크+QR SVG 발급(로그인 필요 — 미들웨어 게이트 통과분만 도달)."""
     job = Store(DB_PATH).get_mix_job(job_id)
-    if not job or not job.get("video_path") or not Path(job["video_path"]).exists():
-        return JSONResponse(status_code=404, content={"ok": False, "error": "완성 영상이 없어요"})
+    _gone = _video_gone_reason(job)
+    if _gone:
+        return JSONResponse(status_code=404, content={"ok": False, "error": _gone})
     sid = _share_put(job_id)
     if PUBLIC_BASE_URL:
         base = PUBLIC_BASE_URL.rstrip("/")
@@ -7725,8 +7816,9 @@ def api_share_v(request: Request, sid: str, dl: int = 0):
     if not job_id:
         return JSONResponse(status_code=403, content={"ok": False, "error": "링크가 만료됐어요"})
     job = Store(DB_PATH).get_mix_job(job_id)
-    if not job or not job.get("video_path") or not Path(job["video_path"]).exists():
-        return JSONResponse(status_code=404, content={"ok": False})
+    _gone = _video_gone_reason(job)
+    if _gone:
+        return JSONResponse(status_code=404, content={"ok": False, "error": _gone})
     if dl:
         return FileResponse(job["video_path"], media_type="video/mp4",
                             filename=export_bundle.safe_name(job_id) + ".mp4")
@@ -7866,9 +7958,9 @@ async def api_buffer_schedule(request: Request):
                             content={"ok": False, "error": "job_id와 채널을 골라 주세요."})
 
     job = Store(DB_PATH).get_mix_job(job_id)
-    if not job or not job.get("video_path") or not Path(job["video_path"]).exists():
-        return JSONResponse(status_code=404,
-                            content={"ok": False, "error": "완성된 영상이 없습니다."})
+    _gone = _video_gone_reason(job)
+    if _gone:
+        return JSONResponse(status_code=404, content={"ok": False, "error": _gone})
     # 내 작업인지 확인 — 남의 job_id로 남의 영상을 공개 링크로 뽑아낼 수 있으면 안 된다.
     if int(job.get("customer_id") or 0) != _cid(request):
         return JSONResponse(status_code=403, content={"ok": False, "error": "내 작업이 아닙니다."})
@@ -8197,6 +8289,45 @@ def _grid_phase(round_no):
     return min(0.95, max(0.05, v))
 
 
+def _grid_from_beatframes(job_id, out_dir, grid_round):
+    """비트 프레임(자막 없는 원본 그림)을 썸네일 후보로 복사한다 → [(Path, ts), ...] 또는 None.
+
+    ★왜: 미리보기(preview.mp4)에는 우리 나레이션 자막이 구워져 있어 썸네일 배경으로 못 쓴다
+    (2026-09-07 고객 제보). beatframes/{i}_c{n}_s{si}@{t}_src.jpg는 컷의 **소스 원본**에서
+    뽑은 그림이라 우리 자막이 없다. 렌더 도중 이미 만들어 두므로 추출 비용도 0이다.
+    파일이 없으면(옛 job 등) None을 돌려 호출부가 종전 경로로 폴백한다 — 회귀 0.
+
+    ts는 파일명의 `@초`(소스 안 위치)를 쓴다. 믹스 결과의 시간축은 아니지만 화면은 이 값을
+    라벨로만 쓰므로 순서를 보존하는 것으로 충분하다."""
+    src_dir = _MIX_WORK_DIR / job_id / "beatframes"
+    if not src_dir.is_dir():
+        return None
+    files = sorted(src_dir.glob("*_src.jpg"))
+    if not files:
+        return None
+    # [다른 장면 더 뽑기] — 같은 목록을 라운드만큼 밀어 다른 그림이 앞으로 온다.
+    if grid_round and len(files) > 1:
+        k = (grid_round * GRID_FRAMES_DEFAULT) % len(files)
+        files = files[k:] + files[:k]
+    out_dir.mkdir(parents=True, exist_ok=True)
+    pairs = []
+    for i, f in enumerate(files[:GRID_FRAMES_DEFAULT]):
+        dest = out_dir / f"grid_{i:02d}.jpg"
+        try:
+            shutil.copyfile(f, dest)
+        except OSError:
+            continue
+        ts = 0.0
+        m = re.search(r"@([0-9.]+)_src\.jpg$", f.name)
+        if m:
+            try:
+                ts = float(m.group(1))
+            except ValueError:
+                ts = 0.0
+        pairs.append((dest, ts))
+    return pairs or None
+
+
 @app.post("/api/produce/thumb/frames")
 def api_thumb_frames(body: dict):
     """7단계 썸네일 — 믹스 결과 영상을 등분해 후보 프레임(기본 16장).
@@ -8311,11 +8442,23 @@ def api_thumb_frames(body: dict):
     # 없다 — 재추출이 그냥 덮어쓴다. rmtree를 추출 *전에* 돌리는 것도 문제였다:
     # 추출이 RuntimeError로 실패하면(ffmpeg 일시 오류 등) 폴더는 이미 비었는데 DB의
     # frames는 죽은 URL 10개를 그대로 들고 있어 "실패하면 이전보다 나빠짐"이 됐다.
-    try:
-        pairs = extract_grid_frames(video, out_dir, n=GRID_FRAMES_DEFAULT,
-                                    phase=_grid_phase(grid_round))
-    except RuntimeError as e:
-        return JSONResponse(status_code=502, content={"ok": False, "error": str(e)})
+    # ★미리보기 배경에는 **우리 나레이션 자막이 이미 박혀 있다**(2026-09-07 고객 제보
+    #   "썸네일 단계에 자막이 계속 나온다"). 실측(job 2572d81cff8d, cid 343): 자막제거를
+    #   켜지 않은 회원이라 배경이 preview로 떨어졌고, 뽑힌 grid_01.jpg 하단에 "난리 난
+    #   블라인드라네요?"가 큼직하게 박혀 있었다. run_preview는 clean_fn만 빼고 _burn_captions는
+    #   그대로 태우기 때문이다(mix_pipeline.run_preview 주석은 '원본 자막'만 말해 이 경우가
+    #   빠져 있었다). 썸네일 제목은 위에 새로 얹으므로 배경 자막은 그 자체로 방해다.
+    #   → 비트 프레임(beatframes/*_src.jpg)은 **소스 원본에서 뽑은 그림**이라 우리 자막이 없다.
+    #     이미 만들어져 있으므로 추가 추출·과금 0. 없으면 종전대로 preview에서 뽑는다(회귀 0).
+    pairs = None
+    if bg_kind == "preview":
+        pairs = _grid_from_beatframes(job_id, out_dir, grid_round)
+    if pairs is None:
+        try:
+            pairs = extract_grid_frames(video, out_dir, n=GRID_FRAMES_DEFAULT,
+                                        phase=_grid_phase(grid_round))
+        except RuntimeError as e:
+            return JSONResponse(status_code=502, content={"ok": False, "error": str(e)})
 
     # 추출 *성공 후에만*, 우리 소유 파일(grid_*.jpg)만, 개별로 고아를 정리한다.
     # 부분 실패(extract_frame_at은 실패 시 조용히 None -- 기존 계약)로 새 결과에
@@ -14279,8 +14422,12 @@ def _api_pinterest_collect(request: Request, body: dict = None):
     #   ⚠️덤이므로 실패해도 수집은 그대로 산다(pin_destination이 빈 값을 준다).
     if items and body.get("with_dest", True):
         def _dest(it):
-            d, l = pinterest_crawl.pin_destination(it.get("url") or "")
+            d, l, cap = pinterest_crawl.pin_destination(it.get("url") or "")
             it["pin_dest"], it["pin_link"] = d or "", l or ""
+            # 검색 응답엔 제목·설명이 없다 → 상세에서 건진 것으로만 채운다.
+            # 이미 값이 있으면 덮지 않는다(빈 값으로 지우는 사고 방지).
+            if cap and not (it.get("caption") or "").strip():
+                it["caption"] = cap
             return it
         with ThreadPoolExecutor(max_workers=16) as _ex:
             items = list(_ex.map(_dest, items))
@@ -17962,6 +18109,54 @@ def api_produce_mix_scenehl(job_id: str, body: dict):
         }
     store.update_mix_job(job_id, edit_plan=plan)
     return {"ok": True, "hl": video_assemble.scene_hl_of(hit)}
+
+
+@app.get("/api/tts/quota")
+def api_tts_quota(request: Request):
+    """내 TTS(음성) 키 상태 — 3단계가 **합성 전에** 물어본다(2026-09-07).
+
+    사장님: "나한테 문의가 안오도록 tts등록이 되어있지 않다고 하고
+             결제를 해야한다고 명시를 정확히해줘 잘보이게".
+
+    왜 필요한가(실측): 본인키를 낸 고객은 그 키만 쓴다(keyroute: 공용 키를 안 섞는다).
+    그래서 **키가 마르면 완전히 멈춘다** — 최일환님(cid 291)이 남은 2자로 401 실패했다.
+    반대로 키를 아예 안 낸 고객은 본사 키로 돌아 잘 된다. 성실한 사람이 더 막히는
+    구조라, 마르기 전에 미리 알려주는 자리가 필요하다.
+
+    state 값:
+      none      — 등록 안 함(본사 키로 돌아감 = 포인트 차감). 결제 안내를 띄운다.
+      low       — 본인키 있고 잔액이 문턱 미만. 곧 멈춘다.
+      ok        — 본인키 있고 잔액 넉넉.
+      unknown   — 본인키는 있는데 잔액을 못 읽었다(키에 user_read 권한이 없으면
+                  잔액 조회만 401이 난다 — 실측 7명이 이 경우였고 TTS는 정상이었다).
+                  ★그래서 '못 읽음'을 '죽은 키'로 단정하지 않는다(0순위: 추측 금지).
+      invalid   — 키 자체가 무효(잔액 조회가 invalid_api_key).
+    """
+    cid = _cid(request)
+    store = Store(DB_PATH)
+    LOW = 3000
+    try:
+        keys, own = keyroute.keys_for(store, cid, keyroute.SVC_ELEVENLABS)
+    except Exception as e:  # noqa: BLE001 — 조회 실패로 화면을 막지 않는다
+        return {"ok": True, "state": "unknown", "detail": f"조회 실패: {e}"}
+    if not own or not keys:
+        return {"ok": True, "state": "none", "left": None}
+    import requests as _rq
+    try:
+        r = _rq.get("https://api.elevenlabs.io/v1/user/subscription",
+                    headers={"xi-api-key": keys[0]}, timeout=8)
+        if r.status_code == 200:
+            d = r.json()
+            left = int(d.get("character_limit", 0)) - int(d.get("character_count", 0))
+            return {"ok": True, "state": ("low" if left < LOW else "ok"),
+                    "left": left, "tier": d.get("tier")}
+        body = (r.text or "")
+        if "invalid_api_key" in body:
+            return {"ok": True, "state": "invalid", "left": None}
+        # missing_permissions 등 — 잔액만 못 읽는 것이지 키가 죽은 게 아니다
+        return {"ok": True, "state": "unknown", "left": None}
+    except Exception as e:  # noqa: BLE001
+        return {"ok": True, "state": "unknown", "detail": str(e)[:120]}
 
 
 @app.post("/api/produce/mix/{job_id}/caplines")
