@@ -747,10 +747,15 @@ _CN_CANDIDATES_PROMPT = """이 이미지는 한국어 쇼츠 영상의 한 장�
     붙여 구체적으로 써라(예: '이사갈 때 마루 찍힘 셀프 보수').
   각 후보는 **서로 다른 각도**여야 한다(제품명·브랜드·용도·문제상황·대상).
 
-- ko = 한국어 검색어, zh = 중국어 검색어(축자번역 말고 중국 창작자가 실제 쓰는 표현으로).
+- ko = 한국어, zh = 중국어, en = 영어, ja = 일본어 검색어.
+  ★네 언어 모두 **축자번역이 아니라 그 나라 창작자가 실제로 쓰는 표현**으로 써라.
+    (2026-09-08 사장님 "외국 영상이 필요하니 중국어 영어 일본어까지 배치되게".
+     핀터레스트 실측이 이유를 보여준다: '인덕션 테이블' 0건 / 'induction table' 12건 —
+     한국어로만 물으면 해외 소재는 아예 안 나온다.)
 - 실제로 쓰이지 않는 말을 지어내지 마라 — 사람이 검색창에 칠 법한 말이어야 한다.
 - JSON만: {{"product": "한국어 제품명(짧게)", \
-"candidates": [{{"ko": "한국어 검색어", "zh": "중국어 검색어"}}, ...]}}
+"candidates": [{{"ko": "한국어 검색어", "zh": "중국어 검색어", \
+"en": "영어 검색어", "ja": "일본어 검색어"}}, ...]}}
 소재: {caption}"""
 
 _CN_CANDIDATES_SCHEMA = {
@@ -761,7 +766,10 @@ _CN_CANDIDATES_SCHEMA = {
             "type": "array",
             "items": {
                 "type": "object",
-                "properties": {"ko": {"type": "string"}, "zh": {"type": "string"}},
+                # en·ja 추가(2026-09-08). required에는 넣지 않는다 — 모델이 못 채우면
+                # 그 언어만 비고 ko/zh는 살아야 한다(전부 실패로 만들지 않는다).
+                "properties": {"ko": {"type": "string"}, "zh": {"type": "string"},
+                               "en": {"type": "string"}, "ja": {"type": "string"}},
                 "required": ["ko", "zh"],
             },
             # ★프롬프트가 5~6개를 요구한다 — 4로 두면 스키마가 조용히 잘라내
@@ -818,7 +826,11 @@ def cn_search_candidates(image_bytes, caption, max_retries=3, quota_sleep=8, exc
             for c in (data.get("candidates") or []):
                 ko, zh = (c.get("ko") or "").strip(), (c.get("zh") or "").strip()
                 if zh and zh not in seen and (not ko or ko not in seen):
-                    cands.append({"ko": ko, "zh": zh})
+                    # en·ja도 함께 싣는다(2026-09-08) — 없으면 빈 문자열이라
+                    # 화면·링크 쪽이 종전대로 ko/zh만 쓰는 것과 호환된다.
+                    cands.append({"ko": ko, "zh": zh,
+                                  "en": (c.get("en") or "").strip(),
+                                  "ja": (c.get("ja") or "").strip()})
                     seen.add(zh)          # 같은 응답 안의 중복도 막는다
             product = (data.get("product") or "").strip()
             # ★여기서 채워두면 /api/lens/yt가 부르는 cn_search_keyword_vision이
@@ -872,7 +884,10 @@ _KW_EXPAND_SCHEMA = {
             "type": "array",
             "items": {
                 "type": "object",
-                "properties": {"ko": {"type": "string"}, "zh": {"type": "string"}},
+                # en·ja 추가(2026-09-08). required에는 넣지 않는다 — 모델이 못 채우면
+                # 그 언어만 비고 ko/zh는 살아야 한다(전부 실패로 만들지 않는다).
+                "properties": {"ko": {"type": "string"}, "zh": {"type": "string"},
+                               "en": {"type": "string"}, "ja": {"type": "string"}},
                 "required": ["ko", "zh"],
             },
             "minItems": 1, "maxItems": 8,
@@ -918,7 +933,9 @@ def expand_search_keywords(keyword, n=6, exclude=None, max_retries=3, quota_slee
                 ko, zh = (c.get("ko") or "").strip(), (c.get("zh") or "").strip()
                 if not (ko or zh) or ko in seen or (zh and zh in seen):
                     continue
-                out.append({"ko": ko, "zh": zh})
+                out.append({"ko": ko, "zh": zh,
+                            "en": (c.get("en") or "").strip(),
+                            "ja": (c.get("ja") or "").strip()})
                 seen.update(x for x in (ko, zh) if x)
             # ★사장님이 넣은 말 **그대로**를 반드시 1번 후보로 둔다(2026-08-16).
             #   프롬프트로만 시키면 모델이 확률적으로 안 지킨다 — 실제로 '고독스 뷰파인더'를

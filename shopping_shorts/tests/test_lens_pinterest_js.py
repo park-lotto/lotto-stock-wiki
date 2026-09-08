@@ -32,13 +32,24 @@ def test_핀터레스트가_플랫폼목록에_있고_정렬은_자동생성(mon
             "console.log(JSON.stringify({label: pin&&pin.label,"
             " order:_LENS_ORDER['pinterest'],"
             " n:LENS_PLATFORMS.length,"
-            " last:LENS_PLATFORMS[LENS_PLATFORMS.length-1].k}));")
+            " yt:_LENS_ORDER['youtube'],"
+            " nv:_LENS_ORDER['naverclip'],"
+            " keys:LENS_PLATFORMS.map(p=>p.k)}));")
     r = run_js_proc(body, capture_output=True, text=True, timeout=60)
     assert r.returncode == 0, r.stderr
     out = json.loads(r.stdout)
     assert out["label"] == "📌 핀터레스트"
-    # 배열에서 자동 생성된 정렬 키가 있어야 카드 정렬(??9 폴백)이 안 어긋난다
-    assert out["order"] == out["n"] - 1 and out["last"] == "pinterest"
+    # 배열에서 자동 생성된 정렬 키가 있어야 카드 정렬(??9 폴백)이 안 어긋난다.
+    # ★"마지막이어야 한다"고 못박지 않는다(2026-09-08) — 플랫폼이 늘 때마다 깨지고,
+    #   이 테스트가 지키려는 건 순서 하나가 아니라 **키가 자동 생성되는가**다.
+    assert isinstance(out["order"], int) and 0 <= out["order"] < out["n"]
+    # 렌즈가 유튜브를 2건 정도만 주므로 유튜브보다 뒤에 온다(2026-08-16 사장님 정렬).
+    assert out["order"] > out["yt"]
+    # ★네이버클립도 목록에 있어야 한다(2026-09-08 사장님 "네이버랑 핀터레스트는 안 나오는데?").
+    #   kw_search._CHAIN엔 08-30부터 있었는데 이 목록에만 없어서, 결과를 정상으로
+    #   가져와도 카드 필터(st.on)가 통째로 잘라내 화면에 안 보였다.
+    assert "naverclip" in out["keys"], "네이버클립이 빠지면 결과가 있어도 화면에 안 뜬다"
+    assert isinstance(out["nv"], int)
 
 
 def test_재생은_기존_play_url_경로를_탄다():
