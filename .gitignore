@@ -174,3 +174,6 @@ scripts/gemini_session/
 
 # 로그인 세션(storage_state) — 쿠키가 들어 있으므로 절대 커밋하지 않는다.
 /out/*session*.json
+
+# 틱톡 로그인 쿠키(2026-09-08) — PC 릴레이가 쓴다. 절대 올리지 않는다.
+tiktok_session.json
