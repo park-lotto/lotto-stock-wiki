@@ -7445,6 +7445,22 @@ class Store:
                 (service,)).fetchall()
         return [plain for _kid, plain in self._decrypt_rows(rows, "pool", service)]
 
+    def get_borrowable_keys(self, service):
+        """**빌려 쓸 수 있는** 회원 키만(2026-09-08). 꺼진 키·소진된 키는 뺀다.
+
+        ★get_pooled_keys와 갈라 둔 이유
+          저건 공용 풀 합류용이라 status를 안 본다(합류 뒤 key_vault가 관리한다).
+          빌림은 다르다 — 죽은 키를 빌리면 그 회차가 그냥 실패하고, 우리 카운터는
+          이미 1을 셌으므로 **회원 몫만 축내고 사장님은 못 쓴다**. 그래서 여기서 거른다.
+          ⚠️'empty'는 SerpApi 월 소진 표시다(api_health). 다음 달에 다시 살아난다.
+        """
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT id, key_enc FROM customer_keys WHERE service=? "
+                "AND COALESCE(status,'') NOT IN ('off','empty') ORDER BY id",
+                (service,)).fetchall()
+        return [plain for _kid, plain in self._decrypt_rows(rows, "pool", service)]
+
     def _decrypt_rows(self, rows, customer_id, service):
         """(id, key_enc) 행들을 복호해 [(id, 평문)]으로. 깨진 행은 로그 후 건너뛴다."""
         from shopping_shorts import keycrypt

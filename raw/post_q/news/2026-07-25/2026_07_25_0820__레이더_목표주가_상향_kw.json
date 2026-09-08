@@ -1,0 +1,133 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "AMD",
+      "signal": "bull",
+      "reason": "AI 인프라 확장·헬리오스 출시 및 AI 모멘텀",
+      "ts": "2026-07-24",
+      "quote": "AI 인프라 확장·헬리오스 출시에 AMD 목표주가 상향",
+      "sector": "반도체"
+    },
+    {
+      "name": "셀렉티브 인슈어런스",
+      "signal": "bull",
+      "reason": "가격 규율 주목",
+      "ts": "2026-07-24",
+      "quote": "오펜하이머, 셀렉티브 인슈어런스 목표 주가 상향… ‘가격 규율’ 주목",
+      "sector": "기타"
+    },
+    {
+      "name": "트래블러스",
+      "signal": "bull",
+      "reason": "사업 보험 전망 개선",
+      "ts": "2026-07-24",
+      "quote": "미즈호, 트래블러스 목표주가 상향…사업 보험 전망 개선",
+      "sector": "기타"
+    },
+    {
+      "name": "바나로스 시스템즈",
+      "signal": "bull",
+      "reason": "SaaS 성장",
+      "ts": "2026-07-24",
+      "quote": "캔터 피츠제럴드, SaaS 성장에 바나로스 시스템즈 목표주가 상향",
+      "sector": "IT"
+    },
+    {
+      "name": "록히드 마틴",
+      "signal": "bull",
+      "reason": "매출 모멘텀 강화",
+      "ts": "2026-07-24",
+      "quote": "UBS, 록히드 마틴 목표주가 상향… 매출 모멘텀 강화",
+      "sector": "방산"
+    },
+    {
+      "name": "디파이니엄",
+      "signal": "bull",
+      "reason": "DT120 전망",
+      "ts": "2026-07-24",
+      "quote": "파이퍼 샌들러, DT120 전망에 디파이니엄 목표주가 상향",
+      "sector": "기타"
+    },
+    {
+      "name": "크록스",
+      "signal": "bull",
+      "reason": "강력한 수요 추세",
+      "ts": "2026-07-24",
+      "quote": "니덤, 강력한 수요 추세에 크록스 목표주가 상향 조정",
+      "sector": "소비내수"
+    },
+    {
+      "name": "에드워즈 라이프사이언스",
+      "signal": "bull",
+      "reason": "실적 호조",
+      "ts": "2026-07-24",
+      "quote": "번스타인, 실적 호조에 에드워즈 라이프사이언스 목표주가 상향",
+      "sector": "바이오"
+    },
+    {
+      "name": "MapLight",
+      "signal": "bull",
+      "reason": "임상 데이터 영향",
+      "ts": "2026-07-24",
+      "quote": "Canaccord, MapLight 목표주가 상향... 임상 데이터 영향",
+      "sector": "바이오"
+    },
+    {
+      "name": "테너블",
+      "signal": "bull",
+      "reason": "플랫폼 채택 호조",
+      "ts": "2026-07-24",
+      "quote": "캔터 피츠제럴드, 플랫폼 채택 호조에 테너블 목표주가 상향",
+      "sector": "IT"
+    },
+    {
+      "name": "인텔",
+      "signal": "bull",
+      "reason": "2분기 실적 호조",
+      "ts": "2026-07-24",
+      "quote": "트루이스트, 인텔 목표 주가 상향 조정…2분기 실적 호조·CAPEX 우려 병존",
+      "sector": "반도체"
+    },
+    {
+      "name": "GE 베르노바",
+      "signal": "bull",
+      "reason": "가스터빈 생산 능력 확대 기대",
+      "ts": "2026-07-24",
+      "quote": "미즈호, GE 베르노바 목표주가 상향... 가스터빈 생산 능력 확대 기대",
+      "sector": "전력"
+    },
+    {
+      "name": "RTX",
+      "signal": "bull",
+      "reason": "견조한 실적 및 수주잔고",
+      "ts": "2026-07-24",
+      "quote": "베어드, 견조한 실적 및 수주잔고에 RTX 목표주가 상향 조정",
+      "sector": "방산"
+    },
+    {
+      "name": "맥스리니어",
+      "signal": "bull",
+      "reason": "광학 DSP 수요 증가",
+      "ts": "2026-07-24",
+      "quote": "니덤, 광학 DSP 수요 증가에 맥스리니어 목표주가 상향 조정",
+      "sector": "반도체"
+    },
+    {
+      "name": "Horizon Bancorp",
+      "signal": "bull",
+      "reason": "실적 호조",
+      "ts": "2026-07-24",
+      "quote": "Keefe Bruyette, Horizon Bancorp 실적 호조에 목표주가 상향",
+      "sector": "기타"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "주요 기업들에 대한 증권사들의 목표주가 상향 조정이 다수 발표됨",
+      "ts": "2026-07-24",
+      "quote": "AI 인프라 확장·헬리오스 출시에 AMD 목표주가 상향 등 다수의 목표주가 상향 조정 발표"
+    }
+  ],
+  "quote": "목표주가 상향"
+}

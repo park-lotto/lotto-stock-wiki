@@ -234,7 +234,10 @@ def _app_src():
 
 # 유료 작업 지점 수 — 늘어나면 여기도 같이 올린다.
 # 2026-08-17: 8곳 / 2026-08-23: 10곳(렌즈 cn·kw search가 과금 없이 열려 있던 것을 막음)
-_PAID_SITES = 10
+# 11 → 2026-09-08 /api/lens/product 추가(🎯 제품명 찾기 — SerpApi 역검색).
+#   이 숫자를 올릴 때는 그 경로에 check_and_count·_charge_or_402·환불 두 줄이
+#   **모두** 붙었는지 확인하고 올려야 한다. 숫자만 올리면 공짜 구멍이 그대로 남는다.
+_PAID_SITES = 11
 
 
 def test_every_paid_site_is_wired():

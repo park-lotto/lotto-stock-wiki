@@ -1,6 +1,21 @@
 import copy
 from shopping_shorts import scene_match
 
+import pytest
+
+
+@pytest.fixture(autouse=True)
+def _pass_narrow(monkeypatch):
+    """1차 좁히기(2026-09-08)를 이 파일에서는 통과시킨다.
+
+    ★좁히기를 끄는 게 아니라 **관심사를 가른다**: 이 파일이 검증하는 것은 소재/역할
+      매칭 로직이고, 픽스처의 나레이션은 'n0' 같은 더미라 실제 대본이 아니다. 좁히기
+      자체는 test_scene_narrow.py가 실제 서버 데이터 모양으로 따로 검증한다.
+      (여기서 좁히기까지 함께 태우면 '무엇이 깨졌는지'가 섞여 진단이 어려워진다)
+    """
+    monkeypatch.setattr(scene_match, "narrow", lambda assets, plan, **kw: list(assets))
+
+
 
 def _plan(*narrations):
     return {"structure": "template",

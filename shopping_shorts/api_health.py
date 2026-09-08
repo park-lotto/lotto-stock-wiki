@@ -499,9 +499,14 @@ def aggregates(hours=24):
             pt_start = pt_day_start_utc().isoformat()
             fail_in = ",".join("?" * len(FAIL_OUTCOMES))
 
+            # ★customer_id를 함께 뽑는다(2026-09-08) — 실패율 판정이 "회원이 넣은 키의
+            #   실패"와 "운영 키의 실패"를 갈라 보기 위해서다. 회원 키 실패는 그 회원만
+            #   겪고 그 회원이 키를 바꿔야 풀리므로 운영사고(danger)가 아니다.
+            #   NULL(운영 키)은 빈 문자열로 모아 화면·판정이 한 어휘만 알게 한다.
             out["by_service"] = [dict(r) for r in conn.execute(
-                f"SELECT service, outcome, COUNT(*) n FROM api_events "
-                f"WHERE ts >= ? GROUP BY service, outcome", (since,))]
+                f"SELECT service, outcome, COALESCE(customer_id,'') customer_id, "
+                f"COUNT(*) n FROM api_events "
+                f"WHERE ts >= ? GROUP BY service, outcome, customer_id", (since,))]
 
             out["by_op"] = [dict(r) for r in conn.execute(
                 "SELECT COALESCE(op,'(미상)') op, service, outcome, COUNT(*) n "
@@ -598,20 +603,31 @@ def verdict(snap=None, agg=None):
     problems, warns = [], []
     try:
         # ① 최근 1시간 실패 비율(서비스별) — silent_fallback은 1건이라도 danger
-        fails = {}      # 진짜 실패(사람이 조치해야 하는 것)
+        fails = {}      # 진짜 실패(사람이 조치해야 하는 것) — 운영 키만
+        member_fails = {}  # (서비스, 회원번호) → 실패 건수. 그 회원만의 문제 → warn
         soft = {}       # 기다리면 풀리는 것(분당 한도·일시 서버오류) — 참고용
         oks = {}
         for row in agg.get("by_service", []):
             svc = row.get("service")
+            _is_member = bool(str(row.get("customer_id") or ""))
             if row.get("outcome") == OUT_OK:
-                oks[svc] = oks.get(svc, 0) + row.get("n", 0)
+                if not _is_member:
+                    oks[svc] = oks.get(svc, 0) + row.get("n", 0)
             elif row.get("outcome") in _RETRYABLE_OUTCOMES:
                 # ★분당 한도·일시적 서버 오류는 **사고가 아니다**(2026-09-01 실측).
                 #   아침 크론이 키를 돌려쓰며 정상적으로 부딪히는 것이라, 이걸 실패로
                 #   세면 매일 아침 danger 경보가 울려 진짜 사고가 묻힌다.
-                soft[svc] = soft.get(svc, 0) + row.get("n", 0)
+                if not _is_member:
+                    soft[svc] = soft.get(svc, 0) + row.get("n", 0)
             elif row.get("outcome") in FAIL_OUTCOMES:
-                fails[svc] = fails.get(svc, 0) + row.get("n", 0)
+                # ★회원이 등록한 키의 실패는 실패율에서 뺀다(2026-09-08 실사고).
+                #   그 회원만 겪고 그 회원이 키를 바꿔야 풀린다 → 아래에서 warn으로 알린다.
+                #   운영 키(customer_id 빈 값)만 실패율 = 운영사고의 근거가 된다.
+                if str(row.get("customer_id") or ""):
+                    k = (svc, str(row["customer_id"]))
+                    member_fails[k] = member_fails.get(k, 0) + row.get("n", 0)
+                else:
+                    fails[svc] = fails.get(svc, 0) + row.get("n", 0)
             if row.get("outcome") == OUT_SILENT and row.get("n", 0) > 0:
                 problems.append(f"{svc}: 무음 폴백 {row['n']}건 — 고객이 무음 영상을 받았다")
             # OUT_AUTH는 아래에서 '키 개수' 기준으로 따로 판정한다(호출 건수로 세지 않는다).
@@ -652,6 +668,16 @@ def verdict(snap=None, agg=None):
                 problems.append(f"{svc}: 최근 1시간 실패율 {round(100 * f / tot)}% ({f}/{tot}건)")
             elif tot >= 10 and f / tot > 0.2:
                 warns.append(f"{svc}: 최근 1시간 실패율 {round(100 * f / tot)}%")
+        # ★회원 키 실패 — 사고가 아니라 그 회원에게 알릴 일이다(2026-09-08).
+        #   ⚠️이미 member_dead가 같은 회원을 말했으면 **두 번 말하지 않는다**(실측: 오늘
+        #   사고를 넣으니 "회원 340의 키가 죽음" / "회원 340의 키로 54번 실패" 두 줄이
+        #   나란히 떴다). 죽은 키(401/403)는 그쪽이 이미 정확히 말한다 — 여기는
+        #   타임아웃·빈응답처럼 **죽음으로는 안 잡히는 실패**만 덧붙인다.
+        for (svc, cid), n in sorted(member_fails.items(), key=lambda kv: -kv[1]):
+            if n >= 5 and (svc, cid) not in member_dead:
+                warns.append(
+                    f"{svc}: 회원 {cid}의 키로 {n}번 실패 — 회원이 키·요금제를 "
+                    f"확인해야 한다(운영 키 문제 아님)")
         # 분당 한도가 성공보다 많으면 '몰렸다'는 신호 — 처방은 키 추가가 아니라 **분산**이다.
         # danger로 올리지 않는다: 기다리면 풀리고, 실제로 작업은 나가고 있다.
         for svc, s in soft.items():

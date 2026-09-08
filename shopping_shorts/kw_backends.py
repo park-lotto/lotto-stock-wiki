@@ -71,6 +71,43 @@ _TIKTOK_EXTRACT = """
 """
 
 
+#: 릴레이가 붙어 있을 때 결과를 기다리는 시간(초). 로컬 실측 10~14초라 넉넉히 준다.
+_TIKTOK_RELAY_TIMEOUT = 75
+
+
+def _tiktok_via_relay(keyword, max_results):
+    """사장님 PC 릴레이에게 틱톡 검색을 맡긴다.
+
+    돌려주는 값:
+        list  릴레이가 처리했다(0건이어도 그건 진짜 0건이다)
+        None  릴레이가 없다/실패했다 → 호출부가 종전 경로로 내려간다
+
+    ★None과 []를 갈라서 돌려준다. 둘을 섞으면 "릴레이가 없어서 0건"과 "정말 없어서
+      0건"이 구별되지 않아, 오늘처럼 원인을 찾는 데 하루가 든다.
+    """
+    try:
+        from shopping_shorts import coupang_relay
+        if not coupang_relay.QUEUE.status().get("online"):
+            return None                      # PC가 안 켜져 있다
+        r = coupang_relay.QUEUE.submit(
+            keyword, max_results, _TIKTOK_RELAY_TIMEOUT,
+            kind="tiktok", payload={"keyword": keyword, "limit": max_results})
+    except Exception as e:      # noqa: BLE001 — 릴레이 사고로 검색 전체를 죽이지 않는다
+        print("[tiktok] 릴레이 호출 실패(종전 경로로): %r" % (e,))
+        return None
+    if not r:
+        return None                          # 타임아웃 — PC가 껐거나 느리다
+    out = []
+    for c in (r.get("items") or []):
+        u = (c or {}).get("url")
+        if not u:
+            continue
+        out.append(cn_backends.normalize({
+            "url": u, "title": c.get("title"), "thumbnail": c.get("thumb"),
+        }, "tiktok"))
+    return out[:max_results]
+
+
 def pw_tiktok(keyword, max_results):
     """틱톡 검색을 프록시+세션으로 긁는다. 비용 0.
 
@@ -84,6 +121,19 @@ def pw_tiktok(keyword, max_results):
       · 그런데 **본문이 비어** 있고 로그인 모달이 뜬다 → 세션 문제
     그래서 세션 없이 부르면 브라우저를 띄우지 않고 즉시 0건으로 접는다
     (괜히 띄우면 프록시 바이트만 버린다)."""
+    # ★서버에서는 어떻게 해도 0건이다 — 사장님 PC가 대신 긁는다(2026-09-08 실측).
+    #   4가지 환경을 갈라 재본 결과:
+    #     내 PC + 창 띄움  → 영상 24개 정상
+    #     내 PC + 헤드리스 → 0개  ("서버에서 문제가 발생했습니다")
+    #     서버 + 창(xvfb) + 프록시 → 0개
+    #     서버 + 창(xvfb) + 직결   → 0개
+    #   세션·프록시·IP는 전부 멀쩡했다. 틱톡이 헤드리스와 서버 환경 자체를 걸러낸다.
+    #   쿠팡이 같은 이유로 이미 PC 릴레이를 쓴다 — 그 큐를 그대로 탄다(0순위-B).
+    #   릴레이가 꺼져 있으면 아래 종전 경로로 내려가 0건이 된다(회귀 없음).
+    relayed = _tiktok_via_relay(keyword, max_results)
+    if relayed is not None:
+        return relayed
+
     session = getattr(config, "TIKTOK_SESSION_PATH", "")
     if not session or not os.path.exists(session):
         return []

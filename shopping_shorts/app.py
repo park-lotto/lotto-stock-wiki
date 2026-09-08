@@ -4507,6 +4507,33 @@ def api_points(request: Request):
             "history": history}
 
 
+@app.get("/api/settings/lens_borrow")
+def api_get_lens_borrow(request: Request):
+    """사장님이 회원 SerpApi 키를 얼마나 빌려 썼나 — 스위치 상태 + 이번 달 현황.
+
+    ★관리자 전용. 회원에겐 보일 이유가 없고, 남의 키 사용량이라 더더욱 안 보인다."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    return {"ok": True, **keyroute.borrow_status(Store(DB_PATH))}
+
+
+@app.post("/api/settings/lens_borrow")
+def api_set_lens_borrow(request: Request, body: dict):
+    """빌림 스위치 on/off (2026-09-08 사장님 "고객꺼 나눠서 좀 쓸 수 있게").
+
+    켜면 **사장님 렌즈 검색에 한해** 공용 키가 마른 뒤 회원 키를 쓴다.
+    한 키당 한 달 10회까지만 쓰고 다음 키로 넘어간다(BORROW_PER_KEY).
+    회원 본인 경로는 종전 그대로다 — 회원은 언제나 자기 키만 쓴다.
+    ★기본은 꺼짐. 끄면 그 순간부터 한 회도 안 빌린다."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    store = Store(DB_PATH)
+    store.set_setting(keyroute.BORROW_SETTING, "1" if body.get("on") else "0")
+    return {"ok": True, **keyroute.borrow_status(store)}
+
+
 @app.get("/api/settings/smart_mix")
 def api_get_smart_mix():
     """스마트 믹스(부품은행+반복회피+핑퐁) 마스터 스위치 상태. bank_enabled로 대표."""
@@ -10040,6 +10067,104 @@ async def api_lens_cn_search(request: Request, keyword: str = Form(""),
     return {"ok": True, **res}
 
 
+@app.post("/api/lens/product")
+async def api_lens_product(request: Request, frames: list[UploadFile] = File(...),
+                            source_caption: str = Form(""),
+                            shortcode: str = Form(""), url: str = Form("")):
+    """★유료 — 멈춘 프레임을 구글 렌즈로 역검색해 **정확한 제품명(브랜드+모델)**을 뽑고,
+    그것을 5개 언어 검색어로 만들어 돌려준다 (2026-09-08 사장님 지시).
+
+    왜 필요한가 — 지금 검색어는 **썸네일 그림만 보고** 지은 범주어라("무선 보조배터리")
+    어느 언어로 번역해도 엉뚱한 게 나온다. 사장님: "제품명을 어떻게든 발굴해서 키워드
+    제일 상단에 배치하는 게 중요한데... 그래야 모든 언어로 들어갈 때 성공확률이 쉽다."
+
+    ★새 배관을 만들지 않는다 — `product_identify`(프레임 역검색 → Gemini가 여러 프레임에
+      걸쳐 일관된 제품명 확정)는 2026-07-10부터 있었는데 `/api/coupang/lens` 한 곳에서만
+      쓰였고 결과가 **쿠팡 검색으로만** 흘렀다. 그 함수를 그대로 렌즈 모달에 잇는다.
+
+    반환: {ok, product, cand:{ko,zh,en,ja,ru}}  — 프론트가 검색어 목록 **맨 위**에 꽂는다.
+    """
+    cid = getattr(request.state, "customer_id", 0)
+    # 유료게이트 — SerpApi를 태우므로 /api/lens/search와 같은 기준으로 건다.
+    if _global_over_cap("lens"):
+        return JSONResponse(status_code=429, content={
+            "ok": False, "error_code": "global_limit",
+            "error": "지금 이용이 많아 제품명 찾기가 잠시 막혔어요. 잠시 후 다시 시도해 주세요."})
+    if not check_and_count(cid, "lens"):
+        return JSONResponse(status_code=429, content={
+            "ok": False, "error_code": "daily_limit",
+            "error": "오늘 렌즈 사용 횟수를 다 썼어요. 결제하면 더 쓸 수 있어요."})
+    _denied = _charge_or_402(cid, pricing.OP_LENS, keyroute.SVC_SERPAPI)
+    if _denied:
+        return _denied
+
+    # ★프레임은 **여러 장**을 받는다(2026-09-08 사장님 "대본분석 전에는 썸네일로만
+    #   하는 거 아니야?"). 1장이면 배경 소품을 제품으로 오인한다 — product_identify가
+    #   6장 교차검증을 하는 이유가 그것이다(2026-07-09 실측). 프론트가 영상에서
+    #   여러 지점을 떠서 보내고, 재생 전이면 썸네일 1장뿐이라 그 사실을 알린다.
+    image_urls = []
+    for f in (frames or [])[:6]:            # SerpApi 콜 = 장수. 상한을 둔다.
+        raw = await f.read()
+        if not raw:
+            continue
+        u = await asyncio.to_thread(upload_frame, raw)
+        if not u:
+            work_dir = _FIND_TMP_DIR / "lens"
+            work_dir.mkdir(parents=True, exist_ok=True)
+            name = uuid.uuid4().hex + ".jpg"
+            (work_dir / name).write_bytes(raw)
+            u = f"{PUBLIC_BASE_URL}/api/find/frame/lens/{name}"
+        image_urls.append(u)
+    if not image_urls:
+        return {"ok": False, "product": "", "error": "프레임이 비어 있습니다"}
+
+    # ★대본이 이미 있으면 캡션 대신 그걸 쓴다 — 화면만으로 애매한 제품도 대본에
+    #   모델명이 적혀 있는 경우가 많다(사장님 지적: 대본 분석 전에는 근거가 얄팍하다).
+    caption = (source_caption or "").strip()
+    try:
+        sc = _lens_script_code(url, shortcode)
+        if sc:
+            sd = Store(DB_PATH).get_script(sc) or {}
+            brief = sd.get("source_brief")
+            if isinstance(brief, dict) and (brief.get("product") or "").strip():
+                caption = (brief["product"] + " / " + caption).strip(" /")
+            body = (sd.get("full_text") or "").strip()
+            if body:
+                caption = (caption + " / " + body[:600]).strip(" /")
+    except Exception as e:  # noqa: BLE001 — 보강 실패는 치명적이지 않다(있으면 좋은 것)
+        print(f"[lens-product] 대본 보강 실패(무시): {e!r}", file=sys.stderr)
+
+    try:
+        # 렌즈 역검색 + 제품명 확정 — 둘 다 블로킹이라 스레드로 뺀다(이벤트루프 보호).
+        lines = await asyncio.to_thread(fetch_lens_lines, image_urls)
+        product = await asyncio.to_thread(
+            identify_product_from_lines, lines, "", caption)
+    except Exception as e:      # noqa: BLE001 — 실패해도 렌즈 나머지는 살아야 한다
+        # ★차감과 환불은 **짝**이다 — 크레딧만 되돌리고 포인트를 안 되돌리면
+        #   실패할 때마다 잔액이 조용히 깎인다(test_byok_charge_wiring가 이걸 잡는다).
+        refund_credit(cid, "lens")
+        _refund_points(cid, pricing.OP_LENS, keyroute.SVC_SERPAPI)
+        return {"ok": False, "product": "", "error": f"제품명 찾기 실패: {type(e).__name__}"}
+
+    product = (product or "").strip()
+    if not product:
+        # 못 찾은 것도 결과다 — 조용히 성공한 척하지 않는다.
+        return {"ok": True, "product": "", "cand": None,
+                "note": "화면에서 제품을 특정하지 못했습니다(로고·모델명이 안 보이는 영상)"}
+
+    # 뾰족한 제품명을 5개 언어로 — 이게 있어야 어느 나라에서 찾아도 같은 물건이 나온다.
+    try:
+        tr = await asyncio.to_thread(video_analysis.translate_keyword, product)
+    except Exception:           # noqa: BLE001 — 번역 실패해도 한국어로는 쓸 수 있다
+        tr = {}
+    cand = {"ko": product,
+            "zh": (tr.get("zh") or "").strip(),
+            "en": (tr.get("en") or "").strip(),
+            "ja": (tr.get("ja") or "").strip(),
+            "ru": (tr.get("ru") or "").strip()}
+    return {"ok": True, "product": product, "cand": cand}
+
+
 @app.post("/api/lens/kw/search")
 async def api_lens_kw_search(request: Request, keyword: str = Form(""),
                               max_results: int = Form(8), lang: str = Form("")):
@@ -12699,7 +12824,18 @@ def _lens_api_keys(customer_id):
 
     ★과금 판단(OP_LENS를 깎을지)도 같은 SVC_SERPAPI를 봐야 한다. 키를 고르는 쪽과
       과금하는 쪽이 다른 서비스를 보면 "키 등록했는데 포인트도 깎임"이 난다."""
-    keys, _ = keyroute.keys_for(Store(DB_PATH), customer_id, keyroute.SVC_SERPAPI)
+    store = Store(DB_PATH)
+    keys, is_user = keyroute.keys_for(store, customer_id, keyroute.SVC_SERPAPI)
+    # ★사장님만: 공용 키가 마르면 회원 키를 **한 키당 월 10회까지만** 빌린다
+    #   (2026-09-08 사장님 "고객꺼 나눠서 좀 쓸 수 있게 / 한사람당 10개씩만 쓰고 이동").
+    #   회원 경로는 손대지 않는다 — 회원은 종전대로 자기 키만 쓴다.
+    #   맨 **뒤에** 붙는다: 사장님 키가 살아 있으면 그게 먼저 나가고, 다 마른
+    #   뒤에야 빌린 키가 쓰인다. 빌리는 순간 세므로 한도를 넘지 않는다.
+    if _as_cid(customer_id) == 0:
+        try:
+            keys = list(keys) + keyroute.borrow_serpapi(store)
+        except Exception as e:      # noqa: BLE001 — 빌림 실패로 렌즈를 막지 않는다
+            print(f"[lens] 회원 키 빌리기 실패(사장님 키로만 진행): {e!r}", file=sys.stderr)
     return keys
 
 
@@ -14555,6 +14691,14 @@ _NAVERCLIP_BEAUTY_KWS = (
 #     · 꽃보다클립은 네이버 클립에 **없다**(다른 플랫폼 채널로 보인다).
 #
 #   실측(2026-08-31): 15채널 프로필 조회 1.1초, 영상 915건 수집 4.2초.
+#
+#   ★2026-09-08 사장님이 벤치시트(네이버클립벤치시트_2609.xlsx, 101행)를 주셔서 **100개로 늘렸다**.
+#     시트는 채널명 + naver.me 단축링크만 있어, 단축링크를 서버(한국 IP)에서 따라가
+#     link.naver.com/bridge?url=...clip.naver.com/@<핸들>에서 핸들을 뽑았다(99/101 성공).
+#     못 넣은 2건:
+#       · 리뷰매니아 — 시트의 URL이 'https://naver.me/IMZCc2니'로 **끝에 한글이 섞인 오타**다.
+#       · 마지막 행 — 채널이 아니라 gemini 링크 메모였다.
+#     기존 15개 중 14개가 시트에도 있어 겹치는 건 한 번만 넣었다(신규 85개).
 _NAVERCLIP_BENCH_CHANNELS = (
     ("하루홈", "haruhomee"),
     ("결이고운", "pqk2yxfjtn"),
@@ -14571,6 +14715,91 @@ _NAVERCLIP_BENCH_CHANNELS = (
     ("진리뷰티", "youn-youn"),
     ("아름다름뷰티", "areumdareum_beauty"),
     ("미소의꿀템찾기", "mirrorlifetem"),
+    ("핑크라이프", "lovelypinklife"),
+    ("7080쥬", "0umyk3x9cb"),
+    ("뷰티핫딜", "chararab"),
+    ("네모세상", "nemo_view"),
+    ("언니의발견", "bearnco__"),
+    ("뷰티맘스", "beautymomslab"),
+    ("예쁨톡톡", "x2mdotqi5b"),
+    ("링코홈", "ringko00"),
+    ("잇쭁", "itzyong"),
+    ("비밀서랍", "85lasphzce"),
+    ("살리미9단", "sallimy9"),
+    ("우리가족살리미", "always_shine81"),
+    ("우아한은실언니", "clip_chaser"),
+    ("pickinbloom", "pickinbloom"),
+    ("살림숑", "daondays01"),
+    ("팔로우하고이뻐지기", "prohealthyy"),
+    ("오늘도 잘샀다", "bydh60861"),
+    ("일상꿀팁", "bestitempickme"),
+    ("꿀단지", "intalk_01"),
+    ("다시20살", "salim_mommy"),
+    ("뷰티랩", "beauty_tip7"),
+    ("오늘의홈", "gogi_vibe"),
+    ("뷰티캔두", "beauty_cando"),
+    ("꿀팁꿀템", "diapro2026"),
+    ("젊음의 비결", "hsyj1006"),
+    ("도대체 왜 돈을 막쓰는거예요", "information11111"),
+    ("꿀템큐레이터", "honeytemcurator"),
+    ("봉쥬르", "bonjourrbong"),
+    ("핑크로그", "2blueskyy"),
+    ("동안한스푼", "daily_item"),
+    ("언니의파우더룸", "beauty_diary_me"),
+    ("머스트해브꿀템", "musthavehoneytem"),
+    ("오늘의뷰팁", "tipstip"),
+    ("핫템모아", "itmoyamoya"),
+    ("방구석쇼핑", "ppp025088013"),
+    ("토닥이네", "todakene"),
+    ("라라홈", "lalaahome"),
+    ("정보홈", "byul2unni"),
+    ("조아뷰티", "joajung67"),
+    ("베스트 큐레이터", "bestcurator"),
+    ("꽃언니픽", "c01u2a0ojs"),
+    ("뷰밍아웃", "beauty_chacha"),
+    ("송도댁", "bro_hahami"),
+    ("톡톡뷰티살롱", "beauty_tem_1004"),
+    ("꿀템고고", "ggultemgogo"),
+    ("중년여신", "bc0ubk97jg"),
+    ("annyoungpick", "annyoungpick"),
+    ("꿀템언니", "ggultem_unni"),
+    ("하니앳홈", "haniathome"),
+    ("등대", "tjbbc000"),
+    ("헬스픽노트", "chishat"),
+    ("컨텐츠바이브", "contentvive"),
+    ("뷰티꿀연구소", "seulgobe"),
+    ("꿀팁창고", "onepickok"),
+    ("뷰티천사", "vitamin-mams"),
+    ("데일리픽스타일", "dailypickstyle"),
+    ("아이템천재", "itemgenius"),
+    ("온더홈", "on_the_home_"),
+    ("줌마의 일상레시피", "dohee170802"),
+    ("꿀팁저장소", "doohee170802"),
+    ("밤비아Pick", "bambia729"),
+    ("오핫템", "ohotem"),
+    ("뷰티슥삭", "beautyseuksak"),
+    ("뷰티클립샵", "beautyclipshop"),
+    ("다시꽃피다", "homebay_"),
+    ("트미", "cutepetfood"),
+    ("아이쇼핑", "blcho84"),
+    ("믿고사는곳", "trustplace"),
+    ("세월뚝", "everyhack"),
+    ("trustpicks", "trustpicks"),
+    ("예뻐지는이유", "everyalldayhappy"),
+    ("오늘더예뻐", "prettyyoungthing"),
+    ("진주댁의 픽", "okay_8"),
+    ("올다온의 소소한 발견", "alldaon_8"),
+    ("그냥 좋아서", "yinsence09"),
+    ("요술항아리", "worldjaphwa1"),
+    ("언니들픽", "print_88"),
+    ("하잇", "house_it_tem"),
+    ("살림뷰티 꿀템zip", "sunny987654321"),
+    ("봐밤바", "boabamba"),
+    ("뷰티플리", "cp_soonsak"),
+    ("40peroff", "40peroff"),
+    ("쇼핑클립", "bongjaming"),
+    ("뽀살림", "loralora27"),
+    ("기록하는 점장 노트", "8vc0dd5ei4"),
 )
 
 
@@ -14607,7 +14836,9 @@ def collect_channels(handles=None, per_channel=60, reset=False):
                 handles.append(h)
     if not handles:
         handles = [h for _n, h in _NAVERCLIP_BENCH_CHANNELS]
-    handles = handles[:60]
+    # ★상한 120 — 벤치 목록이 15→100으로 늘었다(2026-09-08). 60이면 **뒤 40채널이
+    #   조용히 잘려** 시트를 넣고도 안 걷힌다. 상한 자체는 남긴다(시드 오염 방어).
+    handles = handles[:120]
 
     try:
         per = max(5, min(int(per_channel or 60), 200))
@@ -16047,7 +16278,7 @@ def _ig_reel_one(code):
     """인스타 **릴 1건**만 직접 읽어 수집과 같은 10키 dict로 돌려준다(없으면 None).
 
     ★왜 프로필 스크레이프를 안 쓰나(2026-08-19 실측):
-      fetch_reels(계정)는 **최신 3건만** 판다(config.RESULTS_PER_CHANNEL=3).
+      fetch_reels(계정)는 최신 config.RESULTS_PER_CHANNEL건만 판다(2026-09-08 기준 12).
       사장님이 고른 영상은 대개 그 3건 밖이라 통째로 못 찾는다
       (실사고: DcF2lTqzeiu 등록 → 프로필엔 최신 3건뿐이라 reels=0).
       게다가 프로필 열기는 비싸고 연달아 부르면 인스타가 0건을 준다(실측: 2회차 0건).
@@ -16106,7 +16337,7 @@ def _enrich_instagram_meta(url, meta, store=None):
         return meta, None
     import sys as _sys
     # ① 그 영상 하나만 직접 읽는다 — 계정명이 필요 없고, 오래된 영상도 잡힌다.
-    #    ★프로필 스크레이프는 최신 3건만 파므로(RESULTS_PER_CHANNEL) 대개 못 찾는다.
+    #    ★프로필 스크레이프는 최신 RESULTS_PER_CHANNEL건만 파므로 대개 못 찾는다.
     hit = None
     try:
         hit = _ig_reel_one(code)
