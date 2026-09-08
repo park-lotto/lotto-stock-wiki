@@ -130,10 +130,115 @@ def handle_detail(job):
         "product": picked}, timeout=180)
 
 
+# 틱톡 로그인 세션(쿠키). 서버의 /home/ubuntu/tiktok_session.json 과 같은 파일이다.
+# ★저장소에 올리지 않는다(.gitignore) — 사장님 계정 쿠키다.
+_TIKTOK_SESSION = os.getenv("TIKTOK_SESSION_PATH") or os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "tiktok_session.json")
+
+
+def handle_tiktok(job):
+    """틱톡 검색 — 이 PC의 **진짜 크롬 창**으로 긁는다 (2026-09-08).
+
+    ★왜 PC인가 (실측으로 갈랐다):
+        내 PC + 창 띄움  → 영상 24개    내 PC + 헤드리스 → 0개
+        서버 + 창(xvfb)  → 0개          서버 + 창 + 직결 → 0개
+      세션·프록시·IP는 전부 멀쩡했고, 틱톡이 헤드리스와 서버 환경을 걸러낸다.
+      쿠팡이 한국 IP 때문에 PC를 쓰는 것과 이유만 다르고 구조는 같다.
+
+    ★headless=False가 필수다 — 창이 잠깐 떴다 사라진다. 그게 정상이다.
+    """
+    payload = job.get("payload") or {}
+    kw = (payload.get("keyword") or job.get("q") or "").strip()
+    limit = int(payload.get("limit") or job.get("limit") or 10)
+    print(f"  [틱톡] {kw} …", flush=True)
+    items, note = [], ""
+    if not os.path.exists(_TIKTOK_SESSION):
+        note = "틱톡 세션 파일이 없습니다(tiktok_session.json)"
+    else:
+        try:
+            from urllib.parse import quote
+            from playwright.sync_api import sync_playwright
+            url = "https://www.tiktok.com/search?q=" + quote(kw)
+            with sync_playwright() as p:
+                # ★창을 화면 **밖**에 띄운다 (2026-09-08 사장님 "왜 자꾸 꺼지나").
+                #   헤드리스로는 틱톡이 막으므로 진짜 창이 필요한데, 검색할 때마다
+                #   화면에 떴다 사라지면 일하는 데 거슬린다. 위치만 옮기면
+                #   틱톡이 보기엔 여전히 보통 크롬이고 사장님 눈에는 안 띈다.
+                b = p.chromium.launch(
+                    headless=False, channel="chrome",
+                    args=["--disable-blink-features=AutomationControlled",
+                          "--window-position=-32000,-32000"])
+                ctx = b.new_context(storage_state=_TIKTOK_SESSION, locale="ko-KR",
+                                    viewport={"width": 1360, "height": 950})
+                pg = ctx.new_page()
+                pg.goto(url, timeout=60000, wait_until="domcontentloaded")
+                pg.wait_for_timeout(9000)
+                # ★사장님 실측: 첫 시도에 "문제가 발생했습니다"가 뜨는 일이 있고
+                #   다시 시도를 누르면 풀린다. 그래서 비어 있으면 두 번 더 눌러 본다.
+                for _ in range(2):
+                    if pg.evaluate(
+                            "document.querySelectorAll('a[href*=\"/video/\"]').length"):
+                        break
+                    try:
+                        pg.get_by_text("다시 시도", exact=True).first.click(timeout=4000)
+                    except Exception:
+                        break
+                    pg.wait_for_timeout(6000)
+                # ★검색 결과 카드에는 **조회수와 링크뿐**이다(2026-09-08 DOM 실측).
+                #   `search_top-item` 안의 표식은 video-views 하나이고, 제목·계정은
+                #   이 화면에 아예 없다(카드를 열어야 나온다 — 그건 비용이 크다).
+                #   그래서 계정은 **주소에서** 뽑는다(@아이디/video/…). 채널을 모으는 게
+                #   목적이라 계정·조회수·주소면 충분하다.
+                items = pg.evaluate("""
+                  (() => {
+                    const acc = u => (String(u||'').match(/tiktok\\.com\\/@([\\w.\\-]+)/)||[])[1]||'';
+                    const cards=[...document.querySelectorAll('[data-e2e="search_top-item"]')];
+                    const pick=(c,k)=>{const e=c.querySelector('[data-e2e="'+k+'"]');
+                                       return e?String(e.innerText||'').trim():'';};
+                    const rows=cards.map(c=>{
+                      const a=c.querySelector('a[href*="/video/"]');
+                      if(!a) return null;
+                      const who=acc(a.href);
+                      return {url:a.href,
+                              account:who,
+                              views:pick(c,'video-views'),
+                              // 제목 자리가 비면 화면에 빈 카드가 뜬다 → 계정을 넣는다
+                              title:(who?'@'+who:'') ,
+                              thumb:(c.querySelector('img')||{}).src||''};
+                    }).filter(Boolean);
+                    // 카드가 안 잡히면(레이아웃이 바뀌면) 링크만이라도 건진다
+                    if(rows.length) return rows;
+                    return [...document.querySelectorAll('a[href*="/video/"]')]
+                      .map(a=>({url:a.href, account:acc(a.href), views:'',
+                                title:(acc(a.href)?'@'+acc(a.href):''),
+                                thumb:(a.querySelector('img')||{}).src||''}));
+                  })()""") or []
+                ctx.close()
+                b.close()
+        except Exception as exc:      # noqa: BLE001 — 릴레이가 죽으면 안 된다
+            note = f"틱톡 검색 실패: {type(exc).__name__}"
+    # 같은 영상이 여러 번 잡힌다(썸네일·제목이 따로 링크) → 주소로 중복 제거
+    seen, out = set(), []
+    for it in items:
+        u = (it or {}).get("url")
+        if not u or u in seen:
+            continue
+        seen.add(u)
+        out.append(it)
+    print(f"  [결과] {len(out)}건 {note}".rstrip(), flush=True)
+    _post("/api/coupang/relay/result", {
+        "token": TOKEN, "id": job.get("id"), "ok": bool(out),
+        "items": out[:limit], "search_url": "", "notice": note})
+
+
 def handle(job):
-    """일감 하나 처리 — 로컬(한국 IP)에서 실제로 쿠팡을 긁는다."""
-    if (job.get("kind") or "search") == "detail":
+    """일감 하나 처리 — 로컬(한국 IP·진짜 크롬)에서 실제로 긁는다."""
+    kind = job.get("kind") or "search"
+    if kind == "detail":
         handle_detail(job)
+        return
+    if kind == "tiktok":
+        handle_tiktok(job)
         return
     q = job.get("q") or ""
     print(f"  [검색] {q} …", flush=True)

@@ -62,9 +62,15 @@ class RelayQueue:
         self.last_seen = 0.0        # 릴레이가 마지막으로 폴링해 온 시각
 
     # ── 서버(웹 요청) 쪽 ──
-    def submit(self, q, limit, timeout):
-        """일감을 넣고 결과를 기다린다. 시간 안에 안 오면 None."""
-        job = _Job(q, limit)
+    def submit(self, q, limit, timeout, kind="search", payload=None):
+        """일감을 넣고 결과를 기다린다. 시간 안에 안 오면 None.
+
+        ★kind를 받는다(2026-09-08) — 틱톡 검색도 같은 큐를 탄다. 서버(AWS)에서는
+          틱톡이 헤드리스도 xvfb도 걸러내 항상 0건이라(4가지 환경 실측), 쿠팡과
+          똑같이 사장님 PC의 진짜 크롬이 대신 긁는다. 큐·인증·롱폴링·타임아웃을
+          그대로 쓴다 — 릴레이 규칙을 두 벌로 적지 않는다(0순위-B).
+        """
+        job = _Job(q, limit, kind=kind, payload=payload)
         with self._lock:
             self._waiting.append(job)
         if job.done.wait(timeout):
