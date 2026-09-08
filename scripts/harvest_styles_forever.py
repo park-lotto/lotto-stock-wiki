@@ -139,6 +139,38 @@ def score_sul(titles, name=""):
     return sum(1 for t in titles if cz.categorize(name, t) in ("제품정체형", "오용형"))
 
 
+def score_home(titles, name=""):
+    """홈템 축(2026-09-08 사장님 "썰 다음 홈템 잘되는 체널들도 해야하고").
+
+    판정은 `categorize` 한 곳에서만 빌린다(0순위-B) — 여기에 홈템 어휘를 다시 적으면
+    채널은 걸러지는데 랭킹은 안 걸러지는 어긋남이 난다(2026-08-21 '만들기' 사고와 동형).
+    ★썰쇼핑을 홈템으로 세지 않는다. `categorize`는 두 축을 이미 갈라 주므로
+      제품정체형·오용형으로 판정된 편은 여기서 0점이다 — 축이 서로를 잡아먹지 않는다.
+    """
+    return sum(1 for t in titles if cz.categorize(name, t) == "홈템")
+
+
+def harvest_home(titles):
+    """홈템 채널 제목에서 다음 검색어를 만든다 — [홈템어] × [효과어] 조합.
+
+    ★썰쇼핑(harvest_sul)은 [권위자]도 [부정어] [귀결어]라는 **문형**을 쓰지만,
+      홈템은 문형이 아니라 **소재**가 축이다("주방 정리 이렇게 하세요"). 그래서
+      제품어에 효과어를 붙여 실제로 쓰이는 검색어 모양을 만든다.
+    어휘는 categorize.KEYWORDS['홈템']에서 빌린다(0순위-B).
+    """
+    out = collections.Counter()
+    eff = ["정리", "수납", "청소", "꿀템", "추천", "인테리어", "살림템", "필수템"]
+    kw = [w for w in cz.KEYWORDS.get("홈템", []) if len(w) >= 2]
+    for t in titles:
+        lt = t.lower()
+        a = [x for x in kw if x in lt][:2]
+        b = [x for x in eff if x in lt][:2]
+        for c in itertools.product(a, b):
+            if c[0] != c[1]:
+                out["%s %s" % c] += 1
+    return out
+
+
 def score_celeb(titles, name=""):
     return sum(1 for t in titles if _h(t, ys._CELEB) and _h(t, ys._PRODUCT))
 
@@ -192,6 +224,13 @@ STYLES = {
     #   실측 잔존: 549 → 68채널(구독 중앙값 10,450) — 다른 축과 같은 급이 된다.
     "신기템": {"score": ys.score_novel, "min": 5, "min_subs": 1000,
              "harvest": lambda ts: ys.harvest_novel(ts)},
+    # 2026-09-08 신설 — 사장님 "썰 다음 홈템 잘되는 체널들도 해야하고".
+    # ★문턱을 신기템과 같은 급으로 둔다(min 5 · 구독 1,000+). 홈템은 신기템처럼
+    #   **판정이 쉬운 축**이라 다른 축 눈높이(min 2~3)로 두면 우연히 걸린 잡채널이
+    #   통째로 들어온다 — 신기템이 하룻밤 549채널로 오염됐던 그 함정이다.
+    #   실측 근거: 라이브 8,917건에서 홈템 3편 이상인 채널이 이미 303개다.
+    "홈템": {"score": score_home, "min": 5, "min_subs": 1000,
+            "harvest": lambda ts: harvest_home(ts)},
 }
 BLOCK = ["뉴스", "news", "kbs", "mbc", "sbs", "jtbc", "ytn", "연합", "정치", "국회",
          "설교", "복음", "사주", "asmr", "게임", "롤", "피파", "먹튀", "토토"]
@@ -255,6 +294,20 @@ _SEEDS = {
         # 원본 두 채널 — 이 장르를 정의한 곳이라 어휘 수확 대상으로 계속 둔다.
         "UCBFu04us6bv9OFcwrJDXdMg": {"title": "살림킹왕짱", "subs": 14600, "score": 4},
         "UCnD6bgF50o87a92-iK1dI8Q": {"title": "살림도사", "subs": 14500, "score": 4},
+    },
+    # 홈템 씨앗(2026-09-08) — 라이브 8,917건에서 **실제로 홈템이 잘 되는 채널**을 뽑았다.
+    # 고른 기준: 홈템 3편 이상 + (편수 × 조회수중앙값의 제곱근) 상위. 추측이 아니라 실적이다.
+    "홈템": {
+        "UCbnKLFEgzZhZh50XdsBiiBg": {"title": "고수의살림", "subs": 244000, "score": 13},
+        "UCwFNiYnTtrYuwO7YRWomatw": {"title": "살림토끼", "subs": 127000, "score": 9},
+        "UCylAPY4i5NpwkbfD4bBYeeA": {"title": "살림구조대", "subs": 127000, "score": 8},
+        "UCuTrbV_N8Rc0SYlSyVIrguA": {"title": "소온풀", "subs": 88300, "score": 14},
+        "UCJGzyTaZouEo5-DtsusMjwg": {"title": "홈스타일러스", "subs": 56500, "score": 11},
+        "UCTnZvrXO2BZJKGKV8eZKyVw": {"title": "홈그래피", "subs": 27400, "score": 14},
+        "UCOnSoSFUyeakdOOzAP0nnyw": {"title": "똑디템", "subs": 26900, "score": 17},
+        "UCd2eMn4URep6NNO-H_MUTLg": {"title": "살림친구", "subs": 18600, "score": 11},
+        "UCdgUlNruZABfk06xFW8DJlQ": {"title": "리빙테리어", "subs": 4250, "score": 23},
+        "UCgCcj2X-osfrMA4posJL5XQ": {"title": "살림기록관", "subs": 2710, "score": 20},
     },
 }
 for _stl, _seed in _SEEDS.items():
