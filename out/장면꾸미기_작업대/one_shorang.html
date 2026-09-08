@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>숏랑 카드 재현 · 하나만</title>
+<style>
+/* ───────────────────────────────────────────────────────────
+   사장님이 준 카드 1장(숏랑 · #4 "이케아도 놀란 / 일본 천재 발명품") 재현.
+   ⚠️ 숏랑은 channel_layouts.json 실측 19채널에 **없다** — 색·크기는
+      사장님이 준 이미지를 눈으로 읽은 값이다(실측 아님, 추정).
+      실제 프레임을 받으면 그 값으로 바꾼다.
+   비율은 라이브와 같은 9:16. 1080x1920 기준 px를 %로 환산.
+   ─────────────────────────────────────────────────────────── */
+:root{
+  --bg:#0d1117; --line:#232d3a; --sub:#8b98a8; --txt:#e6edf3; --accent:#3fe0a8;
+  /* ▼ 이 카드의 값 (여기 한 곳에서만 정한다) */
+  --barH:  6.0%;      /* 상단 검은 띠 */
+  --bar:   #000000;
+  --barTx: #ffffff;
+  --t1Top: 7.5%;      /* 제목 1줄 시작 */
+  --t2Bg:  #1a4fd6;   /* 제목 2줄 파란 배경 박스 */
+  --subTop:20.5%;     /* 흰 한 줄 박스 */
+  --subH:  5.2%;
+  --vidTop:26.5%;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--txt);
+     font:14px/1.5 "Pretendard","맑은 고딕",system-ui,sans-serif;
+     display:flex;gap:26px;padding:22px;align-items:flex-start;flex-wrap:wrap}
+
+.col{display:flex;flex-direction:column;gap:8px}
+.col h3{margin:0;font-size:13px;font-weight:800;color:var(--sub)}
+
+/* 원본 이미지와 나란히 보기 위해 같은 폭 */
+.card{width:300px;background:#0b0f14;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.stage{width:100%;aspect-ratio:9/16;position:relative;background:#000;overflow:hidden}
+
+/* ── 상단 띠: 가운데 채널명 ── */
+.bar{position:absolute;left:0;right:0;top:0;height:var(--barH);background:var(--bar);
+     display:flex;align-items:center;justify-content:center}
+.bar .ch{color:var(--barTx);font-size:9px;font-weight:800;letter-spacing:.5px}
+
+/* ── 큰 제목 2줄 ── */
+.ttl{position:absolute;left:3.5%;right:3.5%;top:var(--t1Top);text-align:center}
+.ttl .l1{font-size:27px;font-weight:900;color:#fff;line-height:1.14;letter-spacing:-1.2px;
+         text-shadow:0 2px 5px rgba(0,0,0,.55)}
+.ttl .l2{display:inline-block;margin-top:3px;font-size:27px;font-weight:900;color:#fff;
+         line-height:1.14;letter-spacing:-1.2px;background:var(--t2Bg);
+         padding:1px 7px;border-radius:3px}
+
+/* ── 흰 한 줄 박스 ── */
+.sub{position:absolute;left:4.5%;right:4.5%;top:var(--subTop);height:var(--subH);
+     background:#fff;border-radius:3px;display:flex;align-items:center;justify-content:center}
+.sub span{color:#111;font-size:11.5px;font-weight:800;letter-spacing:-.4px;
+     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 6px}
+
+/* ── 영상 ── */
+.vid{position:absolute;left:0;right:0;top:var(--vidTop);bottom:0;
+     background:linear-gradient(168deg,#3a4450,#1a2029);
+     display:flex;align-items:center;justify-content:center}
+.play{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.30);
+     border:2px solid rgba(255,255,255,.85);display:flex;align-items:center;justify-content:center}
+.play::after{content:"";border-left:13px solid #fff;border-top:8px solid transparent;
+     border-bottom:8px solid transparent;margin-left:4px}
+
+/* ── 카드 아래 정보줄(원본 카드처럼) ── */
+.meta{padding:8px 9px;font-size:10.5px;color:var(--sub);line-height:1.7}
+.meta .r{display:flex;justify-content:space-between}
+.meta .r b{color:var(--txt);font-weight:700}
+.meta .hd{color:#6f7d8d;font-size:9.5px;margin-bottom:3px}
+.meta .t{color:var(--txt);font-size:11px;font-weight:600;margin:2px 0 6px;line-height:1.35}
+.btns{display:flex;gap:5px;padding:0 9px 9px}
+.btns button{flex:1;padding:6px 0;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer;
+     background:#0f2a22;border:1px solid #1f5a49;color:#54d6ab}
+
+/* 조절 패널 */
+.panel{width:300px;background:#141b24;border:1px solid var(--line);border-radius:10px;padding:13px}
+.panel h4{margin:0 0 10px;font-size:13px;font-weight:800}
+.fld{margin:9px 0}
+.fld label{display:block;font-size:11.5px;color:var(--sub);margin-bottom:4px;font-weight:600}
+.fld input[type=text]{width:100%;background:#0f151d;border:1px solid var(--line);color:var(--txt);
+     border-radius:7px;padding:7px 9px;font-size:12.5px;font-family:inherit}
+.fline{display:flex;gap:6px}
+.fline input[type=text]{flex:1;min-width:0}
+.sz{display:flex;background:#0f151d;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.sz button{width:26px;border:none;background:transparent;color:var(--txt);font-size:15px;
+     cursor:pointer;font-weight:700}
+.sz button:hover{background:#1c2632;color:var(--accent)}
+.sz .v{min-width:26px;display:flex;align-items:center;justify-content:center;font-size:11px;
+     color:var(--sub);font-weight:700;border-left:1px solid var(--line);border-right:1px solid var(--line)}
+.crow{display:flex;gap:6px;align-items:center;margin:7px 0;font-size:11.5px;color:var(--sub)}
+.crow input[type=color]{width:34px;height:26px;border:1px solid var(--line);border-radius:5px;
+     background:none;cursor:pointer;padding:0}
+.crow .nm{flex:1}
+.note{font-size:10.5px;color:#5d6b7c;line-height:1.55;margin-top:11px;
+      border-top:1px solid var(--line);padding-top:9px}
+</style>
+</head>
+<body>
+
+<div class="col">
+  <h3>재현 — 숏랑 #4</h3>
+  <div class="card">
+    <div class="stage" id="stage">
+      <div class="bar"><span class="ch" id="oCh">숏랑</span></div>
+      <div class="ttl">
+        <div class="l1" id="oL1">이케아도 놀란</div>
+        <div><span class="l2" id="oL2">일본 천재 발명품</span></div>
+      </div>
+      <div class="sub"><span id="oSub">이케아도 놀란 일본 천재 발명품</span></div>
+      <div class="vid"><div class="play"></div></div>
+    </div>
+    <div class="meta">
+      <div class="hd">#4 · 제품정체형 · 10일 전</div>
+      <div class="t" id="mTitle">이케아도 놀란 일본 천재 발명품</div>
+      <div class="r"><span>숏랑 —</span><b>팔로워 43,100</b></div>
+      <div class="r"><span>조회수</span><b>15,993 <span style="color:#f87171">신규</span></b></div>
+      <div class="r"><span>댓글</span><b>0</b></div>
+      <div class="r"><span>시간당조회수</span><b>70.8</b></div>
+      <div class="r"><span>반응률</span><b>0%</b></div>
+      <div class="r"><span>구독자당조회수</span><b>37%</b></div>
+    </div>
+    <div class="btns"><button>▶ 영상보기</button><button>🔖 즐겨찾기</button></div>
+  </div>
+</div>
+
+<div class="panel">
+  <h4>✍ 이 카드 값</h4>
+
+  <div class="fld">
+    <label>채널명 (띠 가운데)</label>
+    <div class="fline">
+      <input type="text" id="iCh" value="숏랑" oninput="draw()">
+      <div class="sz"><button onclick="sz('ch',-1)">－</button><span class="v" id="vCh">9</span><button onclick="sz('ch',1)">＋</button></div>
+    </div>
+  </div>
+
+  <div class="fld">
+    <label>제목 1줄 (흰 글씨)</label>
+    <div class="fline">
+      <input type="text" id="iL1" value="이케아도 놀란" oninput="draw()">
+      <div class="sz"><button onclick="sz('l1',-1)">－</button><span class="v" id="vL1">27</span><button onclick="sz('l1',1)">＋</button></div>
+    </div>
+  </div>
+
+  <div class="fld">
+    <label>제목 2줄 (파란 박스)</label>
+    <div class="fline">
+      <input type="text" id="iL2" value="일본 천재 발명품" oninput="draw()">
+      <div class="sz"><button onclick="sz('l2',-1)">－</button><span class="v" id="vL2">27</span><button onclick="sz('l2',1)">＋</button></div>
+    </div>
+  </div>
+
+  <div class="fld">
+    <label>흰 한 줄 박스</label>
+    <div class="fline">
+      <input type="text" id="iSub" value="이케아도 놀란 일본 천재 발명품" oninput="draw()">
+      <div class="sz"><button onclick="sz('sb',-1)">－</button><span class="v" id="vSub">11.5</span><button onclick="sz('sb',1)">＋</button></div>
+    </div>
+  </div>
+
+  <div class="crow"><span class="nm">상단 띠</span><input type="color" id="cBar" value="#000000" oninput="draw()"></div>
+  <div class="crow"><span class="nm">2줄 배경(파랑)</span><input type="color" id="cT2" value="#1a4fd6" oninput="draw()"></div>
+  <div class="crow"><span class="nm">제목 글자</span><input type="color" id="cTx" value="#ffffff" oninput="draw()"></div>
+  <div class="crow"><span class="nm">흰 박스 글자</span><input type="color" id="cSub" value="#111111" oninput="draw()"></div>
+
+  <div class="note">
+    ⚠️ 숏랑은 실측 19채널에 <b>없습니다</b> — 색·크기는 사장님이 준 이미지를 눈으로 읽은
+    값이라 <b>추정</b>입니다. 실제 영상 프레임을 받으면 그 값으로 바꿉니다.
+  </div>
+</div>
+
+<script>
+const S={ch:9,l1:27,l2:27,sb:11.5};
+function sz(k,d){ S[k]=Math.max(5,Math.round((S[k]+d*(k==='sb'?.5:1))*10)/10); draw(); }
+function draw(){
+  const g=id=>document.getElementById(id);
+  g('oCh').textContent  = g('iCh').value;
+  g('oL1').textContent  = g('iL1').value;
+  g('oL2').textContent  = g('iL2').value;
+  g('oSub').textContent = g('iSub').value;
+  g('mTitle').textContent = g('iSub').value;
+  g('oCh').style.fontSize  = S.ch+'px';
+  g('oL1').style.fontSize  = S.l1+'px';
+  g('oL2').style.fontSize  = S.l2+'px';
+  g('oSub').style.fontSize = S.sb+'px';
+  g('vCh').textContent=S.ch; g('vL1').textContent=S.l1;
+  g('vL2').textContent=S.l2; g('vSub').textContent=S.sb;
+  document.querySelector('.bar').style.background = g('cBar').value;
+  g('oL2').style.background = g('cT2').value;
+  g('oL1').style.color = g('cTx').value;
+  g('oL2').style.color = g('cTx').value;
+  g('oSub').style.color = g('cSub').value;
+}
+draw();
+</script>
+</body>
+</html>

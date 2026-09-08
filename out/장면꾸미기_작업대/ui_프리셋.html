@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>장면꾸미기 · 프리셋 UI 시안 v2</title>
+<style>
+/* ─────────────────────────────────────────────────────────────
+   장면꾸미기 새 UI 시안 v2 (2026-09-09)
+   ★크기는 라이브 실측 그대로: --pvw=min(460px,64vh) (produce.html:777)
+     9:16 고정(2138) / 우측 flex:1;min-width:300px(2232)
+   ★v2에서 바뀐 것 (사장님 요청 3건)
+     1) 문구칸 오른쪽에 글자 크기 ＋－ 버튼 (그 줄만 바로 조절)
+     2) '완성 색' 견본 삭제 — 색은 프리셋이 정한다. 프리셋을 많이 만든다
+     3) 프리셋 19종 = 실제 채널 프레임 실측값(channel_layouts.json, 2026-09-03 서버 다운로드)
+        훅/본문 두 벌 spec을 그대로 옮겼다. 추정 아님.
+   ───────────────────────────────────────────────────────────── */
+:root{
+  --bg:#0d1117; --panel:#141b24; --inset:#0f151d; --line:#232d3a;
+  --txt:#e6edf3; --sub:#8b98a8; --accent:#3fe0a8; --accent2:#7dd3fc;
+  --pvw:min(460px,64vh);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--txt);
+     font:14px/1.5 "Pretendard","맑은 고딕",system-ui,sans-serif;
+     height:100vh;overflow:hidden}
+
+.head{padding:13px 20px 9px;border-bottom:1px solid var(--line)}
+.head h1{margin:0;font-size:17px;font-weight:800}
+.head .sub{margin-top:3px;font-size:12.5px;color:var(--sub)}
+.head .sub b{color:var(--accent)}
+
+.wrap{display:flex;gap:18px;padding:14px 20px;height:calc(100vh - 58px);align-items:flex-start}
+
+/* ══ 좌: 프리셋 (색 고르기 없음 — 프리셋이 색을 정한다) ══ */
+.tplcol{flex:0 0 258px;display:flex;flex-direction:column;height:100%}
+.colttl{font-size:13px;font-weight:800;margin-bottom:4px;display:flex;align-items:baseline;gap:7px}
+.colttl .cnt{font-weight:500;font-size:11.5px;color:var(--sub)}
+.srch{margin:6px 0 9px}
+.srch input{width:100%;background:var(--inset);border:1px solid var(--line);color:var(--txt);
+     border-radius:8px;padding:7px 10px;font-size:12.5px;font-family:inherit}
+.srch input:focus{outline:none;border-color:var(--accent2)}
+
+.tplgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px;overflow-y:auto;
+         padding-right:5px;flex:1;align-content:start}
+.tplgrid::-webkit-scrollbar{width:6px}
+.tplgrid::-webkit-scrollbar-thumb{background:#2b3644;border-radius:3px}
+
+.tpl{background:var(--panel);border:2px solid var(--line);border-radius:10px;
+     padding:5px;cursor:pointer;transition:border-color .12s,transform .1s;position:relative}
+.tpl:hover{border-color:#3c4b5e;transform:translateY(-1px)}
+.tpl.on{border-color:var(--accent)}
+.tpl.on::after{content:"✓";position:absolute;top:3px;right:5px;width:16px;height:16px;
+     background:var(--accent);color:#07231a;border-radius:50%;font-size:10px;font-weight:900;
+     display:flex;align-items:center;justify-content:center;z-index:3}
+
+/* 두 장 겹침 = 한 세트(훅+본문) */
+.duo{position:relative;aspect-ratio:9/16;border-radius:6px;overflow:hidden;background:#000}
+.duo .back{position:absolute;inset:0 0 0 24%;border-radius:5px;overflow:hidden;opacity:.5}
+.duo .front{position:absolute;inset:0 20% 0 0;border-radius:5px;overflow:hidden;
+     box-shadow:3px 0 8px rgba(0,0,0,.75)}
+.tplname{margin-top:4px;font-size:10.5px;font-weight:700;text-align:center;color:var(--sub);
+     white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tplno{font-size:9.5px;color:#5d6b7c;font-weight:800}
+.tpl.on .tplname{color:var(--accent)}
+
+/* 카드 미니 그림 — 훅: 띠+밴드+2줄 / 본문: 띠+흰블록 */
+.mini{width:100%;height:100%;position:relative;background:#111;overflow:hidden}
+.mini .bar{position:absolute;left:0;right:0;top:0}
+.mini .band{position:absolute;left:0;right:0}
+.mini .ttl{position:absolute;left:5%;right:5%;font-size:6.4px;font-weight:900;
+     text-align:center;line-height:1.24;letter-spacing:-.35px}
+.mini .blk{position:absolute;left:0;right:0;background:#fff}
+.mini .vid{position:absolute;left:0;right:0;bottom:0;
+     background:linear-gradient(160deg,#2f3945,#161d26)}
+
+.mkbtn{grid-column:1/-1;border:1.5px dashed #33404f;background:transparent;color:var(--sub);
+       border-radius:10px;padding:12px;cursor:pointer;font-size:12.5px;font-weight:700}
+.mkbtn:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ══ 가운데: 미리보기 ══ */
+.pvcol{flex:0 0 auto;width:var(--pvw);display:flex;flex-direction:column}
+.stage{width:100%;aspect-ratio:9/16;background:#000;border-radius:12px;
+       overflow:hidden;position:relative;border:1px solid var(--line)}
+.duotab{display:flex;gap:6px;margin-bottom:7px}
+.duotab button{flex:1;padding:8px;border-radius:8px;border:1px solid var(--line);
+       background:var(--inset);color:var(--sub);font-size:12.5px;font-weight:700;cursor:pointer}
+.duotab button.on{background:rgba(63,224,168,.13);border-color:var(--accent);color:var(--accent)}
+.pvhint{font-size:11.5px;color:var(--sub);margin-bottom:5px}
+.pvhint b{color:var(--accent2)}
+.scenebar{display:flex;align-items:center;gap:8px;margin-top:8px;
+          background:var(--inset);border:1px solid var(--line);border-radius:9px;padding:6px 10px}
+.scenebar button{background:transparent;border:1px solid var(--line);color:var(--txt);
+       width:29px;height:29px;border-radius:7px;cursor:pointer;font-size:14px}
+.scenebar button:hover{border-color:var(--accent);color:var(--accent)}
+.scenebar .now{flex:1;text-align:center;font-size:12.5px;color:var(--sub)}
+.scenebar .now b{color:var(--txt)}
+
+/* 미리보기 레이어 — 프리셋 spec을 % 로 환산해 그린다(1080x1920 → %) */
+.pv-bar{position:absolute;left:0;right:0;top:0}
+.pv-band{position:absolute;left:0;right:0}
+.pv-ttl{position:absolute;left:5%;right:5%;text-align:center;font-weight:900;
+        line-height:1.24;letter-spacing:-1px;cursor:move}
+.pv-blk{position:absolute;left:0;right:0;background:#fff;display:flex;flex-direction:column;
+        justify-content:center;padding:0 5%}
+.pv-vid{position:absolute;left:0;right:0;bottom:0;
+        background:linear-gradient(165deg,#2b3542,#141a22);
+        display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;
+        color:#4d5a6a;font-size:12.5px}
+.pv-cap{position:absolute;left:6%;right:6%;bottom:9%;text-align:center;font-weight:800;
+        font-size:16px;line-height:1.3;cursor:move;color:#fff;
+        text-shadow:0 0 5px #000,2px 2px 4px #000}
+
+/* ══ 우: 편집 ══ */
+.edcol{flex:1;min-width:300px;display:flex;flex-direction:column;height:100%}
+.tabs{display:flex;gap:7px;margin-bottom:11px}
+.tabs button{padding:9px 20px;border-radius:9px;border:1px solid var(--line);
+       background:var(--inset);color:var(--sub);font-size:13px;font-weight:700;cursor:pointer}
+.tabs button.on{background:rgba(63,224,168,.13);border-color:var(--accent);color:var(--accent)}
+.tabs .spacer{flex:1}
+.tabs .reset{padding:9px 14px;border-radius:9px;border:1px solid var(--line);
+       background:transparent;color:var(--sub);font-size:12px;cursor:pointer}
+
+.pane{flex:1;overflow-y:auto;padding-right:6px}
+.pane::-webkit-scrollbar{width:6px}
+.pane::-webkit-scrollbar-thumb{background:#2b3644;border-radius:3px}
+
+.card{background:var(--panel);border:1px solid var(--line);border-radius:11px;
+      padding:13px 14px;margin-bottom:11px}
+.card h4{margin:0 0 4px;font-size:13px;font-weight:800;display:flex;align-items:center;gap:6px}
+.card .why{font-size:11.5px;color:var(--sub);margin-bottom:10px;line-height:1.45}
+
+label.fl{display:block;font-size:12px;color:var(--sub);margin:11px 0 5px;font-weight:600}
+label.fl:first-of-type{margin-top:0}
+label.fl .cnt{float:right;font-weight:400;font-size:11px}
+input[type=text],textarea{width:100%;background:var(--inset);border:1px solid var(--line);
+      color:var(--txt);border-radius:8px;padding:9px 11px;font-size:13.5px;font-family:inherit;
+      resize:vertical}
+input[type=text]:focus,textarea:focus{outline:none;border-color:var(--accent2)}
+
+/* ★ 문구칸 + 글자크기 ＋－ (사장님 요청 1) — 그 줄만 바로 키우고 줄인다 */
+.fline{display:flex;gap:7px;align-items:stretch}
+.fline input[type=text]{flex:1;min-width:0}
+.sz{display:flex;align-items:center;gap:0;background:var(--inset);border:1px solid var(--line);
+    border-radius:8px;overflow:hidden;flex:0 0 auto}
+.sz button{width:31px;border:none;background:transparent;color:var(--txt);
+    font-size:17px;font-weight:700;cursor:pointer;line-height:1;padding:0}
+.sz button:hover{background:#1c2632;color:var(--accent)}
+.sz .v{min-width:30px;text-align:center;font-size:12px;color:var(--sub);font-weight:700;
+    border-left:1px solid var(--line);border-right:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center}
+
+.chips{display:flex;gap:7px;flex-wrap:wrap}
+.chip{padding:7px 13px;border-radius:20px;border:1px solid var(--line);background:var(--inset);
+      color:var(--sub);font-size:12.5px;font-weight:700;cursor:pointer}
+.chip:hover{border-color:#3c4b5e}
+.chip.on{background:rgba(63,224,168,.13);border-color:var(--accent);color:var(--accent)}
+
+details.more{margin-top:11px;border-top:1px solid var(--line);padding-top:10px}
+details.more summary{cursor:pointer;font-size:12.5px;color:var(--sub);font-weight:700;
+      list-style:none;display:flex;align-items:center;gap:6px;padding:3px 0}
+details.more summary::-webkit-details-marker{display:none}
+details.more summary::before{content:"▸";font-size:10px;transition:transform .12s}
+details.more[open] summary::before{transform:rotate(90deg)}
+.row{display:flex;align-items:center;gap:10px;margin:10px 0}
+.row .nm{flex:0 0 78px;font-size:12px;color:var(--sub)}
+.row input[type=range]{flex:1;accent-color:var(--accent)}
+.row .v{flex:0 0 46px;text-align:right;font-size:11.5px;color:var(--sub)}
+
+.fxrow{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px}
+.fxrow button{padding:11px 6px;border-radius:9px;border:1px solid var(--line);
+      background:var(--inset);color:var(--sub);font-size:12px;font-weight:700;cursor:pointer}
+.fxrow button.on{background:rgba(63,224,168,.13);border-color:var(--accent);color:var(--accent)}
+.stk{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.stk span{width:32px;height:32px;border-radius:8px;background:var(--inset);
+     border:1px solid var(--line);display:flex;align-items:center;justify-content:center;
+     font-size:16px;cursor:pointer}
+.stk span:hover{border-color:var(--accent)}
+
+.cta{width:100%;padding:14px;border-radius:11px;border:none;background:var(--accent);
+     color:#062018;font-size:15px;font-weight:900;cursor:pointer;margin-top:4px}
+.cta2{width:100%;padding:11px;border-radius:11px;border:1px solid var(--line);
+     background:transparent;color:var(--sub);font-size:13px;font-weight:700;cursor:pointer;
+     margin-top:8px}
+.foot{padding-top:11px;border-top:1px solid var(--line);margin-top:6px}
+.note{font-size:11px;color:#5d6b7c;line-height:1.5;margin-top:9px}
+</style>
+</head>
+<body>
+
+<div class="head">
+  <h1>6 · 장면꾸미기</h1>
+  <div class="sub">템플릿을 고르면 <b>제목·자막·색이 한 번에</b> 맞춰집니다. 글만 바꾸면 끝나요.</div>
+</div>
+
+<div class="wrap">
+
+  <!-- ══ 좌: 프리셋 (실측 19종) ══ -->
+  <div class="tplcol">
+    <div class="colttl">🖼 템플릿 <span class="cnt" id="tplCnt"></span></div>
+    <div class="srch"><input type="text" id="q" placeholder="🔍 번호로 찾기" oninput="drawGrid()"></div>
+    <div class="tplgrid" id="tplGrid"></div>
+  </div>
+
+  <!-- ══ 가운데: 미리보기 ══ -->
+  <div class="pvcol">
+    <div class="duotab">
+      <button class="on" data-duo="hook" onclick="setDuo('hook')">훅 장면</button>
+      <button data-duo="body" onclick="setDuo('body')">본문 장면</button>
+    </div>
+    <div class="pvhint">🪞 실시간 미리보기 (9:16) — 글자를 <b>드래그</b>해 자리 이동</div>
+    <div class="stage" id="stage">
+      <div class="pv-bar"  id="pvBar"></div>
+      <div class="pv-band" id="pvBand"></div>
+      <div class="pv-ttl"  id="pvTtl"></div>
+      <div class="pv-blk"  id="pvBlk"></div>
+      <div class="pv-vid"  id="pvVid">▶ 실제 영상이 여기서 재생됩니다<span style="font-size:11px">00:00 / 00:28</span></div>
+      <div class="pv-cap"  id="pvCap">여기에 자막이 나옵니다</div>
+    </div>
+    <div class="scenebar">
+      <button onclick="mvScene(-1)">◀</button>
+      <div class="now">장면 <b id="sNow">1</b> / <span id="sAll">12</span>
+        <span id="sKind" style="color:var(--accent)"> · 훅</span></div>
+      <button onclick="mvScene(1)">▶</button>
+    </div>
+  </div>
+
+  <!-- ══ 우: 편집 ══ -->
+  <div class="edcol">
+    <div class="tabs">
+      <button class="on" data-tab="main" onclick="setTab('main')">✍ 문구·꾸밈</button>
+      <button data-tab="fx" onclick="setTab('fx')">✨ 효과</button>
+      <span class="spacer"></span>
+      <button class="reset" onclick="resetAll()">↻ 초기화</button>
+    </div>
+
+    <div class="pane" id="paneMain">
+
+      <div class="card">
+        <h4>✍ 문구 <span style="font-weight:500;font-size:11px;color:var(--accent2)">— 오른쪽 ＋－로 그 줄 크기만</span></h4>
+        <div class="why">템플릿이 자리·색을 잡아둡니다. 여기엔 글만 넣으세요.</div>
+
+        <label class="fl">첫째 줄 <span class="cnt" id="c1">11/20</span></label>
+        <div class="fline">
+          <input type="text" id="inTtl1" value="역발상으로 돈방석 앉은" oninput="draw()">
+          <div class="sz">
+            <button onclick="szTtl(-2)">－</button>
+            <span class="v" id="szTtlV">86</span>
+            <button onclick="szTtl(2)">＋</button>
+          </div>
+        </div>
+
+        <label class="fl">둘째 줄 <span class="cnt" id="c2">8/20</span></label>
+        <div class="fline">
+          <input type="text" id="inTtl2" value="육아천재의 발명품" oninput="draw()">
+          <div class="sz">
+            <button onclick="szTtl2(-2)">－</button>
+            <span class="v" id="szTtl2V">86</span>
+            <button onclick="szTtl2(2)">＋</button>
+          </div>
+        </div>
+
+        <label class="fl">가운데 한 줄 <span class="cnt" id="c3">20/30</span></label>
+        <div class="fline">
+          <input type="text" id="inBar" value="역발상으로 돈방석 앉은 육아천재의 발명품" oninput="draw()">
+          <div class="sz">
+            <button onclick="szBar(-2)">－</button>
+            <span class="v" id="szBarV">40</span>
+            <button onclick="szBar(2)">＋</button>
+          </div>
+        </div>
+
+        <details class="more">
+          <summary>기울기·압축·테두리 손보기</summary>
+          <div class="row"><span class="nm">기울기</span><input type="range" min="-15" max="15" value="0"><span class="v">0°</span></div>
+          <div class="row"><span class="nm">가로 압축</span><input type="range" min="70" max="100" value="100"><span class="v">100%</span></div>
+          <div class="row"><span class="nm">테두리</span><input type="range" min="0" max="4" step=".2" value="1.2"><span class="v">1.2</span></div>
+          <div class="row"><span class="nm">글자 사이</span><input type="range" min="-3" max="6" value="0"><span class="v">0</span></div>
+          <div class="row"><span class="nm">줄 사이</span><input type="range" min="100" max="180" value="134"><span class="v">1.34</span></div>
+        </details>
+      </div>
+
+      <div class="card">
+        <h4>🔤 글씨체</h4>
+        <div class="why">템플릿이 정한 글씨체를 씁니다. 바꾸고 싶을 때만 고르세요.</div>
+        <div class="chips" id="fontChips">
+          <span class="chip on">템플릿 그대로</span><span class="chip">굵은 고딕</span>
+          <span class="chip">둥근</span><span class="chip">손글씨</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h4>💬 자막</h4>
+        <div class="why">영상에 얹히는 말자막입니다. 자리는 미리보기에서 끌어 옮기세요.</div>
+        <label class="fl">자막 자리</label>
+        <div class="chips"><span class="chip">⬆ 위</span><span class="chip">⬍ 가운데</span><span class="chip on">⬇ 아래</span></div>
+        <label class="fl">적용 범위</label>
+        <div class="chips"><span class="chip on">🌐 모든 장면</span><span class="chip">🎯 이 장면만</span></div>
+        <label class="fl">자막 크기</label>
+        <div class="sz" style="width:fit-content">
+          <button onclick="szCap(-1)">－</button><span class="v" id="szCapV">30</span><button onclick="szCap(1)">＋</button>
+        </div>
+        <details class="more">
+          <summary>줄 나누기 · 테두리</summary>
+          <div style="font-size:11.5px;color:var(--sub);margin:8px 0 6px">
+            <b>Enter</b>=여기서 끊기 · <b>Backspace</b>(줄 맨 앞)=윗줄과 붙이기</div>
+          <textarea rows="3">여기에 자막이
+나옵니다</textarea>
+          <div class="row"><span class="nm">테두리</span><input type="range" min="0" max="6" value="3"><span class="v">3</span></div>
+        </details>
+      </div>
+
+      <div class="foot">
+        <button class="cta">▶ 영상 만들기</button>
+        <button class="cta2">💾 이 꾸밈을 내 템플릿으로 저장</button>
+      </div>
+    </div>
+
+    <div class="pane" id="paneFx" style="display:none">
+      <div class="card">
+        <h4>🔍 장면 확대</h4>
+        <div class="why">보여줄 곳을 크게. 모든 장면에 같은 배율로 걸립니다.</div>
+        <div class="fxrow"><button class="on">끄기</button><button>살짝 (1.3×)</button><button>많이 (2×)</button></div>
+      </div>
+      <div class="card">
+        <h4>💡 강조 — 원으로 짚기</h4>
+        <div class="why">미리보기에서 원을 끌어 자리를 잡습니다. 장면마다 따로 지정합니다.</div>
+        <div class="fxrow"><button class="on">끄기</button><button>원 안 확대</button><button>원 밖 어둡게</button></div>
+      </div>
+      <div class="card">
+        <h4>🩹 가림막</h4>
+        <div class="why">남은 자막·워터마크를 덮습니다.</div>
+        <div class="fxrow"><button class="on">끄기</button><button>하단 자막</button><button>구석 마크</button></div>
+        <details class="more">
+          <summary>모양·색 고르기</summary>
+          <div class="chips" style="margin-top:8px">
+            <span class="chip">■ 사각</span><span class="chip on">▢ 둥근사각</span><span class="chip">● 원</span></div>
+          <div class="chips" style="margin-top:7px">
+            <span class="chip">단색</span><span class="chip on">그라데이션</span><span class="chip">흐림</span></div>
+        </details>
+      </div>
+      <div class="card">
+        <h4>🏷 스티커</h4>
+        <div class="why">눌러서 얹고, 미리보기에서 끌어 옮깁니다.</div>
+        <div class="stk"><span>🔥</span><span>✨</span><span>💥</span><span>⚡</span><span>🎉</span>
+          <span>❗</span><span>❓</span><span>👀</span><span>📌</span><span>💯</span></div>
+        <div class="chips" style="margin-top:9px">
+          <span class="chip">SALE</span><span class="chip">NEW</span><span class="chip">인기</span>
+          <span class="chip">1위</span><span class="chip">할인</span><span class="chip">품절임박</span></div>
+      </div>
+      <div class="note">효과는 <b>완성본에 그대로</b> 나갑니다. 안 건드리면 아무 효과도 걸리지 않습니다.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── 프리셋 19종 = 실제 채널 프레임 실측(channel_layouts.json 2026-09-03).
+      px는 1080x1920 기준 → 미리보기에선 %로 환산한다. ── */
+const H=1920, W=1080;
+const P=[
+  {n:'01',id:'sul_hwaryong',name:'활용정점.',bar:'#C94143',onbar:'#FFFFFF',band:'#000000',alpha:55,bandH:384,barH:250,c1:'#FFFFFF',c2:'#5EEAD4',hs:86,ol:true,headH:384,tc:'#111111',ts:50,l1:'코스트코 본사도 몰랐던',l2:'천재 아이디어'},
+  {n:'02',id:'sul_salrim',name:'살림킹왕짱',bar:'#EE7481',onbar:'#FFFFFF',band:'#FFFFFF',alpha:100,bandH:440,barH:270,c1:'#111111',c2:'#111111',hs:84,ol:false,headH:365,tc:'#111111',ts:48,l1:'개발자도 예상 못한',l2:'미친 사용법'},
+  {n:'03',id:'sul_sulchip',name:'썰칩12',bar:'#3A3A32',onbar:'#FFFFFF',band:'#000000',alpha:88,bandH:365,barH:135,c1:'#FFFFFF',c2:'#4ADE80',hs:86,ol:true,headH:384,tc:'#111111',ts:46,l1:'다이소도 감탄한',l2:'반전의 스티커'},
+  {n:'04',id:'sul_bangkkul',name:'방구석꿀템',bar:'#F14C60',onbar:'#FFFFFF',band:'#FFFFFF',alpha:100,bandH:384,barH:270,c1:'#111111',c2:'#22C55E',hs:66,ol:true,headH:288,tc:'#111111',ts:44,l1:'다이소 기획자도 감탄한',l2:'미친 활용법'},
+  {n:'05',id:'sul_lucky',name:'럭키박스',bar:'#3A1F24',onbar:'#FFFFFF',band:'#000000',alpha:85,bandH:422,barH:190,c1:'#FFFFFF',c2:'#FF5C8A',hs:86,ol:true,headH:270,tc:'#111111',ts:42,l1:'포스트잇 단점을',l2:'삭제한 결과'},
+  {n:'06',id:'sul_cheat',name:'쇼핑 치트키',bar:'#3F5230',onbar:'#FFFFFF',band:'#000000',alpha:85,bandH:365,barH:115,c1:'#FFFFFF',c2:'#FF3B30',hs:90,ol:true,headH:288,tc:'#111111',ts:42,l1:'부모들을 오열하게 만든',l2:'다이소 제품 ㄷㄷ'},
+  {n:'07',id:'sul_gongami',name:'공가미',bar:'#262626',onbar:'#FFFFFF',band:'#262626',alpha:100,bandH:250,barH:154,c1:'#FFFFFF',c2:'#5EEAD4',hs:80,ol:true,headH:211,tc:'#FFFFFF',ts:40,l1:'샤넬도 예상 못한',l2:'일본의 천재적 발상'},
+  {n:'08',id:'sul_core',name:'코어장바구니',bar:'#243481',onbar:'#FFFFFF',band:'',alpha:0,bandH:0,barH:230,c1:'#FFFFFF',c2:'#FFFFFF',hs:84,ol:false,headH:330,tc:'#111111',ts:40,l1:'증명하세요에 서양인이',l2:'열광한 진짜 이유'},
+  {n:'09',id:'sul_jangchak',name:'살림장착',bar:'#141518',onbar:'#FFFFFF',band:'#000000',alpha:100,bandH:290,barH:270,c1:'#FFFFFF',c2:'#FF7AB6',hs:80,ol:true,headH:0,tc:'#111111',ts:48,l1:'비맞던 육아맘들 구원한',l2:'일본 천재의 발명품'},
+  {n:'10',id:'sul_chunjae',name:'쇼핑천재',bar:'#000000',onbar:'#FFFFFF',band:'',alpha:0,bandH:0,barH:460,c1:'#FFE600',c2:'#FFFFFF',hs:70,ol:false,headH:460,tc:'#111111',ts:44,l1:'발편한 걸로',l2:'유명한 운동화 top3'},
+  {n:'11',id:'sul_even',name:'이븐쇼핑',bar:'#2A2A2A',onbar:'#FFFFFF',band:'#111111',alpha:90,bandH:365,barH:135,c1:'#FFFFFF',c2:'#5EEAD4',hs:86,ol:true,headH:384,tc:'#111111',ts:44,l1:'천재가 왜 게으른지',l2:'알수있는 제품'},
+  {n:'12',id:'sul_igeo',name:'이거였네',bar:'#1F6B6B',onbar:'#FFFFFF',band:'#FFFFFF',alpha:100,bandH:330,barH:135,c1:'#111111',c2:'#111111',hs:72,ol:false,headH:330,tc:'#111111',ts:44,l1:'이케아도 예상 못한',l2:'미친 활용법'},
+  {n:'13',id:'sul_dalrae',name:'달래샵',bar:'#000000',onbar:'#FFFFFF',band:'#111111',alpha:90,bandH:0,barH:250,c1:'#FFFFFF',c2:'#FFE600',hs:80,ol:true,headH:0,tc:'#111111',ts:48,l1:'다이소 직원들도',l2:'쟁여둔다는 만능 후크'},
+  {n:'14',id:'sul_kkultip',name:'꿀팁꿀템',bar:'#000000',onbar:'#FFFFFF',band:'#111111',alpha:90,bandH:0,barH:270,c1:'#FFFFFF',c2:'#5EEAD4',hs:80,ol:true,headH:0,tc:'#111111',ts:48,l1:'요잘알이 재발견해',l2:'돈방석 앉은 국산 발명품'},
+  {n:'15',id:'sul_daissue',name:'다있슈',bar:'#7FD1C0',onbar:'#FFFFFF',band:'#111111',alpha:90,bandH:365,barH:135,c1:'#FFFFFF',c2:'#5EEAD4',hs:86,ol:true,headH:330,tc:'#111111',ts:44,l1:'사무용품 제작사도',l2:'놀란 미친 활용법'},
+  {n:'16',id:'sul_insaeng',name:'인생갓템',bar:'#F5E9B8',onbar:'#333333',band:'#000000',alpha:55,bandH:300,barH:115,c1:'#FFFFFF',c2:'#FFE600',hs:76,ol:true,headH:300,tc:'#111111',ts:40,l1:'이케아 개발진도',l2:'당황한 아이디어ㄷㄷ'},
+  {n:'17',id:'sul_namanto',name:'나만또모르고있었지',bar:'#2B2B2B',onbar:'#FFFFFF',band:'',alpha:0,bandH:0,barH:115,c1:'#FFFFFF',c2:'#FFFFFF',hs:84,ol:false,headH:330,tc:'#111111',ts:40,l1:'판매자도 예상못한',l2:'압축봉 활용법'},
+  {n:'18',id:'sul_yosae',name:'요새난리',bar:'#000000',onbar:'#FFFFFF',band:'#111111',alpha:90,bandH:0,barH:154,c1:'#FFFFFF',c2:'#5EEAD4',hs:60,ol:true,headH:0,tc:'#111111',ts:48,l1:'알고나면 소름돋는다는',l2:'이 여자의 행동'},
+  {n:'19',id:'sul_museun',name:'무슨템',bar:'#000000',onbar:'#FFFFFF',band:'#111111',alpha:90,bandH:365,barH:135,c1:'#FFFFFF',c2:'#FFE600',hs:80,ol:true,headH:350,tc:'#111111',ts:44,l1:'옷가게 사장님들이',l2:'가장 싫어하는 액체'},
+];
+let CUR='01', DUO='hook', SC=1, SALL=12, HOOKN=1;
+/* 사용자가 ＋－로 만진 값. null이면 프리셋 값을 그대로 쓴다 */
+let uTtl=null, uTtl2=null, uBar=null, uCap=30;
+
+const pct = px => (px/H*100);
+const hex = (c,a)=>{ if(!c) return 'transparent';
+  const r=parseInt(c.slice(1,3),16),g=parseInt(c.slice(3,5),16),b=parseInt(c.slice(5,7),16);
+  return `rgba(${r},${g},${b},${(a??100)/100})`; };
+const cur = ()=>P.find(x=>x.n===CUR);
+
+/* 카드 미니 그림 */
+function mini(p,kind){
+  const barH=pct(p.barH), bandH=pct(p.bandH), headH=pct(p.headH);
+  if(kind==='hook'){
+    const top = p.bandH? barH : barH;
+    return `<div class="mini" style="background:#0b0b0b">
+      <div class="bar"  style="height:${barH}%;background:${p.bar}"></div>
+      ${p.band?`<div class="band" style="top:${barH}%;height:${bandH}%;background:${hex(p.band,p.alpha)}"></div>`:''}
+      <div class="ttl" style="top:${top+bandH*0.22}%;color:${p.c1}${p.ol?';-webkit-text-stroke:.35px #000':''}">
+        ${p.l1}<br><span style="color:${p.c2}">${p.l2}</span></div>
+      <div class="vid" style="top:${barH+(p.bandH?bandH:22)}%"></div></div>`;
+  }
+  return `<div class="mini" style="background:#0b0b0b">
+    <div class="bar" style="height:${barH}%;background:${p.bar}"></div>
+    ${p.headH?`<div class="blk" style="top:${barH}%;height:${headH}%"></div>`:''}
+    <div class="ttl" style="top:${barH+ (p.headH?headH*0.3:6)}%;color:${p.headH?p.tc:p.c1};font-size:5.4px">${p.l1} ${p.l2}</div>
+    <div class="vid" style="top:${barH+(p.headH?headH:18)}%"></div></div>`;
+}
+function drawGrid(){
+  const q=(document.getElementById('q').value||'').trim();
+  const list=P.filter(p=>!q||p.n.includes(q)||p.name.includes(q));
+  document.getElementById('tplCnt').textContent=`${list.length}종 · 한 세트=훅+본문`;
+  document.getElementById('tplGrid').innerHTML =
+    list.map(p=>`
+      <div class="tpl ${p.n===CUR?'on':''}" onclick="pick('${p.n}')" title="${p.name}">
+        <div class="duo">
+          <div class="back">${mini(p,'body')}</div>
+          <div class="front">${mini(p,'hook')}</div>
+        </div>
+        <div class="tplname"><span class="tplno">${p.n}</span></div>
+      </div>`).join('')
+    + `<button class="mkbtn" onclick="alert('빈 템플릿에서 시작합니다')">＋ 직접 만들기</button>`;
+}
+function pick(n){ CUR=n; uTtl=uTtl2=uBar=null; drawGrid(); syncSz(); draw(); }
+function setDuo(d){
+  DUO=d;
+  document.querySelectorAll('.duotab button').forEach(b=>b.classList.toggle('on',b.dataset.duo===d));
+  draw();
+}
+function setTab(t){
+  document.querySelectorAll('.tabs button[data-tab]').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
+  document.getElementById('paneMain').style.display=t==='main'?'':'none';
+  document.getElementById('paneFx').style.display  =t==='fx'  ?'':'none';
+}
+function mvScene(d){
+  SC=Math.max(1,Math.min(SALL,SC+d));
+  setDuo(SC<=HOOKN?'hook':'body');
+  document.getElementById('sNow').textContent=SC;
+  document.getElementById('sKind').textContent=SC<=HOOKN?' · 훅':' · 본문';
+}
+/* ★ 글자 크기 ＋－ — 그 줄만 바꾼다 */
+function szTtl(d){  const p=cur(); uTtl =Math.max(30,Math.min(140,(uTtl ??p.hs)+d)); syncSz(); draw(); }
+function szTtl2(d){ const p=cur(); uTtl2=Math.max(30,Math.min(140,(uTtl2??p.hs)+d)); syncSz(); draw(); }
+function szBar(d){  const p=cur(); uBar =Math.max(16,Math.min(90 ,(uBar ??p.ts)+d)); syncSz(); draw(); }
+function szCap(d){  uCap=Math.max(14,Math.min(60,uCap+d)); syncSz(); draw(); }
+function syncSz(){
+  const p=cur();
+  document.getElementById('szTtlV').textContent  = uTtl ??p.hs;
+  document.getElementById('szTtl2V').textContent = uTtl2??p.hs;
+  document.getElementById('szBarV').textContent  = uBar ??p.ts;
+  document.getElementById('szCapV').textContent  = uCap;
+}
+function resetAll(){ uTtl=uTtl2=uBar=null; uCap=30; syncSz(); draw(); }
+
+function draw(){
+  const p=cur(), st=document.getElementById('stage');
+  const w=st.clientWidth||460, k=w/W;                 /* 1080px → 화면px 배율 */
+  const barH=pct(p.barH), bandH=pct(p.bandH), headH=pct(p.headH);
+  const t1=document.getElementById('inTtl1').value, t2=document.getElementById('inTtl2').value;
+  document.getElementById('c1').textContent=`${t1.length}/20`;
+  document.getElementById('c2').textContent=`${t2.length}/20`;
+  document.getElementById('c3').textContent=`${document.getElementById('inBar').value.length}/30`;
+
+  const bar=document.getElementById('pvBar');
+  bar.style.height=barH+'%'; bar.style.background=p.bar;
+
+  const band=document.getElementById('pvBand');
+  if(DUO==='hook' && p.band){
+    band.style.display=''; band.style.top=barH+'%';
+    band.style.height=bandH+'%'; band.style.background=hex(p.band,p.alpha);
+  } else band.style.display='none';
+
+  const ttl=document.getElementById('pvTtl'), blk=document.getElementById('pvBlk');
+  const vid=document.getElementById('pvVid');
+
+  if(DUO==='hook'){
+    blk.style.display='none';
+    const s1=(uTtl??p.hs)*k, s2=(uTtl2??p.hs)*k;
+    ttl.style.display=''; ttl.style.top=(barH+(p.bandH?bandH*0.20:4))+'%';
+    ttl.style.fontSize=s1+'px';
+    ttl.style.webkitTextStroke = p.ol? Math.max(1,s1*0.035)+'px #000':'0';
+    ttl.innerHTML=`<span style="color:${p.c1}">${t1}</span>`
+                + (t2?`<br><span style="color:${p.c2};font-size:${s2}px">${t2}</span>`:'');
+    vid.style.top=(barH+(p.bandH?bandH:24))+'%';
+  }else{
+    /* 본문: 띠 + 흰 블록(제목이 그 안) — 실측 본문 구조 */
+    ttl.style.display='none';
+    if(p.headH){
+      blk.style.display=''; blk.style.top=barH+'%'; blk.style.height=headH+'%';
+      blk.innerHTML=`<div style="color:${p.tc};font-weight:900;font-size:${(uBar??p.ts)*k}px;
+        line-height:1.2;text-align:center">${t1} ${t2}</div>`;
+      vid.style.top=(barH+headH)+'%';
+    }else{
+      blk.style.display='none'; vid.style.top=barH+'%';
+    }
+  }
+  const cap=document.getElementById('pvCap');
+  cap.style.fontSize=(uCap*k*1.6)+'px';
+}
+document.querySelectorAll('.chip,.fxrow button').forEach(c=>c.onclick=function(){
+  [...this.parentNode.children].forEach(x=>x.classList.remove('on')); this.classList.add('on');
+});
+document.querySelectorAll('.row input[type=range]').forEach(r=>r.oninput=function(){
+  const v=this.parentNode.querySelector('.v'); if(!v) return;
+  v.textContent = this.max==='180' ? (this.value/100).toFixed(2)
+                : this.max==='100' ? this.value+'%'
+                : this.max==='15'  ? this.value+'°' : this.value;
+});
+addEventListener('resize',draw);
+drawGrid(); syncSz(); draw();
+</script>
+</body>
+</html>
