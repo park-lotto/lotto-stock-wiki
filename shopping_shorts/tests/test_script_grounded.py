@@ -75,7 +75,7 @@ def test_gate_check_는_grounded일_때만_장면근거_항목을_만든다():
 def test_generate_one_style_grounded는_규칙과_전체장면을_넣고_게이트에_장면번호를_준다(monkeypatch):
     from shopping_shorts import bank_assemble
     seen = {"prompts": [], "gate": []}
-    monkeypatch.setattr(bank_assemble, "style_block", lambda style, seconds=30, seed="": "[스타일]")
+    monkeypatch.setattr(bank_assemble, "style_block", lambda style, seconds=30, seed="", **kw: "[스타일]")
     monkeypatch.setattr(SG, "_style_extra", lambda: "")
     monkeypatch.setattr(SG, "_speaker_judge", None)
 
@@ -110,7 +110,7 @@ def test_generate_one_style_grounded는_규칙과_전체장면을_넣고_게이�
 def test_레시피는_규칙이_느슨하다(monkeypatch):
     from shopping_shorts import bank_assemble
     seen = []
-    monkeypatch.setattr(bank_assemble, "style_block", lambda style, seconds=30, seed="": "[스타일]")
+    monkeypatch.setattr(bank_assemble, "style_block", lambda style, seconds=30, seed="", **kw: "[스타일]")
     monkeypatch.setattr(SG, "_style_extra", lambda: "")
     monkeypatch.setattr(SG, "_speaker_judge", None)
     monkeypatch.setattr(SG, "_call_json", lambda prompt, schema, note=None: seen.append(prompt) or
@@ -132,7 +132,7 @@ def test_src_seg_는_여러_번호를_허용하고_첫_번째가_대표다(monke
     assert not ok2 and "s0-9" in det2 and "s0-0" not in det2.split("src_seg=")[1].split("(")[0]
 
     from shopping_shorts import bank_assemble
-    monkeypatch.setattr(bank_assemble, "style_block", lambda style, seconds=30, seed="": "[스타일]")
+    monkeypatch.setattr(bank_assemble, "style_block", lambda style, seconds=30, seed="", **kw: "[스타일]")
     monkeypatch.setattr(SG, "_style_extra", lambda: "")
     monkeypatch.setattr(SG, "_speaker_judge", None)
     monkeypatch.setattr(SG, "_call_json", lambda prompt, schema, note=None:
@@ -147,7 +147,7 @@ def test_장면_목록이_비면_grounded를_끄고_남긴다(monkeypatch):
     """리뷰 M7: 세그 없는 소스에 grounded면 '장면 근거'가 구조적으로 3회 실패."""
     from shopping_shorts import bank_assemble
     seen = []
-    monkeypatch.setattr(bank_assemble, "style_block", lambda style, seconds=30, seed="": "[스타일]")
+    monkeypatch.setattr(bank_assemble, "style_block", lambda style, seconds=30, seed="", **kw: "[스타일]")
     monkeypatch.setattr(SG, "_style_extra", lambda: "")
     monkeypatch.setattr(SG, "_speaker_judge", None)
     monkeypatch.setattr(SG, "_call_json", lambda prompt, schema, note=None: seen.append(prompt) or
