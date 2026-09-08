@@ -136,6 +136,47 @@ _TIKTOK_SESSION = os.getenv("TIKTOK_SESSION_PATH") or os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "tiktok_session.json")
 
 
+def _tiktok_session_health():
+    """세션 쿠키가 얼마나 남았나 — (남은 일수, 사람이 읽는 말). 없으면 (None, 사유).
+
+    ★왜 (2026-09-08 사장님 "세션이 끊기면 어쩌나 주기적으로")
+      세션이 죽으면 검색이 **조용히 0건**이 된다. 오늘 하루가 정확히 그거였다 —
+      코드도 프록시도 멀쩡한데 결과만 없어서 원인을 찾는 데 한참 걸렸다.
+      그래서 만료를 미리·크게 알린다. 갱신은 tools/tiktok_session_from_firefox.py.
+    """
+    import json as _json
+    if not os.path.exists(_TIKTOK_SESSION):
+        return None, "세션 파일이 없습니다"
+    try:
+        with open(_TIKTOK_SESSION, encoding="utf-8") as f:
+            cookies = (_json.load(f) or {}).get("cookies") or []
+    except Exception as e:      # noqa: BLE001
+        return None, f"세션 파일을 못 읽습니다({type(e).__name__})"
+    now = time.time()
+    # 로그인 자체를 지탱하는 쿠키. 이게 죽으면 무슨 짓을 해도 0건이다.
+    key = [c for c in cookies if c.get("name") in ("sessionid", "sid_tt")]
+    if not key:
+        return None, "로그인 쿠키(sessionid)가 없습니다 — 로그인 안 된 세션입니다"
+    exps = [c.get("expires") for c in key if (c.get("expires") or 0) > 0]
+    if not exps:
+        return None, "로그인 쿠키에 만료일이 없습니다"
+    days = (min(exps) - now) / 86400.0
+    if days <= 0:
+        return 0, "로그인 쿠키가 **만료됐습니다**"
+    return days, f"로그인 쿠키 {days:.0f}일 남음"
+
+
+def _warn_session(note):
+    """세션 문제를 창에 크게 적는다 — 작은 글씨로 흘리면 아무도 안 본다."""
+    print("", flush=True)
+    print("  " + "!" * 58, flush=True)
+    print(f"  !! 틱톡 {note}", flush=True)
+    print("  !! 갱신: py tools/tiktok_session_from_firefox.py", flush=True)
+    print("  !!       (파이어폭스로 틱톡에 로그인한 뒤, 파이어폭스를 완전히 닫고 실행)", flush=True)
+    print("  " + "!" * 58, flush=True)
+    print("", flush=True)
+
+
 def handle_tiktok(job):
     """틱톡 검색 — 이 PC의 **진짜 크롬 창**으로 긁는다 (2026-09-08).
 
@@ -152,6 +193,17 @@ def handle_tiktok(job):
     limit = int(payload.get("limit") or job.get("limit") or 10)
     print(f"  [틱톡] {kw} …", flush=True)
     items, note = [], ""
+    days, health = _tiktok_session_health()
+    if days is None or days <= 0:
+        # 세션이 죽었으면 브라우저를 띄우지도 않는다 — 어차피 0건이고 시간만 버린다.
+        _warn_session(health)
+        note = f"틱톡 세션 문제 — {health}"
+        _post("/api/coupang/relay/result", {
+            "token": TOKEN, "id": job.get("id"), "ok": False,
+            "items": [], "search_url": "", "notice": note})
+        return
+    if days < 7:
+        _warn_session(f"{health} — 곧 끊깁니다. 미리 갱신하세요")
     if not os.path.exists(_TIKTOK_SESSION):
         note = "틱톡 세션 파일이 없습니다(tiktok_session.json)"
     else:
@@ -265,8 +317,16 @@ def main():
     config.COUPANG_SEARCH_ENABLED = True
     config.COUPANG_SEARCH_MODE = "local"          # ★릴레이 안에서는 반드시 직접 크롤
 
-    print(f"쿠팡 검색 도우미 시작 — {SERVER}")
-    print("이 창을 켜두면 숏템메이커에서 '쿠팡에서 상품 찾기'가 동작합니다. (Ctrl+C로 종료)")
+    print(f"검색 도우미 시작 — {SERVER}")
+    print("이 창을 켜두면 '쿠팡에서 상품 찾기'와 '틱톡 검색'이 동작합니다. (Ctrl+C로 종료)")
+    # ★켤 때 한 번 알린다 — 검색해 보고 나서 아는 것보다 낫다.
+    _days, _health = _tiktok_session_health()
+    if _days is None or _days <= 0:
+        _warn_session(_health)
+    elif _days < 7:
+        _warn_session(f"{_health} — 곧 끊깁니다. 미리 갱신하세요")
+    else:
+        print(f"  틱톡 세션: {_health}")
     backoff = 1
     while True:
         try:
