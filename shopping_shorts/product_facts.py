@@ -281,6 +281,92 @@ def collect_and_analyze(product_url, work_dir, *, name="", log=print):
     return analyze(raw, name=name, log=log)
 
 
+# ── 제미니 지식으로 소구점 확장 (2026-09-08) ────────────────────────────────
+#
+# 왜 필요한가 — **재료가 0건이라 대본이 원본을 베낀다**(실측 2026-09-08):
+#   최근 job 150건 전부 product.facts 없음(0%). 그래서 대본 생성이 보는 재료는
+#   `_mix_source_block`이 만드는 원본 대본 800자 + 훅/전개/말투뿐이다.
+#   원본을 요약하니 원본과 비슷해질 수밖에 없다.
+#
+# 왜 크롤이 아니라 제미니인가:
+#   위 수집 경로(쿠팡)는 서버가 403이라 **사장님 PC 릴레이**가 필요하고 상품당 2~3분이
+#   걸린다. 그래서 실제로 한 번도 안 채워졌다. 반면 제미니는 몇 초에 끝나고 릴레이가
+#   필요 없다. 참고한 방법론(유튜브 '썰쇼핑쇼츠')도 크롤이 아니라 모델에게 한 마디
+#   물어본다 — "이 아이템과 관련한 신기한 정보를 더 찾아줘".
+#
+# ★사장님 방향(2026-09-08): **대본이 최우선, 장면 배치는 후순위.**
+#   그래서 여기서는 화면 근거로 재료를 거르지 않는다. 거르는 일이 필요하면
+#   대본이 나온 **뒤에** 한다(insta_facts.gate_by_scene). 여기서 걸면 대본이
+#   화면에 종속돼 다시 원본 베끼기로 돌아간다(feedback_대본자유_화면교차고정).
+#
+# ★출력 스키마는 prompt_block과 **같은 칸**을 쓴다(0순위-B). 새 통로를 만들지 않으므로
+#   하류(대본 생성·슬롯 조립·스타일)는 코드 한 줄 안 바꾸고 그대로 돈다.
+
+_EXPAND_KEYS = ("specs", "why", "origin", "peak", "pain", "trigger", "satisfy")
+
+_EXPAND_PROMPT = """너는 쇼핑 숏폼 대본을 쓰기 위해 제품을 조사하는 사람이다.
+
+제품: {product}
+분류: {category}
+참고(원본 영상에서 관찰된 것): {hint}
+
+이 제품에 대해 **네가 아는 것**을 아래 칸에 채워라.
+★원본 영상에 없던 내용이어도 좋다 — 오히려 그런 걸 원한다.
+★단 지어내지 마라. 모르면 그 칸을 비워라. 빈 칸은 벌점이 아니다.
+  브랜드·수치·인증을 확신 없이 적지 마라. 틀린 사실 하나가 영상을 죽인다.
+
+- specs   : 확인된 스펙. 수치가 있으면 단위까지. (예: "두께 0.02mm", "3단 접이")
+- why     : 그 스펙이 왜 좋은지. 원리를 한 줄로.
+- origin  : 출처·권위. 브랜드 유래, 특허, 인증, 원래 용도.
+            (예: "원래 등산용으로 나온 것", "독일 공업 규격 통과")
+- peak    : 가장 센 셀링포인트. **고조 자리에 쓸 한 방.**
+            사람들이 "이게 된다고?" 할 만한 것.
+- pain    : 이 제품이 없을 때 사람들이 겪던 불편. 구체적 상황으로.
+- trigger : 사람들이 이걸 사게 되는 계기.
+- satisfy : 쓰고 나서 좋아진 점. 눈에 보이는 장면으로.
+
+★특히 peak에 공을 들여라. 일반인이 모르는 쓰임, 제조사도 의도 안 한 활용,
+  "심지어 이것도 된다"에 해당하는 것을 2가지 이상 찾아라.
+
+각 칸은 문자열 배열(최대 5개). JSON만 출력."""
+
+
+def expand_by_llm(product, category="", hint="", *, log=print):
+    """제품명 → 소구점 재료 dict(prompt_block과 같은 스키마). 실패·무지식이면 {}.
+
+    product 가 비면 아무것도 안 한다 — 제품을 모르는 채로 물으면 모델이 지어낸다.
+    """
+    product = (product or "").strip()
+    if not product:
+        log("[product_facts] 확장 건너뜀 — 제품명이 없다")
+        return {}
+    prompt = _EXPAND_PROMPT.format(
+        product=product,
+        category=(category or "").strip() or "(미상)",
+        hint=(hint or "").strip()[:400] or "(없음)")
+    got = _gemini(prompt, log=log) or {}
+    out = {}
+    for k in _EXPAND_KEYS:
+        v = got.get(k)
+        if not v:
+            continue
+        if isinstance(v, str):
+            v = [v]
+        vals = [str(x).strip() for x in v if str(x).strip()][:5]
+        if vals:
+            out[k] = vals
+    if out:
+        # ★출처 표식(2026-09-08) — 이게 없으면 prompt_block이 LLM 지식을
+        #   "쿠팡에서 확인된 사실"이라고 말해 **가짜 스펙이 영상에 박힌다**.
+        out["_source"] = "llm"
+        log("[product_facts] 확장 성공 — %s (%s)"
+            % (product, " ".join("%s%d" % (k, len(out[k]))
+                                 for k in out if k != "_source")))
+    else:
+        log("[product_facts] 확장 결과 없음 — %s" % product)
+    return out
+
+
 def prompt_block(facts, max_items=6):
     """product_facts → 대본 프롬프트에 붙일 블록. 비면 ''(호출부는 빈 문자열이면 회귀0).
 
@@ -291,6 +377,8 @@ def prompt_block(facts, max_items=6):
     if not facts:
         return ""
     def _lines(key, label):
+        if key == "_source":          # 출처 표식은 재료가 아니다
+            return ""
         v = facts.get(key)
         if not v:
             return ""
@@ -299,10 +387,17 @@ def prompt_block(facts, max_items=6):
         v = [str(x).strip() for x in v if str(x).strip()][:max_items]
         return ("\n- %s: " % label) + " / ".join(v) if v else ""
 
+    # ★칸 라벨도 출처를 따라간다(2026-09-08 사장님 "스펙이라기보다 제품에 이런 특징이
+    #   있다는 써도 된다"). LLM 재료에 "확인된 스펙 / 수치를 그대로 살려 써라"라는
+    #   라벨을 붙이면 머리말로 아무리 말려도 모델이 수치를 그대로 쓴다 —
+    #   지시와 라벨이 서로 다른 말을 하면 **가까운 라벨이 이긴다**.
+    _llm = facts.get("_source") == "llm"
     body = "".join([
-        _lines("specs", "확인된 스펙(수치를 그대로 살려 써라)"),
-        _lines("why", "그 스펙이 좋은 이유"),
-        _lines("origin", "출처·권위(브랜드·특허·인증)"),
+        _lines("specs", "제품의 특징(수치 단정 말고 '이런 게 있다'로)" if _llm
+                        else "확인된 스펙(수치를 그대로 살려 써라)"),
+        _lines("why", "그 특징이 좋은 이유" if _llm else "그 스펙이 좋은 이유"),
+        _lines("origin", "알려진 유래·원래 용도(브랜드·특허·인증은 단정 금지)" if _llm
+                         else "출처·권위(브랜드·특허·인증)"),
         _lines("peak", "가장 센 셀링포인트(고조 자리에 쓰기 좋다)"),
         _lines("pain", "실사용자가 겪던 불편(리뷰 실측 — 도입부에 쓰면 공감이 산다)"),
         _lines("trigger", "구매 계기"),
@@ -318,6 +413,23 @@ def prompt_block(facts, max_items=6):
             c = [c]
         warn = ("\n- ⚠️단정하면 반박당하는 부분(과장 금지): "
                 + " / ".join(str(x) for x in c[:3]))
-    return ("\n★[이 제품에 대해 확인된 사실 — 쿠팡 상세페이지·베스트리뷰에서 뽑았다]"
-            "\n  아래는 **실제로 확인된 것**이다. 수치·사연을 적극 쓰되, 여기 없는 사실은 "
-            "절대 지어내지 마라." + body + warn)
+    # ★머리말은 재료의 **출처**에 따라 갈라야 한다(2026-09-08).
+    #   실측으로 잡힌 위험: expand_by_llm(제미니 지식)이 만든 재료에도 종전 머리말이
+    #   그대로 붙어 "쿠팡에서 확인된 사실 / 수치를 그대로 살려 써라"라고 말했다.
+    #   베이스어스 이어폰 확장 결과에 '16.2mm 드라이버·IPX4·블루투스 5.3'이 나왔는데
+    #   그게 실제 그 모델의 스펙인지는 **아무도 확인하지 않았다** — 그대로 쓰면
+    #   가짜 스펙이 고객 영상에 박힌다(사장님 금지선: 가짜지표).
+    if facts.get("_source") == "llm":
+        head = ("\n★[이 제품에 대해 **일반적으로 알려진 것** — 검색·상세페이지가 아니라 "
+                "AI 지식에서 왔다]"
+                "\n  쓰임새·불편·활용은 적극 살려라. 다만 **확인된 값이 아니다**:"
+                "\n  - 수치·모델명·인증은 **단정하지 마라**. 꼭 쓰려면 완곡하게"
+                "\n    (\"16.2mm 드라이버\"(X) → \"드라이버가 큼\"(O),"
+                " \"IPX4\"(X) → \"생활방수 되는\"(O))"
+                "\n  - 브랜드·특허·수상은 **빼라**. 틀리면 영상 하나가 통째로 죽는다."
+                "\n  - 반대로 **쓰임새·응용·불편·계기**는 마음껏 써라 — 여기가 이 재료의 값이다.")
+    else:
+        head = ("\n★[이 제품에 대해 확인된 사실 — 쿠팡 상세페이지·베스트리뷰에서 뽑았다]"
+                "\n  아래는 **실제로 확인된 것**이다. 수치·사연을 적극 쓰되, 여기 없는 사실은 "
+                "절대 지어내지 마라.")
+    return head + body + warn

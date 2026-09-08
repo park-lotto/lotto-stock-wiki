@@ -19622,8 +19622,73 @@ def _facts_for_job(job_id, store=None):
         #   담긴 영상 여러 개 중 **재료가 있는 첫 번째**를 쓴다(주제는 [대본 1]이므로 그 순서).
         if not facts:
             facts = _prefetched_facts_for_job(job, st)
+        # ★크롤 재료가 없으면 **제미니 지식으로 채운다**(2026-09-08).
+        #
+        #   왜: 위 두 경로(쿠팡 수집·1단계 선수집)는 서버가 403이라 사장님 PC 릴레이가
+        #   필요하고 상품당 2~3분이 걸려 **실제로 안 채워진다** — 실측 2026-09-08,
+        #   최근 job 150건 전부 facts 0건(0%). 그래서 대본 생성이 보는 재료는
+        #   원본 대본 800자뿐이었고, 원본을 요약하니 원본과 비슷해졌다.
+        #
+        #   ★크롤 재료가 있으면 손대지 않는다 — 확인된 사실이 항상 이긴다(회귀 0).
+        #   ★캐시한다: 같은 job을 다시 열 때마다 호출하면 돈과 시간이 샌다.
+        if not facts:
+            facts = _llm_facts_for_job(job, st)
         return facts or {}
     except Exception:      # noqa: BLE001
+        return {}
+
+
+def _llm_facts_for_job(job, store):
+    """크롤 재료가 없는 job → 제미니 지식으로 만든 재료. 실패하면 {}.
+
+    ★제품명을 모르면 아무것도 안 한다 — 모르는 채로 물으면 모델이 지어낸다.
+    ★결과는 job에 심어 다음 호출부터 재사용한다(같은 job에 매번 호출하지 않는다).
+    """
+    if not job:
+        return {}
+    try:
+        from shopping_shorts import product_facts, script_generate
+        srcs = list((job.get("extract") or {}).values())
+        product = script_generate._sources_product(srcs)
+        if not product:
+            product = ((job.get("product") or {}).get("name") or "").strip()
+        # 원본에서 관찰된 것 — 지어내기를 줄이는 닻으로만 쓴다(내용을 베끼라는 뜻이 아니다).
+        # ★첫 소스가 비어 있을 수 있다 — 채워진 것을 찾을 때까지 훑는다.
+        hint = ""
+        for s in srcs:
+            t = (s.get("full_text") or "").strip()
+            if t:
+                hint = t[:300]
+                break
+        if not product:
+            # ★여기가 커버리지를 가른다(실측 2026-09-08, 최근 job 150건):
+            #     소스의 product 이름   0%
+            #     job.product.name     31%
+            #     원본 대본(full_text) 100%   ← 이것만 항상 있다
+            #   그래서 이름이 없으면 **대본에서 소재를 뽑는다**. 참고한 방법론도
+            #   첫 단계가 "이 아이템의 정보와 대본을 추출해줘"였다 — 같은 순서다.
+            #   detect_subject는 이미 있는 함수다(0순위-B: 새로 만들지 않는다).
+            full = ""
+            for s in srcs:
+                t = (s.get("full_text") or "").strip()
+                if len(t) > len(full):
+                    full = t          # 가장 긴 대본이 주제를 가장 잘 담고 있다
+            if full:
+                product = script_generate.detect_subject(full) or ""
+        if not product:
+            return {}
+        facts = product_facts.expand_by_llm(
+            product, (job.get("structure") or ""), hint)
+        if facts:
+            prod = dict(job.get("product") or {})
+            prod["facts"] = facts
+            # ★update_mix_job이 아니라 전용 메서드다 — product는 그 화이트리스트에
+            #   없어서 update_mix_job으로 보내면 **에러도 없이 조용히 무시된다**
+            #   (store.update_mix_job 주석이 경고하는 바로 그 함정).
+            store.set_mix_product(job["job_id"], prod)          # 캐시
+        return facts
+    except Exception as e:      # noqa: BLE001 — 재료 확장 실패가 대본 생성을 막으면 안 된다
+        print(f"[llm_facts] 확장 실패(무시하고 진행): {e!r}", file=sys.stderr)
         return {}
 
 
