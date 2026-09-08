@@ -4507,6 +4507,33 @@ def api_points(request: Request):
             "history": history}
 
 
+@app.get("/api/settings/lens_borrow")
+def api_get_lens_borrow(request: Request):
+    """사장님이 회원 SerpApi 키를 얼마나 빌려 썼나 — 스위치 상태 + 이번 달 현황.
+
+    ★관리자 전용. 회원에겐 보일 이유가 없고, 남의 키 사용량이라 더더욱 안 보인다."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    return {"ok": True, **keyroute.borrow_status(Store(DB_PATH))}
+
+
+@app.post("/api/settings/lens_borrow")
+def api_set_lens_borrow(request: Request, body: dict):
+    """빌림 스위치 on/off (2026-09-08 사장님 "고객꺼 나눠서 좀 쓸 수 있게").
+
+    켜면 **사장님 렌즈 검색에 한해** 공용 키가 마른 뒤 회원 키를 쓴다.
+    한 키당 한 달 10회까지만 쓰고 다음 키로 넘어간다(BORROW_PER_KEY).
+    회원 본인 경로는 종전 그대로다 — 회원은 언제나 자기 키만 쓴다.
+    ★기본은 꺼짐. 끄면 그 순간부터 한 회도 안 빌린다."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    store = Store(DB_PATH)
+    store.set_setting(keyroute.BORROW_SETTING, "1" if body.get("on") else "0")
+    return {"ok": True, **keyroute.borrow_status(store)}
+
+
 @app.get("/api/settings/smart_mix")
 def api_get_smart_mix():
     """스마트 믹스(부품은행+반복회피+핑퐁) 마스터 스위치 상태. bank_enabled로 대표."""
@@ -12797,7 +12824,18 @@ def _lens_api_keys(customer_id):
 
     ★과금 판단(OP_LENS를 깎을지)도 같은 SVC_SERPAPI를 봐야 한다. 키를 고르는 쪽과
       과금하는 쪽이 다른 서비스를 보면 "키 등록했는데 포인트도 깎임"이 난다."""
-    keys, _ = keyroute.keys_for(Store(DB_PATH), customer_id, keyroute.SVC_SERPAPI)
+    store = Store(DB_PATH)
+    keys, is_user = keyroute.keys_for(store, customer_id, keyroute.SVC_SERPAPI)
+    # ★사장님만: 공용 키가 마르면 회원 키를 **한 키당 월 10회까지만** 빌린다
+    #   (2026-09-08 사장님 "고객꺼 나눠서 좀 쓸 수 있게 / 한사람당 10개씩만 쓰고 이동").
+    #   회원 경로는 손대지 않는다 — 회원은 종전대로 자기 키만 쓴다.
+    #   맨 **뒤에** 붙는다: 사장님 키가 살아 있으면 그게 먼저 나가고, 다 마른
+    #   뒤에야 빌린 키가 쓰인다. 빌리는 순간 세므로 한도를 넘지 않는다.
+    if _as_cid(customer_id) == 0:
+        try:
+            keys = list(keys) + keyroute.borrow_serpapi(store)
+        except Exception as e:      # noqa: BLE001 — 빌림 실패로 렌즈를 막지 않는다
+            print(f"[lens] 회원 키 빌리기 실패(사장님 키로만 진행): {e!r}", file=sys.stderr)
     return keys
 
 
