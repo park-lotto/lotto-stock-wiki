@@ -3451,6 +3451,35 @@ async function lensExtractThenSearch(shortcode){
   if(st2){ st2.reExtracting=false; st2.cnErr=''; st2.cnCands=[]; st2.cnNoNew=false; st2.cnLoading=true; _lensRerender(shortcode); }
   await fetchLensCnKeywords(shortcode, (st2&&st2.caption)||'', st2&&st2.frameBlob, false);
 }
+// 🎯 제품명 찾기 — 멈춘 화면을 구글 렌즈로 역검색해 **브랜드+모델**을 뽑고,
+// 그것을 5개 언어 검색어로 만들어 목록 **맨 위**에 꽂는다 (2026-09-08 사장님 지시).
+// 왜: 지금 검색어는 썸네일 그림만 보고 지은 범주어라("무선 보조배터리") 어느 언어로
+// 번역해도 엉뚱한 게 나온다. 제품명이 뾰족해야 다섯 나라 어디서 찾아도 같은 물건이 뜬다.
+// ★유료(SerpApi) — 사장님이 누를 때만 돈다.
+async function lensFindProduct(shortcode){
+  const st=LENS_STATE[shortcode]; if(!st || st.prodLoading || !st.frameBlob) return;
+  st.prodLoading=true; st.prodNote=''; renderLens(shortcode);
+  try{
+    const fd=new FormData();
+    fd.append('frame', st.frameBlob, 'frame.jpg');
+    fd.append('source_caption', st.caption||'');
+    const d=await (await fetch('/api/lens/product',{method:'POST',body:fd})).json();
+    const st2=LENS_STATE[shortcode]; if(!st2) return;
+    if(!d.ok){ st2.prodNote=d.error||'제품명을 찾지 못했습니다'; return; }
+    if(!d.cand || !d.product){ st2.prodNote=d.note||'화면에서 제품을 특정하지 못했습니다'; return; }
+    // 이미 같은 말이 있으면 다시 넣지 않는다(중복 방지 — 다른 후보들과 같은 규약).
+    const have=new Set((st2.cnCands||[]).map(c=>(c.ko||'').trim()));
+    if(!have.has(d.product)){
+      const c=Object.assign({}, d.cand, {_pinned:true});
+      st2.cnCands=[c].concat(st2.cnCands||[]);   // ★맨 위에 꽂는다
+    }
+    st2.prodNote='';
+  }catch(e){ const s2=LENS_STATE[shortcode]; if(s2) s2.prodNote='제품명 찾기에 실패했습니다'; }
+  finally{
+    const s3=LENS_STATE[shortcode];
+    if(s3){ s3.prodLoading=false; renderLens(shortcode); }
+  }
+}
 async function lensMoreCnKeywords(shortcode){
   const st=LENS_STATE[shortcode];
   if(!st || st.cnLoading || !st.frameBlob) return;
@@ -3961,6 +3990,8 @@ function renderLens(shortcode, mountId){
             ? '지금은 <b>해외 원본</b> — 샤오홍슈·도우인은 중국어, 틱톡·인스타·핀터레스트는 영어로 엽니다. 한국 영상을 보려면 <b>KR 한국어</b>를 누르세요.'
             : `지금은 <b>${(LENS_LANGS.find(L=>L.k===st.lang)||{}).label||''}</b> — 아래 다섯 곳을 모두 이 언어로 검색합니다.`}
         </div>
+        ${st.frameBlob?`<button onclick="lensFindProduct('${shortcode}')" ${st.prodLoading?'disabled':''} title="멈춘 화면을 구글 렌즈로 역검색해 정확한 제품명(브랜드+모델)을 찾아 맨 위에 넣습니다. 범주어('무선 보조배터리')가 아니라 진짜 제품명이라 어느 나라에서 찾아도 같은 물건이 나옵니다. 유료 — 누를 때만 돕니다" style="${btnCss};border-color:#2ea043;color:#2ea043;font-weight:700">${st.prodLoading?'⏳ 제품명 찾는 중… (10~30초)':'🎯 제품명 찾기'}</button>`:''}
+        ${st.prodNote?`<span style="font-size:11px;color:#e0a33d">${esc(st.prodNote)}</span>`:''}
         ${st.frameBlob?`<button onclick="lensMoreCnKeywords('${shortcode}')" ${st.cnLoading?'disabled':''} title="같은 장면으로 다른 각도의 검색어를 더 뽑습니다(이미 나온 건 빼고 아래에 쌓입니다). 무료 — 추가 비용 없음" style="${btnCss};border-color:var(--accent);color:var(--accent)">${st.cnLoading?'⏳ 뽑는 중…':'🔄 다른 검색어 더'}</button>`:''}
         ${st.cnNoNew?'<span style="font-size:11px;color:var(--sub)">더 나올 게 없어요 — 이 장면에서 뽑을 각도는 다 나왔습니다</span>':''}
         ${st.cnErr?`<span style="font-size:11px;color:#e0623d">${esc(st.cnErr)}</span>`:''}
@@ -4007,7 +4038,7 @@ function renderLens(shortcode, mountId){
           //   페이지 이동해서 검색되게"). 인앱 검색(lensCnSearch)은 함수만 남겨둔다.
           return `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:4px 0">
             <div style="min-width:132px;flex:1 1 132px">
-              <div style="font-size:14px;font-weight:600;line-height:1.3">${kw}</div>
+              <div style="font-size:14px;font-weight:600;line-height:1.3">${c._pinned?'<span title="구글 렌즈로 화면에서 찾아낸 정확한 제품명입니다 — 이걸로 검색하면 어느 나라에서든 같은 물건이 나옵니다" style="background:#2ea043;color:#fff;font-size:10px;padding:1px 6px;border-radius:8px;margin-right:5px;vertical-align:middle">🎯 제품명</span>':''}${kw}</div>
               ${/* ko 아래에 나머지 언어를 한 줄로. 옛 후보는 zh만 있어 그대로 호환된다. */''}
               <div style="font-size:11px;color:var(--sub)">${[c.zh,c.en,c.ja].filter(Boolean).map(esc).join(' · ')}</div></div>
             <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">

@@ -10040,6 +10040,81 @@ async def api_lens_cn_search(request: Request, keyword: str = Form(""),
     return {"ok": True, **res}
 
 
+@app.post("/api/lens/product")
+async def api_lens_product(request: Request, frame: UploadFile = File(...),
+                            source_caption: str = Form("")):
+    """★유료 — 멈춘 프레임을 구글 렌즈로 역검색해 **정확한 제품명(브랜드+모델)**을 뽑고,
+    그것을 5개 언어 검색어로 만들어 돌려준다 (2026-09-08 사장님 지시).
+
+    왜 필요한가 — 지금 검색어는 **썸네일 그림만 보고** 지은 범주어라("무선 보조배터리")
+    어느 언어로 번역해도 엉뚱한 게 나온다. 사장님: "제품명을 어떻게든 발굴해서 키워드
+    제일 상단에 배치하는 게 중요한데... 그래야 모든 언어로 들어갈 때 성공확률이 쉽다."
+
+    ★새 배관을 만들지 않는다 — `product_identify`(프레임 역검색 → Gemini가 여러 프레임에
+      걸쳐 일관된 제품명 확정)는 2026-07-10부터 있었는데 `/api/coupang/lens` 한 곳에서만
+      쓰였고 결과가 **쿠팡 검색으로만** 흘렀다. 그 함수를 그대로 렌즈 모달에 잇는다.
+
+    반환: {ok, product, cand:{ko,zh,en,ja,ru}}  — 프론트가 검색어 목록 **맨 위**에 꽂는다.
+    """
+    cid = getattr(request.state, "customer_id", 0)
+    # 유료게이트 — SerpApi를 태우므로 /api/lens/search와 같은 기준으로 건다.
+    if _global_over_cap("lens"):
+        return JSONResponse(status_code=429, content={
+            "ok": False, "error_code": "global_limit",
+            "error": "지금 이용이 많아 제품명 찾기가 잠시 막혔어요. 잠시 후 다시 시도해 주세요."})
+    if not check_and_count(cid, "lens"):
+        return JSONResponse(status_code=429, content={
+            "ok": False, "error_code": "daily_limit",
+            "error": "오늘 렌즈 사용 횟수를 다 썼어요. 결제하면 더 쓸 수 있어요."})
+    _denied = _charge_or_402(cid, pricing.OP_LENS, keyroute.SVC_SERPAPI)
+    if _denied:
+        return _denied
+
+    raw = await frame.read()
+    if not raw:
+        return {"ok": False, "product": "", "error": "프레임이 비어 있습니다"}
+    # 프레임 공개 URL — SerpApi가 우리 서버로 이미지를 받으러 온다(로그인 예외 경로).
+    #   /api/lens/search와 **같은 폴더·같은 규약**을 쓴다(0순위-B).
+    image_url = await asyncio.to_thread(upload_frame, raw)
+    if not image_url:
+        work_dir = _FIND_TMP_DIR / "lens"
+        work_dir.mkdir(parents=True, exist_ok=True)
+        name = uuid.uuid4().hex + ".jpg"
+        (work_dir / name).write_bytes(raw)
+        image_url = f"{PUBLIC_BASE_URL}/api/find/frame/lens/{name}"
+
+    try:
+        # 렌즈 역검색 + 제품명 확정 — 둘 다 블로킹이라 스레드로 뺀다(이벤트루프 보호).
+        lines = await asyncio.to_thread(fetch_lens_lines, [image_url])
+        product = await asyncio.to_thread(
+            identify_product_from_lines, lines,
+            "", source_caption or "")
+    except Exception as e:      # noqa: BLE001 — 실패해도 렌즈 나머지는 살아야 한다
+        # ★차감과 환불은 **짝**이다 — 크레딧만 되돌리고 포인트를 안 되돌리면
+        #   실패할 때마다 잔액이 조용히 깎인다(test_byok_charge_wiring가 이걸 잡는다).
+        refund_credit(cid, "lens")
+        _refund_points(cid, pricing.OP_LENS, keyroute.SVC_SERPAPI)
+        return {"ok": False, "product": "", "error": f"제품명 찾기 실패: {type(e).__name__}"}
+
+    product = (product or "").strip()
+    if not product:
+        # 못 찾은 것도 결과다 — 조용히 성공한 척하지 않는다.
+        return {"ok": True, "product": "", "cand": None,
+                "note": "화면에서 제품을 특정하지 못했습니다(로고·모델명이 안 보이는 영상)"}
+
+    # 뾰족한 제품명을 5개 언어로 — 이게 있어야 어느 나라에서 찾아도 같은 물건이 나온다.
+    try:
+        tr = await asyncio.to_thread(video_analysis.translate_keyword, product)
+    except Exception:           # noqa: BLE001 — 번역 실패해도 한국어로는 쓸 수 있다
+        tr = {}
+    cand = {"ko": product,
+            "zh": (tr.get("zh") or "").strip(),
+            "en": (tr.get("en") or "").strip(),
+            "ja": (tr.get("ja") or "").strip(),
+            "ru": (tr.get("ru") or "").strip()}
+    return {"ok": True, "product": product, "cand": cand}
+
+
 @app.post("/api/lens/kw/search")
 async def api_lens_kw_search(request: Request, keyword: str = Form(""),
                               max_results: int = Form(8), lang: str = Form("")):
