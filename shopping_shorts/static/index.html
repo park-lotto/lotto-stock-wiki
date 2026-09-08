@@ -3282,6 +3282,12 @@ async function fetchLensCnKeywords(shortcode, caption, blob, append){
     // ★원본 주소를 함께 보낸다(2026-08-22) — 서버가 이 주소로 DB에서 캡션·대본을 찾아
     //   검색어 소재를 채운다. 카드가 들고 있는 캡션은 거의 항상 비어 있다(실측 300건 중 1건).
     try{ const _src=findItem(shortcode); if(_src && _src.url) fd.append('source_url', _src.url); }catch(e){}
+    // ★코드도 그대로 보낸다(2026-09-08 사장님 "이건 돌돌이 휴대용인데 택배칼이 나온다").
+    //   서버는 여태 주소에서 코드를 되뽑았는데, 유튜브 카드 주소는 watch?v=<id>라
+    //   경로만 보던 정규식이 한 건도 못 잡았다 — 대본이 DB에 "휴대용 돌돌이"로 멀쩡히
+    //   있는데도 검색어는 썸네일 1장만 보고 지어졌다. 담기/렌즈 코드(lens_…·grab_…)는
+    //   아예 주소에 없어서 되뽑기로는 영원히 못 찾는다. 아는 값을 그냥 넘긴다.
+    if(shortcode && shortcode!=='__single__') fd.append('source_shortcode', shortcode);
     // 🔄 다른 검색어: 이미 보여준 후보를 넘겨 '겹치지 않는 다른 각도'로 받는다(2026-08-14).
     if(append && st0) fd.append('exclude', (st0.cnCands||[]).map(c=>[c.ko,c.zh].filter(Boolean).join('\n')).join('\n'));
     const d=await (await fetch('/api/lens/cn/keywords',{method:'POST',body:fd})).json();

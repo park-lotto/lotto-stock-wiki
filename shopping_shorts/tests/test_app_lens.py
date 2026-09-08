@@ -865,3 +865,70 @@ def test_렌즈_옛추출본은_대본본문으로_판정(tmp_path, monkeypatch)
                files={"frame": ("f.jpg", _JPG_1PX, "image/jpeg")},
                data={"source_url": "https://x/reel/OLDSCRIPT/"})
     assert r.json()["has_source"] is True
+
+
+# ── 대본을 찾을 코드 판정 (2026-09-08 사장님 "이건 돌돌이 휴대용인데 택배칼이 나온다") ──
+# 실사고: 유튜브 카드 주소는 `watch?v=<id>`인데 정규식이 **경로만** 봐서 한 건도 못 잡았다.
+# DB엔 product "휴대용 돌돌이"가 269자 대본과 함께 멀쩡히 있었는데 소재가 ''로 나가,
+# 검색어가 썸네일 1장만 보고 "택배칼"로 지어졌다. '대본 분석 후 찾기'도 같은 이유로
+# 추출만 성공하고 결과가 안 바뀌었다.
+
+def test_유튜브_watch주소에서도_코드를_찾는다():
+    assert appmod._lens_script_code(
+        "https://www.youtube.com/watch?v=Ielb4AVTKck") == "Ielb4AVTKck"
+
+
+def test_shortcode를_주면_주소보다_우선한다():
+    """프론트는 애초에 코드를 안다 — 주소에서 되뽑는 건 그 값을 버리는 우회였다."""
+    assert appmod._lens_script_code(
+        "https://www.youtube.com/watch?v=Ielb4AVTKck", "lens_youtube_abc") == "lens_youtube_abc"
+
+
+def test_주소에_없는_담기코드도_찾는다():
+    """lens_…·grab_… 코드는 주소에 아예 없다 — 되뽑기로는 영원히 못 찾는다."""
+    assert appmod._lens_script_code("", "grab_instagram_a866972ce162") == "grab_instagram_a866972ce162"
+    assert appmod._lens_script_code("https://x/reel/AAA/", "") == "AAA"
+
+
+def test_못찾으면_빈문자열():
+    assert appmod._lens_script_code("https://example.com/nothing") == ""
+    assert appmod._lens_script_code("", "") == ""
+
+
+def test_watch주소_카드도_대본을_소재로_쓴다(tmp_path, monkeypatch):
+    """사고 그대로 재현 — watch?v= 주소인데 대본이 소재에 실려야 한다."""
+    monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
+    st = Store(str(tmp_path / "t.db"))
+    st.save_script("Ielb4AVTKck", {"full_text": "돌돌이 대본입니다",
+                                   "source_brief": {"product": "휴대용 돌돌이"}})
+    seen = {}
+
+    def _fake(raw, src, exclude=None):
+        seen["src"] = src
+        return {"product": "", "candidates": []}
+
+    monkeypatch.setattr(appmod, "cn_search_candidates", _fake)
+    c = TestClient(appmod.app)
+    r = c.post("/api/lens/cn/keywords",
+               files={"frame": ("f.jpg", _JPG_1PX, "image/jpeg")},
+               data={"source_url": "https://www.youtube.com/watch?v=Ielb4AVTKck"})
+    assert r.json()["has_source"] is True, "대본이 있는데 '소재 없음'으로 나갔다"
+    assert "휴대용 돌돌이" in seen.get("src", ""), "제품명이 검색어 소재에 안 실렸다"
+
+
+def test_shortcode만_와도_대본을_쓴다(tmp_path, monkeypatch):
+    """담기 코드는 주소에 없으므로 shortcode 경로가 유일한 길이다."""
+    monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
+    st = Store(str(tmp_path / "t.db"))
+    st.save_script("grab_instagram_zzz", {"full_text": "본문",
+                                          "source_brief": {"product": "휴대용 돌돌이"}})
+    seen = {}
+    monkeypatch.setattr(appmod, "cn_search_candidates",
+                        lambda raw, src, exclude=None: (seen.update(src=src)
+                                                        or {"product": "", "candidates": []}))
+    c = TestClient(appmod.app)
+    r = c.post("/api/lens/cn/keywords",
+               files={"frame": ("f.jpg", _JPG_1PX, "image/jpeg")},
+               data={"source_shortcode": "grab_instagram_zzz"})
+    assert r.json()["has_source"] is True
+    assert "휴대용 돌돌이" in seen.get("src", "")

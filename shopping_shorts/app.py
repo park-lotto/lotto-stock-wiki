@@ -9404,7 +9404,46 @@ def api_lens_locales():
 _LENS_SRC_MAX = int(os.environ.get("LENS_SRC_MAX", "900"))   # 검색어 소재 글자 상한
 
 
-def _lens_source_text(url, front_caption="", store=None):
+def _lens_script_code(url, shortcode=""):
+    """대본을 찾을 때 쓸 **코드**를 정한다 — 판정은 여기 한 곳뿐(0순위-B).
+
+    ★왜 만들었나(2026-09-08 사장님 제보 "이건 돌돌이 휴대용인데 택배칼이 나온다",
+      "대본분석후찾기도 작동이 안 되고"):
+
+      `_lens_source_text`와 `_lens_has_script`에 **같은 정규식이 두 벌** 적혀 있었고,
+      그 정규식은 `/shorts/`·`/reel/` 같은 **경로만** 봤다. 그런데 유튜브 카드의 주소는
+      `https://www.youtube.com/watch?v=<id>` — 코드가 **쿼리**에 있어 한 건도 못 잡았다.
+
+      실측(서버, work 카드 `Ielb4AVTKck`):
+        url                 = https://www.youtube.com/watch?v=Ielb4AVTKck
+        DB의 대본           = product "휴대용 돌돌이" (269자)   ← 멀쩡히 있었다
+        _lens_source_text() = ''                                ← 못 읽었다
+      → 검색어가 썸네일 1장만 보고 "택배칼·미니 커터칼"로 지어졌다.
+      → '대본 분석 후 찾기'도 추출은 200으로 성공하는데(로그 확인) 그 다음 검색어
+        생성이 여전히 대본을 못 읽어 결과가 그대로였다. 사장님이 세 번 연타하셨다.
+
+    ★고치는 방향 — 주소에서 되뽑지 말고 **아는 값을 그대로 쓴다.**
+      프론트는 애초에 shortcode로 렌즈를 연다. url 파싱은 그 값을 버리고 주소에서
+      다시 알아내려는 우회였고, 그래서 형태가 하나 늘 때마다 샜다. 게다가 담기·렌즈
+      항목의 코드(`lens_youtube_…`, `grab_instagram_…`)는 **주소에 아예 없어서**
+      주소 파싱으로는 영원히 못 찾는다.
+      shortcode가 오면 그걸 쓰고, 없을 때만 종전 주소 파싱으로 내려간다(회귀 0).
+
+    ⚠️주소 파싱에 `watch?v=`도 더했다 — shortcode를 안 보내는 옛 호출부를 위해서다.
+    """
+    sc = (shortcode or "").strip()
+    if sc:
+        return sc
+    if not url:
+        return ""
+    m = (_IG_SC_RE.search(url)
+         or re.search(r"/(?:video|shorts|reel|reels|p|tv)/([A-Za-z0-9_-]+)", url)
+         # 유튜브 watch는 코드가 쿼리에 있다 — 경로만 보던 정규식이 놓치던 자리.
+         or re.search(r"[?&]v=([A-Za-z0-9_-]{6,})", url))
+    return m.group(1) if m else ""
+
+
+def _lens_source_text(url, front_caption="", store=None, shortcode=""):
     """검색어를 만들 **소재 텍스트** — 프론트 캡션 + DB 캡션 + 대본을 합친다.
 
     왜(2026-08-22 사장님 "썸네일 캡션 대본을 빠르게 스캔해서"): 지금까지 검색어는
@@ -9438,13 +9477,16 @@ def _lens_source_text(url, front_caption="", store=None):
         except Exception as e:               # noqa: BLE001 — 보강 실패로 검색을 죽이지 않는다
             import sys as _sys
             print(f"[경고] 렌즈 캡션 조회 실패(무시): {e!r}", file=_sys.stderr)
+    # ★대본 조회는 **url 없이도** 돈다(2026-09-08). 캡션(get_enrichment)은 주소로 찾으니
+    #   위 블록이 `and url`을 요구하는 게 맞지만, 대본은 코드로 찾는다 — 그런데 같은
+    #   가드 안에 묶여 있어서 shortcode만 온 호출(담기 코드는 주소가 없다)은 대본까지
+    #   통째로 건너뛰었다. 두 조회는 열쇠가 다르므로 가드도 갈라야 한다.
+    if st is not None:
         try:
             # 대본은 shortcode로 찾는다. 인스타(/reel·/p·/tv)·유튜브(/shorts)·틱톡(/video)
             # 뿐 아니라 호스트가 다른 URL도 마지막 경로 조각을 코드로 본다 — 못 찾으면
             # 그냥 대본이 없는 것으로 지나간다(아래 sd가 빈 값이라 안전).
-            m = (_IG_SC_RE.search(url)
-                 or re.search(r"/(?:video|shorts|reel|reels|p|tv)/([A-Za-z0-9_-]+)", url))
-            sc = m.group(1) if m else ""
+            sc = _lens_script_code(url, shortcode)
             if sc:
                 sd = st.get_script(sc) or {}
                 # ★source_brief를 **맨 앞에** 붙인다(2026-09-06 사장님 "자막을 다 보고
@@ -9473,7 +9515,7 @@ def _lens_source_text(url, front_caption="", store=None):
     return "\n".join(parts)[:_LENS_SRC_MAX]
 
 
-def _lens_has_script(url, store=None):
+def _lens_has_script(url, store=None, shortcode=""):
     """이 영상의 **대본추출이 돼 있나**(=제품이 무엇인지 아는가). 못 읽으면 False.
 
     ★캡션만으로 '안다'고 치면 안 된다(2026-09-06 사장님 "버튼없는게 많아").
@@ -9488,12 +9530,10 @@ def _lens_has_script(url, store=None):
             st = Store(DB_PATH)
         except Exception:                    # noqa: BLE001 — DB 없으면 '모른다'
             return False
-    if not (st and url):
+    if not st or not (url or shortcode):
         return False
     try:
-        m = (_IG_SC_RE.search(url)
-             or re.search(r"/(?:video|shorts|reel|reels|p|tv)/([A-Za-z0-9_-]+)", url))
-        sc = m.group(1) if m else ""
+        sc = _lens_script_code(url, shortcode)
         if not sc:
             return False
         sd = st.get_script(sc) or {}
@@ -9893,12 +9933,17 @@ async def api_lens_cn(request: Request, frame: UploadFile = File(None),
 @app.post("/api/lens/cn/keywords")
 async def api_lens_cn_keywords(request: Request, frame: UploadFile = File(None),
                                 source_caption: str = Form(""), exclude: str = Form(""),
-                                source_url: str = Form("")):
+                                source_url: str = Form(""),
+                                # ★프론트가 아는 코드를 그대로 받는다(2026-09-08).
+                                #   주소에서 되뽑는 방식은 유튜브 watch?v=와 담기/렌즈
+                                #   코드(lens_…·grab_…)를 못 잡아 대본을 통째로 놓쳤다.
+                                source_shortcode: str = Form("")):
     """프레임(+캡션) → 중국어 후보 검색어 리스트. Gemini 비전 1회, Apify 안 부름.
     프론트가 렌즈 열 때 호출해 후보 버튼을 그린다(2026-07-19)."""
     # ★source_url이 있으면 캡션이 비어도 진행한다 — DB에서 캡션·대본을 찾아올 수 있다
     #   (프론트 캡션은 거의 항상 비어 있다: 실측 300건 중 1건).
-    if frame is None and not (source_caption or "").strip() and not (source_url or "").strip():
+    if (frame is None and not (source_caption or "").strip()
+            and not (source_url or "").strip() and not (source_shortcode or "").strip()):
         return {"ok": True, "product": "", "candidates": [], "has_source": False}
     raw = None
     if frame is not None:
@@ -9915,7 +9960,8 @@ async def api_lens_cn_keywords(request: Request, frame: UploadFile = File(None),
         #   프론트가 동시에 던진 /api/lens/yt가 뒤에서 줄을 서 20초가 됐다(2026-08-16 실측).
         # ★썸네일 1장만 보면 제품을 잘못 짚는다(실측 3건 중 2건). DB에 있는
         #   캡션·대본을 합쳐 소재를 넉넉히 준다 — 비용 0(이미 저장된 것).
-        src = await asyncio.to_thread(_lens_source_text, source_url, source_caption)
+        src = await asyncio.to_thread(_lens_source_text, source_url, source_caption,
+                                      None, source_shortcode)
         v = await asyncio.to_thread(cn_search_candidates, raw, src, exclude=seen)
     except Exception:
         v = {}
@@ -9928,7 +9974,7 @@ async def api_lens_cn_keywords(request: Request, frame: UploadFile = File(None),
     #   캡션만 있는 영상이 2,624건인데(서버 실측) 캡션은 후킹 문구라 제품을 특정하지
     #   못한다 — 그걸 '소재 있음'으로 쳐서 정작 버튼이 필요한 영상에 안 떴다.
     try:
-        _has = await asyncio.to_thread(_lens_has_script, source_url)
+        _has = await asyncio.to_thread(_lens_has_script, source_url, None, source_shortcode)
     except Exception:                       # noqa: BLE001 — 판정 실패로 검색을 죽이지 않는다
         _has = False
     return {"ok": True, "product": v.get("product", ""),
