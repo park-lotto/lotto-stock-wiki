@@ -145,7 +145,26 @@ def score_sul(titles, name=""):
 _VLOG_SIGN = ["브이로그", "vlog", "우리집", "저희집", "남편", "아내", "와이프",
               "먹방", "요리", "레시피", "만들기", "먹는 방법",
               "셀프도배", "셀프시공", "시공", "공사", "이사", "집들이",
-              "년차", "구경하고", "루틴", "일상", "vs 딸", "엄마 vs"]
+              "년차", "구경하고", "루틴", "일상", "vs 딸", "엄마 vs",
+              # ★2026-09-08 2차 보강 — 등록한 뒤 실제 업로드를 열어보고 추가했다.
+              #   목록에 없어서 통과한 것들: ggyonghouse "월세집 화장실, 일반인이 두 달
+              #   동안 셀프로 고친" · "변기 직접달다가" · "천장을 직접 설치하면".
+              #   '셀프도배·셀프시공'만 막고 '셀프로 고친/직접 달다'는 안 막고 있었다.
+              "셀프로", "직접 설치", "직접 달", "직접 고친", "직접 만든", "뜯다가",
+              "고쳐봤", "해봤습니다", "도전", "후기", "리모델링", "인테리어 공사"]
+
+# 이 서비스는 한국어 쇼핑 쇼츠를 만든다 — 제목이 한국어가 아니면 재료로 못 쓴다.
+# ★2026-09-08 실측: 홈템 발굴에 Serena Neel(359만)·Lone Fox(178만) 같은 **영어 DIY
+#   채널**이 들어왔다. 직촬 차단은 한국어 어휘 목록이라 영어 제목엔 한 글자도 안 걸린다.
+#   "차단이 뚫렸다"가 아니라 **애초에 볼 수 없는 것**이었다 — 어휘로 막는 방식의 사각지대다.
+_HANGUL_RE = re.compile(r"[가-힣]")
+
+
+def _mostly_korean(titles, floor=0.5):
+    """제목 절반 이상에 한글이 있나. 표본이 없으면 False(모르면 안 받는다)."""
+    if not titles:
+        return False
+    return sum(1 for t in titles if _HANGUL_RE.search(t or "")) / len(titles) >= floor
 
 
 def score_home(titles, name=""):
@@ -161,6 +180,8 @@ def score_home(titles, name=""):
       루프라 한 번 들어오면 그 채널의 어휘로 같은 결을 계속 불러온다.
     """
     if not titles:
+        return 0
+    if not _mostly_korean(titles):      # 영어권 DIY 채널 차단 — 어휘 목록으로는 못 잡는다
         return 0
     vlog = sum(1 for t in titles if _h(t, _VLOG_SIGN))
     if vlog / len(titles) > 0.16:
