@@ -255,6 +255,60 @@ _NUM_UNIT = re.compile(
     r"(\d[\d,.]*)\s*(mm|cm|m|kg|g|ml|l|초|분|시간|일|주|개월|년|개|장|자루|명|인|배|퍼센트|%|원)")
 
 
+# ★고조 칸에 **새 정보**가 들어갔는가 (2026-09-08). 연결어 개수만 세던 구멍을 막는다.
+_ESC_HEADS = ("심지어", "게다가", "거기다", "그것도", "더 대박인 건", "더대박인건",
+              "근데 진짜 충격적인 포인트는", "근데 충격적인 건", "근데 충격적인 포인트는",
+              "충격인 건", "근데 더 미친 건", "근데 진짜는 여기서부터인데", "놀랍게도")
+
+
+def _strip_esc_head(t):
+    """고조 연결어를 떼고 알맹이만 남긴다 — 판정은 알맹이로 해야 한다."""
+    t = (t or "").strip()
+    for h in sorted(_ESC_HEADS, key=len, reverse=True):
+        if t.startswith(h):
+            return t[len(h):].strip(" ,.")
+    return t
+
+
+_ESC_STOP = None
+
+
+def _stems(text):
+    """어간 2글자 집합. 조사·활용이 갈려도 잡히게(메모리: 어간 2글자 매칭)."""
+    global _ESC_STOP
+    ws = set(w[:2] for w in re.findall(r"[가-힣]{2,}", text or ""))
+    if _ESC_STOP is None:
+        _ESC_STOP = set(w[:2] for w in re.findall(r"[가-힣]{2,}",
+            "이것 그것 저것 있음 없음 하는 되는 수도 정도 진짜 완전 그냥 바로 대박 "
+            "미친 충격 포인트 심지어 근데 여기 저기 때문 이거 저거 정말 아주 매우"))
+    return ws - _ESC_STOP
+
+
+def escalation_content(beats, facts_text):
+    """고조 칸들이 **재료에서 온 말**인가. → (검사한 칸 수, 재료 밖인 칸들)
+
+    재료(facts_text)가 없으면 판정하지 않는다 = 기존 동작 그대로(회귀 0)."""
+    if not facts_text:
+        return 0, []
+    # ★peak 줄만 뽑는다 — specs/why(뻔한 사양)로는 고조를 세울 수 없다.
+    #   라벨은 product_facts.prompt_block()이 붙인다: "- 가장 센 셀링포인트(...)".
+    _peak = [ln for ln in facts_text.splitlines() if "셀링포인트" in ln or "의외의 용도" in ln]
+    fs = _stems(" ".join(_peak)) if _peak else set()
+    if not fs:
+        return 0, []
+    n = 0
+    bad = []
+    for b in (beats or []):
+        t = (b.get("text") or "") if isinstance(b, dict) else str(b)
+        if not any(h in t for h in _ESC_HEADS):
+            continue
+        n += 1
+        core = _strip_esc_head(t)
+        if len(_stems(core) & fs) < 2:
+            bad.append(core[:30])
+    return n, bad
+
+
 def _escalation(full):
     """고조 연결어가 **몇 번** 쓰였나. 헌장은 '한 번만'이다(남발하면 죽는다)."""
     n = norm(full)
@@ -355,6 +409,11 @@ def hook_checks(style, full, product=""):
     if (style or {}).get("hook_conceal"):
         toks = _product_tokens(product)
         leaked = [t for t in toks if t in win]
+        # ★한 낱말만 겹치는 건 유출이 아니다 — "선풍기 틈새 청소 솔"의 '청소'처럼
+        #   카테고리어가 훅에 스치는 건 흔하고, 그걸 막으면 멀쩡한 훅이 계속 반려된다.
+        #   두 낱말이 함께 오면("틈새 청소") 그때는 정체가 드러난 것으로 본다.
+        if len(leaked) < 2:
+            leaked = []
         out.append({"name": "훅 3초 정체은폐", "ok": not leaked,
                     "detail": ("앞 3초에 제품 정체(%s)가 나왔다 — 은폐형은 정체를 "
                                "`reveal` 구간까지 숨긴다(실측 5~7초 공개). "
@@ -509,12 +568,28 @@ def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
     #   서사가 없어 "한 단계 더 올라가는 문장"을 놓을 자리가 없다.
     #   여기서 면제하지 않으면 나열형은 영영 통과 못 한다.
     if style.get("is_list"):
-        esc = 1 if esc == 0 else esc      # 0회는 정상 / 남발(2회+)은 그대로 잡는다
-    checks.append({"name": "고조 심화(1회)", "ok": esc == 1,
+        esc = 1 if esc == 0 else esc      # 0회는 정상 / 남발은 그대로 잡는다
+    # ★허용 횟수는 스파인이 정한다(2026-09-08). 없으면 1 = 종전 동작(회귀 0).
+    _esc_max = int(style.get("esc_times") or 1)
+    checks.append({"name": "고조 심화(%d회)" % _esc_max,
+                   "ok": 1 <= esc <= _esc_max,
                    "detail": ("고조 연결어가 없다 — 해결 뒤에 '심지어/더 대박인 건'으로 "
                               "새로운 장점 하나를 더 얹어라" if esc == 0
-                              else ("%d번 나왔다 — 한 번만 써라(남발하면 죽는다)" % esc
-                                    if esc > 1 else "OK"))})
+                              else ("%d번 나왔다 — 이 스타일은 %d번까지다(남발하면 죽는다)"
+                                    % (esc, _esc_max) if esc > _esc_max else "OK"))})
+
+    # ★고조 '내용' 검사(2026-09-08) — 연결어만 있고 알맹이가 재료 밖이면 밋밋하다.
+    #   썰 계열(hook_3s)에만 건다: 이 장르는 고조가 생명이라 사장님이 "제일 심각"이라 했다.
+    #   재료가 없으면 판정 자체를 안 한다(회귀 0).
+    if style.get("hook_3s"):
+        _en, _ebad = escalation_content(beats, facts_text)
+        if _en:
+            checks.append({"name": "고조 알맹이", "ok": not _ebad,
+                           "detail": ("연결어 뒤가 밋밋하다(%s) — '심지어/충격적인 건' 뒤에는 "
+                                      "재료의 **'가장 센 셀링포인트'(의외의 쓰임)**에서 골라 놓아라. "
+                                      "방수·충전식·가벼움처럼 그 제품이면 당연한 소리는 안 된다."
+                                      % " / ".join('"%s"' % x for x in _ebad[:2]))
+                                     if _ebad else "OK"})
 
     # ★소재 일치(2026-08-18) — **출구 검사**. 이번 사고("재료는 네일펜인데 대본은 주방
     #   기름 가림막")를 막으려고 지금까지 한 것은 전부 프롬프트에 경고를 더 넣는 일이었다.

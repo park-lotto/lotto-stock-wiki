@@ -2303,10 +2303,15 @@ function render(opts){
   if(_total > items.length){
     el.insertAdjacentHTML("beforeend",
       `<div style="grid-column:1/-1;text-align:center;padding:16px 0">
-         <button onclick="showMoreCards()" style="padding:10px 22px;border-radius:999px;
-           border:1px solid var(--line);background:var(--inset);color:var(--txt);cursor:pointer">
-           더 보기 <span style="color:var(--sub)">(${items.length} / ${_total})</span>
-         </button></div>`);
+         <button onclick="showMoreCards()" style="padding:18px 46px;border-radius:999px;
+           border:2px solid var(--accent,#4a9eff);background:var(--inset);color:var(--txt);
+           cursor:pointer;font-size:18px;font-weight:800;box-shadow:0 2px 10px rgba(0,0,0,.18)">
+           ⌄ 더 보기 <span style="color:var(--sub);font-size:15px;font-weight:600">
+           (${items.length.toLocaleString()} / ${_total.toLocaleString()}장 · ${(_total-items.length).toLocaleString()}장 남음)</span>
+         </button>
+         <div style="margin-top:8px;font-size:12px;color:var(--sub)">
+           정렬·검색·필터는 <b>${_total.toLocaleString()}장 전부</b>에 이미 적용됐고, 화면에 그리는 것만 나눠 냅니다.
+         </div></div>`);
   }
   markSavedButtons();
   markCapOverflow();

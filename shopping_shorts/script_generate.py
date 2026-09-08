@@ -543,7 +543,7 @@ def _sources_product(sources):
 
 def generate_one_style(sources, style, target_seconds=30, bank_context="", facts_block="",
                        seed="",
-                       note=None, grounded=False):
+                       note=None, grounded=False, product=""):
     """스타일 1개로 대본 1안. → {beats, script, hook, checks, passed, tries, style_id, style_name}
 
     ★조용히 통과시키지 않는다: 게이트를 못 넘으면 passed=False로 **표시해서** 돌려준다.
@@ -560,7 +560,8 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
     seconds = max(5, min(int(target_seconds or 30), 90))
     # ★seed(job_id)를 넘겨 문장틀 순서를 job마다 돌린다 — 안 넘기면 항상 같은
     #   순서라 모델이 앞쪽 틀에 쏠린다(실측: 훅 10개 중 6개가 한 번도 안 나옴).
-    head = bank_assemble.style_block(style, seconds=seconds, seed=seed)
+    head = bank_assemble.style_block(style, seconds=seconds, seed=seed,
+                                     facts_block=facts_block)
     if not head:
         return None
     # grounded(2026-09-04): 장면 전부 + 규칙 + 게이트 '장면 근거'. 아니면 종전 문장 그대로.
@@ -607,7 +608,7 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
         # ★소재 일치도 함께 본다(2026-08-18) — 재료의 제품명을 그대로 넘긴다.
         #   product가 비면 그 검사는 건너뛴다(회귀 0).
         checks, full = script_gate.check(style, res, facts_text=facts_block,
-                                         product=_sources_product(sources),
+                                         product=_sources_product(sources) or (product or ""),
                                          seconds=seconds,
                                          speaker_judge=_speaker_judge,
                                          scene_ids=_scene_ids, grounded=bool(grounded),
@@ -643,7 +644,7 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
         # ★앞 판정을 물려준다 — 안 그러면 화자 실패가 여기서 조용히 사라지고,
         #   판정기를 다시 넘기면 유료 호출이 두 배가 된다(재단은 화자를 못 바꾼다).
         checks, full = script_gate.check(style, res, facts_text=facts_block,
-                                         product=_sources_product(sources),
+                                         product=_sources_product(sources) or (product or ""),
                                          seconds=seconds,
                                          speaker_judge=script_gate.prior_verdict(checks),
                                          scene_ids=_scene_ids, grounded=bool(grounded),
@@ -980,7 +981,7 @@ def regen_one_beat(sources, style, role, beats, template="", target_seconds=30,
 
 
 def generate_by_styles(sources, styles, target_seconds=30, bank_context="", facts_block="",
-                       reasons=None, seed="", grounded=False):
+                       reasons=None, seed="", grounded=False, product=""):
     """스타일 목록(보통 2개) → 각 1안. 실패한 스타일은 건너뛴다(하나라도 나오면 화면은 산다).
 
     facts_block은 그대로 흘려보낸다 — 빈 값이면 기존 경로(회귀 0).
@@ -996,7 +997,7 @@ def generate_by_styles(sources, styles, target_seconds=30, bank_context="", fact
         note = {} if reasons is not None else None
         try:
             d = generate_one_style(sources, st, target_seconds, bank_context, facts_block,
-                                   seed=seed, note=note, grounded=grounded)
+                                   seed=seed, note=note, grounded=grounded, product=product)
         except Exception as e:      # noqa: BLE001 — 한 스타일 실패로 나머지를 죽이지 않는다
             print(f"generate_by_styles 실패(style={st.get('id')}): {e}")
             if reasons is not None:
