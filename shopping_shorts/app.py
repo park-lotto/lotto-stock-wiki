@@ -10104,8 +10104,8 @@ async def api_lens_product(request: Request, frames: list[UploadFile] = File(...
             body = (sd.get("full_text") or "").strip()
             if body:
                 caption = (caption + " / " + body[:600]).strip(" /")
-    except Exception:      # noqa: BLE001 — 보강 실패는 조용히 넘어간다(있으면 좋은 것)
-        pass
+    except Exception as e:  # noqa: BLE001 — 보강 실패는 치명적이지 않다(있으면 좋은 것)
+        print(f"[lens-product] 대본 보강 실패(무시): {e!r}", file=sys.stderr)
 
     try:
         # 렌즈 역검색 + 제품명 확정 — 둘 다 블로킹이라 스레드로 뺀다(이벤트루프 보호).
