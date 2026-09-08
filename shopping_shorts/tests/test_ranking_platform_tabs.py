@@ -22,8 +22,10 @@
   **전 플랫폼 노출**이 지금 계약. 09-07에 숨긴 이유(죽은 데이터)는 사라지지 않았다 —
   실측 09-08: 유튜브 09-08 / 네이버클립 08-30 / 핀터레스트 08-28 / 쓰레드 08-17 /
   틱톡·샤오홍슈·도우인 07-30(게다가 shortcode가 전부 demo_ 더미 8건).
-  사장님께 이 사실을 보고한 뒤 지시대로 전부 열었다. 다시 줄일 일이 생기면
-  삭제가 아니라 display:none으로만 되돌린다(위 이력과 같은 방식).
+  보고 뒤 사장님이 **틱톡·샤오홍슈·도우인 3개는 다시 닫으라**고 하셨다 — 그 셋만
+  실데이터가 0이고 demo_ 더미뿐이라 고객에게 가짜가 보이기 때문이다.
+  → 지금 계약 = 인스타·유튜브·쓰레드·핀터레스트·네이버클립 **5개 노출**,
+    틱톡·샤오홍슈·도우인 3개는 display:none(수집이 살아나면 그때 연다).
 - 2026-08-17(4차): 쓰레드 배선 완료 — service._collect_threads()가 생겨 "비활성"
   전제가 사라졌다. 지표·창은 인스타와 동일(댓글 기준·48h, 사장님 결정).
 
@@ -52,16 +54,18 @@ def _tab_tag(html, platform):
     return html[html.rfind("<div", 0, i): html.find(">", i) + 1]
 
 
-def test_all_platform_tabs_shown():
-    """전 플랫폼 노출 — 지금 계약(2026-09-08 사장님 "모두 공개로해라").
+def test_live_platform_tabs_shown_demo_only_hidden():
+    """노출 5개(인스타·유튜브·쓰레드·핀터레스트·네이버클립), demo 더미 3개는 숨김.
 
-    ★계약이 여러 번 뒤집혔다(파일 맨 위 이력 참조). 줄일 때는 요소를 지우지 말고
-    display:none만 붙인다 — switchPlatform·트렌드카드가 이 요소들을 잡는다.
+    ★2026-09-08 사장님 "모두 공개로해라" → 전부 열었다가, demo_ 더미뿐이라는 실측을
+    보고하니 틱톡·샤오홍슈·도우인 3개만 다시 닫으라고 하셨다.
+    ★숨길 때도 요소는 지우지 않는다 — switchPlatform·트렌드카드가 이 요소들을 잡는다.
     """
     html = INDEX.read_text(encoding="utf-8")
-    for p in ("instagram", "youtube", "threads", "pinterest", "naverclip",
-              "tiktok", "xiaohongshu", "douyin"):
-        assert "display:none" not in _tab_tag(html, p),             f"{p} 탭이 숨겨졌다 — 사장님은 '모두 공개'를 지시했다(2026-09-08)"
+    for p in ("instagram", "youtube", "threads", "pinterest", "naverclip"):
+        assert "display:none" not in _tab_tag(html, p),             f"{p} 탭이 숨겨졌다 — 사장님이 공개하라고 한 5개 중 하나다(2026-09-08)"
+    for p in ("tiktok", "xiaohongshu", "douyin"):
+        assert "display:none" in _tab_tag(html, p),             f"{p} 탭이 열렸다 — 실데이터 0(demo_ 더미)이라 닫기로 했다(2026-09-08)"
 
 
 def test_threads_tab_is_wired():
