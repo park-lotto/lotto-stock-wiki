@@ -139,6 +139,15 @@ def score_sul(titles, name=""):
     return sum(1 for t in titles if cz.categorize(name, t) in ("제품정체형", "오용형"))
 
 
+# 직촬(본인이 찍어 출연) 신호 — 이 결의 채널은 **화면을 재료로 못 쓴다**(2026-09-08 사장님).
+# ★씨앗을 고를 때만이 아니라 **발굴이 새로 찾는 채널에도** 걸어야 한다. 안 그러면
+#   씨앗만 깨끗하고 자식 세대가 직촬로 오염된다 — 자가증식이라 한 번 새면 계속 번진다.
+_VLOG_SIGN = ["브이로그", "vlog", "우리집", "저희집", "남편", "아내", "와이프",
+              "먹방", "요리", "레시피", "만들기", "먹는 방법",
+              "셀프도배", "셀프시공", "시공", "공사", "이사", "집들이",
+              "년차", "구경하고", "루틴", "일상", "vs 딸", "엄마 vs"]
+
+
 def score_home(titles, name=""):
     """홈템 축(2026-09-08 사장님 "썰 다음 홈템 잘되는 체널들도 해야하고").
 
@@ -146,7 +155,16 @@ def score_home(titles, name=""):
     채널은 걸러지는데 랭킹은 안 걸러지는 어긋남이 난다(2026-08-21 '만들기' 사고와 동형).
     ★썰쇼핑을 홈템으로 세지 않는다. `categorize`는 두 축을 이미 갈라 주므로
       제품정체형·오용형으로 판정된 편은 여기서 0점이다 — 축이 서로를 잡아먹지 않는다.
+    ★직촬 채널은 **0점으로 떨어뜨린다**(2026-09-08 사장님 "살림도 직촬은 안되는데").
+      홈템 판정은 통과하지만 화면을 재료로 못 쓰는 결이 있다 — 자기 집·자기 손으로
+      찍어 출연하는 채널이다. 25편 중 4편(16%)만 그 결이어도 배제한다: 자가증식
+      루프라 한 번 들어오면 그 채널의 어휘로 같은 결을 계속 불러온다.
     """
+    if not titles:
+        return 0
+    vlog = sum(1 for t in titles if _h(t, _VLOG_SIGN))
+    if vlog / len(titles) > 0.16:
+        return 0
     return sum(1 for t in titles if cz.categorize(name, t) == "홈템")
 
 
@@ -295,19 +313,34 @@ _SEEDS = {
         "UCBFu04us6bv9OFcwrJDXdMg": {"title": "살림킹왕짱", "subs": 14600, "score": 4},
         "UCnD6bgF50o87a92-iK1dI8Q": {"title": "살림도사", "subs": 14500, "score": 4},
     },
-    # 홈템 씨앗(2026-09-08) — 라이브 8,917건에서 **실제로 홈템이 잘 되는 채널**을 뽑았다.
-    # 고른 기준: 홈템 3편 이상 + (편수 × 조회수중앙값의 제곱근) 상위. 추측이 아니라 실적이다.
+    # 홈템 씨앗(2026-09-08) — 라이브 8,917건 실측.
+    #
+    # ★★처음엔 '홈템 편수 × 조회수'만 보고 뽑았다가 **전부 직촬 채널**이 걸렸다.
+    #   사장님 지적: "살림도 직촬은 안되는데". 직촬은 본인이 자기 집·자기 손으로 찍어
+    #   출연하는 결이라 **화면을 재료로 쓸 수 없다** — 이 서비스의 존재 이유가 남의
+    #   제품 클립을 재편집하는 것인데, 그 채널들은 재료가 아니라 완성품이다.
+    #   실제로 걸렸던 것:
+    #     고수의살림  "유럽에서 아는 사람만 한다는 샐러드 먹는 방법"   ← 요리 직촬
+    #     살림구조대  "코스트코 18년차 회원이 이번주 구경하고 온 제품" ← 매장 직촬
+    #     소온풀      "다이소에 없는 주방꿀템으로 엄마 vs 딸 도시락"   ← 출연 상황극
+    #     홈그래피    "도배 공사 절대 하지마세요 #셀프도배"           ← 시공 직촬
+    #   편수·조회수는 "잘 되는 채널"은 말해주지만 **"재료로 쓸 수 있는 채널"은 말해주지
+    #   않는다.** 지표를 늘리기 전에 그 지표가 무엇을 못 보는지 먼저 물어라.
+    #
+    # 그래서 사장님 확정 기준(2026-09-08)으로 다시 뽑았다 — **썰쇼핑처럼 제품 클립
+    # 편집형만**. 직촬 어휘(브이로그·우리집·남편·시공·먹방·N년차·구경하고…)가 4편 중
+    # 1편만 넘어도 배제하고, 물건 소개 어휘가 60% 이상인 채널만 남겼다.
     "홈템": {
-        "UCbnKLFEgzZhZh50XdsBiiBg": {"title": "고수의살림", "subs": 244000, "score": 13},
         "UCwFNiYnTtrYuwO7YRWomatw": {"title": "살림토끼", "subs": 127000, "score": 9},
-        "UCylAPY4i5NpwkbfD4bBYeeA": {"title": "살림구조대", "subs": 127000, "score": 8},
-        "UCuTrbV_N8Rc0SYlSyVIrguA": {"title": "소온풀", "subs": 88300, "score": 14},
-        "UCJGzyTaZouEo5-DtsusMjwg": {"title": "홈스타일러스", "subs": 56500, "score": 11},
-        "UCTnZvrXO2BZJKGKV8eZKyVw": {"title": "홈그래피", "subs": 27400, "score": 14},
+        "UCdvy8zJAV-z2w55b1yYGQYA": {"title": "인생 조언", "subs": 46200, "score": 6},
+        "UCZseDHYlrD1LV8jwShLFsXw": {"title": "홈퀸살림", "subs": 37000, "score": 13},
+        "UCP9At0_YeazqIriEbAoSU3A": {"title": "살림천재노다지", "subs": 29300, "score": 5},
+        "UCXQRYw25xKBXGaMfb4FnnZQ": {"title": "홈템꿀팁", "subs": 28400, "score": 13},
         "UCOnSoSFUyeakdOOzAP0nnyw": {"title": "똑디템", "subs": 26900, "score": 17},
+        "UCEDiNh6UkkFcjU9zxB-2Lrw": {"title": "쇼핑꿀템 연구소", "subs": 20900, "score": 14},
         "UCd2eMn4URep6NNO-H_MUTLg": {"title": "살림친구", "subs": 18600, "score": 11},
+        "UCvh1AtO12W2A15ftNEGIRyg": {"title": "쇼핑스토리", "subs": 16000, "score": 10},
         "UCdgUlNruZABfk06xFW8DJlQ": {"title": "리빙테리어", "subs": 4250, "score": 23},
-        "UCgCcj2X-osfrMA4posJL5XQ": {"title": "살림기록관", "subs": 2710, "score": 20},
     },
 }
 for _stl, _seed in _SEEDS.items():
