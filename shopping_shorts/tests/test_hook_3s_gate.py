@@ -80,3 +80,26 @@ def test_DB에서_게이트까지_플래그가_실린다(tmp_path):
     sp = [x for x in st.list_spines(status="approved") if x["id"] == sid][0]
     assert sp["hook_3s"] is True and sp["hook_conceal"] is True
     assert sg.hook_checks(sp, "안녕하세요 오늘은 소개해드릴게요"), "게이트가 안 켜졌다"
+
+
+# ── 한 낱말 제품명 회귀 방지 (2026-09-09) ──────────────────────────────────
+# ★2026-09-08에 "낱말 2개 이상 겹칠 때만 유출"로 완화했다가(선풍기 틈새 청소 솔의
+#   '청소' 한 낱말로 멀쩡한 훅이 반려된 탓) **제품명 자체가 한 낱말인 경우**를 놓쳤다.
+#   "마늘다지기"를 훅에 그대로 써도 통과해 은폐형의 생명이 죽었다. 둘 다 지킨다.
+
+def test_한낱말_제품명은_한번만_나와도_잡는다():
+    """제품명이 한 낱말이면 그 한 낱말이 곧 정체다."""
+    cs = sg.hook_checks(CONCEAL, "이건 바로 마늘다지기인데 최근 화제라는데", product="마늘다지기")
+    assert not _ok(cs), "한 낱말 제품명이 훅에 나왔는데 통과했다"
+    assert "은폐" in " ".join(c["name"] for c in cs if not c["ok"])
+
+
+def test_여러낱말_제품의_한낱말_스침은_통과한다():
+    """'선풍기 틈새 청소 솔'의 '청소'처럼 카테고리어가 스치는 건 유출이 아니다."""
+    full = "최근 딱 봤을 때는 도저히 용도를 알기 힘든 이 청소 도구가"
+    assert _ok(sg.hook_checks(CONCEAL, full, product="선풍기 틈새 청소 솔")), "멀쩡한 훅을 반려했다"
+
+
+def test_여러낱말_제품이_두낱말_겹치면_잡는다():
+    full = "이건 바로 틈새 청소 솔인데 진짜 편하다는 거"
+    assert not _ok(sg.hook_checks(CONCEAL, full, product="선풍기 틈새 청소 솔"))
