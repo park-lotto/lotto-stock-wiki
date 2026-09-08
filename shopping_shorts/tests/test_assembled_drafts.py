@@ -8,7 +8,7 @@ import shopping_shorts.app as app
 from shopping_shorts import spine_fill
 
 SUL_SPINE = {
-    "id": 56, "name": "유튜브 오용형", "fit_categories": ["오용형"],
+    "id": 56, "name": "유튜브 「원래 이렇게 쓰는 거 아닌데」", "fit_categories": ["오용형"],
     "beat_roles": ["origin", "notice", "twist"],
     "templates": {
         "origin": ["이게 원래는 {본래용도}로 개발된 제품이었음"],
@@ -123,7 +123,7 @@ def test_화면이_조립못한_이유를_받는다():
 
 # ── 은폐형은 쿠팡 재료가 있어야 채워진다(2026-08-19) ────────────────────────
 CONCEAL_SPINE = {
-    "id": 55, "name": "유튜브 은폐형", "fit_categories": ["제품정체형"],
+    "id": 55, "name": "유튜브 「이건 바로 OO」", "fit_categories": ["제품정체형"],
     "beat_roles": ["bait", "authority", "reveal", "benefit"],
     "templates": {
         "bait": ["최근 딱 봤을 때는 평범한 이 {제품군}이"],
@@ -179,7 +179,7 @@ def test_어느_칸이_왜_안됐는지_말한다(monkeypatch):
     out, left, why = app._assembled_drafts([CONCEAL_SPINE], [{"full_text": "자막"}], None)
     assert out == [] and left == [CONCEAL_SPINE]
     msg = " ".join(why)
-    assert "유튜브 은폐형" in msg and "칸" in msg
+    assert "유튜브 「이건 바로 OO」" in msg and "칸" in msg
     assert "reveal" in msg or "benefit" in msg, "어느 칸이 빈지 말해야 한다"
 
 

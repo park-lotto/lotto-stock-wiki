@@ -5,7 +5,7 @@
 """
 from shopping_shorts import spine_fill as sf
 
-# 라이브 spine 56(유튜브 오용형)의 실제 templates·beat_roles.
+# 라이브 spine 56(유튜브 「원래 이렇게 쓰는 거 아닌데」)의 실제 templates·beat_roles.
 SPINE56 = {
     "beat_roles": ["title", "origin", "notice", "cases", "twist"],
     "templates": {

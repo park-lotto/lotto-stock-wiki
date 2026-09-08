@@ -2334,9 +2334,12 @@ function render(opts){
   //   올라가 읽지 않는다. 잘린 자리에서 바로 풀 수 있어야 한다.
   const _tail = [];
   if(_total > items.length){
-    _tail.push(`<button onclick="showMoreCards()" style="padding:10px 22px;border-radius:999px;
-        border:1px solid var(--line);background:var(--inset);color:var(--txt);cursor:pointer">
-        더 보기 <span style="color:var(--sub)">(${items.length} / ${_total})</span></button>`);
+    // ★크게 둔다 — 200장을 스크롤해 바닥에 온 사람이 못 본 것이 있는 줄 모르고 떠난다.
+    _tail.push(`<button onclick="showMoreCards()" style="padding:18px 46px;border-radius:999px;
+        border:2px solid var(--accent,#4a9eff);background:var(--inset);color:var(--txt);
+        cursor:pointer;font-size:18px;font-weight:800;box-shadow:0 2px 10px rgba(0,0,0,.18)">
+        ⌄ 더 보기 <span style="color:var(--sub);font-size:15px;font-weight:600">
+        (${items.length.toLocaleString()} / ${_total.toLocaleString()}장 · ${(_total-items.length).toLocaleString()}장 남음)</span></button>`);
   }
   if(_perChCut > 0){
     _tail.push(`<button onclick="togglePerChannel()" style="padding:10px 22px;border-radius:999px;
@@ -2346,9 +2349,16 @@ function render(opts){
         📺 채널당 ${PER_CHANNEL_MAX}개로 <b>${_perChCut}건</b>이 접혀 있어요 — 전부 보기</button>`);
   }
   if(_tail.length){
+    // ★두 버튼을 나란히 놓고(origin/main), 그 아래 한 줄 안내를 붙인다(이 트랙).
+    //   안내가 필요한 이유: "검색했는데 왜 일부만 나오느냐"를 먼저 막는다 —
+    //   정렬·필터는 전부에 적용됐고 **그리는 것만** 나눠 낸다.
     el.insertAdjacentHTML("beforeend",
-      `<div style="grid-column:1/-1;text-align:center;padding:16px 0;display:flex;
-         gap:10px;justify-content:center;flex-wrap:wrap">${_tail.join("")}</div>`);
+      `<div style="grid-column:1/-1;text-align:center;padding:16px 0">
+         <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">${_tail.join("")}</div>
+         ${_total > items.length ? `<div style="margin-top:8px;font-size:12px;color:var(--sub)">
+           정렬·검색·필터는 <b>${_total.toLocaleString()}장 전부</b>에 이미 적용됐고, 화면에 그리는 것만 나눠 냅니다.
+         </div>` : ""}
+       </div>`);
   }
   markSavedButtons();
   markCapOverflow();

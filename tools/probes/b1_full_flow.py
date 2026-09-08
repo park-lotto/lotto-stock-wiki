@@ -37,7 +37,7 @@ if comment_gen._current_key_and_idx()[0] is None:
 
 from shopping_shorts import script_generate, edit_plan
 sys.path.insert(0, os.path.join(ROOT, "tools", "probes"))
-# 스타일은 두 번째 인자로 고른다(기본 57 다이소축). 60=유튜브 발명품형(단일 제품·히트작 23편).
+# 스타일은 두 번째 인자로 고른다(기본 57 다이소축). 60=유튜브 「OO 개발자도 무릎 탁」(단일 제품·히트작 23편).
 _SID = sys.argv[2] if len(sys.argv) > 2 else "57"
 STYLE = __import__("_style%s" % _SID, fromlist=["STYLE"]).STYLE
 

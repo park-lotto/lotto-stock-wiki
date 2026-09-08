@@ -747,7 +747,7 @@ def _benefit_material_problem(slots, need, kind, why):
 
 
 def invention_material_problem(slots):
-    """발명품형(spine "유튜브 발명품형") 자격. 효능 3칸 + 제품명.
+    """발명품형(spine "유튜브 「OO 개발자도 무릎 탁」") 자격. 효능 3칸 + 제품명.
 
     {계기}는 **필수가 아니다** — 없으면 계기를 안 쓰는 story 변형이 대신 걸린다
     (없는 미담을 지어내는 것보다 그게 낫다).
@@ -757,7 +757,7 @@ def invention_material_problem(slots):
 
 
 def conceal_material_problem(slots):
-    """은폐형(spine "유튜브 은폐형") 자격. 효능 2칸 + 제품명.
+    """은폐형(spine "유튜브 「이건 바로 OO」") 자격. 효능 2칸 + 제품명.
 
     ★라이브 spine 55의 templates에서 센 수다: reveal={제품} · benefit={효능} ·
       twist={효능2}. {효능3}은 twist 변형 3개 중 하나에만 있어 없어도 칸이 찬다.
