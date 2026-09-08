@@ -160,9 +160,14 @@ def handle_tiktok(job):
             from playwright.sync_api import sync_playwright
             url = "https://www.tiktok.com/search?q=" + quote(kw)
             with sync_playwright() as p:
+                # ★창을 화면 **밖**에 띄운다 (2026-09-08 사장님 "왜 자꾸 꺼지나").
+                #   헤드리스로는 틱톡이 막으므로 진짜 창이 필요한데, 검색할 때마다
+                #   화면에 떴다 사라지면 일하는 데 거슬린다. 위치만 옮기면
+                #   틱톡이 보기엔 여전히 보통 크롬이고 사장님 눈에는 안 띈다.
                 b = p.chromium.launch(
                     headless=False, channel="chrome",
-                    args=["--disable-blink-features=AutomationControlled"])
+                    args=["--disable-blink-features=AutomationControlled",
+                          "--window-position=-32000,-32000"])
                 ctx = b.new_context(storage_state=_TIKTOK_SESSION, locale="ko-KR",
                                     viewport={"width": 1360, "height": 950})
                 pg = ctx.new_page()
