@@ -45,16 +45,16 @@ def _get(st, name):
 
 
 def test_두_스파인이_들어간다(seeded):
-    assert _get(seeded, "유튜브 은폐형")
-    assert _get(seeded, "유튜브 오용형")
+    assert _get(seeded, "유튜브 「이건 바로 OO」")
+    assert _get(seeded, "유튜브 「원래 이렇게 쓰는 거 아닌데」")
 
 
 def test_스타일_목록에_뜬다(seeded):
     """★list_style_spines에 안 뜨면 화면 드롭다운에 없어서 아무도 못 고른다."""
     hid = seeded.list_style_spines(category="제품정체형", status="approved")
-    assert any(s["name"] == "유튜브 은폐형" for s in hid), "은폐형이 제품정체형 목록에 없다"
+    assert any(s["name"] == "유튜브 「이건 바로 OO」" for s in hid), "은폐형이 제품정체형 목록에 없다"
     mis = seeded.list_style_spines(category="오용형", status="approved")
-    assert any(s["name"] == "유튜브 오용형" for s in mis), "오용형이 오용형 목록에 없다"
+    assert any(s["name"] == "유튜브 「원래 이렇게 쓰는 거 아닌데」" for s in mis), "오용형이 오용형 목록에 없다"
 
 
 def test_인스타_카테고리를_침범하지_않는다(seeded):
@@ -65,10 +65,10 @@ def test_인스타_카테고리를_침범하지_않는다(seeded):
 
 def test_no_cta가_켜져있고_게이트가_CTA를_안_본다(seeded):
     """★이게 없으면 유튜브 스파인은 아무리 잘 써도 영구 FAIL이다."""
-    for name in ("유튜브 은폐형", "유튜브 오용형"):
+    for name in ("유튜브 「이건 바로 OO」", "유튜브 「원래 이렇게 쓰는 거 아닌데」"):
         sp = _get(seeded, name)
         assert sp.get("no_cta") is True, "%s에 no_cta가 안 붙었다" % name
-    sp = _get(seeded, "유튜브 오용형")
+    sp = _get(seeded, "유튜브 「원래 이렇게 쓰는 거 아닌데」")
     checks, _ = script_gate.check(sp, [
         {"role": "title", "text": "개발자도 예상 못한 미친 사용법"},
         {"role": "origin", "text": "이게 원래는 의류 태그 부착용으로 개발된 제품이었음"},
@@ -83,7 +83,7 @@ def test_실측_문장이_문장틀을_통과한다(seeded):
     """★틀이 실제 원문과 안 맞으면 게이트가 정상 대본을 FAIL로 잡는다.
 
     아래 문장은 살림킹왕짱 697OHq-VhkY(1,047만) 자막 실측 원문이다."""
-    sp = _get(seeded, "유튜브 오용형")
+    sp = _get(seeded, "유튜브 「원래 이렇게 쓰는 거 아닌데」")
     checks, _ = script_gate.check(sp, [
         {"role": "title", "text": "개발자도 예상 못한 미친 사용법"},
         {"role": "origin", "text": "이게 원래는 딸깍 한 방으로 의류 태그를 부착하라고 개발된 제품이었음"},
@@ -97,7 +97,7 @@ def test_실측_문장이_문장틀을_통과한다(seeded):
 
 def test_은폐형도_실측_문장이_통과한다(seeded):
     """이븐쇼핑 eDHoIXyXOq0(78.2만) 자막 실측 원문."""
-    sp = _get(seeded, "유튜브 은폐형")
+    sp = _get(seeded, "유튜브 「이건 바로 OO」")
     checks, _ = script_gate.check(sp, [
         {"role": "title", "text": "요아정 망하게 한 천재의 발명품"},
         {"role": "bait", "text": "최근 딱 봤을 때는 도저히 용도를 알기 힘든 이 제품이"},
@@ -112,7 +112,7 @@ def test_은폐형도_실측_문장이_통과한다(seeded):
 
 def test_밀도가_유튜브_실측치다(seeded):
     """인스타 시월드형은 300 — 유튜브는 실측 262~283이라 270."""
-    for name in ("유튜브 은폐형", "유튜브 오용형"):
+    for name in ("유튜브 「이건 바로 OO」", "유튜브 「원래 이렇게 쓰는 거 아닌데」"):
         assert _get(seeded, name)["chars_per_30s"] == 270
 
 
@@ -122,5 +122,5 @@ def test_두번_돌려도_안_늘어난다(seeded, monkeypatch):
     monkeypatch.setattr(m, "Store", lambda *_a, **_k: seeded)
     m.main()
     names = [s["name"] for s in seeded.list_spines()]
-    assert names.count("유튜브 은폐형") == 1
-    assert names.count("유튜브 오용형") == 1
+    assert names.count("유튜브 「이건 바로 OO」") == 1
+    assert names.count("유튜브 「원래 이렇게 쓰는 거 아닌데」") == 1

@@ -7,7 +7,7 @@
 """
 from shopping_shorts import script_gate as sg
 
-# 라이브 spine 55(유튜브 은폐형)·56(유튜브 오용형)의 실제 templates 첫 항목.
+# 라이브 spine 55(유튜브 「이건 바로 OO」)·56(유튜브 「원래 이렇게 쓰는 거 아닌데」)의 실제 templates 첫 항목.
 REAL_BAIT = "최근 딱 봤을 때는 도저히 용도를 알기 힘든 이 제품이"
 REAL_ORIGIN = "이게 원래는 의류 태그 부착용으로 개발된 제품이었음"
 
@@ -74,7 +74,7 @@ def test_DB에서_게이트까지_플래그가_실린다(tmp_path):
     DB에 켠 값이 list_spines dict를 거쳐 게이트까지 도달하는지 끝까지 본다."""
     from shopping_shorts.store import Store
     st = Store(str(tmp_path / "t.db"))
-    sid = st.add_spine("유튜브 은폐형", status="approved")
+    sid = st.add_spine("유튜브 「이건 바로 OO」", status="approved")
     st.set_spine_style(sid, beat_roles=["bait"], templates={},
                        chars_per_30s=270, hook_3s=True, hook_conceal=True)
     sp = [x for x in st.list_spines(status="approved") if x["id"] == sid][0]
