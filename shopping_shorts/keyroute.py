@@ -350,6 +350,90 @@ def keys_for(store, customer_id, service):
     return owner, False
 
 
+# ── 사장님이 회원 SerpApi 키를 조금씩 빌려 쓴다 (2026-09-08 사장님 지시) ──
+BORROW_SETTING = "admin_borrow_serpapi"   # "1"이면 켬. **기본은 꺼짐**
+BORROW_PER_KEY = 10                       # 키 하나당 한 달 최대 회수(사장님: "한 사람당 10개씩만")
+BORROW_COUNTER = "borrow_serpapi"         # settings 키 앞머리
+
+
+def _borrow_id(key):
+    """카운터에 쓸 키 식별자. **평문을 저장하지 않는다** — 설정값은 관리자 화면에 보인다."""
+    import hashlib
+    return hashlib.sha256((key or "").encode()).hexdigest()[:12]
+
+
+def _borrow_state(store, month):
+    import json
+    try:
+        return json.loads(store.get_setting(f"{BORROW_COUNTER}::{month}", "") or "{}")
+    except Exception:                     # noqa: BLE001 — 카운터가 깨져도 빌림만 멈춘다
+        return {}
+
+
+def _borrowable(store):
+    """빌릴 수 있는 회원 키 목록. 꺼진 키·소진된 키는 store가 걸러 준다.
+
+    ★죽은 키를 빌리면 회차만 날린다 — 우리는 빌리는 순간 세므로 회원 몫만 축나고
+      사장님은 못 쓴다. 그래서 살아 있는 키만 받는다(store.get_borrowable_keys).
+    """
+    try:
+        if hasattr(store, "get_borrowable_keys"):
+            return store.get_borrowable_keys(SVC_SERPAPI) or []
+        return store.get_pooled_keys(SVC_SERPAPI) or []
+    except Exception as e:                 # noqa: BLE001 — 빌림 실패로 렌즈를 막지 않는다
+        logging.warning("회원 SerpApi 키 조회 실패(빌리지 않는다): %r", e)
+        return []
+
+
+def borrow_serpapi(store, limit_per_key=BORROW_PER_KEY, month=None):
+    """사장님이 쓸 **회원 SerpApi 키 1개**를 빌린다(없으면 빈 목록).
+
+    ★왜 1개씩인가 (사장님 지시)
+      회원이 자기 돈으로 만든 무료 키(월 250회)다. 통째로 쓰면 그 회원이 못 쓴다.
+      그래서 **한 키당 한 달 10회까지만** 쓰고 다음 키로 넘어간다 — 회원 몫의 4%다.
+
+    ★왜 미리 세는가
+      어느 키가 실제로 나갔는지는 lens_discover 안에서만 알 수 있다. 호출 결과를
+      기다렸다 세면 실패분이 안 세어져 **실제보다 적게 세는** 쪽으로 어긋난다.
+      회원 보호가 우선이라 **빌리는 순간 센다** — 틀리더라도 덜 쓰는 쪽으로 틀린다.
+
+    ★적게 쓴 키부터 준다. 한 사람에게 몰리지 않는다.
+    """
+    import json, time
+    if str(store.get_setting(BORROW_SETTING, "") or "") != "1":
+        return []                          # 스위치가 꺼져 있으면 아무것도 안 빌린다
+    month = month or time.strftime("%Y-%m")
+    used = _borrow_state(store, month)
+    pool = _borrowable(store)
+    if not pool:
+        return []
+    live = [(used.get(_borrow_id(k), 0), k) for k in pool]
+    live = [(n, k) for n, k in live if n < limit_per_key]
+    if not live:
+        return []
+    live.sort(key=lambda x: x[0])          # 적게 쓴 키부터
+    n, key = live[0]
+    used[_borrow_id(key)] = n + 1
+    try:
+        store.set_setting(f"{BORROW_COUNTER}::{month}", json.dumps(used))
+    except Exception as e:                 # noqa: BLE001 — 못 세면 **빌리지 않는다**
+        logging.warning("빌림 카운터 저장 실패(빌리지 않는다): %r", e)
+        return []                          # 세지 못하면 한도를 못 지킨다 — 안 쓰는 쪽으로
+    return [key]
+
+
+def borrow_status(store, limit_per_key=BORROW_PER_KEY, month=None):
+    """지금 얼마나 빌려 썼나 — 관리자 화면·점검용."""
+    import time
+    month = month or time.strftime("%Y-%m")
+    used = _borrow_state(store, month)
+    pool = _borrowable(store)
+    left = sum(max(0, limit_per_key - used.get(_borrow_id(k), 0)) for k in pool)
+    return {"on": str(store.get_setting(BORROW_SETTING, "") or "") == "1",
+            "month": month, "keys": len(pool), "per_key": limit_per_key,
+            "used": sum(used.values()), "left": left}
+
+
 def should_charge(store, customer_id, service):
     """포인트를 깎아야 하는가. 사용자 키를 쓰면 안 깎는다.
 
