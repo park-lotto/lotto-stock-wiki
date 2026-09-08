@@ -3299,6 +3299,10 @@ async function fetchLensCnKeywords(shortcode, caption, blob, append){
     // 소재(캡션·대본)가 있었는지 서버가 알려준다 — 없으면 검색어가 썸네일 1장만 보고
     // 찍힌 것이라 아래에서 '대본 분석 후 찾기' 버튼을 띄운다(판정은 서버 한 곳, 0순위-B).
     st.hasSource = (d.has_source !== false);
+    // ★서버는 예전부터 product를 함께 주는데 화면이 안 썼다(2026-09-08 사장님
+    //   "대본분석 후에 제품명이 나오면 표시를 해줘"). 대본을 읽고 확정한 제품명이라
+    //   썸네일만 보고 지은 검색어와 값어치가 다르다 — 그걸 드러낸다.
+    if((d.product||'').trim()) st.product=(d.product||'').trim();
     if(append){
       // 쌓는다 — 사장님이 4개 이후 다른 것도 열어볼 수 있게. 서버가 이미 걸렀지만
       // 모델이 프롬프트를 안 지킬 수 있어 여기서도 zh 기준 중복 제거(이중 안전).
@@ -3456,17 +3460,66 @@ async function lensExtractThenSearch(shortcode){
 // 왜: 지금 검색어는 썸네일 그림만 보고 지은 범주어라("무선 보조배터리") 어느 언어로
 // 번역해도 엉뚱한 게 나온다. 제품명이 뾰족해야 다섯 나라 어디서 찾아도 같은 물건이 뜬다.
 // ★유료(SerpApi) — 사장님이 누를 때만 돈다.
+// 영상에서 **여러 지점**을 캡처한다 (2026-09-08 사장님 "제품명 찾기만 누르면
+// 대본분석 전에는 썸네일로만 하는 거 아니야?" — 맞다. 1장이면 배경 소품을 제품으로
+// 오인한다: product_identify가 6장 교차검증을 하는 이유가 바로 그것이다).
+//   · 영상이 있으면 재생 위치를 옮겨가며 최대 N장을 뜬다(원위치로 되돌린다).
+//   · 영상이 없으면(재생 전) 썸네일 1장뿐이다 — 그 사실을 화면에 알린다.
+async function _captureFrames(shortcode, want){
+  const anchor=document.getElementById('save_'+shortcode);
+  const card=anchor && anchor.closest('.card');
+  const v=card && card.querySelector('video.thumb-video');
+  const out=[];
+  if(!(v && v.readyState>=2 && v.duration && isFinite(v.duration))){
+    const one=await _captureFrameAsync(shortcode);      // 썸네일 폴백(1장)
+    if(one) await new Promise(r=>one.toBlob(b=>{ if(b) out.push(b); r(); },'image/jpeg',0.9));
+    return out;
+  }
+  const wasPaused=v.paused, back=v.currentTime;
+  const cv=document.createElement('canvas');
+  cv.width=v.videoWidth; cv.height=v.videoHeight;
+  const ctx=cv.getContext('2d');
+  try{
+    v.pause();
+    for(let i=0;i<want;i++){
+      // 앞뒤 끝은 로고·인트로라 제품이 잘 안 보인다 → 15~85% 구간을 고르게 훑는다.
+      const t=v.duration*(0.15+0.70*(want===1?0.5:i/(want-1)));
+      await new Promise(res=>{
+        let done=false;
+        const ok=()=>{ if(done) return; done=true; v.removeEventListener('seeked',ok); res(); };
+        v.addEventListener('seeked', ok);
+        setTimeout(ok, 1200);                 // seek이 안 끝나도 넘어간다(멈추지 않게)
+        try{ v.currentTime=t; }catch(e){ ok(); }
+      });
+      try{ ctx.drawImage(v,0,0); }catch(e){ break; }   // taint면 중단
+      const b=await new Promise(r=>cv.toBlob(r,'image/jpeg',0.9));
+      if(b) out.push(b);
+    }
+  }finally{
+    try{ v.currentTime=back; if(!wasPaused) v.play().catch(()=>{}); }catch(e){}
+  }
+  return out;
+}
+
 async function lensFindProduct(shortcode){
   const st=LENS_STATE[shortcode]; if(!st || st.prodLoading || !st.frameBlob) return;
   st.prodLoading=true; st.prodNote=''; renderLens(shortcode);
   try{
     const fd=new FormData();
-    fd.append('frame', st.frameBlob, 'frame.jpg');
+    const blobs=await _captureFrames(shortcode, 5);
+    if(blobs.length){ blobs.forEach((b,i)=>fd.append('frames', b, `f${i}.jpg`)); }
+    else { fd.append('frames', st.frameBlob, 'f0.jpg'); }   // 최후 폴백
     fd.append('source_caption', st.caption||'');
+    fd.append('shortcode', shortcode||'');   // 서버가 DB 대본으로 근거를 보강한다
+    // 몇 장으로 판단했는지 남긴다 — 1장이면 정확도가 떨어지는 걸 사장님이 알아야 한다.
+    st.prodFrames=blobs.length||1;
     const d=await (await fetch('/api/lens/product',{method:'POST',body:fd})).json();
     const st2=LENS_STATE[shortcode]; if(!st2) return;
     if(!d.ok){ st2.prodNote=d.error||'제품명을 찾지 못했습니다'; return; }
-    if(!d.cand || !d.product){ st2.prodNote=d.note||'화면에서 제품을 특정하지 못했습니다'; return; }
+    if(!d.cand || !d.product){
+      st2.prodNote=(d.note||'화면에서 제품을 특정하지 못했습니다')
+        + (st2.prodFrames<=1?' (썸네일 1장만 봤습니다 — 영상을 재생한 뒤 다시 누르면 여러 장면을 보고 더 정확해집니다)':'');
+      return; }
     // 이미 같은 말이 있으면 다시 넣지 않는다(중복 방지 — 다른 후보들과 같은 규약).
     const have=new Set((st2.cnCands||[]).map(c=>(c.ko||'').trim()));
     if(!have.has(d.product)){
@@ -3795,7 +3848,10 @@ async function toggleLensAuto(shortcode){
       if(!cur || cur.autoStop || !cur.autoRun) break outer;   // 사용자가 멈췄거나 모달을 닫았다
       const q=(L==='auto')?(cands[i].ko||cands[i].zh):((cands[i][L]||'').trim());
       if(!q) continue;                                        // 그 언어 검색어가 없으면 건너뛴다
-      cur.autoNote=`${i+1}/${cands.length} · ${L==='auto'?'해외':L}`;
+      // ★무엇을 모으는지 화면에 그대로 적는다(2026-09-08 사장님 "어떤 국가에 어떤
+      //   검색어로 모아지나"). 진행률만 보이면 뭘 하는지 알 수 없다.
+      const _ln={auto:'해외(영/중)', en:'영어', ja:'일본어', zh:'중국어'}[L]||L;
+      cur.autoNote=`${i+1}/${cands.length} · ${_ln} · "${q}"`;
       await lensKwSearch(shortcode, i, L);
     }
   }
@@ -3879,8 +3935,14 @@ function renderLens(shortcode, mountId){
   // 샤오홍슈·도우인 링크를 안 줬다). 지금은 「🔎 여기서」가 유튜브·핀터레스트·
   // 네이버클립을 실제로 쌓으므로 상황이 다르다 — 다만 같은 실수를 안 하려고
   // **건수를 함께** 찍고, 0건인 플랫폼은 흐리게 해서 눌러도 소용없음을 드러낸다.
-  const _cnt={};
-  for(const i of st.items) _cnt[i.platform]=(_cnt[i.platform]||0)+1;
+  const _cnt={}, _cntSrc={};
+  for(const i of st.items){
+    _cnt[i.platform]=(_cnt[i.platform]||0)+1;
+    // ★출처별로도 센다(2026-09-08). 칩 숫자만 보면 인스타·틱톡이 「여기서」로 모인
+    //   것처럼 보이는데 실제로는 🔍 숏템파워검색(렌즈)이 물어온 것이다.
+    const k=i.platform+'|'+(i._src||'렌즈');
+    _cntSrc[k]=(_cntSrc[k]||0)+1;
+  }
   const _anyCnt=Object.keys(_cnt).length>0;
   const chips=!_anyCnt?'':`<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px">
     ${LENS_PLATFORMS.filter(p=>(_cnt[p.k]||0)>0).map(p=>{
@@ -3890,7 +3952,9 @@ function renderLens(shortcode, mountId){
       //   있지만 세션이 결과를 못 받아 0건이다(2026-09-08 서버 반복 실측).
       //   0건 칩을 늘어놓는 건 8/22에 이 칩을 없앤 바로 그 이유다 — 되풀이하지 않는다.
       const n=_cnt[p.k]||0, _pOn=st.on.has(p.k);
-      return `<button onclick="toggleLensPlatform('${shortcode}','${p.k}')" title="${p.label} ${n}건 — 눌러서 보이기/숨기기" style="font-size:11px;padding:3px 9px;border-radius:8px;cursor:pointer;border:1px solid ${_pOn&&n?'var(--accent)':'var(--line)'};background:${_pOn&&n?'var(--accent)':'transparent'};color:${_pOn&&n?'#fff':'var(--fg,inherit)'};opacity:${n?1:.35}">${p.label} ${n}</button>`;
+      const _sl=_cntSrc[p.k+'|렌즈']||0, _sh=_cntSrc[p.k+'|여기서']||0;
+      const _brk=(_sl||_sh)?` (🔍 렌즈 ${_sl} · 🔎 여기서 ${_sh})`:'';
+      return `<button onclick="toggleLensPlatform('${shortcode}','${p.k}')" title="${p.label} ${n}건${_brk} — 눌러서 보이기/숨기기" style="font-size:11px;padding:3px 9px;border-radius:8px;cursor:pointer;border:1px solid ${_pOn&&n?'var(--accent)':'var(--line)'};background:${_pOn&&n?'var(--accent)':'transparent'};color:${_pOn&&n?'#fff':'var(--fg,inherit)'};opacity:${n?1:.35}">${p.label} ${n}</button>`;
     }).join('')}
   </div>`;
   // 필터: 켠 플랫폼 + (숏폼만이면) is_short!==false + (해외만이면) 제목에 한글 없음.
@@ -3980,7 +4044,8 @@ function renderLens(shortcode, mountId){
           }).join('')}
           ${/* ★자동 모으기 — 검색어 × 언어를 순서대로 한 번씩 돌려 계속 쌓는다.
                「여기서」는 무료 플랫폼만 도니 눌러도 돈이 안 나간다. */''}
-          ${(st.cnCands||[]).length?`<button onclick="toggleLensAuto('${shortcode}')" title="검색어 ${(st.cnCands||[]).length}개 × 언어(해외·영어·일본어·중국어)를 순서대로 자동으로 검색해 계속 쌓습니다. 무료 플랫폼만 돌아 비용은 0원이고, 다시 누르면 멈춥니다" style="font-size:12px;padding:3px 10px;border-radius:8px;cursor:pointer;margin-left:6px;border:1px solid ${st.autoRun?'#e0623d':'var(--accent)'};background:transparent;color:${st.autoRun?'#e0623d':'var(--accent)'};font-weight:600">${st.autoRun?'■ 멈추기':'▶ 자동 모으기'}</button>`:''}
+          ${st.product?`<div style="font-size:12px;margin:2px 0 4px"><span title="대본·자막을 읽고 확정한 제품입니다. 검색어가 이 제품을 가리키는지 보세요" style="background:#e0a33d;color:#111;font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;margin-right:6px">📝 대본이 말하는 제품</span><b>${esc(st.product)}</b></div>`:''}
+        ${(st.cnCands||[]).length?`<button onclick="toggleLensAuto('${shortcode}')" title="검색어 ${(st.cnCands||[]).length}개를 각각 4가지 언어(해외·영어·일본어·중국어)로 순서대로 검색해 결과를 계속 쌓습니다. 도는 곳은 유튜브·핀터레스트·네이버클립(전부 무료)이고, 지금 무엇을 검색 중인지 옆에 표시됩니다. 다시 누르면 멈춥니다" style="font-size:12px;padding:3px 10px;border-radius:8px;cursor:pointer;margin-left:6px;border:1px solid ${st.autoRun?'#e0623d':'var(--accent)'};background:transparent;color:${st.autoRun?'#e0623d':'var(--accent)'};font-weight:600">${st.autoRun?'■ 멈추기':'▶ 자동 모으기'}</button>`:''}
           ${st.autoRun&&st.autoNote?`<span style="font-size:11px;color:var(--sub)">${esc(st.autoNote)} 진행 중…</span>`:''}
         </div>
         ${/* ★셋(언어·여기서·새 탭)의 관계가 화면에 안 보여 헷갈린다는 지적(2026-09-08).

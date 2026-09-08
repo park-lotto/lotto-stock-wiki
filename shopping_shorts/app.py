@@ -10041,8 +10041,9 @@ async def api_lens_cn_search(request: Request, keyword: str = Form(""),
 
 
 @app.post("/api/lens/product")
-async def api_lens_product(request: Request, frame: UploadFile = File(...),
-                            source_caption: str = Form("")):
+async def api_lens_product(request: Request, frames: list[UploadFile] = File(...),
+                            source_caption: str = Form(""),
+                            shortcode: str = Form(""), url: str = Form("")):
     """★유료 — 멈춘 프레임을 구글 렌즈로 역검색해 **정확한 제품명(브랜드+모델)**을 뽑고,
     그것을 5개 언어 검색어로 만들어 돌려준다 (2026-09-08 사장님 지시).
 
@@ -10070,25 +10071,47 @@ async def api_lens_product(request: Request, frame: UploadFile = File(...),
     if _denied:
         return _denied
 
-    raw = await frame.read()
-    if not raw:
+    # ★프레임은 **여러 장**을 받는다(2026-09-08 사장님 "대본분석 전에는 썸네일로만
+    #   하는 거 아니야?"). 1장이면 배경 소품을 제품으로 오인한다 — product_identify가
+    #   6장 교차검증을 하는 이유가 그것이다(2026-07-09 실측). 프론트가 영상에서
+    #   여러 지점을 떠서 보내고, 재생 전이면 썸네일 1장뿐이라 그 사실을 알린다.
+    image_urls = []
+    for f in (frames or [])[:6]:            # SerpApi 콜 = 장수. 상한을 둔다.
+        raw = await f.read()
+        if not raw:
+            continue
+        u = await asyncio.to_thread(upload_frame, raw)
+        if not u:
+            work_dir = _FIND_TMP_DIR / "lens"
+            work_dir.mkdir(parents=True, exist_ok=True)
+            name = uuid.uuid4().hex + ".jpg"
+            (work_dir / name).write_bytes(raw)
+            u = f"{PUBLIC_BASE_URL}/api/find/frame/lens/{name}"
+        image_urls.append(u)
+    if not image_urls:
         return {"ok": False, "product": "", "error": "프레임이 비어 있습니다"}
-    # 프레임 공개 URL — SerpApi가 우리 서버로 이미지를 받으러 온다(로그인 예외 경로).
-    #   /api/lens/search와 **같은 폴더·같은 규약**을 쓴다(0순위-B).
-    image_url = await asyncio.to_thread(upload_frame, raw)
-    if not image_url:
-        work_dir = _FIND_TMP_DIR / "lens"
-        work_dir.mkdir(parents=True, exist_ok=True)
-        name = uuid.uuid4().hex + ".jpg"
-        (work_dir / name).write_bytes(raw)
-        image_url = f"{PUBLIC_BASE_URL}/api/find/frame/lens/{name}"
+
+    # ★대본이 이미 있으면 캡션 대신 그걸 쓴다 — 화면만으로 애매한 제품도 대본에
+    #   모델명이 적혀 있는 경우가 많다(사장님 지적: 대본 분석 전에는 근거가 얄팍하다).
+    caption = (source_caption or "").strip()
+    try:
+        sc = _lens_script_code(url, shortcode)
+        if sc:
+            sd = Store(DB_PATH).get_script(sc) or {}
+            brief = sd.get("source_brief")
+            if isinstance(brief, dict) and (brief.get("product") or "").strip():
+                caption = (brief["product"] + " / " + caption).strip(" /")
+            body = (sd.get("full_text") or "").strip()
+            if body:
+                caption = (caption + " / " + body[:600]).strip(" /")
+    except Exception as e:  # noqa: BLE001 — 보강 실패는 치명적이지 않다(있으면 좋은 것)
+        print(f"[lens-product] 대본 보강 실패(무시): {e!r}", file=sys.stderr)
 
     try:
         # 렌즈 역검색 + 제품명 확정 — 둘 다 블로킹이라 스레드로 뺀다(이벤트루프 보호).
-        lines = await asyncio.to_thread(fetch_lens_lines, [image_url])
+        lines = await asyncio.to_thread(fetch_lens_lines, image_urls)
         product = await asyncio.to_thread(
-            identify_product_from_lines, lines,
-            "", source_caption or "")
+            identify_product_from_lines, lines, "", caption)
     except Exception as e:      # noqa: BLE001 — 실패해도 렌즈 나머지는 살아야 한다
         # ★차감과 환불은 **짝**이다 — 크레딧만 되돌리고 포인트를 안 되돌리면
         #   실패할 때마다 잔액이 조용히 깎인다(test_byok_charge_wiring가 이걸 잡는다).
