@@ -3456,17 +3456,66 @@ async function lensExtractThenSearch(shortcode){
 // 왜: 지금 검색어는 썸네일 그림만 보고 지은 범주어라("무선 보조배터리") 어느 언어로
 // 번역해도 엉뚱한 게 나온다. 제품명이 뾰족해야 다섯 나라 어디서 찾아도 같은 물건이 뜬다.
 // ★유료(SerpApi) — 사장님이 누를 때만 돈다.
+// 영상에서 **여러 지점**을 캡처한다 (2026-09-08 사장님 "제품명 찾기만 누르면
+// 대본분석 전에는 썸네일로만 하는 거 아니야?" — 맞다. 1장이면 배경 소품을 제품으로
+// 오인한다: product_identify가 6장 교차검증을 하는 이유가 바로 그것이다).
+//   · 영상이 있으면 재생 위치를 옮겨가며 최대 N장을 뜬다(원위치로 되돌린다).
+//   · 영상이 없으면(재생 전) 썸네일 1장뿐이다 — 그 사실을 화면에 알린다.
+async function _captureFrames(shortcode, want){
+  const anchor=document.getElementById('save_'+shortcode);
+  const card=anchor && anchor.closest('.card');
+  const v=card && card.querySelector('video.thumb-video');
+  const out=[];
+  if(!(v && v.readyState>=2 && v.duration && isFinite(v.duration))){
+    const one=await _captureFrameAsync(shortcode);      // 썸네일 폴백(1장)
+    if(one) await new Promise(r=>one.toBlob(b=>{ if(b) out.push(b); r(); },'image/jpeg',0.9));
+    return out;
+  }
+  const wasPaused=v.paused, back=v.currentTime;
+  const cv=document.createElement('canvas');
+  cv.width=v.videoWidth; cv.height=v.videoHeight;
+  const ctx=cv.getContext('2d');
+  try{
+    v.pause();
+    for(let i=0;i<want;i++){
+      // 앞뒤 끝은 로고·인트로라 제품이 잘 안 보인다 → 15~85% 구간을 고르게 훑는다.
+      const t=v.duration*(0.15+0.70*(want===1?0.5:i/(want-1)));
+      await new Promise(res=>{
+        let done=false;
+        const ok=()=>{ if(done) return; done=true; v.removeEventListener('seeked',ok); res(); };
+        v.addEventListener('seeked', ok);
+        setTimeout(ok, 1200);                 // seek이 안 끝나도 넘어간다(멈추지 않게)
+        try{ v.currentTime=t; }catch(e){ ok(); }
+      });
+      try{ ctx.drawImage(v,0,0); }catch(e){ break; }   // taint면 중단
+      const b=await new Promise(r=>cv.toBlob(r,'image/jpeg',0.9));
+      if(b) out.push(b);
+    }
+  }finally{
+    try{ v.currentTime=back; if(!wasPaused) v.play().catch(()=>{}); }catch(e){}
+  }
+  return out;
+}
+
 async function lensFindProduct(shortcode){
   const st=LENS_STATE[shortcode]; if(!st || st.prodLoading || !st.frameBlob) return;
   st.prodLoading=true; st.prodNote=''; renderLens(shortcode);
   try{
     const fd=new FormData();
-    fd.append('frame', st.frameBlob, 'frame.jpg');
+    const blobs=await _captureFrames(shortcode, 5);
+    if(blobs.length){ blobs.forEach((b,i)=>fd.append('frames', b, `f${i}.jpg`)); }
+    else { fd.append('frames', st.frameBlob, 'f0.jpg'); }   // 최후 폴백
     fd.append('source_caption', st.caption||'');
+    fd.append('shortcode', shortcode||'');   // 서버가 DB 대본으로 근거를 보강한다
+    // 몇 장으로 판단했는지 남긴다 — 1장이면 정확도가 떨어지는 걸 사장님이 알아야 한다.
+    st.prodFrames=blobs.length||1;
     const d=await (await fetch('/api/lens/product',{method:'POST',body:fd})).json();
     const st2=LENS_STATE[shortcode]; if(!st2) return;
     if(!d.ok){ st2.prodNote=d.error||'제품명을 찾지 못했습니다'; return; }
-    if(!d.cand || !d.product){ st2.prodNote=d.note||'화면에서 제품을 특정하지 못했습니다'; return; }
+    if(!d.cand || !d.product){
+      st2.prodNote=(d.note||'화면에서 제품을 특정하지 못했습니다')
+        + (st2.prodFrames<=1?' (썸네일 1장만 봤습니다 — 영상을 재생한 뒤 다시 누르면 여러 장면을 보고 더 정확해집니다)':'');
+      return; }
     // 이미 같은 말이 있으면 다시 넣지 않는다(중복 방지 — 다른 후보들과 같은 규약).
     const have=new Set((st2.cnCands||[]).map(c=>(c.ko||'').trim()));
     if(!have.has(d.product)){
