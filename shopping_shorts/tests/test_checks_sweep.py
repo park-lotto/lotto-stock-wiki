@@ -1,0 +1,809 @@
+"""L1 전수 훑기(sweep) 순수 로직 단위 테스트 — 서버·브라우저 없이 돌아간다.
+signature_of·classify·discover_targets 판정 로직은 가짜 dict/스텁으로 검증한다(브리프 지시).
+브라우저·서버가 필요한 sweep_produce 등은 CHECKS_BASE_URL 없으면 skip."""
+import os
+from types import SimpleNamespace
+
+import pytest
+
+from shopping_shorts.checks import sweep
+from shopping_shorts.checks.verdict import GRAY, GREEN, RED, Result
+
+NEEDS_SERVER = pytest.mark.skipif(
+    not os.environ.get("CHECKS_BASE_URL"), reason="CHECKS_BASE_URL 없음 — 서버/브라우저 실측은 로컬에서 skip"
+)
+
+
+# ---- 브리프 필수 테스트 ----
+
+def test_signature_prefers_id_then_onclick_then_text():
+    assert sweep.signature_of({"tag": "button", "id": "go", "onclick": "x()", "text": "가기"}) == "button#go"
+    assert sweep.signature_of({"tag": "button", "id": "", "onclick": "deleteWork('a',this)", "text": "삭제"}) == "button@deleteWork"
+    assert sweep.signature_of({"tag": "a", "id": "", "onclick": "", "text": "제작소로 이동합니다"}) == "a:제작소로 이동합니다"
+
+
+def test_classify_red_on_pageerror_or_5xx_or_blank():
+    empty = {"pageerrors": [], "console_errors": [], "client_error_posts": 0, "failed_responses": []}
+    assert sweep.classify(empty, {**empty, "pageerrors": ["TypeError"]}, 1000, 1000, False)[0] == RED
+    assert sweep.classify(empty, {**empty, "failed_responses": [("/api/x", 500)]}, 1000, 1000, False)[0] == RED
+    assert sweep.classify(empty, empty, 1000, 50, False)[0] == RED          # 백지
+    assert sweep.classify(empty, {**empty, "client_error_posts": 1}, 1000, 1000, False)[0] == RED
+    assert sweep.classify(empty, empty, 1000, 990, False) == (GREEN, "")
+
+
+# ---- 오탐 방지: classify()가 "정상"을 빨강으로 만들지 않는지 (핵심 검증) ----
+
+def test_classify_normal_shrink_not_red_riview_repro():
+    """리뷰 실측 재현: 모달/패널을 닫아 본문이 1000→80으로 줄어도(페이지 이동 없음, 새 에러 0)
+    빨강이 아니어야 한다 — 절대하한(40) 위라 백지가 아니다."""
+    empty = {"pageerrors": [], "console_errors": [], "client_error_posts": 0, "failed_responses": []}
+    v, _ = sweep.classify(empty, empty, 1000, 80, False)
+    assert v != RED
+
+
+def test_classify_real_blank_still_red_below_floor():
+    """본문이 절대하한(40) 밑으로까지 떨어지면 에러 유무와 무관하게 여전히 빨강이어야 한다."""
+    empty = {"pageerrors": [], "console_errors": [], "client_error_posts": 0, "failed_responses": []}
+    v, _ = sweep.classify(empty, empty, 1000, 5, False)
+    assert v == RED
+
+
+def test_classify_real_blank_with_error_still_red():
+    empty = {"pageerrors": [], "console_errors": [], "client_error_posts": 0, "failed_responses": []}
+    v, _ = sweep.classify(empty, {**empty, "pageerrors": ["TypeError"]}, 1000, 5, False)
+    assert v == RED
+
+
+def test_classify_green_when_navigated_even_if_body_shrinks():
+    """다른 페이지로 이동한 뒤엔 본문 길이가 줄어도 '백지'가 아니다 — navigated=True는 예외."""
+    empty = {"pageerrors": [], "console_errors": [], "client_error_posts": 0, "failed_responses": []}
+    assert sweep.classify(empty, empty, 1000, 10, True) == (GREEN, "")
+
+
+def test_classify_green_when_body_before_small():
+    """원래 짧은 페이지(팝업·모달)는 절대 기준(200자) 밑이면 백지 판정 대상이 아니다."""
+    empty = {"pageerrors": [], "console_errors": [], "client_error_posts": 0, "failed_responses": []}
+    assert sweep.classify(empty, empty, 150, 5, False) == (GREEN, "")
+
+
+def test_classify_green_on_401_403_only_failures():
+    """401/403은 ErrorSink._on_response 단계에서부터 failed_responses에 안 쌓인다(browser.py) — 여기서도
+    이미 기록된 4xx라 해도 새로 늘지 않으면(before==after) 초록이어야 한다."""
+    before = {"pageerrors": [], "console_errors": [], "client_error_posts": 0, "failed_responses": [("/api/y", 404)]}
+    after = {"pageerrors": [], "console_errors": [], "client_error_posts": 0, "failed_responses": [("/api/y", 404)]}
+    assert sweep.classify(before, after, 1000, 990, False) == (GREEN, "")
+
+
+def test_classify_only_new_failures_count():
+    """기존에 있던 실패 응답이 그대로 남아 있는 것만으로는 새 빨강이 아니다 — 새로 늘어난 것만."""
+    before = {"pageerrors": [], "console_errors": ["e1"], "client_error_posts": 0, "failed_responses": []}
+    after = {"pageerrors": [], "console_errors": ["e1"], "client_error_posts": 0, "failed_responses": []}
+    assert sweep.classify(before, after, 1000, 990, False) == (GREEN, "")
+
+
+def test_signature_stable_regardless_of_dom_order_index():
+    """discover_targets가 매기는 idx는 DOM 순서에 따라 바뀔 수 있다 — signature_of는 idx를 안 쓴다."""
+    a = {"tag": "button", "id": "", "onclick": "openMix()", "text": "믹스 열기", "idx": 3}
+    b = {"tag": "button", "id": "", "onclick": "openMix()", "text": "믹스 열기", "idx": 41}
+    assert sweep.signature_of(a) == sweep.signature_of(b)
+
+
+def test_signature_of_never_uses_idx_field():
+    import inspect
+    src = inspect.getsource(sweep.signature_of)
+    assert '"idx"' not in src and "['idx']" not in src and ".get('idx'" not in src.replace('"', "'")
+
+
+# ---- 안전 그물이 막은 요청 때문에 생긴 에러는 판정에서 제외(오탐 방지 #2) ----
+
+def test_filter_blocked_noise_removes_only_blocked_related_errors():
+    """차단된 요청(예: /api/delete_work) 때문에 생긴 콘솔에러·실패응답·client_error 리포트는
+    이 조작 때문에 빨강이 되면 안 된다."""
+    before = {"pageerrors": [], "console_errors": [], "client_error_posts": 0, "failed_responses": []}
+    after = {
+        "pageerrors": [],
+        "console_errors": ["Failed to load resource: /api/delete_work/abc"],
+        "client_error_posts": 1,
+        "failed_responses": [("/api/delete_work/abc", 0)],
+    }
+    filtered = sweep.filter_blocked_noise(after, before, ["/api/delete_work/abc"])
+    v, why = sweep.classify(before, filtered, 500, 480, False)
+    assert v == GREEN, why
+
+
+def test_filter_blocked_noise_keeps_unrelated_real_error():
+    """차단과 무관한 진짜 JS 에러는 그대로 살아 빨강이어야 한다."""
+    before = {"pageerrors": [], "console_errors": [], "client_error_posts": 0, "failed_responses": []}
+    after = {
+        "pageerrors": ["TypeError: cannot read x of undefined"],
+        "console_errors": [],
+        "client_error_posts": 0,
+        "failed_responses": [],
+    }
+    filtered = sweep.filter_blocked_noise(after, before, ["/api/delete_work/abc"])
+    v, _ = sweep.classify(before, filtered, 500, 480, False)
+    assert v == RED
+
+
+def test_filter_blocked_noise_noop_when_nothing_blocked():
+    before = {"pageerrors": [], "console_errors": [], "client_error_posts": 0, "failed_responses": []}
+    after = {"pageerrors": ["boom"], "console_errors": [], "client_error_posts": 0, "failed_responses": []}
+    assert sweep.filter_blocked_noise(after, before, []) == after
+
+
+def test_filter_blocked_noise_removes_generic_netfail_without_path():
+    """★Task14 2차 실측: route.abort()가 실제로 내는 console 메시지는 경로가 안 실린
+    "Failed to load resource: net::ERR_FAILED" 하나뿐이다(예: coupang identify_batch 차단 →
+    "/"가 빨강으로 오판됨). 텍스트 부분매칭이 아니라 개수 기반으로도 걸러져야 한다."""
+    before = {"pageerrors": [], "console_errors": [], "client_error_posts": 0, "failed_responses": []}
+    after = {
+        "pageerrors": [],
+        "console_errors": ["Failed to load resource: net::ERR_FAILED"],
+        "client_error_posts": 0,
+        "failed_responses": [],
+    }
+    filtered = sweep.filter_blocked_noise(after, before, ["/api/coupang/identify_batch"])
+    assert filtered["console_errors"] == []
+    v, why = sweep.classify(before, filtered, 500, 480, False)
+    assert v == GREEN, why
+
+
+def test_filter_blocked_noise_keeps_real_error_alongside_generic_netfail():
+    """경로 없는 일반 실패 메시지는 막힌 요청 수만큼만 깎는다 — 진짜 JS 에러는 예산과 무관하게 산다."""
+    before = {"pageerrors": [], "console_errors": [], "client_error_posts": 0, "failed_responses": []}
+    after = {
+        "pageerrors": [],
+        "console_errors": ["Failed to load resource: net::ERR_FAILED",
+                            "TypeError: cannot read property 'x' of undefined"],
+        "client_error_posts": 0,
+        "failed_responses": [],
+    }
+    filtered = sweep.filter_blocked_noise(after, before, ["/api/coupang/identify_batch"])
+    assert filtered["console_errors"] == ["TypeError: cannot read property 'x' of undefined"]
+    v, _ = sweep.classify(before, filtered, 500, 480, False)
+    assert v == RED   # 무관한 진짜 에러는 여전히 빨강
+
+
+def test_filter_blocked_noise_generic_netfail_budget_capped_by_blocked_count():
+    """일반 실패 메시지가 막힌 요청 수보다 많으면 초과분은 진짜 문제일 수 있어 살려둔다."""
+    before = {"pageerrors": [], "console_errors": [], "client_error_posts": 0, "failed_responses": []}
+    after = {
+        "pageerrors": [], "client_error_posts": 0, "failed_responses": [],
+        "console_errors": ["Failed to load resource: net::ERR_FAILED",
+                            "Failed to load resource: net::ERR_FAILED"],
+    }
+    filtered = sweep.filter_blocked_noise(after, before, ["/api/coupang/identify_batch"])  # 1개만 막힘
+    assert len(filtered["console_errors"]) == 1   # 2개 중 1개(막힌 수만큼)만 깎임
+
+
+class _ListFakePage:
+    """sweep_lists 통합 시험용: goto_ready(browser.py)가 부르는 표면만 흉내낸다.
+    on_goto(url)를 넘기면 goto() 시점(=실제로 안전그물이 요청을 막는 시점)에 노이즈를 주입할 수 있다."""
+    def __init__(self, card_count=1, on_goto=None):
+        self.card_count = card_count
+        self.on_goto = on_goto
+
+    def goto(self, url, wait_until=None, timeout=None):
+        if self.on_goto:
+            self.on_goto(url)
+
+    def wait_for_selector(self, sel, timeout=None, state=None):
+        pass
+
+    def locator(self, sel):
+        return SimpleNamespace(count=lambda: self.card_count)
+
+
+def test_sweep_lists_does_not_redden_on_blocked_request_noise():
+    """★핵심 회귀: coupang identify_batch 같은 차단 요청이 낸 "Failed to load resource: net::ERR_FAILED"
+    콘솔 에러 하나만 있을 때 sweep_lists가 "/"를 빨강으로 오판하면 안 된다(2026-09-07 서버 실측 오탐).
+    실제 타이밍대로 goto() 도중(=안전그물이 요청을 막는 시점)에 blocked·콘솔에러를 주입한다."""
+    from shopping_shorts.checks.browser import ErrorSink
+
+    errors = ErrorSink()
+    session = SimpleNamespace(base_url="http://x", errors=errors, blocked=[])
+
+    def _on_goto(url):
+        if url == "http://x/":   # "/" 방문 때만 차단 노이즈를 흉내낸다
+            session.blocked.append("POST /api/coupang/identify_batch")
+            errors.console_errors.append("Failed to load resource: net::ERR_FAILED")
+
+    session.page = _ListFakePage(card_count=5, on_goto=_on_goto)
+
+    out = sweep.sweep_lists(session)
+    home = [r for r in out if r.page == "/"][0]
+    assert home.verdict == GREEN, home.reason
+
+
+def test_sweep_lists_still_reddens_on_unrelated_real_error():
+    """차단과 무관한 진짜 console 에러는 여전히 빨강이어야 한다(오탐 방지가 검사를 무력화하면 안 됨)."""
+    from shopping_shorts.checks.browser import ErrorSink
+
+    errors = ErrorSink()
+    session = SimpleNamespace(base_url="http://x", errors=errors, blocked=[])
+
+    def _on_goto(url):
+        if url == "http://x/":
+            errors.console_errors.append("TypeError: cannot read property 'x' of undefined")
+
+    session.page = _ListFakePage(card_count=5, on_goto=_on_goto)
+
+    out = sweep.sweep_lists(session)
+    home = [r for r in out if r.page == "/"][0]
+    assert home.verdict == RED
+
+
+# ---- discover_targets: 페이지 스텁으로 검증 ----
+
+class _StubPage:
+    def __init__(self, result):
+        self._result = result
+        self.calls = []
+
+    def evaluate(self, script, *args):
+        self.calls.append((script, args))
+        return self._result
+
+
+def test_discover_targets_calls_page_evaluate_and_returns_list():
+    stub = _StubPage([{"idx": 0, "tag": "button", "id": "a", "onclick": "", "text": "가기", "type": "",
+                        "x": 1, "y": 1, "w": 10, "h": 10}])
+    out = sweep.discover_targets(stub)
+    assert out == stub._result
+    assert len(stub.calls) == 1
+
+
+def test_hit_test_true_false():
+    assert sweep.hit_test(_StubPage(True), 0) is True
+    assert sweep.hit_test(_StubPage(False), 0) is False
+    assert sweep.hit_test(_StubPage(None), 0) is False
+
+
+# ---- ★Task14 2차 실측: 제작소 전수가 앱 공통 사이드바(로그아웃·작업삭제)까지 누르면 안 된다 ----
+
+def test_is_app_shell_nav_flags_logout_delete_rename_bugreport_and_hrefs():
+    assert sweep._is_app_shell_nav({"onclick": "window.__ssLogout()"}) is True
+    assert sweep._is_app_shell_nav({"onclick": "window.__ssDelWork(event,'abc')"}) is True
+    assert sweep._is_app_shell_nav({"onclick": "window.__ssRenWork(event,'abc')"}) is True
+    assert sweep._is_app_shell_nav({"onclick": "ssOpenBugReport()"}) is True
+    assert sweep._is_app_shell_nav({"onclick": "location.href='/challenge'"}) is True
+    assert sweep._is_app_shell_nav({"onclick": ""}) is False
+    # ★284건 빨강 폭증 실측(2026-09-07): 단계 칩(jump(N))도 프레스 루프에 걸리면 다른 패널로
+    # 넘어가버려 그 뒤 요소들이 전부 오탐났다 — _open()이 이미 이 칩으로 패널을 여니 판정 대상에서 뺀다.
+    assert sweep._is_app_shell_nav({"onclick": "jump(0)"}) is True
+    assert sweep._is_app_shell_nav({"onclick": "jump(9)"}) is True
+    assert sweep._is_app_shell_nav({"onclick": "jumpTo(0)"}) is False   # 다른 이름의 함수는 안 건드림
+    # ★4차 실측: <a href>는 onclick 없이도 페이지를 벗어난다(예: "🔐 관리페이지") — 태그로 뺀다.
+    assert sweep._is_app_shell_nav({"tag": "a", "onclick": ""}) is True
+    assert sweep._is_app_shell_nav({"tag": "button", "onclick": "toggleTheme()"}) is False
+
+
+def test_sweep_url_skip_excludes_matching_targets_before_any_click(monkeypatch):
+    """skip으로 걸러진 요소는 클릭 루프 진입 전에 빠져야 한다(로그아웃 사고 방지) — targets 리스트에서
+    아예 사라지는지를 discover_targets 실제 반환값으로 확인한다."""
+    monkeypatch.setattr(sweep, "discover_targets", lambda page: [
+        {"idx": 0, "tag": "div", "id": "", "onclick": "window.__ssLogout()", "text": "로그아웃",
+         "x": 0, "y": 0, "w": 10, "h": 10},
+        {"idx": 1, "tag": "button", "id": "", "onclick": "removeMixUrlRow(this)", "text": "삭제",
+         "x": 0, "y": 0, "w": 10, "h": 10},
+    ])
+    monkeypatch.setattr(sweep, "hit_test", lambda page, idx: True)
+    pressed = []
+    monkeypatch.setattr(sweep, "_press", lambda session, info, url: pressed.append(info["idx"]) or
+                        Result("L1", info["text"], GREEN, signature=f"L1:{info['idx']}", page=url))
+
+    class _Page:
+        url = "http://x/produce"
+        def evaluate(self, js, *a):
+            return None
+
+    session = SimpleNamespace(page=_Page(), base_url="http://x", errors=None, blocked=[])
+    monkeypatch.setattr(sweep.browser, "goto_produce", lambda page, url, timeout_ms=12000: None)
+
+    out = sweep.sweep_url(session, "/produce", skip=sweep._is_app_shell_nav)
+    assert pressed == [1]              # 로그아웃(idx0)은 클릭 루프에 아예 안 들어감
+    assert [r.signature for r in out] == ["L1:1"]
+
+
+# ---- GRAY 감싸기: Session 생성/로그인 실패·playwright 부재는 판정불가로 ----
+
+class _BoomSession:
+    """session.page 접근 시 RuntimeError(로그인 실패 흉내)를 던지는 가짜."""
+    base_url = "http://127.0.0.1:8850"
+
+    @property
+    def page(self):
+        raise RuntimeError("로그인 실패 500")
+
+
+def test_sweep_produce_wraps_runtime_error_as_gray():
+    out = sweep.sweep_produce(_BoomSession())
+    assert len(out) == 1
+    assert out[0].verdict == GRAY
+
+
+def test_sweep_produce_opens_each_panel_and_sweeps_its_buttons(monkeypatch):
+    """★Task14 2026-09-07 2차 지시: 전수 훑기(버튼 하나씩 누르기)를 복구했다 — 패널 서브트리
+    (`.panel[data-step=N]`) 안에서 발견된 버튼만 누른다. 이 fake 패널엔 버튼이 0개이므로
+    (discover_panel_targets가 [] 리턴) '패널 열림' 결과만 남는다 — 버튼 훑기 경로가 예외 없이
+    빈 계획을 정상 처리하는지를 고정한다(회귀 시 즉시 잡히도록)."""
+    class _FakePage:
+        def __init__(self):
+            self.url = "http://x/produce"
+            self.cur = None
+        def evaluate(self, js, *a):
+            if "STEP_LABELS" in js:
+                return ["p0", "p1"]
+            if ".dk.cur" in js:
+                return self.cur
+            if ".panel.show" in js:
+                return "0"   # 물리 패널 번호(고정값 — 이 테스트는 버튼 0개 흉내만 확인)
+            if "root.querySelectorAll" in js:
+                return []    # 이 패널엔 버튼이 없다 — 빈 계획 처리 확인이 목적
+            return 30   # timer_probe 흉내
+        def locator(self, sel):
+            # "#steps [title=\"p0\"]" 형태에서 라벨을 뽑아 클릭 시 cur를 갱신한다
+            label = sel[len('#steps [title="'):-len('"]')]
+            page = self
+            class _Loc:
+                @property
+                def first(self):
+                    return self
+                def click(self, timeout=None):
+                    page.cur = label
+            return _Loc()
+        def wait_for_timeout(self, ms):
+            pass
+
+    class _Session:
+        page = _FakePage()
+        base_url = "http://x"
+
+    monkeypatch.setattr(sweep, "cleanup_old_evidence", lambda: None)
+    monkeypatch.setattr(sweep.browser, "goto_produce", lambda page, url, timeout_ms=12000: None)
+
+    out = sweep.sweep_produce(_Session(), panels=range(2))
+    assert [r.verdict for r in out] == [GREEN, GREEN]
+    assert all("panel_open" in r.signature for r in out)
+
+
+def test_sweep_lists_wraps_runtime_error_as_gray():
+    out = sweep.sweep_lists(_BoomSession())
+    assert len(out) == 1
+    assert out[0].verdict == GRAY
+
+
+def test_sweep_sidebar_wraps_runtime_error_as_gray():
+    out = sweep.sweep_sidebar(_BoomSession())
+    assert len(out) == 1
+    assert out[0].verdict == GRAY
+
+
+def test_reporter_alive_wraps_runtime_error_as_gray():
+    out = sweep.reporter_alive(_BoomSession())
+    assert out.verdict == GRAY
+
+
+# ---- 브라우저·서버 실측 (로컬은 skip) ----
+
+@NEEDS_SERVER
+def test_sweep_produce_live():
+    from shopping_shorts.checks import browser
+    base = os.environ["CHECKS_BASE_URL"]
+    s = browser.open_session(base, os.environ["DASH_USER"], os.environ["DASH_PASS"])
+    try:
+        browser.login(s)
+        out = sweep.sweep_produce(s)
+        assert isinstance(out, list)
+    finally:
+        browser.close_session(s)
+
+
+# ---- 빨간 줄 증거 사진(2026-09-07 리뷰 반영) ----
+
+class _EvidencePage:
+    """page.screenshot(path=...)만 흉내내는 최소 가짜. 실패 흉내는 raise_on_screenshot로."""
+    def __init__(self, raise_on_screenshot=False):
+        self.url = "http://x/produce"
+        self.raise_on_screenshot = raise_on_screenshot
+        self.screenshot_calls = []
+
+    def click(self, sel, timeout=3000, no_wait_after=True):
+        pass
+
+    def fill(self, sel, val, timeout=3000):
+        pass
+
+    def wait_for_timeout(self, ms):
+        pass
+
+    def evaluate(self, script, *a):
+        return 100  # _body_len 등 — 이 테스트들은 백지 판정 경로를 쓰지 않는다
+
+    def screenshot(self, path):
+        self.screenshot_calls.append(path)
+        if self.raise_on_screenshot:
+            raise RuntimeError("페이지가 이미 닫힘(흉내)")
+        with open(path, "wb") as f:
+            f.write(b"\x89PNG\r\n\x1a\n")
+
+
+class _EvidenceSink:
+    """before/after snapshot()을 순서대로 내주는 가짜(1번째=before, 2번째=after)."""
+    def __init__(self, seq):
+        self._seq = list(seq)
+        self._i = 0
+
+    def snapshot(self):
+        d = self._seq[min(self._i, len(self._seq) - 1)]
+        self._i += 1
+        return d
+
+
+class _EvidenceSession:
+    base_url = "http://x"
+
+    def __init__(self, page, sink):
+        self.page = page
+        self.errors = sink
+        self.blocked = []
+
+
+_EMPTY_SNAP = {"pageerrors": [], "console_errors": [], "client_error_posts": 0, "failed_responses": []}
+_RED_INFO = {"idx": 0, "tag": "button", "id": "", "onclick": "", "text": "빨간버튼", "type": ""}
+
+
+def test_press_red_writes_evidence_file(tmp_path, monkeypatch):
+    """빨강일 때 EVIDENCE_ROOT/<dir>/shot.png가 실제로 생긴다."""
+    monkeypatch.setattr(sweep, "EVIDENCE_ROOT", tmp_path)
+    page = _EvidencePage()
+    sink = _EvidenceSink([_EMPTY_SNAP, {**_EMPTY_SNAP, "pageerrors": ["TypeError: boom"]}])
+    session = _EvidenceSession(page, sink)
+
+    result = sweep._press(session, _RED_INFO, "/produce")
+
+    assert result.verdict == RED
+    assert result.evidence_dir, "빨강인데 evidence_dir이 비어 있음"
+    shot = tmp_path / result.evidence_dir / "shot.png"
+    assert shot.is_file()
+
+
+def test_press_green_writes_no_evidence(tmp_path, monkeypatch):
+    """초록일 때는 스크린샷을 찍지 않는다 — 디스크가 안 찬다."""
+    monkeypatch.setattr(sweep, "EVIDENCE_ROOT", tmp_path)
+    page = _EvidencePage()
+    sink = _EvidenceSink([_EMPTY_SNAP, _EMPTY_SNAP])  # 새 에러 없음
+    session = _EvidenceSession(page, sink)
+
+    result = sweep._press(session, _RED_INFO, "/produce")
+
+    assert result.verdict == GREEN
+    assert result.evidence_dir == ""
+    assert page.screenshot_calls == []
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_press_red_screenshot_failure_keeps_verdict(tmp_path, monkeypatch):
+    """screenshot()이 예외를 던져도(페이지 이미 닫힘 등) 판정 자체는 그대로 RED로 기록되고
+    evidence_dir만 비어 있어야 한다 — 증거 캡처 실패가 점검을 죽이면 안 된다."""
+    monkeypatch.setattr(sweep, "EVIDENCE_ROOT", tmp_path)
+    page = _EvidencePage(raise_on_screenshot=True)
+    sink = _EvidenceSink([_EMPTY_SNAP, {**_EMPTY_SNAP, "pageerrors": ["TypeError: boom"]}])
+    session = _EvidenceSession(page, sink)
+
+    result = sweep._press(session, _RED_INFO, "/produce")
+
+    assert result.verdict == RED  # 판정은 살아있다
+    assert "TypeError" in result.reason
+    assert result.evidence_dir == ""  # 캡처만 실패
+    assert page.screenshot_calls  # 시도는 했다
+
+
+def test_capture_red_evidence_swallows_any_exception(tmp_path, monkeypatch):
+    monkeypatch.setattr(sweep, "EVIDENCE_ROOT", tmp_path)
+
+    class _BoomPage:
+        def screenshot(self, path):
+            raise OSError("disk full(흉내)")
+
+    class _S:
+        page = _BoomPage()
+
+    assert sweep.capture_red_evidence(_S(), "sig") == ""
+
+
+def test_capture_red_evidence_no_page_returns_empty(tmp_path, monkeypatch):
+    monkeypatch.setattr(sweep, "EVIDENCE_ROOT", tmp_path)
+
+    class _NoPage:
+        page = None
+
+    assert sweep.capture_red_evidence(_NoPage(), "sig") == ""
+
+
+def test_cleanup_old_evidence_removes_only_old_dirs(tmp_path, monkeypatch):
+    import os
+    import time as _time
+
+    monkeypatch.setattr(sweep, "EVIDENCE_ROOT", tmp_path)
+    old_dir = tmp_path / "old_sig_1"
+    old_dir.mkdir()
+    (old_dir / "shot.png").write_bytes(b"x")
+    new_dir = tmp_path / "new_sig_1"
+    new_dir.mkdir()
+    (new_dir / "shot.png").write_bytes(b"x")
+    old_ts = _time.time() - 20 * 86400
+    os.utime(old_dir, (old_ts, old_ts))
+
+    removed = sweep.cleanup_old_evidence(max_age_days=14)
+
+    assert removed == 1
+    assert not old_dir.exists()
+    assert new_dir.exists()
+
+
+def test_cleanup_old_evidence_missing_root_is_noop(tmp_path, monkeypatch):
+    monkeypatch.setattr(sweep, "EVIDENCE_ROOT", tmp_path / "does_not_exist")
+    assert sweep.cleanup_old_evidence() == 0
+
+
+def test_cleanup_old_evidence_never_escapes_root(tmp_path, monkeypatch):
+    """심볼릭 링크로 루트 밖을 가리켜도 그 대상은 절대 지우면 안 된다."""
+    evroot = tmp_path / "evroot"
+    evroot.mkdir()
+    monkeypatch.setattr(sweep, "EVIDENCE_ROOT", evroot)
+    outside = tmp_path / "outside_secret"
+    outside.mkdir()
+    (outside / "keep.txt").write_text("keep")
+    link = evroot / "link_out"
+    try:
+        link.symlink_to(outside, target_is_directory=True)
+    except (OSError, NotImplementedError):
+        pytest.skip("이 환경은 심볼릭 링크 생성 권한이 없음")
+    import os
+    import time as _time
+    old_ts = _time.time() - 20 * 86400
+    os.utime(outside, (old_ts, old_ts))
+
+    sweep.cleanup_old_evidence(max_age_days=14)
+
+    assert outside.exists()
+    assert (outside / "keep.txt").exists()
+
+
+# ── 버튼 전수 훑기 복구(2026-09-07 2차) — is_dangerous_button 판별 규칙 ────────────────────
+
+
+def test_is_dangerous_button_excludes_anchor_and_location_href():
+    assert sweep.is_dangerous_button({"tag": "a", "onclick": ""}) is True
+    assert sweep.is_dangerous_button({"tag": "button", "onclick": "location.href='/library'"}) is True
+
+
+def test_is_dangerous_button_excludes_go_and_jump_even_inside_panel():
+    """구조적 배제(.panel 밖)가 뚫려도 정규식이 한 번 더 막는다(방어선 2중)."""
+    assert sweep.is_dangerous_button({"tag": "button", "onclick": "go(-1)"}) is True
+    assert sweep.is_dangerous_button({"tag": "button", "onclick": "go(1)"}) is True
+    assert sweep.is_dangerous_button({"tag": "button", "onclick": "jump(3)"}) is True
+    assert sweep.is_dangerous_button({"tag": "button", "onclick": "event.stopPropagation();go(-1)"}) is True
+
+
+def test_is_dangerous_button_excludes_external_send_and_payment():
+    assert sweep.is_dangerous_button({"tag": "button", "onclick": "sendToKakao()"}) is True
+    assert sweep.is_dangerous_button({"tag": "button", "onclick": "loadBuffer()"}) is True
+    assert sweep.is_dangerous_button({"tag": "button", "onclick": "payNow()"}) is True
+    assert sweep.is_dangerous_button({"tag": "button", "onclick": "__ssLogout()"}) is True
+
+
+def test_is_dangerous_button_keeps_in_panel_content_delete_and_reset():
+    """★프리셋/장면 삭제 같은 패널 안 콘텐츠 조작은 위험 목록이 아니다 — 이게 전수 훑기의
+    진짜 대상이다(코디네이터 지시: 미리보기 DB만 건드리면 안전)."""
+    assert sweep.is_dangerous_button({"tag": "button", "onclick": "deleteMyPreset(0)"}) is False
+    assert sweep.is_dangerous_button({"tag": "button", "onclick": "resetFavs()"}) is False
+    assert sweep.is_dangerous_button({"tag": "button", "onclick": "clearHeadcopy()"}) is False
+    assert sweep.is_dangerous_button({"tag": "div", "onclick": "s2DelBeat(0,1)"}) is False
+
+
+# ── _sweep_panel_buttons — 재현성(서명 재매칭) ────────────────────────────────────────────
+
+
+class _ResetFakePage:
+    """browser.goto_produce + '#steps [title=...]' 칩 클릭으로 매 버튼마다 되돌리는 코드를
+    흉내낸다(2026-09-07 3차 실측: 모달을 여는 버튼이 cur는 안 바꾸고 뒤 버튼들을 가려
+    '가려짐' 180건 연쇄를 냈다 — 그래서 버튼마다 항상 리셋하도록 바뀜)."""
+    def __init__(self):
+        self.reset_calls = 0
+    def evaluate(self, js, *a):
+        return "3"
+    def locator(self, sel):
+        page = self
+        class _Loc:
+            @property
+            def first(self):
+                return self
+            def click(self, timeout=None):
+                page.reset_calls += 1
+        return _Loc()
+    def wait_for_timeout(self, ms):
+        pass
+
+
+def test_sweep_panel_buttons_presses_only_discovered_targets_and_reproduces(monkeypatch):
+    """같은 계획(discover_panel_targets)이 두 번 호출돼도 같은 서명 순서로 같은 결과를
+    낸다는 것을 고정한다 — 원장 실측(13→259건 재현불가)의 재발 방지 계약. 버튼마다 항상
+    되돌리므로(browser.goto_produce + 칩 클릭) 그 호출 횟수도 함께 고정한다."""
+    calls = {"n": 0}
+
+    def fake_discover(page, sel):
+        calls["n"] += 1
+        return [{"idx": 0, "tag": "button", "id": "b1", "onclick": "doA()", "text": "A",
+                 "type": "", "visible": True, "disabled": False}]
+
+    monkeypatch.setattr(sweep, "discover_panel_targets", fake_discover)
+    monkeypatch.setattr(sweep, "hit_test", lambda page, idx: True)
+    monkeypatch.setattr(sweep, "capture_red_evidence", lambda session, sig: "")
+    monkeypatch.setattr(sweep.browser, "goto_produce", lambda page, url, timeout_ms=12000: None)
+
+    def fake_press(session, info, url, context=None):
+        return Result("L1", info["text"], GREEN, reason="ok", signature=sweep.signature_of(info), page=url)
+
+    monkeypatch.setattr(sweep, "_press", fake_press)
+
+    class _Session:
+        def __init__(self):
+            self.page = _ResetFakePage()
+        base_url = "http://x"
+
+    import time as _time
+    s1, s2 = _Session(), _Session()
+    out1 = sweep._sweep_panel_buttons(s1, "대본생성", "3", _time.time() + 10)
+    out2 = sweep._sweep_panel_buttons(s2, "대본생성", "3", _time.time() + 10)
+    assert [r.verdict for r in out1] == [r.verdict for r in out2] == [GREEN]
+    assert [r.signature for r in out1] == [r.signature for r in out2]
+    assert calls["n"] == 4  # 2회 실행 × (계획 1회 + 버튼 1개 재-discover 1회) = 4
+    assert s1.page.reset_calls == 1 and s2.page.reset_calls == 1  # 버튼 1개 → 리셋(칩 클릭) 1회
+
+
+def test_sweep_panel_buttons_marks_gray_when_signature_disappears(monkeypatch):
+    """앞선 조작으로 DOM이 바뀌어 계획한 서명이 되돌린 뒤 재-discover에서도 안 잡히면
+    빨강이 아니라 회색(조건부 렌더링 등 정상적인 UI 변화일 수 있음)이어야 한다."""
+    def fake_discover_once_then_empty(page, sel, _state={"n": 0}):
+        _state["n"] += 1
+        if _state["n"] == 1:
+            return [{"idx": 0, "tag": "button", "id": "gone", "onclick": "", "text": "사라짐",
+                     "type": "", "visible": True, "disabled": False}]
+        return []   # 재-discover 시점엔 이미 사라짐
+
+    monkeypatch.setattr(sweep, "discover_panel_targets", fake_discover_once_then_empty)
+    monkeypatch.setattr(sweep.browser, "goto_produce", lambda page, url, timeout_ms=12000: None)
+
+    class _Session:
+        page = _ResetFakePage()
+        base_url = "http://x"
+
+    import time as _time
+    out = sweep._sweep_panel_buttons(_Session(), "대본생성", "3", _time.time() + 10)
+    assert len(out) == 1 and out[0].verdict == GRAY and "다시 못 찾음" in out[0].reason
+
+
+# ── Task14 정정: "누르지 못함" GRAY vs "눌렀는데 터짐" RED 분리(2026-09-07) ──────────────
+
+
+class _ClickTimeoutPage:
+    """click()이 Playwright TimeoutError류 예외를 던지는 가짜 — '누르지 못함'을 흉내낸다."""
+    url = "http://x/produce"
+
+    def click(self, sel, timeout=3000, no_wait_after=True):
+        raise TimeoutError("Page.click: Timeout 3000ms exceeded.")
+
+    def fill(self, sel, val, timeout=3000):
+        raise TimeoutError("Page.fill: Timeout 3000ms exceeded.")
+
+    def evaluate(self, script, *a):
+        return 100
+
+    def screenshot(self, path):
+        with open(path, "wb") as f:
+            f.write(b"\x89PNG\r\n\x1a\n")
+
+
+def test_press_click_timeout_is_gray_not_red(tmp_path, monkeypatch):
+    """클릭 자체가 3초 안에 안 먹으면(타임아웃) '서비스가 아픔'이 아니라 '점검이 못 함' —
+    회색이어야 한다. 이유 문구도 사람이 읽고 판단 가능해야 한다(코디네이터 지시)."""
+    monkeypatch.setattr(sweep, "EVIDENCE_ROOT", tmp_path)
+    page = _ClickTimeoutPage()
+    sink = _EvidenceSink([_EMPTY_SNAP, _EMPTY_SNAP])
+    session = _EvidenceSession(page, sink)
+
+    result = sweep._press(session, _RED_INFO, "/produce")
+
+    assert result.verdict == GRAY
+    assert "누르지 못함" in result.reason
+    assert "TimeoutError" in result.reason
+
+
+def test_press_real_error_after_successful_click_stays_red(tmp_path, monkeypatch):
+    """클릭 자체는 성공했는데 그 결과 pageerror가 새로 생기면 — 이건 진짜 고장이므로
+    여전히 RED여야 한다(누르지 못함 GRAY화가 진짜 에러까지 덮어버리면 안 됨)."""
+    monkeypatch.setattr(sweep, "EVIDENCE_ROOT", tmp_path)
+    page = _EvidencePage()  # click() 성공
+    sink = _EvidenceSink([_EMPTY_SNAP, {**_EMPTY_SNAP, "pageerrors": ["TypeError: boom"]}])
+    session = _EvidenceSession(page, sink)
+
+    result = sweep._press(session, _RED_INFO, "/produce")
+
+    assert result.verdict == RED
+    assert "TypeError" in result.reason
+
+
+def test_sweep_panel_buttons_hit_test_fail_is_gray_not_red(monkeypatch):
+    """가려짐(elementFromPoint 불일치)도 '누르지 못함' 계열 — RED가 아니라 GRAY."""
+    def fake_discover(page, sel):
+        return [{"idx": 0, "tag": "button", "id": "b1", "onclick": "doA()", "text": "A",
+                 "type": "", "visible": True, "disabled": False}]
+
+    monkeypatch.setattr(sweep, "discover_panel_targets", fake_discover)
+    monkeypatch.setattr(sweep, "hit_test", lambda page, idx: False)
+    monkeypatch.setattr(sweep, "capture_red_evidence", lambda session, sig: "")
+    monkeypatch.setattr(sweep.browser, "goto_produce", lambda page, url, timeout_ms=12000: None)
+
+    class _Session:
+        def __init__(self):
+            self.page = _ResetFakePage()
+        base_url = "http://x"
+
+    import time as _time
+    out = sweep._sweep_panel_buttons(_Session(), "대본생성", "3", _time.time() + 10)
+    assert len(out) == 1
+    assert out[0].verdict == GRAY
+    assert "누르지 못함" in out[0].reason
+
+
+# ── Task14 정정: 사람이 알아볼 수 있는 표시 이름 + signature 안정성(2026-09-07) ──────────
+
+
+def test_display_name_prefers_text_then_aria_then_title_then_onclick_then_ordinal():
+    assert sweep._display_name({"tag": "button", "text": "재생", "idx": 0}) == "재생"
+    assert sweep._display_name(
+        {"tag": "button", "text": "", "aria_label": "TTS 재생", "idx": 0}) == "TTS 재생"
+    assert sweep._display_name(
+        {"tag": "button", "text": "", "aria_label": "", "title": "즐겨찾기", "idx": 0}) == "즐겨찾기"
+    assert sweep._display_name(
+        {"tag": "button", "text": "", "aria_label": "", "title": "", "onclick": "playVoice(this)", "idx": 0}
+    ) == "playVoice"
+    assert sweep._display_name(
+        {"tag": "button", "text": "", "aria_label": "", "title": "", "onclick": "", "idx": 2}
+    ) == "이름 없는 버튼 3번째"
+
+
+def test_display_name_adds_panel_context():
+    info = {"tag": "button", "text": "▶ 재생", "idx": 0}
+    assert sweep._display_name(info, "TTS음성") == "TTS음성 — ▶ 재생"
+
+
+def test_display_name_change_does_not_move_signature():
+    """이름이 바뀌어도(문맥이 붙어도) signature_of는 그대로 — '새로 빨강' 계산이 흔들리면 안 된다."""
+    info = {"tag": "button", "id": "", "onclick": "playVoice(this)", "text": "▶ 재생"}
+    sig_before = sweep.signature_of(info)
+    _ = sweep._display_name(info, "TTS음성")  # 표시용 호출이 signature에 영향 없어야 함
+    assert sweep.signature_of(info) == sig_before == "button@playVoice"
+
+
+# ── Task14 정정: 시간예산 초과 시 패널 회전 시작점(2026-09-07) ──────────────────────────
+
+
+def test_rotation_start_persists_and_advances(tmp_path, monkeypatch):
+    state_path = tmp_path / "rotation.json"
+    monkeypatch.setattr(sweep, "_ROTATION_STATE_PATH", state_path)
+
+    assert sweep._load_rotation_start(10) == 0   # 상태 파일 없음 → 0부터
+    sweep._save_rotation_start(3, 10)
+    assert sweep._load_rotation_start(10) == 3
+    sweep._save_rotation_start(13, 10)            # n을 넘는 값도 모듈로 감싸 저장
+    assert sweep._load_rotation_start(10) == 3
+
+
+def test_rotation_start_survives_corrupt_state_file(tmp_path, monkeypatch):
+    state_path = tmp_path / "rotation.json"
+    state_path.write_text("이건 JSON이 아님", encoding="utf-8")
+    monkeypatch.setattr(sweep, "_ROTATION_STATE_PATH", state_path)
+    assert sweep._load_rotation_start(10) == 0   # 깨진 파일이면 0으로 안전 폴백

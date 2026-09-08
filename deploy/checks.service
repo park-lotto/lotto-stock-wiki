@@ -1,0 +1,10 @@
+[Unit]
+Description=Shopping Shorts 검수 — 5분마다 운영 건강 + 라이브 HEAD 바뀌면 화면 점검
+[Service]
+Type=oneshot
+User=ubuntu
+WorkingDirectory=/home/ubuntu/lotto-stock-wiki
+EnvironmentFile=/etc/shopping-shorts.env
+ExecStart=/usr/bin/python3 -m shopping_shorts.checks.run_checks --trigger health
+ExecStart=/usr/bin/python3 -m shopping_shorts.checks.run_checks --trigger deploy
+TimeoutStartSec=2400

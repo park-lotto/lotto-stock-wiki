@@ -14120,6 +14120,129 @@ def _admin_page(request: Request):
                         media_type="text/html; charset=utf-8", headers=_NOCACHE)
 
 
+# ── 관리점검표(2026-09-07 검수 뼈대) — 결과는 checks.db, 화면은 static/checks.html ──
+#    게이트는 /admin과 같은 인라인 _is_admin(★/bot_admin.html·/challenge/admin처럼 빼먹지 않는다).
+@app.get("/admin/checks", response_class=HTMLResponse)
+def _checks_page(request: Request):
+    if not _is_admin(getattr(request.state, "customer_id", None)):
+        return HTMLResponse("<h2 style='font-family:sans-serif'>관리자 전용입니다</h2>", status_code=403)
+    return FileResponse(Path(__file__).parent / "static" / "checks.html",
+                        media_type="text/html; charset=utf-8", headers=_NOCACHE)
+
+
+def _checks_conn():
+    from shopping_shorts.checks import db as _cdb
+    return _cdb.open_db(_cdb.DEFAULT_PATH)
+
+
+# ── 증거 사진(스크린샷) — checks.db와 나란히, checks.db 안 만드는 값이라 여기서 정한다 ──
+#    ★경로탈출 방지 3중: ①디렉터리명 화이트리스트 정규식 ②파일명 화이트리스트(.png만)
+#    ③최종 resolve() 후 EVIDENCE_ROOT 밖이면 거부(symlink 우회까지 막는다).
+_EVIDENCE_ROOT = (Path(__file__).parent / "data" / "checks_evidence").resolve()
+_EVIDENCE_DIR_RE = re.compile(r"^[A-Za-z0-9_-]{1,120}$")
+_EVIDENCE_FILE_RE = re.compile(r"^[A-Za-z0-9_-]{1,120}\.png$")
+
+
+def _evidence_shot_path(evidence_dir: str, filename: str):
+    """검증된 evidence_dir·filename에서 실제 파일 경로를 돌려준다. 벗어나면 None."""
+    if not evidence_dir or not _EVIDENCE_DIR_RE.match(evidence_dir):
+        return None
+    if not filename or not _EVIDENCE_FILE_RE.match(filename):
+        return None
+    candidate = (_EVIDENCE_ROOT / evidence_dir / filename).resolve()
+    try:
+        candidate.relative_to(_EVIDENCE_ROOT)
+    except ValueError:
+        return None  # ★.. 등으로 루트를 벗어남 — 절대 내보내지 않는다
+    return candidate
+
+
+def _evidence_exists(evidence_dir: str) -> bool:
+    p = _evidence_shot_path(evidence_dir, "shot.png")
+    return bool(p and p.is_file())
+
+
+@app.get("/api/admin/checks/summary")
+def _api_checks_summary(request: Request):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts.checks import db as _cdb
+    from shopping_shorts.checks.verdict import summarize
+    conn = _checks_conn()
+    try:
+        # ★리뷰 지적(2026-09-07): 트리거 구분 없이 가장 최근 run을 집으면, 5분마다 도는
+        # health run(check_results 없음)이 daily/deploy가 낸 빨강을 5분 뒤 화면에서 지워버린다.
+        # 화면 결과는 항상 deploy/daily(=실제 L0~L2 화면 점검을 도는) run에서만 가져온다.
+        run = conn.execute(
+            "SELECT * FROM check_runs WHERE finished IS NOT NULL AND trigger IN ('deploy','daily') "
+            "ORDER BY run_id DESC LIMIT 1").fetchone()
+        if not run:
+            return {"ok": True, "run": None, "headline": "아직 점검 실행 기록이 없습니다.", "counts": {}, "newly_red": [],
+                    "results": [], "health": []}
+        rows = _cdb.latest_results(conn, run["run_id"])
+        for r in rows:
+            r["evidence_ok"] = _evidence_exists(r.get("evidence_dir") or "")
+        prev = {r["signature"]: _cdb.previous_verdict(conn, r["signature"], run["run_id"]) for r in rows}
+        summ = summarize(rows, prev)
+        health = [dict(r) for r in conn.execute(
+            "SELECT h.* FROM health_samples h JOIN (SELECT item, MAX(ts) AS mts FROM health_samples GROUP BY item) m "
+            "ON h.item=m.item AND h.ts=m.mts ORDER BY h.ok, h.item")]
+        return {"ok": True, "run": dict(run), "headline": summ["headline"], "counts": summ["counts"],
+                "newly_red": summ["newly_red"], "results": rows, "health": health}
+    finally:
+        conn.close()
+
+
+@app.get("/api/admin/checks/results")
+def _api_checks_results(request: Request, run: int):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    from shopping_shorts.checks import db as _cdb
+    conn = _checks_conn()
+    try:
+        rows = _cdb.latest_results(conn, run)
+        for r in rows:
+            r["evidence_ok"] = _evidence_exists(r.get("evidence_dir") or "")
+        return {"ok": True, "results": rows}
+    finally:
+        conn.close()
+
+
+@app.get("/api/admin/checks/evidence/{result_id}/{filename}")
+def _api_checks_evidence(request: Request, result_id: int, filename: str):
+    """빨간 줄 → 근거 화면 사진. ★관리자 전용 + 경로탈출 3중 방어(_evidence_shot_path)."""
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    conn = _checks_conn()
+    try:
+        row = conn.execute("SELECT evidence_dir FROM check_results WHERE id=?", (result_id,)).fetchone()
+    finally:
+        conn.close()
+    evidence_dir = row["evidence_dir"] if row else ""
+    path = _evidence_shot_path(evidence_dir or "", filename)
+    if not path or not path.is_file():
+        return JSONResponse({"ok": False, "error": "화면 사진이 없습니다"}, status_code=404)
+    return FileResponse(path, media_type="image/png", headers=_NOCACHE)
+
+
+@app.get("/api/admin/checks/health")
+def _api_checks_health(request: Request, item: str, days: int = 14):
+    denied = _require_admin(request)
+    if denied:
+        return denied
+    conn = _checks_conn()
+    try:
+        rows = [dict(r) for r in conn.execute(
+            "SELECT ts, value, ok, detail FROM health_samples WHERE item=? AND ts >= datetime('now', ?) ORDER BY ts",
+            (item, f"-{int(days)} days"))]
+        return {"ok": True, "item": item, "rows": rows}
+    finally:
+        conn.close()
+
+
 # ── 오늘 제작 현황판(2026-09-02) ────────────────────────────────────────────
 #   사장님 요청: "회원들이 오늘 영상 만드는 걸 따로 페이지에서, 통계랑 실제 만든
 #   영상까지 내가 편하게 보게 해달라."
