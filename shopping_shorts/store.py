@@ -6008,13 +6008,33 @@ class Store:
         #   다음 작업에 자동으로 다시 실린다. cid 163은 이 값이 사장님 계정 보이스라
         #   3일간 새 작업마다 같은 404를 맞았다(6잡 전부).
         #   목록에서 안 보이는 목소리면 기억을 버리고 기본값으로 돌아간다(=동작 불변).
+        #   ★"목록에 없으면 버린다"로 하면 안 된다 — 프리셋 행이 아직 없는 정상 경로
+        #     (튜닝 스냅샷·시드 전·테스트)까지 기억을 잃는다. 그래서 **못 쓰는 게
+        #     확실할 때만** 버린다: 그 preset이 DB에 실재하고, 그게 남의 계정 보이스일 때.
         try:
-            if not any(p.get("preset_id") == v.get("preset_id")
-                       for p in self.list_voice_presets(customer_id=customer_id)):
+            pid = v.get("preset_id")
+            if pid and self._is_foreign_account_voice(pid, customer_id):
                 return None
-        except Exception:    # noqa: BLE001 — 조회 실패로 영상제작을 막지 않는다
-            pass
+        except Exception as e:    # noqa: BLE001 — 조회 실패로 영상제작을 막지 않는다
+            # ★조용히 삼키지 마라(BUDGET) — 왜 못 걸렀는지 남긴다.
+            logging.warning("get_last_voice: 보이스 소유 확인 실패(기억 유지) — %r", e)
         return v
+
+    def _is_foreign_account_voice(self, preset_id, customer_id):
+        """그 프리셋이 **남의 일레븐랩스 계정 보이스**인가(=내 키로는 404).
+
+        origin='library'는 누군가의 계정에서 담아온 보이스다. 그 주인이 내가 아니면
+        내 키로는 그 voice_id가 없다. curated(공용 내장)·tuned은 해당 없음.
+        행이 없으면 판단하지 않는다(False) — 모르는 것을 못 쓴다고 단정하지 않는다.
+        """
+        if not customer_id:
+            return False       # 사장님(cid 0)은 자기 계정 보이스의 주인이다
+        with self._conn() as c:
+            row = c.execute("SELECT origin, owner_customer_id FROM voice_presets "
+                            "WHERE preset_id=?", (preset_id,)).fetchone()
+        if not row:
+            return False       # 모르는 프리셋 — 기억을 함부로 버리지 않는다
+        return row[0] == "library" and int(row[1] or 0) != int(customer_id)
 
     def set_last_voice(self, customer_id, voice):
         """이 고객의 다음 작업 기본 성우를 저장(upsert). voice=None이면 지운다.
