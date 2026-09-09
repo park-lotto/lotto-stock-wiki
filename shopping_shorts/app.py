@@ -18916,7 +18916,32 @@ def api_produce_mix_beats_preview(job_id: str):
     for _k, _o in enumerate(out):
         _o["i"] = _k
         _o["total"] = len(out)
-    return {"beats": out}
+    return {"beats": out, "fkey": _frame_cache_key(job, _MIX_WORK_DIR / job_id)}
+
+
+def _frame_cache_key(job, work) -> str:
+    """장면 프레임 주소에 붙일 **재검증 키** (2026-09-09 박세현님 job 57722281732e).
+
+    ★증상: 자막제거를 끝냈는데 6단계 장면꾸미기 배경에 원본 자막이 그대로 보였다.
+      서버는 정상이었다 — 실측하니 _beatframe_file은 청소본(_clean)에서 뜨고 있었고
+      그 그림엔 자막이 없었다. 화면에 나간 것은 **청소 전(23:38)에 뽑혀 브라우저에
+      남아 있던 옛 그림**이다. 주소(/beatframe/{job}/{i}?cut={c})가 청소 전후로
+      똑같아서, 이미 그린 <img>는 다시 받을 이유가 없었다.
+    ★그래서 주소에 청소 상태를 박는다. 청소본이 생기거나 바뀌면 주소가 달라져
+      브라우저 캐시가 통째로 무효가 된다(서버 캐시 파일명에 소스·시각을 넣은 것과 같은 이치).
+    실패하면 빈 문자열 — 주소는 종전대로 돌아가고 조용히 깨지지 않는다."""
+    try:
+        _map, _cvp, _r, _tag, _fresh = _clean_frame_src(job, work, 0)
+        parts = [str(_tag or ""), "1" if _fresh else "0"]
+        if _map:
+            parts.append("|".join(sorted(str(v) for v in _map.values())))
+        if _cvp:
+            _p = Path(_cvp)
+            parts.append(_p.name)
+            parts.append(str(int(_p.stat().st_mtime)) if _p.exists() else "0")
+        return hashlib.md5("::".join(parts).encode("utf-8")).hexdigest()[:12]
+    except Exception:      # noqa: BLE001
+        return ""
 
 
 def _beatframe_file(job, job_id: str, i: int, cut=None):

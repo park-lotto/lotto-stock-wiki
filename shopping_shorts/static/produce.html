@@ -5874,6 +5874,7 @@ let _CAP_FX_TEXT=null;   // 효과를 마지막으로 재생한 자막 문구(�
 let PREVIEW_CAP_TEXT='이렇게 자막이 나와요';   // 스텝퍼가 비트별 자막으로 교체
 // ── 🎞 공용 장면 프리뷰 스텝퍼 — 비트마다 프레임+자막 넘겨보기(TTS·검수판 트랙도 재사용) ──
 let BEATS_PREVIEW=[];   // [{i,total,caption}]
+let BEATS_FKEY='';      // 청소 상태 키 — 프레임 주소에 붙여 옛 그림(자막 있는)을 무효화한다
 let BEAT_IDX=0;
 
 // ── 훅 감탄사(와,/여러분) 켜고 끄기 — 내 설정. 안 정하면 사장님 기본값을 따른다 ──────
@@ -5912,6 +5913,9 @@ async function loadBeatsPreview(){
   try{
     const r=await fetch('/api/produce/mix/beats_preview/'+MIX_JOB);
     const d=await r.json(); BEATS_PREVIEW=d.beats||[];
+    // ★청소 상태 키(2026-09-09). 자막제거 전에 받아둔 그림이 브라우저에 남아
+    //   "자막제거를 했는데 꾸미기엔 자막이 그대로"로 보이던 것 — 주소가 같아서였다.
+    BEATS_FKEY=d.fkey||'';
   }catch(e){ BEATS_PREVIEW=[]; }
   const nv=document.getElementById('beatNav');
   if(!BEATS_PREVIEW.length){ if(st) st.style.display='none'; if(nv) nv.style.display='none'; return; }
@@ -5925,8 +5929,11 @@ async function loadBeatsPreview(){
 //   미리 받아둔 것과 실제로 띄우는 것이 어긋나 prefetch가 통째로 헛돈다(조용히).
 function _beatFrameUrl(b){
   if(!b || typeof MIX_JOB==='undefined' || !MIX_JOB) return '';
-  return '/api/produce/mix/beatframe/'+MIX_JOB+'/'+_beatNo(b)
-         + (b.cut!=null ? ('?cut='+b.cut) : '');
+  let u='/api/produce/mix/beatframe/'+MIX_JOB+'/'+_beatNo(b)
+        + (b.cut!=null ? ('?cut='+b.cut) : '');
+  // ★청소 상태가 바뀌면 주소가 바뀐다 — 브라우저에 남은 '자막 있는' 옛 그림을 무효화한다.
+  if(BEATS_FKEY) u += (u.indexOf('?')<0?'?':'&') + 'v=' + BEATS_FKEY;
+  return u;
 }
 // ── 이웃 장면 그림 미리 받기(2026-08-31 사장님 "다음 장면 넘어갈 때 로딩이 느리다") ──
 //   서버 추출은 실측 150~220ms로 병목이 아니었다. 진짜 원인은 ◀▶를 누르는 **그 순간에야**
