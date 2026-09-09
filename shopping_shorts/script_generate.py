@@ -619,12 +619,35 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
             break
         _n = len(script_gate.norm(full))
         _tgt = script_gate.density_target(style, seconds)
-        if best is None or abs(_n - _tgt) < best[0]:
-            best = (abs(_n - _tgt), res, checks, full)
+        # ★소재가 틀린 안은 "그나마 나은 것" 후보로도 안 쓴다(2026-09-09).
+        #   밀도·순서는 어설퍼도 우리 제품 이야기지만, 소재가 다르면 통째로 남의 대본이다.
+        if not script_gate.fatal_fail(checks):
+            if best is None or abs(_n - _tgt) < best[0]:
+                best = (abs(_n - _tgt), res, checks, full)
         extra = script_gate.gate_feedback(checks)
 
     if not script_gate.passed(checks) and best and best[3] != full:
         _, res, checks, full = best
+
+    # ★치명 실패(소재 이탈)는 여기서 버린다 — fail-open을 닫는다(2026-09-09 사장님 재발 제보).
+    #   실측(work f2547fc3a753): 재료는 'Mac Mini용 레트로 매킨토시 케이스'인데 A안이
+    #   채칼·도마 대본으로 나왔다. 게이트는 `소재 일치 False`로 정확히 잡고 있었는데,
+    #   재시도 뒤에도 실패하면 **길이가 가장 가까운 안을 그대로 내보내는** 경로가 있었다.
+    #   버리면 그 스타일만 빠지고 다른 안은 그대로 산다(generate_by_styles가 건너뛴다).
+    #   전부 빠지면 호출부가 reasons를 보고 "재료가 부족하다"고 정확히 말할 수 있다 —
+    #   엉뚱한 제품 대본을 조용히 내보내는 것보다 낫다.
+    _fatal = script_gate.fatal_fail(checks)
+    if _fatal:
+        if note is not None:
+            # ★generate_by_styles가 읽는 키에 맞춘다(reason/detail) — 다른 이름으로 담으면
+            #   화면엔 원인 없이 '빈손'으로만 떠서 사장님이 이유를 못 본다.
+            note["reason"] = "소재이탈"
+            note["detail"] = (f"재료의 제품({_sources_product(sources) or product or '?'})과 "
+                              f"다른 소재가 나와 반려했습니다 — 재료 대본이 부족합니다")
+            note["tries"] = tries
+        print(f"[script_gate] 소재 이탈 반려: product={_sources_product(sources) or product!r}",
+              file=sys.stderr)
+        return None
 
     # ★마지막 방어는 코드가 한다(2026-08-18 사장님 "계속 다시 살아나는데 원천 해결인가").
     #   재작성은 부탁이라 언제든 어길 수 있다 — 여기서 길이만은 **결정적으로** 맞춘다.
