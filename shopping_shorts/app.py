@@ -20699,6 +20699,49 @@ def _sources_for_generate(item, job, limit=_FACTS_MAX_SOURCES):
     return out[:limit]
 
 
+def _wow_subject(sources):
+    """웹에 물어볼 **주제어**. 1단계가 뽑아둔 제품명을 쓰고, 없으면 소재 이름을 쓴다.
+
+    ★제품명이 정확할수록 좋지만, 없다고 건너뛰지 않는다 — "미니 세탁기"처럼
+      카테고리만 알아도 그 카테고리의 원리·역사는 나온다(실측 2026-09-09).
+    """
+    for x in (sources or []):
+        v = (x.get("product") or "").strip()
+        if v:
+            return v[:80]
+    for x in (sources or []):
+        v = (x.get("name") or "").strip()
+        if v:
+            return v[:80]
+    return ""
+
+
+def _wow_block_for(sources, store):
+    """영상 밖의 신기한 정보 → 프롬프트 블록. 못 찾으면 ''(회귀 0).
+
+    캐시는 **주제어** 단위다(job이 아니라). 같은 제품군이 다시 오면 안 때린다 —
+    이 호출은 웹검색이라 느리고, 실측에서 키 4개가 연속 429였다.
+    """
+    from shopping_shorts import wow_facts
+    subject = _wow_subject(sources)
+    if not subject:
+        return ""
+    ckey = "wow_facts_%s" % hashlib.md5(subject.encode("utf-8")).hexdigest()[:16]
+    wows = None
+    if store is not None:
+        try:
+            wows = json.loads(store.get_setting(ckey, "") or "null")
+        except ValueError:
+            wows = None
+    if wows is None:
+        wows = wow_facts.find(subject)
+        # 빈 결과는 캐시하지 않는다 — 일시 429를 굳히면 그 제품군은 영영 빈손이 된다
+        # (insta_facts 캐시와 같은 원칙).
+        if wows and store is not None:
+            store.set_setting(ckey, json.dumps(wows, ensure_ascii=False))
+    return wow_facts.wow_prompt_block(wows)
+
+
 def _materials_for_generate(item, body, store, cid, spines=None):
     """대본 생성에 넣을 **재료 한 벌** → (sources, facts_block, job, job_id, scene_block)
 
@@ -20745,6 +20788,15 @@ def _materials_for_generate(item, body, store, cid, spines=None):
     _sul_block = _sul_block_for_sources(item.get("category") or "", _src, store, spines)
     if _sul_block:
         _facts_block = (_facts_block + "\n\n" + _sul_block) if _facts_block else _sul_block
+    # ★영상 **밖**의 신기한 정보(2026-09-09 사장님). 위의 재료는 전부 "영상·상품 안"을
+    #   본다 — 그래서 대본이 화면에 이미 보이는 것만 다시 말했다("사람들이 보게 해야
+    #   할 이유가 없어"). 카테고리를 웹에 물어 알맹이 한 줄을 얻는다.
+    #   ★캐시가 본체다: 실측에서 키 4개가 연속 429였고, 이 단계는 job마다 부르면 그만큼
+    #     느려진다. 같은 제품군은 다시 안 때린다.
+    #   ★못 찾으면 빈 문자열 — 대본은 종전대로 나온다(회귀 0).
+    _wow_block = _wow_block_for(_src, store)
+    if _wow_block:
+        _facts_block = (_facts_block + chr(10)*2 + _wow_block) if _facts_block else _wow_block
     # ★`_scene_block`도 돌려준다 — 호출부가 응답의 `materials.scene_points`(화면에 "장면 N개"로
     #   표시)를 만들 때 쓴다. 여기서 안 주면 호출부가 `_scene_points_block`을 **한 번 더**
     #   부르게 되고, 그러면 같은 판단이 두 곳이 된다(0순위-B).
