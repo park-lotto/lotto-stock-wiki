@@ -42,6 +42,10 @@ _MODEL = "gemini-3.1-flash-lite"
 # 몇 개를 받나. 3개면 대본 한 편에서 1~2개를 쓰고도 고를 여지가 남는다.
 WOW_N = 3
 
+# 키를 최대 몇 번까지 돌려볼지. 살아있는 키 수만큼 돌되 이 값을 넘지 않는다 —
+# 키가 25개여도 이 한 단계가 대본을 그만큼 붙잡으면 안 된다.
+_MAX_TRIES = 20
+
 WOW_PROMPT = """'{subject}' 제품으로 한국어 쇼핑 숏폼을 만든다.
 
 이 **카테고리**에 대해 시청자가 모르는 신기한 사실 {n}개를 웹에서 찾아라.
@@ -111,10 +115,18 @@ def find(subject, *, n=WOW_N, log=print, _call=None):
         _say(log, "[wow_facts] 모듈 import 실패 — %s" % str(e)[:100])
         return []
 
-    # ★키를 돌려 가며 재시도한다 — 실측(2026-09-09)에서 **4개 연속 429**였고
-    #   5번째에 성공했다. 한 번 때리고 포기하면 이 단계는 대부분 빈손이 된다.
+    # ★키를 **넉넉히** 돌린다(2026-09-09 사장님: "키배치를 여유있게 하는 걸로 해").
+    #   실측에서 4개 연속 429였고 5번째에 성공했다 — 6회로 묶으면 키가 붐비는 시간엔
+    #   그대로 빈손이 된다. 그래서 **살아있는 키 수만큼** 돈다(한 바퀴 = 모두에게 한 번씩).
+    #   상한을 두는 이유: 키가 아주 많아도 이 한 단계가 대본 생성을 오래 붙잡으면
+    #   그 기다림이 그대로 사장님 몫이 된다.
+    try:
+        _n_keys = len(comment_gen._live_key_indices() or [])
+    except Exception:      # noqa: BLE001 — 키 수를 못 세도 최소한은 돈다
+        _n_keys = 0
+    tries = max(6, min(_n_keys or 6, _MAX_TRIES))
     last = ""
-    for i in range(6):
+    for i in range(tries):
         try:
             key, _idx = comment_gen._next_live_key_and_idx()
             if key is None:
@@ -131,7 +143,8 @@ def find(subject, *, n=WOW_N, log=print, _call=None):
             last = "빈 결과"
         except Exception as e:      # noqa: BLE001 — 웹 보강 실패가 대본을 막으면 안 된다
             last = "%s: %s" % (type(e).__name__, str(e)[:70])
-    _say(log, "[wow_facts] '%s' 못 찾음 — %s" % (subject, last))
+    _say(log, "[wow_facts] '%s' 못 찾음 — 키 %d회 시도, 마지막: %s"
+              % (subject, tries, last))
     return []
 
 

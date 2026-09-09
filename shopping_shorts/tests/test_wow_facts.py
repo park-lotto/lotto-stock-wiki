@@ -69,3 +69,17 @@ def test_프롬프트가_스펙나열을_금지한다():
     p = wow_facts.WOW_PROMPT.format(subject="이어폰", n=3)
     assert "스펙 나열은 쓸모없다" in p
     assert "영상에 안 나온 지식" in p
+
+
+def test_키를_넉넉히_돌린다(monkeypatch):
+    """사장님: "키배치를 여유있게 하는 걸로 해" (2026-09-09).
+
+    실측에서 4개 연속 429였고 5번째에 성공했다. 6회로 묶으면 키가 붐비는 시간엔
+    그대로 빈손이 된다 — 살아있는 키 수만큼 돈다(상한 _MAX_TRIES).
+    """
+    assert wow_facts._MAX_TRIES >= 20
+    src = wow_facts.find.__doc__ or ""
+    import inspect
+    body = inspect.getsource(wow_facts.find)
+    assert "_live_key_indices" in body, "키 수를 안 보고 고정 횟수만 돈다"
+    assert "_MAX_TRIES" in body
