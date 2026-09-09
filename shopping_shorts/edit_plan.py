@@ -4140,6 +4140,10 @@ def build_edit_plan(source_scripts, target_seconds, structure="template", video_
     # ★대본을 고치기 전에 **화면부터 다시 고른다**(2026-08-14). 더 맞는 화면을 찾으면 fit이
     #   올라가 아래 재작성 대상에서 자연히 빠지고, 못 찾은 비트만 종전대로 대사를 고친다.
     grounded["beats"] = _repick_weak_beats(grounded["beats"], seg_map)
+    # ★고른 화면이 정말 맞는지 비트마다 되묻는다(2026-09-09, 기본 OFF).
+    #   _repick 뒤에 둔다 — 재선택으로 고쳐진 것까지 검증해야 최종 결과를 본다.
+    #   교체는 하지 않고 fit만 깎아 검수판에 드러낸다(회귀 0).
+    grounded["beats"] = verify_beat_screens(grounded["beats"], seg_map, store=_verify_store())
     grounded["beats"] = _reconcile_weak_beats(grounded["beats"])
     # 각 비트 target_seconds는 나레이션 글자수 기준으로 재계산(실제 렌더 길이 =
     # 나레이션 읽는 시간 ≈ 글자수÷_SYLLABLES_PER_SEC초). UI 표시 초와 실제 길이가 어긋나지 않게.
@@ -4338,6 +4342,99 @@ def build_inherit_plan(source_scripts, given_script, beat_sources, structure="te
     return {"structure": structure, "beats": beats, "plagiarism_flags": [],
             "detected_type": _normalize_video_type(video_type), "affiliate_target": "",
             "generator": "inherit"}
+
+
+# ── 화면 검증(2026-09-09) — 프롬프트·스키마는 여기 한 곳에서만 정한다(0순위-B).
+#   ★"맞나?"만 묻는다. 더 나은 걸 고르라고 하면 앞 실험처럼 84%가 바뀌어 회귀 위험이 크다.
+#   ★"최소한 맥락으로 어색하지 않으면 통과"를 넣은 이유: 이게 없으면 문자 그대로 따져
+#     멀쩡한 것까지 떨군다(요구먼저 방식이 67% 과잉 기각한 그 실패).
+_SCREEN_VERIFY_PROMPT = """내레이션: "{narration}"
+화면: "{scene}"
+
+이 내레이션을 말할 때 이 화면을 띄우면 시청자가 자연스럽게 볼까?
+- 내레이션이 말하는 사물·동작이 화면에 **실제로 보이거나**, 최소한 그 얘기의 맥락으로
+  어색하지 않으면 ok=true.
+- 전혀 다른 것을 보여주고 있거나 수치·대상이 어긋나면 ok=false.
+JSON만 출력하라."""
+
+_SCREEN_VERIFY_SCHEMA = {
+    "type": "object",
+    "properties": {"ok": {"type": "boolean"}, "why": {"type": "string"}},
+    "required": ["ok"],
+}
+
+
+def _verify_store():
+    """설정 조회용 Store — edit_plan은 평소 DB를 안 쓰므로 여기서만 만든다.
+    실패하면 None을 돌려 검증이 꺼진 것으로 본다(fail-open)."""
+    try:
+        from shopping_shorts.store import Store
+        from shopping_shorts.config import DB_PATH
+        return Store(str(DB_PATH))
+    except Exception as e:      # noqa: BLE001 — 설정을 못 읽으면 그냥 끈다
+        print(f"[verify_screens] store 생성 실패(끈다): {e!r}", file=sys.stderr)
+        return None
+
+
+def verify_beat_screens(beats, seg_map, call=None, store=None):
+    """★고른 화면이 그 대사에 정말 맞는지 **비트마다 따로** 되묻는다 (2026-09-09).
+
+    사장님: "분명히 태깅과 대본에 맞는 게 있는데 엉뚱하고 다른 걸 배치하는 게 문제.
+            제미니가 그 단계 과정을 더 촘촘하게 해보라는 거야."
+
+    ■ 왜 이 모양인가 — 라이브 실측으로 세 번 갈아엎은 결과다(2026-09-09, job 7~12개씩)
+      ① 「바로 고르기」   억지로 고른 것을 **하나도** 못 잡았다(0%). 모델은 재료가 없어도 고른다.
+      ② 「요구 먼저 적기」 "필요한 화면"을 먼저 적게 했더니 그 문장에 갇혀 **과잉 기각**(67%가
+         가짜 '없음'). 예: "물에 슥 씻기만 하면"에 '식재료 씻는 모습'이라 적고, 정작 있는
+         '롤러를 헹구는 장면'을 없다고 했다.
+      ③ 「고르기 → 검증」 이 순서만 정확했다. 탈락 17%가 전부 진짜 억지였고 오탐이 없었다.
+         (탈락 예: "55도 정온 유지"에 '60도→37도로 내려가는 화면' → 수치 불일치를 잡아냈다)
+
+    ■ 무엇을 하나 / 안 하나
+      · **아무것도 교체하지 않는다.** 탈락한 비트의 fit을 2로 낮추고 근거만 남긴다 →
+        검수판이 이미 fit<=2에 ⚠️를 띄우므로 사장님 눈에 그대로 걸린다.
+        (교체까지 자동으로 하면 84%가 바뀐다 — 회귀 위험이 커서 지금은 '표시'까지만 간다)
+      · 후보 목록을 **주지 않는다**. 다시 고르라는 게 아니라 이것만 보라는 것이다.
+      · 비트마다 1회. 한 번에 몰아 물으면 집중이 흩어진다(1차가 그래서 놓친다).
+      · fail-open — 키·모델이 죽어도 원본 그대로 돌려준다.
+
+    ■ 스위치
+      기본 OFF(`store` 설정 `verify_screens_enabled`). 검증 안 된 걸 라이브에 켜두면
+      조용히 비용만 나간다(2026-07-31 B1 실사고 계보).
+    """
+    if not beats or not seg_map:
+        return beats
+    if store is not None:
+        try:
+            if str(store.get_setting("verify_screens_enabled", "") or "") != "1":
+                return beats
+        except Exception as e:      # noqa: BLE001 — 설정 조회 실패로 제작을 죽이지 않는다
+            print(f"[verify_screens] 설정 조회 실패(끈 것으로 본다): {e!r}", file=sys.stderr)
+            return beats
+    call = call or _vault_call
+    out = []
+    for b in beats:
+        nb = dict(b)
+        narr = (nb.get("narration") or "").strip()
+        sid = (nb.get("primary") or {}).get("seg_id")
+        seg = (seg_map or {}).get(sid) or {}
+        sd = (seg.get("scene_desc") or "").strip()
+        # 화면 증거를 요구하지 않는 문장(감정·설명·CTA)은 대상이 아니다 — 화면이 안 맞는 게
+        # 정상이라 여기서 깎으면 멀쩡한 칸에 빨간불이 켜진다(2026-09-08 실측 49%).
+        if not narr or not sd or nb.get("visual_verb") is False or nb.get("respined"):
+            out.append(nb)
+            continue
+        res = call(_SCREEN_VERIFY_PROMPT.format(narration=narr[:200], scene=sd[:200]),
+                   _SCREEN_VERIFY_SCHEMA)
+        if not res:                     # 키 소진·모델 실패 → 그대로 둔다
+            out.append(nb)
+            continue
+        if not bool(res.get("ok")):
+            nb["fit"] = min(int(nb.get("fit") or 5), 2)
+            nb["fit_evidence"] = "verify_failed"
+            nb["verify_why"] = (res.get("why") or "")[:40]
+        out.append(nb)
+    return out
 
 
 def _verify_fits(beats):
