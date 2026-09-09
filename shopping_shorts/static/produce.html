@@ -6178,6 +6178,17 @@ function _beatNo(b){ return (b && b.beat_idx != null) ? b.beat_idx : BEAT_IDX; }
 function _capMsg(t, color){ const m=document.getElementById('capLinesMsg');
   if(m){ m.textContent=t||''; m.style.color=color||''; } }
 
+// ★같은 자막(비트)의 **모든 컷 칸**에 결과를 반영한다(2026-09-09 사장님 제보).
+//   화면은 컷마다 한 칸인데(beats_preview: 비트 하나가 컷 4개면 칸 4개), 저장 뒤
+//   지금 보던 칸 하나만 새 줄로 갈아끼웠다. ◀▶로 같은 자막의 다른 컷으로 넘어가면
+//   그 칸은 **옛 줄**을 들고 있고, 거기서 다시 저장하면 옛 줄이 방금 저장한 걸
+//   덮어쓴다 = "줄나누기를 해도 되돌아간다 / 반영이 안 된다".
+//   자막 손질은 원래 그 컷 전부에 같이 걸린다(화면 안내문도 그렇게 적혀 있다).
+function _capApplyToBeat(b, patch){
+  const no=_beatNo(b);
+  (BEATS_PREVIEW||[]).forEach(x=>{ if(x && x.beat_idx===no) Object.assign(x, patch); });
+}
+
 function renderBeatTools(){
   const b=_curBeat(); if(!b) return;
   // 자리 버튼 — 지금 값에 불이 들어온다
@@ -6240,8 +6251,8 @@ async function setBeatCapPos(pos){
     const d=await r.json();
     if(!r.ok || !d.ok){ _capMsg(d.error||'저장 실패','var(--fire)'); return; }
     // ★저장 성공 → 화면도 그 자리로 즉시 옮긴다. %는 서버가 준 값을 쓴다(렌더와 같은 표).
-    b.pos=d.pos; b.pos_y_pct=(d.y_pct!=null?d.y_pct:null);
-    b.cap_xy=null;                 // 서버도 같이 지운다 — 두 벌로 남기지 않는다
+    // 자리도 같은 함정 — 이 자막의 컷 칸 전부에 반영한다(안 하면 다른 컷에서 옛 자리로 되돌아간다)
+    _capApplyToBeat(b, {pos:d.pos, pos_y_pct:(d.y_pct!=null?d.y_pct:null), cap_xy:null});
     renderBeatTools();
     if(typeof updateCaption==='function') updateCaption();
     _capMsg('이 장면 자막을 '+({top:'위',mid:'중간',bottom:'아래'}[d.pos]||d.pos)+'로 옮겼어요','var(--ok)');
@@ -6259,7 +6270,7 @@ async function saveBeatCapLines(){
        body:JSON.stringify({beat_idx:_beatNo(b), lines})});
     const d=await r.json();
     if(!r.ok || !d.ok){ _capMsg(d.error||'저장 실패','var(--fire)'); return; }
-    b.segs=d.lines; b.durs=null;                 // 표시시간은 서버가 다시 잰다
+    _capApplyToBeat(b, {segs:d.lines, durs:null});   // 이 자막의 컷 칸 전부에(표시시간은 서버가 다시 잰다)
     _capMsg('저장했어요'+(d.timed?'':' (표시시간은 글자수 기준)'),'var(--ok)');
     _playBeatCaptions(b);                        // 바뀐 줄로 미리보기 다시 재생
   }catch(e){ _capMsg(ErrorHelp.text('network'),'var(--fire)'); }
@@ -6275,7 +6286,7 @@ async function resetBeatCapLines(){
        body:JSON.stringify({beat_idx:_beatNo(b), reset:true})});
     const d=await r.json();
     if(!r.ok || !d.ok){ _capMsg(d.error||'되돌리기 실패','var(--fire)'); return; }
-    b.segs=d.lines; b.durs=null; renderBeatTools();
+    _capApplyToBeat(b, {segs:d.lines, durs:null}); renderBeatTools();
     _capMsg('자동 분할로 되돌렸어요','var(--ok)');
     _playBeatCaptions(b);
   }catch(e){ _capMsg(ErrorHelp.text('network'),'var(--fire)'); }
