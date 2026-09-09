@@ -478,6 +478,57 @@ def prior_verdict(checks):
     return lambda _text: {"ok": hit[0]["ok"], "why": hit[0].get("detail") or ""}
 
 
+# ── 사람이 나오는가 / 쓰임이 번지는가 ─────────────────────────────────────
+# ★레퍼런스 원본 630편 실측(2026-09-09)이 근거다. 감이 아니다.
+#     구체적인 사람이 나온다      299편 (47%)
+#     겪은 말투(더라고/샀는데)    308편 (49%)
+#   우리 대본은 "요즘 사람들"·"초보들은"·"고수들은" 같은 **익명 집단**만 쓴다.
+#   레퍼런스는 "육아선배 언니가"·"부모님 댁에 보내드렸더니"·"애들이 아지트라며"다.
+#   같은 말투를 흉내 내는데 정작 **그걸 겪은 사람이 없다** → 설명문이 된다.
+_PERSON_RE = re.compile(
+    "언니|누나|형|오빠|엄마|아빠|부모님|친구|남편|아내|와이프|애들|아이|딸|아들|"
+    "동생|시어머니|장모|이모|고모|삼촌|선배|후배|사장님|동료|저희|우리 ?집|"
+    "제가|내가|나는|우리 ?애")
+
+# 쓰임이 몇 군데로 번지나. 레퍼런스는 낮게→높여→늘려→책장으로 **4단**인데
+# 우리는 1단뿐이다. 재료(insta_facts.targets)에 이미 2~5개가 들어 있는데 안 쓴다.
+_USE_MIN = 2
+
+
+def has_person(full):
+    """대본에 **얼굴 있는 사람**이 나오나. 익명 집단(사람들·다들·초보들)은 사람이 아니다."""
+    return bool(_PERSON_RE.search(full or ""))
+
+
+def used_targets(full, targets):
+    """재료의 쓰임(targets) 중 대본이 실제로 쓴 것 — 어간 2글자 겹침으로 센다.
+
+    ★글자 그대로 베끼길 요구하지 않는다(영상 밖 정보 검사와 같은 기준).
+    """
+    from shopping_shorts import scene_match
+    body = set(scene_match._tokens(full))
+    hit = []
+    for t in (targets or []):
+        if len(body & set(scene_match._tokens(t))) >= 2:
+            hit.append(t)
+    return hit
+
+
+def _targets_from_facts(facts_text):
+    """재료 블록에서 **적용 대상(쓰임)** 목록을 되찾는다. 없으면 [].
+
+    ★호출부에 인자를 새로 심지 않는다 — check를 부르는 곳이 4군데인데 한 곳만
+      빠뜨리면 검사가 조용히 죽는다(0순위-B). 재료 원문은 이미 다 넘어온다.
+      표식은 `insta_facts.insta_prompt_block`이 쓰는 라벨이다.
+    """
+    for line in (facts_text or "").splitlines():
+        line = line.strip()
+        if line.startswith("- 적용 대상"):
+            _, _, rest = line.partition(":")
+            return [x.strip() for x in rest.split("/") if x.strip()]
+    return []
+
+
 def _wow_hooks(facts_text):
     """재료 원문에서 **영상 밖 정보** 훅들을 되찾는다. 없으면 [](검사 자체를 안 만든다).
 
@@ -517,7 +568,7 @@ def _uses_wow(full, hooks, min_hits=2):
 
 def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
           speaker_judge=None, scene_ids=None, grounded=False, is_recipe=False,
-          source_count=None):
+          source_count=None, targets=None, person_required=False):
     """(checks, full_text) 반환. checks = [{name, ok, detail}, ...]
 
     style: {"beat_roles": [...], "templates": {role: [...]}, "chars_per_30s": int}
@@ -526,6 +577,10 @@ def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
         검사한다. 안 주면 그 검사는 건너뛴다 — 기존 호출부는 그대로 = 회귀 0.
     assembled: 이 대본이 **조립**(spine_fill)으로 만들어졌나. 조립만 '문장틀 준수'를
         묻는다 — 아래 그 검사 주석 참조. 기본 False = 생성기.
+    targets: 재료의 **쓰임 목록**(insta_facts.targets). 주면 "쓰임이 번진다"를 검사한다.
+        안 주면 그 항목 자체를 안 만든다 — 기존 호출부 그대로 = 회귀 0.
+    person_required: True면 "사람이 나온다"를 검사한다. 기본 False —
+        정보형·스펙형 스타일까지 사람을 강제하면 멀쩡한 대본이 반려된다.
     speaker_judge: 대본 전문을 받아 {"ok": bool, "why": str}를 돌려주는 판정기.
         주면 '화자 일관성'을 검사한다. 안 주면 그 검사는 **항목 자체를 안 만든다**
         (기존 호출부 그대로 = 회귀 0). 아래 그 검사 주석 참조.
@@ -620,6 +675,30 @@ def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
                        "detail": ("존댓말이 섞였다(%s) — 이 장르는 '~었음 / ~다는 거 / "
                                   "~하더라고요' 반말체다(실측 히트작 전부)."
                                   % ", ".join(_po[:4])) if len(_po) > 1 else "OK"})
+
+    # ★사람이 나오나 (2026-09-09). 레퍼런스 원본 630편 중 **47%**에 구체적인 사람이
+    #   나온다(언니·부모님·애들). 우리 대본은 "요즘 사람들"·"초보들은" 같은 익명 집단만
+    #   써서 이야기가 아니라 설명문이 된다.
+    #   ★기본은 끈다(person_required=False) — 정보형 스타일까지 강제하면 회귀가 난다.
+    if person_required:
+        _has = has_person(full)
+        checks.append({"name": "사람이 나온다", "ok": _has,
+                       "detail": "OK" if _has else
+                       "대본에 사람이 한 명도 없다 — '요즘 사람들'·'다들'은 얼굴이 없다. "
+                       "누가 겪은 일인지 넣어라(언니가 / 엄마한테 보내드렸더니 / 애들이). "
+                       "히트작 47%가 그렇게 쓴다."})
+
+    # ★쓰임이 번지나 (2026-09-09). 히트작은 한 물건이 여러 곳으로 번진다
+    #   (낮게→높여→늘려→책장). 우리는 1단뿐인데, 재료엔 이미 2~5개가 들어 있다.
+    #   재료를 안 주면 항목 자체를 안 만든다 = 회귀 0.
+    targets = targets or _targets_from_facts(facts_text)
+    if targets:
+        _used = used_targets(full, targets)
+        checks.append({"name": "쓰임이 번진다", "ok": len(_used) >= _USE_MIN,
+                       "detail": ("%d곳에 쓴다" % len(_used)) if len(_used) >= _USE_MIN else
+                       ("쓰임을 %d개만 말했다 — 한 물건이 여러 곳에 번지는 게 이 장르의 "
+                        "핵심이다. 재료에 있는 것을 더 써라: %s"
+                        % (len(_used), " / ".join(str(t)[:24] for t in targets[:4])))})
 
     # ★영상 밖에서 찾아온 정보를 **실제로 썼나**(2026-09-09). 재료에 그 블록이 없으면
     #   항목 자체를 안 만든다 — 기존 호출부 그대로 = 회귀 0.
