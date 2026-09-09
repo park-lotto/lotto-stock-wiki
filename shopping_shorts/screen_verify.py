@@ -1,0 +1,79 @@
+"""화면 검증용 프레임·멀티모달 호출·비교 로그. 다운로드는 하지 않는다."""
+import hashlib
+import io
+import json
+import sys
+from pathlib import Path
+
+
+def frame(seg, sid, work):
+    if work is None:
+        return None
+    try:
+        from PIL import Image
+        from shopping_shorts.frame_extract import extract_seg_thumb
+        work = Path(work)
+        vid = str(seg.get("video_id") or "")
+        if any(not x or x in (".", "..") or any(c in x for c in '/\\:')
+               for x in (str(sid or ""), vid)):
+            raise ValueError("잘못된 장면/영상 ID")
+        cached = work / "seg_thumbs" / f"{sid}.jpg"
+        if not cached.is_file():
+            src = next((work / vid).glob("*.mp4"), None)
+            if src is None:
+                raise FileNotFoundError(f"기존 소스 없음: {vid}")
+            cached = extract_seg_thumb(src, cached.parent, seg, cached.name)
+            if cached is None:
+                raise RuntimeError("프레임 추출 실패")
+        data = cached.read_bytes()
+        with Image.open(io.BytesIO(data)) as im:
+            im.verify()
+        return data
+    except Exception as e:  # noqa: BLE001 — 종전 텍스트 경로로 폴백
+        print(f"[verify_screens] 이미지 확보 실패: {e!r}", file=sys.stderr)
+        return None
+
+
+def image_call(prompt, schema, image):
+    from google.genai import types
+    from shopping_shorts.frame_script import _call_with_key_rotation, loads_lenient
+    part = types.Part.from_bytes(data=image, mime_type="image/jpeg")
+
+    def once(client, model):
+        response = client.models.generate_content(
+            model=model, contents=[prompt, part],
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json", response_schema=schema))
+        return loads_lenient(response.text)
+
+    return _call_with_key_rotation(once, what="verify_screens")
+
+
+def invoke(call, *args):
+    try:
+        result = call(*args)
+        if isinstance(result, dict) and type(result.get("ok")) is bool:
+            return {"ok": result["ok"], "why": str(result.get("why") or "")}
+        print("[verify_screens] 판정 없음/응답 형식 오류", file=sys.stderr)
+    except Exception as e:  # noqa: BLE001 — fail-open
+        print(f"[verify_screens] 모델 호출 실패: {e!r}", file=sys.stderr)
+    return None
+
+
+def fingerprint(beat, scene, image):
+    return hashlib.sha256(json.dumps(
+        [1, beat.get("narration"), beat.get("primary"), scene,
+         hashlib.sha256(image).hexdigest() if image else None],
+        ensure_ascii=False, sort_keys=True).encode("utf-8")).hexdigest()
+
+
+def log(record, work):
+    line = json.dumps(record, ensure_ascii=False)
+    print(f"[verify_screens] {line}", file=sys.stderr)
+    if work is not None:
+        try:
+            Path(work).mkdir(parents=True, exist_ok=True)
+            with (Path(work) / "screen_verify.jsonl").open("a", encoding="utf-8") as fh:
+                fh.write(line + "\n")
+        except Exception as e:  # noqa: BLE001 — 로그 실패가 제작을 막지 않는다
+            print(f"[verify_screens] 로그 저장 실패: {e!r}", file=sys.stderr)

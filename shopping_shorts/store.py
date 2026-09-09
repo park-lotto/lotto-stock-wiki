@@ -190,9 +190,16 @@ def _ensure_screen_time(plan, store, job_id):
         #
         #   ⚠️AI 창작 방어는 그대로 살아 있다 — 계획이 처음 만들어질 때(사람 손이 닿기 전)
         #     이 출구를 반드시 지나므로 그때 걸러진다.
+        def finalize(beats):
+            from shopping_shorts.config import DB_PATH
+            filled = _ep._fill_beat_screen_time(beats, seg_map)
+            return _ep.verify_beat_screens(
+                filled, seg_map, store=store,
+                work=DB_PATH.parent / "mix_jobs" / job_id, job_id=job_id)
+
         if any(b.get("narration_manual") for b in beats):
             out = dict(plan)
-            out["beats"] = _ep._fill_beat_screen_time(beats, seg_map)
+            out["beats"] = finalize(beats)
             return out
         beats, _restored = _ep.enforce_scripted_narration(beats, job.get("given_script") or "")
         # ★그리고 **순서·전량**도 지킨다(2026-08-24 사장님 "1" = 강하게).
@@ -202,7 +209,7 @@ def _ensure_screen_time(plan, store, job_id):
         #   ⚠️순서 배분이 대사를 바꾸므로 **창작 되돌림 뒤에** 온다(되돌린 문장도 제자리로).
         beats, _reordered = _ep.enforce_script_order(beats, job.get("given_script") or "")
         out = dict(plan)
-        out["beats"] = _ep._fill_beat_screen_time(beats, seg_map)
+        out["beats"] = finalize(beats)
         return out
     except Exception:      # noqa: BLE001 — 보장 실패가 저장을 막으면 안 된다
         return plan

@@ -4140,10 +4140,7 @@ def build_edit_plan(source_scripts, target_seconds, structure="template", video_
     # ★대본을 고치기 전에 **화면부터 다시 고른다**(2026-08-14). 더 맞는 화면을 찾으면 fit이
     #   올라가 아래 재작성 대상에서 자연히 빠지고, 못 찾은 비트만 종전대로 대사를 고친다.
     grounded["beats"] = _repick_weak_beats(grounded["beats"], seg_map)
-    # ★고른 화면이 정말 맞는지 비트마다 되묻는다(2026-09-09, 기본 OFF).
-    #   _repick 뒤에 둔다 — 재선택으로 고쳐진 것까지 검증해야 최종 결과를 본다.
-    #   교체는 하지 않고 fit만 깎아 검수판에 드러낸다(회귀 0).
-    grounded["beats"] = verify_beat_screens(grounded["beats"], seg_map, store=_verify_store())
+    # 검증은 store의 마지막 화면 보정 뒤에 실행한다.
     grounded["beats"] = _reconcile_weak_beats(grounded["beats"])
     # 각 비트 target_seconds는 나레이션 글자수 기준으로 재계산(실제 렌더 길이 =
     # 나레이션 읽는 시간 ≈ 글자수÷_SYLLABLES_PER_SEC초). UI 표시 초와 실제 길이가 어긋나지 않게.
@@ -4364,19 +4361,8 @@ _SCREEN_VERIFY_SCHEMA = {
 }
 
 
-def _verify_store():
-    """설정 조회용 Store — edit_plan은 평소 DB를 안 쓰므로 여기서만 만든다.
-    실패하면 None을 돌려 검증이 꺼진 것으로 본다(fail-open)."""
-    try:
-        from shopping_shorts.store import Store
-        from shopping_shorts.config import DB_PATH
-        return Store(str(DB_PATH))
-    except Exception as e:      # noqa: BLE001 — 설정을 못 읽으면 그냥 끈다
-        print(f"[verify_screens] store 생성 실패(끈다): {e!r}", file=sys.stderr)
-        return None
-
-
-def verify_beat_screens(beats, seg_map, call=None, store=None):
+def verify_beat_screens(beats, seg_map, call=None, store=None, *, work=None,
+                        image_call=None, job_id=None):
     """★고른 화면이 그 대사에 정말 맞는지 **비트마다 따로** 되묻는다 (2026-09-09).
 
     사장님: "분명히 태깅과 대본에 맞는 게 있는데 엉뚱하고 다른 걸 배치하는 게 문제.
@@ -4395,23 +4381,25 @@ def verify_beat_screens(beats, seg_map, call=None, store=None):
         검수판이 이미 fit<=2에 ⚠️를 띄우므로 사장님 눈에 그대로 걸린다.
         (교체까지 자동으로 하면 84%가 바뀐다 — 회귀 위험이 커서 지금은 '표시'까지만 간다)
       · 후보 목록을 **주지 않는다**. 다시 고르라는 게 아니라 이것만 보라는 것이다.
-      · 비트마다 1회. 한 번에 몰아 물으면 집중이 흩어진다(1차가 그래서 놓친다).
+      · 비트마다 텍스트 1회 + 이미지가 있으면 1회. 두 판정은 비교 로그에 남긴다.
       · fail-open — 키·모델이 죽어도 원본 그대로 돌려준다.
 
     ■ 스위치
-      기본 OFF(`store` 설정 `verify_screens_enabled`). 검증 안 된 걸 라이브에 켜두면
+      기본 OFF(`store` 설정 `screen_verify_enabled`). 검증 안 된 걸 라이브에 켜두면
       조용히 비용만 나간다(2026-07-31 B1 실사고 계보).
     """
-    if not beats or not seg_map:
+    from shopping_shorts import screen_verify as sv
+    if not beats or not seg_map or store is None:
         return beats
     if store is not None:
         try:
-            if str(store.get_setting("verify_screens_enabled", "") or "") != "1":
+            if str(store.get_setting("screen_verify_enabled", "") or "") != "1":
                 return beats
         except Exception as e:      # noqa: BLE001 — 설정 조회 실패로 제작을 죽이지 않는다
             print(f"[verify_screens] 설정 조회 실패(끈 것으로 본다): {e!r}", file=sys.stderr)
             return beats
     call = call or _vault_call
+    image_call = image_call or sv.image_call
     out = []
     for b in beats:
         nb = dict(b)
@@ -4421,18 +4409,46 @@ def verify_beat_screens(beats, seg_map, call=None, store=None):
         sd = (seg.get("scene_desc") or "").strip()
         # 화면 증거를 요구하지 않는 문장(감정·설명·CTA)은 대상이 아니다 — 화면이 안 맞는 게
         # 정상이라 여기서 깎으면 멀쩡한 칸에 빨간불이 켜진다(2026-09-08 실측 49%).
-        if not narr or not sd or nb.get("visual_verb") is False or nb.get("respined"):
+        if not narr or not seg or nb.get("visual_verb") is False or nb.get("respined"):
             out.append(nb)
             continue
-        res = call(_SCREEN_VERIFY_PROMPT.format(narration=narr[:200], scene=sd[:200]),
-                   _SCREEN_VERIFY_SCHEMA)
+        image = sv.frame(seg, sid, work)
+        if not image and not sd:
+            out.append(nb)
+            continue
+        fingerprint = sv.fingerprint(nb, sd, image)
+        prior = nb.get("screen_verification") or {}
+        if prior.get("fingerprint") == fingerprint:
+            out.append(nb)
+            continue
+        started = time.monotonic()
+        text_result = sv.invoke(call, _SCREEN_VERIFY_PROMPT.format(
+            narration=narr[:200], scene=sd[:200]), _SCREEN_VERIFY_SCHEMA) if sd else None
+        image_result = sv.invoke(image_call, _SCREEN_VERIFY_PROMPT.format(
+            narration=narr[:200], scene="첨부된 실제 프레임 1장"),
+            _SCREEN_VERIFY_SCHEMA, image) if image else None
+        res = image_result if image else text_result
+        sv.log({"job_id": job_id, "beat_idx": nb.get("beat_idx"), "seg_id": sid,
+                "primary": nb.get("primary"), "narration": narr, "scene_desc": sd,
+                "fingerprint": fingerprint, "text": text_result, "image": image_result,
+                "disagreed": (text_result["ok"] != image_result["ok"])
+                    if text_result is not None and image_result is not None else None,
+                "seconds": round(time.monotonic() - started, 3),
+                "calls": int(bool(sd)) + int(bool(image))}, work)
         if not res:                     # 키 소진·모델 실패 → 그대로 둔다
             out.append(nb)
             continue
-        if not bool(res.get("ok")):
+        if prior and nb.get("fit_evidence") == "verify_failed":
+            for k in ("fit", "fit_evidence", "verify_why"):
+                nb.pop(k, None)
+            nb.update(prior.get("before") or {})
+        before = {k: nb[k] for k in ("fit", "fit_evidence", "verify_why") if k in nb}
+        if not res["ok"]:
             nb["fit"] = min(int(nb.get("fit") or 5), 2)
             nb["fit_evidence"] = "verify_failed"
             nb["verify_why"] = (res.get("why") or "")[:40]
+        nb["screen_verification"] = {"fingerprint": fingerprint, "before": before,
+                                      "text": text_result, "image": image_result}
         out.append(nb)
     return out
 
