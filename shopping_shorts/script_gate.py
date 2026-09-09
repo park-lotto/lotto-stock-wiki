@@ -538,7 +538,10 @@ def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
     # ★말끝 검사(2026-08-19 사장님 제보 "존댓말이 갑자기"). 유튜브 썰은 '~었음 / ~다는 거'
     #   반말체인데 생성기가 '~가요 / ~거든요 / ~드릴게요' 존댓말로 썼다(실측 spine 55).
     #   인스타 스타일은 존댓말이 정답이므로 **유튜브 썰(hook_3s)에만** 건다.
-    if style.get("hook_3s"):
+    # ★말투는 스파인이 정한다(2026-09-09). polite를 켠 스파인은 존댓말이 정답이라
+    #   반말 검사를 건너뛴다(실측: 「이거 보고 충격 먹었습니다」 계열 30편이 존댓말 87%).
+    #   polite가 없으면 종전대로 반말을 강제한다 = 회귀 0.
+    if style.get("hook_3s") and not style.get("polite"):
         _po = [w for w in _POLITE_TAILS if w in norm(full)]
         checks.append({"name": "말끝(반말체)", "ok": len(_po) <= 1,
                        "detail": ("존댓말이 섞였다(%s) — 이 장르는 '~었음 / ~다는 거 / "
