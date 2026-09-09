@@ -69,6 +69,27 @@ def extract_frame_at(video_path, dest_dir, timestamp_sec, filename="frame_hint.j
     return out_path
 
 
+def extract_segment_thumb(video_path, dest_dir, seg, filename):
+    """세그먼트 시작 직후 대표 프레임 1장 → 캐시 경로.
+
+    장면 카드와 AI 화면 검증이 같은 프레임을 보도록 대표 시각 판단을 여기 한 곳에 둔다.
+    정확한 start는 전환 중일 수 있어 구간의 5%(최대 0.08초)만큼 뒤를 찍는다.
+    이미 캐시된 파일은 ffmpeg를 다시 부르지 않는다.
+    """
+    cached = Path(dest_dir) / filename
+    if cached.exists():
+        return cached
+    try:
+        start = float(seg["start"])
+        end = float(seg["end"])
+    except (KeyError, TypeError, ValueError):
+        return None
+    if end <= start:
+        return None
+    at = start + min(0.08, max(0.0, (end - start) * 0.05))
+    return extract_frame_at(video_path, dest_dir, at, filename=filename)
+
+
 def _probe_duration(video_path):
     """영상 길이(초). 못 구하면 None."""
     cmd = [

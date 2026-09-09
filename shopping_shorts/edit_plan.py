@@ -18,6 +18,7 @@ import re
 import sys
 import threading
 import time
+from pathlib import Path
 
 from google.genai import types
 
@@ -4083,7 +4084,7 @@ def _repick_weak_beats(beats, seg_map, call=_vault_call, min_fit=4):
 
 def build_edit_plan(source_scripts, target_seconds, structure="template", video_type=None,
                     n_alternates=2, max_retries=_KEY_TRY_LIMIT, quota_sleep=8, given_script=None,
-                    is_recipe=False):
+                    is_recipe=False, source_video_paths=None, seg_thumb_dir=None):
     """소스 대본들 → 그라운딩·표절검사된 EDL(설계 §3-2). 실패 시 빈 EDL.
 
     video_type이 None이면 detect_video_type()으로 자동 판별한다(설계 §3-1).
@@ -4143,7 +4144,17 @@ def build_edit_plan(source_scripts, target_seconds, structure="template", video_
     # ★고른 화면이 정말 맞는지 비트마다 되묻는다(2026-09-09, 기본 OFF).
     #   _repick 뒤에 둔다 — 재선택으로 고쳐진 것까지 검증해야 최종 결과를 본다.
     #   교체는 하지 않고 fit만 깎아 검수판에 드러낸다(회귀 0).
-    grounded["beats"] = verify_beat_screens(grounded["beats"], seg_map, store=_verify_store())
+    frame_resolver = None
+    if source_video_paths and seg_thumb_dir:
+        def frame_resolver(seg_id, seg):
+            from shopping_shorts import frame_extract
+            src = source_video_paths.get(seg.get("video_id"))
+            if not src:
+                return None
+            return frame_extract.extract_segment_thumb(
+                src, seg_thumb_dir, seg, f"{seg_id}.jpg")
+    grounded["beats"] = verify_beat_screens(
+        grounded["beats"], seg_map, store=_verify_store(), frame_resolver=frame_resolver)
     grounded["beats"] = _reconcile_weak_beats(grounded["beats"])
     # 각 비트 target_seconds는 나레이션 글자수 기준으로 재계산(실제 렌더 길이 =
     # 나레이션 읽는 시간 ≈ 글자수÷_SYLLABLES_PER_SEC초). UI 표시 초와 실제 길이가 어긋나지 않게.
@@ -4349,7 +4360,7 @@ def build_inherit_plan(source_scripts, given_script, beat_sources, structure="te
 #   ★"최소한 맥락으로 어색하지 않으면 통과"를 넣은 이유: 이게 없으면 문자 그대로 따져
 #     멀쩡한 것까지 떨군다(요구먼저 방식이 67% 과잉 기각한 그 실패).
 _SCREEN_VERIFY_PROMPT = """내레이션: "{narration}"
-화면: "{scene}"
+첨부 이미지가 실제로 재생될 화면의 대표 프레임이다.
 
 이 내레이션을 말할 때 이 화면을 띄우면 시청자가 자연스럽게 볼까?
 - 내레이션이 말하는 사물·동작이 화면에 **실제로 보이거나**, 최소한 그 얘기의 맥락으로
@@ -4376,7 +4387,18 @@ def _verify_store():
         return None
 
 
-def verify_beat_screens(beats, seg_map, call=None, store=None):
+def _vault_call_image(prompt, schema, frame_path):
+    """대표 프레임 1장을 기존 Gemini 키회전 경로로 보낸다."""
+    try:
+        image = types.Part.from_bytes(data=Path(frame_path).read_bytes(),
+                                      mime_type="image/jpeg")
+    except (OSError, TypeError, ValueError) as e:
+        print(f"[verify_screens] 프레임 읽기 실패(건너뜀): {e!r}", file=sys.stderr)
+        return None
+    return _vault_call([prompt, image], schema)
+
+
+def verify_beat_screens(beats, seg_map, call=None, store=None, frame_resolver=None):
     """★고른 화면이 그 대사에 정말 맞는지 **비트마다 따로** 되묻는다 (2026-09-09).
 
     사장님: "분명히 태깅과 대본에 맞는 게 있는데 엉뚱하고 다른 걸 배치하는 게 문제.
@@ -4411,21 +4433,24 @@ def verify_beat_screens(beats, seg_map, call=None, store=None):
         except Exception as e:      # noqa: BLE001 — 설정 조회 실패로 제작을 죽이지 않는다
             print(f"[verify_screens] 설정 조회 실패(끈 것으로 본다): {e!r}", file=sys.stderr)
             return beats
-    call = call or _vault_call
+    call = call or _vault_call_image
     out = []
     for b in beats:
         nb = dict(b)
         narr = (nb.get("narration") or "").strip()
         sid = (nb.get("primary") or {}).get("seg_id")
         seg = (seg_map or {}).get(sid) or {}
-        sd = (seg.get("scene_desc") or "").strip()
         # 화면 증거를 요구하지 않는 문장(감정·설명·CTA)은 대상이 아니다 — 화면이 안 맞는 게
         # 정상이라 여기서 깎으면 멀쩡한 칸에 빨간불이 켜진다(2026-09-08 실측 49%).
-        if not narr or not sd or nb.get("visual_verb") is False or nb.get("respined"):
+        if not narr or not seg or nb.get("visual_verb") is False or nb.get("respined"):
             out.append(nb)
             continue
-        res = call(_SCREEN_VERIFY_PROMPT.format(narration=narr[:200], scene=sd[:200]),
-                   _SCREEN_VERIFY_SCHEMA)
+        frame_path = frame_resolver(sid, seg) if frame_resolver else None
+        if not frame_path:
+            out.append(nb)
+            continue
+        res = call(_SCREEN_VERIFY_PROMPT.format(narration=narr[:200]),
+                   _SCREEN_VERIFY_SCHEMA, frame_path)
         if not res:                     # 키 소진·모델 실패 → 그대로 둔다
             out.append(nb)
             continue

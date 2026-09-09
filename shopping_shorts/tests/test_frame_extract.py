@@ -102,3 +102,21 @@ def test_extract_frame_at_returns_none_on_ffmpeg_failure(monkeypatch, tmp_path):
     monkeypatch.setattr(frame_extract.subprocess, "run", fake_run)
 
     assert frame_extract.extract_frame_at(video_path, tmp_path, 5) is None
+
+
+def test_extract_segment_thumb_uses_start_and_reuses_cache(monkeypatch, tmp_path):
+    calls = []
+
+    def fake_at(video, dest, ts, filename):
+        calls.append((video, dest, ts, filename))
+        out = tmp_path / filename
+        out.write_bytes(b"jpg")
+        return out
+
+    monkeypatch.setattr(frame_extract, "extract_frame_at", fake_at)
+    seg = {"start": 10.0, "end": 12.0}
+    first = frame_extract.extract_segment_thumb("v.mp4", tmp_path, seg, "s1.jpg")
+    second = frame_extract.extract_segment_thumb("v.mp4", tmp_path, seg, "s1.jpg")
+    assert first == second == tmp_path / "s1.jpg"
+    assert len(calls) == 1
+    assert calls[0][2] == pytest.approx(10.08)
