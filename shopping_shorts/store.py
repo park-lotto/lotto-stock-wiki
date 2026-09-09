@@ -2331,8 +2331,12 @@ class Store:
                             "SELECT channel_id, IFNULL(subs,0) FROM channel_styles"):
                         if cid and int(subs or 0) > 0:
                             out[cid] = (int(subs), 0)
-                except Exception:      # noqa: BLE001 — subs 컬럼이 없는 옛 DB
-                    pass
+                except sqlite3.Error as e:
+                    # subs 컬럼이 없는 옛 DB(발굴을 한 번도 안 돌린 환경). 무해하지만
+                    # 조용히 넘기면 "왜 큰 채널이 뒤로 밀리나"를 아무도 못 찾는다.
+                    import sys as _sys
+                    print("[경고] channel_styles.subs 조회 실패(랭킹만 사용): %r" % (e,),
+                          file=_sys.stderr)
             for it in (_json.loads(row[0]).get("items") or []) if row else []:
                 cid = it.get("username") or ""
                 if not cid.startswith("UC"):

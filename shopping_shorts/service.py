@@ -197,7 +197,10 @@ def _collect_youtube(categories=None, seed_only=False):
     #     발굴은 채널을 만날 때 이미 구독자를 아니까, 그 값을 저장해 두고
     #     (register_discovered_styles.py) 새 채널도 처음부터 제 크기대로 세운다.
     #   ★구독자를 정말 모르는 채널만 맨 뒤로 간다. 한 번 긁히면 지표가 생겨 제자리를 찾는다.
-    _rank = store.youtube_channel_rank()
+    # ★없으면 빈 표로 간다 — 정렬은 **부가기능**이고, 이게 없다고 수집이 죽으면 안 된다.
+    #   (게이트가 잡았다: 테스트의 FakeStore에 이 함수가 없어 AttributeError로 수집이
+    #    통째로 터졌다. 실제로도 옛 Store 구현을 물면 같은 일이 난다.)
+    _rank = getattr(store, "youtube_channel_rank", lambda: {})() or {}
 
     def _seed_key(url):
         cid = (url or "").rstrip("/").rsplit("/", 1)[-1]
