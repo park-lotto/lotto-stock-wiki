@@ -409,10 +409,12 @@ def hook_checks(style, full, product=""):
     if (style or {}).get("hook_conceal"):
         toks = _product_tokens(product)
         leaked = [t for t in toks if t in win]
-        # ★한 낱말만 겹치는 건 유출이 아니다 — "선풍기 틈새 청소 솔"의 '청소'처럼
-        #   카테고리어가 훅에 스치는 건 흔하고, 그걸 막으면 멀쩡한 훅이 계속 반려된다.
-        #   두 낱말이 함께 오면("틈새 청소") 그때는 정체가 드러난 것으로 본다.
-        if len(leaked) < 2:
+        # ★몇 낱말이 겹쳐야 유출인가 — **제품명 길이에 맞춘다**(2026-09-09).
+        #   "선풍기 틈새 청소 솔"(3토큰)은 '청소' 하나가 스치는 게 흔해 그걸로 반려하면
+        #   멀쩡한 훅이 계속 죽는다. 반대로 "마늘다지기"(1토큰)는 하나만 나와도
+        #   이름이 통째로 드러난 것이다. 그래서 min(2, 토큰 수)를 문턱으로 쓴다.
+        _need = min(2, len(toks)) or 1
+        if len(leaked) < _need:
             leaked = []
         out.append({"name": "훅 3초 정체은폐", "ok": not leaked,
                     "detail": ("앞 3초에 제품 정체(%s)가 나왔다 — 은폐형은 정체를 "
@@ -535,7 +537,10 @@ def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
     # ★말끝 검사(2026-08-19 사장님 제보 "존댓말이 갑자기"). 유튜브 썰은 '~었음 / ~다는 거'
     #   반말체인데 생성기가 '~가요 / ~거든요 / ~드릴게요' 존댓말로 썼다(실측 spine 55).
     #   인스타 스타일은 존댓말이 정답이므로 **유튜브 썰(hook_3s)에만** 건다.
-    if style.get("hook_3s"):
+    # ★말투는 스파인이 정한다(2026-09-09). polite를 켠 스파인은 존댓말이 정답이라
+    #   반말 검사를 건너뛴다(실측: 「이거 보고 충격 먹었습니다」 계열 30편이 존댓말 87%).
+    #   polite가 없으면 종전대로 반말을 강제한다 = 회귀 0.
+    if style.get("hook_3s") and not style.get("polite"):
         _po = [w for w in _POLITE_TAILS if w in norm(full)]
         checks.append({"name": "말끝(반말체)", "ok": len(_po) <= 1,
                        "detail": ("존댓말이 섞였다(%s) — 이 장르는 '~었음 / ~다는 거 / "
