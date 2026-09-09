@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>장면꾸미기 UI 방향 4종</title>
+  <style>
+    :root{
+      --bg:#071018;--panel:#0d1822;--panel-2:#111e29;--panel-3:#152430;
+      --line:#20313d;--line-strong:#35505f;--text:#f4f8fa;--muted:#8fa3ae;
+      --mint:#43e2b4;--mint-ink:#04251d;--amber:#ffb547;--danger:#ff6d7a;
+      --r-sm:8px;--r-md:12px;--r-lg:16px;--shadow:0 18px 50px rgba(0,0,0,.28);
+      font-family:Pretendard,"Noto Sans KR","Malgun Gothic",system-ui,sans-serif;color-scheme:dark;
+    }
+    *{box-sizing:border-box} body{margin:0;background:#050b11;color:var(--text)} button,input{font:inherit}
+    button{color:inherit}.shell{min-width:1120px;min-height:100vh;background:radial-gradient(circle at 55% -20%,#173242 0,transparent 34%),var(--bg)}
+    .appbar{height:62px;display:flex;align-items:center;padding:0 22px;border-bottom:1px solid var(--line);background:rgba(5,13,20,.94)}
+    .logo{font-size:19px;font-weight:900;letter-spacing:-.5px}.logo b{color:var(--mint)}.beta{margin-left:9px;padding:3px 7px;border:1px solid var(--line-strong);border-radius:999px;color:var(--muted);font-size:11px}
+    .app-actions{margin-left:auto;display:flex;gap:8px}.quiet{height:36px;padding:0 13px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:#b8c7ce;font-weight:700;cursor:pointer}
+    .direction-bar{display:flex;align-items:center;gap:10px;padding:12px 18px;border-bottom:1px solid var(--line);background:#08121a}
+    .direction-bar strong{margin-right:6px;font-size:13px;color:#b8c8d0}.direction{height:38px;padding:0 16px;border:1px solid var(--line-strong);border-radius:10px;background:var(--panel);color:#aebec6;font-weight:800;cursor:pointer}
+    .direction.active{border-color:var(--mint);background:var(--mint);color:var(--mint-ink);box-shadow:0 0 0 4px rgba(67,226,180,.09)}
+    .direction-note{margin-left:auto;color:var(--muted);font-size:12px}.view{display:none}.view.active{display:block}
+    .page-title{height:64px;display:flex;align-items:center;padding:0 18px;border-bottom:1px solid var(--line)}
+    .page-title h1{margin:0;font-size:18px}.page-title p{margin:5px 0 0;color:var(--muted);font-size:12px}.analysis{margin-left:auto;padding:7px 10px;border-radius:999px;background:#0e2c25;color:#75e7c8;font-size:12px;font-weight:800}
+    .workspace{display:grid;min-height:704px}.layout-a{grid-template-columns:300px minmax(430px,1fr) 360px}.layout-b{grid-template-columns:minmax(660px,1fr) 390px}.layout-c{grid-template-columns:246px minmax(470px,1fr) 330px}.layout-d{grid-template-columns:minmax(720px,1fr) 330px}
+    .pane{padding:16px;border-right:1px solid var(--line);background:rgba(13,24,34,.72)}.pane:last-child{border-right:0}.pane h2{font-size:14px;margin:0 0 13px}.pane-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}.pane-head h2{margin:0}.count{font-size:11px;color:var(--muted)}
+    .chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:13px}.chip{height:30px;padding:0 12px;border:0;border-radius:999px;background:var(--panel-3);color:#9eb0ba;font-size:12px;font-weight:700;cursor:pointer}.chip.active{background:var(--mint);color:var(--mint-ink)}
+    .preset-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.preset-list{display:grid;gap:10px}.preset-card{position:relative;border:1px solid var(--line);border-radius:var(--r-md);background:var(--panel-2);padding:8px;cursor:pointer;text-align:left;transition:.16s}.preset-card:hover{transform:translateY(-2px);border-color:#597180}.preset-card.selected{border:2px solid var(--mint);padding:7px;box-shadow:0 0 0 3px rgba(67,226,180,.1)}
+    .preset-card .check{display:none;position:absolute;z-index:3;right:5px;top:5px;width:20px;height:20px;border-radius:50%;background:var(--mint);color:var(--mint-ink);text-align:center;line-height:20px;font-size:11px;font-weight:900}.preset-card.selected .check{display:block}
+    .thumb-pair{display:grid;grid-template-columns:1fr 1fr;gap:4px}.thumb-pair img{display:block;width:100%;aspect-ratio:9/16;object-fit:cover;border-radius:6px;background:#27333c}.preset-card > b{display:block;margin-top:7px;font-size:12px}.preset-card > small{display:block;margin-top:2px;color:var(--muted);font-size:10px}.preset-card.wide{display:grid;grid-template-columns:92px minmax(0,1fr);gap:10px;align-items:center}.preset-card.wide .thumb-pair{height:112px}.preset-card.wide .thumb-pair img{height:112px;width:44px}.preset-card.wide>span{display:block;min-width:0}.preset-card.wide b{margin:0 0 4px;font-size:13px;overflow-wrap:anywhere}.preset-card.wide small{font-size:11px;line-height:1.45;overflow-wrap:anywhere}
+    .preview-pane{display:flex;flex-direction:column;align-items:center;background:linear-gradient(180deg,#0a151e,#081119)}.preview-toolbar{width:100%;display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}.seg{display:flex;gap:3px;padding:3px;border:1px solid var(--line);border-radius:10px;background:#08121a}.seg button{height:31px;padding:0 12px;border:0;border-radius:7px;background:transparent;color:var(--muted);font-size:12px;font-weight:800;cursor:pointer}.seg button.active{background:var(--panel-3);color:var(--text)}
+    .phone-wrap{position:relative;height:545px;display:flex;align-items:center;justify-content:center}.phone{height:525px;aspect-ratio:9/16;object-fit:cover;border-radius:9px;background:#212e37;box-shadow:0 22px 55px rgba(0,0,0,.45);border:1px solid #32434e}.pair-preview{display:flex;gap:18px;align-items:flex-start}.pair-preview figure{margin:0;text-align:center}.pair-preview img{height:430px;aspect-ratio:9/16;object-fit:cover;border-radius:8px;box-shadow:var(--shadow)}.pair-preview figcaption{margin-top:7px;color:var(--muted);font-size:11px}
+    .transport{width:min(420px,100%);display:flex;align-items:center;gap:10px;color:var(--muted);font-size:11px}.play{width:34px;height:34px;border:0;border-radius:50%;background:var(--text);color:#071018;cursor:pointer}.track{height:5px;flex:1;border-radius:99px;background:#33434d;overflow:hidden}.track i{display:block;width:31%;height:100%;background:var(--mint)}
+    .scene-strip{width:100%;display:flex;gap:5px;margin-top:14px}.scene-strip button{flex:1;height:42px;border:1px solid var(--line);border-radius:7px;background:#14212b;color:#758994;font-size:10px;cursor:pointer}.scene-strip button.active{border-color:var(--mint);color:var(--mint);background:#0d2a23}
+    .edit-pane{background:#0a151e}.tool-tabs{display:flex;border-bottom:1px solid var(--line);margin:-2px 0 14px}.tool-tabs button{flex:1;height:42px;border:0;border-bottom:2px solid transparent;background:transparent;color:var(--muted);font-size:12px;font-weight:800}.tool-tabs button.active{border-color:var(--mint);color:var(--mint)}
+    .field{margin-bottom:13px}.field label{display:flex;justify-content:space-between;margin-bottom:6px;color:#bdc9cf;font-size:11px;font-weight:700}.field label span{color:#667b87}.field input{width:100%;height:39px;padding:0 11px;border:1px solid var(--line);border-radius:8px;background:#071119;color:var(--text);font-size:12px}.field input:focus{outline:2px solid rgba(67,226,180,.35);border-color:var(--mint)}
+    .ai-card{padding:11px;border:1px solid #245244;border-radius:10px;background:#0c2821;color:#a8d8ca;font-size:11px;line-height:1.5;margin-bottom:13px}.ai-card b{color:var(--mint)}
+    .color-row{display:flex;gap:12px;margin:8px 0 17px}.swatch{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:10px}.swatch i{width:19px;height:19px;border-radius:50%;border:1px solid #61727b}
+    .primary{width:100%;height:43px;border:0;border-radius:9px;background:var(--mint);color:var(--mint-ink);font-weight:900;cursor:pointer}.secondary{width:100%;height:39px;margin-top:8px;border:1px solid var(--line-strong);border-radius:9px;background:transparent;color:#bac8cf;font-weight:800;cursor:pointer}
+    details{margin-top:10px;border:1px solid var(--line);border-radius:10px;background:#09131b;padding:11px}summary{cursor:pointer;color:#a7b8c0;font-size:12px;font-weight:800}
+    .gallery{display:grid;grid-template-columns:repeat(4,minmax(130px,1fr));gap:12px}.gallery .preset-card{padding:9px}.gallery .thumb-pair{gap:6px}.gallery .preset-card > b{font-size:13px}.gallery-wrap{padding:16px;overflow:hidden}.selection-dock{margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px;border:1px solid var(--line);border-radius:var(--r-lg);background:#0a151e}.dock-info{display:flex;align-items:center;gap:12px}.dock-info .mini-pair{display:flex;gap:3px}.dock-info img{height:94px;aspect-ratio:9/16;object-fit:cover;border-radius:5px}.dock-info h3{margin:0 0 4px;font-size:15px}.dock-info p{margin:0;color:var(--muted);font-size:11px}.dock-preview{display:flex;align-items:center;justify-content:flex-end;gap:10px}.dock-preview button{width:auto;padding:0 20px}.layout-b .pair-preview{gap:10px}.layout-b .pair-preview img{height:300px}.layout-d .pair-preview{gap:8px}.layout-d .pair-preview img{height:250px}
+    .verify-box{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}.metric{padding:10px;border:1px solid var(--line);border-radius:9px;background:#0a151e}.metric span{display:block;color:var(--muted);font-size:10px}.metric b{display:block;margin-top:3px;font-size:15px}.metric.good b{color:var(--mint)}
+    .stepper{display:flex;gap:8px;margin:0 0 14px}.step{flex:1;padding:11px;border:1px solid var(--line);border-radius:10px;background:#0b1620;color:#718792;font-size:12px;font-weight:800}.step.active{border-color:var(--mint);color:var(--mint);background:#0d2923}.step b{display:inline-grid;width:22px;height:22px;margin-right:6px;place-items:center;border-radius:50%;background:#1e303c}.step.active b{background:var(--mint);color:var(--mint-ink)}
+    .simple-list{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}.simple-list .preset-card > small{min-height:29px}.recommend{position:absolute;left:7px;top:7px;z-index:2;padding:4px 7px;border-radius:999px;background:var(--amber);color:#241604;font-size:9px;font-weight:900}
+    .fineprint{margin-top:10px;color:#6f838e;font-size:10px;line-height:1.5}
+    @media(max-width:1280px){.layout-a{grid-template-columns:270px minmax(390px,1fr) 330px}.gallery{grid-template-columns:repeat(3,1fr)}.pair-preview img{height:380px}}
+  </style>
+</head>
+<body>
+<main class="shell">
+  <header class="appbar"><div class="logo">✦ 숏템메이커<b>.</b></div><span class="beta">Beta</span><div class="app-actions"><button class="quiet">사용 가이드</button><button class="quiet">내 계정</button></div></header>
+  <nav class="direction-bar" aria-label="디자인 시안 선택"><strong>장면꾸미기 시안</strong><button class="direction active" data-view="a">A · 3단 편집기</button><button class="direction" data-view="b">B · 페어 갤러리</button><button class="direction" data-view="c">C · 검수 스튜디오</button><button class="direction" data-view="d">D · 간편 완성</button><span class="direction-note">각 시안을 눌러 비교하세요</span></nav>
+
+  <section class="view active" data-page="a">
+    <div class="page-title"><div><h1>6 · 장면꾸미기</h1><p>완성된 훅+본문 프리셋을 고르고 문구만 확인하세요.</p></div><span class="analysis">대본 분석 완료 · 12장면 자동 배치</span></div>
+    <div class="workspace layout-a">
+      <aside class="pane"><div class="pane-head"><h2>템플릿 선택</h2><span class="count">102개</span></div><div class="chips"><button class="chip active">추천</button><button class="chip">쇼핑</button><button class="chip">리뷰</button><button class="chip">정보</button></div><div class="preset-grid">
+        <button class="preset-card selected"><span class="check">✓</span><div class="thumb-pair"><img src="장면꾸미기_작업대/원본프레임/숏템_훅.png"><img src="장면꾸미기_작업대/원본프레임/숏템_본문.png"></div><b>숏템 기본형</b><small>훅+본문 2장</small></button>
+        <button class="preset-card"><div class="thumb-pair"><img src="장면꾸미기_작업대/스타일수집/프레임/s0016_신비아이템_훅.png"><img src="장면꾸미기_작업대/스타일수집/프레임/s0016_신비아이템_본문.png"></div><b>신비아이템</b><small>정보형</small></button>
+        <button class="preset-card"><div class="thumb-pair"><img src="장면꾸미기_작업대/스타일수집/프레임/s0012_부시리_훅.png"><img src="장면꾸미기_작업대/스타일수집/프레임/s0012_부시리_본문.png"></div><b>부시리</b><small>강조형</small></button>
+        <button class="preset-card"><div class="thumb-pair"><img src="장면꾸미기_작업대/스타일수집/프레임/s0018_지식배송_훅.png"><img src="장면꾸미기_작업대/스타일수집/프레임/s0018_지식배송_본문.png"></div><b>지식배송</b><small>설명형</small></button>
+        <button class="preset-card"><div class="thumb-pair"><img src="장면꾸미기_작업대/스타일수집/프레임/s0054_사길잘했다_훅.png"><img src="장면꾸미기_작업대/스타일수집/프레임/s0054_사길잘했다_본문.png"></div><b>사길잘했다</b><small>후기형</small></button>
+        <button class="preset-card"><div class="thumb-pair"><img src="장면꾸미기_작업대/스타일수집/프레임/s0056_헤븐쇼핑_훅.png"><img src="장면꾸미기_작업대/스타일수집/프레임/s0056_헤븐쇼핑_본문.png"></div><b>헤븐쇼핑</b><small>판매형</small></button>
+      </div></aside>
+      <section class="pane preview-pane"><div class="preview-toolbar"><h2>미리보기</h2><div class="seg"><button class="active" data-frame="hook">훅</button><button data-frame="body">본문</button></div></div><div class="phone-wrap"><img class="phone main-preview" src="장면꾸미기_작업대/원본프레임/숏템_훅.png" alt="선택한 템플릿 미리보기"></div><div class="transport"><button class="play">▶</button><span>00:00</span><div class="track"><i></i></div><span>00:28</span></div><div class="scene-strip"><button class="active">훅</button><button>2</button><button>3</button><button>4</button><button>5</button><button>6</button><button>7</button><button>8</button><button>9</button><button>10</button><button>11</button><button>12</button></div></section>
+      <aside class="pane edit-pane"><div class="tool-tabs"><button class="active">문구/텍스트</button><button>미디어</button><button>스타일</button></div><div class="ai-card"><b>AI 자동 배치 완료</b><br>대본에서 훅 제목, 본문 제목, 장면별 자막을 추출했습니다.</div><div class="field"><label>훅 제목 1 <span>14/18</span></label><input value="이케아도 놀랄"></div><div class="field"><label>훅 제목 2 <span>10/18</span></label><input value="한국 천재 발명품"></div><div class="field"><label>본문 제목 <span>16/22</span></label><input value="이케아도 놀랄 한국 천재 발명품"></div><div class="field"><label>현재 장면 자막 <span>10/24</span></label><input value="무슨 식탁 하나로"></div><div class="color-row"><span class="swatch"><i style="background:#fff"></i>흰색</span><span class="swatch"><i style="background:#ffe600"></i>강조</span><span class="swatch"><i style="background:#111"></i>배경</span></div><button class="primary">이 스타일로 완성</button><button class="secondary">내 프리셋으로 저장</button><details><summary>고급 설정 · 위치, 폰트, 효과</summary></details></aside>
+    </div>
+  </section>
+
+  <section class="view" data-page="b">
+    <div class="page-title"><div><h1>프리셋 페어 갤러리</h1><p>원본 훅과 본문을 한 카드에서 비교하고 선택합니다.</p></div><span class="analysis">추천 순 · 유사 대본 기준</span></div>
+    <div class="workspace layout-b"><section class="gallery-wrap"><div class="chips"><button class="chip active">전체</button><button class="chip">쇼핑</button><button class="chip">리뷰</button><button class="chip">정보</button><button class="chip">이슈</button></div><div class="gallery">
+      <button class="preset-card selected"><span class="check">✓</span><div class="thumb-pair"><img src="장면꾸미기_작업대/원본프레임/숏템_훅.png"><img src="장면꾸미기_작업대/원본프레임/숏템_본문.png"></div><b>숏템 기본형</b><small>원본 검수 완료</small></button>
+      <button class="preset-card"><div class="thumb-pair"><img src="장면꾸미기_작업대/스타일수집/프레임/s0016_신비아이템_훅.png"><img src="장면꾸미기_작업대/스타일수집/프레임/s0016_신비아이템_본문.png"></div><b>신비아이템</b><small>파랑 정보형</small></button>
+      <button class="preset-card"><div class="thumb-pair"><img src="장면꾸미기_작업대/스타일수집/프레임/s0012_부시리_훅.png"><img src="장면꾸미기_작업대/스타일수집/프레임/s0012_부시리_본문.png"></div><b>부시리</b><small>노랑 2줄형</small></button>
+      <button class="preset-card"><div class="thumb-pair"><img src="장면꾸미기_작업대/스타일수집/프레임/s0018_지식배송_훅.png"><img src="장면꾸미기_작업대/스타일수집/프레임/s0018_지식배송_본문.png"></div><b>지식배송</b><small>채널형</small></button>
+      <button class="preset-card"><div class="thumb-pair"><img src="장면꾸미기_작업대/스타일수집/프레임/s0054_사길잘했다_훅.png"><img src="장면꾸미기_작업대/스타일수집/프레임/s0054_사길잘했다_본문.png"></div><b>사길잘했다</b><small>후기 강조형</small></button>
+      <button class="preset-card"><div class="thumb-pair"><img src="장면꾸미기_작업대/스타일수집/프레임/s0056_헤븐쇼핑_훅.png"><img src="장면꾸미기_작업대/스타일수집/프레임/s0056_헤븐쇼핑_본문.png"></div><b>헤븐쇼핑</b><small>쇼핑 큐레이션</small></button>
+      <button class="preset-card"><div class="thumb-pair"><img src="장면꾸미기_작업대/스타일수집/프레임/s0036_엄둥이_훅.png"><img src="장면꾸미기_작업대/스타일수집/프레임/s0036_엄둥이_본문.png"></div><b>엄둥이</b><small>생활 꿀팁형</small></button>
+      <button class="preset-card"><div class="thumb-pair"><img src="장면꾸미기_작업대/스타일수집/프레임/s0045_대박살림_훅.png"><img src="장면꾸미기_작업대/스타일수집/프레임/s0045_대박살림_본문.png"></div><b>대박살림</b><small>강한 대비형</small></button>
+    </div><div class="selection-dock"><div class="dock-info"><div class="mini-pair"><img src="장면꾸미기_작업대/원본프레임/숏템_훅.png"><img src="장면꾸미기_작업대/원본프레임/숏템_본문.png"></div><div><h3>숏템 기본형</h3><p>훅 1장 + 본문 11장 자동 적용</p></div></div><div class="dock-preview"><button class="secondary">크게 비교</button><button class="primary">선택하고 문구 확인</button></div></div></section><aside class="pane edit-pane"><h2>선택한 프리셋</h2><div class="ai-card"><b>대본 적합</b><br>반전형 훅과 짧은 설명 문장에 잘 맞습니다.</div><div class="pair-preview"><figure><img src="장면꾸미기_작업대/원본프레임/숏템_훅.png"><figcaption>훅</figcaption></figure><figure><img src="장면꾸미기_작업대/원본프레임/숏템_본문.png"><figcaption>본문</figcaption></figure></div><button class="primary" style="margin-top:14px">이 프리셋 적용</button><details><summary>문구만 미리 수정</summary></details></aside></div>
+  </section>
+
+  <section class="view" data-page="c">
+    <div class="page-title"><div><h1>원본 검수 스튜디오</h1><p>템플릿 제작자용. 훅·본문을 원본과 대조하고 게시 상태를 관리합니다.</p></div><span class="analysis">SOURCE LOCKED · 기준값 보호</span></div>
+    <div class="workspace layout-c"><aside class="pane"><div class="pane-head"><h2>템플릿 묶음</h2><span class="count">검수 7</span></div><div class="preset-list">
+      <button class="preset-card wide selected"><div class="thumb-pair"><img src="장면꾸미기_작업대/원본프레임/숏템_훅.png"><img src="장면꾸미기_작업대/원본프레임/숏템_본문.png"></div><span><b>숏템 기본형</b><small>측정 완료 · 렌더 검수 대기</small></span></button>
+      <button class="preset-card wide"><div class="thumb-pair"><img src="장면꾸미기_작업대/스타일수집/프레임/s0016_신비아이템_훅.png"><img src="장면꾸미기_작업대/스타일수집/프레임/s0016_신비아이템_본문.png"></div><span><b>신비아이템</b><small>픽셀 검수 완료</small></span></button>
+      <button class="preset-card wide"><div class="thumb-pair"><img src="장면꾸미기_작업대/스타일수집/프레임/s0012_부시리_훅.png"><img src="장면꾸미기_작업대/스타일수집/프레임/s0012_부시리_본문.png"></div><span><b>부시리</b><small>폰트 확인 필요</small></span></button>
+    </div></aside><section class="pane preview-pane"><div class="preview-toolbar"><h2>훅 / 본문 동시 검수</h2><div class="seg"><button class="active">렌더</button><button>원본</button><button>차이</button></div></div><div class="pair-preview"><figure><img src="장면꾸미기_작업대/원본프레임/숏템_훅.png"><figcaption>훅 · 360×640 기준</figcaption></figure><figure><img src="장면꾸미기_작업대/원본프레임/숏템_본문.png"><figcaption>본문 · 360×640 기준</figcaption></figure></div><div class="scene-strip"><button class="active">제목</button><button>채널명</button><button>메타</button><button>본문 띠</button><button>영상 경계</button><button>폰트</button></div></section><aside class="pane edit-pane"><h2>검수 결과</h2><div class="verify-box"><div class="metric good"><span>픽셀 일치율</span><b>99.2%</b></div><div class="metric"><span>최대 위치 오차</span><b>1.4 px</b></div><div class="metric"><span>폰트 에셋</span><b>고정됨</b></div><div class="metric"><span>기준 해시</span><b>8F2A…91C</b></div></div><div class="ai-card"><b>원본 기준값은 수정되지 않습니다.</b><br>변형은 별도 override 층에만 저장됩니다.</div><div class="field"><label>상태</label><input value="렌더 검수 대기" readonly></div><div class="field"><label>원본 프레임 시점</label><input value="00:00.433 / 00:02.100" readonly></div><button class="primary">원본 대조 시작</button><button class="secondary">검수 통과 후 게시</button><details><summary>측정값 · 좌표, 글꼴, 행간</summary></details></aside></div>
+  </section>
+
+  <section class="view" data-page="d">
+    <div class="page-title"><div><h1>3단계 간편 완성</h1><p>처음 쓰는 사용자는 추천 프리셋 하나만 고르면 됩니다.</p></div><span class="analysis">고급 기능 숨김</span></div>
+    <div class="workspace layout-d"><section class="pane"><div class="stepper"><div class="step active"><b>1</b>디자인 고르기</div><div class="step"><b>2</b>문구 확인</div><div class="step"><b>3</b>완성</div></div><div class="ai-card"><b>가장 잘 맞는 디자인을 골랐어요.</b><br>첫 문장이 강한 반전형이라 2줄 훅과 짧은 본문 띠 구성을 추천합니다.</div><div class="simple-list">
+      <button class="preset-card selected"><span class="recommend">AI 추천 1위</span><span class="check">✓</span><div class="thumb-pair"><img src="장면꾸미기_작업대/원본프레임/숏템_훅.png"><img src="장면꾸미기_작업대/원본프레임/숏템_본문.png"></div><b>숏템 기본형</b><small>큰 제목 · 노랑 강조 · 본문 흰 띠</small></button>
+      <button class="preset-card"><div class="thumb-pair"><img src="장면꾸미기_작업대/스타일수집/프레임/s0016_신비아이템_훅.png"><img src="장면꾸미기_작업대/스타일수집/프레임/s0016_신비아이템_본문.png"></div><b>신비아이템</b><small>정보 전달 · 파랑 헤더</small></button>
+      <button class="preset-card"><div class="thumb-pair"><img src="장면꾸미기_작업대/스타일수집/프레임/s0012_부시리_훅.png"><img src="장면꾸미기_작업대/스타일수집/프레임/s0012_부시리_본문.png"></div><b>부시리</b><small>강한 후킹 · 노랑 포인트</small></button>
+    </div><p class="fineprint">선택한 디자인은 훅 1장과 본문 전체 장면에 함께 적용됩니다. 본문 문구는 장면마다 대본에서 자동으로 채웁니다.</p></section><aside class="pane edit-pane"><h2>선택 결과</h2><div class="pair-preview"><figure><img src="장면꾸미기_작업대/원본프레임/숏템_훅.png"><figcaption>훅</figcaption></figure><figure><img src="장면꾸미기_작업대/원본프레임/숏템_본문.png"><figcaption>본문</figcaption></figure></div><button class="primary" style="margin-top:16px">다음 · 문구 확인</button><button class="secondary">다른 디자인 더 보기</button><details><summary>직접 조정하기</summary></details></aside></div>
+  </section>
+</main>
+<script>
+  const root=document;
+  root.querySelectorAll('.direction').forEach(button=>button.addEventListener('click',()=>{
+    root.querySelectorAll('.direction').forEach(x=>x.classList.toggle('active',x===button));
+    root.querySelectorAll('.view').forEach(x=>x.classList.toggle('active',x.dataset.page===button.dataset.view));
+  }));
+  root.querySelectorAll('.preset-card').forEach(card=>card.addEventListener('click',()=>{
+    const group=card.closest('.preset-grid,.preset-list,.gallery,.simple-list');
+    if(group) group.querySelectorAll('.preset-card').forEach(x=>x.classList.toggle('selected',x===card));
+  }));
+  root.querySelectorAll('[data-frame]').forEach(button=>button.addEventListener('click',()=>{
+    const group=button.parentElement;group.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===button));
+    const img=button.closest('.preview-pane').querySelector('.main-preview');
+    img.src=button.dataset.frame==='hook'?'장면꾸미기_작업대/원본프레임/숏템_훅.png':'장면꾸미기_작업대/원본프레임/숏템_본문.png';
+  }));
+</script>
+</body>
+</html>

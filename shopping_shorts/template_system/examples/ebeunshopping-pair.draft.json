@@ -1,0 +1,50 @@
+{
+  "id": "ebeunshopping-health-invention-001",
+  "name": "이븐쇼핑 건강 발명품",
+  "version": 1,
+  "status": "draft",
+  "tags": ["쇼핑", "정보", "2줄 훅", "흰 본문 띠"],
+  "source": {
+    "platform": "local",
+    "channel": "이븐쇼핑",
+    "video_url": "local-reference",
+    "video_id": "reference-1310-1312",
+    "captured_at": null,
+    "captures": {
+      "hook": {"time_ms": 0, "path": "캡쳐 (1310).png", "width": 425, "height": 748, "sha256": null},
+      "body": {"time_ms": 0, "path": "캡쳐 (1312).png", "width": 420, "height": 746, "sha256": null}
+    }
+  },
+  "render": {"width": 1080, "height": 1920, "fps": 30, "pixel_ratio": 1, "color_space": "srgb"},
+  "fonts": [
+    {"id": "headline", "family": "unknown-reference-headline", "asset_path": null, "asset_sha256": null, "verification": "unknown", "fallbacks": ["sans-serif"]},
+    {"id": "brand", "family": "unknown-reference-brand", "asset_path": null, "asset_sha256": null, "verification": "unknown", "fallbacks": ["sans-serif"]}
+  ],
+  "hook": {
+    "source_canvas": {"width": 425, "height": 748},
+    "background": {"kind": "solid", "color": "#000000FF"},
+    "layers": [
+      {"id": "top-gradient", "type": "shape", "binding": null, "x": 0, "y": 0, "width": 425, "height": 69, "unit": "source-px", "z": 10, "opacity": 1, "visible": true, "paint": {"kind": "linear-gradient", "angle_deg": 90, "stops": [{"at": 0, "color": "#212120FF"}, {"at": 1, "color": "#1C1F1EFF"}]}, "border": {"width": 0, "color": "#00000000"}, "shadow": {"x": 0, "y": 0, "blur": 0, "spread": 0, "color": "#00000000"}, "radius": 0},
+      {"id": "hook-title-1", "type": "text", "binding": "hook_title_1", "x": 14, "y": 105, "width": 397, "height": 48, "unit": "source-px", "z": 30, "opacity": 1, "visible": true, "text": {"font_id": "headline", "weight": 900, "size": 42, "line_height": 1, "letter_spacing": -1.5, "align": "center", "vertical_align": "middle", "color": "#FFFFFFFF", "stroke": {"width": 3, "color": "#000000FF"}, "shadow": {"x": 2, "y": 3, "blur": 2, "spread": 0, "color": "#000000B3"}, "wrap": "none", "max_lines": 1, "padding": [0, 0, 0, 0], "transform": "none"}, "border": {"width": 0, "color": "#00000000"}, "shadow": {"x": 0, "y": 0, "blur": 0, "spread": 0, "color": "#00000000"}, "radius": 0},
+      {"id": "hook-title-2", "type": "text", "binding": "hook_title_2", "x": 12, "y": 153, "width": 401, "height": 52, "unit": "source-px", "z": 31, "opacity": 1, "visible": true, "text": {"font_id": "headline", "weight": 900, "size": 42, "line_height": 1, "letter_spacing": -1.5, "align": "center", "vertical_align": "middle", "color": "#24E6DCFF", "stroke": {"width": 3, "color": "#000000FF"}, "shadow": {"x": 2, "y": 3, "blur": 2, "spread": 0, "color": "#000000B3"}, "wrap": "none", "max_lines": 1, "padding": [0, 0, 0, 0], "transform": "none"}, "border": {"width": 0, "color": "#00000000"}, "shadow": {"x": 0, "y": 0, "blur": 0, "spread": 0, "color": "#00000000"}, "radius": 0},
+      {"id": "hook-subtitle-band", "type": "shape", "binding": null, "x": 0, "y": 219, "width": 425, "height": 67, "unit": "source-px", "z": 20, "opacity": 1, "visible": true, "paint": {"kind": "linear-gradient", "angle_deg": 90, "stops": [{"at": 0, "color": "#E2E2E2FF"}, {"at": 0.22, "color": "#FAFAFAFF"}, {"at": 0.75, "color": "#F4F4F4FF"}, {"at": 1, "color": "#7F7F7FFF"}]}, "border": {"width": 0, "color": "#00000000"}, "shadow": {"x": 0, "y": 0, "blur": 7, "spread": 0, "color": "#00000055"}, "radius": 0},
+      {"id": "hook-subtitle", "type": "text", "binding": "hook_subtitle", "x": 18, "y": 230, "width": 389, "height": 40, "unit": "source-px", "z": 32, "opacity": 1, "visible": true, "text": {"font_id": "headline", "weight": 900, "size": 25, "line_height": 1, "letter_spacing": -0.8, "align": "center", "vertical_align": "middle", "color": "#050505FF", "stroke": {"width": 0, "color": "#00000000"}, "shadow": {"x": 0, "y": 0, "blur": 0, "spread": 0, "color": "#00000000"}, "wrap": "none", "max_lines": 1, "padding": [0, 0, 0, 0], "transform": "none"}, "border": {"width": 0, "color": "#00000000"}, "shadow": {"x": 0, "y": 0, "blur": 0, "spread": 0, "color": "#00000000"}, "radius": 0}
+    ]
+  },
+  "body": {
+    "source_canvas": {"width": 420, "height": 746},
+    "background": {"kind": "solid", "color": "#000000FF"},
+    "layers": [
+      {"id": "brand-header", "type": "shape", "binding": null, "x": 0, "y": 0, "width": 420, "height": 69, "unit": "source-px", "z": 10, "opacity": 1, "visible": true, "paint": {"kind": "linear-gradient", "angle_deg": 90, "stops": [{"at": 0, "color": "#444444FF"}, {"at": 1, "color": "#3F3F3FFF"}]}, "border": {"width": 0, "color": "#00000000"}, "shadow": {"x": 0, "y": 1, "blur": 0, "spread": 0, "color": "#9A9796FF"}, "radius": 0},
+      {"id": "body-title-area", "type": "shape", "binding": null, "x": 0, "y": 69, "width": 420, "height": 88, "unit": "source-px", "z": 10, "opacity": 1, "visible": true, "paint": {"kind": "solid", "color": "#414141FF"}, "border": {"width": 0, "color": "#00000000"}, "shadow": {"x": 0, "y": 1, "blur": 0, "spread": 0, "color": "#B2B3B1FF"}, "radius": 0},
+      {"id": "body-title", "type": "text", "binding": "body_title", "x": 13, "y": 82, "width": 394, "height": 38, "unit": "source-px", "z": 30, "opacity": 1, "visible": true, "text": {"font_id": "headline", "weight": 900, "size": 27, "line_height": 1, "letter_spacing": -0.7, "align": "center", "vertical_align": "middle", "color": "#FFFFFFFF", "stroke": {"width": 0, "color": "#00000000"}, "shadow": {"x": 1, "y": 2, "blur": 1, "spread": 0, "color": "#00000099"}, "wrap": "none", "max_lines": 1, "padding": [0, 0, 0, 0], "transform": "none"}, "border": {"width": 0, "color": "#00000000"}, "shadow": {"x": 0, "y": 0, "blur": 0, "spread": 0, "color": "#00000000"}, "radius": 0},
+      {"id": "body-caption-band", "type": "shape", "binding": null, "x": 0, "y": 157, "width": 420, "height": 72, "unit": "source-px", "z": 20, "opacity": 1, "visible": true, "paint": {"kind": "linear-gradient", "angle_deg": 90, "stops": [{"at": 0, "color": "#FFFFFFFF"}, {"at": 0.75, "color": "#FDFDFDFF"}, {"at": 1, "color": "#F0F6FAFF"}]}, "border": {"width": 0, "color": "#00000000"}, "shadow": {"x": 0, "y": 1, "blur": 0, "spread": 0, "color": "#D8D8D8FF"}, "radius": 0},
+      {"id": "body-caption", "type": "text", "binding": "body_caption", "x": 20, "y": 171, "width": 380, "height": 38, "unit": "source-px", "z": 30, "opacity": 1, "visible": true, "text": {"font_id": "headline", "weight": 900, "size": 25, "line_height": 1, "letter_spacing": -0.7, "align": "center", "vertical_align": "middle", "color": "#050505FF", "stroke": {"width": 0, "color": "#00000000"}, "shadow": {"x": 0, "y": 0, "blur": 0, "spread": 0, "color": "#00000000"}, "wrap": "none", "max_lines": 1, "padding": [0, 0, 0, 0], "transform": "none"}, "border": {"width": 0, "color": "#00000000"}, "shadow": {"x": 0, "y": 0, "blur": 0, "spread": 0, "color": "#00000000"}, "radius": 0}
+    ]
+  },
+  "bindings": {"channel_name": "이븐쇼핑", "hook_title_1": "건망증 환자를 살려낸", "hook_title_2": "일본 천재의 발명품", "hook_subtitle": "건망증 환자를 살려낸 천재의 발명품?", "body_title": "건망증 환자를 살려낸 천재 발명품?", "body_caption": "전 세계 건망증 환자들의", "view_count": "235만", "comment_count": "697개"},
+  "overflow": {"strategy": "alternate-copy", "min_font_scale": 0.92, "on_failure": "block-publish"},
+  "baseline_locked": true,
+  "overrides": {"allowed": ["copy", "media", "font", "color", "position", "effect"], "storage": "separate-layer"},
+  "validation": {"state": "not-run", "pixel_diff": null, "ssim": null, "font_match": "unknown", "bounds_pass": null, "verified_at": null, "verified_by": null, "notes": ["현재 좌표와 색상은 제공 캡처의 1차 측정값이다.", "폰트 파일 대조와 픽셀 오버레이 검수를 마치기 전에는 published로 승격하지 않는다."]}
+}

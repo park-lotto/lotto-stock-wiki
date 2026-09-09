@@ -1,0 +1,54 @@
+:root {
+  /* 장면꾸미기 편집기 UI 토큰 — 영상 템플릿의 색과 분리한다. */
+  --scene-ui-bg: #071018;
+  --scene-ui-panel: #0d1822;
+  --scene-ui-panel-raised: #111e29;
+  --scene-ui-border: #20313d;
+  --scene-ui-border-strong: #35505f;
+  --scene-ui-text: #f4f8fa;
+  --scene-ui-text-muted: #8fa3ae;
+  --scene-ui-accent: #43e2b4;
+  --scene-ui-accent-ink: #04251d;
+  --scene-ui-warning: #ffb547;
+  --scene-ui-danger: #ff6d7a;
+
+  --scene-ui-space-1: 4px;
+  --scene-ui-space-2: 8px;
+  --scene-ui-space-3: 12px;
+  --scene-ui-space-4: 16px;
+  --scene-ui-space-5: 24px;
+  --scene-ui-radius-sm: 8px;
+  --scene-ui-radius-md: 12px;
+  --scene-ui-radius-lg: 16px;
+  --scene-ui-control-height: 40px;
+  --scene-ui-panel-shadow: 0 18px 50px rgb(0 0 0 / 28%);
+
+  --scene-ui-font: Pretendard, "Noto Sans KR", "Malgun Gothic", sans-serif;
+  --scene-ui-font-size-xs: 11px;
+  --scene-ui-font-size-sm: 12px;
+  --scene-ui-font-size-md: 14px;
+  --scene-ui-font-size-lg: 18px;
+  --scene-ui-font-weight-normal: 400;
+  --scene-ui-font-weight-strong: 700;
+  --scene-ui-font-weight-heavy: 900;
+}
+
+/* 공개 UI 밀도: 프리셋 선택과 문구 교체가 한 화면에 들어가는 값. */
+[data-scene-ui] {
+  font-family: var(--scene-ui-font);
+  color: var(--scene-ui-text);
+  background: var(--scene-ui-bg);
+}
+
+[data-scene-ui] :is(button, input, select, textarea) {
+  min-height: var(--scene-ui-control-height);
+  font: inherit;
+}
+
+[data-scene-ui] [data-advanced] {
+  display: none;
+}
+
+[data-scene-ui][data-advanced-open="true"] [data-advanced] {
+  display: block;
+}
