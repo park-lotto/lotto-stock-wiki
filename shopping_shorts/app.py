@@ -5522,9 +5522,7 @@ def _seg_strip_thumb(src, dest_dir, seg, filename):
       (시작·끝 2장을 붙여도 봤지만 사장님이 앞 장면만으로 충분하다고 정했다)
     ★맨 첫 프레임(정확히 start)은 전환 중이라 흐릴 수 있어 아주 살짝 뒤를 뜬다.
     """
-    a, b = float(seg["start"]), float(seg["end"])
-    at = a + min(0.08, max(0.0, (b - a) * 0.05))
-    return extract_frame_at(src, dest_dir, at, filename=filename)
+    return frame_extract.extract_segment_thumb(src, dest_dir, seg, filename)
 
 def _film_seg_from_id(seg_id: str, job: dict):
     """`film_<video_id>_<start>_<end>` → {video_id,start,end}. 아니면 None.

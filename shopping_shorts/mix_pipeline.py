@@ -1215,6 +1215,7 @@ def run_mix_job(job_id, db_path, work_root):
             source_scripts = list(extracts.values())
             _plan_and_tts(store, job_id, source_scripts, job["target_seconds"],
                           job["structure"], None, work, given_script=job.get("given_script"),
+                          source_video_paths=video_paths,
                           voice=job.get("voice"), customer_id=job.get("customer_id", 0),
                           scene_first=job.get("scene_first", False),
                           script_structure=job.get("script_structure"),
@@ -1478,7 +1479,7 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
                   given_script=None, voice=None, customer_id=0,
                   scene_first=False, reference_text="", ping_pong=False,
                   backbone_meta=None, backbone_forced=None, backbone_base=False,
-                  global_pron=None, script_structure=None):
+                  global_pron=None, script_structure=None, source_video_paths=None):
     """EDL 생성(3) + 비트별 TTS(4) → edit_plan 저장 + ready_for_review.
     run_mix_job(자동판별, video_type=None)과 retype_mix_job(사용자 선택 유형)이 공유.
     given_script: 있으면 확정 대본을 그대로 비트로 쪼개 영상만 매칭(영상제작 2단계).
@@ -1637,13 +1638,15 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
             print("scene_first 후보 0 → 옛 생성기로 폴백(개선 미적용)", file=sys.stderr)
             plan = build_edit_plan(source_scripts, target_seconds, structure=structure,
                                    video_type=video_type, given_script=given_script,
-                                   is_recipe=is_recipe)
+                                   is_recipe=is_recipe, source_video_paths=source_video_paths,
+                                   seg_thumb_dir=Path(work) / "seg_thumbs")
             plan["generator"] = "legacy_fallback"
             plan["generator_note"] = "장면우선 생성이 실패해 예전 방식으로 만들었습니다(개선 미적용) — 다시 매칭을 권장합니다."
     else:
         plan = build_edit_plan(source_scripts, target_seconds, structure=structure,
                                video_type=video_type, given_script=given_script,
-                               is_recipe=is_recipe)
+                               is_recipe=is_recipe, source_video_paths=source_video_paths,
+                               seg_thumb_dir=Path(work) / "seg_thumbs")
         plan["generator"] = "legacy"
     # 빈 EDL(추출 전량 실패 또는 파이프라인 중간 전용풀 소진)을 ready_for_review로
     # 오보고하지 않는다 — 성공처럼 보이는 빈 리뷰화면 대신 즉시 실패로 정상 종료
@@ -1757,8 +1760,17 @@ def retype_mix_job(job_id, video_type, db_path, work_root):
     work = Path(work_root) / job_id
     try:
         source_scripts = list(job["extract"].values())
+        try:
+            source_video_paths = _resolve_sources(job, work)
+        except RuntimeError as e:
+            # 재타이핑은 저장된 extract만으로도 종전처럼 계속할 수 있다. 원본이 정리된 옛 job은
+            # 이미지 검증만 건너뛰고 EDL+TTS 재생성을 죽이지 않는다(fail-open).
+            print(f"[verify_screens] 재타이핑 원본 없음(이미지 검증만 건너뜀): {e}",
+                  file=sys.stderr)
+            source_video_paths = None
         _plan_and_tts(store, job_id, source_scripts, job["target_seconds"],
                       job["structure"], video_type, work, given_script=job.get("given_script"),
+                      source_video_paths=source_video_paths,
                       voice=job.get("voice"), customer_id=job.get("customer_id", 0),
                       global_pron=_gpron, script_structure=job.get("script_structure"))
     except Exception as e:

@@ -111,14 +111,24 @@ def test_scene_first_false면_기존_build_edit_plan_그대로(tmp_path, monkeyp
     plan = {"beats": [{"beat_idx": 0}], "structure": "free",
             "plagiarism_flags": [], "detected_type": "unbox", "affiliate_target": ""}
 
+    build_kw = {}
+
+    def fake_build_edit_plan(*args, **kwargs):
+        build_kw.update(kwargs)
+        return plan
+
     monkeypatch.setattr(_edit_plan, "build_scene_first_plan", fake_build_scene_first_plan)
-    monkeypatch.setattr(mp, "build_edit_plan", lambda *a, **k: plan)
+    monkeypatch.setattr(mp, "build_edit_plan", fake_build_edit_plan)
     monkeypatch.setattr(mp, "_synthesize_beats", lambda *a, **k: None)
     monkeypatch.setattr(mp, "_conform_beats", lambda *a, **k: None)
 
     work = tmp_path / "work"
-    mp._plan_and_tts(store, "j4", [{"full_text": "x"}], 20, "free", None, work)
+    source_paths = {"s0": str(tmp_path / "s0.mp4")}
+    mp._plan_and_tts(store, "j4", [{"full_text": "x"}], 20, "free", None, work,
+                     source_video_paths=source_paths)
 
     assert called["scene_first_plan"] is False
+    assert build_kw["source_video_paths"] == source_paths
+    assert build_kw["seg_thumb_dir"] == work / "seg_thumbs"
     job = store.get_mix_job("j4")
     assert job["edit_plan"]["beats"] == plan["beats"]

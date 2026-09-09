@@ -60,7 +60,7 @@ def test_seg_thumb_extracts_first_frame_and_caches(monkeypatch, tmp_path):
         out.write_bytes(b"\xff\xd8jpeg")
         return out
 
-    monkeypatch.setattr(app_module, "extract_frame_at", _fake_extract)
+    monkeypatch.setattr(app_module.frame_extract, "extract_frame_at", _fake_extract)
     r = client.get("/api/mix/seg_thumb/jt/s0-1")
     assert r.status_code == 200 and r.content == b"\xff\xd8jpeg"
     # ★가운데(3.0)가 아니라 **첫 장면**이다(2026-09-02 사장님 "앞 장면만 나오면 될 것 같은데").
