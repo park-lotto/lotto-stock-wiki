@@ -161,8 +161,12 @@ def test_route_threads_calls_download_threads(monkeypatch, tmp_path):
 
 def test_route_threads_net_host_also_matches(monkeypatch, tmp_path):
     called = {}
-    monkeypatch.setattr(md, "_download_threads",
-                        lambda url, d: called.setdefault("hit", True) or (str(tmp_path / "t.mp4"), ""))
+    # ★`setdefault(...) or (...)`는 setdefault가 True를 돌려줘 **튜플이 안 나간다**
+    #   (2026-09-02 발견). 실제 계약은 (경로, caption) 튜플이다 — 그대로 흉내낸다.
+    def _fake_threads(url, d):
+        called["hit"] = True
+        return (str(tmp_path / "t.mp4"), "")
+    monkeypatch.setattr(md, "_download_threads", _fake_threads)
     md.download_any("https://threads.net/@u/post/Abc123", str(tmp_path))
     assert called.get("hit")
 

@@ -42,6 +42,11 @@ _CODE_RES = {
     "youtube": (re.compile(r"(?:youtu\.be/|/shorts/|/live/|/embed/)([A-Za-z0-9_-]{6,})"),
                 re.compile(r"[?&]v=([A-Za-z0-9_-]{6,})")),
     "tiktok": (re.compile(r"/video/(\d{6,})"),),
+    # 네이버 클립: 재생 주소가 m.naver.com/shorts?...&seedMediaId=<32자>다.
+    # 공유 링크가 다른 모양으로 와도 주소 안 어딘가에 그 32자 ID가 박혀 있으면 잡는다
+    # (clip_url이 만드는 주소는 naverclip_search.clip_url 한 곳뿐 — 여기선 읽기만 한다).
+    "naverclip": (re.compile(r"[?&]seedMediaId=([A-Za-z0-9]{16,})"),
+                  re.compile(r"([0-9A-F]{32,36})")),
 }
 
 
@@ -86,6 +91,8 @@ def embed_url(url, platform, code=""):
         return "https://www.instagram.com/p/" + c + "/embed"
     if platform == "tiktok":
         return "https://www.tiktok.com/embed/v2/" + c
+    # 네이버 클립은 공개 임베드 주소가 없다 — 빈 문자열을 돌려주면 화면이
+    # 카드 링크(새 탭)로 폴백한다. 주소를 지어내면 404다(2026-08-31 실측, 후보 7종 전부).
     return ""
 
 

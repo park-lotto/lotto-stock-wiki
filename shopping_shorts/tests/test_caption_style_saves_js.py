@@ -64,7 +64,7 @@ def test_draw_function_does_not_save():
         assert "_capSaveSoon()" not in body and "_hcSaveSoon()" not in body, (
             f"{fn} 안에서 저장을 부른다 — 애니메이션·복원이 부를 때마다 POST가 나간다")
     # 저장은 Touched 핸들러가 건다
-    assert re.search(r"function capTouched\(\)\{\s*updateCaption\(\);\s*_capSaveSoon\(\)", src), \
+    assert re.search(r"function capTouched\(\)\{\s*CAP_STYLE_TOUCHED\s*=\s*true;\s*updateCaption\(\);\s*_capSaveSoon\(\)", src), \
         "capTouched가 그리기+저장을 함께 하지 않는다"
     assert re.search(r"function hcTouched\(\)\{\s*updateHC\(\);\s*_hcSaveSoon\(\)", src), \
         "hcTouched가 그리기+저장을 함께 하지 않는다"

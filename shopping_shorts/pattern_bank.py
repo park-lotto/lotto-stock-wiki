@@ -106,7 +106,7 @@ def _vault_fallback(prompt, schema, max_tries=4):
             return json.loads(resp.text)
         except Exception as e:  # noqa: BLE001
             if kv.is_daily_exhausted_error(e) or kv.is_account_disabled_error(e):
-                kv.mark_exhausted(kv._owner_group(key) or "general", key)
+                kv.mark_failure(key, e, group=kv._owner_group(key) or "general")   # 401/403=영구, 429=한시
                 continue
             if kv.is_quota_error(e):
                 continue

@@ -170,3 +170,17 @@ class TestStreak:
     def test_목표_3이면_2개는_연속이_아니다(self):
         by = {"2026-08-28": 3, "2026-08-29": 2}
         assert challenge.streak(by, "2026-08-29", goal=3) == 1
+
+
+def test_naverclip_code_and_no_embed():
+    """네이버 클립: seedMediaId를 뽑고, 임베드 주소는 만들지 않는다.
+
+    ★주소를 지어내면 404다(2026-08-31 실측 후보 7종 전부) — 빈 문자열이면
+    화면이 링크로 폴백한다.
+    """
+    mid = "51782434BD964B039EA620B7933A170CBA14"
+    u = ("https://m.naver.com/shorts?serviceType=CLIP&mediaType=VOD"
+         "&seedMediaId=" + mid)
+    assert challenge.video_code(u, "naverclip") == mid
+    assert challenge.dedup_key(u, challenge.video_code(u, "naverclip")) == "sc:" + mid
+    assert challenge.embed_url(u, "naverclip") == ""

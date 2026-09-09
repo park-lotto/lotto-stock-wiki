@@ -14,7 +14,7 @@
   // 원인 찾는 데 한참 걸렸다. 그래서 버전을 숫자로 박고 큰 쪽이 이어받게 한다.
   // (옛 코드는 이 숫자가 없다 → 0으로 보고 새 로직이 이긴다. 옛 인터벌은 남지만
   //  버튼은 id 선점이라 서로 안 덮고, 새 화면(유튜브·쓰레드)은 새 로직이 그린다.)
-  var LOGIC_VER = 20260908;
+  var LOGIC_VER = 20260909;
   if ((window.__ssGrabVer || 0) >= LOGIC_VER) return;   // 같거나 더 새것이 이미 돎
   if (window.__ssGrabLoaded && !window.__ssGrabVer) {
     // 옛 로직이 이미 돌고 있다 — 그 버튼을 걷어내고 새 로직이 다시 그린다.
@@ -343,6 +343,10 @@
     if (y < 2010 || y > 2100) return "";        // 공식이 안 맞는 ID면 표시 안 함
     return y + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
   }
+  // ★재생바 자리는 _dockBtns 한 곳에서만 정한다(0순위-B). 2026-09-02엔 여기(_placeSeekBar:
+  //   top+right)와 _dockBtns(left+bottom)가 같은 tick에서 따로 정해 **넷이 다 걸려** 상자가
+  //   담기 버튼 밑에서 영상 바닥까지 시커멓게 늘어났다(사장님 스샷 3장). 두 번 적지 마라.
+
   function syncSeekBar() {
     if (!_playerPlat()) return;
     var box = document.getElementById("ss-seek");
@@ -352,7 +356,8 @@
     if (!box) {
       box = document.createElement("div");
       box.id = "ss-seek";
-      box.style.cssText = "position:fixed;right:18px;bottom:174px;z-index:2147483647;background:rgba(20,20,20,.92);" +
+      // ★자리는 _dockBtns가 정한다 — 여기 값은 첫 그림 전 잠깐 쓰는 초기값이다.
+      box.style.cssText = "position:fixed;right:18px;bottom:174px;height:auto;width:auto;z-index:2147483647;background:rgba(20,20,20,.92);" +
         "border:1px solid #444;border-radius:12px;padding:5px 8px;display:flex;align-items:center;gap:6px;" +
         "font-family:system-ui,sans-serif;color:#fff;font-size:11px;box-shadow:0 4px 14px rgba(0,0,0,.35)";
       box.innerHTML = "<button id='ss-seek-p' title='일시정지/재생' style='background:none;border:none;" +
@@ -380,6 +385,7 @@
         this.textContent = vv.paused ? "▶" : "⏸";
       });
     }
+    // 자리는 _dockBtns가 정한다 — 여기서 top/right를 건드리지 마라(검은 판 사고).
     var r2 = document.getElementById("ss-seek-r"), t2 = document.getElementById("ss-seek-t"),
         p2 = document.getElementById("ss-seek-p");
     if (r2 && t2) {
@@ -1062,8 +1068,13 @@
     var el = best.parentElement, guard = 0;
     while (el && guard++ < 10) {
       var rr = el.getBoundingClientRect();
+      // ★/reel/ 직접 주소 화면(2026-09-03 사장님 스샷)은 dialog·article이 아닌 칸이
+      //   영상+댓글판을 감싼다 — 댓글 입력창(textarea)을 품은 칸이면 같은 취급. 단 화면
+      //   거의 전체를 덮는 칸은 페이지 껍데기라 버린다(버튼이 브라우저 끝으로 날아간다).
+      var hasComment = !!(el.querySelector && el.querySelector("textarea")) &&
+                       rr.width <= window.innerWidth * 0.85;
       var isModal = (el.getAttribute && el.getAttribute("role") === "dialog") ||
-                    el.tagName === "ARTICLE";
+                    el.tagName === "ARTICLE" || hasComment;
       if (rr.right > right && rr.right < window.innerWidth &&
           (isModal || rr.width <= v.width * 1.6)) right = rr.right;
       el = el.parentElement;
@@ -1095,7 +1106,12 @@
     }
     // 영상이 화면에서 거의 사라졌으면 버튼도 숨긴다(엉뚱한 자리에 떠 있는 것보다 낫다).
     var gone = !!rr && (rr.bottom < 120 || rr.top > window.innerHeight - 80);
-    var base = rr ? Math.max(8, Math.min(rr.top + 8,
+    // ★사이트 **헤더 아래로만** 내려온다(2026-09-02 사장님 "이거때매 계정 눌러지지가
+    //   않는다"). 종전 바닥값 8px은 화면 맨 위라, 영상이 위로 올라간 화면에서 담기 버튼이
+    //   인스타 헤더의 **계정 아이콘 위를 덮어** 프로필을 못 눌렀다. 인스타·유튜브·틱톡
+    //   헤더가 모두 60px 안팎이라 그 아래(72px)를 바닥으로 둔다.
+    var HEADER_SAFE = 72;
+    var base = rr ? Math.max(HEADER_SAFE, Math.min(rr.top + 8,
                  window.innerHeight - 8 - live.length * DOCK_STEP)) : 0;
     var slot = 0;
     for (var i = 0; i < live.length; i++) {
@@ -1113,19 +1129,25 @@
         slot++;
       }
     }
-    // 시크바: 버튼과 겹치지 않게 **영상 아래쪽**에 붙인다(폭은 만들 때 줄여둔다).
+    // 시크바: **담기 버튼(도킹 줄 맨 아래) 바로 밑**에 붙인다(2026-09-02 사장님 "댓글을 못 써서").
+    // ★top·left만 건다. bottom·right는 반드시 auto로 푼다 — 고정 배치에서 top과 bottom이
+    //   같이 걸리면 그 사이만큼 상자가 늘어나 검은 판이 된다(2026-09-02~03 3번 재발).
     var sk = document.getElementById("ss-seek");
     if (sk) {
       sk.style.display = gone ? "none" : "";
       if (gone) return;
-      if (!rr) { sk.style.left = ""; sk.style.right = "18px"; sk.style.bottom = "174px"; }
-      else {
+      if (!rr || slot === 0) {
+        sk.style.left = ""; sk.style.top = "";
+        sk.style.right = "18px"; sk.style.bottom = "174px";
+      } else {
         var sw = sk.offsetWidth || 260;
         var sx = x + 16;
         if (sx + sw + 12 > window.innerWidth) sx = Math.max(8, window.innerWidth - sw - 12);
-        sk.style.right = "auto"; sk.style.left = sx + "px";
-        sk.style.bottom = Math.max(8, window.innerHeight - rr.bottom + 8) + "px";
+        sk.style.right = "auto"; sk.style.bottom = "auto";
+        sk.style.left = sx + "px";
+        sk.style.top = (base + slot * DOCK_STEP) + "px";   // 마지막 버튼 한 칸 아래
       }
+      sk.style.height = "auto"; sk.style.maxHeight = "none"; sk.style.width = "auto";
     }
   }
 

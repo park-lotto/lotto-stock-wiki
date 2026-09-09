@@ -58,7 +58,10 @@ def mute_foreign_speech(source_scripts):
             continue
         nb = dict(sc)
         nb["full_text"] = ""
-        nb["segments"] = [dict(s, text="") for s in (sc.get("segments") or [])]
+        # ★한국어 번역(text_ko·full_text_ko, 2026-09-04 B1)도 같이 지운다 — 인벤토리·2단계 목록이 `text_ko or text`를 '말:'로
+        #   쓰므로 text만 비우면 외국어 말이 번역본으로 우회해 들어온다(2026-09-05 리뷰 M4). 규칙은 한 곳: 이 함수.
+        nb["full_text_ko"] = ""
+        nb["segments"] = [dict(s, text="", text_ko="") for s in (sc.get("segments") or [])]
         # structure는 원문 문장 구조 요약이라 같이 비운다(원문이 프롬프트로 새는 두 번째 길).
         nb["structure"] = {}
         muted.append(nb)

@@ -537,9 +537,35 @@ button.act.play:hover{background:var(--accent);color:#fff;border-color:var(--acc
 #playerhost[data-pane="confirm"] #confirmPane{display:block}
 #playerhost[data-pane="confirm"] #playerIdle,
 #playerhost[data-pane="confirm"] #player{display:none}
-#confirmBody video{width:100%;aspect-ratio:var(--shorts-pv-ar,9/16);object-fit:contain;
-  border-radius:8px;background:#000;display:block}
-#confirmBody .cfLoad{aspect-ratio:var(--shorts-pv-ar,9/16);width:100%;display:flex;
+#confirmBody video{object-fit:contain;
+  border-radius:8px;background:#000;display:block;
+  /* 비율의 정의처는 scene_play.js PV_AR 한 곳이다(test_preview_size_single_source가
+     강제한다 — 2026-08-20 '미리보기 크기가 자꾸 틀어지던' 사고의 처방). 그러니 비율은
+     그대로 두고, **넘칠 때만 줄어들게** 한다: 높이를 틀에 맞춰 깎으면 폭은 비율이
+     알아서 따라온다(width:auto). 실측 322x572 = 0.562 ≒ 9/16. */
+  aspect-ratio:var(--shorts-pv-ar,9/16);
+  width:auto;height:auto;max-width:100%;max-height:100%;
+  flex:0 1 auto;min-height:0;margin:0 auto}
+/* 완성본 탐색바(2026-09-03) — 네이티브 controls는 재생 중 숨어서 "바가 없다"가 된다 */
+/* ★막대가 잘려 안 보이던 것(라이브 실측으로 잡았다). #playerhost는 높이 700px에
+   overflow:hidden인데, 9:16 비율이 강제한 video 높이(768px)가 #confirmBody를
+   805px까지 밀어내 막대가 y=817로 **틀 밖**에 있었다 — 정적 검사로는 절대 안 잡힌다.
+   고치는 자리는 body 하나다: #confirmPane은 flex:1로 제 높이(658px)를 이미 받고 있다.
+   body를 그 높이에 가두고, video는 비율 강제를 풀어 남는 공간만 쓰게 한다
+   (object-fit:contain이라 높이가 줄어도 화면은 안 찌그러진다). 실측: video 620 + 막대 30. */
+#confirmBody{height:100%;min-height:0;display:flex;flex-direction:column}
+#confirmBody .cfbar{display:flex;align-items:center;gap:8px;margin-top:8px;flex:0 0 auto}
+#confirmBody .cfbtn{flex:0 0 auto;width:30px;height:30px;padding:0;border:1px solid var(--line);
+  border-radius:8px;background:var(--inset);color:var(--fg);font-size:13px;line-height:1;cursor:pointer}
+#confirmBody .cfbtn:hover{border-color:var(--accent)}
+#confirmBody .cfSeek{flex:1 1 auto;height:14px;border-radius:7px;background:var(--inset);
+  border:1px solid var(--line);cursor:pointer;position:relative;overflow:hidden}
+#confirmBody .cfSeekFill{position:absolute;left:0;top:0;bottom:0;width:0;
+  background:var(--accent);border-radius:7px;pointer-events:none}
+#confirmBody .cfTime{flex:0 0 auto;font-size:12px;color:var(--sub);
+  font-variant-numeric:tabular-nums;min-width:78px;text-align:right}
+#confirmBody .cfLoad{flex:0 1 auto;min-height:0;width:100%;
+  aspect-ratio:var(--shorts-pv-ar,9/16);max-height:100%;display:flex;
   align-items:center;justify-content:center;border:1px dashed var(--line);
   border-radius:10px;color:var(--dim);font-size:13px;text-align:center;padding:14px}
 .pidleIcon{font-size:30px;opacity:.55}
@@ -623,14 +649,18 @@ body.tight .thumbs{grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap
 body.tight .seg .cutbtn{font-size:10px;padding:2px 5px;right:3px;top:3px;
   opacity:0;transition:opacity .12s}
 body.tight .seg:hover .cutbtn{opacity:1}
-/* ★.tbsay는 max-height 4.5em + pre-wrap이라 line-clamp만으로는 두 줄이 남는다(실측).
-   높이도 함께 잡아야 진짜 한 줄이 된다. */
-body.tight .tbsay{max-height:1.9em;overflow:hidden}
-body.tight .tbsay.open{max-height:none;overflow-y:auto;-webkit-line-clamp:unset}
-
-body.tight .tbsay{                                   /* B. 칸 대본 — 한 줄만 */
-  display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
-body.tight .tbsay.open{-webkit-line-clamp:unset;overflow:visible}
+/* ★촘촘히에서도 **대본은 자르지 않는다** (2026-09-06 고객 "대본이 끝까지 안 나오네요,
+   대본도 씹히는 거 같고요" — 3단계 영상대본MIX).
+   무슨 일이었나: 촘촘히(기본 켜짐)가 대본 칸을 `line-clamp:1 + max-height:1.9em`으로
+   **한 줄만** 남겼다. 실측(고객 잡 3ec9df659411, 67자 문장): 실제 45px 중 27px만 보이고
+   18px이 잘렸다. 게다가 1.9em은 한 줄(1.5em)보다 커서 **둘째 줄이 반쯤 걸쳐** 글자가
+   가로로 잘린 채 보인다 = 고객이 말한 "씹힌다".
+   ★대본은 화면 장식이 아니라 **고객이 확인하러 온 것**이다 — 접을 대상이 아니다.
+   촘촘히가 줄일 것은 썸네일·안내문·KPI지 대본이 아니다(아래 C·D·F 규칙은 그대로 둔다).
+   그래서 촘촘히에서도 기본 규칙(.tbsay의 max-height:4.5em + overflow-y:auto)을 그대로
+   쓴다 — 길면 그 칸 안에서 스크롤되고, 잘려서 사라지지 않는다.
+   ⚠️`.open`(⌄ 버튼)은 그대로 살려 둔다: 아주 긴 문장을 스크롤 없이 통째로 펼치는 용도. */
+body.tight .tbsay.open{max-height:none;overflow-y:auto}
 .saymore{float:right;margin-left:6px;border:0;background:transparent;color:var(--dim);
   cursor:pointer;font-size:12px;padding:0 2px;line-height:1}
 .saymore:hover{color:var(--accent)}
@@ -994,7 +1024,16 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
 /* 구절 맞춤 — 이 카드들이 구절 수만큼 들어간다는 표시(2026-08-29 사장님 "파란색 테두리") */
 .tbcut.inuse{outline:2px solid #4ac1ff;outline-offset:-2px}
 .boxbtn{color:#ffd24a}
-</style></head><body>
+</style><style>
+/* 에러 설명(error_help.js가 그린다) — 빨간 한 줄로 끝내지 않고 왜·무엇을 함께 보여준다 */
+.errHelp{border-left:3px solid var(--fire,#e5484d);background:rgba(229,72,77,.07);
+  padding:8px 10px;border-radius:6px;margin:6px 0;line-height:1.55;text-align:left}
+.errHelp b{color:var(--fire,#e5484d);font-size:14px}
+.errHelp .errWhy{color:var(--sub,#8b8b8b);font-size:13px;margin-top:3px}
+.errHelp .errTodo{font-size:13px;margin-top:4px}
+</style>
+<script src="/error_help.js"></script>
+</head><body>
 
 <header style="display:none">
   <div>
@@ -1025,7 +1064,19 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
       <input type="checkbox" onchange="toggleOne(this.checked)"> 1장=1컷</label>
     <button type="button" id="ttsBtn" class="act" style="padding:3px 10px;font-size:11.5px"
             onclick="makeTts()" title="음성이 없는 칸의 음성을 만듭니다(1~2분)">🔊 음성 만들기</button>
+    <button type="button" class="act" id="undobtn" style="padding:3px 10px;font-size:11.5px" disabled
+            title="되돌릴 편집이 아직 없습니다" onclick="undoWork()">↩ 되돌리기</button>
     <button type="button" class="act" id="tightbtn" title="글자를 접고 화면(영상)을 크게 봅니다" onclick="toggleTight()">▦ 촘촘히</button>
+    <!-- ★저장·불러오기는 **여기**에 있어야 한다(2026-09-07 실측). 처음엔 아래 footer에
+         뒀는데, 제작소 안(body.inside-studio.grow)에서는 그 줄이 통째로 높이 0으로 접혀
+         버튼도 안내문도 안 보였다 — 사장님이 "작동 안 되는 것 같은데"라고 하신 이유다.
+         이 줄(↩되돌리기·▦촘촘히)은 어느 상태에서도 보인다. -->
+    <button type="button" class="act" id="savenowbtn" style="padding:3px 10px;font-size:11.5px"
+            onclick="saveNow()" title="지금 화면의 편성을 이 PC와 서버에 바로 저장합니다(평소엔 편집이 멈추면 1.2초 뒤 자동으로 저장됩니다)">💾 지금 저장</button>
+    <button type="button" class="act" id="loadsrvbtn" style="padding:3px 10px;font-size:11.5px"
+            onclick="loadFromServer()" title="서버에 저장된 편성을 다시 불러옵니다 — 화면이 초기화된 것처럼 보일 때 누르세요">📥 서버에서 불러오기</button>
+    <button type="button" class="act" id="histbtn" style="padding:3px 10px;font-size:11.5px"
+            onclick="openHistory()" title="예전 편성으로 되돌립니다 — 최근 5벌까지 보관합니다">🕘 이전 편성</button>
     <!-- ★지금 화면이 새 코드인지 눈으로 바로 알 수 있게(2026-08-26). 이게 없어서
          '고쳤는데 안 된다'가 캐시 때문인지 진짜 버그인지 매번 헤맸다. -->
     <span id="buildtag" title="이 화면의 코드 버전 — 새로고침해도 안 바뀌면 캐시입니다"
@@ -1147,6 +1198,11 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
 //   확정 결과가 부모(제작소) 좌측에 또 다른 9:16 칸으로 열리던 것을 이 자리로 가져왔다.
 //   부모는 postMessage가 아니라 이 함수들을 **직접 부른다**(같은 도메인).
 //   (postMessage는 2026-08-15에 조용히 실패해서 버린 경로다 — 되살리지 마라)
+// 지금 화면에 걸린 완성본이 **어떤 편성으로** 만들어졌는지(빈 문자열 = 완성본 없음).
+var RENDERED_SIG = '';
+// 렌더가 도는 중인 편성(출발 시점에 찍고, 영상이 걸릴 때 RENDERED_SIG로 확정).
+var PENDING_SIG = '';
+
 function pvTab(which){
   var host = document.getElementById('playerhost');
   if (!host) return;
@@ -1185,6 +1241,10 @@ async function _askRender(){
   try{ if (typeof flushApply === 'function') await flushApply(); }
   catch(e){ console.warn('편집 반영 실패(렌더는 계속)', e); }
   body.innerHTML = '';                               // startPreview가 자기 로더를 그린다
+  // ★렌더에 들어가는 편성을 **출발 시점에** 찍는다(2026-09-03). 완료 시점에 찍으면,
+  //   렌더가 도는 20초 사이에 편집한 것까지 "이 영상에 들어간 것"으로 잘못 기록돼
+  //   낡은 영상을 최신으로 보여주게 된다.
+  try{ PENDING_SIG = (typeof _editSig === 'function') ? _editSig() : ''; }catch(e){ PENDING_SIG = ''; }
   try{
     var up = window.parent;
     if (up && up !== window && typeof up.startPreview === 'function'){ up.startPreview(); return; }
@@ -1208,13 +1268,103 @@ function showConfirmLoading(msg){
   _cfEnable(true);
   pvTab('confirm');
 }
+// ★지문 없는 확정본에 **지금 편성**을 지문으로 찍는다 — 두 번 불린다(0순위-B: 판정은 여기 한 곳).
+//   ① showConfirmVideo 때: 부모가 옛 미리보기를 넣는 순간. 그런데 페이지 복원 경로에선
+//      boot()가 DATA를 받기 **전**이라 _editPayload가 DATA.beats에서 터져 빈 채로 남는다
+//      (라이브 실측 2026-09-04: 배포 뒤에도 RENDERED_SIG_len 0, 나중에 다시 부르면 882).
+//   ② boot() 끝: 편성이 다 실린 뒤 한 번 더. 이때 영상이 있고 지문이 비었으면 찍는다.
+function stampConfirmSigIfMissing(){
+  if (RENDERED_SIG) return;
+  var body = document.getElementById('confirmBody');
+  if (!body || !body.querySelector('video')) return;     // 영상이 없으면 찍을 게 없다
+  try{ RENDERED_SIG = (typeof _editSig === 'function') ? _editSig() : ''; }catch(e){ RENDERED_SIG = ''; }
+}
 // 렌더 끝 — 같은 자리에 진짜 영상.
 function showConfirmVideo(src){
   var body = document.getElementById('confirmBody');
   if (!body) return;
-  body.innerHTML = '<video controls muted playsinline autoplay src="' + src + '"></video>';
+  // ★이 영상이 어떤 편성으로 만들어졌는지 지문을 남긴다(2026-09-03) — applyServer가
+  //   이걸 대조해서 **진짜 바뀌었을 때만** 완성본을 버린다. 안 남기면 옛 동작(무조건
+  //   버리기)으로 돌아가 재렌더가 재발한다.
+  // ★지문 없이 채워지는 경우가 있다(2026-09-04 사장님 제보: "최종렌더 뒤 3단계에서 고치고
+  //   미리보기를 보면 수정이 안 된 걸로 나온다"). 페이지를 다시 열거나 다른 단계에서 돌아오면
+  //   부모(produce)가 **이미 만들어 둔** preview.mp4를 여기로 넣는데, 그 경로엔 _askRender가
+  //   없어 PENDING_SIG가 비어 있다. 그러면 RENDERED_SIG도 비고, applyServer의 낡음 판정은
+  //   `!!RENDERED_SIG && …`라 **영영 낡았다고 못 본다** → 아무리 고쳐도 옛 영상이 안 지워지고
+  //   탭을 눌러도 _askRender가 "이미 있다"며 재렌더를 안 건다. 최종렌더는 무조건 새로
+  //   만드니 거기엔 반영돼 "미리보기만 옛것"이 됐다.
+  //   → 지문이 없으면 **지금 편성**을 이 영상의 지문으로 삼는다. 이후 진짜 바뀌면 지워진다.
+  //     (편집 상태가 아직 안 실린 순간이면 빈 지문이 남고, 첫 편집 저장에서 걸러진다 — 공짜 렌더 1회.)
+  RENDERED_SIG = PENDING_SIG;
+  if (!RENDERED_SIG) stampConfirmSigIfMissing();
+  // ★영상 아래에 **늘 보이는** 탐색바를 함께 그린다(2026-09-03 사장님 제보:
+  //   "완성본 만들기하면 중간 구간으로 이동해서 클릭할 수 있는 바가 없다").
+  //   controls 속성이 주는 네이티브 막대는 재생 중 자동으로 숨고, 세로(9:16) 영상에선
+  //   영상 위에 겹쳐 떠서 잘 안 보인다. 그래서 별도 막대를 영상 **밖에** 둔다.
+  //   ★controls는 그대로 둔다 — 전체화면·배속은 네이티브가 낫고, 우리 막대는 '늘 보이는'
+  //     탐색 수단을 더하는 것이지 대체가 아니다(test_preview_video_is_muted_by_default가
+  //     지키는 계약이기도 하다: 열자마자 muted + 음소거 해제·탐색 수단이 있을 것).
+  //   ⚠️이 주석에 video 태그를 그대로 쓰지 마라 — test_preview_video_is_muted_by_default가
+  //     주석을 안 걷고 정규식으로 태그를 찾아서, 주석 속 예시를 진짜 태그로 오인한다.
+  body.innerHTML =
+      '<video id="cfVid" controls muted playsinline autoplay src="' + src + '"></video>'
+    + '<div class="cfbar">'
+    +   '<button type="button" class="cfbtn" id="cfPlay" title="재생/정지">⏸</button>'
+    +   '<button type="button" class="cfbtn" id="cfMute" title="소리 켜기">🔇</button>'
+    +   '<div class="cfSeek" id="cfSeek"><div class="cfSeekFill" id="cfSeekFill"></div></div>'
+    +   '<div class="cfTime" id="cfTime">0:00 / 0:00</div>'
+    + '</div>';
+  _cfWire();
   _cfEnable(true);
   pvTab('confirm');
+}
+// 완성본 탐색바 배선 — 클릭·드래그로 그 지점으로 건너뛴다.
+function _cfWire(){
+  var v = document.getElementById('cfVid');
+  var seek = document.getElementById('cfSeek');
+  var fill = document.getElementById('cfSeekFill');
+  var time = document.getElementById('cfTime');
+  var play = document.getElementById('cfPlay');
+  var mute = document.getElementById('cfMute');
+  if (!v || !seek) return;
+  function fmt(t){
+    if (!isFinite(t) || t < 0) t = 0;
+    var m = Math.floor(t / 60), sec = Math.floor(t % 60);
+    return m + ':' + (sec < 10 ? '0' : '') + sec;
+  }
+  function paint(){
+    var d = v.duration;
+    // ★duration을 아직 모를 때(메타데이터 전) 나누면 NaN%가 돼 막대가 통째로 사라진다.
+    var pct = (isFinite(d) && d > 0) ? (v.currentTime / d * 100) : 0;
+    fill.style.width = pct + '%';
+    time.textContent = fmt(v.currentTime) + ' / ' + fmt(d);
+  }
+  function jump(ev){
+    var d = v.duration;
+    if (!isFinite(d) || d <= 0) return;          // 아직 길이를 모른다 — 건너뛸 수 없다
+    var r = seek.getBoundingClientRect();
+    var cx = (ev.touches && ev.touches[0]) ? ev.touches[0].clientX : ev.clientX;
+    v.currentTime = Math.max(0, Math.min(1, (cx - r.left) / r.width)) * d;
+    paint();
+  }
+  var dragging = false;
+  seek.addEventListener('mousedown', function(e){ dragging = true; jump(e); });
+  window.addEventListener('mousemove', function(e){ if (dragging) jump(e); });
+  window.addEventListener('mouseup', function(){ dragging = false; });
+  seek.addEventListener('touchstart', function(e){ jump(e); }, {passive:true});
+  seek.addEventListener('touchmove',  function(e){ jump(e); }, {passive:true});
+  v.addEventListener('timeupdate', paint);
+  v.addEventListener('loadedmetadata', paint);   // 길이를 알게 된 순간 눈금이 맞는다
+  v.addEventListener('play',  function(){ play.textContent = '⏸'; });
+  v.addEventListener('pause', function(){ play.textContent = '▶'; });
+  play.addEventListener('click', function(){ if (v.paused) v.play(); else v.pause(); });
+  // 자동재생 정책 때문에 muted로 시작한다 — 눌러서 소리를 켠다.
+  mute.addEventListener('click', function(){
+    v.muted = !v.muted;
+    mute.textContent = v.muted ? '🔇' : '🔊';
+    mute.title = v.muted ? '소리 켜기' : '소리 끄기';
+  });
+  paint();
 }
 // 재매칭 등으로 확정본이 무효가 됐다 — **내용만 비우고** 가조립으로 되돌린다.
 // ★탭을 다시 잠그지 않는다(2026-08-22). 이제 이 탭이 렌더 입구라 항상 눌러야 한다.
@@ -1223,6 +1373,8 @@ function showConfirmVideo(src){
 function clearConfirm(){
   var body = document.getElementById('confirmBody');
   if (body) body.innerHTML = '';
+  RENDERED_SIG = '';                     // 영상이 사라졌으니 지문도 함께 버린다
+  PENDING_SIG = '';
   var host = document.getElementById('playerhost');
   if (host) host.setAttribute('data-pane', 'draft');
   var b = document.querySelector('.pvTab[data-pane="confirm"]');
@@ -1619,6 +1771,103 @@ function serverList(b){
   ov.forEach(s => { const id = s && s.seg_id; if (id && !out.includes(id)) out.push(id); });
   return out.length ? out : null;
 }
+// 서버에 얹힌 편성이 하나라도 있나 — 없으면 되살릴 것이 없다.
+function hasServerEdit(){
+  return (DATA.beats || []).some(b => (serverList(b) || []).length);
+}
+// ★서버 편성을 화면에 얹는 **단 하나의 자리**. 첫 진입 폴백과 [서버에서 불러오기] 버튼이
+//   같은 함수를 쓴다 — 복원 규칙을 두 군데 적으면 반드시 어긋난다(0순위-B).
+//   되살릴 게 없으면 false를 돌려주어 호출한 쪽이 다음 수단으로 넘어가게 한다(fail-open).
+function restoreServer(msg){
+  if (!hasServerEdit()) return false;
+  lists = DATA.beats.map(b => serverList(b) || baseList(b));
+  hydrateFixlen(fixlenFromBeats());    // ✋ 서버가 기억하는 손 길이도 같이
+  mode = 'hand';                       // 서버 편성 = 사람이 정한 배치다
+  ['live','one','hand','pick'].forEach(x => {
+    const b = document.getElementById('m-' + x);
+    if (b) b.classList.toggle('on', x === mode);
+  });
+  render();
+  if (msg) nsay(msg);
+  return true;
+}
+// [📥 서버에서 불러오기] — 화면이 초기화된 것처럼 보일 때 사람이 직접 누르는 탈출구.
+// 되돌리기 기준점을 먼저 박아 잘못 눌러도 ↩로 돌아온다. 불러온 뒤 저장까지 해서
+// 이 PC에도 남긴다(다음에 열 때 또 안 사라진다).
+// 사람이 [💾 지금 저장]을 눌렀을 때만 결과를 알린다 — saveWork 자체는 1.2초마다
+// 자동으로도 불리므로 거기에 알림을 넣으면 4초마다 글자가 뜬다.
+function saveNow(){
+  saveWork();
+  saylo('💾 저장했어요 — 이 PC와 서버 양쪽에 저장됐습니다');
+}
+// 🕘 이전 편성 — 서버가 보관한 판본(최근 5벌)으로 되돌린다(2026-09-07).
+// ★[📥 서버에서 불러오기]로도 안 될 때의 마지막 수단이다. 화면이 초기화된 채
+//   자동저장이 돌면 **서버 편성까지** 덮이는데, 그때 서버는 덮기 직전 판본을
+//   남겨둔다(edit_plan.apply_scene_lab). 여기서 그걸 고른다.
+// ★고르는 UI를 새로 만들지 않는다 — 이 파일엔 이미 목록을 띄우는 관례가 없고,
+//   prompt()는 이 파일에서 금지다(브라우저 모달이 화면을 멈춘다). 그래서 카드로 그린다.
+async function openHistory(){
+  if (!SL.server || !SL.job){ saylo('이 화면에서는 이전 편성을 불러올 수 없어요'); return; }
+  let d;
+  try{
+    d = await (await fetch('/api/mix/scene_lab/' + SL.job + '/history')).json();
+  }catch(e){ saylo('이전 편성을 불러오지 못했어요'); return; }
+  const vs = (d && d.versions) || [];
+  if (!vs.length){ saylo('보관된 이전 편성이 아직 없어요 — 편성이 바뀔 때마다 한 벌씩 쌓입니다'); return; }
+  let box = document.getElementById('histbox');
+  if (!box){
+    box = document.createElement('div');
+    box.id = 'histbox';
+    box.style.cssText = 'position:fixed;left:50%;top:70px;transform:translateX(-50%);z-index:99998;'
+      + 'max-width:min(94vw,520px);padding:14px 16px;border-radius:14px;background:#151a26;'
+      + 'color:#e8ecf5;border:1px solid #3a4560;box-shadow:0 14px 40px rgba(0,0,0,.55);font-size:14px';
+    document.body.appendChild(box);
+  }
+  const rows = vs.map(v => {
+    const when = (v.at || '').replace('T', ' ').replace('Z', '');
+    return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid #2a3346">'
+      + '<div style="flex:1"><b>' + esc(when || '시각 모름') + '</b>'
+      + '<div style="color:#95a0b8;font-size:12.5px">칸 ' + v.beats + '개 · 화면 ' + v.clips + '장</div></div>'
+      + '<button class="act" style="padding:4px 12px" onclick="restoreVersion(' + v.index + ')">이걸로 되돌리기</button>'
+      + '</div>';
+  }).join('');
+  box.innerHTML = '<div style="display:flex;align-items:center;gap:10px">'
+    + '<b style="font-size:15px">🕘 이전 편성으로 되돌리기</b>'
+    + '<button class="act" style="margin-left:auto;padding:4px 10px" onclick="closeHistory()">닫기</button></div>'
+    + '<div style="color:#95a0b8;font-size:12.5px;margin-top:4px">되돌린 뒤에도 지금 편성은 목록에 남아 다시 돌아올 수 있어요.</div>'
+    + rows;
+  box.style.display = '';
+}
+function closeHistory(){ const b=document.getElementById('histbox'); if(b) b.style.display='none'; }
+async function restoreVersion(i){
+  closeHistory();
+  try{
+    const r = await fetch('/api/mix/scene_lab/' + SL.job + '/restore_version',
+      {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({index:i})});
+    const d = await r.json();
+    if (!d || !d.ok){ saylo('되돌리지 못했어요 — ' + ((d && d.error) || '알 수 없는 오류')); return; }
+  }catch(e){ saylo('되돌리지 못했어요'); return; }
+  // ★서버 편성이 바뀌었으니 화면을 서버 기준으로 다시 연다. 여기서 화면 상태를 직접
+  //   손대면 서버와 갈린다 — 새로고침이 가장 정확하고, 사람에게도 "돌아왔다"가 분명하다.
+  saylo('🕘 이전 편성으로 되돌렸어요 — 화면을 새로 불러옵니다');
+  setTimeout(function(){ location.reload(); }, 900);
+}
+function loadFromServer(){
+  if (!hasServerEdit()){ saylo('서버에 저장된 편성이 없어요 — 지금 화면 그대로입니다'); return; }
+  // 무엇이 달라졌는지 세어 둔다 — 눌렀는데 화면이 그대로면 사람은 "안 눌렸다"고 읽는다
+  // (2026-09-07 사장님 "작동 안 되는 것 같은데"). 실제로는 되고 있었고, 아래 saveWork가
+  // 안내문을 '내 편집 저장됨'으로 덮어써서 아무 일도 없어 보였다.
+  const before = (lists || []).map(l => (l || []).length);
+  undoMark();
+  restoreServer('');                    // 안내문은 여기서 안 쓴다 — 아래에서 결과를 보고 쓴다
+  saveWork();                           // ★이 함수가 savedmsg를 덮는다. 그래서 안내는 그 뒤에.
+  const after = (lists || []).map(l => (l || []).length);
+  let changed = 0;
+  for (let i = 0; i < after.length; i++) if (before[i] !== after[i]) changed++;
+  saylo(changed
+    ? ('📥 서버에서 불러왔어요 — ' + changed + '칸이 되살아났습니다 (↩ 되돌리기로 취소)')
+    : '📥 서버 편성과 지금 화면이 같아요 — 바뀐 것이 없습니다 (작업은 안전합니다)');
+}
 function initLists(){
   lists = DATA.beats.map(b => {
     const all = baseList(b);
@@ -1725,7 +1974,7 @@ function toggleTight(){
   localStorage.setItem(TIGHT_KEY, document.body.classList.contains('tight') ? '0' : '1');
   _tightApply();
 }
-const BUILD_TAG = 'F28';   // 밴드 높이 고정은 촘촘히 전용 — 넓게는 내용만큼 자란다
+const BUILD_TAG = 'F29';   // 밴드 높이 고정은 촘촘히 전용 — 넓게는 내용만큼 자란다
 (function(){ const b=document.getElementById('buildtag'); if(b) b.textContent = BUILD_TAG; })();
 
 function toggleHints(){
@@ -1950,6 +2199,8 @@ function renderRollHosts(beatIdx, slot){
     // ★타임라인 🔁 교체 모드(2026-08-29 설계 ⑧)면 여기서 잠금 옵션이 덮인다:
     //   lockLen(고정길이 박스)+onReplace(그 컷 교체). 마지막에 펼쳐야 위 onReplace를 이긴다.
     ...(typeof tlLockOpts === 'function' ? tlLockOpts(kind, vid) : {}),
+    // ＋ 구간으로 잠금을 풀었을 때 되돌릴 원래 onReplace(src는 없음 → null).
+    onReplaceUnlocked: (kind === 'src') ? null : (r => replaceRoll(sid, vid, r)),
   });
   markRollBtns();
 }
@@ -2418,8 +2669,39 @@ function beatFill(i, clips){
            stretching: !!STRETCH[i] && cuts.length > 0 };
 }
 
+// ★타임프레임이 보던 자리를 지킨다(2026-09-04 고객 접수: "CTA 구간을 재생하려고
+//   칸의 검정 빈자리를 누르면 작업화면이 딴 데로 가 있다").
+//   라이브 실측(mix job fb62adf0aad0, 칸 7개): 검정 빈자리 클릭 → scrollLeft
+//   4608 → 4270으로 **338px 깎였다** = 화면이 칸 반쯤 앞으로 밀린다.
+//   왜: renderBand가 innerHTML을 갈아끼우면 칸 안에 펼쳐둔 필름(422px)이 통째로
+//   사라져 가로 스크롤 최대값이 줄고, 브라우저가 scrollLeft를 그만큼 깎는다(clamp).
+//   필름은 나중에 다시 붙어 폭은 돌아오지만 깎인 스크롤은 그대로 남는다.
+//   ★innerHTML 직후에 한 번 되돌리는 것으로는 부족하다 — 그 순간은 아직 좁아 또 깎인다.
+//   실측해 보니 폭이 돌아오는 것은 클릭 후 **약 2.9초 뒤**였다(영상 메타데이터 로드).
+//   그래서 폭이 충분히 돌아올 때까지 짧게 지켜본다.
+//   ⚠ rAF는 탭이 숨으면 멈춰서 못 쓴다(실측으로 확인) — setInterval로 감시한다.
+//   ★사용자가 직접 끌거나 휠을 굴리면 즉시 손을 뗀다 — 내 조작을 되돌리면 안 된다.
+let _bandKeepLeft = null, _bandKeepTok = 0;
+function _bandKeepScroll(row){
+  const keep = _bandKeepLeft;
+  if (!keep){ _bandKeepLeft = null; return; }
+  const tok = ++_bandKeepTok, t0 = Date.now();
+  let alive = true;
+  const stop = () => { alive = false; _bandKeepLeft = null; };
+  row.addEventListener('pointerdown', stop, {once:true});
+  row.addEventListener('wheel', stop, {once:true, passive:true});
+  const iv = setInterval(() => {
+    if (!alive || tok !== _bandKeepTok){ clearInterval(iv); return; }
+    // 폭이 돌아왔을 때만 되돌린다 — 좁은 동안 넣어봐야 또 깎일 뿐이다.
+    if (row.scrollLeft !== keep && row.scrollWidth - row.clientWidth >= keep) row.scrollLeft = keep;
+    if (Date.now() - t0 > 5000){ clearInterval(iv); _bandKeepLeft = null;
+      row.removeEventListener('pointerdown', stop); row.removeEventListener('wheel', stop); }
+  }, 16);
+}
+
 function renderBand(){
   const row = document.getElementById('tbrow'); if (!row) return;
+  if (_bandKeepLeft === null) _bandKeepLeft = row.scrollLeft;   // 한 번의 클릭에서 첫 호출값만 기준
   let total = 0;
   const html = DATA.beats.map((b, i) => {
     const clips = planClips(lists[i] || [], beatDur(i), STRETCH[i], i);
@@ -2459,7 +2741,13 @@ function renderBand(){
     const usedIds = new Set(clips.map(c => c.seg_id));
     const unusedCuts = (lists[i] || []).filter(id => !usedIds.has(id)).map(id => {
       const seg = DATA.segments[id] || {};
-      const why = tooShort(id) ? '너무 짧음' : '자리 없음';
+      // ★조각 자체가 없으면 '자리 없음'이라고 하면 안 된다(2026-09-05 고객 다수 제보).
+      //   서버가 모르는 id는 배지가 '0-0'(srcNo·segNo가 둘 다 0), 길이 0.0, 썸네일 404라
+      //   **검은 칸**이 된다. 종전엔 그 상태를 '자리 없음'으로 그려 사장님이 원인을 알 수
+      //   없었다 — 무슨 일인지 화면이 말하게 한다(다른 3곳은 이미 이 검사를 한다:
+      //   beatFill·notifyEmptyBeats·applyServer).
+      const gone = !DATA.segments[id];
+      const why = gone ? '소스에서 사라진 조각' : (tooShort(id) ? '너무 짧음' : '자리 없음');
       return `<div class="tbcut unused ${isPicked(i, id) ? 'picked' : ''}"
              draggable="true"
              ondragstart="event.stopPropagation();bandDragStart(${i}, '${id}', event)"
@@ -2467,9 +2755,11 @@ function renderBand(){
              ondragover="if(dragFrom){event.preventDefault();event.dataTransfer.dropEffect='move';}"
              ondrop="bandDrop(${i}, '${id}', event)"
              ondblclick="event.stopPropagation();dropCutFromBand(${i}, '${id}')"
-             title="${segMark(id)} · ${seg.label || ''} — 담겨 있지만 이 칸에서는 화면에 안 나옵니다(${why}). 두 번 클릭하면 뺍니다. 다른 칸으로 끌어 옮길 수도 있어요.">
-             <img src="${SL.thumb(id)}"><span class="n">${segMark(id)}</span
-             ><span class="s">${effLen(id).toFixed(1)}</span><span class="off">안 나옴</span
+             title="${gone
+               ? `이 조각이 지금 소스 목록에 없습니다 — 화면에 그릴 수가 없어요(썸네일도 안 나옵니다). 두 번 클릭하면 뺍니다.`
+               : `${segMark(id)} · ${seg.label || ''} — 담겨 있지만 이 칸에서는 화면에 안 나옵니다(${why}). 두 번 클릭하면 뺍니다. 다른 칸으로 끌어 옮길 수도 있어요.`}">
+             <img src="${SL.thumb(id)}"><span class="n">${gone ? '?' : segMark(id)}</span
+             ><span class="s">${gone ? '—' : effLen(id).toFixed(1)}</span><span class="off">${gone ? '조각 없음' : '안 나옴'}</span
              ><input type="checkbox" class="pk" title="빼려면 체크"
                     ${isPicked(i, id) ? 'checked' : ''}
                     onclick="event.stopPropagation();togglePick(${i}, '${id}', this.checked)"
@@ -2490,13 +2780,13 @@ function renderBand(){
                ? `이 칸엔 장면이 없어 자막 ${need.toFixed(1)}초 동안 화면이 비어 있습니다. 아래 소스에서 장면을 담아주세요.`
                : lack > 0.1
                  ? `담은 장면은 ${have.toFixed(1)}초인데 자막은 ${need.toFixed(1)}초 — ${lack.toFixed(1)}초 모자랍니다. `
-                   + (stretching ? '지금은 담긴 장면 전부를 고르게 늘려 채우는 중이라 화면이 그만큼 느리게 흐릅니다.'
-                                 : '모자란 만큼 마지막 컷이 늘어나 그 장면만 오래 나옵니다. 장면을 더 담거나 [늘려 채우기]를 켜세요.')
+                   + (stretching ? '지금은 [전체 늘리기] — 담은 장면을 모두 고르게 늘려 채웁니다(최대 1.15배). 화면이 그만큼 느리게 흐릅니다.'
+                                 : '지금은 [뒷부분 채우기] — 담은 구간 뒤에 이어지는 원본을 더 틀어 채웁니다(1배속). 원본이 모자라면 그때만 마지막 화면이 멈춥니다.')
                  : `담은 장면 ${have.toFixed(1)}초로 자막 ${need.toFixed(1)}초를 다 채웠습니다.`
                    + (f.over > 0.1 ? ` 남는 ${f.over.toFixed(1)}초는 안 나옵니다.` : '')
              }">${have.toFixed(1)}/${need.toFixed(1)}초${
              f.empty ? ' · 장면 없음'
-               : lack > 0.1 ? (stretching ? ' · 늘려 채움' : ` · ${lack.toFixed(1)}초 모자람`)
+               : lack > 0.1 ? (stretching ? ' · 전체 늘림' : ` · ${lack.toFixed(1)}초는 뒷부분으로`)
                // ★남는 재료도 말해준다(2026-08-21 사장님 실측 job a1765d7766e5: CTA 칸에
                //   2.7초 말하는데 9.2초를 담아 6.5초가 안 나왔다. 잡 전체로 45.1초 중
                //   11.8초가 버려졌다). 종전엔 '모자람'만 뜨고 '남음'은 툴팁에만 있어,
@@ -2504,7 +2794,7 @@ function renderBand(){
                : f.over > 0.1 ? ` · ${f.over.toFixed(1)}초는 안 나와요` : ''}</span>${sel === i ? '<span class="picked">여기에 담깁니다</span>' : ''}
           <span class="tbtools" onclick="event.stopPropagation()">
             <label title="컷 경계를 자막 구절 경계에 1:1로 맞춥니다(구절 수만큼 컷·길이도 구절대로). ✋수동 길이가 있으면 수동이 우선"><input type="checkbox" ${phraseSyncOn(i) ? 'checked' : ''} onchange="togglePhraseSync(${i}, this.checked)"> 구절 맞춤</label>
-            <label title="재료가 모자랄 때 마지막 컷만 늘리지 않고 전체를 고르게 늘립니다"><input type="checkbox" ${STRETCH[i] ? 'checked' : ''} onchange="toggleStretch(${i}, this.checked)"> 늘려 채우기</label>
+            <label title="담은 장면이 모자랄 때 어떻게 채울지 고릅니다 — 끄면 [뒷부분 채우기]: 담은 구간 뒤에 이어지는 원본을 1배속으로 더 틉니다(새 화면이 나옵니다). 켜면 [전체 늘리기]: 담은 장면 전부를 고르게 늘려 채웁니다(최대 1.15배, 티가 덜 납니다)"><input type="checkbox" ${STRETCH[i] ? 'checked' : ''} onchange="toggleStretch(${i}, this.checked)"> 전체 늘리기</label>
             <!-- ★칸 순서 바꾸기(◀▶)를 뺐다(2026-08-17 사장님 "필요없는 기능이고 그자리에
                  대본수정 만들고"). 그 자리에 대본수정을 둔다 — 3단계에서 자막을 보다가
                  몇 글자 고치려고 2단계를 왕복하던 것을 없앤다. -->
@@ -2541,6 +2831,7 @@ function renderBand(){
       </div>`;
   }).join('');
   row.innerHTML = html;
+  _bandKeepScroll(row);   // 다시 그려도 보던 자리에 머물게 한다(위 설명)
   // 칸 타임라인(2026-08-29) — 선택된 칸의 .tl-host를 채운다. 그리기 직후라 폭이 잡혀 있다.
   if (typeof tlMount === 'function') { try { tlMount(); } catch (e) { console.error('[tl]', e); } }
   // ★칸을 다시 그리면 그 안에 펼쳐둔 필름도 함께 지워진다 — 곧바로 다시 붙인다.
@@ -2748,9 +3039,9 @@ function render(){
           onclick="event.stopPropagation();autoFill(${i})">${AUTOADD[i] ? `↩ 자동 담은 ${AUTOADD[i].length}장 빼기` : '✨ 자동 채우기'}</button>` : ''}
         <label class="chip" style="cursor:pointer${STRETCH[i]?';border-color:var(--warn);color:#ffd08f':''}"
           onclick="event.stopPropagation()"
-          title="켜면 이 칸만 컷 상한(2.2초)을 풀고, 멘트가 남을 때 마지막 컷에 몰지 않고 담긴 장면 전부를 고르게 늘립니다. 새 장면은 담지 않습니다. (1장=1컷이 켜져 있으면 원래부터 비례 배분이라 이 토글은 변화 없음)"
+          title="담은 장면이 모자랄 때 어떻게 채울지 — 끄면 [뒷부분 채우기]: 담은 구간 뒤 원본을 1배속으로 더 틉니다. 켜면 [전체 늘리기]: 이 칸의 컷 상한(2.2초)을 풀고 담긴 장면 전부를 고르게 늘립니다(최대 1.15배). 새 장면은 담지 않습니다. (1장=1컷이 켜져 있으면 원래부터 비례 배분이라 변화 없음)"
           ><input type="checkbox" ${STRETCH[i]?'checked':''}
-          onchange="toggleStretch(${i},this.checked)"> 늘려 채우기</label>
+          onchange="toggleStretch(${i},this.checked)"> 전체 늘리기</label>
         ${tinyN ? `<span class="chip bad">너무 짧은 장면 ${tinyN}장은 안 나와요</span>` : ''}
         <span class="ord">
           ${mode==='hand' ? `<button class="act" title="이 칸의 장면을 모두 뺍니다" onclick="event.stopPropagation();clearBeat(${i})">비우기</button>` : ''}
@@ -2996,16 +3287,67 @@ function beatDrop(i, ev){
 //   네가 만든 걸로 되어 있어"). 새로고침·페이지 재빌드에도 남는다. 잡별로 따로 저장하므로
 //   다른 잡을 열어도 안 섞인다. '처음으로'를 누르면 지운다.
 // SAVE_KEY는 boot()가 job_id 확정 후 채운다(위 let 선언).
+// 지금 편집 상태를 통째로 뜨는다. 저장본·되돌리기 스냅샷이 **같은 모양**이라
+// applyWork 하나로 둘 다 복원된다(0순위-B).
+function snapWork(){
+  return {
+    mode, lists, chosen: [...chosen], narr: NARR, trims: TRIMS, merges: MERGES,
+    stretch: STRETCH, autoadd: AUTOADD, extra: EXTRA,
+    fixlen: FIXLEN,        // ✋ 손으로 정한 컷 길이(2026-08-29 — "저장을 빼먹어" 경고의 해소)
+    phraseOff: PHRASE_SYNC  // 구절 맞춤 끔 표시(기본 켬이라 끈 칸만 남는다)
+    // ★at(저장 시각)은 일부러 미포함 — 매번 달라져 "바뀜 것이 없으면 안 쌓는다"를
+    //   통째로 무력화한다. 저장할 때만 saveWork가 붙인다.
+  };
+}
+// ══ ↩ 되돌리기(2026-09-05 사장님 "장면을 변경하고 다시 뒤로가기 버튼이 있으면 좋겠어") ══
+//   모든 편집은 끝나면 saveWork를 부른다 — 그래서 되돌리기를 **그 한 곳에만** 달았다.
+//   조작 30여 곳에 push를 뿌리면 반드시 몇 군데를 빼먹고, 그 조작만 조용히 못 되돌린다.
+const UNDO = [];              // 이전 상태들(오래된 것부터). 상한까지만 든다
+const UNDO_MAX = 60;
+let _undoCur = null;          // 지금 화면의 상태(문자열) — 다음 편집 때 이게 스택으로 간다
+let _undoing = false;         // 되돌리는 중 — 그 저장은 스택에 쌓지 않는다
+function undoMark(){          // boot 끝에 한 번 — 첫 편집도 되돌릴 수 있게 기준점을 박는다
+  // 화면을 여는 동안에도 render→saveWork가 여러 번 돌고(자동 음성·필름 열기 등),
+  // 그건 사람의 편집이 아니다. 그래서 여기서 스택을 비운다 — 안 비우면
+  // 화면을 열자마자 [되돌리기]가 켜져 있고, 누르면 내가 하지도 않은 것이 되돌려진다.
+  UNDO.length = 0;
+  try{ _undoCur = JSON.stringify(snapWork()); }catch(e){ _undoCur = null; }
+  undoBtnSync();
+}
+function undoBtnSync(){
+  const b = document.getElementById('undobtn');
+  if (!b) return;
+  b.disabled = !UNDO.length;
+  b.style.opacity = UNDO.length ? '1' : '.4';
+  b.title = UNDO.length ? ('방금 한 편집을 한 단계 되돌립니다 (Ctrl+Z) · ' + UNDO.length + '단계 남음')
+                        : '되돌릴 편집이 아직 없습니다';
+}
+function undoWork(){
+  if (!UNDO.length){ nsay('되돌릴 편집이 없어요'); return; }
+  const prev = UNDO.pop();
+  let w = null;
+  try{ w = JSON.parse(prev); }catch(e){}
+  if (!w || !applyWork(w)){ nsay('⚠ 되돌리지 못했어요 — 저장본 모양이 달라졌습니다'); undoBtnSync(); return; }
+  _undoing = true;                      // 되돌린 저장이 다시 스택에 쌓이면 무한루프다
+  try{ render(); }                      // render가 끝에서 saveWork를 부른다 → 화면·저장·서버 한꺼번에
+  finally{ _undoing = false; }
+  _undoCur = prev;
+  undoBtnSync();
+  nsay('↩ 한 단계 되돌렸어요' + (UNDO.length ? (' (' + UNDO.length + '단계 더 되돌릴 수 있어요)') : ''));
+}
 function saveWork(){
-  try{
-    localStorage.setItem(SAVE_KEY, JSON.stringify({
-      mode, lists, chosen: [...chosen], narr: NARR, trims: TRIMS, merges: MERGES,
-      stretch: STRETCH, autoadd: AUTOADD, extra: EXTRA,
-      fixlen: FIXLEN,        // ✋ 손으로 정한 컷 길이(2026-08-29 — "저장을 빼먹어" 경고의 해소)
-      phraseOff: PHRASE_SYNC, // 구절 맞춤 끔 표시(기본 켬이라 끈 칸만 남는다)
-      at: new Date().toISOString()
-    }));
-  }catch(e){}
+  let snap = null, cur = null;
+  try{ snap = snapWork(); cur = JSON.stringify(snap); }catch(e){}
+  // 달라졌을 때만 직전 상태를 스택에 쌓는다 — 똑같은 저장이 연달아 오면
+  // 되돌리기를 여러 번 눌러도 화면이 안 변하는 빈 단계가 생긴다.
+  if (!_undoing && _undoCur && cur && _undoCur !== cur){
+    UNDO.push(_undoCur);
+    if (UNDO.length > UNDO_MAX) UNDO.shift();
+  }
+  if (cur) _undoCur = cur;
+  undoBtnSync();
+  // 저장본에는 at을 붙인다 — serverEditIsNewer가 이 시각을 본다.
+  try{ if (snap) localStorage.setItem(SAVE_KEY, JSON.stringify(Object.assign({}, snap, {at: new Date().toISOString()}))); }catch(e){}
   const el = document.getElementById('savedmsg');
   if (el) el.textContent = '💾 내 편집 저장됨 (새로고침해도 남습니다)';
   autoApply();          // ★서버에도 자동으로 얹는다(아래)
@@ -3081,7 +3423,17 @@ function loadWork(){
   try{
     const raw = localStorage.getItem(SAVE_KEY);
     if (!raw) return false;
-    const w = JSON.parse(raw);
+    if (!applyWork(JSON.parse(raw))) return false;
+    const el = document.getElementById('savedmsg');
+    if (el) el.textContent = '💾 이어서 편집 중 (저장된 배치를 불러왔습니다)';
+    return true;
+  }catch(e){ return false; }
+}
+// ★저장본 하나(=saveWork가 만드는 모양)을 화면 상태에 그대로 얹는다.
+//   저장본 불러오기와 되돌리기(undoWork)가 **같은 함수**를 쓴다 —
+//   복원 규칙을 두 군데 적으면 반드시 어긋난다(0순위-B).
+function applyWork(w){
+  try{
     if (!w || !Array.isArray(w.lists) || w.lists.length !== DATA.beats.length) return false;
     mode = w.mode || 'hand';
     // ★같은 조각이 한 칸에 두 번 들어 있으면 자리 찾기(indexOf)가 늘 첫 번째를 집어
@@ -3111,8 +3463,6 @@ function loadWork(){
       const b = document.getElementById('m-' + x);
       if (b) b.classList.toggle('on', x === mode);
     });
-    const el = document.getElementById('savedmsg');
-    if (el) el.textContent = '💾 이어서 편집 중 (저장된 배치를 불러왔습니다)';
     return true;
   }catch(e){ return false; }
 }
@@ -3162,6 +3512,41 @@ const NARR_BUSY = {};                  // beat_idx → 음성·자막 재생성 
 // 머리글 안내문에 상태를 쓴다. makeTts의 say는 그 함수 안의 지역 클로저라 여기서 못 쓴다
 // (이름만 같다고 쓸 수 있는 게 아니다 — 실제로 확인하고 전용 헬퍼를 뒀다).
 function nsay(t){ const h = document.getElementById('tbhint'); if (h) h.textContent = t; }
+// ★사람이 버튼을 눌러 생긴 결과는 **보이는 자리**에 알린다(2026-09-07 사장님
+//   "지금저장·서버에서불러오기 작동 안 되는 것 같은데").
+//   실측: nsay가 쓰는 #tbhint는 제작소 iframe 안에서 **0x0**이라 글자가 아예 안 보였다.
+//   버튼은 멀쩡히 돌고 있었는데(칸이 실제로 되살아났다) 화면에 아무 반응이 없으니
+//   안 눌린 것으로 읽힌 것이다. #savedmsg(footer)는 보이는 자리라 여기에 함께 쓴다.
+function saylo(t){
+  nsay(t);
+  const el = document.getElementById('savedmsg');
+  if (el) el.textContent = t;
+  toastlo(t);
+}
+// ★사람이 버튼을 눌러 생긴 결과는 **어떤 상태에서도 보여야 한다**(2026-09-07 실측).
+//   #tbhint는 0x0, #savedmsg는 display:none, footer는 높이 0이었다 — 제작소 안
+//   (body.inside-studio.grow)에서는 footer가 통째로 접혀 안내도 버튼도 안 보인다.
+//   그래서 글자를 어느 칸에 넣는 방식은 전부 실패한다. 화면 위에 직접 띄운다.
+//   ⚠️alert()는 쓰지 않는다 — 브라우저 모달은 화면을 통째로 멈춘다(이 파일의 관례).
+let _TOAST_T = null;
+function toastlo(t){
+  if (!t) return;
+  let box = document.getElementById('lotoast');
+  if (!box){
+    box = document.createElement('div');
+    box.id = 'lotoast';
+    box.style.cssText = 'position:fixed;left:50%;top:18px;transform:translateX(-50%);'
+      + 'z-index:99999;max-width:min(92vw,560px);padding:12px 18px;border-radius:12px;'
+      + 'background:#1b2030;color:#e8ecf5;border:1px solid #3a4560;'
+      + 'box-shadow:0 10px 34px rgba(0,0,0,.5);font-size:15px;font-weight:700;'
+      + 'line-height:1.5;text-align:center;pointer-events:none';
+    document.body.appendChild(box);
+  }
+  box.textContent = t;
+  box.style.display = '';
+  clearTimeout(_TOAST_T);
+  _TOAST_T = setTimeout(function(){ box.style.display = 'none'; }, 4000);
+}
 // ── ✋ 컷 길이 직접 정하기(2026-08-24 사장님 "2번") ──────────────────────────
 // 초 배지를 누르면 그 컷의 길이를 정한다. 이미 정해져 있으면 자동으로 되돌린다.
 // ★칸 전체 길이는 음성에 매여 바꿀 수 없다 — 정한 컷은 그대로 두고
@@ -3369,13 +3754,12 @@ async function retts(i){
 // 지금 화면의 편성·트림·늘려채우기를 라이브 잡 edit_plan에 얹는다(serve.py /apply → apply.py
 // SSH → edit_plan.apply_scene_lab). 원본 primary/alternates는 안 건드리므로 되돌릴 수 있다.
 // 칸 순서를 바꿨어도 beat_idx로 짝을 맞춰 보낸다(화면 순서 ≠ 서버 순서 어긋남 방지).
-async function applyServer(opt){
-  const auto = !!(opt && opt.auto);
-  // 보내는 중에 또 고쳤으면 끝나고 한 번 더 보낸다(마지막 상태가 반드시 서버에 남게).
-  if (_autoApplyBusy){ _autoApplyAgain = true; return; }
-  _autoApplyBusy = true;
-  const msg = document.getElementById('savedmsg');
-  const payload = {
+// 지금 화면의 편성을 서버에 보낼 모양 그대로 만든다.
+// ★한 곳에서만 만든다(0순위-B). 저장(applyServer)과 "완성본이 낡았나" 판정(_editSig)이
+//   각자 payload를 조립하면 언젠가 어긋나고, 그러면 안 바뀌었는데 지우거나(재렌더)
+//   바뀌었는데 옛 영상을 남기는(더 나쁜) 사고가 난다.
+function _editPayload(){
+  return {
     beats: DATA.beats.map((b, i) => ({beat_idx: b.beat_idx,
       list: (lists[i] || []).slice(), stretch: !!STRETCH[i],
       phrase: phraseSyncOn(i)})),   // 구절 맞춤 — 렌더도 같은 경계로(video_assemble)
@@ -3388,6 +3772,17 @@ async function applyServer(opt){
     //   함께 안 보내면 화면엔 담겼는데 렌더에만 안 나온다(가장 나쁜 실패).
     extra_segs: EXTRA,
   };
+}
+// 지금 편성의 지문. 완성본이 만들어진 시점의 지문과 다르면 그 영상은 낡은 것이다.
+function _editSig(){ return JSON.stringify(_editPayload()); }
+
+async function applyServer(opt){
+  const auto = !!(opt && opt.auto);
+  // 보내는 중에 또 고쳤으면 끝나고 한 번 더 보낸다(마지막 상태가 반드시 서버에 남게).
+  if (_autoApplyBusy){ _autoApplyAgain = true; return; }
+  _autoApplyBusy = true;
+  const msg = document.getElementById('savedmsg');
+  const payload = _editPayload();
   if (msg) msg.textContent = auto ? '💾 저장 중…' : '📤 서버에 반영하는 중… (SSH, 몇 초)';
   try{
     const r = await fetch(SL.applyUrl(), {method:'POST', headers:{'Content-Type':'application/json'},
@@ -3400,8 +3795,16 @@ async function applyServer(opt){
     //   아무도 안 비워줬기 때문이다. 재매칭(loadMixReview)만 clearConfirm을 불렀다.
     //   ⚠️여기서 자동으로 다시 렌더하지는 않는다 — 렌더는 20초+ 걸리는 유료 작업이고,
     //     편집 중에는 1.2초마다 이 경로가 돈다. 만드는 건 사장님이 탭을 누를 때다.
-    const _hadConfirm = !!(document.getElementById('confirmBody') || {}).innerHTML.trim();
-    if (_hadConfirm) clearConfirm();
+    // ★"저장이 돌았나"가 아니라 **"편성이 실제로 달라졌나"**로 판정한다(2026-09-03).
+    //   종전엔 저장이 성공하기만 하면 완성본을 지웠다. autoApply는 1.2초 디바운스로
+    //   수시로 도는데다 아무것도 안 바꿔도 다시 보내질 수 있어서, 사장님이 미리보기
+    //   탭을 들렀다 오기만 해도 완성본이 사라지고 **20초짜리 유료 렌더가 다시** 돌았다
+    //   (사장님 제보: "완성본 만들고 미리보기 갔다가 다시 완성본 가면 또 렌더된다").
+    //   지금 보낸 편성의 지문을 렌더 시점 지문과 대조해서, 진짜 달라졌을 때만 지운다.
+    const _sig = JSON.stringify(payload);
+    const _stale = !!RENDERED_SIG && _sig !== RENDERED_SIG;
+    const _hadConfirm = _stale && !!(document.getElementById('confirmBody') || {}).innerHTML.trim();
+    if (_hadConfirm) { clearConfirm(); RENDERED_SIG = ''; }
     if (msg) msg.textContent = _hadConfirm
       ? '✅ 저장됨 — 편성이 바뀌었어요. [완성본 만들기]를 다시 눌러 새로 만들어 주세요'
       : (auto
@@ -3802,14 +4205,15 @@ async function boot(){
   if (serverEditIsNewer()){
     // 다른 곳에서 더 최근에 고쳤다 — 내 옛 저장본을 버리고 서버 편성으로 연다.
     clearWork();
-    lists = DATA.beats.map(b => serverList(b) || baseList(b));
-    hydrateFixlen(fixlenFromBeats());    // ✋ 서버가 기억하는 손 길이도 같이
-    mode = 'hand';                       // 서버 편성 = 사람이 정한 배치다
-    render();
-    nsay('🔄 다른 곳에서 편집한 내용이 더 최신이라 서버 편성을 불러왔어요');
+    restoreServer('🔄 다른 곳에서 편집한 내용이 더 최신이라 서버 편성을 불러왔어요');
   }
   else if (loadWork()) render();
   else if (loadSaved()) render();                       // 다른 PC에서 넘어온 조립
+  // ★로컬 저장본이 없거나 버려졌을 때 서버 편성으로 되살린다(2026-09-07 고객 다수 제보:
+  //   "작업하다가 3단계로 가니 다 없어졌다"). 여기가 없으면 아래 initLists가 돌아
+  //   **AI 기본 배치로 초기화**된다 — 서버엔 편성이 멀쩡히 남아 있는데도 그렇다.
+  //   잃은 게 아니라 화면이 안 읽던 것이다(실측 job 441702e0ec14: scene_override 5칸 전부 생존).
+  else if (restoreServer('🔄 저장된 편성을 서버에서 불러왔어요')) { /* 복원됨 */ }
   else if (DATA.picks && (DATA.picks.lists || []).length) setMode('pick');
   else { initLists(); render(); }
   if (SL.server) pollPhash();
@@ -3818,6 +4222,8 @@ async function boot(){
   loadSfxList().then(l => { if (l && l.length) renderBand(); });
   autoOpenRoll();                  // 필름 자리를 켠 채로 연다
   autoMakeTts();
+  undoMark();                      // ↩ 되돌리기 기준점 — 이걸 안 박으면 **첫 편집**이 되돌려지지 않는다
+  stampConfirmSigIfMissing();      // 복원된 옛 미리보기에 지금 편성 지문을 — 편성이 다 실린 뒤라야 계산된다
 }
 
 
@@ -3910,4 +4316,16 @@ function wireBandPan(){
   }, true);
 }
 boot();
+</script>
+<script>
+// ★Ctrl+Z(mac ⌘Z) = 한 단계 되돌리기. 글자를 치는 칸(대본·숫자)에서는 손대지 않는다
+// — 거긴 브라우저가 주는 글자 되돌리기가 맞다(거기서 가로채면 타이핑을 못 되돌린다).
+document.addEventListener('keydown', function(e){
+  if (!(e.ctrlKey || e.metaKey) || e.shiftKey || e.altKey) return;
+  if ((e.key || '').toLowerCase() !== 'z') return;
+  const t = e.target;
+  if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+  e.preventDefault();
+  if (typeof undoWork === 'function') undoWork();
+});
 </script></body></html>

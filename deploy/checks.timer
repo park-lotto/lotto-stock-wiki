@@ -1,0 +1,8 @@
+[Unit]
+Description=검수 5분 타이머
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=5min
+Persistent=true
+[Install]
+WantedBy=timers.target

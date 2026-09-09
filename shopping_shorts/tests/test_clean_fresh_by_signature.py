@@ -68,3 +68,37 @@ def test_소스별청소본은_종전대로(job_and_work):
     job, work = job_and_work
     job["clean_sources"] = {"s0": "/tmp/s0_clean.mp4"}
     assert mp.clean_final_matches_plan(job, work) is True     # 좌표계가 원본과 같다
+
+
+# ── 원본으로 떨어지지 않는다 (2026-09-02 사장님 "원본 자막이 남아있지 않게 하면 되지") ──
+
+def test_지금편성_청소본이_없으면_옛_청소본이라도_쓴다(job_and_work):
+    """장면이 조금 어긋나는 것보다 자막이 보이는 것이 훨씬 나쁘다 — 고객은 그걸
+    '자막제거가 안 됐다'로 읽는다(같은 제보 3번: 08-27·09-01·09-02)."""
+    job, work = job_and_work
+    (work / "final_clean_옛편성서명.mp4").write_bytes(b"z" * 4096)
+    assert mp.clean_final_path_for_plan(job, work) is None        # 지금 편성 것은 없다
+    alt = mp.clean_any_final_path(job, work)
+    assert alt is not None and alt.name.startswith("final_clean_")
+
+
+def test_청소본이_하나도_없으면_None(job_and_work):
+    """자막제거를 안 한 작업 — 그때만 원본이 맞다."""
+    job, work = job_and_work
+    (work / "clean_preview.mp4").unlink()
+    job["clean_video_path"] = str(work / "clean_preview.mp4")
+    assert mp.clean_any_final_path(job, work) is None
+
+
+def test_여러개면_가장_최근_청소본(job_and_work):
+    import os
+    import time
+    job, work = job_and_work
+    old = work / "final_clean_옛것.mp4"
+    new = work / "final_clean_새것.mp4"
+    old.write_bytes(b"a" * 4096)
+    new.write_bytes(b"b" * 4096)
+    t = time.time()
+    os.utime(old, (t - 600, t - 600))
+    os.utime(new, (t, t))
+    assert mp.clean_any_final_path(job, work) == new

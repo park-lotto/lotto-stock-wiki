@@ -53,13 +53,34 @@ RETENTION_DAYS = int(os.getenv("SHORTS_KEEP_DAYS", "14"))
 # 썸네일 캐시 상한(GB). 넘으면 오래 안 쓴 것부터 지운다.
 THUMB_CACHE_MAX_GB = float(os.getenv("SHORTS_THUMB_CACHE_GB", "8"))
 
+# ★완성 영상 보관 기간(2026-09-07 사장님 확정: 7일).
+#
+#   왜 지우기로 했나 — 실측(서버):
+#    · 완성본이 하루 3.9GB씩 쌓이는데 **지우는 규칙이 아예 없었다**(1,889개 46.9GB).
+#      전체는 하루 10.5GB로 늘어 여유 315GB가 약 30일 뒤 바닥난다.
+#    · 그런데 고객이 화면에서 다시 받을 수 있는 건 `list_produce_works(limit=20)`
+#      = **최근 20건뿐**이다(customer_jobs(limit=200)는 관리자용). 고객은 렌더 직후
+#      내보내기로 받아가므로, 그 뒤 서버 보관은 사실상 최근 몇 건 재다운로드용이다.
+#      사장님: "서버에 저장돼도 고객이 받을 방법 자체가 없는 것 아닌가."
+#    · 7일이면 실제로 다시 받는 창을 덮으면서 완성본이 약 27GB 선에서 멈춘다.
+#
+#   ⚠️중간 재료(RETENTION_DAYS=14)와 **다른 값**이다. 재료는 고객이 다시 편집할 수
+#     있어야 해서 더 길게 둔다 — 두 기간을 하나로 합치지 마라.
+FINAL_KEEP_DAYS = int(os.getenv("SHORTS_FINAL_KEEP_DAYS", "7"))
+
 # 지워도 되는 중간 산출물 — **이름으로 화이트리스트**. 여기 없는 건 안 지운다.
 _JUNK_DIR_EXACT = {"seg_thumbs", "tts", "frames", "tmp", "work", "audio", "parts"}
 _JUNK_DIR_PREFIX = ("s",)        # s0, s1, … 소스 클립 폴더
 
-# 절대 지우지 않는 파일 이름(완성본·미리보기·썸네일)
+# `clean_mix_jobs`(재료 정리)가 절대 지우지 않는 파일 이름.
+# ⚠️완성 영상은 여기 남아 있어야 한다 — 재료 정리는 영상에 손대지 않는다.
+#   영상 삭제는 **보관 기간이 다른 별도 함수**(`clean_final_videos`)만 한다.
 _KEEP_FILES = {"final.mp4", "preview.mp4", "clean_preview.mp4",
                "thumb.png", "thumb.jpg", "cover.png", "cover.jpg"}
+
+# 보관 기간이 지나면 지우는 영상 파일 — 이름으로 화이트리스트(모르는 건 안 지운다).
+# 썸네일(thumb·cover)은 **남긴다**: 목록 카드가 그림 없이 깨지면 "다 지워졌다"로 보인다.
+_FINAL_VIDEO_FILES = {"final.mp4", "preview.mp4", "clean_preview.mp4"}
 
 
 def _is_junk_dir(name: str) -> bool:
@@ -141,6 +162,58 @@ def clean_mix_jobs(data_dir, store=None, keep_days=None, dry_run=False):
     return freed, touched
 
 
+def clean_final_videos(data_dir, store=None, keep_days=None, dry_run=False):
+    """보관 기간이 지난 **완성 영상 파일**을 지운다. (지운 바이트, 파일 수) 반환.
+
+    ★`clean_mix_jobs`와 일부러 나눠 놓았다 — 보관 기간이 다르고(영상 7일 / 재료 14일),
+      무엇보다 **영상 삭제는 되돌릴 수 없다**. 한 함수에 섞으면 재료 정리를 손볼 때마다
+      영상까지 위험해진다.
+
+    지키는 것(재료 정리와 같은 원칙, 여기서는 더 보수적으로):
+     · 이름으로 화이트리스트(`_FINAL_VIDEO_FILES`)한 파일만 지운다. 썸네일은 남긴다.
+     · **파일 자체의 mtime**으로 나이를 본다(폴더 mtime이 아니다) — 폴더는 다른
+       파일이 건드려져도 갱신되므로 옛 영상을 계속 살려두게 된다.
+     · 진행 중인 작업은 건너뛴다(`_job_is_settled`). 렌더 중인 파일을 빼면 그 작업이 깨진다.
+     · 경로가 mix_jobs 밖을 가리키면(심볼릭 링크·`..`) 건너뛴다.
+
+    DB의 `video_path`는 **비우지 않는다**. 화면은 파일이 없으면 "보관 기간이 지나
+    정리됐다"고 말하는데(app.`_video_gone_reason`), 그 판정에 job의 나이가 필요하다 —
+    경로를 지워버리면 "만든 적 없음"과 "지워짐"을 구분할 수 없게 된다.
+    """
+    keep_days = FINAL_KEEP_DAYS if keep_days is None else keep_days
+    root = Path(data_dir) / "mix_jobs"
+    if not root.is_dir():
+        return 0, 0
+    cutoff = time.time() - keep_days * 86400
+    freed = 0
+    removed = 0
+    for job_dir in root.iterdir():
+        if not job_dir.is_dir() or job_dir.is_symlink():
+            continue
+        if store is not None and not _job_is_settled(store, job_dir.name):
+            continue                          # 진행 중이거나 알 수 없다 — 남긴다
+        for name in _FINAL_VIDEO_FILES:
+            f = job_dir / name
+            try:
+                if f.is_symlink() or not f.is_file():
+                    continue
+                st = f.stat()
+                if st.st_mtime > cutoff:
+                    continue                  # 아직 보관 기간 안
+            except OSError:
+                continue
+            if not _inside(f, root):
+                continue
+            if not dry_run:
+                try:
+                    f.unlink()
+                except OSError:
+                    continue
+            freed += st.st_size
+            removed += 1
+    return freed, removed
+
+
 def trim_thumb_cache(data_dir, max_gb=None, dry_run=False):
     """썸네일 캐시를 상한까지 줄인다 — **오래 안 쓴 것부터**(atime 없으면 mtime).
 
@@ -189,11 +262,14 @@ def _gb(n):
 def run(data_dir, store=None, dry_run=False):
     """크론·daily_batch 엔트리포인트. 사람이 읽을 한 줄을 반환한다."""
     j_bytes, j_dirs = clean_mix_jobs(data_dir, store=store, dry_run=dry_run)
+    v_bytes, v_files = clean_final_videos(data_dir, store=store, dry_run=dry_run)
     t_bytes, t_files = trim_thumb_cache(data_dir, dry_run=dry_run)
     tag = "[모의]" if dry_run else ""
     return (f"디스크정리{tag}: 작업재료 {_gb(j_bytes)}({j_dirs}폴더) · "
+            f"완성영상 {_gb(v_bytes)}({v_files}개) · "
             f"썸네일캐시 {_gb(t_bytes)}({t_files}장) · "
-            f"보관 {RETENTION_DAYS}일 · 캐시상한 {THUMB_CACHE_MAX_GB}GB")
+            f"재료보관 {RETENTION_DAYS}일 · 영상보관 {FINAL_KEEP_DAYS}일 · "
+            f"캐시상한 {THUMB_CACHE_MAX_GB}GB")
 
 
 if __name__ == "__main__":       # python -m shopping_shorts.disk_cleanup [--dry-run]

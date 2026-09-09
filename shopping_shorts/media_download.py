@@ -593,8 +593,65 @@ def uploaded_footage_poster_path(url):
     return f if f.exists() else None
 
 
+def normalize_playable(path):
+    """받아 온 mp4를 **브라우저가 확실히 재생하는 모양**으로 맞춘다 (2026-09-02).
+
+    ★왜 여기 한 곳인가: 도우인에만 있던 처방(douyin_fetch._normalize)을 틱톡이 그대로
+      필요로 했다 — 강규봉님 제보 "3단계 미리보기에서 틱톡 영상만 검게 보인다".
+      실측(job 26181de7df55): 틱톡 소스 3개가 전부 **hevc(H.265)**, 유튜브만 h264였다.
+      크롬·엣지는 hevc를 재생하지 못해 화면이 통째로 검게 뜬다(소리만 난다).
+      플랫폼마다 따로 적으면 다음 플랫폼에서 또 터진다 — 받는 문(download_any)에서
+      한 번만 건다(0순위-B).
+
+    h264이고 높이 1920 이하면 **아무것도 안 한다**(변환 0초). 그 밖에만 변환한다.
+    ffmpeg가 없거나 변환이 실패하면 원본을 그대로 쓴다 — 받아 온 것을 잃지 않는다.
+    """
+    try:
+        path = Path(path)
+        if not path.exists():
+            return str(path)
+        probe = subprocess.run(
+            ["ffprobe", "-v", "error", "-select_streams", "v:0",
+             "-show_entries", "stream=codec_name,height", "-of", "csv=p=0", str(path)],
+            capture_output=True, text=True, timeout=60)
+        info = (probe.stdout or "").strip().split(",")
+        codec = info[0] if info else ""
+        height = int(info[1]) if len(info) > 1 and info[1].isdigit() else 0
+    except Exception:  # noqa: BLE001 — ffprobe가 없으면 손대지 않는다
+        return str(path)
+    if codec == "h264" and height <= 1920:
+        return str(path)
+    out = path.with_name(path.stem + "_h264.mp4")
+    try:
+        subprocess.run(
+            ["ffmpeg", "-y", "-i", str(path),
+             "-vf", "scale=-2:'min(1920,ih)'", "-c:v", "libx264", "-preset", "veryfast",
+             "-crf", "20", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "128k",
+             "-movflags", "+faststart", str(out)],
+            capture_output=True, text=True, timeout=600, check=True)
+    except Exception:  # noqa: BLE001 — 변환 실패는 치명적이지 않다(원본으로 간다)
+        out.unlink(missing_ok=True)
+        return str(path)
+    if not out.exists() or out.stat().st_size < 10000:
+        out.unlink(missing_ok=True)
+        return str(path)
+    print(f"[media] {codec} {height}p → h264 변환: {out.name}", file=sys.stderr)
+    path.unlink(missing_ok=True)
+    return str(out)
+
+
 def download_any(url, dest_dir):
-    """소스 URL 다운로드 → (mp4경로, caption) 튜플. caption은 인스타에서만 채워짐."""
+    """소스 URL 다운로드 → (mp4경로, caption) 튜플.
+
+    ★받아 온 것은 **여기서 한 번** 재생 가능한 모양으로 맞춘다(normalize_playable).
+      플랫폼별 함수에 흩어 적으면 새 플랫폼마다 같은 사고가 난다(0순위-B).
+    """
+    path, caption = _download_any_raw(url, dest_dir)
+    return normalize_playable(path), caption
+
+
+def _download_any_raw(url, dest_dir):
+    """플랫폼별 실제 다운로드. caption은 인스타에서만 채워짐."""
     # ★사장님이 **직접 올린 영상파일**이면 받을 게 없다 — 이미 서버에 있다(2026-08-31).
     #   링크 없는 영상(직접 찍은 것·편집해 뽑은 것)을 재료로 쓰려고 만든 경로다.
     #   판정은 app._uploaded_footage_path 한 곳에만 있다(0순위-B: 같은 판단을 두 번

@@ -85,10 +85,11 @@ def embed_text(text: str) -> list[float]:
                 )
                 return list(resp.embeddings[0].values)
             except Exception as e:
-                if key_vault.is_daily_exhausted_error(e):
-                    key_vault.mark_exhausted("embed", key)
-                    continue
-                if key_vault.is_quota_error(e):
+                # ★표시는 mark_failure 한 곳에서 정한다(2026-09-03, 0순위-B).
+                #   종전엔 분당 429가 아무 표시 없이 continue돼 다음 호출이 같은 키를
+                #   또 때렸고, 401/403 사망 키는 raise로 튀어 영구 제외가 안 됐다.
+                key_vault.mark_failure(key, e, group="embed")
+                if key_vault.is_quota_error(e) or key_vault.is_account_disabled_error(e):
                     continue
                 raise
         if attempt == 0:

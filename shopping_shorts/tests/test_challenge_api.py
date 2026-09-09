@@ -83,6 +83,23 @@ def test_submit_same_video_other_url_form_is_duplicate(env):
     assert len(env.list_challenge_submissions(customer_id=77)) == 1
 
 
+def test_submit_accepts_naverclip(env):
+    """네이버 클립 주소도 제출된다(2026-09-02). 담기 목록엔 없는 플랫폼이라
+    _grab_platform이 아니라 _challenge_platform이 판정한다."""
+    env.add_challenge_member(77)
+    c = _client()
+    mid = "51782434BD964B039EA620B7933A170CBA14"
+    url = ("https://m.naver.com/shorts?serviceType=CLIP&mediaType=VOD"
+           "&seedMediaId=" + mid)
+    r = c.post("/api/challenge/submit", params={"url": url},
+               cookies={"dash_auth": _cookie(77)})
+    assert r.status_code == 200, r.text
+    rows = env.list_challenge_submissions(customer_id=77)
+    assert len(rows) == 1
+    assert rows[0]["platform"] == "naverclip"
+    assert rows[0]["shortcode"] == mid          # dedup이 URL 폴백으로 새지 않는다
+
+
 def test_submit_rejects_unsupported_url(env):
     env.add_challenge_member(77)
     c = _client()

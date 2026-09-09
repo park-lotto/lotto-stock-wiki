@@ -117,6 +117,20 @@
   .stat{display:flex;justify-content:space-between;font-size:12px;color:var(--sub);margin-top:4px}
   .stat b{color:var(--txt)}
   .grade{font-size:14px}
+  /* 🏅 조회수 뱃지(2026-09-04 사장님 "몇만뷰 몇십만뷰 이런거 의미있는건 뱃지를 달아야해").
+     기준은 실측 분위수다(유튜브 9,170편): 10만+ 상위 8.2% · 30만+ 3.5% · 50만+ 2.1% · 100만+ 0.8%.
+     ★10만 미만은 안 단다 — 절반이 3,676뷰(중앙값)라 뱃지가 흔해지면 뱃지가 아니다. */
+  /* ★이름 주의: .vbadge 는 **이미** 썸네일 위 영상길이 뱃지가 쓰고 있다(position:absolute).
+     같은 이름을 쓰면 조회수 뱃지가 카드 밖으로 튀어나간다(실측: x=1828, 카드는 x=306).
+     그래서 .viewbadge 로 가른다. */
+  .viewbadge{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:800;
+          padding:1px 7px;border-radius:99px;margin-left:5px;vertical-align:middle;
+          letter-spacing:-.2px;white-space:nowrap}
+  .vb1{background:#1e3a5f;color:#93c5fd}                      /* 10만+ */
+  .vb2{background:#3b2f0b;color:#fcd34d}                      /* 30만+ */
+  .vb3{background:#4a1d1d;color:#fca5a5}                      /* 50만+ */
+  .vb4{background:linear-gradient(90deg,#7c2d12,#b45309);color:#fde68a;
+       box-shadow:0 0 0 1px #f59e0b55}                        /* 100만+ */
   .delta-up{color:var(--fire)}
   .links{display:flex;gap:8px;margin-top:10px}
   .links a{font-size:12px;color:var(--accent);text-decoration:none}
@@ -142,6 +156,12 @@
               border:1px solid #1f6f6b;background:linear-gradient(90deg,#0e2f2e,#0a2422);
               color:#5fe3d6;font-size:11px;cursor:pointer;white-space:nowrap}
   .btns .inner-btn:hover{background:linear-gradient(90deg,#14403e,#0d2e2b)}
+  /* 🛒 쿠팡 상품 찾기(2026-09-04) — 영상을 만들기 전에 "쿠팡에 있나·내 링크 되나"를 카드에서 본다.
+     격자 한 줄을 통째로 차지(내부검색과 같은 규칙). 색은 쿠팡 주황 계열로 파워검색(금색)과 가른다. */
+  .btns .cp-btn{margin-top:0;padding:7px 4px;border-radius:7px;   /* 댓글소통을 빼서(2026-09-04 사장님) 2×2의 4번째 칸 */
+              border:1px solid #8a4b12;background:linear-gradient(90deg,#3a2210,#2a1808);
+              color:#ffb570;font-size:11px;cursor:pointer;white-space:nowrap}
+  .btns .cp-btn:hover{background:linear-gradient(90deg,#4a2c14,#35200a)}
   /* 대본 모달 */
   /* 화면을 막지 않는 이동식(플로팅) 창 — 컨테이너는 클릭 통과, 박스만 잡힘 */
   .modal-bg{display:none;position:fixed;inset:0;z-index:100;pointer-events:none}
@@ -319,6 +339,10 @@ body.is-admin .admin-only{display:block}
 .ftog:hover{color:var(--txt);border-color:var(--txt)}
 .ftog.on{background:var(--accent);border-color:var(--accent);color:#111}
 .fcount{color:var(--sub);font-size:12px;margin-left:2px}
+/* 건수 안내 줄(2026-09-07) — 걸러내기 줄이 숨겨져 있어 이 문구가 안 보이던 것을 바깥으로 뺐다.
+   시니어 가독성 기준(feedback_숨겨도_60대가_쓰기편하게)으로 12px는 너무 작아 13px로 올린다. */
+.fcount-row{margin:6px 0 2px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.fcount-row .fcount{font-size:13px}
 /* secondary sub-filter (소재) */
 .cat{transition:all .18s}
 .cat:hover{transform:translateY(-1px);color:var(--txt);border-color:var(--accent)}
@@ -330,6 +354,15 @@ body.is-admin .admin-only{display:block}
   box-shadow:0 0 0 1px rgba(55,224,189,.4),0 8px 30px -8px rgba(55,224,189,.45)!important}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
+<style>
+/* 에러 설명(error_help.js가 그린다) — 빨간 한 줄로 끝내지 않고 왜·무엇을 함께 보여준다 */
+.errHelp{border-left:3px solid var(--fire,#e5484d);background:rgba(229,72,77,.07);
+  padding:8px 10px;border-radius:6px;margin:6px 0;line-height:1.55;text-align:left}
+.errHelp b{color:var(--fire,#e5484d);font-size:14px}
+.errHelp .errWhy{color:var(--sub,#8b8b8b);font-size:13px;margin-top:3px}
+.errHelp .errTodo{font-size:13px;margin-top:4px}
+</style>
+<script src="/error_help.js"></script>
 </head>
 <body>
   <main class="main">
@@ -337,7 +370,7 @@ body.is-admin .admin-only{display:block}
     <div class="head">
       <h2>레퍼런스 랭킹</h2>
     </div>
-    <div class="desc">443개 레퍼런스 채널의 48시간 이내 릴스를 강도별로 랭킹합니다.</div>
+    <div class="desc">등록 레퍼런스 채널의 <b>최근 수집분</b>을 강도별로 랭킹합니다. (★'48시간'은 올라온 시각이 아니라 <b>우리가 수집한 시각</b> 기준 — 발행시각은 대부분 수집되지 않는다: 실측 4,255건 중 4,030건 누락)</div>
     <!-- ★상단 줄 정리(2026-08-17 사장님 "4개 삭제") — 요소는 남기고 숨긴다.
          toggleOverseas·switchPlatform이 이 요소들을 잡으므로 지우면 그 코드가 죽는다
          (platformTabs가 2026-07-21에 같은 이유로 숨김 처리된 선례를 따른다).
@@ -360,8 +393,18 @@ body.is-admin .admin-only{display:block}
     <!-- ★2026-08-17(3차) 사장님 "인스타랑 유튜브 쓰레드탭 3개를만들어" —
          인스타·유튜브는 결이 완전히 달라(48h·댓글 vs 14일·조회수) 탭을 갈라 관리한다.
          쓰레드는 2026-08-17 배선 완료 — 인스타와 같은 잣대(댓글 기준·48h)로 본다.
-         틱톡·샤오홍슈·도우인은 요소를 남긴 채 숨긴다 — switchPlatform·트렌드카드가
-         이 요소들을 잡으므로 지우면 그 코드가 죽는다(2026-07-21 선례와 같은 이유). -->
+         ★2026-09-07 사장님 "지금은 인스타/유튜브이고" — 쓰레드·핀터레스트·네이버클립을 숨겼다.
+         근거(서버 실측): 자동수집이 꺼져 있어 죽은 데이터를 보여줌.
+         ★2026-09-08 사장님 "메인화면에 핀터레스트는 왜없앴나. 모두 공개로해라" — 전부 다시 켠다.
+         숨기기 전 실측(09-08): 유튜브 09-08 · 네이버클립 08-30 · 핀터레스트 08-28 ·
+         쓰레드 08-17 · 틱톡/샤오홍슈/도우인 07-30(shortcode가 전부 demo_ 더미 8건).
+         이 사실을 보고한 뒤, 사장님이 **틱톡·샤오홍슈·도우인 3개는 다시 닫으라**고 하셨다
+         (그 셋만 실데이터가 0이고 demo_ 더미뿐이라 고객에게 가짜가 보인다).
+         → 지금 노출 = 인스타·유튜브·쓰레드·핀터레스트·네이버클립 5개.
+         그 셋은 수집이 살아나면 그때 연다.
+         ⚠️다시 줄일 일이 생기면 요소를 지우지 말고 style="display:none"만 붙여라 —
+         switchPlatform·트렌드카드가 이 요소들을 잡으므로 지우면 그 코드가 죽는다
+         (2026-07-21 선례). 계약 이력은 tests/test_ranking_platform_tabs.py에 있다. -->
     <details id="platformFold" open style="margin-bottom:12px">
       <summary style="display:none">🌐 플랫폼</summary>
     <div class="ctypes" id="platformTabs" style="margin-top:0;margin-bottom:12px">
@@ -371,11 +414,11 @@ body.is-admin .admin-only{display:block}
       <!-- 핀터레스트(2026-08-28 사장님 "깨끗한 영상들이 많아서 / 나만보게 비공개탭").
            ★관리자 전용 — admin-only 클래스가 body.is-admin일 때만 보이게 한다(기존 방식 그대로).
              고객 화면엔 아예 안 뜬다. 새 방식을 만들지 않는다(0순위-B). -->
-      <div class="ctype admin-only" data-platform="pinterest" onclick="switchPlatform('pinterest',this)">📌 핀터레스트</div>
+      <div class="ctype" data-platform="pinterest" onclick="switchPlatform('pinterest',this)">📌 핀터레스트</div>
       <!-- 네이버 클립(2026-08-30 사장님 "핀터레스트 옆에 네이버클립 카테고리").
            국내 숏폼. 핀터레스트와 달리 조회수·좋아요·댓글·발행시각이 다 와서
            속도·참여율이 정상 계산된다. 무료·로그인 없음(HTTP 2번). -->
-      <div class="ctype admin-only" data-platform="naverclip" onclick="switchPlatform('naverclip',this)">🟩 네이버클립</div>
+      <div class="ctype" data-platform="naverclip" onclick="switchPlatform('naverclip',this)">🟩 네이버클립</div>
       <div class="ctype" data-platform="tiktok" onclick="switchPlatform('tiktok',this)" style="display:none">🎵 틱톡</div>
       <div class="ctype" data-platform="xiaohongshu" onclick="switchPlatform('xiaohongshu',this)" style="display:none">📕 샤오홍슈</div>
       <div class="ctype" data-platform="douyin" onclick="switchPlatform('douyin',this)" style="display:none">🎬 도우인</div>
@@ -435,11 +478,16 @@ body.is-admin .admin-only{display:block}
            ★핀의 목적지(pin_dest)로 고른다 — 수집 때 상세 페이지에서 읽어 담는다. -->
       <div style="margin-top:7px;display:flex;gap:5px;align-items:center;flex-wrap:wrap">
         <span style="font-size:11px;color:var(--sub)">쇼핑몰만 보기:</span>
+        <!-- ★출처축(2026-09-06 사장님 "아마존 테무를 따로 카테고리화할수있나?").
+             건수는 라이브 실측(2,259건): 원본 804 · 재업 682 · 테무 392 · 아마존 166.
+             종전엔 원본·재업 버튼이 없어 **1,486건(66%)을 골라낼 방법이 아예 없었다**.
+             '알리'는 실측 1건뿐이라 뺐다(눌러도 늘 0건 = 고장으로 보인다). -->
         <button class="ftog pinf on" data-dest="" onclick="pinFilter(this)">전체</button>
+        <button class="ftog pinf" data-dest="uploaded by user" onclick="pinFilter(this)">✨ 원본</button>
+        <button class="ftog pinf" data-dest="instagram,tiktok,youtu" onclick="pinFilter(this)">♻️ 재업로드</button>
         <button class="ftog pinf" data-dest="shop" onclick="pinFilter(this)">🛒 쇼핑몰</button>
-        <button class="ftog pinf" data-dest="temu" onclick="pinFilter(this)">테무</button>
-        <button class="ftog pinf" data-dest="aliexpress" onclick="pinFilter(this)">알리</button>
-        <button class="ftog pinf" data-dest="amzn,amazon" onclick="pinFilter(this)">아마존</button>
+        <button class="ftog pinf" data-dest="temu" onclick="pinFilter(this)">🛍 테무</button>
+        <button class="ftog pinf" data-dest="amzn,amazon,amzlink" onclick="pinFilter(this)">📦 아마존</button>
         <span id="pinFilterMsg" style="font-size:11px;color:var(--sub)"></span>
       </div>
       <div style="font-size:11px;color:var(--sub);margin-top:5px">
@@ -538,7 +586,7 @@ body.is-admin .admin-only{display:block}
          아래는 '무엇으로 줄세울까'. 데이터는 이미 받아둔 것이라 추가 크롤 0. -->
     <div class="tabs" id="spanTabs" style="margin-bottom:8px">
       <span class="tab-grp">기간</span>
-      <div class="tab active" data-span="0" title="마지막 수집분 — 48시간 안에 올라온 새 릴스">🆕 48시간 히트작</div>
+      <div class="tab active" data-span="0" title="마지막 수집 회차 — 48시간 안에 ‘우리가 수집한’ 릴스입니다(올라온 시각 기준이 아닙니다)">🆕 48시간 히트작</div>
       <div class="tab" data-span="7" title="최근 7일 수집분 중 댓글 500개 넘은 것 — 이미 받아둔 데이터라 새로 긁지 않습니다">🔥 이번 주 터진 것</div>
       <div class="tab" data-span="30" title="최근 30일 중 댓글 1000개 넘은 것">👑 이번 달 명예의전당</div>
       <div class="tab" data-span="-1" title="지금까지 모아둔 20만 건 중 댓글 1만개 넘은 것 — 새로 긁지 않습니다">🏆 역대 히트작</div>
@@ -576,10 +624,20 @@ body.is-admin .admin-only{display:block}
               title="올라온 지 24시간 안 된 것만 — 남들보다 먼저 잡으려면 여기">🆕 신작</button>
       <button class="ftog" data-f="rising" onclick="toggleFilter('rising')"
               title="시간당 댓글이 쌓이는 속도가 지금 보이는 것 중 상위 25% — 터지는 중인 것만">🔥 급상승</button>
-      <!-- 채널당 상한(2026-08-18 사장님 "체널당 최신영상 2개까지만 배치하면").
-           한 채널이 최대 53장까지 화면을 도배하던 걸 막는다(실측 5,681장 → 1,347장).
-           ★어떤 2장을 남길지는 여기서 안 정한다 — 지금 켠 정렬 탭이 정한다.
-           최신순 탭이면 최신 2장, 조회수순이면 터진 2장(실측 겹침 62% = 탭마다 다르다). -->
+    </div>
+    <!-- ★건수 안내는 걸러내기 줄 **밖에** 둔다(2026-09-07).
+         여태 이 문구는 위 div(#filters) 안에 있었고 그 div가 display:none이라
+         **아무에게도 안 보였다** — 실측: 라이브에서 textContent는
+         "채널당 2개만 (22건 접힘)"으로 잘 채워지는데 화면엔 안 나온다.
+         그래서 "왜 몇 개밖에 없지"를 사장님이 알 방법이 없었다. -->
+    <!-- ★채널당 2개 버튼을 여기로 옮겼다(2026-09-07).
+         여태 이 버튼은 #filters(display:none) 안에 있어 **한 번도 보인 적이 없다**.
+         그런데 실제로 화면을 가장 많이 깎는 게 이 버튼이다 —
+         라이브 실측: 이번달 393건 → 137건(65% 접힘).
+         "왜 몇 개밖에 없나"의 지금 답이 이것이므로, 이유를 말해주는 건수 안내와
+         **같은 줄에** 둬서 읽고 바로 끌 수 있게 한다.
+         신작·급상승은 2026-08-17 사장님 지시대로 계속 숨긴 채 둔다. -->
+    <div class="fcount-row">
       <button class="ftog on" data-f="perch" onclick="togglePerChannel()"
               title="채널마다 상위 2개만 — 한 채널이 화면을 도배하는 걸 막습니다. 어떤 2개인지는 지금 켠 정렬 탭이 정합니다(최신순이면 최신 2개, 조회수순이면 조회수 상위 2개). 끄면 전부 봅니다">📺 채널당 2개</button>
       <span class="fcount" id="fcount"></span>
@@ -674,6 +732,7 @@ body.is-admin .admin-only{display:block}
     </div>
   </div>
 <script>
+function cpKw(s){ /* 쿠팡 검색어: 이모지(서로게이트 쌍) 반 토막 방지 — 2026-09-04 라이브 사고: slice(0,60)가 이모지를 반으로 잘라 encodeURIComponent가 URIError를 던져 즐겨찾기·랭킹 카드 전부 안 그려짐 */ try{ return encodeURIComponent(Array.from(String(s==null?'':s).split('\n')[0]).slice(0,60).join('')); }catch(e){ return ''; } }
 // 썸네일 프록시 URL 빌더(2026-08-09). ★v= 를 붙이는 이유:
 // CDN 서명 만료로 /api/thumb가 404를 낸 적이 있으면 브라우저가 그 결과를 기억해,
 // 나중에 서버가 이미지를 복구(디스크 캐시 백필)해도 **재요청을 안 해** 카드가 계속
@@ -853,8 +912,15 @@ function toggleLensLocale(key){
 }
 // ── 플랫폼별 안내문구·지표 툴팁(2026-07-24, 토글 노출 대응) — 인스타 기준 문구를
 // 그대로 두면 틱톡/유튜브(시드계정·키워드+14일창, 조회수기반)에 거짓 설명이 된다. ──
+// ★이 표가 설명문의 **정본**이다(2026-09-07). HTML의 <div class="desc">를 고쳐도
+//   switchPlatform이 여기 값으로 무조건 덮어써서 화면엔 안 나온다 — 실측으로 잡혔다
+//   (라이브에서 48시간 탭 title은 새 문구인데 .desc만 옛 문구였다). 0순위-B 그대로:
+//   같은 문구를 두 곳에 적으면 반드시 어긋난다. 고칠 땐 여기만 고쳐라.
 const DESC_BY_PLATFORM = {
-  instagram: '등록한 레퍼런스 채널의 <b>48시간</b> 이내 릴스를 강도별로 랭킹합니다.',
+  // '48시간'은 올라온 시각이 아니라 우리가 수집한 시각이다 — 발행시각(upload_ts)이
+  // 서버 실측 4,255건 중 4,030건(94.7%) 비어 있어 last_seen으로 판정하기 때문이다.
+  instagram: '등록 레퍼런스 채널의 <b>최근 수집분</b>을 강도별로 랭킹합니다. '
+           + '(★<b>48시간</b>은 올라온 시각이 아니라 <b>우리가 수집한 시각</b> 기준)',
   tiktok:    '등록한 <b>시드 계정</b>의 최근 <b>14일</b> 숏폼을 조회수 기반 강도로 랭킹합니다. (무료 수집)',
   youtube:   '<b>키워드 시드</b>로 발굴한 최근 <b>14일</b> Shorts를 조회수 기반 강도로 랭킹합니다.',
   xiaohongshu: '등록한 <b>샤오홍슈 채널</b>의 최근 <b>48시간</b> 이내 노트를 참여도 기반 강도로 랭킹합니다. (무료 수집)',
@@ -935,6 +1001,32 @@ function updatePlatformCopy(p){
   });
   applyMetricLabels(p);          // 툴팁만 바꾸고 글자를 안 바꾸면 이름이 거짓말을 한다
 }
+// 🎯 플랫폼마다 쓸모없는 지표는 **숨긴다**(2026-09-04 사장님 "반응률은 빼 / 유튜브에서
+// 단순지표 댓글순이랑 팔로워순은 빼고 … 뾰족하게 만들어줘야대").
+//   유튜브 쇼츠는 댓글이 거의 안 달린다(실측 중앙값 1개 vs 인스타 60개) —
+//   댓글에서 파생된 지표는 전부 0에 몰려 줄세우기가 무의미하다.
+//   ★버튼을 지우지 않고 숨긴다: 인스타로 돌아가면 그대로 살아야 한다.
+const _HIDE_METRICS = {
+  youtube:    ['density', 'fan_density', 'rawcomments', 'followers'],
+  naverclip:  ['fan_density', 'followers'],
+  pinterest:  ['fan_density', 'followers'],
+  threads:    ['density'],            // 쓰레드는 조회수를 안 준다 → 조회수당댓글이 늘 빈다
+};
+function applyMetricTabsFor(p){
+  const hide = _HIDE_METRICS[p] || [];
+  let hidActive = false;
+  document.querySelectorAll('#tabs .tab[data-tab]').forEach(el=>{
+    const off = hide.includes(el.dataset.tab);
+    el.style.display = off ? 'none' : '';
+    if(off && el.classList.contains('active')) hidActive = true;
+  });
+  // ★숨긴 탭이 눌려 있던 채로 두면 목록이 통째로 빈다 — 기본 탭으로 되돌린다.
+  if(hidActive){
+    const fallback = document.querySelector('#tabs .tab[data-tab="comments"]');
+    if(fallback){ document.querySelectorAll('#tabs .tab').forEach(x=>x.classList.remove('active'));
+                  fallback.classList.add('active'); STATE.tab='comments'; }
+  }
+}
 function ttMode(){ const r=document.querySelector('input[name="ttmode"]:checked'); return r?r.value:'account'; }
 function switchPlatform(p, el){
   PLATFORM=p;
@@ -944,6 +1036,7 @@ function switchPlatform(p, el){
   // ★카테고리 줄도 다시 그린다(2026-08-26) — 플랫폼마다 숨기는 버튼이 다르다.
   //   안 부르면 유튜브에서 인스타로 갈아타도 썰쇼핑·장비템 버튼이 그대로 남는다.
   renderCtypes(); renderCats();
+  applyMetricTabsFor(p);          // 플랫폼에 안 맞는 지표는 아예 숨긴다
   document.querySelectorAll('#platformTabs .ctype').forEach(x=>x.classList.remove('active'));
   el.classList.add('active');
   const isTrend = (p==='douyin');
@@ -1208,7 +1301,7 @@ async function xhsFollowerRate(btn){
     });
     _xhsSort='engagement_rate';
     renderXhsList();
-  }catch(e){ alert('오류: '+e); }
+  }catch(e){ alert(ErrorHelp.text(String(e&&e.message||e))); }
   finally{ btn.disabled=false; btn.textContent=old; }
 }
 function xhsCard(a){
@@ -1240,7 +1333,7 @@ async function xhsAdopt(profileUrlEnc, uid, btn){
     const d=await r.json();
     if(d.ok){ btn.outerHTML='<span style="font-size:11px;color:#2e7d32">✅ 담김</span>'; }
     else{ btn.disabled=false; alert(d.reason==='blacklisted'?'삭제(제외)한 계정입니다.':'담기 실패'); }
-  }catch(e){ btn.disabled=false; alert('담기 오류: '+e); }
+  }catch(e){ btn.disabled=false; alert('담기가 안 됐어요.\n\n'+ErrorHelp.text(String(e&&e.message||e))); }
 }
 async function xhsBlacklist(uid, profileUrlEnc, btn){
   if(!confirm('이 계정을 영구 제외할까요? 발굴·자동등록에서 다시 안 뜹니다.')) return;
@@ -1336,7 +1429,7 @@ async function igAdopt(username, fullName, btn){
     const d=await r.json();
     if(d.ok){ btn.outerHTML='<span style="font-size:11px;color:#2e7d32">✅ 담김</span>'; }
     else{ btn.disabled=false; alert(d.reason==='blacklisted'?'삭제(제외)한 계정입니다.':'담기 실패'); }
-  }catch(e){ btn.disabled=false; alert('담기 오류: '+e); }
+  }catch(e){ btn.disabled=false; alert('담기가 안 됐어요.\n\n'+ErrorHelp.text(String(e&&e.message||e))); }
 }
 async function igBlacklist(username, btn){
   if(!confirm('이 계정을 영구 제외할까요? 발굴·자동등록에서 다시 안 뜹니다.')) return;
@@ -1590,9 +1683,18 @@ function renderCats(){
 // silent:true = 아래에서 어차피 render()를 부르므로 두 번 그리지 않는다.
 function setCtype(k){ exitChannelView({silent:true}); STATE.ctype=k; STATE.cat="전체"; renderCtypes(); renderCats(); render(); }
 function setCat(c){ exitChannelView({silent:true}); STATE.cat=c; renderCats(); render(); }
-function setTab(t){ STATE.tab=t; document.querySelectorAll('.tab').forEach(x=>
+// ★정렬 탭은 반드시 '.tab[data-tab]'만 잡는다(2026-09-05 사장님 제보).
+//   기간 줄(#spanTabs)의 버튼도 class="tab"인데 data-tab이 **없다**. 예전 셀렉터가
+//   '.tab' 전체였던 탓에 [48시간 히트작]·[이번 주 터진 것]을 누르면 setTab(undefined)이
+//   함께 돌아 STATE.tab이 undefined가 됐다 → sortKey가 통째로 0을 돌려줘 **정렬이 사라진다**.
+//   그래서 (1)기간 탭을 누른 뒤엔 최신순이 안 먹고 (2)카테고리 안에서 최신순/조회수순이
+//   같은 순서로 보였다. 두 증상의 뿌리가 같다.
+//   또 x.dataset.tab===t 비교가 undefined===undefined로 참이 돼 기간 버튼 4개가 전부
+//   active로 켜지기도 했다 — 셀렉터를 좁히면 둘 다 사라진다.
+function setTab(t){ if(!t) return;               // 정렬 탭이 아니면 손대지 않는다
+  STATE.tab=t; document.querySelectorAll('.tab[data-tab]').forEach(x=>
   x.classList.toggle('active', x.dataset.tab===t)); render(); }
-document.querySelectorAll('.tab').forEach(x=> x.onclick=()=>setTab(x.dataset.tab));
+document.querySelectorAll('.tab[data-tab]').forEach(x=> x.onclick=()=>setTab(x.dataset.tab));
 
 // ★'전체' 탭 정렬 = 오늘 증가분(delta) — 2026-07-29 변경.
 // 왜: 예전엔 누적 댓글수로 세워서 같은 영상이 며칠째 같은 자리에 박혀 있었다(사장님 실제 제보).
@@ -1610,6 +1712,40 @@ document.querySelectorAll('.tab').forEach(x=> x.onclick=()=>setTab(x.dataset.tab
 // -1e15로 같아져 최신순이 통째로 무효**가 됐다(사장님 제보 "최신순인데 2일 전").
 const RECENCY_FIELDS = ['posted_at', 'upload_ts', 'first_seen'];
 
+// 마지막 수집 시각(epoch ms). 0이면 모른다.
+// ★age_hours를 지금 기준으로 되살리는 데 쓴다 — 아래 ageHoursNow() 한 곳에서만 읽는다.
+let COLLECTED_AT_MS = 0;
+
+// 지금 기준 경과 시간(시). 모르면 null.
+function ageHoursNow(i){
+  const h = i.age_hours;
+  if (h == null) return null;
+  // 수집 시각을 알면 그 뒤로 흐른 시간을 더한다. 모르면 종전대로 스냅샷을 쓴다(회귀 0).
+  if (COLLECTED_AT_MS) {
+    const drift = (Date.now() - COLLECTED_AT_MS) / 3.6e6;
+    if (drift > 0) return h + drift;
+  }
+  return h;
+}
+
+// 🏅 조회수 뱃지 — 의미 있는 것만 단다(2026-09-04).
+// 기준은 실측 분위수(유튜브 9,170편): 10만+ 754편(상위 8.2%) · 30만+ 325(3.5%)
+//   · 50만+ 196(2.1%) · 100만+ 72(0.8%). 10만 미만은 안 단다(중앙값이 3,676뷰다).
+const _VBADGES = [
+  [10000000, 'vb4', '🏆', '1000만'],
+  [ 5000000, 'vb4', '👑', '500만'],
+  [ 1000000, 'vb4', '👑', '100만'],
+  [  500000, 'vb3', '💥', '50만'],
+  [  300000, 'vb2', '🔥', '30만'],
+  [  100000, 'vb1', '📈', '10만'],
+];
+function viewBadge(v){
+  const n = Number(v || 0);
+  for (const [th, cls, icon, label] of _VBADGES){
+    if (n >= th) return `<span class="viewbadge ${cls}" title="조회수 ${n.toLocaleString()} — ${label}뷰 이상">${icon} ${label}뷰</span>`;
+  }
+  return '';                                    // 10만 미만은 뱃지 없음
+}
 function recencyMs(i){
   for (const f of RECENCY_FIELDS){
     const v = i[f];
@@ -1623,7 +1759,8 @@ function recencyMs(i){
 function recencyKey(i){
   const t = recencyMs(i);
   if (t != null) return t;                         // epoch ms — 클수록 최신
-  if (i.age_hours != null) return -i.age_hours;    // 경과가 적을수록 최신 → 부호를 뒤집는다
+  const h = ageHoursNow(i);
+  if (h != null) return -h;                        // 경과가 적을수록 최신 → 부호를 뒤집는다
   return -1e15;                                    // 시간을 모르는 것은 맨 뒤
 }
 function sortKey(i){
@@ -2089,11 +2226,27 @@ function render(opts){
   const _fc = document.getElementById("fcount");
   if(_fc){
     // ★숨긴 건 반드시 숫자로 알린다 — 안 그러면 "영상이 사라졌다"로 읽힌다.
+    // 2026-09-07: 여태 '걸러내기'와 '채널당 상한'만 알렸다. 그런데 실제로 사장님이
+    // "28개밖에 없다"고 본 화면은 **카테고리·유형·검색**으로 줄어든 것이었고,
+    // 그 세 가지는 아무 안내도 없이 조용히 잘라내고 있었다(걸러내기 줄 자체가
+    // display:none이라 fresh/rising은 켤 수도 없다 = 원인이 될 수 없었다).
+    // 그래서 **줄어든 이유를 종류와 무관하게 한 줄로 항상** 보여준다.
     const parts = [];
-    if(STATE.filters.fresh || STATE.filters.rising)
-      parts.push(`${_beforeFilter}건 중 ${items.length}건 표시 중`);
-    if(_perChCut > 0)
-      parts.push(`채널당 ${PER_CHANNEL_MAX}개만 (${_perChCut}건 접힘)`);
+    const _served = STATE.items.length;          // 서버가 준 원본 건수
+    if(items.length < _served){
+      const why = [];
+      if(searching)                 why.push(`검색 "${STATE.q.trim()}"`);
+      if(!searching && STATE.cat   !== "전체") why.push(`카테고리 ${STATE.cat}`);
+      if(!searching && STATE.ctype !== "전체") why.push(`유형 ${STATE.ctype}`);
+      if(!searching && STATE.style)            why.push(`축 ${STATE.style}`);
+      if(STATE.filters.fresh)  why.push("신작");
+      if(STATE.filters.rising) why.push("급상승");
+      if(_perChCut > 0)        why.push(`채널당 ${PER_CHANNEL_MAX}개`);
+      parts.push(`전체 ${_served}건 중 ${items.length}건 표시`
+                 + (why.length ? ` — ${why.join(" · ")} 때문` : ""));
+    }else{
+      parts.push(`${items.length}건 전부 표시 중`);
+    }
     _fc.textContent = parts.join(" · ");
   }
   // 배지용 백분위 컨텍스트 — 지금 보이는 항목 기준(정렬·필터 반영)
@@ -2147,7 +2300,7 @@ function render(opts){
         ${(i.video_url||i.platform==='youtube'||i.platform==='tiktok'||(i.platform||PLATFORM)==='instagram')?'<span class="play-badge">▶</span>':''}
       </div>`:''}
       <div class="body">
-        <div class="rank"><span>#${idx+1} · ${i.category} · ${fmtAgo(i)}</span><button class="blockbtn" title="이 채널을 영구 차단 — 지금 바로 가리고, 다음 수집·업데이트에도 안 올라옵니다" onclick="blockChannel('${esc(i.username||'')}','${esc(i.name||'')}',this)">🚫 차단</button></div>
+        <div class="rank"><span>#${idx+1} · ${i.category} · ${fmtAgo(i)}${viewBadge(i.views)}</span><button class="blockbtn" title="이 채널을 영구 차단 — 지금 바로 가리고, 다음 수집·업데이트에도 안 올라옵니다" onclick="blockChannel('${esc(i.username||'')}','${esc(i.name||'')}',this)">🚫 차단</button></div>
         ${i.caption?`<div class="cap${i.thumbnail?'':' cap-only'}" onclick="toggleCap(this)">${esc(i.caption)}</div><div class="capmore" style="display:none" onclick="toggleCap(this.previousElementSibling)">⌄ 더보기</div>`:''}
         <div class="ch"><span class="chname" title="이 채널 영상만 보기(지난 한 달 포함)" style="cursor:pointer" onclick="searchChannel('${esc(i.username||'')}')">${i.name||i.username} <span class="grade">${i.grade||''}</span></span><button class="copy" title="릴스 링크 복사" onclick="copyLink('${i.url}', this)">🔗 복사</button></div>
         ${(i.followers||i.duration!=null)?`<div class="folw">${i.followers?`<span title="채널 팔로워(구독자) 수 — 수집이 실어온 실시간 값">👥 팔로워 ${i.followers.toLocaleString()}</span>`:''}${i.duration!=null?`<span class="dur" title="영상 길이">🎬 ${_fmtDur(i.duration)}</span>`:''}</div>`:''}
@@ -2161,22 +2314,51 @@ function render(opts){
         <div class="actions">
           <div class="btns">
             <button class="view" onclick="window.open('${i.url}','_blank')">👁 영상보기</button>
-            <button class="comment" onclick="goComment('${i.shortcode}')">💬 댓글소통</button>
             <button class="save" id="save_${i.shortcode}" onclick="toggleMix('${i.shortcode}', this)">📥 즐겨찾기</button>
             <button class="script-btn" onclick="lensSearch(this,'${i.shortcode}')">🔍 숏템파워검색</button>
+            <button class="cp-btn" data-sc="${i.shortcode}" title="이 제품이 쿠팡에 있는지 찾고, 있으면 내 추적 링크까지 바로 만듭니다" onclick="window.ssCoupangFind('', {shortcode:'${i.shortcode}', thumbnail:decodeURIComponent('${encodeURIComponent(i.thumbnail||'')}'), hint:this.getAttribute('data-product')||'', noProduct:this.getAttribute('data-noproduct')==='1'})">🛒 쿠팡검색</button>
             ${window.IS_ADMIN?`<button class="inner-btn" title="우리가 관리하는 채널 아카이브에서 같은 제품·주제의 옛 영상 찾기 (무료·비전태그 매칭)" onclick="archiveSimilar('${i.shortcode}')">🏠 숏템내부검색</button>`:''}
           </div>
         </div>
       </div>
     </div>`).join("");
   // 잘린 게 있으면 [더 보기]로 이어붙인다 — 데이터는 그대로 있고 그리기만 나눠 한다.
+  // ★목록 끝에 **두 가지 잘림을 함께** 보여준다(2026-09-08 사장님 "8000개 가까이 있는데
+  //   왜 이렇게 없어 보이지" → "아래 더보기를 클릭하면 되게 하고, 그럼 렉 없는 거 아닌가").
+  //   사장님 말이 맞다 — [더 보기]는 그리기만 나눠 하므로 렉이 안 생긴다. 그런데 그 버튼이
+  //   푸는 건 **렌더 상한뿐**이고, 실제로 더 많이 깎는 `채널당 N개`는 안 풀린다.
+  //   실측(썰쇼핑 탭): 619건 → 채널당2개 315건 → 렌더상한 200장.
+  //     · 렌더 상한이 접은 것  115건  ← [더 보기]가 푼다
+  //     · 채널당 2개가 접은 것 304건  ← 이 버튼이 없으면 영영 못 본다
+  //   위쪽 #fcount에도 같은 안내가 있지만, 200장을 스크롤해 바닥에 온 사람은 그걸 다시
+  //   올라가 읽지 않는다. 잘린 자리에서 바로 풀 수 있어야 한다.
+  const _tail = [];
   if(_total > items.length){
+    // ★크게 둔다 — 200장을 스크롤해 바닥에 온 사람이 못 본 것이 있는 줄 모르고 떠난다.
+    _tail.push(`<button onclick="showMoreCards()" style="padding:18px 46px;border-radius:999px;
+        border:2px solid var(--accent,#4a9eff);background:var(--inset);color:var(--txt);
+        cursor:pointer;font-size:18px;font-weight:800;box-shadow:0 2px 10px rgba(0,0,0,.18)">
+        ⌄ 더 보기 <span style="color:var(--sub);font-size:15px;font-weight:600">
+        (${items.length.toLocaleString()} / ${_total.toLocaleString()}장 · ${(_total-items.length).toLocaleString()}장 남음)</span></button>`);
+  }
+  if(_perChCut > 0){
+    _tail.push(`<button onclick="togglePerChannel()" style="padding:10px 22px;border-radius:999px;
+        border:1px solid var(--fire,#e0a33d);background:transparent;color:var(--fire,#e0a33d);
+        cursor:pointer;font-weight:700"
+        title="지금은 채널마다 상위 ${PER_CHANNEL_MAX}개만 보여주고 있습니다. 누르면 접힌 것까지 전부 나옵니다">
+        📺 채널당 ${PER_CHANNEL_MAX}개로 <b>${_perChCut}건</b>이 접혀 있어요 — 전부 보기</button>`);
+  }
+  if(_tail.length){
+    // ★두 버튼을 나란히 놓고(origin/main), 그 아래 한 줄 안내를 붙인다(이 트랙).
+    //   안내가 필요한 이유: "검색했는데 왜 일부만 나오느냐"를 먼저 막는다 —
+    //   정렬·필터는 전부에 적용됐고 **그리는 것만** 나눠 낸다.
     el.insertAdjacentHTML("beforeend",
       `<div style="grid-column:1/-1;text-align:center;padding:16px 0">
-         <button onclick="showMoreCards()" style="padding:10px 22px;border-radius:999px;
-           border:1px solid var(--line);background:var(--inset);color:var(--txt);cursor:pointer">
-           더 보기 <span style="color:var(--sub)">(${items.length} / ${_total})</span>
-         </button></div>`);
+         <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">${_tail.join("")}</div>
+         ${_total > items.length ? `<div style="margin-top:8px;font-size:12px;color:var(--sub)">
+           정렬·검색·필터는 <b>${_total.toLocaleString()}장 전부</b>에 이미 적용됐고, 화면에 그리는 것만 나눠 냅니다.
+         </div>` : ""}
+       </div>`);
   }
   markSavedButtons();
   markCapOverflow();
@@ -2185,6 +2367,19 @@ function render(opts){
   if(searching && users.length===1){
     _renderChannelHistory(users[0], items.map(i=>i.shortcode));
   }
+  /* ★쿠팡 사전 판독(2026-09-04) — 그린 카드의 제품을 뒤에서 미리 알아내 캐시한다(클릭 즉시 뜨게). */
+  try {
+    if (window.ssCoupangPrewarm) {
+      var _cpItems = [];
+      document.querySelectorAll('.cp-btn[data-sc]').forEach(function (b) {
+        var sc = b.getAttribute('data-sc');
+        var it = STATE.items.find(function (x) { return x.shortcode === sc; });
+        // caption도 같이 보낸다(2026-09-05) — 썸네일만으로는 범주어가 나온다.
+        if (it && (it.thumbnail || it.caption)) _cpItems.push({ shortcode: sc, thumbnail: it.thumbnail || "", caption: it.caption || "" });
+      });
+      window.ssCoupangPrewarm(_cpItems.slice(0, 48));
+    }
+  } catch (e) { /* 사전 판독 실패가 랭킹 화면을 막으면 안 된다 */ }
 }
 // 문구 접기/펴기(2026-08-18 사장님 "문구는 짤리는데 접었다 펴는걸로 글자 다 볼수있게")
 // 실제로 잘린 카드에만 [더보기]를 띄운다 — 안 잘린 카드에 버튼이 붙으면 거짓 안내가 된다.
@@ -2266,7 +2461,7 @@ function fmtAgo(i){
   // 고정돼 보였음 — 실제 시각이 있으면 지금 기준으로 계산한다.
   // ★정렬과 **같은 필드 우선순위**를 쓴다(recencyMs). 표시와 정렬이 다른 값을 보면
   //   "최신순인데 위쪽이 더 오래돼 보이는" 어긋남이 난다(0순위-B).
-  let h = i.age_hours || 0;
+  let h = ageHoursNow(i) || 0;
   const t = recencyMs(i);
   if(t != null){
     h = Math.max(0, (Date.now()-t)/3.6e6);
@@ -2608,17 +2803,40 @@ let ARC_MIN = 10000;                 // 역대 탭 문턱(1만+ 기본). 실측 
 // 상한. 0=없음. 문턱만 낮추면 상위 400이 늘 같은 얼굴이라 세 버튼이 똑같아진다
 // (실측 2026-08-17: 셋 다 400건·1위 동일) → 구간으로 끊어 겹치지 않게 한다.
 let ARC_MAX = 0;
-const _SPAN_MIN_COMMENTS = {7: 500, 30: 1000};
+// 2026-09-07 하향(사장님 "검색하면 나오는 게 너무 적다"). 서버 실측 인스타 4,255건 기준:
+//   이번주 댓글 500+ = 148건 / 200+ = 610건
+//   이번달 댓글 1000+ = 292건 / 300+ = 937건
+// 종전 값은 48시간 탭(315건)보다 이번주(148건)가 **더 적어지는** 역전이 나 있었다.
+// 문턱은 '터진 것'을 가르는 장치지 재고를 말리는 장치가 아니다.
+const _SPAN_MIN_COMMENTS = {7: 200, 30: 300};
+// ★플랫폼마다 '터진 것'의 잣대가 다르다(2026-09-04 사장님 "유튭은 댓글이 필요없어, 조회수 기반이야").
+//   실측 댓글 중앙값: 인스타 60 / 유튜브 **1**. 유튜브에 댓글 문턱을 쓰면 이번 주가 48편,
+//   이번 달이 27편밖에 안 남아 사실상 빈 화면이 된다.
+//   유튜브 조회수 분포(9,170편): P90 7만 · P95 20만 → 10만+ 754편 / 50만+ 196편.
+//   인스타 기간탭 규모(이번주 594 · 이번달 281)와 비슷하게 맞춘 값이다.
+const _SPAN_MIN_VIEWS = {youtube: {7: 100000, 30: 500000}};
 
 async function loadLast(){
   let url = "/api/reference?platform="+PLATFORM;
   if(SPAN_DAYS < 0){
     url += "&archive=1&min_comments="+ARC_MIN+"&max_comments="+ARC_MAX;
   } else if(SPAN_DAYS > 0){
-    url += "&days="+SPAN_DAYS+"&min_comments="+(_SPAN_MIN_COMMENTS[SPAN_DAYS]||500);
+    const mv = (_SPAN_MIN_VIEWS[PLATFORM]||{})[SPAN_DAYS] || 0;
+    // 조회수 기준 플랫폼은 댓글 문턱을 0으로 내린다 — 두 잣대를 함께 걸면 아무것도 안 남는다.
+    url += "&days="+SPAN_DAYS
+         + "&min_comments="+(mv ? 0 : (_SPAN_MIN_COMMENTS[SPAN_DAYS]||500))
+         + (mv ? "&min_views="+mv : "");
   }
   const d = await (await fetch(url)).json();
   STATE.items = d.items || [];   // 결과 없어도 무조건 갈아끼움 — 이전 플랫폼 카드 잔존 방지
+  // ★수집 시각을 기억한다(2026-09-08 사장님 "이건 진짜 1분전인가").
+  //   age_hours는 **수집한 순간 찍힌 스냅샷**이라 그 뒤로 흐른 시간이 안 더해진다.
+  //   실측: 09:15 수집분을 17:57에 보는데 카드가 "2시간 전"(진짜는 10.4시간 전) —
+  //   8.7시간이 통째로 빠져 있었다. 카드 7장이 전부 "12분 전"으로 뭉쳐 보이던 것도
+  //   같은 이유다(실제 발행 시각이 제각각이면 그렇게 뭉칠 수 없다).
+  //   발행 시각(posted_at)이 있으면 그게 정답이지만 유튜브 랭킹은 **0/156건**이라
+  //   기댈 수 없다. 대신 "수집 시점 경과 + 수집 이후 흐른 시간"으로 되살린다.
+  COLLECTED_AT_MS = d.collected_at ? (Date.parse(d.collected_at) || 0) : 0;
   try{ renderStyles(); }catch(e){}   // 이번 목록에 있는 축만 버튼으로
   render();
   const st = document.getElementById("status");
@@ -2835,7 +3053,13 @@ const LENS_PLATFORMS=[
   // 핀터레스트(2026-08-29 사장님 "핀터레스트 검색결과도 노출 / 숏폼영상만").
   // 서버(lens_discover)가 핀 페이지를 실조회해 **영상 핀만** 보내준다(이미지 핀은 서버컷).
   // play_url(mp4 직링크)이 실려 와 기존 인라인 재생 경로(/api/video 프록시)로 바로 재생된다.
-  {k:'pinterest',label:'📌 핀터레스트'}];
+  {k:'pinterest',label:'📌 핀터레스트'},
+  // ★네이버클립(2026-09-08 사장님 "네이버랑 핀터레스트는 안 나오는데?").
+  //   kw_search._CHAIN엔 2026-08-30부터 있었는데 **이 목록에만 없었다** —
+  //   카드 필터가 `st.on.has(i.platform)`로 거르므로, 결과를 정상으로 가져와도
+  //   화면에서 통째로 사라진다(백엔드는 멀쩡한데 안 보이는 모양).
+  //   플랫폼을 붙일 때 _CHAIN·화이트리스트와 **함께** 고쳐야 하는 세 번째 자리다.
+  {k:'naverclip',label:'🟩 네이버클립'}];
 // 카드 정렬용 우선순위 — ★위 배열에서 자동 생성한다(손으로 또 적지 않는다).
 const _LENS_ORDER=Object.fromEntries(LENS_PLATFORMS.map((p,i)=>[p.k,i]));
 let LENS_STATE={};   // shortcode → {items, on:Set, saved:Set}
@@ -2954,7 +3178,10 @@ async function lensSearch(btn, shortcode){
     // 렌즈 결과는 우리 DB shortcode가 없어 담기 바구니 키를 URL기반으로 합성한다
     // (플랫폼 프리픽스+url 해시 — 같은 URL 재검색해도 같은 키라 담김상태가 유지됨).
     const add=(d.items||[]);
-    add.forEach(i=>{ i.savesc='lens_'+i.platform+'_'+_lensHash(i.url); });
+    // ★출처를 남긴다(2026-09-08). 렌즈(숏템파워검색)와 「여기서」 결과가 같은
+    //   st.items에 섞여 들어가는데 카드에 표시가 없어, 사장님이 "틱톡이 쌓인다"고 본 것과
+    //   내가 잰 "「여기서」 틱톡 0건"이 **둘 다 사실인데도** 서로 어긋나 보였다.
+    add.forEach(i=>{ i.savesc='lens_'+i.platform+'_'+_lensHash(i.url); i._src='렌즈'; });
     const have=new Set(st.items.map(i=>i.savesc));
     st.items.push(...add.filter(i=>!have.has(i.savesc)));
     st.diag=d.diag||null;
@@ -3098,7 +3325,7 @@ async function fetchLensYt(shortcode, caption, blob){
     const st=LENS_STATE[shortcode]; if(!st) return;   // 사용자가 닫았을 수 있음
     st.keyword=d.keyword||'';
     const add=(d.items||[]);
-    add.forEach(i=>{ i.savesc='lens_'+i.platform+'_'+_lensHash(i.url); });
+    add.forEach(i=>{ i.savesc='lens_'+i.platform+'_'+_lensHash(i.url); i._src='렌즈'; });
     const have=new Set(st.items.map(i=>i.savesc));
     st.items.push(...add.filter(i=>!have.has(i.savesc)));   // 중복 savesc 제외
     st.ytLoading=false;
@@ -3118,11 +3345,24 @@ async function fetchLensCnKeywords(shortcode, caption, blob, append){
     // ★원본 주소를 함께 보낸다(2026-08-22) — 서버가 이 주소로 DB에서 캡션·대본을 찾아
     //   검색어 소재를 채운다. 카드가 들고 있는 캡션은 거의 항상 비어 있다(실측 300건 중 1건).
     try{ const _src=findItem(shortcode); if(_src && _src.url) fd.append('source_url', _src.url); }catch(e){}
+    // ★코드도 그대로 보낸다(2026-09-08 사장님 "이건 돌돌이 휴대용인데 택배칼이 나온다").
+    //   서버는 여태 주소에서 코드를 되뽑았는데, 유튜브 카드 주소는 watch?v=<id>라
+    //   경로만 보던 정규식이 한 건도 못 잡았다 — 대본이 DB에 "휴대용 돌돌이"로 멀쩡히
+    //   있는데도 검색어는 썸네일 1장만 보고 지어졌다. 담기/렌즈 코드(lens_…·grab_…)는
+    //   아예 주소에 없어서 되뽑기로는 영원히 못 찾는다. 아는 값을 그냥 넘긴다.
+    if(shortcode && shortcode!=='__single__') fd.append('source_shortcode', shortcode);
     // 🔄 다른 검색어: 이미 보여준 후보를 넘겨 '겹치지 않는 다른 각도'로 받는다(2026-08-14).
     if(append && st0) fd.append('exclude', (st0.cnCands||[]).map(c=>[c.ko,c.zh].filter(Boolean).join('\n')).join('\n'));
     const d=await (await fetch('/api/lens/cn/keywords',{method:'POST',body:fd})).json();
     const st=LENS_STATE[shortcode]; if(!st) return;
     const got=(d.candidates||[]).filter(c=>c && c.zh);
+    // 소재(캡션·대본)가 있었는지 서버가 알려준다 — 없으면 검색어가 썸네일 1장만 보고
+    // 찍힌 것이라 아래에서 '대본 분석 후 찾기' 버튼을 띄운다(판정은 서버 한 곳, 0순위-B).
+    st.hasSource = (d.has_source !== false);
+    // ★서버는 예전부터 product를 함께 주는데 화면이 안 썼다(2026-09-08 사장님
+    //   "대본분석 후에 제품명이 나오면 표시를 해줘"). 대본을 읽고 확정한 제품명이라
+    //   썸네일만 보고 지은 검색어와 값어치가 다르다 — 그걸 드러낸다.
+    if((d.product||'').trim()) st.product=(d.product||'').trim();
     if(append){
       // 쌓는다 — 사장님이 4개 이후 다른 것도 열어볼 수 있게. 서버가 이미 걸렀지만
       // 모델이 프롬프트를 안 지킬 수 있어 여기서도 zh 기준 중복 제거(이중 안전).
@@ -3132,6 +3372,7 @@ async function fetchLensCnKeywords(shortcode, caption, blob, append){
     } else {
       st.cnCands=got;
     }
+    _markScriptProduct(st);     // 대본이 말한 제품을 가리키는 검색어를 맨 위로 + 표시
     // 비전 5~15초 사이 사용자가 다른 카드 렌즈를 열었으면 이 모달은 남의 것 → 재렌더 금지
     // (형제 fetchLensYt와 동일 가드. 안 하면 늦은 응답이 현재 모달을 덮어씀)
     const root=document.getElementById('lensRoot');
@@ -3194,7 +3435,7 @@ async function lensCnSearch(shortcode, idx){
     const got=(d.items||[]);
     // 렌즈 결과와 같은 담기키 규칙(savesc)을 붙여야 선택·담기·중복제거가 동일하게 동작한다
     // (형제 fetchLensYt·lensSearch와 같은 규약).
-    got.forEach(i=>{ if(!i.savesc) i.savesc='lens_'+i.platform+'_'+_lensHash(i.url); });
+    got.forEach(i=>{ if(!i.savesc) i.savesc='lens_'+i.platform+'_'+_lensHash(i.url); i._src='여기서'; });
     const have=new Set((st2.items||[]).map(i=>i.savesc));
     st2.items.push(...got.filter(i=>i.savesc && !have.has(i.savesc)));
     st2.cnCost=(d.meta&&Object.values(d.meta).reduce((a,m)=>a+((m&&m.cost_usd)||0),0))||0;
@@ -3207,20 +3448,36 @@ async function lensCnSearch(shortcode, idx){
 // 📷🎵▶ 여기서 찾기 — 인스타·틱톡·유튜브를 한국어 검색어로 돌려 이 페이지 안에 합류.
 // lensCnSearch(샤오홍슈·도우인)의 형제다. 다른 건 **검색어 언어(ko)와 엔드포인트**뿐이라
 // 담기키·중복제거·늦은응답 가드는 같은 규약을 그대로 따른다(형제끼리 어긋나면 안 된다).
-async function lensKwSearch(shortcode, idx){
+async function lensKwSearch(shortcode, idx, langOverride){
   const st=LENS_STATE[shortcode]; if(!st || st.kwSearching) return;
-  const cand=(st.cnCands||[])[idx]; const ko=cand && (cand.ko||cand.zh); if(!ko) return;
+  const cand=(st.cnCands||[])[idx]; if(!cand) return;
+  // ★고른 언어의 검색어로 돈다(2026-09-08 사장님 "언어를 바꿔가면서 쉽게").
+  //   '🌍 해외'(auto)면 서버가 알아서 여러 언어로 돌리므로 한국어를 그대로 보낸다.
+  //   특정 언어를 고르면 **그 언어만** 돌린다 — 언어를 바꿔 누를 때마다 그 언어
+  //   결과가 추가로 쌓이는 게 사장님이 원한 모양이다.
+  const L=langOverride||st.lang||'auto';
+  const ko=(L==='auto') ? (cand.ko||cand.zh) : ((cand[L]||'').trim()||cand.ko||cand.zh);
+  if(!ko) return;
   st.kwSearching=true; st.kwSearchKw=ko; _lensRerender(shortcode);
   try{
     const fd=new FormData();
     fd.append('keyword', ko);
     fd.append('max_results', 8);
+    if(L!=='auto') fd.append('lang', L);   // 서버가 이 언어만 돌린다(중복 호출 방지)
     const d=await (await fetch('/api/lens/kw/search',{method:'POST',body:fd})).json();
     const st2=LENS_STATE[shortcode]; if(!st2) return;
     const got=(d.items||[]);
-    got.forEach(i=>{ if(!i.savesc) i.savesc='lens_'+i.platform+'_'+_lensHash(i.url); });
+    got.forEach(i=>{ if(!i.savesc) i.savesc='lens_'+i.platform+'_'+_lensHash(i.url); i._src='여기서'; });
     const have=new Set((st2.items||[]).map(i=>i.savesc));
-    st2.items.push(...got.filter(i=>i.savesc && !have.has(i.savesc)));
+    // ★방금 온 것에 배치 번호를 찍는다(2026-09-08 사장님 "새로 검색되는 게 중간에
+    //   계속 삽입되니까 새로 추가된 게 어떤 건지 모름"). 카드는 플랫폼 순으로 정렬돼
+    //   새 결과가 목록 중간에 끼어든다 — 번호가 있어야 'NEW'를 붙일 수 있다.
+    st2.batch=(st2.batch||0)+1;
+    st2.lastBatchKw=ko;
+    const fresh=got.filter(i=>i.savesc && !have.has(i.savesc));
+    fresh.forEach(i=>{ i._batch=st2.batch; });
+    st2.items.push(...fresh);
+    st2.lastBatchN=fresh.length;
     st2.kwCost=(d.meta&&Object.values(d.meta).reduce((a,m)=>a+((m&&m.cost_usd)||0),0))||0;
   }catch(e){ /* 실패해도 렌즈 나머지는 정상 */ }
   finally{
@@ -3231,6 +3488,61 @@ async function lensKwSearch(shortcode, idx){
 // 🔄 다른 검색어 — 같은 프레임으로 비전에 다시 묻되 '이미 본 것 빼고'를 넘긴다.
 // 검색어가 렌즈 열 때마다 복불복으로 바뀌던 걸(2026-08-14 사장님) 쌓아가는 방식으로 바꾼 것.
 // Gemini 무료쿼터만 쓴다 — Apify·SerpApi 비용 0(후보는 '링크 여는 버튼'일 뿐).
+// 📝 대본 분석 후 찾기 (2026-09-06 사장님 "대본분석후찾기 버튼 만들고").
+// 왜 필요한가 — 렌즈는 DB에 **이미 있는** 캡션·대본만 읽는다(대본추출을 하지 않는다).
+// 그래서 대본추출을 안 한 영상은 소재가 0자라 검색어가 **썸네일 1장만** 보고 지어지고,
+// 누를 때마다 다른 제품이 나온다(실측: 같은 프레임 5회에 5회 전부 다름).
+// 이 버튼은 ①대본추출을 먼저 돌리고 ②그 제품명으로 검색어를 다시 뽑는다.
+// ⚠️ 대본추출은 과금이라 **자동으로 돌리지 않는다** — 사장님이 누를 때만.
+async function lensExtractThenSearch(shortcode){
+  const st=LENS_STATE[shortcode]; if(!st || st.reExtracting) return;
+  st.reExtracting=true; _lensRerender(shortcode);
+  try{
+    const r=await fetch('/api/extract_script?shortcode='+encodeURIComponent(shortcode),{method:'POST'});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok || !d.ok){
+      const st1=LENS_STATE[shortcode];
+      if(st1){ st1.reExtracting=false; st1.cnErr='⚠️ 대본 분석 실패 — '+((d&&d.error)||'잠시 후 다시'); _lensRerender(shortcode); }
+      return;
+    }
+  }catch(e){
+    const st1=LENS_STATE[shortcode];
+    if(st1){ st1.reExtracting=false; st1.cnErr='⚠️ 네트워크 오류 — 잠시 후 다시'; _lensRerender(shortcode); }
+    return;
+  }
+  // 추출 성공 → 검색어를 **처음부터 다시** 뽑는다(append=false).
+  // 옛 후보는 썸네일만 보고 지은 것이라 이어붙이면 틀린 것이 남는다.
+  const st2=LENS_STATE[shortcode];
+  if(st2){ st2.reExtracting=false; st2.cnErr=''; st2.cnCands=[]; st2.cnNoNew=false; st2.cnLoading=true; _lensRerender(shortcode); }
+  await fetchLensCnKeywords(shortcode, (st2&&st2.caption)||'', st2&&st2.frameBlob, false);
+}
+// ✅ 대본이 말한 제품을 검색어에 표시한다 (2026-09-08 사장님 "대본분석을 한 경우
+//    정확한 제품이 있을 때 키워드에 표시").
+//    검색어는 여러 개가 나오는데 어느 것이 **대본이 말한 그 제품**인지 알 수 없었다.
+//    제품명 토큰이 들어 있는 검색어에 표시를 달고 맨 위로 올린다.
+//    ⚠️어간 2글자로 본다 — '재봉틀'과 '미니 재봉틀'을 같은 것으로 봐야 하는데
+//      완전일치로 보면 하나도 안 걸린다(인스타 슬롯 매칭에서 배운 것과 같은 함정).
+function _markScriptProduct(st){
+  const p=((st&&st.product)||'').trim();
+  if(!st || !p || !(st.cnCands||[]).length) return;
+  // 조사·수식어를 뺀 알맹이만 남긴다. 2글자 미만은 아무 데나 걸려 쓸모없다.
+  const toks=p.split(/[\s,·\/()\[\]]+/).map(t=>t.trim()).filter(t=>t.length>=2);
+  if(!toks.length) return;
+  let first=-1;
+  st.cnCands.forEach((c,i)=>{
+    const ko=String((c&&c.ko)||'');
+    c._scriptHit = toks.some(t=>ko.includes(t));
+    if(c._scriptHit && first<0) first=i;
+  });
+  // 맨 위로 올린다 — 위에서부터 누르는 사장님이 제일 정확한 것을 먼저 만나게.
+  if(first>0){ st.cnCands.unshift(st.cnCands.splice(first,1)[0]); }
+}
+
+// 🎯 「제품명 찾기」는 2026-09-08 사장님 지시로 없앴다.
+//   왜: 유료(SerpApi)인데 하는 일이 「대본 분석 후 찾기」와 겹친다. 대본을 읽어
+//   확정한 제품이 화면 한 장을 역검색한 것보다 정확하고 **공짜**다.
+//   그래서 제품 표시는 대본 분석 결과(st.product)로 한다 — _markScriptProduct 참고.
+//   서버 /api/lens/product 는 남겨 둔다(다른 곳에서 쓸 수 있고 지우면 되돌리기 어렵다).
 async function lensMoreCnKeywords(shortcode){
   const st=LENS_STATE[shortcode];
   if(!st || st.cnLoading || !st.frameBlob) return;
@@ -3265,6 +3577,12 @@ function toggleLensKorean(shortcode){
   const st=LENS_STATE[shortcode]; if(!st) return;
   st.koreanOnly=!st.koreanOnly;
   if(st.koreanOnly) st.foreignOnly=false;
+  renderLens(shortcode);
+}
+// 언어 필터(한국만·해외만)를 한 번에 끈다 — '언어 필터로 N건 숨김' 배지의 [해제].
+function lensClearLangFilter(shortcode){
+  const st=LENS_STATE[shortcode]; if(!st) return;
+  st.koreanOnly=false; st.foreignOnly=false;
   renderLens(shortcode);
 }
 // 🎬 영상만 — 인스타 카드뉴스(사진·카러셀) 가리기(2026-07-30 사장님 제보 "카드뉴스가 많다").
@@ -3484,6 +3802,103 @@ async function renderTrendCards(){
 }
 
 // 플랫폼별 검색 페이지 URL(search_links.py의 _URL_BUILDERS와 동일). 바로가기+담기용.
+// ── 언어 × 플랫폼 (2026-09-08 사장님 "언어별로 누를 수 있게, 사용자들 편하게")
+//    버튼 25개(5언어×5플랫폼)를 한 번에 깔면 60대에게 최악이라, **언어를 한 번 고르면
+//    아이콘 5개가 그 언어로 바뀌는** 방식으로 간다(첫 화면은 늘 아이콘 5개).
+const LENS_LANGS = [
+  // ★국기 이모지만 두면 무슨 뜻인지 알 수 없다(2026-09-08 사장님 "이게 몬지 어떻게 아냐
+  //   보면 알게 해줘야지"). 글자를 함께 적는다 — 60대가 보고 바로 아는 게 우선이다.
+  {k:'auto', label:'🌍 해외 원본',  title:'해외 원본을 찾는 기본값 — 샤오홍슈·도우인은 중국어로, 틱톡·인스타·핀터레스트는 영어로 엽니다'},
+  {k:'ko',   label:'🇰🇷 한국어',   title:'다섯 곳을 모두 한국어로 검색'},
+  {k:'zh',   label:'🇨🇳 중국어',   title:'다섯 곳을 모두 중국어로 검색'},
+  {k:'en',   label:'🇺🇸 영어',     title:'다섯 곳을 모두 영어로 검색'},
+  {k:'ja',   label:'🇯🇵 일본어',   title:'다섯 곳을 모두 일본어로 검색'},
+  {k:'ru',   label:'🇷🇺 러시아어', title:'다섯 곳을 모두 러시아어로 검색'},
+];
+// '자동'일 때 플랫폼마다 쓰는 언어.
+//   ★2026-09-08 사장님: "틱톡·인스타가 한국 것으로 나오는 건 의미가 없다.
+//     **외국 것이 검색돼야 원본을 찾는다**." → 자동의 기본은 **해외 원본 발굴**이다.
+//   그래서 틱톡·인스타도 ko가 아니라 en으로 간다(처음엔 ko로 뒀던 게 목적을 거꾸로
+//   본 것이었다 — 한국 결과는 이미 「🔎 여기서」와 네이버클립이 준다).
+//   샤오홍슈·도우인 = zh(중국 서비스) / 핀터레스트 = en(한국어 인덱스가 사실상 없다
+//   — 실측 '인덕션 테이블' 0건 vs 'induction table' 12건).
+//   한국어로 보고 싶으면 🇰🇷 칩을 누르면 된다(한 번 누르면 5개가 전부 한국어).
+const _LENS_AUTO_LANG = {xiaohongshu:'zh', douyin:'zh', pinterest:'en', tiktok:'en', instagram:'en'};
+
+function _lensKwFor(c, platform, lang){
+  // 고른 언어의 검색어. 없으면 ''을 돌려 **버튼을 아예 안 그린다** —
+  // 빈 검색어로 사이트를 열면 엉뚱한 홈으로 떨어진다(기존 규약과 같다).
+  const L = (lang && lang !== 'auto') ? lang : (_LENS_AUTO_LANG[platform] || 'ko');
+  return ((c && c[L]) || '').trim();
+}
+function setLensLang(shortcode, lang){
+  const st = LENS_STATE[shortcode]; if(!st) return;
+  st.lang = lang;
+  renderLens(shortcode);
+}
+
+// ── 자동 모으기 (2026-09-08 사장님 "어차피 무료면 키워드별로 계속 쌓이도록 /
+//    어차피 나올 때까지 수동으로 누를 거니까")
+//    검색어 × 언어를 **순서대로 한 번씩** 돌린다. 몇 초마다 갱신하는 방식 대신
+//    한 조합이 끝나면 다음을 부르는 직렬로 간다 — 이유:
+//      · 「여기서」는 무료 플랫폼만 돈다(유튜브·핀터레스트·네이버클립) = 비용 0
+//      · 동시에 여러 개를 던지면 핀터레스트가 브라우저를 여러 개 띄워 서버가 기어간다
+//      · 사장님이 중간에 멈출 수 있어야 한다(다시 누르면 정지)
+const _AUTO_LANGS = ['auto', 'en', 'ja', 'zh'];   // ko는 auto가 이미 포함한다
+
+async function toggleLensAuto(shortcode){
+  const st=LENS_STATE[shortcode]; if(!st) return;
+  if(st.autoRun){ st.autoStop=true; st.autoRun=false; renderLens(shortcode); return; }
+  st.autoRun=true; st.autoStop=false; renderLens(shortcode);
+  const cands=(st.cnCands||[]);
+  outer:
+  for(let i=0;i<cands.length;i++){
+    for(const L of _AUTO_LANGS){
+      const cur=LENS_STATE[shortcode];
+      if(!cur || cur.autoStop || !cur.autoRun) break outer;   // 사용자가 멈췄거나 모달을 닫았다
+      const q=(L==='auto')?(cands[i].ko||cands[i].zh):((cands[i][L]||'').trim());
+      if(!q) continue;                                        // 그 언어 검색어가 없으면 건너뛴다
+      // ★무엇을 모으는지 화면에 그대로 적는다(2026-09-08 사장님 "어떤 국가에 어떤
+      //   검색어로 모아지나"). 진행률만 보이면 뭘 하는지 알 수 없다.
+      const _ln={auto:'해외(영/중)', en:'영어', ja:'일본어', zh:'중국어'}[L]||L;
+      cur.autoNote=`${i+1}/${cands.length} · ${_ln} · "${q}"`;
+      await lensKwSearch(shortcode, i, L);
+    }
+  }
+  const fin=LENS_STATE[shortcode];
+  if(fin){ fin.autoRun=false; fin.autoNote=''; renderLens(shortcode); }
+}
+
+//: 「전부 열기」가 여는 곳. _plats와 같은 순서로 둔다(둘이 어긋나면 화면과 다르게 열린다).
+const _LENS_OPEN_ALL = ['xiaohongshu', 'douyin', 'tiktok', 'instagram', 'pinterest'];
+
+function lensOpenAll(shortcode, idx){
+  // ★검색어 하나를 다섯 곳에 한 번에 연다 (2026-09-08 사장님 "언어 하나 고르고
+  //   틱톡 인스타 찾고 키워드별로 또 해야되니 시간이 엄청 걸린다").
+  //   자동 모으기가 도는 곳은 유튜브·핀터레스트·네이버클립·틱톡 넷뿐이고
+  //   샤오홍슈·도우인·인스타는 세션이 없거나 과금이라 아직 손으로 봐야 한다.
+  //   그 손품을 5분의 1로 줄인다 — 클릭 한 번에 탭 다섯.
+  const st = LENS_STATE[shortcode]; if(!st) return;
+  const c = (st.cnCands||[])[idx]; if(!c) return;
+  const L = st.lang || 'auto';
+  const targets = _LENS_OPEN_ALL
+    .map(k => { const q = _lensKwFor(c, k, L); return q ? {k, url:_lensSearchUrl(k, q)} : null; })
+    .filter(Boolean);
+  if(!targets.length) return;
+  let opened = 0;
+  targets.forEach(t => {
+    const u = (t.k === 'xiaohongshu') ? _openUrl(t.url) : t.url;
+    // ★window.open이 null이면 브라우저가 팝업을 막은 것이다. 조용히 넘기면
+    //   "눌렀는데 하나만 열린다"가 되고 원인을 알 수 없다 — 세어서 알린다.
+    try { if(window.open(u, '_blank', 'noopener')) opened++; } catch(e){}
+  });
+  st.openNote = (opened >= targets.length)
+    ? ''
+    : `탭 ${opened}/${targets.length}개만 열렸습니다 — 주소창 오른쪽의 «팝업 차단» 아이콘을 눌러 `
+      + `이 사이트를 «항상 허용»으로 바꾸면 다섯 곳이 한 번에 열립니다`;
+  renderLens(shortcode);
+}
+
 function _lensSearchUrl(platform, kw){
   if(platform==='instagram') kw=_igKw(kw);
   const q=encodeURIComponent(kw||'');
@@ -3492,6 +3907,11 @@ function _lensSearchUrl(platform, kw){
     instagram:`https://www.instagram.com/explore/search/keyword/?q=${q}`,
     xiaohongshu:`https://www.xiaohongshu.com/search_result?keyword=${q}`,
     douyin:`https://www.douyin.com/search/${q}`,
+    // 유튜브(2026-09-08) — 영어·일본어 검색어로 해외 원본을 찾을 때 쓴다.
+    // &sp=EgIYAQ%253D%253D = 쇼츠(4분 미만) 필터. 우리가 찾는 건 숏폼이다.
+    youtube:`https://www.youtube.com/results?search_query=${q}&sp=EgIYAQ%253D%253D`,
+    // 핀터레스트 영상탭(2026-09-08) — 언어 격자에서 빠져 있었다.
+    pinterest:`https://www.pinterest.com/search/videos/?q=${q}`,
   };
   return B[platform]||'#';
 }
@@ -3550,11 +3970,33 @@ function renderLens(shortcode, mountId){
   // 카드 자리에 바로 뜨게 해달라는 사장님 요청). 안 주면 종전대로 모달 body.
   const box=document.getElementById(mountId||'scriptBody');
   const st=LENS_STATE[shortcode]; if(!st || !box) return;
-  // 플랫폼 칩 줄 제거(2026-08-22 사장님 "이거 없애도 되고"). 샤오홍슈·도우인은 렌즈가
-  // 링크를 안 줘서 항상 0이었고, 카드마다 플랫폼 라벨이 이미 붙어 칩이 정보를 더하지 않았다.
-  // ★st.on은 남긴다 — 아래 필터 4곳이 이 집합을 쓴다(항상 전체이므로 통과만 시킨다).
-  //   칩만 지우고 st.on을 같이 지우면 shown 계산이 통째로 깨진다.
-  const chips='';
+  // 플랫폼 칩 — 2026-08-22에 없앴다가 2026-09-08 사장님 "플랫폼으로 나눠볼 수 있게
+  // 하고"로 되살린다. 그때 없앤 이유는 **항상 0건이라 정보를 안 더해서**였다(렌즈가
+  // 샤오홍슈·도우인 링크를 안 줬다). 지금은 「🔎 여기서」가 유튜브·핀터레스트·
+  // 네이버클립을 실제로 쌓으므로 상황이 다르다 — 다만 같은 실수를 안 하려고
+  // **건수를 함께** 찍고, 0건인 플랫폼은 흐리게 해서 눌러도 소용없음을 드러낸다.
+  const _cnt={}, _cntSrc={};
+  for(const i of st.items){
+    _cnt[i.platform]=(_cnt[i.platform]||0)+1;
+    // ★출처별로도 센다(2026-09-08). 칩 숫자만 보면 인스타·틱톡이 「여기서」로 모인
+    //   것처럼 보이는데 실제로는 🔍 숏템파워검색(렌즈)이 물어온 것이다.
+    const k=i.platform+'|'+(i._src||'렌즈');
+    _cntSrc[k]=(_cntSrc[k]||0)+1;
+  }
+  const _anyCnt=Object.keys(_cnt).length>0;
+  const chips=!_anyCnt?'':`<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px">
+    ${LENS_PLATFORMS.filter(p=>(_cnt[p.k]||0)>0).map(p=>{
+      // ★0건은 그리지 않는다(2026-09-08 사장님 "샤오랑 도우인도 쌓이는 거 맞나?").
+      //   맞지 않다 — 샤오홍슈·도우인·인스타는 **링크 전용**이라 여기 쌓일 수가 없고
+      //   (2026-08-22 사장님 "예전처럼 페이지 이동해서 검색되게"), 틱톡은 체인에는
+      //   있지만 세션이 결과를 못 받아 0건이다(2026-09-08 서버 반복 실측).
+      //   0건 칩을 늘어놓는 건 8/22에 이 칩을 없앤 바로 그 이유다 — 되풀이하지 않는다.
+      const n=_cnt[p.k]||0, _pOn=st.on.has(p.k);
+      const _sl=_cntSrc[p.k+'|렌즈']||0, _sh=_cntSrc[p.k+'|여기서']||0;
+      const _brk=(_sl||_sh)?` (🔍 렌즈 ${_sl} · 🔎 여기서 ${_sh})`:'';
+      return `<button onclick="toggleLensPlatform('${shortcode}','${p.k}')" title="${p.label} ${n}건${_brk} — 눌러서 보이기/숨기기" style="font-size:11px;padding:3px 9px;border-radius:8px;cursor:pointer;border:1px solid ${_pOn&&n?'var(--accent)':'var(--line)'};background:${_pOn&&n?'var(--accent)':'transparent'};color:${_pOn&&n?'#fff':'var(--fg,inherit)'};opacity:${n?1:.35}">${p.label} ${n}</button>`;
+    }).join('')}
+  </div>`;
   // 필터: 켠 플랫폼 + (숏폼만이면) is_short!==false + (해외만이면) 제목에 한글 없음.
   let shown=st.items.filter(i=>st.on.has(i.platform));
   if(st.shortsOnly) shown=shown.filter(i=>i.is_short!==false);
@@ -3572,6 +4014,22 @@ function renderLens(shortcode, mountId){
   shown=shown.slice().sort((a,b)=>(_LENS_ORDER[a.platform]??9)-(_LENS_ORDER[b.platform]??9));
   const nPhoto=st.items.filter(i=>st.on.has(i.platform) && i.is_photo===true).length;
   const nOff=st.items.filter(i=>st.on.has(i.platform) && i.match===false).length;
+  // ★언어 필터가 몇 개를 숨겼나 (2026-09-08 사장님 "핀터레스트가 계속 추가 안 됨").
+  //   진짜 원인은 백엔드가 아니라 **이 필터**였다 — 서버 실측으로 핀터레스트는 8건씩
+  //   정상 반환하고 키워드를 바꾸면 겹침도 0인데, 화면에서 통째로 잘려나갔다.
+  //   핀터레스트는 한국어 인덱스가 사실상 없어 **영어로 번역해 검색**한다(kw_backends
+  //   주석의 실측: '인덕션 테이블' 0건 / 'induction table' 12건). 그래서 제목이 전부
+  //   영어고, '🇰🇷 한국만'(제목에 한글 요구)과는 **구조적으로 양립할 수 없다**.
+  //   필터를 몰래 무력화하지는 않는다(사장님이 켠 것이다) — 대신 몇 개가 왜 숨었는지
+  //   보여주고 한 번에 풀 수 있게 한다. 조용한 실패 금지.
+  const _langHidden=st.items.filter(i=>{
+    if(!st.on.has(i.platform)) return false;
+    const ko=_HANGUL_RE.test(i.title||'');
+    return (st.koreanOnly && !ko) || (st.foreignOnly && ko);
+  });
+  const nLang=_langHidden.length;
+  const langPlats=[...new Set(_langHidden.map(i=>i.platform))]
+    .map(k=>(LENS_PLATFORMS.find(p=>p.k===k)||{}).label||k).join('·');
   st._shown=shown;
   const selCount=shown.filter(i=>st.sel.has(i.savesc)).length;
   const allSel=shown.length>0 && selCount===shown.length;
@@ -3590,6 +4048,7 @@ function renderLens(shortcode, mountId){
       <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="영상 길이 90초 이하(또는 길이 불명)만 표시"><input type="checkbox" ${st.shortsOnly?'checked':''} onclick="toggleLensShorts('${shortcode}')"> 숏폼만</label>
       <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="제목에 한글이 없는 결과만 표시 — 원본(해외) 영상 찾을 때. 채널명이 아닌 제목 기준 근사치라 완벽하진 않음"><input type="checkbox" ${st.foreignOnly?'checked':''} onclick="toggleLensForeign('${shortcode}')"> 🌍 해외만</label>
       <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="제목에 한글이 있는 결과만 표시 — 국내 레퍼런스를 볼 때. '해외만'과 반대라 둘은 함께 켜지지 않습니다(제목 기준 근사치)"><input type="checkbox" ${st.koreanOnly?'checked':''} onclick="toggleLensKorean('${shortcode}')"> 🇰🇷 한국만</label>
+      ${nLang?`<span style="font-size:11px;color:#e0a33d;display:inline-flex;align-items:center;gap:6px" title="언어 필터(한국만/해외만)가 가린 결과입니다. 핀터레스트는 한국어 인덱스가 없어 영어로 검색하므로 제목이 영어입니다 — '한국만'과 함께 켜면 전부 가려집니다">⚠️ 언어 필터로 ${nLang}건 숨김${langPlats?` (${langPlats})`:''} <button onclick="lensClearLangFilter('${shortcode}')" style="font-size:11px;padding:2px 8px;border-radius:7px;border:1px solid #e0a33d;background:transparent;color:#e0a33d;cursor:pointer">해제</button></span>`:''}
       <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="인스타 카드뉴스(사진·카러셀 게시물)와 영상인지 확인 못 한 핀터레스트 핀을 가립니다. 인스타는 URL이 /p/면 사진으로 보는 근사치라 드물게 옛 동영상도 같이 가려집니다(끄면 다시 보임). 핀터레스트 이미지 핀은 서버가 확인해 아예 빼고, 확인 실패분만 여기서 가립니다"><input type="checkbox" ${st.videoOnly!==false?'checked':''} onclick="toggleLensVideoOnly('${shortcode}')"> 🎬 영상만${nPhoto?` <span style="color:var(--sub)">(카드뉴스 ${nPhoto})</span>`:''}</label>
       <label style="cursor:pointer;display:flex;align-items:center;gap:4px" title="소재 키워드가 제목에 하나도 없는 결과(⚠️다른주제?)를 가립니다. 렌즈는 시각 유사도만 보기 때문에 엉뚱한 게시물이 섞입니다. ⚠️중국어·영어 제목은 키워드가 안 맞아 원본(해외) 후보까지 사라질 수 있어 기본 꺼짐"><input type="checkbox" ${st.hideOfftopic?'checked':''} onclick="toggleLensOfftopic('${shortcode}')"> ⚠️ 다른주제 숨기기${nOff?` <span style="color:var(--sub)">(${nOff})</span>`:''}</label>
       <button onclick="lensBulkSave('${shortcode}')" ${selCount?'':'disabled'} style="${btnCss}">📥 선택 담기(${selCount})</button>
@@ -3601,7 +4060,7 @@ function renderLens(shortcode, mountId){
       ${st.lensErr?`<span style="color:#e0623d">${st.lensErr}</span>`:''}
       ${st.ytLoading?'<span style="color:var(--sub)">▶️ 유튜브 불러오는 중…</span>':''}
       ${_lensIgDiag(st)}
-      <a href="/grab" target="_blank" rel="noopener" title="샤오홍슈·도우인·틱톡·인스타 영상에 '📥 담기' 버튼이 안 뜨면 여기서 1회 켜기" style="text-decoration:none;font-size:11px;padding:4px 10px;border-radius:8px;border:1px solid var(--accent);background:#1f6feb1a;color:var(--accent);font-weight:700;margin-left:auto;white-space:nowrap">📥 담기 버튼 켜기</a>
+      ${''/* 📥 담기 버튼 켜기 링크 - 2026-09-06 사장님 "담기버튼켜기빼고". 기능은 /grab 페이지에 그대로 있다(사이드바로 갈 수 있음). 되살릴 땐 이 자리에 <a href="/grab">만 다시 넣으면 된다. */}
     </div>
   </div>
   <div style="margin-bottom:8px;padding-top:8px;border-top:1px solid var(--line)">
@@ -3614,12 +4073,41 @@ function renderLens(shortcode, mountId){
           title="넣은 소재로 검색어 조합을 여러 개 만들어 아래에 쌓습니다. 한국어만 넣어도 중국어까지 같이 나옵니다 — 무료" style="${btnCss};border-color:var(--accent);color:var(--accent);font-weight:700">${st.cnLoading?'⏳ 만드는 중…':'✨ 검색어 조합 만들기'}</button>
       </div>
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px">
-        <span style="font-size:12px;color:var(--sub)" title="🔎 여기서 = 인스타·틱톡·유튜브·핀터레스트를 이 페이지 안에서 찾습니다. 나머지 아이콘(📕샤오홍슈 🎶도우인 🎵틱톡 📷인스타)은 그 사이트를 새 탭으로 엽니다">🔎 비슷한 영상 찾기 <span style="opacity:.7">— 🔎는 여기서, 아이콘은 새 탭</span></span>
+        <span style="font-size:12px;color:var(--sub)" title="🔎 여기서 = 유튜브·핀터레스트·네이버클립을 이 페이지 안에서 찾습니다(무료). 나머지 아이콘(📕샤오홍슈 🎶도우인 🎵틱톡 📷인스타 📌핀터레스트)은 그 사이트를 새 탭으로 엽니다 — 우리 비용 0원입니다">🔎 비슷한 영상 찾기 <span style="opacity:.7">— 🔎는 여기서(무료), 아이콘은 새 탭</span></span>
+        ${/* ★언어 고르기(2026-09-08 사장님 "언어별로 누를 수 있게"). 고르면 아래 행의
+             아이콘 5개가 통째로 그 언어 검색어로 바뀐다 — 버튼 25개를 깔지 않는 이유다. */''}
+        <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-top:4px">
+          <span style="font-size:11px;color:var(--sub)" title="여기서 고른 언어로 아래 버튼들이 검색합니다">🌐 <b>아래 버튼들이 검색할 언어</b></span>
+          ${LENS_LANGS.map(L=>{
+            const _lOn=(st.lang||'auto')===L.k;
+            return `<button onclick="setLensLang('${shortcode}','${L.k}')" title="${L.title}" style="font-size:12px;padding:3px 9px;border-radius:8px;cursor:pointer;border:1px solid ${_lOn?'var(--accent)':'var(--line)'};background:${_lOn?'var(--accent)':'transparent'};color:${_lOn?'#fff':'var(--fg,inherit)'};font-weight:${_lOn?'700':'400'}">${L.label}</button>`;
+          }).join('')}
+          ${/* ★자동 모으기 — 검색어 × 언어를 순서대로 한 번씩 돌려 계속 쌓는다.
+               「여기서」는 무료 플랫폼만 도니 눌러도 돈이 안 나간다. */''}
+          ${st.product?`<div style="font-size:12px;margin:2px 0 4px"><span title="대본·자막을 읽고 확정한 제품입니다. 검색어가 이 제품을 가리키는지 보세요" style="background:#e0a33d;color:#111;font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;margin-right:6px">📝 대본이 말하는 제품</span><b>${esc(st.product)}</b></div>`:''}
+        ${(st.cnCands||[]).length?`<button onclick="toggleLensAuto('${shortcode}')" title="검색어 ${(st.cnCands||[]).length}개를 각각 4가지 언어(해외·영어·일본어·중국어)로 순서대로 검색해 결과를 계속 쌓습니다. 도는 곳은 유튜브·핀터레스트·네이버클립(전부 무료)이고, 지금 무엇을 검색 중인지 옆에 표시됩니다. 다시 누르면 멈춥니다" style="font-size:12px;padding:3px 10px;border-radius:8px;cursor:pointer;margin-left:6px;border:1px solid ${st.autoRun?'#e0623d':'var(--accent)'};background:transparent;color:${st.autoRun?'#e0623d':'var(--accent)'};font-weight:600">${st.autoRun?'■ 멈추기':'▶ 자동 모으기'}</button>`:''}
+          ${st.autoRun&&st.autoNote?`<span style="font-size:11px;color:var(--sub)">${esc(st.autoNote)} 진행 중…</span>`:''}
+        </div>
+        ${/* ★셋(언어·여기서·새 탭)의 관계가 화면에 안 보여 헷갈린다는 지적(2026-09-08).
+             한 줄로 설명한다 — 고른 언어가 무엇을 바꾸는지가 핵심이다. */''}
+        <div style="font-size:11px;color:var(--sub);margin:2px 0 6px;line-height:1.5">
+          ${(st.lang||'auto')==='auto'
+            ? '지금은 <b>해외 원본</b> — 샤오홍슈·도우인은 중국어, 틱톡·인스타·핀터레스트는 영어로 엽니다. 한국 영상을 보려면 <b>KR 한국어</b>를 누르세요.'
+            : `지금은 <b>${(LENS_LANGS.find(L=>L.k===st.lang)||{}).label||''}</b> — 아래 다섯 곳을 모두 이 언어로 검색합니다.`}
+        </div>
         ${st.frameBlob?`<button onclick="lensMoreCnKeywords('${shortcode}')" ${st.cnLoading?'disabled':''} title="같은 장면으로 다른 각도의 검색어를 더 뽑습니다(이미 나온 건 빼고 아래에 쌓입니다). 무료 — 추가 비용 없음" style="${btnCss};border-color:var(--accent);color:var(--accent)">${st.cnLoading?'⏳ 뽑는 중…':'🔄 다른 검색어 더'}</button>`:''}
         ${st.cnNoNew?'<span style="font-size:11px;color:var(--sub)">더 나올 게 없어요 — 이 장면에서 뽑을 각도는 다 나왔습니다</span>':''}
+        ${st.cnErr?`<span style="font-size:11px;color:#e0623d">${esc(st.cnErr)}</span>`:''}
+        ${st.openNote?`<div style="font-size:11.5px;color:#e0a33d;padding:4px 0">⚠️ ${esc(st.openNote)}</div>`:''}
+        ${(st.hasSource===false && shortcode!=='__single__')?`<button onclick="lensExtractThenSearch('${shortcode}')" ${st.reExtracting?'disabled':''} title="이 영상의 대본·자막을 먼저 분석해 제품이 무엇인지 알아낸 뒤, 그 제품명으로 검색어를 다시 뽑습니다. 지금 검색어는 썸네일 그림만 보고 지은 것이라 엉뚱할 수 있습니다 (10~30초, 대본추출 1회 과금)" style="${btnCss};border-color:#e0a33d;color:#e0a33d;font-weight:700">${st.reExtracting?'⏳ 대본 분석 중… (10~30초)':'📝 대본 분석 후 찾기'}</button>
+        <span style="font-size:11px;color:#e0a33d">← 지금 검색어는 <b>썸네일 그림만</b> 보고 지은 것입니다</span>`:''}
       </div>
       ${st.cnSearching?`<div style="font-size:11px;color:var(--sub);margin:4px 0">🔎 ${esc(st.cnSearchKw||'')} 검색 중… (10~30초)</div>`:''}
       ${(!st.cnSearching&&st.cnCost!=null)?`<div style="font-size:11px;color:var(--sub);margin:4px 0">${st.cnCost>0?('이번 검색 $'+st.cnCost.toFixed(3)):'무료 검색'}</div>`:''}
+      ${st.kwSearching?`<div style="font-size:11px;color:var(--sub);margin:4px 0">🔎 ${esc(st.kwSearchKw||'')} 검색 중… (10~30초)</div>`:''}
+      ${/* ★kwCost는 2026-09-08까지 값만 담고 화면에 안 그렸다 — 틱톡 Apify가 눈에 안 띈 채
+            나갔다(사장님 지적). cnCost와 같은 자리·같은 문구로 맞춘다. */''}
+      ${(!st.kwSearching&&st.kwCost!=null)?`<div style="font-size:11px;color:var(--sub);margin:4px 0">${st.kwCost>0?('이번 검색 $'+st.kwCost.toFixed(3)):'무료 검색'}</div>`:''}
       <div style="display:flex;flex-direction:column;gap:6px">
         ${(st.cnCands||[]).map((c,idx)=>{
           // 샤오훙슈 검색은 로그아웃 방문자를 로그인으로 막는다(登录后查看搜索结果). 해외판
@@ -3627,8 +4115,19 @@ function renderLens(shortcode, mountId){
           // 그대로 두고 '여는 링크'만 _openUrl로 rednote 치환. 도우인은 해외판 없어 그대로.
           // 샤오홍슈/도우인=중국어(c.zh), 틱톡/인스타=한국어(c.ko)로 연다(플랫폼별 언어).
           const kw=c.ko||c.zh;
-          const xhs=_openUrl(_lensSearchUrl('xiaohongshu', c.zh)), dy=_lensSearchUrl('douyin', c.zh);
-          const tk=_lensSearchUrl('tiktok', kw), ig=_lensSearchUrl('instagram', kw);
+          // ★플랫폼 아이콘 5개 = 지금 고른 언어의 검색어로 연다(2026-09-08).
+          //   언어 칩(위)에서 고르면 이 5개가 통째로 그 언어로 바뀐다.
+          const _L=st.lang||'auto';
+          const _plats=[
+            {k:'xiaohongshu', ico:'📕 샤오홍슈', name:'샤오홍슈'},
+            {k:'douyin',      ico:'🎶 도우인',  name:'도우인'},
+            {k:'tiktok',      ico:'🎵 틱톡',    name:'틱톡'},
+            {k:'instagram',   ico:'📷 인스타',  name:'인스타'},
+            {k:'pinterest',   ico:'📌 핀터레스트', name:'핀터레스트'},
+          ].map(p=>{
+            const q=_lensKwFor(c, p.k, _L);
+            return Object.assign({}, p, {q, url: q?_lensSearchUrl(p.k, q):''});
+          });
           // 아이콘 버튼(2026-08-22 사장님 "텍스트 위주 말고 보기 편하게").
           // 글자('여기서 찾기'·'틱톡'…)를 빼고 같은 크기 아이콘만 늘어놓는다 → 줄이 짧아지고
           // 눈이 검색어에 먼저 간다. 뭘 하는 버튼인지는 title(마우스 올리면)로 남긴다.
@@ -3643,15 +4142,16 @@ function renderLens(shortcode, mountId){
           //   페이지 이동해서 검색되게"). 인앱 검색(lensCnSearch)은 함수만 남겨둔다.
           return `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:4px 0">
             <div style="min-width:132px;flex:1 1 132px">
-              <div style="font-size:14px;font-weight:600;line-height:1.3">${kw}</div>
-              <div style="font-size:11px;color:var(--sub)">${c.zh||''}</div></div>
+              <div style="font-size:14px;font-weight:600;line-height:1.3">${c._scriptHit?'<span title="대본·자막을 읽고 확정한 제품과 맞는 검색어입니다 — 썸네일 그림만 보고 지은 다른 검색어보다 정확합니다" style="background:#2ea043;color:#fff;font-size:10px;padding:1px 6px;border-radius:8px;margin-right:5px;vertical-align:middle">✅ 대본의 제품</span>':''}${kw}</div>
+              ${/* ko 아래에 나머지 언어를 한 줄로. 옛 후보는 zh만 있어 그대로 호환된다. */''}
+              <div style="font-size:11px;color:var(--sub)">${[c.zh,c.en,c.ja].filter(Boolean).map(esc).join(' · ')}</div></div>
             <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-            ${kw?`<button onclick="lensKwSearch('${shortcode}',${idx})" ${st.kwSearching?'disabled':''} title="인스타·틱톡·유튜브·핀터레스트를 '${kw}'로 검색해 이 페이지 안에 카드로 불러옵니다(이동 없음). 핀터레스트는 영어로 번역해 영상탭을 찾습니다" style="${wide}">🔎 여기서</button>`:''}
-            ${c.zh?`<a href="${xhs}" target="_blank" rel="noopener" title="샤오홍슈에서 '${c.zh}' 검색 — 새 탭으로 엽니다" style="${ico}">📕</a>
-            <a href="${dy}" target="_blank" rel="noopener" title="도우인에서 '${c.zh}' 검색 — 새 탭으로 엽니다" style="${ico}">🎶</a>`:''}
-            ${kw?`<a href="${tk}" target="_blank" rel="noopener" title="틱톡에서 '${kw}' 검색 — 새 탭" style="${ico}">🎵</a>
-            <a href="${ig}" target="_blank" rel="noopener" title="인스타에서 '${_igKw(kw)}' 검색 — 새 탭. 지어낸 조합은 0건이라 실제 쓰는 말로 줄입니다" style="${ico}">📷</a>
-            ${_igShortKw(kw)?`<a href="${_lensSearchUrl('instagram', _igShortKw(kw))}" target="_blank" rel="noopener" title="인스타 결과가 없을 때 — '${_igShortKw(kw)}' 한 단어로 넓게" style="${ico};opacity:.6">📷⁺</a>`:''}`:''}
+            ${kw?`<span style="font-size:10px;color:var(--sub);margin-right:2px">이 화면에 담기</span><button onclick="lensKwSearch('${shortcode}',${idx})" ${st.kwSearching?'disabled':''} title="'${kw}'로 검색해 이 페이지 안에 카드로 불러옵니다(이동 없음, 전부 무료). 이 버튼이 가져오는 곳은 유튜브·핀터레스트·네이버클립입니다(틱톡은 로그인 세션이 결과를 못 받아 현재 0건). 샤오홍슈·도우인·인스타는 아래 버튼으로 새 탭에서 보세요. ※카드에 붙은 '틱톡'은 🔍 숏템파워검색(구글 렌즈)이 따로 물어온 것이라 이 버튼과 무관합니다" style="${wide}">🔎 여기서</button>`:''}
+            <span style="font-size:10px;color:var(--sub);margin-left:8px;padding-left:8px;border-left:1px solid var(--line)">새 탭으로 열기</span>
+            ${_plats.some(p=>p.url)?`<button onclick="lensOpenAll('${shortcode}',${idx})" title="아래 다섯 곳을 '${esc(kw)}'로 한꺼번에 엽니다 — 하나씩 누르지 않아도 됩니다. 처음엔 브라우저가 팝업을 막을 수 있는데, 주소창 오른쪽 아이콘에서 «항상 허용»으로 바꾸면 됩니다" style="${wide};border-color:var(--accent);font-weight:700">⚡ 5곳 전부</button>`:''}
+            ${_plats.map(p=>p.url?`<a href="${p.k==='xiaohongshu'?_openUrl(p.url):p.url}" target="_blank" rel="noopener" title="${p.name}를 '${esc(p.q)}'(으)로 검색 — 새 탭으로 엽니다" style="${wide}">${p.ico}</a>`:`<span title="${p.name}: 이 언어의 검색어가 없습니다" style="${wide};opacity:.25;cursor:default">${p.ico}</span>`).join('')}
+            ${/* 인스타는 해시태그라 길면 0건 — 한 단어로 넓히는 보조 버튼을 남겨둔다 */''}
+            ${(_L==='auto'||_L==='ko')&&_igShortKw(kw)?`<a href="${_lensSearchUrl('instagram', _igShortKw(kw))}" target="_blank" rel="noopener" title="인스타 결과가 없을 때 — '${_igShortKw(kw)}' 한 단어로 넓게" style="${ico};opacity:.6">📷⁺</a>`:''}
             </div></div>`;
         }).join('')}
         ${(st.cnCands||[]).length?'':`<div style="font-size:11px;color:var(--sub)">아직 검색어가 없습니다 — 위에 소재를 넣고 <b>✨ 검색어 조합 만들기</b>를 누르거나, 화면에서 자동으로 뽑히길 기다려 보세요.</div>`}
@@ -3692,6 +4192,12 @@ function renderLens(shortcode, mountId){
         <span style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.65);color:#fff;font-size:11px;padding:2px 8px;border-radius:10px">${plabel}</span>
         ${i.sim==='same'?'<span title="AI 유사도 판정: 같은 제품" style="position:absolute;bottom:6px;left:6px;background:#1f9d55;color:#fff;font-size:10px;padding:2px 7px;border-radius:10px">✅같은제품</span>':''}
         ${i.match===false?'<span title="AI 유사도 판정: 무관 — 다른 제품일 수 있음" style="position:absolute;bottom:6px;right:6px;background:#e0623d;color:#fff;font-size:10px;padding:2px 7px;border-radius:10px">⚠️다른주제?</span>':''}
+        ${/* ★방금 검색으로 들어온 카드만 NEW — 결과가 플랫폼 순으로 정렬돼 목록
+             중간에 끼어들기 때문에, 이게 없으면 뭐가 새로 온 건지 알 수 없다. */''}
+        ${(i._batch && st.batch && i._batch===st.batch)?'<span title="방금 검색으로 새로 들어온 결과" style="position:absolute;top:6px;left:6px;background:#2ea043;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px">NEW</span>':''}
+        ${/* ★어느 버튼이 물어온 카드인지(2026-09-08). 렌즈와 「여기서」가 같은 통에
+             섞여 들어와, 같은 플랫폼이라도 출처가 달라 혼란이 있었다. */''}
+        ${i._src?`<span title="${i._src==='렌즈'?'🔍 숏템파워검색(구글 렌즈)이 찾아온 결과':'🔎 여기서(키워드 검색)가 찾아온 결과'}" style="position:absolute;top:6px;right:6px;background:${i._src==='렌즈'?'#6b5bd6':'#2b7fd6'};color:#fff;font-size:10px;padding:2px 6px;border-radius:9px;opacity:.92">${i._src}</span>`:''}
       </div>
       <div class="body">
         <div class="rank" style="white-space:normal;line-height:1.4;min-height:2.8em">${esc((i.title||'').slice(0,70))}</div>
@@ -3966,7 +4472,7 @@ async function saveToWiki(btn){
     const d = await r.json();
     if(!d.ok){ btn.disabled=false; btn.textContent='⭐ S급 위키 저장'; alert('저장 실패: '+(d.error||'')); return; }
     btn.textContent='✓ 위키에 저장됨'; btn.classList.add('done');
-  }catch(e){ btn.disabled=false; btn.textContent='⭐ S급 위키 저장'; alert('네트워크 오류'); }
+  }catch(e){ btn.disabled=false; btn.textContent='⭐ S급 위키 저장'; alert(ErrorHelp.text('network')); }
 }
 async function copyFullText(btn){
   const full = (document.querySelector('#scriptBody .sm-full')||{}).innerText || '';
@@ -4143,7 +4649,7 @@ async function runSceneSplit(){
       cb.addEventListener('change', ()=> pickCut(parseInt(cb.dataset.i,10), cb.checked));
     });
     syncSplitButtons();
-  }catch(e){ if(gen === SCENE_GEN){ listEl.innerHTML=''; alert('네트워크 오류'); } }
+  }catch(e){ if(gen === SCENE_GEN){ listEl.innerHTML=''; alert(ErrorHelp.text('network')); } }
   finally{ btn.disabled = false; }
 }
 
@@ -4237,7 +4743,7 @@ async function prepareOne(start, end, startFrame, queueInfo){
     // 여기서 끝 — parseFloat·toFixed 등 산술을 스치지 않는다(스치면 프레임 번호가 사라진다).
     d._start_frame = (d.start_frame != null) ? d.start_frame : startFrame;
     showSceneDraft(d, queueInfo);
-  }catch(e){ if(gen === SCENE_GEN) handlePrepareFail('네트워크 오류', queueInfo); }
+  }catch(e){ if(gen === SCENE_GEN) handlePrepareFail(ErrorHelp.text('network'), queueInfo); }
 }
 
 // prepare 나가는 순간 sceneStep2를 로딩 문구로 갈아치운다 — 낡은 초안의 버튼이 화면에
@@ -4303,7 +4809,7 @@ async function runScenePrepare(){
     if(!d.ok){ handlePrepareFail(d.error||'구간컷 실패', null); return; }
     SCENE_CTX.token = d.token;
     showSceneDraft(d);   // queueInfo 없음 → d._queue=false, 큐와 무관한 단독 초안
-  }catch(e){ if(gen === SCENE_GEN) handlePrepareFail('네트워크 오류', null); }
+  }catch(e){ if(gen === SCENE_GEN) handlePrepareFail(ErrorHelp.text('network'), null); }
   finally{ btn.disabled = false; btn.textContent = '✂ 자르고 AI 태그 뽑기'; }
 }
 
@@ -4408,7 +4914,7 @@ async function commitScene(){
       alert('장면 라이브러리에 담았습니다.');
     }
   }catch(e){
-    alert('네트워크 오류');
+    alert(ErrorHelp.text('network'));
     SCENE_BUSY = false;
     document.querySelectorAll('#sceneStep2 button').forEach(b=> b.disabled=false);
   }
@@ -4484,6 +4990,6 @@ fetch('/api/me').then(r=>r.ok?r.json():null).then(d=>{
   setTimeout(function(){ try{ traceByUrl(lu); }catch(e){} }, 600);
 })();
 </script>
-<script src="/sidebar.js?v=2"></script>
+<script src="/sidebar.js?v=3"></script>
 </body>
 </html>

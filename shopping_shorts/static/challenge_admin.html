@@ -121,6 +121,7 @@
         <option value="instagram">인스타</option>
         <option value="youtube">유튜브</option>
         <option value="tiktok">틱톡</option>
+        <option value="naverclip">네이버클립</option>
       </select>
       <span id="vcount"></span>
       <span id="vmsg" style="font-size:12px;margin-left:10px"></span>
@@ -231,6 +232,8 @@ function cardHtml(it, idx) {
     meta = `조회 ${Number(it.views).toLocaleString()}`;
   } else if (it.platform === 'tiktok') {
     meta = '틱톡';
+  } else if (it.platform === 'naverclip') {
+    meta = '네이버클립';
   } else if (it.fetch_status === 'failed') {
     meta = '정보 없음';
   } else {

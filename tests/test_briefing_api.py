@@ -212,3 +212,13 @@ def test_api_atom_raw_missing_atom_id_returns_404(tmp_path, monkeypatch):
     c = TestClient(server.app)
     r = c.get("/api/atom_raw/does-not-exist")
     assert r.status_code == 404
+
+
+def test_briefing_keys_do_not_fall_back_to_locked_dedicated_keys(monkeypatch):
+    """★2026-09-04 실측: 브리핑 키 3개가 전부 429 잠금인데 옛 폴백이 잠금을 무시하고 그 3개를
+    다시 줘서 키당 240회/일 429, ok 0건. 잠긴 키가 아니라 요약 풀로 가야 한다."""
+    monkeypatch.setattr(server.key_vault, "get_keys", lambda group: (
+        ["locked-1", "locked-2"] if group == "briefing" else []))
+    monkeypatch.setattr(server.key_vault, "get_live_keys", lambda group: [])   # 전부 잠김
+    monkeypatch.setattr(server, "_summary_keys", lambda: ["shared-key-1"])
+    assert server._briefing_keys() == ["shared-key-1"]

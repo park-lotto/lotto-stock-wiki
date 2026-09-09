@@ -17,7 +17,7 @@ import shopping_shorts.app as A
 
 
 INV = {
-    "id": 60, "name": "유튜브 발명품형", "fit_categories": ["발명품형"],
+    "id": 60, "name": "유튜브 「OO 개발자도 무릎 탁」", "fit_categories": ["발명품형"],
     "beat_roles": ["title", "story", "authority", "benefit", "escalate", "twist"],
     "templates": {
         "title": ["{나라} 천재가 만들어 떼돈 번 {제품}의 정체"],

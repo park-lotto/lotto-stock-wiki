@@ -38,6 +38,26 @@
 
 ---
 
+## 🚫 0순위-A1 — 프로그램 수정은 **실제로 돌려보고 확실할 때만** "됐다"고 한다 (2026-09-04 사장님)
+
+**사장님이 프로그램 수정을 요청하면, 고친 뒤 반드시 그 기능을 실제 환경(라이브 브라우저·실제 job·실제 렌더)에서
+끝까지 돌려보고, 결과를 눈으로 확인한 뒤에만 "고쳐졌다"고 보고한다.** 확인 못 했으면 "고쳤지만 실측은 못 했다"고
+갈라서 말한다.
+
+```
+□ 정적 검토·테스트 통과·문법 검사 = 확인 아님. 실제 화면에서 그 버튼을 누르고 결과물을 본다
+□ 서버 저장·렌더가 끼면 가짜 응답으로 막지 말고 **진짜로** 저장·렌더시켜 결과물(영상·파일·DB)을 대조한다
+□ 배포가 필요하면 배포까지 기다려 **배포본**에서 다시 확인한다 (로컬·주입 검증은 중간 단계일 뿐)
+□ 돌려볼 수 없으면(키 없음·SSH 막힘 등) 그 사실과 "어디까지 확인됐는지"를 보고의 첫 줄에 적는다
+```
+
+왜: 2026-09-04 하루에 세 번 "고쳤다"가 틀렸다 — 내클론음성 버튼(onclick 따옴표, 09-02 구현 뒤 한 번도 안 눌러봄) /
+미리보기 지문(배포 뒤 실측하니 여전히 0) / 판정 로직만 가짜 응답으로 검증하고 실제 렌더는 안 돌림.
+사장님: "너가 실제로 돌려보라고. 매우 중요한 규칙인데, 앞으로는 프로그램 수정을 내가 요청하면 실제 확인까지
+돌려보고 확실할 때 해준다는 걸 규칙에 명시해."
+
+---
+
 ## 🚫 0순위-A2 — 시작 전에 **과거 기록부터 찾아 읽는다** (2026-08-09)
 
 **아무 작업이든, 아무 질문이든, 손대기 전에 한 줄 먼저 실행한다.**
@@ -325,7 +345,12 @@ log.md에 `투경 해제 예측 검증` / `종가배팅 시스템` 키워드 있
 
 ## 🚢 대시보드 배포 규칙 (필수 — 안 지키면 "왜 안 고쳐지나" 재발)
 
-라이브 대시보드 = **stockbrain1.duckdns.org** (서버 `ubuntu@43.200.48.69`, systemd `stockbrain`).
+라이브 대시보드 = **stockbrain1.duckdns.org** (서버 `ubuntu@3.35.251.172`, systemd `stockbrain`).
+
+> ⚠️ **서버 IP는 바뀐다 — 접속 전에 확인하라**: `nslookup shoppingshorts.duckdns.org`
+>   2026-09-06 실측: 여기 적혀 있던 `43.200.48.69`가 **죽은 주소**(포트22 timeout)여서
+>   여러 세션이 "서버 접근이 안 된다"고 오판했다. 서버는 멀쩡히 9일째 돌고 있었다.
+>   **도메인은 항상 살아있는 IP를 가리킨다** — IP를 못 믿겠으면 도메인으로 조회해라.
 
 1. **브랜치는 무조건 `main`.** 서버는 `main`만 추적한다. `feat/*` 등 다른 브랜치에 커밋하면 **서버에 영영 안 감**. 커밋 전 `git branch --show-current`로 main 확인.
 2. **서버 파일 직접수정(핫패치) 금지.** git에 안 남아 다음 pull에 덮인다. 무조건 로컬 → 커밋 → `git push origin main`.
@@ -350,7 +375,7 @@ log.md에 `투경 해제 예측 검증` / `종가배팅 시스템` 키워드 있
    ⚠️ pull을 커밋보다 먼저 하지 마라 — uncommitted 상태의 raw `git pull`은 충돌로 막힌다.
    </details>
 7. CRLF/데이터 노이즈는 `.gitattributes`(eol=lf)로 봉인됨. `raw/`는 git추적 유지(PC간 공유).
-8. **같은 서버(`ubuntu@43.200.48.69`), 같은 repo(`/home/ubuntu/lotto-stock-wiki`)에 서비스 2개.**
+8. **같은 서버(`ubuntu@3.35.251.172`), 같은 repo(`/home/ubuntu/lotto-stock-wiki`)에 서비스 2개.**
    `dashboard/`·`scripts/` 변경 → systemd `stockbrain`(:8090, stockbrain1.duckdns.org) 재시작.
    `shopping_shorts/` 변경 → systemd `shopping-shorts`(:8849, shoppingshorts.duckdns.org) 재시작.
    둘 다 같은 `deploy/auto_deploy.sh` 크론(3분)이 처리 — 그래서 아래 9번 사고가 **두 서비스 배포를 동시에** 막는다.
@@ -360,7 +385,7 @@ log.md에 `투경 해제 예측 검증` / `종가배팅 시스템` 키워드 있
    서버에 staged 상태로 방치돼 배포가 통째로 멈춰있었음, 로컬 4세션 작업 자체는 문제 없었음).
    - **세션 시작 시 1번만 확인**(의심되거나 "배포했는데 안 바뀜" 제보 시 필수):
      ```
-     ssh -i C:\Users\TheRose\crawling_bot_client\LightsailDefaultKey-ap-northeast-2.pem ubuntu@43.200.48.69 \
+     ssh -i C:\Users\CH\crawling_bot_client\LightsailDefaultKey-ap-northeast-2.pem ubuntu@3.35.251.172 \
        "cd /home/ubuntu/lotto-stock-wiki && git status --short && tail -5 /tmp/auto_deploy.log"
      ```
    - `git status --short`에 뭔가 걸리면(특히 "M "/"A " staged) 로그에 `pull실패(작업트리충돌?)`가 있는지 확인.

@@ -518,8 +518,57 @@ def _referer_for(url):
     return "https://www.instagram.com/"
 
 
+# 썸네일 보관함(2026-09-06) — CDN URL이 만료돼도 판독할 수 있게 원본을 디스크에 남긴다.
+#
+# ★왜 필요한가 (실측 2026-09-06): 랭킹 카드에 "살 물건 없음"이 많다는 제보를 파보니
+#   재판독 대기 3,191건 중 **2,771건(87%)이 인스타 썸네일 만료 + 캡션 없음**이었다.
+#   근거가 0이면 어떤 프롬프트로도 판독할 수 없다 — 프롬프트를 고쳐도 화면은 안 바뀐다.
+#   인스타 CDN URL(scontent-*.cdninstagram.com)은 며칠이면 죽는데, 우리는 URL만 들고 있었다.
+#   ⚠️ 이미 만료된 과거분은 이걸로 못 살린다(URL이 이미 죽었다). **앞으로 담는 것**을 지킨다.
+# ★한 곳에만 넣는다: 판독 5곳(archive_tagger·discover_jobs·overseas_hot_jobs·product_name 2곳)이
+#   전부 이 함수를 거치므로, 여기 한 번 붙이면 전 경로가 같이 보호된다(0순위-B).
+# ⚠️ data/thumbs는 2026-07-18부터 **영상 프레임·그리드**가 쓰던 폴더다(실측 2GB).
+#    같은 폴더를 나눠 쓰면 나중에 정리하다 서로 지운다 — 별도 폴더에 담는다.
+_THUMB_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "thumb_cache")
+_THUMB_MAX_BYTES = 3 * 1024 * 1024      # 3MB 넘는 건 썸네일이 아니다 — 안 담는다
+
+
+def _thumb_cache_path(url):
+    """URL → 보관 경로. 파일명은 URL 해시라 CDN 쿼리스트링이 바뀌어도 같은 파일을 가리킨다."""
+    import hashlib
+    h = hashlib.md5((url or "").encode("utf-8", "ignore")).hexdigest()
+    return os.path.join(_THUMB_DIR, h[:2], h + ".jpg")
+
+
+def _thumb_cache_read(url):
+    try:
+        with open(_thumb_cache_path(url), "rb") as f:
+            b = f.read()
+        return b or None
+    except Exception:      # noqa: BLE001 — 보관본이 없거나 못 읽으면 그냥 받아온다
+        return None
+
+
+def _thumb_cache_write(url, content):
+    """보관 실패는 무해하다 — 판독은 이미 content로 진행된다."""
+    if not content or len(content) > _THUMB_MAX_BYTES:
+        return
+    try:
+        path = _thumb_cache_path(url)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        tmp = path + ".tmp"
+        with open(tmp, "wb") as f:
+            f.write(content)
+        os.replace(tmp, path)          # 원자적 — 반쯤 쓰인 파일을 남기지 않는다
+    except Exception as e:      # noqa: BLE001
+        print(f"[thumb_cache] 보관 실패(무해): {type(e).__name__}: {e}", file=sys.stderr)
+
+
 def fetch_thumb_bytes(url, timeout=15):
-    """썸네일 URL → 이미지 bytes. 인스타/샤오홍슈 CDN 핫링크 차단 우회 헤더 포함. 실패 시 None."""
+    """썸네일 URL → 이미지 bytes. 인스타/샤오홍슈 CDN 핫링크 차단 우회 헤더 포함.
+
+    ★받아온 이미지는 보관함에 남긴다. CDN URL이 만료되면 보관본으로 답한다(2026-09-06).
+    실패 시 None."""
     if not url:
         return None
     try:
@@ -529,9 +578,14 @@ def fetch_thumb_bytes(url, timeout=15):
             "Referer": _referer_for(url),
         })
         r.raise_for_status()
-        return r.content
+        content = r.content
+        if content:
+            _thumb_cache_write(url, content)
+            return content
     except Exception:
-        return None
+        pass
+    # 여기 오면 CDN이 죽었거나 막혔다 — 예전에 받아둔 게 있으면 그걸로 판독한다
+    return _thumb_cache_read(url)
 
 
 # 렌즈 비전 호출 1회의 상한(초). 이걸 넘으면 그 호출을 끊고 다음 키로 재시도한다.
@@ -565,10 +619,22 @@ _lens_cache = {}                 # key → (저장시각, product, zh)
 _lens_cache_lock = threading.Lock()
 
 
+# 검색어용 소재를 프롬프트에 얼마나 실을지 — **여기 한 곳에서만** 정한다(0순위-B).
+# ★캐시키(_frame_cache_key)와 프롬프트(cn_search_candidates)가 반드시 같은 값을 써야 한다.
+#   다르면 서로 다른 소재가 같은 캐시칸을 쓰거나(오답 고착), 캐시가 영영 안 맞는다
+#   (memory `reference_캐시키_불일치함정`).
+# 900 = app._LENS_SRC_MAX와 맞춘 값. 400에서 올린 이유(2026-09-06 실측):
+#   쇼츠 대본은 앞부분이 인사·후킹이라 앞에서 400자를 자르면 제품 특징이 통째로 날아갔다
+#   (실측: 잘려나간 112자에 '칼날·키링·안전·박스 테이프'가 전부 있었다).
+#   비용은 거의 없다 — 400자 11.75초 → 900자 12.57초(각 3회 평균, +0.8초)이고,
+#   이 호출은 /api/lens/search와 **병렬**이라 체감 지연은 사실상 0이다.
+_LENS_PROMPT_SRC_MAX = int(os.environ.get("LENS_PROMPT_SRC_MAX", "900"))
+
+
 def _frame_cache_key(image_bytes, caption):
     """프레임+캡션 → 캐시 키. ★저장·조회가 반드시 이 함수를 거친다."""
     h = hashlib.sha1(image_bytes or b"").hexdigest()
-    return f"{h}:{(caption or '')[:400]}"
+    return f"{h}:{(caption or '')[:_LENS_PROMPT_SRC_MAX]}"
 
 
 def _lens_cache_get(key):
@@ -681,10 +747,15 @@ _CN_CANDIDATES_PROMPT = """이 이미지는 한국어 쇼츠 영상의 한 장�
     붙여 구체적으로 써라(예: '이사갈 때 마루 찍힘 셀프 보수').
   각 후보는 **서로 다른 각도**여야 한다(제품명·브랜드·용도·문제상황·대상).
 
-- ko = 한국어 검색어, zh = 중국어 검색어(축자번역 말고 중국 창작자가 실제 쓰는 표현으로).
+- ko = 한국어, zh = 중국어, en = 영어, ja = 일본어, ru = 러시아어 검색어.
+  ★네 언어 모두 **축자번역이 아니라 그 나라 창작자가 실제로 쓰는 표현**으로 써라.
+    (2026-09-08 사장님 "외국 영상이 필요하니 중국어 영어 일본어까지 배치되게".
+     핀터레스트 실측이 이유를 보여준다: '인덕션 테이블' 0건 / 'induction table' 12건 —
+     한국어로만 물으면 해외 소재는 아예 안 나온다.)
 - 실제로 쓰이지 않는 말을 지어내지 마라 — 사람이 검색창에 칠 법한 말이어야 한다.
 - JSON만: {{"product": "한국어 제품명(짧게)", \
-"candidates": [{{"ko": "한국어 검색어", "zh": "중국어 검색어"}}, ...]}}
+"candidates": [{{"ko": "한국어 검색어", "zh": "중국어 검색어", \
+"en": "영어 검색어", "ja": "일본어 검색어", "ru": "러시아어 검색어"}}, ...]}}
 소재: {caption}"""
 
 _CN_CANDIDATES_SCHEMA = {
@@ -695,7 +766,11 @@ _CN_CANDIDATES_SCHEMA = {
             "type": "array",
             "items": {
                 "type": "object",
-                "properties": {"ko": {"type": "string"}, "zh": {"type": "string"}},
+                # en·ja 추가(2026-09-08). required에는 넣지 않는다 — 모델이 못 채우면
+                # 그 언어만 비고 ko/zh는 살아야 한다(전부 실패로 만들지 않는다).
+                "properties": {"ko": {"type": "string"}, "zh": {"type": "string"},
+                               "en": {"type": "string"}, "ja": {"type": "string"},
+                               "ru": {"type": "string"}},
                 "required": ["ko", "zh"],
             },
             # ★프롬프트가 5~6개를 요구한다 — 4로 두면 스키마가 조용히 잘라내
@@ -719,7 +794,8 @@ def cn_search_candidates(image_bytes, caption, max_retries=3, quota_sleep=8, exc
         return empty
     seen = {str(s).strip() for s in (exclude or []) if str(s or "").strip()}
     seen_initial = bool(seen)   # '🔄 다른 검색어' 재요청인가 (아래 캐시 저장 판단에 쓴다)
-    prompt = _CN_CANDIDATES_PROMPT.format(caption=(caption or "(캡션 없음)")[:400])
+    prompt = _CN_CANDIDATES_PROMPT.format(
+        caption=(caption or "(캡션 없음)")[:_LENS_PROMPT_SRC_MAX])
     if seen:
         prompt += ("\n\n※ 아래 검색어들은 **이미 사용자에게 보여준 것**이다. 이것들과 "
                    "겹치지 않는 **완전히 다른 각도**의 후보만 만들라(재료·조리법·모양·"
@@ -738,6 +814,12 @@ def cn_search_candidates(image_bytes, caption, max_retries=3, quota_sleep=8, exc
                     response_mime_type="application/json",
                     http_options=_lens_http_options(),
                     response_schema=_CN_CANDIDATES_SCHEMA,
+                    # ★온도 고정(2026-09-06 사장님 "이번에는 완전 다른거 나왔어").
+                    #   기본 온도로 두면 **같은 영상을 다시 눌러도 매번 다른 제품**이 나온다
+                    #   — 실측: 같은 프레임·같은 입력 5회에 버터커터기/에어팟케이스/미니커터/
+                    #   미니칼/실패로 5회 전부 달랐다. 소재를 제대로 주면 5/5 일치한다.
+                    #   검색어는 창작이 아니라 **판독**이라 흔들릴 이유가 없다.
+                    temperature=0,
                 ),
             )
             data = json.loads(resp.text)
@@ -745,7 +827,12 @@ def cn_search_candidates(image_bytes, caption, max_retries=3, quota_sleep=8, exc
             for c in (data.get("candidates") or []):
                 ko, zh = (c.get("ko") or "").strip(), (c.get("zh") or "").strip()
                 if zh and zh not in seen and (not ko or ko not in seen):
-                    cands.append({"ko": ko, "zh": zh})
+                    # en·ja도 함께 싣는다(2026-09-08) — 없으면 빈 문자열이라
+                    # 화면·링크 쪽이 종전대로 ko/zh만 쓰는 것과 호환된다.
+                    cands.append({"ko": ko, "zh": zh,
+                                  "en": (c.get("en") or "").strip(),
+                                  "ja": (c.get("ja") or "").strip(),
+                                  "ru": (c.get("ru") or "").strip()})
                     seen.add(zh)          # 같은 응답 안의 중복도 막는다
             product = (data.get("product") or "").strip()
             # ★여기서 채워두면 /api/lens/yt가 부르는 cn_search_keyword_vision이
@@ -787,10 +874,14 @@ _KW_EXPAND_PROMPT = """사용자가 찾으려는 소재: "{keyword}"
   ★수식어를 겹쳐 **없는 말을 지어내지 마라** — 인스타 검색은 실제로 쓰이는 말에만 반응한다.
   (실측: '고독스 아동용 카메라' 0건 / '고독스 카메라' 18건, '감성 키즈카메라' 0건 /
    '키즈카메라' 15건. 길어서가 아니라 **아무도 그렇게 안 부르기 때문**이다)
-- 중국어(zh)는 축자번역이 아니라 중국 창작자가 실제로 쓰는 표현으로
+- ★**네 언어를 모두 채워라**: zh(중국어) · en(영어) · ja(일본어) · ru(러시아어).
+  축자번역이 아니라 **그 나라 창작자가 실제로 쓰는 표현**으로 써라.
+  (2026-09-08 사장님 지적: 이 프롬프트가 ko/zh만 요구해서, 검색어 조합으로 만든
+   후보들은 화면에서 영어·일본어 버튼이 전부 비활성으로 떴다. 해외 원본을 찾는 게
+   목적이라 en/ja가 비면 그 줄은 쓸모가 없다.)
 - ★**첫 번째 후보의 ko는 사용자가 넣은 말 그대로** "{keyword}" 여야 한다(한 글자도 바꾸지 마라).
-  그 zh는 그 말의 자연스러운 중국어 표현으로. 조합·확장은 두 번째 후보부터.
-- JSON만: {{"candidates": [{{"ko": "한국어 검색어", "zh": "중국어 검색어"}}, ...]}}"""
+  나머지 언어는 그 말의 자연스러운 현지 표현으로. 조합·확장은 두 번째 후보부터.
+- JSON만: {{"candidates": [{{"ko": "한국어 검색어", "zh": "중국어 검색어", "en": "영어 검색어", "ja": "일본어 검색어", "ru": "러시아어 검색어"}}, ...]}}"""
 
 _KW_EXPAND_SCHEMA = {
     "type": "object",
@@ -799,7 +890,11 @@ _KW_EXPAND_SCHEMA = {
             "type": "array",
             "items": {
                 "type": "object",
-                "properties": {"ko": {"type": "string"}, "zh": {"type": "string"}},
+                # en·ja 추가(2026-09-08). required에는 넣지 않는다 — 모델이 못 채우면
+                # 그 언어만 비고 ko/zh는 살아야 한다(전부 실패로 만들지 않는다).
+                "properties": {"ko": {"type": "string"}, "zh": {"type": "string"},
+                               "en": {"type": "string"}, "ja": {"type": "string"},
+                               "ru": {"type": "string"}},
                 "required": ["ko", "zh"],
             },
             "minItems": 1, "maxItems": 8,
@@ -845,7 +940,10 @@ def expand_search_keywords(keyword, n=6, exclude=None, max_retries=3, quota_slee
                 ko, zh = (c.get("ko") or "").strip(), (c.get("zh") or "").strip()
                 if not (ko or zh) or ko in seen or (zh and zh in seen):
                     continue
-                out.append({"ko": ko, "zh": zh})
+                out.append({"ko": ko, "zh": zh,
+                            "en": (c.get("en") or "").strip(),
+                            "ja": (c.get("ja") or "").strip(),
+                            "ru": (c.get("ru") or "").strip()})
                 seen.update(x for x in (ko, zh) if x)
             # ★사장님이 넣은 말 **그대로**를 반드시 1번 후보로 둔다(2026-08-16).
             #   프롬프트로만 시키면 모델이 확률적으로 안 지킨다 — 실제로 '고독스 뷰파인더'를
@@ -853,8 +951,11 @@ def expand_search_keywords(keyword, n=6, exclude=None, max_retries=3, quota_slee
             #   (이미 보여준 것이면 seen에 있으니 다시 넣지 않는다 — '더' 눌러도 중복 안 쌓임)
             #   zh는 비워 둔다 — 남의 후보 중국어를 빌려오면 📕/🎬 버튼이 **다른 뜻**으로
             #   열린다. 화면은 zh가 없으면 인스타·틱톡 버튼만 그린다.
+            #   ★en/ja/ru 키도 **빈 값으로 함께** 넣는다(2026-09-08). 키 자체가 없으면
+            #     화면이 그 언어 버튼을 흐리게 그리는 건 같지만, 후보마다 모양이 달라
+            #     디버깅이 어려워진다 — 모든 후보가 같은 칸을 갖게 한다.
             if kw not in {(c.get("ko") or "").strip() for c in out} and kw not in seen:
-                out.insert(0, {"ko": kw, "zh": ""})
+                out.insert(0, {"ko": kw, "zh": "", "en": "", "ja": "", "ru": ""})
             return out
         except Exception as e:
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):

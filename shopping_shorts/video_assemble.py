@@ -576,9 +576,12 @@ _MIN_CLIP_KEEP = 0.5
 # 필요한 시간은 마지막 프레임 정지(freeze)로 떠안는다 → 요리 동작은 자연 속도, 남는 시간만 홀드.
 _MAX_SLOWMO = 1.15
 
-# 마지막 비트 '여운'(초) — 대사가 끝나도 화면을 이만큼 더 살려둔다(2026-07-20 콘폼루프 T4,
-# 사장님 육안 피드백 "붙이면 바로 자르지 말고 대사 끝나고 1초 정도 더 냅두면").
-_LAST_RUNOUT = 1.0
+# 마지막 비트 '여운'(초) — 대사가 끝나도 화면을 이만큼 더 살려둔다.
+# 2026-07-20에 1.0으로 넣었으나(콘폼루프 T4) **2026-09-04 사장님 지시로 0으로 되돌렸다**:
+# "더 나오는게 의미가 없는거 아닌가? 다른 영상들은 다 바로 자르던데" — 숏폼은 대사가 끝나면
+# 바로 끊는 게 표준이고, 남는 시간은 슬로모/정지프레임으로 늘어져 완주율만 깎였다.
+# 0이면 plan_beat_clips_for가 여운 연장을 통째로 건너뛰고 mux -t도 tts_dur 그대로다.
+_LAST_RUNOUT = 0.0
 
 
 def _speed_and_freeze(src_dur, out_dur, max_slowmo=_MAX_SLOWMO):
@@ -779,6 +782,13 @@ def _plan_phrase_clips(beat, segs, tts_dur):
             t += d
             bounds.append(min(tts_dur, t))
         bounds.append(tts_dur)
+        # ★칸 길이로 컷 개수를 정한다(2026-09-06 사장님 "너무 잘게 썰려 정신없다").
+        #   구절 경계는 그대로 쓰되, 그중 **등분 지점에 가까운 자리만** 골라 쪼갠다.
+        #   규칙·상수는 cuts_for_beat/pick_split_bounds 한 곳에서만 정하고 화면
+        #   (scene_play.js)이 같은 것을 쓴다(0순위-B).
+        # ★2026-09-06 완전 되돌림(사장님 "어제 그대로 해 / 3구절이면 3컷으로").
+        #   컷 개수를 손대던 규칙(cuts_for_beat·merge_tiny_bounds)을 **전부 뺐다** —
+        #   담은 장면이 화면에 안 나와 라이브 편집을 못 하셨다. 경계는 자막 구절 그대로다.
         # ★구절이 재료보다 많으면 **담은 조각의 뒷부분을 한 바퀴 더 쓴다**(2026-08-31 사장님
         #   "대본이 길어지니까 뒤에까지 장면이 안 붙는다"). 화면(scene_play.js planClips의
         #   구절맞춤 분기)과 **같은 규칙의 서버판**이다 — 한쪽만 고치면 미리보기와 결과물이
@@ -794,29 +804,25 @@ def _plan_phrase_clips(beat, segs, tts_dur):
         for k in range(len(durs)):
             end_b = bounds[-1] if k == len(durs) - 1 else bounds[k + 1]
             d = max(0.1, end_b - bounds[k])
-            if k < len(segs):
-                idx = k                                  # 첫 바퀴 = 담은 순서대로(종전과 같다)
-            else:
-                idx = -1
-                for t2 in range(len(segs)):              # 두 바퀴째 = 뒤가 남은 조각을 돌아가며
-                    j2 = (ri + t2) % len(segs)
-                    # ★end를 모르는 재료는 '남은 게 없다'로 본다 → 종전 동작(마지막이 커버).
-                    #   지어내서 조각 밖을 읽으면 엉뚱한 화면이 나온다.
-                    _end = segs[j2].get("end")
-                    if _end is None:
-                        continue
-                    if float(_end) - pos[j2] >= min(d, _MIN_CLIP) - 1e-3:
-                        idx = j2
-                        break
-                if idx < 0:                              # 재료 소진 → 종전대로 마지막 컷이 커버
-                    if plan:
-                        plan[-1]["src_dur"] += bounds[-1] - bounds[k]
-                        plan[-1]["out_dur"] = plan[-1]["src_dur"]
-                    break
-                ri = (idx + 1) % len(segs)
-            plan.append({"video_id": segs[idx]["video_id"], "start": pos[idx],
+            # ★재료가 구절보다 적으면 **담은 순서대로 돌아간다**(1,2,3,1,2,3…).
+            #   2026-09-02 사장님: "하나를 올렸더니 2·3번 자리에 배치되고 같은 내용이 두 번
+            #   반복돼야 하는데 다른 게 3번에 붙는다" / "장면을 빼면 두 개가 없어지고 넣으면
+            #   갑자기 배치가 바뀐다".
+            #   종전엔 두 바퀴째에 '뒤가 남은 조각의 이어지는 구간'을 골랐다(2026-08-31).
+            #   그 규칙은 자리↔조각 관계가 재료 개수·잔량에 따라 달라져, 조각 하나를 빼면
+            #   그 뒤 배치가 통째로 밀렸다 — 사람 눈엔 "하나 뺐는데 둘이 사라졌다".
+            #   순환 반복은 k만 알면 어느 자리에 무엇이 오는지 정해진다(예측 가능).
+            #   ★화면(scene_play.js planClips 구절맞춤 분기)과 **같은 규칙**이어야 한다 —
+            #     한쪽만 고치면 미리보기와 결과물이 어긋난다(0순위-B).
+            idx = k % len(segs)
+            _end = segs[idx].get("end")
+            st = pos[idx]
+            # 조각 뒤가 남았으면 이어서, 다 썼으면 그 조각의 처음부터 다시(같은 내용 반복).
+            if _end is not None and float(_end) - st < min(d, _MIN_CLIP) - 1e-3:
+                st = float(segs[idx]["start"])
+            plan.append({"video_id": segs[idx]["video_id"], "start": st,
                          "src_dur": d, "out_dur": d})
-            pos[idx] += d
+            pos[idx] = st + d
         return plan
     except Exception:      # noqa: BLE001 — 계획 실패가 렌더를 죽이면 안 된다(폴백이 있다)
         return None
@@ -1077,15 +1083,34 @@ def cap_preset_key(txt):
     return "".join(ch for ch in (txt or "") if ch not in drop)
 
 
-def _wrap_long(segs):
+def _wrap_long(segs, manual=False):
     """구절 리스트에서 _CAP_WRAP를 크게 넘는 초장문만 줄바꿈으로 방어(대부분 그대로 1줄).
-    각 줄은 표시용으로 끝 문장부호를 정리한다(2026-07-21 사장님 '봤잖아요.' 마침표 노출)."""
+    각 줄은 표시용으로 끝 문장부호를 정리한다(2026-07-21 사장님 '봤잖아요.' 마침표 노출).
+
+    ★manual=True — **사람이 직접 정한 줄**(caption_lines)일 때는 쪼개지 않는다(2026-09-07).
+      증상: 타임라인에서 자막 경계를 지워 두 구절을 합쳐도 **경계가 도로 살아났다**.
+      실측(job b7af2dd796c5, cta): 저장은 200 OK로 DB에 2줄이 정상 저장되는데,
+      화면을 그리는 _lab_captions → _caption_segments 경로에서 여기가 19자를 넘는
+      첫 줄('다들 모르시는 게 하나 있는데 여행이나 캠핑 갈 때도 이거 하나' = 공백 빼고 25자)을
+      textwrap으로 재분할해 **3구절로 되돌렸다**. 저장이 성공하니 에러도 안 떠서
+      "눌러도 아무 일이 없다"로만 보였다.
+      이 함수의 원래 목적은 docstring대로 "아주 긴 **단일 어절** 방어"인데, 실제로는
+      여러 어절로 된 줄까지 잘라 사람 결정을 덮고 있었다.
+    ★폭 걱정은 안 해도 된다 — 자막 렌더는 single_line=True로 그린다:
+      "절대 줄바꿈하지 않고 한 줄로 두되, 폭을 넘으면 폰트를 자동 축소"
+      (_segmented_drawtext, 사장님 "자막은 무조건 한 줄"). 즉 화면 밖으로 안 나간다.
+      그래서 manual일 때도 **띄어쓰기 없는 단일 어절**만은 방어를 남긴다(줄일 수 없는 것).
+    """
     out = []
     for s in segs:
         s = _strip_cap_tail(s)
         if not s:
             continue
-        if len(s.replace(" ", "")) > _CAP_WRAP:
+        too_long = len(s.replace(" ", "")) > _CAP_WRAP
+        # 사람이 정한 줄은 어절이 둘 이상이면 그대로 존중한다.
+        if manual and len(s.split()) > 1:
+            too_long = False
+        if too_long:
             out.extend(textwrap.wrap(s, _CAP_WRAP) or [s])
         else:
             out.append(s)
@@ -1116,7 +1141,8 @@ def _caption_segments(narration, preset=None):
     if preset and isinstance(preset, (list, tuple)):
         lines = [str(x).strip() for x in preset if str(x).strip()]
         if lines and cap_preset_key("".join(lines)) == cap_preset_key(narr):
-            return _wrap_long(lines)
+            # 사람(또는 대본 AI)이 정한 줄 → 재분할하지 않는다(2026-09-07 경계 버그).
+            return _wrap_long(lines, manual=True)
     words = narr.split()
     out, cur = [], []
     for i, w in enumerate(words):
@@ -1395,6 +1421,31 @@ def _caption_drawtexts(narration, dur, work, idx, t0=0.0, style=None, real_durs=
                 )
             parts.append(sp + ":" + enable_clause)
     return parts
+
+
+def caption_schedule(beat, tail=0.0):
+    """비트 하나의 자막 구절 시간표 [(구절, 시작초, 끝초)] — **_caption_drawtexts와 같은 규칙**(0순위-B).
+
+    캡컷 내보내기가 쓴다(2026-09-03 사장님 실측: 캡컷엔 비트 문장이 통째로 한 줄이라 화면 밖으로
+    넘쳤다 — 렌더는 짧은 구절로 쪼개 순차 표시한다). 구절 나누기·길이 배분·리드인·오프셋을
+    렌더의 같은 함수·같은 키(caption_lines/cap_durs/cap_lead/cap_offset)로 계산한다.
+    tail: 마지막 구절 여운(렌더는 마지막 비트에만 0.5).
+    """
+    segs = _caption_segments((beat.get("narration") or ""), preset=beat.get("caption_lines"))
+    if not segs:
+        return []
+    dur = float(beat.get("dur") or 0.0)
+    durs = _caption_durations(segs, dur, real_durs=beat.get("cap_durs"))
+    t0 = float(beat.get("t0") or 0.0)
+    off = float(beat.get("cap_offset") or 0.0)
+    t = max(0.0, float(beat.get("cap_lead") or 0.0))
+    out = []
+    for i, (seg, d) in enumerate(zip(segs, durs)):
+        start = max(0.0, t + t0 + off)
+        t += d
+        end = (dur + tail if i == len(segs) - 1 else t) + t0 + off
+        out.append((seg, start, max(start, end)))
+    return out
 
 
 def _caption_vf(narration, dur, has_font, work, idx):
@@ -1800,6 +1851,16 @@ def _outline_parts(style):
     w = max(0, _ui_px(style.get("outline_w"), 9, zero_ok=True))
     if w <= 0:
         return []
+    # ★화면의 절반으로 그린다(2026-09-02 사장님 제보: "프로그램에서 얇게 해도
+    #   보이는 것보다 더 두껍게 아웃풋이 나와요. 그래서 캡컷 가서 다시 자막 작업").
+    #   뿌리는 **테두리를 그리는 방식이 두 곳에서 다른 것**이다(0순위-B):
+    #     · 미리보기(produce.html applyCapStroke/헤드카피)= CSS -webkit-text-stroke
+    #       → 획선 **가운데**에 걸쳐 그려지고 paint-order:stroke fill로 안쪽 절반은
+    #         글자가 덮는다 → 눈에 보이는 두께 = w/2
+    #     · 최종렌더(여기) = ffmpeg drawtext borderw → **전부 바깥쪽** = w
+    #   그래서 정확히 2배로 나왔다. 미리보기가 정본이므로(사장님이 보고 정한 값)
+    #   렌더를 절반으로 맞춘다. 1px은 0으로 사라지지 않게 바닥을 둔다.
+    w = max(1, int(round(w / 2)))
     return [f"borderw={w}",
             f"bordercolor={_hex_to_ff(style.get('outline_color'), '0x000000')}"]
 
@@ -2217,6 +2278,38 @@ def _beat_timeline(edit_plan, tts_paths):
         })
         t0 += dur
     return timeline
+
+
+# ── CTA 잘라내기(2026-09-05 사장님 "CTA 있는 걸로 만들고 유튜브 올릴 땐 뒷부분만 잘라내고 싶다")
+#   유튜브엔 댓글 유도 CTA를 빼고 올리고, 인스타·틱톡엔 CTA가 있는 판을 쓴다.
+#   ★자를 지점은 여기 한 곳에서만 정한다(0순위-B) — API·렌더가 각자 계산하면 어긋난다.
+#   ★CTA 판정은 edit_plan._is_cta를 **재사용**한다. 여기서 role 문자열을 새로 검사하면
+#     _CTA_ROLES가 늘 때 한쪽만 고쳐진다(계정↔프록시 덮어쓰기와 같은 병).
+def cta_cut_sec(timeline):
+    """CTA 비트가 시작하는 절대 시각(초). CTA가 없으면 None.
+
+    이 값까지 잘라내면 CTA 직전에서 끝난다. timeline은 _beat_timeline의 결과이므로
+    자막·모션·효과음과 **같은 시간축**이다(별도 누적 금지).
+
+    ⚠️ 반환값은 **썸네일 인트로를 붙이기 전** 기준이다. prepend_still로 앞에 인트로가
+       붙으면 그만큼 밀린다 — 보정은 저장하는 쪽(mix_pipeline.run_render)이 한다.
+    """
+    from shopping_shorts.edit_plan import _is_cta   # 지역 import: 순환참조 회피
+    for b in timeline:
+        if _is_cta(b):
+            t0 = float(b.get("t0") or 0.0)
+            # t0=0 = 첫 비트가 CTA. 자르면 빈 영상이 되므로 없는 것으로 친다.
+            return t0 if t0 > 0.05 else None
+    return None
+
+
+# ★잘라내기에 키프레임(-force_key_frames)은 **필요 없다** — 2026-09-05 실측으로 확인.
+#   처음엔 "-c copy는 키프레임에서만 잘려 최대 8초 어긋난다"고 보고 렌더에 키프레임을
+#   박으려 했으나, 그건 **앞을 자르는 -ss** 이야기였다. 뒤를 자르는 -t/-frames:v는
+#   키프레임과 무관하다. 실측(preset=medium, 8.33초 간격 키프레임, 27.4초 자르기):
+#     키프레임 없음 → 824프레임 / 27.400에 키프레임 강제 → 824프레임 (똑같다)
+#   그래서 렌더 경로는 건드리지 않는다. 자르는 쪽만 -frames:v로 정확히 하면 된다
+#   (-t 27.4는 B프레임 때문에 824프레임=27.47초로 2프레임 넘친다 → 822프레임으로 자른다).
 
 
 # 장면별 자막 자리(2026-08-25 사장님 "장면당 자막 배치를 수정할 수 있게").

@@ -19,6 +19,7 @@
 """
 import base64
 import re
+import sys
 
 import requests
 
@@ -68,6 +69,34 @@ def is_typecast(model_id):
 
     프리셋의 model_id는 일레븐랩스면 `eleven_*`, 타입캐스트면 `ssfm-*`다."""
     return str(model_id or "").lower().startswith(_MODEL_PREFIX)
+
+
+def enabled():
+    """타입캐스트를 쓰는가 — ★이 판정도 여기 한 곳뿐이다(0순위-B).
+
+    2026-09-07 사장님: "지금 타입캐스트를 안 쓰고 일레븐만 쓴다." 끄면
+    ①성우 카드에서 타입캐스트 성우가 빠지고(app.api_voice_presets)
+    ②이미 그 성우로 저장된 job은 합성 직전에 일레븐랩스로 대체된다
+      (mix_pipeline._voice_params / tts.synthesize_tts).
+    그래서 3단계에서 나던 "타입캐스트 오류"가 구조적으로 못 난다.
+    되돌리려면 서버 env `TYPECAST_ENABLED=1`."""
+    return bool(config.TYPECAST_ENABLED)
+
+
+# 타입캐스트를 껐을 때 대신 쓸 일레븐랩스 성우 = 미나·표현(kr-mina-expressive).
+# ★값의 정본은 여기 하나다 — mix_pipeline._DEFAULT_VOICE도 이걸 읽는다(0순위-B).
+FALLBACK_VOICE = {
+    "preset_id": "kr-mina-expressive",
+    "voice_id": "aiUUgjHa4mpHf6UenZuf",
+    "model_id": "eleven_v3",
+    "settings": {"stability": 0.35, "similarity_boost": 0.78, "style": 0.4},
+}
+
+
+def use_fallback(model_id):
+    """이 model_id를 **일레븐랩스로 갈아끼워야 하는가**.
+    타입캐스트 프리셋인데 엔진이 꺼져 있으면 True."""
+    return is_typecast(model_id) and not enabled()
 
 
 def api_key(customer_id=0):
@@ -149,6 +178,17 @@ def build_payload(text, voice_id, *, speed=None, emotion=None, intensity=None,
     return body
 
 
+def raise_with_body(r):
+    """4xx/5xx면 **업체가 준 본문**을 문구에 실어 올린다(2026-09-05). 종전 raise_for_status는
+    '403 Client Error: Forbidden for url: …'만 남겨 잡 오류에 사유가 없었다 — 고객 cid 260이 키·요금제·
+    크레딧 전부 정상인데 403이 14일간 21건이었고, 본문을 못 봐 '요금제' 오진을 냈다. 타입캐스트 문서는
+    403을 정의하지 않는다(402=크레딧 부족, 404=voice 없음) → 본문만이 사유다. HTTPError 유지(재시도 루프가 잡는다)."""
+    if r.status_code < 400:
+        return
+    body = (r.text or "").strip().replace("\n", " ")[:200]
+    raise requests.HTTPError(f"{r.status_code} {r.reason or ''} {r.url or ''} | 본문: {body or '(없음)'}", response=r)
+
+
 def synthesize(text, out_path, *, voice_id, speed=None, emotion=None, intensity=None,
                model_id=None, seed=None, previous_text=None, next_text=None,
                timeout=120, customer_id=0):
@@ -163,7 +203,23 @@ def synthesize(text, out_path, *, voice_id, speed=None, emotion=None, intensity=
                          intensity=intensity, model_id=model_id, seed=seed,
                          previous_text=previous_text, next_text=next_text)
     r = requests.post(_ENDPOINT_TS, headers={"X-API-KEY": key}, json=body, timeout=timeout)
-    r.raise_for_status()
+    # ★타임스탬프 엔드포인트가 403/404면 **일반 엔드포인트로 한 번 더**(2026-09-05 고객 cid 260: 14일간 잡 21건 전부
+    #   `403 Forbidden …/with-timestamps`, 키 검사(/v1/voices)는 통과). 요금제·권한이 타임스탬프만 막는 경우를 살린다 —
+    #   정렬(alignment)은 None이 되어 자막이 ASR로 강등되지만 영상은 나온다. 일반도 거부면 그 오류를 그대로 올린다.
+    if r.status_code in (403, 404):
+        print(f"typecast_tts: with-timestamps {r.status_code} → 일반 엔드포인트로 재시도 ({(r.text or '')[:120]!r})",
+              file=sys.stderr)
+        r2 = requests.post(_ENDPOINT, headers={"X-API-KEY": key}, json=body, timeout=timeout)
+        if r2.status_code == 200:
+            data2 = r2.json()
+            audio_b64 = data2.get("audio")
+            if not audio_b64:
+                raise RuntimeError("타입캐스트 응답에 audio가 없습니다")
+            with open(out_path, "wb") as f:
+                f.write(base64.b64decode(audio_b64))
+            return None
+        raise_with_body(r2)
+    raise_with_body(r)
     data = r.json()
     audio_b64 = data.get("audio")
     if not audio_b64:

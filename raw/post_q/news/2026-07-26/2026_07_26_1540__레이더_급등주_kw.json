@@ -1,0 +1,21 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "SK텔레콤",
+      "signal": "bull",
+      "reason": "AI 사업을 통한 재도약 시동",
+      "ts": null,
+      "quote": "아 옛날이여…SK텔레콤, AI 타고 재도약 시동[급등주 지금은]",
+      "sector": "통신"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "SK텔레콤이 AI 사업을 중심으로 재도약을 시도하고 있음",
+      "ts": "07-26 05:00",
+      "quote": "아 옛날이여…SK텔레콤, AI 타고 재도약 시동[급등주 지금은]"
+    }
+  ],
+  "quote": "아 옛날이여…SK텔레콤, AI 타고 재도약 시동[급등주 지금은]"
+}

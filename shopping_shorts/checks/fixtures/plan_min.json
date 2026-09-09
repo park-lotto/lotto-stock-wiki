@@ -1,0 +1,5 @@
+{
+  "beats": [{"text": "a"}, {"text": "b"}],
+  "cuts": [1, 2],
+  "captions": ["a", "b"]
+}

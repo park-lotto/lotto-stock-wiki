@@ -112,10 +112,13 @@ def build_group(voice_id, name, one_liner="", lang="KR", group_id=None):
     return rows
 
 
-def bake_sample(preset):
+def bake_sample(preset, customer_id=0):
     """프리셋 1건의 미리듣기 mp3를 굽는다. 실패해도 등록은 살린다(샘플 없으면 카드에 재생버튼만 없음).
 
-    ★synthesize_line을 쓴다 — 이유는 파일 머리말 ②."""
+    ★synthesize_line을 쓴다 — 이유는 파일 머리말 ②.
+    ★customer_id = **누구 크레딧으로 굽나**(2026-09-02). 이걸 안 넘기던 동안에는
+      고객이 자기 목소리를 담아도 샘플 4건이 **사장님 키**로 나갔다. 등록하는 사람이
+      제 몫을 쓰는 게 맞다. 0이면 종전대로 사장님 키(관리자 등록 경로가 그렇다)."""
     from shopping_shorts.mix_pipeline import synthesize_line
     voice_presets.SAMPLES_DIR.mkdir(parents=True, exist_ok=True)
     out = voice_presets.SAMPLES_DIR / preset["sample_file"]
@@ -126,7 +129,7 @@ def bake_sample(preset):
                "silence_trim": preset.get("default_silence_trim", "off"),
                "naturalize_profile": None,
                "model_id": preset.get("model_id")},
-        beat_role="훅", beat_index=0, beat_total=5)
+        beat_role="훅", beat_index=0, beat_total=5, customer_id=int(customer_id or 0))
     return out
 
 
@@ -173,7 +176,7 @@ def register(store, voice_id, name, one_liner="", lang="KR", bake=True,
     for p in rows:
         if bake:
             try:
-                bake_sample(p)
+                bake_sample(p, customer_id=owner_customer_id)
             except Exception as e:                 # 크레딧·네트워크 등 — 등록 자체는 진행
                 failed.append(f"{p['preset_id']}: {e}")
                 p["sample_file"] = None

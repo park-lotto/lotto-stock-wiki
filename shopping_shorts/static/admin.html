@@ -82,6 +82,23 @@ tbody tr:hover{background:#1b1b22}
 
 /* ── 바로가기(2026-08-24) — 주소를 외우지 않아도 되게 ── */
 .quicknav{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 16px}
+/* 운영 사고 상주 목록(2026-09-06 사장님 "관리자 화면 키면 나오게").
+   토스트는 12초 뒤 사라지고 한 번 읽으면 다시 안 떠서, 자리를 비운 사이 지나간 사고를
+   놓쳤다(실측 09-06: 미해결 13건인데 화면 어디에도 목록이 없었다).
+   ★조치하기 전엔 계속 보인다 — 닫기를 눌러야 사라진다. */
+.alertBoard{margin:0 0 16px}
+.alertBoard .ab{display:flex;gap:10px;align-items:flex-start;border:1px solid;border-left-width:4px;border-radius:10px;padding:10px 12px;margin-bottom:8px}
+.alertBoard .ab.cust{background:#160c0c;color:#f7e9e9;border-color:#7a2b2b;border-left-color:#ff5a5a}
+.alertBoard .ab.ops{background:#171205;color:#f6efe0;border-color:#6a4a10;border-left-color:#f5a623}
+.alertBoard .ab.info{background:#0f1412;color:#e6efe9;border-color:#2a3a33;border-left-color:#8fa1a0}
+.alertBoard .abl{font-size:12px;font-weight:800;margin-bottom:2px}
+.alertBoard .ab.cust .abl{color:#ff8080}
+.alertBoard .ab.ops .abl{color:#ffc85c}
+.alertBoard .ab.info .abl{color:#b7c5c0}
+.alertBoard .abt{font-size:13.5px;font-weight:700;line-height:1.4}
+.alertBoard .abm{font-size:12px;opacity:.9;margin-top:3px;line-height:1.45}
+.alertBoard .abx{margin-left:auto;background:transparent;border:1px solid currentColor;color:inherit;opacity:.65;border-radius:8px;padding:3px 9px;font-size:12px;cursor:pointer;white-space:nowrap}
+.alertBoard .abx:hover{opacity:1}
 .qbtn{display:flex;flex-direction:column;gap:2px;padding:10px 14px;border-radius:10px;
       background:#16161c;border:1px solid #2a2a30;color:#e8e8ea;text-decoration:none;
       font-size:14px;font-weight:700;min-width:132px;transition:border-color .12s,background .12s}
@@ -110,11 +127,16 @@ tbody tr:hover{background:#1b1b22}
 <h1>🔐 관리자</h1>
 <div class=sub>결제 확인된 계정을 <b>pro</b>로 승격 / 체험·크레딧 설정 조정</div>
 
+<!-- 운영 사고 — 조치 전까지 여기 상주한다(2026-09-06). 토스트(sidebar.js)는 지나가면
+     끝이라 놓친다. 미해결만 보여주고, 닫기를 누르면 그때 사라진다. -->
+<div class=alertBoard id=alertBoard></div>
+
 <!-- 바로가기(2026-08-24) — 관리자가 자주 오가는 화면을 여기 모은다. 예전엔 주소를
      외워서 쳐야 했다(특히 관측판 /ops는 어디에도 링크가 없었다).
      ★새 탭으로 연다: 관리 작업 중 화면이 통째로 바뀌면 하던 일을 잃는다. -->
 <nav class=quicknav>
   <!-- 제작 현황판(2026-09-02) — 회원이 오늘 뭘 만들고 있나 + 실제 영상. /ops와 형제. -->
+  <a href="/admin/checks" target="_blank" rel="noopener" class="qbtn hot">🩺 관리점검표<small>오늘 어디가 아픈가</small></a>
   <a href="/admin/production" target="_blank" rel="noopener" class="qbtn hot">🎬 오늘 제작 현황<small>회원이 만든 영상</small></a>
   <a href="/ops" target="_blank" rel="noopener" class="qbtn hot">📊 관측판<small>서버가 버티나</small></a>
   <a href="/apiwatch" target="_blank" rel="noopener" class="qbtn hot">🔑 API 관측판<small>키가 버티나</small></a>
@@ -177,6 +199,33 @@ tbody tr:hover{background:#1b1b22}
 </div>
 
 <h2 class=grouphead>🔔 오늘 처리할 일</h2>
+
+<!-- 1단계 정확도 측정(2026-09-05) — 서버가 최근 소스 N편으로 [기존 추출 vs B1 컷별 프레임 태깅]의
+     묘사↔프레임 정확도를 같은 판정기로 잰다(SSH 불필요). 사장님 "주소 치는 거 말고 job처럼" → 여기 카드.
+     ★숫자 읽는 법: 판정기는 관대하다 — 절대값보다 classic/b1 **상대 비교**. 빈 묘사·미판정이 0이 아니면 믿지 않는다. -->
+<div class="card wait" id="probeCard">
+  <h2>🎞 1단계 정확도 측정 <span id=pMsg class=msg></span>
+    <span style="float:right;font-size:13px;font-weight:400">
+      소스 <input type=number id=probeN value=30 min=1 max=40 style="width:52px"> 편
+      <button id=probeStart onclick="startProbe()" style="margin-left:6px;padding:4px 12px;cursor:pointer">▶ 측정 시작</button>
+    </span></h2>
+  <div id=pProg style="font-size:13px;color:#8a8a92;margin:4px 0 8px">아직 안 돌렸습니다.</div>
+  <table><thead><tr><th>비교 편수</th><th>기존(classic)</th><th>B1</th><th>B1 우위</th><th>기존 우위</th><th>동점</th><th>미판정</th><th>B1 빈 묘사</th><th>B1 편당 초</th></tr></thead>
+  <tbody id=psum><tr><td colspan=9 class=empty>—</td></tr></tbody></table>
+  <details style="margin-top:6px"><summary style="cursor:pointer;font-size:13px;color:#8a8a92">편별 상세</summary>
+  <table><thead><tr><th>작업</th><th>소스</th><th>기존</th><th>B1</th><th>세그(기존→B1)</th><th>빈 묘사</th><th>초</th><th>오류</th></tr></thead>
+  <tbody id=prows></tbody></table></details>
+</div>
+
+<!-- 작업 진단(2026-09-05) — 오류 신고의 작업번호(work=… 또는 job)를 넣으면 서버 상태를 한 장으로(SSH 불필요). -->
+<div class="card wait" id="diagCard">
+  <h2>🩺 작업 진단 <span id=gMsg class=msg></span>
+    <span style="float:right;font-size:13px;font-weight:400">
+      <input type=text id=diagId placeholder="work 또는 job 번호 (예 d43ae07da0a2)" style="width:260px" onkeydown="if(event.key==='Enter')runDiag()">
+      <button onclick="runDiag()" style="margin-left:6px;padding:4px 12px;cursor:pointer">조회</button>
+    </span></h2>
+  <pre id=diagOut style="font-size:12px;white-space:pre-wrap;color:#c9c9d0;max-height:420px;overflow:auto;margin:0">오류 신고의 주소에서 work=… 뒤 번호를 넣고 조회.</pre>
+</div>
 
 <!-- 오류 신고(2026-08-24) — 고객이 사이드바 '🐞 오류 신고'를 누르면 여기 쌓인다.
      ★고객은 한 줄만 쓴다. 페이지·작업번호·단계·화면오류는 화면이 자동으로 담아 보낸다
@@ -283,6 +332,55 @@ function fillSummary(customers, pendCount, depCount){
   }
   if(pendCount!==undefined) set('sum_pend', pendCount, true);
   if(depCount!==undefined) set('sum_dep', depCount, true);
+}
+// ── 운영 사고 상주 목록(2026-09-06 사장님 "관리자 화면 키면 나오게") ──────────────
+// 왜 목록인가: sidebar.js 토스트는 **안 읽은 것만** 뜨고 12초 뒤 사라지고 한 번 본 건
+// 다시 안 뜬다(shown[a.id]·a.read). 자리를 비운 사이 지나간 사고는 못 본다.
+// 실측 2026-09-06 15:45: 쪽지 20건 중 **미해결 13건**인데 화면 어디에도 목록이 없었다
+// (admin.html에 'alerts'가 0건). typecast 실패율 63% 같은 고객영향 사고가 잠깐 떴다 끝.
+// ★판정은 resolved 하나다 — read(봤나)가 아니라 **조치됐나**로 본다. 그래서 읽었어도
+//   미해결이면 계속 보인다. 닫기를 눌러야 사라진다.
+// ⚠️토스트를 없애지 않는다 — 저건 '지금 막 났다'를 알리는 것이고 이건 '아직 남았다'를
+//   보여주는 것이라 목적이 다르다.
+function _abEsc(v){ return (v==null?'':String(v)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+async function renderAlertBoard(){
+  const box=document.getElementById('alertBoard'); if(!box) return;
+  let d=null;
+  try{ const r=await fetch('/api/admin/pending',{headers:{'Accept':'application/json'}});
+       if(!r.ok) return; d=await r.json(); }catch(e){ return; }
+  if(!d||!d.ok) return;
+  const open=(d.alerts||[]).filter(a=>a&&!a.resolved);
+  if(!open.length){ box.innerHTML=''; return; }   // 멀쩡할 땐 조용하다(빈 상자를 안 띄운다)
+  // 급한 것부터 — 고객영향 → 운영주의 → 정보. 같은 등급이면 최신순(id는 epoch초).
+  const rank={'고객영향':0,'운영주의':1,'정보':2};
+  open.sort((a,b)=>(rank[a.grade]??1)-(rank[b.grade]??1) || (b.id||0)-(a.id||0));
+  // ⚠️배열 리터럴로 쓰지 마라 — SETTING_FIELDS와 같은 모양(대괄호+따옴표 문자열 두 개)이면
+  //   test_admin_payload가 그걸 설정 필드로 오인해 "화면엔 입력칸이 있는데 서버가 거부"로
+  //   빨개진다(그 테스트는 admin.html을 정규식으로 긁는다). 실제로 두 번 밟았다 —
+  //   클래스명(cust·info·ops)이 걸렸고, 그걸 설명하는 주석의 예시까지 또 걸렸다.
+  //   그래서 객체({c,l})로 쓴다.
+  const TH={'고객영향':{c:'cust',l:'🚨 고객 영향 사고 — 지금 확인'},
+            '정보':{c:'info',l:'ℹ️ 알림'},
+            '운영주의':{c:'ops',l:'⚠️ 운영 주의 — 자동 우회됨, 서비스 정상'}};
+  box.innerHTML=open.map(a=>{
+    const t=TH[a.grade]||TH['운영주의'];
+    return '<div class="ab '+t.c+'"><div style="flex:1;min-width:0">'
+      + '<div class=abl>'+t.l+'</div>'
+      + '<div class=abt>'+_abEsc(a.title)+'</div>'
+      + (a.auto?'<div class=abm>✅ 자동 조치: '+_abEsc(a.auto)+'</div>':'')
+      + (a.todo?'<div class=abm>👉 할 일: '+_abEsc(a.todo)+'</div>':'')
+      + (a.detail?'<details class=abm><summary style="cursor:pointer">상세 사유 보기</summary>'
+          + '<div style="margin-top:5px;font-size:11px;white-space:pre-wrap;word-break:break-all;max-height:180px;overflow:auto">'
+          + _abEsc(a.detail)+'</div></details>':'')
+      + '</div>'
+      + '<button class=abx onclick="closeAlert('+JSON.stringify(a.id)+')">닫기</button></div>';
+  }).join('');
+}
+// 닫기 = '해결됨'. 서버가 resolved를 찍으면 다음 렌더에서 빠진다.
+async function closeAlert(id){
+  try{ await fetch('/api/admin/alerts/resolve',{method:'POST',
+        headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id})}); }catch(e){}
+  renderAlertBoard();
 }
 async function load(){
   const r=await fetch('/api/admin/customers');
@@ -1067,6 +1165,74 @@ function reopenBug(id){
 }
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',loadBugs);
 else loadBugs();
+
+/* 운영 사고 상주 목록(2026-09-06) — 화면을 열 때 한 번, 그 뒤 30초마다.
+   ★loadBugs와 같은 모양으로 건다(0순위-B: 새 초기화 규칙을 만들지 않는다).
+   ⚠️함수만 만들고 여기서 안 부르면 목록이 영영 안 뜬다 — test_admin_alert_board가
+     이 배선(호출 존재)까지 본다. */
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',renderAlertBoard);
+else renderAlertBoard();
+setInterval(renderAlertBoard, 30000);
+
+/* ── 1단계 정확도 측정 카드(2026-09-05) ── 서버 API probe/frame_accuracy를 화면으로. 도는 동안 15초마다 새로 그린다. */
+var _probeTimer=null;
+function _pf(v){ return (v===null||v===undefined)?'—':(typeof v==='number'?v.toFixed(3):String(v)); }
+function renderProbe(d){
+  var prog=document.getElementById('pProg'), sum=document.getElementById('psum'), rows=document.getElementById('prows'), btn=document.getElementById('probeStart');
+  if(!prog) return;
+  var st=d.status||'idle';
+  if(st==='running'){ prog.textContent='측정 중… '+(d.done||0)+' / '+(d.total||'?')+' 편 (시작 '+(d.started||'')+')'+(d.error?' · ⚠ '+d.error:''); btn.disabled=true; }
+  else if(st==='done'){ prog.textContent='완료 · '+(d.done||0)+' 편 · 결과 파일 '+(d.path||'')+(d.error?' · ⚠ '+d.error:''); btn.disabled=false; }
+  else if(st==='error'){ prog.textContent='실패: '+(d.error||''); btn.disabled=false; }
+  else { prog.textContent='아직 안 돌렸습니다.'; btn.disabled=false; }
+  var s=d.summary||{};
+  sum.innerHTML = Object.keys(s).length ? '<tr><td>'+_pf(s.compared)+'</td><td>'+_pf(s.classic_avg)+'</td><td><b>'+_pf(s.b1_avg)+'</b></td><td>'+_pf(s.b1_better)+'</td><td>'+_pf(s.classic_better)+'</td><td>'+_pf(s.tie)+'</td><td>'+_pf(s.unjudged)+'</td><td>'+_pf(s.b1_empty_segs)+' / '+_pf(s.b1_segs_total)+'</td><td>'+_pf(s.b1_secs_avg)+'</td></tr>'
+                                        : '<tr><td colspan=9 class=empty>—</td></tr>';
+  var ex=document.getElementById('probeExtra'); if(!ex && sum.closest){ ex=document.createElement('div'); ex.id='probeExtra'; ex.className='muted'; ex.style.marginTop='4px'; var tb=sum.closest('table'); if(tb) tb.insertAdjacentElement('afterend', ex); }
+  if(ex) ex.textContent = Object.keys(s).length ? ('라벨 일치(결/쓰임) 기존 '+_pf(s.classic_role_pct)+'%/'+_pf(s.classic_label_pct)+'% · B1 '+_pf(s.b1_role_pct)+'%/'+_pf(s.b1_label_pct)+'% · 전사 사유 '+JSON.stringify(s.transcript_status||{})) : '';
+  var rs=d.results||[];
+  rows.innerHTML = rs.length ? rs.map(function(r){
+      return '<tr><td>'+(r.job_id||'').slice(0,8)+'</td><td>'+(r.vid||'')+'</td><td>'+_pf(r.classic_score)+'</td><td>'+_pf(r.b1_score)+'</td><td>'+_pf(r.classic_segs)+'→'+_pf(r.b1_segs)+'</td><td>'+_pf(r.b1_empty)+'</td><td>'+_pf(r.b1_secs)+'</td><td style="color:#c33">'+(r.b1_error||r.classic_error||'')+'</td></tr>';
+    }).join('') : '<tr><td colspan=8 class=empty>—</td></tr>';
+  if(st==='running' && !_probeTimer){ _probeTimer=setInterval(function(){ _probeTimer=null; loadProbe(); }, 15000); }
+}
+function loadProbe(){
+  if(_probeTimer){ clearInterval(_probeTimer); _probeTimer=null; }
+  fetch('/api/admin/probe/frame_accuracy').then(function(r){return r.json();}).then(renderProbe).catch(function(){});
+}
+function startProbe(){
+  var n=parseInt(document.getElementById('probeN').value||'30',10)||30;
+  document.getElementById('pMsg').textContent='';
+  fetch('/api/admin/probe/frame_accuracy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({n:n})})
+    .then(function(r){return r.json();}).then(function(d){
+      if(!d.ok){ document.getElementById('pMsg').textContent='이미 도는 중이거나 시작 실패'; }
+      loadProbe();
+    }).catch(function(e){ document.getElementById('pMsg').textContent='시작 실패: '+e; });
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',loadProbe);
+else loadProbe();
+
+/* ── 작업 진단 카드(2026-09-05) ── 작업번호로 서버 상태 한 장. 사람이 읽기 좋게 줄로 편다. */
+function runDiag(){
+  var id=(document.getElementById('diagId').value||'').trim().replace(/.*work=/,'').replace(/[?&#].*$/,'');
+  if(!id) return;
+  var out=document.getElementById('diagOut'); out.textContent='조회 중…';
+  fetch('/api/admin/diag/work/'+encodeURIComponent(id)).then(function(r){return r.json();}).then(function(d){
+    if(!d.found){ out.textContent='못 찾음: '+id+' (work도 job도 아님)'; return; }
+    var L=[];
+    if(d.kind==='work') L.push('작업 '+d.work_id+' · 고객 '+d.customer_id+' · 제목 '+(d.title||'')+' · 단계 '+d.step+' · 갱신 '+d.updated_at+' · 확정대본 '+d.given_script_chars+'자');
+    var j=d.job||{};
+    if(j.job_id){
+      L.push('잡 '+j.job_id+' · 상태 '+j.status+(j.error?' · ⚠ 오류: '+j.error:'')+' · 고객 '+j.customer_id+' · 목표 '+j.target_seconds+'초');
+      L.push('추출 소스 '+j.extract_sources+'개 / 세그 '+j.extract_segments+' · 확정대본 '+j.given_script_chars+'자 · script_structure '+JSON.stringify(j.script_structure));
+      var p=j.plan||{}; L.push('계획: generator '+p.generator+' · 비트 '+p.beats+' · 상속 '+p.inherited+' · TTS '+p.tts_files+' · gate '+JSON.stringify(p.gate));
+      L.push('미리보기 '+JSON.stringify(j.preview)+' · 자막제거 '+JSON.stringify(j.clean)+' · fx '+j.fx_status+' · video '+(j.video_path||'-'));
+      L.push('작업폴더 '+(d.work_dir&&d.work_dir.exists?'있음 '+JSON.stringify(d.work_dir.files_by_dir):'없음'));
+    } else L.push('잡 없음(work에 job_id가 비었거나 잡이 지워짐)');
+    (d.bug_reports||[]).forEach(function(r){ L.push('🐞 #'+r.id+' ['+r.status+'] '+r.step+' · '+r.message+(r.console?'\n   화면오류: '+r.console:'')); });
+    out.textContent=L.join('\n');
+  }).catch(function(e){ out.textContent='조회 실패: '+e; });
+}
 </script>
 </div>
 <script src="/sidebar.js?v=2"></script>

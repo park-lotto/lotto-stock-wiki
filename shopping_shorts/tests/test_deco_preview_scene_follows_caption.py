@@ -116,14 +116,20 @@ setTimeout(()=>{ clearTimeout(CAP_SEQ_TIMER);
     assert out[-1] == 'SEEN=["/f/1-0","/f/1-1"]', out[-1]
 
 
-def test_좌우_화살표는_칸_단위로_넘긴다():
-    """컷은 자동으로 흐르므로, ◀▶ 가 컷 단위면 같은 칸에서 눌러도 티가 안 난다."""
+def test_좌우_화살표는_컷_한장씩_넘긴다():
+    """2026-09-03 사장님: "1장씩 넘어가야 하는데 단락별로 3~4장씩 넘어간다".
+    칸 단위(2026-09-01)로 묶었더니 한 번 누를 때 그 칸의 컷 3~4개를 통째로 건너뛰었다."""
     out = _run(_MAKE + """
 clearTimeout(CAP_SEQ_TIMER);
 BEAT_IDX=2;                 // 칸1의 두 번째 컷을 보는 중
-stepBeat(1);  console.log('NEXT=' + BEAT_IDX);      // 칸2의 첫 컷(=순번 5)
+stepBeat(1);  console.log('NEXT=' + BEAT_IDX);      // 바로 다음 컷
 BEAT_IDX=3;
-stepBeat(-1); console.log('PREV=' + BEAT_IDX);      // 칸0의 첫 컷(=순번 0)
+stepBeat(-1); console.log('PREV=' + BEAT_IDX);      // 바로 앞 컷
+console.log('SEEN=' + JSON.stringify(_SEEN.slice(-2)));
+console.log('PAUSED=' + CAP_PAUSED);                // 수동으로 넘기면 자동흐름은 멈춘다
 """)
-    assert out[0] == "NEXT=5", out[0]
-    assert out[1] == "PREV=0", out[1]
+    assert out[0] == "NEXT=3", out[0]
+    assert out[1] == "PREV=2", out[1]
+    # 넘긴 그 컷의 그림을 **즉시** 그린다(미리받기를 기다리지 않는다)
+    assert out[2] == 'SEEN=["/f/1-2","/f/1-1"]', out[2]
+    assert out[3] == "PAUSED=true", out[3]

@@ -1,0 +1,234 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<title>클로드 개발 벤치마킹 — 영상 2편 분석</title>
+<style>
+:root{--bg:#0c1116;--card:#141b23;--card2:#0f1620;--line:#243040;--txt:#e6edf3;--sub:#8b9bb0;--ok:#22c55e;--no:#ef4444;--mv:#f59e0b;--acc:#7df5db;--pur:#a78bfa}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--txt);font:14px/1.65 "Malgun Gothic",system-ui,sans-serif}
+header{position:sticky;top:0;z-index:9;background:#0c1116f2;backdrop-filter:blur(6px);border-bottom:1px solid var(--line);padding:14px 20px}
+h1{margin:0 0 5px;font-size:18px}
+.sub{color:var(--sub);font-size:12.5px}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px 60px}
+h2{font-size:16px;margin:34px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px}
+h3{font-size:14px;margin:20px 0 9px;color:var(--acc)}
+.pill{display:inline-block;background:var(--card);border:1px solid var(--line);border-radius:99px;padding:4px 11px;font-size:12px;color:var(--sub);margin:2px 3px 2px 0}
+.bar{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:11px 0}
+.card.warn{border-color:var(--mv);background:#1a1610}
+.card.bad{border-color:var(--no);background:#1a1113}
+.card.good{border-color:var(--ok);background:#101a13}
+.card.key{border-color:var(--acc);background:#0f1a1d}
+table{width:100%;border-collapse:collapse;margin:11px 0;font-size:13px}
+th,td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}
+th{background:var(--card2);color:var(--acc);font-size:12.5px;font-weight:700}
+td.y{color:var(--ok);font-weight:700}td.n{color:var(--no);font-weight:700}td.m{color:var(--mv);font-weight:700}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:820px){.grid2{grid-template-columns:1fr}}
+.vid{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px 15px}
+.vid .t{font-weight:700;font-size:13.5px;margin-bottom:5px;word-break:keep-all}
+.vid .m{color:var(--sub);font-size:12px}
+ul{margin:8px 0;padding-left:19px}li{margin:5px 0}
+.q{border-left:3px solid var(--pur);padding:3px 0 3px 12px;margin:9px 0;color:#c9d6e4;font-size:13px}
+.q .ts{color:var(--pur);font-size:11.5px;font-weight:700;margin-right:6px}
+code{background:#0a0f14;border:1px solid var(--line);border-radius:5px;padding:1.5px 6px;font:12.5px Consolas,monospace;color:var(--acc)}
+.big{font-size:15px;font-weight:700;color:var(--acc)}
+.no-b{color:var(--no);font-weight:700}.ok-b{color:var(--ok);font-weight:700}.mv-b{color:var(--mv);font-weight:700}
+.n{counter-reset:s}
+.step{background:var(--card2);border:1px solid var(--line);border-left:3px solid var(--acc);border-radius:8px;padding:11px 14px;margin:9px 0}
+.step .h{font-weight:700;font-size:13.5px;margin-bottom:4px}
+.tag{display:inline-block;border-radius:5px;padding:1px 7px;font-size:11px;font-weight:700;margin-left:6px}
+.tag.have{background:#0d2b1a;color:var(--ok);border:1px solid #1c5334}
+.tag.miss{background:#2b1013;color:var(--no);border:1px solid #5a2027}
+.tag.part{background:#2b220d;color:var(--mv);border:1px solid #5a4520}
+.foot{color:var(--sub);font-size:12px;margin-top:28px;border-top:1px solid var(--line);padding-top:14px}
+</style></head><body>
+<header>
+  <h1>클로드 개발 벤치마킹 — 유튜브 자동화 영상 2편 분석</h1>
+  <div class="sub">2026-09-05 · 두 영상 <b>전체 자막 실측</b>(832줄 / 570줄) 기반 · 우리 코드베이스와 대조</div>
+  <div class="bar">
+    <span class="pill">분석 목적: 저 사람 방식 → 우리 적용</span>
+    <span class="pill">결론: 기술·입구 아님 · <b style="color:var(--mv)">단계별 판단의 자동경로 배선</b></span>
+  </div>
+</header>
+<div class="wrap">
+
+<h2>0. 먼저 — 두 영상의 정체</h2>
+<div class="grid2">
+  <div class="vid">
+    <div class="t">① "만들어줘"만 쓰면 완성되는 유튜브 자동화 2.0</div>
+    <div class="m">채널 <b>다함께 잡잡잡</b> · 28분 · 2026-09-03 · 조회 6,080</div>
+  </div>
+  <div class="vid">
+    <div class="t">② MCP로 유튜브 완전 자동화한 의문의 사나이</div>
+    <div class="m">채널 <b>마케터 제이J</b> · 20분 · 2026-09-03 · 조회 6,620</div>
+  </div>
+</div>
+
+<div class="card warn">
+  <b>⚠️ 중요 — 이 둘은 사실상 같은 영상입니다.</b><br>
+  두 편 모두 <b>같은 인물(쇼츠대폭발)</b>이 <b>같은 제품(볼케노 MCP)</b>을 소개하는 인터뷰이고,
+  <b>같은 날(09-03)</b> 서로 다른 채널에 올라갔습니다. 즉 <span class="no-b">기술 설명 영상이 아니라 유료 강의 2기 모집 홍보 영상</span>입니다.
+  <div style="margin-top:9px;color:var(--sub);font-size:12.5px">
+  → 그래서 <b>내부 구현은 한 줄도 안 나옵니다.</b> 코드·프롬프트·MCP 서버 구조는 전부 비공개.
+  벤치마킹할 수 있는 건 <b>"무엇을 팔았나 = 어떤 사용자 경험을 설계했나"</b>이고, 그것만으로도 건질 게 큽니다.
+  </div>
+</div>
+
+<h2>1. 저 사람이 실제로 한 것 — 핵심 3줄</h2>
+<div class="card key">
+  <div class="big">① 설치형 프로그램을 버리고 → 클로드 코드 안으로 들어갔다</div>
+  <div class="q"><span class="ts">①01:30</span> "기존 프로그램은 다운로드받아 설치하는 방식이었는데… 제 컴퓨터에선 돌아가는데 <b>다른 PC에선 안 되는 문제가 많았어요.</b> MCP로 바꾸고 나서는 <b>클로드 코드 자체가 각 PC에 맞게 세팅을 다 해 줍니다.</b>"</div>
+  <div style="color:var(--sub);font-size:12.5px">→ 배포·환경설정 문제를 <b>클로드 코드에 떠넘겨</b> 해결. 우리도 정확히 같은 병(윈도우/맥, 폰트, 경로)을 앓고 있음.</div>
+</div>
+<div class="card key">
+  <div class="big">② 입구를 문장 하나로 줄였다 — "만들어 줘"</div>
+  <div class="q"><span class="ts">②09:50</span> "그 폴더를 끌어다 놓고 <b>'영화간 스타일로 만들어 줘'. 이게 끝입니다.</b>"</div>
+  <div class="q"><span class="ts">①04:30</span> "프롬프트라고 할 것도 없고요. <b>해 줘. 만들어 줘.</b>"</div>
+  <div style="color:var(--sub);font-size:12.5px">→ 사용자는 <b>단계를 모릅니다.</b> 9단계 UI를 클릭하는 게 아니라 한 문장을 칩니다.</div>
+</div>
+<div class="card key">
+  <div class="big">③ 판단 기준을 전부 '프리셋'으로 미리 심었다</div>
+  <div class="q"><span class="ts">①15:30</span> "수강생 입장에선 요청만 하지만, 그걸 만들려고 저는 <b>수집하고 분석하고 설계하고 자동화하고 고도화</b>를 합니다."</div>
+  <div class="q"><span class="ts">①03:00</span> "<b>조립 작업 지시서</b>를 여기다 넣어놨고 — 편집은 어떻게 하고 <b>폰트는 무엇을 쓰고 자간·행간·위치</b>는 어떻게 하고 이미지·클립은 어디서 가져오는지가 다 담겨 있어서"</div>
+  <div style="color:var(--sub);font-size:12.5px">→ <b>"어떻게 만들지"의 결정을 런타임이 아니라 프리셋에 박아놨다.</b> 이게 우리 0순위-B(같은 판단 두 군데 금지)와 정확히 같은 사상.</div>
+</div>
+
+<h2>2. 자막에서 확인된 구체적 기능 (실측 인용)</h2>
+<table>
+<tr><th style="width:22%">기능</th><th style="width:44%">영상에서 말한 내용</th><th>우리 상태 (실측)</th></tr>
+<tr><td><b>파이프라인 로그</b></td><td>"기사 원문 확보 → 대본 → <b>이미지 11장 전문 생성</b> → 자막 타이밍 완료 → SFX → 26컷 배치 완료" <span style="color:var(--sub)">(①10:00~11:00)</span></td><td class="y">있음 — 우리도 단계별 로그 있음</td></tr>
+<tr><td><b>팩트체크 검수 단계</b></td><td>"이게 <b>검수도</b>예요. 팩트 체크하는 검수 단계가 있어서 뒷단에서 다시 한번 검수해서 <b>다시 만들라고 요청하고 다시 받아오는</b>" <span style="color:var(--sub)">(①10:00)</span></td><td class="m">부분 — 게이트는 있으나 <b>교정루프</b>는 믹스에만</td></tr>
+<tr><td><b>병렬 제작</b></td><td>"<b>1개를 만드나 5개를 만드나 시간은 비슷</b>해요. 30~40분." <span style="color:var(--sub)">(①06:30)</span></td><td class="n">없음 — 우리는 1건씩 순차</td></tr>
+<tr><td><b>원격 트리거</b></td><td>"밖에 나가서 <b>텔레그램으로 요청</b>… <b>핸드폰으로</b> 만드는 수강생도 있어요" <span style="color:var(--sub)">(①06:30)</span></td><td class="m">부분 — 텔레그램 봇 있으나 제작 트리거 아님</td></tr>
+<tr><td><b>폰트 자동 설치</b></td><td>"폰트도 PC에 깔려 있어야 똑같이 나오는데 <b>폰트를 자동으로 다운받게끔 세팅</b>해 놨고" <span style="color:var(--sub)">(①11:00)</span></td><td class="m">부분 — <b>우리도 정확히 이 병을 앓았음</b>(woff2 메모리)</td></tr>
+<tr><td><b>편집기로 내보내기</b></td><td>"<b>캡컷으로 보내 줘 / 프리미어로 띄워 줘</b> 하면 프리미어에서 딱 열리게" <span style="color:var(--sub)">(①10:30)</span></td><td class="y">있음 — 캡컷·ZIP 내보내기 구현됨</td></tr>
+<tr><td><b>소재 자동 수집</b></td><td>"쇼핑 영상 소스는? <b>소스도 알아서 찾아옵니다.</b>" <span style="color:var(--sub)">(①11:30)</span></td><td class="y">있음 — 렌즈·수집 파이프라인</td></tr>
+<tr><td><b>사용자 오류 로그 수집</b></td><td>"수강생들이 쓰면서 어디서 오류가 나는지 <b>제 서버로 로그가 다 들어와요.</b> 그거 보면서 계속 고쳐드리고" <span style="color:var(--sub)">(②02:30)</span></td><td class="m">부분 — /apiwatch 있으나 <b>고객 오류 자동수집은 아님</b></td></tr>
+</table>
+
+<h2>3. 우리와의 진짜 격차 — <span style="color:var(--mv)">입구가 아니라 각 단계의 정교함</span></h2>
+
+<div class="card bad">
+  <b>⚠️ 초판 정정 (사장님 지적).</b> 처음에 저는 "입구가 9단계여서"라고 썼는데 <b>순서가 거꾸로였습니다.</b><br>
+  <span class="no-b">저쪽이 한 문장으로 되는 건 입구를 줄여서가 아니라, 뒤 단계마다 판단이 다 박혀 있어서 <b>물어볼 게 없는 것</b>입니다.</span>
+  우리는 단계별 디테일이 좋아서 한 번에 가야 하는데 못 갑니다 — <b>그 디테일이 수동 경로에만 있고 자동 경로엔 안 실려 있기 때문</b>입니다.
+</div>
+
+<div class="card good">
+  <b>✅ 사실 우리에게도 "한 문장" 자동 경로는 이미 있습니다.</b><br>
+  <code>shopping_shorts/auto_run.py</code> — <code>S1 수집 → S2 대본 → S3 믹스+렌더</code>가 <b>사람 개입 없이</b> 돕니다.
+  즉 <b>9단계 UI는 애초에 진짜 병목이 아니었습니다.</b>
+</div>
+
+<div class="card bad">
+  <b>❌ 진짜 병목 — 같은 함수를 부르는데 자동 경로는 지시를 안 넘깁니다</b>
+  <div style="margin-top:9px">엔진 <code>generate_variations()</code>는 인자를 <b>11개</b> 받습니다
+  (<code>elem_modes</code> 요소별 지시, <code>category_lookup</code>, <code>bank_context</code>, <code>seed_hook</code> …).</div>
+
+  <div style="background:#0a0f14;border:1px solid var(--line);border-radius:7px;padding:10px 13px;margin:10px 0;font:12.5px/1.7 Consolas,monospace;color:#c9d6e4">
+  <span style="color:var(--ok)">// 수동 (app.py:3419) — 지시가 다 들어간다</span><br>
+  generate_variations(structure, full_text, <b style="color:var(--ok)">elem_modes, category_lookup, **_gen_kw</b>)<br>
+  → 직후 <b style="color:var(--ok)">pickup_script.filter_drafts()</b> 로 후킹 검증까지<br><br>
+  <span style="color:var(--no)">// 자동 (auto_run.py:118) — 빈 껍데기</span><br>
+  generate_variations(structure, full_text, <b style="color:var(--no)">{}, {}</b>, mode="remake", my_topic=<b style="color:var(--no)">""</b>, subject=<b style="color:var(--no)">""</b>)<br>
+  → 검증 없이 <b style="color:var(--no)">drafts[0]</b> 그냥 사용
+  </div>
+
+  <table style="margin-top:6px">
+  <tr><th>실측 항목</th><th>수동 경로</th><th>자동 경로</th></tr>
+  <tr><td>대본 생성 시 지시 전달</td><td class="y">elem_modes·category·bank·seed_hook</td><td class="n">전부 <code>{}</code> / <code>""</code></td></tr>
+  <tr><td>검증·교정 훅 개수</td><td class="y">13개</td><td class="n">0개</td></tr>
+  <tr><td>후보 중 선택</td><td class="y">filter_drafts로 걸러 고름</td><td class="n">무조건 [0]번</td></tr>
+  <tr><td>믹스에 스타일 전달</td><td class="y">scene_first·backbone_main·script_structure</td><td class="n">미전달</td></tr>
+  </table>
+</div>
+
+<div class="card key">
+  <b>사장님 말씀이 맞습니다 — 저쪽 뒤에는 길게 세팅된 게 있습니다.</b><br>
+  영상에서 본인이 직접 말한 그 세팅이 곧 우리 <code>elem_modes</code> 자리에 들어가야 할 내용입니다:
+  <div class="q"><span class="ts">①03:00</span> "편집은 어떻게 하고 <b>폰트는 무엇을 쓰고 자간·행간·위치는 어떻게 하고</b> 이미지·클립은 어디서 가져오는지가 <b>다 담겨 있어서</b>"</div>
+  <div class="q"><span class="ts">①09:00</span> "그런 것들을 세팅 안 해 놓으면 <b>한국 돈이 일본·중국 돈같이 보인다</b>거나… 그래서 <b>시대적·문화적·국가적 맥락</b>을 제가 세팅해 놓은 겁니다"</div>
+  → 이건 기술이 아니라 <b>축적된 판단</b>입니다. 그리고 우리는 그 판단을 <b>이미 갖고 있습니다</b>(수동 경로에).
+  <b>없는 건 그걸 자동 경로에 싣는 배선</b>입니다.
+</div>
+
+<h2>4. 그래서 — 우리에게 적용할 아이디어 5</h2>
+
+<div class="step">
+  <div class="h">아이디어 1 — <span style="color:var(--acc)">자동 경로에 수동 경로의 판단을 싣는다</span> <span class="tag part">판단은 이미 있음 · 배선만 없음</span></div>
+  <b>가장 크고 가장 싼 개선.</b> 새 프롬프트를 쓰는 게 아니라, <b>수동 경로가 이미 쓰고 있는 지시를 자동 경로에도 넘기는 일</b>입니다.<br>
+  <ul>
+    <li><code>auto_run.py:118</code>의 <code>{}, {}</code> 를 실제 <code>elem_modes</code>·<code>category_lookup</code>으로 채운다</li>
+    <li><code>filter_drafts()</code>를 자동 경로에도 붙인다 → <b>[0]번 무조건 선택</b>을 없앤다</li>
+    <li><code>create_mix_job</code>에 <code>scene_first</code>·<code>backbone_main</code>·<code>script_structure</code> 전달</li>
+    <li><b>이게 되면 "한 문장 입구"는 저절로 쓸 만해집니다</b> — 지금은 입구가 있어도 결과가 거칠어서 못 씁니다</li>
+  </ul>
+</div>
+
+<div class="step">
+  <div class="h">아이디어 1-B — <span style="color:var(--acc)">"기본값 프리셋"을 장르별로 만든다</span> <span class="tag miss">이게 저쪽의 5개월</span></div>
+  저쪽이 판 것의 본체가 이겁니다. 자동 경로가 <code>{}</code>를 넘기는 이유는 <b>"안 물어보면 뭘 써야 할지 정해둔 게 없어서"</b>입니다.<br>
+  <ul>
+    <li>장르별(쇼핑·인물·정보·해외) <b>elem_modes 기본 세트</b>를 파일 하나에 박는다</li>
+    <li>메모리 <code>reference_대본템플릿_빈칸짝맞추기</code>·<code>project_폰트일원화</code>가 이미 같은 방향</li>
+    <li>0순위-B 준수: <b>기본값은 한 군데서만</b> 정한다(수동·자동이 같은 파일을 본다)</li>
+  </ul>
+</div>
+
+<div class="step">
+  <div class="h">아이디어 2 — <span style="color:var(--acc)">병렬 제작</span> (우리에게 유일하게 진짜 없는 것) <span class="tag miss">없음</span></div>
+  "1개나 5개나 30~40분"이 저쪽 최대 무기입니다. 수익은 <b>업로드 개수에 비례</b>하므로 여기가 곧 매출 차이.<br>
+  <ul>
+    <li>메모리 <code>feedback_속도개선_순차루프먼저</code>와 정확히 같은 처방 — 순차 for루프부터 병렬화</li>
+    <li>AI 대기시간이 대부분이라 <b>CPU가 아니라 동시 요청 수</b>가 병목 → 키풀 로테이션과 짝으로 설계</li>
+  </ul>
+</div>
+
+<div class="step">
+  <div class="h">아이디어 3 — <span style="color:var(--acc)">교정 루프를 전 단계로</span> 확대 <span class="tag part">믹스에만 있음</span></div>
+  저쪽은 "검수 → 다시 만들라고 요청 → 다시 받아옴"을 <b>파이프라인에 상시</b> 넣었습니다.<br>
+  <ul>
+    <li>우리는 <code>plan_gate</code> 교정루프가 <b>믹스에만</b> 있음(메모리 <code>project_믹스_게이트교정루프</code>)</li>
+    <li>메모리 <code>reference_규칙은있는데_판정이없다</code> — <b>규칙만 있고 판정이 없으면 어겨도 안 걸린다.</b> 판정과 재요청을 짝으로</li>
+  </ul>
+</div>
+
+<div class="step">
+  <div class="h">아이디어 4 — <span style="color:var(--acc)">고객 오류 로그 자동 수집</span> <span class="tag part">부분</span></div>
+  <div class="q"><span class="ts">②02:30</span> "어디서 오류가 나는지 <b>제 서버의 로그가 다 들어와요.</b> 그거 보면서 계속 고쳐 드리고"</div>
+  1기 수강생을 <b>QA 부대로 쓴</b> 구조입니다. 우리는 <code>/apiwatch</code>가 API 상태만 봅니다 — <b>고객이 실제로 막힌 지점</b>은 안 모입니다.
+</div>
+
+<div class="step">
+  <div class="h">아이디어 5 — <span style="color:var(--acc)">원격 트리거(텔레그램)로 제작 걸기</span> <span class="tag part">봇은 있음</span></div>
+  "밖에서 텔레그램으로 요청", "핸드폰으로 만드는 수강생". 우리는 텔레그램 봇이 <b>이미 있지만 알림 전용</b>입니다.
+  아이디어 1(한 문장 입구)이 되면 이건 <b>거의 공짜로 따라옵니다</b> — 같은 진입점을 봇에 연결만 하면 됨.
+</div>
+
+<h2>5. 걸러야 할 것 — 그대로 믿으면 안 되는 주장</h2>
+<div class="card warn">
+  <b>이 영상은 강의 판매용입니다.</b> 숫자와 단정은 반드시 갈라서 받아야 합니다.
+  <ul>
+    <li><b>"사람 손 1%도 안 닿는다"</b>(①19:00) ↔ 같은 사람이 다른 영상에선 <b>"한두 프레임이 튀는 게 보인다, 검수는 한다"</b>(②14:30). <span class="no-b">→ 0%가 아니라 '검수만 남았다'가 사실</span></li>
+    <li><b>수익 인증(월 1,850만·2,841만·누적 1억)</b> — 전부 <b>강의 수강생 사례</b>이고 검증 불가. 생존자 편향</li>
+    <li><b>저작권</b> — 본인도 인정: "넷플릭스나 <b>P2P 사이트</b>에서"(①14:00), "여전히 <b>원작 저작권 리스크는 있다</b>"(①17:00). <span class="no-b">→ 영화 롱폼 방식은 우리가 따라갈 영역이 아님</span></li>
+    <li><b>구독료 "10몇만 원"</b>(①07:00) — Max 5 = $100, Max 20 = $200. 병렬을 돌리면 <b>여기가 진짜 비용</b></li>
+  </ul>
+</div>
+
+<h2>6. 한 줄 결론</h2>
+<div class="card key">
+  <div class="big">우리 판단은 <span style="color:var(--mv)">수동 경로에만</span> 있습니다. 자동 경로는 그 판단 없이 같은 엔진을 부릅니다.</div>
+  <div style="margin-top:9px">
+  저쪽이 5개월간 한 일의 본질은 새 기술 개발이 아니라 <b>"매 단계에서 뭘 쓸지를 미리 다 정해둔 것"</b>입니다.
+  그래서 사용자가 안 물어봐도 되고, 그 결과가 <b>한 문장</b>으로 보이는 겁니다.<br><br>
+  우리는 모듈 160개·19,826줄에 <b>그 판단을 이미 갖고 있습니다</b> — 다만 <b>사람이 UI에서 고를 때만</b> 실립니다.
+  <b class="mv-b">즉 격차는 "기술"도 "입구"도 아니고, 판단을 자동 경로까지 잇는 배선과 그 기본값입니다.</b><br><br>
+  <b>순서 제안</b> — ① 자동 경로에 지시 배선(<code>{}</code> 제거) → ①-B 장르별 기본 프리셋 → ② 병렬(매출 직결) → ③ 교정루프 확대 → ④ 고객 로그 → ⑤ 텔레그램 트리거.
+  </div>
+</div>
+
+<div class="foot">
+  <b>실측 근거</b> — 두 영상 한국어 자동자막 전량(v1 832줄 / v2 570줄) · <code>yt-make-video/SKILL.md</code> STEP 4·5 · <code>shopping_shorts</code> 모듈 160개 · <code>app.py</code> 19,826줄 · <code>.mcp.json</code> 부재 확인 · <code>produce.html</code> 9단계<br>
+  <b>확인 못 한 것</b> — 볼케노 MCP의 <b>내부 구현(코드·프롬프트·서버 구조)</b>은 두 영상 어디에도 공개되지 않음. 화면 프레임 캡처는 유튜브 스트림 제약(403/포맷)으로 실패 → <b>본 문서는 자막 실측과 우리 코드 대조에 근거</b>하며, 저쪽 내부 구조에 대한 서술은 전부 <b>발언 인용</b>입니다.
+</div>
+
+</div></body></html>

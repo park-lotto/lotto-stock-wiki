@@ -31,5 +31,9 @@ def test_candidates_parses_vision_json(monkeypatch):
     monkeypatch.setattr(va, "_client_for_key", lambda key: fake_client)
     out = va.cn_search_candidates(b"img", "감자칩 에어프라이어")
     assert out["product"] == "에어프라이어 감자칩"
-    assert out["candidates"][0] == {"ko": "공기튀김 감자칩", "zh": "空气炸锅土豆片"}
+    # ★ko/zh만 비교한다(2026-09-08) — 후보에 en·ja 칸이 늘었고 모델이 안 채우면
+    #   빈 문자열로 온다. 딕셔너리 전체를 비교하면 언어를 늘릴 때마다 깨진다.
+    _c0 = out["candidates"][0]
+    assert (_c0["ko"], _c0["zh"]) == ("공기튀김 감자칩", "空气炸锅土豆片")
+    assert "en" in _c0 and "ja" in _c0
     assert len(out["candidates"]) == 2

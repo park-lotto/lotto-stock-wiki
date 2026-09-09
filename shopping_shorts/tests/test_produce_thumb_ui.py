@@ -457,15 +457,16 @@ renderThumbLayers = () => {}; renderThumbCanvas = () => {};
 const out = {};
 toggleThumbFx(0); out.on = THUMB_STATE.layers[0].fx.underline;
 toggleThumbFx(0); out.off = THUMB_STATE.layers[0].fx.underline;
-toggleThumbFx(0); toggleThumbFx(1); out.exclusive = THUMB_STATE.layers[0].fx.underline;
-toggleThumbFx(2); out.marker = !!THUMB_STATE.layers[0].fx.marker;
-toggleThumbFx(2); out.marker_off = THUMB_STATE.layers[0].fx.marker;
+toggleThumbFx(0); out.on2 = THUMB_STATE.layers[0].fx.underline;
+toggleThumbFx(1); out.marker = !!THUMB_STATE.layers[0].fx.marker;
+toggleThumbFx(1); out.marker_off = THUMB_STATE.layers[0].fx.marker;
 console.log(JSON.stringify(out));
 """
     out = json.loads(_run_node(script))
     assert out["on"] == "line"
     assert out["off"] == "none"
-    assert out["exclusive"] == "brush", "붓밑줄을 켜면 일반 밑줄은 꺼져야 한다"
+    # 2026-09-05 '붓 밑줄' 버튼은 뺐다(사장님) — 이제 [0]=밑줄 [1]=형광펜 [2]=네온.
+    assert out["on2"] == "line"
     assert out["marker"] is True
     assert out["marker_off"] is None
 

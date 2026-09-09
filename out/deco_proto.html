@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<title>장면꾸미기 시제품</title>
+<style>
+:root{--bg:#f4f5f7;--card:#fff;--line:#e3e6ea;--ink:#1c1f24;--sub:#6b7280;--acc:#2f6bff;--acc2:#eaf0ff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Pretendard","Malgun Gothic",system-ui,sans-serif}
+.top{display:flex;align-items:center;gap:14px;padding:12px 22px;background:#fff;border-bottom:1px solid var(--line)}
+.top h1{font-size:17px;margin:0}.top small{color:var(--sub)}
+.wrap{display:grid;grid-template-columns:420px 1fr;gap:22px;padding:22px;max-width:1240px;margin:0 auto}
+.mirrorWrap{position:sticky;top:16px}
+.mirror{background:#222 center/cover;border-radius:14px;aspect-ratio:9/16;position:relative;overflow:hidden;color:#fff;user-select:none}
+.mirror .bgimg{position:absolute;inset:0;background:linear-gradient(160deg,#5a6b7a,#2b3540 60%,#141a20);transform-origin:50% 50%;transition:transform .2s}
+.mirror .bgimg::after{content:"";position:absolute;left:20%;top:35%;width:60%;height:38%;background:#c8d3dc;border-radius:12px;box-shadow:0 10px 30px #0008}
+.mirror .bgimg::before{content:"";position:absolute;left:30%;top:20%;width:40%;height:18%;background:#e8b04a;border-radius:8px}
+.hc{position:absolute;left:0;right:0;text-align:center;font-weight:900;padding:10px 8%;cursor:grab;white-space:pre-line;line-height:1.25}
+.hc.none{display:none}
+.hc.band{background:var(--hcbg,#ffd400);color:var(--hcfg,#000)}
+.hc.yt{background:#fff;color:#000;text-align:left;font-size:0.85em;padding-top:18px}
+.hc.yt::before{content:"● 살림킹왕짱 · [광고]";display:block;font-size:11px;font-weight:600;color:#666;margin-bottom:4px}
+.hc.bars{background:#000;color:#fff}
+.hc .w{cursor:pointer;border-bottom:2px dotted transparent}.hc .w:hover{border-bottom-color:#f00a}
+.cap{position:absolute;left:8%;right:8%;text-align:center;font-weight:800;cursor:grab;transition:top .2s;padding:6px 8px;border-radius:8px}
+.cap.pos-top{top:12%}.cap.pos-mid{top:47%}.cap.pos-bottom{top:78%}
+.cap.st-basic{color:#fff;text-shadow:0 0 4px #000,0 0 8px #000}
+.cap.st-yellow{color:#ffe600;text-shadow:0 2px 0 #000,0 0 6px #000}
+.cap.st-box{background:#000c;color:#fff}
+.cap.st-white{color:#fff;-webkit-text-stroke:1.5px #000;text-shadow:none}
+.cap.st-round{background:#fff;color:#000;border-radius:30px}
+.zoomRing{position:absolute;width:38%;aspect-ratio:1;border:3px solid #4ff;border-radius:50%;left:31%;top:36%;display:none;box-shadow:0 0 0 999px #0006}
+.zoomRing.sq{border-radius:14px}
+.mask{position:absolute;background:#666;border:2px dashed #ddd;width:28%;height:8%;left:60%;top:22%;cursor:grab}
+.sticker{position:absolute;font-size:34px;left:8%;top:22%;cursor:grab}
+.logo{position:absolute;right:5%;top:4%;font-size:12px;background:#fff9;color:#000;padding:3px 8px;border-radius:6px;display:none}
+.ad{position:absolute;left:5%;top:4%;font-size:11px;background:#e00;color:#fff;padding:2px 6px;border-radius:4px;display:none}
+.hint{position:absolute;bottom:2%;left:0;right:0;text-align:center;font-size:11px;color:#bbb;pointer-events:none}
+.nav{display:flex;gap:8px;align-items:center;margin-top:10px}
+.nav b{flex:1;text-align:center}
+button{border:1px solid var(--line);background:#fff;border-radius:9px;padding:8px 13px;font:inherit;font-size:14px;cursor:pointer;white-space:nowrap}
+button:hover{border-color:#bbb}button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+button.big{padding:10px 8px;font-weight:800;flex:1;font-size:15px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px}
+.tabs{display:flex;gap:6px;margin-bottom:16px}
+.pane{display:none}.pane.on{display:block}
+.sec{margin-bottom:16px}.sec .t{font-size:13px;font-weight:700;color:var(--sub);margin-bottom:7px}
+.cards{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+.cards div{flex:0 0 92px;height:92px;border:1px solid var(--line);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:13px;background:#fafafa;cursor:pointer;text-align:center;padding:4px}
+.cards div.on{border:2px solid var(--acc);background:var(--acc2)}
+.row{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+select,textarea{border:1px solid var(--line);border-radius:9px;padding:7px 9px;font:inherit;font-size:14px;background:#fff}
+textarea{width:100%;resize:none}
+.sw{width:30px;height:30px;border-radius:8px;border:2px solid var(--line);cursor:pointer}.sw.on{border-color:var(--acc);box-shadow:0 0 0 2px var(--acc2)}
+.num{min-width:34px;text-align:center;font-weight:700}
+details{border-top:1px solid var(--line);padding-top:10px;margin-top:6px}
+summary{cursor:pointer;color:var(--sub);font-size:14px;font-weight:700}
+details .inner{padding:10px 0 0;display:flex;flex-direction:column;gap:12px}
+.save{font-size:12px;color:#16a34a;margin-top:8px}
+.pop{position:absolute;background:#fff;color:#000;border:1px solid var(--line);border-radius:10px;padding:8px;display:none;gap:6px;z-index:5;box-shadow:0 6px 20px #0003}
+.tplcards div{flex:0 0 76px;height:auto;flex-direction:column;gap:4px;padding:6px 4px;font-size:11px}
+.tplcards b{font-weight:600;white-space:nowrap}
+.mini{display:block;width:44px;height:78px;background:#e9edf1;border-radius:4px;position:relative;overflow:hidden}
+.mini.top::before{content:"";position:absolute;left:0;right:0;top:0;height:22%;background:var(--c)}
+.mini.topbottom::before{content:"";position:absolute;left:0;right:0;top:0;height:19%;background:var(--c)}
+.mini.topbottom::after{content:"";position:absolute;left:0;right:0;bottom:0;height:19%;background:var(--c)}
+.mini.frame{box-shadow:inset 0 0 0 5px var(--c)}
+.mini.yt::before{content:"";position:absolute;left:0;right:0;top:0;height:26%;background:#fff;border-bottom:1px solid #ccc}
+.hc.sh-top,.hc.sh-topbottom{background:var(--hcbg,#ffd400);color:var(--hcfg,#000)}
+.hc.sh-frame{background:transparent;color:var(--hcbg,#fff);text-shadow:0 0 4px #000}
+.frameBox{position:absolute;inset:0;pointer-events:none;display:none;box-shadow:inset 0 0 0 14px var(--c)}
+.botBar{position:absolute;left:0;right:0;bottom:0;height:11%;display:none;background:var(--c)}
+</style></head><body>
+<div class="top"><h1>6 · 장면꾸미기 <small>— 시제품(진짜 저장은 안 됨). 눌러보고 미리보기에서 끌어보세요</small></h1></div>
+<div class="wrap">
+ <div class="mirrorWrap">
+  <div class="mirror" id="mirror">
+   <div class="bgimg" id="bg"></div>
+   <div class="frameBox" id="frameBox"></div><div class="botBar" id="botBar"></div><div class="zoomRing" id="ring"></div>
+   <div class="mask" id="mask" style="display:none" title="끌어서 옮기기"></div>
+   <div class="sticker" id="sticker" style="display:none">😀</div>
+   <div class="logo" id="logo">🏷 내 로고</div>
+   <div class="ad" id="ad">광고</div>
+   <div class="hc sh-top" id="hc" style="top:8%"></div>
+   <div class="cap pos-bottom st-basic" id="cap">이거 하나면 끝나요</div>
+   <div class="pop" id="pop"></div>
+   <div class="hint" id="hint">글자를 끌어서 옮기기</div>
+  </div>
+  <div class="nav"><button onclick="beat(-1)">◀</button><b id="beatNo">3 / 12</b><button onclick="beat(1)">▶</button><button>▶ 재생</button><button>🖼 썸네일로</button></div>
+ </div>
+
+ <div class="panel">
+  <div class="tabs">
+   <button class="big on" data-tab="cap" onclick="tab('cap')">💬 자막</button>
+   <button class="big" data-tab="title" onclick="tab('title')">🎨 제목</button>
+   <button class="big" data-tab="scene" onclick="tab('scene')">🎬 장면</button>
+  </div>
+
+  <!-- 자막 -->
+  <div class="pane on" id="pane-cap">
+   <div class="sec"><div class="t">스타일 고르기</div>
+    <div class="cards" id="capCards">
+     <div class="on" data-st="basic">기본</div><div data-st="yellow">노랑강조</div><div data-st="box">검정박스</div><div data-st="white">흰테두리</div><div data-st="round">둥근띠</div><div data-st="mine">⭐ 내 스타일</div>
+    </div></div>
+   <div class="sec"><div class="t">자리 <small style="font-weight:400">— 미리보기에서 끌어도 됩니다</small></div>
+    <div class="row" id="capPos"><button data-pos="top">⬆ 위</button><button data-pos="mid">중간</button><button class="on" data-pos="bottom">⬇ 아래</button><span style="width:10px"></span><button class="on" id="capAll" onclick="this.classList.toggle('on')">모든 장면에</button></div></div>
+   <div class="sec"><div class="t">글씨</div>
+    <div class="row"><select onchange="cap.style.fontFamily=this.value"><option value="inherit">프리텐다드</option><option value="serif">명조</option><option value="cursive">손글씨</option></select>
+     <button onclick="capSize(-4)">−</button><span class="num" id="capSz">22</span><button onclick="capSize(4)">＋</button>
+     <span style="width:6px"></span>
+     <span class="sw on" style="background:#fff" onclick="capColor('#fff',this)"></span><span class="sw" style="background:#ffe600" onclick="capColor('#ffe600',this)"></span><span class="sw" style="background:#2ee6c5" onclick="capColor('#2ee6c5',this)"></span><span class="sw" style="background:#000" onclick="capColor('#000',this)"></span></div></div>
+   <details><summary>⚙ 세부 설정</summary><div class="inner">
+    <div class="row"><span class="t" style="margin:0">가로정렬</span><button>⇤ 왼쪽</button><button class="on">↔ 가운데</button><button>⇥ 오른쪽</button></div>
+    <div class="row"><span class="t" style="margin:0">효과</span><button class="on">없음</button><button>페이드</button><button>✦ 반짝</button></div>
+    <div class="row"><span class="t" style="margin:0">이 장면만</span><button onclick="hint.textContent='이 장면 줄만 고치는 칸이 여기 열립니다'">✏️ 이 장면 자막 줄 고치기</button><button>↩ 지워진 자막 자리</button></div>
+    <div class="row"><button>💾 지금 스타일을 내 스타일로 저장</button></div>
+   </div></details>
+   <div class="save">✓ 자동 저장됨</div>
+  </div>
+
+  <!-- 제목 -->
+  <div class="pane" id="pane-title">
+   <div class="sec"><div class="t">틀 고르기</div>
+    <div class="cards tplcards" id="tplCards"><div data-tpl="none"><i class="mini"></i><b>없음</b></div><div data-tpl="top" data-bg="#FF5A5F" data-fg="#fff"><i class="mini top" style="--c:#FF5A5F"></i><b>상단 띠·코랄</b></div><div data-tpl="top" data-bg="#22C7B8" data-fg="#000"><i class="mini top" style="--c:#22C7B8"></i><b>상단 띠·민트</b></div><div data-tpl="top" data-bg="#FFC531" data-fg="#000" class="on"><i class="mini top" style="--c:#FFC531"></i><b>상단 띠·옐로</b></div><div data-tpl="top" data-bg="#2B3A67" data-fg="#fff"><i class="mini top" style="--c:#2B3A67"></i><b>상단 띠·네이비</b></div><div data-tpl="topbottom" data-bg="#FF5A5F" data-fg="#fff"><i class="mini topbottom" style="--c:#FF5A5F"></i><b>상단+하단 띠·코랄</b></div><div data-tpl="topbottom" data-bg="#22C7B8" data-fg="#000"><i class="mini topbottom" style="--c:#22C7B8"></i><b>상단+하단 띠·민트</b></div><div data-tpl="topbottom" data-bg="#FFC531" data-fg="#000"><i class="mini topbottom" style="--c:#FFC531"></i><b>상단+하단 띠·옐로</b></div><div data-tpl="topbottom" data-bg="#2B3A67" data-fg="#fff"><i class="mini topbottom" style="--c:#2B3A67"></i><b>상단+하단 띠·네이비</b></div><div data-tpl="frame" data-bg="#FF5A5F" data-fg="#fff"><i class="mini frame" style="--c:#FF5A5F"></i><b>테두리·코랄</b></div><div data-tpl="frame" data-bg="#22C7B8" data-fg="#000"><i class="mini frame" style="--c:#22C7B8"></i><b>테두리·민트</b></div><div data-tpl="frame" data-bg="#FFC531" data-fg="#000"><i class="mini frame" style="--c:#FFC531"></i><b>테두리·옐로</b></div><div data-tpl="frame" data-bg="#2B3A67" data-fg="#fff"><i class="mini frame" style="--c:#2B3A67"></i><b>테두리·네이비</b></div><div data-tpl="yt"><i class="mini yt"></i><b>유튜브형</b></div><div data-tpl="img"><i class="mini"></i><b>＋ 내 그림</b></div><div data-tpl="mine"><i class="mini"></i><b>⭐ 내 틀</b></div></div></div>
+   <div class="sec"><div class="t">문구</div>
+    <textarea id="hcText" rows="2" oninput="renderHC()">바닥 세정제 추천
+이거 하나면 끝나요</textarea>
+    <div class="row" style="margin-top:6px"><button onclick="aiSuggest()">✨ AI 추천 문구</button><select><option>채널명: 살림킹왕짱</option><option>채널명 바꾸기…</option></select></div>
+    <div class="row" id="aiRow" style="margin-top:6px;display:none"></div></div>
+   <div class="sec"><div class="t">글씨 <small style="font-weight:400">— 색 바꿀 낱말은 미리보기에서 그 글자를 누르세요</small></div>
+    <div class="row"><select onchange="hc.style.fontFamily=this.value"><option value="inherit">검은고딕</option><option value="serif">명조</option><option value="cursive">손글씨</option></select>
+     <button onclick="hcSize(-3)">−</button><span class="num" id="hcSz">26</span><button onclick="hcSize(3)">＋</button>
+     <span style="width:6px"></span>
+     <span class="sw" style="background:#000" onclick="hcColor('#000')"></span><span class="sw" style="background:#fff" onclick="hcColor('#fff')"></span><span class="sw" style="background:#e00" onclick="hcColor('#e00')"></span><span class="sw" style="background:#2f6bff" onclick="hcColor('#2f6bff')"></span></div></div>
+   <details><summary>⚙ 세부 설정</summary><div class="inner">
+    <div class="row"><span class="t" style="margin:0">띠 색</span><span class="sw" style="background:#ffd400" onclick="hcBand('#ffd400')"></span><span class="sw" style="background:#2ee6c5" onclick="hcBand('#2ee6c5')"></span><span class="sw" style="background:#fff" onclick="hcBand('#fff')"></span><span class="sw" style="background:#000" onclick="hcBand('#000')"></span></div>
+    <div class="row"><span class="t" style="margin:0">테두리</span><button class="on">없음</button><button onclick="hc.style.webkitTextStroke='1px #fff'">흰 테두리</button><button onclick="hc.style.webkitTextStroke='1px #000'">검은 테두리</button></div>
+    <div class="row"><span class="t" style="margin:0">띠 높이</span><span style="color:var(--sub);font-size:13px">미리보기에서 띠 아래쪽을 끌어 조절</span></div>
+    <div class="row"><button>💾 내 틀로 저장</button></div>
+   </div></details>
+   <div class="save">✓ 자동 저장됨</div>
+  </div>
+
+  <!-- 장면 -->
+  <div class="pane" id="pane-scene">
+   <div class="sec"><div class="t">확대 <small style="font-weight:400">— 미리보기를 누르면 그 지점이 중심</small></div>
+    <div class="row" id="zoomRow"><button class="on" data-z="1">1×</button><button data-z="1.5">1.5×</button><button data-z="2">2×</button><button data-z="3">3×</button><span style="width:10px"></span><button class="on" onclick="this.classList.toggle('on')">모든 장면 같이</button></div></div>
+   <div class="sec"><div class="t">강조</div>
+    <div class="row" id="emphRow"><button class="on" data-e="off">끄기</button><button data-e="circle">⭕ 원</button><button data-e="sq">▢ 네모</button></div></div>
+   <div class="sec"><div class="t">가리기</div>
+    <div class="row"><button onclick="mask.style.display='block';hint.textContent='회색 가림막을 끌어 옮기세요'">＋ 가림막</button><button onclick="sticker.style.display='block'">😀 스티커</button><button onclick="mask.style.display='none';sticker.style.display='none'">✕ 전부 지우기</button></div></div>
+   <div class="sec"><div class="t">워터마크 · [광고]</div>
+    <div class="row"><button onclick="logo.style.display=logo.style.display=='block'?'none':'block';this.classList.toggle('on')">🏷 로고 올리기</button><button onclick="ad.style.display=ad.style.display=='block'?'none':'block';this.classList.toggle('on')">[광고] 표시</button></div></div>
+   <details><summary>⚙ 세부 설정</summary><div class="inner">
+    <div class="row"><span class="t" style="margin:0">로고 크기</span><button onclick="szEl(logo,-2)">−</button><button onclick="szEl(logo,2)">＋</button><span class="t" style="margin:0 0 0 12px">투명도</span><button onclick="logo.style.opacity=Math.max(.2,(+logo.style.opacity||1)-.2)">−</button><button onclick="logo.style.opacity=Math.min(1,(+logo.style.opacity||1)+.2)">＋</button></div>
+    <div class="row"><span class="t" style="margin:0">[광고]</span><button class="on">자동 위치</button><button>또렷하게</button></div>
+    <div class="row"><button>🖼 이미지 오버레이</button><button>고급 렌더 (10P)</button></div>
+   </div></details>
+   <div class="save">✓ 자동 저장됨</div>
+  </div>
+ </div>
+</div>
+
+<script>
+const $=s=>document.querySelector(s), frameBox=document.getElementById('frameBox'), botBar=document.getElementById('botBar'), hint=$('#hint'), cap=$('#cap'), hc=$('#hc'), bg=$('#bg'), ring=$('#ring'), mask=$('#mask'), sticker=$('#sticker'), logo=$('#logo'), ad=$('#ad'), pop=$('#pop'), mirror=$('#mirror');
+let beatN=3, capSz=22, hcSzV=26, zoom=1, wordColors={};
+cap.style.fontSize=capSz+'px'; hc.style.fontSize=hcSzV+'px';
+function tab(n){document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('on',b.dataset.tab===n));document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('on',p.id==='pane-'+n));
+ hint.textContent={cap:'글자를 끌어서 옮기기',title:'낱말을 누르면 색 · 띠를 끌어 옮기기',scene:'화면을 누르면 그곳이 확대 중심'}[n];}
+function beat(d){beatN=Math.min(12,Math.max(1,beatN+d));$('#beatNo').textContent=beatN+' / 12';cap.textContent=['이거 하나면 끝나요','얼룩이 싹 사라져요','향도 은은해요','한 번 써보세요'][beatN%4];}
+function pick(container,fn){container.addEventListener('click',e=>{const t=e.target.closest('div,button');if(!t||t===container)return;[...container.children].forEach(c=>c.classList.remove('on'));t.classList.add('on');fn(t);});}
+pick($('#capCards'),t=>{cap.className='cap pos-'+curPos+' st-'+(t.dataset.st==='mine'?'yellow':t.dataset.st);});
+let curPos='bottom';
+pick($('#capPos'),t=>{if(!t.dataset.pos)return;curPos=t.dataset.pos;cap.classList.remove('pos-top','pos-mid','pos-bottom');cap.classList.add('pos-'+curPos);cap.style.top='';});
+function capSize(d){capSz=Math.max(12,capSz+d);$('#capSz').textContent=capSz;cap.style.fontSize=capSz+'px';}
+function capColor(c,el){cap.style.color=c;document.querySelectorAll('#pane-cap .sw').forEach(s=>s.classList.remove('on'));el.classList.add('on');}
+pick($('#tplCards'),t=>{const k=t.dataset.tpl,c=t.dataset.bg||'#ffd400';
+ hc.className='hc '+(k==='none'?'none':k==='mine'||k==='img'?'band':k==='yt'?'yt':'sh-'+k);
+ if(t.dataset.bg){hc.style.setProperty('--hcbg',c);hc.style.setProperty('--hcfg',t.dataset.fg);}
+ if(k==='img'){hc.style.setProperty('--hcbg','linear-gradient(90deg,#f7c,#7cf)');}
+ frameBox.style.display=k==='frame'?'block':'none';frameBox.style.setProperty('--c',c);
+ botBar.style.display=k==='topbottom'?'block':'none';botBar.style.setProperty('--c',c);});
+function renderHC(){hc.innerHTML=$('#hcText').value.split(/\r?\n/).map(line=>line.split(/\s+/).filter(Boolean).map(w=>`<span class="w" style="color:${wordColors[w]||'inherit'}" onclick="wordPop(event,'${w}')">${w}</span>`).join(' ')).join('<br>');}
+renderHC();
+function wordPop(e,w){e.stopPropagation();pop.style.display='flex';const r=mirror.getBoundingClientRect();pop.style.left=Math.min(r.width-190,e.clientX-r.left-40)+'px';pop.style.top=(e.clientY-r.top+14)+'px';
+ pop.innerHTML=['#e00','#ffe600','#2ee6c5','#2f6bff','#fff','#000'].map(c=>`<span class="sw" style="background:${c}" onclick="wordColors['${w}']='${c}';renderHC();pop.style.display='none'"></span>`).join('')+`<button onclick="delete wordColors['${w}'];renderHC();pop.style.display='none'">해제</button>`;}
+document.addEventListener('click',()=>pop.style.display='none');
+function hcSize(d){hcSzV=Math.max(14,hcSzV+d);$('#hcSz').textContent=hcSzV;hc.style.fontSize=hcSzV+'px';}
+function hcColor(c){hc.style.setProperty('--hcfg',c);hc.style.color=c;}
+function hcBand(c){hc.style.setProperty('--hcbg',c);}
+function aiSuggest(){const r=$('#aiRow');r.style.display='flex';r.innerHTML=['찌든때 3초 컷','바닥 청소 이걸로 끝','세정제 고민 끝','물걸레 필요없음'].map(s=>`<button onclick="$('#hcText').value='${s}\\n이거 하나면 끝나요';renderHC()">${s}</button>`).join('');}
+pick($('#zoomRow'),t=>{if(!t.dataset.z)return;zoom=+t.dataset.z;bg.style.transform=`scale(${zoom})`;});
+mirror.addEventListener('click',e=>{if(!$('#pane-scene').classList.contains('on')||e.target.closest('.cap,.hc,.mask,.sticker,.pop'))return;const r=mirror.getBoundingClientRect();const x=(e.clientX-r.left)/r.width*100,y=(e.clientY-r.top)/r.height*100;bg.style.transformOrigin=`${x}% ${y}%`;if(zoom===1){zoom=1.5;bg.style.transform='scale(1.5)';[...$('#zoomRow').children].forEach(b=>b.classList.toggle('on',b.dataset.z==='1.5'));}});
+pick($('#emphRow'),t=>{ring.style.display=t.dataset.e==='off'?'none':'block';ring.classList.toggle('sq',t.dataset.e==='sq');});
+function szEl(el,d){el.style.fontSize=(parseFloat(getComputedStyle(el).fontSize)+d)+'px';}
+// 드래그(자막·헤드카피·가림막·스티커)
+[cap,hc,mask,sticker].forEach(el=>{let sx,sy,ox,oy,drag=false;el.addEventListener('pointerdown',e=>{if(e.target.classList.contains('w'))return;drag=true;el.setPointerCapture(e.pointerId);const r=mirror.getBoundingClientRect(),b=el.getBoundingClientRect();sx=e.clientX;sy=e.clientY;ox=b.left-r.left;oy=b.top-r.top;});
+ el.addEventListener('pointermove',e=>{if(!drag)return;const r=mirror.getBoundingClientRect();el.style.top=((oy+e.clientY-sy)/r.height*100)+'%';if(el===mask||el===sticker)el.style.left=((ox+e.clientX-sx)/r.width*100)+'%';if(el===cap){cap.classList.remove('pos-top','pos-mid','pos-bottom');}});
+ el.addEventListener('pointerup',()=>drag=false);});
+</script>
+</body></html>

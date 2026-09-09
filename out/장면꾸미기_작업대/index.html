@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<title>장면꾸미기 작업대</title>
+<style>
+:root{--bg:#f4f5f7;--card:#fff;--line:#e3e6ea;--ink:#1c1f24;--sub:#6b7280;--acc:#2f6bff;--acc2:#eaf0ff}
+*{box-sizing:border-box}html,body{height:100%}body{margin:0;overflow:hidden;background:var(--bg);color:var(--ink);font:15px/1.5 "Pretendard","Malgun Gothic",system-ui,sans-serif}
+.topbar{display:flex;align-items:center;gap:14px;padding:12px 22px;background:#fff;border-bottom:1px solid var(--line)}
+.topbar h1{font-size:17px;margin:0}.topbar small{color:var(--sub)}
+.wrap{display:grid;grid-template-columns:auto minmax(0,1fr);gap:22px;padding:16px 22px;height:calc(100vh - 52px);max-width:1400px;margin:0 auto}
+.mirrorWrap{align-self:start}
+.mirror{border-radius:14px;aspect-ratio:9/16;height:min(calc(100vh - 140px),820px);width:auto;position:relative;overflow:hidden;background:#111;user-select:none;touch-action:none}
+.mirror img{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#bg{transform-origin:50% 50%;transition:transform .2s}
+#frame,#hcimg,#capimg{opacity:1;transition:opacity .15s}#frame.busy,#hcimg.busy,#capimg.busy{opacity:.55}
+#capLinesBox input{width:100%;border:1px solid var(--line);border-radius:8px;padding:7px 10px;font:inherit;font-size:14px;margin-bottom:5px}
+.cap{position:absolute;left:8%;right:8%;text-align:center;font-weight:800;cursor:grab;padding:6px 8px;border-radius:8px;color:#fff;text-shadow:0 0 4px #000,0 0 8px #000}
+.cap.pos-top{top:12%}.cap.pos-mid{top:47%}.cap.pos-bottom{top:78%}
+.cap.st-yellow{color:#ffe600;text-shadow:0 2px 0 #000,0 0 6px #000}
+.cap.st-box{background:#000c;text-shadow:none}
+.cap.st-white{color:#fff;-webkit-text-stroke:1.5px #000;text-shadow:none}
+.cap.st-round{background:#fff;color:#000;border-radius:30px;text-shadow:none}
+.hcHtml{position:absolute;left:0;right:0;text-align:center;font-weight:900;padding:10px 8%;white-space:pre-line;line-height:1.2;display:none;pointer-events:none}
+.zoomRing{position:absolute;width:38%;aspect-ratio:1;border:3px solid #4ff;border-radius:50%;left:31%;top:36%;display:none;box-shadow:0 0 0 999px #0006}
+.zoomRing.sq{border-radius:14px}
+.mask{position:absolute;background:#666;border:2px dashed #ddd;width:28%;height:8%;left:60%;top:22%;cursor:grab}
+.sticker{position:absolute;font-size:34px;left:8%;top:22%;cursor:grab}
+.hint{position:absolute;bottom:2%;left:0;right:0;text-align:center;font-size:11px;color:#eee;text-shadow:0 0 3px #000;pointer-events:none}
+.guide{position:absolute;left:0;right:0;height:0;border-top:2px dashed #4ff;display:none;pointer-events:none}
+.nav{display:flex;gap:8px;align-items:center;margin-top:10px}.nav b{flex:1;text-align:center}
+button{border:1px solid var(--line);background:#fff;border-radius:9px;padding:8px 13px;font:inherit;font-size:14px;cursor:pointer;white-space:nowrap}
+button:hover{border-color:#bbb}button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+button.big{padding:10px 8px;font-weight:800;flex:1;font-size:15px}
+.panel{min-width:0;overflow:auto;height:100%;background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px}
+.tabs{display:flex;gap:6px;margin-bottom:16px}
+.pane{display:none}.pane.on{display:block}
+.sec{margin-bottom:12px;border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#fbfbfd}.sec .t{font-size:15px;font-weight:800;color:var(--ink);margin-bottom:8px;display:flex;align-items:center;gap:8px}.sec .t small{color:var(--sub);font-weight:400;font-size:12px}.sec .t::before{content:'';width:6px;height:16px;border-radius:3px;background:var(--acc)}
+
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.pair{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 10px;border:2px solid var(--line);border-radius:12px;cursor:pointer;background:#fff;min-width:130px}.pair.on{border-color:var(--acc);background:var(--acc2)}.pair b{font-size:13px}.pair small{font-size:11px;color:var(--sub)}
+.pairImg{position:relative;width:90px;height:160px;border-radius:8px;overflow:hidden;background:#111}.pairImg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.chips button{padding:5px 11px;font-size:13px;border-radius:20px}
+.cards.tpl{display:none}.cards.tpl.on{display:flex}
+.cards{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px}
+.cards div{flex:0 0 72px;border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;background:#fafafa;cursor:pointer;text-align:center;padding:5px 3px}
+.cards div.on{border:2px solid var(--acc);background:var(--acc2)}
+.cards img,.cards i{width:50px;height:88px;border-radius:5px;background:#dfe4ea;object-fit:cover;display:block}
+.cards b{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:70px}
+.row{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+select,textarea,input[type=text]{border:1px solid var(--line);border-radius:9px;padding:7px 9px;font:inherit;font-size:14px;background:#fff}
+.row select{max-width:150px}.row button{padding:7px 10px}.lbl{min-width:auto!important}
+textarea{width:100%;resize:none}
+.sw{width:28px;height:28px;border-radius:8px;border:2px solid var(--line);cursor:pointer;padding:0}
+input[type=color]{width:34px;height:30px;border:1px solid var(--line);border-radius:8px;padding:2px;background:#fff;cursor:pointer}
+.num{min-width:40px;text-align:center;font-weight:700}
+details{border-top:1px solid var(--line);padding-top:10px;margin-top:6px}
+summary{cursor:pointer;color:var(--sub);font-size:14px;font-weight:700}
+details .inner{padding:10px 0 0;display:flex;flex-direction:column;gap:12px}
+.lbl{font-size:13px;color:var(--sub);min-width:64px}
+.save{font-size:12px;color:#16a34a;margin-top:8px}
+.pop{position:absolute;background:#fff;color:#000;border:1px solid var(--line);border-radius:10px;padding:8px;display:none;gap:6px;z-index:5;box-shadow:0 6px 20px #0003}
+.err{color:#b91c1c;font-size:12px;display:none}
+</style></head><body>
+<div class="topbar"><h1>6 · 장면꾸미기 <small>— 작업대. 틀·글자는 라이브 렌더 코드가 그린 그대로입니다</small></h1><span id="err" class="err"></span></div>
+<div class="wrap">
+ <div class="mirrorWrap">
+  <div class="mirror" id="mirror">
+   <img id="bg" src="bg.jpg" alt="">
+   <img id="tpl" src="" alt="" style="display:none">
+   <img id="frame" src="" alt=""><img id="hcimg" src="" alt=""><img id="capimg" src="" alt="">
+   <div class="hcHtml" id="hcHtml"></div>
+   <div class="guide" id="guide"></div>
+   <div class="zoomRing" id="ring"></div>
+   <div class="mask" id="mask" style="display:none"></div>
+   <div class="sticker" id="sticker" style="display:none">😀</div>
+   <div class="cap pos-bottom" id="cap" style="display:none">이거 하나면 끝나요</div>
+   <div class="pop" id="pop"></div>
+   <div class="hint" id="hint">글자를 끌어서 옮기기</div>
+  </div>
+  <div class="nav"><button onclick="beat(-1)">◀</button><b id="beatNo">1 / 12</b><button onclick="beat(1)">▶</button><button id="playBtn" onclick="togglePlay()">▶ 재생</button><button>🖼 썸네일로</button></div>
+ </div>
+
+ <div class="panel">
+  <div class="tabs">
+   <button class="big" data-tab="cap" onclick="tab('cap')">💬 자막</button>
+   <button class="big on" data-tab="title" onclick="tab('title')">🎨 제목</button>
+   <button class="big" data-tab="scene" onclick="tab('scene')">🎬 장면</button>
+  </div>
+
+  <!-- 자막 -->
+  <div class="pane" id="pane-cap">
+   <div class="sec"><div class="t">자막 즐겨찾기 <small>— 누르면 그 모양으로. ⭐내 스타일에 저장해두면 다음에도</small></div>
+    <div class="cards" id="capCards">
+     <div class="on" data-st="basic"><i style="background:#333;color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:12px;text-shadow:0 0 3px #000">기본</i><b>기본</b></div>
+     <div data-st="yellow"><i style="background:#333;color:#ffe600;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:12px;text-shadow:0 0 3px #000">노랑</i><b>노랑강조</b></div>
+     <div data-st="box"><i style="background:#888;display:flex;align-items:center;justify-content:center"><span style="background:#000c;color:#fff;font-size:11px;padding:2px 5px;border-radius:3px">박스</span></i><b>검정박스</b></div>
+     <div data-st="white"><i style="background:#333;color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:12px;-webkit-text-stroke:.6px #000">테두리</i><b>흰테두리</b></div>
+     <div data-st="whitebox"><i style="background:#888;display:flex;align-items:center;justify-content:center"><span style="background:#fff;color:#000;font-size:11px;padding:2px 6px;border-radius:9px">둥근</span></i><b>둥근띠</b></div>
+     <div data-st="mine"><i style="display:flex;align-items:center;justify-content:center;font-size:20px">⭐</i><b>내 스타일</b></div>
+    </div></div>
+   <div class="sec"><div class="t">자막 위치 <small>— 미리보기에서 끌어도 됩니다 · <b id="capScopeLbl">모든 장면에</b> 적용</small></div>
+    <div class="row" id="capPos"><button data-pos="top">⬆ 위</button><button class="on" data-pos="mid">가운데</button><button data-pos="bottom">⬇ 아래</button><span style="width:10px"></span><button class="on" id="capAll" onclick="capScope(!CAPS.all)">모든 장면에</button><button id="capOne" onclick="capScope(false)">이 장면만</button></div></div>
+   <div class="sec"><div class="t">자막 폰트</div>
+    <div class="row"><select id="cap_font" onchange="capStyle('font',this.value)"><option value="">기본 폰트</option></select>
+     <button onclick="capBump('size',-4)">−</button><span class="num" id="cap_size_v">52</span><button onclick="capBump('size',4)">＋</button>
+     <span style="width:6px"></span><span class="lbl" style="min-width:auto">글자색</span><input type="color" id="cap_color" value="#ffffff" oninput="capStyle('color',this.value)">
+     <span class="lbl" style="min-width:auto">테두리</span><input type="color" id="cap_olc" value="#000000" oninput="capStyle('outline_color',this.value)"><button onclick="capBump('outline_w',-1)">−</button><span class="num" id="cap_olw_v">6</span><button onclick="capBump('outline_w',1)">＋</button></div>
+    <div class="row" style="margin-top:6px"><span class="lbl">글자 뒤 박스</span><button id="capBoxBtn" onclick="capStyle('box',!CAPS.style.box)">켜기/끄기</button><input type="color" id="cap_boxc" value="#000000" oninput="capStyle('box_color',this.value)">
+     <span class="lbl" style="min-width:auto">진하기</span><button onclick="capBump('box_opacity',-10)">−</button><span class="num" id="cap_boxo_v">80</span><button onclick="capBump('box_opacity',10)">＋</button></div></div>
+   <div class="sec"><div class="t">자막 줄바꾸기 <small>— 이 장면 자막. Enter=여기서 끊기 · Backspace(줄 맨 앞)=윗줄과 붙이기</small></div>
+    <div id="capLinesBox"></div>
+    <div class="row"><button onclick="capSaveLines()">💾 이 장면 줄 저장</button><button onclick="capAutoLines()">↩ 자동으로</button><button onclick="capNextLine()">▸ 다음 줄 보기 <span id="capLineNo">1/1</span></button><span id="capMsg" style="font-size:12px;color:#16a34a"></span></div></div>
+   <details><summary>⚙ 세부 설정</summary><div class="inner">
+    <div class="row"><span class="lbl">효과</span><select onchange="capStyle('effect',this.value)"><option value="fade">페이드</option><option value="none">없음</option><option value="slide">슬라이드</option><option value="pop">팝</option><option value="sparkle">✦ 반짝</option></select>
+     <span class="lbl" style="min-width:auto;margin-left:8px">그림자</span><button id="capShBtn" onclick="capStyle('shadow',!CAPS.style.shadow)">켜기/끄기</button></div>
+    <div class="row"><button onclick="capResetStyle()">↩ 스타일 기본값으로</button><button onclick="capSaveMine()">💾 내 스타일로 저장</button><button onclick="capResetAllPos()">↩ 모든 장면 자리 초기화</button></div>
+   </div></details>
+   <div class="save" id="capSaved">✓ 자동 저장됨</div>
+  </div>
+
+  <!-- 제목 -->
+  <div class="pane on" id="pane-title">
+   <div class="sec"><div class="t">템플릿 <small>— 후킹 → 본문이 한 벌입니다. 고치고 싶은 쪽을 누르세요</small></div>
+    <div class="row" id="pairRow" style="align-items:stretch;gap:14px;margin-bottom:8px">
+     <div class="pair on" data-part="hook" onclick="setPart('hook')"><div class="pairImg"><img class="pbg" src="bg.jpg"><img class="pfr"><img class="phc"></div><b>🎯 후킹 템플릿</b><small>앞 <span id="hookBeatsLbl">1</span>장면</small></div>
+     <div style="align-self:center;font-size:22px;color:var(--sub)">→</div>
+     <div class="pair" data-part="body" onclick="setPart('body')"><div class="pairImg"><img class="pbg" src="bg.jpg"><img class="pfr"><img class="phc"><img class="pcap"></div><b>📄 본문 템플릿</b><small>나머지 장면</small></div>
+    </div>
+    <div class="row" id="partRow" style="margin-bottom:4px"><span style="display:none"><button class="on" data-part="hook" onclick="setPart('hook')">후킹</button><button data-part="body" onclick="setPart('body')">본문</button></span>
+ <span class="lbl" style="min-width:auto;margin-left:8px">후킹 장면 수</span><button onclick="hookBeats=Math.max(1,hookBeats-1);$('#hookBeats').textContent=hookBeats;beat(0)">−</button><span class="num" id="hookBeats">1</span><button onclick="hookBeats=Math.min(11,hookBeats+1);$('#hookBeats').textContent=hookBeats;beat(0)">＋</button>
+ <button id="sameBtn" onclick="toggleSame()" title="후킹 값을 본문에 복사 / 다시 누르면 되돌림">후킹 → 본문 같게</button></div>
+ </div><div class="sec"><div class="t">틀 고르기 <small>— ★는 실제 채널 실측 · 지금 <b id="partName">후킹</b> 틀</small></div>
+    <div id="tplGroups"></div></div>
+   <div class="sec"><div class="t">채널명 <small>— 맨 위 띠 가운데</small></div>
+    <div class="row"><input type="text" id="channel" value="살림킹왕짱" placeholder="채널명" oninput="set('channel',this.value)" style="width:120px">
+     <select id="ch_font" onchange="set('ch_font',this.value)"><option value="">채널 폰트</option></select>
+     <button onclick="bump('ch_size',-4,40)">−</button><span class="num" id="ch_size_v">기본</span><button onclick="bump('ch_size',4,40)">＋</button>
+     <span class="lbl" style="min-width:auto">글자색</span><input type="color" id="on_bar_color" value="#ffffff" oninput="set('on_bar_color',this.value)">
+     <span class="lbl" style="min-width:auto">박스색</span><input type="color" id="bar_color" value="#ffffff" oninput="set('bar_color',this.value)">
+     <span class="lbl" style="min-width:auto">높이</span><button onclick="bumpBar(-20)">−</button><span class="num" id="bar_h_v2">190</span><button onclick="bumpBar(20)">＋</button></div></div>
+   <div class="sec"><div class="t">대제목 <small style="font-weight:400" id="bigHint">— 큰 글씨 2줄. 엔터로 줄을 나눕니다</small></div>
+    <textarea id="hcText" rows="2" placeholder="여기에 대제목을 적으세요" oninput="setBig('text',this.value)">바닥 세정제 추천
+이거 하나면 끝나요</textarea>
+    <div class="row" style="margin-top:6px"><select id="title_font" onchange="setBig('font',this.value)"><option value="">채널 폰트</option></select>
+     <button onclick="bumpBig(-4)">−</button><span class="num" id="hc_size_v">86</span><button onclick="bumpBig(4)">＋</button><button onclick="hcFit()">↔ 폭에 맞추기</button>
+     <span class="lbl" style="min-width:auto">1줄 색</span><input type="color" id="hc_color" value="#000000" oninput="setBig('color',this.value)">
+     <span class="lbl" style="min-width:auto" id="c2lbl">2줄 색</span><input type="color" id="hc_color2" value="#000000" oninput="setBig('color2',this.value)">
+     <button onclick="aiSuggest()">✨ AI 추천</button></div>
+    <div class="row" style="margin-top:6px"><span class="lbl" style="min-width:auto">박스색</span><input type="color" id="band_color" value="#000000" oninput="setBigBox('color',this.value)">
+     <span class="lbl" style="min-width:auto">투명도</span><button onclick="bumpBigBox('alpha',-10)">−</button><span class="num" id="band_alpha_v">60</span><button onclick="bumpBigBox('alpha',10)">＋</button>
+     <span class="lbl" style="min-width:auto">높이</span><button onclick="bumpBigBox('h',-20)">−</button><span class="num" id="band_h_v">0</span><button onclick="bumpBigBox('h',20)">＋</button><span id="alphaWrap"></span></div>
+    <div class="row" id="aiRow" style="margin-top:6px;display:none"></div></div>
+   <div class="sec"><div class="t">소제목 <small style="font-weight:400" id="subHint">— 큰 글씨 아래 한 줄 박스. 글자를 키우면 박스도 같이 커집니다</small></div>
+    <div class="row"><input type="text" id="title" style="width:360px" placeholder="소제목 한 줄 (비우면 없음)" oninput="setSub('text',this.value)"><input type="text" id="comments" style="width:120px;display:none" placeholder="댓글 수" oninput="set('comments',this.value)"><button onclick="$('#title').value='';setSub('text','')">비우기</button></div>
+    <div class="row" style="margin-top:6px"><select id="sub_font" onchange="setSub('font',this.value)"><option value="">채널 폰트</option></select>
+     <button onclick="bumpSub(-2)">−</button><span class="num" id="sub_size_v">28</span><button onclick="bumpSub(2)">＋</button>
+     <span class="lbl" style="min-width:auto">글자색</span><input type="color" id="sub_color" value="#111111" oninput="setSub('color',this.value)">
+     <span class="lbl" style="min-width:auto">박스색</span><input type="color" id="sub_bg" value="#ffffff" oninput="setSub('bg',this.value)">
+</div></div>
+   <div class="sec"><div class="t">저장 <small>— 지금 화면 그대로</small></div>
+    <div class="row"><button onclick="saveMyPreset()">⭐ 내 프리셋으로 저장</button><span style="font-size:12px;color:var(--sub)">조절한 값은 그 채널 기본값으로 자동 저장됩니다</span><button onclick="clearDefault()">↩ 채널 원래 값으로</button><span id="saveMsg" style="font-size:12px;color:#16a34a"></span></div></div>
+   <details><summary>⚙ 세부 설정</summary><div class="inner">
+    <div class="row"><span class="lbl">하단 띠</span><button onclick="bump('bottom_h',-20)">−</button><span class="num" id="bottom_h_v">0</span><button onclick="bump('bottom_h',20)">＋</button></div>
+    <div class="row"><span class="lbl">글자 테두리</span><input type="color" id="hc_olc" value="#ffffff" oninput="setHc('outline_color',this.value)"><button onclick="bumpHc('outline_w',-1)">−</button><span class="num" id="hc_olw_v">5</span><button onclick="bumpHc('outline_w',1)">＋</button><button id="hcBox" onclick="setHc('box',!SPEC.hc.box)">글자 뒤 흰 박스</button></div>
+    <div class="row"><span class="lbl">글자 사이</span><button onclick="bumpHc2('tracking',-2)">−</button><span class="num" id="hc_tracking_v">0</span><button onclick="bumpHc2('tracking',2)">＋</button><span class="lbl" style="min-width:auto;margin-left:10px">줄 사이</span><button onclick="bumpHc2('leading',-0.1)">−</button><span class="num" id="hc_leading_v">1.34</span><button onclick="bumpHc2('leading',0.1)">＋</button><button onclick="setHc('tracking',0);setHc('leading',0)">↩ 기본</button></div>
+    <div class="row"><span class="lbl">글이 길면</span><button id="hcWrapOn" class="on" onclick="setHc('wrap',true)">줄을 늘린다 (썸네일처럼)</button><button id="hcWrapOff" onclick="setHc('wrap',false)">글자를 줄인다</button></div>
+    <div class="row"><span class="lbl">조회수·댓글</span><input type="text" style="width:90px" placeholder="264만" oninput="set('views',this.value)"><input type="text" style="width:70px" placeholder="587" oninput="set('comments',this.value)"><button onclick="set('icons',!SPEC.icons)">☰🔍 아이콘 켜고끄기</button></div>
+    <div class="row"><button onclick="resetSpec()">↩ 이 틀 기본값으로</button><button>💾 내 틀로 저장</button><button onclick="copySpec()">📋 지금 값 복사(개발용)</button></div>
+   </div></details>
+   <div class="save">✓ 자동 저장됨 <span id="fileSaved"></span></div>
+  </div>
+
+  <!-- 장면 -->
+  <div class="pane" id="pane-scene">
+   <div class="sec"><div class="t">확대 <small style="font-weight:400">— 미리보기를 누르면 그 지점이 중심</small></div>
+    <div class="row" id="zoomRow"><button class="on" data-z="1">1×</button><button data-z="1.5">1.5×</button><button data-z="2">2×</button><button data-z="3">3×</button><span style="width:10px"></span><button class="on" onclick="this.classList.toggle('on')">모든 장면 같이</button></div></div>
+   <div class="sec"><div class="t">강조</div>
+    <div class="row" id="emphRow"><button class="on" data-e="off">끄기</button><button data-e="circle">⭕ 원</button><button data-e="sq">▢ 네모</button></div></div>
+   <div class="sec"><div class="t">가리기</div>
+    <div class="row"><button onclick="mask.style.display='block'">＋ 가림막</button><button onclick="sticker.style.display='block'">😀 스티커</button><button onclick="mask.style.display='none';sticker.style.display='none'">✕ 전부 지우기</button></div></div>
+   <div class="sec"><div class="t">[광고] 표시 <small style="font-weight:400">— 라이브 렌더</small></div>
+    <div class="row"><button id="adBtn" class="on" onclick="set('ad_badge',!SPEC.ad_badge);this.classList.toggle('on',SPEC.ad_badge)">[광고] 표시</button>
+     <span class="lbl" style="min-width:auto">크기</span><button onclick="bump('ad_size',-4,24)">−</button><span class="num" id="ad_size_v">기본</span><button onclick="bump('ad_size',4,24)">＋</button>
+     <span class="lbl" style="min-width:auto">진하기</span><button onclick="bump('ad_alpha',-20)">−</button><span class="num" id="ad_alpha_v">100</span><button onclick="bump('ad_alpha',20)">＋</button></div>
+    <div class="row" style="margin-top:6px"><span class="lbl">위치</span><button onclick="bump('ad_x',-5)">◀</button><span class="num" id="ad_x_v">자동</span><button onclick="bump('ad_x',5)">▶</button><button onclick="bump('ad_y',-5)">▲</button><span class="num" id="ad_y_v">자동</span><button onclick="bump('ad_y',5)">▼</button></div></div>
+   <details><summary>⚙ 세부 설정</summary><div class="inner">
+    <div class="row"><button>🏷 로고 올리기</button><button>🖼 이미지 오버레이</button><button>고급 렌더 (10P)</button></div>
+   </div></details>
+   <div class="save">✓ 자동 저장됨</div>
+  </div>
+ </div>
+</div>
+
+<script>
+const $=s=>document.querySelector(s), hint=$('#hint'), cap=$('#cap'), bg=$('#bg'), ring=$('#ring'), mask=$('#mask'), sticker=$('#sticker'), pop=$('#pop'), mirror=$('#mirror'), frame=$('#frame'), tplImg=$('#tpl'), hcHtml=$('#hcHtml'), guide=$('#guide'), errEl=$('#err');
+let beatN=1, capSz=22, zoom=1, PRESETS=[], LAYOUTS={}, curTpl='', hookBeats=1, part='hook';
+const SPECS={hook:{},body:{}}; let SPEC=SPECS.hook;
+function curPart(){return beatN<=hookBeats?'hook':'body';}
+function setPart(p){part=p;SPEC=SPECS[p];document.querySelectorAll('#partRow [data-part],#pairRow .pair').forEach(b=>b.classList.toggle('on',b.dataset.part===p));$('#partName').textContent=p==='hook'?'후킹':'본문';if(curPart()!==p){beatN=p==='hook'?1:hookBeats+1;$('#beatNo').textContent=beatN+' / 12';}markCard();syncFromSpec();render();if(typeof capShowBeat==='function')capShowBeat();}
+let BODY_BACKUP=null;
+function toggleSame(){const b=document.getElementById('sameBtn');if(!BODY_BACKUP){BODY_BACKUP=JSON.parse(JSON.stringify(SPECS.body));SPECS.body=JSON.parse(JSON.stringify(SPECS.hook));b.textContent='후킹·본문 다르게';b.classList.add('on');hint.textContent='본문을 후킹과 같게 했어요. 다시 누르면 되돌아갑니다';}else{SPECS.body=BODY_BACKUP;BODY_BACKUP=null;b.textContent='후킹 → 본문 같게';b.classList.remove('on');hint.textContent='본문을 원래대로 되돌렸어요';}if(part==='body'){SPEC=SPECS.body;syncFromSpec();}render();}
+function copyPart(){toggleSame();}
+function markCard(){const box=$('#tplGroups');if(!box)return;box.querySelectorAll('div[data-tpl].on').forEach(c=>c.classList.remove('on'));const id=SPEC.preset;const c=id?box.querySelector(`[data-id="${id}"]`):box.querySelector('[data-tpl="none"]');if(c){c.classList.add('on');const g=c.parentElement.dataset.g;box.querySelectorAll('#tplChips button').forEach(x=>x.classList.toggle('on',x.dataset.g===g));box.querySelectorAll('.cards.tpl').forEach(x=>x.classList.toggle('on',x.dataset.g===g));}}
+function syncFromSpec(){const _b=(part==='body'&&!(LAYOUTS[SPEC.preset]||{}).body_keep_hc);$('#hcText').value=_b?(SPEC.title||''):((SPEC.hc||{}).text||'');$('#channel').value=SPEC.channel||'';syncUI();}
+cap.style.fontSize=capSz+'px';
+function tab(n){document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('on',b.dataset.tab===n));document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('on',p.id==='pane-'+n));
+ hint.textContent={cap:'글자를 끌어서 옮기기',title:'제목을 끌어 옮기기 · 띠 아래 선을 끌어 높이',scene:'화면을 누르면 그곳이 확대 중심'}[n];}
+let PLAY=null;
+function togglePlay(){const btn=document.getElementById('playBtn');if(PLAY){clearInterval(PLAY);PLAY=null;btn.textContent='▶ 재생';btn.classList.remove('on');return;}
+ btn.textContent='⏸ 멈춤';btn.classList.add('on');beatN=0;let lineTick=0;
+ const step=()=>{const b=CAPS&&CAPS.beats[beatN-1];const n=(b&&b.lines&&b.lines.length)||1;
+  if(beatN===0||lineTick>=n){beatN=beatN>=12?1:beatN+1;lineTick=0;beat(0);}
+  else{if(b){b.cur=lineTick;document.getElementById('capLineNo').textContent=(b.cur+1)+'/'+n;capRender();}}
+  lineTick++;};
+ step();PLAY=setInterval(step,1300);}
+function beat(d){beatN=Math.min(12,Math.max(1,beatN+d));$('#beatNo').textContent=beatN+' / 12';const p=curPart();if(p!==part){part=p;SPEC=SPECS[p];document.querySelectorAll('#partRow [data-part],#pairRow .pair').forEach(b=>b.classList.toggle('on',b.dataset.part===p));$('#partName').textContent=p==='hook'?'후킹':'본문';markCard();syncFromSpec();}render();capShowBeat();}
+function hookBeatsLbl(){const e=document.getElementById('hookBeatsLbl');if(e)e.textContent=hookBeats;}
+function pick(container,fn){container.addEventListener('click',e=>{const t=e.target.closest('div[data-st],div[data-pos],button[data-pos],button[data-z],button[data-e],div[data-tpl]');if(!t)return;[...container.querySelectorAll('.on')].forEach(c=>c.classList.remove('on'));t.classList.add('on');fn(t);});}
+
+
+// ── 제목(틀) : 라이브 렌더 ──
+const BASE={channel:'살림킹왕짱',title:'',ad_badge:true};
+const HC_DEFAULT={wrap:true,font:'Pretendard-ExtraBold.otf',size:86,color:'#FFFFFF',color2:'#FFE600',y:37,x:50,weight:900,outline:true,outline_color:'#000000',outline_w:8,box:false,box_color:'#FFFFFF',box_pad:16,box_opacity:100};
+const PLACEHOLDER='여기에 제목을\n적어주세요';
+function hcPayload(){const hc=Object.assign({},HC_DEFAULT,SPEC.hc||{});const txt=(hc.text||'').trim();
+ if(!txt){const _L=LAYOUTS[SPEC.preset];const _noHc=_L&&_L.hook&&_L.hook.hc&&_L.hook.hc.text==='';if(part!=='hook'||_noHc){hc.text='';return hc;}hc.text=PLACEHOLDER;hc.color='#BBBBBB';hc.outline=false;hc.box=false;}
+ else{const lines=txt.split(/\r?\n/);if(hc.color2&&hc.color2!==hc.color&&lines[1])hc.highlight_rules=[{keyword:lines[1].trim(),color:hc.color2,box:false}];}
+ return hc;}
+function frameSpec(){const s=Object.assign({},SPEC);delete s.hc;const t=(SPEC.title||'').trim();const hcT=((SPEC.hc||{}).text||'').trim();
+ s.title=t;return s;}
+function fitBand(){for(const T of [SPECS.hook,(LAYOUTS[SPECS.hook.preset]||{}).body_keep_hc?SPECS.body:null]){if(!T)continue;fitOne(T);}}
+function fitOne(T,nl){if(!T||!T.hc||!(T.hc.text||'').trim())return;const lines=nl||((T.hc.text||'').split(/\r?\n/).filter(x=>x.trim()).length||1);const px=(+T.hc.size||86)*1.5;const need=Math.round(lines*px*(+T.hc.leading||1.34)+56);if(T.hook_band_h>0){if(T._bandLock){if(T.hook_band_h<need)T.hook_band_h=need;}else T.hook_band_h=need;T.hc.y=Math.round((T.bar_h+T.hook_band_h/2)/1920*100);}else{if((T.bar_h||0)<need)T.bar_h=need;T.hc.y=Math.round((T.bar_h/2+20)/1920*100);}}
+async function hcFit(target,keep){const T=target||SPEC;const hc=Object.assign({},HC_DEFAULT,T.hc||{});if(!(hc.text||'').trim())return;try{const j=await (await fetch('/fit?keep='+(keep?1:0)+'&hc='+encodeURIComponent(JSON.stringify(hc)))).json();if(!keep&&j.size&&j.size<hc.size){T.hc=T.hc||{};T.hc.size=j.size;hint.textContent='글 크기를 폭에 맞춰 '+j.size+'로 잡았습니다';}if(T===SPECS.hook&&LAYOUTS[T.preset]){fitOne(T,j.lines);if((LAYOUTS[T.preset]||{}).body_keep_hc&&SPECS.body.hc){SPECS.body.hc.size=T.hc.size;fitOne(SPECS.body,j.lines);}}if(T===SPEC){syncUI();render();}}catch(e){}}
+function _isBody(){return part==='body'&&!(LAYOUTS[SPEC.preset]||{}).body_keep_hc;}
+function bumpBar(d){let v=+SPEC.bar_h||((PRESETS.find(p=>p.id===SPEC.preset)||{}).bar_h||190);SPEC.bar_h=Math.max(0,Math.min(900,v+d));syncUI();render();}
+function setBigBox(k,v){if(_isBody()){if(k==='color')set('sub_bg_c',v);return;}if(k==='color')set('hook_band_color',v);}
+function bumpBigBox(k,d){if(_isBody()){if(k==='h'){let v=+SPEC.head_h||300;SPEC.head_h=Math.max(0,v+d);SPEC._bandLock=true;syncUI();render();}return;}
+ if(k==='alpha'){let v=+SPEC.hook_band_alpha||60;SPEC.hook_band_alpha=Math.max(0,Math.min(100,v+d));}
+ if(k==='h'){let v=+SPEC.hook_band_h||0;SPEC.hook_band_h=Math.max(0,v+d);SPEC._bandLock=true;}syncUI();render();}
+function autoBand(){SPEC._bandLock=false;if(_isBody()){delete SPEC._bandLock;}hcFit(SPEC,true);}
+function setBig(k,v){if(part==='body'&&!(LAYOUTS[SPEC.preset]||{}).body_keep_hc){const m={text:'title',font:'title_font',color:'title_color'};if(k==='text')v=v.replace(/\s*\r?\n\s*/g,' ');if(m[k])set(m[k],v);return;}setHc(k,v);}
+function bumpBig(d){if(part==='body'&&!(LAYOUTS[SPEC.preset]||{}).body_keep_hc){bump('title_size',d,62);return;}bumpHc('size',d);}
+function setSub(k,v){if(part==='body'&&!(LAYOUTS[SPEC.preset]||{}).body_keep_hc){const m={text:'views',color:'sub_text_c'};if(m[k])set(m[k],v);return;}const m={text:'sub_line',font:'sub_line_font',color:'sub_line_color',bg:'sub_line_bg'};set(m[k],v);}
+function bumpSub(d){if(part==='body'&&!(LAYOUTS[SPEC.preset]||{}).body_keep_hc)return;let v=+SPEC.sub_line_size||28;SPEC.sub_line_size=Math.max(12,Math.min(80,v+d));syncUI();render();}
+function setHc(k,v){SPEC.hc=SPEC.hc||{};SPEC.hc[k]=v;syncUI();render();if(part==='hook'&&LAYOUTS[SPEC.preset])hcFit(SPEC,true);}
+function bumpHc2(k,d){SPEC.hc=SPEC.hc||{};let v=+SPEC.hc[k]||(k==='leading'?1.34:0);v=Math.round((v+d)*100)/100;SPEC.hc[k]=(k==='leading'?Math.max(1,Math.min(2.5,v)):Math.max(-20,Math.min(60,v)));syncUI();render();}
+function bumpHc(k,d){SPEC.hc=SPEC.hc||{};let v=+SPEC.hc[k];if(isNaN(v))v=+HC_DEFAULT[k]||0;SPEC.hc[k]=Math.max(0,v+d);syncUI();render();if(part==='hook'&&LAYOUTS[SPEC.preset])hcFit(SPEC,true);}
+function resetSpec(){const p=PRESETS.find(x=>x.id===SPEC.preset)||{};const keepText=((SPEC.hc||{}).text)||'';SPEC=SPECS[part]=Object.assign({},BASE,{preset:SPEC.preset,title:'',channel:$('#channel').value,hc:Object.assign({},HC_DEFAULT,p.headcopy||{},{text:keepText,x:50})});$('#title').value='';syncUI();render();}
+function set(k,v){SPEC[k]=v;syncUI();render();}
+function bump(k,d,def){let v=+SPEC[k]||0; if(!v&&def)v=def; v=Math.max(0,v+d); SPEC[k]=v; syncUI(); render();}
+const $v=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v;};const $t=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};const $c=(id,cls,on)=>{const e=document.getElementById(id);if(e)e.classList.toggle(cls,on);};
+function syncUI(){const V=(k,fallback)=>{const el=document.getElementById(k+'_v');if(el)el.textContent=SPEC[k]?SPEC[k]:fallback;};
+ const hc=Object.assign({},HC_DEFAULT,SPEC.hc||{});$t('hc_size_v',hc.size);$t('hc_olw_v',hc.outline_w);$v('hc_color',hc.color);$v('hc_color2',hc.color2||hc.color);$v('hc_olc',hc.outline_color);$('#hcBox').classList.toggle('on',!!hc.box);$('#hcWrapOn').classList.toggle('on',hc.wrap!==false);$('#hcWrapOff').classList.toggle('on',hc.wrap===false);$v('title_font',hc.font||'');$v('ch_font',SPEC.ch_font||'');$t('bar_h_v2',SPEC.bar_h||((PRESETS.find(p=>p.id===SPEC.preset)||{}).bar_h||190));const _bd=_isBody();$v('band_color',_bd?(SPEC.sub_bg_c||'#ffffff'):(SPEC.hook_band_color||'#000000'));$t('band_alpha_v',_bd?'—':(SPEC.hook_band_alpha||60));document.querySelectorAll('#band_alpha_v').forEach(e=>{const r=e.parentElement;});$t('band_h_v',_bd?(SPEC.head_h||0):(SPEC.hook_band_h||0));$v('on_bar_color',SPEC.on_bar_color||'#ffffff');$v('bar_color',SPEC.bar_color||'#ffffff');$t('sub_size_v',SPEC.sub_line_size||28);$v('sub_font',SPEC.sub_line_font||'');$v('sub_color',SPEC.sub_line_color||'#111111');$v('sub_bg',SPEC.sub_line_bg||'#ffffff');$v('title',part==='body'&&!(LAYOUTS[SPEC.preset]||{}).body_keep_hc?(SPEC.views||''):(SPEC.sub_line||''));const _b=(part==='body'&&!(LAYOUTS[SPEC.preset]||{}).body_keep_hc);$t('bigHint',_b?'— 흰 블록 안 제목 한 줄':'— 큰 글씨 2줄. 엔터로 줄을 나눕니다');$t('subHint',_b?'— 조회수 · 댓글 (제목 아래 작은 줄)':'— 큰 글씨 아래 한 줄 박스. 글자를 키우면 박스도 같이 커집니다');const _c=document.getElementById('comments');if(_c){_c.style.display=_b?'':'none';_c.value=SPEC.comments||'';}document.getElementById('title').placeholder=_b?'조회수 (예: 264만)':'소제목 한 줄 (비우면 없음)';if(_b){$t('hc_size_v',SPEC.title_size||62);$v('title_font',SPEC.title_font||'');$v('hc_color',SPEC.title_color||'#111111');}$t('hc_tracking_v',hc.tracking||0);$t('hc_leading_v',hc.leading||1.34);
+ V('title_size','기본');V('bar_h',190);V('bar_soft',0);V('bottom_h',0);V('title_ol_w','기본');V('ch_size','기본');V('ch_x',50);V('ad_size','기본');V('ad_alpha',100);V('ad_x','자동');V('ad_y','자동');
+ if(SPEC.bar_color)$v('bar_color',SPEC.bar_color);if(SPEC.on_bar_color)$v('on_bar_color',SPEC.on_bar_color);}
+let rt=null;const hcimg=$('#hcimg');
+function loadImg(el,url){el.classList.add('busy');const im=new Image();im.onload=()=>{el.src=im.src;el.classList.remove('busy');errEl.style.display='none';};im.onerror=()=>{el.classList.remove('busy');fetch(im.src).then(r=>r.json()).then(j=>{errEl.textContent='렌더 실패: '+(j.error||'');errEl.style.display='';}).catch(()=>{});};im.src=url;}
+function persistTitle(){pushStateFile();try{localStorage.setItem('deco_title',JSON.stringify({hook:SPECS.hook,body:SPECS.body,part,beatN,hookBeats}));const id=SPECS.hook&&SPECS.hook.preset;if(id&&typeof DEF!=='undefined'){DEF[id]={hook:JSON.parse(JSON.stringify(SPECS.hook)),body:JSON.parse(JSON.stringify(SPECS.body))};localStorage.setItem('deco_defaults',JSON.stringify(DEF));}}catch(e){}}
+function pairUrls(T){if(!T||!T.preset)return null;const s=Object.assign({},T);delete s.hc;delete s._bandLock;const hc=Object.assign({},HC_DEFAULT,T.hc||{});const txt=(hc.text||'').trim();if(!txt)hc.text='';else{const ls=txt.split(/\r?\n/);if(hc.color2&&hc.color2!==hc.color&&ls[1])hc.highlight_rules=[{keyword:ls[1].trim(),color:hc.color2,box:false}];}return {fr:'/render?spec='+encodeURIComponent(JSON.stringify(s)),hc:'/hc?hc='+encodeURIComponent(JSON.stringify(hc))};}
+function renderPair(){document.querySelectorAll('#pairRow .pair').forEach(el=>{const u=pairUrls(SPECS[el.dataset.part]);if(!u){el.querySelector('.pfr').src='';el.querySelector('.phc').src='';return;}el.querySelector('.pfr').src=u.fr;el.querySelector('.phc').src=u.hc;});hookBeatsLbl();}
+let prt=null;
+function render(){persistTitle();clearTimeout(prt);prt=setTimeout(renderPair,400);clearTimeout(rt);rt=setTimeout(()=>{if(!SPEC.preset){frame.style.display='none';hcimg.style.display='none';return;}frame.style.display='';hcimg.style.display='';
+ loadImg(hcimg,'/hc?hc='+encodeURIComponent(JSON.stringify(hcPayload())));frame.classList.add('busy');
+ const im=new Image();im.onload=()=>{frame.src=im.src;frame.classList.remove('busy');errEl.style.display='none';};
+ im.onerror=()=>{frame.classList.remove('busy');fetch(im.src).then(r=>r.json()).then(j=>{errEl.textContent='렌더 실패: '+(j.error||'');errEl.style.display='';}).catch(()=>{});};
+ im.src='/render?spec='+encodeURIComponent(JSON.stringify(frameSpec()))+'&_='+Date.now();},120);}
+function copySpec(){navigator.clipboard.writeText(JSON.stringify(SPEC,null,1));hint.textContent='값을 복사했습니다';}
+async function loadFrames(){await hydrateFromFile();
+ PRESETS=await (await fetch('/presets')).json();try{LAYOUTS=await (await fetch('/channel_layouts.json')).json();}catch(e){LAYOUTS={};}
+ const fonts=await (await fetch('/fonts')).json();
+ const FONT_NAMES=[{"name": "⭐ 티몬 몬소리", "file": "TmonMonsori.ttf"}, {"name": "⭐ 배민 주아", "file": "BMJUA.ttf"}, {"name": "배민 도현", "file": "BMDOHYEON.ttf"}, {"name": "⭐ 빙그레", "file": "Binggrae-Bold.otf"}, {"name": "꾸불림체", "file": "Kkubulim.ttf"}, {"name": "⭐ 지마켓 산스", "file": "GmarketSansBold.otf"}, {"name": "SUIT", "file": "SUIT-Bold.otf"}, {"name": "프리텐다드", "file": "Pretendard-ExtraBold.otf"}, {"name": "프리텐다드 Bold", "file": "Pretendard-Bold.otf"}, {"name": "프리텐다드 SemiBold", "file": "Pretendard-SemiBold.otf"}, {"name": "스포카 한 산스", "file": "SpoqaHanSansNeo-Bold.otf"}, {"name": "IBM Plex Sans", "file": "IBMPlexSansKR-Bold.otf"}, {"name": "노토 산스", "file": "NotoSansKR-Bold.otf"}, {"name": "나눔고딕", "file": "NanumGothic-Bold.ttf"}, {"name": "경기천년바탕", "file": "GBatang.otf"}, {"name": "고운바탕", "file": "GowunBatang.ttf"}, {"name": "리디바탕", "file": "RIDIBatang.otf"}, {"name": "프리텐다드 Reg", "file": "Pretendard-Regular.otf"}, {"name": "SUIT Reg", "file": "SUIT-Regular.otf"}, {"name": "스포카 Reg", "file": "SpoqaHanSansNeo-Regular.otf"}, {"name": "IBM Plex Reg", "file": "IBMPlexSansKR-Regular.otf"}, {"name": "손글씨 개구쟁이", "file": "Gaegu-Bold.ttf"}, {"name": "손글씨 나눔펜", "file": "NanumPenScript.ttf"}, {"name": "손글씨 나눔붓", "file": "NanumBrushScript.ttf"}, {"name": "손글씨 하이멜로디", "file": "HiMelody.ttf"}, {"name": "⭐ 손글씨 싱글데이", "file": "SingleDay.ttf"}, {"name": "손글씨 포스터리", "file": "PoorStory.ttf"}, {"name": "손글씨 독도", "file": "Dokdo-Regular.ttf"}, {"name": "손글씨 동해독도", "file": "EastSeaDokdo.ttf"}, {"name": "감자꽃", "file": "GamjaFlower.ttf"}, {"name": "⭐ 귀여운체", "file": "CuteFont.ttf"}, {"name": "⭐ 레트로 킬사인", "file": "KirangHaerang.ttf"}, {"name": "레트로 성실체", "file": "Sunflower-Medium.ttf"}, {"name": "레트로 흑백사진", "file": "BlackAndWhitePicture.ttf"}, {"name": "임팩트 검은고딕", "file": "BlackHanSans.ttf"}, {"name": "임팩트 구기", "file": "Gugi-Regular.ttf"}, {"name": "카페24 아네모네", "file": "Cafe24Ohsquare.ttf"}, {"name": "카페24 단정해", "file": "Cafe24Danjunghae.ttf"}, {"name": "간판체", "file": "KCCGanpan.otf"}, {"name": "손글씨 분필", "file": "HakgyoansimBunpil.ttf"}];
+ const known=new Set(FONT_NAMES.map(x=>x.file));const ordered=FONT_NAMES.filter(x=>fonts.includes(x.file)).concat(fonts.filter(f=>!known.has(f)).map(f=>({name:f.replace(/\.(ttf|otf)$/i,''),file:f})));
+ for(const id of ['title_font','ch_font','sub_font','cap_font']){const s=document.getElementById(id);if(!s)continue;ordered.forEach(x=>{const o=document.createElement('option');o.value=x.file;o.textContent=x.name;s.appendChild(o);});}
+ const box=$('#tplGroups');const groups={};PRESETS.forEach(p=>(groups[p.group]=groups[p.group]||[]).push(p));
+ const G=[['썰채널형','썰채널형'],['커뮤니티','커뮤니티'],['빈 틀','빈 틀'],['기타','회색띠']];
+ let html='<div class="chips" id="tplChips">'+G.map(([g,l],i)=>`<button class="${i?'':'on'}" data-g="${g}">${l} ${(groups[g]||[]).length}</button>`).join('')+'<button data-g="band">색띠 12</button><button data-g="mine">내 것</button></div>';
+ html+='<div class="cards tpl" data-g="mine"><div data-tpl="none"><i></i><b>없음</b></div><div data-tpl="img"><i></i><b>＋ 내 그림</b></div><div data-tpl="mine"><i></i><b>⭐ 내 틀</b></div></div>';
+ for(const [g] of G){if(!groups[g])continue;html+=`<div class="cards tpl${g==='썰채널형'?' on':''}" data-g="${g}">`+groups[g].map(p=>`<div data-tpl="preset" data-id="${p.id}"><img src="/thumb/${p.id}" loading="lazy"><b>${LAYOUTS[p.id]?'★':''}${p.name}</b></div>`).join('')+'</div>';}
+ const shapes=[['상단 띠',[1,2,3,4]],['상단+하단 띠',[5,6,7,8]],['테두리',[9,10,11,12]]],cn=['코랄','민트','옐로','네이비'];
+ html+='<div class="cards tpl" data-g="band">';
+ shapes.forEach(([sl,ids])=>ids.forEach((n,i)=>{html+=`<div data-tpl="band" data-n="${String(n).padStart(2,'0')}"><img src="/tpl/tpl_${String(n).padStart(2,'0')}.png" style="background:#dfe4ea"><b>${sl}·${cn[i]}</b></div>`;}));
+ html+='</div>';box.innerHTML=html;
+ $('#tplChips').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;box.querySelectorAll('#tplChips button').forEach(x=>x.classList.toggle('on',x===b));box.querySelectorAll('.cards.tpl').forEach(c=>c.classList.toggle('on',c.dataset.g===b.dataset.g));});
+ box.addEventListener('click',e=>{const t=e.target.closest('div[data-tpl]');if(!t)return;box.querySelectorAll('div[data-tpl].on').forEach(c=>c.classList.remove('on'));t.classList.add('on');pickTpl(t);});
+ let saved=null;try{saved=JSON.parse(localStorage.getItem('deco_title')||'null');}catch(e){}
+ if(saved&&saved.hook&&saved.hook.preset){SPECS.hook=saved.hook;SPECS.body=saved.body||{};hookBeats=saved.hookBeats||1;$('#hookBeats').textContent=hookBeats;beatN=saved.beatN||1;$('#beatNo').textContent=beatN+' / 12';part=curPart();SPEC=SPECS[part];document.querySelectorAll('#partRow [data-part],#pairRow .pair').forEach(b=>b.classList.toggle('on',b.dataset.part===part));$('#partName').textContent=part==='hook'?'후킹':'본문';syncFromSpec();render();if(part==='hook')hcFit(SPEC,true);hint.textContent='마지막 작업 상태로 열었습니다';}
+ else{part='body';SPEC=SPECS.body;pickTpl(box.querySelector('[data-id="plain_white"]'));SPECS.body.hc.text='';part='hook';SPEC=SPECS.hook;const first=box.querySelector('[data-id="sul_salrim"]');pickTpl(first);}
+ markCard();renderMyCards();
+}
+const STATE_KEYS=['deco_defaults','deco_mypresets','deco_caps_by','deco_title'];
+async function hydrateFromFile(){try{const has=STATE_KEYS.some(k=>localStorage.getItem(k));if(has)return;const r=await fetch('/state.json?_='+Date.now());if(!r.ok)return;const j=await r.json();for(const k of STATE_KEYS){if(j[k]!=null)localStorage.setItem(k,typeof j[k]==='string'?j[k]:JSON.stringify(j[k]));}location.reload();}catch(e){}}
+let stT=null;function pushStateFile(){clearTimeout(stT);stT=setTimeout(()=>{const o={};for(const k of STATE_KEYS){try{o[k]=JSON.parse(localStorage.getItem(k)||'null');}catch(e){o[k]=null;}}o._saved=new Date().toISOString();fetch('/state',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(o)}).then(r=>r.json()).then(j=>{const e=document.getElementById('fileSaved');if(e)e.textContent=j.ok?'· 파일에도 저장됨(state.json)':'· 파일 저장 실패';}).catch(()=>{});},1200);}
+const DEF=(()=>{try{return JSON.parse(localStorage.getItem('deco_defaults')||'{}');}catch(e){return {};}})();
+const MY=(()=>{try{return JSON.parse(localStorage.getItem('deco_mypresets')||'[]');}catch(e){return [];}})();
+function _save(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}pushStateFile();}
+function _msg(t){const m=$('#saveMsg');m.textContent=t;setTimeout(()=>{if(m.textContent===t)m.textContent='';},4000);}
+function saveAsDefault(){const id=SPECS.hook.preset;if(!id)return;DEF[id]={hook:JSON.parse(JSON.stringify(SPECS.hook)),body:JSON.parse(JSON.stringify(SPECS.body)),cap:CAPS?{style:CAPS.style,pos:CAPS.beats[0].pos,y_pct:CAPS.beats[0].y_pct}:null};_save('deco_defaults',DEF);_msg('이 채널의 기본값으로 저장했어요. 다음에 이 틀을 고르면 이 값으로 열립니다');}
+function clearDefault(){const id=SPECS.hook.preset;if(DEF[id]){delete DEF[id];_save('deco_defaults',DEF);}if(LAYOUTS[id])applyLayout(id);_msg('채널 원래 값으로 되돌렸어요');}
+function saveMyPreset(){const id=SPECS.hook.preset;const base=(LAYOUTS[id]&&LAYOUTS[id].name)||(PRESETS.find(p=>p.id===id)||{}).name||id;const name=base+' · 내 설정 '+(MY.length+1);MY.push({name,hook:JSON.parse(JSON.stringify(SPECS.hook)),body:JSON.parse(JSON.stringify(SPECS.body)),cap:CAPS?{style:CAPS.style,pos:CAPS.beats[0].pos,y_pct:CAPS.beats[0].y_pct}:null});_save('deco_mypresets',MY);renderMyCards();_msg('⭐ "'+name+'" 로 저장했어요. 「내 것」에서 고를 수 있어요');}
+function renderMyCards(){const row=document.querySelector('.cards.tpl[data-g="mine"]');if(!row)return;row.querySelectorAll('[data-tpl="myp"]').forEach(e=>e.remove());MY.forEach((m,i)=>{const d=document.createElement('div');d.dataset.tpl='myp';d.dataset.i=i;d.innerHTML='<i style="display:flex;align-items:center;justify-content:center;font-size:20px">⭐</i><b>'+m.name+'</b>';row.appendChild(d);});}
+function loadMyPreset(i){const m=MY[i];if(!m)return;SPECS.hook=JSON.parse(JSON.stringify(m.hook));SPECS.body=JSON.parse(JSON.stringify(m.body));SPEC=SPECS[part];capSwitchTo(SPECS.hook.preset);if(m.cap&&CAPS){CAPS.style=Object.assign({},CAP_DEFAULT,m.cap.style||{});CAPS.beats.forEach(b=>{b.pos=m.cap.pos||'mid';b.y_pct=m.cap.y_pct;});capSave();capSyncUI();capRender();}syncFromSpec();render();hint.textContent='⭐ '+m.name;}
+function applyLayout(id){BODY_BACKUP=null;const _sb=document.getElementById('sameBtn');if(_sb){_sb.textContent='후킹 → 본문 같게';_sb.classList.remove('on');}const L=LAYOUTS[id],p=PRESETS.find(x=>x.id===id)||{};const keepText=L.sample||((SPECS.hook.hc||{}).text)||$('#hcText').value||'';const ch=$('#channel').value;
+ const mk=(part)=>{const d=L[part]||{};const hc=Object.assign({},HC_DEFAULT,p.headcopy||{},d.hc||{});const noHc=(d.hc&&d.hc.text==='');if((part==='hook'&&!noHc)||(part==='body'&&L.body_keep_hc))hc.text=keepText;else hc.text='';if(part==='body'&&L.body_keep_hc)Object.assign(hc,L.hook.hc||{},{text:keepText});hc.x=hc.x||50;
+  const sp=Object.assign({},BASE,{preset:id,channel:ch,title:((part==='body'&&!L.body_keep_hc)||noHc)?keepText.replace(/\s*\r?\n\s*/g,' '):''},d.spec||{},{hc});if(!('sub_line' in (d.spec||{}))&&part==='hook'&&L.hook&&L.hook.spec&&L.hook.spec.sub_line)sp.sub_line=L.hook.spec.sub_line;return sp;};
+ SPECS.hook=mk('hook');SPECS.body=mk('body');if(SPECS.hook.sub_line&&!SPECS.hook.sub_line_size)SPECS.hook.sub_line_size=28;SPEC=SPECS[part];
+ if(typeof capSwitchTo==='function')capSwitchTo(id);
+ $('#hcText').value=keepText;$('#bar_color').value=(SPEC.bar_color||p.bar||'#ffffff');$('#on_bar_color').value=(SPEC.on_bar_color||p.on_bar||'#111111');if(DEF[id]){const keep=SPECS.hook.hc.text;SPECS.hook=JSON.parse(JSON.stringify(DEF[id].hook));SPECS.body=JSON.parse(JSON.stringify(DEF[id].body));SPECS.hook.hc.text=keep;SPEC=SPECS[part];syncFromSpec();render();hcFit(SPECS.hook,true);hint.textContent='내가 만진 값 그대로 열었습니다 (↩ 채널 원래 값으로 되돌릴 수 있어요)';return;}
+ syncUI();render();hcFit(SPECS.hook);hint.textContent='★ '+(L.name||id)+' 완성 화면을 올렸습니다. 문구만 바꾸세요';}
+function pickTpl(t){const k=t.dataset.tpl;if(k==='myp'){loadMyPreset(+t.dataset.i);return;}tplImg.style.display='none';hcHtml.style.display='none';
+ if(k==='preset'&&LAYOUTS[t.dataset.id]){applyLayout(t.dataset.id);return;}
+ if(k==='preset'&&DEF[t.dataset.id]&&!LAYOUTS[t.dataset.id]){const keep=(SPECS.hook.hc||{}).text;SPECS.hook=JSON.parse(JSON.stringify(DEF[t.dataset.id].hook));SPECS.body=JSON.parse(JSON.stringify(DEF[t.dataset.id].body||{}));if(keep&&SPECS.hook.hc)SPECS.hook.hc.text=keep;SPEC=SPECS[part];syncFromSpec();render();capSwitchTo(t.dataset.id);hint.textContent='내가 만진 값 그대로 열었습니다';return;}
+ if(k==='preset'){const p=PRESETS.find(x=>x.id===t.dataset.id);const keepText=((SPEC.hc||{}).text)||$('#hcText').value;SPEC=SPECS[part]=Object.assign({},BASE,{preset:t.dataset.id,title:$('#title').value,channel:$('#channel').value,hc:Object.assign({},HC_DEFAULT,p.headcopy||{},{text:keepText,x:50})});$('#bar_color').value=p.bar||'#ffffff';$('#on_bar_color').value=p.on_bar||'#111111';syncUI();render();hcFit();capSwitchTo(t.dataset.id);return;}
+ SPEC=SPECS[part]={};frame.style.display='none';
+ if(k==='band'){tplImg.src='/tpl/tpl_'+t.dataset.n+'.png';tplImg.style.display='';hcHtml.style.display='block';hcHtml.textContent=$('#title').value;hcHtml.style.top='4%';hcHtml.style.color='#111';hcHtml.style.fontSize='24px';}
+}
+// 미리보기 드래그: 제목 옮기기 / 띠 높이
+let drag=null;
+mirror.addEventListener('pointerdown',e=>{if(!$('#pane-title').classList.contains('on')||!SPEC.preset)return;if(e.target.closest('.cap,.mask,.sticker,.pop'))return;
+ const r=mirror.getBoundingClientRect();const y=(e.clientY-r.top)/r.height*1920;const bh=+SPEC.bar_h||((PRESETS.find(p=>p.id===SPEC.preset)||{}).bar_h||0);
+ if(Math.abs(y-bh)<40&&bh>0){drag={kind:'bar',r};guide.style.display='block';guide.style.top=(bh/1920*100)+'%';}
+ else{drag={kind:'hc',r};}
+ mirror.setPointerCapture(e.pointerId);});
+mirror.addEventListener('pointermove',e=>{if(!drag)return;const r=drag.r;const px=(e.clientX-r.left)/r.width*100,py=(e.clientY-r.top)/r.height*100;
+ if(drag.kind==='bar'){SPEC.bar_h=Math.max(0,Math.min(600,Math.round(py/100*1920)));guide.style.top=(SPEC.bar_h/1920*100)+'%';}
+ else{SPEC.hc=SPEC.hc||{};SPEC.hc.x=Math.round(Math.max(0,Math.min(100,px)));SPEC.hc.y=Math.round(Math.max(0,Math.min(100,py)));}
+ syncUI();render();});
+mirror.addEventListener('pointerup',()=>{drag=null;guide.style.display='none';});
+function aiSuggest(){const r=$('#aiRow');r.style.display='flex';r.innerHTML=['찌든때 3초 컷','바닥 청소 이걸로 끝','세정제 고민 끝','물걸레 필요없음'].map(s=>`<button onclick="$('#hcText').value='${s}\\n이거 하나면 끝나요';setBig('text',$('#hcText').value)">${s}</button>`).join('');}
+// 장면 탭
+pick($('#zoomRow'),t=>{if(!t.dataset.z)return;zoom=+t.dataset.z;bg.style.transform=`scale(${zoom})`;});
+mirror.addEventListener('click',e=>{if(!$('#pane-scene').classList.contains('on')||e.target.closest('.cap,.mask,.sticker,.pop'))return;const r=mirror.getBoundingClientRect();const x=(e.clientX-r.left)/r.width*100,y=(e.clientY-r.top)/r.height*100;bg.style.transformOrigin=`${x}% ${y}%`;if(zoom===1){zoom=1.5;bg.style.transform='scale(1.5)';[...$('#zoomRow').children].forEach(b=>b.classList.toggle('on',b.dataset.z==='1.5'));}});
+pick($('#emphRow'),t=>{ring.style.display=t.dataset.e==='off'?'none':'block';ring.classList.toggle('sq',t.dataset.e==='sq');});
+[cap,mask,sticker].forEach(el=>{let sx,sy,ox,oy,d=false;el.addEventListener('pointerdown',e=>{d=true;el.setPointerCapture(e.pointerId);e.stopPropagation();const r=mirror.getBoundingClientRect(),b=el.getBoundingClientRect();sx=e.clientX;sy=e.clientY;ox=b.left-r.left;oy=b.top-r.top;});
+ el.addEventListener('pointermove',e=>{if(!d)return;const r=mirror.getBoundingClientRect();el.style.top=((oy+e.clientY-sy)/r.height*100)+'%';if(el!==cap)el.style.left=((ox+e.clientX-sx)/r.width*100)+'%';if(el===cap)cap.classList.remove('pos-top','pos-mid','pos-bottom');});
+ el.addEventListener('pointerup',()=>d=false);});
+loadFrames();
+// ══ 자막 탭 — 장면(비트)마다 줄·자리를 기억한다. 스타일은 전체 공통. 전부 localStorage에도 남긴다 ══
+const CAP_DEFAULT={font:'',size:52,color:'#FFFFFF',outline:true,outline_color:'#000000',outline_w:6,box:false,box_color:'#000000',box_opacity:80,box_pad:12,effect:'fade',shadow:false};
+const CAP_PRESET={basic:{},yellow:{color:'#FFE600'},box:{box:true,box_color:'#000000',box_opacity:80,outline:false},white:{color:'#FFFFFF',outline:true,outline_color:'#000000',outline_w:8},whitebox:{box:true,box_color:'#FFFFFF',box_opacity:95,color:'#111111',outline:false}};
+const SAMPLE_NARR=['제조사도 예상 못한 의류 수선 태깅 건의 활용법','바닥 세정제 이거 하나면 얼룩이 싹 사라져요','물걸레질 필요 없이 닦기만 하면 끝나요','향도 은은해서 청소 후에 기분까지 좋아요','다이소에서 3천 원이면 살 수 있어요','한 번 써보면 다시 돌아가기 힘들어요','아이 있는 집이라면 더 추천해요','주방 기름때에도 똑같이 잘 들어요','유리창은 물자국 없이 깨끗하게 닦여요','세탁실 곰팡이에도 뿌려두면 돼요','한 통으로 한 달은 넉넉히 써요','댓글에 링크 남겨둘게요'];
+let CAPS=null;const CAPS_BY=(()=>{try{return JSON.parse(localStorage.getItem('deco_caps_by')||'{}');}catch(e){return {};}})();
+function capKey(){return (SPECS&&SPECS.hook&&SPECS.hook.preset)||'_none';}
+function capFresh(pid){const L=(typeof LAYOUTS!=='undefined'&&LAYOUTS[pid])||null;const st=Object.assign({},CAP_DEFAULT,(L&&L.cap)||{});return {style:st,preset:L&&L.cap?'mine':'basic',all:true,mine:L&&L.cap?Object.assign({},st):null,beats:SAMPLE_NARR.map(t=>({text:t,lines:null,pos:'mid',y_pct:null,x_pct:null,cur:0}))};}
+function capSwitchTo(pid){pid=pid||capKey();if(CAPS_BY[pid]&&CAPS_BY[pid].beats&&CAPS_BY[pid].beats.length===12){CAPS=CAPS_BY[pid];}else{CAPS=capFresh(pid);CAPS_BY[pid]=CAPS;}if(typeof capSyncUI==='function'&&document.getElementById('cap_font')){capSyncUI();capShowBeat();}}
+function capLoad(){const k=capKey();if(CAPS_BY[k]&&CAPS_BY[k].beats&&CAPS_BY[k].beats.length===12){CAPS=CAPS_BY[k];return;}try{const j=localStorage.getItem('deco_caps');if(j){CAPS=JSON.parse(j);if(CAPS&&CAPS.beats&&CAPS.beats.length===12){CAPS_BY[k]=CAPS;return;}}}catch(e){}
+ CAPS=capFresh(capKey());CAPS_BY[capKey()]=CAPS;}
+function capSave(){pushStateFile();try{CAPS_BY[capKey()]=CAPS;localStorage.setItem('deco_caps_by',JSON.stringify(CAPS_BY));}catch(e){}const el=$('#capSaved');if(el){el.textContent='✓ 자동 저장됨 '+new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});}}
+function capBeat(){return CAPS.beats[beatN-1];}
+function capMsg(t,bad){const m=$('#capMsg');m.textContent=t;m.style.color=bad?'#b91c1c':'#16a34a';}
+function capPosY(b){if(b.y_pct!=null)return b.y_pct;return {top:12,mid:50,bottom:null}[b.pos||'mid'];}
+async function capEnsureLines(b){if(b.lines&&b.lines.length)return b.lines;try{b.lines=await (await fetch('/segs?text='+encodeURIComponent(b.text))).json();}catch(e){b.lines=[b.text];}if(!b.lines||!b.lines.length)b.lines=[b.text];b.auto=true;return b.lines;}
+async function capShowBeat(){const b=capBeat();await capEnsureLines(b);if(b.cur>=b.lines.length)b.cur=0;
+ capRenderLinesBox(b);document.querySelectorAll('#capPos [data-pos]').forEach(x=>x.classList.toggle('on',x.dataset.pos===(b.pos||'mid')));
+ $('#capLineNo').textContent=(b.cur+1)+'/'+b.lines.length;capRender();}
+function capRenderLinesBox(b){const box=$('#capLinesBox');box.innerHTML='';(b.lines||[]).forEach((ln,i)=>box.appendChild(capLineInput(ln,i)));}
+function capLineInput(text,i){const inp=document.createElement('input');inp.type='text';inp.value=text;inp.dataset.capline='1';
+ inp.addEventListener('keydown',ev=>{if(ev.key==='Enter'){ev.preventDefault();const at=inp.selectionStart,head=inp.value.slice(0,at).trim(),tail=inp.value.slice(at).trim();if(!head||!tail)return;inp.value=head;const nxt=capLineInput(tail,i+1);inp.parentNode.insertBefore(nxt,inp.nextSibling);nxt.focus();nxt.setSelectionRange(0,0);}
+  else if(ev.key==='Backspace'&&inp.selectionStart===0&&inp.selectionEnd===0){const prev=inp.previousElementSibling;if(!prev||prev.dataset.capline!=='1')return;ev.preventDefault();const at=prev.value.length;prev.value=(prev.value+' '+inp.value).trim();inp.parentNode.removeChild(inp);prev.focus();prev.setSelectionRange(at,at);}});
+ return inp;}
+function capSaveLines(){const b=capBeat();const lines=[...document.querySelectorAll('#capLinesBox [data-capline]')].map(e=>e.value.trim()).filter(Boolean);if(!lines.length){capMsg('줄이 비었어요',true);return;}b.lines=lines;b.auto=false;b.cur=0;capSave();capMsg('이 장면 줄을 저장했어요');capShowBeat();}
+async function capAutoLines(){const b=capBeat();b.lines=null;await capEnsureLines(b);b.cur=0;capSave();capMsg('자동 줄 나누기로 되돌렸어요');capShowBeat();}
+function capNextLine(){const b=capBeat();b.cur=(b.cur+1)%b.lines.length;$('#capLineNo').textContent=(b.cur+1)+'/'+b.lines.length;capRender();}
+function capScope(all){CAPS.all=all;$('#capAll').classList.toggle('on',all);$('#capOne').classList.toggle('on',!all);$('#capScopeLbl').textContent=all?'모든 장면에':'이 장면('+beatN+'번)만';capSave();}
+function capSetPos(pos){CAPS.touched=true;const apply=b=>{b.pos=pos;b.y_pct=null;b.x_pct=null;};if(CAPS.all)CAPS.beats.forEach(apply);else apply(capBeat());capSave();capShowBeat();}
+function capStyle(k,v){CAPS.style[k]=v;CAPS.touched=true;capSyncUI();capSave();capRender();}
+function capBump(k,d){let v=+CAPS.style[k];if(isNaN(v))v=+CAP_DEFAULT[k]||0;CAPS.style[k]=Math.max(0,v+d);CAPS.touched=true;capSyncUI();capSave();capRender();}
+function capApplyPreset(p){CAPS.touched=true;CAPS.preset=p;CAPS.style=Object.assign({},CAP_DEFAULT,p==='mine'?(CAPS.mine||{}):(CAP_PRESET[p]||{}));capSyncUI();capSave();capRender();}
+function capResetStyle(){capApplyPreset(CAPS.preset||'basic');capMsg('스타일을 기본값으로 되돌렸어요');}
+function capSaveMine(){CAPS.mine=Object.assign({},CAPS.style);CAPS.preset='mine';capSave();capMsg('내 스타일로 저장했어요');document.querySelectorAll('#capCards [data-st]').forEach(c=>c.classList.toggle('on',c.dataset.st==='mine'));}
+function capResetAllPos(){CAPS.beats.forEach(b=>{b.pos='mid';b.y_pct=null;b.x_pct=null;});capSave();capShowBeat();capMsg('모든 장면 위치를 가운데로 되돌렸어요');}
+function capSyncUI(){const st=CAPS.style;$('#cap_size_v').textContent=st.size;$('#cap_olw_v').textContent=st.outline_w;$('#cap_boxo_v').textContent=st.box_opacity;$('#cap_color').value=st.color;$('#cap_olc').value=st.outline_color;$('#cap_boxc').value=st.box_color;$('#cap_font').value=st.font||'';$('#capBoxBtn').classList.toggle('on',!!st.box);$('#capShBtn').classList.toggle('on',!!st.shadow);
+ document.querySelectorAll('#capCards [data-st]').forEach(c=>c.classList.toggle('on',c.dataset.st===CAPS.preset));capScope(CAPS.all);}
+const capimg=$('#capimg');let capT=null;
+function capRender(){clearTimeout(capT);capT=setTimeout(()=>{if(typeof curPart==='function'&&curPart()==='hook'&&LAYOUTS[(SPECS.hook||{}).preset]){capimg.style.display='none';return;}capimg.style.display='';const b=capBeat();const text=(b.lines||[b.text])[b.cur]||'';const st=Object.assign({},CAPS.style,{y_pct:capPosY(b),x_pct:b.x_pct==null?50:b.x_pct});if(st.y_pct==null)delete st.y_pct;
+ loadImg(capimg,'/cap?style='+encodeURIComponent(JSON.stringify(st))+'&text='+encodeURIComponent(text));},120);}
+$('#capCards').addEventListener('click',e=>{const t=e.target.closest('[data-st]');if(!t)return;capApplyPreset(t.dataset.st);});
+$('#capPos').addEventListener('click',e=>{const t=e.target.closest('[data-pos]');if(!t)return;capSetPos(t.dataset.pos);});
+// 미리보기 끌기(자막 탭): 끄는 자리로 y·x. 범위는 '모든 장면에/이 장면만'을 따른다
+let capDrag=null;
+mirror.addEventListener('pointerdown',e=>{if(!$('#pane-cap').classList.contains('on'))return;if(e.target.closest('.mask,.sticker,.pop'))return;capDrag={r:mirror.getBoundingClientRect()};mirror.setPointerCapture(e.pointerId);});
+mirror.addEventListener('pointermove',e=>{if(!capDrag)return;const r=capDrag.r;const px=Math.round(Math.max(0,Math.min(100,(e.clientX-r.left)/r.width*100))),py=Math.round(Math.max(0,Math.min(100,(e.clientY-r.top)/r.height*100)));
+ const apply=b=>{b.y_pct=py;b.x_pct=px;};if(CAPS.all)CAPS.beats.forEach(apply);else apply(capBeat());document.querySelectorAll('#capPos [data-pos]').forEach(x=>x.classList.remove('on'));capRender();});
+mirror.addEventListener('pointerup',()=>{if(capDrag){capDrag=null;CAPS.touched=true;capSave();}});
+(async()=>{await new Promise(r=>setTimeout(r,800));capLoad();capSyncUI();capShowBeat();})();
+</script>
+</body></html>

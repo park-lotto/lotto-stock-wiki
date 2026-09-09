@@ -1,0 +1,117 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "하나금융",
+      "signal": "bull",
+      "reason": "2분기 호실적 및 주주환원율 50% 전망",
+      "ts": "2026-07-26",
+      "quote": "하나금융, 2분기 호실적+주주환원율 50% 전망…목표가 '상향 or 유지'",
+      "sector": "기타"
+    },
+    {
+      "name": "AMD",
+      "signal": "bull",
+      "reason": "AI 인프라 확장 및 헬리오스 출시, AI 모멘텀",
+      "ts": "2026-07-24",
+      "quote": "AI 인프라 확장·헬리오스 출시에 AMD 목표주가 상향",
+      "sector": "반도체"
+    },
+    {
+      "name": "삼성E&A",
+      "signal": "bull",
+      "reason": "어닝서프라이즈",
+      "ts": "2026-07-24",
+      "quote": "어닝서프라이즈에 증권가 목표주가 줄상향···삼성E&A, 이틀 연속 ‘강세’",
+      "sector": "기타"
+    },
+    {
+      "name": "셀렉티브 인슈어런스",
+      "signal": "bull",
+      "reason": "가격 규율 주목",
+      "ts": "2026-07-24",
+      "quote": "오펜하이머, 셀렉티브 인슈어런스 목표 주가 상향… ‘가격 규율’ 주목",
+      "sector": "기타"
+    },
+    {
+      "name": "GE 베르노바",
+      "signal": "bull",
+      "reason": "가스터빈 생산 능력 확대 및 성장 전망",
+      "ts": "2026-07-24",
+      "quote": "미즈호, GE 베르노바 목표주가 상향... 가스터빈 생산 능력 확대 기대",
+      "sector": "전력"
+    },
+    {
+      "name": "인텔",
+      "signal": "bull",
+      "reason": "2분기 실적 호조",
+      "ts": "2026-07-24",
+      "quote": "트루이스트, 인텔 목표 주가 상향 조정…2분기 실적 호조·CAPEX 우려 병존",
+      "sector": "반도체"
+    },
+    {
+      "name": "RTX",
+      "signal": "bull",
+      "reason": "견조한 실적 및 수주잔고",
+      "ts": "2026-07-24",
+      "quote": "베어드, 견조한 실적 및 수주잔고에 RTX 목표주가 상향 조정",
+      "sector": "방산"
+    },
+    {
+      "name": "Progress Software",
+      "signal": "bull",
+      "reason": "Domo 인수 합의",
+      "ts": "2026-07-23",
+      "quote": "DA 데이비슨, Domo 인수 합의로 Progress Software 목표주가 상향",
+      "sector": "IT"
+    },
+    {
+      "name": "Netstreit",
+      "signal": "bull",
+      "reason": "가이던스 상향",
+      "ts": "2026-07-23",
+      "quote": "Stifel, Netstreit 목표주가 상향... 가이던스 상향 덕분",
+      "sector": "기타"
+    },
+    {
+      "name": "필립모리스",
+      "signal": "bull",
+      "reason": "실적 호조",
+      "ts": "2026-07-23",
+      "quote": "Stifel, 필립모리스 목표주가 실적 호조에 205달러로 상향",
+      "sector": "소비내수"
+    },
+    {
+      "name": "제너럴 모터스",
+      "signal": "bull",
+      "reason": "가격 경쟁력 강조 및 실적 호조",
+      "ts": "2026-07-22",
+      "quote": "TD Cowen, 제너럴 모터스 목표주가 실적 호조에 $132로 상향 조정",
+      "sector": "자동차"
+    },
+    {
+      "name": "Robinhood",
+      "signal": "bull",
+      "reason": "펀더멘털 개선",
+      "ts": "2026-07-22",
+      "quote": "KeyBanc, Robinhood 목표주가 상향... 펀더멘털 개선 주목",
+      "sector": "기타"
+    },
+    {
+      "name": "유나이티드 렌탈스",
+      "signal": "bull",
+      "reason": "장비단 성장 기대",
+      "ts": "2026-07-24",
+      "quote": "번스타인, 유나이티드 렌탈스(URI) 목표주가 상향… 장비단 성장 기대",
+      "sector": "기타"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "뱅크오브아메리카, 사이버보안 주요 종목 목표주가 상향",
+      "ts": "2026-07-25",
+      "quote": "뱅크오브아메리카, 사이버보안 주요 종목 목표주가 상향"
+    }
+  ],
+  "quote": "증권가 전반의 목표주가 상향 조정 흐름"
+}

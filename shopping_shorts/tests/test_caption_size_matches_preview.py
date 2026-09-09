@@ -63,7 +63,10 @@ def test_outline_shadow_box_scale_together(tmp_path):
     style = {"size": 60, "outline": True, "outline_w": 6,
              "box": True, "box_pad": 16, "box_opacity": 80}
     joined = " ".join(va._segmented_drawtext("안녕", style, tmp_path, "k2", 50.0, 50.0))
-    assert f"borderw={round(6 * RATIO)}" in joined
+    # ★외곽선만 절반이다(2026-09-02): 미리보기 CSS -webkit-text-stroke는 획 **가운데**에
+#   걸쳐 그려져 보이는 두께가 w/2인데, ffmpeg borderw는 **전부 바깥**이라 w다.
+#   미리보기가 정본이라 렌더를 절반으로 맞췄다(고객 제보 "보이는 것보다 두껍게 나온다").
+    assert f"borderw={round(round(6 * RATIO) / 2)}" in joined
     assert f"boxborderw={round(16 * RATIO)}" in joined
 
 
@@ -72,7 +75,7 @@ def test_fixed_drawtext_headcopy_also_scaled(tmp_path):
     out = va._fixed_drawtext({"text": "헤드카피", "size": 80, "outline": True, "outline_w": 6},
                              tmp_path, "hc")
     assert f"fontsize={round(80 * RATIO)}" in out
-    assert f"borderw={round(6 * RATIO)}" in out
+    assert f"borderw={round(round(6 * RATIO) / 2)}" in out
 
 
 def test_frontend_and_backend_reference_width_agree():

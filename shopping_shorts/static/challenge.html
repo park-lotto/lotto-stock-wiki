@@ -129,7 +129,7 @@
   </div>
 
   <div class="box">
-    <input id="url" type="url" placeholder="인스타·유튜브·틱톡 영상 주소를 붙여넣기"
+    <input id="url" type="url" placeholder="인스타·유튜브·틱톡·네이버클립 영상 주소를 붙여넣기"
            autocomplete="off" enterkeyhint="send">
     <button id="go">제출</button>
   </div>
@@ -200,6 +200,7 @@ function metaText(it) {
   if (it.fetch_status === 'ok' && (it.views || it.views === 0))
     return '조회 ' + Number(it.views).toLocaleString();
   if (it.platform === 'tiktok') return '틱톡';
+  if (it.platform === 'naverclip') return '네이버클립';
   if (it.fetch_status === 'failed') return '정보 없음';
   return '정보 수집 중';
 }

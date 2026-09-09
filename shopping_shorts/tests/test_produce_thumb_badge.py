@@ -278,9 +278,12 @@ console.log(JSON.stringify({
 """
     d = json.loads(_run_node(script))
     assert d["hasDel"], "배지에 ✕ 삭제 손잡이가 안 뜬다"
-    # 2026-08-28 사장님 "손잡이 모서리 기능빼줘 버튼조절 기능 있으니까"
-    #  → 크기·방향 모서리 3개를 뺐다. 남는 버튼은 ✕ 하나뿐(점선 네모는 button이 아니다).
-    assert d["buttons"] == 1, f"손잡이는 삭제 ✕ 하나여야 한다: {d['buttons']}"
+    # 2026-08-28 사장님 "손잡이 모서리 기능빼줘"로 모서리 3개를 뺐다가,
+    # 2026-09-02 고객 제보("스티커 크기 각도 조절이 미리보기 창에서 안 돼요")로 되살렸다.
+    # ★단, 예전처럼 한 손잡이가 크기+회전을 같이 잡지 않는다(그게 감도 불만의 뿌리였다) —
+    #   ⤢=크기만 / ↻=각도만. 그래서 버튼은 ✕·⤢·↻ 셋이다(점선 네모는 button이 아니다).
+    assert d["buttons"] == 3, f"손잡이는 ✕·⤢·↻ 셋이어야 한다: {d['buttons']}"
+    assert 'data-h="size"' in d["html"] and 'data-h="rot"' in d["html"]
 
 
 def test_badge_handle_box_matches_pill_width():
