@@ -20699,6 +20699,40 @@ def _sources_for_generate(item, job, limit=_FACTS_MAX_SOURCES):
     return out[:limit]
 
 
+def _sort_spines_by_seconds(spines, seconds):
+    """목표 초에 **칸당 길이가 맞는** 스파인을 앞으로. 후보는 하나도 안 버린다.
+
+    한 칸이 몇 초여야 하나 — 히트작 4,915편 실측 중앙값이 **6.3초**다(25초 ÷ 4칸).
+    우리는 24.2초를 **8칸**으로 써서 칸당 3.0초였다(2026-09-09 실측). 같은 시간을
+    두 배로 쪼개니 문장이 토막나고 이야기가 안 된다("토막토막 끊긴다" 사장님 제보).
+
+    ★게이트로 칸 수를 막지 않는다(아스트라 지적): 게이트는 칸 수를 만들지 않는다 —
+      스파인의 beat_roles가 먼저 정한다. 게이트에 상한만 넣으면 반려·재작성 루프만 는다.
+    ★버리지 않고 **정렬만** 한다: 그 카테고리에 4칸짜리가 하나도 없을 수 있다.
+      버리면 그 소재는 대본이 아예 안 나온다. 순서만 바꾸면 최악이라도 종전과 같다(회귀 0).
+    """
+    _IDEAL_SEC_PER_BEAT = 6.3
+
+    def _n(sp):
+        r = (sp or {}).get("beat_roles")
+        if isinstance(r, str):
+            try:
+                r = json.loads(r or "[]")
+            except ValueError:
+                return 0
+        return len(r or [])
+
+    try:
+        sec = max(5, min(int(seconds or 25), 90))
+    except (TypeError, ValueError):
+        sec = 25
+    want = max(3, round(sec / _IDEAL_SEC_PER_BEAT))          # 25초 -> 4칸
+    # 칸 수가 같으면 **원래 순서**(실적순)를 지킨다 — 잘 나가는 것이 먼저다.
+    return [x for _i, x in sorted(
+        enumerate(spines or []),
+        key=lambda t: (abs(_n(t[1]) - want) if _n(t[1]) else 99, t[0]))]
+
+
 def _wow_subject(sources):
     """웹에 물어볼 **주제어**. 1단계가 뽑아둔 제품명을 쓰고, 없으면 소재 이름을 쓴다.
 
