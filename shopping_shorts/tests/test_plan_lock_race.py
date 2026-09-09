@@ -63,3 +63,40 @@ def test_plan_writing_endpoints_take_the_lock():
         i = src.index("def %s(" % fn)
         body = src[i:i + 1500]
         assert "_plan_lock(" in body, "%s 가 편집안 잠금을 안 쓴다" % fn
+
+
+def test_plan_path_detection():
+    """어느 경로를 직렬화하는지 — 편집안 고치는 문만 잡고 나머진 안 잡는다."""
+    f = _app._plan_job_of_path
+    assert f("/api/produce/mix/abc123/caplines") == "abc123"
+    assert f("/api/produce/mix/abc123/cappos") == "abc123"
+    assert f("/api/produce/mix/abc123/scenezoom") == "abc123"
+    assert f("/api/mix/scene_lab/abc123/apply") == "abc123"
+    assert f("/api/mix/tts/abc123/2/regen") is None      # 편집안 통째 저장이 아니다
+    assert f("/api/produce/styles") is None
+    assert f("/") is None
+
+
+def test_same_job_serialized_different_jobs_not():
+    """미들웨어 잠금이 job별인지 — 다른 작업이 서로 막히면 화면이 느려진다."""
+    import asyncio as _a
+    _app._PLAN_REQ_LOCKS.clear()
+
+    async def main():
+        order = []
+
+        async def req(job, tag, hold):
+            lock = _app._PLAN_REQ_LOCKS.setdefault(job, _a.Lock())
+            async with lock:
+                order.append("시작:" + tag)
+                await _a.sleep(hold)
+                order.append("끝:" + tag)
+
+        await _a.gather(req("J1", "A", 0.05), req("J1", "B", 0.01), req("J2", "C", 0.01))
+        return order
+
+    order = _a.run(main())
+    # 같은 job의 A와 B는 절대 겹치지 않는다
+    assert order.index("끝:A") < order.index("시작:B"), order
+    # 다른 job인 C는 A가 붙잡고 있어도 먼저 끝난다
+    assert order.index("끝:C") < order.index("끝:A"), order

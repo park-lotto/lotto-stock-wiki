@@ -12417,6 +12417,45 @@ def _track_activity(customer_id, path):
         pass
 
 
+# ── 편집안을 고치는 요청은 job마다 한 줄로 세운다 (2026-09-09) ─────────────
+# ★왜: 편집안(edit_plan)을 통째로 다시 쓰는 곳이 app.py에만 **22군데**다. 전부
+#   「읽고 → 고치고 → 통째로 쓴다」인데, 6단계 화면은 자동저장(scene_lab/apply)과
+#   자리·확대 저장을 사람이 안 눌러도 계속 쏜다. 둘이 겹치면 나중에 끝난 쪽이
+#   **자기가 읽어둔 옛 편집안**으로 덮어써서 방금 저장한 자막줄이 사라진다
+#   (실측 로그 job 593f4191557d: caplines 14:40:29 / apply 14:40:30 / caplines
+#    14:40:33 / apply 14:40:34 — 둘 다 200 OK라 화면엔 "저장했어요"만 뜬다).
+# ★엔드포인트마다 잠금을 다는 방식은 22곳을 빠짐없이 달아야 하고 새 엔드포인트가
+#   생기면 또 샌다(0순위-B: 같은 판단을 22곳에 적지 마라). 그래서 **문 앞 한 곳**에서
+#   같은 job의 편집 요청을 직렬화한다. 다른 job끼리는 서로 안 막는다.
+# ★asyncio 잠금이라 이벤트 루프를 안 막는다(엔드포인트는 스레드풀에서 돈다).
+_PLAN_REQ_LOCKS = {}
+_PLAN_REQ_PATHS = ("/api/produce/mix/", "/api/mix/scene_lab/")
+
+
+def _plan_job_of_path(path):
+    """편집안을 고치는 경로면 그 job_id, 아니면 None."""
+    for pre in _PLAN_REQ_PATHS:
+        if path.startswith(pre):
+            rest = path[len(pre):].split("/")
+            if rest and rest[0]:
+                return rest[0]
+    return None
+
+
+@app.middleware("http")
+async def _plan_write_serializer(request: Request, call_next):
+    if request.method != "POST":
+        return await call_next(request)
+    job = _plan_job_of_path(request.url.path)
+    if not job:
+        return await call_next(request)
+    lock = _PLAN_REQ_LOCKS.get(job)
+    if lock is None:
+        lock = _PLAN_REQ_LOCKS.setdefault(job, asyncio.Lock())
+    async with lock:
+        return await call_next(request)
+
+
 @app.middleware("http")
 async def _auth_guard(request: Request, call_next):
     if not _AUTH_ON:
