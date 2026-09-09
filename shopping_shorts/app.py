@@ -18504,7 +18504,7 @@ def api_produce_mix_caplines(job_id: str, body: dict):
         return JSONResponse(status_code=422, content={"ok": False, "error": "lines 필요"})
     if _cmp_key("".join(lines)) != _cmp_key(narr):
         return JSONResponse(status_code=422,
-                            content={"ok": False, "error": "대사 글자가 달라졌어요 — 줄만 나눠주세요"})
+                            content={"ok": False, "error": "저장 안 됐어요 — 글자가 달라졌습니다. 줄만 나누고 붙이세요(글자를 지우거나 고치면 저장이 막힙니다). 되돌리려면 [↩ 자동으로]를 누르세요"})
     hit["caption_lines"] = lines
     hit["cap_durs"] = None                       # 옛 경계 기준 시간은 무효
     hit["cap_lead"] = hit.get("cap_lead", 0.0)
