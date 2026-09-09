@@ -209,7 +209,12 @@ def save(st):
 
 
 def seed_videos(st, n=20):
-    """씨앗 영상 — ①통과 채널의 영상 ②없으면 랭킹의 썰쇼핑 상위."""
+    """씨앗 영상 — 통과 채널의 영상 + 랭킹의 쇼핑 결 영상.
+
+    ★씨앗을 썰(제품정체형·오용형)로만 좁히면 **3사이클 만에 마른다**(2026-09-09 실측:
+      랭킹 922건 중 썰은 37건뿐이라 "씨앗 없음"으로 멈췄다). 홈템·장비템·차량템도
+      같은 시청자가 보는 판이라 추천이 겹친다 — GOOD 전부를 씨앗으로 쓴다.
+    """
     c = sqlite3.connect(os.path.join(BASE, "shopping_shorts/data/reference.db"))
     row = c.execute("SELECT value FROM settings WHERE key=?",
                     ("last_run::youtube",)).fetchone()
@@ -219,7 +224,7 @@ def seed_videos(st, n=20):
     pool = [i for i in items
             if i.get("shortcode") and i["shortcode"] not in seen
             and ((i.get("username") in good_ch)
-                 or (i.get("category") or "") in SUL)]
+                 or (i.get("category") or "") in GOOD)]
     pool.sort(key=lambda x: -(x.get("views") or 0))
     return pool[:n]
 
