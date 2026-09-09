@@ -5980,6 +5980,17 @@ def api_mix_scene_lab_apply(job_id: str, body: dict):
     payload = body.get("payload") or {}
     if not payload.get("beats"):
         return JSONResponse(status_code=422, content={"ok": False, "error": "payload.beats 필요"})
+    # ★자동저장이 계속 도는 자리다 — 편집안을 **잠금 안에서 다시 읽어** 고친다(_plan_lock 주석).
+    #   위에서 읽은 job은 검사용이고, 실제로 고칠 판은 여기서 새로 뜬다. 안 그러면 그 사이에
+    #   들어온 자막줄 저장(caplines)을 옛 편집안으로 통째로 덮어쓴다.
+    with _plan_lock(job_id):
+        job = store.get_mix_job(job_id) or job
+        plan = job.get("edit_plan") or plan
+        return _scene_lab_apply_locked(store, job_id, job, plan, payload)
+
+
+def _scene_lab_apply_locked(store, job_id, job, plan, payload):
+    """apply의 실제 작업 — 반드시 _plan_lock 안에서 부른다."""
     seg_map, _ = _edit_plan._build_inventory(list((job.get("extract") or {}).values()))
     # ★교체 기록(2026-09-04): 적용 전후 '첫 조각'이 바뀐 비트를 DB에 남긴다 — 매칭의 시험지. 픽 로직엔 안 쓴다.
     _before = {"beats": [dict(b) for b in plan.get("beats") or []], "generator": plan.get("generator")}
@@ -12406,6 +12417,45 @@ def _track_activity(customer_id, path):
         pass
 
 
+# ── 편집안을 고치는 요청은 job마다 한 줄로 세운다 (2026-09-09) ─────────────
+# ★왜: 편집안(edit_plan)을 통째로 다시 쓰는 곳이 app.py에만 **22군데**다. 전부
+#   「읽고 → 고치고 → 통째로 쓴다」인데, 6단계 화면은 자동저장(scene_lab/apply)과
+#   자리·확대 저장을 사람이 안 눌러도 계속 쏜다. 둘이 겹치면 나중에 끝난 쪽이
+#   **자기가 읽어둔 옛 편집안**으로 덮어써서 방금 저장한 자막줄이 사라진다
+#   (실측 로그 job 593f4191557d: caplines 14:40:29 / apply 14:40:30 / caplines
+#    14:40:33 / apply 14:40:34 — 둘 다 200 OK라 화면엔 "저장했어요"만 뜬다).
+# ★엔드포인트마다 잠금을 다는 방식은 22곳을 빠짐없이 달아야 하고 새 엔드포인트가
+#   생기면 또 샌다(0순위-B: 같은 판단을 22곳에 적지 마라). 그래서 **문 앞 한 곳**에서
+#   같은 job의 편집 요청을 직렬화한다. 다른 job끼리는 서로 안 막는다.
+# ★asyncio 잠금이라 이벤트 루프를 안 막는다(엔드포인트는 스레드풀에서 돈다).
+_PLAN_REQ_LOCKS = {}
+_PLAN_REQ_PATHS = ("/api/produce/mix/", "/api/mix/scene_lab/")
+
+
+def _plan_job_of_path(path):
+    """편집안을 고치는 경로면 그 job_id, 아니면 None."""
+    for pre in _PLAN_REQ_PATHS:
+        if path.startswith(pre):
+            rest = path[len(pre):].split("/")
+            if rest and rest[0]:
+                return rest[0]
+    return None
+
+
+@app.middleware("http")
+async def _plan_write_serializer(request: Request, call_next):
+    if request.method != "POST":
+        return await call_next(request)
+    job = _plan_job_of_path(request.url.path)
+    if not job:
+        return await call_next(request)
+    lock = _PLAN_REQ_LOCKS.get(job)
+    if lock is None:
+        lock = _PLAN_REQ_LOCKS.setdefault(job, asyncio.Lock())
+    async with lock:
+        return await call_next(request)
+
+
 @app.middleware("http")
 async def _auth_guard(request: Request, call_next):
     if not _AUTH_ON:
@@ -18272,6 +18322,27 @@ def api_produce_mix_trim(job_id: str, body: dict):
             "tail_trim": hit.get("tail_trim", 0.0), "trimmed": hit.get(key, 0.0)}
 
 
+# ── 편집안(edit_plan) 쓰기 잠금 ──────────────────────────────────────────
+# ★왜(2026-09-09 사장님/고객 제보 "줄나누기를 저장했는데 몇 개가 없어진다"):
+#   편집안을 고치는 API들이 전부 **읽고 → 고치고 → 통째로 다시 쓴다**. 그런데
+#   장면 실험실 자동저장(scene_lab/apply)은 사람이 안 눌러도 계속 돈다 —
+#   실측 로그(job 593f4191557d):
+#       14:40:29 caplines / 14:40:30 apply / 14:40:33 caplines / 14:40:34 apply
+#   자동저장이 편집안을 **읽은 뒤 쓰기 전** 사이에 자막줄 저장이 끼면, 자동저장이
+#   들고 있던 옛 편집안이 그대로 덮어써 방금 저장한 줄이 사라진다(둘 다 200 OK라
+#   화면엔 "저장했어요"만 뜬다). 같은 모양의 사고가 전에도 있었다(자동저장이 오려낸
+#   장면 조각을 지운 건).
+#   → 편집안을 고치는 곳은 **이 잠금 안에서 다시 읽고 쓴다**. 판단처는 여기 한 곳(0순위-B).
+_PLAN_LOCKS = {}
+_PLAN_LOCKS_GUARD = threading.Lock()
+
+
+def _plan_lock(job_id):
+    """job 하나의 edit_plan 읽기-수정-쓰기를 직렬화하는 잠금."""
+    with _PLAN_LOCKS_GUARD:
+        return _PLAN_LOCKS.setdefault(str(job_id), threading.Lock())
+
+
 def _mix_job_beat_or_error(job_id, body, store):
     """{job_id, body.beat_idx} → (plan, beat, None) 또는 (None, None, 에러응답).
     장면 하나를 손보는 API들이 같은 검사를 반복하지 않게 한 곳에 모은다(0순위-B)."""
@@ -18302,7 +18373,12 @@ def api_produce_mix_cappos(job_id: str, body: dict):
     ★자유 좌표는 cap_pos보다 우선한다 — 해석은 video_assemble._beat_cap_style 한 곳(0순위-B).
     ★음성·타이밍을 건드리지 않는다 → 즉시·무료."""
     store = Store(DB_PATH)
+    # 자막 자리도 편집안을 통째로 다시 쓴다 → 자동저장과 겹치지 않게 같은 잠금(_plan_lock).
+    with _plan_lock(job_id):
+        return _cappos_locked(store, job_id, body)
 
+
+def _cappos_locked(store, job_id, body):
     # ── '모두 적용': 장면별 덮어쓰기를 싹 지운다. 안 지우면 손댔던 장면만 옛 자리에 남아
     #    "모두 적용했는데 몇 장면은 안 바뀐다"가 된다.
     if body.get("apply_all"):
@@ -18482,6 +18558,12 @@ def api_produce_mix_caplines(job_id: str, body: dict):
       다시 계산해야 한다. TTS 타임스탬프는 mp3 옆에 남아 있어 다시 읽을 수 있다
       (_beat_words) — 안 하면 옛 경계 기준 시간이 남아 자막이 밀린다."""
     store = Store(DB_PATH)
+    # ★자동저장(scene_lab/apply)과 겹치면 방금 저장한 줄이 옛 편집안에 덮인다 → 같은 잠금 안에서.
+    with _plan_lock(job_id):
+        return _caplines_locked(store, job_id, body)
+
+
+def _caplines_locked(store, job_id, body):
     plan, hit, err = _mix_job_beat_or_error(job_id, body, store)
     if err:
         return err
