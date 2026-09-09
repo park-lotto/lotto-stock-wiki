@@ -2151,8 +2151,15 @@ def _segmented_drawtext(text, base_style, work, key_prefix, x_pct, y_pct,
                     continue
                 key = f"{key_prefix}_{li}_{len(parts)}"
                 (work / f"txt_{key}.txt").write_text(chunk, encoding="utf-8")
+                # ★expansion=none — % 한 글자가 그 줄을 통째로 지운다(2026-09-09 사장님 제보).
+                #   drawtext 기본값 expansion=normal은 텍스트를 %{...} 치환식으로 훑는다.
+                #   "되고, 99.9%"처럼 %가 그냥 글자로 들어가면 치환이 실패해 **아무것도 안 그린다**
+                #   (에러도 안 난다 → 렌더는 성공하는데 그 자막만 영상에서 사라진다).
+                #   실측(job 851e2d9893b1 beat5 seg1): 같은 필터에 텍스트만 바꿔 렌더 →
+                #   "되고, 99.9%" 450바이트(빈 화면) / "되고, 999" 3418바이트(글자 있음) /
+                #   expansion=none 5234바이트(글자 있음). 우리는 %{...} 치환을 안 쓰므로 꺼도 된다.
                 seg_parts = [
-                    f"drawtext=fontfile={fontref}:textfile=txt_{key}.txt",
+                    f"drawtext=fontfile={fontref}:textfile=txt_{key}.txt:expansion=none",
                     f"fontcolor={_hex_to_ff(seg_color, default_color)}",
                     f"fontsize={size}",
                     f"x={int(cx)}", f"y={int(line_y)}",
@@ -2207,7 +2214,7 @@ def _fixed_drawtext(spec, work, key, default_color="0xFFFFFF"):
     else:
         y_expr = f"y=(h*{yf:.4f}-th/2)"
     parts = [
-        f"drawtext=fontfile={fontref}:textfile=txt_{key}.txt",
+        f"drawtext=fontfile={fontref}:textfile=txt_{key}.txt:expansion=none",
         f"fontcolor={_hex_to_ff(spec.get('color'), default_color)}",
         f"fontsize={size}",
         f"x=(w*{xf:.4f}-tw/2)", y_expr,
