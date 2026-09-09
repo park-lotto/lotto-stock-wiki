@@ -4669,10 +4669,20 @@ _TTS_VENDOR_RULES = (
      "설정 > 🔑 내 키 등록에서 다른 키를 넣어 주세요."),
     (("missing the permission", "missing_permissions"),
      "음성 서비스 키는 맞지만 필요한 권한(text_to_speech 등)이 꺼져 있습니다. ElevenLabs → API Keys에서 그 키의 권한을 켜 주세요."),
+    # ★404 = 그 키(계정)에 그 목소리가 없다(2026-09-09 실사고 cid 163, 3일간 6잡 전부 실패).
+    #   일레븐랩스 계정 전용 보이스는 **만든 계정 키로만** 불린다. 개인 키를 낸 회원이
+    #   공용 라이브러리 목소리(owner=0 사장님 계정 보이스)를 고르면 자기 키로 부르다 404가 난다
+    #   (keyroute: 개인 키가 있으면 폴백 없이 그 키만 쓴다).
+    #   ⚠️이 줄이 401/403보다 **위**에 있어야 한다 — 아래 규칙의 "403"이 voice_id·URL 문자열에
+    #     우연히 걸리면 "키를 다시 넣어라"는 틀린 안내가 나간다(문자열 검사라 문맥을 못 본다).
+    #   ⚠️종전엔 404 규칙이 아예 없어 _USER_ERROR_RULES의 뭉뚱그리기에 걸려
+    #     "음성 서비스가 잠시 몰려…"(=기다리면 풀린다)로 나갔다. 정반대 안내였고,
+    #     고객은 3일간 재시도만 반복했다. 실측: 잔액 129,296크레딧 정상, 몰린 것도 아니었다.
+    (("404", "voice_not_found", "voice not found", "422"),
+     "고른 목소리를 내 음성 키로는 쓸 수 없습니다. 그 목소리가 다른 계정에 속해 있어요. "
+     "TTS 단계에서 **다른 목소리**를 골라 주세요."),
     (("401", "403", "invalid_api_key", "unauthorized", "forbidden"),
      "음성 서비스가 내 키를 인식하지 못합니다. 설정 > 🔑 내 키 등록에서 키를 다시 확인하거나 새 키를 넣어 주세요."),
-    (("voice_not_found", "voice not found", "422"),
-     "선택한 목소리를 음성 서비스가 찾지 못합니다. TTS 단계에서 목소리를 다시 골라 주세요."),
     (("429", "too many requests", "rate limit"),
      "음성 서비스가 잠시 몰려 응답하지 않았습니다. 1~2분 뒤 다시 시도해 주세요."),
     (("500", "502", "503", "504", "server error", "timed out", "timeout"),
@@ -4685,6 +4695,15 @@ def _tts_vendor_message(low):
     if not any(m in low for m in ("api.elevenlabs.io", "api.typecast.ai", "elevenlabs", "typecast")):
         return None
     for keys, friendly in _TTS_VENDOR_RULES:
+        # ★벤더를 못박은 줄(예: ("api.typecast.ai","403"))은 **둘 다** 있어야 한다(2026-09-09).
+        #   any()로 보면 "403" 한 조각만 걸려도 타입캐스트 안내가 나갔다 —
+        #   일레븐랩스 404인데 voice_id에 '403'이 우연히 들어 있으면 엉뚱한 벤더 안내가 나간다
+        #   (사보타주 중에 실제로 잡았다). 벤더가 적힌 줄은 그 벤더의 오류에만 쓴다.
+        vendor = [k for k in keys if k.startswith("api.")]
+        if vendor:
+            if all(v in low for v in vendor) and any(k in low for k in keys if k not in vendor):
+                return friendly
+            continue
         if any(k in low for k in keys):
             return friendly
     return None
