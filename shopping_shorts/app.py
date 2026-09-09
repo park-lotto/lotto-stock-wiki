@@ -20242,6 +20242,47 @@ def _sul_block_for_sources(category, sources, store=None, spines=None):
         return ""
 
 
+# 재료를 뽑을 때 화면을 몇 장 볼지. 6장이면 처음·중간·끝이 다 들어오고, 제품이
+# 화면에 나오는 숏폼에서 물건·손동작·박힌 글자를 알아보기에 충분하다(_MAX_FRAMES와 짝).
+_FACT_FRAMES = 6
+
+
+def _frames_for_source(src, log=lambda *a: None):
+    """소재 한 편 → 화면 프레임 jpeg 바이트 목록. 못 구하면 [](재료는 전사로만 간다).
+
+    ★왜 필요한가(2026-09-09 사장님): "쿠팡 안 써도 GPT에 영상을 보여주면 잘 뽑는데
+      우리는 왜 안 되냐". 우리는 재료를 **글자에서만** 뽑고 있었다 — 무자막·외국어
+      영상은 통째로 빈손이 된다(실측 190건 중 재료 보유 1건).
+
+    ★여기서 새로 받지 않는다. 1단계가 이미 내려받아 둔 파일만 쓴다 —
+      대본 생성 경로에서 다운로드를 돌리면 그 몇 분이 그대로 사장님 기다림이 된다
+      (`_facts_per_source`·`_facts_block_for_job` 주석과 같은 원칙).
+    """
+    url = (src or {}).get("url") or ""
+    if not url:
+        return []
+    try:
+        from shopping_shorts import frame_extract, mix_pipeline
+        for code in mix_pipeline._cache_keys_for_url(url):
+            d = _FIND_TMP_DIR / hashlib.sha1(str(code).encode()).hexdigest()[:16]
+            vids = sorted(d.glob("*.mp4")) if d.is_dir() else []
+            if not vids:
+                continue
+            out = []
+            for path, _ts in frame_extract.extract_grid_frames(
+                    str(vids[0]), d / "fact_frames", n=_FACT_FRAMES):
+                try:
+                    out.append(Path(path).read_bytes())
+                except OSError:
+                    pass
+            if out:
+                return out
+    except Exception as e:      # noqa: BLE001 — 프레임을 못 구해도 재료 추출은 돌아야 한다
+        print("[facts] 프레임 준비 실패(%s: %s) — 전사만 씁니다"
+              % (type(e).__name__, str(e)[:100]), file=sys.stderr)
+    return []
+
+
 def _facts_per_source(sources, store, analyze, ckey_prefix, cache_only=False):
     """담긴 영상 **한 편씩** 재료를 뽑는다(캐시 포함) → [facts, ...].
 
@@ -20263,9 +20304,15 @@ def _facts_per_source(sources, store, analyze, ckey_prefix, cache_only=False):
     facts = []
     for x in (sources or [])[:_FACTS_MAX_SOURCES]:
         c = (x.get("full_text") or "").strip()
-        if not c:
+        # ★전사가 비어도 **화면**이 있으면 뽑는다(2026-09-09). 여기서 `continue`하던
+        #   한 줄이 무자막·외국어 영상의 재료를 통째로 버리고 있었다 — 그 결과 모델이
+        #   빈손으로 대본을 쓰고 스펙을 지어냈다(job 40148f06f529 실측).
+        #   캐시에 있으면 프레임은 안 뽑는다(캐시 적중이 흔한 경로다).
+        frames = []
+        ckey_src = c or ("url:" + str((x.get("url") or "")))
+        if not ckey_src.strip():
             continue
-        ckey = "%s_%s" % (ckey_prefix, hashlib.md5(c.encode("utf-8")).hexdigest()[:16])
+        ckey = "%s_%s" % (ckey_prefix, hashlib.md5(ckey_src.encode("utf-8")).hexdigest()[:16])
         f = {}
         if store is not None:
             try:
@@ -20273,8 +20320,11 @@ def _facts_per_source(sources, store, analyze, ckey_prefix, cache_only=False):
             except Exception:      # noqa: BLE001 — 깨진 캐시로 조립을 막지 않는다
                 f = {}
         if not f and not cache_only:
+            frames = _frames_for_source(x)
+            if not c and not frames:
+                continue           # 말도 화면도 없다 — 뽑을 재료가 정말 없는 경우
             try:
-                f = analyze({"captions": [c]}) or {}
+                f = analyze({"captions": [c] if c else [], "frames": frames}) or {}
             except Exception:      # noqa: BLE001
                 f = {}
             # 빈 결과는 캐시하지 않는다 — 일시 실패를 굳히면 그 영상은 영영 재료가 없다.
@@ -20591,11 +20641,16 @@ def _sources_for_generate(item, job, limit=_FACTS_MAX_SOURCES):
     """
     out, seen = [], set()
 
-    def _add(name, full_text, structure, product="", segments=None):
+    def _add(name, full_text, structure, product="", segments=None, url=""):
         txt = (full_text or "").strip()
-        if not txt or txt in seen:
+        # ★말이 없는 소재도 담는다(2026-09-09) — 화면에서 재료를 뽑기 때문이다.
+        #   전에는 전사가 없으면 여기서 통째로 빠져 무자막 영상이 재료가 될 길이 없었다.
+        #   단 **주소가 있을 때만** 담는다 — 주소가 없으면 화면을 찾을 길이 없어서
+        #   빈 항목이 목록 맨 앞에 끼기만 한다(test_segments가 잡아준 회귀).
+        _dedup = txt or ("url:" + str(url or "").strip() if str(url or "").strip() else "")
+        if not _dedup.strip() or _dedup in seen:
             return
-        seen.add(txt)
+        seen.add(_dedup)
         # ★product를 함께 싣는다(2026-08-18). 1단계 분석이 이미 뽑아 둔 값이다
         #   (source_brief.product — 실측 "다이소 자석 네일펜"). 지금까지 이 값이
         #   대본 생성에 한 번도 안 실려서, AI가 여러 텍스트 더미를 보고 **소재를 스스로
@@ -20606,11 +20661,15 @@ def _sources_for_generate(item, job, limit=_FACTS_MAX_SOURCES):
                     # ★세그먼트도 싣는다(2026-08-18) — 대본이 '이 문장은 어느 대목을 보고
                     #   썼는지'(src_seg)를 지목하려면 번호가 붙은 목록을 봐야 한다.
                     #   무자막 소스는 text가 비어 있고 scene_desc만 있다 — 그것도 단서다.
+                    # ★url — 재료 추출이 이 주소로 **이미 받아둔 영상**을 찾아 화면을 본다
+                    #   (`_frames_for_source`). 없으면 그 소재는 전사로만 간다.
+                    "url": url or "",
                     "segments": segments or []})
 
     _add(item.get("category") or "", item.get("full_text"), item.get("structure"),
          ((item.get("source_brief") or {}).get("product") if isinstance(item.get("source_brief"), dict) else ""),
-         item.get("segments"))
+         item.get("segments"), url=(item.get("url") or item.get("video_url") or ""))
+    _urls = list((job or {}).get("urls") or [])
     for _vid, ex in sorted(((job or {}).get("extract") or {}).items()):
         if len(out) >= limit:
             break
@@ -20623,9 +20682,16 @@ def _sources_for_generate(item, job, limit=_FACTS_MAX_SOURCES):
                            for s in (ex.get("segments") or [])
                            if isinstance(s, dict)).strip()
         _brief = ex.get("source_brief")
+        # ★"s0"·"s1" → job["urls"] 순번. 이 주소가 있어야 화면을 볼 수 있다.
+        _u = ""
+        try:
+            _i = int(str(_vid).lstrip("s"))
+            _u = _urls[_i] if 0 <= _i < len(_urls) else ""
+        except (TypeError, ValueError):
+            _u = ""
         _add(item.get("category") or "", txt, ex.get("structure"),
              (_brief or {}).get("product") if isinstance(_brief, dict) else "",
-             ex.get("segments"))
+             ex.get("segments"), url=_u)
     return out[:limit]
 
 
