@@ -46,6 +46,14 @@ _TAIL_EMI = ("거든요", "더라고요", "더라구요", "었어요", "았어�
 
 # 말 밀도 허용 폭 — 스타일 히트작 밀도의 70~140%. 밖이면 "그 스타일이 아니다".
 DENSITY_LO, DENSITY_HI = 0.7, 1.4
+
+# ★목표 초를 얼마나 채워야 "그 길이의 대본"인가 (2026-09-09).
+#   0.8 = 25초짜리면 최소 20초. 이 바닥이 없으면 스타일 밀도만 보고 9초짜리가 통과한다.
+_FILL_FLOOR = 0.8
+
+# 허용 **하한**을 목표 초의 몇 할로 잡을지. 0.7 = 25초짜리면 17.5초 미만은 반려.
+# _FILL_FLOOR보다 낮게 둔다 — 목표는 넉넉히 주되 반려는 명백히 짧을 때만 한다.
+_LEN_FLOOR = 0.7
 DEFAULT_CHARS_PER_30S = 135      # 스타일에 실측값이 없을 때만(일반 기준 4.5자/초)
 
 # ─────────────────────────────────────────────────────────────────────────
@@ -123,11 +131,39 @@ def density_target(style, seconds=30):
     프롬프트(bank_assemble.style_block)와 판정(check)이 서로 다른 수를 쓰면
     "시킨 대로 썼는데 반려"가 난다."""
     sec = max(5, min(int(seconds or 30), 90))
+    # ★목표 초를 **바닥**으로 삼는다 (2026-09-09 사장님: "10초가 안 되는 대본이야").
+    #   여태 이 함수는 스타일 밀도만 보고 목표 초를 **길이의 근거로 안 썼다**.
+    #   실측: 25초짜리를 시켜놓고 게이트 목표가 112자(=15초)였고, 나온 건 71자(=9.6초)였다.
+    #   위 천장 주석("규격이 이긴다")과 짝이 되는 바닥이다 — 천장만 있고 바닥이 없어서
+    #   44초를 조인 뒤로는 반대쪽으로 새고 있었다.
+    #   0.8인 이유: 25초 목표면 20초는 채우게 한다. 1.0으로 두면 스타일의 색(느린 말투)이
+    #   통째로 죽고, 게이트 반려가 잦아지면 모델이 오히려 더 줄인다(2026-09-08 실측:
+    #   반려 뒤 127->200->118->112자로 쪼그라들었다).
+    _floor = int(_FILL_FLOOR * _speech_cps() * sec)
     # ★norm 기준으로 환산해서 쓴다 — 천장(_speech_cps)도 norm이라 단위가 맞아야
     #   비교가 성립한다. 종전엔 raw 예산을 norm 천장과 견줘 **항상 천장에 잘렸고**,
     #   그 탓에 스타일별 밀도가 전부 같은 값이 됐다(위 주석의 실측 참조).
     tgt = int(norm_chars_per_30s(style) * sec / 30)
-    return max(1, min(tgt, int(_speech_cps() * sec)))
+    return max(1, min(max(tgt, _floor), int(_speech_cps() * sec)))
+
+
+def density_range(style, seconds=30):
+    """이 스타일·이 길이에서 **허용 글자수 범위** (lo, hi). 길이 판단의 유일한 입구.
+
+    ★왜 함수로 뽑았나(2026-09-09): 같은 계산이 `check`와 `spine_fill._range`에
+      두 벌로 적혀 있었다. 바닥을 한쪽에만 넣으면 "판정은 반려인데 조립은 통과"가
+      난다 — 조용해서 더 나쁘다(0순위-B).
+
+    ★바닥이 두 개다:
+        스타일 바닥  tgt * DENSITY_LO   — 그 스타일치고 너무 얇은가
+        길이 바닥    0.7 * cps * sec    — **시킨 초를 못 채우는가**  ← 2026-09-09 추가
+      길이 바닥이 없어서 "25초짜리"에 9.6초 대본이 통과했다(사장님 제보).
+    """
+    sec = max(5, min(int(seconds or 30), 90))
+    tgt = density_target(style, sec)
+    cap = int(_speech_cps() * sec)
+    lo = max(int(tgt * DENSITY_LO), int(_LEN_FLOOR * cap))
+    return min(lo, cap), min(int(tgt * DENSITY_HI), cap)
 
 
 def norm(s):
@@ -442,6 +478,43 @@ def prior_verdict(checks):
     return lambda _text: {"ok": hit[0]["ok"], "why": hit[0].get("detail") or ""}
 
 
+def _wow_hooks(facts_text):
+    """재료 원문에서 **영상 밖 정보** 훅들을 되찾는다. 없으면 [](검사 자체를 안 만든다).
+
+    ★왜 필요한가(2026-09-09 사장님 실측): 웹에서 '폐쇄 효과'·'특정 음역대' 같은
+      알맹이를 3개나 찾아왔는데 대본은 한 줄도 안 썼다. 프롬프트에 "하나만 골라
+      넣어라"라고 **말만** 해뒀기 때문이다.
+      ★프롬프트가 말해도 아무도 검사 안 하면 안 지켜진다(같은 이름의 메모리 교훈).
+    """
+    from shopping_shorts import wow_facts
+    txt = facts_text or ""
+    i = txt.find(wow_facts.WOW_MARK)
+    if i < 0:
+        return []
+    out = []
+    for line in txt[i:].splitlines():
+        line = line.strip()
+        if line.startswith("- "):
+            out.append(line[2:].split("(근거:")[0].strip())
+        elif out and not line.startswith(("-", "★", "[")):
+            break          # 블록이 끝났다
+    return [x for x in out if x]
+
+
+def _uses_wow(full, hooks, min_hits=2):
+    """대본이 훅 중 **하나라도** 실제로 썼나 — 어간 2글자가 2개 이상 겹치면 썼다고 본다.
+
+    ★글자 그대로 베끼길 요구하지 않는다. 대본은 입말로 각색되므로 원문 일치를
+      요구하면 제대로 쓴 대본까지 반려된다(장면 좁히기와 같은 기준을 쓴다).
+    """
+    from shopping_shorts import scene_match
+    body = set(scene_match._tokens(full))
+    for h in hooks:
+        if len(body & set(scene_match._tokens(h))) >= min_hits:
+            return True, h
+    return False, ""
+
+
 def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
           speaker_judge=None, scene_ids=None, grounded=False, is_recipe=False,
           source_count=None):
@@ -548,11 +621,23 @@ def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
                                   "~하더라고요' 반말체다(실측 히트작 전부)."
                                   % ", ".join(_po[:4])) if len(_po) > 1 else "OK"})
 
+    # ★영상 밖에서 찾아온 정보를 **실제로 썼나**(2026-09-09). 재료에 그 블록이 없으면
+    #   항목 자체를 안 만든다 — 기존 호출부 그대로 = 회귀 0.
+    #   왜 검사인가: 프롬프트에 "하나만 골라 넣어라"라고 적어뒀는데 모델이 통째로
+    #   무시했다(라이브 실측: 훅 3개를 찾아왔는데 대본은 0개 사용).
+    _hooks = _wow_hooks(facts_text)
+    if _hooks:
+        _used, _which = _uses_wow(full, _hooks)
+        checks.append({"name": "영상 밖 정보", "ok": _used,
+                       "detail": ("'%s' 를 썼다" % _which[:40]) if _used else
+                       ("찾아온 사실을 하나도 안 썼다 — 화면에 이미 보이는 얘기만 하면 "
+                        "시청자가 볼 이유가 없다. 아래 중 **하나**를 대본 가운데에 "
+                        "네 말투로 풀어 넣어라: %s" % " / ".join(h[:40] for h in _hooks[:3]))})
+
     tgt = density_target(style, seconds)
-    # ★위 천장(hi)은 말속도 환산 길이를 절대 못 넘는다 — 안 그러면 245자로 시켜놓고
-    #   343자(=42초)까지 통과시켜 "30초짜리"가 다시 40초가 된다(2026-08-18).
-    _cap = int(_speech_cps() * max(5, min(int(seconds or 30), 90)))
-    lo, hi = int(tgt * DENSITY_LO), min(int(tgt * DENSITY_HI), _cap)
+    # ★천장은 말속도 환산 길이를 못 넘고(2026-08-18), 바닥은 시킨 초를 채워야 한다
+    #   (2026-09-09). 둘 다 `density_range` 한 곳에서 정한다 — 조립도 같은 것을 쓴다.
+    lo, hi = density_range(style, seconds)
     n = len(norm(full))
     # ★방향을 말해준다(2026-08-18 사장님 "40초 대본이 나오는데 고친 거 아니었나").
     #   예전 detail은 "300자 / 히트작 245자"라 넘쳤는지 모자란지가 안 드러났고, 재작성
