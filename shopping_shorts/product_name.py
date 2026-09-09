@@ -27,6 +27,7 @@ vision_tags의 subject/keywords는 **분위기어가 지배**한다. 아카이�
 """
 import concurrent.futures as _fut
 import json
+import sys
 
 from pipeline.atoms import key_vault
 from shopping_shorts import comment_gen
@@ -183,3 +184,144 @@ def same_product(a, b):
     # 부분문자열(붙여쓴 상품명 대비): '채칼세트' ⊃ '채칼'
     ja, jb = "".join(sorted(ca)), "".join(sorted(cb))
     return ja in jb or jb in ja
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# 쿠팡 검색용 판독(2026-09-05) — 위 _PROMPT/identify_many와 **목적이 다르다**
+# ════════════════════════════════════════════════════════════════════════════
+# 위쪽은 "같은 제품 영상 모으기"용이다. 자막을 일부러 무시시켜 범주어("벽선반")를
+# 얻는데, same_product가 핵심어 하나만 겹쳐도 같다고 보므로 그게 오히려 잘 묶인다.
+#
+# 쿠팡 검색은 정반대다 — **살 물건 하나를 특정**해야 한다. 실측(2026-09-05 사장님 제보):
+# 랭킹 카드 버튼에 "벽선반"·"청소용 스펀지"·"프라이팬"이 박혀 쿠팡에서 엉뚱한 게 나왔다.
+# 원인은 프리워밍이 **썸네일 이미지만** 보낸 것 + 그 프롬프트가 자막을 껐다는 것 둘 다.
+#
+# ★그래서 여기서는 캡션 본문을 이미지와 **같이** 준다. 모델 호출은 그대로 1회 —
+#   추가 비용·시간이 0이다(대본 추출은 영상 업로드라 완전히 다른 급의 비용: 0.1P 과금).
+# ⚠️ 위 _PROMPT를 고쳐 재사용하지 않는다. identify_many는 아카이브 유사도(app.py 2곳)와
+#    product_backfill이 같이 쓴다 — 프롬프트를 건드리면 그 묶기가 조용히 바뀐다(0순위-B).
+# ⚠️ 캐시도 따로다(vision_tags.shop_product). 같은 칸에 쓰면 위와 같은 사고가 난다.
+_SHOP_PROMPT = """이 이미지는 한국어 쇼츠 영상의 썸네일이고, 아래는 그 영상에 올린 사람이 쓴 설명 글이다.
+
+이 영상이 소개하는 **물건 하나**를 쿠팡에서 검색할 상품명으로 답하라.
+
+★설명 글에 물건 이름이 적혀 있으면 **그것을 최우선으로 믿어라**(이미지보다 정확하다).
+  글에 없으면 이미지에 실물로 찍힌 물건을 보고 답하라.
+  이미지의 큰 자막 문구는 낚시성이라 그대로 베끼지 마라 — 물건 이름만 가져와라.
+
+★구체적으로: 쓰임새·형태·단수를 붙여 실제로 검색할 이름으로.
+  - 좋은 예: "3단 조립식 벽선반", "무선 노래방 마이크", "슬라이더 지우개", "전동 채칼"
+  - 나쁜 예: "벽선반", "프라이팬", "주방용품", "살림꿀템"  (← 범주어·분위기어는 금지)
+
+★방법·레시피 영상도 **쓰는 물건**이 있으면 그것을 답하라(2026-09-06).
+  "방법을 알려주는 영상"이라는 이유만으로 빈 문자열로 두지 마라 — 그 방법에
+  **반드시 쓰이는 물건**이 있으면 그게 답이다.
+  - 세탁·청소 방법 → 그때 넣는 **세제·세정제·도구** ("산소계 표백제", "배수구 세정제")
+  - 레시피 → ①만든 **완성품**을 파는 것이면 그것 ②아니면 핵심 **재료**나 **조리도구**
+    ("냉동 생지", "식빵 슬라이서", "부침가루", "실리콘 찜기")
+  - 설명 글의 해시태그에 상품명이 있으면 그것을 쓴다(#살균세제 → "살균 세탁세제")
+
+★물건을 일부러 숨긴 낚시 문구("이것만 넣으세요", "이거 하나면")여도 포기하지 마라.
+  글과 이미지의 **맥락으로 좁혀지는 물건**이 있으면 그것을 답하라.
+  예) "배추 절일 때 소금만 넣지 말고 이것" → 절임 맥락에서 흔히 쓰는 재료를 이미지에서 찾아라
+  ⚠️ 단 이미지에도 근거가 없으면 그때는 빈 문자열이다 — 상상해서 찍지는 마라.
+
+★"정보성 영상이라서" / "상품을 홍보하지 않아서"는 빈 문자열의 이유가 **못 된다**.
+  이 판독은 광고인지 아닌지를 묻는 게 아니다 — **그 영상을 보고 사고 싶어질 물건**을 묻는다.
+  요리 팁·살림 팁은 거의 언제나 재료나 도구를 쓴다. 그것을 답하라.
+
+★product를 빈 문자열로 둘 경우 — 아래 넷뿐이다:
+  1. 맛집·장소·여행처럼 **살 수 있는 물건 자체가 없는** 영상
+  2. 몸으로만 하는 것(스트레칭·자세 교정처럼 도구가 안 쓰이는 것)
+  3. 물건이 여러 개 나열되기만 하고 주인공이 없는 영상
+  4. 글에도 이미지에도 **근거가 전혀 없어** 무엇인지 못 정할 때
+  ⚠️ 상상해서 찍지는 마라. 다만 **화면이나 글에 물건이 보이는데** 빈 문자열로 두는 것이
+     틀린 상품명보다 더 나쁘다.
+
+JSON으로만 답하라: {"product": "구체적 상품명 또는 빈 문자열", "why": "근거 한 줄"}"""
+
+_SHOP_SCHEMA = {"type": "object",
+                "properties": {"product": {"type": "string"}, "why": {"type": "string"}},
+                "required": ["product"]}
+
+
+def _identify_shop_one(image_bytes, caption_text):
+    """썸네일 + 캡션본문 → 쿠팡 검색용 상품명. 실패·키소진은 None(재시도 대상).
+
+    ""(빈 문자열)은 '살 물건 없음' 확정이라 캐시에 남긴다 — None과 구분한다.
+    이미지가 없어도 캡션만으로 답할 수 있으면 답한다(캡션이 이미지보다 정확한 경우가 있다)."""
+    try:
+        from google.genai import types
+
+        from shopping_shorts import video_analysis
+    except Exception:      # noqa: BLE001 — 비전 모듈 없으면 조용히 포기
+        return None
+    cap = (caption_text or "").strip()
+    if not image_bytes and not cap:
+        return None                                  # 근거가 아예 없다
+    body = _SHOP_PROMPT + "\n\n설명 글:\n" + (cap if cap else "(없음)")
+    for _ in range(3):
+        key, idx = comment_gen._next_live_key_and_idx()
+        if key is None:
+            return None
+        try:
+            client = video_analysis._client_for_key(key)
+            parts = [body]
+            if image_bytes:
+                parts.append(types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg"))
+            r = client.models.generate_content(
+                model=video_analysis._TRANSLATE_MODEL, contents=parts,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json", response_schema=_SHOP_SCHEMA))
+            return (json.loads(r.text).get("product") or "").strip()
+        except Exception as e:      # noqa: BLE001
+            if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
+                comment_gen._mark_key_exhausted(idx, key_vault.retry_delay_seconds(e), exc=e)
+                continue
+            if key_vault.is_quota_error(e):
+                continue           # 429는 다음 키로 — 화면이 기다리고 있다
+            print(f"[shop_product] 판독 실패(무해): {type(e).__name__}: {e}", file=sys.stderr)
+            return None
+    return None
+
+
+def identify_shop_many(items, db_path, max_workers=_MAX_WORKERS, out_no_evidence=None):
+    """[{shortcode, thumbnail, caption}] → {shortcode: 상품명}. 캐시된 건 안 묻는다.
+
+    캐시는 vision_tags.shop_product(묶기용 product와 별도). 판정 실패는 저장하지 않아
+    다음 기회에 다시 시도한다 — 빈 문자열('살 물건 없음')만 확정으로 저장한다.
+
+    out_no_evidence: 리스트를 주면 **근거가 0이라 모델을 부르지도 못한** shortcode를 담아준다
+    (썸네일 만료 + 캡션 없음). '살 물건 없음'과 화면에서 갈라 보여주기 위한 것이다."""
+    from shopping_shorts import coupang_query, video_analysis
+    store = Store(db_path)
+    codes = [i.get("shortcode") for i in items if i.get("shortcode")]
+    cached = store.shop_products_map(codes)
+    todo = [i for i in items if i.get("shortcode") and i["shortcode"] not in cached
+            and (i.get("thumbnail") or coupang_query.caption_body(i.get("caption") or ""))]
+    if not todo:
+        return cached
+
+    def _work(it):
+        img = video_analysis.fetch_thumb_bytes(it.get("thumbnail")) if it.get("thumbnail") else None
+        cap = coupang_query.caption_body(it.get("caption") or "")
+        if not img and not cap:
+            # ★근거가 0이다(썸네일 만료 + 캡션 없음) — 모델을 부를 수조차 없다.
+            #   "살 물건 없음"과 구분해야 한다(2026-09-06): 화면이 둘을 같게 보여주면
+            #   사장님이 "왜 이렇게 없다고 나오나"로 읽는다. 실측 3,191건 중 2,771건(87%).
+            return it["shortcode"], None, True
+        return it["shortcode"], _identify_shop_one(img, cap), False
+
+    out = dict(cached)
+    no_evidence = []
+    with _fut.ThreadPoolExecutor(max_workers=max_workers) as ex:
+        for sc, p, blind in ex.map(_work, todo):
+            if blind:
+                no_evidence.append(sc)
+            if p is None:
+                continue            # 판정 실패 — 캐시에 안 남긴다(재시도)
+            store.save_shop_product(sc, p)
+            out[sc] = p
+    if out_no_evidence is not None:
+        out_no_evidence.extend(no_evidence)    # 호출부가 리스트를 주면 거기 담아준다
+    return out

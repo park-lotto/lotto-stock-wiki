@@ -28,12 +28,13 @@ from shopping_shorts.scene_match import match_scene_assets, match_sfx
 from shopping_shorts import tts
 from shopping_shorts import typecast_tts
 from shopping_shorts import audio_post
+from shopping_shorts import tts_joined
 from shopping_shorts import config
 from shopping_shorts import usage_meter
 from shopping_shorts import single_source
 from shopping_shorts import script_lang
 from shopping_shorts.video_assemble import assemble, _beat_timeline, _beat_material, _probe_duration, _MAX_SLOWMO, preview_preset
-from shopping_shorts.video_assemble import prepend_still
+from shopping_shorts.video_assemble import prepend_still, cta_cut_sec
 from shopping_shorts.motion_assets import resolve_layers, DEFAULT_ASSETS_DIR
 from shopping_shorts.motion_packs import build_plan, load_packs
 from shopping_shorts.vmake_client import remove_subtitles
@@ -184,11 +185,10 @@ def _cache_keys_for_url(url):
 # 성우 미선택(2단계 미리보기 등) 기본 성우 = 미나·표현(kr-mina-expressive, 2026-07-25 사장님 확정).
 # 예전 기본은 config.ELEVENLABS_VOICE_ID(Rachel=영어 성우)라 성우를 고르기 전 미리보기가
 # 영어 성우로 한국어를 읽었다. 값은 assets/voice_presets.json의 kr-mina-expressive 스냅샷.
+# ★성우 값의 정본은 typecast_tts.FALLBACK_VOICE 하나다(0순위-B) — 타입캐스트를 껐을 때의
+#   대체 성우와 여기 기본 성우가 같은 값이라, 두 벌로 적으면 언젠가 어긋난다.
 _DEFAULT_VOICE = {
-    "preset_id": "kr-mina-expressive",
-    "voice_id": "aiUUgjHa4mpHf6UenZuf",
-    "model_id": "eleven_v3",
-    "settings": {"stability": 0.35, "similarity_boost": 0.78, "style": 0.4},
+    **typecast_tts.FALLBACK_VOICE,
     # ★1.4 (2026-08-22 사장님 지시 — 2.2는 실제로 들어보니 말도 안 되게 빨랐다).
     #   ⚠️아래 "메종 8.45자/초"는 **자막 글자수 ÷ 영상 길이**로 낸 값이라
     #     사람이 말하는 속도가 아니다(무음·화면전환·자막만 있는 구간이 섞였다).
@@ -222,6 +222,12 @@ def _voice_params(voice):
     스냅샷은 /api/mix/voice가 프리셋에서 통째로 복사해 넣는다 — naturalize_profile·model_id가
     빠지면 튜닝 작업대에서 동결한 값이 렌더에 도달하지 못한다(2026-07-15 whole-branch 리뷰 S1/S8)."""
     v = voice or _DEFAULT_VOICE
+    # ★타입캐스트를 껐으면(TYPECAST_ENABLED=0) 이미 저장된 타입캐스트 스냅샷도 여기서
+    #   일레븐랩스 성우로 갈아끼운다(2026-09-07). 안 갈면 3단계에서 "타입캐스트 오류"가
+    #   그대로 난다 — 고객이 옛날에 고른 성우가 job.voice에 통째로 박혀 있기 때문이다.
+    #   voice_id·model_id·settings는 **짝**이라 함께 바꾼다(0순위-B: 따로 바꾸면 어긋난다).
+    if typecast_tts.use_fallback(v.get("model_id")):
+        v = {**v, **typecast_tts.FALLBACK_VOICE}
     speed = v.get("speed", 1.0)
     model_id = v.get("model_id") or "eleven_v3"
     # ★타입캐스트는 API가 tempo 0.5~2.0을 직접 받는다(2026-08-19). 일레븐랩스처럼
@@ -252,23 +258,15 @@ def _hook_opener_on(customer_id):
         return True
 
 
-def synthesize_line(narration, out_path, *, voice=None, profile=None, beat_role=None,
-                    beat_index=None, beat_total=None, previous_text=None, next_text=None,
-                    ranker=asr_ranker, global_pron=None, customer_id=0, hook_opener=None):
-    """한 줄을 naturalize→TTS(N-best·연속성)→후처리까지 합성하고 변환텍스트를 반환.
+def line_profile(prof_v, profile=None, *, global_pron=None, hook_opener=None,
+                 customer_id=0, script_endings=False):
+    """한 줄을 합성할 때 쓸 naturalize 프로파일을 만든다 — **판정은 여기 한 곳**.
 
-    **튜닝 작업대와 실제 렌더가 공유하는 단일 경로**다. 양쪽이 각자 파이프라인을 조립하면
-    인자가 갈려 "작업대에서 들은 소리 ≠ 영상 소리"가 된다(2026-07-15 리뷰 S3/S4/S5/S6).
-    새 호출부를 만들지 말고 이 함수를 쓸 것.
-
-    profile 미지정 시 voice 스냅샷의 naturalize_profile을 쓴다. seed/n_best는 merge_profile을
-    거친 값으로 읽어 텍스트와 오디오가 같은 기준을 보게 한다(S10).
-
-    customer_id: **누구 키로 합성하나**(2026-08-24). 0=사장님 키(기존 동작 그대로).
-    하류는 이미 다 뚫려 있었다 — synthesize_best(**kw)가 그대로 넘기고
-    synthesize_tts→tts._api_key→keyroute.keys_for가 받는다. 여기만 안 받아서
-    회원이 일레븐랩스 키를 등록해도 항상 사장님 키로 돌았다(keyroute.py 주석 참조)."""
-    voice_id, settings, speed, extra_tempo, trim, prof_v, model_id, pace_mode = _voice_params(voice)
+    synthesize_line(비트별 경로)과 tts_joined(통짜 합성 경로)가 같은 프로파일을
+    보게 하려고 뽑았다(0순위-B: 같은 판단을 두 군데 적으면 반드시 어긋난다).
+    prof_v = 보이스 스냅샷의 naturalize_profile. 나머지 인자 의미는
+    synthesize_line의 docstring과 같다.
+    """
     prof = merge_profile(profile if profile is not None else prof_v)
     # 전역 발음교정을 profile 위에 병합(설계 §2-A) — 렌더·작업대 공통 choke.
     prof = pron_corrections.overlay(prof, global_pron or {})
@@ -280,6 +278,49 @@ def synthesize_line(narration, out_path, *, voice=None, profile=None, beat_role=
     if hook_opener is False or (hook_opener is None and not _hook_opener_on(customer_id)):
         prof = copy.deepcopy(prof)
         prof.setdefault("fillers", {})["on"] = False
+    # ★대본이 정한 어미는 대본이 이긴다(2026-09-04 사장님 제보 "대본생성 어미 ~다. 수정 >
+    #   영상대본MIX 미리듣기 ~요< 자동 수정됨"). 뿌리는 0순위-B — 어미를 정하는 곳이
+    #   둘이었다: ①대본생성(스타일·프롬프트, 사장님이 손으로 고침) ②여기 naturalize의
+    #   `spoken_style`(_SPOKEN_MAP: 습니다→어요, 입니다→이에요…). ②가 ①을 덮어썼다.
+    #   ★더 나쁜 건 통째로 바꾸는 게 아니라는 점이다 — intensity(기본 0.4)가 "앞에서부터
+    #   그 비율만" 바꾸므로 한 대본 안에서 어미가 **섞인다**. 실측:
+    #     '가격도 착합니다. 성능도 좋습니다. 후회 없습니다.'
+    #       → '가격도 착해요… 성능도 좋아요. 후회 없습니다.'
+    #   자막은 대본(습니다)인데 소리는 어요라 **글자와 말이 어긋난다**.
+    #   ⚠️naturalize를 통째로 끄지 않는다 — 감탄사·속삭임·발음교정·억양은 TTS가 사람처럼
+    #   읽게 하는 별개 기능이다. 어미 치환 한 단계만 대본에 양보한다.
+    if script_endings:
+        prof = copy.deepcopy(prof)      # 호출자 프리셋 오염 금지(얕은복사 원본오염 전례)
+        prof.setdefault("spoken_style", {})["on"] = False
+    return prof
+
+
+def synthesize_line(narration, out_path, *, voice=None, profile=None, beat_role=None,
+                    beat_index=None, beat_total=None, previous_text=None, next_text=None,
+                    ranker=asr_ranker, global_pron=None, customer_id=0, hook_opener=None,
+                    script_endings=False):
+    """한 줄을 naturalize→TTS(N-best·연속성)→후처리까지 합성하고 변환텍스트를 반환.
+
+    **튜닝 작업대와 실제 렌더가 공유하는 단일 경로**다. 양쪽이 각자 파이프라인을 조립하면
+    인자가 갈려 "작업대에서 들은 소리 ≠ 영상 소리"가 된다(2026-07-15 리뷰 S3/S4/S5/S6).
+    새 호출부를 만들지 말고 이 함수를 쓸 것.
+
+    profile 미지정 시 voice 스냅샷의 naturalize_profile을 쓴다. seed/n_best는 merge_profile을
+    거친 값으로 읽어 텍스트와 오디오가 같은 기준을 보게 한다(S10).
+
+    script_endings: **대본이 정한 어미가 이긴다**(2026-09-04 사장님 제보 "대본생성 어미
+    ~다. 수정 > 미리듣기 ~요 자동 수정됨"). True면 `spoken_style`(문어체→구어체 어미
+    치환)만 끄고 나머지 단계는 그대로 돈다. 기본 False = 종전 동작(회귀 0).
+    자세한 근거는 아래 그 처리 자리 주석 참조.
+
+    customer_id: **누구 키로 합성하나**(2026-08-24). 0=사장님 키(기존 동작 그대로).
+    하류는 이미 다 뚫려 있었다 — synthesize_best(**kw)가 그대로 넘기고
+    synthesize_tts→tts._api_key→keyroute.keys_for가 받는다. 여기만 안 받아서
+    회원이 일레븐랩스 키를 등록해도 항상 사장님 키로 돌았다(keyroute.py 주석 참조)."""
+    voice_id, settings, speed, extra_tempo, trim, prof_v, model_id, pace_mode = _voice_params(voice)
+    prof = line_profile(prof_v, profile, global_pron=global_pron,
+                       hook_opener=hook_opener, customer_id=customer_id,
+                       script_endings=script_endings)
     natural = naturalize(narration, prof, beat_role=beat_role,
                          beat_index=beat_index, beat_total=beat_total)
     # 오독 자동회피(2026-07-22): Whisper 랭커(GROQ 키)가 실동작할 때만 n을 최소 2로
@@ -295,17 +336,11 @@ def synthesize_line(narration, out_path, *, voice=None, profile=None, beat_role=
                         voice_id=voice_id, voice_settings=settings, speed=speed,
                         model_id=model_id, previous_text=previous_text, next_text=next_text,
                         customer_id=customer_id)
-    # ★무음 제거 '전에' 어디를 자를지 재서 사이드카에 남긴다(2026-08-06). post_process는
-    # 제자리 덮어쓰기라 뒤에는 원본 타임라인을 알 길이 없다. 이 구간들이 있어야 TTS
-    # 타임스탬프를 조각별로 당겨 자막을 맞출 수 있다(선형사상으론 누적 드리프트가 남는다).
-    # 반환값 대신 사이드카에 쓰는 이유: synthesize_line 호출부가 6곳이고 대부분 반환값을
-    # 대사 텍스트로 쓴다 — 시그니처를 바꾸면 그 전부와 기존 스텁이 깨진다.
-    if pace_mode:
-        try:
-            tts_timestamps.save_removed(str(out_path),
-                                        audio_post.measure_removed_spans(str(out_path)))
-        except Exception:
-            pass                  # 측정 실패 = 선형 폴백(기존 동작), 렌더는 계속
+    # 무음삭제 구간 기록 + 후처리는 audio_post.finish_line_audio **한 곳**에서 한다
+    # (2026-09-06) — 통짜 경로(tts_joined)의 조각도 같은 함수로 마무리해야 쉼·여백이
+    # 갈리지 않는다(0순위-B). 반환값 대신 사이드카에 쓰는 이유: synthesize_line 호출부가
+    # 6곳이고 대부분 반환값을 대사 텍스트로 쓴다 — 시그니처를 바꾸면 그 전부와 기존
+    # 스텁이 깨진다.
     # 비트별 라우드니스 정규화는 **실제 음성일 때만** — 키 없는 개발용 무음 mock에
     # loudnorm을 걸면 무음 바닥을 노이즈로 끌어올린다(reference_local_tts_silent_mock_trap).
     # ★"실제 음성인가"는 그 비트가 쓰는 엔진의 키로 판정한다(2026-08-19). 종전엔
@@ -317,10 +352,55 @@ def synthesize_line(narration, out_path, *, voice=None, profile=None, beat_role=
     has_voice_key = (bool(typecast_tts.api_key(customer_id))
                      if typecast_tts.is_typecast(model_id)
                      else bool(config.ELEVENLABS_API_KEY))
-    audio_post.post_process(str(out_path), str(out_path), tempo=extra_tempo,
-                            silence_trim=trim, pace_mode=pace_mode,
-                            loudnorm=has_voice_key)
+    audio_post.finish_line_audio(str(out_path), tempo=extra_tempo, silence_trim=trim,
+                                 pace_mode=pace_mode, loudnorm=has_voice_key)
     return natural
+
+
+def finalize_beat_audio(beat, out, *, trim_tail=True):
+    """합성된 비트 mp3 하나를 마무리한다 — 무음 트림·실측 길이·자막 타이밍.
+
+    비트별 경로(_synthesize_beats)와 통짜 경로(tts_joined) **둘 다** 이 함수를 쓴다.
+    각자 마무리를 조립하면 "작업대에서 들은 것 ≠ 영상"이 다시 생긴다(0순위-B).
+
+    trim_tail: 기본 True. 통짜 경로도 True다(2026-09-06) — 통짜 조각은 원음의 문단 사이
+    쉼을 이웃과 나눠 갖고 잘려 나오므로 비트별 조각과 똑같이 끝 무음을 다듬어야 한다.
+    (처음엔 "연속 음성을 중간점에서 잘라 붙이면 원본"이라며 False였는데, 그 전제 자체가
+    무음삭제·apad를 조각별로 거치는 지금 구조에선 성립하지 않는다.)
+    """
+    # ★비트 끝 무음 트림(2026-07-22) — 각 비트 TTS 뒤 자연 무음(호흡·여백)을 잘라 이어붙임을
+    # 딱 맞춘다. 안 자르면 비트 경계마다 dead-air가 남아 뚝뚝 끊긴다(레퍼런스 릴스는 무음 0).
+    # 뒤만 자르고 작은 여백을 남겨 급함·클릭 방지. 실패·mock은 원본 유지(무해).
+    if trim_tail:
+        try:
+            audio_post.trim_tail_silence(out, out)
+        except Exception:
+            traceback.print_exc(file=sys.stderr)
+    # UI '영상 길이'는 target_seconds 합인데, 추정(글자÷5.7)은 보이스 speed를 못 봐서
+    # 빠른 보이스(speed>1)면 실제 음성보다 길게 잡혀 '음성이 짧아요' 오경고가 떴다.
+    # 실제 발화초로 덮어 UI·조립(tts_dur)·최종영상을 한 값으로 맞춘다(2026-07-21).
+    # probe 실패(손상·미존재 mp3)는 조용히 추정 유지 — target 덮어쓰기는 부가기능이라 죽이면 안 된다.
+    try:
+        _ad = _probe_duration(str(out))
+    except Exception:
+        _ad = None
+    if _ad and _ad > 0:
+        beat["target_seconds"] = round(_ad, 1)
+    # 자막 타이밍용: 실제 말한 워드 시각으로 구절 표시시간 계산(실패/키없음 → 미설정=폴백).
+    beat["cap_durs"] = None
+    beat["cap_lead"] = 0.0
+    _ensure_breath_lines(beat)   # 폴백 칸이면 Gemini 호흡 끊기(실패=규칙 폴백)
+    words, _wsrc = _beat_words_src(str(out), _ad, removed=tts_timestamps.load_removed(str(out)))
+    _timing = None
+    if words:
+        _timing = caption_sync.phrase_durs_from_words(
+            beat["narration"], words, _ad or 0.0,
+            preset=beat.get("caption_lines"))   # None일 수 있음 → 폴백
+        if _timing:
+            beat["cap_durs"] = _timing.durs
+            beat["cap_lead"] = _timing.lead_in
+    # 산출 단계 기록(⑦a) — 정렬까지 성공해야 그 단이다. 실패하면 글자수 추정.
+    beat["cap_src"] = _wsrc if (words and _timing) else "estimate"
 
 
 def _beat_tts_path(tts_dir, beat):
@@ -368,9 +448,62 @@ def mismatched_beats(beats):
     return [b.get("beat_idx") for b in (beats or []) if not tts_matches_narration(b)]
 
 
+def job_script_endings(job):
+    """이 잡은 **대본이 어미를 정하는** 잡인가 (2026-09-04).
+
+    참이면 음성 합성이 `spoken_style`(문어체→구어체 어미 치환)을 건너뛴다 — 사장님이
+    2단계에서 확정·수정한 어미가 미리듣기·렌더에 그대로 나간다.
+
+    판정 기준 = `given_script`(1단계에서 확정한 대본)이 있나. 그 잡의 나레이션은 사람이
+    쓰거나 승인한 문장이므로 어미도 사람 것이다. 반대로 given_script가 없는 잡은 AI가
+    나레이션을 새로 쓰므로 종전대로 구어체 다듬기를 받는다(회귀 0).
+
+    ★판정을 여기 한 곳에만 둔다 — 호출부 5곳이 각자 `job.get("given_script")`를 보면
+    언젠가 한 곳이 어긋난다(0순위-B: 같은 판단 두 군데 = 반드시 어긋난다).
+    """
+    return bool((job or {}).get("given_script") or "")
+
+
+def _try_joined(beats, tts_dir, *, voice, skip_existing, global_pron,
+                customer_id, script_endings):
+    """통짜 합성 시도 — 성공하면 True(비트별 경로를 건너뛴다).
+
+    ★"한 칸만 다시"가 없다: 통짜의 값어치는 전 비트가 **한 번의 발화**라는 데 있다.
+    일부만 다시 구우면 그 칸만 톤이 달라져 애초의 증상으로 돌아간다. 그래서
+    skip_existing이어도 다시 구울 비트가 하나라도 있으면 전부 다시 굽는다.
+    (전부 최신이면 굽지 않고 True — 0원, 종전과 같다.)
+    """
+    total = len(beats)
+    outs = [Path(_beat_tts_path(tts_dir, b)) for b in beats]
+    if skip_existing and all(b.get("tts_path") == str(o) and o.exists()
+                             for b, o in zip(beats, outs)):
+        return True
+    voice_id, settings, speed, extra_tempo, trim, prof_v, model_id, pace_mode = _voice_params(voice)
+    prof = line_profile(prof_v, None, global_pron=global_pron,
+                        customer_id=customer_id, script_endings=script_endings)
+    naturals = [naturalize(b["narration"], prof, beat_role=b.get("role"),
+                           beat_index=i, beat_total=total)
+                for i, b in enumerate(beats)]
+    seed = prof.get("seed") if prof.get("seed") is not None else _PINNED_TTS_SEED
+    ok = tts_joined.synthesize_joined(
+        beats, naturals, [str(o) for o in outs], voice_id=voice_id, settings=settings,
+        speed=speed, model_id=model_id, extra_tempo=extra_tempo,
+        customer_id=customer_id, seed=seed, work_dir=tts_dir,
+        silence_trim=trim, pace_mode=pace_mode)
+    if not ok:
+        return False
+    for beat, out in zip(beats, outs):
+        beat["tts_path"] = str(out)
+        finalize_beat_audio(beat, out)      # 조각도 비트별과 같은 마무리(2026-09-06)
+    return True
+
+
 def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron=None,
-                      customer_id=0):
+                      customer_id=0, script_endings=False):
     """비트별로 synthesize_line 호출. beat['tts_path']를 채운다.
+
+    script_endings: 확정 대본(given_script) 잡인가 — 참이면 대본이 정한 어미를 음성이
+    덮어쓰지 않는다(2026-09-04). 판정은 `job_script_endings()` 한 곳에서만 한다.
     연속성(previous_text/next_text)은 인접 비트의 '원문'(naturalize 전) narration을 쓴다
     — naturalize된 텍스트(오디오 태그·추임새 포함)를 연속성으로 넘기면 ElevenLabs가
     태그를 발화 텍스트로 오인할 수 있어서다.
@@ -404,42 +537,21 @@ def _synthesize_beats(beats, tts_dir, *, voice, skip_existing=False, global_pron
             previous_text=beats[i - 1]["narration"] if i > 0 else None,
             next_text=beats[i + 1]["narration"] if i < total - 1 else None,
             global_pron=global_pron, customer_id=customer_id,
+            script_endings=script_endings,
         )
         beat["tts_path"] = str(out)
-        # ★비트 끝 무음 트림(2026-07-22) — 각 비트 TTS 뒤 자연 무음(호흡·여백)을 잘라 이어붙임을
-        # 딱 맞춘다. 안 자르면 비트 경계마다 dead-air가 남아 뚝뚝 끊긴다(레퍼런스 릴스는 무음 0).
-        # 뒤만 자르고 작은 여백을 남겨 급함·클릭 방지. 실패·mock은 원본 유지(무해).
-        try:
-            audio_post.trim_tail_silence(out, out)
-        except Exception:
-            traceback.print_exc(file=sys.stderr)
-        # UI '영상 길이'는 target_seconds 합인데, 추정(글자÷5.7)은 보이스 speed를 못 봐서
-        # 빠른 보이스(speed>1)면 실제 음성보다 길게 잡혀 '음성이 짧아요' 오경고가 떴다.
-        # 실제 발화초로 덮어 UI·조립(tts_dur)·최종영상을 한 값으로 맞춘다(2026-07-21).
-        # probe 실패(손상·미존재 mp3)는 조용히 추정 유지 — target 덮어쓰기는 부가기능이라 죽이면 안 된다.
-        try:
-            _ad = _probe_duration(str(out))
-        except Exception:
-            _ad = None
-        if _ad and _ad > 0:
-            beat["target_seconds"] = round(_ad, 1)
-        # 자막 타이밍용: 실제 말한 워드 시각으로 구절 표시시간 계산(실패/키없음 → 미설정=폴백).
-        beat["cap_durs"] = None
-        beat["cap_lead"] = 0.0
-        _ensure_breath_lines(beat)   # 폴백 칸이면 Gemini 호흡 끊기(실패=규칙 폴백)
-        words, _wsrc = _beat_words_src(str(out), _ad, removed=tts_timestamps.load_removed(str(out)))
-        _timing = None
-        if words:
-            _timing = caption_sync.phrase_durs_from_words(
-                beat["narration"], words, _ad or 0.0,
-                preset=beat.get("caption_lines"))   # None일 수 있음 → 폴백
-            if _timing:
-                beat["cap_durs"] = _timing.durs
-                beat["cap_lead"] = _timing.lead_in
-        # 산출 단계 기록(⑦a) — 정렬까지 성공해야 그 단이다. 실패하면 글자수 추정.
-        beat["cap_src"] = _wsrc if (words and _timing) else "estimate"
+        finalize_beat_audio(beat, out)
 
     if total == 0:
+        return
+    # ★통짜 합성(2026-09-05) — 자막 전환 지점의 목소리 튐을 뿌리에서 없앤다.
+    #   전부 한 번에 굽고 정렬로 잘라내므로 조각 사이에 톤·볼륨·배속 차이가
+    #   생길 자리가 없다. 실패하면 아래 비트별 경로로 그대로 내려간다(라이브 안전).
+    #   기본 off — TTS_JOINED=1로 켠다(검증 안 된 플래그를 라이브에 켜지 않는다).
+    if tts_joined.enabled() and _try_joined(
+            beats, tts_dir, voice=voice, skip_existing=skip_existing,
+            global_pron=global_pron, customer_id=customer_id,
+            script_endings=script_endings):
         return
     _t0 = datetime.now(timezone.utc)
     workers = max(1, min(config.TTS_MAX_WORKERS, total))
@@ -720,7 +832,8 @@ def _prepare_sources(urls, work, store=None):
             ops_alert.raise_alert(
                 "source_download",
                 "소스 영상 다운로드가 전부 실패했습니다 — 수집 통로가 끊겼을 수 있습니다",
-                detail, store=store)
+                detail, store=store,
+                todo="고객 작업이 멈춥니다 — 소스 링크를 직접 열어 통로(인스타·유튜브)가 막혔는지 확인")
         except Exception as _ae:      # noqa: BLE001 — 알림 실패가 본작업을 막지 않는다
             # ★사유는 남긴다(2026-08-19 F-2). 알림이 조용히 죽으면 "사고가 났는데
             #   아무도 모른다"가 되고, 그게 이 알림을 만든 이유(08-03 실사고)였다.
@@ -919,6 +1032,45 @@ def _owned_job(fn):
 
 
 @_owned_job
+def humanize_tts_error(err, has_own_key=None):
+    """TTS 실패 원문을 고객이 읽고 **뭘 해야 하는지 아는** 한 줄로 바꾼다(2026-09-07).
+
+    사장님: "만약에 정말 등록이 안되었으면 tts 키를 재등록해주세요 문구 남겨".
+
+    왜 필요한가(실측): 최일환님(cid 291) job 7ebb65e720da가
+        "401 Client Error: Unauthorized for url: https://api.elevenlabs.io/..."
+    로만 실패해 3단계에서 멈췄다. 원문만 보면 "인증 실패"로 읽히는데 실제 원인은
+    **음성 크레딧 소진**이었다(그 계정 남은 문자 2자). 화면에도 이 원문이 그대로
+    떠서 고객은 무엇을 해야 할지 알 수 없었다.
+
+    ★일레븐랩스는 잔액 소진도 401로 준다 — 코드만 보고 "키가 틀렸다"고 단정하면
+      안 된다. 그래서 안내는 두 가지를 함께 말한다(재등록 / 크레딧 확인).
+    ★원문은 버리지 않고 뒤에 붙인다 — 우리가 원인을 다시 찾을 때 필요하다.
+    """
+    raw = str(err or "")
+    low = raw.lower()
+    tip = None
+    if "elevenlabs" in low or "typecast" in low or "text-to-speech" in low:
+        if "401" in raw or "unauthorized" in low or "invalid_api_key" in low:
+            tip = ("🎙 음성(TTS) 키에 문제가 있어요. "
+                   "설정에서 **TTS 키를 재등록**해 주세요. "
+                   "키가 맞다면 음성 서비스의 **남은 크레딧**을 확인해 주세요 "
+                   "(잔액이 떨어져도 같은 오류가 납니다).")
+        elif "402" in raw or "quota" in low or "credit" in low:
+            tip = ("🎙 음성(TTS) 크레딧이 부족해요. "
+                   "음성 서비스에서 크레딧을 채우거나, 설정에서 **TTS 키를 재등록**해 주세요.")
+        elif "404" in raw or "not found" in low:
+            tip = ("🎙 고른 성우를 그 키로 찾을 수 없어요. "
+                   "다른 성우를 고르거나 설정에서 **TTS 키를 재등록**해 주세요.")
+        elif "429" in raw or "rate" in low:
+            tip = "🎙 음성 서비스가 잠시 붐빕니다. 1~2분 뒤 다시 시도해 주세요."
+    if not tip:
+        return raw
+    if has_own_key is False:
+        tip += " (지금은 등록된 개인 TTS 키가 없어 공용 키로 만들고 있습니다.)"
+    return f"{tip}\n\n[원문] {raw}"
+
+
 def run_mix_job(job_id, db_path, work_root):
     """다운로드→추출→EDL→TTS. 완료 시 status='ready_for_review'."""
     # 이 job 안에서 나가는 모든 Gemini 콜에 job_id·customer_id를 붙인다(2026-08-16).
@@ -995,6 +1147,11 @@ def run_mix_job(job_id, db_path, work_root):
                     segs = None
                 if segs and all(s.get("seg_id") for s in segs):
                     r = {"segments": segs, "full_text": (cached.get("full_text") or "")}
+                    # ★B1 산출(번역 전문·빈 묘사 비율)도 캐시에서 물려준다(2026-09-05 리뷰 M5) — 빠지면 외국 소스의
+                    #   대본 재료(app: full_text_ko or full_text)가 원문으로 떨어진다.
+                    for _k in ("full_text_ko", "tag_empty_ratio"):
+                        if cached.get(_k) not in (None, ""):
+                            r[_k] = cached[_k]
                     # ★영상 단위 요약을 함께 물려준다(2026-08-17). 여기서 캐시의 **일부
                     #   필드만** 골라 담기 때문에 source_brief가 통째로 떨어져 나갔다 —
                     #   도서관 추출본엔 있는데 job의 extract엔 없어서, 재태깅을 해도
@@ -1060,6 +1217,7 @@ def run_mix_job(job_id, db_path, work_root):
                           job["structure"], None, work, given_script=job.get("given_script"),
                           voice=job.get("voice"), customer_id=job.get("customer_id", 0),
                           scene_first=job.get("scene_first", False),
+                          script_structure=job.get("script_structure"),
                           reference_text=job.get("given_script") or "",
                           # 핑퐁(대본↔장면 왕복 행위매칭): 전역 설정으로 on/off(기본 off·회귀0).
                           # 스키마 컬럼 없이 한 스위치로 켠다 — store.set_setting('ping_pong_enabled','1').
@@ -1074,7 +1232,7 @@ def run_mix_job(job_id, db_path, work_root):
                           global_pron=_gpron)
         except Exception as e:
             traceback.print_exc(file=sys.stderr)
-            store.update_mix_job(job_id, status="failed", error=str(e))
+            store.update_mix_job(job_id, status="failed", error=humanize_tts_error(e))
             # 유료게이트: 렌더 실패 → 예약한 'render' 크레딧 환불(계정+전역). 실패했는데 크레딧만
             # 날아가면 시니어에겐 '고장'으로 읽힌다(하루 2회뿐). points 실패환불(_fx_render_job)과 대칭.
             # ★render_charge_day가 있는 job만(=/api/mix/start가 실제 과금한 것) 환불하고, 딱 그 날짜로
@@ -1320,7 +1478,7 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
                   given_script=None, voice=None, customer_id=0,
                   scene_first=False, reference_text="", ping_pong=False,
                   backbone_meta=None, backbone_forced=None, backbone_base=False,
-                  global_pron=None):
+                  global_pron=None, script_structure=None):
     """EDL 생성(3) + 비트별 TTS(4) → edit_plan 저장 + ready_for_review.
     run_mix_job(자동판별, video_type=None)과 retype_mix_job(사용자 선택 유형)이 공유.
     given_script: 있으면 확정 대본을 그대로 비트로 쪼개 영상만 매칭(영상제작 2단계).
@@ -1373,7 +1531,21 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
         print("[mix] 확정 대본이 있어 scene_first를 끈다 — 대본은 그대로, 화면만 매칭"
               " (%d자)" % len((given_script or "").strip()), file=sys.stderr)
         scene_first = False
-    if scene_first:
+    # ★3단계 상속(2026-09-04, 스위치 edl_inherit_enabled → script_structure.inherit_scenes): 2단계가 줄마다
+    #   남긴 출처 장면을 그대로 잇는다(Gemini 0회, 추측 층 없음). 못 이으면(줄·출처 개수 불일치 등) None →
+    #   아래 옛 경로 그대로(회귀 0).
+    plan = None
+    _ss = script_structure if isinstance(script_structure, dict) else {}
+    if (given_script or "").strip() and _ss.get("inherit_scenes") and _ss.get("beat_sources"):
+        from shopping_shorts.edit_plan import build_inherit_plan
+        plan = build_inherit_plan(source_scripts, given_script, _ss.get("beat_sources"),
+                                  structure=structure, video_type=video_type)
+        print("[mix] 3단계 상속: %s" % ("비트 %d개(출처 %d줄)" % (
+            len(plan["beats"]), sum(1 for b in plan["beats"] if b.get("inherited")))
+            if plan else "이을 수 없어 옛 경로로"), file=sys.stderr)
+    if plan is not None:
+        pass
+    elif scene_first:
         from shopping_shorts.edit_plan import build_scene_first_plan
         # 부품은행 주입(P0-2): 설정 bank_enabled=1일 때만 승인 훅·어미·부사·CTA·스파인을 조립해
         # 영상 대본 프롬프트에 실어준다. 기본 off → 회귀0. 매 job 상위 perf 풀에서 로테이션
@@ -1531,7 +1703,8 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     # 4) 비트별 TTS (naturalize + N-best + 연속성 + 프리셋 후처리)
     store.update_mix_job(job_id, status="tts")
     _synthesize_beats(plan["beats"], work / "tts", voice=voice, global_pron=global_pron,
-                      customer_id=customer_id)
+                      customer_id=customer_id,
+                      script_endings=job_script_endings({"given_script": given_script}))
 
     # 4.2) 프리즈 뿌리 fix(2026-07-21) — 화면을 **실 TTS 길이**만큼 재보정한다. fill은 plan
     # 시점에 나레이션 추정(글자÷5.7)으로 채웠는데, 빠른 보이스면 실제 TTS가 추정과 달라 생긴
@@ -1552,10 +1725,16 @@ def _plan_and_tts(store, job_id, source_scripts, target_seconds, structure, vide
     # 4.9) ★게이트 교정 루프(2026-07-25) — 최종 plan(refill·conform 뒤)을 보고 위반이면
     # 통과할 때까지 재픽(상한 3). 경고만 하던 관문을 '통과시키는 관문'으로. 순수·무과금·
     # 나레이션 불변. 실패해도 job은 안 죽인다(순수 계산).
-    try:
-        _run_gate_correction(plan, source_scripts, target_seconds)
-    except Exception:
-        traceback.print_exc(file=sys.stderr)
+    # ★상속 계획(generator="inherit")은 게이트 재픽을 **지나지 않는다**(2026-09-05 리뷰 H1). 재픽의 "인접 컷 연속 끊기"
+    #   규칙이 상속의 "앞 비트 다음 컷" b-roll과 정면 충돌해 primary를 뒤에서 바꿨다 — 그러면 inherited·fit·배지·교체 기록이
+    #   전부 거짓이 된다. 결정하는 곳은 2단계 한 곳이다(0순위-B). gate엔 건너뛴 이유만 남긴다.
+    if (plan or {}).get("generator") == "inherit":
+        plan["gate"] = {"skipped": "inherit", "why": "2단계 출처 상속 — 재픽·교정 층을 지나지 않는다"}
+    else:
+        try:
+            _run_gate_correction(plan, source_scripts, target_seconds)
+        except Exception:
+            traceback.print_exc(file=sys.stderr)
 
     # ★카드=TTS 일치(2026-07-27 실사고 "대본이랑 TTS가 다르게 나온다"): 추천 후보는 위에서
     #   _conform_beats/_refill로 나레이션이 재작성됐는데, candidates_json(카드가 읽는 것)은
@@ -1581,10 +1760,10 @@ def retype_mix_job(job_id, video_type, db_path, work_root):
         _plan_and_tts(store, job_id, source_scripts, job["target_seconds"],
                       job["structure"], video_type, work, given_script=job.get("given_script"),
                       voice=job.get("voice"), customer_id=job.get("customer_id", 0),
-                      global_pron=_gpron)
+                      global_pron=_gpron, script_structure=job.get("script_structure"))
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
-        store.update_mix_job(job_id, status="failed", error=str(e))
+        store.update_mix_job(job_id, status="failed", error=humanize_tts_error(e))
         # 🎁 무료체험: 재타이핑(유형 변경 후 EDL+TTS 재생성)이 실패해도 체험 1회를 돌려준다.
         #   run_render 실패 환불과 대칭 — 체험자가 재타이핑 실패로 유일한 1회를 잃고 잠기는 걸 막는다.
         #   유료(render_charge_day=날짜)는 미환불(기존 동작). usage_decr는 0 밑으로 안 가 이중환불 안전.
@@ -2908,7 +3087,8 @@ def run_clean_sources(job_id, db_path, work_root):
             try:
                 _synthesize_beats(plan_for_tts["beats"], work / "tts", voice=job.get("voice"),
                                   skip_existing=True, global_pron=_gpron,
-                                  customer_id=job.get("customer_id", 0))
+                                  customer_id=job.get("customer_id", 0),
+                                  script_endings=job_script_endings(job))
                 # ★훅 시작점도 여기서 확정한다 — 조립(_render_mix)이 첫 장면 start를
                 #   피크 시점으로 **in-place로 옮긴다**(video_assemble._apply_hook_inpoint).
                 #   그게 청소 뒤에 일어나면 서명이 또 바뀌어 렌더에서 재청소된다.
@@ -2981,6 +3161,31 @@ def run_clean_sources(job_id, db_path, work_root):
 
 
 @_owned_job
+# ── 편성 지문(2026-09-02) ───────────────────────────────────────────────────
+# 왜: 미리보기를 만든 뒤 편성(대본·컷)이 바뀌어도 **미리보기 파일은 그대로 남는다**.
+# 고객은 낡은 미리보기와 새 최종을 나란히 받아 "영상이 두 개다 / 장면이 바뀌었다"로 본다
+# (실사고 job 76665d680876: 미리보기 09-01 23:31 vs 최종 09-02 10:05, 8개 시점 전부 다른 컷).
+# 그래서 **무엇으로 만들었는지**를 지문으로 남기고, 달라졌으면 화면이 말하게 한다.
+# ★지문 만드는 곳은 여기 한 곳이다(0순위-B) — 만들 때와 비교할 때가 어긋나면 소용없다.
+def plan_signature(plan):
+    """편성 지문 — 화면에 보이는 것이 달라지는 값만 넣는다(문장·컷·길이)."""
+    import hashlib
+    import json as _json
+    beats = ((plan or {}).get("beats") or [])
+    body = [{
+        "n": (b or {}).get("narration") or "",
+        "s": (b or {}).get("seg_ids") or [],
+        "c": (b or {}).get("cutaway") or "",
+        "d": round(float((b or {}).get("seconds") or 0), 2),
+    } for b in beats]
+    raw = _json.dumps(body, ensure_ascii=False, sort_keys=True)
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:16]
+
+
+def preview_sig_path(work_root, job_id):
+    return Path(work_root) / job_id / "preview.sig"
+
+
 def run_preview(job_id, db_path, work_root):
     """1단계 미리보기: 유료 자막제거(VMake)·꾸미기 없이 믹스+음성+기본자막만 렌더.
 
@@ -3014,7 +3219,8 @@ def run_preview(job_id, db_path, work_root):
         #   조립 직전 스스로 낫는다 — 이미 있는 비트는 skip(재과금 0), 빠진 비트만 합성.
         #   합성 결과(tts_path)를 edit_plan에 되박아 최종 렌더가 재합성 없이 재사용하게 한다.
         _synthesize_beats(plan["beats"], work / "tts", voice=job.get("voice"), skip_existing=True,
-                          global_pron=_gpron, customer_id=job.get("customer_id", 0))
+                          global_pron=_gpron, customer_id=job.get("customer_id", 0),
+                          script_endings=job_script_endings(job))
         store.update_mix_job(job_id, edit_plan=plan)
         tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan["beats"] if b.get("tts_path")}
         source_video_paths = _resolve_sources(job, work)
@@ -3038,6 +3244,12 @@ def run_preview(job_id, db_path, work_root):
             ensure_faststart(out_path)
         except Exception as e:      # 실패해도 원본은 그대로 — 미리보기를 못 쓰게 만들진 않는다
             print(f"[preview] faststart 보장 실패(원본 유지): {type(e).__name__}", file=sys.stderr)
+        # 이 미리보기가 **무슨 편성으로** 만들어졌는지 남긴다 — 나중에 편성이 바뀌면
+        # 화면이 "낡았다"고 말할 수 있다(못 써도 미리보기 자체는 정상이라 조용히 넘어간다).
+        try:
+            preview_sig_path(work_root, job_id).write_text(plan_signature(plan), encoding="utf-8")
+        except Exception:
+            print("[preview] 편성 지문 기록 실패(무시)", file=sys.stderr)
         store.update_mix_job(job_id, preview_status="ready", preview_path=str(out_path))
     except Exception as e:  # noqa: BLE001 — BackgroundTasks라 밖에서 아무도 안 받는다
         traceback.print_exc(file=sys.stderr)
@@ -3142,7 +3354,8 @@ def run_render(job_id, db_path, work_root):
         # ★TTS 보장(2026-07-21) — run_preview와 같은 방어심층. 미리보기를 건너뛰고 바로 렌더에
         #   와도(또는 TTS 없는 후보가 edit_plan에 있어도) 조립 직전 스스로 낫는다. 이미 있으면 skip.
         _synthesize_beats(plan["beats"], work / "tts", voice=job.get("voice"), skip_existing=True,
-                          global_pron=_gpron, customer_id=job.get("customer_id", 0))
+                          global_pron=_gpron, customer_id=job.get("customer_id", 0),
+                          script_endings=job_script_endings(job))
         store.update_mix_job(job_id, edit_plan=plan)
         tts_paths = {b["beat_idx"]: b["tts_path"] for b in plan["beats"] if b.get("tts_path")}
         source_video_paths = _resolve_sources(job, work)
@@ -3207,16 +3420,37 @@ def run_render(job_id, db_path, work_root):
         #   켠 경우에만 돈다. 실패해도 렌더 자체는 살린다 — 인트로 때문에 완성 영상을
         #   통째로 잃는 게 더 나쁘다(실패는 로그로만 남기고 원본 final.mp4를 그대로 쓴다).
         _thumb = job.get("thumbnail") or {}
+        # 인트로가 실제로 붙은 길이(초). CTA 잘라내기가 이만큼 밀어서 저장한다.
+        # ★prepend_still은 성공 여부를 bool로 돌려준다 — 켰는데 실패했을 수 있으므로
+        #   "켰다"가 아니라 "붙었다"로 판단한다(실패했는데 밀면 그만큼 일찍 잘린다).
+        _intro_shift = 0.0
         if _thumb.get("intro"):
             try:
                 _png = _thumb_intro_png(job, _thumb)
                 if _png:
-                    prepend_still(str(out_path), str(_png),
-                                                 seconds=float(_thumb.get("intro_sec") or 1.2))
+                    _intro_sec = float(_thumb.get("intro_sec") or 1.2)
+                    if prepend_still(str(out_path), str(_png), seconds=_intro_sec):
+                        _intro_shift = _intro_sec
                 else:
                     print(f"[thumb-intro] {job_id}: 붙일 썸네일 PNG를 못 찾음", file=sys.stderr)
             except Exception:
                 traceback.print_exc(file=sys.stderr)
+        # ✂ CTA 잘라내기(2026-09-05 사장님 "유튜브 올릴 땐 뒷부분만 잘라내고 싶다").
+        #   완성본에서 CTA 비트가 시작하는 시각을 지금 구해 DB에 박아둔다. 렌더가 끝나면
+        #   이 값을 다시 구하기가 어렵다 — 비트별 절대시각은 어디에도 저장되지 않고,
+        #   TTS mp3로 재계산해야 하는데 그 작업폴더는 청소 대상이라 언젠가 사라진다.
+        #   ★자를 지점을 정하는 곳은 video_assemble.cta_cut_sec 하나다(0순위-B) —
+        #     여기서 role을 다시 검사하면 렌더가 박은 키프레임과 어긋난다.
+        #   ★인트로(prepend_still)를 붙였으면 그만큼 **밀어서** 저장한다. 안 밀면
+        #     인트로를 켠 영상만 그 길이만큼 일찍 잘린다.
+        #   실패해도 렌더는 살린다 — 잘라내기 버튼 하나 때문에 완성본을 잃을 수 없다.
+        try:
+            _cta_cut = cta_cut_sec(_beat_timeline(plan, tts_paths))
+            if _cta_cut:
+                _cta_cut += _intro_shift
+            store.update_mix_job(job_id, cta_cut_sec=_cta_cut)
+        except Exception:
+            traceback.print_exc(file=sys.stderr)
         # ★moov 앞으로(faststart). 안 하면 moov가 파일 끝에 남아, 헤더만 읽어 판단하는
         #   외부 수집기가 영상을 못 읽는다 — Buffer 실측 2026-08-30:
         #   "Invalid post: Video could not be read from its URL"(HEAD 200인데 거절).
@@ -3226,7 +3460,7 @@ def run_render(job_id, db_path, work_root):
         store.update_mix_job(job_id, status="done", video_path=str(out_path))
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
-        store.update_mix_job(job_id, status="failed", error=str(e))
+        store.update_mix_job(job_id, status="failed", error=humanize_tts_error(e))
         # 🎁 무료체험 이벤트: 최종 렌더(자막제거·조립)가 실패하면 체험 1회를 돌려준다(재도전 가능).
         #   과금은 /api/mix/start(run_mix_job 단계)에서 한 번뿐이고 최종렌더는 같은 job의 뒷단계라,
         #   run_mix_job이 성공해 여기까지 온 체험 job은 실패해도 환불이 안 됐다 → 여기서 메운다.
@@ -3325,8 +3559,9 @@ def resynth_tts_job(job_id, db_path, work_root):
     try:
         _synthesize_beats(plan["beats"], work / "tts", voice=job.get("voice"),
                           global_pron=pron_corrections.load(store),
-                          customer_id=job.get("customer_id", 0))
+                          customer_id=job.get("customer_id", 0),
+                          script_endings=job_script_endings(job))
         store.update_mix_job(job_id, edit_plan=plan, status="ready_for_review")
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
-        store.update_mix_job(job_id, status="failed", error=str(e))
+        store.update_mix_job(job_id, status="failed", error=humanize_tts_error(e))

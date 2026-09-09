@@ -1,0 +1,21 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "LS일렉트릭",
+      "signal": "bull",
+      "reason": "HVDC 기술 국산화 및 에너지 고속도로 사업 추진에 따른 성장성 기대",
+      "ts": null,
+      "quote": "HVDC 국산화 앞장···LS일렉트릭, 에너지 고속도로 정조준",
+      "sector": "전력"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "LS일렉트릭이 HVDC 국산화를 주도하며 에너지 고속도로 사업을 정조준함",
+      "ts": "2026-07-24 15:40",
+      "quote": "HVDC 국산화 앞장···LS일렉트릭, 에너지 고속도로 정조준"
+    }
+  ],
+  "quote": "HVDC 국산화 앞장···LS일렉트릭, 에너지 고속도로 정조준"
+}

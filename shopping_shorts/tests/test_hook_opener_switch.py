@@ -130,9 +130,17 @@ def test_대본이_이미_부름말로_열었으면_음성이_또_안_붙인다(
 
 
 def test_음성쪽_배선이_끊기지_않았다():
+    """★소스 문자열이 아니라 **동작**으로 본다(2026-09-05).
+
+    종전엔 synthesize_line의 소스에 `["on"] = False`가 있는지 봤다. 그런데 이 판단은
+    통짜 합성 경로(tts_joined)와 공유하려고 `line_profile`로 옮겨졌고, 기능은 멀쩡한데
+    테스트만 깨졌다 — 위치를 검사하면 정당한 이동조차 회귀로 잡힌다.
+    지금은 "스위치를 끄면 fillers가 실제로 꺼지는가"를 프로파일로 확인한다."""
     import inspect
     from shopping_shorts import mix_pipeline
-    src = inspect.getsource(mix_pipeline.synthesize_line)
-    assert "hook_opener=None" in inspect.signature(mix_pipeline.synthesize_line).__str__() \
-        or "hook_opener" in src, "음성 쪽이 스위치를 안 본다"
-    assert '["on"] = False' in src, "스위치를 꺼도 fillers가 안 꺼진다"
+    assert "hook_opener" in inspect.signature(mix_pipeline.synthesize_line).__str__(), \
+        "음성 쪽이 스위치를 안 본다"
+    off = mix_pipeline.line_profile(None, None, hook_opener=False)
+    assert off["fillers"]["on"] is False, "스위치를 꺼도 fillers가 안 꺼진다"
+    on = mix_pipeline.line_profile(None, None, hook_opener=True)
+    assert on["fillers"]["on"] is True, "스위치를 켰는데 fillers가 꺼져 있다"

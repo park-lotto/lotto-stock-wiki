@@ -152,7 +152,9 @@ def test_runout_no_slack_extends_out_only_and_empty_plan_safe():
     _extend_last_clip_for_runout(plan, segs, 1.0)
     assert plan[-1]["src_dur"] == 3.0 and plan[-1]["out_dur"] == 4.0
     assert _extend_last_clip_for_runout([], segs, 1.0) == []   # 빈 plan 무해
-    assert _LAST_RUNOUT == 1.0
+    # 여운 기계는 살아 있지만 **기본값은 꺼져 있다**(2026-09-04 사장님 지시).
+    # 숏폼은 대사 끝에서 바로 컷 — 값만 올리면 위 3개 테스트가 보증하는 기계가 그대로 돈다.
+    assert _LAST_RUNOUT == 0.0
 
 
 # ── T1: 편집안 화면 배지(소스 앵커) ─────────────────────────────

@@ -95,3 +95,73 @@ def test_소스별_청소본은_안_건드린다(monkeypatch, tmp_path):
     after = store.get_mix_job("j1")
     assert after.get("clean_sources") == before
     assert after.get("clean_status") == "ready", "clean_status를 지우면 자막제거를 다시 돌리게 된다"
+
+
+# ── 확정대본 모드에서 지운 칸이 되살아난다 (2026-09-06 고객 재제보) ─────────────
+# job 3ec9df659411(work c55d6f8988e8, 26.피규어) — 09-06 새벽 beat_idx 중복을 고친
+# 뒤에도 "삭제가 안 된다"가 그대로였다. 라이브 실측으로 갈라 보니 **다른 층**이었다:
+#
+#   삭제 필터 직후(app.py가 넘기는 값)  : 6칸 [0,1,2,3,4,6]
+#   ① enforce_scripted_narration 후    : 6칸 [0,1,2,3,4,6]
+#   ② enforce_script_order 후          : 7칸 [0,1,2,3,4,5,6]  ← 여기서 부활
+#
+# store.update_mix_job이 저장 직전 _ensure_screen_time을 부르고, 그 안의
+# enforce_script_order가 "확정대본 7줄인데 칸이 6개다 → 줄마다 칸 하나로 다시 짜라"
+# (edit_plan.py `_lines_mode and len(targets) != len(sents)` 분기)로 지운 칸을 되살린다.
+#
+# ★API는 ok:True, deleted:5를 반환하면서 실제로는 안 지워졌다(left:7) — 조용한 실패라
+#   화면은 "지웠다"고 하고 새로고침하면 그대로 있었다.
+#
+# 위쪽 기존 테스트들이 못 잡은 이유: given_script 없이 seed하므로 enforce_script_order가
+# 첫 줄에서 곧장 되돌아간다(빈 대본 = 검사 대상 아님). 확정대본을 줘야 재현된다.
+
+_SCRIPT = "\n".join(f"문장{i}입니다." for i in range(3))
+
+
+def _seed_scripted(store, n=3):
+    """확정대본(given_script) 모드 — 고객 job과 같은 조건.
+
+    ★extract가 있어야 한다. _ensure_screen_time은 extract가 비면 첫머리에서 그대로
+      돌아가므로(store.py `if not extract: return plan`), 없으면 확정대본 검사 자체가
+      돌지 않아 이 버그가 재현되지 않는다(위 기존 테스트들이 못 잡은 이유이기도 하다).
+    """
+    store.create_mix_job("j2", ["u0"], 20, "free", given_script=_SCRIPT)
+    store.update_mix_job("j2", status="ready_for_review", extract={
+        "s0": {"segments": [
+            {"seg_id": f"s0-{i}", "start": float(i) * 2, "end": float(i) * 2 + 2.0,
+             "text": "", "scene_desc": f"장면{i}"} for i in range(n + 3)]}},
+        edit_plan={
+            "structure": "free",
+            "beats": [_beat(i, f"문장{i}입니다.") for i in range(n)],
+            "plagiarism_flags": []})
+
+
+def test_확정대본_모드에서도_지운_칸이_되살아나지_않는다(monkeypatch, tmp_path):
+    client, store = _client(monkeypatch, tmp_path)
+    _seed_scripted(store)
+    r = client.post("/api/mix/scene_lab/j2/beat/1/delete")
+    assert r.status_code == 200, r.text
+    beats = store.get_mix_job("j2")["edit_plan"]["beats"]
+    idxs = [b["beat_idx"] for b in beats]
+    assert 1 not in idxs, f"지운 칸이 확정대본 검사로 되살아났다: {idxs}"
+    assert idxs == [0, 2], idxs
+
+
+def test_삭제_응답의_left가_실제_저장된_칸수와_같다(monkeypatch, tmp_path):
+    """ok:True인데 안 지워지는 조용한 실패를 막는다 — 응답과 DB가 어긋나면 안 된다."""
+    client, store = _client(monkeypatch, tmp_path)
+    _seed_scripted(store)
+    r = client.post("/api/mix/scene_lab/j2/beat/1/delete")
+    assert r.status_code == 200, r.text
+    left = r.json()["left"]
+    real = len(store.get_mix_job("j2")["edit_plan"]["beats"])
+    assert left == real, f"응답 left={left} 인데 실제 저장은 {real}칸"
+
+
+def test_삭제해도_남은_칸의_대사는_안_바뀐다(monkeypatch, tmp_path):
+    """비례 재배분이 돌면 남은 칸에 옛 문장이 쪼개져 붙는다(2026-08-25 실사고와 같은 모양)."""
+    client, store = _client(monkeypatch, tmp_path)
+    _seed_scripted(store)
+    client.post("/api/mix/scene_lab/j2/beat/1/delete")
+    beats = store.get_mix_job("j2")["edit_plan"]["beats"]
+    assert [b["narration"] for b in beats] == ["문장0입니다.", "문장2입니다."]

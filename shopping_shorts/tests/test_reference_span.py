@@ -73,8 +73,11 @@ class TestApiWiring:
         seen = {}
 
         class _S:
-            def hits_since(self, days, min_comments=500):
+            def hits_since(self, days, min_comments=500, platform="instagram",
+                           min_views=0):
                 seen["days"], seen["min"] = days, min_comments
+                seen["platform"] = platform          # 2026-09-04: 플랫폼도 전달돼야 한다
+                seen["min_views"] = min_views        # 2026-09-04: 유튜브는 조회수 기준
                 return []
 
             def removed_usernames(self):
@@ -85,7 +88,32 @@ class TestApiWiring:
         monkeypatch.setattr(app_mod, "_attach_durations", lambda *a, **k: None)
         monkeypatch.setattr(app_mod, "_attach_posted_at", lambda *a, **k: None)
         app_mod.api_reference(platform="instagram", days=7, min_comments=500)
-        assert seen == {"days": 7, "min": 500}
+        assert seen == {"days": 7, "min": 500, "platform": "instagram", "min_views": 0}
+
+    def test_유튜브도_기간탭이_열린다(self, monkeypatch):
+        """★2026-09-04 사장님 "유튜브는 48시간으로만 되어있는데 이번주·이번달도".
+        여태 platform!='instagram'이면 **빈 목록**을 돌려줘 유튜브는 기간탭이 통째로 죽어 있었다.
+        이제 플랫폼을 그대로 store로 넘긴다(추가 크롤은 여전히 0)."""
+        from shopping_shorts import app as app_mod
+        seen = {}
+
+        class _S:
+            def hits_since(self, days, min_comments=500, platform="instagram",
+                           min_views=0):
+                seen["platform"] = platform
+                seen["min_views"] = min_views
+                return []
+
+            def removed_usernames(self):
+                return set()
+
+        monkeypatch.setattr(app_mod, "Store", lambda *a, **k: _S())
+        monkeypatch.setattr(app_mod, "_attach_vision_tags", lambda *a, **k: None)
+        monkeypatch.setattr(app_mod, "_attach_durations", lambda *a, **k: None)
+        monkeypatch.setattr(app_mod, "_attach_posted_at", lambda *a, **k: None)
+        app_mod.api_reference(platform="youtube", days=7, min_comments=0, min_views=100000)
+        assert seen.get("platform") == "youtube", "유튜브가 store까지 안 갔다(옛 인스타 전용 차단)"
+        assert seen.get("min_views") == 100000, "조회수 문턱이 store까지 안 갔다"
 
 
 class TestFrontend:
@@ -94,10 +122,18 @@ class TestFrontend:
         spans = re.findall(r'data-span="(\d+)"', html)
         assert spans == ["0", "7", "30"]
 
-    def test_30일탭은_문턱1000(self):
-        html = _INDEX.read_text(encoding="utf-8")
-        assert "30: 1000" in html.replace(" ", " ")
+    def test_기간탭_문턱(self):
+        """2026-09-07 하향: 7일 500→200, 30일 1000→300.
 
+        왜 내렸나(서버 실측 2026-09-07, 인스타 4,255건):
+          이번주 댓글500+ = 148건 < 48시간 탭 315건
+            ← 기간을 넓혔는데 오히려 적어지는 역전이 나 있었다.
+          200+ = 610건 / 30일 300+ = 937건으로 역전이 풀린다.
+        종전 1000의 근거였던 "500이면 692건이라 명예의전당이 안 된다"는
+        채널이 적던 시기의 얘기다. 지금은 문턱이 재고를 말리는 쪽으로 뒤집혔다.
+        """
+        html = _INDEX.read_text(encoding="utf-8")
+        assert "7: 200" in html and "30: 300" in html
     def test_기간0일땐_days파라미터를_안붙인다(self):
         # 붙이면 첫 화면이 이력 조회로 새버린다
         html = _INDEX.read_text(encoding="utf-8")

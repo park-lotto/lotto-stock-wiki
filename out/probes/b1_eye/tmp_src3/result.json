@@ -1,0 +1,468 @@
+{
+ "segments": [
+  {
+   "seg_id": "s0-0",
+   "start": 0.0,
+   "end": 1.368,
+   "text": "Saat",
+   "text_ko": "",
+   "scene_desc": "손이 은색 탁상시계를 치우자 뒤에 숨어 있던 곰돌이 푸 모양의 노란색 봉제 인형 키링이 드러납니다.",
+   "label": "인형 키링 도입",
+   "use_point": "탁상시계를 치우며 귀여운 인형 키링이 나타나는 연출로, 영상 도입부에서 시청자의 이목을 집중시키기 좋습니다.",
+   "action": null,
+   "change": "시계가 치워지면서 뒤에 숨겨져 있던 인형 키링이 온전히 드러납니다.",
+   "has_effect": true,
+   "is_key": false,
+   "shot_role": "기타",
+   "product_benefits": [
+    "곰돌이 푸 캐릭터 모양의 귀엽고 포근한 봉제 인형 디자인"
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-1",
+   "start": 1.368,
+   "end": 2.736,
+   "text": "kamu sudah membutuhkan kejadian ini, anda kemudian mungkin merasa tak mengerti dengan kejadian yang kheningannya.",
+   "text_ko": "",
+   "scene_desc": "곰돌이 푸 캐릭터 모양의 봉제 인형 키링을 정면 클로즈업하여 상세히 보여줍니다.",
+   "label": "인형 키링 상세",
+   "use_point": "인형의 디테일한 표정과 부드러운 질감을 클로즈업하여 보여주므로 제품의 귀여움을 극대화하는 구간에 어울립니다.",
+   "action": null,
+   "change": "",
+   "has_effect": true,
+   "is_key": false,
+   "shot_role": "기타",
+   "product_benefits": [
+    "부드럽고 푹신한 극세사 재질의 표면 처리"
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-2",
+   "start": 2.736,
+   "end": 4.438,
+   "text": "",
+   "text_ko": "",
+   "scene_desc": "의자 위에 곰돌이 푸 얼굴 모양의 원형 메모리폼 방석을 손으로 꾹 누르며 올려놓습니다.",
+   "label": "원형 방석 소개",
+   "use_point": "방석을 의자에 배치하며 쿠션감을 손으로 가볍게 확인하는 장면으로, 제품 사용 모습과 탄성을 직관적으로 전달합니다.",
+   "action": "누르다",
+   "change": "손으로 누르는 힘에 따라 방석 표면이 부드럽게 눌렸다가 다시 복원됩니다.",
+   "has_effect": true,
+   "is_key": true,
+   "shot_role": "설치",
+   "product_benefits": [
+    "폭신한 복원력을 가진 귀여운 푸 캐릭터 모양의 메모리폼 방석"
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-3",
+   "start": 4.438,
+   "end": 6.34,
+   "text": "",
+   "text_ko": "",
+   "scene_desc": "다양한 캐릭터와 빵 디자인이 담긴 3D 입체 스티커 시트를 손으로 들어서 흔들며 광택을 보여줍니다.",
+   "label": "입체 스티커 소개",
+   "use_point": "투명한 시트지에 인쇄된 다양한 입체 스티커 구성을 한눈에 보여주어 다이어리 꾸미기 등의 부자재 소개에 적합합니다.",
+   "action": "담다",
+   "change": "스티커 시트가 흔들리며 입체적인 스티커들의 광택이 도드라집니다.",
+   "has_effect": true,
+   "is_key": false,
+   "shot_role": "사용중",
+   "product_benefits": [
+    "다양한 푸 캐릭터와 베이커리 디자인이 포함된 입체적인 3D 스티커"
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-4",
+   "start": 6.34,
+   "end": 9.142,
+   "text": "Apakah you eilir-erohkan tempat penyelenggaraan kami karena Anda melakukan sengaja?",
+   "text_ko": "",
+   "scene_desc": "핀셋을 사용하여 하얀색 스마트폰 뒷면에 노란색 푸 얼굴 모양의 3D 입체 스티커를 부착합니다.",
+   "label": "입체 스티커 시연",
+   "use_point": "폰 케이스에 직접 스티커를 붙이는 디테일한 동작을 담고 있어, 제품의 실제 활용법을 보여주는 대목에 제격입니다.",
+   "action": "누르다",
+   "change": "스마트폰 뒷면에 귀여운 입체 스티커들이 하나씩 부착되어 폰이 꾸며집니다.",
+   "has_effect": true,
+   "is_key": true,
+   "shot_role": "사용중",
+   "product_benefits": [
+    "스마트폰 등 소지품을 귀엽게 꾸밀 수 있는 우수한 점착력"
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-5",
+   "start": 9.142,
+   "end": 11.912,
+   "text": "Anda diberitahu bahwa viatana mendekadi tempat penyelenggaraan dana jika Anda memperlukan kejadian! Jadi,",
+   "text_ko": "",
+   "scene_desc": "손으로 노란색 케이스를 열고 내부에서 베이지색 빗을 꺼내며 거울을 보여줍니다.",
+   "label": "빗 거울 세트 시연",
+   "use_point": "케이스에서 빗을 꺼내어 거울과 세트 구성을 확인시켜 주는 장면에 쓰기 좋으며, 실용적인 휴대성을 강조할 수 있습니다.",
+   "action": "열다",
+   "change": "투명한 케이스가 열리고 내부에 수납되어 있던 빗이 밖으로 꺼내집니다.",
+   "has_effect": true,
+   "is_key": true,
+   "shot_role": "조작",
+   "product_benefits": [
+    "빗과 거울이 콤팩트하게 합쳐져 휴대가 편리한 일체형 세트"
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-6",
+   "start": 11.912,
+   "end": 14.147,
+   "text": "saya akan mencari kereta yang dibuat terbaik. Dia",
+   "text_ko": "",
+   "scene_desc": "손으로 식빵 모양에 피글렛과 푸 얼굴이 각각 그려진 헤어 고정 시트 2종을 들어서 정면으로 보여줍니다.",
+   "label": "헤어 고정 시트 소개",
+   "use_point": "귀여운 식빵 모양의 캐릭터 헤어 시트를 정면으로 보여주어, 독특한 디자인의 매력을 어필하는 구간에 사용하기 좋습니다.",
+   "action": null,
+   "change": "손가락 사이에 끼워진 두 종류의 캐릭터 고정 시트가 정면을 향해 보여집니다.",
+   "has_effect": true,
+   "is_key": false,
+   "shot_role": "사용중",
+   "product_benefits": [
+    "식빵 모양 베이스에 푸와 피글렛이 새겨진 귀여운 디자인"
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-7",
+   "start": 14.147,
+   "end": 15.649,
+   "text": "dipercaya sebagai tempat lehat karena ini sesuai kualitas membuatnya sama. Saya",
+   "text_ko": "",
+   "scene_desc": "여성의 검은 머리카락 측면에 식빵 모양의 캐릭터 헤어 고정 시트를 손으로 가볍게 대어 고정시킵니다.",
+   "label": "헤어 고정 시트 시연",
+   "use_point": "머리카락에 시트를 대고 눌러 고정하는 실사용 모습을 직관적으로 보여주어, 제품의 간편한 사용성을 설명할 때 좋습니다.",
+   "action": "누르다",
+   "change": "머리카락 위에 얹은 시트가 흘러내리지 않고 안정적으로 밀착되어 고정됩니다.",
+   "has_effect": true,
+   "is_key": true,
+   "shot_role": "사용중",
+   "product_benefits": [
+    "머리카락을 손쉽게 고정할 수 있는 간편한 부착 방식"
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-8",
+   "start": 15.649,
+   "end": 17.05,
+   "text": "Baiklah. ingin kembali.",
+   "text_ko": "",
+   "scene_desc": "테이블 위에 놓인 갈색의 사각형 퍼프 시트에서 푸 얼굴 모양 메이크업 퍼프 하나를 톡 떼어냅니다.",
+   "label": "뜯어 쓰는 퍼프 소개",
+   "use_point": "일체형 시트에서 퍼프 한 조각을 깔끔하게 뜯어내는 모습을 담고 있어, 신선하고 위생적인 특징을 강조하기 좋습니다.",
+   "action": "당기다",
+   "change": "네모난 전체 시트에서 동그란 푸 캐릭터 퍼프가 한 조각 깔끔하게 분리됩니다.",
+   "has_effect": true,
+   "is_key": true,
+   "shot_role": "사용중",
+   "product_benefits": [
+    "필요할 때마다 하나씩 깔끔하게 떼어내서 쓸 수 있는 편리한 퍼프"
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-9",
+   "start": 17.05,
+   "end": 18.986,
+   "text": "Saya",
+   "text_ko": "",
+   "scene_desc": "폴라로이드 디자인 프레임 속에 두 가지 타입(촉촉물광, 보송매끈)의 퍼프들을 가득 얹은 양손을 보여줍니다.",
+   "label": "퍼프 종류 비교",
+   "use_point": "두 가지 타입의 퍼프 제형과 디자인을 양손에 올려 대조하므로, 제품 라인업을 요약하여 비교하는 장면에 적절합니다.",
+   "action": "올리다",
+   "change": "",
+   "has_effect": true,
+   "is_key": false,
+   "shot_role": "실증",
+   "product_benefits": [
+    "촉촉한 물광용과 보송한 매끈용 두 가지 제형으로 구성된 라인업"
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-10",
+   "start": 18.986,
+   "end": 20.954,
+   "text": "memulai. Gerah",
+   "text_ko": "",
+   "scene_desc": "노란색의 미니 식빵 모양 퍼프 시트에서 손가락으로 식빵 한 개 디자인의 작은 퍼프를 뜯어냅니다.",
+   "label": "미니 퍼프 시연",
+   "use_point": "작은 사이즈의 식빵 모양 퍼프를 똑 떼어내는 손동작을 가까이서 보여주어 디테일한 기능 설명을 돕는 B롤로 유용합니다.",
+   "action": "당기다",
+   "change": "길쭉한 퍼프 띠에서 식빵 모양의 미니 퍼프 한 개가 가볍게 뜯어져 나옵니다.",
+   "has_effect": true,
+   "is_key": true,
+   "shot_role": "사용중",
+   "product_benefits": [
+    "미니 사이즈로 좁은 부위까지 밀착 커버가 가능한 식빵 모양 퍼프"
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-11",
+   "start": 20.954,
+   "end": 22.422,
+   "text": "akan terlibat",
+   "text_ko": "",
+   "scene_desc": "네 손가락 끝에 귀여운 식빵 모양과 푸 캐릭터 디자인의 미니 퍼프들을 각각 끼워 흔들며 연출합니다.",
+   "label": "미니 퍼프 활용",
+   "use_point": "네 손가락 끝에 미니 퍼프를 각각 끼우고 있는 귀여운 모습을 줌아웃하며 보여주어 소장 가치를 높이는 대목에 좋습니다.",
+   "action": "끼우다",
+   "change": "네 개의 손가락 끝에 미니 퍼프들이 각각 꼭 맞게 끼워져 있습니다.",
+   "has_effect": true,
+   "is_key": false,
+   "shot_role": "완성",
+   "product_benefits": [
+    "손가락 끝에 끼워 정교한 터치가 가능한 콤팩트한 미니 퍼프"
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-12",
+   "start": 22.422,
+   "end": 24.825,
+   "text": "diseri dengan memapar ke gempa. Beli mulai.",
+   "text_ko": "",
+   "scene_desc": "손가락으로 곰돌이 캐릭터가 그려진 쿠션 퍼프의 탄성을 보여줌.",
+   "label": "쿠션 퍼프 탄성 시연",
+   "use_point": "제품의 말랑한 재질과 탄성을 시각적으로 강조할 때 사용하면 시청자의 촉각적 호기심을 자극하기 좋습니다.",
+   "action": "누르다",
+   "change": "퍼프가 손가락에 의해 움푹 들어갔다가 다시 돌아온다.",
+   "has_effect": true,
+   "is_key": true,
+   "shot_role": "실증",
+   "product_benefits": [
+    "폭신폭신하고 부드러운 사용감을 주는 탄력 있는 퍼프입니다."
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-13",
+   "start": 24.825,
+   "end": 27.394,
+   "text": "",
+   "text_ko": "",
+   "scene_desc": "손등에 쿠션 퍼프를 가볍게 톡톡 두드리는 모습.",
+   "label": "퍼프 사용 모습 시연",
+   "use_point": "제품의 실제 사용법을 직관적으로 보여주는 대목에서 활용하여 제품 활용도를 쉽게 이해시키기 좋습니다.",
+   "action": "누르다",
+   "change": "퍼프가 손등에 닿으며 가볍게 눌린다.",
+   "has_effect": true,
+   "is_key": true,
+   "shot_role": "사용중",
+   "product_benefits": [
+    "밀착력이 좋아 화장품을 고르게 펴 바르기 적합합니다."
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-14",
+   "start": 27.394,
+   "end": 28.562,
+   "text": "Ayolah,",
+   "text_ko": "",
+   "scene_desc": "접혀있던 빗 거울 세트를 손으로 펼쳐 거울과 빗 부분을 보여줌.",
+   "label": "빗 거울 세트 기능 시연",
+   "use_point": "제품의 휴대성과 접이식 기능을 소개하는 구간에서 제품이 열리고 닫히는 구조를 보여주기에 적합합니다.",
+   "action": "열다",
+   "change": "닫혀있던 거울과 빗이 펼쳐진다.",
+   "has_effect": true,
+   "is_key": true,
+   "shot_role": "조작",
+   "product_benefits": [
+    "빗과 거울이 합쳐진 접이식 디자인으로 휴대성이 뛰어납니다."
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-15",
+   "start": 28.562,
+   "end": 29.463,
+   "text": "",
+   "text_ko": "",
+   "scene_desc": "가방 주머니에 빗 거울 세트를 가볍게 수납하는 모습.",
+   "label": "제품 휴대 예시 시연",
+   "use_point": "일상 속 휴대성을 강조할 때 사용하여 제품이 일상 어디에나 쉽게 휴대 가능하다는 점을 보여주기 좋습니다.",
+   "action": "끼우다",
+   "change": "빗 거울 세트가 주머니 속으로 들어간다.",
+   "has_effect": true,
+   "is_key": false,
+   "shot_role": "사용중",
+   "product_benefits": [
+    "콤팩트한 사이즈로 작은 가방이나 파우치에도 쉽게 들어갑니다."
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-16",
+   "start": 29.463,
+   "end": 32.199,
+   "text": "Ria. Terima kasih telah",
+   "text_ko": "",
+   "scene_desc": "동그란 미니 파츠 거울의 앞면과 뒷면을 손으로 돌려 보여줌.",
+   "label": "미니 거울 디자인 소개",
+   "use_point": "제품의 아기자기한 디자인적 디테일을 클로즈업하여 시각적 매력을 어필하는 대목에 적합합니다.",
+   "action": "뒤집다",
+   "change": "거울이 돌아가며 앞면과 뒷면이 모두 보여진다.",
+   "has_effect": true,
+   "is_key": false,
+   "shot_role": "사용중",
+   "product_benefits": [
+    "귀여운 곰돌이 캐릭터 디자인이 적용된 휴대용 거울입니다."
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-17",
+   "start": 32.199,
+   "end": 33.333,
+   "text": "",
+   "text_ko": "",
+   "scene_desc": "귀여운 귀 모양이 달린 헤어밴드를 착용한 모습.",
+   "label": "헤어밴드 착용 시연",
+   "use_point": "제품 착용 후의 모습을 보여줌으로써 스타일링 효과를 강조하는 대목에서 활용하기 좋습니다.",
+   "action": null,
+   "change": "",
+   "has_effect": true,
+   "is_key": false,
+   "shot_role": "사용중",
+   "product_benefits": [
+    "폭신한 재질의 귀 모양 디자인으로 착용 시 귀여운 느낌을 줍니다."
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-18",
+   "start": 33.333,
+   "end": 34.968,
+   "text": "menonton!",
+   "text_ko": "",
+   "scene_desc": "테이블 위에 놓인 여러 가지 헤어밴드 제품들을 손으로 만지는 모습.",
+   "label": "제품 라인업 소개",
+   "use_point": "다양한 캐릭터 디자인이나 색상을 한눈에 보여주어 구매 선택지를 넓혀주는 대목에 적합합니다.",
+   "action": null,
+   "change": "",
+   "has_effect": true,
+   "is_key": false,
+   "shot_role": "기타",
+   "product_benefits": [
+    "다양한 디자인과 캐릭터 선택지가 있어 취향대로 고를 수 있습니다."
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-19",
+   "start": 34.968,
+   "end": 36.603,
+   "text": "",
+   "text_ko": "",
+   "scene_desc": "글리터가 들어있는 헤어 브러시를 흔들어 내부 글리터가 움직이는 모습을 보여줌.",
+   "label": "글리터 브러시 시연",
+   "use_point": "제품의 시각적 재미 요소인 글리터를 강조하여 트렌디하고 예쁜 소품임을 부각할 때 좋습니다.",
+   "action": null,
+   "change": "브러시 내부의 글리터가 움직이며 섞인다.",
+   "has_effect": true,
+   "is_key": true,
+   "shot_role": "실증",
+   "product_benefits": [
+    "움직이는 글리터가 들어있어 시각적으로 화려하고 예쁩니다."
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-20",
+   "start": 36.603,
+   "end": 37.504,
+   "text": "",
+   "text_ko": "",
+   "scene_desc": "다양한 디자인의 헤어 브러시 제품들이 바구니에 담겨 있는 모습.",
+   "label": "제품 라인업 전시",
+   "use_point": "영상 마무리 단계에서 제품 구성 전체를 보여주어 구매 욕구를 자극하는 배치에 좋습니다.",
+   "action": "담다",
+   "change": "",
+   "has_effect": true,
+   "is_key": false,
+   "shot_role": "완성",
+   "product_benefits": [
+    "다양한 디자인의 브러시가 있어 취향에 맞게 선택이 가능합니다."
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-21",
+   "start": 37.504,
+   "end": 39.473,
+   "text": "",
+   "text_ko": "",
+   "scene_desc": "다이소 디즈니 베이커리 푸 제품들이 테이블 위에 모여 있는 모습.",
+   "label": "브랜드 전체 제품 소개",
+   "use_point": "영상 마지막에 모든 시리즈 제품을 총망라하여 보여줌으로써 브랜드 인지도를 높이는 대목에 배치합니다.",
+   "action": null,
+   "change": "",
+   "has_effect": true,
+   "is_key": false,
+   "shot_role": "완성",
+   "product_benefits": [
+    "디즈니 푸 베이커리 컨셉의 다양한 리빙 및 뷰티 소품들입니다."
+   ],
+   "motion_level": null
+  },
+  {
+   "seg_id": "s0-22",
+   "start": 39.473,
+   "end": 41.034,
+   "text": "",
+   "text_ko": "",
+   "scene_desc": "다이소 로고 텍스트가 화면 중앙에 등장함.",
+   "label": "브랜드 로고 노출",
+   "use_point": "영상의 마지막에 브랜드 로고를 명확히 노출하여 시청자에게 브랜드 정보를 각인시키는 용도로 씁니다.",
+   "action": null,
+   "change": "",
+   "has_effect": true,
+   "is_key": false,
+   "shot_role": "기타",
+   "product_benefits": [],
+   "motion_level": null
+  }
+ ],
+ "full_text": "Saat kamu sudah membutuhkan kejadian ini, anda kemudian mungkin merasa tak mengerti dengan kejadian yang kheningannya. Apakah you eilir-erohkan tempat penyelenggaraan kami karena Anda melakukan sengaja? Anda diberitahu bahwa viatana mendekadi tempat penyelenggaraan dana jika Anda memperlukan kejadian! Jadi, saya akan mencari kereta yang dibuat terbaik. Dia dipercaya sebagai tempat lehat karena ini sesuai kualitas membuatnya sama. Saya Baiklah. ingin kembali. Saya memulai. Gerah akan terlibat diseri dengan memapar ke gempa. Beli mulai. Ayolah, Ria. Terima kasih telah menonton!",
+ "product_benefits": [
+  "곰돌이 푸 캐릭터 모양의 귀엽고 포근한 봉제 인형 디자인",
+  "부드럽고 푹신한 극세사 재질의 표면 처리",
+  "폭신한 복원력을 가진 귀여운 푸 캐릭터 모양의 메모리폼 방석",
+  "다양한 푸 캐릭터와 베이커리 디자인이 포함된 입체적인 3D 스티커",
+  "스마트폰 등 소지품을 귀엽게 꾸밀 수 있는 우수한 점착력",
+  "빗과 거울이 콤팩트하게 합쳐져 휴대가 편리한 일체형 세트",
+  "식빵 모양 베이스에 푸와 피글렛이 새겨진 귀여운 디자인",
+  "머리카락을 손쉽게 고정할 수 있는 간편한 부착 방식",
+  "필요할 때마다 하나씩 깔끔하게 떼어내서 쓸 수 있는 편리한 퍼프",
+  "촉촉한 물광용과 보송한 매끈용 두 가지 제형으로 구성된 라인업",
+  "미니 사이즈로 좁은 부위까지 밀착 커버가 가능한 식빵 모양 퍼프",
+  "손가락 끝에 끼워 정교한 터치가 가능한 콤팩트한 미니 퍼프",
+  "폭신폭신하고 부드러운 사용감을 주는 탄력 있는 퍼프입니다.",
+  "밀착력이 좋아 화장품을 고르게 펴 바르기 적합합니다.",
+  "빗과 거울이 합쳐진 접이식 디자인으로 휴대성이 뛰어납니다.",
+  "콤팩트한 사이즈로 작은 가방이나 파우치에도 쉽게 들어갑니다.",
+  "귀여운 곰돌이 캐릭터 디자인이 적용된 휴대용 거울입니다.",
+  "폭신한 재질의 귀 모양 디자인으로 착용 시 귀여운 느낌을 줍니다.",
+  "다양한 디자인과 캐릭터 선택지가 있어 취향대로 고를 수 있습니다.",
+  "움직이는 글리터가 들어있어 시각적으로 화려하고 예쁩니다.",
+  "다양한 디자인의 브러시가 있어 취향에 맞게 선택이 가능합니다.",
+  "디즈니 푸 베이커리 컨셉의 다양한 리빙 및 뷰티 소품들입니다."
+ ],
+ "source_brief": {},
+ "tag_empty_ratio": 0.0,
+ "transcript_status": "ok",
+ "full_text_ko": ""
+}

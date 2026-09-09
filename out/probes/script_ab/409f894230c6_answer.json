@@ -1,0 +1,17 @@
+[
+ {
+  "pair": 1,
+  "A": "gemini-3.5-flash",
+  "B": "gemini-3.1-flash-lite"
+ },
+ {
+  "pair": 2,
+  "A": "gemini-3.5-flash",
+  "B": "gemini-3.1-flash-lite"
+ },
+ {
+  "pair": 3,
+  "A": "gemini-3.1-flash-lite",
+  "B": "gemini-3.5-flash"
+ }
+]

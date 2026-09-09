@@ -96,12 +96,30 @@ def measure_removed_spans(in_path, threshold=None, min_dur=None):
     # 앞무음은 start_silence(0.05)만 넘어도 잘리고 내부는 stop_duration(0.3) 이상만 잘린다.
     # 더 짧은 쪽으로 잡아 앞무음을 놓치지 않고, 내부 구간은 아래에서 길이로 걸러낸다.
     d = _PACE_START_SILENCE if min_dur is None else min_dur
+    spans = []
+    for start, end in detect_silences(in_path, thr, d):
+        if start <= 1e-3:
+            # 앞무음: start_periods=1이 통째로 걷어낸다.
+            spans.append((start, end))
+        elif (end - start) >= _PACE_STOP_DURATION:
+            # ★내부 무음은 '삭제'가 아니라 stop_duration까지 '줄이기'다(2026-08-06 실측).
+            # silenceremove는 0.3초를 남긴다 — 전체를 지운다고 보면 뒤 단어를 너무
+            # 많이 당겨 자막이 이번엔 반대로 빨라진다(실측: 2.2초 감지 vs 실제 1.433초).
+            # 그래서 초과분만 잘린 것으로 계산한다. 뒤에서부터 깎이므로 구간 끝을 남긴다.
+            spans.append((start, end - _PACE_STOP_DURATION))
+    return spans
+
+
+def detect_silences(in_path, threshold, min_dur):
+    """silencedetect 판정 그대로 [(시작초, 끝초), ...] — 원본 타임라인, 자르지 않는다.
+    measure_removed_spans(무음삭제 예측)와 tts_joined(통짜 조각의 경계 찾기)가 같이 쓰는
+    파서 한 벌(0순위-B). 실패·ffmpeg 없음·멈춤 → [] (호출부가 각자 폴백)."""
     try:
         r = subprocess.run(
             ["ffmpeg", "-i", str(in_path), "-af",
-             f"silencedetect=noise={thr}:d={d}", "-f", "null", "-"],
+             f"silencedetect=noise={threshold}:d={min_dur}", "-f", "null", "-"],
             stdin=subprocess.DEVNULL, capture_output=True, text=True, check=True,
-            timeout=FFMPEG_TIMEOUT_SEC)   # 멈추면 []를 반환 = 선형 폴백(기존 동작)
+            timeout=FFMPEG_TIMEOUT_SEC)
     except Exception:
         return []
     spans, start = [], None
@@ -117,15 +135,7 @@ def measure_removed_spans(in_path, threshold=None, min_dur=None):
             except ValueError:
                 start = None
                 continue
-            if start <= 1e-3:
-                # 앞무음: start_periods=1이 통째로 걷어낸다.
-                spans.append((start, end))
-            elif (end - start) >= _PACE_STOP_DURATION:
-                # ★내부 무음은 '삭제'가 아니라 stop_duration까지 '줄이기'다(2026-08-06 실측).
-                # silenceremove는 0.3초를 남긴다 — 전체를 지운다고 보면 뒤 단어를 너무
-                # 많이 당겨 자막이 이번엔 반대로 빨라진다(실측: 2.2초 감지 vs 실제 1.433초).
-                # 그래서 초과분만 잘린 것으로 계산한다. 뒤에서부터 깎이므로 구간 끝을 남긴다.
-                spans.append((start, end - _PACE_STOP_DURATION))
+            spans.append((start, end))
             start = None
     return spans
 
@@ -186,6 +196,31 @@ def post_process(in_path, out_path, tempo=1.0, silence_trim="off", pace_mode=Fal
     if same:
         os.replace(target, str(out_path))
     return str(out_path)
+
+
+def finish_line_audio(path, *, tempo=1.0, silence_trim="off", pace_mode=False,
+                      loudnorm=False):
+    """합성된 한 줄 mp3의 마무리 — 무음삭제 구간 기록 + post_process. **판정은 여기 한 곳**.
+
+    비트별 경로(mix_pipeline.synthesize_line)와 통짜 경로(tts_joined의 조각)가 같이
+    쓴다(0순위-B). 2026-09-06 실사고: 통짜가 조각 마무리를 따로 조립했다가(전체에
+    무음삭제를 건 뒤 정렬을 되당겨 자르기) 정렬 오차가 최대 234ms 쌓여 단어 한가운데가
+    갈렸다 — 문장 사이 쉼이 3~28ms(비트별 60ms). 조각을 비트별과 **같은 코드**로
+    마무리하면 쉼·여백이 구조적으로 같아진다.
+
+    ★무음 제거 '전에' 어디를 자를지 재서 사이드카에 남긴다(2026-08-06). post_process는
+    제자리 덮어쓰기라 뒤에는 원본 타임라인을 알 길이 없다. 이 구간들이 있어야 TTS
+    타임스탬프를 조각별로 당겨 자막을 맞출 수 있다(선형사상으론 누적 드리프트가 남는다).
+    측정 실패 = 선형 폴백(기존 동작), 렌더는 계속."""
+    from . import tts_timestamps          # tts_timestamps가 이 모듈을 import한다(순환 방지)
+    if pace_mode:
+        try:
+            tts_timestamps.save_removed(str(path), measure_removed_spans(str(path)))
+        except Exception:      # noqa: BLE001
+            print(f"[audio_post] 무음구간 측정 실패 — 선형 폴백: {os.path.basename(str(path))}",
+                  flush=True)
+    return post_process(str(path), str(path), tempo=tempo, silence_trim=silence_trim,
+                        pace_mode=pace_mode, loudnorm=loudnorm)
 
 
 def _audio_dur(path):

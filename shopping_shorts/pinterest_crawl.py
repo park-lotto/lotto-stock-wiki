@@ -36,21 +36,55 @@ import urllib.parse
 # ⚠️12개를 넘기지 마라 — 엔드포인트가 kws[:12]로 자른다(뒤쪽이 조용히 사라진다).
 # ⚠️같은 검색어를 또 돌리면 새 핀이 거의 안 나온다(검색어당 10~27개가 한계).
 #   많이 모으려면 화면 입력칸에 **다른 검색어**를 넣어 돌려라.
+# ★2026-09-06 개편 — 감이 아니라 **원본 적중률 실측**으로 갈아끼웠다.
+#   사장님: "테무 제품영상광고처럼 그런건 별로고 우리 쇼핑쇼츠에 들어갈만한걸 찾는게 핵심".
+#
+#   라이브 2,259건에서 검색어별로 쟀다(6건 이상 모인 126종). 원본 = pin_dest가
+#   'Uploaded by user' = 쇼핑몰 링크도 남의 릴스 재업로드도 아닌 것.
+#
+#   읽어낸 규칙 — 검색어를 늘릴 땐 이걸 따르라(test_pinterest_keywords.py가 지킨다):
+#     ① `<물건> gadget` 꼴  → 원본이 잘 나온다. 실사용 장면 위주.       (80~100%)
+#     ② `haul`(하울)        → 언박싱 광고물.                            (원본 0%)
+#     ③ `container`·`rack`·`dispenser` 등 제품 카테고리명 → 쇼핑몰 광고.  (원본 0%)
+#     ④ `asmr`              → 인스타 재업로드 88%.                       (원본 0%)
+#
+#   종전 목록엔 0%짜리 `temu haul kitchen`·`aliexpress gadgets cool`(실측 1건)이
+#   들어 있었고, 100%짜리는 하나도 없었다. 버튼만 눌러도 좋은 게 걸리게 한다.
 DEFAULT_KEYWORDS = [
-    # 쇼핑몰 겨냥(적중률 높은 순)
-    "temu gadgets must have",
-    "temu home gadgets",
-    "temu tools gadget",
-    "temu haul kitchen",
-    "kitchen gadgets amazon finds",
-    "amazon finds under 20 dollars",
-    "aliexpress gadgets cool",
-    # 원래 쓰던 공구·신박템 계열(쇼핑몰 링크는 적지만 영상이 깨끗하다)
-    "welding tool hack",
-    "diy tool invention",
-    "amazing tools gadget",
-    "workshop tool trick",
-    "clever tool idea",
+    # ── 실측 원본 적중률 80%+ (숫자는 2026-09-06 라이브 실측) ──
+    "temu toilet gadget",                # 100% (11건)
+    "viral shopping finds gadget",       # 100% (6건)
+    "temu shower gadget",                #  88% (9건)
+    "weird gadgets that actually work",  #  87% (8건)
+    "farm tool invention",               #  87% (8건)
+    "temu rice gadget",                  #  83% (18건)
+    "construction tool amazing",         #  81% (11건)
+    "temu garden gadget",                #  80% (10건)
+    # ── 실측 71~79% ──
+    "temu kids toy gadget",              #  75% (12건)
+    "temu plant gadget",                 #  75% (8건)
+    # ★아마존 축(2026-09-06 사장님 "테무아마존도 좋은게 많다"). 실측으로 골랐다 —
+    #   `amazon finds ~` 계열은 원본 0%(광고 재업)인데 아래 둘은 원본이 잘 나온다.
+    "cheap gadgets amazon finds",        # 원본 100% (3건)
+    "amazon cheap finds",                # 원본  75% + 아마존링크 25% (4건)
+]
+# ★상한 12개 — `/api/pinterest/collect`가 `kws[:12]`로 자른다(app.py, 폭주 방지).
+#   더 넣으면 **뒤쪽이 조용히 잘려** 넣어놓고 안 돌아가는 상태가 된다
+#   (test_pinterest.py::test_기본_키워드가_한_배치에_들어간다가 이걸 지킨다).
+#   새 축을 시험하려면 아래 후보를 화면의 검색어 칸에 직접 넣어 돌리고,
+#   적중률을 재서 위 목록의 낮은 것과 **교체**하라 — 덧붙이지 마라.
+CANDIDATE_KEYWORDS = [
+    # 실측은 좋은데 12칸이 모자라 뺀 것들(넣으려면 위와 교체)
+    "temu fitness gadget",               # 원본 75% (8건)
+    "satisfying gadget demo",            # 원본 71% (14건)
+    # ①규칙(`<물건> gadget`)으로 넓히는 새 축. 실측 전이라 기본값에는 안 넣는다.
+    "temu workshop gadget",
+    "temu repair gadget",
+    "temu winter gadget",
+    # 실측 66% — 12칸이 모자라 뺐다(넣으려면 위와 교체)
+    "temu camping gadget",
+    "tiktok made me buy it gadget",
+    "farming gadget amazing",
 ]
 
 _SEARCH_API_HINT = "BaseSearchResource/get"
@@ -229,8 +263,31 @@ _PIN_DOMAIN_RE = re.compile(r'"domain":"([^"]{2,60})"')
 _PIN_LINK_RE = re.compile(r'"link":"(https?://[^"]{5,300})"')
 
 
+def _ld_video_block(html):
+    """핀 상세 HTML → JSON-LD VideoObject dict / 없으면 None.
+
+    ★pin_destination과 pin_video_info가 **같은 판정을 두 번 적지 않게** 뽑은 함수다
+      (0순위-B). 둘 다 같은 상세 페이지를 읽으므로 파싱은 한 곳에서만 한다.
+    """
+    import json
+    for m in _LD_JSON_RE.finditer(html):
+        try:
+            block = json.loads(m.group(1))
+        except ValueError:
+            continue
+        for it in (block if isinstance(block, list) else [block]):
+            if not (isinstance(it, dict) and it.get("@type") == "VideoObject"):
+                continue
+            if not str(it.get("contentUrl") or ""):
+                continue
+            return it
+    return None
+
+
 def pin_destination(url, timeout=15):
-    """핀 상세 URL → (domain, link). 못 읽으면 (None, None) — 지어내지 않는다.
+    """핀 상세 URL → (domain, link, caption). 못 읽으면 (None, None, "") — 지어내지 않는다.
+
+    ★2026-09-07: 반환이 2개→3개로 늘었다. 호출부를 함께 고쳐야 한다.
 
     ★사장님 "알리 테무에서 나오는 상품들을 중점으로 어떻게 찾을수있나"(2026-08-29)에
       대한 답이다. **검색 응답엔 링크가 없다**(핀 키는 id·images·videos뿐, 25개 전수
@@ -248,18 +305,26 @@ def pin_destination(url, timeout=15):
     amzn.to 34 · temu.to 20 · amazon 19 → 쇼핑몰 핀 85개(전부 영상 있음, 중앙값 15.8초).
     """
     import requests
-    from shopping_shorts.reddit_source import _proxies
+    from shopping_shorts.config import residential_proxies
     try:
         r = requests.get(url, headers={"User-Agent": _PIN_PAGE_UA,
                                        "Accept-Encoding": "gzip, deflate"},
-                         proxies=_proxies(), timeout=timeout)
+                         proxies=residential_proxies(), timeout=timeout)
         if r.status_code != 200:
             return None, None
         doms = [d for d in _PIN_DOMAIN_RE.findall(r.text) if d and d != "null"]
         links = _PIN_LINK_RE.findall(r.text)
-        return (doms[0] if doms else None), (links[0] if links else None)
+        # ★캡션도 여기서 함께 건진다(2026-09-07) — 왕복은 늘지 않는다.
+        #   검색 API가 제목·설명을 아예 안 줘서 라이브 캡션 보유율이 0%(2,259건 중 1건)
+        #   였고, 캡션이 없으면 제작 쪽에서 소재를 고를 근거가 없다.
+        cap = ""
+        it = _ld_video_block(r.text)
+        if it:
+            cap = (str(it.get("name") or "").strip()
+                   or str(it.get("description") or "").strip())[:200]
+        return (doms[0] if doms else None), (links[0] if links else None), cap
     except Exception:                  # noqa: BLE001 — 덤이 본업을 죽이면 안 된다
-        return None, None
+        return None, None, ""
 
 
 # 쇼핑몰 판정용 — 화면 필터와 **같은 목록을 두 번 적지 않는다**(0순위-B).
@@ -294,25 +359,20 @@ def pin_video_info(url, timeout=8):
     #
     #   ⚠️①만 고치면 **오히려 나빠진다**: 예외(판정불가 → 렌즈가 안 자름)가
     #     None(영상 아님 확정 → 렌즈가 잘라냄)으로 바뀌어 멀쩡한 영상이 사라진다.
-    #   프록시 dict는 reddit_source._proxies()를 재사용한다(0순위-B) — 미설정이면
-    #   None을 주므로 로컬·테스트에서도 안 깨진다.
-    from shopping_shorts.reddit_source import _proxies
+    #   프록시는 config.residential_proxies() 한 곳에서 정한다(0순위-B).
+    #   ★2026-09-04: 종전엔 reddit_source._proxies()(=REDDIT_PROXY만)를 썼는데
+    #     서버엔 YTDLP_PROXY만 깔려 있어 핀터레스트만 직결로 나갔다 → 담은 핀이
+    #     믹스에서 통째로 '이미지 핀'으로 떨어졌다(실측 None 2/2 → 프록시 태우면 2/2 정상).
+    #   미설정이면 None을 주므로 로컬·테스트에서도 안 깨진다.
+    from shopping_shorts.config import residential_proxies
     r = requests.get(url, headers={"User-Agent": _PIN_PAGE_UA,
                                    "Accept-Encoding": "gzip, deflate"},
-                     proxies=_proxies(), timeout=timeout)
+                     proxies=residential_proxies(), timeout=timeout)
     if r.status_code != 200:
         raise RuntimeError(f"핀 페이지 HTTP {r.status_code}: {url}")
-    for m in _LD_JSON_RE.finditer(r.text):
-        try:
-            block = json.loads(m.group(1))
-        except ValueError:
-            continue
-        for it in (block if isinstance(block, list) else [block]):
-            if not (isinstance(it, dict) and it.get("@type") == "VideoObject"):
-                continue
+    it = _ld_video_block(r.text)      # 파싱은 한 곳에서만(0순위-B)
+    if it:
             vurl = str(it.get("contentUrl") or "")
-            if not vurl:
-                continue
             return {
                 "video_url": vurl,
                 "duration": iso_duration_secs(it.get("duration")),

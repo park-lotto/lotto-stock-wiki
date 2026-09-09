@@ -1,0 +1,606 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>발명품형 4갈래 — 실측 대본</title>
+<style>
+:root{
+  --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --line:#2b303c;
+  --ink:#e9ecf1; --dim:#9aa3b2; --faint:#6b7482;
+  --gold:#f2c14e; --hot:#ff6b4a; --blue:#63b3ff; --mint:#4ade80; --violet:#a78bfa;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Pretendard","Malgun Gothic","맑은 고딕",system-ui,sans-serif;
+  line-height:1.6;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:40px 22px 90px}
+header.top{border-bottom:1px solid var(--line);padding-bottom:22px;margin-bottom:8px}
+h1{font-size:27px;margin:0 0 9px;letter-spacing:-.5px}
+.sub{color:var(--dim);font-size:14px;max-width:900px}
+.src{margin-top:13px;font-size:12.5px;color:var(--faint);
+  background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:9px 14px;display:inline-block}
+.src b{color:var(--dim);font-weight:600}
+
+.rule{margin:18px 0 4px;background:#1a1508;border:1px solid #4a3c14;border-left:3px solid var(--gold);
+  border-radius:10px;padding:13px 18px}
+.rule>b{font-size:14px;color:var(--gold)}
+.rule>span{font-size:11.5px;color:var(--faint);margin-left:8px}
+.rulebody{margin-top:8px;font-size:13px;color:#ded7c6;line-height:1.85}
+.rulebody b{color:var(--ink)}
+.rulebody code{background:#12151c;border:1px solid #4a3c14;color:var(--gold);
+  border-radius:4px;padding:1px 6px;margin:0 2px;font-family:Consolas,monospace;font-size:11.5px}
+.rulebody .how{display:block;margin-top:7px;padding-top:7px;border-top:1px dashed #4a3c14;
+  font-size:11.8px;color:var(--faint);line-height:1.7}
+.rulebody .how code{border-color:#333947;color:var(--blue)}
+
+.legend{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 6px}
+.lg{font-size:11.5px;padding:4px 10px;border-radius:20px;border:1px solid var(--line);
+  background:var(--panel);color:var(--dim)}
+.lg b{font-weight:700}
+.lg.c1 b{color:var(--hot)} .lg.c2 b{color:var(--gold)}
+.lg.c3 b{color:var(--mint)} .lg.c4 b{color:var(--violet)}
+
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+  overflow:hidden;margin:26px 0}
+.card.c1{border-top:3px solid var(--hot)}
+.card.c2{border-top:3px solid var(--gold)}
+.card.c3{border-top:3px solid var(--mint)}
+.card.c4{border-top:3px solid var(--violet)}
+.chead{padding:16px 22px;background:var(--panel2);border-bottom:1px solid var(--line)}
+.ctop{display:flex;align-items:baseline;gap:11px;flex-wrap:wrap}
+.cno{font-size:19px;font-weight:800;font-variant-numeric:tabular-nums}
+.c1 .cno{color:var(--hot)} .c2 .cno{color:var(--gold)}
+.c3 .cno{color:var(--mint)} .c4 .cno{color:var(--violet)}
+.cname{font-size:19px;font-weight:800;letter-spacing:-.4px}
+.cdesc{font-size:12.5px;color:var(--dim);font-weight:600}
+.cdesc b{font-weight:600}
+@media(max-width:700px){.cdesc{flex-basis:100%;margin-top:2px}}
+.cmeta{margin-left:auto;font-size:12px;color:var(--faint);font-variant-numeric:tabular-nums}
+.cmeta b{color:var(--dim);font-weight:700}
+.cwhat{margin-top:9px;font-size:13.5px;color:#cfd6e0;line-height:1.7}
+.cwhat em{font-style:normal;font-weight:700}
+.c1 .cwhat em{color:var(--hot)} .c2 .cwhat em{color:var(--gold)}
+.c3 .cwhat em{color:var(--mint)} .c4 .cwhat em{color:var(--violet)}
+
+.marks{display:flex;gap:6px;flex-wrap:wrap;margin-top:11px}
+.mk{font-size:11px;font-family:Consolas,monospace;padding:3px 8px;border-radius:5px;
+  background:#12151c;border:1px solid #333947;color:var(--faint)}
+.mk.on{color:var(--ink);border-color:#4a5162;background:#1b2029}
+.mk b{font-variant-numeric:tabular-nums}
+.mk.hi{color:#0f1115;font-weight:800;border:none}
+.c1 .mk.hi{background:var(--hot)} .c2 .mk.hi{background:var(--gold)}
+.c3 .mk.hi{background:var(--mint)} .c4 .mk.hi{background:var(--violet)}
+
+.two{display:grid;grid-template-columns:1fr 1fr}
+@media(max-width:940px){.two{grid-template-columns:1fr}}
+.pane+.pane{border-left:1px solid #20242e}
+@media(max-width:940px){.pane+.pane{border-left:none;border-top:1px solid #20242e}}
+.ptitle{font-size:11px;letter-spacing:1.1px;font-weight:800;padding:11px 22px;
+  border-bottom:1px solid #20242e;background:#13161d;color:var(--faint)}
+.ptitle span{font-weight:600;letter-spacing:0;margin-left:7px;font-size:11px;color:#5a6270}
+
+.full{padding:17px 22px;font-size:13.4px;color:#ded7c6;line-height:1.9}
+.full .h{color:var(--ink);font-weight:800}
+.c1 .full em,.c2 .full em,.c3 .full em,.c4 .full em{font-style:normal;font-weight:700}
+.c1 .full em{color:var(--hot)} .c2 .full em{color:var(--gold)}
+.c3 .full em{color:var(--mint)} .c4 .full em{color:var(--violet)}
+.vv{display:block;margin-top:12px;font-size:11.5px;color:var(--faint);
+  font-variant-numeric:tabular-nums;border-top:1px dashed #2b303c;padding-top:9px}
+
+.slot{display:grid;grid-template-columns:82px 1fr;gap:12px;padding:9px 22px;
+  border-bottom:1px solid #1c202a;font-size:12.9px}
+.slot:last-child{border-bottom:none}
+.slot .r{font-family:Consolas,"D2Coding",monospace;font-size:11.4px;color:var(--blue);padding-top:2px}
+.slot .r.key{font-weight:800}
+.c1 .slot .r.key{color:var(--hot)} .c2 .slot .r.key{color:var(--gold)}
+.c3 .slot .r.key{color:var(--mint)} .c4 .slot .r.key{color:var(--violet)}
+.slot .t{color:#cfd6e0;line-height:1.75}
+.slot .t code{background:#12151c;border:1px solid #3a3f4c;color:var(--blue);
+  border-radius:4px;padding:1px 5px;font-family:Consolas,monospace;font-size:11.4px}
+.slot .t .fix{color:var(--gold);font-weight:700}
+.slot.skip{opacity:.42}
+.slot.skip .t{font-style:italic}
+
+.note{margin:9px 22px 17px;font-size:12.2px;color:var(--faint);
+  background:#12151c;border:1px solid #262b36;border-radius:8px;padding:10px 14px;line-height:1.7}
+.note b{color:var(--dim)}
+
+/* 라이브 DB에서 뽑은 기존 스파인 카드 */
+.card.live{border-top:3px solid var(--blue)}
+.card.live .cno{color:var(--blue);font-size:16px;font-family:Consolas,monospace}
+.card.live.off{opacity:.86;border-top-color:#4a5162}
+.card.live.off .cno{color:var(--faint)}
+.mk.hi2{background:var(--gold);color:#0f1115;font-weight:800;border:none}
+.mk.hi4{background:var(--violet);color:#0f1115;font-weight:800;border:none}
+.card.live .slot .r.key{color:var(--blue)}
+.card .sub code,.card .t code{font-family:Consolas,monospace}
+
+h2{font-size:17px;margin:44px 0 12px;padding-left:12px;border-left:3px solid var(--blue)}
+table{width:100%;border-collapse:collapse;font-size:12.6px;margin-bottom:10px}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left}
+th{color:var(--faint);font-weight:700;font-size:11.5px;letter-spacing:.4px;
+  background:var(--panel2);white-space:nowrap}
+td{color:#cfd6e0}
+td.n{font-variant-numeric:tabular-nums;text-align:right}
+tr:hover td{background:#161a21}
+.tag{font-size:10.5px;padding:2px 7px;border-radius:4px;font-weight:800;color:#0f1115}
+.tag.c1{background:var(--hot)} .tag.c2{background:var(--gold)}
+.tag.c3{background:var(--mint)} .tag.c4{background:var(--violet)}
+
+.foot{margin-top:34px;padding:16px 20px;background:var(--panel);border:1px solid var(--line);
+  border-radius:12px;font-size:13px;color:#cfd6e0;line-height:1.85}
+.foot b{color:var(--ink)}
+.foot .warn{color:var(--gold);font-weight:700}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <h1>발명품형 4갈래 — 실측 대본</h1>
+  <div class="sub">
+    "천재의 발명품형" 하나로 묶었던 계열을 <b>채널이 실제로 쓰는 골격</b>으로 다시 갈랐다.
+    공통은 <b>고조 연결어 하나뿐</b>이고, 나머지 칸은 갈래마다 쓰고 안 쓰고가 정반대다.
+    왼쪽은 실제 유튜브 자막 원문, 오른쪽은 그 골격을 빈칸으로 뽑은 것이다.
+  </div>
+  <div class="src">
+    <b>근거</b> 발명품 계열 자막 222편 / 채널 66개 · 자막 5편 이상 채널 15개만 프로필 ·
+    아래 원문 8편은 2026-09-09 로컬에서 직접 받은 자막
+  </div>
+  <div class="rule">
+    <b>★공통 규칙 — 유튜브형은 무조건 반말이다</b>
+    <span>(2026-08-22 사장님 확정 · 4갈래 전부에 적용)</span>
+    <div class="rulebody">
+      끝까지 <b>"~했음 / ~다는 거 / ~다고"</b> 반말체로 쓴다. 훅 말투를 마지막 칸까지 끌고 간다.<br>
+      쓰면 안 되는 어미 —
+      <code>~거든요</code> <code>~드릴게요</code> <code>~예요</code> <code>~습니다</code>
+      <code>~하세요</code> <code>~네요</code> <code>~죠</code> <code>~가요</code>
+      <span class="how">이미 걸려 있다: 프롬프트 지시(<code>bank_assemble</code>) + 게이트 반려(<code>script_gate</code> 존댓말 12종).
+      단 <code>hook_3s: true</code>를 선언한 스타일에만 걸린다 — 새로 만들 ①③④에도 반드시 선언한다.</span>
+    </div>
+  </div>
+  <div class="legend">
+    <span class="lg c1">① <b>"OO도 당황한 천재 발명품"</b> 178~190자</span>
+    <span class="lg c2">② <b>"이건 바로 OO"</b> 194~248자</span>
+    <span class="lg c3">③ <b>"그거 때문에 답답했잖아"</b> 209~217자</span>
+    <span class="lg c4">④ <b>"OO 개발자도 무릎 탁"</b> 228~265자</span>
+  </div>
+</header>
+
+
+<!-- ① -->
+<div class="card c1">
+  <div class="chead">
+    <div class="ctop">
+      <span class="cno">①</span>
+      <span class="cname">"OO도 당황한 천재 발명품"</span>
+      <span class="cdesc">뭔지 안 밝히고 성과로만 몰아가는 방식</span>
+      <span class="cmeta">근거 <b>22편</b> · 채널 2개 · 평균 <b>178~190자</b> · 가장 짧다</span>
+    </div>
+    <div class="cwhat">
+      성과(떼돈·바이럴·품절)와 고조를 <em>둘 다 100%</em> 쓰는데
+      <em>정체 공개를 안 한다</em>(0~17%). 제품명을 굳이 안 밝히고 "이게 있는데"로 흘려보낸다.
+      짧고 빠르게 치고 빠지는 판이다.
+    </div>
+    <div class="marks">
+      <span class="mk hi">성과 <b>100%</b></span>
+      <span class="mk hi">고조 <b>100%</b></span>
+      <span class="mk">공개 <b>0~17%</b></span>
+      <span class="mk">미끼 <b>8~10%</b></span>
+      <span class="mk">한계 <b>0~25%</b></span>
+    </div>
+  </div>
+
+  <div class="two">
+    <div class="pane">
+      <div class="ptitle">실측 원문 <span>uc5vyr2c · 삼성도 당황한 천재 주부 발명품</span></div>
+      <div class="full">
+        <span class="h">삼성도 당황한 천재 주부 발명품.</span>
+        요즘 손빨래 귀찮은 사람들 사이에서 <em>난리난</em> 초미니 세탁기가 있는데
+        물이랑 세제만 넣어주면 속옷이나 양말처럼 소량 빨래를 알아서 돌려 준다는 거.
+        이걸 보고 어떤 사람들은 샤워하면서 빨래까지 돌려 버리는데
+        <em>근데 진짜는 여기서부터</em> 크기가 워낙 작아 출장이나 여행 갈 때
+        가방에 넣어 그대로 들고 갈 수 있다고.
+        <span class="vv">190자 · 조회수 291,457 · 제품명을 끝까지 안 밝힘</span>
+      </div>
+    </div>
+    <div class="pane">
+      <div class="ptitle">빈칸 틀 <span>6칸</span></div>
+      <div class="slot"><div class="r key">hook</div><div class="t"><span class="fix">{권위체}도 당황한 천재 {주체} 발명품</span> — 15~25자, 제목이 곧 이 문장</div></div>
+      <div class="slot"><div class="r">fame</div><div class="t">요즘 <code>{겪던불편}</code> 사람들 사이에서 <span class="fix">난리난</span> <code>{닮은물건}</code>가 있는데</div></div>
+      <div class="slot"><div class="r">solve</div><div class="t"><code>{조건}</code>만 넣어주면 <code>{핵심해결}</code>준다는 거</div></div>
+      <div class="slot"><div class="r">more</div><div class="t">이걸 보고 어떤 사람들은 <code>{의외의쓰임}</code></div></div>
+      <div class="slot"><div class="r key">shock</div><div class="t"><span class="fix">근데 진짜는 여기서부터</span> <code>{가장센것}</code></div></div>
+      <div class="slot"><div class="r">land</div><div class="t"><code>{감탄}</code>다고 — '~다고' 체로 닫는다</div></div>
+      <div class="slot skip"><div class="r">reveal</div><div class="t">쓰지 않는다 — 이 갈래는 제품명을 안 밝힌다</div></div>
+    </div>
+  </div>
+  <div class="note">
+    <b>다른 갈래와 뭐가 다른가</b> — ②는 중반에 "이건 바로 OO"로 정체를 밝히는 게 축인데,
+    ①은 그 칸이 아예 없다. 대신 성과와 고조로만 밀어 <b>가장 짧게</b> 끝낸다.
+  </div>
+</div>
+
+
+<!-- ② -->
+<div class="card c2">
+  <div class="chead">
+    <div class="ctop">
+      <span class="cno">②</span>
+      <span class="cname">"이건 바로 OO"</span>
+      <span class="cdesc">감췄다가 중간에 딱 공개하는 방식 <b style="color:var(--faint);font-weight:600">· 지금 만들어둔 「천재의 발명품형」</b></span>
+      <span class="cmeta">근거 <b>52편</b> · 채널 4개 · 평균 <b>194~248자</b> · 가장 두껍다</span>
+    </div>
+    <div class="cwhat">
+      <em>"이건 바로 OO"로 중반에 정체를 밝히는 게 축</em>이다(공개 89~100%).
+      훅에서 제품을 감추고 미끼 → 성과로 끌고 가다 4번째 칸에서 공개한다.
+      그중 <em>uclecy6i</em>(18편·248자)가 풀세트 — 미끼 78 · 성과 67 · 공개 89 · 고조 100을 다 쓴다.
+    </div>
+    <div class="marks">
+      <span class="mk hi">공개 <b>89~100%</b></span>
+      <span class="mk hi">고조 <b>100%</b></span>
+      <span class="mk on">미끼 <b>19~78%</b></span>
+      <span class="mk on">성과 <b>15~67%</b></span>
+      <span class="mk">한계 <b>8~39%</b></span>
+    </div>
+  </div>
+
+  <div class="two">
+    <div class="pane">
+      <div class="ptitle">실측 원문 <span>uclecy6i · 영혼까지 빨아마시는 한국 천재 발명품</span></div>
+      <div class="full">
+        <span class="h">영혼까지 빨아마시는 한국 천재 발명품.</span>
+        최근 딱 봤을 때는 <em>무슨 선풍기처럼 생긴</em> 이 제품이
+        전 세계 SNS에서 바이럴이 폭발하며 이걸 개발한 한국 천재가 떼돈을 벌었다는데
+        <em>이건 바로 휴대용 미니후드.</em>
+        이게 말도 안 되는 게 기존 주방 환풍기는 아무리 세게 틀어도 분명한 한계가 있어
+        주방 가구들에 온갖 기름때가 남아 오히려 창문을 여는 게 나을 정도였지만
+        이 제품은 옆에 켜 놓는 순간 음식이 빨려 들어갈 정도의 강력한 흡입력으로
+        각종 고기 냄새는 당연하고 생선 비린내 등 심한 탄 냄새까지 싹 다 잡아먹어 버리는데
+        <em>심지어</em> 기름이 묻어 나오는 유증기까지 모조리 필터해 버린다는 거.
+        <em>근데 진짜 충격적인 포인트는</em> 전용 필터도 100장이나 주는 데다가
+        이걸 만든 회사가 대한민국 최초로 아쿠아 청소기를 만든 회사라 더 믿음이 간다고.
+        <span class="vv">407자(30초 환산 248자) · 조회수 958,451 · 9칸 풀세트</span>
+      </div>
+    </div>
+    <div class="pane">
+      <div class="ptitle">빈칸 틀 <span>9칸 — 이미 스파인으로 만들어둠</span></div>
+      <div class="slot"><div class="r key">hook</div><div class="t"><span class="fix">{수식}한 {나라} 천재의 발명품</span> — 제품명 절대 금지</div></div>
+      <div class="slot"><div class="r">bait</div><div class="t">최근 딱 봤을 때는 <span class="fix">평범한</span> <code>{닮은물건}</code>처럼 생긴 이 제품이</div></div>
+      <div class="slot"><div class="r">fame</div><div class="t">전 세계 SNS에서 바이럴이 폭발하며 이걸 개발한 <code>{나라}</code> 천재가 떼돈을 벌었다는데</div></div>
+      <div class="slot"><div class="r key">reveal</div><div class="t"><span class="fix">이건 바로</span> <code>{제품}</code> — 여기서 처음 이름이 나온다</div></div>
+      <div class="slot"><div class="r">limit</div><div class="t">이게 말도 안 되는 게 기존 <code>{대체품}</code>은 <code>{한계}</code></div></div>
+      <div class="slot"><div class="r">solve</div><div class="t">이 제품은 <code>{핵심해결}</code></div></div>
+      <div class="slot"><div class="r">more</div><div class="t"><span class="fix">심지어</span> <code>{의외의쓰임}</code> — 형용사만 오면 실패</div></div>
+      <div class="slot"><div class="r key">shock</div><div class="t"><span class="fix">근데 진짜 충격적인 포인트는</span> <code>{가장센것}</code></div></div>
+      <div class="slot"><div class="r">land</div><div class="t"><code>{감탄}</code>다고 — 구매 명령·댓글 요구 금지</div></div>
+    </div>
+  </div>
+  <div class="note">
+    <b>같은 갈래 짧은 판</b>(uc9cpf1v, 243자) — "써보면 반한다는 천재의 발명품. 최근 천재가 만든 이 물건이
+    1억 이상 조회수로 품절대란이 일어났다는데 <b>이건 바로 온열 담요가운.</b> …
+    하지만 더 충격적인 포인트는…" → <b>미끼·한계를 빼고</b> 공개 + 고조만 남긴 축약판이다.
+  </div>
+</div>
+
+
+<!-- ③ -->
+<div class="card c3">
+  <div class="chead">
+    <div class="ctop">
+      <span class="cno">③</span>
+      <span class="cname">"그거 때문에 답답했잖아"</span>
+      <span class="cdesc">불편했던 문제부터 깔고 해결로 가는 방식</span>
+      <span class="cmeta">근거 <b>27편</b> · 채널 2개 · 평균 <b>209~217자</b></span>
+    </div>
+    <div class="cwhat">
+      <em>"기존은 이래서 불편했다"로 밀고 간다</em>(한계 44~89%).
+      그런데 <em>성과 자랑도 정체 공개도 거의 안 한다</em>(0~6%) — ①②와 정확히 정반대다.
+      천재·떼돈 얘기 없이 <em>문제 → 해결 → 그래서 편해졌다</em>로만 간다.
+    </div>
+    <div class="marks">
+      <span class="mk hi">한계 <b>44~89%</b></span>
+      <span class="mk on">고조 <b>56~67%</b></span>
+      <span class="mk">성과 <b>6~44%</b></span>
+      <span class="mk">공개 <b>0%</b></span>
+      <span class="mk">미끼 <b>0%</b></span>
+    </div>
+  </div>
+
+  <div class="two">
+    <div class="pane">
+      <div class="ptitle">실측 원문 <span>ucoys5q5 · UV 누유 탐지 라이트</span></div>
+      <div class="full">
+        <span class="h">이제 라이트만 비추면 누유 부위가 바로 보입니다.</span>
+        차에서 오일이나 냉각수가 미세하게 새는데 기름 찌든 때에 가려져
+        <em>도대체 어디서 새는지 몰라 답답하셨죠.</em>
+        그럴 땐 이 UV 누유 탐지 라이트만 비추면 어디서 새는지 바로 보입니다.
+        형광 염료를 넣고 이 자외선 불빛만 엔진룸에 비춰주면
+        기름 새는 경로가 선명한 형광색으로 1초 만에 드러나는 원리죠.
+        <em>기존에는</em> 오일이 사방에 튀어도 정확한 누유 지점을 찾기 어려워
+        수리도 오래 걸리고 멀쩡한 부품까지 가는 경우도 있었는데
+        이제 문제점도 바로 찾고 불필요한 수리도 없어서 답답할 일이 없겠네요.
+        <span class="vv">299자 · 조회수 80,638 · 천재·떼돈 언급 0 · <b style="color:var(--gold)">원문은 존댓말(→ 만들 때는 반말로)</b></span>
+      </div>
+    </div>
+    <div class="pane">
+      <div class="ptitle">빈칸 틀 <span>6칸</span></div>
+      <div class="slot"><div class="r key">hook</div><div class="t">이제 <code>{동작}</code>만 하면 <code>{결과}</code>된다는 거 — <span class="fix">해결된 장면</span>으로 연다</div></div>
+      <div class="slot"><div class="r key">pain</div><div class="t"><code>{겪던불편}</code>해서 <span class="fix">답답했음</span> — 문제를 길게 깐다 <b style="color:var(--gold)">(원문은 "답답하셨죠" 존댓말 → 반말로 고침)</b></div></div>
+      <div class="slot"><div class="r">solve</div><div class="t">근데 이 <code>{제품}</code>만 <code>{동작}</code>하면 <code>{결과}</code></div></div>
+      <div class="slot"><div class="r">how</div><div class="t"><code>{원리}</code>라는 거 — 왜 되는지 설명한다</div></div>
+      <div class="slot"><div class="r key">limit</div><div class="t"><span class="fix">기존에는</span> <code>{한계}</code>였음 — ★이 갈래의 축</div></div>
+      <div class="slot"><div class="r">land</div><div class="t">이제 <code>{해소}</code>돼서 <code>{감탄}</code>다고</div></div>
+      <div class="slot skip"><div class="r">fame</div><div class="t">쓰지 않는다 — 성과 자랑이 없다</div></div>
+      <div class="slot skip"><div class="r">reveal</div><div class="t">쓰지 않는다 — 처음부터 제품을 밝히고 간다</div></div>
+    </div>
+  </div>
+  <div class="note">
+    <b>★원문은 존댓말이지만 반말로 바꿔 만든다</b> — 실측 채널은 <b>"~죠 / ~네요"</b>를 쓰지만,
+    사장님 규칙상 <b style="color:var(--gold)">유튜브형은 무조건 반말</b>이다(2026-08-22 확정, 게이트가 존댓말 12종을 반려한다).
+    <b>골격(문제 → 해결 → 기존한계)은 실측 그대로 쓰고 어미만 반말로</b> 바꾼다.
+    <b>같은 갈래 반말판</b>(ucf_di4h, 295자)도 있다 — "주차장 보고 만들었다는 일본 천재의 아이디어.
+    이건 원래 책 쓰러지는 거 막아주는 <b>평범한 책꽂이였음.</b> … <b>일반 책꽂이는</b> 책이 줄면
+    중심 못 잡고 쓰러지는데…" → 한계를 축으로 쓰되 반말·정체감추기를 섞은 판.
+  </div>
+</div>
+
+
+<!-- ④ -->
+<div class="card c4">
+  <div class="chead">
+    <div class="ctop">
+      <span class="cno">④</span>
+      <span class="cname">"OO 개발자도 무릎 탁"</span>
+      <span class="cdesc">만든 사람 이야기로 여는 방식</span>
+      <span class="cmeta">근거 <b>11편</b> · 채널 2개 · 평균 <b>228~265자</b> · 가장 길다</span>
+    </div>
+    <div class="cwhat">
+      <em>누가 만들었나가 본체</em>다(사람 40~67%). 개발자·주부·대학생·대기업 개발자 같은
+      <em>사람</em>이 훅에 들어가고, 그 사람의 아이디어가 왜 대단한지로 끌고 간다.
+      기존 스파인 <em>#60(옛 유튜브 발명품형 → 「OO 개발자도 무릎 탁」)</em>의 설명("탄생 배경으로 연다")이 정확히 이것이다.
+    </div>
+    <div class="marks">
+      <span class="mk hi">사람 <b>40~67%</b></span>
+      <span class="mk hi">고조 <b>100%</b></span>
+      <span class="mk on">수치 <b>20~33%</b></span>
+      <span class="mk">성과 <b>0~17%</b></span>
+      <span class="mk">미끼 <b>0~17%</b></span>
+    </div>
+  </div>
+
+  <div class="two">
+    <div class="pane">
+      <div class="ptitle">실측 원문 <span>ucxeyhz8 · OO 개발자도 무릎 탁 친 아이디어</span></div>
+      <div class="full">
+        <span class="h">OO 개발자도 무릎 탁 친 천재적인 아이디어.</span>
+        <em>이어폰 하나만 샀는데 용도별 이어폰이 무려 세 쌍이나 들어 있다는</em>
+        이 제품이 SNS에서 아이디어가 미쳤다며 엄청난 화제가 되고 있다는데
+        <em>이게 진짜 미친 포인트인 게</em> 시끄러운 지하철에선 커널형으로 주변 소음이 차단된 음악을 듣고
+        운동할 땐 클립형으로 바꿔 끼우면 아무리 뛰어도 절대 빠지지 않는데
+        <em>심지어</em> 수면용으로 바꿔주면 귀가 아프지 않아 누워서 드라마 볼 때 진짜 편하다는 거임.
+        <em>근데 진짜 충격적인 포인트는</em> 급할 땐 핸드폰 충전도 가능한데
+        무려 <em>3만 원대</em>의 정신 나간 가성비라 진짜 깜짝 놀랐다고.
+        <span class="vv">304자 · 조회수 46,566 · 3단 고조(포인트→심지어→진짜충격)</span>
+      </div>
+    </div>
+    <div class="pane">
+      <div class="ptitle">빈칸 틀 <span>7칸</span></div>
+      <div class="slot"><div class="r key">hook</div><div class="t"><code>{사람}</code>도 <code>{반응}</code>한 <span class="fix">천재적인 아이디어</span> — 사람이 주어</div></div>
+      <div class="slot"><div class="r key">idea</div><div class="t"><code>{아이디어한줄}</code> — 뭐가 기발한지 한 문장. ★이 갈래의 축</div></div>
+      <div class="slot"><div class="r">fame</div><div class="t">SNS에서 아이디어가 미쳤다며 화제가 되고 있다는데</div></div>
+      <div class="slot"><div class="r">solve</div><div class="t"><span class="fix">이게 진짜 미친 포인트인 게</span> <code>{쓰임1}</code>, <code>{쓰임2}</code></div></div>
+      <div class="slot"><div class="r">more</div><div class="t"><span class="fix">심지어</span> <code>{의외의쓰임}</code></div></div>
+      <div class="slot"><div class="r key">shock</div><div class="t"><span class="fix">근데 진짜 충격적인 포인트는</span> <code>{가장센것}</code> + <code>{가격}</code></div></div>
+      <div class="slot"><div class="r">land</div><div class="t">진짜 <code>{감탄}</code>다고</div></div>
+    </div>
+  </div>
+  <div class="note">
+    <b>★고조가 3단</b>이다 — "이게 진짜 미친 포인트인 게" → "심지어" → "근데 진짜 충격적인 포인트는".
+    ②는 2단(심지어 + 진짜충격)인데 이 갈래는 하나 더 쌓는다. 그래서 가장 길다(228~265자).
+    <b>수치를 쓴다</b>는 것도 특징 — "세 쌍", "3만 원대"처럼 숫자로 못을 박는다.
+  </div>
+</div>
+
+
+<h2>지금 화면에 있는 기존 3종 — 실측과 대조</h2>
+<div class="sub" style="margin-bottom:16px">
+  라이브 DB(<code style="font-family:Consolas,monospace;font-size:12px;color:var(--blue)">spine</code> 55·56·60)에서 그대로 뽑았다.
+  ★<b>세 개가 서로 다른 갈래가 아니다</b> — 55와 60은 위 ②·④에 각각 대응하고,
+  56(오용형)만 발명품 계열 밖의 다른 장르다.
+</div>
+
+<div class="card live">
+  <div class="chead">
+    <div class="ctop">
+      <span class="cno">60</span>
+      <span class="cname">유튜브 「OO 개발자도 무릎 탁」</span>
+      <span class="cdesc">옛 이름: 유튜브 발명품형 <b style="color:var(--mint)">· 2026-09-09 라이브 반영됨</b></span>
+      <span class="cmeta">근거 <b>23편</b> · <b>270자</b> · approved · 6칸</span>
+    </div>
+    <div class="cwhat">
+      DB 상황 설명: <em>"탄생 배경(사람 이야기)으로 열고 권위·화제로 받친 뒤 핵심 기능을 시연한다"</em><br>
+      → 이건 위 <span class="tag c4">④</span> <b>"OO 개발자도 무릎 탁"(사람 이야기로 여는 방식)</b>이다. <code>story</code> 칸 설명에
+      "★이 물건이 <b>왜·누구 때문에</b> 태어났는지 말한다 — <b>이 갈래의 본체다</b>"라고 적혀 있다.
+    </div>
+    <div class="marks">
+      <span class="mk on">title</span><span class="mk hi4">story</span>
+      <span class="mk on">authority</span><span class="mk on">benefit</span>
+      <span class="mk on">escalate</span><span class="mk on">twist</span>
+    </div>
+  </div>
+  <div class="two">
+    <div class="pane">
+      <div class="ptitle">라이브 문장틀 <span>DB 원문</span></div>
+      <div class="slot"><div class="r key">title</div><div class="t">이런 걸 만들어? <code>{나라}</code> 발명품 수준 차이 나네</div></div>
+      <div class="slot"><div class="r key">story</div><div class="t"><code>{계기}</code>에서 탄생한 이 제품이 사람들 사이에서 조용히 퍼지기 시작했는데</div></div>
+      <div class="slot"><div class="r">authority</div><div class="t">이걸 개발한 <code>{나라}</code>의 천재가 떼돈을 벌었다는데 그럴 만한 이유가 있음</div></div>
+      <div class="slot"><div class="r">benefit</div><div class="t">이게 진짜 말도 안 되는 게 <code>{효능}</code></div></div>
+      <div class="slot"><div class="r">escalate</div><div class="t">심지어 <code>{효능2}</code></div></div>
+      <div class="slot"><div class="r">twist</div><div class="t">근데 진짜 충격적인 포인트는 따로 있는데 <code>{효능3}</code></div></div>
+    </div>
+    <div class="pane">
+      <div class="ptitle">실측과 어긋나는 곳</div>
+      <div class="slot"><div class="r key">길이</div><div class="t"><b>270자</b>로 박혀 있는데 실측 계열 평균은 <b>213자</b>다. ④("OO 개발자도 무릎 탁")만 228~265자라 이 값은 ④에는 맞고 나머지엔 <b>57자 길다</b></div></div>
+      <div class="slot"><div class="r key">reveal</div><div class="t">정체 공개 칸이 <b>없다</b> — ②(52편·공개 89~100%)를 이 틀로는 못 만든다</div></div>
+      <div class="slot"><div class="r key">고조</div><div class="t">escalate + twist = <b>2단</b>. 실측 ④는 <b>3단</b>이다("미친 포인트" → "심지어" → "진짜 충격")</div></div>
+      <div class="slot"><div class="r key">사람</div><div class="t"><code>{계기}</code>만 있고 <b>누가</b>(개발자·주부·대학생)를 넣는 칸이 없다. 실측 ④의 축은 사람이다</div></div>
+    </div>
+  </div>
+  <div class="note">
+    <b>★근거 23편</b>은 4갈래를 뭉쳐 센 숫자로 보인다 — 실측으로 ④에 해당하는 채널은 2개·11편뿐이다.
+  </div>
+</div>
+
+<div class="card live">
+  <div class="chead">
+    <div class="ctop">
+      <span class="cno">55</span>
+      <span class="cname">유튜브 「이건 바로 OO」</span>
+      <span class="cdesc">옛 이름: 유튜브 은폐형 <b style="color:var(--mint)">· 2026-09-09 라이브 반영됨</b></span>
+      <span class="cmeta">근거 <b>4편</b> · <b>270자</b> · approved · 6칸</span>
+    </div>
+    <div class="cwhat">
+      DB 상황 설명: <em>"정체를 숨긴 화제의 제품을 중반에 공개하고 2차 반전으로 닫는다"</em><br>
+      → 이건 위 <span class="tag c2">②</span> <b>"이건 바로 OO"</b>와 <b>같은 갈래</b>다.
+      <code>bait → authority → reveal</code> 순서가 실측 ②의 미끼 → 성과 → 공개와 정확히 겹친다.
+    </div>
+    <div class="marks">
+      <span class="mk on">title</span><span class="mk on">bait</span>
+      <span class="mk on">authority</span><span class="mk hi2">reveal</span>
+      <span class="mk on">benefit</span><span class="mk on">twist</span>
+    </div>
+  </div>
+  <div class="two">
+    <div class="pane">
+      <div class="ptitle">라이브 문장틀 <span>DB 원문</span></div>
+      <div class="slot"><div class="r key">title</div><div class="t"><code>{나라}</code> 천재가 만들어 떼돈 번 <code>{제품군}</code>의 정체</div></div>
+      <div class="slot"><div class="r">bait</div><div class="t">최근 딱 봤을 때는 도저히 용도를 알기 힘든 이 제품이</div></div>
+      <div class="slot"><div class="r">authority</div><div class="t">이걸 개발한 <code>{나라}</code>의 천재가 돈방석에 앉았다는데</div></div>
+      <div class="slot"><div class="r key">reveal</div><div class="t">이건 바로 <code>{제품}</code></div></div>
+      <div class="slot"><div class="r">benefit</div><div class="t">이게 말도 안 되는 게 <code>{효능}</code></div></div>
+      <div class="slot"><div class="r">twist</div><div class="t">근데 진짜 충격적인 포인트는 <code>{효능2}</code> 심지어 <code>{효능3}</code></div></div>
+    </div>
+    <div class="pane">
+      <div class="ptitle">②(신규)와 무엇이 다른가</div>
+      <div class="slot"><div class="r key">칸 수</div><div class="t"><b>6칸</b> vs ② <b>9칸</b>. ②는 <code>limit</code>(기존 한계)·<code>solve</code>·<code>land</code>를 따로 둔다</div></div>
+      <div class="slot"><div class="r key">한계</div><div class="t">"기존 OO는 ~해서"가 <b>없다</b>. 실측 ② 원문(미니후드)은 이 칸이 <b>전체의 3분의 1</b>을 차지한다</div></div>
+      <div class="slot"><div class="r key">고조</div><div class="t"><code>twist</code> 한 칸에 "충격 + 심지어"를 <b>몰아넣었다</b>. 실측은 <code>more</code>·<code>shock</code> <b>두 칸으로 나뉜다</b></div></div>
+      <div class="slot"><div class="r key">미끼</div><div class="t">"용도를 알기 힘든"으로 고정. 실측은 "<b>평범한 {닮은물건}처럼 생긴</b>"이 주류다(78%)</div></div>
+      <div class="slot"><div class="r key">근거</div><div class="t"><b>4편</b>뿐이다. ②는 <b>52편</b>으로 다시 세웠다</div></div>
+    </div>
+  </div>
+  <div class="note">
+    <b>결론</b> — 55는 ②의 <b>축약·초기판</b>이다. ②로 갈아끼우거나, 55를 "짧은 판"으로 남기고
+    ②를 <b>풀세트</b>로 따로 두는 두 갈래가 있다(실측 uc9cpf1v 243자가 딱 이 축약판이다).
+  </div>
+</div>
+
+<div class="card live off">
+  <div class="chead">
+    <div class="ctop">
+      <span class="cno">56</span>
+      <span class="cname">유튜브 「원래 이렇게 쓰는 거 아닌데」</span>
+      <span class="cdesc">옛 이름: 유튜브 오용형 <b style="color:var(--mint)">· 2026-09-09 라이브 반영됨</b></span>
+      <span class="cmeta">근거 <b>4편</b> · <b>270자</b> · approved · 6칸</span>
+    </div>
+    <div class="cwhat">
+      DB 상황 설명: <em>"본래 용도로 만든 제품을 사람들이 엉뚱하게 쓰기 시작한 이야기"</em><br>
+      → <b>발명품 계열이 아니다.</b> 위 4갈래 어디에도 안 겹친다.
+      축이 <em>"원래 용도를 뒤집는가"</em>라서 자격 검사부터 다르다(app.py <code>SUL_CATEGORIES</code>).
+      <b>그대로 두면 된다.</b>
+    </div>
+    <div class="marks">
+      <span class="mk on">title</span><span class="mk on">bait</span>
+      <span class="mk on">origin</span><span class="mk on">notice</span>
+      <span class="mk on">cases</span><span class="mk on">twist</span>
+    </div>
+  </div>
+  <div class="two">
+    <div class="pane">
+      <div class="ptitle">라이브 문장틀 <span>DB 원문</span></div>
+      <div class="slot"><div class="r key">title</div><div class="t">제조사도 예상 못 한 <code>{제품군}</code> 활용법</div></div>
+      <div class="slot"><div class="r">bait</div><div class="t">요새 이 <code>{제품군}</code> 하나로 난리가 났는데</div></div>
+      <div class="slot"><div class="r key">origin</div><div class="t">이게 원래는 <code>{본래용도}</code>로 개발된 <code>{제품군}</code>이었음 — ★이 갈래의 축</div></div>
+      <div class="slot"><div class="r">notice</div><div class="t">그런데 사람들은 <code>{속성}</code>을 눈치채고 이걸 엉뚱한 용도로 쓰기 시작하는데</div></div>
+      <div class="slot"><div class="r">cases</div><div class="t">초보들은 기껏해야 <code>{용도}</code> 정도가 전부였는데 고수들은 <code>{용도2}</code>까지, 심지어 <code>{용도3}</code>까지</div></div>
+      <div class="slot"><div class="r">twist</div><div class="t">근데 미친 사용법은 따로 있었는데 <code>{용도끝}</code></div></div>
+    </div>
+    <div class="pane">
+      <div class="ptitle">왜 다른 장르인가</div>
+      <div class="slot"><div class="r key">축</div><div class="t"><b>원래 용도를 뒤집는다</b>. 발명품 4갈래는 전부 "새로 만든 물건"이라 뒤집을 원래 용도가 없다</div></div>
+      <div class="slot"><div class="r key">천재</div><div class="t">개발자·천재·떼돈이 <b>안 나온다</b>. 오히려 "제조사도 예상 못 한"으로 만든 사람을 <b>깎는다</b></div></div>
+      <div class="slot"><div class="r key">주어</div><div class="t">주어가 <b>사용자</b>다("사람들은", "고수들은"). 발명품형은 주어가 <b>제품·개발자</b>다</div></div>
+      <div class="slot"><div class="r key">자격</div><div class="t">app.py가 <code>misuse_genre</code>로 재료 자격을 따로 검사한다 — 섞으면 "이 영상은 오용형이 아닙니다"로 막힌다</div></div>
+    </div>
+  </div>
+</div>
+
+<h2>한 장으로 보는 차이</h2>
+<table>
+<thead><tr>
+  <th>갈래</th><th>길이</th><th class="n">근거</th>
+  <th>미끼</th><th>성과</th><th>공개</th><th>한계</th><th>고조</th><th>사람</th>
+  <th>말투</th><th>축</th><th>지금 화면의 것</th>
+</tr></thead>
+<tbody>
+<tr>
+  <td><span class="tag c1">①</span> "OO도 당황한<br>천재 발명품"</td><td>178~190자</td><td class="n">22편</td>
+  <td>8~10%</td><td><b>100%</b></td><td>0~17%</td><td>0~25%</td><td><b>100%</b></td><td>0~33%</td>
+  <td>반말</td><td>성과 → 고조, 끝까지 안 밝힘</td>
+  <td style="color:var(--hot);font-weight:700">없음</td>
+</tr>
+<tr>
+  <td><span class="tag c2">②</span> "이건 바로 OO"</td><td>194~248자</td><td class="n">52편</td>
+  <td>19~78%</td><td>15~67%</td><td><b>89~100%</b></td><td>8~39%</td><td><b>100%</b></td><td>8~17%</td>
+  <td>반말</td><td>"이건 바로 OO"</td>
+  <td><b>55 은폐형</b><br><span style="font-size:11px;color:var(--faint)">6칸 축약판·근거 4편</span></td>
+</tr>
+<tr>
+  <td><span class="tag c3">③</span> "그거 때문에<br>답답했잖아"</td><td>209~217자</td><td class="n">27편</td>
+  <td>0%</td><td>6~44%</td><td>0%</td><td><b>44~89%</b></td><td>56~67%</td><td>0%</td>
+  <td><b>존댓말</b></td><td>"기존에는 ~였는데"</td>
+  <td style="color:var(--hot);font-weight:700">없음</td>
+</tr>
+<tr>
+  <td><span class="tag c4">④</span> "OO 개발자도<br>무릎 탁"</td><td>228~265자</td><td class="n">11편</td>
+  <td>0~17%</td><td>0~17%</td><td>0~60%</td><td>0~20%</td><td><b>100%</b></td><td><b>40~67%</b></td>
+  <td>반말</td><td>누가 만들었나 + 3단 고조</td>
+  <td><b>60 발명품형</b><br><span style="font-size:11px;color:var(--faint)">2단 고조·사람 칸 없음</span></td>
+</tr>
+<tr style="background:#12151c">
+  <td style="color:var(--faint)">— 계열 밖</td><td>270자</td><td class="n">4편</td>
+  <td colspan="6" style="color:var(--faint);font-size:12px">원래 용도를 뒤집는 이야기 · 주어가 사용자 · 천재/떼돈 없음</td>
+  <td>반말</td><td style="color:var(--faint)">"원래는 ~였음"</td>
+  <td><b>56 오용형</b><br><span style="font-size:11px;color:var(--faint)">다른 장르 · 그대로 둠</span></td>
+</tr>
+</tbody>
+</table>
+
+<div class="foot">
+  <b>그래서 무슨 뜻인가</b><br>
+  · <b>하나의 발명품형으로 뭉뚱그리면 안 된다.</b> 지금 스파인으로 만들어둔 건 <b>②(풀세트) 하나</b>다.<br>
+  · ①③④는 아직 안 만들었다. 만들면 발명품형 안에서만 <b>4가지 다른 판</b>이 나오고,
+    유튜브 계열 스파인이 <b>4개 → 7개</b>가 된다.<br>
+  · 공통은 <b>고조 연결어 하나뿐</b>이다 — 그래서 2026-09-08에 한 고조 수리는 <b>4갈래 전부에 통한다.</b><br>
+  · <span class="warn">③은 말투부터 다르다(존댓말)</span> — 같은 스파인에 얹으면 안 되는 이유가 여기 있다.<br>
+  <br>
+  <b>근거 편수</b>는 ① 22편 · ③ 27편 · ④ 11편으로 ②(52편)보다 얇지만,
+  기존 스파인 12종 중 <b>근거 0편짜리가 4개</b>(정체의문·사회증거·무지후회·금지경고)인 걸 감안하면 충분하다.
+  <br><br>
+  <b>기존 3종과 맞춰 보면</b><br>
+  · <b>55 은폐형 = ②("이건 바로 OO")의 축약판</b>(6칸·근거 4편). ②는 9칸·52편으로 다시 세운 것이다.<br>
+  · <b>60 발명품형 = ④("OO 개발자도 무릎 탁")에 해당</b>하는데, 정작 <span class="warn">사람을 넣는 칸이 없고</span> 고조도 2단이다(실측 ④는 3단).
+    근거 23편은 4갈래를 뭉쳐 센 숫자로 보인다.<br>
+  · <b>56 오용형은 계열 밖</b>이다 — 주어가 사용자고 "원래 용도를 뒤집는" 축이라 <b>그대로 두면 된다</b>.<br>
+  · 셋 다 <span class="warn">길이가 270자로 똑같이 박혀 있다</span>. 실측은 178~265자로 갈래마다 다르고
+    계열 평균은 213자다 — 지금 값은 <b>모든 갈래에 57자 길다</b>.<br>
+  <br>
+  <b>그래서 화면은 이렇게 된다</b> — 유튜브 전용 3장 →
+  <b>①②③④ + 오용형 = 5장</b>(55·60은 ②·④로 흡수하거나 짧은 판으로 남긴다).
+</div>
+
+</div>
+</body>
+</html>

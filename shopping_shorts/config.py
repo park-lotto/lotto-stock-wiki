@@ -297,6 +297,13 @@ ELEVENLABS_TIMESTAMPS = os.getenv("ELEVENLABS_TIMESTAMPS", "1") not in ("0", "fa
 # 판단한다(0순위-B). 키가 없으면 기존과 같이 무음 mock으로 내려앉는다.
 TYPECAST_API_KEY = os.environ.get("TYPECAST_API_KEY", "")
 
+# ★타입캐스트를 쓸 것인가(2026-09-07 사장님 "지금 타입캐스트 안 쓰고 일레븐만 쓴다").
+#   기본 0 = 끔. 끄면 ①성우 카드에서 타입캐스트 성우가 사라지고 ②이미 그 성우로
+#   저장해 둔 job은 합성 직전에 일레븐랩스 성우로 **자동 대체**된다(3단계에서 나던
+#   "타입캐스트 오류"가 그래서 사라진다). 판정은 typecast_tts.enabled() 한 곳뿐(0순위-B).
+#   다시 쓰려면 서버 env에 TYPECAST_ENABLED=1만 넣으면 종전 동작으로 돌아온다.
+TYPECAST_ENABLED = os.environ.get("TYPECAST_ENABLED", "0") not in ("0", "false", "False", "")
+
 # ASR 라운드트립 검증(튜닝 작업대) — Whisper로 TTS를 재전사해 오독 탐지. GROQ 우선.
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 
@@ -322,6 +329,26 @@ YTDLP_PROXY = os.getenv("YTDLP_PROXY", "")
 #   종전대로 YTDLP_PROXY 한 개만 쓴다(회귀 0).
 YTDLP_PROXY_SLOTS = int(os.getenv("YTDLP_PROXY_SLOTS", "4"))
 
+
+# ★"주거용 IP로 나가야 하는 요청"의 프록시를 정하는 곳은 여기 하나다(0순위-B).
+#   2026-09-04 실사고: 핀터레스트가 REDDIT_PROXY만 읽었는데 서버에는 YTDLP_PROXY만
+#   깔려 있어(webshare) 핀터레스트만 데이터센터 IP로 나갔다. 핀터레스트는 그 IP에
+#   SEO용 JSON-LD를 아예 안 내려준다 → pin_video_info가 None → 믹스에서
+#   "영상이 없는 핀이에요(이미지 핀)"로 떨어졌다. 실측(라이브 담긴 핀 2건):
+#     프록시 없음 → None 2/2   /   YTDLP_PROXY 태움 → mp4 직링크 2/2.
+#   같은 자원(주거용 출구 IP)을 이름 두 개로 나눠 적어서 한쪽만 설정된 것이 뿌리다.
+#   전용 노브(REDDIT_PROXY)가 있으면 그것을 먼저 쓰고, 없으면 이미 깔려 있는
+#   YTDLP_PROXY로 넘어간다 — 둘 다 없으면 종전대로 직결(회귀 0).
+def residential_proxy():
+    """주거용 출구 IP 프록시 URL(없으면 빈 문자열)."""
+    return REDDIT_PROXY or YTDLP_PROXY or ""
+
+
+def residential_proxies():
+    """requests용 proxies dict(없으면 None = 직결)."""
+    u = residential_proxy()
+    return {"http": u, "https": u} if u else None
+
 # 네이버 클립 벤치마킹 채널 매일 자동수집(2026-08-31). 샤홍·인스타 발굴과 같은
 # 계약으로 **기본은 꺼둔다** — 켜는 건 서버 env에서 한다(병합만으로 라이브 동작이
 # 바뀌면 안 된다). 실측 부담: 15채널 915건에 4.2초라 배치에 얹어도 티가 안 난다.
@@ -340,7 +367,22 @@ WINDOW_HOURS = 48          # 48시간 이내만 랭킹(인스타 — 빠르게 �
 # 2026-07-13). 발굴 창을 넓게(14일) 잡아 언어필터 후에도 충분한 후보를 확보.
 YOUTUBE_WINDOW_HOURS = 336  # 14일
 YOUTUBE_MAX_PER_KW = 50     # 키워드당 검색 상한(YouTube API 한 호출 최대)
-RESULTS_PER_CHANNEL = 3    # 채널당 최신 상한
+# 채널당 최신 상한. ★3 → 12 (2026-09-08 실측).
+# 인스타 프로필 릴스 탭을 한 번 열면 graphql 첫 응답에 **12건**이 통째로 온다
+# (실측: long_2_salim·zip.ella_home 둘 다 nodes=12. instagram_playwright의
+#  "실측(수확 0이던 채널 30개, 15초): 30/30 전부 12건 회수" 주석과 같은 값).
+# 우리는 그 12건을 다 받아놓고 `nodes[:RESULTS_PER_CHANNEL]`로 3건만 쓰고 9건을
+# 버리고 있었다 — 자르기만 하므로 12로 올려도 **추가 요청·프록시 바이트 0**이다.
+# 왜 손실이 컸나(실측 2026-09-08, 60일 업로드 이력 기준):
+#   A(매일)  주기중 1.2건 업로드 → 유실 0%    ← 상한에 안 걸린다
+#   B(7일)   6.6건  → 3건만     → 유실 59%
+#   C(14일)  9.4건  → 3건만     → 유실 70%
+#   D(30일)  12.3건 → 3건만     → 유실 77%
+# 즉 손실은 전부 C·D에 몰려 있었고, 거기에 물건(홈템) 채널이 185개 있다.
+# ⚠️12를 넘기려면 스크롤이 필요해 추가 요청이 생긴다 — 공짜는 딱 12까지다.
+# ⚠️랭킹 수집은 Gemini 태깅을 부르지 않는다(태깅은 channel_archive 기반) →
+#   건수가 늘어도 AI 비용은 안 는다. 되돌리려면 이 숫자만 3으로.
+RESULTS_PER_CHANNEL = 12   # 채널당 최신 상한 (한 번 여는 값과 동일 = 버리는 것 없음)
 ONLY_NEWER_THAN = "2 days" # Apify 날짜필터 (창 + 여유)
 
 # 채널 등급제(2026-08-17) — 과거 성적으로 방문 주기를 가른다. 상세·실측근거: channel_tier.py
@@ -467,6 +509,24 @@ DOUYIN_SESSION_PATH = os.getenv("DOUYIN_SESSION_PATH", "/home/ubuntu/douyin_sess
 #   즉 샤오홍슈(세션 있음 → 무료 성공)와 도우인(세션 없음 → Apify)의 차이와 같다.
 #   이 파일이 생기는 순간 kw_search가 자동으로 무료 경로를 먼저 타고 비용이 0이 된다.
 TIKTOK_SESSION_PATH = os.getenv("TIKTOK_SESSION_PATH", "/home/ubuntu/tiktok_session.json")
+
+# ── 「🔎 여기서」(렌즈 모달 키워드 검색)에서 **돈 나가는 경로를 끈다** (2026-09-08 사장님 지시)
+#    사장님: "인스타는 막고 / 틱톡은 (무료로 긁게)".
+#
+#    왜 껐나 — 이 버튼은 화면상 '무료 검색'처럼 보이는데 실제로는 두 군데서 돈이 샜다:
+#      · 인스타 = Apify는 아니지만 **주거용 프록시**(INSTAGRAM_PROXY)라 GB 과금이다.
+#        코드 주석이 "무료"라고 적어둔 건 *렌즈 예산이 아니라 프록시 예산에서 나간다*는
+#        뜻일 뿐이고, 회당 몇 MB인지 우리는 **측정한 적이 없다**(단가 grep 0건).
+#      · 틱톡 = 세션이 없으면 Apify $0.0195/회로 폴백한다. 화면의 kwCost는 값을
+#        계산해 놓고 **그리지 않아서**(index.html) 사장님 눈에 안 보인 채 나갔다.
+#
+#    끈 뒤의 동작: 두 플랫폼은 「여기서」결과에서 빠지고, 모달의 새 탭 아이콘
+#    (📷 인스타 · 🎵 틱톡)으로 유도된다 — 그 링크는 우리 돈이 0원이다.
+#
+#    ★틱톡은 "유료 폴백만" 끈다. 세션 파일이 생기면 pw_tiktok이 무료로 성공하므로
+#      이 노브를 그대로 둔 채 자동으로 살아난다(_CHAIN·프론트 무수정).
+KW_SEARCH_INSTAGRAM = os.getenv("KW_SEARCH_INSTAGRAM", "0") == "1"
+KW_SEARCH_TIKTOK_APIFY = os.getenv("KW_SEARCH_TIKTOK_APIFY", "0") == "1"
 
 # ── 외부 도구 실행 상한 (2026-08-23 점검: 타임아웃이 없어 행이 걸리면 스레드가 영구 점유됐다)
 #    ★값은 여기서만 정한다 — 파일마다 따로 적으면 어긋난다(0순위-B).

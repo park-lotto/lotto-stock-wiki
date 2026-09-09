@@ -182,7 +182,9 @@ def generate(job, seed=0):
             return out
         except Exception as e:  # noqa: BLE001 — 생성 실패는 치명적 아님
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
-                key_vault.mark_exhausted(key_vault._owner_group(key) or _GEN_GROUP, key)
+                # ★표시는 mark_failure가 정한다: 401/403/무효키=영구, 429=한시(2026-09-04).
+                #   종전 mark_exhausted는 죽은 키를 30분 뒤 다시 살려 매번 재호출됐다.
+                key_vault.mark_failure(key, e, group=key_vault._owner_group(key) or _GEN_GROUP)
                 continue
             if key_vault.is_quota_error(e):
                 continue  # 순간 rate limit — 다음 키로

@@ -135,6 +135,30 @@ def test_verdict_ok_when_quiet(tmp_db):
     assert v["level"] == "ok"
 
 
+def _shorts_snap(keys):
+    return {"gemini": [{"pool": "shorts", "total": len(keys),
+                        "live": sum(1 for k in keys if k["state"] == "live"),
+                        "keys": keys}], "others": [], "collectors": []}
+
+
+def test_verdict_owner_locked_but_member_live_is_warn(tmp_db):
+    """2026-09-04 실사고: 사장님 키 1개가 일일 한도에 잠겼는데 회원 키로 정상 생성 중이었다.
+    고객영향(danger)이 아니라 '키 보충' 운영주의(warn)여야 한다."""
+    keys = [{"idx": 0, "tail": "QoPcbg", "owner": "owner", "state": "locked"},
+            {"idx": 1, "tail": "FbavLs", "owner": "member", "state": "live"}]
+    v = api_health.verdict(snap=_shorts_snap(keys), agg=api_health.aggregates(hours=1))
+    assert v["level"] == "warn"
+    assert any("회원 키 1개" in w and "보충" in w for w in v["warns"])
+
+
+def test_verdict_shorts_pool_truly_dead_is_danger(tmp_db):
+    keys = [{"idx": 0, "tail": "QoPcbg", "owner": "owner", "state": "locked"},
+            {"idx": 1, "tail": "FbavLs", "owner": "member", "state": "locked"}]
+    v = api_health.verdict(snap=_shorts_snap(keys), agg=api_health.aggregates(hours=1))
+    assert v["level"] == "danger"
+    assert any("전멸" in p for p in v["problems"])
+
+
 def test_verdict_auth_dead_is_danger(tmp_db):
     api_health.record("gemini", api_health.OUT_AUTH, detail=_AUTH_MSG)
     v = api_health.verdict(snap={"gemini": [], "others": [], "collectors": []},
@@ -376,3 +400,132 @@ def test_dead_key_problem_includes_last_seen(tmp_db):
                            agg=api_health.aggregates(hours=1))
     msg = " ".join(v["problems"])
     assert "마지막" in msg and ("방금" in msg or "분 전" in msg or "시간" in msg)
+
+
+
+def test_member_dead_key_is_warn_not_danger(tmp_db):
+    """★2026-09-04 사장님 "계속 운영사고가 뜬다": typecast 183건·elevenlabs 252건이 전부 회원이 넣은
+    키(customer_id 있음)였는데 '죽은 키 1개()'로 danger. 회원 키는 회원이 바꿔야 하니 warn + 회원 번호."""
+    for _ in range(5):
+        api_health.record("typecast", api_health.OUT_AUTH, customer_id="340",
+                          detail="403 Client Error: Forbidden")
+    v = api_health.verdict(snap={"gemini": [], "others": [], "collectors": []},
+                           agg=api_health.aggregates(hours=1))
+    assert v["level"] == "warn", v
+    assert any("회원 340" in w and "typecast" in w for w in v["warns"]), v["warns"]
+    assert not v["problems"]
+
+
+def test_owner_dead_key_still_danger_beside_member(tmp_db):
+    """운영 키(customer_id 없음)가 죽은 건 여전히 danger — 회원 키 분리가 운영 사고를 가리면 안 된다."""
+    api_health.record("gemini", api_health.OUT_AUTH, pool="vault", key="X" * 20 + "sJbmaQ", detail=_AUTH_MSG)
+    api_health.record("elevenlabs", api_health.OUT_AUTH, customer_id="268", detail="401 Unauthorized")
+    v = api_health.verdict(snap={"gemini": [], "others": [], "collectors": []},
+                           agg=api_health.aggregates(hours=1))
+    assert v["level"] == "danger"
+    assert any("sJbmaQ" in p for p in v["problems"])
+    assert not any("elevenlabs" in p for p in v["problems"])
+    assert any("회원 268" in w for w in v["warns"])
+
+
+def test_problem_signature_ignores_counts_and_times():
+    a = ["gemini: 죽은 키 1개(…sJbmaQ)를 3번 헛되이 호출(마지막 09:41, 40분 전) — 빼라"]
+    b = ["gemini: 죽은 키 1개(…sJbmaQ)를 11번 헛되이 호출(마지막 10:12, 2분 전) — 빼라"]
+    c = ["gemini: 죽은 키 1개(…nIWJaw)를 11번 헛되이 호출(마지막 10:12, 2분 전) — 빼라"]
+    assert api_health._problem_signature(a) == api_health._problem_signature(b)
+    assert api_health._problem_signature(a) != api_health._problem_signature(c)
+
+
+def test_alert_signature_unchanged_suppresses_repeat():
+    """같은 서명이면 두 번째는 억제, 내용이 바뀌면 다시 올린다."""
+    from shopping_shorts import ops_alert
+
+    class _St:
+        def __init__(self):
+            self.d = {}
+
+        def get_setting(self, k, default=None):
+            return self.d.get(k, default)
+
+        def set_setting(self, k, v):
+            self.d[k] = v
+
+    st = _St()
+    assert ops_alert.signature_unchanged(st, "k", "A") is False   # 처음 — 올린다
+    assert ops_alert.signature_unchanged(st, "k", "A") is True    # 그대로 — 억제
+    assert ops_alert.signature_unchanged(st, "k", "B") is False   # 바뀜 — 올린다
+    assert ops_alert.signature_unchanged(st, "k", None) is False  # 서명 없음 — 종전 동작
+
+
+
+def test_alert_grade_defaults_and_resolve():
+    """★2026-09-04 사장님 "다 큰 사고처럼 보인다": 등급 기본값과 '해결됨' 닫힘."""
+    from shopping_shorts import ops_alert
+    assert ops_alert.grade_for("api_key_dead_gemini") == ops_alert.GRADE_OPS
+    assert ops_alert.grade_for("source_download") == ops_alert.GRADE_CUSTOMER
+    assert ops_alert.grade_for("deposit_claim") == ops_alert.GRADE_INFO
+    assert ops_alert.grade_for("anything", grade="고객영향") == "고객영향"
+
+    class _St:
+        def __init__(self):
+            self.d = {}
+
+        def get_setting(self, k, default=None):
+            return self.d.get(k, default)
+
+        def set_setting(self, k, v):
+            self.d[k] = v
+
+    import json as _j
+    st = _St()
+    st.d["ops_alerts"] = _j.dumps([{"id": 1, "kind": "api_health_danger", "title": "x"},
+                                   {"id": 2, "kind": "other", "title": "y"}])
+    st.d["ops_alert_sig_api_health_danger"] = "SIG"
+    assert ops_alert.resolve_kind("api_health_danger", store=st) == 1
+    cur = _j.loads(st.d["ops_alerts"])
+    assert cur[0]["resolved"] and not cur[1].get("resolved")
+    assert st.d["ops_alert_sig_api_health_danger"] == ""          # 다음에 같은 문제면 새 경보
+
+
+def test_verdict_ok_resolves_open_danger(tmp_db, monkeypatch):
+    """문제가 사라지면 verdict가 열린 사고 쪽지를 닫는다 — '조치가 됐는지'를 화면이 말한다."""
+    from shopping_shorts import ops_alert
+    called = []
+    monkeypatch.setattr(ops_alert, "resolve_kind", lambda kind, store=None: called.append(kind) or 1)
+    v = api_health.verdict(snap={"gemini": [], "others": [], "collectors": []},
+                           agg=api_health.aggregates(hours=1))
+    assert v["level"] == "ok" and called == ["api_health_danger"]
+
+
+def test_verdict_member_key_failures_are_not_danger(tmp_db):
+    """★회원이 자기 키를 넣어 실패한 것은 **운영사고가 아니다**(2026-09-08 실사고).
+
+    실사고: 회원 340의 typecast 키가 무료플랜이라 합성 API만 403을 뱉었는데
+    (`/v1/voices`는 통과 — 키·계정은 멀쩡했다), 최근 1시간 창에 그 54건만 들어와
+    "typecast: 최근 1시간 실패율 100% (18/18건)" **고객 영향 사고** 빨간불이 떴다.
+    같은 시각 다른 회원 4명은 184건 정상이었다 — 서비스는 멀쩡했다.
+
+    죽은 키 판정(member_dead)에는 2026-09-04에 이 규칙이 이미 들어갔는데
+    **실패율 판정만 빠져 있었다**(0순위-B: 같은 판단이 두 군데). 여기서 짝을 맞춘다.
+
+    회원 키 실패는 그 회원만 겪고 그 회원이 키를 바꿔야 풀린다 → warn으로 회원 번호를
+    붙여 알린다. danger는 운영 키가 무너져 **전 고객이** 영향받을 때만이다."""
+    for _ in range(18):
+        api_health.record("typecast", api_health.OUT_AUTH, customer_id="340",
+                          detail=_AUTH_MSG)
+    v = api_health.verdict(snap={"gemini": [], "others": [], "collectors": []},
+                           agg=api_health.aggregates(hours=1))
+    assert v["level"] != "danger", f"회원 키 실패가 사고로 떴다: {v['problems']}"
+    assert not any("실패율" in p for p in v["problems"]), v["problems"]
+    assert any("340" in w for w in v["warns"]), v["warns"]
+
+
+def test_verdict_owner_key_failures_still_danger(tmp_db):
+    """★반대쪽 — 운영 키(customer_id 없음)가 무너지면 그건 진짜 사고다.
+
+    위 테스트가 통과하려고 실패율 판정을 통째로 죽이면 안 된다. 이 짝이 그걸 막는다."""
+    for _ in range(18):
+        api_health.record("typecast", api_health.OUT_AUTH, detail=_AUTH_MSG)
+    v = api_health.verdict(snap={"gemini": [], "others": [], "collectors": []},
+                           agg=api_health.aggregates(hours=1))
+    assert v["level"] == "danger", v

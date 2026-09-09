@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>대본 스타일 카드 — 후킹 5종 (실측)</title>
+<style>
+:root{
+  --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --line:#2b303c;
+  --ink:#e9ecf1; --dim:#9aa3b2; --faint:#6b7482;
+  --gold:#f2c14e; --hot:#ff6b4a; --bad:#f2545b; --blue:#63b3ff;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Pretendard","Malgun Gothic","맑은 고딕",system-ui,sans-serif;
+  line-height:1.65;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1120px;margin:0 auto;padding:48px 24px 96px}
+
+header.top{border-bottom:1px solid var(--line);padding-bottom:28px;margin-bottom:40px}
+h1{font-size:30px;margin:0 0 10px;letter-spacing:-.5px}
+.sub{color:var(--dim);font-size:14px}
+.src{margin-top:14px;font-size:12.5px;color:var(--faint);
+  background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 14px;display:inline-block}
+.src b{color:var(--dim);font-weight:600}
+
+h2{font-size:19px;margin:52px 0 18px;padding-left:12px;border-left:3px solid var(--gold);letter-spacing:-.3px}
+
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.rule{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px}
+.rule .n{font-size:11px;color:var(--gold);letter-spacing:1.5px;font-weight:700;margin-bottom:8px}
+.rule .t{font-size:15.5px;font-weight:700;margin-bottom:8px}
+.rule .d{font-size:13px;color:var(--dim)}
+.rule.warn{border-color:#5a2b2b}
+.rule.warn .n{color:var(--bad)}
+
+.cards{display:flex;flex-direction:column;gap:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.card.neg{border-color:#4a2626}
+.chead{display:flex;align-items:baseline;gap:14px;padding:18px 22px;background:var(--panel2);
+  border-bottom:1px solid var(--line);flex-wrap:wrap}
+.rank{font-size:12px;color:var(--faint);font-variant-numeric:tabular-nums;min-width:20px}
+.cname{font-size:18px;font-weight:800;letter-spacing:-.3px}
+.mult{margin-left:auto;font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--gold)}
+.card.neg .mult{color:var(--bad)}
+.mult small{font-size:11px;color:var(--faint);font-weight:500;margin-left:4px}
+.cbody{padding:20px 22px;display:grid;grid-template-columns:1fr 1fr;gap:22px}
+@media(max-width:760px){.cbody{grid-template-columns:1fr}}
+.blk .lab{font-size:11px;letter-spacing:1.2px;color:var(--faint);font-weight:700;margin-bottom:9px}
+.pat{font-family:"Consolas","D2Coding",monospace;font-size:13.5px;color:var(--blue);
+  background:#12151c;border:1px solid var(--line);border-radius:7px;padding:9px 12px;margin-bottom:7px}
+.ex{font-size:13.5px;color:var(--dim);padding:5px 0 5px 14px;border-left:2px solid var(--line);margin-bottom:5px}
+.ex b{color:var(--ink);font-weight:600}
+.ex .v{color:var(--hot);font-variant-numeric:tabular-nums;font-size:12.5px;margin-left:6px}
+.guess{background:#1a1710;border:1px dashed #4a3f22;border-radius:7px;padding:11px 13px;font-size:13.5px;color:#e5d9b8}
+.guess .tag{display:inline-block;font-size:10px;letter-spacing:1px;color:var(--gold);
+  border:1px solid #4a3f22;border-radius:4px;padding:1px 6px;margin-bottom:7px;font-weight:700}
+.note{font-size:12.5px;color:var(--faint);padding:12px 22px;border-top:1px solid var(--line);background:#13161d}
+.note b{color:var(--bad)}
+
+.formula{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
+@media(max-width:760px){.formula{grid-template-columns:1fr 1fr}}
+.step{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:16px}
+.step .sn{font-size:11px;color:var(--gold);font-weight:700;margin-bottom:6px}
+.step .st{font-size:14.5px;font-weight:700;margin-bottom:6px}
+.step .sd{font-size:12.5px;color:var(--dim)}
+.quote{background:var(--panel2);border-left:3px solid var(--gold);border-radius:0 10px 10px 0;
+  padding:16px 20px;font-size:14.5px;color:#e8e2d0}
+.quote .who{display:block;margin-top:9px;font-size:12px;color:var(--faint)}
+
+table{width:100%;border-collapse:collapse;font-size:13.5px;background:var(--panel);
+  border:1px solid var(--line);border-radius:11px;overflow:hidden}
+th,td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--line)}
+th{background:var(--panel2);font-size:11.5px;letter-spacing:.8px;color:var(--dim);font-weight:700}
+tr:last-child td{border-bottom:none}
+td.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+.hi{color:var(--gold)} .lo{color:var(--bad)}
+.tw{overflow-x:auto}
+
+.limit{background:#1a1216;border:1px solid #4a2630;border-radius:12px;padding:18px 22px;font-size:13.5px;color:#e3c9cd}
+.limit h3{margin:0 0 10px;font-size:14px;color:var(--bad);letter-spacing:.3px}
+.limit ul{margin:0;padding-left:18px}
+.limit li{margin-bottom:6px}
+footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--line);font-size:12px;color:var(--faint)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <h1>대본 스타일 카드 — 후킹 5종</h1>
+  <div class="sub">만물상점류 실측에서 뽑은 조회수 배율 기반. 배율이 높은 순으로 쓴다.</div>
+  <div class="src">
+    <b>표본</b> 624편 (만물상점 325 + 쇼핑만물상 299) &nbsp;·&nbsp;
+    <b>기준</b> 전체 중앙 조회수 3.0만 &nbsp;·&nbsp;
+    <b>출처</b> handoff/장비템축.md (2026-08-25 실측) &nbsp;·&nbsp;
+    <b>배포</b> 로컬 전용
+  </div>
+</header>
+
+<h2>먼저 — 어기면 배율이 무너지는 철칙 3개</h2>
+<div class="rules">
+  <div class="rule">
+    <div class="n">RULE 01</div>
+    <div class="t">후킹은 딱 1개만</div>
+    <div class="d">1개 5.4만 &gt; 2개 3.8만 &gt; 3개 1.8만. 겹칠수록 역효과다. 강한 것 하나를 고르고 나머지는 버린다.</div>
+  </div>
+  <div class="rule">
+    <div class="n">RULE 02</div>
+    <div class="t">후킹 없는 대본은 쓰지 않는다</div>
+    <div class="d">500만+ 영상 7편은 후킹 비율 100%(예외 0건). 3만 미만 310편은 30.3%. 있음 4.9만 vs 없음 2.3만 = 2.1배.</div>
+  </div>
+  <div class="rule warn">
+    <div class="n">금지</div>
+    <div class="t">‘나도 · 셀프 · DIY’ 쓰지 마라</div>
+    <div class="d">소유자작 후킹은 0.80x — 유일하게 평균을 깎는다. 가전과 겹치면 0.29x로 최악.</div>
+  </div>
+</div>
+
+<h2>스타일 카드 (배율 높은 순)</h2>
+<div class="cards">
+
+  <div class="card">
+    <div class="chead">
+      <span class="rank">01</span>
+      <span class="cname">비유격상</span>
+      <span class="mult">10.97x<small>중앙 대비</small></span>
+    </div>
+    <div class="cbody">
+      <div class="blk">
+        <div class="lab">틀</div>
+        <div class="pat">{익숙한 분야}계의 {유명한 물건}</div>
+        <div class="pat">{분야} 끝판왕</div>
+        <div class="lab" style="margin-top:16px">실측 예시</div>
+        <div class="ex"><b>정원계의 바리깡</b><span class="v">530만</span></div>
+      </div>
+      <div class="blk">
+        <div class="lab">쓰는 법</div>
+        <div class="guess">
+          <span class="tag">제안</span>
+          모르는 물건을 <b>아는 물건에 빗대</b> 한 방에 이해시킨다.
+          빗대는 대상은 <b>누구나 아는 생활용품</b>일수록 세다(바리깡·믹서기·다리미).
+          제품명은 첫 문장에 넣지 않는다 — 정체를 숨겨야 끝까지 본다.
+        </div>
+      </div>
+    </div>
+    <div class="note">가장 센 축인데 <b>검색어로는 쓸모없다</b> — ‘정원계의 바리깡’으로 검색하면 그 영상 3건만 나온다. 후킹은 대본용, 제품명은 채널 발굴용으로 갈라 쓴다.</div>
+  </div>
+
+  <div class="card">
+    <div class="chead">
+      <span class="rank">02</span>
+      <span class="cname">정체 은폐</span>
+      <span class="mult">4.63x<small>중앙 대비</small></span>
+    </div>
+    <div class="cbody">
+      <div class="blk">
+        <div class="lab">틀</div>
+        <div class="pat">이녀석 / 이거 하나면</div>
+        <div class="pat">{전문가}도 모르는 {분야}의 비밀</div>
+        <div class="lab" style="margin-top:16px">실측 예시</div>
+        <div class="ex"><b>베테랑도 모르는 레이저용접기</b></div>
+      </div>
+      <div class="blk">
+        <div class="lab">쓰는 법</div>
+        <div class="guess">
+          <span class="tag">제안</span>
+          제품명을 <b>끝까지 미룬다</b>. 훅에서는 지시대명사(이녀석·이거)만 쓰고,
+          정체는 변신이 끝난 뒤 밝힌다. ‘전문가도 모른다’는 <b>권위 부정</b>을 얹으면 더 세다.
+        </div>
+      </div>
+    </div>
+    <div class="note">기존 대본 게이트에 <b>hook_conceal</b>(훅에서 제품 정체 은폐) 검사가 이미 있다 — 이 카드는 그 검사와 짝이다.</div>
+  </div>
+
+  <div class="card">
+    <div class="chead">
+      <span class="rank">03</span>
+      <span class="cname">장소 전환</span>
+      <span class="mult">3.00x<small>중앙 대비</small></span>
+    </div>
+    <div class="cbody">
+      <div class="blk">
+        <div class="lab">틀</div>
+        <div class="pat">어디서든 {실내에서만 되던 것}</div>
+        <div class="pat">{제약된 장소}에서도 {불가능하던 일}</div>
+        <div class="lab" style="margin-top:16px">실측 예시</div>
+        <div class="ex"><b>어디서든 에어컨</b><span class="v">260만</span></div>
+      </div>
+      <div class="blk">
+        <div class="lab">쓰는 법</div>
+        <div class="guess">
+          <span class="tag">제안</span>
+          <b>장소 제약이 깨지는 순간</b>을 판다. 원래 못 하던 곳(차 안·텐트·베란다)에서
+          되는 그림이 있어야 성립 — 화면에 <b>그 장소가 실제로 보여야</b> 한다.
+        </div>
+      </div>
+    </div>
+    <div class="note">화면 근거가 필요한 유일한 축. 장소 컷이 없으면 이 카드는 쓰지 않는다.</div>
+  </div>
+
+  <div class="card">
+    <div class="chead">
+      <span class="rank">04</span>
+      <span class="cname">극단 수식</span>
+      <span class="mult">2.57x<small>중앙 대비</small></span>
+    </div>
+    <div class="cbody">
+      <div class="blk">
+        <div class="lab">틀</div>
+        <div class="pat">초미니 / 휴대용 / 무선 {큰 장비}</div>
+        <div class="lab" style="margin-top:16px">실측 예시</div>
+        <div class="ex"><b>미니포크레인</b><span class="v">810만</span></div>
+        <div class="ex" style="border-color:var(--gold)"><b>극단수식 × 중장비·농기계 = 50.0x</b><span class="v">12편 중앙 150만</span></div>
+      </div>
+      <div class="blk">
+        <div class="lab">쓰는 법</div>
+        <div class="guess">
+          <span class="tag">제안</span>
+          <b>원래 거대한 것</b>에 붙일 때만 터진다. 포크레인·제설기·지게차처럼
+          ‘크다’가 상식인 물건이라야 ‘초미니’가 충격이 된다.
+          이미 작은 물건에 붙이면 아무 일도 안 일어난다.
+        </div>
+      </div>
+    </div>
+    <div class="note">단독 배율은 4위지만 <b>중장비·농기계와 교차하면 50.0x로 전체 1위</b>다. 제품 도메인을 먼저 보고 고를 것.</div>
+  </div>
+
+  <div class="card neg">
+    <div class="chead">
+      <span class="rank">05</span>
+      <span class="cname">소유·자작 <span style="font-size:12px;color:#f2545b;font-weight:600">— 쓰지 마라</span></span>
+      <span class="mult">0.80x<small>중앙 대비</small></span>
+    </div>
+    <div class="cbody">
+      <div class="blk">
+        <div class="lab">틀 (금지)</div>
+        <div class="pat" style="color:#f2545b;text-decoration:line-through">나도 {가질 수 있다}</div>
+        <div class="pat" style="color:#f2545b;text-decoration:line-through">셀프 / DIY</div>
+      </div>
+      <div class="blk">
+        <div class="lab">왜 안 되나</div>
+        <div class="guess" style="background:#1a1214;border-color:#4a2630;color:#e3c9cd">
+          <span class="tag" style="color:#f2545b;border-color:#4a2630">실측</span>
+          다섯 축 중 <b>유일하게 1.0 미만</b>. ‘내가 해야 한다’는 부담을 주는 순간
+          구경거리에서 노동으로 바뀐다. <b>소유자작 × 가전 = 0.29x</b>로 최악의 조합.
+        </div>
+      </div>
+    </div>
+    <div class="note">카드로 남겨두는 이유는 <b>금지 목록</b>이기 때문. 대본 게이트에서 걸러낼 후보다.</div>
+  </div>
+
+</div>
+
+<h2>최상위 히트작 대본 공식 — 4단 구조</h2>
+<div class="formula">
+  <div class="step"><div class="sn">STEP 1</div><div class="st">비싼 기존 방식 부정</div><div class="sd">“이제 ○○ 살 필요 없다”</div></div>
+  <div class="step"><div class="sn">STEP 2</div><div class="st">단돈 N원 대안</div><div class="sd">가격 격차를 숫자로 못박는다</div></div>
+  <div class="step"><div class="sn">STEP 3</div><div class="st">즉각 변신</div><div class="sd">before → after를 한 컷에</div></div>
+  <div class="step"><div class="sn">STEP 4</div><div class="st">감탄</div><div class="sd">결과에 대한 짧은 리액션</div></div>
+</div>
+<div class="quote">
+  “이제 100만 원짜리 대리석 사서 붙일 필요가 없어졌습니다. 단돈 만 원짜리 페인트를…”
+  <span class="who">1,900만 <b>이젠 나도 고급주택</b> / 1,500만 <b>모두 모래로 밀어버려잇</b> — 두 편 모두 동일 구조 (실물 확인)</span>
+</div>
+
+<h2>제품 도메인 배율 — 어떤 물건을 고를 것인가</h2>
+<div class="tw">
+<table>
+  <tr><th>도메인</th><th style="text-align:right">배율</th><th style="text-align:right">중앙 조회수</th><th>판단</th></tr>
+  <tr><td><b>중장비 · 농기계</b></td><td class="num hi">23.4x</td><td class="num">70.1만</td><td>1순위. 극단수식과 교차하면 50.0x</td></tr>
+  <tr><td>건자재</td><td class="num">4.0x</td><td class="num">—</td><td>2순위</td></tr>
+  <tr><td>야외 · 레저</td><td class="num">2.5x</td><td class="num">—</td><td>3순위</td></tr>
+  <tr><td>공구</td><td class="num lo">0.9x</td><td class="num">—</td><td>평균 이하 — 후킹으로 끌어올려야</td></tr>
+</table>
+</div>
+
+<h2>이 자료의 한계</h2>
+<div class="limit">
+  <h3>넘겨짚지 말 것</h3>
+  <ul>
+    <li><b>표본은 장비·공구 축 2채널 624편뿐</b>이다. 홈템·주방·오용형 등 다른 카테고리에도 같은 배율이 나온다는 근거는 <b>없다</b>.</li>
+    <li>‘쓰는 법’ 칸의 문장은 <b>제안</b>이다 — 배율·예시·4단 공식만 실측이고, 왜 통하는지에 대한 해석은 검증된 바 없다.</li>
+    <li>측정 시점은 <b>2026-08-25</b>. 유튜브 추천 반응은 바뀐다.</li>
+    <li>‘후킹 없음’ 무리 중 <b>51%는 제품명 단독형</b>이라 이 5축 사전으로는 애초에 안 잡힌다.</li>
+  </ul>
+</div>
+
+<footer>
+  근거: handoff/장비템축.md · handoff/장비템축_3R_티어B후보.md (2026-08-25 실측) ·
+  생성 2026-09-05 · <b>로컬 전용 — 라이브 미반영</b>
+</footer>
+
+</div>
+</body>
+</html>

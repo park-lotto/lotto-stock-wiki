@@ -11,6 +11,7 @@ import json
 import os
 import random
 import re
+import sys
 
 from google.genai import types
 
@@ -31,14 +32,18 @@ _GEN_GROUP = "general"
 #   2026-08-20 실측 사고: app.py는 5인데 여기 그릇이 `sources[:3]`이라 **5편 뽑아 3편만
 #   넣고** 있었다. 같은 판단을 두 벌로 적으면 반드시 어긋난다.
 #
-#   5의 근거 두 가지가 같은 값을 가리킨다:
-#    · 사장님 지시(2026-08-19) "영상은 최대 5개까지만. 더 넣어봐야 의미없다"
-#    · 히트작 200편 실측(raw/analysis/썰쇼핑_히트작200_2026-08-20):
-#      필요 장면 평균 3.3 / 중앙값 3 / 범위 2~5
+#   ★5 → 8 (2026-09-05 사장님 "1단계 영상분석에서 8개까지 분석가능하게 늘려줘").
 #
-#   ⚠️더 올리지 마라: 재료 1편당 프롬프트 ~2.8천자(본문 800 + 장면 20줄)라
-#     5편이 이미 ~14천자다.
-SOURCE_MAX = 5
+#   종전 5의 근거였던 것과, 지금 8로 올리며 아는 것:
+#    · 옛 지시(2026-08-19) "영상은 최대 5개까지만" → 이번 지시가 이를 대체한다
+#    · 히트작 200편 실측(raw/analysis/썰쇼핑_히트작200_2026-08-20):
+#      필요 장면 평균 3.3 / 중앙값 3 / 범위 2~5 — **대본에 필요한 장면 수**이지
+#      재료 상한이 아니다. 재료가 많으면 고를 폭이 넓어진다.
+#    · 분석 시간은 거의 안 는다: 추출은 동시 4개 병렬(app._AUTOLOAD_MAX_WORKERS)이라
+#      5개도 8개도 두 웨이브다.
+#    · 대신 프롬프트가 길어진다 — 재료 1편당 ~2.8천자(본문 800 + 장면 20줄)라
+#      5편 ~14천자 → 8편 ~22천자. 대본 품질이 흐려지면 여기부터 의심하라.
+SOURCE_MAX = 8
 
 
 def _style_extra():
@@ -86,7 +91,9 @@ def _call_json(prompt, schema, note=None):
             return json.loads(resp.text)
         except Exception as e:  # noqa: BLE001 — 생성 실패는 치명적 아님
             if key_vault.is_daily_exhausted_error(e) or key_vault.is_account_disabled_error(e):
-                key_vault.mark_exhausted(key_vault._owner_group(key) or _GEN_GROUP, key)
+                # ★표시는 mark_failure가 정한다: 401/403/무효키=영구, 429=한시(2026-09-04).
+                #   종전 mark_exhausted는 죽은 키를 30분 뒤 다시 살려 매번 재호출됐다.
+                key_vault.mark_failure(key, e, group=key_vault._owner_group(key) or _GEN_GROUP)
                 if note is not None:
                     note["reason"] = "exhausted"     # 돌다가 다 말랐다 = 진짜 소진
                 continue
@@ -346,7 +353,59 @@ def _source_benefits(s):
     return [t.strip() for t in raw if isinstance(t, str) and t.strip()]
 
 
-def _mix_source_block(sources):
+# ★2단계 '본 것만 쓰기'(2026-09-04, 사장님 "제품형 대본은 소스 영상에 보이는 것으로만 써야 한다 —
+#   대본을 썼는데 장면이 없다는 건 말이 안 된다"). 종전 장면 목록은 소스당 20개×40자로 잘려 긴
+#   소스의 뒤쪽 장면은 존재조차 몰랐고, src_seg는 "딱히 없으면 빈칸"이라 장면 없는 줄이 통과됐다.
+#   grounded 모드: 장면을 **전부**(상한 GROUNDED_SCENE_MAX) 쓰임·변화·활용까지 보여주고, 장점·효과·
+#   특징·동작·결과 주장은 장면 번호가 **필수**(script_gate '장면 근거' 검사가 반려). 훅·감정·연결·가격·
+#   약속 줄은 장면 없이 허용(needs_scene=false). 플래그 밖에선 종전과 완전히 같다(회귀 0).
+GROUNDED_SCENE_MAX = 60
+
+
+def _scene_line_full(x):
+    """grounded 모드 장면 한 줄: 번호·길이·말(한국어 번역 우선)·화면·쓰임·변화·활용."""
+    try:
+        length = round(float(x.get("end") or 0) - float(x.get("start") or 0), 1)
+    except (TypeError, ValueError):
+        length = 0
+    say = (x.get("text_ko") or x.get("text") or "").strip()[:60]
+    parts = [f"  [{x.get('seg_id')}] ({length}s)"]
+    if say:
+        parts.append("말:" + say)
+    parts.append("화면:" + (x.get("scene_desc") or "").strip()[:70])
+    for key, name in (("label", "쓰임"), ("change", "변화"), ("use_point", "활용")):
+        v = (x.get(key) or "").strip()
+        if v:
+            parts.append(f"{name}:{v[:50]}")
+    return " | ".join(parts)
+
+
+_GROUNDED_RULE = (
+    "\n\n★★[장면에 보이는 것만 써라 — 제품형 규칙]\n"
+    "- 제품의 **장점·효과·특징·동작·결과**를 말하는 줄은 반드시 위 '장면 목록'에 실제로 보이는 장면에서 "
+    "나와야 하고, 그 장면 번호를 src_seg에 적어라(needs_scene=true). 목록에 없는 장점은 쓰지 마라 — "
+    "장면이 없는 장점 한 줄이 들어가면 반려된다.\n"
+    "- 훅·감정·연결·가격·약속·마무리처럼 특정 화면을 요구하지 않는 줄은 src_seg를 빈칸으로 두고 "
+    "needs_scene=false로 표시해라. 단 대본의 3분의 1 이상은 장면이 붙은 줄이어야 한다(시연·결과·증거 칸은 반드시).\n"
+    "- src_seg에는 장면 목록의 번호만 적어라(없는 번호 = 반려). 한 줄이 여러 장면에 걸치면 쉼표로 "
+    "여러 번호를 적되 **첫 번째가 대표 장면**이다.\n"
+    "- **한 장면은 한 줄에만 쓴다** — 앞줄에서 대표로 쓴 번호를 뒷줄에서 또 대표로 쓰지 마라. "
+    "같은 화면이 두 번 나오면 영상이 반복돼 보인다. 비슷한 장면이 여러 개면 각 줄에 다른 번호를 골라라 "
+    "(보조 번호는 겹쳐도 된다).\n"
+    "- 재료 대본이 **여러 영상**이면 장면도 여러 영상에서 골라 써라. 앞에 있는 것부터 채워 **한 영상에서만** 다 가져오지 마라 — 여러 편을 넣는 이유가 한 편에 끌려가지 않기 위해서다. 다만 소재가 서로 다른 제품이면 억지로 섞지 말고 그 줄에 정말 맞는 장면을 골라라.")
+
+
+def scene_ids_of(sources):
+    """장면 목록에 실제로 실린 seg_id 집합(게이트가 '지어낸 번호'를 거르는 기준)."""
+    ids = set()
+    for s in (sources or [])[:SOURCE_MAX]:
+        for x in (s.get("segments") or [])[:GROUNDED_SCENE_MAX]:
+            if isinstance(x, dict) and x.get("seg_id"):
+                ids.add(str(x["seg_id"]))
+    return ids
+
+
+def _mix_source_block(sources, full_scenes=False):
     lines = []
     for i, s in enumerate(sources, 1):
         st = s.get("structure") or {}
@@ -364,11 +423,17 @@ def _mix_source_block(sources):
         #   원래 그 말이 나온 그림이라 가장 정확하다.
         #   ⚠️무자막 소스는 말(text)이 비고 화면 설명만 있다 — 그것도 단서라 함께 준다.
         _segs = [x for x in (s.get("segments") or []) if isinstance(x, dict) and x.get("seg_id")]
-        if _segs:
+        if _segs and full_scenes:
+            # grounded 모드 — 전부(상한) + 쓰임·변화·활용(위 GROUNDED_SCENE_MAX 주석)
+            block += ("\n- 장면 목록(★이 영상에 실제로 보이는 것 전부다. 장점·효과·동작은 여기서만 가져오고 "
+                      "번호를 src_seg에 적어라):\n"
+                      + "\n".join(_scene_line_full(x) for x in _segs[:GROUNDED_SCENE_MAX]))
+        elif _segs:
             block += "\n- 장면 목록(이 대본을 참고해 쓸 때 어느 대목인지 번호로 지목하라):\n" + "\n".join(
                 "  [{sid}] {say}{desc}".format(
                     sid=x.get("seg_id"),
-                    say=("말:" + (x.get("text") or "").strip()[:40] + " ") if (x.get("text") or "").strip() else "",
+                    say=("말:" + (x.get("text_ko") or x.get("text") or "").strip()[:40] + " ")
+                        if (x.get("text_ko") or x.get("text") or "").strip() else "",
                     desc="화면:" + (x.get("scene_desc") or "").strip()[:40])
                 for x in _segs[:20])
         # 무자막 해외영상: 자막·나레이션이 없어 전체대본이 비고 특장점만 있다. 그 특장점을
@@ -403,6 +468,15 @@ def _mix_source_block(sources):
         out += ("\n\n★★주제는 반드시 [대본 1]의 제품·소재다. [대본 2] 이하는 **말투·전개·표현을 참고만** 하고, "
                 "거기 나오는 제품·기능·사례를 주제로 삼거나 섞지 마라. "
                 "[대본 1]과 다른 물건 이야기가 한 줄이라도 들어가면 반려된다.")
+        # ★단, **장면(그림)은 예외다**(2026-09-06 사장님 "씨앗으로, 모든 장면매칭은 좋은장면 우선").
+        #   위 주제 고정은 *다른 제품이 섞이는 것*을 막으려는 것이지(2026-08-17 치아바타/도마),
+        #   같은 제품을 여러 각도로 찍은 소스의 **그림까지** 막으려는 게 아니다.
+        #   실측(레트로 카메라, 소스 7편·97구간): 씨앗(국내 10구간·249자)에서 4칸을 가져오고
+        #   말이 가장 풍부한 외국 소스(20구간·1207자·17구간 번역 완료)는 **0칸**이었다.
+        out += ("\n★★단 **장면(그림)은 예외**다 — 같은 제품이라면 [대본 2] 이하의 장면도 얼마든지 써라. "
+                "src_seg는 **그 줄의 내용을 가장 잘 보여주는 장면**을 소스 구분 없이 골라라"
+                "(다른 제품의 장면을 쓰라는 뜻이 아니다 — 같은 제품을 다른 각도에서 찍은 것을 말한다). "
+                "씨앗 영상에 더 나은 그림이 없으면 다른 영상에서 가져오는 게 맞다.")
     return out
 
 
@@ -444,7 +518,10 @@ _STYLE_SCHEMA = {
                 #   지어낼 수 없게 후보 목록에 있는 것만 쓰라고 프롬프트에서 못 박는다.
                 #   못 고르면 빈 문자열(그때는 종전대로 3단계가 알아서 고른다 = 회귀 0).
                 "properties": {"role": {"type": "string"}, "text": {"type": "string"},
-                               "src_seg": {"type": "string"}},
+                               "src_seg": {"type": "string"},
+                               # grounded 모드(2026-09-04): 이 줄이 특정 화면을 요구하는가(장점·효과·동작·결과).
+                               # 종전 호출은 안 채워도 된다(required 아님 = 회귀 0).
+                               "needs_scene": {"type": "boolean"}},
                 "required": ["role", "text", "src_seg"],
             },
         },
@@ -466,7 +543,7 @@ def _sources_product(sources):
 
 def generate_one_style(sources, style, target_seconds=30, bank_context="", facts_block="",
                        seed="",
-                       note=None):
+                       note=None, grounded=False, product=""):
     """스타일 1개로 대본 1안. → {beats, script, hook, checks, passed, tries, style_id, style_name}
 
     ★조용히 통과시키지 않는다: 게이트를 못 넘으면 passed=False로 **표시해서** 돌려준다.
@@ -483,19 +560,38 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
     seconds = max(5, min(int(target_seconds or 30), 90))
     # ★seed(job_id)를 넘겨 문장틀 순서를 job마다 돌린다 — 안 넘기면 항상 같은
     #   순서라 모델이 앞쪽 틀에 쏠린다(실측: 훅 10개 중 6개가 한 번도 안 나옴).
-    head = bank_assemble.style_block(style, seconds=seconds, seed=seed)
+    head = bank_assemble.style_block(style, seconds=seconds, seed=seed,
+                                     facts_block=facts_block)
     if not head:
         return None
-    base = (_MIX_PROMPT.format(sources=_mix_source_block((sources or [])[:SOURCE_MAX]),
+    # grounded(2026-09-04): 장면 전부 + 규칙 + 게이트 '장면 근거'. 아니면 종전 문장 그대로.
+    _is_recipe = any("레시피" in (s.get("name") or "") for s in (sources or []))
+    _scene_ids = scene_ids_of(sources) if grounded else None
+    # ★장면 목록이 비면(세그 없는 소스) grounded는 구조적으로 3회 다 실패한다(2026-09-05 리뷰 M7) → 종전 모드로 강등하고 남긴다
+    if grounded and not _scene_ids:
+        print("generate_one_style: 장면 목록 0개 — grounded를 끄고 종전 모드로", file=sys.stderr)
+        if isinstance(note, dict):
+            note["grounded_downgraded"] = "장면 목록 0개"
+        grounded, _scene_ids = False, None
+    # ★장면을 실제로 **가진** 소스가 몇 편인가(2026-09-05). 게이트 '장면 근거'가 이 값으로
+    #   "여러 편을 넣었는데 한 편만 썼나"를 본다. 장면 없는 소스는 애초에 고를 수 없으니 세지 않는다.
+    _source_count = sum(1 for s in (sources or [])[:SOURCE_MAX] if (s.get("segments") or [])) or None
+    base = (_MIX_PROMPT.format(sources=_mix_source_block((sources or [])[:SOURCE_MAX],
+                                                         full_scenes=bool(grounded)),
                                seconds=seconds, words=max(15, round(seconds * 2.3)), n=1,
                                bank=("\n\n" + bank_context) if bank_context else "")
             + _style_extra()
             + (("\n" + facts_block) if facts_block else "")
             + "\n\n" + head
-            + "\n\n각 칸마다 src_seg에 **그 문장을 쓸 때 참고한 장면 번호**를 적어라"
-              "([대본 N]의 '장면 목록'에 있는 번호만. 3단계가 그 장면을 화면으로 붙인다)."
-              " 참고한 대목이 딱히 없으면 빈 문자열."
-            + "\n\n출력은 위 칸 순서대로 beats 배열 하나만. 각 원소는 {role, text, src_seg}.")
+            + ((_GROUNDED_RULE if not _is_recipe else
+                "\n\n★[장면 번호] 장면을 보고 쓴 줄은 src_seg에 장면 목록의 번호를 적어라(없는 번호 금지). "
+                "레시피는 감각·전개 줄이 장면 없이도 된다(needs_scene=false).") if grounded else
+               "\n\n각 칸마다 src_seg에 **그 문장을 쓸 때 참고한 장면 번호**를 적어라"
+               "([대본 N]의 '장면 목록'에 있는 번호만. 3단계가 그 장면을 화면으로 붙인다)."
+               " 참고한 대목이 딱히 없으면 빈 문자열.")
+            + ("\n\n출력은 위 칸 순서대로 beats 배열 하나만. 각 원소는 {role, text, src_seg, needs_scene}."
+               if grounded else
+               "\n\n출력은 위 칸 순서대로 beats 배열 하나만. 각 원소는 {role, text, src_seg}."))
 
     extra, tries, res, checks, full = "", [], None, [], ""
     # ★재작성이 끝내 통과 못 하면 **마지막 시도**가 아니라 규격에 가장 가까운 시도를 쓴다
@@ -512,9 +608,11 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
         # ★소재 일치도 함께 본다(2026-08-18) — 재료의 제품명을 그대로 넘긴다.
         #   product가 비면 그 검사는 건너뛴다(회귀 0).
         checks, full = script_gate.check(style, res, facts_text=facts_block,
-                                         product=_sources_product(sources),
+                                         product=_sources_product(sources) or (product or ""),
                                          seconds=seconds,
-                                         speaker_judge=_speaker_judge)
+                                         speaker_judge=_speaker_judge,
+                                         scene_ids=_scene_ids, grounded=bool(grounded),
+                                         is_recipe=_is_recipe, source_count=_source_count)
         tries.append({"chars": len(script_gate.norm(full)),
                       "fails": [c["name"] for c in checks if not c["ok"]]})
         if script_gate.passed(checks):
@@ -546,9 +644,11 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
         # ★앞 판정을 물려준다 — 안 그러면 화자 실패가 여기서 조용히 사라지고,
         #   판정기를 다시 넘기면 유료 호출이 두 배가 된다(재단은 화자를 못 바꾼다).
         checks, full = script_gate.check(style, res, facts_text=facts_block,
-                                         product=_sources_product(sources),
+                                         product=_sources_product(sources) or (product or ""),
                                          seconds=seconds,
-                                         speaker_judge=script_gate.prior_verdict(checks))
+                                         speaker_judge=script_gate.prior_verdict(checks),
+                                         scene_ids=_scene_ids, grounded=bool(grounded),
+                                         is_recipe=_is_recipe, source_count=_source_count)
         tries.append({"chars": len(script_gate.norm(full)), "trimmed": True,
                       "fails": [c["name"] for c in checks if not c["ok"]]})
 
@@ -557,6 +657,11 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
     #   다른 수를 말하게 된다 — 초 환산은 script_gate 한 곳에서만 한다(0순위-B).
     for _b in (res or []):
         _b["sec"] = script_gate.est_seconds(_b.get("text", ""))
+        # ★src_seg 정규화(2026-09-04): 모델이 "s3-10,s3-11"처럼 여럿을 적는다. 하류(store._apply_beat_sources·
+        #   produce.html beat_sources)는 번호 하나를 기대하므로 src_seg=대표(첫 번째), 전체는 src_segs에.
+        _ids = script_gate.parse_src_segs(_b.get("src_seg"))
+        _b["src_segs"] = _ids
+        _b["src_seg"] = _ids[0] if _ids else ""
     return {
         "style_id": style.get("id"), "style_name": style.get("name"),
         "beats": res or [], "script": full, "hook": (res or [{}])[0].get("text", ""),
@@ -876,7 +981,7 @@ def regen_one_beat(sources, style, role, beats, template="", target_seconds=30,
 
 
 def generate_by_styles(sources, styles, target_seconds=30, bank_context="", facts_block="",
-                       reasons=None, seed=""):
+                       reasons=None, seed="", grounded=False, product=""):
     """스타일 목록(보통 2개) → 각 1안. 실패한 스타일은 건너뛴다(하나라도 나오면 화면은 산다).
 
     facts_block은 그대로 흘려보낸다 — 빈 값이면 기존 경로(회귀 0).
@@ -892,7 +997,7 @@ def generate_by_styles(sources, styles, target_seconds=30, bank_context="", fact
         note = {} if reasons is not None else None
         try:
             d = generate_one_style(sources, st, target_seconds, bank_context, facts_block,
-                                   seed=seed, note=note)
+                                   seed=seed, note=note, grounded=grounded, product=product)
         except Exception as e:      # noqa: BLE001 — 한 스타일 실패로 나머지를 죽이지 않는다
             print(f"generate_by_styles 실패(style={st.get('id')}): {e}")
             if reasons is not None:

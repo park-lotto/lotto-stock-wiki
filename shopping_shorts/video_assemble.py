@@ -576,9 +576,12 @@ _MIN_CLIP_KEEP = 0.5
 # 필요한 시간은 마지막 프레임 정지(freeze)로 떠안는다 → 요리 동작은 자연 속도, 남는 시간만 홀드.
 _MAX_SLOWMO = 1.15
 
-# 마지막 비트 '여운'(초) — 대사가 끝나도 화면을 이만큼 더 살려둔다(2026-07-20 콘폼루프 T4,
-# 사장님 육안 피드백 "붙이면 바로 자르지 말고 대사 끝나고 1초 정도 더 냅두면").
-_LAST_RUNOUT = 1.0
+# 마지막 비트 '여운'(초) — 대사가 끝나도 화면을 이만큼 더 살려둔다.
+# 2026-07-20에 1.0으로 넣었으나(콘폼루프 T4) **2026-09-04 사장님 지시로 0으로 되돌렸다**:
+# "더 나오는게 의미가 없는거 아닌가? 다른 영상들은 다 바로 자르던데" — 숏폼은 대사가 끝나면
+# 바로 끊는 게 표준이고, 남는 시간은 슬로모/정지프레임으로 늘어져 완주율만 깎였다.
+# 0이면 plan_beat_clips_for가 여운 연장을 통째로 건너뛰고 mux -t도 tts_dur 그대로다.
+_LAST_RUNOUT = 0.0
 
 
 def _speed_and_freeze(src_dur, out_dur, max_slowmo=_MAX_SLOWMO):
@@ -779,6 +782,13 @@ def _plan_phrase_clips(beat, segs, tts_dur):
             t += d
             bounds.append(min(tts_dur, t))
         bounds.append(tts_dur)
+        # ★칸 길이로 컷 개수를 정한다(2026-09-06 사장님 "너무 잘게 썰려 정신없다").
+        #   구절 경계는 그대로 쓰되, 그중 **등분 지점에 가까운 자리만** 골라 쪼갠다.
+        #   규칙·상수는 cuts_for_beat/pick_split_bounds 한 곳에서만 정하고 화면
+        #   (scene_play.js)이 같은 것을 쓴다(0순위-B).
+        # ★2026-09-06 완전 되돌림(사장님 "어제 그대로 해 / 3구절이면 3컷으로").
+        #   컷 개수를 손대던 규칙(cuts_for_beat·merge_tiny_bounds)을 **전부 뺐다** —
+        #   담은 장면이 화면에 안 나와 라이브 편집을 못 하셨다. 경계는 자막 구절 그대로다.
         # ★구절이 재료보다 많으면 **담은 조각의 뒷부분을 한 바퀴 더 쓴다**(2026-08-31 사장님
         #   "대본이 길어지니까 뒤에까지 장면이 안 붙는다"). 화면(scene_play.js planClips의
         #   구절맞춤 분기)과 **같은 규칙의 서버판**이다 — 한쪽만 고치면 미리보기와 결과물이
@@ -1073,15 +1083,34 @@ def cap_preset_key(txt):
     return "".join(ch for ch in (txt or "") if ch not in drop)
 
 
-def _wrap_long(segs):
+def _wrap_long(segs, manual=False):
     """구절 리스트에서 _CAP_WRAP를 크게 넘는 초장문만 줄바꿈으로 방어(대부분 그대로 1줄).
-    각 줄은 표시용으로 끝 문장부호를 정리한다(2026-07-21 사장님 '봤잖아요.' 마침표 노출)."""
+    각 줄은 표시용으로 끝 문장부호를 정리한다(2026-07-21 사장님 '봤잖아요.' 마침표 노출).
+
+    ★manual=True — **사람이 직접 정한 줄**(caption_lines)일 때는 쪼개지 않는다(2026-09-07).
+      증상: 타임라인에서 자막 경계를 지워 두 구절을 합쳐도 **경계가 도로 살아났다**.
+      실측(job b7af2dd796c5, cta): 저장은 200 OK로 DB에 2줄이 정상 저장되는데,
+      화면을 그리는 _lab_captions → _caption_segments 경로에서 여기가 19자를 넘는
+      첫 줄('다들 모르시는 게 하나 있는데 여행이나 캠핑 갈 때도 이거 하나' = 공백 빼고 25자)을
+      textwrap으로 재분할해 **3구절로 되돌렸다**. 저장이 성공하니 에러도 안 떠서
+      "눌러도 아무 일이 없다"로만 보였다.
+      이 함수의 원래 목적은 docstring대로 "아주 긴 **단일 어절** 방어"인데, 실제로는
+      여러 어절로 된 줄까지 잘라 사람 결정을 덮고 있었다.
+    ★폭 걱정은 안 해도 된다 — 자막 렌더는 single_line=True로 그린다:
+      "절대 줄바꿈하지 않고 한 줄로 두되, 폭을 넘으면 폰트를 자동 축소"
+      (_segmented_drawtext, 사장님 "자막은 무조건 한 줄"). 즉 화면 밖으로 안 나간다.
+      그래서 manual일 때도 **띄어쓰기 없는 단일 어절**만은 방어를 남긴다(줄일 수 없는 것).
+    """
     out = []
     for s in segs:
         s = _strip_cap_tail(s)
         if not s:
             continue
-        if len(s.replace(" ", "")) > _CAP_WRAP:
+        too_long = len(s.replace(" ", "")) > _CAP_WRAP
+        # 사람이 정한 줄은 어절이 둘 이상이면 그대로 존중한다.
+        if manual and len(s.split()) > 1:
+            too_long = False
+        if too_long:
             out.extend(textwrap.wrap(s, _CAP_WRAP) or [s])
         else:
             out.append(s)
@@ -1112,7 +1141,8 @@ def _caption_segments(narration, preset=None):
     if preset and isinstance(preset, (list, tuple)):
         lines = [str(x).strip() for x in preset if str(x).strip()]
         if lines and cap_preset_key("".join(lines)) == cap_preset_key(narr):
-            return _wrap_long(lines)
+            # 사람(또는 대본 AI)이 정한 줄 → 재분할하지 않는다(2026-09-07 경계 버그).
+            return _wrap_long(lines, manual=True)
     words = narr.split()
     out, cur = [], []
     for i, w in enumerate(words):
@@ -2274,6 +2304,38 @@ def _beat_timeline(edit_plan, tts_paths):
         })
         t0 += dur
     return timeline
+
+
+# ── CTA 잘라내기(2026-09-05 사장님 "CTA 있는 걸로 만들고 유튜브 올릴 땐 뒷부분만 잘라내고 싶다")
+#   유튜브엔 댓글 유도 CTA를 빼고 올리고, 인스타·틱톡엔 CTA가 있는 판을 쓴다.
+#   ★자를 지점은 여기 한 곳에서만 정한다(0순위-B) — API·렌더가 각자 계산하면 어긋난다.
+#   ★CTA 판정은 edit_plan._is_cta를 **재사용**한다. 여기서 role 문자열을 새로 검사하면
+#     _CTA_ROLES가 늘 때 한쪽만 고쳐진다(계정↔프록시 덮어쓰기와 같은 병).
+def cta_cut_sec(timeline):
+    """CTA 비트가 시작하는 절대 시각(초). CTA가 없으면 None.
+
+    이 값까지 잘라내면 CTA 직전에서 끝난다. timeline은 _beat_timeline의 결과이므로
+    자막·모션·효과음과 **같은 시간축**이다(별도 누적 금지).
+
+    ⚠️ 반환값은 **썸네일 인트로를 붙이기 전** 기준이다. prepend_still로 앞에 인트로가
+       붙으면 그만큼 밀린다 — 보정은 저장하는 쪽(mix_pipeline.run_render)이 한다.
+    """
+    from shopping_shorts.edit_plan import _is_cta   # 지역 import: 순환참조 회피
+    for b in timeline:
+        if _is_cta(b):
+            t0 = float(b.get("t0") or 0.0)
+            # t0=0 = 첫 비트가 CTA. 자르면 빈 영상이 되므로 없는 것으로 친다.
+            return t0 if t0 > 0.05 else None
+    return None
+
+
+# ★잘라내기에 키프레임(-force_key_frames)은 **필요 없다** — 2026-09-05 실측으로 확인.
+#   처음엔 "-c copy는 키프레임에서만 잘려 최대 8초 어긋난다"고 보고 렌더에 키프레임을
+#   박으려 했으나, 그건 **앞을 자르는 -ss** 이야기였다. 뒤를 자르는 -t/-frames:v는
+#   키프레임과 무관하다. 실측(preset=medium, 8.33초 간격 키프레임, 27.4초 자르기):
+#     키프레임 없음 → 824프레임 / 27.400에 키프레임 강제 → 824프레임 (똑같다)
+#   그래서 렌더 경로는 건드리지 않는다. 자르는 쪽만 -frames:v로 정확히 하면 된다
+#   (-t 27.4는 B프레임 때문에 824프레임=27.47초로 2프레임 넘친다 → 822프레임으로 자른다).
 
 
 # 장면별 자막 자리(2026-08-25 사장님 "장면당 자막 배치를 수정할 수 있게").

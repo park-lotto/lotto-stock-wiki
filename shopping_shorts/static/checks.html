@@ -1,0 +1,86 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>관리점검표</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+ body{font-family:system-ui,"Malgun Gothic",sans-serif;margin:0;background:#0f1218;color:#f1f4f9}
+ header{padding:16px 20px;border-bottom:1px solid #2c3644;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+ .dot{width:16px;height:16px;border-radius:50%;display:inline-block;flex:none}
+ .green{background:#22c55e}.yellow{background:#facc15}.red{background:#ef4444}
+ .gray{background:#5b6472;border:2px solid #9aa4b2}
+ section{padding:16px 20px}
+ h2{font-size:16px;margin:0 0 10px}
+ .row{display:flex;gap:12px;align-items:flex-start;padding:12px;border:1px solid #2c3644;border-radius:10px;margin-bottom:8px;background:#151b24}
+ .row .dot{margin-top:2px}
+ .row .name{font-size:15px;font-weight:700}
+ .row .sub{color:#aeb8c6;font-size:13px;margin-top:2px}
+ .row .reason{color:#e2c4c4;font-size:13px;margin-top:4px}
+ .row.newly{border-color:#ef4444;background:#241417;box-shadow:0 0 0 1px #ef4444 inset}
+ .row.info{border-color:#3b4657;background:#131a24}
+ .row.info .name{font-weight:600;color:#c8d2e0}
+ .badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;background:#38424f;color:#dbe2ec;margin-left:8px;vertical-align:middle}
+ .badge.info{background:#374151;color:#cbd5e1}
+ table{width:100%;border-collapse:collapse}
+ td,th{padding:8px 6px;border-bottom:1px solid #2c3644;font-size:13.5px;text-align:left;vertical-align:top}
+ th{color:#aeb8c6;font-weight:600}
+ a{color:#7dd3fc}
+ small{color:#aeb8c6}
+ nav a{margin-left:4px}
+ .empty{color:#aeb8c6;padding:10px 4px}
+ .headline{font-weight:800;font-size:17px}
+</style></head><body>
+<header><span id="dot" class="dot gray"></span><div><div id="headline" class="headline">불러오는 중…</div>
+<small id="meta"></small></div><nav style="margin-left:auto"><a href="/admin">관리자</a> · <a href="/ops">관측판</a> · <a href="/apiwatch">API</a></nav></header>
+<section><h2>🔴 어제는 초록, 오늘 빨강</h2><div id="newly"></div></section>
+<section><h2>화면·흐름 점검 결과</h2><div id="results"></div></section>
+<section><h2>운영 건강</h2><table><thead><tr><th></th><th>항목</th><th>값</th><th>내용</th><th>시각</th></tr></thead><tbody id="health"></tbody></table></section>
+<script>
+const ORDER={red:0,yellow:1,gray:2,green:3};
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function rowHtml(r,newly){
+  const dot = r.verdict==='gray' ? 'gray' : r.verdict;
+  return `<div class="row ${newly?'newly':''}"><span class="dot ${esc(dot)}"></span><div>
+  <div class="name">${esc(r.name)}${r.verdict==='gray'?'<span class="badge">판정 불가</span>':''} <span class="sub">${esc(r.layer)} · ${esc(r.page||'')}</span></div>
+  ${r.reason?`<div class="reason">${esc(r.reason)}</div>`:''}
+  ${r.evidence_ok?` <a href="/api/admin/checks/evidence/${r.id}/shot.png" target="_blank">화면 사진</a>`:(r.evidence_dir?'<small> · 화면 사진 없음</small>':'')}</div></div>`;
+}
+function healthRow(h){
+  // h_dead_key_recall::member 처럼 항상 ok=True로 고정된 항목은 "판정"이 아니라
+  // 참고용 수치다 — 초록 신호등과 섞이면 사장님이 이상 없다고 오해한다(Task5 지적).
+  const isInfo = /::member$/.test(h.item||'') || (h.name||'').includes('참고용');
+  if (isInfo){
+    return `<tr class="info-row"><td><span class="dot gray"></span></td>
+    <td>${esc(h.name)}<span class="badge info">참고용</span>${h.evidence_url?` <a href="${esc(h.evidence_url)}" target="_blank">보기</a>`:''}</td>
+    <td>${esc(h.value)}</td><td>${esc(h.detail)}</td><td><small>${esc(h.ts)}</small></td></tr>`;
+  }
+  const dot = h.ok===null ? 'gray' : (h.ok?'green':'red');
+  const badge = h.ok===null ? '<span class="badge">판정 불가</span>' : '';
+  return `<tr><td><span class="dot ${dot}"></span></td><td>${esc(h.name)}${badge}${h.evidence_url?` <a href="${esc(h.evidence_url)}" target="_blank">보기</a>`:''}</td>
+  <td>${esc(h.value)}</td><td>${esc(h.detail)}</td><td><small>${esc(h.ts)}</small></td></tr>`;
+}
+async function load(){
+  let j;
+  try{
+    j = await (await fetch('/api/admin/checks/summary',{credentials:'same-origin'})).json();
+  }catch(e){
+    document.getElementById('headline').textContent='불러오기 실패(네트워크)';
+    return;
+  }
+  if(!j.ok){document.getElementById('headline').textContent='불러오기 실패';return;}
+  document.getElementById('headline').textContent=j.headline;
+  const run=j.run; const overall=run?run.verdict:'gray';
+  document.getElementById('dot').className='dot '+esc(overall||'gray');
+  document.getElementById('meta').textContent=run
+    ?`마지막 실행 ${run.finished} · ${run.trigger} · ${run.head_sha||''} · 빨강 ${j.counts.red||0} 주의 ${j.counts.yellow||0} 판정불가 ${j.counts.gray||0} 정상 ${j.counts.green||0}`
+    :'';
+  const newSig=new Set((j.newly_red||[]).map(r=>r.signature));
+  document.getElementById('newly').innerHTML=(j.newly_red||[]).map(r=>rowHtml(r,true)).join('')||'<div class="empty">새로 빨개진 항목 없음</div>';
+  const rest=(j.results||[]).filter(r=>!newSig.has(r.signature)).sort((a,b)=>ORDER[a.verdict]-ORDER[b.verdict]);
+  document.getElementById('results').innerHTML=rest.map(r=>rowHtml(r,false)).join('')||'<div class="empty">점검 결과 없음</div>';
+  const health=(j.health||[]).slice().sort((a,b)=>{
+    const ai=/::member$/.test(a.item||'')?1:0, bi=/::member$/.test(b.item||'')?1:0;
+    if(ai!==bi) return ai-bi;
+    return (a.ok===b.ok)?0:(a.ok?1:-1);
+  });
+  document.getElementById('health').innerHTML=health.map(healthRow).join('') || '<tr><td colspan="5" class="empty">운영 건강 데이터 없음</td></tr>';
+}
+load(); setInterval(load,30000);
+</script></body></html>

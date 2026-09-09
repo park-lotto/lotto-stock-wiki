@@ -22,10 +22,17 @@ def _beat(**kw):
 
 
 def test_cut_bounds_equal_phrase_bounds():
+    """컷 경계 = 자막 구절 경계. **3구절이면 3컷**이다.
+
+    ★2026-09-06: 하루 사이 "칸 길이가 컷 개수를 정한다"·"짧은 칸은 합친다"를 넣었다가
+      **둘 다 되돌렸다** — 담은 장면이 화면에 안 나와 사장님이 라이브 편집을 못 하셨다.
+      컷 개수를 손대는 규칙은 넣지 마라. 짧은 컷이 거슬리면 자막 줄을 합치는 쪽으로
+      풀어야 한다(그건 사장님이 화면에서 직접 하신다).
+    """
     plan = _plan_phrase_clips(_beat(), SEGS, 3.86)
-    assert plan and len(plan) == 3
+    assert plan and len(plan) == 3, "3구절이면 3컷"
     durs = [c["out_dur"] for c in plan]
-    # 컷1 = 리드인 0.29 + 구절1 1.1 / 컷2 = 구절2 0.68 / 컷3 = 구절3 + 꼬리(합계 보전)
+    # 컷1 = 리드인 0.29 + 구절1 1.1 / 컷2 = 구절2 0.68 / 컷3 = 구절3 + 꼬리
     assert durs[0] == pytest.approx(0.29 + 1.1, abs=1e-6)
     assert durs[1] == pytest.approx(0.68, abs=1e-6)
     assert sum(durs) == pytest.approx(3.86, abs=1e-6)

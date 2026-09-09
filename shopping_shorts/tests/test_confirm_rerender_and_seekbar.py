@@ -123,3 +123,14 @@ def test_탐색바가_틀_밖으로_밀려나지_않는다():
     body = css.split("#confirmBody{")[1].split("}")[0]
     assert "display:flex" in body and "flex-direction:column" in body, \
         "#confirmBody가 세로 flex가 아니면 막대가 틀 밖으로 밀려난다"
+
+
+def test_지문_없이_채워진_완성본도_지문을_갖는다():
+    """2026-09-04 사장님 제보: 최종렌더 뒤 3단계에서 고쳐도 미리보기는 옛것.
+    페이지 복원 경로는 _askRender를 안 거쳐 PENDING_SIG가 비어 RENDERED_SIG도 비었다 →
+    낡음 판정(`!!RENDERED_SIG && …`)이 영영 거짓. 채울 때 현재 편성 지문을 대신 찍어야 한다."""
+    code = _code("scene_lab.html")
+    assert "stampConfirmSigIfMissing()" in _fn(code, "showConfirmVideo"), "지문 없이 채워진 영상은 낡음을 영영 못 본다"
+    assert "_editSig()" in _fn(code, "stampConfirmSigIfMissing"), "지문은 _editSig 한 곳에서 만든다(0순위-B)"
+    # 복원 경로는 boot가 DATA를 받기 전에 영상이 들어와 계산이 실패한다 — boot 끝에서 한 번 더
+    assert "stampConfirmSigIfMissing()" in _fn(code, "boot"), "편성이 실린 뒤에 다시 찍지 않으면 지문이 빈 채 남는다(라이브 실측)"

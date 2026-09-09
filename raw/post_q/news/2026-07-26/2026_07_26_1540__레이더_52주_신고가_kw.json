@@ -1,0 +1,34 @@
+{
+  "target_kind": "stock_tips",
+  "stocks": [
+    {
+      "name": "Adams Diversified Equity",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-07-21 14:34",
+      "quote": "Adams Diversified Equity, 주가 26.34달러로 52주 신고가 경신",
+      "sector": "기타"
+    },
+    {
+      "name": "Digitalbridge Group Inc",
+      "signal": "bull",
+      "reason": "52주 신고가 경신",
+      "ts": "2026-07-20 20:03",
+      "quote": "Digitalbridge Group Inc 주가, 52주 신고가 15.82달러 기록",
+      "sector": "기타"
+    }
+  ],
+  "news_items": [
+    {
+      "fact": "Adams Diversified Equity, 주가 26.34달러로 52주 신고가 경신",
+      "ts": "2026-07-21 14:34",
+      "quote": "Adams Diversified Equity, 주가 26.34달러로 52주 신고가 경신"
+    },
+    {
+      "fact": "Digitalbridge Group Inc 주가, 52주 신고가 15.82달러 기록",
+      "ts": "2026-07-20 20:03",
+      "quote": "Digitalbridge Group Inc 주가, 52주 신고가 15.82달러 기록"
+    }
+  ],
+  "quote": "Adams Diversified Equity, 주가 26.34달러로 52주 신고가 경신 / Digitalbridge Group Inc 주가, 52주 신고가 15.82달러 기록"
+}
