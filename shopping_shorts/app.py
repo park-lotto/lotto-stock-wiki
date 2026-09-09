@@ -20268,13 +20268,17 @@ def _frames_for_source(src, log=lambda *a: None):
             vids = sorted(d.glob("*.mp4")) if d.is_dir() else []
             if not vids:
                 continue
-            out = []
+            out, unread = [], 0
             for path, _ts in frame_extract.extract_grid_frames(
                     str(vids[0]), d / "fact_frames", n=_FACT_FRAMES):
                 try:
                     out.append(Path(path).read_bytes())
-                except OSError:
-                    pass
+                except OSError as e:   # 한 장 못 읽어도 나머지로 간다 — 조용히 넘기진 않는다
+                    unread += 1
+                    _last_read_err = e
+            if unread:
+                print("[facts] 프레임 %d장 못 읽음(%s) — 남은 %d장으로 진행"
+                      % (unread, str(_last_read_err)[:80], len(out)), file=sys.stderr)
             if out:
                 return out
     except Exception as e:      # noqa: BLE001 — 프레임을 못 구해도 재료 추출은 돌아야 한다
