@@ -47,8 +47,44 @@ KEYS = [v for i in range(1, _MAX + 1)
 if not KEYS:                                     # 예전 형식도 받아준다
     RAW = os.environ.get("YOUTUBE_API_KEYS", "")
     KEYS = [k for k in RAW.replace(",", " ").split() if k]
+
+# ★회원 키도 합류시킨다(2026-09-09 사장님 "고객들 유튭키가 다 공용이야 전체 회원키로
+#   레퍼런스랭킹하는거야"). 위 주석의 2026-08-19 사고와 **같은 종류**의 구멍이다 —
+#   그때는 환경변수를 한 개만 읽어 1/10로 돌았고, 지금은 회원 키를 통째로 몰랐다.
+#   실측 2026-09-09: 회원 유튜브 키 52개가 DB에 있는데 이 루프는 사장님 10개만 써서
+#   100,000 units에서 "쿼터 소진"을 선언하고 잤다(실제 가용 620,000).
+#   ⚠️키는 **암호화돼 있다**(customer_keys.key_enc = Fernet `gAAAAA...`). DB에서 직접
+#     읽으면 못 쓴다 — 복호화는 store.get_pooled_keys가 한다. 그래서 진짜 Store를
+#     따로 띄워 그 함수를 부른다(이 스크립트는 위에서 가짜 shopping_shorts 패키지를
+#     만들기 때문에, 여기서만 sys.modules를 잠깐 비켜 두고 진짜 모듈을 import한다).
+try:
+    _fake = sys.modules.pop("shopping_shorts", None)
+    _fake_sub = {k: sys.modules.pop(k) for k in list(sys.modules)
+                 if k.startswith("shopping_shorts.")}
+    sys.path.insert(0, os.path.dirname(BASE))
+    from shopping_shorts.store import Store as _Store          # noqa: E402
+    from shopping_shorts.config import DB_PATH as _DBP         # noqa: E402
+    from shopping_shorts import keyroute as _kr                # noqa: E402
+    _mem = list(_Store(_DBP).get_pooled_keys(_kr.SVC_YOUTUBE) or [])
+    _before = len(KEYS)
+    for k in _mem:
+        if k not in KEYS:
+            KEYS.append(k)
+    if len(KEYS) > _before:
+        print("[keypool] 유튜브 사장님 %d + 회원 %d = %d개"
+              % (_before, len(KEYS) - _before, len(KEYS)), file=sys.stderr)
+except Exception as _e:      # noqa: BLE001 — 합류 실패해도 사장님 키로 돈다
+    print("[keypool] 회원키 합류 실패(사장님 키로 계속): %r" % (_e,), file=sys.stderr)
+finally:
+    # 가짜 패키지를 원상복구한다 — 아래 코드가 그걸 전제로 돈다(안 되돌리면 통째로 깨진다).
+    for _k in [k for k in list(sys.modules) if k.startswith("shopping_shorts")]:
+        sys.modules.pop(_k, None)
+    if _fake is not None:
+        sys.modules["shopping_shorts"] = _fake
+    sys.modules.update(_fake_sub)
+
 assert KEYS, "no keys"
-DAILY = 10000 * len(KEYS)       # 키 1개당 하루 10,000 units
+DAILY = 10000 * len(KEYS)       # 키 1개당 하루 10,000 units(프로젝트가 계정별로 다름)
 
 pkg = types.ModuleType("shopping_shorts")
 pkg.__path__ = []

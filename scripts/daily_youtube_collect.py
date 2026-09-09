@@ -25,6 +25,24 @@ def main():
     from shopping_shorts.config import DB_PATH
     from shopping_shorts.store import Store
     store = Store(DB_PATH)
+    # ★회원 유튜브 키를 공용 풀에 합류시킨다(2026-09-09 사장님 "고객들 유튭키가 다
+    #   공용이야 전체 회원키로 레퍼런스랭킹하는거야 그걸로 수집해").
+    #
+    #   이 스크립트는 **별도 프로세스**라 FastAPI startup이 없다 — 그래서 회원 키를
+    #   하나도 모른 채 사장님 키 10개로만 돌았다. 실측 2026-09-09:
+    #     회원 유튜브 키 52개가 DB에 등록돼 있는데 수집은 10개만 사용
+    #     → 쓸 수 있는 하루 쿼터 620,000 units 중 100,000만 쓰고 "소진"으로 멈춤
+    #     → 시드 2,170개 중 1,020개만 응답(영상 9,622→7,323 · 썰쇼핑 813→526)
+    #
+    #   ⚠️2026-08-31에 **똑같은 사고**가 워커에서 났고(회원 키 44개를 통째로 몰랐다)
+    #     그때 웹·워커·capacity_watch는 고쳤는데 이 스크립트와 발굴 루프는 빠져 있었다.
+    #     keypool.resync_pools가 합류 규칙의 유일한 출처다(0순위-B) — 여기 다시 적지 않는다.
+    try:
+        from shopping_shorts import keypool
+        keypool.resync_pools(store, verbose=True)
+    except Exception as e:      # noqa: BLE001 — 합류 실패가 수집을 막지 않는다
+        print(f"[daily_youtube_collect] 회원키 합류 실패(사장님 키로 계속): {e!r}",
+              file=sys.stderr)
     # ★하루치 중복 방지 + 재시도(2026-08-31): 예전엔 타이머가 하루 1회뿐이라, 그 순간
     #   렌더가 돌면 "다음 회차로 미룬다"면서 실제로는 **그날 수집이 통째로 날아갔다**
     #   (실사고 08-31: 08:10에 렌더 중 → 스킵 → 하루 0건, 사장님이 발견).

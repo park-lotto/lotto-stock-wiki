@@ -2300,6 +2300,51 @@ class Store:
             except sqlite3.Error:
                 return {}
 
+    def youtube_channel_rank(self):
+        """채널ID → (구독자, 최고조회수). 마지막 수집분에서 집계한다(API 0회).
+
+        ★왜 필요한가(2026-09-09 사장님 "썰쇼핑 채널들 중 대형채널 위주로 먼저 수집을
+          계속 해야될것 같애. 구독자 많은것 / 그다음 조회수 터지는거 / 아직 우리
+          레퍼런스가 너무 얇아"):
+
+          수집은 시드를 `ORDER BY added_at ASC`, 즉 **등록이 오래된 순**으로 돈다.
+          쿼터가 마르면 뒤쪽이 통째로 빠지는데 그 순서가 채널 크기와 아무 상관이 없다.
+          실측 2026-09-09: 시드 2,170개 중 **1,020개만 응답**하고 끝났다
+          (영상 9,622→7,323건 · 썰쇼핑 813→526건). 어제 새로 넣은 채널이 맨 뒤라
+          큰 채널이 그대로 잘려 나갔다.
+
+        ★지표는 이미 가진 것에서 뽑는다 — 구독자를 다시 물으면 그것도 쿼터다.
+        """
+        import json as _json
+        out = {}
+        try:
+            with self._conn() as c:
+                row = c.execute("SELECT value FROM settings WHERE key=?",
+                                ("last_run::youtube",)).fetchone()
+                # ★발굴이 등록할 때 적어둔 구독자도 함께 본다(2026-09-09).
+                #   랭킹에 아직 안 뜬 **새 채널**은 last_run에 없어서 지표가 0이 되고,
+                #   그러면 크기와 무관하게 뒤로 밀린다 — 발굴로 찾은 대형 채널이
+                #   영영 안 걸리는 길이다. 발굴은 만날 때 이미 구독자를 알고 있으므로
+                #   channel_styles.subs에 저장해 두고 여기서 빌려 쓴다.
+                try:
+                    for cid, subs in c.execute(
+                            "SELECT channel_id, IFNULL(subs,0) FROM channel_styles"):
+                        if cid and int(subs or 0) > 0:
+                            out[cid] = (int(subs), 0)
+                except Exception:      # noqa: BLE001 — subs 컬럼이 없는 옛 DB
+                    pass
+            for it in (_json.loads(row[0]).get("items") or []) if row else []:
+                cid = it.get("username") or ""
+                if not cid.startswith("UC"):
+                    continue
+                subs = int(it.get("followers") or 0)
+                views = int(it.get("views") or 0)
+                s0, v0 = out.get(cid, (0, 0))
+                out[cid] = (max(s0, subs), max(v0, views))
+        except Exception:      # noqa: BLE001 — 순위를 못 구해도 수집은 돌아야 한다
+            return {}
+        return out
+
     def list_seeds(self, platform):
         """플랫폼 시드 목록. 유튜브는 발굴 스타일(썰쇼핑·신기템 등)을 함께 준다.
 
