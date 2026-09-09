@@ -242,10 +242,40 @@ def refresh_member_gemini_keys(pooled):
     return len(_OWNER_GEMINI_KEYS), len(SHORTS_GEMINI_KEYS) - len(_OWNER_GEMINI_KEYS)
 
 
+# 유튜브 키를 **값으로 복사해 가는** 모듈들(2026-09-09 실측으로 전수 확인).
+#   grep 'from shopping_shorts.config import ... YOUTUBE_API_KEYS'
+_YT_IMPORTERS = ("youtube_client", "youtube_search", "seo_probe")
+
+
+def _push_youtube_pool_to_importers(keys):
+    """복사본을 들고 있는 모듈들의 YOUTUBE_API_KEYS를 갱신한다.
+
+    이미 import된 모듈만 건드린다(sys.modules) — 여기서 새로 import하면 순환이 난다.
+    """
+    import sys
+    for name in _YT_IMPORTERS:
+        mod = sys.modules.get("shopping_shorts." + name)
+        if mod is not None and hasattr(mod, "YOUTUBE_API_KEYS"):
+            mod.YOUTUBE_API_KEYS = keys
+
+
 def refresh_member_youtube_keys(pooled):
     """회원 유튜브 키를 공용 풀에 합류시킨다(제미니와 같은 규칙)."""
     global YOUTUBE_API_KEYS
     YOUTUBE_API_KEYS = _merge_pool(_OWNER_YOUTUBE_KEYS, pooled)
+    # ★★값을 복사해 간 모듈들에도 밀어 넣는다 — **이 줄이 없어서 사고가 났다**(2026-09-09).
+    #
+    #   제미니에는 2026-08-27에 같은 처방(_push_pool_to_importers)이 들어갔는데
+    #   유튜브에는 안 들어갔다. `from shopping_shorts.config import YOUTUBE_API_KEYS`는
+    #   **값 복사**라, 여기서 재할당해도 youtube_client·youtube_search는 옛 목록을 본다.
+    #
+    #   실측 피해(2026-09-09): keypool 배선을 넣어 로그에는
+    #     `[keypool] 유튜브 사장님 10 + 회원 52 = 62개`
+    #   가 찍혔는데, 실제 호출은 **이미 소진된 사장님 키 10개**로 나갔다.
+    #     수집 9,622건 → 922건 (썰쇼핑 813 → 37건, -93%)
+    #   로그가 "합류 성공"이라고 말하는데 실제로는 아무것도 안 바뀐 **조용한 실패**였다.
+    #   ⚠️키 풀을 늘리는 배선은 항상 두 짝이다 — config 갱신 + 복사본 갱신.
+    _push_youtube_pool_to_importers(YOUTUBE_API_KEYS)
     return len(_OWNER_YOUTUBE_KEYS), len(YOUTUBE_API_KEYS) - len(_OWNER_YOUTUBE_KEYS)
 
 
