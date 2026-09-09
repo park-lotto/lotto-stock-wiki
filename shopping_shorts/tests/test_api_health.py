@@ -495,3 +495,37 @@ def test_verdict_ok_resolves_open_danger(tmp_db, monkeypatch):
     v = api_health.verdict(snap={"gemini": [], "others": [], "collectors": []},
                            agg=api_health.aggregates(hours=1))
     assert v["level"] == "ok" and called == ["api_health_danger"]
+
+
+def test_verdict_member_key_failures_are_not_danger(tmp_db):
+    """★회원이 자기 키를 넣어 실패한 것은 **운영사고가 아니다**(2026-09-08 실사고).
+
+    실사고: 회원 340의 typecast 키가 무료플랜이라 합성 API만 403을 뱉었는데
+    (`/v1/voices`는 통과 — 키·계정은 멀쩡했다), 최근 1시간 창에 그 54건만 들어와
+    "typecast: 최근 1시간 실패율 100% (18/18건)" **고객 영향 사고** 빨간불이 떴다.
+    같은 시각 다른 회원 4명은 184건 정상이었다 — 서비스는 멀쩡했다.
+
+    죽은 키 판정(member_dead)에는 2026-09-04에 이 규칙이 이미 들어갔는데
+    **실패율 판정만 빠져 있었다**(0순위-B: 같은 판단이 두 군데). 여기서 짝을 맞춘다.
+
+    회원 키 실패는 그 회원만 겪고 그 회원이 키를 바꿔야 풀린다 → warn으로 회원 번호를
+    붙여 알린다. danger는 운영 키가 무너져 **전 고객이** 영향받을 때만이다."""
+    for _ in range(18):
+        api_health.record("typecast", api_health.OUT_AUTH, customer_id="340",
+                          detail=_AUTH_MSG)
+    v = api_health.verdict(snap={"gemini": [], "others": [], "collectors": []},
+                           agg=api_health.aggregates(hours=1))
+    assert v["level"] != "danger", f"회원 키 실패가 사고로 떴다: {v['problems']}"
+    assert not any("실패율" in p for p in v["problems"]), v["problems"]
+    assert any("340" in w for w in v["warns"]), v["warns"]
+
+
+def test_verdict_owner_key_failures_still_danger(tmp_db):
+    """★반대쪽 — 운영 키(customer_id 없음)가 무너지면 그건 진짜 사고다.
+
+    위 테스트가 통과하려고 실패율 판정을 통째로 죽이면 안 된다. 이 짝이 그걸 막는다."""
+    for _ in range(18):
+        api_health.record("typecast", api_health.OUT_AUTH, detail=_AUTH_MSG)
+    v = api_health.verdict(snap={"gemini": [], "others": [], "collectors": []},
+                           agg=api_health.aggregates(hours=1))
+    assert v["level"] == "danger", v

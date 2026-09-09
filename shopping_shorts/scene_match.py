@@ -41,6 +41,63 @@ _MATCH_SCHEMA = {
 }
 
 
+# ── 1차 좁히기 (2026-09-08) ────────────────────────────────────────────
+# 왜 필요한가 — **이 기능이 한 번 꺼진 이유가 이것이다.** mix_pipeline 주석:
+#   "켜고 끄는 스위치가 없어 자산이 하나라도 등록돼 있으면 **모든 영상에 무조건**
+#    적용됐다(당시 12개 등록). 사장님 지시('장면 라이브러리 없애, 안 쓰니까')"
+# 실제로 서버에 남아 있는 12개는 튀김·삼겹살·서랍장·세탁기·감자튀김이다. 캠핑 의자
+# 영상에 감자튀김 컷이 붙으면 시청자는 즉시 이상함을 느낀다.
+#
+# 그래서 Gemini에게 묻기 **전에** 말과 화면이 애초에 겹치는 후보만 남긴다.
+#   · 비용 0·즉시(문자열 대조뿐) — 컷이 1만 개가 돼도 Gemini가 보는 후보는 일정하다
+#   · 겹치는 게 하나도 없으면 **아무것도 안 붙인다**(그게 옛 사고의 처방이다)
+_STOP = {"영상", "장면", "사람", "손", "화면", "모습", "하는", "있는", "것", "그것",
+         "이것", "저것", "때", "안", "위", "아래", "옆", "앞", "뒤"}
+
+
+def _tokens(text):
+    """비교용 토큰 — 어간 2글자로 자른다.
+
+    한국어는 조사·어미가 붙어 완전일치가 잘 안 된다("감자를"≠"감자"). 인스타 슬롯
+    매칭에서 쓰던 것과 같은 기법이다(어간 2글자). 2글자면 과매칭이 걱정되지만,
+    아래에서 **2개 이상 겹칠 때만** 통과시켜 우연을 거른다.
+    """
+    out = set()
+    for raw in (text or "").replace(",", " ").split():
+        w = "".join(ch for ch in raw if ch.isalnum())
+        if len(w) < 2 or w in _STOP:
+            continue
+        out.add(w[:2] if len(w) > 2 else w)
+    return out
+
+
+def _asset_tokens(a):
+    return _tokens(" ".join([
+        a.get("subject") or "", a.get("scene_desc") or "",
+        " ".join(a.get("keywords") or []), a.get("title") or "",
+    ]))
+
+
+def narrow(assets, plan, min_hits=2):
+    """대본과 말이 겹치는 컷만 남긴다 — Gemini에 넘기기 전 무료 1차 필터.
+
+    min_hits=2 — 1글자 어간이 우연히 겹치는 것을 거른다. 실측 없이 정한 값이라
+    라이브에서 '붙어야 할 게 안 붙는다'가 나오면 1로 낮춰라(반대 방향 사고는
+    '엉뚱한 게 붙는다'이고, 그쪽이 훨씬 나쁘다 — 그래서 보수적으로 시작한다).
+    """
+    beats = (plan or {}).get("beats") or []
+    said = set()
+    for b in beats:
+        said |= _tokens(b.get("narration") or "")
+    if not said:
+        return []                      # 대본이 없으면 붙일 근거도 없다
+    out = []
+    for a in assets:
+        if len(_asset_tokens(a) & said) >= min_hits:
+            out.append(a)
+    return out
+
+
 def _candidates(assets):
     return [a for a in assets
             if a.get("asset_type") == "clip" and a.get("source_origin") in _ALLOWED_ORIGIN]
@@ -72,7 +129,9 @@ def match_scene_assets(plan, assets, *, threshold=0.9, vault_call=None):
     # 짤이 라이브 영상에 박히는 것 > 짤 안 쓰는 것)이라 이쪽이 안전하다. 최종 안전망=검수판(사람).
     vault_call = vault_call or edit_plan._vault_call
     plan = copy.deepcopy(plan)
-    cands = _candidates(assets)
+    # ★Gemini에 묻기 전에 좁힌다(2026-09-08) — 아래 역할 패스도 같은 목록을 쓴다.
+    #   좁힌 결과가 비면 cands가 비고, 소재 패스도 역할 패스도 아무것도 안 붙인다.
+    cands = narrow(_candidates(assets), plan)
     by_id = {a["id"]: a for a in cands}
     suggestions = []
     if cands:

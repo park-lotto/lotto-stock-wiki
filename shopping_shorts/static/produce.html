@@ -9635,13 +9635,21 @@ function _renderMixReviewBody(d, failStatus){
       <span style="font-size:11px;background:var(--accent2);padding:2px 8px;border-radius:10px">${esc(b.role||'')}</span>${b.inherited?` <span title="2단계 대본이 지목한 장면을 그대로 붙였습니다(추측 없음)" style="font-size:11px;background:var(--inset);border:1px solid var(--line);padding:2px 8px;border-radius:10px;color:var(--sub)">📎 2단계 장면</span>`:(b.fit_evidence==='broll_fill'?` <span title="이 줄은 특정 화면을 요구하지 않아 앞 장면의 다음 컷으로 채웠습니다" style="font-size:11px;background:var(--inset);border:1px solid var(--line);padding:2px 8px;border-radius:10px;color:var(--sub)">🎞 b-roll</span>`:'')}
       <div style="margin:6px 0;font-size:13px">${esc(b.narration||'')}</div>
       <div class="hint">🎞 ${esc(b.primary?.video_id||'')} · ${b.primary?.start}s~${b.primary?.end}s · ${b.target_seconds}s${b.fit?` · 매칭 ${b.fit}/5`:''}${b.conformed?` · <span style="color:var(--accent)">⏱ 길이 맞춤</span>`:''}</div>
-      ${(b.fit&&b.fit<=2&&!b.respined)?`<div style="color:var(--fire);font-size:12px;margin-top:3px">⚠️ 이 문장에 맞는 영상이 부족합니다 — 대본을 살짝 바꾸거나 소스 영상을 추가하세요.</div>`:''}
+      ${/* ★visual_verb=false면 경고하지 않는다(2026-09-08).
+             그 값은 대본을 쓴 모델이 "이 문장이 화면의 구체적 동작·상태를 지목하는가"를
+             직접 매긴 것이다(프롬프트 원문: "감정·설명·도입부처럼 특정 화면을 요구하지
+             않으면 false"). 라이브 실측 1,500 job — fit<=2인 칸 1,782개 중 **871개(49%)가
+             visual_verb=false**였다. "친구네 집 갔다가 충격받았어요" 같은 말은 화면이 안
+             맞는 게 정상인데 빨간불이 떠서, 사장님이 고칠 게 없는 칸까지 전부 확인해야 했다.
+             ⚠️옛 job은 이 값이 없다(92% 채워짐) → undefined면 종전대로 경고한다(안전). */''}
+      ${(b.fit&&b.fit<=2&&!b.respined&&b.visual_verb!==false)?`<div style="color:var(--fire);font-size:12px;margin-top:3px">⚠️ 이 문장에 맞는 영상이 부족합니다 — 대본을 살짝 바꾸거나 소스 영상을 추가하세요.</div>`:''}
+      ${(b.fit&&b.fit<=2&&!b.respined&&b.visual_verb===false)?`<div class="hint" style="margin-top:3px" title="이 문장은 감정·설명·도입부라 특정 화면을 요구하지 않습니다. 화면이 딱 맞지 않아도 정상입니다">💬 이야기 문장 — 화면이 꼭 맞지 않아도 됩니다</div>`:''}
       ${(b.sync_gap&&b.sync_gap>0.8)?`<div id="syncGap${i}" style="color:var(--fire);font-size:12px;margin-top:3px">⏱ 대사가 영상보다 ${b.sync_gap}초 깁니다. <button class="btn-prev" style="padding:4px 10px;font-size:12px;margin-left:6px" onclick="doShorten(${i})">✂ 대사 줄이기</button></div>`:''}
       <div class="scene-swap" id="sceneSwap${i}">${renderSwapButton(b, i)}</div>
       <div class="scene-cutaway" id="sceneCutaway${i}">${renderSceneCutaway(b, i)}</div>
       <div class="scene-sfx" id="sceneSfx${i}">${renderSceneSfx(b, i)}</div>
       <div class="scene-trim" id="sceneTrim${i}">${renderTrimControls(b, i)}</div>
-    </div>`).join('')+`<div class="hint" style="margin-top:6px">✅ 매칭 완료${(d.beats||[]).some(b=>!b.respined&&b.fit&&b.fit<=2)?' <span style="color:var(--fire)">— ⚠️ 표시된 문장은 영상이 약합니다</span>':''} — 아래에서 <b>미리보기</b>를 확인한 뒤 다음으로 넘어가세요.</div>`
+    </div>`).join('')+`<div class="hint" style="margin-top:6px">✅ 매칭 완료${(d.beats||[]).some(b=>!b.respined&&b.fit&&b.fit<=2&&b.visual_verb!==false)?' <span style="color:var(--fire)">— ⚠️ 표시된 문장은 영상이 약합니다</span>':''} — 아래에서 <b>미리보기</b>를 확인한 뒤 다음으로 넘어가세요.</div>`
     +`<button class="btn" style="margin-top:8px;padding:7px 14px;background:var(--inset);border:1px solid var(--line);color:var(--sub)" onclick="cancelMixReview()" title="이 매칭을 취소하고 소스·대본을 고쳐 처음부터 다시 매칭합니다">✕ 취소하고 다시 매칭</button>`
     +`<div class="hint" style="margin-top:6px">완성본은 장면 편집의 <b>완성본 만들기</b> 탭에서 만들어집니다 🪞 · 장면이 안 맞으면 각 문장의 <b>🎞 다른 화면으로 바꾸기</b>로 고치거나, 위 <b>✕ 취소하고 다시 매칭</b>으로 다시 하세요.</div>`
     +`<details id="bankInjectedBox" style="margin-top:10px;font-size:12px"><summary style="cursor:pointer;color:var(--sub)">🏦 이번 대본에 쓴 은행 부품 보기 (검증)</summary><div id="bankInjectedBody" class="hint" style="margin-top:6px">불러오는 중…</div></details>`;

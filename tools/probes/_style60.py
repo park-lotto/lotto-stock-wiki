@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-"""서버 /api/script/styles의 id 60 '유튜브 발명품형' 원문(2026-09-05 조회).
+"""서버 /api/script/styles의 id 60 '유튜브 「OO 개발자도 무릎 탁」' 원문(2026-09-05 조회).
 히트작 23편 기반 — 서버 스타일 중 source_count가 가장 크다. **단일 제품** 소재용.
 ★발명한 값이 아니라 라이브가 실제로 쓰는 그 형태 그대로다."""
 STYLE = {
- "id": 60, "name": "유튜브 발명품형",
+ "id": 60, "name": "유튜브 「OO 개발자도 무릎 탁」",
  "situation_type": "탄생 배경(사람 이야기)으로 열고 권위·화제로 받친 뒤 핵심 기능을 시연한다",
  "beat_roles": ["title", "story", "authority", "benefit", "escalate", "twist"],
  "chars_per_30s": 270,

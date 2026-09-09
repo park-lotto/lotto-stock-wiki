@@ -18,6 +18,14 @@
    daily_batch 로그가 매일 "샤홍발굴 0 · 네클채널 0").
   ★핀터레스트는 랭킹 수정 검증 후 다시 켜는 것이 예정된 순서다
   (사장님: "핀터는 매칭까지 못가고 막혔어") — 삭제 말고 display:none만 떼라.
+- 2026-09-08: 사장님 "메인화면에 핀터레스트는 왜없앴나. 모두 공개로해라" →
+  **전 플랫폼 노출**이 지금 계약. 09-07에 숨긴 이유(죽은 데이터)는 사라지지 않았다 —
+  실측 09-08: 유튜브 09-08 / 네이버클립 08-30 / 핀터레스트 08-28 / 쓰레드 08-17 /
+  틱톡·샤오홍슈·도우인 07-30(게다가 shortcode가 전부 demo_ 더미 8건).
+  보고 뒤 사장님이 **틱톡·샤오홍슈·도우인 3개는 다시 닫으라**고 하셨다 — 그 셋만
+  실데이터가 0이고 demo_ 더미뿐이라 고객에게 가짜가 보이기 때문이다.
+  → 지금 계약 = 인스타·유튜브·쓰레드·핀터레스트·네이버클립 **5개 노출**,
+    틱톡·샤오홍슈·도우인 3개는 display:none(수집이 살아나면 그때 연다).
 - 2026-08-17(4차): 쓰레드 배선 완료 — service._collect_threads()가 생겨 "비활성"
   전제가 사라졌다. 지표·창은 인스타와 동일(댓글 기준·48h, 사장님 결정).
 
@@ -46,19 +54,20 @@ def _tab_tag(html, platform):
     return html[html.rfind("<div", 0, i): html.find(">", i) + 1]
 
 
-def test_two_tabs_shown_rest_hidden():
-    """노출은 인스타·유튜브 2개. 나머지는 요소를 남긴 채 숨긴다(로직 보존).
+def test_live_platform_tabs_shown_demo_only_hidden():
+    """노출 5개(인스타·유튜브·쓰레드·핀터레스트·네이버클립), demo 더미 3개는 숨김.
 
-    ★2026-09-07 계약 변경 — 종전 3개(+쓰레드)에서 2개로 줄었다.
-    요소는 남긴다: switchPlatform·트렌드카드가 잡으므로 지우면 그 코드가 죽는다.
+    ★2026-09-08 사장님 "모두 공개로해라" → 전부 열었다가, demo_ 더미뿐이라는 실측을
+    보고하니 틱톡·샤오홍슈·도우인 3개만 다시 닫으라고 하셨다.
+    ★숨길 때도 요소는 지우지 않는다 — switchPlatform·트렌드카드가 이 요소들을 잡는다.
     """
     html = INDEX.read_text(encoding="utf-8")
-    for p in ("instagram", "youtube"):
-        assert "display:none" not in _tab_tag(html, p), f"{p} 탭이 숨겨졌다"
-    for p in ("threads", "pinterest", "naverclip",
-              "tiktok", "xiaohongshu", "douyin"):
-        msg = f"{p} 탭이 다시 노출됐다 — 인스타·유튜브 2개만 보여야 한다"
-        assert "display:none" in _tab_tag(html, p), msg
+    for p in ("instagram", "youtube", "threads", "pinterest", "naverclip"):
+        assert "display:none" not in _tab_tag(html, p),             f"{p} 탭이 숨겨졌다 — 사장님이 공개하라고 한 5개 중 하나다(2026-09-08)"
+    for p in ("tiktok", "xiaohongshu", "douyin"):
+        assert "display:none" in _tab_tag(html, p),             f"{p} 탭이 열렸다 — 실데이터 0(demo_ 더미)이라 닫기로 했다(2026-09-08)"
+
+
 def test_threads_tab_is_wired():
     """쓰레드 탭은 배선 완료 — 눌러서 들어가진다(2026-08-17 4차, 계약 뒤집힘).
 

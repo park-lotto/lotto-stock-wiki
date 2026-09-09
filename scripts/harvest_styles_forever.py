@@ -139,6 +139,77 @@ def score_sul(titles, name=""):
     return sum(1 for t in titles if cz.categorize(name, t) in ("제품정체형", "오용형"))
 
 
+# 직촬(본인이 찍어 출연) 신호 — 이 결의 채널은 **화면을 재료로 못 쓴다**(2026-09-08 사장님).
+# ★씨앗을 고를 때만이 아니라 **발굴이 새로 찾는 채널에도** 걸어야 한다. 안 그러면
+#   씨앗만 깨끗하고 자식 세대가 직촬로 오염된다 — 자가증식이라 한 번 새면 계속 번진다.
+_VLOG_SIGN = ["브이로그", "vlog", "우리집", "저희집", "남편", "아내", "와이프",
+              "먹방", "요리", "레시피", "만들기", "먹는 방법",
+              "셀프도배", "셀프시공", "시공", "공사", "이사", "집들이",
+              "년차", "구경하고", "루틴", "일상", "vs 딸", "엄마 vs",
+              # ★2026-09-08 2차 보강 — 등록한 뒤 실제 업로드를 열어보고 추가했다.
+              #   목록에 없어서 통과한 것들: ggyonghouse "월세집 화장실, 일반인이 두 달
+              #   동안 셀프로 고친" · "변기 직접달다가" · "천장을 직접 설치하면".
+              #   '셀프도배·셀프시공'만 막고 '셀프로 고친/직접 달다'는 안 막고 있었다.
+              "셀프로", "직접 설치", "직접 달", "직접 고친", "직접 만든", "뜯다가",
+              "고쳐봤", "해봤습니다", "도전", "후기", "리모델링", "인테리어 공사"]
+
+# 이 서비스는 한국어 쇼핑 쇼츠를 만든다 — 제목이 한국어가 아니면 재료로 못 쓴다.
+# ★2026-09-08 실측: 홈템 발굴에 Serena Neel(359만)·Lone Fox(178만) 같은 **영어 DIY
+#   채널**이 들어왔다. 직촬 차단은 한국어 어휘 목록이라 영어 제목엔 한 글자도 안 걸린다.
+#   "차단이 뚫렸다"가 아니라 **애초에 볼 수 없는 것**이었다 — 어휘로 막는 방식의 사각지대다.
+_HANGUL_RE = re.compile(r"[가-힣]")
+
+
+def _mostly_korean(titles, floor=0.5):
+    """제목 절반 이상에 한글이 있나. 표본이 없으면 False(모르면 안 받는다)."""
+    if not titles:
+        return False
+    return sum(1 for t in titles if _HANGUL_RE.search(t or "")) / len(titles) >= floor
+
+
+def score_home(titles, name=""):
+    """홈템 축(2026-09-08 사장님 "썰 다음 홈템 잘되는 체널들도 해야하고").
+
+    판정은 `categorize` 한 곳에서만 빌린다(0순위-B) — 여기에 홈템 어휘를 다시 적으면
+    채널은 걸러지는데 랭킹은 안 걸러지는 어긋남이 난다(2026-08-21 '만들기' 사고와 동형).
+    ★썰쇼핑을 홈템으로 세지 않는다. `categorize`는 두 축을 이미 갈라 주므로
+      제품정체형·오용형으로 판정된 편은 여기서 0점이다 — 축이 서로를 잡아먹지 않는다.
+    ★직촬 채널은 **0점으로 떨어뜨린다**(2026-09-08 사장님 "살림도 직촬은 안되는데").
+      홈템 판정은 통과하지만 화면을 재료로 못 쓰는 결이 있다 — 자기 집·자기 손으로
+      찍어 출연하는 채널이다. 25편 중 4편(16%)만 그 결이어도 배제한다: 자가증식
+      루프라 한 번 들어오면 그 채널의 어휘로 같은 결을 계속 불러온다.
+    """
+    if not titles:
+        return 0
+    if not _mostly_korean(titles):      # 영어권 DIY 채널 차단 — 어휘 목록으로는 못 잡는다
+        return 0
+    vlog = sum(1 for t in titles if _h(t, _VLOG_SIGN))
+    if vlog / len(titles) > 0.16:
+        return 0
+    return sum(1 for t in titles if cz.categorize(name, t) == "홈템")
+
+
+def harvest_home(titles):
+    """홈템 채널 제목에서 다음 검색어를 만든다 — [홈템어] × [효과어] 조합.
+
+    ★썰쇼핑(harvest_sul)은 [권위자]도 [부정어] [귀결어]라는 **문형**을 쓰지만,
+      홈템은 문형이 아니라 **소재**가 축이다("주방 정리 이렇게 하세요"). 그래서
+      제품어에 효과어를 붙여 실제로 쓰이는 검색어 모양을 만든다.
+    어휘는 categorize.KEYWORDS['홈템']에서 빌린다(0순위-B).
+    """
+    out = collections.Counter()
+    eff = ["정리", "수납", "청소", "꿀템", "추천", "인테리어", "살림템", "필수템"]
+    kw = [w for w in cz.KEYWORDS.get("홈템", []) if len(w) >= 2]
+    for t in titles:
+        lt = t.lower()
+        a = [x for x in kw if x in lt][:2]
+        b = [x for x in eff if x in lt][:2]
+        for c in itertools.product(a, b):
+            if c[0] != c[1]:
+                out["%s %s" % c] += 1
+    return out
+
+
 def score_celeb(titles, name=""):
     return sum(1 for t in titles if _h(t, ys._CELEB) and _h(t, ys._PRODUCT))
 
@@ -192,6 +263,13 @@ STYLES = {
     #   실측 잔존: 549 → 68채널(구독 중앙값 10,450) — 다른 축과 같은 급이 된다.
     "신기템": {"score": ys.score_novel, "min": 5, "min_subs": 1000,
              "harvest": lambda ts: ys.harvest_novel(ts)},
+    # 2026-09-08 신설 — 사장님 "썰 다음 홈템 잘되는 체널들도 해야하고".
+    # ★문턱을 신기템과 같은 급으로 둔다(min 5 · 구독 1,000+). 홈템은 신기템처럼
+    #   **판정이 쉬운 축**이라 다른 축 눈높이(min 2~3)로 두면 우연히 걸린 잡채널이
+    #   통째로 들어온다 — 신기템이 하룻밤 549채널로 오염됐던 그 함정이다.
+    #   실측 근거: 라이브 8,917건에서 홈템 3편 이상인 채널이 이미 303개다.
+    "홈템": {"score": score_home, "min": 5, "min_subs": 1000,
+            "harvest": lambda ts: harvest_home(ts)},
 }
 BLOCK = ["뉴스", "news", "kbs", "mbc", "sbs", "jtbc", "ytn", "연합", "정치", "국회",
          "설교", "복음", "사주", "asmr", "게임", "롤", "피파", "먹튀", "토토"]
@@ -236,6 +314,54 @@ _SEEDS = {
     "신기템": {
         "UC6FhOTXF3D0oDtOILYnkKow": {"title": "꿀템 보물찾기", "subs": 0, "score": 4},
         "UCXQRYw25xKBXGaMfb4FnnZQ": {"title": "홈템꿀팁 | 살림, 꿀템", "subs": 0, "score": 4},
+    },
+    # ★썰쇼핑 씨앗(2026-09-08 신설). 위 주석은 "썰쇼핑도 살림킹왕짱을 심어 뒀다"고
+    #   적혀 있었지만 **실제로는 이 표에 없었다** — 그래서 루프를 돌려도 썰쇼핑 축은
+    #   영영 0이었다(실측: 27분 45채널 발굴분이 전부 '신기템'). 빈 풀은 스스로 못
+    #   벗어난다는 바로 그 함정에 썰쇼핑이 걸려 있었다.
+    # 씨앗은 **사장님이 직접 O로 찍은 채널**에서 골랐다(out/썰쇼핑_판정결과_전체.json,
+    #   587편 채점). score = 그 채널에서 사장님이 O를 준 편수 — 추측이 아니라 사람 판정이다.
+    "썰쇼핑": {
+        "UCf_dI4hEIhyO_Ghbpg-0yXA": {"title": "공가미", "subs": 8070, "score": 7},
+        "UCKppHYI5ul6uw-AXOMCFMiA": {"title": "뽀터언니", "subs": 1350, "score": 6},
+        "UCXteg2LRkVxN8b7umCE7QOQ": {"title": "딸기라떼", "subs": 5130, "score": 6},
+        "UCQRLTJOU9WTtstLwIeM2lmA": {"title": "왜 팔릴까", "subs": 1720, "score": 5},
+        "UC8Wcwts4ChdpCe-nzqpM04A": {"title": "인생갓템", "subs": 30700, "score": 4},
+        "UCo2z7vorOcD2wU8uxL8Wgew": {"title": "럭키박스", "subs": 2340, "score": 4},
+        "UC7-zAnA-Q91i52Ma1ufhGHg": {"title": "달래샵", "subs": 6910, "score": 4},
+        "UCkAv5c_XGwtEhpYk3i-zcFg": {"title": "오늘꿀템", "subs": 1380, "score": 4},
+        # 원본 두 채널 — 이 장르를 정의한 곳이라 어휘 수확 대상으로 계속 둔다.
+        "UCBFu04us6bv9OFcwrJDXdMg": {"title": "살림킹왕짱", "subs": 14600, "score": 4},
+        "UCnD6bgF50o87a92-iK1dI8Q": {"title": "살림도사", "subs": 14500, "score": 4},
+    },
+    # 홈템 씨앗(2026-09-08) — 라이브 8,917건 실측.
+    #
+    # ★★처음엔 '홈템 편수 × 조회수'만 보고 뽑았다가 **전부 직촬 채널**이 걸렸다.
+    #   사장님 지적: "살림도 직촬은 안되는데". 직촬은 본인이 자기 집·자기 손으로 찍어
+    #   출연하는 결이라 **화면을 재료로 쓸 수 없다** — 이 서비스의 존재 이유가 남의
+    #   제품 클립을 재편집하는 것인데, 그 채널들은 재료가 아니라 완성품이다.
+    #   실제로 걸렸던 것:
+    #     고수의살림  "유럽에서 아는 사람만 한다는 샐러드 먹는 방법"   ← 요리 직촬
+    #     살림구조대  "코스트코 18년차 회원이 이번주 구경하고 온 제품" ← 매장 직촬
+    #     소온풀      "다이소에 없는 주방꿀템으로 엄마 vs 딸 도시락"   ← 출연 상황극
+    #     홈그래피    "도배 공사 절대 하지마세요 #셀프도배"           ← 시공 직촬
+    #   편수·조회수는 "잘 되는 채널"은 말해주지만 **"재료로 쓸 수 있는 채널"은 말해주지
+    #   않는다.** 지표를 늘리기 전에 그 지표가 무엇을 못 보는지 먼저 물어라.
+    #
+    # 그래서 사장님 확정 기준(2026-09-08)으로 다시 뽑았다 — **썰쇼핑처럼 제품 클립
+    # 편집형만**. 직촬 어휘(브이로그·우리집·남편·시공·먹방·N년차·구경하고…)가 4편 중
+    # 1편만 넘어도 배제하고, 물건 소개 어휘가 60% 이상인 채널만 남겼다.
+    "홈템": {
+        "UCwFNiYnTtrYuwO7YRWomatw": {"title": "살림토끼", "subs": 127000, "score": 9},
+        "UCdvy8zJAV-z2w55b1yYGQYA": {"title": "인생 조언", "subs": 46200, "score": 6},
+        "UCZseDHYlrD1LV8jwShLFsXw": {"title": "홈퀸살림", "subs": 37000, "score": 13},
+        "UCP9At0_YeazqIriEbAoSU3A": {"title": "살림천재노다지", "subs": 29300, "score": 5},
+        "UCXQRYw25xKBXGaMfb4FnnZQ": {"title": "홈템꿀팁", "subs": 28400, "score": 13},
+        "UCOnSoSFUyeakdOOzAP0nnyw": {"title": "똑디템", "subs": 26900, "score": 17},
+        "UCEDiNh6UkkFcjU9zxB-2Lrw": {"title": "쇼핑꿀템 연구소", "subs": 20900, "score": 14},
+        "UCd2eMn4URep6NNO-H_MUTLg": {"title": "살림친구", "subs": 18600, "score": 11},
+        "UCvh1AtO12W2A15ftNEGIRyg": {"title": "쇼핑스토리", "subs": 16000, "score": 10},
+        "UCdgUlNruZABfk06xFW8DJlQ": {"title": "리빙테리어", "subs": 4250, "score": 23},
     },
 }
 for _stl, _seed in _SEEDS.items():
