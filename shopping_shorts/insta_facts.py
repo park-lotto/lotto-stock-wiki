@@ -61,8 +61,12 @@ SLOT_SOURCE = {
     "가격":     "insta_facts.price     (얼마인가 — 다이소축의 무기)",
 }
 
-INSTA_PROMPT = """아래는 한국 인스타 릴스(살림·홈템) 영상의 전사·캡션이다.
-이 영상들로 **인스타 릴스 대본**을 쓰려고 한다. 대본의 빈칸을 채울 재료만 뽑아라.
+INSTA_PROMPT = """아래는 살림·홈템 숏폼 영상의 전사·캡션이다.
+**함께 붙은 화면 사진(있으면)도 같이 보라** — 시간 순으로 뽑은 장면들이다.
+말이 없거나 외국어라 알아들을 수 없으면 **화면만 보고** 뽑아라: 무슨 물건인지,
+어떻게 쓰는지, 화면에 박힌 글자(자막·포장·가격표)에 뭐라고 적혀 있는지.
+
+이 영상들로 **숏폼 대본**을 쓰려고 한다. 대본의 빈칸을 채울 재료만 뽑아라.
 
 ★영상에 실제로 나온 것만 써라. 안 나온 건 **지어내지 마라** — 빈 배열로 두면 된다.
   (지어내면 "5년째 근무하는 이모" 같은 거짓말이 대본에 박힌다. 실측 2026-08-19:
@@ -288,13 +292,43 @@ def _body_of(raw):
     return "\n".join(parts)[:_MAX_BODY]
 
 
+# ── 화면 프레임 ──────────────────────────────────────────────────────────────
+# ★왜 붙였나 (2026-09-09 사장님): "쿠팡을 안 써도 GPT에 저 영상을 보여주면 제품명과
+#   특징을 잘 뽑는데 우리는 왜 안 되냐". 실측한 답은 **모델이 아니라 입력**이었다 —
+#   이 모듈은 여태 전사 **글자만** 보냈다(`Part.from_bytes`가 한 줄도 없었다).
+#   라이브 job 40148f06f529: 전사가 영어 노래 가사 54자뿐 → 재료 0 → 모델이
+#   "인체공학·실리콘 재질·반영구 세척"을 지어냈다(그 단어들은 재료 어디에도 없다).
+#   최근 190건 중 제품 재료가 있던 건 **1건(1%)**이었다.
+#
+# ★같은 프롬프트·스키마·필터를 그대로 쓴다(0순위-B). 갈리는 건 입력뿐이다 —
+#   추출기를 두 벌로 만들면 한쪽만 고쳐져 "어떤 영상은 되고 어떤 건 안 되네"가 된다.
+_MAX_FRAMES = 6
+
+
+def _frame_parts(frames, types, log=lambda *a: None):
+    """jpeg 바이트 목록 → Gemini 파트 목록. 깨진 장은 조용히 버린다(재료가 우선)."""
+    parts, bad = [], 0
+    for b in (frames or [])[:_MAX_FRAMES]:
+        if isinstance(b, (bytes, bytearray)) and len(b) > 512:
+            parts.append(types.Part.from_bytes(data=bytes(b), mime_type="image/jpeg"))
+        else:
+            bad += 1
+    if bad:
+        _say(log, "[insta_facts] 못 쓰는 프레임 %d장 건너뜀" % bad)
+    return parts
+
+
 def analyze_insta(raw, *, log=print):
-    """인스타 전사·캡션 → 재료 dict. 재료가 없으면 {} (예외 없음).
+    """전사·캡션(+화면 프레임) → 재료 dict. 재료가 없으면 {} (예외 없음).
 
     실패해도 {}를 돌려준다 — 재료 추출 실패가 대본 생성을 막으면 안 된다.
+
+    raw["frames"]에 jpeg 바이트를 담아 주면 **화면도 함께 본다**.
+    ★전사가 비어도 프레임만 있으면 뽑는다 — 무자막·외국어 영상이 여기서 살아난다.
     """
     body = _body_of(raw)
-    if not body:
+    frames = (raw or {}).get("frames") if isinstance(raw, dict) else None
+    if not body and not frames:
         return {}
     # ★"왜 비었는지"를 반드시 남긴다(2026-08-19 실사고). 처음엔 아래 세 갈래가 전부
     #   말없이 `return {}`이었다 — 실측에서 5편 전부 0/7이 나왔는데 **로그가 한 줄도 없어**
@@ -320,7 +354,8 @@ def analyze_insta(raw, *, log=print):
             return _fail("살아있는 키 없음(키 풀 소진)")
         resp = video_analysis._client_for_key(key).models.generate_content(
             model=video_analysis._TRANSLATE_MODEL,
-            contents=[INSTA_PROMPT + body],
+            contents=[INSTA_PROMPT + (body or "(말이 없는 영상 — 화면만 보고 뽑아라)")]
+                     + _frame_parts(frames, types, log),
             config=types.GenerateContentConfig(
                 response_mime_type="application/json",
                 response_schema=INSTA_SCHEMA,
