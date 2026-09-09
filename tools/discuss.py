@@ -98,10 +98,22 @@ def ask(topic, question, model=None):
     cmd = [exe, "exec", "-s", "read-only", "-C", str(BASE)]
     if model:
         cmd += ["-m", model]
-    cmd.append(ctx % (prior, question))
+    # ★프롬프트를 **인자로 넘기지 마라**(2026-09-09 실측). 윈도우에서 codex.CMD는
+    #   cmd.exe를 거치는데 거기서 한글이 cp949로 뭉개진다 — 코덱스가 질문을 못 읽고
+    #   "보내주세요"라고 답했다(화면에 깨진 글자가 찍혀 발각됐다).
+    #   stdin(`-`)도 안 먹었다(무응답). 그래서 **질문을 UTF-8 파일에 쓰고 그 파일을
+    #   읽으라고** 시킨다 — 명령줄엔 영문 경로만 나간다.
+    qf = OUT / "_ask.md"
+    qf.parent.mkdir(parents=True, exist_ok=True)
+    qf.write_text(ctx % (prior, question), encoding="utf-8")
+    cmd.append("Read the UTF-8 file docs/decide/_ask.md and answer what it asks. "
+               "Answer in Korean.")
     try:
-        r = subprocess.run(cmd, capture_output=True, text=True,
-                           encoding="utf-8", errors="replace", timeout=TIMEOUT_S)
+        r = subprocess.run(cmd, capture_output=True, timeout=TIMEOUT_S)
+        r = subprocess.CompletedProcess(
+            cmd, r.returncode,
+            (r.stdout or b"").decode("utf-8", "replace"),
+            (r.stderr or b"").decode("utf-8", "replace"))
         ans = _clean(r.stdout or "") or ("(빈 응답) stderr: " + (r.stderr or "")[:400])
     except subprocess.TimeoutExpired:
         ans = "(코덱스 응답 없음 — %d초 초과. 질문을 쪼개서 다시 물어라)" % TIMEOUT_S
