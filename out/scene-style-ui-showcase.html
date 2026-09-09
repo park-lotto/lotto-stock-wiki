@@ -37,7 +37,7 @@
     .dynamic-phone .body-title-area{display:none;position:absolute;z-index:4;left:0;right:0;top:9.4%;height:11.7%;padding:9px 10px 0;background:#414141;color:#fff;text-align:left}.dynamic-phone .body-title-area b{display:block;font-size:17px;line-height:1.2;letter-spacing:-.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.dynamic-phone .body-title-area small{display:block;margin-top:4px;color:#c3c3c3;font-size:9px}.dynamic-phone .body-band{display:none;position:absolute;z-index:4;left:0;right:0;top:21.1%;height:9.7%;align-items:center;justify-content:center;padding:0 8px;background:linear-gradient(180deg,#fff,#fdfdfd 78%,#eff6fa);color:#050505;font-size:17px;font-weight:900;letter-spacing:-.7px}.dynamic-phone.is-body .hook-copy,.dynamic-phone.is-body .hook-band{display:none}.dynamic-phone.is-body .body-title-area{display:block}.dynamic-phone.is-body .body-band{display:flex}.dynamic-phone.is-body .brand-row{background:linear-gradient(180deg,color-mix(in srgb,var(--template-body),#fff 5%),var(--template-body));color:#0a0a0a}.dynamic-phone.is-body .brand-icon{color:#111}.dynamic-phone.is-body .media-window{top:30.8%}.dynamic-phone .safe-lines{position:absolute;z-index:5;inset:4%;border:1px dashed rgba(67,226,180,.34);pointer-events:none;opacity:0}.dynamic-phone:hover .safe-lines{opacity:1}
     /* 숏템 기본형: 360x640 원본을 픽셀 측정한 전용 구성. */
     .dynamic-phone.template-shortem{background-image:var(--template-media);background-size:100% 100%;background-position:0 0;background-repeat:no-repeat}
-    .dynamic-phone.template-shortem .brand-row,.dynamic-phone.template-shortem .media-window{display:none}
+    .dynamic-phone.template-shortem .brand-row,.dynamic-phone.template-shortem .media-window,.dynamic-phone.template-shortem .shortem-body-channel{display:none}
     .dynamic-phone.template-shortem .hook-copy{top:10%;height:20.625%;padding:3% 0 0;background:rgb(43,39,29);justify-content:flex-start;gap:0;font-family:"TmonMonsori","Black Han Sans",sans-serif;line-height:.95;letter-spacing:-2.7px}
     .dynamic-phone.template-shortem .hook-copy strong,.dynamic-phone.template-shortem .hook-copy em{display:block;width:100%;text-align:center;white-space:nowrap;font-weight:400;-webkit-text-stroke:3.1px #000;paint-order:stroke fill;text-shadow:0 3.4px 0 #000,0 6px 7px rgba(0,0,0,.5)}
     .dynamic-phone.template-shortem .hook-copy strong{font-size:52px;color:rgb(255,255,255)}
@@ -48,6 +48,12 @@
     .dynamic-phone.template-shortem.is-body .body-title-area b{font-size:18.5px;font-weight:400;line-height:1.2;letter-spacing:-1.05px;overflow:visible;text-overflow:clip}
     .dynamic-phone.template-shortem.is-body .body-title-area small{display:none}
     .dynamic-phone.template-shortem.is-body .body-band{display:flex;top:30.15625%;height:8.90625%;padding:1% 6px 0;background:linear-gradient(180deg,rgb(255,255,255) 0%,rgb(253,253,253) 12%,rgb(253,253,253) 84%,rgb(255,255,255) 100%);color:#000;font-family:"TmonMonsori","Black Han Sans",sans-serif;font-size:19px;font-weight:400;letter-spacing:-1px;line-height:1;white-space:nowrap;box-shadow:none}
+    .dynamic-phone.template-shortem:not(.is-pristine) .brand-row{display:flex;height:10%;padding:1.5% 0 0;justify-content:center;border:0;background:rgb(43,39,29);color:#000;font-family:"TmonMonsori","Black Han Sans",sans-serif}
+    .dynamic-phone.template-shortem:not(.is-pristine) .brand-row .brand-icon{display:none}
+    .dynamic-phone.template-shortem:not(.is-pristine) .brand-row b{font-size:21px;font-weight:400;letter-spacing:-1px}
+    .dynamic-phone.template-shortem:not(.is-pristine).is-body .brand-row{height:13.59375%;padding:1.5% 0 0;background:rgb(255,233,168)}
+    .dynamic-phone.template-shortem:not(.is-pristine).is-body .brand-row b{font-size:22px}
+    .dynamic-phone.template-shortem:not(.is-pristine).is-body .shortem-body-channel{display:flex;position:absolute;z-index:5;left:22.5%;top:14.3%;width:24%;height:6.7%;align-items:flex-start;padding-top:1.8%;background:rgb(253,253,253);color:#000;font-family:"TmonMonsori","Black Han Sans",sans-serif;font-size:16px;line-height:1;letter-spacing:-.8px}
     /* 값이 바뀌기 전에는 원본 캡처 자체가 미리보기이므로 서브픽셀 렌더링까지 1:1이다. */
     .dynamic-phone.template-shortem.is-pristine:not(.is-body) .hook-copy,.dynamic-phone.template-shortem.is-pristine:not(.is-body) .hook-band{display:none}
     .dynamic-phone.template-shortem.is-pristine.is-body .body-title-area,.dynamic-phone.template-shortem.is-pristine.is-body .body-band{display:none}
@@ -77,15 +83,15 @@
     <div class="page-title"><div><h1>6 · 장면꾸미기</h1><p>완성된 훅+본문 프리셋을 고르고 문구만 확인하세요.</p></div><span class="analysis">대본 분석 완료 · 12장면 자동 배치</span></div>
     <div class="workspace layout-a">
       <aside class="pane"><div class="pane-head"><h2>템플릿 선택</h2><span class="count">102개</span></div><div class="chips"><button class="chip active">추천</button><button class="chip">쇼핑</button><button class="chip">리뷰</button><button class="chip">정보</button></div><div class="preset-grid">
-        <button class="preset-card selected" data-live-preset data-template="shortem" data-channel="숏템" data-accent="#ffe500" data-top="#2b271d" data-body="#ffe9a8" data-media="장면꾸미기_작업대/원본프레임/숏템_훅.png" data-body-media="장면꾸미기_작업대/원본프레임/숏템_본문.png"><span class="check">✓</span><div class="thumb-pair"><img src="장면꾸미기_작업대/원본프레임/숏템_훅.png"><img src="장면꾸미기_작업대/원본프레임/숏템_본문.png"></div><b>숏템 기본형</b><small>훅+본문 2장</small></button>
+        <button class="preset-card selected" data-live-preset data-template="shortem" data-channel="숏템" data-hook-fields="channel,hook1,hook2,bodyTitle" data-body-fields="channel,bodyTitle,caption" data-accent="#ffe500" data-top="#2b271d" data-body="#ffe9a8" data-media="장면꾸미기_작업대/원본프레임/숏템_훅.png" data-body-media="장면꾸미기_작업대/원본프레임/숏템_본문.png"><span class="check">✓</span><div class="thumb-pair"><img src="장면꾸미기_작업대/원본프레임/숏템_훅.png"><img src="장면꾸미기_작업대/원본프레임/숏템_본문.png"></div><b>숏템 기본형</b><small>훅+본문 2장</small></button>
         <button class="preset-card" data-live-preset data-channel="신비아이템" data-accent="#ffd400" data-top="#0b2638" data-body="#2589c8" data-media="장면꾸미기_작업대/스타일수집/프레임/s0016_신비아이템_훅.png"><div class="thumb-pair"><img src="장면꾸미기_작업대/스타일수집/프레임/s0016_신비아이템_훅.png"><img src="장면꾸미기_작업대/스타일수집/프레임/s0016_신비아이템_본문.png"></div><b>신비아이템</b><small>정보형</small></button>
         <button class="preset-card" data-live-preset data-channel="부시리" data-accent="#ffd22e" data-top="#19120a" data-body="#f2cc58" data-media="장면꾸미기_작업대/스타일수집/프레임/s0012_부시리_훅.png"><div class="thumb-pair"><img src="장면꾸미기_작업대/스타일수집/프레임/s0012_부시리_훅.png"><img src="장면꾸미기_작업대/스타일수집/프레임/s0012_부시리_본문.png"></div><b>부시리</b><small>강조형</small></button>
         <button class="preset-card" data-live-preset data-channel="지식배송" data-accent="#ff6b32" data-top="#171717" data-body="#ef8431" data-media="장면꾸미기_작업대/스타일수집/프레임/s0018_지식배송_훅.png"><div class="thumb-pair"><img src="장면꾸미기_작업대/스타일수집/프레임/s0018_지식배송_훅.png"><img src="장면꾸미기_작업대/스타일수집/프레임/s0018_지식배송_본문.png"></div><b>지식배송</b><small>설명형</small></button>
         <button class="preset-card" data-live-preset data-channel="사길잘했다" data-accent="#bfff2f" data-top="#151515" data-body="#f3cad5" data-media="장면꾸미기_작업대/스타일수집/프레임/s0054_사길잘했다_훅.png"><div class="thumb-pair"><img src="장면꾸미기_작업대/스타일수집/프레임/s0054_사길잘했다_훅.png"><img src="장면꾸미기_작업대/스타일수집/프레임/s0054_사길잘했다_본문.png"></div><b>사길잘했다</b><small>후기형</small></button>
         <button class="preset-card" data-live-preset data-channel="헤븐쇼핑" data-accent="#ffd927" data-top="#17120d" data-body="#f4cf4f" data-media="장면꾸미기_작업대/스타일수집/프레임/s0056_헤븐쇼핑_훅.png"><div class="thumb-pair"><img src="장면꾸미기_작업대/스타일수집/프레임/s0056_헤븐쇼핑_본문.png"><img src="장면꾸미기_작업대/스타일수집/프레임/s0056_헤븐쇼핑_본문.png"></div><b>헤븐쇼핑</b><small>판매형</small></button>
       </div></aside>
-      <section class="pane preview-pane"><div class="preview-toolbar"><h2>실시간 미리보기</h2><div class="seg"><button class="active" data-frame="hook">훅</button><button data-frame="body">본문</button></div></div><div class="phone-wrap"><div class="stage-note left"><b>선택 프리셋</b><span data-stage-name>숏템 기본형</span><i><span style="width:100%"></span></i>원본 레이어 규칙 적용</div><div class="dynamic-phone template-shortem is-pristine" id="a-live-preview" data-template="shortem" style="--template-media:url('장면꾸미기_작업대/원본프레임/숏템_훅.png')"><div class="brand-row"><span class="brand-icon">☰</span><b data-preview-channel>숏템</b><span class="brand-icon">⌕</span></div><div class="hook-copy"><strong data-preview-hook-1>이케아도 놀랄</strong><em data-preview-hook-2>한국 천재 발명품</em></div><div class="hook-band" data-preview-body-title>이케아도 놀랄 한국 천재 발명품</div><div class="body-title-area"><b data-preview-body-title>이케아도 놀랄 한국 천재 발명품</b><small>조회수 235만 | 댓글 697개</small></div><div class="body-band" data-preview-caption>무슨 식탁 하나로</div><div class="media-window"></div><div class="safe-lines"></div></div><div class="stage-note right"><b>자동 배치</b>훅 1장 · 본문 11장<i><span style="width:92%"></span></i>문구 길이 안전</div></div><div class="transport"><button class="play">▶</button><span>00:00</span><div class="track"><i></i></div><span>00:28</span></div><div class="scene-strip"><button class="active">훅</button><button>2</button><button>3</button><button>4</button><button>5</button><button>6</button><button>7</button><button>8</button><button>9</button><button>10</button><button>11</button><button>12</button></div></section>
-      <aside class="pane edit-pane"><div class="tool-tabs"><button class="active">문구/텍스트</button><button>미디어</button><button>스타일</button></div><div class="ai-card"><b>AI 자동 배치 완료</b><br>아래 글자를 수정하면 가운데 레이어에 즉시 반영됩니다.</div><div class="field"><label>훅 제목 1 <span>14/18</span></label><input data-bind="hook1" value="이케아도 놀랄"></div><div class="field"><label>훅 제목 2 <span>10/18</span></label><input data-bind="hook2" value="한국 천재 발명품"></div><div class="field"><label>본문 제목 <span>16/22</span></label><input data-bind="bodyTitle" value="이케아도 놀랄 한국 천재 발명품"></div><div class="field"><label>현재 장면 자막 <span>10/24</span></label><input data-bind="caption" value="무슨 식탁 하나로"></div><div class="color-row"><span class="swatch"><i style="background:#fff"></i>흰색</span><span class="swatch"><i data-accent-swatch style="background:#ffe600"></i>강조</span><span class="swatch"><i data-top-swatch style="background:#211f19"></i>배경</span></div><button class="primary">이 스타일로 완성</button><button class="secondary">내 프리셋으로 저장</button><details><summary>고급 설정 · 위치, 폰트, 효과</summary></details></aside>
+      <section class="pane preview-pane"><div class="preview-toolbar"><h2>실시간 미리보기</h2><div class="seg"><button class="active" data-frame="hook">훅</button><button data-frame="body">본문</button></div></div><div class="phone-wrap"><div class="stage-note left"><b>선택 프리셋</b><span data-stage-name>숏템 기본형</span><i><span style="width:100%"></span></i>원본 레이어 규칙 적용</div><div class="dynamic-phone template-shortem is-pristine" id="a-live-preview" data-template="shortem" style="--template-media:url('장면꾸미기_작업대/원본프레임/숏템_훅.png')"><div class="brand-row"><span class="brand-icon">☰</span><b data-preview-channel>숏템</b><span class="brand-icon">⌕</span></div><div class="shortem-body-channel" data-preview-channel>숏템</div><div class="hook-copy"><strong data-preview-hook-1>이케아도 놀랄</strong><em data-preview-hook-2>한국 천재 발명품</em></div><div class="hook-band" data-preview-body-title>이케아도 놀랄 한국 천재 발명품</div><div class="body-title-area"><b data-preview-body-title>이케아도 놀랄 한국 천재 발명품</b><small>조회수 235만 | 댓글 697개</small></div><div class="body-band" data-preview-caption>무슨 식탁 하나로</div><div class="media-window"></div><div class="safe-lines"></div></div><div class="stage-note right"><b>자동 배치</b>훅 1장 · 본문 11장<i><span style="width:92%"></span></i>문구 길이 안전</div></div><div class="transport"><button class="play">▶</button><span>00:00</span><div class="track"><i></i></div><span>00:28</span></div><div class="scene-strip"><button class="active">훅</button><button>2</button><button>3</button><button>4</button><button>5</button><button>6</button><button>7</button><button>8</button><button>9</button><button>10</button><button>11</button><button>12</button></div></section>
+      <aside class="pane edit-pane"><div class="tool-tabs"><button class="active">문구/텍스트</button><button>미디어</button><button>스타일</button></div><div class="ai-card"><b>AI 자동 배치 완료</b><br>현재 프레임에 실제로 있는 문구만 표시합니다. 없는 요소는 빈칸으로 둡니다.</div><div class="field" data-field-key="channel"><label><span data-field-label>채널명</span> <span data-count>2/12</span></label><input data-bind="channel" data-max="12" value="숏템"></div><div class="field" data-field-key="hook1"><label><span data-field-label>훅 제목 1</span> <span data-count>7/18</span></label><input data-bind="hook1" data-max="18" value="이케아도 놀랄"></div><div class="field" data-field-key="hook2"><label><span data-field-label>훅 제목 2</span> <span data-count>9/18</span></label><input data-bind="hook2" data-max="18" value="한국 천재 발명품"></div><div class="field" data-field-key="bodyTitle"><label><span data-field-label data-hook-label="보조 제목" data-body-label="훅 제목">보조 제목</span> <span data-count>16/22</span></label><input data-bind="bodyTitle" data-max="22" value="이케아도 놀랄 한국 천재 발명품"></div><div class="field" data-field-key="caption"><label><span data-field-label>현재 장면 자막</span> <span data-count>8/24</span></label><input data-bind="caption" data-max="24" value="무슨 식탁 하나로"></div><div class="color-row"><span class="swatch"><i style="background:#fff"></i>흰색</span><span class="swatch"><i data-accent-swatch style="background:#ffe600"></i>강조</span><span class="swatch"><i data-top-swatch style="background:#211f19"></i>배경</span></div><button class="primary">이 스타일로 완성</button><button class="secondary">내 프리셋으로 저장</button><details><summary>고급 설정 · 위치, 폰트, 효과</summary></details></aside>
     </div>
   </section>
 
@@ -132,9 +138,18 @@
     if(group) group.querySelectorAll('.preset-card').forEach(x=>x.classList.toggle('selected',x===card));
   }));
   const livePreview=root.getElementById('a-live-preview');
+  const defaultFields={hook:['channel','hook1','hook2','bodyTitle'],body:['channel','bodyTitle','caption']};
+  const applyFrameFields=kind=>{
+    const preset=root.querySelector('[data-live-preset].selected');
+    const configured=preset?.dataset[kind+'Fields'];
+    const visible=new Set(configured?configured.split(',').filter(Boolean):defaultFields[kind]);
+    root.querySelectorAll('.layout-a [data-field-key]').forEach(field=>field.hidden=!visible.has(field.dataset.fieldKey));
+    root.querySelectorAll('.layout-a [data-hook-label][data-body-label]').forEach(label=>label.textContent=label.dataset[kind+'Label']);
+  };
   const setFrame=kind=>{
     livePreview.classList.toggle('is-body',kind==='body');
     root.querySelectorAll('.layout-a [data-frame]').forEach(x=>x.classList.toggle('active',x.dataset.frame===kind));
+    applyFrameFields(kind);
   };
   root.querySelectorAll('.layout-a [data-frame]').forEach(button=>button.addEventListener('click',()=>setFrame(button.dataset.frame)));
   root.querySelectorAll('[data-live-preset]').forEach(card=>card.addEventListener('click',()=>{
@@ -149,7 +164,9 @@
     livePreview.style.setProperty('--template-media',`url("${activeFrame==='body'?bodyMedia:card.dataset.media}")`);
     livePreview.dataset.hookMedia=card.dataset.media;
     livePreview.dataset.bodyMedia=bodyMedia;
-    root.querySelector('[data-preview-channel]').textContent=card.dataset.channel;
+    root.querySelectorAll('[data-preview-channel]').forEach(target=>target.textContent=card.dataset.channel||' ');
+    const channelInput=root.querySelector('.layout-a [data-bind="channel"]');
+    if(channelInput) channelInput.value=card.dataset.channel||'';
     root.querySelector('[data-stage-name]').textContent=card.querySelector('b').textContent;
     root.querySelector('[data-accent-swatch]').style.background=card.dataset.accent;
     root.querySelector('[data-top-swatch]').style.background=card.dataset.top;
@@ -159,6 +176,7 @@
     if(media) livePreview.style.setProperty('--template-media',`url("${media}")`);
   }));
   const bindings={
+    channel:'[data-preview-channel]',
     hook1:'[data-preview-hook-1]',
     hook2:'[data-preview-hook-2]',
     bodyTitle:'[data-preview-body-title]',
@@ -166,6 +184,8 @@
   };
   root.querySelectorAll('.layout-a [data-bind]').forEach(input=>input.addEventListener('input',()=>{
     livePreview.classList.remove('is-pristine');
+    const counter=input.closest('.field')?.querySelector('[data-count]');
+    if(counter) counter.textContent=`${[...input.value].length}/${input.dataset.max}`;
     root.querySelectorAll(bindings[input.dataset.bind]).forEach(target=>target.textContent=input.value||' ');
   }));
   root.querySelectorAll('.layout-a .scene-strip button').forEach((button,index)=>button.addEventListener('click',()=>{
@@ -175,6 +195,7 @@
   const initialPreset=root.querySelector('[data-live-preset].selected');
   livePreview.dataset.hookMedia=initialPreset.dataset.media;
   livePreview.dataset.bodyMedia=initialPreset.dataset.bodyMedia||initialPreset.dataset.media.replace('_훅.png','_본문.png');
+  applyFrameFields('hook');
 </script>
 </body>
 </html>
