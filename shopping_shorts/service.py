@@ -181,6 +181,35 @@ def _collect_youtube(categories=None, seed_only=False):
         # 수동 키워드 시드(언어별)
         for lang, kws in by_lang.items():
             raw.extend(yt_search(kws, after, max_per_kw=YOUTUBE_MAX_PER_KW, lang=lang))
+    # ★계정 시드를 **큰 채널부터** 돈다(2026-09-09 사장님 "대형채널 위주로 먼저 수집을
+    #   계속 해야될것 같애. 구독자 많은것 / 그다음 조회수 터지는거").
+    #
+    #   종전엔 `list_seeds`가 주는 순서 그대로였고 그건 `ORDER BY added_at ASC`
+    #   = **등록이 오래된 순**이라 채널 크기와 무관했다. 쿼터가 마르면 뒤쪽이 통째로
+    #   빠지는데, 실측(2026-09-09) 시드 2,170개 중 **1,020개만 응답**하고 끝났다
+    #   (영상 9,622→7,323 · 썰쇼핑 813→526). 전날 새로 넣은 큰 채널이 맨 뒤라 잘렸다.
+    #
+    #   순서: ①구독자 많은 순 → ②최고 조회수 순 → ③구독자를 모르는 채널
+    #
+    #   ★구독자는 **랭킹(last_run) + 발굴 등록분(channel_styles.subs)** 둘 다에서 본다.
+    #     처음엔 "새 채널을 맨 앞"으로 뒀는데 실측하니 새 채널이 1,228개(시드의 57%)라
+    #     그러면 큰 채널이 또 뒤로 밀린다 — 사장님 지시와 정반대가 된다.
+    #     발굴은 채널을 만날 때 이미 구독자를 아니까, 그 값을 저장해 두고
+    #     (register_discovered_styles.py) 새 채널도 처음부터 제 크기대로 세운다.
+    #   ★구독자를 정말 모르는 채널만 맨 뒤로 간다. 한 번 긁히면 지표가 생겨 제자리를 찾는다.
+    # ★없으면 빈 표로 간다 — 정렬은 **부가기능**이고, 이게 없다고 수집이 죽으면 안 된다.
+    #   (게이트가 잡았다: 테스트의 FakeStore에 이 함수가 없어 AttributeError로 수집이
+    #    통째로 터졌다. 실제로도 옛 Store 구현을 물면 같은 일이 난다.)
+    _rank = getattr(store, "youtube_channel_rank", lambda: {})() or {}
+
+    def _seed_key(url):
+        cid = (url or "").rstrip("/").rsplit("/", 1)[-1]
+        subs, views = _rank.get(cid, (0, 0))
+        if not subs:
+            return (1, 0, 0)          # 크기를 모르는 채널은 맨 뒤
+        return (0, -subs, -views)     # 구독자↓ · 조회수↓
+
+    accounts = sorted(accounts, key=_seed_key)
     # 계정 시드(채널기반)
     for acc in accounts:
         raw.extend(yt_fetch_channel(acc, cache_get=store.yt_cache_get,
