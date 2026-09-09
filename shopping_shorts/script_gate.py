@@ -916,8 +916,29 @@ def scene_grounding_check(beats, scene_ids, is_recipe=False, min_ratio=0.34, sou
     return (not problems), ("; ".join(problems) if problems else "OK(%d/%d줄에 장면)" % (with_scene, len(beats)))
 
 
+#: 이것만은 "고쳐서라도 내보낸다"가 성립하지 않는 검사 — 소재가 틀리면 그 대본은 통째로 남의 것이다.
+#: (2026-09-09 사장님 재발 제보. 09-07엔 프롬프트 가드만 넣었고 출구는 그대로 열려 있었다.)
+FATAL_CHECKS = ("소재 일치",)
+
+
 def passed(checks):
     return bool(checks) and all(c["ok"] for c in checks)
+
+
+def fatal_fail(checks):
+    """치명 검사(소재 일치)가 깨졌으면 그 이름. 아니면 "".
+
+    ★왜 따로 두나(2026-09-09): generate_one_style은 재시도 뒤에도 통과 못 하면
+      **길이(밀도)가 가장 가까운 안을 그냥 내보낸다**(fail-open). 밀도·순서는 어설퍼도
+      쓸 수 있지만, 소재가 다르면 그 대본은 우리 제품 이야기가 아니다 —
+      실측(work f2547fc3a753): 재료는 'Mac Mini용 레트로 매킨토시 케이스'인데
+      A안이 채칼·도마 대본으로 나왔고, 게이트는 `소재 일치 False`로 정확히 잡고도
+      그대로 화면에 실렸다.
+    """
+    for c in checks or []:
+        if not c.get("ok") and c.get("name") in FATAL_CHECKS:
+            return c.get("name") or ""
+    return ""
 
 
 def gate_feedback(checks):
