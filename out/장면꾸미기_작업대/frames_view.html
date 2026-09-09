@@ -1,0 +1,51 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>실측 틀 고르기</title>
+<style>
+body{margin:0;font:14px/1.5 "Malgun Gothic",system-ui,sans-serif;background:#f6f7f9;padding:16px}
+h1{font-size:19px;margin:0 0 4px}
+.sub{color:#6b7280;font-size:13px;margin-bottom:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}
+.it{background:#fff;border:3px solid transparent;border-radius:12px;overflow:hidden;cursor:pointer;
+    box-shadow:0 1px 3px #0001;transition:transform .12s}
+.it:hover{transform:translateY(-3px)}
+.it.on{border-color:#2563eb;box-shadow:0 0 0 4px #eef4ff}
+.pv{position:relative;width:100%;aspect-ratio:9/16;background:#111;overflow:hidden}
+.pv img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.cap{position:absolute;left:6%;right:6%;border:2px dashed #ff2d55;border-radius:6px;
+     background:#ff2d5522;pointer-events:none}
+.nm{padding:7px 8px;font-size:12px;font-weight:700;text-align:center}
+.mt{padding:0 8px 8px;font-size:11px;color:#6b7280;text-align:center}
+.bar{position:sticky;top:0;background:#f6f7f9;padding:8px 0 12px;z-index:9}
+.bar button{padding:8px 14px;border:1px solid #d7dbe0;background:#fff;border-radius:9px;cursor:pointer;font-size:13px}
+#out{margin-top:10px;font-size:13px;color:#111}
+</style></head><body>
+<h1>실측 틀 36장 — 쓸 만한 것을 눌러주세요</h1>
+<div class="sub">빨간 점선 = 그 채널이 자막을 넣던 자리 · 배경은 예시 영상입니다</div>
+<div class="bar"><button onclick="dump()">고른 것 보기</button>
+  <button onclick="document.querySelectorAll('.it').forEach(e=>e.classList.remove('on'));out.textContent=''">전부 해제</button>
+  <span id="cnt" style="margin-left:10px;color:#6b7280"></span><div id="out"></div></div>
+<div class="grid" id="g"></div>
+<script>
+const out=document.getElementById('out');
+fetch('/frames/frames.json?_='+Date.now()).then(r=>r.json()).then(M=>{
+  const g=document.getElementById('g');let n=0;
+  Object.keys(M).sort((a,b)=>(+a.split('_')[0])-(+b.split('_')[0])).forEach(name=>{
+    ['hook','body'].forEach(kind=>{
+      const r=M[name][kind]; if(!r)return; n++;
+      const c=r.caption;
+      const capBox=c?`<div class="cap" style="top:${c.top_pct}%;height:${(c.bottom_pct-c.top_pct)}%"></div>`:'';
+      g.insertAdjacentHTML('beforeend',
+        `<div class="it" data-k="${name}|${kind}">
+           <div class="pv"><img src="bg.jpg"><img src="/frames/${r.file}">${capBox}</div>
+           <div class="nm">${name.split('_')[1]} · ${kind==='hook'?'후킹':'본문'}</div>
+           <div class="mt">틀 ${r.ui_pct}% · 자막 ${c?c.top_pct+'~'+c.bottom_pct+'%':'못 찾음'}</div>
+         </div>`);
+    });
+  });
+  document.getElementById('cnt').textContent=n+'장';
+  g.addEventListener('click',e=>{const t=e.target.closest('.it');if(t)t.classList.toggle('on');});
+});
+function dump(){
+  const k=[...document.querySelectorAll('.it.on')].map(e=>e.dataset.k);
+  out.textContent = k.length? ('고른 것 '+k.length+'장: '+k.join(' , ')) : '아직 고른 게 없습니다';
+}
+</script></body></html>

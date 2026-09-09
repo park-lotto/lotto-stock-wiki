@@ -1,28 +1,23 @@
 {
- "wrap": true,
- "font": "TmonMonsori.ttf",
- "size": 80,
- "color": "#FFFFFF",
- "color2": "#5EEAD4",
+ "font": "BlackHanSans.ttf",
+ "size": 66,
  "y": 15,
- "x": 50,
- "weight": 900,
+ "leading": 1.15,
+ "color": "#FFFFFF",
+ "color2": "#3EE8C6",
  "outline": true,
  "outline_color": "#000000",
  "outline_w": 10,
- "box": false,
- "box_color": "#FFFFFF",
- "box_pad": 16,
- "box_opacity": 100,
- "shadow": true,
- "shadow_color": "#000000",
- "shadow_d": 4,
- "text": "요잘알이 재발견해\n돈방석 앉은 국산 발명품",
+ "text": "코스트코 본사도 몰랐던\n천재 아이디어",
+ "wrap": true,
+ "x": 50,
+ "weight": 900,
  "highlight_rules": [
   {
-   "keyword": "돈방석 앉은 국산 발명품",
-   "color": "#5EEAD4",
-   "box": false
+   "keyword": "천재 아이디어",
+   "color": "#3EE8C6",
+   "box": false,
+   "box_color": "#3EE8C6"
   }
  ]
 }

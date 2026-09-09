@@ -1,6 +1,6 @@
 # 장면꾸미기 작업대 — 로컬 전용. 라이브 렌더 코드(deco_frame.render)를 그대로 불러 PNG를 돌려준다.
 # 실행: 시작.bat  (또는 py server.py) → http://127.0.0.1:8766
-import sys, os, io, json, hashlib, pathlib, urllib.parse
+import sys, os, io, re, json, hashlib, pathlib, urllib.parse
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 
 HERE = pathlib.Path(__file__).resolve().parent
@@ -101,6 +101,28 @@ def cap_png(style, text, size):
     _cache[key] = b.getvalue()
     return _cache[key]
 
+def _backup_state():
+    """state.json을 덮어쓰기 직전에 backup/ 으로 복사한다.
+
+    2026-09-05 사고: 다른 PC에서 마무리한 값을, 이 PC 브라우저를 여는 것만으로
+    덮어써 잃을 뻔했다(hydrateFromFile은 파일이 더 새로울 때만 이긴다).
+    되돌릴 수단이 하나도 없던 게 진짜 문제였다 — 그래서 여기서 무조건 남긴다.
+    """
+    src = HERE / "state.json"
+    if not src.exists():
+        return
+    try:
+        import shutil, time as _t
+        bdir = HERE / "backup"
+        bdir.mkdir(exist_ok=True)
+        shutil.copy2(src, bdir / ("state_%s.json" % _t.strftime("%m%d_%H%M%S")))
+        olds = sorted(bdir.glob("state_*.json"))
+        for f in olds[:-20]:      # 최근 20벌만 남긴다
+            f.unlink()
+    except Exception:
+        pass
+
+
 class H(SimpleHTTPRequestHandler):
     def __init__(self, *a, **k): super().__init__(*a, directory=str(HERE), **k)
     def log_message(self, *a): pass
@@ -118,6 +140,7 @@ class H(SimpleHTTPRequestHandler):
             body = self.rfile.read(n)
             try:
                 json.loads(body.decode("utf-8"))
+                _backup_state()          # ★덮어쓰기 전에 직전 값을 남긴다(2026-09-05 유실 사고)
                 (HERE / "state.json").write_bytes(body)
                 return self._send(b'{"ok":true}', "application/json")
             except Exception as e:
@@ -126,14 +149,59 @@ class H(SimpleHTTPRequestHandler):
     def do_GET(self):
         u = urllib.parse.urlparse(self.path); q = urllib.parse.parse_qs(u.query)
         try:
+            if u.path == "/tpl_png":
+                # HTML 틀 + 문구 → 투명 PNG. 화면 카드와 미리보기가 같은 그림을 쓴다.
+                import tpl_render as _tr
+                name = q.get("tpl", [""])[0]
+                vals = json.loads(q.get("v", ["{}"])[0])
+                key = hashlib.sha1((name + json.dumps(vals, sort_keys=True)).encode()).hexdigest()[:16]
+                cache = HERE / "_tplcache"
+                cache.mkdir(exist_ok=True)
+                fp = cache / (key + ".png")
+                if not fp.exists():
+                    _tr.render_one(name, vals, str(fp))
+                return self._send(fp.read_bytes(), "image/png")
+            if u.path == "/tpl_list":
+                # ★HTML 틀 목록 — tpl/ 에 파일을 떨어뜨리면 그게 곧 등록이다(등록 절차 없음).
+                #   사장님이 코덱스로 틀을 계속 만들어 넣어도 화면이 자동으로 는다.
+                import glob as _g
+                out = []
+                for fp in sorted(_g.glob(str(HERE / "tpl" / "*.html"))):
+                    nm = os.path.splitext(os.path.basename(fp))[0]
+                    if nm.startswith("tmp"):
+                        continue
+                    try:
+                        head = open(fp, encoding="utf-8").read(400)
+                        m = re.search(r"<!--설명:\s*(.*?)-->", head)
+                        desc = m.group(1).strip() if m else ""
+                    except Exception:
+                        desc = ""
+                    out.append({"id": nm, "name": nm.replace("_", " · "), "desc": desc})
+                return self._send(json.dumps(out, ensure_ascii=False).encode(), "application/json")
             if u.path == "/presets":
                 return self._send(json.dumps(presets(), ensure_ascii=False).encode(), "application/json")
             if u.path == "/fonts":
                 fs = sorted(f.name for f in FONT_DIR.iterdir() if f.suffix.lower() in (".ttf", ".otf"))
                 return self._send(json.dumps(fs, ensure_ascii=False).encode(), "application/json")
+            if u.path.startswith("/fonts/"):
+                # ★HTML 틀이 @font-face로 실제 폰트 파일을 불러 쓴다(2026-09-05).
+                #   렌더(Pillow)와 화면(브라우저)이 같은 파일을 써야 글자가 어긋나지 않는다.
+                fn = os.path.basename(u.path.split("/", 2)[2])
+                fp = FONT_DIR / fn
+                if fp.exists() and fp.suffix.lower() in (".ttf", ".otf"):
+                    mime = "font/ttf" if fp.suffix.lower() == ".ttf" else "font/otf"
+                    return self._send(fp.read_bytes(), mime)
+                self.send_response(404); self.end_headers(); return
             if u.path.startswith("/thumb/"):
                 pid = u.path.split("/", 2)[2]
-                return self._send(render_png(dict(SAMPLE, preset=pid), (135, 240), on_bg=True), "image/png")
+                # ★카드 썸네일도 화면과 같은 채널명을 쓴다(2026-09-05 사장님):
+                #   예전엔 SAMPLE의 "살림킹왕짱" 고정이라, 화면엔 채널명이 있는데
+                #   카드엔 다른 이름이 박혀 "들어가는 것/안 들어가는 것"이 섞여 보였다.
+                #   channel 인자가 오면 그 값을 쓰고, 빈 문자열이면 아예 안 그린다.
+                sp = dict(SAMPLE, preset=pid)
+                if "channel" in q:
+                    sp["channel"] = q.get("channel", [""])[0]
+                return self._send(render_png(sp, (135, 240), on_bg=True), "image/png")
             if u.path == "/render":
                 spec = json.loads(q.get("spec", ["{}"])[0])
                 return self._send(render_png(spec, (540, 960)), "image/png")
@@ -181,5 +249,12 @@ class H(SimpleHTTPRequestHandler):
 
 if __name__ == "__main__":
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 8766
+    import socket
+    try:
+        _s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM); _s.connect(("8.8.8.8", 80)); lan = _s.getsockname()[0]; _s.close()
+    except Exception:
+        lan = "(IP 확인 실패)"
     print(f"장면꾸미기 작업대: http://127.0.0.1:{port}/  (프리셋 {len(d.PRESETS)}종, 코드={CODE_ROOT})")
-    ThreadingHTTPServer(("127.0.0.1", port), H).serve_forever()
+    print(f"  ★다른 PC에서 열기(같은 와이파이): http://{lan}:{port}/")
+    # 0.0.0.0 = 같은 와이파이의 다른 PC(아무것도 안 깔린 PC)에서 브라우저만으로 접속 (2026-09-04)
+    ThreadingHTTPServer(("0.0.0.0", port), H).serve_forever()
