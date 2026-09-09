@@ -43,7 +43,11 @@ def test_지금_편성의_청소본이_있으면_그걸_쓴다(tmp_path, monkeyp
     assert is_fresh is True, "fresh가 아니면 컷 프레임이 원본에서 뜬다(자막이 남는다)"
 
 
-def test_서명_청소본이_없으면_종전대로_판정한다(tmp_path, monkeypatch):
+def test_서명_청소본이_없으면_옛_청소본이라도_쓴다(tmp_path, monkeypatch):
+    """★2026-09-02 사장님 지시로 계약이 바뀌었다: "원본 자막이 남아있지 않게 하면 되지."
+    지금 편성 서명의 청소본이 없어도 **원본으로 떨어지지 않는다** — 장면이 조금
+    어긋나는 것보다 자막이 보이는 것이 훨씬 나쁘다(mix_pipeline.clean_any_final_path).
+    이 테스트는 원래 is_fresh False를 요구했으나, 그건 바뀌기 전 계약이다."""
     plan = {"beats": [{"beat_idx": 0, "primary": {"video_id": "s0", "start": 0}}]}
     stale = _mk(tmp_path / "clean_preview.mp4")
     monkeypatch.setattr(A, "_resolve_sources", lambda *a, **k: {})
@@ -52,5 +56,5 @@ def test_서명_청소본이_없으면_종전대로_판정한다(tmp_path, monke
     cmap, cfin, ratio, tag, is_fresh = A._clean_frame_src(_job(plan, stale), tmp_path, 0)
 
     assert cfin == str(stale)
-    assert is_fresh is False, "편성이 바뀐 뒤 재청소 전이면 원본에서 뜨는 것이 맞다"
+    assert is_fresh is True, "옛 청소본이라도 청소본에서 뜬다 — 원본이면 자막이 보인다"
     assert tag == "_clean"
