@@ -1306,10 +1306,25 @@
   .s2-exbtn{margin-top:10px;align-self:flex-start;font-size:11px;font-weight:700;color:var(--s2-sub);
     background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:3px 9px;cursor:pointer}
   .s2-exbtn:hover{border-color:var(--accent2);color:var(--txt)}
-  .s2-ex{position:absolute;top:calc(100% - 6px);left:0;right:0;z-index:30;
-    max-height:min(58vh,520px);overflow:auto;overscroll-behavior:contain;
-    padding:12px 14px 14px;background:var(--panel);border:1px solid var(--accent2);border-radius:0 0 12px 12px;
-    box-shadow:0 14px 32px rgba(0,0,0,.45);font-size:11.5px;line-height:1.65;color:var(--s2-sub);cursor:default}
+  /* ★펼침 창은 카드 폭에 갇히면 세로로만 길어져 스크롤이 생긴다(2026-09-09 사장님
+     "열면 좀 창이 커지게"). 카드 밖으로 넓혀 띄운다 — 오른쪽 끝 카드는 화면을 넘지
+     않도록 .s2-ex.left가 왼쪽으로 펼친다. */
+  .s2-ex{position:absolute;top:calc(100% - 6px);left:0;z-index:30;
+    min-width:min(560px,92vw);max-width:min(680px,94vw);
+    max-height:min(72vh,700px);overflow:auto;overscroll-behavior:contain;
+    padding:14px 16px 16px;background:var(--panel);border:1px solid var(--accent2);border-radius:12px;
+    box-shadow:0 14px 32px rgba(0,0,0,.45);font-size:12.5px;line-height:1.7;color:var(--s2-sub);cursor:default}
+  .s2-ex.left{left:auto;right:0}
+  /* 샘플 대본 — 이 스타일로 쓰면 뭐가 나오는지 한눈에 */
+  .s2-sample{margin:0 0 12px;padding:11px 13px;border-radius:10px;
+    background:rgba(0,0,0,.22);border:1px solid var(--line)}
+  .s2-sample h6{margin:0 0 7px}
+  .s2-sample .ln{display:flex;gap:9px;align-items:flex-start;margin:0 0 6px}
+  .s2-sample .ln:last-child{margin-bottom:0}
+  .s2-sample .rl{flex:0 0 66px;font-size:10.5px;font-weight:700;color:var(--s2-sub);
+    opacity:.85;padding-top:2px;text-align:right;white-space:nowrap}
+  .s2-sample .tx{flex:1;font-size:13.5px;line-height:1.6;color:var(--gold);
+    font-weight:600;word-break:keep-all}
   .s2-card:has(.s2-ex){z-index:31}
   .s2-ex h6{margin:0 0 3px;font-size:11px;font-weight:800;color:var(--txt)}
   .s2-ex .q{color:var(--gold);font-weight:600;word-break:keep-all}
@@ -17141,6 +17156,10 @@ function s2StripPlat(txt){
 }
 function s2RoleName(r){ return S2_ROLE[r] || ('· ' + (r||'')); }
 // 문장틀의 {빈칸}을 눈에 보이게 — "여긴 우리 소재로 채워진다"를 화면이 말해준다.
+function _s2ExSide(idx, total){
+  // 오른쪽 끝 카드에서 오른쪽으로 펼치면 화면 밖으로 나간다 — 뒤쪽 3장은 왼쪽으로.
+  return (total > 3 && idx >= total - 3) ? ' left' : '';
+}
 function s2Tmpl(t){
   return esc(t||'').replace(/\{([^}]+)\}/g, (m,k)=>'<i class="s2-gap">'+k+'</i>');
 }
@@ -17408,7 +17427,7 @@ function s2RenderStyles(){
   const _sorted = S2.styles.map((st,i)=>({st,i}))
     .sort((a,b)=> (_platRank(a.st)-_platRank(b.st)) || (a.i-b.i))
     .map(x=>x.st);
-  const cards=_sorted.map(st=>{
+  const cards=_sorted.map((st,idx)=>{
     const on=S2.picked.indexOf(st.id)>=0;
     const nth=on?(' · '+String.fromCharCode(65+S2.picked.indexOf(st.id))+'안'):'';
     // ★배지는 **소재 이름 그대로** 보여준다(2026-08-21 사장님: "체크 표시가 아니고
@@ -17456,7 +17475,19 @@ function s2RenderStyles(){
       return `<li><b>${esc(s2RoleName(r).replace(/^\S+\s/,''))}</b> <span class="q">"${s2Tmpl(ex)}"</span></li>`;
     }).filter(Boolean).join('');
     const open = !!S2_OPEN[st.id];
-    const exBody = !open ? '' : `<div class="s2-ex" onclick="event.stopPropagation()">
+    // ★샘플 대본(2026-09-09 사장님 "샘플 대본 하나씩을 넣어주고").
+    //   칸별 문장틀을 **순서대로 이어** 실제 대본처럼 보여준다. 목록만 있으면
+    //   "이 스타일로 쓰면 뭐가 나오는지"가 안 그려진다. 빈칸은 s2Tmpl이 초록 태그로 바꾼다.
+    const sampleLi = chain.map(r=>{
+      const ex = s2Ex(tpl, r); if(!ex) return '';
+      return `<div class="ln"><span class="rl">${esc(s2RoleName(r).replace(/^\S+\s/,''))}</span>`
+           + `<span class="tx">${s2Tmpl(ex)}</span></div>`;
+    }).filter(Boolean).join('');
+    const sample = sampleLi
+      ? `<div class="s2-sample"><h6>🧾 샘플 대본 — 이 스타일로 쓰면 이렇게 나옵니다</h6>${sampleLi}</div>`
+      : '';
+    const exBody = !open ? '' : `<div class="s2-ex${_s2ExSide(idx,_sorted.length)}" onclick="event.stopPropagation()">
+      ${sample}
       ${sit?`<div class="s2-quote plain" style="margin:0 0 8px">${esc(sit)}</div>`:''}
       ${hookLine}
       ${flow}
@@ -17465,7 +17496,6 @@ function s2RenderStyles(){
       ${titleEx?`<div class="sec"><h6>📌 제목 후킹은 이렇게</h6><div class="q">"${s2Tmpl(titleEx)}"</div></div>`:''}
       ${lineEx?`<div class="sec"><h6>🎣 첫 후킹은 이렇게</h6><div class="q">"${s2Tmpl(lineEx)}"</div></div>`:''}
       ${storyLi?`<div class="sec"><h6>📖 스토리라인</h6><ol>${storyLi}</ol></div>`:''}
-      ${lineLi?`<div class="sec"><h6>📝 이어지는 칸</h6><ol>${lineLi}</ol></div>`:''}
       ${(st.appeal && String(st.appeal).replace(/\s/g,'')!==nm.replace(/\s/g,'') && String(st.appeal).length>nm.length+4)
         ?`<div class="sec"><h6>💡 왜 통하나</h6><div>${esc(st.appeal).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>')}</div></div>`:''}
     </div>`;
