@@ -1,243 +1,30 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>영상제작 스튜디오 — 로또의 주식</title>
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>영상 제작소 — 프로젝트</title>
 <style>
-:root {
-  --gold: #d4af37; --gold-dim: #9a7d28; --bg: #0a0a0a;
-  --card: #16161a; --line: #2a2a30; --txt: #e8e6e0; --muted: #8a8a92;
-}
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: var(--bg); color: var(--txt); font-family: 'Segoe UI','Malgun Gothic',sans-serif; }
-.topbar { height: 54px; background: var(--card); border-bottom: 1px solid var(--line);
-  display: flex; align-items: center; padding: 0 28px; justify-content: space-between; }
-.topbar .brand { font-size: .92rem; font-weight: 700; color: var(--gold); }
-#app { max-width: 900px; margin: 0 auto; padding: 28px; }
-.label { font-size: .74rem; color: var(--muted); font-weight: 700; text-transform: uppercase;
-  letter-spacing: .6px; margin: 18px 0 8px; }
-.mock-input, input[type=text] { width: 100%; padding: 12px 16px; background: var(--card);
-  border: 1px solid var(--line); border-radius: 10px; color: var(--txt); font-family: inherit;
-  font-size: .9rem; }
-.btn { padding: 10px 18px; border-radius: 9px; cursor: pointer; font-family: inherit;
-  font-size: .84rem; font-weight: 700; color: #0a0a0a; background: var(--gold);
-  border: none; }
-.btn:disabled { opacity: .5; cursor: default; }
-.btn.secondary { color: var(--txt); background: var(--card); border: 1px solid var(--line); }
-table { width: 100%; border-collapse: collapse; font-size: .82rem; margin-top: 10px; }
-th, td { padding: 8px 6px; text-align: left; border-bottom: 1px solid var(--line); }
-th { color: var(--muted); font-weight: 600; font-size: .74rem; }
-.grade-great { color: var(--gold); font-weight: 700; }
-.grade-good { color: #22c55e; font-weight: 700; }
-.grade-normal { color: var(--muted); }
-.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px;
-  padding: 16px; margin-top: 10px; }
-.qc-line { font-size: .82rem; color: var(--muted); padding: 4px 0; }
-.qc-line.pass { color: var(--gold); }
-.plan-box h1 { font-size: 1.1rem; color: var(--gold); margin-bottom: 8px; }
-.plan-box { font-size: .88rem; line-height: 1.7; }
-.action-row { display: flex; gap: 8px; margin-top: 14px; }
-.guide-box { max-width: 900px; margin: 16px auto 0; padding: 16px 28px 0; }
-.guide-box .card { font-size: .82rem; line-height: 1.7; color: var(--txt); position: relative; }
-.guide-box .card b { color: var(--gold); }
-.guide-close { position: absolute; top: 10px; right: 12px; background: none; border: none;
-  color: var(--muted); cursor: pointer; font-size: .8rem; }
-.hint { font-size: .74rem; color: var(--muted); margin: 2px 0 4px; }
+:root{--bg:#090a0d;--panel:#111319;--card:#171a21;--line:#2a2e38;--txt:#f1efe8;--muted:#969ba8;--gold:#efbd57;--blue:#67a9ff;--green:#67d6a3}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font-family:"Segoe UI","Malgun Gothic",sans-serif;min-height:100vh}button,input,textarea,select{font:inherit}.app{display:grid;grid-template-columns:280px 1fr;min-height:100vh}.side{background:#0d0f14;border-right:1px solid var(--line);padding:22px 16px;position:sticky;top:0;height:100vh;overflow:auto}.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px;padding:2px 6px 22px}.brand i{width:32px;height:32px;border-radius:10px;background:var(--gold);color:#17120a;display:grid;place-items:center;font-style:normal}.new{width:100%;border:0;border-radius:10px;padding:11px;background:var(--gold);color:#17120a;font-weight:800;cursor:pointer}.side-label{margin:24px 6px 10px;color:var(--muted);font-size:12px;font-weight:700}.project-item{padding:11px;border:1px solid transparent;border-radius:10px;cursor:pointer;margin:5px 0}.project-item:hover,.project-item.on{background:var(--card);border-color:var(--line)}.project-item b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.project-item span{font-size:11px;color:var(--muted)}.main{min-width:0}.top{height:66px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 30px;background:#090a0de8;backdrop-filter:blur(12px);position:sticky;top:0;z-index:5}.crumb,.save-state{font-size:12px;color:var(--muted)}.save-state.ok{color:var(--green)}.content{max-width:1120px;margin:0 auto;padding:30px}.empty{min-height:70vh;display:grid;place-items:center;text-align:center;color:var(--muted)}.empty h1{color:var(--txt);font-size:30px;margin:0 0 10px}.empty p{line-height:1.7}.project-head{display:flex;justify-content:space-between;gap:20px;align-items:flex-start}.project-head h1{font-size:28px;margin:0}.project-head p{margin:7px 0 0;color:var(--muted);font-size:13px}.badge{border:1px solid #4b3d21;color:var(--gold);background:#201a10;border-radius:99px;padding:6px 10px;font-size:12px}.steps{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin:26px 0}.step{padding:10px 6px;border:1px solid var(--line);background:var(--panel);color:var(--muted);border-radius:10px;text-align:center;font-size:11px;cursor:pointer}.step b{display:block;font-size:13px}.step.on{background:#231d12;border-color:#725925;color:var(--gold)}.step.disabled{opacity:.38}.grid{display:grid;grid-template-columns:1fr 330px;gap:18px}.card{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:20px}.card h2{font-size:17px;margin:0 0 4px}.desc{font-size:12px;color:var(--muted);margin-bottom:20px;line-height:1.5}.field{margin:15px 0}.field label{display:block;font-size:12px;font-weight:700;color:#c7cad2;margin-bottom:7px}.field input,.field textarea,.field select{width:100%;background:#0d0f14;border:1px solid var(--line);border-radius:9px;color:var(--txt);padding:11px 12px;outline:none}.field textarea{min-height:120px;resize:vertical;line-height:1.6}.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:18px}.btn{border:0;border-radius:9px;padding:10px 15px;font-weight:800;cursor:pointer;background:var(--gold);color:#17120a}.btn.secondary{background:var(--card);border:1px solid var(--line);color:var(--txt)}.btn.blue{background:var(--blue);color:#081322}.btn:disabled{opacity:.45}.tip{font-size:12px;color:var(--muted);line-height:1.65}.tip strong{color:var(--txt)}.summary{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:15px}.stat{padding:13px;background:var(--card);border-radius:10px}.stat b{display:block;font-size:20px}.stat span{font-size:11px;color:var(--muted)}.hidden{display:none!important}.progress{padding:12px;margin:12px 0;background:#101720;border:1px solid #263c55;border-radius:9px;color:#aacdf8;font-size:12px}.scene{background:var(--card);border:1px solid var(--line);border-radius:12px;margin:10px 0;padding:15px}.scene-head{display:flex;justify-content:space-between;gap:10px}.scene-status{font-size:11px;color:var(--muted)}.scene textarea{width:100%;min-height:82px;margin-top:10px;background:#0d0f14;border:1px solid var(--line);border-radius:8px;color:var(--txt);padding:10px;line-height:1.5}.drop{border:1px dashed #4b5160;border-radius:9px;padding:12px;margin-top:10px;text-align:center;color:var(--muted);font-size:12px}.asset{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:12px}.asset a{color:var(--blue);text-decoration:none}.coming{padding:35px;text-align:center;color:var(--muted)}.coming strong{display:block;color:var(--txt);font-size:19px;margin-bottom:8px}dialog{border:1px solid var(--line);border-radius:16px;background:var(--panel);color:var(--txt);padding:0;width:min(520px,calc(100vw - 30px));box-shadow:0 25px 80px #000b}dialog::backdrop{background:#000a}.modal{padding:22px}.modal h2{margin:0}.toast{position:fixed;right:22px;bottom:22px;background:#242832;border:1px solid #424957;border-radius:10px;padding:12px 16px;font-size:13px;z-index:20}@media(max-width:900px){.app{grid-template-columns:1fr}.side{height:auto;position:relative;border-right:0;border-bottom:1px solid var(--line)}.project-list{display:flex;overflow:auto}.project-item{min-width:180px}.grid{grid-template-columns:1fr}.steps{grid-template-columns:repeat(4,1fr)}.top{position:relative}.content{padding:20px}}
 </style>
-</head>
-<body>
-
-<div class="topbar">
-  <span class="brand">🎬 영상제작 스튜디오</span>
-  <div style="display:flex;align-items:center;gap:14px">
-    <button class="btn secondary" style="font-size:.78rem;padding:6px 12px" onclick="toggleGuide()">❓ 사용법</button>
-    <a href="/" style="color:var(--muted);font-size:.8rem;text-decoration:none">← 메인으로</a>
-  </div>
-</div>
-
-<div class="guide-box" id="guide-box" style="display:none">
-  <div class="card">
-    <button class="guide-close" onclick="closeGuide()">✕ 닫기</button>
-    📖 <b>이렇게 쓰세요</b><br>
-    <b>① 아이디어</b> — 오늘 다룰 소재를 한 문장으로 적으세요. (예: "메타발 반도체 조정, 오늘 아침 리포트는 정반대였다")<br>
-    <b>② 터진 영상</b> (선택) — 관련 키워드로 검색하면 그 채널 자체 평균조회수 대비 얼마나 잘 나왔는지(기여도·성과도: Great/Good/Normal)를 보여줍니다. 참고할 영상은 "담기"로 추가하면 기획서 생성 시 레퍼런스로 같이 들어갑니다.<br>
-    <b>③ 생성</b> — "기획서 생성"을 누르면 AI가 초안을 쓰고 자체 QC(품질검사, 9점 만점 중 7점 이상)를 통과할 때까지 최대 3번까지 자동으로 다시 씁니다. 진행 상황이 실시간으로 표시되고, 완성되면 마크다운 기획서가 아래에 뜹니다.
-  </div>
-</div>
-
-<div id="app">
-  <div class="label">① 아이디어</div>
-  <div class="hint">오늘 다룰 소재를 한 문장으로</div>
-  <input type="text" id="idea-input" placeholder="예: 어젯밤 메타발 반도체 조정, 오늘 아침 리포트는 정반대였다">
-
-  <div class="label">② 터진 영상 (선택사항)</div>
-  <div class="hint">키워드로 검색 → 채널 평균 대비 잘 나온 영상을 "담기"로 참고자료 추가</div>
-  <div style="display:flex;gap:8px">
-    <input type="text" id="hotclip-query" placeholder="검색어: 반도체 조정" style="flex:1">
-    <button class="btn secondary" onclick="searchHotClips()">🔥 실시간 탐지</button>
-  </div>
-  <div id="hotclip-results"></div>
-  <div id="hotclip-picked" style="font-size:.78rem;color:var(--muted);margin-top:6px"></div>
-
-  <div class="label">③ 생성</div>
-  <div class="hint">QC 통과할 때까지 최대 3회 자동 재작성 (진행상황 실시간 표시)</div>
-  <button class="btn" id="generate-btn" onclick="generatePlan()">🎬 기획서 생성</button>
-
-  <div id="progress-area"></div>
-  <div id="plan-area"></div>
-</div>
-
+</head><body>
+<div class="app"><aside class="side"><div class="brand"><i>▶</i> 영상 제작소</div><button class="new" onclick="openNewProject()">＋ 새 영상 프로젝트</button><div class="side-label">최근 프로젝트</div><div class="project-list" id="projectList"><div class="tip">불러오는 중…</div></div></aside>
+<main class="main"><header class="top"><span class="crumb">숏템메이커 · 영상 제작 자동화</span><span id="saveState" class="save-state">프로젝트를 선택하세요</span></header><div class="content">
+<section id="empty" class="empty"><div><h1>한 번 설명하고, 계속 이어서 만듭니다</h1><p>기획·대본·장면·촬영파일이 한 프로젝트에 저장됩니다.<br>바탕화면 폴더와 수정본 전달을 반복하지 않아도 됩니다.</p><button class="btn" onclick="openNewProject()">첫 프로젝트 만들기</button></div></section>
+<section id="workspace" class="hidden"><div class="project-head"><div><h1 id="projectTitle">제목</h1><p id="projectMeta"></p></div><span class="badge" id="projectBadge">작업중</span></div><div class="steps" id="steps"></div><div id="panels">
+<section class="panel" data-step="1"><div class="grid"><div class="card"><h2>1. 영상 기본설정</h2><div class="desc">이 내용은 자동저장되며 기획과 대본의 기준이 됩니다.</div><div class="field"><label>프로젝트 제목</label><input data-bind="title"></div><div class="row"><div class="field"><label>영상 형식</label><select data-bind="format"><option value="longform">유튜브 롱폼</option><option value="vsl">판매·설득형 VSL</option><option value="shorts">유튜브 쇼츠</option></select></div><div class="field"><label>목표 길이</label><select data-bind="target_minutes"><option value="3">3분</option><option value="5">5분</option><option value="10">10분</option><option value="15">15분</option><option value="20">20분</option></select></div></div><div class="field"><label>이 영상의 목표</label><textarea data-bind="goal" placeholder="예: 숏템메이커가 왜 필요한지 설명하고 체험으로 연결"></textarea></div><div class="field"><label>시청자</label><input data-bind="audience" placeholder="예: 쇼핑쇼츠를 배우고도 실행하지 못한 사람"></div><div class="field"><label>이번 영상 아이디어</label><textarea data-bind="idea" placeholder="한 문장으로 적으세요"></textarea></div><div class="actions"><button class="btn" onclick="goStep(2)">저장하고 기획하기 →</button></div></div><aside class="card"><h2>이번 프로젝트</h2><div class="summary"><div class="stat"><b id="sumScenes">0</b><span>장면</span></div><div class="stat"><b id="sumAssets">0</b><span>등록 파일</span></div></div><p class="tip"><strong>사라지지 않습니다.</strong><br>입력 내용은 서버에 저장됩니다. 같은 페이지에서 언제든 이어서 작업할 수 있습니다.</p></aside></div></section>
+<section class="panel hidden" data-step="2"><div class="grid"><div class="card"><h2>2. 기획서</h2><div class="desc">기존 AI 기획 기능을 저장되는 프로젝트에 연결했습니다.</div><div class="actions"><button class="btn blue" id="planBtn" onclick="generatePlan()">AI 기획서 만들기</button><button class="btn secondary" onclick="saveNow()">현재 내용 저장</button></div><div id="planProgress" class="progress hidden"></div><div class="field"><label>기획서 편집</label><textarea data-bind="plan_text" style="min-height:420px" placeholder="AI로 생성하거나 직접 입력하세요"></textarea></div><div class="actions"><button class="btn" onclick="copyPlanToScript()">이 기획으로 대본 시작 →</button></div></div><aside class="card"><h2>파일 전달 없음</h2><p class="tip">생성 결과는 내려받지 않고 프로젝트에 바로 저장됩니다. 판매형은 문제 인식부터 CTA까지 7단계 설득구조를 기준으로 합니다.</p></aside></div></section>
+<section class="panel hidden" data-step="3"><div class="grid"><div class="card"><h2>3. 대본</h2><div class="desc">화면에서 고치면 자동저장됩니다.</div><div class="field"><label>전체 대본</label><textarea data-bind="script_text" style="min-height:470px" placeholder="장면 제목은 '## S1 — 오프닝'처럼 적으세요."></textarea></div><div class="actions"><button class="btn blue" onclick="splitScenes()">장면으로 자동 나누기</button><button class="btn secondary" onclick="saveNow()">저장</button></div></div><aside class="card"><h2>장면 나누기</h2><p class="tip">`##` 제목이 있으면 제목별로, 없으면 빈 줄 기준으로 나눕니다. 장면별 대사는 이후에도 수정할 수 있습니다.</p></aside></div></section>
+<section class="panel hidden" data-step="4"><div class="grid"><div class="card"><h2>4. 장면·촬영파일</h2><div class="desc">각 장면 칸에 녹화·음성·이미지를 바로 등록합니다.</div><div id="sceneList"></div></div><aside class="card"><h2>등록 현황</h2><p class="tip" id="assetHelp">먼저 대본을 장면으로 나누세요.</p></aside></div></section>
+<section class="panel hidden" data-step="5"><div class="card"><div class="coming"><strong>5. 성우·자막 자동화</strong>프로젝트 저장과 촬영파일 등록 다음에 연결합니다. 아직 실행 버튼은 만들지 않았습니다.</div></div></section><section class="panel hidden" data-step="6"><div class="card"><div class="coming"><strong>6. 장면 디자인</strong>VSL리모션의 배경·자막·모션 문법을 템플릿으로 옮길 단계입니다.</div></div></section><section class="panel hidden" data-step="7"><div class="card"><div class="coming"><strong>7. 미리보기·검수</strong>씬별 미리보기와 수정 요청을 이 화면에서 처리할 단계입니다.</div></div></section><section class="panel hidden" data-step="8"><div class="card"><div class="coming"><strong>8. 최종 렌더</strong>합본·썸네일·업로드용 파일 생성을 연결할 단계입니다.</div></div></section>
+</div></section></div></main></div>
+<dialog id="newDialog"><form class="modal" onsubmit="createProject(event)"><h2>새 영상 프로젝트</h2><p class="tip">제목만 넣어도 바로 시작할 수 있습니다.</p><div class="field"><label>프로젝트 제목</label><input id="newTitle" required placeholder="예: 숏템메이커 3편"></div><div class="row"><div class="field"><label>형식</label><select id="newFormat"><option value="longform">유튜브 롱폼</option><option value="vsl">판매·설득형 VSL</option><option value="shorts">쇼츠</option></select></div><div class="field"><label>목표 길이</label><select id="newMinutes"><option value="5">5분</option><option value="10" selected>10분</option><option value="15">15분</option></select></div></div><div class="actions"><button class="btn">프로젝트 만들기</button><button class="btn secondary" type="button" onclick="newDialog.close()">취소</button></div></form></dialog><div id="toast" class="toast hidden"></div>
 <script>
-let pickedRefs = [];
-let lastHotClipResults = [];
-function esc(s){return String(s == null ? '' : s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
-
-const GUIDE_KEY = 'yt_guide_dismissed';
-function toggleGuide() {
-  const box = document.getElementById('guide-box');
-  box.style.display = box.style.display === 'none' ? 'block' : 'none';
-}
-function closeGuide() {
-  document.getElementById('guide-box').style.display = 'none';
-  localStorage.setItem(GUIDE_KEY, '1');
-}
-if (!localStorage.getItem(GUIDE_KEY)) {
-  document.addEventListener('DOMContentLoaded', () => { document.getElementById('guide-box').style.display = 'block'; });
-}
-
-async function searchHotClips(_isAutoRetry) {
-  const q = document.getElementById('hotclip-query').value.trim();
-  if (!q) return;
-  const box = document.getElementById('hotclip-results');
-  box.innerHTML = _isAutoRetry
-    ? '<p style="color:var(--muted);font-size:.82rem">네트워크 오류 감지 — 자동 재시도 중…</p>'
-    : '<p style="color:var(--muted);font-size:.82rem">검색 중… (유튜브 실시간 조회라 5~15초 걸릴 수 있어요)</p>';
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 30000);
-  try {
-    const res = await fetch('/yt/hot_clips', {
-      method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({q}), signal: controller.signal
-    });
-    clearTimeout(timeoutId);
-    let data = null;
-    try { data = await res.json(); } catch (_) { /* 비JSON 응답, 아래에서 처리 */ }
-    if (!res.ok || (data && data.error)) {
-      const msg = (data && data.error) || `검색 실패 (HTTP ${res.status})`;
-      box.innerHTML = `<p style="color:#e88">${esc(msg)} ` +
-        `<button class="btn secondary" style="font-size:.75rem;padding:3px 10px" onclick="searchHotClips()">🔁 재시도</button></p>`;
-      return;
-    }
-    renderHotClips(data.results);
-  } catch (e) {
-    clearTimeout(timeoutId);
-    // 순수 네트워크 단절(TypeError "Failed to fetch")은 한 번은 자동으로 재시도 —
-    // 타임아웃(AbortError)이나 이미 한 번 재시도한 경우는 바로 수동 재시도 버튼 노출
-    if (!_isAutoRetry && e.name !== 'AbortError') {
-      setTimeout(() => searchHotClips(true), 1200);
-      return;
-    }
-    const msg = e.name === 'AbortError' ? '시간 초과 (30초) — 네트워크가 느리거나 유튜브 API가 지연 중일 수 있어요' : `네트워크 오류: ${e.message}`;
-    box.innerHTML = `<p style="color:#e88">검색 실패 — ${msg} ` +
-      `<button class="btn secondary" style="font-size:.75rem;padding:3px 10px" onclick="searchHotClips()">🔁 재시도</button></p>`;
-  }
-}
-
-function gradeClass(g) {
-  if (g === 'Great') return 'grade-great';
-  if (g === 'Good') return 'grade-good';
-  return 'grade-normal';
-}
-
-function renderHotClips(results) {
-  lastHotClipResults = results;
-  const box = document.getElementById('hotclip-results');
-  if (!results.length) { box.innerHTML = '<p style="color:var(--muted);font-size:.82rem">결과 없음</p>'; return; }
-  let html = '<table><tr><th></th><th>제목</th><th>채널</th><th>조회수</th><th>기여도</th><th>성과도</th></tr>';
-  results.forEach((r, i) => {
-    html += `<tr>
-      <td><button class="btn secondary" style="font-size:.75rem;padding:4px 10px" onclick="pickRef(${i})">담기</button></td>
-      <td>${esc(r.title)}</td><td>${esc(r.channel_title)}</td>
-      <td>${r.view_count.toLocaleString()}<br><span style="font-size:.75rem;color:var(--muted)">(${r.view_pct_above_avg >= 0 ? '+' : ''}${r.view_pct_above_avg}%)</span></td>
-      <td class="${gradeClass(r.contribution_grade)}">${r.contribution_grade}</td>
-      <td class="${gradeClass(r.performance_grade)}">${r.performance_grade}</td>
-    </tr>`;
-  });
-  html += '</table>';
-  box.innerHTML = html;
-}
-
-function pickRef(i) {
-  const r = lastHotClipResults[i];
-  if (!r || pickedRefs.find(x => x.video_id === r.video_id)) return;
-  pickedRefs.push(r);
-  document.getElementById('hotclip-picked').textContent =
-    `📥 ${pickedRefs.length}건 담김: ` + pickedRefs.map(x => x.title).join(' · ');
-}
-
-async function generatePlan() {
-  const idea = document.getElementById('idea-input').value.trim();
-  if (!idea) { alert('아이디어를 입력하세요'); return; }
-  const btn = document.getElementById('generate-btn');
-  btn.disabled = true; btn.textContent = '생성 중…';
-
-  const progressBox = document.getElementById('progress-area');
-  const planBox = document.getElementById('plan-area');
-  progressBox.innerHTML = '<div class="card" id="progress-card"></div>';
-  planBox.innerHTML = '';
-  const progressCard = document.getElementById('progress-card');
-
-  try {
-    const resp = await fetch('/yt/generate_plan', {
-      method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({idea, references: pickedRefs})
-    });
-    const reader = resp.body.getReader();
-    const decoder = new TextDecoder();
-    let buf = '';
-    while (true) {
-      const {done, value} = await reader.read();
-      if (done) break;
-      buf += decoder.decode(value, {stream: true});
-      const parts = buf.split('\n\n');
-      buf = parts.pop();
-      for (const part of parts) {
-        if (!part.startsWith('data: ')) continue;
-        const event = JSON.parse(part.slice(6));
-        handleEvent(event, progressCard, planBox);
-      }
-    }
-  } catch (e) {
-    progressCard.innerHTML += `<div class="qc-line" style="color:#e88">실패: ${e.message} ` +
-      `<button class="btn secondary" style="font-size:.75rem;padding:3px 10px" onclick="generatePlan()">🔁 재시도</button></div>`;
-  } finally {
-    btn.disabled = false; btn.textContent = '🎬 기획서 생성';
-  }
-}
-
-function handleEvent(event, progressCard, planBox) {
-  if (event.type === 'step') {
-    const passed = event.qc_score !== undefined && event.qc_score >= 7;
-    const line = document.createElement('div');
-    line.className = 'qc-line' + (passed ? ' pass' : '');
-    line.textContent = event.qc_score !== undefined
-      ? `시도 ${event.attempt}/${event.max_attempt} · 점수 ${event.qc_score}/9${passed ? ' → 통과' : ''}`
-      : `생성 중… (시도 ${event.attempt}/${event.max_attempt})`;
-    progressCard.appendChild(line);
-  } else if (event.type === 'done') {
-    planBox.innerHTML = `
-      <div class="label">④ 완성된 기획서 (QC ${event.qc_score}/9)</div>
-      <div class="card plan-box">${marked.parse(event.plan_text)}</div>
-      <div class="action-row">
-        <button class="btn">✅ 이 기획으로 대본 진행 →</button>
-        <button class="btn secondary" onclick="generatePlan()">🔁 다시 생성</button>
-      </div>`;
-  } else if (event.type === 'error') {
-    progressCard.innerHTML += `<div class="qc-line" style="color:#e88">오류: ${event.message}</div>`;
-  }
-}
-</script>
-</body>
-</html>
+const STEP_NAMES=['기본설정','기획서','대본','장면·파일','성우·자막','디자인','검수','렌더'];let projects=[],project=null,currentStep=1,saveTimer=null,saving=false;const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function api(url,opt={}){const r=await fetch(url,opt);let d={};try{d=await r.json()}catch{}if(!r.ok||d.error)throw new Error(d.error||`HTTP ${r.status}`);return d}function toast(msg){const e=$('#toast');e.textContent=msg;e.classList.remove('hidden');setTimeout(()=>e.classList.add('hidden'),2200)}function openNewProject(){$('#newDialog').showModal();setTimeout(()=>$('#newTitle').focus(),30)}
+async function createProject(e){e.preventDefault();const d=await api('/yt/projects',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:$('#newTitle').value,format:$('#newFormat').value,target_minutes:+$('#newMinutes').value})});$('#newDialog').close();$('#newTitle').value='';await loadProjects();await openProject(d.id);toast('프로젝트를 만들었습니다')}async function loadProjects(){projects=(await api('/yt/projects')).projects||[];renderProjects()}function renderProjects(){$('#projectList').innerHTML=projects.length?projects.map(p=>`<div class="project-item ${project&&p.id===project.id?'on':''}" onclick="openProject('${p.id}')"><b>${esc(p.title)}</b><span>${p.scene_count}장면 · ${esc((p.updated_at||'').slice(5,16).replace('T',' '))}</span></div>`).join(''):'<div class="tip">아직 프로젝트가 없습니다.</div>'}
+async function openProject(id){if(project&&project.id!==id)await saveNow({quiet:true});project=await api(`/yt/projects/${id}`);currentStep=+project.current_step||1;$('#empty').classList.add('hidden');$('#workspace').classList.remove('hidden');fillProject();renderProjects();renderSteps();showStep(currentStep);setSaved()}function fillProject(){$('#projectTitle').textContent=project.title;fillMeta();document.querySelectorAll('[data-bind]').forEach(e=>e.value=project[e.dataset.bind]??'');renderScenes()}function fillMeta(){$('#projectMeta').textContent=`${({longform:'유튜브 롱폼',vsl:'판매·설득형 VSL',shorts:'유튜브 쇼츠'})[project.format]} · 목표 ${project.target_minutes}분 · 마지막 저장 ${(project.updated_at||'').replace('T',' ').slice(0,16)}`;const ss=project.scenes||[];$('#sumScenes').textContent=ss.length;$('#sumAssets').textContent=ss.reduce((n,s)=>n+(s.assets||[]).length,0)}function renderSteps(){$('#steps').innerHTML=STEP_NAMES.map((n,i)=>`<button class="step ${i+1===currentStep?'on':''} ${i>3?'disabled':''}" onclick="goStep(${i+1})"><b>${i+1}</b>${n}</button>`).join('')}function showStep(n){document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('hidden',+p.dataset.step!==n));if(n===4)renderScenes()}async function goStep(n){if(!project)return;currentStep=n;project.current_step=n;await saveNow({quiet:true});renderSteps();showStep(n)}
+document.addEventListener('input',e=>{if(!project||!e.target.dataset.bind)return;const k=e.target.dataset.bind;project[k]=k==='target_minutes'?+e.target.value:e.target.value;if(k==='title')$('#projectTitle').textContent=e.target.value||'제목 없음';scheduleSave()});function scheduleSave(){clearTimeout(saveTimer);$('#saveState').textContent='저장 대기';saveTimer=setTimeout(()=>saveNow({quiet:true}),650)}function setSaved(){$('#saveState').textContent='저장됨';$('#saveState').className='save-state ok'}async function saveNow({quiet=false}={}){if(!project||saving)return;clearTimeout(saveTimer);saving=true;$('#saveState').textContent='저장 중…';try{project=await api(`/yt/projects/${project.id}`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(project)});setSaved();fillMeta();if(!quiet)toast('저장했습니다');loadProjects()}catch(e){$('#saveState').textContent='저장 실패';if(!quiet)toast(e.message)}finally{saving=false}}
+async function generatePlan(){if(!project.idea.trim()){toast('먼저 영상 아이디어를 적어주세요');return}const b=$('#planBtn'),p=$('#planProgress');b.disabled=true;p.classList.remove('hidden');p.textContent='기획서를 만들고 품질을 검사하고 있습니다…';try{const r=await fetch('/yt/generate_plan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({idea:project.idea,references:project.references||[]})});if(!r.ok)throw new Error(`HTTP ${r.status}`);const rd=r.body.getReader(),dc=new TextDecoder();let buf='';while(true){const x=await rd.read();if(x.done)break;buf+=dc.decode(x.value,{stream:true});const chunks=buf.split('\n\n');buf=chunks.pop();for(const c of chunks){if(!c.startsWith('data: '))continue;const v=JSON.parse(c.slice(6));if(v.type==='step')p.textContent=v.qc_score!==undefined?`시도 ${v.attempt}/${v.max_attempt} · 품질 ${v.qc_score}/9`:`기획서 작성 중 · 시도 ${v.attempt}`;if(v.type==='done'){project.plan_text=v.plan_text||'';document.querySelector('[data-bind="plan_text"]').value=project.plan_text;p.textContent=`완료 · 품질 ${v.qc_score}/9`;await saveNow({quiet:true})}if(v.type==='error')throw new Error(v.message)}}toast('기획서를 저장했습니다')}catch(e){p.textContent=`오류: ${e.message}`}finally{b.disabled=false}}async function copyPlanToScript(){if(!project.plan_text.trim()){toast('기획서가 비어 있습니다');return}if(!project.script_text.trim())project.script_text=project.plan_text;document.querySelector('[data-bind="script_text"]').value=project.script_text;await goStep(3)}
+async function splitScenes(){const text=(project.script_text||'').trim();if(!text){toast('대본이 비어 있습니다');return}let parts=[],heads=[...text.matchAll(/^##+\s+(.+)$/gm)];if(heads.length)heads.forEach((m,i)=>parts.push({title:m[1].trim(),script:text.slice(m.index+m[0].length,i+1<heads.length?heads[i+1].index:text.length).trim()}));else parts=text.split(/\n\s*\n+/).map((x,i)=>({title:`장면 ${i+1}`,script:x.trim()})).filter(x=>x.script);const old=project.scenes||[];project.scenes=parts.map((p,i)=>({id:old[i]?.id||`scene-${String(i+1).padStart(2,'0')}`,title:p.title,script:p.script,status:old[i]?.status||'waiting',assets:old[i]?.assets||[]}));await goStep(4);toast(`${parts.length}개 장면으로 나눴습니다`)}
+function renderScenes(){if(!project)return;const ss=project.scenes||[],box=$('#sceneList');if(!box)return;box.innerHTML=ss.length?ss.map((s,i)=>`<article class="scene"><div class="scene-head"><b>${String(i+1).padStart(2,'0')} · <span contenteditable="true" onblur="editScene('${s.id}','title',this.textContent)">${esc(s.title)}</span></b><span class="scene-status">${(s.assets||[]).length?'재료 등록됨':'재료 대기'}</span></div><textarea oninput="editScene('${s.id}','script',this.value)">${esc(s.script)}</textarea><div class="drop"><input type="file" onchange="uploadAsset('${s.id}',this)"><div>영상·음성·이미지·문서를 이 장면에 등록</div></div>${(s.assets||[]).map(a=>`<div class="asset"><a href="/yt/projects/${project.id}/assets/${s.id}/${a.id}" target="_blank">${esc(a.name)}</a><span>${bytes(a.size)}</span></div>`).join('')}</article>`).join(''):'<div class="coming"><strong>장면이 없습니다</strong>3단계에서 대본을 장면으로 나누세요.</div>';const ready=ss.filter(s=>(s.assets||[]).length).length;$('#assetHelp').textContent=ss.length?`${ss.length}개 장면 중 ${ready}개에 파일이 등록됐습니다.`:'먼저 대본을 장면으로 나누세요.';fillMeta()}function editScene(id,k,v){const s=project.scenes.find(x=>x.id===id);if(s){s[k]=v;scheduleSave()}}async function uploadAsset(id,input){const f=input.files[0];if(!f)return;const fd=new FormData();fd.append('scene_id',id);fd.append('file',f);input.disabled=true;$('#saveState').textContent=`${f.name} 등록 중…`;try{project=(await api(`/yt/projects/${project.id}/assets`,{method:'POST',body:fd})).project;renderScenes();fillMeta();toast('장면 파일을 등록했습니다')}catch(e){toast(e.message)}finally{input.disabled=false;setSaved()}}function bytes(n){return n<1024?`${n} B`:n<1048576?`${(n/1024).toFixed(1)} KB`:`${(n/1048576).toFixed(1)} MB`}loadProjects().then(()=>{if(projects.length)return openProject(projects[0].id)}).catch(e=>$('#projectList').innerHTML=`<div class="tip">불러오기 실패: ${esc(e.message)}</div>`);
+</script></body></html>
