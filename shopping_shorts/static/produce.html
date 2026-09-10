@@ -2898,6 +2898,11 @@
               <button type="button" onclick="mkAdd('wmr')" class="mkbtn">⊡ 구석 워터마크</button>
               <button type="button" onclick="mkAdd('sub')" class="mkbtn">◎ 가운데</button>
             </div>
+            <!-- 🎬 이 장면에만(2026-09-10) — 켜고 얹으면 지금 보는 장면에서만 덮는다. 기본 꺼짐(지금까지와 같음). -->
+            <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;margin-bottom:8px;cursor:pointer;min-height:32px">
+              <input type="checkbox" id="mkOnlyScene" onchange="MK_ONLY_SCENE=this.checked">
+              <span>🎬 새로 얹는 건 <b>지금 장면에만</b></span>
+            </label>
             <div id="mkPills" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
             <div id="mkEditor"></div>
             <div class="hint" style="font-size:11px;margin-top:10px;line-height:1.7">
@@ -4731,7 +4736,12 @@ function frameUrl(f){
     bg_image:f.bg_image||'', ch_y:f.ch_y??0, title_y:f.title_y??0,
     head_block:(f.head_block===false)?'0':'1'});
   // 가림막(2026-08-28) — 배열이라 JSON으로 싣는다. 없으면 아예 안 보낸다(옛 그림 캐시를 그대로 쓰게).
-  if(Array.isArray(f.masks) && f.masks.length) q.set('masks', JSON.stringify(f.masks));
+  // 🎬 '이 장면에만' 가림막은 **지금 보고 있는 장면**일 때만 미리보기에 싣는다(2026-09-10).
+  //   판단은 mkVisible 한 곳(렌더는 서버 split_scene_masks가 같은 규칙으로 가른다).
+  if(Array.isArray(f.masks) && f.masks.length){
+    const vis=f.masks.filter(function(m){ return mkVisible(m); });
+    if(vis.length) q.set('masks', JSON.stringify(vis));
+  }
   return '/api/produce/frame.png?'+q.toString();
 }
 async function loadFramePresets(){
@@ -5043,6 +5053,54 @@ const MK_QUICK={
   wml:    {l:4,  t:84, w:24, h:8,  shape:'round', fx:'fade', soft:45},
   top:    {l:6,  t:8,  w:88, h:11, shape:'round', fx:'fade', soft:35}
 };
+// 🎬 이 장면에만(2026-09-10 사장님 "장면에만 하는걸 만들고").
+//   가림막에 beat(자막 칸 번호)·cut(그 칸의 몇 번째 컷)을 붙이면 그 장면에서만 덮는다.
+//   없으면 지금까지처럼 영상 전체. ★장면 번호는 장면 목록(BEATS_PREVIEW)이 준 값 그대로 —
+//   화면이 따로 세면 렌더(final_clip_pairs)와 두 벌이 된다.
+function mkCurScene(){
+  const b=(typeof BEATS_PREVIEW!=='undefined' && BEATS_PREVIEW[BEAT_IDX]) || null;
+  if(!b) return null;
+  return {beat:(b.beat_idx!=null?b.beat_idx:BEAT_IDX), cut:(b.cut!=null?b.cut:null)};
+}
+function mkIsScene(m){ return !!m && m.beat!=null; }
+function mkVisible(m){
+  if(!mkIsScene(m)) return true;
+  const c=mkCurScene(); if(!c) return false;
+  return m.beat===c.beat && (m.cut==null || m.cut===c.cut);
+}
+// 그 가림막이 걸린 장면이 목록에서 몇 번째인지(화면의 "N / M 장면"과 같은 번호)
+function mkSceneNo(m){
+  if(!mkIsScene(m) || typeof BEATS_PREVIEW==='undefined') return null;
+  for(let i=0;i<BEATS_PREVIEW.length;i++){
+    const b=BEATS_PREVIEW[i], bi=(b.beat_idx!=null?b.beat_idx:i);
+    if(bi===m.beat && (m.cut==null || (b.cut!=null?b.cut:null)===m.cut)) return i+1;
+  }
+  return null;
+}
+let MK_ONLY_SCENE=false;          // 새로 얹을 때 '이 장면에만' 붙일지(기본 꺼짐 = 지금까지와 같음)
+function mkTagNew(o){
+  if(!MK_ONLY_SCENE) return o;
+  const c=mkCurScene(); if(!c) return o;
+  o.beat=c.beat; if(c.cut!=null) o.cut=c.cut;
+  return o;
+}
+function mkScope(v){
+  const a=mkEnsure(); if(!a||!a[MK_SEL]) return;
+  const m=a[MK_SEL];
+  if(v==='scene'){
+    const c=mkCurScene(); if(!c){ alert('장면 목록이 아직 없어요 — 영상 매칭 뒤에 쓸 수 있어요.'); return; }
+    m.beat=c.beat; if(c.cut!=null) m.cut=c.cut; else delete m.cut;
+  }else{ delete m.beat; delete m.cut; }
+  renderTemplatePreview(); saveHeadcopy(); mkRender();
+}
+// 장면을 넘기면 그 장면의 가림막만 보이게 다시 그린다(장면 전용이 하나라도 있을 때만).
+function mkOnBeatChange(light){
+  const a=mkArr()||[];
+  if(!a.some(mkIsScene)) return;
+  try{ renderTemplatePreview(); }catch(e){}
+  if(light){ try{ syncMaskBoxes(); }catch(e){} return; }
+  try{ mkRender(); }catch(e){}
+}
 function mkArr(){
   const f=STATE.deco&&STATE.deco.template&&STATE.deco.template.frame; if(!f) return null;
   if(!Array.isArray(f.masks)) f.masks=[];
@@ -5052,7 +5110,7 @@ function mkAdd(kind){
   const a=mkArr(); if(!a) return;
   if(a.length>=MK_MAX){ alert('가림효과는 최대 '+MK_MAX+'개까지예요.'); return; }
   const q=MK_QUICK[kind]||{l:30,t:44,w:40,h:10};
-  a.push(Object.assign({shape:'round',fx:'fade',color:'#000000',op:100,soft:30,rot:0}, q));
+  a.push(mkTagNew(Object.assign({shape:'round',fx:'fade',color:'#000000',op:100,soft:30,rot:0}, q)));
   MK_SEL=a.length-1;
   renderTemplatePreview(); saveHeadcopy(); mkRender();
 }
@@ -5084,8 +5142,8 @@ function mkAddEmoji(ch){
   if(a.length>=MK_MAX){ alert('가림효과·스티커는 최대 '+MK_MAX+'개까지예요.'); return; }
   // 9:16 화면이라 같은 %라도 세로가 훨씬 길다 — 정사각으로 보이려면 h = w*(1080/1920).
   const w=14;
-  a.push({kind:'emoji', ch:ch, l:43, t:26, w:w, h:+(w*1080/1920).toFixed(2),
-          shape:'round', fx:'solid', color:'#000000', op:100, soft:0, rot:0});
+  a.push(mkTagNew({kind:'emoji', ch:ch, l:43, t:26, w:w, h:+(w*1080/1920).toFixed(2),
+          shape:'round', fx:'solid', color:'#000000', op:100, soft:0, rot:0}));
   MK_SEL=a.length-1;
   renderTemplatePreview(); saveHeadcopy(); mkRender();
 }
@@ -5094,8 +5152,8 @@ function mkAddBadge(text){
   const a=mkArr(); if(!a) return;
   if(a.length>=MK_MAX){ alert('가림효과·스티커는 최대 '+MK_MAX+'개까지예요.'); return; }
   const w=Math.min(46, 12 + text.length*7);
-  a.push({kind:'badge', text:text, l:6, t:14, w:w, h:6.5,
-          shape:'round', fx:'solid', color:'#FF2D5E', op:100, soft:0, rot:0});
+  a.push(mkTagNew({kind:'badge', text:text, l:6, t:14, w:w, h:6.5,
+          shape:'round', fx:'solid', color:'#FF2D5E', op:100, soft:0, rot:0}));
   MK_SEL=a.length-1;
   renderTemplatePreview(); saveHeadcopy(); mkRender();
 }
@@ -5239,7 +5297,8 @@ function mkRender(){
       +'style="padding:5px 14px;border-radius:999px;font-size:12px;cursor:pointer;'
       +'background:'+(on?'#0d2a1c':'transparent')+';'
       +'color:'+(on?'#7CE8B0':'var(--sub)')+';'
-      +'border:1px solid '+(on?'#2FBF71':'var(--line)')+'">'+(i+1)+'번</button>';
+      +'border:1px solid '+(on?'#2FBF71':'var(--line)')+'">'+(i+1)+'번'
+      +(mkIsScene(_m)?' · 🎬'+(mkSceneNo(_m)||'?')+'장면':'')+'</button>';
   }).join('');
   if(MK_SEL<0||MK_SEL>=a.length) MK_SEL=Math.max(0,a.length-1);
   const m=empty ? Object.assign({},MK_DRAFT) : a[MK_SEL];
@@ -5270,8 +5329,16 @@ function mkRender(){
     +'<span style="font-size:12px;color:var(--sub)">'+(m.color||'#000000')+'</span></div>'
     // 12색 한 줄 — 위 팔레트와 같은 규칙(0순위-B: 한쪽만 고치면 어긋난다).
     +'<div style="display:grid;grid-template-columns:repeat(12,1fr);gap:4px">'+pal+'</div>';
+  // 🎬 적용 범위 — 전체 장면 / 이 장면만(2026-09-10). 맨 위에 둔다: 가장 먼저 정할 일이다.
+  const _sn=mkSceneNo(m);
+  const scopeBlock='<div style="'+lab+'">어느 장면에</div>'
+    +mkChoice([['all','🌐 전체 장면'],['scene','🎬 이 장면만']], mkIsScene(m)?'scene':'all', 'mkScope')
+    +(mkIsScene(m)?'<div style="font-size:11px;color:var(--sub);margin-top:4px">'
+      +(_sn?_sn+'번 장면에서만 덮습니다':'걸린 장면을 목록에서 못 찾았어요(편성이 바뀌었을 수 있어요) — 다시 [이 장면만]을 눌러 주세요')
+      +(mkVisible(m)?'':' · <b>지금 장면엔 안 보여요</b>')+'</div>':'');
   ed.innerHTML=
-     (isEmoji
+     (empty?'':scopeBlock)
+    +(isEmoji
         ? '<div style="'+lab+'">스티커</div><div style="font-size:30px;line-height:1.1;margin-bottom:4px">'
           + (m.ch||'') + '</div>'
         : '')
@@ -5315,6 +5382,7 @@ function syncMaskBoxes(){
   if(!(t&&t.frame)) return;               // 틀이 없으면 가림막도 없다
   const a=mkArr()||[];
   a.forEach(function(m,i){
+    if(!mkVisible(m)) return;       // 🎬 다른 장면 전용은 이 장면에서 안 보인다(끌 수도 없다)
     const b=document.createElement('div');
     // ★표식을 실제로 붙인다(2026-08-30 사장님 "가림막 만들고 이동할때마다 장면 확대 계속되는데").
     //   _zoomOnText의 예외 목록에 [data-maskbox]가 **적혀만 있고** 정작 요소엔 안 붙어 있어
@@ -6000,6 +6068,7 @@ function showBeat(i, first){
   // 🔎 강조는 **장면마다 따로**다(확대의 '모든 장면에 같은 배율' 같은 전파가 없다) —
   //   강조는 "이 장면의 이 자리"를 가리키는 것이라 다음 장면에 그대로 옮기면 엉뚱한 곳을 가리킨다.
   if(typeof hlLoadFromBeat==='function') hlLoadFromBeat();
+  if(typeof mkOnBeatChange==='function') mkOnBeatChange();   // 🎬 장면 전용 가림막 갈아 보이기
   // ★지금 장면을 다 그린 **뒤에** 이웃을 받는다 — 먼저 받으면 지금 볼 그림과 대역폭을 다툰다
   try{ _prefetchNeighborFrames(BEAT_IDX); }catch(e){}
 }
@@ -6086,7 +6155,10 @@ function _playBeatCaptions(b){
     const k=_cutForSeg(si);
     const idx=cuts[k], x=BEATS_PREVIEW[idx];
     if(!x) return;
+    const _mkPrev=BEAT_IDX;
     BEAT_IDX=idx;                       // '이 장면을 썸네일로'가 지금 보이는 컷을 집게
+    // 🎬 자동재생으로 컷이 넘어가도 그 컷의 가림막만 보이게(편집칸은 안 건드린다 — 끄는 중 방해 금지)
+    if(_mkPrev!==idx && typeof mkOnBeatChange==='function') mkOnBeatChange(true);
     if(bg && sb && sb.checked){
       const u=_beatFrameUrl(x);
       if(u && bg.getAttribute('src')!==u){ bg.src=u; bg.style.display='block'; }
@@ -6153,6 +6225,7 @@ function showCutOnly(idx){
   if(typeof renderBeatTools==='function') renderBeatTools();
   if(typeof zoomOnBeatChange==='function') zoomOnBeatChange(false);
   if(typeof hlLoadFromBeat==='function') hlLoadFromBeat();
+  if(typeof mkOnBeatChange==='function') mkOnBeatChange();
   try{ _prefetchNeighborFrames(idx); }catch(e){}
 }
 function stepBeat(d){
