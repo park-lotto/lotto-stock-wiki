@@ -11,7 +11,7 @@
   const displayName=p=>p.id==='s0101'?'숏템 기본형':p.name;
   const renderGrid=()=>{
     grid.innerHTML=rows.map((p,i)=>mode==='continuous'
-      ? `<button class="preset-card fixed-card${i===0?' selected':''}" data-p20="${i}"><span class="check">✓</span><div class="fixed-thumb" style="--fixed-bg:${p.thumb.bg};--fixed-c1:${p.thumb.c1};--fixed-c2:${p.thumb.c2};background-image:url('${esc(p.thumbnail_image)}')"><i>숏템메이커</i><strong>처음부터 끝까지</strong><em>같은 디자인 유지</em></div><b>${esc(p.name)}</b><small>1장~끝까지 동일</small></button>`
+      ? `<button class="preset-card fixed-card${i===0?' selected':''}" data-p20="${i}"><span class="check">✓</span><div class="fixed-thumb" style="background-image:url('${esc(p.thumbnail_image)}')"></div><b>${esc(p.name)}</b><small>1장~끝까지 동일</small></button>`
       : `<button class="preset-card${i===0?' selected':''}" data-p20="${i}"><span class="check">✓</span><div class="thumb-pair"><img src="${esc(p.hook_image)}"><img src="${esc(p.body_image)}"></div><b>${esc(displayName(p))}</b><small>${compact(p.views)} · 훅+본문</small></button>`).join('');
   };
   const presetPane=grid.closest('.pane'),modeBar=document.createElement('div');modeBar.className='template-mode-bar';
@@ -105,7 +105,6 @@
   }
   function presetValue(bind){
     const p=rows[current];
-    if(p.mode==='continuous'&&bind!=='channel')return '';
     return bind==='channel'?(p.sample.channel||'숏템메이커'):p.sample[bind];
   }
   function updateCount(input){
@@ -117,8 +116,7 @@
     input.value=presetValue(bind)||'';fontScales.delete(scaleKey(bind));textOffsets.delete(scaleKey(bind));
     [...fittedText.keys()].filter(key=>key.startsWith(scaleKey(bind)+':')).forEach(key=>fittedText.delete(key));
     if(bind==='caption')captionPositions.delete(captionKey());
-    if(mode==='continuous'){const set=currentDirty();set.delete(bind);dirtyFields.set(dirtyKey(),set)}else markDirty(bind);
-    updateCount(input);updateSteppers();updateCaptionButtons();renderEdit();
+    markDirty(bind);updateCount(input);updateSteppers();updateCaptionButtons();renderEdit();
   }
 
   function frameKeys(frameKind,p){
@@ -178,7 +176,7 @@
     const scaledFont=Math.max(9,fontPx*textScale(bind));
     const topOffset=(bind==='caption'?captionOffset():0)+textOffset(bind);
     const verticalNudge=bind==='channel'?.7:-.35;
-    Object.assign(el.style,{left:left+'%',right:right+'%',top:Math.max(0,ln.y0/frame.height*100+verticalNudge+topOffset)+'%',height:(ln.h/frame.height*100+0.9)+'%',fontSize:scaledFont+'px',fontFamily:`"${family}",sans-serif`,fontWeight:String(weight),letterSpacing:letterPx+'px',color:rgba(color||ln.color||'#fff'),textShadow:shadowY?`0 ${shadowY}px 1px rgba(0,0,0,.88)`:'none',webkitTextStroke:stroke?`${stroke}px #080808`:'0',padding:`0 ${pad}px`,whiteSpace:ln.max_lines>1?'normal':'nowrap',lineHeight:ln.max_lines>1?'1.18':'1'});
+    Object.assign(el.style,{left:left+'%',right:right+'%',top:Math.max(0,ln.y0/frame.height*100+verticalNudge+topOffset)+'%',height:(ln.h/frame.height*100+0.9)+'%',fontSize:scaledFont+'px',fontFamily:`"${family}",sans-serif`,fontWeight:String(weight),fontStyle:ln.font_style||'normal',letterSpacing:letterPx+'px',color:rgba(color||ln.color||'#fff'),textShadow:shadowY?`0 ${shadowY}px 1px rgba(0,0,0,.88)`:'none',webkitTextStroke:stroke?`${stroke}px #080808`:'0',padding:`0 ${pad}px`,whiteSpace:ln.max_lines>1?'normal':'nowrap',lineHeight:ln.max_lines>1?'1.05':'1'});
     if(ln.accent_words){
       const words=String(text||' ').split(/\s+/),accent=document.createElement('span'),rest=document.createElement('span');
       accent.textContent=words.slice(0,ln.accent_words).join(' ');accent.style.color=ln.accent;accent.style.marginRight=Math.max(2,fontPx*.11)+'px';
@@ -186,8 +184,8 @@
     }else el.textContent=text||' ';
     layer.insertBefore(el,badge);
     const fitKey=`${scaleKey(bind)}:${ln.x0}:${ln.y0}`,chars=Math.max(1,[...String(text||' ')].length),cached=fittedText.get(fitKey);
-    if(cached&&chars<=cached.capacity){el.style.fontSize=cached.size+'px';if(cached.letter!=null)el.style.letterSpacing=cached.letter+'px';if(cached.xscale<1){el.style.transform=`scaleX(${cached.xscale})`;el.style.transformOrigin=role.includes('left')?'left center':'center';}}
-    else {fitText(el,scaledFont,.12,true);const fitted=parseFloat(el.style.fontSize)||scaledFont;let reserved=Math.max(4,fitted*chars/(chars+1));el.style.fontSize=reserved+'px';if(el.scrollWidth>el.clientWidth+2){reserved=Math.max(4,reserved*(el.clientWidth/Math.max(1,el.scrollWidth))*.96);el.style.fontSize=reserved+'px';}let fittedLetter=parseFloat(getComputedStyle(el).letterSpacing)||0;while(el.scrollWidth>el.clientWidth+2&&fittedLetter>-reserved*.3){fittedLetter-=.25;el.style.letterSpacing=fittedLetter+'px';}const xscale=Math.min(1,el.clientWidth/Math.max(1,el.scrollWidth)*.98);if(xscale<1){el.style.transform=`scaleX(${xscale})`;el.style.transformOrigin=role.includes('left')?'left center':'center';}fittedText.set(fitKey,{capacity:chars+1,size:reserved,letter:fittedLetter,xscale});}
+    if(cached&&chars<=cached.capacity){el.style.fontSize=cached.size+'px';if(cached.letter!=null)el.style.letterSpacing=cached.letter+'px';const xscale=Math.min(1,el.clientWidth/Math.max(1,el.scrollWidth)*.98);if(xscale<1){el.style.transform=`scaleX(${xscale})`;el.style.transformOrigin=role.includes('left')?'left center':'center';}}
+    else {fitText(el,scaledFont,.12,true);const fitted=parseFloat(el.style.fontSize)||scaledFont;el.style.fontSize=fitted+'px';let fittedLetter=parseFloat(getComputedStyle(el).letterSpacing)||0;while(el.scrollWidth>el.clientWidth+2&&fittedLetter>-fitted*.3){fittedLetter-=.25;el.style.letterSpacing=fittedLetter+'px';}const xscale=Math.min(1,el.clientWidth/Math.max(1,el.scrollWidth)*.98);if(xscale<1){el.style.transform=`scaleX(${xscale})`;el.style.transformOrigin=role.includes('left')?'left center':'center';}fittedText.set(fitKey,{capacity:Number(inputs[bind]?.dataset.max)||chars,size:fitted,letter:fittedLetter,xscale});}
     return el;
   }
   function renderEdit(){
@@ -196,7 +194,6 @@
     const dirty=currentDirty();
     const bg=frame.title_bg||frame.top_band?.color||'#111111';
     if(mode==='continuous'&&dirty.size){
-      (frame.fixed_bands||[]).forEach(b=>addPatch(b.y0/frame.height*100,(b.y1-b.y0)/frame.height*100,b.color));
       (frame.boxes||[]).forEach(b=>{const box=addPatch(b.y/frame.height*100,b.height/frame.height*100,b.background,b.x/frame.width*100,b.width/frame.width*100);if(b.border)box.style.border=`${b.border_width||1}px solid ${b.border}`;});
     }
     const channelBoxes=frame.channel_boxes?.length?frame.channel_boxes:(frame.channel_box?[frame.channel_box]:[]);
@@ -262,11 +259,11 @@
     preview.classList.remove('template-shortem');
     preview.classList.add('template-precision');
     base.hidden=false;layer.hidden=false;
-    if(mode==='continuous')dirtyFields.set(`${p.id}:frame`,new Set());
+    if(mode==='continuous')dirtyFields.set(`${p.id}:frame`,new Set(frameKeys('frame',p).filter(key=>key!=='caption'&&key!=='channel')));
     else {dirtyFields.set(`${p.id}:hook`,new Set(frameKeys('hook',p)));dirtyFields.set(`${p.id}:body`,new Set(frameKeys('body',p)));}
     grid.querySelectorAll('[data-p20]').forEach((x,i)=>x.classList.toggle('selected',i===index));
-    inputs.channel.value=p.sample.channel||'숏템메이커';inputs.hook1.value=mode==='continuous'?'':p.sample.hook1;inputs.hook2.value=mode==='continuous'?'':p.sample.hook2;inputs.bodyTitle.value=mode==='continuous'?'':p.sample.bodyTitle;inputs.caption.value=mode==='continuous'?'':p.sample.caption;
-    for(const bind of ['hook1','hook2','bodyTitle','caption'])inputs[bind].placeholder=mode==='continuous'?'입력하면 원본 문구를 교체합니다':'';
+    inputs.channel.value=p.sample.channel||'숏템메이커';inputs.hook1.value=p.sample.hook1;inputs.hook2.value=p.sample.hook2;inputs.bodyTitle.value=p.sample.bodyTitle;inputs.caption.value=p.sample.caption;
+    for(const bind of ['hook1','hook2','bodyTitle','caption'])inputs[bind].placeholder='';
     root.querySelectorAll('[data-preview-channel]').forEach(x=>x.textContent=inputs.channel.value);
     root.querySelectorAll('[data-preview-hook-1]').forEach(x=>x.textContent=p.sample.hook1);
     root.querySelectorAll('[data-preview-hook-2]').forEach(x=>x.textContent=p.sample.hook2);
