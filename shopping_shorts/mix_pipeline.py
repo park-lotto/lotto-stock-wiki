@@ -2764,7 +2764,7 @@ def _plan_signature(plan):
     """편집안 → 완성본 **그림**을 결정하는 것만 뽑은 서명(sha1 앞 16자).
 
     들어가는 것: 비트 순서 · 각 비트의 재료(video_id·start·end) · 컷 길이(target_seconds)
-                 · **장면 확대 구도(scene_zoom/pan)** — 잘라내는 자리가 곧 그림이다.
+                 · **장면 확대·강조(scene_zoom/pan/scene_hl)** — 합성되는 그림 자체다.
     빠지는 것:  대사·음성·자막 — 화면 그림을 안 바꾸므로 다시 청소할 이유가 없다.
 
     ★재료 판정은 video_assemble._beat_material과 같은 규칙이다(scene_override 우선).
@@ -2784,6 +2784,10 @@ def _plan_signature(plan):
         _z, _px, _py = _va.scene_zoom_of(b)
         if _z > 1.0001:                        # 지정 없으면 아무것도 안 붙인다
             parts.append("z=%.4f,%.5f,%.5f" % (_z, _px, _py))   # → 옛 작업 서명 불변
+        _hl = _va.scene_hl_of(b)
+        if _hl:                                 # 강조가 구워진 청소본을 옛 캐시로 덮지 않는다
+            parts.append("hl=%s,%s,%.5f,%.5f,%.5f,%.4f" % (
+                _hl["mode"], _hl["shape"], _hl["cx"], _hl["cy"], _hl["r"], _hl["zoom"]))
         parts.append("|")
     return hashlib.sha1("".join(parts).encode("utf-8")).hexdigest()[:16]
 
