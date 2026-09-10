@@ -1,4 +1,4 @@
-"""매일 유튜브 자동수집(무료 경로) — systemd 타이머가 하루 여러 번 실행, 성공하면 그날은 끝.
+"""유튜브 자동수집(무료 경로) — systemd 타이머가 하루 6번 깨우고, **반나절에 한 번**만 실제로 돈다.
 
 앱 HTTP를 거치지 않고 service.collect(platform="youtube")를 직접 호출한다.
 - 인증/페이월 우회(관리자 세션 불필요)
@@ -12,7 +12,7 @@ import time
 
 from shopping_shorts import service
 
-DONE_KEY = "daily_collect_done::youtube"   # 값 = 마지막으로 수집에 성공한 날짜(KST, YYYY-MM-DD)
+DONE_KEY = "daily_collect_done::youtube"   # 값 = 마지막으로 성공한 회차(KST, YYYY-MM-DD-AM|PM)
 
 
 def main():
@@ -48,9 +48,23 @@ def main():
     #   (실사고 08-31: 08:10에 렌더 중 → 스킵 → 하루 0건, 사장님이 발견).
     #   낮에 제작을 계속하면 렌더 중일 확률이 높아 구조적으로 재발한다.
     #   그래서 타이머를 여러 시각으로 늘리고, 성공한 날은 이 표식으로 건너뛴다.
-    today = datetime.now(ZoneInfo("Asia/Seoul")).strftime("%Y-%m-%d")
-    if store.get_setting(DONE_KEY) == today:
-        print(f"[daily_youtube_collect] 오늘({today}) 이미 수집 완료 — 건너뜀")
+    # ★하루 1회 → **반나절 1회**로 늘린다 (2026-09-10 사장님 "수집을 늘리고 싶다").
+    #   왜: 12시간 히트작 탭을 붙였는데 수집이 하루 1회면 그 뒤 12시간이 지나는 순간
+    #   '올라온 지 12시간 이내'가 0건이 된다 — 저녁부터 탭이 통째로 빈다.
+    #
+    #   쿼터가 되는가(2026-09-10 서버 실측):
+    #     유튜브 키 62개(사장님 10 + 회원 52) = 하루 620,000 units
+    #     시드 2,386개 × 검색 100 units = 회당 약 238,600 units
+    #     → 1회 38% · **2회 77%** · 3회 115%(초과). 그래서 2회까지만 연다.
+    #   시간도 든다: 실측 1회 77분(08:10~09:27, 9,983건).
+    #
+    #   경계를 14시로 둔 이유 — 오후 슬롯에 재시도 기회를 4번(14:10·17:10·20:10·22:40)
+    #   남기기 위해서다. 08-31 실사고처럼 렌더와 겹쳐 한 번 양보하면 그 슬롯이 통째로
+    #   날아가는데, 기회가 하나뿐이면 그게 곧 '그 반나절 0건'이 된다.
+    _now = datetime.now(ZoneInfo("Asia/Seoul"))
+    slot = _now.strftime("%Y-%m-%d") + ("-AM" if _now.hour < 14 else "-PM")
+    if store.get_setting(DONE_KEY) == slot:
+        print(f"[daily_youtube_collect] 이번 회차({slot}) 이미 수집 완료 — 건너뜀")
         return 0
     if store.heavy_job_active():
         print("[daily_youtube_collect] 렌더/믹스 진행 중 — 다음 회차에 재시도")
@@ -66,7 +80,7 @@ def main():
     except Exception as e:  # noqa: BLE001 — 크론이 죽어도 서비스는 무사, 로그만 남긴다
         print(f"[daily_youtube_collect] 실패: {e!r}", file=sys.stderr)
         return 1
-    store.set_setting(DONE_KEY, today)   # 오늘치 완료 — 남은 회차는 건너뛴다
+    store.set_setting(DONE_KEY, slot)    # 이번 반나절 완료 — 남은 회차는 건너뛴다
     print(f"[daily_youtube_collect] {len(items)}건 수집 · {time.time() - t0:.1f}s")
     return 0
 

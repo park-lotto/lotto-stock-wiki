@@ -1,3 +1,5 @@
+import re
+
 import pytest
 
 import shopping_shorts.store as store_mod
@@ -78,3 +80,24 @@ def test_render_busy_leaves_no_done_mark(monkeypatch):
     assert dyc.main() == 0
     assert called == []                      # 수집 안 함
     assert _FakeStore.saved == {}            # ★표식도 안 남김 → 다음 회차가 다시 시도한다
+
+
+def test_표식은_반나절_슬롯이다(monkeypatch):
+    """2026-09-10: 하루 1회 → **반나절 1회**(사장님 "수집을 늘리고 싶다").
+
+    12시간 히트작 탭은 '올라온 지 12시간 이내'를 보는데 수집이 하루 1회면
+    그 뒤로 12시간이 지나는 순간 탭이 통째로 빈다.
+
+    표식이 날짜만이면(YYYY-MM-DD) 오후 회차가 오전 표식을 보고 건너뛴다 →
+    반나절 수집이 조용히 하루 1회로 되돌아간다. 형식을 여기서 못 박는다.
+
+    쿼터 근거(2026-09-10 서버 실측): 키 62개=620,000 units/일,
+    회당 시드 2,386 × 100 = 약 238,600 → 2회 77%로 들어간다. 3회는 초과.
+    """
+    monkeypatch.setattr(dyc.service, "collect",
+                        lambda platform, seed_only=False: [{"shortcode": "a"}])
+    assert dyc.main() == 0
+    mark = _FakeStore.saved.get(dyc.DONE_KEY)
+    assert mark, "완료 표식이 안 남았다"
+    assert re.fullmatch(r"\d{4}-\d{2}-\d{2}-(AM|PM)", mark), \
+        f"표식이 반나절 슬롯이 아니다: {mark!r}"
