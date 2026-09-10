@@ -17,6 +17,9 @@
     @font-face{font-family:"JalnanGothic";src:url("../shopping_shorts/static/fonts/JalnanGothic.ttf") format("truetype");font-display:swap}
     @font-face{font-family:"GasoekOne";src:url("../shopping_shorts/static/fonts/GasoekOne-Regular.ttf") format("truetype");font-display:swap}
     @font-face{font-family:"Stylish";src:url("../shopping_shorts/static/fonts/Stylish-Regular.ttf") format("truetype");font-display:swap}
+    @font-face{font-family:"Cafe24Ohsquare";src:url("../shopping_shorts/static/fonts/Cafe24Ohsquare.ttf") format("truetype");font-display:swap}
+    @font-face{font-family:"KCCGanpan";src:url("../shopping_shorts/static/fonts/KCCGanpan.otf") format("opentype");font-display:swap}
+    @font-face{font-family:"BinggraeBold";src:url("../shopping_shorts/static/fonts/Binggrae-Bold.otf") format("opentype");font-display:swap}
     :root{
       --bg:#071018;--panel:#0d1822;--panel-2:#111e29;--panel-3:#152430;
       --line:#20313d;--line-strong:#35505f;--text:#f4f8fa;--muted:#8fa3ae;
@@ -197,6 +200,7 @@
     const counter=input.closest('.field')?.querySelector('[data-count]');
     if(counter) counter.textContent=`${[...input.value].length}/${input.dataset.max}`;
     root.querySelectorAll(bindings[input.dataset.bind]).forEach(target=>target.textContent=input.value||' ');
+    window.requestShortemFit?.();
   }));
   root.querySelectorAll('.layout-a .scene-strip button').forEach((button,index)=>button.addEventListener('click',()=>{
     button.parentElement.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===button));

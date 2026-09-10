@@ -36,6 +36,9 @@ SAMPLES = {
     "방구석꿀템": ["다이소 덕후들의", "천재적인 활용법"],
     "이븐쇼핑": ["건망증 환자를 살려낸", "일본 천재의 발명품"],
     "숏템": ["이케아도 놀랄", "한국 천재 발명품"],
+    "쇼핑 치트키": ["부모를 오열하게 만든", "다이소 제품의 정체"],
+    "이거였네": ["이게 왜 이제야 보였지", "몰랐던 생활 아이디어"],
+    "나만또모르고있었지": ["나만 또 모르고 있었지", "이걸 왜 이제 알았지?"],
 }
 
 # 자동 실측기를 원본 프레임과 픽셀 대조해 수정한 값.
@@ -108,7 +111,7 @@ MANUAL = {
     },
     "t03": {
         "hook": {
-            "width": 360, "height": 640, "title_bg": "#514D3D", "top_band": None, "font_family": "TmonMonsori", "font_weight": 400,
+            "width": 360, "height": 640, "title_bg": "#514D3D", "top_band": None, "cleanup_y0": 50, "font_family": "TmonMonsori", "font_weight": 400,
             "lines": [
                 {"x0": 12, "x1": 348, "y0": 52, "y1": 94, "h": 43, "lpct": 3.3, "rpct": 3.1, "color": "#FFFFFF", "background": "#514D3D", "font_size": 38, "stroke": 3.0, "shadow_y": 2, "patch_top": 5, "patch_bottom": 4},
                 {"x0": 37, "x1": 323, "y0": 101, "y1": 143, "h": 43, "lpct": 10.3, "rpct": 10.0, "color": "#2CFF44", "background": "#514D3D", "font_size": 38, "stroke": 3.0, "shadow_y": 2, "patch_top": 4, "patch_bottom": 8},
@@ -130,10 +133,10 @@ MANUAL = {
         "hook": {
             "width": 360, "height": 640, "title_bg": "#F8F7FF", "top_band": None, "font_family": "TmonMonsori", "font_weight": 400,
             "channel_box": {"x": 91, "y": 29, "width": 183, "height": 44, "background": "#FF5D5E", "color": "#FFFFFF", "radius": 0, "border": None, "font_size": 28},
-            "boxes": [{"x": 74, "y": 111, "width": 214, "height": 81, "background": "#F8F7FF", "border": "#FFFFFF", "border_width": 4, "shadow": "0 3px 9px #111111"}],
+            "boxes": [{"x": 45, "y": 100, "width": 270, "height": 100, "background": "#F8F7FF", "border": "#FFFFFF", "border_width": 3, "shadow": "0 3px 9px #111111"}],
             "lines": [
-                {"x0": 84, "x1": 279, "y0": 120, "y1": 151, "h": 32, "lpct": 23.3, "rpct": 22.2, "color": "#FFFFFF", "background": "#F8F7FF", "font_size": 26, "stroke": 2.3, "shadow_y": 2, "skip_patch": True},
-                {"x0": 86, "x1": 278, "y0": 154, "y1": 187, "h": 34, "lpct": 23.9, "rpct": 22.5, "color": "#35EF58", "background": "#F8F7FF", "font_size": 27, "stroke": 2.3, "shadow_y": 2, "skip_patch": True},
+                {"x0": 50, "x1": 310, "y0": 110, "y1": 150, "h": 41, "lpct": 13.9, "rpct": 13.6, "color": "#FFFFFF", "background": "#F8F7FF", "font_size": 34, "stroke": 2.3, "shadow_y": 2, "skip_patch": True},
+                {"x0": 50, "x1": 310, "y0": 153, "y1": 195, "h": 43, "lpct": 13.9, "rpct": 13.6, "color": "#35EF58", "background": "#F8F7FF", "font_size": 36, "stroke": 2.3, "shadow_y": 2, "skip_patch": True},
             ],
             "white_box": None, "video_from": {"y": 222, "pct": 34.7}, "fingerprint": "manual-t04-hook-v1",
         },
@@ -146,10 +149,80 @@ MANUAL = {
             ],
             "white_box": None, "video_from": {"y": 222, "pct": 34.7}, "fingerprint": "manual-t04-body-v1",
         },
-    }
+    },
+    "t06": {
+        "hook": {
+            "width": 360, "height": 640, "title_bg": "#D8D8D8", "cleanup_y0": 39,
+            "font_family": "GasoekOne", "font_weight": 400,
+            "lines": [
+                {"x0": 12, "x1": 348, "y0": 43, "y1": 98, "h": 56, "color": "#FFFFFF", "background": "#D8D8D8", "font_size": 46, "letter_spacing": -0.8, "stroke": 1.3, "shadow_y": 1.2},
+                {"x0": 24, "x1": 336, "y0": 102, "y1": 157, "h": 56, "color": "#FF3037", "background": "#D8D8D8", "font_size": 47, "letter_spacing": -0.8, "stroke": 1.3, "shadow_y": 1.2},
+            ],
+            "white_box": {"y0": 160, "y1": 214, "background": "#FFFFFF", "text": {"x0": 18, "x1": 342, "y0": 174, "y1": 202, "h": 29, "font_size": 22, "font_family": "GmarketSansBold", "font_weight": 400, "letter_spacing": -0.7, "stroke": 0, "shadow_y": 0}},
+            "video_from": {"y": 215, "pct": 33.6}, "fingerprint": "manual-t06-premium-v1",
+        },
+    },
+    "t12": {
+        "hook": {
+            "width": 360, "height": 640, "title_bg": "#FFFFFF", "cleanup_y0": 116,
+            "font_family": "BlackHanSans", "font_weight": 400,
+            "channel_box": {"x": 86, "y": 40, "width": 188, "height": 42, "background": "#002D3A", "color": "#FFFFFF", "radius": 0, "border": None, "font_size": 25, "font_family": "GmarketSansBold", "font_weight": 400},
+            "lines": [
+                {"x0": 22, "x1": 338, "y0": 126, "y1": 169, "h": 44, "color": "#090909", "background": "#FFFFFF", "font_size": 37, "letter_spacing": -1.2, "stroke": 0, "shadow_y": 0},
+                {"x0": 47, "x1": 313, "y0": 174, "y1": 217, "h": 44, "color": "#090909", "background": "#FFFFFF", "font_size": 37, "letter_spacing": -1.2, "stroke": 0, "shadow_y": 0},
+            ],
+            "white_box": None, "video_from": {"y": 241, "pct": 37.7}, "fingerprint": "manual-t12-premium-v1",
+        },
+    },
+    "t17": {
+        "hook": {
+            "width": 360, "height": 640, "title_bg": "#FFFFFF", "cleanup_y0": 79,
+            "font_family": "Pretendard", "font_weight": 800,
+            "channel_box": {"x": 67, "y": 38, "width": 226, "height": 27, "background": "#010101", "color": "#D8D8D8", "radius": 0, "border": None, "font_size": 20, "font_family": "Pretendard", "font_weight": 800},
+            "lines": [
+                {"x0": 30, "x1": 330, "y0": 91, "y1": 126, "h": 36, "color": "#111111", "background": "#FFFFFF", "font_size": 30, "letter_spacing": -0.9, "stroke": 0, "shadow_y": 0},
+                {"x0": 62, "x1": 298, "y0": 132, "y1": 158, "h": 27, "color": "#868686", "background": "#FFFFFF", "font_size": 20, "letter_spacing": -0.5, "stroke": 0, "shadow_y": 0},
+            ],
+            "white_box": None, "video_from": {"y": 177, "pct": 27.7}, "fingerprint": "manual-t17-premium-v1",
+        },
+    },
+    "t16": {
+        "hook": {
+            "width": 360, "height": 640, "title_bg": "#665D44", "top_band": {"y0": 0, "y1": 28, "color": "#665D44"},
+            "font_family": "GasoekOne", "font_weight": 400,
+            "lines": [
+                {"x0": 22, "x1": 338, "y0": 69, "y1": 113, "h": 45, "color": "#FFFFFF", "background": "#665D44", "font_size": 38, "letter_spacing": -0.7, "stroke": 0.9, "shadow_y": 1.0},
+                {"x0": 34, "x1": 326, "y0": 120, "y1": 171, "h": 52, "color": "#FFE45B", "background": "#665D44", "font_size": 44, "letter_spacing": -0.8, "stroke": 0.9, "shadow_y": 1.0},
+            ],
+            "white_box": {"y0": 192, "y1": 222, "background": "#FFFFFF", "text": None},
+            "video_from": {"y": 223, "pct": 34.8}, "fingerprint": "manual-t16-premium-v1",
+        },
+    },
 }
 
 STORY_FOOTER_OVERRIDES = {"t09": 545, "t14": 554}
+HOOK_TYPE_PROFILES = {
+    # 한 폰트로 도배하지 않는다. 각 레퍼런스의 성격은 유지하되 훅 가독성만 상향한다.
+    "t01": {"family": "Jalnan2", "weight": 400, "tracking": -0.7, "stroke": 1.0, "shadow": 1.15},
+    "t02": {"family": "Jalnan2", "weight": 400, "tracking": -0.65, "stroke": 0.7, "shadow": 0.8},
+    "t03": {"family": "JalnanGothic", "weight": 400, "tracking": -0.85, "stroke": 1.2, "shadow": 1.15},
+    "t04": {"family": "Jalnan2", "weight": 400, "tracking": -0.7, "stroke": 1.1, "shadow": 1.1},
+    "t05": {"family": "Jalnan2", "weight": 400, "tracking": -0.7, "stroke": 1.0, "shadow": 1.0},
+    "t06": {"family": "GasoekOne", "weight": 400, "tracking": -0.8, "stroke": 1.3, "shadow": 1.2},
+    "t07": {"family": "GmarketSansBold", "weight": 400, "tracking": -1.0, "stroke": 1.1, "shadow": 1.15},
+    "t08": {"family": "JalnanGothic", "weight": 400, "tracking": -0.9, "stroke": 1.05, "shadow": 1.0},
+    "t09": {"family": "GothicA1Black", "weight": 900, "tracking": -0.85, "stroke": 1.05, "shadow": 1.0},
+    "t10": {"family": "GasoekOne", "weight": 400, "tracking": -1.15, "stroke": 0.9, "shadow": 1.0},
+    "t11": {"family": "Jalnan2", "weight": 400, "tracking": -0.65, "stroke": 1.0, "shadow": 1.0},
+    "t12": {"family": "BlackHanSans", "weight": 400, "tracking": -1.2, "stroke": 0, "shadow": 0},
+    "t13": {"family": "KCCGanpan", "weight": 400, "tracking": -0.75, "stroke": 1.0, "shadow": 1.0},
+    "t14": {"family": "GmarketSansBold", "weight": 400, "tracking": -1.0, "stroke": 1.05, "shadow": 1.0},
+    "t15": {"family": "BinggraeBold", "weight": 400, "tracking": -0.7, "stroke": 1.05, "shadow": 1.0},
+    "t16": {"family": "GasoekOne", "weight": 400, "tracking": -1.1, "stroke": 0.9, "shadow": 1.0},
+    "t17": {"family": "Pretendard", "weight": 800, "tracking": -0.9, "stroke": 0, "shadow": 0},
+    "t19": {"family": "JalnanGothic", "weight": 400, "tracking": -0.85, "stroke": 1.05, "shadow": 1.0},
+    "s0056": {"family": "GmarketSansBold", "weight": 400, "tracking": -0.9, "stroke": 1.0, "shadow": 1.0},
+}
 
 
 def load_measure(key: str) -> tuple[dict, str, str]:
@@ -180,14 +253,16 @@ def compact_frame(frame: dict | None) -> dict | None:
     if title_lines:
         top_band = frame.get("top_band")
         channel_boxes = frame.get("channel_boxes", []) or ([frame["channel_box"]] if frame.get("channel_box") else [])
-        if top_band:
-            y0 = min(height, top_band["y1"] + 1)
+        if frame.get("cleanup_y0") is not None:
+            y0 = min(height, frame["cleanup_y0"])
         elif channel_boxes:
             y0 = min(height, max(box["y"] + box["height"] for box in channel_boxes) + 10)
+        elif top_band:
+            y0 = min(height, top_band["y1"] + 1)
         else:
-            y0 = max(0, min(line["y0"] for line in title_lines) - 22)
-        white_box = frame.get("white_box")
-        y1 = min(height, white_box["y0"] if white_box else (frame.get("video_from") or {}).get("y", max(line["y1"] for line in title_lines) + 16))
+            y0 = min(line["y0"] for line in title_lines) - 22
+        # 제목과 흰 설명띠 사이에 남던 원본 글자/로고까지 영상 시작점 직전에서 전부 지운다.
+        y1 = min(height, (frame.get("video_from") or {}).get("y", max(line["y1"] for line in title_lines) + 16))
         cleanup_regions.append({
             "role": "original-title", "x": 0, "y": y0, "width": width,
             "height": y1 - y0, "background": frame.get("title_bg") or "#111111",
@@ -208,6 +283,23 @@ def compact_frame(frame: dict | None) -> dict | None:
         "boxes": frame.get("boxes", []),
         "cleanup_regions": cleanup_regions,
     }
+
+
+def polish_hook(frame: dict | None, key: str) -> dict | None:
+    if not frame or key == "s0101":
+        return frame
+    profile = HOOK_TYPE_PROFILES.get(key, {"family": "JalnanGothic", "weight": 400, "tracking": -0.8, "stroke": 1.0, "shadow": 1.0})
+    family = profile["family"]
+    frame["font_family"] = family
+    frame["font_weight"] = profile["weight"]
+    for line in frame.get("lines", []):
+        line["font_family"] = family
+        line["font_weight"] = frame["font_weight"]
+        line["letter_spacing"] = min(float(line.get("letter_spacing", profile["tracking"])), profile["tracking"])
+        # 굵기는 폰트 자체로 만든다. 테두리와 그림자는 영상 위 분리용 보조 수단이다.
+        line["stroke"] = min(float(line.get("stroke") or profile["stroke"]), profile["stroke"])
+        line["shadow_y"] = min(float(line.get("shadow_y") or profile["shadow"]), profile["shadow"])
+    return frame
 
 
 def add_footer_cleanup(frame: dict | None, image_path: str, key: str) -> dict | None:
@@ -235,10 +327,10 @@ def main() -> None:
         if key in MANUAL:
             measured = {**measured, **MANUAL[key]}
         if key == "t07":
-            measured["hook"]["font_family"] = "TmonMonsori"
-            measured["hook"]["font_weight"] = 400
-            measured["hook"]["lines"][0].update({"font_family": "TmonMonsori", "font_weight": 400, "font_size": 31, "letter_spacing": -1.4, "stroke": 2.2, "shadow_y": 3})
-            measured["hook"]["lines"][1].update({"color": "#00F9ED", "font_family": "TmonMonsori", "font_weight": 400, "font_size": 39, "letter_spacing": -1.8, "stroke": 2.2, "shadow_y": 3})
+            measured["hook"]["lines"][0].update({"font_size": 31})
+            measured["hook"]["lines"][1].update({"color": "#00F9ED", "font_size": 39})
+        if key == "t05" and len(measured.get("hook", {}).get("lines", [])) > 1:
+            measured["hook"]["lines"][1]["color"] = "#FF7F9D"
         sample = SAMPLES.get(name, [f"{name}에서 발견한", "놀라운 생활 아이디어"])
         rows.append({
             "rank": rank,
@@ -248,7 +340,7 @@ def main() -> None:
             "hook_image": hook_path,
             "body_image": body_path,
             "sample": {"hook1": sample[0], "hook2": sample[1], "bodyTitle": " ".join(sample), "caption": "이런 방법이 있었네요"},
-            "hook": add_footer_cleanup(compact_frame(measured.get("hook")), hook_path, key),
+            "hook": add_footer_cleanup(polish_hook(compact_frame(measured.get("hook")), key), hook_path, key),
             "body": add_footer_cleanup(compact_frame(measured.get("body")), body_path, f"{key}-body"),
         })
     rows.sort(key=lambda row: (row["id"] != "s0101", int(row["rank"])))

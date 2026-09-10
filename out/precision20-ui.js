@@ -255,7 +255,8 @@
     const min=Math.max(5,startSize*minRatio);
     el.style.fontSize=startSize+'px';
     let size=startSize;
-    while(size>min&&(el.scrollWidth>el.clientWidth+2||(checkHeight&&el.scrollHeight>el.clientHeight+4))){
+    const contentWidth=()=>{const range=document.createRange();range.selectNodeContents(el);return Math.max(el.scrollWidth,range.getBoundingClientRect().width)};
+    while(size>min&&(contentWidth()>el.clientWidth+2||(checkHeight&&el.scrollHeight>el.clientHeight+4))){
       size-=.5;el.style.fontSize=size+'px';
     }
   }
@@ -263,17 +264,20 @@
     if(rows[current].id!=='s0101')return;
     const targets={channel:'[data-preview-channel]',hook1:'[data-preview-hook-1]',hook2:'[data-preview-hook-2]',bodyTitle:'[data-preview-body-title]',caption:'[data-preview-caption]'};
     Object.entries(targets).forEach(([bind,selector])=>root.querySelectorAll('.layout-a '+selector).forEach(el=>{
-      el.style.fontSize='';const baseSize=parseFloat(getComputedStyle(el).fontSize)||18;
+      el.style.fontSize='';el.style.transform='none';const baseSize=parseFloat(getComputedStyle(el).fontSize)||18;
       fitText(el,baseSize*textScale(bind),.3);
+      const range=document.createRange();range.selectNodeContents(el);const width=Math.max(el.scrollWidth,range.getBoundingClientRect().width);
+      const xscale=Math.min(1,el.clientWidth/Math.max(1,width)*.98);el.style.transform=xscale<1?`scaleX(${xscale})`:'none';el.style.transformOrigin='center';
     }));
   }
+  window.requestShortemFit=()=>requestAnimationFrame(fitShortemText);
   function addText(text,ln,frame,color,role='center',bind='bodyTitle'){
     const scale=preview.clientHeight/frame.height;
     const measuredBounds=role.includes('left')||role.includes('precision-channel');
     const pad=measuredBounds?Math.max(2,Math.round(4*scale)):0;
     const el=document.createElement('div');el.className='precision-text '+role;el.dataset.editBind=bind;
-    const left=measuredBounds?Math.max(0,ln.x0/frame.width*100-1.6):0;
-    const right=measuredBounds?Math.max(0,(frame.width-1-ln.x1)/frame.width*100-1.6):0;
+    const left=measuredBounds?Math.max(0,ln.x0/frame.width*100-1.6):Math.max(1.5,(ln.x0||0)/frame.width*100);
+    const right=measuredBounds?Math.max(0,(frame.width-1-ln.x1)/frame.width*100-1.6):Math.max(1.5,(frame.width-1-(ln.x1??frame.width-1))/frame.width*100);
     const fontPx=ln.font_size?ln.font_size*scale:ln.h*scale*1.05;
     const stroke=Number(ln.stroke||0)*scale,shadowY=Number(ln.shadow_y||0)*scale;
     const family=ln.font_family||frame.font_family||'TmonMonsori';
@@ -296,9 +300,9 @@
       rest.textContent=words.slice(ln.accent_words).join(' ');el.append(accent,rest);
     }else el.textContent=text||' ';
     layer.insertBefore(el,badge);
-    const fitKey=`${scaleKey(bind)}:${ln.x0}:${ln.y0}`,chars=Math.max(1,[...String(text||' ')].length),cached=fittedText.get(fitKey);
+    const fitKey=`${scaleKey(bind)}:${family}:${weight}:${ln.x0}:${ln.y0}`,chars=Math.max(1,[...String(text||' ')].length),cached=fittedText.get(fitKey);
     if(cached&&chars<=cached.capacity){el.style.fontSize=cached.size+'px';if(cached.letter!=null)el.style.letterSpacing=cached.letter+'px';const xscale=cached.xscale??1;if(xscale<1){el.style.transform=`scaleX(${xscale})`;el.style.transformOrigin=role.includes('left')?'left center':'center';}}
-    else {fitText(el,scaledFont,.12,true);const fitted=parseFloat(el.style.fontSize)||scaledFont;el.style.fontSize=fitted+'px';let fittedLetter=parseFloat(getComputedStyle(el).letterSpacing)||0;while(el.scrollWidth>el.clientWidth+2&&fittedLetter>-fitted*.3){fittedLetter-=.25;el.style.letterSpacing=fittedLetter+'px';}const xscale=Math.min(Number(ln.scale_x)||1,el.clientWidth/Math.max(1,el.scrollWidth)*.98);if(xscale<1){el.style.transform=`scaleX(${xscale})`;el.style.transformOrigin=role.includes('left')?'left center':'center';}fittedText.set(fitKey,{capacity:Math.max(Number(inputs[bind]?.dataset.max)||0,chars+2),size:fitted,letter:fittedLetter,xscale});}
+    else {const isStory=mode==='story',manualStory=isStory&&fontScales.has(scaleKey(bind));if(!manualStory)fitText(el,scaledFont,isStory ? .3 : .12,true);const fitted=parseFloat(el.style.fontSize)||scaledFont;el.style.fontSize=fitted+'px';let fittedLetter=parseFloat(getComputedStyle(el).letterSpacing)||0;const range=document.createRange();range.selectNodeContents(el);const measuredWidth=()=>Math.max(el.scrollWidth,range.getBoundingClientRect().width);const minLetter=isStory?-fitted*.08:-fitted*.3;while(!manualStory&&measuredWidth()>el.clientWidth+2&&fittedLetter>minLetter){fittedLetter-=.2;el.style.letterSpacing=Math.max(minLetter,fittedLetter)+'px';}const overflowScale=el.clientWidth/Math.max(1,measuredWidth())*.98;const xscale=isStory?(manualStory?1:Math.min(1,overflowScale)):Math.min(Number(ln.scale_x)||1,overflowScale);if(xscale<1){el.style.transform=`scaleX(${xscale})`;el.style.transformOrigin=role.includes('left')?'left center':'center';}fittedText.set(fitKey,{capacity:chars+1,size:fitted,letter:fittedLetter,xscale});}
     return el;
   }
   function renderEdit(){
@@ -354,6 +358,10 @@
       addText(value(key),drawLine,frame,fixedTextColor||(roleColor?colorFor(roleColor,drawLine.color):drawLine.color),align,key);
     });
     const wb=frame.white_box;
+    if(wb){
+      // 원본 설명띠의 글자/흔적을 먼저 완전히 덮고 편집 가능한 텍스트만 다시 올린다.
+      addPatch(wb.y0/frame.height*100,(wb.y1-wb.y0+1)/frame.height*100,wb.background||'#FFFFFF',0,100,'white-box');
+    }
     if(wb?.text){
       const key=kind==='hook'?'bodyTitle':'caption';
       if(dirty.has(key)){const offset=(key==='caption'?captionOffset():0)+textOffset(key);if(offset)addPatch(wb.y0/frame.height*100,(wb.y1-wb.y0+1)/frame.height*100,'#FFFFFF',0,100,key);addPatch(wb.y0/frame.height*100+offset,(wb.y1-wb.y0+1)/frame.height*100,'#FFFFFF',0,100,key);addText(value(key),wb.text,frame,'#111111','center',key);}
@@ -484,7 +492,9 @@
     captionPositions.set(captionKey(),Number(button.dataset.captionPosition));markDirty('caption');updateCaptionButtons();renderEdit();
   });
   addEventListener('resize',()=>{if(!preview.classList.contains('is-pristine'))renderEdit()});
-  document.fonts?.ready?.then(()=>{fittedText.clear();renderEdit()});
+  const premiumFaces=['JalnanGothic','Jalnan2','GothicA1Black','GmarketSansBold','GasoekOne','Cafe24Ohsquare','KCCGanpan','BinggraeBold','BlackHanSans','Pretendard'];
+  Promise.all(premiumFaces.map(family=>document.fonts?.load?.(`400 32px "${family}"`))).then(()=>{fittedText.clear();renderEdit()});
+  document.fonts?.addEventListener?.('loadingdone',()=>{fittedText.clear();renderEdit()});
   saveButton&&(saveButton.textContent='현재 설정 저장');
   const query=new URLSearchParams(location.search),initialPreset=Math.max(0,Number(query.get('preset'))||0);
   if(query.get('mode')==='continuous'){modeBar.querySelector('[data-template-mode="continuous"]').click();if(initialPreset<rows.length)selectPreset(initialPreset)}else selectPreset(Math.min(initialPreset,rows.length-1));
