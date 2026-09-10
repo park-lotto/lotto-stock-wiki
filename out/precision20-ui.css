@@ -1,0 +1,23 @@
+.dynamic-phone.template-precision{
+  background:#000;
+}
+.dynamic-phone.template-precision>.brand-row,
+.dynamic-phone.template-precision>.shortem-body-channel,
+.dynamic-phone.template-precision>.hook-copy,
+.dynamic-phone.template-precision>.hook-band,
+.dynamic-phone.template-precision>.body-title-area,
+.dynamic-phone.template-precision>.body-band,
+.dynamic-phone.template-precision>.media-window{
+  display:none!important;
+}
+.precision-base,.precision-edit-layer{
+  position:absolute;inset:0;width:100%;height:100%;display:block;
+}
+.precision-base{z-index:1;object-fit:cover;object-position:top}
+.precision-edit-layer{z-index:6;pointer-events:none;overflow:hidden}
+.dynamic-phone.is-pristine .precision-edit-layer{display:none}
+.precision-patch{position:absolute;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.precision-text{position:absolute;z-index:2;display:flex;align-items:center;overflow:visible;font-family:"TmonMonsori","Pretendard",sans-serif;font-weight:900;line-height:1;white-space:nowrap;text-rendering:geometricPrecision;-webkit-font-smoothing:antialiased}
+.precision-text.center{justify-content:center;text-align:center}.precision-text.left{justify-content:flex-start;text-align:left}
+.precision-channel{font-family:"Pretendard",sans-serif;letter-spacing:.04em}
+.precision-badge{position:absolute;right:7px;bottom:7px;z-index:8;padding:4px 7px;border-radius:999px;background:#07131ddd;border:1px solid #42e2b477;color:#8cf5d4;font-size:8px;font-weight:900}
