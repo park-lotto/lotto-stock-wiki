@@ -53,6 +53,8 @@ def test_video_project_create_update_and_list(monkeypatch, tmp_path):
     project = made.json()
     assert project["title"] == "숏템메이커 3편"
     assert project["scenes"] == []
+    assert project["topic_discovery"]["mode"] == "topic"
+    assert project["video_analyses"] == []
 
     project["script_text"] = "## S1 — 훅\n첫 문장"
     project["scenes"] = [{
@@ -105,6 +107,71 @@ def test_video_project_asset_upload_and_read(monkeypatch, tmp_path):
 def test_yt_page_is_persistent_project_workflow(client):
     html = client.get("/yt").text
     assert "새 영상 프로젝트" in html
+    assert "주제 찾기·레퍼런스 분석" in html
+    assert "URL 직접 분석" in html
+    assert "아스트라 주제 확정 카드" in html
     assert "장면으로 자동 나누기" in html
     assert "장면·촬영파일" in html
     assert "아직 실행 버튼은 만들지 않았습니다" in html
+
+
+def test_topic_analysis_stream_saves_cards_and_decision(monkeypatch, tmp_path):
+    monkeypatch.setattr(server_module, "YT_PROJECTS_DIR", str(tmp_path / "projects"))
+    monkeypatch.setattr(server_module, "YT_ANALYSIS_CACHE_DIR", str(tmp_path / "cache"))
+
+    class FakeTeardown:
+        @staticmethod
+        def parse_video_id(value):
+            return "abc123DEF45" if "abc123DEF45" in value else ""
+
+        @staticmethod
+        def teardown(video_id, title, channel, stats, context):
+            return {
+                "video_id": video_id, "url": "https://youtu.be/abc123DEF45",
+                "title": title or "성과 영상", "channel": channel or "채널",
+                "thumbnail": "https://example.com/t.jpg", "metrics": stats,
+                "click_device": {"title_formula": "대상+문제"},
+                "hook": {"type": "공감", "evidence": [{"at": "00:00:03", "quote": "근거"}]},
+                "story_beats": [], "viewer_needs": [], "visual_grammar": {},
+                "strengths": [], "risks": [],
+            }
+
+        @staticmethod
+        def synthesize(cards, context):
+            return {
+                "topic": "확정 주제", "audience": context["audience"],
+                "promise": "변화", "why_now": "지금", "differentiation": "차별점",
+                "score": {"total": 82}, "decisions": [], "titles": [],
+                "thumbnails": [], "hooks": [], "outline": [],
+                "research_tasks": ["숫자 확인"], "needed_assets": [], "guardrails": [],
+            }
+
+    monkeypatch.setattr(server_module, "_teardown", FakeTeardown)
+    c = TestClient(server_module.app)
+    project = c.post("/yt/projects", json={"title": "주제 분석 시험"}).json()
+    response = c.post(
+        f"/yt/projects/{project['id']}/topic/analyze",
+        json={
+            "mode": "urls", "seed_topic": "AI 직원", "audience": "1인 사업자",
+            "videos": ["https://youtu.be/abc123DEF45"],
+        },
+    )
+    assert response.status_code == 200
+    assert '"type": "video_done"' in response.text
+    assert '"type": "done"' in response.text
+
+    saved = c.get(f"/yt/projects/{project['id']}").json()
+    assert saved["video_analyses"][0]["video_id"] == "abc123DEF45"
+    assert saved["topic_discovery"]["astra_decision"]["topic"] == "확정 주제"
+    assert saved["idea"] == "확정 주제"
+
+
+def test_topic_analysis_rejects_non_youtube_input(monkeypatch, tmp_path):
+    monkeypatch.setattr(server_module, "YT_PROJECTS_DIR", str(tmp_path))
+    c = TestClient(server_module.app)
+    project = c.post("/yt/projects", json={"title": "잘못된 주소"}).json()
+    response = c.post(
+        f"/yt/projects/{project['id']}/topic/analyze",
+        json={"videos": ["https://example.com/not-youtube"]},
+    )
+    assert response.status_code == 400
