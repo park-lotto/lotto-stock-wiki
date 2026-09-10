@@ -1766,8 +1766,18 @@ function recencyKey(i){
   if (h != null) return -h;                        // 경과가 적을수록 최신 → 부호를 뒤집는다
   return -1e15;                                    // 시간을 모르는 것은 맨 뒤
 }
+// 이 항목에서 그 값이 '모르는 값'인가(서버가 화면 보호용으로 0을 채워 넣은 것).
+// ★fill_intensity가 metrics_unknown에 적어 보낸다 — 0을 특별취급하는 판단은 여기 한 곳뿐.
+function _unknownMetric(i, k){
+  const u = i && i.metrics_unknown;
+  return Array.isArray(u) && u.indexOf(k) >= 0;
+}
 function sortKey(i){
-  return {comments:(i.delta ?? i.comments), speed:i.speed, accel:(i.accel??-1), density:i.density,
+  // ★'전체'는 오늘 증가분(delta)이 정본이지만, 기간·역대 탭은 delta를 아예 모른다
+  //   → 그럴 땐 누적 댓글수로 줄세운다. 안 그러면 전 항목이 0점이라 정렬이 사라진다
+  //   (2026-09-10 실사고: 이번 주 탭 유튜브 400건·인스타 373건 전부 delta 0).
+  return {comments:(_unknownMetric(i,'delta') ? (i.comments||0) : (i.delta ?? i.comments)),
+          speed:i.speed, accel:(i.accel??-1), density:i.density,
           fan_density:(i.fan_density||0),
           // 단순정렬 3종(2026-07-30) — 지표 계산 없이 절대값 그대로 내림차순.
           // '전체'는 오늘 증가분(delta) 기준이라, 누적 절대값으로 보고 싶을 때 쓴다.
@@ -2263,9 +2273,10 @@ function render(opts){
       if(_perChCut > 0)        why.push(`채널당 ${PER_CHANNEL_MAX}개`);
       parts.push(`전체 ${_served}건 중 ${items.length}건 표시`
                  + (why.length ? ` — ${why.join(" · ")} 때문` : ""));
-    }else{
-      parts.push(`${items.length}건 전부 표시 중`);
     }
+    // ★줄어들지 않았으면 아무 말도 안 한다(2026-09-10 사장님 "이런건 안보이게 해도 되고").
+    //   이 줄의 목적은 "왜 적게 나오나"를 알려주는 것이다. 다 보여주고 있을 때의
+    //   "212건 전부 표시 중"은 알려줄 것이 없는데 자리만 차지한다.
     _fc.textContent = parts.join(" · ");
   }
   // 배지용 백분위 컨텍스트 — 지금 보이는 항목 기준(정렬·필터 반영)
@@ -2296,10 +2307,19 @@ function render(opts){
   // 조용히 이상한 순서를 보여주는 대신 왜 그런지 말해준다.
   const _needFan = (STATE.tab==='fan_density' && !items.some(i=>(i.fan_density||0)>0));
   const _needDen = (STATE.tab==='density'     && !items.some(i=>(i.density||0)>0));
-  const _notice = (_needFan||_needDen)
-    ? `<div class="empty" style="margin-bottom:10px">이 지표는 아직 값이 없어 순서가 의미 없습니다 —
-        ${_needFan?'팔로워를 수집이 실어오기 시작한 게 오늘부터라':'조회수 기준 계산이 바뀌어'}
-        <b>다음 수집(내일 오전 9시)</b>부터 채워집니다.</div>`
+  // ★팔로워순도 같은 함정이었다(2026-09-10). 기간·역대 탭은 팔로워 수를 아예 안 실어와
+  //   전 항목이 0 → 눌러도 순서가 그대로다. 조용히 두면 "정렬이 안 먹는다"가 된다.
+  const _needFol = (STATE.tab==='followers'   && !items.some(i=>(i.followers||0)>0));
+  // 기간·역대 탭은 '다음 수집이면 채워진다'가 **거짓**이다 — 그 탭이 읽는 곳에 그 값이
+  //   애초에 없다(reel_history에 followers·delta 컬럼이 없다). 안내를 갈라 적는다.
+  const _spanTab = (SPAN_DAYS !== 0);
+  const _notice = (_needFan||_needDen||_needFol)
+    ? (_spanTab
+        ? `<div class="empty" style="margin-bottom:10px">이 <b>기간 탭</b>에는 ${_needFol?'팔로워 수':(_needFan?'팔로워당댓글':'조회수당댓글')}가 없어 이 순서는 의미가 없습니다 —
+            <b>🆕 48시간</b>·<b>⚡ 12시간</b> 탭에서는 정상으로 보입니다.</div>`
+        : `<div class="empty" style="margin-bottom:10px">이 지표는 아직 값이 없어 순서가 의미 없습니다 —
+            ${(_needFan||_needFol)?'팔로워를 수집이 실어오기 시작한 게 오늘부터라':'조회수 기준 계산이 바뀌어'}
+            <b>다음 수집</b>부터 채워집니다.</div>`)
     : '';
   // ★렌더 상한(2026-08-18 사장님 "인스타에서 유튜브 넘어가면 버퍼가 엄청심해").
   // 원인: 카드 수가 플랫폼마다 35배 차이다 — 실측 인스타 161장 / 유튜브 5,681장.
