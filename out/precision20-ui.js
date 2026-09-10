@@ -10,12 +10,22 @@
   const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const compact=n=>n?new Intl.NumberFormat('ko-KR',{notation:n>=1e6?'compact':'standard',maximumFractionDigits:1}).format(n)+'회':'시인성 선별';
   const displayName=p=>p.id==='s0101'?'숏템 기본형':p.name;
+  const uniformMedia='assets/scene-style/uniform-household-demo.png';
+  const mediaBounds=frame=>{
+    if(!frame)return {top:0,height:100};
+    const start=frame.video_from?.y||0;
+    const footer=(frame.cleanup_regions||[]).find(region=>region.role==='source-footer');
+    const end=footer?.y||frame.height;
+    return {top:start/frame.height*100,height:Math.max(0,end-start)/frame.height*100};
+  };
+  const fixedThumb=p=>`assets/scene-style/thumbnails/fixed-${p.source_id}.png`;
+  const storyThumb=(p,kind)=>`assets/scene-style/thumbnails/story-${p.id}-${kind}.png`;
   const presetHasCaptionSlot=p=>p.mode==='continuous'?p.frame?.caption_slot?.mode==='reserved':!!p.body?.white_box;
   const captionBadge=p=>presetHasCaptionSlot(p)?'<span class="caption-kind reserved">자막칸</span>':'<span class="caption-kind overlay">영상 위</span>';
   const renderGrid=()=>{
     grid.innerHTML=rows.map((p,i)=>mode==='continuous'
-      ? `<button class="preset-card fixed-card${i===0?' selected':''}" data-p20="${i}"><span class="check">✓</span>${captionBadge(p)}<div class="fixed-thumb" style="background-image:url('${esc(p.thumbnail_image)}')"></div><b>${esc(p.name)}</b><small>1장~끝까지 동일</small></button>`
-      : `<button class="preset-card${i===0?' selected':''}" data-p20="${i}"><span class="check">✓</span>${captionBadge(p)}<div class="thumb-pair"><img src="${esc(p.hook_image)}"><img src="${esc(p.body_image)}"></div><b>${esc(displayName(p))}</b><small>${compact(p.views)} · 훅+본문</small></button>`).join('');
+      ? `<button class="preset-card fixed-card${i===0?' selected':''}" data-p20="${i}"><span class="check">✓</span>${captionBadge(p)}<div class="fixed-thumb" style="background-image:url('${fixedThumb(p)}')"></div><b>${esc(p.name)}</b><small>1장~끝까지 동일</small></button>`
+      : `<button class="preset-card${i===0?' selected':''}" data-p20="${i}"><span class="check">✓</span>${captionBadge(p)}<div class="thumb-pair"><img src="${storyThumb(p,'hook')}"><img src="${storyThumb(p,'body')}"></div><b>${esc(displayName(p))}</b><small>${compact(p.views)} · 훅+본문</small></button>`).join('');
   };
   const presetPane=grid.closest('.pane'),modeBar=document.createElement('div');modeBar.className='template-mode-bar';
   modeBar.innerHTML='<button type="button" data-template-mode="story" class="active">썰쇼핑형 <small>20</small></button><button type="button" data-template-mode="continuous">전장면 고정형 <small>20</small></button>';
@@ -23,9 +33,10 @@
 
   preview.classList.add('is-pristine');
   const base=document.createElement('img');base.className='precision-base';
+  const media=document.createElement('img');media.className='precision-media';media.src=uniformMedia;media.alt='공통 생활용품 시연 장면';
   const layer=document.createElement('div');layer.className='precision-edit-layer';
   const badge=document.createElement('div');badge.className='precision-badge';badge.textContent='원본 실측 편집';layer.appendChild(badge);
-  preview.append(base,layer);
+  preview.append(base,media,layer);
 
   let current=0,kind='hook',sceneIndex=0,hookMotion='zoom-punch',hookMotionSpeed=.72;
   const fontScales=new Map();
@@ -292,6 +303,7 @@
     else if(mode!=='continuous'&&sceneIndex===0)sceneIndex=1;
     const p=rows[current],source=imageFor(p);
     base.src=source;
+    const frame=frameFor(p),bounds=mediaBounds(frame);Object.assign(media.style,{top:bounds.top+'%',height:bounds.height+'%'});
     preview.classList.toggle('is-body',mode!=='continuous'&&kind==='body');
     preview.classList.toggle('is-continuous',mode==='continuous');
     const seg=root.querySelector('.layout-a .seg');if(seg)seg.hidden=mode==='continuous';
@@ -302,7 +314,7 @@
     sceneIndex=Math.max(0,Math.min(sceneTotal()-1,nextIndex));
     kind=mode==='continuous'?'hook':sceneIndex===0?'hook':'body';
     const p=rows[current],source=imageFor(p,sceneIndex);
-    base.src=source;preview.classList.toggle('is-body',mode!=='continuous'&&kind==='body');
+    base.src=source;const frame=frameFor(p,sceneIndex),bounds=mediaBounds(frame);Object.assign(media.style,{top:bounds.top+'%',height:bounds.height+'%'});preview.classList.toggle('is-body',mode!=='continuous'&&kind==='body');
     root.querySelectorAll('.layout-a [data-frame]').forEach(x=>x.classList.toggle('active',x.dataset.frame===kind));
     fieldSet(kind,p);updateSceneUI();updateSteppers();updateCaptionButtons();renderEdit();syncHookMotionUI();requestAnimationFrame(runHookMotion);
   }
@@ -311,7 +323,7 @@
     if(mode==='continuous')kind='hook';else sceneIndex=kind==='hook'?0:Math.max(1,sceneIndex);
     preview.classList.remove('template-shortem');
     preview.classList.add('template-precision');
-    base.hidden=false;layer.hidden=false;
+    base.hidden=false;media.hidden=false;layer.hidden=false;
     if(mode==='continuous')dirtyFields.set(`${p.id}:frame`,new Set(frameKeys('frame',p).filter(key=>key!=='caption'&&key!=='channel')));
     else {dirtyFields.set(`${p.id}:hook`,new Set(frameKeys('hook',p)));dirtyFields.set(`${p.id}:body`,new Set(frameKeys('body',p)));}
     grid.querySelectorAll('[data-p20]').forEach((x,i)=>x.classList.toggle('selected',i===index));

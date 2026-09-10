@@ -20,12 +20,19 @@ const url = process.argv[2] || 'http://127.0.0.1:8770/out/scene-style-ui-showcas
     await document.fonts.load('900 24px "TmonMonsori"','한글제목');
     if(!document.fonts.check('900 24px "TmonMonsori"','한글제목'))failures.push('TmonMonsori 웹폰트 로드 실패');
     if(document.querySelectorAll('.fixed-card').length!==20)failures.push('고정형 카드 20개 미표시');
+    if(![...document.querySelectorAll('.fixed-card .fixed-thumb')].every((thumb,index)=>thumb.style.backgroundImage.includes(`fixed-${rows[index].source_id}.png`)))failures.push('고정형 정리 썸네일 20개 미표시');
+    if(preview.querySelector('.precision-media')?.getAttribute('src')!=='assets/scene-style/uniform-household-demo.png')failures.push('중앙 공통 영상 프레임 미적용');
+    const presetPane=document.querySelector('.layout-a>aside.pane:first-child'),presetGrid=presetPane?.querySelector('.preset-grid');
+    if(Math.abs(presetPane?.getBoundingClientRect().width-390)>2)failures.push('왼쪽 템플릿 패널 390px 고정 실패');
+    if(!presetGrid||presetGrid.scrollHeight<=presetGrid.clientHeight||getComputedStyle(presetGrid).overflowY!=='auto')failures.push('왼쪽 템플릿 내부 세로 스크롤 실패');
     if(!document.querySelector('.layout-a .seg')?.hidden)failures.push('고정형에서 훅/본문 토글 노출');
     for(let i=0;i<rows.length;i++){
       document.querySelector(`[data-p20="${i}"]`).click();await wait();
       const src=preview.querySelector('.precision-base').getAttribute('src');
       if(src!==rows[i].frame_image)failures.push(`${rows[i].name}: 고정 프레임 불일치`);
       const reserved=rows[i].frame.caption_slot?.mode==='reserved';
+      const media=preview.querySelector('.precision-media'),mediaBox=media?.getBoundingClientRect(),previewBox=preview.getBoundingClientRect();
+      if(!mediaBox||mediaBox.top<previewBox.top-1||mediaBox.bottom>previewBox.bottom+1||mediaBox.height<previewBox.height*.45)failures.push(`${rows[i].name}: 공통 영상 영역 불일치`);
       const cleanups=rows[i].frame.cleanup_regions||[];
       if(!cleanups.some(region=>region.role==='original-title'&&region.y===0&&region.height===rows[i].frame.video_from.y))failures.push(`${rows[i].name}: 원본 제목 전체 마스크 누락`);
       if(reserved&&!cleanups.some(region=>region.role==='source-footer'))failures.push(`${rows[i].name}: 하단 출처 마스크 누락`);
