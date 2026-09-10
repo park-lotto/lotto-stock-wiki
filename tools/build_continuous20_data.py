@@ -17,7 +17,7 @@ TEXTS = {
     "s0034": ["흑백요리사 박은영셰프가", "추천하는 공필러??"], "s0035": ["계약은 끝났지만", "우리의 찐사랑"],
     "s0090": ["몰라서 못 샀던", "주방꿀템 3가지"], "s0093": ["꿀쌀들과 쉬쉬하며 사용한", "1만원 대 명품관 향"],
     "s0121": ["촬영 전 연예인들이 챙겨 먹는", "생활약속 기분전환 알파플러스"], "s0144": ["한번 까기 시작하면 끝장", "승은이가 추천하는 간식"],
-    "s0145": ["BTS 뷔가 요즘 맨날", "들고 다닌다는", "스마일 가방 정체"], "s0155": ["다이소 5천원 크림 세 개 중에", "이거 골라야 함"],
+    "s0145": ["BTS 뷔가 요즘 맨날", "들고 다닌다는", "스마일 가방 정체"], "s0155": ["다이소 5천원 크림", "세 개 중에", "이거 골라야 함"],
     "s0195": ["10년 만의 동창회에서", "친구들이 놀란 이유"], "s0217": ["10살 어려보이는", "복숭아빛 메이크업"],
     "s0218": ["모델인 아일릿 원희도", "몰랐던 화장품의 반전"], "s0234": ["나이키가 만든", "미친 슬리퍼"],
     "s0241": ["물로만 끝? 일본", "360만개 팔린 청소템"], "s0291": ["신민아 루이비통", "대신 든 가을가방"],
@@ -39,7 +39,7 @@ LINE_STYLE = {
     "s0121": [{"color": "#FFFFFF"}, {"color": "#E7ED73", "accent": "#E5A8EB", "accent_words": 1}],
     "s0144": [{"color": "#FFFFFF"}, {"color": "#F3A475"}],
     "s0145": [{"color": "#FFFFFF"}, {"color": "#00FF31"}, {"color": "#159BFF"}],
-    "s0155": [{"color": "#FFFFFF", "word_colors": ["#FF4438", "#FF4438", "#FF4438", "#FFFFFF", "#FFFFFF", "#FFFFFF"]}, {"color": "#B9F000"}],
+    "s0155": [{"color": "#FF4438"}, {"color": "#FFFFFF"}, {"color": "#B9F000"}],
     "s0195": [{"color": "#F4F10A"}, {"color": "#F04755"}],
     "s0217": [{"color": "#FF27D8"}, {"color": "#FFFFFF", "accent": "#16F02B", "accent_words": 1}],
     "s0218": [{"color": "#FFFFFF", "word_colors": ["#FFFFFF", "#FF73BC", "#FF73BC"]}, {"color": "#FFFFFF", "word_colors": ["#FFFFFF", "#FFFFFF", "#FFFFFF", "#EFE080"]}],
@@ -48,7 +48,7 @@ LINE_STYLE = {
     "s0291": [{"color": "#F3F000"}, {"color": "#20F12F"}],
     "s0311": [{"color": "#FFFFFF", "word_colors": ["#159CDD", "#FFFFFF", "#FFFFFF"]}, {"color": "#FF38A8"}, {"color": "#BEB8AF"}],
     "s0340": [{"color": "#FFFFFF"}, {"color": "#F4E8EC"}],
-    "s0430": [{"color": "#111111", "background": "#F1CF69", "skip_patch": True}, {"color": "#FFFFFF"}],
+    "s0430": [{"color": "#FFEC98", "background": "#000000"}, {"color": "#FFFFFF"}],
     "s0431": [{"color": "#FFFFFF"}, {"color": "#8DDE72"}],
     "s0446": [{"color": "#12E238"}, {"color": "#FFFFFF", "word_colors": ["#F11EC2", "#F11EC2", "#FFFFFF", "#FFFFFF"]}],
     "s0460": [{"color": "#FFFFFF"}, {"color": "#3CAFE9"}],
@@ -67,16 +67,24 @@ FOOTER_OVERRIDES = {
 
 def compact(slug, frame, caption_slot):
     width, height = map(int, frame["size"].split("x"))
+    video_from = dict(frame.get("video_from") or {})
+    source_lines = list(frame.get("lines", []))
+    if slug == "s0155":
+        source_lines = [
+            {**source_lines[0], "y0": 35, "y1": 54, "h": 20},
+            {**source_lines[0], "y0": 56, "y1": 78, "h": 23},
+            {**source_lines[1], "y0": 82, "y1": 102, "h": 21},
+        ]
+    elif slug == "s0311":
+        source_lines = source_lines[:2]
+        video_from = {"y": 94, "pct": 22.1}
     lines = []
-    for index, source in enumerate(frame.get("lines", [])):
+    for index, source in enumerate(source_lines):
         line = dict(source)
         line["bind"] = "hook1" if index == 0 else "hook2" if index == 1 else "bodyTitle"
         line["font_family"] = FONT_BY_SLUG.get(slug, "TmonMonsori")
         line["font_weight"] = 900
-        multiline = slug == "s0155" and index == 0
-        line["font_size"] = max(15, round(line["h"] * (.55 if multiline else 1.10), 1))
-        if multiline:
-            line["max_lines"] = 2
+        line["font_size"] = max(15, round(line["h"] * 1.10, 1))
         if slug in ITALIC_SLUGS:
             line["font_style"] = "italic"
         line["scale_x"] = SCALE_X_BY_SLUG.get(slug, .99)
@@ -87,6 +95,10 @@ def compact(slug, frame, caption_slot):
         line["no_patch"] = False
         if index < len(LINE_STYLE.get(slug, [])):
             line.update(LINE_STYLE[slug][index])
+        if slug == "s0234":
+            line.update({"font_weight": 400, "font_style": "italic", "stroke": .6 if index == 0 else .9, "shadow_y": 1})
+        if slug == "s0430" and index == 0:
+            line.update({"color": "#FFEC98", "background": "#000000", "skip_patch": False, "font_size": 19.8, "scale_x": .90, "x0": 6, "x1": width - 6})
         lines.append(line)
     reserved = caption_slot["mode"] == "reserved"
     caption_y = caption_slot["y"] if reserved else max(round(height * .68), min(height - 42, (frame.get("video_from") or {}).get("y", 0) + 55))
@@ -102,7 +114,7 @@ def compact(slug, frame, caption_slot):
         fixed_bands.append({"y0": frame["top_band"]["y0"], "y1": frame["top_band"]["y1"], "color": frame["top_band"]["color"]})
     cleanup_regions = [{
         "role": "original-title", "x": 0, "y": 0, "width": width,
-        "height": (frame.get("video_from") or {}).get("y", 0),
+        "height": video_from.get("y", 0),
         "background": frame.get("title_bg") or "#111111",
     }]
     if reserved:
@@ -113,10 +125,10 @@ def compact(slug, frame, caption_slot):
     return {
         "width": width, "height": height, "top_band": frame.get("top_band"),
         "title_bg": frame.get("title_bg"), "font_family": "TmonMonsori", "font_weight": 400,
-        "lines": lines, "white_box": None, "video_from": frame.get("video_from"), "fixed_bands": fixed_bands,
+        "lines": lines, "white_box": None, "video_from": video_from, "fixed_bands": fixed_bands,
         "caption_slot": caption_slot, "cleanup_regions": cleanup_regions,
         "fingerprint": f"continuous-{frame.get('fingerprint', '')}",
-        "channel_box": None, "channel_boxes": [], "boxes": frame.get("boxes", []),
+        "channel_box": None, "channel_boxes": [{"x": 72, "y": 3, "width": 96, "height": 15, "background": "#000000", "color": "#B8B8B8", "font_size": 10, "font_family": "Pretendard", "font_weight": 800, "letter_spacing": .2, "radius": 2}], "boxes": frame.get("boxes", []),
     }
 
 

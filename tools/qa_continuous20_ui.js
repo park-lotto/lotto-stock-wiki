@@ -26,6 +26,19 @@ const url = process.argv[2] || 'http://127.0.0.1:8770/out/scene-style-ui-showcas
     if(Math.abs(presetPane?.getBoundingClientRect().width-390)>2)failures.push('왼쪽 템플릿 패널 390px 고정 실패');
     if(!presetGrid||presetGrid.scrollHeight<=presetGrid.clientHeight||getComputedStyle(presetGrid).overflowY!=='auto')failures.push('왼쪽 템플릿 내부 세로 스크롤 실패');
     if(!document.querySelector('.layout-a .seg')?.hidden)failures.push('고정형에서 훅/본문 토글 노출');
+    const fixedPanel=document.querySelector('.fixed-quick-panel');
+    if(!fixedPanel||fixedPanel.hidden)failures.push('고정형 빠른 조절 패널 미노출');
+    const firstPreviewBox=preview.getBoundingClientRect(),firstMedia=preview.querySelector('.precision-media');
+    const initialTop=Math.round(firstMedia.getBoundingClientRect().top-firstPreviewBox.top);
+    const initialBottom=Math.round(firstPreviewBox.bottom-firstMedia.getBoundingClientRect().bottom);
+    const initialTopValue=Number(fixedPanel?.querySelector('[data-fixed-size="top"] output')?.textContent.replace('%',''));
+    fixedPanel?.querySelector('[data-fixed-size="top"] [data-fixed-step="1"]')?.click();await wait();
+    if(Number(fixedPanel?.querySelector('[data-fixed-size="top"] output')?.textContent.replace('%',''))!==initialTopValue+1||Math.round(firstMedia.getBoundingClientRect().top-firstPreviewBox.top)<=initialTop)failures.push('상단 제목칸 1% 높이 조절 실패');
+    fixedPanel?.querySelector('[data-fixed-size="bottom"] [data-fixed-step="1"]')?.click();await wait();
+    if(Math.round(firstPreviewBox.bottom-firstMedia.getBoundingClientRect().bottom)<=initialBottom)failures.push('하단 자막칸 1% 높이 조절 실패');
+    fixedPanel?.querySelector('[data-fixed-palette="mint"]')?.click();await wait();
+    if(fixedPanel?.querySelector('[data-fixed-color="top"]')?.value.toLowerCase()!=='#082923'||fixedPanel?.querySelector('[data-fixed-color="title2"]')?.value.toLowerCase()!=='#43e2b4')failures.push('고정형 원터치 팔레트 실패');
+    fixedPanel?.querySelector('[data-fixed-reset]')?.click();await wait();
     for(let i=0;i<rows.length;i++){
       document.querySelector(`[data-p20="${i}"]`).click();await wait();
       const src=preview.querySelector('.precision-base').getAttribute('src');

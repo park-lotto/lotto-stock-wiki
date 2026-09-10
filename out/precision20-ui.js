@@ -11,8 +11,24 @@
   const compact=n=>n?new Intl.NumberFormat('ko-KR',{notation:n>=1e6?'compact':'standard',maximumFractionDigits:1}).format(n)+'회':'시인성 선별';
   const displayName=p=>p.id==='s0101'?'숏템 기본형':p.name;
   const uniformMedia='assets/scene-style/uniform-household-demo.png';
-  const mediaBounds=frame=>{
+  const fixedLayouts=new Map(),fixedColors=new Map();
+  const fixedBaseLayout=frame=>{
+    const footer=(frame?.cleanup_regions||[]).find(region=>region.role==='source-footer');
+    return {top:Math.round((frame?.video_from?.y||0)/(frame?.height||1)*100),bottom:footer?Math.round(footer.height/frame.height*100):0};
+  };
+  const fixedLayoutFor=(presetId,frame)=>fixedLayouts.get(presetId)||fixedBaseLayout(frame);
+  const fixedBaseColors=frame=>{
+    const titleLines=(frame?.lines||[]).filter(line=>line.bind!=='caption');
+    const footer=(frame?.cleanup_regions||[]).find(region=>region.role==='source-footer');
+    return {top:frame?.title_bg||frame?.top_band?.color||'#000000',bottom:footer?.background||'#000000',title1:titleLines[0]?.color||'#FFFFFF',title2:titleLines[1]?.color||titleLines[0]?.color||'#FFFFFF'};
+  };
+  const fixedColorsFor=(presetId,frame)=>({...fixedBaseColors(frame),...(fixedColors.get(presetId)||{})});
+  const mediaBounds=(frame,presetId)=>{
     if(!frame)return {top:0,height:100};
+    if(presetId?.startsWith('fixed_')){
+      const layout=fixedLayoutFor(presetId,frame);
+      return {top:layout.top,height:Math.max(25,100-layout.top-layout.bottom)};
+    }
     const start=frame.video_from?.y||0;
     const footer=(frame.cleanup_regions||[]).find(region=>region.role==='source-footer');
     const end=footer?.y||frame.height;
@@ -60,6 +76,20 @@
   const captionKey=()=>`${rows[current].id}:${mode}:${sceneIndex}:caption`;
   const currentHasCaptionSlot=()=>mode==='continuous'?frameFor(rows[current])?.caption_slot?.mode==='reserved':kind==='body'&&!!frameFor(rows[current])?.white_box;
   const captionOffset=()=>currentHasCaptionSlot()?0:(kind==='body'||mode==='continuous')?(captionPositions.get(captionKey())||0)*6:0;
+  const fixedCaptionShift=frame=>{
+    if(mode!=='continuous')return 0;
+    const footer=(frame?.cleanup_regions||[]).find(region=>region.role==='source-footer');
+    if(!footer)return 0;
+    const originalCenter=(footer.y+footer.height/2)/frame.height*100;
+    const layout=fixedLayoutFor(rows[current].id,frame);
+    return 100-layout.bottom/2-originalCenter;
+  };
+  const fixedDrawLine=(line,frame)=>{
+    if(mode!=='continuous'||line.bind==='caption')return line;
+    const baseTop=(frame.video_from?.y||frame.height*.25),nextTop=fixedLayoutFor(rows[current].id,frame).top/100*frame.height;
+    const ratio=nextTop/baseTop;
+    return {...line,y0:line.y0*ratio,y1:line.y1*ratio,h:line.h*ratio,font_size:(line.font_size||line.h)*Math.min(1.18,Math.max(.82,ratio))};
+  };
   const currentDirty=()=>dirtyFields.get(dirtyKey())||new Set();
   const markDirty=bind=>{
     const key=dirtyKey(),set=dirtyFields.get(key)||new Set();set.add(bind);dirtyFields.set(key,set);
@@ -100,7 +130,27 @@
   motionPanel.className='hook-motion';
   motionPanel.innerHTML='<div class="hook-motion-head"><b>훅 시선집중 모션</b><small>첫 장면에만 적용</small></div><div class="hook-motion-grid"><button type="button" class="active" data-hook-motion="zoom-punch">줌 펀치</button><button type="button" data-hook-motion="pop">팝업</button><button type="button" data-hook-motion="slide">슬라이드</button><button type="button" data-hook-motion="flash">플래시</button></div><div class="hook-speed"><span>속도</span><button type="button" data-hook-speed="1.35">느림</button><button type="button" data-hook-speed="1">보통</button><button type="button" class="active" data-hook-speed="0.72">빠름</button></div>';
   root.querySelector('.layout-a .ai-card')?.after(motionPanel);
+  const fixedPanel=document.createElement('section');
+  fixedPanel.className='fixed-quick-panel';
+  fixedPanel.innerHTML='<div class="fixed-quick-head"><b>고정형 빠른 조절</b><button type="button" data-fixed-reset>전체 초기화</button></div><div class="fixed-size-control" data-fixed-size="top"><span>상단 제목칸</span><button type="button" data-fixed-step="-1">−</button><input type="range" min="12" max="50" step="1" data-fixed-range="top"><output>0%</output><button type="button" data-fixed-step="1">＋</button></div><div class="fixed-size-control" data-fixed-size="bottom"><span>하단 자막칸</span><button type="button" data-fixed-step="-1">−</button><input type="range" min="0" max="35" step="1" data-fixed-range="bottom"><output>0%</output><button type="button" data-fixed-step="1">＋</button></div><div class="fixed-palette-row"><button type="button" data-fixed-palette="original">원본</button><button type="button" data-fixed-palette="mint">민트</button><button type="button" data-fixed-palette="yellow">옐로</button><button type="button" data-fixed-palette="pink">핑크</button></div><div class="fixed-color-grid"><label><span>제목 배경</span><input type="color" data-fixed-color="top"></label><label><span>하단 배경</span><input type="color" data-fixed-color="bottom"></label><label><span>제목 1</span><input type="color" data-fixed-color="title1"></label><label><span>제목 2</span><input type="color" data-fixed-color="title2"></label></div>';
+  motionPanel.after(fixedPanel);
+  const fixedPalettes={mint:{top:'#082923',bottom:'#082923',title1:'#FFFFFF',title2:'#43E2B4'},yellow:{top:'#17140A',bottom:'#17140A',title1:'#FFFFFF',title2:'#FFE24A'},pink:{top:'#24101A',bottom:'#24101A',title1:'#FFFFFF',title2:'#FF78B7'}};
   function syncHookMotionUI(){motionPanel.hidden=mode!=='story'||sceneIndex!==0}
+  const minimumFixedTop=frame=>Math.min(46,Math.max(12,Math.ceil((Math.max(0,...(frame?.lines||[]).filter(line=>line.bind!=='caption').map(line=>line.y1))+2)/(frame?.height||1)*100)));
+  function syncMediaLayout(){
+    const p=rows[current],frame=frameFor(p),bounds=mediaBounds(frame,p?.id);
+    Object.assign(media.style,{top:bounds.top+'%',height:bounds.height+'%'});
+  }
+  function syncFixedPanel(){
+    fixedPanel.hidden=mode!=='continuous';if(fixedPanel.hidden)return;
+    const p=rows[current],frame=frameFor(p),layout=fixedLayoutFor(p.id,frame),colors=fixedColorsFor(p.id,frame);
+    fixedPanel.querySelectorAll('[data-fixed-size]').forEach(row=>{
+      const key=row.dataset.fixedSize,input=row.querySelector('input'),output=row.querySelector('output');
+      if(key==='top')input.min=String(minimumFixedTop(frame));
+      input.value=String(layout[key]);output.textContent=layout[key]+'%';
+    });
+    fixedPanel.querySelectorAll('[data-fixed-color]').forEach(input=>input.value=colors[input.dataset.fixedColor]);
+  }
   function runHookMotion(){
     if(qaMode||motionPanel.hidden||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
     [preview,...preview.querySelectorAll('*')].forEach(el=>el.getAnimations?.().forEach(animation=>animation.cancel()));
@@ -198,7 +248,7 @@
   function addPatch(y,h,color,x=0,w=100,bind=''){
     const el=document.createElement('div');el.className='precision-patch';
     if(bind)el.dataset.editBind=bind;
-    const paint=bind&&bind!=='channel'?colorFor('background',color):color;
+    const paint=bind&&bind!=='channel'&&mode!=='continuous'?colorFor('background',color):color;
     Object.assign(el.style,{left:x+'%',top:y+'%',width:w+'%',height:h+'%',background:rgba(paint)});layer.insertBefore(el,badge);return el;
   }
   function fitText(el,startSize,minRatio=.58,checkHeight=false){
@@ -230,12 +280,15 @@
     const weight=ln.font_weight||frame.font_weight||400;
     const letterPx=ln.letter_spacing!=null?ln.letter_spacing*scale:Math.max(-1.5,-.035*fontPx);
     const manualScale=textScale(bind),scaledFont=Math.max(9,fontPx*manualScale);
-    const topOffset=(bind==='caption'?captionOffset():0)+textOffset(bind);
+    const topOffset=(bind==='caption'?captionOffset()+fixedCaptionShift(frame):0)+textOffset(bind);
     const verticalNudge=bind==='channel'?.7:-.35;
     const baseHeight=ln.h/frame.height*100+.9,displayHeight=baseHeight*Math.max(1,manualScale);
     const displayTop=ln.y0/frame.height*100+verticalNudge+topOffset-(displayHeight-baseHeight)/2;
     Object.assign(el.style,{left:left+'%',right:right+'%',top:Math.max(0,displayTop)+'%',height:displayHeight+'%',fontSize:scaledFont+'px',fontFamily:`"${family}",sans-serif`,fontWeight:String(weight),fontStyle:ln.font_style||'normal',letterSpacing:letterPx+'px',color:rgba(color||ln.color||'#fff'),textShadow:shadowY?`0 ${shadowY}px 1px rgba(0,0,0,.88)`:'none',webkitTextStroke:stroke?`${stroke}px #080808`:'0',padding:`0 ${pad}px`,whiteSpace:ln.max_lines>1?'normal':'nowrap',flexWrap:ln.max_lines>1?'wrap':'nowrap',alignContent:ln.max_lines>1?'center':'normal',lineHeight:ln.max_lines>1?'1.05':'1'});
-    if(ln.word_colors?.length){
+    const fixedColorKey=bind==='hook1'?'title1':(bind==='hook2'||bind==='bodyTitle')?'title2':null;
+    const forcedColor=fixedColorKey&&mode==='continuous'&&fixedColors.get(rows[current].id)?.[fixedColorKey];
+    if(forcedColor){el.style.color=forcedColor;el.textContent=text||' ';
+    }else if(ln.word_colors?.length){
       String(text||' ').split(/\s+/).forEach((word,index,words)=>{const span=document.createElement('span');span.textContent=word;span.style.color=ln.word_colors[index]||ln.color||'#fff';if(index<words.length-1)span.style.marginRight=Math.max(2,fontPx*.11)+'px';el.append(span)});
     }else if(ln.accent_words){
       const words=String(text||' ').split(/\s+/),accent=document.createElement('span'),rest=document.createElement('span');
@@ -253,10 +306,16 @@
     const p=rows[current],frame=frameFor(p);if(!frame)return;
     const dirty=currentDirty();
     const bg=frame.title_bg||frame.top_band?.color||'#111111';
-    (frame.cleanup_regions||[]).forEach(region=>addPatch(
-      region.y/frame.height*100,region.height/frame.height*100,region.background,
-      (region.x||0)/frame.width*100,(region.width||frame.width)/frame.width*100
-    ));
+    const fixedLayout=mode==='continuous'?fixedLayoutFor(p.id,frame):null;
+    const fixedPaint=mode==='continuous'?fixedColorsFor(p.id,frame):null;
+    (frame.cleanup_regions||[]).forEach(region=>{
+      if(mode==='continuous'&&(region.role==='original-title'||region.role==='source-footer'))return;
+      addPatch(region.y/frame.height*100,region.height/frame.height*100,region.background,(region.x||0)/frame.width*100,(region.width||frame.width)/frame.width*100);
+    });
+    if(fixedLayout){
+      addPatch(0,fixedLayout.top,fixedPaint.top);
+      if(fixedLayout.bottom>0)addPatch(100-fixedLayout.bottom,fixedLayout.bottom,fixedPaint.bottom);
+    }
     if(dirty.size){
       (frame.boxes||[]).forEach(b=>{const box=addPatch(b.y/frame.height*100,b.height/frame.height*100,b.background,b.x/frame.width*100,b.width/frame.width*100);if(b.border)box.style.border=`${b.border_width||1}px solid ${b.border}`;});
     }
@@ -280,16 +339,19 @@
     lines.forEach((ln,i)=>{
       const key=ln.bind||(kind==='hook'?(i===0?'hook1':i===1?'hook2':'bodyTitle'):(i===0?'bodyTitle':'caption'));
       if(!dirty.has(key))return;
-      const pt=ln.patch_top??2,pb=ln.patch_bottom??2;
-      const offset=(key==='caption'?captionOffset():0)+textOffset(key);
-      if(!ln.no_patch){
-        if(offset)addPatch(Math.max(0,(ln.y0-pt)/frame.height*100),(ln.h+pt+pb)/frame.height*100,ln.background||bg,0,100,key);
-        if(!ln.skip_patch)addPatch(Math.max(0,(ln.y0-pt)/frame.height*100+offset),(ln.h+pt+pb)/frame.height*100,ln.background||bg,0,100,key);
-        else addPatch(Math.max(0,(ln.y0-pt)/frame.height*100+offset),(ln.h+pt+pb)/frame.height*100,ln.background||frame.boxes?.[0]?.background||bg,Math.max(0,ln.x0/frame.width*100-2),(ln.x1-ln.x0)/frame.width*100+4,key);
+      const drawLine=fixedDrawLine(ln,frame),pt=drawLine.patch_top??2,pb=drawLine.patch_bottom??2;
+      const offset=(key==='caption'?captionOffset()+fixedCaptionShift(frame):0)+textOffset(key);
+      const lineBackground=fixedPaint?(key==='caption'?fixedPaint.bottom:fixedPaint.top):(drawLine.background||bg);
+      if(!drawLine.no_patch){
+        if(offset)addPatch(Math.max(0,(drawLine.y0-pt)/frame.height*100),(drawLine.h+pt+pb)/frame.height*100,lineBackground,0,100,key);
+        if(!drawLine.skip_patch)addPatch(Math.max(0,(drawLine.y0-pt)/frame.height*100+offset),(drawLine.h+pt+pb)/frame.height*100,lineBackground,0,100,key);
+        else addPatch(Math.max(0,(drawLine.y0-pt)/frame.height*100+offset),(drawLine.h+pt+pb)/frame.height*100,drawLine.background||frame.boxes?.[0]?.background||bg,Math.max(0,drawLine.x0/frame.width*100-2),(drawLine.x1-drawLine.x0)/frame.width*100+4,key);
       }
-      const align=(ln.lpct??50)<4&&(ln.rpct??50)>10?'left':'center';
+      const align=(drawLine.lpct??50)<4&&(drawLine.rpct??50)>10?'left':'center';
       const roleColor=key==='hook2'?'accent':key==='hook1'?'white':null;
-      addText(value(key),ln,frame,roleColor?colorFor(roleColor,ln.color):ln.color,align,key);
+      const fixedOverride=mode==='continuous'?fixedColors.get(p.id):null;
+      const fixedTextColor=fixedOverride?(key==='hook1'?fixedOverride.title1:(key==='hook2'||key==='bodyTitle')?fixedOverride.title2:null):null;
+      addText(value(key),drawLine,frame,fixedTextColor||(roleColor?colorFor(roleColor,drawLine.color):drawLine.color),align,key);
     });
     const wb=frame.white_box;
     if(wb?.text){
@@ -303,20 +365,20 @@
     else if(mode!=='continuous'&&sceneIndex===0)sceneIndex=1;
     const p=rows[current],source=imageFor(p);
     base.src=source;
-    const frame=frameFor(p),bounds=mediaBounds(frame);Object.assign(media.style,{top:bounds.top+'%',height:bounds.height+'%'});
+    const frame=frameFor(p),bounds=mediaBounds(frame,p.id);Object.assign(media.style,{top:bounds.top+'%',height:bounds.height+'%'});
     preview.classList.toggle('is-body',mode!=='continuous'&&kind==='body');
     preview.classList.toggle('is-continuous',mode==='continuous');
     const seg=root.querySelector('.layout-a .seg');if(seg)seg.hidden=mode==='continuous';
     root.querySelectorAll('.layout-a [data-frame]').forEach(x=>x.classList.toggle('active',x.dataset.frame===kind));
-    fieldSet(kind,p);updateSceneUI();updateSteppers();updateCaptionButtons();renderEdit();syncHookMotionUI();requestAnimationFrame(runHookMotion);
+    fieldSet(kind,p);updateSceneUI();updateSteppers();updateCaptionButtons();renderEdit();syncHookMotionUI();syncFixedPanel();requestAnimationFrame(runHookMotion);
   }
   function showScene(nextIndex){
     sceneIndex=Math.max(0,Math.min(sceneTotal()-1,nextIndex));
     kind=mode==='continuous'?'hook':sceneIndex===0?'hook':'body';
     const p=rows[current],source=imageFor(p,sceneIndex);
-    base.src=source;const frame=frameFor(p,sceneIndex),bounds=mediaBounds(frame);Object.assign(media.style,{top:bounds.top+'%',height:bounds.height+'%'});preview.classList.toggle('is-body',mode!=='continuous'&&kind==='body');
+    base.src=source;const frame=frameFor(p,sceneIndex),bounds=mediaBounds(frame,p.id);Object.assign(media.style,{top:bounds.top+'%',height:bounds.height+'%'});preview.classList.toggle('is-body',mode!=='continuous'&&kind==='body');
     root.querySelectorAll('.layout-a [data-frame]').forEach(x=>x.classList.toggle('active',x.dataset.frame===kind));
-    fieldSet(kind,p);updateSceneUI();updateSteppers();updateCaptionButtons();renderEdit();syncHookMotionUI();requestAnimationFrame(runHookMotion);
+    fieldSet(kind,p);updateSceneUI();updateSteppers();updateCaptionButtons();renderEdit();syncHookMotionUI();syncFixedPanel();requestAnimationFrame(runHookMotion);
   }
   function selectPreset(index){
     current=index;const p=rows[index];
@@ -324,7 +386,7 @@
     preview.classList.remove('template-shortem');
     preview.classList.add('template-precision');
     base.hidden=false;media.hidden=false;layer.hidden=false;
-    if(mode==='continuous')dirtyFields.set(`${p.id}:frame`,new Set(frameKeys('frame',p).filter(key=>key!=='caption'&&key!=='channel')));
+    if(mode==='continuous')dirtyFields.set(`${p.id}:frame`,new Set(frameKeys('frame',p).filter(key=>key!=='caption')));
     else {dirtyFields.set(`${p.id}:hook`,new Set(frameKeys('hook',p)));dirtyFields.set(`${p.id}:body`,new Set(frameKeys('body',p)));}
     grid.querySelectorAll('[data-p20]').forEach((x,i)=>x.classList.toggle('selected',i===index));
     inputs.channel.value=p.sample.channel||'숏템메이커';inputs.hook1.value=p.sample.hook1;inputs.hook2.value=p.sample.hook2;inputs.bodyTitle.value=p.sample.bodyTitle;inputs.caption.value=p.sample.caption;
@@ -382,9 +444,39 @@
     const speed=event.target.closest('[data-hook-speed]');
     if(speed){hookMotionSpeed=Number(speed.dataset.hookSpeed);motionPanel.querySelectorAll('[data-hook-speed]').forEach(button=>button.classList.toggle('active',button===speed));runHookMotion();return}
   });
+  const applyFixedSize=(key,rawValue)=>{
+    if(mode!=='continuous')return;
+    const p=rows[current],frame=frameFor(p),currentLayout={...fixedLayoutFor(p.id,frame)};
+    const min=key==='top'?minimumFixedTop(frame):0,max=key==='top'?50:35;
+    currentLayout[key]=Math.round(Math.max(min,Math.min(max,Number(rawValue))));
+    if(currentLayout.top+currentLayout.bottom>70)currentLayout[key]=70-currentLayout[key==='top'?'bottom':'top'];
+    fixedLayouts.set(p.id,currentLayout);fittedText.clear();preview.classList.remove('is-pristine');syncMediaLayout();renderEdit();syncFixedPanel();
+  };
+  fixedPanel.addEventListener('input',event=>{
+    const range=event.target.closest('[data-fixed-range]');
+    if(range){applyFixedSize(range.dataset.fixedRange,range.value);return}
+    const color=event.target.closest('[data-fixed-color]');
+    if(color&&mode==='continuous'){
+      const p=rows[current],next={...(fixedColors.get(p.id)||{})};next[color.dataset.fixedColor]=color.value;fixedColors.set(p.id,next);
+      preview.classList.remove('is-pristine');renderEdit();syncFixedPanel();
+    }
+  });
+  fixedPanel.addEventListener('click',event=>{
+    const step=event.target.closest('[data-fixed-step]');
+    if(step){const row=step.closest('[data-fixed-size]'),key=row.dataset.fixedSize;applyFixedSize(key,Number(row.querySelector('input').value)+Number(step.dataset.fixedStep));return}
+    const palette=event.target.closest('[data-fixed-palette]');
+    if(palette&&mode==='continuous'){
+      const p=rows[current];
+      if(palette.dataset.fixedPalette==='original')fixedColors.delete(p.id);else fixedColors.set(p.id,{...fixedPalettes[palette.dataset.fixedPalette]});
+      preview.classList.remove('is-pristine');renderEdit();syncFixedPanel();return;
+    }
+    if(event.target.closest('[data-fixed-reset]')&&mode==='continuous'){
+      const p=rows[current];fixedLayouts.delete(p.id);fixedColors.delete(p.id);fittedText.clear();syncMediaLayout();renderEdit();syncFixedPanel();
+    }
+  });
   const saveButton=root.querySelector('.layout-a .secondary');
   saveButton?.addEventListener('click',()=>{
-    const p=rows[current],snapshot={mode,presetId:p.id,frameKind:frameKind(),hookMotion,hookMotionSpeed,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),colors:Object.fromEntries(colorOverrides)};
+    const p=rows[current],snapshot={mode,presetId:p.id,frameKind:frameKind(),hookMotion,hookMotionSpeed,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),colors:Object.fromEntries(colorOverrides),fixedLayouts:Object.fromEntries(fixedLayouts),fixedColors:Object.fromEntries(fixedColors)};
     localStorage.setItem('scene_style_preset',JSON.stringify(snapshot));saveButton.textContent='✓ 현재 설정 저장됨';setTimeout(()=>saveButton.textContent='현재 설정 저장',1400);
   });
   root.querySelector('.layout-a .edit-pane').addEventListener('click',event=>{
