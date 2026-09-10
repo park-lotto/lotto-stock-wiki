@@ -8209,23 +8209,32 @@ function bindHCDrag(){
 function bindCapDrag(){
   const pv=document.getElementById('hcPreview'), tx=document.getElementById('capPreviewText');
   if(!pv||!tx||tx._dragBound) return; tx._dragBound=true;
-  tx.style.cursor='move'; let drag=false, moved=false;
+  tx.style.cursor='move'; let drag=false, moved=false, dragBeat=null, dragScope='all', dragSceneNo=0;
   const move=e=>{ if(!drag) return; const r=pv.getBoundingClientRect();
     const cx=(e.touches?e.touches[0].clientX:e.clientX), cy=(e.touches?e.touches[0].clientY:e.clientY);
     const x=Math.round(Math.max(0,Math.min(100,(cx-r.left)/r.width*100)));
     const y=Math.round(Math.max(0,Math.min(100,(cy-r.top)/r.height*100)));
     moved=true;
-    if(CAP_DRAG_SCOPE==='one'){
+    if(dragScope==='one'){
       // 🎯 이 장면만 — 전체 설정(CAP_X_PCT/capY)은 **건드리지 않는다**. 장면에만 좌표를 얹는다.
-      const b=(typeof _curBeat==='function') ? _curBeat() : null;
+      // ★드래그 도중 자동재생이 다음 컷으로 넘어가도, 손을 댄 순간의 자막 비트를 끝까지 쓴다.
+      //   매 move마다 _curBeat()를 다시 읽으면 화면 전환 타이머와 경합해 옆 장면에 저장된다.
+      const b=dragBeat;
       if(b){ b.cap_xy={x_pct:x, y_pct:y}; b.pos='free'; b.pos_y_pct=null; }
     }else{
       CAP_X_PCT=x; document.getElementById('capY').value=y; capPositionTouched();
     }
     updateCaption(); };
-  const end=()=>{ if(!drag) return; drag=false; if(!moved) return; moved=false; saveCapDrag(); };
-  tx.addEventListener('mousedown', e=>{drag=true; moved=false; e.preventDefault();});
-  tx.addEventListener('touchstart', e=>{drag=true; moved=false;}, {passive:true});
+  const end=()=>{ if(!drag) return; drag=false; if(!moved) return; moved=false; saveCapDrag(dragBeat, dragScope, dragSceneNo); };
+  const start=()=>{
+    drag=true; moved=false; dragScope=CAP_DRAG_SCOPE; dragBeat=(typeof _curBeat==='function')?_curBeat():null;
+    dragSceneNo=BEAT_IDX+1;
+    // 위치를 잡는 동안 장면이 자동으로 넘어가면 보이는 장면과 저장 장면이 갈라진다. 즉시 멈춘다.
+    if(CAP_SEQ_TIMER){ clearTimeout(CAP_SEQ_TIMER); CAP_SEQ_TIMER=null; }
+    CAP_SEQ_GEN++; CAP_PAUSED=true; if(typeof _capPlayIcon==='function') _capPlayIcon();
+  };
+  tx.addEventListener('mousedown', e=>{start(); e.preventDefault();});
+  tx.addEventListener('touchstart', ()=>{start();}, {passive:true});
   document.addEventListener('mousemove', move);
   document.addEventListener('touchmove', move, {passive:true});
   document.addEventListener('mouseup', end);
@@ -8234,22 +8243,22 @@ function bindCapDrag(){
 // 손을 뗐을 때 실제로 저장한다(끄는 동안 매 픽셀 저장하면 서버를 두들긴다).
 //   'one' → 이 장면에만 자유 좌표(cap_xy)
 //   'all' → 전체 설정을 저장 + 장면별 덮어쓰기를 **싹 지운다**(안 지우면 손댔던 장면만 안 따라온다)
-async function saveCapDrag(){
+async function saveCapDrag(targetBeat, targetScope, targetSceneNo){
   const msg=document.getElementById('capScopeMsg');
   const say=(t,c)=>{ if(msg){ msg.textContent=t; msg.style.color=c||''; } };
   if(typeof MIX_JOB==='undefined' || !MIX_JOB){ say('작업을 아직 못 찾았어요','var(--fire)'); return; }
   try{
-    if(CAP_DRAG_SCOPE==='one'){
-      const b=(typeof _curBeat==='function') ? _curBeat() : null;
+    if((targetScope||CAP_DRAG_SCOPE)==='one'){
+      const b=targetBeat || ((typeof _curBeat==='function') ? _curBeat() : null);
       if(!b || !b.cap_xy) return;
       const r=await fetch('/api/produce/mix/'+encodeURIComponent(MIX_JOB)+'/cappos',
         {method:'POST',headers:{'Content-Type':'application/json'},
          body:JSON.stringify({beat_idx:_beatNo(b), x_pct:b.cap_xy.x_pct, y_pct:b.cap_xy.y_pct})});
       const d=await r.json();
       if(!r.ok || !d.ok){ say(d.error||'저장 실패','var(--fire)'); return; }
-      b.cap_xy={x_pct:d.x_pct, y_pct:d.y_pct}; b.pos='free'; b.pos_y_pct=null;
+      _capApplyToBeat(b,{cap_xy:{x_pct:d.x_pct,y_pct:d.y_pct},pos:'free',pos_y_pct:null});
       if(typeof renderBeatTools==='function') renderBeatTools();
-      say('이 장면('+(BEAT_IDX+1)+'번) 자막만 옮겼어요','var(--ok)');
+      say('이 장면('+(targetSceneNo||BEAT_IDX+1)+'번) 자막을 저장했어요','var(--ok)');
     }else{
       CAP_ALL_POS_DIRTY=true;
       const d=await saveCapAllPosition();
