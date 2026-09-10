@@ -18453,6 +18453,12 @@ def api_produce_mix_scenezoom(job_id: str, body: dict):
       **뜻만 저장**한다(0순위-B). 그래야 화면·렌더가 같은 규칙을 본다.
     ★음성·타이밍·자막을 건드리지 않는다 → 즉시·무료."""
     store = Store(DB_PATH)
+    with _plan_lock(job_id):
+        return _scenezoom_locked(store, job_id, body)
+
+
+def _scenezoom_locked(store, job_id, body):
+    """확대 edit_plan 갱신 — 반드시 job별 잠금 안에서 다시 읽고 쓴다."""
     plan, hit, err = _mix_job_beat_or_error(job_id, body, store)
     if err:
         return err
@@ -18495,6 +18501,12 @@ def api_produce_mix_scenehl(job_id: str, body: dict):
     ★값 해석·보정은 video_assemble.scene_hl_of 한 곳뿐(0순위-B). 여기선 뜻만 저장한다.
     ★음성·타이밍·자막을 안 건드린다 → 즉시·무료(scenezoom과 같다)."""
     store = Store(DB_PATH)
+    with _plan_lock(job_id):
+        return _scenehl_locked(store, job_id, body)
+
+
+def _scenehl_locked(store, job_id, body):
+    """강조 edit_plan 갱신 — 반드시 job별 잠금 안에서 다시 읽고 쓴다."""
     plan, hit, err = _mix_job_beat_or_error(job_id, body, store)
     if err:
         return err
