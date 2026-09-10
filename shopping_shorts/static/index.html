@@ -1964,6 +1964,14 @@ window.addEventListener('popstate', function(){
 // 볼 수 있게 됐다. 조회수밀도와 보는 게 달라서(본 사람 중 반응률 vs 구독자 규모 대비 열기)
 // 둘 중 높은 쪽을 '반응' 축으로 쓴다 — 어느 한쪽으로만 터진 것도 놓치지 않는다.
 // 팔로워가 없는 항목은 fr=0이라 종전처럼 조회수밀도만으로 판정된다(회귀 없음).
+// 받침이 있으면 '을', 없으면 '를'. 한글이 아니면(영문·숫자로 끝나면) '를'로 둔다.
+// ★안내 문구에 "썰쇼핑를"처럼 나오면 사장님이 바로 알아본다 — 조사는 값에 따라 갈린다.
+function _josaEulReul(word){
+  const s = String(word || '');
+  const ch = s.charCodeAt(s.length - 1);
+  if(!(ch >= 0xAC00 && ch <= 0xD7A3)) return '를';
+  return ((ch - 0xAC00) % 28) ? '을' : '를';
+}
 function _pctl(sorted, v){ let lo=0,hi=sorted.length; while(lo<hi){const m=(lo+hi)>>1; if(sorted[m]<=v) lo=m+1; else hi=m;} return sorted.length? lo/sorted.length : 0; }
 function _fmtViews(n){ n=n||0; return n>=10000 ? (n/10000).toFixed(1)+'만' : n.toLocaleString(); }
 // ══ 뱃지·필터 판정 — 여기 한 곳에서만 정한다(2026-09-10) ═══════════════════════
@@ -2397,13 +2405,13 @@ function render(opts){
           : STATE.grade
             ? (function(){
                 const L = {must:'🎯 진짜 봐야할 것', rising:'📈 급상승', small:'🚀 구독자 대비 터짐'}[STATE.grade] || '';
-                const why = [];
-                if(STATE.ctype !== '전체') why.push(`유형 <b>${esc(STATE.ctype)}</b>`);
-                if(STATE.cat   !== '전체') why.push(`카테고리 <b>${esc(STATE.cat)}</b>`);
-                if(STATE.style)            why.push(`축 <b>${esc(STATE.style)}</b>`);
+                const why = [], raw = [];
+                if(STATE.ctype !== '전체'){ why.push(`유형 <b>${esc(STATE.ctype)}</b>`); raw.push(STATE.ctype); }
+                if(STATE.cat   !== '전체'){ why.push(`카테고리 <b>${esc(STATE.cat)}</b>`); raw.push(STATE.cat); }
+                if(STATE.style){           why.push(`축 <b>${esc(STATE.style)}</b>`);   raw.push(STATE.style); }
                 return `<div class="empty">지금 조건에는 <b>${L}</b>이 없습니다.<br>`
                   + `<span style="font-size:12px">`
-                  + (why.length ? `${why.join(' · ')}를 <b>전체</b>로 풀거나, ` : '')
+                  + (why.length ? `${why.join(' · ')}${_josaEulReul(raw[raw.length-1])} <b>전체</b>로 풀거나, ` : '')
                   + `기간을 <b>이번 주</b>로 넓혀보세요. — 뱃지는 조건을 넉넉히 잡아도 만족하는 것만 답니다.</span></div>`;
               })()
           : (SPAN_DAYS === 0 && SPAN_HOURS < 48)
