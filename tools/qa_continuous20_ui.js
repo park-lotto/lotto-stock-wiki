@@ -25,6 +25,8 @@ const url = process.argv[2] || 'http://127.0.0.1:8770/out/scene-style-ui-showcas
       field?.querySelector('[data-position-step="-1"]')?.click();await wait();
       const y1=preview.querySelector('[data-edit-bind="hook1"].precision-text')?.getBoundingClientRect().y;
       if(!(y1<y0))failures.push(`${rows[i].name}: 제목 위 이동 실패`);
+      if(Math.abs(y1-y0)>preview.getBoundingClientRect().height*.007)failures.push(`${rows[i].name}: 제목 이동 간격이 미세 조정 범위를 초과`);
+      if(i===0){for(let n=0;n<20;n++)field?.querySelector('[data-font-step="0.08"]')?.click();await wait();if(field?.querySelector('.font-stepper output')?.textContent!=='200%')failures.push('글자 크기 200% 상한 실패');}
       if([...preview.querySelectorAll('[data-edit-bind]')].some(el=>{const a=el.getBoundingClientRect(),b=preview.getBoundingClientRect();return a.left<b.left-3||a.right>b.right+3||el.scrollWidth>el.clientWidth+2}))failures.push(`${rows[i].name}: 글자 넘침`);
     }
     document.querySelector('.layout-a .secondary').click();

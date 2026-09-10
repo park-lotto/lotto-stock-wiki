@@ -294,13 +294,13 @@
   root.querySelector('.layout-a .edit-pane').addEventListener('click',event=>{
     const button=event.target.closest('[data-font-step]');if(!button)return;
     const bind=button.closest('[data-field-key]').dataset.fieldKey;
-    const next=Math.min(1.6,Math.max(.55,textScale(bind)+Number(button.dataset.fontStep)));
+    const next=Math.min(2,Math.max(.55,textScale(bind)+Number(button.dataset.fontStep)));
     fontScales.set(scaleKey(bind),next);[...fittedText.keys()].filter(key=>key.startsWith(scaleKey(bind)+':')).forEach(key=>fittedText.delete(key));markDirty(bind);preview.classList.remove('is-pristine');updateSteppers();renderEdit();
   });
   root.querySelector('.layout-a .edit-pane').addEventListener('click',event=>{
     const button=event.target.closest('[data-position-step]');if(!button)return;
     const bind=button.closest('[data-field-key]').dataset.fieldKey;
-    textOffsets.set(scaleKey(bind),Math.max(-18,Math.min(18,textOffset(bind)+Number(button.dataset.positionStep)*2)));
+    textOffsets.set(scaleKey(bind),Math.max(-18,Math.min(18,textOffset(bind)+Number(button.dataset.positionStep)*.5)));
     markDirty(bind);preview.classList.remove('is-pristine');renderEdit();
   });
   root.querySelector('.layout-a .edit-pane').addEventListener('click',event=>{
