@@ -32,7 +32,7 @@ except Exception:
 sys.stdout.reconfigure(encoding="utf-8")
 
 try:
-    from fastapi import FastAPI, Request
+    from fastapi import FastAPI, Request, UploadFile, File, Form
     from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse, FileResponse, RedirectResponse, PlainTextResponse
     from starlette.concurrency import run_in_threadpool
     import uvicorn
@@ -6975,6 +6975,47 @@ _위키 정식 ingest는 후속 연결 예정_
 
 
 # ── §5 유튜브 영상제작 대시보드 (/yt) ──────────────────────────
+YT_PROJECTS_DIR = os.path.join(ROOT, "data", "yt_projects")
+_YT_PROJECT_ID_RE = re.compile(r"^[a-zA-Z0-9_-]{6,80}$")
+_YT_UPLOAD_EXTS = {
+    ".mp4", ".mov", ".mkv", ".webm", ".mp3", ".wav", ".m4a",
+    ".png", ".jpg", ".jpeg", ".webp", ".pdf", ".txt", ".md",
+}
+
+
+def _yt_now():
+    return datetime.now().astimezone().isoformat(timespec="seconds")
+
+
+def _yt_project_path(project_id):
+    if not _YT_PROJECT_ID_RE.fullmatch(str(project_id or "")):
+        raise ValueError("잘못된 프로젝트 ID")
+    return os.path.join(YT_PROJECTS_DIR, project_id, "project.json")
+
+
+def _yt_load_project(project_id):
+    path = _yt_project_path(project_id)
+    if not os.path.exists(path):
+        return None
+    with open(path, encoding="utf-8") as f:
+        return json.load(f)
+
+
+def _yt_save_project(project):
+    path = _yt_project_path(project["id"])
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    project["updated_at"] = _yt_now()
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(project, f, ensure_ascii=False, indent=2)
+    os.replace(tmp, path)
+    return project
+
+
+def _yt_scene(project, scene_id):
+    return next((s for s in project.get("scenes", []) if s.get("id") == scene_id), None)
+
+
 @app.get("/yt", response_class=HTMLResponse)
 def yt_page():
     p = os.path.join(HERE, "yt.html")
@@ -6984,6 +7025,148 @@ def yt_page():
         html = f.read()
     # 브라우저 캐시로 옛 버전 남는 것 방지 (계속 수정할 페이지라 매번 최신 서빙)
     return HTMLResponse(content=html, headers={"Cache-Control": "no-cache, must-revalidate"})
+
+
+@app.get("/yt/projects")
+def api_yt_projects():
+    rows = []
+    if os.path.isdir(YT_PROJECTS_DIR):
+        for path in glob.glob(os.path.join(YT_PROJECTS_DIR, "*", "project.json")):
+            try:
+                with open(path, encoding="utf-8") as f:
+                    p = json.load(f)
+                rows.append({
+                    "id": p["id"], "title": p.get("title", "제목 없음"),
+                    "status": p.get("status", "draft"),
+                    "current_step": p.get("current_step", 1),
+                    "scene_count": len(p.get("scenes", [])),
+                    "updated_at": p.get("updated_at", ""),
+                })
+            except (OSError, ValueError, KeyError, json.JSONDecodeError):
+                continue
+    rows.sort(key=lambda x: x.get("updated_at", ""), reverse=True)
+    return JSONResponse(content={"projects": rows})
+
+
+@app.post("/yt/projects")
+async def api_yt_project_create(req: Request):
+    body = await req.json()
+    title = str(body.get("title") or "").strip()
+    if not title:
+        return JSONResponse(content={"error": "프로젝트 제목이 필요합니다"}, status_code=400)
+    now = _yt_now()
+    project_id = datetime.now().strftime("%Y%m%d%H%M%S") + "-" + uuid.uuid4().hex[:8]
+    project = {
+        "id": project_id, "title": title[:120], "status": "draft",
+        "current_step": 1, "format": body.get("format") or "longform",
+        "goal": body.get("goal") or "", "audience": body.get("audience") or "",
+        "target_minutes": int(body.get("target_minutes") or 10),
+        "idea": body.get("idea") or "", "references": [],
+        "plan_text": "", "script_text": "", "scenes": [],
+        "voice": {"provider": "elevenlabs", "name": "Liam", "speed": 1.0},
+        "created_at": now, "updated_at": now,
+    }
+    _yt_save_project(project)
+    return JSONResponse(content=project, status_code=201)
+
+
+@app.get("/yt/projects/{project_id}")
+def api_yt_project_get(project_id: str):
+    try:
+        project = _yt_load_project(project_id)
+    except ValueError as e:
+        return JSONResponse(content={"error": str(e)}, status_code=400)
+    if project is None:
+        return JSONResponse(content={"error": "프로젝트를 찾을 수 없습니다"}, status_code=404)
+    return JSONResponse(content=project)
+
+
+@app.patch("/yt/projects/{project_id}")
+async def api_yt_project_update(project_id: str, req: Request):
+    try:
+        project = _yt_load_project(project_id)
+    except ValueError as e:
+        return JSONResponse(content={"error": str(e)}, status_code=400)
+    if project is None:
+        return JSONResponse(content={"error": "프로젝트를 찾을 수 없습니다"}, status_code=404)
+    body = await req.json()
+    allowed = {
+        "title", "status", "current_step", "format", "goal", "audience",
+        "target_minutes", "idea", "references", "plan_text", "script_text",
+        "scenes", "voice",
+    }
+    for key in allowed:
+        if key in body:
+            project[key] = body[key]
+    _yt_save_project(project)
+    return JSONResponse(content=project)
+
+
+@app.post("/yt/projects/{project_id}/assets")
+async def api_yt_project_asset_upload(
+        project_id: str, scene_id: str = Form(...), file: UploadFile = File(...)):
+    if not _YT_PROJECT_ID_RE.fullmatch(scene_id):
+        return JSONResponse(content={"error": "잘못된 장면 ID"}, status_code=400)
+    try:
+        project = _yt_load_project(project_id)
+    except ValueError as e:
+        return JSONResponse(content={"error": str(e)}, status_code=400)
+    if project is None:
+        return JSONResponse(content={"error": "프로젝트를 찾을 수 없습니다"}, status_code=404)
+    scene = _yt_scene(project, scene_id)
+    if scene is None:
+        return JSONResponse(content={"error": "장면을 찾을 수 없습니다"}, status_code=404)
+    original = os.path.basename(file.filename or "upload")
+    ext = os.path.splitext(original)[1].lower()
+    if ext not in _YT_UPLOAD_EXTS:
+        return JSONResponse(content={"error": "지원하지 않는 파일 형식입니다"}, status_code=400)
+    asset_id = uuid.uuid4().hex[:12]
+    safe_name = re.sub(r"[^0-9A-Za-z가-힣._-]+", "_", original)[:140]
+    asset_dir = os.path.join(YT_PROJECTS_DIR, project_id, "assets", scene_id)
+    os.makedirs(asset_dir, exist_ok=True)
+    dest = os.path.join(asset_dir, f"{asset_id}_{safe_name}")
+    size = 0
+    with open(dest, "wb") as out:
+        while True:
+            chunk = await file.read(1024 * 1024)
+            if not chunk:
+                break
+            size += len(chunk)
+            if size > 1024 * 1024 * 1024:
+                out.close()
+                os.remove(dest)
+                return JSONResponse(content={"error": "파일은 1GB 이하만 등록할 수 있습니다"}, status_code=413)
+            out.write(chunk)
+    asset = {
+        "id": asset_id, "name": original, "size": size,
+        "content_type": file.content_type or "application/octet-stream",
+        "stored_name": os.path.basename(dest), "created_at": _yt_now(),
+    }
+    scene.setdefault("assets", []).append(asset)
+    scene["status"] = "ready"
+    _yt_save_project(project)
+    return JSONResponse(content={"asset": asset, "project": project}, status_code=201)
+
+
+@app.get("/yt/projects/{project_id}/assets/{scene_id}/{asset_id}")
+def api_yt_project_asset(project_id: str, scene_id: str, asset_id: str):
+    if not _YT_PROJECT_ID_RE.fullmatch(scene_id):
+        return JSONResponse(content={"error": "잘못된 장면 ID"}, status_code=400)
+    try:
+        project = _yt_load_project(project_id)
+    except ValueError:
+        project = None
+    scene = _yt_scene(project, scene_id) if project else None
+    asset = next((a for a in (scene or {}).get("assets", []) if a.get("id") == asset_id), None)
+    if not asset:
+        return JSONResponse(content={"error": "파일을 찾을 수 없습니다"}, status_code=404)
+    stored_name = str(asset.get("stored_name") or "")
+    if not stored_name or os.path.basename(stored_name) != stored_name:
+        return JSONResponse(content={"error": "잘못된 저장 파일 정보"}, status_code=400)
+    path = os.path.join(YT_PROJECTS_DIR, project_id, "assets", scene_id, stored_name)
+    if not os.path.isfile(path):
+        return JSONResponse(content={"error": "저장 파일이 없습니다"}, status_code=404)
+    return FileResponse(path, media_type=asset.get("content_type"), filename=asset.get("name"))
 
 
 @app.get("/yt/refs", response_class=HTMLResponse)
