@@ -71,10 +71,10 @@ async function settle(page) {
       for (const field of visibleFields) {
         const output = field.querySelector('.font-stepper output');
         const beforeScale = output?.textContent;
-        field.querySelector('[data-font-step="0.08"]')?.click();
+        field.querySelector('[data-font-step="0.1"]')?.click();
         await sleepFrames();
         if (!output || output.textContent === beforeScale) failures.push(`${preset.name}/${field.dataset.fieldKey}: 글자 크기 + 버튼 작동 실패`);
-        field.querySelector('[data-font-step="-0.08"]')?.click();
+        field.querySelector('[data-font-step="-0.1"]')?.click();
         await sleepFrames();
       }
       await select(index);

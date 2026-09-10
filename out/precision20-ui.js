@@ -55,7 +55,7 @@
     const count=field.querySelector('[data-count]');
     const stepper=document.createElement('span');
     stepper.className='font-stepper';
-    stepper.innerHTML='<button type="button" data-font-step="-0.08" title="글자 작게">−</button><output>100%</output><button type="button" data-font-step="0.08" title="글자 크게">＋</button><button type="button" data-position-step="-1" title="위로">↑</button><button type="button" data-position-step="1" title="아래로">↓</button><button type="button" data-field-reset title="프리셋 기본값으로">↺</button>';
+    stepper.innerHTML='<button type="button" data-font-step="-0.1" title="글자 10% 작게">−</button><output>100%</output><button type="button" data-font-step="0.1" title="글자 10% 크게">＋</button><button type="button" data-position-step="-1" title="위로">↑</button><button type="button" data-position-step="1" title="아래로">↓</button><button type="button" data-field-reset title="프리셋 기본값으로">↺</button>';
     count.before(stepper);
   });
   const captionField=root.querySelector('.layout-a [data-field-key="caption"]');
@@ -209,10 +209,12 @@
     const family=ln.font_family||frame.font_family||'TmonMonsori';
     const weight=ln.font_weight||frame.font_weight||400;
     const letterPx=ln.letter_spacing!=null?ln.letter_spacing*scale:Math.max(-1.5,-.035*fontPx);
-    const scaledFont=Math.max(9,fontPx*textScale(bind));
+    const manualScale=textScale(bind),scaledFont=Math.max(9,fontPx*manualScale);
     const topOffset=(bind==='caption'?captionOffset():0)+textOffset(bind);
     const verticalNudge=bind==='channel'?.7:-.35;
-    Object.assign(el.style,{left:left+'%',right:right+'%',top:Math.max(0,ln.y0/frame.height*100+verticalNudge+topOffset)+'%',height:(ln.h/frame.height*100+0.9)+'%',fontSize:scaledFont+'px',fontFamily:`"${family}",sans-serif`,fontWeight:String(weight),fontStyle:ln.font_style||'normal',letterSpacing:letterPx+'px',color:rgba(color||ln.color||'#fff'),textShadow:shadowY?`0 ${shadowY}px 1px rgba(0,0,0,.88)`:'none',webkitTextStroke:stroke?`${stroke}px #080808`:'0',padding:`0 ${pad}px`,whiteSpace:ln.max_lines>1?'normal':'nowrap',flexWrap:ln.max_lines>1?'wrap':'nowrap',alignContent:ln.max_lines>1?'center':'normal',lineHeight:ln.max_lines>1?'1.05':'1'});
+    const baseHeight=ln.h/frame.height*100+.9,displayHeight=baseHeight*Math.max(1,manualScale);
+    const displayTop=ln.y0/frame.height*100+verticalNudge+topOffset-(displayHeight-baseHeight)/2;
+    Object.assign(el.style,{left:left+'%',right:right+'%',top:Math.max(0,displayTop)+'%',height:displayHeight+'%',fontSize:scaledFont+'px',fontFamily:`"${family}",sans-serif`,fontWeight:String(weight),fontStyle:ln.font_style||'normal',letterSpacing:letterPx+'px',color:rgba(color||ln.color||'#fff'),textShadow:shadowY?`0 ${shadowY}px 1px rgba(0,0,0,.88)`:'none',webkitTextStroke:stroke?`${stroke}px #080808`:'0',padding:`0 ${pad}px`,whiteSpace:ln.max_lines>1?'normal':'nowrap',flexWrap:ln.max_lines>1?'wrap':'nowrap',alignContent:ln.max_lines>1?'center':'normal',lineHeight:ln.max_lines>1?'1.05':'1'});
     if(ln.word_colors?.length){
       String(text||' ').split(/\s+/).forEach((word,index,words)=>{const span=document.createElement('span');span.textContent=word;span.style.color=ln.word_colors[index]||ln.color||'#fff';if(index<words.length-1)span.style.marginRight=Math.max(2,fontPx*.11)+'px';el.append(span)});
     }else if(ln.accent_words){
@@ -332,7 +334,7 @@
   root.querySelector('.layout-a .edit-pane').addEventListener('click',event=>{
     const button=event.target.closest('[data-font-step]');if(!button)return;
     const bind=button.closest('[data-field-key]').dataset.fieldKey;
-    const next=Math.min(2,Math.max(.55,textScale(bind)+Number(button.dataset.fontStep)));
+    const next=Math.min(3,Math.max(.5,textScale(bind)+Number(button.dataset.fontStep)));
     fontScales.set(scaleKey(bind),next);[...fittedText.keys()].filter(key=>key.startsWith(scaleKey(bind)+':')).forEach(key=>fittedText.delete(key));markDirty(bind);preview.classList.remove('is-pristine');updateSteppers();renderEdit();
   });
   root.querySelector('.layout-a .edit-pane').addEventListener('click',event=>{
