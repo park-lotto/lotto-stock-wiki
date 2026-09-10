@@ -4408,7 +4408,9 @@ def verify_beat_screens(beats, seg_map, call=None, store=None, *, work=None,
         print(f"[verify_screens] autofix 설정 조회 실패(끈 것으로 본다): {e!r}",
               file=sys.stderr)
     # 이미 쓰이고 있는 장면 — 같은 그림을 두 번 붙이지 않는다.
+    #   alternates까지 센다 — _fill_beat_screen_time도 그렇게 본다(0순위-B, 페이블 검토).
     used_ids = {(b.get("primary") or {}).get("seg_id") for b in beats}
+    used_ids |= {(a or {}).get("seg_id") for b in beats for a in (b.get("alternates") or [])}
     used_ids.discard(None)
     # ★칸을 **동시에** 묻는다(2026-09-10 사장님 "분당 한도 안 걸리게").
     #   한 칸씩 순서대로 물으면 job당 21초였다(라이브 60건 실측). 동시에 물으면 3초대다.
@@ -4424,7 +4426,8 @@ def verify_beat_screens(beats, seg_map, call=None, store=None, *, work=None,
         sid = (b.get("primary") or {}).get("seg_id")
         seg = (seg_map or {}).get(sid) or {}
         narr = (b.get("narration") or "").strip()
-        if (not narr or not seg or b.get("visual_verb") is False or b.get("respined")):
+        if (not narr or not seg or b.get("visual_verb") is False or b.get("respined")
+                or b.get("screen_locked")):
             continue
         prior = b.get("screen_verification") or {}
         img = sv.frame(seg, sid, work)
@@ -4454,7 +4457,8 @@ def verify_beat_screens(beats, seg_map, call=None, store=None, *, work=None,
         sd = (seg.get("scene_desc") or "").strip()
         # 화면 증거를 요구하지 않는 문장(감정·설명·CTA)은 대상이 아니다 — 화면이 안 맞는 게
         # 정상이라 여기서 깎으면 멀쩡한 칸에 빨간불이 켜진다(2026-09-08 실측 49%).
-        if not narr or not seg or nb.get("visual_verb") is False or nb.get("respined"):
+        if (not narr or not seg or nb.get("visual_verb") is False or nb.get("respined")
+                or nb.get("screen_locked")):
             out.append(nb)
             continue
         image = sv.frame(seg, sid, work)
@@ -4517,11 +4521,17 @@ def verify_beat_screens(beats, seg_map, call=None, store=None, *, work=None,
                         break
             if fixed:
                 cand, cres = fixed
-                nb["auto_swap"] = {"from": dict(nb.get("primary") or {}),
+                # ★되돌릴 자리는 **최초 원본**이다(아스트라 검토 2026-09-10).
+                #   교체본이 다음 회차에 또 떨어지면 여기를 덮어써 최초 원본을 잃는다.
+                origin = (nb.get("auto_swap") or {}).get("from") or dict(nb.get("primary") or {})
+                nb["auto_swap"] = {"from": origin,
                                    "why": (res.get("why") or "")[:60],
                                    "to_why": (cres.get("why") or "")[:60]}
                 nb["primary"] = {k: cand.get(k) for k in
                                  ("video_id", "seg_id", "start", "end", "scene_desc")}
+                # 올린 컷은 대안 목록에서 뺀다 — 한 칸에 같은 그림이 두 번 들어간다(페이블 검토).
+                nb["alternates"] = [a for a in (nb.get("alternates") or [])
+                                    if (a or {}).get("seg_id") != cand.get("seg_id")]
                 used_ids.add(cand.get("seg_id"))
                 for k in ("fit", "fit_evidence", "verify_why"):
                     nb.pop(k, None)
@@ -4535,9 +4545,21 @@ def verify_beat_screens(beats, seg_map, call=None, store=None, *, work=None,
                 nb["fit"] = min(int(nb.get("fit") or 5), 2)
                 nb["fit_evidence"] = "verify_failed"
                 nb["verify_why"] = (res.get("why") or "")[:40]
+        # ★교체했으면 지문도 **새 화면 기준**이어야 한다(아스트라 검토 2026-09-10).
+        #   원본 지문을 그대로 두면 다음 저장 때 캐시가 늘 빗나가 같은 칸을 매번 다시 묻는다.
+        if nb.get("auto_swap"):
+            nsid = (nb.get("primary") or {}).get("seg_id")
+            nseg = (seg_map or {}).get(nsid) or {}
+            nimg = sv.frame(nseg, nsid, work)
+            fingerprint = sv.fingerprint(nb, (nseg.get("scene_desc") or "").strip(), nimg)
         nb["screen_verification"] = {"fingerprint": fingerprint, "before": before,
                                       "text": text_result, "image": image_result}
         out.append(nb)
+    # ★화면을 바꿨으면 **길이 보장을 다시 돌린다**(아스트라 검토 2026-09-10).
+    #   store는 _fill_beat_screen_time 뒤에 이 함수를 부른다 — 여기서 primary를 갈아끼우면
+    #   '화면 길이 >= 대사 길이'가 조용히 깨진 채 저장된다(짧은 컷으로 바뀌면 프리즈가 난다).
+    if any(b.get("auto_swap") for b in out):
+        out = _fill_beat_screen_time(out, seg_map)
     return out
 
 

@@ -101,6 +101,12 @@ def _apply_beat_sources(beats, structure, seg_map):
         cur = (b.get("primary") or {}).get("seg_id")
         if cur == sid:
             return False
+        # ★뒤에 온 판단이 이미 이 칸의 화면을 정했으면 되돌리지 않는다(2026-09-10 페이블 검토).
+        #   사람이 고른 화면(screen_locked)과 사진으로 "안 맞다"를 확인하고 바꾼 화면
+        #   (auto_swap)이 그렇다. 매 저장마다 여기서 출처 장면으로 되돌리면, 검증이 다시
+        #   바꾸고 → 저장할 때마다 화면이 왕복하고 alternates가 자란다(실행으로 확인됨).
+        if b.get("screen_locked") or b.get("auto_swap"):
+            return False
         g = _ep._ground_ref({"seg_id": sid}, seg_map)
         if not g:
             return False

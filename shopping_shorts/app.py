@@ -5474,6 +5474,13 @@ def api_mix_adjust(body: dict):
         if b["beat_idx"] == beat_idx:
             b["primary"] = grounded
             b["fit"] = None   # 화면이 바뀌었으니 옛 매칭점수 무효(사람이 눈으로 고름)
+            # ★사람이 고른 화면은 **잠근다**(2026-09-10 페이블 검토).
+            #   잠그지 않으면 저장 출구의 출처장면 적용·자동 교체가 다음 저장에서
+            #   되돌려버린다 — 사장님이 "↩ 원래대로"를 눌러도 무효가 된다.
+            b["screen_locked"] = True
+            b.pop("auto_swap", None)          # 사람 결정이 최종 — 자동 교체 표시는 걷는다
+            for k in ("fit_evidence", "verify_why", "screen_verification"):
+                b.pop(k, None)
             matched = True
             break
     if not matched:

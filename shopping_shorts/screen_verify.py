@@ -93,6 +93,9 @@ def candidates(beat, seg_map, used_ids, limit=10):
     pool = non_edge_segs(seg_map) or {}
     cur = (beat.get("primary") or {})
     out, seen = [], set(used_ids or ())
+    # ★자기 칸의 대안은 '이미 쓰는 것'이 아니다 — 이 칸을 위해 대본이 골라둔 후보다.
+    #   used_ids에는 다른 칸의 대안까지 들어 있으므로 여기서 자기 것만 되돌린다.
+    seen -= {(a or {}).get("seg_id") for a in (beat.get("alternates") or [])}
     seen.add(cur.get("seg_id"))
 
     def push(sid):

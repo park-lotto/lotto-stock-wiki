@@ -74,8 +74,40 @@ def test_맞는_화면이_없으면_종전대로_빨간불(frames):
     assert out[0]["primary"]["seg_id"] == "a"       # 화면은 그대로 둔다
 
 
-def test_이미_쓰는_화면은_후보에서_뺀다():
-    """같은 그림이 두 번 나오면 고친 것보다 나쁘다."""
+def test_다른칸이_쓰는_화면은_빼되_자기_대안은_남긴다():
+    """같은 그림이 두 번 나오면 고친 것보다 나쁘다. 단 **자기 칸의 대안**은
+    이 칸을 위해 대본이 골라둔 후보라 빼면 안 된다(2026-09-10 페이블 검토 뒤 보정)."""
     from shopping_shorts import screen_verify as sv
-    cands = sv.candidates(_beats()[0], _seg_map(), used_ids={"b"})
-    assert [c["seg_id"] for c in cands] == []
+    segs = _seg_map()
+    segs["c"] = {"video_id": "v1", "seg_id": "c", "start": 3.0, "end": 4.0, "scene_desc": "다른 칸이 씀"}
+    cands = [c["seg_id"] for c in sv.candidates(_beats()[0], segs, used_ids={"c"})]
+    assert "c" not in cands          # 다른 칸이 쓰는 화면은 뺀다
+    assert cands[0] == "b"           # 자기 대안은 첫 후보로 남는다
+
+
+def test_두번_떨어져도_최초원본으로_되돌아간다(frames):
+    """아스트라 검토(2026-09-10): 교체본이 다음 회차에 또 떨어지면 auto_swap.from을
+    덮어써 **최초 원본을 잃는다**. 되돌리기가 가리키는 곳은 언제나 사람이 처음 본 화면이다."""
+    segs = _seg_map()
+    segs["c"] = {"video_id": "v1", "seg_id": "c", "start": 3.0, "end": 4.0, "scene_desc": "세 번째"}
+    b = _beats()[0]
+    b["auto_swap"] = {"from": {"seg_id": "a", "video_id": "v1"}, "why": "처음", "to_why": ""}
+    b["primary"] = dict(b["primary"], seg_id="b")
+    out = _ep.verify_beat_screens([b], segs, call=lambda *a: {"ok": True, "why": ""},
+                                  store=_Store(screen_verify_enabled="1",
+                                               screen_verify_autofix="1"),
+                                  work=None, image_call=_calls([False, True]))
+    assert out[0]["auto_swap"]["from"]["seg_id"] == "a"     # 최초 원본이 지켜졌다
+
+
+def test_교체하면_길이보장을_다시_돌린다(frames, monkeypatch):
+    """교체는 store의 길이 보정(_fill_beat_screen_time) **뒤에** 일어난다 —
+    짧은 컷으로 바뀌면 '화면 길이 >= 대사 길이'가 조용히 깨진다."""
+    called = []
+    real = _ep._fill_beat_screen_time
+    monkeypatch.setattr(_ep, "_fill_beat_screen_time",
+                        lambda beats, sm: called.append(1) or real(beats, sm))
+    _ep.verify_beat_screens(_beats(), _seg_map(), call=lambda *a: {"ok": True, "why": ""},
+                            store=_Store(screen_verify_enabled="1", screen_verify_autofix="1"),
+                            work=None, image_call=_calls([False, True]))
+    assert called, "화면을 바꿨으면 길이 보장을 다시 돌려야 한다"
