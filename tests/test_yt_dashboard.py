@@ -19,12 +19,28 @@ def client():
 def test_hot_clips_endpoint_returns_results(client):
     fake_results = [{"video_id": "v1", "title": "테스트", "view_count": 1000,
                       "view_pct_above_avg": 50.0, "contribution_grade": "Normal",
-                      "performance_grade": "Normal", "channel_title": "c", "thumbnail": ""}]
+                      "performance_grade": "Normal", "channel_title": "c", "thumbnail": "",
+                      "relevance_score": 80}]
     with patch("server.find_hot_clips", return_value=fake_results):
         resp = client.post("/yt/hot_clips", json={"q": "반도체 조정"})
 
     assert resp.status_code == 200
     assert resp.json()["results"] == fake_results
+
+
+def test_hot_clips_endpoint_drops_candidates_without_relevance(client):
+    fake_results = [
+        {"video_id": "good", "relevance_score": 73},
+        {"video_id": "junk", "relevance_score": 0},
+    ]
+    with patch("server.find_hot_clips", return_value=fake_results):
+        resp = client.post("/yt/hot_clips", json={
+            "q": "쇼핑쇼츠", "published_days": 30,
+            "video_format": "shorts", "sort_by": "meaningful",
+        })
+
+    assert resp.status_code == 200
+    assert resp.json()["results"] == [fake_results[0]]
 
 
 def test_generate_plan_streams_sse_events(client):

@@ -6992,6 +6992,7 @@ def _yt_now():
 def _yt_topic_default():
     return {
         "mode": "topic", "objective": "views", "seed_topic": "",
+        "published_days": 90, "video_format": "any", "sort_by": "meaningful",
         "manual_urls": "", "search_results": [], "selected_video_ids": [],
         "astra_decision": {}, "locked_at": None,
     }
@@ -7332,8 +7333,25 @@ async def api_yt_hot_clips(req: Request):
     if find_hot_clips is None:
         return JSONResponse(content={"error": "hot_clips 모듈을 불러올 수 없음"}, status_code=503)
 
+    try:
+        published_days = int(body.get("published_days") or 90)
+    except (TypeError, ValueError):
+        published_days = 90
+    video_format = str(body.get("video_format") or "any")
+    sort_by = str(body.get("sort_by") or "meaningful")
+
     def _do():
-        return find_hot_clips(q)
+        ranked = find_hot_clips(
+            q,
+            published_days=published_days,
+            video_format=video_format,
+            sort_by=sort_by,
+            require_relevance=True,
+        )
+        # YouTube 검색은 relevanceLanguage/regionCode를 힌트로만 취급하므로 완전히
+        # 무관한 글로벌 대형 영상이 섞일 수 있다. 관련성 근거가 없는 후보는 분석·
+        # 자동 선택 단계로 보내지 않는다.
+        return [item for item in ranked if int(item.get("relevance_score") or 0) >= 20]
 
     try:
         results = await run_in_threadpool(_do)
