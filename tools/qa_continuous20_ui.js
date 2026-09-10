@@ -15,8 +15,8 @@ const url = process.argv[2] || 'http://127.0.0.1:8770/out/scene-style-ui-showcas
     const wait=()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
     if(rows.length!==20)failures.push(`고정형 개수 ${rows.length}`);
     const reservedCount=rows.filter(row=>row.frame.caption_slot?.mode==='reserved').length;
-    if(reservedCount!==12)failures.push(`전용 자막칸 판정 ${reservedCount}/12`);
-    if(document.querySelectorAll('.fixed-card .caption-kind.reserved').length!==12||document.querySelectorAll('.fixed-card .caption-kind.overlay').length!==8)failures.push('프리셋 자막 유형 배지 불일치');
+    if(reservedCount!==15)failures.push(`전용 자막칸 판정 ${reservedCount}/15`);
+    if(document.querySelectorAll('.fixed-card .caption-kind.reserved').length!==15||document.querySelectorAll('.fixed-card .caption-kind.overlay').length!==5)failures.push('프리셋 자막 유형 배지 불일치');
     await document.fonts.load('900 24px "TmonMonsori"','한글제목');
     if(!document.fonts.check('900 24px "TmonMonsori"','한글제목'))failures.push('TmonMonsori 웹폰트 로드 실패');
     if(document.querySelectorAll('.fixed-card').length!==20)failures.push('고정형 카드 20개 미표시');
@@ -26,6 +26,9 @@ const url = process.argv[2] || 'http://127.0.0.1:8770/out/scene-style-ui-showcas
       const src=preview.querySelector('.precision-base').getAttribute('src');
       if(src!==rows[i].frame_image)failures.push(`${rows[i].name}: 고정 프레임 불일치`);
       const reserved=rows[i].frame.caption_slot?.mode==='reserved';
+      const cleanups=rows[i].frame.cleanup_regions||[];
+      if(!cleanups.some(region=>region.role==='original-title'&&region.y===0&&region.height===rows[i].frame.video_from.y))failures.push(`${rows[i].name}: 원본 제목 전체 마스크 누락`);
+      if(reserved&&!cleanups.some(region=>region.role==='source-footer'))failures.push(`${rows[i].name}: 하단 출처 마스크 누락`);
       const positionButtons=[...document.querySelectorAll('[data-caption-position]')];
       if(positionButtons.some(button=>button.hidden!==reserved))failures.push(`${rows[i].name}: 자막 위치 버튼 노출 규칙 불일치`);
       if(document.querySelector('.caption-position span')?.textContent!==(reserved?'✓ 전용 자막칸':'영상 위 자막'))failures.push(`${rows[i].name}: 자막 유형 안내 불일치`);

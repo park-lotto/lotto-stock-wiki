@@ -8,6 +8,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from caption_slot_detection import detect_bottom_caption_slot, extend_reserved_slot_over_source_text
+
 
 ROOT = Path(__file__).resolve().parents[1]
 COLLECT = ROOT / "out" / "장면꾸미기_작업대" / "스타일수집"
@@ -147,6 +149,8 @@ MANUAL = {
     }
 }
 
+STORY_FOOTER_OVERRIDES = {"t09": 545, "t14": 554}
+
 
 def load_measure(key: str) -> tuple[dict, str, str]:
     if key.startswith("t"):
@@ -170,6 +174,24 @@ def compact_frame(frame: dict | None) -> dict | None:
         width, height = map(int, frame["size"].split("x"))
     else:
         width, height = frame["width"], frame["height"]
+    lines = frame.get("lines", [])
+    title_lines = [line for line in lines if "y0" in line and "y1" in line]
+    cleanup_regions = []
+    if title_lines:
+        top_band = frame.get("top_band")
+        channel_boxes = frame.get("channel_boxes", []) or ([frame["channel_box"]] if frame.get("channel_box") else [])
+        if top_band:
+            y0 = min(height, top_band["y1"] + 1)
+        elif channel_boxes:
+            y0 = min(height, max(box["y"] + box["height"] for box in channel_boxes) + 10)
+        else:
+            y0 = max(0, min(line["y0"] for line in title_lines) - 22)
+        white_box = frame.get("white_box")
+        y1 = min(height, white_box["y0"] if white_box else (frame.get("video_from") or {}).get("y", max(line["y1"] for line in title_lines) + 16))
+        cleanup_regions.append({
+            "role": "original-title", "x": 0, "y": y0, "width": width,
+            "height": y1 - y0, "background": frame.get("title_bg") or "#111111",
+        })
     return {
         "width": width,
         "height": height,
@@ -177,14 +199,33 @@ def compact_frame(frame: dict | None) -> dict | None:
         "title_bg": frame.get("title_bg"),
         "font_family": frame.get("font_family"),
         "font_weight": frame.get("font_weight"),
-        "lines": frame.get("lines", []),
+        "lines": lines,
         "white_box": frame.get("white_box"),
         "video_from": frame.get("video_from"),
         "fingerprint": frame.get("fingerprint"),
         "channel_box": frame.get("channel_box"),
         "channel_boxes": frame.get("channel_boxes", []),
         "boxes": frame.get("boxes", []),
+        "cleanup_regions": cleanup_regions,
     }
+
+
+def add_footer_cleanup(frame: dict | None, image_path: str, key: str) -> dict | None:
+    if not frame:
+        return frame
+    path = ROOT / "out" / image_path
+    slot = detect_bottom_caption_slot(path)
+    if key in STORY_FOOTER_OVERRIDES:
+        y = STORY_FOOTER_OVERRIDES[key]
+        slot.update({"mode": "reserved", "y": y, "height": frame["height"] - y,
+                     "ratio": round((frame["height"] - y) / frame["height"], 3)})
+    slot = extend_reserved_slot_over_source_text(path, slot)
+    if slot["mode"] == "reserved":
+        frame["cleanup_regions"].append({
+            "role": "source-footer", "x": 0, "y": slot["y"], "width": frame["width"],
+            "height": frame["height"] - slot["y"], "background": slot["background"],
+        })
+    return frame
 
 
 def main() -> None:
@@ -207,8 +248,8 @@ def main() -> None:
             "hook_image": hook_path,
             "body_image": body_path,
             "sample": {"hook1": sample[0], "hook2": sample[1], "bodyTitle": " ".join(sample), "caption": "이런 방법이 있었네요"},
-            "hook": compact_frame(measured.get("hook")),
-            "body": compact_frame(measured.get("body")),
+            "hook": add_footer_cleanup(compact_frame(measured.get("hook")), hook_path, key),
+            "body": add_footer_cleanup(compact_frame(measured.get("body")), body_path, f"{key}-body"),
         })
     rows.sort(key=lambda row: (row["id"] != "s0101", int(row["rank"])))
     text = "window.PRECISION20=" + json.dumps(rows, ensure_ascii=False, separators=(",", ":")) + ";\n"

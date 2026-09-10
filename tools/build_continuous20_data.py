@@ -2,7 +2,7 @@
 import json
 from pathlib import Path
 
-from caption_slot_detection import detect_bottom_caption_slot
+from caption_slot_detection import detect_bottom_caption_slot, extend_reserved_slot_over_source_text
 
 ROOT = Path(__file__).resolve().parents[1]
 COLLECT = ROOT / "out" / "장면꾸미기_작업대" / "스타일수집"
@@ -54,6 +54,16 @@ LINE_STYLE = {
     "s0460": [{"color": "#FFFFFF"}, {"color": "#3CAFE9"}],
 }
 
+# 자동 판정이 영상 자막으로 보았지만, 실제로는 출처/워터마크만 놓인 단색 하단 영역이다.
+# 이 영역은 원문을 지우고 전용 자막칸으로 재사용한다.
+FOOTER_OVERRIDES = {
+    "s0121": {"mode": "reserved", "y": 381, "height": 45, "background": "#000000", "ratio": .106},
+    "s0311": {"mode": "reserved", "y": 343, "height": 83, "background": "#000000", "ratio": .195},
+    "s0291": {"mode": "reserved", "y": 333, "height": 93, "background": "#000000", "ratio": .218},
+    "s0340": {"mode": "reserved", "y": 333, "height": 93, "background": "#000000", "ratio": .218},
+    "s0446": {"mode": "reserved", "y": 334, "height": 92, "background": "#000000", "ratio": .216},
+}
+
 
 def compact(slug, frame, caption_slot):
     width, height = map(int, frame["size"].split("x"))
@@ -90,10 +100,21 @@ def compact(slug, frame, caption_slot):
     fixed_bands = []
     if frame.get("top_band"):
         fixed_bands.append({"y0": frame["top_band"]["y0"], "y1": frame["top_band"]["y1"], "color": frame["top_band"]["color"]})
+    cleanup_regions = [{
+        "role": "original-title", "x": 0, "y": 0, "width": width,
+        "height": (frame.get("video_from") or {}).get("y", 0),
+        "background": frame.get("title_bg") or "#111111",
+    }]
+    if reserved:
+        cleanup_regions.append({
+            "role": "source-footer", "x": 0, "y": caption_slot["y"], "width": width,
+            "height": height - caption_slot["y"], "background": caption_slot["background"],
+        })
     return {
         "width": width, "height": height, "top_band": frame.get("top_band"),
         "title_bg": frame.get("title_bg"), "font_family": "TmonMonsori", "font_weight": 400,
-        "lines": lines, "white_box": None, "video_from": frame.get("video_from"), "fixed_bands": fixed_bands, "caption_slot": caption_slot,
+        "lines": lines, "white_box": None, "video_from": frame.get("video_from"), "fixed_bands": fixed_bands,
+        "caption_slot": caption_slot, "cleanup_regions": cleanup_regions,
         "fingerprint": f"continuous-{frame.get('fingerprint', '')}",
         "channel_box": None, "channel_boxes": [], "boxes": frame.get("boxes", []),
     }
@@ -106,7 +127,9 @@ def main():
     for slug in SLUGS:
         row = by_slug[slug]
         image = f"장면꾸미기_작업대/스타일수집/프레임/{slug}_{row['name']}_훅.png"
-        caption_slot = detect_bottom_caption_slot(ROOT / "out" / image)
+        image_path = ROOT / "out" / image
+        caption_slot = FOOTER_OVERRIDES.get(slug) or detect_bottom_caption_slot(image_path)
+        caption_slot = extend_reserved_slot_over_source_text(image_path, caption_slot)
         frame = compact(slug, row["hook"], caption_slot)
         colors = [line.get("color", "#FFFFFF") for line in frame["lines"]]
         rows.append({

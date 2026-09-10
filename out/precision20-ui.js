@@ -242,7 +242,11 @@
     const p=rows[current],frame=frameFor(p);if(!frame)return;
     const dirty=currentDirty();
     const bg=frame.title_bg||frame.top_band?.color||'#111111';
-    if(mode==='continuous'&&dirty.size){
+    (frame.cleanup_regions||[]).forEach(region=>addPatch(
+      region.y/frame.height*100,region.height/frame.height*100,region.background,
+      (region.x||0)/frame.width*100,(region.width||frame.width)/frame.width*100
+    ));
+    if(dirty.size){
       (frame.boxes||[]).forEach(b=>{const box=addPatch(b.y/frame.height*100,b.height/frame.height*100,b.background,b.x/frame.width*100,b.width/frame.width*100);if(b.border)box.style.border=`${b.border_width||1}px solid ${b.border}`;});
     }
     const channelBoxes=frame.channel_boxes?.length?frame.channel_boxes:(frame.channel_box?[frame.channel_box]:[]);
