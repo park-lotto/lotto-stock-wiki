@@ -6976,7 +6976,9 @@ _위키 정식 ingest는 후속 연결 예정_
 
 # ── §5 유튜브 영상제작 대시보드 (/yt) ──────────────────────────
 YT_PROJECTS_DIR = os.path.join(ROOT, "data", "yt_projects")
+YT_ANALYSIS_CACHE_DIR = os.path.join(ROOT, "data", "yt_analysis_cache")
 _YT_PROJECT_ID_RE = re.compile(r"^[a-zA-Z0-9_-]{6,80}$")
+_YT_VIDEO_ID_RE = re.compile(r"^[A-Za-z0-9_-]{11}$")
 _YT_UPLOAD_EXTS = {
     ".mp4", ".mov", ".mkv", ".webm", ".mp3", ".wav", ".m4a",
     ".png", ".jpg", ".jpeg", ".webp", ".pdf", ".txt", ".md",
@@ -6985,6 +6987,23 @@ _YT_UPLOAD_EXTS = {
 
 def _yt_now():
     return datetime.now().astimezone().isoformat(timespec="seconds")
+
+
+def _yt_topic_default():
+    return {
+        "mode": "topic", "objective": "views", "seed_topic": "",
+        "manual_urls": "", "search_results": [], "selected_video_ids": [],
+        "astra_decision": {}, "locked_at": None,
+    }
+
+
+def _yt_normalize_project(project):
+    default = _yt_topic_default()
+    current = project.get("topic_discovery") or {}
+    default.update(current)
+    project["topic_discovery"] = default
+    project.setdefault("video_analyses", [])
+    return project
 
 
 def _yt_project_path(project_id):
@@ -6998,10 +7017,11 @@ def _yt_load_project(project_id):
     if not os.path.exists(path):
         return None
     with open(path, encoding="utf-8") as f:
-        return json.load(f)
+        return _yt_normalize_project(json.load(f))
 
 
 def _yt_save_project(project):
+    _yt_normalize_project(project)
     path = _yt_project_path(project["id"])
     os.makedirs(os.path.dirname(path), exist_ok=True)
     project["updated_at"] = _yt_now()
@@ -7062,6 +7082,7 @@ async def api_yt_project_create(req: Request):
         "goal": body.get("goal") or "", "audience": body.get("audience") or "",
         "target_minutes": int(body.get("target_minutes") or 10),
         "idea": body.get("idea") or "", "references": [],
+        "topic_discovery": _yt_topic_default(), "video_analyses": [],
         "plan_text": "", "script_text": "", "scenes": [],
         "voice": {"provider": "elevenlabs", "name": "Liam", "speed": 1.0},
         "created_at": now, "updated_at": now,
@@ -7093,13 +7114,136 @@ async def api_yt_project_update(project_id: str, req: Request):
     allowed = {
         "title", "status", "current_step", "format", "goal", "audience",
         "target_minutes", "idea", "references", "plan_text", "script_text",
-        "scenes", "voice",
+        "scenes", "voice", "topic_discovery", "video_analyses",
     }
     for key in allowed:
         if key in body:
             project[key] = body[key]
     _yt_save_project(project)
     return JSONResponse(content=project)
+
+
+def _yt_analysis_cache_path(video_id):
+    if not _YT_VIDEO_ID_RE.fullmatch(str(video_id or "")):
+        raise ValueError("잘못된 YouTube 영상 ID")
+    return os.path.join(YT_ANALYSIS_CACHE_DIR, f"{video_id}.json")
+
+
+def _yt_analysis_cache_load(video_id):
+    path = _yt_analysis_cache_path(video_id)
+    if not os.path.isfile(path):
+        return None
+    try:
+        with open(path, encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, ValueError, json.JSONDecodeError):
+        return None
+
+
+def _yt_analysis_cache_save(card):
+    path = _yt_analysis_cache_path(card["video_id"])
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(card, f, ensure_ascii=False, indent=2)
+    os.replace(tmp, path)
+
+
+@app.post("/yt/projects/{project_id}/topic/analyze")
+async def api_yt_topic_analyze(project_id: str, req: Request):
+    """선택 영상 1~10개를 해체하고 Astra 규칙의 주제 확정 카드를 저장한다."""
+    try:
+        project = _yt_load_project(project_id)
+    except ValueError as e:
+        return JSONResponse(content={"error": str(e)}, status_code=400)
+    if project is None:
+        return JSONResponse(content={"error": "프로젝트를 찾을 수 없습니다"}, status_code=404)
+    if _teardown is None:
+        return JSONResponse(content={"error": "영상 분석 모듈을 불러올 수 없습니다"}, status_code=503)
+
+    body = await req.json()
+    raw_videos = body.get("videos") or []
+    videos, seen = [], set()
+    for raw in raw_videos[:10]:
+        value = raw if isinstance(raw, str) else raw.get("video_id") or raw.get("url") or ""
+        video_id = _teardown.parse_video_id(str(value))
+        if not video_id or video_id in seen:
+            continue
+        seen.add(video_id)
+        item = {"video_id": video_id}
+        if isinstance(raw, dict):
+            item.update({
+                "title": str(raw.get("title") or "")[:300],
+                "channel": str(raw.get("channel") or raw.get("channel_title") or "")[:200],
+                "stats": raw.get("stats") or {
+                    "view_count": raw.get("view_count") or 0,
+                    "view_pct_above_avg": raw.get("view_pct_above_avg"),
+                    "contribution_grade": raw.get("contribution_grade") or "",
+                    "thumbnail": raw.get("thumbnail") or "",
+                },
+            })
+        videos.append(item)
+    if not videos:
+        return JSONResponse(content={"error": "분석할 YouTube 영상이 필요합니다"}, status_code=400)
+
+    context = {
+        "seed_topic": str(body.get("seed_topic") or "")[:300],
+        "audience": str(body.get("audience") or project.get("audience") or "")[:300],
+        "objective": str(body.get("objective") or "views")[:40],
+        "format": project.get("format", "longform"),
+        "target_minutes": project.get("target_minutes", 10),
+    }
+
+    def _stream():
+        cards = []
+        for index, video in enumerate(videos, 1):
+            video_id = video["video_id"]
+            yield f"data: {json.dumps({'type':'video_start','index':index,'total':len(videos),'video_id':video_id}, ensure_ascii=False)}\n\n"
+            try:
+                card = _yt_analysis_cache_load(video_id)
+                cached = card is not None
+                if card is None:
+                    card = _teardown.teardown(
+                        video_id, video.get("title", ""), video.get("channel", ""),
+                        video.get("stats") or {}, context={},
+                    )
+                    _yt_analysis_cache_save(card)
+                stats = video.get("stats") or {}
+                if stats.get("view_count"):
+                    card.setdefault("metrics", {})["view_count"] = int(stats["view_count"])
+                if stats.get("view_pct_above_avg") is not None:
+                    card.setdefault("metrics", {})["view_pct_above_avg"] = stats["view_pct_above_avg"]
+                cards.append(card)
+                yield f"data: {json.dumps({'type':'video_done','index':index,'total':len(videos),'cached':cached,'card':card}, ensure_ascii=False)}\n\n"
+            except Exception as e:
+                yield f"data: {json.dumps({'type':'video_error','index':index,'total':len(videos),'video_id':video_id,'message':str(e)[:200]}, ensure_ascii=False)}\n\n"
+
+        if not cards:
+            yield f"data: {json.dumps({'type':'error','message':'분석에 성공한 영상이 없습니다'}, ensure_ascii=False)}\n\n"
+            return
+        yield f"data: {json.dumps({'type':'synthesizing','count':len(cards)}, ensure_ascii=False)}\n\n"
+        try:
+            decision = _teardown.synthesize(cards, context)
+            project["video_analyses"] = cards
+            topic = project["topic_discovery"]
+            topic.update({
+                "mode": str(body.get("mode") or topic.get("mode") or "topic"),
+                "objective": context["objective"], "seed_topic": context["seed_topic"],
+                "selected_video_ids": [c["video_id"] for c in cards],
+                "astra_decision": decision, "locked_at": None,
+            })
+            project["idea"] = decision.get("topic") or context["seed_topic"]
+            project["references"] = [{
+                "video_id": c["video_id"], "title": c.get("title", ""),
+                "channel_title": c.get("channel", ""),
+                "view_pct_above_avg": (c.get("metrics") or {}).get("view_pct_above_avg") or 0,
+            } for c in cards]
+            _yt_save_project(project)
+            yield f"data: {json.dumps({'type':'done','decision':decision,'project':project}, ensure_ascii=False)}\n\n"
+        except Exception as e:
+            yield f"data: {json.dumps({'type':'error','message':str(e)[:200]}, ensure_ascii=False)}\n\n"
+
+    return StreamingResponse(_stream(), media_type="text/event-stream")
 
 
 @app.post("/yt/projects/{project_id}/assets")
