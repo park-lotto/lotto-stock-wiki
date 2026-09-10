@@ -111,3 +111,20 @@ def test_교체하면_길이보장을_다시_돌린다(frames, monkeypatch):
                             store=_Store(screen_verify_enabled="1", screen_verify_autofix="1"),
                             work=None, image_call=_calls([False, True]))
     assert called, "화면을 바꿨으면 길이 보장을 다시 돌려야 한다"
+
+
+def test_계정별로_켤_수_있다(frames):
+    """사장님 "내꺼만 다 켜서 해보면 안 되나" — 'cid:0'이면 그 계정에만 걸린다."""
+    calls = []
+
+    def img(*a):
+        calls.append(1)
+        return {"ok": True, "why": ""}
+
+    st = _Store(screen_verify_enabled="cid:0")
+    _ep.verify_beat_screens(_beats(), _seg_map(), call=lambda *a: {"ok": True},
+                            store=st, work=None, image_call=img, customer_id=7)
+    assert calls == [], "다른 계정은 건드리지 않는다"
+    _ep.verify_beat_screens(_beats(), _seg_map(), call=lambda *a: {"ok": True},
+                            store=st, work=None, image_call=img, customer_id=0)
+    assert calls, "지정한 계정에서는 검사한다"

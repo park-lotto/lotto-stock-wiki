@@ -122,3 +122,26 @@ def candidates(beat, seg_map, used_ids, limit=10):
 #   훅 문장**이다 — 경계선이라 모델 답이 매번 조금 다르다. 배치의 문제가 아니었다.
 #   지금은 동시 물음을 쓴다(4.7초). 더 줄여야 하면 배치를 되살려도 된다 — 정확도 차이는
 #   확인된 바 없다(표본 3칸으로는 못 가른다).
+
+
+def flag_on(store, key, customer_id=None):
+    """설정 스위치 하나를 읽는다. **계정별로 켤 수 있다**(2026-09-10 사장님 "내꺼만 다 켜서").
+
+    "1"        → 전체에 켠다
+    "cid:0,2"  → 그 고객 번호에만 켠다(사장님 관리자 계정 = 0)
+    그 외/없음 → 꺼짐
+
+    ★왜 계정별인가: 새 판정을 고객 영상에 먼저 걸면, 좋아졌는지 나빠졌는지 아무도
+      모르는 채로 고객이 먼저 맞는다. 사장님 계정에서 실제로 써 보고 판정한 뒤 넓힌다.
+    ★판정은 여기 한 곳에서만 한다 — 검사·자동교체 두 스위치가 같은 규칙을 쓰므로
+      각자 적으면 언젠가 한쪽이 어긋난다."""
+    try:
+        v = str(store.get_setting(key, "") or "").strip()
+    except Exception as e:      # noqa: BLE001 — 설정 조회 실패는 꺼진 것으로 본다
+        print(f"[verify_screens] {key} 조회 실패(끈 것으로 본다): {e!r}", file=sys.stderr)
+        return False
+    if v == "1":
+        return True
+    if v.startswith("cid:") and customer_id is not None:
+        return str(customer_id) in [x.strip() for x in v[4:].split(",") if x.strip()]
+    return False

@@ -201,7 +201,8 @@ def _ensure_screen_time(plan, store, job_id):
             filled = _ep._fill_beat_screen_time(beats, seg_map)
             return _ep.verify_beat_screens(
                 filled, seg_map, store=store,
-                work=DB_PATH.parent / "mix_jobs" / job_id, job_id=job_id)
+                work=DB_PATH.parent / "mix_jobs" / job_id, job_id=job_id,
+                customer_id=job.get("customer_id"))
 
         if any(b.get("narration_manual") for b in beats):
             out = dict(plan)

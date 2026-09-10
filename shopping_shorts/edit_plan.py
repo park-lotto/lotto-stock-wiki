@@ -4362,7 +4362,7 @@ _SCREEN_VERIFY_SCHEMA = {
 
 
 def verify_beat_screens(beats, seg_map, call=None, store=None, *, work=None,
-                        image_call=None, job_id=None):
+                        image_call=None, job_id=None, customer_id=None):
     """★고른 화면이 그 대사에 정말 맞는지 **비트마다 따로** 되묻는다 (2026-09-09).
 
     사장님: "분명히 태깅과 대본에 맞는 게 있는데 엉뚱하고 다른 걸 배치하는 게 문제.
@@ -4391,22 +4391,12 @@ def verify_beat_screens(beats, seg_map, call=None, store=None, *, work=None,
     from shopping_shorts import screen_verify as sv
     if not beats or not seg_map or store is None:
         return beats
-    if store is not None:
-        try:
-            if str(store.get_setting("screen_verify_enabled", "") or "") != "1":
-                return beats
-        except Exception as e:      # noqa: BLE001 — 설정 조회 실패로 제작을 죽이지 않는다
-            print(f"[verify_screens] 설정 조회 실패(끈 것으로 본다): {e!r}", file=sys.stderr)
-            return beats
+    if not sv.flag_on(store, "screen_verify_enabled", customer_id):
+        return beats
     call = call or _vault_call
     image_call = image_call or sv.image_call
     # 자동 교체 스위치 — 검증과 따로 끌 수 있게 둔다(검증만 켜고 교체는 끄기 가능).
-    autofix = False
-    try:
-        autofix = str(store.get_setting("screen_verify_autofix", "") or "") == "1"
-    except Exception as e:      # noqa: BLE001 — 설정 조회 실패면 교체를 안 한다
-        print(f"[verify_screens] autofix 설정 조회 실패(끈 것으로 본다): {e!r}",
-              file=sys.stderr)
+    autofix = sv.flag_on(store, "screen_verify_autofix", customer_id)
     # 이미 쓰이고 있는 장면 — 같은 그림을 두 번 붙이지 않는다.
     #   alternates까지 센다 — _fill_beat_screen_time도 그렇게 본다(0순위-B, 페이블 검토).
     used_ids = {(b.get("primary") or {}).get("seg_id") for b in beats}
