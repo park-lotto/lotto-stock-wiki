@@ -117,10 +117,28 @@ class TestApiWiring:
 
 
 class TestFrontend:
-    def test_기간탭_3개가_있다(self):
+    def test_기간탭_4개가_있다(self):
+        """2026-09-10: 12시간 탭 추가로 span=0이 **둘**이 됐다(12h·48h).
+
+        둘 다 서버 요청이 같다(days=0 → load_last_run) — 다른 건 화면에서 자르는
+        시간(data-hours)뿐이다. 그래서 span 목록엔 0이 두 번 나오는 게 정상이다.
+        """
         html = _INDEX.read_text(encoding="utf-8")
         spans = re.findall(r'data-span="(\d+)"', html)
-        assert spans == ["0", "7", "30"]
+        assert spans == ["0", "0", "7", "30"]
+
+    def test_12시간탭은_data_hours로만_갈린다(self):
+        """창 크기는 SPAN_HOURS 한 곳에서만 정한다(0순위-B: 같은 판단을 두 번 적지 않는다).
+
+        ★컷은 반드시 ageHoursNow()로 한다. raw age_hours는 **수집한 순간의 스냅샷**이라
+          유튜브처럼 하루 1회 수집이면 최대 24시간이 통째로 빠져 12시간 탭에 30시간 전
+          영상이 남는다.
+        """
+        html = _INDEX.read_text(encoding="utf-8")
+        assert 'data-hours="12"' in html and 'data-hours="48"' in html
+        assert 'SPAN_HOURS = parseInt(t.dataset.hours || "48", 10);' in html
+        assert "h <= SPAN_HOURS" in html
+        assert "const h = ageHoursNow(i); return h == null || h <= SPAN_HOURS" in html
 
     def test_기간탭_문턱(self):
         """2026-09-07 하향: 7일 500→200, 30일 1000→300.
