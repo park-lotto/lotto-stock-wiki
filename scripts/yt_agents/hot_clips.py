@@ -2,7 +2,11 @@
 2026-07-03: agent_plan.search_hot_clips()(Google검색+Gemini 추정)는 숫자가 부정확해서
 실제 API 수치로 교체."""
 import html
+import math
 import os
+import re
+import statistics
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import requests
@@ -71,17 +75,24 @@ def _api_get(endpoint: str, params: dict) -> dict:
     raise RuntimeError("YouTube API 키 전부 소진")
 
 
-def search_videos(query: str, max_results: int = 10) -> list[dict]:
-    """유튜브 검색 — 관련도 높은 순, 최근 것 우선."""
+def search_videos(query: str, max_results: int = 25, published_days: int = 90) -> list[dict]:
+    """YouTube 검색 결과를 관련도순으로 수집한다.
+
+    성과 평가는 검색 이후에 따로 한다. ``order=viewCount``를 쓰면 검색어와 무관한
+    역사적 초대형 영상이 섞이므로 여기서는 YouTube의 관련도 순서를 보존한다.
+    """
     params = {
         "part": "snippet",
         "q": query,
         "type": "video",
         "regionCode": "KR",
         "relevanceLanguage": "ko",
-        "order": "viewCount",
+        "order": "relevance",
         "maxResults": max_results,
     }
+    if published_days > 0:
+        published_after = datetime.now(timezone.utc) - timedelta(days=published_days)
+        params["publishedAfter"] = published_after.isoformat(timespec="seconds").replace("+00:00", "Z")
     data = _api_get("search", params)
     out = []
     for item in data.get("items", []):
@@ -91,10 +102,63 @@ def search_videos(query: str, max_results: int = 10) -> list[dict]:
             "title": html.unescape(sn["title"]),
             "channel_id": sn["channelId"],
             "channel_title": html.unescape(sn["channelTitle"]),
+            "description": html.unescape(sn.get("description", "")),
             "published_at": sn["publishedAt"],
             "thumbnail": sn.get("thumbnails", {}).get("default", {}).get("url", ""),
         })
     return out
+
+
+def get_video_durations(video_ids: list[str]) -> dict[str, int]:
+    """영상 길이를 초 단위로 반환한다. 쇼츠/롱폼 필터를 선택했을 때만 호출한다."""
+    if not video_ids:
+        return {}
+    data = _api_get("videos", {"part": "contentDetails", "id": ",".join(video_ids)})
+    return {
+        item["id"]: _parse_iso_duration(item.get("contentDetails", {}).get("duration", ""))
+        for item in data.get("items", [])
+    }
+
+
+def _parse_iso_duration(value: str) -> int:
+    match = re.fullmatch(r"PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?", value or "")
+    if not match:
+        return 0
+    hours, minutes, seconds = (int(x or 0) for x in match.groups())
+    return hours * 3600 + minutes * 60 + seconds
+
+
+def _normalized(value: str) -> str:
+    return "".join(re.findall(r"[0-9a-z가-힣]+", (value or "").lower()))
+
+
+def _bigrams(value: str) -> set[str]:
+    value = _normalized(value)
+    if len(value) < 2:
+        return {value} if value else set()
+    return {value[i:i + 2] for i in range(len(value) - 1)}
+
+
+def _relevance_score(query: str, title: str, description: str = "", channel: str = "") -> int:
+    q = _normalized(query)
+    title_norm = _normalized(title)
+    haystack = _normalized(f"{title} {description} {channel}")
+    if q and q in title_norm:
+        return 100
+    qgrams = _bigrams(q)
+    if not qgrams:
+        return 0
+    title_overlap = len(qgrams & _bigrams(title)) / len(qgrams)
+    all_overlap = len(qgrams & _bigrams(haystack)) / len(qgrams)
+    return round(min(100, title_overlap * 80 + all_overlap * 20))
+
+
+def _age_days(published_at: str) -> float:
+    try:
+        published = datetime.fromisoformat(published_at.replace("Z", "+00:00"))
+        return max(1.0, (datetime.now(timezone.utc) - published).total_seconds() / 86400)
+    except (TypeError, ValueError):
+        return 9999.0
 
 
 def get_video_stats(video_ids: list[str]) -> dict[str, dict]:
@@ -167,12 +231,35 @@ def _grade(pct: float) -> str:
     return "Normal"
 
 
-def find_hot_clips(query: str) -> list[dict]:
-    """검색 → 통계 조회 → 채널 평균 대비 % 계산 → 등급 부여."""
-    videos = search_videos(query)
+def find_hot_clips(
+    query: str,
+    *,
+    published_days: int = 90,
+    video_format: str = "any",
+    sort_by: str = "meaningful",
+    require_relevance: bool = False,
+) -> list[dict]:
+    """검색 결과를 관련성·조회속도·채널 돌파력·참여율·최신성으로 재평가한다."""
+    published_days = published_days if published_days in {7, 30, 90, 365} else 90
+    video_format = video_format if video_format in {"any", "shorts", "longform"} else "any"
+    sort_by = sort_by if sort_by in {"meaningful", "relevance", "velocity", "outlier", "views"} else "meaningful"
+    videos = search_videos(query, max_results=25, published_days=published_days)
+    for video in videos:
+        video["_relevance_score"] = _relevance_score(
+            query, video["title"], video.get("description", ""), video["channel_title"]
+        )
+    if require_relevance:
+        videos = [video for video in videos if video["_relevance_score"] >= 20]
     if not videos:
         return []
     stats = get_video_stats([v["video_id"] for v in videos])
+    durations = get_video_durations([v["video_id"] for v in videos]) if video_format != "any" else {}
+    if video_format == "shorts":
+        videos = [v for v in videos if 0 < durations.get(v["video_id"], 0) <= 180]
+    elif video_format == "longform":
+        videos = [v for v in videos if durations.get(v["video_id"], 0) > 180]
+    if not videos:
+        return []
 
     # 고유 channel_id 추출
     unique_channel_ids = list(set(v["channel_id"] for v in videos))
@@ -203,22 +290,54 @@ def find_hot_clips(query: str) -> list[dict]:
         if filtered:
             avg_view = sum(rv["view_count"] for rv in filtered) / len(filtered)
             avg_like = sum(rv["like_count"] for rv in filtered) / len(filtered)
+            median_view = statistics.median(rv["view_count"] for rv in filtered)
         else:
             avg_view = 0.0
             avg_like = 0.0
+            median_view = 0.0
 
         view_pct = round((st["view_count"] - avg_view) / avg_view * 100, 1) if avg_view else 0.0
         like_pct = round((st["like_count"] - avg_like) / avg_like * 100, 1) if avg_like else 0.0
+
+        age_days = _age_days(v.get("published_at", ""))
+        views_per_day = round(st["view_count"] / age_days)
+        engagement_rate = round(
+            (st["like_count"] + st["comment_count"]) / st["view_count"] * 100, 2
+        ) if st["view_count"] else 0.0
+        outlier_ratio = round(st["view_count"] / median_view, 2) if median_view else 1.0
+        relevance = v.get("_relevance_score", 0)
+        velocity_score = min(100, round(math.log10(max(1, views_per_day)) * 20))
+        outlier_score = min(100, round(max(0, math.log2(max(1, outlier_ratio))) * 25 + 25))
+        engagement_score = min(100, round(engagement_rate * 20))
+        recency_score = max(0, round(100 * (1 - age_days / published_days)))
+        meaningful_score = round(
+            relevance * .45 + velocity_score * .20 + outlier_score * .20
+            + engagement_score * .10 + recency_score * .05
+        )
 
         results.append({
             "video_id": v["video_id"],
             "title": v["title"],
             "channel_title": v["channel_title"],
             "thumbnail": v["thumbnail"],
+            "published_at": v.get("published_at", ""),
+            "age_days": round(age_days, 1),
             "view_count": st["view_count"],
+            "views_per_day": views_per_day,
             "view_pct_above_avg": view_pct,
+            "channel_median_views": round(median_view),
+            "outlier_ratio": outlier_ratio,
+            "engagement_rate": engagement_rate,
+            "relevance_score": relevance,
+            "meaningful_score": meaningful_score,
             "contribution_grade": _grade(view_pct),
             "performance_grade": _grade(like_pct),
             "subscriber_count": ch_stat["subscriber_count"],
         })
+
+    sort_keys = {
+        "meaningful": "meaningful_score", "relevance": "relevance_score",
+        "velocity": "views_per_day", "outlier": "outlier_ratio", "views": "view_count",
+    }
+    results.sort(key=lambda item: item[sort_keys[sort_by]], reverse=True)
     return results
