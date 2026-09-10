@@ -2448,7 +2448,7 @@
                 <div style="background:var(--inset);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px">
                   <div style="font-size:12px;font-weight:700;color:var(--sub);margin-bottom:8px">② 자리</div>
                   <div style="font-size:12px;color:var(--sub)">세로 위치 <b id="capYV">84</b>%
-                    <input id="capY" type="range" min="0" max="100" value="84" oninput="CAP_POS_TOUCHED=true;capTouched()" style="width:100%"></div>
+                    <input id="capY" type="range" min="0" max="100" value="84" oninput="capPositionTouched()" onchange="saveCapAllPosition()" style="width:100%"></div>
                   <!-- ★가로 정렬 버튼(2026-08-25 고객 요청 "자막이 한쪽으로 치우쳐져 있어서
                        정렬하는 부분이 추가되면 좋겠어요"). 자막은 드래그로 가로 이동이 되는데
                        (CAP_X_PCT) **되돌리는 길이 없었다** — 한 번 끌면 중앙으로 못 돌아온다.
@@ -5869,6 +5869,10 @@ let CAP_X_PCT=50;
 // ✋ 자막 드래그 적용 범위(2026-08-31): 'all'=전체 설정(종전 동작) / 'one'=이 장면만(cap_xy).
 //   ★기본은 'all' — 여태 동작이 그것이라 아무것도 안 고른 사장님에겐 달라지는 게 없다.
 let CAP_DRAG_SCOPE='all';
+// 전체 자막 위치를 만진 뒤 아직 장면별 덮어쓰기까지 정리하지 못했는지.
+// 세로 슬라이더·정렬 버튼도 '전체 위치' 조작인데 종전엔 cap_xy가 남아 일부 장면만 안 움직였다.
+let CAP_ALL_POS_DIRTY=false;
+let _CAP_ALL_POS_SAVE=null;
 function setCapDragScope(v){
   CAP_DRAG_SCOPE = (v==='one') ? 'one' : 'all';
   document.querySelectorAll('#capScopeBtns [data-capscope]').forEach(el=>{
@@ -6419,6 +6423,11 @@ let _CAP_SAVE_T = null;
 //   자리(CAP_POS_TOUCHED)만 지키고 색·외곽선·박스는 안 지켜서 매번 두 번 일했다.
 let CAP_STYLE_TOUCHED=false;
 function capTouched(){ CAP_STYLE_TOUCHED=true; updateCaption(); _capSaveSoon(); }
+function capPositionTouched(){
+  CAP_POS_TOUCHED=true;
+  CAP_ALL_POS_DIRTY=true;
+  capTouched();
+}
 function _capSaveSoon(){
   if(typeof saveHeadcopy !== 'function') return;   // 하네스엔 없다(슬라이스 테스트 보호)
   clearTimeout(_CAP_SAVE_T);                       // 슬라이더 드래그는 매 픽셀 뜬다 → 디바운스
@@ -7584,7 +7593,8 @@ function alignCap(where){
   if(where==='center') CAP_X_PCT=50;
   else if(where==='left') CAP_X_PCT=22;
   else if(where==='right') CAP_X_PCT=78;
-  updateCaption();
+  capPositionTouched();
+  saveCapAllPosition();
 }
 // ══════════════════════════════════════════════════════════════════════════
 // 🔍 장면 확대 (2026-08-30 사장님 "장면 확대기능 / 부분확대 / 어떤지점을 클릭해서 /
@@ -8137,7 +8147,7 @@ function bindCapDrag(){
       const b=(typeof _curBeat==='function') ? _curBeat() : null;
       if(b){ b.cap_xy={x_pct:x, y_pct:y}; b.pos='free'; b.pos_y_pct=null; }
     }else{
-      CAP_X_PCT=x; document.getElementById('capY').value=y; CAP_POS_TOUCHED=true;
+      CAP_X_PCT=x; document.getElementById('capY').value=y; capPositionTouched();
     }
     updateCaption(); };
   const end=()=>{ if(!drag) return; drag=false; if(!moved) return; moved=false; saveCapDrag(); };
@@ -8168,17 +8178,35 @@ async function saveCapDrag(){
       if(typeof renderBeatTools==='function') renderBeatTools();
       say('이 장면('+(BEAT_IDX+1)+'번) 자막만 옮겼어요','var(--ok)');
     }else{
-      if(typeof saveHeadcopy==='function') await saveHeadcopy();     // 전체 자막 설정 저장
-      const r=await fetch('/api/produce/mix/'+encodeURIComponent(MIX_JOB)+'/cappos',
-        {method:'POST',headers:{'Content-Type':'application/json'},
-         body:JSON.stringify({apply_all:true})});
-      const d=await r.json();
-      if(!r.ok || !d.ok){ say(d.error||'저장 실패','var(--fire)'); return; }
-      (BEATS_PREVIEW||[]).forEach(b=>{ b.cap_xy=null; b.pos='bottom'; b.pos_y_pct=null; });
-      if(typeof renderBeatTools==='function') renderBeatTools();
+      CAP_ALL_POS_DIRTY=true;
+      const d=await saveCapAllPosition();
+      if(!d || !d.ok){ say((d&&d.error)||'저장 실패','var(--fire)'); return; }
       say('모든 장면 자막을 이 자리로 옮겼어요'+(d.cleared?' (장면별로 따로 두셨던 '+d.cleared+'개도 맞췄어요)':''),'var(--ok)');
     }
   }catch(e){ say(ErrorHelp.text('network'),'var(--fire)'); }
+}
+// 세로 슬라이더·가로 정렬·'모든 장면' 드래그가 공유하는 저장 입구.
+// 전체 좌표를 먼저 저장한 뒤 cap_xy/cap_pos를 지워야 최종 렌더도 모든 장면이 같은 자리를 쓴다.
+async function saveCapAllPosition(){
+  if(!CAP_ALL_POS_DIRTY) return {ok:true, cleared:0};
+  if(_CAP_ALL_POS_SAVE) return _CAP_ALL_POS_SAVE;
+  _CAP_ALL_POS_SAVE=(async()=>{
+    clearTimeout(_CAP_SAVE_T);
+    if(typeof saveHeadcopy==='function' && !(await saveHeadcopy()))
+      return {ok:false, error:'자막 위치 저장 실패 — 렌더하지 않았어요'};
+    try{
+      const r=await fetch('/api/produce/mix/'+encodeURIComponent(MIX_JOB)+'/cappos',
+        {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({apply_all:true})});
+      const d=await r.json().catch(()=>({ok:false}));
+      if(!r.ok || !d.ok) return {ok:false, error:d.error||'장면별 자막 위치 정리 실패'};
+      (BEATS_PREVIEW||[]).forEach(b=>{ b.cap_xy=null; b.pos='bottom'; b.pos_y_pct=null; });
+      CAP_ALL_POS_DIRTY=false;
+      if(typeof renderBeatTools==='function') renderBeatTools();
+      return d;
+    }catch(e){ return {ok:false, error:'자막 위치 저장 중 연결이 끊겼어요'}; }
+  })();
+  try{ return await _CAP_ALL_POS_SAVE; }
+  finally{ _CAP_ALL_POS_SAVE=null; }
 }
 // 지워진 자막영역(primary=넓고 자주 쓰인 1번 자리)이 있으면 '다시 그 자리로' 버튼만 연다.
 // ★2026-07-27 사장님 요청으로 점선 박스 표시(capRegionMarker)는 제거했다 — 미리보기를
@@ -8201,7 +8229,7 @@ function resetCapToRegion(){
   const p=(CLEAN_REGIONS||{}).primary; if(!p) return;
   CAP_X_PCT=Math.round(p.x_pct);
   document.getElementById('capY').value=Math.round(p.y_pct);
-  CAP_POS_TOUCHED=false; updateCaption();
+  CAP_POS_TOUCHED=false; CAP_ALL_POS_DIRTY=true; capTouched(); saveCapAllPosition();
 }
 // clean_regions를 아직 못 받았으면 상태 API에서 1회 당겨온다(자막제거 폴러를 안 거치고 5단계로 온 경우).
 async function ensureCleanRegions(){
@@ -8211,9 +8239,12 @@ async function ensureCleanRegions(){
   applyErasedRegion();
 }
 async function saveHeadcopy(){
-  if(!MIX_JOB) return;
-  try{ await fetch('/api/produce/mix/settings',{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({job_id:MIX_JOB, headcopy:STATE.headcopy, caption_style:STATE.captionStyle, deco:STATE.deco})}); }catch(e){}
+  if(!MIX_JOB) return false;
+  try{
+    const r=await fetch('/api/produce/mix/settings',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({job_id:MIX_JOB, headcopy:STATE.headcopy, caption_style:STATE.captionStyle, deco:STATE.deco})});
+    return r.ok;
+  }catch(e){ return false; }
 }
 function jump(o){
   // o = 오브(표시) 인덱스. ORB_TO_PANEL로 실제 패널 인덱스(cur)를 구한다 — 매칭(신규 패널7)이
@@ -15074,7 +15105,17 @@ async function renderFinal(){
     <div style="font-size:11px;opacity:.45">끝나면 여기서 바로 재생돼요</div>
   </div>`;
   _rfStart=Date.now(); clearInterval(_rfTimer); _rfTimer=setInterval(_rfTick,1000); _rfTick();
-  await saveHeadcopy();   // 헤드카피 설정을 job에 반영 후 렌더
+  const _settingsSaved=await saveHeadcopy();   // 헤드카피 설정을 job에 반영 후 렌더
+  if(!_settingsSaved){
+    clearInterval(_rfTimer); _finalRenderRestore('❌ 꾸미기 저장 실패 — 이전 설정으로 렌더하지 않았어요');
+    return;
+  }
+  // 전체 자막 위치를 만졌다면 장면별 옛 좌표도 렌더 전에 반드시 정리한다.
+  const _capPosSaved=await saveCapAllPosition();
+  if(!_capPosSaved || !_capPosSaved.ok){
+    clearInterval(_rfTimer); _finalRenderRestore('❌ '+((_capPosSaved&&_capPosSaved.error)||'자막 위치 저장 실패'));
+    return;
+  }
   // ★3단계 편집(컷 길이·편성)도 밀린 게 있으면 먼저 얹는다(2026-09-02).
   //   미리보기 경로(_askRender)에서 실제로 난 사고와 **같은 뿌리**다: 편집 저장은
   //   1.2초 디바운스라 렌더가 먼저 출발하면 옛 편성으로 만들어진다(실측 0ms 렌더 / 901ms 저장).

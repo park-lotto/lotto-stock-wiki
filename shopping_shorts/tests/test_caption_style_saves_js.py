@@ -35,7 +35,7 @@ def test_every_caption_control_goes_through_touched():
         m = re.search(r'id="%s"[^>]*?(?:oninput|onchange)="([^"]*)"' % cid, src)
         assert m, f"{cid} 컨트롤을 못 찾음(마크업이 바뀌었나)"
         handler = m.group(1)
-        if "capTouched()" not in handler:
+        if "capTouched()" not in handler and "capPositionTouched()" not in handler:
             missed.append((cid, handler))
     assert not missed, (
         "이 컨트롤들은 저장 경로를 안 탄다 — 화면만 바뀌고 렌더엔 안 반영된다: %r" % missed)
