@@ -13,6 +13,7 @@
 .precision-base,.precision-edit-layer{
   position:absolute;inset:0;width:100%;height:100%;display:block;
 }
+.precision-base[hidden],.precision-edit-layer[hidden]{display:none!important}
 .precision-base{z-index:1;object-fit:cover;object-position:top}
 .precision-edit-layer{z-index:6;pointer-events:none;overflow:hidden}
 .dynamic-phone.is-pristine .precision-edit-layer{display:none}
@@ -21,3 +22,6 @@
 .precision-text.center{justify-content:center;text-align:center}.precision-text.left{justify-content:flex-start;text-align:left}
 .precision-channel{font-family:"Pretendard",sans-serif;letter-spacing:.04em}
 .precision-badge{position:absolute;right:7px;bottom:7px;z-index:8;padding:4px 7px;border-radius:999px;background:#07131ddd;border:1px solid #42e2b477;color:#8cf5d4;font-size:8px;font-weight:900}
+.font-stepper{display:inline-flex;align-items:center;gap:4px;margin-left:auto;margin-right:8px;color:#8fa3ad!important}
+.font-stepper button{width:23px;height:20px;padding:0;border:1px solid #34505d;border-radius:6px;background:#0d202b;color:#d9e5ea;font-size:14px;font-weight:900;line-height:18px;cursor:pointer}
+.font-stepper button:hover{border-color:#43e2b4;color:#43e2b4}.font-stepper output{min-width:31px;color:#7f939d;font-size:9px;text-align:center}
