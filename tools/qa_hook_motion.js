@@ -19,6 +19,13 @@ const path = require('path');
       effects.push({name: button.dataset.hookMotion, animations: document.querySelector('#a-live-preview').getAnimations({subtree: true}).length});
       await sleep(760);
     }
+    const speeds = [];
+    for (const button of document.querySelectorAll('[data-hook-speed]')) {
+      button.click();
+      const animation = document.querySelector('#a-live-preview').getAnimations({subtree: true})[0];
+      speeds.push({name: button.textContent, duration: animation?.effect?.getTiming().duration || 0});
+      await sleep(1100);
+    }
     const input = document.querySelector('[data-bind="hook1"]');
     input.value += '가';
     input.dispatchEvent(new Event('input', {bubbles: true}));
@@ -30,11 +37,12 @@ const path = require('path');
     const visibleOnHook = !panel.hidden;
     document.querySelector('[data-template-mode="continuous"]').click();
     const hiddenOnContinuous = panel.hidden;
-    return {buttonCount: buttons.length, effects, inputTriggeredAnimations, hiddenOnBody, visibleOnHook, hiddenOnContinuous};
+    return {buttonCount: buttons.length, speedCount: speeds.length, effects, speeds, inputTriggeredAnimations, hiddenOnBody, visibleOnHook, hiddenOnContinuous};
   });
   result.errors = errors;
   console.log(JSON.stringify(result, null, 2));
-  const failed = result.buttonCount !== 4 || result.effects.some(effect => effect.animations === 0) || result.inputTriggeredAnimations !== 0 || !result.hiddenOnBody || !result.visibleOnHook || !result.hiddenOnContinuous || errors.length;
+  const durations = result.speeds.map(speed => speed.duration);
+  const failed = result.buttonCount !== 4 || result.speedCount !== 3 || result.effects.some(effect => effect.animations === 0) || !(durations[0] > durations[1] && durations[1] > durations[2]) || result.inputTriggeredAnimations !== 0 || !result.hiddenOnBody || !result.visibleOnHook || !result.hiddenOnContinuous || errors.length;
   await browser.close();
   process.exit(failed ? 1 : 0);
 })().catch(error => { console.error(error); process.exit(1); });

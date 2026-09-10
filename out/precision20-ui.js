@@ -25,7 +25,7 @@
   const badge=document.createElement('div');badge.className='precision-badge';badge.textContent='원본 실측 편집';layer.appendChild(badge);
   preview.append(base,layer);
 
-  let current=0,kind='hook',sceneIndex=0,hookMotion='zoom-punch';
+  let current=0,kind='hook',sceneIndex=0,hookMotion='zoom-punch',hookMotionSpeed=.72;
   const fontScales=new Map();
   const fittedText=new Map();
   const textOffsets=new Map();
@@ -84,7 +84,7 @@
   if(colorRow)colorRow.innerHTML='<label class="swatch"> <input type="color" data-color-role="white" value="#ffffff"><span>흰색</span></label><label class="swatch"><input type="color" data-color-role="accent" value="#ffe600"><span>강조</span></label><label class="swatch"><input type="color" data-color-role="background" value="#211f19"><span>배경</span></label>';
   const motionPanel=document.createElement('section');
   motionPanel.className='hook-motion';
-  motionPanel.innerHTML='<div class="hook-motion-head"><b>훅 시선집중 모션</b><small>첫 장면에만 적용</small></div><div class="hook-motion-grid"><button type="button" class="active" data-hook-motion="zoom-punch">줌 펀치</button><button type="button" data-hook-motion="pop">팝업</button><button type="button" data-hook-motion="slide">슬라이드</button><button type="button" data-hook-motion="flash">플래시</button></div><button type="button" class="hook-motion-replay" data-hook-motion-replay>▶ 선택 효과 다시 보기</button>';
+  motionPanel.innerHTML='<div class="hook-motion-head"><b>훅 시선집중 모션</b><small>첫 장면에만 적용</small></div><div class="hook-motion-grid"><button type="button" class="active" data-hook-motion="zoom-punch">줌 펀치</button><button type="button" data-hook-motion="pop">팝업</button><button type="button" data-hook-motion="slide">슬라이드</button><button type="button" data-hook-motion="flash">플래시</button></div><div class="hook-speed"><span>속도</span><button type="button" data-hook-speed="1.35">느림</button><button type="button" data-hook-speed="1">보통</button><button type="button" class="active" data-hook-speed="0.72">빠름</button></div><button type="button" class="hook-motion-replay" data-hook-motion-replay>▶ 선택 효과 다시 보기</button>';
   root.querySelector('.layout-a .ai-card')?.after(motionPanel);
   function syncHookMotionUI(){motionPanel.hidden=mode!=='story'||sceneIndex!==0}
   function runHookMotion(){
@@ -92,17 +92,29 @@
     [preview,...preview.querySelectorAll('*')].forEach(el=>el.getAnimations?.().forEach(animation=>animation.cancel()));
     const texts=[...layer.querySelectorAll('.precision-text')];
     const timing={duration:620,easing:'cubic-bezier(.18,.88,.25,1)',fill:'both'};
+    const time=value=>Math.round(value*hookMotionSpeed);
+    const play=(element,keyframes,options)=>{const animation=element.animate(keyframes,options);animation.finished.then(()=>animation.cancel()).catch(()=>{});return animation};
     if(hookMotion==='zoom-punch'){
-      preview.animate([{transform:'scale(.94)'},{transform:'scale(1.025)',offset:.7},{transform:'scale(1)'}],{...timing,duration:720});
-      texts.forEach((el,index)=>el.animate([{opacity:0,transform:'scale(.55) translateY(10px)'},{opacity:1,transform:'scale(1.09) translateY(0)',offset:.72},{opacity:1,transform:'scale(1) translateY(0)'}],{...timing,delay:80+index*75}));
+      play(preview,[
+        {transform:'scale(1)',filter:'contrast(1)'},
+        {transform:'scale(1.105)',filter:'contrast(1.12)',offset:.32},
+        {transform:'scale(1.075) translateX(-3px)',filter:'contrast(1.08)',offset:.48},
+        {transform:'scale(1.045) translateX(2px)',filter:'contrast(1.04)',offset:.62},
+        {transform:'scale(1)',filter:'contrast(1)'}
+      ],{...timing,duration:time(760),easing:'cubic-bezier(.15,.72,.2,1)'});
+      texts.forEach((el,index)=>play(el,[
+        {opacity:0,transform:'translateY(-18px)'},
+        {opacity:1,transform:'translateY(2px)',offset:.68},
+        {opacity:1,transform:'translateY(0)'}
+      ],{...timing,duration:time(500),delay:time(70+index*70)}));
     }else if(hookMotion==='pop'){
-      texts.forEach((el,index)=>el.animate([{opacity:0,transform:'scale(.25)'},{opacity:1,transform:'scale(1.14)',offset:.68},{opacity:1,transform:'scale(1)'}],{...timing,duration:520,delay:index*90}));
+      texts.forEach((el,index)=>play(el,[{opacity:0,transform:'scale(.25)'},{opacity:1,transform:'scale(1.14)',offset:.68},{opacity:1,transform:'scale(1)'}],{...timing,duration:time(520),delay:time(index*90)}));
     }else if(hookMotion==='slide'){
-      preview.animate([{transform:'translateX(10px) scale(1.025)'},{transform:'translateX(0) scale(1)'}],timing);
-      texts.forEach((el,index)=>el.animate([{opacity:0,transform:`translateX(${index%2?-46:46}px)`},{opacity:1,transform:'translateX(0)'}],{...timing,delay:index*85}));
+      play(preview,[{transform:'translateX(10px) scale(1.025)'},{transform:'translateX(0) scale(1)'}],{...timing,duration:time(620)});
+      texts.forEach((el,index)=>play(el,[{opacity:0,transform:`translateX(${index%2?-46:46}px)`},{opacity:1,transform:'translateX(0)'}],{...timing,duration:time(620),delay:time(index*85)}));
     }else{
-      preview.animate([{filter:'brightness(1)'},{filter:'brightness(1.85)',offset:.12},{filter:'brightness(.82)',offset:.25},{filter:'brightness(1)'}],{duration:480,easing:'ease-out'});
-      texts.forEach((el,index)=>el.animate([{opacity:0,transform:'scale(1.32)'},{opacity:1,transform:'scale(.96)',offset:.7},{opacity:1,transform:'scale(1)'}],{...timing,duration:480,delay:70+index*55}));
+      play(preview,[{filter:'brightness(1)'},{filter:'brightness(1.85)',offset:.12},{filter:'brightness(.82)',offset:.25},{filter:'brightness(1)'}],{duration:time(480),easing:'ease-out'});
+      texts.forEach((el,index)=>play(el,[{opacity:0,transform:'scale(1.32)'},{opacity:1,transform:'scale(.96)',offset:.7},{opacity:1,transform:'scale(1)'}],{...timing,duration:time(480),delay:time(70+index*55)}));
     }
   }
   function sceneTotal(){return 12}
@@ -340,11 +352,13 @@
   motionPanel.addEventListener('click',event=>{
     const choice=event.target.closest('[data-hook-motion]');
     if(choice){hookMotion=choice.dataset.hookMotion;motionPanel.querySelectorAll('[data-hook-motion]').forEach(button=>button.classList.toggle('active',button===choice));runHookMotion();return}
+    const speed=event.target.closest('[data-hook-speed]');
+    if(speed){hookMotionSpeed=Number(speed.dataset.hookSpeed);motionPanel.querySelectorAll('[data-hook-speed]').forEach(button=>button.classList.toggle('active',button===speed));runHookMotion();return}
     if(event.target.closest('[data-hook-motion-replay]'))runHookMotion();
   });
   const saveButton=root.querySelector('.layout-a .secondary');
   saveButton?.addEventListener('click',()=>{
-    const p=rows[current],snapshot={mode,presetId:p.id,frameKind:frameKind(),hookMotion,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),colors:Object.fromEntries(colorOverrides)};
+    const p=rows[current],snapshot={mode,presetId:p.id,frameKind:frameKind(),hookMotion,hookMotionSpeed,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),colors:Object.fromEntries(colorOverrides)};
     localStorage.setItem('scene_style_preset',JSON.stringify(snapshot));saveButton.textContent='✓ 현재 설정 저장됨';setTimeout(()=>saveButton.textContent='현재 설정 저장',1400);
   });
   root.querySelector('.layout-a .edit-pane').addEventListener('click',event=>{
