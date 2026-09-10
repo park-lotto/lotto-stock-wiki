@@ -593,5 +593,12 @@
     "track": "영상분석조사",
     "summary": "유튜브 영상(SURVIVAL AI, 12:53) watch 스킬로 전사 확보 후 video_analysis_create 정리. Higgsfield MCP 연결 시 쓰는 무료 샷단위 영상분석 도구 - 분석결과를 Seedance 영상생성 프롬프트로 변환하는 흐름 7단계 + 설치법 정리.",
     "next": "필요시 특정 구간 프레임 재추출해 실제 UI 화면 확인 / Higgsfield MCP 실제 연결 테스트"
+  },
+  {
+    "date": "2026-09-10",
+    "category": "스탁브레인",
+    "track": "장면그림",
+    "summary": "아스트라(코덱스) 구현분 서버 실측 완료. 라이브 job 4건·비트 17개에서 텍스트 판정 vs 그림 판정 2건 갈림, 둘 다 그림이 맞았다(프레임 육안 확인). 이미지 판정이 comment_gen 키풀을 쓴다는 함정 발견.",
+    "next": "표본 확대 후 screen_verify_enabled 켤지 판단 → finish"
   }
 ]
