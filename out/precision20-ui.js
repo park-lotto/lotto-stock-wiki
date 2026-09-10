@@ -18,11 +18,17 @@
 
   let current=0,kind='hook';
   const fontScales=new Map();
+  const dirtyFields=new Map();
   const inputs=Object.fromEntries([...root.querySelectorAll('.layout-a [data-bind]')].map(x=>[x.dataset.bind,x]));
   const value=k=>inputs[k]?.value||' ';
   const rgba=hex=>hex&&/^#[0-9a-f]{6}$/i.test(hex)?hex:'#111111';
   const scaleKey=bind=>`${rows[current].id}:${kind}:${bind}`;
   const textScale=bind=>fontScales.get(scaleKey(bind))||1;
+  const dirtyKey=()=>`${rows[current].id}:${kind}`;
+  const currentDirty=()=>dirtyFields.get(dirtyKey())||new Set();
+  const markDirty=bind=>{
+    const key=dirtyKey(),set=dirtyFields.get(key)||new Set();set.add(bind);dirtyFields.set(key,set);
+  };
 
   root.querySelectorAll('.layout-a [data-field-key]').forEach(field=>{
     const count=field.querySelector('[data-count]');
@@ -40,7 +46,7 @@
 
   function fieldSet(frameKind,p){
     const frame=p[frameKind];
-    const hasChannel=!!(frame?.channel_box||frame?.top_band);
+    const hasChannel=!!(frame?.channel_box||frame?.channel_boxes?.length||frame?.top_band);
     const lineCount=frame?.lines?.length||0;
     const keys=p.id==='s0101'
       ? (frameKind==='hook'?['channel','hook1','hook2']:['channel','bodyTitle','caption'])
@@ -50,8 +56,9 @@
     root.querySelectorAll('.layout-a [data-field-key]').forEach(f=>f.hidden=!keys.includes(f.dataset.fieldKey));
     root.querySelectorAll('.layout-a [data-hook-label][data-body-label]').forEach(label=>label.textContent=label.dataset[frameKind+'Label']);
   }
-  function addPatch(y,h,color,x=0,w=100){
+  function addPatch(y,h,color,x=0,w=100,bind=''){
     const el=document.createElement('div');el.className='precision-patch';
+    if(bind)el.dataset.editBind=bind;
     Object.assign(el.style,{left:x+'%',top:y+'%',width:w+'%',height:h+'%',background:rgba(color)});layer.insertBefore(el,badge);return el;
   }
   function fitText(el,startSize,minRatio=.58,checkHeight=false){
@@ -75,7 +82,7 @@
   function addText(text,ln,frame,color,role='center',bind='bodyTitle'){
     const scale=preview.clientHeight/frame.height;
     const pad=Math.max(2,Math.round(4*scale));
-    const el=document.createElement('div');el.className='precision-text '+role;
+    const el=document.createElement('div');el.className='precision-text '+role;el.dataset.editBind=bind;
     const left=Math.max(0,ln.x0/frame.width*100-1.6),right=Math.max(0,(frame.width-1-ln.x1)/frame.width*100-1.6);
     const fontPx=ln.font_size?ln.font_size*scale:ln.h*scale*1.05;
     const stroke=Number(ln.stroke||0)*scale,shadowY=Number(ln.shadow_y||0)*scale;
@@ -89,59 +96,54 @@
     layer.insertBefore(el,badge);fitText(el,scaledFont,.2,ln.max_lines>1);
   }
   function renderEdit(){
-    if(rows[current].id==='s0101')return;
     [...layer.children].filter(x=>x!==badge).forEach(x=>x.remove());
     const p=rows[current],frame=p[kind];if(!frame)return;
+    const dirty=currentDirty();
     const bg=frame.title_bg||frame.top_band?.color||'#111111';
-    (frame.boxes||[]).forEach(b=>{
-      const box=addPatch(b.y/frame.height*100,b.height/frame.height*100,b.background,b.x/frame.width*100,b.width/frame.width*100);
-      if(b.border)box.style.border=`${(b.border_width||1)*preview.clientHeight/frame.height}px solid ${b.border}`;
-      if(b.shadow)box.style.boxShadow=b.shadow;
-    });
-    if(frame.channel_box){
-      const c=frame.channel_box;
-      const box=addPatch(c.y/frame.height*100,c.height/frame.height*100,c.background,c.x/frame.width*100,c.width/frame.width*100);
+    const channelBoxes=frame.channel_boxes?.length?frame.channel_boxes:(frame.channel_box?[frame.channel_box]:[]);
+    if(dirty.has('channel')&&channelBoxes.length){
+      channelBoxes.forEach(c=>{
+      const box=addPatch(c.y/frame.height*100,c.height/frame.height*100,c.background,c.x/frame.width*100,c.width/frame.width*100,'channel');
       box.style.borderRadius=(c.radius*preview.clientHeight/frame.height)+'px';if(c.border)box.style.border=`${Math.max(1,preview.clientHeight/frame.height)}px solid ${c.border}`;
       const channelLine={x0:c.x,x1:c.x+c.width,y0:c.y,y1:c.y+c.height,h:c.height,font_size:c.font_size,stroke:0,shadow_y:0};
       addText(value('channel'),channelLine,frame,c.color,'center precision-channel','channel');
-    }else if(frame.top_band){
+      });
+    }else if(dirty.has('channel')&&frame.top_band){
       const t=frame.top_band, y=t.y0/frame.height*100, h=(t.y1-t.y0+1)/frame.height*100;
-      addPatch(y,h,t.color,20,60);
+      addPatch(y,h,t.color,20,60,'channel');
       const channelLine={x0:Math.round(frame.width*.2),x1:Math.round(frame.width*.8),y0:t.y0,y1:t.y1,h:t.y1-t.y0+1};
       addText(value('channel'),channelLine,frame,'#FFFFFF','center precision-channel','channel');
     }
     const lines=frame.lines||[];
     lines.forEach((ln,i)=>{
-      const pt=ln.patch_top??2,pb=ln.patch_bottom??2;
-      if(!ln.skip_patch)addPatch(Math.max(0,(ln.y0-pt)/frame.height*100),(ln.h+pt+pb)/frame.height*100,ln.background||bg);
       const key=kind==='hook'?(i===0?'hook1':i===1?'hook2':'bodyTitle'):(i===0?'bodyTitle':'caption');
+      if(!dirty.has(key))return;
+      const pt=ln.patch_top??2,pb=ln.patch_bottom??2;
+      if(!ln.skip_patch)addPatch(Math.max(0,(ln.y0-pt)/frame.height*100),(ln.h+pt+pb)/frame.height*100,ln.background||bg,0,100,key);
+      else addPatch(Math.max(0,(ln.y0-pt)/frame.height*100),(ln.h+pt+pb)/frame.height*100,ln.background||frame.boxes?.[0]?.background||bg,Math.max(0,ln.x0/frame.width*100-2),(ln.x1-ln.x0)/frame.width*100+4,key);
       const align=(ln.lpct??50)<4&&(ln.rpct??50)>10?'left':'center';
       addText(value(key),ln,frame,ln.color,align,key);
     });
     const wb=frame.white_box;
-    if(wb){
-      addPatch(wb.y0/frame.height*100,(wb.y1-wb.y0+1)/frame.height*100,'#FFFFFF');
-      if(wb.text){const key=kind==='hook'?'bodyTitle':'caption';addText(value(key),wb.text,frame,'#111111','center',key);}
+    if(wb?.text){
+      const key=kind==='hook'?'bodyTitle':'caption';
+      if(dirty.has(key)){addPatch(wb.y0/frame.height*100,(wb.y1-wb.y0+1)/frame.height*100,'#FFFFFF',0,100,key);addText(value(key),wb.text,frame,'#111111','center',key);}
     }
   }
   function showFrame(next){
     kind=next;
     const p=rows[current],source=kind==='hook'?p.hook_image:p.body_image;
-    if(p.id==='s0101'){
-      preview.style.setProperty('--template-media',`url("${source}")`);
-      fitShortemText();
-    }
-    else base.src=source;
+    base.src=source;
     preview.classList.toggle('is-body',kind==='body');
     root.querySelectorAll('.layout-a [data-frame]').forEach(x=>x.classList.toggle('active',x.dataset.frame===kind));
     fieldSet(kind,p);updateSteppers();renderEdit();
   }
   function selectPreset(index){
     current=index;const p=rows[index];
-    const isShortem=p.id==='s0101';
-    preview.classList.toggle('template-shortem',isShortem);
-    preview.classList.toggle('template-precision',!isShortem);
-    base.hidden=isShortem;layer.hidden=isShortem;
+    preview.classList.remove('template-shortem');
+    preview.classList.add('template-precision');
+    base.hidden=false;layer.hidden=false;
+    dirtyFields.delete(`${p.id}:hook`);dirtyFields.delete(`${p.id}:body`);
     grid.querySelectorAll('[data-p20]').forEach((x,i)=>x.classList.toggle('selected',i===index));
     inputs.channel.value=p.name;inputs.hook1.value=p.sample.hook1;inputs.hook2.value=p.sample.hook2;inputs.bodyTitle.value=p.sample.bodyTitle;inputs.caption.value=p.sample.caption;
     root.querySelectorAll('[data-preview-channel]').forEach(x=>x.textContent=p.name);
@@ -160,15 +162,13 @@
   root.querySelectorAll('.layout-a [data-frame]').forEach(button=>button.addEventListener('click',()=>showFrame(button.dataset.frame)));
   root.querySelectorAll('.layout-a .scene-strip button').forEach((button,index)=>button.addEventListener('click',()=>showFrame(index===0?'hook':'body')));
   Object.values(inputs).forEach(input=>input.addEventListener('input',()=>{
-    preview.classList.remove('is-pristine');
-    if(rows[current].id==='s0101')fitShortemText();else renderEdit();
+    markDirty(input.dataset.bind);preview.classList.remove('is-pristine');renderEdit();
   }));
   root.querySelector('.layout-a .edit-pane').addEventListener('click',event=>{
     const button=event.target.closest('[data-font-step]');if(!button)return;
     const bind=button.closest('[data-field-key]').dataset.fieldKey;
     const next=Math.min(1.6,Math.max(.55,textScale(bind)+Number(button.dataset.fontStep)));
-    fontScales.set(scaleKey(bind),next);preview.classList.remove('is-pristine');updateSteppers();
-    if(rows[current].id==='s0101')fitShortemText();else renderEdit();
+    fontScales.set(scaleKey(bind),next);markDirty(bind);preview.classList.remove('is-pristine');updateSteppers();renderEdit();
   });
   addEventListener('resize',()=>{if(!preview.classList.contains('is-pristine'))renderEdit()});
   selectPreset(0);

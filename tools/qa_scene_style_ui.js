@@ -63,6 +63,7 @@ async function settle(page) {
         field.querySelector('[data-font-step="-0.08"]')?.click();
         await sleepFrames();
       }
+      await select(index);
       const before = inputValues();
       const channel = document.querySelector('[data-bind="channel"]');
       channel.value = `${before.channel}d`;
@@ -71,25 +72,38 @@ async function settle(page) {
       const after = inputValues();
       const changed = Object.keys(after).filter((key) => before[key] !== after[key]);
       if (changed.join(',') !== 'channel') failures.push(`${preset.name}: 채널명 수정이 ${changed.join(',')} 필드에 영향`);
+      const editedLayers = [...preview.querySelectorAll('[data-edit-bind]')].map((el) => el.dataset.editBind);
+      if (editedLayers.some((bind) => bind !== 'channel')) failures.push(`${preset.name}: 채널명 수정 시 다른 글자 레이어까지 교체`);
 
       await select(index);
       for (const kind of ['hook', 'body']) {
+        await select(index);
         await frame(kind);
+        const frameInputs = [...document.querySelectorAll('.layout-a .field:not([hidden]) [data-bind]')];
+        for (const originalInput of frameInputs) {
+          const bind = originalInput.dataset.bind;
+          await select(index);await frame(kind);
+          const singleInput = document.querySelector(`[data-bind="${bind}"]`);
+          singleInput.value = `${singleInput.value}o`;
+          singleInput.dispatchEvent(new Event('input', { bubbles: true }));
+          await sleepFrames();
+          const layerBinds = [...preview.querySelectorAll('[data-edit-bind]')].map((el) => el.dataset.editBind);
+          if (!layerBinds.length || layerBinds.some((layerBind) => layerBind !== bind)) failures.push(`${preset.name}/${kind}/${bind}: 한 필드 수정 시 다른 글자 레이어까지 교체`);
+        }
+        await select(index);await frame(kind);
         for (const input of document.querySelectorAll('.layout-a .field:not([hidden]) [data-bind]')) {
           input.value = values[input.dataset.bind] || '테스트';
           input.dispatchEvent(new Event('input', { bubbles: true }));
         }
         await sleepFrames();
         const rect = preview.getBoundingClientRect();
-        const boxes = drawnBoxes(preset.id === 's0101', kind);
+        const boxes = drawnBoxes(false, kind);
         for (const el of boxes) {
           const box = el.getBoundingClientRect();
           const horizontalOverflow = box.left < rect.left - 3 || box.right > rect.right + 3 || el.scrollWidth > el.clientWidth + 2;
           if (horizontalOverflow) failures.push(`${preset.name}/${kind}: ${el.textContent.trim()} 가로 넘침`);
         }
-        const sourceOk = preset.id === 's0101'
-          ? decodeURIComponent(getComputedStyle(preview).backgroundImage).includes(kind === 'hook' ? '숏템_훅' : '숏템_본문')
-          : preview.querySelector('.precision-base').getAttribute('src') === (kind === 'hook' ? preset.hook_image : preset.body_image);
+        const sourceOk = preview.querySelector('.precision-base').getAttribute('src') === (kind === 'hook' ? preset.hook_image : preset.body_image);
         if (!sourceOk) failures.push(`${preset.name}/${kind}: 원본 이미지 전환 실패`);
         results.push({ preset: preset.name, kind, fields: [...document.querySelectorAll('.layout-a .field:not([hidden]) [data-bind]')].map((el) => el.dataset.bind), drawn: boxes.length });
       }
@@ -97,8 +111,8 @@ async function settle(page) {
       if (index > 0) {
         await select(0);
         const base = preview.querySelector('.precision-base');
-        const expectedShortemFrame = preview.classList.contains('is-body') ? '숏템_본문' : '숏템_훅';
-        if (!preview.classList.contains('template-shortem') || getComputedStyle(base).display !== 'none' || !decodeURIComponent(getComputedStyle(preview).backgroundImage).includes(expectedShortemFrame)) {
+        const expectedShortemFrame = preview.classList.contains('is-body') ? rows[0].body_image : rows[0].hook_image;
+        if (!preview.classList.contains('template-precision') || getComputedStyle(base).display === 'none' || base.getAttribute('src') !== expectedShortemFrame) {
           failures.push(`${preset.name}에서 숏템 기본형으로 복귀 실패`);
         }
       }

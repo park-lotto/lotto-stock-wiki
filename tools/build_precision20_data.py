@@ -39,6 +39,32 @@ SAMPLES = {
 # 자동 실측기를 원본 프레임과 픽셀 대조해 수정한 값.
 # 이 표에 들어온 프리셋만 "초정밀" 검수 대상이다.
 MANUAL = {
+    "s0101": {
+        "hook": {
+            "width": 360, "height": 640, "title_bg": "#2B271D", "top_band": None,
+            "channel_boxes": [
+                {"x": 145, "y": 27, "width": 70, "height": 36, "background": "#2B271D", "color": "#050505", "radius": 0, "border": None, "font_size": 28}
+            ],
+            "lines": [
+                {"x0": 9, "x1": 351, "y0": 70, "y1": 130, "h": 61, "lpct": 2.5, "rpct": 2.5, "color": "#FFFFFF", "background": "#2B271D", "font_size": 52, "stroke": 3.1, "shadow_y": 4, "patch_top": 5, "patch_bottom": 5},
+                {"x0": 10, "x1": 350, "y0": 134, "y1": 188, "h": 55, "lpct": 2.8, "rpct": 2.8, "color": "#FFE500", "background": "#2B271D", "font_size": 47, "stroke": 3.1, "shadow_y": 4, "patch_top": 4, "patch_bottom": 5},
+            ],
+            "white_box": {"y0": 191, "y1": 248, "text": {"x0": 20, "x1": 340, "y0": 207, "y1": 236, "h": 30, "font_size": 24, "stroke": 0, "shadow_y": 0}},
+            "video_from": {"y": 249, "pct": 38.9}, "fingerprint": "manual-shortem-hook-v2",
+        },
+        "body": {
+            "width": 360, "height": 640, "title_bg": "#FFFFFF", "top_band": None,
+            "channel_boxes": [
+                {"x": 145, "y": 27, "width": 70, "height": 36, "background": "#FFE9A8", "color": "#050505", "radius": 0, "border": None, "font_size": 28},
+                {"x": 80, "y": 101, "width": 57, "height": 30, "background": "#FFFFFF", "color": "#050505", "radius": 0, "border": None, "font_size": 21}
+            ],
+            "lines": [
+                {"x0": 38, "x1": 322, "y0": 158, "y1": 184, "h": 27, "lpct": 10.6, "rpct": 10.6, "color": "#050505", "background": "#FFFFFF", "font_size": 23, "stroke": 0, "shadow_y": 0, "patch_top": 4, "patch_bottom": 5},
+                {"x0": 102, "x1": 258, "y0": 210, "y1": 236, "h": 27, "lpct": 28.3, "rpct": 28.3, "color": "#050505", "background": "#FFFFFF", "font_size": 23, "stroke": 0, "shadow_y": 0, "patch_top": 5, "patch_bottom": 6},
+            ],
+            "white_box": None, "video_from": {"y": 250, "pct": 39.1}, "fingerprint": "manual-shortem-body-v2",
+        },
+    },
     "t01": {
         "hook": {
             "width": 360, "height": 640, "title_bg": "#FFFFFF",
@@ -154,6 +180,7 @@ def compact_frame(frame: dict | None) -> dict | None:
         "video_from": frame.get("video_from"),
         "fingerprint": frame.get("fingerprint"),
         "channel_box": frame.get("channel_box"),
+        "channel_boxes": frame.get("channel_boxes", []),
         "boxes": frame.get("boxes", []),
     }
 
