@@ -24,15 +24,11 @@ TEXTS = {
     "s0446": ["강민경도 반했다는", "제니 가방 대체 얼마길래?"], "s0460": ["케이크 다 못 먹잖아요", "이렇게 하면 되네요"],
 }
 FONT_BY_SLUG = {
-    "s0034": "JalnanGothic", "s0035": "Jalnan2", "s0090": "JalnanGothic",
-    "s0093": "GmarketSansBold", "s0121": "Jalnan2", "s0144": "GmarketSansBold",
-    "s0145": "JalnanGothic", "s0155": "GasoekOne", "s0195": "GmarketSansBold",
-    "s0217": "Jalnan2", "s0218": "GmarketSansBold", "s0234": "BMDOHYEON",
-    "s0241": "JalnanGothic", "s0291": "Jalnan2", "s0311": "GasoekOne",
-    "s0340": "GmarketSansBold", "s0430": "Stylish", "s0431": "GmarketSansBold",
-    "s0446": "JalnanGothic", "s0460": "JalnanGothic",
+    "s0234": "BMDOHYEON",
+    "s0430": "GmarketSansBold",
 }
 ITALIC_SLUGS = {"s0034", "s0093", "s0431"}
+SCALE_X_BY_SLUG = {"s0234": .96, "s0431": .94}
 LINE_STYLE = {
     "s0034": [{"color": "#FFFFFF"}, {"color": "#FF77C7", "accent": "#25E5E6", "accent_words": 1}],
     "s0035": [{"color": "#FFFFFF"}, {"color": "#FF88A5"}],
@@ -64,13 +60,14 @@ def compact(slug, frame):
         line = dict(source)
         line["bind"] = "hook1" if index == 0 else "hook2" if index == 1 else "bodyTitle"
         line["font_family"] = FONT_BY_SLUG.get(slug, "TmonMonsori")
-        line["font_weight"] = 400
+        line["font_weight"] = 900
         multiline = slug == "s0155" and index == 0
-        line["font_size"] = max(15, round(line["h"] * (.48 if multiline else .94), 1))
+        line["font_size"] = max(15, round(line["h"] * (.55 if multiline else 1.10), 1))
         if multiline:
             line["max_lines"] = 2
         if slug in ITALIC_SLUGS:
             line["font_style"] = "italic"
+        line["scale_x"] = SCALE_X_BY_SLUG.get(slug, .99)
         line["letter_spacing"] = round(-line["font_size"] * .035, 1)
         line["stroke"] = max(0, round(line["font_size"] * .065, 1))
         line["shadow_y"] = max(1, round(line["font_size"] * .07, 1))

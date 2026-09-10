@@ -84,7 +84,7 @@
   if(colorRow)colorRow.innerHTML='<label class="swatch"> <input type="color" data-color-role="white" value="#ffffff"><span>흰색</span></label><label class="swatch"><input type="color" data-color-role="accent" value="#ffe600"><span>강조</span></label><label class="swatch"><input type="color" data-color-role="background" value="#211f19"><span>배경</span></label>';
   const motionPanel=document.createElement('section');
   motionPanel.className='hook-motion';
-  motionPanel.innerHTML='<div class="hook-motion-head"><b>훅 시선집중 모션</b><small>첫 장면에만 적용</small></div><div class="hook-motion-grid"><button type="button" class="active" data-hook-motion="zoom-punch">줌 펀치</button><button type="button" data-hook-motion="pop">팝업</button><button type="button" data-hook-motion="slide">슬라이드</button><button type="button" data-hook-motion="flash">플래시</button></div><div class="hook-speed"><span>속도</span><button type="button" data-hook-speed="1.35">느림</button><button type="button" data-hook-speed="1">보통</button><button type="button" class="active" data-hook-speed="0.72">빠름</button></div><button type="button" class="hook-motion-replay" data-hook-motion-replay>▶ 선택 효과 다시 보기</button>';
+  motionPanel.innerHTML='<div class="hook-motion-head"><b>훅 시선집중 모션</b><small>첫 장면에만 적용</small></div><div class="hook-motion-grid"><button type="button" class="active" data-hook-motion="zoom-punch">줌 펀치</button><button type="button" data-hook-motion="pop">팝업</button><button type="button" data-hook-motion="slide">슬라이드</button><button type="button" data-hook-motion="flash">플래시</button></div><div class="hook-speed"><span>속도</span><button type="button" data-hook-speed="1.35">느림</button><button type="button" data-hook-speed="1">보통</button><button type="button" class="active" data-hook-speed="0.72">빠름</button></div>';
   root.querySelector('.layout-a .ai-card')?.after(motionPanel);
   function syncHookMotionUI(){motionPanel.hidden=mode!=='story'||sceneIndex!==0}
   function runHookMotion(){
@@ -223,7 +223,7 @@
     layer.insertBefore(el,badge);
     const fitKey=`${scaleKey(bind)}:${ln.x0}:${ln.y0}`,chars=Math.max(1,[...String(text||' ')].length),cached=fittedText.get(fitKey);
     if(cached&&chars<=cached.capacity){el.style.fontSize=cached.size+'px';if(cached.letter!=null)el.style.letterSpacing=cached.letter+'px';const xscale=cached.xscale??1;if(xscale<1){el.style.transform=`scaleX(${xscale})`;el.style.transformOrigin=role.includes('left')?'left center':'center';}}
-    else {fitText(el,scaledFont,.12,true);const fitted=parseFloat(el.style.fontSize)||scaledFont;el.style.fontSize=fitted+'px';let fittedLetter=parseFloat(getComputedStyle(el).letterSpacing)||0;while(el.scrollWidth>el.clientWidth+2&&fittedLetter>-fitted*.3){fittedLetter-=.25;el.style.letterSpacing=fittedLetter+'px';}const xscale=Math.min(1,el.clientWidth/Math.max(1,el.scrollWidth)*.98);if(xscale<1){el.style.transform=`scaleX(${xscale})`;el.style.transformOrigin=role.includes('left')?'left center':'center';}fittedText.set(fitKey,{capacity:Math.max(Number(inputs[bind]?.dataset.max)||0,chars+2),size:fitted,letter:fittedLetter,xscale});}
+    else {fitText(el,scaledFont,.12,true);const fitted=parseFloat(el.style.fontSize)||scaledFont;el.style.fontSize=fitted+'px';let fittedLetter=parseFloat(getComputedStyle(el).letterSpacing)||0;while(el.scrollWidth>el.clientWidth+2&&fittedLetter>-fitted*.3){fittedLetter-=.25;el.style.letterSpacing=fittedLetter+'px';}const xscale=Math.min(Number(ln.scale_x)||1,el.clientWidth/Math.max(1,el.scrollWidth)*.98);if(xscale<1){el.style.transform=`scaleX(${xscale})`;el.style.transformOrigin=role.includes('left')?'left center':'center';}fittedText.set(fitKey,{capacity:Math.max(Number(inputs[bind]?.dataset.max)||0,chars+2),size:fitted,letter:fittedLetter,xscale});}
     return el;
   }
   function renderEdit(){
@@ -354,7 +354,6 @@
     if(choice){hookMotion=choice.dataset.hookMotion;motionPanel.querySelectorAll('[data-hook-motion]').forEach(button=>button.classList.toggle('active',button===choice));runHookMotion();return}
     const speed=event.target.closest('[data-hook-speed]');
     if(speed){hookMotionSpeed=Number(speed.dataset.hookSpeed);motionPanel.querySelectorAll('[data-hook-speed]').forEach(button=>button.classList.toggle('active',button===speed));runHookMotion();return}
-    if(event.target.closest('[data-hook-motion-replay]'))runHookMotion();
   });
   const saveButton=root.querySelector('.layout-a .secondary');
   saveButton?.addEventListener('click',()=>{
