@@ -28,6 +28,10 @@ def material(tmp_path):
 
 
 def test_image_wins_and_both_judgments_are_logged(material):
+    """★2026-09-10 계약 변경: 그림이 있으면 **글자는 묻지 않는다**(칸당 2회 → 1회).
+    라이브 240칸 대조에서 둘이 갈리면 언제나 그림이 맞았다 — 글자를 남길 이유가
+    그 대조뿐이었고 끝났다. 그림을 못 구한 칸만 종전대로 글자로 본다(아래 폴백 테스트).
+    """
     work, beat, segs, image = material
     before = copy.deepcopy(beat)
     calls = []
@@ -43,7 +47,7 @@ def test_image_wins_and_both_judgments_are_logged(material):
     assert out[0]["fit"] == 5 and out[0]["primary"] == beat["primary"]
     assert beat == before and calls == [1]
     record = json.loads((work / "screen_verify.jsonl").read_text(encoding="utf-8"))
-    assert record["disagreed"] is True and record["calls"] == 2
+    assert record["calls"] == 1 and record["text"] is None   # 글자는 안 물었다
     assert record["job_id"] == "j" and record["image"]["ok"] is True
 
 
@@ -102,18 +106,19 @@ def test_same_input_cached_changed_narration_rechecked(material):
 
     def judge(*args):
         calls.append(1)
-        return {"ok": len(calls) > 2}
+        return {"ok": len(calls) > 1}
 
     def verify(beats):
         return ep.verify_beat_screens(beats, segs, store=Settings(), work=work,
                                       call=judge, image_call=judge)
 
+    # 그림만 묻는다 → 호출 수는 칸당 1회(2026-09-10 계약 변경).
     out = verify([beat])
     assert out[0]["fit"] == 2
-    assert verify(out) == out and len(calls) == 2
+    assert verify(out) == out and len(calls) == 1      # 같은 입력은 다시 안 묻는다
     out[0]["narration"] = "changed"
     changed = verify(out)
-    assert len(calls) == 4 and changed[0]["fit"] == 5
+    assert len(calls) == 2 and changed[0]["fit"] == 5
     assert "fit_evidence" not in changed[0]
 
 

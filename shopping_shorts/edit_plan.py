@@ -4410,6 +4410,41 @@ def verify_beat_screens(beats, seg_map, call=None, store=None, *, work=None,
     # 이미 쓰이고 있는 장면 — 같은 그림을 두 번 붙이지 않는다.
     used_ids = {(b.get("primary") or {}).get("seg_id") for b in beats}
     used_ids.discard(None)
+    # ★칸을 **동시에** 묻는다(2026-09-10 사장님 "분당 한도 안 걸리게").
+    #   한 칸씩 순서대로 물으면 job당 21초였다(라이브 60건 실측). 동시에 물으면 3초대다.
+    #   분당 한도는 키 페이서(comment_gen._next_live_key_and_idx)가 이미 지킨다 —
+    #   키 14개 x 분당 5회 = 70회/분이고 job당 필요한 건 칸 수(중앙값 6)뿐이다.
+    #   ⚠️한 요청에 묶는 배치도 재봤다(호출 1회·2.9초). 판정이 3칸 달라져 배치 탓으로
+    #     봤으나 **틀린 진단이었다** — 이 동시 물음(호출은 단건 그대로)에서도 3칸이 달랐고
+    #     겹치는 건 1칸뿐이다. 흔들리는 칸은 "미국도 당황한 천재 발명품" 같은 훅 문장이라
+    #     경계선이고, 모델 답이 매번 조금 다르다. 배치를 되살려도 되지만 4.7초면 충분하다.
+    from concurrent.futures import ThreadPoolExecutor
+    judged, pend = {}, []
+    for b in beats:
+        sid = (b.get("primary") or {}).get("seg_id")
+        seg = (seg_map or {}).get(sid) or {}
+        narr = (b.get("narration") or "").strip()
+        if (not narr or not seg or b.get("visual_verb") is False or b.get("respined")):
+            continue
+        prior = b.get("screen_verification") or {}
+        img = sv.frame(seg, sid, work)
+        if not img:
+            continue
+        if prior.get("fingerprint") == sv.fingerprint(b, (seg.get("scene_desc") or "").strip(), img):
+            continue                    # 지난번과 같은 입력 — 다시 묻지 않는다
+        pend.append((b.get("beat_idx"), narr, img))
+
+    def _ask(item):
+        idx, narr, img = item
+        return idx, sv.invoke(image_call, _SCREEN_VERIFY_PROMPT.format(
+            narration=narr[:200], scene="첨부된 실제 프레임 1장"),
+            _SCREEN_VERIFY_SCHEMA, img)
+
+    if pend:
+        with ThreadPoolExecutor(max_workers=min(4, len(pend))) as pool:
+            for idx, res in pool.map(_ask, pend):
+                if res is not None:
+                    judged[idx] = res
     out = []
     for b in beats:
         nb = dict(b)
@@ -4432,11 +4467,17 @@ def verify_beat_screens(beats, seg_map, call=None, store=None, *, work=None,
             out.append(nb)
             continue
         started = time.monotonic()
-        text_result = sv.invoke(call, _SCREEN_VERIFY_PROMPT.format(
-            narration=narr[:200], scene=sd[:200]), _SCREEN_VERIFY_SCHEMA) if sd else None
-        image_result = sv.invoke(image_call, _SCREEN_VERIFY_PROMPT.format(
-            narration=narr[:200], scene="첨부된 실제 프레임 1장"),
-            _SCREEN_VERIFY_SCHEMA, image) if image else None
+        # ★그림이 있으면 글자는 안 묻는다(2026-09-10). 240칸 대조에서 둘이 갈리면
+        #   **언제나 그림이 맞았다** — 글자 판정을 남길 이유는 그 대조뿐이었고 끝났다.
+        #   호출이 칸당 2회 → 1회, 배치까지 타면 job당 1회가 된다.
+        image_result = judged.get(nb.get("beat_idx")) if image else None
+        if image and image_result is None:      # 동시 물음에서 빠진 칸만 따로
+            image_result = sv.invoke(image_call, _SCREEN_VERIFY_PROMPT.format(
+                narration=narr[:200], scene="첨부된 실제 프레임 1장"),
+                _SCREEN_VERIFY_SCHEMA, image)
+        # 그림을 못 구한 칸은 종전대로 글자로 본다(기존 계약 — 회귀 0).
+        text_result = None if image else (sv.invoke(call, _SCREEN_VERIFY_PROMPT.format(
+            narration=narr[:200], scene=sd[:200]), _SCREEN_VERIFY_SCHEMA) if sd else None)
         res = image_result if image else text_result
         sv.log({"job_id": job_id, "beat_idx": nb.get("beat_idx"), "seg_id": sid,
                 "primary": nb.get("primary"), "narration": narr, "scene_desc": sd,
@@ -4444,7 +4485,8 @@ def verify_beat_screens(beats, seg_map, call=None, store=None, *, work=None,
                 "disagreed": (text_result["ok"] != image_result["ok"])
                     if text_result is not None and image_result is not None else None,
                 "seconds": round(time.monotonic() - started, 3),
-                "calls": int(bool(sd)) + int(bool(image))}, work)
+                "calls": int(bool(image)) or int(bool(sd)),
+                "parallel": nb.get("beat_idx") in judged}, work)
         if not res:                     # 키 소진·모델 실패 → 그대로 둔다
             out.append(nb)
             continue
