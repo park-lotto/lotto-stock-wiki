@@ -87,10 +87,10 @@ MANUAL = {
     },
     "t02": {
         "hook": {
-            "width": 360, "height": 640, "title_bg": "#FFFFFF", "top_band": None, "font_family": "BlackHanSans", "font_weight": 400,
+            "width": 360, "height": 640, "title_bg": "#FFFFFF", "top_band": None, "font_family": "GmarketSansBold", "font_weight": 700,
             "lines": [
                 {"x0": 10, "x1": 350, "y0": 118, "y1": 162, "h": 45, "lpct": 2.8, "rpct": 2.5, "color": "#050505", "background": "#FFFFFF", "font_size": 37, "stroke": 0, "shadow_y": 0, "patch_top": 5, "patch_bottom": 4},
-                {"x0": 78, "x1": 282, "y0": 169, "y1": 213, "h": 45, "lpct": 21.7, "rpct": 21.4, "color": "#050505", "background": "#FFFFFF", "font_size": 37, "stroke": 0, "shadow_y": 0, "patch_top": 4, "patch_bottom": 6},
+                {"x0": 78, "x1": 282, "y0": 169, "y1": 213, "h": 45, "lpct": 21.7, "rpct": 21.4, "color": "#FF5D5E", "background": "#FFFFFF", "font_size": 37, "stroke": 0.8, "shadow_y": 0, "patch_top": 4, "patch_bottom": 6},
             ],
             "white_box": None, "video_from": {"y": 239, "pct": 37.3}, "fingerprint": "manual-t02-hook-v1",
         },
@@ -106,10 +106,10 @@ MANUAL = {
     },
     "t03": {
         "hook": {
-            "width": 360, "height": 640, "title_bg": "#514D3D", "top_band": None, "font_family": "GmarketSansBold", "font_weight": 700,
+            "width": 360, "height": 640, "title_bg": "#514D3D", "top_band": None, "font_family": "TmonMonsori", "font_weight": 400,
             "lines": [
-                {"x0": 12, "x1": 348, "y0": 52, "y1": 94, "h": 43, "lpct": 3.3, "rpct": 3.1, "color": "#FFFFFF", "background": "#514D3D", "font_size": 38, "stroke": 2.2, "shadow_y": 2, "patch_top": 5, "patch_bottom": 4},
-                {"x0": 37, "x1": 323, "y0": 101, "y1": 143, "h": 43, "lpct": 10.3, "rpct": 10.0, "color": "#31F65C", "background": "#514D3D", "font_size": 38, "stroke": 2.2, "shadow_y": 2, "patch_top": 4, "patch_bottom": 8},
+                {"x0": 12, "x1": 348, "y0": 52, "y1": 94, "h": 43, "lpct": 3.3, "rpct": 3.1, "color": "#FFFFFF", "background": "#514D3D", "font_size": 38, "stroke": 3.0, "shadow_y": 2, "patch_top": 5, "patch_bottom": 4},
+                {"x0": 37, "x1": 323, "y0": 101, "y1": 143, "h": 43, "lpct": 10.3, "rpct": 10.0, "color": "#2CFF44", "background": "#514D3D", "font_size": 38, "stroke": 3.0, "shadow_y": 2, "patch_top": 4, "patch_bottom": 8},
             ],
             "white_box": {"y0": 169, "y1": 212, "text": {"x0": 22, "x1": 338, "y0": 176, "y1": 204, "h": 29, "font_size": 24, "stroke": 0, "shadow_y": 0}},
             "video_from": {"y": 231, "pct": 36.1}, "fingerprint": "manual-t03-hook-v1",
@@ -193,6 +193,11 @@ def main() -> None:
         measured, hook_path, body_path = load_measure(key)
         if key in MANUAL:
             measured = {**measured, **MANUAL[key]}
+        if key == "t07":
+            measured["hook"]["font_family"] = "TmonMonsori"
+            measured["hook"]["font_weight"] = 400
+            measured["hook"]["lines"][0].update({"font_family": "TmonMonsori", "font_weight": 400, "font_size": 31, "letter_spacing": -1.4, "stroke": 2.2, "shadow_y": 3})
+            measured["hook"]["lines"][1].update({"color": "#00F9ED", "font_family": "TmonMonsori", "font_weight": 400, "font_size": 39, "letter_spacing": -1.8, "stroke": 2.2, "shadow_y": 3})
         sample = SAMPLES.get(name, [f"{name}에서 발견한", "놀라운 생활 아이디어"])
         rows.append({
             "rank": rank,

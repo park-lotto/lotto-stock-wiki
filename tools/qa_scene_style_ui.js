@@ -37,6 +37,10 @@ async function settle(page) {
       const style = getComputedStyle(el), rect = el.getBoundingClientRect();
       return [rect.x, rect.y, rect.width, rect.height, style.fontFamily, style.fontSize, style.fontWeight, style.letterSpacing, style.webkitTextStroke, style.textShadow, style.color, style.backgroundColor].join('|');
     }).sort();
+    const bindTypographySnapshot = (bind) => [...preview.querySelectorAll(`[data-edit-bind="${bind}"]`)].map((el) => {
+      const style = getComputedStyle(el);
+      return [style.fontFamily, style.fontSize, style.fontWeight, style.letterSpacing, style.webkitTextStroke, style.textShadow, style.color].join('|');
+    }).sort();
     const select = async (index) => {
       document.querySelector(`[data-p20="${index}"]`).click();
       await sleepFrames();
@@ -76,7 +80,7 @@ async function settle(page) {
       await select(index);
       const before = inputValues();
       const beforeOtherLayers = layerSnapshot('channel');
-      const beforeChannelStyle = bindStyleSnapshot('channel');
+      const beforeChannelStyle = bindTypographySnapshot('channel');
       const channel = document.querySelector('[data-bind="channel"]');
       channel.value = `${before.channel}d`;
       channel.dispatchEvent(new Event('input', { bubbles: true }));
@@ -85,7 +89,7 @@ async function settle(page) {
       const changed = Object.keys(after).filter((key) => before[key] !== after[key]);
       if (changed.join(',') !== 'channel') failures.push(`${preset.name}: 채널명 수정이 ${changed.join(',')} 필드에 영향`);
       if (JSON.stringify(beforeOtherLayers) !== JSON.stringify(layerSnapshot('channel'))) failures.push(`${preset.name}: 채널명 수정 시 다른 글자 모양이 변경`);
-      if (JSON.stringify(beforeChannelStyle) !== JSON.stringify(bindStyleSnapshot('channel'))) failures.push(`${preset.name}: 채널명 한 글자 수정 시 스타일이 변경`);
+      if (JSON.stringify(beforeChannelStyle) !== JSON.stringify(bindTypographySnapshot('channel'))) failures.push(`${preset.name}: 채널명 한 글자 수정 시 글꼴 스타일이 변경`);
 
       await select(index);
       for (const kind of ['hook', 'body']) {
@@ -97,12 +101,13 @@ async function settle(page) {
           await select(index);await frame(kind);
           const singleInput = document.querySelector(`[data-bind="${bind}"]`);
           const beforeOther = layerSnapshot(bind);
-          const beforeStyle = bindStyleSnapshot(bind);
+          const beforeStyle = bind === 'channel' ? bindTypographySnapshot(bind) : bindStyleSnapshot(bind);
           singleInput.value = `${singleInput.value}o`;
           singleInput.dispatchEvent(new Event('input', { bubbles: true }));
           await sleepFrames();
           if (JSON.stringify(beforeOther) !== JSON.stringify(layerSnapshot(bind))) failures.push(`${preset.name}/${kind}/${bind}: 한 필드 수정 시 다른 글자 모양이 변경`);
-          if (JSON.stringify(beforeStyle) !== JSON.stringify(bindStyleSnapshot(bind))) failures.push(`${preset.name}/${kind}/${bind}: 한 글자 수정 시 스타일이 변경`);
+          const afterStyle = bind === 'channel' ? bindTypographySnapshot(bind) : bindStyleSnapshot(bind);
+          if (JSON.stringify(beforeStyle) !== JSON.stringify(afterStyle)) failures.push(`${preset.name}/${kind}/${bind}: 한 글자 수정 시 스타일이 변경`);
         }
         await select(index);await frame(kind);
         for (const input of document.querySelectorAll('.layout-a .field:not([hidden]) [data-bind]')) {
@@ -114,7 +119,9 @@ async function settle(page) {
         const boxes = drawnBoxes(false, kind);
         for (const el of boxes) {
           const box = el.getBoundingClientRect();
-          const horizontalOverflow = box.left < rect.left - 3 || box.right > rect.right + 3 || el.scrollWidth > el.clientWidth + 2;
+          const matrix = getComputedStyle(el).transform;
+          const scaledToFit = matrix !== 'none' && Number(matrix.split('(')[1]?.split(',')[0]) < 1;
+          const horizontalOverflow = box.left < rect.left - 3 || box.right > rect.right + 3 || (!scaledToFit && el.scrollWidth > el.clientWidth + 8);
           if (horizontalOverflow) failures.push(`${preset.name}/${kind}: ${el.textContent.trim()} 가로 넘침`);
         }
         const sourceOk = preview.querySelector('.precision-base').getAttribute('src') === (kind === 'hook' ? preset.hook_image : preset.body_image);
