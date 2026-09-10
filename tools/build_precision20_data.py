@@ -43,31 +43,31 @@ MANUAL = {
         "hook": {
             "width": 360, "height": 640, "title_bg": "#2B271D", "top_band": None,
             "channel_boxes": [
-                {"x": 145, "y": 27, "width": 70, "height": 36, "background": "#2B271D", "color": "#050505", "radius": 0, "border": None, "font_size": 28}
+                {"x": 132, "y": 20, "width": 96, "height": 48, "background": "#2B271D", "color": "#050505", "radius": 0, "border": None, "font_size": 27, "font_family": "TmonMonsori", "font_weight": 400, "letter_spacing": -1.4}
             ],
             "lines": [
-                {"x0": 9, "x1": 351, "y0": 70, "y1": 130, "h": 61, "lpct": 2.5, "rpct": 2.5, "color": "#FFFFFF", "background": "#2B271D", "font_size": 52, "stroke": 3.1, "shadow_y": 4, "patch_top": 5, "patch_bottom": 5},
-                {"x0": 10, "x1": 350, "y0": 134, "y1": 188, "h": 55, "lpct": 2.8, "rpct": 2.8, "color": "#FFE500", "background": "#2B271D", "font_size": 47, "stroke": 3.1, "shadow_y": 4, "patch_top": 4, "patch_bottom": 5},
+                {"x0": 5, "x1": 355, "y0": 68, "y1": 132, "h": 65, "lpct": 1.4, "rpct": 1.4, "color": "#FFFFFF", "background": "#2D2D2A", "font_size": 63.4, "font_family": "TmonMonsori", "font_weight": 400, "letter_spacing": -3.3, "stroke": 3.8, "shadow_y": 4.2, "patch_top": 5, "patch_bottom": 3},
+                {"x0": 5, "x1": 355, "y0": 133, "y1": 190, "h": 58, "lpct": 1.4, "rpct": 1.4, "color": "#FFE500", "background": "#2D2D2A", "font_size": 53, "font_family": "TmonMonsori", "font_weight": 400, "letter_spacing": -3.0, "stroke": 3.8, "shadow_y": 4.2, "patch_top": 2, "patch_bottom": 2},
             ],
-            "white_box": {"y0": 191, "y1": 248, "text": {"x0": 20, "x1": 340, "y0": 207, "y1": 236, "h": 30, "font_size": 24, "stroke": 0, "shadow_y": 0}},
+            "white_box": {"y0": 191, "y1": 248, "text": {"x0": 16, "x1": 344, "y0": 205, "y1": 238, "h": 34, "font_size": 27, "font_family": "TmonMonsori", "font_weight": 400, "letter_spacing": -1.65, "stroke": 0, "shadow_y": 0}},
             "video_from": {"y": 249, "pct": 38.9}, "fingerprint": "manual-shortem-hook-v2",
         },
         "body": {
             "width": 360, "height": 640, "title_bg": "#FFFFFF", "top_band": None,
             "channel_boxes": [
-                {"x": 145, "y": 27, "width": 70, "height": 36, "background": "#FFE9A8", "color": "#050505", "radius": 0, "border": None, "font_size": 28},
-                {"x": 80, "y": 101, "width": 57, "height": 30, "background": "#FFFFFF", "color": "#050505", "radius": 0, "border": None, "font_size": 21}
+                {"x": 145, "y": 27, "width": 70, "height": 36, "background": "#FFE9A8", "color": "#050505", "radius": 0, "border": None, "font_size": 28, "font_family": "TmonMonsori", "font_weight": 400, "letter_spacing": -1.2},
+                {"x": 80, "y": 101, "width": 57, "height": 30, "background": "#FFFFFF", "color": "#050505", "radius": 0, "border": None, "font_size": 21, "font_family": "TmonMonsori", "font_weight": 400, "letter_spacing": -1.0}
             ],
             "lines": [
-                {"x0": 38, "x1": 322, "y0": 158, "y1": 184, "h": 27, "lpct": 10.6, "rpct": 10.6, "color": "#050505", "background": "#FFFFFF", "font_size": 23, "stroke": 0, "shadow_y": 0, "patch_top": 4, "patch_bottom": 5},
-                {"x0": 102, "x1": 258, "y0": 210, "y1": 236, "h": 27, "lpct": 28.3, "rpct": 28.3, "color": "#050505", "background": "#FFFFFF", "font_size": 23, "stroke": 0, "shadow_y": 0, "patch_top": 5, "patch_bottom": 6},
+                {"x0": 38, "x1": 322, "y0": 158, "y1": 184, "h": 27, "lpct": 10.6, "rpct": 10.6, "color": "#050505", "background": "#FFFFFF", "font_size": 23, "font_family": "TmonMonsori", "font_weight": 400, "letter_spacing": -1.2, "stroke": 0, "shadow_y": 0, "patch_top": 4, "patch_bottom": 5},
+                {"x0": 102, "x1": 258, "y0": 210, "y1": 236, "h": 27, "lpct": 28.3, "rpct": 28.3, "color": "#050505", "background": "#FFFFFF", "font_size": 23, "font_family": "TmonMonsori", "font_weight": 400, "letter_spacing": -1.2, "stroke": 0, "shadow_y": 0, "patch_top": 5, "patch_bottom": 6},
             ],
             "white_box": None, "video_from": {"y": 250, "pct": 39.1}, "fingerprint": "manual-shortem-body-v2",
         },
     },
     "t01": {
         "hook": {
-            "width": 360, "height": 640, "title_bg": "#FFFFFF",
+            "width": 360, "height": 640, "title_bg": "#FFFFFF", "font_family": "TmonMonsori", "font_weight": 400,
             "channel_box": {"x": 91, "y": 55, "width": 151, "height": 25, "background": "#FFFFFF", "color": "#111111", "radius": 0, "border": None, "font_size": 22},
             "lines": [
                 {"x0": 5, "x1": 355, "y0": 127, "y1": 164, "h": 38, "lpct": 1.4, "rpct": 1.1, "color": "#FFFFFF", "background": "#FFFFFF", "font_size": 31, "accent": "#00EFEA", "accent_words": 1, "stroke": 2.2, "shadow_y": 4, "patch_top": 4, "patch_bottom": 7},
@@ -76,7 +76,7 @@ MANUAL = {
             "white_box": None, "video_from": {"y": 214, "pct": 33.4}, "fingerprint": "manual-t01-hook-v1",
         },
         "body": {
-            "width": 360, "height": 640, "title_bg": "#FFFFFF",
+            "width": 360, "height": 640, "title_bg": "#FFFFFF", "font_family": "TmonMonsori", "font_weight": 400,
             "channel_box": {"x": 91, "y": 55, "width": 151, "height": 25, "background": "#FFFFFF", "color": "#111111", "radius": 0, "border": None, "font_size": 22},
             "lines": [
                 {"x0": 18, "x1": 353, "y0": 101, "y1": 126, "h": 26, "lpct": 5.0, "rpct": 1.7, "color": "#111111", "background": "#FFFFFF", "font_size": 20, "stroke": 0, "shadow_y": 0},
@@ -87,7 +87,7 @@ MANUAL = {
     },
     "t02": {
         "hook": {
-            "width": 360, "height": 640, "title_bg": "#FFFFFF", "top_band": None,
+            "width": 360, "height": 640, "title_bg": "#FFFFFF", "top_band": None, "font_family": "BlackHanSans", "font_weight": 400,
             "lines": [
                 {"x0": 10, "x1": 350, "y0": 118, "y1": 162, "h": 45, "lpct": 2.8, "rpct": 2.5, "color": "#050505", "background": "#FFFFFF", "font_size": 37, "stroke": 0, "shadow_y": 0, "patch_top": 5, "patch_bottom": 4},
                 {"x0": 78, "x1": 282, "y0": 169, "y1": 213, "h": 45, "lpct": 21.7, "rpct": 21.4, "color": "#050505", "background": "#FFFFFF", "font_size": 37, "stroke": 0, "shadow_y": 0, "patch_top": 4, "patch_bottom": 6},
@@ -95,7 +95,7 @@ MANUAL = {
             "white_box": None, "video_from": {"y": 239, "pct": 37.3}, "fingerprint": "manual-t02-hook-v1",
         },
         "body": {
-            "width": 360, "height": 640, "title_bg": "#FFFFFF", "top_band": None,
+            "width": 360, "height": 640, "title_bg": "#FFFFFF", "top_band": None, "font_family": "BlackHanSans", "font_weight": 400,
             "channel_box": {"x": 103, "y": 38, "width": 151, "height": 37, "background": "#F77C7F", "color": "#FFFFFF", "radius": 0, "border": None, "font_size": 25},
             "lines": [
                 {"x0": 50, "x1": 310, "y0": 102, "y1": 129, "h": 28, "lpct": 13.9, "rpct": 13.6, "color": "#080808", "background": "#FFFFFF", "font_size": 23, "stroke": 0, "shadow_y": 0, "patch_top": 4, "patch_bottom": 4},
@@ -106,7 +106,7 @@ MANUAL = {
     },
     "t03": {
         "hook": {
-            "width": 360, "height": 640, "title_bg": "#514D3D", "top_band": None,
+            "width": 360, "height": 640, "title_bg": "#514D3D", "top_band": None, "font_family": "GmarketSansBold", "font_weight": 700,
             "lines": [
                 {"x0": 12, "x1": 348, "y0": 52, "y1": 94, "h": 43, "lpct": 3.3, "rpct": 3.1, "color": "#FFFFFF", "background": "#514D3D", "font_size": 38, "stroke": 2.2, "shadow_y": 2, "patch_top": 5, "patch_bottom": 4},
                 {"x0": 37, "x1": 323, "y0": 101, "y1": 143, "h": 43, "lpct": 10.3, "rpct": 10.0, "color": "#31F65C", "background": "#514D3D", "font_size": 38, "stroke": 2.2, "shadow_y": 2, "patch_top": 4, "patch_bottom": 8},
@@ -115,7 +115,7 @@ MANUAL = {
             "video_from": {"y": 231, "pct": 36.1}, "fingerprint": "manual-t03-hook-v1",
         },
         "body": {
-            "width": 360, "height": 640, "title_bg": "#FFFFFF", "top_band": None,
+            "width": 360, "height": 640, "title_bg": "#FFFFFF", "top_band": None, "font_family": "GmarketSansBold", "font_weight": 700,
             "channel_box": {"x": 112, "y": 51, "width": 123, "height": 24, "background": "#FFFFFF", "color": "#111111", "radius": 0, "border": None, "font_size": 18},
             "lines": [
                 {"x0": 43, "x1": 318, "y0": 99, "y1": 125, "h": 27, "lpct": 11.9, "rpct": 11.7, "color": "#111111", "background": "#FFFFFF", "font_size": 22, "stroke": 0, "shadow_y": 0, "patch_top": 4, "patch_bottom": 4},
@@ -126,7 +126,7 @@ MANUAL = {
     },
     "t04": {
         "hook": {
-            "width": 360, "height": 640, "title_bg": "#F8F7FF", "top_band": None,
+            "width": 360, "height": 640, "title_bg": "#F8F7FF", "top_band": None, "font_family": "TmonMonsori", "font_weight": 400,
             "channel_box": {"x": 91, "y": 29, "width": 183, "height": 44, "background": "#FF5D5E", "color": "#FFFFFF", "radius": 0, "border": None, "font_size": 28},
             "boxes": [{"x": 74, "y": 111, "width": 214, "height": 81, "background": "#F8F7FF", "border": "#FFFFFF", "border_width": 4, "shadow": "0 3px 9px #111111"}],
             "lines": [
@@ -136,7 +136,7 @@ MANUAL = {
             "white_box": None, "video_from": {"y": 222, "pct": 34.7}, "fingerprint": "manual-t04-hook-v1",
         },
         "body": {
-            "width": 360, "height": 640, "title_bg": "#F8F7FF", "top_band": None,
+            "width": 360, "height": 640, "title_bg": "#F8F7FF", "top_band": None, "font_family": "TmonMonsori", "font_weight": 400,
             "channel_box": {"x": 91, "y": 29, "width": 183, "height": 44, "background": "#FF5D5E", "color": "#FFFFFF", "radius": 0, "border": None, "font_size": 28},
             "lines": [
                 {"x0": 46, "x1": 316, "y0": 103, "y1": 129, "h": 27, "lpct": 12.8, "rpct": 12.2, "color": "#080808", "background": "#F8F7FF", "font_size": 22, "stroke": 0, "shadow_y": 0, "patch_top": 4, "patch_bottom": 4},
@@ -175,6 +175,8 @@ def compact_frame(frame: dict | None) -> dict | None:
         "height": height,
         "top_band": frame.get("top_band"),
         "title_bg": frame.get("title_bg"),
+        "font_family": frame.get("font_family"),
+        "font_weight": frame.get("font_weight"),
         "lines": frame.get("lines", []),
         "white_box": frame.get("white_box"),
         "video_from": frame.get("video_from"),

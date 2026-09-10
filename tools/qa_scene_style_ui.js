@@ -27,6 +27,16 @@ async function settle(page) {
     const preview = document.querySelector('#a-live-preview');
     const sleepFrames = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     const inputValues = () => Object.fromEntries([...document.querySelectorAll('.layout-a [data-bind]')].map((el) => [el.dataset.bind, el.value]));
+    const layerSnapshot = (excluded = '') => [...preview.querySelectorAll('[data-edit-bind]')]
+      .filter((el) => el.dataset.editBind !== excluded)
+      .map((el) => {
+        const style = getComputedStyle(el), rect = el.getBoundingClientRect();
+        return [el.dataset.editBind, el.textContent, rect.x, rect.y, rect.width, rect.height, style.fontFamily, style.fontSize, style.fontWeight, style.letterSpacing, style.webkitTextStroke, style.textShadow, style.color, style.backgroundColor].join('|');
+      }).sort();
+    const bindStyleSnapshot = (bind) => [...preview.querySelectorAll(`[data-edit-bind="${bind}"]`)].map((el) => {
+      const style = getComputedStyle(el), rect = el.getBoundingClientRect();
+      return [rect.x, rect.y, rect.width, rect.height, style.fontFamily, style.fontSize, style.fontWeight, style.letterSpacing, style.webkitTextStroke, style.textShadow, style.color, style.backgroundColor].join('|');
+    }).sort();
     const select = async (index) => {
       document.querySelector(`[data-p20="${index}"]`).click();
       await sleepFrames();
@@ -65,6 +75,8 @@ async function settle(page) {
       }
       await select(index);
       const before = inputValues();
+      const beforeOtherLayers = layerSnapshot('channel');
+      const beforeChannelStyle = bindStyleSnapshot('channel');
       const channel = document.querySelector('[data-bind="channel"]');
       channel.value = `${before.channel}d`;
       channel.dispatchEvent(new Event('input', { bubbles: true }));
@@ -72,8 +84,8 @@ async function settle(page) {
       const after = inputValues();
       const changed = Object.keys(after).filter((key) => before[key] !== after[key]);
       if (changed.join(',') !== 'channel') failures.push(`${preset.name}: 채널명 수정이 ${changed.join(',')} 필드에 영향`);
-      const editedLayers = [...preview.querySelectorAll('[data-edit-bind]')].map((el) => el.dataset.editBind);
-      if (editedLayers.some((bind) => bind !== 'channel')) failures.push(`${preset.name}: 채널명 수정 시 다른 글자 레이어까지 교체`);
+      if (JSON.stringify(beforeOtherLayers) !== JSON.stringify(layerSnapshot('channel'))) failures.push(`${preset.name}: 채널명 수정 시 다른 글자 모양이 변경`);
+      if (JSON.stringify(beforeChannelStyle) !== JSON.stringify(bindStyleSnapshot('channel'))) failures.push(`${preset.name}: 채널명 한 글자 수정 시 스타일이 변경`);
 
       await select(index);
       for (const kind of ['hook', 'body']) {
@@ -84,11 +96,13 @@ async function settle(page) {
           const bind = originalInput.dataset.bind;
           await select(index);await frame(kind);
           const singleInput = document.querySelector(`[data-bind="${bind}"]`);
+          const beforeOther = layerSnapshot(bind);
+          const beforeStyle = bindStyleSnapshot(bind);
           singleInput.value = `${singleInput.value}o`;
           singleInput.dispatchEvent(new Event('input', { bubbles: true }));
           await sleepFrames();
-          const layerBinds = [...preview.querySelectorAll('[data-edit-bind]')].map((el) => el.dataset.editBind);
-          if (!layerBinds.length || layerBinds.some((layerBind) => layerBind !== bind)) failures.push(`${preset.name}/${kind}/${bind}: 한 필드 수정 시 다른 글자 레이어까지 교체`);
+          if (JSON.stringify(beforeOther) !== JSON.stringify(layerSnapshot(bind))) failures.push(`${preset.name}/${kind}/${bind}: 한 필드 수정 시 다른 글자 모양이 변경`);
+          if (JSON.stringify(beforeStyle) !== JSON.stringify(bindStyleSnapshot(bind))) failures.push(`${preset.name}/${kind}/${bind}: 한 글자 수정 시 스타일이 변경`);
         }
         await select(index);await frame(kind);
         for (const input of document.querySelectorAll('.layout-a .field:not([hidden]) [data-bind]')) {
