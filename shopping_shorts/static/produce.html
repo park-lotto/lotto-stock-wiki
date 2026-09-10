@@ -5094,10 +5094,11 @@ function mkScope(v){
   renderTemplatePreview(); saveHeadcopy(); mkRender();
 }
 // 장면을 넘기면 그 장면의 가림막만 보이게 다시 그린다(장면 전용이 하나라도 있을 때만).
-function mkOnBeatChange(){
+function mkOnBeatChange(light){
   const a=mkArr()||[];
   if(!a.some(mkIsScene)) return;
   try{ renderTemplatePreview(); }catch(e){}
+  if(light){ try{ syncMaskBoxes(); }catch(e){} return; }
   try{ mkRender(); }catch(e){}
 }
 function mkArr(){
@@ -6154,7 +6155,10 @@ function _playBeatCaptions(b){
     const k=_cutForSeg(si);
     const idx=cuts[k], x=BEATS_PREVIEW[idx];
     if(!x) return;
+    const _mkPrev=BEAT_IDX;
     BEAT_IDX=idx;                       // '이 장면을 썸네일로'가 지금 보이는 컷을 집게
+    // 🎬 자동재생으로 컷이 넘어가도 그 컷의 가림막만 보이게(편집칸은 안 건드린다 — 끄는 중 방해 금지)
+    if(_mkPrev!==idx && typeof mkOnBeatChange==='function') mkOnBeatChange(true);
     if(bg && sb && sb.checked){
       const u=_beatFrameUrl(x);
       if(u && bg.getAttribute('src')!==u){ bg.src=u; bg.style.display='block'; }
