@@ -2588,7 +2588,13 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
     # (세그먼트 1개면 0.0). 절대시각 = 비트 t0 + 오프셋. sfx_events=[(경로, 절대초), ...].
     sfx_events = sfx_events_for(timeline, sfx_paths)
     has_sfx = bool(sfx_events)
-    if not has_bgm and not has_overlay and not has_motion and not has_sfx:
+    # 🎬 '이 장면에만' 가림막(2026-09-10) — [{_abspath?, blur_mask?, blur_sigma?, start, dur}].
+    #   없으면 빈 목록이라 아래 경로가 한 글자도 안 바뀐다.
+    scene_masks = [s for s in (deco.get("scene_masks") or [])
+                   if float(s.get("dur") or 0) > 0 and (
+                       (s.get("_abspath") and os.path.exists(s["_abspath"]))
+                       or (s.get("blur_mask") and os.path.exists(s["blur_mask"])))]
+    if not has_bgm and not has_overlay and not has_motion and not has_sfx and not scene_masks:
         base_vf = vf
         _run_ffmpeg(["ffmpeg", "-y", "-i", str(in_video), "-vf", base_vf, "-r", "30",
                      "-c:v", "libx264", "-preset", _preset(), "-crf", _crf(), *_threads_args(), "-c:a", "copy", "-pix_fmt", "yuv420p", str(out_path)],
@@ -2612,7 +2618,20 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
         fc.append("[bbl][bmk]alphamerge[bblm]")
         fc.append("[bb0][bblm]overlay=0:0[vblur]")
         vcur, idx = "vblur", idx + 1
-    if has_overlay:                                   # 이미지 오버레이(로고·뱃지 등)
+    # 🎬 장면 전용 **흐림** — 전체 흐림과 같은 레시피에 enable(그 장면 시간)만 붙인다.
+    for k, s in enumerate(scene_masks):
+        _sbm, _sbs = s.get("blur_mask"), float(s.get("blur_sigma") or 0)
+        if not (_sbm and _sbs > 0 and os.path.exists(_sbm)):
+            continue
+        a0, a1 = float(s["start"]), float(s["start"]) + float(s["dur"])
+        inputs += ["-i", _sbm]
+        fc.append(f"[{vcur}]split[sb{k}a][sb{k}b]")
+        fc.append(f"[sb{k}b]gblur=sigma={_sbs}[sb{k}l]")
+        fc.append(f"[{idx}:v]scale={_OUT_W}:{_OUT_H},format=rgba,alphaextract[sb{k}m]")
+        fc.append(f"[sb{k}l][sb{k}m]alphamerge[sb{k}lm]")
+        fc.append(f"[sb{k}a][sb{k}lm]overlay=0:0:enable='between(t,{a0:.3f},{a1:.3f})'[sb{k}v]")
+        vcur, idx = f"sb{k}v", idx + 1
+    if has_overlay:                                  # 이미지 오버레이(로고·뱃지 등)
         inputs += ["-i", ov_path]
         w = overlay.get("width")                      # 1080px 기준 폭(없으면 원본)
         scale = f"scale={int(w)}:-1," if w else ""
@@ -2627,6 +2646,18 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
         m_inputs, m_fc, vcur, idx = _motion_layer_filters(motion_layers, idx, vcur)
         inputs += m_inputs
         fc += m_fc
+    # 🎬 장면 전용 **색 막·스티커** — 틀 그림 위에(전체 가림막과 같은 층) 그 장면 시간에만.
+    #   ★setpts로 밀지 않는다: 그림 한 장(정지)이라 시간을 밀 이유가 없고, enable만으로
+    #     켜고 끈다(틀 레이어 start=0과 같은 방식 — 한 장짜리는 끝까지 마지막 프레임이 유지된다).
+    for k, s in enumerate(scene_masks):
+        _sp = s.get("_abspath")
+        if not (_sp and os.path.exists(_sp)):
+            continue
+        a0, a1 = float(s["start"]), float(s["start"]) + float(s["dur"])
+        inputs += ["-i", _sp]
+        fc.append(f"[{idx}:v]scale={_OUT_W}:{_OUT_H},format=rgba[sm{k}]")
+        fc.append(f"[{vcur}][sm{k}]overlay=0:0:enable='between(t,{a0:.3f},{a1:.3f})'[sm{k}v]")
+        vcur, idx = f"sm{k}v", idx + 1
     # 오디오 믹스: 나레이션(항상) + BGM(있으면) + 효과음(있으면)을 한 번에 amix.
     # duration=first → 첫 입력(나레이션) 길이로 잘린다. 효과음이 비트보다 길면 다음
     # 비트 위로 흘러넘치되 영상 끝에서만 잘린다(v1 알려진 한계, 스펙 §4.3).

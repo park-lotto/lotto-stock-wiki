@@ -1958,6 +1958,9 @@ def _template_layer(tpl, first_beat_dur=0):
     frame = tpl.get("frame")
     if frame:
         from shopping_shorts import deco_frame
+        # 🎬 '이 장면에만' 가림막은 틀 그림(영상 전체)에서 뺀다 — 장면 시간에만 따로 얹는다
+        #   (_scene_mask_layers). 장면 지정이 없으면 frame이 **그대로** 돌아와 옛 그림과 같다.
+        frame, _scene_ms = deco_frame.split_scene_masks(frame)
         p = deco_frame.render_to(frame, deco_frame.cache_path(frame))
         tid = "frame:" + deco_frame.cache_key(frame)
         # 🩹 가림막의 **흐림**은 그림으로 못 한다(뒤 영상을 흐리게 하는 일이라).
@@ -1985,6 +1988,51 @@ def _template_layer(tpl, first_beat_dur=0):
     # 'first'인데 비트 길이를 모르면 전체로 둔다 — dur=0을 주면 화면에서 아예 안 보인다.
     if tpl.get("span") == "first" and first_beat_dur and first_beat_dur > 0:
         out["dur"] = float(first_beat_dur)
+    return out
+
+
+def _scene_mask_layers(tpl, plan, tts_paths, src_durs):
+    """'이 장면에만' 가림막 → 렌더가 얹을 [{_abspath, blur_mask, blur_sigma, start, dur}, ...].
+
+    ★장면의 시간 창은 final_clip_pairs에서 온다 — 미리보기 장면 목록(beats_preview)이
+      쓰는 **그 함수**다(0순위-B). 그래서 화면의 "3/12 장면"과 렌더의 그 3초가 같다.
+    cut이 None이면 그 칸(beat)의 컷 전체를 덮는다. 시간을 못 찾으면 **안 얹는다**
+    (엉뚱한 시간에 덮는 것보다 안 덮는 게 낫다) — 대신 로그를 남긴다.
+    """
+    frame = (tpl or {}).get("frame")
+    if not frame:
+        return []
+    from shopping_shorts import deco_frame
+    _g, scenes = deco_frame.split_scene_masks(frame)
+    if not scenes:
+        return []
+    try:
+        cuts = final_clip_pairs(plan, tts_paths, src_durs) or []
+    except Exception as e:      # noqa: BLE001
+        print(f"[scene_mask] 컷 계획 실패 — 장면 가림막 생략: {e!r}", file=sys.stderr)
+        cuts = []
+    out = []
+    for (bi, ci), ms in sorted(scenes.items(), key=lambda kv: (kv[0][0], kv[0][1] if kv[0][1] is not None else -1)):
+        mine = [c for c in cuts if c.get("beat_idx") == bi]
+        if ci is not None:
+            mine = mine[ci:ci + 1] if ci < len(mine) else []
+        if not mine:
+            print(f"[scene_mask] beat={bi} cut={ci} 시간 못 찾음 — 생략", file=sys.stderr)
+            continue
+        start = float(mine[0]["fin"])
+        end = float(mine[-1]["fin"]) + float(mine[-1]["dur"])
+        if end <= start:
+            continue
+        lay = {"start": start, "dur": end - start}
+        png = deco_frame.render_scene_masks_to(ms)
+        if png:
+            lay["_abspath"] = str(png)
+        bm = deco_frame.render_blur_mask_to({"masks": ms})
+        bs = deco_frame.blur_sigma(deco_frame._norm_masks(ms))
+        if bm and bs > 0:
+            lay["blur_mask"], lay["blur_sigma"] = str(bm), bs
+        if lay.get("_abspath") or lay.get("blur_mask"):
+            out.append(lay)
     return out
 
 
@@ -3409,6 +3457,18 @@ def run_render(job_id, db_path, work_root):
         _tl = _template_layer(deco.get("template"), first_beat_dur=_first)
         if _tl:
             deco = {**deco, "template": {**(deco.get("template") or {}), **_tl}}
+        # 🎬 '이 장면에만' 가림막 — 장면 시간 창과 함께 따로 넘긴다(없으면 키 자체를 안 만든다).
+        #   ★장면 시각은 미리보기 장면 목록(app._final_cuts)과 **같은 입력**으로 잰다:
+        #     청소 전 원본 소스 길이 + 칸별 TTS. 청소본 길이로 재면 컷이 미세하게 갈릴 수 있다.
+        try:
+            _sm_durs = {v: (_probe_duration(str(p_)) or 0.0)
+                        for v, p_ in _resolve_sources(job, work).items()}
+            _sm = _scene_mask_layers(job.get("deco", {}).get("template"), plan, tts_paths, _sm_durs)
+        except Exception as e:      # noqa: BLE001 — 장면 가림막 때문에 렌더 전체를 잃지 않는다
+            print(f"[scene_mask] 준비 실패 — 생략: {e!r}", file=sys.stderr)
+            _sm = []
+        if _sm:
+            deco = {**deco, "scene_masks": _sm}
         # 모션 팩: pack_id → 비트 타임라인으로 레이어 생성(렌더 시점에만 알 수 있음)
         # pack_id 없으면 _apply_motion_pack이 무변경으로 통과하므로, 그 경우 불필요한
         # ffprobe 호출(_beat_timeline)을 피한다 — 수동 layers만 쓰는 기존 deco를 위해 필수.
