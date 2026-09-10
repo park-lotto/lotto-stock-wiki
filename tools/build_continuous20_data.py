@@ -2,6 +2,8 @@
 import json
 from pathlib import Path
 
+from caption_slot_detection import detect_bottom_caption_slot
+
 ROOT = Path(__file__).resolve().parents[1]
 COLLECT = ROOT / "out" / "장면꾸미기_작업대" / "스타일수집"
 OUT = ROOT / "out" / "continuous20-data.js"
@@ -53,7 +55,7 @@ LINE_STYLE = {
 }
 
 
-def compact(slug, frame):
+def compact(slug, frame, caption_slot):
     width, height = map(int, frame["size"].split("x"))
     lines = []
     for index, source in enumerate(frame.get("lines", [])):
@@ -76,12 +78,14 @@ def compact(slug, frame):
         if index < len(LINE_STYLE.get(slug, [])):
             line.update(LINE_STYLE[slug][index])
         lines.append(line)
-    caption_y = max(round(height * .68), min(height - 42, (frame.get("video_from") or {}).get("y", 0) + 55))
+    reserved = caption_slot["mode"] == "reserved"
+    caption_y = caption_slot["y"] if reserved else max(round(height * .68), min(height - 42, (frame.get("video_from") or {}).get("y", 0) + 55))
+    caption_height = caption_slot["height"] if reserved else 28
     lines.append({
-        "bind": "caption", "x0": 18, "x1": width - 18, "y0": caption_y, "y1": caption_y + 27, "h": 28,
-        "lpct": 7.5, "rpct": 7.5, "color": "#FFFFFF", "background": "#111111",
+        "bind": "caption", "x0": 18, "x1": width - 18, "y0": caption_y, "y1": caption_y + caption_height - 1, "h": caption_height,
+        "lpct": 7.5, "rpct": 7.5, "color": "#FFFFFF", "background": caption_slot["background"] if reserved else "#111111",
         "font_size": 16, "font_family": "Pretendard", "font_weight": 700, "letter_spacing": -.4,
-        "stroke": 0, "shadow_y": 1, "no_patch": False, "patch_top": 3, "patch_bottom": 3,
+        "stroke": 0, "shadow_y": 1, "no_patch": False, "patch_top": 0 if reserved else 3, "patch_bottom": 0 if reserved else 3,
     })
     fixed_bands = []
     if frame.get("top_band"):
@@ -89,7 +93,7 @@ def compact(slug, frame):
     return {
         "width": width, "height": height, "top_band": frame.get("top_band"),
         "title_bg": frame.get("title_bg"), "font_family": "TmonMonsori", "font_weight": 400,
-        "lines": lines, "white_box": None, "video_from": frame.get("video_from"), "fixed_bands": fixed_bands,
+        "lines": lines, "white_box": None, "video_from": frame.get("video_from"), "fixed_bands": fixed_bands, "caption_slot": caption_slot,
         "fingerprint": f"continuous-{frame.get('fingerprint', '')}",
         "channel_box": None, "channel_boxes": [], "boxes": frame.get("boxes", []),
     }
@@ -101,8 +105,9 @@ def main():
     rows = []
     for slug in SLUGS:
         row = by_slug[slug]
-        frame = compact(slug, row["hook"])
         image = f"장면꾸미기_작업대/스타일수집/프레임/{slug}_{row['name']}_훅.png"
+        caption_slot = detect_bottom_caption_slot(ROOT / "out" / image)
+        frame = compact(slug, row["hook"], caption_slot)
         colors = [line.get("color", "#FFFFFF") for line in frame["lines"]]
         rows.append({
             "id": f"fixed_{slug}", "source_id": slug, "name": row["name"], "views": 0,

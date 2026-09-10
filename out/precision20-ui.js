@@ -10,10 +10,12 @@
   const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const compact=n=>n?new Intl.NumberFormat('ko-KR',{notation:n>=1e6?'compact':'standard',maximumFractionDigits:1}).format(n)+'회':'시인성 선별';
   const displayName=p=>p.id==='s0101'?'숏템 기본형':p.name;
+  const presetHasCaptionSlot=p=>p.mode==='continuous'?p.frame?.caption_slot?.mode==='reserved':!!p.body?.white_box;
+  const captionBadge=p=>presetHasCaptionSlot(p)?'<span class="caption-kind reserved">자막칸</span>':'<span class="caption-kind overlay">영상 위</span>';
   const renderGrid=()=>{
     grid.innerHTML=rows.map((p,i)=>mode==='continuous'
-      ? `<button class="preset-card fixed-card${i===0?' selected':''}" data-p20="${i}"><span class="check">✓</span><div class="fixed-thumb" style="background-image:url('${esc(p.thumbnail_image)}')"></div><b>${esc(p.name)}</b><small>1장~끝까지 동일</small></button>`
-      : `<button class="preset-card${i===0?' selected':''}" data-p20="${i}"><span class="check">✓</span><div class="thumb-pair"><img src="${esc(p.hook_image)}"><img src="${esc(p.body_image)}"></div><b>${esc(displayName(p))}</b><small>${compact(p.views)} · 훅+본문</small></button>`).join('');
+      ? `<button class="preset-card fixed-card${i===0?' selected':''}" data-p20="${i}"><span class="check">✓</span>${captionBadge(p)}<div class="fixed-thumb" style="background-image:url('${esc(p.thumbnail_image)}')"></div><b>${esc(p.name)}</b><small>1장~끝까지 동일</small></button>`
+      : `<button class="preset-card${i===0?' selected':''}" data-p20="${i}"><span class="check">✓</span>${captionBadge(p)}<div class="thumb-pair"><img src="${esc(p.hook_image)}"><img src="${esc(p.body_image)}"></div><b>${esc(displayName(p))}</b><small>${compact(p.views)} · 훅+본문</small></button>`).join('');
   };
   const presetPane=grid.closest('.pane'),modeBar=document.createElement('div');modeBar.className='template-mode-bar';
   modeBar.innerHTML='<button type="button" data-template-mode="story" class="active">썰쇼핑형 <small>20</small></button><button type="button" data-template-mode="continuous">전장면 고정형 <small>20</small></button>';
@@ -45,7 +47,8 @@
   const colorFor=(role,fallback)=>colorOverrides.get(colorKey(role))||fallback;
   const dirtyKey=()=>`${rows[current].id}:${frameKind()}`;
   const captionKey=()=>`${rows[current].id}:${mode}:${sceneIndex}:caption`;
-  const captionOffset=()=>(kind==='body'||mode==='continuous')?(captionPositions.get(captionKey())||0)*6:0;
+  const currentHasCaptionSlot=()=>mode==='continuous'?frameFor(rows[current])?.caption_slot?.mode==='reserved':kind==='body'&&!!frameFor(rows[current])?.white_box;
+  const captionOffset=()=>currentHasCaptionSlot()?0:(kind==='body'||mode==='continuous')?(captionPositions.get(captionKey())||0)*6:0;
   const currentDirty=()=>dirtyFields.get(dirtyKey())||new Set();
   const markDirty=bind=>{
     const key=dirtyKey(),set=dirtyFields.get(key)||new Set();set.add(bind);dirtyFields.set(key,set);
@@ -136,8 +139,14 @@
     });
   }
   function updateCaptionButtons(){
+    const reserved=currentHasCaptionSlot();
     const position=captionPositions.get(captionKey())||0;
-    root.querySelectorAll('.layout-a [data-caption-position]').forEach(button=>button.classList.toggle('active',Number(button.dataset.captionPosition)===position));
+    const label=root.querySelector('.layout-a .caption-position span');
+    if(label)label.textContent=reserved?'✓ 전용 자막칸':'영상 위 자막';
+    root.querySelectorAll('.layout-a [data-caption-position]').forEach(button=>{button.hidden=reserved;button.disabled=reserved;button.classList.toggle('active',!reserved&&Number(button.dataset.captionPosition)===position)});
+    const guide=root.querySelector('.layout-a .caption-guide');
+    if(guide)guide.textContent=reserved?'원본에 확보된 자막칸으로 자동 배치됩니다.':'전용 칸이 없어 영상 위에서 위치를 선택합니다.';
+    captionField?.classList.toggle('reserved-caption',reserved);
   }
   function presetValue(bind){
     const p=rows[current];

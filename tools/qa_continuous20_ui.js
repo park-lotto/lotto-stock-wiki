@@ -14,6 +14,9 @@ const url = process.argv[2] || 'http://127.0.0.1:8770/out/scene-style-ui-showcas
     const failures=[],rows=window.CONTINUOUS20,preview=document.querySelector('#a-live-preview');
     const wait=()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
     if(rows.length!==20)failures.push(`고정형 개수 ${rows.length}`);
+    const reservedCount=rows.filter(row=>row.frame.caption_slot?.mode==='reserved').length;
+    if(reservedCount!==12)failures.push(`전용 자막칸 판정 ${reservedCount}/12`);
+    if(document.querySelectorAll('.fixed-card .caption-kind.reserved').length!==12||document.querySelectorAll('.fixed-card .caption-kind.overlay').length!==8)failures.push('프리셋 자막 유형 배지 불일치');
     await document.fonts.load('900 24px "TmonMonsori"','한글제목');
     if(!document.fonts.check('900 24px "TmonMonsori"','한글제목'))failures.push('TmonMonsori 웹폰트 로드 실패');
     if(document.querySelectorAll('.fixed-card').length!==20)failures.push('고정형 카드 20개 미표시');
@@ -22,6 +25,10 @@ const url = process.argv[2] || 'http://127.0.0.1:8770/out/scene-style-ui-showcas
       document.querySelector(`[data-p20="${i}"]`).click();await wait();
       const src=preview.querySelector('.precision-base').getAttribute('src');
       if(src!==rows[i].frame_image)failures.push(`${rows[i].name}: 고정 프레임 불일치`);
+      const reserved=rows[i].frame.caption_slot?.mode==='reserved';
+      const positionButtons=[...document.querySelectorAll('[data-caption-position]')];
+      if(positionButtons.some(button=>button.hidden!==reserved))failures.push(`${rows[i].name}: 자막 위치 버튼 노출 규칙 불일치`);
+      if(document.querySelector('.caption-position span')?.textContent!==(reserved?'✓ 전용 자막칸':'영상 위 자막'))failures.push(`${rows[i].name}: 자막 유형 안내 불일치`);
       if(!['s0234','s0430'].includes(rows[i].source_id)&&!rows[i].frame.lines.slice(0,-1).every(line=>line.font_family==='TmonMonsori'&&line.font_weight===900))failures.push(`${rows[i].name}: 초굵은 제목체 규칙 불일치`);
       const fixed=()=>[...preview.querySelectorAll('[data-edit-bind]:not([data-edit-bind="caption"])')].map(el=>{const r=el.getBoundingClientRect(),s=getComputedStyle(el);return [el.dataset.editBind,r.x,r.y,r.width,r.height,s.fontSize,s.color,s.backgroundColor].join('|')}).sort().join('\n');
       const before=fixed();
