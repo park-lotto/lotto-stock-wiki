@@ -179,11 +179,22 @@ class TestBadgeGrade:
         assert "must:{v:100000, per_h:2000}" in html, "유튜브 🎯 문턱"
         assert "must:{v:1500,   per_h:30}" in html, "인스타 🎯 문턱"
 
+    def test_급상승_문턱은_진짜봐야할것보다_낮다(self):
+        """같으면 그 속도를 넘는 순간 총량까지 채워 🎯로 넘어가 📈가 거의 안 남는다.
+
+        실측(2026-09-10 라이브, 유튜브 48시간 1,083건): 속도 문턱이 같던 때
+        🎯 10건에 📈 12건뿐이었고, 유형을 '썰쇼핑'으로 좁히면 📈가 0~1건이었다
+        (사장님 "급상승은 안뜸"). 낮춘 뒤 유튜브 90건 / 인스타 36건.
+        """
+        html = _INDEX.read_text(encoding="utf-8")
+        assert "rising:{per_h:500}" in html, "유튜브 📈 문턱이 🎯(2000)보다 낮아야 한다"
+        assert "rising:{per_h:15}" in html, "인스타 📈 문턱이 🎯(30)보다 낮아야 한다"
+
     def test_뱃지와_필터가_같은_판정식을_쓴다(self):
         """따로 적으면 '뱃지는 붙었는데 필터엔 안 걸린다'가 난다(0순위-B)."""
         html = _INDEX.read_text(encoding="utf-8")
         assert "const g = gradeOf(i);" in html, "뱃지가 gradeOf를 쓴다"
-        assert "const g = gradeOf(i);\n      return g === want" in html, "필터도 gradeOf를 쓴다"
+        assert "items.filter(i => gradeOf(i) === want)" in html, "필터도 gradeOf를 쓴다"
 
     def test_백분위_판정으로_되돌아가지_않았다(self):
         """badgeHTML이 다시 ctx(화면 목록 백분위)로 판정하면 뱃지가 또 흔들린다."""
