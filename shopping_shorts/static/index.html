@@ -632,12 +632,13 @@ body.is-admin .admin-only{display:block}
     <div class="filters" id="gradeFilters">
       <span class="flabel">뱃지로 보기</span>
       <button class="ftog on" data-g="" onclick="setGrade('')" title="뱃지와 상관없이 전부">전체</button>
-      <button class="ftog" data-g="must" onclick="setGrade('must')"
-              title="유튜브: 조회 10만 이상이면서 시간당 2,000회 이상 오르는 중 / 인스타: 댓글 1,500 이상이면서 시간당 30개 이상. 실제로 제작에 쓰신 영상을 기준으로 잡은 문턱입니다(유튜브 기준 무작위보다 12.7배 정확)">🎯 진짜 봐야할 것</button>
-      <button class="ftog" data-g="rising" onclick="setGrade('rising')"
-              title="지금 빠르게 오르는 중 — 유튜브 시간당 2,000회 / 인스타 시간당 댓글 30개 이상. 🎯도 함께 보입니다">📈 급상승</button>
-      <button class="ftog" data-g="small" onclick="setGrade('small')"
-              title="작은 채널의 대박 — 유튜브: 구독자 수의 5배 넘게 본 것 / 인스타: 팔로워 1,000명당 댓글 15개 이상">🚀 구독자 대비 터짐</button>
+      <!-- ★설명(title)은 비워둔다 — gradeTips()가 GRADE_RULES를 읽어 **지금 보는 플랫폼의
+           실제 문턱**으로 채운다. 손으로 적어두면 문턱을 바꿀 때 반드시 한쪽만 고쳐져
+           어긋난다(2026-09-10 실사고: 급상승 문턱을 500으로 낮췄는데 설명은 2,000인 채로
+           남아 사장님이 "시간당 2000이 안되는데?" — 숫자는 한 곳에서만 정한다, 0순위-B). -->
+      <button class="ftog" data-g="must" onclick="setGrade('must')">🎯 진짜 봐야할 것</button>
+      <button class="ftog" data-g="rising" onclick="setGrade('rising')">📈 급상승</button>
+      <button class="ftog" data-g="small" onclick="setGrade('small')">🚀 구독자 대비 터짐</button>
       <span class="fcount" id="gradeCount"></span>
     </div>
     <!-- ★건수 안내는 걸러내기 줄 **밖에** 둔다(2026-09-07).
@@ -2021,6 +2022,23 @@ function gradeOf(i){
   if(rel >= r.small.ratio && main >= r.small.floor) return 'small';
   return null;
 }
+// 버튼 설명을 **문턱에서 만들어** 붙인다 — 숫자를 손으로 적어두지 않는다(0순위-B).
+// 플랫폼마다 축이 다르므로 지금 보고 있는 플랫폼 기준으로 말한다.
+function gradeTips(){
+  const r = gradeRule();
+  const n = v => v.toLocaleString();
+  const 축 = (r.axis === 'views') ? '조회' : '댓글';
+  const 단위 = (r.axis === 'views') ? '회' : '개';
+  const 대비 = (r.axis === 'views') ? `구독자 수의 ${r.small.ratio}배 넘게 본 것`
+                                   : `팔로워 1,000명당 댓글 ${r.small.ratio}${단위} 이상`;
+  return {
+    must  : `${축} ${n(r.must.v)}${단위} 이상이면서 시간당 ${n(r.must.per_h)}${단위} 이상 오르는 중`
+            + ` — 실제로 제작에 쓰신 영상을 기준으로 잡은 문턱입니다`,
+    rising: `지금 빠르게 오르는 중 — 시간당 ${n(r.rising.per_h)}${단위} 이상`
+            + ` (🎯는 여기 안 섞입니다. 🎯는 따로 보세요)`,
+    small : `작은 채널의 대박 — ${대비}`,
+  };
+}
 const GRADE_LABEL = {
   must  : {e:'🎯', t:'진짜 봐야할 것', c:'must'},
   rising: {e:'📈', t:'급상승',        c:'red'},
@@ -2313,12 +2331,17 @@ function render(opts){
     // ★재고가 0인 버튼은 흐리게 — 눌러도 빈 화면이 나올 것을 **누르기 전에** 알려준다
     //   (2026-09-10 사장님 "유튜브는 필터에 안잡힘": 유형 '썰쇼핑'을 켜 둔 채 🎯를 누르니
     //    0건이었는데, 화면엔 '결과 없음'만 떠 고장으로 읽혔다. 실제로는 그 조건에 없던 것).
+    const tips = gradeTips();
     document.querySelectorAll('#gradeFilters .ftog').forEach(b => {
       const g = b.dataset.g || '';
       b.classList.toggle('on', g === (STATE.grade || ''));
       const empty = g && !gc[g];
       b.style.opacity = empty ? '.38' : '';
-      if(g) b.dataset.empty = empty ? '1' : '';
+      if(g){
+        b.dataset.empty = empty ? '1' : '';
+        // 설명은 매번 지금 플랫폼의 실제 문턱으로 다시 쓴다 — 어긋날 자리를 아예 없앤다
+        b.title = tips[g] + (empty ? ' · 지금 조건에는 없습니다' : ` · 지금 ${gc[g]}건`);
+      }
     });
   }
   // ★뱃지 필터 — 카드의 뱃지와 같은 판정식(gradeOf)을 쓴다. 화면에 보이는 것이 곧 기준이다.

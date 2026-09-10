@@ -200,3 +200,17 @@ class TestBadgeGrade:
         """badgeHTML이 다시 ctx(화면 목록 백분위)로 판정하면 뱃지가 또 흔들린다."""
         html = _INDEX.read_text(encoding="utf-8")
         assert "const score = vr*0.35" not in html, "옛 종합점수 판정이 되살아났다"
+
+    def test_설명은_문턱에서_자동으로_만든다(self):
+        """숫자를 title에 손으로 적어두면 문턱을 바꿀 때 반드시 한쪽만 고쳐진다.
+
+        실사고 2026-09-10: 급상승 문턱을 시간당 2,000→500으로 낮췄는데 버튼 설명은
+        '2,000회'인 채로 남아, 사장님이 1780.9짜리 급상승 카드를 보고
+        "시간당 조회수가 2000회가 안되는데?"라고 하셨다. 기준은 한 곳에서만 정한다(0순위-B).
+        """
+        html = _INDEX.read_text(encoding="utf-8")
+        assert "function gradeTips()" in html, "설명 생성기가 있어야 한다"
+        assert "b.title = tips[g]" in html, "버튼 설명을 생성기로 채워야 한다"
+        # 뱃지 버튼에 숫자를 박은 title이 되살아나지 않았는지
+        for dead in ('title="유튜브: 조회 10만', 'title="지금 빠르게 오르는 중 — 유튜브 시간당'):
+            assert dead not in html, f"문턱 숫자가 설명에 다시 박혔다: {dead}"
