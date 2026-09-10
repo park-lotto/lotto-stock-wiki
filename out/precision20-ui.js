@@ -220,6 +220,7 @@
       const pt=ln.patch_top??2,pb=ln.patch_bottom??2;
       const offset=(key==='caption'?captionOffset():0)+textOffset(key);
       if(!ln.no_patch){
+        if(offset)addPatch(Math.max(0,(ln.y0-pt)/frame.height*100),(ln.h+pt+pb)/frame.height*100,ln.background||bg,0,100,key);
         if(!ln.skip_patch)addPatch(Math.max(0,(ln.y0-pt)/frame.height*100+offset),(ln.h+pt+pb)/frame.height*100,ln.background||bg,0,100,key);
         else addPatch(Math.max(0,(ln.y0-pt)/frame.height*100+offset),(ln.h+pt+pb)/frame.height*100,ln.background||frame.boxes?.[0]?.background||bg,Math.max(0,ln.x0/frame.width*100-2),(ln.x1-ln.x0)/frame.width*100+4,key);
       }
@@ -230,7 +231,7 @@
     const wb=frame.white_box;
     if(wb?.text){
       const key=kind==='hook'?'bodyTitle':'caption';
-      if(dirty.has(key)){const offset=key==='caption'?captionOffset():0;addPatch(wb.y0/frame.height*100+offset,(wb.y1-wb.y0+1)/frame.height*100,'#FFFFFF',0,100,key);addText(value(key),wb.text,frame,'#111111','center',key);}
+      if(dirty.has(key)){const offset=(key==='caption'?captionOffset():0)+textOffset(key);if(offset)addPatch(wb.y0/frame.height*100,(wb.y1-wb.y0+1)/frame.height*100,'#FFFFFF',0,100,key);addPatch(wb.y0/frame.height*100+offset,(wb.y1-wb.y0+1)/frame.height*100,'#FFFFFF',0,100,key);addText(value(key),wb.text,frame,'#111111','center',key);}
     }
   }
   function showFrame(next){

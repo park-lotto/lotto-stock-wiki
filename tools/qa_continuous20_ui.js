@@ -21,9 +21,9 @@ const url = process.argv[2] || 'http://127.0.0.1:8770/out/scene-style-ui-showcas
       const before=fixed();
       for(const target of [1,5,11]){document.querySelector('[data-scene-current]').textContent=String(target);while(Number(document.querySelector('[data-scene-current]').textContent)<target)document.querySelector('[data-scene-step="1"]').click();await wait();if(fixed()!==before)failures.push(`${rows[i].name}: 장면 이동 시 고정 디자인 변경`);}
       const field=document.querySelector('[data-field-key="hook1"]'),text=field?.querySelector('.precision-text');
-      const y0=preview.querySelector('[data-edit-bind="hook1"]')?.getBoundingClientRect().y;
+      const y0=preview.querySelector('[data-edit-bind="hook1"].precision-text')?.getBoundingClientRect().y;
       field?.querySelector('[data-position-step="-1"]')?.click();await wait();
-      const y1=preview.querySelector('[data-edit-bind="hook1"]')?.getBoundingClientRect().y;
+      const y1=preview.querySelector('[data-edit-bind="hook1"].precision-text')?.getBoundingClientRect().y;
       if(!(y1<y0))failures.push(`${rows[i].name}: 제목 위 이동 실패`);
       if([...preview.querySelectorAll('[data-edit-bind]')].some(el=>{const a=el.getBoundingClientRect(),b=preview.getBoundingClientRect();return a.left<b.left-3||a.right>b.right+3||el.scrollWidth>el.clientWidth+2}))failures.push(`${rows[i].name}: 글자 넘침`);
     }
