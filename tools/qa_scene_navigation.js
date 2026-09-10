@@ -5,7 +5,7 @@ const url = process.argv[2] || 'http://127.0.0.1:8770/out/scene-style-ui-showcas
 (async () => {
   const browser = await puppeteer.launch({ headless: true });
   const page = await browser.newPage();
-  await page.setViewport({ width: 1728, height: 960 });
+  await page.setViewport({ width: 1920, height: 900 });
   const errors = [];
   page.on('pageerror', error => errors.push(String(error)));
   await page.goto(url, { waitUntil: 'networkidle0' });
@@ -18,6 +18,10 @@ const url = process.argv[2] || 'http://127.0.0.1:8770/out/scene-style-ui-showcas
     const channelBox = () => document.querySelector('.precision-patch[data-edit-bind="channel"]').getBoundingClientRect().width;
     const captionTop = () => document.querySelector('.precision-text[data-edit-bind="caption"]').getBoundingClientRect().top;
     const report = {};
+    const panes = [...document.querySelectorAll('.layout-a>.pane')].map(el => Math.round(el.getBoundingClientRect().width));
+    const phoneRect = document.querySelector('#a-live-preview').getBoundingClientRect();
+    const firstThumb = document.querySelector('.layout-a .preset-card img').getBoundingClientRect();
+    report.layout = { panes, phone: [Math.round(phoneRect.width), Math.round(phoneRect.height)], thumbnail: [Math.round(firstThumb.width), Math.round(firstThumb.height)] };
 
     report.initialScene = current();
     click('[data-scene-step="1"]'); await wait();
@@ -62,11 +66,12 @@ const url = process.argv[2] || 'http://127.0.0.1:8770/out/scene-style-ui-showcas
   });
 
   await settle();
-  await page.screenshot({ path: 'out/scene-navigation-qa.png', fullPage: true });
+  await page.screenshot({ path: 'out/scene-navigation-qa.png', fullPage: false });
   console.log(JSON.stringify({ ...result, errors }, null, 2));
   const ok = result.initialScene === '1' && result.nextScene === '2' && result.bodySelected && result.captionReadonly
     && Object.values(result.captionMovement).every(Boolean) && result.channel.expanded
     && result.lastScene === '12' && result.nextDisabledAtEnd && result.firstSceneAgain === '1' && result.previousDisabledAtStart
+    && result.layout.panes[0] >= 400 && result.layout.panes[2] >= 480 && result.layout.phone[1] >= 560 && result.layout.thumbnail[0] >= 75
     && result.channel.valueReset && result.channel.sizeReset && Object.values(result.fieldResets).every(Boolean) && errors.length === 0;
   await browser.close();
   process.exit(ok ? 0 : 1);

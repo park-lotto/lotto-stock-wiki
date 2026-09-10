@@ -1,6 +1,21 @@
 .dynamic-phone.template-precision{
   background:#000;
 }
+.layout-a{grid-template-columns:minmax(330px,22%) minmax(560px,1fr) minmax(400px,26%)!important}
+.layout-a .pane{padding-left:18px;padding-right:18px}
+.layout-a .phone-wrap{height:580px}
+.layout-a .dynamic-phone{height:570px}
+.layout-a .preset-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.layout-a .preset-card{padding:9px}
+.layout-a .preset-card.selected{padding:8px}
+.layout-a .thumb-pair{gap:6px}
+.layout-a .preset-card>b{font-size:13px}
+.layout-a .preset-card>small{font-size:10px;line-height:1.35}
+@media(max-width:1400px){
+  .layout-a{grid-template-columns:300px minmax(500px,1fr) 360px!important}
+  .layout-a .phone-wrap{height:550px}
+  .layout-a .dynamic-phone{height:540px}
+}
 .dynamic-phone.template-precision>.brand-row,
 .dynamic-phone.template-precision>.shortem-body-channel,
 .dynamic-phone.template-precision>.hook-copy,
