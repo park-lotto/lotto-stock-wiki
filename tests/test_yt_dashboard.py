@@ -126,6 +126,7 @@ def test_yt_page_is_persistent_project_workflow(client):
     assert "주제 찾기·레퍼런스 분석" in html
     assert "URL 직접 분석" in html
     assert "아스트라 주제 확정 카드" in html
+    assert "이 결과는 이전 조회수순 검색으로 만든 값입니다" in html
     assert "장면으로 자동 나누기" in html
     assert "장면·촬영파일" in html
     assert "아직 실행 버튼은 만들지 않았습니다" in html
