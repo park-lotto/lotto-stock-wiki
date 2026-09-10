@@ -177,3 +177,7 @@ scripts/gemini_session/
 
 # 틱톡 로그인 쿠키(2026-09-08) — PC 릴레이가 쓴다. 절대 올리지 않는다.
 tiktok_session.json
+
+# pytest 캐시(2026-09-10) — 병렬로 pytest가 돌면 파일이 잠긴 채 남아 지울 수도 없고,
+# track.py finish가 "트랙 폴더가 dirty"로 병합을 막는다(아스트라도 09-09에 밟았다).
+.pytest_cache/
