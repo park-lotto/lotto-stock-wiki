@@ -4400,6 +4400,16 @@ def verify_beat_screens(beats, seg_map, call=None, store=None, *, work=None,
             return beats
     call = call or _vault_call
     image_call = image_call or sv.image_call
+    # 자동 교체 스위치 — 검증과 따로 끌 수 있게 둔다(검증만 켜고 교체는 끄기 가능).
+    autofix = False
+    try:
+        autofix = str(store.get_setting("screen_verify_autofix", "") or "") == "1"
+    except Exception as e:      # noqa: BLE001 — 설정 조회 실패면 교체를 안 한다
+        print(f"[verify_screens] autofix 설정 조회 실패(끈 것으로 본다): {e!r}",
+              file=sys.stderr)
+    # 이미 쓰이고 있는 장면 — 같은 그림을 두 번 붙이지 않는다.
+    used_ids = {(b.get("primary") or {}).get("seg_id") for b in beats}
+    used_ids.discard(None)
     out = []
     for b in beats:
         nb = dict(b)
@@ -4444,9 +4454,45 @@ def verify_beat_screens(beats, seg_map, call=None, store=None, *, work=None,
             nb.update(prior.get("before") or {})
         before = {k: nb[k] for k in ("fit", "fit_evidence", "verify_why") if k in nb}
         if not res["ok"]:
-            nb["fit"] = min(int(nb.get("fit") or 5), 2)
-            nb["fit_evidence"] = "verify_failed"
-            nb["verify_why"] = (res.get("why") or "")[:40]
+            # ★맞는 화면을 **찾아서 바꿔준다**(2026-09-10 사장님 "답을 알고 두 번
+            #   수동으로 하는 거야?"). 실측: 어긋난 22칸 중 21칸(95%)은 맞는 화면이
+            #   같은 영상 안에 이미 있었다 — 재료가 없는 게 아니라 고르기가 틀렸다.
+            #   ⚠️09-08에 기각된 자동 재배치는 **낱말 겹침**으로 골랐다(사장님이 실제
+            #   고른 컷의 겹침이 오히려 낮아 방향이 반대였다). 여기는 화면을 실제로
+            #   보고 ok를 받은 것만 쓴다 — 판정축이 다르다.
+            #   되돌릴 수 있게 원본을 `auto_swap.from`에 남긴다.
+            fixed = None
+            if image and autofix:
+                for cand in sv.candidates(nb, seg_map, used_ids):
+                    cimg = sv.frame(cand, cand.get("seg_id"), work)
+                    if not cimg:
+                        continue
+                    cres = sv.invoke(image_call, _SCREEN_VERIFY_PROMPT.format(
+                        narration=narr[:200], scene="첨부된 실제 프레임 1장"),
+                        _SCREEN_VERIFY_SCHEMA, cimg)
+                    if cres and cres["ok"]:
+                        fixed = (cand, cres)
+                        break
+            if fixed:
+                cand, cres = fixed
+                nb["auto_swap"] = {"from": dict(nb.get("primary") or {}),
+                                   "why": (res.get("why") or "")[:60],
+                                   "to_why": (cres.get("why") or "")[:60]}
+                nb["primary"] = {k: cand.get(k) for k in
+                                 ("video_id", "seg_id", "start", "end", "scene_desc")}
+                used_ids.add(cand.get("seg_id"))
+                for k in ("fit", "fit_evidence", "verify_why"):
+                    nb.pop(k, None)
+                sv.log({"job_id": job_id, "beat_idx": nb.get("beat_idx"),
+                        "event": "auto_swap", "narration": narr,
+                        "from": nb["auto_swap"]["from"].get("seg_id"),
+                        "to": cand.get("seg_id"),
+                        "from_why": nb["auto_swap"]["why"],
+                        "to_why": nb["auto_swap"]["to_why"]}, work)
+            else:
+                nb["fit"] = min(int(nb.get("fit") or 5), 2)
+                nb["fit_evidence"] = "verify_failed"
+                nb["verify_why"] = (res.get("why") or "")[:40]
         nb["screen_verification"] = {"fingerprint": fingerprint, "before": before,
                                       "text": text_result, "image": image_result}
         out.append(nb)

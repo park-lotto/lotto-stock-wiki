@@ -9677,6 +9677,10 @@ function _renderMixReviewBody(d, failStatus){
              ⚠️옛 job은 이 값이 없다(92% 채워짐) → undefined면 종전대로 경고한다(안전). */''}
       ${/* ★화면 검증(2026-09-09)이 떨어뜨린 칸은 **왜 떨어졌는지**를 보여준다.
              그냥 "영상이 부족합니다"만 뜨면 사장님이 뭘 고쳐야 할지 알 수 없다. */''}
+      ${/* ★자동 교체(2026-09-10): 화면이 안 맞아서 **프로그램이 알아서 바꾼** 칸.
+             사장님 "답을 알고 두 번 수동으로 하는 거야?" — 그래서 찾아서 바꾼다.
+             단 조용히 바꾸지 않는다. 무엇을 왜 바꿨는지 보여주고 되돌릴 수 있게 둔다. */''}
+      ${b.auto_swap?`<div style="color:var(--ok,#2e9e5b);font-size:12px;margin-top:3px">🔄 화면이 안 맞아서 <b>자동으로 바꿨습니다</b>${b.auto_swap.why?` — 원래 화면: ${esc(b.auto_swap.why)}`:''} <button class="btn-prev" style="padding:3px 9px;font-size:11px;margin-left:6px" onclick="undoAutoSwap(${i})">↩ 원래대로</button></div>`:''}
       ${(b.fit_evidence==='verify_failed'&&!b.respined)?`<div style="color:var(--fire);font-size:12px;margin-top:3px">⚠️ 화면이 이 문장과 안 맞습니다${b.verify_why?` — <b>${esc(b.verify_why)}</b>`:''} · 아래 <b>🎞 다른 화면으로 바꾸기</b>로 고르세요</div>`:''}
       ${(b.fit&&b.fit<=2&&!b.respined&&b.visual_verb!==false&&b.fit_evidence!=='verify_failed')?`<div style="color:var(--fire);font-size:12px;margin-top:3px">⚠️ 이 문장에 맞는 영상이 부족합니다 — 대본을 살짝 바꾸거나 소스 영상을 추가하세요.</div>`:''}
       ${(b.fit&&b.fit<=2&&!b.respined&&b.visual_verb===false)?`<div class="hint" style="margin-top:3px" title="이 문장은 감정·설명·도입부라 특정 화면을 요구하지 않습니다. 화면이 딱 맞지 않아도 정상입니다">💬 이야기 문장 — 화면이 꼭 맞지 않아도 됩니다</div>`:''}
@@ -12486,6 +12490,14 @@ async function doSwap(idx, segId){
     if(!r.ok){ if(box) box.innerHTML='<div class="hint" style="color:var(--fire)">⚠️ '+esc(r.error||'실패')+'</div>'; return; }
   }catch(e){ if(box) box.innerHTML=ErrorHelp.html('network'); return; }
   loadMixReview();   // 화면이 바뀜=옛 미리보기 무효 → 전체 재로드가 프리뷰까지 정리(2360 규율)
+}
+// ↩ 자동 교체 되돌리기(2026-09-10) — 프로그램이 바꾼 화면을 원래 것으로 돌린다.
+//   교체와 같은 출구(/api/mix/adjust)를 쓴다 — 되돌리기용 경로를 따로 파면 언젠가 어긋난다(0순위-B).
+async function undoAutoSwap(idx){
+  const b = ((typeof window!=='undefined' && window._mixBeats) || [])[idx];
+  const from = b && b.auto_swap && b.auto_swap.from && b.auto_swap.from.seg_id;
+  if(!from){ alert('되돌릴 원래 화면을 찾지 못했습니다'); return; }
+  doSwap(idx, from);
 }
 // ─── SWAP-END
 

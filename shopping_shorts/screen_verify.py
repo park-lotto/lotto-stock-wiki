@@ -77,3 +77,36 @@ def log(record, work):
                 fh.write(line + "\n")
         except Exception as e:  # noqa: BLE001 — 로그 실패가 제작을 막지 않는다
             print(f"[verify_screens] 로그 저장 실패: {e!r}", file=sys.stderr)
+
+
+def candidates(beat, seg_map, used_ids, limit=10):
+    """어긋난 칸을 구제할 후보 장면을 **싼 순서로** 내놓는다 (2026-09-10).
+
+    ★왜 순서가 중요한가: 후보 하나마다 모델 호출 1회다. 실측(어긋난 22칸)에서
+      맞는 화면은 **95%가 같은 영상 안에** 있었고, 그중엔 바로 옆 컷도 있었다
+      ("스마트폰까지 거치돼서"에 빈 뒷좌석이 붙었는데 옆 컷에 폰이 꽂혀 있었다).
+      그래서 ①대본이 지목한 대안 → ②같은 영상의 이웃 컷 → ③나머지 순으로 준다.
+    ★이미 다른 칸이 쓰는 장면(used_ids)은 뺀다 — 같은 그림이 두 번 나오면
+      고친 것보다 나쁘다.
+    ★edge(첫·끝 컷)는 자동 배치에서 종전대로 제외한다(non_edge_segs 계보)."""
+    from shopping_shorts.edit_plan import non_edge_segs
+    pool = non_edge_segs(seg_map) or {}
+    cur = (beat.get("primary") or {})
+    out, seen = [], set(used_ids or ())
+    seen.add(cur.get("seg_id"))
+
+    def push(sid):
+        if not sid or sid in seen or sid not in pool:
+            return
+        seen.add(sid)
+        out.append(pool[sid])
+
+    for a in (beat.get("alternates") or []):
+        push((a or {}).get("seg_id"))
+    same = [s for sid, s in pool.items() if s.get("video_id") == cur.get("video_id")]
+    start = float(cur.get("start") or 0)
+    for s in sorted(same, key=lambda s: abs(float(s.get("start") or 0) - start)):
+        push(s.get("seg_id"))
+    for sid in pool:
+        push(sid)
+    return out[:max(0, int(limit))]
