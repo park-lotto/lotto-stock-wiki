@@ -105,6 +105,7 @@
   }
   function presetValue(bind){
     const p=rows[current];
+    if(p.mode==='continuous'&&bind!=='channel')return '';
     return bind==='channel'?(p.sample.channel||'숏템메이커'):p.sample[bind];
   }
   function updateCount(input){
@@ -116,7 +117,8 @@
     input.value=presetValue(bind)||'';fontScales.delete(scaleKey(bind));textOffsets.delete(scaleKey(bind));
     [...fittedText.keys()].filter(key=>key.startsWith(scaleKey(bind)+':')).forEach(key=>fittedText.delete(key));
     if(bind==='caption')captionPositions.delete(captionKey());
-    markDirty(bind);updateCount(input);updateSteppers();updateCaptionButtons();renderEdit();
+    if(mode==='continuous'){const set=currentDirty();set.delete(bind);dirtyFields.set(dirtyKey(),set)}else markDirty(bind);
+    updateCount(input);updateSteppers();updateCaptionButtons();renderEdit();
   }
 
   function frameKeys(frameKind,p){
@@ -193,7 +195,7 @@
     const p=rows[current],frame=frameFor(p);if(!frame)return;
     const dirty=currentDirty();
     const bg=frame.title_bg||frame.top_band?.color||'#111111';
-    if(mode==='continuous'){
+    if(mode==='continuous'&&dirty.size){
       (frame.fixed_bands||[]).forEach(b=>addPatch(b.y0/frame.height*100,(b.y1-b.y0)/frame.height*100,b.color));
       (frame.boxes||[]).forEach(b=>{const box=addPatch(b.y/frame.height*100,b.height/frame.height*100,b.background,b.x/frame.width*100,b.width/frame.width*100);if(b.border)box.style.border=`${b.border_width||1}px solid ${b.border}`;});
     }
@@ -260,10 +262,11 @@
     preview.classList.remove('template-shortem');
     preview.classList.add('template-precision');
     base.hidden=false;layer.hidden=false;
-    if(mode==='continuous')dirtyFields.set(`${p.id}:frame`,new Set(frameKeys('frame',p)));
+    if(mode==='continuous')dirtyFields.set(`${p.id}:frame`,new Set());
     else {dirtyFields.set(`${p.id}:hook`,new Set(frameKeys('hook',p)));dirtyFields.set(`${p.id}:body`,new Set(frameKeys('body',p)));}
     grid.querySelectorAll('[data-p20]').forEach((x,i)=>x.classList.toggle('selected',i===index));
-    inputs.channel.value=p.sample.channel||'숏템메이커';inputs.hook1.value=p.sample.hook1;inputs.hook2.value=p.sample.hook2;inputs.bodyTitle.value=p.sample.bodyTitle;inputs.caption.value=p.sample.caption;
+    inputs.channel.value=p.sample.channel||'숏템메이커';inputs.hook1.value=mode==='continuous'?'':p.sample.hook1;inputs.hook2.value=mode==='continuous'?'':p.sample.hook2;inputs.bodyTitle.value=mode==='continuous'?'':p.sample.bodyTitle;inputs.caption.value=mode==='continuous'?'':p.sample.caption;
+    for(const bind of ['hook1','hook2','bodyTitle','caption'])inputs[bind].placeholder=mode==='continuous'?'입력하면 원본 문구를 교체합니다':'';
     root.querySelectorAll('[data-preview-channel]').forEach(x=>x.textContent=inputs.channel.value);
     root.querySelectorAll('[data-preview-hook-1]').forEach(x=>x.textContent=p.sample.hook1);
     root.querySelectorAll('[data-preview-hook-2]').forEach(x=>x.textContent=p.sample.hook2);
@@ -323,5 +326,6 @@
   addEventListener('resize',()=>{if(!preview.classList.contains('is-pristine'))renderEdit()});
   document.fonts?.ready?.then(()=>{fittedText.clear();renderEdit()});
   saveButton&&(saveButton.textContent='현재 설정 저장');
-  if(new URLSearchParams(location.search).get('mode')==='continuous')modeBar.querySelector('[data-template-mode="continuous"]').click();else selectPreset(0);
+  const query=new URLSearchParams(location.search),initialPreset=Math.max(0,Number(query.get('preset'))||0);
+  if(query.get('mode')==='continuous'){modeBar.querySelector('[data-template-mode="continuous"]').click();if(initialPreset<rows.length)selectPreset(initialPreset)}else selectPreset(Math.min(initialPreset,rows.length-1));
 })();
