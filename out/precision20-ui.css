@@ -57,3 +57,9 @@
 .scene-summary{display:flex!important;align-items:center;justify-content:center;gap:7px;width:min(322px,90%);margin:7px auto 0;padding:8px 10px;border:1px solid #1e3743;border-radius:8px;background:#091721}
 .scene-summary .scene-dot{width:6px;height:6px;border-radius:50%;background:#43e2b4;box-shadow:0 0 8px #43e2b4}
 .scene-summary b{color:#d8e6ea;font-size:11px}.scene-summary small{color:#6f8791;font-size:9px}
+.hook-motion{margin:0 0 13px;padding:10px;border:1px solid #294451;border-radius:10px;background:#091721}
+.hook-motion[hidden]{display:none!important}.hook-motion-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.hook-motion-head b{font-size:11px;color:#dce8ec}.hook-motion-head small{font-size:9px;color:#43e2b4}
+.hook-motion-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}.hook-motion-grid button{height:34px;padding:0 4px;border:1px solid #294451;border-radius:7px;background:#0d202b;color:#9eb0b9;font-size:10px;font-weight:900;cursor:pointer}
+.hook-motion-grid button:hover,.hook-motion-grid button.active{border-color:#43e2b4;background:#10362f;color:#63edc6}
+.hook-motion-replay{width:100%;height:30px;margin-top:7px;border:1px dashed #355565;border-radius:7px;background:transparent;color:#b8c9cf;font-size:10px;font-weight:900;cursor:pointer}

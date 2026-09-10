@@ -10,6 +10,7 @@ TARGETS = [
     "Hahmlet-Variable.ttf", "Orbit-Regular.ttf", "SongMyung-Regular.ttf",
     "YeonSung-Regular.ttf", "GowunDodum-Regular.ttf", "NanumGothicCoding-Bold.ttf",
     "NanumMyeongjo-ExtraBold.ttf", "GrandifloraOne-Regular.ttf", "MoiraiOne-Regular.ttf",
+    "Jalnan2.ttf", "JalnanGothic.ttf", "GasoekOne-Regular.ttf", "Stylish-Regular.ttf",
 ]
 
 

@@ -2,6 +2,7 @@
   const storyRows=window.PRECISION20||[],fixedRows=window.CONTINUOUS20||[];
   let rows=storyRows,mode='story';
   const root=document;
+  const qaMode=new URLSearchParams(location.search).has('qa');
   const preview=root.getElementById('a-live-preview');
   const grid=root.querySelector('.layout-a .preset-grid');
   if(!rows.length||!preview||!grid)return;
@@ -24,7 +25,7 @@
   const badge=document.createElement('div');badge.className='precision-badge';badge.textContent='원본 실측 편집';layer.appendChild(badge);
   preview.append(base,layer);
 
-  let current=0,kind='hook',sceneIndex=0;
+  let current=0,kind='hook',sceneIndex=0,hookMotion='zoom-punch';
   const fontScales=new Map();
   const fittedText=new Map();
   const textOffsets=new Map();
@@ -81,6 +82,29 @@
   }
   const colorRow=root.querySelector('.layout-a .color-row');
   if(colorRow)colorRow.innerHTML='<label class="swatch"> <input type="color" data-color-role="white" value="#ffffff"><span>흰색</span></label><label class="swatch"><input type="color" data-color-role="accent" value="#ffe600"><span>강조</span></label><label class="swatch"><input type="color" data-color-role="background" value="#211f19"><span>배경</span></label>';
+  const motionPanel=document.createElement('section');
+  motionPanel.className='hook-motion';
+  motionPanel.innerHTML='<div class="hook-motion-head"><b>훅 시선집중 모션</b><small>첫 장면에만 적용</small></div><div class="hook-motion-grid"><button type="button" class="active" data-hook-motion="zoom-punch">줌 펀치</button><button type="button" data-hook-motion="pop">팝업</button><button type="button" data-hook-motion="slide">슬라이드</button><button type="button" data-hook-motion="flash">플래시</button></div><button type="button" class="hook-motion-replay" data-hook-motion-replay>▶ 선택 효과 다시 보기</button>';
+  root.querySelector('.layout-a .ai-card')?.after(motionPanel);
+  function syncHookMotionUI(){motionPanel.hidden=mode!=='story'||sceneIndex!==0}
+  function runHookMotion(){
+    if(qaMode||motionPanel.hidden||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+    [preview,...preview.querySelectorAll('*')].forEach(el=>el.getAnimations?.().forEach(animation=>animation.cancel()));
+    const texts=[...layer.querySelectorAll('.precision-text')];
+    const timing={duration:620,easing:'cubic-bezier(.18,.88,.25,1)',fill:'both'};
+    if(hookMotion==='zoom-punch'){
+      preview.animate([{transform:'scale(.94)'},{transform:'scale(1.025)',offset:.7},{transform:'scale(1)'}],{...timing,duration:720});
+      texts.forEach((el,index)=>el.animate([{opacity:0,transform:'scale(.55) translateY(10px)'},{opacity:1,transform:'scale(1.09) translateY(0)',offset:.72},{opacity:1,transform:'scale(1) translateY(0)'}],{...timing,delay:80+index*75}));
+    }else if(hookMotion==='pop'){
+      texts.forEach((el,index)=>el.animate([{opacity:0,transform:'scale(.25)'},{opacity:1,transform:'scale(1.14)',offset:.68},{opacity:1,transform:'scale(1)'}],{...timing,duration:520,delay:index*90}));
+    }else if(hookMotion==='slide'){
+      preview.animate([{transform:'translateX(10px) scale(1.025)'},{transform:'translateX(0) scale(1)'}],timing);
+      texts.forEach((el,index)=>el.animate([{opacity:0,transform:`translateX(${index%2?-46:46}px)`},{opacity:1,transform:'translateX(0)'}],{...timing,delay:index*85}));
+    }else{
+      preview.animate([{filter:'brightness(1)'},{filter:'brightness(1.85)',offset:.12},{filter:'brightness(.82)',offset:.25},{filter:'brightness(1)'}],{duration:480,easing:'ease-out'});
+      texts.forEach((el,index)=>el.animate([{opacity:0,transform:'scale(1.32)'},{opacity:1,transform:'scale(.96)',offset:.7},{opacity:1,transform:'scale(1)'}],{...timing,duration:480,delay:70+index*55}));
+    }
+  }
   function sceneTotal(){return 12}
   function updateSceneUI(){
     root.querySelectorAll('.layout-a [data-scene-current]').forEach(el=>el.textContent=String(sceneIndex+1));
@@ -176,16 +200,18 @@
     const scaledFont=Math.max(9,fontPx*textScale(bind));
     const topOffset=(bind==='caption'?captionOffset():0)+textOffset(bind);
     const verticalNudge=bind==='channel'?.7:-.35;
-    Object.assign(el.style,{left:left+'%',right:right+'%',top:Math.max(0,ln.y0/frame.height*100+verticalNudge+topOffset)+'%',height:(ln.h/frame.height*100+0.9)+'%',fontSize:scaledFont+'px',fontFamily:`"${family}",sans-serif`,fontWeight:String(weight),fontStyle:ln.font_style||'normal',letterSpacing:letterPx+'px',color:rgba(color||ln.color||'#fff'),textShadow:shadowY?`0 ${shadowY}px 1px rgba(0,0,0,.88)`:'none',webkitTextStroke:stroke?`${stroke}px #080808`:'0',padding:`0 ${pad}px`,whiteSpace:ln.max_lines>1?'normal':'nowrap',lineHeight:ln.max_lines>1?'1.05':'1'});
-    if(ln.accent_words){
+    Object.assign(el.style,{left:left+'%',right:right+'%',top:Math.max(0,ln.y0/frame.height*100+verticalNudge+topOffset)+'%',height:(ln.h/frame.height*100+0.9)+'%',fontSize:scaledFont+'px',fontFamily:`"${family}",sans-serif`,fontWeight:String(weight),fontStyle:ln.font_style||'normal',letterSpacing:letterPx+'px',color:rgba(color||ln.color||'#fff'),textShadow:shadowY?`0 ${shadowY}px 1px rgba(0,0,0,.88)`:'none',webkitTextStroke:stroke?`${stroke}px #080808`:'0',padding:`0 ${pad}px`,whiteSpace:ln.max_lines>1?'normal':'nowrap',flexWrap:ln.max_lines>1?'wrap':'nowrap',alignContent:ln.max_lines>1?'center':'normal',lineHeight:ln.max_lines>1?'1.05':'1'});
+    if(ln.word_colors?.length){
+      String(text||' ').split(/\s+/).forEach((word,index,words)=>{const span=document.createElement('span');span.textContent=word;span.style.color=ln.word_colors[index]||ln.color||'#fff';if(index<words.length-1)span.style.marginRight=Math.max(2,fontPx*.11)+'px';el.append(span)});
+    }else if(ln.accent_words){
       const words=String(text||' ').split(/\s+/),accent=document.createElement('span'),rest=document.createElement('span');
       accent.textContent=words.slice(0,ln.accent_words).join(' ');accent.style.color=ln.accent;accent.style.marginRight=Math.max(2,fontPx*.11)+'px';
       rest.textContent=words.slice(ln.accent_words).join(' ');el.append(accent,rest);
     }else el.textContent=text||' ';
     layer.insertBefore(el,badge);
     const fitKey=`${scaleKey(bind)}:${ln.x0}:${ln.y0}`,chars=Math.max(1,[...String(text||' ')].length),cached=fittedText.get(fitKey);
-    if(cached&&chars<=cached.capacity){el.style.fontSize=cached.size+'px';if(cached.letter!=null)el.style.letterSpacing=cached.letter+'px';const xscale=Math.min(1,el.clientWidth/Math.max(1,el.scrollWidth)*.98);if(xscale<1){el.style.transform=`scaleX(${xscale})`;el.style.transformOrigin=role.includes('left')?'left center':'center';}}
-    else {fitText(el,scaledFont,.12,true);const fitted=parseFloat(el.style.fontSize)||scaledFont;el.style.fontSize=fitted+'px';let fittedLetter=parseFloat(getComputedStyle(el).letterSpacing)||0;while(el.scrollWidth>el.clientWidth+2&&fittedLetter>-fitted*.3){fittedLetter-=.25;el.style.letterSpacing=fittedLetter+'px';}const xscale=Math.min(1,el.clientWidth/Math.max(1,el.scrollWidth)*.98);if(xscale<1){el.style.transform=`scaleX(${xscale})`;el.style.transformOrigin=role.includes('left')?'left center':'center';}fittedText.set(fitKey,{capacity:Number(inputs[bind]?.dataset.max)||chars,size:fitted,letter:fittedLetter,xscale});}
+    if(cached&&chars<=cached.capacity){el.style.fontSize=cached.size+'px';if(cached.letter!=null)el.style.letterSpacing=cached.letter+'px';const xscale=cached.xscale??1;if(xscale<1){el.style.transform=`scaleX(${xscale})`;el.style.transformOrigin=role.includes('left')?'left center':'center';}}
+    else {fitText(el,scaledFont,.12,true);const fitted=parseFloat(el.style.fontSize)||scaledFont;el.style.fontSize=fitted+'px';let fittedLetter=parseFloat(getComputedStyle(el).letterSpacing)||0;while(el.scrollWidth>el.clientWidth+2&&fittedLetter>-fitted*.3){fittedLetter-=.25;el.style.letterSpacing=fittedLetter+'px';}const xscale=Math.min(1,el.clientWidth/Math.max(1,el.scrollWidth)*.98);if(xscale<1){el.style.transform=`scaleX(${xscale})`;el.style.transformOrigin=role.includes('left')?'left center':'center';}fittedText.set(fitKey,{capacity:Math.max(Number(inputs[bind]?.dataset.max)||0,chars+2),size:fitted,letter:fittedLetter,xscale});}
     return el;
   }
   function renderEdit(){
@@ -243,7 +269,7 @@
     preview.classList.toggle('is-continuous',mode==='continuous');
     const seg=root.querySelector('.layout-a .seg');if(seg)seg.hidden=mode==='continuous';
     root.querySelectorAll('.layout-a [data-frame]').forEach(x=>x.classList.toggle('active',x.dataset.frame===kind));
-    fieldSet(kind,p);updateSceneUI();updateSteppers();updateCaptionButtons();renderEdit();
+    fieldSet(kind,p);updateSceneUI();updateSteppers();updateCaptionButtons();renderEdit();syncHookMotionUI();requestAnimationFrame(runHookMotion);
   }
   function showScene(nextIndex){
     sceneIndex=Math.max(0,Math.min(sceneTotal()-1,nextIndex));
@@ -251,7 +277,7 @@
     const p=rows[current],source=imageFor(p,sceneIndex);
     base.src=source;preview.classList.toggle('is-body',mode!=='continuous'&&kind==='body');
     root.querySelectorAll('.layout-a [data-frame]').forEach(x=>x.classList.toggle('active',x.dataset.frame===kind));
-    fieldSet(kind,p);updateSceneUI();updateSteppers();updateCaptionButtons();renderEdit();
+    fieldSet(kind,p);updateSceneUI();updateSteppers();updateCaptionButtons();renderEdit();syncHookMotionUI();requestAnimationFrame(runHookMotion);
   }
   function selectPreset(index){
     current=index;const p=rows[index];
@@ -311,9 +337,14 @@
     const input=event.target.closest('[data-color-role]');if(!input)return;
     colorOverrides.set(colorKey(input.dataset.colorRole),input.value);preview.classList.remove('is-pristine');renderEdit();
   });
+  motionPanel.addEventListener('click',event=>{
+    const choice=event.target.closest('[data-hook-motion]');
+    if(choice){hookMotion=choice.dataset.hookMotion;motionPanel.querySelectorAll('[data-hook-motion]').forEach(button=>button.classList.toggle('active',button===choice));runHookMotion();return}
+    if(event.target.closest('[data-hook-motion-replay]'))runHookMotion();
+  });
   const saveButton=root.querySelector('.layout-a .secondary');
   saveButton?.addEventListener('click',()=>{
-    const p=rows[current],snapshot={mode,presetId:p.id,frameKind:frameKind(),text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),colors:Object.fromEntries(colorOverrides)};
+    const p=rows[current],snapshot={mode,presetId:p.id,frameKind:frameKind(),hookMotion,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),colors:Object.fromEntries(colorOverrides)};
     localStorage.setItem('scene_style_preset',JSON.stringify(snapshot));saveButton.textContent='✓ 현재 설정 저장됨';setTimeout(()=>saveButton.textContent='현재 설정 저장',1400);
   });
   root.querySelector('.layout-a .edit-pane').addEventListener('click',event=>{

@@ -23,8 +23,38 @@ TEXTS = {
     "s0430": ["이지혜 극찬 500만원 테이블", "'반값'에 구매하는 방법"], "s0431": ["집안 옷장 냄새 박멸", "봉태규의 비밀 아이템"],
     "s0446": ["강민경도 반했다는", "제니 가방 대체 얼마길래?"], "s0460": ["케이크 다 못 먹잖아요", "이렇게 하면 되네요"],
 }
-FONT_BY_SLUG = {"s0093": "GmarketSansBold", "s0121": "GmarketSansBold", "s0195": "GmarketSansBold", "s0218": "GmarketSansBold", "s0340": "GmarketSansBold", "s0431": "GmarketSansBold", "s0234": "BMDOHYEON"}
-ITALIC_SLUGS = {"s0093", "s0431"}
+FONT_BY_SLUG = {
+    "s0034": "JalnanGothic", "s0035": "Jalnan2", "s0090": "JalnanGothic",
+    "s0093": "GmarketSansBold", "s0121": "Jalnan2", "s0144": "GmarketSansBold",
+    "s0145": "JalnanGothic", "s0155": "GasoekOne", "s0195": "GmarketSansBold",
+    "s0217": "Jalnan2", "s0218": "GmarketSansBold", "s0234": "BMDOHYEON",
+    "s0241": "JalnanGothic", "s0291": "Jalnan2", "s0311": "GasoekOne",
+    "s0340": "GmarketSansBold", "s0430": "Stylish", "s0431": "GmarketSansBold",
+    "s0446": "JalnanGothic", "s0460": "JalnanGothic",
+}
+ITALIC_SLUGS = {"s0034", "s0093", "s0431"}
+LINE_STYLE = {
+    "s0034": [{"color": "#FFFFFF"}, {"color": "#FF77C7", "accent": "#25E5E6", "accent_words": 1}],
+    "s0035": [{"color": "#FFFFFF"}, {"color": "#FF88A5"}],
+    "s0090": [{"color": "#FFFFFF"}, {"color": "#F2B7C4"}],
+    "s0093": [{"color": "#FFFFFF", "accent": "#FF8D9D", "accent_words": 1}, {"color": "#43E9F2", "accent": "#FFE66E", "accent_words": 2}],
+    "s0121": [{"color": "#FFFFFF"}, {"color": "#E7ED73", "accent": "#E5A8EB", "accent_words": 1}],
+    "s0144": [{"color": "#FFFFFF"}, {"color": "#F3A475"}],
+    "s0145": [{"color": "#FFFFFF"}, {"color": "#00FF31"}, {"color": "#159BFF"}],
+    "s0155": [{"color": "#FFFFFF", "word_colors": ["#FF4438", "#FF4438", "#FF4438", "#FFFFFF", "#FFFFFF", "#FFFFFF"]}, {"color": "#B9F000"}],
+    "s0195": [{"color": "#F4F10A"}, {"color": "#F04755"}],
+    "s0217": [{"color": "#FF27D8"}, {"color": "#FFFFFF", "accent": "#16F02B", "accent_words": 1}],
+    "s0218": [{"color": "#FFFFFF", "word_colors": ["#FFFFFF", "#FF73BC", "#FF73BC"]}, {"color": "#FFFFFF", "word_colors": ["#FFFFFF", "#FFFFFF", "#FFFFFF", "#EFE080"]}],
+    "s0234": [{"color": "#FFE135"}, {"color": "#159EF2"}],
+    "s0241": [{"color": "#FFFFFF"}, {"color": "#EAA6C8"}],
+    "s0291": [{"color": "#F3F000"}, {"color": "#20F12F"}],
+    "s0311": [{"color": "#FFFFFF", "word_colors": ["#159CDD", "#FFFFFF", "#FFFFFF"]}, {"color": "#FF38A8"}, {"color": "#BEB8AF"}],
+    "s0340": [{"color": "#FFFFFF"}, {"color": "#F4E8EC"}],
+    "s0430": [{"color": "#111111", "background": "#F1CF69", "skip_patch": True}, {"color": "#FFFFFF"}],
+    "s0431": [{"color": "#FFFFFF"}, {"color": "#8DDE72"}],
+    "s0446": [{"color": "#12E238"}, {"color": "#FFFFFF", "word_colors": ["#F11EC2", "#F11EC2", "#FFFFFF", "#FFFFFF"]}],
+    "s0460": [{"color": "#FFFFFF"}, {"color": "#3CAFE9"}],
+}
 
 
 def compact(slug, frame):
@@ -46,6 +76,8 @@ def compact(slug, frame):
         line["shadow_y"] = max(1, round(line["font_size"] * .07, 1))
         line["background"] = frame.get("title_bg") or "#111111"
         line["no_patch"] = False
+        if index < len(LINE_STYLE.get(slug, [])):
+            line.update(LINE_STYLE[slug][index])
         lines.append(line)
     caption_y = max(round(height * .68), min(height - 42, (frame.get("video_from") or {}).get("y", 0) + 55))
     lines.append({
