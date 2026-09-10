@@ -156,3 +156,36 @@ class TestFrontend:
         # 붙이면 첫 화면이 이력 조회로 새버린다
         html = _INDEX.read_text(encoding="utf-8")
         assert "if(SPAN_DAYS > 0){" in html
+
+
+class TestBadgeGrade:
+    """뱃지·필터 판정(2026-09-10) — 문턱이 고정 숫자여야 화면에 흔들리지 않는다.
+
+    종전엔 '지금 보이는 목록 안에서의 백분위'라 카테고리·기간 탭을 바꾸면 같은 영상의
+    뱃지가 변했고, 무엇을 걸러도 항상 상위 5%가 나와 '진짜 봐야할 것'이 실측 526건이었다.
+
+    문턱 근거(서버 실측): 사장님이 실제로 담고 대본까지 뽑은 영상을 정답으로 두고 잰
+    적중력 — 유튜브 조회10만+시간당2,000 = 165건 12.7배 / 인스타 댓글1,500+시간당30 = 19건 5.9배.
+    """
+
+    def test_플랫폼마다_축이_다르다(self):
+        """유튜브는 조회수, 인스타는 댓글. 실측 댓글 중앙값이 1개 vs 161개라 한 잣대를 못 쓴다."""
+        html = _INDEX.read_text(encoding="utf-8")
+        assert "youtube:   {axis:'views'," in html
+        assert "instagram: {axis:'comments'," in html
+
+    def test_문턱이_고정숫자다(self):
+        html = _INDEX.read_text(encoding="utf-8")
+        assert "must:{v:100000, per_h:2000}" in html, "유튜브 🎯 문턱"
+        assert "must:{v:1500,   per_h:30}" in html, "인스타 🎯 문턱"
+
+    def test_뱃지와_필터가_같은_판정식을_쓴다(self):
+        """따로 적으면 '뱃지는 붙었는데 필터엔 안 걸린다'가 난다(0순위-B)."""
+        html = _INDEX.read_text(encoding="utf-8")
+        assert "const g = gradeOf(i);" in html, "뱃지가 gradeOf를 쓴다"
+        assert "const g = gradeOf(i);\n      return g === want" in html, "필터도 gradeOf를 쓴다"
+
+    def test_백분위_판정으로_되돌아가지_않았다(self):
+        """badgeHTML이 다시 ctx(화면 목록 백분위)로 판정하면 뱃지가 또 흔들린다."""
+        html = _INDEX.read_text(encoding="utf-8")
+        assert "const score = vr*0.35" not in html, "옛 종합점수 판정이 되살아났다"

@@ -626,6 +626,20 @@ body.is-admin .admin-only{display:block}
       <button class="ftog" data-f="rising" onclick="toggleFilter('rising')"
               title="시간당 댓글이 쌓이는 속도가 지금 보이는 것 중 상위 25% — 터지는 중인 것만">🔥 급상승</button>
     </div>
+    <!-- ★뱃지 필터(2026-09-10 사장님 "벳지필터기준 명확하게하고 의미있는기준을 만들어야해").
+         카드에 붙는 뱃지와 **같은 판정식(gradeOf)**을 쓴다 — 화면에 보이는 뱃지가 곧 필터다.
+         문턱은 고정 숫자라 카테고리·기간 탭을 바꿔도 결과가 흔들리지 않는다. -->
+    <div class="filters" id="gradeFilters">
+      <span class="flabel">뱃지로 보기</span>
+      <button class="ftog on" data-g="" onclick="setGrade('')" title="뱃지와 상관없이 전부">전체</button>
+      <button class="ftog" data-g="must" onclick="setGrade('must')"
+              title="유튜브: 조회 10만 이상이면서 시간당 2,000회 이상 오르는 중 / 인스타: 댓글 1,500 이상이면서 시간당 30개 이상. 실제로 제작에 쓰신 영상을 기준으로 잡은 문턱입니다(유튜브 기준 무작위보다 12.7배 정확)">🎯 진짜 봐야할 것</button>
+      <button class="ftog" data-g="rising" onclick="setGrade('rising')"
+              title="지금 빠르게 오르는 중 — 유튜브 시간당 2,000회 / 인스타 시간당 댓글 30개 이상. 🎯도 함께 보입니다">📈 급상승</button>
+      <button class="ftog" data-g="small" onclick="setGrade('small')"
+              title="작은 채널의 대박 — 유튜브: 구독자 수의 5배 넘게 본 것 / 인스타: 팔로워 1,000명당 댓글 15개 이상">🚀 구독자 대비 터짐</button>
+      <span class="fcount" id="gradeCount"></span>
+    </div>
     <!-- ★건수 안내는 걸러내기 줄 **밖에** 둔다(2026-09-07).
          여태 이 문구는 위 div(#filters) 안에 있었고 그 div가 display:none이라
          **아무에게도 안 보였다** — 실측: 라이브에서 textContent는
@@ -787,6 +801,8 @@ const TOPIC_CTYPE = {홈템:"홈템", 가전:"홈템", 레시피:"비법형", �
 const CTYPE_HIDDEN = {instagram:["썰쇼핑", "장비템", "차량템"],
                       threads:["썰쇼핑", "장비템", "차량템"]};
 let STATE = {items:[], tab:"comments", ctype:"전체", cat:"전체", q:"", style:"",
+             // 뱃지 필터(2026-09-10) — 지난번 고른 것을 기억한다. 읽기 실패는 '전체'로.
+             grade:(function(){ try{ return localStorage.getItem('refGrade') || ''; }catch(e){ return ''; } })(),
              filters:_loadFilters()};
 // 걸러내기 상태는 브라우저에 기억시킨다 — 새로고침마다 다시 켜게 하면 아무도 안 쓴다.
 function _loadFilters(){
@@ -818,6 +834,14 @@ function _risingCut(list){
   return v[Math.min(v.length-1, Math.floor(v.length*RISING_PCTL))];
 }
 let PLATFORM='instagram';
+// 뱃지 필터(2026-09-10). ''=전체 / 'must' / 'rising' / 'small'. 택1이라 서로 안 겹친다.
+function setGrade(g){
+  STATE.grade = g || '';
+  document.querySelectorAll('#gradeFilters .ftog').forEach(b =>
+    b.classList.toggle('on', (b.dataset.g || '') === STATE.grade));
+  try{ localStorage.setItem('refGrade', STATE.grade); }catch(e){}
+  render();
+}
 // 한 번에 그릴 카드 수 상한(2026-08-18). 유튜브는 5,681장이라 전부 그리면 탭 전환이 멈춘다.
 // [더 보기]를 누를 때마다 이만큼씩 늘어난다 — 데이터를 자르는 게 아니라 그리기만 나눠 한다.
 const RENDER_STEP = 200;
@@ -1766,8 +1790,18 @@ function recencyKey(i){
   if (h != null) return -h;                        // 경과가 적을수록 최신 → 부호를 뒤집는다
   return -1e15;                                    // 시간을 모르는 것은 맨 뒤
 }
+// 이 항목에서 그 값이 '모르는 값'인가(서버가 화면 보호용으로 0을 채워 넣은 것).
+// ★fill_intensity가 metrics_unknown에 적어 보낸다 — 0을 특별취급하는 판단은 여기 한 곳뿐.
+function _unknownMetric(i, k){
+  const u = i && i.metrics_unknown;
+  return Array.isArray(u) && u.indexOf(k) >= 0;
+}
 function sortKey(i){
-  return {comments:(i.delta ?? i.comments), speed:i.speed, accel:(i.accel??-1), density:i.density,
+  // ★'전체'는 오늘 증가분(delta)이 정본이지만, 기간·역대 탭은 delta를 아예 모른다
+  //   → 그럴 땐 누적 댓글수로 줄세운다. 안 그러면 전 항목이 0점이라 정렬이 사라진다
+  //   (2026-09-10 실사고: 이번 주 탭 유튜브 400건·인스타 373건 전부 delta 0).
+  return {comments:(_unknownMetric(i,'delta') ? (i.comments||0) : (i.delta ?? i.comments)),
+          speed:i.speed, accel:(i.accel??-1), density:i.density,
           fan_density:(i.fan_density||0),
           // 단순정렬 3종(2026-07-30) — 지표 계산 없이 절대값 그대로 내림차순.
           // '전체'는 오늘 증가분(delta) 기준이라, 누적 절대값으로 보고 싶을 때 쓴다.
@@ -1932,6 +1966,52 @@ window.addEventListener('popstate', function(){
 // 팔로워가 없는 항목은 fr=0이라 종전처럼 조회수밀도만으로 판정된다(회귀 없음).
 function _pctl(sorted, v){ let lo=0,hi=sorted.length; while(lo<hi){const m=(lo+hi)>>1; if(sorted[m]<=v) lo=m+1; else hi=m;} return sorted.length? lo/sorted.length : 0; }
 function _fmtViews(n){ n=n||0; return n>=10000 ? (n/10000).toFixed(1)+'만' : n.toLocaleString(); }
+// ══ 뱃지·필터 판정 — 여기 한 곳에서만 정한다(2026-09-10) ═══════════════════════
+// ★왜 다시 짰나: 종전 판정은 전부 "지금 화면에 보이는 것들 안에서의 백분위"였다.
+//   그래서 ①카테고리·기간 탭을 바꾸면 **같은 영상의 뱃지가 변했고** ②무엇을 걸러도
+//   항상 상위 5%가 나와 '진짜 봐야할 것'이 실측 526건(5.3%)이나 됐다 — 훑을 수 없는 수다.
+//   필터로 쓰려면 기준이 화면에 흔들리지 않는 **고정 숫자**여야 한다.
+//
+// ★문턱의 근거(2026-09-10 서버 실측): 사장님이 실제로 담고 대본까지 뽑은 영상을
+//   정답으로 두고, 그것을 무작위보다 몇 배 잘 집어내는지(적중력)로 골랐다.
+//     유튜브 : 조회10만+시간당2,000 → 165건(1.7%) **12.7배**   (조회10만 단독은 6.5배)
+//     인스타 : 댓글1,500+시간당30   →  19건(9.1%)  **5.9배**
+//
+// ★플랫폼마다 축이 다르다(2026-09-10 사장님 "유튜브는 댓글이 의미가 없어 /
+//   인스타만 댓글적용 유튭은 조회수만 적용"). 실측 댓글 중앙값 유튜브 1개 / 인스타 161개.
+//   한 잣대를 같이 쓰면 한쪽이 통째로 죽는다.
+//
+// ★조회수당댓글은 뺐다 — 실제 쓴 영상이 오히려 더 낮았다(0.0048 vs 전체 0.0054).
+//   구분을 못 하는 지표인데 종전 종합점수에서 가중치 50%를 받고 있었다.
+const GRADE_RULES = {
+  youtube:   {axis:'views',
+              must:{v:100000, per_h:2000}, rising:{per_h:2000}, small:{ratio:5, floor:10000}},
+  instagram: {axis:'comments',
+              must:{v:1500,   per_h:30},   rising:{per_h:30},   small:{ratio:15, floor:300}},
+};
+// 유튜브·인스타 외(틱톡·네이버클립·쓰레드·샤오홍슈)는 조회수 축을 준용한다 —
+// 이 플랫폼들도 댓글이 거의 안 달린다. 문턱은 재고가 쌓이면 따로 실측해 가른다.
+function gradeRule(){ return GRADE_RULES[PLATFORM] || GRADE_RULES.youtube; }
+// 등급: 'must'(🎯) · 'rising'(📈) · 'small'(🚀) · null. 뱃지와 필터가 이것 하나를 본다.
+function gradeOf(i){
+  const r = gradeRule();
+  const h = ageHoursNow(i);
+  const age = (h && h > 0) ? h : 1;               // 시간을 모르면 1시간으로 본다(과대평가 방지)
+  const main = (r.axis === 'views') ? (i.views || 0) : (i.comments || 0);
+  const fo = i.followers || 0;
+  const perH = main / age;
+  // 팔로워 대비 — 유튜브는 '구독자 대비 몇 배 봤나', 인스타는 '팔로워 1,000명당 댓글 몇 개'
+  const rel = fo ? (r.axis === 'views' ? main / fo : main / fo * 1000) : 0;
+  if(main >= r.must.v && perH >= r.must.per_h) return 'must';
+  if(perH >= r.rising.per_h)                   return 'rising';
+  if(rel >= r.small.ratio && main >= r.small.floor) return 'small';
+  return null;
+}
+const GRADE_LABEL = {
+  must  : {e:'🎯', t:'진짜 봐야할 것', c:'must'},
+  rising: {e:'📈', t:'급상승',        c:'red'},
+  small : {e:'🚀', t:'구독자 대비 터짐', c:'green'},
+};
 function _insight(vr, dr, sr, fr){
   // 아주 선별적 — 평범한 건 배지 없음(대부분 배지 X). 빨강=뜨는중, 연두=반응 좋음.
   const rr = Math.max(dr, fr||0);   // 반응 축 = 조회수밀도·팔로워밀도 중 높은 쪽
@@ -1944,18 +2024,13 @@ function _insight(vr, dr, sr, fr){
   return null;
 }
 function badgeHTML(i, ctx){
-  const vr=_pctl(ctx.vs, i.views||0), dr=_pctl(ctx.ds, i.density||0), sr=_pctl(ctx.ss, i.speed||0);
-  const fr=(ctx.fs && ctx.fs.length) ? _pctl(ctx.fs, i.fan_density||0) : 0;
-  const b=_insight(vr, dr, sr, fr);
+  // ★ctx(화면 목록 백분위)는 더 이상 판정에 쓰지 않는다 — gradeOf가 고정 문턱으로 정한다.
+  //   그래야 카테고리·기간을 바꿔도 같은 영상의 뱃지가 그대로다.
+  const g = gradeOf(i);
   let h='';
-  if(b){
-    // 🎯 진짜 봐야할 것: 도달·반응·상승세 종합(반응 가중) 최상위만 — 극소수. 크고 빨갛게 강조.
-    const score = vr*0.35 + Math.max(dr, fr)*0.50 + sr*0.15;
-    const must = score>=0.90;
-    const cls = must ? 'must' : b.c;
-    const emo = must ? '🎯' : b.e;
-    const txt = must ? '진짜 봐야할 것' : b.t;
-    h+=`<span class="ibadge ${cls}"><span class="emo">${emo}</span><span class="lbl">${txt}</span></span>`;
+  if(g){
+    const b = GRADE_LABEL[g];
+    h+=`<span class="ibadge ${b.c}"><span class="emo">${b.e}</span><span class="lbl">${b.t}</span></span>`;
   }
   // 조회수 배지 제거(2026-08-14) — 지표줄에 이미 있고, 재생 컨트롤과 겹치는 자리였다.
   return h;
@@ -2214,6 +2289,26 @@ function render(opts){
   if(SPAN_DAYS === 0){
     items = items.filter(i => { const h = ageHoursNow(i); return h == null || h <= SPAN_HOURS; });
   }
+  // 뱃지별 재고를 세어 버튼 옆에 적는다 — 눌러보기 전에 몇 건인지 알 수 있게.
+  // ★기간 컷은 이미 반영됐고 카테고리·검색은 아직 안 걸린 시점에서 센다(그 기간의 재고).
+  {
+    const gc = {must:0, rising:0, small:0};
+    for(const i of items){ const g = gradeOf(i); if(g) gc[g]++; }
+    const el = document.getElementById('gradeCount');
+    if(el) el.textContent = `🎯 ${gc.must} · 📈 ${gc.rising} · 🚀 ${gc.small}`;
+    document.querySelectorAll('#gradeFilters .ftog').forEach(b =>
+      b.classList.toggle('on', (b.dataset.g || '') === (STATE.grade || '')));
+  }
+  // ★뱃지 필터 — 카드의 뱃지와 같은 판정식(gradeOf)을 쓴다. 화면에 보이는 것이 곧 기준이다.
+  //   '급상승'을 고르면 🎯도 함께 남긴다 — 🎯는 급상승 조건을 이미 넘은 것이라
+  //   빼고 보여주면 "제일 좋은 게 사라졌다"가 된다.
+  if(STATE.grade){
+    const want = STATE.grade;
+    items = items.filter(i => {
+      const g = gradeOf(i);
+      return g === want || (want === 'rising' && g === 'must');
+    });
+  }
   const _beforeFilter = items.length;
   if(STATE.filters.fresh || STATE.filters.rising){
     const cut = STATE.filters.rising ? _risingCut(items) : 0;
@@ -2263,9 +2358,10 @@ function render(opts){
       if(_perChCut > 0)        why.push(`채널당 ${PER_CHANNEL_MAX}개`);
       parts.push(`전체 ${_served}건 중 ${items.length}건 표시`
                  + (why.length ? ` — ${why.join(" · ")} 때문` : ""));
-    }else{
-      parts.push(`${items.length}건 전부 표시 중`);
     }
+    // ★줄어들지 않았으면 아무 말도 안 한다(2026-09-10 사장님 "이런건 안보이게 해도 되고").
+    //   이 줄의 목적은 "왜 적게 나오나"를 알려주는 것이다. 다 보여주고 있을 때의
+    //   "212건 전부 표시 중"은 알려줄 것이 없는데 자리만 차지한다.
     _fc.textContent = parts.join(" · ");
   }
   // 배지용 백분위 컨텍스트 — 지금 보이는 항목 기준(정렬·필터 반영)
@@ -2296,10 +2392,19 @@ function render(opts){
   // 조용히 이상한 순서를 보여주는 대신 왜 그런지 말해준다.
   const _needFan = (STATE.tab==='fan_density' && !items.some(i=>(i.fan_density||0)>0));
   const _needDen = (STATE.tab==='density'     && !items.some(i=>(i.density||0)>0));
-  const _notice = (_needFan||_needDen)
-    ? `<div class="empty" style="margin-bottom:10px">이 지표는 아직 값이 없어 순서가 의미 없습니다 —
-        ${_needFan?'팔로워를 수집이 실어오기 시작한 게 오늘부터라':'조회수 기준 계산이 바뀌어'}
-        <b>다음 수집(내일 오전 9시)</b>부터 채워집니다.</div>`
+  // ★팔로워순도 같은 함정이었다(2026-09-10). 기간·역대 탭은 팔로워 수를 아예 안 실어와
+  //   전 항목이 0 → 눌러도 순서가 그대로다. 조용히 두면 "정렬이 안 먹는다"가 된다.
+  const _needFol = (STATE.tab==='followers'   && !items.some(i=>(i.followers||0)>0));
+  // 기간·역대 탭은 '다음 수집이면 채워진다'가 **거짓**이다 — 그 탭이 읽는 곳에 그 값이
+  //   애초에 없다(reel_history에 followers·delta 컬럼이 없다). 안내를 갈라 적는다.
+  const _spanTab = (SPAN_DAYS !== 0);
+  const _notice = (_needFan||_needDen||_needFol)
+    ? (_spanTab
+        ? `<div class="empty" style="margin-bottom:10px">이 <b>기간 탭</b>에는 ${_needFol?'팔로워 수':(_needFan?'팔로워당댓글':'조회수당댓글')}가 없어 이 순서는 의미가 없습니다 —
+            <b>🆕 48시간</b>·<b>⚡ 12시간</b> 탭에서는 정상으로 보입니다.</div>`
+        : `<div class="empty" style="margin-bottom:10px">이 지표는 아직 값이 없어 순서가 의미 없습니다 —
+            ${(_needFan||_needFol)?'팔로워를 수집이 실어오기 시작한 게 오늘부터라':'조회수 기준 계산이 바뀌어'}
+            <b>다음 수집</b>부터 채워집니다.</div>`)
     : '';
   // ★렌더 상한(2026-08-18 사장님 "인스타에서 유튜브 넘어가면 버퍼가 엄청심해").
   // 원인: 카드 수가 플랫폼마다 35배 차이다 — 실측 인스타 161장 / 유튜브 5,681장.
