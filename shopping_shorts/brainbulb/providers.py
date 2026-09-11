@@ -80,14 +80,17 @@ def typecast_key(key_file=None):
 
 
 def typecast_synth(voice_id, *, tempo=None, model="ssfm-v30", key_file=None, timeout=90):
-    """→ synth(text, out_path). 일반 엔드포인트는 **mp3 바이트를 그대로** 돌려준다(실측 200 audio/mpeg) — JSON 아님."""
+    """→ synth(text, out_path, role="NARR"). voice_id는 문자열(전 역할 같은 목소리) 또는 {"NARR","CHAR","PUNCH"} dict(역할별 3명).
+    일반 엔드포인트는 **mp3 바이트를 그대로** 돌려준다(실측 200 audio/mpeg) — JSON 아님."""
     from shopping_shorts import typecast_tts
     key = typecast_key(key_file)
     if not key:
         raise RuntimeError("providers: Typecast 키가 없습니다 (~/.volcano/keys/typecast 또는 TYPECAST_API_KEY)")
+    voices = dict(voice_id) if isinstance(voice_id, dict) else {"NARR": voice_id}
 
-    def synth(text, out_path):
-        body = typecast_tts.build_payload(text, voice_id, speed=tempo, model_id=model)
+    def synth(text, out_path, role="NARR", emotion=None, intensity=None):
+        vid = voices.get(role) or voices.get("NARR") or next(iter(voices.values()))
+        body = typecast_tts.build_payload(text, vid, speed=tempo, model_id=model, emotion=emotion, intensity=intensity)
         r = requests.post(_TC_URL, headers={"X-API-KEY": key}, json=body, timeout=timeout)
         if r.status_code != 200:
             raise RuntimeError(f"typecast {r.status_code}: {r.text[:200]}")
@@ -99,5 +102,5 @@ def typecast_synth(voice_id, *, tempo=None, model="ssfm-v30", key_file=None, tim
             data = base64.b64decode(r.json()["audio"])
         with open(out_path, "wb") as fh:
             fh.write(data)
-    synth.tag = f"{voice_id}|{tempo}|{model}"        # voice.py 사이드카에 실린다 — 목소리·템포가 바뀌면 재합성
+    synth.tag = f"{sorted(voices.items())}|{tempo}|{model}"   # voice.py 사이드카에 실린다 — 목소리·템포가 바뀌면 재합성
     return synth

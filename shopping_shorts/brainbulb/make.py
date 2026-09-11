@@ -17,12 +17,24 @@ from . import pipeline, providers
 DEFAULT_VOICE = "tc_6059dad0b83880769a50502f"      # Typecast 'Changsu' = 박창수 (사장님 지정 2026-09-12). 볼케이노는 여성 나레(228Hz)+남성 PUNCH(104Hz) 2인 구성(실측)
 
 
+def _voices(a):
+    if a.voice:
+        return a.voice
+    from . import spec
+    v = dict(spec.POLICY_VOICES)
+    for k, val in (("NARR", a.voice_narr), ("CHAR", a.voice_char), ("PUNCH", a.voice_punch)):
+        if val:
+            v[k] = val
+    return v
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--url"); ap.add_argument("--text-file")
     ap.add_argument("--workdir", required=True)
-    ap.add_argument("--voice", default=DEFAULT_VOICE)
-    ap.add_argument("--tempo", type=float, default=1.15)   # 실측: 볼케이노 7.4자/초. 쉼 압축 뒤 1.35는 9.1(너무 빠름) → 1.15 ≈ 7.7
+    ap.add_argument("--voice", default=None, help="전 역할 같은 목소리(tc_…). 기본은 역할별 3명(spec.POLICY_VOICES)")
+    ap.add_argument("--voice-narr", default=None); ap.add_argument("--voice-char", default=None); ap.add_argument("--voice-punch", default=None)
+    ap.add_argument("--tempo", type=float, default=1.3)    # 사장님: "템포 더 빠르게"(v004 1.15=7.9자/초에도). 볼케이노 7.4는 여성 목소리라 더 빨리 들린다
     _vol = os.path.expanduser("~/.volcano/jobs/20260911_뇌전구_박수홍")     # 로컬에 있는 볼케이노 팩(저작권 미확인 — 커밋 안 함)
     ap.add_argument("--sfx-dir", default=os.path.join(_vol, "sfx_norm") if os.path.isdir(os.path.join(_vol, "sfx_norm")) else None)
     ap.add_argument("--meme-dir", default=os.path.join(_vol, "pepe", "fm") if os.path.isdir(os.path.join(_vol, "pepe", "fm")) else None)
@@ -49,7 +61,7 @@ def main(argv=None):
     from . import images as _images
     imagegen = None if a.no_images else _images.evolink_imagegen(quality=a.quality)
     r = pipeline.run_all(a.workdir, source_text=text, llm=providers.gemini_llm(a.model),
-                         tts=providers.typecast_synth(a.voice, tempo=a.tempo), imagegen=imagegen,
+                         tts=providers.typecast_synth(_voices(a), tempo=a.tempo), imagegen=imagegen,
                          sfx_dir=a.sfx_dir, meme_dir=a.meme_dir, bg_image=a.bg)
     if r["status"] != "ok":
         print("[make] 멈춤:", json.dumps({k: v for k, v in r.items() if k != "job"}, ensure_ascii=False, indent=1)[:1500])

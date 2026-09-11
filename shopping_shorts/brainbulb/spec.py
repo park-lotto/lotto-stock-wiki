@@ -125,3 +125,24 @@ POLICY_SILENCE_SEC = 0.7           # 나레 트랙 안 무음 임계 (꼬리 0.1
 POLICY_SILENCE_DB = -40.0
 POLICY_DURATION_TOL = 0.05         # mp4 길이 vs total 허용 오차
 
+# ── 역할별 성우 (볼케이노 5편 f0 실측: 나레 ~220Hz 여성 / CHAR ~265Hz 더 높은 여성 / PUNCH 90~170Hz 낮은 남성 = 3명) ──
+# 사장님 지정(2026-09-12): 박창수 · 용식이 · 발키리 (저장소 Typecast 프리셋 add_typecast_presets.py)
+POLICY_VOICES = {
+    "NARR": "tc_6059dad0b83880769a50502f",     # 박창수 — 친근하고 편안한 남성 (카드도 나레 목소리)
+    "CHAR": "tc_5feb2085cca1a479e73bac37",     # 용식이 — 능청스럽고 개성있는 남성 (대사 컷)
+    "PUNCH": "tc_60478557f12456064b353409",    # 발키리 — 당차고 힘있는 여성 (마지막 단정문)
+}
+# ── 훅/본문 다르게 (숏템메이커 장면꾸미기 "속삭임을 훅에만" 원리, 사장님 2026-09-12) ─────────
+# Typecast ssfm-v30 감정 프리셋: angry / happy / normal / sad / tonedown / toneup / whisper
+POLICY_HOOK_CUTS = 1               # 카드 + 첫 N컷 = 훅
+POLICY_EMOTION = {                 # 역할 → (감정, 강도). None = 기본
+    "HOOK": ("whisper", 1.2),
+    "NARR": None,
+    "PUNCH": ("toneup", 1.5),
+}
+MEME_TO_TC_EMOTION = {             # 대사(CHAR) 컷은 밈 감정을 따라간다
+    "경악/충격": "toneup", "당황": "toneup", "분노": "angry", "슬픔/울음": "sad",
+    "비웃음/조롱": "happy", "만족/엄지척": "happy", "무표정/멍": "tonedown", "의심/떨떠름": "tonedown",
+    "피곤/지침": "tonedown", "기타": None,
+}
+
