@@ -8,6 +8,7 @@
   'Illegal byte sequence'와 경로 이중 결합으로 죽었다. subtitles 필터 경로 이스케이프 문제도 같이 사라진다).
 """
 import os
+import re
 import subprocess
 
 from . import spec
@@ -54,14 +55,39 @@ def sfx_bed(plan, timing, sfx_dir, wd, total, out_name="sfx_bed.wav"):
     return os.path.join(wd, out_name)
 
 
+def _measure_loudness(path, wd):
+    """1차 패스: 통합 라우드니스(LUFS)와 트루피크(dBTP). loudnorm print_format=json 을 측정용으로만 쓴다."""
+    import json as _json
+    r = subprocess.run(["ffmpeg", "-hide_banner", "-nostats", "-i", path, "-af", f"{spec.MIX_LOUDNORM}:print_format=json", "-f", "null", "-"],
+                       cwd=wd, capture_output=True, text=True, encoding="utf-8", errors="replace", stdin=subprocess.DEVNULL)
+    m = re.search(r"\{[^{}]*\"input_i\"[^{}]*\}", r.stderr, re.S)
+    if not m:
+        raise RuntimeError(f"render/mix: 라우드니스 측정 실패 — {r.stderr[-200:]}")
+    d = _json.loads(m.group(0))
+    return float(d["input_i"]), float(d["input_tp"])
+
+
+def _gain_filter(path, wd):
+    """목표 I=-16 LUFS·TP≤-1.5까지 **고정 게인**. loudnorm 2패스 대신 쓰는 이유: loudnorm은 출력 길이를 65ms 줄인다
+    (실측 v006: apad를 앞뒤 어디 붙여도 28.469 vs total 28.535 → 검수 stream_sync 실패). volume은 길이를 안 건드린다."""
+    li, tp = _measure_loudness(path, wd)
+    gain = min(-16.0 - li, -1.5 - tp)
+    return f"volume={gain:.2f}dB"
+
+
 def mix(narr_wav, bed_wav, wd, total, out_name="audio_final.wav"):
     n = _rel(narr_wav, wd)
     if bed_wav is None:
-        _run(["ffmpeg", "-y", "-loglevel", "error", "-i", n, "-af", spec.MIX_LOUDNORM, "-t", str(total), out_name], "mix", wd)
+        g = _gain_filter(n, wd)
+        _run(["ffmpeg", "-y", "-loglevel", "error", "-i", n, "-af", f"{g},apad=pad_dur=1", "-t", str(total), out_name], "mix", wd)
         return os.path.join(wd, out_name)
-    fc = f"[1:a]volume={spec.SFX_BED_DB}dB[b];[0:a][b]amix=inputs=2:normalize=0:duration=first,{spec.MIX_LOUDNORM}[m]"
+    raw = out_name + ".premix.wav"
+    fc = f"[1:a]volume={spec.SFX_BED_DB}dB[b];[0:a][b]amix=inputs=2:normalize=0:duration=first,apad=pad_dur=1[m]"
     _run(["ffmpeg", "-y", "-loglevel", "error", "-i", n, "-i", _rel(bed_wav, wd), "-filter_complex", fc, "-map", "[m]",
-          "-t", str(total), out_name], "mix", wd)
+          "-t", str(total), raw], "premix", wd)
+    g = _gain_filter(raw, wd)
+    _run(["ffmpeg", "-y", "-loglevel", "error", "-i", raw, "-af", g, "-t", str(total), out_name], "mix", wd)
+    os.remove(os.path.join(wd, raw))
     return os.path.join(wd, out_name)
 
 

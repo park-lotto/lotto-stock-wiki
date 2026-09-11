@@ -50,13 +50,19 @@ def _takes_role(fn):
 
 
 def plan_emotion(role, meme, *, hook=False):
-    """역할·훅·밈 감정 → Typecast (감정, 강도). 판정은 여기 한 곳(0순위-B)."""
-    if hook and spec.POLICY_EMOTION.get("HOOK"):
-        return spec.POLICY_EMOTION["HOOK"]
-    if role == "CHAR":
+    """역할·훅·밈 감정 → Typecast (감정, 강도). 판정은 여기 한 곳(0순위-B). whisper는 어떤 경로로도 안 나간다."""
+    if spec.POLICY_EMOTION_ALL:
+        out = spec.POLICY_EMOTION_ALL
+    elif hook and spec.POLICY_EMOTION.get("HOOK"):
+        out = spec.POLICY_EMOTION["HOOK"]
+    elif role == "CHAR":
         e = spec.MEME_TO_TC_EMOTION.get(meme or "")
-        return (e, 1.2) if e else None
-    return spec.POLICY_EMOTION.get(role)
+        out = (e, 1.2) if e else None
+    else:
+        out = spec.POLICY_EMOTION.get(role)
+    if out and out[0] in spec.FORBIDDEN_EMOTIONS:
+        raise RuntimeError(f"voice: 금지된 감정 {out[0]} (사장님 지시 — spec.FORBIDDEN_EMOTIONS)")
+    return out
 
 
 def synth_all(script, workdir, synth, *, spent_chars=0, log=print):

@@ -134,15 +134,17 @@ POLICY_VOICES = {
 }
 # ── 훅/본문 다르게 (숏템메이커 장면꾸미기 "속삭임을 훅에만" 원리, 사장님 2026-09-12) ─────────
 # Typecast ssfm-v30 감정 프리셋: angry / happy / normal / sad / tonedown / toneup / whisper
-POLICY_HOOK_CUTS = 1               # 카드 + 첫 N컷 = 훅
-POLICY_EMOTION = {                 # 역할 → (감정, 강도). None = 기본
-    "HOOK": ("whisper", 1.2),
+POLICY_HOOK_CUTS = 0               # 훅 특별 처리 없음 (사장님 2026-09-12: "위스퍼는 절대 쓰지 말고")
+POLICY_EMOTION_ALL = ("angry", 1.2)  # ★전 컷 공통 감정 — 사장님: "화남모드로 해서 모두". None이면 아래 역할표를 쓴다
+POLICY_EMOTION = {                 # 역할 → (감정, 강도). None = 기본  (EMOTION_ALL이 None일 때만)
+    "HOOK": None,
     "NARR": None,
     "PUNCH": ("toneup", 1.5),
 }
-MEME_TO_TC_EMOTION = {             # 대사(CHAR) 컷은 밈 감정을 따라간다
+MEME_TO_TC_EMOTION = {             # 대사(CHAR) 컷은 밈 감정을 따라간다 (EMOTION_ALL이 None일 때만)
     "경악/충격": "toneup", "당황": "toneup", "분노": "angry", "슬픔/울음": "sad",
     "비웃음/조롱": "happy", "만족/엄지척": "happy", "무표정/멍": "tonedown", "의심/떨떠름": "tonedown",
     "피곤/지침": "tonedown", "기타": None,
 }
+FORBIDDEN_EMOTIONS = ("whisper",)   # 어떤 경로로도 안 나간다 (사장님 지시). voice.plan_emotion이 막는다
 
