@@ -23,7 +23,11 @@ def main(argv=None):
     ap.add_argument("--workdir", required=True)
     ap.add_argument("--voice", default=DEFAULT_VOICE)
     ap.add_argument("--tempo", type=float, default=1.25)   # 실측: 볼케이노 나레가 Typecast 기본보다 약 1.35배 빠르다(같은 문장 1.8s vs 2.7s)
-    ap.add_argument("--sfx-dir", default=None)
+    _vol = os.path.expanduser("~/.volcano/jobs/20260911_뇌전구_박수홍")     # 로컬에 있는 볼케이노 팩(저작권 미확인 — 커밋 안 함)
+    ap.add_argument("--sfx-dir", default=os.path.join(_vol, "sfx_norm") if os.path.isdir(os.path.join(_vol, "sfx_norm")) else None)
+    ap.add_argument("--meme-dir", default=os.path.join(_vol, "pepe", "fm") if os.path.isdir(os.path.join(_vol, "pepe", "fm")) else None)
+    ap.add_argument("--no-images", action="store_true", help="EvoLink 생성 생략(검은 슬롯)")
+    ap.add_argument("--quality", default=None, help="gpt-image-2 low|medium|high (기본 spec.IMAGE_QUALITY)")
     ap.add_argument("--bg", default=None)
     ap.add_argument("--model", default="gemini-3.1-flash-lite")
     ap.add_argument("--from", dest="from_step", default=None, help="이 단계부터 다시 (예: voice, subtitle)")
@@ -42,8 +46,11 @@ def main(argv=None):
     os.makedirs(a.workdir, exist_ok=True)
     with open(os.path.join(a.workdir, "source.txt"), "w", encoding="utf-8") as fh:
         fh.write(text)
+    from . import images as _images
+    imagegen = None if a.no_images else _images.evolink_imagegen(quality=a.quality)
     r = pipeline.run_all(a.workdir, source_text=text, llm=providers.gemini_llm(a.model),
-                         tts=providers.typecast_synth(a.voice, tempo=a.tempo), sfx_dir=a.sfx_dir, bg_image=a.bg)
+                         tts=providers.typecast_synth(a.voice, tempo=a.tempo), imagegen=imagegen,
+                         sfx_dir=a.sfx_dir, meme_dir=a.meme_dir, bg_image=a.bg)
     if r["status"] != "ok":
         print("[make] 멈춤:", json.dumps({k: v for k, v in r.items() if k != "job"}, ensure_ascii=False, indent=1)[:1500])
         return 1

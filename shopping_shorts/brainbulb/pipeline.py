@@ -13,9 +13,9 @@ import os
 import tempfile
 import time
 
-from . import spec, prompt, lint, layout, voice, timing, ass_gen, sfx, render, review, measure
+from . import spec, prompt, lint, layout, voice, timing, ass_gen, sfx, render, review, measure, images as _images, frames as _frames
 
-STEPS = ["setup", "script", "layout", "lint", "voice", "timing", "subtitle", "sfx", "render", "review"]
+STEPS = ["setup", "script", "layout", "lint", "prompts", "images", "voice", "timing", "subtitle", "sfx", "frames", "render", "review"]
 
 
 def _job_path(wd):
@@ -81,7 +81,7 @@ def _digest(obj):
     return hashlib.sha256(json.dumps(obj, ensure_ascii=False, sort_keys=True).encode("utf-8")).hexdigest()[:12]
 
 
-def run_step(wd, step, *, source_text=None, llm=None, tts=None, sfx_dir=None, bg_image=None, fonts_dir=None, log=print):
+def run_step(wd, step, *, source_text=None, llm=None, tts=None, imagegen=None, sfx_dir=None, meme_dir=None, bg_image=None, fonts_dir=None, log=print):
     """한 단계만 실행. → 응답 dict {status: ok|need_input|failed, step, next_step, fail?, need?}"""
     job = load(wd)
     d = job["data"]
@@ -128,6 +128,26 @@ def run_step(wd, step, *, source_text=None, llm=None, tts=None, sfx_dir=None, bg
                 save(wd, job)
                 return _resp("failed", step, "lint", fail={"where": "lint", "why": f"반려 {len(rej)}건", "fix": lint.feedback(issues), "retry_ok": True})
 
+        elif step == "prompts":
+            if llm is None or imagegen is None:
+                d["prompts"] = {"skipped": True, "why": "llm 또는 imagegen 없음 — 사진 없이(검은 슬롯) 진행"}
+            else:
+                s = dict(d["script"]["script"]); s["groups"] = d["layout"]["groups"]
+                d["prompts"] = _images.make_prompts(s, d["setup"]["source_text"], llm, log=log)
+            _invalidate_after(job, "prompts")
+
+        elif step == "images":
+            if d["prompts"].get("skipped") or imagegen is None:
+                d["images"] = {"files": {}, "skipped": True}
+            else:
+                d["images"] = {"files": _images.generate_all(d["prompts"]["prompts"], wd, imagegen, log=log)}
+            _invalidate_after(job, "images")
+
+        elif step == "frames":
+            s = dict(d["script"]["script"]); s["groups"] = d["layout"]["groups"]
+            d["frames"] = _frames.build(wd, d["timing"], s, d["images"]["files"], meme_dir=meme_dir, log=log)
+            _invalidate_after(job, "frames")
+
         elif step == "voice":
             if tts is None:
                 return _resp("need_input", step, "voice", need=["tts (synth(text,out_path))"])
@@ -158,7 +178,8 @@ def run_step(wd, step, *, source_text=None, llm=None, tts=None, sfx_dir=None, bg
 
         elif step == "render":
             r = render.build(wd, d["timing"], d["subtitle"]["path"], d["voice"]["files"], d["sfx"]["plan"],
-                             sfx_dir=sfx_dir, bg_image=bg_image, fonts_dir=fonts_dir, log=log)
+                             sfx_dir=sfx_dir, bg_image=bg_image, frames_list=d.get("frames", {}).get("list"),
+                             fonts_dir=fonts_dir, log=log)
             d["render"] = r
             _invalidate_after(job, "render")
 

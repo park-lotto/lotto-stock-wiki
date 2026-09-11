@@ -41,6 +41,20 @@ def build(source_text, *, feedback=""):
     )
 
 
+def parse_any(raw):
+    """LLM 응답 → dict (스키마 검사 없음). 코드펜스·앞뒤 잡문을 걷어내고 첫 JSON 객체만."""
+    s = raw.strip()
+    s = re.sub(r"^```(?:json)?\s*|\s*```$", "", s, flags=re.S)
+    start = s.find("{")
+    if start < 0:
+        raise ValueError("응답에 JSON 객체가 없습니다")
+    try:
+        d, _end = json.JSONDecoder().raw_decode(s[start:])
+    except json.JSONDecodeError as e:
+        raise ValueError(f"JSON 파싱 실패: {e}") from e
+    return d
+
+
 def parse(raw):
     """LLM 응답 → dict. 코드펜스·앞뒤 잡문을 걷어낸다. 실패하면 ValueError(원인 포함)."""
     s = raw.strip()

@@ -10,6 +10,16 @@ FONTS_DIR = os.path.join(os.path.dirname(__file__), "fonts")
 
 CANVAS_W, CANVAS_H = 1080, 1920
 SLOT_W, SLOT_H = 1028, 786
+SLOT_X, SLOT_Y = 26, 469           # 실제 mp4 프레임 실측: 열 26~1053, 행 469~1254 (제목 아래·자막 위). 카드 띠(469~)가 그 위에 얹힌다
+
+# ── 이미지 생성 (볼케이노 실행기 cardnews_images.generate_gpt_image2 와 같은 호출) ─────
+IMAGE_API = "https://api.evolink.ai"
+IMAGE_MODEL = "gpt-image-2"
+IMAGE_SIZE = "3:2"                 # 지원: auto/1:1/16:9/9:16/3:2/2:3. 슬롯 1028×786(1.31)에 가장 가까운 3:2 → 가운데 cover 크롭
+IMAGE_QUALITY = "medium"           # low $0.0037 / medium $0.032 / high $0.127 (실행기 주석 실측 단가)
+IMAGE_PROMPT_PREFIX = "Documentary style photo, in South Korea, Korean people, Korean-language signage and hangul text, "  # 볼케이노 서버가 붙이는 접두(실측 payload.prompts)
+IMAGE_PROMPT_SUFFIX = ", documentary photography, natural lighting, no text overlay, no watermark"
+MEME_FIT = "height"                # 밈은 슬롯 높이에 맞춰 가운데(실측 밈 폭 870 ≈ 231×218 → 786 높이)
 
 # ── ASS 헤더·스타일 블록 (5편 MD5 동일 · 전편 3편 바이트 동일 = 8/8) ──────────────
 ASS_HEADER = (

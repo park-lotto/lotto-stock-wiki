@@ -65,25 +65,30 @@ def mix(narr_wav, bed_wav, wd, total, out_name="audio_final.wav"):
     return os.path.join(wd, out_name)
 
 
-def video(ass_path, audio_wav, wd, total, *, bg_image=None, fonts_dir=None, fps=29.97, out_name="out/final.mp4"):
-    """배경(없으면 검정) + 자막 번인 + 오디오 → mp4. 전부 작업폴더 기준 상대 경로."""
+def video(ass_path, audio_wav, wd, total, *, bg_image=None, frames_list=None, fonts_dir=None, fps=29.97, out_name="out/final.mp4"):
+    """배경(프레임 시퀀스 > 단일 이미지 > 검정) + 자막 번인 + 오디오 → mp4. 전부 작업폴더 기준 상대 경로."""
     from .measure import _fontsdir_arg
     fonts_dir = fonts_dir or spec.FONTS_DIR
     os.makedirs(os.path.join(wd, os.path.dirname(out_name)), exist_ok=True)
     fd = _fontsdir_arg(fonts_dir, wd)
-    if bg_image:
+    if frames_list:
+        vin = ["-f", "concat", "-safe", "0", "-i", _rel(frames_list, wd)]      # 컷별 정지 프레임(볼케이노 vconcat 방식)
+    elif bg_image:
         vin = ["-loop", "1", "-framerate", str(fps), "-i", _rel(bg_image, wd)]
     else:
         vin = ["-f", "lavfi", "-i", f"color=black:s={spec.CANVAS_W}x{spec.CANVAS_H}:r={fps}"]
+    # tpad로 마지막 프레임을 붙들어 두고 -t total로 자른다. -shortest는 쓰지 않는다 —
+    # 프레임 시퀀스는 29.97fps 양자화로 음성보다 몇 프레임 짧아져 -shortest가 거기서 끊는다(실측: 긴 영상에서 검수 mp4_duration 실패).
     argv = ["ffmpeg", "-y", "-loglevel", "error", *vin, "-i", _rel(audio_wav, wd),
-            "-vf", f"scale={spec.CANVAS_W}:{spec.CANVAS_H}:force_original_aspect_ratio=decrease,pad={spec.CANVAS_W}:{spec.CANVAS_H}:(ow-iw)/2:(oh-ih)/2,subtitles={_rel(ass_path, wd)}:fontsdir={fd}",
+            # ★fps 정규화가 맨 앞이어야 한다 — concat 이미지 스트림은 가변 프레임률이라 tpad만으로는 영상이 0.24초 짧게 끝났다(실측 A/B/C 대조: fps 선행 시 32.366 vs 오디오 32.370)
+            "-vf", f"fps={fps},tpad=stop_mode=clone:stop_duration=2,scale={spec.CANVAS_W}:{spec.CANVAS_H}:force_original_aspect_ratio=decrease,pad={spec.CANVAS_W}:{spec.CANVAS_H}:(ow-iw)/2:(oh-ih)/2,subtitles={_rel(ass_path, wd)}:fontsdir={fd}",
             "-t", str(total), "-r", str(fps), "-pix_fmt", "yuv420p", "-c:v", "libx264", "-preset", "veryfast", "-crf", "20",
-            "-c:a", "aac", "-b:a", "192k", "-shortest", out_name]
+            "-c:a", "aac", "-b:a", "192k", out_name]
     _run(argv, "video", wd)
     return os.path.join(wd, out_name)
 
 
-def build(workdir, timing, ass_path, narr_files, sfx_plan, *, sfx_dir=None, bg_image=None, fonts_dir=None, log=print):
+def build(workdir, timing, ass_path, narr_files, sfx_plan, *, sfx_dir=None, bg_image=None, frames_list=None, fonts_dir=None, log=print):
     wd = os.path.abspath(workdir)
     total = timing["total"]
     narr = concat_narration(narr_files, wd)
@@ -91,6 +96,6 @@ def build(workdir, timing, ass_path, narr_files, sfx_plan, *, sfx_dir=None, bg_i
     if bed is None:
         log("[brainbulb.render] 효과음 팩 없음 — 베드 생략(나레만)")
     final = mix(narr, bed, wd, total)
-    mp4 = video(ass_path, final, wd, total, bg_image=bg_image, fonts_dir=fonts_dir)
+    mp4 = video(ass_path, final, wd, total, bg_image=bg_image, frames_list=frames_list, fonts_dir=fonts_dir)
     log(f"[brainbulb.render] {mp4} ({total}s)")
     return {"mp4": mp4, "narr": narr, "bed": bed, "audio": final}
