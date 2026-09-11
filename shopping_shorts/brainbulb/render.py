@@ -35,7 +35,7 @@ def sfx_bed(plan, timing, sfx_dir, out_wav, total):
         if not os.path.exists(path):
             continue
         g = timing["groups"][x["cut"]]
-        k = len(inputs)
+        k = len(tags)                      # 입력 번호 = 지금까지 붙인 효과음 개수 (아스트라 3R: len(inputs)는 2씩 뛰어 'Invalid file index')
         inputs += ["-i", path]
         filters.append(f"[{k}:a]volume={x['gain']},adelay={int(g['t'] * 1000)}|{int(g['t'] * 1000)},aformat=sample_rates=44100:channel_layouts=stereo[s{k}]")
         tags.append(f"[s{k}]")

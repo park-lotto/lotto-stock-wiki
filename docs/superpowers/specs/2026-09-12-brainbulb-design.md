@@ -141,7 +141,7 @@ i%4==3 → [ding, r3_ding, x_ding]                        (주기 3)
 
 | 항목 | 실측 | 코드 |
 |---|---|---|
-| ASS 시각 반올림 | timing.t(3자리)에 HALF_UP → 135컷 중 133 일치. 나머지 2컷은 서버 원시 누적값이 .xx5 바로 아래(22.1244→22.12) | `ass_gen.fmt_time` HALF_UP, 테스트 ±1cs |
+| ASS 시각 반올림 | timing.t(3자리)에 **HALF_EVEN → 135컷 중 134 일치**(HALF_UP은 133). 남은 1컷(4.605→04.61)은 서버 원시값이 .xx5 위 | `ass_gen.fmt_time` HALF_EVEN(아스트라 3R가 코드·문서 불일치를 잡음), 테스트 ±1cs |
 | 마지막 컷 자막 End | t+d가 아니라 **total**(꼬리 0.1 포함) 5/5 | `ass_gen.build` |
 | 1줄↔2줄 경계 | 어절·글자수 아님. **숫자·영문을 한글 폭으로 센 잉크 폭 ≈700px** (1줄 최대 703 / 2줄 최소 726). 예외 4건이 전부 숫자·영문 포함 줄이라 발견 | `layout.proxy_width`, `POLICY_LINE_SPLIT_PX=710` → **배치 135/135 일치** |
 | 2줄 분할점 | 픽셀 최대폭 최소, 동률이면 윗줄 긴 쪽 → 2줄 컷 전부 일치 | `layout.break_lines` |
@@ -149,3 +149,20 @@ i%4==3 → [ding, r3_ding, x_ding]                        (주기 3)
 | lines 정본 | timing.json의 lines는 stale일 수 있다(박위 그룹24) — 정본은 sub.ass | 테스트가 sub.ass에서 복원 |
 | subtitles 필터 fontsdir | 절대경로 `C\:`는 필터 파서가 깨뜨림 → cwd 상대경로 | `measure._fontsdir_arg` (렌더 3곳 공용) |
 | ffmpeg stderr | cp949로 읽으면 한글 메시지에서 죽음 | 모든 subprocess `encoding="utf-8", errors="replace"` |
+
+## 7. 아스트라 3라운드 — 코드 리뷰 (2026-09-12) 와 반영
+
+아스트라가 읽기 전용 환경에서 코드를 읽고 일부 테스트를 직접 돌려 **"커밋 보류"** 판정을 냈다. 페이블이 전부 코드로 확인했고, 맞는 지적이었다.
+
+| 지적 | 확인 | 반영 |
+|---|---|---|
+| `render.sfx_bed` 입력 번호 `k=len(inputs)`가 2씩 뛰어 효과음 2개부터 `Invalid file index` | 맞다 (`-i path` 두 원소씩 증가) | `k=len(tags)` · 테스트 ①(4개 실합성+2개 누락) |
+| `voice`가 wav 존재만 보고 재사용 → 대본 바꿔도 옛 음성 | 맞다 | 옆 `.txt`(글자) 비교로 재사용 판정, 바뀐 컷만 재합성 · 테스트 ② |
+| 반려 뒤 `step_done`이 전진해 재개 시 voice로 건너뜀 | 맞다 (`_invalidate_after`가 실패 전에 step_done 기록) | `_fail_stay` — 실패 단계는 직전 단계로 되돌림 · 테스트 ③ |
+| 비용 상한이 잡당 누적이 아님 (§5 위반) | 맞다 | `job.tts_spent_chars` 누적(무효화와 무관) + 새로 합성할 글자만 셈 · 테스트 ④ |
+| `review._silences`가 ffmpeg rc·파일 유무를 안 봐서 실패가 "무음 없음"으로 통과 | 맞다 | rc/파일 검사 → 검수 실패 · 테스트 ⑤ |
+| review에 경계 검사·스트림 동기 없음 (§5 위반) | 맞다 | `subtitle_bounds`(본문 100/108 좌표, 제목 잉크) + `stream_sync`(영상·오디오 스트림 길이) · 테스트 ⑥ |
+| measure 캐시 키에 폰트 경로 없음 | 맞다 | 키에 `abspath(fonts_dir)` 포함 |
+| 코드는 HALF_EVEN인데 문서는 HALF_UP | 맞다 (페이블이 되돌리는 걸 빠뜨림) | 실측 HALF_EVEN 134/135 > HALF_UP 133 → 코드 유지, 문서 정정 |
+
+**남은 미합의 없음.** 정책값 4건은 `spec.POLICY_*`로 명시. 다음 논쟁거리는 2단계(이미지·밈·`timeline.json`)에서.

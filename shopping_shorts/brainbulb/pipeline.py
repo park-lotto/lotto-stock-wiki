@@ -46,6 +46,13 @@ def _invalidate_after(job, step):
     job["step_done"] = step
 
 
+def _fail_stay(job, step):
+    """단계가 실패(반려·검수 불합격)하면 **전진하지 않는다** — step_done은 직전 단계로.
+    아스트라 3R: 반려를 돌려주기 전에 step_done=lint로 저장해 재개 시 voice로 넘어가던 버그."""
+    i = STEPS.index(step)
+    job["step_done"] = STEPS[i - 1] if i > 0 else None
+
+
 def _resp(status, step, next_step=None, **kw):
     return {"status": status, "step": step, "next_step": next_step, **kw}
 
@@ -99,6 +106,7 @@ def run_step(wd, step, *, source_text=None, llm=None, tts=None, sfx_dir=None, bg
                            "issues": [i.__dict__ for i in issues]}
             _invalidate_after(job, "script")
             if rej:
+                _fail_stay(job, step)
                 save(wd, job)
                 return _resp("failed", step, "script", fail={"where": "script.lint", "why": f"재작성 {attempts}회 뒤에도 반려 {len(rej)}건",
                                                               "fix": lint.feedback(issues), "retry_ok": True})
@@ -116,6 +124,7 @@ def run_step(wd, step, *, source_text=None, llm=None, tts=None, sfx_dir=None, bg
             d["lint"] = {"issues": [i.__dict__ for i in issues], "ok": not rej}
             _invalidate_after(job, "lint")
             if rej:
+                _fail_stay(job, step)
                 save(wd, job)
                 return _resp("failed", step, "lint", fail={"where": "lint", "why": f"반려 {len(rej)}건", "fix": lint.feedback(issues), "retry_ok": True})
 
@@ -123,7 +132,10 @@ def run_step(wd, step, *, source_text=None, llm=None, tts=None, sfx_dir=None, bg
             if tts is None:
                 return _resp("need_input", step, "voice", need=["tts (synth(text,out_path))"])
             s = dict(d["script"]["script"]); s["groups"] = d["layout"]["groups"]
-            d["voice"] = voice.synth_all(s, wd, tts, log=log)
+            # 비용은 잡당 누적 — 단계 산출물(data)이 무효화돼도 남도록 job 최상위에 둔다
+            v = voice.synth_all(s, wd, tts, spent_chars=job.get("tts_spent_chars", 0), log=log)
+            job["tts_spent_chars"] = v["spent_chars"]
+            d["voice"] = v
             _invalidate_after(job, "voice")
 
         elif step == "timing":
@@ -155,6 +167,7 @@ def run_step(wd, step, *, source_text=None, llm=None, tts=None, sfx_dir=None, bg
             d["review"] = rep
             _invalidate_after(job, "review")
             if not rep["ok"]:
+                _fail_stay(job, step)
                 save(wd, job)
                 bad = [c for c in rep["checks"] if not c["ok"]]
                 return _resp("failed", step, None, fail={"where": "review", "why": ", ".join(c["name"] for c in bad),
@@ -163,6 +176,7 @@ def run_step(wd, step, *, source_text=None, llm=None, tts=None, sfx_dir=None, bg
             raise ValueError(f"모르는 단계: {step}")
     except Exception as e:  # noqa: BLE001 — 원인·처방을 응답에 담아 올린다(실패 문구 원인 뭉개기 금지)
         job["history"].append({"step": step, "error": repr(e)[:300], "at": time.time()})
+        _fail_stay(job, step)
         save(wd, job)
         return _resp("failed", step, step, fail={"where": step, "why": repr(e)[:300], "fix": "로그의 where부터 확인", "retry_ok": True})
     job["history"].append({"step": step, "ok": True, "at": time.time()})

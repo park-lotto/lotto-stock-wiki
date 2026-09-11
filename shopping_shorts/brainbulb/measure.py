@@ -29,13 +29,18 @@ def _fontsdir_arg(fonts_dir, cwd):
     return fd.replace("\\", "/").replace(":", "\\:")
 
 
+def _ck(fonts_dir, it):
+    """캐시 키에 폰트 폴더를 넣는다 — 폰트를 바꿔도 옛 폭을 돌려주던 구멍(아스트라 3R)."""
+    return (os.path.abspath(fonts_dir),) + tuple(it)
+
+
 def ink_widths(items, fonts_dir=None):
     """items: [(font_name, size, text)] → [ink_px]. font_name은 ASS 폰트 이름(spec.STYLE_FONT[*][0])."""
     fonts_dir = fonts_dir or spec.FONTS_DIR
-    todo = [(i, it) for i, it in enumerate(items) if tuple(it) not in _CACHE]
+    todo = [it for it in items if _ck(fonts_dir, it) not in _CACHE]
     if todo:
-        _render_measure([it for _, it in todo], fonts_dir)
-    return [_CACHE[tuple(it)] for it in items]
+        _render_measure(todo, fonts_dir)
+    return [_CACHE[_ck(fonts_dir, it)] for it in items]
 
 
 def ink_width(font_name, size, text, fonts_dir=None):
@@ -83,7 +88,7 @@ def _render_measure(items, fonts_dir):
     for i, it in enumerate(items):
         band = a[20 + _BAND * i: 20 + _BAND * (i + 1) - 10, :]
         xs = np.where(band.max(axis=0) > 40)[0]
-        _CACHE[tuple(it)] = int(xs.max() - xs.min() + 1) if len(xs) else 0
+        _CACHE[_ck(fonts_dir, it)] = int(xs.max() - xs.min() + 1) if len(xs) else 0
 
 
 _EDGE_CACHE = {}
@@ -97,10 +102,10 @@ def edges(items, fonts_dir=None):
     → [(left, right)]: 앵커 x(=spec.BODY_X)를 0으로 둔 상대 좌표. 화면 안 조건: BODY_X+left ≥ 0, BODY_X+right ≤ 1080
     """
     fonts_dir = fonts_dir or spec.FONTS_DIR
-    todo = [it for it in items if tuple(it) not in _EDGE_CACHE]
+    todo = [it for it in items if _ck(fonts_dir, it) not in _EDGE_CACHE]
     if todo:
         _render_edges(todo, fonts_dir)
-    return [_EDGE_CACHE[tuple(it)] for it in items]
+    return [_EDGE_CACHE[_ck(fonts_dir, it)] for it in items]
 
 
 def _render_edges(items, fonts_dir):
@@ -128,7 +133,7 @@ def _render_edges(items, fonts_dir):
     for i, it in enumerate(items):
         band = a[20 + _BAND * i: 20 + _BAND * (i + 1) - 10, :]
         xs = np.where(band.max(axis=0) > 40)[0]
-        _EDGE_CACHE[tuple(it)] = (int(xs.min()) - _EDGE_X0, int(xs.max()) + 1 - _EDGE_X0) if len(xs) else (0, 0)
+        _EDGE_CACHE[_ck(fonts_dir, it)] = (int(xs.min()) - _EDGE_X0, int(xs.max()) + 1 - _EDGE_X0) if len(xs) else (0, 0)
 
 
 def font_probe(fonts_dir=None):

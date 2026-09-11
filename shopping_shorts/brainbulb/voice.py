@@ -25,25 +25,45 @@ def _to_wav(src, dst):
         raise RuntimeError(f"voice: wav 변환 실패 {src} — {r.stderr[-200:]}")
 
 
-def synth_all(script, workdir, synth, *, log=print):
-    """→ {"card_sec", "cut_secs":[...], "files":[...], "chars"}  파일은 workdir/tts/00.wav(카드), 01.wav.."""
+def _sidecar(wav):
+    return wav[:-4] + ".txt"
+
+
+def synth_all(script, workdir, synth, *, spent_chars=0, log=print):
+    """→ {"card_sec", "cut_secs":[...], "files":[...], "chars", "synthesized"}  파일은 workdir/tts/00.wav(카드), 01.wav..
+
+    - 재사용 조건은 "파일이 있다"가 아니라 **옆 .txt의 글자가 같다** (아스트라 3R: 대본을 바꿔도 옛 음성이 붙던 버그)
+    - 비용 상한은 잡당 **누적**: spent_chars(이전 합성분) + 이번에 실제로 새로 합성할 글자 (재사용분은 안 센다)
+    """
     texts = [script["title"]["card"]] + [g["text"] for g in script["groups"]]
-    chars = sum(len(t) for t in texts)
-    if chars > spec.POLICY_MAX_TTS_CHARS:
-        raise RuntimeError(f"voice: TTS 글자 {chars}자 > 상한 {spec.POLICY_MAX_TTS_CHARS} — 돈 나가기 전에 멈춤")
     td = os.path.join(workdir, "tts")
     os.makedirs(td, exist_ok=True)
+    todo = []
+    for i, t in enumerate(texts):
+        wav = os.path.join(td, f"{i:02d}.wav")
+        same = os.path.exists(wav) and os.path.exists(_sidecar(wav)) and open(_sidecar(wav), encoding="utf-8").read() == t
+        if not same:
+            todo.append(i)
+    new_chars = sum(len(texts[i]) for i in todo)
+    if spent_chars + new_chars > spec.POLICY_MAX_TTS_CHARS:
+        raise RuntimeError(f"voice: TTS 누적 {spent_chars}+{new_chars}자 > 상한 {spec.POLICY_MAX_TTS_CHARS} — 돈 나가기 전에 멈춤")
     files, secs = [], []
     for i, t in enumerate(texts):
         wav = os.path.join(td, f"{i:02d}.wav")
-        if not os.path.exists(wav):
+        if i in todo:
             raw = os.path.join(td, f"{i:02d}.raw.mp3")
+            for stale in (wav, _sidecar(wav)):
+                if os.path.exists(stale):
+                    os.remove(stale)
             synth(t, raw)
             _to_wav(raw, wav)
             os.remove(raw)
+            with open(_sidecar(wav), "w", encoding="utf-8") as fh:
+                fh.write(t)
         sec = timing.wav_seconds(wav)
         if sec <= 0.05:
             raise RuntimeError(f"voice: {i}번 음성이 비었습니다 ({sec:.3f}s) «{t}»")
         files.append(wav); secs.append(sec)
-    log(f"[brainbulb.voice] {len(files)}개 합성, {chars}자, 합계 {sum(secs):.2f}s")
-    return {"card_sec": secs[0], "cut_secs": secs[1:], "files": files, "chars": chars}
+    log(f"[brainbulb.voice] {len(files)}개 중 {len(todo)}개 새로 합성({new_chars}자, 누적 {spent_chars + new_chars}), 합계 {sum(secs):.2f}s")
+    return {"card_sec": secs[0], "cut_secs": secs[1:], "files": files, "chars": new_chars,
+            "spent_chars": spent_chars + new_chars, "synthesized": todo}
