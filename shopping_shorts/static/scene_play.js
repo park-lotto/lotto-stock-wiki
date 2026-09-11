@@ -449,7 +449,12 @@ function planClips(segIds, ttsDur, spread, beatIdx){
         //   올지 사람이 예측할 수 없었다. 더 나쁜 건 조각을 하나 빼면 그 뒤 배치가 통째로
         //   밀려 "하나 뺐는데 둘이 사라진 것처럼" 보인 것이다.
         //   순환 반복은 자리↔조각 관계가 단순해 넣고 빼도 앞자리가 흔들리지 않는다.
-        const idx = k % segments.length;
+        // ★순환(1,2,1,2) → 이어붙임(1,1,2,2)으로(2026-09-11 사장님 "줄을 4칸으로 바꾸면 장면은
+        //   2개인데 줄만 4개면 편하잖아"). 고객 실측: 자막을 4줄로 쪼개자 조각 2개가 1,2,1,2로 돌아
+        //   같은 장면이 두 번(앞 것 0.57초) 나왔다. 이어붙이면 조각 k가 자기 몫의 구절을 연달아
+        //   덮어 컷은 조각 수 그대로, 자막만 늘어난다. 자리는 여전히 k·개수만으로 정해진다.
+        //   구절 ≤ 조각이면 종전처럼 1:1. ★서버(video_assemble._plan_phrase_clips)와 같은 식.
+        const idx = nPhrase <= segments.length ? k : Math.floor(k * segments.length / nPhrase);
         const seg = segments[idx];
         // 조각 뒤가 남았으면 이어서, 다 썼으면 그 조각의 처음부터 다시 본다(같은 내용 반복).
         let st = pos[idx];

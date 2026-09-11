@@ -3677,6 +3677,34 @@ async function waitNarrRegen(i, ver0){
   nsay(`⚠ 칸 ${i+1} 재생성이 오래 걸려요 — 잠시 뒤 새로고침해 확인해주세요`);
   return false;
 }
+// ★제작소에서 자막 줄을 바꾸면 여기(실험실)도 새 구절로 컷을 다시 그린다(2026-09-11 고객 제보).
+//   이 화면은 열 때 한 번만 자막을 받아와서, 제작소 자막 단계에서 줄을 4개로 쪼개도
+//   여기는 옛 2개로 컷 2개를 보여줬다. 완성본은 서버가 **지금 자막(4개)** 기준으로 컷을 만들어
+//   조각 2개가 1,2,1,2로 돌았다 → 고객: "편집 땐 1번인데 완성본은 두 번 나온다".
+//   컷 수 = 자막 구절 수, 조각이 모자라면 담은 순서대로 순환(1,2,1,2)은 사장님이 정한 규칙(09-02,
+//   2026-09-11 재확인 "1212 기존으로") — 규칙은 두지 않고 **보는 것 = 나오는 것**만 맞춘다.
+//   제작소(produce.html _labRefreshCaptions)가 같은 도메인 iframe의 이 함수를 직접 부른다.
+window.refreshCaptions = async function(i){
+  if (!SL.server || !SL.job) return false;
+  try{
+    const d = await (await fetch(`/api/mix/scene_lab/${SL.job}`, {cache:'no-store'})).json();
+    if (!d || !d.ok) return false;
+    // 자막·길이만 갈아끼운다 — 담은 조각(lists)·트림은 사람이 여기서 만진 것이라 건드리지 않는다.
+    DATA.captions = d.data.captions; DATA.tts_dur = d.data.tts_dur;
+    if (Array.isArray(d.data.beats)) DATA.beats = d.data.beats;
+    const n = ((DATA.captions || {})[String(i)] || []).length;
+    const m = (typeof lists !== 'undefined' && lists && lists[i]) ? lists[i].length : 0;
+    if (typeof nsay === 'function'){
+      // ★조각 추가를 요구하지 않는다(2026-09-11 사장님 "굳이 믹스로 가서 또 2장을 넣어야
+      //   하잖아"). 구절이 조각보다 많으면 조각마다 줄을 나눠 이어서 덮는다(1,1,2,2) — 알려만 준다.
+      nsay(n > m && m > 0
+        ? `칸 ${i+1} 자막 ${n}줄 · 장면은 ${m}개 그대로(조각마다 줄을 나눠 이어서 덮어요)`
+        : `칸 ${i+1} 자막 ${n}줄로 컷을 다시 그렸어요`);
+    }
+    if (typeof repaint === 'function') repaint();
+    return true;
+  }catch(e){ return false; }
+};
 function narrOf(i){ return NARR[i] != null ? NARR[i] : (DATA.beats[i].narration || ''); }
 function narrChanged(i){ return NARR[i] != null && NARR[i] !== (DATA.beats[i].narration || ''); }
 function estSec(t){
