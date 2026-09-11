@@ -131,3 +131,14 @@
 - news payload 모양(박위 편과 동일): `source:""` · `source_request:{kind,url}` · `source_chars`(공백 제외) · `transcript`(본문 — 소제목 불릿·기획 꼬리문단 제거). 소제목이 다음 문단에 붙어 오는 곳("돌파이번")은 손으로 끊어야 한다.
 - 대본 1회 통과(경고 2건은 §9와 같은 비차단). 이미지 1/11 실패(병원 어린이+산소마스크, 사유 미기록) → 성인 마스크 대기줄로 바꿔 통과, 나머지 10장 캐시 재사용.
 - render_plan 멈춤 2건: ① 피사체 검수 2건(같은 슬롯10 항공사진) → 열어 보고 `kind:scene` ② 밈 013.png 한글 '충격' 내장 → 자동 갱신된 실행기는 **`timing.groups[N].meme`·`groups[N].meme` 둘 다 다른 밈 경로로 교체**하라고 지시 → 025.png(입 벌린 충격, 글자 없음)로 통과. 감정→파일 매핑은 없어서 57장 컨택트시트(PIL)로 골랐다. §10 테이저건 편의 `images[경로].preserve_text` 방식과 갈리니 실행기 메시지대로 따를 것.
+
+---
+
+## 2026-09-12 CH PC — 뇌전구 2편 (박수홍 홈쇼핑 복귀)
+
+- 소재: 조선비즈 `n.news.naver.com/mnews/ranking/article/366/0001191819` (491자). 산출물 `~/.volcano/jobs/20260911_뇌전구_박수홍/out/박수홍_홈쇼핑복귀_v001.mp4` (34.1초 · 28컷 · 밈 4 · 이미지 10) · 바탕화면 사본 `뇌전구_박수홍_홈쇼핑복귀_v001.mp4`
+- **CH PC는 TheRose와 별개로 세팅 필요했다**: `~/.volcano/venv`(3.14 + pillow·numpy·opencv·fonttools·Brotli·onnxruntime) 새로 만들고 키 2개(`~/.volcano/keys/evolink`·`typecast`)를 Write 툴로 저장(셸 명령에 키 싣지 말라는 서버 지시). Typecast는 사장님이 채팅에 준 `__pltH…` 키(프로젝트 `.env`의 `__pltP…`와 다른 키).
+- **실행기 첫 실행은 auto 분류기가 막는다** → 사장님이 `!`로 한 번 돌리면 그 뒤 세션이 직접 돌릴 수 있었다(memory `reference_볼케이노_실행기차단_OCR보존두곳` 실측 재확인). bash-input에선 역슬래시 경로가 깨지니 `~/…` 슬래시 경로 + `PYTHONUTF8=1`로 준다.
+- 걸린 것 3가지: ① 이미지 슬롯 4(기내 우는 유아 안은 장면)가 EvoLink에서 실패 → 아이를 뒷모습·담요로 바꾸니 통과(9장은 캐시 재사용). ② 밈 `pepe/fm/013.png`에 '충격'·'어?' 글자가 박혀 render_plan 반려 → `timing.groups[5].meme`·`groups[5].meme`을 글자 없는 `025.png`로 교체. ③ `user_slots`는 `{}`가 아니라 `[]`(목록)이어야 반려 안 남.
+- render_plan 검수(focus_review_replies)는 실제 이미지 4장을 Read로 보고 답했다. 밈·얼굴 없는 사진은 `kind:object` + 비율 box로 답하면 통과.
+- 같은 시각 다른 세션이 `out/volcano/뇌전구_0004104394`(박위 기사)를 진행 중이었다 — 사장님이 그 폴더 명령을 이 창에 붙인 적 있음. **작업 폴더를 먼저 대조하고 남의 폴더는 안 건드린다.**
