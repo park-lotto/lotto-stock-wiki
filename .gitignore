@@ -177,3 +177,7 @@ scripts/gemini_session/
 
 # 틱톡 로그인 쿠키(2026-09-08) — PC 릴레이가 쓴다. 절대 올리지 않는다.
 tiktok_session.json
+
+# Local proof artifacts for the continuous effect-mining worker.
+/.pytest-tmp-effect-mining/
+/.effect-mining-proof/

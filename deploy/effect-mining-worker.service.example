@@ -1,0 +1,20 @@
+[Unit]
+Description=Shopping Shorts continuous effect mining worker
+After=network-online.target effect-mining-scheduler.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/lotto-stock-wiki
+EnvironmentFile=/etc/shopping-shorts.env
+Environment=EFFECT_MINING_DB=/var/lib/shopping-shorts-effect-mining/mining.db
+Environment=EFFECT_MINING_MEDIA_ROOT=/var/lib/shopping-shorts-effect-mining/media
+ExecStart=/usr/bin/python3 -m shopping_shorts.effect_mining.cli work --poll-sec 3 --lease-sec 900
+Restart=always
+RestartSec=5
+UMask=0027
+
+[Install]
+WantedBy=multi-user.target
+
