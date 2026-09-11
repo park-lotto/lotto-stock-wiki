@@ -57,9 +57,9 @@ def sfx_bed(plan, timing, sfx_dir, wd, total, out_name="sfx_bed.wav"):
 def mix(narr_wav, bed_wav, wd, total, out_name="audio_final.wav"):
     n = _rel(narr_wav, wd)
     if bed_wav is None:
-        _run(["ffmpeg", "-y", "-loglevel", "error", "-i", n, "-t", str(total), out_name], "mix", wd)
+        _run(["ffmpeg", "-y", "-loglevel", "error", "-i", n, "-af", spec.MIX_LOUDNORM, "-t", str(total), out_name], "mix", wd)
         return os.path.join(wd, out_name)
-    fc = f"[1:a]volume={spec.SFX_BED_DB}dB[b];[0:a][b]amix=inputs=2:normalize=0:duration=first[m]"
+    fc = f"[1:a]volume={spec.SFX_BED_DB}dB[b];[0:a][b]amix=inputs=2:normalize=0:duration=first,{spec.MIX_LOUDNORM}[m]"
     _run(["ffmpeg", "-y", "-loglevel", "error", "-i", n, "-i", _rel(bed_wav, wd), "-filter_complex", fc, "-map", "[m]",
           "-t", str(total), out_name], "mix", wd)
     return os.path.join(wd, out_name)

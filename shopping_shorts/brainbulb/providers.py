@@ -99,4 +99,5 @@ def typecast_synth(voice_id, *, tempo=None, model="ssfm-v30", key_file=None, tim
             data = base64.b64decode(r.json()["audio"])
         with open(out_path, "wb") as fh:
             fh.write(data)
+    synth.tag = f"{voice_id}|{tempo}|{model}"        # voice.py 사이드카에 실린다 — 목소리·템포가 바뀌면 재합성
     return synth

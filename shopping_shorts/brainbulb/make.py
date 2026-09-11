@@ -14,7 +14,7 @@ import sys
 
 from . import pipeline, providers
 
-DEFAULT_VOICE = "tc_69fc0cff784968297fb45daa"      # Typecast 'Sanghyun' (ssfm-v30). 볼케이노가 쓴 목소리는 서버가 골라 미상
+DEFAULT_VOICE = "tc_6059dad0b83880769a50502f"      # Typecast 'Changsu' = 박창수 (사장님 지정 2026-09-12). 볼케이노는 여성 나레(228Hz)+남성 PUNCH(104Hz) 2인 구성(실측)
 
 
 def main(argv=None):
@@ -22,7 +22,7 @@ def main(argv=None):
     ap.add_argument("--url"); ap.add_argument("--text-file")
     ap.add_argument("--workdir", required=True)
     ap.add_argument("--voice", default=DEFAULT_VOICE)
-    ap.add_argument("--tempo", type=float, default=1.25)   # 실측: 볼케이노 나레가 Typecast 기본보다 약 1.35배 빠르다(같은 문장 1.8s vs 2.7s)
+    ap.add_argument("--tempo", type=float, default=1.15)   # 실측: 볼케이노 7.4자/초. 쉼 압축 뒤 1.35는 9.1(너무 빠름) → 1.15 ≈ 7.7
     _vol = os.path.expanduser("~/.volcano/jobs/20260911_뇌전구_박수홍")     # 로컬에 있는 볼케이노 팩(저작권 미확인 — 커밋 안 함)
     ap.add_argument("--sfx-dir", default=os.path.join(_vol, "sfx_norm") if os.path.isdir(os.path.join(_vol, "sfx_norm")) else None)
     ap.add_argument("--meme-dir", default=os.path.join(_vol, "pepe", "fm") if os.path.isdir(os.path.join(_vol, "pepe", "fm")) else None)
