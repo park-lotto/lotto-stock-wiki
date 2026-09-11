@@ -122,7 +122,7 @@ def main() -> int:
                     leaf = Path(member.filename).name
                     if leaf.startswith("._"):
                         continue
-                    if LICENSE_RE.search(member.filename) and member.file_size <= 1024 * 1024:
+                    if LICENSE_RE.search(Path(member.filename).name) and member.file_size <= 1024 * 1024:
                         data = zf.read(member)
                         if any(marker in data.upper() for marker in OFL_MARKERS):
                             licenses.append((member, data))

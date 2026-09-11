@@ -1,5 +1,5 @@
 {
-  "collected_at": "2026-09-11T03:48:43+00:00",
+  "collected_at": "2026-09-11T03:51:42+00:00",
   "scope": "공식 GitHub 원 제작 저장소의 해외 디스플레이/에디토리얼 폰트",
   "warning": "대부분 한글 글리프가 없다. 한글 훅 대체재가 아니라 영문·숫자·포인트용으로 분류한다.",
   "sources": [
@@ -1890,75 +1890,9 @@
           "path": "font_collection\\licenses\\github-international\\gridded-lab__ofl-fonts\\OFL.txt",
           "bytes": 4369,
           "sha256": "81b703ed5e47978e90bc1d3c72672bfdd8cc507563fbea6626dc779f421bc932"
-        },
-        {
-          "archive_path": "ofl-fonts-master/README.md",
-          "path": "font_collection\\licenses\\github-international\\gridded-lab__ofl-fonts\\README.md",
-          "bytes": 678,
-          "sha256": "72cc178f54f414f5209552544516dc76aeffe12ad5fed40d825f083568f79ee4"
-        },
-        {
-          "archive_path": "ofl-fonts-master/float round/README.md",
-          "path": "font_collection\\licenses\\github-international\\gridded-lab__ofl-fonts\\README.md",
-          "bytes": 176,
-          "sha256": "8788299fae1736a4ff7230b825e8cfbe582b8a6a88b54170670175f67965891a"
-        },
-        {
-          "archive_path": "ofl-fonts-master/inkwell/README.md",
-          "path": "font_collection\\licenses\\github-international\\gridded-lab__ofl-fonts\\README.md",
-          "bytes": 170,
-          "sha256": "18d31ba87764dbb2e4daea971c5756b9676c3e2ecccd09948e6d988a5f799b11"
-        },
-        {
-          "archive_path": "ofl-fonts-master/opensourcery/README.md",
-          "path": "font_collection\\licenses\\github-international\\gridded-lab__ofl-fonts\\README.md",
-          "bytes": 346,
-          "sha256": "0e54edc856300e58ec39f524ba11447d72e90c94119f8b1021adbdda2029bd68"
-        },
-        {
-          "archive_path": "ofl-fonts-master/opensourcery/fonts/OpenSourceryRegular.otf",
-          "path": "font_collection\\licenses\\github-international\\gridded-lab__ofl-fonts\\OpenSourceryRegular.otf",
-          "bytes": 32520,
-          "sha256": "b6aae5044b5cde3721344454101071cf0627db0c289605d67b7b852aec437f56"
-        },
-        {
-          "archive_path": "ofl-fonts-master/opensourcery/sources/OpenSourceryRegular.sfd",
-          "path": "font_collection\\licenses\\github-international\\gridded-lab__ofl-fonts\\OpenSourceryRegular.sfd",
-          "bytes": 84398,
-          "sha256": "fd9760498fad761f65bf6d822bc5b2a825329e3f467510127f934769750b3f04"
-        },
-        {
-          "archive_path": "ofl-fonts-master/snk/README.md",
-          "path": "font_collection\\licenses\\github-international\\gridded-lab__ofl-fonts\\README.md",
-          "bytes": 216,
-          "sha256": "a7be8e41c3461daf2f1711a4bdf5345ef33a9deab0bc92ed9c5f266b910b5292"
-        },
-        {
-          "archive_path": "ofl-fonts-master/sourcery pixel/README.md",
-          "path": "font_collection\\licenses\\github-international\\gridded-lab__ofl-fonts\\README.md",
-          "bytes": 362,
-          "sha256": "5beca80b2316fa2b59a4337c9f124c42d1a330313452882d7de185e608a4dee9"
-        },
-        {
-          "archive_path": "ofl-fonts-master/sourcery pixel/SourceryPixel.otf",
-          "path": "font_collection\\licenses\\github-international\\gridded-lab__ofl-fonts\\SourceryPixel.otf",
-          "bytes": 43740,
-          "sha256": "5a17a2f2f54c91f9d34b4fb6c3d890698671194f4d75981569aaedbd74a90306"
-        },
-        {
-          "archive_path": "ofl-fonts-master/sourcery pixel/SourceryPixel_Bold.otf",
-          "path": "font_collection\\licenses\\github-international\\gridded-lab__ofl-fonts\\SourceryPixel_Bold.otf",
-          "bytes": 21404,
-          "sha256": "6f6ad81aab10814e34204122e9ac3d5f09d3ea52bc44ec674cd000fcfe6e4ffe"
-        },
-        {
-          "archive_path": "ofl-fonts-master/sourcery pixel/SourceryPixel_OG.otf",
-          "path": "font_collection\\licenses\\github-international\\gridded-lab__ofl-fonts\\SourceryPixel_OG.otf",
-          "bytes": 11784,
-          "sha256": "eb9943bdda5d17744aa719713d2cd16d53b95594d2e5e90e603412122b8be1a6"
         }
       ],
-      "collected_at": "2026-09-11T03:38:57+00:00"
+      "collected_at": "2026-09-11T03:51:42+00:00"
     },
     {
       "repo": "JordanNewell/newell-typeface",
