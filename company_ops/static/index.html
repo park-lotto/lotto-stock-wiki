@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="/static/style.css">
   <script src="/static/app.js" defer></script>
 </head>
-<body data-company="makers" data-motion="on" data-ui="command">
+<body data-company="makers" data-motion="on" data-ui="operations-world">
 <a class="skip-link" href="#projects-panel">프로젝트로 바로 이동</a>
 <div class="shell">
   <header class="commandbar">
@@ -30,11 +30,33 @@
         <span class="universe-caption">세 개의 회사. 하나의 방향.</span>
       </div>
       <div class="scene-toolbar"><div class="view-switch" role="group" aria-label="회사 지도 보기"><button id="view-organization" class="view-button" type="button" aria-pressed="true">조직 관제</button><button id="view-business" class="view-button" type="button" aria-pressed="false">사업 현황</button></div><span id="scene-note" class="scene-note">업무 배정 연결 · AI 모델 실행 미연결</span></div>
-      <section id="organization-view" class="organization-view" aria-label="회사의 책임과 팀 구조">
-        <div class="organization-spine" aria-hidden="true"></div>
-        <div class="command-staff"><div class="staff-label"><span>COMMAND STAFF</span><strong>지휘 계통</strong></div><div class="director"><span class="director-index" aria-hidden="true">◎</span><strong>대표</strong><span>방향 · 우선순위 · 의사결정</span><span class="human-label">사람</span></div><div class="responsibility-stack"><div class="role-layer"><span class="layer-label">기획</span><div id="planning-roles" class="role-pair"></div></div><div class="role-layer"><span class="layer-label">실행</span><div id="execution-roles" class="role-pair"></div></div></div></div>
-        <div class="team-field"><div class="field-heading"><div><span>DEPARTMENT GRID</span><strong>부서별 실시간 현황</strong></div><small>카드를 누르면 해당 팀 업무만 표시됩니다</small></div><svg id="team-routes" class="team-routes" viewBox="0 0 1000 70" preserveAspectRatio="none" aria-hidden="true"></svg><div id="team-nodes" class="team-nodes"></div></div>
-        <div class="map-bottom"><span>업무 배정과 단계 이동은 실제 저장됩니다. AI 모델 호출은 아직 연결되지 않았습니다.</span><span id="route-status" role="status" aria-live="polite">팀을 선택하면 업무로 이어집니다 ↘</span></div>
+      <section id="organization-view" class="organization-view operations-world" aria-label="회사의 실제 업무 공간과 이동 경로">
+        <header class="world-heading">
+          <div><p class="eyebrow">INSIDE THE COMPANY</p><h2>회사는 다섯 개의 방을 지나<br>결과를 만듭니다.</h2></div>
+          <p>프로젝트가 어디에 있고, 누가 맡았으며,<br>무엇을 끝내야 다음 방으로 가는지 보여줍니다.</p>
+        </header>
+        <div class="world-layout">
+          <aside class="department-directory" aria-labelledby="department-title">
+            <div class="directory-head"><span>01 / 부서 선택</span><strong id="department-title">어디에서 하는 일인가</strong></div>
+            <svg id="team-routes" class="team-routes" viewBox="0 0 1000 70" preserveAspectRatio="none" aria-hidden="true"></svg>
+            <div id="team-nodes" class="team-nodes"></div>
+          </aside>
+          <section class="company-interior" aria-labelledby="floor-title">
+            <div class="interior-head"><div><span>02 / 작업 동선</span><strong id="floor-title">일이 지나가는 공간</strong></div><div class="route-tools"><span id="route-status" role="status" aria-live="polite">회사 전체 업무를 보고 있습니다</span><button id="replay-route" class="route-replay" type="button">저장된 이동 재생 ▶</button></div></div>
+            <div class="command-staff"><div class="staff-label"><span>책임선</span><strong>누가 판단하고 실행하는가</strong></div><div class="director"><span class="director-index" aria-hidden="true">◎</span><strong>대표</strong><span>방향 · 우선순위 · 최종 결정</span><span class="human-label">사람</span></div><div class="responsibility-stack"><div class="role-layer"><span class="layer-label">기획</span><div id="planning-roles" class="role-pair"></div></div><div class="role-layer"><span class="layer-label">실행</span><div id="execution-roles" class="role-pair"></div></div></div></div>
+            <div id="process-floor" class="process-floor" aria-label="접수부터 완료까지 업무 이동">
+              <div class="floor-perspective" aria-hidden="true"></div>
+              <div id="stage-rooms" class="stage-rooms"></div>
+              <div id="work-stream" class="work-stream"></div>
+            </div>
+            <p class="interior-legend"><span><i class="legend-work"></i> 현재 머무는 업무</span><span><i class="legend-route"></i> 실제 인계 경로</span><span>AI 실행 연결 전 · 배정과 이력만 실제 저장</span></p>
+          </section>
+          <aside class="live-inspector" aria-labelledby="inspector-title">
+            <div class="directory-head"><span>03 / 현재 작업</span><strong id="inspector-title">이 방에서 무엇을 하나</strong></div>
+            <div id="room-inspector" class="room-inspector"></div>
+          </aside>
+        </div>
+        <div class="map-bottom"><span>프로젝트를 누르면 기록·근거·다음 행동을 직접 확인하고 저장할 수 있습니다.</span><span>새 인계가 저장될 때만 업무가 다음 방으로 이동합니다.</span></div>
       </section>
       <section id="business-view" class="business-view" aria-labelledby="business-title" hidden>
         <div class="business-copy"><p class="eyebrow">제품에서 사업의 가치로</p><h2 id="business-title">무엇을 만들고,<br>어떻게 이어지는가.</h2><p>제품의 현재와 수익 구조를 함께 봅니다.</p></div>

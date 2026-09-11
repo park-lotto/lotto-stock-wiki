@@ -7,6 +7,13 @@ const PAGE_SIZE = 50;
 const POLL_INTERVAL = 5000;
 const COMPANY_MARKS = {makers: "M", hnl: "H", stock: "S"};
 const EVENT_LABELS = {created: "프로젝트 접수", assigned: "담당 역할 자동 배정", advance: "다음 단계로 인계", block: "흐름 차단", resume: "업무 재개", reject: "검수 반려 · 구현으로 복귀"};
+const STAGE_ROOMS = {
+  intake: {number: "01", place: "접수실", verb: "문제를 일로 바꿉니다", work: "요청 · 목표 · 책임자를 기록", exit: "목표와 담당 팀이 정해지면 설계실로"},
+  design: {number: "02", place: "설계실", verb: "해결할 방법을 정합니다", work: "범위 · 규칙 · 완료 조건을 확정", exit: "실행 가능한 계획이 기록되면 제작실로"},
+  build: {number: "03", place: "제작실", verb: "결과물을 만듭니다", work: "코드 · 영상 · 문서를 실제로 제작", exit: "산출물과 확인 결과가 있으면 검증실로"},
+  verify: {number: "04", place: "검증실", verb: "실제로 되는지 확인합니다", work: "실사용 · 오류 · 완료 조건을 대조", exit: "별도 검수자와 근거가 있으면 완료 보관실로"},
+  done: {number: "05", place: "완료 보관실", verb: "승인된 결과를 남깁니다", work: "검증 근거 · 결정 · 전체 이력을 보존", exit: "완료 · 필요하면 새 프로젝트로 다시 시작"},
+};
 let state = null;
 let companyId = "makers";
 let teamFilter = null;
@@ -23,6 +30,8 @@ let eventsCursor = null;
 let eventsHasMore = false;
 let eventsBusy = false;
 let eventsGeneration = 0;
+let inspectedProjectId = null;
+let replaying = false;
 const renderKeys = new Map();
 const dialogReturnTargets = new Map();
 const mediaMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -172,12 +181,6 @@ function buildOrganization() {
   if (sameRender("teams", state.teams)) return;
   $("team-routes").replaceChildren();
   $("team-nodes").replaceChildren(...state.teams.map((team, index) => {
-    const x = ((index + 0.5) / state.teams.length) * 1000;
-    const path = document.createElementNS(SVG_NS, "path");
-    path.id = "route-" + team.id;
-    path.setAttribute("d", "M500 0 C500 30 " + x + " 14 " + x + " 68");
-    path.setAttribute("class", "team-route");
-    $("team-routes").append(path);
     const card = node("article", "department-card");
     card.dataset.teamId = team.id;
     const button = node("button", "team-node");
@@ -188,22 +191,12 @@ function buildOrganization() {
     button.title = team.description;
     const heading = node("span", "team-heading");
     heading.append(node("span", "team-index", String(index + 1).padStart(2, "0")), node("span", "team-name", team.name));
-    button.append(heading, node("span", "team-description", team.description), node("span", "team-load"));
+    button.append(heading, node("span", "team-description", team.description), node("span", "team-load"), node("span", "team-enter", "내부 보기 →"));
     button.addEventListener("click", () => selectTeam(teamFilter === team.id ? null : team.id, true));
-    const workflow = node("div", "department-workflow");
-    const phases = [["planner", "기획"], ["executor", "구현"], ["reviewer", "검수"]];
-    for (const [key, label] of phases) {
-      const roleId = team.workflow[key];
-      const chip = node("span", "flow-role");
-      chip.dataset.role = roleId;
-      chip.append(node("small", "", label), node("strong", "", roleName(roleId)), node("i", "", "대기"));
-      workflow.append(chip);
-    }
-    const jobs = node("div", "department-jobs");
-    jobs.dataset.teamJobs = team.id;
-    card.append(button, workflow, jobs);
+    card.append(button);
     return card;
   }));
+  buildProcessFloor();
 }
 function renderOrganization() {
   buildOrganization();
@@ -222,31 +215,6 @@ function renderOrganization() {
     const load = "열린 업무 " + list.length + (blocked ? " · 차단 " + blocked : "");
     button.querySelector(".team-load").textContent = load;
     button.setAttribute("aria-label", team.name + " · " + load + " · 프로젝트 필터");
-    $("route-" + team.id).classList.toggle("is-selected", selected);
-    $("route-" + team.id).classList.toggle("is-blocked", blocked > 0);
-    for (const chip of card.querySelectorAll(".flow-role")) {
-      const count = list.filter(project => project.current_assignee === chip.dataset.role).length;
-      chip.classList.toggle("is-working", count > 0);
-      chip.querySelector("i").textContent = count ? `배정 ${count}` : "대기";
-    }
-    const jobs = card.querySelector(".department-jobs");
-    const jobSignature = list.map(project => [project.id, project.version, project.stage, project.current_assignee, project.blocked]);
-    if (!sameRender("department-jobs-" + companyId + "-" + team.id, jobSignature)) {
-      jobs.replaceChildren();
-      if (!list.length) {
-        jobs.append(node("p", "department-empty", "대기 중 · 새 업무 없음"));
-      } else {
-        for (const project of list.slice(0, 3)) {
-          const job = node("button", "department-job" + (project.blocked ? " is-blocked" : ""));
-          job.type = "button";
-          job.dataset.projectId = project.id;
-          job.append(node("span", "job-signal"), node("span", "job-copy", project.title), node("small", "", `${stageName(project.stage)} · ${roleName(project.current_assignee)}`));
-          job.addEventListener("click", () => openDetail(project.id, {returnTarget: job}));
-          jobs.append(job);
-        }
-        if (list.length > 3) jobs.append(node("p", "department-more", `외 ${list.length - 3}건`));
-      }
-    }
   }
   for (const role of state.roles) {
     const active = state.assignments.filter(item => item.company_id === companyId && item.role_id === role.id && ["active", "blocked"].includes(item.status));
@@ -256,6 +224,119 @@ function renderOrganization() {
     target.classList.toggle("has-blocked-work", active.some(item => item.status === "blocked"));
     target.querySelector(".role-load").textContent = active.length ? `배정 ${active.length}건` : "대기";
   }
+  renderProcessFloor();
+}
+
+function buildProcessFloor() {
+  if ($("stage-rooms").children.length) return;
+  $("stage-rooms").replaceChildren(...state.stages.map(stage => {
+    const info = STAGE_ROOMS[stage.id];
+    const room = node("article", "stage-room");
+    room.dataset.stage = stage.id;
+    const head = node("header");
+    head.append(node("span", "room-number", info.number), node("strong", "", info.place), node("span", "room-count", "0"));
+    room.append(head, node("p", "room-verb", info.verb), node("p", "room-work", info.work));
+    const threshold = node("div", "room-threshold");
+    threshold.append(node("span", "", "다음 방 조건"), node("small", "", info.exit));
+    room.append(threshold);
+    return room;
+  }));
+}
+
+function activeAssignment(project) {
+  return state.assignments.find(item => item.project_id === project.id && ["active", "blocked"].includes(item.status));
+}
+
+function elapsedText(value) {
+  const started = new Date(value).getTime();
+  if (!Number.isFinite(started)) return "시작 시각 확인 필요";
+  const seconds = Math.max(0, Math.floor((Date.now() - started) / 1000));
+  const days = Math.floor(seconds / 86400);
+  const hours = Math.floor((seconds % 86400) / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  if (days) return `${days}일 ${hours}시간 경과`;
+  if (hours) return `${hours}시간 ${minutes}분 경과`;
+  return `${minutes}분 ${String(seconds % 60).padStart(2, "0")}초 경과`;
+}
+
+function renderProcessFloor() {
+  const visible = companyProjects().filter(project => !teamFilter || project.team_id === teamFilter);
+  if (!visible.some(project => project.id === inspectedProjectId)) inspectedProjectId = visible.find(project => project.stage !== "done")?.id || visible[0]?.id || null;
+  for (const room of $("stage-rooms").children) {
+    const count = visible.filter(project => project.stage === room.dataset.stage).length;
+    room.querySelector(".room-count").textContent = `${count}건`;
+    room.classList.toggle("is-occupied", count > 0);
+    room.classList.toggle("is-selected", visible.some(project => project.id === inspectedProjectId && project.stage === room.dataset.stage));
+  }
+  const keep = new Set(visible.map(project => project.id));
+  for (const old of [...$("work-stream").children]) if (!keep.has(old.dataset.projectId)) old.remove();
+  visible.forEach((project, lane) => {
+    let pass = [...$("work-stream").children].find(item => item.dataset.projectId === project.id);
+    const stageIndex = Math.max(0, state.stages.findIndex(stage => stage.id === project.stage));
+    if (!pass) {
+      pass = node("button", "work-pass");
+      pass.type = "button";
+      pass.dataset.projectId = project.id;
+      pass.style.setProperty("--stage", stageIndex);
+      const signal = node("span", "pass-signal");
+      signal.setAttribute("aria-hidden", "true");
+      pass.append(signal, node("span", "pass-place"), node("strong", ""), node("small", ""));
+      pass.addEventListener("click", () => {
+        inspectedProjectId = project.id;
+        renderProcessFloor();
+        announce(project.title + "의 현재 작업을 표시합니다.");
+      });
+      $("work-stream").append(pass);
+    }
+    const previous = Number(pass.dataset.stageIndex ?? stageIndex);
+    pass.dataset.stageIndex = String(stageIndex);
+    pass.dataset.blocked = String(project.blocked);
+    pass.classList.toggle("is-selected", project.id === inspectedProjectId);
+    pass.classList.toggle("is-blocked", project.blocked);
+    pass.style.setProperty("--lane", lane % 4);
+    pass.querySelector(".pass-place").textContent = STAGE_ROOMS[project.stage].place;
+    pass.querySelector("strong").textContent = project.title;
+    pass.querySelector("small").textContent = `${roleName(project.current_assignee)} · ${teamName(project.team_id)}`;
+    pass.setAttribute("aria-label", `${project.title} · ${STAGE_ROOMS[project.stage].place} · 담당 ${roleName(project.current_assignee)}`);
+    if (previous !== stageIndex && motionEnabled() && !replaying) {
+      pass.classList.add("is-moving");
+      requestAnimationFrame(() => pass.style.setProperty("--stage", stageIndex));
+      setTimeout(() => pass.classList.remove("is-moving"), 1100);
+    } else if (!replaying) pass.style.setProperty("--stage", stageIndex);
+  });
+  $("replay-route").disabled = !inspectedProjectId || replaying;
+  renderRoomInspector();
+}
+
+function renderRoomInspector() {
+  const target = $("room-inspector");
+  const project = projectById(inspectedProjectId);
+  if (!project || project.company_id !== companyId) {
+    target.replaceChildren(node("p", "inspector-empty", "이 회사에 아직 이동 중인 업무가 없습니다.\n프로젝트를 만들면 접수실에서 시작합니다."));
+    return;
+  }
+  const room = STAGE_ROOMS[project.stage];
+  const assignment = activeAssignment(project);
+  const latest = state.events.find(event => event.project_id === project.id);
+  const location = node("div", "inspector-location");
+  location.append(node("span", "", `${room.number} · 현재 위치`), node("strong", "", room.place));
+  const title = node("h3", "", project.title);
+  const owner = node("p", "inspector-owner", `${teamName(project.team_id)} · 책임자 ${project.owner}`);
+  const current = node("div", "inspector-section");
+  current.append(node("span", "section-kicker", "지금 맡은 사람"), node("strong", "", roleName(project.current_assignee)), node("p", "", assignment?.note || room.work));
+  if (assignment?.started_at) {
+    const clock = node("time", "elapsed-clock", elapsedText(assignment.started_at));
+    clock.dataset.startedAt = assignment.started_at;
+    current.append(clock);
+  }
+  const next = node("div", "inspector-section next-condition");
+  next.append(node("span", "section-kicker", "다음 방으로 가려면"), node("p", "", room.exit));
+  const recent = node("div", "inspector-section recent-record");
+  recent.append(node("span", "section-kicker", "마지막 저장 기록"), node("p", "", latest?.message || "아직 저장된 사건이 없습니다."));
+  const open = node("button", "inspector-open", "기록과 다음 행동 열기 ↗");
+  open.type = "button";
+  open.addEventListener("click", () => openDetail(project.id, {returnTarget: open}));
+  target.replaceChildren(location, title, owner, current, next, recent, open);
 }
 
 function renderAssignments() {
@@ -427,6 +508,7 @@ function selectCompany(id) {
   clearPulses();
   companyId = id;
   teamFilter = null;
+  inspectedProjectId = null;
   put("route-status", "팀을 선택하면 업무로 이어집니다 ↘");
   $("route-status").dataset.event = "false";
   render();
@@ -434,9 +516,10 @@ function selectCompany(id) {
 }
 function selectTeam(id, scroll = false) {
   teamFilter = id;
+  inspectedProjectId = null;
   render();
   announce(id ? teamName(id) + "의 프로젝트를 표시합니다." : "회사의 전체 프로젝트를 표시합니다.");
-  if (scroll) $("projects-panel").scrollIntoView({behavior: motionEnabled() ? "smooth" : "auto", block: "start"});
+  if (scroll) $("process-floor").scrollIntoView({behavior: motionEnabled() ? "smooth" : "auto", block: "center"});
 }
 function selectView(view) {
   activeView = view;
@@ -469,20 +552,35 @@ function showNewEvents(events) {
   if (!motionEnabled() || activeView !== "organization") return;
   for (const event of visible) {
     const project = projectById(event.project_id);
-    const route = project && $("route-" + project.team_id);
-    if (!route) continue;
-    const pulse = document.createElementNS(SVG_NS, "path");
-    pulse.setAttribute("d", route.getAttribute("d"));
-    pulse.setAttribute("class", "route-pulse is-pulsing");
-    pulse.dataset.kind = eventClass(event.kind);
-    pulse.dataset.eventId = String(event.id);
-    $("team-routes").append(pulse);
-    pulse.addEventListener("animationend", () => pulse.remove(), {once: true});
-    setTimeout(() => pulse.remove(), 1700);
-    const team = $("team-" + project.team_id);
-    team.classList.add("is-arriving");
-    setTimeout(() => team.classList.remove("is-arriving"), 1500);
+    const pass = project && [...$("work-stream").children].find(item => item.dataset.projectId === project.id);
+    if (!pass) continue;
+    pass.classList.add("is-arriving");
+    setTimeout(() => pass.classList.remove("is-arriving"), 1500);
   }
+}
+
+async function replayRoute() {
+  const project = projectById(inspectedProjectId);
+  const pass = project && [...$("work-stream").children].find(item => item.dataset.projectId === project.id);
+  if (!project || !pass || replaying) return;
+  replaying = true;
+  $("replay-route").disabled = true;
+  const destination = Math.max(0, state.stages.findIndex(stage => stage.id === project.stage));
+  pass.classList.add("is-replaying");
+  pass.style.setProperty("--stage", 0);
+  put("route-status", `이동 기록 재생 · ${STAGE_ROOMS.intake.place}`);
+  await new Promise(resolve => setTimeout(resolve, motionEnabled() ? 450 : 0));
+  for (let index = 1; index <= destination; index += 1) {
+    const stage = state.stages[index];
+    pass.style.setProperty("--stage", index);
+    put("route-status", `저장된 인계 ${index}회 · ${STAGE_ROOMS[stage.id].place}로 이동`);
+    await new Promise(resolve => setTimeout(resolve, motionEnabled() ? 900 : 0));
+  }
+  pass.classList.remove("is-replaying");
+  replaying = false;
+  $("replay-route").disabled = false;
+  put("route-status", `${project.title} · 현재 ${STAGE_ROOMS[project.stage].place}`);
+  announce(project.title + "의 저장된 이동 경로 재생이 끝났습니다.");
 }
 
 /* One serialized drain prevents old responses from overwriting newer data.
@@ -745,6 +843,7 @@ $("clear-team").addEventListener("click", () => selectTeam(null));
 $("more-events").addEventListener("click", loadDetailEvents);
 $("view-organization").addEventListener("click", () => selectView("organization"));
 $("view-business").addEventListener("click", () => selectView("business"));
+$("replay-route").addEventListener("click", replayRoute);
 $("all-companies").addEventListener("click", () => {
   if (state) selectTeam(null);
   selectView("organization");
@@ -784,3 +883,9 @@ document.addEventListener("visibilitychange", () => {
 updateMotion();
 refresh();
 setInterval(() => { if (!writing && !document.hidden) refresh(); }, POLL_INTERVAL);
+setInterval(() => {
+  if (document.hidden) return;
+  document.querySelectorAll(".elapsed-clock[data-started-at]").forEach(clock => {
+    clock.textContent = elapsedText(clock.dataset.startedAt);
+  });
+}, 1000);

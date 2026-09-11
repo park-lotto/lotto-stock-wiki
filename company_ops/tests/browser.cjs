@@ -54,10 +54,10 @@ async function expectAssignee(page, title, roleId, stage) {
     throw new Error(`${stage} 담당자 이동 실패: ${JSON.stringify(assignment)}`);
   }
   await page.waitForFunction((expectedTitle, expectedRole) => {
-    const role = document.querySelector(`.department-card[data-team-id="improve"] .flow-role[data-role="${expectedRole}"]`);
-    const job = [...document.querySelectorAll('.department-card[data-team-id="improve"] .department-job')]
+    const pass = [...document.querySelectorAll('.work-pass')]
       .find(item => item.textContent.includes(expectedTitle));
-    return role?.classList.contains('is-working') && job?.textContent.includes(expectedRole === 'codex' ? 'Codex' : expectedRole === 'astra' ? 'Astra' : 'Claude');
+    const expectedName = expectedRole === 'codex' ? 'Codex' : expectedRole === 'astra' ? 'Astra' : 'Claude';
+    return pass?.textContent.includes(expectedName);
   }, {timeout: 8000}, title, roleId);
 }
 
@@ -134,7 +134,7 @@ async function main() {
     if (returnedFocus.projectId !== created.id && returnedFocus.id !== "new-project") {
       throw new Error(`자동 상세 닫기 포커스 복귀 실패: ${JSON.stringify(returnedFocus)}`);
     }
-    await page.click(`[data-project-id="${created.id}"]`);
+    await page.click(`.project-row[data-project-id="${created.id}"]`);
     await page.waitForSelector("#detail-dialog[open]");
 
     for (const [expected, assignee] of [["design", "claude"], ["build", "codex"], ["verify", "astra"]]) {
@@ -163,7 +163,7 @@ async function main() {
       document.querySelector('#metric-active')?.textContent === '0' &&
       document.querySelector('#metric-work')?.textContent === '0' &&
       document.querySelector('#metric-done')?.textContent === '1' &&
-      ![...document.querySelectorAll('.department-job')].some(item => item.textContent.includes(expectedTitle))
+      [...document.querySelectorAll('.work-pass')].some(item => item.textContent.includes(expectedTitle) && item.dataset.stageIndex === '4')
     ), {timeout: 8000}, title);
     await page.screenshot({path: path.join(artifacts, "company-atlas-verified.png"), fullPage: true});
 
