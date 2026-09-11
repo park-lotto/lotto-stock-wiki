@@ -107,6 +107,8 @@ def r_card(s, ctx):
         return [Issue("card", REJECT, "title.card", "", "오프닝 카드 문장이 없습니다")]
     if len(re.findall(r"[.!?]", card.rstrip(".!?"))) > 0:
         return [Issue("card", REJECT, "title.card", card, "카드는 읽어주는 한 문장입니다 — 낱말로 끊거나 두 문장을 쓰지 않습니다")]
+    if len(card) > spec.POLICY_CARD_MAX_CHARS:
+        return [Issue("card", REJECT, "title.card", card, f"카드가 너무 깁니다({len(card)}자) — 최소 {len(card) - spec.POLICY_CARD_MAX_CHARS + 6}자를 덜어내 30자 안팎 한 문장으로")]
     return []
 
 
@@ -191,7 +193,7 @@ RULES = [
     Rule("nonwhite_run", REJECT, "흰색이 아닌 강조색을 3컷 연달아 쓰지 마라. 사이에 WHITE를 둬라.", r_nonwhite_run),
     Rule("formal", REJECT, "나레는 반말체(~였다/~했다 또는 ~임/~됨). '-습니다'가 과반이면 안 되고 '-습니까/-십시오'는 쓰지 마라.", r_formal),
     Rule("h2_abstract", REJECT, "h2(노란 아랫줄)에는 숫자를 넣고, 이유·사연 같은 추상명사로 끝내지 마라.", r_h2_abstract),
-    Rule("card", REJECT, "카드는 오프닝에서 읽어주는 한 문장. 낱말로 끊지 마라.", r_card),
+    Rule("card", REJECT, f"카드는 오프닝에서 읽어주는 한 문장, {spec.POLICY_CARD_MAX_CHARS}자 안(실제 편 26~33자). 낱말로 끊지 마라.", r_card),
     Rule("words", REJECT, f"한 줄은 {spec.POLICY_MAX_WORDS_PER_LINE}어절 이하. 한 컷은 짧게(12~14자 한 줄 또는 두 줄).", r_words, needs_layout=True),
     Rule("layout", REJECT, "줄나눔은 우리가 한다 — lines를 쓰지 마라. 컷이 두 줄로도 안 들어가면 반려되니 글자를 줄이거나 두 컷으로 쪼개라.", r_layout, needs_layout=True),
     Rule("punch", REJECT, "PUNCH는 마지막 컷 하나뿐. RED 색으로 짧은 단정문.", r_punch),

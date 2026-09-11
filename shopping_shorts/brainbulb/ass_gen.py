@@ -35,8 +35,17 @@ def title_sizes(h1, h2, fonts_dir=None):
             _fit_prop(f2, h2, b2, spec.TITLE_TARGET_INK, fonts_dir))
 
 
-def card_size(card_text):
-    return spec.CARD_FS_LONG if len(card_text) >= spec.POLICY_CARD_LONG_MIN_CHARS else spec.CARD_FS_SHORT
+def card_size(card_text, fonts_dir=None):
+    """26자 미만 54 / 이상 46 (실측). 46으로도 띠(1040px)를 넘치면 36까지 비례 축소(우리 정책, 실제 제작 실측 반영)."""
+    if len(card_text) < spec.POLICY_CARD_LONG_MIN_CHARS:
+        return spec.CARD_FS_SHORT
+    fs = spec.CARD_FS_LONG
+    font, _f, _b = spec.STYLE_FONT["CARD"]
+    w = measure.ink_width(font, fs, card_text, fonts_dir)
+    limit = spec.CANVAS_W - 40
+    if w > limit:
+        fs = max(spec.POLICY_CARD_MIN_FS, int(fs * limit / w))
+    return fs
 
 
 def _dlg(layer, t0, t1, style, text):
@@ -46,7 +55,7 @@ def _dlg(layer, t0, t1, style, text):
 def build(title, card_text, timing, *, hl_fs=None, card_fs=None, fonts_dir=None):
     """title: {h1,h2} / card_text: 카드 문장 / timing: timing.build() 결과 → sub.ass 전문(str)"""
     fs1, fs2 = hl_fs or title_sizes(title["h1"], title["h2"], fonts_dir)
-    cfs = card_fs or card_size(card_text)
+    cfs = card_fs or card_size(card_text, fonts_dir)
     ce, total = timing["card_end"], timing["total"]
     lines = [spec.ASS_HEADER, "", spec.STYLE_BLOCK, "", "[Events]\n" + spec.EVENTS_FORMAT.rstrip("\n")]
     ev = []

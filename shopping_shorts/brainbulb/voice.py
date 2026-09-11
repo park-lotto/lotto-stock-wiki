@@ -18,8 +18,15 @@ def typecast_synth(voice_id, **kw):
     return synth
 
 
+# 앞뒤 무음 제거 — 볼케이노 컷 wav엔 무음이 없다(실측), Typecast 원본엔 0.2초씩 붙는다.
+# ★stop_periods로 뒤를 자르면 **문장 중간 첫 쉼**에서 뒷말이 통째로 잘린다(실측 2026-09-12: 9음절이 0.21초).
+#   앞만 자르는 필터를 뒤집어서 두 번 쓴다(areverse 샌드위치).
+_TRIM = ("silenceremove=start_periods=1:start_threshold=-45dB:start_silence=0.03,areverse,"
+         "silenceremove=start_periods=1:start_threshold=-45dB:start_silence=0.05,areverse")
+
+
 def _to_wav(src, dst):
-    r = subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", src, "-ar", "44100", "-ac", "2", dst],
+    r = subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", src, "-af", _TRIM, "-ar", "44100", "-ac", "2", dst],
                        capture_output=True, text=True, encoding="utf-8", errors="replace", stdin=subprocess.DEVNULL)
     if r.returncode != 0:
         raise RuntimeError(f"voice: wav 변환 실패 {src} — {r.stderr[-200:]}")
@@ -44,7 +51,8 @@ def synth_all(script, workdir, synth, *, spent_chars=0, log=print):
         same = os.path.exists(wav) and os.path.exists(_sidecar(wav)) and open(_sidecar(wav), encoding="utf-8").read() == t
         if not same:
             todo.append(i)
-    new_chars = sum(len(texts[i]) for i in todo)
+    # 새로 과금되는 글자 = 원본 mp3가 없는 것만 (원본이 남아 있으면 변환만 다시 한다)
+    new_chars = sum(len(texts[i]) for i in todo if not os.path.exists(os.path.join(td, f"{i:02d}.raw.mp3")))
     if spent_chars + new_chars > spec.POLICY_MAX_TTS_CHARS:
         raise RuntimeError(f"voice: TTS 누적 {spent_chars}+{new_chars}자 > 상한 {spec.POLICY_MAX_TTS_CHARS} — 돈 나가기 전에 멈춤")
     files, secs = [], []
@@ -52,12 +60,13 @@ def synth_all(script, workdir, synth, *, spent_chars=0, log=print):
         wav = os.path.join(td, f"{i:02d}.wav")
         if i in todo:
             raw = os.path.join(td, f"{i:02d}.raw.mp3")
-            for stale in (wav, _sidecar(wav)):
+            old_text = open(_sidecar(wav), encoding="utf-8").read() if os.path.exists(_sidecar(wav)) else None
+            for stale in (wav, _sidecar(wav)) + ((raw,) if old_text is not None and old_text != t else ()):
                 if os.path.exists(stale):
-                    os.remove(stale)
-            synth(t, raw)
+                    os.remove(stale)               # 글자가 바뀌었으면 원본 mp3도 버린다
+            if not os.path.exists(raw):            # 원본 mp3는 보존 — 트림 필터만 바꿔 다시 돌릴 때 재과금 없이
+                synth(t, raw)
             _to_wav(raw, wav)
-            os.remove(raw)
             with open(_sidecar(wav), "w", encoding="utf-8") as fh:
                 fh.write(t)
         sec = timing.wav_seconds(wav)

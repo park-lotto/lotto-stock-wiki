@@ -71,6 +71,8 @@ CARD_LAYER_BANDS = (0, 1)
 CARD_LAYER_TEXT = 2
 CARD_FS_LONG, CARD_FS_SHORT = 46, 54
 POLICY_CARD_LONG_MIN_CHARS = 26    # 우리 정책: 26자 이상이면 46 (5편 전부 26~33자→46, 전편 짧은 카드→54. 경계 미확정)
+POLICY_CARD_MAX_CHARS = 44         # 실측 최대 33자(fs46 → 871px). Gemini가 52자를 써 띠를 넘쳤고(2026-09-12) 36자 규칙엔 4회 연속 41자로 걸림 → 44자까지 받고 크기로 흡수
+POLICY_CARD_MIN_FS = 36            # 44자 안이면 카드 글자를 폭(1040px)에 맞춰 46→36까지 줄인다(우리 정책. 볼케이노는 46/54뿐)
 
 # ── 타이밍 ────────────────────────────────────────────────────────────────────────
 TAIL_SEC = 0.1                     # total = 카드 + Σ컷 + 0.1 (5/5 실측)
@@ -108,7 +110,7 @@ POLICY_LINE_SPLIT_PX = 710         # 1줄↔2줄 경계(숫자·영문을 한글
 POLICY_COPY_MIN_CHARS = 14         # 원문에 이만큼 그대로 들어 있으면 "다시 쓴 것이 아니다". 서버는 10자('전극침이 나갈 줄 몰랐다')를 통과시켰다
 POLICY_MAX_REWRITES = 3            # 반려 → 재작성 최대 횟수
 POLICY_MAX_TTS_CHARS = 6000        # 잡당 TTS 누적 글자 상한 (비용)
-POLICY_SILENCE_SEC = 0.35          # 나레 트랙 안 무음 임계 (꼬리 0.1 제외)
+POLICY_SILENCE_SEC = 0.7           # 나레 트랙 안 무음 임계 (꼬리 0.1 제외). 0.35는 문장 안 말 쉼(실측 0.41s '그런데 수하물 / 내리는 사이')을 누락으로 오판
 POLICY_SILENCE_DB = -40.0
 POLICY_DURATION_TOL = 0.05         # mp4 길이 vs total 허용 오차
 

@@ -53,7 +53,7 @@ def test_sfx_bed_mixes_multiple_files_and_skips_missing(tmp_path):
     for x in plan[:4]:                                  # 4개만 만들고 2개는 누락
         _tone(str(sfx_dir / os.path.basename(x["file"])), 0.2, 880)
     t = tmod.build(1.0, [1.0] * 6, [{"text": g["text"], "color": g["color"], "role": g["role"]} for g in s["groups"]])
-    out = render.sfx_bed(plan, t, str(sfx_dir), str(tmp_path / "bed.wav"), t["total"])
+    out = render.sfx_bed(plan, t, str(sfx_dir), str(tmp_path), t["total"])
     assert out and os.path.exists(out)
     assert abs(tmod.wav_seconds(out) - t["total"]) <= 0.1
 

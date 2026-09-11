@@ -59,6 +59,11 @@ def _subtitle_bounds(ass, fonts_dir):
             w = measure.ink_width(spec.STYLE_FONT[sty][0], fs, txt, fonts_dir)
             if w > spec.TITLE_TARGET_INK + 8:
                 bad.append({"style": sty, "text": txt, "ink": w})
+        elif sty == "CARD":
+            m = re.search(r"\\fs(\d+)", p[9]); fs = int(m.group(1)) if m else spec.STYLE_FONT[sty][2]
+            w = measure.ink_width(spec.STYLE_FONT[sty][0], fs, txt, fonts_dir)
+            if w > spec.CANVAS_W - 40:             # 카드 문장은 an5 가운데 정렬, 좌우 20px 여유
+                bad.append({"style": sty, "text": txt, "ink": w})
     return bad
 
 

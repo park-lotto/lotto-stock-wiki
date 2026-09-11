@@ -186,6 +186,17 @@ def run_step(wd, step, *, source_text=None, llm=None, tts=None, sfx_dir=None, bg
     return _resp("ok", step, nxt)
 
 
+def reset_to(wd, step):
+    """이 단계부터 다시 돌리게 되돌린다(뒤 산출물 무효화). 예: 트림 필터를 바꾼 뒤 voice부터."""
+    job = load(wd)
+    _fail_stay(job, step)
+    i = STEPS.index(step)
+    for s in STEPS[i:]:
+        job["data"].pop(s, None)
+    save(wd, job)
+    return job
+
+
 def next_step(wd):
     job = load(wd)
     done = job.get("step_done")

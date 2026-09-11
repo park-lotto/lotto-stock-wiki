@@ -45,11 +45,11 @@ def parse(raw):
     """LLM 응답 → dict. 코드펜스·앞뒤 잡문을 걷어낸다. 실패하면 ValueError(원인 포함)."""
     s = raw.strip()
     s = re.sub(r"^```(?:json)?\s*|\s*```$", "", s, flags=re.S)
-    m = re.search(r"\{.*\}", s, flags=re.S)
-    if not m:
+    start = s.find("{")
+    if start < 0:
         raise ValueError("응답에 JSON 객체가 없습니다")
     try:
-        d = json.loads(m.group(0))
+        d, _end = json.JSONDecoder().raw_decode(s[start:])   # 첫 객체 하나만 — 뒤에 잡문·둘째 객체가 붙어도 산다(실측 'Extra data')
     except json.JSONDecodeError as e:
         raise ValueError(f"JSON 파싱 실패: {e}") from e
     for k in ("title", "groups"):
@@ -67,7 +67,14 @@ def generate(source_text, call, *, max_rewrites=None, fonts_dir=None, log=print)
     last = None
     for attempt in range(max_rewrites + 1):
         raw = call(build(source_text, feedback=fb))
-        script = parse(raw)
+        try:
+            script = parse(raw)
+        except ValueError as e:                     # 형식 오류도 반려처럼 — 사유를 붙여 다시 쓰게 한다
+            log(f"[brainbulb.script] 시도 {attempt + 1}: 형식 오류 — {e}")
+            fb = f"\n\n[재작성 지시 — 출력 형식 오류: {e}. 설명·코드펜스 없이 JSON 객체 **하나만** 출력하라]"
+            if last is None:
+                last = ({"title": {}, "groups": []}, [lint.Issue("format", lint.REJECT, "output", str(e)[:80], "JSON 객체 하나만")], attempt + 1)
+            continue
         issues, laid = lint.lint(script, source_text=source_text, fonts_dir=fonts_dir)
         rej = lint.rejects(issues)
         log(f"[brainbulb.script] 시도 {attempt + 1}: 컷 {len(script['groups'])} · 반려 {len(rej)} · 경고 {len(issues) - len(rej)}")

@@ -3,6 +3,9 @@
 
 입력은 전부 파일이다: sub.ass · tts/NN.wav · sfx_plan · timing. 여기서는 판단하지 않는다 — 조립만.
 효과음 팩이 없으면(저작권 미확인, 팩 미보유) 베드를 건너뛰고 그 사실을 로그에 남긴다.
+
+★모든 ffmpeg는 **작업폴더를 cwd로** 잡고 **상대 경로**만 쓴다 (실측 2026-09-12: 한글 폴더 + concat 목록 상대경로가
+  'Illegal byte sequence'와 경로 이중 결합으로 죽었다. subtitles 필터 경로 이스케이프 문제도 같이 사라진다).
 """
 import os
 import subprocess
@@ -10,24 +13,28 @@ import subprocess
 from . import spec
 
 
-def _run(argv, what):
-    r = subprocess.run(argv, capture_output=True, text=True, encoding="utf-8", errors="replace", stdin=subprocess.DEVNULL)
+def _run(argv, what, cwd):
+    r = subprocess.run(argv, cwd=cwd, capture_output=True, text=True, encoding="utf-8", errors="replace", stdin=subprocess.DEVNULL)
     if r.returncode != 0:
         raise RuntimeError(f"render/{what}: ffmpeg 실패 — {r.stderr[-400:]}")
 
 
-def concat_narration(files, out_wav, tail_sec=spec.TAIL_SEC):
-    """카드+컷 wav를 무음 없이 이어 붙이고 꼬리 0.1초 무음을 붙인다 → narr.wav"""
-    lst = out_wav + ".txt"
-    with open(lst, "w", encoding="utf-8") as fh:
+def _rel(path, wd):
+    return os.path.relpath(os.path.abspath(path), os.path.abspath(wd)).replace("\\", "/")
+
+
+def concat_narration(files, wd, out_name="narr.wav", tail_sec=spec.TAIL_SEC):
+    """카드+컷 wav를 무음 없이 이어 붙이고 꼬리 0.1초 무음을 붙인다 → narr.wav (경로는 목록 파일 기준 상대)"""
+    lst = out_name + ".txt"
+    with open(os.path.join(wd, lst), "w", encoding="utf-8") as fh:
         for f in files:
-            fh.write("file '" + f.replace("\\", "/").replace("'", "'\\''") + "'\n")
+            fh.write("file '" + _rel(f, wd).replace("'", "'\\''") + "'\n")
     _run(["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", lst,
-          "-af", f"apad=pad_dur={tail_sec}", "-ar", "44100", "-ac", "2", out_wav], "narr")
-    return out_wav
+          "-af", f"apad=pad_dur={tail_sec}", "-ar", "44100", "-ac", "2", out_name], "narr", wd)
+    return os.path.join(wd, out_name)
 
 
-def sfx_bed(plan, timing, sfx_dir, out_wav, total):
+def sfx_bed(plan, timing, sfx_dir, wd, total, out_name="sfx_bed.wav"):
     """컷 시작 시각에 효과음 1발씩(게인 적용) → 베드 wav. 파일이 하나도 없으면 None."""
     inputs, filters, tags = [], [], []
     for x in plan:
@@ -35,56 +42,55 @@ def sfx_bed(plan, timing, sfx_dir, out_wav, total):
         if not os.path.exists(path):
             continue
         g = timing["groups"][x["cut"]]
-        k = len(tags)                      # 입력 번호 = 지금까지 붙인 효과음 개수 (아스트라 3R: len(inputs)는 2씩 뛰어 'Invalid file index')
-        inputs += ["-i", path]
-        filters.append(f"[{k}:a]volume={x['gain']},adelay={int(g['t'] * 1000)}|{int(g['t'] * 1000)},aformat=sample_rates=44100:channel_layouts=stereo[s{k}]")
+        k = len(tags)                      # 입력 번호 = 지금까지 붙인 효과음 개수 (아스트라 3R: len(inputs)는 2씩 뛴다)
+        inputs += ["-i", _rel(path, wd)]
+        ms = int(g["t"] * 1000)
+        filters.append(f"[{k}:a]volume={x['gain']},adelay={ms}|{ms},aformat=sample_rates=44100:channel_layouts=stereo[s{k}]")
         tags.append(f"[s{k}]")
     if not inputs:
         return None
     fc = ";".join(filters) + f";{''.join(tags)}amix=inputs={len(tags)}:normalize=0,apad=whole_dur={total}[bed]"
-    _run(["ffmpeg", "-y", "-loglevel", "error", *inputs, "-filter_complex", fc, "-map", "[bed]", "-t", str(total), out_wav], "sfx_bed")
-    return out_wav
+    _run(["ffmpeg", "-y", "-loglevel", "error", *inputs, "-filter_complex", fc, "-map", "[bed]", "-t", str(total), out_name], "sfx_bed", wd)
+    return os.path.join(wd, out_name)
 
 
-def mix(narr_wav, bed_wav, out_wav, total):
+def mix(narr_wav, bed_wav, wd, total, out_name="audio_final.wav"):
+    n = _rel(narr_wav, wd)
     if bed_wav is None:
-        _run(["ffmpeg", "-y", "-loglevel", "error", "-i", narr_wav, "-t", str(total), out_wav], "mix")
-        return out_wav
+        _run(["ffmpeg", "-y", "-loglevel", "error", "-i", n, "-t", str(total), out_name], "mix", wd)
+        return os.path.join(wd, out_name)
     fc = f"[1:a]volume={spec.SFX_BED_DB}dB[b];[0:a][b]amix=inputs=2:normalize=0:duration=first[m]"
-    _run(["ffmpeg", "-y", "-loglevel", "error", "-i", narr_wav, "-i", bed_wav, "-filter_complex", fc, "-map", "[m]", "-t", str(total), out_wav], "mix")
-    return out_wav
+    _run(["ffmpeg", "-y", "-loglevel", "error", "-i", n, "-i", _rel(bed_wav, wd), "-filter_complex", fc, "-map", "[m]",
+          "-t", str(total), out_name], "mix", wd)
+    return os.path.join(wd, out_name)
 
 
-def video(ass_path, audio_wav, out_mp4, total, *, bg_image=None, fonts_dir=None, fps=29.97):
-    """배경(없으면 검정) + 자막 번인 + 오디오 → mp4. subtitles 필터 경로 이스케이프를 피하려고 ASS 폴더를 cwd로 잡는다."""
+def video(ass_path, audio_wav, wd, total, *, bg_image=None, fonts_dir=None, fps=29.97, out_name="out/final.mp4"):
+    """배경(없으면 검정) + 자막 번인 + 오디오 → mp4. 전부 작업폴더 기준 상대 경로."""
     from .measure import _fontsdir_arg
     fonts_dir = fonts_dir or spec.FONTS_DIR
-    cwd = os.path.dirname(os.path.abspath(ass_path))
-    ass_rel = os.path.basename(ass_path)
-    fd = _fontsdir_arg(fonts_dir, cwd)
+    os.makedirs(os.path.join(wd, os.path.dirname(out_name)), exist_ok=True)
+    fd = _fontsdir_arg(fonts_dir, wd)
     if bg_image:
-        vin = ["-loop", "1", "-framerate", str(fps), "-i", bg_image]
+        vin = ["-loop", "1", "-framerate", str(fps), "-i", _rel(bg_image, wd)]
     else:
         vin = ["-f", "lavfi", "-i", f"color=black:s={spec.CANVAS_W}x{spec.CANVAS_H}:r={fps}"]
-    argv = ["ffmpeg", "-y", "-loglevel", "error", *vin, "-i", audio_wav,
-            "-vf", f"scale={spec.CANVAS_W}:{spec.CANVAS_H}:force_original_aspect_ratio=decrease,pad={spec.CANVAS_W}:{spec.CANVAS_H}:(ow-iw)/2:(oh-ih)/2,subtitles={ass_rel}:fontsdir={fd}",
+    argv = ["ffmpeg", "-y", "-loglevel", "error", *vin, "-i", _rel(audio_wav, wd),
+            "-vf", f"scale={spec.CANVAS_W}:{spec.CANVAS_H}:force_original_aspect_ratio=decrease,pad={spec.CANVAS_W}:{spec.CANVAS_H}:(ow-iw)/2:(oh-ih)/2,subtitles={_rel(ass_path, wd)}:fontsdir={fd}",
             "-t", str(total), "-r", str(fps), "-pix_fmt", "yuv420p", "-c:v", "libx264", "-preset", "veryfast", "-crf", "20",
-            "-c:a", "aac", "-b:a", "192k", "-shortest", out_mp4]
-    r = subprocess.run(argv, cwd=cwd, capture_output=True, text=True, encoding="utf-8", errors="replace", stdin=subprocess.DEVNULL)
-    if r.returncode != 0:
-        raise RuntimeError(f"render/video: ffmpeg 실패 — {r.stderr[-400:]}")
-    return out_mp4
+            "-c:a", "aac", "-b:a", "192k", "-shortest", out_name]
+    _run(argv, "video", wd)
+    return os.path.join(wd, out_name)
 
 
 def build(workdir, timing, ass_path, narr_files, sfx_plan, *, sfx_dir=None, bg_image=None, fonts_dir=None, log=print):
-    out = os.path.join(workdir, "out")
-    os.makedirs(out, exist_ok=True)
+    wd = os.path.abspath(workdir)
     total = timing["total"]
-    narr = concat_narration(narr_files, os.path.join(workdir, "narr.wav"))
-    bed = sfx_bed(sfx_plan, timing, sfx_dir, os.path.join(workdir, "sfx_bed.wav"), total) if sfx_dir else None
+    narr = concat_narration(narr_files, wd)
+    bed = sfx_bed(sfx_plan, timing, sfx_dir, wd, total) if sfx_dir else None
     if bed is None:
         log("[brainbulb.render] 효과음 팩 없음 — 베드 생략(나레만)")
-    final = mix(narr, bed, os.path.join(workdir, "audio_final.wav"), total)
-    mp4 = video(ass_path, final, os.path.join(out, "final.mp4"), total, bg_image=bg_image, fonts_dir=fonts_dir)
+    final = mix(narr, bed, wd, total)
+    mp4 = video(ass_path, final, wd, total, bg_image=bg_image, fonts_dir=fonts_dir)
     log(f"[brainbulb.render] {mp4} ({total}s)")
     return {"mp4": mp4, "narr": narr, "bed": bed, "audio": final}
