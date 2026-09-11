@@ -1164,16 +1164,20 @@
   function _pinSingle() { return /^\/pin\/[^/]+/.test(location.pathname); }
   function addPinCardBtns() {
     if (!_isPin() || _pinSingle()) return;
-    var links = document.querySelectorAll('a[href^="/pin/"]');
-    for (var i = 0; i < links.length; i++) {
-      var a = links[i];
-      if (a.getAttribute("data-ssgrab")) continue;
-      var rr = a.getBoundingClientRect();
-      if (rr.width < 100 || rr.height < 100) continue;         // 아이콘·텍스트 링크 제외
-      var im = a.querySelector("img");
-      if (!im) continue;
-      a.setAttribute("data-ssgrab", "1");
-      if (getComputedStyle(a).position === "static") a.style.position = "relative";
+    // ★핀터레스트 실측(2026-09-11): 핀 링크 <a href="/pin/…">는 **0x0**(레이아웃 없음)이고
+    //   크기를 가진 상자는 [data-test-id="pin"] 래퍼다. 영상 핀은 <img> 대신 <video>만 있다.
+    //   그래서 래퍼 기준으로 크기·버튼 자리를 잡고, 썸네일은 img.src 또는 video.poster.
+    var cards = document.querySelectorAll('[data-test-id="pin"]');
+    for (var i = 0; i < cards.length; i++) {
+      var c = cards[i];
+      if (c.getAttribute("data-ssgrab")) continue;
+      var a = c.querySelector('a[href^="/pin/"]');
+      var im = c.querySelector("img, video");
+      if (!a || !im) continue;
+      var rr = c.getBoundingClientRect();
+      if (rr.width < 100 || rr.height < 100) continue;     // 아직 안 그려진(0x0) 카드는 다음 tick에
+      c.setAttribute("data-ssgrab", "1");
+      if (getComputedStyle(c).position === "static") c.style.position = "relative";
       var b = document.createElement("button");
       b.className = "ss-card-grab";
       b.textContent = "📥";
@@ -1185,10 +1189,10 @@
       (function (a, im) {
         b.addEventListener("click", function (e) {
           e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
-          openGrab(a.href, im.src || "", im.alt || "");
+          openGrab(a.href, im.poster || im.src || "", im.alt || im.getAttribute("aria-label") || "");
         }, true);
       })(a, im);
-      a.appendChild(b);
+      c.appendChild(b);
     }
   }
   function syncPinFloat() {
