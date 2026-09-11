@@ -6975,6 +6975,11 @@ _위키 정식 ingest는 후속 연결 예정_
 
 
 # ── §5 유튜브 영상제작 대시보드 (/yt) ──────────────────────────
+try:
+    import evolink_api as _evolink
+except ImportError:
+    _evolink = None
+
 YT_PROJECTS_DIR = os.path.join(ROOT, "data", "yt_projects")
 YT_ANALYSIS_CACHE_DIR = os.path.join(ROOT, "data", "yt_analysis_cache")
 _YT_PROJECT_ID_RE = re.compile(r"^[a-zA-Z0-9_-]{6,80}$")
@@ -7035,6 +7040,10 @@ def _yt_save_project(project):
 
 def _yt_scene(project, scene_id):
     return next((s for s in project.get("scenes", []) if s.get("id") == scene_id), None)
+
+
+def _yt_evolink_key():
+    return _env_key("EVOLINK_API_KEY")
 
 
 @app.get("/yt", response_class=HTMLResponse)
@@ -7312,6 +7321,127 @@ def api_yt_project_asset(project_id: str, scene_id: str, asset_id: str):
     if not os.path.isfile(path):
         return JSONResponse(content={"error": "저장 파일이 없습니다"}, status_code=404)
     return FileResponse(path, media_type=asset.get("content_type"), filename=asset.get("name"))
+
+
+@app.get("/yt/evolink/status")
+def api_yt_evolink_status():
+    """키 자체는 노출하지 않고 에보링크 연결 준비 상태와 허용 모델만 보낸다."""
+    models = list(_evolink.MODELS) if _evolink is not None else []
+    return JSONResponse(content={
+        "configured": bool(_yt_evolink_key()),
+        "available": _evolink is not None,
+        "models": models,
+        "default_model": _evolink.DEFAULT_MODEL if _evolink is not None else "",
+    })
+
+
+@app.post("/yt/projects/{project_id}/scenes/{scene_id}/ai-video")
+async def api_yt_scene_ai_video_create(project_id: str, scene_id: str, req: Request):
+    """장면 하나를 EvoLink 유료 영상 생성 작업으로 제출한다."""
+    if _evolink is None:
+        return JSONResponse(content={"error": "에보링크 연결 모듈을 불러올 수 없습니다"}, status_code=503)
+    key = _yt_evolink_key()
+    if not key:
+        return JSONResponse(
+            content={"error": "에보링크 API 키가 없습니다. .env에 EVOLINK_API_KEY를 등록한 뒤 서버를 다시 시작하세요."},
+            status_code=503,
+        )
+    try:
+        project = _yt_load_project(project_id)
+    except ValueError as e:
+        return JSONResponse(content={"error": str(e)}, status_code=400)
+    scene = _yt_scene(project, scene_id) if project else None
+    if scene is None:
+        return JSONResponse(content={"error": "장면을 찾을 수 없습니다"}, status_code=404)
+    current = scene.get("ai_video") or {}
+    if current.get("status") in {"pending", "processing"}:
+        return JSONResponse(content={"error": "이미 생성 중인 AI 영상이 있습니다"}, status_code=409)
+
+    body = await req.json()
+    prompt = str(body.get("prompt") or scene.get("ai_prompt") or scene.get("script") or "").strip()
+    try:
+        task = await run_in_threadpool(
+            _evolink.create_video,
+            api_key=key,
+            prompt=prompt,
+            model=str(body.get("model") or _evolink.DEFAULT_MODEL),
+            duration=int(body.get("duration") or 5),
+            quality=str(body.get("quality") or "720p"),
+            aspect_ratio=str(body.get("aspect_ratio") or ("9:16" if project.get("format") == "shorts" else "16:9")),
+            generate_audio=bool(body.get("generate_audio", False)),
+        )
+    except (ValueError, _evolink.EvoLinkError) as e:
+        return JSONResponse(content={"error": str(e)}, status_code=400)
+
+    scene["production_type"] = "ai_generated"
+    scene["ai_prompt"] = prompt
+    scene["ai_video"] = {
+        "task_id": task["id"], "status": task.get("status") or "pending",
+        "progress": int(task.get("progress") or 0),
+        "model": task.get("model") or body.get("model") or _evolink.DEFAULT_MODEL,
+        "duration": int(body.get("duration") or 5),
+        "quality": str(body.get("quality") or "720p"),
+        "aspect_ratio": str(body.get("aspect_ratio") or ("9:16" if project.get("format") == "shorts" else "16:9")),
+        "estimated_time": (task.get("task_info") or {}).get("estimated_time"),
+        "submitted_at": _yt_now(), "asset_id": None, "error": "",
+    }
+    _yt_save_project(project)
+    return JSONResponse(content={"task": scene["ai_video"], "project": project}, status_code=202)
+
+
+@app.get("/yt/projects/{project_id}/scenes/{scene_id}/ai-video")
+async def api_yt_scene_ai_video_status(project_id: str, scene_id: str):
+    """생성 상태를 조회하고 완료된 원격 영상을 즉시 프로젝트에 저장한다."""
+    if _evolink is None:
+        return JSONResponse(content={"error": "에보링크 연결 모듈을 불러올 수 없습니다"}, status_code=503)
+    key = _yt_evolink_key()
+    if not key:
+        return JSONResponse(content={"error": "에보링크 API 키가 없습니다"}, status_code=503)
+    try:
+        project = _yt_load_project(project_id)
+    except ValueError as e:
+        return JSONResponse(content={"error": str(e)}, status_code=400)
+    scene = _yt_scene(project, scene_id) if project else None
+    ai_video = (scene or {}).get("ai_video") or {}
+    if not ai_video.get("task_id"):
+        return JSONResponse(content={"error": "이 장면에 AI 영상 작업이 없습니다"}, status_code=404)
+
+    try:
+        task = await run_in_threadpool(_evolink.get_task, api_key=key, task_id=ai_video["task_id"])
+        status = str(task.get("status") or ai_video.get("status") or "pending")
+        ai_video["status"] = status
+        ai_video["progress"] = int(task.get("progress") or 0)
+        if status == "failed":
+            error = task.get("error") or task.get("message") or "영상 생성에 실패했습니다"
+            if isinstance(error, dict):
+                error = error.get("message") or error.get("code") or "영상 생성에 실패했습니다"
+            ai_video["error"] = str(error)[:300]
+        if status == "completed" and not ai_video.get("asset_id"):
+            results = task.get("results") or []
+            first = results[0] if results else ""
+            result_url = first.get("url") if isinstance(first, dict) else first
+            if not result_url:
+                raise _evolink.EvoLinkError("완료 응답에 영상 주소가 없습니다")
+            asset_id = uuid.uuid4().hex[:12]
+            filename = f"evolink_{scene_id}_{asset_id}.mp4"
+            asset_dir = os.path.join(YT_PROJECTS_DIR, project_id, "assets", scene_id)
+            stored_name = f"{asset_id}_{filename}"
+            path = os.path.join(asset_dir, stored_name)
+            size = await run_in_threadpool(_evolink.download_result, result_url, path)
+            asset = {
+                "id": asset_id, "name": filename, "size": size,
+                "content_type": "video/mp4", "stored_name": stored_name,
+                "source": "evolink", "created_at": _yt_now(),
+            }
+            scene.setdefault("assets", []).append(asset)
+            scene["status"] = "ready"
+            ai_video["asset_id"] = asset_id
+            ai_video["saved_at"] = _yt_now()
+        scene["ai_video"] = ai_video
+        _yt_save_project(project)
+    except _evolink.EvoLinkError as e:
+        return JSONResponse(content={"error": str(e)}, status_code=400)
+    return JSONResponse(content={"task": ai_video, "project": project})
 
 
 @app.get("/yt/refs", response_class=HTMLResponse)

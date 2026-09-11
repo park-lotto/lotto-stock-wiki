@@ -128,7 +128,74 @@ def test_yt_page_is_persistent_project_workflow(client):
     assert "아스트라 주제 확정 카드" in html
     assert "장면으로 자동 나누기" in html
     assert "장면·촬영파일" in html
+    assert "에보링크 AI 장면" in html
+    assert "AI 영상 만들기(유료)" in html
     assert "아직 실행 버튼은 만들지 않았습니다" in html
+
+
+def test_evolink_status_does_not_expose_key(monkeypatch, client):
+    monkeypatch.setattr(server_module, "_yt_evolink_key", lambda: "top-secret-key")
+    response = client.get("/yt/evolink/status")
+    assert response.status_code == 200
+    assert response.json()["configured"] is True
+    assert "top-secret-key" not in response.text
+
+
+def test_scene_ai_video_submit_poll_and_local_save(monkeypatch, tmp_path):
+    monkeypatch.setattr(server_module, "YT_PROJECTS_DIR", str(tmp_path / "projects"))
+    monkeypatch.setattr(server_module, "_yt_evolink_key", lambda: "secret")
+    monkeypatch.setattr(server_module._evolink, "create_video", lambda **kwargs: {
+        "id": "task-unified-123", "status": "pending", "progress": 0,
+        "model": kwargs["model"], "task_info": {"estimated_time": 60},
+    })
+    monkeypatch.setattr(server_module._evolink, "get_task", lambda **kwargs: {
+        "id": kwargs["task_id"], "status": "completed", "progress": 100,
+        "results": ["https://cdn.example.com/generated.mp4"],
+    })
+
+    def fake_download(url, destination):
+        Path(destination).parent.mkdir(parents=True, exist_ok=True)
+        Path(destination).write_bytes(b"real-video-file")
+        return 15
+
+    monkeypatch.setattr(server_module._evolink, "download_result", fake_download)
+    c = TestClient(server_module.app)
+    project = c.post("/yt/projects", json={"title": "AI 장면 시험", "format": "shorts"}).json()
+    project["scenes"] = [{
+        "id": "scene-01", "title": "훅", "script": "첫 장면",
+        "status": "waiting", "assets": [], "production_type": "ai_generated",
+    }]
+    c.patch(f"/yt/projects/{project['id']}", json=project)
+
+    submitted = c.post(
+        f"/yt/projects/{project['id']}/scenes/scene-01/ai-video",
+        json={"prompt": "카메라가 제품으로 다가간다", "duration": 5, "quality": "720p"},
+    )
+    assert submitted.status_code == 202
+    assert submitted.json()["task"]["task_id"] == "task-unified-123"
+    assert submitted.json()["task"]["aspect_ratio"] == "9:16"
+
+    completed = c.get(f"/yt/projects/{project['id']}/scenes/scene-01/ai-video")
+    assert completed.status_code == 200
+    scene = completed.json()["project"]["scenes"][0]
+    assert scene["ai_video"]["asset_id"]
+    assert scene["assets"][0]["source"] == "evolink"
+    asset = scene["assets"][0]
+    saved = c.get(f"/yt/projects/{project['id']}/assets/scene-01/{asset['id']}")
+    assert saved.content == b"real-video-file"
+
+
+def test_scene_ai_video_requires_server_side_key(monkeypatch, tmp_path):
+    monkeypatch.setattr(server_module, "YT_PROJECTS_DIR", str(tmp_path))
+    monkeypatch.setattr(server_module, "_yt_evolink_key", lambda: "")
+    c = TestClient(server_module.app)
+    project = c.post("/yt/projects", json={"title": "키 없음"}).json()
+    response = c.post(
+        f"/yt/projects/{project['id']}/scenes/scene-01/ai-video",
+        json={"prompt": "장면"},
+    )
+    assert response.status_code == 503
+    assert "EVOLINK_API_KEY" in response.json()["error"]
 
 
 def test_topic_analysis_stream_saves_cards_and_decision(monkeypatch, tmp_path):
