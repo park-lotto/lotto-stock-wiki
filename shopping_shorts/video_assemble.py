@@ -2701,7 +2701,11 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
             idx += 1
     if len(mix_labels) > 1:
         ins = "".join(f"[{lb}]" for lb in mix_labels)
-        fc.append(f"{ins}amix=inputs={len(mix_labels)}:duration=first:dropout_transition=2[a]")
+        # ★normalize=0 (2026-09-12): amix 기본값은 **입력 개수로 나눈다**. 효과음 29발을 얹은
+        #   실측에서 나레이션까지 30분의 1(-30dB)이 돼 -54 LUFS로 나왔다(볼케이노 재조립).
+        #   BGM 1개만 있어도 나레이션이 반(-6dB)이 되던 것이 같은 병이다. 볼륨은 위에서
+        #   volume= 로 이미 정했으니 amix는 그냥 더하기만 해야 한다.
+        fc.append(f"{ins}amix=inputs={len(mix_labels)}:duration=first:dropout_transition=2:normalize=0[a]")
         amap = "[a]"
     cmd = ["ffmpeg", "-y", *inputs, "-filter_complex", ";".join(fc), "-map", f"[{vcur}]"]
     cmd += (["-map", amap, "-c:a", "aac"] if amap else ["-map", "0:a", "-c:a", "copy"])
