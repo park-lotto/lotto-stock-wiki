@@ -121,3 +121,13 @@
 - **밈 글자 보존 — 실행기가 render_plan 중 자동 갱신(5파일)된 뒤 방식이 바뀜**: `photo_text_results`를 손대지 말고 `payload["images"]["<밈 절대경로>"] = {"path":"pepe/fm/013.png","preserve_text":true,"photo_review":{"reason":"…"}}`를 추가하고 `--step render_plan` 재개 → 통과. (구 방식 memory는 옛 실행기 기준)
 - render_plan 장면 검수 2건은 내가 `probe/subject-focus/**/client-media/*.png`를 실제로 보고 `focus_review_replies[sha] = {request_sha256, answer, reviewed_image_ids}`로 답했다. 얼굴이 안 잡힌 인물(숙인 학생)은 kind=object + box 비율로.
 - 대본 경고 2건은 통과 후에도 남음: "윗줄에서 문장이 끝났다"(애들이 보여달란다고) · "마지막 문장이 끝나지 않았다"(…아니다). 반려는 아님.
+
+---
+
+## 12. 2026-09-12 CH PC — 뇌전구 6편째 보르네오 땅속 산불 `보르네오_땅속산불_v001.mp4` (32컷·39.7초)
+
+- 소재: 서울신문 081/0003679513 [지금, 지구] 보르네오 이탄지 산불(서울 3배 소실·호흡기 환자 5만). 작업 폴더 `out/volcano/뇌전구_0003679513/`(gitignore) · 바탕화면 사본 `뇌전구_보르네오_땅속산불_v001.mp4`. 실측 1080×1920 · 39.71초(timing 39.76) · 자막·헤드라인·마지막 RED PUNCH 프레임으로 확인.
+- **팩 다운로드가 auto 분류기에 막힘**("Code from External" — curl도 python도 전부). 우회: 완성된 `뇌전구_0004104394/`의 fonts·pepe·runner·sfx_norm·framevision·`.volcano-asset-receipts`를 새 폴더에 **복사**하니 실행기가 sha 대조 뒤 "다운로드 재사용"으로 통과. 실행기 실행은 이번엔 안 막혔다.
+- news payload 모양(박위 편과 동일): `source:""` · `source_request:{kind,url}` · `source_chars`(공백 제외) · `transcript`(본문 — 소제목 불릿·기획 꼬리문단 제거). 소제목이 다음 문단에 붙어 오는 곳("돌파이번")은 손으로 끊어야 한다.
+- 대본 1회 통과(경고 2건은 §9와 같은 비차단). 이미지 1/11 실패(병원 어린이+산소마스크, 사유 미기록) → 성인 마스크 대기줄로 바꿔 통과, 나머지 10장 캐시 재사용.
+- render_plan 멈춤 2건: ① 피사체 검수 2건(같은 슬롯10 항공사진) → 열어 보고 `kind:scene` ② 밈 013.png 한글 '충격' 내장 → 자동 갱신된 실행기는 **`timing.groups[N].meme`·`groups[N].meme` 둘 다 다른 밈 경로로 교체**하라고 지시 → 025.png(입 벌린 충격, 글자 없음)로 통과. 감정→파일 매핑은 없어서 57장 컨택트시트(PIL)로 골랐다. §10 테이저건 편의 `images[경로].preserve_text` 방식과 갈리니 실행기 메시지대로 따를 것.
