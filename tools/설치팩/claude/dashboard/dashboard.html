@@ -1,0 +1,367 @@
+<title>프로젝트 대시보드</title>
+<style>
+:root { color-scheme: light dark; }
+body { font-family: system-ui, sans-serif; margin: 0; padding: 2rem; background: #fff; color: #111; }
+@media (prefers-color-scheme: dark) { body { background: #111; color: #eee; } }
+:root[data-theme="dark"] body { background: #111; color: #eee; }
+:root[data-theme="light"] body { background: #fff; color: #111; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; max-width: 100%; }
+.card { border: 1px solid #8888; border-radius: 8px; padding: 1rem; overflow-x: auto; }
+.card h2 { margin: 0 0 0.5rem; font-size: 1.1rem; }
+.trackblock { border-top: 1px dashed #8886; padding-top: 0.6rem; margin-top: 0.6rem; }
+.trackblock:first-of-type { border-top: 0; padding-top: 0; margin-top: 0; }
+.track { margin: 0 0 0.3rem; font-size: 0.95rem; opacity: 0.85; }
+.minilog { font-size: 1.2rem; letter-spacing: 0.2rem; }
+</style>
+<div class="grid">
+
+<section class="card">
+  <h2>스탁브레인</h2>
+  <div class="trackblock">
+    <h3 class="track">대본소재이탈2</h3>
+    <p class="summary"><strong>현재:</strong> 라이브 실측 완료: 배포·재시작 후 같은 재료로 57/53 생성 2회 → 다이소 0회, 57 tries에 &#x27;재료 밖 판매처&#x27; 잡힘·재작성으로 걷어냄. 서버 게이트 직접 호출도 확인. spine 57 pending(목록 16→15). 핸드오프·메모리 기록, 문서 커밋 병합.</p>
+    <p class="next"><strong>다음:</strong> 57 되살리려면 문장틀 6틀 중립화 후 승인. 부분재생성·조립·승격 게이트 배선(별건)</p>
+    <p class="minilog">○○○○●○●</p>
+  </div>
+  <div class="trackblock">
+    <h3 class="track">기간탭12시간</h3>
+    <p class="summary"><strong>현재:</strong> 코덱스 &#x27;한 창에서 대화&#x27; 정체 실측: cmd AutoRun 레지스트리(.codex-autorun.cmd)로 cmd 열면 Codex 자동 실행. 집 PC 막힘 원인은 샌드박스 관리자 승인 + config.toml 권한 3줄(approval_policy never / danger-full-access / windows sandbox elevated)이 PC별 파일이라 안 따라감. 아스트라=gpt-6-astra 안내는 텔레그램 전송 완료(msg 725).</p>
+    <p class="next"><strong>다음:</strong> 집 PC 세팅 결과 확인. 레퍼런스 랭킹은 배포 완료 상태(12시간탭·정렬수정·뱃지필터·툴팁자동생성). 남은 건 팔로워 계열 2칸 source_enrichment 조인</p>
+    <p class="minilog">○○○○○●●</p>
+  </div>
+  <div class="trackblock">
+    <h3 class="track">코덱스세팅</h3>
+    <p class="summary"><strong>현재:</strong> 코덱스 설치·설정 전 과정을 handoff/코덱스세팅.md + wiki/log.d에 기록하고 푸시. git에 담기는 것(AGENTS.md·코덱스.bat·track_open.py)과 PC마다 따로 해야 하는 것(로그인·config.toml·AutoRun·크롬확장·.agents 머리말)을 갈라 정리. 집 PC는 4단계면 재현 가능.</p>
+    <p class="next"><strong>다음:</strong> 집 PC에서 4단계 실제 재현 확인. 대화형 approval:never 실제 적용 여부 화면 확인.</p>
+    <p class="minilog">○○○○●●○</p>
+  </div>
+  <div class="trackblock">
+    <h3 class="track">컷뱅크</h3>
+    <p class="summary"><strong>현재:</strong> 장면매칭 진행상황 확인만 함. 09-08 B1 프레임태깅 라이브 점화(관찰 단계), 자동 재배치는 폐기, 검수판 빨간불 33% 제거 배포 완료. 09-09 재료 화면추출+wow_facts는 main 병합만 되고 서버 배포 대기 상태로 기록됨.</p>
+    <p class="next"><strong>다음:</strong> 새벽 배포 반영 여부 확인 후 실제 job으로 재료 적재·대본 밀도 실측</p>
+    <p class="minilog">○○○●●●○</p>
+  </div>
+  <div class="trackblock">
+    <h3 class="track">장면그림</h3>
+    <p class="summary"><strong>현재:</strong> 페이블·아스트라 교차검토로 결함 6건 발견·수정. 핵심은 저장마다 화면이 왕복하고 되돌리기 버튼이 무효였던 것(페이블이 실행으로 발견). screen_locked로 사람 결정을 잠갔고 5회 저장 시험으로 확인.</p>
+    <p class="next"><strong>다음:</strong> 1단계 검사만 켜고 며칠 관찰 → 2단계 교체본 사람 눈 판정 → 3단계 autofix</p>
+    <p class="minilog">○○○○○●○</p>
+  </div>
+  <div class="trackblock">
+    <h3 class="track">영상분석조사</h3>
+    <p class="summary"><strong>현재:</strong> 유튜브 영상(SURVIVAL AI, 12:53) watch 스킬로 전사 확보 후 video_analysis_create 정리. Higgsfield MCP 연결 시 쓰는 무료 샷단위 영상분석 도구 - 분석결과를 Seedance 영상생성 프롬프트로 변환하는 흐름 7단계 + 설치법 정리.</p>
+    <p class="next"><strong>다음:</strong> 필요시 특정 구간 프레임 재추출해 실제 UI 화면 확인 / Higgsfield MCP 실제 연결 테스트</p>
+    <p class="minilog">○○○○○●○</p>
+  </div>
+  <div class="trackblock">
+    <h3 class="track">썰쇼핑판정확대</h3>
+    <p class="summary"><strong>현재:</strong> 마감 — 피드 타기 발굴 전환·상시가동, 수집 회복(영상 922→9,601, 썰쇼핑 549→776 +41%), 통과 151개 시드 등록(2,170→2,385). 미등록 411개는 결이 새서 보류하고 판정 페이지 out/피드채널판정.html로 만들어 브라우저 실측 완료. 커밋 aa72791e0, main 병합 진행.</p>
+    <p class="next"><strong>다음:</strong> 집에서: git pull → out/피드채널판정.html 열어 상위 50~100개 O/X 채점 → 내보내기 복사 → 그 라벨로 판정기 교정(디에디트=놓침 / 따니네 만들기·시공DIY=오통과 / 아랍어 채널 통과 = 한국어 게이트 구멍) → 발굴 재실행 후 등록.</p>
+    <p class="minilog">○○○●●●○</p>
+  </div>
+  <div class="trackblock">
+    <h3 class="track">꾸미기가림막</h3>
+    <p class="summary"><strong>현재:</strong> 가림막 &#x27;이 장면에만&#x27; 긴급 배포 완료. 라이브 화면 반영·렌더 워커 재시작 확인</p>
+    <p class="next"><strong>다음:</strong> 라이브 작업으로 실렌더 1회 재확인 / 캡컷 장면가림막 지원</p>
+    <p class="minilog">○○○○○●○</p>
+  </div>
+  <div class="trackblock">
+    <h3 class="track">꾸미기</h3>
+    <p class="summary"><strong>현재:</strong> 가림막 장면별 적용 여부 조사 — masks는 틀 전체 공통(장면·시간 칸 없음) 확인</p>
+    <p class="next"><strong>다음:</strong> 원하시면 가림막 장면별 적용 기능 설계</p>
+    <p class="minilog">○○○○○●○</p>
+  </div>
+  <div class="trackblock">
+    <h3 class="track">해외발굴</h3>
+    <p class="summary"><strong>현재:</strong> 오전 인스타 발굴 세션 위치 확인 — 트랙 인스타수집확대(handoff/인스타수집확대.md, 10:27). 상한3→12·세션 1→8 복구·fetch_limit 삭제까지 완료돼 있고, 상한12는 오늘 09:00 타이머가 첫 실행이라 아직 미측정 상태.</p>
+    <p class="next"><strong>다음:</strong> 오늘 09:00 인스타 수집분이 채널당 12건까지 들어왔는지 서버 reference.db로 실측 (기준선: 신규 109건/일·채널당 1.65건·홈템 57.9%)</p>
+    <p class="minilog">○○○○●○○</p>
+  </div>
+  <div class="trackblock">
+    <h3 class="track">자막퍼센트소실</h3>
+    <p class="summary"><strong>현재:</strong> 자막이 사라지는 원인 3개 찾아 전부 라이브 배포: (1) %가 들어간 줄을 ffmpeg drawtext가 조용히 안 그림(expansion=none) (2) 컷 여러개인 자막에서 저장이 한 칸만 갱신돼 옛 줄이 덮어씀 (3) 자동저장(scene_lab/apply)이 읽고-쓰는 사이 줄저장을 덮는 레이스 → 편집 POST를 job별 직렬화하는 미들웨어. 라이브 브라우저·완성본 프레임·서버로그로 각각 실측.</p>
+    <p class="next"><strong>다음:</strong> 너무 짧게 스치는 자막(0.3~0.5초, 최근 120잡 144건) 최소 표시시간 바닥 0.5초 적용 여부 사장님 확답 대기. %로 자막 빠진 3건(851e2d9893b1/fce39265da95/b2be65299625) 재렌더.</p>
+    <p class="minilog">○○○○●○○</p>
+  </div>
+  <div class="trackblock">
+    <h3 class="track">자막줄나누기</h3>
+    <p class="summary"><strong>현재:</strong> produce.html 줄나누기 UI 조사 — 1번=이 장면 줄 저장(장면 전체 한 번에), 2번=자동분할 되돌리기. 미저장 상태로 장면 이동하면 renderBeatTools가 다시 그려 손댄 줄이 사라짐(유력 원인). 서버는 대사 변경 자체를 422로 막아 대본 삭제 불가. _wrap_long manual=True(09-07 수정) 서버 반영 확인. 고객 제보 12건 전부 done, 미처리 0.</p>
+    <p class="next"><strong>다음:</strong> 사장님이 겪은 work= 작업번호 받아 해당 job의 caption_lines를 서버 DB에서 실측</p>
+    <p class="minilog">○○○○●○○</p>
+  </div>
+  <div class="trackblock">
+    <h3 class="track">인스타수집확대</h3>
+    <p class="summary"><strong>현재:</strong> 상한 12 첫 수집 실측(9/9 09시): 총 266건/122채널(전날 118건/73채널, 2.3배). 물건 86→145건(+69%), 레시피 비중 15%→12%. 예측(250건·+78%)과 거의 일치. 단 채널당 최대 9건·평균 2.2건이라 266건은 밀린 재고를 푼 1회성일 수 있다.</p>
+    <p class="next"><strong>다음:</strong> ① 내일(9/10) 수집으로 평상시 수준 확정 — 재고 소진 후에도 유지되는지 ② 익은 영상 유입으로 물건 채널이 A 승격되는지 등급분포 재측정 ③ topic_grouper usage 기록 추가(금액 미확인 상태) ④ 남은 세션 4개 하루 1~2개씩</p>
+    <p class="minilog">○○○●●○○</p>
+  </div>
+  <div class="trackblock">
+    <h3 class="track">소구점확장</h3>
+    <p class="summary"><strong>현재:</strong> 사장님 화면 제보 2건 수정. ①존댓말 새던 것 — 게이트가 어미 &#x27;종류&#x27;를 세어 거든요가 몇 번 나와도 1종류라 통과했다. 문턱 0으로 내리고 더라고요는 목록에서 제외(판정문이 그걸 반말 예시로 들고 있어 모순). ②3단계에 fame·land가 영문 코드로 뜨던 것 — S2_ROLE에 21개 누락, DB beat_roles 50종과 대조해 한 번에 채움(누락 0). 앞서 스타일 펼침창 확대+샘플대본도 브라우저 실측으로 확인. 관련테스트 250 passed·JS 4블록 통과. 커밋 b2d663db5.</p>
+    <p class="next"><strong>다음:</strong> ①finish 재실행 결과 확인 — 1차는 출력이 비고 main에 안 들어감(락 대기 중 끊긴 듯), 로그를 /tmp/fin.log에 남기며 재실행 중 ②병합되면 DEPLOY_NOW로 배포 당기고 브라우저에서 fame→📣화제 표시·존댓말 반려·펼침창 크기 실측 ③기존 미결: app.py product 전달·더보기 버튼 실측</p>
+    <p class="minilog">○○○●●○○</p>
+  </div>
+  <div class="trackblock">
+    <h3 class="track">세션시작</h3>
+    <p class="summary"><strong>현재:</strong> 세션 시작만 하고 실제 작업 지시는 없었음 (작업 디렉터리 설정만 확인)</p>
+    <p class="next"><strong>다음:</strong> 사장님 작업 지시 대기</p>
+    <p class="minilog">○○○○●○○</p>
+  </div>
+  <div class="trackblock">
+    <h3 class="track">꾸미기자막잔존</h3>
+    <p class="summary"><strong>현재:</strong> 박세현님 job 57722281732e — 자막제거 후 6단계 꾸미기 배경에 원본 자막 잔존. 서버는 정상(청소본에서 뜸)이었고, 청소 전에 받아 브라우저에 남은 옛 프레임이 원인. 프레임 주소에 청소상태 키(?v=fkey) 추가해 캐시 무효화. main 25b04e3d5 배포+라이브 실측 완료</p>
+    <p class="next"><strong>다음:</strong> 고객에게 새로고침 안내 / 같은 캐시 함정이 남은 다른 프레임 주소(clean_thumb 등) 점검</p>
+    <p class="minilog">○○○○●○○</p>
+  </div>
+  <div class="trackblock">
+    <h3 class="track">필름적용반영</h3>
+    <p class="summary"><strong>현재:</strong> 고객 제보 2건 원인 조사(코드 근거까지). ①필름 ⬆적용은 기존 컷을 교체하지 않고 추가(scene_lab.html:2292 l.push) → 옛 긴 컷이 남아 전체재생이 옛것으로 보임(교체는 🔁 replaceRoll). ②15인치 노트북 필름 하단 잘림 = 촘촘히 모드 #topright overflow:hidden + frwin 고정높이(scene_lab.html:783,811), 스크롤 없이 잘림.</p>
+    <p class="next"><strong>다음:</strong> 사장님 승인 시 수정: (1) commitRoll에서 겹치는 film_ 조각이 있으면 추가 대신 교체 (2) 세로 짧을 때 overflow 허용+필름 높이 하한 완화. 수정 후 라이브 실측 필요</p>
+    <p class="minilog">○○○●○○○</p>
+  </div>
+  <div class="trackblock">
+    <h3 class="track">플랫폼탭공개</h3>
+    <p class="summary"><strong>현재:</strong> 랭킹 플랫폼 탭 5개 공개(핀터레스트·네이버클립 admin-only 해제, 쓰레드 포함). 틱톡·샤오홍슈·도우인은 demo_ 더미 8건뿐이라 사장님 지시로 다시 닫음. 네이버클립 벤치채널 15→100개(사장님 엑셀 naver.me 링크 99/101 해제, 표본 10개 실채널 확인), 수집 상한 60→120.</p>
+    <p class="next"><strong>다음:</strong> 새벽 자동배포 반영 후 라이브 실측: ①탭 5개 보이는지 ②네이버클립 100채널 수집 실제로 걷히는지. 리뷰매니아 채널은 시트 URL 오타(끝에 한글)라 링크 재요청 필요. 서버 워킹트리 미커밋 5파일이 pull을 막을 수 있음</p>
+    <p class="minilog">○○○●○○○</p>
+  </div>
+  <div class="trackblock">
+    <h3 class="track">틱톡릴레이</h3>
+    <p class="summary"><strong>현재:</strong> 틱톡 릴레이 전 구간 검증 완료 — 사장님이 누른 자동모으기가 서버→PC→틱톡을 타고 &#x27;오타마톤&#x27; 12건을 가져왔고 영어(Otamatone)로 이어졌다. 이어서 손품을 줄이는 &#x27;5곳 전부&#x27; 버튼을 붙였다(검색어 줄에서 한 번 누르면 샤오홍슈·도우인·틱톡·인스타·핀터레스트가 고른 언어로 한꺼번에 열림, 팝업 차단 시 몇 개 열렸는지 안내). ★실측 정정: kw_search 주석의 &#x27;샤오홍슈가 무료로 돌고 있다&#x27;는 옛 사실이고 실제로는 샤오홍슈·도우인 둘 다 세션이 없다.</p>
+    <p class="next"><strong>다음:</strong> 샤오홍슈 세션 확보 — 사장님이 파이어폭스로 rednote 로그인만 하면 틱톡과 같은 방법으로 쿠키를 뽑아 자동 모으기에 합류시킨다(비용 0, 중국 원본이 손 안 대고 쌓임). 그 다음 후보는 인스타를 PC 릴레이로 돌려 프록시 과금 없애기.</p>
+    <p class="minilog">○○○●○○○</p>
+  </div>
+  <div class="trackblock">
+    <h3 class="track">제품표시</h3>
+    <p class="summary"><strong>현재:</strong> ① 제품명 찾기(유료 SerpApi) 버튼을 없애고, 대본 분석으로 확정한 제품을 가리키는 검색어에 &#x27;대본의 제품&#x27; 표시를 달아 맨 위로 올리게 했다(라이브 반영 cccb06f17). ② 자동 모으기에 틱톡이 안 나오는 원인을 4가지 환경 실측으로 갈랐다 — 내 PC에서 창 띄우면 24개 정상, 헤드리스면 0개, 서버는 xvfb로 창을 띄워도(프록시 유무 무관) 0개. 세션·프록시·IP는 전부 정상이었고 틱톡이 서버 환경 자체를 걸러낸다.</p>
+    <p class="next"><strong>다음:</strong> 틱톡 수집을 PC 릴레이로 붙일지 사장님 결정 대기(쿠팡이 이미 같은 길 — 서버 지문차단으로 PC가 긁고 서버가 분석). 붙이면 사장님 PC가 켜져 있어야 틱톡이 모인다. 안 붙이면 자동 모으기에서 틱톡을 빼고 &#x27;틱톡&#x27; 직접 열기 버튼만 남긴다.</p>
+    <p class="minilog">○○○●○○○</p>
+  </div>
+  <div class="trackblock">
+    <h3 class="track">장면라이브러리</h3>
+    <p class="summary"><strong>현재:</strong> 썰쇼핑 강의영상 분석 후 장면매칭 축 실측. 서버DB: vision_tags 38,807(영상단위)이나 컷단위 scene_assets는 14건뿐 — 저장·꺼내기 배관(mix_pipeline:1696)은 이미 있고 적립만 안 켬. scene_match는 후보 전체를 프롬프트에 나열해 컷 1만개면 터짐(1차 좁히기 부재). product_identify는 쿠팡검색 한 곳에서만 쓰이고 kw_search는 사람이 손으로 키워드 입력.</p>
+    <p class="next"><strong>다음:</strong> ① product_identify→제품명 확정→kw_search 자동호출 배관 연결(대본·장면 공통 상류) ② scene_match 앞에 인덱스 1차좁히기 ③ 적립 켜기(공용/제품 두 칸) ④ Pexels 연동. 대본축(신기한정보·증거필수/자유 구분)은 별도 세션.</p>
+    <p class="minilog">○○○●○○○</p>
+  </div>
+  <div class="trackblock">
+    <h3 class="track">인스타수집조사</h3>
+    <p class="summary"><strong>현재:</strong> 랭킹 헛돎 실측 확인: 매일 신규항목 채널의 51~70%가 전날과 동일, 8일 내내 등장 23채널 vs 하루만 등장 97채널. 뿌리는 A등급 65개만 매일 열림(C 146개는 14일·D 105개는 30일 주기). 사장님 릴스 24건 채널 해석 중(서버 yt-dlp는 username 못 뽑음 → 로컬 주거IP에서 title &#x27;Video by &lt;id&gt;&#x27; 파싱으로 해결).</p>
+    <p class="next"><strong>다음:</strong> ① 24채널 등록 완료 ② 비용중립 로테이션 안 시뮬레이션(A 매일고정 65 → 45로 줄이고 남는 자리를 오래 안 연 물건 C/D에 배정, 하루 여는 총수 유지) ③ 레시피 문턱 상향안과 합산 효과 산출</p>
+    <p class="minilog">○○○●○○○</p>
+  </div>
+  <div class="trackblock">
+    <h3 class="track">썰쇼핑 벤치마크</h3>
+    <p class="summary"><strong>현재:</strong> 유튜브 &#x27;썰쇼핑 쇼츠&#x27; 강의 영상(38분) 전체 자막+핵심화면 실측 분석. 우리 숏템메이커 코드와 대조: 대본엔진·꾸미기틀·캡컷자동화는 우리가 앞섬. 격차는 (1)제품 바깥 신기한정보(창업스토리·기술원리) 보강 단계 부재 — 스파인 빈칸을 모델이 지어내는 원인, (2)제휴처가 쿠팡 단일.</p>
+    <p class="next"><strong>다음:</strong> sul_facts 뒤에 웹 grounding 재료수집 단계 추가(origin_story/기술원리/유래/의외통계 4종). 제목 3후보 유형강제(감정타겟팅·이유형·비밀누설).</p>
+    <p class="minilog">○○○●○○○</p>
+  </div>
+  <div class="trackblock">
+    <h3 class="track">렌즈키빌림</h3>
+    <p class="summary"><strong>현재:</strong> SerpApi 키 5개가 전부 잔량 0인 걸 확인하고(갱신 9/17·9/20·9/26), 사장님이 회원 키를 한 키당 월 10회만 빌려 쓰는 기능을 라이브에 넣었다. 회원 키 66개 x 10회 = 660회 확보. 빌리는 순간 세고, 카운터 저장 실패하면 안 빌리고, 꺼진 키·소진된 키는 제외한다. 회원 경로는 한 줄도 안 건드렸다. 라이브 실측 완료(스위치 on/off·사장님 키 뒤에 붙음·회원 cid2는 429로 막힘).</p>
+    <p class="next"><strong>다음:</strong> ① 렌즈 브라우저 방식(lens_local.py)은 계정 위험으로 접었고 SerpApi로 회귀 — Visual matches에 외국 원본이 있다는 발견은 SerpApi visual_matches로 재현할 것. ② 가드 없는 렌즈 통로 3곳(/api/lens/cn/search·product·kw/search)은 Apify가 사장님 계정으로 나간다 — 자기 키 규칙 적용 검토. ③ keyroute.BLOCK_EXEMPT_CIDS의 cid 291은 &#x27;2026-09-04에 뺀다&#x27;고 적혀 있는데 아직 남아 있다(영구 무료 상태).</p>
+    <p class="minilog">○○○●○○○</p>
+  </div>
+  <div class="trackblock">
+    <h3 class="track">레퍼런스정상화</h3>
+    <p class="summary"><strong>현재:</strong> 유튜브 &#x27;썰쇼핑쇼츠&#x27; 영상(37분54초) 실제 시청·분석 완료(전사 871세그·프레임 80장). ★제미나이 요약과 원본 차이 발견: 4단계 마지막이 CTA가 아니라 &#x27;감정 착지&#x27;, 시간배분 명시(0~5/5~20/20~45/45~55), 제목후보 3개+유형라벨, S.T.O.R.Y 자기검증 체크리스트, S01~S10은 영상에 없음(제미나이 창작). 우리 코드 구조 파악: style_profiles._STYLES 4종+SCRIPT_TRIO env로 배포없이 교체 가능 → 새 시스템 불필요, ssul 스타일 1개 추가로 해결.</p>
+    <p class="next"><strong>다음:</strong> ① 사장님 결정: 썰쇼핑을 3각 중 하나로 교체할지 4번째 후보로 추가할지 ② 결정 후 ssul 스타일 구현(반말톤·30~35초·4단계·점층사다리 연결어사전) ③ 신기한정보 확장 1콜 추가 ④ 실제 대본 뽑아 검증</p>
+    <p class="minilog">○○●●○○○</p>
+  </div>
+  <div class="trackblock">
+    <h3 class="track">레퍼런스발굴</h3>
+    <p class="summary"><strong>현재:</strong> 렌즈 역검색 0건의 원인을 갈라냈다 — 셀렉터·이미지 문제가 아니라 구글 reCAPTCHA 봇 차단(스크린샷 실측, IP 218.145.197.133). lens_local.py에 is_blocked() 판정과 --solve(사람이 한 번 캡차를 풀어 쿠키 적립) 모드를 붙였고, 차단은 이제 0건이 아니라 BLOCKED로 갈라져 나온다. .gitignore에 .pw_lens/ 추가.</p>
+    <p class="next"><strong>다음:</strong> 사장님이 캡차를 푼 뒤 같은 인스타 썸네일로 렌즈 재시험 — 유튜브·틱톡 링크가 실제로 나오는지 실측. 나오면 origin_tracer의 텍스트 검색을 렌즈로 교체.</p>
+    <p class="minilog">○○○●○○○</p>
+  </div>
+  <div class="trackblock">
+    <h3 class="track">대본소재이탈</h3>
+    <p class="summary"><strong>현재:</strong> 유튜브 썰쇼핑 랭킹이 며칠째 안 바뀌는 원인 규명(코드 미변경, 사장님이 안내만 원하심). 데이터는 정상 — 오늘 08:10 수집, 썰쇼핑 549건에 0일차 35·1일차 35건 신선분 유입중. 뿌리는 정렬: 조회수순=누적이라 오래된 대박이 영원히 1등이고, &#x27;48시간 히트작&#x27; 기간탭의 48시간이 발행이 아닌 수집 시각 기준이라 조회수순 상위20 중 19개가 발행 48h 초과(최고 13.5일). 발행 48h 이내 70건의 1위는 49.6만회/40시간/어제만 +28.5만. 사장님께 &#x27;전체(delta)&#x27; 탭 사용 안내.</p>
+    <p class="next"><strong>다음:</strong> 사장님이 원하면 기간 탭을 발행 기준으로 전환(트리거: &#x27;기간 발행기준으로 바꿔줘&#x27;). 별건 미해결: youtube_category_presets에 썰쇼핑·장비템·차량템 키워드 0개라 전용 수집 경로 없음(핸드오프 유튜브상한조회수 ①) — 키워드는 사장님 확인 필요. posted_at이 549건 중 0건이라 최신순이 age_hours 폴백으로만 동작.</p>
+    <p class="minilog">○○●●○○○</p>
+  </div>
+  <div class="trackblock">
+    <h3 class="track">검수뼈대</h3>
+    <p class="summary"><strong>현재:</strong> 접속자 실측: 300초 이내 활동 고객 5명, 진행중 작업 1건(running). 강제배포 시 재시작이 최대 30분 지연되고 실행중 작업이 영향받을 수 있어 &#x27;새벽 자동반영&#x27; 권고. 코드는 이미 origin/main에 있음(b3c0cd5a7).</p>
+    <p class="next"><strong>다음:</strong> 새벽 02~06시 자동 pull 후 systemd 타이머 4개 설치(사장님이 &#x27;타이머 걸어줘&#x27; 하면 서버 반영 확인 뒤 즉시 설치). 설치 명령은 task-14-brief.md Step4</p>
+    <p class="minilog">○○●●○○○</p>
+  </div>
+  <div class="trackblock">
+    <h3 class="track">건축쇼츠 제작소</h3>
+    <p class="summary"><strong>현재:</strong> 레퍼런스 발굴기 4종 완성(비용 0원) — channel_finder(AI 다국어 검색어→채널), video_finder(조회수÷구독자 배수로 터진 영상), thumb_filter(Gemini가 썸네일 보고 사람 중심 제외), video_page/channel_page. 분야 3개(건축·신기템·홈템) 실측: 채널 1,269개·영상 428개. ★429를 403만 잡아 조용히 0건 되던 버그 수정.</p>
+    <p class="next"><strong>다음:</strong> 발굴 결과를 주제 후보로 연결(터진 영상 → 우리 소재로 번안). 사직단 편 영상 9컷 + 오버레이로 한 편 완주</p>
+    <p class="minilog">○○●●○○○</p>
+  </div>
+  <div class="trackblock">
+    <h3 class="track">협업질의</h3>
+    <p class="summary"><strong>현재:</strong> 다른 PC/다른 계정 작업자와 동시 작업 시 꼬임 여부 질의 응답. 계정 분리는 무관, 같은 워킹트리 공유 여부가 핵심임을 정리(A: 별개 클론 안전 / B: 원격데스크톱 같은 폴더 위험).</p>
+    <p class="next"><strong>다음:</strong> 사장님이 A/B 중 어느 상황인지 확인 후 해당 케이스 세팅 절차 정리</p>
+    <p class="minilog">○○●○○○○</p>
+  </div>
+  <div class="trackblock">
+    <h3 class="track">필름조각소실</h3>
+    <p class="summary"><strong>현재:</strong> 박세현(cid 340) 관련 기록 3건과 어제(09-06) 작업 전량을 읽고 정리. &#x27;3단계 갔다오면 작업물 소실&#x27; 제보의 알려진 뿌리는 scene_lab 자동저장이 extra_segs(film_ 조각)를 지워 편성 서명이 바뀌는 것이며, 서버 안전망은 09-05 ba4003df6로 이미 배포됨(edit_plan.py:5573 확인). 3번째 재발이면 안전망 미작동이거나 미수정 건(clean_video_path 고정, beat_idx 중복 잔여 5잡)일 가능성.</p>
+    <p class="next"><strong>다음:</strong> 박세현의 이번 job id 확보 후 라이브 실측 — final_clean_{sig}.plan.json 스냅샷 vs 현재 edit_plan 비트 재료 대조, scene_lab/*/apply POST 시각과 edit_plan.updated_at 일치 여부 확인</p>
+    <p class="minilog">●○●○○○○</p>
+  </div>
+  <div class="trackblock">
+    <h3 class="track">타입캐스트끄기</h3>
+    <p class="summary"><strong>현재:</strong> 썸네일 후보에 우리 나레이션 자막이 박혀 나오던 것 수정 — 자막제거 미사용 회원은 배경이 preview인데 run_preview가 _burn_captions를 태워 자막이 구워져 있었다. beatframes/*_src.jpg(소스 원본, 자막 없음)로 대체. 실데이터 전후 이미지 대조 완료. 게이트 진행 중.</p>
+    <p class="next"><strong>다음:</strong> 게이트 통과 → main 병합 → 웹 재시작 → 라이브 썸네일 실측. 앞서 타입캐스트 OFF·자막제거 무한폴링은 이미 라이브.</p>
+    <p class="minilog">○○●○○○○</p>
+  </div>
+  <div class="trackblock">
+    <h3 class="track">정지그림회복</h3>
+    <p class="summary"><strong>현재:</strong> 전체 재생에서 컷이 통째로 정지 그림으로 지나가던 원인 수정 — scene_play.js giveUp()이 대기창(0.3~1.5초) 초과 시 onloadedmetadata를 끊어 늦게 열린 영상을 못 살렸다. 시간초과/에러를 갈라 늦게 열리면 경과초만큼 건너뛴 지점부터 이어 재생.</p>
+    <p class="next"><strong>다음:</strong> 병합 게이트 통과 확인 후 배포, job dbddcce899bb로 전체 재생 실측</p>
+    <p class="minilog">○○●○○○○</p>
+  </div>
+  <div class="trackblock">
+    <h3 class="track">재생끊김·자막제거안내</h3>
+    <p class="summary"><strong>현재:</strong> 전체 재생 렉의 진짜 원인 규명·배포 — 같은 소스 파일을 슬롯 4벌이 각자 받아 대역폭이 4등분되던 것(실측 4초 시점 10/28 → blob 공유 28/28). 박선정님 문의는 갈라짐: 3단계 미리보기 원본 자막은 설계대로(1콜 개편, 완성본만 청소)인데 안내가 body.tight CSS로 숨겨져 있었고, 장면꾸미기 잔존은 진짜 버그(청소 후 서버는 _clean 프레임을 주는데 주소가 같아 img가 재요청을 안 함) → frame_tag 캐시버스터 추가.</p>
+    <p class="next"><strong>다음:</strong> 원본자막안내 트랙 finish 게이트 완료 확인 후 배포, 사장님 브라우저에서 전체 재생 렉·장면꾸미기 자막 실측</p>
+    <p class="minilog">○○●○○○○</p>
+  </div>
+  <div class="trackblock">
+    <h3 class="track">자료조사</h3>
+    <p class="summary"><strong>현재:</strong> 노션 글(요즘 쇼츠는 이걸로 만듭니다) + 유튜브 B9ndu9VtCDI(쇼츠 제작 완전 자동화) 두 자료를 실제로 읽고 정리. 1편=수동 워크플로(클로드→ElevenLabs→Flow→CapCut, 30분/편), 2편=5단계 완전자동화(Playwright로 Flow 화면조작, Groq Whisper 자막, YouTube Data API 예약업로드, 워처 방식). Flow 영상생성 API는 과금 지뢰(4분에 6~7만원).</p>
+    <p class="next"><strong>다음:</strong> 이 자동화 구조를 숏템메이커/STOCK BRAIN에 붙일지 사장님 판단 대기</p>
+    <p class="minilog">○○●○○○○</p>
+  </div>
+  <div class="trackblock">
+    <h3 class="track">자동점검</h3>
+    <p class="summary"><strong>현재:</strong> 회귀버그 자동점검 시스템 브레인스토밍. 실측: 파이썬 테스트 850파일 있으나 화면 E2E는 0개(사장님이 겪는 버그가 정확히 그 빈틈). produce.html 18016줄/버튼281/onclick336. merge_gate.py:9에 &#x27;전체 pytest 25 failed 정체 미규명&#x27; 방치 중. 미리보기서버 8850(deploy/preview.sh) 실재 확인. 2층 구조(전수훑기+한바퀴 깊게) 제안, 승인 대기.</p>
+    <p class="next"><strong>다음:</strong> 2층 구조 승인 후 렌더 포함 여부 결정 → 설계문서 작성 → writing-plans</p>
+    <p class="minilog">○○●○○○○</p>
+  </div>
+  <div class="trackblock">
+    <h3 class="track">모델조사</h3>
+    <p class="summary"><strong>현재:</strong> GPT-6 Astra vs 클로드 모델 비교 HTML 작성(out/모델비교_GPT_vs_Claude_2026-09-07.html). 코덱스 병행 사용 가능성 실측(트랙락=커널 파일락이라 도구 무관 OK / AGENTS.md 부재가 구멍). 새 PC 세팅 절차 정리. 레퍼런스랭킹 &#x27;여행&#x27; 4건 = 48시간 필터 의심 제기.</p>
+    <p class="next"><strong>다음:</strong> ① AGENTS.md 생성 여부 결정 ② 레퍼런스랭킹 실측: 인스타 전체건수/여행 매칭수/upload_ts 보유수 3개 대조</p>
+    <p class="minilog">○○●○○○○</p>
+  </div>
+  <div class="trackblock">
+    <h3 class="track">건축쇼츠자동화</h3>
+    <p class="summary"><strong>현재:</strong> 쇼츠 실측 리포트·프롬프트문서 판독본·레퍼런스 4편 정리 등 문서 3종 작성 완료. 신비한건축사전 본체가 쇼츠 368개임을 확인하고 상위 40편 구조 분석.</p>
+    <p class="next"><strong>다음:</strong> D 6번영상 정독 → E 7번영상+네이버링크 → F 미판독구간 → G 엔진 쇼츠기준 재조정</p>
+    <p class="minilog">○○●○○○○</p>
+  </div>
+  <div class="trackblock">
+    <h3 class="track">3단계저장</h3>
+    <p class="summary"><strong>현재:</strong> 박세현 님(cid340) 사후 확인 — 안 된 것 없음. job 441702e0ec14 오늘 18:32 완성본 36.8MB 생성, 자막제거 ready, 오류 0. 조치가 전부 살아있음: 붙인 s9 소스 10개 유지, 편성 5/5칸, 오려낸 조각 23→60개(계속 작업하심), 판본 5벌 보관중(오늘 만든 되돌리기가 실제 고객 작업에서 작동).</p>
+    <p class="next"><strong>다음:</strong> 보관정책(회원당 10개+7일)은 사장님 공지 후. ★디스크는 차면 자동삭제 없이 서비스 정지(경보만 있음), 33일 여유. 별건: 이미 만든 job에 소스 추가 안 되는 구조</p>
+    <p class="minilog">○○●○○○○</p>
+  </div>
+  <div class="trackblock">
+    <h3 class="track">조사</h3>
+    <p class="summary"><strong>현재:</strong> 인포크링크 틱톡 자동DM 지원 여부 조사. 자동DM은 별도 서비스 &#x27;인포크매니저&#x27;이고 공식 가이드상 인스타그램 전용. 틱톡은 프로필 링크 연동만 가능.</p>
+    <p class="next"><strong>다음:</strong> 필요시 인포크 고객센터에 틱톡 자동DM 지원 여부 직접 문의</p>
+    <p class="minilog">●○○○○○○</p>
+  </div>
+  <div class="trackblock">
+    <h3 class="track">장면편집되돌리기</h3>
+    <p class="summary"><strong>현재:</strong> 장면편집(scene_lab)에 ↩ 되돌리기 버튼 + Ctrl+Z 추가(최대 60단계). render() 끝의 saveWork() 한 출구에만 스택을 달아 모든 편집이 자동으로 잡히게 했다. loadWork 복원부를 applyWork(w)로 분리해 저장본 불러오기와 되돌리기가 같은 함수를 쓰게 했고, 스냅샷에서 at(시각)을 빼 &#x27;변경 없음&#x27; 판정이 무력화되던 문제를 막았다. main 병합 16f673925, BUILD_TAG F29.</p>
+    <p class="next"><strong>다음:</strong> 라이브 실측 미완 — 자동배포 시간창(2~6시) 밖이라 대기 중. 배포 후 화면 뱃지가 v F29인지 확인하고 /scene_lab.html?job=&lt;실제job&gt;에서 장면 이동→되돌리기 실제 동작·빈단계 없음·새로고침 유지·서버 편성 반영을 확인할 것(체크리스트: handoff/장면편집되돌리기.md).</p>
+    <p class="minilog">●○○○○○○</p>
+  </div>
+  <div class="trackblock">
+    <h3 class="track">장면꾸미기재편</h3>
+    <p class="summary"><strong>현재:</strong> 장면꾸미기 화면 완성(템플릿·미리보기·제목/자막/효과 3단, 효과 탭에 부품 5종 스위치). 커밋 b1f6a3afb 푸시 완료, handoff에 오늘 확인사실·함정 4개·다음 할 일 기록. 이어서 &#x27;박세희 고객 3단계 오류&#x27; 조사 착수 — 회원 436명 중 해당 이름 없음(박세현/박세용 후보).</p>
+    <p class="next"><strong>다음:</strong> ① 사장님이 박세현/박세용 중 누구인지 확인 → 3단계(영상대본MIX) 오류 조사 ② 코덱스 HTML 틀 투입 ③ [26컷 만들기]·[제작소에 적용] 파이프라인 연결</p>
+    <p class="minilog">●○○○○○○</p>
+  </div>
+  <div class="trackblock">
+    <h3 class="track">에러백과</h3>
+    <p class="summary"><strong>현재:</strong> 고객 화면 에러 설명 정본 error_help.js(24항목) 신설·배선 완료, main 병합 2건. 포인트 항목은 사장님 지시로 제거. 서버 워킹트리 깨끗함 확인, 배포 로그에 대기 확인(시간창 2~6시) — 새벽 자동배포 예약됨.</p>
+    <p class="next"><strong>다음:</strong> 새벽 배포 후 라이브 실측(통신 끊고 버튼 눌러 .errHelp 상자 확인). 이후 library.html 배선, app.py 뭉갠 문구 2곳을 사유 코드로 교체.</p>
+    <p class="minilog">●○○○○○○</p>
+  </div>
+  <div class="trackblock">
+    <h3 class="track">썸네일프리셋</h3>
+    <p class="summary"><strong>현재:</strong> 썸네일 편집칸 정리 완료·main 병합됨(01e8de0): 붓밑줄·스티커 직접입력 제거, 재료 3탭 반영, 중복 &#x27;내 프리셋&#x27; 통합(같은 id·같은 let 변수명 → 병합 시 SyntaxError로 제작소 스크립트 전멸할 자리였음), 프리셋 11→21종. 게이트 새 실패 1건(selected 응답 통째비교)도 수리.</p>
+    <p class="next"><strong>다음:</strong> ★라이브 미반영 — auto_deploy 시간창(새벽 2~6시)에 붙잡혀 대기 중. 새벽 2시 자동배포 후 브라우저에서 프리셋 21개·재료탭 3개 실제로 눌러 확인(급하면 서버에 touch /home/ubuntu/DEPLOY_NOW)</p>
+    <p class="minilog">●○○○○○○</p>
+  </div>
+  <div class="trackblock">
+    <h3 class="track">보이스</h3>
+    <p class="summary"><strong>현재:</strong> TTS 영어 음성 지원 여부 코드 확인. 일레븐랩스(eleven_multilingual_v2)는 영어 가능, 타입캐스트는 typecast_tts.py:127에 language=kor 하드코딩이라 불가.</p>
+    <p class="next"><strong>다음:</strong> 영어 대본 실제 job 실측 또는 타입캐스트 language를 프리셋 인자로 개방</p>
+    <p class="minilog">●○○○○○○</p>
+  </div>
+  <div class="trackblock">
+    <h3 class="track">목소리이음매</h3>
+    <p class="summary"><strong>현재:</strong> 자막 전환 목소리 튐: 통짜 합성(tts_joined.py) 완성·main 병합, 서버 실측으로 이음매 레벨 튐 8.53→3.77dB. 남은 3.77은 이음매 결함 아님(붙이기 전 조각끼리도 4.73) = 말 자체 크기 차이. 기본 off. 1단계 재료 영상 상한 5→8도 병합. 사장님 승인으로 DEPLOY_NOW 배포 트리거(14:56)</p>
+    <p class="next"><strong>다음:</strong> ①배포 반영 확인 후 서비스 정상·URL칸 8개 실동작 브라우저 확인 ②사장님 청취 판정(목소리비교_1/2.mp3) 후 TTS_JOINED=1 ③툭툭 끊기면 쉼 0.05~0.1초 남기기 또는 크로스페이드</p>
+    <p class="minilog">●○○○○○○</p>
+  </div>
+  <div class="trackblock">
+    <h3 class="track">랭킹최신순</h3>
+    <p class="summary"><strong>현재:</strong> 정렬 버그 2건. ①기간 탭(#spanTabs)도 class=tab이라 setTab(undefined)이 돌아 STATE.tab이 지워지고 정렬이 통째로 무효 → 셀렉터를 .tab[data-tab]로 좁힘(배포·브라우저 실측 완료). ②발행시각 upload_ts가 한 건도 안 쌓임(수집 items에 timestamp 키 자체가 없음, 실측 유튜브 9203건 중 0) → age_hours로 역산 저장. 저장→hits_since 왕복 실측 통과.</p>
+    <p class="next"><strong>다음:</strong> ②커밋 finish 게이트 결과 확인 후 배포(시간창 2~6시). 배포 뒤 유튜브 기간 탭(7일)에서 최신순이 실제로 갈리는지 브라우저 실측. 옛 9203건은 재수집돼야 채워지는 점 확인</p>
+    <p class="minilog">●○○○○○○</p>
+  </div>
+  <div class="trackblock">
+    <h3 class="track">대본스타일틀</h3>
+    <p class="summary"><strong>현재:</strong> 기존 spine 44개(승인35·대기9) 전수 대조 후 없는 축만 골라 새 대본틀 8종 로컬 문서화(out/새로운_대본틀_8종.html). ★최대 공백=화자 — 기존은 거의 전부 &#x27;직접(나)&#x27;인데 히트작 상위(217만·65만)는 전지적 관찰자·제품분석가. 완전신규 4개: 솔직혹평형(105만, 기존에 비판틀 0개)·셀프반박형(64만)·회사실수대박형(217만)·제조사도몰랐던쓰임형(65만). 앞서 만든 유튜브 10종은 7개가 기존과 겹쳐 폐기 수준.</p>
+    <p class="next"><strong>다음:</strong> 기존 44개 templates(문장예시)까지 대조 — 이름 달라도 문장 겹칠 수 있음. 트렌드 필터(upload_date 활용) 미적용. 8종을 실제 spine으로 등록할지 결정</p>
+    <p class="minilog">●○○○○○○</p>
+  </div>
+  <div class="trackblock">
+    <h3 class="track">고객에러설명문구</h3>
+    <p class="summary"><strong>현재:</strong> 고객 제보 에러 구간 설명문구 작업 착수. 대상 페이지 후보(apiwatch/help/ops/신규)를 조사했으나 &#x27;그 페이지&#x27;가 어디인지 미확정이라 사장님 확인 대기 중.</p>
+    <p class="next"><strong>다음:</strong> 대상 페이지 확정 후, 제보된 에러 구간 수집(handoff·log.d·메모리)해서 원인 설명문구 삽입</p>
+    <p class="minilog">●○○○○○○</p>
+  </div>
+  <div class="trackblock">
+    <h3 class="track">main</h3>
+    <p class="summary"><strong>현재:</strong> git pull 실행 — 이미 최신 상태(Already up to date)</p>
+    <p class="next"><strong>다음:</strong> 작업 지시 대기</p>
+    <p class="minilog">●○○○○○○</p>
+  </div>
+  <div class="trackblock">
+    <h3 class="track">B1프레임태깅</h3>
+    <p class="summary"><strong>현재:</strong> 1→2→3단계를 실영상 15편으로 검증(다이소·단일제품·오늘랭킹·즐겨찾기 영어/힌디어). 결함 수리: 번역·브리프가 키 회전을 안 해 429에 통째로 죽던 것(공용 _call_with_key_rotation로 3곳 통일, 힌디어 영상 text_ko 0/12→12/12) · b-roll이 대사를 안 읽던 것 · 훅 채점 · 훅 후보에 실증 누락 · has_effect 미탑재 · 게이트 CTA 어간이 스타일 자신의 템플릿을 떨어뜨리던 것</p>
+    <p class="next"><strong>다음:</strong> ①같은 컷이 두 칸에 중복(구간 5~6개 소스에서 발생, 2단계가 같은 번호를 두 줄에) ②MAX_SPAN_SEC 7→5 실험(한 구간에 두 장면 섞임) ③소스 2편 이상 섞어 중복 해소되는지 ④캐시 shortcode 단일키라 사장님만 켜기 게이트가 샘 ⑤전사 Path 수리 등 커밋 main 미병합</p>
+    <p class="minilog">●○○○○○○</p>
+  </div>
+</section>
+
+<section class="card">
+  <h2>유튜브 자동화</h2>
+  <div class="trackblock">
+    
+    <p class="summary"><strong>현재:</strong> (기록 없음)</p>
+    <p class="next"><strong>다음:</strong> (기록 없음)</p>
+    <p class="minilog">○○○○○○○</p>
+  </div>
+</section>
+
+<section class="card">
+  <h2>쇼핑쇼츠 자동화</h2>
+  <div class="trackblock">
+    
+    <p class="summary"><strong>현재:</strong> (기록 없음)</p>
+    <p class="next"><strong>다음:</strong> (기록 없음)</p>
+    <p class="minilog">○○○○○○○</p>
+  </div>
+</section>
+
+<section class="card">
+  <h2>SEO 워드프레스 자동화</h2>
+  <div class="trackblock">
+    
+    <p class="summary"><strong>현재:</strong> (기록 없음)</p>
+    <p class="next"><strong>다음:</strong> (기록 없음)</p>
+    <p class="minilog">○○○○○○○</p>
+  </div>
+</section>
+
+<section class="card">
+  <h2>위키창고</h2>
+  <div class="trackblock">
+    
+    <p class="summary"><strong>현재:</strong> (기록 없음)</p>
+    <p class="next"><strong>다음:</strong> (기록 없음)</p>
+    <p class="minilog">○○○○○○○</p>
+  </div>
+</section>
+</div>
