@@ -103,4 +103,5 @@ def typecast_synth(voice_id, *, tempo=None, model="ssfm-v30", key_file=None, tim
         with open(out_path, "wb") as fh:
             fh.write(data)
     synth.tag = f"{sorted(voices.items())}|{tempo}|{model}"   # voice.py 사이드카에 실린다 — 목소리·템포가 바뀌면 재합성
+    synth.tag_for = lambda role: f"{voices.get(role) or voices.get('NARR')}|{tempo}|{model}"   # 역할별 태그 — 한 역할만 바꾸면 그 컷만 재합성
     return synth

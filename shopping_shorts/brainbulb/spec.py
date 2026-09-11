@@ -127,19 +127,20 @@ POLICY_DURATION_TOL = 0.05         # mp4 길이 vs total 허용 오차
 
 # ── 역할별 성우 (볼케이노 5편 f0 실측: 나레 ~220Hz 여성 / CHAR ~265Hz 더 높은 여성 / PUNCH 90~170Hz 낮은 남성 = 3명) ──
 # 사장님 지정(2026-09-12): 박창수 · 용식이 · 발키리 (저장소 Typecast 프리셋 add_typecast_presets.py)
-POLICY_VOICES = {
-    "NARR": "tc_6059dad0b83880769a50502f",     # 박창수 — 친근하고 편안한 남성 (카드도 나레 목소리)
-    "CHAR": "tc_5feb2085cca1a479e73bac37",     # 용식이 — 능청스럽고 개성있는 남성 (대사 컷)
-    "PUNCH": "tc_60478557f12456064b353409",    # 발키리 — 당차고 힘있는 여성 (마지막 단정문)
+POLICY_VOICES = {                  # 사장님 확정 2026-09-12: "박창수 그대로, 용식이가 마지막 펀치 화남 강하게, 발키리 화남으로 페페"
+    "NARR": "tc_6059dad0b83880769a50502f",     # 박창수 — 나레·카드
+    "CHAR": "tc_60478557f12456064b353409",     # 발키리 — 페페 대사 컷, 화남
+    "PUNCH": "tc_5feb2085cca1a479e73bac37",    # 용식이 — 마지막 펀치, 화남 강하게
 }
 # ── 훅/본문 다르게 (숏템메이커 장면꾸미기 "속삭임을 훅에만" 원리, 사장님 2026-09-12) ─────────
 # Typecast ssfm-v30 감정 프리셋: angry / happy / normal / sad / tonedown / toneup / whisper
 POLICY_HOOK_CUTS = 0               # 훅 특별 처리 없음 (사장님 2026-09-12: "위스퍼는 절대 쓰지 말고")
-POLICY_EMOTION_ALL = ("angry", 1.2)  # ★전 컷 공통 감정 — 사장님: "화남모드로 해서 모두". None이면 아래 역할표를 쓴다
-POLICY_EMOTION = {                 # 역할 → (감정, 강도). None = 기본  (EMOTION_ALL이 None일 때만)
+POLICY_EMOTION_ALL = None          # 전 컷 공통 감정. None이면 아래 역할표 (v006은 ("angry",1.2) 전 컷)
+POLICY_EMOTION = {                 # 역할 → (감정, 강도 0~2). 사장님 확정: 전부 화남, 펀치는 강하게
     "HOOK": None,
-    "NARR": None,
-    "PUNCH": ("toneup", 1.5),
+    "NARR": ("angry", 1.2),
+    "CHAR": ("angry", 1.2),
+    "PUNCH": ("angry", 2.0),
 }
 MEME_TO_TC_EMOTION = {             # 대사(CHAR) 컷은 밈 감정을 따라간다 (EMOTION_ALL이 None일 때만)
     "경악/충격": "toneup", "당황": "toneup", "분노": "angry", "슬픔/울음": "sad",

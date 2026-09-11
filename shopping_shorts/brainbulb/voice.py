@@ -55,8 +55,8 @@ def plan_emotion(role, meme, *, hook=False):
         out = spec.POLICY_EMOTION_ALL
     elif hook and spec.POLICY_EMOTION.get("HOOK"):
         out = spec.POLICY_EMOTION["HOOK"]
-    elif role == "CHAR":
-        e = spec.MEME_TO_TC_EMOTION.get(meme or "")
+    elif role == "CHAR" and spec.POLICY_EMOTION.get("CHAR") is None:
+        e = spec.MEME_TO_TC_EMOTION.get(meme or "")     # CHAR 고정 감정이 없을 때만 밈 감정을 따른다
         out = (e, 1.2) if e else None
     else:
         out = spec.POLICY_EMOTION.get(role)
@@ -76,8 +76,12 @@ def synth_all(script, workdir, synth, *, spent_chars=0, log=print):
     emos = [plan_emotion("NARR", None, hook=True)] + [
         plan_emotion(g.get("role", "NARR"), g.get("meme"), hook=(i < spec.POLICY_HOOK_CUTS))
         for i, g in enumerate(script["groups"])]      # 훅(카드+첫 컷) whisper / CHAR는 밈 감정 / PUNCH toneup
-    tag = getattr(synth, "tag", "")                  # 목소리|템포|모델 — 바뀌면 글자가 같아도 재합성
-    keys = [(tag + "|" + str(e) + "\n" + t) if tag else t for t, e in zip(texts, emos)]
+    tag_for = getattr(synth, "tag_for", None)         # 역할별 목소리|템포|모델 — 그 역할만 바뀌면 그 컷만 재합성
+    tag = getattr(synth, "tag", "")
+    def _key(t, e, role):
+        tg = tag_for(role) if tag_for else tag
+        return (tg + "|" + str(e) + "\n" + t) if tg else t
+    keys = [_key(t, e, r) for t, e, r in zip(texts, emos, roles)]
     td = os.path.join(workdir, "tts")
     os.makedirs(td, exist_ok=True)
     todo = []
