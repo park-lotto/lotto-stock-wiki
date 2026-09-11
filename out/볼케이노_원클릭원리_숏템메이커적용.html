@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>볼케이노 원클릭 원리 → 숏템메이커 적용</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --panel:#ffffff; --txt:#1c2330; --sub:#5b6473; --line:#e2e6ec;
+    --accent:#d2461f; --accent-soft:#fdeee9; --blue:#2458c5; --blue-soft:#eaf0fc;
+    --green:#1f8a4c; --green-soft:#e8f5ed; --amber:#b7791f; --amber-soft:#fbf3e3;
+    --mono:"Cascadia Code","D2Coding",Consolas,monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#111418; --panel:#181c22; --txt:#e6e9ee; --sub:#9aa3b2; --line:#2a3039;
+      --accent:#ff7a52; --accent-soft:#3a2119; --blue:#7aa2ff; --blue-soft:#1c2740;
+      --green:#5fcf8a; --green-soft:#16301f; --amber:#e6b35a; --amber-soft:#3a2d13;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:"Pretendard","Malgun Gothic","Apple SD Gothic Neo",system-ui,sans-serif;line-height:1.6;font-size:15px}
+  .wrap{max-width:1180px;margin:0 auto;padding:32px 20px 80px}
+  header{border-bottom:2px solid var(--accent);padding-bottom:16px;margin-bottom:28px}
+  header h1{margin:0 0 6px;font-size:28px;letter-spacing:-.5px}
+  header p{margin:0;color:var(--sub)}
+  .meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .meta span{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:3px 12px;font-size:12.5px;color:var(--sub)}
+  h2{font-size:20px;margin:44px 0 12px;padding-left:12px;border-left:4px solid var(--accent)}
+  h3{font-size:16px;margin:26px 0 8px;color:var(--blue)}
+  p{margin:8px 0}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px 20px;margin:12px 0}
+  .flow{display:grid;grid-template-columns:1fr;gap:10px;margin:14px 0}
+  .flow .step{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:grid;grid-template-columns:96px 1fr;gap:12px;align-items:start}
+  .flow .who{font-weight:700;color:var(--accent);font-size:13px;padding-top:2px}
+  .key{background:var(--accent-soft);border-left:4px solid var(--accent);padding:12px 16px;border-radius:6px;margin:14px 0;font-weight:600}
+  .note{background:var(--blue-soft);border-left:4px solid var(--blue);padding:12px 16px;border-radius:6px;margin:14px 0}
+  .ok{background:var(--green-soft);border-left:4px solid var(--green);padding:12px 16px;border-radius:6px;margin:14px 0}
+  .tblwrap{overflow-x:auto;margin:12px 0}
+  table{border-collapse:collapse;width:100%;background:var(--panel);font-size:14px}
+  th,td{border:1px solid var(--line);padding:9px 11px;vertical-align:top;text-align:left}
+  th{background:var(--bg);font-weight:700;white-space:nowrap}
+  td b{color:var(--accent)}
+  code{font-family:var(--mono);font-size:12.5px;background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:1px 5px}
+  pre{font-family:var(--mono);font-size:12.5px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px;overflow-x:auto;line-height:1.55;margin:10px 0}
+  .pill{display:inline-block;border-radius:999px;padding:1px 9px;font-size:12px;font-weight:700;margin-right:4px}
+  .p1{background:var(--accent-soft);color:var(--accent)} .p2{background:var(--blue-soft);color:var(--blue)}
+  .p4{background:var(--green-soft);color:var(--green)} .p9{background:var(--amber-soft);color:var(--amber)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:760px){.grid2{grid-template-columns:1fr}.flow .step{grid-template-columns:1fr}}
+  .num{display:inline-block;width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;text-align:center;line-height:26px;font-weight:700;font-size:13px;margin-right:8px}
+  footer{margin-top:60px;color:var(--sub);font-size:12.5px;border-top:1px solid var(--line);padding-top:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>볼케이노 원클릭 원리 → 숏템메이커가 가져올 것</h1>
+  <p>뇌전구를 베끼는 게 아니다. <b>볼케이노가 왜 소재 하나로 끝까지 가는지</b>를 뽑아, 숏템메이커가 이미 겪은 문제에 대응시킨다.</p>
+  <div class="meta">
+    <span>2026-09-12</span>
+    <span>근거: 볼케이노 서버 응답 원문(setup 3회) · handoff/볼케이노MCP.md · 뇌전구_역분석</span>
+    <span>숏템메이커 코드: auto_run.py · script_gate.gate_feedback · produce.html · app.py</span>
+    <span>사고 기록: memory 14건</span>
+    <span>사장님 철학: 딸깍 프리셋</span>
+  </div>
+</header>
+
+<h2>0. 볼케이노 원클릭의 실체 — 사용자가 하는 일은 딱 하나</h2>
+<div class="flow">
+  <div class="step"><div class="who">사용자</div><div>소재(URL / 텍스트) + 채널명. 끝.</div></div>
+  <div class="step"><div class="who">서버</div><div><code>next_step</code> 한 걸음씩 지시 → 클라이언트(AI·실행기)가 그대로 실행 → 결과를 되돌림 → 다음 걸음</div></div>
+  <div class="step"><div class="who">사람 자리</div><div>script(대본) · prompts(그림 지시) · memes(감정 선택) — <b>이 3곳뿐</b>. 그것도 AI가 채운다</div></div>
+</div>
+<div class="key">10단계 화면이 없다. 버튼이 없다. 화면 대신 "다음 한 걸음"이 있다.</div>
+
+<h2>1. 원리 11개 — 서버 응답에서 그대로 읽은 것</h2>
+<div class="tblwrap"><table>
+<tr><th>#</th><th>원리</th><th>서버 응답의 실제 모양</th></tr>
+<tr><td>1</td><td><b>서버가 다음 한 걸음만 지시한다</b></td><td><code>next_step</code>, <code>do[]</code>(실행할 명령), <code>measure[]</code>(재서 넣을 것), <code>then_call_with[]</code>. 클라이언트는 "임의로 해석하거나 개선하지 마라"</td></tr>
+<tr><td>2</td><td><b>상태는 한 곳, 명시적으로 넘긴다</b></td><td><code>carry: [review_policy, review_client, env, source_kind]</code> + <code>next_payload</code>를 그대로 되돌려야 함. "한 글자라도 다르면 반려"</td></tr>
+<tr><td>3</td><td><b>돈 나가기 전에 전부 확인</b></td><td><code>setup</code>이 파이썬·모듈·ffmpeg·키를 실측(점검 스크립트를 이 PC에서 돌려 JSON 회신). 키는 있는지만 본다. 채널별 필요 키표로 안 쓸 키는 안 묻는다</td></tr>
+<tr><td>4</td><td><b>규칙은 판정으로만 존재한다</b></td><td>대본 반려 30건 → 2건 → 통과. 반려마다 원문 사유("제목에는 구두점을 쓰지 않습니다"). 프롬프트가 아니라 린터가 지킨다</td></tr>
+<tr><td>5</td><td><b>디자인 결정은 상수다</b></td><td><code>sub.ass</code> 스타일 블록이 3편 바이트 단위 동일. 사용자가 조정할 게 없다. 길이 따라 크기만 자동 축소</td></tr>
+<tr><td>6</td><td><b>사람 자리는 3곳, 나머지는 기계</b></td><td>script·prompts·memes만 모델이 채움. 실행기 <code>volcano_drive.py</code>가 나머지 12단계를 서버와 직접 주고받음</td></tr>
+<tr><td>7</td><td><b>멈추면 재개 지점을 파일로 남긴다</b></td><td>실행기가 사람 자리에서 멈추며 <code>next_payload.json</code> 저장. <code>--step &lt;멈춘단계&gt; --payload next_payload.json</code>으로 이어감</td></tr>
+<tr><td>8</td><td><b>검수도 AI가 실물을 읽고 답한다</b></td><td><code>review_client: claude</code>, <code>review_replies</code>. 렌더 결과 판정을 사람이 안 본다</td></tr>
+<tr><td>9</td><td><b>실패 문구가 원인·처방·위치를 다 말한다</b></td><td>키 없음 → "어느 채널에만 필요 / 안 쓰면 발급 안 해도 됨 / 발급 URL / 저장 경로 / 저장 명령 / 왜 필요한지"</td></tr>
+<tr><td>10</td><td><b>자산은 팩이다</b></td><td>sfx·pepe·fonts·runner·framevision 5종을 서명 URL로. 환경에 흩어진 파일에 의존하지 않는다</td></tr>
+<tr><td>11</td><td><b>피드백 통로가 내장</b></td><td><code>step=feedback, {kind: request|bug, text}</code> — "관리자가 매일 아침 읽는다"</td></tr>
+</table></div>
+
+<h2>2. 숏템메이커의 현재 모습 (실측)</h2>
+<div class="tblwrap"><table>
+<tr><th>항목</th><th>실측</th></tr>
+<tr><td>화면</td><td><code>produce.html</code> 18,393줄, 10단계, 사람이 단계마다 누른다</td></tr>
+<tr><td>상태 저장처</td><td><b>3곳</b> — 브라우저 <code>STATE</code> 객체 / <code>localStorage</code> 8종 / 서버 <code>/api/produce/mix/settings</code>. 컨트롤 25곳 중 일부만 서버 저장을 부른다</td></tr>
+<tr><td>자동 러너</td><td><b>있다</b> — <code>auto_run.py</code> S1(수집)→S2(대본)→S3(믹스). 비용 상한·재시도·사람 확인 멈춤·재개까지 설계됨</td></tr>
+<tr><td>러너의 심사기</td><td><code>default_judge</code> = <b>"무조건 pass"</b>. 코드 주석: "트랙5가 기계 게이트로 교체할 자리" — 아직 안 됨</td></tr>
+<tr><td>러너 호출처</td><td><code>/api/auto/start</code> 엔드포인트 1곳. <b>화면에서 부르는 곳 0곳</b></td></tr>
+<tr><td>게이트</td><td><code>script_gate</code> 다수 + <code>gate_feedback</code> = 반려 사유를 재작성 지시로 되돌림. <b>볼케이노 원리4와 같다. 이미 있음</b></td></tr>
+<tr><td>mix_jobs 상태</td><td>12종. <code>failed</code> 대입 11곳</td></tr>
+</table></div>
+<div class="ok">뼈대는 이미 있다. 러너·게이트·재작성 루프가 코드에 있다. 안 이어져 있을 뿐이다.</div>
+
+<h2>3. 숏템메이커 사고 ↔ 볼케이노 원리 — 1:1 대응</h2>
+<div class="tblwrap"><table>
+<tr><th>숏템메이커 실사고 (기록)</th><th>뿌리</th><th>원리</th><th>가져올 것</th></tr>
+<tr><td><b>미리보기만 바뀌고 저장 안 됨</b><br>자막 11 + 헤드카피 14 컨트롤이 update*()만 부름 (09-02)</td><td>상태가 3곳. 저장이 컨트롤 책임</td><td><span class="pill p2">2</span></td><td>상태는 <b>서버 job 하나</b>. 화면은 그리기만. 저장은 "단계 넘김" 때 payload 통째로 한 번</td></tr>
+<tr><td><b>삭제가 저장 출구에서 부활</b><br>enforce_script_order가 지운 칸을 되살림 (09-06)</td><td>검사기가 데이터를 <b>고친다</b></td><td><span class="pill p1">1</span><span class="pill p2">2</span></td><td>판정은 <b>반려만</b> 한다. 데이터를 손대지 않는다. 다르면 반려하고 이유를 준다</td></tr>
+<tr><td><b>확정대본 순서 누락</b><br>2단계 확정본이 3단계에서 뒤집힘 (08-24)</td><td>단계 사이 변환 코드가 판단함</td><td><span class="pill p2">2</span></td><td><code>carry</code> 방식: 앞 단계 산출을 그대로 다음 단계에. 한 글자 바뀌면 반려</td></tr>
+<tr><td><b>규칙은 있는데 판정이 없다</b><br>화자가 도중에 바뀜 (08-23)</td><td>프롬프트에만 적힘</td><td><span class="pill p4">4</span></td><td>규칙마다 판정 함수. 판정 없는 규칙은 없는 규칙</td></tr>
+<tr><td><b>슬롯값 판정 없으면 형용사 샌다</b><br>{가격}에 "저렴한 가격" (08-21)</td><td>틀만 보고 값은 안 봄</td><td><span class="pill p4">4</span></td><td>값 판정(단위 요구) 추가</td></tr>
+<tr><td><b>판정만 있고 지시 없음</b><br>헌장은 CTA 쓰라 하고 게이트는 벌줌 (08-22)</td><td>규칙이 두 곳(헌장·게이트)에 따로</td><td><span class="pill p4">4</span><span class="pill p2">5</span></td><td><b>규칙표 한 곳</b>에서 프롬프트 지시 블록과 게이트 판정을 둘 다 생성 (genre_block이 이미 이 방향)</td></tr>
+<tr><td><b>판정만 보면 억지로 섞는다</b><br>딴 제품 4칸 (09-05)</td><td>수량 판정이라 통과 쪽으로 움직임</td><td><span class="pill p4">4</span><span class="pill p2">8</span></td><td>판정에 "억지 조합"을 보는 눈(AI 검수)을 넣는다</td></tr>
+<tr><td><b>실패 문구 원인 뭉개기</b><br>"키 소진 또는 응답 오류" (08-22)</td><td>fail-open이 원인을 버림</td><td><span class="pill p9">9</span></td><td>실패 응답 표준: <code>{어디서, 왜, 뭘 하면 되는지, 재시도 의미 있나}</code></td></tr>
+<tr><td><b>게이트 조용한 실패</b><br>except: pass 35개</td><td>실패가 안 보임</td><td><span class="pill p9">9</span></td><td>삼키지 말고 사유 로그. 이미 테스트가 개수 상한을 지킨다</td></tr>
+<tr><td><b>분석 시작조차 안 됨</b><br>"분석중"도 없음 (08-20)</td><td>화면이 작업을 <b>시작</b>한다</td><td><span class="pill p2">6</span><span class="pill p2">7</span></td><td>작업 시작은 서버 job. 화면은 status 폴링만. 시작 안 되면 status가 말한다</td></tr>
+<tr><td><b>배선은 층마다</b> 캡션이 필터에서 잘림 (09-05) / <b>실측 함정 경로</b> 6종</td><td>배선이 여러 층·여러 파일</td><td><span class="pill p1">1</span><span class="pill p2">6</span></td><td>단계 어댑터 <b>한 곳</b>(auto_run.default_stages)에만 배선</td></tr>
+<tr><td><b>실사용 QA 10단계 전부 사람</b> (09-02)</td><td>사람 자리가 10곳</td><td><span class="pill p2">6</span></td><td>사람 자리 <b>3곳</b>: 소재 고르기 · 대본 확인 · 최종 확인. 나머지 자동</td></tr>
+<tr><td><b>딸깍 프리셋 철학</b> (사장님)<br>"조정 UI보다 완성 샘플"</td><td>스타일이 컨트롤 25개에 흩어짐</td><td><span class="pill p2">5</span></td><td>스타일 = <b>완성묶음 상수</b>(헤드카피+자막+효과). 조정은 상수 위에 덧씌우는 옵션</td></tr>
+<tr><td><b>돈 나가는 단계 전 점검 없음</b><br>수집 APIFY ≈ 1,010원/회, TTS</td><td>cost_cap은 있으나 사전 점검 없음</td><td><span class="pill p2">3</span></td><td><code>setup</code> 단계: 키·잔액·도구 실측 뒤에만 시작</td></tr>
+</table></div>
+<div class="key">14건 중 13건이 원리 1·2·4·6·9 다섯 개로 설명된다. 볼케이노가 특별한 기술을 쓰는 게 아니라 이 다섯을 어기지 않는 것이다.</div>
+
+<h2>4. 숏템메이커에 얹는 설계 — 최소 변경, 있는 것 재사용</h2>
+
+<h3>4-1. 서버 상태기계 하나 — <code>/api/produce/next</code></h3>
+<pre>요청:  {job_id, step, payload}          ← 볼케이노 volcano_video와 같은 모양
+응답:  {status: ok | need_input | execute | failed,
+        next_step, need: [...],          ← 사람이 채울 것만
+        next_payload: {...},             ← 그대로 되돌릴 것
+        fail: {where, why, fix, retry_ok}}</pre>
+<p>지금 <code>produce.html</code>이 들고 있는 10단계 순서·조건 분기가 서버로 온다. 화면은 이 응답을 그리기만 한다. <code>mix_jobs</code>가 이미 job 저장소이고 status 12종을 next_step으로 쓰면 된다.</p>
+
+<h3>4-2. <code>auto_run.py</code>를 살린다 (이미 있음)</h3>
+<div class="tblwrap"><table>
+<tr><th>지금</th><th>바꿀 것</th></tr>
+<tr><td><code>default_judge</code> = 무조건 pass</td><td><code>script_gate</code> 판정으로 교체 — "트랙5 자리"라고 코드에 적혀 있음</td></tr>
+<tr><td>S1·S2·S3 세 단계</td><td>10단계 어댑터로 확장. 어댑터는 엔진 호출만 (배선이 한 곳)</td></tr>
+<tr><td><code>waiting_human</code> 멈춤</td><td>멈출 때 <code>need</code>(뭘 채우면 되는지)를 같이 저장 → 볼케이노 next_payload.json</td></tr>
+<tr><td>화면 호출 0곳</td><td>제작소 첫 화면에 "소재 + 프리셋 → 시작" 버튼 하나</td></tr>
+</table></div>
+
+<h3>4-3. 규칙표 한 곳 → 지시와 판정을 둘 다 생성</h3>
+<pre>RULES = [
+  {"id": "no_comma",
+   "prompt": "자막에 쉼표를 쓰지 마라",
+   "check":  lambda cut: "," not in cut.text,
+   "reason": "이 채널 자막에 쓰지 않는 부호입니다 [',']"},
+  ...
+]
+prompt_block = "\n".join(r["prompt"] for r in RULES)      # 프롬프트로
+verdict      = [r for r in RULES if not r["check"](x)]      # 게이트로 → gate_feedback</pre>
+<p>"시켜놓고 벌주기"가 구조적으로 불가능해진다. <code>bank_assemble.genre_block</code>이 이미 이 방향이다.</p>
+
+<div class="grid2">
+  <div class="card">
+    <h3 style="margin-top:0">4-4. 실패 응답 표준</h3>
+    <p>모든 <code>status="failed"</code> 대입(11곳)이 <code>{where, why, fix, retry_ok}</code>를 채운다. "키 소진 또는 응답 오류"가 못 나온다.</p>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">4-5. 프리셋 = 완성묶음 상수</h3>
+    <p>헤드카피+자막+효과+모션팩을 하나의 JSON 상수로. 화면 컨트롤 25개는 그 상수 위에 덧씌우는 옵션이 되고, 저장은 "상수 + 덧씌운 값"을 단계 넘김 때 한 번.</p>
+  </div>
+</div>
+
+<h3>4-6. 사람 자리 3곳</h3>
+<div class="flow">
+  <div class="step"><div class="who"><span class="num">1</span>소재</div><div>S1 후보 5개 중 선택 — 러너가 <code>candidates</code>를 이미 남긴다</div></div>
+  <div class="step"><div class="who"><span class="num">2</span>대본</div><div>S2 초안 3개 중 선택·수정</div></div>
+  <div class="step"><div class="who"><span class="num">3</span>최종</div><div>렌더 결과 보고 승인</div></div>
+</div>
+<p>나머지(분석·EDL·TTS·자막·효과음·렌더)는 게이트가 통과시키면 사람이 안 본다.</p>
+
+<h2>5. 순서 — 문제 크기 순</h2>
+<div class="tblwrap"><table>
+<tr><th>순</th><th>할 일</th><th>푸는 사고</th><th>고치는 곳</th></tr>
+<tr><td>1</td><td>실패 응답 표준 + 상태 단일화(서버 job 하나)</td><td>저장 안 됨 · 부활 · 순서 누락 · 원인 뭉개기</td><td><code>app.py</code> settings/mix 저장 출구, <code>mix_pipeline</code> failed 11곳</td></tr>
+<tr><td>2</td><td><code>auto_run.default_judge</code> → <code>script_gate</code> 연결</td><td>판정 없는 규칙 전부</td><td><code>auto_run.py</code> 34줄</td></tr>
+<tr><td>3</td><td>규칙표 한 곳 → 지시+판정</td><td>시켜놓고 벌주기 · 형용사 · 억지 섞기</td><td><code>script_gate.py</code> + <code>bank_assemble.genre_block</code></td></tr>
+<tr><td>4</td><td><code>/api/produce/next</code> 상태기계 + 화면을 렌더 전용으로</td><td>층마다 배선 · 분석 미시작 · 10단계 수동</td><td><code>app.py</code> 신규 라우트, <code>produce.html</code> 축소</td></tr>
+<tr><td>5</td><td>프리셋 완성묶음 상수</td><td>딸깍 철학</td><td><code>produce.html</code> 컨트롤 → 상수</td></tr>
+<tr><td>6</td><td><code>setup</code> 단계(키·잔액·도구 실측)</td><td>돈 나간 뒤 실패</td><td><code>api_health</code> 재사용</td></tr>
+</table></div>
+<div class="note">1~2번은 화면을 안 건드린다. 3번까지 하면 <b>러너가 게이트를 통과할 때까지 혼자 돈다</b> — 그게 원클릭의 절반이다.</div>
+
+<h2>6. 볼케이노가 안 하는 것 — 우리가 더 잘할 수 있는 자리</h2>
+<div class="card">
+  <p>• 볼케이노는 채널이 10개로 고정이고 스타일이 상수라 사용자가 못 바꾼다. 우리는 프리셋을 상수로 두되 <b>덧씌우기</b>를 남긴다(사장님 철학 "완성본에서 미세조정").</p>
+  <p>• 볼케이노는 실행기가 로컬 파이썬을 요구한다(venv·키 파일·팩 다운로드). 우리는 서버가 다 돌리니 사용자 PC에 아무것도 안 깐다.</p>
+  <p>• 볼케이노는 사람 자리가 AI(Claude)다. 우리는 사람 자리 3곳을 <b>고객</b>이 누른다 — 고객이 고른 기록(<code>log_pick_event</code>가 이미 있음)이 다음 자동화의 학습 데이터가 된다.</p>
+</div>
+
+<footer>원본 문서: channel/volcano/볼케이노_원클릭원리_숏템메이커적용_2026-09-12.md · 근거는 전부 실측(서버 응답 원문 · 코드 · 메모리 기록)</footer>
+</div>
+</body>
+</html>
