@@ -15438,6 +15438,8 @@ _GRAB_DOMAINS = [
     ("xiaohongshu", ("xiaohongshu.com", "xhslink.com", "rednote.com")),
     ("douyin", ("douyin.com", "iesdouyin.com")),
     ("threads", ("threads.com", "threads.net")),
+    # 핀터레스트(2026-09-11 고객 "담기 버튼이 없다") — 다운로드는 media_download._download_pinterest
+    ("pinterest", ("pinterest.com",)),
 ]
 
 

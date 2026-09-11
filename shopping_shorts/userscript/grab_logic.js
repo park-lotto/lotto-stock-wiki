@@ -1,6 +1,7 @@
 // 로또 · 원클릭 담기 — 실제 로직 (grab.user.js 로더가 서버에서 이 파일을 매번 불러와 실행).
 // ★이 파일을 고치면 모든 사용자가 다음 새로고침에 자동 반영된다(재설치 불필요).
-// 로직 버전: 2026-09-02-b  (LOGIC_VER가 정본)
+// 로직 버전: 2026-09-11  (LOGIC_VER가 정본)
+//   · 핀터레스트 — 핀 페이지 플로팅 담기 + 검색 그리드 카드마다 📥 (2026-09-11 고객 문의)
 //   · ⭐볼채널등록 — 회원용 개인 채널 즐겨찾기
 //   · 유튜브는 쇼츠에서만 동작 — 메인·롱폼 차단
 //   ★두 트랙이 같은 날 각각 20260905를 달아 병합에서 부딪혔다. 합친 파일이라
@@ -14,7 +15,7 @@
   // 원인 찾는 데 한참 걸렸다. 그래서 버전을 숫자로 박고 큰 쪽이 이어받게 한다.
   // (옛 코드는 이 숫자가 없다 → 0으로 보고 새 로직이 이긴다. 옛 인터벌은 남지만
   //  버튼은 id 선점이라 서로 안 덮고, 새 화면(유튜브·쓰레드)은 새 로직이 그린다.)
-  var LOGIC_VER = 20260909;
+  var LOGIC_VER = 20260911;
   if ((window.__ssGrabVer || 0) >= LOGIC_VER) return;   // 같거나 더 새것이 이미 돎
   if (window.__ssGrabLoaded && !window.__ssGrabVer) {
     // 옛 로직이 이미 돌고 있다 — 그 버튼을 걷어내고 새 로직이 다시 그린다.
@@ -1151,6 +1152,51 @@
     }
   }
 
+  // ── 핀터레스트(2026-09-11) ────────────────────────────────────────────
+  //   고객: "숏템파워검색 → 📌 누르면 영상은 뜨는데 담기 버튼이 없다". 📌는 pinterest.com
+  //   검색을 새 탭에 여는 버튼이라 우리 버튼이 있을 리 없었다 — 이 로직이 핀터레스트를
+  //   아예 몰랐다(@match에도 없었다). 서버 쪽 받기(media_download._download_pinterest)는
+  //   이미 있었으니 화면만 붙인다.
+  //   · 핀 페이지(/pin/숫자/) = 단일 영상 → 플로팅 📥 담기(location.href 그대로).
+  //   · 검색·피드 그리드 = 핀 카드(a[href^="/pin/"])마다 📥. 플로팅은 숨긴다 — 검색 페이지
+  //     주소를 담으면 서버가 "지원 안 함"을 낼 뿐이라 혼동만 준다.
+  function _isPin() { return location.host.indexOf("pinterest.") >= 0; }
+  function _pinSingle() { return /^\/pin\/[^/]+/.test(location.pathname); }
+  function addPinCardBtns() {
+    if (!_isPin() || _pinSingle()) return;
+    var links = document.querySelectorAll('a[href^="/pin/"]');
+    for (var i = 0; i < links.length; i++) {
+      var a = links[i];
+      if (a.getAttribute("data-ssgrab")) continue;
+      var rr = a.getBoundingClientRect();
+      if (rr.width < 100 || rr.height < 100) continue;         // 아이콘·텍스트 링크 제외
+      var im = a.querySelector("img");
+      if (!im) continue;
+      a.setAttribute("data-ssgrab", "1");
+      if (getComputedStyle(a).position === "static") a.style.position = "relative";
+      var b = document.createElement("button");
+      b.className = "ss-card-grab";
+      b.textContent = "📥";
+      b.title = "이 핀 담기";
+      b.style.cssText =
+        "position:absolute;top:8px;left:8px;z-index:99999;background:#1f6feb;color:#fff;" +
+        "border:none;border-radius:16px;width:34px;height:34px;font-size:16px;" +
+        "box-shadow:0 2px 8px rgba(0,0,0,.4);cursor:pointer";
+      (function (a, im) {
+        b.addEventListener("click", function (e) {
+          e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
+          openGrab(a.href, im.src || "", im.alt || "");
+        }, true);
+      })(a, im);
+      a.appendChild(b);
+    }
+  }
+  function syncPinFloat() {
+    if (!_isPin()) return;
+    var f = document.getElementById("ss-grab-btn");
+    if (f) f.style.display = _pinSingle() ? "" : "none";
+  }
+
   // ── 유튜브는 '쇼츠'에서만 동작한다 (2026-09-02 사장님 요청) ──────────────
   //   메인·구독·검색·채널 등 목록 화면과 **롱폼(watch)** 에선 버튼을 아예 띄우지 않는다.
   //   예외: 공유 링크로 열린 쇼츠는 /watch?v=... 로 뜨기도 한다 → 재생 중인 영상 길이가
@@ -1175,7 +1221,7 @@
     } catch (e) {}
   }
 
-  function tick() { if (_ytOff()) { _ytClear(); return; } try{addFloatBtn();}catch(e){} try{addCardBtns();}catch(e){} try{addAnchorCardBtns();}catch(e){} try{addDouyinCardBtns();}catch(e){} try{syncFloat();}catch(e){} try{syncChannelBtn();}catch(e){} try{syncExtraBtns();}catch(e){} try{syncSeekBar();}catch(e){} try{syncGridBadges();}catch(e){} try{_dockBtns();}catch(e){} }
+  function tick() { if (_ytOff()) { _ytClear(); return; } try{addFloatBtn();}catch(e){} try{addCardBtns();}catch(e){} try{addAnchorCardBtns();}catch(e){} try{addDouyinCardBtns();}catch(e){} try{addPinCardBtns();}catch(e){} try{syncFloat();}catch(e){} try{syncPinFloat();}catch(e){} try{syncChannelBtn();}catch(e){} try{syncExtraBtns();}catch(e){} try{syncSeekBar();}catch(e){} try{syncGridBadges();}catch(e){} try{_dockBtns();}catch(e){} }
   tick();
   // SPA라 스크롤·재검색으로 카드가 갈아끼워져도 버튼을 계속 유지한다.
   // 핸들을 남긴다 — 더 새로운 로직이 로드되면 위 가드가 이걸 끄고 이어받는다.
