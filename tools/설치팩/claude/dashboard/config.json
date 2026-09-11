@@ -1,0 +1,10 @@
+{
+  "categories": [
+    {"name": "스탁브레인", "path_hints": ["C:\\Users\\TheRose\\Desktop\\로또의 주식"]},
+    {"name": "유튜브 자동화", "path_hints": []},
+    {"name": "쇼핑쇼츠 자동화", "path_hints": []},
+    {"name": "SEO 워드프레스 자동화", "path_hints": []},
+    {"name": "위키창고", "path_hints": ["C:\\Users\\TheRose\\knowledge-wiki"]}
+  ],
+  "artifact_url": "https://claude.ai/code/artifact/8ea243dd-4227-4016-a811-7cb3b9906c99"
+}

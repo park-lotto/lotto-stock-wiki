@@ -1,0 +1,41 @@
+{
+  "firecrawl-mcp": {
+    "type": "stdio",
+    "command": "npx",
+    "args": [
+      "-y",
+      "firecrawl-mcp"
+    ],
+    "env": {}
+  },
+  "browsermcp": {
+    "type": "stdio",
+    "command": "npx",
+    "args": [
+      "@browsermcp/mcp@latest"
+    ],
+    "env": {}
+  },
+  "elevenlabs-mcp": {
+    "type": "stdio",
+    "command": "uvx",
+    "args": [
+      "elevenlabs-mcp"
+    ],
+    "env": {}
+  },
+  "notebooklm-mcp": {
+    "type": "stdio",
+    "command": "notebooklm-mcp",
+    "args": [],
+    "env": {}
+  },
+  "AfterEffectsMCP": {
+    "type": "stdio",
+    "command": "node",
+    "args": [
+      "__USERPROFILE__/tools/after-effects-mcp/build/index.js"
+    ],
+    "env": {}
+  }
+}
