@@ -1342,7 +1342,8 @@ def _adjust_caps_for_trim(beat):
     return 0.0, durs
 
 
-def _caption_drawtexts(narration, dur, work, idx, t0=0.0, style=None, real_durs=None, cap_offset=0.0, tail=0.5, cap_lines=None, lead_in=0.0):
+def _caption_drawtexts(narration, dur, work, idx, t0=0.0, style=None, real_durs=None, cap_offset=0.0,
+                       tail=0.5, cap_lines=None, lead_in=0.0, cap_xy_segs=None):
     """나레이션 한 비트의 자막(하단 바 + 순차 drawtext)을 필터 문자열 리스트로 반환한다.
     _segmented_drawtext 기반: highlight_rules가 있으면 단어별 강조, 없으면 세그먼트 1개
     (기존과 동일 산출물). 각 구절 enable 구간은 t0(전체 타임라인 오프셋)만큼 밀린다.
@@ -1394,8 +1395,19 @@ def _caption_drawtexts(narration, dur, work, idx, t0=0.0, style=None, real_durs=
         start = max(0.0, t + t0 + cap_offset)
         t += d
         end = (dur + tail if i == len(segs) - 1 else t) + t0 + cap_offset
+        # 화면에 지금 보이는 자막 한 줄만 옮길 때의 좌표. JSON 객체 키는 문자열이므로
+        # 문자열/정수 키를 모두 받는다. 없으면 비트 전체 좌표(xpct/ypct)를 그대로 쓴다.
+        seg_xy = (cap_xy_segs or {}).get(str(i)) if isinstance(cap_xy_segs, dict) else None
+        if seg_xy is None and isinstance(cap_xy_segs, dict):
+            seg_xy = cap_xy_segs.get(i)
+        seg_xpct, seg_ypct = xpct, ypct
+        if isinstance(seg_xy, dict):
+            if seg_xy.get("x_pct") is not None:
+                seg_xpct = max(0.0, min(100.0, float(seg_xy["x_pct"])))
+            if seg_xy.get("y_pct") is not None:
+                seg_ypct = max(0.0, min(100.0, float(seg_xy["y_pct"])))
         seg_parts = _segmented_drawtext(
-            seg, style, work, f"cap_{idx}_{i}", xpct, ypct,
+            seg, style, work, f"cap_{idx}_{i}", seg_xpct, seg_ypct,
             highlight_rules=style.get("highlight_rules"), default_color="0xFFFFFF",
             single_line=True,   # 자막은 무조건 한 줄(폭 넘으면 폰트 자동축소)
         )
@@ -2306,6 +2318,7 @@ def _beat_timeline(edit_plan, tts_paths):
             # 사장님이 고친 자리가 렌더에 반영되지 않는다(위 cap_durs와 같은 함정).
             "cap_pos": beat.get("cap_pos"),
             "cap_xy": beat.get("cap_xy"),                  # 드래그로 옮긴 장면별 자유 좌표(2026-08-31)
+            "cap_xy_segs": beat.get("cap_xy_segs"),        # 화면에 보이는 자막 한 줄별 자유 좌표
             "sfx": beat.get("sfx"),                        # 효과음 매칭(있으면) — position 읽기용
             "head_trim": beat.get("head_trim", 0.0),
         })
@@ -2530,9 +2543,10 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
         filters.extend(_caption_drawtexts(b["narration"], b["dur"], work, b["beat_idx"],
                                           b["t0"], _beat_cap_style(caption_style, b),
                                           real_durs=b.get("cap_durs"),
-                                          cap_offset=b.get("cap_offset", 0.0), tail=_tail,
-                                          cap_lines=b.get("caption_lines"),
-                                          lead_in=b.get("cap_lead", 0.0)))
+                                           cap_offset=b.get("cap_offset", 0.0), tail=_tail,
+                                           cap_lines=b.get("caption_lines"),
+                                           lead_in=b.get("cap_lead", 0.0),
+                                           cap_xy_segs=b.get("cap_xy_segs")))
     if headcopy and (headcopy.get("text") or "").strip():
         # enable 없으면 전체 표시(기존). 팩이 hook_only면 렌더 파생값 _headcopy_enable이 온다.
         hc_enable = ((deco or {}).get("motion") or {}).get("_headcopy_enable")
