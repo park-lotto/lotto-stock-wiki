@@ -44,11 +44,11 @@ COMPANIES = [
 ]
 
 TEAMS = [
-    {"id": "new", "name": "신규개발팀", "description": "승인된 신규 제품 개발과 시제품 검증"},
-    {"id": "improve", "name": "제품개선팀", "description": "기존 제품의 UI·기능·템플릿 개선"},
-    {"id": "cs", "name": "CS팀", "description": "문의 분류와 고객 불편 처리 추적"},
-    {"id": "ops", "name": "서비스운영팀", "description": "고객 작업 실패와 서비스 장애 관찰"},
-    {"id": "qa", "name": "품질검증팀", "description": "변경사항과 실제 사용 결과 검증"},
+    {"id": "new", "name": "신규개발팀", "description": "승인된 신규 제품 개발과 시제품 검증", "workflow": {"planner": "astra", "executor": "codex", "reviewer": "claude"}},
+    {"id": "improve", "name": "제품개선팀", "description": "기존 제품의 UI·기능·템플릿 개선", "workflow": {"planner": "claude", "executor": "codex", "reviewer": "astra"}},
+    {"id": "cs", "name": "CS팀", "description": "문의 분류와 고객 불편 처리 추적", "workflow": {"planner": "claude", "executor": "opus", "reviewer": "astra"}},
+    {"id": "ops", "name": "서비스운영팀", "description": "고객 작업 실패와 서비스 장애 관찰", "workflow": {"planner": "astra", "executor": "opus", "reviewer": "claude"}},
+    {"id": "qa", "name": "품질검증팀", "description": "변경사항과 실제 사용 결과 검증", "workflow": {"planner": "claude", "executor": "codex", "reviewer": "astra"}},
 ]
 
 ROLES = [
@@ -60,13 +60,7 @@ ROLES = [
 
 # 팀을 고르면 이 표 한 곳에서 기획 → 구현 → 검수 책임을 정한다.
 # AI 모델 호출 여부와 무관하게 실제 프로젝트 배정 원장에 기록된다.
-TEAM_WORKFLOWS = {
-    "new": {"planner": "astra", "executor": "codex", "reviewer": "claude"},
-    "improve": {"planner": "claude", "executor": "codex", "reviewer": "astra"},
-    "cs": {"planner": "claude", "executor": "opus", "reviewer": "astra"},
-    "ops": {"planner": "astra", "executor": "opus", "reviewer": "claude"},
-    "qa": {"planner": "claude", "executor": "codex", "reviewer": "astra"},
-}
+TEAM_WORKFLOWS = {team["id"]: team["workflow"] for team in TEAMS}
 
 ROLE_IDS = {item["id"] for item in ROLES}
 

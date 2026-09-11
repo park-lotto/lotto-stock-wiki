@@ -62,6 +62,9 @@ class CompanyOpsApiTests(unittest.TestCase):
         state = response.json()
         self.assertEqual({item["id"] for item in state["companies"]}, {"makers", "hnl", "stock"})
         self.assertEqual({item["id"] for item in state["teams"]}, {"new", "improve", "cs", "ops", "qa"})
+        workflows = {item["id"]: item["workflow"] for item in state["teams"]}
+        self.assertEqual(workflows["new"], {"planner": "astra", "executor": "codex", "reviewer": "claude"})
+        self.assertEqual(workflows["cs"], {"planner": "claude", "executor": "opus", "reviewer": "astra"})
         self.assertEqual(
             state["stages"],
             [

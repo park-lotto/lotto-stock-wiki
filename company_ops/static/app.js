@@ -142,6 +142,28 @@ function roleNode(role) {
   item.setAttribute("aria-label", role.name + " · " + role.role + " · " + role.status);
   return item;
 }
+function metric(id, value) {
+  const target = $(id);
+  const next = String(value);
+  if (target.textContent === next) return;
+  target.textContent = next;
+  if (!motionEnabled()) return;
+  target.classList.remove("metric-hit");
+  void target.offsetWidth;
+  target.classList.add("metric-hit");
+}
+function renderMetrics() {
+  const projects = companyProjects();
+  const open = projects.filter(project => project.stage !== "done");
+  const assignments = state.assignments.filter(item => item.company_id === companyId && ["active", "blocked"].includes(item.status));
+  const activeRoles = new Set(assignments.filter(item => item.status === "active").map(item => item.role_id));
+  metric("metric-active", activeRoles.size);
+  metric("metric-work", open.length);
+  metric("metric-standby", Math.max(0, state.roles.length - activeRoles.size));
+  metric("metric-blocked", open.filter(project => project.blocked).length);
+  metric("metric-done", projects.filter(project => project.stage === "done").length);
+  metric("metric-events", state.events.filter(event => event.company_id === companyId).length);
+}
 function buildOrganization() {
   if (!sameRender("roles", state.roles)) {
     $("planning-roles").replaceChildren(...state.roles.filter(role => role.group === "planning").map(roleNode));
@@ -156,15 +178,31 @@ function buildOrganization() {
     path.setAttribute("d", "M500 0 C500 30 " + x + " 14 " + x + " 68");
     path.setAttribute("class", "team-route");
     $("team-routes").append(path);
+    const card = node("article", "department-card");
+    card.dataset.teamId = team.id;
     const button = node("button", "team-node");
     button.type = "button";
     button.id = "team-" + team.id;
     button.dataset.testid = "team-" + team.id;
     button.dataset.teamId = team.id;
     button.title = team.description;
-    button.append(node("span", "team-index", String(index + 1).padStart(2, "0")), node("span", "team-name", team.name), node("span", "team-description", team.description), node("span", "team-load"));
+    const heading = node("span", "team-heading");
+    heading.append(node("span", "team-index", String(index + 1).padStart(2, "0")), node("span", "team-name", team.name));
+    button.append(heading, node("span", "team-description", team.description), node("span", "team-load"));
     button.addEventListener("click", () => selectTeam(teamFilter === team.id ? null : team.id, true));
-    return button;
+    const workflow = node("div", "department-workflow");
+    const phases = [["planner", "기획"], ["executor", "구현"], ["reviewer", "검수"]];
+    for (const [key, label] of phases) {
+      const roleId = team.workflow[key];
+      const chip = node("span", "flow-role");
+      chip.dataset.role = roleId;
+      chip.append(node("small", "", label), node("strong", "", roleName(roleId)), node("i", "", "대기"));
+      workflow.append(chip);
+    }
+    const jobs = node("div", "department-jobs");
+    jobs.dataset.teamJobs = team.id;
+    card.append(button, workflow, jobs);
+    return card;
   }));
 }
 function renderOrganization() {
@@ -175,14 +213,40 @@ function renderOrganization() {
     const blocked = list.filter(project => project.blocked).length;
     const selected = teamFilter === team.id;
     const button = $("team-" + team.id);
+    const card = button.closest(".department-card");
     button.classList.toggle("active", selected);
     button.classList.toggle("is-blocked", blocked > 0);
+    card.classList.toggle("active", selected);
+    card.classList.toggle("is-blocked", blocked > 0);
     button.setAttribute("aria-pressed", String(selected));
     const load = "열린 업무 " + list.length + (blocked ? " · 차단 " + blocked : "");
     button.querySelector(".team-load").textContent = load;
     button.setAttribute("aria-label", team.name + " · " + load + " · 프로젝트 필터");
     $("route-" + team.id).classList.toggle("is-selected", selected);
     $("route-" + team.id).classList.toggle("is-blocked", blocked > 0);
+    for (const chip of card.querySelectorAll(".flow-role")) {
+      const count = list.filter(project => project.current_assignee === chip.dataset.role).length;
+      chip.classList.toggle("is-working", count > 0);
+      chip.querySelector("i").textContent = count ? `배정 ${count}` : "대기";
+    }
+    const jobs = card.querySelector(".department-jobs");
+    const jobSignature = list.map(project => [project.id, project.version, project.stage, project.current_assignee, project.blocked]);
+    if (!sameRender("department-jobs-" + companyId + "-" + team.id, jobSignature)) {
+      jobs.replaceChildren();
+      if (!list.length) {
+        jobs.append(node("p", "department-empty", "대기 중 · 새 업무 없음"));
+      } else {
+        for (const project of list.slice(0, 3)) {
+          const job = node("button", "department-job" + (project.blocked ? " is-blocked" : ""));
+          job.type = "button";
+          job.dataset.projectId = project.id;
+          job.append(node("span", "job-signal"), node("span", "job-copy", project.title), node("small", "", `${stageName(project.stage)} · ${roleName(project.current_assignee)}`));
+          job.addEventListener("click", () => openDetail(project.id, {returnTarget: job}));
+          jobs.append(job);
+        }
+        if (list.length > 3) jobs.append(node("p", "department-more", `외 ${list.length - 3}건`));
+      }
+    }
   }
   for (const role of state.roles) {
     const active = state.assignments.filter(item => item.company_id === companyId && item.role_id === role.id && ["active", "blocked"].includes(item.status));
@@ -347,6 +411,7 @@ function render() {
   put("open-count", state.projects.filter(project => project.stage !== "done").length);
   $("open-count").title = "전체 회사의 저장된 미완료 프로젝트";
   renderCompanyNavigation();
+  renderMetrics();
   renderOrganization();
   renderBusiness();
   renderAssignments();

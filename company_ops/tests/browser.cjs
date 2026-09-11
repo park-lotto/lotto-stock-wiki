@@ -53,6 +53,12 @@ async function expectAssignee(page, title, roleId, stage) {
   if (assignment?.role_id !== roleId || assignment?.stage !== stage) {
     throw new Error(`${stage} 담당자 이동 실패: ${JSON.stringify(assignment)}`);
   }
+  await page.waitForFunction((expectedTitle, expectedRole) => {
+    const role = document.querySelector(`.department-card[data-team-id="improve"] .flow-role[data-role="${expectedRole}"]`);
+    const job = [...document.querySelectorAll('.department-card[data-team-id="improve"] .department-job')]
+      .find(item => item.textContent.includes(expectedTitle));
+    return role?.classList.contains('is-working') && job?.textContent.includes(expectedRole === 'codex' ? 'Codex' : expectedRole === 'astra' ? 'Astra' : 'Claude');
+  }, {timeout: 8000}, title, roleId);
 }
 
 async function waitStage(page, title, stage) {
@@ -109,6 +115,14 @@ async function main() {
     await page.waitForSelector("#detail-dialog[open]");
     await waitStage(page, title, "intake");
     await expectAssignee(page, title, "claude", "intake");
+    const liveMetrics = await page.evaluate(() => ({
+      active: document.querySelector('#metric-active')?.textContent,
+      work: document.querySelector('#metric-work')?.textContent,
+      standby: document.querySelector('#metric-standby')?.textContent,
+    }));
+    if (liveMetrics.active !== "1" || liveMetrics.work !== "1" || liveMetrics.standby !== "3") {
+      throw new Error(`관제 지표 갱신 실패: ${JSON.stringify(liveMetrics)}`);
+    }
     const created = await projectStage(page, title);
     if (!created?.id) throw new Error("생성한 프로젝트를 API에서 찾지 못함");
     await page.keyboard.press("Escape");
@@ -145,6 +159,12 @@ async function main() {
     await page.type("#action-reviewer", "독립 검증자");
     await page.click("#action-submit");
     await waitStage(page, title, "done");
+    await page.waitForFunction(expectedTitle => (
+      document.querySelector('#metric-active')?.textContent === '0' &&
+      document.querySelector('#metric-work')?.textContent === '0' &&
+      document.querySelector('#metric-done')?.textContent === '1' &&
+      ![...document.querySelectorAll('.department-job')].some(item => item.textContent.includes(expectedTitle))
+    ), {timeout: 8000}, title);
     await page.screenshot({path: path.join(artifacts, "company-atlas-verified.png"), fullPage: true});
 
     await page.reload({waitUntil: "domcontentloaded", timeout: 15000});
