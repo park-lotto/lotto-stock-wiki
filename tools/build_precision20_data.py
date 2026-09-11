@@ -203,10 +203,10 @@ MANUAL = {
 STORY_FOOTER_OVERRIDES = {"t09": 545, "t14": 554}
 HOOK_TYPE_PROFILES = {
     # 한 폰트로 도배하지 않는다. 각 레퍼런스의 성격은 유지하되 훅 가독성만 상향한다.
-    "t01": {"family": "Jalnan2", "weight": 400, "tracking": -0.7, "stroke": 1.0, "shadow": 1.15},
+    "t01": {"family": "TmonMonsori", "weight": 400, "tracking": -1.2, "stroke": 1.35, "shadow": 1.4},
     "t02": {"family": "Jalnan2", "weight": 400, "tracking": -0.65, "stroke": 0.7, "shadow": 0.8},
     "t03": {"family": "JalnanGothic", "weight": 400, "tracking": -0.85, "stroke": 1.2, "shadow": 1.15},
-    "t04": {"family": "Jalnan2", "weight": 400, "tracking": -0.7, "stroke": 1.1, "shadow": 1.1},
+    "t04": {"family": "TmonMonsori", "weight": 400, "tracking": -1.2, "stroke": 1.25, "shadow": 1.3},
     "t05": {"family": "Jalnan2", "weight": 400, "tracking": -0.7, "stroke": 1.0, "shadow": 1.0},
     "t06": {"family": "GasoekOne", "weight": 400, "tracking": -0.8, "stroke": 1.3, "shadow": 1.2},
     "t07": {"family": "GmarketSansBold", "weight": 400, "tracking": -1.0, "stroke": 1.1, "shadow": 1.15},
@@ -215,14 +215,107 @@ HOOK_TYPE_PROFILES = {
     "t10": {"family": "GasoekOne", "weight": 400, "tracking": -1.15, "stroke": 0.9, "shadow": 1.0},
     "t11": {"family": "Jalnan2", "weight": 400, "tracking": -0.65, "stroke": 1.0, "shadow": 1.0},
     "t12": {"family": "BlackHanSans", "weight": 400, "tracking": -1.2, "stroke": 0, "shadow": 0},
-    "t13": {"family": "KCCGanpan", "weight": 400, "tracking": -0.75, "stroke": 1.0, "shadow": 1.0},
-    "t14": {"family": "GmarketSansBold", "weight": 400, "tracking": -1.0, "stroke": 1.05, "shadow": 1.0},
-    "t15": {"family": "BinggraeBold", "weight": 400, "tracking": -0.7, "stroke": 1.05, "shadow": 1.0},
+    "t13": {"family": "Jalnan2", "weight": 400, "tracking": -0.75, "stroke": 1.0, "shadow": 1.0},
+    "t14": {"family": "JalnanGothic", "weight": 400, "tracking": -0.9, "stroke": 1.05, "shadow": 1.0},
+    "t15": {"family": "GmarketSansBold", "weight": 400, "tracking": -0.9, "stroke": 1.05, "shadow": 1.0},
     "t16": {"family": "GasoekOne", "weight": 400, "tracking": -1.1, "stroke": 0.9, "shadow": 1.0},
     "t17": {"family": "Pretendard", "weight": 800, "tracking": -0.9, "stroke": 0, "shadow": 0},
     "t19": {"family": "JalnanGothic", "weight": 400, "tracking": -0.85, "stroke": 1.05, "shadow": 1.0},
     "s0056": {"family": "GmarketSansBold", "weight": 400, "tracking": -0.9, "stroke": 1.0, "shadow": 1.0},
 }
+
+# 320px 실사용 미리보기로 20장을 한 장씩 검수한 뒤 잡은 훅 전용 좌표다.
+# 자동 실측값의 ink bbox를 그대로 글자 박스로 쓰면 제목이 작아지므로 화면 설계 좌표를 별도로 둔다.
+HOOK_VISUAL_PATCHES = {
+    "s0101": {"cleanup_y0": 0, "channel_boxes": [],
+        "channel_box": {"x": 105, "y": 18, "width": 150, "height": 42, "background": "#2B271D", "color": "#FFFFFF", "radius": 0, "border": None, "font_size": 25, "font_family": "TmonMonsori", "font_weight": 400}},
+    "t01": {"family": "TmonMonsori", "lines": [
+        {"font_size": 34, "letter_spacing": -1.2, "stroke": 1.35, "shadow_y": 1.4},
+        {"font_size": 38, "letter_spacing": -1.4, "stroke": 1.35, "shadow_y": 1.4},
+    ]},
+    "t02": {"cleanup_y0": 96,
+        "cleanup_regions_extra": [{"role": "header-clean", "x": 0, "y": 0, "width": 360, "height": 96, "background": "#F77C7F"}],
+        "channel_box": {"x": 90, "y": 24, "width": 180, "height": 38, "background": "#F77C7F", "color": "#FFFFFF", "radius": 0, "border": None, "font_size": 25, "font_family": "GmarketSansBold", "font_weight": 400}},
+    "t03": {"cleanup_y0": 50,
+        "cleanup_regions_extra": [{"role": "header-clean", "x": 0, "y": 0, "width": 360, "height": 50, "background": "#514D3D"}],
+        "channel_box": {"x": 90, "y": 11, "width": 180, "height": 29, "background": "#514D3D", "color": "#FFFFFF", "radius": 0, "border": None, "font_size": 20, "font_family": "GmarketSansBold", "font_weight": 400}},
+    "t04": {"family": "TmonMonsori", "lines": [
+        {"font_size": 35, "letter_spacing": -1.2, "stroke": 1.25, "shadow_y": 1.3},
+        {"font_size": 38, "letter_spacing": -1.3, "stroke": 1.25, "shadow_y": 1.3},
+    ]},
+    "t05": {"lines": [
+        {"font_size": 35, "y0": 101, "y1": 141, "h": 41},
+        {"font_size": 38, "y0": 146, "y1": 190, "h": 45},
+    ]},
+    "t07": {"lines": [
+        {"x0": 12, "x1": 348, "y0": 70, "y1": 109, "h": 40, "font_size": 38},
+        {"x0": 35, "x1": 325, "y0": 115, "y1": 160, "h": 46, "font_size": 43},
+    ]},
+    "t08": {"lines": [
+        {"x0": 15, "x1": 345, "y0": 78, "y1": 116, "h": 39, "font_size": 36},
+        {"x0": 30, "x1": 330, "y0": 121, "y1": 162, "h": 42, "font_size": 40},
+    ]},
+    "t09": {"cleanup_y0": 0,
+        "channel_box": {"x": 90, "y": 15, "width": 180, "height": 31, "background": "#17181B", "color": "#FFFFFF", "radius": 0, "border": None, "font_size": 21, "font_family": "GmarketSansBold", "font_weight": 400},
+        "lines": [
+        {"x0": 16, "x1": 344, "y0": 82, "y1": 121, "h": 40, "font_size": 39},
+        {"x0": 12, "x1": 348, "y0": 126, "y1": 170, "h": 45, "font_size": 42},
+    ]},
+    "t12": {"cleanup_regions_extra": [{"role": "header-clean", "x": 0, "y": 0, "width": 360, "height": 116, "background": "#002D3A"}]},
+    "t10": {"cleanup_y0": 55, "lines": [
+        {"x0": 22, "x1": 338, "y0": 63, "y1": 102, "h": 40, "font_size": 36},
+        {"x0": 12, "x1": 348, "y0": 108, "y1": 153, "h": 46, "font_size": 42},
+    ], "white_box": {"y0": 169, "y1": 204, "background": "#FFFFFF", "text": None}},
+    "t11": {"lines": [
+        {"x0": 16, "x1": 344, "y0": 79, "y1": 120, "h": 42, "font_size": 37},
+        {"x0": 12, "x1": 348, "y0": 126, "y1": 171, "h": 46, "font_size": 41},
+    ]},
+    "t13": {"family": "Jalnan2", "cleanup_y0": 0, "video_from": {"y": 254, "pct": 39.7}, "lines": [
+        {"x0": 18, "x1": 342, "y0": 52, "y1": 92, "h": 41, "font_size": 37},
+        {"x0": 14, "x1": 346, "y0": 98, "y1": 143, "h": 46, "font_size": 42},
+    ], "white_box": {"y0": 185, "y1": 253, "background": "#FFFFFF", "text": None}},
+    "t14": {"family": "JalnanGothic", "cleanup_y0": 0, "lines": [
+        {"x0": 15, "x1": 345, "y0": 43, "y1": 83, "h": 41, "font_size": 37},
+        {"x0": 10, "x1": 350, "y0": 91, "y1": 143, "h": 53, "font_size": 45},
+    ]},
+    "t15": {"family": "GmarketSansBold", "cleanup_y0": 54,
+        "cleanup_regions_extra": [{"role": "header-clean", "x": 0, "y": 0, "width": 360, "height": 54, "background": "#557E78"}],
+        "channel_box": {"x": 92, "y": 14, "width": 176, "height": 30, "background": "#557E78", "color": "#FFFFFF", "radius": 0, "border": None, "font_size": 22, "font_family": "GmarketSansBold", "font_weight": 400},
+        "lines": [
+            {"x0": 15, "x1": 345, "y0": 64, "y1": 105, "h": 42, "font_size": 38},
+            {"x0": 12, "x1": 348, "y0": 111, "y1": 157, "h": 47, "font_size": 42},
+        ]},
+    "t17": {"cleanup_regions_extra": [{"role": "header-clean", "x": 0, "y": 0, "width": 360, "height": 79, "background": "#010101"}]},
+    "t19": {"family": "JalnanGothic", "lines": [
+        {"x0": 16, "x1": 344, "y0": 45, "y1": 86, "h": 42, "font_size": 38, "color": "#FFFFFF"},
+        {"x0": 12, "x1": 348, "y0": 94, "y1": 142, "h": 49, "font_size": 44, "color": "#00F0E8"},
+    ], "white_box": {"y0": 169, "y1": 240, "background": "#FFFFFF", "text": None}},
+    "s0056": {"family": "GmarketSansBold", "cleanup_y0": 0, "video_from": {"y": 161, "pct": 37.8},
+        "channel_box": {"x": 64, "y": 12, "width": 112, "height": 27, "background": "#000000", "color": "#FFFFFF", "radius": 0, "border": None, "font_size": 18, "font_family": "GmarketSansBold", "font_weight": 400},
+        "lines": [
+            {"x0": 8, "x1": 232, "y0": 45, "y1": 76, "h": 32, "font_size": 28, "color": "#FFFFFF"},
+            {"x0": 7, "x1": 233, "y0": 80, "y1": 116, "h": 37, "font_size": 32, "color": "#F2CC11"},
+        ], "white_box": {"y0": 127, "y1": 160, "background": "#D7D7D7", "text": None}},
+}
+
+
+def apply_hook_visual_patch(frame: dict | None, key: str) -> dict | None:
+    if not frame or key not in HOOK_VISUAL_PATCHES:
+        return frame
+    patch = HOOK_VISUAL_PATCHES[key]
+    if "family" in patch:
+        frame["font_family"] = patch["family"]
+    for field in ("cleanup_y0", "video_from", "white_box", "channel_box", "channel_boxes", "cleanup_regions_extra"):
+        if field in patch:
+            frame[field] = patch[field]
+    if "lines" in patch:
+        source_lines = frame.get("lines", [])
+        frame["lines"] = []
+        for index, line_patch in enumerate(patch["lines"]):
+            base = dict(source_lines[index]) if index < len(source_lines) else {}
+            base.update(line_patch)
+            frame["lines"].append(base)
+    return frame
 
 
 def load_measure(key: str) -> tuple[dict, str, str]:
@@ -267,6 +360,7 @@ def compact_frame(frame: dict | None) -> dict | None:
             "role": "original-title", "x": 0, "y": y0, "width": width,
             "height": y1 - y0, "background": frame.get("title_bg") or "#111111",
         })
+    cleanup_regions.extend(frame.get("cleanup_regions_extra", []))
     return {
         "width": width,
         "height": height,
@@ -331,6 +425,7 @@ def main() -> None:
             measured["hook"]["lines"][1].update({"color": "#00F9ED", "font_size": 39})
         if key == "t05" and len(measured.get("hook", {}).get("lines", [])) > 1:
             measured["hook"]["lines"][1]["color"] = "#FF7F9D"
+        measured["hook"] = apply_hook_visual_patch(measured.get("hook"), key)
         sample = SAMPLES.get(name, [f"{name}에서 발견한", "놀라운 생활 아이디어"])
         rows.append({
             "rank": rank,
