@@ -5,3 +5,4 @@
 ## 2026-09-12 볼케이노MCP (CH PC)
 - CH PC 첫 셋업(venv·키 2종) 후 뇌전구 2편 "박위 케냐봉사" 완성(28컷·35.1초, 대본 1회 통과). 작업폴더 out/volcano/뇌전구_0004104394 · 바탕화면 사본
 - 함정 3개: 실행기를 Claude가 돌리면 auto 분류기가 외부코드로 차단(사장님 `!` 1회 실행 후 풀림) / OCR 보존은 photo_text_state.results도 같이 고쳐야 통과 / render_plan images는 {슬롯:경로} dict
+- 2026-09-12 CH: 뇌전구 4편(이동건 제주 카페, 56.8초) 완성. 반려는 "한편"(접속어) 1건. news 소재는 probe 빼고 source_chars만. 마지막 컷 밈이 가운뎃손가락이라 톤 확인 필요. handoff §10

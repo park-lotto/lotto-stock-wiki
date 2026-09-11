@@ -95,3 +95,16 @@
 - 원하면 편별 설계 텍스트(대본·timing·sub.ass)를 `channel/volcano/<편>/`에 복사해 재현 자료로 축적
 - 인물형 롱폼 쓰려면 Serper·네이버 API HUB(ID/Secret)·Gemini 키 필요
 - 실행기 로그에 ffmpeg 전체 인자를 남기는 옵션이 있는지 `volcano_drive.py` 확인(미착수)
+
+---
+
+## 10. 2026-09-12 CH PC — 이동건 제주 카페 편 (뇌전구 4번째)
+
+- 소재: 매일경제 009/0005733897 (n.news.naver.com 주소 그대로 curl 성공 — "차단된다" 트랩과 달리 됐음. 본문은 `<article id="dic_area">`에서 추출, 페이지는 utf-8인데 Git Bash 콘솔 출력만 깨져 보임 → 파일로 쓰고 Read로 확인)
+- 작업 폴더: `~/.volcano/jobs/20260911b_뇌전구/` → `out/이동건_제주카페_v001.mp4` (56.79초, 1080×1920, timing.total 56.834 ±0.1 OK) · 바탕화면 사본 `뇌전구_이동건_제주카페_v001.mp4`
+- 25컷(밈 4: 7·13·19·25) · 이미지 9슬롯 · 마지막 RED PUNCH · ~임/~음체. 대본 반려 1건뿐: **"한편"은 접속 표현 금지**("이 채널이 쓰지 않는 접속 표현") → "근데"로 교체
+- 경고(비차단) 3건: 첫 컷이 문장을 끝냄 / 컷 7·15 줄 끝이 살짝 잘림 → 통과는 됐으나 다음 편엔 첫 컷을 끌고 가는 형태로, 줄은 11자 안쪽으로
+- probed 단계: news 소재에 `probe`(env JSON)를 넣으면 "비디오 스트림이 없다"로 반려 → **텍스트 소재는 source_chars만**, probe 키는 빼야 한다
+- render_plan 검수 요청은 밈 컷 1건뿐(subject-focus). 답: kind=object, box로 캐릭터 전체, speaker=silent. 밈 글자 OCR은 memory대로 두 구조(photo_text_results·photo_text_state.results) 동시 patch로 통과
+- ⚠ 밈 "비웃음/조롱"은 **가운뎃손가락 페페**(마지막 컷에 박힘). 채널 톤에 안 맞으면 감정을 "무표정/멍"·"만족/엄지척"으로 바꿔 memes부터 재실행
+- 키: 사장님이 채팅으로 EvoLink·Typecast 키 전달 → `~/.volcano/keys/`에 값만 저장(파일은 이미 같은 값이 있었음)
