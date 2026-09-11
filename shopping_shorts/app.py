@@ -12580,8 +12580,9 @@ async def _auth_guard(request: Request, call_next):
 # ── 유료게이트 접근권한 판정 (단일 진실원. API게이트·화면·크레딧 모두 이 함수만 본다) ──
 def access_level(customer_id, now=None, cust=None):
     """customer_id → "full"(전기능) | "ranking_only"(랭킹만) | "pending"(승인대기, 전면차단).
-    규칙: 사장님(0)=full / 계정없음=ranking_only / 미승인(approved_at NULL)=pending /
-    plan=pro=full / 체험중(now<full_access_until)=full / 그 외 ranking_only.
+    규칙: 사장님(0)=full / 계정없음=ranking_only / plan=pro=full /
+    plan=trial=ranking_only / 미승인 무료계정은 체험창 안=ranking_only·밖=pending /
+    승인된 이용기간 안=full / 그 외 ranking_only.
 
     ★cust를 넘기면 DB를 다시 안 친다(2026-08-29). 관리자 목록처럼 고객 dict를 이미
       들고 있는 곳에서 쓴다 — **판정 규칙은 아래 그대로**라 결과가 달라지지 않는다.
@@ -12614,6 +12615,14 @@ def access_level(customer_id, now=None, cust=None):
             if _now > _until:
                 return "ranking_only"       # 기간 만료 → 랭킹만(재결제 유도)
         return "full"
+    # ★관리자가 지정한 체험판도 **승인 검사보다 앞선다**(2026-09-11 실사고, cid 475).
+    #   가입 체험이 끝난 미승인 계정을 관리자가 plan="trial"로 바꿔도 approved_at은
+    #   입금 기록이 아니므로 비워 둔다. 따라서 이 분기가 아래에 있으면 체험판 지정 후에도
+    #   pending으로 남는다. plan="trial" 자체가 사장님의 랭킹 전용 이용 결정이다.
+    #   체험판은 기간과 무관하게 ranking_only이며 full_access_until은 화면 표시용이다.
+    #   예전 free+full_access_until 전기능 체험과 섞으면 제작소까지 열리므로 구분한다.
+    if cust.get("plan") == "trial":
+        return "ranking_only"
     if cust.get("approved_at") is None:
         # 🎁 무료체험 이벤트: 미승인이라도 가입 후 체험창(trial_ends_at) 안이면 맛보기.
         #    창 밖이면 대기실 전면차단(pending). NULL(기존고객)은 0 취급 → 즉시 pending.
@@ -12624,14 +12633,7 @@ def access_level(customer_id, now=None, cust=None):
         if now < (cust.get("trial_ends_at") or 0):
             return "ranking_only"
         return "pending"
-    # (plan=="pro"는 위에서 이미 처리했다 — 승인 검사보다 앞선다)
-    # ★체험판(plan="trial", 2026-08-21 사장님 "체험판은 레퍼런스랭킹만 + 렌즈 10회")
-    #   = 기간과 무관하게 ranking_only. 제작소는 얼린 미리보기가 나가고 유료 API는 402.
-    #   full_access_until은 화면에 'D-N'을 띄우는 표시용으로만 남는다.
-    #   ⚠️ 예전 '체험'은 free+full_access_until로 **full**을 줬다 — 이름은 체험인데
-    #      권한은 pro와 같아, 체험 계정이 진짜 제작소에 들어갔다(2026-08-21 실측).
-    if cust.get("plan") == "trial":
-        return "ranking_only"
+    # (plan=="pro"·"trial"은 위에서 이미 처리했다 — 승인 검사보다 앞선다)
     if now is None:
         now = int(datetime.now(timezone.utc).timestamp())
     # ★full_access_until은 '체험 창'이 아니라 **입금 승인으로 부여한 이용 기간**이다
