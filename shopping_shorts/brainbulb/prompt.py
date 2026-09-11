@@ -1,0 +1,78 @@
+# -*- coding: utf-8 -*-
+"""대본 생성 요청 — 소재 + 규칙표 지시문(lint.prompt_block) + 8편 분포 목표 → JSON 대본.
+
+LLM 호출기는 주입한다(`call(prompt:str) -> str`). 키·모델 선택은 pipeline/호출자 몫 — 테스트는 가짜 호출기로 돈다.
+"""
+import json
+import re
+
+from . import spec, lint
+
+SCHEMA_EXAMPLE = {
+    "title": {"h1": "흰 윗줄 9~13자", "h2": "노란 아랫줄 12~15자 숫자 포함", "card": "오프닝에서 읽어주는 한 문장 26~33자",
+              "youtube": "유튜브 제목 구두점 없이"},
+    "region": {"region": "국내", "place": "장소", "reason": "왜 국내인지"},
+    "groups": [
+        {"text": "첫 컷은 문장을 끝내지 않고", "color": "WHITE", "role": "NARR", "img": 1},
+        {"text": "벌써 나온다고", "color": "RED", "role": "CHAR", "meme": "경악/충격"},
+        {"text": "사과보다 복귀가 빨랐다", "color": "RED", "role": "PUNCH", "meme": "무표정/멍"},
+    ],
+}
+
+TARGETS = (
+    "- 컷 22~32개, 컷당 한 호흡(6~14자). 총 35~55초 분량.\n"
+    "- 색 분포: WHITE 과반(NARR), RED 3~4컷(CHAR 대사·마지막 PUNCH), YELLOW 2~4, PINK 정확히 1, ORANGE 0~1.\n"
+    "- 역할: NARR 16~27, CHAR 3~7, PUNCH 정확히 1(마지막 컷, RED, 밈).\n"
+    "- 밈 4~5컷(전체 14~18%). 첫 밈은 6~8번째 컷. RED 컷은 전부 밈 컷. 마지막 컷도 밈(무표정/멍이 관행).\n"
+    "- 이미지 슬롯 9~11개(img 번호 1부터). 한 슬롯을 2~3컷이 이어서 공유.\n"
+    "- 말투는 하나로 통일: '~였다/~했다' 계열 또는 '~임/~됨/~음' 계열."
+)
+
+
+def build(source_text, *, feedback=""):
+    return (
+        "너는 '뇌전구' 채널의 숏폼 대본 작가다. 아래 소재(기사)를 **다시 써서** 자막 컷 대본을 만든다.\n"
+        "출력은 JSON 하나만. 설명·코드펜스 없이 JSON만.\n\n"
+        f"[규칙 — 어기면 반려된다]\n{lint.prompt_block()}\n\n"
+        f"[분포 목표 — 실제 채널 8편 실측]\n{TARGETS}\n\n"
+        f"[출력 형식 예시]\n{json.dumps(SCHEMA_EXAMPLE, ensure_ascii=False, indent=1)}\n\n"
+        f"[소재]\n{source_text.strip()}\n"
+        f"{feedback}"
+    )
+
+
+def parse(raw):
+    """LLM 응답 → dict. 코드펜스·앞뒤 잡문을 걷어낸다. 실패하면 ValueError(원인 포함)."""
+    s = raw.strip()
+    s = re.sub(r"^```(?:json)?\s*|\s*```$", "", s, flags=re.S)
+    m = re.search(r"\{.*\}", s, flags=re.S)
+    if not m:
+        raise ValueError("응답에 JSON 객체가 없습니다")
+    try:
+        d = json.loads(m.group(0))
+    except json.JSONDecodeError as e:
+        raise ValueError(f"JSON 파싱 실패: {e}") from e
+    for k in ("title", "groups"):
+        if k not in d:
+            raise ValueError(f"대본에 '{k}'가 없습니다")
+    for g in d["groups"]:
+        g.pop("lines", None)          # 줄나눔은 우리가 한다 — LLM lines는 버린다(볼케이노와 같다)
+    return d
+
+
+def generate(source_text, call, *, max_rewrites=None, fonts_dir=None, log=print):
+    """생성 → 린트 → 반려면 사유를 붙여 재작성 (볼케이노 30→2→0 루프). → (script_with_lines, issues, attempts)"""
+    max_rewrites = spec.POLICY_MAX_REWRITES if max_rewrites is None else max_rewrites
+    fb = ""
+    last = None
+    for attempt in range(max_rewrites + 1):
+        raw = call(build(source_text, feedback=fb))
+        script = parse(raw)
+        issues, laid = lint.lint(script, source_text=source_text, fonts_dir=fonts_dir)
+        rej = lint.rejects(issues)
+        log(f"[brainbulb.script] 시도 {attempt + 1}: 컷 {len(script['groups'])} · 반려 {len(rej)} · 경고 {len(issues) - len(rej)}")
+        last = (laid, issues, attempt + 1)
+        if not rej:
+            return last
+        fb = lint.feedback(issues)
+    return last

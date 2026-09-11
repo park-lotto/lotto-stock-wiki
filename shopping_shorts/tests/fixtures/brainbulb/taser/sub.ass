@@ -1,0 +1,69 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1080
+PlayResY: 1920
+WrapStyle: 2
+ScaledBorderAndShadow: yes
+YCbCr Matrix: TV.709
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: HL1,SB 어그로 Bold,123,&H00FFFFFF,&H00FFFFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,4,0,7,0,0,0,1
+Style: HL2,SB 어그로 Bold,134,&H0000FFFF,&H0000FFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,4,0,7,0,0,0,1
+Style: CARD,에스코어 드림 6 Bold,54,&H00000000,&H00000000,&H00FDFDFD,&H00FDFDFD,0,0,0,0,100,100,0,0,1,0,0,7,0,0,0,1
+Style: WHITE,에스코어 드림 7 ExtraBold,102,&H00FFFFFF,&H00FFFFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,4,0,7,0,0,0,1
+Style: PINK,에스코어 드림 6 Bold,102,&H00FEDEFE,&H00FEDEFE,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,4,0,7,0,0,0,1
+Style: YELLOW,에스코어 드림 6 Bold,99,&H0000FFFF,&H0000FFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,4,0,7,0,0,0,1
+Style: RED,여기어때 잘난체 OTF,73,&H000000FF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,4,0,7,0,0,0,1
+Style: ORANGE,에스코어 드림 6 Bold,102,&H000D6CF7,&H000D6CF7,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,4,0,7,0,0,0,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.00,0:00:02.99,CARD,,0,0,0,,{\p1\pos(0,469)\c&H3B3B3B&\bord0\shad0}m 0 0 l 1080 0 l 1080 273 l 0 273{\p0}
+Dialogue: 1,0:00:00.00,0:00:02.99,CARD,,0,0,0,,{\p1\pos(0,565)\c&HFDFDFD&\bord0\shad0}m 0 0 l 1080 0 l 1080 137 l 0 137{\p0}
+Dialogue: 2,0:00:00.00,0:00:02.99,CARD,,0,0,0,,{\an5\pos(546,633)\fs46\c&H000000&\bord0\shad0}중학생들한테 테이저건 자랑하다 진짜로 쏴버린 경찰
+Dialogue: 3,0:00:00.00,0:00:44.10,HL1,,0,0,0,,{\an8\pos(530,215)\fs117}테이저건 자랑하던 경찰
+Dialogue: 3,0:00:00.00,0:00:44.10,HL2,,0,0,0,,{\an8\pos(530,330)\fs102}중학생 10여명 앞에서 오발
+Dialogue: 4,0:00:02.99,0:00:05.08,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}충북 음성의 한
+Dialogue: 4,0:00:02.99,0:00:05.08,WHITE,,0,0,0,,{\an8\pos(636,1358)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}공터에서 벌어진 일인데
+Dialogue: 4,0:00:05.08,0:00:06.91,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}신고 처리 마치고
+Dialogue: 4,0:00:05.08,0:00:06.91,WHITE,,0,0,0,,{\an8\pos(636,1358)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}복귀하던 경찰관
+Dialogue: 4,0:00:06.91,0:00:08.88,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}근처에 있던 중학생
+Dialogue: 4,0:00:06.91,0:00:08.88,WHITE,,0,0,0,,{\an8\pos(636,1358)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}10여명이 다가옴
+Dialogue: 4,0:00:08.88,0:00:10.73,YELLOW,,0,0,0,,{\an8\pos(636,1276)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}아저씨 테이저건
+Dialogue: 4,0:00:08.88,0:00:10.73,YELLOW,,0,0,0,,{\an8\pos(636,1363)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}한번만 보여주세요
+Dialogue: 4,0:00:10.73,0:00:12.57,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}경찰관은 흔쾌히
+Dialogue: 4,0:00:10.73,0:00:12.57,WHITE,,0,0,0,,{\an8\pos(636,1358)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}시연을 해주기로 함
+Dialogue: 4,0:00:12.57,0:00:14.42,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}침 없이 전기만
+Dialogue: 4,0:00:12.57,0:00:14.42,WHITE,,0,0,0,,{\an8\pos(636,1358)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}튀는 스턴건 모드로
+Dialogue: 4,0:00:14.42,0:00:16.11,RED,,0,0,0,,{\an8\pos(636,1286)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}근데 카트리지가
+Dialogue: 4,0:00:14.42,0:00:16.11,RED,,0,0,0,,{\an8\pos(636,1373)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}끼워져 있었음
+Dialogue: 4,0:00:16.11,0:00:18.33,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}경찰관은 그걸 모른
+Dialogue: 4,0:00:16.11,0:00:18.33,WHITE,,0,0,0,,{\an8\pos(636,1358)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}채 방아쇠를 당김
+Dialogue: 4,0:00:18.33,0:00:20.26,ORANGE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}전극침이 3미터
+Dialogue: 4,0:00:18.33,0:00:20.26,ORANGE,,0,0,0,,{\an8\pos(636,1358)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}앞 학생 허벅지에
+Dialogue: 4,0:00:20.26,0:00:22.33,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}나머지 하나는 학생
+Dialogue: 4,0:00:20.26,0:00:22.33,WHITE,,0,0,0,,{\an8\pos(636,1358)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}팔을 스치고 지나감
+Dialogue: 4,0:00:22.33,0:00:24.01,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}경찰 설명은 전류가
+Dialogue: 4,0:00:22.33,0:00:24.01,WHITE,,0,0,0,,{\an8\pos(636,1358)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}안 흘렀다는 것
+Dialogue: 4,0:00:24.01,0:00:26.24,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}학생도 그 자리에선
+Dialogue: 4,0:00:24.01,0:00:26.24,WHITE,,0,0,0,,{\an8\pos(636,1358)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}괜찮다며 집에 감
+Dialogue: 4,0:00:26.24,0:00:28.13,RED,,0,0,0,,{\an8\pos(636,1286)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}근데 집에 가서
+Dialogue: 4,0:00:26.24,0:00:28.13,RED,,0,0,0,,{\an8\pos(636,1373)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}통증이 시작됨
+Dialogue: 4,0:00:28.13,0:00:29.91,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}결국 병원에 입원해
+Dialogue: 4,0:00:28.13,0:00:29.91,WHITE,,0,0,0,,{\an8\pos(636,1358)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}치료받는 중임
+Dialogue: 4,0:00:29.91,0:00:31.46,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}학부모 측
+Dialogue: 4,0:00:29.91,0:00:31.46,WHITE,,0,0,0,,{\an8\pos(636,1358)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}주장은 정반대임
+Dialogue: 4,0:00:31.46,0:00:33.94,PINK,,0,0,0,,{\an8\pos(636,1269)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}전류 흘렀는데 왜
+Dialogue: 4,0:00:31.46,0:00:33.94,PINK,,0,0,0,,{\an8\pos(636,1356)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}바로 병원 안 보냈냐
+Dialogue: 4,0:00:33.94,0:00:35.62,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}경찰관 본인의
+Dialogue: 4,0:00:33.94,0:00:35.62,WHITE,,0,0,0,,{\an8\pos(636,1358)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}해명은 이랬음
+Dialogue: 4,0:00:35.62,0:00:36.97,YELLOW,,0,0,0,,{\an8\pos(636,1276)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}전극침이 나갈
+Dialogue: 4,0:00:35.62,0:00:36.97,YELLOW,,0,0,0,,{\an8\pos(636,1363)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}줄 몰랐다
+Dialogue: 4,0:00:36.97,0:00:38.34,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}경찰은 감찰에 착수함
+Dialogue: 4,0:00:38.34,0:00:40.41,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}사고 경위와 징계
+Dialogue: 4,0:00:38.34,0:00:40.41,WHITE,,0,0,0,,{\an8\pos(636,1358)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}여부를 조사할 방침임
+Dialogue: 4,0:00:40.41,0:00:42.49,WHITE,,0,0,0,,{\an8\pos(636,1271)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}애들이 보여달란다고
+Dialogue: 4,0:00:40.41,0:00:42.49,WHITE,,0,0,0,,{\an8\pos(636,1358)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}꺼낼 장비가 아닌데
+Dialogue: 4,0:00:42.49,0:00:44.10,RED,,0,0,0,,{\an8\pos(636,1286)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}몰랐다는 말로
+Dialogue: 4,0:00:42.49,0:00:44.10,RED,,0,0,0,,{\an8\pos(636,1373)\fscx108\fscy108\t(0,90,\fscx100\fscy100)}끝날 일이 아니다

@@ -1,0 +1,114 @@
+# -*- coding: utf-8 -*-
+"""뇌전구 규격 상수 — 8편 실측(2026-09-12)에서 그대로 옮긴 값.
+
+★여기 값은 "우리가 정한 것"이 아니라 "볼케이노 산출물 8편에서 바이트/좌표 단위로 같았던 것"이다.
+  바꾸려면 근거(실측)가 있어야 한다. 우리 정책으로 정한 값은 `POLICY_` 접두로 갈라 둔다.
+"""
+import os
+
+FONTS_DIR = os.path.join(os.path.dirname(__file__), "fonts")
+
+CANVAS_W, CANVAS_H = 1080, 1920
+SLOT_W, SLOT_H = 1028, 786
+
+# ── ASS 헤더·스타일 블록 (5편 MD5 동일 · 전편 3편 바이트 동일 = 8/8) ──────────────
+ASS_HEADER = (
+    "[Script Info]\n"
+    "ScriptType: v4.00+\n"
+    "PlayResX: 1080\n"
+    "PlayResY: 1920\n"
+    "WrapStyle: 2\n"
+    "ScaledBorderAndShadow: yes\n"
+    "YCbCr Matrix: TV.709\n"
+)
+STYLE_BLOCK = (
+    "[V4+ Styles]\n"
+    "Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\n"
+    "Style: HL1,SB 어그로 Bold,123,&H00FFFFFF,&H00FFFFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,4,0,7,0,0,0,1\n"
+    "Style: HL2,SB 어그로 Bold,134,&H0000FFFF,&H0000FFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,4,0,7,0,0,0,1\n"
+    "Style: CARD,에스코어 드림 6 Bold,54,&H00000000,&H00000000,&H00FDFDFD,&H00FDFDFD,0,0,0,0,100,100,0,0,1,0,0,7,0,0,0,1\n"
+    "Style: WHITE,에스코어 드림 7 ExtraBold,102,&H00FFFFFF,&H00FFFFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,4,0,7,0,0,0,1\n"
+    "Style: PINK,에스코어 드림 6 Bold,102,&H00FEDEFE,&H00FEDEFE,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,4,0,7,0,0,0,1\n"
+    "Style: YELLOW,에스코어 드림 6 Bold,99,&H0000FFFF,&H0000FFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,4,0,7,0,0,0,1\n"
+    "Style: RED,여기어때 잘난체 OTF,73,&H000000FF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,4,0,7,0,0,0,1\n"
+    "Style: ORANGE,에스코어 드림 6 Bold,102,&H000D6CF7,&H000D6CF7,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,4,0,7,0,0,0,1\n"
+)
+EVENTS_FORMAT = "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n"
+
+# 스타일 → (ASS 폰트 이름, 파일, 스타일 기본 크기)
+STYLE_FONT = {
+    "HL1": ("SB 어그로 Bold", "SBAggroB.ttf", 123),
+    "HL2": ("SB 어그로 Bold", "SBAggroB.ttf", 134),
+    "CARD": ("에스코어 드림 6 Bold", "S-CoreDream-6Bold.ttf", 54),
+    "WHITE": ("에스코어 드림 7 ExtraBold", "S-CoreDream-7ExtraBold.ttf", 102),
+    "PINK": ("에스코어 드림 6 Bold", "S-CoreDream-6Bold.ttf", 102),
+    "YELLOW": ("에스코어 드림 6 Bold", "S-CoreDream-6Bold.ttf", 99),
+    "RED": ("여기어때 잘난체 OTF", "yg-jalnan.ttf", 73),
+    "ORANGE": ("에스코어 드림 6 Bold", "S-CoreDream-6Bold.ttf", 102),
+}
+
+# ── 본문 자막 좌표 (스타일별 y가 다르다 — 8편 문서 §2-③) ─────────────────────────
+BODY_X = 636                       # \an8 = 위-가운데 앵커
+BODY_Y = {"WHITE": 1271, "ORANGE": 1271, "YELLOW": 1276, "PINK": 1269, "RED": 1286}
+LINE_GAP = 87                      # 2줄째 = 첫줄 + 87
+ENTRANCE = r"\fscx108\fscy108\t(0,90,\fscx100\fscy100)"
+ENTRANCE_SCALE = 1.08
+BODY_LAYER = 4
+# 기하 한도: 우측 여유 = 1080-636 = 444 → 100% 888px, 108% 등장 순간 822px (통과 최대 808 실측)
+BODY_MAX_INK_100 = 2 * (CANVAS_W - BODY_X)                       # 888
+BODY_MAX_INK_ENTRANCE = int(BODY_MAX_INK_100 / ENTRANCE_SCALE)   # 822
+
+# ── 제목 (h1 흰 윗줄 / h2 노란 아랫줄) ────────────────────────────────────────────
+HL_POS = {"HL1": (530, 215), "HL2": (530, 330)}
+HL_LAYER = 3
+TITLE_TARGET_INK = 1000            # 비례 축소 목표. 축소된 제목 실측 잉크 993~1002px. 잉크 임계 방식은 어떤 값으로도 4건이 어긋남 → 비례식(ass_gen._fit_prop)
+
+# ── 오프닝 카드 ───────────────────────────────────────────────────────────────────
+CARD_BAND_GRAY = ("&H3B3B3B&", 469, 273)    # (색, y, 높이)
+CARD_BAND_WHITE = ("&HFDFDFD&", 565, 137)
+CARD_TEXT_POS = (546, 633)
+CARD_LAYER_BANDS = (0, 1)
+CARD_LAYER_TEXT = 2
+CARD_FS_LONG, CARD_FS_SHORT = 46, 54
+POLICY_CARD_LONG_MIN_CHARS = 26    # 우리 정책: 26자 이상이면 46 (5편 전부 26~33자→46, 전편 짧은 카드→54. 경계 미확정)
+
+# ── 타이밍 ────────────────────────────────────────────────────────────────────────
+TAIL_SEC = 0.1                     # total = 카드 + Σ컷 + 0.1 (5/5 실측)
+
+# ── 대본 어휘 ─────────────────────────────────────────────────────────────────────
+COLORS = ("WHITE", "YELLOW", "RED", "ORANGE", "PINK")
+ROLES = ("NARR", "CHAR", "PUNCH")
+EMOTIONS = ("경악/충격", "기타", "당황", "만족/엄지척", "무표정/멍", "분노", "비웃음/조롱", "슬픔/울음", "의심/떨떠름", "피곤/지침")
+# 감정 → pepe/fm 파일 (5편 실측. 경악은 013이 4편, 025가 1편)
+MEME_FILE = {"경악/충격": "013", "당황": "027", "분노": "042", "비웃음/조롱": "000",
+             "무표정/멍": "008", "의심/떨떠름": "016", "슬픔/울음": "005"}
+
+# ── 효과음 ────────────────────────────────────────────────────────────────────────
+# 5편 sfx_plan이 접미사까지 완전 동일 (최장 보르네오 32컷). "12주기 반복"이 아니다 — 13번째가 r3_click.
+SFX_SEQ32 = [
+    "pop4_3", "click_4", "boing_3", "ding_5", "pop4_4", "r3_click_7", "hit_4", "r3_ding_6",
+    "pop4_5", "x_click_5", "r3_hit_3", "x_ding_4", "pop4_0", "r3_click_2", "boing_3", "ding_5",
+    "pop4_1", "x_click_1", "hit_4", "r3_ding_6", "pop4_2", "click_3", "r3_hit_3", "x_ding_4",
+    "pop4_3", "r3_click_6", "boing_3", "ding_5", "pop4_4", "x_click_4", "hit_4", "r3_ding_6",
+]
+# 구조: 4칸 틀 × 계열별 주기 (32컷 전부 공식 일치). 33컷 이상은 이 공식으로 늘린다.
+SFX_FAMILY = {
+    0: ["pop4"],
+    1: ["click", "r3_click", "x_click", "r3_click", "x_click"],
+    2: ["boing", "hit", "r3_hit"],
+    3: ["ding", "r3_ding", "x_ding"],
+}
+SFX_GAIN_DEFAULT = 1.0
+SFX_GAIN_RED = 1.25                # RED 컷 (5편 컷 번호 정확히 일치)
+SFX_BED_DB = -22.0                 # 나레 대비 효과음 베드 (전편 문서)
+
+# ── 우리 정책 (미합의 4건 + 판정 임계. 실측이 생기면 바꾼다 — 설계 논쟁 §5) ────────
+POLICY_MAX_WORDS_PER_LINE = 5      # 서버 "어절이 너무 많습니다" 반려. 실측 통과 최대 4어절
+POLICY_LINE_SPLIT_PX = 710         # 1줄↔2줄 경계(숫자·영문을 한글 폭으로 센 잉크 폭). 실측: 1줄 최대 703 / 2줄 최소 726 → 그 사이
+POLICY_COPY_MIN_CHARS = 14         # 원문에 이만큼 그대로 들어 있으면 "다시 쓴 것이 아니다". 서버는 10자('전극침이 나갈 줄 몰랐다')를 통과시켰다
+POLICY_MAX_REWRITES = 3            # 반려 → 재작성 최대 횟수
+POLICY_MAX_TTS_CHARS = 6000        # 잡당 TTS 누적 글자 상한 (비용)
+POLICY_SILENCE_SEC = 0.35          # 나레 트랙 안 무음 임계 (꼬리 0.1 제외)
+POLICY_SILENCE_DB = -40.0
+POLICY_DURATION_TOL = 0.05         # mp4 길이 vs total 허용 오차
+
