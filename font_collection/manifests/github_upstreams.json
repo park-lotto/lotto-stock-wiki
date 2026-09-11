@@ -1,0 +1,1688 @@
+[
+  {
+    "source": "github-upstream",
+    "repo": "orioncactus/pretendard",
+    "source_url": "https://github.com/orioncactus/pretendard",
+    "description": "어느 플랫폼에서든 사용할 수 있는 system-ui 대체 글꼴 | A system-ui alternative font for all cross-platform",
+    "style_group": "modern-sans",
+    "curation_note": "개인 제작·OFL, 범용 산세리프",
+    "stars": 3574,
+    "updated_at": "2026-09-11T01:42:03Z",
+    "default_branch": "main",
+    "github_license": "NOASSERTION",
+    "license_files": [
+      {
+        "source_path": "LICENSE",
+        "path": "font_collection\\licenses\\github\\orioncactus--pretendard\\LICENSE",
+        "bytes": 4816,
+        "sha256": "82e9c8a4b203261f10ddba1296422d64914ff3d4b7bd8a12896d03f0f088d70a"
+      },
+      {
+        "source_path": "packages/pretendard-gov/dist/LICENSE.txt",
+        "path": "font_collection\\licenses\\github\\orioncactus--pretendard\\LICENSE.txt",
+        "bytes": 4820,
+        "sha256": "e84395ff7ecbbaa72c7ac59a03266bebd9f489d2270d6943b08d6a60d7fc91ba"
+      },
+      {
+        "source_path": "packages/pretendard-jp/dist/LICENSE.txt",
+        "path": "font_collection\\licenses\\github\\orioncactus--pretendard\\LICENSE.txt",
+        "bytes": 4820,
+        "sha256": "e84395ff7ecbbaa72c7ac59a03266bebd9f489d2270d6943b08d6a60d7fc91ba"
+      },
+      {
+        "source_path": "packages/pretendard-std/dist/LICENSE.txt",
+        "path": "font_collection\\licenses\\github\\orioncactus--pretendard\\LICENSE.txt",
+        "bytes": 4820,
+        "sha256": "e84395ff7ecbbaa72c7ac59a03266bebd9f489d2270d6943b08d6a60d7fc91ba"
+      },
+      {
+        "source_path": "packages/pretendard/dist/LICENSE.txt",
+        "path": "font_collection\\licenses\\github\\orioncactus--pretendard\\LICENSE.txt",
+        "bytes": 4820,
+        "sha256": "e84395ff7ecbbaa72c7ac59a03266bebd9f489d2270d6943b08d6a60d7fc91ba"
+      }
+    ],
+    "files": [
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\Pretendard-Black.otf",
+        "bytes": 1559552,
+        "sha256": "94628b0bcea8936b6e5c30d98d685eb9bbaffb0fe2ed255542ecc656c248e021",
+        "source_path": "examples/flutter_pretendard/fonts/Pretendard-Black.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/examples/flutter_pretendard/fonts/Pretendard-Black.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\Pretendard-Bold.otf",
+        "bytes": 1576660,
+        "sha256": "2e91915fab54df71cc9598ebf608b2bdb54c6fe3c066ac61dff0bc44fca71cc7",
+        "source_path": "examples/flutter_pretendard/fonts/Pretendard-Bold.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/examples/flutter_pretendard/fonts/Pretendard-Bold.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\Pretendard-ExtraBold.otf",
+        "bytes": 1568512,
+        "sha256": "c35fe941b7568d52a96010561540e47f9d3948dfde66ba25bc1908233e0a40cd",
+        "source_path": "examples/flutter_pretendard/fonts/Pretendard-ExtraBold.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/examples/flutter_pretendard/fonts/Pretendard-ExtraBold.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\Pretendard-ExtraLight.otf",
+        "bytes": 1544180,
+        "sha256": "e2837078f57079de2742e83c394a70b8a80b9662bc8ff4e96e7b791d6bd7cdbb",
+        "source_path": "examples/flutter_pretendard/fonts/Pretendard-ExtraLight.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/examples/flutter_pretendard/fonts/Pretendard-ExtraLight.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\Pretendard-Light.otf",
+        "bytes": 1599968,
+        "sha256": "51418ee96ef96e9059db88d7da82f24fada1f4aca70d5157c878ea6b460dd343",
+        "source_path": "examples/flutter_pretendard/fonts/Pretendard-Light.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/examples/flutter_pretendard/fonts/Pretendard-Light.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\Pretendard-Medium.otf",
+        "bytes": 1584068,
+        "sha256": "d39e50e4bb52b4993b6a4eeb821a171254745bd824446af01e1f616b89fface0",
+        "source_path": "examples/flutter_pretendard/fonts/Pretendard-Medium.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/examples/flutter_pretendard/fonts/Pretendard-Medium.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\Pretendard-Regular.otf",
+        "bytes": 1574352,
+        "sha256": "3ffbacde6ab8411f1d2db54bb9b1f0b3ee2a738932033722cf0388c06aed1c93",
+        "source_path": "examples/flutter_pretendard/fonts/Pretendard-Regular.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/examples/flutter_pretendard/fonts/Pretendard-Regular.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\Pretendard-SemiBold.otf",
+        "bytes": 1583704,
+        "sha256": "c89bc43027dc7cde5726e96223376f8eec09302b2fc1f8147fd5b57cfc376118",
+        "source_path": "examples/flutter_pretendard/fonts/Pretendard-SemiBold.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/examples/flutter_pretendard/fonts/Pretendard-SemiBold.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\Pretendard-Thin.otf",
+        "bytes": 1487484,
+        "sha256": "635354dcdcc133318be74f9a83cb59d29652c56d463bcd34e20a8cd6e01f3af9",
+        "source_path": "examples/flutter_pretendard/fonts/Pretendard-Thin.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/examples/flutter_pretendard/fonts/Pretendard-Thin.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\Pretendard-Black.otf",
+        "bytes": 1559552,
+        "sha256": "94628b0bcea8936b6e5c30d98d685eb9bbaffb0fe2ed255542ecc656c248e021",
+        "source_path": "examples/react_native_pretendard/assets/fonts/Pretendard-Black.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/examples/react_native_pretendard/assets/fonts/Pretendard-Black.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\Pretendard-Bold.otf",
+        "bytes": 1576660,
+        "sha256": "2e91915fab54df71cc9598ebf608b2bdb54c6fe3c066ac61dff0bc44fca71cc7",
+        "source_path": "examples/react_native_pretendard/assets/fonts/Pretendard-Bold.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/examples/react_native_pretendard/assets/fonts/Pretendard-Bold.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\Pretendard-ExtraBold.otf",
+        "bytes": 1568512,
+        "sha256": "c35fe941b7568d52a96010561540e47f9d3948dfde66ba25bc1908233e0a40cd",
+        "source_path": "examples/react_native_pretendard/assets/fonts/Pretendard-ExtraBold.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/examples/react_native_pretendard/assets/fonts/Pretendard-ExtraBold.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\Pretendard-ExtraLight.otf",
+        "bytes": 1544180,
+        "sha256": "e2837078f57079de2742e83c394a70b8a80b9662bc8ff4e96e7b791d6bd7cdbb",
+        "source_path": "examples/react_native_pretendard/assets/fonts/Pretendard-ExtraLight.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/examples/react_native_pretendard/assets/fonts/Pretendard-ExtraLight.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\Pretendard-Light.otf",
+        "bytes": 1599968,
+        "sha256": "51418ee96ef96e9059db88d7da82f24fada1f4aca70d5157c878ea6b460dd343",
+        "source_path": "examples/react_native_pretendard/assets/fonts/Pretendard-Light.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/examples/react_native_pretendard/assets/fonts/Pretendard-Light.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\Pretendard-Medium.otf",
+        "bytes": 1584068,
+        "sha256": "d39e50e4bb52b4993b6a4eeb821a171254745bd824446af01e1f616b89fface0",
+        "source_path": "examples/react_native_pretendard/assets/fonts/Pretendard-Medium.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/examples/react_native_pretendard/assets/fonts/Pretendard-Medium.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\Pretendard-Regular.otf",
+        "bytes": 1574352,
+        "sha256": "3ffbacde6ab8411f1d2db54bb9b1f0b3ee2a738932033722cf0388c06aed1c93",
+        "source_path": "examples/react_native_pretendard/assets/fonts/Pretendard-Regular.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/examples/react_native_pretendard/assets/fonts/Pretendard-Regular.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\Pretendard-SemiBold.otf",
+        "bytes": 1583704,
+        "sha256": "c89bc43027dc7cde5726e96223376f8eec09302b2fc1f8147fd5b57cfc376118",
+        "source_path": "examples/react_native_pretendard/assets/fonts/Pretendard-SemiBold.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/examples/react_native_pretendard/assets/fonts/Pretendard-SemiBold.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\Pretendard-Thin.otf",
+        "bytes": 1487484,
+        "sha256": "635354dcdcc133318be74f9a83cb59d29652c56d463bcd34e20a8cd6e01f3af9",
+        "source_path": "examples/react_native_pretendard/assets/fonts/Pretendard-Thin.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/examples/react_native_pretendard/assets/fonts/Pretendard-Thin.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardGOV-Black.otf",
+        "bytes": 3717600,
+        "sha256": "54108c754cfd9b24bae01243778829fc7db0244df983ce543b23ba34ed92c9e9",
+        "source_path": "packages/pretendard-gov/dist/public/static/PretendardGOV-Black.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-gov/dist/public/static/PretendardGOV-Black.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardGOV-Bold.otf",
+        "bytes": 3750284,
+        "sha256": "deeff873beb2e32ccb3378d08f5d37687e0367df092e0be748f586634cfa4495",
+        "source_path": "packages/pretendard-gov/dist/public/static/PretendardGOV-Bold.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-gov/dist/public/static/PretendardGOV-Bold.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardGOV-ExtraBold.otf",
+        "bytes": 3737068,
+        "sha256": "7744029c85962d9a17a6d69a8ceb9e42c4e2026a00af83d6b50eb164de4cfc74",
+        "source_path": "packages/pretendard-gov/dist/public/static/PretendardGOV-ExtraBold.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-gov/dist/public/static/PretendardGOV-ExtraBold.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardGOV-ExtraLight.otf",
+        "bytes": 3581316,
+        "sha256": "cc797f47222d8f4494edc841cfc6cd16bc3441f9179e7389f5923324358ee47d",
+        "source_path": "packages/pretendard-gov/dist/public/static/PretendardGOV-ExtraLight.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-gov/dist/public/static/PretendardGOV-ExtraLight.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardGOV-Light.otf",
+        "bytes": 3656012,
+        "sha256": "e5937926759ed4c072f3a732f700d9c4eedf136bde80379b442374a716c1c78c",
+        "source_path": "packages/pretendard-gov/dist/public/static/PretendardGOV-Light.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-gov/dist/public/static/PretendardGOV-Light.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardGOV-Medium.otf",
+        "bytes": 3758336,
+        "sha256": "e170ae4b6d91f558b0d3692dbb27b30cb5c3b9c3f719b7670673a28b9552ac58",
+        "source_path": "packages/pretendard-gov/dist/public/static/PretendardGOV-Medium.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-gov/dist/public/static/PretendardGOV-Medium.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardGOV-Regular.otf",
+        "bytes": 3723672,
+        "sha256": "3a3f8ee05092d07b25c4c0b4801f78dbac8d1f9362e4610b97033d4128e48310",
+        "source_path": "packages/pretendard-gov/dist/public/static/PretendardGOV-Regular.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-gov/dist/public/static/PretendardGOV-Regular.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardGOV-SemiBold.otf",
+        "bytes": 3762328,
+        "sha256": "43dca6392644a8dd2b29251d04f23ff68af6dbe73b6820f3edb78a2cf8e19234",
+        "source_path": "packages/pretendard-gov/dist/public/static/PretendardGOV-SemiBold.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-gov/dist/public/static/PretendardGOV-SemiBold.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardGOV-Thin.otf",
+        "bytes": 3505936,
+        "sha256": "dc98e78c4e279f78ee3a4cad5e5a1f62de18e739c7331f6277979157e591bf60",
+        "source_path": "packages/pretendard-gov/dist/public/static/PretendardGOV-Thin.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-gov/dist/public/static/PretendardGOV-Thin.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardGOV-Black.ttf",
+        "bytes": 5471056,
+        "sha256": "b3ef3ef836b0862c7540dbe0fb946340b3c3fc17ac7c9c944c9fe7000b52779a",
+        "source_path": "packages/pretendard-gov/dist/public/static/alternative/PretendardGOV-Black.ttf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-gov/dist/public/static/alternative/PretendardGOV-Black.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardGOV-Bold.ttf",
+        "bytes": 5491520,
+        "sha256": "4a72e78753b42a16308597b597f050ecd1d4baad92cbae8cdf4bcf0d28828da7",
+        "source_path": "packages/pretendard-gov/dist/public/static/alternative/PretendardGOV-Bold.ttf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-gov/dist/public/static/alternative/PretendardGOV-Bold.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardGOV-ExtraBold.ttf",
+        "bytes": 5483664,
+        "sha256": "d24e79fb99aa652360619ea553f5bd2ddab56be81947556e095daa2333373df1",
+        "source_path": "packages/pretendard-gov/dist/public/static/alternative/PretendardGOV-ExtraBold.ttf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-gov/dist/public/static/alternative/PretendardGOV-ExtraBold.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardGOV-ExtraLight.ttf",
+        "bytes": 5681252,
+        "sha256": "3d26985f214225759f4c26ea7b0cba99973b90a8ed34802aa2a08595210844a0",
+        "source_path": "packages/pretendard-gov/dist/public/static/alternative/PretendardGOV-ExtraLight.ttf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-gov/dist/public/static/alternative/PretendardGOV-ExtraLight.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardGOV-Light.ttf",
+        "bytes": 5649024,
+        "sha256": "532ea06823f804026bdcf0b7141cd27b67c4879a722d3a9bbc64f4559bb42b30",
+        "source_path": "packages/pretendard-gov/dist/public/static/alternative/PretendardGOV-Light.ttf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-gov/dist/public/static/alternative/PretendardGOV-Light.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardGOV-Medium.ttf",
+        "bytes": 5560624,
+        "sha256": "6a448170a076ea52a947f34e87900f8a47807fef05a7c2fdcb424946e8846a9e",
+        "source_path": "packages/pretendard-gov/dist/public/static/alternative/PretendardGOV-Medium.ttf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-gov/dist/public/static/alternative/PretendardGOV-Medium.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardGOV-Regular.ttf",
+        "bytes": 5604796,
+        "sha256": "b288cb28b28b7763c8264cc3cf477e09fc9c4a29d7bf29f63580871ef3c89e06",
+        "source_path": "packages/pretendard-gov/dist/public/static/alternative/PretendardGOV-Regular.ttf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-gov/dist/public/static/alternative/PretendardGOV-Regular.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardGOV-SemiBold.ttf",
+        "bytes": 5515220,
+        "sha256": "a9e9eb4a737524f08ee444c455dd55c9bda547e150ffd855cbddfd7bc20dbbe5",
+        "source_path": "packages/pretendard-gov/dist/public/static/alternative/PretendardGOV-SemiBold.ttf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-gov/dist/public/static/alternative/PretendardGOV-SemiBold.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardGOV-Thin.ttf",
+        "bytes": 5717404,
+        "sha256": "daa89a3b34339711d9d4f255d904072eb870aed423de5cc82c92a4522f6fe304",
+        "source_path": "packages/pretendard-gov/dist/public/static/alternative/PretendardGOV-Thin.ttf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-gov/dist/public/static/alternative/PretendardGOV-Thin.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardGOVVariable.ttf",
+        "bytes": 13386352,
+        "sha256": "4fd4391c698344496a13dadb3792e3b4cba592425f387e41ce59d68f904ae854",
+        "source_path": "packages/pretendard-gov/dist/public/variable/PretendardGOVVariable.ttf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-gov/dist/public/variable/PretendardGOVVariable.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardJP-Black.otf",
+        "bytes": 3744444,
+        "sha256": "9db15cc3cd3a53f8f5a4ea5b87c1f0e042bbbe1a06f6003faf63442487ccc9a5",
+        "source_path": "packages/pretendard-jp/dist/public/static/PretendardJP-Black.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-jp/dist/public/static/PretendardJP-Black.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardJP-Bold.otf",
+        "bytes": 3774288,
+        "sha256": "b7c518afea7212acfc10c99d1ddc0d28912adf906d65ae8ccd7c55b3ef3f6d1a",
+        "source_path": "packages/pretendard-jp/dist/public/static/PretendardJP-Bold.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-jp/dist/public/static/PretendardJP-Bold.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardJP-ExtraBold.otf",
+        "bytes": 3758568,
+        "sha256": "0e36574fc94ba635db62bb4277e828a08b146a81e47bcbd923b03183120f8751",
+        "source_path": "packages/pretendard-jp/dist/public/static/PretendardJP-ExtraBold.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-jp/dist/public/static/PretendardJP-ExtraBold.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardJP-ExtraLight.otf",
+        "bytes": 3607716,
+        "sha256": "c8edc39da478cc97540fd29f29efe847881161c573b191f7ea00a0c90401f345",
+        "source_path": "packages/pretendard-jp/dist/public/static/PretendardJP-ExtraLight.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-jp/dist/public/static/PretendardJP-ExtraLight.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardJP-Light.otf",
+        "bytes": 3677344,
+        "sha256": "161decabcd03cc46559db8e119f21cf57aca43b9a5c1e75ca97b49fd26802267",
+        "source_path": "packages/pretendard-jp/dist/public/static/PretendardJP-Light.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-jp/dist/public/static/PretendardJP-Light.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardJP-Medium.otf",
+        "bytes": 3772664,
+        "sha256": "889ab94f484ac3dfd4bd56ec75072358a10da1460099745fe15fffe6ddcaedc4",
+        "source_path": "packages/pretendard-jp/dist/public/static/PretendardJP-Medium.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-jp/dist/public/static/PretendardJP-Medium.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardJP-Regular.otf",
+        "bytes": 3652728,
+        "sha256": "8e45c1999c941e8237e52c650c64667638cff1e50b9492c7b02ee1d380b7d06d",
+        "source_path": "packages/pretendard-jp/dist/public/static/PretendardJP-Regular.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-jp/dist/public/static/PretendardJP-Regular.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardJP-SemiBold.otf",
+        "bytes": 3781740,
+        "sha256": "7cd2b757bd8b8db79b4b87c3b402aa62aca666b55ff50ae0799e14ece1942314",
+        "source_path": "packages/pretendard-jp/dist/public/static/PretendardJP-SemiBold.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-jp/dist/public/static/PretendardJP-SemiBold.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardJP-Thin.otf",
+        "bytes": 3519608,
+        "sha256": "a0ee95c2547b958e59a9a4df290a1b26d6037f3c623cc8ccb684de05275d34f1",
+        "source_path": "packages/pretendard-jp/dist/public/static/PretendardJP-Thin.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-jp/dist/public/static/PretendardJP-Thin.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardJP-Black.ttf",
+        "bytes": 5398144,
+        "sha256": "1356798e117b6f2ec2e547eaafaa2b1a11f154247b86f1f8a8d3107bcb62ee78",
+        "source_path": "packages/pretendard-jp/dist/public/static/alternative/PretendardJP-Black.ttf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-jp/dist/public/static/alternative/PretendardJP-Black.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardJP-Bold.ttf",
+        "bytes": 5412352,
+        "sha256": "b6f14d5848f95bc50f28c323234574a8357fdd992582cd98acbfc3b33da44255",
+        "source_path": "packages/pretendard-jp/dist/public/static/alternative/PretendardJP-Bold.ttf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-jp/dist/public/static/alternative/PretendardJP-Bold.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardJP-ExtraBold.ttf",
+        "bytes": 5406584,
+        "sha256": "2e190467caa35ced53efbf1f1f7b87dadf903b518255337d14057ced7d7b9ccf",
+        "source_path": "packages/pretendard-jp/dist/public/static/alternative/PretendardJP-ExtraBold.ttf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-jp/dist/public/static/alternative/PretendardJP-ExtraBold.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardJP-ExtraLight.ttf",
+        "bytes": 5631796,
+        "sha256": "051e6ec1c8e9c74eeeb09706a4d3d3955f93999745aadcd4acb68339b1c212d5",
+        "source_path": "packages/pretendard-jp/dist/public/static/alternative/PretendardJP-ExtraLight.ttf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-jp/dist/public/static/alternative/PretendardJP-ExtraLight.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardJP-Light.ttf",
+        "bytes": 5596864,
+        "sha256": "bb9741fd88b90c688964af67201ecc8b3274afb8957db728d1a3db6ce1f374f3",
+        "source_path": "packages/pretendard-jp/dist/public/static/alternative/PretendardJP-Light.ttf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-jp/dist/public/static/alternative/PretendardJP-Light.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardJP-Medium.ttf",
+        "bytes": 5485360,
+        "sha256": "235c6f1adc15db2d16772052c159fdb7e01bb746ad81850c5bc629d645b4b571",
+        "source_path": "packages/pretendard-jp/dist/public/static/alternative/PretendardJP-Medium.ttf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-jp/dist/public/static/alternative/PretendardJP-Medium.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardJP-Regular.ttf",
+        "bytes": 5462268,
+        "sha256": "b14698ed6d82737f45e918d079bca6fc498a107bcb094b56c5229dbddf3246d3",
+        "source_path": "packages/pretendard-jp/dist/public/static/alternative/PretendardJP-Regular.ttf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-jp/dist/public/static/alternative/PretendardJP-Regular.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardJP-SemiBold.ttf",
+        "bytes": 5439200,
+        "sha256": "3d5876966f063d6dea569ed843ff328557ffab56fedfef9327106c5ea638882f",
+        "source_path": "packages/pretendard-jp/dist/public/static/alternative/PretendardJP-SemiBold.ttf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-jp/dist/public/static/alternative/PretendardJP-SemiBold.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardJP-Thin.ttf",
+        "bytes": 5665700,
+        "sha256": "84117181eb49ec4f12f8d3ee285b3466be0daebb11c2f1246ea2b1163dea920c",
+        "source_path": "packages/pretendard-jp/dist/public/static/alternative/PretendardJP-Thin.ttf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-jp/dist/public/static/alternative/PretendardJP-Thin.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardJPVariable.ttf",
+        "bytes": 13087888,
+        "sha256": "bc1d77db0f3cb9c20986b8939aa8a28d5216552d777d082955da22f420535cbb",
+        "source_path": "packages/pretendard-jp/dist/public/variable/PretendardJPVariable.ttf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-jp/dist/public/variable/PretendardJPVariable.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardStd-Black.otf",
+        "bytes": 317936,
+        "sha256": "37a2d3b909f3fa082a975dd6ab95ff696fa0464ed75a2c309cf26a460b671bf1",
+        "source_path": "packages/pretendard-std/dist/public/static/PretendardStd-Black.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-std/dist/public/static/PretendardStd-Black.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardStd-Bold.otf",
+        "bytes": 317928,
+        "sha256": "74f2c3270a8d187bed5bd0d8434a6e5cf7aa60a9deb58b3b78a4c81f32d03b64",
+        "source_path": "packages/pretendard-std/dist/public/static/PretendardStd-Bold.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-std/dist/public/static/PretendardStd-Bold.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardStd-ExtraBold.otf",
+        "bytes": 317448,
+        "sha256": "8f9c17385bfc06af35a95caf0c4e6a3980089c19f6f0f9cef1fb2a0d01cfb182",
+        "source_path": "packages/pretendard-std/dist/public/static/PretendardStd-ExtraBold.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-std/dist/public/static/PretendardStd-ExtraBold.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardStd-ExtraLight.otf",
+        "bytes": 328748,
+        "sha256": "7078f6c8ad85b80e40b083df23b51617cf5c2e400e4399493e38bc0a804e5b04",
+        "source_path": "packages/pretendard-std/dist/public/static/PretendardStd-ExtraLight.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-std/dist/public/static/PretendardStd-ExtraLight.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardStd-Light.otf",
+        "bytes": 331092,
+        "sha256": "58523abe44ea123ff8d08f047d604d14486806cc032e944faccfb53897d49127",
+        "source_path": "packages/pretendard-std/dist/public/static/PretendardStd-Light.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-std/dist/public/static/PretendardStd-Light.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardStd-Medium.otf",
+        "bytes": 318512,
+        "sha256": "57f72e36d52ccd9cb4656ce4499a627e6a8b8ecd393708564726a2e2fdcd4ccc",
+        "source_path": "packages/pretendard-std/dist/public/static/PretendardStd-Medium.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-std/dist/public/static/PretendardStd-Medium.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardStd-Regular.otf",
+        "bytes": 318132,
+        "sha256": "9a12d6d5dfd352f28b511706a90ee7cc4d43dd7445514a4bd0dae152d0b73d2d",
+        "source_path": "packages/pretendard-std/dist/public/static/PretendardStd-Regular.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-std/dist/public/static/PretendardStd-Regular.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardStd-SemiBold.otf",
+        "bytes": 317984,
+        "sha256": "7fd0e7de9d2f91d0ba8d8a1d75d051570044f0b703bcecddd3cd31f53e1890a1",
+        "source_path": "packages/pretendard-std/dist/public/static/PretendardStd-SemiBold.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-std/dist/public/static/PretendardStd-SemiBold.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardStd-Thin.otf",
+        "bytes": 327464,
+        "sha256": "7444fa72d0c7c86823bf373eb6a27ec741fe96980e1a8ca6761d01eb3ae25b9e",
+        "source_path": "packages/pretendard-std/dist/public/static/PretendardStd-Thin.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-std/dist/public/static/PretendardStd-Thin.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardStd-Black.ttf",
+        "bytes": 452608,
+        "sha256": "abe2ea6119780a829dca1a5570935e7e39a678a12ef1f581131b85450c2ad0d0",
+        "source_path": "packages/pretendard-std/dist/public/static/alternative/PretendardStd-Black.ttf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-std/dist/public/static/alternative/PretendardStd-Black.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardStd-Bold.ttf",
+        "bytes": 452200,
+        "sha256": "d19618a699fa0ebb3e32a0b6a520813a999094ae7aba938e8a0add8df6954b75",
+        "source_path": "packages/pretendard-std/dist/public/static/alternative/PretendardStd-Bold.ttf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-std/dist/public/static/alternative/PretendardStd-Bold.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardStd-ExtraBold.ttf",
+        "bytes": 453264,
+        "sha256": "693ac31cde2417ab54caf6d05039ec50f1c7ce537e74e2fafc4faed4fae8a161",
+        "source_path": "packages/pretendard-std/dist/public/static/alternative/PretendardStd-ExtraBold.ttf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-std/dist/public/static/alternative/PretendardStd-ExtraBold.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardStd-ExtraLight.ttf",
+        "bytes": 468172,
+        "sha256": "5598be7864ca91685159e74ceae4f44c1a7f1f4833588fa95d25b6581c4096ca",
+        "source_path": "packages/pretendard-std/dist/public/static/alternative/PretendardStd-ExtraLight.ttf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-std/dist/public/static/alternative/PretendardStd-ExtraLight.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardStd-Light.ttf",
+        "bytes": 466596,
+        "sha256": "489606d0297d07bf5c8eefdb5694e14892f3fb3a680aea2b1ed7b33aeccdc411",
+        "source_path": "packages/pretendard-std/dist/public/static/alternative/PretendardStd-Light.ttf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-std/dist/public/static/alternative/PretendardStd-Light.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardStd-Medium.ttf",
+        "bytes": 453880,
+        "sha256": "50d446265d3ee474a4d41dde1a6e537a7b0c9bc3897899bae3fa73163bf2ab03",
+        "source_path": "packages/pretendard-std/dist/public/static/alternative/PretendardStd-Medium.ttf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-std/dist/public/static/alternative/PretendardStd-Medium.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardStd-Regular.ttf",
+        "bytes": 453060,
+        "sha256": "1ad55c52b41152d9a24b4da0dded8fdbbe5875a4ac5259e012a67af5f0d73bfc",
+        "source_path": "packages/pretendard-std/dist/public/static/alternative/PretendardStd-Regular.ttf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-std/dist/public/static/alternative/PretendardStd-Regular.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardStd-SemiBold.ttf",
+        "bytes": 451836,
+        "sha256": "30d0562593bcbc52b0226eeaa085a9c360246974e0b9870b8b3360dedcdb4f41",
+        "source_path": "packages/pretendard-std/dist/public/static/alternative/PretendardStd-SemiBold.ttf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-std/dist/public/static/alternative/PretendardStd-SemiBold.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardStd-Thin.ttf",
+        "bytes": 468704,
+        "sha256": "311797a2f7c872b3e03298aa31e31a816a06338e91b8dac67f69d5b4b32ae6ac",
+        "source_path": "packages/pretendard-std/dist/public/static/alternative/PretendardStd-Thin.ttf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-std/dist/public/static/alternative/PretendardStd-Thin.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardStdVariable.ttf",
+        "bytes": 883056,
+        "sha256": "296eaad62c95aaff2f1ff5d80cd0fd44f6ced2bba4c666fffca605bb8a27fbec",
+        "source_path": "packages/pretendard-std/dist/public/static/alternative/PretendardStdVariable.ttf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-std/dist/public/static/alternative/PretendardStdVariable.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardStdVariable.ttf",
+        "bytes": 883056,
+        "sha256": "296eaad62c95aaff2f1ff5d80cd0fd44f6ced2bba4c666fffca605bb8a27fbec",
+        "source_path": "packages/pretendard-std/dist/public/variable/PretendardStdVariable.ttf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard-std/dist/public/variable/PretendardStdVariable.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\Pretendard-Black.otf",
+        "bytes": 1559552,
+        "sha256": "94628b0bcea8936b6e5c30d98d685eb9bbaffb0fe2ed255542ecc656c248e021",
+        "source_path": "packages/pretendard/dist/public/static/Pretendard-Black.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard/dist/public/static/Pretendard-Black.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\Pretendard-Bold.otf",
+        "bytes": 1576660,
+        "sha256": "2e91915fab54df71cc9598ebf608b2bdb54c6fe3c066ac61dff0bc44fca71cc7",
+        "source_path": "packages/pretendard/dist/public/static/Pretendard-Bold.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard/dist/public/static/Pretendard-Bold.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\Pretendard-ExtraBold.otf",
+        "bytes": 1568512,
+        "sha256": "c35fe941b7568d52a96010561540e47f9d3948dfde66ba25bc1908233e0a40cd",
+        "source_path": "packages/pretendard/dist/public/static/Pretendard-ExtraBold.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard/dist/public/static/Pretendard-ExtraBold.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\Pretendard-ExtraLight.otf",
+        "bytes": 1544180,
+        "sha256": "e2837078f57079de2742e83c394a70b8a80b9662bc8ff4e96e7b791d6bd7cdbb",
+        "source_path": "packages/pretendard/dist/public/static/Pretendard-ExtraLight.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard/dist/public/static/Pretendard-ExtraLight.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\Pretendard-Light.otf",
+        "bytes": 1599968,
+        "sha256": "51418ee96ef96e9059db88d7da82f24fada1f4aca70d5157c878ea6b460dd343",
+        "source_path": "packages/pretendard/dist/public/static/Pretendard-Light.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard/dist/public/static/Pretendard-Light.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\Pretendard-Medium.otf",
+        "bytes": 1584068,
+        "sha256": "d39e50e4bb52b4993b6a4eeb821a171254745bd824446af01e1f616b89fface0",
+        "source_path": "packages/pretendard/dist/public/static/Pretendard-Medium.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard/dist/public/static/Pretendard-Medium.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\Pretendard-Regular.otf",
+        "bytes": 1574352,
+        "sha256": "3ffbacde6ab8411f1d2db54bb9b1f0b3ee2a738932033722cf0388c06aed1c93",
+        "source_path": "packages/pretendard/dist/public/static/Pretendard-Regular.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard/dist/public/static/Pretendard-Regular.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\Pretendard-SemiBold.otf",
+        "bytes": 1583704,
+        "sha256": "c89bc43027dc7cde5726e96223376f8eec09302b2fc1f8147fd5b57cfc376118",
+        "source_path": "packages/pretendard/dist/public/static/Pretendard-SemiBold.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard/dist/public/static/Pretendard-SemiBold.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\Pretendard-Thin.otf",
+        "bytes": 1487484,
+        "sha256": "635354dcdcc133318be74f9a83cb59d29652c56d463bcd34e20a8cd6e01f3af9",
+        "source_path": "packages/pretendard/dist/public/static/Pretendard-Thin.otf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard/dist/public/static/Pretendard-Thin.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\Pretendard-Black.ttf",
+        "bytes": 2665004,
+        "sha256": "0a7c1fd65a599f9d25de860cc832ea9ac40c207775e33eb4344a4647392a2b5d",
+        "source_path": "packages/pretendard/dist/public/static/alternative/Pretendard-Black.ttf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard/dist/public/static/alternative/Pretendard-Black.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\Pretendard-Bold.ttf",
+        "bytes": 2661752,
+        "sha256": "c16b88c670d23e83fa1170c954cbc4822d3b8dad3c3cde15d798a94b43d97985",
+        "source_path": "packages/pretendard/dist/public/static/alternative/Pretendard-Bold.ttf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard/dist/public/static/alternative/Pretendard-Bold.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\Pretendard-ExtraBold.ttf",
+        "bytes": 2669648,
+        "sha256": "eedbd2877218242323bdff816684f7f5c325e54ae820d5b78eec9a5e5c7edef6",
+        "source_path": "packages/pretendard/dist/public/static/alternative/Pretendard-ExtraBold.ttf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard/dist/public/static/alternative/Pretendard-ExtraBold.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\Pretendard-ExtraLight.ttf",
+        "bytes": 2838808,
+        "sha256": "041fad1c6a532208d52def16576f0d1dd7f1b77b9306c657f69bf619f2b638cc",
+        "source_path": "packages/pretendard/dist/public/static/alternative/Pretendard-ExtraLight.ttf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard/dist/public/static/alternative/Pretendard-ExtraLight.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\Pretendard-Light.ttf",
+        "bytes": 2813692,
+        "sha256": "1ba73b22955754bb9ed6bbf7678416af647f90704e9064661f7924da578dad3e",
+        "source_path": "packages/pretendard/dist/public/static/alternative/Pretendard-Light.ttf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard/dist/public/static/alternative/Pretendard-Light.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\Pretendard-Medium.ttf",
+        "bytes": 2701192,
+        "sha256": "3bae579377eb8e9ac412cb4809ebc3de1d956ed75995c1e346f0c1311053f4e2",
+        "source_path": "packages/pretendard/dist/public/static/alternative/Pretendard-Medium.ttf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard/dist/public/static/alternative/Pretendard-Medium.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\Pretendard-Regular.ttf",
+        "bytes": 2725828,
+        "sha256": "6d0af5258997aec7354a6e340fc2325ba321c410ca48b3af858c8c3d6e92a324",
+        "source_path": "packages/pretendard/dist/public/static/alternative/Pretendard-Regular.ttf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard/dist/public/static/alternative/Pretendard-Regular.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\Pretendard-SemiBold.ttf",
+        "bytes": 2671468,
+        "sha256": "5e1c548732af70873103066c16e1369b9a8a871f0b38c321a1d5bc73e43cea2d",
+        "source_path": "packages/pretendard/dist/public/static/alternative/Pretendard-SemiBold.ttf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard/dist/public/static/alternative/Pretendard-SemiBold.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\Pretendard-Thin.ttf",
+        "bytes": 2868924,
+        "sha256": "5f65cfe7d99934ee73de983df26154666c65418d73a62f634110945f2ddc0caf",
+        "source_path": "packages/pretendard/dist/public/static/alternative/Pretendard-Thin.ttf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard/dist/public/static/alternative/Pretendard-Thin.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\orioncactus--pretendard\\PretendardVariable.ttf",
+        "bytes": 6739336,
+        "sha256": "3090ccde0442bb347aa7685d9ba8b17436a60682df6e8f92a9a670de14056e22",
+        "source_path": "packages/pretendard/dist/public/variable/PretendardVariable.ttf",
+        "url": "https://raw.githubusercontent.com/orioncactus/pretendard/main/packages/pretendard/dist/public/variable/PretendardVariable.ttf"
+      }
+    ],
+    "candidate_font_files": 95,
+    "collected_at": "2026-09-11T02:53:44+00:00"
+  },
+  {
+    "source": "github-upstream",
+    "repo": "sun-typeface/SUIT",
+    "source_url": "https://github.com/sun-typeface/SUIT",
+    "description": "SUIT―수트는 반복되는 노력을 기울이지 않아도 완성도 높은 형태를 유지하며, 소모적인 커뮤니케이션도 줄일 수 있도록 제작한 UI 본문용 폰트입니다.",
+    "style_group": "modern-sans",
+    "curation_note": "개인 제작·OFL, UI 산세리프",
+    "stars": 310,
+    "updated_at": "2026-09-06T03:56:41Z",
+    "default_branch": "main",
+    "github_license": "OFL-1.1",
+    "license_files": [
+      {
+        "source_path": "LICENSE",
+        "path": "font_collection\\licenses\\github\\sun-typeface--suit\\LICENSE",
+        "bytes": 4380,
+        "sha256": "30d101ee3c35ef629d622d933d261a27b2f60223e0a3b0f36791e569c2b9daa9"
+      }
+    ],
+    "files": [
+      {
+        "path": "font_collection\\files\\github\\sun-typeface--suit\\SUIT-Bold.otf",
+        "bytes": 352192,
+        "sha256": "40178aa07b8ce5ef7bfe8381641272de8e6020095245995d95ed71c26f54f2a8",
+        "source_path": "fonts/static/otf/SUIT-Bold.otf",
+        "url": "https://raw.githubusercontent.com/sun-typeface/SUIT/main/fonts/static/otf/SUIT-Bold.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\sun-typeface--suit\\SUIT-ExtraBold.otf",
+        "bytes": 352572,
+        "sha256": "67e6733beb6192138e4651f4436f0e2be2fe6a519861dd23cb86cf136bac0232",
+        "source_path": "fonts/static/otf/SUIT-ExtraBold.otf",
+        "url": "https://raw.githubusercontent.com/sun-typeface/SUIT/main/fonts/static/otf/SUIT-ExtraBold.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\sun-typeface--suit\\SUIT-ExtraLight.otf",
+        "bytes": 351460,
+        "sha256": "d1161251fe3b1b5dd510d8470848a7c5db5eab6afb6db81bcc0b70ac85a431a6",
+        "source_path": "fonts/static/otf/SUIT-ExtraLight.otf",
+        "url": "https://raw.githubusercontent.com/sun-typeface/SUIT/main/fonts/static/otf/SUIT-ExtraLight.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\sun-typeface--suit\\SUIT-Heavy.otf",
+        "bytes": 349916,
+        "sha256": "8873533c970d6f1525a38e0dbd80e772377e85c8e8c9a89a26903f5da4d40611",
+        "source_path": "fonts/static/otf/SUIT-Heavy.otf",
+        "url": "https://raw.githubusercontent.com/sun-typeface/SUIT/main/fonts/static/otf/SUIT-Heavy.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\sun-typeface--suit\\SUIT-Light.otf",
+        "bytes": 353388,
+        "sha256": "d17994c15280fb99e8819a3752a6f676e76c7ba9544e3ecb41193e2630c5cb33",
+        "source_path": "fonts/static/otf/SUIT-Light.otf",
+        "url": "https://raw.githubusercontent.com/sun-typeface/SUIT/main/fonts/static/otf/SUIT-Light.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\sun-typeface--suit\\SUIT-Medium.otf",
+        "bytes": 352024,
+        "sha256": "204c9e9caad3a1f7cfe45bbec9e71cd679f6f009edfaa9fae85363722f5b333e",
+        "source_path": "fonts/static/otf/SUIT-Medium.otf",
+        "url": "https://raw.githubusercontent.com/sun-typeface/SUIT/main/fonts/static/otf/SUIT-Medium.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\sun-typeface--suit\\SUIT-Regular.otf",
+        "bytes": 351524,
+        "sha256": "75559147fba6cf373d3a9b5e4a2ea3ba2f8dfb22e5debaabb90277365b8831ad",
+        "source_path": "fonts/static/otf/SUIT-Regular.otf",
+        "url": "https://raw.githubusercontent.com/sun-typeface/SUIT/main/fonts/static/otf/SUIT-Regular.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\sun-typeface--suit\\SUIT-SemiBold.otf",
+        "bytes": 351552,
+        "sha256": "faeab67df52b4400aec8893507b5b1502057b53f1224bfe6c89cdba2bece0ca1",
+        "source_path": "fonts/static/otf/SUIT-SemiBold.otf",
+        "url": "https://raw.githubusercontent.com/sun-typeface/SUIT/main/fonts/static/otf/SUIT-SemiBold.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\sun-typeface--suit\\SUIT-Thin.otf",
+        "bytes": 339692,
+        "sha256": "00b0126b80519efde5432f73a909317a2b45a37584e48489d4c56559d3fc2df0",
+        "source_path": "fonts/static/otf/SUIT-Thin.otf",
+        "url": "https://raw.githubusercontent.com/sun-typeface/SUIT/main/fonts/static/otf/SUIT-Thin.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\sun-typeface--suit\\SUIT-Bold.ttf",
+        "bytes": 589892,
+        "sha256": "e9b000dcc7a21bc82289fa7d159119ed6dbae621fabdb2553a104394a208e23d",
+        "source_path": "fonts/static/ttf/SUIT-Bold.ttf",
+        "url": "https://raw.githubusercontent.com/sun-typeface/SUIT/main/fonts/static/ttf/SUIT-Bold.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\sun-typeface--suit\\SUIT-ExtraBold.ttf",
+        "bytes": 586272,
+        "sha256": "4603d335820213dd248c545c2f5d54041d047022039932e6133a9032027e3862",
+        "source_path": "fonts/static/ttf/SUIT-ExtraBold.ttf",
+        "url": "https://raw.githubusercontent.com/sun-typeface/SUIT/main/fonts/static/ttf/SUIT-ExtraBold.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\sun-typeface--suit\\SUIT-ExtraLight.ttf",
+        "bytes": 600984,
+        "sha256": "905a952a6121fb3b9979c28ad245c23f24fe3fdc700ad9329b32ba40a91c4ec4",
+        "source_path": "fonts/static/ttf/SUIT-ExtraLight.ttf",
+        "url": "https://raw.githubusercontent.com/sun-typeface/SUIT/main/fonts/static/ttf/SUIT-ExtraLight.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\sun-typeface--suit\\SUIT-Heavy.ttf",
+        "bytes": 583792,
+        "sha256": "9dbd449ccaeb26bc154d66fa6a8d8a9089a00abdf4f556707031c710ab1b46f9",
+        "source_path": "fonts/static/ttf/SUIT-Heavy.ttf",
+        "url": "https://raw.githubusercontent.com/sun-typeface/SUIT/main/fonts/static/ttf/SUIT-Heavy.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\sun-typeface--suit\\SUIT-Light.ttf",
+        "bytes": 598200,
+        "sha256": "15626037d575857c10fb189cd7f12a81fb80821aa3fd823c5985aab67a9255cf",
+        "source_path": "fonts/static/ttf/SUIT-Light.ttf",
+        "url": "https://raw.githubusercontent.com/sun-typeface/SUIT/main/fonts/static/ttf/SUIT-Light.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\sun-typeface--suit\\SUIT-Medium.ttf",
+        "bytes": 592832,
+        "sha256": "06be0060927642883b9027b275744fc8234826e6563015ebe3324f3802ae005f",
+        "source_path": "fonts/static/ttf/SUIT-Medium.ttf",
+        "url": "https://raw.githubusercontent.com/sun-typeface/SUIT/main/fonts/static/ttf/SUIT-Medium.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\sun-typeface--suit\\SUIT-Regular.ttf",
+        "bytes": 594324,
+        "sha256": "88c94c990b9996c558666ef07c11664ab177c3be191e2846950b48f245d02274",
+        "source_path": "fonts/static/ttf/SUIT-Regular.ttf",
+        "url": "https://raw.githubusercontent.com/sun-typeface/SUIT/main/fonts/static/ttf/SUIT-Regular.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\sun-typeface--suit\\SUIT-SemiBold.ttf",
+        "bytes": 591696,
+        "sha256": "8d202e0341b9426b653c1b3d36b2c0d1f4b482a7dfa83baaccf84d355d688fbd",
+        "source_path": "fonts/static/ttf/SUIT-SemiBold.ttf",
+        "url": "https://raw.githubusercontent.com/sun-typeface/SUIT/main/fonts/static/ttf/SUIT-SemiBold.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\sun-typeface--suit\\SUIT-Thin.ttf",
+        "bytes": 604912,
+        "sha256": "c72d5ae2ac8bbe89eab79d82218d47f5474a9c0b3261ac439080d13064c19766",
+        "source_path": "fonts/static/ttf/SUIT-Thin.ttf",
+        "url": "https://raw.githubusercontent.com/sun-typeface/SUIT/main/fonts/static/ttf/SUIT-Thin.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\sun-typeface--suit\\SUIT-Variable.ttf",
+        "bytes": 1585020,
+        "sha256": "12e1fea375d27869a686d7432c1e6a38154d394994f5d82ace24f36a7db68333",
+        "source_path": "fonts/variable/ttf/SUIT-Variable.ttf",
+        "url": "https://raw.githubusercontent.com/sun-typeface/SUIT/main/fonts/variable/ttf/SUIT-Variable.ttf"
+      }
+    ],
+    "candidate_font_files": 19,
+    "collected_at": "2026-09-11T02:53:46+00:00"
+  },
+  {
+    "source": "github-upstream",
+    "repo": "wanteddev/wanted-sans",
+    "source_url": "https://github.com/wanteddev/wanted-sans",
+    "description": "곧으면서도 유연한 산세리프 글꼴 | A Sans-serif font; Geometric with a heart, Humanist with a soul",
+    "style_group": "modern-sans",
+    "curation_note": "공식 공개·OFL, 디스플레이/본문",
+    "stars": 357,
+    "updated_at": "2026-09-06T03:57:11Z",
+    "default_branch": "main",
+    "github_license": "OFL-1.1",
+    "license_files": [
+      {
+        "source_path": "OFL.txt",
+        "path": "font_collection\\licenses\\github\\wanteddev--wanted-sans\\OFL.txt",
+        "bytes": 4394,
+        "sha256": "db345ad0216d0b73ba5dd3a540507281da6695f234e0a4e70cf2e1a8f30d4331"
+      },
+      {
+        "source_path": "packages/wanted-sans-std/fonts/OFL.txt",
+        "path": "font_collection\\licenses\\github\\wanteddev--wanted-sans\\OFL.txt",
+        "bytes": 4394,
+        "sha256": "db345ad0216d0b73ba5dd3a540507281da6695f234e0a4e70cf2e1a8f30d4331"
+      },
+      {
+        "source_path": "packages/wanted-sans/fonts/OFL.txt",
+        "path": "font_collection\\licenses\\github\\wanteddev--wanted-sans\\OFL.txt",
+        "bytes": 4394,
+        "sha256": "db345ad0216d0b73ba5dd3a540507281da6695f234e0a4e70cf2e1a8f30d4331"
+      }
+    ],
+    "files": [
+      {
+        "path": "font_collection\\files\\github\\wanteddev--wanted-sans\\WantedSansStd-Black.otf",
+        "bytes": 135472,
+        "sha256": "2abaf6f73608f49b63096041c80a34ca48d297e631c8ead280915a230724ed4c",
+        "source_path": "packages/wanted-sans-std/fonts/otf/WantedSansStd-Black.otf",
+        "url": "https://raw.githubusercontent.com/wanteddev/wanted-sans/main/packages/wanted-sans-std/fonts/otf/WantedSansStd-Black.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\wanteddev--wanted-sans\\WantedSansStd-Bold.otf",
+        "bytes": 134720,
+        "sha256": "382460512d9534df43879167be7c40c33705e5037ba1764e2c382dabb2a71c14",
+        "source_path": "packages/wanted-sans-std/fonts/otf/WantedSansStd-Bold.otf",
+        "url": "https://raw.githubusercontent.com/wanteddev/wanted-sans/main/packages/wanted-sans-std/fonts/otf/WantedSansStd-Bold.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\wanteddev--wanted-sans\\WantedSansStd-ExtraBlack.otf",
+        "bytes": 131020,
+        "sha256": "4d10f9757e9bc7c6d769ecbb83fe384b6c655d6481c603305a452e80bd4b2e4a",
+        "source_path": "packages/wanted-sans-std/fonts/otf/WantedSansStd-ExtraBlack.otf",
+        "url": "https://raw.githubusercontent.com/wanteddev/wanted-sans/main/packages/wanted-sans-std/fonts/otf/WantedSansStd-ExtraBlack.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\wanteddev--wanted-sans\\WantedSansStd-ExtraBold.otf",
+        "bytes": 136996,
+        "sha256": "93de60bba929167789a81be184ba07749834eb3c8f4f2a82d902645acc26112a",
+        "source_path": "packages/wanted-sans-std/fonts/otf/WantedSansStd-ExtraBold.otf",
+        "url": "https://raw.githubusercontent.com/wanteddev/wanted-sans/main/packages/wanted-sans-std/fonts/otf/WantedSansStd-ExtraBold.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\wanteddev--wanted-sans\\WantedSansStd-Medium.otf",
+        "bytes": 136060,
+        "sha256": "f5ef288389639bedc3e2557ac1770c60f91c49aecbdeea1775f2aa6c0ee3206d",
+        "source_path": "packages/wanted-sans-std/fonts/otf/WantedSansStd-Medium.otf",
+        "url": "https://raw.githubusercontent.com/wanteddev/wanted-sans/main/packages/wanted-sans-std/fonts/otf/WantedSansStd-Medium.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\wanteddev--wanted-sans\\WantedSansStd-Regular.otf",
+        "bytes": 131040,
+        "sha256": "8ec50606ea61d14c0e5f4de34620d94df8fb9183e1ce8a2dfac1359f916fdbbe",
+        "source_path": "packages/wanted-sans-std/fonts/otf/WantedSansStd-Regular.otf",
+        "url": "https://raw.githubusercontent.com/wanteddev/wanted-sans/main/packages/wanted-sans-std/fonts/otf/WantedSansStd-Regular.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\wanteddev--wanted-sans\\WantedSansStd-SemiBold.otf",
+        "bytes": 136956,
+        "sha256": "59a468d0f8290ae2630df59da0d7091911755c3fbfc231a8e11da637f24551e6",
+        "source_path": "packages/wanted-sans-std/fonts/otf/WantedSansStd-SemiBold.otf",
+        "url": "https://raw.githubusercontent.com/wanteddev/wanted-sans/main/packages/wanted-sans-std/fonts/otf/WantedSansStd-SemiBold.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\wanteddev--wanted-sans\\WantedSansStd-Black.ttf",
+        "bytes": 176784,
+        "sha256": "c6bd00990f769b2660fcba0fc319bcd855a807ce09de4ac63eedf3f0b52adc21",
+        "source_path": "packages/wanted-sans-std/fonts/ttf/WantedSansStd-Black.ttf",
+        "url": "https://raw.githubusercontent.com/wanteddev/wanted-sans/main/packages/wanted-sans-std/fonts/ttf/WantedSansStd-Black.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\wanteddev--wanted-sans\\WantedSansStd-Bold.ttf",
+        "bytes": 177460,
+        "sha256": "763fd83507aec1cee91a4b6f15c10eca59e626b3315a1d98099bc412d4492191",
+        "source_path": "packages/wanted-sans-std/fonts/ttf/WantedSansStd-Bold.ttf",
+        "url": "https://raw.githubusercontent.com/wanteddev/wanted-sans/main/packages/wanted-sans-std/fonts/ttf/WantedSansStd-Bold.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\wanteddev--wanted-sans\\WantedSansStd-ExtraBlack.ttf",
+        "bytes": 175092,
+        "sha256": "3865bc80268a2b80a25a576c0c91e12fca2b72c21cd9324c6bc5b01707865b67",
+        "source_path": "packages/wanted-sans-std/fonts/ttf/WantedSansStd-ExtraBlack.ttf",
+        "url": "https://raw.githubusercontent.com/wanteddev/wanted-sans/main/packages/wanted-sans-std/fonts/ttf/WantedSansStd-ExtraBlack.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\wanteddev--wanted-sans\\WantedSansStd-ExtraBold.ttf",
+        "bytes": 176396,
+        "sha256": "4c7481bad32d467dbd479713aabafa2cfba07bae1860168f2375b7fbfdc2b270",
+        "source_path": "packages/wanted-sans-std/fonts/ttf/WantedSansStd-ExtraBold.ttf",
+        "url": "https://raw.githubusercontent.com/wanteddev/wanted-sans/main/packages/wanted-sans-std/fonts/ttf/WantedSansStd-ExtraBold.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\wanteddev--wanted-sans\\WantedSansStd-Medium.ttf",
+        "bytes": 177072,
+        "sha256": "636f266c53228199c54be043881c5d0f495d3bbe4ac51288a4770a12022a1cd8",
+        "source_path": "packages/wanted-sans-std/fonts/ttf/WantedSansStd-Medium.ttf",
+        "url": "https://raw.githubusercontent.com/wanteddev/wanted-sans/main/packages/wanted-sans-std/fonts/ttf/WantedSansStd-Medium.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\wanteddev--wanted-sans\\WantedSansStd-Regular.ttf",
+        "bytes": 175156,
+        "sha256": "b28280a866dcb2eff9aa28f46296843fe0aca0bf169a12e6695f5eabdb357ecb",
+        "source_path": "packages/wanted-sans-std/fonts/ttf/WantedSansStd-Regular.ttf",
+        "url": "https://raw.githubusercontent.com/wanteddev/wanted-sans/main/packages/wanted-sans-std/fonts/ttf/WantedSansStd-Regular.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\wanteddev--wanted-sans\\WantedSansStd-SemiBold.ttf",
+        "bytes": 177384,
+        "sha256": "90d0806905ff6987776eb8212f87211da1c34f7d91946c51c5bd5d9fba88d543",
+        "source_path": "packages/wanted-sans-std/fonts/ttf/WantedSansStd-SemiBold.ttf",
+        "url": "https://raw.githubusercontent.com/wanteddev/wanted-sans/main/packages/wanted-sans-std/fonts/ttf/WantedSansStd-SemiBold.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\wanteddev--wanted-sans\\WantedSansStdVariable.ttf",
+        "bytes": 266208,
+        "sha256": "a990eb76a9eda7e9fbfe9019d04bd762e49058927d576bb34a62ca7d9f42af25",
+        "source_path": "packages/wanted-sans-std/fonts/variable/WantedSansStdVariable.ttf",
+        "url": "https://raw.githubusercontent.com/wanteddev/wanted-sans/main/packages/wanted-sans-std/fonts/variable/WantedSansStdVariable.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\wanteddev--wanted-sans\\WantedSans-Black.otf",
+        "bytes": 1318608,
+        "sha256": "099b549f42ab4c1880e767fba7a5d6aa6a2782d00696db824a3207133f2a003a",
+        "source_path": "packages/wanted-sans/fonts/otf/WantedSans-Black.otf",
+        "url": "https://raw.githubusercontent.com/wanteddev/wanted-sans/main/packages/wanted-sans/fonts/otf/WantedSans-Black.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\wanteddev--wanted-sans\\WantedSans-Bold.otf",
+        "bytes": 1349152,
+        "sha256": "bf29dc540812833b954ae2531a119256305849530d8e191def07f4a9cdeea5c7",
+        "source_path": "packages/wanted-sans/fonts/otf/WantedSans-Bold.otf",
+        "url": "https://raw.githubusercontent.com/wanteddev/wanted-sans/main/packages/wanted-sans/fonts/otf/WantedSans-Bold.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\wanteddev--wanted-sans\\WantedSans-ExtraBlack.otf",
+        "bytes": 1322316,
+        "sha256": "d280ff16e3e4a66295026088328bd8ec434099dd1e95c92ad42c428d963708bc",
+        "source_path": "packages/wanted-sans/fonts/otf/WantedSans-ExtraBlack.otf",
+        "url": "https://raw.githubusercontent.com/wanteddev/wanted-sans/main/packages/wanted-sans/fonts/otf/WantedSans-ExtraBlack.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\wanteddev--wanted-sans\\WantedSans-ExtraBold.otf",
+        "bytes": 1335800,
+        "sha256": "9289a05774bca91bc11687b3a23c763404c712480a52897add693403ba73bea1",
+        "source_path": "packages/wanted-sans/fonts/otf/WantedSans-ExtraBold.otf",
+        "url": "https://raw.githubusercontent.com/wanteddev/wanted-sans/main/packages/wanted-sans/fonts/otf/WantedSans-ExtraBold.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\wanteddev--wanted-sans\\WantedSans-Medium.otf",
+        "bytes": 1360032,
+        "sha256": "7dad2dfda91663fb8cf98907dc7839c1fa89ddb3a8e0b98dffe55a6ebaff2604",
+        "source_path": "packages/wanted-sans/fonts/otf/WantedSans-Medium.otf",
+        "url": "https://raw.githubusercontent.com/wanteddev/wanted-sans/main/packages/wanted-sans/fonts/otf/WantedSans-Medium.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\wanteddev--wanted-sans\\WantedSans-Regular.otf",
+        "bytes": 1346604,
+        "sha256": "1944767d948318570793eda00986d463e07017d9dcc7cef3bd7e77fe032fd2fb",
+        "source_path": "packages/wanted-sans/fonts/otf/WantedSans-Regular.otf",
+        "url": "https://raw.githubusercontent.com/wanteddev/wanted-sans/main/packages/wanted-sans/fonts/otf/WantedSans-Regular.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\wanteddev--wanted-sans\\WantedSans-SemiBold.otf",
+        "bytes": 1357544,
+        "sha256": "b17b0a5979c870965a9c174082f71fb0f6c4ea09ad6db28f6327995db11f65fc",
+        "source_path": "packages/wanted-sans/fonts/otf/WantedSans-SemiBold.otf",
+        "url": "https://raw.githubusercontent.com/wanteddev/wanted-sans/main/packages/wanted-sans/fonts/otf/WantedSans-SemiBold.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\wanteddev--wanted-sans\\WantedSans-Black.ttf",
+        "bytes": 2350312,
+        "sha256": "02092d69b9518a541eb2dd96037e50f2a2d660bbf3168f987f38fa9718cf362b",
+        "source_path": "packages/wanted-sans/fonts/ttf/WantedSans-Black.ttf",
+        "url": "https://raw.githubusercontent.com/wanteddev/wanted-sans/main/packages/wanted-sans/fonts/ttf/WantedSans-Black.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\wanteddev--wanted-sans\\WantedSans-Bold.ttf",
+        "bytes": 2344596,
+        "sha256": "7d97a38d0c35b2e43ff2ae47040133faf0324d1c78800a16aaaa5d276376037c",
+        "source_path": "packages/wanted-sans/fonts/ttf/WantedSans-Bold.ttf",
+        "url": "https://raw.githubusercontent.com/wanteddev/wanted-sans/main/packages/wanted-sans/fonts/ttf/WantedSans-Bold.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\wanteddev--wanted-sans\\WantedSans-ExtraBlack.ttf",
+        "bytes": 2372768,
+        "sha256": "ede63d59b0a60a07123afb84a89d1322743d358d28c8db3dbf04acd9688e1f17",
+        "source_path": "packages/wanted-sans/fonts/ttf/WantedSans-ExtraBlack.ttf",
+        "url": "https://raw.githubusercontent.com/wanteddev/wanted-sans/main/packages/wanted-sans/fonts/ttf/WantedSans-ExtraBlack.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\wanteddev--wanted-sans\\WantedSans-ExtraBold.ttf",
+        "bytes": 2344992,
+        "sha256": "1614d814a293c877dc103a8751fc629cf772ddecd3ac3f26b634f529241dd47f",
+        "source_path": "packages/wanted-sans/fonts/ttf/WantedSans-ExtraBold.ttf",
+        "url": "https://raw.githubusercontent.com/wanteddev/wanted-sans/main/packages/wanted-sans/fonts/ttf/WantedSans-ExtraBold.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\wanteddev--wanted-sans\\WantedSans-Medium.ttf",
+        "bytes": 2379572,
+        "sha256": "e5f05e044e105b699f7eea82f9875ebcad46bfe73118a6ef60d48889631816aa",
+        "source_path": "packages/wanted-sans/fonts/ttf/WantedSans-Medium.ttf",
+        "url": "https://raw.githubusercontent.com/wanteddev/wanted-sans/main/packages/wanted-sans/fonts/ttf/WantedSans-Medium.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\wanteddev--wanted-sans\\WantedSans-Regular.ttf",
+        "bytes": 2401736,
+        "sha256": "849b51938f5779e7526fcf09b3c737e9d401261d111f626280af16423bf19f40",
+        "source_path": "packages/wanted-sans/fonts/ttf/WantedSans-Regular.ttf",
+        "url": "https://raw.githubusercontent.com/wanteddev/wanted-sans/main/packages/wanted-sans/fonts/ttf/WantedSans-Regular.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\wanteddev--wanted-sans\\WantedSans-SemiBold.ttf",
+        "bytes": 2352124,
+        "sha256": "1378a4914ebc4f658af9d68284048ddbc904a9704ae78fcdd84e7862bde89d70",
+        "source_path": "packages/wanted-sans/fonts/ttf/WantedSans-SemiBold.ttf",
+        "url": "https://raw.githubusercontent.com/wanteddev/wanted-sans/main/packages/wanted-sans/fonts/ttf/WantedSans-SemiBold.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\wanteddev--wanted-sans\\WantedSansVariable.ttf",
+        "bytes": 4669352,
+        "sha256": "9953a7cfc4a3cba4ef1242abaf89779b3cd15fd9729c2d67d9e9d37a0da967f5",
+        "source_path": "packages/wanted-sans/fonts/variable/WantedSansVariable.ttf",
+        "url": "https://raw.githubusercontent.com/wanteddev/wanted-sans/main/packages/wanted-sans/fonts/variable/WantedSansVariable.ttf"
+      }
+    ],
+    "candidate_font_files": 30,
+    "collected_at": "2026-09-11T02:54:23+00:00"
+  },
+  {
+    "source": "github-upstream",
+    "repo": "jhaemin/Interop",
+    "source_url": "https://github.com/jhaemin/Interop",
+    "description": "The Interop font family",
+    "style_group": "modern-sans",
+    "curation_note": "개인 제작·OFL, 현대적 산세리프",
+    "stars": 93,
+    "updated_at": "2026-08-18T04:38:12Z",
+    "default_branch": "main",
+    "github_license": "OFL-1.1",
+    "license_files": [
+      {
+        "source_path": "LICENSE",
+        "path": "font_collection\\licenses\\github\\jhaemin--interop\\LICENSE",
+        "bytes": 4353,
+        "sha256": "a752e8e79b9a1223968b448e8e6ed61bafaeb7e0f4d9fb6f0c40d35e72ba373b"
+      }
+    ],
+    "files": [
+      {
+        "path": "font_collection\\files\\github\\jhaemin--interop\\Interop-Bold.woff2",
+        "bytes": 1015848,
+        "sha256": "73dc5dde2deb0640fa0a6d018f6031e6c712ef221f99e1e20bad4330dd82b8c4",
+        "source_path": "web/fonts/Interop-Bold.woff2",
+        "url": "https://raw.githubusercontent.com/jhaemin/Interop/main/web/fonts/Interop-Bold.woff2"
+      },
+      {
+        "path": "font_collection\\files\\github\\jhaemin--interop\\Interop-ExtraBold.woff2",
+        "bytes": 1076972,
+        "sha256": "ffc3b45f7d3083fa3aaf9e36b9cae959f61139a530b165c27c014f90530ac606",
+        "source_path": "web/fonts/Interop-ExtraBold.woff2",
+        "url": "https://raw.githubusercontent.com/jhaemin/Interop/main/web/fonts/Interop-ExtraBold.woff2"
+      },
+      {
+        "path": "font_collection\\files\\github\\jhaemin--interop\\Interop-ExtraLight.woff2",
+        "bytes": 1022348,
+        "sha256": "56ae12f7f985f1917d645d5b88fe8fbba01173839ea32b7faa0d079a74f4ae84",
+        "source_path": "web/fonts/Interop-ExtraLight.woff2",
+        "url": "https://raw.githubusercontent.com/jhaemin/Interop/main/web/fonts/Interop-ExtraLight.woff2"
+      },
+      {
+        "path": "font_collection\\files\\github\\jhaemin--interop\\Interop-Light.woff2",
+        "bytes": 1053700,
+        "sha256": "647525480fce3798cd4ae331b5d2e3e3c157014a6871ac637ee62deb5acfe0d7",
+        "source_path": "web/fonts/Interop-Light.woff2",
+        "url": "https://raw.githubusercontent.com/jhaemin/Interop/main/web/fonts/Interop-Light.woff2"
+      },
+      {
+        "path": "font_collection\\files\\github\\jhaemin--interop\\Interop-Medium.woff2",
+        "bytes": 1060196,
+        "sha256": "21e4309ab317bc1928cd33594a88e69cd7a342ffb227438cfa4188499b056e8c",
+        "source_path": "web/fonts/Interop-Medium.woff2",
+        "url": "https://raw.githubusercontent.com/jhaemin/Interop/main/web/fonts/Interop-Medium.woff2"
+      },
+      {
+        "path": "font_collection\\files\\github\\jhaemin--interop\\Interop-Regular.woff2",
+        "bytes": 1045496,
+        "sha256": "67f677ec50551dde91b57d52bd7384bc179da8da19ffa98879bf5f34bf69569f",
+        "source_path": "web/fonts/Interop-Regular.woff2",
+        "url": "https://raw.githubusercontent.com/jhaemin/Interop/main/web/fonts/Interop-Regular.woff2"
+      },
+      {
+        "path": "font_collection\\files\\github\\jhaemin--interop\\Interop-SemiBold.woff2",
+        "bytes": 1066160,
+        "sha256": "57a93724c4aa493f9b5515651147bbc6da7341c59ce9625fb7a0fed8436a0083",
+        "source_path": "web/fonts/Interop-SemiBold.woff2",
+        "url": "https://raw.githubusercontent.com/jhaemin/Interop/main/web/fonts/Interop-SemiBold.woff2"
+      },
+      {
+        "path": "font_collection\\files\\github\\jhaemin--interop\\Interop-Thin.woff2",
+        "bytes": 903768,
+        "sha256": "a2af6aebce27132164de552537963397e20e5b0c8ce1a2651cb4edcaf781aac1",
+        "source_path": "web/fonts/Interop-Thin.woff2",
+        "url": "https://raw.githubusercontent.com/jhaemin/Interop/main/web/fonts/Interop-Thin.woff2"
+      }
+    ],
+    "candidate_font_files": 8,
+    "collected_at": "2026-09-11T02:54:24+00:00"
+  },
+  {
+    "source": "github-upstream",
+    "repo": "quiple/galmuri",
+    "source_url": "https://github.com/quiple/galmuri",
+    "description": "Bitmap fonts inspired by the font design from Nintendo DS",
+    "style_group": "pixel",
+    "curation_note": "개인 제작·OFL, 픽셀 디스플레이",
+    "stars": 451,
+    "updated_at": "2026-09-10T05:03:05Z",
+    "default_branch": "main",
+    "github_license": "OFL-1.1",
+    "license_files": [
+      {
+        "source_path": "dist/LICENSE.txt",
+        "path": "font_collection\\licenses\\github\\quiple--galmuri\\LICENSE.txt",
+        "bytes": 4360,
+        "sha256": "86a3ee9495f942f0243f18c103da9faca27adb88142613edb8bb852e56c892c1"
+      },
+      {
+        "source_path": "ofl-ko.md",
+        "path": "font_collection\\licenses\\github\\quiple--galmuri\\ofl-ko.md",
+        "bytes": 6145,
+        "sha256": "1578e98bfc84e5f282dd76e9d2e20691de21a3c96a26a5eb51c5e3292fd3f847"
+      },
+      {
+        "source_path": "ofl.md",
+        "path": "font_collection\\licenses\\github\\quiple--galmuri\\ofl.md",
+        "bytes": 4266,
+        "sha256": "9a9e5a342c430c3fcf01a408b680f4405d5bf4ac659c931be35f8a1b27ea69c9"
+      }
+    ],
+    "files": [
+      {
+        "path": "font_collection\\files\\github\\quiple--galmuri\\Galmuri11-Bold.ttf",
+        "bytes": 2613660,
+        "sha256": "45d901e379138dd91873af157640f60aa4cf6beaa885c3efd2a8c279e039a237",
+        "source_path": "dist/Galmuri11-Bold.ttf",
+        "url": "https://raw.githubusercontent.com/quiple/galmuri/main/dist/Galmuri11-Bold.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\quiple--galmuri\\Galmuri11-Condensed.ttf",
+        "bytes": 2668536,
+        "sha256": "613d5de93abdbfca203be1bb05c756d792ba8c141ae831607feeba62279d07b9",
+        "source_path": "dist/Galmuri11-Condensed.ttf",
+        "url": "https://raw.githubusercontent.com/quiple/galmuri/main/dist/Galmuri11-Condensed.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\quiple--galmuri\\Galmuri11.ttf",
+        "bytes": 5376428,
+        "sha256": "e24256f42e43713d2ea086a1e1669d78b968f5b3cc547e5c157f0606ffa5def1",
+        "source_path": "dist/Galmuri11.ttf",
+        "url": "https://raw.githubusercontent.com/quiple/galmuri/main/dist/Galmuri11.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\quiple--galmuri\\Galmuri11Bitmap-Bold-2.40.4.ttf",
+        "bytes": 465472,
+        "sha256": "0b929fe85c01aba7b98792332ec54249b6143dd7338a220dd7623a9bf62d16c5",
+        "source_path": "dist/Galmuri11Bitmap-Bold-2.40.4.ttf",
+        "url": "https://raw.githubusercontent.com/quiple/galmuri/main/dist/Galmuri11Bitmap-Bold-2.40.4.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\quiple--galmuri\\Galmuri11Bitmap-Condensed-2.40.4.ttf",
+        "bytes": 373980,
+        "sha256": "26f4cc454fb2f1f65d2fcdb72c3b0306ef12ea5d2b69f664891f89f343887419",
+        "source_path": "dist/Galmuri11Bitmap-Condensed-2.40.4.ttf",
+        "url": "https://raw.githubusercontent.com/quiple/galmuri/main/dist/Galmuri11Bitmap-Condensed-2.40.4.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\quiple--galmuri\\Galmuri11Bitmap-Regular-2.40.4.ttf",
+        "bytes": 783416,
+        "sha256": "0d7e7e8652d8cf666c4501b1dfe8d4ccaee97f068edff4cc4e90f14266ed4a49",
+        "source_path": "dist/Galmuri11Bitmap-Regular-2.40.4.ttf",
+        "url": "https://raw.githubusercontent.com/quiple/galmuri/main/dist/Galmuri11Bitmap-Regular-2.40.4.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\quiple--galmuri\\Galmuri14.ttf",
+        "bytes": 5636376,
+        "sha256": "6fe6c3fe4369e3837ac348431e8670733d67aa4bd550982baa72cc93c81a1c68",
+        "source_path": "dist/Galmuri14.ttf",
+        "url": "https://raw.githubusercontent.com/quiple/galmuri/main/dist/Galmuri14.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\quiple--galmuri\\Galmuri14Bitmap-Regular-2.40.4.ttf",
+        "bytes": 952956,
+        "sha256": "480da440d5ce7a6232c6ea3765959bd66ec17340aa2463ac60e4f08aada50e14",
+        "source_path": "dist/Galmuri14Bitmap-Regular-2.40.4.ttf",
+        "url": "https://raw.githubusercontent.com/quiple/galmuri/main/dist/Galmuri14Bitmap-Regular-2.40.4.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\quiple--galmuri\\Galmuri7.ttf",
+        "bytes": 3702440,
+        "sha256": "c845c6bf6f7236ed370aed4a8f8d9b4f25e6a18f63515777fe4153d287c32917",
+        "source_path": "dist/Galmuri7.ttf",
+        "url": "https://raw.githubusercontent.com/quiple/galmuri/main/dist/Galmuri7.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\quiple--galmuri\\Galmuri7Bitmap-Regular-2.40.4.ttf",
+        "bytes": 507552,
+        "sha256": "c093a0288bb5f73a49b42275468e2ad8be0c7e7356283d7d78d89b0489e3b615",
+        "source_path": "dist/Galmuri7Bitmap-Regular-2.40.4.ttf",
+        "url": "https://raw.githubusercontent.com/quiple/galmuri/main/dist/Galmuri7Bitmap-Regular-2.40.4.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\quiple--galmuri\\Galmuri9.ttf",
+        "bytes": 4649144,
+        "sha256": "e84e821b18be15b9e3a907ceb83cfba25fabf51c80b7edf0d2921cf8f8e1a11d",
+        "source_path": "dist/Galmuri9.ttf",
+        "url": "https://raw.githubusercontent.com/quiple/galmuri/main/dist/Galmuri9.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\quiple--galmuri\\Galmuri9Bitmap-Regular-2.40.4.ttf",
+        "bytes": 637820,
+        "sha256": "897c621bb33ba77ed5645d87137bc3dcdcf153e61ccf1ee75d239a079590485a",
+        "source_path": "dist/Galmuri9Bitmap-Regular-2.40.4.ttf",
+        "url": "https://raw.githubusercontent.com/quiple/galmuri/main/dist/Galmuri9Bitmap-Regular-2.40.4.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\quiple--galmuri\\GalmuriMono11.ttf",
+        "bytes": 5200216,
+        "sha256": "39008f23c10f32900ff888f3c6799a08c1033a14fe58cda2c89a10de2619c733",
+        "source_path": "dist/GalmuriMono11.ttf",
+        "url": "https://raw.githubusercontent.com/quiple/galmuri/main/dist/GalmuriMono11.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\quiple--galmuri\\GalmuriMono11Bitmap-Regular-2.40.4.ttf",
+        "bytes": 758024,
+        "sha256": "109d9966b35c93c8e33600b32abc1630440e9690f66c3043fb7a5bb2c593c87a",
+        "source_path": "dist/GalmuriMono11Bitmap-Regular-2.40.4.ttf",
+        "url": "https://raw.githubusercontent.com/quiple/galmuri/main/dist/GalmuriMono11Bitmap-Regular-2.40.4.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\quiple--galmuri\\GalmuriMono7.ttf",
+        "bytes": 3610116,
+        "sha256": "29ae71aff2ca530bf6b78f086fe18234e19226019a417907586676727e81474f",
+        "source_path": "dist/GalmuriMono7.ttf",
+        "url": "https://raw.githubusercontent.com/quiple/galmuri/main/dist/GalmuriMono7.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\quiple--galmuri\\GalmuriMono7Bitmap-Regular-2.40.4.ttf",
+        "bytes": 506312,
+        "sha256": "acc640dac67fe8fefec76cf30043f0c38884bfb639a9022aa9d53f3966afdbba",
+        "source_path": "dist/GalmuriMono7Bitmap-Regular-2.40.4.ttf",
+        "url": "https://raw.githubusercontent.com/quiple/galmuri/main/dist/GalmuriMono7Bitmap-Regular-2.40.4.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\quiple--galmuri\\GalmuriMono9.ttf",
+        "bytes": 4525140,
+        "sha256": "edff253b2c6f0ce84849b73e967563ce2ac5bbf3c0aac0c61909268c5aebd962",
+        "source_path": "dist/GalmuriMono9.ttf",
+        "url": "https://raw.githubusercontent.com/quiple/galmuri/main/dist/GalmuriMono9.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\quiple--galmuri\\GalmuriMono9Bitmap-Regular-2.40.4.ttf",
+        "bytes": 611764,
+        "sha256": "e3fb3366c0c56b5d10be69ad6c30a026556d4743e91e43a30ef6f4bf1d88b583",
+        "source_path": "dist/GalmuriMono9Bitmap-Regular-2.40.4.ttf",
+        "url": "https://raw.githubusercontent.com/quiple/galmuri/main/dist/GalmuriMono9Bitmap-Regular-2.40.4.ttf"
+      }
+    ],
+    "candidate_font_files": 18,
+    "collected_at": "2026-09-11T02:54:26+00:00"
+  },
+  {
+    "source": "github-upstream",
+    "repo": "mushsooni/mulmaru",
+    "source_url": "https://github.com/mushsooni/mulmaru",
+    "description": "게임에 잘 어울리는 한글 픽셀 폰트 | A Korean pixel font perfect for games",
+    "style_group": "pixel",
+    "curation_note": "개인 제작·OFL, 굵은 픽셀",
+    "stars": 61,
+    "updated_at": "2026-09-08T10:59:27Z",
+    "default_branch": "main",
+    "github_license": "OFL-1.1",
+    "license_files": [
+      {
+        "source_path": "LICENSE",
+        "path": "font_collection\\licenses\\github\\mushsooni--mulmaru\\LICENSE",
+        "bytes": 4455,
+        "sha256": "53440f608d67fd4dcf570047e6009c7bd43eba58814dff3f89f0b5568e450008"
+      },
+      {
+        "source_path": "LICENSE_ko",
+        "path": "font_collection\\licenses\\github\\mushsooni--mulmaru\\LICENSE_ko",
+        "bytes": 5659,
+        "sha256": "8f8cc9e61289481061feb12bd48ba5da95ad09752bc96c33fb93d69a3c3b70f6"
+      }
+    ],
+    "files": [],
+    "candidate_font_files": 0,
+    "collected_at": "2026-09-11T02:54:27+00:00"
+  },
+  {
+    "source": "github-upstream",
+    "repo": "quiple/x12y12pxMaruMinyaHangul",
+    "source_url": "https://github.com/quiple/x12y12pxMaruMinyaHangul",
+    "description": "x12y12pxMaruMinya를 기반으로 만들어진 12px 크기의 둥근고딕 한국어·일본어 픽셀 폰트",
+    "style_group": "pixel",
+    "curation_note": "개인 제작·OFL, 둥근 픽셀",
+    "stars": 7,
+    "updated_at": "2026-08-18T09:08:49Z",
+    "default_branch": "main",
+    "github_license": "OFL-1.1",
+    "license_files": [
+      {
+        "source_path": "OFL.txt",
+        "path": "font_collection\\licenses\\github\\quiple--x12y12pxmaruminyahangul\\OFL.txt",
+        "bytes": 4460,
+        "sha256": "35e3aa4dec3bbc28bf025357414c9738c97df65e85e2a82f5d84da2a71fce447"
+      }
+    ],
+    "files": [
+      {
+        "path": "font_collection\\files\\github\\quiple--x12y12pxmaruminyahangul\\x12y12pxMaruMinyaHangul.ttf",
+        "bytes": 5563612,
+        "sha256": "954e4cbdc8476561cdd042aa2f22d4fbfea57dbfc4beb45e307ac1c1c6938d5a",
+        "source_path": "fonts/x12y12pxMaruMinyaHangul.ttf",
+        "url": "https://raw.githubusercontent.com/quiple/x12y12pxMaruMinyaHangul/main/fonts/x12y12pxMaruMinyaHangul.ttf"
+      }
+    ],
+    "candidate_font_files": 1,
+    "collected_at": "2026-09-11T02:54:28+00:00"
+  },
+  {
+    "source": "github-upstream",
+    "repo": "quiple/x10y12pxDenkiChipHangul",
+    "source_url": "https://github.com/quiple/x10y12pxDenkiChipHangul",
+    "description": "A compact 12px bold Korean and Japanese pixel font based on x8y12pxDenkiChip",
+    "style_group": "pixel",
+    "curation_note": "개인 제작·OFL, 굵은 픽셀",
+    "stars": 10,
+    "updated_at": "2026-08-26T06:05:52Z",
+    "default_branch": "main",
+    "github_license": "OFL-1.1",
+    "license_files": [
+      {
+        "source_path": "OFL.txt",
+        "path": "font_collection\\licenses\\github\\quiple--x10y12pxdenkichiphangul\\OFL.txt",
+        "bytes": 4458,
+        "sha256": "f171314087e4dda519c07f95186b629b85c8089a319be0152e151f7ef2bfeea4"
+      }
+    ],
+    "files": [
+      {
+        "path": "font_collection\\files\\github\\quiple--x10y12pxdenkichiphangul\\x10y12pxDenkiChipHangul.otf",
+        "bytes": 488864,
+        "sha256": "3e9a7e091aeaeb44ee83af6980da59891a1fe22f32a8ab721d080753525d8b0b",
+        "source_path": "fonts/otf/x10y12pxDenkiChipHangul.otf",
+        "url": "https://raw.githubusercontent.com/quiple/x10y12pxDenkiChipHangul/main/fonts/otf/x10y12pxDenkiChipHangul.otf"
+      },
+      {
+        "path": "font_collection\\files\\github\\quiple--x10y12pxdenkichiphangul\\x10y12pxDenkiChipHangul.ttf",
+        "bytes": 5100620,
+        "sha256": "4589cb1a59bcbd669ad7ac0669827e5a4d411832048e9bdd9618c907c1a8d272",
+        "source_path": "fonts/ttf/x10y12pxDenkiChipHangul.ttf",
+        "url": "https://raw.githubusercontent.com/quiple/x10y12pxDenkiChipHangul/main/fonts/ttf/x10y12pxDenkiChipHangul.ttf"
+      }
+    ],
+    "candidate_font_files": 2,
+    "collected_at": "2026-09-11T02:54:29+00:00"
+  },
+  {
+    "source": "github-upstream",
+    "repo": "sawalk/MapleSaemmul",
+    "source_url": "https://github.com/sawalk/MapleSaemmul",
+    "description": "a korean bitmap font inspired by MapleStory DS",
+    "style_group": "pixel",
+    "curation_note": "개인 제작·OFL, 게임풍 픽셀",
+    "stars": 4,
+    "updated_at": "2026-09-08T00:55:46Z",
+    "default_branch": "main",
+    "github_license": "OFL-1.1",
+    "license_files": [
+      {
+        "source_path": "ofl.txt",
+        "path": "font_collection\\licenses\\github\\sawalk--maplesaemmul\\ofl.txt",
+        "bytes": 4351,
+        "sha256": "84cc23d1e17f1ccc0406bd8aaee2f90036e06aa3584e96f4ecd0f3deb63072c0"
+      }
+    ],
+    "files": [
+      {
+        "path": "font_collection\\files\\github\\sawalk--maplesaemmul\\font2.ttf",
+        "bytes": 524448,
+        "sha256": "a6ac7fe901a3cc1b65742164b1f78fd9dcdcc19b1fad1a9f23ef8a76d61851de",
+        "source_path": "assets/font2.ttf",
+        "url": "https://raw.githubusercontent.com/sawalk/MapleSaemmul/main/assets/font2.ttf"
+      }
+    ],
+    "candidate_font_files": 1,
+    "collected_at": "2026-09-11T02:54:31+00:00"
+  },
+  {
+    "source": "github-upstream",
+    "repo": "JAMO-TYPEFACE/Orbit",
+    "source_url": "https://github.com/JAMO-TYPEFACE/Orbit",
+    "description": "Orbit 2022 by JAMO",
+    "style_group": "display",
+    "curation_note": "개인 제작·OFL, 실험적 디스플레이",
+    "stars": 73,
+    "updated_at": "2026-07-29T09:09:25Z",
+    "default_branch": "main",
+    "github_license": "OFL-1.1",
+    "license_files": [
+      {
+        "source_path": "OFL.txt",
+        "path": "font_collection\\licenses\\github\\jamo-typeface--orbit\\OFL.txt",
+        "bytes": 4478,
+        "sha256": "00f1783a4e7a52d945c0c4de689571b2db896493362651db2706b40c6fc1c330"
+      }
+    ],
+    "files": [
+      {
+        "path": "font_collection\\files\\github\\jamo-typeface--orbit\\Orbit-Regular.ttf",
+        "bytes": 784480,
+        "sha256": "5d0206fb0a9e3eeac51aff8d4a6dbb7613d63fc435f1a51f96dc35cefb5f9f87",
+        "source_path": "Fonts/ttf/Orbit-Regular.ttf",
+        "url": "https://raw.githubusercontent.com/JAMO-TYPEFACE/Orbit/main/Fonts/ttf/Orbit-Regular.ttf"
+      }
+    ],
+    "candidate_font_files": 1,
+    "collected_at": "2026-09-11T02:54:32+00:00"
+  },
+  {
+    "source": "github-upstream",
+    "repo": "JAMO-TYPEFACE/Moirai",
+    "source_url": "https://github.com/JAMO-TYPEFACE/Moirai",
+    "description": "Moirai 2022 by JAMO",
+    "style_group": "display",
+    "curation_note": "개인 제작·OFL, 실험적 디스플레이",
+    "stars": 10,
+    "updated_at": "2026-03-26T18:20:38Z",
+    "default_branch": "main",
+    "github_license": "OFL-1.1",
+    "license_files": [
+      {
+        "source_path": "OFL.txt",
+        "path": "font_collection\\licenses\\github\\jamo-typeface--moirai\\OFL.txt",
+        "bytes": 4480,
+        "sha256": "0f2daa61cee069893d44ba24f3bdddbba18ac33b011fd8944e8682dbf347c61d"
+      }
+    ],
+    "files": [
+      {
+        "path": "font_collection\\files\\github\\jamo-typeface--moirai\\MoiraiOne-Regular.ttf",
+        "bytes": 2102128,
+        "sha256": "432f48aa773510211ac50c9d8130e50fe135c4d8c05645828ccde7e652ea8106",
+        "source_path": "Fonts/ttf/MoiraiOne-Regular.ttf",
+        "url": "https://raw.githubusercontent.com/JAMO-TYPEFACE/Moirai/main/Fonts/ttf/MoiraiOne-Regular.ttf"
+      }
+    ],
+    "candidate_font_files": 1,
+    "collected_at": "2026-09-11T02:54:33+00:00"
+  },
+  {
+    "source": "github-upstream",
+    "repo": "JAMO-TYPEFACE/Grandiflora",
+    "source_url": "https://github.com/JAMO-TYPEFACE/Grandiflora",
+    "description": "Grandiflora 2022 by JAMO",
+    "style_group": "display",
+    "curation_note": "개인 제작·OFL, 실험적 디스플레이",
+    "stars": 8,
+    "updated_at": "2026-01-18T12:07:04Z",
+    "default_branch": "main",
+    "github_license": "OFL-1.1",
+    "license_files": [
+      {
+        "source_path": "OFL.txt",
+        "path": "font_collection\\licenses\\github\\jamo-typeface--grandiflora\\OFL.txt",
+        "bytes": 4490,
+        "sha256": "4d0bb797c98a0840faec0952153a4030442f263fcf08b906e38837ea8f401808"
+      }
+    ],
+    "files": [
+      {
+        "path": "font_collection\\files\\github\\jamo-typeface--grandiflora\\GrandifloraOne-Regular.ttf",
+        "bytes": 2342672,
+        "sha256": "1368456f106be4e58cb7f819d46515a549435294b19647b73d68e4e6d965b16d",
+        "source_path": "Fonts/ttf/GrandifloraOne-Regular.ttf",
+        "url": "https://raw.githubusercontent.com/JAMO-TYPEFACE/Grandiflora/main/Fonts/ttf/GrandifloraOne-Regular.ttf"
+      }
+    ],
+    "candidate_font_files": 1,
+    "collected_at": "2026-09-11T02:54:35+00:00"
+  },
+  {
+    "source": "github-upstream",
+    "repo": "lxgw/LxgwWenkaiKR",
+    "source_url": "https://github.com/lxgw/LxgwWenkaiKR",
+    "description": "Korean Version of LXGW WenKai",
+    "style_group": "hand-serif",
+    "curation_note": "개인 제작·OFL, 문해서체 계열",
+    "stars": 32,
+    "updated_at": "2026-09-07T13:15:59Z",
+    "default_branch": "main",
+    "github_license": "OFL-1.1",
+    "license_files": [
+      {
+        "source_path": "OFL.txt",
+        "path": "font_collection\\licenses\\github\\lxgw--lxgwwenkaikr\\OFL.txt",
+        "bytes": 4395,
+        "sha256": "e270ddb6be9ebd4d25c460dcddb7ca2255508ae5ae560c514f2e5b07daed764b"
+      }
+    ],
+    "files": [
+      {
+        "path": "font_collection\\files\\github\\lxgw--lxgwwenkaikr\\LXGWWenKaiKR-Light.ttf",
+        "bytes": 14739408,
+        "sha256": "8efb3790062802ef7503ce47e6a6402f84a0ff8eac238189b6c5d0d8959ecc07",
+        "source_path": "fonts/TTF/LXGWWenKaiKR-Light.ttf",
+        "url": "https://raw.githubusercontent.com/lxgw/LxgwWenkaiKR/main/fonts/TTF/LXGWWenKaiKR-Light.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\lxgw--lxgwwenkaikr\\LXGWWenKaiKR-Medium.ttf",
+        "bytes": 13802744,
+        "sha256": "33bd42346be15070d76a572e2109a5fbc781c41ba686b48a44c0576a77c77e8b",
+        "source_path": "fonts/TTF/LXGWWenKaiKR-Medium.ttf",
+        "url": "https://raw.githubusercontent.com/lxgw/LxgwWenkaiKR/main/fonts/TTF/LXGWWenKaiKR-Medium.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\lxgw--lxgwwenkaikr\\LXGWWenKaiKR-Regular.ttf",
+        "bytes": 13920480,
+        "sha256": "53f4000736b832d0716e8189af6b0dd8e91c5e244f5218a97583d5564d672b59",
+        "source_path": "fonts/TTF/LXGWWenKaiKR-Regular.ttf",
+        "url": "https://raw.githubusercontent.com/lxgw/LxgwWenkaiKR/main/fonts/TTF/LXGWWenKaiKR-Regular.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\lxgw--lxgwwenkaikr\\LXGWWenKaiMonoKR-Light.ttf",
+        "bytes": 14735080,
+        "sha256": "01c1cb3a27596bf6b453f741f62794cd1aa9f92581be9d83b5135b0d493b1147",
+        "source_path": "fonts/TTF/LXGWWenKaiMonoKR-Light.ttf",
+        "url": "https://raw.githubusercontent.com/lxgw/LxgwWenkaiKR/main/fonts/TTF/LXGWWenKaiMonoKR-Light.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\lxgw--lxgwwenkaikr\\LXGWWenKaiMonoKR-Medium.ttf",
+        "bytes": 13804492,
+        "sha256": "99539f620839682bee92b576730ee43fb1c00c36c5c29b145ea8ef73bd8b7b1e",
+        "source_path": "fonts/TTF/LXGWWenKaiMonoKR-Medium.ttf",
+        "url": "https://raw.githubusercontent.com/lxgw/LxgwWenkaiKR/main/fonts/TTF/LXGWWenKaiMonoKR-Medium.ttf"
+      },
+      {
+        "path": "font_collection\\files\\github\\lxgw--lxgwwenkaikr\\LXGWWenKaiMonoKR-Regular.ttf",
+        "bytes": 13929824,
+        "sha256": "9be52ae96d0c0f7f9e7ff35895dbb8d6b6919483c7923e2f3306f3f33b9cb9d5",
+        "source_path": "fonts/TTF/LXGWWenKaiMonoKR-Regular.ttf",
+        "url": "https://raw.githubusercontent.com/lxgw/LxgwWenkaiKR/main/fonts/TTF/LXGWWenKaiMonoKR-Regular.ttf"
+      }
+    ],
+    "candidate_font_files": 6,
+    "collected_at": "2026-09-11T02:54:37+00:00"
+  },
+  {
+    "source": "github-upstream",
+    "repo": "Neople-font/BitBit",
+    "source_url": "https://github.com/Neople-font/BitBit",
+    "description": null,
+    "style_group": "display",
+    "curation_note": "공식 공개·OFL, 도트 디스플레이",
+    "stars": 1,
+    "updated_at": "2026-08-04T06:06:34Z",
+    "default_branch": "main",
+    "github_license": "OFL-1.1",
+    "license_files": [
+      {
+        "source_path": "OFL.txt",
+        "path": "font_collection\\licenses\\github\\neople-font--bitbit\\OFL.txt",
+        "bytes": 4480,
+        "sha256": "6d41a06e206a282277409983ee9b418b664b5a02ccd0c24c37c4e42235c304f7"
+      }
+    ],
+    "files": [
+      {
+        "path": "font_collection\\files\\github\\neople-font--bitbit\\BitBit-Regular.ttf",
+        "bytes": 942024,
+        "sha256": "5fa8fe090ae3b6ad98f7a2302f83bdabf432f05a0196a0579769dbdff6fd8ed0",
+        "source_path": "BitBit-Regular.ttf",
+        "url": "https://raw.githubusercontent.com/Neople-font/BitBit/main/BitBit-Regular.ttf"
+      }
+    ],
+    "candidate_font_files": 1,
+    "collected_at": "2026-09-11T02:54:38+00:00"
+  },
+  {
+    "source": "github-upstream",
+    "repo": "naver/d2-coding-font",
+    "source_url": "https://github.com/naver/d2-coding-font",
+    "style_group": "mono",
+    "curation_note": "공식 공개·OFL, 한글 코딩체",
+    "error": "403 Client Error: rate limit exceeded for url: https://api.github.com/repos/naver/d2-coding-font/git/trees/master?recursive=1",
+    "collected_at": "2026-09-11T02:54:39+00:00"
+  }
+]

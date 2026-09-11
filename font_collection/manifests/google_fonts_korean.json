@@ -1,0 +1,1526 @@
+[
+  {
+    "source": "google-fonts",
+    "source_url": "https://github.com/google/fonts/tree/main/ofl/astasans",
+    "name": "Asta Sans",
+    "category": "Sans Serif",
+    "designers": [
+      "42dot"
+    ],
+    "subsets": [
+      "menu",
+      "korean",
+      "latin"
+    ],
+    "weights": [
+      "300",
+      "400",
+      "500",
+      "600",
+      "700",
+      "800"
+    ],
+    "license": "OFL-1.1",
+    "redistribution": "allowed",
+    "embedding": "allowed",
+    "video": "allowed",
+    "files": [
+      {
+        "path": "font_collection\\files\\google-fonts\\astasans\\AstaSans[wght].ttf",
+        "bytes": 5771772,
+        "sha256": "f68410bf7d04deb992097758640145c72ddcf234070794237fc4994e18991c33",
+        "filename": "AstaSans[wght].ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/astasans/AstaSans[wght].ttf"
+      }
+    ],
+    "license_path": "font_collection\\licenses\\google-fonts\\astasans\\OFL.txt",
+    "metadata_path": "font_collection\\licenses\\google-fonts\\astasans\\METADATA.pb",
+    "collected_at": "2026-09-11T02:41:11+00:00"
+  },
+  {
+    "source": "google-fonts",
+    "source_url": "https://github.com/google/fonts/tree/main/ofl/bagelfatone",
+    "name": "Bagel Fat One",
+    "category": "Display",
+    "designers": [
+      "Kyungwon Kim",
+      "JAMO"
+    ],
+    "subsets": [
+      "menu",
+      "korean",
+      "latin",
+      "latin-ext"
+    ],
+    "weights": [
+      "400"
+    ],
+    "license": "OFL-1.1",
+    "redistribution": "allowed",
+    "embedding": "allowed",
+    "video": "allowed",
+    "files": [
+      {
+        "path": "font_collection\\files\\google-fonts\\bagelfatone\\BagelFatOne-Regular.ttf",
+        "bytes": 1585984,
+        "sha256": "9286944032c5a9b20ad70940105417beae14013e0b4f5fc292425afdc4330245",
+        "filename": "BagelFatOne-Regular.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/bagelfatone/BagelFatOne-Regular.ttf"
+      }
+    ],
+    "license_path": "font_collection\\licenses\\google-fonts\\bagelfatone\\OFL.txt",
+    "metadata_path": "font_collection\\licenses\\google-fonts\\bagelfatone\\METADATA.pb",
+    "collected_at": "2026-09-11T02:41:12+00:00"
+  },
+  {
+    "source": "google-fonts",
+    "source_url": "https://github.com/google/fonts/tree/main/ofl/blackandwhitepicture",
+    "name": "Black And White Picture",
+    "category": "Display",
+    "designers": [
+      "AsiaSoft Inc."
+    ],
+    "subsets": [
+      "menu",
+      "korean",
+      "latin"
+    ],
+    "weights": [
+      "400"
+    ],
+    "license": "OFL-1.1",
+    "redistribution": "allowed",
+    "embedding": "allowed",
+    "video": "allowed",
+    "files": [
+      {
+        "path": "font_collection\\files\\google-fonts\\blackandwhitepicture\\BlackAndWhitePicture-Regular.ttf",
+        "bytes": 9606352,
+        "sha256": "4d72cd6de1f210b446c86f06b4e13d7641cbcfb1b375c6927341388aa8e08056",
+        "filename": "BlackAndWhitePicture-Regular.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/blackandwhitepicture/BlackAndWhitePicture-Regular.ttf"
+      }
+    ],
+    "license_path": "font_collection\\licenses\\google-fonts\\blackandwhitepicture\\OFL.txt",
+    "metadata_path": "font_collection\\licenses\\google-fonts\\blackandwhitepicture\\METADATA.pb",
+    "collected_at": "2026-09-11T02:41:13+00:00"
+  },
+  {
+    "source": "google-fonts",
+    "source_url": "https://github.com/google/fonts/tree/main/ofl/blackhansans",
+    "name": "Black Han Sans",
+    "category": "Sans Serif",
+    "designers": [
+      "Zess Type"
+    ],
+    "subsets": [
+      "menu",
+      "korean",
+      "latin"
+    ],
+    "weights": [
+      "400"
+    ],
+    "license": "OFL-1.1",
+    "redistribution": "allowed",
+    "embedding": "allowed",
+    "video": "allowed",
+    "files": [
+      {
+        "path": "font_collection\\files\\google-fonts\\blackhansans\\BlackHanSans-Regular.ttf",
+        "bytes": 998424,
+        "sha256": "31960809284026681774a8e52dc19ebcad26cf69b0ad9d560f288296fbb52739",
+        "filename": "BlackHanSans-Regular.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/blackhansans/BlackHanSans-Regular.ttf"
+      }
+    ],
+    "license_path": "font_collection\\licenses\\google-fonts\\blackhansans\\OFL.txt",
+    "metadata_path": "font_collection\\licenses\\google-fonts\\blackhansans\\METADATA.pb",
+    "collected_at": "2026-09-11T02:41:16+00:00"
+  },
+  {
+    "source": "google-fonts",
+    "source_url": "https://github.com/google/fonts/tree/main/ofl/cutefont",
+    "name": "Cute Font",
+    "category": "Display",
+    "designers": [
+      "TypoDesign Lab. Inc"
+    ],
+    "subsets": [
+      "menu",
+      "korean",
+      "latin"
+    ],
+    "weights": [
+      "400"
+    ],
+    "license": "OFL-1.1",
+    "redistribution": "allowed",
+    "embedding": "allowed",
+    "video": "allowed",
+    "files": [
+      {
+        "path": "font_collection\\files\\google-fonts\\cutefont\\CuteFont-Regular.ttf",
+        "bytes": 1027936,
+        "sha256": "c403227fe6288a8c1423ca48e93fd7efc81e3b81053f7d17adcf659bd95fa4c3",
+        "filename": "CuteFont-Regular.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/cutefont/CuteFont-Regular.ttf"
+      }
+    ],
+    "license_path": "font_collection\\licenses\\google-fonts\\cutefont\\OFL.txt",
+    "metadata_path": "font_collection\\licenses\\google-fonts\\cutefont\\METADATA.pb",
+    "collected_at": "2026-09-11T02:41:18+00:00"
+  },
+  {
+    "source": "google-fonts",
+    "source_url": "https://github.com/google/fonts/tree/main/ofl/diphylleia",
+    "name": "Diphylleia",
+    "category": "Serif",
+    "designers": [
+      "Minha Hyung",
+      "JAMO"
+    ],
+    "subsets": [
+      "menu",
+      "korean",
+      "latin",
+      "latin-ext"
+    ],
+    "weights": [
+      "400"
+    ],
+    "license": "OFL-1.1",
+    "redistribution": "allowed",
+    "embedding": "allowed",
+    "video": "allowed",
+    "files": [
+      {
+        "path": "font_collection\\files\\google-fonts\\diphylleia\\Diphylleia-Regular.ttf",
+        "bytes": 1947768,
+        "sha256": "a0f505e19758bbe69da3e1cdd89fac74e69e851aa82195a61c861bcee7a53293",
+        "filename": "Diphylleia-Regular.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/diphylleia/Diphylleia-Regular.ttf"
+      }
+    ],
+    "license_path": "font_collection\\licenses\\google-fonts\\diphylleia\\OFL.txt",
+    "metadata_path": "font_collection\\licenses\\google-fonts\\diphylleia\\METADATA.pb",
+    "collected_at": "2026-09-11T02:41:22+00:00"
+  },
+  {
+    "source": "google-fonts",
+    "source_url": "https://github.com/google/fonts/tree/main/ofl/dohyeon",
+    "name": "Do Hyeon",
+    "category": "Sans Serif",
+    "designers": [
+      "Woowahan Brothers"
+    ],
+    "subsets": [
+      "menu",
+      "korean",
+      "latin"
+    ],
+    "weights": [
+      "400"
+    ],
+    "license": "OFL-1.1",
+    "redistribution": "allowed",
+    "embedding": "allowed",
+    "video": "allowed",
+    "files": [
+      {
+        "path": "font_collection\\files\\google-fonts\\dohyeon\\DoHyeon-Regular.ttf",
+        "bytes": 879764,
+        "sha256": "35644be7f28e0a68a447b1f7af351dcde5674b870f24f7b5f43e26d00b4ab653",
+        "filename": "DoHyeon-Regular.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/dohyeon/DoHyeon-Regular.ttf"
+      }
+    ],
+    "license_path": "font_collection\\licenses\\google-fonts\\dohyeon\\OFL.txt",
+    "metadata_path": "font_collection\\licenses\\google-fonts\\dohyeon\\METADATA.pb",
+    "collected_at": "2026-09-11T02:41:26+00:00"
+  },
+  {
+    "source": "google-fonts",
+    "source_url": "https://github.com/google/fonts/tree/main/ofl/dokdo",
+    "name": "Dokdo",
+    "category": "Display",
+    "designers": [
+      "FONTRIX"
+    ],
+    "subsets": [
+      "menu",
+      "korean",
+      "latin"
+    ],
+    "weights": [
+      "400"
+    ],
+    "license": "OFL-1.1",
+    "redistribution": "allowed",
+    "embedding": "allowed",
+    "video": "allowed",
+    "files": [
+      {
+        "path": "font_collection\\files\\google-fonts\\dokdo\\Dokdo-Regular.ttf",
+        "bytes": 2150860,
+        "sha256": "5b3a3d8d28af31fa9adec3fc5da81a88b52e1ff39ed3930c1db787aa4e79c36d",
+        "filename": "Dokdo-Regular.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/dokdo/Dokdo-Regular.ttf"
+      }
+    ],
+    "license_path": "font_collection\\licenses\\google-fonts\\dokdo\\OFL.txt",
+    "metadata_path": "font_collection\\licenses\\google-fonts\\dokdo\\METADATA.pb",
+    "collected_at": "2026-09-11T02:41:29+00:00"
+  },
+  {
+    "source": "google-fonts",
+    "source_url": "https://github.com/google/fonts/tree/main/ofl/dongle",
+    "name": "Dongle",
+    "category": "Sans Serif",
+    "designers": [
+      "Yanghee Ryu"
+    ],
+    "subsets": [
+      "menu",
+      "korean",
+      "latin",
+      "latin-ext",
+      "vietnamese"
+    ],
+    "weights": [
+      "300",
+      "400",
+      "700"
+    ],
+    "license": "OFL-1.1",
+    "redistribution": "allowed",
+    "embedding": "allowed",
+    "video": "allowed",
+    "files": [
+      {
+        "path": "font_collection\\files\\google-fonts\\dongle\\Dongle-Light.ttf",
+        "bytes": 4389060,
+        "sha256": "bb04e03dbe44fb0c619434f31565e62b5bac67229d5ed72eeac69c2e74e9a45c",
+        "filename": "Dongle-Light.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/dongle/Dongle-Light.ttf"
+      },
+      {
+        "path": "font_collection\\files\\google-fonts\\dongle\\Dongle-Regular.ttf",
+        "bytes": 4458600,
+        "sha256": "2966e7a9d312a868e2b5477bf9a3e59b8ce16beb76e7e52305ab5897d1ce9741",
+        "filename": "Dongle-Regular.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/dongle/Dongle-Regular.ttf"
+      },
+      {
+        "path": "font_collection\\files\\google-fonts\\dongle\\Dongle-Bold.ttf",
+        "bytes": 4476536,
+        "sha256": "944c498c0d1a1832ab36f173b1b3aa5ae77b2a914e00c4d79e05338fae36472d",
+        "filename": "Dongle-Bold.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/dongle/Dongle-Bold.ttf"
+      }
+    ],
+    "license_path": "font_collection\\licenses\\google-fonts\\dongle\\OFL.txt",
+    "metadata_path": "font_collection\\licenses\\google-fonts\\dongle\\METADATA.pb",
+    "collected_at": "2026-09-11T02:41:34+00:00"
+  },
+  {
+    "source": "google-fonts",
+    "source_url": "https://github.com/google/fonts/tree/main/ofl/eastseadokdo",
+    "name": "East Sea Dokdo",
+    "category": "Handwriting",
+    "designers": [
+      "YoonDesign Inc"
+    ],
+    "subsets": [
+      "menu",
+      "korean",
+      "latin"
+    ],
+    "weights": [
+      "400"
+    ],
+    "license": "OFL-1.1",
+    "redistribution": "allowed",
+    "embedding": "allowed",
+    "video": "allowed",
+    "files": [
+      {
+        "path": "font_collection\\files\\google-fonts\\eastseadokdo\\EastSeaDokdo-Regular.ttf",
+        "bytes": 3178684,
+        "sha256": "8cebb39d375134fdbcedef9bf4ec4f6c3f02c39ed0aacd6e83f7a0f435e593b2",
+        "filename": "EastSeaDokdo-Regular.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/eastseadokdo/EastSeaDokdo-Regular.ttf"
+      }
+    ],
+    "license_path": "font_collection\\licenses\\google-fonts\\eastseadokdo\\OFL.txt",
+    "metadata_path": "font_collection\\licenses\\google-fonts\\eastseadokdo\\METADATA.pb",
+    "collected_at": "2026-09-11T02:41:37+00:00"
+  },
+  {
+    "source": "google-fonts",
+    "source_url": "https://github.com/google/fonts/tree/main/ofl/gaegu",
+    "name": "Gaegu",
+    "category": "Handwriting",
+    "designers": [
+      "JIKJI SOFT"
+    ],
+    "subsets": [
+      "menu",
+      "korean",
+      "latin"
+    ],
+    "weights": [
+      "300",
+      "400",
+      "700"
+    ],
+    "license": "OFL-1.1",
+    "redistribution": "allowed",
+    "embedding": "allowed",
+    "video": "allowed",
+    "files": [
+      {
+        "path": "font_collection\\files\\google-fonts\\gaegu\\Gaegu-Light.ttf",
+        "bytes": 3213004,
+        "sha256": "da44ad6e5823819599ec42e1a516f23002cc0e72f968f93bd49e793360cd77ca",
+        "filename": "Gaegu-Light.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/gaegu/Gaegu-Light.ttf"
+      },
+      {
+        "path": "font_collection\\files\\google-fonts\\gaegu\\Gaegu-Regular.ttf",
+        "bytes": 3165816,
+        "sha256": "aa52c98336f7c62e2896fc8b12b56a75d5b476d88a2f104b0980f4f7ce0adfc3",
+        "filename": "Gaegu-Regular.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/gaegu/Gaegu-Regular.ttf"
+      },
+      {
+        "path": "font_collection\\files\\google-fonts\\gaegu\\Gaegu-Bold.ttf",
+        "bytes": 2962664,
+        "sha256": "cc38a4af9506a45254d1ce07c589ec473d9e5f0be319e5a77b17c214903f8c1c",
+        "filename": "Gaegu-Bold.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/gaegu/Gaegu-Bold.ttf"
+      }
+    ],
+    "license_path": "font_collection\\licenses\\google-fonts\\gaegu\\OFL.txt",
+    "metadata_path": "font_collection\\licenses\\google-fonts\\gaegu\\METADATA.pb",
+    "collected_at": "2026-09-11T02:41:42+00:00"
+  },
+  {
+    "source": "google-fonts",
+    "source_url": "https://github.com/google/fonts/tree/main/ofl/gamjaflower",
+    "name": "Gamja Flower",
+    "category": "Handwriting",
+    "designers": [
+      "YoonDesign Inc"
+    ],
+    "subsets": [
+      "menu",
+      "korean",
+      "latin"
+    ],
+    "weights": [
+      "400"
+    ],
+    "license": "OFL-1.1",
+    "redistribution": "allowed",
+    "embedding": "allowed",
+    "video": "allowed",
+    "files": [
+      {
+        "path": "font_collection\\files\\google-fonts\\gamjaflower\\GamjaFlower-Regular.ttf",
+        "bytes": 12615444,
+        "sha256": "ece32819ed58536355a49a095b0cdfdd3b8ef9081c5ed9ca1cef8f5d999ae1ac",
+        "filename": "GamjaFlower-Regular.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/gamjaflower/GamjaFlower-Regular.ttf"
+      }
+    ],
+    "license_path": "font_collection\\licenses\\google-fonts\\gamjaflower\\OFL.txt",
+    "metadata_path": "font_collection\\licenses\\google-fonts\\gamjaflower\\METADATA.pb",
+    "collected_at": "2026-09-11T02:41:47+00:00"
+  },
+  {
+    "source": "google-fonts",
+    "source_url": "https://github.com/google/fonts/tree/main/ofl/gasoekone",
+    "name": "Gasoek One",
+    "category": "Sans Serif",
+    "designers": [
+      "Jiashuo Zhang",
+      "JAMO"
+    ],
+    "subsets": [
+      "menu",
+      "korean",
+      "latin",
+      "latin-ext"
+    ],
+    "weights": [
+      "400"
+    ],
+    "license": "OFL-1.1",
+    "redistribution": "allowed",
+    "embedding": "allowed",
+    "video": "allowed",
+    "files": [
+      {
+        "path": "font_collection\\files\\google-fonts\\gasoekone\\GasoekOne-Regular.ttf",
+        "bytes": 1061372,
+        "sha256": "73a6b8e0d12a56f0a070f19b44a93ae050f98eb926da5d2a7c8d6db92bd8d9c3",
+        "filename": "GasoekOne-Regular.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/gasoekone/GasoekOne-Regular.ttf"
+      }
+    ],
+    "license_path": "font_collection\\licenses\\google-fonts\\gasoekone\\OFL.txt",
+    "metadata_path": "font_collection\\licenses\\google-fonts\\gasoekone\\METADATA.pb",
+    "collected_at": "2026-09-11T02:41:51+00:00"
+  },
+  {
+    "source": "google-fonts",
+    "source_url": "https://github.com/google/fonts/tree/main/ofl/gothica1",
+    "name": "Gothic A1",
+    "category": "Sans Serif",
+    "designers": [
+      "HanYang I&C Co"
+    ],
+    "subsets": [
+      "menu",
+      "cyrillic",
+      "cyrillic-ext",
+      "greek",
+      "greek-ext",
+      "korean",
+      "latin",
+      "latin-ext",
+      "vietnamese"
+    ],
+    "weights": [
+      "100",
+      "200",
+      "300",
+      "400",
+      "500",
+      "600",
+      "700",
+      "800",
+      "900"
+    ],
+    "license": "OFL-1.1",
+    "redistribution": "allowed",
+    "embedding": "allowed",
+    "video": "allowed",
+    "files": [
+      {
+        "path": "font_collection\\files\\google-fonts\\gothica1\\GothicA1-Thin.ttf",
+        "bytes": 2308312,
+        "sha256": "2caee77c0db6afe1cd759c547537361ce66945e7d6fef0f14a9a35fbb4581bb6",
+        "filename": "GothicA1-Thin.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/gothica1/GothicA1-Thin.ttf"
+      },
+      {
+        "path": "font_collection\\files\\google-fonts\\gothica1\\GothicA1-ExtraLight.ttf",
+        "bytes": 2298392,
+        "sha256": "3de01e7b6bc0fdd494fa4de0677e67a73a6ae907537bb4c5f355d9c966e2ebfd",
+        "filename": "GothicA1-ExtraLight.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/gothica1/GothicA1-ExtraLight.ttf"
+      },
+      {
+        "path": "font_collection\\files\\google-fonts\\gothica1\\GothicA1-Light.ttf",
+        "bytes": 2298100,
+        "sha256": "927826b1e23366327ebe53d4675a87938ee90b77104cb794087b5138588b53f4",
+        "filename": "GothicA1-Light.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/gothica1/GothicA1-Light.ttf"
+      },
+      {
+        "path": "font_collection\\files\\google-fonts\\gothica1\\GothicA1-Regular.ttf",
+        "bytes": 2295400,
+        "sha256": "211151bea98098c579610ab1114bb1bfe909057207db561f357b896d076c21ac",
+        "filename": "GothicA1-Regular.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/gothica1/GothicA1-Regular.ttf"
+      },
+      {
+        "path": "font_collection\\files\\google-fonts\\gothica1\\GothicA1-Medium.ttf",
+        "bytes": 2288824,
+        "sha256": "c8a0eb56fa6b13448688fed0799d503fe536a8c6b7acfafdfd580edb9c4c2192",
+        "filename": "GothicA1-Medium.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/gothica1/GothicA1-Medium.ttf"
+      },
+      {
+        "path": "font_collection\\files\\google-fonts\\gothica1\\GothicA1-SemiBold.ttf",
+        "bytes": 2288560,
+        "sha256": "7ee3063f2d626936d8a59dfa21525e7ed19b4e89e8fbb0ea5a924cad9b0cc1f4",
+        "filename": "GothicA1-SemiBold.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/gothica1/GothicA1-SemiBold.ttf"
+      },
+      {
+        "path": "font_collection\\files\\google-fonts\\gothica1\\GothicA1-Bold.ttf",
+        "bytes": 2287068,
+        "sha256": "2e883fa0ae548000996258b4101f2bb732a28b197264f49621a2cb16d6e9f126",
+        "filename": "GothicA1-Bold.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/gothica1/GothicA1-Bold.ttf"
+      },
+      {
+        "path": "font_collection\\files\\google-fonts\\gothica1\\GothicA1-ExtraBold.ttf",
+        "bytes": 2281144,
+        "sha256": "37a65353a646fea5a1ac90585d1bb8f9b997ecae0b79c4f1f187566f910e3f9d",
+        "filename": "GothicA1-ExtraBold.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/gothica1/GothicA1-ExtraBold.ttf"
+      },
+      {
+        "path": "font_collection\\files\\google-fonts\\gothica1\\GothicA1-Black.ttf",
+        "bytes": 2260752,
+        "sha256": "6398ff5c6923c74cb453390892dcb982ec0a6c43b35da8590a8f32702d8c079d",
+        "filename": "GothicA1-Black.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/gothica1/GothicA1-Black.ttf"
+      }
+    ],
+    "license_path": "font_collection\\licenses\\google-fonts\\gothica1\\OFL.txt",
+    "metadata_path": "font_collection\\licenses\\google-fonts\\gothica1\\METADATA.pb",
+    "collected_at": "2026-09-11T02:42:04+00:00"
+  },
+  {
+    "source": "google-fonts",
+    "source_url": "https://github.com/google/fonts/tree/main/ofl/gowunbatang",
+    "name": "Gowun Batang",
+    "category": "Serif",
+    "designers": [
+      "Yanghee Ryu"
+    ],
+    "subsets": [
+      "menu",
+      "korean",
+      "latin",
+      "latin-ext",
+      "vietnamese"
+    ],
+    "weights": [
+      "400",
+      "700"
+    ],
+    "license": "OFL-1.1",
+    "redistribution": "allowed",
+    "embedding": "allowed",
+    "video": "allowed",
+    "files": [
+      {
+        "path": "font_collection\\files\\google-fonts\\gowunbatang\\GowunBatang-Regular.ttf",
+        "bytes": 8433296,
+        "sha256": "466c593e7147412e748af4856d5ad14709b5a860bdf62b9c2546f2c5874e9849",
+        "filename": "GowunBatang-Regular.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/gowunbatang/GowunBatang-Regular.ttf"
+      },
+      {
+        "path": "font_collection\\files\\google-fonts\\gowunbatang\\GowunBatang-Bold.ttf",
+        "bytes": 8178712,
+        "sha256": "dbfcaa646e5831e7478524924f02906f550285a5050699b4e38c9950b3ec4b94",
+        "filename": "GowunBatang-Bold.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/gowunbatang/GowunBatang-Bold.ttf"
+      }
+    ],
+    "license_path": "font_collection\\licenses\\google-fonts\\gowunbatang\\OFL.txt",
+    "metadata_path": "font_collection\\licenses\\google-fonts\\gowunbatang\\METADATA.pb",
+    "collected_at": "2026-09-11T02:42:09+00:00"
+  },
+  {
+    "source": "google-fonts",
+    "source_url": "https://github.com/google/fonts/tree/main/ofl/gowundodum",
+    "name": "Gowun Dodum",
+    "category": "Sans Serif",
+    "designers": [
+      "Yanghee Ryu"
+    ],
+    "subsets": [
+      "menu",
+      "korean",
+      "latin",
+      "latin-ext",
+      "vietnamese"
+    ],
+    "weights": [
+      "400"
+    ],
+    "license": "OFL-1.1",
+    "redistribution": "allowed",
+    "embedding": "allowed",
+    "video": "allowed",
+    "files": [
+      {
+        "path": "font_collection\\files\\google-fonts\\gowundodum\\GowunDodum-Regular.ttf",
+        "bytes": 7229088,
+        "sha256": "a6e457933227483a11758fd0947bc74422a106d46f0bf057fdaa5af94a30067d",
+        "filename": "GowunDodum-Regular.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/gowundodum/GowunDodum-Regular.ttf"
+      }
+    ],
+    "license_path": "font_collection\\licenses\\google-fonts\\gowundodum\\OFL.txt",
+    "metadata_path": "font_collection\\licenses\\google-fonts\\gowundodum\\METADATA.pb",
+    "collected_at": "2026-09-11T02:42:12+00:00"
+  },
+  {
+    "source": "google-fonts",
+    "source_url": "https://github.com/google/fonts/tree/main/ofl/grandifloraone",
+    "name": "Grandiflora One",
+    "category": "Serif",
+    "designers": [
+      "Haesung Cho",
+      "JAMO"
+    ],
+    "subsets": [
+      "menu",
+      "korean",
+      "latin",
+      "latin-ext"
+    ],
+    "weights": [
+      "400"
+    ],
+    "license": "OFL-1.1",
+    "redistribution": "allowed",
+    "embedding": "allowed",
+    "video": "allowed",
+    "files": [
+      {
+        "path": "font_collection\\files\\google-fonts\\grandifloraone\\GrandifloraOne-Regular.ttf",
+        "bytes": 2342680,
+        "sha256": "592da2454a6626ee68558e220df28808b95f7dd140cd1ceb8a0d72b777f157ad",
+        "filename": "GrandifloraOne-Regular.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/grandifloraone/GrandifloraOne-Regular.ttf"
+      }
+    ],
+    "license_path": "font_collection\\licenses\\google-fonts\\grandifloraone\\OFL.txt",
+    "metadata_path": "font_collection\\licenses\\google-fonts\\grandifloraone\\METADATA.pb",
+    "collected_at": "2026-09-11T02:42:14+00:00"
+  },
+  {
+    "source": "google-fonts",
+    "source_url": "https://github.com/google/fonts/tree/main/ofl/gugi",
+    "name": "Gugi",
+    "category": "Display",
+    "designers": [
+      "TAE System & Typefaces Co."
+    ],
+    "subsets": [
+      "menu",
+      "korean",
+      "latin"
+    ],
+    "weights": [
+      "400"
+    ],
+    "license": "OFL-1.1",
+    "redistribution": "allowed",
+    "embedding": "allowed",
+    "video": "allowed",
+    "files": [
+      {
+        "path": "font_collection\\files\\google-fonts\\gugi\\Gugi-Regular.ttf",
+        "bytes": 990856,
+        "sha256": "c0b1f979979cfc309fb2438fa9464f96173353e0c4842cc7a5919658184ed9d3",
+        "filename": "Gugi-Regular.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/gugi/Gugi-Regular.ttf"
+      }
+    ],
+    "license_path": "font_collection\\licenses\\google-fonts\\gugi\\OFL.txt",
+    "metadata_path": "font_collection\\licenses\\google-fonts\\gugi\\METADATA.pb",
+    "collected_at": "2026-09-11T02:42:17+00:00"
+  },
+  {
+    "source": "google-fonts",
+    "source_url": "https://github.com/google/fonts/tree/main/ofl/hahmlet",
+    "name": "Hahmlet",
+    "category": "Serif",
+    "designers": [
+      "Hypertype"
+    ],
+    "subsets": [
+      "menu",
+      "korean",
+      "latin",
+      "latin-ext",
+      "vietnamese"
+    ],
+    "weights": [
+      "100",
+      "200",
+      "300",
+      "400",
+      "500",
+      "600",
+      "700",
+      "800",
+      "900"
+    ],
+    "license": "OFL-1.1",
+    "redistribution": "allowed",
+    "embedding": "allowed",
+    "video": "allowed",
+    "files": [
+      {
+        "path": "font_collection\\files\\google-fonts\\hahmlet\\Hahmlet[wght].ttf",
+        "bytes": 3559144,
+        "sha256": "892bffe530255770a7435226154a02f519055ff6bedf64254f37f21d15a59279",
+        "filename": "Hahmlet[wght].ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/hahmlet/Hahmlet[wght].ttf"
+      }
+    ],
+    "license_path": "font_collection\\licenses\\google-fonts\\hahmlet\\OFL.txt",
+    "metadata_path": "font_collection\\licenses\\google-fonts\\hahmlet\\METADATA.pb",
+    "collected_at": "2026-09-11T02:42:20+00:00"
+  },
+  {
+    "source": "google-fonts",
+    "source_url": "https://github.com/google/fonts/tree/main/ofl/himelody",
+    "name": "Hi Melody",
+    "category": "Handwriting",
+    "designers": [
+      "YoonDesign Inc"
+    ],
+    "subsets": [
+      "menu",
+      "korean",
+      "latin"
+    ],
+    "weights": [
+      "400"
+    ],
+    "license": "OFL-1.1",
+    "redistribution": "allowed",
+    "embedding": "allowed",
+    "video": "allowed",
+    "files": [
+      {
+        "path": "font_collection\\files\\google-fonts\\himelody\\HiMelody-Regular.ttf",
+        "bytes": 12623412,
+        "sha256": "360d2c0a880918aa48328d1d9219f5390788d09a1c9353e12b471de018673ae6",
+        "filename": "HiMelody-Regular.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/himelody/HiMelody-Regular.ttf"
+      }
+    ],
+    "license_path": "font_collection\\licenses\\google-fonts\\himelody\\OFL.txt",
+    "metadata_path": "font_collection\\licenses\\google-fonts\\himelody\\METADATA.pb",
+    "collected_at": "2026-09-11T02:42:24+00:00"
+  },
+  {
+    "source": "google-fonts",
+    "source_url": "https://github.com/google/fonts/tree/main/ofl/ibmplexsanskr",
+    "name": "IBM Plex Sans KR",
+    "category": "Sans Serif",
+    "designers": [
+      "Mike Abbink",
+      "Bold Monday"
+    ],
+    "subsets": [
+      "menu",
+      "korean",
+      "latin",
+      "latin-ext"
+    ],
+    "weights": [
+      "100",
+      "200",
+      "300",
+      "400",
+      "500",
+      "600",
+      "700"
+    ],
+    "license": "OFL-1.1",
+    "redistribution": "allowed",
+    "embedding": "allowed",
+    "video": "allowed",
+    "files": [
+      {
+        "path": "font_collection\\files\\google-fonts\\ibmplexsanskr\\IBMPlexSansKR-Thin.ttf",
+        "bytes": 2519952,
+        "sha256": "80fe4c5dc2fce17a7115a84966da6f5e443e21f332db2e1de53339f7f92357c6",
+        "filename": "IBMPlexSansKR-Thin.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/ibmplexsanskr/IBMPlexSansKR-Thin.ttf"
+      },
+      {
+        "path": "font_collection\\files\\google-fonts\\ibmplexsanskr\\IBMPlexSansKR-ExtraLight.ttf",
+        "bytes": 2860324,
+        "sha256": "202d1aa692a8d222026f981725477df7ea963246c3c6080cc3b55669414fc861",
+        "filename": "IBMPlexSansKR-ExtraLight.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/ibmplexsanskr/IBMPlexSansKR-ExtraLight.ttf"
+      },
+      {
+        "path": "font_collection\\files\\google-fonts\\ibmplexsanskr\\IBMPlexSansKR-Light.ttf",
+        "bytes": 2803868,
+        "sha256": "a44ebb467261e0bb02f5d5ce375ca5d675a70f8047fd8d4e8dc56add4be50c7b",
+        "filename": "IBMPlexSansKR-Light.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/ibmplexsanskr/IBMPlexSansKR-Light.ttf"
+      },
+      {
+        "path": "font_collection\\files\\google-fonts\\ibmplexsanskr\\IBMPlexSansKR-Regular.ttf",
+        "bytes": 2797100,
+        "sha256": "53750379270312368cf7641901f43a98dd892e3d9d5798cf25cdc245c85c71c0",
+        "filename": "IBMPlexSansKR-Regular.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/ibmplexsanskr/IBMPlexSansKR-Regular.ttf"
+      },
+      {
+        "path": "font_collection\\files\\google-fonts\\ibmplexsanskr\\IBMPlexSansKR-Medium.ttf",
+        "bytes": 2866736,
+        "sha256": "4a7130f56ce50bf10f9d383f624e50bad2c80bebc63e51f4269ece2c7d919166",
+        "filename": "IBMPlexSansKR-Medium.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/ibmplexsanskr/IBMPlexSansKR-Medium.ttf"
+      },
+      {
+        "path": "font_collection\\files\\google-fonts\\ibmplexsanskr\\IBMPlexSansKR-SemiBold.ttf",
+        "bytes": 2854744,
+        "sha256": "823c1956adf56c27c06b062725dfce23f266e4fd1366290f2957c8407482a817",
+        "filename": "IBMPlexSansKR-SemiBold.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/ibmplexsanskr/IBMPlexSansKR-SemiBold.ttf"
+      },
+      {
+        "path": "font_collection\\files\\google-fonts\\ibmplexsanskr\\IBMPlexSansKR-Bold.ttf",
+        "bytes": 2875584,
+        "sha256": "9d82a8be5330f6d7b53121262867b402baca672eb69b852928f06d185d357f7d",
+        "filename": "IBMPlexSansKR-Bold.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/ibmplexsanskr/IBMPlexSansKR-Bold.ttf"
+      }
+    ],
+    "license_path": "font_collection\\licenses\\google-fonts\\ibmplexsanskr\\OFL.txt",
+    "metadata_path": "font_collection\\licenses\\google-fonts\\ibmplexsanskr\\METADATA.pb",
+    "collected_at": "2026-09-11T02:42:36+00:00"
+  },
+  {
+    "source": "google-fonts",
+    "source_url": "https://github.com/google/fonts/tree/main/ofl/jua",
+    "name": "Jua",
+    "category": "Sans Serif",
+    "designers": [
+      "Woowahan Brothers"
+    ],
+    "subsets": [
+      "menu",
+      "korean",
+      "latin"
+    ],
+    "weights": [
+      "400"
+    ],
+    "license": "OFL-1.1",
+    "redistribution": "allowed",
+    "embedding": "allowed",
+    "video": "allowed",
+    "files": [
+      {
+        "path": "font_collection\\files\\google-fonts\\jua\\Jua-Regular.ttf",
+        "bytes": 2119352,
+        "sha256": "769677aef240bfc3b9965f2b50748075bff885e6c6992fc591a3fb268279f898",
+        "filename": "Jua-Regular.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/jua/Jua-Regular.ttf"
+      }
+    ],
+    "license_path": "font_collection\\licenses\\google-fonts\\jua\\OFL.txt",
+    "metadata_path": "font_collection\\licenses\\google-fonts\\jua\\METADATA.pb",
+    "collected_at": "2026-09-11T02:42:40+00:00"
+  },
+  {
+    "source": "google-fonts",
+    "source_url": "https://github.com/google/fonts/tree/main/ofl/kiranghaerang",
+    "name": "Kirang Haerang",
+    "category": "Display",
+    "designers": [
+      "Woowahan Brothers"
+    ],
+    "subsets": [
+      "menu",
+      "korean",
+      "latin"
+    ],
+    "weights": [
+      "400"
+    ],
+    "license": "OFL-1.1",
+    "redistribution": "allowed",
+    "embedding": "allowed",
+    "video": "allowed",
+    "files": [
+      {
+        "path": "font_collection\\files\\google-fonts\\kiranghaerang\\KirangHaerang-Regular.ttf",
+        "bytes": 5995608,
+        "sha256": "d677d28d466989017c520f00a2a7794ea581ea3d9fa9a830fbb44f1015eac72d",
+        "filename": "KirangHaerang-Regular.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/kiranghaerang/KirangHaerang-Regular.ttf"
+      }
+    ],
+    "license_path": "font_collection\\licenses\\google-fonts\\kiranghaerang\\OFL.txt",
+    "metadata_path": "font_collection\\licenses\\google-fonts\\kiranghaerang\\METADATA.pb",
+    "collected_at": "2026-09-11T02:42:46+00:00"
+  },
+  {
+    "source": "google-fonts",
+    "source_url": "https://github.com/google/fonts/tree/main/ofl/moiraione",
+    "name": "Moirai One",
+    "category": "Display",
+    "designers": [
+      "Jiyeon Park",
+      "JAMO"
+    ],
+    "subsets": [
+      "menu",
+      "korean",
+      "latin",
+      "latin-ext"
+    ],
+    "weights": [
+      "400"
+    ],
+    "license": "OFL-1.1",
+    "redistribution": "allowed",
+    "embedding": "allowed",
+    "video": "allowed",
+    "files": [
+      {
+        "path": "font_collection\\files\\google-fonts\\moiraione\\MoiraiOne-Regular.ttf",
+        "bytes": 2102128,
+        "sha256": "432f48aa773510211ac50c9d8130e50fe135c4d8c05645828ccde7e652ea8106",
+        "filename": "MoiraiOne-Regular.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/moiraione/MoiraiOne-Regular.ttf"
+      }
+    ],
+    "license_path": "font_collection\\licenses\\google-fonts\\moiraione\\OFL.txt",
+    "metadata_path": "font_collection\\licenses\\google-fonts\\moiraione\\METADATA.pb",
+    "collected_at": "2026-09-11T02:42:54+00:00"
+  },
+  {
+    "source": "google-fonts",
+    "source_url": "https://github.com/google/fonts/tree/main/ofl/nanumbrushscript",
+    "name": "Nanum Brush Script",
+    "category": "Handwriting",
+    "designers": [
+      "Sandoll Communication"
+    ],
+    "subsets": [
+      "menu",
+      "korean",
+      "latin"
+    ],
+    "weights": [
+      "400"
+    ],
+    "license": "OFL-1.1",
+    "redistribution": "allowed",
+    "embedding": "allowed",
+    "video": "allowed",
+    "files": [
+      {
+        "path": "font_collection\\files\\google-fonts\\nanumbrushscript\\NanumBrushScript-Regular.ttf",
+        "bytes": 3564804,
+        "sha256": "27ceaf578c96f594cdf07fe0181b251790acbb746a164e45c1f6473f89911a31",
+        "filename": "NanumBrushScript-Regular.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/nanumbrushscript/NanumBrushScript-Regular.ttf"
+      }
+    ],
+    "license_path": "font_collection\\licenses\\google-fonts\\nanumbrushscript\\OFL.txt",
+    "metadata_path": "font_collection\\licenses\\google-fonts\\nanumbrushscript\\METADATA.pb",
+    "collected_at": "2026-09-11T02:43:00+00:00"
+  },
+  {
+    "source": "google-fonts",
+    "source_url": "https://github.com/google/fonts/tree/main/ofl/nanumgothic",
+    "name": "Nanum Gothic",
+    "category": "Sans Serif",
+    "designers": [
+      "Sandoll Communication"
+    ],
+    "subsets": [
+      "menu",
+      "korean",
+      "latin"
+    ],
+    "weights": [
+      "400",
+      "700",
+      "800"
+    ],
+    "license": "OFL-1.1",
+    "redistribution": "allowed",
+    "embedding": "allowed",
+    "video": "allowed",
+    "files": [
+      {
+        "path": "font_collection\\files\\google-fonts\\nanumgothic\\NanumGothic-Regular.ttf",
+        "bytes": 2054744,
+        "sha256": "76f45ef4a6bcff344c837c95a7dcc26e017e38b5846d5ae0cdcb5b86be2e2d31",
+        "filename": "NanumGothic-Regular.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/nanumgothic/NanumGothic-Regular.ttf"
+      },
+      {
+        "path": "font_collection\\files\\google-fonts\\nanumgothic\\NanumGothic-Bold.ttf",
+        "bytes": 2073868,
+        "sha256": "f96298f9fb18e364d2370f4c3ce948ac67a2b61af992d7234bc15c42b033c674",
+        "filename": "NanumGothic-Bold.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/nanumgothic/NanumGothic-Bold.ttf"
+      },
+      {
+        "path": "font_collection\\files\\google-fonts\\nanumgothic\\NanumGothic-ExtraBold.ttf",
+        "bytes": 2112720,
+        "sha256": "5c4568e5295a8c52bc30e7efa1ea6d2de43556268ef42daba93540a1ece691ae",
+        "filename": "NanumGothic-ExtraBold.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/nanumgothic/NanumGothic-ExtraBold.ttf"
+      }
+    ],
+    "license_path": "font_collection\\licenses\\google-fonts\\nanumgothic\\OFL.txt",
+    "metadata_path": "font_collection\\licenses\\google-fonts\\nanumgothic\\METADATA.pb",
+    "collected_at": "2026-09-11T02:43:07+00:00"
+  },
+  {
+    "source": "google-fonts",
+    "source_url": "https://github.com/google/fonts/tree/main/ofl/nanumgothiccoding",
+    "name": "Nanum Gothic Coding",
+    "category": "Handwriting",
+    "designers": [
+      "Sandoll Communication"
+    ],
+    "subsets": [
+      "menu",
+      "korean",
+      "latin"
+    ],
+    "weights": [
+      "400",
+      "700"
+    ],
+    "license": "OFL-1.1",
+    "redistribution": "allowed",
+    "embedding": "allowed",
+    "video": "allowed",
+    "files": [
+      {
+        "path": "font_collection\\files\\google-fonts\\nanumgothiccoding\\NanumGothicCoding-Regular.ttf",
+        "bytes": 2315924,
+        "sha256": "787effd7efed2abca88ade231faa8191f4e9fcf85b1805a13ee1dc3724b72089",
+        "filename": "NanumGothicCoding-Regular.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/nanumgothiccoding/NanumGothicCoding-Regular.ttf"
+      },
+      {
+        "path": "font_collection\\files\\google-fonts\\nanumgothiccoding\\NanumGothicCoding-Bold.ttf",
+        "bytes": 2246240,
+        "sha256": "77a6de97c176b76ef9a683b565a1e6f4ce40b499c72a2972c4b5bdf7c6b8e7a0",
+        "filename": "NanumGothicCoding-Bold.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/nanumgothiccoding/NanumGothicCoding-Bold.ttf"
+      }
+    ],
+    "license_path": "font_collection\\licenses\\google-fonts\\nanumgothiccoding\\OFL.txt",
+    "metadata_path": "font_collection\\licenses\\google-fonts\\nanumgothiccoding\\METADATA.pb",
+    "collected_at": "2026-09-11T02:43:11+00:00"
+  },
+  {
+    "source": "google-fonts",
+    "source_url": "https://github.com/google/fonts/tree/main/ofl/nanummyeongjo",
+    "name": "Nanum Myeongjo",
+    "category": "Serif",
+    "designers": [
+      "Sandoll Communication"
+    ],
+    "subsets": [
+      "menu",
+      "korean",
+      "latin"
+    ],
+    "weights": [
+      "400",
+      "700",
+      "800"
+    ],
+    "license": "OFL-1.1",
+    "redistribution": "allowed",
+    "embedding": "allowed",
+    "video": "allowed",
+    "files": [
+      {
+        "path": "font_collection\\files\\google-fonts\\nanummyeongjo\\NanumMyeongjo-Regular.ttf",
+        "bytes": 3058408,
+        "sha256": "7ed9e8653a8ed04285d51dc343ffea6eb3d9c73afc27383ea8929ee4ffd03205",
+        "filename": "NanumMyeongjo-Regular.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/nanummyeongjo/NanumMyeongjo-Regular.ttf"
+      },
+      {
+        "path": "font_collection\\files\\google-fonts\\nanummyeongjo\\NanumMyeongjo-Bold.ttf",
+        "bytes": 3074720,
+        "sha256": "bc9ed8e60d93fe6db054b8fb988481b625f2eef8cb2317ad0e9834681b8fe3f3",
+        "filename": "NanumMyeongjo-Bold.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/nanummyeongjo/NanumMyeongjo-Bold.ttf"
+      },
+      {
+        "path": "font_collection\\files\\google-fonts\\nanummyeongjo\\NanumMyeongjo-ExtraBold.ttf",
+        "bytes": 3180888,
+        "sha256": "60c0077fce069ba90ae97c0a3679f6eb3712e0ca637bdd0c15b72d335ec46db7",
+        "filename": "NanumMyeongjo-ExtraBold.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/nanummyeongjo/NanumMyeongjo-ExtraBold.ttf"
+      }
+    ],
+    "license_path": "font_collection\\licenses\\google-fonts\\nanummyeongjo\\OFL.txt",
+    "metadata_path": "font_collection\\licenses\\google-fonts\\nanummyeongjo\\METADATA.pb",
+    "collected_at": "2026-09-11T02:43:15+00:00"
+  },
+  {
+    "source": "google-fonts",
+    "source_url": "https://github.com/google/fonts/tree/main/ofl/nanumpenscript",
+    "name": "Nanum Pen Script",
+    "category": "Handwriting",
+    "designers": [
+      "Sandoll Communication"
+    ],
+    "subsets": [
+      "menu",
+      "korean",
+      "latin"
+    ],
+    "weights": [
+      "400"
+    ],
+    "license": "OFL-1.1",
+    "redistribution": "allowed",
+    "embedding": "allowed",
+    "video": "allowed",
+    "files": [
+      {
+        "path": "font_collection\\files\\google-fonts\\nanumpenscript\\NanumPenScript-Regular.ttf",
+        "bytes": 3201664,
+        "sha256": "6f0d1ab29c7894010dc88831fb7a0a51edb79136e450344183de5b1a8b52bd43",
+        "filename": "NanumPenScript-Regular.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/nanumpenscript/NanumPenScript-Regular.ttf"
+      }
+    ],
+    "license_path": "font_collection\\licenses\\google-fonts\\nanumpenscript\\OFL.txt",
+    "metadata_path": "font_collection\\licenses\\google-fonts\\nanumpenscript\\METADATA.pb",
+    "collected_at": "2026-09-11T02:43:17+00:00"
+  },
+  {
+    "source": "google-fonts",
+    "source_url": "https://github.com/google/fonts/tree/main/ofl/notosanskr",
+    "name": "Noto Sans KR",
+    "category": "Sans Serif",
+    "designers": [
+      "Google"
+    ],
+    "subsets": [
+      "menu",
+      "cyrillic",
+      "korean",
+      "latin",
+      "latin-ext",
+      "vietnamese"
+    ],
+    "weights": [
+      "100",
+      "200",
+      "300",
+      "400",
+      "500",
+      "600",
+      "700",
+      "800",
+      "900"
+    ],
+    "license": "OFL-1.1",
+    "redistribution": "allowed",
+    "embedding": "allowed",
+    "video": "allowed",
+    "files": [
+      {
+        "path": "font_collection\\files\\google-fonts\\notosanskr\\NotoSansKR[wght].ttf",
+        "bytes": 10414588,
+        "sha256": "194018e6b2b293a7964f037b25c0249ce1418bc9ab3c971060a03aa57861e252",
+        "filename": "NotoSansKR[wght].ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/notosanskr/NotoSansKR[wght].ttf"
+      }
+    ],
+    "license_path": "font_collection\\licenses\\google-fonts\\notosanskr\\OFL.txt",
+    "metadata_path": "font_collection\\licenses\\google-fonts\\notosanskr\\METADATA.pb",
+    "collected_at": "2026-09-11T02:43:19+00:00"
+  },
+  {
+    "source": "google-fonts",
+    "source_url": "https://github.com/google/fonts/tree/main/ofl/notoserifkr",
+    "name": "Noto Serif KR",
+    "category": "Serif",
+    "designers": [
+      "Google"
+    ],
+    "subsets": [
+      "menu",
+      "cyrillic",
+      "korean",
+      "latin",
+      "latin-ext",
+      "vietnamese"
+    ],
+    "weights": [
+      "200",
+      "300",
+      "400",
+      "500",
+      "600",
+      "700",
+      "800",
+      "900"
+    ],
+    "license": "OFL-1.1",
+    "redistribution": "allowed",
+    "embedding": "allowed",
+    "video": "allowed",
+    "files": [
+      {
+        "path": "font_collection\\files\\google-fonts\\notoserifkr\\NotoSerifKR[wght].ttf",
+        "bytes": 23795420,
+        "sha256": "11f8d5de6f1b79195efba3828aaa2ec95c1178f5ae976fb23c8d53250a9938f3",
+        "filename": "NotoSerifKR[wght].ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/notoserifkr/NotoSerifKR[wght].ttf"
+      }
+    ],
+    "license_path": "font_collection\\licenses\\google-fonts\\notoserifkr\\OFL.txt",
+    "metadata_path": "font_collection\\licenses\\google-fonts\\notoserifkr\\METADATA.pb",
+    "collected_at": "2026-09-11T02:43:25+00:00"
+  },
+  {
+    "source": "google-fonts",
+    "source_url": "https://github.com/google/fonts/tree/main/ofl/orbit",
+    "name": "Orbit",
+    "category": "Sans Serif",
+    "designers": [
+      "Sooun Cho",
+      "JAMO"
+    ],
+    "subsets": [
+      "menu",
+      "korean",
+      "latin",
+      "latin-ext"
+    ],
+    "weights": [
+      "400"
+    ],
+    "license": "OFL-1.1",
+    "redistribution": "allowed",
+    "embedding": "allowed",
+    "video": "allowed",
+    "files": [
+      {
+        "path": "font_collection\\files\\google-fonts\\orbit\\Orbit-Regular.ttf",
+        "bytes": 784480,
+        "sha256": "5d0206fb0a9e3eeac51aff8d4a6dbb7613d63fc435f1a51f96dc35cefb5f9f87",
+        "filename": "Orbit-Regular.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/orbit/Orbit-Regular.ttf"
+      }
+    ],
+    "license_path": "font_collection\\licenses\\google-fonts\\orbit\\OFL.txt",
+    "metadata_path": "font_collection\\licenses\\google-fonts\\orbit\\METADATA.pb",
+    "collected_at": "2026-09-11T02:43:27+00:00"
+  },
+  {
+    "source": "google-fonts",
+    "source_url": "https://github.com/google/fonts/tree/main/ofl/poorstory",
+    "name": "Poor Story",
+    "category": "Display",
+    "designers": [
+      "Yoon Design"
+    ],
+    "subsets": [
+      "menu",
+      "korean",
+      "latin"
+    ],
+    "weights": [
+      "400"
+    ],
+    "license": "OFL-1.1",
+    "redistribution": "allowed",
+    "embedding": "allowed",
+    "video": "allowed",
+    "files": [
+      {
+        "path": "font_collection\\files\\google-fonts\\poorstory\\PoorStory-Regular.ttf",
+        "bytes": 3966768,
+        "sha256": "831ab87f7b5463f9cd83ac249bf386816f3a478f1d226427c88cac907adb7ee2",
+        "filename": "PoorStory-Regular.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/poorstory/PoorStory-Regular.ttf"
+      }
+    ],
+    "license_path": "font_collection\\licenses\\google-fonts\\poorstory\\OFL.txt",
+    "metadata_path": "font_collection\\licenses\\google-fonts\\poorstory\\METADATA.pb",
+    "collected_at": "2026-09-11T02:43:30+00:00"
+  },
+  {
+    "source": "google-fonts",
+    "source_url": "https://github.com/google/fonts/tree/main/ofl/singleday",
+    "name": "Single Day",
+    "category": "Display",
+    "designers": [
+      "DXKorea Inc"
+    ],
+    "subsets": [
+      "menu",
+      "korean",
+      "latin"
+    ],
+    "weights": [
+      "400"
+    ],
+    "license": "OFL-1.1",
+    "redistribution": "allowed",
+    "embedding": "allowed",
+    "video": "allowed",
+    "files": [
+      {
+        "path": "font_collection\\files\\google-fonts\\singleday\\SingleDay-Regular.ttf",
+        "bytes": 816524,
+        "sha256": "716ff67a4b0675b35c26d60a4bb83173f7d153ab754474ed36c3369593ca1ca8",
+        "filename": "SingleDay-Regular.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/singleday/SingleDay-Regular.ttf"
+      }
+    ],
+    "license_path": "font_collection\\licenses\\google-fonts\\singleday\\OFL.txt",
+    "metadata_path": "font_collection\\licenses\\google-fonts\\singleday\\METADATA.pb",
+    "collected_at": "2026-09-11T02:43:31+00:00"
+  },
+  {
+    "source": "google-fonts",
+    "source_url": "https://github.com/google/fonts/tree/main/ofl/songmyung",
+    "name": "Song Myung",
+    "category": "Serif",
+    "designers": [
+      "JIKJI"
+    ],
+    "subsets": [
+      "menu",
+      "korean",
+      "latin"
+    ],
+    "weights": [
+      "400"
+    ],
+    "license": "OFL-1.1",
+    "redistribution": "allowed",
+    "embedding": "allowed",
+    "video": "allowed",
+    "files": [
+      {
+        "path": "font_collection\\files\\google-fonts\\songmyung\\SongMyung-Regular.ttf",
+        "bytes": 2035300,
+        "sha256": "7f90ab20250911560212cc5819c7b205f9c6644bb96b65095d89fcae096bbf58",
+        "filename": "SongMyung-Regular.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/songmyung/SongMyung-Regular.ttf"
+      }
+    ],
+    "license_path": "font_collection\\licenses\\google-fonts\\songmyung\\OFL.txt",
+    "metadata_path": "font_collection\\licenses\\google-fonts\\songmyung\\METADATA.pb",
+    "collected_at": "2026-09-11T02:43:33+00:00"
+  },
+  {
+    "source": "google-fonts",
+    "source_url": "https://github.com/google/fonts/tree/main/ofl/stylish",
+    "name": "Stylish",
+    "category": "Sans Serif",
+    "designers": [
+      "AsiaSoft Inc"
+    ],
+    "subsets": [
+      "menu",
+      "korean",
+      "latin"
+    ],
+    "weights": [
+      "400"
+    ],
+    "license": "OFL-1.1",
+    "redistribution": "allowed",
+    "embedding": "allowed",
+    "video": "allowed",
+    "files": [
+      {
+        "path": "font_collection\\files\\google-fonts\\stylish\\Stylish-Regular.ttf",
+        "bytes": 10854004,
+        "sha256": "3ea2e4c9d0183fdcc1362039305ef30fa8bb5154f030b303a029059a44a8516c",
+        "filename": "Stylish-Regular.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/stylish/Stylish-Regular.ttf"
+      }
+    ],
+    "license_path": "font_collection\\licenses\\google-fonts\\stylish\\OFL.txt",
+    "metadata_path": "font_collection\\licenses\\google-fonts\\stylish\\METADATA.pb",
+    "collected_at": "2026-09-11T02:43:37+00:00"
+  },
+  {
+    "source": "google-fonts",
+    "source_url": "https://github.com/google/fonts/tree/main/ofl/sunflower",
+    "name": "Sunflower",
+    "category": "Sans Serif",
+    "designers": [
+      "JIKJISOFT"
+    ],
+    "subsets": [
+      "menu",
+      "korean",
+      "latin"
+    ],
+    "weights": [
+      "300",
+      "500",
+      "700"
+    ],
+    "license": "OFL-1.1",
+    "redistribution": "allowed",
+    "embedding": "allowed",
+    "video": "allowed",
+    "files": [
+      {
+        "path": "font_collection\\files\\google-fonts\\sunflower\\Sunflower-Light.ttf",
+        "bytes": 758332,
+        "sha256": "dd9fb97aa9ec1fdb65e0328513d9c54c114fba41decca1d32a1e1ed992e255c5",
+        "filename": "Sunflower-Light.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/sunflower/Sunflower-Light.ttf"
+      },
+      {
+        "path": "font_collection\\files\\google-fonts\\sunflower\\Sunflower-Medium.ttf",
+        "bytes": 770536,
+        "sha256": "6e216d6b2f77a850f6b73be25633d09e03385dfa63a3a632f9e7d83a90ea7f79",
+        "filename": "Sunflower-Medium.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/sunflower/Sunflower-Medium.ttf"
+      },
+      {
+        "path": "font_collection\\files\\google-fonts\\sunflower\\Sunflower-Bold.ttf",
+        "bytes": 746300,
+        "sha256": "6b033627817f6619433afe82028013dc45a78ff82406b1dbe5b16e1bbc370e0a",
+        "filename": "Sunflower-Bold.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/sunflower/Sunflower-Bold.ttf"
+      }
+    ],
+    "license_path": "font_collection\\licenses\\google-fonts\\sunflower\\OFL.txt",
+    "metadata_path": "font_collection\\licenses\\google-fonts\\sunflower\\METADATA.pb",
+    "collected_at": "2026-09-11T02:43:41+00:00"
+  },
+  {
+    "source": "google-fonts",
+    "source_url": "https://github.com/google/fonts/tree/main/ofl/yeonsung",
+    "name": "Yeon Sung",
+    "category": "Display",
+    "designers": [
+      "Woowahan brothers"
+    ],
+    "subsets": [
+      "menu",
+      "korean",
+      "latin"
+    ],
+    "weights": [
+      "400"
+    ],
+    "license": "OFL-1.1",
+    "redistribution": "allowed",
+    "embedding": "allowed",
+    "video": "allowed",
+    "files": [
+      {
+        "path": "font_collection\\files\\google-fonts\\yeonsung\\YeonSung-Regular.ttf",
+        "bytes": 2511004,
+        "sha256": "49ac2a11009f5f58307d377911eb45d210cf4c1d379d9eca38fb4cdad5491ef6",
+        "filename": "YeonSung-Regular.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/yeonsung/YeonSung-Regular.ttf"
+      }
+    ],
+    "license_path": "font_collection\\licenses\\google-fonts\\yeonsung\\OFL.txt",
+    "metadata_path": "font_collection\\licenses\\google-fonts\\yeonsung\\METADATA.pb",
+    "collected_at": "2026-09-11T02:43:43+00:00"
+  }
+]

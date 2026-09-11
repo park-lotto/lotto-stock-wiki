@@ -1,0 +1,28 @@
+{
+  "files": 892,
+  "valid": 892,
+  "invalid": 0,
+  "with_korean": 834,
+  "without_korean": 58,
+  "bytes": 1493785744,
+  "duplicate_groups": 12,
+  "duplicate_extra_files": 12,
+  "extensions": {
+    ".ttf": 189,
+    ".woff2": 443,
+    ".otf": 66,
+    ".woff": 194
+  },
+  "files_by_source": {
+    "github": 169,
+    "google-fonts": 64,
+    "noonnu": 625,
+    "official-archives": 34
+  },
+  "korean_files_by_source": {
+    "github": 135,
+    "google-fonts": 64,
+    "noonnu": 601,
+    "official-archives": 34
+  }
+}

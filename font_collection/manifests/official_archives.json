@@ -1,0 +1,317 @@
+[
+  {
+    "id": "paperlogy-1.001",
+    "name": "페이퍼로지",
+    "kind": "개인 디자이너",
+    "style_group": "display-sans",
+    "source_page": "https://freesentation.blog/paperlogyfont",
+    "archive_url": "https://github.com/Freesentation/paperlogy/raw/refs/heads/main/Paperlogy-1.001.zip",
+    "license": "OFL-1.1",
+    "archive_bytes": 5609426,
+    "archive_sha256": "6ffa5c8fc7539c61f419dcd2c4dd714556412f2455d26399e83792968c7b23d6",
+    "files": [
+      {
+        "archive_path": "Paperlogy-1Thin.ttf",
+        "path": "font_collection\\files\\official-archives\\paperlogy-1.001\\Paperlogy-1Thin.ttf",
+        "bytes": 1318080,
+        "sha256": "9d8f4627b1a299dfedc7382c14f56521913ba6fa667753ccd6fbcc4e38824a8a"
+      },
+      {
+        "archive_path": "Paperlogy-2ExtraLight.ttf",
+        "path": "font_collection\\files\\official-archives\\paperlogy-1.001\\Paperlogy-2ExtraLight.ttf",
+        "bytes": 1315380,
+        "sha256": "e7ee3fde6d3ac91cca98f2eeb3d39ee87984aa06a0c442c6b2f900255c453593"
+      },
+      {
+        "archive_path": "Paperlogy-3Light.ttf",
+        "path": "font_collection\\files\\official-archives\\paperlogy-1.001\\Paperlogy-3Light.ttf",
+        "bytes": 1314504,
+        "sha256": "7e92cd3075e088e4fd139da64e7a46f3102b8b8797eee5c1ccfc37b13a5a7794"
+      },
+      {
+        "archive_path": "Paperlogy-4Regular.ttf",
+        "path": "font_collection\\files\\official-archives\\paperlogy-1.001\\Paperlogy-4Regular.ttf",
+        "bytes": 1312616,
+        "sha256": "05e1021e3de620dddc97875342e2be1a94c5f8e9b9f792bd16c4c1d0085343b3"
+      },
+      {
+        "archive_path": "Paperlogy-5Medium.ttf",
+        "path": "font_collection\\files\\official-archives\\paperlogy-1.001\\Paperlogy-5Medium.ttf",
+        "bytes": 1311560,
+        "sha256": "f3c97ace885bb7d2a53a73dc71d832fa79988d5f546c2562abbb87aa07492f4b"
+      },
+      {
+        "archive_path": "Paperlogy-6SemiBold.ttf",
+        "path": "font_collection\\files\\official-archives\\paperlogy-1.001\\Paperlogy-6SemiBold.ttf",
+        "bytes": 1309568,
+        "sha256": "ca92034a1c4602a57c55434dfdbf8428a0bb88ac84a99a5effec1a41f0118127"
+      },
+      {
+        "archive_path": "Paperlogy-7Bold.ttf",
+        "path": "font_collection\\files\\official-archives\\paperlogy-1.001\\Paperlogy-7Bold.ttf",
+        "bytes": 1307936,
+        "sha256": "7effb892621474e9c2a9112f482eb87dd25b65a470e5ae5971be5a68d89ad89b"
+      },
+      {
+        "archive_path": "Paperlogy-8ExtraBold.ttf",
+        "path": "font_collection\\files\\official-archives\\paperlogy-1.001\\Paperlogy-8ExtraBold.ttf",
+        "bytes": 1304560,
+        "sha256": "fb0324f8ac057e50f4f4632331617e347bfe5a04184f7b0db514be682fb6b25c"
+      },
+      {
+        "archive_path": "Paperlogy-9Black.ttf",
+        "path": "font_collection\\files\\official-archives\\paperlogy-1.001\\Paperlogy-9Black.ttf",
+        "bytes": 1305192,
+        "sha256": "9a2149095d72ae268abb3acf6a3a6ab4adcae8c0ebb98999bd2d607f22149bc0"
+      }
+    ],
+    "license_files": [],
+    "collected_at": "2026-09-11T03:09:52+00:00"
+  },
+  {
+    "id": "line-seed-kr",
+    "name": "LINE Seed KR",
+    "kind": "공식 제작사",
+    "style_group": "modern-sans",
+    "source_page": "https://seed.line.me/index_kr.html",
+    "archive_url": "https://seed.line.me/src/images/fonts/LINE_Seed_Sans_KR.zip",
+    "license": "OFL-1.1",
+    "archive_bytes": 12466705,
+    "archive_sha256": "bfc3d5f737a47be1d9fc6cc971d8f78c7b6688f327501b522071f306dcdcf3e1",
+    "files": [
+      {
+        "archive_path": "LINE_SeedKR_2023.09.06/TTF/LINESeedKR-Rg.ttf",
+        "path": "font_collection\\files\\official-archives\\line-seed-kr\\LINESeedKR-Rg.ttf",
+        "bytes": 3422600,
+        "sha256": "52fdbf502f57c2652461eee99c8c71a9f85850f93ed411e5ed08e24327e33003"
+      },
+      {
+        "archive_path": "LINE_SeedKR_2023.09.06/TTF/LINESeedKR-Bd.ttf",
+        "path": "font_collection\\files\\official-archives\\line-seed-kr\\LINESeedKR-Bd.ttf",
+        "bytes": 3421604,
+        "sha256": "df6d817f60814528922a0e2911b76a1252db0697c2de78a7283ea7a3c8e70e21"
+      },
+      {
+        "archive_path": "LINE_SeedKR_2023.09.06/TTF/LINESeedKR-Th.ttf",
+        "path": "font_collection\\files\\official-archives\\line-seed-kr\\LINESeedKR-Th.ttf",
+        "bytes": 3388352,
+        "sha256": "32d66aa59486bab9128681808392d1e46285b3776eae24afa4f6cfd95de0ca0d"
+      },
+      {
+        "archive_path": "LINE_SeedKR_2023.09.06/OTF/LINESeedKR-Rg.otf",
+        "path": "font_collection\\files\\official-archives\\line-seed-kr\\LINESeedKR-Rg.otf",
+        "bytes": 3200472,
+        "sha256": "227e8d3cfafb20f3dcf242a23af0a608c97198699dae8976841b9a5c7c47fff0"
+      },
+      {
+        "archive_path": "LINE_SeedKR_2023.09.06/OTF/LINESeedKR-Bd.otf",
+        "path": "font_collection\\files\\official-archives\\line-seed-kr\\LINESeedKR-Bd.otf",
+        "bytes": 3154728,
+        "sha256": "f63c5062b4f57d8907e81b39975d6d69060a90c37e8825c102064b14e19a73bf"
+      },
+      {
+        "archive_path": "LINE_SeedKR_2023.09.06/OTF/LINESeedKR-Th.otf",
+        "path": "font_collection\\files\\official-archives\\line-seed-kr\\LINESeedKR-Th.otf",
+        "bytes": 3253992,
+        "sha256": "bf4d5301286f028ade845f98aed509c2dde21415fc2148b336f2d9ba9dd9477f"
+      },
+      {
+        "archive_path": "LINE_SeedKR_2023.09.06/Web/woff/LINESeedKR-Th.woff",
+        "path": "font_collection\\files\\official-archives\\line-seed-kr\\LINESeedKR-Th.woff",
+        "bytes": 728344,
+        "sha256": "544c6790d9d5ef0508ea1fe46969bfc3e0e496902ca63c561b6da7d87fe35391"
+      },
+      {
+        "archive_path": "LINE_SeedKR_2023.09.06/Web/woff/LINESeedKR-Bd.woff",
+        "path": "font_collection\\files\\official-archives\\line-seed-kr\\LINESeedKR-Bd.woff",
+        "bytes": 896900,
+        "sha256": "b14d9645a7845598e4a883a1badbc1d739dcc0147e44c2b9ecbb5f69d18a12b3"
+      },
+      {
+        "archive_path": "LINE_SeedKR_2023.09.06/Web/woff/LINESeedKR-Rg.woff",
+        "path": "font_collection\\files\\official-archives\\line-seed-kr\\LINESeedKR-Rg.woff",
+        "bytes": 972092,
+        "sha256": "78618f23ed590427f92ff9e54689aa9bf639245a8b7f43187ecaf2d88501d1ec"
+      },
+      {
+        "archive_path": "LINE_SeedKR_2023.09.06/Web/woff2/LINESeedKR-Th.woff2",
+        "path": "font_collection\\files\\official-archives\\line-seed-kr\\LINESeedKR-Th.woff2",
+        "bytes": 385412,
+        "sha256": "9206d758600c8aa60ac77f0f339daa6e1e86c02430dac20697e33d8658a676e0"
+      },
+      {
+        "archive_path": "LINE_SeedKR_2023.09.06/Web/woff2/LINESeedKR-Bd.woff2",
+        "path": "font_collection\\files\\official-archives\\line-seed-kr\\LINESeedKR-Bd.woff2",
+        "bytes": 463480,
+        "sha256": "57f95a6c2ce2ff6fa84e28f96bc5d29dcf5a7e308c9a25ed9541eacff3edfa56"
+      },
+      {
+        "archive_path": "LINE_SeedKR_2023.09.06/Web/woff2/LINESeedKR-Rg.woff2",
+        "path": "font_collection\\files\\official-archives\\line-seed-kr\\LINESeedKR-Rg.woff2",
+        "bytes": 523808,
+        "sha256": "709275188a8ef23040274490cd1fa048a02e9c441a238a4252837258cf8a43df"
+      }
+    ],
+    "license_files": [],
+    "collected_at": "2026-09-11T03:09:55+00:00"
+  },
+  {
+    "id": "gmarket-sans-ttf",
+    "name": "Gmarket Sans",
+    "kind": "공식 제작사",
+    "style_group": "display-sans",
+    "source_page": "https://corp.gmarket.com/fonts/",
+    "archive_url": "https://corp.gmarket.com/fonts/GmarketSansTTF.zip",
+    "license": "custom-free-redistribution",
+    "archive_bytes": 2640278,
+    "archive_sha256": "a2cc0ab9eb3bc868a6f2affd89fa1d4718cb6e1226dcb695b05d0d2ff417ae02",
+    "files": [
+      {
+        "archive_path": "GmarketSansTTFLight.ttf",
+        "path": "font_collection\\files\\official-archives\\gmarket-sans-ttf\\GmarketSansTTFLight.ttf",
+        "bytes": 2413604,
+        "sha256": "7e8e8c70349ed94acf3ea4c6962a56417fdfa0a8803bc6cf9dc36324d5656849"
+      },
+      {
+        "archive_path": "GmarketSansTTFMedium.ttf",
+        "path": "font_collection\\files\\official-archives\\gmarket-sans-ttf\\GmarketSansTTFMedium.ttf",
+        "bytes": 2417020,
+        "sha256": "c6b9a2c10bfdb55975948ce191f9cf638955b5cfdc99149969add5b579262fc1"
+      },
+      {
+        "archive_path": "GmarketSansTTFBold.ttf",
+        "path": "font_collection\\files\\official-archives\\gmarket-sans-ttf\\GmarketSansTTFBold.ttf",
+        "bytes": 2511976,
+        "sha256": "ff7c354dd1a324e4cecc1223c4f71e74fa81be7027e0c7f6324c475909cacefc"
+      }
+    ],
+    "license_files": [],
+    "collected_at": "2026-09-11T03:09:56+00:00"
+  },
+  {
+    "id": "mulmaru",
+    "name": "물마루",
+    "kind": "개인 디자이너",
+    "style_group": "pixel",
+    "source_page": "https://github.com/mushsooni/mulmaru",
+    "archive_url": "https://github.com/mushsooni/mulmaru/releases/download/v1.0/Mulmaru.zip",
+    "license": "OFL-1.1",
+    "archive_bytes": 614688,
+    "archive_sha256": "fff80e46f59f9ed72d9b2160ba2cc1a624a149fcf99cc39760769e3eb9685ad5",
+    "files": [
+      {
+        "archive_path": "Mulmaru.otf",
+        "path": "font_collection\\files\\official-archives\\mulmaru\\Mulmaru.otf",
+        "bytes": 602988,
+        "sha256": "cdc35e79d4bffb6a6fa46fad985ea8911f176940de62f91b310343cf21a0206d"
+      },
+      {
+        "archive_path": "Mulmaru.ttf",
+        "path": "font_collection\\files\\official-archives\\mulmaru\\Mulmaru.ttf",
+        "bytes": 1606948,
+        "sha256": "02545e10374c0797be32df8670e18663c6ab73eea6966bb98f4ffd0283138810"
+      },
+      {
+        "archive_path": "Mulmaru.woff2",
+        "path": "font_collection\\files\\official-archives\\mulmaru\\Mulmaru.woff2",
+        "bytes": 99820,
+        "sha256": "6cf652f25b20a64926333cd41b49cab4a25ffe00761b86762e21db9df52ffb44"
+      }
+    ],
+    "license_files": [
+      {
+        "archive_path": "LICENSE.txt",
+        "path": "font_collection\\licenses\\official-archives\\mulmaru\\LICENSE.txt",
+        "bytes": 4547,
+        "sha256": "a94cab6def3684ae4c8a8fc2d337cd9ee197885847f2fa7d8944cb3f90927d18"
+      }
+    ],
+    "collected_at": "2026-09-11T03:09:57+00:00"
+  },
+  {
+    "id": "mulmaru-mono",
+    "name": "물마루 모노",
+    "kind": "개인 디자이너",
+    "style_group": "pixel-mono",
+    "source_page": "https://github.com/mushsooni/mulmaru",
+    "archive_url": "https://github.com/mushsooni/mulmaru/releases/download/v1.0/MulmaruMono.zip",
+    "license": "OFL-1.1",
+    "archive_bytes": 606923,
+    "archive_sha256": "8341afdcb21ed41e2bc08d192d17199ecf63409c45287476ec936cba6bd1bfdc",
+    "files": [
+      {
+        "archive_path": "MulmaruMono.otf",
+        "path": "font_collection\\files\\official-archives\\mulmaru-mono\\MulmaruMono.otf",
+        "bytes": 576108,
+        "sha256": "dbf5570a20ed307b80b23cc44211e4748d824f179a75a56cd6d42d299526c292"
+      },
+      {
+        "archive_path": "MulmaruMono.ttf",
+        "path": "font_collection\\files\\official-archives\\mulmaru-mono\\MulmaruMono.ttf",
+        "bytes": 1583396,
+        "sha256": "34a1641eb4e94449b26192321e8e0c2bd4f07ef3674fac8abed33d8953a7f70d"
+      },
+      {
+        "archive_path": "MulmaruMono.woff2",
+        "path": "font_collection\\files\\official-archives\\mulmaru-mono\\MulmaruMono.woff2",
+        "bytes": 98252,
+        "sha256": "15bd887b9e7478f2cdcf32169d2d8a5361af42dabe94af0083afbbad8089a53c"
+      }
+    ],
+    "license_files": [
+      {
+        "archive_path": "LICENSE.txt",
+        "path": "font_collection\\licenses\\official-archives\\mulmaru-mono\\LICENSE.txt",
+        "bytes": 4547,
+        "sha256": "a94cab6def3684ae4c8a8fc2d337cd9ee197885847f2fa7d8944cb3f90927d18"
+      }
+    ],
+    "collected_at": "2026-09-11T03:09:59+00:00"
+  },
+  {
+    "id": "d2-coding-1.3.3",
+    "name": "D2Coding",
+    "kind": "공식 제작사",
+    "style_group": "mono",
+    "source_page": "https://github.com/naver/d2-coding-font/releases/tag/VER1.3.3",
+    "archive_url": "https://github.com/naver/d2-coding-font/releases/download/VER1.3.3/D2Coding-Ver1.3.3-20260725.zip",
+    "license": "OFL-1.1",
+    "archive_bytes": 21293600,
+    "archive_sha256": "c2a6e364d4102eb2c4de52ffe3d76317c1f4c045e3737e022e69ee0be47f31e2",
+    "files": [
+      {
+        "archive_path": "D2CodingLigature/D2CodingBold-Ver1.3.3-20260725-ligature.ttf",
+        "path": "font_collection\\files\\official-archives\\d2-coding-1.3.3\\D2CodingBold-Ver1.3.3-20260725-ligature.ttf",
+        "bytes": 4398372,
+        "sha256": "a66b33d20061a2eb30c55a7dc8742efd55f39dc26ba548ba9400194dd09464a6"
+      },
+      {
+        "archive_path": "D2CodingLigature/D2Coding-Ver1.3.3-20260725-ligature.ttf",
+        "path": "font_collection\\files\\official-archives\\d2-coding-1.3.3\\D2Coding-Ver1.3.3-20260725-ligature.ttf",
+        "bytes": 4224216,
+        "sha256": "9ab0dd3867329f414b83227ab542eea267bcd1217efb9aeb6206f956384ce5ed"
+      },
+      {
+        "archive_path": "D2Coding/D2Coding-Ver1.3.3-20260725.ttf",
+        "path": "font_collection\\files\\official-archives\\d2-coding-1.3.3\\D2Coding-Ver1.3.3-20260725.ttf",
+        "bytes": 4185500,
+        "sha256": "c064f343b5cfc131f083377ba606b748f9b61a5bbd89708e4010b9066dff5a24"
+      },
+      {
+        "archive_path": "D2Coding/D2CodingBold-Ver1.3.3-20260725.ttf",
+        "path": "font_collection\\files\\official-archives\\d2-coding-1.3.3\\D2CodingBold-Ver1.3.3-20260725.ttf",
+        "bytes": 4359628,
+        "sha256": "770afd3304d03924a05744335315f9dbb51f30870a3e24b05ffba9abd2f9400f"
+      }
+    ],
+    "license_files": [
+      {
+        "archive_path": "OFL.txt",
+        "path": "font_collection\\licenses\\official-archives\\d2-coding-1.3.3\\OFL.txt",
+        "bytes": 4511,
+        "sha256": "1807e8dec4d65f474cbf9be39f5e2254ecb81702babc320749e272ea66ffcc69"
+      }
+    ],
+    "collected_at": "2026-09-11T03:10:03+00:00"
+  }
+]
