@@ -2781,6 +2781,13 @@ def _plan_signature(plan):
         for m in _beat_materials(b):
             parts.append("%s:%s:%s" % (m.get("video_id"), m.get("start"), m.get("end")))
         parts.append("t=%s" % b.get("target_seconds"))
+        # ★자막 줄 나누기(caption_lines)는 "자막"이지만 **컷 경계**를 정한다(_plan_phrase_clips:
+        #   구절 수 = 컷 수, 조각 배정 1,1,2,2). 빼면 줄만 바꿔도 서명이 그대로라 옛 컷으로 만든
+        #   청소본이 재사용된다(2026-09-11 실사고: 고객이 4줄로 바꾼 뒤 완성본을 다시 만들어도
+        #   16:08 청소본(옛 배정)이 그대로 나감). 지정 없으면 안 붙인다 → 옛 작업 서명 불변.
+        _cl = b.get("caption_lines")
+        if _cl:
+            parts.append("c=%s" % "/".join(str(x) for x in _cl))
         _z, _px, _py = _va.scene_zoom_of(b)
         if _z > 1.0001:                        # 지정 없으면 아무것도 안 붙인다
             parts.append("z=%.4f,%.5f,%.5f" % (_z, _px, _py))   # → 옛 작업 서명 불변
