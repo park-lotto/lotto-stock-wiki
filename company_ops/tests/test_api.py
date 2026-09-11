@@ -90,7 +90,7 @@ class CompanyOpsApiTests(unittest.TestCase):
     def test_lifespan_initializes_schema_at_version_two(self) -> None:
         db = sqlite3.connect(self.db_path)
         try:
-            self.assertEqual(db.execute("PRAGMA user_version").fetchone()[0], 2)
+            self.assertEqual(db.execute("PRAGMA user_version").fetchone()[0], 3)
         finally:
             db.close()
 
@@ -140,7 +140,7 @@ class CompanyOpsApiTests(unittest.TestCase):
         newer_db_path = Path(self.temporary_directory.name) / "newer.sqlite3"
         db = sqlite3.connect(newer_db_path)
         try:
-            db.execute("PRAGMA user_version = 3")
+            db.execute("PRAGMA user_version = 99")
             db.commit()
         finally:
             db.close()
@@ -149,7 +149,7 @@ class CompanyOpsApiTests(unittest.TestCase):
             newer_client.__enter__()
         db = sqlite3.connect(newer_db_path)
         try:
-            self.assertEqual(db.execute("PRAGMA user_version").fetchone()[0], 3)
+            self.assertEqual(db.execute("PRAGMA user_version").fetchone()[0], 99)
         finally:
             db.close()
 

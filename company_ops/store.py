@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import sqlite3
+import json
+import hashlib
 import uuid
 from contextlib import contextmanager
 from datetime import datetime, timezone
@@ -59,7 +61,7 @@ class Store:
     def initialize(self) -> None:
         with self.connection() as db:
             current_version = db.execute("PRAGMA user_version").fetchone()[0]
-            if current_version not in (0, 1, 2):
+            if current_version not in (0, 1, 2, 3):
                 raise SchemaVersionError(f"지원하지 않는 스키마 버전입니다: {current_version}")
             db.execute("PRAGMA journal_mode = WAL")
             db.execute("BEGIN IMMEDIATE")
@@ -156,8 +158,17 @@ class Store:
                 )
                 # 초기 v2 시제품이 담당 역할을 검수자 칸에 기록했던 값을 정리한다.
                 db.execute("UPDATE events SET reviewer='' WHERE kind='assigned' AND reviewer<>''")
-                if current_version < 2:
-                    db.execute("PRAGMA user_version = 2")
+                db.execute("""CREATE TABLE IF NOT EXISTS terminal_receipts (
+                    request_id TEXT PRIMARY KEY,
+                    project_id TEXT NOT NULL UNIQUE REFERENCES projects(id),
+                    payload_hash TEXT NOT NULL,
+                    session_ref TEXT NOT NULL,
+                    approval_ref TEXT NOT NULL,
+                    approval_text TEXT NOT NULL,
+                    received_at TEXT NOT NULL
+                )""")
+                if current_version < 3:
+                    db.execute("PRAGMA user_version = 3")
                 db.commit()
             except Exception:
                 db.rollback()
@@ -177,12 +188,25 @@ class Store:
         keys = ("id", "project_id", "company_id", "kind", "message", "evidence", "reviewer", "created_at")
         return dict(zip(keys, row))
 
-    def create_project(self, *, company_id: str, title: str, team_id: str, owner: str, description: str) -> dict:
+    def create_project(self, *, company_id: str, title: str, team_id: str, owner: str, description: str,
+                       terminal_receipt: dict | None = None) -> dict:
         project_id = str(uuid.uuid4())
         timestamp = utc_now()
         with self.connection() as db:
             db.execute("BEGIN IMMEDIATE")
             try:
+                if terminal_receipt:
+                    payload_hash = hashlib.sha256(json.dumps(
+                        [company_id, title, team_id, owner, description, terminal_receipt],
+                        ensure_ascii=False, sort_keys=True).encode()).hexdigest()
+                    previous = db.execute(
+                        "SELECT project_id, payload_hash FROM terminal_receipts WHERE request_id=?",
+                        (terminal_receipt["request_id"],)).fetchone()
+                    if previous:
+                        if previous[1] != payload_hash:
+                            raise ConflictError("같은 전달 번호의 내용이 달라졌습니다. 새 컨펌과 전달 번호가 필요합니다.")
+                        db.rollback()
+                        return self.get_project(previous[0])
                 workflow = TEAM_WORKFLOWS[team_id]
                 db.execute(
                     "INSERT INTO projects (id, company_id, title, team_id, owner, description, stage, blocked, version, created_at, updated_at, planner_role, executor_role, reviewer_role, current_assignee) "
@@ -204,6 +228,15 @@ class Store:
                     "VALUES (?, ?, 'assigned', ?, ?)",
                     (project_id, company_id, f"접수 업무 배정 → {workflow['planner']}", timestamp),
                 )
+                if terminal_receipt:
+                    db.execute("INSERT INTO terminal_receipts VALUES (?, ?, ?, ?, ?, ?, ?)",
+                        (terminal_receipt["request_id"], project_id, payload_hash,
+                         terminal_receipt["session_ref"], terminal_receipt["approval_ref"],
+                         terminal_receipt["approval_text"], timestamp))
+                    db.execute("INSERT INTO events (project_id, company_id, kind, message, evidence, created_at) "
+                               "VALUES (?, ?, 'terminal_handoff', ?, ?, ?)",
+                               (project_id, company_id, "터미널 컨펌 근거와 확정 지시 접수 (전달자 기록)",
+                                terminal_receipt["approval_ref"], timestamp))
                 db.commit()
             except Exception:
                 db.rollback()
@@ -359,11 +392,14 @@ class Store:
                 "SELECT id, project_id, company_id, team_id, stage, role_id, status, note, started_at, completed_at "
                 "FROM assignments ORDER BY id DESC LIMIT 300"
             ).fetchall()
+            receipts = db.execute("SELECT request_id, project_id, session_ref, approval_ref, approval_text, received_at "
+                                  "FROM terminal_receipts ORDER BY received_at DESC").fetchall()
         assignment_keys = ("id", "project_id", "company_id", "team_id", "stage", "role_id", "status", "note", "started_at", "completed_at")
         return {
             "projects": [self._project(row) for row in projects],
             "events": [self._event(row) for row in events],
             "assignments": [dict(zip(assignment_keys, row)) for row in assignments],
+            "terminal_receipts": [dict(row) for row in receipts],
         }
 
     def project_events(self, project_id: str, *, before_id: int | None = None, limit: int = 50) -> list[dict]:
