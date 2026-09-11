@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#090d12">
+  <title>회사 운영실 · 살아 있는 회사의 아틀라스</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body data-company="makers" data-motion="on">
+<a class="skip-link" href="#projects-panel">프로젝트로 바로 이동</a>
+<div class="shell">
+  <header class="commandbar">
+    <a class="brand" href="/" aria-label="회사 운영실 홈"><svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 3 36 12v16L20 37 4 28V12Z"/><path d="m4 12 16 9 16-9M20 21v16M12 8l16 9v15"/></svg><span>회사 운영실<small>살아 있는 회사의 아틀라스</small></span></a>
+    <div class="command-status"><span id="sync-status" class="connection" role="status"><i aria-hidden="true"></i><span id="sync-label">저장소 확인 중</span></span><span class="sync-time">마지막 조회 <time id="last-sync">—</time></span><span class="open-count">열린 프로젝트 <strong id="open-count">—</strong></span></div>
+    <button id="motion-toggle" class="motion-button" type="button" aria-pressed="true" aria-label="화면 움직임 끄기"><span aria-hidden="true">◌</span><span id="motion-label">움직임 켜짐</span></button>
+  </header>
+  <main id="main-content">
+    <div id="global-error" class="error global-error" role="alert" hidden></div>
+    <div class="navigation-line"><nav class="breadcrumbs" aria-label="현재 위치"><button id="all-companies" type="button">전체 회사</button><span aria-hidden="true">/</span><span id="breadcrumb">메이커스랩</span><span id="team-breadcrumb" hidden></span></nav><button id="refresh-now" class="text-button" type="button"><span aria-hidden="true">↻</span> 다시 조회</button></div>
+    <section class="atlas" aria-labelledby="company-name">
+      <div class="atlas-light" aria-hidden="true"></div>
+      <div class="atlas-heading"><div><p class="eyebrow"><span class="accent-bar"></span> 회사의 의도에서, 실제 결과까지</p><h1 id="company-name">메이커스랩</h1></div><div class="company-intro"><p id="company-subtitle">회사 정보를 불러오고 있습니다.</p><p class="source-note">대표 제공 사업 현황 · 운영 시스템 연동 전</p></div></div>
+      <div class="company-universe">
+        <svg class="universe-lines" viewBox="0 0 1200 290" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="orbit-gradient"><stop offset="0" stop-color="currentColor" stop-opacity="0"/><stop offset=".5" stop-color="currentColor" stop-opacity=".7"/><stop offset="1" stop-color="currentColor" stop-opacity="0"/></linearGradient></defs><ellipse cx="600" cy="145" rx="560" ry="98"/><ellipse cx="600" cy="147" rx="472" ry="57"/><path class="horizon" d="M0 147H1200M600 0V290"/><path d="M85 128Q600 350 1115 128"/></svg>
+        <nav id="company-nav" class="company-cores" aria-label="회사 선택"></nav>
+        <span class="universe-caption">세 개의 회사. 하나의 방향.</span>
+      </div>
+      <div class="scene-toolbar"><div class="view-switch" role="group" aria-label="회사 지도 보기"><button id="view-organization" class="view-button" type="button" aria-pressed="true">조직의 흐름</button><button id="view-business" class="view-button" type="button" aria-pressed="false">사업의 흐름</button></div><span id="scene-note" class="scene-note">책임 관계 · AI 실행 미연결</span></div>
+      <section id="organization-view" class="organization-view" aria-label="회사의 책임과 팀 구조">
+        <div class="organization-spine" aria-hidden="true"></div>
+        <div class="director"><span class="director-index" aria-hidden="true">◎</span><strong>대표</strong><span>방향 · 우선순위 · 의사결정</span><span class="human-label">사람</span></div>
+        <div class="responsibility-stack"><div class="role-layer"><span class="layer-label">공동 책임</span><div id="planning-roles" class="role-pair"></div></div><div class="role-layer"><span class="layer-label">실행 리더</span><div id="execution-roles" class="role-pair"></div></div></div>
+        <div class="team-field"><svg id="team-routes" class="team-routes" viewBox="0 0 1000 70" preserveAspectRatio="none" aria-hidden="true"></svg><div id="team-nodes" class="team-nodes"></div></div>
+        <div class="map-bottom"><span>역할과 책임의 설계입니다. AI 작업은 아직 실행되지 않습니다.</span><span id="route-status" role="status" aria-live="polite">팀을 선택하면 업무로 이어집니다 ↘</span></div>
+      </section>
+      <section id="business-view" class="business-view" aria-labelledby="business-title" hidden>
+        <div class="business-copy"><p class="eyebrow">제품에서 사업의 가치로</p><h2 id="business-title">무엇을 만들고,<br>어떻게 이어지는가.</h2><p>제품의 현재와 수익 구조를 함께 봅니다.</p></div>
+        <div class="business-flow"><div class="product-column"><h3>제품 · 서비스</h3><div id="product-list"></div></div><div class="business-bridge" aria-hidden="true"><span>→</span></div><div class="revenue-column"><div class="section-heading"><h3>수익 구조</h3><span class="status-tag">회계 미연결</span></div><div class="revenue-number">—<span>금액 연동 전</span></div><ul id="revenue-list"></ul><p class="source-note">기간 · 통화 · 집계 기준 · 출처 미설정</p></div></div>
+      </section>
+    </section>
+    <div class="operations-grid">
+      <section id="projects-panel" class="projects-panel" aria-labelledby="projects-title"><div class="section-heading projects-heading"><div><p class="eyebrow">의도가 일이 되는 자리</p><h2 id="projects-title">프로젝트 흐름 <span id="project-count">—</span></h2></div><button id="new-project" class="primary" type="button" disabled><span aria-hidden="true">＋</span> 프로젝트 만들기</button></div><div class="filter-line"><p id="project-context">선택한 회사의 저장된 프로젝트</p><button id="clear-team" class="text-button" type="button" hidden>팀 필터 해제 ×</button></div><div id="stage-summary" class="stage-summary" aria-label="단계별 프로젝트 수"></div><div id="project-list"></div></section>
+      <section class="activity" aria-labelledby="activity-title"><div class="section-heading"><div><p class="eyebrow">실제로 남겨진 변화</p><h2 id="activity-title">운영 기록</h2></div><span class="status-tag">수동 기록</span></div><ol id="event-list"></ol><p class="activity-footnote">저장된 최신 사건을 표시합니다.<br>전체 이력과 검증 근거는 프로젝트에서 확인하세요.</p></section>
+    </div>
+    <footer><span class="footer-statement">회사는, 실행의 기록으로 자랍니다.</span><div id="integration-list" class="integration-list"></div><span>로컬 운영실</span></footer>
+  </main>
+</div>
+<div id="announcement" class="sr-only" role="status" aria-live="polite"></div>
+<dialog id="create-dialog" aria-labelledby="create-title">
+  <div class="dialog-head"><div><p id="create-company" class="eyebrow"></p><h2 id="create-title">의도를 프로젝트로.</h2></div><button class="close" type="button" data-close="create-dialog" aria-label="프로젝트 만들기 닫기">×</button></div>
+  <form id="create-form"><label for="project-title">프로젝트 이름</label><input id="project-title" name="title" required maxlength="120" placeholder="해결할 문제나 만들고 싶은 결과" autocomplete="off"><div class="form-grid"><div><label for="project-team">담당 팀</label><select id="project-team" name="team_id" required></select></div><div><label for="project-owner">최종 책임자</label><input id="project-owner" name="owner" value="대표" required maxlength="80" autocomplete="off"></div></div><label for="project-description">목표와 완료 조건</label><textarea id="project-description" name="description" rows="4" maxlength="4000" placeholder="왜 필요한가요? 어떤 결과가 나오면 완료인가요?"></textarea><p class="form-hint">담당자는 수동으로 기록합니다. 저장하면 접수 단계의 프로젝트가 만들어지며, AI 실행은 연결 전입니다.</p><p id="create-error" class="error" role="alert" hidden></p><div class="form-footer"><button class="text-button" type="button" data-close="create-dialog">돌아가기</button><button type="submit" id="create-submit" class="primary">프로젝트 저장 <span aria-hidden="true">↗</span></button></div></form>
+</dialog>
+<dialog id="detail-dialog" aria-labelledby="detail-title">
+  <div class="dialog-head"><div><p id="detail-meta" class="eyebrow"></p><h2 id="detail-title"></h2></div><button class="close" type="button" data-close="detail-dialog" aria-label="프로젝트 상세 닫기">×</button></div>
+  <p id="detail-description" class="detail-description"></p><div id="detail-stages" class="stage-summary" aria-label="현재 프로젝트 단계"></div><p id="detail-status" class="detail-status"></p><p id="detail-update" class="notice" role="status" hidden></p>
+  <form id="action-form"><label for="project-action">다음 행동</label><select id="project-action" name="action"></select><label for="action-note">진행 기록 / 차단·재개·반려 이유</label><textarea id="action-note" name="note" rows="3" maxlength="4000" placeholder="무엇을 확인했고, 왜 다음 행동을 하는지 기록하세요."></textarea><div id="verification-fields" hidden><label for="action-evidence">실제 사용 검증 근거</label><textarea id="action-evidence" name="evidence" rows="3" maxlength="4000" placeholder="확인한 결과, 산출물 경로, 재현 절차"></textarea><label for="action-reviewer">검수 담당자</label><input id="action-reviewer" name="reviewer" maxlength="80" placeholder="실행 책임자와 다른 담당자" autocomplete="off"><p class="form-hint">수동 검증 기록입니다. 이름 입력은 검수자의 신원이나 독립성을 인증하지 않으며, 자동 검수 승인이 아닙니다.</p></div><p id="action-error" class="error" role="alert" hidden></p><button type="submit" id="action-submit" class="primary">변경 기록 저장 <span aria-hidden="true">↗</span></button></form>
+  <section id="detail-events" class="detail-events" aria-labelledby="detail-events-title"><div class="section-heading"><h3 id="detail-events-title">프로젝트의 기록</h3><span class="status-tag">저장된 원본 사건</span></div><ol id="detail-event-list"></ol><p id="detail-events-error" class="error" role="alert" hidden></p><button id="more-events" class="secondary" type="button" hidden>이전 기록 더 보기</button></section>
+</dialog>
+</body>
+</html>
