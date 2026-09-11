@@ -7,13 +7,16 @@
 - `manifests/github_upstreams.json`: 개인 디자이너·공식 제작사의 원본 GitHub 저장소
 - `manifests/official_archives.json`: 제작사/개인 디자이너 공식 ZIP 배포본
 - `manifests/github_discovery.json`: GitHub 한글/OFL 폰트 검색 후보와 원본성 검토 상태
+- `manifests/github_international.json`: 해외 원 제작 GitHub 22곳의 수집·라이선스 검증 결과
 - `files/google-fonts/`: 공식 `google/fonts` 저장소에서 받은 OFL 원본 파일
 - `files/github/`: 제작자 원본 GitHub 저장소에서 받은 설치형 폰트 파일
 - `files/official-archives/`: 공식 페이지·GitHub Release에서 받은 ZIP의 폰트 파일
+- `files/github-international/`: 해외 파운드리·개인 디자이너 공식 GitHub의 OTF/TTF
 - `licenses/`: 각 패밀리의 원문 라이선스와 공식 메타데이터
 - `logs/`: 실패 URL과 재시도 대상
 - `audit/`: 실파일 내부 이름·한글 글리프·손상·중복 검사 결과
 - `collection_report.json`: 수집 건수와 용량 요약
+- `library_pack/index.html`: 검색·용도 필터·실제 렌더 미리보기가 있는 로컬 카탈로그
 
 눈누 항목은 `영상`, `임베딩`, `OFL/재배포`가 모두 명시적으로 허용된 경우에만
 `download_allowed`로 분류한다. 조건부 허용, 재배포 금지, 판정 불명 항목은
@@ -37,10 +40,13 @@ py tools/collect_font_sources.py --source all --download
 - 원 제작 GitHub: 15곳(개인 디자이너 포함)
 - 공식 ZIP: 페이퍼로지, LINE Seed KR, Gmarket Sans, 물마루 2종, D2Coding
 - GitHub 추가 검색 후보: 121곳, 그중 원 제작 후보 88곳
-- 실파일 감사: 892개 전부 정상, 한글 지원 834개, 비한글 장식/영문 58개
-- 물리 용량: 1,493,785,744바이트
+- 해외 GitHub: 22곳 검사, 20곳 통과, OTF/TTF 710개
+- 실파일 감사: 1,602개 전부 정상, 한글 지원 834개, 비한글 장식/영문 768개
+- 물리 용량: 1,762,392,400바이트
 - 동일 해시 중복: 12그룹(출처 보존을 위해 삭제하지 않음)
+- 라이브러리 팩: 대표 패밀리 973개(한글 649, GitHub 해외 288)
 
 실제 바이너리는 Git 용량 폭증을 막기 위해 `files/`가 ignore되어 있다. 같은 PC의 다른
 세션에서는 이 트랙의 `font_collection/files/`를 직접 읽으면 된다. 영구 저장소로 옮길 때는
-`audit/files.json`의 `has_korean=true`, `valid=true` 항목만 우선 사용한다.
+`audit/files.json`의 `valid=true`를 기본으로 쓰고, 한글 본문은 `has_korean=true`,
+영문·숫자 포인트는 `github-international` 그룹을 사용한다.

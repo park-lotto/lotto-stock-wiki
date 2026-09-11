@@ -13,6 +13,11 @@
 - GitHub 검색 후보 121곳 중 미러/파생 의심을 제외한 원 제작 후보 88곳을 후속 검토 목록으로 남겼다.
 - 실제 폰트 892개를 fontTools+Brotli로 전수 검사: 정상 892, 한글 지원 834, 비한글 58.
 - 동일 SHA-256 중복 12그룹은 출처 비교를 위해 유지했다.
+- 해외 원 제작 GitHub 22곳을 추가 검사해 20곳에서 OTF/TTF 710개를 수집했다. Mona Sans,
+  Monaspace, League 계열, Velvetyne 계열, Inter, Recursive, Anybody, Jost, Public Sans,
+  Smiley Sans 등이 포함된다.
+- 전체 실파일 1,602개를 다시 감사해 정상 1,602, 한글 지원 834, 비한글 768을 확인했다.
+- `font_collection/library_pack/`에 대표 패밀리 973개의 검색·필터·실제 렌더 카탈로그를 만들었다.
 
 ## 핵심 경로
 
@@ -21,9 +26,11 @@
 - `font_collection/manifests/github_upstreams.json`
 - `font_collection/manifests/official_archives.json`
 - `font_collection/manifests/github_discovery.json`
+- `font_collection/manifests/github_international.json`
 - `font_collection/audit/files.json`
 - `font_collection/audit/report.json`
-- `font_collection/files/` (1.49GB, Git ignore, 같은 PC에서만 공유)
+- `font_collection/library_pack/index.html`
+- `font_collection/files/` (약 1.76GB, Git ignore, 같은 PC에서만 공유)
 
 ## 라이브러리 세션에서 지킬 것
 
@@ -36,5 +43,6 @@
 ## 남은 일
 
 - `github_discovery.json`의 원 제작 후보 88곳을 사람 눈으로 샘플 검수하고 추가 채택한다.
-- 비한글 58개는 영문 포인트/아이콘 전용 그룹으로 쓸지 결정한다.
-- 라이브러리 세션에서 시각 샘플 렌더와 훅용 점수(굵기·폭·가독성·개성)를 만든다.
+- 라이브러리 팩의 1차 `hook` 추천은 이름·계열 휴리스틱이다. 실제 썸네일 훅 점수
+  (굵기·폭·가독성·개성)는 렌더 비교 후 별도 정밀 랭킹으로 교체한다.
+- 해외 폰트는 대부분 한글 글리프가 없으므로 한글 폰트 대체가 아닌 영문·숫자 포인트로 사용한다.

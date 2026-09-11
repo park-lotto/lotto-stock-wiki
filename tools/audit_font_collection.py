@@ -5,14 +5,21 @@ from __future__ import annotations
 
 import hashlib
 import json
+import sys
 from collections import Counter, defaultdict
 from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+COLLECTION = ROOT / "font_collection"
+# WOFF2 감사용 Brotli는 수집 폴더 안에 격리 설치한다. 전역 환경에 없더라도
+# 이전 세션과 같은 결과가 나오도록 import 전에 경로를 연결한다.
+VENDOR = COLLECTION / ".audit_vendor"
+if VENDOR.exists():
+    sys.path.insert(0, str(VENDOR))
 
 from fontTools.ttLib import TTFont
 
 
-ROOT = Path(__file__).resolve().parents[1]
-COLLECTION = ROOT / "font_collection"
 EXTENSIONS = {".ttf", ".otf", ".woff", ".woff2"}
 
 

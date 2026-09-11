@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-11T03:12:07+00:00",
+  "generated_at": "2026-09-11T03:46:00+00:00",
   "noonnu": {
     "indexed": 1172,
     "download_eligible": 395,
@@ -26,23 +26,36 @@
     "downloaded_bytes": 64689008,
     "errors": 0
   },
+  "github_international": {
+    "repositories_reviewed": 22,
+    "repositories_collected": 20,
+    "downloaded_files": 710,
+    "downloaded_bytes": 268606656,
+    "errors": 2
+  },
+  "library_pack": {
+    "representative_families": 973,
+    "korean_families": 649,
+    "github_international_families": 288
+  },
   "file_audit": {
-    "files": 892,
-    "valid": 892,
+    "files": 1602,
+    "valid": 1602,
     "invalid": 0,
     "with_korean": 834,
-    "without_korean": 58,
-    "bytes": 1493785744,
+    "without_korean": 768,
+    "bytes": 1762392400,
     "duplicate_groups": 12,
     "duplicate_extra_files": 12,
     "extensions": {
-      ".ttf": 189,
+      ".ttf": 529,
       ".woff2": 443,
-      ".otf": 66,
+      ".otf": 436,
       ".woff": 194
     },
     "files_by_source": {
       "github": 169,
+      "github-international": 710,
       "google-fonts": 64,
       "noonnu": 625,
       "official-archives": 34
