@@ -389,6 +389,14 @@ def grounding_check(full, facts_text):
 
 #: 제품명에서 검사에 쓸 토큰을 뽑는다. 브랜드·수식어가 섞여 있어도 하나만 맞으면 된다.
 #  ★한 글자는 버린다 — '펜' 같은 조각은 아무 대본에나 걸려 검사가 무력해진다.
+#: 판매처 고유명사 — '재료 밖 판매처' 검사가 보는 목록. 스파인 문장틀이 이런 이름을
+#: 문장에 박아 두면("저희 언니가 다이소 점장인데") 모델은 틀을 그대로 써서 재료에 없는
+#: 판매처가 대본에 들어간다. 여기 적힌 이름만 본다 — 넓히면 오탐이 난다(0순위: 오탐 > 미탐).
+RETAILERS = ("다이소", "쿠팡", "올리브영", "이케아", "무인양품", "코스트코", "이마트",
+             "홈플러스", "롯데마트", "편의점", "세븐일레븐", "알리익스프레스", "테무",
+             "스타벅스", "GS25", "CU")
+
+
 #  ★'다이소'처럼 파는 곳 이름도 남긴다: 그 단어라도 나오면 우리 소재 얘기가 맞다.
 def _product_tokens(product):
     raw = (product or "").strip()
@@ -571,7 +579,7 @@ def _uses_wow(full, hooks, min_hits=2):
 
 def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
           speaker_judge=None, scene_ids=None, grounded=False, is_recipe=False,
-          source_count=None, targets=None, person_required=False):
+          source_count=None, targets=None, person_required=False, materials_text=""):
     """(checks, full_text) 반환. checks = [{name, ok, detail}, ...]
 
     style: {"beat_roles": [...], "templates": {role: [...]}, "chars_per_30s": int}
@@ -785,6 +793,27 @@ def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
                                  ("대본에 「%s」 얘기가 한 번도 안 나온다 — 다른 소재로 "
                                   "샜을 가능성이 높다(재료 밖 소재 금지)" % product)})
 
+    # ★재료 밖 판매처(2026-09-11 사장님 "고질적으로 다른 내용이 두 개씩") — 위 '소재 일치'의
+    #   사각지대다. 그 검사는 **우리 제품 단어가 하나라도 있으면 통과**라, 소재는 맞는데
+    #   판매처·소속이 남의 것인 대본을 못 잡았다.
+    #   실측(work 79e2c2b40481): 재료 6편 전부 '반려동물 털 제거 젤 패드'인데 초안이
+    #   "여러분 다이소 가면 이거 무조건 데려오세요… 제 지인이 다이소 매니저로 있거든요".
+    #   뿌리는 스파인 57('다이소 내부인형')의 문장틀에 '다이소 점장'이 문자 그대로 박혀 있고,
+    #   프롬프트가 "틀 자체를 새로 짓지 마라"고 강제한 것 — 모델은 지시를 따랐다.
+    #   30일간 그 스타일을 고른 109건 중 50건이 같은 모양이었다(재료엔 다이소가 없는데).
+    #   판정은 좁게: RETAILERS의 이름이 대본에 나왔는데 **재료 원문 어디에도 없으면** 실패.
+    #   materials_text를 안 주면 검사 자체를 건너뛴다(회귀 0). '지인이 점장'·'품절'처럼
+    #   고유명사가 아닌 허위는 여기서 안 잡는다 — 그건 사실검증의 몫이라 넓히면 오탐이 난다.
+    if materials_text:
+        _mt = norm(materials_text).lower()
+        _nf = norm(full).lower()
+        leaked = [r for r in RETAILERS if r.lower() in _nf and r.lower() not in _mt]
+        checks.append({"name": "재료 밖 판매처", "ok": not leaked,
+                       "detail": ("OK" if not leaked else
+                                  ("대본에 「%s」가 나오는데 재료 어디에도 없다 — 문장틀에 박힌 "
+                                   "판매처를 그대로 쓴 것이다. 재료에 없는 판매처·소속·인맥은 "
+                                   "쓰지 말고 그 자리를 재료의 사실로 바꿔라" % ", ".join(leaked[:3])))})
+
     # ★훅 3초(2026-08-19) — 스타일이 선언할 때만. 위 함수 하나가 판단을 전담한다.
     checks += hook_checks(style, full, product)
 
@@ -924,7 +953,9 @@ def scene_grounding_check(beats, scene_ids, is_recipe=False, min_ratio=0.34, sou
 
 #: 이것만은 "고쳐서라도 내보낸다"가 성립하지 않는 검사 — 소재가 틀리면 그 대본은 통째로 남의 것이다.
 #: (2026-09-09 사장님 재발 제보. 09-07엔 프롬프트 가드만 넣었고 출구는 그대로 열려 있었다.)
-FATAL_CHECKS = ("소재 일치",)
+#: '재료 밖 판매처'도 치명이다(2026-09-11) — 소재는 맞아도 "다이소 매니저 지인"이 지어낸
+#: 말이면 그 대본은 거짓말이다. 고쳐서 내보낼 것이 아니라 그 스타일을 빼야 한다.
+FATAL_CHECKS = ("소재 일치", "재료 밖 판매처")
 
 
 def passed(checks):

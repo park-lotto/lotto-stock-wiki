@@ -60,8 +60,16 @@ def main():
 
     if found:
         sid = found["id"]
+        # ★사람이 내린 것(pending)은 되살리지 않는다(2026-09-11). 이 스파인은 문장틀에
+        #   '다이소 점장'이 박혀 있어 다이소가 아닌 재료에서 거짓 설정을 만들었고(30일 109건 중 50건),
+        #   그래서 내렸다. 여기서 무조건 approved로 되돌리면 "왜 또 살아났나"가 된다.
+        #   되살리려면 관리 화면에서 사람이 승인한다. 템플릿·카테고리 덮어쓰기도 같이 멈춘다 —
+        #   내린 행의 내용을 바꿔 두면 다음 승인 때 무엇이 올라가는지 아무도 모른다.
+        if (found.get("status") or "") == "pending":
+            print("   (상태 'pending' — 사람이 내린 것이라 그대로 둔다. 되살리려면 관리 화면에서 승인)")
+            return 0
         # ★이미 있는 행도 상태를 바로잡는다 — 안 하면 잘못된 status로 심긴 행이
-        #   다시 돌려도 영영 안 고쳐진다(add_spine을 안 타므로).
+        #   다시 돌려도 영영 안 고쳐진다(add_spine을 안 타므로). ('active' 같은 오타 상태만.)
         if (found.get("status") or "") != "approved":
             st.set_spine_status(sid, "approved")
             print("   (상태 %r → 'approved' 로 고침 — 이래야 목록에 뜬다)" % found.get("status"))

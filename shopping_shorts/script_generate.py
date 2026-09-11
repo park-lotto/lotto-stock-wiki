@@ -533,6 +533,22 @@ STYLE_REWRITES = 2       # 게이트 실패 시 다시 쓰는 횟수. 그래도 
 
 
 
+def _materials_text(sources):
+    """게이트 '재료 밖 판매처'가 대조할 **재료 원문**(전사 전부 + 제품명).
+
+    ★facts_block을 쓰면 안 된다(2026-09-11 아스트라 검토) — 그 블록은 LLM 확장·장면 분석이
+      섞인 가공물이라 원문에 있는 판매처를 "없다"고 오판하거나, 반대로 지어낸 것을 "있다"고
+      볼 수 있다. 검사용 재료는 사람이 담은 원문 그대로여야 한다.
+    """
+    parts = []
+    for s in (sources or []):
+        for k in ("full_text", "product", "caption", "title"):
+            v = (s.get(k) or "").strip() if isinstance(s, dict) else ""
+            if v:
+                parts.append(v)
+    return "\n".join(parts)
+
+
 def _sources_product(sources):
     """재료에서 우리 제품명 하나(첫 번째로 채워진 것). 없으면 ""."""
     for s in (sources or []):
@@ -607,12 +623,15 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
         #   대조한다(지어낸 수치 차단). 안 줬으면 그 검사는 건너뛴다(회귀 0).
         # ★소재 일치도 함께 본다(2026-08-18) — 재료의 제품명을 그대로 넘긴다.
         #   product가 비면 그 검사는 건너뛴다(회귀 0).
+        # ★재료 원문도 넘긴다(2026-09-11) — '재료 밖 판매처' 검사가 대조할 기준.
+        #   facts_block(가공물)이 아니라 사람이 담은 전사 그대로(_materials_text).
         checks, full = script_gate.check(style, res, facts_text=facts_block,
                                          product=_sources_product(sources) or (product or ""),
                                          seconds=seconds,
                                          speaker_judge=_speaker_judge,
                                          scene_ids=_scene_ids, grounded=bool(grounded),
-                                         is_recipe=_is_recipe, source_count=_source_count)
+                                         is_recipe=_is_recipe, source_count=_source_count,
+                                         materials_text=_materials_text(sources))
         tries.append({"chars": len(script_gate.norm(full)),
                       "fails": [c["name"] for c in checks if not c["ok"]]})
         if script_gate.passed(checks):
@@ -641,12 +660,23 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
         if note is not None:
             # ★generate_by_styles가 읽는 키에 맞춘다(reason/detail) — 다른 이름으로 담으면
             #   화면엔 원인 없이 '빈손'으로만 떠서 사장님이 이유를 못 본다.
-            note["reason"] = "소재이탈"
-            note["detail"] = (f"재료의 제품({_sources_product(sources) or product or '?'})과 "
-                              f"다른 소재가 나와 반려했습니다 — 재료 대본이 부족합니다")
+            # ★원인별로 다른 처방을 낸다(2026-09-11 아스트라 검토). '재료 밖 판매처'는 재료가
+            #   부족한 게 아니라 **고른 스타일의 문장틀이 오염된 것**이다 — 여기에 "재료를
+            #   더 담으라"고 하면 또 틀린 안내가 된다. 다른 스타일을 고르라고 말해야 한다.
+            if _fatal == "재료 밖 판매처":
+                _leak = next((c.get("detail") or "" for c in checks
+                              if c.get("name") == "재료 밖 판매처" and not c.get("ok")), "")
+                note["reason"] = "판매처이탈"
+                note["detail"] = (f"스타일 「{style.get('name') or '?'}」의 문장틀이 재료에 없는 "
+                                  f"판매처를 넣어 반려했습니다 — 이 재료에는 다른 스타일을 고르세요. "
+                                  f"({_leak[:60]})")
+            else:
+                note["reason"] = "소재이탈"
+                note["detail"] = (f"재료의 제품({_sources_product(sources) or product or '?'})과 "
+                                  f"다른 소재가 나와 반려했습니다 — 재료 대본이 부족합니다")
             note["tries"] = tries
-        print(f"[script_gate] 소재 이탈 반려: product={_sources_product(sources) or product!r}",
-              file=sys.stderr)
+        print(f"[script_gate] {_fatal} 반려: style={style.get('name')!r} "
+              f"product={_sources_product(sources) or product!r}", file=sys.stderr)
         return None
 
     # ★마지막 방어는 코드가 한다(2026-08-18 사장님 "계속 다시 살아나는데 원천 해결인가").
