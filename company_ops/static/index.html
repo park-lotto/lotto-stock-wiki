@@ -6,6 +6,7 @@
   <meta name="color-scheme" content="dark">
   <meta name="theme-color" content="#090d12">
   <title>회사 운영실 · 살아 있는 회사의 아틀라스</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%2326dbc5' d='M32 3 58 18v28L32 61 6 46V18z'/%3E%3Cpath fill='%23090d12' d='m14 23 18 10 18-10v7L35 38v14h-6V38l-15-8z'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="/static/style.css">
   <script src="/static/app.js" defer></script>
 </head>
@@ -34,12 +35,17 @@
         <div class="director"><span class="director-index" aria-hidden="true">◎</span><strong>대표</strong><span>방향 · 우선순위 · 의사결정</span><span class="human-label">사람</span></div>
         <div class="responsibility-stack"><div class="role-layer"><span class="layer-label">공동 책임</span><div id="planning-roles" class="role-pair"></div></div><div class="role-layer"><span class="layer-label">실행 리더</span><div id="execution-roles" class="role-pair"></div></div></div>
         <div class="team-field"><svg id="team-routes" class="team-routes" viewBox="0 0 1000 70" preserveAspectRatio="none" aria-hidden="true"></svg><div id="team-nodes" class="team-nodes"></div></div>
-        <div class="map-bottom"><span>역할과 책임의 설계입니다. AI 작업은 아직 실행되지 않습니다.</span><span id="route-status" role="status" aria-live="polite">팀을 선택하면 업무로 이어집니다 ↘</span></div>
+        <div class="map-bottom"><span>업무 배정과 단계 이동은 실제 저장됩니다. AI 모델 호출은 아직 연결되지 않았습니다.</span><span id="route-status" role="status" aria-live="polite">팀을 선택하면 업무로 이어집니다 ↘</span></div>
       </section>
       <section id="business-view" class="business-view" aria-labelledby="business-title" hidden>
         <div class="business-copy"><p class="eyebrow">제품에서 사업의 가치로</p><h2 id="business-title">무엇을 만들고,<br>어떻게 이어지는가.</h2><p>제품의 현재와 수익 구조를 함께 봅니다.</p></div>
         <div class="business-flow"><div class="product-column"><h3>제품 · 서비스</h3><div id="product-list"></div></div><div class="business-bridge" aria-hidden="true"><span>→</span></div><div class="revenue-column"><div class="section-heading"><h3>수익 구조</h3><span class="status-tag">회계 미연결</span></div><div class="revenue-number">—<span>금액 연동 전</span></div><ul id="revenue-list"></ul><p class="source-note">기간 · 통화 · 집계 기준 · 출처 미설정</p></div></div>
       </section>
+    </section>
+    <section class="dispatch-board" aria-labelledby="dispatch-title">
+      <div class="section-heading"><div><p class="eyebrow">실제 저장되는 책임 이동</p><h2 id="dispatch-title">실시간 업무 배정</h2></div><span id="assignment-count" class="status-tag">0건 작동 중</span></div>
+      <p class="dispatch-note">팀 규칙에 따라 기획·구현·검수 담당이 자동으로 정해집니다. 단계가 바뀌면 업무 카드가 다음 담당자에게 이동합니다.</p>
+      <div id="assignment-lanes" class="assignment-lanes"></div>
     </section>
     <div class="operations-grid">
       <section id="projects-panel" class="projects-panel" aria-labelledby="projects-title"><div class="section-heading projects-heading"><div><p class="eyebrow">의도가 일이 되는 자리</p><h2 id="projects-title">프로젝트 흐름 <span id="project-count">—</span></h2></div><button id="new-project" class="primary" type="button" disabled><span aria-hidden="true">＋</span> 프로젝트 만들기</button></div><div class="filter-line"><p id="project-context">선택한 회사의 저장된 프로젝트</p><button id="clear-team" class="text-button" type="button" hidden>팀 필터 해제 ×</button></div><div id="stage-summary" class="stage-summary" aria-label="단계별 프로젝트 수"></div><div id="project-list"></div></section>

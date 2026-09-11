@@ -6,7 +6,7 @@ const SVG_NS = "http://www.w3.org/2000/svg";
 const PAGE_SIZE = 50;
 const POLL_INTERVAL = 5000;
 const COMPANY_MARKS = {makers: "M", hnl: "H", stock: "S"};
-const EVENT_LABELS = {created: "프로젝트 접수", advance: "다음 단계로 인계", block: "흐름 차단", resume: "업무 재개", reject: "검수 반려 · 구현으로 복귀"};
+const EVENT_LABELS = {created: "프로젝트 접수", assigned: "담당 역할 자동 배정", advance: "다음 단계로 인계", block: "흐름 차단", resume: "업무 재개", reject: "검수 반려 · 구현으로 복귀"};
 let state = null;
 let companyId = "makers";
 let teamFilter = null;
@@ -56,6 +56,7 @@ const projectById = id => state?.projects.find(item => item.id === id);
 const projectRow = id => [...$("project-list").querySelectorAll("[data-project-id]")].find(item => item.dataset.projectId === id) || null;
 const teamName = id => state?.teams.find(item => item.id === id)?.name || id;
 const stageName = id => state?.stages.find(item => item.id === id)?.label || id;
+const roleName = id => state?.roles.find(item => item.id === id)?.name || id || "완료";
 const eventClass = kind => ({block: "blocked", reject: "rejected"}[kind] || kind);
 function dateText(value) {
   const date = new Date(value);
@@ -135,7 +136,7 @@ function roleNode(role) {
   item.title = role.role + " · " + role.status;
   const monogram = node("span", "role-monogram", role.name.slice(0, 1));
   monogram.setAttribute("aria-hidden", "true");
-  const status = node("small", "", "미연결");
+  const status = node("small", "role-load", "배정 0건");
   status.setAttribute("aria-label", role.status);
   item.append(monogram, node("strong", "", role.name), status);
   item.setAttribute("aria-label", role.name + " · " + role.role + " · " + role.status);
@@ -183,6 +184,42 @@ function renderOrganization() {
     $("route-" + team.id).classList.toggle("is-selected", selected);
     $("route-" + team.id).classList.toggle("is-blocked", blocked > 0);
   }
+  for (const role of state.roles) {
+    const active = state.assignments.filter(item => item.company_id === companyId && item.role_id === role.id && ["active", "blocked"].includes(item.status));
+    const target = document.querySelector(`.role-node[data-role="${role.id}"]`);
+    if (!target) continue;
+    target.classList.toggle("has-work", active.length > 0);
+    target.classList.toggle("has-blocked-work", active.some(item => item.status === "blocked"));
+    target.querySelector(".role-load").textContent = active.length ? `배정 ${active.length}건` : "대기";
+  }
+}
+
+function renderAssignments() {
+  const projects = companyProjects().filter(project => project.stage !== "done" && (!teamFilter || project.team_id === teamFilter));
+  const signature = projects.map(project => [project.id, project.version, project.current_assignee, project.blocked]);
+  if (sameRender("assignment-lanes", [companyId, teamFilter, signature])) return;
+  put("assignment-count", projects.length + "건 작동 중");
+  const lanes = state.roles.map(role => {
+    const lane = node("article", "assignment-lane");
+    lane.dataset.role = role.id;
+    const header = node("header");
+    const mine = projects.filter(project => project.current_assignee === role.id);
+    header.append(node("span", "assignment-orb", role.name.slice(0, 1)), node("strong", "", role.name), node("small", "", mine.length + "건"));
+    lane.append(header);
+    const body = node("div", "assignment-stack");
+    if (!mine.length) body.append(node("p", "assignment-empty", "다음 배정 대기"));
+    for (const project of mine) {
+      const card = node("button", "work-card" + (project.blocked ? " is-blocked" : " is-live"));
+      card.type = "button";
+      card.dataset.projectId = project.id;
+      card.append(node("span", "work-stage", project.blocked ? "차단" : stageName(project.stage)), node("strong", "", project.title), node("small", "", teamName(project.team_id)));
+      card.addEventListener("click", () => openDetail(project.id, {returnTarget: card}));
+      body.append(card);
+    }
+    lane.append(body);
+    return lane;
+  });
+  $("assignment-lanes").replaceChildren(...lanes);
 }
 function renderBusiness() {
   const selected = company();
@@ -238,7 +275,7 @@ function renderProjects() {
       const marker = node("span", "mission-marker");
       marker.setAttribute("aria-hidden", "true");
       const copy = node("span", "project-copy");
-      copy.append(node("strong", "", project.title), node("small", "", teamName(project.team_id) + " · 책임자 " + project.owner));
+      copy.append(node("strong", "", project.title), node("small", "", teamName(project.team_id) + " · 현재 담당 " + roleName(project.current_assignee) + " · 책임자 " + project.owner));
       button.append(marker, copy, node("span", "stage-label", project.blocked ? "차단 · " + stageName(project.stage) : stageName(project.stage)), node("span", "project-arrow", "↗"));
       button.addEventListener("click", () => openDetail(project.id));
       const progress = node("span", "mission-progress");
@@ -312,6 +349,7 @@ function render() {
   renderCompanyNavigation();
   renderOrganization();
   renderBusiness();
+  renderAssignments();
   renderProjects();
   renderEvents();
   if (!sameRender("integrations", state.integrations)) {
@@ -341,7 +379,7 @@ function selectView(view) {
   $("business-view").hidden = view !== "business";
   $("view-organization").setAttribute("aria-pressed", String(view === "organization"));
   $("view-business").setAttribute("aria-pressed", String(view === "business"));
-  put("scene-note", view === "organization" ? "책임 관계 · AI 실행 미연결" : "대표 제공 현황 · 회계 미연결");
+  put("scene-note", view === "organization" ? "업무 배정 연결 · AI 모델 실행 미연결" : "대표 제공 현황 · 회계 미연결");
   clearPulses();
 }
 
@@ -395,7 +433,7 @@ function refresh({force = false} = {}) {
       refreshAgain = false;
       try {
         const nextState = await api("/api/state");
-        for (const field of ["companies", "teams", "roles", "projects", "events", "stages", "integrations"]) {
+        for (const field of ["companies", "teams", "roles", "projects", "events", "assignments", "stages", "integrations"]) {
           if (!Array.isArray(nextState[field])) throw new Error("회사 상태 응답의 형식이 올바르지 않습니다.");
         }
         if (!nextState.companies.length) throw new Error("회사 정보를 찾지 못했습니다.");

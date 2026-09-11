@@ -74,6 +74,7 @@ class CompanyOpsApiTests(unittest.TestCase):
         )
         self.assertEqual(state["projects"], [])
         self.assertEqual(state["events"], [])
+        self.assertEqual(state["assignments"], [])
         catalog_text = json.dumps(state["companies"], ensure_ascii=False)
         self.assertNotIn("확정 매출", catalog_text)
         self.assertNotIn("후보수익", catalog_text)
@@ -83,18 +84,60 @@ class CompanyOpsApiTests(unittest.TestCase):
             {"Astra": "기획 책임", "Claude": "기획 책임", "Opus": "실행 리더", "Codex": "실행 리더"},
         )
 
-    def test_lifespan_initializes_schema_at_version_one(self) -> None:
+    def test_lifespan_initializes_schema_at_version_two(self) -> None:
         db = sqlite3.connect(self.db_path)
         try:
-            self.assertEqual(db.execute("PRAGMA user_version").fetchone()[0], 1)
+            self.assertEqual(db.execute("PRAGMA user_version").fetchone()[0], 2)
         finally:
             db.close()
+
+    def test_v1_projects_migrate_to_team_and_stage_assignments(self) -> None:
+        legacy_path = Path(self.temporary_directory.name) / "legacy.sqlite3"
+        db = sqlite3.connect(legacy_path)
+        try:
+            db.executescript(
+                """
+                CREATE TABLE projects (
+                    id TEXT PRIMARY KEY, company_id TEXT NOT NULL, title TEXT NOT NULL,
+                    team_id TEXT NOT NULL, owner TEXT NOT NULL, description TEXT NOT NULL,
+                    stage TEXT NOT NULL, blocked INTEGER NOT NULL DEFAULT 0,
+                    version INTEGER NOT NULL DEFAULT 1, created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+                );
+                CREATE TABLE events (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT, project_id TEXT NOT NULL,
+                    company_id TEXT NOT NULL, kind TEXT NOT NULL, message TEXT NOT NULL,
+                    evidence TEXT NOT NULL DEFAULT '', reviewer TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL
+                );
+                INSERT INTO projects VALUES (
+                    'legacy-build', 'makers', '기존 개선 업무', 'improve', '대표', '',
+                    'build', 1, 4, '2026-09-10T00:00:00Z', '2026-09-11T00:00:00Z'
+                );
+                INSERT INTO projects VALUES (
+                    'legacy-done', 'makers', '기존 완료 업무', 'ops', '대표', '',
+                    'done', 0, 8, '2026-09-09T00:00:00Z', '2026-09-10T00:00:00Z'
+                );
+                PRAGMA user_version = 1;
+                """
+            )
+            db.commit()
+        finally:
+            db.close()
+
+        with TestClient(create_app(legacy_path), base_url="http://localhost") as legacy_client:
+            state = legacy_client.get("/api/state").json()
+        projects = {item["id"]: item for item in state["projects"]}
+        self.assertEqual(projects["legacy-build"]["current_assignee"], "codex")
+        self.assertEqual(projects["legacy-done"]["current_assignee"], "")
+        self.assertEqual(len(state["assignments"]), 1)
+        self.assertEqual(state["assignments"][0]["project_id"], "legacy-build")
+        self.assertEqual(state["assignments"][0]["role_id"], "codex")
+        self.assertEqual(state["assignments"][0]["status"], "blocked")
 
     def test_newer_schema_version_is_rejected_without_downgrade(self) -> None:
         newer_db_path = Path(self.temporary_directory.name) / "newer.sqlite3"
         db = sqlite3.connect(newer_db_path)
         try:
-            db.execute("PRAGMA user_version = 2")
+            db.execute("PRAGMA user_version = 3")
             db.commit()
         finally:
             db.close()
@@ -103,7 +146,7 @@ class CompanyOpsApiTests(unittest.TestCase):
             newer_client.__enter__()
         db = sqlite3.connect(newer_db_path)
         try:
-            self.assertEqual(db.execute("PRAGMA user_version").fetchone()[0], 2)
+            self.assertEqual(db.execute("PRAGMA user_version").fetchone()[0], 3)
         finally:
             db.close()
 
@@ -159,9 +202,46 @@ class CompanyOpsApiTests(unittest.TestCase):
         self.assertEqual(project["version"], 1)
         self.assertTrue(project["created_at"].endswith("Z"))
         events = self.client.get(f"/api/projects/{project['id']}/events").json()
-        self.assertEqual(len(events), 1)
-        self.assertEqual(events[0]["kind"], "created")
+        self.assertEqual(len(events), 2)
+        self.assertEqual(events[0]["kind"], "assigned")
+        self.assertEqual(events[1]["kind"], "created")
+        self.assertEqual(events[0]["reviewer"], "")
         self.assertTrue(events[0]["created_at"].endswith("Z"))
+
+    def test_team_rules_assign_and_move_real_work_between_roles(self) -> None:
+        project = self.create_project(team_id="improve")
+        self.assertEqual(project["planner_role"], "claude")
+        self.assertEqual(project["executor_role"], "codex")
+        self.assertEqual(project["reviewer_role"], "astra")
+        self.assertEqual(project["current_assignee"], "claude")
+        state = self.client.get("/api/state").json()
+        self.assertEqual(state["assignments"][0]["role_id"], "claude")
+        self.assertEqual(state["assignments"][0]["status"], "active")
+
+        project = self.action(project, "advance", note="설계 시작")
+        self.assertEqual(project["stage"], "design")
+        self.assertEqual(project["current_assignee"], "claude")
+        project = self.action(project, "advance", note="구현 시작")
+        self.assertEqual(project["stage"], "build")
+        self.assertEqual(project["current_assignee"], "codex")
+        project = self.action(project, "advance", note="검증 시작")
+        self.assertEqual(project["stage"], "verify")
+        self.assertEqual(project["current_assignee"], "astra")
+
+        assignments = self.client.get("/api/state").json()["assignments"]
+        active = [item for item in assignments if item["status"] == "active"]
+        self.assertEqual([(item["stage"], item["role_id"]) for item in active], [("verify", "astra")])
+        self.assertEqual({item["stage"] for item in assignments}, {"intake", "design", "build", "verify"})
+
+    def test_block_and_resume_update_the_active_assignment(self) -> None:
+        project = self.create_project(team_id="ops")
+        project = self.action(project, "block", note="서버 확인 대기")
+        assignment = self.client.get("/api/state").json()["assignments"][0]
+        self.assertEqual(assignment["status"], "blocked")
+        project = self.action(project, "resume", note="확인 완료")
+        assignment = self.client.get("/api/state").json()["assignments"][0]
+        self.assertEqual(assignment["status"], "active")
+        self.assertEqual(assignment["note"], "확인 완료")
 
     def test_create_rejects_unknown_blank_or_extra_catalog_fields(self) -> None:
         for overrides in (
@@ -209,7 +289,7 @@ class CompanyOpsApiTests(unittest.TestCase):
         try:
             state = second_client.get("/api/state").json()
             self.assertEqual([item["id"] for item in state["projects"]], [project["id"]])
-            self.assertEqual(len(state["events"]), 1)
+            self.assertEqual(len(state["events"]), 2)
         finally:
             second_client.__exit__(None, None, None)
 
@@ -402,7 +482,7 @@ class CompanyOpsApiTests(unittest.TestCase):
             event_ids.extend(event["id"] for event in page)
             before_id = page[-1]["id"]
 
-        self.assertEqual(len(event_ids), 107)
+        self.assertEqual(len(event_ids), 108)
         self.assertEqual(len(event_ids), len(set(event_ids)))
         self.assertEqual(event_ids, sorted(event_ids, reverse=True))
 

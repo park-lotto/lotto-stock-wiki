@@ -52,11 +52,23 @@ TEAMS = [
 ]
 
 ROLES = [
-    {"id": "astra", "name": "Astra", "group": "planning", "role": "기획 책임", "status": "계획 책임 미연결"},
-    {"id": "claude", "name": "Claude", "group": "planning", "role": "기획 책임", "status": "계획 책임 미연결"},
-    {"id": "opus", "name": "Opus", "group": "execution", "role": "실행 리더", "status": "실행 리더 미연결"},
-    {"id": "codex", "name": "Codex", "group": "execution", "role": "실행 리더", "status": "실행 리더 미연결"},
+    {"id": "astra", "name": "Astra", "group": "planning", "role": "기획 책임", "status": "업무 배정 연결 · 모델 실행 미연결"},
+    {"id": "claude", "name": "Claude", "group": "planning", "role": "기획 책임", "status": "업무 배정 연결 · 모델 실행 미연결"},
+    {"id": "opus", "name": "Opus", "group": "execution", "role": "실행 리더", "status": "업무 배정 연결 · 모델 실행 미연결"},
+    {"id": "codex", "name": "Codex", "group": "execution", "role": "실행 리더", "status": "업무 배정 연결 · 모델 실행 미연결"},
 ]
+
+# 팀을 고르면 이 표 한 곳에서 기획 → 구현 → 검수 책임을 정한다.
+# AI 모델 호출 여부와 무관하게 실제 프로젝트 배정 원장에 기록된다.
+TEAM_WORKFLOWS = {
+    "new": {"planner": "astra", "executor": "codex", "reviewer": "claude"},
+    "improve": {"planner": "claude", "executor": "codex", "reviewer": "astra"},
+    "cs": {"planner": "claude", "executor": "opus", "reviewer": "astra"},
+    "ops": {"planner": "astra", "executor": "opus", "reviewer": "claude"},
+    "qa": {"planner": "claude", "executor": "codex", "reviewer": "astra"},
+}
+
+ROLE_IDS = {item["id"] for item in ROLES}
 
 STAGE_DEFINITIONS = [
     {"id": "intake", "label": "접수"},

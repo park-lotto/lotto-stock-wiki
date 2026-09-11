@@ -31,6 +31,30 @@ async function projectStage(page, title) {
   return project ? {id: project.id, stage: project.stage, version: project.version, blocked: project.blocked} : null;
 }
 
+async function activeAssignment(page, title) {
+  const data = await state(page);
+  const project = data.projects.find(item => item.title === title);
+  if (!project) return null;
+  return data.assignments.find(item => item.project_id === project.id && item.status === "active") || null;
+}
+
+async function expectAssignee(page, title, roleId, stage) {
+  await page.waitForFunction(async (expectedTitle, expectedRole, expectedStage) => {
+    const response = await fetch("/api/state", {cache: "no-store"});
+    const data = await response.json();
+    const project = data.projects.find(item => item.title === expectedTitle);
+    if (!project || project.current_assignee !== expectedRole || project.stage !== expectedStage) return false;
+    return data.assignments.some(item => (
+      item.project_id === project.id && item.role_id === expectedRole &&
+      item.stage === expectedStage && item.status === "active"
+    ));
+  }, {timeout: 8000}, title, roleId, stage);
+  const assignment = await activeAssignment(page, title);
+  if (assignment?.role_id !== roleId || assignment?.stage !== stage) {
+    throw new Error(`${stage} 담당자 이동 실패: ${JSON.stringify(assignment)}`);
+  }
+}
+
 async function waitStage(page, title, stage) {
   await page.waitForFunction(async (expectedTitle, expectedStage) => {
     const response = await fetch("/api/state", {cache: "no-store"});
@@ -84,6 +108,7 @@ async function main() {
     await page.click("#create-submit");
     await page.waitForSelector("#detail-dialog[open]");
     await waitStage(page, title, "intake");
+    await expectAssignee(page, title, "claude", "intake");
     const created = await projectStage(page, title);
     if (!created?.id) throw new Error("생성한 프로젝트를 API에서 찾지 못함");
     await page.keyboard.press("Escape");
@@ -98,10 +123,11 @@ async function main() {
     await page.click(`[data-project-id="${created.id}"]`);
     await page.waitForSelector("#detail-dialog[open]");
 
-    for (const expected of ["design", "build", "verify"]) {
+    for (const [expected, assignee] of [["design", "claude"], ["build", "codex"], ["verify", "astra"]]) {
       await page.select("#project-action", "advance");
       await page.click("#action-submit");
       await waitStage(page, title, expected);
+      await expectAssignee(page, title, assignee, expected);
     }
 
     await page.select("#project-action", "advance");
@@ -140,7 +166,9 @@ async function main() {
 
     if (errors.length) throw new Error(errors.join("\n"));
     const final = await projectStage(page, title);
-    process.stdout.write(JSON.stringify({ok: true, title, project_id: final.id, stage: final.stage, screenshots: 3, mobile_overflow: overflow}) + "\n");
+    const finalAssignment = await activeAssignment(page, title);
+    if (finalAssignment !== null) throw new Error(`완료 뒤 활성 배정 잔존: ${JSON.stringify(finalAssignment)}`);
+    process.stdout.write(JSON.stringify({ok: true, title, project_id: final.id, stage: final.stage, assignment_flow: ["claude", "codex", "astra"], screenshots: 3, mobile_overflow: overflow}) + "\n");
   } finally {
     await browser.close();
   }

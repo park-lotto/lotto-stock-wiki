@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterator
 
-from .catalog import STAGE_IDS
+from .catalog import STAGE_IDS, TEAM_WORKFLOWS
 
 
 class StoreError(Exception):
@@ -59,7 +59,7 @@ class Store:
     def initialize(self) -> None:
         with self.connection() as db:
             current_version = db.execute("PRAGMA user_version").fetchone()[0]
-            if current_version not in (0, 1):
+            if current_version not in (0, 1, 2):
                 raise SchemaVersionError(f"지원하지 않는 스키마 버전입니다: {current_version}")
             db.execute("PRAGMA journal_mode = WAL")
             db.execute("BEGIN IMMEDIATE")
@@ -81,6 +81,61 @@ class Store:
                     )
                     """
                 )
+                project_columns = {row[1] for row in db.execute("PRAGMA table_info(projects)")}
+                for name, ddl in (
+                    ("planner_role", "TEXT NOT NULL DEFAULT 'astra'"),
+                    ("executor_role", "TEXT NOT NULL DEFAULT 'codex'"),
+                    ("reviewer_role", "TEXT NOT NULL DEFAULT 'claude'"),
+                    ("current_assignee", "TEXT NOT NULL DEFAULT 'astra'"),
+                ):
+                    if name not in project_columns:
+                        db.execute(f"ALTER TABLE projects ADD COLUMN {name} {ddl}")
+                db.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS assignments (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+                        company_id TEXT NOT NULL,
+                        team_id TEXT NOT NULL,
+                        stage TEXT NOT NULL,
+                        role_id TEXT NOT NULL,
+                        status TEXT NOT NULL,
+                        note TEXT NOT NULL DEFAULT '',
+                        started_at TEXT NOT NULL,
+                        completed_at TEXT
+                    )
+                    """
+                )
+                db.execute(
+                    "CREATE INDEX IF NOT EXISTS idx_assignments_project_id_id "
+                    "ON assignments(project_id, id DESC)"
+                )
+                if current_version < 2:
+                    # v1 프로젝트도 팀 규칙과 현재 단계에 맞는 담당자를 복원한다.
+                    # ALTER TABLE의 고정 기본값을 그대로 두면 모든 기존 일이 Astra로 잘못 보인다.
+                    existing_projects = db.execute(
+                        "SELECT id, company_id, team_id, stage, blocked, created_at, updated_at FROM projects"
+                    ).fetchall()
+                    for project in existing_projects:
+                        workflow = TEAM_WORKFLOWS.get(project[2], TEAM_WORKFLOWS["new"])
+                        assignee = {
+                            "intake": workflow["planner"],
+                            "design": workflow["planner"],
+                            "build": workflow["executor"],
+                            "verify": workflow["reviewer"],
+                            "done": "",
+                        }.get(project[3], workflow["planner"])
+                        db.execute(
+                            "UPDATE projects SET planner_role=?, executor_role=?, reviewer_role=?, current_assignee=? WHERE id=?",
+                            (workflow["planner"], workflow["executor"], workflow["reviewer"], assignee, project[0]),
+                        )
+                        if project[3] != "done":
+                            db.execute(
+                                "INSERT INTO assignments (project_id, company_id, team_id, stage, role_id, status, note, started_at) "
+                                "VALUES (?, ?, ?, ?, ?, ?, '기존 프로젝트 담당 복원', ?)",
+                                (project[0], project[1], project[2], project[3], assignee,
+                                 "blocked" if project[4] else "active", project[6] or project[5]),
+                            )
                 db.execute(
                     """
                     CREATE TABLE IF NOT EXISTS events (
@@ -99,8 +154,10 @@ class Store:
                     "CREATE INDEX IF NOT EXISTS idx_events_project_id_id "
                     "ON events(project_id, id DESC)"
                 )
-                if current_version == 0:
-                    db.execute("PRAGMA user_version = 1")
+                # 초기 v2 시제품이 담당 역할을 검수자 칸에 기록했던 값을 정리한다.
+                db.execute("UPDATE events SET reviewer='' WHERE kind='assigned' AND reviewer<>''")
+                if current_version < 2:
+                    db.execute("PRAGMA user_version = 2")
                 db.commit()
             except Exception:
                 db.rollback()
@@ -111,6 +168,7 @@ class Store:
         keys = (
             "id", "company_id", "title", "team_id", "owner", "description",
             "stage", "blocked", "version", "created_at", "updated_at",
+            "planner_role", "executor_role", "reviewer_role", "current_assignee",
         )
         return dict(zip(keys, row)) | {"blocked": bool(row[7])}
 
@@ -125,14 +183,26 @@ class Store:
         with self.connection() as db:
             db.execute("BEGIN IMMEDIATE")
             try:
+                workflow = TEAM_WORKFLOWS[team_id]
                 db.execute(
-                    "INSERT INTO projects (id, company_id, title, team_id, owner, description, stage, blocked, version, created_at, updated_at) "
-                    "VALUES (?, ?, ?, ?, ?, ?, 'intake', 0, 1, ?, ?)",
-                    (project_id, company_id, title, team_id, owner, description, timestamp, timestamp),
+                    "INSERT INTO projects (id, company_id, title, team_id, owner, description, stage, blocked, version, created_at, updated_at, planner_role, executor_role, reviewer_role, current_assignee) "
+                    "VALUES (?, ?, ?, ?, ?, ?, 'intake', 0, 1, ?, ?, ?, ?, ?, ?)",
+                    (project_id, company_id, title, team_id, owner, description, timestamp, timestamp,
+                     workflow["planner"], workflow["executor"], workflow["reviewer"], workflow["planner"]),
                 )
                 db.execute(
                     "INSERT INTO events (project_id, company_id, kind, message, created_at) VALUES (?, ?, 'created', ?, ?)",
                     (project_id, company_id, f"프로젝트 생성: {title}", timestamp),
+                )
+                db.execute(
+                    "INSERT INTO assignments (project_id, company_id, team_id, stage, role_id, status, note, started_at) "
+                    "VALUES (?, ?, ?, 'intake', ?, 'active', '접수와 목표 확인', ?)",
+                    (project_id, company_id, team_id, workflow["planner"], timestamp),
+                )
+                db.execute(
+                    "INSERT INTO events (project_id, company_id, kind, message, created_at) "
+                    "VALUES (?, ?, 'assigned', ?, ?)",
+                    (project_id, company_id, f"접수 업무 배정 → {workflow['planner']}", timestamp),
                 )
                 db.commit()
             except Exception:
@@ -143,7 +213,7 @@ class Store:
     def get_project(self, project_id: str) -> dict:
         with self.connection() as db:
             row = db.execute(
-                "SELECT id, company_id, title, team_id, owner, description, stage, blocked, version, created_at, updated_at FROM projects WHERE id = ?",
+                "SELECT id, company_id, title, team_id, owner, description, stage, blocked, version, created_at, updated_at, planner_role, executor_role, reviewer_role, current_assignee FROM projects WHERE id = ?",
                 (project_id,),
             ).fetchone()
         if row is None:
@@ -175,6 +245,7 @@ class Store:
             blocked = bool(row["blocked"])
             next_stage = stage
             next_blocked = blocked
+            next_assignee = row["current_assignee"]
             if stage == "done":
                 db.rollback()
                 raise ConflictError("완료된 프로젝트는 변경할 수 없습니다")
@@ -186,6 +257,11 @@ class Store:
                     db.rollback()
                     raise InvalidActionError("재개하려면 사유가 필요합니다")
                 next_blocked = False
+                db.execute(
+                    "UPDATE assignments SET status='active', note=?, completed_at=NULL "
+                    "WHERE id=(SELECT id FROM assignments WHERE project_id=? ORDER BY id DESC LIMIT 1)",
+                    (note, project_id),
+                )
             elif action == "advance":
                 if stage == "verify":
                     if not evidence or not reviewer:
@@ -195,11 +271,17 @@ class Store:
                         db.rollback()
                         raise InvalidActionError("검토자는 담당자와 달라야 합니다")
                 next_stage = STAGE_IDS[STAGE_IDS.index(stage) + 1]
+                next_assignee = self._assignee_for(row, next_stage)
             elif action == "block":
                 if stage not in STAGE_IDS[:-1] or not note:
                     db.rollback()
                     raise InvalidActionError("차단하려면 진행 중 단계와 사유가 필요합니다")
                 next_blocked = True
+                db.execute(
+                    "UPDATE assignments SET status='blocked', note=? "
+                    "WHERE id=(SELECT id FROM assignments WHERE project_id=? ORDER BY id DESC LIMIT 1)",
+                    (note, project_id),
+                )
             elif action == "resume":
                 db.rollback()
                 raise ConflictError("차단되지 않은 프로젝트는 재개할 수 없습니다")
@@ -211,6 +293,7 @@ class Store:
                     db.rollback()
                     raise InvalidActionError("반려하려면 사유가 필요합니다")
                 next_stage = "build"
+                next_assignee = row["executor_role"]
             else:
                 db.rollback()
                 raise InvalidActionError("알 수 없는 작업입니다")
@@ -218,28 +301,70 @@ class Store:
             timestamp = utc_now()
             new_version = row["version"] + 1
             db.execute(
-                "UPDATE projects SET stage = ?, blocked = ?, version = ?, updated_at = ? WHERE id = ?",
-                (next_stage, int(next_blocked), new_version, timestamp, project_id),
+                "UPDATE projects SET stage = ?, blocked = ?, version = ?, updated_at = ?, current_assignee = ? WHERE id = ?",
+                (next_stage, int(next_blocked), new_version, timestamp, next_assignee, project_id),
             )
             message = note or f"{action}: {stage} → {next_stage}"
             db.execute(
                 "INSERT INTO events (project_id, company_id, kind, message, evidence, reviewer, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
                 (project_id, row["company_id"], action, message, evidence, reviewer, timestamp),
             )
+            if next_stage != stage:
+                db.execute(
+                    "UPDATE assignments SET status='done', completed_at=? "
+                    "WHERE id=(SELECT id FROM assignments WHERE project_id=? ORDER BY id DESC LIMIT 1)",
+                    (timestamp, project_id),
+                )
+                if next_stage != "done":
+                    assignment_note = {
+                        "design": "해결안과 완료 조건 설계",
+                        "build": "승인된 설계 구현",
+                        "verify": "실행 결과와 완료 조건 검증",
+                    }[next_stage]
+                    db.execute(
+                        "INSERT INTO assignments (project_id, company_id, team_id, stage, role_id, status, note, started_at) "
+                        "VALUES (?, ?, ?, ?, ?, 'active', ?, ?)",
+                        (project_id, row["company_id"], row["team_id"], next_stage,
+                         next_assignee, assignment_note, timestamp),
+                    )
+                    db.execute(
+                        "INSERT INTO events (project_id, company_id, kind, message, created_at) "
+                        "VALUES (?, ?, 'assigned', ?, ?)",
+                        (project_id, row["company_id"], f"{next_stage} 업무 배정 → {next_assignee}", timestamp),
+                    )
             db.commit()
             updated = db.execute("SELECT * FROM projects WHERE id = ?", (project_id,)).fetchone()
         return self._project(updated)
+
+    @staticmethod
+    def _assignee_for(row: sqlite3.Row, stage: str) -> str:
+        if stage in {"intake", "design"}:
+            return row["planner_role"]
+        if stage == "build":
+            return row["executor_role"]
+        if stage == "verify":
+            return row["reviewer_role"]
+        return ""
 
     def state(self) -> dict:
         with self.connection() as db:
             db.row_factory = sqlite3.Row
             projects = db.execute(
-                "SELECT id, company_id, title, team_id, owner, description, stage, blocked, version, created_at, updated_at FROM projects ORDER BY created_at DESC, id DESC"
+                "SELECT id, company_id, title, team_id, owner, description, stage, blocked, version, created_at, updated_at, planner_role, executor_role, reviewer_role, current_assignee FROM projects ORDER BY created_at DESC, id DESC"
             ).fetchall()
             events = db.execute(
                 "SELECT id, project_id, company_id, kind, message, evidence, reviewer, created_at FROM events ORDER BY id DESC LIMIT 100"
             ).fetchall()
-        return {"projects": [self._project(row) for row in projects], "events": [self._event(row) for row in events]}
+            assignments = db.execute(
+                "SELECT id, project_id, company_id, team_id, stage, role_id, status, note, started_at, completed_at "
+                "FROM assignments ORDER BY id DESC LIMIT 300"
+            ).fetchall()
+        assignment_keys = ("id", "project_id", "company_id", "team_id", "stage", "role_id", "status", "note", "started_at", "completed_at")
+        return {
+            "projects": [self._project(row) for row in projects],
+            "events": [self._event(row) for row in events],
+            "assignments": [dict(zip(assignment_keys, row)) for row in assignments],
+        }
 
     def project_events(self, project_id: str, *, before_id: int | None = None, limit: int = 50) -> list[dict]:
         with self.connection() as db:
