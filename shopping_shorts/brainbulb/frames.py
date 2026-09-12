@@ -104,11 +104,22 @@ def build(workdir, timing, script, images, *, meme_dir=None, card_img=None, log=
     p = compose(card_src, os.path.join(d, "intro.jpg"))
     entries.append((p, timing["card_end"])); timeline.append({"i": 0, "t": 0, "d": timing["card_end"], "kind": "card", "src": card_src})
     memes = 0
+    last_img = card_src            # ★직전 컷의 사진 — 빈 컷을 검게 두지 않으려고 들고 간다
+    blanks = 0
     for g, tg in zip(groups, timing["groups"]):
         if g.get("meme"):
             src = meme_path(g["meme"], meme_dir); kind = "meme"; memes += bool(src)
         else:
             src = _nearest(images, g.get("img")); kind = "img"
+        if not src:
+            # ★슬롯 번호가 없는 컷(CHAR·PUNCH 대사)과 밈 팩이 없는 컷은 src가 None이 된다.
+            #   그대로 두면 **화면이 통째로 검게** 나간다(실측 2026-09-13 박위 1차: 상영시간의 50%).
+            #   볼케이노 골든은 img 없는 컷 5개가 **전부 밈**이라 빈 컷이 애초에 없다.
+            #   우리는 대본이 밈 없는 빈 컷을 만들 수 있으므로 직전 사진을 이어서 쓴다.
+            src, kind = last_img, "img"
+            blanks += 1
+        elif kind == "img":
+            last_img = src
         p = compose(src, os.path.join(d, f"g{tg['i']:02d}.jpg"), kind=kind)
         entries.append((p, tg["d"])); timeline.append({"i": tg["i"], "t": tg["t"], "d": tg["d"], "kind": kind, "src": src})
     # 마지막 컷은 꼬리 0.1까지 유지
@@ -120,5 +131,9 @@ def build(workdir, timing, script, images, *, meme_dir=None, card_img=None, log=
             rel = os.path.relpath(path, workdir).replace("\\", "/")
             fh.write(f"file '{rel}'\nduration {dur:.3f}\n")
         fh.write(f"file '{os.path.relpath(entries[-1][0], workdir).replace(chr(92), '/')}'\n")   # concat 마지막 duration 적용용
-    log(f"[brainbulb.frames] 프레임 {len(entries)}장 (사진 {sum(1 for t in timeline if t['kind']=='img' and t['src'])}, 밈 {memes})")
+    black = sum(1 for t in timeline if not t["src"])
+    log(f"[brainbulb.frames] 프레임 {len(entries)}장 "
+        f"(사진 {sum(1 for t in timeline if t['kind']=='img' and t['src'])}, 밈 {memes}"
+        + (f", 직전사진으로 메움 {blanks}" if blanks else "")
+        + (f", ★검은 화면 {black}" if black else "") + ")")
     return {"list": lst, "frames": [e[0] for e in entries], "timeline": timeline}

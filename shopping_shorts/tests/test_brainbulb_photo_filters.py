@@ -319,3 +319,45 @@ def test_normal_photo_is_not_avatar(tmp_path):
     pytest.importorskip("cv2")
     p = tmp_path / "n.jpg"; _noise(p, seed=33)
     assert photos.looks_like_avatar(str(p)) is False
+
+
+# ── 빈 컷이 검게 나가지 않는다 (2026-09-13 박위 1차 실측: 상영시간의 50%가 검정) ──────────
+def _timing(n):
+    return {"card_end": 1.0,
+            "groups": [{"i": i + 1, "t": float(i), "d": 1.0} for i in range(n)]}
+
+
+def test_build_fills_blank_cuts_with_previous_photo(tmp_path):
+    """★슬롯 번호 없는 컷(CHAR·PUNCH 대사)이 검게 나가던 병.
+
+    볼케이노 골든은 img 없는 컷 5개가 **전부 밈**이라 빈 컷이 애초에 없다.
+    우리 대본은 밈 없는 빈 컷을 만들 수 있으므로 직전 사진을 이어 쓴다.
+    """
+    from shopping_shorts.brainbulb import frames
+    img = tmp_path / "01.png"
+    Image.new("RGB", (800, 600), (200, 30, 30)).save(img)
+    script = {"groups": [{"text": "가", "img": 1},
+                         {"text": "나"},                 # ← img 없음·밈 없음 = 예전엔 검정
+                         {"text": "다", "img": 1}]}
+    r = frames.build(str(tmp_path), _timing(3), script, {"1": str(img)}, log=lambda *a: None)
+    assert all(t["src"] for t in r["timeline"]), "검은 컷이 남았다"
+    mid = Image.open(r["timeline"][2]["src"]) if False else None
+    # 실제로 그려진 화면에서 슬롯이 검지 않은지 본다
+    import numpy as np
+    from shopping_shorts.brainbulb import spec
+    for f in r["frames"]:
+        a = np.asarray(Image.open(f).convert("L"), dtype=float)
+        slot = a[spec.SLOT_Y:spec.SLOT_Y + spec.SLOT_H, spec.SLOT_X:spec.SLOT_X + spec.SLOT_W]
+        assert slot.mean() > 10, f"{f} 슬롯이 검다"
+
+
+def test_build_fills_when_meme_pack_missing(tmp_path):
+    """밈 팩이 없으면 meme_path가 None — 그 컷도 검게 두지 않는다."""
+    from shopping_shorts.brainbulb import frames
+    img = tmp_path / "01.png"
+    Image.new("RGB", (800, 600), (30, 200, 30)).save(img)
+    script = {"groups": [{"text": "가", "img": 1},
+                         {"text": "나", "meme": "분노"}]}      # meme_dir 없음 → None
+    r = frames.build(str(tmp_path), _timing(2), script, {"1": str(img)},
+                     meme_dir=None, log=lambda *a: None)
+    assert all(t["src"] for t in r["timeline"])
