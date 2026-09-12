@@ -39,20 +39,27 @@ def _run(cmd):
         raise SystemExit("ffmpeg 실패:\n" + " ".join(cmd) + "\n" + r.stderr[-1500:])
 
 
-def make_still(src_png: str, out_mp4: Path, seconds: float, *, plain_bg: str | None = None):
-    """PNG → 1080×1920 정지 mp4. 가로 사진은 흐린 배경 위에 폭 맞춤(contain)으로 놓는다.
+def make_still(src_png: str, out_mp4: Path, seconds: float, *, plain_bg: str | None = None,
+               width: int = 1080, top_pct: float = 48.0):
+    """PNG → 1080×1920 정지 mp4.
+
+    ★그림은 화면 **아래쪽 띠**에 놓는다(top_pct 부터). 우리 프리셋의 머리카피(37~63%)·자막(41~63%)
+    자리가 화면 한가운데라, 그림을 정중앙에 두면 제목·자막·그림이 한 곳에 몰린다
+    (2026-09-12 사장님 캡처: 밈 위에 머리카피와 빨간 자막이 겹침). 위쪽은 흐린 배경(사진) 또는
+    단색(밈)으로 비워 글자 자리를 준다.
     plain_bg 를 주면(밈처럼 흐림이 어색한 그림) 그 단색 위에 놓는다."""
     if out_mp4.exists():
         return out_mp4
     out_mp4.parent.mkdir(parents=True, exist_ok=True)
+    y = int(1920 * top_pct / 100)
     if plain_bg:
-        vf = (f"scale=900:-2:flags=lanczos,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:color={plain_bg},"
+        vf = (f"scale={width}:-2:flags=lanczos,pad=1080:1920:(ow-iw)/2:{y}:color={plain_bg},"
               "format=yuv420p")
     else:
         vf = ("split[a][b];"
               "[a]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=24:2[bg];"
-              "[b]scale=1080:-2:flags=lanczos[fg];"
-              "[bg][fg]overlay=(W-w)/2:(H-h)/2,format=yuv420p")
+              f"[b]scale={width}:-2:flags=lanczos[fg];"
+              f"[bg][fg]overlay=(W-w)/2:{y},format=yuv420p")
     _run(["ffmpeg", "-y", "-loop", "1", "-t", f"{seconds:.3f}", "-i", src_png,
           "-filter_complex", vf, "-r", "30", "-c:v", "libx264", "-preset", "veryfast",
           "-crf", "18", "-pix_fmt", "yuv420p", "-an", str(out_mp4)])
@@ -96,8 +103,10 @@ def build(manifest: dict, layout: str, channel: str, out_path: Path, *, sfx: boo
         vid = f"s{n}"
         is_meme = "/pepe/" in media.replace("\\", "/")
         stem = Path(media).stem + "_" + ("meme" if is_meme else "img")
+        # 사진: 폭 1080, 48%부터(=~48~90%) / 밈: 폭 700, 자막(≤63%) 아래 64%부터
         mp4 = make_still(media, src_dir / vid / f"{stem}.mp4", dur + _STILL_PAD,
-                         plain_bg="white" if is_meme else None)
+                         plain_bg="white" if is_meme else None,
+                         width=700 if is_meme else 1080, top_pct=64.0 if is_meme else 48.0)
         source_video_paths[vid] = str(mp4)
         vid_of[media] = vid
 
