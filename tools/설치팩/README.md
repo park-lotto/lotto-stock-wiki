@@ -26,7 +26,7 @@
 | 1 | winget으로 Git · Node · Python · ffmpeg · gh · uv · bun | git 2.54 · node 24.15 · python 3.12.10 · ffmpeg 8.1.1 |
 | 2 | Claude Code 공식 설치기 | 2.1.268, `~/.local/bin/claude.exe` |
 | 3 | `npm i -g` @openai/codex · myagentmemory · @higgsfield/cli | codex-cli 0.154.0 |
-| 4 | 저장소 clone + `pip install -r shopping_shorts/requirements.txt` + tzdata/playwright + `npm install` + notebooklm-mcp | 저장소 `Desktop\로또의 주식` |
+| 4 | 저장소 clone + `pip install -r shopping_shorts/requirements.txt` + tzdata/playwright + `npm install` | 저장소 `Desktop\로또의 주식` |
 | 5 | `~/.claude/` — settings.json(훅·권한·플러그인 켬 목록·모델) · 전역 CLAUDE.md · keybindings · dashboard 훅 · MCP 서버 5개 · **자동 메모리 236개** | |
 | 6 | gstack clone + setup → `/codex` `/browse` `/review` 등 | garrytan/gstack 1.55.1.0 |
 | 7 | After Effects MCP (선택) | Dakkshin/after-effects-mcp |
@@ -49,7 +49,7 @@ install.ps1                       ← 실행할 것
 claude/settings.json.template     ← 사용자 경로만 __USERPROFILE__ 로 바꿔둠 (키 없음)
 claude/CLAUDE.md                  ← 전역 규칙(한국어·fablize)
 claude/keybindings.json
-claude/mcpServers.json            ← MCP 5개 (firecrawl·browsermcp·elevenlabs·notebooklm·AfterEffects) — 키 없음
+claude/mcpServers.json            ← MCP 4개 (firecrawl·browsermcp·elevenlabs·AfterEffects — notebooklm은 09-12 뺌: 로그인 크롬창 반복) — 키 없음
 claude/dashboard/                 ← Stop 훅 스크립트(stop_hook.py 등)
 claude/memory/                    ← 자동 메모리 236개 (사장님 개인 기록 — 남 주지 말 것)
 claude/watch.env.template         ← GROQ_API_KEY= (비어 있음)

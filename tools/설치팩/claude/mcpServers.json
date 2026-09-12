@@ -24,12 +24,6 @@
     ],
     "env": {}
   },
-  "notebooklm-mcp": {
-    "type": "stdio",
-    "command": "notebooklm-mcp",
-    "args": [],
-    "env": {}
-  },
   "AfterEffectsMCP": {
     "type": "stdio",
     "command": "node",
