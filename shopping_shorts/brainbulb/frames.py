@@ -56,6 +56,16 @@ def meme_path(emotion, meme_dir):
     return os.path.join(meme_dir, files[0]) if files else None
 
 
+def _nearest(images, slot):
+    """빈 슬롯은 가장 가까운 번호의 사진으로 메운다 — 한 장이 거부돼도 그 컷만 검게 두지 않는다(실측: 미성년자+무기 거부)."""
+    if str(slot) in images:
+        return images[str(slot)]
+    have = sorted(int(k) for k in images)
+    if not have or slot is None:
+        return None
+    return images[str(min(have, key=lambda k: abs(k - int(slot))))]
+
+
 def build(workdir, timing, script, images, *, meme_dir=None, card_img=None, log=print):
     """→ {"list": ffconcat 경로, "frames": [...], "timeline": [{i, t, d, kind, src}]}"""
     d = os.path.join(workdir, "slot")
@@ -64,7 +74,7 @@ def build(workdir, timing, script, images, *, meme_dir=None, card_img=None, log=
     timeline, entries = [], []
     # 카드
     ci = card_img or next((g["img"] for g in groups if isinstance(g.get("img"), int)), None)
-    card_src = images.get(str(ci)) if ci is not None else None
+    card_src = _nearest(images, ci) if ci is not None else None
     p = compose(card_src, os.path.join(d, "intro.jpg"))
     entries.append((p, timing["card_end"])); timeline.append({"i": 0, "t": 0, "d": timing["card_end"], "kind": "card", "src": card_src})
     memes = 0
@@ -72,7 +82,7 @@ def build(workdir, timing, script, images, *, meme_dir=None, card_img=None, log=
         if g.get("meme"):
             src = meme_path(g["meme"], meme_dir); kind = "meme"; memes += bool(src)
         else:
-            src = images.get(str(g.get("img"))); kind = "img"
+            src = _nearest(images, g.get("img")); kind = "img"
         p = compose(src, os.path.join(d, f"g{tg['i']:02d}.jpg"), kind=kind)
         entries.append((p, tg["d"])); timeline.append({"i": tg["i"], "t": tg["t"], "d": tg["d"], "kind": kind, "src": src})
     # 마지막 컷은 꼬리 0.1까지 유지

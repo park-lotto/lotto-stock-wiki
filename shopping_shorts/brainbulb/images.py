@@ -111,20 +111,51 @@ def evolink_imagegen(*, quality=None, size=None, key_file=None, poll_max=120, po
     return gen
 
 
+_SAFE_SUFFIX = ("wide establishing shot from behind, no faces visible, "
+                "no weapons in frame, neutral documentary scene")
+
+
+def _soften(prompt):
+    """거부된 프롬프트를 순화 — 사람·무기 묘사를 빼고 장소 위주로.
+
+    실측 2026-09-12(테이저건 편 슬롯7): 미성년자 + 테이저건이 한 장면에 있으면 gpt-image-2가
+    `failed`로 거부한다. 한 슬롯이 막혀 **편 전체가 멈추면** 안 되므로 ①순화 재시도 ②그래도 실패면
+    그 슬롯만 비우고(검은 슬롯) 진행한다.
+    """
+    head = spec.IMAGE_PROMPT_PREFIX
+    body = prompt[len(head):] if prompt.startswith(head) else prompt
+    body = body.split(". ")[-1] if ". " in body else body        # cast 설명(인물 인상착의)을 떨군다
+    return head + body.replace(spec.IMAGE_PROMPT_SUFFIX, "") + ", " + _SAFE_SUFFIX
+
+
 def generate_all(prompts, workdir, imagegen, *, log=print):
-    """prompts {slot: text} → img/<slot>.png. 같은 프롬프트(해시)면 재사용 — 재과금 없음."""
+    """prompts {slot: text} → img/<slot>.png. 같은 프롬프트(해시)면 재사용 — 재과금 없음.
+
+    한 슬롯이 실패해도 편 전체를 멈추지 않는다(순화 재시도 → 그래도 실패면 그 슬롯 없이 진행).
+    """
     d = os.path.join(workdir, "img")
     os.makedirs(d, exist_ok=True)
-    out, made = {}, 0
+    out, made, failed = {}, 0, []
     for slot, p in sorted(prompts.items(), key=lambda kv: int(kv[0])):
         path = os.path.join(d, f"{int(slot):02d}.png")
         h = hashlib.sha256(p.encode("utf-8")).hexdigest()[:16]
         side = path + ".json"
         ok = os.path.exists(path) and os.path.exists(side) and json.load(open(side, encoding="utf-8")).get("hash") == h
         if not ok:
-            imagegen(p, path)
-            json.dump({"hash": h, "prompt": p}, open(side, "w", encoding="utf-8"), ensure_ascii=False)
+            used = p
+            try:
+                imagegen(p, path)
+            except Exception as e1:  # noqa: BLE001 — 거부·일시오류 모두 순화 재시도 대상
+                used = _soften(p)
+                log(f"[brainbulb.images] 슬롯 {slot} 거부({e1!r:.80}) → 순화 재시도")
+                try:
+                    imagegen(used, path)
+                except Exception as e2:  # noqa: BLE001
+                    log(f"[brainbulb.images] 슬롯 {slot} 재시도도 실패({e2!r:.80}) — 이 슬롯 없이 진행")
+                    failed.append(str(slot))
+                    continue
+            json.dump({"hash": h, "prompt": used}, open(side, "w", encoding="utf-8"), ensure_ascii=False)
             made += 1
         out[str(slot)] = path
-    log(f"[brainbulb.images] {len(out)}장 중 {made}장 새로 생성")
+    log(f"[brainbulb.images] {len(out)}장 중 {made}장 새로 생성" + (f" · 실패 슬롯 {failed}" if failed else ""))
     return out
