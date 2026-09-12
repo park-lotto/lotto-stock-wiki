@@ -3378,7 +3378,13 @@ async function lensSearch(btn, shortcode){
   try{ const _loc=(typeof lensLocalesParam==='function')?lensLocalesParam():'';
        if(_loc) fd.append('locales', _loc); }catch(e){}
   try{
-    const r=await fetch('/api/lens/search',{method:'POST',body:fd});
+    // ★90초 상한(2026-09-12 사장님 "렌즈 검색 중에서 안 넘어간다"). 서버 최악은
+    //   SerpApi 30초×재시도3×나라수 + Gemini 채점 재시도라 몇 분도 걸릴 수 있고, 프론트는
+    //   응답을 무한정 기다렸다 — 노트북이 잠들어 연결이 끊기면 스피너가 영원히 남았다.
+    //   끊고 "다시 시도"를 보여주는 편이 낫다(서버 쪽은 그대로 끝나고 결과는 버려진다).
+    const _ac=new AbortController(); const _tm=setTimeout(()=>_ac.abort(), 90000);
+    let r; try{ r=await fetch('/api/lens/search',{method:'POST',body:fd,signal:_ac.signal}); }
+    finally{ clearTimeout(_tm); }
     const st=LENS_STATE[shortcode]; if(!st) return;   // 사용자가 닫았을 수 있음
     st.lensLoading=false;
     if(r.status===429){ const d=await r.json(); st.lensErr='💰 '+(d.error||'이번 달 렌즈 한도 초과'); _lensRerender(shortcode); return; }
@@ -3397,7 +3403,9 @@ async function lensSearch(btn, shortcode){
     _lensRerender(shortcode);
   }catch(e){
     const st=LENS_STATE[shortcode]; if(!st) return;
-    st.lensLoading=false; st.lensErr='❌ '+e.message; _lensRerender(shortcode);
+    st.lensLoading=false;
+    st.lensErr=(e&&e.name==='AbortError')?'⏱ 90초 안에 답이 없어 끊었어요 — 잠시 뒤 🔍 숏템파워검색을 다시 눌러주세요':'❌ '+e.message;
+    _lensRerender(shortcode);
   }
 }
 // 늦게 도착한 응답이 **다른 카드의 렌즈 모달**을 덮어쓰지 않게 하는 공용 가드.
