@@ -185,3 +185,7 @@ tiktok_session.json
 # 볼케이노 작업 폴더(서버 토큰·대용량 팩 포함) — 커밋 금지 (2026-09-11)
 /out/volcano/
 /out/volcano_*/
+
+# 효과팩 수집 원본(대용량, 2026-09-13)
+/research/effect_packs/raw/
+/research/effect_packs/library/
