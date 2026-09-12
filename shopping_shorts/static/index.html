@@ -1743,6 +1743,13 @@ const RECENCY_FIELDS = ['posted_at', 'upload_ts', 'first_seen'];
 // 마지막 수집 시각(epoch ms). 0이면 모른다.
 // ★age_hours를 지금 기준으로 되살리는 데 쓴다 — 아래 ageHoursNow() 한 곳에서만 읽는다.
 let COLLECTED_AT_MS = 0;
+// 기간 창 안에 아무것도 없어 마지막 수집분을 대신 보여주는 중인가(render()가 정한다).
+let STALE_FALLBACK = false;
+function _collectedAgoText(){
+  if(!COLLECTED_AT_MS) return '시각 모름';
+  const h = Math.round((Date.now() - COLLECTED_AT_MS) / 3.6e6);
+  return h < 48 ? `${h}시간 전` : `${Math.round(h/24)}일 전`;
+}
 
 // 지금 기준 경과 시간(시). 모르면 null.
 function ageHoursNow(i){
@@ -2318,8 +2325,16 @@ function render(opts){
   //   ★ageHoursNow를 쓴다(raw age_hours 아님). age_hours는 **수집한 순간의 스냅샷**이라
   //     유튜브처럼 하루 1회 수집(daily_collect_done::youtube)이면 최대 24시간이 통째로
   //     빠져 "12시간 탭인데 30시간 전 것"이 남는다. 카드의 'X시간 전' 표시와 같은 셈을 쓴다.
+  STALE_FALLBACK = false;
   if(SPAN_DAYS === 0){
-    items = items.filter(i => { const h = ageHoursNow(i); return h == null || h <= SPAN_HOURS; });
+    const cut = items.filter(i => { const h = ageHoursNow(i); return h == null || h <= SPAN_HOURS; });
+    // ★수집이 멈춘 날 화면이 통째로 비는 것을 막는다(2026-09-12 사장님 "예전거로 먼저
+    //   복구해놔, 그래야 사람들 볼 수 있지"). 인스타 세션이 전멸해 이틀 수집이 빠지자
+    //   마지막 수집분 212건이 전부 48시간 밖으로 밀려 고객 화면이 0건이 됐다. 창 안에
+    //   하나도 없고 수집분은 있으면 **마지막 수집분을 그대로** 보여주고 아래 상태줄에
+    //   "수집이 멈춰 있다"고 적는다. 창 안에 하나라도 있으면 종전과 완전히 같다.
+    if(cut.length === 0 && items.length > 0){ STALE_FALLBACK = true; }
+    else items = cut;
   }
   // 뱃지별 재고를 세어 버튼 옆에 적는다 — 눌러보기 전에 몇 건인지 알 수 있게.
   // ★기간 컷은 이미 반영됐고 카테고리·검색은 아직 안 걸린 시점에서 센다(그 기간의 재고).
@@ -3043,7 +3058,9 @@ async function loadLast(){
     //   ("역대 · 댓글 1만개 이상 361건" 등)은 정보가 있으니 그대로 둔다.
     // ★12시간 탭만은 안내를 남긴다(2026-09-10) — 48시간보다 훨씬 얇아서 카드가 몇 장
     //   안 나오면 "고장났나"로 읽힌다. 왜 적은지 화면에 적어둔다.
-    st.textContent = SPAN_HOURS === 48 ? ""
+    st.textContent = STALE_FALLBACK
+      ? `⚠ 최근 ${SPAN_HOURS}시간 안에 새로 수집된 것이 없어 마지막 수집분(${_collectedAgoText()}) ${STATE.items.length}건을 보여줍니다`
+      : SPAN_HOURS === 48 ? ""
       : `올라온 지 ${SPAN_HOURS}시간 이내만 — 수집분 ${STATE.items.length}건 중에서 고릅니다`;
   }
 }
