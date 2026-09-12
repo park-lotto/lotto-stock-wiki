@@ -172,6 +172,7 @@ def generate_all(prompts, workdir, imagegen, *, sources=None, log=print):
     os.makedirs(d, exist_ok=True)
     sources = sources or {}
     out, made, failed, by_kind = {}, 0, [], {"real": 0, "variant": 0, "gen": 0}
+    seen_photos = set()          # ★같은 사진이 두 컷에 들어가는 걸 막는다(편 하나에서 돌려 쓴다)
     for slot, p in sorted(prompts.items(), key=lambda kv: int(kv[0])):
         path = os.path.join(d, f"{int(slot):02d}.png")
         src = sources.get(str(slot)) or {"kind": "gen", "query": ""}
@@ -185,7 +186,7 @@ def generate_all(prompts, workdir, imagegen, *, sources=None, log=print):
         done, used_kind = False, kind
         if kind in ("real", "variant") and query:
             from . import photos
-            hit = photos.pick_photo(query, workdir, slot, log=log)
+            hit = photos.pick_photo(query, workdir, slot, log=log, seen=seen_photos)
             if hit:
                 try:
                     done = _from_photo(slot, hit, path, kind, workdir, log)

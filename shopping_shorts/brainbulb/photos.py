@@ -85,27 +85,213 @@ def download(url, out_path, *, timeout=30, min_bytes=8000):
     return out_path
 
 
-def has_face(path):
-    """사람 얼굴이 있나 — 로고·건물·상품 사진을 거른다. OpenCV가 없으면 True(통과)."""
+def imread(path):
+    """OpenCV로 사진을 읽는다. 못 읽으면 None.
+
+    ★`cv2.imread`를 직접 부르지 마라 — 윈도우에서 **경로에 한글이 있으면 무조건 None**이다
+      (실측 2026-09-13 `out/brainbulb/박위_photo/`: 파일 325,823B가 멀쩡히 있는데 imread는 False,
+       같은 바이트를 imdecode에 주면 (676,409,3)으로 읽힌다).
+      그 바람에 박위 편 7컷이 전부 "얼굴 없음·글자 0%"로 조용히 버려져 수집 0/7이 됐다.
+      바이트로 읽어 imdecode에 넘기면 경로 글자와 무관하다. 읽는 곳은 여기 한 군데뿐이다(0순위-B).
+    """
+    try:
+        import cv2
+        import numpy as np
+    except ImportError:
+        return None
+    try:
+        buf = np.fromfile(path, dtype=np.uint8)
+    except Exception:  # noqa: BLE001 — 파일이 없거나 못 읽으면 판정 안 함
+        return None
+    if not buf.size:
+        return None
+    return cv2.imdecode(buf, cv2.IMREAD_COLOR)
+
+
+def find_seam(path, *, band=(0.35, 0.65), min_ratio=6.0):
+    """이어붙인 사진의 경계를 찾는다 → ("v"|"h", 위치) 또는 None.
+
+    왜: 뉴스 사진은 두 장면을 좌우/위아래로 이어붙인 것이 흔하다(실측 2026-09-13 박수홍 편 4장 중 2장).
+    그대로 슬롯에 넣으면 같은 사람이 한 화면에 두 번 나오거나 잘려 들어간다.
+    판정: 가운데 구간에서 인접 행·열 평균 밝기 차가 전체 평균의 min_ratio배 넘게 튀는 자리.
+    실측값 — 좌우 이어붙임 14.6배 / 위아래 23.6배 / 정상 사진 3.2배.
+    """
+    try:
+        from PIL import Image
+        import numpy as np
+    except ImportError:
+        return None
+    try:
+        a = np.asarray(Image.open(path).convert("L"), dtype=float)
+    except Exception:  # noqa: BLE001 — 못 읽으면 경계 판정 안 함
+        return None
+    h, w = a.shape
+    best = None
+    for axis, arr, n in (("v", np.abs(np.diff(a.mean(axis=0))), w),
+                         ("h", np.abs(np.diff(a.mean(axis=1))), h)):
+        if n < 200:
+            continue
+        lo, hi = int(n * band[0]), int(n * band[1])
+        seg = arr[lo:hi]
+        if not len(seg):
+            continue
+        i = lo + int(np.argmax(seg))
+        ratio = arr[i] / (arr.mean() + 1e-9)
+        if ratio >= min_ratio and (best is None or ratio > best[2]):
+            best = (axis, i + 1, ratio)
+    return (best[0], best[1]) if best else None
+
+
+def split_collage(path, out_path=None, *, max_cuts=3, min_side=280):
+    """이어붙인 사진이면 **더 큰 쪽 한 칸만** 잘라 저장하고 True. 아니면 손대지 않고 False.
+
+    ★한 번만 자르면 모자란다(실측 2026-09-13 박위 편): 3칸짜리는 한 번 자른 뒤에도 경계가 남아
+      사과문 캡처가 사진에 붙은 채로 통과했다. 경계가 사라질 때까지 되풀이하되,
+      너무 잘게 잘리면(min_side 미만) 멈춘다 — 슬롯에 넣을 수 없다.
+    """
+    from PIL import Image
+    dst = out_path or path
+    cut = False
+    for _ in range(max_cuts):
+        seam = find_seam(dst if cut else path)     # ★잘라 저장한 뒤엔 **저장된 그 파일**을 다시 잰다
+        if not seam:
+            break
+        axis, pos = seam
+        cur = Image.open(dst if cut else path)
+        w, h = cur.size
+        if axis == "v":
+            keep = cur.crop((0, 0, pos, h)) if pos >= w - pos else cur.crop((pos, 0, w, h))
+        else:
+            keep = cur.crop((0, 0, w, pos)) if pos >= h - pos else cur.crop((0, pos, w, h))
+        if min(keep.size) < min_side:
+            break
+        keep.convert("RGB").save(dst, "JPEG", quality=94)
+        cut = True
+    return cut
+
+
+def text_ratio(path, *, sample=500):
+    """글자가 덮은 면적 비율(0~1). 자막·가격표가 깔린 방송 캡처를 거른다. OCR 없이 근사한다.
+
+    실측 2026-09-13 (박수홍 편 4장):
+      일반 사진 0.2~0.5%  /  홈쇼핑 화면 캡처 14.3%  → 임계 3%면 확실히 갈린다.
+    ★엣지 밀도만 보면 유리·바닥 무늬가 글자로 잡혀 사진(20%)과 캡처(19%)가 구분되지 않았다.
+      글자는 ①가로로 길고 ②배경 색이 단조롭고(채도 표준편차 낮음) ③잉크 비율이 중간 — 셋을 같이 본다.
+    ★잉크는 **어두운 쪽으로 단정하지 마라**(실측 2026-09-13 박위 04번): 검은 바탕에 흰 글씨인
+      사과문 캡처가 0.2%로 나와 그대로 통과했다. 밝고 어두운 쪽 중 **적은 쪽**을 잉크로 본다.
+    """
     try:
         import cv2
     except ImportError:
+        return 0.0
+    try:
+        img = imread(path)                      # ★한글 경로 대응 — cv2.imread 직접 호출 금지
+        if img is None:
+            return 0.0
+        s = sample / max(img.shape[:2])
+        if s < 1:
+            img = cv2.resize(img, (int(img.shape[1] * s), int(img.shape[0] * s)))
+        g = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        grad = cv2.morphologyEx(g, cv2.MORPH_GRADIENT, cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3)))
+        _, bw = cv2.threshold(grad, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+        conn = cv2.morphologyEx(bw, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_RECT, (9, 1)))
+        cnts, _ = cv2.findContours(conn, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        H, W = g.shape
+        area = 0
+        for c in cnts:
+            x, y, w, h = cv2.boundingRect(c)
+            if h < 6 or h > H * 0.25 or w < h * 2.0 or w * h < 120:
+                continue
+            patch = img[y:y + h, x:x + w]
+            if cv2.cvtColor(patch, cv2.COLOR_BGR2HSV)[:, :, 1].std() > 45:
+                continue                                    # 색이 다채로우면 사진 무늬
+            pg = cv2.cvtColor(patch, cv2.COLOR_BGR2GRAY)
+            _, pb = cv2.threshold(pg, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+            dark = (pb == 0).mean()
+            ink = min(dark, 1.0 - dark)          # ★글자가 밝을 수도 있다 — 적은 쪽이 잉크다
+            if not (0.04 < ink < 0.45):
+                continue                                    # 잉크 비율이 글자 범위 밖
+            area += w * h
+        return area / (H * W)
+    except Exception as e:  # noqa: BLE001 — 못 재면 통과(0)로 두고 다른 검사에 맡긴다
+        print(f"[brainbulb.photos] 글자 측정 실패(통과 처리): {e!r}")
+        return 0.0
+
+
+def _yunet_model():
+    """YuNet onnx 경로 — spec.FACE_MODEL(있으면) → 볼케이노 팩 → None.
+
+    ★경로에 한글이 있으면 OpenCV가 onnx를 못 읽는다(실측 2026-09-13):
+      볼케이노 팩이 `~/.volcano/jobs/20260911_뇌전구_박수홍/…`에 있어 **모든 사진에서 검출이 실패**했고,
+      실패는 '통과 처리'라 얼굴 판정이 조용히 무력화돼 있었다(박위 편 6컷 전부 미검사 통과).
+      그래서 한글이 섞인 경로면 ASCII 전용 자리로 **한 번 복사해 두고** 그 사본을 쓴다.
+    """
+    for p in (getattr(spec, "FACE_MODEL", None),
+              os.path.expanduser("~/.volcano/jobs/20260911_뇌전구_박수홍/framevision/models/face_detection_yunet_2023mar.onnx")):
+        if not p or not os.path.exists(p):
+            continue
+        p = os.path.normpath(os.path.abspath(p))   # ★슬래시가 섞여도 OpenCV가 읽게 한다(실측)
+        if p.isascii():
+            return p
+        cache = os.path.join(os.path.expanduser("~"), ".brainbulb", "models",
+                             "face_detection_yunet_2023mar.onnx")
+        try:
+            if not os.path.exists(cache) or os.path.getsize(cache) != os.path.getsize(p):
+                os.makedirs(os.path.dirname(cache), exist_ok=True)
+                import shutil
+                shutil.copyfile(p, cache)
+            return cache
+        except Exception as e:  # noqa: BLE001 — 복사 실패면 얼굴 판정만 못 한다(편은 계속 간다)
+            print(f"[brainbulb.photos] 얼굴 모델 복사 실패: {e!r}")
+            return None
+    return None
+
+
+def has_face(path, *, min_score=0.6):
+    """사람 얼굴이 있나 — 로고·건물·상품 사진을 거른다.
+
+    ★OpenCV 5는 `CascadeClassifier`를 뺐다(실측 AttributeError). 볼케이노와 같은 **YuNet**을 쓴다.
+    모델이 없거나 검출이 실패하면 True(통과) — 못 잰 것을 '얼굴 없음'으로 단정하지 않는다.
+    """
+    model = _yunet_model()
+    if not model:
         return True
     try:
-        img = cv2.imread(path)
+        import cv2
+        img = imread(path)                      # ★한글 경로 대응 — cv2.imread 직접 호출 금지
         if img is None:
             return False
-        cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        faces = cascade.detectMultiScale(gray, 1.1, 4, minSize=(40, 40))
-        return len(faces) > 0
+        h, w = img.shape[:2]
+        det = cv2.FaceDetectorYN.create(model, "", (w, h), min_score, 0.3, 5000)
+        _, faces = det.detect(img)
+        return faces is not None and len(faces) > 0
     except Exception as e:  # noqa: BLE001 — 검출 실패를 '얼굴 없음'으로 단정하지 않는다
         print(f"[brainbulb.photos] 얼굴 검출 실패(통과 처리): {e!r}")
         return True
 
 
-def pick_photo(query, workdir, slot, *, want_face=True, num=10, log=print):
-    """검색 → 뉴스 출처 우선 → 얼굴 확인 → 다운로드. 못 찾으면 None."""
+def _fingerprint(path):
+    """사진의 지문 — 같은 사진이 두 컷에 들어가는 걸 막는다.
+
+    ★실측 2026-09-13 박위 편: 검색어가 달라도(«케냐 봉사» / «휠체어 들어올리는») 같은 기사 사진이
+      와서 슬롯 5와 8에 **바이트까지 똑같은 사진**이 들어갔다. 사장님이 지적한 "두 번 연속 나온다"가 이것이다.
+      자른 뒤 모습으로 재야 하므로 픽셀을 8x8 회색조로 줄여 비교한다(리사이즈·재압축에도 견딘다).
+    """
+    try:
+        from PIL import Image
+        im = Image.open(path).convert("L").resize((8, 8))
+        px = list(im.tobytes())                 # getdata()는 Pillow 14에서 빠진다
+        avg = sum(px) / len(px)
+        return "".join("1" if v > avg else "0" for v in px)
+    except Exception:  # noqa: BLE001 — 지문을 못 내면 중복 검사만 못 한다
+        return None
+
+
+def pick_photo(query, workdir, slot, *, want_face=True, num=10, log=print, seen=None):
+    """검색 → 뉴스 출처 우선 → 얼굴 확인 → 다운로드. 못 찾으면 None.
+
+    `seen`에 이미 쓴 사진의 지문을 담아 넘기면 **같은 사진을 두 컷에 넣지 않는다**(호출부가 set 하나를 돌려 쓴다).
+    """
     d = os.path.join(workdir, "photo")
     os.makedirs(d, exist_ok=True)
     try:
@@ -125,10 +311,25 @@ def pick_photo(query, workdir, slot, *, want_face=True, num=10, log=print):
             download(h["url"], path)
         except Exception:  # noqa: BLE001 — 한 장 실패는 다음 후보로
             continue
+        note = ""
+        if split_collage(path):                    # 이어붙인 사진이면 한 칸만 남긴다
+            note = " (이어붙임 → 한 칸만)"
+        tr = text_ratio(path)
+        if tr > spec.POLICY_PHOTO_TEXT_MAX:        # 자막·가격표 덮인 방송 캡처
+            log(f"[brainbulb.photos] 슬롯 {slot} 글자 과다({tr:.0%}) — 다음 후보")
+            os.remove(path)
+            continue
         if want_face and not has_face(path):
             os.remove(path)
             continue
-        log(f"[brainbulb.photos] 슬롯 {slot} «{query}» → {h['source'][:24]} ({h['w']}x{h['h']})")
+        fp = _fingerprint(path)
+        if seen is not None and fp and fp in seen:
+            log(f"[brainbulb.photos] 슬롯 {slot} 앞 컷과 같은 사진 — 다음 후보")
+            os.remove(path)
+            continue
+        if seen is not None and fp:
+            seen.add(fp)
+        log(f"[brainbulb.photos] 슬롯 {slot} «{query}» → {h['source'][:24]} ({h['w']}x{h['h']}){note}")
         return {"path": path, **h}
     log(f"[brainbulb.photos] 슬롯 {slot} «{query}» — 쓸 만한 사진 없음")
     return None
