@@ -112,10 +112,9 @@ const window=context.window;
       benchmark:{source,note:'사용자 제공 이븐쇼핑 원본의 배치·색상 재현. 서체는 대조한 후보이며 픽셀 동일성을 보증하지 않음'},
       cleanup_regions:[{role:'original-title',x:0,y:0,width,height:video,background:'#212121'}],video_from:{y:video,pct:video/height*100},
       lines:[],surfaces:[],ornaments:[{type:'menu',x:16,y:14,width:40,height:25,color:'#E6E9E5'},{type:'search',x:width-53,y:9,width:29,height:29,color:'#D9DFDB'}],channel_boxes:[],boxes:[],white_box:null});
-    even.sample={...even.sample,channel:'이븐쇼핑',hook1:'건망증 환자를 살려낸',hook2:'일본 천재의 발명품',bodyTitle:'건망증 환자를 살려낸 천재의 발명품?',caption:'전 세계 건망증 환자들의'};
+    even.sample={...even.sample,channel:'숏템메이커',hook1:'건망증 환자를 살려낸',hook2:'일본 천재의 발명품',bodyTitle:'건망증 환자를 살려낸 천재의 발명품?',caption:'전 세계 건망증 환자들의'};
     even.hook_image='template_refs/even-hook-reference.png';even.body_image='template_refs/even-body-reference.png';
     even.hook=frame(425,748,285,'이븐쇼핑 원본형 · 훅',even.hook_image);
-    even.hook.media_source='assets/scene-style/even-hook-media.png';
     even.hook.lines=[{...line('hook1',15,103,395,49,43,'#FFFFFF'),stroke:2,shadow_y:2},
       {...line('hook2',13,151,399,62,50,'#00F9ED'),stroke:2,shadow_y:2},
       {...line('bodyTitle',19,231,387,34,25,'#080808'),background:'#FFFFFF'}];
@@ -123,7 +122,7 @@ const window=context.window;
       {x:0,y:68,width:425,height:1,background:'#727772'},
       {x:5,y:225,width:415,height:51,background:'linear-gradient(180deg,#FFFFFF,#FFFFFF 72%,#ECEEEC)',shadow:'0 0 12px 7px #FFFFFFB0',radius:2}];
     even.body=frame(420,746,229,'이븐쇼핑 원본형 · 본문',even.body_image);
-    even.body.media_source='assets/scene-style/even-body-media.png';even.body.caption_slot={mode:'reserved'};
+    even.body.caption_slot={mode:'reserved'};
     even.body.channel_box={x:95,y:6,width:230,height:48,font_size:40,font_family:'GmarketSansBold',font_weight:400,letter_spacing:7,color:'#FFFFFF',background:'#404040',designed:true};
     even.body.lines=[{...line('bodyTitle',15,82,390,39,27,'#FFFFFF'),background:'#3F3F3F'},
       {...line('caption',23,173,374,40,27,'#090909'),background:'#FFFFFF'}];
