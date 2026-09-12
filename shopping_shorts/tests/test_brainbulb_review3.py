@@ -33,6 +33,10 @@ def _script(job="parksuhong", n=None):
     for g in groups[:-1]:
         if g["role"] == "PUNCH":
             g["role"] = "NARR"
+    if n:   # 앞 n컷만 잘라 쓰면 마지막이 앞 컷에서 이어져 last_standalone에 걸린다 → 잘라 쓸 때만 독립 문장으로 교체
+        groups[-2]["text"] = "그렇게 2주가 지났다"
+        groups[-1]["text"] = "사과보다 복귀가 빨랐다"
+        groups[-1]["color"] = "RED"
     return {"title": p["title"], "groups": groups}
 
 

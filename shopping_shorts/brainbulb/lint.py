@@ -35,7 +35,9 @@ class Rule:
 
 _FORMAL = re.compile(r"(습니다|습니까|십시오)[.!?]?$")
 _FORMAL_HARD = re.compile(r"(습니까|십시오)[.!?]?$")
-_CLOSED = re.compile(r"(다|임|음|됨|요|야|네|지|까|냐|죠)[.!?]?$")
+# 종결 판정 — 볼케이노 5편 137컷의 어미를 훑어 만든 목록(2026-09-12 실측).
+# '~셈'(정점 찍은 셈)·'~ㄴ데'(장비가 아닌데)·'~걸'처럼 종결로 쓰이는 것까지 포함해야 정답 편을 반려하지 않는다.
+_CLOSED = re.compile(r"(다|임|음|됨|셈|뿐|요|야|네|지|까|냐|죠|걸|데|군|구나|더라|든|텐데)[.!?]?$")
 _TITLE_PUNCT = re.compile(r'[",?!.…:;]')
 _ABSTRACT_TAIL = ("이유", "사연", "진실", "비밀", "정체", "이야기", "상황", "사실", "근황", "결말")
 
@@ -154,6 +156,23 @@ def r_last_closed(s, ctx):
     return out
 
 
+def r_last_standalone(s, ctx):
+    """마지막 컷은 **그 자체로 완결된 한 문장**이어야 한다 — 앞 컷에서 이어지면 반려.
+
+    실측 2026-09-12(테이저건 편): 21컷 «학부모는 분통을» → 22컷 «터뜨리는 중임»으로 한 문장을 잘라
+    마지막 컷만 보면 주어가 없었다. 볼케이노 5편은 전부 마지막 컷이 독립 문장이다
+    ('사과보다 복귀가 빨랐다' · '사람이 낸 불이다' · '몰랐다는 말로 끝날 일이 아니다').
+    """
+    gs = _groups(s)
+    if len(gs) < 2:
+        return []
+    prev = gs[-2].get("text", "").strip()
+    if prev and not _CLOSED.search(prev):
+        return [Issue("last_standalone", REJECT, f"groups[{len(gs) - 1}]", gs[-1].get("text", ""),
+                      f"마지막 컷이 앞 컷 «{prev}»에서 이어집니다 — 마지막 컷은 그 자체로 끝나는 한 문장이어야 합니다. 앞 컷을 닫고 마지막을 새 문장으로 쓰세요")]
+    return []
+
+
 def r_line1_end(s, ctx):
     out = []
     for i, g in enumerate(_groups(s)):
@@ -197,6 +216,7 @@ RULES = [
     Rule("words", REJECT, f"한 줄은 {spec.POLICY_MAX_WORDS_PER_LINE}어절 이하. 한 컷은 짧게(12~14자 한 줄 또는 두 줄).", r_words, needs_layout=True),
     Rule("layout", REJECT, "줄나눔은 우리가 한다 — lines를 쓰지 마라. 컷이 두 줄로도 안 들어가면 반려되니 글자를 줄이거나 두 컷으로 쪼개라.", r_layout, needs_layout=True),
     Rule("punch", REJECT, "PUNCH는 마지막 컷 하나뿐. RED 색으로 짧은 단정문.", r_punch),
+    Rule("last_standalone", REJECT, "마지막 컷은 앞 컷에서 이어지지 않는 **독립된 한 문장**으로 써라. 앞 컷에서 문장을 끝내고, 마지막 컷만 읽어도 말이 되게 하라.", r_last_standalone),
     Rule("copy", REJECT, "원문을 요약하지 말고 다시 써라. 원문 문장을 그대로 줄여 쓰지 마라.", r_copy),
     Rule("first_open", WARN, "첫 컷에서 문장을 끝내지 마라 — 다음 컷으로 끌고 가라.", r_first_open),
     Rule("last_closed", WARN, "마지막 컷은 문장을 닫아라. WHITE가 아니라 RED PUNCH로.", r_last_closed),
