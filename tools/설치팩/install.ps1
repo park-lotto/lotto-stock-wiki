@@ -90,7 +90,7 @@ if (Test-Path (Join-Path $PROJECT 'shopping_shorts\requirements.txt')) {
   Ok 'python 패키지'
 }
 if (Test-Path (Join-Path $PROJECT 'package.json')) { Push-Location $PROJECT; npm install --silent | Out-Null; Pop-Location; Ok 'npm install (puppeteer 등)' }
-if (Has uv) { uv tool install notebooklm-mcp-cli 2>$null | Out-Null; Ok 'notebooklm-mcp (uv tool)' }
+# notebooklm-mcp는 2026-09-12 뺌(만료 쿠키로 로그인 크롬창이 반복해서 뜸)
 
 # ---------------------------------------------------------------------------
 Step '5. Claude 설정 복사 (~/.claude)'
@@ -128,7 +128,7 @@ if (-not $root.PSObject.Properties['mcpServers']) { $root | Add-Member -NoteProp
 foreach ($prop in $mcpObj.PSObject.Properties) {
   if ($root.mcpServers.PSObject.Properties[$prop.Name]) { $root.mcpServers.($prop.Name) = $prop.Value } else { $root.mcpServers | Add-Member -NotePropertyName $prop.Name -NotePropertyValue $prop.Value }
 }
-[IO.File]::WriteAllText($cj, ($root | ConvertTo-Json -Depth 20), (New-Object Text.UTF8Encoding $false)); Ok '~/.claude.json mcpServers 5개 (firecrawl·browsermcp·elevenlabs·notebooklm·AfterEffects)'
+[IO.File]::WriteAllText($cj, ($root | ConvertTo-Json -Depth 20), (New-Object Text.UTF8Encoding $false)); Ok '~/.claude.json mcpServers 4개 (firecrawl·browsermcp·elevenlabs·AfterEffects)'
 # 자동 메모리 (프로젝트 경로 키는 사용자명에 따라 달라진다 → 여기서 계산)
 $projKey = ($PROJECT -replace '[^A-Za-z0-9]', '-')
 $memDst = Join-Path $CL "projects\$projKey\memory"
