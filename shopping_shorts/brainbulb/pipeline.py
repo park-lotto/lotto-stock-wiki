@@ -140,7 +140,8 @@ def run_step(wd, step, *, source_text=None, llm=None, tts=None, imagegen=None, s
             if d["prompts"].get("skipped") or imagegen is None:
                 d["images"] = {"files": {}, "skipped": True}
             else:
-                d["images"] = {"files": _images.generate_all(d["prompts"]["prompts"], wd, imagegen, log=log)}
+                d["images"] = {"files": _images.generate_all(d["prompts"]["prompts"], wd, imagegen,
+                                                             sources=d["prompts"].get("sources"), log=log)}
             _invalidate_after(job, "images")
 
         elif step == "frames":

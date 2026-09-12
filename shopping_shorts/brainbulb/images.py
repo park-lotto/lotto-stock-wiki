@@ -19,11 +19,23 @@ def build_prompt_request(script, source_text):
     slots = sorted({g["img"] for g in script["groups"] if isinstance(g.get("img"), int)})
     cuts = "\n".join(f"- 슬롯 {g['img']}: 컷{i + 1} «{g['text']}»" for i, g in enumerate(script["groups"]) if isinstance(g.get("img"), int))
     return (
-        "너는 뇌전구 채널의 이미지 디렉터다. 아래 대본의 이미지 슬롯마다 **영문** 생성 프롬프트를 쓴다.\n"
-        "규칙:\n"
+        "너는 뇌전구 채널의 이미지 디렉터다. 아래 대본의 이미지 슬롯마다 **어떤 사진을 쓸지**와 **영문 생성 프롬프트**를 정한다.\n"
+        "\n"
+        "[슬롯마다 셋 중 하나를 고른다]\n"
+        "  real    실존 인물이 주인공이고 **좋은 얘기**(복귀·성과·봉사·미담)인 컷 → 실제 사진을 그대로 쓴다\n"
+        "  variant 실존 인물이 주인공인데 **안 좋은 얘기**(논란·사고·비판·수사)인 컷 → 실제 사진을 참조로 변형한다\n"
+        "  gen     특정 인물이 주인공이 아닌 배경·상황·개념 컷 → 처음부터 생성한다\n"
+        "  ★real·variant를 고르면 `query`에 **한국어 이미지 검색어**를 쓴다(예: '박수홍 홈쇼핑'). 인물 이름 + 상황 낱말.\n"
+        "  ★인물 이름이 기사에 안 나오면 real·variant를 쓰지 마라. gen으로 간다.\n"
+        "\n"
+        "[프롬프트 규칙]\n"
         "- cast: 등장 인물마다 인상착의를 한 문장으로 고정해 모든 슬롯에 같은 문구를 그대로 쓴다(컷 간 같은 인물로 나오게). 실명·유명인 이름은 쓰지 말고 외양만.\n"
         "- 각 슬롯 프롬프트는 장면(장소·행동·구도·조명)을 구체적으로. 사진처럼(documentary photo). 'illustration', 'cartoon' 금지. 글자·자막·워터마크가 나오게 하지 마라.\n"
-        "- 출력은 JSON 하나만: {\"cast\": {\"<슬롯>\": \"...\"}, \"prompts\": {\"<슬롯>\": \"...\"}}. 슬롯 키는 문자열 숫자.\n\n"
+        "  (real·variant 슬롯도 프롬프트를 반드시 써라 — 검색이 실패하면 그것으로 생성한다)\n"
+        "\n"
+        "출력은 JSON 하나만:\n"
+        '{"cast": {"<슬롯>": "..."}, "prompts": {"<슬롯>": "..."}, '
+        '"sources": {"<슬롯>": {"kind": "real|variant|gen", "query": "검색어 또는 빈 문자열"}}}\n\n'
         f"[슬롯 목록] {slots}\n[컷↔슬롯]\n{cuts}\n\n[소재]\n{source_text[:1500]}\n"
     )
 
@@ -45,8 +57,19 @@ def make_prompts(script, source_text, call, *, log=print):
     missing = [s for s in slots if str(s) not in prompts]
     if missing:
         raise RuntimeError(f"images: 프롬프트가 없는 슬롯 {missing}")
-    log(f"[brainbulb.prompts] 슬롯 {len(prompts)}개 프롬프트")
-    return {"cast": cast, "prompts": prompts}
+    # 사진 종류·검색어 — 없거나 이상하면 gen으로 (판정은 여기 한 곳)
+    sources = {}
+    for k in prompts:
+        v = (d.get("sources") or {}).get(k) or {}
+        kind = str(v.get("kind") or "gen").lower()
+        query = (v.get("query") or "").strip()
+        if kind not in spec.PHOTO_KINDS or (kind in ("real", "variant") and not query):
+            kind, query = "gen", ""
+        sources[k] = {"kind": kind, "query": query}
+    n_real = sum(1 for v in sources.values() if v["kind"] == "real")
+    n_var = sum(1 for v in sources.values() if v["kind"] == "variant")
+    log(f"[brainbulb.prompts] 슬롯 {len(prompts)}개 — 실물 {n_real} · 변형 {n_var} · 생성 {len(prompts) - n_real - n_var}")
+    return {"cast": cast, "prompts": prompts, "sources": sources}
 
 
 # ── EvoLink ──────────────────────────────────────────────────────────────────────
@@ -128,34 +151,70 @@ def _soften(prompt):
     return head + body.replace(spec.IMAGE_PROMPT_SUFFIX, "") + ", " + _SAFE_SUFFIX
 
 
-def generate_all(prompts, workdir, imagegen, *, log=print):
-    """prompts {slot: text} → img/<slot>.png. 같은 프롬프트(해시)면 재사용 — 재과금 없음.
+def _from_photo(slot, src, path, kind, workdir, log):
+    """검색 사진 → real이면 그대로 복사, variant면 참조 변형. 성공하면 True."""
+    from . import photos
+    if kind == "real":
+        from PIL import Image
+        Image.open(src["path"]).convert("RGB").save(path, "PNG")
+        return True
+    photos.variant(src["path"], path, spec.VARIANT_PROMPT, log=log)
+    return True
 
-    한 슬롯이 실패해도 편 전체를 멈추지 않는다(순화 재시도 → 그래도 실패면 그 슬롯 없이 진행).
+
+def generate_all(prompts, workdir, imagegen, *, sources=None, log=print):
+    """prompts {slot: text} → img/<slot>.png.
+
+    사진 조달 순서(사장님 2026-09-13): 실물/변형 지정 슬롯은 **검색 먼저**, 안 되면 생성으로 폴백.
+    같은 프롬프트·같은 종류(해시)면 재사용 — 재과금 없음. 한 슬롯이 실패해도 편 전체를 멈추지 않는다.
     """
     d = os.path.join(workdir, "img")
     os.makedirs(d, exist_ok=True)
-    out, made, failed = {}, 0, []
+    sources = sources or {}
+    out, made, failed, by_kind = {}, 0, [], {"real": 0, "variant": 0, "gen": 0}
     for slot, p in sorted(prompts.items(), key=lambda kv: int(kv[0])):
         path = os.path.join(d, f"{int(slot):02d}.png")
-        h = hashlib.sha256(p.encode("utf-8")).hexdigest()[:16]
+        src = sources.get(str(slot)) or {"kind": "gen", "query": ""}
+        kind, query = src["kind"], src.get("query", "")
+        h = hashlib.sha256(f"{kind}|{query}|{p}".encode("utf-8")).hexdigest()[:16]
         side = path + ".json"
-        ok = os.path.exists(path) and os.path.exists(side) and json.load(open(side, encoding="utf-8")).get("hash") == h
-        if not ok:
+        if os.path.exists(path) and os.path.exists(side) and json.load(open(side, encoding="utf-8")).get("hash") == h:
+            out[str(slot)] = path
+            by_kind[kind] = by_kind.get(kind, 0) + 1
+            continue
+        done, used_kind = False, kind
+        if kind in ("real", "variant") and query:
+            from . import photos
+            hit = photos.pick_photo(query, workdir, slot, log=log)
+            if hit:
+                try:
+                    done = _from_photo(slot, hit, path, kind, workdir, log)
+                except Exception as e:  # noqa: BLE001 — 변형 실패는 생성으로 폴백
+                    log(f"[brainbulb.images] 슬롯 {slot} 변형 실패({e!r:.70}) — 생성으로")
+            if not done:
+                used_kind = "gen"
+        if not done:
+            used_kind = "gen"
             used = p
             try:
                 imagegen(p, path)
+                done = True
             except Exception as e1:  # noqa: BLE001 — 거부·일시오류 모두 순화 재시도 대상
                 used = _soften(p)
                 log(f"[brainbulb.images] 슬롯 {slot} 거부({e1!r:.80}) → 순화 재시도")
                 try:
                     imagegen(used, path)
+                    done = True
                 except Exception as e2:  # noqa: BLE001
                     log(f"[brainbulb.images] 슬롯 {slot} 재시도도 실패({e2!r:.80}) — 이 슬롯 없이 진행")
                     failed.append(str(slot))
-                    continue
-            json.dump({"hash": h, "prompt": used}, open(side, "w", encoding="utf-8"), ensure_ascii=False)
-            made += 1
+        if not done:
+            continue
+        json.dump({"hash": h, "kind": used_kind, "query": query, "prompt": p},
+                  open(side, "w", encoding="utf-8"), ensure_ascii=False)
+        made += 1
+        by_kind[used_kind] = by_kind.get(used_kind, 0) + 1
         out[str(slot)] = path
-    log(f"[brainbulb.images] {len(out)}장 중 {made}장 새로 생성" + (f" · 실패 슬롯 {failed}" if failed else ""))
+    log(f"[brainbulb.images] {len(out)}장 (새로 {made}장) — 실물 {by_kind.get('real',0)} · 변형 {by_kind.get('variant',0)} · 생성 {by_kind.get('gen',0)}"
+        + (f" · 실패 슬롯 {failed}" if failed else ""))
     return out

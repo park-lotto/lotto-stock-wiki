@@ -19,6 +19,14 @@ IMAGE_SIZE = "3:2"                 # 지원: auto/1:1/16:9/9:16/3:2/2:3. 슬롯 
 IMAGE_QUALITY = "medium"           # low $0.0037 / medium $0.032 / high $0.127 (실행기 주석 실측 단가)
 IMAGE_PROMPT_PREFIX = "Documentary style photo, in South Korea, Korean people, Korean-language signage and hangul text, "  # 볼케이노 서버가 붙이는 접두(실측 payload.prompts)
 IMAGE_PROMPT_SUFFIX = ", documentary photography, natural lighting, no text overlay, no watermark"
+
+# ── 실제 사진 조달 (photos.py) — 사장님 2026-09-13 ────────────────────────────────
+# 실측: 참조 이미지를 지키는 모델은 qwen-image-edit 하나뿐. gpt-image-2·gemini 이미지는 참조를 무시한다.
+VARIANT_MODEL = "qwen-image-edit"      # ★size 파라미터를 주면 400. image_url 필드에 data URI.
+VARIANT_PROMPT = ("같은 인물의 옷차림·체형·머리모양과 같은 장소·구도를 그대로 유지한 채 "
+                  "다큐멘터리 사진으로 다시 그려라. 얼굴은 특정 실존 인물과 닮지 않게 하되 "
+                  "같은 연령대·성별의 한국인으로 자연스럽게. 글자·워터마크 없이.")
+PHOTO_KINDS = ("real", "variant", "gen")   # 실물 / 변형 / 생성
 MEME_FIT = "height"                # 밈은 슬롯 높이에 맞춰 가운데(실측 밈 폭 870 ≈ 231×218 → 786 높이)
 
 # ── ASS 헤더·스타일 블록 (5편 MD5 동일 · 전편 3편 바이트 동일 = 8/8) ──────────────
