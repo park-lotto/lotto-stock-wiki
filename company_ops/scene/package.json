@@ -1,0 +1,8 @@
+{
+  "name": "company-ops-hq-preview",
+  "private": true,
+  "type": "module",
+  "scripts": {"build": "esbuild main.js --bundle --format=esm --minify --outfile=../static/hq/hq.bundle.js"},
+  "dependencies": {"three": "0.180.0"},
+  "devDependencies": {"esbuild": "0.25.10"}
+}

@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#122521"><title>메이커스랩 · 살아 있는 회사</title><link rel="icon" href="data:,"><link rel="stylesheet" href="hq.css"></head>
+<body>
+<header><a class="wordmark" href="/hq/"><span class="brand-symbol">M</span><span>MAKERS LAB<small>살아 있는 회사</small></span></a><nav aria-label="회사"><button class="active">메이커스랩</button><button disabled title="다음 검토 범위">HNL</button><button disabled title="다음 검토 범위">스탁브레인</button></nav><span class="preview">공간 디자인 검토 · 01</span></header>
+<main>
+<section class="world" aria-label="입체 사옥"><div class="scene-heading"><div class="eyebrow">THE COMPANY, ALIVE</div><h1>아이디어가 일하는 곳.</h1><p>메이커스랩 사옥 <span>／</span> 첫 브랜드, 숏템메이커</p></div>
+<canvas id="scene" tabindex="0" aria-label="3D 사옥. 부서는 왼쪽 목록에서도 선택할 수 있습니다."></canvas>
+<div id="loading" role="status">사옥을 준비하고 있습니다…</div>
+<nav id="floors" aria-label="층별 부서"></nav>
+<div class="breadcrumbs"><button id="home">사옥 전체</button><span id="crumb">외부 전경</span></div>
+<div class="scene-controls"><button id="pan" aria-pressed="true">이동</button><button id="orbit" aria-pressed="false">회전</button><span></span><button id="zoom-in" aria-label="확대">＋</button><button id="zoom-out" aria-label="축소">−</button><button id="reset">시점 복원</button><button id="motion" aria-pressed="false">움직임 줄이기</button></div>
+<div class="scene-foot"><span>드래그 이동 · 휠 확대 · 부서와 로봇 선택</span><span id="scene-mode">제안된 공간 · 로봇 배치 예시</span></div>
+<div id="minimap" aria-label="사옥 미니맵"><small>층별 탐색</small><div id="mini-floors"></div></div>
+</section>
+<aside id="details" aria-label="선택한 공간과 업무"><div class="panel-top"><span class="eyebrow">WORKSPACE</span><span id="connection" role="status">연결 확인 중</span></div><div id="panel"></div></aside>
+</main>
+<footer><span><i></i>첫 조작 검토본</span><span>사옥 → 부서 → 로봇 → 업무 기록</span><a href="/static/control.html" target="_blank" rel="noopener">기존 업무 관제 ↗</a></footer>
+<script type="module">import('./hq.bundle.js').catch(error=>{console.error(error);document.querySelector('#loading').textContent='3D 화면을 불러오지 못했습니다. 새로고침하거나 기존 업무 관제를 이용해 주세요.';});</script>
+</body></html>
