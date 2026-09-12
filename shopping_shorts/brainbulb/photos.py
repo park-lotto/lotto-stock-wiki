@@ -65,12 +65,21 @@ _NEWS_HINTS = ("뉴스", "news", "일보", "신문", "경제", "스포츠", "연
                "중앙", "동아", "한겨레", "머니투데이", "이데일리", "마이데일리", "osen", "tv리포트",
                "엑스포츠", "스타", "매일", "kbs", "sbs", "mbc", "jtbc", "ytn", "채널", "데일리")
 _BAD_HINTS = ("pinterest", "핀터레스트", "aliexpress", "alibaba", "taobao", "amazon", "coupang",
-              "쿠팡", "11st", "gmarket", "shop", "쇼핑", "wikipedia", "namu", "나무위키")
+              "쿠팡", "11st", "gmarket", "shop", "쇼핑", "wikipedia", "namu", "나무위키",
+              # ★SNS·동영상 페이지 — 프로필 사진(둥근 아바타)·채널 화면이 온다(실측 2026-09-13
+              #   박위 03번 유튜브 채널 페이지, 06번 인스타그램). 기사 사진이 아니다.
+              "instagram", "인스타", "facebook", "페이스북", "youtube", "유튜브", "tiktok",
+              "twitter", "x.com", "threads", "blog", "블로그", "cafe", "카페", "티스토리", "tistory")
+
+
+def _is_blocked(source):
+    """쇼핑몰·SNS·위키 — 기사 사진이 아니라서 **후보에서 뺀다**."""
+    return any(b in (source or "").lower() for b in _BAD_HINTS)
 
 
 def looks_like_news(source):
     s = (source or "").lower()
-    if any(b in s for b in _BAD_HINTS):
+    if _is_blocked(s):
         return False
     return any(h in s for h in _NEWS_HINTS)
 
@@ -142,6 +151,25 @@ def find_seam(path, *, band=(0.35, 0.65), min_ratio=6.0):
     return (best[0], best[1]) if best else None
 
 
+def _keep_side(path, axis, pos, a, b, bigger_is_a):
+    """이어붙인 두 칸 중 남길 쪽 — **얼굴이 있는 칸**을 우선, 없으면 큰 칸.
+
+    ★큰 쪽만 남기면 사람이 작게 찍힌 칸을 버린다(실측 2026-09-13 박위 01번:
+      얼굴이 든 칸이 좁은 쪽이라 잘려 나가 얼굴이 가장자리로 밀렸다).
+    """
+    found = faces(path)
+    if found:
+        first = 0
+        for (x, y, w, h) in found:
+            c = (x + w / 2) if axis == "v" else (y + h / 2)
+            first += 1 if c < pos else -1       # a칸에 있으면 +, b칸이면 -
+        if first > 0:
+            return a
+        if first < 0:
+            return b
+    return a if bigger_is_a else b
+
+
 def split_collage(path, out_path=None, *, max_cuts=3, min_side=280):
     """이어붙인 사진이면 **더 큰 쪽 한 칸만** 잘라 저장하고 True. 아니면 손대지 않고 False.
 
@@ -157,14 +185,23 @@ def split_collage(path, out_path=None, *, max_cuts=3, min_side=280):
         if not seam:
             break
         axis, pos = seam
-        cur = Image.open(dst if cut else path)
+        cur_path = dst if cut else path
+        cur = Image.open(cur_path)
         w, h = cur.size
         if axis == "v":
-            keep = cur.crop((0, 0, pos, h)) if pos >= w - pos else cur.crop((pos, 0, w, h))
+            a, b = cur.crop((0, 0, pos, h)), cur.crop((pos, 0, w, h))
+            bigger_is_a = pos >= w - pos
         else:
-            keep = cur.crop((0, 0, w, pos)) if pos >= h - pos else cur.crop((0, pos, w, h))
+            a, b = cur.crop((0, 0, w, pos)), cur.crop((0, pos, w, h))
+            bigger_is_a = pos >= h - pos
+        keep = _keep_side(cur_path, axis, pos, a, b, bigger_is_a)
         if min(keep.size) < min_side:
-            break
+            # ★고른 칸이 너무 얇으면 **포기하지 말고 반대 칸**을 본다 — 포기하면 이어붙인 사진이
+            #   통째로 남는다(실측 2026-09-13 박위 06번: 얼굴이 몰린 아래칸이 244px라 두 칸이 그대로 통과).
+            other = b if keep is a else a
+            if min(other.size) < min_side:
+                break
+            keep = other
         keep.convert("RGB").save(dst, "JPEG", quality=94)
         cut = True
     return cut
@@ -247,27 +284,50 @@ def _yunet_model():
     return None
 
 
+def faces(path, *, min_score=0.6):
+    """사진 속 얼굴 상자 목록 → [(x, y, w, h), …]. 못 재면 None(=측정 불가).
+
+    ★빈 목록 `[]`(얼굴 없음)과 `None`(못 쟀음)은 다르다 — 못 잰 것을 '얼굴 없음'으로 단정하면
+      모델이 깨졌을 때 멀쩡한 사진을 전부 버린다(실측 2026-09-13 한글 경로 사고와 같은 모양).
+    검출은 여기 한 군데서만 한다 — 판정(has_face)과 자르기(face_box)가 같은 결과를 쓴다(0순위-B).
+    """
+    model = _yunet_model()
+    if not model:
+        return None
+    try:
+        import cv2
+        img = imread(path)                      # ★한글 경로 대응 — cv2.imread 직접 호출 금지
+        if img is None:
+            return None
+        h, w = img.shape[:2]
+        det = cv2.FaceDetectorYN.create(model, "", (w, h), min_score, 0.3, 5000)
+        _, found = det.detect(img)
+        if found is None:
+            return []
+        return [tuple(int(v) for v in f[:4]) for f in found]
+    except Exception as e:  # noqa: BLE001 — 검출 실패를 '얼굴 없음'으로 단정하지 않는다
+        print(f"[brainbulb.photos] 얼굴 검출 실패(통과 처리): {e!r}")
+        return None
+
+
+def face_box(path, *, min_score=0.6):
+    """가장 큰 얼굴 하나 → (x, y, w, h). 없거나 못 재면 None."""
+    got = faces(path, min_score=min_score)
+    if not got:
+        return None
+    return max(got, key=lambda f: f[2] * f[3])
+
+
 def has_face(path, *, min_score=0.6):
     """사람 얼굴이 있나 — 로고·건물·상품 사진을 거른다.
 
     ★OpenCV 5는 `CascadeClassifier`를 뺐다(실측 AttributeError). 볼케이노와 같은 **YuNet**을 쓴다.
     모델이 없거나 검출이 실패하면 True(통과) — 못 잰 것을 '얼굴 없음'으로 단정하지 않는다.
     """
-    model = _yunet_model()
-    if not model:
-        return True
-    try:
-        import cv2
-        img = imread(path)                      # ★한글 경로 대응 — cv2.imread 직접 호출 금지
-        if img is None:
-            return False
-        h, w = img.shape[:2]
-        det = cv2.FaceDetectorYN.create(model, "", (w, h), min_score, 0.3, 5000)
-        _, faces = det.detect(img)
-        return faces is not None and len(faces) > 0
-    except Exception as e:  # noqa: BLE001 — 검출 실패를 '얼굴 없음'으로 단정하지 않는다
-        print(f"[brainbulb.photos] 얼굴 검출 실패(통과 처리): {e!r}")
-        return True
+    got = faces(path, min_score=min_score)
+    if got is None:
+        return True                             # 못 쟀다 → 통과
+    return len(got) > 0
 
 
 def _fingerprint(path):
@@ -301,8 +361,11 @@ def pick_photo(query, workdir, slot, *, want_face=True, num=10, log=print, seen=
         return None
     if not hits:
         return None
-    ranked = [h for h in hits if looks_like_news(h["source"])] + \
-             [h for h in hits if not looks_like_news(h["source"])]
+    # ★쇼핑몰·SNS는 **아예 뺀다**(뒤로 미루면 앞이 다 떨어졌을 때 결국 쓰인다 — 실측 박위 03·06번).
+    #   나머지는 뉴스 출처를 앞에 세운다.
+    usable = [h for h in hits if not _is_blocked(h["source"])]
+    ranked = [h for h in usable if looks_like_news(h["source"])] + \
+             [h for h in usable if not looks_like_news(h["source"])]
     for h in ranked[:6]:
         if h["w"] and h["w"] < 300:
             continue

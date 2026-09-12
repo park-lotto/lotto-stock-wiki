@@ -11,12 +11,38 @@ from PIL import Image
 from . import spec
 
 
-def _cover(im, w, h):
+def _cover(im, w, h, focus=None):
+    """슬롯을 꽉 채우도록 키운 뒤 잘라낸다. `focus`가 있으면 **그 점이 화면에 남도록** 잘린다.
+
+    ★가운데로만 자르면 얼굴이 가장자리로 밀린다(실측 2026-09-13 박위 01번: 얼굴이 폭 300 중 x=250).
+      focus는 원본 좌표 (cx, cy) — 얼굴 중심을 넣는다. 얼굴은 눈이 위쪽에 오는 게 자연스러워
+      세로로는 정가운데가 아니라 **조금 위**(0.42)에 둔다.
+    """
     sw, sh = im.size
     s = max(w / sw, h / sh)
     im = im.resize((max(1, round(sw * s)), max(1, round(sh * s))), Image.LANCZOS)
-    x = (im.width - w) // 2; y = (im.height - h) // 2
+    if focus:
+        x = int(round(focus[0] * s - w / 2))
+        y = int(round(focus[1] * s - h * 0.42))
+    else:
+        x = (im.width - w) // 2
+        y = (im.height - h) // 2
+    x = max(0, min(x, im.width - w))            # 바깥으로 나가면 가장자리에 붙인다
+    y = max(0, min(y, im.height - h))
     return im.crop((x, y, x + w, y + h))
+
+
+def _face_focus(src):
+    """사진 속 가장 큰 얼굴의 중심 → (cx, cy). 얼굴이 없거나 못 재면 None(가운데 자르기)."""
+    try:
+        from . import photos
+        box = photos.face_box(src)
+    except Exception:  # noqa: BLE001 — 검출이 안 되면 예전처럼 가운데로 자른다
+        return None
+    if not box:
+        return None
+    x, y, w, h = box
+    return (x + w / 2, y + h / 2)
 
 
 def _contain_h(im, h):
@@ -37,7 +63,7 @@ def compose(src, out_path, *, kind="img"):
             x = spec.SLOT_X + (spec.SLOT_W - im.width) // 2
             canvas.paste(im, (x, spec.SLOT_Y), im)
         else:
-            im = _cover(im, spec.SLOT_W, spec.SLOT_H)
+            im = _cover(im, spec.SLOT_W, spec.SLOT_H, focus=_face_focus(src))
             canvas.paste(im.convert("RGB"), (spec.SLOT_X, spec.SLOT_Y))
     canvas.save(out_path, "JPEG", quality=92)
     return out_path

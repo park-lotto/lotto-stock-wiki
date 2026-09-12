@@ -207,3 +207,87 @@ def test_text_ratio_catches_light_text_on_dark(tmp_path):
     p = tmp_path / "dark.jpg"
     Image.fromarray(img).save(p, "JPEG", quality=95)
     assert photos.text_ratio(str(p)) > spec.POLICY_PHOTO_TEXT_MAX
+
+
+# ── 얼굴 기준 자르기 (2026-09-13, 01번이 가장자리로 밀린 흠) ──────────────────────────
+def test_faces_distinguishes_none_from_empty(tmp_path, monkeypatch):
+    """★'못 쟀다'(None)와 '얼굴 없다'([])는 다르다 — 섞으면 모델이 깨졌을 때 멀쩡한 사진을 다 버린다."""
+    monkeypatch.setattr(photos, "_yunet_model", lambda: None)
+    p = tmp_path / "n.jpg"; _noise(p)
+    assert photos.faces(str(p)) is None
+    assert photos.has_face(str(p)) is True          # 못 쟀으면 통과
+
+
+def test_face_box_returns_largest(tmp_path, monkeypatch):
+    monkeypatch.setattr(photos, "faces", lambda p, **k: [(0, 0, 10, 10), (50, 50, 40, 40)])
+    p = tmp_path / "n.jpg"; _noise(p)
+    assert photos.face_box(str(p)) == (50, 50, 40, 40)
+
+
+def test_keep_side_prefers_face_over_size(tmp_path, monkeypatch):
+    """얼굴이 작은 칸에 있으면 **큰 칸을 버린다**(박위 01번이 이 경우였다)."""
+    from PIL import Image as I
+    a = I.new("RGB", (200, 400), (30, 30, 30))      # 작지만 얼굴이 있는 칸
+    b = I.new("RGB", (400, 400), (200, 200, 200))   # 크지만 얼굴 없는 칸
+    monkeypatch.setattr(photos, "faces", lambda p, **k: [(50, 100, 60, 60)])   # x중심 80 < pos 200
+    keep = photos._keep_side("x.jpg", "v", 200, a, b, bigger_is_a=False)
+    assert keep is a
+
+
+def test_keep_side_falls_back_to_size_without_faces(tmp_path, monkeypatch):
+    from PIL import Image as I
+    a = I.new("RGB", (200, 400)); b = I.new("RGB", (400, 400))
+    monkeypatch.setattr(photos, "faces", lambda p, **k: None)      # 못 쟀다
+    assert photos._keep_side("x.jpg", "v", 200, a, b, bigger_is_a=False) is b
+
+
+def test_cover_keeps_face_in_frame():
+    """★가운데 자르기면 잘려 나갈 얼굴이, focus를 주면 화면 안에 남는다."""
+    from PIL import Image as I
+    from shopping_shorts.brainbulb import frames
+    im = I.new("RGB", (1000, 500), (0, 0, 0))
+    im.paste(I.new("RGB", (80, 80), (255, 0, 0)), (900, 210))      # 오른쪽 끝 얼굴
+    plain = frames._cover(im, 400, 400)                             # 가운데 자르기
+    aimed = frames._cover(im, 400, 400, focus=(940, 250))           # 얼굴 겨냥
+    assert plain.getcolors()[0][1] == (0, 0, 0) or (255, 0, 0) not in [c for _, c in plain.getcolors(9999)]
+    assert (255, 0, 0) in [c for _, c in aimed.getcolors(9999)]     # 얼굴이 남았다
+
+
+def test_cover_clamps_to_edges():
+    """겨냥한 점이 가장자리라도 빈 칸(검은 띠)이 생기면 안 된다."""
+    from PIL import Image as I
+    from shopping_shorts.brainbulb import frames
+    im = I.new("RGB", (1000, 500), (120, 120, 120))
+    out = frames._cover(im, 400, 400, focus=(0, 0))
+    assert out.size == (400, 400)
+    assert set(c for _, c in out.getcolors(9999)) == {(120, 120, 120)}
+
+
+def test_sns_sources_are_not_news():
+    """★SNS·동영상 페이지는 기사 사진이 아니다 — 프로필 아바타·채널 화면이 온다.
+
+    실측 2026-09-13 박위 편: 03번이 유튜브 채널 페이지(둥근 아바타+UI 글자), 06번이 인스타그램이었다.
+    """
+    for bad in ("Instagram", "YouTube", "페이스북", "TikTok", "네이버 블로그", "티스토리"):
+        assert not photos.looks_like_news(bad), bad
+    for good in ("연합뉴스", "한국경제", "JTBC 뉴스", "OSEN"):
+        assert photos.looks_like_news(good), good
+
+
+def test_split_falls_back_when_face_side_too_thin(tmp_path, monkeypatch):
+    """★얼굴이 몰린 칸이 너무 얇으면 반대 칸으로 — 포기하면 이어붙인 사진이 통째로 남는다.
+
+    실측 2026-09-13 박위 06번(530x542, 경계 298): 얼굴 4개 중 3개가 아래칸(244px)에 있어
+    그쪽을 고르다 min_side에 걸려 자르기를 포기했고, 자막 박힌 두 칸짜리가 그대로 통과했다.
+    """
+    w, h = 530, 542
+    a = np.zeros((h, w, 3), dtype=np.uint8)
+    a[:298, :] = 40
+    a[298:, :] = 220
+    p = tmp_path / "two.jpg"
+    Image.fromarray(a).save(p, "JPEG", quality=95)
+    monkeypatch.setattr(photos, "faces", lambda x, **k: [(10, 400, 20, 20)])   # 아래칸(얇은 쪽)
+    assert photos.split_collage(str(p), min_side=280) is True
+    out = Image.open(p)
+    assert out.size == (530, 298)                    # 얇은 아래칸 대신 위칸이 남았다
+    assert photos.find_seam(str(p)) is None
