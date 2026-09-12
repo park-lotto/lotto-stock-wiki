@@ -519,7 +519,7 @@ def _resolve_locales(locales):
     return picked or allowed
 
 
-def search_similar_videos(image_url, api_key=None, timeout=60, source_caption=None,
+def search_similar_videos(image_url, api_key=None, timeout=30, source_caption=None,
                           stats=None, locales=None):
     """공개 이미지 URL → [{platform, url, title, thumbnail, match}]. 5개 동영상 플랫폼만.
     키 없음·호출 실패 시 [].
