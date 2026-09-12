@@ -2779,6 +2779,58 @@
           </div>
           </div>
           <div id="decoPaneFx" style="display:none">
+          <!-- 💬 댓글 카드 라이브러리: 미리보기와 최종본은 같은 서버 PNG를 쓴다. -->
+          <style>
+            #commentFxBox{margin-bottom:12px;border:1px solid rgba(116,231,190,.34);border-radius:14px;background:linear-gradient(145deg,rgba(18,35,38,.96),rgba(15,18,30,.98));overflow:hidden;box-shadow:0 12px 30px rgba(0,0,0,.18)}
+            #commentFxBox>summary{cursor:pointer;padding:13px 14px;font-size:14px;font-weight:900;display:flex;gap:8px;align-items:center;min-height:48px}
+            .commentStyleGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+            .commentStyleCard{position:relative;text-align:left;border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px;background:rgba(255,255,255,.045);color:var(--txt);cursor:pointer;overflow:hidden;min-height:100px;transition:transform .16s,border-color .16s,box-shadow .16s}
+            .commentStyleCard:hover{transform:translateY(-2px);border-color:rgba(124,232,176,.68)}
+            .commentStyleCard.on{border-color:#7CE8B0;box-shadow:0 0 0 2px rgba(124,232,176,.15),0 10px 28px rgba(0,0,0,.2)}
+            .commentMini{height:45px;border-radius:8px;padding:8px 9px;margin-bottom:8px;box-sizing:border-box;font-size:8px;line-height:1.35;overflow:hidden}
+            .commentMini.dark{background:#111319;color:#fff;border:1px solid rgba(255,255,255,.2)}
+            .commentMini.pop{background:linear-gradient(135deg,#fff,#e9efff);color:#17213a;border-left:4px solid #6c5ce7;box-shadow:0 5px 14px rgba(62,78,145,.25)}
+            .commentFields{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+            .commentFields label{font-size:11px;color:var(--sub);display:flex;flex-direction:column;gap:4px}
+            .commentFields input,.commentFields textarea{width:100%;box-sizing:border-box;background:var(--inset);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:8px;font:inherit}
+            .commentFields textarea{resize:vertical;min-height:72px;line-height:1.45}
+            #commentCardPreview.comment-enter{animation:commentCardEnter .58s cubic-bezier(.16,1,.3,1) both}
+            @keyframes commentCardEnter{0%{opacity:0;transform:translate(-50%,calc(-50% + 42px)) scale(.94)}65%{opacity:1;transform:translate(-50%,calc(-50% - 5px)) scale(1.012)}100%{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+            @media(max-width:720px){.commentStyleGrid,.commentFields{grid-template-columns:1fr}}
+          </style>
+          <details id="commentFxBox" open>
+            <summary>💬 <span style="color:#7CE8B0">댓글 카드</span>
+              <span style="font-size:11px;color:var(--sub);font-weight:600">— 댓글을 입력하면 영상 위에 움직입니다</span>
+            </summary>
+            <div style="padding:0 12px 14px">
+              <div class="commentStyleGrid">
+                <button type="button" class="commentStyleCard" data-comment-style="dark_social" onclick="commentPickStyle('dark_social')">
+                  <div class="commentMini dark"><b>● 마켓</b> &nbsp;53분 전<br>이거 정말 개웃기네요 ㅋㅋㅋ</div>
+                  <b>다크 소셜</b><div class="hint" style="font-size:10px;margin-top:3px">실제 댓글창처럼 집중되는 암전형</div>
+                </button>
+                <button type="button" class="commentStyleCard" data-comment-style="premium_pop" onclick="commentPickStyle('premium_pop')">
+                  <div class="commentMini pop"><b>● 시청자 후기</b><br>정말 유용한 정보네요!</div>
+                  <b>프리미엄 팝</b><div class="hint" style="font-size:10px;margin-top:3px">밝은 유리 질감과 포인트 컬러</div>
+                </button>
+              </div>
+              <div id="commentEditor" style="display:none">
+                <div class="commentFields">
+                  <label>작성자<input id="commentAuthor" maxlength="40" value="시청자" oninput="commentUpdate()"></label>
+                  <label>작성 시간<input id="commentAge" maxlength="30" value="방금 전" oninput="commentUpdate()"></label>
+                  <label style="grid-column:1/-1">댓글 내용<textarea id="commentText" maxlength="280" oninput="commentUpdate()">정말 유용한 정보네요!</textarea></label>
+                  <label>좋아요 수<input id="commentLikes" type="number" min="0" max="999999999" value="0" oninput="commentUpdate()"></label>
+                  <label>프로필 사진 (선택)<input id="commentAvatar" type="file" accept="image/png,image/jpeg,image/webp" onchange="commentUploadAvatar()"></label>
+                  <label>등장 시점 (초)<input id="commentStart" type="number" min="0" max="3600" step="0.1" value="0.4" oninput="commentUpdate()"></label>
+                  <label>노출 시간 (초)<input id="commentDur" type="number" min="0.5" max="120" step="0.1" value="3.5" oninput="commentUpdate()"></label>
+                  <label style="grid-column:1/-1">크기 <input id="commentWidth" type="range" min="320" max="980" step="10" value="880" oninput="commentUpdate()"></label>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;margin-top:10px">
+                  <span id="commentAvatarStatus" class="hint" style="flex:1">왼쪽 미리보기에서 드래그해 옮기세요.</span>
+                  <button type="button" class="btn-prev" onclick="commentClear()" style="color:#ff8c9b">댓글 카드 제거</button>
+                </div>
+              </div>
+            </div>
+          </details>
           <!-- 🔎 강조 — 효과 탭 **맨 위**에 둔다(2026-08-30). 아래(가림막 뒤)에 두니
                첫 화면에서 615px 밖으로 밀려 안 보였다(실측). 새 기능일수록 먼저 보여야 한다. -->
           <!-- 🔍 장면 확대 — 미리보기 옆에서 **효과 탭 안**으로 옮겼다(2026-08-30 사장님).
@@ -5690,6 +5742,7 @@ function decoTab(name){
   // 없어서, 탭만 열면 제목만 있고 아래가 비어 있었다.
   if(name==='fx'){
     try{ mkRender(); }catch(e){}
+    try{ restoreCommentControls(); }catch(e){}
     // 🔎 강조도 효과 탭에 산다(2026-08-30) — 탭을 열 때 지금 장면의 값으로 다시 그린다.
     try{ hlLoadFromBeat(); }catch(e){}
   }
@@ -5742,6 +5795,105 @@ function initHeadcopy(){
   loadTemplates();              // 템플릿 카드(목록은 1회만 읽고 캐시)
   loadFramePresets();           // 📰 내용물 있는 틀 프리셋(같은 탭에 함께 산다)
   renderTemplatePreview();      // 복원된 선택을 미리보기에 반영
+  restoreCommentControls();     // 💬 저장된 댓글 카드 복원 + 서버 PNG 미리보기
+}
+// ── 💬 댓글 카드 라이브러리 ──
+let _COMMENT_SAVE_T=null, _COMMENT_PREVIEW_T=null;
+function _commentDefault(style){
+  return {style:style||'dark_social',author:'시청자',age:'방금 전',text:'정말 유용한 정보네요!',likes:0,
+    x:50,y:72,width:880,alpha:1,start:.4,dur:3.5,animation:'slide_up',avatar_file:''};
+}
+function _commentSaveSoon(){
+  clearTimeout(_COMMENT_SAVE_T);
+  _COMMENT_SAVE_T=setTimeout(()=>{ try{ saveHeadcopy(); }catch(e){} },350);
+}
+function commentPickStyle(style){
+  STATE.deco=STATE.deco||{extra_texts:[]};
+  const old=STATE.deco.comment_card||_commentDefault(style);
+  STATE.deco.comment_card=Object.assign({},old,{style:style});
+  restoreCommentControls();
+  renderCommentPreview(true);
+  saveHeadcopy();
+}
+function commentUpdate(){
+  STATE.deco=STATE.deco||{extra_texts:[]};
+  const old=STATE.deco.comment_card||_commentDefault('dark_social');
+  const val=(id,fallback)=>{const el=document.getElementById(id);return el?el.value:fallback;};
+  STATE.deco.comment_card=Object.assign({},old,{
+    author:val('commentAuthor',old.author).trim().slice(0,40),
+    age:val('commentAge',old.age).trim().slice(0,30),
+    text:val('commentText',old.text).trim().slice(0,280),
+    likes:Math.max(0,Math.min(999999999,Number(val('commentLikes',old.likes))||0)),
+    start:Math.max(0,Number(val('commentStart',old.start))||0),
+    dur:Math.max(.5,Math.min(120,Number(val('commentDur',old.dur))||.5)),
+    width:Math.max(320,Math.min(980,Number(val('commentWidth',old.width))||880))
+  });
+  clearTimeout(_COMMENT_PREVIEW_T);
+  _COMMENT_PREVIEW_T=setTimeout(()=>renderCommentPreview(true),120);
+  _commentSaveSoon();
+}
+async function commentUploadAvatar(){
+  const input=document.getElementById('commentAvatar'), file=input&&input.files&&input.files[0];
+  if(!file) return;
+  if(!MIX_JOB){ alert('영상 매칭을 먼저 실행해주세요.'); input.value=''; return; }
+  const status=document.getElementById('commentAvatarStatus'); if(status) status.textContent='프로필 사진 올리는 중…';
+  const fd=new FormData(); fd.append('job_id',MIX_JOB); fd.append('file',file);
+  try{
+    const response=await fetch('/api/produce/mix/comment-avatar',{method:'POST',body:fd});
+    const data=await response.json();
+    if(!response.ok||!data.ok) throw new Error(data.error||'업로드 실패');
+    STATE.deco=STATE.deco||{extra_texts:[]};
+    STATE.deco.comment_card=STATE.deco.comment_card||_commentDefault('dark_social');
+    STATE.deco.comment_card.avatar_file=data.file;
+    if(status) status.textContent='✅ 프로필 사진 적용됨';
+    renderCommentPreview(true); await saveHeadcopy();
+  }catch(error){ if(status) status.textContent='❌ '+error.message; }
+}
+function commentClear(){
+  if(STATE.deco) delete STATE.deco.comment_card;
+  restoreCommentControls();
+  renderCommentPreview(false);
+  saveHeadcopy();
+}
+function restoreCommentControls(){
+  const card=STATE.deco&&STATE.deco.comment_card;
+  const editor=document.getElementById('commentEditor'); if(editor) editor.style.display=card?'block':'none';
+  document.querySelectorAll('[data-comment-style]').forEach(el=>el.classList.toggle('on',!!card&&el.dataset.commentStyle===card.style));
+  if(!card){ renderCommentPreview(false); return; }
+  const set=(id,value)=>{const el=document.getElementById(id);if(el&&document.activeElement!==el) el.value=value;};
+  set('commentAuthor',card.author||'시청자'); set('commentAge',card.age||'방금 전');
+  set('commentText',card.text||''); set('commentLikes',card.likes||0);
+  set('commentStart',card.start==null ? .4 : card.start); set('commentDur',card.dur==null ? 3.5 : card.dur);
+  set('commentWidth',card.width||880); renderCommentPreview(false);
+}
+function renderCommentPreview(replay){
+  const stage=document.getElementById('hcPreview'), card=STATE.deco&&STATE.deco.comment_card;
+  let image=document.getElementById('commentCardPreview');
+  if(!stage||!card||!String(card.text||'').trim()){ if(image) image.remove(); return; }
+  if(!image){
+    image=document.createElement('img'); image.id='commentCardPreview'; image.alt='댓글 카드 미리보기';
+    image.style.cssText='position:absolute;z-index:12;cursor:grab;touch-action:none;user-select:none;filter:drop-shadow(0 8px 15px rgba(0,0,0,.22))';
+    stage.appendChild(image); bindCommentDrag(image);
+  }
+  image.style.left=(Number(card.x)||50)+'%'; image.style.top=(Number(card.y)||72)+'%';
+  image.style.width=((Number(card.width)||880)/10.8)+'%'; image.style.transform='translate(-50%,-50%)';
+  image.style.opacity=card.alpha==null?1:card.alpha;
+  image.onload=()=>{ if(replay){ image.classList.remove('comment-enter'); void image.offsetWidth; image.classList.add('comment-enter'); } };
+  image.src='/api/produce/comment-card.png?job_id='+encodeURIComponent(MIX_JOB||'')+'&spec='+encodeURIComponent(JSON.stringify(card));
+}
+function bindCommentDrag(image){
+  if(!image||image._commentDragBound) return; image._commentDragBound=true;
+  image.addEventListener('pointerdown',event=>{
+    event.preventDefault(); event.stopPropagation(); image.setPointerCapture(event.pointerId); image.style.cursor='grabbing';
+    const stage=document.getElementById('hcPreview');
+    const move=e=>{ if(!STATE.deco||!STATE.deco.comment_card||!stage) return; const rect=stage.getBoundingClientRect();
+      const x=Math.max(0,Math.min(100,(e.clientX-rect.left)/rect.width*100));
+      const y=Math.max(0,Math.min(100,(e.clientY-rect.top)/rect.height*100));
+      STATE.deco.comment_card.x=Math.round(x*10)/10; STATE.deco.comment_card.y=Math.round(y*10)/10;
+      image.style.left=x+'%'; image.style.top=y+'%'; };
+    const up=e=>{ image.style.cursor='grab'; image.removeEventListener('pointermove',move); image.removeEventListener('pointerup',up); image.removeEventListener('pointercancel',up); _commentSaveSoon(); };
+    image.addEventListener('pointermove',move); image.addEventListener('pointerup',up); image.addEventListener('pointercancel',up);
+  });
 }
 // 모션 팩 목록(서버 packs.json과 id가 일치해야 함 — Task7에서 확정)
 const MOTION_PACKS=[{id:'dynamic_pop',name:'다이나믹 팝'},{id:'minimal_chic',name:'미니멀 시크'}];

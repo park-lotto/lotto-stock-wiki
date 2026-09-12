@@ -177,3 +177,7 @@ scripts/gemini_session/
 
 # 틱톡 로그인 쿠키(2026-09-08) — PC 릴레이가 쓴다. 절대 올리지 않는다.
 tiktok_session.json
+
+# 댓글카드 검증 산출물(mp4·png 4MB) — 커밋 금지 (2026-09-12)
+/out/comment-card-proof/
+/out/comment-card-preview/

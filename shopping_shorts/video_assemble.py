@@ -1811,7 +1811,10 @@ def _motion_layer_filters(layers, next_input_idx, vcur):
         path = L.get("_abspath")
         if not path:
             continue
-        input_args += ["-i", path]
+        if L.get("loop"):
+            input_args += ["-loop", "1", "-i", path]
+        else:
+            input_args += ["-i", path]
         w = L.get("width")
         scale = f"scale={int(w)}:-1," if w else ""
         aa = max(0.0, min(1.0, float(L.get("alpha", 1))))
@@ -1823,9 +1826,22 @@ def _motion_layer_filters(layers, next_input_idx, vcur):
         # start>0일 때만 setpts를 얹는다(start=0은 원점이라 이동이 no-op — 필터 문자열을
         # 불필요하게 늘리지 않고 기존 산출물과의 호환성도 유지).
         ts = f"setpts=PTS-STARTPTS+{start:.3f}/TB," if start > 0 else ""
-        fc.append(f"[{idx}:v]{ts}{scale}format=rgba,colorchannelmixer=aa={aa:.2f}[{lab}]")
+        fades = ""
+        if L.get("animation") == "slide_up" and dur is not None:
+            fade_d = min(0.22, max(0.08, float(dur) / 4))
+            fade_out = max(start, start + float(dur) - fade_d)
+            fades = (f"fade=t=in:st={start:.3f}:d={fade_d:.3f}:alpha=1,"
+                     f"fade=t=out:st={fade_out:.3f}:d={fade_d:.3f}:alpha=1")
+        fc.append(f"[{idx}:v]{ts}{scale}format=rgba,colorchannelmixer=aa={aa:.2f}"
+                  f"{',' + fades if fades else ''}[{lab}]")
         en = f":enable='between(t,{start:.3f},{start + float(dur):.3f})'" if dur is not None else ""
-        fc.append(f"[{vcur}][{lab}]overlay=x=W*{xf:.4f}-w/2:y=H*{yf:.4f}-h/2{en}[{out}]")
+        ypos = f"H*{yf:.4f}-h/2"
+        if L.get("animation") == "slide_up":
+            ypos = (f"'{ypos}+if(lt(t,{start + 0.420:.3f}),"
+                    f"H*0.10*pow(1-(t-{start:.3f})/0.420,3)-"
+                    f"H*0.012*sin(PI*(t-{start:.3f})/0.420),0)'")
+        stop = ":shortest=1" if L.get("loop") else ""
+        fc.append(f"[{vcur}][{lab}]overlay=x=W*{xf:.4f}-w/2:y={ypos}{stop}{en}[{out}]")
         vcur = out
         idx += 1
     return input_args, fc, vcur, idx
@@ -2575,6 +2591,17 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
         if tpl.get("dur"):
             tl["dur"] = float(tpl["dur"])
         motion_layers = list(motion_layers) + [tl]
+    # 댓글 카드도 기존 타임드 레이어 배관을 공유한다. 합성 규칙을
+    # 따로 복제하지 않아 스티커·템플릿과 같은 시간축을 쓴다.
+    comment = deco.get("comment_card") or {}
+    if comment.get("_abspath") and str(comment.get("text") or "").strip():
+        motion_layers = list(motion_layers) + [{
+            "_abspath": comment["_abspath"],
+            "x": comment.get("x", 50), "y": comment.get("y", 72),
+            "width": comment.get("width", 880), "alpha": comment.get("alpha", 1),
+            "start": comment.get("start", 0.4), "dur": comment.get("dur", 3.5),
+            "animation": comment.get("animation", "slide_up"), "loop": True,
+        }]
     has_motion = bool(motion_layers)
     # 효과음(sfx): 비트별 position → 절대 오프셋(초)을 캡션과 **같은 함수**로 계산한다
     # (별도 계산 금지 — 저장위치=읽기위치). first=0.0 / last=마지막 세그먼트 직전까지의 합

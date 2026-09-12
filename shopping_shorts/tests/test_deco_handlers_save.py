@@ -26,6 +26,9 @@ MUST_SAVE = [
     "frSwapHeadcopy",   # 틀↔헤드카피 교체
     "mkAdd",            # 가림 추가
     "pickMotionPack",   # 모션팩
+    "commentPickStyle", # 댓글 카드 스타일
+    "commentUpdate",    # 댓글 카드 내용·타이밍
+    "commentClear",     # 댓글 카드 제거
     "capTouched",       # 자막 컨트롤 공용 입구
     "hcTouched",        # 헤드카피 컨트롤 공용 입구
 ]

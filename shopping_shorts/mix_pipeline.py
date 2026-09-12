@@ -1930,6 +1930,20 @@ def resolve_deco_media(deco, work):
             p = work / item["file"]
             if p.exists():
                 deco[key] = {**item, "_abspath": str(p)}
+    card = deco.get("comment_card") or {}
+    if str(card.get("text") or "").strip():
+        from shopping_shorts import comment_card
+        payload = dict(card)
+        avatar_file = Path(str(payload.get("avatar_file") or "")).name
+        if avatar_file:
+            avatar_path = work / avatar_file
+            if avatar_path.is_file():
+                payload["avatar_path"] = str(avatar_path)
+        clean = comment_card.normalize(payload)
+        out = work / f"comment_card_{comment_card.cache_key(payload)}.png"
+        if not out.exists():
+            comment_card.render_to(payload, out)
+        deco["comment_card"] = {**clean, "_abspath": str(out)}
     return deco
 
 

@@ -18164,6 +18164,60 @@ def api_produce_frame_png(request: Request):
                         headers={"Cache-Control": "public, max-age=31536000"})
 
 
+@app.get("/api/produce/comment-card/styles")
+def api_produce_comment_card_styles():
+    """댓글 카드 라이브러리 목록. 스타일 정의는 comment_card 한 곳만 쓴다."""
+    from shopping_shorts import comment_card
+    return {"ok": True, "styles": comment_card.styles()}
+
+
+@app.get("/api/produce/comment-card.png")
+def api_produce_comment_card_png(spec: str = "", job_id: str = ""):
+    """편집기와 최종 영상이 공유하는 댓글 카드 PNG 렌더러."""
+    from shopping_shorts import comment_card
+    try:
+        payload = json.loads(spec or "{}")
+        if not isinstance(payload, dict):
+            payload = {}
+    except (TypeError, ValueError):
+        payload = {}
+    avatar_file = Path(str(payload.get("avatar_file") or "")).name
+    if avatar_file and job_id and re.fullmatch(r"[A-Za-z0-9_-]+", job_id or ""):
+        avatar_path = _MIX_WORK_DIR / job_id / avatar_file
+        if avatar_path.is_file():
+            payload["avatar_path"] = str(avatar_path)
+    out = comment_card.CACHE_DIR / f"{comment_card.cache_key(payload)}.png"
+    if not out.exists():
+        comment_card.render_to(payload, out)
+    return FileResponse(str(out), media_type="image/png",
+                        headers={"Cache-Control": "public, max-age=31536000"})
+
+
+@app.post("/api/produce/mix/comment-avatar")
+async def api_produce_comment_avatar(job_id: str = Form(...), file: UploadFile = File(...)):
+    """댓글 카드용 프로필 사진을 작업 폴더에 정규화된 PNG로 저장한다."""
+    store = Store(DB_PATH)
+    if not job_id or not store.get_mix_job(job_id):
+        return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
+    raw = await file.read()
+    if not raw or len(raw) > 5 * 1024 * 1024:
+        return JSONResponse(status_code=413, content={"ok": False, "error": "프로필 이미지는 5MB 이하만 가능해요"})
+    try:
+        from PIL import Image, ImageOps
+        with Image.open(io.BytesIO(raw)) as source:
+            avatar = ImageOps.fit(source.convert("RGBA"), (512, 512), method=Image.Resampling.LANCZOS)
+            output = io.BytesIO()
+            avatar.save(output, "PNG", optimize=True)
+            normalized = output.getvalue()
+    except (OSError, ValueError):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "이미지를 읽지 못했어요"})
+    name = f"comment_avatar_{hashlib.sha1(normalized).hexdigest()[:16]}.png"
+    target = _MIX_WORK_DIR / job_id / name
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(normalized)
+    return {"ok": True, "file": name}
+
+
 @app.post("/api/produce/mix/bgm")
 async def api_produce_mix_bgm(job_id: str = Form(...), file: UploadFile = File(...)):
     """BGM 오디오 업로드 → job work dir에 bgm.{ext}로 저장. deco.bgm.file로 참조·렌더 시 믹스."""
