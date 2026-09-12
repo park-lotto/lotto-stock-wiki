@@ -10,6 +10,8 @@
   const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const compact=n=>n?new Intl.NumberFormat('ko-KR',{notation:n>=1e6?'compact':'standard',maximumFractionDigits:1}).format(n)+'회':'시인성 선별';
   const displayName=p=>p.id==='s0101'?'숏템 기본형':p.name;
+  const fontNames={SBAggroB:'강렬한 어그로체',YgJalnan:'친근한 잘난체',Cafe24Ohsquare:'각진 카페24',BinggraeBold:'부드러운 빙그레',Jalnan2:'잘난체 2',JalnanGothic:'잘난고딕',GasoekOne:'묵직한 가석체',GmarketSansBold:'지마켓 산스',TmonMonsori:'티몬 몬소리',BlackHanSans:'검은고딕',GothicA1Black:'고딕 A1',Pretendard:'깔끔한 프리텐다드'};
+  const fontLabel=p=>fontNames[p.hook?.lines?.[0]?.font_family||p.hook?.font_family]||'템플릿 전용 서체';
   const uniformMedia='assets/scene-style/uniform-household-demo.png';
   const fixedLayouts=new Map(),fixedColors=new Map();
   const fixedBaseLayout=frame=>{
@@ -41,7 +43,7 @@
   const renderGrid=()=>{
     grid.innerHTML=rows.map((p,i)=>mode==='continuous'
       ? `<button class="preset-card fixed-card${i===0?' selected':''}" data-p20="${i}"><span class="check">✓</span>${captionBadge(p)}<div class="fixed-thumb" style="background-image:url('${fixedThumb(p)}')"></div><b>${esc(p.name)}</b><small>1장~끝까지 동일</small></button>`
-      : `<button class="preset-card${i===0?' selected':''}" data-p20="${i}"><span class="check">✓</span>${captionBadge(p)}<div class="thumb-pair"><img src="${storyThumb(p,'hook')}"><img src="${storyThumb(p,'body')}"></div><b>${esc(displayName(p))}</b><small>${compact(p.views)} · 훅+본문</small></button>`).join('');
+      : `<button class="preset-card${i===0?' selected':''}" data-p20="${i}"><span class="check">✓</span>${captionBadge(p)}<div class="thumb-pair"><img src="${storyThumb(p,'hook')}"><img src="${storyThumb(p,'body')}"></div><b>${esc(displayName(p))}</b><small>${esc(fontLabel(p))} · 훅+본문</small></button>`).join('');
   };
   const presetPane=grid.closest('.pane'),modeBar=document.createElement('div');modeBar.className='template-mode-bar';
   modeBar.innerHTML='<button type="button" data-template-mode="story" class="active">썰쇼핑형 <small>20</small></button><button type="button" data-template-mode="continuous">전장면 고정형 <small>20</small></button>';
@@ -492,7 +494,7 @@
     captionPositions.set(captionKey(),Number(button.dataset.captionPosition));markDirty('caption');updateCaptionButtons();renderEdit();
   });
   addEventListener('resize',()=>{if(!preview.classList.contains('is-pristine'))renderEdit()});
-  const premiumFaces=['JalnanGothic','Jalnan2','GothicA1Black','GmarketSansBold','GasoekOne','Cafe24Ohsquare','KCCGanpan','BinggraeBold','BlackHanSans','Pretendard'];
+  const premiumFaces=['SBAggroB','YgJalnan','JalnanGothic','Jalnan2','GothicA1Black','GmarketSansBold','GasoekOne','Cafe24Ohsquare','KCCGanpan','BinggraeBold','BlackHanSans','Pretendard'];
   Promise.all(premiumFaces.map(family=>document.fonts?.load?.(`400 32px "${family}"`))).then(()=>{fittedText.clear();renderEdit()});
   document.fonts?.addEventListener?.('loadingdone',()=>{fittedText.clear();renderEdit()});
   saveButton&&(saveButton.textContent='현재 설정 저장');

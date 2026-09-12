@@ -6,6 +6,7 @@ from fontTools.ttLib import TTFont
 
 ROOT = Path(__file__).resolve().parents[1] / "shopping_shorts" / "static" / "fonts"
 TARGETS = [
+    "SBAggroB.ttf", "yg-jalnan.ttf",
     "BagelFatOne-Regular.ttf", "Dongle-Bold.ttf", "GothicA1-Black.ttf",
     "Hahmlet-Variable.ttf", "Orbit-Regular.ttf", "SongMyung-Regular.ttf",
     "YeonSung-Regular.ttf", "GowunDodum-Regular.ttf", "NanumGothicCoding-Bold.ttf",
