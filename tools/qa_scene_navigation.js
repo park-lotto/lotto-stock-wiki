@@ -68,7 +68,7 @@ const url = process.argv[2] || 'http://127.0.0.1:8770/out/scene-style-ui-showcas
   await settle();
   await page.screenshot({ path: 'out/scene-navigation-qa.png', fullPage: false });
   console.log(JSON.stringify({ ...result, errors }, null, 2));
-  const ok = result.initialScene === '1' && result.nextScene === '2' && result.bodySelected && result.captionReadonly
+  const ok = result.initialScene === '1' && result.nextScene === '2' && result.bodySelected && !result.captionReadonly
     && Object.values(result.captionMovement).every(Boolean) && result.channel.expanded
     && result.lastScene === '12' && result.nextDisabledAtEnd && result.firstSceneAgain === '1' && result.previousDisabledAtStart
     && result.layout.panes[0] >= 400 && result.layout.panes[2] >= 480 && result.layout.phone[1] >= 560 && result.layout.thumbnail[0] >= 75

@@ -65,13 +65,14 @@
   const colorOverrides=new Map();
   const dirtyFields=new Map();
   const captionPositions=new Map();
+  const captionTexts=new Map(),captionDrags=new Map();
   const inputs=Object.fromEntries([...root.querySelectorAll('.layout-a [data-bind]')].map(x=>[x.dataset.bind,x]));
   const value=k=>inputs[k]?.value||' ';
   const rgba=hex=>hex&&/^#[0-9a-f]{6}$/i.test(hex)?hex:'#111111';
   const frameFor=(p,index=sceneIndex)=>p.mode==='continuous'?p.frame:p[index===0?'hook':'body'];
   const imageFor=(p,index=sceneIndex)=>p.mode==='continuous'?p.frame_image:(index===0?p.hook_image:p.body_image);
   const frameKind=()=>mode==='continuous'?'frame':kind;
-  const scaleKey=bind=>`${rows[current].id}:${frameKind()}:${bind}`;
+  const scaleKey=bind=>`${rows[current].id}:${frameKind()}:${bind}${bind==='caption'?':'+sceneIndex:''}`;
   const textScale=bind=>fontScales.get(scaleKey(bind))||1;
   const textOffset=bind=>textOffsets.get(scaleKey(bind))||0;
   const colorKey=role=>`${rows[current].id}:${frameKind()}:${role}`;
@@ -79,7 +80,9 @@
   const dirtyKey=()=>`${rows[current].id}:${frameKind()}`;
   const captionKey=()=>`${rows[current].id}:${mode}:${sceneIndex}:caption`;
   const currentHasCaptionSlot=()=>mode==='continuous'?frameFor(rows[current])?.caption_slot?.mode==='reserved':kind==='body'&&storyHasCaptionSlot(frameFor(rows[current]));
-  const captionOffset=()=>currentHasCaptionSlot()?0:(kind==='body'||mode==='continuous')?(captionPositions.get(captionKey())||0)*6:0;
+  const captionOffset=()=>(captionDrags.get(captionKey())?.y||0)+(currentHasCaptionSlot()?0:(kind==='body'||mode==='continuous')?(captionPositions.get(captionKey())||0)*6:0);
+  const captionX=()=>captionDrags.get(captionKey())?.x||0;
+  function syncCaption(){inputs.caption.value=captionTexts.get(captionKey())??(rows[current].sample.caption||'이런 방법이 있었네요');updateCount(inputs.caption);}
   const fixedCaptionShift=frame=>{
     if(mode!=='continuous')return 0;
     const footer=(frame?.cleanup_regions||[]).find(region=>region.role==='source-footer');
@@ -109,8 +112,8 @@
   const captionField=root.querySelector('.layout-a [data-field-key="caption"]');
   if(captionField){
     const captionInput=captionField.querySelector('[data-bind="caption"]');
-    captionInput.readOnly=true;captionInput.title='자막 문구는 대본에서 가져오며 여기서는 위치만 변경합니다.';captionInput.classList.add('caption-readonly');
-    captionField.querySelector('.font-stepper').hidden=true;
+    captionInput.readOnly=false;captionInput.title='현재 장면의 자막을 편집합니다. 미리보기에서 끌어 위치를 옮길 수 있습니다.';
+    captionField.querySelector('.font-stepper').hidden=false;
     const captionCount=captionField.querySelector('[data-count]');if(captionCount)captionCount.hidden=true;
     const sceneLabel=document.createElement('span');sceneLabel.className='caption-scene-index';sceneLabel.dataset.captionSceneIndex='';captionField.querySelector('label').appendChild(sceneLabel);
     const controls=document.createElement('div');controls.className='caption-position';
@@ -126,7 +129,7 @@
   }
   if(sceneStrip){
     sceneStrip.className='scene-summary';
-    sceneStrip.innerHTML='<span class="scene-dot"></span><b data-scene-name>1장 · 훅</b><small>줄바꿈 기준 자동 장면 분리</small>';
+    sceneStrip.innerHTML='<span class="scene-dot"></span><b data-scene-name>1장 · 훅</b><small>장면별 자막 편집 미리보기</small>';
   }
   const colorRow=root.querySelector('.layout-a .color-row');
   if(colorRow)colorRow.innerHTML='<label class="swatch"> <input type="color" data-color-role="white" value="#ffffff"><span>흰색</span></label><label class="swatch"><input type="color" data-color-role="accent" value="#ffe600"><span>강조</span></label><label class="swatch"><input type="color" data-color-role="background" value="#211f19"><span>배경</span></label>';
@@ -210,7 +213,7 @@
     if(label)label.textContent=reserved?'✓ 전용 자막칸':'영상 위 자막';
     root.querySelectorAll('.layout-a [data-caption-position]').forEach(button=>{button.hidden=reserved;button.disabled=reserved;button.classList.toggle('active',!reserved&&Number(button.dataset.captionPosition)===position)});
     const guide=root.querySelector('.layout-a .caption-guide');
-    if(guide)guide.textContent=reserved?'원본에 확보된 자막칸으로 자동 배치됩니다.':'전용 칸이 없어 영상 위에서 위치를 선택합니다.';
+    if(guide)guide.textContent='이 장면의 자막을 입력하고, 화면에서 끌어 위치를 옮기세요. ＋−로 크기를 조절합니다.';
     captionField?.classList.toggle('reserved-caption',reserved);
   }
   function presetValue(bind){
@@ -225,7 +228,7 @@
     const input=inputs[bind];if(!input)return;
     input.value=presetValue(bind)||'';fontScales.delete(scaleKey(bind));textOffsets.delete(scaleKey(bind));
     [...fittedText.keys()].filter(key=>key.startsWith(scaleKey(bind)+':')).forEach(key=>fittedText.delete(key));
-    if(bind==='caption')captionPositions.delete(captionKey());
+    if(bind==='caption'){captionPositions.delete(captionKey());captionDrags.delete(captionKey());captionTexts.delete(captionKey());syncCaption();}
     markDirty(bind);updateCount(input);updateSteppers();updateCaptionButtons();renderEdit();
   }
 
@@ -332,6 +335,7 @@
     contrastOutline(el,ln,frame,bind);
     if(ln.max_lines>1){el.style.overflowWrap='anywhere';el.style.wordBreak='keep-all';el.style.textWrap='balance';el.style.lineHeight='1.2';}
     layer.insertBefore(el,badge);
+    if(bind==='caption'){el.style.left=(left+captionX())+'%';el.style.right=(right-captionX())+'%';}
     const fitKey=`${scaleKey(bind)}:${family}:${weight}:${ln.x0}:${ln.y0}`,chars=Math.max(1,[...String(text||' ')].length),cached=fittedText.get(fitKey);
     if(cached&&chars<=cached.capacity){el.style.fontSize=cached.size+'px';if(cached.letter!=null)el.style.letterSpacing=cached.letter+'px';const xscale=cached.xscale??1;if(xscale<1){el.style.transform=`scaleX(${xscale})`;el.style.transformOrigin=role.includes('left')?'left center':'center';}}
     else {const isStory=mode==='story',manualStory=isStory&&fontScales.has(scaleKey(bind));if(!manualStory)fitText(el,scaledFont,isStory ? .3 : .12,true);const fitted=parseFloat(el.style.fontSize)||scaledFont;el.style.fontSize=fitted+'px';let fittedLetter=parseFloat(getComputedStyle(el).letterSpacing)||0;const range=document.createRange();range.selectNodeContents(el);const measuredWidth=()=>Math.max(el.scrollWidth,range.getBoundingClientRect().width);const minLetter=isStory?-fitted*.08:-fitted*.3;while(!manualStory&&measuredWidth()>el.clientWidth+2&&fittedLetter>minLetter){fittedLetter-=.2;el.style.letterSpacing=Math.max(minLetter,fittedLetter)+'px';}const overflowScale=el.clientWidth/Math.max(1,measuredWidth())*.98;const xscale=isStory?(manualStory?1:Math.min(1,overflowScale)):Math.min(Number(ln.scale_x)||1,overflowScale);if(xscale<1){el.style.transform=`scaleX(${xscale})`;el.style.transformOrigin=role.includes('left')?'left center':'center';}fittedText.set(fitKey,{capacity:chars+1,size:fitted,letter:fittedLetter,xscale});}
@@ -340,7 +344,9 @@
   function renderEdit(){
     [...layer.children].filter(x=>x!==badge).forEach(x=>x.remove());
     const p=rows[current],frame=frameFor(p);if(!frame)return;
+    base.hidden=!!frame.design_label;
     badge.textContent=frame.design_label?frame.design_label:'원본 실측 편집';
+    badge.hidden=!!frame.design_label;
     const dirty=currentDirty();
     const bg=frame.title_bg||frame.top_band?.color||'#111111';
     const fixedLayout=mode==='continuous'?fixedLayoutFor(p.id,frame):null;
@@ -359,7 +365,7 @@
     const designScale=preview.clientHeight/frame.height;
     (frame.surfaces||[]).forEach(s=>{
       const offset=s.bind==='caption'?captionOffset()+textOffset('caption'):0;
-      const surface=addPatch(s.y/frame.height*100+offset,s.height/frame.height*100,s.background,s.x/frame.width*100,s.width/frame.width*100);
+      const surface=addPatch(s.y/frame.height*100+offset,s.height/frame.height*100,s.background,s.x/frame.width*100+(s.bind==='caption'?captionX():0),s.width/frame.width*100);
       surface.classList.add('body-material');
       if(s.bind)surface.dataset.editBind=s.bind;
       surface.style.borderRadius=(s.radius||0)*designScale+'px';
@@ -430,7 +436,7 @@
     preview.classList.toggle('is-continuous',mode==='continuous');
     const seg=root.querySelector('.layout-a .seg');if(seg)seg.hidden=mode==='continuous';
     root.querySelectorAll('.layout-a [data-frame]').forEach(x=>x.classList.toggle('active',x.dataset.frame===kind));
-    fieldSet(kind,p);updateSceneUI();updateSteppers();updateCaptionButtons();renderEdit();syncHookMotionUI();syncFixedPanel();requestAnimationFrame(runHookMotion);
+    syncCaption();fieldSet(kind,p);updateSceneUI();updateSteppers();updateCaptionButtons();renderEdit();syncHookMotionUI();syncFixedPanel();requestAnimationFrame(runHookMotion);
   }
   function showScene(nextIndex){
     sceneIndex=Math.max(0,Math.min(sceneTotal()-1,nextIndex));
@@ -442,7 +448,7 @@
     const p=rows[current],source=imageFor(p,sceneIndex);
     base.src=source;const frame=frameFor(p,sceneIndex),bounds=mediaBounds(frame,p.id);Object.assign(media.style,{top:bounds.top+'%',height:bounds.height+'%'});preview.classList.toggle('is-body',mode!=='continuous'&&kind==='body');
     root.querySelectorAll('.layout-a [data-frame]').forEach(x=>x.classList.toggle('active',x.dataset.frame===kind));
-    fieldSet(kind,p);updateSceneUI();updateSteppers();updateCaptionButtons();renderEdit();syncHookMotionUI();syncFixedPanel();requestAnimationFrame(runHookMotion);
+    syncCaption();fieldSet(kind,p);updateSceneUI();updateSteppers();updateCaptionButtons();renderEdit();syncHookMotionUI();syncFixedPanel();requestAnimationFrame(runHookMotion);
   }
   function selectPreset(index){
     current=index;const p=rows[index];
@@ -480,6 +486,7 @@
     showScene(sceneIndex+Number(button.dataset.sceneStep));
   });
   Object.values(inputs).forEach(input=>input.addEventListener('input',()=>{
+    if(input.dataset.bind==='caption')captionTexts.set(captionKey(),input.value);
     markDirty(input.dataset.bind);preview.classList.remove('is-pristine');renderEdit();
   }));
   root.querySelector('.layout-a .edit-pane').addEventListener('click',event=>{
@@ -540,7 +547,7 @@
   });
   const saveButton=root.querySelector('.layout-a .secondary');
   saveButton?.addEventListener('click',()=>{
-    const p=rows[current],snapshot={mode,presetId:p.id,frameKind:frameKind(),hookMotion,hookMotionSpeed,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),colors:Object.fromEntries(colorOverrides),fixedLayouts:Object.fromEntries(fixedLayouts),fixedColors:Object.fromEntries(fixedColors)};
+    const p=rows[current],snapshot={mode,presetId:p.id,sceneIndex,frameKind:frameKind(),hookMotion,hookMotionSpeed,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),colors:Object.fromEntries(colorOverrides),fixedLayouts:Object.fromEntries(fixedLayouts),fixedColors:Object.fromEntries(fixedColors),captionTexts:Object.fromEntries(captionTexts),captionDrags:Object.fromEntries(captionDrags),captionPositions:Object.fromEntries(captionPositions)};
     localStorage.setItem('scene_style_preset',JSON.stringify(snapshot));saveButton.textContent='✓ 현재 설정 저장됨';setTimeout(()=>saveButton.textContent='현재 설정 저장',1400);
   });
   root.querySelector('.layout-a .edit-pane').addEventListener('click',event=>{
@@ -548,6 +555,23 @@
     captionPositions.set(captionKey(),Number(button.dataset.captionPosition));markDirty('caption');updateCaptionButtons();renderEdit();
   });
   addEventListener('resize',()=>{if(!preview.classList.contains('is-pristine'))renderEdit()});
+  let captionDrag=null;
+  preview.addEventListener('pointerdown',event=>{
+    if(event.button!==0||!event.target.closest('[data-edit-bind="caption"]'))return;
+    const rect=preview.getBoundingClientRect(),text=layer.querySelector('.precision-text[data-edit-bind="caption"]');if(!text)return;
+    const bounds=text.getBoundingClientRect(),origin=captionDrags.get(captionKey())||{x:0,y:0};
+    captionDrag={pointer:event.pointerId,startX:event.clientX,startY:event.clientY,rect,origin,bounds};
+    preview.setPointerCapture(event.pointerId);event.preventDefault();
+  });
+  preview.addEventListener('pointermove',event=>{
+    if(!captionDrag||event.pointerId!==captionDrag.pointer)return;
+    const d=captionDrag;
+    const dx=Math.max(d.rect.left-d.bounds.left,Math.min(d.rect.right-d.bounds.right,event.clientX-d.startX));
+    const dy=Math.max(d.rect.top-d.bounds.top,Math.min(d.rect.bottom-d.bounds.bottom,event.clientY-d.startY));
+    captionDrags.set(captionKey(),{x:d.origin.x+dx/d.rect.width*100,y:d.origin.y+dy/d.rect.height*100});
+    markDirty('caption');renderEdit();
+  });
+  for(const type of ['pointerup','pointercancel','lostpointercapture'])preview.addEventListener(type,()=>{captionDrag=null;});
   const premiumFaces=['SBAggroB','YgJalnan','JalnanGothic','Jalnan2','GothicA1Black','GmarketSansBold','GasoekOne','Cafe24Ohsquare','KCCGanpan','BinggraeBold','BlackHanSans','Pretendard'];
   Promise.all(premiumFaces.map(family=>document.fonts?.load?.(`400 32px "${family}"`))).then(()=>{fittedText.clear();renderEdit()});
   document.fonts?.addEventListener?.('loadingdone',()=>{fittedText.clear();renderEdit()});
@@ -555,4 +579,22 @@
   const query=new URLSearchParams(location.search),initialPreset=Math.max(0,Number(query.get('preset'))||0);
   if(query.get('mode')==='continuous'){modeBar.querySelector('[data-template-mode="continuous"]').click();if(initialPreset<rows.length)selectPreset(initialPreset)}else selectPreset(Math.min(initialPreset,rows.length-1));
   if(mode==='story'&&query.get('frame')==='body')showFrame('body');
+  if(!qaMode){
+    try{
+      const saved=JSON.parse(localStorage.getItem('scene_style_preset')||'null');
+      if(saved){
+        for(const [name,map] of Object.entries({fontScales,textOffsets,colors:colorOverrides,fixedLayouts,fixedColors,captionTexts,captionDrags,captionPositions}))for(const [key,value] of Object.entries(saved[name]||{}))map.set(key,value);
+        if(!query.has('preset')&&!query.has('mode')){
+          modeBar.querySelector(`[data-template-mode="${saved.mode==='continuous'?'continuous':'story'}"]`).click();
+          const index=rows.findIndex(p=>p.id===saved.presetId);if(index>=0)selectPreset(index);
+        }
+        if(rows[current].id===saved.presetId){
+          const savedScene=saved.sceneIndex??(saved.frameKind==='body'?1:0);
+          showScene(query.get('frame')==='hook'?0:query.get('frame')==='body'?Math.max(1,savedScene):savedScene);
+          for(const [key,text] of Object.entries(saved.text||{}))if(inputs[key]&&key!=='caption'){inputs[key].value=text;markDirty(key);updateCount(inputs[key]);}
+        }
+        hookMotion=saved.hookMotion||hookMotion;hookMotionSpeed=saved.hookMotionSpeed||hookMotionSpeed;renderEdit();
+      }
+    }catch(error){console.warn('저장 설정 복원 실패',error);}
+  }
 })();

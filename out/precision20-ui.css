@@ -36,6 +36,8 @@
 .precision-base{z-index:1;object-fit:cover;object-position:top}
 .precision-media{z-index:3;inset:auto 0 auto 0;object-fit:cover;object-position:center 63%}
 .precision-edit-layer{z-index:6;pointer-events:none;overflow:hidden}
+.precision-edit-layer [data-edit-bind="caption"]{pointer-events:auto;cursor:grab;touch-action:none;user-select:none}
+.precision-edit-layer [data-edit-bind="caption"]:active{cursor:grabbing}
 .dynamic-phone.is-pristine .precision-edit-layer{display:none}
 .precision-patch{position:absolute;display:flex;align-items:center;justify-content:center;overflow:hidden}
 .precision-text{position:absolute;z-index:2;display:flex;align-items:center;overflow:visible;font-family:"TmonMonsori","Pretendard",sans-serif;font-weight:900;line-height:1;white-space:nowrap;text-rendering:geometricPrecision;-webkit-font-smoothing:antialiased;font-synthesis:none}

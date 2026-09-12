@@ -53,7 +53,6 @@ const window=context.window;
       channel={...channel,x:84,y:40,width:176,height:27,font_size:22,background:'#FFFFFF',color:d.ink};ornament('search',270,46,13,13,d.ink);
     }else if(d.family==='profile'){
       channel.y=24;channel.font_family='JalnanGothic';channel.font_size=27;
-      surface(22,103,29,29,gradient(['#2D2921','#655B46','#24201B']),{radius:18});
       ornament('spark',29,110,15,15,'#E5D5A9');
       ornament('rule',62,114,75,3,d.accent+'AA');ornament('rule',62,123,44,2,d.accent+'55');
     }else if(d.family==='browser'){
@@ -93,6 +92,7 @@ const window=context.window;
       if(['editorial','profile','community'].includes(d.family))surface(23,d.caption+capH*.28,2,capH*.44,d.accent+'A0',{radius:2});
       line('caption',34,d.caption+5,292,capH-10,capH<40?17:20,'#30343A','#FFFFFF');
     }
+    frame.ornaments=frame.ornaments.filter(o=>!['rule','bookmark','spark'].includes(o.type));
     return frame;
   };
   for(const p of window.PRECISION20||[]){const d=profiles[p.id];if(d)p.body=makeBody(p,d);}
