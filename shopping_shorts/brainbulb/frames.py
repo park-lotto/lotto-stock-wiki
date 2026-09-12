@@ -11,19 +11,23 @@ from PIL import Image
 from . import spec
 
 
-def _cover(im, w, h, focus=None):
+def _cover(im, w, h, focus=None, face_top=0.42):
     """슬롯을 꽉 채우도록 키운 뒤 잘라낸다. `focus`가 있으면 **그 점이 화면에 남도록** 잘린다.
 
     ★가운데로만 자르면 얼굴이 가장자리로 밀린다(실측 2026-09-13 박위 01번: 얼굴이 폭 300 중 x=250).
       focus는 원본 좌표 (cx, cy) — 얼굴 중심을 넣는다. 얼굴은 눈이 위쪽에 오는 게 자연스러워
-      세로로는 정가운데가 아니라 **조금 위**(0.42)에 둔다.
+      세로로는 정가운데가 아니라 **조금 위**(face_top=0.42)에 둔다.
+
+    ★카드 컷은 다르다 — 제목 띠가 슬롯 위 273px(35%)을 덮으므로 얼굴을 그 아래로 내려야 한다
+      (실측 2026-09-13 사장님 "박수홍때도 그렇고 첫장면은 늘 얼굴이 짤림": 사진 자체는 멀쩡한데
+       흰 띠가 머리를 정통으로 가렸다). 그때 face_top을 띠 아래 비율로 올려 부른다.
     """
     sw, sh = im.size
     s = max(w / sw, h / sh)
     im = im.resize((max(1, round(sw * s)), max(1, round(sh * s))), Image.LANCZOS)
     if focus:
         x = int(round(focus[0] * s - w / 2))
-        y = int(round(focus[1] * s - h * 0.42))
+        y = int(round(focus[1] * s - h * face_top))
     else:
         x = (im.width - w) // 2
         y = (im.height - h) // 2
@@ -51,8 +55,20 @@ def _contain_h(im, h):
     return im.resize((max(1, round(sw * s)), h), Image.LANCZOS)
 
 
-def compose(src, out_path, *, kind="img"):
-    """src 이미지 → 1080×1920 검은 캔버스 위 슬롯에 배치한 jpg"""
+def card_band_end():
+    """카드 제목 띠가 끝나는 y — 띠 위치를 두 번 적지 않는다(0순위-B)."""
+    return max(spec.CARD_BAND_GRAY[1] + spec.CARD_BAND_GRAY[2],
+               spec.CARD_BAND_WHITE[1] + spec.CARD_BAND_WHITE[2])
+
+
+def compose(src, out_path, *, kind="img", card=False):
+    """src 이미지 → 1080×1920 검은 캔버스 위 슬롯에 배치한 jpg.
+
+    ★card=True면 사진을 **제목 띠 아래**에만 넣는다(실측 2026-09-13 사장님
+      "박수홍때도 그렇고 첫장면은 늘 얼굴이 짤림"). 생성 이미지는 16:9(1.79)인데 슬롯은 1.31이라
+      cover하면 세로가 딱 맞아 **세로로 1px도 못 움직인다** — 얼굴 위치를 아무리 겨냥해도
+      흰 띠가 머리를 가린다. 그래서 카드만은 띠 아래 높이에 맞춰 넣고 가로를 가운데 정렬한다.
+    """
     canvas = Image.new("RGB", (spec.CANVAS_W, spec.CANVAS_H), (0, 0, 0))
     if src and os.path.exists(src):
         im = Image.open(src).convert("RGBA")
@@ -62,6 +78,11 @@ def compose(src, out_path, *, kind="img"):
                 im = _cover(im, spec.SLOT_W, spec.SLOT_H)
             x = spec.SLOT_X + (spec.SLOT_W - im.width) // 2
             canvas.paste(im, (x, spec.SLOT_Y), im)
+        elif card:
+            top = card_band_end()                       # 띠 아래부터가 보이는 자리
+            vis_h = spec.SLOT_Y + spec.SLOT_H - top
+            im = _cover(im, spec.SLOT_W, vis_h, focus=_face_focus(src))
+            canvas.paste(im.convert("RGB"), (spec.SLOT_X, top))
         else:
             im = _cover(im, spec.SLOT_W, spec.SLOT_H, focus=_face_focus(src))
             canvas.paste(im.convert("RGB"), (spec.SLOT_X, spec.SLOT_Y))
@@ -101,7 +122,7 @@ def build(workdir, timing, script, images, *, meme_dir=None, card_img=None, log=
     # 카드
     ci = card_img or next((g["img"] for g in groups if isinstance(g.get("img"), int)), None)
     card_src = _nearest(images, ci) if ci is not None else None
-    p = compose(card_src, os.path.join(d, "intro.jpg"))
+    p = compose(card_src, os.path.join(d, "intro.jpg"), card=True)   # ★제목 띠 아래에만 넣는다
     entries.append((p, timing["card_end"])); timeline.append({"i": 0, "t": 0, "d": timing["card_end"], "kind": "card", "src": card_src})
     memes = 0
     last_img = card_src            # ★직전 컷의 사진 — 빈 컷을 검게 두지 않으려고 들고 간다

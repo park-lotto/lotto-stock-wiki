@@ -361,3 +361,43 @@ def test_build_fills_when_meme_pack_missing(tmp_path):
     r = frames.build(str(tmp_path), _timing(2), script, {"1": str(img)},
                      meme_dir=None, log=lambda *a: None)
     assert all(t["src"] for t in r["timeline"])
+
+
+# ── 카드(첫 장면) 얼굴이 제목 띠에 먹히던 병 (2026-09-13 사장님 지적) ──────────────────
+def test_card_photo_sits_below_title_band(tmp_path, monkeypatch):
+    """★"박수홍때도 그렇고 첫장면은 늘 얼굴이 짤림".
+
+    사진 자체는 멀쩡한데 흰 제목 띠가 머리를 정통으로 가렸다.
+    ★생성 이미지는 16:9(1.79)인데 슬롯은 1.31 — cover하면 세로가 딱 맞아 **1px도 못 움직인다**.
+      그래서 얼굴을 겨냥하는 것만으로는 절대 안 풀린다. 카드는 띠 아래 높이에 맞춰 넣어야 한다.
+    """
+    from shopping_shorts.brainbulb import frames, spec
+    src = tmp_path / "p.png"
+    Image.new("RGB", (1376, 768), (180, 180, 180)).save(src)      # 실제 생성 크기
+    monkeypatch.setattr(frames, "_face_focus", lambda s: (688.0, 220.0))
+    out = str(tmp_path / "intro.jpg")
+    frames.compose(str(src), out, card=True)
+    a = np.asarray(Image.open(out).convert("L"), dtype=float)
+    band = frames.card_band_end()
+    assert a[spec.SLOT_Y:band, spec.SLOT_X:spec.SLOT_X + spec.SLOT_W].mean() < 5   # 띠 자리는 비어 있다
+    assert a[band:spec.SLOT_Y + spec.SLOT_H, spec.SLOT_X:spec.SLOT_X + spec.SLOT_W].mean() > 100  # 사진은 그 아래
+
+
+def test_card_band_end_comes_from_spec():
+    """띠 위치를 코드에 두 번 적지 않는다(0순위-B) — spec 상수가 바뀌면 같이 움직인다."""
+    from shopping_shorts.brainbulb import frames, spec
+    assert frames.card_band_end() == max(spec.CARD_BAND_GRAY[1] + spec.CARD_BAND_GRAY[2],
+                                         spec.CARD_BAND_WHITE[1] + spec.CARD_BAND_WHITE[2])
+
+
+def test_normal_cut_still_fills_whole_slot(tmp_path, monkeypatch):
+    """카드가 아닌 컷은 예전대로 슬롯을 꽉 채운다 — 카드 수리가 본문을 건드리면 안 된다."""
+    from shopping_shorts.brainbulb import frames, spec
+    src = tmp_path / "p.png"
+    Image.new("RGB", (1376, 768), (180, 180, 180)).save(src)
+    monkeypatch.setattr(frames, "_face_focus", lambda s: None)
+    out = str(tmp_path / "g.jpg")
+    frames.compose(str(src), out)
+    a = np.asarray(Image.open(out).convert("L"), dtype=float)
+    top = a[spec.SLOT_Y:spec.SLOT_Y + 60, spec.SLOT_X:spec.SLOT_X + spec.SLOT_W]
+    assert top.mean() > 100                                        # 슬롯 맨 위까지 사진이 있다
