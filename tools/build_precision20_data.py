@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 from pathlib import Path
 
 from caption_slot_detection import detect_bottom_caption_slot, extend_reserved_slot_over_source_text
@@ -441,6 +442,7 @@ def main() -> None:
     rows.sort(key=lambda row: (row["id"] != "s0101", int(row["rank"])))
     text = "window.PRECISION20=" + json.dumps(rows, ensure_ascii=False, separators=(",", ":")) + ";\n"
     DEST.write_text(text, encoding="utf-8")
+    subprocess.run(["node", str(ROOT / "tools" / "build_body20_designs.js")], check=True)
     print(f"{DEST} ({len(rows)} presets)")
 
 

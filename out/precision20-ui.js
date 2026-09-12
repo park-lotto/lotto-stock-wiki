@@ -38,7 +38,7 @@
   };
   const fixedThumb=p=>`assets/scene-style/thumbnails/fixed-${p.source_id}.png`;
   const storyThumb=(p,kind)=>`assets/scene-style/thumbnails/story-${p.id}-${kind}.png`;
-  const storyHasCaptionSlot=frame=>!!frame?.white_box||(frame?.cleanup_regions||[]).some(r=>r.role==='source-footer');
+  const storyHasCaptionSlot=frame=>frame?.caption_slot?frame.caption_slot.mode==='reserved':!!frame?.white_box||(frame?.cleanup_regions||[]).some(r=>r.role==='source-footer');
   const presetHasCaptionSlot=p=>p.mode==='continuous'?p.frame?.caption_slot?.mode==='reserved':storyHasCaptionSlot(p.body);
   const captionBadge=p=>presetHasCaptionSlot(p)?'<span class="caption-kind reserved">자막칸</span>':'<span class="caption-kind overlay">영상 위</span>';
   const renderGrid=()=>{
@@ -253,7 +253,7 @@
     const el=document.createElement('div');el.className='precision-patch';
     if(bind)el.dataset.editBind=bind;
     const paint=bind&&bind!=='channel'&&mode!=='continuous'?colorFor('background',color):color;
-    Object.assign(el.style,{left:x+'%',top:y+'%',width:w+'%',height:h+'%',background:rgba(paint)});layer.insertBefore(el,badge);return el;
+    Object.assign(el.style,{left:x+'%',top:y+'%',width:w+'%',height:h+'%',background:CSS.supports('background',paint)?paint:rgba(paint)});layer.insertBefore(el,badge);return el;
   }
   function fitText(el,startSize,minRatio=.58,checkHeight=false){
     const min=Math.max(5,startSize*minRatio);
@@ -340,6 +340,7 @@
   function renderEdit(){
     [...layer.children].filter(x=>x!==badge).forEach(x=>x.remove());
     const p=rows[current],frame=frameFor(p);if(!frame)return;
+    badge.textContent=frame.design_label?frame.design_label:'원본 실측 편집';
     const dirty=currentDirty();
     const bg=frame.title_bg||frame.top_band?.color||'#111111';
     const fixedLayout=mode==='continuous'?fixedLayoutFor(p.id,frame):null;
@@ -355,9 +356,28 @@
     if(dirty.size){
       (frame.boxes||[]).forEach(b=>{const box=addPatch(b.y/frame.height*100,b.height/frame.height*100,b.background,b.x/frame.width*100,b.width/frame.width*100);if(b.border)box.style.border=`${b.border_width||1}px solid ${b.border}`;});
     }
+    const designScale=preview.clientHeight/frame.height;
+    (frame.surfaces||[]).forEach(s=>{
+      const offset=s.bind==='caption'?captionOffset()+textOffset('caption'):0;
+      const surface=addPatch(s.y/frame.height*100+offset,s.height/frame.height*100,s.background,s.x/frame.width*100,s.width/frame.width*100);
+      surface.classList.add('body-material');
+      if(s.bind)surface.dataset.editBind=s.bind;
+      surface.style.borderRadius=(s.radius||0)*designScale+'px';
+      for(const [key,css] of [['border','border'],['borderTop','borderTop'],['borderBottom','borderBottom']])if(s[key])surface.style[css]=`${Math.max(.5,designScale)}px solid ${s[key]}`;
+      if(s.shadow)surface.style.boxShadow=s.shadow;
+    });
+    (frame.ornaments||[]).forEach(o=>{
+      const el=document.createElement('i');el.className='body-ornament body-ornament-'+o.type;el.setAttribute('aria-hidden','true');
+      Object.assign(el.style,{left:o.x/frame.width*100+'%',top:o.y/frame.height*100+'%',width:o.width/frame.width*100+'%',height:o.height/frame.height*100+'%',color:o.color});
+      layer.insertBefore(el,badge);
+    });
     const channelBoxes=frame.channel_boxes?.length?frame.channel_boxes:(frame.channel_box?[frame.channel_box]:[]);
     if(dirty.has('channel')&&channelBoxes.length){
       channelBoxes.forEach(c=>{
+      if(c.designed){
+        const ln={x0:c.x,x1:c.x+c.width,y0:c.y,h:c.height,font_size:c.font_size,font_family:c.font_family,font_weight:c.font_weight,background:c.background};
+        addText(value('channel'),ln,frame,c.color,'center precision-channel','channel');return;
+      }
       const scale=preview.clientHeight/frame.height,maxWidth=frame.width*.9,maxX=frame.width*.05;
       const box=addPatch(c.y/frame.height*100,c.height/frame.height*100,c.background,c.x/frame.width*100,c.width/frame.width*100,'channel');
       box.style.borderRadius=((Number(c.radius)||0)*preview.clientHeight/frame.height)+'px';if(c.border)box.style.border=`${Math.max(1,preview.clientHeight/frame.height)}px solid ${c.border}`;
@@ -534,4 +554,5 @@
   saveButton&&(saveButton.textContent='현재 설정 저장');
   const query=new URLSearchParams(location.search),initialPreset=Math.max(0,Number(query.get('preset'))||0);
   if(query.get('mode')==='continuous'){modeBar.querySelector('[data-template-mode="continuous"]').click();if(initialPreset<rows.length)selectPreset(initialPreset)}else selectPreset(Math.min(initialPreset,rows.length-1));
+  if(mode==='story'&&query.get('frame')==='body')showFrame('body');
 })();

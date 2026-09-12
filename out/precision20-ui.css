@@ -41,6 +41,14 @@
 .precision-text{position:absolute;z-index:2;display:flex;align-items:center;overflow:visible;font-family:"TmonMonsori","Pretendard",sans-serif;font-weight:900;line-height:1;white-space:nowrap;text-rendering:geometricPrecision;-webkit-font-smoothing:antialiased;font-synthesis:none}
 .precision-text.center{justify-content:center;text-align:center}.precision-text.left{justify-content:flex-start;text-align:left}
 .precision-channel{font-family:"Pretendard",sans-serif;letter-spacing:.04em}
+.body-ornament{position:absolute;display:block;z-index:1;pointer-events:none;box-sizing:border-box}
+.body-ornament-rule{background:currentColor}
+.body-ornament-menu{border-top:2px solid;border-bottom:2px solid}
+.body-ornament-menu:after{content:"";position:absolute;top:50%;left:0;width:75%;border-top:2px solid;transform:translateY(-50%)}
+.body-ornament-search{border:1.6px solid;border-radius:50%}
+.body-ornament-search:after{content:"";position:absolute;width:40%;border-top:1.6px solid;right:-30%;bottom:-10%;transform:rotate(45deg);transform-origin:left}
+.body-ornament-bookmark{background:currentColor;clip-path:polygon(0 0,100% 0,100% 100%,50% 75%,0 100%)}
+.body-ornament-spark{background:currentColor;clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%)}
 .precision-badge{position:absolute;right:7px;bottom:7px;z-index:8;padding:4px 7px;border-radius:999px;background:#07131ddd;border:1px solid #42e2b477;color:#8cf5d4;font-size:8px;font-weight:900}
 .font-stepper{display:inline-flex;align-items:center;gap:4px;margin-left:auto;margin-right:8px;color:#8fa3ad!important}
 .font-stepper button{width:23px;height:20px;padding:0;border:1px solid #34505d;border-radius:6px;background:#0d202b;color:#d9e5ea;font-size:14px;font-weight:900;line-height:18px;cursor:pointer}
