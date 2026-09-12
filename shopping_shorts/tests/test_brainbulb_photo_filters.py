@@ -291,3 +291,31 @@ def test_split_falls_back_when_face_side_too_thin(tmp_path, monkeypatch):
     out = Image.open(p)
     assert out.size == (530, 298)                    # 얇은 아래칸 대신 위칸이 남았다
     assert photos.find_seam(str(p)) is None
+
+
+def test_avatar_page_is_rejected(tmp_path):
+    """★SNS 프로필 화면 — 출처 이름으로는 못 막는다(Serper가 '한국경제'로 줬다).
+
+    실측 2026-09-13 박위 02번: 유튜브 채널 페이지가 글자 0.0%·경계 없음으로 전부 통과해
+    슬롯에 둥근 아바타가 그대로 들어갔다. 큰 원 + 그 안의 얼굴로 판정한다.
+    """
+    cv2 = pytest.importorskip("cv2")
+    a = np.full((420, 440, 3), 20, dtype=np.uint8)                  # 어두운 UI 바탕
+    cv2.circle(a, (220, 200), 150, (170, 200, 230), -1)             # 둥근 아바타
+    p = tmp_path / "avatar.jpg"
+    Image.fromarray(a).save(p, "JPEG", quality=95)
+    import types
+    photos_box = photos.face_box
+    try:
+        photos.face_box = lambda x, **k: (190, 170, 60, 60)          # 원 안의 얼굴
+        # 합성 원은 가장자리 무늬가 없어 실사진보다 잘 안 잡힌다 — 문턱을 낮춰 판정 자체를 시험한다
+        assert photos.looks_like_avatar(str(p), min_score=40) is True
+    finally:
+        photos.face_box = photos_box
+
+
+def test_normal_photo_is_not_avatar(tmp_path):
+    """원이 없으면 아바타가 아니다 — 멀쩡한 사진을 버리면 안 된다."""
+    pytest.importorskip("cv2")
+    p = tmp_path / "n.jpg"; _noise(p, seed=33)
+    assert photos.looks_like_avatar(str(p)) is False

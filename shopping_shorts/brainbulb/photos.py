@@ -255,6 +255,40 @@ def text_ratio(path, *, sample=500):
         return 0.0
 
 
+def looks_like_avatar(path, *, min_score=60):
+    """SNS 프로필 화면인가 — **둥근 아바타 + 그 안에 얼굴**이면 True.
+
+    ★출처 이름으로는 못 막는다(실측 2026-09-13 박위 02번: Serper가 출처를 '한국경제'로 줬는데
+      실제로는 유튜브 채널 페이지였다). 글자 0.0%·경계 없음이라 다른 검사도 전부 통과한다.
+      구분되는 건 생김새뿐 — 큰 원 하나가 있고 그 안에 얼굴이 든다.
+      실측: 아바타 1개 검출 / 정상 사진 3장 전부 0개.
+    """
+    try:
+        import cv2
+        import numpy as np
+    except ImportError:
+        return False
+    img = imread(path)
+    if img is None:
+        return False
+    g = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    h, w = g.shape
+    s = 400 / max(h, w)
+    g2 = cv2.resize(g, (max(1, int(w * s)), max(1, int(h * s))))
+    H, W = g2.shape
+    found = cv2.HoughCircles(cv2.medianBlur(g2, 5), cv2.HOUGH_GRADIENT, dp=1, minDist=H,
+                             param1=100, param2=min_score,
+                             minRadius=int(min(H, W) * 0.18), maxRadius=int(min(H, W) * 0.55))
+    if found is None:
+        return False
+    cx, cy, r = found[0][0]
+    box = face_box(path)
+    if not box:
+        return False                                # 얼굴이 없으면 그냥 둥근 물건일 뿐
+    fx, fy = (box[0] + box[2] / 2) * s, (box[1] + box[3] / 2) * s
+    return bool(((fx - cx) ** 2 + (fy - cy) ** 2) ** 0.5 < r)   # 얼굴이 원 안에 있다(numpy bool 금지)
+
+
 def _yunet_model():
     """YuNet onnx 경로 — spec.FACE_MODEL(있으면) → 볼케이노 팩 → None.
 
@@ -383,6 +417,10 @@ def pick_photo(query, workdir, slot, *, want_face=True, num=10, log=print, seen=
             os.remove(path)
             continue
         if want_face and not has_face(path):
+            os.remove(path)
+            continue
+        if looks_like_avatar(path):        # SNS 프로필 화면(둥근 아바타) — 기사 사진이 아니다
+            log(f"[brainbulb.photos] 슬롯 {slot} 프로필 아바타 화면 — 다음 후보")
             os.remove(path)
             continue
         fp = _fingerprint(path)
