@@ -52,10 +52,15 @@ const url = process.argv[2] || 'http://127.0.0.1:8770/out/scene-style-ui-showcas
       const positionButtons=[...document.querySelectorAll('[data-caption-position]')];
       if(positionButtons.some(button=>button.hidden!==reserved))failures.push(`${rows[i].name}: 자막 위치 버튼 노출 규칙 불일치`);
       if(document.querySelector('.caption-position span')?.textContent!==(reserved?'✓ 전용 자막칸':'영상 위 자막'))failures.push(`${rows[i].name}: 자막 유형 안내 불일치`);
-      if(!['s0234','s0430'].includes(rows[i].source_id)&&!rows[i].frame.lines.slice(0,-1).every(line=>line.font_family==='TmonMonsori'&&line.font_weight===900))failures.push(`${rows[i].name}: 초굵은 제목체 규칙 불일치`);
+      for(const line of rows[i].frame.lines.filter(line=>line.bind!=='caption')){
+        const el=preview.querySelector(`.precision-text[data-edit-bind="${line.bind}"]`);
+        if(!el||!getComputedStyle(el).fontFamily.includes(line.font_family)||getComputedStyle(el).fontWeight!=='400')failures.push(`${rows[i].name}/${line.bind}: 지정 서체 또는 합성 볼드 금지 규칙 불일치`);
+      }
       const fixed=()=>[...preview.querySelectorAll('[data-edit-bind]:not([data-edit-bind="caption"])')].map(el=>{const r=el.getBoundingClientRect(),s=getComputedStyle(el);return [el.dataset.editBind,r.x,r.y,r.width,r.height,s.fontSize,s.color,s.backgroundColor].join('|')}).sort().join('\n');
       const before=fixed();
-      for(const target of [1,5,11]){document.querySelector('[data-scene-current]').textContent=String(target);while(Number(document.querySelector('[data-scene-current]').textContent)<target)document.querySelector('[data-scene-step="1"]').click();await wait();if(fixed()!==before)failures.push(`${rows[i].name}: 장면 이동 시 고정 디자인 변경`);}
+      for(const target of [2,5,11]){while(Number(document.querySelector('[data-scene-current]').textContent)<target)document.querySelector('[data-scene-step="1"]').click();await wait();if(fixed()!==before)failures.push(`${rows[i].name}: 장면 이동 시 고정 디자인 변경`);}
+      const caption=preview.querySelector('.precision-text[data-edit-bind="caption"]');
+      if(!caption||!getComputedStyle(caption).fontFamily.includes('PretendardXBold'))failures.push(`${rows[i].name}: 본문 자막 서체 미적용`);
       const field=document.querySelector('[data-field-key="hook1"]'),text=field?.querySelector('.precision-text');
       const input=field?.querySelector('[data-bind="hook1"]');if(input){input.value='교체 제목 테스트';input.dispatchEvent(new Event('input',{bubbles:true}));await wait();}
       const y0=preview.querySelector('[data-edit-bind="hook1"].precision-text')?.getBoundingClientRect().y;
@@ -64,7 +69,7 @@ const url = process.argv[2] || 'http://127.0.0.1:8770/out/scene-style-ui-showcas
       if(!(y1<y0))failures.push(`${rows[i].name}: 제목 위 이동 실패`);
       if(Math.abs(y1-y0)>preview.getBoundingClientRect().height*.007)failures.push(`${rows[i].name}: 제목 이동 간격이 미세 조정 범위를 초과`);
       if(i===0){for(let n=0;n<30;n++)field?.querySelector('[data-font-step="0.1"]')?.click();await wait();if(field?.querySelector('.font-stepper output')?.textContent!=='300%')failures.push('글자 크기 300% 상한 실패');}
-      if([...preview.querySelectorAll('[data-edit-bind]')].some(el=>{const a=el.getBoundingClientRect(),b=preview.getBoundingClientRect();return a.left<b.left-3||a.right>b.right+3||el.scrollWidth>el.clientWidth+2}))failures.push(`${rows[i].name}: 글자 넘침`);
+      for(const el of preview.querySelectorAll('.precision-text')){const a=el.getBoundingClientRect(),b=preview.getBoundingClientRect(),range=document.createRange();range.selectNodeContents(el);const r=range.getBoundingClientRect();if(a.left<b.left-3||a.right>b.right+3||r.left<b.left-3||r.right>b.right+3)failures.push(`${rows[i].name}/${el.dataset.editBind}: 실제 글자 넘침 ${r.width.toFixed(1)}px`);}
     }
     document.querySelector('.layout-a .secondary').click();
     if(!localStorage.getItem('scene_style_preset'))failures.push('현재 설정 저장 실패');

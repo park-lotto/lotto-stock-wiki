@@ -11,7 +11,7 @@
   const compact=n=>n?new Intl.NumberFormat('ko-KR',{notation:n>=1e6?'compact':'standard',maximumFractionDigits:1}).format(n)+'회':'시인성 선별';
   const displayName=p=>p.id==='s0101'?'숏템 기본형':p.name;
   const fontNames={SBAggroB:'강렬한 어그로체',YgJalnan:'친근한 잘난체',Cafe24Ohsquare:'각진 카페24',BinggraeBold:'부드러운 빙그레',Jalnan2:'잘난체 2',JalnanGothic:'잘난고딕',GasoekOne:'묵직한 가석체',GmarketSansBold:'지마켓 산스',TmonMonsori:'티몬 몬소리',BlackHanSans:'검은고딕',GothicA1Black:'고딕 A1',Pretendard:'깔끔한 프리텐다드'};
-  const fontLabel=p=>fontNames[p.hook?.lines?.[0]?.font_family||p.hook?.font_family]||'템플릿 전용 서체';
+  const fontLabel=p=>{const family=(p.hook||p.frame)?.lines?.[0]?.font_family;return fontNames[family==='PretendardXBold'?'Pretendard':family]||'템플릿 전용 서체'};
   const uniformMedia='assets/scene-style/uniform-household-demo.png';
   const fixedLayouts=new Map(),fixedColors=new Map();
   const fixedBaseLayout=frame=>{
@@ -38,11 +38,13 @@
   };
   const fixedThumb=p=>`assets/scene-style/thumbnails/fixed-${p.source_id}.png`;
   const storyThumb=(p,kind)=>`assets/scene-style/thumbnails/story-${p.id}-${kind}.png`;
-  const presetHasCaptionSlot=p=>p.mode==='continuous'?p.frame?.caption_slot?.mode==='reserved':!!p.body?.white_box;
+  const storyHasCaptionSlot=frame=>!!frame?.white_box||(frame?.cleanup_regions||[]).some(r=>r.role==='source-footer');
+  const presetHasCaptionSlot=p=>p.mode==='continuous'?p.frame?.caption_slot?.mode==='reserved':storyHasCaptionSlot(p.body);
   const captionBadge=p=>presetHasCaptionSlot(p)?'<span class="caption-kind reserved">자막칸</span>':'<span class="caption-kind overlay">영상 위</span>';
   const renderGrid=()=>{
+    const count=root.querySelector('.layout-a .pane-head .count');if(count)count.textContent=`${storyRows.length+fixedRows.length}개`;
     grid.innerHTML=rows.map((p,i)=>mode==='continuous'
-      ? `<button class="preset-card fixed-card${i===0?' selected':''}" data-p20="${i}"><span class="check">✓</span>${captionBadge(p)}<div class="fixed-thumb" style="background-image:url('${fixedThumb(p)}')"></div><b>${esc(p.name)}</b><small>1장~끝까지 동일</small></button>`
+      ? `<button class="preset-card fixed-card${i===0?' selected':''}" data-p20="${i}"><span class="check">✓</span>${captionBadge(p)}<div class="fixed-thumb" style="background-image:url('${fixedThumb(p)}')"></div><b>${esc(p.name)}</b><small>${esc(fontLabel(p))} · 고정형</small></button>`
       : `<button class="preset-card${i===0?' selected':''}" data-p20="${i}"><span class="check">✓</span>${captionBadge(p)}<div class="thumb-pair"><img src="${storyThumb(p,'hook')}"><img src="${storyThumb(p,'body')}"></div><b>${esc(displayName(p))}</b><small>${esc(fontLabel(p))} · 훅+본문</small></button>`).join('');
   };
   const presetPane=grid.closest('.pane'),modeBar=document.createElement('div');modeBar.className='template-mode-bar';
@@ -76,7 +78,7 @@
   const colorFor=(role,fallback)=>colorOverrides.get(colorKey(role))||fallback;
   const dirtyKey=()=>`${rows[current].id}:${frameKind()}`;
   const captionKey=()=>`${rows[current].id}:${mode}:${sceneIndex}:caption`;
-  const currentHasCaptionSlot=()=>mode==='continuous'?frameFor(rows[current])?.caption_slot?.mode==='reserved':kind==='body'&&!!frameFor(rows[current])?.white_box;
+  const currentHasCaptionSlot=()=>mode==='continuous'?frameFor(rows[current])?.caption_slot?.mode==='reserved':kind==='body'&&storyHasCaptionSlot(frameFor(rows[current]));
   const captionOffset=()=>currentHasCaptionSlot()?0:(kind==='body'||mode==='continuous')?(captionPositions.get(captionKey())||0)*6:0;
   const fixedCaptionShift=frame=>{
     if(mode!=='continuous')return 0;
@@ -273,6 +275,31 @@
     }));
   }
   window.requestShortemFit=()=>requestAnimationFrame(fitShortemText);
+  function contrastOutline(el,ln,frame,bind){
+    // 배경과 대비가 부족한 글자만 보정한다. 강조 단어도 각각 판정한다.
+    const luminance=hex=>{
+      if(!/^#[0-9a-f]{6}$/i.test(hex||''))return null;
+      const rgb=[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4);
+      return rgb[0]*.2126+rgb[1]*.7152+rgb[2]*.0722;
+    };
+    const y=ln.y0+ln.h/2;
+    const region=(frame.cleanup_regions||[]).find(r=>y>=r.y&&y<r.y+r.height);
+    const whiteBox=frame.white_box&&y>=frame.white_box.y0&&y<=frame.white_box.y1;
+    const fixed=mode==='continuous'?fixedColorsFor(rows[current].id,frame):null;
+    const background=bind==='channel'?ln.background:(whiteBox?(frame.white_box.background||'#FFFFFF'):(fixed?(bind==='caption'?fixed.bottom:fixed.top):(region?.background||ln.background||frame.title_bg)));
+    const bg=luminance(background);
+    const apply=node=>{
+      const textColor=node.style.color||el.style.color;
+      const rgb=textColor.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+      const hex=rgb?'#'+rgb.slice(1,4).map(v=>Number(v).toString(16).padStart(2,'0')).join(''):textColor;
+      const fg=luminance(hex);
+      const low=bg!==null&&fg!==null&&(Math.max(bg,fg)+.05)/(Math.min(bg,fg)+.05)<3;
+      node.style.webkitTextStroke=low?`1.2px ${bg>.179?'#151515':'#FFFFFF'}`:'0px';
+      node.style.paintOrder='stroke fill';
+      node.style.textShadow='none';
+    };
+    apply(el);Array.from(el.children).forEach(apply);
+  }
   function addText(text,ln,frame,color,role='center',bind='bodyTitle'){
     const scale=preview.clientHeight/frame.height;
     const measuredBounds=role.includes('left')||role.includes('precision-channel');
@@ -281,7 +308,8 @@
     const left=measuredBounds?Math.max(0,ln.x0/frame.width*100-1.6):Math.max(1.5,(ln.x0||0)/frame.width*100);
     const right=measuredBounds?Math.max(0,(frame.width-1-ln.x1)/frame.width*100-1.6):Math.max(1.5,(frame.width-1-(ln.x1??frame.width-1))/frame.width*100);
     const fontPx=ln.font_size?ln.font_size*scale:ln.h*scale*1.05;
-    const stroke=Number(ln.stroke||0)*scale,shadowY=Number(ln.shadow_y||0)*scale;
+    // 기본 외곽선/그림자는 제거하고 색 대비 부족 시에만 아래에서 얇게 보정한다.
+    const stroke=0,shadowY=0;
     const family=ln.font_family||frame.font_family||'TmonMonsori';
     const weight=ln.font_weight||frame.font_weight||400;
     const letterPx=ln.letter_spacing!=null?ln.letter_spacing*scale:Math.max(-1.5,-.035*fontPx);
@@ -301,6 +329,8 @@
       accent.textContent=words.slice(0,ln.accent_words).join(' ');accent.style.color=ln.accent;accent.style.marginRight=Math.max(2,fontPx*.11)+'px';
       rest.textContent=words.slice(ln.accent_words).join(' ');el.append(accent,rest);
     }else el.textContent=text||' ';
+    contrastOutline(el,ln,frame,bind);
+    if(ln.max_lines>1){el.style.overflowWrap='anywhere';el.style.wordBreak='keep-all';el.style.textWrap='balance';el.style.lineHeight='1.2';}
     layer.insertBefore(el,badge);
     const fitKey=`${scaleKey(bind)}:${family}:${weight}:${ln.x0}:${ln.y0}`,chars=Math.max(1,[...String(text||' ')].length),cached=fittedText.get(fitKey);
     if(cached&&chars<=cached.capacity){el.style.fontSize=cached.size+'px';if(cached.letter!=null)el.style.letterSpacing=cached.letter+'px';const xscale=cached.xscale??1;if(xscale<1){el.style.transform=`scaleX(${xscale})`;el.style.transformOrigin=role.includes('left')?'left center':'center';}}
@@ -331,7 +361,7 @@
       const scale=preview.clientHeight/frame.height,maxWidth=frame.width*.9,maxX=frame.width*.05;
       const box=addPatch(c.y/frame.height*100,c.height/frame.height*100,c.background,c.x/frame.width*100,c.width/frame.width*100,'channel');
       box.style.borderRadius=((Number(c.radius)||0)*preview.clientHeight/frame.height)+'px';if(c.border)box.style.border=`${Math.max(1,preview.clientHeight/frame.height)}px solid ${c.border}`;
-      const channelLine={x0:maxX,x1:maxX+maxWidth,y0:c.y,y1:c.y+c.height,h:c.height,font_size:c.font_size,font_family:c.font_family,font_weight:c.font_weight,letter_spacing:c.letter_spacing,stroke:0,shadow_y:0};
+      const channelLine={x0:maxX,x1:maxX+maxWidth,y0:c.y,y1:c.y+c.height,h:c.height,font_size:c.font_size,font_family:c.font_family,font_weight:c.font_weight,letter_spacing:c.letter_spacing,background:c.background,stroke:0,shadow_y:0};
       const channelText=addText(value('channel'),channelLine,frame,c.color,'center precision-channel','channel');
       const range=document.createRange();range.selectNodeContents(channelText);
       const contentWidth=range.getBoundingClientRect().width/scale+18;
@@ -385,6 +415,10 @@
   function showScene(nextIndex){
     sceneIndex=Math.max(0,Math.min(sceneTotal()-1,nextIndex));
     kind=mode==='continuous'?'hook':sceneIndex===0?'hook':'body';
+    if(mode==='continuous'){
+      if(sceneIndex>0)markDirty('caption');else currentDirty().delete('caption');
+      inputs.caption.value=sceneIndex>0?(rows[current].sample.caption||'이런 방법이 있었네요'):'';
+    }
     const p=rows[current],source=imageFor(p,sceneIndex);
     base.src=source;const frame=frameFor(p,sceneIndex),bounds=mediaBounds(frame,p.id);Object.assign(media.style,{top:bounds.top+'%',height:bounds.height+'%'});preview.classList.toggle('is-body',mode!=='continuous'&&kind==='body');
     root.querySelectorAll('.layout-a [data-frame]').forEach(x=>x.classList.toggle('active',x.dataset.frame===kind));
@@ -396,10 +430,10 @@
     preview.classList.remove('template-shortem');
     preview.classList.add('template-precision');
     base.hidden=false;media.hidden=false;layer.hidden=false;
-    if(mode==='continuous')dirtyFields.set(`${p.id}:frame`,new Set(frameKeys('frame',p).filter(key=>key!=='caption')));
+    if(mode==='continuous')dirtyFields.set(`${p.id}:frame`,new Set(frameKeys('frame',p).filter(key=>key!=='caption'||sceneIndex>0)));
     else {dirtyFields.set(`${p.id}:hook`,new Set(frameKeys('hook',p)));dirtyFields.set(`${p.id}:body`,new Set(frameKeys('body',p)));}
     grid.querySelectorAll('[data-p20]').forEach((x,i)=>x.classList.toggle('selected',i===index));
-    inputs.channel.value=p.sample.channel||'숏템메이커';inputs.hook1.value=p.sample.hook1;inputs.hook2.value=p.sample.hook2;inputs.bodyTitle.value=p.sample.bodyTitle;inputs.caption.value=p.sample.caption;
+    inputs.channel.value=p.sample.channel||'숏템메이커';inputs.hook1.value=p.sample.hook1;inputs.hook2.value=p.sample.hook2;inputs.bodyTitle.value=p.sample.bodyTitle;inputs.caption.value=p.sample.caption||(mode==='continuous'&&sceneIndex>0?'이런 방법이 있었네요':'');
     for(const bind of ['hook1','hook2','bodyTitle','caption'])inputs[bind].placeholder='';
     root.querySelectorAll('[data-preview-channel]').forEach(x=>x.textContent=inputs.channel.value);
     root.querySelectorAll('[data-preview-hook-1]').forEach(x=>x.textContent=p.sample.hook1);
@@ -432,7 +466,7 @@
     const button=event.target.closest('[data-font-step]');if(!button)return;
     const bind=button.closest('[data-field-key]').dataset.fieldKey;
     const next=Math.min(3,Math.max(.5,textScale(bind)+Number(button.dataset.fontStep)));
-    fontScales.set(scaleKey(bind),next);[...fittedText.keys()].filter(key=>key.startsWith(scaleKey(bind)+':')).forEach(key=>fittedText.delete(key));markDirty(bind);preview.classList.remove('is-pristine');updateSteppers();renderEdit();
+    if(Math.abs(next-1)<.001)fontScales.delete(scaleKey(bind));else fontScales.set(scaleKey(bind),next);[...fittedText.keys()].filter(key=>key.startsWith(scaleKey(bind)+':')).forEach(key=>fittedText.delete(key));markDirty(bind);preview.classList.remove('is-pristine');updateSteppers();renderEdit();
   });
   root.querySelector('.layout-a .edit-pane').addEventListener('click',event=>{
     const button=event.target.closest('[data-position-step]');if(!button)return;
