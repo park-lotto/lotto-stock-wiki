@@ -2111,6 +2111,8 @@
     </section>
     <section class="panel" data-step="3">
       <h3 data-steptitle="deco">6 · 장면꾸미기</h3>
+      <button type="button" class="btn" onclick="openSceneStyleEditor()">장면꾸미기 · 문구와 효과 편집</button>
+      <span id="sceneStyleStatus" class="hint"></span>
       <div class="sub">아래 <b>완성 스타일</b>을 고르면 바로 완성돼요. 실제 장면 위에서 미리보고, 더 손보고 싶으면 <b>직접 다듬기</b>를 펼치세요.</div>
       <!-- 🪞 피팅룸: 좌(큰 미러) + 우(문구·스타일카드·강조·고급) -->
       <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start;margin-top:12px">
@@ -18207,5 +18209,6 @@ async function checkTtsKey(){
 }
 try{ checkTtsKey(); }catch(e){}
 </script>
+<script src="/scene-style-produce.js?v=1"></script>
 </body>
 </html>

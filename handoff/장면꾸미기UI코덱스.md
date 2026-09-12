@@ -1,5 +1,17 @@
 # 장면꾸미기 UI·정밀 템플릿 디자인 시스템
 
+## 2026-09-13 · 문구/효과 실제 제작·렌더 연결 — 배포 보류
+
+- 사용자 지시: 미디어·스타일 탭 제거, 문구/텍스트 + 효과 2탭. 효과는 화면 확대·원형 돋보기·스포트라이트, 위치/크기와 장면별 초기화만 제공한다. **내일 라이브 후 배포한다고 명시했으므로 finish/main 병합 금지.**
+- `precision20-ui.js`의 상태 API를 `scene-style-connect.js`가 사용한다. 기존 localStorage `scene_style_preset`의 크기·위치·색을 유지하고 제작소에서는 실제 자막 시간표를 받는다. 12장 고정 샘플은 제작소에서 실제 자막 구간 수로 교체된다.
+- 제작소 6단계의 `장면꾸미기 · 문구와 효과 편집` 버튼 → 인증된 자산 라우트의 iframe → 동일 출처/source 확인 postMessage → 기존 settings API에 `deco.scene_style` 저장. 서버 성공 응답 후 STATE와 작업 저장을 갱신한다.
+- `scene_style.context_for`는 기존 `_beat_timeline`/`caption_schedule`을 사용한다. 첫 비트의 모든 자막은 훅, 이후는 본문. 무음 구간은 빈 자막으로 유지한다. 제목은 기존 헤드카피/첫 대사에서 채우고 저장한 편집 문구가 있으면 복원한다.
+- 렌더는 `assemble`에서 분기. `render_scene_style.js`가 편집기와 동일한 DOM을 1080×1920 투명 PNG로 생성한다. 영상 영역/글자 위치를 다른 코드로 재구현하지 않는다. 확대/강조는 기존 scene_zoom_of/highlight_fc를 사용한다. 이전 틀·문구는 중복하지 않으며 BGM/효과음은 기존 경로를 사용한다. 오디오는 장면별 AAC 인코딩 없이 마지막에 원본 스트림을 붙인다.
+- 실측: 브라우저 탭·자막 이동/편집·효과 저장, 실제 제작소 버튼→iframe→서버 저장→재조회 모두 성공, 페이지 오류 0. 임시 DB+실제 FFmpeg `assemble`로 3.000초 MP4 생성. 고정형(스포트라이트/돋보기/편집 자막)과 이븐쇼핑 훅/본문 출력 프레임 육안 확인. 기존 테스트68 + 새 타이밍/검증7 통과, 자막 실제 조작40 실패0.
+- QA: `node tools/qa_scene_style_connect.js` → `py tools/qa_scene_style_render.py`; 제작소 브라우저는 `py tools/serve_scene_style_qa.py`(127.0.0.1:8768, 임시 DB 전용) → `node tools/qa_scene_style_produce.js`. 산출물 `.tmp/scene-style-qa/{final.mp4,story-final.mp4,produce-connected.png}`. 정적 작업대는 127.0.0.1:8767/out/scene-style-ui-showcase.html.
+- **사용자가 직접 조정한 설정 원본은 사용자 Chrome의 127.0.0.1:8767 localStorage에 저장되어 있다. 이 값을 지우지 말 것.** 테스트는 별도 headless 프로필/임시 DB이며 사용자 저장값을 파일 기본값으로 복사했다고 주장하지 않는다. 다른 origin의 제작소로 개인 프리셋을 자동 이전하는 기능은 이번에 추가하지 않았다.
+- 내일: 사용자 라이브 종료/배포 지시 후 main 최신 변경과 통합, 배포 전 서버 Node/Puppeteer/Chromium 실행 가능 여부 확인(패키지는 기존 package.json dependencies). 라이브 고객 영상의 최종 렌더는 아직 실행하지 않았다. 오늘 검증은 로컬 생성 미디어/임시 job 기준이다.
+
 ## 2026-09-13 · 이븐쇼핑 채널명·영상 교체
 
 - 사용자 요청으로 t11 채널명 기본값을 숏템메이커로 변경. 이전 저장값이 정확히 이븐쇼핑인 경우에도 숏템메이커로 복원한다.

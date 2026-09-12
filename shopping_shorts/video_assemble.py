@@ -2499,7 +2499,7 @@ def _pre_compose_under_text(in_video, deco, work):
     return str(out), deco
 
 
-def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None, caption_style=None, deco=None, sfx_paths=None):
+def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None, caption_style=None, deco=None, sfx_paths=None, skip_text=False):
     """완성된 믹스 영상(in_video) 위에 우리 자막을 비트 타이밍대로 굽는다.
     비트 경계는 각 비트 tts 길이 누적(t0)으로 계산해, drawtext enable 구간을 전체
     타임라인 기준으로 배치한다(_caption_drawtexts에 t0 오프셋 전달). drawtext 값 안의
@@ -2523,7 +2523,7 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
     if _color_filter.strip():
         filters.append(_color_filter.strip())
     timeline = _beat_timeline(edit_plan, tts_paths)
-    for b in timeline:
+    for b in ([] if skip_text else timeline):
         # 마지막 비트만 0.5초 여운(영상 끝에서 자막이 툭 사라지지 않게). 중간 비트는 tail=0 —
         # 여운을 주면 그 자막이 다음 비트로 0.5초 넘어가 다음 자막과 겹쳐 뭉갠다(전환 겹침, 실측).
         _tail = 0.5 if b is timeline[-1] else 0.0
@@ -2533,7 +2533,7 @@ def _burn_captions(in_video, edit_plan, tts_paths, out_path, work, headcopy=None
                                           cap_offset=b.get("cap_offset", 0.0), tail=_tail,
                                           cap_lines=b.get("caption_lines"),
                                           lead_in=b.get("cap_lead", 0.0)))
-    if headcopy and (headcopy.get("text") or "").strip():
+    if not skip_text and headcopy and (headcopy.get("text") or "").strip():
         # enable 없으면 전체 표시(기존). 팩이 hook_only면 렌더 파생값 _headcopy_enable이 온다.
         hc_enable = ((deco or {}).get("motion") or {}).get("_headcopy_enable")
         if not hc_enable:
@@ -2691,6 +2691,15 @@ def assemble(edit_plan, tts_paths, source_video_paths, out_path, clean_fn=None, 
         #   없어 문제가 안 보였을 뿐이다. 화면을 꽉 채우는 이미지 틀에선 글자가 통째로 묻힌다.
         #   → 그림을 **자막 굽기 전에** 먼저 영상에 합성하고, 틀 슬롯은 비운다(두 번 얹으면
         #     또 덮는다). 순서를 정하는 곳은 여기 한 곳이다(0순위-B).
+        if (deco or {}).get("scene_style"):
+            from .scene_style import compose
+            # 기존 BGM·효과음은 유지하고, 옛 틀/문구는 새 템플릿과 중복하지 않는다.
+            audio_deco = {k: v for k, v in deco.items() if k not in ("template", "extra_texts", "watermark", "overlay", "motion")}
+            with_audio = work / "scene-style-audio.mp4"
+            _burn_captions(base_video, edit_plan, tts_paths, with_audio, work,
+                           deco=audio_deco, sfx_paths=sfx_paths, skip_text=True)
+            return compose(with_audio, _beat_timeline(edit_plan, tts_paths),
+                           deco["scene_style"], out_path, work, headcopy)
         base_video, deco = _pre_compose_under_text(base_video, deco, work)
         return _burn_captions(base_video, edit_plan, tts_paths, out_path, work, headcopy, caption_style, deco, sfx_paths=sfx_paths)
     finally:

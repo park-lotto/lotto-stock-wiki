@@ -1,0 +1,9 @@
+.layout-a .tool-tabs{display:grid;grid-template-columns:1fr 1fr}
+.scene-text-panel[hidden],.scene-effects-panel[hidden],[data-highlight-controls][hidden]{display:none!important}
+.scene-effects-panel{padding:12px 0;min-height:350px}.scene-effects-panel p{color:#97adbc;font-size:13px}
+.scene-effects-panel label{display:block;margin:24px 0;color:#cbdce4;font-size:14px}.scene-effects-panel input{display:block;width:100%;margin-top:14px;accent-color:#38dbb1}.scene-effects-panel output{float:right;color:#38dbb1}
+.scene-effect-choices{display:flex;gap:8px}.scene-effect-choices button{flex:1;background:#10242f;color:#cbdce4;border:1px solid #35505b;border-radius:8px;padding:12px 6px;cursor:pointer}.scene-effect-choices button.active{color:#062b23;background:#38dbb1}
+.scene-media-clip{position:absolute;left:0;width:100%;overflow:hidden;z-index:3}.scene-media-clip .precision-media{position:absolute;inset:0;object-fit:cover}.scene-focus{position:absolute;border:2px solid white;border-radius:50%;pointer-events:none;z-index:4;background-repeat:no-repeat}.scene-focus[hidden]{display:none}
+.scene-embedded .direction-bar,.scene-embedded .appbar,.scene-embedded .stepper{display:none!important}.scene-embedded .layout-a>aside.pane:first-child{height:95vh}.scene-embedded .layout-a{min-height:100vh}
+.scene-focus{overflow:hidden}.scene-lens{position:absolute;object-fit:cover;object-position:center;max-width:none}.scene-lens[hidden]{display:none}.layout-a .stage-note.right,.precision-badge{display:none!important}
+.scene-effects-reset{width:100%;height:39px;border:1px solid #35505b;border-radius:9px;background:transparent;color:#bac8cf;cursor:pointer}

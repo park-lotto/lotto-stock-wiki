@@ -69,8 +69,10 @@
   const inputs=Object.fromEntries([...root.querySelectorAll('.layout-a [data-bind]')].map(x=>[x.dataset.bind,x]));
   const value=k=>inputs[k]?.value||' ';
   const rgba=hex=>hex&&/^#[0-9a-f]{6}$/i.test(hex)?hex:'#111111';
-  const frameFor=(p,index=sceneIndex)=>p.mode==='continuous'?p.frame:p[index===0?'hook':'body'];
-  const imageFor=(p,index=sceneIndex)=>p.mode==='continuous'?p.frame_image:(index===0?p.hook_image:p.body_image);
+  let sceneContext=null,effects={};
+  const sceneKind=index=>sceneContext?.scenes?.[index]?.kind||(index===0?'hook':'body');
+  const frameFor=(p,index=sceneIndex)=>p.mode==='continuous'?p.frame:p[sceneKind(index)];
+  const imageFor=(p,index=sceneIndex)=>p.mode==='continuous'?p.frame_image:(sceneKind(index)==='hook'?p.hook_image:p.body_image);
   const frameKind=()=>mode==='continuous'?'frame':kind;
   const scaleKey=bind=>`${rows[current].id}:${frameKind()}:${bind}${bind==='caption'?':'+sceneIndex:''}`;
   const textScale=bind=>fontScales.get(scaleKey(bind))||1;
@@ -82,7 +84,7 @@
   const currentHasCaptionSlot=()=>mode==='continuous'?frameFor(rows[current])?.caption_slot?.mode==='reserved':kind==='body'&&storyHasCaptionSlot(frameFor(rows[current]));
   const captionOffset=()=>(captionDrags.get(captionKey())?.y||0)+(currentHasCaptionSlot()?0:(kind==='body'||mode==='continuous')?(captionPositions.get(captionKey())||0)*6:0);
   const captionX=()=>captionDrags.get(captionKey())?.x||0;
-  function syncCaption(){inputs.caption.value=captionTexts.get(captionKey())??(rows[current].sample.caption||'이런 방법이 있었네요');updateCount(inputs.caption);}
+  function syncCaption(){inputs.caption.value=captionTexts.get(captionKey())??sceneContext?.scenes?.[sceneIndex]?.caption??(rows[current].sample.caption||'이런 방법이 있었네요');updateCount(inputs.caption);}
   const fixedCaptionShift=frame=>{
     if(mode!=='continuous')return 0;
     const footer=(frame?.cleanup_regions||[]).find(region=>region.role==='source-footer');
@@ -142,7 +144,7 @@
   fixedPanel.innerHTML='<div class="fixed-quick-head"><b>고정형 빠른 조절</b><button type="button" data-fixed-reset>전체 초기화</button></div><div class="fixed-size-control" data-fixed-size="top"><span>상단 제목칸</span><button type="button" data-fixed-step="-1">−</button><input type="range" min="12" max="50" step="1" data-fixed-range="top"><output>0%</output><button type="button" data-fixed-step="1">＋</button></div><div class="fixed-size-control" data-fixed-size="bottom"><span>하단 자막칸</span><button type="button" data-fixed-step="-1">−</button><input type="range" min="0" max="35" step="1" data-fixed-range="bottom"><output>0%</output><button type="button" data-fixed-step="1">＋</button></div><div class="fixed-palette-row"><button type="button" data-fixed-palette="original">원본</button><button type="button" data-fixed-palette="mint">민트</button><button type="button" data-fixed-palette="yellow">옐로</button><button type="button" data-fixed-palette="pink">핑크</button></div><div class="fixed-color-grid"><label><span>제목 배경</span><input type="color" data-fixed-color="top"></label><label><span>하단 배경</span><input type="color" data-fixed-color="bottom"></label><label><span>제목 1</span><input type="color" data-fixed-color="title1"></label><label><span>제목 2</span><input type="color" data-fixed-color="title2"></label></div>';
   motionPanel.after(fixedPanel);
   const fixedPalettes={mint:{top:'#082923',bottom:'#082923',title1:'#FFFFFF',title2:'#43E2B4'},yellow:{top:'#17140A',bottom:'#17140A',title1:'#FFFFFF',title2:'#FFE24A'},pink:{top:'#24101A',bottom:'#24101A',title1:'#FFFFFF',title2:'#FF78B7'}};
-  function syncHookMotionUI(){motionPanel.hidden=mode!=='story'||sceneIndex!==0}
+  function syncHookMotionUI(){motionPanel.hidden=true}
   const minimumFixedTop=frame=>Math.min(46,Math.max(12,Math.ceil((Math.max(0,...(frame?.lines||[]).filter(line=>line.bind!=='caption').map(line=>line.y1))+2)/(frame?.height||1)*100)));
   function syncMediaLayout(){
     const p=rows[current],frame=frameFor(p),bounds=mediaBounds(frame,p?.id);
@@ -188,7 +190,7 @@
       texts.forEach((el,index)=>play(el,[{opacity:0,transform:'scale(1.32)'},{opacity:1,transform:'scale(.96)',offset:.7},{opacity:1,transform:'scale(1)'}],{...timing,duration:time(480),delay:time(70+index*55)}));
     }
   }
-  function sceneTotal(){return 12}
+  function sceneTotal(){return sceneContext?.scenes?.length||12}
   function updateSceneUI(){
     root.querySelectorAll('.layout-a [data-scene-current]').forEach(el=>el.textContent=String(sceneIndex+1));
     root.querySelectorAll('.layout-a [data-scene-total]').forEach(el=>el.textContent=String(sceneTotal()));
@@ -346,7 +348,7 @@
     [...layer.children].filter(x=>x!==badge).forEach(x=>x.remove());
     const p=rows[current],frame=frameFor(p);if(!frame)return;
     base.hidden=!!frame.design_label;
-    const mediaSource=frame.media_source||uniformMedia;if(media.getAttribute('src')!==mediaSource)media.src=mediaSource;
+    const mediaSource=sceneContext?.scenes?.[sceneIndex]?.media||frame.media_source||uniformMedia;if(media.getAttribute('src')!==mediaSource)media.src=mediaSource;
     badge.textContent=frame.design_label?frame.design_label:'원본 실측 편집';
     badge.hidden=!!frame.design_label;
     const dirty=currentDirty();
@@ -429,7 +431,8 @@
   }
   function showFrame(next){
     kind=mode==='continuous'?'hook':next;
-    if(mode!=='continuous'&&kind==='hook')sceneIndex=0;
+    if(mode!=='continuous'&&sceneContext?.scenes?.length){const index=sceneContext.scenes.findIndex(s=>s.kind===kind);if(index>=0)sceneIndex=index;else kind=sceneKind(sceneIndex);}
+    else if(mode!=='continuous'&&kind==='hook')sceneIndex=0;
     else if(mode!=='continuous'&&sceneIndex===0)sceneIndex=1;
     const p=rows[current],source=imageFor(p);
     base.src=source;
@@ -442,7 +445,7 @@
   }
   function showScene(nextIndex){
     sceneIndex=Math.max(0,Math.min(sceneTotal()-1,nextIndex));
-    kind=mode==='continuous'?'hook':sceneIndex===0?'hook':'body';
+    kind=mode==='continuous'?'hook':sceneKind(sceneIndex);
     if(mode==='continuous'){
       markDirty('caption');
       inputs.caption.value=sceneIndex>0?(rows[current].sample.caption||'이런 방법이 있었네요'):'';
@@ -474,6 +477,7 @@
     const top=frame?.top_band?.color||frame?.title_bg||'#111111';
     const accentInput=colorRow?.querySelector('[data-color-role="accent"]'),topInput=colorRow?.querySelector('[data-color-role="background"]');
     if(accentInput)accentInput.value=accent;if(topInput)topInput.value=top;
+    if(sceneContext?.text)for(const [key,text] of Object.entries(sceneContext.text))if(inputs[key])inputs[key].value=text;
     preview.classList.remove('is-pristine');showFrame(kind);
   }
   grid.addEventListener('click',e=>{const card=e.target.closest('[data-p20]');if(card)selectPreset(+card.dataset.p20)});
@@ -489,6 +493,7 @@
   });
   Object.values(inputs).forEach(input=>input.addEventListener('input',()=>{
     if(input.dataset.bind==='caption')captionTexts.set(captionKey(),input.value);
+    else if(sceneContext?.text)sceneContext.text[input.dataset.bind]=input.value;
     markDirty(input.dataset.bind);preview.classList.remove('is-pristine');renderEdit();
   }));
   root.querySelector('.layout-a .edit-pane').addEventListener('click',event=>{
@@ -549,7 +554,7 @@
   });
   const saveButton=root.querySelector('.layout-a .secondary');
   saveButton?.addEventListener('click',()=>{
-    const p=rows[current],snapshot={mode,presetId:p.id,sceneIndex,frameKind:frameKind(),hookMotion,hookMotionSpeed,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),colors:Object.fromEntries(colorOverrides),fixedLayouts:Object.fromEntries(fixedLayouts),fixedColors:Object.fromEntries(fixedColors),captionTexts:Object.fromEntries(captionTexts),captionDrags:Object.fromEntries(captionDrags),captionPositions:Object.fromEntries(captionPositions)};
+    const snapshot=window.sceneStyle.snapshot();
     localStorage.setItem('scene_style_preset',JSON.stringify(snapshot));saveButton.textContent='✓ 현재 설정 저장됨';setTimeout(()=>saveButton.textContent='현재 설정 저장',1400);
   });
   root.querySelector('.layout-a .edit-pane').addEventListener('click',event=>{
@@ -600,4 +605,28 @@
       }
     }catch(error){console.warn('저장 설정 복원 실패',error);}
   }
+  window.sceneStyle={
+    snapshot:()=>({version:1,mode,presetId:rows[current].id,sceneIndex,frameKind:frameKind(),text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),colors:Object.fromEntries(colorOverrides),fixedLayouts:Object.fromEntries(fixedLayouts),fixedColors:Object.fromEntries(fixedColors),captionTexts:Object.fromEntries(captionTexts),captionDrags:Object.fromEntries(captionDrags),captionPositions:Object.fromEntries(captionPositions),effects}),
+    load(context,saved){
+      sceneContext=context;
+      if(saved){
+        for(const [name,map] of Object.entries({fontScales,textOffsets,colors:colorOverrides,fixedLayouts,fixedColors,captionTexts,captionDrags,captionPositions})){
+          map.clear();for(const [key,value] of Object.entries(saved[name]||{}))map.set(key,value);
+        }
+        effects=saved.effects||{};
+        mode=saved.mode==='continuous'?'continuous':'story';rows=mode==='continuous'?fixedRows:storyRows;
+        modeBar.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x.dataset.templateMode===mode));
+        renderGrid();selectPreset(Math.max(0,rows.findIndex(p=>p.id===saved.presetId)));
+        for(const [key,value] of Object.entries(saved.text||{}))if(inputs[key]&&key!=='caption')inputs[key].value=value;
+      }
+      if(context?.text)for(const [key,value] of Object.entries(context.text))if(inputs[key])inputs[key].value=value;
+      if(context?.scenes?.length)showScene(0);
+      fittedText.clear();renderEdit();
+    },
+    show(index){showScene(index);return this.geometry()},
+    geometry:()=>({media:mediaBounds(frameFor(rows[current]),rows[current].id),sceneIndex,kind:sceneKind(sceneIndex)}),
+    effect(value){if(value!==undefined)effects[String(sceneIndex)]=value;return effects[String(sceneIndex)]||{}},
+    refresh(){fittedText.clear();renderEdit()},
+  };
+  try{effects=JSON.parse(localStorage.getItem('scene_style_preset')||'null')?.effects||{}}catch{}
 })();
