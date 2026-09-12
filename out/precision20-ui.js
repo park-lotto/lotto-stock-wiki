@@ -16,7 +16,7 @@
   const fixedLayouts=new Map(),fixedColors=new Map();
   const fixedBaseLayout=frame=>{
     const footer=(frame?.cleanup_regions||[]).find(region=>region.role==='source-footer');
-    return {top:Math.round((frame?.video_from?.y||0)/(frame?.height||1)*100),bottom:footer?Math.round(footer.height/frame.height*100):0};
+    return {top:Math.round((frame?.video_from?.y||0)/(frame?.height||1)*100),bottom:footer&&frame?.lines?.some(l=>l.bind==='caption')?Math.min(14,Math.round(footer.height/frame.height*100)):0};
   };
   const fixedLayoutFor=(presetId,frame)=>fixedLayouts.get(presetId)||fixedBaseLayout(frame);
   const fixedBaseColors=frame=>{
@@ -333,18 +333,20 @@
       rest.textContent=words.slice(ln.accent_words).join(' ');el.append(accent,rest);
     }else el.textContent=text||' ';
     contrastOutline(el,ln,frame,bind);
+    if(frame.reference_style){el.style.webkitTextStroke=ln.stroke?`${ln.stroke*scale}px #080808`:'0px';el.style.textShadow=ln.shadow_y?`0 ${ln.shadow_y*scale}px ${2*scale}px #000000AA`:'none';}
     if(ln.max_lines>1){el.style.overflowWrap='anywhere';el.style.wordBreak='keep-all';el.style.textWrap='balance';el.style.lineHeight='1.2';}
     layer.insertBefore(el,badge);
     if(bind==='caption'){el.style.left=(left+captionX())+'%';el.style.right=(right-captionX())+'%';}
     const fitKey=`${scaleKey(bind)}:${family}:${weight}:${ln.x0}:${ln.y0}`,chars=Math.max(1,[...String(text||' ')].length),cached=fittedText.get(fitKey);
     if(cached&&chars<=cached.capacity){el.style.fontSize=cached.size+'px';if(cached.letter!=null)el.style.letterSpacing=cached.letter+'px';const xscale=cached.xscale??1;if(xscale<1){el.style.transform=`scaleX(${xscale})`;el.style.transformOrigin=role.includes('left')?'left center':'center';}}
-    else {const isStory=mode==='story',manualStory=isStory&&fontScales.has(scaleKey(bind));if(!manualStory)fitText(el,scaledFont,isStory ? .3 : .12,true);const fitted=parseFloat(el.style.fontSize)||scaledFont;el.style.fontSize=fitted+'px';let fittedLetter=parseFloat(getComputedStyle(el).letterSpacing)||0;const range=document.createRange();range.selectNodeContents(el);const measuredWidth=()=>Math.max(el.scrollWidth,range.getBoundingClientRect().width);const minLetter=isStory?-fitted*.08:-fitted*.3;while(!manualStory&&measuredWidth()>el.clientWidth+2&&fittedLetter>minLetter){fittedLetter-=.2;el.style.letterSpacing=Math.max(minLetter,fittedLetter)+'px';}const overflowScale=el.clientWidth/Math.max(1,measuredWidth())*.98;const xscale=isStory?(manualStory?1:Math.min(1,overflowScale)):Math.min(Number(ln.scale_x)||1,overflowScale);if(xscale<1){el.style.transform=`scaleX(${xscale})`;el.style.transformOrigin=role.includes('left')?'left center':'center';}fittedText.set(fitKey,{capacity:chars+1,size:fitted,letter:fittedLetter,xscale});}
+    else {const isStory=mode==='story',manualSize=fontScales.has(scaleKey(bind));if(!manualSize)fitText(el,scaledFont,isStory ? .3 : .12,true);const fitted=parseFloat(el.style.fontSize)||scaledFont;el.style.fontSize=fitted+'px';let fittedLetter=parseFloat(getComputedStyle(el).letterSpacing)||0;const range=document.createRange();range.selectNodeContents(el);const measuredWidth=()=>Math.max(el.scrollWidth,range.getBoundingClientRect().width);const minLetter=isStory?-fitted*.08:-fitted*.3;while(!manualSize&&measuredWidth()>el.clientWidth+2&&fittedLetter>minLetter){fittedLetter-=.2;el.style.letterSpacing=Math.max(minLetter,fittedLetter)+'px';}const overflowScale=el.clientWidth/Math.max(1,measuredWidth())*.98;const xscale=manualSize?1:isStory?Math.min(1,overflowScale):Math.min(Number(ln.scale_x)||1,overflowScale);if(xscale<1){el.style.transform=`scaleX(${xscale})`;el.style.transformOrigin=role.includes('left')?'left center':'center';}fittedText.set(fitKey,{capacity:chars+1,size:fitted,letter:fittedLetter,xscale});}
     return el;
   }
   function renderEdit(){
     [...layer.children].filter(x=>x!==badge).forEach(x=>x.remove());
     const p=rows[current],frame=frameFor(p);if(!frame)return;
     base.hidden=!!frame.design_label;
+    const mediaSource=frame.media_source||uniformMedia;if(media.getAttribute('src')!==mediaSource)media.src=mediaSource;
     badge.textContent=frame.design_label?frame.design_label:'원본 실측 편집';
     badge.hidden=!!frame.design_label;
     const dirty=currentDirty();
@@ -381,7 +383,7 @@
     if(dirty.has('channel')&&channelBoxes.length){
       channelBoxes.forEach(c=>{
       if(c.designed){
-        const ln={x0:c.x,x1:c.x+c.width,y0:c.y,h:c.height,font_size:c.font_size,font_family:c.font_family,font_weight:c.font_weight,background:c.background};
+        const ln={x0:c.x,x1:c.x+c.width,y0:c.y,h:c.height,font_size:c.font_size,font_family:c.font_family,font_weight:c.font_weight,letter_spacing:c.letter_spacing,background:c.background};
         addText(value('channel'),ln,frame,c.color,'center precision-channel','channel');return;
       }
       const scale=preview.clientHeight/frame.height,maxWidth=frame.width*.9,maxX=frame.width*.05;
@@ -442,7 +444,7 @@
     sceneIndex=Math.max(0,Math.min(sceneTotal()-1,nextIndex));
     kind=mode==='continuous'?'hook':sceneIndex===0?'hook':'body';
     if(mode==='continuous'){
-      if(sceneIndex>0)markDirty('caption');else currentDirty().delete('caption');
+      markDirty('caption');
       inputs.caption.value=sceneIndex>0?(rows[current].sample.caption||'이런 방법이 있었네요'):'';
     }
     const p=rows[current],source=imageFor(p,sceneIndex);
@@ -456,7 +458,7 @@
     preview.classList.remove('template-shortem');
     preview.classList.add('template-precision');
     base.hidden=false;media.hidden=false;layer.hidden=false;
-    if(mode==='continuous')dirtyFields.set(`${p.id}:frame`,new Set(frameKeys('frame',p).filter(key=>key!=='caption'||sceneIndex>0)));
+    if(mode==='continuous')dirtyFields.set(`${p.id}:frame`,new Set(frameKeys('frame',p)));
     else {dirtyFields.set(`${p.id}:hook`,new Set(frameKeys('hook',p)));dirtyFields.set(`${p.id}:body`,new Set(frameKeys('body',p)));}
     grid.querySelectorAll('[data-p20]').forEach((x,i)=>x.classList.toggle('selected',i===index));
     inputs.channel.value=p.sample.channel||'숏템메이커';inputs.hook1.value=p.sample.hook1;inputs.hook2.value=p.sample.hook2;inputs.bodyTitle.value=p.sample.bodyTitle;inputs.caption.value=p.sample.caption||(mode==='continuous'&&sceneIndex>0?'이런 방법이 있었네요':'');
@@ -566,8 +568,8 @@
   preview.addEventListener('pointermove',event=>{
     if(!captionDrag||event.pointerId!==captionDrag.pointer)return;
     const d=captionDrag;
-    const dx=Math.max(d.rect.left-d.bounds.left,Math.min(d.rect.right-d.bounds.right,event.clientX-d.startX));
-    const dy=Math.max(d.rect.top-d.bounds.top,Math.min(d.rect.bottom-d.bounds.bottom,event.clientY-d.startY));
+    const dx=Math.max(Math.min(0,d.rect.left-d.bounds.left),Math.min(Math.max(0,d.rect.right-d.bounds.right),event.clientX-d.startX));
+    const dy=Math.max(Math.min(0,d.rect.top-d.bounds.top),Math.min(Math.max(0,d.rect.bottom-d.bounds.bottom),event.clientY-d.startY));
     captionDrags.set(captionKey(),{x:d.origin.x+dx/d.rect.width*100,y:d.origin.y+dy/d.rect.height*100});
     markDirty('caption');renderEdit();
   });

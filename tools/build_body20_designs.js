@@ -89,13 +89,49 @@ const window=context.window;
     }else{
       const capH=d.video-d.caption;
       surface(0,d.caption,360,capH,`linear-gradient(110deg,${dark?'#F5F3EE':'#FFFFFF'},${dark?'#E8E6E0':d.paper})`,{borderTop:d.accent+'40',shadow:'inset 0 1px 0 #FFFFFF99'});
-      if(['editorial','profile','community'].includes(d.family))surface(23,d.caption+capH*.28,2,capH*.44,d.accent+'A0',{radius:2});
       line('caption',34,d.caption+5,292,capH-10,capH<40?17:20,'#30343A','#FFFFFF');
     }
     frame.ornaments=frame.ornaments.filter(o=>!['rule','bookmark','spark'].includes(o.type));
     return frame;
   };
-  for(const p of window.PRECISION20||[]){const d=profiles[p.id];if(d)p.body=makeBody(p,d);}
+  for(const p of window.PRECISION20||[]){
+    const d=profiles[p.id];if(d)p.body=makeBody(p,{...d,end:640});
+    const h=p.hook,empty=h.white_box&&!h.white_box.text;
+    if(empty){
+      const lastTitle=Math.max(0,...h.lines.map(l=>l.y1??l.y0+l.h));
+      const next=Math.max(lastTitle+8,h.white_box.y0);
+      h.video_from={y:next,pct:next/h.height*100};h.white_box=null;
+      h.cleanup_regions=(h.cleanup_regions||[]).map(r=>r.role==='original-title'?{...r,height:Math.max(0,next-r.y)}:r);
+    }
+    h.cleanup_regions=(h.cleanup_regions||[]).filter(r=>r.role!=='source-footer');
+  }
+  const even=window.PRECISION20.find(p=>p.id==='t11');
+  if(even){
+    const line=(bind,x,y,w,h,size,color)=>({bind,x0:x,x1:x+w,y0:y,y1:y+h,h,font_size:size,font_family:'TmonMonsori',font_weight:400,color,background:'#212121',no_patch:true,max_lines:1,letter_spacing:-.6});
+    const frame=(width,height,video,label,source)=>({width,height,design_label:label,reference_style:true,title_bg:'#212121',font_family:'TmonMonsori',font_weight:400,
+      benchmark:{source,note:'사용자 제공 이븐쇼핑 원본의 배치·색상 재현. 서체는 대조한 후보이며 픽셀 동일성을 보증하지 않음'},
+      cleanup_regions:[{role:'original-title',x:0,y:0,width,height:video,background:'#212121'}],video_from:{y:video,pct:video/height*100},
+      lines:[],surfaces:[],ornaments:[{type:'menu',x:16,y:14,width:40,height:25,color:'#E6E9E5'},{type:'search',x:width-53,y:9,width:29,height:29,color:'#D9DFDB'}],channel_boxes:[],boxes:[],white_box:null});
+    even.sample={...even.sample,channel:'이븐쇼핑',hook1:'건망증 환자를 살려낸',hook2:'일본 천재의 발명품',bodyTitle:'건망증 환자를 살려낸 천재의 발명품?',caption:'전 세계 건망증 환자들의'};
+    even.hook_image='template_refs/even-hook-reference.png';even.body_image='template_refs/even-body-reference.png';
+    even.hook=frame(425,748,285,'이븐쇼핑 원본형 · 훅',even.hook_image);
+    even.hook.media_source='assets/scene-style/even-hook-media.png';
+    even.hook.lines=[{...line('hook1',15,103,395,49,43,'#FFFFFF'),stroke:2,shadow_y:2},
+      {...line('hook2',13,151,399,62,50,'#00F9ED'),stroke:2,shadow_y:2},
+      {...line('bodyTitle',19,231,387,34,25,'#080808'),background:'#FFFFFF'}];
+    even.hook.surfaces=[{x:0,y:0,width:425,height:285,background:'linear-gradient(180deg,#202221,#202020 70%,#424441)'},
+      {x:0,y:68,width:425,height:1,background:'#727772'},
+      {x:5,y:225,width:415,height:51,background:'linear-gradient(180deg,#FFFFFF,#FFFFFF 72%,#ECEEEC)',shadow:'0 0 12px 7px #FFFFFFB0',radius:2}];
+    even.body=frame(420,746,229,'이븐쇼핑 원본형 · 본문',even.body_image);
+    even.body.media_source='assets/scene-style/even-body-media.png';even.body.caption_slot={mode:'reserved'};
+    even.body.channel_box={x:95,y:6,width:230,height:48,font_size:40,font_family:'GmarketSansBold',font_weight:400,letter_spacing:7,color:'#FFFFFF',background:'#404040',designed:true};
+    even.body.lines=[{...line('bodyTitle',15,82,390,39,27,'#FFFFFF'),background:'#3F3F3F'},
+      {...line('caption',23,173,374,40,27,'#090909'),background:'#FFFFFF'}];
+    even.body.surfaces=[{x:0,y:0,width:420,height:156,background:'linear-gradient(180deg,#454545,#3B3B3B)'},
+      {x:0,y:67,width:420,height:1,background:'#949494'},{x:0,y:156,width:420,height:73,background:'linear-gradient(180deg,#FFFFFF,#FAFBFA)'}];
+    // 원본 조회/댓글 수는 사용자의 영상 수치가 아니므로 복제하지 않는다.
+    window.PRECISION20.sort((a,b)=>Number(b.id==='t11')-Number(a.id==='t11'));
+  }
   fs.writeFileSync(destination,'window.PRECISION20='+JSON.stringify(window.PRECISION20)+';\n','utf8');
   console.log(`본문 디자인 ${window.PRECISION20.length}종 생성`);
 })();
