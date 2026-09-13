@@ -24,9 +24,15 @@ def build_prompt_request(script, source_text):
         "[슬롯마다 셋 중 하나를 고른다]\n"
         "  real    실존 인물이 주인공이고 **좋은 얘기**(복귀·성과·봉사·미담)인 컷 → 실제 사진을 그대로 쓴다\n"
         "  variant 실존 인물이 주인공인데 **안 좋은 얘기**(논란·사고·비판·수사)인 컷 → 실제 사진을 참조로 변형한다\n"
-        "  gen     특정 인물이 주인공이 아닌 배경·상황·개념 컷 → 처음부터 생성한다\n"
-        "  ★real·variant를 고르면 `query`에 **한국어 이미지 검색어**를 쓴다(예: '박수홍 홈쇼핑'). 인물 이름 + 상황 낱말.\n"
-        "  ★인물 이름이 기사에 안 나오면 real·variant를 쓰지 마라. gen으로 간다.\n"
+        "  scene   인물이 아니라 **장소·사물**이 주인공인 컷 → 검색해서 실제 사진을 쓴다\n"
+        "          (KTX 승강장·휠체어 경사로·슬럼가 골목처럼 '그 자리에 가면 있는' 것)\n"
+        "  gen     장소·사물로 찍을 수 없는 **개념·감정** 컷 → 처음부터 생성한다\n"
+        "          (침묵·여론·시간이 흐름처럼 눈에 안 보이는 것, 그리고 특정 개인이 나와야 하는데 검색이 안 될 때)\n"
+        "  ★real·variant·scene을 고르면 `query`에 **한국어 이미지 검색어**를 쓴다.\n"
+        "    real·variant는 인물 이름 + 상황(예: '박수홍 홈쇼핑'). scene은 장소·사물 이름(예: 'KTX 승강장').\n"
+        "  ★인물 이름이 기사에 안 나오면 real·variant를 쓰지 마라. scene이나 gen으로 간다.\n"
+        "  ★scene 검색어에 **사람을 넣지 마라** — '노트북 보는 사람' 같은 건 스톡사진이 와서 광고처럼 보인다.\n"
+        "    장소·사물만 적어라. 사람이 꼭 필요하면 gen으로 만들어라.\n"
         "\n"
         "[프롬프트 규칙]\n"
         "- cast: 등장 인물마다 인상착의를 한 문장으로 고정해 모든 슬롯에 같은 문구를 그대로 쓴다(컷 간 같은 인물로 나오게). 실명·유명인 이름은 쓰지 말고 외양만.\n"
@@ -39,7 +45,7 @@ def build_prompt_request(script, source_text):
         "\n"
         "출력은 JSON 하나만:\n"
         '{"cast": {"<슬롯>": "..."}, "prompts": {"<슬롯>": "..."}, '
-        '"sources": {"<슬롯>": {"kind": "real|variant|gen", "query": "검색어 또는 빈 문자열"}}}\n\n'
+        '"sources": {"<슬롯>": {"kind": "real|variant|scene|gen", "query": "검색어 또는 빈 문자열"}}}\n\n'
         f"[슬롯 목록] {slots}\n[컷↔슬롯]\n{cuts}\n\n[소재]\n{source_text[:1500]}\n"
     )
 
@@ -67,12 +73,12 @@ def make_prompts(script, source_text, call, *, log=print):
         v = (d.get("sources") or {}).get(k) or {}
         kind = str(v.get("kind") or "gen").lower()
         query = (v.get("query") or "").strip()
-        if kind not in spec.PHOTO_KINDS or (kind in ("real", "variant") and not query):
+        if kind not in spec.PHOTO_KINDS or (kind in ("real", "variant", "scene") and not query):
             kind, query = "gen", ""
         sources[k] = {"kind": kind, "query": query}
-    n_real = sum(1 for v in sources.values() if v["kind"] == "real")
-    n_var = sum(1 for v in sources.values() if v["kind"] == "variant")
-    log(f"[brainbulb.prompts] 슬롯 {len(prompts)}개 — 실물 {n_real} · 변형 {n_var} · 생성 {len(prompts) - n_real - n_var}")
+    from collections import Counter
+    c = Counter(v["kind"] for v in sources.values())
+    log(f"[brainbulb.prompts] 슬롯 {len(prompts)}개 — 실물 {c['real']} · 변형 {c['variant']} · 장소 {c['scene']} · 생성 {c['gen']}")
     return {"cast": cast, "prompts": prompts, "sources": sources}
 
 
@@ -158,7 +164,7 @@ def _soften(prompt):
 def _from_photo(slot, src, path, kind, workdir, log):
     """검색 사진 → real이면 그대로 복사, variant면 참조 변형. 성공하면 True."""
     from . import photos
-    if kind == "real":
+    if kind in ("real", "scene"):          # scene도 찾은 사진을 그대로 쓴다(변형 안 함)
         from PIL import Image
         Image.open(src["path"]).convert("RGB").save(path, "PNG")
         return True
@@ -175,7 +181,7 @@ def generate_all(prompts, workdir, imagegen, *, sources=None, log=print):
     d = os.path.join(workdir, "img")
     os.makedirs(d, exist_ok=True)
     sources = sources or {}
-    out, made, failed, by_kind = {}, 0, [], {"real": 0, "variant": 0, "gen": 0}
+    out, made, failed, by_kind = {}, 0, [], {"real": 0, "variant": 0, "scene": 0, "gen": 0}
     seen_photos = set()          # ★같은 사진이 두 컷에 들어가는 걸 막는다(편 하나에서 돌려 쓴다)
     for slot, p in sorted(prompts.items(), key=lambda kv: int(kv[0])):
         path = os.path.join(d, f"{int(slot):02d}.png")
@@ -188,9 +194,11 @@ def generate_all(prompts, workdir, imagegen, *, sources=None, log=print):
             by_kind[kind] = by_kind.get(kind, 0) + 1
             continue
         done, used_kind = False, kind
-        if kind in ("real", "variant") and query:
+        if kind in ("real", "variant", "scene") and query:
             from . import photos
-            hit = photos.pick_photo(query, workdir, slot, log=log, seen=seen_photos)
+            # ★scene은 얼굴을 보지 않는다 — 승강장·골목처럼 사람이 없는 게 정상이다
+            hit = photos.pick_photo(query, workdir, slot, log=log, seen=seen_photos,
+                                    want_face=(kind != "scene"))
             if hit:
                 try:
                     done = _from_photo(slot, hit, path, kind, workdir, log)
@@ -220,6 +228,6 @@ def generate_all(prompts, workdir, imagegen, *, sources=None, log=print):
         made += 1
         by_kind[used_kind] = by_kind.get(used_kind, 0) + 1
         out[str(slot)] = path
-    log(f"[brainbulb.images] {len(out)}장 (새로 {made}장) — 실물 {by_kind.get('real',0)} · 변형 {by_kind.get('variant',0)} · 생성 {by_kind.get('gen',0)}"
+    log(f"[brainbulb.images] {len(out)}장 (새로 {made}장) — 실물 {by_kind.get('real',0)} · 변형 {by_kind.get('variant',0)} · 장소 {by_kind.get('scene',0)} · 생성 {by_kind.get('gen',0)}"
         + (f" · 실패 슬롯 {failed}" if failed else ""))
     return out

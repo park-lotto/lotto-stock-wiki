@@ -146,3 +146,44 @@ def test_generate_all_reuse_keys_on_kind_change(tmp_path, monkeypatch):
                         sources={"1": {"kind": "variant", "query": "q"}}, log=lambda *a: None)
     second = json.load(open(str(tmp_path / "img" / "01.png.json"), encoding="utf-8"))
     assert first["hash"] != second["hash"] and second["kind"] == "variant"
+
+
+# ── scene: 장소·사물 검색 (2026-09-13 사장님 "이미지도 구글 검색으로 다양하게") ──────────
+def test_scene_kind_searches_without_face(tmp_path, monkeypatch):
+    """★scene은 얼굴을 보지 않는다 — 승강장·골목은 사람이 없는 게 정상이다."""
+    seen = {}
+    src = tmp_path / "f.jpg"; _png(src, color=(80, 120, 60))
+    def fake_pick(q, wd, slot, **k):
+        seen["want_face"] = k.get("want_face")
+        return {"path": str(src), "source": "연합뉴스"}
+    monkeypatch.setattr(photos, "pick_photo", fake_pick)
+    out = images.generate_all({"1": "p"}, str(tmp_path), lambda a, b: pytest.fail("생성을 부르면 안 된다"),
+                              sources={"1": {"kind": "scene", "query": "KTX 승강장"}}, log=lambda *a: None)
+    assert seen["want_face"] is False
+    assert json.load(open(out["1"] + ".json", encoding="utf-8"))["kind"] == "scene"
+
+
+def test_real_kind_still_requires_face(tmp_path, monkeypatch):
+    """사람이 주인공인 real은 예전대로 얼굴을 본다 — scene 추가가 이걸 망가뜨리면 안 된다."""
+    seen = {}
+    src = tmp_path / "f.jpg"; _png(src)
+    def fake_pick(q, wd, slot, **k):
+        seen["want_face"] = k.get("want_face")
+        return {"path": str(src), "source": "연합뉴스"}
+    monkeypatch.setattr(photos, "pick_photo", fake_pick)
+    images.generate_all({"1": "p"}, str(tmp_path), lambda a, b: None,
+                        sources={"1": {"kind": "real", "query": "박위"}}, log=lambda *a: None)
+    assert seen["want_face"] is True
+
+
+def test_scene_without_query_falls_back_to_gen():
+    """검색어 없는 scene은 gen으로 — 판정은 한 곳(0순위-B)."""
+    script = {"groups": [{"text": "x", "color": "WHITE", "role": "NARR", "img": 1}]}
+    raw = json.dumps({"cast": {}, "prompts": {"1": "a"},
+                      "sources": {"1": {"kind": "scene", "query": ""}}})
+    r = images.make_prompts(script, "소재", lambda _: raw, log=lambda *a: None)
+    assert r["sources"]["1"]["kind"] == "gen"
+
+
+def test_scene_is_a_known_kind():
+    assert "scene" in spec.PHOTO_KINDS
