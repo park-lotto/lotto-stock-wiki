@@ -9,6 +9,17 @@ import json, os, re, shutil, subprocess, sys, zipfile, hashlib
 
 RAW, LIB, CAT = sys.argv[1], sys.argv[2], sys.argv[3]
 catalog = {r["id"]: r for r in json.load(open(CAT, encoding="utf-8"))}
+# zip 비밀번호: 배포자가 영상 안에 표시한 것을 사장님이 알려준 값. {"채널명 일부 또는 *": ["비번", ...]}
+PW_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "zip_passwords.json")
+PASSWORDS = json.load(open(PW_FILE, encoding="utf-8")) if os.path.exists(PW_FILE) else {}
+
+
+def pw_candidates(channel):
+    out = []
+    for k, v in PASSWORDS.items():
+        if k == "*" or (channel and k in channel):
+            out += v
+    return out
 
 CATEGORIES = [  # (폴더, 한글, 제목 키워드)
     ("arrows_highlights", "화살표·강조", r"화살표|arrow|형광|highlight|marker|마커|체크|check|underline|circle|동그라미"),
@@ -41,9 +52,14 @@ def category_for(r):
     return "misc", "기타"
 
 
-def unzip_all(root):
+def unzip_all(root, passwords=()):
     n = 0
     for _ in range(3):  # 중첩 zip
+        # 이전에 비번 걸려 .ENCRYPTED 로 남긴 것도 비번이 생겼으면 다시 시도
+        for d, _, fs in os.walk(root):
+            for f in fs:
+                if f.lower().endswith(".zip.encrypted") and passwords:
+                    os.rename(os.path.join(d, f), os.path.join(d, f[:-len(".ENCRYPTED")]))
         zips = [os.path.join(d, f) for d, _, fs in os.walk(root) for f in fs if f.lower().endswith(".zip")]
         if not zips:
             break
@@ -51,6 +67,17 @@ def unzip_all(root):
             out = z[:-4]
             try:
                 with zipfile.ZipFile(z) as zf:
+                    pwd = None
+                    enc = [i for i in zf.infolist() if i.flag_bits & 0x1 and not i.is_dir()]
+                    if enc:
+                        for cand in passwords:
+                            try:
+                                zf.open(enc[0], pwd=cand.encode("utf-8")).read(16); pwd = cand.encode("utf-8"); break
+                            except Exception:
+                                continue
+                        if pwd is None:
+                            raise RuntimeError("password required (no match)")
+                        zf.setpassword(pwd)
                     for info in zf.infolist():
                         # 한글 파일명(cp437로 잘못 읽힘) 복구
                         name = info.filename
@@ -112,7 +139,7 @@ def main():
         if os.path.exists(dst):
             shutil.rmtree(dst)
         shutil.copytree(src, dst)
-        unzipped = unzip_all(dst)
+        unzipped = unzip_all(dst, pw_candidates(r.get("channel") or ""))
         inv = []
         for d, _, fs in os.walk(dst):
             for f in fs:

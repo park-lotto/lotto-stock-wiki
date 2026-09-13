@@ -21,6 +21,44 @@ def run(cmd):
     return subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=120).returncode == 0
 
 
+def detect_crop(src, seconds=3):
+    """검은 바탕 위 작은 글자(자막 템플릿)면 글자 영역만 남기는 crop 값을 찾는다. 없으면 None."""
+    import re as _re
+    r = subprocess.run(["ffmpeg", "-v", "info", "-t", str(seconds), "-i", src, "-vf", "cropdetect=limit=24:round=2:reset=0", "-f", "null", "-"],
+                       capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=120)
+    m = _re.findall(r"crop=(\d+):(\d+):(\d+):(\d+)", r.stderr)
+    if not m:
+        return None
+    w, h, x, y = map(int, m[-1])
+    pr = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height", "-of", "csv=p=0", src],
+                        capture_output=True, text=True, timeout=30)
+    try:
+        W, H = map(int, pr.stdout.strip().split(",")[:2])
+    except Exception:
+        return None
+    if w <= 0 or h <= 0 or w * h > W * H * 0.6:   # 화면 대부분이 내용이면 자를 이유 없음
+        return None
+    mx, my = int(w * 0.12) + 8, int(h * 0.25) + 8   # 여백
+    x0, y0 = max(0, x - mx), max(0, y - my); x1, y1 = min(W, x + w + mx), min(H, y + h + my)
+    return f"crop={x1 - x0}:{y1 - y0}:{x0}:{y0}"
+
+
+def is_static(mp4):
+    """미리보기 첫 프레임과 끝 프레임이 거의 같으면 정지형."""
+    try:
+        from PIL import Image, ImageChops, ImageStat
+        a = mp4 + "_a.png"; b = mp4 + "_b.png"
+        run(["ffmpeg", "-v", "error", "-y", "-i", mp4, "-frames:v", "1", "-update", "1", a])
+        run(["ffmpeg", "-v", "error", "-y", "-sseof", "-0.3", "-i", mp4, "-frames:v", "1", "-update", "1", b])
+        if not (os.path.exists(a) and os.path.exists(b)):
+            return False
+        d = ImageStat.Stat(ImageChops.difference(Image.open(a).convert("L"), Image.open(b).convert("L"))).mean[0]
+        os.remove(a); os.remove(b)
+        return d < 1.0
+    except Exception:
+        return False
+
+
 def make_previews(pack_dir, pack_id, f):
     src = os.path.join(pack_dir, f["file"])
     key = hashlib.md5(f["file"].encode("utf-8")).hexdigest()[:10]
@@ -29,6 +67,7 @@ def make_previews(pack_dir, pack_id, f):
     ext = f["ext"]
     thumb = os.path.join(outdir, key + ".png")
     prev = os.path.join(outdir, key + ".mp4")
+    big = os.path.join(outdir, key + "_big.mp4")
     # 알파는 회색 바탕에 합성해서 보이게(검정 바탕이면 검은 글자 소스가 안 보인다)
     comp = f"[0:v]scale={SIZE}:{SIZE}:force_original_aspect_ratio=decrease,format=rgba[f];color=c=0x8c8c8c:s={SIZE}x{SIZE}:d=1[bg];[bg][f]overlay=(W-w)/2:(H-h)/2:shortest=1,format=rgb24"
     if ext in IMG and not os.path.exists(thumb):
@@ -54,6 +93,10 @@ def make_previews(pack_dir, pack_id, f):
             comp_v = f"[0:v]scale={SIZE}:{SIZE}:force_original_aspect_ratio=decrease,format=rgba[f];color=c=0x8c8c8c:s={SIZE}x{SIZE}[bg];[bg][f]overlay=(W-w)/2:(H-h)/2:shortest=1,format=yuv420p"
             run(["ffmpeg", "-v", "error", "-y", "-t", "3", "-i", src, "-filter_complex", comp_v, "-r", "15", "-c:v", "libx264",
                  "-preset", "veryfast", "-crf", "28", "-an", prev])
+        if not os.path.exists(big):   # 크게 보기(라이트박스)용 — 원본 비율, 최대 960
+            comp_b = f"[0:v]scale=960:960:force_original_aspect_ratio=decrease,format=rgba[f];color=c=0x8c8c8c:s=960x960[bg];[bg][f]overlay=(W-w)/2:(H-h)/2:shortest=1,format=yuv420p"
+            run(["ffmpeg", "-v", "error", "-y", "-t", "6", "-i", src, "-filter_complex", comp_b, "-r", "24", "-c:v", "libx264",
+                 "-preset", "veryfast", "-crf", "24", "-an", big])
     if ext in MOGRT and not (os.path.exists(thumb) and os.path.exists(prev)):
         try:
             import zipfile, tempfile
@@ -63,15 +106,22 @@ def make_previews(pack_dir, pack_id, f):
                     from PIL import Image
                     im = Image.open(z.open("thumb.png")).convert("RGBA"); im.thumbnail((SIZE, SIZE))
                     bg = Image.new("RGBA", (SIZE, SIZE), (140, 140, 140, 255)); bg.alpha_composite(im, ((SIZE - im.width) // 2, (SIZE - im.height) // 2)); bg.convert("RGB").save(thumb)
-                if "thumb.mp4" in names and not os.path.exists(prev):
+                if "thumb.mp4" in names and not (os.path.exists(prev) and os.path.exists(big)):
                     tmp = os.path.join(outdir, key + "_src.mp4")
                     open(tmp, "wb").write(z.read("thumb.mp4"))
-                    run(["ffmpeg", "-v", "error", "-y", "-t", "3", "-i", tmp, "-vf", f"scale={SIZE}:{SIZE}:force_original_aspect_ratio=decrease,pad={SIZE}:{SIZE}:(ow-iw)/2:(oh-ih)/2:color=0x8c8c8c,format=yuv420p", "-r", "15", "-c:v", "libx264", "-preset", "veryfast", "-crf", "28", "-an", prev])
+                    cr = detect_crop(tmp)   # 검은 화면 속 작은 자막 → 글자 영역만
+                    pre = (cr + ",") if cr else ""
+                    W2, H2 = SIZE * 2, int(SIZE * 9 / 16)
+                    run(["ffmpeg", "-v", "error", "-y", "-t", "4", "-i", tmp, "-vf", f"{pre}scale={W2}:{H2}:force_original_aspect_ratio=decrease,pad={W2}:{H2}:(ow-iw)/2:(oh-ih)/2:color=0x222222,format=yuv420p", "-r", "15", "-c:v", "libx264", "-preset", "veryfast", "-crf", "26", "-an", prev])
+                    run(["ffmpeg", "-v", "error", "-y", "-t", "8", "-i", tmp, "-vf", f"{pre}scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2:color=0x222222,format=yuv420p", "-r", "24", "-c:v", "libx264", "-preset", "veryfast", "-crf", "24", "-an", big])
                     os.remove(tmp)
+                    run(["ffmpeg", "-v", "error", "-y", "-ss", "1", "-i", prev, "-frames:v", "1", "-update", "1", thumb])   # 포스터도 크롭본에서
         except Exception as e:
             print("  mogrt 미리보기 실패", src, e)
     rel = lambda p: os.path.relpath(p, LIB).replace("\\", "/") if os.path.exists(p) else None
-    return {"thumb": rel(thumb), "prev": rel(prev), "src": os.path.relpath(src, LIB).replace("\\", "/")}
+    static = is_static(prev) if os.path.exists(prev) else False
+    return {"thumb": rel(thumb), "prev": rel(prev), "big": rel(big), "static": static, "wide": ext in MOGRT,
+            "src": os.path.relpath(src, LIB).replace("\\", "/")}
 
 
 def main():
@@ -118,7 +168,13 @@ def main():
     .cell .b{position:absolute;top:4px;left:4px;font-size:10px;padding:1px 5px;border-radius:3px;background:#000a}
     .aud{width:%dpx;padding:6px;font-size:11px} .aud audio{width:100%%;height:28px}
     details summary{cursor:pointer;color:#8cf;font-size:12px}
-    """ % (SIZE, SIZE, SIZE, SIZE * 2)
+    .cell.wide{width:%dpx} .cell.wide video,.cell.wide img{width:%dpx;height:%dpx}
+    .cell{cursor:zoom-in}
+    #lb{position:fixed;inset:0;background:#000d;display:none;align-items:center;justify-content:center;flex-direction:column;z-index:9}
+    #lb video,#lb img{max-width:92vw;max-height:80vh;background:#222} #lb .cap{color:#ddd;font-size:13px;margin-top:8px}
+    #lb .x{position:absolute;top:14px;right:22px;color:#fff;font-size:28px;cursor:pointer}
+    .stat{position:absolute;top:4px;right:4px;font-size:10px;padding:1px 5px;border-radius:3px;background:#a33c}
+    """ % (SIZE, SIZE, SIZE, SIZE * 2, SIZE * 2, SIZE * 2, int(SIZE * 9 / 16))
     out = [f"<!doctype html><meta charset='utf-8'><title>효과팩 라이브러리</title><style>{css}</style>",
            f"<h1>효과팩 라이브러리 (2026-09-13)</h1><div class='sub'>{len(packs)}팩 · 미리보기 {n_files}개 · 영상은 마우스를 올리면 재생 · 출처·라이선스는 팩마다 표시</div><nav>"]
     for c, L in by.items():
@@ -147,13 +203,22 @@ def main():
                     out.append(f"<div class='aud'>🔊 {html.escape(name)}<audio controls preload='none' src='{html.escape(pv['src'])}'></audio></div>")
                 elif f["ext"] in VID | MOGRT and pv.get("prev"):
                     badge = "mogrt" if f["ext"] in MOGRT else ("α" if f.get("alpha") else "mp4")
-                    out.append(f"<div class='cell'><video class='pv' muted loop playsinline preload='metadata' poster='{pv['thumb'] or ''}' src='{pv['prev']}' onclick='togglePlay(this)' title='클릭: 재생/정지'></video><span class='b'>{badge} {f.get('w','')}×{f.get('h','')}</span><div class='n' title='{html.escape(name)}'>{html.escape(name)}</div></div>")
+                    wide = " wide" if pv.get("wide") else ""
+                    stat = "<span class='stat'>정지형</span>" if pv.get("static") else ""
+                    bigsrc = pv.get("big") or pv["prev"]
+                    out.append(f"<div class='cell{wide}' data-big='{html.escape(bigsrc)}' data-kind='video' data-name='{html.escape(name)}'><video class='pv' muted loop playsinline preload='metadata' poster='{pv['thumb'] or ''}' src='{pv['prev']}' title='클릭: 크게 보기'></video><span class='b'>{badge} {f.get('w','')}×{f.get('h','')}</span>{stat}<div class='n' title='{html.escape(name)}'>{html.escape(name)}</div></div>")
                 elif pv.get("thumb"):
-                    out.append(f"<div class='cell'><img loading='lazy' src='{pv['thumb']}'><span class='b'>{f['ext'][1:]} {f.get('w','')}×{f.get('h','')}</span><div class='n' title='{html.escape(name)}'>{html.escape(name)}</div></div>")
+                    out.append(f"<div class='cell' data-big='{html.escape(pv['src'])}' data-kind='img' data-name='{html.escape(name)}'><img loading='lazy' src='{pv['thumb']}'><span class='b'>{f['ext'][1:]} {f.get('w','')}×{f.get('h','')}</span><div class='n' title='{html.escape(name)}'>{html.escape(name)}</div></div>")
             if len(p["file_list"]) > 60:
                 out.append(f"<div class='aud'>… 외 {len(p['file_list'])-60}개 (폴더에서 보기)</div>")
             out.append("</div></div>")
-    out.append("""<script>
+    out.append("""<div id='lb'><span class='x'>&#10005;</span><div id='lbc'></div><div class='cap' id='lbcap'></div></div>
+<script>
+function openLB(src,kind,name){ const c=document.getElementById('lbc'); c.innerHTML = kind==='video' ? '<video src="'+src+'" controls autoplay loop muted playsinline></video>' : '<img src="'+src+'">'; document.getElementById('lbcap').textContent=name+'  (ESC 또는 바깥 클릭으로 닫기)'; document.getElementById('lb').style.display='flex'; }
+function closeLB(){ document.getElementById('lb').style.display='none'; document.getElementById('lbc').innerHTML=''; }
+document.getElementById('lb').addEventListener('click', e=>{ if(e.target.id==='lb'||e.target.className==='x') closeLB(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeLB(); });
+document.querySelectorAll('.cell[data-big]').forEach(c=>c.addEventListener('click',()=>openLB(c.dataset.big,c.dataset.kind,c.dataset.name)));
 function togglePlay(v){ if(v.paused){ v.play().catch(()=>{}); } else { v.pause(); } }
 const io = new IntersectionObserver(es => { es.forEach(e => { const v=e.target; if(e.isIntersecting){ v.play().catch(()=>{}); } else { v.pause(); } }); }, {threshold: 0.2});
 document.querySelectorAll('video.pv').forEach(v => io.observe(v));
