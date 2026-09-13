@@ -13,7 +13,11 @@ const puppeteer=require('puppeteer');
   await page.mouse.move(800,500);await page.mouse.down();await page.mouse.move(1000,500,{steps:10});await page.mouse.up();
   d=await page.evaluate(()=>window.hqWalkDiagnostics());assert.notDeepEqual(d.camera,before);
   await page.screenshot({path:'company_ops/.artifacts/hq-walk-orbit.png'});
+  // 위치 바로가기 option이 마크업 오타로 조용히 사라지면 select가 아무것도 못 고른다(2026-09-13 실사고).
+  const options=await page.evaluate(()=>[...document.querySelectorAll('#place option')].map(o=>o.value).filter(Boolean));
+  assert.deepEqual(options,['entrance','lobby','office','lounge','stairs','mezzanine','meeting','third'],'위치 바로가기 목록이 코드의 places와 어긋남');
   await page.select('#place','entrance');
+  assert.equal((await page.evaluate(()=>window.hqWalkDiagnostics())).mode,'walk','위치 선택은 보행 모드로 전환해야 한다');
   d=await page.evaluate(()=>window.hqWalkDiagnostics());const start=d.feet;
   await page.keyboard.down('KeyW');await new Promise(r=>setTimeout(r,3000));await page.keyboard.up('KeyW');
   d=await page.evaluate(()=>window.hqWalkDiagnostics());assert(d.feet.z<start.z-2,'Walking must move camera');
