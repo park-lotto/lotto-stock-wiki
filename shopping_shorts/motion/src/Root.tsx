@@ -4,6 +4,8 @@ import {LilyBoxed} from './LilyBoxed';
 import {LilyStack} from './LilyStack';
 import {LilyNewsBar} from './LilyNewsBar';
 import {LilyStamp} from './LilyStamp';
+import {LilyNameBar} from './LilyNameBar';
+import {LilyTyping} from './LilyTyping';
 import {SwipeLeft} from './SwipeLeft';
 import {Sparkle} from './Sparkle';
 import {ImpactText} from './ImpactText';
@@ -30,6 +32,24 @@ if (typeof document !== 'undefined') {
 
 export const RemotionRoot: React.FC = () => (
   <>
+    <Composition
+      id="LilyTyping"
+      component={LilyTyping}
+      durationInFrames={90}
+      fps={30}
+      width={1080}
+      height={1920}
+      defaultProps={{text: '커서가 깜빡이는 타이핑 자막', color: '#ffffff'}}
+    />
+    <Composition
+      id="LilyNameBar"
+      component={LilyNameBar}
+      durationInFrames={60}
+      fps={30}
+      width={1080}
+      height={1920}
+      defaultProps={{name: '지혜', text: '조금은 설렌다고 말하고 싶네요..', color: '#ffffff'}}
+    />
     <Composition
       id="LilyNewsBar"
       component={LilyNewsBar}
