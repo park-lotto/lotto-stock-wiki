@@ -37,7 +37,7 @@ const puppeteer=require('puppeteer'),path=require('path');
  }
  await page.click('[data-template-mode="story"]');await page.click('[data-p20="14"]');await page.click('[data-frame="body"]');
  await page.$eval('[data-bind="caption"]',e=>{e.value='저장한 자막 유지';e.dispatchEvent(new Event('input',{bubbles:true}));});
- await page.click('.layout-a .secondary');await page.goto(url+'?frame=body',{waitUntil:'networkidle0'});
+ await page.click('.layout-a .edit-pane > .primary');await page.goto(url+'?frame=body',{waitUntil:'networkidle0'});
  if(await page.$eval('.precision-text[data-edit-bind="caption"]',e=>e.textContent)!=='저장한 자막 유지')failures.push('새로고침 복원 실패');
  await (await page.$('#a-live-preview')).screenshot({path:path.join(process.env.TEMP,'caption-fixed.png')});
  await browser.close();console.log(JSON.stringify({count,failures},null,2));process.exitCode=failures.length?1:0;

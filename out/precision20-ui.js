@@ -451,7 +451,8 @@
     const wb=frame.white_box;
     if(wb){
       // 원본 설명띠의 글자/흔적을 먼저 완전히 덮고 편집 가능한 텍스트만 다시 올린다.
-      addPatch(wb.y0/frame.height*100,(wb.y1-wb.y0+1)/frame.height*100,wb.background||'#FFFFFF',0,100,'white-box');
+      const movedCaption=kind==='body'&&(fixedLayouts.get(layoutKey(p.id,frame))?.bottom||0)>0;
+      addPatch(wb.y0/frame.height*100,(wb.y1-wb.y0+1)/frame.height*100,movedCaption?(fixedColorsFor(p.id,frame).top||bg):(wb.background||'#FFFFFF'),0,100,'white-box');
     }
     if(wb?.text){
       const key=kind==='hook'?'bodyTitle':'caption';
@@ -470,8 +471,9 @@
     for(const el of [...layer.children].filter(el=>el!==badge)){
       const top=parseFloat(el.style.top),height=parseFloat(el.style.height);if(!Number.isFinite(top))continue;
       if(layout){
-        if(el.dataset.editBind==='caption'&&next.bottom>0){el.style.top=(end+next.bottom/2-height/2+captionOffset()+textOffset('caption'))+'%';}
+        if(el.dataset.editBind==='caption'&&next.bottom>0){if(!el.classList.contains('precision-text')){el.remove();continue;}el.style.top=(end+next.bottom/2-height/2+captionOffset()+textOffset('caption'))+'%';}
         else{el.style.top=mapY(top)+'%';if(Number.isFinite(height)&&!el.classList.contains('precision-text'))el.style.height=Math.max(0,mapY(top+height)-mapY(top))+'%';}
+        if(kind==='body'&&next.bottom>0&&!el.classList.contains('precision-text')&&el.style.background&&top<oldTop){el.style.background=fixedColorsFor(p.id,frame).top;el.style.boxShadow='none';}
       }
       if(paint){
         if(el.classList.contains('precision-text')){
@@ -574,7 +576,7 @@
   });
   motionPanel.addEventListener('click',event=>{
     const choice=event.target.closest('[data-hook-motion]');
-    if(choice){hookMotion=choice.dataset.hookMotion;motionPanel.querySelectorAll('[data-hook-motion]').forEach(button=>button.classList.toggle('active',button===choice));runHookMotion();return}
+    if(choice){hookMotion=choice.dataset.hookMotion;if(sceneIndex!==0){sceneIndex=0;showFrame('hook');}motionPanel.querySelectorAll('[data-hook-motion]').forEach(button=>button.classList.toggle('active',button===choice));runHookMotion();return}
     const speed=event.target.closest('[data-hook-speed]');
     if(speed){hookMotionSpeed=Number(speed.dataset.hookSpeed);motionPanel.querySelectorAll('[data-hook-speed]').forEach(button=>button.classList.toggle('active',button===speed));runHookMotion();return}
   });
@@ -618,7 +620,7 @@
     const button=event.target.closest('[data-caption-position]');if(!button)return;
     captionPositions.set(captionKey(),Number(button.dataset.captionPosition));markDirty('caption');updateCaptionButtons();renderEdit();
   });
-  addEventListener('resize',()=>{if(!preview.classList.contains('is-pristine'))renderEdit()});
+  addEventListener('resize',()=>{if(!window.sceneStyleExporting&&!preview.classList.contains('is-pristine'))renderEdit()});
   let captionDrag=null;
   preview.addEventListener('pointerdown',event=>{
     if(event.button!==0||!event.target.closest('[data-edit-bind="caption"]'))return;
@@ -638,7 +640,7 @@
   for(const type of ['pointerup','pointercancel','lostpointercapture'])preview.addEventListener(type,()=>{captionDrag=null;});
   const premiumFaces=['SBAggroB','YgJalnan','JalnanGothic','Jalnan2','GothicA1Black','GmarketSansBold','GasoekOne','Cafe24Ohsquare','KCCGanpan','BinggraeBold','BlackHanSans','Pretendard'];
   Promise.all(premiumFaces.map(family=>document.fonts?.load?.(`400 32px "${family}"`))).then(()=>{fittedText.clear();renderEdit()});
-  document.fonts?.addEventListener?.('loadingdone',()=>{fittedText.clear();renderEdit()});
+  document.fonts?.addEventListener?.('loadingdone',()=>{if(!window.sceneStyleExporting){fittedText.clear();renderEdit()}});
   saveButton&&(saveButton.textContent='현재 설정 저장');
   const query=new URLSearchParams(location.search),initialPreset=Math.max(0,Number(query.get('preset'))||0);
   if(query.get('mode')==='continuous'){modeBar.querySelector('[data-template-mode="continuous"]').click();if(initialPreset<rows.length)selectPreset(initialPreset)}else selectPreset(Math.min(initialPreset,rows.length-1));

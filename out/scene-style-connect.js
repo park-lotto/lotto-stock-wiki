@@ -53,7 +53,7 @@
   effectsPanel.addEventListener('click',ev=>{
     const b=ev.target.closest('[data-effect-mode]');
     if(b){const e=structuredClone(api.effect());e.highlight={cx:.5,cy:.55,r:.22,zoom:2,shape:'circle',...e.highlight,on:b.dataset.effectMode!=='none',mode:b.dataset.effectMode};api.effect(e);}
-    else if(ev.target.closest('[data-effects-reset]'))api.effect({});else return;
+    else if(ev.target.closest('[data-effects-reset]')){api.effect({});window.sceneDecorations?.refresh();}else return;
     updateControls();sync();
   });
   tabs.addEventListener('click',ev=>{const b=ev.target.closest('[data-editor-tab]');if(!b)return;const isText=b.dataset.editorTab==='text';textPanel.hidden=!isText;effectsPanel.hidden=isText;tabs.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));updateControls();});

@@ -5,6 +5,8 @@ const puppeteer=require('puppeteer'),path=require('path'),assert=require('assert
   const page=await browser.newPage();await page.setViewport({width:1800,height:1050});
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto('http://127.0.0.1:8768/produce.html',{waitUntil:'networkidle2',timeout:60000});
+  const shapes=await page.evaluate(()=>THUMB_SHAPE_LIST.map(def=>{const canvas=document.createElement('canvas');canvas.width=200;canvas.height=200;const ctx=canvas.getContext('2d');drawShape(ctx,{shape:def.key,size:62,x:.5,y:.5,rot:0,color:def.color},200,200);return [...ctx.getImageData(0,0,200,200).data].some((v,i)=>i%4===3&&v>0)}));
+  assert.equal(shapes.length,9);assert.ok(shapes.every(Boolean),'기존 썸네일 도형 9종 실제 캔버스 출력');
   await page.evaluate(()=>{MIX_JOB='scene-style-qa';document.querySelector('[data-step="3"]').style.display='block'});
   await page.$eval('[onclick="openSceneStyleEditor()"]',e=>e.scrollIntoView());
   await page.click('[onclick="openSceneStyleEditor()"]');

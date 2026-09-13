@@ -9,7 +9,7 @@ const fs=require('fs'),path=require('path'),{pathToFileURL}=require('url'),puppe
     await page.addStyleTag({content:`body *{visibility:hidden!important}#a-live-preview,#a-live-preview *{visibility:visible!important}#a-live-preview{position:fixed!important;left:0!important;top:0!important;width:1080px!important;height:1920px!important;max-width:none!important;max-height:none!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:transparent!important;z-index:99999!important}.precision-base,.precision-media,.scene-media-clip,.precision-badge{display:none!important}html,body{background:transparent!important}`});
     await page.evaluate(r=>window.sceneStyle.load(r.context,r.snapshot),request);
     await page.addStyleTag({content:'.scene-decoration{outline:none!important}'});
-    await page.evaluate(async()=>{await document.fonts.ready;window.sceneStyle.refresh()});
+    await page.evaluate(async()=>{await document.fonts.ready;window.sceneStyle.refresh();window.sceneStyleExporting=true});
     const layers=[];
     for(let index=0;index<request.context.scenes.length;index++){
       const g=await page.evaluate(i=>window.sceneStyle.show(i),index);
@@ -17,16 +17,27 @@ const fs=require('fs'),path=require('path'),{pathToFileURL}=require('url'),puppe
       const file=`scene-style-layer-${index}.png`;
       const duration=request.snapshot.hookMotion?await page.evaluate(()=>window.sceneStyle.motionAt(100000)):0;
       const moving=await page.evaluate(()=>window.sceneDecorations?.motionAt(0)||false);
-      await (await page.$('#a-live-preview')).screenshot({path:path.join(request.output,file),omitBackground:true});
+      await page.screenshot({path:path.join(request.output,file),clip:{x:0,y:0,width:1080,height:1920},omitBackground:true});
       const scene=request.context.scenes[index],first=Math.round(scene.start*30),end=Math.round(scene.end*30);
       let animation=null;
       if(moving||(duration>first/30*1000&&g.kind==='hook')){
         const count=moving?end-first:Math.min(end-first,Math.ceil(duration/1000*30)-first+1);
         const pattern=`scene-style-motion-${index}-%04d.png`;
         for(let f=0;f<count;f++){
+          await page.evaluate(i=>window.sceneStyle.show(i),index);
+          await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
           await page.evaluate(({title,shape})=>{window.sceneStyle.motionAt(title);window.sceneDecorations?.motionAt(shape)},{title:g.kind==='hook'?(first+f)/30*1000:100000,shape:f/30*1000});
           await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
-          await (await page.$('#a-live-preview')).screenshot({path:path.join(request.output,pattern.replace('%04d',String(f).padStart(4,'0'))),omitBackground:true});
+          // Materialize the sampled animation state for Chromium's screenshot compositor.
+          await page.evaluate(()=>{
+            document.querySelectorAll('.scene-decoration,.precision-text').forEach(el=>{
+              const animations=el.getAnimations();if(!animations.length)return;
+              const style=getComputedStyle(el),values={};
+              for(const key of ['transform','translate','rotate','scale','opacity','filter','clipPath'])values[key]=style[key];
+              animations.forEach(a=>a.cancel());Object.assign(el.style,values);
+            });
+          });
+          await page.screenshot({path:path.join(request.output,pattern.replace('%04d',String(f).padStart(4,'0'))),clip:{x:0,y:0,width:1080,height:1920},omitBackground:true});
         }
         animation={pattern,count};
       }
