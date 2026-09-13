@@ -206,6 +206,24 @@ def r_meme_ratio(s, ctx):
     return []
 
 
+def r_slot_seq(s, ctx):
+    """이미지 슬롯은 1부터 빠짐없이 이어져야 한다.
+
+    ★실측 2026-09-13: 대본이 2~9번을 써서 1번이 통째로 없었다. 지시문엔 "img 번호 1부터"라고
+      적혀 있는데 **판정이 없어** 그냥 통과했고, 슬롯이 8개로 줄어 사진도 한 장 덜 만들어졌다
+      (목표 9~11장). 번호가 비면 카드·컷 배정도 어긋난다.
+    """
+    slots = sorted({g["img"] for g in _groups(s) if isinstance(g.get("img"), int)})
+    if not slots:
+        return []
+    want = list(range(1, len(slots) + 1))
+    if slots != want:
+        missing = [n for n in want if n not in slots]
+        return [Issue("slot_seq", REJECT, "groups[].img", str(slots),
+                      f"슬롯 번호는 1부터 빠짐없이 이어져야 합니다 — 빠진 번호 {missing or '없음'}, {len(slots)}개면 1~{len(slots)}")]
+    return []
+
+
 def r_card_img(s, ctx):
     """오프닝 카드에 쓸 슬롯 — 없는 슬롯이면 반려, 1번이면 경고.
 
@@ -311,6 +329,7 @@ RULES = [
     Rule("last_standalone", REJECT, "마지막 컷은 앞 컷에서 이어지지 않는 **독립된 한 문장**으로 써라. 앞 컷에서 문장을 끝내고, 마지막 컷만 읽어도 말이 되게 하라.", r_last_standalone),
     Rule("copy", REJECT, "원문을 요약하지 말고 다시 써라. 원문 문장을 그대로 줄여 쓰지 마라.", r_copy),
     Rule("cut_count", REJECT, f"컷은 {spec.POLICY_MIN_CUTS}~{spec.POLICY_MAX_CUTS}개. 모자라면 반려된다.", r_cut_count),
+    Rule("slot_seq", REJECT, "이미지 슬롯 번호는 1부터 빠짐없이 이어지게 매겨라(1,2,3…). 번호를 건너뛰지 마라.", r_slot_seq),
     Rule("card_img", REJECT, "card_img는 대본에 있는 슬롯 번호. 1번은 피해라 — 카드 뒤 1번 컷과 같은 사진이 이어진다.", r_card_img),
     Rule("example_copy", WARN, "지시문에 든 예시 문장을 그대로 쓰지 마라 — 구조만 따르고 이 기사로 새로 써라.", r_example_copy),
     Rule("first_open", WARN, "첫 컷에서 문장을 끝내지 마라 — 다음 컷으로 끌고 가라.", r_first_open),
