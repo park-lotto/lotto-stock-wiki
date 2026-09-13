@@ -17,8 +17,21 @@ IMAGE_API = "https://api.evolink.ai"
 IMAGE_MODEL = "gpt-image-2"
 IMAGE_SIZE = "3:2"                 # 지원: auto/1:1/16:9/9:16/3:2/2:3. 슬롯 1028×786(1.31)에 가장 가까운 3:2 → 가운데 cover 크롭
 IMAGE_QUALITY = "medium"           # low $0.0037 / medium $0.032 / high $0.127 (실행기 주석 실측 단가)
-IMAGE_PROMPT_PREFIX = "Documentary style photo, in South Korea, Korean people, Korean-language signage and hangul text, "  # 볼케이노 서버가 붙이는 접두(실측 payload.prompts)
-IMAGE_PROMPT_SUFFIX = ", documentary photography, natural lighting, no text overlay, no watermark"
+# 접두 — 로케일만 박고 장면 묘사는 작성자에게 맡긴다.
+# ★"Documentary style photo"를 앞에 고정으로 붙이던 것을 뺐다(2026-09-13 실측): 편 A만 우연히
+#   10슬롯 전부 그 문구였고, 편 B는 8종·편 C는 9종으로 **슬롯마다 첫 어구가 다르다**
+#   (`Photorealistic wide shot of a dusty empty lot…`). 한 편만 보고 "고정 접두"로 역산했던 오독이다.
+IMAGE_PROMPT_PREFIX = "In South Korea, Korean people, Korean-language signage and hangul text, "
+
+# 접미 — 실측 볼케이노 16개 그대로. 우리는 4개뿐이라 **가짜 구독자 수·그래프가 그려졌다**
+# (2026-09-13: 없는 채널명 밑에 '1,000,000', '글로벌 경기침체' 꺾은선). 굵은 것이 그 방어선이다.
+IMAGE_PROMPT_SUFFIX = (
+    ", documentary photograph, photorealistic, real people, natural lighting, shot on a camera"
+    ", not an illustration, not a cartoon, not a drawing, not anime, not 3d render"
+    ", all signage and screens are out of focus or too small to read"
+    ", no legible words, no legible numbers or currency amounts"
+    ", no real brand names, no real company or product names, no logos, no watermarks"
+)
 
 # ── 실제 사진 조달 (photos.py) — 사장님 2026-09-13 ────────────────────────────────
 # 실측: 참조 이미지를 지키는 모델은 qwen-image-edit 하나뿐. gpt-image-2·gemini 이미지는 참조를 무시한다.

@@ -17,7 +17,13 @@ from . import spec, prompt as _prompt
 
 def build_prompt_request(script, source_text):
     slots = sorted({g["img"] for g in script["groups"] if isinstance(g.get("img"), int)})
-    cuts = "\n".join(f"- 슬롯 {g['img']}: 컷{i + 1} «{g['text']}»" for i, g in enumerate(script["groups"]) if isinstance(g.get("img"), int))
+    # ★슬롯으로 묶어서 보여준다. 예전엔 컷을 평평하게 나열해 **한 슬롯을 2~3컷이 나눠 쓴다는 것**이
+    #   안 보였고, 그래서 컷마다 다른 장면을 요구해 그림이 자막을 못 따라갔다(실측 2026-09-13).
+    by = {}
+    for i, g in enumerate(script["groups"]):
+        if isinstance(g.get("img"), int):
+            by.setdefault(g["img"], []).append(f"컷{i + 1} «{g['text']}»")
+    cuts = "\n".join(f"- 슬롯 {s} ({len(by[s])}컷 공유): " + " + ".join(by[s]) for s in sorted(by))
     return (
         "너는 뇌전구 채널의 이미지 디렉터다. 아래 대본의 이미지 슬롯마다 **어떤 사진을 쓸지**와 **영문 생성 프롬프트**를 정한다.\n"
         "\n"
@@ -35,8 +41,17 @@ def build_prompt_request(script, source_text):
         "    장소·사물만 적어라. 사람이 꼭 필요하면 gen으로 만들어라.\n"
         "\n"
         "[프롬프트 규칙]\n"
-        "- cast: 등장 인물마다 인상착의를 한 문장으로 고정해 모든 슬롯에 같은 문구를 그대로 쓴다(컷 간 같은 인물로 나오게). 실명·유명인 이름은 쓰지 말고 외양만.\n"
-        "- 각 슬롯 프롬프트는 장면(장소·행동·구도·조명)을 구체적으로. 사진처럼(documentary photo). 'illustration', 'cartoon' 금지. 글자·자막·워터마크가 나오게 하지 마라.\n"
+        "- cast: 주인공 인상착의를 **한 문장으로 고정**한다(나이대·체형·머리·옷차림). 실명·유명인 이름은 쓰지 말고 외양만.\n"
+        "  ★cast는 **주인공이 실제로 화면에 나오는 슬롯에만** 달아라. 슬롯 번호를 키로 쓴다.\n"
+        "    실측: 볼케이노는 10슬롯 중 5개에만 달았다(편마다 5/10 · 3/9 · 6/9).\n"
+        "    ✘ 전 슬롯에 달지 마라 — 장소·사물·행인 컷에까지 주인공이 그려진다\n"
+        "      (실측 2026-09-13: 케냐 슬럼가·시장통·태권도장에 전부 휠체어 탄 남자가 나왔다).\n"
+        "    주인공이 없는 컷은 cast를 **빼고** 그 장면만 써라: «공항 지상직원이 짐을 내린다»\n"
+        "    «기내에서 시계를 보는 지친 승객들» «소파에 앉아 휴대폰을 엎어둔 부부».\n"
+        "- 각 슬롯 프롬프트는 장면(장소·행동·구도·조명)을 구체적으로 영문 한 줄로.\n"
+        "  ★한 슬롯을 2~3컷이 나눠 쓴다 — 그 컷들을 **한 장면으로 묶어** 그려라. 컷마다 다른 장면을 요구하지 마라.\n"
+        "  ★첫 어구로 사진의 종류를 정해라: «Photorealistic wide shot of…» «Photorealistic medium shot of…»\n"
+        "    «Documentary style photo of…». 슬롯마다 달라도 된다(실측: 편 B 8종·편 C 9종).\n"
         "  (real·variant 슬롯도 프롬프트를 반드시 써라 — 검색이 실패하면 그것으로 생성한다)\n"
         "- ★화면·계기판을 주문하지 마라: 유튜브 채널 화면·구독자 카운터·그래프·스마트폰 화면.\n"
         "  모델이 **없는 채널 이름과 숫자를 지어내 화면에 박는다**(실측 2026-09-13: 가짜 채널명 밑에\n"
@@ -54,15 +69,18 @@ def make_prompts(script, source_text, call, *, log=print):
     raw = call(build_prompt_request(script, source_text))
     d = _prompt.parse_any(raw)
     cast = {str(k): v for k, v in (d.get("cast") or {}).items()}
-    # cast 키가 슬롯 번호면 그 슬롯 것만, 아니면('protagonist' 같은 이름 — 실측) 전부를 모든 프롬프트 앞에 붙인다.
-    # 안 붙이면 프롬프트에 "the protagonist"만 남아 컷마다 다른 사람이 나온다.
-    cast_all = "; ".join(f"{k}: {v}" for k, v in cast.items())
     prompts = {}
     for k, v in (d.get("prompts") or {}).items():
         k = str(k)
-        c = cast.get(k) or cast_all
-        body = (c + ". " if c and c.lower() not in v.lower() else "") + v
-        prompts[k] = spec.IMAGE_PROMPT_PREFIX + body + spec.IMAGE_PROMPT_SUFFIX
+        # ★cast는 **그 슬롯에 지정된 것만** 붙인다. 예전엔 지정이 없으면 전체 cast를 붙였는데
+        #   (`cast.get(k) or cast_all`), 그 탓에 **인물이 안 나오는 컷에도 주인공이 그려졌다**
+        #   — 케냐 슬럼가·시장통에 휠체어 탄 남자가 나온 직접 원인(사장님 2026-09-13 "전혀 다른 게 나온다").
+        #   실측: 볼케이노는 주인공이 화면에 나오는 슬롯에만 붙인다(편 A 5/10 · B 3/9 · C 6/9).
+        c = cast.get(k) or ""
+        body = (c + ", " if c and c.lower() not in v.lower() else "") + v
+        # ★cast는 프롬프트 안에 두 번 들어간다 — 장면 앞과 접미 직전(실측 볼케이노 전 슬롯).
+        tail = (", " + c if c else "") + spec.IMAGE_PROMPT_SUFFIX
+        prompts[k] = spec.IMAGE_PROMPT_PREFIX + body + tail
     slots = sorted({g["img"] for g in script["groups"] if isinstance(g.get("img"), int)})
     missing = [s for s in slots if str(s) not in prompts]
     if missing:

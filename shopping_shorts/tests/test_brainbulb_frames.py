@@ -63,12 +63,37 @@ def test_generate_all_reuses_same_prompt(tmp_path):
     assert calls[-1] == "b2" and len(calls) == 3
 
 
-def test_make_prompts_prepends_cast_when_keys_are_names():
-    script = {"groups": [{"text": "x", "color": "WHITE", "role": "NARR", "img": 1}, {"text": "y", "color": "WHITE", "role": "NARR", "img": 2}]}
-    raw = json.dumps({"cast": {"protagonist": "a Korean man in his 50s"}, "prompts": {"1": "the protagonist on a plane", "2": "the protagonist in a studio"}})
+def test_cast_goes_only_to_slots_that_name_it():
+    """★cast는 **지정된 슬롯에만** 붙는다.
+
+    실측 2026-09-13(볼케이노 3편): 주인공이 화면에 나오는 슬롯에만 달렸다(5/10 · 3/9 · 6/9).
+    예전 우리 코드는 지정이 없으면 전체 cast를 모든 슬롯에 붙였고(`cast.get(k) or cast_all`),
+    그 탓에 케냐 슬럼가·시장통 컷에까지 휠체어 탄 남자가 그려졌다
+    (사장님 "이미지를 이렇게 쓰면 안되겠다. 전혀 다른게 나온다").
+    """
+    script = {"groups": [{"text": "x", "color": "WHITE", "role": "NARR", "img": 1},
+                         {"text": "y", "color": "WHITE", "role": "NARR", "img": 2}]}
+    raw = json.dumps({"cast": {"1": "a Korean man in his 50s"},          # 1번에만 지정
+                      "prompts": {"1": "on a plane", "2": "airport ground crew unloading bags"}})
     r = images.make_prompts(script, "소재", lambda _: raw, log=lambda *a: None)
-    assert all("a Korean man in his 50s" in v for v in r["prompts"].values())
+    assert "a Korean man in his 50s" in r["prompts"]["1"]
+    assert "a Korean man in his 50s" not in r["prompts"]["2"], "인물 없는 슬롯에 주인공이 붙었다"
     assert all(v.startswith(spec.IMAGE_PROMPT_PREFIX) for v in r["prompts"].values())
+
+
+def test_cast_appears_twice_in_prompt():
+    """cast는 장면 앞과 접미 직전에 **두 번** 들어간다(실측 볼케이노 전 슬롯)."""
+    script = {"groups": [{"text": "x", "color": "WHITE", "role": "NARR", "img": 1}]}
+    raw = json.dumps({"cast": {"1": "a Korean man in his 50s"}, "prompts": {"1": "on a plane"}})
+    r = images.make_prompts(script, "소재", lambda _: raw, log=lambda *a: None)
+    assert r["prompts"]["1"].count("a Korean man in his 50s") == 2
+
+
+def test_suffix_blocks_legible_numbers():
+    """★접미 금지어 — 가짜 구독자 수·그래프가 그려지던 구멍(실측 2026-09-13 '1,000,000')."""
+    for ban in ("no legible numbers or currency amounts", "not an illustration",
+                "no legible words", "no logos", "no watermarks"):
+        assert ban in spec.IMAGE_PROMPT_SUFFIX, ban
 
 
 @pytest.mark.skipif(not HAS_FFMPEG, reason="ffmpeg 없음")
