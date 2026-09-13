@@ -138,6 +138,8 @@ def main():
                        f"<a href='file:///{html.escape(p['dir'].replace(chr(92), '/'))}' style='color:#8cf'>폴더</a></div>")
             if p["license_lines"]:
                 out.append("<details><summary>라이선스 문구(설명란 원문)</summary><pre style='font-size:11px;color:#bbb;white-space:pre-wrap'>" + html.escape("\n".join(p["license_lines"])) + "</pre></details>")
+            if p.get("encrypted_zips") and not p["file_list"]:
+                out.append("<div style='color:#f9b;font-size:12px;margin:4px 0'>🔒 zip에 비밀번호가 걸려 있어 아직 못 풀었습니다 — 비번은 배포 영상 안에 표시됨. 원본 영상 링크에서 확인 후 알려주시면 풀어 넣겠습니다.</div>")
             out.append("<div class='grid'>")
             for f in p["file_list"][:60]:
                 pv = f["pv"]; name = os.path.basename(f["file"])
@@ -145,12 +147,17 @@ def main():
                     out.append(f"<div class='aud'>🔊 {html.escape(name)}<audio controls preload='none' src='{html.escape(pv['src'])}'></audio></div>")
                 elif f["ext"] in VID | MOGRT and pv.get("prev"):
                     badge = "mogrt" if f["ext"] in MOGRT else ("α" if f.get("alpha") else "mp4")
-                    out.append(f"<div class='cell'><video muted loop preload='none' poster='{pv['thumb'] or ''}' src='{pv['prev']}' onmouseover='this.play()' onmouseout='this.pause()'></video><span class='b'>{badge} {f.get('w','')}×{f.get('h','')}</span><div class='n' title='{html.escape(name)}'>{html.escape(name)}</div></div>")
+                    out.append(f"<div class='cell'><video class='pv' muted loop playsinline preload='metadata' poster='{pv['thumb'] or ''}' src='{pv['prev']}' onclick='togglePlay(this)' title='클릭: 재생/정지'></video><span class='b'>{badge} {f.get('w','')}×{f.get('h','')}</span><div class='n' title='{html.escape(name)}'>{html.escape(name)}</div></div>")
                 elif pv.get("thumb"):
                     out.append(f"<div class='cell'><img loading='lazy' src='{pv['thumb']}'><span class='b'>{f['ext'][1:]} {f.get('w','')}×{f.get('h','')}</span><div class='n' title='{html.escape(name)}'>{html.escape(name)}</div></div>")
             if len(p["file_list"]) > 60:
                 out.append(f"<div class='aud'>… 외 {len(p['file_list'])-60}개 (폴더에서 보기)</div>")
             out.append("</div></div>")
+    out.append("""<script>
+function togglePlay(v){ if(v.paused){ v.play().catch(()=>{}); } else { v.pause(); } }
+const io = new IntersectionObserver(es => { es.forEach(e => { const v=e.target; if(e.isIntersecting){ v.play().catch(()=>{}); } else { v.pause(); } }); }, {threshold: 0.2});
+document.querySelectorAll('video.pv').forEach(v => io.observe(v));
+</script>""")
     path = os.path.join(LIB, "index.html")
     open(path, "w", encoding="utf-8").write("\n".join(out))
     print("viewer:", path, "packs", len(packs), "previews", n_files)
