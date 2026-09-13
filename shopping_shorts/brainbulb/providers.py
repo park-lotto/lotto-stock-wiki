@@ -49,14 +49,52 @@ def _env_key(name, env_file=None):
     return ""
 
 
-def gemini_llm(model="gemini-3.1-flash-lite", api_key=None, env_file=None):
-    """→ call(prompt) -> str. JSON은 prompt.parse가 걷어낸다."""
+def _gemini_client(api_key=None, env_file=None):
+    """제미니 클라이언트 하나를 여기서만 만든다(0순위-B) — 버텍스 우선, 없으면 무료 키.
+
+    ★왜 버텍스인가: 무료 키는 **모델마다 하루 20건**이라 한 편(검수 11장 + 대본 2~7회)을
+      두 번도 못 돌린다(실측 2026-09-13: v9 한 편에 할당량이 끝났다).
+      버텍스는 그 제한이 없다 — 사장님 계정에 결제가 이미 붙어 있고(012D20-…) API도 켜져 있다.
+      값도 싸다: 한 편 21,960입력·6,450출력 토큰 ≈ **6.7원**.
+      같은 편의 이미지 생성비(에보링크 11장 493원)의 1.4%다.
+
+    고르는 순서:
+      ① BRAINBULB_VERTEX=0 이면 무료 키를 강제(빠른 시험·오프라인용)
+      ② GOOGLE_CLOUD_PROJECT(또는 .env)가 있으면 **버텍스**
+      ③ 없으면 GEMINI_API_KEY 무료 키
+    """
+    from google import genai
+    if os.environ.get("BRAINBULB_VERTEX", "").strip() != "0":
+        proj = _env_key("GOOGLE_CLOUD_PROJECT", env_file)
+        if proj:
+            loc = _env_key("GOOGLE_CLOUD_LOCATION", env_file) or "us-central1"
+            return genai.Client(vertexai=True, project=proj, location=loc)
     key = api_key or _env_key("GEMINI_API_KEY", env_file)
     if not key:
-        raise RuntimeError("providers: GEMINI_API_KEY가 없습니다 (.env 또는 환경변수)")
-    from google import genai
+        raise RuntimeError("providers: GOOGLE_CLOUD_PROJECT(버텍스) 또는 GEMINI_API_KEY가 없습니다")
+    return genai.Client(api_key=key)
+
+
+def _pick_model(client, model):
+    """버텍스에 없는 모델이면 있는 것으로 바꾼다.
+
+    ★실측 2026-09-13: 버텍스(us-central1)에 `gemini-3.1-flash-lite`·`gemini-3-flash-preview`·
+      `gemini-2.0-flash`가 **없다**(404). 되는 것은 2.5 계열이다.
+      무료 키에서는 3.1이 되므로, 어디로 붙었느냐에 따라 갈아끼운다.
+    """
+    try:
+        if not client._api_client.vertexai:
+            return model
+    except Exception:  # noqa: BLE001 — 못 보면 그대로 쓴다
+        return model
+    return spec.VERTEX_MODEL_MAP.get(model, model)
+
+
+def gemini_llm(model="gemini-3.1-flash-lite", api_key=None, env_file=None):
+    """→ call(prompt) -> str. JSON은 prompt.parse가 걷어낸다. 버텍스 우선(무료 키 한도 회피)."""
     from google.genai import types
-    client = genai.Client(api_key=key)
+    client = _gemini_client(api_key, env_file)
+    model = _pick_model(client, model)
 
     def call(prompt):
         r = client.models.generate_content(model=model, contents=prompt,
@@ -77,14 +115,11 @@ def gemini_reviewer(model="gemini-3.1-flash-lite", api_key=None, env_file=None):
         gemini-3.1-flash-lite  retry  ['-2,886.93']
         gemini-2.5-flash-lite  accepted []          ← 놓친다. 기본에서 뺐다.
       3.1-flash-lite는 옷의 MIRACLE·정상 사진은 통과시켜 오탐도 없었다(3/3 정답).
-    ★무료 한도는 하루 20건이라 한 편(11장)을 두 번 못 돌린다 — 유료 전환이 필요하다.
+    ★무료 키는 하루 20건이라 한 편(11장)을 두 번 못 돌린다 → 버텍스를 먼저 쓴다(_gemini_client).
     """
-    key = api_key or _env_key("GEMINI_API_KEY", env_file)
-    if not key:
-        raise RuntimeError("providers: GEMINI_API_KEY가 없습니다 (.env 또는 환경변수)")
-    from google import genai
     from google.genai import types
-    client = genai.Client(api_key=key)
+    client = _gemini_client(api_key, env_file)
+    model = _pick_model(client, model)
 
     def call(prompt, image_path):
         with open(image_path, "rb") as fh:

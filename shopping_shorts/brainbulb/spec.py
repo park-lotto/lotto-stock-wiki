@@ -242,3 +242,14 @@ PROMPT_PERSON_WORDS = ("사람", "사람들", "받았", "받음", "받는", "도
 # 의심스러운 것만 보낸다(모델 호출은 돈이 든다).
 PHOTOCHECK_FLAT_MAX = 0.55      # 평평한 면 비율 상한 — 넘으면 '평평한 면이 넓다'(일러스트 징후)
 PHOTOCHECK_GRAD_MIN = 1.0       # 가장자리 세기 중앙값 하한 — 밑돌면 잔질감(모공·직물)이 없다
+
+# 버텍스에 없는 모델 → 있는 것으로. 실측 2026-09-13(us-central1):
+#   gemini-3.1-flash-lite · gemini-3-flash-preview · gemini-2.0-flash 는 404.
+#   2.5 계열만 된다. 무료 키에서는 3.1이 되므로 붙은 곳에 따라 갈아끼운다(_pick_model).
+#   ★검수에 2.5-flash-lite를 쓰면 가짜 기록을 놓친다 → 2.5-flash로 올린다.
+VERTEX_MODEL_MAP = {
+    "gemini-3.1-flash-lite": "gemini-2.5-flash",
+    "gemini-3-flash-preview": "gemini-2.5-flash",
+    "gemini-2.0-flash": "gemini-2.5-flash",
+    "gemini-2.5-flash-lite": "gemini-2.5-flash",
+}

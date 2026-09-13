@@ -194,3 +194,35 @@ def test_reviewer_default_model_catches_fake_records():
     got = inspect.signature(providers.gemini_reviewer).parameters["model"].default
     assert got != "gemini-2.5-flash-lite", "가짜 기록을 놓치는 모델이 기본이다"
     assert got == "gemini-3.1-flash-lite", got
+
+
+def test_vertex_model_map_avoids_missing_models():
+    """★버텍스에 없는 모델을 그대로 쓰면 404다.
+
+    실측 2026-09-13(us-central1): gemini-3.1-flash-lite · gemini-3-flash-preview ·
+    gemini-2.0-flash 가 **없다**. 2.5 계열만 된다.
+    검수용으로 2.5-flash-lite를 쓰면 가짜 기록을 놓치므로 2.5-flash로 올린다.
+    """
+    from shopping_shorts.brainbulb import spec
+    m = spec.VERTEX_MODEL_MAP
+    assert m.get("gemini-3.1-flash-lite") == "gemini-2.5-flash"
+    assert m.get("gemini-2.5-flash-lite") == "gemini-2.5-flash", "검수가 가짜 기록을 놓친다"
+
+
+def test_pick_model_leaves_free_key_alone():
+    """무료 키로 붙었으면 모델을 바꾸지 않는다 — 거기선 3.1이 된다."""
+    from shopping_shorts.brainbulb import providers
+
+    class FakeFree:
+        class _api_client:
+            vertexai = False
+    assert providers._pick_model(FakeFree(), "gemini-3.1-flash-lite") == "gemini-3.1-flash-lite"
+
+
+def test_pick_model_swaps_on_vertex():
+    from shopping_shorts.brainbulb import providers
+
+    class FakeVertex:
+        class _api_client:
+            vertexai = True
+    assert providers._pick_model(FakeVertex(), "gemini-3.1-flash-lite") == "gemini-2.5-flash"
