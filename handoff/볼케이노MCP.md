@@ -194,3 +194,76 @@ style_fields : color · colors · font · font_file · font_size
   `remotion_render.py` 는 이미 "없으면 `RemotionUnavailable`" 구조라 자리는 마련돼 있다.
 - 대안: 릴리 디자인을 ffmpeg/PIL 로 다시 구현하면 Remotion 없이 되지만 **애니메이션은 포기**.
 - 지금은 컷별 스타일을 `build_cuts.py` 에서 손으로 지정한다. 대본 단계에서 정하게 하면 자동화된다.
+
+### ★재현 절차 — 볼케이노 영상에 릴리 자막 얹기 (이대로 치면 된다)
+
+전제: 볼케이노를 render_mix 까지 돌려 작업 폴더에 아래 3개가 있어야 한다.
+`video_raw.mp4`(자막 없는 영상) · `audio_sfx.wav`(목소리+효과음) · `timing.json`(컷 시각)
+
+```bash
+WORK=<볼케이노 작업 폴더>                      # 예: .../scratchpad/volcano_blind_gf
+MOTION="C:/Users/CH/Desktop/로또의 주식/.tracks/릴리자막프리셋/shopping_shorts/motion"
+FF="C:/Users/CH/AppData/Local/Microsoft/WinGet/Packages/Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe/ffmpeg-8.1.2-full_build/bin/ffmpeg.EXE"
+```
+
+**① 최초 1회만 — Remotion 설치** (`node_modules` 없으면 CLI 가 안 뜬다)
+```bash
+cd "$MOTION" && npm install --no-audit --no-fund     # 184 packages, 13초
+```
+
+**② 컷 계획 만들기** `timing.json` → `cuts.json`
+```bash
+cd "$WORK" && python build_cuts.py                   # 아래 '컷 계획' 참고
+cp cuts.json "$MOTION/cuts.json"
+```
+`build_cuts.py` 의 `PLAN` 이 컷번호 → 스타일 표다. 여기만 고치면 배치가 바뀐다.
+kind 7종: `narr`(박스형) `hl`(형광펜) `lower`(이름표) `bubble`(댓글) `react`(리액션단어) `stamp`(도장) `punch`(빨강마무리)
+`lower` 는 `name`+`color`, `hl` 은 `highlight`(본문에 실제로 있는 낱말이어야 한다 — 없으면 스크립트가 narr 로 되돌리고 경고한다).
+
+**③ 자막층 렌더** (투명 배경 ProRes4444 · 약 50초 · 137MB)
+```bash
+cd "$MOTION" && npx remotion render src/index.ts SsulOverlay "$WORK/overlay.mov" \
+  --props=./cuts.json --codec=prores --prores-profile=4444 \
+  --pixel-format=yuva444p10le --image-format=png
+```
+길이는 `calculateMetadata` 가 컷에서 자동 계산한다(`--frames` 주지 마라 — durationInFrames 와 안 맞으면 반려).
+
+**④ 합성** (12초)
+```bash
+cd "$WORK" && "$FF" -y -v error -i video_raw.mp4 -i overlay.mov -i audio_sfx.wav \
+  -filter_complex "[0:v][1:v]overlay=0:0:format=auto,format=yuv420p[v]" \
+  -map "[v]" -map 2:a -c:v libx264 -preset medium -crf 19 -pix_fmt yuv420p \
+  -color_range tv -colorspace bt709 -c:a aac -b:a 192k -t <timing.total> \
+  -movflags +faststart out/<slug>_lily.mp4
+```
+
+**⑤ 검증 — 반드시 눈으로 본다** (0순위-A1)
+```bash
+# 자막이 사진을 덮지 않는지: 사진 아래 띠에 있어야 한다
+"$FF" -y -v error -ss <시각> -i out/<slug>_lily.mp4 -frames:v 1 chk.png   # → Read 로 본다
+# 알파가 살았는지: 자막 없는 구간 0%, 있는 구간만 불투명
+"$FF" -y -v error -ss 0.5 -i overlay.mov -frames:v 1 -pix_fmt rgba a.png
+```
+
+### ★자막 y 위치 — 판이 바뀌면 다시 재야 한다
+
+`SsulOverlay` 의 `shiftY`(기본 753)는 **뇌전구 판 실측값**이다. 템플릿이 바뀌면 틀어진다.
+재는 법: 자막 없는 프레임에서 사진 위/아래 경계를 찾고, 그 아래 검은 띠 중앙에 맞춘다.
+```python
+from PIL import Image; import numpy as np
+im=np.array(Image.open('프레임.png').convert('L')); rows=im.mean(axis=1)
+lit=[y for y,v in enumerate(rows) if v>12]          # 사진 영역
+print(lit[0], lit[-1], (lit[-1]+1920)//2)           # 뇌전구: 469 1254 1587
+```
+그 다음 `overlay.mov` 에서 자막이 실제로 찍힌 y 를 재서 차이만큼 `shiftY` 를 보정한다.
+★한 번에 안 맞는다 — 감싼 `AbsoluteFill` 이 `marginTop` 기준을 바꿔 **민 양이 그대로 반영되지 않는다**.
+실측 2회로 맞췄다(574 → 1408 나옴 → 753 → 1587 적중).
+
+### 컴포넌트 함정 (고치면서 실제로 밟음 — 정적 검토로는 안 잡힌다)
+
+| 증상 | 원인 | 고침 |
+|---|---|---|
+| 댓글에 말풍선 없이 **꼬리만** 뜸 | `LilyBubble` 은 label 이 비어도 풍선을 그린다 | 댓글 문구를 `text` 아닌 **`label`** 로 |
+| 마무리 자막이 **흰색**으로 나옴 | `hlColor` 는 강조어만 칠한다 | 전체 색은 **`color`** |
+| 형광펜 밴드색이 안 먹음 | `marker` 변형 전용 키가 따로 있다 | **`markerColor`** |
+| remotion CLI 가 아예 안 뜸 | `tsconfig.json` 없음 | 이번 커밋에 추가함 |
