@@ -270,3 +270,20 @@ print(lit[0], lit[-1], (lit[-1]+1920)//2)           # 뇌전구: 469 1254 1587
 | 마무리 자막이 **흰색**으로 나옴 | `hlColor` 는 강조어만 칠한다 | 전체 색은 **`color`** |
 | 형광펜 밴드색이 안 먹음 | `marker` 변형 전용 키가 따로 있다 | **`markerColor`** |
 | remotion CLI 가 아예 안 뜸 | `tsconfig.json` 없음 | 이번 커밋에 추가함 |
+
+## 2026-09-14 CH PC — ★B안 실측: video_raw + 이븐쇼핑 헤더 + 릴리 자막 (최민식 출연료 편)
+
+**결론: 앞 절(自막 갈아끼우기)의 "헤드라인은 템플릿 쪽에서" 빈칸이 채워졌다.** 산출물 바탕화면 `최민식_이븐쇼핑헤더+릴리자막_B.mp4`(36.77초).
+
+```
+video_raw.mp4 (볼케이노 사진·밈·움직임·검수 그대로, 글자 0)
+ + chrome.mov   ← 이븐쇼핑 헤더 층(PIL, 투명 ProRes4444)  tools/lilysub/even_header/even_chrome.py
+ + overlay.mov  ← 릴리 자막 층(Remotion SsulOverlay)        cuts.json ← build_cuts.py + plan
+ + audio_sfx.wav → ffmpeg overlay 2겹 → 최종
+```
+
+- 헤더 좌표는 `precision20-data.js` 이븐쇼핑(t11) 그대로(`even_pil.py` HOOK/BODY dict). 뇌전구 판 사진이 y469 부터라 **훅 헤더는 469 높이로 축소, 본문 헤더는 회색부(spec y0~156)만 쓰고 401~469 를 #3B3B3B 로 채움** — 흰 자막띠는 릴리가 맡으니 뺐다(안 빼면 빈 흰 띠가 뜬다, 실측).
+- ★**`LilyBasic` 계열(narr·hl·punch)이 전부 화면 밖으로 나갔다** — `position="bottom"` 이 아래 여백 11%(y1709) 기준이라 `shiftY 753` 을 더하면 2462. lower·bubble 은 자기 레이아웃이 달라 보였고 세 kind 만 픽셀 0. `SsulOverlay.tsx` 에서 그 세 kind 는 `position="mid"` + shift-126(=627) 로 바꿔 띠 중앙 1587 적중(실측 1551~1625). react·stamp 는 y385 로 헤더에 걸쳐 +300.
+- 검증: overlay.mov 를 검정 위에 떠서 kind 7종 y 범위 실측 → 6종 띠 안·react 사진 위. 합성본 프레임 6장 눈으로 확인.
+- 계획 파일 예시 `tools/lilysub/plan_예시_최민식출연료.json`(lower 2·hl 4·bubble 1·react 2·punch 1).
+- 남은 것: 헤더 문구(HOOK1/HOOK2/BODYTITLE/CHANNEL)가 `even_pil.py` 상수 — 볼케이노 `title.h1/h2/card` 자동 연결 미착수. 컷별 kind 도 아직 손 계획. 글꼴 TmonMonsori 없음(잘난체 대체). `장면꾸미기UI코덱스` 트랙의 `out/even_export.cjs`(브라우저 캡처판)는 **폐기 대상** — memory `템플릿영상_브라우저캡처말고_좌표렌더`.

@@ -1,0 +1,12 @@
+{
+  "4":  {"kind":"lower", "name":"형",     "color":"#1aa6a6"},
+  "6":  {"kind":"lower", "name":"최민식", "color":"#ff8a3d"},
+  "8":  {"kind":"hl",    "highlight":"150만원"},
+  "10": {"kind":"bubble"},
+  "11": {"kind":"hl",    "highlight":"종이 쪼가리"},
+  "13": {"kind":"hl",    "highlight":"깡"},
+  "15": {"kind":"react", "text":"30퍼?!"},
+  "18": {"kind":"react", "text":"또 2퍼?!"},
+  "20": {"kind":"hl",    "highlight":"230만원"},
+  "21": {"kind":"punch"}
+}
