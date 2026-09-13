@@ -1,128 +1,174 @@
 <!doctype html><meta charset="utf-8"><title>릴리리아 자막 프리셋</title>
 <style>
-  body{font-family:Pretendard,'Malgun Gothic',sans-serif;background:#111;color:#eee;margin:0;padding:20px}
-  h1{font-size:22px;margin:0 0 4px}.sub{color:#999;font-size:13px;margin-bottom:18px}
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+  body{font-family:Pretendard,'Malgun Gothic',sans-serif;background:#111;color:#eee;margin:0;padding:20px 20px 60px}
+  h1{font-size:22px;margin:0 0 4px}
+  .sub{color:#999;font-size:13px;margin-bottom:16px}
+  .nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:26px}
+  .nav a{background:#1c1c1c;color:#cde;text-decoration:none;font-size:13px;padding:6px 12px;border-radius:999px;border:1px solid #2a2a2a}
+  .nav a:hover{background:#26323f;border-color:#3a5068}
+  .nav a .cnt{color:#7f95a8;font-size:11px;margin-left:5px}
+  section{margin-bottom:34px;scroll-margin-top:14px}
+  .sechead{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:4px}
+  .sechead h2{font-size:18px;margin:0}
+  .sechead .cnt{color:#6f8398;font-size:12px}
+  .when{color:#8fd3a0;font-size:13px;margin:0 0 12px;background:#16231a;border-left:3px solid #2f7d46;padding:7px 12px;border-radius:0 6px 6px 0}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
   .card{background:#1a1a1a;border-radius:12px;overflow:hidden}
   .card video{width:100%;aspect-ratio:1080/520;object-fit:cover;background:#000;display:block}
-  .card .b{padding:10px 12px}
-  .card .n{font-weight:700;font-size:15px}
-  .card .m{color:#9ab;font-size:12px;margin-top:3px}
-  .status{display:inline-block;font-size:11px;padding:2px 8px;border-radius:5px;margin-left:6px}
-  .done{background:#1e4d2b}.todo{background:#4d3f1e}
-  .note{background:#181818;border-radius:8px;padding:12px;margin-top:20px;font-size:13px;color:#bbb;line-height:1.6}
+  .card .b{padding:9px 12px}
+  .card .n{font-weight:700;font-size:14px}
+  .card .m{color:#9ab;font-size:12px;margin-top:3px;line-height:1.4}
+  .card .src{color:#667;font-size:11px;margin-top:4px}
+  .note{background:#181818;border-radius:8px;padding:14px;margin-top:10px;font-size:13px;color:#bbb;line-height:1.7}
 </style>
-<h1>릴리리아(by. Lily) 자막 프리셋 — Remotion 재현</h1>
-<div class="sub">mogrt(프리미어 전용)를 우리 렌더러로 재현. 대본만 바꾸면 이 스타일로 나온다. 영상은 마우스 올리면 재생.</div>
-<div class="grid" id="grid"></div>
-<div class="note">
-  <b>진행 상황</b><br>
-  ✅ 완성 69종 (에디션 12개)<br>
-  · #14 심플 14 / #38 환승연애 11 / #4 뉴스 5 / #41 도장 5<br>
-  · #11 첨자 4 / #12 화날때 3 / #10 예능데코 5 / #28 예능강조 4 / #42 신서유기 4<br>
-  · #7 크리스마스 4 (네온·아이콘라벨·트리씬·이름표바)<br>
-  · #44 힐링 3 (중괄호·감성한줄·커피로워서드)<br>
-  · #13 휘뚤마뚤 4 (기본·레트로·네온·화살표)<br>
-  · #23 모션 3 (무지개·하늘파랑·새해)<br>
-  ⏳ 각 에디션 나머지 색·문구 변형은 같은 컴포넌트에 값만 바꿔 계속 추가<br>
-  <br>
-  <b>쓰는 법</b>: 이 프리셋들은 숏템메이커 고급효과(Remotion)에 붙일 컴포넌트다. 제작소에서 프리셋 고르고 글자 넣으면 렌더된다(UI 연결은 다음 단계).
-</div>
+<h1>릴리리아(by. Lily) 자막 프리셋 — 용도별</h1>
+<div class="sub">"지금 이 장면에 뭘 쓸까?" 로 찾는다. 대본(글자)만 바꾸면 이 스타일로 렌더된다. 카드에 마우스 올리면 재생.</div>
+<div class="nav" id="nav"></div>
+<div id="cats"></div>
+<div class="note" id="note"></div>
+
 <script>
-const items = [
-  {file:'p_hee', name:'핑크 네온 (희로애락)', desc:'흰 글자+핑크 외곽선+글로우+강조+반짝이', status:'done'},
-  {file:'p_hot', name:'핫핑크', desc:'진한 핑크 톤 변형', status:'done'},
-  {file:'p_pur', name:'보라 네온 (화려한 모션)', desc:'보라 글로우 변형', status:'done'},
-  {file:'p_chm', name:'첨자 (라벨)', desc:'위 핑크 라벨 박스 + 핑크글자 노란 외곽선', status:'done'},
-  {file:'p_ang', name:'화날때 (불꽃)', desc:'빨간 글자 + 양옆 불꽃', status:'done'},
-  {file:'p_news', name:'뉴스바', desc:'로고박스 + 회색바 + 검은 굵은 글자', status:'done'},
-  {file:'p_stamp', name:'도장 (스탬프)', desc:'빨간 이중 테두리 + 쾅 등장', status:'done'},
-  {file:'p_name', name:'이름표+상자 (환승연애/신서유기)', desc:'테두리 상자 + 이름표 + 구분선', status:'done'},
-  {file:'p_type', name:'타이핑 (커서 깜빡임)', desc:'한 글자씩 등장 + 커서', status:'done'},
-  {file:'p_box', name:'테두리 박스 (크리스마스)', desc:'금색 이탤릭 + 얇은 사각 테두리', status:'done'},
-  {file:'p_stk', name:'2줄형 (심플)', desc:'작은 부제 + 큰 본문, 깔끔', status:'done'},
-  {file:'p_quote', name:'인용구형 (감성)', desc:'위·아래 큰따옴표 + 부제 + 본문, 명언 톤', status:'done'},
-  {file:'p_question', name:'질문형 (Q.)', desc:'이탤릭 Q. + 2줄 질문, 인터뷰용', status:'done'},
-  {file:'p_underline', name:'밑줄형', desc:'부제 + 본문 + 글자폭 밑줄(좌→우 등장)', status:'done'},
-  // #38 환승연애 컨셉 (11버전)
-  {file:'p_e38_v1', name:'#38 로워서드바 (지혜)', desc:'이름표 탭 + 검은 자막바, 예능 로워서드', status:'done'},
-  {file:'p_e38_v2', name:'#38 로워서드바 (성훈)', desc:'파란 이름표 색 변형', status:'done'},
-  {file:'p_e38_v3', name:'#38 이름표+본문 (지혜)', desc:'분홍 이름표 탭(밑줄) + 흰 큰 본문', status:'done'},
-  {file:'p_e38_v4', name:'#38 이름표+본문 (성훈)', desc:'파란 이름표 색 변형', status:'done'},
-  {file:'p_e38_v5', name:'#38 인용구', desc:'큰따옴표 감성 인용', status:'done'},
-  {file:'p_e38_v6', name:'#38 본문만', desc:'이름표 없이 큰 본문', status:'done'},
-  {file:'p_e38_v7', name:'#38 손그림 라벨박스 (분홍)', desc:'하트 + 손그림 테두리 + 2줄 인용', status:'done'},
-  {file:'p_e38_v8', name:'#38 손그림 라벨박스 (파랑)', desc:'파란색 변형', status:'done'},
-  {file:'p_e38_v9', name:'#38 팝 단어 "머뭇"', desc:'블러→선명 글로우, 통통 등장', status:'done'},
-  {file:'p_e38_v10', name:'#38 팝 단어 "수줍"', desc:'감정 단어 강조', status:'done'},
-  {file:'p_e38_v11', name:'#38 팝 단어 "???"', desc:'물음 강조', status:'done'},
-  // #4 뉴스 자막 (6버전; ver1은 뉴스바로 위에 있음)
-  {file:'p_n4_v2', name:'#4 뉴스 앵커형', desc:'이름표+직함 + 파란 하단 박스', status:'done'},
-  {file:'p_n4_v3', name:'#4 뉴스 헤드라인', desc:'회색 소제목 + 큰 흰 본문', status:'done'},
-  {file:'p_n4_v4', name:'#4 뉴스 은색바', desc:'은색 그라데이션 속보 바', status:'done'},
-  {file:'p_n4_v5', name:'#4 뉴스 라벨형', desc:'파란 라벨 + 본문 밑줄', status:'done'},
-  {file:'p_n4_v6', name:'#4 뉴스 프로필형', desc:'원형 프로필 + 직함 + 이름', status:'done'},
-  // #41 도장 쾅 (5버전)
-  {file:'p_s41_v1', name:'#41 도장 REJECTED', desc:'빨간 이중테두리 + 쾅 등장 + 흔들림', status:'done'},
-  {file:'p_s41_v2', name:'#41 도장 SUCCESS', desc:'글자만 교체', status:'done'},
-  {file:'p_s41_v3', name:'#41 도장 FAIL', desc:'글자만 교체', status:'done'},
-  {file:'p_s41_v4', name:'#41 도장 PASS', desc:'글자만 교체', status:'done'},
-  {file:'p_s41_v5', name:'#41 도장 ACCEPTED', desc:'글자만 교체', status:'done'},
-  // #11 첨자 자막 (색·말풍선 변형)
-  {file:'p_c11_v1', name:'#11 첨자 (핑크)', desc:'흰 글자 + 핑크 외곽선 + 핑크 라벨', status:'done'},
-  {file:'p_c11_v11', name:'#11 첨자 (파랑)', desc:'파랑 외곽선 + 파랑 라벨 색변형', status:'done'},
-  {file:'p_c11_bubble1', name:'#11 말풍선 (핑크)', desc:'둥근 말풍선 라벨(꼬리) + 강조 본문', status:'done'},
-  {file:'p_c11_bubble2', name:'#11 말풍선 (주황)', desc:'주황 말풍선 색변형', status:'done'},
-  // #12 화날때 (불꽃)
-  {file:'p_f12_v1', name:'#12 불꽃 강조', desc:'빨간 글자 + 양옆 🔥 + 강조어', status:'done'},
-  {file:'p_f12_v4', name:'#12 화날때 (차분)', desc:'흰 글자 + 얇은 검은 테두리', status:'done'},
-  {file:'p_f12_v7', name:'#12 불꽃 (문장형)', desc:'긴 대사 불꽃 자막', status:'done'},
-  // #10 예능데코 (단어)
-  {file:'p_d10_1', name:'#10 데코 "ㅋㅋㅋㅋㅋㅋ"', desc:'큰 글자 부들부들 흔들림', status:'done'},
-  {file:'p_d10_2', name:'#10 데코 "???????"', desc:'통통 팝 등장', status:'done'},
-  {file:'p_d10_3', name:'#10 데코 "!@%$#&"', desc:'특수문자 흔들림', status:'done'},
-  {file:'p_d10_4', name:'#10 데코 "우와아앙!!!"', desc:'위에서 쾅 떨어짐', status:'done'},
-  {file:'p_d10_5', name:'#10 데코 "!! //"', desc:'노란 빗금 강조', status:'done'},
-  // #28 예능강조 (별폭발/강조)
-  {file:'p_b28_burst1', name:'#28 별폭발 "이건 아니지!" (빨강)', desc:'만화 폭발 도형 + 2줄', status:'done'},
-  {file:'p_b28_burst2', name:'#28 별폭발 "이건 아니지!" (파랑)', desc:'색 변형', status:'done'},
-  {file:'p_d28_excl', name:'#28 강조 "!!!"', desc:'빨간 느낌표 흔들림', status:'done'},
-  {file:'p_d28_q', name:'#28 강조 "???"', desc:'빨간 물음표 흔들림', status:'done'},
-  // #42 신서유기
-  {file:'p_l42_list', name:'#42 리스트 (강호동 3등)', desc:'헤드라인 + 불릿 항목 순차 등장', status:'done'},
-  {file:'p_d42_excl', name:'#42 큰 느낌표 "!"', desc:'위에서 쾅', status:'done'},
-  {file:'p_d42_kk', name:'#42 "ㅋㅋㅋㅋㅋㅋㅋㅋ"', desc:'흔들림', status:'done'},
-  {file:'p_d42_emo', name:'#42 이모티콘 "*^_^*"', desc:'팝 등장', status:'done'},
-  // #7 크리스마스
-  {file:'p_x7_v2', name:'#7 네온 Merry Christmas', desc:'붉은 네온 글로우 + 눈사람', status:'done'},
-  {file:'p_x7_v3', name:'#7 아이콘 라벨', desc:'🎄 라벨 + 흰테두리 본문 + 강조', status:'done'},
-  {file:'p_x7_v7', name:'#7 트리 씬', desc:'큰 트리 + "크리스마스 밤" 색밴드', status:'done'},
-  {file:'p_x7_v8', name:'#7 아이콘 이름표바', desc:'🎄 이름표 + 흰 자막바', status:'done'},
-  // #44 힐링 감성
-  {file:'p_h44_v4', name:'#44 중괄호 { LOVE MYSELF }', desc:'부제 + serif 중괄호 강조', status:'done'},
-  {file:'p_h44_v3', name:'#44 감성 한줄', desc:'위아래 얇은 선 + 부드러운 본문', status:'done'},
-  {file:'p_h44_v10', name:'#44 커피 로워서드', desc:'이름표 | 잔잔한 한 줄', status:'done'},
-  // #13 휘뚤마뚤 예능
-  {file:'p_m13_v1', name:'#13 기본 자막', desc:'부제 + 큰 본문, 깔끔', status:'done'},
-  {file:'p_m13_v12', name:'#13 레트로 컬러', desc:'노랑 글자 + 주황 강조 + 라벨', status:'done'},
-  {file:'p_m13_v5', name:'#13 네온 초록', desc:'초록 네온 + 반짝이', status:'done'},
-  {file:'p_m13_v10', name:'#13 화살표 띄용', desc:'핑크 팝 단어', status:'done'},
-  // #23 모션 예능
-  {file:'p_o23_v3', name:'#23 무지개', desc:'흰 글자 + 보라 글로우 + 강조', status:'done'},
-  {file:'p_o23_v4', name:'#23 하늘 파랑', desc:'파랑 글로우 색변형', status:'done'},
-  {file:'p_o23_v1', name:'#23 새해 (2024)', desc:'초록 네온 + 라벨', status:'done'},
+// 카테고리 정의: 언제 쓰는지 한 줄로.
+const CATS = [
+  {id:'talk',  icon:'💬', name:'말하는 자막 · 기본/감성',
+   when:'그냥 대사·나레이션을 예쁘게 얹을 때. 정보영상·브이로그·감성컷의 기본 자막.'},
+  {id:'react', icon:'🔥', name:'감정 강조 · 리액션',
+   when:'화날 때·놀랄 때·부끄러울 때 감정을 크게 띄울 때. 예능 리액션 순간.'},
+  {id:'meme',  icon:'💥', name:'큰 리액션 컷 · 밈',
+   when:'화면을 꽉 채우는 한 방. 판정(합격/탈락)·"이건 아니지"·!!!·??? 같은 밈컷.'},
+  {id:'lower', icon:'🏷️', name:'말하는 사람 표시 · 로워서드',
+   when:'누가 말하는지 이름표로 띄울 때. 인터뷰·환승연애식 대화·출연자 소개.'},
+  {id:'news',  icon:'📰', name:'뉴스 · 정보 자막',
+   when:'뉴스 패러디·정보 전달·항목 나열. 속보바·헤드라인·프로필·리스트.'},
+  {id:'label', icon:'🎀', name:'첨자 · 말풍선 라벨',
+   when:'귀여운 라벨을 위에 얹어 코멘트할 때. 첨자·말풍선 부연.'},
+  {id:'ask',   icon:'❓', name:'질문 · 인터뷰',
+   when:'질문을 던지는 컷. Q. 인터뷰 질문·자막.'},
+  {id:'theme', icon:'🎄', name:'테마 · 시즌',
+   when:'크리스마스·새해 등 시즌 영상의 타이틀/자막.'},
 ];
-const g = document.getElementById('grid');
-for (const it of items) {
-  const c = document.createElement('div'); c.className='card';
-  c.innerHTML = `<video muted loop playsinline preload="metadata" poster="media/${it.file}.png" src="media/${it.file}.mp4"></video>
-  <div class="b"><div class="n">${it.name}<span class="status ${it.status}">${it.status==='done'?'완성':'예정'}</span></div><div class="m">${it.desc}</div></div>`;
-  const v = c.querySelector('video');
-  c.addEventListener('mouseenter',()=>v.play().catch(()=>{}));
-  c.addEventListener('mouseleave',()=>{v.pause();});
-  g.appendChild(c);
+
+// 프리셋 카드 (cat 으로 분류). src = 원본 에디션.
+const items = [
+  // ── 말하는 자막(기본/감성) ──
+  {cat:'talk', file:'p_stk',       name:'2줄형 (심플)',        desc:'작은 부제 + 큰 본문, 가장 깔끔한 기본', src:'#14'},
+  {cat:'talk', file:'p_m13_v1',    name:'기본 자막',          desc:'부제 + 큰 본문, 무난한 기본형', src:'#13'},
+  {cat:'talk', file:'p_underline', name:'밑줄형',             desc:'부제 + 본문 + 글자폭 밑줄(좌→우)', src:'#14'},
+  {cat:'talk', file:'p_type',      name:'타이핑 (커서)',      desc:'한 글자씩 등장 + 깜빡이는 커서', src:'#14'},
+  {cat:'talk', file:'p_quote',     name:'인용구형 (감성)',    desc:'위·아래 큰따옴표, 명언 톤', src:'#14'},
+  {cat:'talk', file:'p_e38_v5',    name:'인용구 (환승연애)',  desc:'감성 큰따옴표 인용', src:'#38'},
+  {cat:'talk', file:'p_h44_v4',    name:'중괄호 { ENG }',     desc:'부제 + serif 중괄호, 힐링 감성', src:'#44'},
+  {cat:'talk', file:'p_h44_v3',    name:'감성 한줄',          desc:'위아래 얇은 선 + 부드러운 한 줄', src:'#44'},
+  {cat:'talk', file:'p_box',       name:'테두리 박스',        desc:'금색 이탤릭 + 얇은 사각 테두리', src:'#7'},
+  {cat:'talk', file:'p_hee',       name:'핑크 네온',          desc:'흰 글자+핑크 외곽선+글로우+반짝이', src:'#8'},
+  {cat:'talk', file:'p_hot',       name:'핫핑크',             desc:'진한 핑크 톤 변형', src:'#1'},
+  {cat:'talk', file:'p_pur',       name:'보라 네온',          desc:'보라 글로우 변형', src:'#9'},
+  {cat:'talk', file:'p_o23_v3',    name:'무지개',             desc:'흰 글자 + 보라 글로우 + 강조', src:'#23'},
+  {cat:'talk', file:'p_o23_v4',    name:'하늘 파랑',          desc:'파랑 글로우 색변형', src:'#23'},
+  {cat:'talk', file:'p_m13_v5',    name:'네온 초록',          desc:'초록 네온 + 반짝이', src:'#13'},
+  {cat:'talk', file:'p_m13_v12',   name:'레트로 컬러',        desc:'노랑 글자 + 주황 강조 + 라벨', src:'#13'},
+
+  // ── 감정 강조(리액션) ──
+  {cat:'react', file:'p_ang',      name:'화날때 (불꽃)',      desc:'빨간 글자 + 양옆 불꽃', src:'#12'},
+  {cat:'react', file:'p_f12_v1',   name:'불꽃 강조',          desc:'빨간 글자 + 🔥 + 강조어', src:'#12'},
+  {cat:'react', file:'p_f12_v7',   name:'불꽃 문장형',        desc:'긴 대사 불꽃 자막', src:'#12'},
+  {cat:'react', file:'p_f12_v4',   name:'화날때 (차분)',      desc:'흰 글자 + 얇은 검은 테두리', src:'#12'},
+  {cat:'react', file:'p_e38_v9',   name:'팝 단어 "머뭇"',     desc:'블러→선명 글로우, 감정 단어', src:'#38'},
+  {cat:'react', file:'p_e38_v10',  name:'팝 단어 "수줍"',     desc:'통통 등장 감정 강조', src:'#38'},
+  {cat:'react', file:'p_d10_1',    name:'"ㅋㅋㅋㅋㅋㅋ"',     desc:'큰 글자 부들부들', src:'#10'},
+  {cat:'react', file:'p_d42_kk',   name:'"ㅋㅋㅋㅋㅋㅋㅋ"',   desc:'흔들림 (긴 버전)', src:'#42'},
+  {cat:'react', file:'p_d10_4',    name:'"우와아앙!!!"',      desc:'위에서 쾅 떨어짐', src:'#10'},
+  {cat:'react', file:'p_d10_3',    name:'"!@%$#&"',          desc:'특수문자 욕/짜증 흔들림', src:'#10'},
+  {cat:'react', file:'p_d10_5',    name:'"!! //"',           desc:'노란 빗금 강조', src:'#10'},
+  {cat:'react', file:'p_d42_emo',  name:'이모티콘 "*^_^*"',   desc:'팝 등장', src:'#42'},
+  {cat:'react', file:'p_m13_v10',  name:'화살표 띄용',        desc:'핑크 팝 단어', src:'#13'},
+
+  // ── 큰 리액션 컷(밈) ──
+  {cat:'meme', file:'p_stamp',     name:'도장 (스탬프)',      desc:'빨간 이중 테두리 + 쾅', src:'#14'},
+  {cat:'meme', file:'p_s41_v1',    name:'도장 REJECTED',      desc:'탈락/반려 판정', src:'#41'},
+  {cat:'meme', file:'p_s41_v2',    name:'도장 SUCCESS',       desc:'성공 판정', src:'#41'},
+  {cat:'meme', file:'p_s41_v3',    name:'도장 FAIL',          desc:'실패 판정', src:'#41'},
+  {cat:'meme', file:'p_s41_v4',    name:'도장 PASS',          desc:'통과 판정', src:'#41'},
+  {cat:'meme', file:'p_s41_v5',    name:'도장 ACCEPTED',      desc:'합격 판정', src:'#41'},
+  {cat:'meme', file:'p_b28_burst1',name:'별폭발 "이건 아니지!"',desc:'만화 폭발 도형 + 2줄 (빨강)', src:'#28'},
+  {cat:'meme', file:'p_b28_burst2',name:'별폭발 (파랑)',       desc:'색 변형', src:'#28'},
+  {cat:'meme', file:'p_d28_excl',  name:'"!!!"',             desc:'빨간 느낌표 흔들림', src:'#28'},
+  {cat:'meme', file:'p_d28_q',     name:'"???"',             desc:'빨간 물음표 흔들림', src:'#28'},
+  {cat:'meme', file:'p_d10_2',     name:'"???????"',         desc:'물음표 팝 등장', src:'#10'},
+  {cat:'meme', file:'p_d42_excl',  name:'큰 느낌표 "!"',      desc:'위에서 쾅', src:'#42'},
+  {cat:'meme', file:'p_e38_v11',   name:'팝 단어 "???"',      desc:'물음 강조 (블러→선명)', src:'#38'},
+
+  // ── 로워서드(말하는 사람) ──
+  {cat:'lower', file:'p_e38_v1',   name:'로워서드바 (지혜)',  desc:'이름표 탭 + 검은 자막바', src:'#38'},
+  {cat:'lower', file:'p_e38_v2',   name:'로워서드바 (성훈)',  desc:'파란 이름표 색 변형', src:'#38'},
+  {cat:'lower', file:'p_e38_v3',   name:'이름표+본문 (지혜)', desc:'분홍 이름표(밑줄) + 흰 큰 본문', src:'#38'},
+  {cat:'lower', file:'p_e38_v4',   name:'이름표+본문 (성훈)', desc:'파란 색 변형', src:'#38'},
+  {cat:'lower', file:'p_e38_v6',   name:'본문만 (큰 대사)',   desc:'이름표 없이 큰 본문', src:'#38'},
+  {cat:'lower', file:'p_name',     name:'이름표+상자',        desc:'테두리 상자 + 이름표 + 구분선', src:'#38'},
+  {cat:'lower', file:'p_n4_v2',    name:'앵커형',             desc:'이름표+직함 + 파란 하단 박스', src:'#4'},
+  {cat:'lower', file:'p_n4_v6',    name:'프로필형',           desc:'원형 프로필 + 직함 + 이름', src:'#4'},
+  {cat:'lower', file:'p_h44_v10',  name:'커피 로워서드',      desc:'이름표 | 잔잔한 한 줄', src:'#44'},
+
+  // ── 뉴스·정보 ──
+  {cat:'news', file:'p_news',      name:'뉴스바',             desc:'로고박스 + 회색바 + 검은 굵은 글자', src:'#4'},
+  {cat:'news', file:'p_n4_v3',     name:'뉴스 헤드라인',      desc:'회색 소제목 + 큰 흰 본문', src:'#4'},
+  {cat:'news', file:'p_n4_v4',     name:'속보 은색바',        desc:'은색 그라데이션 바', src:'#4'},
+  {cat:'news', file:'p_n4_v5',     name:'라벨형',             desc:'파란 라벨 + 본문 밑줄', src:'#4'},
+  {cat:'news', file:'p_l42_list',  name:'리스트 (항목 나열)', desc:'헤드라인 + 불릿 순차 등장', src:'#42'},
+
+  // ── 첨자·말풍선 ──
+  {cat:'label', file:'p_chm',      name:'첨자 (핑크·노랑)',   desc:'핑크 라벨 + 핑크글자 노란 외곽선', src:'#2'},
+  {cat:'label', file:'p_c11_v1',   name:'첨자 (핑크)',        desc:'흰 글자 + 핑크 외곽선 + 핑크 라벨', src:'#11'},
+  {cat:'label', file:'p_c11_v11',  name:'첨자 (파랑)',        desc:'파랑 외곽선 + 파랑 라벨', src:'#11'},
+  {cat:'label', file:'p_c11_bubble1',name:'말풍선 (핑크)',    desc:'둥근 말풍선(꼬리) + 강조 본문', src:'#11'},
+  {cat:'label', file:'p_c11_bubble2',name:'말풍선 (주황)',    desc:'주황 말풍선 색변형', src:'#11'},
+  {cat:'label', file:'p_e38_v7',   name:'손그림 라벨박스 (분홍)',desc:'하트 + 손그림 테두리 + 2줄 인용', src:'#38'},
+  {cat:'label', file:'p_e38_v8',   name:'손그림 라벨박스 (파랑)',desc:'파란색 변형', src:'#38'},
+
+  // ── 질문·인터뷰 ──
+  {cat:'ask', file:'p_question',   name:'질문형 (Q.)',        desc:'이탤릭 Q. + 2줄 질문, 인터뷰용', src:'#14'},
+
+  // ── 테마·시즌 ──
+  {cat:'theme', file:'p_x7_v2',    name:'네온 Merry Christmas',desc:'붉은 네온 글로우 + 눈사람', src:'#7'},
+  {cat:'theme', file:'p_x7_v3',    name:'크리스마스 라벨',    desc:'🎄 라벨 + 흰테두리 본문 + 강조', src:'#7'},
+  {cat:'theme', file:'p_x7_v7',    name:'크리스마스 트리 씬', desc:'큰 트리 + 색밴드 본문', src:'#7'},
+  {cat:'theme', file:'p_x7_v8',    name:'크리스마스 이름표바',desc:'🎄 이름표 + 흰 자막바', src:'#7'},
+  {cat:'theme', file:'p_o23_v1',   name:'새해 (2024)',        desc:'초록 네온 + 라벨', src:'#23'},
+];
+
+// 렌더
+const nav = document.getElementById('nav');
+const cats = document.getElementById('cats');
+for (const cat of CATS) {
+  const list = items.filter(it => it.cat === cat.id);
+  if (!list.length) continue;
+  const a = document.createElement('a'); a.href = '#'+cat.id;
+  a.innerHTML = `${cat.icon} ${cat.name}<span class="cnt">${list.length}</span>`;
+  nav.appendChild(a);
+
+  const sec = document.createElement('section'); sec.id = cat.id;
+  sec.innerHTML = `<div class="sechead"><h2>${cat.icon} ${cat.name}</h2><span class="cnt">${list.length}종</span></div>
+    <p class="when">이럴 때 → ${cat.when}</p><div class="grid"></div>`;
+  const g = sec.querySelector('.grid');
+  for (const it of list) {
+    const c = document.createElement('div'); c.className='card';
+    c.innerHTML = `<video muted loop playsinline preload="metadata" poster="media/${it.file}.png" src="media/${it.file}.mp4"></video>
+    <div class="b"><div class="n">${it.name}</div><div class="m">${it.desc}</div><div class="src">원본 ${it.src}</div></div>`;
+    const v = c.querySelector('video');
+    c.addEventListener('mouseenter',()=>v.play().catch(()=>{}));
+    c.addEventListener('mouseleave',()=>{v.pause();});
+    g.appendChild(c);
+  }
+  cats.appendChild(sec);
 }
+
+// note
+document.getElementById('note').innerHTML =
+  `<b>총 ${items.length}종 · 카테고리 ${CATS.length}개</b><br>`+
+  `이 프리셋들은 숏템메이커 고급효과(Remotion) 컴포넌트다. 제작소에서 프리셋 고르고 글자만 넣으면 렌더된다(UI 연결은 다음 단계).<br>`+
+  `한 컴포넌트에 색·문구만 바꾸면 같은 계열 변형이 무한히 나온다 — 위 카드는 대표 샘플이다.`;
+
 // 화면에 보이면 자동재생
-const io = new IntersectionObserver(es=>es.forEach(e=>{const v=e.target;e.isIntersecting?v.play().catch(()=>{}):v.pause();}),{threshold:0.3});
+const io = new IntersectionObserver(es=>es.forEach(e=>{const v=e.target;e.isIntersecting?v.play().catch(()=>{}):v.pause();}),{threshold:0.25});
 document.querySelectorAll('video').forEach(v=>io.observe(v));
 </script>
