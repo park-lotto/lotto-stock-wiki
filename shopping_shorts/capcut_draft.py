@@ -405,7 +405,7 @@ def _watermark_material(wm, font_path):
 def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
                 project_name, canvas=(1080, 1920), font_path=_DEFAULT_FONT, video_durs=None,
                 caption_style=None, deco=None, headcopy_layer=None, bgm_layer=None,
-                sfx_layers=None, cutaway_layers=None):
+                sfx_layers=None, cutaway_layers=None, intro=None):
     """편집안 → (draft_content_dict, assets_to_copy).
 
     asset_paths: {real_path: 캡컷이 볼 절대경로} — 호출부가 파일을 그 절대경로에 두고 넘긴다.
@@ -648,6 +648,35 @@ def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
     tracks = [t for t in (vid_track, cut_track, hc_track, tpl_track,   # 머리카피가 틀 아래
                           aud_track, bgm_track, sfx_track, txt_track, wm_track)
               if t["segments"]]
+
+    # ── 🖼 썸네일 인트로(2026-09-13 사장님 "캡컷에도 첫 장면으로") ────────────────
+    # 렌더(mix_pipeline.prepend_still)는 완성 MP4 **앞에** 썸네일을 붙인다. 캡컷은 완성본을
+    # 담는 게 아니라 원본에서 편집본을 다시 조립하므로, 같은 그림을 여기서 따로 얹어야
+    # 두 결과물이 같아진다.
+    #
+    # ★기존 것들을 전부 뒤로 민 **다음** 인트로를 0초에 놓는다. 미는 일을 한 곳에서
+    #   일괄로 하는 이유(0순위-B): 시각을 계산하는 자리가 9개 트랙에 흩어져 있어
+    #   (t0·_acc·caption_schedule·headcopy t0·sfx at·전구간 0…) 각자 더하게 만들면
+    #   언젠가 한 곳을 빠뜨려 **소리와 화면이 어긋난다**. 다 만든 뒤 한 번에 밀면
+    #   빠뜨릴 자리가 없다.
+    # ★`source_timerange`는 **절대 건드리지 않는다** — 그건 타임라인 위치가 아니라
+    #   소스 파일 안에서 어디부터 읽을지다(head_trim 등). 밀면 엉뚱한 데가 재생된다.
+    intro_us = _us((intro or {}).get("seconds", 0.0)) if intro else 0
+    intro_path = (intro or {}).get("path")
+    if intro_us > 0 and intro_path:
+        for _t in tracks:
+            for _seg in _t["segments"]:
+                _seg["target_timerange"]["start"] += intro_us
+        total_us += intro_us
+        im = _photo_material(intro_path, str(intro_path).rsplit("/", 1)[-1], cw, ch)
+        mats["videos"].append(im)          # ★append — 앞에 끼우면 videos[0]=소스 전제가 깨진다
+        iseg = _base_segment(im["id"], 0, intro_us, source_start=0, source_dur=intro_us,
+                             render_index=0, volume=0.0)
+        intro_track = {"id": _uid(), "type": "video", "attribute": 0, "flag": 0,
+                       "name": "", "is_default_name": True, "segments": [iseg]}
+        # 맨 앞 구간엔 다른 게 아무것도 없다(전부 밀었다) → 층을 다툴 일이 없어 0으로 둔다.
+        tracks.append(intro_track)
+
     draft = _skeleton(project_name, cw, ch, total_us)
     draft["materials"].update(mats)
     draft["tracks"] = tracks
@@ -698,7 +727,7 @@ def assemble_draft_folder(out_root, base_abs, *, plan, timeline, source_video_pa
                           tts_paths, project_name, canvas=(1080, 1920), font_path=_DEFAULT_FONT,
                           probe=None, final_video=None, caption_style=None, deco=None,
                           headcopy_png=None, headcopy_span=None, sfx_events=None,
-                          cutaway_paths=None):
+                          cutaway_paths=None, intro_png=None, intro_seconds=0.0):
     """draft 폴더를 out_root/<project>/ 에 실제로 조립한다(에셋 복사 + draft_content.json + meta).
 
     base_abs: 캡컷이 이 draft 폴더를 볼 **절대경로**(예: C:/capcutproject/CapCut Drafts). draft가
@@ -778,6 +807,15 @@ def assemble_draft_folder(out_root, base_abs, *, plan, timeline, source_video_pa
             headcopy_layer = {"_capcut_path": _hp, "t0": float(_ht0 or 0.0),
                               "dur": float(_hdur or 0.0)}
 
+    # 🖼 썸네일 인트로 PNG — 렌더가 영상 앞에 붙이는 그 그림을 캡컷에도 같이 넣는다.
+    # ★길이는 렌더와 **같은 값**을 호출부가 준다(mix_pipeline의 intro_sec) — 여기서 다시
+    #   정하면 두 결과물의 인트로 길이가 갈린다(0순위-B).
+    intro_layer = None
+    if intro_png:
+        _ip, _ = _bring(intro_png, "thumb_intro.png")
+        if _ip:
+            intro_layer = {"path": _ip, "seconds": float(intro_seconds or 0.0)}
+
     bgm_layer = None
     _bgm = (deco.get("bgm") or {}) if isinstance(deco, dict) else {}
     if _bgm.get("_abspath"):
@@ -807,7 +845,8 @@ def assemble_draft_folder(out_root, base_abs, *, plan, timeline, source_video_pa
                            tts_paths=tts_paths, asset_paths=asset_paths, project_name=project,
                            canvas=canvas, font_path=font_path, video_durs=video_durs,
                            headcopy_layer=headcopy_layer, bgm_layer=bgm_layer,
-                           sfx_layers=sfx_layers, cutaway_layers=cutaway_layers)
+                           sfx_layers=sfx_layers, cutaway_layers=cutaway_layers,
+                           intro=intro_layer)
 
     # ── 미디어 보관함(2026-08-23 사장님 "라이브러리에 조각 영상들 불러올 수 있게") ──
     #   타임라인은 그대로 두고, **장면 조각을 캡컷 보관함에 넣어** 끌어다 갈아끼울 수 있게 한다.

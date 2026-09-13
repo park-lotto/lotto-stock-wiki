@@ -3511,7 +3511,8 @@ def run_render(job_id, db_path, work_root):
             try:
                 _png = _thumb_intro_png(job, _thumb)
                 if _png:
-                    _intro_sec = float(_thumb.get("intro_sec") or 1.2)
+                    from shopping_shorts.app import thumb_intro_seconds
+                    _intro_sec = thumb_intro_seconds(_thumb)   # 길이는 한 곳에서만 정한다
                     if prepend_still(str(out_path), str(_png), seconds=_intro_sec):
                         _intro_shift = _intro_sec
                 else:

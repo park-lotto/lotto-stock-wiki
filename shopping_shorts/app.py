@@ -7716,7 +7716,7 @@ def _cta_cut_for_job(job):
     # ⚠️ 폴백 경로는 인트로(prepend_still) 보정이 안 들어간다 — 인트로를 켰다면 그만큼 민다.
     _thumb = job.get("thumbnail") or {}
     if _thumb.get("intro"):
-        cut += float(_thumb.get("intro_sec") or 1.2)
+        cut += thumb_intro_seconds(_thumb)      # 길이는 한 곳에서만 정한다
     return float(cut), ""
 
 
@@ -7897,6 +7897,19 @@ def _selected_thumb_path(job):
         return None
     p = d / name
     return p if p.exists() else None
+
+
+def thumb_intro_seconds(thumb):
+    """썸네일 인트로가 몇 초인가 — **여기 한 곳에서만 정한다**(0순위-B).
+
+    렌더(mix_pipeline)·CTA 잘라내기·캡컷 내보내기가 전부 이 길이를 쓴다. 기본값을
+    각자 적으면 한 곳만 고쳐졌을 때 **인트로 길이가 갈려** 캡컷과 완성본이 달라지고
+    CTA 자르는 지점도 어긋난다(2026-09-13 캡컷 인트로 추가하며 3벌째가 될 뻔했다).
+    """
+    try:
+        return float((thumb or {}).get("intro_sec") or 1.2)
+    except (TypeError, ValueError):
+        return 1.2
 
 
 @app.get("/api/share/t/{sid}")
@@ -8262,10 +8275,25 @@ def api_mix_capcut(job_id: str, base: str = ""):
             caption_style=_cap_style, deco=_deco)
         _hc_span = video_assemble.headcopy_span(timeline)
 
+    # 🖼 썸네일 인트로(2026-09-13) — 9단계에서 켰으면 캡컷 타임라인 맨 앞에도 같이 넣는다.
+    #   렌더(mix_pipeline)는 완성 MP4 앞에 붙이는데, 캡컷은 원본에서 다시 조립하므로
+    #   여기서 따로 얹지 않으면 **캡컷에만 첫 장면이 없다**(2026-09-13 실측으로 확인).
+    #   ★어느 PNG냐는 _thumb_intro_png가 이미 정한다 — 여기서 다시 고르면 어긋난다(0순위-B).
+    _ithumb = job.get("thumbnail") or {}
+    _intro_png, _intro_sec = None, 0.0
+    if _ithumb.get("intro"):
+        try:
+            _p = mix_pipeline._thumb_intro_png(job, _ithumb)
+            if _p:
+                _intro_png, _intro_sec = str(_p), thumb_intro_seconds(_ithumb)
+        except Exception:      # noqa: BLE001 — 인트로 하나 때문에 내보내기가 죽으면 안 된다
+            import traceback as _tb            # app.py 관례(:7711·:7763) — 최상위 import 아님
+            _tb.print_exc(file=sys.stderr)
+
     proj, project, files = capcut_draft.assemble_draft_folder(
         out_root, base, plan=plan, timeline=timeline, source_video_paths=source_video_paths,
         tts_paths=tts_paths, project_name=_capcut_project_name(job_id, job, plan),
-        final_video=_final,
+        final_video=_final, intro_png=_intro_png, intro_seconds=_intro_sec,
         caption_style=(_cap_style if _style_on else None),
         deco=(_deco if _style_on else None),
         headcopy_png=(_hc_png if _style_on else None),
