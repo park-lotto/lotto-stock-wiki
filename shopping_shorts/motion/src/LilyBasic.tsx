@@ -35,10 +35,12 @@ export const LilyBasic: React.FC<LilyBasicProps> = ({
   position = 'bottom',
 }) => {
   const frame = useCurrentFrame();
-  const {width} = useVideoConfig();
+  const {width, height} = useVideoConfig();
   const opacity = interpolate(frame, [0, 8], [0, 1], {extrapolateRight: 'clamp'});
   const rise = interpolate(frame, [0, 11], [12, 0], {extrapolateRight: 'clamp'});
-  const marginTop = position === 'top' ? '15%' : position === 'bottom' ? '74%' : '44%';
+  // 세로축 배치: justifyContent로 정한다(marginTop%+scale 조합은 원점 탓에 중앙으로 쏠린다).
+  const justify = position === 'top' ? 'flex-start' : position === 'bottom' ? 'flex-end' : 'center';
+  const padBlock = position === 'mid' ? 0 : Math.round(height * 0.11); // 상/하 안전 여백
   const ff = `"${fontFamily}", "Malgun Gothic", sans-serif`;
   const estW = text.length * fontSize * 0.62 + 120;
   const fit = Math.min(1, (width * 0.9) / estW);
@@ -68,8 +70,8 @@ export const LilyBasic: React.FC<LilyBasicProps> = ({
     : {};
 
   return (
-    <AbsoluteFill style={{justifyContent: 'flex-start', alignItems: align === 'center' ? 'center' : 'flex-start', backgroundColor: 'transparent'}}>
-      <div style={{marginTop, marginLeft: align === 'left' ? '6%' : 0, opacity, transform: `translateY(${rise}px) scale(${fit})`, transformOrigin: align === 'left' ? 'left center' : 'center'}}>
+    <AbsoluteFill style={{justifyContent: justify, alignItems: align === 'center' ? 'center' : 'flex-start', paddingTop: position === 'top' ? padBlock : 0, paddingBottom: position === 'bottom' ? padBlock : 0, backgroundColor: 'transparent'}}>
+      <div style={{marginLeft: align === 'left' ? '6%' : 0, opacity, transform: `translateY(${rise}px) scale(${fit})`, transformOrigin: align === 'left' ? 'left center' : 'center'}}>
         <div style={{...boxStyle, fontFamily: ff, fontWeight: variant === 'plain' || variant === 'marker' ? 900 : 800, fontSize, color, whiteSpace: 'nowrap', textAlign: align, textShadow: (variant === 'plain' || variant === 'marker') ? '0 3px 12px rgba(0,0,0,0.75)' : 'none'}}>
           {parts.map(span)}
         </div>

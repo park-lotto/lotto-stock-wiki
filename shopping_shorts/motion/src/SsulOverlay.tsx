@@ -93,11 +93,21 @@ export const SsulOverlay: React.FC<SsulOverlayProps> = ({cuts, shiftY = 753}) =>
 
         // react·stamp 는 사진 위에 얹는 게 맞다(한 방 효과) → 밀지 않는다.
         const onPhoto = c.kind === 'react' || c.kind === 'stamp';
+        // ★LilyBasic 계열(narr·hl·punch)은 position="bottom" 이 아래 여백 11%(=y1709) 기준이라
+        //   shift 753 을 더하면 2462 → 화면 밖으로 나간다(2026-09-14 실측: 세 kind 모두 픽셀 0).
+        //   중앙(mid, y960) 기준으로 두고 띠 중앙 1587 까지 +627 만 민다. lower·bubble 은 기존 shift 유지.
+        const isBasic = c.kind === 'narr' || c.kind === 'hl' || c.kind === 'punch';
+        const basicShift = shift - 126;   // 753 → 627 (1587 - 960)
+        const body = isBasic ? React.cloneElement(inner as React.ReactElement, {position: 'mid'}) : inner;
+        // 사진 위 한 방(react·stamp)도 그대로 두면 y385~527 로 헤더(0~469)에 걸친다(실측) → 사진 안쪽 +300
+        const photoShift = 300;
         return (
           <Sequence key={i} from={from} durationInFrames={dur}>
-            {onPhoto ? inner : (
-              <AbsoluteFill style={{transform: `translateY(${shift}px)`}}>
-                {inner}
+            {onPhoto ? (
+              <AbsoluteFill style={{transform: `translateY(${photoShift}px)`}}>{inner}</AbsoluteFill>
+            ) : (
+              <AbsoluteFill style={{transform: `translateY(${isBasic ? basicShift : shift}px)`}}>
+                {body}
               </AbsoluteFill>
             )}
           </Sequence>
