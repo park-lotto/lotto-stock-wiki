@@ -198,8 +198,11 @@ def r_meme_ratio(s, ctx):
         return []
     n = sum(1 for g in gs if g.get("meme"))
     r = n / len(gs)
-    if r < 0.10 or r > 0.25:
-        return [Issue("meme_ratio", WARN, "groups", f"{n}/{len(gs)}", "밈은 전체의 14~18%가 이 채널 관행입니다")]
+    # 실측 실물 5편: 15·16·14·17·18% — 아주 좁다. 22%를 넘으면 밈이 너무 잦다
+    # (실측 2026-09-13: 23컷에 밈 6개=26%가 경고선 25% 밑으로 새어 통과했다).
+    if r < 0.10 or r > 0.22:
+        return [Issue("meme_ratio", WARN, "groups", f"{n}/{len(gs)} = {r:.0%}",
+                      f"밈은 전체의 14~18%가 이 채널 관행입니다(실물 5편 15·16·14·17·18%) — {round(len(gs)*0.16)}컷 안팎")]
     return []
 
 
