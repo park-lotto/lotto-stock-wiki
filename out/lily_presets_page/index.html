@@ -1,0 +1,46 @@
+<!doctype html><meta charset="utf-8"><title>릴리리아 자막 프리셋</title>
+<style>
+  body{font-family:Pretendard,'Malgun Gothic',sans-serif;background:#111;color:#eee;margin:0;padding:20px}
+  h1{font-size:22px;margin:0 0 4px}.sub{color:#999;font-size:13px;margin-bottom:18px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+  .card{background:#1a1a1a;border-radius:12px;overflow:hidden}
+  .card video{width:100%;aspect-ratio:1080/520;object-fit:cover;background:#000;display:block}
+  .card .b{padding:10px 12px}
+  .card .n{font-weight:700;font-size:15px}
+  .card .m{color:#9ab;font-size:12px;margin-top:3px}
+  .status{display:inline-block;font-size:11px;padding:2px 8px;border-radius:5px;margin-left:6px}
+  .done{background:#1e4d2b}.todo{background:#4d3f1e}
+  .note{background:#181818;border-radius:8px;padding:12px;margin-top:20px;font-size:13px;color:#bbb;line-height:1.6}
+</style>
+<h1>릴리리아(by. Lily) 자막 프리셋 — Remotion 재현</h1>
+<div class="sub">mogrt(프리미어 전용)를 우리 렌더러로 재현. 대본만 바꾸면 이 스타일로 나온다. 영상은 마우스 올리면 재생.</div>
+<div class="grid" id="grid"></div>
+<div class="note">
+  <b>진행 상황</b><br>
+  ✅ 완성: 핑크 네온(희로애락) · 핫핑크 · 보라 네온 · 테두리박스(크리스마스) · 2줄형(심플) — 5종<br>
+  ⏳ 다음: 환승연애(이름표+상자) · 뉴스바 · 도장 쾅(스탬프) · 타이핑 · 화날때(불꽃) · 첨자<br>
+  <br>
+  <b>쓰는 법</b>: 이 프리셋들은 숏템메이커 고급효과(Remotion)에 붙일 컴포넌트다. 제작소에서 프리셋 고르고 글자 넣으면 렌더된다(UI 연결은 다음 단계).
+</div>
+<script>
+const items = [
+  {file:'p_hee', name:'핑크 네온 (희로애락)', desc:'흰 글자+핑크 외곽선+글로우+강조+반짝이', status:'done'},
+  {file:'p_hot', name:'핫핑크', desc:'진한 핑크 톤 변형', status:'done'},
+  {file:'p_pur', name:'보라 네온 (화려한 모션)', desc:'보라 글로우 변형', status:'done'},
+  {file:'p_box', name:'테두리 박스 (크리스마스)', desc:'금색 이탤릭 + 얇은 사각 테두리', status:'done'},
+  {file:'p_stk', name:'2줄형 (심플)', desc:'작은 부제 + 큰 본문, 깔끔', status:'done'},
+];
+const g = document.getElementById('grid');
+for (const it of items) {
+  const c = document.createElement('div'); c.className='card';
+  c.innerHTML = `<video muted loop playsinline preload="metadata" poster="media/${it.file}.png" src="media/${it.file}.mp4"></video>
+  <div class="b"><div class="n">${it.name}<span class="status ${it.status}">${it.status==='done'?'완성':'예정'}</span></div><div class="m">${it.desc}</div></div>`;
+  const v = c.querySelector('video');
+  c.addEventListener('mouseenter',()=>v.play().catch(()=>{}));
+  c.addEventListener('mouseleave',()=>{v.pause();});
+  g.appendChild(c);
+}
+// 화면에 보이면 자동재생
+const io = new IntersectionObserver(es=>es.forEach(e=>{const v=e.target;e.isIntersecting?v.play().catch(()=>{}):v.pause();}),{threshold:0.3});
+document.querySelectorAll('video').forEach(v=>io.observe(v));
+</script>

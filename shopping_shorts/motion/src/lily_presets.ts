@@ -33,6 +33,38 @@ export const LILY_PRESETS: Record<string, LilyPreset> = {
     anim: 'pop',
     fontSize: 96,
   },
+  // #1 핫한 핑크 — 더 진한 핑크 톤
+  hot_pink: {
+    id: 'hot_pink',
+    name: '릴리 · 핫핑크',
+    fontFamily: 'TmonMonsori',
+    italic: 8,
+    fillColor: '#ffffff',
+    hlColor: '#ff0d6e',
+    hlStroke: '#ffffff',
+    strokeColor: '#ff0d6e',
+    strokeW: 7,
+    glow: 'rgba(255,20,110,0.6)',
+    sparkle: true,
+    anim: 'pop',
+    fontSize: 96,
+  },
+  // #9 화려한 모션 — 보라 네온
+  purple_neon: {
+    id: 'purple_neon',
+    name: '릴리 · 보라 네온',
+    fontFamily: 'TmonMonsori',
+    italic: 8,
+    fillColor: '#ffffff',
+    hlColor: '#b06bff',
+    hlStroke: '#ffffff',
+    strokeColor: '#8a3dff',
+    strokeW: 7,
+    glow: 'rgba(150,80,255,0.6)',
+    sparkle: true,
+    anim: 'pop',
+    fontSize: 96,
+  },
 };
 
 export const resolveLilyPreset = (p?: string | LilyPreset): LilyPreset => {

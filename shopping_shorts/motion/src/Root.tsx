@@ -1,5 +1,7 @@
 import {Composition, staticFile, continueRender, delayRender} from 'remotion';
 import {LilySub} from './LilySub';
+import {LilyBoxed} from './LilyBoxed';
+import {LilyStack} from './LilyStack';
 import {SwipeLeft} from './SwipeLeft';
 import {Sparkle} from './Sparkle';
 import {ImpactText} from './ImpactText';
@@ -26,6 +28,24 @@ if (typeof document !== 'undefined') {
 
 export const RemotionRoot: React.FC = () => (
   <>
+    <Composition
+      id="LilyBoxed"
+      component={LilyBoxed}
+      durationInFrames={60}
+      fps={30}
+      width={1080}
+      height={1920}
+      defaultProps={{text: 'Merry Christmas', color: '#e8b73a', position: 'bottom'}}
+    />
+    <Composition
+      id="LilyStack"
+      component={LilyStack}
+      durationInFrames={60}
+      fps={30}
+      width={1080}
+      height={1920}
+      defaultProps={{sub: '굉장히 쓰기 좋은', text: '심플한 자막 템플릿입니다.', position: 'bottom'}}
+    />
     <Composition
       id="LilySub"
       component={LilySub}
