@@ -1,4 +1,5 @@
 import {Composition, staticFile, continueRender, delayRender} from 'remotion';
+import {SsulOverlay} from './SsulOverlay';
 import {LilySub} from './LilySub';
 import {LilyBoxed} from './LilyBoxed';
 import {LilyStack} from './LilyStack';
@@ -46,6 +47,22 @@ if (typeof document !== 'undefined') {
 
 export const RemotionRoot: React.FC = () => (
   <>
+    {/* 썰쇼츠 자막 오버레이 — 컷은 --props 로 넘긴다.
+        길이는 마지막 컷의 끝(+여유 0.5초)에서 자동으로 정한다. */}
+    <Composition
+      id="SsulOverlay"
+      component={SsulOverlay}
+      durationInFrames={60}
+      fps={30}
+      width={1080}
+      height={1920}
+      defaultProps={{cuts: [{t: 0, d: 2, kind: 'narr' as const, text: '자막 오버레이 미리보기'}]}}
+      calculateMetadata={({props}) => {
+        const cuts = props.cuts ?? [];
+        const end = cuts.reduce((m, c) => Math.max(m, c.t + c.d), 0);
+        return {durationInFrames: Math.max(1, Math.ceil((end + 0.5) * 30))};
+      }}
+    />
     <Composition id="LilyQuote" component={LilyQuote} durationInFrames={60} fps={30} width={1080} height={1920} defaultProps={{sub: '명언을 말 할 것 같은..', text: '감성적인 템플릿', color: '#ffffff'}} />
     <Composition id="LilyQuestion" component={LilyQuestion} durationInFrames={60} fps={30} width={1080} height={1920} defaultProps={{text: '오늘 이 대회에서 1등 하신 소감을 말씀해 주시겠어요??', mark: 'Q.'}} />
     <Composition id="LilyUnderline" component={LilyUnderline} durationInFrames={60} fps={30} width={1080} height={1920} defaultProps={{sub: '두 줄로 사용이 가능한', text: '깔끔하고 편리한 자막 템플릿'}} />
