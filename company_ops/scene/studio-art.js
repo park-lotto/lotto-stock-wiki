@@ -73,7 +73,9 @@ function desk(p,w,accent,index){
  // Back acoustic divider and individual station plate.
  box(p,3.15,.26,.065,0,1.02,-.76,'#b8cbc4',.045);panel(p,.7,.18,-1.08,1.025,-.72,(c,W,H)=>text(c,w.id,60,H*.73,115,'#294e58',700),'#e8ede4');
 }
-export function buildStudio(scene){
+export {box,cyl,rod,panel,text,plant};
+export function buildStudio(scene,options={}){
+ const roomWorkers=options.workers||studioWorkers,title=options.title||'기획 · 리서치 스튜디오';
  const root=new T.Group();scene.add(root);const workers=[],picks=[];
  const floorTex=texture(512,512,(c,W,H)=>{c.fillStyle='#ebe8dc';c.fillRect(0,0,W,H);let s=1234;const rand=()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296;};for(let i=0;i<2200;i++){c.fillStyle=['#cecbbf','#dcd9cb','#f4f1e7'][i%3];c.fillRect(rand()*W,rand()*H,1+rand()*2,1+rand()*2);}});floorTex.wrapS=floorTex.wrapT=T.RepeatWrapping;floorTex.repeat.set(6,5);
  box(root,21,.4,15,0,-.26,0,'#9daba7',.20);box(root,20.8,.15,14.8,0,-.03,0,new T.MeshStandardMaterial({map:floorTex,roughness:.85}),.12);
@@ -82,15 +84,21 @@ export function buildStudio(scene){
  box(root,20.8,2.9,.18,0,1.38,-7.1,'#dfe5dc',.07);
  for(let i=0;i<16;i++)box(root,.055,2.85,.06,-9.5+i*.25,1.4,-6.98,'#b8a183',.01);
  // Back identity panel and practical task board.
- panel(root,4.6,1.3,-5.8,1.9,-6.88,(c,W,H)=>{text(c,'MAKERS LAB',35,85,58,'#315765',700);text(c,'기획 · 리서치 스튜디오',35,157,36,'#617a7b');text(c,'작은 생각을 실제 작업으로.',35,226,25,'#83938b');},'#dfe5dc');
+ panel(root,4.6,1.3,-5.8,1.9,-6.88,(c,W,H)=>{text(c,'MAKERS LAB',35,85,58,'#315765',700);text(c,title,35,157,36,'#617a7b');text(c,'작은 생각을 실제 작업으로.',35,226,25,'#83938b');},'#dfe5dc');
  box(root,5.9,1.9,.10,1.7,1.65,-6.91,'#9baea8',.06);
  panel(root,5.65,1.66,1.7,1.65,-6.848,(c,W,H)=>{text(c,'TEAM WORKBOARD',30,52,27,'#45656d',700);const cols=['조사','설계','리뷰'];for(let i=0;i<3;i++){text(c,cols[i],35+i*335,106,30,'#3d606a',600);for(let j=0;j<2;j++){c.fillStyle=['#c4dfd3','#ead4b5','#d1daeb'][i];c.fillRect(30+i*335,132+j*75,295,61);text(c,[['자료 수집','요구사항 정리'],['사용 흐름','실험 설계'],['근거 확인','팀장 보고']][i][j],46+i*335,170+j*75,24,'#48606a');}}},'#f1efe5');
  box(root,3.1,.73,1.0,7.6,.40,-6.25,'#bd9d78',.08);box(root,3.2,.07,1.1,7.6,.80,-6.25,'#eee9dd',.035);
  for(let i=0;i<5;i++)box(root,.12,.29,.37,6.5+i*.15,.98,-6.3,['#5b8d8b','#b88d72','#95aabb'][i%3],.01);
  plant(root,8.8,-6.25,.65);plant(root,-9.2,5.8,1.6);plant(root,9.3,5.8,1.7);plant(root,-9.2,-5.5,1.5);
  for(const x of [-9.7,9.7]){box(root,.06,.025,11,x,.075,0,new T.MeshBasicMaterial({color:'#d7b77d'}),.01);}
- for(let i=0;i<8;i++){
-  const w=studioWorkers[i],accent=palette[i],station=new T.Group();station.position.set(-6.6+(i%4)*4.4,0,i<4?-2.8:3);root.add(station);
+ for(let i=0;i<roomWorkers.length;i++){
+  const w=roomWorkers[i],accent=palette[i%palette.length],station=new T.Group();station.position.set(-6.6+(i%4)*4.4,0,i<4?-2.8:3);root.add(station);
+  if(options.leaderSeat&&w.role==='팀장'){
+   station.position.set(-6.6,0,-4.6);
+   box(root,4.1,.04,4.0,-6.6,.07,-4.15,'#dac49d',.15);
+   box(root,.09,1.0,3.8,-4.48,.55,-4.15,'#aec5bb');
+   panel(root,2.3,.42,-6.6,.11,-2.2,(c,W,H)=>text(c,'TEAM LEAD / 팀장',30,H*.72,58,'#735e3e',700),'#efe3c9').rotation.x=-Math.PI/2;
+  }
   desk(station,w,accent,i);const bot=robot(station,w,accent);bot.head.rotation.y=(i%2?-.12:.12);
   const hit=mesh(station,new T.BoxGeometry(1.45,2.55,1.75),new T.MeshBasicMaterial({visible:false}),0,1.12,.7);hit.userData.workerId=w.id;picks.push(hit);
   const ring=mesh(station,new T.RingGeometry(.8,.85,64),new T.MeshBasicMaterial({color:'#479d94',side:T.DoubleSide}),0,.095,.88);ring.rotation.x=-Math.PI/2;ring.visible=false;

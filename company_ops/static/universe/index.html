@@ -1,0 +1,11 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>메이커스랩 · 유니버스</title><link rel="stylesheet" href="universe.css"></head><body>
+<header><a href="../studio/" class="brand"><b>M</b> MAKERS LAB</a><span class="badge">공간·배치 예시 · 실제 실행 미연결</span><button id="night" aria-pressed="false">야간으로</button></header>
+<main><canvas id="scene" aria-label="메이커스랩 입체 공간 지도"></canvas><div id="labels"></div></main>
+<nav id="breadcrumb" aria-label="현재 공간"><button id="outside">메이커스랩 유니버스</button><span id="path">/ 외부 캠퍼스</span></nav>
+<section id="intro"><span class="eyebrow" id="eyebrow">ONE COMPANY · MANY POSSIBILITIES</span><h1 id="title">일하는 세계로<br>들어오세요.</h1><p id="description">프로그램 건물을 선택해 내부 공간을 탐색하세요.</p></section>
+<aside id="navigation"><div id="buildings"><h2>프로그램</h2><button data-building="shortem"><b>01 숏템메이커</b><small>입구 → 내부 3구역</small><span>↗</span></button><button data-building="stock"><b>02 스탁브레인</b><small>외관 검토 · 내부 미구현</small></button></div><div id="inside-nav" hidden><h2>1층 · 팀 작업공간</h2><div id="rooms"></div><label for="search">워커 · 업무 찾기</label><input id="search" placeholder="W-001 / 자막 / 검수" autocomplete="off"><div id="workers"></div></div><p class="footnote">2층·지하·자동 확장은 다음 설계 단계입니다.</p></aside>
+<section id="entrance" hidden><span class="eyebrow">SHORTEM MAKER / ENTRANCE</span><h2>숏템메이커</h2><p>기획 8석 · 개발 4석 · 독립 검수 4석<br>팀장 자리와 인접 작업공간을 둘러보세요.</p><button id="enter">건물 안으로 들어가기 →</button></section>
+<aside id="detail" hidden></aside><div id="notice" role="status" aria-live="polite"></div>
+<div id="view-tools"><button id="overview">전체 보기</button><button id="zoom-in" aria-label="확대">+</button><button id="zoom-out" aria-label="축소">−</button></div>
+<footer><span id="scope">외부 캠퍼스 · 360° 탐색</span><span>드래그 회전 · 우클릭 이동 · 휠 확대 · ESC 뒤로</span><a href="../atlas/">200석 배치 검토 ↗</a></footer>
+<script type="module" src="universe.bundle.js"></script></body></html>
