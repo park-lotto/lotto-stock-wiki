@@ -32,7 +32,11 @@ for r in todo:
         is_folder = "/folders/" in u
         cmd = [sys.executable, "-m", "gdown", "--no-cookies", "-O", d + os.sep] + (["--folder"] if is_folder else []) + [u]
         t = time.time()
-        p = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=1800)
+        try:
+            p = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=900)
+        except subprocess.TimeoutExpired:   # ★대형 폴더 하나가 전체 실행을 죽이지 않게(2026-09-13 실사고)
+            print(f"{r['id']} timeout 900s :: {r['title'][:40]}", flush=True)
+            continue
         n = sum(len(fs) for _, _, fs in os.walk(d)) - 1
         print(f"{r['id']} {'folder' if is_folder else 'file'} rc={p.returncode} files={n} {int(time.time()-t)}s :: {r['title'][:40]}", flush=True)
         if p.returncode != 0:

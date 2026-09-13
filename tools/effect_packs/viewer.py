@@ -13,6 +13,7 @@ THUMB = os.path.join(LIB, "_thumbs")
 IMG = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
 VID = {".mov", ".mp4", ".webm"}
 AUD = {".mp3", ".wav", ".ogg"}
+MOGRT = {".mogrt"}   # 프리미어 모션그래픽 템플릿 = zip(thumb.png·thumb.mp4 내장) → 그걸로 미리보기
 SIZE = 240
 
 
@@ -53,6 +54,22 @@ def make_previews(pack_dir, pack_id, f):
             comp_v = f"[0:v]scale={SIZE}:{SIZE}:force_original_aspect_ratio=decrease,format=rgba[f];color=c=0x8c8c8c:s={SIZE}x{SIZE}[bg];[bg][f]overlay=(W-w)/2:(H-h)/2:shortest=1,format=yuv420p"
             run(["ffmpeg", "-v", "error", "-y", "-t", "3", "-i", src, "-filter_complex", comp_v, "-r", "15", "-c:v", "libx264",
                  "-preset", "veryfast", "-crf", "28", "-an", prev])
+    if ext in MOGRT and not (os.path.exists(thumb) and os.path.exists(prev)):
+        try:
+            import zipfile, tempfile
+            with zipfile.ZipFile(src) as z:
+                names = z.namelist()
+                if "thumb.png" in names and not os.path.exists(thumb):
+                    from PIL import Image
+                    im = Image.open(z.open("thumb.png")).convert("RGBA"); im.thumbnail((SIZE, SIZE))
+                    bg = Image.new("RGBA", (SIZE, SIZE), (140, 140, 140, 255)); bg.alpha_composite(im, ((SIZE - im.width) // 2, (SIZE - im.height) // 2)); bg.convert("RGB").save(thumb)
+                if "thumb.mp4" in names and not os.path.exists(prev):
+                    tmp = os.path.join(outdir, key + "_src.mp4")
+                    open(tmp, "wb").write(z.read("thumb.mp4"))
+                    run(["ffmpeg", "-v", "error", "-y", "-t", "3", "-i", tmp, "-vf", f"scale={SIZE}:{SIZE}:force_original_aspect_ratio=decrease,pad={SIZE}:{SIZE}:(ow-iw)/2:(oh-ih)/2:color=0x8c8c8c,format=yuv420p", "-r", "15", "-c:v", "libx264", "-preset", "veryfast", "-crf", "28", "-an", prev])
+                    os.remove(tmp)
+        except Exception as e:
+            print("  mogrt 미리보기 실패", src, e)
     rel = lambda p: os.path.relpath(p, LIB).replace("\\", "/") if os.path.exists(p) else None
     return {"thumb": rel(thumb), "prev": rel(prev), "src": os.path.relpath(src, LIB).replace("\\", "/")}
 
@@ -65,9 +82,9 @@ def main():
     for p in lib["packs"]:
         pd = os.path.join(LIB, p["category"], p["id"])
         pj = json.load(open(os.path.join(pd, "pack.json"), encoding="utf-8"))
-        files = [f for f in pj["inventory"] if f["ext"] in IMG | VID | AUD]
+        files = [f for f in pj["inventory"] if f["ext"] in IMG | VID | AUD | MOGRT]
         # 그린스크린 mp4는 알파 mov와 짝이라 미리보기에선 mov를 우선(중복 줄이기)
-        files.sort(key=lambda f: (0 if f["ext"] == ".mov" else 1 if f["ext"] in IMG else 2, f["file"]))
+        files.sort(key=lambda f: (0 if f["ext"] in (".mov", ".mogrt") else 1 if f["ext"] in IMG else 2, f["file"]))
         p2 = dict(p, file_list=files, dir=pd)
         packs.append(p2)
         for f in files:
@@ -90,7 +107,8 @@ def main():
     nav a{display:inline-block;margin:0 8px 8px 0;padding:6px 10px;background:#222;border-radius:6px;color:#ddd;text-decoration:none;font-size:13px}
     h2{font-size:18px;margin:26px 0 10px;border-bottom:1px solid #333;padding-bottom:6px}
     .pack{background:#1a1a1a;border-radius:10px;padding:12px;margin-bottom:14px}
-    .pack .t{font-weight:700;font-size:15px} .pack .m{color:#9ab;font-size:12px;margin:4px 0 8px}
+    .pack .t{font-weight:700;font-size:15px}
+    .pack .cover{float:right;width:160px;height:90px;object-fit:cover;border-radius:6px;margin:0 0 6px 10px;background:#333} .pack .m{color:#9ab;font-size:12px;margin:4px 0 8px}
     .lic{display:inline-block;padding:2px 7px;border-radius:4px;font-size:11px;margin-right:6px}
     .lic.ok{background:#1e4d2b} .lic.attr{background:#4d3f1e} .lic.no{background:#4d1e1e} .lic.unk{background:#333}
     .grid{display:flex;flex-wrap:wrap;gap:8px}
@@ -112,7 +130,9 @@ def main():
             lic = p["license"]
             cls = "ok" if "표기불요" in lic else "attr" if "출처표기" in lic else "no" if "비상업" in lic else "unk"
             enc = f" · 🔒 비번 zip {len(p['encrypted_zips'])}개" if p.get("encrypted_zips") else ""
-            out.append(f"<div class='pack'><div class='t'>{html.escape(p['name'])}</div>"
+            vid = p["source_url"].split("v=")[-1]
+            cover = f"<a href='{p['source_url']}' target='_blank'><img class='cover' src='https://i.ytimg.com/vi/{vid}/mqdefault.jpg' loading='lazy'></a>"
+            out.append(f"<div class='pack'>{cover}<div class='t'>{html.escape(p['name'])}</div>"
                        f"<div class='m'><span class='lic {cls}'>{html.escape(lic)}</span>{html.escape(p['channel'] or '')} · 조회 {p['views']:,} · "
                        f"파일 {p['files']} (알파 {p['alpha_files']}) · {round(p['bytes']/1e6)}MB{enc} · <a href='{p['source_url']}' target='_blank' style='color:#8cf'>원본 영상</a> · "
                        f"<a href='file:///{html.escape(p['dir'].replace(chr(92), '/'))}' style='color:#8cf'>폴더</a></div>")
@@ -123,8 +143,8 @@ def main():
                 pv = f["pv"]; name = os.path.basename(f["file"])
                 if f["ext"] in AUD:
                     out.append(f"<div class='aud'>🔊 {html.escape(name)}<audio controls preload='none' src='{html.escape(pv['src'])}'></audio></div>")
-                elif f["ext"] in VID and pv.get("prev"):
-                    badge = "α" if f.get("alpha") else "mp4"
+                elif f["ext"] in VID | MOGRT and pv.get("prev"):
+                    badge = "mogrt" if f["ext"] in MOGRT else ("α" if f.get("alpha") else "mp4")
                     out.append(f"<div class='cell'><video muted loop preload='none' poster='{pv['thumb'] or ''}' src='{pv['prev']}' onmouseover='this.play()' onmouseout='this.pause()'></video><span class='b'>{badge} {f.get('w','')}×{f.get('h','')}</span><div class='n' title='{html.escape(name)}'>{html.escape(name)}</div></div>")
                 elif pv.get("thumb"):
                     out.append(f"<div class='cell'><img loading='lazy' src='{pv['thumb']}'><span class='b'>{f['ext'][1:]} {f.get('w','')}×{f.get('h','')}</span><div class='n' title='{html.escape(name)}'>{html.escape(name)}</div></div>")
