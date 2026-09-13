@@ -6,6 +6,10 @@
  <details open><summary>스티커 · 도형 · 배지</summary><div class="dec-kit"><button data-dec-kit="sticker" class="active">😀 스티커</button><button data-dec-kit="shape">🎨 도형</button><button data-dec-kit="badge">🏷 배지</button></div><div data-kit="sticker"><div class="dec-categories"></div><div class="dec-stickers"></div></div><div data-kit="shape" hidden><p>움직이는 도형 · 눌러서 영상 위에 추가</p><div class="dec-shapes"></div></div><div data-kit="badge" hidden><p>문구와 색, 모양을 바꿀 수 있어요</p><div class="dec-badges"></div></div></details>
  <div class="dec-items"></div><div class="dec-edit" hidden><p>화면에서 끌어 이동하세요.</p><label data-badge-text>배지 문구<input data-dec="text" type="text" maxlength="24"></label><label data-badge-style>배지 모양<select data-dec="badgeStyle"><option value="pill">그라데이션 알약</option><option value="ticket">티켓</option><option value="glass">유리 배지</option><option value="burst">포인트 배지</option></select></label><label data-motion-control>움직임<select data-dec="motion"><option value="none">없음</option><option value="point">가리키기</option><option value="pulse">두근두근</option><option value="spin">회전</option><option value="float">둥실둥실</option><option value="reveal">쓱 나타나기</option></select></label><label>크기<input data-dec="size" type="range" min="5" max="90" step="1"></label><label data-mask-height>높이<input data-dec="h" type="range" min="2" max="35" step="1"></label><label>회전<input data-dec="rot" type="range" min="-45" max="45" step="1"></label><label>투명도<input data-dec="op" type="range" min="10" max="100" step="1"></label><label data-mask-color>색상<input data-dec="color" type="color"></label><button data-dec-delete>선택한 항목 삭제</button></div>`;
  panel.append(box);
+ const itemList=box.querySelector('.dec-items');
+ box.prepend(itemList);
+ const toolbar=document.createElement('div');toolbar.className='scene-decoration-toolbar';toolbar.hidden=true;
+ toolbar.innerHTML='<span></span><button type="button" data-overlay-delete>삭제</button>';preview.append(toolbar);
  const layer=document.createElement('div');layer.className='scene-decorations';preview.append(layer);
  let selected=-1,category=0,index=-1,drag=null;
  const masks=()=>api.effect().masks||[];
@@ -21,7 +25,8 @@
  }
  function controls(){
    const list=masks(),items=box.querySelector('.dec-items');items.replaceChildren();
-   list.forEach((m,i)=>{const b=button(m.kind==='emoji'?m.ch:m.kind==='badge'?m.text:m.kind==='graphic'?(catalog.shapes.find(s=>s.key===m.graphic)?.label||'도형'):`가림막 ${i+1}`,'data-dec-select',i);b.classList.toggle('active',selected===i);items.append(b)});
+   list.forEach((m,i)=>{const row=document.createElement('div');row.className='dec-item';const label=m.kind==='emoji'?m.ch:m.kind==='badge'?m.text:m.kind==='graphic'?(catalog.shapes.find(s=>s.key===m.graphic)?.label||'도형'):'가림막';const b=button(`${i+1}. ${label}`,'data-dec-select',i);b.classList.toggle('active',selected===i);const del=button('×','data-dec-remove',i);del.setAttribute('aria-label',`${i+1}. ${label} 삭제`);row.append(b,del);items.append(row)});
+   toolbar.hidden=!list[selected];toolbar.querySelector('span').textContent=list[selected]?`${selected+1}번 선택`:'';
    const edit=box.querySelector('.dec-edit'),m=list[selected];edit.hidden=!m;if(!m)return;
    edit.querySelectorAll('[data-dec]').forEach(el=>el.value=el.dataset.dec==='size'?m.w:m[el.dataset.dec]??0);
    edit.querySelector('[data-mask-height]').hidden=m.kind==='emoji';edit.querySelector('[data-mask-color]').hidden=m.kind==='emoji';
@@ -59,6 +64,7 @@
    if(b.hasAttribute('data-dec-category')){category=Number(b.dataset.decCategory);picker();return;}
    const list=structuredClone(masks());
    if(b.hasAttribute('data-dec-select'))selected=Number(b.dataset.decSelect);
+   else if(b.hasAttribute('data-dec-remove')){const removed=Number(b.dataset.decRemove);list.splice(removed,1);selected=removed===selected?-1:selected>removed?selected-1:selected;commit(list);}
    else if(b.hasAttribute('data-dec-delete')){list.splice(selected,1);selected=-1;commit(list);}
    else{
      if(list.length>=12)return;
@@ -81,7 +87,19 @@
    commit(list);draw();
  });
  layer.addEventListener('pointerdown',event=>{
-   const target=event.target.closest('[data-dec-index]');if(!target||event.button!==0)return;
+   if(event.button!==0)return;
+   // Transparent canvas padding must not intercept a different decoration below it.
+   const target=document.elementsFromPoint(event.clientX,event.clientY).map(e=>e.closest?.('[data-dec-index]')).filter((e,i,a)=>e&&a.indexOf(e)===i).find(el=>{
+     const canvas=el.querySelector('canvas');if(!canvas)return true;
+     const style=getComputedStyle(el),rect=el.getBoundingClientRect();
+     let matrix=new DOMMatrix(style.transform==='none'?undefined:style.transform);
+     const rotation=parseFloat(style.rotate)||0,scale=(style.scale==='none'?'1':style.scale).split(' ').map(Number);
+     matrix=new DOMMatrix().rotate(rotation).scale(scale[0],scale[1]||scale[0]).multiply(matrix);
+     const p=new DOMPoint(event.clientX-rect.left-rect.width/2,event.clientY-rect.top-rect.height/2).matrixTransform(matrix.inverse());
+     const x=Math.floor((p.x/el.clientWidth+.5)*canvas.width),y=Math.floor((p.y/el.clientHeight+.5)*canvas.height);
+     return x>=0&&y>=0&&x<canvas.width&&y<canvas.height&&canvas.getContext('2d').getImageData(x,y,1,1).data[3]>24;
+   });
+   if(!target)return;
    selected=Number(target.dataset.decIndex);const m=masks()[selected];drag={x:event.clientX,y:event.clientY,l:m.l,t:m.t,id:event.pointerId};layer.setPointerCapture(event.pointerId);event.preventDefault();controls();draw();
  });
  layer.addEventListener('pointermove',event=>{
@@ -89,7 +107,10 @@
    m.l=Math.max(0,Math.min(100-m.w,drag.l+(event.clientX-drag.x)/rect.width*100));m.t=Math.max(0,Math.min(100-m.h,drag.t+(event.clientY-drag.y)/rect.height*100));commit(list);draw();
  });
  for(const name of ['pointerup','pointercancel','lostpointercapture'])layer.addEventListener(name,()=>drag=null);
+ function removeSelected(){const list=structuredClone(masks());if(selected<0||selected>=list.length)return;list.splice(selected,1);selected=-1;drag=null;commit(list);controls();draw();}
+ toolbar.querySelector('button').addEventListener('click',removeSelected);
+ document.addEventListener('keydown',event=>{if(!['Delete','Backspace'].includes(event.key)||event.target.closest('input,textarea,select,[contenteditable="true"]')||panel.hidden)return;if(selected>=0){event.preventDefault();removeSelected();}});
  new MutationObserver(draw).observe(preview.querySelector('.precision-edit-layer'),{childList:true});
  addEventListener('resize',()=>{if(!window.sceneStyleExporting)draw()});picker();draw();
- window.sceneDecorations={motionAt(time){for(const el of layer.children)for(const animation of el.getAnimations()){animation.pause();animation.currentTime=time;}return masks().some(m=>m.motion&&m.motion!=='none')},refresh:draw};
+ window.sceneDecorations={motionAt(time){for(const el of layer.children)for(const animation of el.getAnimations()){animation.pause();animation.currentTime=time;}return masks().some(m=>m.motion&&m.motion!=='none')},refresh(){controls();draw();}};
 })();

@@ -18,5 +18,6 @@
 .caption-position button.active{background:#36d9ae;color:#06241c;border-color:#36d9ae}
 .caption-mask{pointer-events:auto;cursor:move;z-index:1}
 .caption-position label[hidden]{display:none!important}
+.dec-item{display:flex;gap:2px}.dec-item [data-dec-remove]{color:#ff9d9d;padding:6px 10px}.scene-decoration-toolbar{position:absolute;top:8px;right:8px;z-index:30;display:flex;align-items:center;gap:8px;padding:5px 7px;background:#07151eee;border:1px solid #43e2b4;border-radius:7px;color:white;font:12px sans-serif;pointer-events:auto}.scene-decoration-toolbar[hidden]{display:none!important}.scene-decoration-toolbar button{padding:6px 10px;border:0;border-radius:5px;background:#ef5555;color:white;cursor:pointer}
 .layout-a .edit-pane .color-row{display:none!important}
 .fixed-size-control[hidden],.fixed-color-grid label[hidden]{display:none!important}
