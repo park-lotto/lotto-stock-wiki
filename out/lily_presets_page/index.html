@@ -17,8 +17,11 @@
 <div class="grid" id="grid"></div>
 <div class="note">
   <b>진행 상황</b><br>
-  ✅ 완성 14종: 핑크네온·핫핑크·보라네온·첨자·화날때·뉴스바·도장·이름표상자·타이핑·테두리박스·2줄형·인용구·질문형·밑줄형<br>
-  ⏳ #14 심플 에디션의 나머지 색·라벨 변형 계속 추가 중<br>
+  ✅ 완성 30종<br>
+  · #14 심플 계열 14: 핑크네온·핫핑크·보라네온·첨자·화날때·뉴스바·도장·이름표상자·타이핑·테두리박스·2줄형·인용구·질문형·밑줄형<br>
+  · #38 환승연애 11: 로워서드바(지혜/성훈)·이름표본문(지혜/성훈)·인용구·본문·손그림라벨박스(분홍/파랑)·팝단어(머뭇/수줍/???)<br>
+  · #4 뉴스 5: 앵커형·헤드라인·은색바·라벨형·프로필형 (ver1=뉴스바)<br>
+  ⏳ 다음 에디션 순서대로 계속 추가<br>
   <br>
   <b>쓰는 법</b>: 이 프리셋들은 숏템메이커 고급효과(Remotion)에 붙일 컴포넌트다. 제작소에서 프리셋 고르고 글자 넣으면 렌더된다(UI 연결은 다음 단계).
 </div>
@@ -38,6 +41,24 @@ const items = [
   {file:'p_quote', name:'인용구형 (감성)', desc:'위·아래 큰따옴표 + 부제 + 본문, 명언 톤', status:'done'},
   {file:'p_question', name:'질문형 (Q.)', desc:'이탤릭 Q. + 2줄 질문, 인터뷰용', status:'done'},
   {file:'p_underline', name:'밑줄형', desc:'부제 + 본문 + 글자폭 밑줄(좌→우 등장)', status:'done'},
+  // #38 환승연애 컨셉 (11버전)
+  {file:'p_e38_v1', name:'#38 로워서드바 (지혜)', desc:'이름표 탭 + 검은 자막바, 예능 로워서드', status:'done'},
+  {file:'p_e38_v2', name:'#38 로워서드바 (성훈)', desc:'파란 이름표 색 변형', status:'done'},
+  {file:'p_e38_v3', name:'#38 이름표+본문 (지혜)', desc:'분홍 이름표 탭(밑줄) + 흰 큰 본문', status:'done'},
+  {file:'p_e38_v4', name:'#38 이름표+본문 (성훈)', desc:'파란 이름표 색 변형', status:'done'},
+  {file:'p_e38_v5', name:'#38 인용구', desc:'큰따옴표 감성 인용', status:'done'},
+  {file:'p_e38_v6', name:'#38 본문만', desc:'이름표 없이 큰 본문', status:'done'},
+  {file:'p_e38_v7', name:'#38 손그림 라벨박스 (분홍)', desc:'하트 + 손그림 테두리 + 2줄 인용', status:'done'},
+  {file:'p_e38_v8', name:'#38 손그림 라벨박스 (파랑)', desc:'파란색 변형', status:'done'},
+  {file:'p_e38_v9', name:'#38 팝 단어 "머뭇"', desc:'블러→선명 글로우, 통통 등장', status:'done'},
+  {file:'p_e38_v10', name:'#38 팝 단어 "수줍"', desc:'감정 단어 강조', status:'done'},
+  {file:'p_e38_v11', name:'#38 팝 단어 "???"', desc:'물음 강조', status:'done'},
+  // #4 뉴스 자막 (6버전; ver1은 뉴스바로 위에 있음)
+  {file:'p_n4_v2', name:'#4 뉴스 앵커형', desc:'이름표+직함 + 파란 하단 박스', status:'done'},
+  {file:'p_n4_v3', name:'#4 뉴스 헤드라인', desc:'회색 소제목 + 큰 흰 본문', status:'done'},
+  {file:'p_n4_v4', name:'#4 뉴스 은색바', desc:'은색 그라데이션 속보 바', status:'done'},
+  {file:'p_n4_v5', name:'#4 뉴스 라벨형', desc:'파란 라벨 + 본문 밑줄', status:'done'},
+  {file:'p_n4_v6', name:'#4 뉴스 프로필형', desc:'원형 프로필 + 직함 + 이름', status:'done'},
 ];
 const g = document.getElementById('grid');
 for (const it of items) {

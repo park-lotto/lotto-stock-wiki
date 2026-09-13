@@ -9,6 +9,10 @@ import {LilyTyping} from './LilyTyping';
 import {LilyQuote} from './LilyQuote';
 import {LilyQuestion} from './LilyQuestion';
 import {LilyUnderline} from './LilyUnderline';
+import {LilyLower} from './LilyLower';
+import {LilyHandBox} from './LilyHandBox';
+import {LilyPop} from './LilyPop';
+import {LilyNews} from './LilyNews';
 import {SwipeLeft} from './SwipeLeft';
 import {Sparkle} from './Sparkle';
 import {ImpactText} from './ImpactText';
@@ -38,6 +42,10 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="LilyQuote" component={LilyQuote} durationInFrames={60} fps={30} width={1080} height={1920} defaultProps={{sub: '명언을 말 할 것 같은..', text: '감성적인 템플릿', color: '#ffffff'}} />
     <Composition id="LilyQuestion" component={LilyQuestion} durationInFrames={60} fps={30} width={1080} height={1920} defaultProps={{text: '오늘 이 대회에서 1등 하신 소감을 말씀해 주시겠어요??', mark: 'Q.'}} />
     <Composition id="LilyUnderline" component={LilyUnderline} durationInFrames={60} fps={30} width={1080} height={1920} defaultProps={{sub: '두 줄로 사용이 가능한', text: '깔끔하고 편리한 자막 템플릿'}} />
+    <Composition id="LilyLower" component={LilyLower} durationInFrames={60} fps={30} width={1080} height={1920} defaultProps={{name: '지혜', text: '조금은 설렌다고 말하고 싶네요..', variant: 'bar', color: '#3b6ea5'}} />
+    <Composition id="LilyHandBox" component={LilyHandBox} durationInFrames={60} fps={30} width={1080} height={1920} defaultProps={{text: '"당신의 x는\\n당신을 선택했습니다"', bg: '#e59ab0', heart: '#e0466a'}} />
+    <Composition id="LilyPop" component={LilyPop} durationInFrames={45} fps={30} width={1080} height={1920} defaultProps={{word: '머뭇', color: '#ffffff'}} />
+    <Composition id="LilyNews" component={LilyNews} durationInFrames={60} fps={30} width={1080} height={1920} defaultProps={{variant: 'headline', title: '빈대와의 전쟁 시작...', text: '빈대 잡으려다 초가삼간 타 태운다.', color: '#2f6fd0'}} />
     <Composition
       id="LilyTyping"
       component={LilyTyping}
