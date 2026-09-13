@@ -136,6 +136,37 @@ def claude_llm(bin_path="claude", timeout=300, log=print):
     return call
 
 
+def script_llm(model="gemini-3.1-flash-lite", *, which=None, log=print):
+    """대본을 **누가 쓸지** 여기서 한 번만 정한다(0순위-B — 두 군데서 정하면 어긋난다).
+
+    고르는 순서:
+      ① `which` 인자 ('claude' | 'gemini')
+      ② 환경변수 BRAINBULB_SCRIPT_LLM
+      ③ 기본 **claude**
+
+    ★왜 클로드가 기본인가 — 골든 5편 실측 2026-09-14 (같은 원문·같은 규칙 22개로 나란히):
+                    컷차이합  CHAR차이  추상어  시간
+        실물(정답)        -        -      1     -
+        제미니           26       10      3   535초
+        클로드           15        5      1  1121초
+      제미니는 실물 25컷짜리를 **37컷**으로, 22컷짜리를 **32컷**으로 쓴다(한 편이 1.5배).
+      인물 대사(CHAR)도 실물 6→3, 5→2로 **절반으로 줄이고 나레이션으로 설명해버린다** —
+      뇌전구가 재미있는 이유가 그 대사인데 그걸 못 살린다.
+      박수홍 편은 클로드가 컷 28·CHAR 3·숫자 4/5로 **실물과 정확히 일치**했다.
+
+    ★대신 클로드는 2.1배 느리고 구독 토큰을 쓴다. 하루 여러 편을 무인으로 돌리는 자리라면
+      `BRAINBULB_SCRIPT_LLM=gemini` 로 바꿔라 — 규칙 22개는 양쪽 모두에 그대로 걸린다.
+    """
+    which = (which or os.environ.get("BRAINBULB_SCRIPT_LLM", "") or "claude").strip().lower()
+    if which == "gemini":
+        log(f"[brainbulb.script] 대본 작성 = 제미니({model})")
+        return gemini_llm(model)
+    if which != "claude":
+        raise ValueError(f"providers: 모르는 대본 작성기 «{which}» — claude 또는 gemini")
+    log("[brainbulb.script] 대본 작성 = 클로드")
+    return claude_llm()
+
+
 def gemini_reviewer(model="gemini-3.1-flash-lite", api_key=None, env_file=None):
     """→ call(prompt, image_path) -> str. **그림을 실제로 보고** 판정하게 한다.
 

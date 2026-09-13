@@ -4,7 +4,7 @@
   py -m shopping_shorts.brainbulb.make --url <기사URL> --workdir out/brainbulb/<이름> [--voice tc_…] [--sfx-dir …] [--bg 이미지]
   py -m shopping_shorts.brainbulb.make --text-file 소재.txt --workdir …
 
-흐름: 링크 → 기사 본문 → (pipeline) setup → script(Gemini, 린터 반려→재작성) → layout → lint → voice(Typecast, 컷별)
+흐름: 링크 → 기사 본문 → (pipeline) setup → script(클로드, 린터 반려→재작성) → layout → lint → voice(Typecast, 컷별)
       → timing → subtitle → sfx → render → review. 멈추면 어디서 왜 멈췄는지 그대로 찍는다.
 """
 import argparse
@@ -41,7 +41,10 @@ def main(argv=None):
     ap.add_argument("--no-images", action="store_true", help="EvoLink 생성 생략(검은 슬롯)")
     ap.add_argument("--quality", default=None, help="gpt-image-2 low|medium|high (기본 spec.IMAGE_QUALITY)")
     ap.add_argument("--bg", default=None)
-    ap.add_argument("--model", default="gemini-3.1-flash-lite")
+    ap.add_argument("--model", default="gemini-3.1-flash-lite", help="--script-llm gemini 일 때 쓸 제미니 모델")
+    ap.add_argument("--script-llm", default=None, choices=["claude", "gemini"],
+                    help="대본을 누가 쓸지. 기본 claude(골든 5편에서 실물에 더 가깝다). "
+                         "대량·무인이면 gemini. 환경변수 BRAINBULB_SCRIPT_LLM 로도 된다")
     ap.add_argument("--from", dest="from_step", default=None, help="이 단계부터 다시 (예: voice, subtitle)")
     ap.add_argument("--no-review", action="store_true", help="사진 검수 생략(모델 호출을 아낀다)")
     a = ap.parse_args(argv)
@@ -61,7 +64,8 @@ def main(argv=None):
         fh.write(text)
     from . import images as _images
     imagegen = None if a.no_images else _images.evolink_imagegen(quality=a.quality)
-    r = pipeline.run_all(a.workdir, source_text=text, llm=providers.gemini_llm(a.model),
+    r = pipeline.run_all(a.workdir, source_text=text,
+                         llm=providers.script_llm(a.model, which=a.script_llm),
                          tts=providers.typecast_synth(_voices(a), tempo=a.tempo), imagegen=imagegen,
                          sfx_dir=a.sfx_dir, meme_dir=a.meme_dir, bg_image=a.bg,
                          reviewer=None if (a.no_review or imagegen is None) else providers.gemini_reviewer())
