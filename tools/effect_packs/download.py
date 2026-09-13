@@ -6,8 +6,15 @@ dest = sys.argv[1]
 cat = json.load(open("catalog.json", encoding="utf-8"))
 OK = ("상업OK·표기불요", "상업OK·출처표기", "저작권무료(주장)")
 ANY_FORMAT = "--all-formats" in sys.argv   # 프리미어·AE 전용 팩도 받는다(폰트처럼 자산으로 보관)
-todo = [r for r in cat if r["license"] in OK and (ANY_FORMAT or r["direct_usable"])
-        and any("drive.google" in u for u in r["links"])]
+INCLUDE_UNKNOWN = "--include-unknown" in sys.argv   # 라이선스 문구 없는 팩도 받는다(연구 후보, 사용 전 확인)
+SLEEP = 10   # ★팩 사이 간격(초). 연속 20팩쯤에서 구글이 "접근 과다"로 막았다(2026-09-13 실측)
+ONLY_RESOLVED = "--only-resolved" in sys.argv   # 블로그에서 뽑은 링크(resolved_links)가 있는 팩만
+def drive_links(r):
+    src = (r.get("resolved_links") or []) if ONLY_RESOLVED else (r["links"] + (r.get("resolved_links") or []))
+    return [u for u in src if "drive.google" in u]
+todo = [r for r in cat if (r["license"] in OK or (INCLUDE_UNKNOWN and r["license"] != "비상업만(상업은 구매/주의)"))
+        and (ANY_FORMAT or r["direct_usable"]) and drive_links(r)]
+todo.sort(key=lambda r: (0 if r["license"] in OK else 1, -(r["views"] or 0)))
 print("download targets:", len(todo), flush=True)
 log = []
 for r in todo:
@@ -20,7 +27,7 @@ for r in todo:
     if any(f.endswith((".mp3", ".wav", ".mov", ".png", ".mp4", ".zip")) for f in os.listdir(d)):
         log.append((r["id"], "skip(있음)")); continue
     ok = False
-    for u in [u for u in r["links"] if "drive.google" in u]:
+    for u in drive_links(r):
         u = u.rstrip("​​").split("?usp")[0]
         is_folder = "/folders/" in u
         cmd = [sys.executable, "-m", "gdown", "--no-cookies", "-O", d + os.sep] + (["--folder"] if is_folder else []) + [u]
@@ -33,5 +40,6 @@ for r in todo:
         if n > 0:
             ok = True; break
     log.append((r["id"], "ok" if ok else "fail"))
+    time.sleep(SLEEP)
 json.dump(log, open(os.path.join(dest, "_download_log.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 print("done", sum(1 for _, s in log if s == "ok"), "/", len(log))
