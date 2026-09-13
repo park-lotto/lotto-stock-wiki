@@ -1,6 +1,6 @@
 (()=>{
  const api=window.sceneStyle,preview=document.querySelector('#a-live-preview');if(!api)return;
- const defaults={watermark:{on:false,text:'@숏템메이커',x:36,y:90,size:3,opacity:65,color:'#ffffff'},ad:{on:false,text:'[광고]',x:87,y:6,size:3,opacity:100,color:'#ffffff'}};
+ const defaults={watermark:{on:false,text:'@숏템메이커',x:50,y:90,size:3,opacity:65,color:'#ffffff',align:'center',motion:'none'},ad:{on:false,text:'[광고]',x:87,y:6,size:3,opacity:100,color:'#ffffff'}};
  const section=document.createElement('details');section.className='scene-label-settings';section.open=true;
  section.innerHTML='<summary>워터마크 · 광고 표시</summary><small>설정은 자동으로 기억합니다.</small>';
  for(const [key,title] of [['watermark','워터마크'],['ad','광고 표시']]){
@@ -9,10 +9,12 @@
  }
  document.querySelector('.scene-effects-panel').prepend(section);
  const layer=document.createElement('div');layer.className='scene-brand-layer';preview.append(layer);
- const config=key=>({...defaults[key],...api.branding()[key]});
- section.addEventListener('click',event=>{if(!event.target.closest('[data-brand-reset]'))return;const key=event.target.closest('[data-brand]').dataset.brand,item=config(key);api.branding({...api.branding(),[key]:{...item,x:defaults[key].x,y:defaults[key].y}});controls();draw();});
+ const config=key=>{const saved=api.branding()[key],item={...defaults[key],...saved};if(key==='watermark'&&saved&&!saved.align){if(saved.x===36)item.x=50;else item.align='left';}return item;};
+ const motionControl=document.createElement('label');motionControl.innerHTML='움직임<select data-brand-field="motion"><option value="none">없음</option><option value="float">살짝 움직임</option></select>';section.querySelector('[data-brand="watermark"] [data-brand-options]').append(motionControl);
+ section.addEventListener('click',event=>{if(!event.target.closest('[data-brand-reset]'))return;const key=event.target.closest('[data-brand]').dataset.brand,item=config(key);api.branding({...api.branding(),[key]:{...item,x:defaults[key].x,y:defaults[key].y,...(key==='watermark'?{align:'center'}:{})}});controls();draw();});
  function controls(){section.querySelectorAll('[data-brand]').forEach(row=>{const item=config(row.dataset.brand);row.querySelector('[data-brand-options]').hidden=!item.on;row.querySelectorAll('[data-brand-field]').forEach(input=>{if(input.type==='checkbox')input.checked=item.on;else input.value=item[input.dataset.brandField]})})}
- function draw(){layer.replaceChildren();for(const key of Object.keys(defaults)){const item=config(key);if(!item.on)continue;const el=document.createElement('div');el.className='scene-brand';el.dataset.brandLabel=key;el.textContent=item.text;Object.assign(el.style,{left:item.x+'%',top:item.y+'%',fontSize:preview.clientWidth*item.size/100+'px',opacity:item.opacity/100,color:item.color});layer.append(el)}}
+ function draw(){layer.replaceChildren();for(const key of Object.keys(defaults)){const item=config(key);if(!item.on)continue;const el=document.createElement('div');el.className='scene-brand';el.dataset.brandLabel=key;const ink=document.createElement('span');ink.className='scene-brand-ink';ink.style.display='block';ink.textContent=item.text;el.append(ink);Object.assign(el.style,{left:item.x+'%',top:item.y+'%',fontSize:preview.clientWidth*item.size/100+'px',opacity:item.opacity/100,color:item.color,transform:item.align==='center'?'translateX(-50%)':'none'});layer.append(el);if(item.motion==='float'){const distance=preview.clientWidth*.012;ink.animate([{transform:'translateY(0)'},{transform:`translateY(${-distance}px)`},{transform:'translateY(0)'}],{duration:2400,iterations:Infinity,easing:'ease-in-out'});}}}
+ window.sceneBranding={motionAt(time){let moving=false;layer.querySelectorAll('.scene-brand-ink').forEach(el=>el.getAnimations().forEach(a=>{a.pause();a.currentTime=time;moving=true}));return moving}};
  section.addEventListener('input',event=>{const key=event.target.closest('[data-brand]')?.dataset.brand,field=event.target.dataset.brandField;if(!key||!field)return;const item=config(key);item[field]=event.target.type==='checkbox'?event.target.checked:event.target.type==='range'?Number(event.target.value):event.target.value;api.branding({...api.branding(),[key]:item});controls();draw()});
  let drag=null;
  layer.addEventListener('pointerdown',event=>{const el=event.target.closest('[data-brand-label]');if(!el||event.button!==0)return;drag={key:el.dataset.brandLabel,x:event.clientX,y:event.clientY,item:config(el.dataset.brandLabel),id:event.pointerId};layer.setPointerCapture(event.pointerId);event.preventDefault()});

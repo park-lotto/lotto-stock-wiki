@@ -16,7 +16,7 @@ const fs=require('fs'),path=require('path'),{pathToFileURL}=require('url'),puppe
       await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
       const file=`scene-style-layer-${index}.png`;
       const duration=request.snapshot.hookMotion&&request.snapshot.hookMotion!=='zoom-punch'?await page.evaluate(()=>window.sceneStyle.motionAt(100000)):0;
-      const moving=await page.evaluate(()=>window.sceneDecorations?.motionAt(0)||false);
+      const moving=await page.evaluate(()=>{const shape=window.sceneDecorations?.motionAt(0),brand=window.sceneBranding?.motionAt(0);return shape||brand||false});
       await page.screenshot({path:path.join(request.output,file),clip:{x:0,y:0,width:1080,height:1920},omitBackground:true});
       const scene=request.context.scenes[index],first=Math.round(scene.start*30),end=Math.round(scene.end*30);
       let animation=null;
@@ -26,11 +26,11 @@ const fs=require('fs'),path=require('path'),{pathToFileURL}=require('url'),puppe
         for(let f=0;f<count;f++){
           await page.evaluate(i=>window.sceneStyle.show(i),index);
           await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
-          await page.evaluate(({title,shape})=>{window.sceneStyle.motionAt(title);window.sceneDecorations?.motionAt(shape)},{title:g.kind==='hook'?(first+f)/30*1000:100000,shape:f/30*1000});
+          await page.evaluate(({title,shape,brand})=>{window.sceneStyle.motionAt(title);window.sceneDecorations?.motionAt(shape);window.sceneBranding?.motionAt(brand)},{title:g.kind==='hook'?(first+f)/30*1000:100000,shape:f/30*1000,brand:(first+f)/30*1000});
           await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
           // Materialize the sampled animation state for Chromium's screenshot compositor.
           await page.evaluate(()=>{
-            document.querySelectorAll('.scene-decoration,.precision-text').forEach(el=>{
+            document.querySelectorAll('.scene-decoration,.precision-text,.scene-brand-ink').forEach(el=>{
               const animations=el.getAnimations();if(!animations.length)return;
               const style=getComputedStyle(el),values={};
               for(const key of ['transform','translate','rotate','scale','opacity','filter','clipPath'])values[key]=style[key];
