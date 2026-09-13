@@ -15,7 +15,7 @@ const fs=require('fs'),path=require('path'),{pathToFileURL}=require('url'),puppe
       const g=await page.evaluate(i=>window.sceneStyle.show(i),index);
       await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
       const file=`scene-style-layer-${index}.png`;
-      const duration=request.snapshot.hookMotion?await page.evaluate(()=>window.sceneStyle.motionAt(100000)):0;
+      const duration=request.snapshot.hookMotion&&request.snapshot.hookMotion!=='zoom-punch'?await page.evaluate(()=>window.sceneStyle.motionAt(100000)):0;
       const moving=await page.evaluate(()=>window.sceneDecorations?.motionAt(0)||false);
       await page.screenshot({path:path.join(request.output,file),clip:{x:0,y:0,width:1080,height:1920},omitBackground:true});
       const scene=request.context.scenes[index],first=Math.round(scene.start*30),end=Math.round(scene.end*30);
@@ -41,7 +41,8 @@ const fs=require('fs'),path=require('path'),{pathToFileURL}=require('url'),puppe
         }
         animation={pattern,count};
       }
-      layers.push({...g,file,animation});
+      const camera=request.snapshot.hookMotion==='zoom-punch'?await page.evaluate(({first,end})=>Array.from({length:end-first},(_,f)=>window.sceneStyle.cameraAt((first+f)/30*1000)),{first,end}):null;
+      layers.push({...g,file,animation,camera});
     }
     if(errors.length)throw new Error(errors.join('\n'));
     fs.writeFileSync(path.join(request.output,'scene-style-layers.json'),JSON.stringify(layers));

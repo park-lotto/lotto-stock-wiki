@@ -1,5 +1,12 @@
 # 장면꾸미기 UI·정밀 템플릿 디자인 시스템
 
+## 2026-09-13 · 줌 펀치 화면 전체 확대·흔들림 복원
+
+- 사용자 정정: 줌 펀치는 제목 팝업이 아니라 화면 전체 확대·짧은 흔들림이다. 전체 시각 레이어를 scene-camera 안에 모아 1→1.105배 확대와 좌우/상하 이동 후 복귀. 팝업은 제목만 기존 모션 유지. 선택 설명도 전체/제목 구분.
+- 모션 곡선은 precision20-ui.js의 punchFrames/cameraAt 한 곳. 최종 렌더는 같은 프레임별 숫자를 metadata로 받아 영상·텍스트·도형 합성 이후 FFmpeg zoompan 적용. PNG에 카메라 효과를 먼저 찍어 중복 확대하지 않는다. 실제 시간으로 샘플링하므로 훅이 여러 자막으로 나뉘어도 처음부터 재시작하지 않는다.
+- qa_zoom_punch 브라우저: 전체 영상 사각형 확대/이동/복귀, 팝업 영상 고정 통과. qa_scene_controls 기존 제목4·도형9 통과, scene_style pytest9 통과. 줌/팝업 각각 실제3초 MP4 출력 및 프레임 육안 확인. qa_zoom_punch_output 영상 영역 시간별 픽셀 차이 줌34.61 / 팝업0.0.
+- 산출물 .tmp/scene-style-qa/punch.mp4, final.mp4(팝업), punch-early/settled.png. UI v61. 사용자 저장값 덮기 및 배포/finish 없음.
+
 ## 2026-09-13 · 워터마크·광고 / 줄 분할 / 상단 원본 잔상 / 제목 모션 위치
 
 - 효과 탭 앞에 워터마크·광고 표시 추가. snapshot.branding에 전체 장면 공통 on/text/x/y/size/opacity/color 저장, DOM 드래그·저장복원·동일 DOM 최종 영상 반영. `scene-style-labels.js` 사용.

@@ -187,7 +187,21 @@ def compose(in_video, timeline, snapshot, out_path, work, headcopy=None):
             graph += f"[out]split[clear][soft];[soft]gblur=sigma={blur_sigma(masks)}[blur];[2:v]format=rgba,alphaextract[mask];[blur][mask]alphamerge[masked];[clear][masked]overlay=0:0:shortest=1[under];[under]"
         else:
             graph += "[out]"
-        graph += "[ink]overlay=0:0:shortest=1[final]"
+        graph += "[ink]overlay=0:0:shortest=1[composed]"
+        camera=layer.get("camera") or []
+        if any(abs(frame.get("zoom",1)-1)>.00001 for frame in camera):
+            # The browser owns the motion curve; sample values apply to the complete composition.
+            def expression(key, default):
+                expr=str(default)
+                for frame_no in range(len(camera)-1,-1,-1):
+                    val=camera[frame_no][key]
+                    if abs(val-default)>.000001:
+                        expr=f"if(eq(on,{frame_no}),{val:.7f},{expr})"
+                return expr
+            z,dx,dy=expression("zoom",1),expression("dx",0),expression("dy",0)
+            graph+=f";[composed]zoompan=z='{z}':x='(iw-iw/zoom)/2-({dx})*iw/zoom':y='(ih-ih/zoom)/2-({dy})*ih/zoom':d=1:s={width}x{va._OUT_H}:fps=30[final]"
+        else:
+            graph+=";[composed]null[final]"
         part=work/f"scene-style-{index:04d}.mp4"
         va._run_ffmpeg(["ffmpeg","-y","-ss",str(first_frame/30),"-i",str(in_video),*layer_input,"-filter_complex",graph,"-map","[final]","-an","-frames:v",str(last_frame-first_frame),"-r","30","-c:v","libx264","-preset",va._preset(),"-crf",va._crf(),*va._threads_args(),"-pix_fmt","yuv420p",str(part)],cwd=str(work))
         parts.append(part)

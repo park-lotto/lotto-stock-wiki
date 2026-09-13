@@ -28,7 +28,7 @@ const puppeteer=require('puppeteer'),assert=require('assert'),path=require('path
   await page.click('[data-frame="hook"]');await page.click('[data-editor-tab="text"]');
   for(const motion of ['zoom-punch','pop','slide','flash']){
     await page.click(`[data-hook-motion="${motion}"]`);
-    const result=await page.evaluate(()=>{const duration=window.sceneStyle.motionAt(180);return {duration,styles:[...document.querySelectorAll('.precision-text')].filter(e=>e.getAnimations().length).map(e=>getComputedStyle(e).transform)}});
+    const result=await page.evaluate(()=>{const duration=window.sceneStyle.motionAt(180);return {duration,styles:[...document.querySelectorAll('.precision-text,.scene-camera')].filter(e=>e.getAnimations().length).map(e=>getComputedStyle(e).transform)}});
     assert.ok(result.duration>0&&result.styles.length>0,motion);
   }
   await page.click('[data-editor-tab="effects"]');await page.click('[data-add-mask="blur"]');await page.click('[data-add-emoji="🔥"]');await page.click('[data-dec-kit="badge"]');await page.click('[data-add-badge="추천"]');
