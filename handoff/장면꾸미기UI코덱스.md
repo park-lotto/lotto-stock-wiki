@@ -1,5 +1,16 @@
 # 장면꾸미기 UI·정밀 템플릿 디자인 시스템
 
+## 2026-09-13 · 배선 우선 점검 — 미수정 항목 있음
+
+- 요청: 기능 추가 전에 페이지 기억/렌더/캡컷 연결부터 확인. 이번 작업은 감사 및 재현 도구 추가이며 제품 코드 수정·배포 없음.
+- 실제 독립 Chromium + 8768 임시 QA DB에서 `tools/qa_scene_style_wiring.js` 실행: 3번째 장면 zoom1.65/panX0.3 적용 후 닫고 다시 열기 및 페이지 새로고침에서 값 보존. 단 sceneIndex2가0으로 바뀜(`precision20-ui.js load`의 showScene(0)). 페이지 재접속 테스트는 QA job을 다시 지정해 여는 방식이며 실제 계정의 내 작업 선택 복원까지 검증한 것은 아님.
+- 적용 없이 zoom1.91로 바꾸고 닫으면1.65로 복귀 재현. 부모 close는 dialog.close만 수행. branding의 브라우저 자동 기억과 서버 적용 저장은 별개라 재접속 시 서버의 예전 branding이 우선할 수 있음(코드 확인, 해당 조합 브라우저 재현은 미실시).
+- 실제 `qa_scene_style_render.py watermark-motion-snapshot.json` 재실행: 임시 DB 저장 및3초 MP4 생성 성공, final-1.png에서 제목/실제 자막/중앙 워터마크 확인. 모든 효과 조합을 이번 감사에서 전수 렌더한 것은 아님.
+- 캡컷: app.api_mix_capcut와 capcut_draft에 deco.scene_style 해석 없음. 임시 job의 urls를 로컬 유효 source로 연결해 실제 GET 내보내기 후 원복. 산출물 video3/audio3/text3, 컷3+원본+음성3만 포함, 새 템플릿/워터마크 등 없음. 최초 urls=[]인 QA의 음성만 반환은 fixture 문제와 구분. 생성 draft를 확인했으며 CapCut 앱으로 열기는 미실시.
+- 추가 확인 필요: QA 재열기 화면에서 미디어 영역 검정 관찰(렌더 MP4 소스는 정상), 원인 미확정. 오래 실행된 QA 서버 및 이미지 응답 확인 필요. 기존 producer의 deco 전체 교체가 오래된 STATE와 충돌하는지 실제 작업 복원 흐름 검증도 남음.
+- 다음 우선순위: 편집 임시저장/닫기 유실 방지 → 저장 sceneIndex 복원 → 캡컷 새 snapshot 연결 및 출력 비교. 캡컷을 편집 가능한 레이어로 보낼지 결정 없이 완성 MP4로 통째 대체하지 말 것.
+- 증거(트랙 .tmp/scene-style-qa): wiring-audit.json, wiring-reopen.png, capcut-valid-source-audit.json, final.mp4, final-1.png. QA 스크립트는 기존 임시 snapshot을 finally에서 복원하며 실제 고객 데이터에는 사용 금지.
+
 ## 2026-09-13 · 워터마크 정확한 가운데 정렬·움직임
 
 - 기본 x50/align center 및 외부 박스 translateX(-50%)로 문구 길이에 무관한 가로 중앙. 이전 기본 x36 저장값만 중앙으로 보정하고 직접 옮긴 값은 보존. 기본 위치로 버튼은 중앙 복원.
