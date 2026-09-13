@@ -20,32 +20,57 @@
   .card .m{color:#9ab;font-size:12px;margin-top:3px;line-height:1.4}
   .card .src{color:#667;font-size:11px;margin-top:4px}
   .note{background:#181818;border-radius:8px;padding:14px;margin-top:10px;font-size:13px;color:#bbb;line-height:1.7}
+  .dash{background:#151515;border:1px solid #262626;border-radius:10px;padding:16px 18px;margin-bottom:24px}
+  .dash h3{margin:0 0 3px;font-size:15px}
+  .dash .goal{color:#8f9;font-size:13px;margin-bottom:14px}
+  .dash .big{font-size:26px;font-weight:800;color:#fff}
+  .dash .big small{font-size:14px;color:#7f95a8;font-weight:400}
+  .bars{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px 20px;margin-top:6px}
+  .bar{font-size:12px}
+  .bar .lab{display:flex;justify-content:space-between;margin-bottom:3px;color:#cbd}
+  .bar .lab .num{color:#7f95a8}
+  .bar .track{height:7px;background:#242424;border-radius:4px;overflow:hidden}
+  .bar .fill{height:100%;background:linear-gradient(90deg,#2f7d46,#4bbf6b);border-radius:4px}
+  .bar.new .fill{background:linear-gradient(90deg,#7a5a1e,#c99a3a)}
+  .bar.new .lab .tag{color:#c99a3a;font-size:10px;margin-left:4px}
 </style>
-<h1>릴리리아(by. Lily) 자막 프리셋 — 용도별</h1>
+<h1>숏츠 자막·효과 라이브러리 — 용도별</h1>
 <div class="sub">"지금 이 장면에 뭘 쓸까?" 로 찾는다. 대본(글자)만 바꾸면 이 스타일로 렌더된다. 카드에 마우스 올리면 재생.</div>
+<div class="dash" id="dash"></div>
 <div class="nav" id="nav"></div>
 <div id="cats"></div>
 <div class="note" id="note"></div>
 
 <script>
-// 카테고리 정의: 언제 쓰는지 한 줄로.
+// 카테고리 정의: 언제 쓰는지 + 유료급 목표(target). planned=아직 카드 없는 신규.
 const CATS = [
-  {id:'talk',  icon:'💬', name:'말하는 자막 · 기본/감성',
+  {id:'talk',  icon:'💬', name:'말하는 자막 · 기본/감성', target:45,
    when:'그냥 대사·나레이션을 예쁘게 얹을 때. 정보영상·브이로그·감성컷의 기본 자막.'},
-  {id:'react', icon:'🔥', name:'감정 강조 · 리액션',
+  {id:'react', icon:'🔥', name:'감정 강조 · 리액션', target:40,
    when:'화날 때·놀랄 때·부끄러울 때 감정을 크게 띄울 때. 예능 리액션 순간.'},
-  {id:'meme',  icon:'💥', name:'큰 리액션 컷 · 밈',
+  {id:'meme',  icon:'💥', name:'큰 리액션 컷 · 밈', target:35,
    when:'화면을 꽉 채우는 한 방. 판정(합격/탈락)·"이건 아니지"·!!!·??? 같은 밈컷.'},
-  {id:'lower', icon:'🏷️', name:'말하는 사람 표시 · 로워서드',
+  {id:'lower', icon:'🏷️', name:'말하는 사람 표시 · 로워서드', target:30,
    when:'누가 말하는지 이름표로 띄울 때. 인터뷰·환승연애식 대화·출연자 소개.'},
-  {id:'news',  icon:'📰', name:'뉴스 · 정보 자막',
+  {id:'news',  icon:'📰', name:'뉴스 · 정보 자막', target:25,
    when:'뉴스 패러디·정보 전달·항목 나열. 속보바·헤드라인·프로필·리스트.'},
-  {id:'label', icon:'🎀', name:'첨자 · 말풍선 라벨',
+  {id:'label', icon:'🎀', name:'첨자 · 말풍선 라벨', target:25,
    when:'귀여운 라벨을 위에 얹어 코멘트할 때. 첨자·말풍선 부연.'},
-  {id:'ask',   icon:'❓', name:'질문 · 인터뷰',
+  {id:'ask',   icon:'❓', name:'질문 · 인터뷰', target:12,
    when:'질문을 던지는 컷. Q. 인터뷰 질문·자막.'},
-  {id:'theme', icon:'🎄', name:'테마 · 시즌',
-   when:'크리스마스·새해 등 시즌 영상의 타이틀/자막.'},
+  {id:'theme', icon:'🎄', name:'테마 · 시즌', target:30,
+   when:'크리스마스·새해·생일·핼러윈 등 시즌 영상의 타이틀/자막.'},
+  // ── 신규(유료급 필수, 아직 제작 예정) ──
+  {id:'title',  icon:'🎬', name:'타이틀 · 오프닝', target:20, planned:true,
+   when:'영상 시작 대형 타이틀·인트로 카드.'},
+  {id:'trans',  icon:'⏭️', name:'전환 · 트랜지션 자막', target:15, planned:true,
+   when:'STEP·다음·BEFORE→AFTER 구간 전환.'},
+  {id:'cta',    icon:'🔔', name:'구독 · CTA', target:15, planned:true,
+   when:'구독·좋아요·알림·댓글 유도(채널 필수).'},
+  {id:'count',  icon:'🔢', name:'수치 · 카운트 · 랭킹', target:20, planned:true,
+   when:'가격·N위·타이머·통계 강조(쇼핑·정보 필수).'},
+  {id:'chat',   icon:'💭', name:'말풍선 · 대화 연출', target:15, planned:true,
+   when:'카톡풍·만화 대사·생각 풍선.'},
 ];
 
 // 프리셋 카드 (cat 으로 분류). src = 원본 에디션.
@@ -136,19 +161,46 @@ const items = [
   {cat:'theme', file:'p_o23_v1',   name:'새해 (2024)',        desc:'초록 네온 + 라벨', src:'#23'},
 ];
 
-// 렌더
+// 각 카테고리 현재 보유 수
+const countOf = id => items.filter(it => it.cat === id).length;
+
+// ── 진척 대시보드 ──
+const totalNow = items.length;
+const totalTarget = CATS.reduce((s,c)=>s+c.target,0);
+const pct = Math.round(totalNow/totalTarget*100);
+let barsHtml = '';
+for (const cat of CATS) {
+  const now = countOf(cat.id);
+  const p = Math.min(100, Math.round(now/cat.target*100));
+  barsHtml += `<div class="bar ${cat.planned?'new':''}">
+    <div class="lab"><span>${cat.icon} ${cat.name.split(' · ')[0]}${cat.planned?'<span class="tag">예정</span>':''}</span><span class="num">${now}/${cat.target}</span></div>
+    <div class="track"><div class="fill" style="width:${p}%"></div></div></div>`;
+}
+document.getElementById('dash').innerHTML =
+  `<h3>유료급 라이브러리 진척</h3>
+   <div class="goal">목표: 숏츠 제작 시 컷 성격마다 골라 쓰는 프로급 자막·효과 풀세트 (13 카테고리)</div>
+   <div class="big">${totalNow}<small> / ${totalTarget}종 · ${pct}%</small></div>
+   <div class="bars">${barsHtml}</div>`;
+
+// ── 카테고리 섹션 ──
 const nav = document.getElementById('nav');
 const cats = document.getElementById('cats');
 for (const cat of CATS) {
   const list = items.filter(it => it.cat === cat.id);
-  if (!list.length) continue;
   const a = document.createElement('a'); a.href = '#'+cat.id;
-  a.innerHTML = `${cat.icon} ${cat.name}<span class="cnt">${list.length}</span>`;
+  a.innerHTML = `${cat.icon} ${cat.name}<span class="cnt">${list.length}/${cat.target}</span>`;
+  if (cat.planned) a.style.opacity = .6;
   nav.appendChild(a);
 
   const sec = document.createElement('section'); sec.id = cat.id;
-  sec.innerHTML = `<div class="sechead"><h2>${cat.icon} ${cat.name}</h2><span class="cnt">${list.length}종</span></div>
-    <p class="when">이럴 때 → ${cat.when}</p><div class="grid"></div>`;
+  const head = `<div class="sechead"><h2>${cat.icon} ${cat.name}</h2><span class="cnt">${list.length}/${cat.target}종</span></div>
+    <p class="when">이럴 때 → ${cat.when}</p>`;
+  if (!list.length) {
+    // 아직 카드 없는 신규 카테고리 = 예정 안내
+    sec.innerHTML = head + `<p class="when" style="color:#c99a3a;background:#231e16;border-left-color:#7a5a1e">🚧 제작 예정 — 목표 ${cat.target}종. 컴포넌트 설계 후 채운다.</p>`;
+    cats.appendChild(sec); continue;
+  }
+  sec.innerHTML = head + `<div class="grid"></div>`;
   const g = sec.querySelector('.grid');
   for (const it of list) {
     const c = document.createElement('div'); c.className='card';
@@ -164,9 +216,10 @@ for (const cat of CATS) {
 
 // note
 document.getElementById('note').innerHTML =
-  `<b>총 ${items.length}종 · 카테고리 ${CATS.length}개</b><br>`+
-  `이 프리셋들은 숏템메이커 고급효과(Remotion) 컴포넌트다. 제작소에서 프리셋 고르고 글자만 넣으면 렌더된다(UI 연결은 다음 단계).<br>`+
-  `한 컴포넌트에 색·문구만 바꾸면 같은 계열 변형이 무한히 나온다 — 위 카드는 대표 샘플이다.`;
+  `<b>지금 ${totalNow}종 / 목표 ${totalTarget}종 · 13 카테고리</b><br>`+
+  `계획 문서: <code>docs/superpowers/specs/2026-09-13-자막효과-라이브러리-로드맵.md</code><br>`+
+  `한 컴포넌트에 색·문구만 바꾸면 계열 변형이 무한히 나온다 — 위 카드는 각 스타일의 대표 샘플이다. `+
+  `우선순위: ① 말하는자막·리액션·로워서드 보강 → ② 타이틀·구독·수치 신규 → ③ 밈·질문·전환 → ④ 테마·대화·색변형.`;
 
 // 화면에 보이면 자동재생
 const io = new IntersectionObserver(es=>es.forEach(e=>{const v=e.target;e.isIntersecting?v.play().catch(()=>{}):v.pause();}),{threshold:0.25});
