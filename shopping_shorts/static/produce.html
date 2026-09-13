@@ -3051,7 +3051,54 @@
                   style="width:270px;height:480px;border-radius:8px;cursor:move;background:#111"></canvas>
           <div id="thumbHandles" style="position:absolute;inset:0;pointer-events:none"></div>
           </div>
-          <button class="btn-next" style="width:270px;margin-top:8px" onclick="generateThumb()">썸네일 생성</button>
+          <!-- 🔍확대 · 🔎돋보기 (2026-09-13 사장님: "장면꾸미기 있는것 심플하게 조작되게").
+               6단계 장면꾸미기와 **같은 뜻·같은 범위**의 값이다(thumbView 한 곳에서 해석).
+               ★배경 사진에만 걸린다 — 글자·스티커는 같이 커지지 않는다(장면꾸미기도 같다). -->
+          <div style="width:270px;margin-top:10px;border-top:1px solid var(--line);padding-top:9px">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
+              <span style="font-size:12px;color:var(--sub);flex:1">🔍 사진 확대</span>
+              <span id="thumbZoomVal" style="font-size:11px;color:var(--sub)">100%</span>
+              <button class="tab" style="min-width:auto;padding:2px 7px;font-size:11px"
+                      onclick="thumbZoomReset()" title="확대·이동을 처음으로">↺</button>
+            </div>
+            <input id="thumbZoom" type="range" min="100" max="300" step="5" value="100"
+                   style="width:100%" oninput="thumbZoomSet(this.value/100)">
+            <div id="thumbPanHint" class="hint" style="font-size:11px;margin-top:3px;display:none">
+              확대한 사진을 <b>끌어서</b> 보여줄 곳을 맞추세요</div>
+
+            <div style="display:flex;align-items:center;gap:6px;margin-top:11px;margin-bottom:5px">
+              <span style="font-size:12px;color:var(--sub);flex:1">🔎 돋보기</span>
+              <label style="font-size:11px;color:var(--sub);display:flex;align-items:center;gap:4px;cursor:pointer">
+                <input id="thumbHlOn" type="checkbox" onchange="thumbHlToggle(this.checked)"> 켜기</label>
+            </div>
+            <div id="thumbHlBox" style="display:none">
+              <div style="display:flex;gap:5px;margin-bottom:6px">
+                <button id="thumbHlModeZoom" class="tab" style="flex:1;min-width:auto;padding:5px;font-size:11px"
+                        onclick="thumbHlSet({mode:'zoom'})">🔍 원 안 확대</button>
+                <button id="thumbHlModeSpot" class="tab" style="flex:1;min-width:auto;padding:5px;font-size:11px"
+                        onclick="thumbHlSet({mode:'spot'})">💡 원 밖 어둡게</button>
+              </div>
+              <div style="display:flex;gap:5px;margin-bottom:7px">
+                <button id="thumbHlShapeCircle" class="tab" style="flex:1;min-width:auto;padding:5px;font-size:11px"
+                        onclick="thumbHlSet({shape:'circle'})">⭕ 원</button>
+                <button id="thumbHlShapeRound" class="tab" style="flex:1;min-width:auto;padding:5px;font-size:11px"
+                        onclick="thumbHlSet({shape:'round'})">▢ 둥근네모</button>
+              </div>
+              <div style="display:flex;align-items:center;gap:6px">
+                <span style="font-size:11px;color:var(--sub);width:30px">크기</span>
+                <input id="thumbHlR" type="range" min="8" max="55" step="1" value="28"
+                       style="flex:1" oninput="thumbHlSet({r:this.value/100})">
+              </div>
+              <div id="thumbHlZRow" style="display:flex;align-items:center;gap:6px;margin-top:4px">
+                <span style="font-size:11px;color:var(--sub);width:30px">배율</span>
+                <input id="thumbHlZ" type="range" min="110" max="400" step="10" value="200"
+                       style="flex:1" oninput="thumbHlSet({zoom:this.value/100})">
+              </div>
+              <div class="hint" style="font-size:11px;margin-top:4px">원을 <b>끌어서</b> 강조할 곳으로 옮기세요</div>
+            </div>
+          </div>
+
+          <button class="btn-next" style="width:270px;margin-top:10px" onclick="generateThumb()">썸네일 생성</button>
           <div id="thumbSaveStatus" class="hint" style="margin-top:6px"></div>
 
           <!-- 🖼 내 프리셋(2026-09-02 사장님 "만들어진것 프리셋으로 저장하는것 만들어줘.
@@ -15805,11 +15852,151 @@ function addThumbBadge(label){
   renderThumbLayers(); renderThumbCanvas();
 }
 
-function drawThumb(ctx, img, layers, W, H){
+// ── 🔍 썸네일 배경 확대 + 🔎 돋보기 (2026-09-13 사장님: "썸네일 꾸미기에서 확대랑 돋보기") ──
+// 6단계 장면꾸미기에 이미 있는 것을 썸네일에도 넣은 것이다. **뜻(저장 형식)을 장면꾸미기와
+// 똑같이 맞춘다**(0순위-B) — 화면 크기와 무관한 **비율**이라 미리보기(270px)와 저장 PNG(1080px)가
+// 같은 그림이 된다:
+//     zoom        배경 확대 배율 1~3            (video_assemble.scene_zoom_of와 같은 범위)
+//     pan_x/pan_y 확대된 그림을 민 정도, 화면 폭·높이 대비 (오른쪽·아래가 +), |pan| <= (zoom-1)/2
+//     hl {on,mode,shape,cx,cy,r,zoom}           (video_assemble.scene_hl_of와 같은 필드·같은 범위)
+//       cx,cy 중심(0~1) · r 반지름은 **폭 대비**(0.06~0.9) — 폭 기준이라 세로 썸네일에서도 원이 원이다
+// ★이 값은 **배경 사진에만** 건다. 글자·스티커는 같이 확대하지 않는다 — 장면꾸미기도 같다
+//   (.zoomStage > #hcPreviewBg, produce.html:794). 제목이 같이 커지면 화면 밖으로 나가 못 쓴다.
+const THUMB_VIEW_DEF = {zoom: 1, pan_x: 0, pan_y: 0,
+                        hl: {on: false, mode: 'zoom', shape: 'circle',
+                             cx: 0.5, cy: 0.47, r: 0.28, zoom: 2.0}};
+// 모양 → 거리식의 지수. 서버 video_assemble._HL_SHAPE_N과 **같은 표**다(n=2 원, n=4 둥근네모).
+const THUMB_HL_SHAPE_N = {circle: 2, round: 4};
+
+// 숫자 하나를 범위 안으로. ★`+v || dflt`를 쓰지 마라 — **0도 falsy라 기본값으로 튄다**.
+// (실측 2026-09-13: 돋보기 배율 0을 넣으니 하한 1.1이 아니라 기본 2가 나왔다. cx=0도 같은 함정.)
+// 숫자가 아닐 때만 기본값으로 떨어뜨리고, 그 다음 범위로 가둔다.
+function _thumbNum(v, dflt, lo, hi){
+  const n = (v === null || v === '' || v === undefined) ? NaN : Number(v);
+  return Math.max(lo, Math.min(hi, Number.isFinite(n) ? n : dflt));
+}
+
+function thumbView(v){
+  // ★해석은 여기 한 곳에서만 한다(0순위-B) — 그리기·손잡이·저장이 각자 파싱하면 반드시 어긋난다.
+  const o = Object.assign({}, THUMB_VIEW_DEF, v || {});
+  o.zoom = _thumbNum(o.zoom, 1, 1, 3);
+  const lim = (o.zoom - 1) / 2;                       // 확대한 만큼만 밀 수 있다(빈 구석 방지)
+  o.pan_x = _thumbNum(o.pan_x, 0, -lim, lim);
+  o.pan_y = _thumbNum(o.pan_y, 0, -lim, lim);
+  const h = Object.assign({}, THUMB_VIEW_DEF.hl, (v || {}).hl || {});
+  o.hl = {on: !!h.on,
+          mode: h.mode === 'spot' ? 'spot' : 'zoom',
+          shape: h.shape === 'round' ? 'round' : 'circle',
+          cx: _thumbNum(h.cx, 0.5, 0, 1), cy: _thumbNum(h.cy, 0.47, 0, 1),
+          r: _thumbNum(h.r, 0.28, 0.06, 0.9),
+          zoom: _thumbNum(h.zoom, 2.0, 1.1, 4)};
+  return o;
+}
+
+// ── 조작 ──────────────────────────────────────────────
+// 값을 바꾸는 곳은 **여기뿐**이다(0순위-B). 슬라이더·드래그·초기화가 각자 THUMB_STATE.view를
+// 직접 주무르면 한 곳을 고쳐도 나머지가 안 따라온다.
+function thumbViewSet(patch){
+  const cur = THUMB_STATE.view || {};
+  const next = Object.assign({}, cur, patch || {});
+  if (patch && patch.hl) next.hl = Object.assign({}, cur.hl || {}, patch.hl);
+  THUMB_STATE.view = thumbView(next);        // 범위 보정도 한 함수에서
+  renderThumbCanvas();
+}
+function thumbZoomSet(z){ thumbViewSet({zoom: z}); }
+function thumbZoomReset(){ thumbViewSet({zoom: 1, pan_x: 0, pan_y: 0}); }
+function thumbHlToggle(on){ thumbViewSet({hl: {on: !!on}}); }
+function thumbHlSet(patch){ thumbViewSet({hl: patch}); }
+
+// 화면(슬라이더·버튼)을 현재 값에 맞춘다 — 드래그로 바뀐 값도 여기로 되돌아온다.
+function syncThumbViewUI(){
+  const V = thumbView(THUMB_STATE.view);
+  const $ = id => document.getElementById(id);
+  const z = $('thumbZoom'); if (z && +z.value !== Math.round(V.zoom * 100)) z.value = Math.round(V.zoom * 100);
+  const zv = $('thumbZoomVal'); if (zv) zv.textContent = Math.round(V.zoom * 100) + '%';
+  const ph = $('thumbPanHint'); if (ph) ph.style.display = V.zoom > 1.0001 ? '' : 'none';
+  const on = $('thumbHlOn'); if (on) on.checked = V.hl.on;
+  const box = $('thumbHlBox'); if (box) box.style.display = V.hl.on ? '' : 'none';
+  // 고른 것은 눌린 듯 보이게 — 어느 모드인지 눈으로 알아야 한다.
+  const mark = (id, yes) => { const e = $(id); if (e) e.style.outline = yes ? '2px solid var(--accent)' : 'none'; };
+  mark('thumbHlModeZoom', V.hl.mode === 'zoom');   mark('thumbHlModeSpot', V.hl.mode === 'spot');
+  mark('thumbHlShapeCircle', V.hl.shape === 'circle'); mark('thumbHlShapeRound', V.hl.shape === 'round');
+  const zr = $('thumbHlZRow'); if (zr) zr.style.display = V.hl.mode === 'spot' ? 'none' : '';  // 어둡게는 배율이 없다
+  const r = $('thumbHlR'); if (r && +r.value !== Math.round(V.hl.r * 100)) r.value = Math.round(V.hl.r * 100);
+  const hz = $('thumbHlZ'); if (hz && +hz.value !== Math.round(V.hl.zoom * 100)) hz.value = Math.round(V.hl.zoom * 100);
+}
+
+// 배경 한 장을 확대·이동해서 그린다. 확대가 없으면 종전과 완전히 같은 한 줄이다(회귀 0).
+function _drawThumbBg(ctx, img, V, W, H){
+  if (!img) return;
+  if (V.zoom <= 1.0001){ ctx.drawImage(img, 0, 0, W, H); return; }
+  // 화면을 zoom배로 키우고, 중앙에서 pan만큼 민 자리에 놓는다.
+  // (서버 _crop_xy와 같은 뜻 — 거기선 크롭 창을 -pan 옮기고, 여기선 그림을 +pan 옮긴다)
+  const zw = W * V.zoom, zh = H * V.zoom;
+  ctx.drawImage(img, -(zw - W) / 2 + W * V.pan_x, -(zh - H) / 2 + H * V.pan_y, zw, zh);
+}
+
+// 돋보기 원의 경로. 테두리·마스크·미리보기가 **같은 식**을 쓴다 → 모양이 어긋날 수 없다.
+// n=2는 정확히 원이라 arc로 그리고, n=4(둥근네모)는 초타원을 점으로 잇는다.
+function _thumbHlPath(ctx, cx, cy, r, shape){
+  const n = THUMB_HL_SHAPE_N[shape] || 2;
+  ctx.beginPath();
+  if (n === 2){ ctx.arc(cx, cy, r, 0, Math.PI * 2); return; }
+  const STEP = 96;
+  for (let i = 0; i <= STEP; i++){
+    const t = (i / STEP) * Math.PI * 2, c = Math.cos(t), s2 = Math.sin(t);
+    // |x/r|^n + |y/r|^n = 1 의 매개변수 표현
+    const x = cx + r * Math.sign(c) * Math.pow(Math.abs(c), 2 / n);
+    const y = cy + r * Math.sign(s2) * Math.pow(Math.abs(s2), 2 / n);
+    i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+  }
+  ctx.closePath();
+}
+
+// 돋보기를 배경 위에 얹는다(글자보다 **아래** — 제목이 원에 가리면 안 된다).
+function _drawThumbHL(ctx, img, V, W, H){
+  const hl = V.hl;
+  if (!hl.on || !img) return;
+  const cx = hl.cx * W, cy = hl.cy * H, r = hl.r * W;    // r은 폭 기준(서버 _hl_px와 동일)
+  if (hl.mode === 'spot'){
+    // 💡 원 밖을 어둡게 — 전체를 덮고 원만 도려낸다(서버 _HL_DARK=0.60과 같은 농도).
+    ctx.save();
+    ctx.fillStyle = 'rgba(0,0,0,0.60)';
+    ctx.fillRect(0, 0, W, H);
+    ctx.globalCompositeOperation = 'destination-out';
+    _thumbHlPath(ctx, cx, cy, r, hl.shape);
+    ctx.fill();
+    ctx.restore();
+  } else {
+    // 🔍 원 안만 확대 — 원으로 잘라내고 그 안에 배경을 hl.zoom배로 다시 그린다.
+    // 확대의 중심을 원 중심에 맞춰야 "그 점이 커진" 것으로 보인다.
+    ctx.save();
+    _thumbHlPath(ctx, cx, cy, r, hl.shape);
+    ctx.clip();
+    ctx.translate(cx, cy);
+    ctx.scale(hl.zoom, hl.zoom);
+    ctx.translate(-cx, -cy);
+    _drawThumbBg(ctx, img, V, W, H);       // ★배경 확대(V.zoom)를 먼저 먹인 그림을 키운다
+    ctx.restore();
+  }
+  // 흰 테두리 — 두 모드 공통(서버 _HL_RING과 같은 역할). 폭에 비례해 어느 크기에서도 같아 보인다.
+  ctx.save();
+  ctx.strokeStyle = '#fff';
+  ctx.lineWidth = Math.max(2, W * 0.006);
+  ctx.shadowColor = 'rgba(0,0,0,0.45)';
+  ctx.shadowBlur = W * 0.008;
+  _thumbHlPath(ctx, cx, cy, r, hl.shape);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawThumb(ctx, img, layers, W, H, view){
   const s = W / THUMB_W;                    // 캔버스 배율 — 외곽선·박스 여백용
+  const V = thumbView(view);
   // ★매 렌더마다 먼저 지운다(2026-07-18 라이브 실측) — job 없을 때 드래그 잔상이 쌓이던 것 봉인.
   ctx.clearRect(0, 0, W, H);
-  if (img) ctx.drawImage(img, 0, 0, W, H);
+  _drawThumbBg(ctx, img, V, W, H);
+  _drawThumbHL(ctx, img, V, W, H);          // 돋보기는 배경 위 · 글자 아래
   (layers || []).forEach(L => {
     if (L.kind === 'sticker'){ if (L.emoji) drawSticker(ctx, L, W, H); return; }
     if (L.kind === 'shape'){ drawShape(ctx, L, W, H); return; }
@@ -15880,6 +16067,9 @@ function drawThumb(ctx, img, layers, W, H){
 
 const THUMB_STATE = {frames: [], frame_ts: null, frame_url: null, img: null,
                      layers: [], sel: 0, results: [], selected: null, title_cands: [],
+                     // 🔍확대·🔎돋보기(2026-09-13). 배경에만 거는 값이라 layers와 따로 둔다
+                     // — 레이어에 섞으면 프리셋·손잡이·삭제가 전부 이걸 레이어로 오해한다.
+                     view: JSON.parse(JSON.stringify(THUMB_VIEW_DEF)),
                      job: null};   // job=이 상태가 속한 MIX_JOB. 바뀌면 리셋(2026-07-22)
 
 // 추출은 수 초 걸린다. THUMB_STATE.frames는 '응답이 와야' 채워지므로 그것만 보고 가드하면
@@ -16067,8 +16257,9 @@ async function renderThumbCanvas(){
   await ensureThumbFontsLoaded(THUMB_STATE.layers);
   if (gen !== THUMB_RENDER_GEN) return;   // 기다리는 사이 새 렌더가 예약됐다 — 이번 건 버린다
   const ctx = cv.getContext('2d');
-  drawThumb(ctx, THUMB_STATE.img, THUMB_STATE.layers, THUMB_W, THUMB_H);
+  drawThumb(ctx, THUMB_STATE.img, THUMB_STATE.layers, THUMB_W, THUMB_H, THUMB_STATE.view);
   renderThumbHandles();
+  syncThumbViewUI();
 }
 
 // ── 🖐 스티커·도형 손잡이(2026-08-18 사장님: "삭제 간단히 / 끝부분 잡고 크기·방향") ──
@@ -16757,6 +16948,9 @@ const THUMB_GRAB_R2 = 0.28 * 0.28;   // 잡히는 반경(정규화 거리²) —
 function initThumbDrag(){
   const cv = document.getElementById('thumbCanvas'); if (!cv || !cv.addEventListener) return;
   let grabbed = -1, offX = 0, offY = 0;
+  // 🔎돋보기 원 옮기기 / 🔍확대한 사진 밀기 (2026-09-13). 글자 드래그(grabbed)와 **배타적**이다
+  // — 한 번에 하나만 잡아야 "글자를 옮겼는데 배경도 같이 밀린다"가 안 난다.
+  let dragMode = null, panFrom = null;
   const to = e => {
     const r = cv.getBoundingClientRect();
     return {x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height};
@@ -16776,6 +16970,18 @@ function initThumbDrag(){
     //   그대로 산다. -1로 두면 그것들이 통째로 무동작이 된다(실제로 8곳이 sel을 참조).
     if (best < 0 || bestD > THUMB_GRAB_R2){
       deselectThumbLayer();
+      // 글자를 안 잡았으면 🔎돋보기 원 → 🔍확대한 사진 순으로 잡아본다(2026-09-13).
+      // ★순서가 중요하다: 원이 위에 보이므로 원을 먼저 준다. 둘 다 아니면 종전처럼 아무것도 안 한다.
+      const V = thumbView(THUMB_STATE.view);
+      if (V.hl.on){
+        // 원 안을 눌렀나 — 반지름은 **폭 기준**이라 세로 비율을 곱해 비교한다(그리기와 같은 기준).
+        const dx = p.x - V.hl.cx, dy = (p.y - V.hl.cy) * (THUMB_H / THUMB_W);
+        if (Math.sqrt(dx * dx + dy * dy) <= V.hl.r){
+          dragMode = 'hl'; offX = V.hl.cx - p.x; offY = V.hl.cy - p.y;
+          return;
+        }
+      }
+      if (V.zoom > 1.0001){ dragMode = 'pan'; panFrom = {p, x: V.pan_x, y: V.pan_y}; }
       return;
     }
     grabbed = best;
@@ -16784,12 +16990,25 @@ function initThumbDrag(){
     offX = L.x - p.x; offY = L.y - p.y;                // 잡은 지점과의 간격 유지 = 상대이동
     renderThumbLayers(); renderThumbHandles();
   });
-  window.addEventListener('mouseup', () => { grabbed = -1; });
+  window.addEventListener('mouseup', () => { grabbed = -1; dragMode = null; panFrom = null; });
   // Esc로도 푼다 — 손잡이가 그림을 가려서 확인이 안 될 때 마우스를 옮기지 않고 치울 수 있다.
   window.addEventListener('keydown', e => {
     if (e.key === 'Escape' && document.getElementById('thumbHandles')?.innerHTML) deselectThumbLayer();
   });
   cv.addEventListener('mousemove', e => {
+    // 🔎돋보기 원 옮기기 / 🔍확대한 사진 밀기 — 글자 드래그보다 먼저 가른다(배타적).
+    if (dragMode === 'hl'){
+      const p = to(e);
+      thumbHlSet({cx: p.x + offX, cy: p.y + offY});     // 범위 보정은 thumbView 한 곳에서
+      return;
+    }
+    if (dragMode === 'pan' && panFrom){
+      const p = to(e);
+      // 끈 만큼 그림이 따라오게 — 화면 폭·높이 대비 비율로 더한다(저장 단위와 같다).
+      thumbViewSet({pan_x: panFrom.x + (p.x - panFrom.p.x),
+                    pan_y: panFrom.y + (p.y - panFrom.p.y)});
+      return;
+    }
     if (grabbed < 0) return;
     const L = THUMB_STATE.layers[grabbed]; if (!L) return;
     const p = to(e);
@@ -16815,7 +17034,8 @@ async function generateThumb(){
     fd.append('job_id', MIX_JOB);
     fd.append('meta', JSON.stringify({frame_ts: THUMB_STATE.frame_ts,
                                       frame_url: THUMB_STATE.frame_url,
-                                      layers: THUMB_STATE.layers}));
+                                      layers: THUMB_STATE.layers,
+                                      view: THUMB_STATE.view}));   // 🔍확대·🔎돋보기도 함께 보존
     fd.append('file', blob, 'thumb.png');   // 이 이름은 서버가 무시한다(경로순회 방지)
     const r = await fetch('/api/produce/thumb/save', {method: 'POST', body: fd});
     const d = await r.json().catch(() => ({ok: false}));
@@ -16904,6 +17124,8 @@ function initThumb(){
     THUMB_STATE.frames = []; THUMB_STATE.layers = []; THUMB_STATE.title_cands = [];
     THUMB_STATE.results = []; THUMB_STATE.selected = null; THUMB_STATE.sel = 0;
     THUMB_STATE.frame_ts = null; THUMB_STATE.frame_url = null; THUMB_STATE.img = null;
+    // 🔍확대·🔎돋보기도 버린다 — 남기면 새 영상의 다른 장면에 엉뚱한 구도가 걸린다.
+    THUMB_STATE.view = JSON.parse(JSON.stringify(THUMB_VIEW_DEF));
     const sug = document.getElementById('thumbTitleSuggest'); if (sug) sug.innerHTML = '';
     const gal = document.getElementById('thumbGallery'); if (gal) gal.innerHTML = '';
   }

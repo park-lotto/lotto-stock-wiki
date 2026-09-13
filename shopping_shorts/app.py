@@ -8669,7 +8669,9 @@ async def api_thumb_save(job_id: str = Form(...), meta: str = Form(...),
     results.append(name)
     # ★meta를 통째로 합치지 않는다. frames(Task 3이 만든 후보목록)·results·selected는
     #  서버 소유라 클라이언트가 덮으면 안 된다 — 편집 상태만 화이트리스트로 받는다.
-    for k in ("frame_ts", "frame_url", "layers"):
+    # ★"view"(🔍확대·🔎돋보기, 2026-09-13)도 편집 상태라 같이 받는다. 화이트리스트에
+    #   안 넣으면 미리보기만 바뀌고 다시 열면 사라진다(조용한 유실).
+    for k in ("frame_ts", "frame_url", "layers", "view"):
         if k in meta_obj:
             thumb[k] = meta_obj[k]
     thumb["results"] = results
