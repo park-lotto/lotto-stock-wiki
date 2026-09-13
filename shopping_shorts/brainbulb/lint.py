@@ -383,5 +383,10 @@ def feedback(issues):
     bad = rejects(issues)
     if not bad:
         return ""
-    return ("\n\n[재작성 지시 — 방금 쓴 것이 아래를 어겼다. 해당 부분만 그대로 고쳐라. 칸 개수·순서는 유지]\n"
-            + "\n".join(f"- {i.where} «{i.found}»: {i.why}" for i in bad))
+    return ("\n\n[재작성 지시 — 방금 쓴 것이 아래를 어겼다]\n"
+            + "\n".join(f"- {i.where} «{i.found}»: {i.why}" for i in bad)
+            + "\n\n★고치는 법: 지적된 곳 **말고는 글자 하나도 바꾸지 마라**. 대본을 새로 쓰지 마라.\n"
+              "  방금 낸 JSON을 그대로 가져와 위 항목만 손보고 전체를 다시 출력하라.\n"
+              "  컷 개수·순서·색·역할·img 번호·card_img를 그대로 두면 새 반려가 생기지 않는다.\n"
+              "  (실측 2026-09-13: 7번 다시 쓰는 동안 컷 수가 23→24→26으로 계속 바뀌었다 —\n"
+              "   한 곳을 고치면서 대본을 새로 써 다른 곳이 깨졌다.)")

@@ -205,5 +205,10 @@ def generate(source_text, call, *, max_rewrites=None, fonts_dir=None, log=print,
         last = (laid, issues, attempt + 1)
         if not rej:
             return last
-        fb = lint.feedback(issues)
+        # ★직전 대본을 함께 보낸다 — 안 보내면 모델은 기사만 받고 **백지에서 새로 쓴다**.
+        #   그래서 한 곳을 고치라 해도 대본 전체가 바뀌어 다른 곳이 깨졌다
+        #   (실측 2026-09-13: 7시도 동안 컷 수 23→24→26, 매번 다른 규칙에 걸려 통과 못 함).
+        fb = ("\n\n[방금 낸 대본 — 이것을 고쳐라. 새로 쓰지 마라]\n"
+              + json.dumps(script, ensure_ascii=False)
+              + lint.feedback(issues))
     return last
