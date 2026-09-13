@@ -6,6 +6,9 @@ import {LilyNewsBar} from './LilyNewsBar';
 import {LilyStamp} from './LilyStamp';
 import {LilyNameBar} from './LilyNameBar';
 import {LilyTyping} from './LilyTyping';
+import {LilyQuote} from './LilyQuote';
+import {LilyQuestion} from './LilyQuestion';
+import {LilyUnderline} from './LilyUnderline';
 import {SwipeLeft} from './SwipeLeft';
 import {Sparkle} from './Sparkle';
 import {ImpactText} from './ImpactText';
@@ -32,6 +35,9 @@ if (typeof document !== 'undefined') {
 
 export const RemotionRoot: React.FC = () => (
   <>
+    <Composition id="LilyQuote" component={LilyQuote} durationInFrames={60} fps={30} width={1080} height={1920} defaultProps={{sub: '명언을 말 할 것 같은..', text: '감성적인 템플릿', color: '#ffffff'}} />
+    <Composition id="LilyQuestion" component={LilyQuestion} durationInFrames={60} fps={30} width={1080} height={1920} defaultProps={{text: '오늘 이 대회에서 1등 하신 소감을 말씀해 주시겠어요??', mark: 'Q.'}} />
+    <Composition id="LilyUnderline" component={LilyUnderline} durationInFrames={60} fps={30} width={1080} height={1920} defaultProps={{sub: '두 줄로 사용이 가능한', text: '깔끔하고 편리한 자막 템플릿'}} />
     <Composition
       id="LilyTyping"
       component={LilyTyping}
