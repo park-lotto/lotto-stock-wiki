@@ -14,6 +14,8 @@ export type LilyPreset = {
   sparkle: boolean;    // 양옆 반짝이 별
   anim: 'fade' | 'pop' | 'bounce';
   fontSize: number;
+  label?: {bg: string; color: string};  // 위 작은 라벨 박스(첨자용). props.label 텍스트와 함께 씀
+  emoji?: string;      // 글자 양옆 이모지(화날때 🔥 등)
 };
 
 export const LILY_PRESETS: Record<string, LilyPreset> = {
@@ -64,6 +66,24 @@ export const LILY_PRESETS: Record<string, LilyPreset> = {
     sparkle: true,
     anim: 'pop',
     fontSize: 96,
+  },
+  // #2 첨자 — 핑크 글자+노란 외곽선, 위에 핑크 라벨 박스
+  cheomja: {
+    id: 'cheomja', name: '릴리 · 첨자(라벨)',
+    fontFamily: 'TmonMonsori', italic: 6,
+    fillColor: '#ff5fb0', hlColor: '#ffe14d', hlStroke: '#ff2e8f',
+    strokeColor: '#ffe14d', strokeW: 6,
+    glow: 'rgba(255,120,190,0.5)', sparkle: false, anim: 'pop', fontSize: 84,
+    label: {bg: '#ff7ab8', color: '#ffffff'},
+  },
+  // #12 화날 때 — 빨간 글자+흰 외곽선, 양옆 불꽃
+  angry: {
+    id: 'angry', name: '릴리 · 화날때(불꽃)',
+    fontFamily: 'TmonMonsori', italic: 6,
+    fillColor: '#ff2b2b', hlColor: '#ffd23d', hlStroke: '#8a0000',
+    strokeColor: '#ffffff', strokeW: 7,
+    glow: 'rgba(255,60,0,0.55)', sparkle: false, anim: 'bounce', fontSize: 90,
+    emoji: '🔥',
   },
 };
 

@@ -2,6 +2,8 @@ import {Composition, staticFile, continueRender, delayRender} from 'remotion';
 import {LilySub} from './LilySub';
 import {LilyBoxed} from './LilyBoxed';
 import {LilyStack} from './LilyStack';
+import {LilyNewsBar} from './LilyNewsBar';
+import {LilyStamp} from './LilyStamp';
 import {SwipeLeft} from './SwipeLeft';
 import {Sparkle} from './Sparkle';
 import {ImpactText} from './ImpactText';
@@ -28,6 +30,24 @@ if (typeof document !== 'undefined') {
 
 export const RemotionRoot: React.FC = () => (
   <>
+    <Composition
+      id="LilyNewsBar"
+      component={LilyNewsBar}
+      durationInFrames={60}
+      fps={30}
+      width={1080}
+      height={1920}
+      defaultProps={{text: '경기 침체 계속 될 것으로 보여...', logo: 'SBC\nNEWS'}}
+    />
+    <Composition
+      id="LilyStamp"
+      component={LilyStamp}
+      durationInFrames={60}
+      fps={30}
+      width={1080}
+      height={1920}
+      defaultProps={{text: 'REJECTED', color: '#e01d1d', rotate: -11}}
+    />
     <Composition
       id="LilyBoxed"
       component={LilyBoxed}

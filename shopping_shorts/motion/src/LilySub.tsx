@@ -8,6 +8,7 @@ export type LilySubProps = {
   highlight?: string;      // 이 단어만 강조색(원본의 "행복"처럼)
   preset?: string | LilyPreset;
   position?: 'top' | 'mid' | 'bottom';
+  label?: string;          // 위 작은 라벨 박스 텍스트(첨자용). preset.label 스타일과 함께
 };
 
 const Star: React.FC<{x: number; y: number; s: number; phase: number}> = ({x, y, s, phase}) => {
@@ -22,7 +23,7 @@ const Star: React.FC<{x: number; y: number; s: number; phase: number}> = ({x, y,
   );
 };
 
-export const LilySub: React.FC<LilySubProps> = ({text, highlight, preset, position = 'mid'}) => {
+export const LilySub: React.FC<LilySubProps> = ({text, highlight, preset, position = 'mid', label}) => {
   const p = resolveLilyPreset(preset);
   const frame = useCurrentFrame();
   const {fps, width} = useVideoConfig();
@@ -57,7 +58,16 @@ export const LilySub: React.FC<LilySubProps> = ({text, highlight, preset, positi
 
   return (
     <AbsoluteFill style={{justifyContent: 'flex-start', alignItems: 'center', backgroundColor: 'transparent'}}>
-      <div style={{marginTop, position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', opacity, transform: `translateY(${bounce}px) scale(${scale * fit})`}}>
+      <div style={{marginTop, display: 'flex', flexDirection: 'column', alignItems: 'center', opacity, transform: `translateY(${bounce}px) scale(${scale * fit})`}}>
+      {/* 위 라벨 박스(첨자) */}
+      {p.label && label && (
+        <div style={{background: p.label.bg, color: p.label.color, fontFamily: `"${p.fontFamily}", "Malgun Gothic", sans-serif`, fontWeight: 900, fontSize: p.fontSize * 0.4, padding: '4px 18px', borderRadius: 22, marginBottom: 12, boxShadow: `0 0 14px ${p.glow}`}}>
+          {label}
+        </div>
+      )}
+      <div style={{position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center'}}>
+        {/* 왼쪽 이모지(화날때 등) */}
+        {p.emoji && <span style={{fontSize: p.fontSize, marginRight: 6}}>{p.emoji}</span>}
         {/* 왼쪽 반짝이 — 글자 바깥 */}
         {p.sparkle && (
           <div style={{position: 'absolute', right: '100%', top: '50%', transform: 'translateY(-50%)', width: 90, height: 120}}>
@@ -103,6 +113,9 @@ export const LilySub: React.FC<LilySubProps> = ({text, highlight, preset, positi
             <Star x={40} y={64} s={0.55} phase={3.3} />
           </div>
         )}
+        {/* 오른쪽 이모지 */}
+        {p.emoji && <span style={{fontSize: p.fontSize, marginLeft: 6}}>{p.emoji}</span>}
+      </div>
       </div>
     </AbsoluteFill>
   );
