@@ -12,6 +12,7 @@ const puppeteer=require('puppeteer'),fs=require('fs'),assert=require('assert');
    await page.evaluate(()=>openSceneStyleEditor());await page.waitForSelector('dialog[open] iframe');
    let frame=await(await page.$('dialog iframe')).contentFrame();
    await frame.waitForFunction(()=>window.sceneStyle?.context()?.jobId);
+   await frame.waitForFunction(()=>{const img=document.querySelector('.precision-media');return img?.complete&&img.naturalWidth>0});
    return frame;
   };
   let frame=await open();
