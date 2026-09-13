@@ -37,7 +37,7 @@ def validate_snapshot(value):
         elif isinstance(obj, str) and len(obj) > 2000:
             raise ValueError("문구가 너무 깁니다")
     walk(value)
-    for name in ("text", "fontScales", "textOffsets", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "effects"):
+    for name in ("text", "fontScales", "textOffsets", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"):
         if name in value and not isinstance(value[name], dict):
             raise ValueError(f"{name} 설정이 올바르지 않습니다")
     for color in (value.get("colors") or {}).values():
@@ -62,6 +62,13 @@ def validate_snapshot(value):
         if not isinstance(drag,dict):
             raise ValueError("자막 위치 형식이 올바르지 않습니다")
         number(drag.get("x"),-100,100);number(drag.get("y"),-100,100)
+    for caption in (value.get("captionLayouts") or {}).values():
+        if not isinstance(caption,dict) or caption.get("placement") not in ("title","free"):
+            raise ValueError("자막 배치 형식이 올바르지 않습니다")
+        number(caption.get("w",100),20,100);number(caption.get("h",7),4,25)
+        for key in ("background","color"):
+            if key in caption and (not isinstance(caption[key],str) or len(caption[key])>500):
+                raise ValueError("자막 색상 형식이 올바르지 않습니다")
     for texts in (value.get("text") or {},value.get("captionTexts") or {}):
         if any(not isinstance(t,str) for t in texts.values()):
             raise ValueError("문구는 텍스트여야 합니다")
@@ -103,7 +110,7 @@ def validate_snapshot(value):
         raise ValueError("제목 효과가 올바르지 않습니다")
     if "hookMotionSpeed" in value:
         number(value["hookMotionSpeed"],.5,2)
-    allowed = {"version", "mode", "presetId", "sceneIndex", "frameKind", "hookMotion", "hookMotionSpeed", "text", "fontScales", "textOffsets", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "effects"}
+    allowed = {"version", "mode", "presetId", "sceneIndex", "frameKind", "hookMotion", "hookMotionSpeed", "text", "fontScales", "textOffsets", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "captionLayouts", "effects"}
     return {key: val for key, val in value.items() if key in allowed}
 
 

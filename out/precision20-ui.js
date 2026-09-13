@@ -13,29 +13,41 @@
   const fontNames={SBAggroB:'강렬한 어그로체',YgJalnan:'친근한 잘난체',Cafe24Ohsquare:'각진 카페24',BinggraeBold:'부드러운 빙그레',Jalnan2:'잘난체 2',JalnanGothic:'잘난고딕',GasoekOne:'묵직한 가석체',GmarketSansBold:'지마켓 산스',TmonMonsori:'티몬 몬소리',BlackHanSans:'검은고딕',GothicA1Black:'고딕 A1',Pretendard:'깔끔한 프리텐다드'};
   const fontLabel=p=>{const family=(p.hook||p.frame)?.lines?.[0]?.font_family;return fontNames[family==='PretendardXBold'?'Pretendard':family]||'템플릿 전용 서체'};
   const uniformMedia='assets/scene-style/uniform-household-demo.png';
-  const fixedLayouts=new Map(),fixedColors=new Map();
+  const fixedLayouts=new Map(),fixedColors=new Map(),captionLayouts=new Map();
   const fixedBaseLayout=frame=>{
     const footer=(frame?.cleanup_regions||[]).find(region=>region.role==='source-footer');
-    return {top:Math.round((frame?.video_from?.y||0)/(frame?.height||1)*100),bottom:footer&&frame?.lines?.some(l=>l.bind==='caption')?Math.min(14,Math.round(footer.height/frame.height*100)):0};
+    return {top:Math.round((frame?.video_from?.y||0)/(frame?.height||1)*100),bottom:0};
   };
   const layoutKey=(presetId,frame)=>presetId.startsWith('fixed_')?presetId:`${presetId}:${frame===storyRows.find(p=>p.id===presetId)?.hook?'hook':'body'}`;
-  const fixedLayoutFor=(presetId,frame)=>fixedLayouts.get(layoutKey(presetId,frame))||fixedBaseLayout(frame);
+  const fixedLayoutFor=(presetId,frame)=>({...fixedBaseLayout(frame),...(fixedLayouts.get(layoutKey(presetId,frame))||{}),bottom:0});
   const fixedBaseColors=frame=>{
     const titleLines=(frame?.lines||[]).filter(line=>line.bind!=='caption');
     const footer=(frame?.cleanup_regions||[]).find(region=>region.role==='source-footer');
     return {top:frame?.title_bg||frame?.top_band?.color||'#000000',bottom:footer?.background||'#000000',title1:titleLines[0]?.color||'#FFFFFF',title2:titleLines[1]?.color||titleLines[0]?.color||'#FFFFFF'};
   };
   const fixedColorsFor=(presetId,frame)=>({...fixedBaseColors(frame),...(fixedColors.get(layoutKey(presetId,frame))||{})});
+  const captionSource=frame=>{
+    const ln=(frame.lines||[]).find(l=>l.bind==='caption')||(frame===rows[current]?.body?frame.white_box?.text:null);
+    const start=frame.video_from?.y||0;
+    const surface=ln&&(frame.surfaces||[]).find(s=>s.y<=ln.y0+ln.h/2&&s.y+s.height>=ln.y0+ln.h/2&&s.y>start*.45);
+    const band=frame===rows[current]?.body&&frame.white_box?{y:frame.white_box.y0,height:frame.white_box.y1-frame.white_box.y0,background:frame.white_box.background}:surface;
+    const cut=ln&&ln.y0<start?(band?.y??ln.y0):start;
+    return {ln,cut,background:band?.background||ln?.background||'#FFFFFF',height:Math.max(5,Math.min(18,(band?.height||ln?.h||frame.height*.07)/frame.height*100))};
+  };
+  const hasEditableCaption=()=>mode==='continuous'||kind==='body';
+  const captionSettings=()=>{
+    const frame=frameFor(rows[current]),source=captionSource(frame),saved=captionLayouts.get(captionKey())||{};
+    return {placement:captionDrags.has(captionKey())?'free':'title',w:100,h:source.height,background:source.background,color:source.ln?.color||'#111111',...saved};
+  };
+  const titleHeight=frame=>{
+    const original=(frame.video_from?.y||0)/frame.height*100,cut=captionSource(frame).cut/frame.height*100;
+    const configured=fixedLayoutFor(rows[current].id,frame).top;
+    return mode==='continuous'||fixedLayouts.get(layoutKey(rows[current].id,frame))?.titleOnly?configured:configured*cut/Math.max(.01,original);
+  };
   const mediaBounds=(frame,presetId)=>{
     if(!frame)return {top:0,height:100};
-    if(presetId?.startsWith('fixed_')||fixedLayouts.has(layoutKey(presetId,frame))){
-      const layout=fixedLayoutFor(presetId,frame);
-      return {top:layout.top,height:Math.max(25,100-layout.top-layout.bottom)};
-    }
-    const start=frame.video_from?.y||0;
-    const footer=(frame.cleanup_regions||[]).find(region=>region.role==='source-footer');
-    const end=footer?.y||frame.height;
-    return {top:start/frame.height*100,height:Math.max(0,end-start)/frame.height*100};
+    const top=titleHeight(frame)+(hasEditableCaption()&&captionSettings().placement==='title'?captionSettings().h:0);
+    return {top,height:100-top};
   };
   const fixedThumb=p=>`assets/scene-style/thumbnails/fixed-${p.source_id}.png`;
   const storyThumb=(p,kind)=>`assets/scene-style/thumbnails/story-${p.id}-${kind}.png`;
@@ -125,7 +137,7 @@
     const captionCount=captionField.querySelector('[data-count]');if(captionCount)captionCount.hidden=true;
     const sceneLabel=document.createElement('span');sceneLabel.className='caption-scene-index';sceneLabel.dataset.captionSceneIndex='';captionField.querySelector('label').appendChild(sceneLabel);
     const controls=document.createElement('div');controls.className='caption-position';
-    controls.innerHTML='<span>자막 위치</span><button type="button" data-caption-position="-1">↑ 위</button><button type="button" data-caption-position="0" class="active">가운데</button><button type="button" data-caption-position="1">↓ 아래</button>';
+    controls.innerHTML='<button type="button" data-caption-placement="title">제목 아래</button><button type="button" data-caption-placement="free">자유 이동</button><label>가림막 너비<input type="range" data-caption-layout="w" min="20" max="100" step="1"></label><label>가림막 높이<input type="range" data-caption-layout="h" min="4" max="25" step="1"></label><label>가림막 색<input type="color" data-caption-layout="background"></label><label>자막 색<input type="color" data-caption-layout="color"></label>';
     const guide=document.createElement('p');guide.className='caption-guide';guide.textContent='대본의 줄바꿈 1개가 장면 1개로 자동 배치됩니다.';
     captionField.append(controls,guide);
   }
@@ -163,8 +175,9 @@
   }
   function syncFixedPanel(){
     fixedPanel.hidden=false;
+    fixedPanel.querySelector('[data-fixed-size="bottom"]').hidden=true;fixedPanel.querySelector('[data-fixed-color="bottom"]').closest('label').hidden=true;
     fixedPanel.querySelector('.fixed-quick-head b').textContent=mode==='continuous'?'고정형 빠른 조절':`${kind==='hook'?'훅':'본문'} 빠른 조절`;
-    const p=rows[current],frame=frameFor(p),layout=fixedLayoutFor(p.id,frame),colors=fixedColorsFor(p.id,frame);
+    const p=rows[current],frame=frameFor(p),layout={...fixedLayoutFor(p.id,frame),top:titleHeight(frame)},colors=fixedColorsFor(p.id,frame);
     fixedPanel.querySelectorAll('[data-fixed-size]').forEach(row=>{
       const key=row.dataset.fixedSize,input=row.querySelector('input'),output=row.querySelector('output');
       if(key==='top')input.min=String(mode==='continuous'?minimumFixedTop(frame):8);
@@ -233,14 +246,13 @@
     });
   }
   function updateCaptionButtons(){
-    const reserved=currentHasCaptionSlot();
-    const position=captionPositions.get(captionKey())||0;
-    const label=root.querySelector('.layout-a .caption-position span');
-    if(label)label.textContent=reserved?'✓ 전용 자막칸':'영상 위 자막';
-    root.querySelectorAll('.layout-a [data-caption-position]').forEach(button=>{button.hidden=false;button.disabled=false;button.classList.toggle('active',Number(button.dataset.captionPosition)===position)});
+    const settings=captionSettings();
+    root.querySelectorAll('[data-caption-placement]').forEach(b=>b.classList.toggle('active',b.dataset.captionPlacement===settings.placement));
+    root.querySelectorAll('[data-caption-layout]').forEach(input=>{const val=settings[input.dataset.captionLayout];input.value=input.type==='color'&&!/^#[0-9a-f]{6}$/i.test(val)?'#ffffff':val;});
+    const width=root.querySelector('[data-caption-layout="w"]');if(width)width.closest('label').hidden=settings.placement==='title';
     const guide=root.querySelector('.layout-a .caption-guide');
-    if(guide)guide.textContent='Enter로 줄바꿈 · 화면에서 자막을 끌어 이동 · 아래 저장 버튼으로 위치까지 저장';
-    captionField?.classList.toggle('reserved-caption',reserved);
+    if(guide)guide.textContent='Enter로 줄바꿈 · 자막과 가림막을 함께 끌어 원본 자막 자국을 덮으세요 · 위치까지 저장';
+    captionField?.classList.remove('reserved-caption');
   }
   function presetValue(bind){
     const p=rows[current];
@@ -254,7 +266,7 @@
     const input=inputs[bind];if(!input)return;
     input.value=presetValue(bind)||'';fontScales.delete(scaleKey(bind));textOffsets.delete(scaleKey(bind));
     [...fittedText.keys()].filter(key=>key.startsWith(scaleKey(bind)+':')).forEach(key=>fittedText.delete(key));
-    if(bind==='caption'){captionPositions.delete(captionKey());captionDrags.delete(captionKey());captionTexts.delete(captionKey());syncCaption();}
+    if(bind==='caption'){captionLayouts.delete(captionKey());captionPositions.delete(captionKey());captionDrags.delete(captionKey());captionTexts.delete(captionKey());syncCaption();}
     markDirty(bind);updateCount(input);updateSteppers();updateCaptionButtons();renderEdit();
   }
 
@@ -385,7 +397,7 @@
     const fixedLayout=mode==='continuous'?fixedLayoutFor(p.id,frame):null;
     const fixedPaint=mode==='continuous'?fixedColorsFor(p.id,frame):null;
     (frame.cleanup_regions||[]).forEach(region=>{
-      if(mode==='continuous'&&(region.role==='original-title'||region.role==='source-footer'))return;
+      if(region.role==='source-footer'||(mode==='continuous'&&region.role==='original-title'))return;
       addPatch(region.y/frame.height*100,region.height/frame.height*100,region.background,(region.x||0)/frame.width*100,(region.width||frame.width)/frame.width*100);
     });
     if(fixedLayout){
@@ -397,6 +409,7 @@
     }
     const designScale=preview.clientHeight/frame.height;
     (frame.surfaces||[]).forEach(s=>{
+      if(s.bind==='caption')return;
       const offset=s.bind==='caption'?captionOffset()+textOffset('caption'):0;
       const surface=addPatch(s.y/frame.height*100+offset,s.height/frame.height*100,s.background,s.x/frame.width*100+(s.bind==='caption'?captionX():0),s.width/frame.width*100);
       surface.classList.add('body-material');
@@ -433,7 +446,7 @@
     const lines=frame.lines||[];
     lines.forEach((ln,i)=>{
       const key=ln.bind||(kind==='hook'?(i===0?'hook1':i===1?'hook2':'bodyTitle'):(i===0?'bodyTitle':'caption'));
-      if(!dirty.has(key))return;
+      if(key==='caption'||!dirty.has(key))return;
       const drawLine=fixedDrawLine(ln,frame),pt=drawLine.patch_top??2,pb=drawLine.patch_bottom??2;
       const offset=(key==='caption'?captionOffset()+fixedCaptionShift(frame):0)+textOffset(key);
       const lineBackground=fixedPaint?(key==='caption'?fixedPaint.bottom:fixedPaint.top):(drawLine.background||bg);
@@ -449,40 +462,46 @@
       addText(value(key),drawLine,frame,fixedTextColor||(roleColor?colorFor(roleColor,drawLine.color):drawLine.color),align,key);
     });
     const wb=frame.white_box;
-    if(wb){
+    if(wb&&kind==='hook'){
       // 원본 설명띠의 글자/흔적을 먼저 완전히 덮고 편집 가능한 텍스트만 다시 올린다.
       const movedCaption=kind==='body'&&(fixedLayouts.get(layoutKey(p.id,frame))?.bottom||0)>0;
       addPatch(wb.y0/frame.height*100,(wb.y1-wb.y0+1)/frame.height*100,movedCaption?(fixedColorsFor(p.id,frame).top||bg):(wb.background||'#FFFFFF'),0,100,'white-box');
     }
-    if(wb?.text){
+    if(wb?.text&&kind==='hook'){
       const key=kind==='hook'?'bodyTitle':'caption';
       if(dirty.has(key)){const offset=(key==='caption'?captionOffset():0)+textOffset(key);if(offset)addPatch(wb.y0/frame.height*100,(wb.y1-wb.y0+1)/frame.height*100,'#FFFFFF',0,100,key);addPatch(wb.y0/frame.height*100+offset,(wb.y1-wb.y0+1)/frame.height*100,'#FFFFFF',0,100,key);addText(value(key),wb.text,frame,'#111111','center',key);}
     }
     if(mode==='story')applyStoryLayout(frame,p);
+    if(hasEditableCaption())renderCaption(frame);
+    syncMediaLayout();
   }
   function applyStoryLayout(frame,p){
-    const key=layoutKey(p.id,frame),layout=fixedLayouts.get(key),paint=fixedColors.get(key);
-    if(!layout&&!paint)return;
-    const oldTop=(frame.video_from?.y||0)/frame.height*100;
-    const footer=(frame.cleanup_regions||[]).find(r=>r.role==='source-footer');
-    const oldEnd=footer?footer.y/frame.height*100:100;
-    const next=layout||{top:oldTop,bottom:100-oldEnd},end=100-next.bottom;
-    const mapY=y=>y<=oldTop?y*next.top/Math.max(.01,oldTop):y>=oldEnd&&oldEnd<100?end+(y-oldEnd)*next.bottom/(100-oldEnd):next.top+(y-oldTop)*(end-next.top)/Math.max(.01,oldEnd-oldTop);
+    const source=captionSource(frame),cut=source.cut/frame.height*100,next=titleHeight(frame),paint=fixedColors.get(layoutKey(p.id,frame));
     for(const el of [...layer.children].filter(el=>el!==badge)){
       const top=parseFloat(el.style.top),height=parseFloat(el.style.height);if(!Number.isFinite(top))continue;
-      if(layout){
-        if(el.dataset.editBind==='caption'&&next.bottom>0){if(!el.classList.contains('precision-text')){el.remove();continue;}el.style.top=(end+next.bottom/2-height/2+captionOffset()+textOffset('caption'))+'%';}
-        else{el.style.top=mapY(top)+'%';if(Number.isFinite(height)&&!el.classList.contains('precision-text'))el.style.height=Math.max(0,mapY(top+height)-mapY(top))+'%';}
-        if(kind==='body'&&next.bottom>0&&!el.classList.contains('precision-text')&&el.style.background&&top<oldTop){el.style.background=fixedColorsFor(p.id,frame).top;el.style.boxShadow='none';}
-      }
+      if(top>=cut&&hasEditableCaption()){el.remove();continue;}
+      el.style.top=top*next/Math.max(.01,cut)+'%';
+      if(Number.isFinite(height)&&!el.classList.contains('precision-text'))el.style.height=Math.max(0,Math.min(height,cut-top)*next/Math.max(.01,cut))+'%';
       if(paint){
         if(el.classList.contains('precision-text')){
           const color=el.dataset.editBind==='hook1'?paint.title1:['hook2','bodyTitle'].includes(el.dataset.editBind)?paint.title2:null;
           if(color){el.style.color=color;el.querySelectorAll('span').forEach(s=>s.style.color=color);}
-        }else if(el.style.background&&top<oldTop&&el.dataset.editBind!=='caption'&&paint.top)el.style.background=paint.top;
+        }else if(el.style.background&&paint.top)el.style.background=paint.top;
       }
     }
-    if(next.bottom>0)addPatch(end,next.bottom,paint?.bottom||fixedBaseColors(frame).bottom);
+  }
+  function renderCaption(frame){
+    const settings=captionSettings(),source=captionSource(frame),drag=captionDrags.get(captionKey())||{x:0,y:0};
+    const w=settings.placement==='title'?100:settings.w,h=settings.h;
+    const x=settings.placement==='title'?0:Math.max(0,Math.min(100-w,(100-w)/2+drag.x));
+    const y=settings.placement==='title'?titleHeight(frame):Math.max(0,Math.min(100-h,titleHeight(frame)+drag.y+textOffset('caption')));
+    const patch=addPatch(y,h,settings.background,x,w,'caption');patch.classList.add('caption-mask');patch.style.background=settings.background;
+    const original=source.ln||{font_size:frame.height*.032,font_family:frame.font_family||'Pretendard',font_weight:900};
+    const ln={...original,x0:(x+2)/100*frame.width,x1:(x+w-2)/100*frame.width,y0:y/100*frame.height,h:h/100*frame.height,max_lines:1,no_patch:true};
+    addText(value('caption'),ln,frame,settings.color,'center','caption');
+    const text=layer.querySelector('.precision-text[data-edit-bind="caption"]');
+    Object.assign(text.style,{left:(x+2)+'%',right:'auto',width:Math.max(1,w-4)+'%',top:y+'%',height:h+'%',transform:'none',display:'flex',alignItems:'center',justifyContent:'center',whiteSpace:'pre-wrap',lineHeight:'1.15',color:settings.color});
+    text.textContent=value('caption');text.querySelectorAll('span').forEach(s=>s.style.color=settings.color);
   }
   function showFrame(next){
     kind=mode==='continuous'?'hook':next;
@@ -560,6 +579,7 @@
   root.querySelector('.layout-a .edit-pane').addEventListener('click',event=>{
     const button=event.target.closest('[data-position-step]');if(!button)return;
     const bind=button.closest('[data-field-key]').dataset.fieldKey;
+    if(bind==='caption'){captionLayouts.set(captionKey(),{...captionSettings(),placement:'free'});updateCaptionButtons();}
     textOffsets.set(scaleKey(bind),Math.max(-18,Math.min(18,textOffset(bind)+Number(button.dataset.positionStep)*.5)));
     markDirty(bind);preview.classList.remove('is-pristine');renderEdit();
   });
@@ -581,7 +601,7 @@
     if(speed){hookMotionSpeed=Number(speed.dataset.hookSpeed);motionPanel.querySelectorAll('[data-hook-speed]').forEach(button=>button.classList.toggle('active',button===speed));runHookMotion();return}
   });
   const applyFixedSize=(key,rawValue)=>{
-    const p=rows[current],frame=frameFor(p),currentLayout={...fixedLayoutFor(p.id,frame)};
+    const p=rows[current],frame=frameFor(p),currentLayout={...fixedLayoutFor(p.id,frame),top:titleHeight(frame),titleOnly:true};
     const min=key==='top'?(mode==='continuous'?minimumFixedTop(frame):8):0,max=key==='top'?50:35;
     currentLayout[key]=Math.round(Math.max(min,Math.min(max,Number(rawValue))));
     if(currentLayout.top+currentLayout.bottom>70)currentLayout[key]=70-currentLayout[key==='top'?'bottom':'top'];
@@ -616,6 +636,17 @@
     const snapshot=window.sceneStyle.snapshot();
     localStorage.setItem('scene_style_preset',JSON.stringify(snapshot));saveButton.textContent='✓ 현재 설정 저장됨';setTimeout(()=>saveButton.textContent='현재 설정 저장',1400);
   });
+  captionField?.addEventListener('click',event=>{
+    const button=event.target.closest('[data-caption-placement]');if(!button)return;
+    const settings=captionSettings();captionLayouts.set(captionKey(),{...settings,placement:button.dataset.captionPlacement});
+    if(button.dataset.captionPlacement==='title'){captionDrags.delete(captionKey());textOffsets.delete(scaleKey('caption'));}
+    markDirty('caption');updateCaptionButtons();renderEdit();
+  });
+  captionField?.addEventListener('input',event=>{
+    const input=event.target.closest('[data-caption-layout]');if(!input)return;
+    const settings=captionSettings();settings[input.dataset.captionLayout]=input.type==='range'?Number(input.value):input.value;
+    captionLayouts.set(captionKey(),settings);markDirty('caption');renderEdit();
+  });
   root.querySelector('.layout-a .edit-pane').addEventListener('click',event=>{
     const button=event.target.closest('[data-caption-position]');if(!button)return;
     captionPositions.set(captionKey(),Number(button.dataset.captionPosition));markDirty('caption');updateCaptionButtons();renderEdit();
@@ -625,7 +656,8 @@
   preview.addEventListener('pointerdown',event=>{
     if(event.button!==0||!event.target.closest('[data-edit-bind="caption"]'))return;
     const rect=preview.getBoundingClientRect(),text=layer.querySelector('.precision-text[data-edit-bind="caption"]');if(!text)return;
-    const bounds=text.getBoundingClientRect(),origin=captionDrags.get(captionKey())||{x:0,y:0};
+    const settings=captionSettings();if(settings.placement==='title'){captionLayouts.set(captionKey(),{...settings,placement:'free',w:100});updateCaptionButtons();}
+    const bounds=(layer.querySelector('.caption-mask')||text).getBoundingClientRect(),origin=captionDrags.get(captionKey())||{x:0,y:0};
     captionDrag={pointer:event.pointerId,startX:event.clientX,startY:event.clientY,rect,origin,bounds};
     preview.setPointerCapture(event.pointerId);event.preventDefault();
   });
@@ -650,7 +682,7 @@
       const saved=JSON.parse(localStorage.getItem('scene_style_preset')||'null');
       if(saved){
         if(saved.presetId==='t11'&&saved.text?.channel==='이븐쇼핑')saved.text.channel='숏템메이커';
-        for(const [name,map] of Object.entries({fontScales,textOffsets,colors:colorOverrides,fixedLayouts,fixedColors,captionTexts,captionDrags,captionPositions}))for(const [key,value] of Object.entries(saved[name]||{}))map.set(key,value);
+        for(const [name,map] of Object.entries({fontScales,textOffsets,colors:colorOverrides,fixedLayouts,fixedColors,captionTexts,captionDrags,captionPositions,captionLayouts}))for(const [key,value] of Object.entries(saved[name]||{}))map.set(key,value);
         if(!query.has('preset')&&!query.has('mode')){
           modeBar.querySelector(`[data-template-mode="${saved.mode==='continuous'?'continuous':'story'}"]`).click();
           const index=rows.findIndex(p=>p.id===saved.presetId);if(index>=0)selectPreset(index);
@@ -665,11 +697,11 @@
     }catch(error){console.warn('저장 설정 복원 실패',error);}
   }
   window.sceneStyle={
-    snapshot:()=>({version:1,mode,presetId:rows[current].id,sceneIndex,frameKind:frameKind(),hookMotion,hookMotionSpeed,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),colors:Object.fromEntries(colorOverrides),fixedLayouts:Object.fromEntries(fixedLayouts),fixedColors:Object.fromEntries(fixedColors),captionTexts:Object.fromEntries(captionTexts),captionDrags:Object.fromEntries(captionDrags),captionPositions:Object.fromEntries(captionPositions),effects}),
+    snapshot:()=>({version:1,mode,presetId:rows[current].id,sceneIndex,frameKind:frameKind(),hookMotion,hookMotionSpeed,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),colors:Object.fromEntries(colorOverrides),fixedLayouts:Object.fromEntries(fixedLayouts),fixedColors:Object.fromEntries(fixedColors),captionTexts:Object.fromEntries(captionTexts),captionDrags:Object.fromEntries(captionDrags),captionPositions:Object.fromEntries(captionPositions),captionLayouts:Object.fromEntries(captionLayouts),effects}),
     load(context,saved){
       sceneContext=context;
       if(saved){
-        for(const [name,map] of Object.entries({fontScales,textOffsets,colors:colorOverrides,fixedLayouts,fixedColors,captionTexts,captionDrags,captionPositions})){
+        for(const [name,map] of Object.entries({fontScales,textOffsets,colors:colorOverrides,fixedLayouts,fixedColors,captionTexts,captionDrags,captionPositions,captionLayouts})){
           map.clear();for(const [key,value] of Object.entries(saved[name]||{}))map.set(key,value);
         }
         effects=saved.effects||{};

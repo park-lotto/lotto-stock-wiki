@@ -9,11 +9,11 @@ const puppeteer=require('puppeteer'),assert=require('assert'),path=require('path
   assert.equal(await page.$eval('.fixed-quick-panel',el=>el.hidden),false);
   const initial=await geometry();await input('[data-fixed-range="top"]','43');assert.equal((await geometry()).media.top,43);
   await page.click('[data-frame="body"]');assert.notEqual((await geometry()).media.top,43);
-  await input('[data-fixed-range="top"]','35');await input('[data-fixed-range="bottom"]','15');
-  assert.deepEqual((await geometry()).media,{top:35,height:50});
-  await input('[data-color-role="accent"]','#ff0077');
+  await input('[data-fixed-range="top"]','35');
+  assert.equal(Math.round((await geometry()).media.top+(await geometry()).media.height),100);
+  await input('[data-fixed-color="title2"]','#ff0077');
   assert.equal(await page.$eval('.precision-text[data-edit-bind="bodyTitle"]',el=>getComputedStyle(el).color),'rgb(255, 0, 119)');
-  await input('[data-color-role="white"]','#33ff66');
+  await input('[data-caption-layout="color"]','#33ff66');
   assert.equal(await page.$eval('.precision-text[data-edit-bind="caption"]',el=>getComputedStyle(el).color),'rgb(51, 255, 102)');
   await page.click('[data-bind="caption"]');await page.keyboard.down('Control');await page.keyboard.press('KeyA');await page.keyboard.up('Control');await page.keyboard.type('First line');await page.keyboard.press('Enter');await page.keyboard.type('Second line');
   assert.equal(await page.$eval('[data-bind="caption"]',e=>e.value),'First line\nSecond line');

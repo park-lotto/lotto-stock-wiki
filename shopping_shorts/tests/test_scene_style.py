@@ -2,6 +2,14 @@ import pytest
 from shopping_shorts.scene_style import context_for, validate_snapshot
 
 
+def test_caption_mask_placement_survives_validation():
+    saved={"mode":"story","presetId":"t11","captionLayouts":{"t11:story:1:caption":{"placement":"free","w":80,"h":12,"background":"#ffffff","color":"#111111"}}}
+    assert validate_snapshot(saved)["captionLayouts"]==saved["captionLayouts"]
+    saved["captionLayouts"]["t11:story:1:caption"]["h"]=90
+    with pytest.raises(ValueError):
+        validate_snapshot(saved)
+
+
 def test_real_caption_gaps_and_hook_beat_are_preserved():
     timeline=[{"beat_idx":7,"t0":0,"dur":2,"narration":"첫 줄 다음 줄","caption_lines":["첫 줄","다음 줄"],"cap_durs":[.7,1.1],"cap_lead":.2},
               {"beat_idx":9,"t0":2,"dur":1,"narration":"본문","caption_lines":["본문"]}]
