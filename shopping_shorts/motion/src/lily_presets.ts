@@ -144,6 +144,37 @@ export const LILY_PRESETS: Record<string, LilyPreset> = {
     glow: 'rgba(255,60,0,0.55)', sparkle: false, anim: 'bounce', fontSize: 90,
     emoji: '🔥',
   },
+  // ── 채널 톤별 기본 컬러 (P1 보강) ──
+  mint: {
+    id: 'mint', name: '릴리 · 민트',
+    fontFamily: 'TmonMonsori', italic: 6, fillColor: '#ffffff', hlColor: '#3fe0c0', hlStroke: '#ffffff',
+    strokeColor: '#1fb89c', strokeW: 7, glow: 'rgba(60,220,190,0.5)', sparkle: true, anim: 'pop', fontSize: 88,
+  },
+  coral: {
+    id: 'coral', name: '릴리 · 코랄',
+    fontFamily: 'TmonMonsori', italic: 6, fillColor: '#ffffff', hlColor: '#ff7a6b', hlStroke: '#ffffff',
+    strokeColor: '#e85c4a', strokeW: 7, glow: 'rgba(255,110,90,0.5)', sparkle: true, anim: 'pop', fontSize: 88,
+  },
+  gold: {
+    id: 'gold', name: '릴리 · 골드',
+    fontFamily: 'TmonMonsori', italic: 4, fillColor: '#fff4d6', hlColor: '#ffcf3d', hlStroke: '#7a5a00',
+    strokeColor: '#b8901f', strokeW: 6, glow: 'rgba(255,200,60,0.45)', sparkle: true, anim: 'pop', fontSize: 88,
+  },
+  lavender: {
+    id: 'lavender', name: '릴리 · 라벤더',
+    fontFamily: 'TmonMonsori', italic: 6, fillColor: '#ffffff', hlColor: '#c59bff', hlStroke: '#ffffff',
+    strokeColor: '#9a6bff', strokeW: 7, glow: 'rgba(170,120,255,0.5)', sparkle: true, anim: 'pop', fontSize: 88,
+  },
+  red_punch: {
+    id: 'red_punch', name: '릴리 · 레드 펀치',
+    fontFamily: 'TmonMonsori', italic: 4, fillColor: '#ff3b3b', hlColor: '#ffd23d', hlStroke: '#600',
+    strokeColor: '#ffffff', strokeW: 8, glow: 'rgba(255,40,40,0.5)', sparkle: false, anim: 'bounce', fontSize: 96,
+  },
+  clean_white: {
+    id: 'clean_white', name: '릴리 · 클린 화이트',
+    fontFamily: 'TmonMonsori', italic: 0, fillColor: '#ffffff', hlColor: '#ffe14d', hlStroke: '#333',
+    strokeColor: '#1a1a1a', strokeW: 6, glow: 'rgba(0,0,0,0.4)', sparkle: false, anim: 'fade', fontSize: 88,
+  },
 };
 
 export const resolveLilyPreset = (p?: string | LilyPreset): LilyPreset => {

@@ -19,6 +19,7 @@ import {LilyBurst} from './LilyBurst';
 import {LilyList} from './LilyList';
 import {LilyXmas} from './LilyXmas';
 import {LilyHealing} from './LilyHealing';
+import {LilyBasic} from './LilyBasic';
 import {SwipeLeft} from './SwipeLeft';
 import {Sparkle} from './Sparkle';
 import {ImpactText} from './ImpactText';
@@ -58,6 +59,7 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="LilyList" component={LilyList} durationInFrames={75} fps={30} width={1080} height={1920} defaultProps={{head: '강호동 [3등]으로 도착!', items: ['[천하장사] 출신', '대한민국 [국민MC]', '특기 : [잘먹기]'], hlColor: '#ffb000'}} />
     <Composition id="LilyXmas" component={LilyXmas} durationInFrames={60} fps={30} width={1080} height={1920} defaultProps={{variant: 'label', title: '이번 크리스마스도', text: '소중한 사람들과 함께합니다!', highlight: '함께합니다!', accent: '#e23a3a', icon: '🎄'}} />
     <Composition id="LilyHealing" component={LilyHealing} durationInFrames={70} fps={30} width={1080} height={1920} defaultProps={{variant: 'brace', sub: '자화자찬의 시간', text: 'LOVE MYSELF', accent: '#d98f5a'}} />
+    <Composition id="LilyBasic" component={LilyBasic} durationInFrames={60} fps={30} width={1080} height={1920} defaultProps={{variant: 'box', text: '이렇게 하면 [훨씬] 깔끔합니다', hlColor: '#ffe14d', position: 'bottom'}} />
     <Composition
       id="LilyTyping"
       component={LilyTyping}
