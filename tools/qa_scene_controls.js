@@ -25,13 +25,13 @@ const puppeteer=require('puppeteer'),assert=require('assert'),path=require('path
   await page.reload({waitUntil:'networkidle0'}); // qa 모드에서는 자동 복원하지 않으므로 실제 저장값을 다음에 일반 URL에서 복원한다.
   await page.goto('http://127.0.0.1:8767/out/scene-style-ui-showcase.html',{waitUntil:'networkidle0'});
   const restored=await page.evaluate(()=>window.sceneStyle.snapshot());assert.deepEqual(restored.captionDrags,before.captionDrags);assert.deepEqual(restored.captionTexts,before.captionTexts);
-  await page.click('[data-frame="hook"]');await page.click('[data-editor-tab="effects"]');
+  await page.click('[data-frame="hook"]');await page.click('[data-editor-tab="text"]');
   for(const motion of ['zoom-punch','pop','slide','flash']){
     await page.click(`[data-hook-motion="${motion}"]`);
     const result=await page.evaluate(()=>{const duration=window.sceneStyle.motionAt(180);return {duration,styles:[...document.querySelectorAll('.precision-text')].filter(e=>e.getAnimations().length).map(e=>getComputedStyle(e).transform)}});
     assert.ok(result.duration>0&&result.styles.length>0,motion);
   }
-  await page.click('[data-add-mask="blur"]');await page.click('[data-add-emoji="🔥"]');await page.click('[data-dec-kit="badge"]');await page.click('[data-add-badge="추천"]');
+  await page.click('[data-editor-tab="effects"]');await page.click('[data-add-mask="blur"]');await page.click('[data-add-emoji="🔥"]');await page.click('[data-dec-kit="badge"]');await page.click('[data-add-badge="추천"]');
   assert.equal(await page.$$eval('.scene-decoration',els=>els.length),3);
   const decoration=await (await page.$('.scene-decoration[data-dec-index="2"]')).boundingBox();
   await page.mouse.move(decoration.x+10,decoration.y+10);await page.mouse.down();await page.mouse.move(decoration.x+35,decoration.y+40,{steps:5});await page.mouse.up();

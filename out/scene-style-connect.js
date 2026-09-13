@@ -17,7 +17,7 @@
     <label>세로 위치<input data-effect="cy" type="range" min="0.1" max="0.9" step="0.01" value="0.55"></label></div>
     <button class="scene-effects-reset" data-effects-reset>이 장면 효과 초기화</button>`;
   textPanel.after(effectsPanel);
-  if(titleMotion)effectsPanel.prepend(titleMotion);
+  if(titleMotion)textPanel.querySelector('.ai-card').after(titleMotion);
   const note=textPanel.querySelector('.ai-card');if(note)note.innerHTML='<b>문구·자막 편집</b><br><span data-connection-status>저장한 설정으로 미리보고 있습니다.</span>';
   const preview=document.querySelector('#a-live-preview'),media=preview.querySelector('.precision-media');
   const windowEl=document.createElement('div');windowEl.className='scene-media-clip';media.before(windowEl);windowEl.append(media);
@@ -77,6 +77,7 @@
       context=event.data.context;
       const saved=event.data.snapshot||{...api.snapshot(),captionTexts:{},effects:{}};
       api.load(context,saved);
+      if(Number.isInteger(event.data.sceneIndex))api.show(event.data.sceneIndex);
       const status=pane.querySelector('[data-connection-status]');if(status)status.textContent=`실제 자막 ${context.scenes.length}개를 연결했습니다.`;
       if(headerStatus)headerStatus.textContent=`실제 자막 ${context.scenes.length}개 연결`;
       sync();

@@ -8,7 +8,7 @@ const fs=require('fs'),path=require('path'),{pathToFileURL}=require('url'),puppe
     await page.goto(pathToFileURL(path.resolve(__dirname,'../out/scene-style-ui-showcase.html')).href+'?qa=1',{waitUntil:'networkidle0'});
     await page.addStyleTag({content:`body *{visibility:hidden!important}#a-live-preview,#a-live-preview *{visibility:visible!important}#a-live-preview{position:fixed!important;left:0!important;top:0!important;width:1080px!important;height:1920px!important;max-width:none!important;max-height:none!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:transparent!important;z-index:99999!important}.precision-base,.precision-media,.scene-media-clip,.precision-badge{display:none!important}html,body{background:transparent!important}`});
     await page.evaluate(r=>window.sceneStyle.load(r.context,r.snapshot),request);
-    await page.addStyleTag({content:'.scene-decoration{outline:none!important}.scene-decoration-toolbar{display:none!important}'});
+    await page.addStyleTag({content:'.scene-decoration{outline:none!important}.scene-decoration-toolbar,.precision-source-cleanup{display:none!important}'});
     await page.evaluate(async()=>{await document.fonts.ready;window.sceneStyle.refresh();window.sceneStyleExporting=true});
     const layers=[];
     for(let index=0;index<request.context.scenes.length;index++){

@@ -2,6 +2,14 @@ import pytest
 from shopping_shorts.scene_style import context_for, validate_snapshot
 
 
+def test_branding_is_saved_and_size_is_bounded():
+    saved={"mode":"story","presetId":"t11","branding":{"watermark":{"on":True,"text":"@channel","x":10,"y":80,"size":3,"opacity":65,"color":"#ffffff"}}}
+    assert validate_snapshot(saved)["branding"]==saved["branding"]
+    saved["branding"]["watermark"]["size"]=100
+    with pytest.raises(ValueError):
+        validate_snapshot(saved)
+
+
 def test_caption_mask_placement_survives_validation():
     saved={"mode":"story","presetId":"t11","captionLayouts":{"t11:story:1:caption":{"placement":"free","w":80,"h":12,"background":"#ffffff","color":"#111111"}}}
     assert validate_snapshot(saved)["captionLayouts"]==saved["captionLayouts"]

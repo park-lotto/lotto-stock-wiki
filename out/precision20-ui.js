@@ -68,6 +68,7 @@
   const base=document.createElement('img');base.className='precision-base';
   const media=document.createElement('img');media.className='precision-media';media.src=uniformMedia;media.alt='공통 생활용품 시연 장면';
   const layer=document.createElement('div');layer.className='precision-edit-layer';
+  const sourceClean=document.createElement('div');sourceClean.className='precision-source-cleanup';preview.append(sourceClean);
   const badge=document.createElement('div');badge.className='precision-badge';badge.textContent='원본 실측 편집';layer.appendChild(badge);
   preview.append(base,media,layer);
 
@@ -87,7 +88,7 @@
   const inputs=Object.fromEntries([...root.querySelectorAll('.layout-a [data-bind]')].map(x=>[x.dataset.bind,x]));
   const value=k=>inputs[k]?.value||' ';
   const rgba=hex=>hex&&/^#[0-9a-f]{6}$/i.test(hex)?hex:'#111111';
-  let sceneContext=null,effects={};
+  let sceneContext=null,effects={},branding={};
   const sceneKind=index=>sceneContext?.scenes?.[index]?.kind||(index===0?'hook':'body');
   const frameFor=(p,index=sceneIndex)=>p.mode==='continuous'?p.frame:p[sceneKind(index)];
   const imageFor=(p,index=sceneIndex)=>p.mode==='continuous'?p.frame_image:(sceneKind(index)==='hook'?p.hook_image:p.body_image);
@@ -388,6 +389,8 @@
   function renderEdit(){
     [...layer.children].filter(x=>x!==badge).forEach(x=>x.remove());
     const p=rows[current],frame=frameFor(p);if(!frame)return;
+    sourceClean.replaceChildren();
+    for(const region of frame.cleanup_regions||[]){if(region.role!=='original-title')continue;const cover=document.createElement('div');Object.assign(cover.style,{position:'absolute',left:(region.x||0)/frame.width*100+'%',top:region.y/frame.height*100+'%',width:(region.width||frame.width)/frame.width*100+'%',height:region.height/frame.height*100+'%',background:region.background||frame.title_bg||'#111111'});sourceClean.append(cover);}
     base.hidden=!!frame.design_label;
     const mediaSource=sceneContext?.scenes?.[sceneIndex]?.media||frame.media_source||uniformMedia;if(media.getAttribute('src')!==mediaSource)media.src=mediaSource;
     badge.textContent=frame.design_label?frame.design_label:'원본 실측 편집';
@@ -681,6 +684,7 @@
     try{
       const saved=JSON.parse(localStorage.getItem('scene_style_preset')||'null');
       if(saved){
+        branding=saved.branding||{};
         if(saved.presetId==='t11'&&saved.text?.channel==='이븐쇼핑')saved.text.channel='숏템메이커';
         for(const [name,map] of Object.entries({fontScales,textOffsets,colors:colorOverrides,fixedLayouts,fixedColors,captionTexts,captionDrags,captionPositions,captionLayouts}))for(const [key,value] of Object.entries(saved[name]||{}))map.set(key,value);
         if(!query.has('preset')&&!query.has('mode')){
@@ -697,9 +701,10 @@
     }catch(error){console.warn('저장 설정 복원 실패',error);}
   }
   window.sceneStyle={
-    snapshot:()=>({version:1,mode,presetId:rows[current].id,sceneIndex,frameKind:frameKind(),hookMotion,hookMotionSpeed,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),colors:Object.fromEntries(colorOverrides),fixedLayouts:Object.fromEntries(fixedLayouts),fixedColors:Object.fromEntries(fixedColors),captionTexts:Object.fromEntries(captionTexts),captionDrags:Object.fromEntries(captionDrags),captionPositions:Object.fromEntries(captionPositions),captionLayouts:Object.fromEntries(captionLayouts),effects}),
+    snapshot:()=>({version:1,mode,presetId:rows[current].id,sceneIndex,frameKind:frameKind(),hookMotion,hookMotionSpeed,branding,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),colors:Object.fromEntries(colorOverrides),fixedLayouts:Object.fromEntries(fixedLayouts),fixedColors:Object.fromEntries(fixedColors),captionTexts:Object.fromEntries(captionTexts),captionDrags:Object.fromEntries(captionDrags),captionPositions:Object.fromEntries(captionPositions),captionLayouts:Object.fromEntries(captionLayouts),effects}),
     load(context,saved){
       sceneContext=context;
+      branding=saved?.branding||{};
       if(saved){
         for(const [name,map] of Object.entries({fontScales,textOffsets,colors:colorOverrides,fixedLayouts,fixedColors,captionTexts,captionDrags,captionPositions,captionLayouts})){
           map.clear();for(const [key,value] of Object.entries(saved[name]||{}))map.set(key,value);
@@ -718,6 +723,9 @@
     show(index){showScene(index);return this.geometry()},
     geometry:()=>({media:mediaBounds(frameFor(rows[current]),rows[current].id),sceneIndex,kind:sceneKind(sceneIndex)}),
     effect(value){if(value!==undefined)effects[String(sceneIndex)]=value;return effects[String(sceneIndex)]||{}},
+    branding(value){if(value!==undefined)branding=value;return branding},
+    context:()=>sceneContext,
+    resetCaptionText(){captionTexts.delete(captionKey());syncCaption();markDirty('caption');renderEdit()},
     refresh(){fittedText.clear();renderEdit()},
     motionAt(time){return runHookMotion({time})},
   };

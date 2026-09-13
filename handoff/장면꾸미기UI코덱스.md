@@ -1,5 +1,14 @@
 # 장면꾸미기 UI·정밀 템플릿 디자인 시스템
 
+## 2026-09-13 · 워터마크·광고 / 줄 분할 / 상단 원본 잔상 / 제목 모션 위치
+
+- 효과 탭 앞에 워터마크·광고 표시 추가. snapshot.branding에 전체 장면 공통 on/text/x/y/size/opacity/color 저장, DOM 드래그·저장복원·동일 DOM 최종 영상 반영. `scene-style-labels.js` 사용.
+- 문구/텍스트의 자막 아래 줄 나누기. 기존 `_capLineInput`을 `caption-line-input.js`로 공용화해 Enter 커서 분할/줄 시작 Backspace 병합 재사용. 제작소에서는 기존 caplines API(글자는 보존, 줄만 변경)로 저장/자동 초기화 후 실제 시간표 재조회. 바뀐 장면 번호에 맞춰 자막 위치/가림막/폰트/효과를 beat_idx와 시간으로 remap해 settings 저장. 정적 시안은 줄 배치를 로컬 저장하며 영상 연결 시 시간별 재생됨을 안내.
+- 상단 높이 변경 시 cleanup 영역도 이동해 원본 글자가 새던 문제: 원본 좌표의 지움 레이어를 base 위·영상 아래에 유지. 실제 영상 렌더는 base 자체를 숨기므로 이 지움 레이어도 숨긴다. 럭키박스 상단50% 캡처에서 원본 글자 잔상 제거 확인.
+- 사용자 요청으로 제목 4모션(줌 펀치/팝업/슬라이드/플래시)을 효과 탭에서 **문구/텍스트 제목 입력 위**로 이동. 중복 컨트롤 없음. 시안 자산 v60, 제작소 bridge v2.
+- QA: labels_lines(워터마크/광고/드래그/복원/전장면/Enter·Backspace/모션 위치), lines_server(실제 제작소→caplines 3→4장/자동3장 복원/다른 장면 효과 remap/브랜딩 저장), 기존 scene_controls 제목4·도형9 조작 통과. scene_style + caption_lines_edit pytest 통과. QA 서버는 합성 사인파를 외부 받아쓰기에 보내지 않도록 _beat_words_src를 빈 결과로 대체하여 기존 글자수 타이밍 폴백을 검증한다.
+- 실제 저장된 QA job으로 `qa_saved_scene_render.py`: 3.000초 MP4의 1.1/1.7초에서 서로 다른 분할 자막 및 워터마크·광고 유지 육안 확인. `.tmp/scene-style-qa/saved-lines.mp4`. QA_LEAVE_SPLIT=1로 남긴 QA DB는 현재4장 상태, lines_server 재실행 전 beat1 caplines reset 필요. 라이브 DB/배포/finish는 건드리지 않음.
+
 ## 2026-09-13 · 도형 개별 선택·삭제
 
 - 마지막 도형 캔버스의 투명 영역이 이전 항목 클릭을 가로채던 문제. elementsFromPoint 후보를 역변환한 캔버스 알파로 검사하여 투명 여백 아래 항목 선택. 회전/크기 변환 반영.
