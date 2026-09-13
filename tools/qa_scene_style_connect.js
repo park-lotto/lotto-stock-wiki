@@ -20,7 +20,7 @@ const puppeteer=require('puppeteer'),fs=require('fs'),path=require('path'),asser
   await page.$eval('[data-bind="caption"]',e=>{e.value='직접 고친 두 번째 자막';e.dispatchEvent(new Event('input',{bubbles:true}))});
   await page.click('[data-scene-step="-1"]');await page.click('[data-scene-step="1"]');
   assert.equal(await page.$eval('[data-bind="caption"]',e=>e.value),'직접 고친 두 번째 자막');
-  await page.click('.layout-a .edit-pane > .secondary');
+  await page.click('.layout-a .edit-pane > .primary');
   const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('scene_style_preset')));
   fs.writeFileSync(path.join(out,'snapshot.json'),JSON.stringify(saved));
   await page.screenshot({path:path.join(out,'text-ui.png')});

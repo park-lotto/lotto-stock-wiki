@@ -28,7 +28,10 @@ def validate_snapshot(value):
                     raise ValueError("허용하지 않는 설정 키입니다")
                 walk(child, depth+1)
         elif isinstance(obj, list):
-            raise ValueError("설정 형식이 올바르지 않습니다")
+            if len(obj)>12:
+                raise ValueError("가림막·스티커는 최대 12개입니다")
+            for child in obj:
+                walk(child,depth+1)
         elif isinstance(obj, (float, int)) and (not math.isfinite(obj) or abs(obj) > 10000):
             raise ValueError("설정 수치가 범위를 벗어났습니다")
         elif isinstance(obj, str) and len(obj) > 2000:
@@ -66,13 +69,41 @@ def validate_snapshot(value):
         if not isinstance(effect,dict):
             raise ValueError("효과 형식이 올바르지 않습니다")
         number(effect.get("zoom",1),1,3)
+        if "masks" in effect:
+            from .deco_frame import _norm_masks
+            if not isinstance(effect["masks"],list):
+                raise ValueError("가림막 형식이 올바르지 않습니다")
+            normalized=[]
+            for mask in effect["masks"]:
+                if not isinstance(mask,dict):
+                    raise ValueError("가림막 항목이 올바르지 않습니다")
+                base=_norm_masks([{**mask,"kind":"shape" if mask.get("kind")=="graphic" else mask.get("kind")}])
+                if not base:
+                    continue
+                item=base[0]
+                if mask.get("kind")=="graphic":
+                    if not re.fullmatch(r"[a-z_]{1,32}",str(mask.get("graphic") or "")):
+                        raise ValueError("도형 종류가 올바르지 않습니다")
+                    item.update(kind="graphic",graphic=mask["graphic"])
+                if mask.get("motion") in ("none","point","pulse","spin","float","reveal"):
+                    item["motion"]=mask["motion"]
+                if item["kind"]=="badge":
+                    item["text"]=str(mask.get("text") or "")[:24]
+                    if mask.get("badgeStyle") in ("pill","ticket","glass","burst"):
+                        item["badgeStyle"]=mask["badgeStyle"]
+                normalized.append(item)
+            effect["masks"]=normalized
         hl=effect.get("highlight") or {}
         if not isinstance(hl,dict):
             raise ValueError("강조 형식이 올바르지 않습니다")
         if hl:
             for key,default,lo,hi in (("cx",.5,0,1),("cy",.55,0,1),("r",.22,.06,.9),("zoom",2,1.1,4)):
                 number(hl.get(key,default),lo,hi)
-    allowed = {"version", "mode", "presetId", "sceneIndex", "frameKind", "text", "fontScales", "textOffsets", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "effects"}
+    if value.get("hookMotion") not in (None,"zoom-punch","pop","slide","flash"):
+        raise ValueError("제목 효과가 올바르지 않습니다")
+    if "hookMotionSpeed" in value:
+        number(value["hookMotionSpeed"],.5,2)
+    allowed = {"version", "mode", "presetId", "sceneIndex", "frameKind", "hookMotion", "hookMotionSpeed", "text", "fontScales", "textOffsets", "colors", "fixedLayouts", "fixedColors", "captionTexts", "captionDrags", "captionPositions", "effects"}
     return {key: val for key, val in value.items() if key in allowed}
 
 
@@ -127,9 +158,21 @@ def compose(in_video, timeline, snapshot, out_path, work, headcopy=None):
         zw,zh=round(width*zoom/2)*2,round(height*zoom/2)*2
         vf=f"scale={width}:{height}:force_original_aspect_ratio=increase,crop={width}:{height},scale={zw}:{zh},crop={width}:{height},pad={width}:{va._OUT_H}:0:{top}:black,setsar=1"
         hl=va.highlight_fc({"scene_hl":effect.get("highlight")},vf,grow=False)
-        graph=(hl+";[out]" if hl else f"[0:v]{vf}[base];[base]")+"[1:v]overlay=0:0:shortest=1[final]"
+        prefix=f"[1:v]tpad=stop_mode=clone:stop_duration={(last_frame-first_frame)/30}[ink];" if layer.get("animation") else "[1:v]null[ink];"
+        graph=prefix+(hl+";" if hl else f"[0:v]{vf}[out];")
+        layer_input=["-framerate","30","-i",str(work/layer["animation"]["pattern"])] if layer.get("animation") else ["-loop","1","-i",str(work/layer["file"])]
+        from .deco_frame import render_blur_mask, blur_sigma
+        masks=effect.get("masks") or []
+        blur=render_blur_mask({"masks":masks})
+        if blur is not None:
+            mask_path=work/f"scene-style-blur-{index}.png";blur.save(mask_path)
+            layer_input += ["-loop","1","-i",str(mask_path)]
+            graph += f"[out]split[clear][soft];[soft]gblur=sigma={blur_sigma(masks)}[blur];[2:v]format=rgba,alphaextract[mask];[blur][mask]alphamerge[masked];[clear][masked]overlay=0:0:shortest=1[under];[under]"
+        else:
+            graph += "[out]"
+        graph += "[ink]overlay=0:0:shortest=1[final]"
         part=work/f"scene-style-{index:04d}.mp4"
-        va._run_ffmpeg(["ffmpeg","-y","-ss",str(first_frame/30),"-i",str(in_video),"-loop","1","-i",str(work/layer["file"]),"-filter_complex",graph,"-map","[final]","-an","-frames:v",str(last_frame-first_frame),"-r","30","-c:v","libx264","-preset",va._preset(),"-crf",va._crf(),*va._threads_args(),"-pix_fmt","yuv420p",str(part)],cwd=str(work))
+        va._run_ffmpeg(["ffmpeg","-y","-ss",str(first_frame/30),"-i",str(in_video),*layer_input,"-filter_complex",graph,"-map","[final]","-an","-frames:v",str(last_frame-first_frame),"-r","30","-c:v","libx264","-preset",va._preset(),"-crf",va._crf(),*va._threads_args(),"-pix_fmt","yuv420p",str(part)],cwd=str(work))
         parts.append(part)
     listing=work/"scene-style-concat.txt"
     listing.write_text("\n".join(f"file '{p.name}'" for p in parts),encoding="utf-8")

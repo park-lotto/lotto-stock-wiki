@@ -2,7 +2,7 @@
   const api=window.sceneStyle;if(!api)return;
   const pane=document.querySelector('.layout-a .edit-pane'),tabs=pane.querySelector('.tool-tabs');
   tabs.innerHTML='<button class="active" data-editor-tab="text">문구/텍스트</button><button data-editor-tab="effects">효과</button>';
-  pane.querySelector('.hook-motion')?.remove();
+  const titleMotion=pane.querySelector('.hook-motion');
   pane.querySelector('details')?.remove();
   const textPanel=document.createElement('div');textPanel.className='scene-text-panel';
   const primary=pane.querySelector('.primary'),save=pane.querySelector('.secondary');
@@ -17,6 +17,7 @@
     <label>세로 위치<input data-effect="cy" type="range" min="0.1" max="0.9" step="0.01" value="0.55"></label></div>
     <button class="scene-effects-reset" data-effects-reset>이 장면 효과 초기화</button>`;
   textPanel.after(effectsPanel);
+  if(titleMotion)effectsPanel.prepend(titleMotion);
   const note=textPanel.querySelector('.ai-card');if(note)note.innerHTML='<b>문구·자막 편집</b><br><span data-connection-status>저장한 설정으로 미리보고 있습니다.</span>';
   const preview=document.querySelector('#a-live-preview'),media=preview.querySelector('.precision-media');
   const windowEl=document.createElement('div');windowEl.className='scene-media-clip';media.before(windowEl);windowEl.append(media);
@@ -60,6 +61,7 @@
   new MutationObserver(sync).observe(preview.querySelector('.precision-edit-layer'),{childList:true});
   addEventListener('resize',sync);sync();updateControls();
   const embedded=window.parent!==window;
+  save.hidden=true;
   if(embedded){document.body.classList.add('scene-embedded');primary.textContent='이 영상에 적용';}
   else primary.textContent='현재 설정 저장';
   primary.addEventListener('click',()=>{
@@ -82,6 +84,7 @@
     if(event.data?.type==='scene-style-saved'){
       saving=false;primary.disabled=false;primary.textContent=event.data.ok?'✓ 이 영상에 적용됨':'저장 실패 · 다시 적용';
       if(!event.data.ok)pane.querySelector('[data-connection-status]').textContent=event.data.error||'저장에 실패했습니다.';
+      else save.click();
     }
   });
   if(embedded)window.parent.postMessage({type:'scene-style-ready'},location.origin);

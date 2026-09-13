@@ -18,16 +18,17 @@
     const footer=(frame?.cleanup_regions||[]).find(region=>region.role==='source-footer');
     return {top:Math.round((frame?.video_from?.y||0)/(frame?.height||1)*100),bottom:footer&&frame?.lines?.some(l=>l.bind==='caption')?Math.min(14,Math.round(footer.height/frame.height*100)):0};
   };
-  const fixedLayoutFor=(presetId,frame)=>fixedLayouts.get(presetId)||fixedBaseLayout(frame);
+  const layoutKey=(presetId,frame)=>presetId.startsWith('fixed_')?presetId:`${presetId}:${frame===storyRows.find(p=>p.id===presetId)?.hook?'hook':'body'}`;
+  const fixedLayoutFor=(presetId,frame)=>fixedLayouts.get(layoutKey(presetId,frame))||fixedBaseLayout(frame);
   const fixedBaseColors=frame=>{
     const titleLines=(frame?.lines||[]).filter(line=>line.bind!=='caption');
     const footer=(frame?.cleanup_regions||[]).find(region=>region.role==='source-footer');
     return {top:frame?.title_bg||frame?.top_band?.color||'#000000',bottom:footer?.background||'#000000',title1:titleLines[0]?.color||'#FFFFFF',title2:titleLines[1]?.color||titleLines[0]?.color||'#FFFFFF'};
   };
-  const fixedColorsFor=(presetId,frame)=>({...fixedBaseColors(frame),...(fixedColors.get(presetId)||{})});
+  const fixedColorsFor=(presetId,frame)=>({...fixedBaseColors(frame),...(fixedColors.get(layoutKey(presetId,frame))||{})});
   const mediaBounds=(frame,presetId)=>{
     if(!frame)return {top:0,height:100};
-    if(presetId?.startsWith('fixed_')){
+    if(presetId?.startsWith('fixed_')||fixedLayouts.has(layoutKey(presetId,frame))){
       const layout=fixedLayoutFor(presetId,frame);
       return {top:layout.top,height:Math.max(25,100-layout.top-layout.bottom)};
     }
@@ -66,6 +67,11 @@
   const dirtyFields=new Map();
   const captionPositions=new Map();
   const captionTexts=new Map(),captionDrags=new Map();
+  const originalCaption=root.querySelector('.layout-a [data-bind="caption"]');
+  if(originalCaption?.tagName==='INPUT'){
+    const textarea=document.createElement('textarea');for(const a of originalCaption.attributes)if(a.name!=='value')textarea.setAttribute(a.name,a.value);
+    textarea.value=originalCaption.value;textarea.rows=3;originalCaption.replaceWith(textarea);
+  }
   const inputs=Object.fromEntries([...root.querySelectorAll('.layout-a [data-bind]')].map(x=>[x.dataset.bind,x]));
   const value=k=>inputs[k]?.value||' ';
   const rgba=hex=>hex&&/^#[0-9a-f]{6}$/i.test(hex)?hex:'#111111';
@@ -82,7 +88,7 @@
   const dirtyKey=()=>`${rows[current].id}:${frameKind()}`;
   const captionKey=()=>`${rows[current].id}:${mode}:${sceneIndex}:caption`;
   const currentHasCaptionSlot=()=>mode==='continuous'?frameFor(rows[current])?.caption_slot?.mode==='reserved':kind==='body'&&storyHasCaptionSlot(frameFor(rows[current]));
-  const captionOffset=()=>(captionDrags.get(captionKey())?.y||0)+(currentHasCaptionSlot()?0:(kind==='body'||mode==='continuous')?(captionPositions.get(captionKey())||0)*6:0);
+  const captionOffset=()=>(captionDrags.get(captionKey())?.y||0)+(captionPositions.get(captionKey())||0)*6;
   const captionX=()=>captionDrags.get(captionKey())?.x||0;
   function syncCaption(){inputs.caption.value=captionTexts.get(captionKey())??sceneContext?.scenes?.[sceneIndex]?.caption??(rows[current].sample.caption||'이런 방법이 있었네요');updateCount(inputs.caption);}
   const fixedCaptionShift=frame=>{
@@ -144,29 +150,45 @@
   fixedPanel.innerHTML='<div class="fixed-quick-head"><b>고정형 빠른 조절</b><button type="button" data-fixed-reset>전체 초기화</button></div><div class="fixed-size-control" data-fixed-size="top"><span>상단 제목칸</span><button type="button" data-fixed-step="-1">−</button><input type="range" min="12" max="50" step="1" data-fixed-range="top"><output>0%</output><button type="button" data-fixed-step="1">＋</button></div><div class="fixed-size-control" data-fixed-size="bottom"><span>하단 자막칸</span><button type="button" data-fixed-step="-1">−</button><input type="range" min="0" max="35" step="1" data-fixed-range="bottom"><output>0%</output><button type="button" data-fixed-step="1">＋</button></div><div class="fixed-palette-row"><button type="button" data-fixed-palette="original">원본</button><button type="button" data-fixed-palette="mint">민트</button><button type="button" data-fixed-palette="yellow">옐로</button><button type="button" data-fixed-palette="pink">핑크</button></div><div class="fixed-color-grid"><label><span>제목 배경</span><input type="color" data-fixed-color="top"></label><label><span>하단 배경</span><input type="color" data-fixed-color="bottom"></label><label><span>제목 1</span><input type="color" data-fixed-color="title1"></label><label><span>제목 2</span><input type="color" data-fixed-color="title2"></label></div>';
   motionPanel.after(fixedPanel);
   const fixedPalettes={mint:{top:'#082923',bottom:'#082923',title1:'#FFFFFF',title2:'#43E2B4'},yellow:{top:'#17140A',bottom:'#17140A',title1:'#FFFFFF',title2:'#FFE24A'},pink:{top:'#24101A',bottom:'#24101A',title1:'#FFFFFF',title2:'#FF78B7'}};
-  function syncHookMotionUI(){motionPanel.hidden=true}
+  function syncHookMotionUI(){
+    motionPanel.hidden=false;
+    motionPanel.querySelectorAll('[data-hook-motion]').forEach(b=>b.classList.toggle('active',b.dataset.hookMotion===hookMotion));
+    motionPanel.querySelectorAll('[data-hook-speed]').forEach(b=>b.classList.toggle('active',Number(b.dataset.hookSpeed)===hookMotionSpeed));
+    motionPanel.querySelector('.hook-motion-head small').textContent='영상 시작의 제목에 적용';
+  }
   const minimumFixedTop=frame=>Math.min(46,Math.max(12,Math.ceil((Math.max(0,...(frame?.lines||[]).filter(line=>line.bind!=='caption').map(line=>line.y1))+2)/(frame?.height||1)*100)));
   function syncMediaLayout(){
     const p=rows[current],frame=frameFor(p),bounds=mediaBounds(frame,p?.id);
     Object.assign(media.style,{top:bounds.top+'%',height:bounds.height+'%'});
   }
   function syncFixedPanel(){
-    fixedPanel.hidden=mode!=='continuous';if(fixedPanel.hidden)return;
+    fixedPanel.hidden=false;
+    fixedPanel.querySelector('.fixed-quick-head b').textContent=mode==='continuous'?'고정형 빠른 조절':`${kind==='hook'?'훅':'본문'} 빠른 조절`;
     const p=rows[current],frame=frameFor(p),layout=fixedLayoutFor(p.id,frame),colors=fixedColorsFor(p.id,frame);
     fixedPanel.querySelectorAll('[data-fixed-size]').forEach(row=>{
       const key=row.dataset.fixedSize,input=row.querySelector('input'),output=row.querySelector('output');
-      if(key==='top')input.min=String(minimumFixedTop(frame));
-      input.value=String(layout[key]);output.textContent=layout[key]+'%';
+      if(key==='top')input.min=String(mode==='continuous'?minimumFixedTop(frame):8);
+      input.value=String(layout[key]);output.textContent=Math.round(layout[key])+'%';
     });
     fixedPanel.querySelectorAll('[data-fixed-color]').forEach(input=>input.value=colors[input.dataset.fixedColor]);
   }
-  function runHookMotion(){
-    if(qaMode||motionPanel.hidden||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
-    [preview,...preview.querySelectorAll('*')].forEach(el=>el.getAnimations?.().forEach(animation=>animation.cancel()));
-    const texts=[...layer.querySelectorAll('.precision-text')];
+  function runHookMotion(options){
+    const seeking=options&&typeof options==='object'&&Number.isFinite(options.time);
+    if(!seeking&&(qaMode||sceneIndex!==0||matchMedia('(prefers-reduced-motion: reduce)').matches))return 0;
+    layer.querySelectorAll('.precision-text').forEach(el=>el.getAnimations?.().forEach(animation=>animation.cancel()));
+    const texts=[...layer.querySelectorAll('.precision-text')].filter(el=>['hook1','hook2','bodyTitle'].includes(el.dataset.editBind));
+    let duration=0;
     const timing={duration:620,easing:'cubic-bezier(.18,.88,.25,1)',fill:'both'};
     const time=value=>Math.round(value*hookMotionSpeed);
-    const play=(element,keyframes,options)=>{const animation=element.animate(keyframes,options);animation.finished.then(()=>animation.cancel()).catch(()=>{});return animation};
+    const play=(element,keyframes,timing)=>{
+      if(element===preview)return;
+      const base=element.style.transform==='none'?'':element.style.transform;
+      keyframes=keyframes.map(k=>({...k,transform:(k.transform||'')+' '+base}));
+      const animation=element.animate(keyframes,timing);duration=Math.max(duration,(timing.duration||0)+(timing.delay||0));
+      if(seeking){animation.pause();animation.currentTime=options.time;}
+      else animation.finished.then(()=>animation.cancel()).catch(()=>{});
+      return animation;
+    };
     if(hookMotion==='zoom-punch'){
       play(preview,[
         {transform:'scale(1)',filter:'contrast(1)'},
@@ -176,8 +198,9 @@
         {transform:'scale(1)',filter:'contrast(1)'}
       ],{...timing,duration:time(760),easing:'cubic-bezier(.15,.72,.2,1)'});
       texts.forEach((el,index)=>play(el,[
-        {opacity:0,transform:'translateY(-18px)'},
-        {opacity:1,transform:'translateY(2px)',offset:.68},
+        {opacity:0,transform:'translateY(-18px) scale(.8)'},
+        {opacity:1,transform:'translateY(2px) scale(1.14)',offset:.5},
+        {opacity:1,transform:'translateY(-1px) scale(1.04)',offset:.75},
         {opacity:1,transform:'translateY(0)'}
       ],{...timing,duration:time(500),delay:time(70+index*70)}));
     }else if(hookMotion==='pop'){
@@ -187,8 +210,9 @@
       texts.forEach((el,index)=>play(el,[{opacity:0,transform:`translateX(${index%2?-46:46}px)`},{opacity:1,transform:'translateX(0)'}],{...timing,duration:time(620),delay:time(index*85)}));
     }else{
       play(preview,[{filter:'brightness(1)'},{filter:'brightness(1.85)',offset:.12},{filter:'brightness(.82)',offset:.25},{filter:'brightness(1)'}],{duration:time(480),easing:'ease-out'});
-      texts.forEach((el,index)=>play(el,[{opacity:0,transform:'scale(1.32)'},{opacity:1,transform:'scale(.96)',offset:.7},{opacity:1,transform:'scale(1)'}],{...timing,duration:time(480),delay:time(70+index*55)}));
+      texts.forEach((el,index)=>play(el,[{opacity:0,transform:'scale(1.32)',filter:'brightness(2)'},{opacity:1,transform:'scale(.96)',filter:'brightness(1.7)',offset:.3},{opacity:1,transform:'scale(1)',filter:'brightness(1)'}],{...timing,duration:time(480),delay:time(70+index*55)}));
     }
+    return duration;
   }
   function sceneTotal(){return sceneContext?.scenes?.length||12}
   function updateSceneUI(){
@@ -213,9 +237,9 @@
     const position=captionPositions.get(captionKey())||0;
     const label=root.querySelector('.layout-a .caption-position span');
     if(label)label.textContent=reserved?'✓ 전용 자막칸':'영상 위 자막';
-    root.querySelectorAll('.layout-a [data-caption-position]').forEach(button=>{button.hidden=reserved;button.disabled=reserved;button.classList.toggle('active',!reserved&&Number(button.dataset.captionPosition)===position)});
+    root.querySelectorAll('.layout-a [data-caption-position]').forEach(button=>{button.hidden=false;button.disabled=false;button.classList.toggle('active',Number(button.dataset.captionPosition)===position)});
     const guide=root.querySelector('.layout-a .caption-guide');
-    if(guide)guide.textContent='이 장면의 자막을 입력하고, 화면에서 끌어 위치를 옮기세요. ＋−로 크기를 조절합니다.';
+    if(guide)guide.textContent='Enter로 줄바꿈 · 화면에서 자막을 끌어 이동 · 아래 저장 버튼으로 위치까지 저장';
     captionField?.classList.toggle('reserved-caption',reserved);
   }
   function presetValue(bind){
@@ -306,6 +330,8 @@
     apply(el);Array.from(el.children).forEach(apply);
   }
   function addText(text,ln,frame,color,role='center',bind='bodyTitle'){
+    const manualLines=bind==='caption'?String(text).split('\n').length:1;
+    if(manualLines>1)ln={...ln,max_lines:manualLines,h:ln.h*manualLines,y0:ln.y0-ln.h*(manualLines-1)/2};
     const scale=preview.clientHeight/frame.height;
     const measuredBounds=role.includes('left')||role.includes('precision-channel');
     const pad=measuredBounds?Math.max(2,Math.round(4*scale)):0;
@@ -336,7 +362,10 @@
     }else el.textContent=text||' ';
     contrastOutline(el,ln,frame,bind);
     if(frame.reference_style){el.style.webkitTextStroke=ln.stroke?`${ln.stroke*scale}px #080808`:'0px';el.style.textShadow=ln.shadow_y?`0 ${ln.shadow_y*scale}px ${2*scale}px #000000AA`:'none';}
-    if(ln.max_lines>1){el.style.overflowWrap='anywhere';el.style.wordBreak='keep-all';el.style.textWrap='balance';el.style.lineHeight='1.2';}
+    if(manualLines>1){el.textContent=text;el.style.whiteSpace='pre-wrap';el.style.display='block';el.style.lineHeight='1.2';el.style.textWrap='wrap';}
+    else if(ln.max_lines>1){el.style.overflowWrap='anywhere';el.style.wordBreak='keep-all';el.style.textWrap='balance';el.style.lineHeight='1.2';}
+    const chosen=colorOverrides.get(colorKey(bind==='hook2'?'accent':'white'));
+    if(chosen){el.style.color=chosen;el.querySelectorAll('span').forEach(span=>span.style.color=chosen);}
     layer.insertBefore(el,badge);
     if(bind==='caption'){el.style.left=(left+captionX())+'%';el.style.right=(right-captionX())+'%';}
     const fitKey=`${scaleKey(bind)}:${family}:${weight}:${ln.x0}:${ln.y0}`,chars=Math.max(1,[...String(text||' ')].length),cached=fittedText.get(fitKey);
@@ -428,6 +457,30 @@
       const key=kind==='hook'?'bodyTitle':'caption';
       if(dirty.has(key)){const offset=(key==='caption'?captionOffset():0)+textOffset(key);if(offset)addPatch(wb.y0/frame.height*100,(wb.y1-wb.y0+1)/frame.height*100,'#FFFFFF',0,100,key);addPatch(wb.y0/frame.height*100+offset,(wb.y1-wb.y0+1)/frame.height*100,'#FFFFFF',0,100,key);addText(value(key),wb.text,frame,'#111111','center',key);}
     }
+    if(mode==='story')applyStoryLayout(frame,p);
+  }
+  function applyStoryLayout(frame,p){
+    const key=layoutKey(p.id,frame),layout=fixedLayouts.get(key),paint=fixedColors.get(key);
+    if(!layout&&!paint)return;
+    const oldTop=(frame.video_from?.y||0)/frame.height*100;
+    const footer=(frame.cleanup_regions||[]).find(r=>r.role==='source-footer');
+    const oldEnd=footer?footer.y/frame.height*100:100;
+    const next=layout||{top:oldTop,bottom:100-oldEnd},end=100-next.bottom;
+    const mapY=y=>y<=oldTop?y*next.top/Math.max(.01,oldTop):y>=oldEnd&&oldEnd<100?end+(y-oldEnd)*next.bottom/(100-oldEnd):next.top+(y-oldTop)*(end-next.top)/Math.max(.01,oldEnd-oldTop);
+    for(const el of [...layer.children].filter(el=>el!==badge)){
+      const top=parseFloat(el.style.top),height=parseFloat(el.style.height);if(!Number.isFinite(top))continue;
+      if(layout){
+        if(el.dataset.editBind==='caption'&&next.bottom>0){el.style.top=(end+next.bottom/2-height/2+captionOffset()+textOffset('caption'))+'%';}
+        else{el.style.top=mapY(top)+'%';if(Number.isFinite(height)&&!el.classList.contains('precision-text'))el.style.height=Math.max(0,mapY(top+height)-mapY(top))+'%';}
+      }
+      if(paint){
+        if(el.classList.contains('precision-text')){
+          const color=el.dataset.editBind==='hook1'?paint.title1:['hook2','bodyTitle'].includes(el.dataset.editBind)?paint.title2:null;
+          if(color){el.style.color=color;el.querySelectorAll('span').forEach(s=>s.style.color=color);}
+        }else if(el.style.background&&top<oldTop&&el.dataset.editBind!=='caption'&&paint.top)el.style.background=paint.top;
+      }
+    }
+    if(next.bottom>0)addPatch(end,next.bottom,paint?.bottom||fixedBaseColors(frame).bottom);
   }
   function showFrame(next){
     kind=mode==='continuous'?'hook':next;
@@ -494,7 +547,7 @@
   Object.values(inputs).forEach(input=>input.addEventListener('input',()=>{
     if(input.dataset.bind==='caption')captionTexts.set(captionKey(),input.value);
     else if(sceneContext?.text)sceneContext.text[input.dataset.bind]=input.value;
-    markDirty(input.dataset.bind);preview.classList.remove('is-pristine');renderEdit();
+    updateCount(input);markDirty(input.dataset.bind);preview.classList.remove('is-pristine');renderEdit();
   }));
   root.querySelector('.layout-a .edit-pane').addEventListener('click',event=>{
     const button=event.target.closest('[data-font-step]');if(!button)return;
@@ -514,7 +567,10 @@
   });
   colorRow?.addEventListener('input',event=>{
     const input=event.target.closest('[data-color-role]');if(!input)return;
-    colorOverrides.set(colorKey(input.dataset.colorRole),input.value);preview.classList.remove('is-pristine');renderEdit();
+    const role=input.dataset.colorRole,p=rows[current],key=layoutKey(p.id,frameFor(p)),paint={...(fixedColors.get(key)||{})};
+    if(role==='background'){paint.top=input.value;paint.bottom=input.value;}
+    else paint[role==='white'?'title1':'title2']=input.value;
+    fixedColors.set(key,paint);colorOverrides.set(colorKey(role),input.value);preview.classList.remove('is-pristine');renderEdit();syncFixedPanel();
   });
   motionPanel.addEventListener('click',event=>{
     const choice=event.target.closest('[data-hook-motion]');
@@ -523,19 +579,19 @@
     if(speed){hookMotionSpeed=Number(speed.dataset.hookSpeed);motionPanel.querySelectorAll('[data-hook-speed]').forEach(button=>button.classList.toggle('active',button===speed));runHookMotion();return}
   });
   const applyFixedSize=(key,rawValue)=>{
-    if(mode!=='continuous')return;
     const p=rows[current],frame=frameFor(p),currentLayout={...fixedLayoutFor(p.id,frame)};
-    const min=key==='top'?minimumFixedTop(frame):0,max=key==='top'?50:35;
+    const min=key==='top'?(mode==='continuous'?minimumFixedTop(frame):8):0,max=key==='top'?50:35;
     currentLayout[key]=Math.round(Math.max(min,Math.min(max,Number(rawValue))));
     if(currentLayout.top+currentLayout.bottom>70)currentLayout[key]=70-currentLayout[key==='top'?'bottom':'top'];
-    fixedLayouts.set(p.id,currentLayout);fittedText.clear();preview.classList.remove('is-pristine');syncMediaLayout();renderEdit();syncFixedPanel();
+    fixedLayouts.set(layoutKey(p.id,frame),currentLayout);fittedText.clear();preview.classList.remove('is-pristine');syncMediaLayout();renderEdit();syncFixedPanel();
   };
   fixedPanel.addEventListener('input',event=>{
     const range=event.target.closest('[data-fixed-range]');
     if(range){applyFixedSize(range.dataset.fixedRange,range.value);return}
     const color=event.target.closest('[data-fixed-color]');
-    if(color&&mode==='continuous'){
-      const p=rows[current],next={...(fixedColors.get(p.id)||{})};next[color.dataset.fixedColor]=color.value;fixedColors.set(p.id,next);
+    if(color){
+      const p=rows[current],key=layoutKey(p.id,frameFor(p)),next={...(fixedColors.get(key)||{})};next[color.dataset.fixedColor]=color.value;fixedColors.set(key,next);
+      colorOverrides.delete(colorKey(color.dataset.fixedColor==='title1'?'white':color.dataset.fixedColor==='title2'?'accent':'background'));
       preview.classList.remove('is-pristine');renderEdit();syncFixedPanel();
     }
   });
@@ -543,13 +599,14 @@
     const step=event.target.closest('[data-fixed-step]');
     if(step){const row=step.closest('[data-fixed-size]'),key=row.dataset.fixedSize;applyFixedSize(key,Number(row.querySelector('input').value)+Number(step.dataset.fixedStep));return}
     const palette=event.target.closest('[data-fixed-palette]');
-    if(palette&&mode==='continuous'){
-      const p=rows[current];
-      if(palette.dataset.fixedPalette==='original')fixedColors.delete(p.id);else fixedColors.set(p.id,{...fixedPalettes[palette.dataset.fixedPalette]});
+    if(palette){
+      const p=rows[current],key=layoutKey(p.id,frameFor(p));
+      for(const role of ['white','accent','background'])colorOverrides.delete(colorKey(role));
+      if(palette.dataset.fixedPalette==='original')fixedColors.delete(key);else fixedColors.set(key,{...fixedPalettes[palette.dataset.fixedPalette]});
       preview.classList.remove('is-pristine');renderEdit();syncFixedPanel();return;
     }
-    if(event.target.closest('[data-fixed-reset]')&&mode==='continuous'){
-      const p=rows[current];fixedLayouts.delete(p.id);fixedColors.delete(p.id);fittedText.clear();syncMediaLayout();renderEdit();syncFixedPanel();
+    if(event.target.closest('[data-fixed-reset]')){
+      const p=rows[current],key=layoutKey(p.id,frameFor(p));fixedLayouts.delete(key);fixedColors.delete(key);for(const role of ['white','accent','background'])colorOverrides.delete(colorKey(role));fittedText.clear();syncMediaLayout();renderEdit();syncFixedPanel();
     }
   });
   const saveButton=root.querySelector('.layout-a .secondary');
@@ -601,12 +658,12 @@
           showScene(query.get('frame')==='hook'?0:query.get('frame')==='body'?Math.max(1,savedScene):savedScene);
           for(const [key,text] of Object.entries(saved.text||{}))if(inputs[key]&&key!=='caption'){inputs[key].value=text;markDirty(key);updateCount(inputs[key]);}
         }
-        hookMotion=saved.hookMotion||hookMotion;hookMotionSpeed=saved.hookMotionSpeed||hookMotionSpeed;renderEdit();
+        hookMotion=saved.hookMotion||hookMotion;hookMotionSpeed=saved.hookMotionSpeed||hookMotionSpeed;renderEdit();syncHookMotionUI();
       }
     }catch(error){console.warn('저장 설정 복원 실패',error);}
   }
   window.sceneStyle={
-    snapshot:()=>({version:1,mode,presetId:rows[current].id,sceneIndex,frameKind:frameKind(),text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),colors:Object.fromEntries(colorOverrides),fixedLayouts:Object.fromEntries(fixedLayouts),fixedColors:Object.fromEntries(fixedColors),captionTexts:Object.fromEntries(captionTexts),captionDrags:Object.fromEntries(captionDrags),captionPositions:Object.fromEntries(captionPositions),effects}),
+    snapshot:()=>({version:1,mode,presetId:rows[current].id,sceneIndex,frameKind:frameKind(),hookMotion,hookMotionSpeed,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),colors:Object.fromEntries(colorOverrides),fixedLayouts:Object.fromEntries(fixedLayouts),fixedColors:Object.fromEntries(fixedColors),captionTexts:Object.fromEntries(captionTexts),captionDrags:Object.fromEntries(captionDrags),captionPositions:Object.fromEntries(captionPositions),effects}),
     load(context,saved){
       sceneContext=context;
       if(saved){
@@ -614,6 +671,7 @@
           map.clear();for(const [key,value] of Object.entries(saved[name]||{}))map.set(key,value);
         }
         effects=saved.effects||{};
+        hookMotion=saved.hookMotion||hookMotion;hookMotionSpeed=saved.hookMotionSpeed||hookMotionSpeed;
         mode=saved.mode==='continuous'?'continuous':'story';rows=mode==='continuous'?fixedRows:storyRows;
         modeBar.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x.dataset.templateMode===mode));
         renderGrid();selectPreset(Math.max(0,rows.findIndex(p=>p.id===saved.presetId)));
@@ -627,6 +685,7 @@
     geometry:()=>({media:mediaBounds(frameFor(rows[current]),rows[current].id),sceneIndex,kind:sceneKind(sceneIndex)}),
     effect(value){if(value!==undefined)effects[String(sceneIndex)]=value;return effects[String(sceneIndex)]||{}},
     refresh(){fittedText.clear();renderEdit()},
+    motionAt(time){return runHookMotion({time})},
   };
   try{effects=JSON.parse(localStorage.getItem('scene_style_preset')||'null')?.effects||{}}catch{}
 })();
