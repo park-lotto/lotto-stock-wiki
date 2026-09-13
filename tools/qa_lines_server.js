@@ -5,8 +5,10 @@
  await page.evaluate(()=>{MIX_JOB='scene-style-qa';document.querySelector('[data-step="3"]').style.display='block'});
  await page.click('[onclick="openSceneStyleEditor()"]');await page.waitForSelector('dialog[open] iframe');
  const f=await(await page.$('dialog iframe')).contentFrame();await f.waitForFunction(()=>window.sceneStyle?.context()?.jobId);
- await f.evaluate(()=>{sceneStyle.show(2);sceneStyle.effect({zoom:1.5});sceneStyle.show(1)});
- await f.click('.scene-line-editor summary');await f.$eval('[data-line-inputs] input',e=>{e.focus();e.setSelectionRange(3,3)});await page.keyboard.press('Enter');
+ await f.evaluate(()=>sceneStyle.show(1));
+ if(await f.evaluate(()=>sceneStyle.context().scenes.length!==3)){await f.$eval('[data-lines-reset]',e=>e.click());await f.waitForFunction(()=>sceneStyle.context().scenes.length===3);}
+ await f.evaluate(()=>{sceneStyle.branding({watermark:{on:true,text:'@qa',x:5,y:90,size:3,opacity:65,color:'#ffffff'}});sceneStyle.show(2);sceneStyle.effect({zoom:1.5});sceneStyle.show(1)});
+ await f.$eval('.scene-line-editor',e=>e.open=true);await f.$eval('[data-line-inputs] input',e=>{e.focus();e.setSelectionRange(3,3)});await page.keyboard.press('Enter');
  assert.equal(await f.$$eval('[data-line-inputs] input',e=>e.length),2);
  await f.$eval('[data-lines-save]',e=>e.scrollIntoView({block:'center'}));await f.click('[data-lines-save]');
  await f.waitForFunction(()=>sceneStyle.context().scenes.length===4,{timeout:15000});

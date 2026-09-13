@@ -615,6 +615,7 @@
     const bind=button.closest('[data-field-key]').dataset.fieldKey;
     if(bind==='caption'){captionLayouts.set(captionKey(),{...captionSettings(),placement:'free'});updateCaptionButtons();}
     textOffsets.set(scaleKey(bind),Math.max(-18,Math.min(18,textOffset(bind)+Number(button.dataset.positionStep)*.5)));
+    if(bind==='caption')applyCaptionMoveScope();
     markDirty(bind);preview.classList.remove('is-pristine');renderEdit();
   });
   root.querySelector('.layout-a .edit-pane').addEventListener('click',event=>{
@@ -674,6 +675,7 @@
     const button=event.target.closest('[data-caption-placement]');if(!button)return;
     const settings=captionSettings();captionLayouts.set(captionKey(),{...settings,placement:button.dataset.captionPlacement});
     if(button.dataset.captionPlacement==='title'){captionDrags.delete(captionKey());textOffsets.delete(scaleKey('caption'));}
+    applyCaptionMoveScope();
     markDirty('caption');updateCaptionButtons();renderEdit();
   });
   captionField?.addEventListener('input',event=>{
@@ -686,7 +688,31 @@
     captionPositions.set(captionKey(),Number(button.dataset.captionPosition));markDirty('caption');updateCaptionButtons();renderEdit();
   });
   addEventListener('resize',()=>{if(!window.sceneStyleExporting&&!preview.classList.contains('is-pristine'))renderEdit()});
-  let captionDrag=null;
+  let captionDrag=null,captionMoveScope='scene';
+  const moveScope=document.createElement('div');moveScope.className='caption-position';
+  moveScope.innerHTML='<span style="grid-column:1/-1">자막 위치 적용 범위</span><button type="button" data-caption-scope="all">모든 장면</button><button type="button" data-caption-scope="scene" class="active">이 자막만</button><small style="grid-column:1/-1" data-caption-scope-status>이 자막의 위치만 바꿉니다.</small>';
+  const captionPlacement=captionField?.querySelector('.caption-position');
+  captionPlacement?.before(moveScope);
+  const maskDetails=document.createElement('details');maskDetails.style.gridColumn='1/-1';maskDetails.innerHTML='<summary style="cursor:pointer">가림막 크기 · 색상</summary><div class="caption-position"></div>';
+  captionPlacement?.querySelectorAll('label').forEach(label=>maskDetails.querySelector('div').append(label));
+  captionPlacement?.append(maskDetails);
+  function applyCaptionMoveScope(){
+    if(captionMoveScope!=='all')return;
+    const drag=captionDrags.get(captionKey())||{x:0,y:0},settings=captionSettings(),offset=textOffset('caption');
+    for(let i=0;i<sceneTotal();i++){
+      const key=`${rows[current].id}:${mode}:${i}:caption`;
+      captionDrags.set(key,{...drag});
+      captionLayouts.set(key,{...(captionLayouts.get(key)||{}),placement:settings.placement,w:settings.w});
+      textOffsets.set(`${rows[current].id}:${mode==='continuous'?'frame':sceneKind(i)}:caption:${i}`,offset);
+    }
+  }
+  moveScope.addEventListener('click',event=>{
+    const button=event.target.closest('[data-caption-scope]');if(!button)return;
+    captionMoveScope=button.dataset.captionScope;
+    moveScope.querySelectorAll('button').forEach(el=>el.classList.toggle('active',el===button));
+    applyCaptionMoveScope();
+    moveScope.querySelector('[data-caption-scope-status]').textContent=captionMoveScope==='all'?'현재 위치를 모든 장면에 적용했습니다. 이후 이동도 함께 적용됩니다.':'이후 이동은 이 자막에만 적용됩니다.';
+  });
   preview.addEventListener('pointerdown',event=>{
     if(event.button!==0||!event.target.closest('[data-edit-bind="caption"]'))return;
     const rect=preview.getBoundingClientRect(),text=layer.querySelector('.precision-text[data-edit-bind="caption"]');if(!text)return;
@@ -703,7 +729,7 @@
     captionDrags.set(captionKey(),{x:d.origin.x+dx/d.rect.width*100,y:d.origin.y+dy/d.rect.height*100});
     markDirty('caption');renderEdit();
   });
-  for(const type of ['pointerup','pointercancel','lostpointercapture'])preview.addEventListener(type,()=>{captionDrag=null;});
+  for(const type of ['pointerup','pointercancel','lostpointercapture'])preview.addEventListener(type,()=>{if(captionDrag)applyCaptionMoveScope();captionDrag=null;});
   const premiumFaces=['SBAggroB','YgJalnan','JalnanGothic','Jalnan2','GothicA1Black','GmarketSansBold','GasoekOne','Cafe24Ohsquare','KCCGanpan','BinggraeBold','BlackHanSans','Pretendard'];
   Promise.all(premiumFaces.map(family=>document.fonts?.load?.(`400 32px "${family}"`))).then(()=>{fittedText.clear();renderEdit()});
   document.fonts?.addEventListener?.('loadingdone',()=>{if(!window.sceneStyleExporting){fittedText.clear();renderEdit()}});
