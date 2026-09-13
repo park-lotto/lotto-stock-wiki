@@ -38,7 +38,7 @@ def detect_crop(src, seconds=3):
         return None
     if w <= 0 or h <= 0 or w * h > W * H * 0.6:   # 화면 대부분이 내용이면 자를 이유 없음
         return None
-    mx, my = int(w * 0.12) + 8, int(h * 0.25) + 8   # 여백
+    mx, my = int(w * 0.20) + 8, int(h * 0.30) + 8   # 여백(옆에서 들어오는 요소 고려)
     x0, y0 = max(0, x - mx), max(0, y - my); x1, y1 = min(W, x + w + mx), min(H, y + h + my)
     return f"crop={x1 - x0}:{y1 - y0}:{x0}:{y0}"
 
@@ -113,7 +113,8 @@ def make_previews(pack_dir, pack_id, f):
                     pre = (cr + ",") if cr else ""
                     W2, H2 = SIZE * 2, SIZE + (SIZE % 2)   # ★짝수 크기(홀수면 libx264가 실패해 0바이트)
                     run(["ffmpeg", "-v", "error", "-y", "-t", "4", "-i", tmp, "-vf", f"{pre}scale={W2}:{H2}:force_original_aspect_ratio=decrease,pad={W2}:{H2}:(ow-iw)/2:(oh-ih)/2:color=0x222222,format=yuv420p", "-r", "15", "-c:v", "libx264", "-preset", "veryfast", "-crf", "26", "-an", prev])
-                    run(["ffmpeg", "-v", "error", "-y", "-t", "8", "-i", tmp, "-vf", f"{pre}scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2:color=0x222222,format=yuv420p", "-r", "24", "-c:v", "libx264", "-preset", "veryfast", "-crf", "24", "-an", big])
+                    # 크게 보기는 크롭 없이 원본 전체 화면 — 옆에서 들어오는 요소가 잘리지 않게(사장님 캡처 2026-09-13)
+                    run(["ffmpeg", "-v", "error", "-y", "-t", "8", "-i", tmp, "-vf", "scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2:color=0x222222,format=yuv420p", "-r", "24", "-c:v", "libx264", "-preset", "veryfast", "-crf", "24", "-an", big])
                     os.remove(tmp)
                     run(["ffmpeg", "-v", "error", "-y", "-ss", "1", "-i", prev, "-frames:v", "1", "-update", "1", thumb])   # 포스터도 크롭본에서
         except Exception as e:
