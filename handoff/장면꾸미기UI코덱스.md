@@ -11,6 +11,14 @@
 - 다음 우선순위: 편집 임시저장/닫기 유실 방지 → 저장 sceneIndex 복원 → 캡컷 새 snapshot 연결 및 출력 비교. 캡컷을 편집 가능한 레이어로 보낼지 결정 없이 완성 MP4로 통째 대체하지 말 것.
 - 증거(트랙 .tmp/scene-style-qa): wiring-audit.json, wiring-reopen.png, capcut-valid-source-audit.json, final.mp4, final-1.png. QA 스크립트는 기존 임시 snapshot을 finally에서 복원하며 실제 고객 데이터에는 사용 금지.
 
+## 2026-09-13 · 저장/재접속 배선 보강 — 배포 보류
+
+- `precision20-ui.js`가 저장된 `sceneIndex`를 무시하고 항상 0장으로 가던 재현을 수정. 마지막 편집 장면을 다시 연다.
+- 제작소 닫기와 Esc는 `저장하고 닫기`로 통일했다. 저장 성공 전에는 닫히지 않으며, 페이지 이탈 때도 임시 브라우저 저장과 keepalive 서버 저장을 시도한다. 재열면 같은 실제 장면 타임라인일 때 임시값을 복원한다.
+- 장면꾸미기 저장은 전체 `deco`를 다시 보내지 않고 `scene_style`만 보낸다. 서버가 기존 deco와 병합하므로 BGM·워터마크 등 다른 제작소 설정을 오래된 화면 상태로 덮지 않는다.
+- `qa_scene_style_wiring.js`: 3장 zoom/pan 적용 → 저장·닫기 → 재열기 → 저장하지 않은 수정·닫기 → 페이지 새로고침까지 값/장면번호가 유지되는지 확인. 실제 실행 성공: scene2, zoom1.91/panX.3 유지. `pytest shopping_shorts/tests/test_scene_style.py -q`: 9 passed.
+- 캡컷 새 scene_style 연결은 아직 없음. 캡컷에서 각 요소를 수정할지/완성 화면을 참조 영상으로 보낼지 사용자 결정 후 구현·검증. 배포/finish 금지.
+
 ## 2026-09-13 · 워터마크 정확한 가운데 정렬·움직임
 
 - 기본 x50/align center 및 외부 박스 translateX(-50%)로 문구 길이에 무관한 가로 중앙. 이전 기본 x36 저장값만 중앙으로 보정하고 직접 옮긴 값은 보존. 기본 위치로 버튼은 중앙 복원.

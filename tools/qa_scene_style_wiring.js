@@ -1,5 +1,5 @@
 // Read/write audit against the isolated QA job; never use a customer job.
-const puppeteer=require('puppeteer'),fs=require('fs');
+const puppeteer=require('puppeteer'),fs=require('fs'),assert=require('assert');
 (async()=>{
  const browser=await puppeteer.launch({headless:true});
  const origin='http://127.0.0.1:8768',url=origin+'/api/produce/scene-style/context/scene-style-qa';
@@ -22,10 +22,10 @@ const puppeteer=require('puppeteer'),fs=require('fs');
   const saved=page.waitForResponse(r=>r.url().endsWith('/api/produce/mix/settings')&&r.request().method()==='POST');
   await frame.evaluate(()=>parent.postMessage({type:'scene-style-save',jobId:'scene-style-qa',snapshot:sceneStyle.snapshot()},location.origin));
   await saved;await page.waitForFunction(()=>document.getElementById('sceneStyleStatus').textContent.includes('적용됨'));
-  await page.evaluate(()=>document.querySelector('dialog').close());frame=await open();
+  await page.click('dialog > div button');await page.waitForSelector('dialog[open]',{hidden:true});frame=await open();
   const reopened=await frame.evaluate(()=>sceneStyle.snapshot());
   await frame.evaluate(()=>{sceneStyle.show(2);sceneStyle.effect({...sceneStyle.effect(),zoom:1.91});});
-  await page.evaluate(()=>document.querySelector('dialog').close());frame=await open();
+  await page.click('dialog > div button');await page.waitForSelector('dialog[open]',{hidden:true});frame=await open();
   const unsaved=await frame.evaluate(()=>sceneStyle.snapshot());
   const stored=await(await fetch(url)).json();
   await page.reload({waitUntil:'networkidle2'});
@@ -38,6 +38,9 @@ const puppeteer=require('puppeteer'),fs=require('fs');
   await page.screenshot({path:'.tmp/scene-style-qa/wiring-reopen.png'});
   fs.writeFileSync('.tmp/scene-style-qa/wiring-audit.json',JSON.stringify(result,null,2));
   console.log(JSON.stringify(result));
+  assert.equal(reopened.sceneIndex,2,'Last edited scene must reopen');
+  assert.equal(unsaved.effects['2'].zoom,1.91,'Close must preserve edits');
+  assert.equal(reloaded.effects['2'].zoom,1.91,'Reload must preserve edits');
  }finally{
   await fetch(origin+'/api/produce/mix/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job_id:'scene-style-qa',deco:{scene_style:original.snapshot}})});
   await browser.close();

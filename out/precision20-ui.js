@@ -779,7 +779,7 @@
         for(const [key,value] of Object.entries(saved.text||{}))if(inputs[key]&&key!=='caption')inputs[key].value=value;
       }
       if(context?.text)for(const [key,value] of Object.entries(context.text))if(inputs[key])inputs[key].value=value;
-      if(context?.scenes?.length)showScene(0);
+      if(context?.scenes?.length)showScene(Number.isInteger(saved?.sceneIndex)?saved.sceneIndex:0);
       fittedText.clear();renderEdit();
     },
     show(index){showScene(index);return this.geometry()},

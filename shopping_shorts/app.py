@@ -17760,7 +17760,8 @@ def api_produce_mix_settings(body: dict):
     """3단계 자막제거 등 렌더 전 설정 갱신. body: {job_id, subtitle_removal}."""
     job_id = (body.get("job_id") or "").strip()
     store = Store(DB_PATH)
-    if not job_id or not store.get_mix_job(job_id):
+    job = store.get_mix_job(job_id) if job_id else None
+    if not job:
         return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
     fields = {}
     if "subtitle_removal" in body:
@@ -17777,6 +17778,13 @@ def api_produce_mix_settings(body: dict):
                 fields["deco"]["scene_style"] = validate_snapshot(fields["deco"]["scene_style"])
             except (ValueError, TypeError) as exc:
                 return JSONResponse(status_code=422, content={"ok": False, "error": str(exc)})
+    if "scene_style" in body:
+        from .scene_style import validate_snapshot
+        try:
+            snapshot = validate_snapshot(body["scene_style"])
+        except (ValueError, TypeError) as exc:
+            return JSONResponse(status_code=422, content={"ok": False, "error": str(exc)})
+        fields["deco"] = {**(fields.get("deco") or job.get("deco") or {}), "scene_style": snapshot}
     if "seo" in body:
         fields["seo"] = body.get("seo")  # 6단계 SEO 일습 dict or None
     if fields:
