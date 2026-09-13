@@ -111,7 +111,9 @@ def make_prompts(script, source_text, call, *, log=print):
     #    downward trend line" → 가짜 그래프 화면이 그려졌다. 접미 금지어 16개도 못 막았다).
     #   지시만 있고 판정이 없으면 언젠가 샌다 — 오늘 다섯 번째 같은 병이다.
     for k, v in list(prompts.items()):
-        low = v.lower()
+        # ★접두·접미를 뺀 **본문만** 검사한다 — 접미에 "no legible numbers"가 들어 있어
+        #   그대로 검사하면 모든 프롬프트가 "numbers"에 걸려 전부 빈 방이 된다(시험이 잡았다).
+        low = v[len(spec.IMAGE_PROMPT_PREFIX):].split(spec.IMAGE_PROMPT_SUFFIX)[0].lower()
         hit = next((w for w in spec.PROMPT_SCREEN_WORDS if w in low), None)
         if hit:
             prompts[k] = _no_screen(v, hit)

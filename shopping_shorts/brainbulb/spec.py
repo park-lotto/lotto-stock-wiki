@@ -214,7 +214,13 @@ POLICY_SCENE_MARK_MAX = 0.30
 # profile with a downward trend line»이 가짜 그래프를 그렸다. 지시문만으로는 안 막힌다.
 PROMPT_SCREEN_WORDS = ("computer screen", "smartphone screen", "phone screen", "monitor showing",
                        "social media profile", "subscriber count", "trend line", "graph showing",
-                       "chart showing", "youtube channel", "dashboard", "analytics")
+                       "chart showing", "youtube channel", "dashboard", "analytics",
+                       # ★2차 유출(실측 v6 슬롯11): «digital sign … showing a downward trend icon and
+                       #   blurred numbers» → **신한투자증권 간판 + 종합주가지수 -2,866.93**이 그려졌다.
+                       #   실존 브랜드에 가짜 수치라 앞의 것보다 더 나쁘다. 낱말을 좁게 잡으면 계속 샌다.
+                       "digital sign", "digital display", "electronic sign", "led display",
+                       "billboard", "ticker", "stock", "index", "display showing", "screen showing",
+                       "sign showing", "numbers", "counter", "statistics", "percentage")
 
 # 바꿔 넣을 장면 — 같은 '떠나감·줄어듦'을 사람과 장소로 말한다(볼케이노도 화면 대신 사람을 쓴다).
 PROMPT_SCREEN_FALLBACK = ("A quiet empty room with an unused desk and a chair turned away from the window, "

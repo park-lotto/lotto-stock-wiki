@@ -165,3 +165,23 @@ def test_scene_falls_back_to_gen_when_subtitle_needs_people():
     r = images.make_prompts(script, "소재", lambda _: raw, log=lambda *a: None)
     assert r["sources"]["1"]["kind"] == "gen", "사람 행동 컷이 장소검색으로 갔다"
     assert r["sources"]["2"]["kind"] == "scene", "순수 장소 컷까지 막으면 안 된다"
+
+
+def test_screen_words_cover_second_leak():
+    """★2차 유출 — 낱말을 좁게 잡으면 계속 샌다.
+
+    실측 2026-09-13(v6 슬롯11): «digital sign in a public space showing a downward trend icon
+    and blurred numbers» → **신한투자증권 간판 + 종합주가지수 -2,866.93**이 그려졌다.
+    실존 브랜드에 가짜 수치라 1차 유출(가짜 구독자 수)보다 나쁘다.
+    """
+    for w in ("digital sign", "numbers", "ticker", "stock", "billboard"):
+        assert w in spec.PROMPT_SCREEN_WORDS, w
+
+
+def test_screen_words_do_not_catch_normal_scenes():
+    """멀쩡한 장면까지 막으면 그림이 통째로 빈 방이 된다."""
+    for t in ("a quiet alley at dusk with nobody around",
+              "KTX station platform with a train arriving",
+              "volunteers lifting a wheelchair up stone stairs",
+              "a crowded street market in the afternoon"):
+        assert not any(w in t.lower() for w in spec.PROMPT_SCREEN_WORDS), t
