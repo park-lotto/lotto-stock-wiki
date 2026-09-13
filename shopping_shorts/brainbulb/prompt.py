@@ -108,14 +108,31 @@ ENDING_EXAMPLES = (
 )
 
 
+def _hide_same_story(block, source_text):
+    """소재와 같은 편에서 온 예시 줄을 지운다.
+
+    ★실측 2026-09-13: 박위 기사에 박위 편 예시를 보여주니 카드를 글자까지 그대로 베꼈다
+      («케냐 봉사 갔다가 봉사 받고 왔다는 백만 유튜버»). 같은 소재면 구조를 보는 게 아니라 답을 보는 것이다.
+      기사에 그 편의 고유명사가 있으면 그 편 예시 줄은 통째로 뺀다.
+    """
+    src = source_text or ""
+    out = []
+    for line in block.split("\n"):
+        mark = next((w for w in spec.PROMPT_EXAMPLE_TOPICS if w in line), None)
+        if mark and mark in src:
+            continue                       # 이 줄은 지금 쓰는 기사와 같은 편이다 — 감춘다
+        out.append(line)
+    return "\n".join(out)
+
+
 def build(source_text, *, feedback=""):
     return (
         "너는 '뇌전구' 채널의 숏폼 대본 작가다. 아래 소재(기사)를 **다시 써서** 자막 컷 대본을 만든다.\n"
         "출력은 JSON 하나만. 설명·코드펜스 없이 JSON만.\n\n"
         f"[규칙 — 어기면 반려된다]\n{lint.prompt_block()}\n\n"
         f"[분포 목표 — 실제 채널 8편 실측]\n{TARGETS}\n"
-        f"{CONTENT_RULES}"
-        f"{ENDING_EXAMPLES}\n"
+        f"{_hide_same_story(CONTENT_RULES, source_text)}"
+        f"{_hide_same_story(ENDING_EXAMPLES, source_text)}\n"
         f"[출력 형식 예시]\n{json.dumps(SCHEMA_EXAMPLE, ensure_ascii=False, indent=1)}\n\n"
         f"[소재]\n{source_text.strip()}\n"
         f"{feedback}"

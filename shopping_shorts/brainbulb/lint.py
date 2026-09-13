@@ -116,6 +116,11 @@ def r_card(s, ctx):
         return [Issue("card", REJECT, "title.card", card, "카드는 읽어주는 한 문장입니다 — 낱말로 끊거나 두 문장을 쓰지 않습니다")]
     if len(card) > spec.POLICY_CARD_MAX_CHARS:
         return [Issue("card", REJECT, "title.card", card, f"카드가 너무 깁니다({len(card)}자) — 최소 {len(card) - spec.POLICY_CARD_MAX_CHARS + 6}자를 덜어내 30자 안팎 한 문장으로")]
+    if len(card) > spec.POLICY_CARD_LONG_WARN:
+        # 44자는 띠가 버티는 물리 한도고, 실제로 쓰이는 건 26~33자다(실물 5편 26·27·28·33·33).
+        # 길어지면 반전 없이 기사 문장을 옮긴 것이다(실측 2026-09-13: 40자 카드가 그랬다).
+        return [Issue("card", REJECT, "title.card", card,
+                      f"카드가 {len(card)}자입니다 — 실제 편은 26~33자입니다. 기사 설명을 빼고 **어긋나는 동사 둘**만 남기세요")]
     return []
 
 
