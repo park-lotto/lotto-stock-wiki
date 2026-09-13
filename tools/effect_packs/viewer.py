@@ -22,25 +22,52 @@ def run(cmd):
 
 
 def detect_crop(src, seconds=3):
-    """검은 바탕 위 작은 글자(자막 템플릿)면 글자 영역만 남기는 crop 값을 찾는다. 없으면 None."""
-    import re as _re
-    r = subprocess.run(["ffmpeg", "-v", "info", "-t", str(seconds), "-i", src, "-vf", "cropdetect=limit=24:round=2:reset=0", "-f", "null", "-"],
-                       capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=120)
-    m = _re.findall(r"crop=(\d+):(\d+):(\d+):(\d+)", r.stderr)
-    if not m:
+    """여러 프레임에서 배경색과 다른 픽셀의 영역을 합쳐 crop 값을 만든다. (ffmpeg cropdetect는 어두운
+    얇은 자막에서 음수 폭을 내 무효 — 2026-09-13 실측) 내용이 화면 60% 이상이면 None."""
+    from PIL import Image, ImageChops
+    tmpdir = src + "_cd"
+    os.makedirs(tmpdir, exist_ok=True)
+    run(["ffmpeg", "-v", "error", "-y", "-t", str(seconds), "-i", src, "-vf", "fps=3", os.path.join(tmpdir, "f%02d.png")])
+    frames = sorted(os.listdir(tmpdir))
+    if not frames:
         return None
-    w, h, x, y = map(int, m[-1])
-    pr = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height", "-of", "csv=p=0", src],
-                        capture_output=True, text=True, timeout=30)
-    try:
-        W, H = map(int, pr.stdout.strip().split(",")[:2])
-    except Exception:
+    x0 = y0 = 10 ** 9; x1 = y1 = -1; W = H = None
+    for fn in frames:
+        im = Image.open(os.path.join(tmpdir, fn)).convert("RGB"); W, H = im.size
+        small = im.resize((64, 36)); bgc = max(small.getcolors(64 * 36), key=lambda c: c[0])[1]
+        bb = ImageChops.difference(im, Image.new("RGB", im.size, bgc)).convert("L").point(lambda v: 255 if v > 12 else 0).getbbox()
+        if bb:
+            x0, y0, x1, y1 = min(x0, bb[0]), min(y0, bb[1]), max(x1, bb[2]), max(y1, bb[3])
+    import shutil as _sh; _sh.rmtree(tmpdir, ignore_errors=True)
+    if x1 < 0 or (x1 - x0) * (y1 - y0) > W * H * 0.6:
         return None
-    if w <= 0 or h <= 0 or w * h > W * H * 0.6:   # 화면 대부분이 내용이면 자를 이유 없음
+    w, h = x1 - x0, y1 - y0
+    mx, my = int(w * 0.20) + 8, int(h * 0.30) + 8
+    cx0, cy0, cx1, cy1 = max(0, x0 - mx), max(0, y0 - my), min(W, x1 + mx), min(H, y1 + my)
+    cw, ch = (cx1 - cx0) // 2 * 2, (cy1 - cy0) // 2 * 2   # 짝수
+    if cw < 32 or ch < 16:
         return None
-    mx, my = int(w * 0.20) + 8, int(h * 0.30) + 8   # 여백(옆에서 들어오는 요소 고려)
-    x0, y0 = max(0, x - mx), max(0, y - my); x1, y1 = min(W, x + w + mx), min(H, y + h + my)
-    return f"crop={x1 - x0}:{y1 - y0}:{x0}:{y0}"
+    return f"crop={cw}:{ch}:{cx0}:{cy0}"
+
+
+def best_poster(mp4, out):
+    """미리보기 mp4에서 여러 시점을 뽑아 밝은 내용이 가장 넓은 프레임을 포스터로 쓴다(빈 화면·글자 등장 전 방지)."""
+    from PIL import Image
+    best, best_area = None, -1
+    for t in ("0.3", "0.8", "1.3", "1.9", "2.6", "3.4"):
+        cand = out + f".{t}.png"
+        run(["ffmpeg", "-v", "error", "-y", "-ss", t, "-i", mp4, "-frames:v", "1", "-update", "1", cand])
+        if not os.path.exists(cand):
+            continue
+        im = Image.open(cand).convert("L"); bb = im.point(lambda v: 255 if v > 60 else 0).getbbox()
+        area = (bb[2] - bb[0]) * (bb[3] - bb[1]) if bb else 0
+        if area > best_area:
+            if best and os.path.exists(best): os.remove(best)
+            best, best_area = cand, area
+        else:
+            os.remove(cand)
+    if best:
+        os.replace(best, out)
 
 
 def is_static(mp4):
@@ -85,43 +112,59 @@ def make_previews(pack_dir, pack_id, f):
     if ext in VID:
         if not os.path.exists(thumb):
             # 포스터는 길이의 40% 지점 — 알파 애니메이션은 첫 0.5초가 빈 화면인 게 많다(실측 71장 회색)
-            ss = max(0.3, float(f.get("dur") or 1.0) * 0.4)
-            # ★-frames:v 3 + -update 1 = 마지막(3번째) 프레임을 남긴다. overlay는 영상 프레임이
-            #   배경(color)보다 늦게 도착하면 첫 출력이 배경만이라, 1프레임만 뽑으면 회색 빈 칸이 된다
-            run(["ffmpeg", "-v", "error", "-y", "-ss", f"{ss:.2f}", "-i", src, "-filter_complex", comp, "-frames:v", "3", "-update", "1", thumb])
+            pass   # 포스터는 아래 prev 생성 뒤 best_poster 로 뽑는다
         if not os.path.exists(prev):
             comp_v = f"[0:v]scale={SIZE}:{SIZE}:force_original_aspect_ratio=decrease,format=rgba[f];color=c=0x8c8c8c:s={SIZE}x{SIZE}[bg];[bg][f]overlay=(W-w)/2:(H-h)/2:shortest=1,format=yuv420p"
             run(["ffmpeg", "-v", "error", "-y", "-t", "3", "-i", src, "-filter_complex", comp_v, "-r", "15", "-c:v", "libx264",
                  "-preset", "veryfast", "-crf", "28", "-an", prev])
+        if not os.path.exists(thumb) and os.path.exists(prev):
+            best_poster(prev, thumb)
         if not os.path.exists(big):   # 크게 보기(라이트박스)용 — 원본 비율, 최대 960
             comp_b = f"[0:v]scale=960:960:force_original_aspect_ratio=decrease,format=rgba[f];color=c=0x8c8c8c:s=960x960[bg];[bg][f]overlay=(W-w)/2:(H-h)/2:shortest=1,format=yuv420p"
             run(["ffmpeg", "-v", "error", "-y", "-t", "6", "-i", src, "-filter_complex", comp_b, "-r", "24", "-c:v", "libx264",
                  "-preset", "veryfast", "-crf", "24", "-an", big])
     if ext in MOGRT and not (os.path.exists(thumb) and os.path.exists(prev)):
         try:
-            import zipfile, tempfile
+            import zipfile
+            from PIL import Image, ImageChops
             with zipfile.ZipFile(src) as z:
                 names = z.namelist()
-                if "thumb.png" in names and not os.path.exists(thumb):
-                    from PIL import Image
-                    im = Image.open(z.open("thumb.png")).convert("RGBA"); im.thumbnail((SIZE, SIZE))
-                    bg = Image.new("RGBA", (SIZE, SIZE), (140, 140, 140, 255)); bg.alpha_composite(im, ((SIZE - im.width) // 2, (SIZE - im.height) // 2)); bg.convert("RGB").save(thumb)
-                if "thumb.mp4" in names and not (os.path.exists(prev) and os.path.exists(big)):
-                    tmp = os.path.join(outdir, key + "_src.mp4")
-                    open(tmp, "wb").write(z.read("thumb.mp4"))
-                    cr = detect_crop(tmp)   # 검은 화면 속 작은 자막 → 글자 영역만
-                    pre = (cr + ",") if cr else ""
-                    W2, H2 = SIZE * 2, SIZE + (SIZE % 2)   # ★짝수 크기(홀수면 libx264가 실패해 0바이트)
-                    run(["ffmpeg", "-v", "error", "-y", "-t", "4", "-i", tmp, "-vf", f"{pre}scale={W2}:{H2}:force_original_aspect_ratio=decrease,pad={W2}:{H2}:(ow-iw)/2:(oh-ih)/2:color=0x222222,format=yuv420p", "-r", "15", "-c:v", "libx264", "-preset", "veryfast", "-crf", "26", "-an", prev])
-                    # 크게 보기는 크롭 없이 원본 전체 화면 — 옆에서 들어오는 요소가 잘리지 않게(사장님 캡처 2026-09-13)
-                    run(["ffmpeg", "-v", "error", "-y", "-t", "8", "-i", tmp, "-vf", "scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2:color=0x222222,format=yuv420p", "-r", "24", "-c:v", "libx264", "-preset", "veryfast", "-crf", "24", "-an", big])
-                    os.remove(tmp)
-                    run(["ffmpeg", "-v", "error", "-y", "-ss", "1", "-i", prev, "-frames:v", "1", "-update", "1", thumb])   # 포스터도 크롭본에서
+                W2, H2 = SIZE * 2, SIZE + (SIZE % 2)
+                if "thumb.mp4" in names:
+                    if not (os.path.exists(prev) and os.path.exists(big)):
+                        tmp = os.path.join(outdir, key + "_src.mp4")
+                        open(tmp, "wb").write(z.read("thumb.mp4"))
+                        cr = detect_crop(tmp)   # 검은 화면 속 작은 자막 → 글자 영역만
+                        pre = (cr + ",") if cr else ""
+                        run(["ffmpeg", "-v", "error", "-y", "-t", "4", "-i", tmp, "-vf", f"{pre}scale={W2}:{H2}:force_original_aspect_ratio=decrease,pad={W2}:{H2}:(ow-iw)/2:(oh-ih)/2:color=0x222222,format=yuv420p", "-r", "15", "-c:v", "libx264", "-preset", "veryfast", "-crf", "26", "-an", prev])
+                        # 크게 보기는 크롭 없이 원본 전체 화면 — 옆에서 들어오는 요소가 잘리지 않게
+                        run(["ffmpeg", "-v", "error", "-y", "-t", "8", "-i", tmp, "-vf", "scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2:color=0x222222,format=yuv420p", "-r", "24", "-c:v", "libx264", "-preset", "veryfast", "-crf", "24", "-an", big])
+                        os.remove(tmp)
+                    if not os.path.exists(thumb) and os.path.exists(prev):
+                        best_poster(prev, thumb)   # ★영상이 있으면 포스터는 항상 영상(크롭본)에서 — thumb.png 는 작거나 비어 있는 게 많다
+                if not os.path.exists(thumb) and "thumb.png" in names:
+                    im = Image.open(z.open("thumb.png")).convert("RGB")
+                    # 배경색(가장 흔한 색)과 다른 픽셀의 영역만 잘라 키운다 — 검정뿐 아니라 사진 배경도 대응
+                    small = im.resize((64, 36)); bgc = max(small.getcolors(64 * 36), key=lambda c: c[0])[1]
+                    diff = ImageChops.difference(im, Image.new("RGB", im.size, bgc)).convert("L").point(lambda v: 255 if v > 40 else 0)
+                    bb = diff.getbbox()
+                    if bb and (bb[2] - bb[0]) * (bb[3] - bb[1]) < im.width * im.height * 0.6:
+                        mx, my = int((bb[2] - bb[0]) * 0.20) + 8, int((bb[3] - bb[1]) * 0.30) + 8
+                        im = im.crop((max(0, bb[0] - mx), max(0, bb[1] - my), min(im.width, bb[2] + mx), min(im.height, bb[3] + my)))
+                    im.thumbnail((W2, H2))
+                    bg = Image.new("RGB", (W2, H2), (34, 34, 34)); bg.paste(im, ((W2 - im.width) // 2, (H2 - im.height) // 2)); bg.save(thumb)
         except Exception as e:
             print("  mogrt 미리보기 실패", src, e)
     rel = lambda p: os.path.relpath(p, LIB).replace("\\", "/") if os.path.exists(p) else None
     static = is_static(prev) if os.path.exists(prev) else False
-    return {"thumb": rel(thumb), "prev": rel(prev), "big": rel(big), "static": static, "wide": ext in MOGRT,
+    empty = False
+    try:
+        if os.path.exists(thumb):
+            from PIL import Image
+            empty = Image.open(thumb).convert("L").point(lambda v: 255 if v > 60 else 0).getbbox() is None
+    except Exception:
+        pass
+    return {"thumb": rel(thumb), "prev": rel(prev), "big": rel(big), "static": static, "empty": empty, "wide": ext in MOGRT,
             "src": os.path.relpath(src, LIB).replace("\\", "/")}
 
 
@@ -205,7 +248,7 @@ def main():
                 elif f["ext"] in VID | MOGRT and pv.get("prev"):
                     badge = "mogrt" if f["ext"] in MOGRT else ("α" if f.get("alpha") else "mp4")
                     wide = " wide" if pv.get("wide") else ""
-                    stat = "<span class='stat'>정지형</span>" if pv.get("static") else ""
+                    stat = "<span class='stat'>미리보기 빈 화면(제작자 파일)</span>" if pv.get("empty") else ("<span class='stat'>정지형</span>" if pv.get("static") else "")
                     bigsrc = pv.get("big") or pv["prev"]
                     out.append(f"<div class='cell{wide}' data-big='{html.escape(bigsrc)}' data-kind='video' data-name='{html.escape(name)}'><video class='pv' muted loop playsinline preload='metadata' poster='{pv['thumb'] or ''}' src='{pv['prev']}' title='클릭: 크게 보기'></video><span class='b'>{badge} {f.get('w','')}×{f.get('h','')}</span>{stat}<div class='n' title='{html.escape(name)}'>{html.escape(name)}</div></div>")
                 elif pv.get("thumb"):
