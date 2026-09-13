@@ -17,11 +17,15 @@
 <div class="grid" id="grid"></div>
 <div class="note">
   <b>진행 상황</b><br>
-  ✅ 완성 30종<br>
-  · #14 심플 계열 14: 핑크네온·핫핑크·보라네온·첨자·화날때·뉴스바·도장·이름표상자·타이핑·테두리박스·2줄형·인용구·질문형·밑줄형<br>
-  · #38 환승연애 11: 로워서드바(지혜/성훈)·이름표본문(지혜/성훈)·인용구·본문·손그림라벨박스(분홍/파랑)·팝단어(머뭇/수줍/???)<br>
-  · #4 뉴스 5: 앵커형·헤드라인·은색바·라벨형·프로필형 (ver1=뉴스바)<br>
-  ⏳ 다음 에디션 순서대로 계속 추가<br>
+  ✅ 완성 55종<br>
+  · #14 심플 계열 14 / #38 환승연애 11 / #4 뉴스 5<br>
+  · #41 도장 5 (REJECTED·SUCCESS·FAIL·PASS·ACCEPTED)<br>
+  · #11 첨자 4 (핑크/파랑 첨자·핑크/주황 말풍선)<br>
+  · #12 화날때 3 (불꽃강조·차분·문장형)<br>
+  · #10 예능데코 5 (ㅋㅋㅋ·???·특수문자·우와앙·빗금)<br>
+  · #28 예능강조 4 (별폭발 빨강/파랑·!!!·???)<br>
+  · #42 신서유기 4 (강호동리스트·큰느낌표·ㅋㅋㅋ·이모티콘)<br>
+  ⏳ 남은 에디션: #7 크리스마스 · #13 휘뚤마뚤 · #23 모션 · #44 힐링 (진행 중)<br>
   <br>
   <b>쓰는 법</b>: 이 프리셋들은 숏템메이커 고급효과(Remotion)에 붙일 컴포넌트다. 제작소에서 프리셋 고르고 글자 넣으면 렌더된다(UI 연결은 다음 단계).
 </div>
@@ -59,6 +63,37 @@ const items = [
   {file:'p_n4_v4', name:'#4 뉴스 은색바', desc:'은색 그라데이션 속보 바', status:'done'},
   {file:'p_n4_v5', name:'#4 뉴스 라벨형', desc:'파란 라벨 + 본문 밑줄', status:'done'},
   {file:'p_n4_v6', name:'#4 뉴스 프로필형', desc:'원형 프로필 + 직함 + 이름', status:'done'},
+  // #41 도장 쾅 (5버전)
+  {file:'p_s41_v1', name:'#41 도장 REJECTED', desc:'빨간 이중테두리 + 쾅 등장 + 흔들림', status:'done'},
+  {file:'p_s41_v2', name:'#41 도장 SUCCESS', desc:'글자만 교체', status:'done'},
+  {file:'p_s41_v3', name:'#41 도장 FAIL', desc:'글자만 교체', status:'done'},
+  {file:'p_s41_v4', name:'#41 도장 PASS', desc:'글자만 교체', status:'done'},
+  {file:'p_s41_v5', name:'#41 도장 ACCEPTED', desc:'글자만 교체', status:'done'},
+  // #11 첨자 자막 (색·말풍선 변형)
+  {file:'p_c11_v1', name:'#11 첨자 (핑크)', desc:'흰 글자 + 핑크 외곽선 + 핑크 라벨', status:'done'},
+  {file:'p_c11_v11', name:'#11 첨자 (파랑)', desc:'파랑 외곽선 + 파랑 라벨 색변형', status:'done'},
+  {file:'p_c11_bubble1', name:'#11 말풍선 (핑크)', desc:'둥근 말풍선 라벨(꼬리) + 강조 본문', status:'done'},
+  {file:'p_c11_bubble2', name:'#11 말풍선 (주황)', desc:'주황 말풍선 색변형', status:'done'},
+  // #12 화날때 (불꽃)
+  {file:'p_f12_v1', name:'#12 불꽃 강조', desc:'빨간 글자 + 양옆 🔥 + 강조어', status:'done'},
+  {file:'p_f12_v4', name:'#12 화날때 (차분)', desc:'흰 글자 + 얇은 검은 테두리', status:'done'},
+  {file:'p_f12_v7', name:'#12 불꽃 (문장형)', desc:'긴 대사 불꽃 자막', status:'done'},
+  // #10 예능데코 (단어)
+  {file:'p_d10_1', name:'#10 데코 "ㅋㅋㅋㅋㅋㅋ"', desc:'큰 글자 부들부들 흔들림', status:'done'},
+  {file:'p_d10_2', name:'#10 데코 "???????"', desc:'통통 팝 등장', status:'done'},
+  {file:'p_d10_3', name:'#10 데코 "!@%$#&"', desc:'특수문자 흔들림', status:'done'},
+  {file:'p_d10_4', name:'#10 데코 "우와아앙!!!"', desc:'위에서 쾅 떨어짐', status:'done'},
+  {file:'p_d10_5', name:'#10 데코 "!! //"', desc:'노란 빗금 강조', status:'done'},
+  // #28 예능강조 (별폭발/강조)
+  {file:'p_b28_burst1', name:'#28 별폭발 "이건 아니지!" (빨강)', desc:'만화 폭발 도형 + 2줄', status:'done'},
+  {file:'p_b28_burst2', name:'#28 별폭발 "이건 아니지!" (파랑)', desc:'색 변형', status:'done'},
+  {file:'p_d28_excl', name:'#28 강조 "!!!"', desc:'빨간 느낌표 흔들림', status:'done'},
+  {file:'p_d28_q', name:'#28 강조 "???"', desc:'빨간 물음표 흔들림', status:'done'},
+  // #42 신서유기
+  {file:'p_l42_list', name:'#42 리스트 (강호동 3등)', desc:'헤드라인 + 불릿 항목 순차 등장', status:'done'},
+  {file:'p_d42_excl', name:'#42 큰 느낌표 "!"', desc:'위에서 쾅', status:'done'},
+  {file:'p_d42_kk', name:'#42 "ㅋㅋㅋㅋㅋㅋㅋㅋ"', desc:'흔들림', status:'done'},
+  {file:'p_d42_emo', name:'#42 이모티콘 "*^_^*"', desc:'팝 등장', status:'done'},
 ];
 const g = document.getElementById('grid');
 for (const it of items) {

@@ -43,7 +43,8 @@ export const LilySub: React.FC<LilySubProps> = ({text, highlight, preset, positi
 
   const marginTop = position === 'top' ? '12%' : position === 'bottom' ? '74%' : '42%';
   // 화면 폭을 넘으면 자동 축소(원본은 한 줄이 화면 안에 딱 맞는다). 대략 글자당 폭으로 추정.
-  const estW = text.length * p.fontSize * 0.62 + 160; // 글자폭 + 반짝이 여백
+  // 글자폭 + 반짝이 여백 + (이모지가 있으면 좌우 이모지 폭)
+  const estW = text.length * p.fontSize * 0.62 + 160 + (p.emoji ? p.fontSize * 2.4 : 0);
   const fit = Math.min(1, (width * 0.9) / estW);
 
   const parts: {t: string; hl: boolean}[] = [];

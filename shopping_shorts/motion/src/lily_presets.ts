@@ -76,6 +76,32 @@ export const LILY_PRESETS: Record<string, LilyPreset> = {
     glow: 'rgba(255,120,190,0.5)', sparkle: false, anim: 'pop', fontSize: 84,
     label: {bg: '#ff7ab8', color: '#ffffff'},
   },
+  // #11 첨자 자막 — 흰 글자 + 핑크 외곽선 + 위 핑크 라벨(강조어만 핑크)
+  cheomja_white: {
+    id: 'cheomja_white', name: '릴리 · 첨자(흰글자)',
+    fontFamily: 'TmonMonsori', italic: 6,
+    fillColor: '#ffffff', hlColor: '#ff5fb0', hlStroke: '#ffffff',
+    strokeColor: '#ff7ab8', strokeW: 7,
+    glow: 'rgba(255,120,190,0.45)', sparkle: false, anim: 'pop', fontSize: 84,
+    label: {bg: '#ff7ab8', color: '#ffffff'},
+  },
+  // #11 첨자 — 파랑 라벨 변형
+  cheomja_blue: {
+    id: 'cheomja_blue', name: '릴리 · 첨자(파랑)',
+    fontFamily: 'TmonMonsori', italic: 6,
+    fillColor: '#ffffff', hlColor: '#4db6ff', hlStroke: '#ffffff',
+    strokeColor: '#5a9bd8', strokeW: 7,
+    glow: 'rgba(90,155,216,0.45)', sparkle: false, anim: 'pop', fontSize: 84,
+    label: {bg: '#5a9bd8', color: '#ffffff'},
+  },
+  // #12 화날때 — 흰 글자 차분 버전(불편함을 감출 수 없구나)
+  angry_calm: {
+    id: 'angry_calm', name: '릴리 · 화날때(차분)',
+    fontFamily: 'TmonMonsori', italic: 4,
+    fillColor: '#f2f2f2', hlColor: '#ff6a3d', hlStroke: '#1a1a1a',
+    strokeColor: '#1a1a1a', strokeW: 5,
+    glow: 'rgba(0,0,0,0.4)', sparkle: false, anim: 'fade', fontSize: 80,
+  },
   // #12 화날 때 — 빨간 글자+흰 외곽선, 양옆 불꽃
   angry: {
     id: 'angry', name: '릴리 · 화날때(불꽃)',

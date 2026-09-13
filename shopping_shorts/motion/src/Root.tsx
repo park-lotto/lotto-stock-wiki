@@ -13,6 +13,10 @@ import {LilyLower} from './LilyLower';
 import {LilyHandBox} from './LilyHandBox';
 import {LilyPop} from './LilyPop';
 import {LilyNews} from './LilyNews';
+import {LilyDeco} from './LilyDeco';
+import {LilyBubble} from './LilyBubble';
+import {LilyBurst} from './LilyBurst';
+import {LilyList} from './LilyList';
 import {SwipeLeft} from './SwipeLeft';
 import {Sparkle} from './Sparkle';
 import {ImpactText} from './ImpactText';
@@ -46,6 +50,10 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="LilyHandBox" component={LilyHandBox} durationInFrames={60} fps={30} width={1080} height={1920} defaultProps={{text: '"당신의 x는\\n당신을 선택했습니다"', bg: '#e59ab0', heart: '#e0466a'}} />
     <Composition id="LilyPop" component={LilyPop} durationInFrames={45} fps={30} width={1080} height={1920} defaultProps={{word: '머뭇', color: '#ffffff'}} />
     <Composition id="LilyNews" component={LilyNews} durationInFrames={60} fps={30} width={1080} height={1920} defaultProps={{variant: 'headline', title: '빈대와의 전쟁 시작...', text: '빈대 잡으려다 초가삼간 타 태운다.', color: '#2f6fd0'}} />
+    <Composition id="LilyDeco" component={LilyDeco} durationInFrames={45} fps={30} width={1080} height={1920} defaultProps={{word: 'ㅋㅋㅋㅋㅋㅋ', anim: 'shake', color: '#ffffff'}} />
+    <Composition id="LilyBubble" component={LilyBubble} durationInFrames={60} fps={30} width={1080} height={1920} defaultProps={{label: '첨자 자리 입니당!', text: '엄청나게 귀여운 말풍선 자막!', highlight: '말풍선', labelBg: '#ff7ab8', hlColor: '#ff5fb0'}} />
+    <Composition id="LilyBurst" component={LilyBurst} durationInFrames={45} fps={30} width={1080} height={1920} defaultProps={{text: '이건\\n아니지!', burstColor: '#e23a3a'}} />
+    <Composition id="LilyList" component={LilyList} durationInFrames={75} fps={30} width={1080} height={1920} defaultProps={{head: '강호동 [3등]으로 도착!', items: ['[천하장사] 출신', '대한민국 [국민MC]', '특기 : [잘먹기]'], hlColor: '#ffb000'}} />
     <Composition
       id="LilyTyping"
       component={LilyTyping}
