@@ -1,0 +1,9 @@
+{
+  "5":  {"kind":"hl",     "highlight":"4천이 안 됨"},
+  "9":  {"kind":"lower",  "name":"여친", "color":"#1aa6a6"},
+  "10": {"kind":"react",  "text":"대치동 학부모?!"},
+  "12": {"kind":"lower",  "name":"여친", "color":"#1aa6a6"},
+  "16": {"kind":"bubble"},
+  "17": {"kind":"bubble", "color":"#ff8a3d"},
+  "19": {"kind":"punch"}
+}

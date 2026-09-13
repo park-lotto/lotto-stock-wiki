@@ -213,10 +213,13 @@ cd "$MOTION" && npm install --no-audit --no-fund     # 184 packages, 13초
 
 **② 컷 계획 만들기** `timing.json` → `cuts.json`
 ```bash
-cd "$WORK" && python build_cuts.py                   # 아래 '컷 계획' 참고
-cp cuts.json "$MOTION/cuts.json"
+TRACK="C:/Users/CH/Desktop/로또의 주식/.tracks/릴리자막프리셋"
+python "$TRACK/tools/lilysub/build_cuts.py" "$WORK" "$TRACK/tools/lilysub/plan_예시_블라인드썰.json"
+cp "$WORK/cuts.json" "$MOTION/cuts.json"
 ```
-`build_cuts.py` 의 `PLAN` 이 컷번호 → 스타일 표다. 여기만 고치면 배치가 바뀐다.
+계획 파일을 **안 주면 전부 narr**(박스형)로 깔린다 — 그대로도 영상은 나온다.
+계획은 `{"컷번호": {"kind":..., ...}}` 꼴이고 컷번호는 `timing.groups[].i` 다.
+예시 파일: `tools/lilysub/plan_예시_블라인드썰.json`
 kind 7종: `narr`(박스형) `hl`(형광펜) `lower`(이름표) `bubble`(댓글) `react`(리액션단어) `stamp`(도장) `punch`(빨강마무리)
 `lower` 는 `name`+`color`, `hl` 은 `highlight`(본문에 실제로 있는 낱말이어야 한다 — 없으면 스크립트가 narr 로 되돌리고 경고한다).
 
