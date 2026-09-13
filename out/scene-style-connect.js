@@ -17,6 +17,8 @@
     <label>세로 위치<input data-effect="cy" type="range" min="0.1" max="0.9" step="0.01" value="0.55"></label></div>
     <button class="scene-effects-reset" data-effects-reset>이 장면 효과 초기화</button>`;
   textPanel.after(effectsPanel);
+  const copyEffects=document.createElement('button');copyEffects.className='scene-effects-reset';copyEffects.textContent='이 효과를 다른 장면에도 적용';copyEffects.dataset.effectsAll='';effectsPanel.append(copyEffects);
+  copyEffects.addEventListener('click',()=>{api.copyEffectsToAll();copyEffects.textContent='모든 장면에 적용했어요';setTimeout(()=>copyEffects.textContent='이 효과를 다른 장면에도 적용',1600);});
   if(titleMotion)textPanel.querySelector('.ai-card').after(titleMotion);
   const note=textPanel.querySelector('.ai-card');if(note)note.innerHTML='<b>문구·자막 편집</b><br><span data-connection-status>저장한 설정으로 미리보고 있습니다.</span>';
   const preview=document.querySelector('#a-live-preview'),media=preview.querySelector('.precision-media');
@@ -28,15 +30,26 @@
   function sync(){
     const g=api.geometry(),e=api.effect(),z=Number(e.zoom)||1,h=e.highlight||{},m=h.on?h.mode:'none';
     windowEl.style.top=g.media.top+'%';windowEl.style.height=g.media.height+'%';
-    Object.assign(media.style,{top:'0',height:'100%',objectPosition:'center',transform:`scale(${z})`});
+    const px=(e.panX||0)*(z-1)*preview.clientWidth/2,py=(e.panY||0)*(z-1)*preview.clientHeight*g.media.height/200;
+    Object.assign(media.style,{top:'0',height:'100%',objectPosition:'center',transform:`translate(${px}px,${py}px) scale(${z})`});windowEl.style.cursor=z>1?'grab':'default';
     focus.hidden=m==='none';
     const pw=preview.clientWidth,ph=preview.clientHeight,r=(h.r||.22)*pw,cx=(h.cx??.5)*pw,cy=((h.cy??.55)-g.media.top/100)*ph;
     Object.assign(focus.style,{width:r*2+'px',height:r*2+'px',left:cx-r+'px',top:cy-r+'px',boxShadow:m==='spot'?'0 0 0 3000px #0009':'none'});
     lens.hidden=m!=='zoom';if(lens.src!==media.src)lens.src=media.src;
     const mh=ph*g.media.height/100;
-    Object.assign(lens.style,{width:pw+'px',height:mh+'px',left:r+pw/2-2*cx+'px',top:r+mh/2-2*cy+'px',transform:`scale(${z*2})`});
+    Object.assign(lens.style,{width:pw+'px',height:mh+'px',left:r+pw/2-2*cx+px*2+'px',top:r+mh/2-2*cy+py*2+'px',transform:`scale(${z*2})`});
     if(lastIndex!==g.sceneIndex){lastIndex=g.sceneIndex;updateControls();}
   }
+  let mediaDrag=null;
+  windowEl.addEventListener('pointerdown',event=>{if(event.button!==0)return;const isLens=!!event.target.closest('.scene-focus'),e=structuredClone(api.effect());if(!isLens&&(e.zoom||1)<=1)return;mediaDrag={id:event.pointerId,x:event.clientX,y:event.clientY,isLens,e,rect:preview.getBoundingClientRect()};windowEl.setPointerCapture(event.pointerId);event.preventDefault();});
+  windowEl.addEventListener('pointermove',event=>{
+    if(!mediaDrag||mediaDrag.id!==event.pointerId)return;const d=mediaDrag,e=structuredClone(d.e),dx=(event.clientX-d.x)/d.rect.width,dy=(event.clientY-d.y)/d.rect.height,clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+    if(d.isLens)e.highlight={...e.highlight,cx:clamp((e.highlight.cx??.5)+dx,0,1),cy:clamp((e.highlight.cy??.55)+dy,0,1)};
+    else{const z=e.zoom||1,mh=api.geometry().media.height/100;e.panX=clamp((e.panX||0)+dx*2/(z-1),-1,1);e.panY=clamp((e.panY||0)+dy*2/((z-1)*mh),-1,1);}
+    api.effect(e);sync();updateControls();
+  });
+  for(const type of ['pointerup','pointercancel','lostpointercapture'])windowEl.addEventListener(type,()=>mediaDrag=null);
+  windowEl.addEventListener('dragstart',event=>event.preventDefault());
   function updateControls(){
     const e=api.effect(),h=e.highlight||{};
     effectsPanel.querySelectorAll('[data-effect]').forEach(el=>el.value=({zoom:e.zoom||1,radius:h.r||.22,cx:h.cx??.5,cy:h.cy??.55})[el.dataset.effect]);

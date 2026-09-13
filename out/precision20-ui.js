@@ -96,7 +96,8 @@
   const inputs=Object.fromEntries([...root.querySelectorAll('.layout-a [data-bind]')].map(x=>[x.dataset.bind,x]));
   const value=k=>inputs[k]?.value||' ';
   const rgba=hex=>hex&&/^#[0-9a-f]{6}$/i.test(hex)?hex:'#111111';
-  let sceneContext=null,effects={},branding={};
+  const rememberedBranding=()=>{try{return JSON.parse(localStorage.getItem('scene_style_branding')||'{}')}catch{return {}}};
+  let sceneContext=null,effects={},branding=rememberedBranding();
   const sceneKind=index=>sceneContext?.scenes?.[index]?.kind||(index===0?'hook':'body');
   const frameFor=(p,index=sceneIndex)=>p.mode==='continuous'?p.frame:p[sceneKind(index)];
   const imageFor=(p,index=sceneIndex)=>p.mode==='continuous'?p.frame_image:(sceneKind(index)==='hook'?p.hook_image:p.body_image);
@@ -146,7 +147,7 @@
     const captionCount=captionField.querySelector('[data-count]');if(captionCount)captionCount.hidden=true;
     const sceneLabel=document.createElement('span');sceneLabel.className='caption-scene-index';sceneLabel.dataset.captionSceneIndex='';captionField.querySelector('label').appendChild(sceneLabel);
     const controls=document.createElement('div');controls.className='caption-position';
-    controls.innerHTML='<button type="button" data-caption-placement="title">제목 아래</button><button type="button" data-caption-placement="free">자유 이동</button><label>가림막 너비<input type="range" data-caption-layout="w" min="20" max="100" step="1"></label><label>가림막 높이<input type="range" data-caption-layout="h" min="4" max="25" step="1"></label><label>가림막 색<input type="color" data-caption-layout="background"></label><label>자막 색<input type="color" data-caption-layout="color"></label>';
+    controls.innerHTML='<button type="button" data-caption-placement="title">제목 아래</button><button type="button" data-caption-placement="free">자유 이동</button><label>자막박스 너비<input type="range" data-caption-layout="w" min="20" max="100" step="1"></label><label>자막박스 높이<input type="range" data-caption-layout="h" min="4" max="25" step="1"></label><label>자막박스 색<input type="color" data-caption-layout="background"></label><label>자막 색<input type="color" data-caption-layout="color"></label>';
     const guide=document.createElement('p');guide.className='caption-guide';guide.textContent='대본의 줄바꿈 1개가 장면 1개로 자동 배치됩니다.';
     captionField.append(controls,guide);
   }
@@ -696,7 +697,7 @@
   captionPlacement?.after(moveScope);
   captionPlacement.querySelector('[data-caption-placement="free"]').textContent='위치 옮기기';
   captionPlacement.querySelector('[data-caption-placement="title"]').textContent='위치 초기화';
-  const maskDetails=document.createElement('details');maskDetails.style.gridColumn='1/-1';maskDetails.innerHTML='<summary style="cursor:pointer">가림막 크기 · 색상</summary><div class="caption-position"></div>';
+  const maskDetails=document.createElement('details');maskDetails.style.gridColumn='1/-1';maskDetails.innerHTML='<summary style="cursor:pointer">자막박스 크기 · 색상</summary><div class="caption-position"></div>';
   captionPlacement?.querySelectorAll('label').forEach(label=>maskDetails.querySelector('div').append(label));
   captionPlacement?.append(maskDetails);
   function applyCaptionMoveScope(){
@@ -745,7 +746,7 @@
     try{
       const saved=JSON.parse(localStorage.getItem('scene_style_preset')||'null');
       if(saved){
-        branding=saved.branding||{};
+        branding=Object.keys(saved.branding||{}).length?saved.branding:rememberedBranding();
         if(saved.presetId==='t11'&&saved.text?.channel==='이븐쇼핑')saved.text.channel='숏템메이커';
         for(const [name,map] of Object.entries({fontScales,textOffsets,colors:colorOverrides,fixedLayouts,fixedColors,captionTexts,captionDrags,captionPositions,captionLayouts}))for(const [key,value] of Object.entries(saved[name]||{}))map.set(key,value);
         if(!query.has('preset')&&!query.has('mode')){
@@ -765,7 +766,7 @@
     snapshot:()=>({version:1,mode,presetId:rows[current].id,sceneIndex,frameKind:frameKind(),hookMotion,hookMotionSpeed,branding,text:Object.fromEntries(Object.entries(inputs).map(([k,v])=>[k,v.value])),fontScales:Object.fromEntries(fontScales),textOffsets:Object.fromEntries(textOffsets),colors:Object.fromEntries(colorOverrides),fixedLayouts:Object.fromEntries(fixedLayouts),fixedColors:Object.fromEntries(fixedColors),captionTexts:Object.fromEntries(captionTexts),captionDrags:Object.fromEntries(captionDrags),captionPositions:Object.fromEntries(captionPositions),captionLayouts:Object.fromEntries(captionLayouts),effects}),
     load(context,saved){
       sceneContext=context;
-      branding=saved?.branding||{};
+      branding=Object.keys(saved?.branding||{}).length?saved.branding:rememberedBranding();
       if(saved){
         for(const [name,map] of Object.entries({fontScales,textOffsets,colors:colorOverrides,fixedLayouts,fixedColors,captionTexts,captionDrags,captionPositions,captionLayouts})){
           map.clear();for(const [key,value] of Object.entries(saved[name]||{}))map.set(key,value);
@@ -784,7 +785,8 @@
     show(index){showScene(index);return this.geometry()},
     geometry:()=>({media:mediaBounds(frameFor(rows[current]),rows[current].id),sceneIndex,kind:sceneKind(sceneIndex)}),
     effect(value){if(value!==undefined)effects[String(sceneIndex)]=value;return effects[String(sceneIndex)]||{}},
-    branding(value){if(value!==undefined)branding=value;return branding},
+    copyEffectsToAll(){const value=structuredClone(effects[String(sceneIndex)]||{});for(let i=0;i<sceneTotal();i++)effects[String(i)]=structuredClone(value);},
+    branding(value){if(value!==undefined){branding=value;try{localStorage.setItem('scene_style_branding',JSON.stringify(value));const saved=JSON.parse(localStorage.getItem('scene_style_preset')||'null');if(saved)localStorage.setItem('scene_style_preset',JSON.stringify({...saved,branding:value}));}catch{}}return branding},
     context:()=>sceneContext,
     resetCaptionText(){captionTexts.delete(captionKey());syncCaption();markDirty('caption');renderEdit()},
     refresh(){fittedText.clear();renderEdit()},

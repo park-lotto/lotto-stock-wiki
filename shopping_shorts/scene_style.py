@@ -76,6 +76,8 @@ def validate_snapshot(value):
         if not isinstance(effect,dict):
             raise ValueError("효과 형식이 올바르지 않습니다")
         number(effect.get("zoom",1),1,3)
+        number(effect.get("panX",0),-1,1)
+        number(effect.get("panY",0),-1,1)
         if "masks" in effect:
             from .deco_frame import _norm_masks
             if not isinstance(effect["masks"],list):
@@ -173,7 +175,9 @@ def compose(in_video, timeline, snapshot, out_path, work, headcopy=None):
         zoom,_,_=va.scene_zoom_of({"scene_zoom":effect.get("zoom",1)})
         width=va._OUT_W
         zw,zh=round(width*zoom/2)*2,round(height*zoom/2)*2
-        vf=f"scale={width}:{height}:force_original_aspect_ratio=increase,crop={width}:{height},scale={zw}:{zh},crop={width}:{height},pad={width}:{va._OUT_H}:0:{top}:black,setsar=1"
+        crop_x=round((zw-width)*(1-effect.get("panX",0))/2)
+        crop_y=round((zh-height)*(1-effect.get("panY",0))/2)
+        vf=f"scale={width}:{height}:force_original_aspect_ratio=increase,crop={width}:{height},scale={zw}:{zh},crop={width}:{height}:{crop_x}:{crop_y},pad={width}:{va._OUT_H}:0:{top}:black,setsar=1"
         hl=va.highlight_fc({"scene_hl":effect.get("highlight")},vf,grow=False)
         prefix=f"[1:v]tpad=stop_mode=clone:stop_duration={(last_frame-first_frame)/30}[ink];" if layer.get("animation") else "[1:v]null[ink];"
         graph=prefix+(hl+";" if hl else f"[0:v]{vf}[out];")

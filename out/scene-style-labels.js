@@ -1,15 +1,16 @@
 (()=>{
  const api=window.sceneStyle,preview=document.querySelector('#a-live-preview');if(!api)return;
- const defaults={watermark:{on:false,text:'@숏템메이커',x:5,y:90,size:3,opacity:65,color:'#ffffff'},ad:{on:false,text:'[광고]',x:5,y:4,size:3,opacity:100,color:'#ffffff'}};
+ const defaults={watermark:{on:false,text:'@숏템메이커',x:36,y:90,size:3,opacity:65,color:'#ffffff'},ad:{on:false,text:'[광고]',x:87,y:6,size:3,opacity:100,color:'#ffffff'}};
  const section=document.createElement('details');section.className='scene-label-settings';section.open=true;
- section.innerHTML='<summary>워터마크 · 광고 표시 <small>모든 장면</small></summary>';
+ section.innerHTML='<summary>워터마크 · 광고 표시</summary><small>설정은 자동으로 기억합니다.</small>';
  for(const [key,title] of [['watermark','워터마크'],['ad','광고 표시']]){
    const row=document.createElement('div');row.dataset.brand=key;
-   row.innerHTML=`<label><input type="checkbox" data-brand-field="on"> ${title}</label><div data-brand-options><input type="text" maxlength="40" data-brand-field="text" aria-label="${title} 문구"><label>크기<input type="range" min="1" max="10" step="0.2" data-brand-field="size"></label><label>투명도<input type="range" min="10" max="100" step="1" data-brand-field="opacity"></label><label>색상<input type="color" data-brand-field="color"></label><small>미리보기에서 끌어 위치를 옮기세요.</small></div>`;section.append(row);
+   row.innerHTML=`<label class="brand-toggle"><input type="checkbox" data-brand-field="on"><span>${title}</span></label><div data-brand-options><input type="text" maxlength="40" data-brand-field="text" aria-label="${title} 문구"><details><summary>크기 · 색상</summary><label>크기<input type="range" min="1" max="10" step="0.2" data-brand-field="size"></label><label>투명도<input type="range" min="10" max="100" step="1" data-brand-field="opacity"></label><label>색상<input type="color" data-brand-field="color"></label></details><button type="button" data-brand-reset>기본 위치로</button></div>`;section.append(row);
  }
  document.querySelector('.scene-effects-panel').prepend(section);
  const layer=document.createElement('div');layer.className='scene-brand-layer';preview.append(layer);
  const config=key=>({...defaults[key],...api.branding()[key]});
+ section.addEventListener('click',event=>{if(!event.target.closest('[data-brand-reset]'))return;const key=event.target.closest('[data-brand]').dataset.brand,item=config(key);api.branding({...api.branding(),[key]:{...item,x:defaults[key].x,y:defaults[key].y}});controls();draw();});
  function controls(){section.querySelectorAll('[data-brand]').forEach(row=>{const item=config(row.dataset.brand);row.querySelector('[data-brand-options]').hidden=!item.on;row.querySelectorAll('[data-brand-field]').forEach(input=>{if(input.type==='checkbox')input.checked=item.on;else input.value=item[input.dataset.brandField]})})}
  function draw(){layer.replaceChildren();for(const key of Object.keys(defaults)){const item=config(key);if(!item.on)continue;const el=document.createElement('div');el.className='scene-brand';el.dataset.brandLabel=key;el.textContent=item.text;Object.assign(el.style,{left:item.x+'%',top:item.y+'%',fontSize:preview.clientWidth*item.size/100+'px',opacity:item.opacity/100,color:item.color});layer.append(el)}}
  section.addEventListener('input',event=>{const key=event.target.closest('[data-brand]')?.dataset.brand,field=event.target.dataset.brandField;if(!key||!field)return;const item=config(key);item[field]=event.target.type==='checkbox'?event.target.checked:event.target.type==='range'?Number(event.target.value):event.target.value;api.branding({...api.branding(),[key]:item});controls();draw()});
