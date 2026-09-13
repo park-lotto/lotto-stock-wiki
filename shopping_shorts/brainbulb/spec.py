@@ -208,3 +208,14 @@ POLICY_MAX_SLOTS = 12
 #   뉴스천지 0.567 · 뉴스1 0.365 · 자막캡처 0.675 / 깨끗한 사진 0.000~0.225
 #   한계: MBC 로고(0.197)는 못 잡고, 사진 속 경고표지판(0.327)은 오탐한다.
 POLICY_SCENE_MARK_MAX = 0.30
+
+# 화면·계기판 주문 감지 — 모델이 **없는 채널명과 숫자를 지어내 화면에 박는다**.
+# 실측 2026-09-13: 접미 금지어 16개를 다 넣고도 «computer screen showing a social media
+# profile with a downward trend line»이 가짜 그래프를 그렸다. 지시문만으로는 안 막힌다.
+PROMPT_SCREEN_WORDS = ("computer screen", "smartphone screen", "phone screen", "monitor showing",
+                       "social media profile", "subscriber count", "trend line", "graph showing",
+                       "chart showing", "youtube channel", "dashboard", "analytics")
+
+# 바꿔 넣을 장면 — 같은 '떠나감·줄어듦'을 사람과 장소로 말한다(볼케이노도 화면 대신 사람을 쓴다).
+PROMPT_SCREEN_FALLBACK = ("A quiet empty room with an unused desk and a chair turned away from the window, "
+                          "late afternoon light, nobody present")

@@ -65,6 +65,16 @@ def build_prompt_request(script, source_text):
     )
 
 
+def _no_screen(prompt, hit):
+    """화면·계기판을 주문한 프롬프트를 **사람·장소 장면으로** 바꾼다.
+
+    ★왜 지우는 게 아니라 바꾸나: 문장에서 화면만 빼면 "…를 보여주는"처럼 목적어가 사라져
+      모델이 아무거나 그린다. 대신 같은 감정을 사람·장소로 옮긴 문장을 통째로 쓴다
+      (볼케이노 실측도 «소파에 앉아 휴대폰을 엎어둔 부부»처럼 화면 대신 사람을 쓴다).
+    """
+    return spec.IMAGE_PROMPT_PREFIX + spec.PROMPT_SCREEN_FALLBACK + spec.IMAGE_PROMPT_SUFFIX
+
+
 def make_prompts(script, source_text, call, *, log=print):
     raw = call(build_prompt_request(script, source_text))
     d = _prompt.parse_any(raw)
@@ -85,6 +95,16 @@ def make_prompts(script, source_text, call, *, log=print):
     missing = [s for s in slots if str(s) not in prompts]
     if missing:
         raise RuntimeError(f"images: 프롬프트가 없는 슬롯 {missing}")
+    # ★화면·계기판 주문을 **판정으로** 막는다 — 지시문에 적어놨는데도 모델이 어겼다
+    #   (실측 2026-09-13 v5 슬롯9: "computer screen showing a social media profile with a
+    #    downward trend line" → 가짜 그래프 화면이 그려졌다. 접미 금지어 16개도 못 막았다).
+    #   지시만 있고 판정이 없으면 언젠가 샌다 — 오늘 다섯 번째 같은 병이다.
+    for k, v in list(prompts.items()):
+        low = v.lower()
+        hit = next((w for w in spec.PROMPT_SCREEN_WORDS if w in low), None)
+        if hit:
+            prompts[k] = _no_screen(v, hit)
+            log(f"[brainbulb.prompts] 슬롯 {k} 화면 주문(«{hit}») — 사람·장소로 바꿈")
     # 사진 종류·검색어 — 없거나 이상하면 gen으로 (판정은 여기 한 곳)
     sources = {}
     for k in prompts:

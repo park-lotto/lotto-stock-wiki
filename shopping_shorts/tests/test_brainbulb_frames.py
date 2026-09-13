@@ -122,3 +122,27 @@ def test_pipeline_with_fake_images_and_memes_renders(tmp_path):
     assert d["images"]["files"]["1"].endswith("01.png")
     assert [x["kind"] for x in d["frames"]["timeline"]] == ["card", "img", "img", "meme", "meme"]
     assert d["review"]["ok"], d["review"]
+
+
+def test_screen_orders_are_replaced():
+    """★화면·계기판 주문은 판정으로 막는다 — 지시문만으론 샌다.
+
+    실측 2026-09-13(v5 슬롯9): "computer screen showing a social media profile with a
+    downward trend line"이 접미 금지어 16개를 뚫고 **가짜 그래프**를 그렸다.
+    지시문에 "화면을 주문하지 마라"가 이미 있었는데도 모델이 어겼다.
+    """
+    script = {"groups": [{"text": "x", "color": "WHITE", "role": "NARR", "img": 1},
+                         {"text": "y", "color": "WHITE", "role": "NARR", "img": 2}]}
+    raw = json.dumps({"cast": {},
+                      "prompts": {"1": "a computer screen showing a subscriber count dropping",
+                                  "2": "a quiet alley at dusk with nobody around"}})
+    r = images.make_prompts(script, "소재", lambda _: raw, log=lambda *a: None)
+    assert "computer screen" not in r["prompts"]["1"].lower(), "화면 주문이 그대로 남았다"
+    assert "subscriber count" not in r["prompts"]["1"].lower()
+    assert "quiet alley" in r["prompts"]["2"], "멀쩡한 장면까지 바꾸면 안 된다"
+
+
+def test_screen_words_cover_known_leaks():
+    """실제로 샜던 표현이 목록에 있나."""
+    for w in ("computer screen", "social media profile", "subscriber count", "trend line"):
+        assert w in spec.PROMPT_SCREEN_WORDS, w
