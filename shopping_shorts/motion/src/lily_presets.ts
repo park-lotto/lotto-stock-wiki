@@ -102,6 +102,39 @@ export const LILY_PRESETS: Record<string, LilyPreset> = {
     strokeColor: '#1a1a1a', strokeW: 5,
     glow: 'rgba(0,0,0,0.4)', sparkle: false, anim: 'fade', fontSize: 80,
   },
+  // #13 휘뚤마뚤 — 레트로 컬러(노랑 글자+주황 외곽선, 첨자 라벨)
+  retro_yellow: {
+    id: 'retro_yellow', name: '릴리 · 레트로 컬러',
+    fontFamily: 'TmonMonsori', italic: 4,
+    fillColor: '#ffd23d', hlColor: '#ff8a3d', hlStroke: '#7a3a00',
+    strokeColor: '#7a3a00', strokeW: 6,
+    glow: 'rgba(255,160,60,0.4)', sparkle: false, anim: 'pop', fontSize: 84,
+    label: {bg: '#ffb000', color: '#5a2a00'},
+  },
+  // #13 휘뚤마뚤 — 네온 초록
+  neon_green: {
+    id: 'neon_green', name: '릴리 · 네온 초록',
+    fontFamily: 'TmonMonsori', italic: 6,
+    fillColor: '#ffffff', hlColor: '#7dff8a', hlStroke: '#ffffff',
+    strokeColor: '#3ad14a', strokeW: 7,
+    glow: 'rgba(80,230,110,0.6)', sparkle: true, anim: 'pop', fontSize: 90,
+  },
+  // #23 모션 — 무지개(강조어만 다른 색; 본문 흰 글자)
+  rainbow: {
+    id: 'rainbow', name: '릴리 · 무지개',
+    fontFamily: 'TmonMonsori', italic: 6,
+    fillColor: '#ffffff', hlColor: '#ff5fb0', hlStroke: '#ffffff',
+    strokeColor: '#9b6bff', strokeW: 7,
+    glow: 'rgba(150,90,255,0.5)', sparkle: true, anim: 'bounce', fontSize: 88,
+  },
+  // #23 모션 — 하늘 파랑
+  sky_blue: {
+    id: 'sky_blue', name: '릴리 · 하늘 파랑',
+    fontFamily: 'TmonMonsori', italic: 6,
+    fillColor: '#ffffff', hlColor: '#4db6ff', hlStroke: '#ffffff',
+    strokeColor: '#2f8fd8', strokeW: 7,
+    glow: 'rgba(80,170,240,0.55)', sparkle: true, anim: 'pop', fontSize: 88,
+  },
   // #12 화날 때 — 빨간 글자+흰 외곽선, 양옆 불꽃
   angry: {
     id: 'angry', name: '릴리 · 화날때(불꽃)',

@@ -17,15 +17,14 @@
 <div class="grid" id="grid"></div>
 <div class="note">
   <b>진행 상황</b><br>
-  ✅ 완성 55종<br>
-  · #14 심플 계열 14 / #38 환승연애 11 / #4 뉴스 5<br>
-  · #41 도장 5 (REJECTED·SUCCESS·FAIL·PASS·ACCEPTED)<br>
-  · #11 첨자 4 (핑크/파랑 첨자·핑크/주황 말풍선)<br>
-  · #12 화날때 3 (불꽃강조·차분·문장형)<br>
-  · #10 예능데코 5 (ㅋㅋㅋ·???·특수문자·우와앙·빗금)<br>
-  · #28 예능강조 4 (별폭발 빨강/파랑·!!!·???)<br>
-  · #42 신서유기 4 (강호동리스트·큰느낌표·ㅋㅋㅋ·이모티콘)<br>
-  ⏳ 남은 에디션: #7 크리스마스 · #13 휘뚤마뚤 · #23 모션 · #44 힐링 (진행 중)<br>
+  ✅ 완성 69종 (에디션 12개)<br>
+  · #14 심플 14 / #38 환승연애 11 / #4 뉴스 5 / #41 도장 5<br>
+  · #11 첨자 4 / #12 화날때 3 / #10 예능데코 5 / #28 예능강조 4 / #42 신서유기 4<br>
+  · #7 크리스마스 4 (네온·아이콘라벨·트리씬·이름표바)<br>
+  · #44 힐링 3 (중괄호·감성한줄·커피로워서드)<br>
+  · #13 휘뚤마뚤 4 (기본·레트로·네온·화살표)<br>
+  · #23 모션 3 (무지개·하늘파랑·새해)<br>
+  ⏳ 각 에디션 나머지 색·문구 변형은 같은 컴포넌트에 값만 바꿔 계속 추가<br>
   <br>
   <b>쓰는 법</b>: 이 프리셋들은 숏템메이커 고급효과(Remotion)에 붙일 컴포넌트다. 제작소에서 프리셋 고르고 글자 넣으면 렌더된다(UI 연결은 다음 단계).
 </div>
@@ -94,6 +93,24 @@ const items = [
   {file:'p_d42_excl', name:'#42 큰 느낌표 "!"', desc:'위에서 쾅', status:'done'},
   {file:'p_d42_kk', name:'#42 "ㅋㅋㅋㅋㅋㅋㅋㅋ"', desc:'흔들림', status:'done'},
   {file:'p_d42_emo', name:'#42 이모티콘 "*^_^*"', desc:'팝 등장', status:'done'},
+  // #7 크리스마스
+  {file:'p_x7_v2', name:'#7 네온 Merry Christmas', desc:'붉은 네온 글로우 + 눈사람', status:'done'},
+  {file:'p_x7_v3', name:'#7 아이콘 라벨', desc:'🎄 라벨 + 흰테두리 본문 + 강조', status:'done'},
+  {file:'p_x7_v7', name:'#7 트리 씬', desc:'큰 트리 + "크리스마스 밤" 색밴드', status:'done'},
+  {file:'p_x7_v8', name:'#7 아이콘 이름표바', desc:'🎄 이름표 + 흰 자막바', status:'done'},
+  // #44 힐링 감성
+  {file:'p_h44_v4', name:'#44 중괄호 { LOVE MYSELF }', desc:'부제 + serif 중괄호 강조', status:'done'},
+  {file:'p_h44_v3', name:'#44 감성 한줄', desc:'위아래 얇은 선 + 부드러운 본문', status:'done'},
+  {file:'p_h44_v10', name:'#44 커피 로워서드', desc:'이름표 | 잔잔한 한 줄', status:'done'},
+  // #13 휘뚤마뚤 예능
+  {file:'p_m13_v1', name:'#13 기본 자막', desc:'부제 + 큰 본문, 깔끔', status:'done'},
+  {file:'p_m13_v12', name:'#13 레트로 컬러', desc:'노랑 글자 + 주황 강조 + 라벨', status:'done'},
+  {file:'p_m13_v5', name:'#13 네온 초록', desc:'초록 네온 + 반짝이', status:'done'},
+  {file:'p_m13_v10', name:'#13 화살표 띄용', desc:'핑크 팝 단어', status:'done'},
+  // #23 모션 예능
+  {file:'p_o23_v3', name:'#23 무지개', desc:'흰 글자 + 보라 글로우 + 강조', status:'done'},
+  {file:'p_o23_v4', name:'#23 하늘 파랑', desc:'파랑 글로우 색변형', status:'done'},
+  {file:'p_o23_v1', name:'#23 새해 (2024)', desc:'초록 네온 + 라벨', status:'done'},
 ];
 const g = document.getElementById('grid');
 for (const it of items) {
