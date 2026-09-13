@@ -65,7 +65,7 @@ def gemini_llm(model="gemini-3.1-flash-lite", api_key=None, env_file=None):
     return call
 
 
-def gemini_reviewer(model="gemini-2.5-flash-lite", api_key=None, env_file=None):
+def gemini_reviewer(model="gemini-3.1-flash-lite", api_key=None, env_file=None):
     """→ call(prompt, image_path) -> str. **그림을 실제로 보고** 판정하게 한다.
 
     ★프롬프트 낱말을 막는 방식은 계속 샌다(실측 2026-09-13: computer screen을 막으니

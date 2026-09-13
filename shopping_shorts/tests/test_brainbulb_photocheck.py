@@ -178,3 +178,19 @@ def test_old_field_name_still_read():
     raw = json.dumps({"verdict": "accepted", "visual_kind": "photo",
                       "legible_text": ["가짜 주가지수"], "matches_subtitle": True, "reason": ""})
     assert photocheck.parse_review(raw)["verdict"] == "retry"
+
+
+def test_reviewer_default_model_catches_fake_records():
+    """★기본 검수 모델을 바꿀 때 이 시험을 보라.
+
+    실측 2026-09-13, 같은 가짜 주가지수 그림:
+      gemini-2.5-flash       retry
+      gemini-3.1-flash-lite  retry     ← 기본
+      gemini-2.5-flash-lite  accepted  ← 놓친다. 기본이었다가 교체.
+    ★커밋 메시지에 '교체했다'고 적고 실제로는 안 바뀐 적이 있다(같은 날) — 그래서 시험으로 박는다.
+    """
+    import inspect
+    from shopping_shorts.brainbulb import providers
+    got = inspect.signature(providers.gemini_reviewer).parameters["model"].default
+    assert got != "gemini-2.5-flash-lite", "가짜 기록을 놓치는 모델이 기본이다"
+    assert got == "gemini-3.1-flash-lite", got
