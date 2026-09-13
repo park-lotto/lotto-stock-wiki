@@ -6,23 +6,25 @@
 <style>
 *{box-sizing:border-box}body{margin:0;background:#121b21;color:#f0eadc;font:15px/1.6 system-ui,sans-serif}header{padding:22px 4vw;display:flex;align-items:center;gap:24px;border-bottom:1px solid #ffffff18}strong{letter-spacing:4px}header span{color:#c3b697;font-size:13px}main{max-width:1600px;margin:auto;padding:25px 4vw}h1{font-size:28px;margin:0 0 5px;font-weight:500}p{margin:0;color:#aaaeb0}nav{display:flex;gap:8px;flex-wrap:wrap;margin:22px 0}button,a{font:inherit;color:inherit}button{cursor:pointer;border:1px solid #626569;background:transparent;border-radius:5px;padding:9px 19px}button[aria-pressed=true]{background:#d7bd87;color:#152027;border-color:#d7bd87}.stage{margin:0;background:#0b1217;border:1px solid #ffffff15;border-radius:9px;overflow:hidden}.stage img{display:block;width:100%;max-height:75vh;object-fit:contain}figcaption{padding:13px 20px;color:#c9c0ac;display:flex;justify-content:space-between;gap:15px}.note{margin-top:18px;font-size:13px}a{color:#d7bd87}footer{padding:20px 0;color:#9aa4a8;font-size:12px}@media(max-width:700px){header{gap:12px;flex-wrap:wrap}h1{font-size:23px}figcaption{flex-direction:column}.stage img{min-height:250px}}
 </style>
-<header><strong>MAKERS LAB</strong><span>건설 검토 / 본사 01</span></header>
+<header><strong>MAKERS LAB</strong><span>건설 검토 / 본사 · 소재와 실내 02</span></header>
 <main>
 <h1>A안의 본사부터, 한 동씩.</h1>
-<p>중앙 유리 로비 · 석재 프레임 · 계단식 테라스 정원</p>
+<p>결이 있는 석재 · 짙은 브론즈 · 월넛과 패브릭 · 창 너머의 업무 공간</p>
 <nav aria-label="검토 시점">
 <button data-view="day" aria-pressed="true">주간 외관</button>
 <button data-view="night" aria-pressed="false">야간 외관</button>
 <button data-view="entry" aria-pressed="false">입구 가까이</button>
 <button data-view="lobby" aria-pressed="false">로비 내부</button>
+<button data-view="window" aria-pressed="false">창 너머 실내</button>
+<button data-view="before" aria-pressed="false">수정 전 외관</button>
 <button data-view="reference" aria-pressed="false">승인 A 시안</button>
 </nav>
-<figure class="stage"><img id="view" src="hq-day.png" alt="본사 주간 Blender 렌더"><figcaption><span id="caption">주간 외관 · 실제 Blender 모델 렌더</span><a id="original" href="hq-day.png" target="_blank" rel="noopener">원본 크게 열기 ↗</a></figcaption></figure>
+<figure class="stage"><img id="view" src="hq-premium-day.png" alt="본사 소재와 실내 보강 주간 Blender 렌더"><figcaption><span id="caption">주간 외관 · 소재와 실내 보강 · 실제 Blender 렌더</span><a id="original" href="hq-premium-day.png" target="_blank" rel="noopener">원본 크게 열기 ↗</a></figcaption></figure>
 <p class="note">실제 3D 모델의 고정 시점 렌더를 검토하는 페이지입니다. 이 페이지 자체는 자유 회전·보행 화면이 아닙니다. 조경·실내는 1차 설계이며, 직원·실제 업무 시스템은 아직 연결하지 않았습니다.</p>
 <footer><a href="../campus/">기존 캠퍼스 보기</a> · 기존 전체 배치는 보존했습니다. 이번 검토 범위는 메이커스랩 본사 한 동입니다.</footer>
 </main>
 <script>
-const views={day:['hq-day.png','주간 외관 · 실제 Blender 모델 렌더'],night:['hq-night.png','야간 외관 · 같은 모델과 같은 카메라, 조명 변경'],entry:['hq-entry.png','입구 근접 · 유리 출입문과 캐노피'],lobby:['hq-lobby.png','로비 내부 · 리셉션, 계단, 메자닌'],reference:['../campus/a-day-night-reference.png','승인 A 시안 · 생성 이미지이며 실제 3D 렌더가 아닙니다']};
+const views={day:['hq-premium-day.png','주간 외관 · 소재와 실내 보강 · 실제 Blender 렌더'],night:['hq-premium-night.png','야간 외관 · 같은 모델과 같은 카메라, 조명 변경'],entry:['hq-premium-entry.png','입구 근접 · 석재 결, 브론즈 마감, 유리 출입문'],lobby:['hq-premium-lobby.png','로비 내부 · 석재 리셉션, 월넛 벽, 패브릭 라운지'],window:['hq-premium-window.png','창 너머 실내 · 업무석, 라운지, 책장과 천장 조명'],before:['hq-day.png','수정 전 외관 · 같은 카메라의 v2 렌더'],reference:['../campus/a-day-night-reference.png','승인 A 시안 · 생성 이미지이며 실제 3D 렌더가 아닙니다']};
 document.querySelectorAll('button[data-view]').forEach(button=>button.addEventListener('click',()=>{const [src,label]=views[button.dataset.view];document.querySelector('#view').src=src;document.querySelector('#view').alt=label;document.querySelector('#caption').textContent=label;document.querySelector('#original').href=src;document.querySelectorAll('button[data-view]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));}));
 </script>
 </html>
