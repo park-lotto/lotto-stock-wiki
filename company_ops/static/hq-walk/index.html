@@ -1,0 +1,10 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>메이커스랩 본사 · 직접 둘러보기</title><link rel="icon" href="data:,"><link rel="stylesheet" href="walk.css"></head>
+<body><canvas id="scene" tabindex="0" aria-label="메이커스랩 본사 3D 공간"></canvas>
+<header><strong>MAKERS LAB</strong><span>본사 / 실제 3D 둘러보기</span><a href="../hq-building/">고화질 렌더 비교 ↗</a></header>
+<nav aria-label="이동 모드"><button id="orbit" aria-pressed="true">외관 회전</button><button id="walk" aria-pressed="false">직접 걷기</button><select id="place" aria-label="위치 바로가기"><option value="">위치 바로가기</option value="entrance">정문 앞</option><option value="lobby">1층 로비</option><option value="office">1층 업무실</option><option value="lounge">1층 라운지</option><option value="stairs">중층 계단 앞</option><option value="mezzanine">중층 회랑</option><option value="meeting">2층 회의실</option><option value="third">3층 업무실</option></select><button id="night" aria-pressed="false">야간</button></nav>
+<section id="loading" role="status">본사 3D 모델 불러오는 중…<small>첫 로딩에는 모델 약 34MB를 불러옵니다.</small></section>
+<div id="crosshair" hidden>+</div><div id="hint">드래그: 회전 · 휠: 확대 / 축소</div>
+<div id="touch" aria-label="보행 조작" hidden><button data-key="KeyW" aria-label="앞으로">↑</button><div><button data-key="KeyA" aria-label="왼쪽">←</button><button data-key="KeyS" aria-label="뒤로">↓</button><button data-key="KeyD" aria-label="오른쪽">→</button></div></div>
+<footer><span id="status">연결 준비 중</span><span>실시간 조명은 렌더와 다릅니다 · 전층 연결 계단/엘리베이터·워커 미구현</span></footer>
+<script type="module">import('./walk.bundle.js').catch(e=>{console.error(e);document.querySelector('#loading').hidden=false;document.querySelector('#loading').textContent='3D 화면을 열지 못했습니다. 새로고침해 주세요.';});</script>
+</body></html>
