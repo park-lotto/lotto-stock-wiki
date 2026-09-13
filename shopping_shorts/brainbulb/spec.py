@@ -219,3 +219,9 @@ PROMPT_SCREEN_WORDS = ("computer screen", "smartphone screen", "phone screen", "
 # 바꿔 넣을 장면 — 같은 '떠나감·줄어듦'을 사람과 장소로 말한다(볼케이노도 화면 대신 사람을 쓴다).
 PROMPT_SCREEN_FALLBACK = ("A quiet empty room with an unused desk and a chair turned away from the window, "
                           "late afternoon light, nobody present")
+
+# 자막이 사람의 행동을 말하는 표지 — 이런 컷은 scene(장소 검색)으로 못 채운다.
+# 실측 2026-09-13: «사람들 도움을 받음»에 «좁은 골목길»로 검색해 빈 밤골목이 왔다.
+PROMPT_PERSON_WORDS = ("사람", "사람들", "받았", "받음", "받는", "도왔", "도움", "들어 올", "들어올",
+                       "부축", "찾았", "찾아", "만났", "만나", "안았", "업고", "밀어", "탔다", "타고",
+                       "함께", "같이", "둘러", "모였", "모여")

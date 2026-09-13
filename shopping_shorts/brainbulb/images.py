@@ -65,6 +65,17 @@ def build_prompt_request(script, source_text):
     )
 
 
+def _needs_person(script, slot):
+    """그 슬롯 자막이 **사람의 행동**을 말하나 — 그러면 장소 검색으로는 못 채운다.
+
+    실측 2026-09-13(v5): «사람들 도움을 받음»·«휠체어 타고 찾았음»에 장소만 검색해
+      빈 골목·지붕 사진이 왔다. 사람이 나와야 하는 컷은 생성으로 보낸다.
+    """
+    txt = " ".join(g.get("text", "") for g in script.get("groups") or []
+                   if str(g.get("img")) == str(slot))
+    return any(w in txt for w in spec.PROMPT_PERSON_WORDS)
+
+
 def _no_screen(prompt, hit):
     """화면·계기판을 주문한 프롬프트를 **사람·장소 장면으로** 바꾼다.
 
@@ -113,6 +124,13 @@ def make_prompts(script, source_text, call, *, log=print):
         query = (v.get("query") or "").strip()
         if kind not in spec.PHOTO_KINDS or (kind in ("real", "variant", "scene") and not query):
             kind, query = "gen", ""
+        # ★자막이 **사람의 행동**을 말하는 컷은 scene(장소 검색)으로 보내지 않는다.
+        #   실측 2026-09-13 v5: «휠체어 타고 케냐 슬럼가를 찾았음»에 «케냐 슬럼가 골목»으로 검색해
+        #   지붕만 찍힌 사진이 왔고, «사람들 도움을 받음»에는 깜깜한 빈 골목이 왔다.
+        #   지시문에 "사람이 필요하면 gen으로"가 있었는데도 안 지켜졌다 — 판정으로 막는다.
+        if kind == "scene" and _needs_person(script, k):
+            kind, query = "gen", ""
+            log(f"[brainbulb.prompts] 슬롯 {k} 자막이 사람의 행동 — 장소검색 대신 생성")
         sources[k] = {"kind": kind, "query": query}
     from collections import Counter
     c = Counter(v["kind"] for v in sources.values())

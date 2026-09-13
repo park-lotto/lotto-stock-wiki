@@ -146,3 +146,22 @@ def test_screen_words_cover_known_leaks():
     """실제로 샜던 표현이 목록에 있나."""
     for w in ("computer screen", "social media profile", "subscriber count", "trend line"):
         assert w in spec.PROMPT_SCREEN_WORDS, w
+
+
+def test_scene_falls_back_to_gen_when_subtitle_needs_people():
+    """★자막이 사람의 행동을 말하면 장소 검색으로 못 채운다.
+
+    실측 2026-09-13(v5): «휠체어 타고 케냐 슬럼가를 찾았음»에 «케냐 슬럼가 골목»으로 검색해
+    지붕만 찍힌 사진이, «사람들 도움을 받음»에는 깜깜한 빈 골목이 왔다.
+    지시문에 "사람이 필요하면 gen으로"가 있었는데도 안 지켜져 판정을 붙였다.
+    """
+    script = {"groups": [{"text": "휠체어 타고 케냐", "color": "WHITE", "role": "NARR", "img": 1},
+                         {"text": "슬럼가를 찾았음", "color": "WHITE", "role": "NARR", "img": 1},
+                         {"text": "사건의 시작은", "color": "WHITE", "role": "NARR", "img": 2},
+                         {"text": "열차 내 사고였음", "color": "WHITE", "role": "NARR", "img": 2}]}
+    raw = json.dumps({"cast": {}, "prompts": {"1": "kenya alley", "2": "ktx platform"},
+                      "sources": {"1": {"kind": "scene", "query": "케냐 슬럼가 골목"},
+                                  "2": {"kind": "scene", "query": "KTX 승강장"}}})
+    r = images.make_prompts(script, "소재", lambda _: raw, log=lambda *a: None)
+    assert r["sources"]["1"]["kind"] == "gen", "사람 행동 컷이 장소검색으로 갔다"
+    assert r["sources"]["2"]["kind"] == "scene", "순수 장소 컷까지 막으면 안 된다"
