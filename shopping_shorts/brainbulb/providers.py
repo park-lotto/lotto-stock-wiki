@@ -71,6 +71,13 @@ def gemini_reviewer(model="gemini-2.5-flash-lite", api_key=None, env_file=None):
     ★프롬프트 낱말을 막는 방식은 계속 샌다(실측 2026-09-13: computer screen을 막으니
       digital sign으로, 그걸 막으니 또 다른 표현으로 나왔다). 만든 그림을 보고 판정해야
       새 표현도 잡힌다. 볼케이노도 같은 구조다 — review_policy={"provider":"client"}.
+
+    ★모델마다 판정이 다르다(실측 2026-09-13, 같은 가짜 주가지수 그림):
+        gemini-2.5-flash       retry  ['종합주가지수 -2,886.93', '신한투자증권']
+        gemini-3.1-flash-lite  retry  ['-2,886.93']
+        gemini-2.5-flash-lite  accepted []          ← 놓친다. 기본에서 뺐다.
+      3.1-flash-lite는 옷의 MIRACLE·정상 사진은 통과시켜 오탐도 없었다(3/3 정답).
+    ★무료 한도는 하루 20건이라 한 편(11장)을 두 번 못 돌린다 — 유료 전환이 필요하다.
     """
     key = api_key or _env_key("GEMINI_API_KEY", env_file)
     if not key:
