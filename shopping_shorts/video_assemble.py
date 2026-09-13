@@ -1086,9 +1086,17 @@ def cap_preset_key(txt):
       화면에 보이는 줄은 _strip_cap_tail로 마침표가 떼여 있으므로, 사장님이 그 줄을 그대로
       나눠 저장하면 저장은 통과하지만 렌더에서는 narration의 마침표 때문에 대조가 깨져
       **조용히 규칙 폴백**으로 내려갔다 = "저장은 되는데 최종렌더에 반영 안 됨"(2026-08-26 제보).
+
+    ★공백은 **유니코드 공백 전부**를 뗀다(2026-09-13 고객 제보 "1챕터 훅만 경계 클릭이 안 먹음").
+      종전엔 ASCII 4종(space/tab/CR/LF)만 떼서, 대사에 **NBSP(\\xa0)**가 섞인 칸은
+      대조가 영영 깨졌다 — 화면(JS)은 어절을 `\\s+`로 쪼개는데 그 정규식은 NBSP도 공백으로
+      보고 지워 버리므로, 다시 이어붙인 글자에는 NBSP가 없다. 그래서 키가 서로 달라
+      caplines가 422로 거절 → 버튼을 눌러도 **아무 일이 안 일어난다**.
+      실측(job e020944ae71f, beat 0 '냉동실에\\xa0 그냥'): 2챕터는 NBSP가 없어 정상 동작,
+      1챕터만 실패 = "챕터마다 다르다"의 진짜 이유. 붙여넣기 대사에 NBSP는 흔하다.
     """
-    drop = set(_CAP_TRIM_TAIL) | set(chr(32)+chr(9)+chr(10)+chr(13))
-    return "".join(ch for ch in (txt or "") if ch not in drop)
+    drop = set(_CAP_TRIM_TAIL)
+    return "".join(ch for ch in (txt or "") if ch not in drop and not ch.isspace())
 
 
 def _wrap_long(segs, manual=False):
