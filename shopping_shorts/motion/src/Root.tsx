@@ -1,4 +1,5 @@
-import {Composition} from 'remotion';
+import {Composition, staticFile, continueRender, delayRender} from 'remotion';
+import {LilySub} from './LilySub';
 import {SwipeLeft} from './SwipeLeft';
 import {Sparkle} from './Sparkle';
 import {ImpactText} from './ImpactText';
@@ -8,8 +9,32 @@ import {CalloutCard} from './CalloutCard';
 import {SceneRemotion} from './SceneRemotion';
 import {FullReel} from './FullReel';
 
+// 릴리리아 자막용 폰트를 @font-face로 등록(Remotion public/). 없으면 다른 폰트로 그려져 느낌이 깨진다.
+const lilyFontHandle = delayRender('lily-font');
+if (typeof document !== 'undefined') {
+  const style = document.createElement('style');
+  style.textContent = `@font-face{font-family:'TmonMonsori';src:url('${staticFile('fonts/TmonMonsori.ttf')}') format('truetype');font-weight:900;}`;
+  document.head.appendChild(style);
+  const f = new FontFace('TmonMonsori', `url('${staticFile('fonts/TmonMonsori.ttf')}')`);
+  f.load().then((loaded) => {
+    (document as unknown as {fonts: {add: (x: FontFace) => void}}).fonts.add(loaded);
+    continueRender(lilyFontHandle);
+  }).catch(() => continueRender(lilyFontHandle));
+} else {
+  continueRender(lilyFontHandle);
+}
+
 export const RemotionRoot: React.FC = () => (
   <>
+    <Composition
+      id="LilySub"
+      component={LilySub}
+      durationInFrames={60}
+      fps={30}
+      width={1080}
+      height={1920}
+      defaultProps={{text: '이게 정말 진정한 행복 같아요!', highlight: '행복', preset: 'hee_pink', position: 'mid'}}
+    />
     <Composition id="SwipeLeft" component={SwipeLeft} durationInFrames={18} fps={30} width={720} height={1280} />
     <Composition id="Sparkle" component={Sparkle} durationInFrames={30} fps={30} width={300} height={300} />
     <Composition

@@ -1,0 +1,39 @@
+// 릴리리아(by. Lily) 자막 스타일 프리셋. deco_frame.PRESETS 처럼 한 곳에서 관리한다.
+// 새 스타일을 추가할 때 여기 항목만 늘리면 된다(컴포넌트는 그대로).
+export type LilyPreset = {
+  id: string;
+  name: string;        // 사람이 고르는 이름
+  fontFamily: string;  // @font-face 로 등록된 이름
+  italic: number;      // 기울임(deg). 0이면 없음
+  fillColor: string;   // 글자색
+  hlColor: string;     // 강조 단어색
+  strokeColor: string; // 외곽선색
+  strokeW: number;     // 외곽선 두께(px)
+  glow: string;        // 글로우 색(rgba)
+  sparkle: boolean;    // 양옆 반짝이 별
+  anim: 'fade' | 'pop' | 'bounce';
+  fontSize: number;
+};
+
+export const LILY_PRESETS: Record<string, LilyPreset> = {
+  // #8 희로애락 — 핑크 네온: 흰 글자 아닌 진분홍 글자 + 두꺼운 흰 외곽선 + 핑크 글로우 + 반짝이
+  hee_pink: {
+    id: 'hee_pink',
+    name: '릴리 · 핑크 네온(희로애락)',
+    fontFamily: 'TmonMonsori',
+    italic: 8,
+    fillColor: '#ffffff',
+    hlColor: '#ff3d9a',
+    strokeColor: '#ff2e8f',
+    strokeW: 7,
+    glow: 'rgba(255,90,175,0.55)',
+    sparkle: true,
+    anim: 'pop',
+    fontSize: 96,
+  },
+};
+
+export const resolveLilyPreset = (p?: string | LilyPreset): LilyPreset => {
+  if (p && typeof p === 'object') return p;
+  return LILY_PRESETS[(p as string) || 'hee_pink'] || LILY_PRESETS.hee_pink;
+};
