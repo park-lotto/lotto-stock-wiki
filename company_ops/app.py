@@ -24,6 +24,7 @@ from .catalog import (
     TEAMS,
 )
 from .store import ConflictError, InvalidActionError, NotFoundError, SchemaVersionError, Store
+from .rolo import router as rolo_router
 
 
 class ProjectCreate(BaseModel):
@@ -139,6 +140,7 @@ def create_app(db_path: str | Path | None = None) -> FastAPI:
     ):
         return store.project_events(project_id, before_id=before_id, limit=limit)
 
+    application.include_router(rolo_router)
     static_dir = Path(__file__).resolve().parent / "static"
     application.mount("/static", StaticFiles(directory=static_dir), name="static")
     application.mount("/", StaticFiles(directory=static_dir, html=True), name="site")
