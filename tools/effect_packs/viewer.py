@@ -71,17 +71,22 @@ def best_poster(mp4, out):
 
 
 def is_static(mp4):
-    """미리보기 첫 프레임과 끝 프레임이 거의 같으면 정지형."""
+    """미리보기 영상에 움직임이 없으면 정지형. 인접 프레임 중 **최대** 변화로 판정한다 —
+    등장 애니메이션이 앞부분에서만 있고 뒤가 멈추는 자막을 정지로 오판하지 않게(2026-09-13 실측:
+    첫-끝 프레임만 보면 애니메이션을 놓친다). 커서 깜빡임(국소·미세)은 무시하려고 문턱을 둔다."""
     try:
         from PIL import Image, ImageChops, ImageStat
-        a = mp4 + "_a.png"; b = mp4 + "_b.png"
-        run(["ffmpeg", "-v", "error", "-y", "-i", mp4, "-frames:v", "1", "-update", "1", a])
-        run(["ffmpeg", "-v", "error", "-y", "-sseof", "-0.3", "-i", mp4, "-frames:v", "1", "-update", "1", b])
-        if not (os.path.exists(a) and os.path.exists(b)):
-            return False
-        d = ImageStat.Stat(ImageChops.difference(Image.open(a).convert("L"), Image.open(b).convert("L"))).mean[0]
-        os.remove(a); os.remove(b)
-        return d < 1.0
+        d = mp4 + "_frames"; os.makedirs(d, exist_ok=True)
+        run(["ffmpeg", "-v", "error", "-y", "-i", mp4, "-vf", "fps=8,scale=320:-1", os.path.join(d, "f%03d.png")])
+        fs = sorted(os.listdir(d))
+        mx, prev = 0.0, None
+        for fn in fs:
+            im = Image.open(os.path.join(d, fn)).convert("L")
+            if prev is not None:
+                mx = max(mx, ImageStat.Stat(ImageChops.difference(im, prev)).mean[0])
+            prev = im
+        import shutil as _sh; _sh.rmtree(d, ignore_errors=True)
+        return mx < 0.6   # 이보다 작으면 사실상 정지(커서 깜빡임 수준)
     except Exception:
         return False
 
