@@ -91,7 +91,7 @@ def test_pipeline_with_fake_images_and_memes_renders(tmp_path):
         if "이미지 디렉터" in p:
             return json.dumps({"cast": {"1": "a man"}, "prompts": {"1": "a man on a plane"}})
         return json.dumps(s, ensure_ascii=False)
-    r = pipeline.run_all(str(tmp_path / "job"), source_text="소재", llm=llm, tts=tts, imagegen=gen, meme_dir=str(meme_dir), log=lambda *a: None)
+    r = pipeline.run_all(str(tmp_path / "job"), source_text="소재", llm=llm, tts=tts, imagegen=gen, meme_dir=str(meme_dir), log=lambda *a: None, min_cuts=1)
     assert r["status"] == "ok", r
     d = pipeline.load(str(tmp_path / "job"))["data"]
     assert d["images"]["files"]["1"].endswith("01.png")

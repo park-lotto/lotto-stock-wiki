@@ -89,10 +89,10 @@ def test_voice_budget_is_cumulative(tmp_path):
 def test_pipeline_rejected_script_does_not_advance(tmp_path):
     bad = {"title": {"h1": "제목", "h2": "숫자 3개", "card": "한 문장"},
            "groups": [{"text": "쉼표가, 있다", "color": "WHITE", "role": "PUNCH", "img": 1}]}
-    r = pipeline.run_all(str(tmp_path), source_text="소재", llm=lambda _: json.dumps(bad, ensure_ascii=False), tts=_fake_tts)
+    r = pipeline.run_all(str(tmp_path), source_text="소재", llm=lambda _: json.dumps(bad, ensure_ascii=False), tts=_fake_tts, min_cuts=1)
     assert r["status"] == "failed" and r["step"] == "script"
     assert pipeline.next_step(str(tmp_path)) == "script"          # 다시 script부터
-    r2 = pipeline.run_all(str(tmp_path), source_text="소재", llm=lambda _: json.dumps(bad, ensure_ascii=False), tts=_fake_tts)
+    r2 = pipeline.run_all(str(tmp_path), source_text="소재", llm=lambda _: json.dumps(bad, ensure_ascii=False), tts=_fake_tts, min_cuts=1)
     assert r2["status"] == "failed" and r2["step"] == "script"
     assert "voice" not in pipeline.load(str(tmp_path))["data"]
 
@@ -100,7 +100,7 @@ def test_pipeline_rejected_script_does_not_advance(tmp_path):
 # ⑤ 검수: 나레 파일 없음 → 실패(빈 목록으로 통과하지 않는다)
 def test_review_fails_when_narration_missing(tmp_path):
     s = _script(n=4)
-    r = pipeline.run_all(str(tmp_path), source_text="소재", llm=lambda _: json.dumps(s, ensure_ascii=False), tts=_fake_tts)
+    r = pipeline.run_all(str(tmp_path), source_text="소재", llm=lambda _: json.dumps(s, ensure_ascii=False), tts=_fake_tts, min_cuts=1)
     assert r["status"] == "ok", r
     d = pipeline.load(str(tmp_path))["data"]
     rep = review.run(d["render"]["mp4"], d["subtitle"]["path"], str(tmp_path / "없는파일.wav"), d["timing"])
@@ -112,7 +112,7 @@ def test_review_fails_when_narration_missing(tmp_path):
 # ⑥ 검수: 화면 밖 줄이 ASS에 있으면 반려
 def test_review_rejects_out_of_bounds_line(tmp_path):
     s = _script(n=4)
-    r = pipeline.run_all(str(tmp_path), source_text="소재", llm=lambda _: json.dumps(s, ensure_ascii=False), tts=_fake_tts)
+    r = pipeline.run_all(str(tmp_path), source_text="소재", llm=lambda _: json.dumps(s, ensure_ascii=False), tts=_fake_tts, min_cuts=1)
     assert r["status"] == "ok", r
     d = pipeline.load(str(tmp_path))["data"]
     ass = open(d["subtitle"]["path"], encoding="utf-8").read()

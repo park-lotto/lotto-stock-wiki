@@ -81,7 +81,7 @@ def _digest(obj):
     return hashlib.sha256(json.dumps(obj, ensure_ascii=False, sort_keys=True).encode("utf-8")).hexdigest()[:12]
 
 
-def run_step(wd, step, *, source_text=None, llm=None, tts=None, imagegen=None, sfx_dir=None, meme_dir=None, bg_image=None, fonts_dir=None, log=print):
+def run_step(wd, step, *, source_text=None, llm=None, tts=None, imagegen=None, sfx_dir=None, meme_dir=None, bg_image=None, fonts_dir=None, log=print, min_cuts=None):
     """한 단계만 실행. → 응답 dict {status: ok|need_input|failed, step, next_step, fail?, need?}"""
     job = load(wd)
     d = job["data"]
@@ -100,7 +100,8 @@ def run_step(wd, step, *, source_text=None, llm=None, tts=None, imagegen=None, s
         elif step == "script":
             if llm is None:
                 return _resp("need_input", step, "script", need=["llm (call(prompt)->str)"])
-            script, issues, attempts = prompt.generate(d["setup"]["source_text"], llm, fonts_dir=fonts_dir, log=log)
+            script, issues, attempts = prompt.generate(d["setup"]["source_text"], llm, fonts_dir=fonts_dir, log=log,
+                                                       min_cuts=min_cuts)
             rej = lint.rejects(issues)
             d["script"] = {"script": script, "attempts": attempts,
                            "issues": [i.__dict__ for i in issues]}
@@ -118,7 +119,7 @@ def run_step(wd, step, *, source_text=None, llm=None, tts=None, imagegen=None, s
 
         elif step == "lint":
             s = dict(d["script"]["script"]); s["groups"] = d["layout"]["groups"]
-            issues, _ = lint.lint(s, source_text=d["setup"]["source_text"], do_layout=False)
+            issues, _ = lint.lint(s, source_text=d["setup"]["source_text"], do_layout=False, min_cuts=min_cuts)
             issues += lint.r_layout(s, {"layout_fails": d["layout"]["fails"]})
             rej = lint.rejects(issues)
             d["lint"] = {"issues": [i.__dict__ for i in issues], "ok": not rej}

@@ -210,6 +210,64 @@ def r_copy(s, ctx):
     return out
 
 
+def r_cut_count(s, ctx):
+    """컷이 너무 적으면 반려 — 지시문엔 22~32라고 적어놨는데 판정이 없었다(0순위: 규칙은 있는데 판정이 없다).
+
+    실측 2026-09-13: 내용 규칙을 넣은 뒤 모델이 17컷짜리를 냈는데 그대로 통과했다.
+    실물 5편은 22·25·28·28·32컷(최소 22)이고, 22컷 미만이면 35초가 안 나온다.
+    """
+    n = len(_groups(s))
+    if not n:
+        return []
+    lo = ctx.get("min_cuts")            # 시험은 4컷짜리 가짜 대본을 쓴다 — 낮춰 부를 수 있게 연다
+    lo = spec.POLICY_MIN_CUTS if lo is None else lo
+    if n < lo:
+        return [Issue("cut_count", REJECT, "groups", f"{n}컷",
+                      f"컷이 모자랍니다 — {lo}~{spec.POLICY_MAX_CUTS}컷으로 늘리세요")]
+    if n > spec.POLICY_MAX_CUTS:
+        return [Issue("cut_count", WARN, "groups", f"{n}컷",
+                      f"컷이 많습니다 — {spec.POLICY_MAX_CUTS}컷 이하가 이 채널 관행입니다")]
+    return []
+
+
+def r_example_copy(s, ctx):
+    """지시문에 든 예시 문장을 **남의 기사에** 그대로 쓰면 반려.
+
+    실측 2026-09-13: 카드 예시로 실물 편의 «케냐 봉사 갔다가 봉사 받고 왔다는 백만 유튜버»를 보여줬더니
+    같은 소재라 그 문장을 **그대로** 카드로 냈다. 예시는 구조를 보라는 것이지 베끼라는 게 아니다.
+
+    ★단, 그 예시의 주인공이 이 기사의 주인공이면 반려하지 않는다 — 실물 5편 자신이 걸려버린다
+      (골든 회귀 시험이 즉시 잡아줬다: 박수홍 편이 «사과보다 복귀가 빨랐다»로 반려됨).
+      판정은 "이 기사에 없는 고유명사를 예시에서 데려왔나"로 한다.
+    """
+    src = (ctx.get("source_text") or "")
+    out = []
+
+    def borrowed(text):
+        """예시와 같은 문장인데, 그 예시의 고유명사가 이 기사엔 없다 → 남의 것을 베꼈다."""
+        t = text.replace(" ", "")
+        for ex in spec.PROMPT_EXAMPLES:
+            e = ex.replace(" ", "")
+            if not e or (t != e and not (len(e) >= 12 and e in t)):
+                continue
+            names = [w for w in spec.PROMPT_EXAMPLE_NAMES if w.replace(" ", "") in e]
+            if not names or any(w not in src for w in names):
+                return ex
+        return None
+
+    card = (s.get("title") or {}).get("card") or ""
+    ex = borrowed(card)
+    if ex:
+        out.append(Issue("example_copy", WARN, "title.card", card,
+                         "지시문 예시를 그대로 베꼈습니다 — 이 기사로 새로 쓰세요"))
+    for i, g in enumerate(_groups(s)):
+        t = g.get("text", "")
+        if len(t.replace(" ", "")) >= 8 and borrowed(t):
+            out.append(Issue("example_copy", WARN, f"groups[{i}]", t,
+                             "지시문 예시를 그대로 베꼈습니다 — 이 기사로 새로 쓰세요"))
+    return out
+
+
 RULES = [
     Rule("title_punct", REJECT, "제목(h1·h2)에는 구두점을 쓰지 마라 (따옴표·물음표·마침표 포함).", r_title_punct),
     Rule("comma", REJECT, "자막 본문에 쉼표(,)를 쓰지 마라.", r_comma),
@@ -223,6 +281,8 @@ RULES = [
     Rule("punch", REJECT, "PUNCH는 마지막 컷 하나뿐. RED 색으로 짧은 단정문.", r_punch),
     Rule("last_standalone", REJECT, "마지막 컷은 앞 컷에서 이어지지 않는 **독립된 한 문장**으로 써라. 앞 컷에서 문장을 끝내고, 마지막 컷만 읽어도 말이 되게 하라.", r_last_standalone),
     Rule("copy", REJECT, "원문을 요약하지 말고 다시 써라. 원문 문장을 그대로 줄여 쓰지 마라.", r_copy),
+    Rule("cut_count", REJECT, f"컷은 {spec.POLICY_MIN_CUTS}~{spec.POLICY_MAX_CUTS}개. 모자라면 반려된다.", r_cut_count),
+    Rule("example_copy", WARN, "지시문에 든 예시 문장을 그대로 쓰지 마라 — 구조만 따르고 이 기사로 새로 써라.", r_example_copy),
     Rule("first_open", WARN, "첫 컷에서 문장을 끝내지 마라 — 다음 컷으로 끌고 가라.", r_first_open),
     Rule("last_closed", WARN, "마지막 컷은 문장을 닫아라. WHITE가 아니라 RED PUNCH로.", r_last_closed),
     Rule("line1_end", WARN, "(줄나눔 참고) 두 줄 컷의 윗줄에서 문장이 끝나지 않게 컷을 짜라.", r_line1_end, needs_layout=True),
@@ -235,9 +295,9 @@ def prompt_block():
     return "\n".join(f"- {r.prompt}" for r in RULES)
 
 
-def lint(script, *, source_text="", do_layout=True, fonts_dir=None):
+def lint(script, *, source_text="", do_layout=True, fonts_dir=None, min_cuts=None):
     """→ (issues, script_with_lines). 원본 script는 손대지 않는다."""
-    ctx = {"source_text": source_text}
+    ctx = {"source_text": source_text, "min_cuts": min_cuts}
     s = dict(script)
     if do_layout:
         gl, fails = layout.layout_groups(_groups(script), fonts_dir)
