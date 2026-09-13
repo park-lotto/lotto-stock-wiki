@@ -30,7 +30,7 @@ _NEEDS_LAYOUT = {r.id for r in lint.RULES if r.needs_layout}
 # 정답 5편으로 검증되는 REJECT 규칙 목록. 규칙을 추가하면 여기에도 넣어라(②).
 CHECKED = {
     "title_punct", "comma", "enum", "nonwhite_run", "formal",
-    "h2_abstract", "card", "punch", "last_standalone", "copy", "cut_count",
+    "h2_abstract", "card", "punch", "last_standalone", "copy", "cut_count", "card_img",
 }
 
 

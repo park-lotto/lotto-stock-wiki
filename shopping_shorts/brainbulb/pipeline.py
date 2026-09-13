@@ -147,7 +147,8 @@ def run_step(wd, step, *, source_text=None, llm=None, tts=None, imagegen=None, s
 
         elif step == "frames":
             s = dict(d["script"]["script"]); s["groups"] = d["layout"]["groups"]
-            d["frames"] = _frames.build(wd, d["timing"], s, d["images"]["files"], meme_dir=meme_dir, log=log)
+            d["frames"] = _frames.build(wd, d["timing"], s, d["images"]["files"], meme_dir=meme_dir, log=log,
+                                        card_img=d["script"]["script"].get("card_img"))
             _invalidate_after(job, "frames")
 
         elif step == "voice":

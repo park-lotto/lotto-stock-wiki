@@ -206,6 +206,27 @@ def r_meme_ratio(s, ctx):
     return []
 
 
+def r_card_img(s, ctx):
+    """오프닝 카드에 쓸 슬롯 — 없는 슬롯이면 반려, 1번이면 경고.
+
+    ★1번을 쓰면 카드 바로 뒤에 1번 컷이 와서 **같은 사진이 연달아** 보인다
+      (실측 2026-09-13 사장님 "첫 후킹 사진이랑 다음 사진이랑 같게 나온다":
+       카드·1컷·2컷이 전부 01.png라 확대만 바뀐 화면이 셋 이어졌다).
+      단 실물 5편 중 3편도 1번을 쓰므로 **반려는 아니다** — 알리기만 한다.
+    """
+    ci = s.get("card_img")
+    if ci is None:
+        return []
+    slots = {g["img"] for g in _groups(s) if isinstance(g.get("img"), int)}
+    if not isinstance(ci, int) or ci not in slots:
+        return [Issue("card_img", REJECT, "card_img", str(ci),
+                      f"없는 슬롯입니다 — 대본에 있는 슬롯({min(slots) if slots else '?'}~{max(slots) if slots else '?'}) 중에서 고르세요")]
+    if ci == 1:
+        return [Issue("card_img", WARN, "card_img", str(ci),
+                      "카드가 1번이면 바로 뒤 1번 컷과 같은 사진이 이어집니다 — 3번 이후를 고르세요")]
+    return []
+
+
 def r_copy(s, ctx):
     src = (ctx.get("source_text") or "").replace(" ", "")
     if not src:
@@ -290,6 +311,7 @@ RULES = [
     Rule("last_standalone", REJECT, "마지막 컷은 앞 컷에서 이어지지 않는 **독립된 한 문장**으로 써라. 앞 컷에서 문장을 끝내고, 마지막 컷만 읽어도 말이 되게 하라.", r_last_standalone),
     Rule("copy", REJECT, "원문을 요약하지 말고 다시 써라. 원문 문장을 그대로 줄여 쓰지 마라.", r_copy),
     Rule("cut_count", REJECT, f"컷은 {spec.POLICY_MIN_CUTS}~{spec.POLICY_MAX_CUTS}개. 모자라면 반려된다.", r_cut_count),
+    Rule("card_img", REJECT, "card_img는 대본에 있는 슬롯 번호. 1번은 피해라 — 카드 뒤 1번 컷과 같은 사진이 이어진다.", r_card_img),
     Rule("example_copy", WARN, "지시문에 든 예시 문장을 그대로 쓰지 마라 — 구조만 따르고 이 기사로 새로 써라.", r_example_copy),
     Rule("first_open", WARN, "첫 컷에서 문장을 끝내지 마라 — 다음 컷으로 끌고 가라.", r_first_open),
     Rule("last_closed", WARN, "마지막 컷은 문장을 닫아라. WHITE가 아니라 RED PUNCH로.", r_last_closed),
