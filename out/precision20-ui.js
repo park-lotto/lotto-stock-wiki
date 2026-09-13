@@ -265,7 +265,7 @@
     root.querySelectorAll('[data-caption-layout]').forEach(input=>{const val=settings[input.dataset.captionLayout];input.value=input.type==='color'&&!/^#[0-9a-f]{6}$/i.test(val)?'#ffffff':val;});
     const width=root.querySelector('[data-caption-layout="w"]');if(width)width.closest('label').hidden=settings.placement==='title';
     const guide=root.querySelector('.layout-a .caption-guide');
-    if(guide)guide.textContent='Enter로 줄바꿈 · 자막과 가림막을 함께 끌어 원본 자막 자국을 덮으세요 · 위치까지 저장';
+    if(guide)guide.textContent=settings.placement==='free'?'화면의 자막을 끌어 원하는 곳에 놓으세요.':'';
     captionField?.classList.remove('reserved-caption');
   }
   function presetValue(bind){
@@ -690,13 +690,17 @@
   addEventListener('resize',()=>{if(!window.sceneStyleExporting&&!preview.classList.contains('is-pristine'))renderEdit()});
   let captionDrag=null,captionMoveScope='scene';
   const moveScope=document.createElement('div');moveScope.className='caption-position';
-  moveScope.innerHTML='<span style="grid-column:1/-1">자막 위치 적용 범위</span><button type="button" data-caption-scope="all">모든 장면</button><button type="button" data-caption-scope="scene" class="active">이 자막만</button><small style="grid-column:1/-1" data-caption-scope-status>이 자막의 위치만 바꿉니다.</small>';
+  moveScope.hidden=true;
+  moveScope.innerHTML='<button type="button" data-caption-scope="all" style="grid-column:1/-1">이 위치를 다른 장면에도 적용</button><small style="grid-column:1/-1" data-caption-scope-status></small>';
   const captionPlacement=captionField?.querySelector('.caption-position');
-  captionPlacement?.before(moveScope);
+  captionPlacement?.after(moveScope);
+  captionPlacement.querySelector('[data-caption-placement="free"]').textContent='위치 옮기기';
+  captionPlacement.querySelector('[data-caption-placement="title"]').textContent='위치 초기화';
   const maskDetails=document.createElement('details');maskDetails.style.gridColumn='1/-1';maskDetails.innerHTML='<summary style="cursor:pointer">가림막 크기 · 색상</summary><div class="caption-position"></div>';
   captionPlacement?.querySelectorAll('label').forEach(label=>maskDetails.querySelector('div').append(label));
   captionPlacement?.append(maskDetails);
   function applyCaptionMoveScope(){
+    moveScope.hidden=false;
     if(captionMoveScope!=='all')return;
     const drag=captionDrags.get(captionKey())||{x:0,y:0},settings=captionSettings(),offset=textOffset('caption');
     for(let i=0;i<sceneTotal();i++){
@@ -708,10 +712,10 @@
   }
   moveScope.addEventListener('click',event=>{
     const button=event.target.closest('[data-caption-scope]');if(!button)return;
-    captionMoveScope=button.dataset.captionScope;
-    moveScope.querySelectorAll('button').forEach(el=>el.classList.toggle('active',el===button));
+    captionMoveScope='all';
     applyCaptionMoveScope();
-    moveScope.querySelector('[data-caption-scope-status]').textContent=captionMoveScope==='all'?'현재 위치를 모든 장면에 적용했습니다. 이후 이동도 함께 적용됩니다.':'이후 이동은 이 자막에만 적용됩니다.';
+    captionMoveScope='scene';
+    moveScope.querySelector('[data-caption-scope-status]').textContent='모든 장면에 적용했어요.';
   });
   preview.addEventListener('pointerdown',event=>{
     if(event.button!==0||!event.target.closest('[data-edit-bind="caption"]'))return;

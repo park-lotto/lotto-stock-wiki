@@ -3,7 +3,7 @@
   const pane=document.querySelector('.layout-a .edit-pane'),tabs=pane.querySelector('.tool-tabs');
   tabs.innerHTML='<button class="active" data-editor-tab="text">문구/텍스트</button><button data-editor-tab="effects">효과</button>';
   const titleMotion=pane.querySelector('.hook-motion');
-  pane.querySelector('details')?.remove();
+  pane.querySelector(':scope > details')?.remove();
   const textPanel=document.createElement('div');textPanel.className='scene-text-panel';
   const primary=pane.querySelector('.primary'),save=pane.querySelector('.secondary');
   [...pane.children].filter(el=>![tabs,primary,save].includes(el)).forEach(el=>textPanel.append(el));

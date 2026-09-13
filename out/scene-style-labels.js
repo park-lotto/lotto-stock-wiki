@@ -18,16 +18,25 @@
  layer.addEventListener('pointermove',event=>{if(!drag||event.pointerId!==drag.id)return;const r=preview.getBoundingClientRect(),item={...drag.item};item.x=Math.max(0,Math.min(90,item.x+(event.clientX-drag.x)/r.width*100));item.y=Math.max(0,Math.min(95,item.y+(event.clientY-drag.y)/r.height*100));api.branding({...api.branding(),[drag.key]:item});draw()});
  for(const name of ['pointerup','pointercancel','lostpointercapture'])layer.addEventListener(name,()=>drag=null);
  const caption=document.querySelector('.layout-a [data-field-key="caption"]'),lines=document.createElement('details');lines.className='scene-line-editor';
- lines.open=true;
- lines.innerHTML='<summary>단락별 자막 나누기</summary><p data-lines-context></p><p>한 칸이 순서대로 재생할 자막 한 구절입니다. Enter로 나누고, 줄 맨 앞 Backspace로 합칩니다.</p><div data-line-inputs></div><div class="scene-line-actions"><button type="button" data-lines-save>이 단락 줄 저장</button><button type="button" data-lines-reset>자동으로</button></div><small data-lines-status></small>';
+ lines.open=false;
+ lines.innerHTML='<summary>자막 나누기</summary><small data-lines-context></small><p>끊을 곳을 누르고 ‘나누기’를 누르세요.</p><div data-line-inputs></div><div class="scene-line-actions"><button type="button" data-lines-split>나누기</button><button type="button" data-lines-merge>윗줄과 합치기</button></div><div class="scene-line-actions"><button type="button" data-lines-save>적용</button><button type="button" data-lines-reset>원래대로</button></div><small data-lines-status></small>';
+ let focusedLine=null;
+ lines.addEventListener('focusin',event=>{if(event.target.matches('[data-capline]'))focusedLine=event.target;});
+ lines.addEventListener('pointerdown',event=>{if(event.target.closest('[data-lines-split],[data-lines-merge]'))event.preventDefault();});
+ lines.addEventListener('click',event=>{
+   const split=event.target.closest('[data-lines-split]'),merge=event.target.closest('[data-lines-merge]');if(!split&&!merge)return;
+   if(!focusedLine?.isConnected){status('먼저 자막에서 끊을 곳을 눌러 주세요.');return;}
+   if(merge)focusedLine.setSelectionRange(0,0);
+   focusedLine.dispatchEvent(new KeyboardEvent('keydown',{key:split?'Enter':'Backspace',bubbles:true,cancelable:true}));
+ });
  caption.after(lines);let lastKey='',pending=false;
  function fillLines(){const context=api.context(),scene=context?.scenes[api.geometry().sceneIndex],input=caption.querySelector('[data-bind="caption"]');const values=scene?context.scenes.filter(s=>s.beat_idx===scene.beat_idx&&s.caption).map(s=>s.caption):input.value.split('\n');const box=lines.querySelector('[data-line-inputs]');box.replaceChildren(...values.map((text,i)=>window.makeCaptionLineInput(text,i)));}
- function sync(){const context=api.context(),index=api.geometry().sceneIndex,key=context?`${context.jobId}:${context.scenes[index]?.beat_idx}`:`local:${api.snapshot().presetId}:${index}`;lines.hidden=!context&&caption.hidden;lines.querySelector('[data-lines-context]').textContent=context?`현재 단락의 자막 전체 · ${context.scenes.filter(s=>s.beat_idx===context.scenes[index]?.beat_idx&&s.caption).length}구절`:'템플릿 시안의 샘플 문구입니다. 제작 영상에서 열면 현재 단락의 전체 자막이 표시됩니다.';if(key!==lastKey){lastKey=key;fillLines()}controls();draw()}
+ function sync(){const context=api.context(),index=api.geometry().sceneIndex,key=context?`${context.jobId}:${context.scenes[index]?.beat_idx}`:`local:${api.snapshot().presetId}:${index}`;lines.hidden=!context&&caption.hidden;lines.querySelector('[data-lines-context]').textContent=context?'':'샘플 자막';if(key!==lastKey){lastKey=key;fillLines()}controls();draw()}
  const status=message=>lines.querySelector('[data-lines-status]').textContent=message;
  lines.addEventListener('toggle',()=>{if(lines.open&&!pending)fillLines()});
  lines.addEventListener('click',event=>{const reset=!!event.target.closest('[data-lines-reset]');if(!reset&&!event.target.closest('[data-lines-save]'))return;if(pending)return;const values=[...lines.querySelectorAll('[data-capline]')].map(e=>e.value.trim()).filter(Boolean);if(!reset&&!values.length){status('줄을 입력해 주세요.');return;}const context=api.context();
    if(window.parent!==window&&context){pending=true;status('줄을 저장하는 중…');window.parent.postMessage({type:'scene-style-lines',jobId:context.jobId,beatIdx:context.scenes[api.geometry().sceneIndex].beat_idx,lines:values,reset,snapshot:api.snapshot()},location.origin);}
-   else{if(reset)api.resetCaptionText();else{const input=caption.querySelector('[data-bind="caption"]');input.value=values.join('\n');input.dispatchEvent(new Event('input',{bubbles:true}))}document.querySelector('.layout-a .edit-pane > .primary').click();fillLines();status('시안에 저장했습니다. 영상에 연결하면 줄별로 재생됩니다.');}
+   else{if(reset)api.resetCaptionText();else{const input=caption.querySelector('[data-bind="caption"]');input.value=values.join('\n');input.dispatchEvent(new Event('input',{bubbles:true}))}document.querySelector('.layout-a .edit-pane > .primary').click();fillLines();status('적용했어요.');}
  });
  addEventListener('message',event=>{if(event.source!==window.parent||event.origin!==location.origin||event.data?.type!=='scene-style-lines-result')return;pending=false;status(event.data.ok?'줄 저장 완료 · 영상에 반영됩니다.':event.data.error||'저장하지 못했습니다.');if(event.data.ok){lastKey='';sync()}});
  new MutationObserver(sync).observe(preview.querySelector('.precision-edit-layer'),{childList:true});addEventListener('resize',()=>{if(!window.sceneStyleExporting)draw()});sync();
