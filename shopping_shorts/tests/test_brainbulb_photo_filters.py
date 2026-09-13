@@ -401,3 +401,52 @@ def test_normal_cut_still_fills_whole_slot(tmp_path, monkeypatch):
     a = np.asarray(Image.open(out).convert("L"), dtype=float)
     top = a[spec.SLOT_Y:spec.SLOT_Y + 60, spec.SLOT_X:spec.SLOT_X + spec.SLOT_W]
     assert top.mean() > 100                                        # 슬롯 맨 위까지 사진이 있다
+
+
+# ── 모서리 워터마크 (2026-09-13 scene 검색을 열면서) ──────────────────────────────
+def test_corner_mark_catches_translucent_logo(tmp_path):
+    """★언론사 워터마크는 반투명이라 text_ratio가 못 본다(실측: 뉴스천지 로고가 글자 1.1%로 통과).
+
+    모서리에서 '채도는 낮은데 잔가장자리가 많은' 정도로 잡는다.
+    실측 — 뉴스천지 0.567 · 뉴스1 0.365 / 깨끗한 사진 0.000~0.225.
+    """
+    cv2 = pytest.importorskip("cv2")
+    a = np.zeros((400, 600, 3), dtype=np.uint8)
+    a[:, :] = (70, 110, 160)                                   # 채도 있는 배경
+    p = tmp_path / "clean.jpg"
+    Image.fromarray(a).save(p, "JPEG", quality=95)
+    before = photos.corner_mark(str(p))
+
+    b = a.copy()
+    corner = b[300:395, 380:590]
+    corner[:] = (150, 150, 150)                                 # 회색(채도 0) 로고 자리
+    for i in range(6):
+        cv2.putText(corner, "NEWS1", (6, 16 + i * 14), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (235, 235, 235), 1)
+    q = tmp_path / "wm.jpg"
+    Image.fromarray(b).save(q, "JPEG", quality=95)
+    assert photos.corner_mark(str(q)) > before                  # 로고가 있는 쪽이 더 높다
+
+
+def test_corner_mark_survives_missing_file(tmp_path):
+    assert photos.corner_mark(str(tmp_path / "없음.jpg")) == 0.0
+
+
+def test_pick_photo_drops_watermarked_when_max_mark_given(tmp_path, monkeypatch):
+    """scene 검색만 이 검사를 건다 — 인물 사진에는 오탐이 많아 걸지 않는다."""
+    import shutil
+    wm = tmp_path / "wm.jpg"; _noise(wm, seed=5)
+    ok = tmp_path / "ok.jpg"; _noise(ok, seed=6)
+    hits = [{"url": "http://x/wm.jpg", "source": "연합뉴스", "title": "", "w": 600, "h": 400},
+            {"url": "http://x/ok.jpg", "source": "한국경제", "title": "", "w": 600, "h": 400}]
+    monkeypatch.setattr(photos, "search_images", lambda q, **k: hits)
+    monkeypatch.setattr(photos, "download",
+                        lambda u, p, **k: shutil.copy(str(wm if "wm" in u else ok), p))
+    monkeypatch.setattr(photos, "text_ratio", lambda p, **k: 0.0)
+    # 첫 후보(wm)만 로고가 있다고 본다 — 파일 내용으로 가른다(호출 횟수에 기대지 않는다)
+    import hashlib
+    wm_md5 = hashlib.md5(open(wm, "rb").read()).hexdigest()
+    monkeypatch.setattr(photos, "corner_mark",
+                        lambda p: 0.9 if hashlib.md5(open(p, "rb").read()).hexdigest() == wm_md5 else 0.1)
+    r = photos.pick_photo("KTX 승강장", str(tmp_path), 1, want_face=False,
+                          log=lambda *a: None, max_mark=0.30)
+    assert r is not None                                        # 둘째 후보로 넘어갔다

@@ -198,7 +198,8 @@ def generate_all(prompts, workdir, imagegen, *, sources=None, log=print):
             from . import photos
             # ★scene은 얼굴을 보지 않는다 — 승강장·골목처럼 사람이 없는 게 정상이다
             hit = photos.pick_photo(query, workdir, slot, log=log, seen=seen_photos,
-                                    want_face=(kind != "scene"))
+                                    want_face=(kind != "scene"),
+                                    max_mark=(spec.POLICY_SCENE_MARK_MAX if kind == "scene" else None))
             if hit:
                 try:
                     done = _from_photo(slot, hit, path, kind, workdir, log)

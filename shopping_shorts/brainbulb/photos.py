@@ -352,6 +352,42 @@ def face_box(path, *, min_score=0.6):
     return max(got, key=lambda f: f[2] * f[3])
 
 
+def corner_mark(path):
+    """모서리에 박힌 워터마크·로고 정도(0~1). 클수록 로고가 있을 가능성이 높다.
+
+    ★언론사 워터마크는 **반투명 회색**이라 `text_ratio`가 못 본다(실측 2026-09-13:
+      뉴스천지 로고가 박힌 사진이 글자 1.1%로 통과했다). 대신 모서리 상자에서
+      '채도는 낮은데 잔가장자리가 많은' 정도를 잰다 — 반투명 로고의 지문이다.
+
+    실측값(0.30을 넘으면 의심):
+      뉴스천지 워터마크 0.567 · 뉴스1 0.365 · 자막 깔린 캡처 0.675
+      깨끗한 사진 0.000~0.225
+    한계: MBC 로고(0.197)처럼 작고 채도 높은 건 못 잡고, 사진 속 경고표지판(0.327)을 오탐한다.
+    그래서 **인물 사진에는 쓰지 않는다** — scene(장소·사물)에만 건다.
+    """
+    try:
+        import cv2
+        import numpy as np
+    except ImportError:
+        return 0.0
+    img = imread(path)
+    if img is None:
+        return 0.0
+    h, w = img.shape[:2]
+    bh, bw = int(h * 0.28), int(w * 0.42)
+    if bh < 8 or bw < 8:
+        return 0.0
+    best = 0.0
+    for y0, x0 in ((0, 0), (0, w - bw), (h - bh, 0), (h - bh, w - bw)):
+        b = img[y0:y0 + bh, x0:x0 + bw]
+        g = cv2.cvtColor(b, cv2.COLOR_BGR2GRAY)
+        edge = float((np.abs(cv2.Laplacian(g, cv2.CV_64F)) > 18).mean())
+        sat = float(cv2.cvtColor(b, cv2.COLOR_BGR2HSV)[:, :, 1].mean())
+        if sat < 60:                       # 색이 빠진 모서리 = 로고가 얹힌 자리
+            best = max(best, edge)
+    return best
+
+
 def has_face(path, *, min_score=0.6):
     """사람 얼굴이 있나 — 로고·건물·상품 사진을 거른다.
 
@@ -381,7 +417,7 @@ def _fingerprint(path):
         return None
 
 
-def pick_photo(query, workdir, slot, *, want_face=True, num=10, log=print, seen=None):
+def pick_photo(query, workdir, slot, *, want_face=True, num=10, log=print, seen=None, max_mark=None):
     """검색 → 뉴스 출처 우선 → 얼굴 확인 → 다운로드. 못 찾으면 None.
 
     `seen`에 이미 쓴 사진의 지문을 담아 넘기면 **같은 사진을 두 컷에 넣지 않는다**(호출부가 set 하나를 돌려 쓴다).
@@ -416,6 +452,12 @@ def pick_photo(query, workdir, slot, *, want_face=True, num=10, log=print, seen=
             log(f"[brainbulb.photos] 슬롯 {slot} 글자 과다({tr:.0%}) — 다음 후보")
             os.remove(path)
             continue
+        if max_mark is not None:
+            m = corner_mark(path)
+            if m >= max_mark:          # 모서리 워터마크·로고 (scene 전용 검사)
+                log(f"[brainbulb.photos] 슬롯 {slot} 모서리 로고 의심({m:.2f}) — 다음 후보")
+                os.remove(path)
+                continue
         if want_face and not has_face(path):
             os.remove(path)
             continue
