@@ -21,7 +21,12 @@ IMAGE_QUALITY = "medium"           # low $0.0037 / medium $0.032 / high $0.127 (
 # ★"Documentary style photo"를 앞에 고정으로 붙이던 것을 뺐다(2026-09-13 실측): 편 A만 우연히
 #   10슬롯 전부 그 문구였고, 편 B는 8종·편 C는 9종으로 **슬롯마다 첫 어구가 다르다**
 #   (`Photorealistic wide shot of a dusty empty lot…`). 한 편만 보고 "고정 접두"로 역산했던 오독이다.
-IMAGE_PROMPT_PREFIX = "In South Korea, Korean people, Korean-language signage and hangul text, "
+# ★로케일을 "한국"으로 박지 마라 — 컷마다 나라가 다를 수 있다.
+#   실측 2026-09-13(v7 슬롯4): 케냐 슬럼가 계단 장면인데 접두가 "In South Korea"라
+#   **한국 지하철 계단에서 파란 조끼 자원봉사자들이 휠체어를 드는 그림**이 나왔다
+#   (사장님 "전체 맥락 없이 만든거야?"). 슬롯마다 작성자가 장소를 적고, 안 적으면 이 값을 쓴다.
+IMAGE_LOCALE_DEFAULT = "In South Korea, Korean people, Korean-language signage and hangul text"
+IMAGE_PROMPT_PREFIX = IMAGE_LOCALE_DEFAULT + ", "     # 옛 이름 유지(시험·호출부 호환)
 
 # 접미 — 실측 볼케이노 16개 그대로. 우리는 4개뿐이라 **가짜 구독자 수·그래프가 그려졌다**
 # (2026-09-13: 없는 채널명 밑에 '1,000,000', '글로벌 경기침체' 꺾은선). 굵은 것이 그 방어선이다.

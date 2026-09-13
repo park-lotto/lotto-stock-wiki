@@ -185,3 +185,31 @@ def test_screen_words_do_not_catch_normal_scenes():
               "volunteers lifting a wheelchair up stone stairs",
               "a crowded street market in the afternoon"):
         assert not any(w in t.lower() for w in spec.PROMPT_SCREEN_WORDS), t
+
+
+def test_overseas_slot_gets_its_own_locale():
+    """★로케일을 한국으로 박으면 해외 장면이 한국으로 그려진다.
+
+    실측 2026-09-13(v7 슬롯4): 케냐 슬럼가 계단 장면인데 접두가 "In South Korea"라
+    **한국 지하철 계단에서 파란 조끼 자원봉사자들이 휠체어를 드는 그림**이 나왔다
+    (사장님 "전체 맥락 없이 만든거야?"). 한 편 안에서도 나라가 갈린다.
+    """
+    script = {"region": {"region": "국내", "place": ""},
+              "groups": [{"text": "케냐 계단", "color": "WHITE", "role": "NARR", "img": 1},
+                         {"text": "KTX 사고", "color": "WHITE", "role": "NARR", "img": 2}]}
+    raw = json.dumps({"cast": {}, "places": {"1": "Kenya", "2": ""},
+                      "prompts": {"1": "volunteers lifting a wheelchair up stairs",
+                                  "2": "a train station platform"}})
+    r = images.make_prompts(script, "소재", lambda _: raw, log=lambda *a: None)
+    assert r["prompts"]["1"].startswith("In Kenya,"), r["prompts"]["1"][:40]
+    assert "South Korea" not in r["prompts"]["1"], "해외 컷에 한국이 붙었다"
+    assert r["prompts"]["2"].startswith(spec.IMAGE_LOCALE_DEFAULT), "국내 컷은 기본 로케일"
+
+
+def test_script_region_overseas_applies_when_slot_has_no_place():
+    """슬롯이 장소를 안 적었으면 대본의 region/place를 쓴다(볼케이노 보르네오 편 방식)."""
+    script = {"region": {"region": "해외", "place": "인도네시아 보르네오"},
+              "groups": [{"text": "산불", "color": "WHITE", "role": "NARR", "img": 1}]}
+    raw = json.dumps({"cast": {}, "prompts": {"1": "burning peatland at dusk"}})
+    r = images.make_prompts(script, "소재", lambda _: raw, log=lambda *a: None)
+    assert r["prompts"]["1"].startswith("In 인도네시아 보르네오,")

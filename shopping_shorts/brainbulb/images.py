@@ -48,6 +48,11 @@ def build_prompt_request(script, source_text):
         "      (실측 2026-09-13: 케냐 슬럼가·시장통·태권도장에 전부 휠체어 탄 남자가 나왔다).\n"
         "    주인공이 없는 컷은 cast를 **빼고** 그 장면만 써라: «공항 지상직원이 짐을 내린다»\n"
         "    «기내에서 시계를 보는 지친 승객들» «소파에 앉아 휴대폰을 엎어둔 부부».\n"
+        "- ★places: 그 컷이 **어느 나라·도시**인지 슬롯마다 영문으로 적어라(«Kenya», «Nairobi slum», «Seoul»).\n"
+        "  한 편 안에서도 나라가 갈린다 — KTX 사고는 한국, 케냐 봉사는 케냐다.\n"
+        "  안 적으면 한국으로 그려진다: 실측 2026-09-13, 케냐 슬럼가 계단 장면에 장소를 안 적었더니\n"
+        "  **한국 지하철 계단에서 파란 조끼 자원봉사자들이 휠체어를 드는 그림**이 나왔다.\n"
+        "  국내 컷은 비워도 된다(기본이 한국).\n"
         "- 각 슬롯 프롬프트는 장면(장소·행동·구도·조명)을 구체적으로 영문 한 줄로.\n"
         "  ★한 슬롯을 2~3컷이 나눠 쓴다 — 그 컷들을 **한 장면으로 묶어** 그려라. 컷마다 다른 장면을 요구하지 마라.\n"
         "  ★첫 어구로 사진의 종류를 정해라: «Photorealistic wide shot of…» «Photorealistic medium shot of…»\n"
@@ -59,10 +64,29 @@ def build_prompt_request(script, source_text):
         "  숫자는 자막이 말한다 — 그림은 **사람과 장소**를 보여줘라(빈 책상·창밖을 보는 뒷모습·문 닫힌 사무실).\n"
         "\n"
         "출력은 JSON 하나만:\n"
-        '{"cast": {"<슬롯>": "..."}, "prompts": {"<슬롯>": "..."}, '
+        '{"cast": {"<슬롯>": "..."}, "places": {"<슬롯>": "Kenya 또는 빈 문자열"}, '
+        '"prompts": {"<슬롯>": "..."}, '
         '"sources": {"<슬롯>": {"kind": "real|variant|scene|gen", "query": "검색어 또는 빈 문자열"}}}\n\n'
         f"[슬롯 목록] {slots}\n[컷↔슬롯]\n{cuts}\n\n[소재]\n{source_text[:1500]}\n"
     )
+
+
+def _locale(script, slot_place=None):
+    """이미지에 붙일 로케일 한 줄 — 슬롯이 장소를 적었으면 그것, 아니면 대본의 region/place.
+
+    ★로케일을 "한국"으로 박으면 **해외 장면이 한국으로 그려진다**(실측 2026-09-13 v7 슬롯4:
+      케냐 슬럼가 계단인데 한국 지하철 계단에 파란 조끼 봉사자들이 나왔다).
+      볼케이노도 편마다 region을 정한다(보르네오 편 region=해외 · place=인도네시아 보르네오).
+      우리 대본도 region/place를 만들고 있었는데 **이미지 쪽이 안 쓰고 있었다** — 배선 누락.
+      게다가 한 편 안에서도 나라가 갈린다(KTX=한국 · 슬럼가=케냐) → 슬롯이 적은 장소를 우선한다.
+    """
+    if slot_place:
+        return f"In {slot_place}"
+    r = script.get("region") or {}
+    place = (r.get("place") or "").strip()
+    if r.get("region") == "해외" and place:
+        return f"In {place}"
+    return spec.IMAGE_LOCALE_DEFAULT
 
 
 def _needs_person(script, slot):
@@ -90,6 +114,8 @@ def make_prompts(script, source_text, call, *, log=print):
     raw = call(build_prompt_request(script, source_text))
     d = _prompt.parse_any(raw)
     cast = {str(k): v for k, v in (d.get("cast") or {}).items()}
+    # 슬롯별 장소 — 한 편 안에서 나라가 갈릴 때 쓴다(KTX=한국 · 슬럼가=케냐). 없으면 대본 region/place.
+    places = {str(k): (v or "").strip() for k, v in (d.get("places") or {}).items()}
     prompts = {}
     for k, v in (d.get("prompts") or {}).items():
         k = str(k)
@@ -101,7 +127,7 @@ def make_prompts(script, source_text, call, *, log=print):
         body = (c + ", " if c and c.lower() not in v.lower() else "") + v
         # ★cast는 프롬프트 안에 두 번 들어간다 — 장면 앞과 접미 직전(실측 볼케이노 전 슬롯).
         tail = (", " + c if c else "") + spec.IMAGE_PROMPT_SUFFIX
-        prompts[k] = spec.IMAGE_PROMPT_PREFIX + body + tail
+        prompts[k] = _locale(script, places.get(k)) + ", " + body + tail
     slots = sorted({g["img"] for g in script["groups"] if isinstance(g.get("img"), int)})
     missing = [s for s in slots if str(s) not in prompts]
     if missing:
@@ -111,9 +137,11 @@ def make_prompts(script, source_text, call, *, log=print):
     #    downward trend line" → 가짜 그래프 화면이 그려졌다. 접미 금지어 16개도 못 막았다).
     #   지시만 있고 판정이 없으면 언젠가 샌다 — 오늘 다섯 번째 같은 병이다.
     for k, v in list(prompts.items()):
-        # ★접두·접미를 뺀 **본문만** 검사한다 — 접미에 "no legible numbers"가 들어 있어
+        # ★**접미를 뺀 본문만** 검사한다 — 접미에 "no legible numbers"가 들어 있어
         #   그대로 검사하면 모든 프롬프트가 "numbers"에 걸려 전부 빈 방이 된다(시험이 잡았다).
-        low = v[len(spec.IMAGE_PROMPT_PREFIX):].split(spec.IMAGE_PROMPT_SUFFIX)[0].lower()
+        #   ★접두 길이로 자르지 마라 — 로케일이 «In Kenya»처럼 짧아지면 잘림이 어긋나
+        #   접미 일부가 본문에 남아 다시 "numbers"에 걸린다(실측 2026-09-13, 내가 만든 회귀).
+        low = v.split(spec.IMAGE_PROMPT_SUFFIX)[0].lower()
         hit = next((w for w in spec.PROMPT_SCREEN_WORDS if w in low), None)
         if hit:
             prompts[k] = _no_screen(v, hit)
