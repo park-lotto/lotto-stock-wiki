@@ -17,6 +17,25 @@
 
   let RAF = 0;                    // 재생선 루프 — 마운트된 타임라인 하나만 돈다
 
+  // ── 타임라인이 사람에게 말하는 곳은 **여기 한 곳**이다(0순위-B) ──────────────
+  // ★왜: nsay는 #tbhint에 쓰는데 제작소 iframe 안에서 그 자리가 0x0이라 글자가 안 보인다
+  //   (2026-09-07 실측, saylo/toastlo가 그래서 생겼다). 그런데 타임라인은 계속 nsay만 써서
+  //   **실패가 통째로 조용했다** — 경계 저장이 422로 거절돼도 화면은 아무 말이 없었다.
+  //   증상이 늘 "눌러도 아무 일이 없다"라 원인이 달라도 같은 제보로 오고(09-13까지 4회),
+  //   매번 잡 로그를 뒤져야 했다. 실패만은 반드시 눈에 보이게 한다.
+  function _tlSay(t) {
+    // 있으면 보이는 자리(푸터+토스트)로, 없으면 기존 힌트줄로 — 어느 화면에서도 안 삼킨다.
+    if (typeof saylo === 'function') { saylo(t); return; }
+    if (typeof nsay === 'function') nsay(t);
+  }
+  /* 실패 알림 — 서버가 준 이유(있으면)를 그대로 보여준다. 이유가 곧 해결법인 경우가 많다
+     (예: "글자가 달라졌습니다 — 줄만 나누고 붙이세요"). */
+  function _tlFail(serverMsg, fallback) {
+    const why = String(serverMsg || '').trim();
+    _tlSay('⚠ ' + (why || fallback));
+    try { console.warn('[timeline]', fallback, '|', why || '(서버 사유 없음)'); } catch (_) {}
+  }
+
   function _dur(i) {
     return Math.max(0.2, beatDur(i) || 0.2);
   }
@@ -223,7 +242,7 @@
     // 컷 교체는 **기존 replaceRoll 경로 하나**로 — 새 조각 만들기·칸 갈아끼우기 규칙을
     // 여기서 다시 적지 않는다(0순위-B).
     try { replaceRoll(rep.oldSeg, vid, { s: r.s, e: r.e }); }
-    catch (e) { nsay('⚠ 교체 실패 — ' + e.message); return; }
+    catch (e) { _tlFail(e && e.message, '장면을 교체하지 못했어요'); return; }
     REPLACE = null;
     // 교체 로그(⑩ 축소판 — 기록만, 픽 로직 무변경). 실패해도 조용히 넘어간다(부가 기능).
     try {
@@ -338,15 +357,19 @@
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ beat_idx: i, lines }) });
       const d = await r.json();
-      if (!r.ok || !d.ok) { nsay('⚠ ' + (d.error || '경계 저장 실패')); return; }
+      // ★실패는 **보이는 자리**에 알린다(2026-09-13 고객 "클릭해도 지워지지도 변경도 안 된다").
+      //   nsay가 쓰는 #tbhint는 제작소 iframe 안에서 0x0이라 글자가 아예 안 보인다(09-07 실측).
+      //   서버는 422로 이유를 정확히 말하고 있었는데 화면이 삼켜서, 원인이 무엇이든 증상이
+      //   늘 "그냥 안 눌림"으로만 왔다 — 경계 실패는 이 뿌리로 이미 네 번 재발했다.
+      if (!r.ok || !d.ok) { _tlFail(d && d.error, '경계를 저장하지 못했어요'); return; }
       // ⑨ 연쇄 갱신 — 진실(구절 시간표)만 바꾸고 나머지는 render()가 파생으로 다시 그린다.
       if (d.captions) DATA.captions[String(i)] = d.captions;
       const b = (DATA.beats || [])[i];
       if (b) { b.caption_lines = lines; b.cap_durs = d.cap_durs;
                b.cap_lead = d.cap_lead; b.cap_src = d.cap_src; }
-      if (!d.timed) nsay('⚠ 이 칸은 정밀 타임스탬프가 없어 초가 추정입니다 — 🔊 음성·자막 다시 뽑기를 권장');
+      if (!d.timed) _tlSay('⚠ 이 칸은 정밀 타임스탬프가 없어 초가 추정입니다 — 🔊 음성·자막 다시 뽑기를 권장');
       render();
-    } catch (e) { nsay('⚠ 경계 저장 실패 — 네트워크'); }
+    } catch (e) { _tlFail(null, '경계를 저장하지 못했어요 — 네트워크'); }
   };
 
   /* 자막 블록 클릭 → 기존 F21(pickSeg) 경로. 하이라이트만 타임라인에도 얹는다. */
