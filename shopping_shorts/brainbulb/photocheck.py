@@ -73,10 +73,16 @@ def build_review_request(path, subtitle):
         "  photo        실제 카메라로 찍은 것처럼 보인다(피부 모공·직물 주름·머리카락 질감·자연광 명암)\n"
         "  illustration 윤곽선·평면 색면·셀 셰이딩·과장된 비율이 보인다\n"
         "\n"
-        "[판정 2 — 읽히는 글자가 있나]\n"
-        "  화면에 **읽을 수 있는** 글자·숫자·로고·상호가 있으면 적어라.\n"
-        "  ★지어낸 기록은 특히 위험하다: 없는 채널 이름 밑의 구독자 수, 가짜 주가지수, 실존 회사 간판.\n"
-        "  흐릿해서 못 읽는 배경 간판은 문제가 아니다.\n"
+        "[판정 2 — **지어낸 기록**이 있나]\n"
+        "  ★묻는 것은 '글자가 있나'가 아니라 '**없는 사실을 진짜처럼 보여주나**'다.\n"
+        "  적어야 할 것 — 화면·간판·표가 **수치나 이름을 내세우는** 경우:\n"
+        "    없는 채널 이름 밑의 구독자 수 · 가짜 주가지수·환율 · 지어낸 뉴스 헤드라인\n"
+        "    실존 회사 간판(신한투자증권 같은) · 읽히는 가격표·계기판\n"
+        "  적지 마라 — 실제 사진에 자연히 있는 글자:\n"
+        "    옷·가방의 브랜드(NIKE·YALE) · 간판이나 표지판의 지명 · 흐릿한 배경 글자\n"
+        "    번호판·상표 조각처럼 **주장을 담지 않는** 글자\n"
+        "  판단 기준: 그 글자가 **틀린 정보를 사실처럼 전달하나**. 아니면 적지 마라.\n"
+        "  ★fabricated_text를 하나라도 적었으면 verdict는 반드시 retry다. 둘을 어긋나게 내지 마라.\n"
         "\n"
         "[판정 3 — 자막과 맞나]\n"
         "  자막이 말하는 장소·사람·행동이 그림에 있나. 나라가 어긋나지 않았나.\n"
@@ -84,7 +90,7 @@ def build_review_request(path, subtitle):
         "\n"
         "JSON 하나만 출력하라:\n"
         '{"verdict": "accepted 또는 retry", "visual_kind": "photo 또는 illustration",'
-        ' "legible_text": ["읽히는 글자"], "matches_subtitle": true 또는 false,'
+        ' "fabricated_text": ["지어낸 기록만"], "matches_subtitle": true 또는 false,'
         ' "reason": "보이는 것을 근거로 한 판정 이유"}\n'
     )
 
@@ -98,11 +104,13 @@ def parse_review(raw):
         return {"verdict": "accepted", "reason": "판정을 못 읽어 통과 처리"}
     v = str(d.get("verdict") or "accepted").lower()
     kind = str(d.get("visual_kind") or "photo").lower()
-    text = [t for t in (d.get("legible_text") or []) if str(t).strip()]
+    # ★"읽히는 글자"가 아니라 **지어낸 기록**만 본다 — 옷의 NIKE·YALE 때문에
+    #   실제 뉴스 사진이 버려지고 생성 이미지로 바뀌었다(실측 2026-09-13 v9 슬롯4).
+    text = [t for t in (d.get("fabricated_text") or d.get("legible_text") or []) if str(t).strip()]
     match = d.get("matches_subtitle")
     bad = (v == "retry" or kind == "illustration" or bool(text) or match is False)
     return {"verdict": "retry" if bad else "accepted", "visual_kind": kind,
-            "legible_text": text, "matches_subtitle": match,
+            "fabricated_text": text, "matches_subtitle": match,
             "reason": str(d.get("reason") or "")[:300]}
 
 

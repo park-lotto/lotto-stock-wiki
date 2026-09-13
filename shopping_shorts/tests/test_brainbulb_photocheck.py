@@ -56,7 +56,7 @@ def test_metrics_survives_missing_file(tmp_path):
 def test_parse_review_rejects_legible_text():
     """★읽히는 글자가 있으면 반려 — 실측으로 잡아낸 가짜 주가지수가 이 경우다."""
     raw = json.dumps({"verdict": "accepted", "visual_kind": "photo",
-                      "legible_text": ["종합주가지수", "-2,886.83", "신한투자증권"],
+                      "fabricated_text": ["종합주가지수", "-2,886.83", "신한투자증권"],
                       "matches_subtitle": True, "reason": "주가 전광판"})
     r = photocheck.parse_review(raw)
     assert r["verdict"] == "retry", "글자가 읽히는데 통과시켰다"
@@ -64,20 +64,20 @@ def test_parse_review_rejects_legible_text():
 
 def test_parse_review_rejects_illustration():
     raw = json.dumps({"verdict": "accepted", "visual_kind": "illustration",
-                      "legible_text": [], "matches_subtitle": True, "reason": "셀 셰이딩"})
+                      "fabricated_text": [], "matches_subtitle": True, "reason": "셀 셰이딩"})
     assert photocheck.parse_review(raw)["verdict"] == "retry"
 
 
 def test_parse_review_rejects_subtitle_mismatch():
     """자막과 안 맞으면 반려 — 볼케이노에 없는 검사다(케냐 자막에 한국 지하철)."""
     raw = json.dumps({"verdict": "accepted", "visual_kind": "photo",
-                      "legible_text": [], "matches_subtitle": False, "reason": "한국 지하철"})
+                      "fabricated_text": [], "matches_subtitle": False, "reason": "한국 지하철"})
     assert photocheck.parse_review(raw)["verdict"] == "retry"
 
 
 def test_parse_review_accepts_clean():
     raw = json.dumps({"verdict": "accepted", "visual_kind": "photo",
-                      "legible_text": [], "matches_subtitle": True, "reason": "맞는 장면"})
+                      "fabricated_text": [], "matches_subtitle": True, "reason": "맞는 장면"})
     assert photocheck.parse_review(raw)["verdict"] == "accepted"
 
 
@@ -102,7 +102,7 @@ def test_check_sends_all_images(tmp_path):
     def rv(prompt, path):
         called.append(path)
         return json.dumps({"verdict": "accepted", "visual_kind": "photo",
-                           "legible_text": [], "matches_subtitle": True, "reason": ""})
+                           "fabricated_text": [], "matches_subtitle": True, "reason": ""})
     r = photocheck.check({"1": str(a), "2": str(b)}, {"1": "가", "2": "나"},
                          reviewer=rv, log=lambda *a_: None)
     assert r["checked"] == 2
@@ -118,7 +118,7 @@ def test_check_can_still_filter_by_metrics(tmp_path):
     def rv(prompt, path):
         called.append(path)
         return json.dumps({"verdict": "accepted", "visual_kind": "photo",
-                           "legible_text": [], "matches_subtitle": True, "reason": ""})
+                           "fabricated_text": [], "matches_subtitle": True, "reason": ""})
     photocheck.check({"1": str(a), "2": str(b)}, {"1": "가", "2": "나"},
                      reviewer=rv, log=lambda *a_: None, force_all=False)
     assert called == [str(b)], "지표가 깨끗한 것까지 보냈다"
@@ -129,7 +129,7 @@ def test_check_collects_retry_slots(tmp_path):
     p = tmp_path / "1.png"; _flat(p)
     def rv(prompt, path):
         return json.dumps({"verdict": "retry", "visual_kind": "photo",
-                           "legible_text": ["가짜 숫자"], "matches_subtitle": True, "reason": "글자"})
+                           "fabricated_text": ["가짜 숫자"], "matches_subtitle": True, "reason": "글자"})
     r = photocheck.check({"1": str(p)}, {"1": "자막"}, reviewer=rv, log=lambda *a: None)
     assert r["retry"] == ["1"]
 
@@ -156,5 +156,25 @@ def test_review_request_asks_all_three():
     """질문에 셋이 다 들어가나 — 사진/그림 · 읽히는 글자 · 자막 일치."""
     q = photocheck.build_review_request("x.png", "케냐 슬럼가를 지남")
     assert "케냐 슬럼가를 지남" in q
-    for w in ("illustration", "읽을 수 있는", "자막과 맞나"):
+    for w in ("illustration", "지어낸 기록", "자막과 맞나"):
         assert w in q, w
+
+
+def test_brand_on_clothing_is_not_fabricated():
+    """★옷의 브랜드는 지어낸 기록이 아니다.
+
+    실측 2026-09-13(v9): 옷의 NIKE·YALE·MIRACLE 때문에 3장이 반려됐고,
+    그중 슬롯4는 **검색해서 찾은 실제 뉴스 사진**이었다. 실물을 쓰자는 지시와 반대로
+    검수가 진짜 사진을 버리고 생성 이미지로 바꿨다.
+    → 질문을 '읽히는 글자'에서 '지어낸 기록'으로 바꿨다.
+    """
+    q = photocheck.build_review_request("x.png", "자막")
+    assert "NIKE" in q and "적지 마라" in q, "브랜드 예외가 질문에 없다"
+    assert "verdict는 반드시 retry" in q, "적어놓고 통과시키지 말라는 지시가 없다"
+
+
+def test_old_field_name_still_read():
+    """모델이 옛 이름으로 답해도 읽는다 — 판정이 흔들려도 놓치지 않게."""
+    raw = json.dumps({"verdict": "accepted", "visual_kind": "photo",
+                      "legible_text": ["가짜 주가지수"], "matches_subtitle": True, "reason": ""})
+    assert photocheck.parse_review(raw)["verdict"] == "retry"

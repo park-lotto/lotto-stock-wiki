@@ -86,7 +86,8 @@ def gemini_reviewer(model="gemini-2.5-flash-lite", api_key=None, env_file=None):
         r = client.models.generate_content(
             model=model,
             contents=[types.Part.from_bytes(data=raw, mime_type=mime), prompt],
-            config=types.GenerateContentConfig(response_mime_type="application/json"))
+            config=types.GenerateContentConfig(response_mime_type="application/json",
+                                               temperature=0.0))
         return r.text or ""
     return call
 
