@@ -1,0 +1,8 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>메이커스랩 · 워커 스튜디오</title><link rel="stylesheet" href="studio.css"></head><body>
+<header><a class="brand" href="../atlas/"><b>M</b><span>MAKERS LAB<small>숏템메이커 / 디자인 스튜디오</small></span></a><div class="sample">디자인 검토 · 예시 데이터</div><nav><button id="night" aria-pressed="false">☾ 야간으로</button><button id="motion" aria-pressed="true">연출 동작</button><a href="../atlas/">200개 관제로 ↗</a></nav></header>
+<main><canvas id="scene" aria-label="8개 워커의 3D 디자인 검토 공간. 하단 워커 버튼으로 선택할 수 있습니다."></canvas><div id="labels" aria-hidden="true"></div>
+<section class="intro"><div class="eyebrow">01 / RESEARCH STUDIO</div><h1 id="view-title">기획·리서치 스튜디오</h1><p>생각하고, 만들고, 함께 검토하는 공간.</p><div class="team-count"><strong id="count">8</strong><span>예시 워커<small id="summary"></small></span></div></section>
+<div class="tools"><button id="home">전체 보기</button><button id="zoom-out" aria-label="축소">−</button><button id="zoom-in" aria-label="확대">+</button><span>드래그 회전 · 우클릭 이동 · 휠 확대</span></div>
+<aside id="detail" hidden aria-label="선택 워커 상세"></aside>
+<footer><div class="roster-head"><strong>함께 일하는 워커</strong><span>선택하면 얼굴과 작업대를 가까이 볼 수 있습니다.</span><small>실제 실행 미연결</small></div><div id="workers"></div></footer>
+</main><script type="module" src="studio.bundle.js"></script></body></html>
