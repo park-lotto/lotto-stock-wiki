@@ -318,3 +318,28 @@ def generate_all(prompts, workdir, imagegen, *, sources=None, log=print):
     log(f"[brainbulb.images] {len(out)}장 (새로 {made}장) — 실물 {by_kind.get('real',0)} · 변형 {by_kind.get('variant',0)} · 장소 {by_kind.get('scene',0)} · 생성 {by_kind.get('gen',0)}"
         + (f" · 실패 슬롯 {failed}" if failed else ""))
     return out
+
+
+def regenerate(slots, prompts, workdir, imagegen, files, *, log=print):
+    """검수에서 반려된 슬롯만 **안전한 장면으로 바꿔** 다시 만든다. → 갱신된 files
+
+    ★같은 프롬프트로 다시 만들면 같은 것이 나온다(실측: 가짜 간판을 두 번 그렸다).
+      반려 사유가 대개 '읽히는 글자'이므로 글자가 나올 여지를 없앤 장면으로 바꾼다.
+      그래도 실패하면 그 슬롯은 그대로 둔다 — 편이 멈추면 안 된다.
+    """
+    out = dict(files)
+    d = os.path.join(workdir, "img")
+    for slot in slots:
+        path = os.path.join(d, f"{int(slot):02d}.png")
+        safe = spec.IMAGE_PROMPT_PREFIX + spec.PROMPT_SCREEN_FALLBACK + spec.IMAGE_PROMPT_SUFFIX
+        try:
+            imagegen(safe, path)
+            out[str(slot)] = path
+            side = path + ".json"
+            with open(side, "w", encoding="utf-8") as fh:
+                json.dump({"kind": "gen", "hash": hashlib.sha256(safe.encode("utf-8")).hexdigest()[:16],
+                           "regenerated": True, "why": "검수 반려"}, fh, ensure_ascii=False)
+            log(f"[brainbulb.images] 슬롯 {slot} 검수 반려 → 안전한 장면으로 다시 만듦")
+        except Exception as e:  # noqa: BLE001 — 재생성 실패가 편을 멈추면 안 된다
+            log(f"[brainbulb.images] 슬롯 {slot} 재생성 실패({e!r:.60}) — 그대로 둔다")
+    return out

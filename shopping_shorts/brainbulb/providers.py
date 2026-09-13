@@ -65,6 +65,32 @@ def gemini_llm(model="gemini-3.1-flash-lite", api_key=None, env_file=None):
     return call
 
 
+def gemini_reviewer(model="gemini-2.5-flash-lite", api_key=None, env_file=None):
+    """→ call(prompt, image_path) -> str. **그림을 실제로 보고** 판정하게 한다.
+
+    ★프롬프트 낱말을 막는 방식은 계속 샌다(실측 2026-09-13: computer screen을 막으니
+      digital sign으로, 그걸 막으니 또 다른 표현으로 나왔다). 만든 그림을 보고 판정해야
+      새 표현도 잡힌다. 볼케이노도 같은 구조다 — review_policy={"provider":"client"}.
+    """
+    key = api_key or _env_key("GEMINI_API_KEY", env_file)
+    if not key:
+        raise RuntimeError("providers: GEMINI_API_KEY가 없습니다 (.env 또는 환경변수)")
+    from google import genai
+    from google.genai import types
+    client = genai.Client(api_key=key)
+
+    def call(prompt, image_path):
+        with open(image_path, "rb") as fh:
+            raw = fh.read()
+        mime = "image/png" if image_path.lower().endswith(".png") else "image/jpeg"
+        r = client.models.generate_content(
+            model=model,
+            contents=[types.Part.from_bytes(data=raw, mime_type=mime), prompt],
+            config=types.GenerateContentConfig(response_mime_type="application/json"))
+        return r.text or ""
+    return call
+
+
 # ── Typecast ─────────────────────────────────────────────────────────────────────
 _TC_URL = "https://api.typecast.ai/v1/text-to-speech"
 

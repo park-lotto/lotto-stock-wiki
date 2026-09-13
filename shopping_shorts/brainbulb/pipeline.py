@@ -13,7 +13,7 @@ import os
 import tempfile
 import time
 
-from . import spec, prompt, lint, layout, voice, timing, ass_gen, sfx, render, review, measure, images as _images, frames as _frames
+from . import spec, prompt, lint, layout, voice, timing, ass_gen, sfx, render, review, measure, images as _images, frames as _frames, photocheck as _photocheck
 
 STEPS = ["setup", "script", "layout", "lint", "prompts", "images", "voice", "timing", "subtitle", "sfx", "frames", "render", "review"]
 
@@ -81,7 +81,17 @@ def _digest(obj):
     return hashlib.sha256(json.dumps(obj, ensure_ascii=False, sort_keys=True).encode("utf-8")).hexdigest()[:12]
 
 
-def run_step(wd, step, *, source_text=None, llm=None, tts=None, imagegen=None, sfx_dir=None, meme_dir=None, bg_image=None, fonts_dir=None, log=print, min_cuts=None):
+def _subtitles_by_slot(script):
+    """{슬롯: 그 슬롯을 쓰는 컷들의 자막}. 검수가 "이 사진이 이 자막에 맞나"를 묻는 데 쓴다."""
+    out = {}
+    for g in script.get("groups") or []:
+        i = g.get("img")
+        if isinstance(i, int):
+            out.setdefault(str(i), []).append(g.get("text", ""))
+    return {k: " / ".join(v) for k, v in out.items()}
+
+
+def run_step(wd, step, *, source_text=None, llm=None, tts=None, imagegen=None, sfx_dir=None, meme_dir=None, bg_image=None, fonts_dir=None, log=print, min_cuts=None, reviewer=None):
     """한 단계만 실행. → 응답 dict {status: ok|need_input|failed, step, next_step, fail?, need?}"""
     job = load(wd)
     d = job["data"]
@@ -141,8 +151,20 @@ def run_step(wd, step, *, source_text=None, llm=None, tts=None, imagegen=None, s
             if d["prompts"].get("skipped") or imagegen is None:
                 d["images"] = {"files": {}, "skipped": True}
             else:
-                d["images"] = {"files": _images.generate_all(d["prompts"]["prompts"], wd, imagegen,
-                                                             sources=d["prompts"].get("sources"), log=log)}
+                files = _images.generate_all(d["prompts"]["prompts"], wd, imagegen,
+                                             sources=d["prompts"].get("sources"), log=log)
+                # ★만든 그림을 **실제로 보고** 판정한다 — 프롬프트 낱말 차단은 계속 샌다
+                #   (실측 2026-09-13: computer screen을 막으니 digital sign으로, 그걸 막으니 또 다른
+                #    표현으로 나왔다. 검수는 «종합주가지수 -2,886.83 신한투자증권»을 읽어내 반려했다).
+                #   볼케이노도 같은 구조다 — review_policy={"provider":"client"}.
+                if reviewer is not None:
+                    subs = _subtitles_by_slot(d["script"]["script"])
+                    chk = _photocheck.check(files, subs, reviewer=reviewer, log=log)
+                    d["photo_check"] = chk
+                    if chk["retry"]:
+                        files = _images.regenerate(chk["retry"], d["prompts"]["prompts"], wd,
+                                                   imagegen, files, log=log)
+                d["images"] = {"files": files}
             _invalidate_after(job, "images")
 
         elif step == "frames":

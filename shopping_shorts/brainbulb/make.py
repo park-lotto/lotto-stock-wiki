@@ -62,7 +62,8 @@ def main(argv=None):
     imagegen = None if a.no_images else _images.evolink_imagegen(quality=a.quality)
     r = pipeline.run_all(a.workdir, source_text=text, llm=providers.gemini_llm(a.model),
                          tts=providers.typecast_synth(_voices(a), tempo=a.tempo), imagegen=imagegen,
-                         sfx_dir=a.sfx_dir, meme_dir=a.meme_dir, bg_image=a.bg)
+                         sfx_dir=a.sfx_dir, meme_dir=a.meme_dir, bg_image=a.bg,
+                         reviewer=None if (a.no_review or imagegen is None) else providers.gemini_reviewer())
     if r["status"] != "ok":
         print("[make] 멈춤:", json.dumps({k: v for k, v in r.items() if k != "job"}, ensure_ascii=False, indent=1)[:1500])
         return 1
