@@ -103,6 +103,39 @@ def gemini_llm(model="gemini-3.1-flash-lite", api_key=None, env_file=None):
     return call
 
 
+def claude_llm(bin_path="claude", timeout=300, log=print):
+    """→ call(prompt) -> str. **대본을 클로드가 쓴다.** `gemini_llm`과 바꿔 끼우면 된다.
+
+    ★왜 바꾸나 (실측 2026-09-14):
+      하루 동안 규칙을 16→21개로 늘렸는데도 대본이 밋밋했다. 원인을 찾다 보니
+      **볼케이노에는 대본 생성 모델이 아예 없었다** — 서버 응답 `script_input` 원문:
+      "서버는 규격만 검사하며 이 단계에서 유료 모델을 부르지 않습니다."
+      볼케이노는 규칙 11개(우리 절반)를 내려주고 **붙어 있는 AI(claude)에게 쓰게 한 뒤**
+      규격만 검사한다. `review.client.bin == "claude"` 가 그 배선이다.
+
+      같은 소재(블라인드 집값)로 나란히 뽑아 보면 갈린다:
+        제미니   도입 6컷이 정보 0 · 어미 섞임(뉴스 5 · 음슴 4) · 재료의 재반박을 안 씀
+        클로드   2컷에 숫자 후킹 · 어미 통일 · 글쓴이 재반박까지 씀
+      규칙을 더 넣어 약한 모델을 붙잡는 것보다 이쪽이 싸고 확실하다.
+
+    ★프롬프트를 **stdin 으로** 넘긴다 — 대본 지시문이 8천 자가 넘어 argv 로는 윈도우에서 끊긴다.
+    ★`--print` 는 한 번 묻고 끝내는 모드다(대화 세션을 열지 않는다).
+    """
+    import subprocess
+
+    def call(prompt):
+        argv = [bin_path, "--print", "--permission-mode", "bypassPermissions"]
+        r = subprocess.run(argv, input=prompt, capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", timeout=timeout)
+        if r.returncode != 0:
+            raise RuntimeError(f"claude {r.returncode}: {(r.stderr or '')[:300]}")
+        out = (r.stdout or "").strip()
+        if not out:
+            raise RuntimeError("claude: 빈 응답")
+        return out
+    return call
+
+
 def gemini_reviewer(model="gemini-3.1-flash-lite", api_key=None, env_file=None):
     """→ call(prompt, image_path) -> str. **그림을 실제로 보고** 판정하게 한다.
 
@@ -128,6 +161,31 @@ def gemini_reviewer(model="gemini-3.1-flash-lite", api_key=None, env_file=None):
         r = client.models.generate_content(
             model=model,
             contents=[types.Part.from_bytes(data=raw, mime_type=mime), prompt],
+            config=types.GenerateContentConfig(response_mime_type="application/json",
+                                               temperature=0.0))
+        return r.text or ""
+    return call
+
+
+def gemini_reader(model="gemini-3.1-flash-lite", api_key=None, env_file=None):
+    """→ call(prompt, [image_path…]) -> str. 그림 **여러 장을 한 번에** 읽힌다.
+
+    커뮤니티 글은 본문이 캡처 이미지라 한 장씩 보면 앞뒤가 끊긴다 — 순서대로 함께 보낸다.
+    """
+    from google.genai import types
+    client = _gemini_client(api_key, env_file)
+    model = _pick_model(client, model)
+
+    def call(prompt, image_paths):
+        parts = []
+        for p in image_paths:
+            with open(p, "rb") as fh:
+                raw = fh.read()
+            mime = "image/png" if p.lower().endswith(".png") else "image/jpeg"
+            parts.append(types.Part.from_bytes(data=raw, mime_type=mime))
+        parts.append(prompt)
+        r = client.models.generate_content(
+            model=model, contents=parts,
             config=types.GenerateContentConfig(response_mime_type="application/json",
                                                temperature=0.0))
         return r.text or ""

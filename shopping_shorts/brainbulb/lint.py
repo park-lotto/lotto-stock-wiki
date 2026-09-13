@@ -35,6 +35,10 @@ class Rule:
 
 _FORMAL = re.compile(r"(습니다|습니까|십시오)[.!?]?$")
 _FORMAL_HARD = re.compile(r"(습니까|십시오)[.!?]?$")
+
+# 어미 두 계열 — 실물은 편마다 **하나로 통일**한다(아래 r_ending_mix 주석의 실측).
+_END_NEWS = re.compile(r"(였다|이었다|았다|었다|겠다|한다|된다|않았다|이다|린다|난다|온다|간다)[.!?]?$")
+_END_EUM = re.compile(r"(음|함|됨|임|짐|옴|삼|남|셈)[.!?]?$")
 # 종결 판정 — 볼케이노 5편 137컷의 어미를 훑어 만든 목록(2026-09-12 실측).
 # '~셈'(정점 찍은 셈)·'~ㄴ데'(장비가 아닌데)·'~걸'처럼 종결로 쓰이는 것까지 포함해야 정답 편을 반려하지 않는다.
 _CLOSED = re.compile(
@@ -65,6 +69,17 @@ def r_comma(s, ctx):
             for i, g in enumerate(_groups(s)) if "," in g.get("text", "")]
 
 
+def _nearest_emotion(v):
+    """오타 난 감정 이름 → 가장 비슷한 정식 이름. 너무 다르면 None.
+
+    실측 2026-09-13: «의심/떨떠러»(정답 «의심/떨떠름») 한 글자 차이로 7시도가 전부 반려됐다.
+    반려 사유를 줘도 모델이 같은 오타를 되풀이했다 — 고쳐 주는 쪽이 맞다.
+    """
+    import difflib
+    m = difflib.get_close_matches(str(v), spec.EMOTIONS, n=1, cutoff=0.7)
+    return m[0] if m else None
+
+
 def r_enum(s, ctx):
     out = []
     for i, g in enumerate(_groups(s)):
@@ -76,6 +91,13 @@ def r_enum(s, ctx):
         meme = g.get("meme")
         if not has_img and not meme:
             out.append(Issue("enum", REJECT, f"groups[{i}]", g.get("text", ""), "컷마다 img(슬롯 번호) 또는 meme(감정)이 있어야 합니다"))
+        # ★오타 한 글자로 편이 통째로 막히면 안 된다(실측 2026-09-13 v10: «의심/떨떠러»를
+        #   7번 내리 써서 대본이 실패했다). 가장 비슷한 감정으로 **고쳐서** 넘긴다.
+        if meme and meme not in spec.EMOTIONS:
+            fixed = _nearest_emotion(meme)
+            if fixed:
+                g["meme"] = fixed
+                meme = fixed
         if meme and meme not in spec.EMOTIONS:
             out.append(Issue("enum", REJECT, f"groups[{i}].meme", str(meme), f"밈 감정은 다음 문자열 그대로: {' · '.join(spec.EMOTIONS)}"))
     return out
@@ -99,6 +121,40 @@ def r_formal(s, ctx):
     if gs and n * 2 > len(gs):
         out.append(Issue("formal", REJECT, "groups", f"{n}/{len(gs)}", "격식 종결(-습니다)이 너무 많습니다 — 이 채널은 거의 쓰지 않습니다(반말체: ~였다/~임/~됨)"))
     return out
+
+
+def r_ending_mix(s, ctx):
+    """한 대본 안에서 어미 계열을 섞지 마라 — 뉴스체로 가든 음슴체로 가든 **하나로**.
+
+    ★"~였다가 뉴스 같아서 밋밋하다"가 아니다. 실물 5편을 세어 보면 뉴스체가 정상이다
+      (실측 2026-09-14, 135컷):
+          박수홍   뉴스 7 · 음슴  0      이동건  뉴스 0 · 음슴 16
+          보르네오 뉴스 5 · 음슴  1      테이저건 뉴스 0 · 음슴  9
+          박위     뉴스 5 · 음슴  0
+      5편 중 3편은 음슴체가 아예 없고 뉴스체로만 쓴다. PUNCH도 「사람이 낸 불이다」
+      「이제 침묵이 더 위험하다」처럼 ~다로 닫는다. 그러니 ~였다를 금지하면
+      **실물 4편이 반려된다**(골든 회귀가 막는다).
+
+      실물의 규칙은 금지가 아니라 **통일**이다 — 한 편 안에서 어미가 왔다갔다 하지 않는다.
+      우리 대본이 밋밋하게 들린 진짜 이유가 이것이다(뉴스 5 · 음슴 4로 섞였다).
+
+    판정: 두 계열이 **둘 다 2컷 이상**이면 반려. 한쪽이 1컷이면 우연이므로 통과
+          (보르네오가 뉴스 5 · 음슴 1이라 이 여유가 필요하다).
+    """
+    gs = _groups(s)
+    news = [(i, g.get("text", "").strip()) for i, g in enumerate(gs)
+            if _END_NEWS.search(g.get("text", "").strip())]
+    eum = [(i, g.get("text", "").strip()) for i, g in enumerate(gs)
+           if _END_EUM.search(g.get("text", "").strip())]
+    if len(news) >= 2 and len(eum) >= 2:
+        minor = news if len(news) <= len(eum) else eum
+        keep = "음슴체(~음·~함·~임)" if minor is news else "뉴스체(~였다·~이다)"
+        drop = "뉴스체(~였다·~이다)" if minor is news else "음슴체(~음·~함·~임)"
+        shown = " · ".join(f"groups[{i}] «{t}»" for i, t in minor[:4])
+        return [Issue("ending_mix", REJECT, "groups", f"뉴스체 {len(news)} · 음슴체 {len(eum)}",
+                      f"한 편 안에서 어미가 섞였습니다 — {keep}로 통일하고 {drop}를 고치세요. "
+                      f"고칠 곳: {shown}")]
+    return []
 
 
 def r_h2_abstract(s, ctx):
@@ -334,6 +390,7 @@ RULES = [
     Rule("enum", REJECT, f"색은 {'/'.join(spec.COLORS)}, 역할은 {'/'.join(spec.ROLES)}만. 컷마다 img(슬롯 번호) 또는 meme(감정) 중 하나. 밈 감정은 다음 문자열 그대로: {' · '.join(spec.EMOTIONS)}.", r_enum),
     Rule("nonwhite_run", REJECT, "흰색이 아닌 강조색을 3컷 연달아 쓰지 마라. 사이에 WHITE를 둬라.", r_nonwhite_run),
     Rule("formal", REJECT, "나레는 반말체(~였다/~했다 또는 ~임/~됨). '-습니다'가 과반이면 안 되고 '-습니까/-십시오'는 쓰지 마라.", r_formal),
+    Rule("ending_mix", REJECT, "어미는 **한 편 안에서 하나로 통일**하라 — 뉴스체(~였다·~이다)로 갈지 음슴체(~음·~함·~임)로 갈지 먼저 정하고 끝까지 그것만 써라. 둘을 섞으면 반려된다(PUNCH도 같은 계열로 닫아라).", r_ending_mix),
     Rule("h2_abstract", REJECT, "h2(노란 아랫줄)에는 숫자를 넣고, 이유·사연 같은 추상명사로 끝내지 마라.", r_h2_abstract),
     Rule("card", REJECT, f"카드는 오프닝에서 읽어주는 한 문장, {spec.POLICY_CARD_MAX_CHARS}자 안(실제 편 26~33자). 낱말로 끊지 마라.", r_card),
     Rule("words", REJECT, f"한 줄은 {spec.POLICY_MAX_WORDS_PER_LINE}어절 이하. 한 컷은 짧게(12~14자 한 줄 또는 두 줄).", r_words, needs_layout=True),
