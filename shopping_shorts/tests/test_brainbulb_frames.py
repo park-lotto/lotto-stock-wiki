@@ -124,22 +124,60 @@ def test_pipeline_with_fake_images_and_memes_renders(tmp_path):
     assert d["review"]["ok"], d["review"]
 
 
-def test_screen_orders_are_replaced():
-    """★화면·계기판 주문은 판정으로 막는다 — 지시문만으론 샌다.
+def test_screen_orders_are_sent_back_for_rewrite():
+    """★화면 주문은 판정으로 막되 **반려해서 다시 쓰게** 한다 — 조용히 갈아치우지 않는다.
 
     실측 2026-09-13(v5 슬롯9): "computer screen showing a social media profile with a
     downward trend line"이 접미 금지어 16개를 뚫고 **가짜 그래프**를 그렸다.
-    지시문에 "화면을 주문하지 마라"가 이미 있었는데도 모델이 어겼다.
+    지시문에 "화면을 주문하지 마라"가 이미 있었는데도 모델이 어겼다 → 판정이 필요하다.
+
+    ★2026-09-14: 그런데 걸렸을 때 「빈 방」 문장으로 **통째로 갈아치우던 것**이 더 큰 병이었다.
+      작성자는 자기 프롬프트가 버려진 걸 모르고 로그에도 안 남아, 최민식 편에서 돈 이야기
+      세 컷이 사람 없는 현대식 사무실로 나갔다(1초·13초·30초가 같은 그림).
+      → 볼케이노처럼 **반려 사유를 붙여 다시 쓰게** 하고, 고쳐 온 것을 쓴다.
     """
     script = {"groups": [{"text": "x", "color": "WHITE", "role": "NARR", "img": 1},
                          {"text": "y", "color": "WHITE", "role": "NARR", "img": 2}]}
-    raw = json.dumps({"cast": {},
+    bad = json.dumps({"cast": {},
                       "prompts": {"1": "a computer screen showing a subscriber count dropping",
                                   "2": "a quiet alley at dusk with nobody around"}})
-    r = images.make_prompts(script, "소재", lambda _: raw, log=lambda *a: None)
-    assert "computer screen" not in r["prompts"]["1"].lower(), "화면 주문이 그대로 남았다"
-    assert "subscriber count" not in r["prompts"]["1"].lower()
-    assert "quiet alley" in r["prompts"]["2"], "멀쩡한 장면까지 바꾸면 안 된다"
+    good = json.dumps({"cast": {},
+                       "prompts": {"1": "a woman staring at her hands on a kitchen table",
+                                   "2": "a quiet alley at dusk with nobody around"}})
+    seen = []
+
+    def call(p):
+        seen.append(p)
+        return bad if len(seen) == 1 else good
+
+    r = images.make_prompts(script, "소재", call, log=lambda *a: None)
+    assert len(seen) == 2, "반려하고 다시 쓰게 하지 않았다"
+    assert "슬롯 1" in seen[1], "어느 슬롯이 왜 반려됐는지 알려주지 않았다"
+    assert "computer screen" not in r["prompts"]["1"].lower()
+    assert "staring at her hands" in r["prompts"]["1"], "고쳐 온 프롬프트를 안 썼다"
+    assert "quiet alley" in r["prompts"]["2"], "멀쩡한 장면까지 건드리면 안 된다"
+
+
+def test_money_scenes_are_not_blocked():
+    """★돈 이야기를 그릴 수 있어야 한다 — 낱말을 넓게 잡으면 편이 통째로 빈 방이 된다.
+
+    실측 2026-09-14(최민식 편): numbers·percentage·counter 까지 막았더니 슬롯 9·11이 걸려
+    「빈 사무실」이 세 컷 들어갔다. 자막은 «수수료를 30퍼센트 떼어 갔다» 였다.
+    볼케이노는 이 자리에서 실사가 아닌 것을 주문하는 낱말만 막는다(서버 prompt_rules).
+    """
+    for t in ("a hand pulling several banknotes away from a thin stack on a desk",
+              "a stack of 1980s banknotes bound with a paper band on a metal desk",
+              "an old promissory note held between two fingers over a worn desk",
+              "a young man counting bills in a cramped office"):
+        assert not images._bad_words(t), t
+
+
+def test_nonphoto_orders_are_caught():
+    """실사 채널이므로 그림·만화 주문은 막는다(볼케이노가 막는 유일한 범주)."""
+    for t in ("Cartoon frog with worried eyes",
+              "a watercolor painting of an old street",
+              "3d render of a stack of coins"):
+        assert images._bad_words(t), t
 
 
 def test_screen_words_cover_known_leaks():
@@ -173,9 +211,16 @@ def test_screen_words_cover_second_leak():
     실측 2026-09-13(v6 슬롯11): «digital sign in a public space showing a downward trend icon
     and blurred numbers» → **신한투자증권 간판 + 종합주가지수 -2,866.93**이 그려졌다.
     실존 브랜드에 가짜 수치라 1차 유출(가짜 구독자 수)보다 나쁘다.
+
+    ★2026-09-14: 이때 `numbers`·`ticker`·`stock`·`billboard`까지 넓혔던 것을 **되돌렸다** —
+      그 낱말들이 돈 이야기를 통째로 막았기 때문이다(test_money_scenes_are_not_blocked).
+      이 사고의 실제 주문은 «digital sign … showing …» 이었으므로 그 형태만 막으면 걸린다.
     """
-    for w in ("digital sign", "numbers", "ticker", "stock", "billboard"):
+    for w in ("digital sign", "display showing", "screen showing", "sign showing"):
         assert w in spec.PROMPT_SCREEN_WORDS, w
+    # 그때 실제로 샜던 문장이 지금도 걸리는가 — 낱말 목록을 좁히고도 이건 잡혀야 한다
+    leak = "digital sign in a public space showing a downward trend icon and blurred numbers"
+    assert images._bad_words(leak), "2차 유출 문장이 안 걸린다"
 
 
 def test_screen_words_do_not_catch_normal_scenes():

@@ -103,7 +103,7 @@ def gemini_llm(model="gemini-3.1-flash-lite", api_key=None, env_file=None):
     return call
 
 
-def claude_llm(bin_path="claude", timeout=300, log=print):
+def claude_llm(model=None, *, bin_path="claude", timeout=300, log=print):
     """→ call(prompt) -> str. **대본을 클로드가 쓴다.** `gemini_llm`과 바꿔 끼우면 된다.
 
     ★왜 바꾸나 (실측 2026-09-14):
@@ -120,11 +120,21 @@ def claude_llm(bin_path="claude", timeout=300, log=print):
 
     ★프롬프트를 **stdin 으로** 넘긴다 — 대본 지시문이 8천 자가 넘어 argv 로는 윈도우에서 끊긴다.
     ★`--print` 는 한 번 묻고 끝내는 모드다(대화 세션을 열지 않는다).
+
+    ★모델을 **반드시 못 박는다**(기본 opus). 안 박으면 CLI 기본값을 따라가는데, 그건
+      사장님이 그 PC에서 무엇을 기본으로 뒀느냐에 달렸다 — 다른 PC에서 Sonnet 이 기본이면
+      **말없이 대본 품질이 바뀌고 아래 벤치가 재현되지 않는다**(실측 2026-09-14: 지정 없이
+      부르니 `claude-opus-5[1m]` 이 잡혔다. 즉 골든 5편 벤치는 Opus 로 잰 값이다).
+      볼케이노도 같은 자리에서 `cfg["model"]` 로 못 박는다(`volcano_run.claude_call`).
     """
     import subprocess
 
+    model = model or spec.SCRIPT_CLAUDE_MODEL
+
     def call(prompt):
         argv = [bin_path, "--print", "--permission-mode", "bypassPermissions"]
+        if model:
+            argv += ["--model", model]
         r = subprocess.run(argv, input=prompt, capture_output=True, text=True,
                            encoding="utf-8", errors="replace", timeout=timeout)
         if r.returncode != 0:
@@ -133,6 +143,7 @@ def claude_llm(bin_path="claude", timeout=300, log=print):
         if not out:
             raise RuntimeError("claude: 빈 응답")
         return out
+    call.tag = f"claude:{model or 'cli-default'}"   # 어느 모델이 썼는지 job.json 에 남는다
     return call
 
 
@@ -163,8 +174,11 @@ def script_llm(model="gemini-3.1-flash-lite", *, which=None, log=print):
         return gemini_llm(model)
     if which != "claude":
         raise ValueError(f"providers: 모르는 대본 작성기 «{which}» — claude 또는 gemini")
-    log("[brainbulb.script] 대본 작성 = 클로드")
-    return claude_llm()
+    # ★`model` 은 제미니 모델명이다(`--model` 기본값) — 클로드에 그대로 넘기면 안 된다.
+    #   클로드 모델은 BRAINBULB_CLAUDE_MODEL 이나 spec.SCRIPT_CLAUDE_MODEL 로 따로 정한다.
+    cm = os.environ.get("BRAINBULB_CLAUDE_MODEL", "").strip() or spec.SCRIPT_CLAUDE_MODEL
+    log(f"[brainbulb.script] 대본 작성 = 클로드({cm})")
+    return claude_llm(cm)
 
 
 def gemini_reviewer(model="gemini-3.1-flash-lite", api_key=None, env_file=None):

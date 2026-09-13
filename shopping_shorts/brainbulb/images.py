@@ -100,19 +100,46 @@ def _needs_person(script, slot):
     return any(w in txt for w in spec.PROMPT_PERSON_WORDS)
 
 
-def _no_screen(prompt, hit):
-    """화면·계기판을 주문한 프롬프트를 **사람·장소 장면으로** 바꾼다.
+def _bad_words(body):
+    """프롬프트 본문에서 걸리는 낱말 → [(낱말, 왜)]. 없으면 빈 목록.
 
-    ★왜 지우는 게 아니라 바꾸나: 문장에서 화면만 빼면 "…를 보여주는"처럼 목적어가 사라져
-      모델이 아무거나 그린다. 대신 같은 감정을 사람·장소로 옮긴 문장을 통째로 쓴다
-      (볼케이노 실측도 «소파에 앉아 휴대폰을 엎어둔 부부»처럼 화면 대신 사람을 쓴다).
+    ★본문만 받는다 — 접미에 "no legible numbers"가 들어 있어 통째로 검사하면
+      모든 프롬프트가 걸린다(실측 2026-09-13, 내가 만든 회귀).
     """
-    return spec.IMAGE_PROMPT_PREFIX + spec.PROMPT_SCREEN_FALLBACK + spec.IMAGE_PROMPT_SUFFIX
+    low = body.lower()
+    out = [(w, "화면에 수치를 띄워 달라는 주문") for w in spec.PROMPT_SCREEN_WORDS if w in low]
+    out += [(w, "실사가 아닌 그림 주문") for w in spec.PROMPT_NONPHOTO_WORDS if w in low]
+    return out
 
 
-def make_prompts(script, source_text, call, *, log=print):
-    raw = call(build_prompt_request(script, source_text))
-    d = _prompt.parse_any(raw)
+def make_prompts(script, source_text, call, *, log=print, max_rewrites=2):
+    fb, d = "", None
+    for attempt in range(max_rewrites + 1):
+        d = _prompt.parse_any(call(build_prompt_request(script, source_text) + fb))
+        bad = {}
+        for k, v in (d.get("prompts") or {}).items():
+            hits = _bad_words(str(v))
+            if hits:
+                bad[str(k)] = hits
+        if not bad:
+            break
+        # ★조용히 바꾸지 않는다 — **반려하고 다시 쓰게 한다**(볼케이노와 같은 방식).
+        #   예전엔 걸리면 「빈 방」 문장으로 통째로 갈아치웠는데, 작성자는 그 사실을 모르고
+        #   로그에도 안 남아 **영상을 볼 때까지 아무도 몰랐다**(실측 2026-09-14 최민식 편:
+        #   돈 이야기 세 컷이 사람 없는 현대식 사무실로 나갔다).
+        lines = "\n".join(
+            f"  · 슬롯 {k}: «{h[0]}» — {h[1]}" for k, hs in bad.items() for h in hs[:2])
+        log(f"[brainbulb.prompts] 시도 {attempt + 1}: 슬롯 {sorted(bad)} 반려 — 다시 쓰게 한다")
+        fb = ("\n\n[재작성 지시 — 아래 슬롯의 프롬프트만 고쳐라. 나머지는 글자 하나도 바꾸지 마라]\n"
+              + lines
+              + "\n\n★고치는 법: **화면·간판에 수치를 띄우지 말고**, 같은 내용을 "
+                "«무엇이 찍힌 사진인지»로 바꿔 써라.\n"
+                "  ❌ a display showing a 30 percent commission\n"
+                "  ✅ a hand pulling several banknotes away from a thin stack on a desk\n"
+                "  숫자 자체는 자막이 말한다 — 그림은 **그 일이 벌어지는 장면**을 보여주면 된다.\n"
+                "  부정문(not a …)은 쓰지 마라 — 접미로 자동으로 붙는다.\n")
+    else:
+        log(f"[brainbulb.prompts] {max_rewrites + 1}번 고쳐도 남았다 — 그대로 진행하고 검수에 맡긴다")
     cast = {str(k): v for k, v in (d.get("cast") or {}).items()}
     # 슬롯별 장소 — 한 편 안에서 나라가 갈릴 때 쓴다(KTX=한국 · 슬럼가=케냐). 없으면 대본 region/place.
     places = {str(k): (v or "").strip() for k, v in (d.get("places") or {}).items()}
@@ -132,20 +159,7 @@ def make_prompts(script, source_text, call, *, log=print):
     missing = [s for s in slots if str(s) not in prompts]
     if missing:
         raise RuntimeError(f"images: 프롬프트가 없는 슬롯 {missing}")
-    # ★화면·계기판 주문을 **판정으로** 막는다 — 지시문에 적어놨는데도 모델이 어겼다
-    #   (실측 2026-09-13 v5 슬롯9: "computer screen showing a social media profile with a
-    #    downward trend line" → 가짜 그래프 화면이 그려졌다. 접미 금지어 16개도 못 막았다).
-    #   지시만 있고 판정이 없으면 언젠가 샌다 — 오늘 다섯 번째 같은 병이다.
-    for k, v in list(prompts.items()):
-        # ★**접미를 뺀 본문만** 검사한다 — 접미에 "no legible numbers"가 들어 있어
-        #   그대로 검사하면 모든 프롬프트가 "numbers"에 걸려 전부 빈 방이 된다(시험이 잡았다).
-        #   ★접두 길이로 자르지 마라 — 로케일이 «In Kenya»처럼 짧아지면 잘림이 어긋나
-        #   접미 일부가 본문에 남아 다시 "numbers"에 걸린다(실측 2026-09-13, 내가 만든 회귀).
-        low = v.split(spec.IMAGE_PROMPT_SUFFIX)[0].lower()
-        hit = next((w for w in spec.PROMPT_SCREEN_WORDS if w in low), None)
-        if hit:
-            prompts[k] = _no_screen(v, hit)
-            log(f"[brainbulb.prompts] 슬롯 {k} 화면 주문(«{hit}») — 사람·장소로 바꿈")
+    # (금지 낱말 검사는 위 재작성 루프가 한다 — 여기서 또 하지 않는다. 0순위-B)
     # 사진 종류·검색어 — 없거나 이상하면 gen으로 (판정은 여기 한 곳)
     sources = {}
     for k in prompts:
@@ -321,17 +335,27 @@ def generate_all(prompts, workdir, imagegen, *, sources=None, log=print):
 
 
 def regenerate(slots, prompts, workdir, imagegen, files, *, log=print):
-    """검수에서 반려된 슬롯만 **안전한 장면으로 바꿔** 다시 만든다. → 갱신된 files
+    """검수에서 반려된 슬롯만 다시 만든다. → 갱신된 files
 
     ★같은 프롬프트로 다시 만들면 같은 것이 나온다(실측: 가짜 간판을 두 번 그렸다).
-      반려 사유가 대개 '읽히는 글자'이므로 글자가 나올 여지를 없앤 장면으로 바꾼다.
+      그래서 **그 슬롯의 원래 장면은 지키고** 글자가 나올 여지만 없앤다.
+
+    ★예전엔 슬롯마다 똑같은 「빈 방」 문장으로 갈아치웠는데, 그러면 **반려된 슬롯이
+      전부 같은 그림**이 되고 자막과 무관해진다(실측 2026-09-14 최민식 편).
+      장면을 버리지 말고 촬영 조건만 바꾼다.
       그래도 실패하면 그 슬롯은 그대로 둔다 — 편이 멈추면 안 된다.
     """
     out = dict(files)
     d = os.path.join(workdir, "img")
     for slot in slots:
         path = os.path.join(d, f"{int(slot):02d}.png")
-        safe = spec.IMAGE_PROMPT_PREFIX + spec.PROMPT_SCREEN_FALLBACK + spec.IMAGE_PROMPT_SUFFIX
+        orig = (prompts or {}).get(str(slot)) or ""
+        body = orig.split(spec.IMAGE_PROMPT_SUFFIX)[0] if orig else ""
+        if body:
+            safe = (body + ", shot from behind or at an angle so that no sign, screen or printed"
+                    " text is visible in frame, shallow depth of field" + spec.IMAGE_PROMPT_SUFFIX)
+        else:
+            safe = spec.IMAGE_PROMPT_PREFIX + spec.PROMPT_REGEN_FALLBACK + spec.IMAGE_PROMPT_SUFFIX
         try:
             imagegen(safe, path)
             out[str(slot)] = path

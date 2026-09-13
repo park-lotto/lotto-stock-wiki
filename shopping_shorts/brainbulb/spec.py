@@ -217,19 +217,34 @@ POLICY_SCENE_MARK_MAX = 0.30
 # 화면·계기판 주문 감지 — 모델이 **없는 채널명과 숫자를 지어내 화면에 박는다**.
 # 실측 2026-09-13: 접미 금지어 16개를 다 넣고도 «computer screen showing a social media
 # profile with a downward trend line»이 가짜 그래프를 그렸다. 지시문만으로는 안 막힌다.
+#
+# ★2026-09-14 대폭 축소. 왜:
+#   낱말을 넓게 잡았더니(numbers·percentage·counter·statistics·index·stock…)
+#   **돈 이야기를 아예 그릴 수 없게 됐다.** 최민식 편은 처음부터 끝까지 돈 얘기다 —
+#   150만원·30퍼센트·45만원·105만원. 그런데 슬롯 9·11이 `percentage`/`numbers` 에 걸려
+#   프롬프트가 통째로 버려지고 「빈 사무실」이 세 컷이나 들어갔다(실측: 1초·13초·30초).
+#   자막은 «수수료를 30퍼센트 떼어 갔다» 인데 화면은 사람 없는 현대식 오피스였다.
+#
+#   볼케이노는 이 자리에서 **실사가 아닌 것을 주문하는 낱말만** 막는다(서버 `prompt_rules` 원문:
+#   "그림·만화·애니·웹툰·일러스트·3D·컴퓨터그래픽을 요청하는 영어 낱말이 들어가면 반려").
+#   numbers·percentage 따위는 목록에 없다. **지어낸 기록은 낱말이 아니라 검수가 잡는다**
+#   — 우리도 `photocheck` 가 그림을 실제로 보고 판정한다(사장님 "두더지 아니야?"의 답).
+#
+#   그래서 남긴 것은 «화면에 수치를 띄워 달라»는 **직접 주문**뿐이다. 이것만으로도
+#   위 실사고 2건(가짜 구독자 수·가짜 주가지수)은 걸린다 — 둘 다 screen/sign 주문이었다.
 PROMPT_SCREEN_WORDS = ("computer screen", "smartphone screen", "phone screen", "monitor showing",
                        "social media profile", "subscriber count", "trend line", "graph showing",
                        "chart showing", "youtube channel", "dashboard", "analytics",
-                       # ★2차 유출(실측 v6 슬롯11): «digital sign … showing a downward trend icon and
-                       #   blurred numbers» → **신한투자증권 간판 + 종합주가지수 -2,866.93**이 그려졌다.
-                       #   실존 브랜드에 가짜 수치라 앞의 것보다 더 나쁘다. 낱말을 좁게 잡으면 계속 샌다.
                        "digital sign", "digital display", "electronic sign", "led display",
-                       "billboard", "ticker", "stock", "index", "display showing", "screen showing",
-                       "sign showing", "numbers", "counter", "statistics", "percentage")
+                       "display showing", "screen showing", "sign showing")
 
-# 바꿔 넣을 장면 — 같은 '떠나감·줄어듦'을 사람과 장소로 말한다(볼케이노도 화면 대신 사람을 쓴다).
-PROMPT_SCREEN_FALLBACK = ("A quiet empty room with an unused desk and a chair turned away from the window, "
-                          "late afternoon light, nobody present")
+# 실사가 아닌 것을 주문하는 낱말 — 볼케이노가 실제로 막는 유일한 범주.
+PROMPT_NONPHOTO_WORDS = ("illustration", "cartoon", "anime", "webtoon", "drawing", "3d render",
+                         "digital art", "painting", "sketch", "vector art", "cgi", "render of")
+
+# 최후의 폴백 — 원래 프롬프트를 못 살릴 때만(검수 반려 + 원문 유실). 평소엔 쓰이지 않는다.
+PROMPT_REGEN_FALLBACK = ("A quiet empty room with an unused desk and a chair turned away from the window, "
+                         "late afternoon light, nobody present")
 
 # 자막이 사람의 행동을 말하는 표지 — 이런 컷은 scene(장소 검색)으로 못 채운다.
 # 실측 2026-09-13: «사람들 도움을 받음»에 «좁은 골목길»로 검색해 빈 밤골목이 왔다.
@@ -247,6 +262,12 @@ PHOTOCHECK_GRAD_MIN = 1.0       # 가장자리 세기 중앙값 하한 — 밑�
 #   gemini-3.1-flash-lite · gemini-3-flash-preview · gemini-2.0-flash 는 404.
 #   2.5 계열만 된다. 무료 키에서는 3.1이 되므로 붙은 곳에 따라 갈아끼운다(_pick_model).
 #   ★검수에 2.5-flash-lite를 쓰면 가짜 기록을 놓친다 → 2.5-flash로 올린다.
+# 대본을 쓰는 클로드 모델. ★반드시 못 박는다 — 안 박으면 CLI 기본값을 따라가고,
+#   그건 그 PC에 무엇이 기본으로 잡혀 있느냐에 달려 골든 5편 벤치가 재현되지 않는다.
+#   (실측 2026-09-14: 지정 없이 `claude --print` 를 부르니 claude-opus-5[1m] 이 잡혔다 —
+#    즉 그 벤치(컷차이 15·CHAR차이 5)는 opus 로 잰 값이다.)
+SCRIPT_CLAUDE_MODEL = "opus"
+
 VERTEX_MODEL_MAP = {
     "gemini-3.1-flash-lite": "gemini-2.5-flash",
     "gemini-3-flash-preview": "gemini-2.5-flash",
