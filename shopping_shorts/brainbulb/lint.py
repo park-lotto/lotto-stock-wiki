@@ -224,6 +224,19 @@ def r_slot_seq(s, ctx):
     return []
 
 
+def r_slot_count(s, ctx):
+    """이미지 슬롯 개수 — 실물 5편은 9·9·10·11·11개다.
+
+    ★슬롯이 많으면 그만큼 이미지를 더 만든다(돈이 든다). 지시문엔 9~11이라 적혀 있는데
+      판정이 없어 14개짜리가 통과했다(실측 2026-09-13). 12까지는 받고 그 위만 막는다.
+    """
+    n = len({g["img"] for g in _groups(s) if isinstance(g.get("img"), int)})
+    if n and n > spec.POLICY_MAX_SLOTS:
+        return [Issue("slot_count", REJECT, "groups[].img", f"{n}개",
+                      f"이미지 슬롯이 너무 많습니다 — 실제 편은 9~11개입니다. 한 슬롯을 2~3컷이 나눠 쓰게 묶으세요")]
+    return []
+
+
 def r_card_img(s, ctx):
     """오프닝 카드에 쓸 슬롯 — 없는 슬롯이면 반려, 1번이면 경고.
 
@@ -329,6 +342,7 @@ RULES = [
     Rule("last_standalone", REJECT, "마지막 컷은 앞 컷에서 이어지지 않는 **독립된 한 문장**으로 써라. 앞 컷에서 문장을 끝내고, 마지막 컷만 읽어도 말이 되게 하라.", r_last_standalone),
     Rule("copy", REJECT, "원문을 요약하지 말고 다시 써라. 원문 문장을 그대로 줄여 쓰지 마라.", r_copy),
     Rule("cut_count", REJECT, f"컷은 {spec.POLICY_MIN_CUTS}~{spec.POLICY_MAX_CUTS}개. 모자라면 반려된다.", r_cut_count),
+    Rule("slot_count", REJECT, f"이미지 슬롯은 9~11개(최대 {spec.POLICY_MAX_SLOTS}). 한 슬롯을 2~3컷이 나눠 쓴다.", r_slot_count),
     Rule("slot_seq", REJECT, "이미지 슬롯 번호는 1부터 빠짐없이 이어지게 매겨라(1,2,3…). 번호를 건너뛰지 마라.", r_slot_seq),
     Rule("card_img", REJECT, "card_img는 대본에 있는 슬롯 번호. 1번은 피해라 — 카드 뒤 1번 컷과 같은 사진이 이어진다.", r_card_img),
     Rule("example_copy", WARN, "지시문에 든 예시 문장을 그대로 쓰지 마라 — 구조만 따르고 이 기사로 새로 써라.", r_example_copy),
