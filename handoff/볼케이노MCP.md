@@ -142,3 +142,55 @@
 - 걸린 것 3가지: ① 이미지 슬롯 4(기내 우는 유아 안은 장면)가 EvoLink에서 실패 → 아이를 뒷모습·담요로 바꾸니 통과(9장은 캐시 재사용). ② 밈 `pepe/fm/013.png`에 '충격'·'어?' 글자가 박혀 render_plan 반려 → `timing.groups[5].meme`·`groups[5].meme`을 글자 없는 `025.png`로 교체. ③ `user_slots`는 `{}`가 아니라 `[]`(목록)이어야 반려 안 남.
 - render_plan 검수(focus_review_replies)는 실제 이미지 4장을 Read로 보고 답했다. 밈·얼굴 없는 사진은 `kind:object` + 비율 box로 답하면 통과.
 - 같은 시각 다른 세션이 `out/volcano/뇌전구_0004104394`(박위 기사)를 진행 중이었다 — 사장님이 그 폴더 명령을 이 창에 붙인 적 있음. **작업 폴더를 먼저 대조하고 남의 폴더는 안 건드린다.**
+
+---
+
+## 2026-09-14 CH PC — ★자막을 릴리 프리셋으로 갈아끼우기 (트랙 `릴리자막프리셋`)
+
+**결론부터: 볼케이노 자막을 "지우고 바꾸는" 게 아니다. 자막 굽기 전 파일을 쓰면 된다.**
+
+### 실측 1 — `video_raw.mp4` 에는 글자가 하나도 없다
+
+render_mix 단계에서 볼케이노는 `video_raw.mp4`(사진·움직임만) + `audio_sfx.wav` 를 만들고,
+**마지막 ffmpeg 한 줄에서 `sub.ass` 를 구워** `out/<slug>_v001.mp4` 를 낸다.
+
+프레임 추출로 확인: `video_raw.mp4` 에는 자막은 물론 **헤드라인(h1·h2)·오프닝 카드도 없다.**
+→ 글자는 전부 마지막에 한 번에 들어간다. 그래서 **지울 필요 없이 `video_raw` 를 쓰면 백지**다.
+
+```
+video_raw.mp4 + (우리 자막 층) + audio_sfx.wav  →  ffmpeg overlay  →  최종본
+```
+
+★**헤드라인도 같이 사라진다** — 자막만 우리 걸로 바꾸면 위쪽 헤드라인이 통째로 빈다.
+헤드라인은 **템플릿 쪽에서 해결해야 한다**(이 트랙 밖 일).
+
+### 실측 2 — 볼케이노가 자막에 열어주는 범위 (서버 `customization_help`)
+
+```
+style_roles  : headline · caption · card
+style_fields : color · colors · font · font_file · font_size
+               outline_color · outline_width · background_color · background_opacity · x · y
+```
+서버 문구: *"SRT는 문구·시각만 저장하며 스타일은 ASS·편집 파일에 있습니다"*
+
+즉 **글자색·글꼴(font_file 로 TmonMonsori 투입 가능)·외곽선·배경상자·위치까지만** 된다.
+말풍선 꼬리 · 이름표 사선절단 · 도장 이중테두리 · 형광펜 밴드 · 흔들림 애니메이션은 **ASS 로 불가**.
+→ "릴리 스타일로 재밌게 해줘"를 MCP 에 말한다고 되지 않는다. 별도 합성 공정이 필요하다.
+
+### 한 편 실제로 만들어 봄 (블라인드 여친직장 편, 19컷 36.77초)
+
+`shopping_shorts/motion/src/SsulOverlay.tsx`(이번 커밋) — `timing.json` 컷을 받아
+역할별 릴리 스타일로 배치 → Remotion ProRes4444 알파 렌더 → ffmpeg overlay 합성.
+이미지·TTS·효과음은 **전부 재사용**(재생성 0원, 합성 12초).
+
+- 자막 자리 실측: 사진 **469~1254**, 아래 검은 띠 중앙 **1587** → `shiftY=753`
+- 알파 확인: 자막 없는 구간 0%, 있는 구간만 불투명
+- 산출물: 바탕화면 `뇌전구_여친직장_릴리자막.mp4` (어제 볼케이노판 `뇌전구_여친직장_남친.mp4` 와 비교용)
+
+### 다음에 걸릴 것
+
+- **Remotion 필요**: 이 방식은 `motion/node_modules` 가 있어야 한다(로컬은 설치함, 4.0.489).
+  서버(숏템메이커)에 넣으려면 node 설치 여부부터 확인해야 한다 — **아직 확인 안 했다.**
+  `remotion_render.py` 는 이미 "없으면 `RemotionUnavailable`" 구조라 자리는 마련돼 있다.
+- 대안: 릴리 디자인을 ffmpeg/PIL 로 다시 구현하면 Remotion 없이 되지만 **애니메이션은 포기**.
+- 지금은 컷별 스타일을 `build_cuts.py` 에서 손으로 지정한다. 대본 단계에서 정하게 하면 자동화된다.
