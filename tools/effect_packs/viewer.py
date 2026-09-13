@@ -111,7 +111,7 @@ def make_previews(pack_dir, pack_id, f):
                     open(tmp, "wb").write(z.read("thumb.mp4"))
                     cr = detect_crop(tmp)   # 검은 화면 속 작은 자막 → 글자 영역만
                     pre = (cr + ",") if cr else ""
-                    W2, H2 = SIZE * 2, int(SIZE * 9 / 16)
+                    W2, H2 = SIZE * 2, SIZE + (SIZE % 2)   # ★짝수 크기(홀수면 libx264가 실패해 0바이트)
                     run(["ffmpeg", "-v", "error", "-y", "-t", "4", "-i", tmp, "-vf", f"{pre}scale={W2}:{H2}:force_original_aspect_ratio=decrease,pad={W2}:{H2}:(ow-iw)/2:(oh-ih)/2:color=0x222222,format=yuv420p", "-r", "15", "-c:v", "libx264", "-preset", "veryfast", "-crf", "26", "-an", prev])
                     run(["ffmpeg", "-v", "error", "-y", "-t", "8", "-i", tmp, "-vf", f"{pre}scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2:color=0x222222,format=yuv420p", "-r", "24", "-c:v", "libx264", "-preset", "veryfast", "-crf", "24", "-an", big])
                     os.remove(tmp)
@@ -174,7 +174,7 @@ def main():
     #lb video,#lb img{max-width:92vw;max-height:80vh;background:#222} #lb .cap{color:#ddd;font-size:13px;margin-top:8px}
     #lb .x{position:absolute;top:14px;right:22px;color:#fff;font-size:28px;cursor:pointer}
     .stat{position:absolute;top:4px;right:4px;font-size:10px;padding:1px 5px;border-radius:3px;background:#a33c}
-    """ % (SIZE, SIZE, SIZE, SIZE * 2, SIZE * 2, SIZE * 2, int(SIZE * 9 / 16))
+    """ % (SIZE, SIZE, SIZE, SIZE * 2, SIZE * 2, SIZE * 2, SIZE)
     out = [f"<!doctype html><meta charset='utf-8'><title>효과팩 라이브러리</title><style>{css}</style>",
            f"<h1>효과팩 라이브러리 (2026-09-13)</h1><div class='sub'>{len(packs)}팩 · 미리보기 {n_files}개 · 영상은 마우스를 올리면 재생 · 출처·라이선스는 팩마다 표시</div><nav>"]
     for c, L in by.items():
