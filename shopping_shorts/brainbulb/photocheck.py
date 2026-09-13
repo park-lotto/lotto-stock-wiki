@@ -106,15 +106,21 @@ def parse_review(raw):
             "reason": str(d.get("reason") or "")[:300]}
 
 
-def check(files, subtitles, *, reviewer=None, log=print, force_all=False):
+def check(files, subtitles, *, reviewer=None, log=print, force_all=True):
     """→ {"checked", "reviewed", "retry": [슬롯…]}
 
     files      {슬롯: 경로} · subtitles {슬롯: 그 슬롯 자막}
     reviewer   call(prompt, image_path) -> str. 없으면 기계 지표만 본다.
-    force_all  True면 지표와 무관하게 전부 모델에게 보낸다(비용 든다).
+    force_all  기본 True — **전부 모델에게 보낸다**.
 
-    ★기계 지표로 먼저 거르고 **의심스러운 것만** 모델에게 보낸다 —
-      볼케이노도 10장 중 1장만 보냈다(편 B·C는 0장).
+    ★볼케이노는 지표로 걸러 10장 중 1장만 보냈지만 **우리는 전수로 본다**. 왜:
+      · 우리가 잡으려는 건 볼케이노가 안 보는 것이다 — 지어낸 간판·수치, 자막과 어긋난 장면.
+        그건 **잘 그려진 사진**이라 그림/사진 지표에 안 걸린다
+        (실측 2026-09-13: 가짜 주가지수 flat 0.177 · 정상 사진 0.035~0.310 — 구분 불가).
+      · 우리 그림 39장의 flat 최대가 0.480이라 볼케이노 문턱 0.55로는 **한 장도 안 걸린다**.
+        실제로 v8에서 10장 검사에 모델 판정 0장이었다 — 검수가 영영 안 돈다.
+      · 값이 싸다: 한 편 10장 전수가 약 1.8원. 이미지 생성비(10장 $0.32)의 0.4%다.
+      지표는 버리지 않고 기록만 남긴다 — 나중에 문턱을 정할 근거가 된다.
     """
     out, retry = [], []
     for slot in sorted(files, key=lambda x: int(x)):

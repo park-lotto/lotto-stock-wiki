@@ -87,20 +87,41 @@ def test_parse_review_survives_garbage():
 
 
 # ── 전체 흐름 ────────────────────────────────────────────────────────────────────
-def test_check_only_reviews_suspicious_images(tmp_path):
-    """★기계 지표가 깨끗하면 모델을 안 부른다 — 볼케이노도 10장 중 1장만 보냈다."""
+def test_check_sends_all_images(tmp_path):
+    """★전수 검수 — 볼케이노는 지표로 걸렀지만 우리는 전부 본다.
+
+    실측 2026-09-13: 우리 그림 39장의 flat 최대가 0.480이라 볼케이노 문턱 0.55로는
+    **한 장도 안 걸렸다**(v8에서 10장 검사에 모델 판정 0장). 잡으려는 것이 다르다 —
+    지어낸 간판·수치는 잘 그려진 사진이라 그림/사진 지표에 안 걸린다.
+    값도 싸다: 한 편 전수가 약 1.8원(이미지 생성비의 0.4%).
+    """
     pytest.importorskip("cv2")
-    clean = tmp_path / "1.png"; _noise(clean, seed=1)
-    flat = tmp_path / "2.png"; _flat(flat)
+    a = tmp_path / "1.png"; _noise(a, seed=1)
+    b = tmp_path / "2.png"; _flat(b)
     called = []
     def rv(prompt, path):
         called.append(path)
         return json.dumps({"verdict": "accepted", "visual_kind": "photo",
                            "legible_text": [], "matches_subtitle": True, "reason": ""})
-    r = photocheck.check({"1": str(clean), "2": str(flat)}, {"1": "가", "2": "나"},
-                         reviewer=rv, log=lambda *a: None)
+    r = photocheck.check({"1": str(a), "2": str(b)}, {"1": "가", "2": "나"},
+                         reviewer=rv, log=lambda *a_: None)
     assert r["checked"] == 2
-    assert called == [str(flat)], "깨끗한 사진까지 모델에 보냈다"
+    assert len(called) == 2, "전수로 안 보냈다"
+
+
+def test_check_can_still_filter_by_metrics(tmp_path):
+    """force_all=False면 예전처럼 지표로 거른다 — 비용을 아껴야 할 때 쓴다."""
+    pytest.importorskip("cv2")
+    a = tmp_path / "1.png"; _noise(a, seed=1)
+    b = tmp_path / "2.png"; _flat(b)
+    called = []
+    def rv(prompt, path):
+        called.append(path)
+        return json.dumps({"verdict": "accepted", "visual_kind": "photo",
+                           "legible_text": [], "matches_subtitle": True, "reason": ""})
+    photocheck.check({"1": str(a), "2": str(b)}, {"1": "가", "2": "나"},
+                     reviewer=rv, log=lambda *a_: None, force_all=False)
+    assert called == [str(b)], "지표가 깨끗한 것까지 보냈다"
 
 
 def test_check_collects_retry_slots(tmp_path):

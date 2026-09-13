@@ -43,6 +43,7 @@ def main(argv=None):
     ap.add_argument("--bg", default=None)
     ap.add_argument("--model", default="gemini-3.1-flash-lite")
     ap.add_argument("--from", dest="from_step", default=None, help="이 단계부터 다시 (예: voice, subtitle)")
+    ap.add_argument("--no-review", action="store_true", help="사진 검수 생략(모델 호출을 아낀다)")
     a = ap.parse_args(argv)
     if a.from_step:
         pipeline.reset_to(a.workdir, a.from_step)
