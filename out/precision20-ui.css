@@ -20,13 +20,14 @@
   .layout-a .phone-wrap{height:550px}
   .layout-a .dynamic-phone{height:540px}
 }
-.dynamic-phone.template-precision>.brand-row,
-.dynamic-phone.template-precision>.shortem-body-channel,
-.dynamic-phone.template-precision>.hook-copy,
-.dynamic-phone.template-precision>.hook-band,
-.dynamic-phone.template-precision>.body-title-area,
-.dynamic-phone.template-precision>.body-band,
-.dynamic-phone.template-precision>.media-window{
+/* Legacy preview markup stays hidden when camera effects wrap the layers. */
+.dynamic-phone.template-precision .brand-row,
+.dynamic-phone.template-precision .shortem-body-channel,
+.dynamic-phone.template-precision .hook-copy,
+.dynamic-phone.template-precision .hook-band,
+.dynamic-phone.template-precision .body-title-area,
+.dynamic-phone.template-precision .body-band,
+.dynamic-phone.template-precision .media-window{
   display:none!important;
 }
 .precision-base,.precision-media,.precision-edit-layer{

@@ -395,7 +395,9 @@
     const p=rows[current],frame=frameFor(p);if(!frame)return;
     sourceClean.replaceChildren();
     for(const region of frame.cleanup_regions||[]){if(region.role!=='original-title')continue;const cover=document.createElement('div');Object.assign(cover.style,{position:'absolute',left:(region.x||0)/frame.width*100+'%',top:region.y/frame.height*100+'%',width:(region.width||frame.width)/frame.width*100+'%',height:region.height/frame.height*100+'%',background:region.background||frame.title_bg||'#111111'});sourceClean.append(cover);}
-    base.hidden=!!frame.design_label;
+    // Reference screenshots are picker assets, never a live editable background.
+    // Their baked-in letters/icons cannot follow resized title geometry.
+    base.hidden=true;sourceClean.hidden=true;
     const mediaSource=sceneContext?.scenes?.[sceneIndex]?.media||frame.media_source||uniformMedia;if(media.getAttribute('src')!==mediaSource)media.src=mediaSource;
     badge.textContent=frame.design_label?frame.design_label:'원본 실측 편집';
     badge.hidden=!!frame.design_label;
@@ -403,6 +405,10 @@
     const bg=frame.title_bg||frame.top_band?.color||'#111111';
     const fixedLayout=mode==='continuous'?fixedLayoutFor(p.id,frame):null;
     const fixedPaint=mode==='continuous'?fixedColorsFor(p.id,frame):null;
+    if(mode==='story'&&!frame.design_label){
+      addPatch(0,captionSource(frame).cut/frame.height*100,bg);
+      if(frame.top_band)addPatch(frame.top_band.y0/frame.height*100,(frame.top_band.y1-frame.top_band.y0+1)/frame.height*100,frame.top_band.color);
+    }
     (frame.cleanup_regions||[]).forEach(region=>{
       if(region.role==='source-footer'||(mode==='continuous'&&region.role==='original-title'))return;
       addPatch(region.y/frame.height*100,region.height/frame.height*100,region.background,(region.x||0)/frame.width*100,(region.width||frame.width)/frame.width*100);
@@ -488,7 +494,13 @@
       const top=parseFloat(el.style.top),height=parseFloat(el.style.height);if(!Number.isFinite(top))continue;
       if(top>=cut&&hasEditableCaption()){el.remove();continue;}
       el.style.top=top*next/Math.max(.01,cut)+'%';
-      if(Number.isFinite(height)&&!el.classList.contains('precision-text'))el.style.height=Math.max(0,Math.min(height,cut-top)*next/Math.max(.01,cut))+'%';
+      if(Number.isFinite(height))el.style.height=Math.max(0,Math.min(height,cut-top)*next/Math.max(.01,cut))+'%';
+      // Compress the type with its title area; moving line origins alone overlaps lines.
+      if(el.classList.contains('precision-text')&&next<cut){
+        const ratio=next/Math.max(.01,cut);
+        el.style.fontSize=parseFloat(el.style.fontSize)*ratio+'px';
+        el.style.letterSpacing=(parseFloat(el.style.letterSpacing)||0)*ratio+'px';
+      }
       if(paint){
         if(el.classList.contains('precision-text')){
           const color=el.dataset.editBind==='hook1'?paint.title1:['hook2','bodyTitle'].includes(el.dataset.editBind)?paint.title2:null;
