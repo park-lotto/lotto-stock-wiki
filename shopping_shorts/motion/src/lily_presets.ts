@@ -7,6 +7,7 @@ export type LilyPreset = {
   italic: number;      // 기울임(deg). 0이면 없음
   fillColor: string;   // 글자색
   hlColor: string;     // 강조 단어색
+  hlStroke?: string;   // 강조어 외곽선(대비 반전용, 기본 흰색)
   strokeColor: string; // 외곽선색
   strokeW: number;     // 외곽선 두께(px)
   glow: string;        // 글로우 색(rgba)
@@ -23,7 +24,8 @@ export const LILY_PRESETS: Record<string, LilyPreset> = {
     fontFamily: 'TmonMonsori',
     italic: 8,
     fillColor: '#ffffff',
-    hlColor: '#ff3d9a',
+    hlColor: '#ff2e8f',
+    hlStroke: '#ffffff',
     strokeColor: '#ff2e8f',
     strokeW: 7,
     glow: 'rgba(255,90,175,0.55)',

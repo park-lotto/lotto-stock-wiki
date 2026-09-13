@@ -73,13 +73,25 @@ export const LilySub: React.FC<LilySubProps> = ({text, highlight, preset, positi
             letterSpacing: '-0.02em',
             whiteSpace: 'nowrap',
             transform: p.italic ? `skewX(-${p.italic}deg)` : undefined,
-            WebkitTextStroke: `${p.strokeW}px ${p.strokeColor}`,
             paintOrder: 'stroke fill',
             textShadow: glowShadow,
           }}
         >
           {parts.map((seg, i) => (
-            <span key={i} style={{color: seg.hl ? p.hlColor : p.fillColor}}>
+            // 강조어는 대비를 뒤집어 도드라지게: 핑크 글자 + 흰 외곽선(+살짝 크게).
+            // 일반은 흰 글자 + 핑크 외곽선. 굵은 폰트라 강조어를 같은 색조로 두면 뭉쳐 안 보인다.
+            <span
+              key={i}
+              style={{
+                color: seg.hl ? p.hlColor : p.fillColor,
+                WebkitTextStroke: seg.hl
+                  ? `${p.strokeW + 1}px ${p.hlStroke || '#ffffff'}`
+                  : `${p.strokeW}px ${p.strokeColor}`,
+                fontSize: seg.hl ? '1.1em' : undefined,
+                display: 'inline-block',
+                margin: seg.hl ? '0 0.12em' : undefined,
+              }}
+            >
               {seg.t}
             </span>
           ))}
