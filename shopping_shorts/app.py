@@ -13996,9 +13996,30 @@ async def _admin_customer_device_reset(request: Request):
         cid = int(body.get("customer_id"))
     except (TypeError, ValueError):
         return JSONResponse({"error": "customer_id 필요"}, status_code=400)
+    # ★slot은 화면이 실제로 보낸다(2026-09-15 '골라 해제'). 그래서 여기서 검증한다 —
+    #   전엔 slot을 아무도 안 보내서 int('abc')=500 · slot=99=아무것도 안 지우고 ok:True가
+    #   드러나지 않았다. 없는 칸을 "해제했습니다"라고 하면 안 된다.
+    st = Store(DB_PATH)
     slot = body.get("slot")
-    Store(DB_PATH).device_reset(cid, int(slot) if slot else None)
-    return {"ok": True}
+    if slot is None or slot == "":
+        slot = None                                  # 전부 해제
+    else:
+        try:
+            slot = int(slot)
+        except (TypeError, ValueError):
+            return JSONResponse({"error": "slot이 숫자가 아니에요"}, status_code=400)
+        if not (1 <= slot <= st.PC_SLOTS):
+            return JSONResponse(
+                {"error": f"slot은 1~{st.PC_SLOTS} 사이여야 해요"}, status_code=400)
+        if slot not in {d["slot"] for d in st.device_list(cid)}:
+            return JSONResponse({"error": f"{slot}번 PC는 등록돼 있지 않아요"},
+                                status_code=404)
+    before = len(st.device_list(cid))
+    st.device_reset(cid, slot)
+    left = st.device_list(cid)
+    # ★실제로 줄었는지 세서 돌려준다 — 화면이 응답을 보고 말할 수 있어야 한다
+    #   (memory: 삭제가_저장출구에서_부활 — ok:True인데 DB는 그대로인 조용한 실패)
+    return {"ok": True, "removed": before - len(left), "left": len(left)}
 
 
 @app.post("/api/admin/customer/term")
