@@ -4389,7 +4389,6 @@ function renderLens(shortcode, mountId){
             ${_plats.some(p=>p.url)?`<button onclick="lensOpenAll('${shortcode}',${idx})" title="아래 다섯 곳을 '${esc(kw)}'로 한꺼번에 엽니다 — 하나씩 누르지 않아도 됩니다. 처음엔 브라우저가 팝업을 막을 수 있는데, 주소창 오른쪽 아이콘에서 «항상 허용»으로 바꾸면 됩니다" style="${wide};border-color:var(--accent);font-weight:700">⚡ 5곳 전부</button>`:''}
             ${_plats.map(p=>p.url?`<a href="${p.k==='xiaohongshu'?_openUrl(p.url):p.url}" target="_blank" rel="noopener" title="${p.name}를 '${esc(p.q)}'(으)로 검색 — 새 탭으로 엽니다" style="${wide}">${p.ico}</a>`:`<span title="${p.name}: 이 언어의 검색어가 없습니다" style="${wide};opacity:.25;cursor:default">${p.ico}</span>`).join('')}
             ${/* 인스타는 해시태그라 길면 0건 — 한 단어로 넓히는 보조 버튼을 남겨둔다 */''}
-            ${(_L==='auto'||_L==='ko')&&_igShortKw(kw)?`<a href="${_lensSearchUrl('instagram', _igShortKw(kw))}" target="_blank" rel="noopener" title="인스타 결과가 없을 때 — '${_igShortKw(kw)}' 한 단어로 넓게" style="${ico};opacity:.6">📷⁺</a>`:''}
             </div></div>`;
         }).join('')}
         ${(st.cnCands||[]).length?'':`<div style="font-size:11px;color:var(--sub)">아직 검색어가 없습니다 — 위에 소재를 넣고 <b>✨ 검색어 조합 만들기</b>를 누르거나, 화면에서 자동으로 뽑히길 기다려 보세요.</div>`}
