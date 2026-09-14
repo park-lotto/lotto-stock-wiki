@@ -42,7 +42,8 @@ def client(tmp_path, monkeypatch):
     # 로컬 .env 유무에 따라 실제 Gemini를 호출해 200/502가 달라진다.
     # 판정기 장애·주제 이탈의 fail-close는 test_script_topic_contract가 검증한다.
     monkeypatch.setattr(appmod.script_generate, "_speaker_judge", lambda *a, **k: {
-        "ok": True, "why": "", "topic_ok": True, "topic_why": "", "foreign_products": []})
+        "ok": True, "why": "", "topic_ok": True, "topic_why": "", "foreign_products": [],
+        "claims_ok": True, "claims_why": "", "unsupported_claims": []})
     monkeypatch.setattr(appmod, "_wow_block_for", lambda *a, **k: "")
     return TestClient(appmod.app)
 

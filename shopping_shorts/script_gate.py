@@ -596,7 +596,7 @@ def _uses_wow(full, hooks, min_hits=2):
 def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
           speaker_judge=None, scene_ids=None, grounded=False, is_recipe=False,
           source_count=None, targets=None, person_required=False, materials_text="",
-          topic_required=False):
+          topic_required=False, claim_evidence=None, claims_required=False):
     """(checks, full_text) 반환. checks = [{name, ok, detail}, ...]
 
     style: {"beat_roles": [...], "templates": {role: [...]}, "chars_per_30s": int}
@@ -810,12 +810,38 @@ def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
     #     잡았다(오탐). 이 파일의 기존 원칙대로 오탐이 미탐보다 나쁘다 → LLM 판정.
     #   ★fail-open: 판정을 못 하면(_call_json이 키 소진 시 {} 반환·예외) **통과**시킨다.
     #     여기서 막으면 키가 마른 날 대본이 통째로 안 나온다.
+    checks += semantic_content_checks(
+        full, product, speaker_judge, evidence=claim_evidence,
+        topic_required=topic_required, claims_required=claims_required)
+
+    # ★수치 그라운딩(2026-08-16) — 재료를 준 경우에만. 지어낸 수치를 잡는다.
+    ok_g, bad = grounding_check(full, facts_text)
+    if (facts_text or "").strip():
+        checks.append({"name": "수치 근거", "ok": ok_g,
+                       "detail": ("재료에 없는 수치: " + ", ".join(bad[:5])
+                                  + " — 지어내지 말고 확인된 것만 써라") if bad else "OK"})
+
+    if grounded and scene_ids is not None:
+        ok_s, det = scene_grounding_check(beats, scene_ids, is_recipe=is_recipe,
+                                          source_count=source_count)
+        checks.append({"name": "장면 근거", "ok": ok_s, "detail": det})
+    return checks, full
+
+
+def semantic_content_checks(full, product="", speaker_judge=None, evidence=None,
+                            topic_required=False, claims_required=False):
+    """전체·부분·픽업·조립이 공유하는 화자/주제/사실 의미 판정 출구."""
+    checks, _v = [], {}
     if speaker_judge is not None:
         try:
             try:
-                _v = speaker_judge(full, product) or {}
+                _v = (speaker_judge(full, product, evidence=evidence)
+                      if evidence is not None else speaker_judge(full, product)) or {}
             except TypeError:  # 옛 판정기/테스트는 인자 하나 계약
-                _v = speaker_judge(full) or {}
+                try:
+                    _v = speaker_judge(full, product) or {}
+                except TypeError:
+                    _v = speaker_judge(full) or {}
         except Exception:      # noqa: BLE001 — 판정 실패가 대본 생성을 죽이면 안 된다
             _v = {}
         if isinstance(_v, dict) and isinstance(_v.get("ok"), bool):
@@ -840,21 +866,25 @@ def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
         checks.append({"name": "주제 단일성", "ok": False,
                        "detail": "고정 제품 주제 판정기가 없어 결과를 내보내지 않는다"})
 
-    # ★수치 그라운딩(2026-08-16) — 재료를 준 경우에만. 지어낸 수치를 잡는다.
-    ok_g, bad = grounding_check(full, facts_text)
-    if (facts_text or "").strip():
-        checks.append({"name": "수치 근거", "ok": ok_g,
-                       "detail": ("재료에 없는 수치: " + ", ".join(bad[:5])
-                                  + " — 지어내지 말고 확인된 것만 써라") if bad else "OK"})
-
-    # ★장면 근거(2026-09-04, 2단계 '본 것만 쓰기'): grounded 모드에서만 항목을 만든다(종전 호출 = 회귀 0).
-    #   규칙은 프롬프트(_GROUNDED_RULE)에 적혀 있고 **여기가 그 판정**이다 — 지시와 판정은 짝
-    #   (메모리 '규칙은 있는데 판정이 없다': 지시만 있으면 어겨도 미검출 → 재작성이 안 걸린다).
-    if grounded and scene_ids is not None:
-        ok_s, det = scene_grounding_check(beats, scene_ids, is_recipe=is_recipe,
-                                          source_count=source_count)
-        checks.append({"name": "장면 근거", "ok": ok_s, "detail": det})
-    return checks, full
+    if evidence is not None or claims_required:
+        decided = isinstance(_v, dict) and isinstance(_v.get("claims_ok"), bool)
+        unsupported = _v.get("unsupported_claims") if isinstance(_v, dict) else None
+        # 판정 결과가 서로 모순되거나 목록 타입이 깨진 경우도 성공으로 보지 않는다.
+        valid = decided and isinstance(unsupported, list)
+        ok = valid and _v["claims_ok"] is True and not unsupported
+        if valid or claims_required:
+            details = []
+            for row in (unsupported or []) if isinstance(unsupported, list) else []:
+                if isinstance(row, dict):
+                    details.append("%s: %s" % (row.get("claim") or "문장",
+                                                row.get("reason") or "근거 없음"))
+                else:
+                    details.append(str(row))
+            checks.append({"name": "사실 근거", "ok": bool(ok),
+                           "detail": "OK" if ok else (" / ".join(details)[:500]
+                               or (_v.get("claims_why") if isinstance(_v, dict) else "")
+                               or "사실 근거를 확인하지 못해 결과를 내보내지 않는다")})
+    return checks
 
 
 def parse_src_segs(raw):
@@ -955,7 +985,7 @@ def scene_grounding_check(beats, scene_ids, is_recipe=False, min_ratio=0.34, sou
 #: (2026-09-09 사장님 재발 제보. 09-07엔 프롬프트 가드만 넣었고 출구는 그대로 열려 있었다.)
 #: '재료 밖 판매처'도 치명이다(2026-09-11) — 소재는 맞아도 "다이소 매니저 지인"이 지어낸
 #: 말이면 그 대본은 거짓말이다. 고쳐서 내보낼 것이 아니라 그 스타일을 빼야 한다.
-FATAL_CHECKS = ("소재 일치", "주제 단일성", "재료 밖 판매처")
+FATAL_CHECKS = ("소재 일치", "주제 단일성", "재료 밖 판매처", "사실 근거")
 
 
 def fatal_content_checks(full, product="", materials_text=""):
