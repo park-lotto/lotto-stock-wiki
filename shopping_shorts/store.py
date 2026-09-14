@@ -1137,6 +1137,15 @@ class Store:
                 pass  # 이미 존재
             # "영상 안 올라오는" 죽은 채널 — 엑셀 원본은 안 건드리고 여기에 넣어
             # collect()가 추적에서 제외한다(소프트 삭제, 복구 가능, 2026-07-12).
+            # 사람이 지정한 영상 카테고리(2026-09-14 사장님 "지정되면 그쪽 카테고리로
+            # 들어가게"). 판정기보다 우선한다 — 다음 수집이 다시 분류해도 이 값이 이긴다.
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS category_overrides (
+                    shortcode TEXT PRIMARY KEY,
+                    category TEXT NOT NULL,
+                    set_at TEXT
+                )
+            """)
             c.execute("""
                 CREATE TABLE IF NOT EXISTS removed_channels (
                     username TEXT PRIMARY KEY,
@@ -2615,6 +2624,43 @@ class Store:
                       key=lambda i: (i.get("age_hours") is None,
                                      i.get("age_hours") if i.get("age_hours") is not None else 0))
 
+    def set_category_overrides(self, mapping):
+        """{shortcode: category} 저장. category가 빈 값이면 지정 해제. 저장한 개수를 준다."""
+        now = datetime.now(timezone.utc).isoformat()
+        n = 0
+        with self._conn() as c:
+            for sc, cat in (mapping or {}).items():
+                if not sc:
+                    continue
+                if cat:
+                    c.execute("INSERT OR REPLACE INTO category_overrides(shortcode, category, set_at) "
+                              "VALUES(?,?,?)", (sc, cat, now))
+                else:
+                    c.execute("DELETE FROM category_overrides WHERE shortcode=?", (sc,))
+                n += 1
+        return n
+
+    def _apply_overrides(self, items, conn=None):
+        """사람 지정 카테고리를 덮는다 — **저장하는 자리(save/merge)에서만** 부른다(0순위-B).
+
+        판정기(categorize)는 수집 때마다 다시 돌므로, 지정값을 판정기 쪽에 적으면
+        다음 수집에 덮인다. 저장 직전 한 곳에서 덮어야 모든 수집 경로가 따른다.
+        """
+        try:
+            if conn is not None:
+                rows = conn.execute("SELECT shortcode, category FROM category_overrides").fetchall()
+            else:
+                with self._conn() as c:
+                    rows = c.execute("SELECT shortcode, category FROM category_overrides").fetchall()
+        except sqlite3.Error:
+            return items
+        ov = dict(rows)
+        if ov:
+            for x in items or []:
+                if isinstance(x, dict) and x.get("shortcode") in ov:
+                    x["category"] = ov[x["shortcode"]]
+        return items
+
     def _fill_delta(self, platform, items):
         """delta·is_new가 없는 항목을 채운다 — **모든 플랫폼이 지나는 자리**(0순위-B).
 
@@ -2642,7 +2688,7 @@ class Store:
         return items
 
     def save_last_run_platform(self, platform, items, collected_at):
-        items = self._trim_for_store(self._fill_delta(platform, items))
+        items = self._trim_for_store(self._apply_overrides(self._fill_delta(platform, items)))
         with self._conn() as c:
             c.execute("INSERT OR REPLACE INTO settings(key, value) VALUES(?,?)",
                       (f"last_run::{platform}", json.dumps({"items": items, "collected_at": collected_at}, ensure_ascii=False)))
@@ -2705,7 +2751,8 @@ class Store:
                             x["age_hours"] = round(x["age_hours"] + shift, 1)
             have = {_k(x) for x in prev}
             fresh = [x for x in (new_items or []) if _k(x) not in have]
-            items = self._trim_for_store(self._fill_delta(platform, fresh) + prev)
+            items = self._trim_for_store(
+                self._apply_overrides(self._fill_delta(platform, fresh) + prev, conn=c))
             c.execute("INSERT OR REPLACE INTO settings(key, value) VALUES(?,?)",
                       (f"last_run::{platform}",
                        json.dumps({"items": items, "collected_at": collected_at},
