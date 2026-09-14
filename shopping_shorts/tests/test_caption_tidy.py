@@ -77,3 +77,11 @@ def test_끄기_스위치(monkeypatch):
     b = {"narration": n, "caption_lines": ["여러분", "오이 절대 냉장고에"]}
     mp._apply_cap_timing(b, n, [1], 2.0)
     assert b["caption_lines"] == ["여러분", "오이 절대 냉장고에"]
+
+
+def test_담은_장면_수_밑으로는_안_합친다():
+    """구절 맞춤은 줄 수 = 컷 수 — 장면 수 밑으로 합치면 담은 장면이 화면에서 빠진다(1,700칸 시뮬 884→1,853)."""
+    segs = ["알고 보니", "투명한 낚싯줄", "하나가", "핵심이었네요"]
+    lines, _ = va.tidy_caption_lines(segs, [0.4, 0.6, 0.5, 0.7],
+                                     narration="알고 보니 투명한 낚싯줄 하나가 핵심이었네요", min_lines=3)
+    assert len(lines) == 3

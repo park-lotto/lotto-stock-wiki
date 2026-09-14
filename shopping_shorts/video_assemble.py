@@ -1362,7 +1362,7 @@ def _cap_ends_modifier(s):
     return 0xAC00 <= ord(c) <= 0xD7A3 and (ord(c) - 0xAC00) % 28 == 8 and not t.endswith("들")
 
 
-def tidy_caption_lines(lines, durs=None, narration=None):
+def tidy_caption_lines(lines, durs=None, narration=None, min_lines=1):
     """짧은 줄을 이웃과 합친다. 반환 (lines, durs) — durs는 합친 만큼 **더해서** 돌려준다
     (합치기는 이웃끼리만이라 실측 초가 정확히 보존된다). durs가 None이면 글자수로만 판정.
     narration을 주면 문장 끝을 원문에서 찾는다(★안 주면 줄 끝 부호만 봐서 놓칠 수 있다)."""
@@ -1381,8 +1381,10 @@ def tidy_caption_lines(lines, durs=None, narration=None):
         return (not E[a]
                 and _cap_flat_len(L[a] + L[b]) <= _CAP_TIDY_MAX_CHARS)
 
+    # ★min_lines = 그 칸에 담긴 장면 수(2026-09-14 실측). 구절 맞춤은 줄 수 = 컷 수라, 줄을 장면 수
+    #   밑으로 합치면 **담은 장면이 화면에서 빠진다**(라이브 1,700칸 시뮬: 빠진 장면 884 → 1,853).
     changed = True
-    while changed and len(L) >= 2:
+    while changed and len(L) >= 2 and len(L) > max(1, min_lines):
         changed = False
         # 가장 짧은 줄부터 처리해야 결과가 순서에 덜 휘둘린다
         order = sorted(range(len(L)), key=lambda k: (D[k] if D else _cap_flat_len(L[k])))

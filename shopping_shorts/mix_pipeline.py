@@ -575,7 +575,13 @@ def _apply_cap_timing(beat, narration, words, dur):
         try:
             segs = video_assemble._caption_segments(narration, preset=beat.get("caption_lines"))
             if len(segs) == len(durs):
-                lines, nd = video_assemble.tidy_caption_lines(segs, durs, narration=narration)
+                # 담은 장면 수 밑으로는 안 합친다 — 구절 맞춤 컷에서 장면이 빠지지 않게
+                try:
+                    _n_mat = len([m for m in (_beat_material(beat) or []) if m])
+                except Exception:      # noqa: BLE001
+                    _n_mat = 1
+                lines, nd = video_assemble.tidy_caption_lines(segs, durs, narration=narration,
+                                                              min_lines=_n_mat)
                 if len(lines) < len(segs) and                         video_assemble.cap_preset_key("".join(lines)) == video_assemble.cap_preset_key(narration):
                     beat["caption_lines"] = lines
                     durs = nd
