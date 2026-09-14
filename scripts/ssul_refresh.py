@@ -22,6 +22,30 @@ from shopping_shorts.store import Store
 SSUL_CATEGORIES = ("제품정체형", "오용형")   # index.html 카테고리 라벨 '썰쇼핑'과 짝
 
 
+def _ssul_channels(store, prev_items):
+    """갱신 대상 = 세 출처의 합집합 (2026-09-14 실측: 236 → 755채널).
+
+    ① 지금 랭킹에 썰 영상이 있는 채널 — 이것만 쓰면 14일 창 밖으로 밀린 채널이 빠진다(236)
+    ② 수집 이력(reel_history)에서 썰 영상을 한 번이라도 낸 채널(338)
+    ③ 발굴이 화법 '썰쇼핑'으로 등록한 채널(channel_styles, 282)
+    채널당 2 units라 넓혀도 회당 ~1,500 units. 썰 아닌 영상은 카테고리가 걸러 탭에 안 섞인다.
+    """
+    out = {i.get("username") for i in prev_items
+           if i.get("category") in SSUL_CATEGORIES and i.get("username")}
+    ph = ",".join("?" * len(SSUL_CATEGORIES))
+    for sql, args in (
+        (f"SELECT DISTINCT username FROM reel_history WHERE platform='youtube' "
+         f"AND category IN ({ph})", SSUL_CATEGORIES),
+        ("SELECT channel_id FROM channel_styles WHERE style='썰쇼핑'", ()),
+    ):
+        try:
+            with store._conn() as c:
+                out |= {r[0] for r in c.execute(sql, args) if r[0]}
+        except Exception as e:      # noqa: BLE001 — 한 출처가 없어도 나머지로 돈다
+            print(f"[ssul_refresh] 채널 출처 조회 실패: {e!r}", file=sys.stderr)
+    return {c for c in out if str(c).startswith("UC")}
+
+
 def _main_collect_running():
     try:
         r = subprocess.run(["systemctl", "is-active", "shopping-shorts-collect.service"],
@@ -56,8 +80,7 @@ def main():
     from shopping_shorts.youtube_client import fetch_channel_shorts, fetch_subscribers
 
     prev, _ = store.load_last_run_platform("youtube")
-    channels = sorted({i.get("username") for i in prev
-                       if i.get("category") in SSUL_CATEGORIES and i.get("username")})
+    channels = sorted(_ssul_channels(store, prev))
     if not channels:
         print("[ssul_refresh] 썰쇼핑 채널 0개 — 할 일 없음")
         return 0
@@ -89,8 +112,10 @@ def main():
     if not items:
         print(f"[ssul_refresh] 채널 {len(channels)}개에서 0건 — 저장 안 함(쿼터·네트워크 확인)")
         return 1
-    added, total = store.merge_last_run_platform("youtube", items, now.isoformat(),
-                                                 update_existing=True)
+    had = {i.get("shortcode") for i in prev}
+    added = sum(1 for i in items if i["shortcode"] not in had)   # 교체분은 신규가 아니다
+    _, total = store.merge_last_run_platform("youtube", items, now.isoformat(),
+                                             update_existing=True)
     n12 = sum(1 for i in items if i.get("category") in SSUL_CATEGORIES
               and (i.get("age_hours") or 1e9) <= 12)
     print(f"[ssul_refresh] 채널 {len(channels)} · 영상 {len(items)}건(신규 {added}) · "
