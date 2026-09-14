@@ -815,9 +815,11 @@ def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
         topic_required=topic_required, claims_required=claims_required)
 
     # ★수치 그라운딩(2026-08-16) — 재료를 준 경우에만. 지어낸 수치를 잡는다.
-    ok_g, bad = grounding_check(full, facts_text)
-    if (facts_text or "").strip():
+    ok_g, bad = (grounded_quantity_check(full, claim_evidence) if claims_required
+                 else grounding_check(full, facts_text))
+    if (facts_text or "").strip() or claims_required:
         checks.append({"name": "수치 근거", "ok": ok_g,
+                       "fatal": bool(claims_required),
                        "detail": ("재료에 없는 수치: " + ", ".join(bad[:5])
                                   + " — 지어내지 말고 확인된 것만 써라") if bad else "OK"})
 
@@ -826,6 +828,132 @@ def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
                                           source_count=source_count)
         checks.append({"name": "장면 근거", "ok": ok_s, "detail": det})
     return checks, full
+
+
+def claim_units(text):
+    """판정 입력과 출력 검증이 공유하는 문장 단위. 숫자의 소수점은 자르지 않는다."""
+    return [s.strip() for s in re.findall(
+        r"[\s\S]+?(?:[.!?。！？][\"'”’)]*(?=\s|$)|\n+|$)", str(text or "")) if s.strip()]
+
+
+def _quote_norm(text):
+    return re.sub(r"\s+", "", str(text or ""))
+
+
+_CLAIM_QUANTITY = re.compile(
+    r"(?<![\dA-Za-z])(?P<num>\d[\d,.]*|수십|수백|수천|몇|일|이|삼|사|오|육|칠|팔|구|십)"
+    r"\s*(?P<scale>천|만|억)?\s*(?P<unit>mm|cm|kg|ml|초|분|시간|개월|퍼센트|년|개|장|자루|명|인|배|%|원)")
+_POPULARITY_CLAIM = re.compile(r"입소문|품절|매진|판매량|베스트셀러|인기|유행|화제|대란|난리(?:가)?\s*났|난리\s*난|없어서\s*못\s*(?:구|사)")
+_ODOR_CLAIM = re.compile(r"탈취|(?:냄새|악취).{0,30}(?:차단|제거|잡아|잡아주|없|안\s*나|걱정할\s*필요)")
+_ODOR_EVIDENCE = re.compile(r"탈취|냄새|악취")
+_ODOR_RELIEF = re.compile(
+    r"탈취|(?:냄새|악취).{0,15}(?:차단|제거|없애|잡아|줄어|덜\s*나|나지\s*않|안\s*나|없|걱정.{0,10}없)")
+_ODOR_NEGATED = re.compile(r"없지\s*않|(?:차단|제거|탈취).{0,6}(?:안\s*(?:되|돼)|않|못|아니)")
+
+
+def _quantities(text):
+    out = []
+    korean = {"일": 1, "이": 2, "삼": 3, "사": 4, "오": 5, "육": 6,
+              "칠": 7, "팔": 8, "구": 9, "십": 10}
+    for match in _CLAIM_QUANTITY.finditer(str(text or "")):
+        num, unit = match["num"], match["unit"]
+        # '이 장면', '이 분' 같은 지시어를 수량/시간으로 오인하지 않는다.
+        if num in korean and (unit not in ("초", "분", "시간", "원")
+                              or re.search(r"\s", match.group(0))):
+            continue
+        scale = {"천": 1000, "만": 10000, "억": 100000000}.get(match["scale"], 1)
+        vague = num in ("몇", "수십", "수백", "수천")
+        if vague:
+            value = {"몇": 1, "수십": 10, "수백": 100, "수천": 1000}[num] * scale
+        else:
+            try:
+                value = korean[num] if num in korean else float(num.replace(",", "").rstrip("."))
+            except ValueError:
+                continue
+            value *= scale
+        factor, base = {"분": (60, "초"), "시간": (3600, "초"),
+                        "퍼센트": (1, "%")}.get(unit, (1, unit))
+        out.append((match.group(0), base, value * factor, vague))
+    return out
+
+
+def _quantity_supported(quantity, text):
+    _, unit, value, vague = quantity
+    for _, other_unit, other_value, other_vague in _quantities(text):
+        if unit != other_unit:
+            continue
+        if vague and value <= other_value < value * 10:
+            return True
+        if not vague and not other_vague and value == other_value:
+            return True
+    return False
+
+
+def grounded_quantity_check(full, evidence):
+    """확정 근거의 본문만 수치와 대조한다. seg_id/편집 길이/활용 추측은 근거가 아니다."""
+    text = "\n".join(str(row.get("text") or "") for row in (evidence or {}).get("items", [])
+                     if isinstance(row, dict))
+    bad = [q[0] for q in _quantities(full) if not _quantity_supported(q, text)]
+    return not bad, bad
+
+
+def _claim_audit_errors(full, evidence, verdict):
+    """모델의 초록 판정만 믿지 않고 문장 누락·허위 인용·고위험 주장 근거를 검증한다."""
+    units = claim_units(full)
+    audit = verdict.get("claim_checks") if isinstance(verdict, dict) else None
+    if not isinstance(audit, list):
+        return ["문장별 사실 근거 판정이 없다"]
+    items = {str(x.get("evidence_id")): x for x in (evidence or {}).get("items", [])
+             if isinstance(x, dict) and x.get("evidence_id") and x.get("text")}
+    errors, seen = [], set()
+    for row in audit:
+        if not isinstance(row, dict):
+            errors.append("문장별 판정 형식이 잘못됐다")
+            continue
+        index = row.get("unit_index")
+        if type(index) is not int or not 0 <= index < len(units) or index in seen:
+            errors.append("판정 문장 번호가 없거나 중복됐다")
+            continue
+        seen.add(index)
+        unit = units[index]
+        if _quote_norm(row.get("claim")) != _quote_norm(unit):
+            errors.append("%d번 문장 원문과 판정 대상이 다르다" % index)
+            continue
+        kind, supports = row.get("kind"), row.get("supports")
+        if kind not in ("objective", "subjective") or not isinstance(supports, list):
+            errors.append("%d번 문장의 주장 종류/근거 목록이 없다" % index)
+            continue
+        quantities = _quantities(unit)
+        popularity, odor = bool(_POPULARITY_CLAIM.search(unit)), bool(_ODOR_CLAIM.search(unit))
+        if row.get("supported") is not True:
+            errors.append("%d번 문장에 확인되지 않은 주장이 있다: %s" % (index, unit))
+        if kind == "subjective" and (quantities or popularity or odor):
+            errors.append("%d번 문장의 수치·인기도·냄새 주장을 주관적 감탄으로 면제했다" % index)
+        quotes, nonvisual_quotes = [], []
+        for support in supports:
+            item = items.get(str(support.get("evidence_id"))) if isinstance(support, dict) else None
+            quote = str(support.get("quote") or "").strip() if isinstance(support, dict) else ""
+            if not item or len(_quote_norm(quote)) < 3 or _quote_norm(quote) not in _quote_norm(item["text"]):
+                errors.append("%d번 문장의 근거 ID 또는 인용문이 실제 자료에 없다" % index)
+                continue
+            quotes.append(quote)
+            if item.get("kind") != "visual":
+                nonvisual_quotes.append(quote)
+        if kind == "objective" and not quotes:
+            errors.append("%d번 객관적 문장의 원문 근거가 없다: %s" % (index, unit))
+        quoted = "\n".join(quotes)
+        for quantity in quantities:
+            if not _quantity_supported(quantity, quoted):
+                errors.append("%d번 문장 수치 %s의 실제 근거가 없다" % (index, quantity[0]))
+        # 화면에 물건이 보인다는 사실은 유행·탈취 성능을 증명하지 않는다.
+        nonvisual = "\n".join(nonvisual_quotes)
+        if popularity and not _POPULARITY_CLAIM.search(nonvisual):
+            errors.append("%d번 문장 인기도·입소문·품절의 발화/검증 근거가 없다" % index)
+        if odor and (not _ODOR_RELIEF.search(nonvisual) or _ODOR_NEGATED.search(nonvisual)):
+            errors.append("%d번 문장 냄새·탈취 효과의 발화/검증 근거가 없다" % index)
+    if seen != set(range(len(units))):
+        errors.append("판정에서 빠진 문장 번호: " + ", ".join(str(i) for i in range(len(units)) if i not in seen))
+    return errors
 
 
 def semantic_content_checks(full, product="", speaker_judge=None, evidence=None,
@@ -871,9 +999,10 @@ def semantic_content_checks(full, product="", speaker_judge=None, evidence=None,
         unsupported = _v.get("unsupported_claims") if isinstance(_v, dict) else None
         # 판정 결과가 서로 모순되거나 목록 타입이 깨진 경우도 성공으로 보지 않는다.
         valid = decided and isinstance(unsupported, list)
-        ok = valid and _v["claims_ok"] is True and not unsupported
+        audit_errors = _claim_audit_errors(full, evidence, _v) if claims_required else []
+        ok = valid and _v["claims_ok"] is True and not unsupported and not audit_errors
         if valid or claims_required:
-            details = []
+            details = list(audit_errors)
             for row in (unsupported or []) if isinstance(unsupported, list) else []:
                 if isinstance(row, dict):
                     details.append("%s: %s" % (row.get("claim") or "문장",
@@ -1036,7 +1165,7 @@ def fatal_fail(checks):
       그대로 화면에 실렸다.
     """
     for c in checks or []:
-        if not c.get("ok") and c.get("name") in FATAL_CHECKS:
+        if not c.get("ok") and (c.get("name") in FATAL_CHECKS or c.get("fatal") is True):
             return c.get("name") or ""
     return ""
 
