@@ -13,6 +13,7 @@
 
 쓰는 법:
   python tools/meme_packs/screen.py <밈원본폴더> <후보저장폴더>
+  python tools/meme_packs/screen.py <밈원본폴더> <후보저장폴더> --chroma   # 그린스크린 요구
 """
 import json
 import os
@@ -23,6 +24,7 @@ SLOT_H = 786                 # brainbulb spec.SLOT_H — 이 아래면 확대되
 SLOT_W = 1028
 PROBES = 9                   # 클립당 훑어볼 지점 수
 VIDEO = (".mp4", ".mov", ".webm", ".gif", ".mkv", ".avi")
+NEED_CHROMA = "--chroma" in sys.argv   # 그린스크린(배경제거)을 요구할 때만 켠다
 
 
 def ffprobe(path):
@@ -147,7 +149,11 @@ def main():
             reasons.append(f"높이{meta['h']}(2배↑확대)")
         elif meta["h"] < SLOT_H:
             soft.append(f"높이{meta['h']}→{SLOT_H} {meta['h'] and round(SLOT_H/meta['h'],2)}배")
-        if green < 15:
+        # ★그린스크린 요구는 --chroma 일 때만 본다(2026-09-15 2차 교정).
+        #   조PD 짤 30개는 **원본 화면을 그대로 쓰는 방식**이라 그린이 0%인 게 정상인데,
+        #   유튜브 밈팩(배경 제거용) 기준을 그대로 적용해 **30개 전부 탈락**시켰다.
+        #   판정 기준은 자산의 성격에 맞춰야 한다 — 남의 기준을 그대로 쓰면 다 버린다.
+        if NEED_CHROMA and green < 15:
             reasons.append(f"그린{green}%(크로마키아님=원본화면)")
         if green > 88:
             reasons.append(f"그린{green}%(피사체못찾음)")
