@@ -20,7 +20,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from shopping_shorts.store import Store
-from shopping_shorts.media_download import download_any
+from shopping_shorts.media_download import download_any, _is_direct_video
 from shopping_shorts import script_extract
 from shopping_shorts.script_extract import extract_script
 from shopping_shorts.edit_plan import _SYLLABLES_PER_SEC, build_edit_plan, conform_narration
@@ -779,6 +779,28 @@ def _extract_coverage(r, path):
     return min(1.0, covered / dur)
 
 
+def _basket_download_urls(urls, store, customer_id):
+    """제작 URL과 같은 장바구니 항목의 직접 영상 주소를 우선 사용한다.
+
+    담기 예열은 ``mix_basket.video_url``을 쓰지만 mix job은 페이지 URL만 저장한다.
+    샤오홍슈처럼 서버 yt-dlp가 페이지를 풀지 못하는 플랫폼은 여기서 직접 CDN 주소를
+    되살리지 않으면 예열 성공 뒤 제작 단계에서 다시 탈락한다.
+    """
+    if not store or customer_id in (None, ""):
+        return list(urls)
+    try:
+        basket = {item.get("url"): item for item in
+                  store.mix_basket_list(customer_id=customer_id)}
+    except Exception:  # noqa: BLE001 — DB 조회 실패가 기존 URL 다운로드까지 막으면 안 된다.
+        return list(urls)
+
+    resolved = []
+    for url in urls:
+        direct = ((basket.get(url) or {}).get("video_url") or "").strip()
+        resolved.append(direct if direct and _is_direct_video(direct) else url)
+    return resolved
+
+
 def _prepare_sources(urls, work, store=None):
     """소스 URL들을 플랫폼 무관하게 다운로드 → ({video_id: mp4경로}, {video_id: caption}, skipped).
     caption은 인스타 소스만 채워짐(download_any가 (path, caption) 튜플 반환) — 유튜브/틱톡은
@@ -1097,7 +1119,9 @@ def run_mix_job(job_id, db_path, work_root):
             # video_id -> mp4 path, video_id -> caption(인스타만 채워짐, 유튜브/틱톡은 "").
             # extract_script가 caption을 힌트로 쓰고 없어도 영상 재전사로 동작 — .get(vid, "")로 안전 기본값.
             # 소스별 예외격리: 불량 URL은 스킵되고 최소 1개만 살면 계속(2026-07-19).
-            video_paths, captions, skipped = _prepare_sources(job["urls"], work, store=store)
+            download_urls = _basket_download_urls(
+                job["urls"], store, job.get("customer_id"))
+            video_paths, captions, skipped = _prepare_sources(download_urls, work, store=store)
             if skipped:
                 print(f"run_mix_job[{job_id}]: {len(skipped)}개 소스 스킵 "
                       f"(불량 URL) — {[u for u, _ in skipped]}", file=sys.stderr)
