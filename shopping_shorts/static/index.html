@@ -3350,8 +3350,8 @@ async function lensSearch(btn, shortcode){
   // 재생 중이면 현재 프레임(사장님이 고른 장면), 아니면 썸네일.
   // 둘 다 없으면(유튜브 iframe 폴백 등) 기억해둔 썸네일 주소로 다시 받아 시도한다.
   const cv=await _captureFrameAsync(shortcode);
-  if(!cv){ openScript('<div style="padding:10px;color:var(--sub)">이미지를 준비하지 못했습니다. 썸네일이 로드된 뒤 다시 눌러주세요.</div>','🔍 렌즈 유사영상',true); return; }
-  openScript('<div class="sm-loading">🔍 렌즈 검색 중… (5~15초)</div>','🔍 렌즈 유사영상',true);
+  if(!cv){ openScript('<div style="padding:10px;color:var(--sub)">이미지를 준비하지 못했습니다. 썸네일이 로드된 뒤 다시 눌러주세요.</div>','🔍 비슷한 영상 찾기',true); return; }
+  openScript('<div class="sm-loading">🔍 렌즈 검색 중… (5~15초)</div>','🔍 비슷한 영상 찾기',true);
   const blob=await new Promise(r=>cv.toBlob(r,'image/jpeg',0.85));
   const srcItem=findItem(shortcode);
   const caption=(srcItem && srcItem.caption) || '';
@@ -4117,7 +4117,9 @@ function lensOpenAll(shortcode, idx){
     const u = (t.k === 'xiaohongshu') ? _openUrl(t.url) : t.url;
     // ★window.open이 null이면 브라우저가 팝업을 막은 것이다. 조용히 넘기면
     //   "눌렀는데 하나만 열린다"가 되고 원인을 알 수 없다 — 세어서 알린다.
-    try { if(window.open(u, '_blank', 'noopener')) opened++; } catch(e){}
+    // ★'noopener'를 주면 window.open은 **열려도 늘 null**을 돌려준다(명세). 그래서 5개가 다 열려도
+    //   "0/5개만 열렸다"고 떴다(2026-09-14 실클릭 실측). 창을 받아 opener만 끊는다.
+    try { const w=window.open(u, '_blank'); if(w){ try{ w.opener=null; }catch(_){} opened++; } } catch(e){}
   });
   st.openNote = (opened >= targets.length)
     ? ''
