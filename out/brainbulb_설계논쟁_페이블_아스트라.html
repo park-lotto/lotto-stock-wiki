@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>brainbulb 설계 논쟁 — 페이블 × 아스트라</title>
+<style>
+  :root{
+    --bg:#f5f6f8; --panel:#fff; --txt:#1b2230; --sub:#5d6675; --line:#e1e5eb;
+    --fable:#2458c5; --fable-soft:#eaf0fc; --astra:#c8561a; --astra-soft:#fdf0e8;
+    --green:#1f8a4c; --green-soft:#e8f5ed; --amber:#b7791f; --amber-soft:#fbf3e3; --red:#c0392b; --red-soft:#fbeae8;
+    --mono:"Cascadia Code","D2Coding",Consolas,monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#111418; --panel:#181c22; --txt:#e6e9ee; --sub:#9aa3b2; --line:#2a3039;
+      --fable:#7aa2ff; --fable-soft:#1c2740; --astra:#ff9a5c; --astra-soft:#3a2416;
+      --green:#5fcf8a; --green-soft:#16301f; --amber:#e6b35a; --amber-soft:#3a2d13; --red:#ff7b6e; --red-soft:#3d1c19;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:"Pretendard","Malgun Gothic","Apple SD Gothic Neo",system-ui,sans-serif;line-height:1.65;font-size:15px}
+  .wrap{max-width:1180px;margin:0 auto;padding:32px 20px 80px}
+  header{border-bottom:2px solid var(--txt);padding-bottom:16px;margin-bottom:26px}
+  header h1{margin:0 0 6px;font-size:27px;letter-spacing:-.5px}
+  header p{margin:0;color:var(--sub)}
+  .meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .meta span{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:3px 12px;font-size:12.5px;color:var(--sub)}
+  .legend{display:flex;gap:14px;margin:14px 0 0;flex-wrap:wrap}
+  .legend span{display:inline-flex;align-items:center;gap:6px;font-size:13px}
+  .dot{width:12px;height:12px;border-radius:50%;display:inline-block}
+  h2{font-size:20px;margin:44px 0 12px;padding-left:12px;border-left:4px solid var(--txt)}
+  h3{font-size:15.5px;margin:22px 0 8px;color:var(--sub)}
+  p{margin:8px 0}
+  .say{border-radius:12px;padding:16px 20px;margin:12px 0;border:1px solid var(--line);background:var(--panel);position:relative}
+  .say.fable{border-left:5px solid var(--fable)}
+  .say.astra{border-left:5px solid var(--astra)}
+  .who{font-weight:800;font-size:13px;letter-spacing:.3px;margin-bottom:6px}
+  .fable .who{color:var(--fable)} .astra .who{color:var(--astra)}
+  .say ul{margin:6px 0 0 0;padding-left:18px} .say li{margin:4px 0}
+  .verdict{display:inline-block;border-radius:6px;padding:1px 8px;font-size:12px;font-weight:700;margin-left:6px;vertical-align:middle}
+  .v-ok{background:var(--green-soft);color:var(--green)} .v-no{background:var(--red-soft);color:var(--red)} .v-mid{background:var(--amber-soft);color:var(--amber)}
+  .tblwrap{overflow-x:auto;margin:12px 0}
+  table{border-collapse:collapse;width:100%;background:var(--panel);font-size:14px}
+  th,td{border:1px solid var(--line);padding:9px 11px;vertical-align:top;text-align:left}
+  th{background:var(--bg);font-weight:700;white-space:nowrap}
+  code{font-family:var(--mono);font-size:12.5px;background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:1px 5px}
+  pre{font-family:var(--mono);font-size:12.5px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px;overflow-x:auto;line-height:1.55;margin:10px 0}
+  .key{background:var(--green-soft);border-left:4px solid var(--green);padding:12px 16px;border-radius:6px;margin:14px 0;font-weight:600}
+  .warn{background:var(--amber-soft);border-left:4px solid var(--amber);padding:12px 16px;border-radius:6px;margin:14px 0}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:760px){.grid2{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px}
+  footer{margin-top:60px;color:var(--sub);font-size:12.5px;border-top:1px solid var(--line);padding-top:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>brainbulb 설계 논쟁 — 페이블 × 아스트라</h1>
+  <p>뇌전구(볼케이노) 규격 숏폼을 서버 없이 로컬에서 만드는 파이프라인. <b>분업이 아니라 각자 의견을 내고 논쟁해 수렴했다.</b> 3라운드 뒤 코드 12모듈·테스트 48개.</p>
+  <div class="meta">
+    <span>2026-09-12</span>
+    <span>페이블 = Claude Fable 5.1</span>
+    <span>아스트라 = Codex gpt-6-astra (reasoning high)</span>
+    <span>근거: 8편 역분석 · 실제 5편 산출물 fixture · 숏템메이커 코드</span>
+    <span>원본: docs/superpowers/specs/2026-09-12-brainbulb-design.md</span>
+  </div>
+  <div class="legend">
+    <span><i class="dot" style="background:var(--fable)"></i> 페이블 발언</span>
+    <span><i class="dot" style="background:var(--astra)"></i> 아스트라 발언</span>
+    <span><i class="verdict v-ok">맞았다</i> <i class="verdict v-no">틀렸다</i> <i class="verdict v-mid">반쯤</i> = 상대가 파일로 검증한 결과</span>
+  </div>
+</header>
+
+<h2>0. 목표</h2>
+<div class="card">
+  텍스트/기사 소재 하나 → <b>뇌전구 규격 숏폼(1080×1920, 34~57초)</b>을 사람 개입 없이. 1단계 MVP = 검은 배경 + 제목 + 카드 + 자막 + 나레(TTS) + 효과음. 이미지·밈은 2단계.
+</div>
+
+<h2>1라운드 — 페이블 안, 아스트라 독립 의견</h2>
+
+<div class="say fable">
+  <div class="who">페이블 · 안</div>
+  <ul>
+    <li><b>구조는 볼케이노식 단계 배열 하나.</b> <code>STEPS = [setup, script, lint, voice, timing, subtitle, sfx, render]</code>. 단계마다 계약 4칸(들어갈 것/실행/재는 것/넘길 것). 판정은 반려만 하고 데이터를 고치지 않는다.</li>
+    <li><b>규칙은 표 하나에서 지시문과 판정을 둘 다 생성.</b> 숏템메이커의 "시켜놓고 벌주기" 재발 방지.</li>
+    <li><b>디자인은 상수(spec.py).</b> 채널 추가 = spec 교체.</li>
+    <li><b>검증은 실제 5편 산출물과 diff.</b> PIL 금지(libass보다 1.3배 크게 나옴, 실측).</li>
+    <li>확신 못 하는 5가지를 논쟁에 부침: 줄나눔 주체 / 줄 폭 한도(실측 하한 808) / TTS 컷별 vs 통짜 / 렌더 프레임 나열 vs 단일 배경 / 상태 sqlite vs json.</li>
+  </ul>
+</div>
+
+<div class="say astra">
+  <div class="who">아스트라 · 1라운드</div>
+  <p><b>동의:</b> 단계 배열, 상태 단일화, 판정 비수정, 규칙표 구조, libass 실측, 검은 배경 MVP.</p>
+  <p><b>반대 ①</b> <code>gate_feedback()</code> 재사용 금지 <i class="verdict v-ok">맞았다</i> — <code>over</code> 없는 모든 실패에 "분량이 모자라다"를 붙인다. 구두점 위반에 분량 처방이 나간다.</p>
+  <p><b>반대 ②</b> 표본을 무조건 정답으로 삼지 마라 <i class="verdict v-ok">맞았다</i> — 박수홍 6번 밈이 payload는 025, timing.json은 013. 단계별 정본 필드를 정하고 그것만 대조하라.</p>
+  <p><b>5가지 답:</b> (1) 줄나눔은 별도 배치 함수, LLM lines는 버린다 (2) 808은 임시, 최종은 실제 좌표에서 100%·108% 경계 검사 (3) 컷별 합성 + 파일 실측 (4) 단일 배경 (5) 작업폴더 json + 원자 저장·락·해시.</p>
+  <p><b>놓친 것:</b> 효과음 "12주기"는 표본과 다르다 — cut 13이 click이 아니라 r3_click <i class="verdict v-ok">맞았다</i>. 그리고 단계 배열에 <b>최종 검수</b>가 없다 <i class="verdict v-ok">맞았다</i>.</p>
+</div>
+
+<h2>2라운드 — 페이블 검증·재반박, 아스트라 수렴</h2>
+
+<div class="say fable">
+  <div class="who">페이블 · 파일로 검증한 뒤 재반박</div>
+  <ul>
+    <li><b>효과음 — 아스트라가 맞다. 그런데 진짜 규칙을 찾았다.</b> 5편이 접미사까지 동일하고, 구조는 4칸 틀 × 계열별 주기다. 32컷 전부 공식 일치.
+      <pre>i%4==0 → pop4
+i%4==1 → [click, r3_click, x_click, r3_click, x_click]  (주기 5)
+i%4==2 → [boing, hit, r3_hit]                           (주기 3)
+i%4==3 → [ding, r3_ding, x_ding]                        (주기 3)</pre></li>
+    <li><b>밈 025/013 — 맞다.</b> timing.json은 밈 확정 전 산출물이라 stale. 정본: 시각=timing / 밈=render_frames / 줄=sub.ass.</li>
+    <li><b>gate_feedback — 맞다.</b> 자체 <code>feedback()</code>: 규칙 사유만 나열.</li>
+    <li><b>줄 폭 — 반쯤 동의, 그런데 한도는 정해진다.</b> 앵커가 <code>\an8\pos(636,y)</code>라 우측 여유 444 → 100%에서 888, <b>108% 등장 순간 822px</b>. 통과 최대 808이 그 안. 좌표 검사로 구현하면 상수가 필요 없다 — 808 정책 철회.</li>
+    <li>줄나눔·TTS·렌더·상태·검수 단계: 전부 동의. 되묻는 질문엔 "고정값(스타일·좌표·타이밍·효과음)만 완전 일치 요구, 서버 함수가 정하는 값은 우리 정책을 명시".</li>
+    <li>남은 질문: review는 규칙 검사만(MVP)인가, 모델 검수까지인가.</li>
+  </ul>
+</div>
+
+<div class="say astra">
+  <div class="who">아스트라 · 2라운드</div>
+  <p><b>822 확정 한도 반대, 좌표 검사 동의</b> <i class="verdict v-mid">반쯤</i> — 산술은 맞지만 앵커 양쪽 대칭을 가정한 값이고 Outline=4가 있다. 화면 밖까지 잴 수 있는 여백에서 렌더해 <b>외곽선 포함 경계를 100%·108% 둘 다</b> 검사하라.</p>
+  <p><b>효과음 공식 직접 검증: 135/135컷 일치.</b> 남은 건 33컷 이후 접미사 규칙.</p>
+  <p><b>review = MVP는 규칙 검사만.</b> 단 "무음 없음"은 수정 — 끝에 0.1초 꼬리가 있으니 의도한 꼬리와 음성 누락을 구분하고, <b>나레 트랙을 따로</b> 검사.</p>
+  <p><b>STEPS에 <code>layout</code>을 명시 단계로.</b> 검사 단계는 입력을 수정하지 않는다. 재작성 최대 3회, 바뀐 입력의 후속 산출물은 무효화.</p>
+  <p><b>미합의 4건:</b> 33컷 이후 파일명 · 카드 54→46 경계 · 무음 임계 · 비용 상한 구체값.</p>
+</div>
+
+<h2>합의된 설계</h2>
+<div class="tblwrap"><table>
+<tr><th>단계</th><th>들어갈 것</th><th>실행</th><th>재는 것</th><th>넘기는 것</th><th>사람</th></tr>
+<tr><td>setup</td><td>소재·spec·예산</td><td>폰트 프로브·도구·키 확인</td><td>폰트 4종 폴백 대조, ffmpeg, Typecast 키</td><td>실행 맥락</td><td>최초 설정</td></tr>
+<tr><td>script</td><td>소재·규칙 지시문·반려 사유</td><td>LLM 대본 생성</td><td>구조·사용 글자수</td><td>제목·카드·컷 원문</td><td>없음</td></tr>
+<tr><td>layout</td><td>원문·spec</td><td>줄 배치(글자 보존)·제목/카드 크기</td><td>libass 경계(100%·108%, 외곽선 포함)</td><td>배치 결과</td><td>없음</td></tr>
+<tr><td>lint</td><td>원문·배치</td><td>규칙표 판정</td><td>위반·경고</td><td>통과본 / 재작성 사유</td><td>없음</td></tr>
+<tr><td>voice</td><td>통과본</td><td>카드·컷 TTS(컷별)</td><td>wav 길이·누락·누적 글자수</td><td>wav·실측값</td><td>없음</td></tr>
+<tr><td>timing</td><td>wav 실측값</td><td>구간 누적 + 꼬리 0.1</td><td>경계·총길이</td><td>timing</td><td>없음</td></tr>
+<tr><td>subtitle</td><td>배치·timing</td><td>ASS 생성</td><td>태그·좌표·시각</td><td>sub.ass</td><td>없음</td></tr>
+<tr><td>sfx</td><td>컷·timing</td><td>관측 32 + 공식 확장, RED 1.25</td><td>파일·게인·시작점</td><td>효과음 트랙</td><td>없음</td></tr>
+<tr><td>render</td><td>ASS·나레·효과음</td><td>단일 배경 + subtitles + amix</td><td>스트림·길이</td><td>mp4</td><td>없음</td></tr>
+<tr><td>review</td><td>mp4·중간 산출물</td><td>규칙 검수</td><td>폰트·경계·나레 무음·스트림 동기</td><td>보고서</td><td>실패 해결 시</td></tr>
+</table></div>
+<div class="warn">미합의 4건은 <b>우리 정책(<code>POLICY_</code>)</b>으로 spec에 명시: 33컷 이후 접미사 = 같은 계열 마지막 관측 변주 / 카드 26자 이상 46 / 나레 무음 임계 0.35초 / 재작성 3회·잡당 TTS 6,000자.</div>
+
+<h2>코드를 쓰며 새로 실측한 것</h2>
+<div class="tblwrap"><table>
+<tr><th>항목</th><th>실측</th><th>코드</th></tr>
+<tr><td>제목 크기</td><td>잉크 임계는 어떤 값으로도 4건 어긋남. <b>비례식</b> floor(base×1000/ink(base))가 10건 중 8 정확·2건 1pt</td><td><code>ass_gen._fit_prop</code>, 테스트 ±1pt</td></tr>
+<tr><td>ASS 시각 반올림</td><td>3자리 t에 <b>HALF_EVEN → 135컷 중 134</b>(HALF_UP 133). 서버는 원시 누적값을 반올림</td><td><code>ass_gen.fmt_time</code>, 테스트 ±1cs</td></tr>
+<tr><td>마지막 컷 End</td><td>t+d가 아니라 <b>total</b>(꼬리 0.1 포함) 5/5</td><td><code>ass_gen.build</code></td></tr>
+<tr><td><b>1줄↔2줄 경계</b></td><td>어절·글자 수 아님. 잉크 폭 ≈700px. 예외 4건이 전부 숫자·영문 포함 → <b>숫자·영문을 한글 폭으로 센 잉크 폭</b>(1줄 최대 703 / 2줄 최소 726)</td><td><code>layout.proxy_width</code>, 710 → <b>배치 135/135 일치</b></td></tr>
+<tr><td>2줄 분할점</td><td>픽셀 최대폭 최소, 동률이면 윗줄 긴 쪽</td><td>2줄 컷 전부 일치</td></tr>
+<tr><td>원문 베끼기</td><td>서버는 10자 그대로를 통과시킴</td><td><code>POLICY_COPY_MIN_CHARS=14</code></td></tr>
+<tr><td>fontsdir 경로</td><td>절대경로 <code>C\:</code>는 필터 파서가 깨뜨림</td><td>cwd 상대경로, 렌더 3곳 공용</td></tr>
+<tr><td>ffmpeg stderr</td><td>cp949로 읽으면 한글 메시지에서 죽음</td><td>모든 subprocess utf-8</td></tr>
+</table></div>
+
+<h2>3라운드 — 아스트라 코드 리뷰: "커밋 보류"</h2>
+
+<div class="say astra">
+  <div class="who">아스트라 · 코드를 읽고 일부 테스트를 직접 돌린 뒤</div>
+  <p><b>커밋 보류.</b> ① 효과음 합성이 실제로 실패하고 ② 재작성 뒤 옛 음성이 남으며 ③ 반려·검사 실패가 후속 진행이나 성공으로 처리된다.</p>
+</div>
+
+<div class="say fable">
+  <div class="who">페이블 · 전부 코드로 확인 — 맞는 지적이었다</div>
+</div>
+
+<div class="tblwrap"><table>
+<tr><th>지적</th><th>확인</th><th>반영</th></tr>
+<tr><td><code>render.sfx_bed</code> 입력 번호 <code>k=len(inputs)</code>가 2씩 뛰어 효과음 2개부터 <code>Invalid file index</code></td><td><i class="verdict v-ok">맞았다</i></td><td><code>k=len(tags)</code> · 테스트 ①(4개 실합성 + 2개 누락)</td></tr>
+<tr><td><code>voice</code>가 wav 존재만 보고 재사용 → 대본을 바꿔도 옛 음성</td><td><i class="verdict v-ok">맞았다</i></td><td>옆 <code>.txt</code>(글자) 비교, 바뀐 컷만 재합성 · 테스트 ②</td></tr>
+<tr><td>반려 뒤 <code>step_done</code>이 전진해 재개 시 voice로 건너뜀</td><td><i class="verdict v-ok">맞았다</i></td><td><code>_fail_stay</code> — 실패 단계는 직전 단계로 · 테스트 ③</td></tr>
+<tr><td>비용 상한이 잡당 누적이 아님 (합의 위반)</td><td><i class="verdict v-ok">맞았다</i></td><td><code>job.tts_spent_chars</code> 누적 · 테스트 ④</td></tr>
+<tr><td><code>review._silences</code>가 ffmpeg rc·파일 유무를 안 봐서 실패가 "무음 없음"으로 통과</td><td><i class="verdict v-ok">맞았다</i></td><td>rc/파일 검사 → 검수 실패 · 테스트 ⑤</td></tr>
+<tr><td>review에 경계 검사·스트림 동기 없음 (합의 위반)</td><td><i class="verdict v-ok">맞았다</i></td><td><code>subtitle_bounds</code> + <code>stream_sync</code> · 테스트 ⑥</td></tr>
+<tr><td>measure 캐시 키에 폰트 경로 없음</td><td><i class="verdict v-ok">맞았다</i></td><td>키에 <code>abspath(fonts_dir)</code></td></tr>
+<tr><td>코드는 HALF_EVEN인데 문서는 HALF_UP</td><td><i class="verdict v-ok">맞았다</i></td><td>실측 EVEN 134 > UP 133 → 코드 유지, 문서 정정</td></tr>
+</table></div>
+<div class="key">남은 미합의 없음. 테스트 42 → 48개 통과. 다음 논쟁거리는 2단계(이미지·밈·timeline.json).</div>
+
+<h2>지금 상태</h2>
+<div class="grid2">
+  <div class="card">
+    <h3 style="margin-top:0">된 것</h3>
+    <ul>
+      <li><code>shopping_shorts/brainbulb/</code> 12모듈, 볼케이노식 단계 배열 하나가 상태기계</li>
+      <li>실제 5편과 대조: 스타일 바이트 동일 · 효과음 135컷 동일 · 타이밍 동일 · ASS 줄 동일(±1cs) · 줄배치 135/135 · 제목 ±1pt</li>
+      <li>끝까지 실행(실제 대본 + 사인파 TTS + 진짜 ffmpeg 렌더) → 검수 통과 → 프레임 4장 육안 확인</li>
+      <li>트랙 <code>track/뇌전구벤치</code> 커밋 4개, origin 백업. main 병합은 아직</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">안 된 것</h3>
+    <ul>
+      <li>실제 Gemini·Typecast 키로 한 편도 안 뽑음 — <code>pipeline.run_all(llm=…, tts=…)</code> 한 곳</li>
+      <li>이미지·밈은 2단계. 효과음·밈 팩은 저작권 미확인이라 커밋 제외(없으면 베드 생략)</li>
+      <li>숏템메이커 적용은 별도 트랙(원클릭 원리 문서 §5 순서)</li>
+    </ul>
+  </div>
+</div>
+
+<footer>원본: docs/superpowers/specs/2026-09-12-brainbulb-design.md · handoff/뇌전구벤치.md · 아스트라 호출: <code>codex exec -s read-only -m gpt-6-astra -o out.md "…" &lt; /dev/null</code></footer>
+</div>
+</body>
+</html>
