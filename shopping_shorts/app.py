@@ -3484,6 +3484,16 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
     _seed_cta = (body.get("seed_cta") or "").strip()
     if _seed_hook:
         _gen_kw["seed_hook"] = _seed_hook
+    # ★픽업도 스타일 생성과 같은 재료 한 벌을 쓴다(2026-09-14).
+    # 종전에는 씨앗 1편만 프롬프트에 넣고 소재 출구 검사도 생략해, 같은 요청의 스타일 안은
+    # 정상인데 첫 번째 픽업 안만 전혀 다른 제품으로 나가는 우회 경로가 남아 있었다.
+    _pick_src, _pick_facts, _pick_job, _pick_jid, _pick_scene = _materials_for_generate(
+        it, body, store, _cid(request))
+    if not [x for x in (_pick_src or []) if (x.get("full_text") or "").strip()]:
+        return JSONResponse(status_code=422, content={
+            "ok": False,
+            "error": "재료(대본 원문)가 아직 없어요 — 1단계에서 담긴 영상의 대본 분석이 "
+                     "끝난 뒤 다시 눌러주세요. 급하면 '직접 쓰기'로 대본을 넣어도 됩니다."})
     # ★은행 예산을 여기서도 건다(2026-09-07). 스타일 경로(위)에는 재료 글자수로 은행을
     #   잘라내는 코드가 있는데 **이 픽업 경로에는 없었다** — 같은 판단이 한쪽에만 적힌
     #   0순위-B다. 실측 work 01e725b98569: 재료 233자인데 은행 1,832자 + 스타일 예시
@@ -3491,15 +3501,23 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
     #   ("3D 요술봉 카드케이스")으로 끌려갔다. 같은 사고가 2026-08-18에도 있었다
     #   (재료 750자 vs 은행 2,822자). 재료를 모르는 채 은행을 짜면 반드시 재발한다.
     if _gen_kw.get("bank_context"):
-        _pick_chars = len(it.get("full_text") or "")
+        _pick_chars = sum(len(s.get("full_text") or "")
+                          for s in (_pick_src or [])[:_FACTS_MAX_SOURCES])
         if _pick_chars:
             _trimmed = bank_assemble.assemble_bank_context(
                 store, it.get("category") or "", source_chars=_pick_chars)
             if _trimmed:
                 _gen_kw["bank_context"] = _trimmed
-    drafts = script_generate.generate_variations(
-        it.get("structure") or {}, it.get("full_text") or "", elem_modes, category_lookup, **_gen_kw)
+    _material_rejected = []
+    drafts = script_generate.generate_guarded_variations(
+        it.get("structure") or {}, _pick_src, elem_modes, category_lookup,
+        rejection_reasons=_material_rejected, **_gen_kw)
     if not drafts:
+        if _material_rejected:
+            return JSONResponse(status_code=502, content={
+                "ok": False,
+                "error": "재료와 다른 소재가 반복 생성되어 차단했습니다 — 다시 생성해주세요.",
+                "reasons": _material_rejected})
         return JSONResponse(status_code=502, content={"ok": False, "error": "생성 실패(Gemini 키 소진 또는 오류) — 잠시 후 재시도"})
     _pickup_rejected = []
     if _seed_hook:
@@ -3515,7 +3533,12 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
         draft_id = uuid.uuid4().hex[:12]
         store.save_draft(draft_id, cid, shortcode, None, dr.get("hook", ""), dr.get("script", ""), None, "generate")
         dr["draft_id"] = draft_id
-    _resp = {"ok": True, "drafts": drafts}
+    _resp = {"ok": True, "drafts": drafts, "materials": {
+        "sources": [{"chars": len(s.get("full_text") or ""),
+                     "head": (s.get("full_text") or "")[:40]} for s in _pick_src],
+        "scene_points": _pick_scene.count("\n· ") if _pick_scene else 0,
+        "product_facts": bool(_facts_block_for_job(_pick_jid, store)),
+    }}
     # ★어긴 안이 왜 걸러졌는지 화면이 말할 수 있게 올린다(조용한 폴백 금지).
     if _pickup_rejected:
         _resp["pickup_rejected"] = _pickup_rejected
@@ -5925,6 +5948,120 @@ def api_mix_src(job_id: str, video_id: str, request: Request):
     if not src or not Path(src).exists():
         return JSONResponse(status_code=404, content={"ok": False, "error": "소스 없음"})
     return _range_mp4_response(src, request)
+
+
+# ── 전체재생용 저화질 합본(2026-09-14 사장님 "음성은 나오는데 화면이 끊겨 보인다") ──────
+#   종전 전체재생은 브라우저가 컷마다 원본 mp4의 그 초로 시크했다 — 컷마다 받기·디코딩을
+#   기다리느라 화면만 멈추고 음성은 흘렀다(09-02·09-03에 안전핀만 두 번 덧댐).
+#   화면이 보낸 컷 목록 그대로 360p 한 편으로 이어 붙여 두면 전체재생은 파일 하나를 틀면 된다.
+#   ★컷 계산은 화면(planClips) 한 곳 — 서버는 받은 목록을 붙이기만 한다(0순위-B).
+#   실측(job 1a91a10941ec, 33컷·42초): 동시 4개 인코딩 4.8초.
+_PVPROXY_LOCK = threading.Lock()
+_PVPROXY_BUSY: dict = {}          # job_id -> 만드는 중인 sig
+
+
+def _pvproxy_dir(job_id: str) -> Path:
+    return _MIX_WORK_DIR / job_id / "pvproxy"
+
+
+def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict) -> None:
+    import subprocess
+    from concurrent.futures import ThreadPoolExecutor
+    d = _pvproxy_dir(job_id)
+    tmp = d / f"_tmp_{sig}"
+    try:
+        tmp.mkdir(parents=True, exist_ok=True)
+
+        def enc(a):
+            k, c = a
+            dur = max(0.04, float(c["dur"]))
+            out = tmp / f"{k:04d}.ts"
+            src = srcs.get(c.get("video_id"))
+            vf = "scale=360:640:force_original_aspect_ratio=decrease,pad=360:640:(ow-iw)/2:(oh-ih)/2,fps=30,setsar=1"
+            if src:
+                take = float(c.get("src_dur") or 0) or dur
+                take = min(take, dur)
+                # 늘리기: 화면과 같은 배율 상한(MAX_SLOWMO 1.15) — 넘는 몫은 마지막 프레임 정지
+                slow = min(dur / take, 1.15) if take > 0 else 1.0
+                vf = f"setpts=(PTS-STARTPTS)*{slow:.5f}," + vf + f",tpad=stop_mode=clone:stop_duration={dur:.3f}"
+                cmd = ["ffmpeg", "-y", "-v", "error", "-threads", "1",
+                       "-ss", f"{float(c['start']):.3f}", "-t", f"{take:.3f}", "-i", str(src)]
+            else:   # 소재가 없으면 검은 화면으로 자리만 채운다 — 빼면 뒤 컷이 음성보다 앞선다
+                cmd = ["ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", "color=black:s=360x640:r=30"]
+            cmd += ["-an", "-vf", vf, "-t", f"{dur:.3f}", "-c:v", "libx264",
+                    "-preset", "ultrafast", "-crf", "30", "-pix_fmt", "yuv420p", str(out)]
+            r = subprocess.run(cmd, capture_output=True, timeout=120)
+            if r.returncode != 0 or not out.exists():
+                raise RuntimeError(r.stderr.decode("utf-8", "ignore")[-300:])
+            return out
+
+        with ThreadPoolExecutor(4) as ex:
+            parts = list(ex.map(enc, enumerate(cuts)))
+        lst = tmp / "list.txt"
+        lst.write_text("".join(f"file '{p.as_posix()}'\n" for p in parts), encoding="utf-8")
+        final_tmp = d / f"_{sig}.mp4"
+        r = subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "concat", "-safe", "0", "-i", str(lst),
+                            "-c", "copy", "-movflags", "+faststart", str(final_tmp)],
+                           capture_output=True, timeout=120)
+        if r.returncode != 0:
+            raise RuntimeError(r.stderr.decode("utf-8", "ignore")[-300:])
+        final_tmp.replace(d / f"{sig}.mp4")
+        for old in d.glob("*.mp4"):          # 최신 한 벌만 남긴다
+            if old.name != f"{sig}.mp4":
+                old.unlink(missing_ok=True)
+    except Exception as e:
+        print(f"[pvproxy] {job_id} {sig} 실패: {e}")
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+        with _PVPROXY_LOCK:
+            if _PVPROXY_BUSY.get(job_id) == sig:
+                _PVPROXY_BUSY.pop(job_id, None)
+
+
+@app.post("/api/mix/preview_proxy/{job_id}")
+def api_mix_preview_proxy(job_id: str, body: dict):
+    """body = {"cuts": [{"video_id","start","dur","src_dur"?}, ...]}
+    돌려주는 것 = {"sig", "state": "ready"|"building"} · ready면 url로 튼다."""
+    import hashlib
+    cuts = body.get("cuts") or []
+    if not isinstance(cuts, list) or not cuts or len(cuts) > 600:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "컷 목록 필요"})
+    try:
+        norm = [{"video_id": str(c.get("video_id") or ""), "start": round(float(c.get("start") or 0), 3),
+                 "dur": round(float(c.get("dur") or 0), 3),
+                 "src_dur": round(float(c.get("src_dur") or 0), 3)} for c in cuts]
+    except (TypeError, ValueError):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "컷 형식 오류"})
+    sig = hashlib.sha1(json.dumps(norm, sort_keys=True).encode()).hexdigest()[:16]
+    if (_pvproxy_dir(job_id) / f"{sig}.mp4").exists():
+        return {"ok": True, "sig": sig, "state": "ready", "url": f"/api/mix/preview_proxy/{job_id}/{sig}.mp4"}
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
+    with _PVPROXY_LOCK:
+        if _PVPROXY_BUSY.get(job_id) == sig:
+            return {"ok": True, "sig": sig, "state": "building"}
+        if job_id in _PVPROXY_BUSY:        # 옛 편성을 만드는 중 — 끝나면 화면이 다시 부른다
+            return {"ok": True, "sig": sig, "state": "building"}
+        _PVPROXY_BUSY[job_id] = sig
+    try:
+        srcs = {k: v for k, v in (_resolve_sources(job, _MIX_WORK_DIR / job_id) or {}).items()
+                if v and Path(v).exists()}
+    except Exception:
+        srcs = {}
+    threading.Thread(target=_pvproxy_build, args=(job_id, sig, norm, srcs), daemon=True).start()
+    return {"ok": True, "sig": sig, "state": "building"}
+
+
+@app.get("/api/mix/preview_proxy/{job_id}/{name}")
+def api_mix_preview_proxy_file(job_id: str, name: str, request: Request):
+    import re as _re
+    if not _re.fullmatch(r"[0-9a-f]{16}\.mp4", name):
+        return JSONResponse(status_code=404, content={"ok": False})
+    p = _pvproxy_dir(job_id) / name
+    if not p.exists():
+        return JSONResponse(status_code=404, content={"ok": False})
+    return _range_mp4_response(p, request)
 
 
 @app.post("/api/mix/scene_lab/{job_id}/fill")
@@ -8384,6 +8521,29 @@ def _grid_from_beatframes(job_id, out_dir, grid_round):
     return pairs or None
 
 
+def _thumb_clean_background(job_id, job):
+    """썸네일에 쓸 자막 제거본 경로 하나.
+
+    완성본 1편 청소 방식은 ``clean_video_path``를 채우지 않고
+    ``final_clean_{편성서명}.mp4``를 남긴다. 썸네일도 그 정본을 먼저 찾아야 한다.
+    """
+    work = _MIX_WORK_DIR / job_id
+    if job.get("clean_status") == "ready":
+        fresh = mix_pipeline.clean_final_path_for_plan(job, work)
+        if fresh and fresh.exists():
+            return str(fresh)
+    legacy = job.get("clean_video_path")
+    if legacy and Path(legacy).exists():
+        return str(legacy)
+    if job.get("clean_status") == "ready":
+        # 썸네일 후보는 컷 좌표를 맞추는 화면이 아니다. 현재 편성본이 없더라도 가장 최근
+        # 청소본의 장면을 쓰는 편이 원본 자막이 박힌 preview로 떨어지는 것보다 정확하다.
+        any_clean = mix_pipeline.clean_any_final_path(job, work)
+        if any_clean and any_clean.exists():
+            return str(any_clean)
+    return ""
+
+
 @app.post("/api/produce/thumb/frames")
 def api_thumb_frames(body: dict):
     """7단계 썸네일 — 믹스 결과 영상을 등분해 후보 프레임(기본 16장).
@@ -8418,19 +8578,20 @@ def api_thumb_frames(body: dict):
     # 여기서 즉석 조립한다 — 이전 조립이 재렌더/재매칭 레이스로 유실됐을 수 있다(2026-07-21 사장님
     # 재제보: clean_status=ready·edit_plan 있음인데 clean_video_path=None으로 자막 preview가 걸렸음).
     # VMake는 이미 탔으니 추가과금 0. 실패하면 아래 폴백 그대로.
-    _cvp = job.get("clean_video_path")
-    if job.get("clean_status") == "ready" and not (_cvp and Path(_cvp).exists()):
+    _clean_bg = _thumb_clean_background(job_id, job)
+    if job.get("clean_status") == "ready" and not _clean_bg:
         # 자가치유 조립은 ffmpeg를 태운다 — 실패(RuntimeError)나 배포 재시작으로 ffmpeg가
         # 죽으면(exit 255) 여기서 예외가 그대로 올라가 500이 났다(2026-07-22 실측). 그러면
         # 아래 preview/최종 폴백을 못 타고 프레임이 아예 안 나온다. 삼키고 폴백으로 넘긴다.
         try:
             if mix_pipeline.assemble_clean_video(job_id, DB_PATH, _MIX_WORK_DIR):
                 job = Store(DB_PATH).get_mix_job(job_id)   # 새 clean_video_path 반영
+                _clean_bg = _thumb_clean_background(job_id, job)
         except Exception:
             pass   # 자막 없는 배경을 못 만들면 자막 있는 preview/최종으로라도 프레임을 낸다
     video = None
     bg_kind = ""          # 어떤 배경을 썼나 — 화면이 사장님·고객에게 알린다(아래 참조)
-    for cand, kind in ((job.get("clean_video_path"), "clean"),
+    for cand, kind in ((_clean_bg, "clean"),
                        (job.get("preview_path"), "preview"),
                        (job.get("video_path"), "final")):
         if cand and Path(cand).exists():
@@ -10936,7 +11097,8 @@ def _pay_cta():
 def _with_pay(html: str) -> str:
     """결제 CTA(__PAY_HREF__/__PAY_LABEL__)를 요청 시점에 채운다."""
     href, label = _pay_cta()
-    return html.replace("__PAY_HREF__", href).replace("__PAY_LABEL__", label)
+    return (html.replace("__PAY_HREF__", href).replace("__PAY_LABEL__", label)
+                .replace("__BIZFOOT__", _biz_foot()))
 
 
 # ── 공개 대문(랜딩) — 비로그인 방문자용. 민트×블랙, 한 페이지(B). ──
@@ -11122,7 +11284,7 @@ a{text-decoration:none;color:inherit}
 <h2>손자한테 안 물어봐도 됩니다</h2>
 <p>지금 10분, 무료로 하나 만들어보세요. 구글 계정이면 3초 · 카드 없이 시작.</p>
 <a class=cta href="/login">무료로 시작하기 →</a></div>
-<div class=foot>© __NAME__ · 쇼핑쇼츠, 이제 10분만에__LEGAL__</div>
+<div class=foot>© __NAME__ · 쇼핑쇼츠, 이제 10분만에__LEGAL____BIZFOOT__</div>
 </div>
 <script>(function(){var rm=matchMedia('(prefers-reduced-motion:reduce)').matches;
 var rev=document.querySelectorAll('.reveal');
@@ -11951,18 +12113,47 @@ def _biz_block():
     """사업자정보 표시(전자상거래법). admin 설정(biz_*)이 비면 '(준비 중)'."""
     import html as _h
     st = Store(DB_PATH)
-    def g(k, d="(준비 중)"):
-        v = (st.get_setting(k, "") or "").strip()
-        return _h.escape(v) if v else d
+    b = _biz_values()
+    sales = f'<b>통신판매업신고</b> {b["biz_sales_no"]}<br>' if b["biz_sales_no"] else ""
     return (
         '<div class=biz>'
-        f'<b>상호</b> {g("biz_name", _BRAND["name"])} &nbsp;·&nbsp; '
-        f'<b>대표자</b> {g("biz_owner")}<br>'
-        f'<b>사업자등록번호</b> {g("biz_regno")}<br>'
-        f'<b>통신판매업신고</b> {g("biz_sales_no")}<br>'
-        f'<b>주소</b> {g("biz_addr")}<br>'
-        f'<b>문의</b> {g("biz_email")}'
+        f'<b>상호</b> {b["biz_name"]} &nbsp;·&nbsp; '
+        f'<b>대표자</b> {b["biz_owner"]}<br>'
+        f'<b>사업자등록번호</b> {b["biz_regno"]}<br>'
+        f'{sales}'
+        f'<b>주소</b> {b["biz_addr"]}<br>'
+        f'<b>고객센터</b> {b["biz_tel"]} &nbsp;·&nbsp; <b>이메일</b> {b["biz_email"]}'
         '</div>')
+
+# 사업자정보 기본값(사장님 제공 2026-09-14). admin 설정(biz_*)에 값이 있으면 그게 우선.
+_BIZ_DEFAULTS = {
+    "biz_name": "주식회사 메이커스랩스",
+    "biz_owner": "정기영",
+    "biz_regno": "104-87-04013",
+    "biz_sales_no": "",
+    "biz_addr": "경기도 용인시 수지구 현암로 148 (죽전동) 스카이프라자 602호",
+    "biz_tel": "010-5202-7840",
+    "biz_email": "makerslab07@gmail.com",
+}
+
+def _biz_values() -> dict:
+    """사업자정보 한 곳에서 정한다(약관 페이지·대문 푸터 공용). HTML 이스케이프된 값."""
+    import html as _h
+    try:
+        st = Store(DB_PATH)
+        get = lambda k: (st.get_setting(k, "") or "").strip()
+    except Exception:
+        get = lambda k: ""
+    return {k: _h.escape(get(k) or d) for k, d in _BIZ_DEFAULTS.items()}
+
+def _biz_foot() -> str:
+    """대문(랜딩) 하단 사업자정보 — 작은 글씨 한 덩어리."""
+    b = _biz_values()
+    sales = f' · 통신판매업신고 {b["biz_sales_no"]}' if b["biz_sales_no"] else ""
+    return ('<div style="margin-top:10px;font-size:11.5px;line-height:1.8;color:#6b7f7c">'
+            f'상호 {b["biz_name"]} · 대표자 {b["biz_owner"]} · 사업자등록번호 {b["biz_regno"]}{sales}<br>'
+            f'주소 {b["biz_addr"]}<br>'
+            f'고객센터 {b["biz_tel"]} · 이메일 {b["biz_email"]}</div>')
 
 def _legal_nav(active: str):
     items = [("/terms", "이용약관"), ("/privacy", "개인정보처리방침"), ("/refund", "환불정책")]
@@ -13311,7 +13502,7 @@ _ADMIN_SETTING_KEYS = {"trial_days", "trial_grant_points", "trial_event_hours",
                        "global_cap_lens", "global_cap_render", "global_cap_script",
                        "contact_kakao", "contact_phone", "pay_url",
                        "bank_name", "bank_account", "bank_holder", "deposit_note",
-                       "biz_name", "biz_owner", "biz_regno", "biz_addr", "biz_sales_no", "biz_email",
+                       "biz_name", "biz_owner", "biz_regno", "biz_addr", "biz_sales_no", "biz_email", "biz_tel",
                        # 조립 끄기 — "1"이면 틀 조립을 건너뛰고 전부 생성기로(2026-08-21)
                        "assemble_off",
                        # 1기 챌린지(2026-08-24) — 기간·하루 목표
