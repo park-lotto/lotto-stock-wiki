@@ -851,6 +851,16 @@ function pvxStep(c){
   paintCut();
   schedStep(c.dur * 1000);
 }
+// 합본은 **음성 시계에 묶는다** — 컷 타이머(벽시계)만 따르면 음성이 늦게 뜬 만큼 화면이 앞선다
+//   (로컬 실측: 첫 칸 0.47초 앞섬). 음성이 흐르는 동안 0.12초 넘게 벌어지면 합본을 그 자리로 옮긴다.
+function pvxSync(){
+  const c = seq[seqI];
+  if (!c || !c._px || seqPaused || seqBeat == null || !audioUsable()) return;
+  const a = audio(); if (!a || a.paused) return;
+  const want = PVX.offs[seqBeat] + a.currentTime;
+  const v = c._px;
+  if (Math.abs(v.currentTime - want) > 0.12) { try { v.currentTime = want; } catch(e){} }
+}
 function cutStart(c){ return c._px ? c._pstart : c.start; }
 function seat(c){
   if (c._px) return c._px;                            // 합본은 이어 트는 중 — 미리 앉히면 화면이 튄다
@@ -991,6 +1001,7 @@ function tickSub(){
     // ★시계는 curT() 하나만 본다(0순위-B, 2026-08-20). 예전엔 여기만 audio를 직접 봐서
     //   음성 없는 칸에서 자막이 첫 구절("여러분")에 얼어붙었다 — 화면은 제 타이머로
     //   계속 돌아 "대본이 적용 안 됐다"로 보였다.
+    pvxSync();
     const a = audio(), t = curT();
     const c = capAt(seqBeat, t);
     const k = seqBounds.findIndex(([a0, b0]) => t >= a0 - 1e-3 && t < b0);
