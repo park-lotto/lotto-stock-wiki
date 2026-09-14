@@ -10936,7 +10936,8 @@ def _pay_cta():
 def _with_pay(html: str) -> str:
     """결제 CTA(__PAY_HREF__/__PAY_LABEL__)를 요청 시점에 채운다."""
     href, label = _pay_cta()
-    return html.replace("__PAY_HREF__", href).replace("__PAY_LABEL__", label)
+    return (html.replace("__PAY_HREF__", href).replace("__PAY_LABEL__", label)
+                .replace("__BIZFOOT__", _biz_foot()))
 
 
 # ── 공개 대문(랜딩) — 비로그인 방문자용. 민트×블랙, 한 페이지(B). ──
@@ -11122,7 +11123,7 @@ a{text-decoration:none;color:inherit}
 <h2>손자한테 안 물어봐도 됩니다</h2>
 <p>지금 10분, 무료로 하나 만들어보세요. 구글 계정이면 3초 · 카드 없이 시작.</p>
 <a class=cta href="/login">무료로 시작하기 →</a></div>
-<div class=foot>© __NAME__ · 쇼핑쇼츠, 이제 10분만에__LEGAL__</div>
+<div class=foot>© __NAME__ · 쇼핑쇼츠, 이제 10분만에__LEGAL____BIZFOOT__</div>
 </div>
 <script>(function(){var rm=matchMedia('(prefers-reduced-motion:reduce)').matches;
 var rev=document.querySelectorAll('.reveal');
@@ -11951,18 +11952,47 @@ def _biz_block():
     """사업자정보 표시(전자상거래법). admin 설정(biz_*)이 비면 '(준비 중)'."""
     import html as _h
     st = Store(DB_PATH)
-    def g(k, d="(준비 중)"):
-        v = (st.get_setting(k, "") or "").strip()
-        return _h.escape(v) if v else d
+    b = _biz_values()
+    sales = f'<b>통신판매업신고</b> {b["biz_sales_no"]}<br>' if b["biz_sales_no"] else ""
     return (
         '<div class=biz>'
-        f'<b>상호</b> {g("biz_name", _BRAND["name"])} &nbsp;·&nbsp; '
-        f'<b>대표자</b> {g("biz_owner")}<br>'
-        f'<b>사업자등록번호</b> {g("biz_regno")}<br>'
-        f'<b>통신판매업신고</b> {g("biz_sales_no")}<br>'
-        f'<b>주소</b> {g("biz_addr")}<br>'
-        f'<b>문의</b> {g("biz_email")}'
+        f'<b>상호</b> {b["biz_name"]} &nbsp;·&nbsp; '
+        f'<b>대표자</b> {b["biz_owner"]}<br>'
+        f'<b>사업자등록번호</b> {b["biz_regno"]}<br>'
+        f'{sales}'
+        f'<b>주소</b> {b["biz_addr"]}<br>'
+        f'<b>고객센터</b> {b["biz_tel"]} &nbsp;·&nbsp; <b>이메일</b> {b["biz_email"]}'
         '</div>')
+
+# 사업자정보 기본값(사장님 제공 2026-09-14). admin 설정(biz_*)에 값이 있으면 그게 우선.
+_BIZ_DEFAULTS = {
+    "biz_name": "주식회사 메이커스랩스",
+    "biz_owner": "정기영",
+    "biz_regno": "104-87-04013",
+    "biz_sales_no": "",
+    "biz_addr": "경기도 용인시 수지구 현암로 148 (죽전동) 스카이프라자 602호",
+    "biz_tel": "010-5202-7840",
+    "biz_email": "makerslab07@gmail.com",
+}
+
+def _biz_values() -> dict:
+    """사업자정보 한 곳에서 정한다(약관 페이지·대문 푸터 공용). HTML 이스케이프된 값."""
+    import html as _h
+    try:
+        st = Store(DB_PATH)
+        get = lambda k: (st.get_setting(k, "") or "").strip()
+    except Exception:
+        get = lambda k: ""
+    return {k: _h.escape(get(k) or d) for k, d in _BIZ_DEFAULTS.items()}
+
+def _biz_foot() -> str:
+    """대문(랜딩) 하단 사업자정보 — 작은 글씨 한 덩어리."""
+    b = _biz_values()
+    sales = f' · 통신판매업신고 {b["biz_sales_no"]}' if b["biz_sales_no"] else ""
+    return ('<div style="margin-top:10px;font-size:11.5px;line-height:1.8;color:#6b7f7c">'
+            f'상호 {b["biz_name"]} · 대표자 {b["biz_owner"]} · 사업자등록번호 {b["biz_regno"]}{sales}<br>'
+            f'주소 {b["biz_addr"]}<br>'
+            f'고객센터 {b["biz_tel"]} · 이메일 {b["biz_email"]}</div>')
 
 def _legal_nav(active: str):
     items = [("/terms", "이용약관"), ("/privacy", "개인정보처리방침"), ("/refund", "환불정책")]
@@ -13311,7 +13341,7 @@ _ADMIN_SETTING_KEYS = {"trial_days", "trial_grant_points", "trial_event_hours",
                        "global_cap_lens", "global_cap_render", "global_cap_script",
                        "contact_kakao", "contact_phone", "pay_url",
                        "bank_name", "bank_account", "bank_holder", "deposit_note",
-                       "biz_name", "biz_owner", "biz_regno", "biz_addr", "biz_sales_no", "biz_email",
+                       "biz_name", "biz_owner", "biz_regno", "biz_addr", "biz_sales_no", "biz_email", "biz_tel",
                        # 조립 끄기 — "1"이면 틀 조립을 건너뛰고 전부 생성기로(2026-08-21)
                        "assemble_off",
                        # 1기 챌린지(2026-08-24) — 기간·하루 목표
