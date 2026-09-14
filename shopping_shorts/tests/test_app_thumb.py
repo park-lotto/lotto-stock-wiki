@@ -10,6 +10,7 @@ from fastapi.testclient import TestClient
 
 from shopping_shorts import app as app_module
 from shopping_shorts import frame_extract
+from shopping_shorts import mix_pipeline
 from shopping_shorts.store import Store
 
 
@@ -80,6 +81,95 @@ def test_frames_prefer_caption_free_source(client, tmp_path, monkeypatch):
     r = client.post("/api/produce/thumb/frames", json={"job_id": "j1"})
     assert r.status_code == 200
     assert used["path"] == str(clean), "자막 박힌 video_path 대신 자막제거본(clean)을 써야 한다"
+
+
+def test_frames_use_signature_clean_final_when_legacy_path_is_empty(client, tmp_path, monkeypatch):
+    """완성본 1편 청소는 clean_video_path 없이 final_clean_{sig}.mp4만 남긴다.
+
+    박선정님 job 1a91a10941ec 실측: clean_status=ready, clean_video_path=None,
+    현재 편성 final_clean은 존재했지만 썸네일은 preview에서 뽑혀 원본 자막이 남았다.
+    """
+    monkeypatch.setattr(app_module, "_MIX_WORK_DIR", tmp_path / "mix")
+    s = _job_with_video(tmp_path)
+    preview = tmp_path / "preview.mp4"; preview.write_bytes(b"captioned-preview")
+    plan = {"beats": [{"beat_idx": 0, "primary": {"video_id": "s0", "start": 1.0,
+                                                    "end": 2.0}}]}
+    s.update_mix_job("j1", edit_plan=plan, preview_path=str(preview),
+                     clean_status="ready", subtitle_removal=1)
+    work = tmp_path / "mix" / "j1"; work.mkdir(parents=True)
+    clean = work / f"final_clean_{mix_pipeline._plan_signature(plan)}.mp4"
+    clean.write_bytes(b"clean" * 1024)
+    monkeypatch.setattr(mix_pipeline, "assemble_clean_video",
+                        lambda *a, **k: pytest.fail("현재 편성 청소본이 있는데 구형 자가치유를 호출했다"))
+    used = {}
+
+    def fake_grid(video_path, dest_dir, n=16, phase=0.5):
+        used["path"] = str(video_path)
+        dest = Path(dest_dir); dest.mkdir(parents=True, exist_ok=True)
+        p = dest / "grid_00.jpg"; p.write_bytes(b"img")
+        return [(p, 0.0)]
+
+    monkeypatch.setattr(app_module, "extract_grid_frames", fake_grid)
+    d = client.post("/api/produce/thumb/frames", json={"job_id": "j1"}).json()
+
+    assert d["ok"] and d["bg"] == "clean"
+    assert used["path"] == str(clean)
+
+
+def test_refresh_replaces_cached_preview_frames_after_final_clean_arrives(client, tmp_path, monkeypatch):
+    """청소 전에 만든 썸네일도 새로고침하면 final_clean 기준으로 다시 뽑는다."""
+    monkeypatch.setattr(app_module, "_MIX_WORK_DIR", tmp_path / "mix")
+    s = _job_with_video(tmp_path)
+    preview = tmp_path / "preview.mp4"; preview.write_bytes(b"captioned-preview")
+    plan = {"beats": [{"beat_idx": 0, "primary": {"video_id": "s0", "start": 1.0,
+                                                    "end": 2.0}}]}
+    s.update_mix_job("j1", edit_plan=plan, preview_path=str(preview),
+                     clean_status="processing", subtitle_removal=1)
+    used = []
+
+    def fake_grid(video_path, dest_dir, n=16, phase=0.5):
+        used.append(str(video_path))
+        dest = Path(dest_dir); dest.mkdir(parents=True, exist_ok=True)
+        p = dest / "grid_00.jpg"; p.write_bytes(f"img-{len(used)}".encode())
+        return [(p, 0.0)]
+
+    monkeypatch.setattr(app_module, "extract_grid_frames", fake_grid)
+    before = client.post("/api/produce/thumb/frames", json={"job_id": "j1"}).json()
+
+    work = tmp_path / "mix" / "j1"; work.mkdir(parents=True)
+    clean = work / f"final_clean_{mix_pipeline._plan_signature(plan)}.mp4"
+    clean.write_bytes(b"clean" * 1024)
+    s.update_mix_job("j1", clean_status="ready")
+    after = client.post("/api/produce/thumb/frames", json={"job_id": "j1"}).json()
+
+    assert before["bg"] == "preview"
+    assert after["bg"] == "clean"
+    assert used == [str(preview), str(clean)]
+    assert before["frames"][0]["url"] != after["frames"][0]["url"]
+
+
+def test_frames_use_recent_clean_final_before_captioned_preview(client, tmp_path, monkeypatch):
+    """현재 편성이 바뀌었어도 썸네일 후보는 최근 청소본을 쓰고 preview로 떨어지지 않는다."""
+    monkeypatch.setattr(app_module, "_MIX_WORK_DIR", tmp_path / "mix")
+    s = _job_with_video(tmp_path)
+    preview = tmp_path / "preview.mp4"; preview.write_bytes(b"captioned-preview")
+    s.update_mix_job("j1", edit_plan={"beats": [{"beat_idx": 99}]},
+                     preview_path=str(preview), clean_status="ready", subtitle_removal=1)
+    work = tmp_path / "mix" / "j1"; work.mkdir(parents=True)
+    old_clean = work / "final_clean_old-layout.mp4"; old_clean.write_bytes(b"clean" * 1024)
+    used = {}
+
+    def fake_grid(video_path, dest_dir, n=16, phase=0.5):
+        used["path"] = str(video_path)
+        dest = Path(dest_dir); dest.mkdir(parents=True, exist_ok=True)
+        p = dest / "grid_00.jpg"; p.write_bytes(b"img")
+        return [(p, 0.0)]
+
+    monkeypatch.setattr(app_module, "extract_grid_frames", fake_grid)
+    d = client.post("/api/produce/thumb/frames", json={"job_id": "j1"}).json()
+
+    assert d["ok"] and d["bg"] == "clean"
+    assert used["path"] == str(old_clean)
 
 
 def test_frames_reuses_existing(client, tmp_path, monkeypatch):

@@ -8521,6 +8521,29 @@ def _grid_from_beatframes(job_id, out_dir, grid_round):
     return pairs or None
 
 
+def _thumb_clean_background(job_id, job):
+    """썸네일에 쓸 자막 제거본 경로 하나.
+
+    완성본 1편 청소 방식은 ``clean_video_path``를 채우지 않고
+    ``final_clean_{편성서명}.mp4``를 남긴다. 썸네일도 그 정본을 먼저 찾아야 한다.
+    """
+    work = _MIX_WORK_DIR / job_id
+    if job.get("clean_status") == "ready":
+        fresh = mix_pipeline.clean_final_path_for_plan(job, work)
+        if fresh and fresh.exists():
+            return str(fresh)
+    legacy = job.get("clean_video_path")
+    if legacy and Path(legacy).exists():
+        return str(legacy)
+    if job.get("clean_status") == "ready":
+        # 썸네일 후보는 컷 좌표를 맞추는 화면이 아니다. 현재 편성본이 없더라도 가장 최근
+        # 청소본의 장면을 쓰는 편이 원본 자막이 박힌 preview로 떨어지는 것보다 정확하다.
+        any_clean = mix_pipeline.clean_any_final_path(job, work)
+        if any_clean and any_clean.exists():
+            return str(any_clean)
+    return ""
+
+
 @app.post("/api/produce/thumb/frames")
 def api_thumb_frames(body: dict):
     """7단계 썸네일 — 믹스 결과 영상을 등분해 후보 프레임(기본 16장).
@@ -8555,19 +8578,20 @@ def api_thumb_frames(body: dict):
     # 여기서 즉석 조립한다 — 이전 조립이 재렌더/재매칭 레이스로 유실됐을 수 있다(2026-07-21 사장님
     # 재제보: clean_status=ready·edit_plan 있음인데 clean_video_path=None으로 자막 preview가 걸렸음).
     # VMake는 이미 탔으니 추가과금 0. 실패하면 아래 폴백 그대로.
-    _cvp = job.get("clean_video_path")
-    if job.get("clean_status") == "ready" and not (_cvp and Path(_cvp).exists()):
+    _clean_bg = _thumb_clean_background(job_id, job)
+    if job.get("clean_status") == "ready" and not _clean_bg:
         # 자가치유 조립은 ffmpeg를 태운다 — 실패(RuntimeError)나 배포 재시작으로 ffmpeg가
         # 죽으면(exit 255) 여기서 예외가 그대로 올라가 500이 났다(2026-07-22 실측). 그러면
         # 아래 preview/최종 폴백을 못 타고 프레임이 아예 안 나온다. 삼키고 폴백으로 넘긴다.
         try:
             if mix_pipeline.assemble_clean_video(job_id, DB_PATH, _MIX_WORK_DIR):
                 job = Store(DB_PATH).get_mix_job(job_id)   # 새 clean_video_path 반영
+                _clean_bg = _thumb_clean_background(job_id, job)
         except Exception:
             pass   # 자막 없는 배경을 못 만들면 자막 있는 preview/최종으로라도 프레임을 낸다
     video = None
     bg_kind = ""          # 어떤 배경을 썼나 — 화면이 사장님·고객에게 알린다(아래 참조)
-    for cand, kind in ((job.get("clean_video_path"), "clean"),
+    for cand, kind in ((_clean_bg, "clean"),
                        (job.get("preview_path"), "preview"),
                        (job.get("video_path"), "final")):
         if cand and Path(cand).exists():
