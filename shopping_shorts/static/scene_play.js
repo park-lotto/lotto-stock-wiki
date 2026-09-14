@@ -779,21 +779,49 @@ function pvxCuts(){
   return {beats, cuts, key: beats.join('|')};
 }
 function pvxClock(c){ return c && c._px; }
+// ★언제 만드나(2026-09-14 사장님 "처음 배치시 빠르게 / 장면 교체했을 땐 버튼을 눌러서").
+//   처음 한 번만 자동(합본이 아직 없을 때). 그 뒤 편성이 바뀌면 자동으로 안 만들고
+//   [🎞 바뀐 장면 반영] 버튼을 띄운다 — 누른 편성(PVX.want)만 만든다.
+function pvxBtns(state){
+  ['pball', 'pball2'].forEach(id => {
+    const pb = document.getElementById(id); if (!pb || !pb.parentNode) return;
+    let b = document.getElementById(id + '_pvx');
+    if (!b){
+      b = document.createElement('button');
+      b.type = 'button'; b.id = id + '_pvx'; b.className = 'act';
+      b.style.cssText = 'margin-left:6px;padding:3px 10px;font-size:11.5px';
+      b.title = '바꾼 장면으로 끊김 없는 미리보기를 새로 만듭니다(몇 초)';
+      b.onclick = (e) => { if (e) e.stopPropagation(); pvxRequest(); };
+      pb.parentNode.insertBefore(b, pb.nextSibling);
+    }
+    b.hidden = !state;
+    b.disabled = state === 'building';
+    b.textContent = state === 'building' ? '⏳ 반영 중…' : '🎞 바뀐 장면 반영';
+  });
+}
+function pvxRequest(){
+  let p; try { p = pvxCuts(); } catch(e){ return; }
+  PVX.want = p.key; PVX.lastKey = p.key;
+  pvxTick();
+}
 function pvxTick(){
   pvxSwap();
-  if (!SL.server || !DATA || !DATA.beats || PVX.ready) return;
+  if (!SL.server || !DATA || !DATA.beats) return;
   let p; try { p = pvxCuts(); } catch(e){ return; }
-  if (!p.cuts.length || p.key === PVX.key) { PVX.lastKey = p.key; return; }
-  // 편집 중엔 매번 만들지 않는다 — 한 번 쉬어(3초 동안 안 바뀌면) 그때 요청한다.
+  if (!p.cuts.length || p.key === PVX.key) { PVX.lastKey = p.key; pvxBtns(PVX.ready ? 'building' : ''); return; }
+  if (PVX.ready) { pvxBtns('building'); return; }
   const stable = p.key === PVX.lastKey;
   PVX.lastKey = p.key;
-  if (!stable || PVX.pending === p.key) return;
+  if (!PVX.key && !PVX.want) PVX.want = p.key;                    // 첫 배치 — 기다리지 않고 바로 자동
+  if (PVX.want !== p.key){ pvxBtns(PVX.key ? 'stale' : ''); return; }   // 바뀜 — 버튼 누를 때까지 대기
+  pvxBtns('building');
+  if (PVX.pending === p.key) return;
   PVX.pending = p.key;
   fetch(`/api/mix/preview_proxy/${SL.job}`, {method: 'POST', headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({cuts: p.cuts})})
     .then(r => r.ok ? r.json() : null)
     .then(j => {
-      if (!j || j.state !== 'ready' || !j.url){ PVX.pending = ''; return; }   // 만드는 중 — 다음 틱에 다시 묻는다
+      if (!j || j.state !== 'ready' || !j.url){ PVX.pending = ''; setTimeout(() => { try { pvxTick(); } catch(e){} }, 1000); return; }   // 만드는 중 — 1초 뒤 다시 묻는다
       return fetch(j.url).then(r => r.ok ? r.blob() : null).then(bl => {
         PVX.pending = '';
         if (!bl || !bl.size) return;
@@ -822,7 +850,7 @@ function pvxSwap(){
         v.src = PVX.url;
         let off = 0;
         PVX.offs = p.beats.map(s => { const a = off; JSON.parse(s).forEach(c => off += c.dur); return a; });
-        PVX.beats = p.beats; PVX.key = p.key;
+        PVX.beats = p.beats; PVX.key = p.key; pvxBtns("");
         console.log('[pvx] 합본 준비', r.sig, p.cuts.length + '컷', (bl.size/1e6).toFixed(1) + 'MB');
   }
 }
