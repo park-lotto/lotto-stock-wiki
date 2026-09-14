@@ -17625,7 +17625,7 @@ function s2RenderSeeds(){
     //   (2026-08-20 사장님 제보 "여긴 왜 썸네일도 작아지고 설명도 이상하다").
     S2.seeds.push({shortcode:d.pick_id, title:pm.name||pm.title||'선택 영상', thumb:pm.thumbnail||'',
       category:pm.category||'', followers:pm.followers, text:d.pick_text||'',
-      structure:d.structure||{}, tiles:d.tiles||{}, pick:true});
+      product:pm.product||'', structure:d.structure||{}, tiles:d.tiles||{}, pick:true});
   }
   // 담긴 나머지 영상 — **AI PICK 응답의 candidates**를 쓴다.
   // ★HANDOFF를 쓰면 안 된다(실측으로 배운 것): HANDOFF의 `pickScript`는 대본 텍스트가
@@ -17645,7 +17645,7 @@ function s2RenderSeeds(){
       _seen.add(sc);
       S2.seeds.push({shortcode:sc, title:c.name||c.title||'담은 영상', thumb:c.thumbnail||c.thumb||'',
         category:c.category||'', followers:c.followers,
-        text:c.text||'', structure:c.structure||{}, tiles:c.tiles||{}, pick:false});
+        text:c.text||'', product:c.product||'', structure:c.structure||{}, tiles:c.tiles||{}, pick:false});
     });
   }catch(e){}
   // ★사장님이 직접 쓴 대본은 **AI PICK 목록에 없다** — 이 함수가 매번 S2.seeds를 새로
@@ -18013,7 +18013,8 @@ async function s2Generate(){
   if(hint) hint.textContent='';
   try{
     const body={mode:'A', my_topic:'', subject:'', n:2, elem_modes:{},
-      structure:null, base_script:s.text||'', category:s.category||PM_CATEGORY||''};
+      structure:null, base_script:s.text||'', category:s.category||PM_CATEGORY||'',
+      shortcode:s.shortcode||''};
     // ★job_id를 반드시 실어라(2026-08-17). 서버는 이걸로 ①담긴 영상 전부의 대본
     //   ②쿠팡 상세·리뷰 재료 ③1단계 장면 태깅(label·use_point)을 붙인다.
     //   안 보내면 코드가 다 있어도 **재료가 빈 채로** 대본이 나온다(내가 처음에 빠뜨린 것).
@@ -18117,6 +18118,10 @@ async function s2Generate(){
     // ★만들자마자 남긴다(2026-08-17). 여기서 저장 안 하면 확정(s2Confirm) 전에 새로고침한
     //   순간 **돈 들여 뽑은 대본이 통째로 날아간다** — 사장님 제보의 핵심 경로다.
     saveWork();
+    // [바꾸기]는 서버 work에 저장된 주제 계약을 검증한다. 1초 디바운스를 기다리면
+    // 생성 직후 클릭에서 계약이 아직 없어 422가 나므로, 결과 직후에는 즉시 저장한다.
+    S2._contractSave=Promise.resolve(_pushWorkNow()).catch(()=>null);
+    await S2._contractSave;
   }catch(e){
     if(hint) hint.innerHTML='<span style="color:var(--fire)">네트워크 오류</span>';
     toast('⚠️ 네트워크 오류 — 다시 시도해주세요');
@@ -18194,6 +18199,7 @@ function s2RenderDrafts(){
       //   화면에 `<span style="color:var(--gold)">틀 조립 못 함…</span>`이 **글자 그대로** 떴다.
       //   (사장님 화면에서 실제로 목격) 섞어 담으면 어느 쪽을 이스케이프해도 한쪽이 깨진다.
       const bits=[];
+      if(m.topic_product) bits.push('<b style="color:var(--accent)">고정 주제 '+esc(m.topic_product)+'</b>');
       if(srcs.length) bits.push(esc('대본 '+srcs.length+'편('+srcs.map(s=>s.chars+'자').join('·')+')'));
       if(m.scene_points) bits.push(esc('장면 '+m.scene_points+'개'));
       if(m.product_facts) bits.push(esc('쿠팡 재료'));
@@ -18457,9 +18463,11 @@ async function s2RegenBeat(i,j,tmpl){
   const tx=row?row.querySelector('.s2-sent'):null;
   if(tx){ tx.setAttribute('contenteditable','false'); tx.textContent='⏳ 이 칸을 다시 쓰는 중…'; }
   try{
+    if(S2._contractSave) await S2._contractSave;
     const s=S2.seed||{};
-    const body={style_id:dr.style_id, role:role, beats:beats, template:tmpl||'',
+    const body={style_id:dr.style_id, role:role, beat_index:j, beats:beats, template:tmpl||'',
       base_script:s.text||'', category:s.category||PM_CATEGORY||'', target_seconds:25};
+    if(S2.materials && S2.materials.topic_product) body.topic_product=S2.materials.topic_product;
     // ★픽업영상 대본은 style_id가 없다(스타일을 안 고르는 경로) — 종전엔 서버가 422로
     //   튕겨 **[바꾸기]가 통째로 막혀 있었다**(2026-08-26 사장님 제보).
     //   스타일 대신 **씨앗 구조·훅 문형**을 실어 보낸다. 전체 생성과 같은 재료다(0순위-B).

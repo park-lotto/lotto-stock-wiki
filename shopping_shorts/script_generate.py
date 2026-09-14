@@ -455,8 +455,12 @@ def _mix_source_block(sources, full_scenes=False):
     #   결과가 '주방 기름 가림막'). 1단계 분석이 제품명을 이미 뽑아 두는데
     #   (source_brief.product — 실측 '다이소 자석 네일펜') 그 값을 생성에 한 번도 안 줬다.
     #   **아는 값을 안 주고 짐작하게 한 것**이 뿌리다. 맨 앞에 박으면 추론할 여지가 없어진다.
-    _prod = ""
+    # 선택 제품 주제는 자료의 우연한 정렬보다 우선한다.
+    _prod = next(((s.get("topic_product") or "").strip() for s in sources
+                  if (s.get("topic_product") or "").strip()), "")
     for _s in sources:
+        if _prod:
+            break
         _p = (_s.get("product") or "").strip()
         if _p:
             _prod = _p
@@ -552,6 +556,10 @@ def _materials_text(sources):
 def _sources_product(sources):
     """재료에서 우리 제품명 하나(첫 번째로 채워진 것). 없으면 ""."""
     for s in (sources or []):
+        p = (s.get("topic_product") or "").strip()
+        if p:
+            return p
+    for s in (sources or []):
         p = (s.get("product") or "").strip()
         if p:
             return p
@@ -631,7 +639,11 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
                                          speaker_judge=_speaker_judge,
                                          scene_ids=_scene_ids, grounded=bool(grounded),
                                          is_recipe=_is_recipe, source_count=_source_count,
-                                         materials_text=_materials_text(sources))
+                                         materials_text=_materials_text(sources),
+                                         topic_required=any(
+                                             s.get("topic_product") and
+                                             s.get("topic_semantic_required", True)
+                                             for s in (sources or [])))
         tries.append({"chars": len(script_gate.norm(full)),
                       "fails": [c["name"] for c in checks if not c["ok"]]})
         if script_gate.passed(checks):
@@ -701,9 +713,19 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
                                          seconds=seconds,
                                          speaker_judge=script_gate.prior_verdict(checks),
                                          scene_ids=_scene_ids, grounded=bool(grounded),
-                                         is_recipe=_is_recipe, source_count=_source_count)
+                                         is_recipe=_is_recipe, source_count=_source_count,
+                                         materials_text=_materials_text(sources),
+                                         topic_required=any(
+                                             s.get("topic_product") and
+                                             s.get("topic_semantic_required", True)
+                                             for s in (sources or [])))
         tries.append({"chars": len(script_gate.norm(full)), "trimmed": True,
                       "fails": [c["name"] for c in checks if not c["ok"]]})
+        if script_gate.fatal_fail(checks):
+            if note is not None:
+                note["reason"] = "소재이탈"
+                note["detail"] = "최종 재단 뒤 고정 제품 주제 검사를 통과하지 못했습니다"
+            return None
 
     # ★화면에 "영상으로 몇 초"를 띄우려면 초를 서버가 계산해 실어 보내야 한다
     #   (2026-08-18 사장님). 화면이 자기 상수로 따로 계산하면 판정(밀도 게이트)과
@@ -725,8 +747,10 @@ def generate_one_style(sources, style, target_seconds=30, bank_context="", facts
 
 _SPEAKER_SCHEMA = {
     "type": "object",
-    "properties": {"ok": {"type": "boolean"}, "why": {"type": "string"}},
-    "required": ["ok", "why"],
+    "properties": {"ok": {"type": "boolean"}, "why": {"type": "string"},
+                   "topic_ok": {"type": "boolean"}, "topic_why": {"type": "string"},
+                   "foreign_products": {"type": "array", "items": {"type": "string"}}},
+    "required": ["ok", "why", "topic_ok", "topic_why", "foreign_products"],
 }
 
 _SPEAKER_PROMPT = """다음 한국어 숏폼 대본에서 **말하는 사람(화자)이 처음부터 끝까지 한 사람으로
@@ -750,11 +774,21 @@ FAIL로 잡을 것 — 이 셋만:
 
 why에는 **무엇을 어떻게 고쳐야 하는지** 한 문장으로 적어라(FAIL일 때만).
 
+[고정 제품 주제]
+{product}
+
+topic_ok는 대본의 중심 제품과 기능이 위 고정 제품 하나인지 판정해라.
+- 장소·대상 수식어(차량용/어린이/휴대용)만 겹치는 다른 제품은 FAIL.
+- 고정 제품을 한 번 언급하고 컵홀더·냉장고 등 다른 제품의 기능을 중심으로 설명해도 FAIL.
+- 고정 제품의 자연스러운 동의어·상위 표현은 OK.
+- 고정 제품 자체가 여러 제품 모음/세트라고 명시된 경우에만 그 목록을 함께 다뤄도 OK.
+foreign_products에는 대본에 섞인 다른 제품명을 적고, 없으면 빈 배열로 내라.
+
 [대본]
 {script}"""
 
 
-def _speaker_judge(text):
+def _speaker_judge(text, product=""):
     """대본 전문 → {"ok": bool, "why": str}. 판정 못 하면 {} (게이트가 통과시킨다).
 
     ★fail-open: _call_json은 무키·소진·응답오류를 전부 {}로 돌려준다. 그대로
@@ -763,7 +797,8 @@ def _speaker_judge(text):
     """
     if not (text or "").strip():
         return {}
-    return _call_json(_SPEAKER_PROMPT.format(script=text), _SPEAKER_SCHEMA)
+    return _call_json(_SPEAKER_PROMPT.format(script=text, product=product or "(미확정)"),
+                      _SPEAKER_SCHEMA)
 
 
 _BEAT_SCHEMA = {
@@ -820,7 +855,8 @@ def _beat_len_cap(per):
 
 
 def regen_one_beat(sources, style, role, beats, template="", target_seconds=30,
-                   bank_context="", facts_block=""):
+                   bank_context="", facts_block="", topic_product="", topic_judge=None,
+                   beat_index=None):
     """[바꾸기] — 대본의 **한 칸만** 다시 쓴다. → {text, template, matched, tries} / 실패면 None
 
     ## 왜 '틀을 그대로 넣기'가 아니라 '재생성'인가 (2026-08-17 사장님 지시 B안)
@@ -854,6 +890,16 @@ def regen_one_beat(sources, style, role, beats, template="", target_seconds=30,
     role = (role or "").strip()
     if not role:
         return None
+    beat_rows = [b for b in (beats or []) if isinstance(b, dict)]
+    if beat_index is not None:
+        try:
+            beat_index = int(beat_index)
+        except (TypeError, ValueError):
+            return None
+        if not (0 <= beat_index < len(beat_rows)) or beat_rows[beat_index].get("role") != role:
+            return None
+    else:
+        beat_index = next((i for i, b in enumerate(beat_rows) if b.get("role") == role), None)
     # ★스파인이 없어도 돈다(2026-08-26 사장님 "픽업영상 대본은 바꾸기를 누르면
     #   ai자동바꾸기가 왜안되나"). 픽업영상 대본은 **스타일을 안 고르는 경로**라
     #   style이 None인데, 종전엔 여기서 곧장 None을 반환해 [바꾸기]가 통째로 막혔다.
@@ -876,8 +922,8 @@ def regen_one_beat(sources, style, role, beats, template="", target_seconds=30,
     #   때는 그게 틀렸다 — 칸마다 제 길이가 다르기 때문이다. 실측에서 한 문장짜리 훅이
     #   2~3문장으로 부풀어 **훅의 힘이 죽었다**(미끼는 짧아야 하는 칸이다).
     #   대본 전체 밀도는 나머지 칸이 그대로 있으므로 이 칸만 제자리를 지키면 유지된다.
-    prev_text = next((str(b.get("text") or "") for b in (beats or [])
-                      if isinstance(b, dict) and b.get("role") == role), "")
+    prev_text = (str(beat_rows[beat_index].get("text") or "")
+                 if beat_index is not None else "")
     # ★norm으로 잰다 — 아래 판정(`n_out`)·상한(`_beat_len_cap`)과 **같은 단위**여야 한다.
     #   종전엔 여기만 raw(len)라 상한이 26% 헐렁했다(2026-08-24 실사고, beat_len 주석 참조).
     per = beat_len(prev_text)
@@ -888,10 +934,8 @@ def regen_one_beat(sources, style, role, beats, template="", target_seconds=30,
 
     # 앞뒤 문맥 — 지금 대본에서 이 칸을 뺀 나머지를 순서대로 보여준다.
     ctx = []
-    for b in (beats or []):
-        if not isinstance(b, dict):
-            continue
-        mark = "  ← ★지금 다시 쓸 칸" if b.get("role") == role else ""
+    for k, b in enumerate(beat_rows):
+        mark = "  ← ★지금 다시 쓸 칸" if k == beat_index else ""
         ctx.append('  %s: %s%s' % (bank_assemble._sanitize(str(b.get("role") or "")),
                                    bank_assemble._sanitize(str(b.get("text") or "")), mark))
 
@@ -980,11 +1024,23 @@ def regen_one_beat(sources, style, role, beats, template="", target_seconds=30,
         # CTA는 마지막 칸 몫이다. 다른 칸이 댓글 유도를 하면 그 칸의 역할을 벗어난 것이다.
         cta_role = roles[-1] if roles else ""
         stole_cta = (role != cta_role) and ("남겨주" in script_gate.norm(out))
+        topic_bad = False
+        if topic_product and topic_judge is not None:
+            merged_parts = [out if k == beat_index else str(b.get("text") or "")
+                            for k, b in enumerate(beat_rows)]
+            if beat_index is None:       # 옛 직접 호출: 아직 없는 칸을 새로 채우는 경우
+                merged_parts.append(out)
+            merged = " ".join(merged_parts)
+            try:
+                topic_bad = (topic_judge(merged, topic_product) or {}).get("topic_ok") is not True
+            except Exception:  # noqa: BLE001 — 고정 주제 판정 불가면 내보내지 않는다
+                topic_bad = True
         tries.append({"chars": n_out,
                       "fails": ([] if ok_t else ["문장틀"]) + (["빈칸"] if left else [])
                                + (["그대로"] if same else []) + (["길이"] if too_long else [])
-                               + (["CTA침범"] if stole_cta else [])})
-        if ok_t and not left and not same and not too_long and not stole_cta:
+                               + (["CTA침범"] if stole_cta else [])
+                               + (["주제이탈"] if topic_bad else [])})
+        if ok_t and not left and not same and not too_long and not stole_cta and not topic_bad:
             break
         # ★재작성 지시는 **무엇을 어겼는지 그대로** 보여준다(2026-08-15 게이트와 같은 사상:
         #   부탁이 아니라 되돌리기). 실측(2026-08-17)에서 "틀을 살려라"만으로는 2/4가 계속
@@ -1017,6 +1073,9 @@ def regen_one_beat(sources, style, role, beats, template="", target_seconds=30,
         if stole_cta:
             extra += ("- **댓글 유도(CTA)를 여기에 썼다.** CTA는 마지막 '%s' 칸 몫이다. "
                       "이 칸에서는 빼라.\n" % cta_role)
+        if topic_bad:
+            extra += ("- **고정 제품 주제(%s)와 다른 제품이 섞였다.** 다른 제품·기능은 전부 빼고 "
+                      "이 제품의 같은 칸 역할만 다시 써라.\n" % topic_product)
     # ★조용히 반쪽을 주지 않는다 — 중괄호가 남았거나, 한 글자도 안 바뀌었거나, 칸 하나가
     #   대본 전체를 삼킨 결과는 실패로 돌려보내 화면이 "다시 시도"를 말하게 한다.
     #   성공인 척하고 화면에 꽂는 게 제일 나쁘다(사장님이 5줄짜리 훅을 그대로 받았다).
@@ -1029,6 +1088,17 @@ def regen_one_beat(sources, style, role, beats, template="", target_seconds=30,
         return None
     if roles and role != roles[-1] and "남겨주" in script_gate.norm(out):
         return None
+    if topic_product and topic_judge is not None:
+        merged_parts = [out if k == beat_index else str(b.get("text") or "")
+                        for k, b in enumerate(beat_rows)]
+        if beat_index is None:
+            merged_parts.append(out)
+        merged = " ".join(merged_parts)
+        try:
+            if (topic_judge(merged, topic_product) or {}).get("topic_ok") is not True:
+                return None
+        except Exception:  # noqa: BLE001
+            return None
     return {"text": out, "template": picked, "role": role,
             "matched": (not want) or script_gate.template_matches(out, want), "tries": tries}
 
@@ -1206,7 +1276,11 @@ def generate_guarded_variations(structure, sources, elem_modes, category_lookup,
     # 이 모듈의 기존 관례대로 지연 import한다(순환 import 방지).
     from shopping_shorts import script_gate
 
-    sources = [s for s in (sources or [])
+    all_sources = [s for s in (sources or []) if isinstance(s, dict)]
+    topic_locked = any((s.get("topic_product") or "").strip() and
+                       s.get("topic_semantic_required", True) for s in all_sources)
+    locked_product = _sources_product(all_sources)
+    sources = [s for s in all_sources
                if isinstance(s, dict) and (s.get("full_text") or "").strip()]
     material_text = _materials_text(sources)
     full_text = "\n\n".join((s.get("full_text") or "").strip() for s in sources)
@@ -1215,7 +1289,7 @@ def generate_guarded_variations(structure, sources, elem_modes, category_lookup,
 
     normalized_mode = {"A": "remake", "B": "transplant"}.get(mode, mode)
     guard_product = ((my_topic or "").strip() if normalized_mode == "transplant"
-                     else (_sources_product(sources) or (subject or "").strip()))
+                     else (locked_product or _sources_product(sources) or (subject or "").strip()))
     if normalized_mode == "transplant" and (my_topic or "").strip():
         material_text = material_text + "\n" + my_topic.strip()
 
@@ -1232,10 +1306,15 @@ def generate_guarded_variations(structure, sources, elem_modes, category_lookup,
             fatal = script_gate.fatal_content_fail(
                 draft.get("script") or "", product=guard_product,
                 materials_text=material_text)
+            if not fatal and topic_locked:
+                verdict = _speaker_judge(draft.get("script") or "", guard_product) or {}
+                if verdict.get("topic_ok") is not True:
+                    fatal = "주제 단일성"
             if fatal:
                 rejected_this_batch = True
                 if rejection_reasons is not None:
-                    rejection_reasons.append({"reason": "소재이탈" if fatal == "소재 일치" else "판매처이탈",
+                    rejection_reasons.append({"reason": ("판매처이탈" if fatal == "재료 밖 판매처"
+                                                         else "소재이탈"),
                                               "detail": fatal})
                 continue
             accepted.append(draft)
