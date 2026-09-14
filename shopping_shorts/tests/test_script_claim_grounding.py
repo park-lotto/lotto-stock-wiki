@@ -24,9 +24,12 @@ def sources():
                  {"seg_id": "toilet-2", "scene_desc": "사람이 변기 위에 앉는다."}]}]
 
 
-def verdict(ok=True, claim="", reason="근거가 없다"):
+def verdict(ok=True, claim="", reason="근거가 없다", text=""):
     return {"ok": True, "why": "", "topic_ok": True, "topic_why": "", "foreign_products": [],
             "claims_ok": ok, "claims_why": "" if ok else reason,
+            "claim_checks": [{"unit_index": i, "claim": unit, "kind": "subjective",
+                              "supported": ok, "supports": []}
+                             for i, unit in enumerate(gate.claim_units(text))],
             "unsupported_claims": [] if ok else [{"beat_index": 0, "claim": claim,
                                                  "reason": reason, "evidence_ids": ["toilet-0"]}]}
 
@@ -109,7 +112,7 @@ def test_legacy_nonproduct_and_supported_subjective_expression_are_preserved():
     assert not gate.semantic_content_checks("물때 청소", "", None)
     checks = gate.semantic_content_checks(
         "펼치고 봉투만 씌우면 되니 편리함이 미쳤네요.", PRODUCT,
-        lambda *_a, **_k: verdict(), evidence=sg.claim_evidence(sources()), claims_required=True)
+        lambda text, *_a, **_k: verdict(text=text), evidence=sg.claim_evidence(sources()), claims_required=True)
     assert not gate.fatal_fail(checks)
 
 
@@ -141,7 +144,7 @@ def test_trim_rejudges_actual_final_text_instead_of_reusing_claim_success(monkey
     seen = []
     def judge(script, product, evidence=None):
         seen.append(script)
-        return verdict("냄새분자" not in script, "냄새분자 완전 차단")
+        return verdict("냄새분자" not in script, "냄새분자 완전 차단", text=script)
     monkeypatch.setattr(sg, "_speaker_judge", judge)
     note = {}
     assert sg.generate_one_style(sources(), {"beat_roles": ["hook"], "chars_per_30s": 100}, note=note) is None
@@ -172,9 +175,9 @@ def test_partial_can_replace_unsupported_template_with_supported_action(monkeypa
     judged = []
     result = sg.regen_one_beat(sources(), style, "scale",
         beats=[{"role": "scale", "text": "현지선 없어서 못 구해요"}], beat_index=0,
-        topic_product=PRODUCT, topic_judge=lambda text, *_a, **_k: judged.append(text) or verdict())
+        topic_product=PRODUCT, topic_judge=lambda text, *_a, **_k: judged.append(text) or verdict(text=text))
     assert result and result["text"] == "변기를 접어 가방에 넣어요"
-    assert result["matched"] is False
+    assert result["matched"] is True and result["template"] == ""
     assert judged == ["변기를 접어 가방에 넣어요"]
 
 
@@ -186,7 +189,7 @@ def test_partial_new_candidate_gets_new_judgment_but_final_identical_text_reuses
     judged = []
     def judge(text, *_a, **_k):
         judged.append(text)
-        return verdict("몇만" not in text, "몇만 원", "가격 근거 없음")
+        return verdict("몇만" not in text, "몇만 원", "가격 근거 없음", text=text)
     result = sg.regen_one_beat(sources(), None, "use",
         beats=[{"role": "use", "text": "변기를 펼치고 비닐을 씌우면 돼요"}], beat_index=0,
         topic_product=PRODUCT, topic_judge=judge)
@@ -202,7 +205,7 @@ def test_pickup_uses_same_evidence_gate_and_keeps_valid_draft(monkeypatch):
         return [{"script": "변기가 현지서 품절입니다."}, {"script": "변기를 펼치면 편하겠네요."}]
     monkeypatch.setattr(sg, "generate_variations", generate)
     monkeypatch.setattr(sg, "_speaker_judge", lambda text, *_a, **_k:
-                        verdict("품절" not in text, "품절"))
+                        verdict("품절" not in text, "품절", text=text))
     reasons = []
     result = sg.generate_guarded_variations({}, sources(), {}, {}, n=2, rejection_reasons=reasons)
     assert [x["script"] for x in result] == ["변기를 펼치면 편하겠네요."]
@@ -221,8 +224,138 @@ def test_pickup_retry_gets_specific_failed_claim_feedback(monkeypatch):
         return [{"script": text}]
     monkeypatch.setattr(sg, "generate_variations", generate)
     monkeypatch.setattr(sg, "_speaker_judge", lambda text, *_a, **_k:
-                        verdict("품절" not in text, "현지선 변기가 품절입니다.", "재고 자료가 없다"))
+                        verdict("품절" not in text, "현지선 변기가 품절입니다.", "재고 자료가 없다", text=text))
     result = sg.generate_guarded_variations({}, sources(), {}, {}, n=1)
     assert len(result) == 1 and "품절" not in result[0]["script"]
     assert "현지선 변기가 품절입니다." in contexts[1]
     assert "재고 자료가 없다" in contexts[1]
+
+
+def audited_verdict(text, evidence_id, quote, kind="objective"):
+    out = verdict(text=text)
+    out["claim_checks"] = [{"unit_index": i, "claim": unit, "kind": kind,
+                            "supported": True, "supports": [{"evidence_id": evidence_id, "quote": quote}]}
+                           for i, unit in enumerate(gate.claim_units(text))]
+    return out
+
+
+@pytest.mark.parametrize("text", [
+    "펼쳐서 비닐만 씌우면 끝이라 1분도 안 걸려요.",
+    "응고제로 액체가 굳으니까 차 안 냄새 걱정할 필요도 없더라고.",
+    "차에 쟁여두는 분들이 늘면서 입소문이 쫙 퍼졌거든요.",
+    "실제로 요즘 차량 필수템으로 난리가 났대요.",
+    "몇만 원이면 이 변기를 살 수 있어요.",
+])
+def test_phase2_real_claims_cannot_pass_with_unrelated_visual_quote(text):
+    evidence = sg.claim_evidence(sources())
+    response = audited_verdict(text, "scene:toilet:toilet-0:visual", "변기를 펼쳐 비닐을 씌운다.")
+    checks = gate.semantic_content_checks(text, PRODUCT, lambda *_a, **_k: response,
+                                          evidence=evidence, claims_required=True)
+    assert gate.fatal_fail(checks) == "사실 근거"
+
+
+def test_claim_coverage_rejects_omitted_sentence_duplicate_and_changed_claim():
+    text = "변기를 펼쳐요. 현지에서 입소문이 퍼졌어요."
+    evidence = sg.claim_evidence(sources())
+    response = verdict(text=text)
+    for rows in ([response["claim_checks"][0]],
+                 [response["claim_checks"][0], response["claim_checks"][0]],
+                 [dict(row, claim="다른 문장") for row in response["claim_checks"]]):
+        broken = dict(response, claim_checks=rows)
+        assert gate._claim_audit_errors(text, evidence, broken)
+
+
+@pytest.mark.parametrize("text", ["입소문이 쫙 퍼졌어요.", "냄새 걱정이 없어요.", "1분이면 설치돼요."])
+def test_objective_risk_cannot_be_labeled_subjective(text):
+    assert gate._claim_audit_errors(text, sg.claim_evidence(sources()), verdict(text=text))
+
+
+def test_numeric_evidence_is_fatal_only_when_required_and_uses_actual_scene_text():
+    evidence = sg.claim_evidence(sources())
+    assert gate.grounded_quantity_check("1분 안에 설치", evidence) == (False, ["1분"])
+    evidence["items"].append({"evidence_id": "scene:timed", "kind": "visual",
+                              "text": "영상 속 설치 타이머가 60초를 표시한다."})
+    assert gate.grounded_quantity_check("1분 안에 설치", evidence) == (True, [])
+    assert gate.grounded_quantity_check("1.5분 걸려요", evidence)[0] is False
+    assert gate.fatal_fail([{"name": "수치 근거", "ok": False, "fatal": True}]) == "수치 근거"
+    assert not gate.fatal_fail([{"name": "수치 근거", "ok": False}])
+
+
+@pytest.mark.parametrize("price", ["2만원", "20,000원"])
+def test_different_price_is_not_supported_by_similar_quote(price):
+    text = "가격은 %s입니다." % price
+    evidence = {"items": [{"evidence_id": "product:0", "kind": "product_fact", "text": "판매 가격은 1만원이다."}]}
+    response = audited_verdict(text, "product:0", "판매 가격은 1만원이다.")
+    assert gate._claim_audit_errors(text, evidence, response)
+
+
+def test_negative_odor_statement_cannot_support_no_odor_and_genuine_odor_evidence_can():
+    text = "사용 후 냄새 걱정이 없어요."
+    for source_text, accepted in [("사용 후 냄새가 난다.", False), ("사용 후 냄새가 나지 않는다.", True)]:
+        evidence = {"items": [{"evidence_id": "source:review:transcript", "kind": "transcript", "text": source_text}]}
+        response = audited_verdict(text, "source:review:transcript", source_text)
+        assert bool(gate._claim_audit_errors(text, evidence, response)) is not accepted
+
+
+def test_invented_quote_or_id_is_rejected_even_when_model_claims_success():
+    text = "변기를 펼쳐 비닐을 씌워요."
+    evidence = sg.claim_evidence(sources())
+    for evidence_id, quote in [("nonexistent", "변기를 펼쳐 비닐을 씌운다."),
+                               ("scene:toilet:toilet-0:visual", "실험실에서 위생성이 검증됐다.")]:
+        assert gate._claim_audit_errors(text, evidence, audited_verdict(text, evidence_id, quote))
+
+
+def test_actual_observation_and_normal_subjective_reaction_remain_allowed():
+    text = "변기를 펼쳐 비닐을 씌워요. 편하겠네요!"
+    evidence = sg.claim_evidence(sources())
+    response = verdict(text=text)
+    response["claim_checks"][0] = audited_verdict(
+        gate.claim_units(text)[0], "scene:toilet:toilet-0:visual", "변기를 펼쳐 비닐을 씌운다.")["claim_checks"][0]
+    assert not gate._claim_audit_errors(text, evidence, response)
+
+
+def test_claim_units_preserve_decimals_quotes_newlines_and_unpunctuated_beats():
+    assert gate.claim_units('1.5분이 걸려요. "가격은 2.5만원이에요."\n접어서 보관해요') == [
+        "1.5분이 걸려요.", '"가격은 2.5만원이에요."', "접어서 보관해요"]
+    assert gate.claim_units("변기를 펼침 봉투 장착 다시 접음") == ["변기를 펼침 봉투 장착 다시 접음"]
+    assert gate._quantities("이 장면은 이 분이 설명합니다.") == []
+
+
+def test_locked_generation_omits_inferred_benefits_and_usage_advice():
+    text = sg._mix_source_block(sources(), full_scenes=True)
+    assert "냄새를 완전 차단" not in text and "내구성이 좋아 급똥" not in text
+    assert "변기를 펼쳐 비닐을 씌운다" in text
+
+
+def test_locked_judge_prompt_has_no_legacy_speaker_only_instructions(monkeypatch):
+    prompts = []
+    monkeypatch.setattr(sg, "_call_json", lambda prompt, *_a: prompts.append(prompt) or {})
+    sg._speaker_judge("변기를 펼쳐요.", PRODUCT, sg.claim_evidence(sources()))
+    assert "일관되는지**만" not in prompts[0]
+    assert "애매하면 통과" not in prompts[0]
+    assert "[검사 문장 단위]" in prompts[0]
+
+
+def test_full_and_partial_prompts_neutralize_the_same_unsupported_style(monkeypatch):
+    prompts = []
+    monkeypatch.setattr(sg, "STYLE_REWRITES", 0)
+    monkeypatch.setattr(sg, "BEAT_REGEN_TRIES", 0)
+    monkeypatch.setattr(sg, "_style_extra", lambda: "")
+    monkeypatch.setattr(sg, "_call_json", lambda prompt, *_a, **_k:
+                        prompts.append(prompt) or {"beats": [], "text": "변기를 접어 넣어요"})
+    template = "현지에선 품절대란까지 났대요"
+    style = {"id": 54, "name": "발견형", "beat_roles": ["scale"],
+             "beat_descs": {"scale": "얼마나 화제인지 단정한다"},
+             "templates": {"scale": [template]}}
+    original = copy.deepcopy(style)
+    sg.generate_one_style(sources(), style)
+    result = sg.regen_one_beat(sources(), style, "scale", template=template,
+        beats=[{"role": "scale", "text": template}], beat_index=0,
+        topic_product=PRODUCT, topic_judge=lambda text, *_a, **_k: verdict(text=text))
+    assert result and result["template"] == ""
+    assert len(prompts) == 2
+    assert template not in prompts[0]
+    partial_instruction = prompts[1].split("[다시 쓸 칸]", 1)[1]
+    assert template not in partial_instruction and "★쓸 문장틀" not in partial_instruction
+    assert "얼마나 화제인지 단정한다" not in prompts[0] + partial_instruction
+    assert style == original

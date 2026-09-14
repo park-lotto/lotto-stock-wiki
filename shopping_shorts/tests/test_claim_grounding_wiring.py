@@ -48,6 +48,10 @@ def test_assembled_output_uses_and_records_real_claim_gate(monkeypatch, supporte
         captured.append(evidence)
         return {"ok": True, "topic_ok": True, "topic_why": "", "foreign_products": [],
                 "claims_ok": supported, "claims_why": "" if supported else "품절 근거 없음",
+                "claim_checks": [{"unit_index": 0, "claim": text, "kind": "objective",
+                                  "supported": supported,
+                                  "supports": [{"evidence_id": "source:source_0:transcript",
+                                                "quote": "변기를 펼쳐 비닐을 씌운다"}] if supported else []}],
                 "unsupported_claims": [] if supported else [{
                     "beat_index": 0, "claim": "현지 품절", "reason": "근거 없음", "evidence_ids": []}]}
 

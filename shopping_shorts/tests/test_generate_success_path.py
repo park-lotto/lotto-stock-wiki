@@ -30,7 +30,7 @@ import json
 import pytest
 from fastapi.testclient import TestClient
 
-from shopping_shorts import app as appmod
+from shopping_shorts import app as appmod, script_gate
 from shopping_shorts.store import Store
 
 
@@ -43,7 +43,10 @@ def client(tmp_path, monkeypatch):
     # 판정기 장애·주제 이탈의 fail-close는 test_script_topic_contract가 검증한다.
     monkeypatch.setattr(appmod.script_generate, "_speaker_judge", lambda *a, **k: {
         "ok": True, "why": "", "topic_ok": True, "topic_why": "", "foreign_products": [],
-        "claims_ok": True, "claims_why": "", "unsupported_claims": []})
+        "claims_ok": True, "claims_why": "", "claim_checks": [{"unit_index": i, "claim": t, "kind": "subjective",
+                          "supported": True, "supports": []}
+                         for i, t in enumerate(script_gate.claim_units(a[0]))],
+        "unsupported_claims": []})
     monkeypatch.setattr(appmod, "_wow_block_for", lambda *a, **k: "")
     return TestClient(appmod.app)
 

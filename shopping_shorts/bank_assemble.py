@@ -2,6 +2,8 @@
 ★중괄호 소독 필수 — script_generate 프롬프트가 .format()을 돌린다(_STORY_RULES_CORE 옆에 낀다)."""
 import hashlib
 import random
+import copy
+import re
 
 from shopping_shorts.pattern_bank import STYLE_BUCKETS, CONTENT_BUCKETS
 
@@ -298,6 +300,164 @@ def beat_descs(style):
         if not str(out.get(role) or "").strip():
             out[role] = _ROLE_FALLBACK.get(role, "%s — 이 칸의 역할에 맞게 쓴다" % role)
     return out
+
+
+_FACT_STYLE_NEUTRAL = (
+    "이 role은 출력 순서를 식별하는 이름일 뿐이다. 아래 검증 근거에서 직접 확인되는 "
+    "제품 동작이나 사용 상황 하나를 앞 칸과 겹치지 않게 이어 말한다. 가격·인기·품절·"
+    "판매량·출처·지역·주변 반응을 새로 만들지 않는다."
+)
+
+
+def _trusted_style_facts(evidence):
+    """스타일의 객관 단정을 열 수 있는 텍스트만 모은다.
+
+    visual은 물체·동작 관측이다. 화면만 보고 가격, 판매량, 지역, 입소문을 알 수 없으므로
+    이 범주의 근거로 승격하지 않는다.
+    """
+    if not isinstance(evidence, dict):
+        return ""
+    rows = []
+    for item in (evidence.get("items") or []):
+        if not isinstance(item, dict) or item.get("kind") == "visual":
+            continue
+        if item.get("kind") not in ("transcript", "product_fact", "general_fact"):
+            continue
+        text = str(item.get("text") or "").strip()
+        if text:
+            rows.append(text)
+    return "\n".join(rows)
+
+
+def _price_facets(text):
+    facets = set()
+    compact = re.sub(r"\s+", "", text or "")
+    amounts = []
+    for number, unit in re.findall(r"(?<!\d)(\d[\d,.]*)(만원|천원|원)", compact):
+        try:
+            value = float(number.replace(",", ""))
+        except ValueError:
+            continue
+        if unit == "만원":
+            value *= 10000
+        elif unit == "천원":
+            value *= 1000
+        amounts.append(value)
+    if amounts or re.search(r"(?:가격|판매가|정가)\s*[:은이가]", text or ""):
+        facets.add("price")
+    # 정확한 3,900원을 "몇천 원" 틀로 둥글릴지, 12,900원을 "몇만 원"이라 부를지는
+    # 작가 판단이 아니다. 그 표현 자체가 근거에 있을 때만 literal 틀을 연다.
+    if "몇천원" in compact:
+        facets.add("price_thousands")
+    if "몇만원" in compact:
+        facets.add("price_ten_thousands")
+    if re.search(r"저렴|싸(?:다|게|고|서)|부담\s*없|가성비", text or ""):
+        facets.add("affordable")
+    return facets
+
+
+def _style_fact_facets(text):
+    """근거가 실제로 말한 외부 사실의 종류. 넓은 인기와 품절은 따로 둔다."""
+    facets = _price_facets(text)
+    rules = {
+        "word_of_mouth": r"입소문|소문(?:이|을)?.{0,8}(?:퍼|났|나)|주변에.{0,8}알려",
+        "scarcity": r"품절|매진|물량.{0,8}(?:없|부족)|구할\s*수\s*없|못\s*구|품귀",
+        "popularity": r"인기|화제|난리|필수템|베스트셀러|줄\s*서|입소문|품절|매진",
+        "buzz": r"화제",
+        "hype": r"난리",
+        "must_have": r"필수템",
+        "queue": r"줄\s*서",
+        "local_only": r"현지.{0,6}에서만|현지에서만",
+        "created_for_problem": r"(?:문제|불편).{0,12}(?:때문|해결|위해).{0,12}(?:만들|개발|발명)|"
+                               r"(?:만들|개발|발명).{0,12}(?:문제|불편).{0,12}(?:해결|위해)",
+        "origin": r"현지|해외|국내|한국|미국|일본|중국|아마존|다이소|에서만|발명|개발|"
+                  r"만들어(?:진|낸|졌)",
+        "authority": r"전문가|기관|공식|연구|브랜드|제조사|의사|교수",
+        "reaction": r"후기|리뷰|사용자|구매자|써\s*본\s*사람|사람들.{0,8}(?:말|반응)|"
+                    r"다들.{0,8}(?:물어|찾)",
+        "rating": r"후기.{0,8}만점|리뷰.{0,8}만점|별점.{0,5}(?:5|오)점",
+    }
+    for facet, pattern in rules.items():
+        if re.search(pattern, text or "", re.S):
+            facets.add(facet)
+    if "word_of_mouth" in facets or "scarcity" in facets:
+        facets.add("popularity")
+    return facets
+
+
+def _style_claim_requirements(text, role=""):
+    """설명·문장틀이 사실로 전제하는 facet. 역할 이름 자체도 일부는 단정이다."""
+    text = str(text or "")
+    req = set()
+    if role == "price":
+        req.add("price")
+    elif role == "spread":
+        req.add("word_of_mouth")
+    elif role == "scale":
+        req.add("popularity")
+    elif role in ("source", "authority"):
+        req.add("authority")
+    elif role == "witness":
+        req.add("reaction")
+
+    patterns = {
+        "word_of_mouth": r"입소문|소문.{0,8}(?:퍼|났|나)|주변에.{0,8}알려",
+        "scarcity": r"품절|매진|물량.{0,8}(?:없|부족)|구할\s*수\s*없|못\s*구|"
+                    r"어렵게\s*구|검색해도.{0,8}(?:없|안\s*나)|대란",
+        "popularity": r"인기|베스트셀러",
+        "buzz": r"화제",
+        "hype": r"난리",
+        "must_have": r"필수템",
+        "queue": r"줄\s*서",
+        "local_only": r"현지.{0,6}에서만|현지에서만",
+        "created_for_problem": r"(?:문제|불편).{0,12}(?:때문|해결|위해).{0,12}(?:만들|개발|발명)|"
+                               r"(?:만들|개발|발명).{0,12}(?:문제|불편).{0,12}(?:해결|위해)",
+        "origin": r"현지|해외|아마존|다이소|에서만|발명|개발|만들어(?:진|낸|졌)",
+        "authority": r"\{권위[^}]*\}|전문가|기관|공식|연구|브랜드|제조사",
+        "reaction": r"후기|리뷰|사용자|구매자|써\s*본\s*사람|사람들.{0,8}(?:말|반응)|"
+                    r"다들.{0,8}(?:물어|찾)",
+        "rating": r"후기.{0,8}만점|리뷰.{0,8}만점|별점.{0,5}(?:5|오)점",
+    }
+    for facet, pattern in patterns.items():
+        if re.search(pattern, text, re.S):
+            req.add(facet)
+    if re.search(r"몇천\s*원", text):
+        req.add("price_thousands")
+    elif re.search(r"몇만\s*원", text):
+        req.add("price_ten_thousands")
+    elif "{가격}" in text or re.search(r"(?:이|그)\s*값|가격", text):
+        req.add("price")
+    if re.search(r"가격.{0,8}(?:싼|저렴)|부담\s*없|가성비", text):
+        req.add("affordable")
+    return req
+
+
+def fact_aware_style(style, evidence=None):
+    """잠긴 생성에서만 미입증 객관 단정을 뺀 prompt용 스타일 view를 만든다.
+
+    role·순서·이름·말투는 그대로다. evidence=None은 기존 unlocked 경로이며 원본을 그대로
+    반환한다. 근거가 있더라도 더 강한 틀(인기→품절, 가격→몇천 원)은 통과시키지 않는다.
+    """
+    if evidence is None or not isinstance(style, dict):
+        return style
+    adapted = copy.deepcopy(style)
+    facts = _trusted_style_facts(evidence)
+    facets = _style_fact_facets(facts)
+    descs = beat_descs(style)
+    templates = style.get("templates") or {}
+    adapted_descs, adapted_templates = {}, {}
+    for role in list(style.get("beat_roles") or []):
+        desc = str(descs.get(role) or "")
+        desc_req = _style_claim_requirements(desc, role)
+        adapted_descs[role] = desc if desc_req <= facets else _FACT_STYLE_NEUTRAL
+        kept = []
+        for template in (templates.get(role) or []):
+            if _style_claim_requirements(template, role) <= facets:
+                kept.append(template)
+        adapted_templates[role] = kept
+    adapted["beat_descs"] = adapted_descs
+    adapted["templates"] = adapted_templates
+    return adapted
 
 
 def _rotate(items, seed, role):
