@@ -410,6 +410,11 @@ def _product_tokens(product):
     return [t for t in out if t]
 
 
+def _product_core_tokens(product):
+    from shopping_shorts import topic_contract
+    return topic_contract.topic_mentions(product, product)
+
+
 # ── 훅 3초 게이트(2026-08-19) ─────────────────────────────────────────────
 # 왜 필요한가: 유튜브 썰쇼핑은 **완시청 장사**다(실측 댓글률 0.005% vs 인스타 2.35%,
 # 구독 1.46만 채널이 1,047만 조회). 그런데 게이트는 구간순서·문장틀·밀도만 봤다 —
@@ -483,10 +488,21 @@ def prior_verdict(checks):
 
     앞에 판정이 없으면(키 소진 등) None을 돌려주는 판정기 → 검사 항목이 안 생긴다.
     """
-    hit = [c for c in (checks or []) if c.get("name") == "화자 일관성"]
+    hit = {c.get("name"): c for c in (checks or [])
+           if c.get("name") in ("화자 일관성", "주제 단일성")}
     if not hit:
-        return lambda _text: {}
-    return lambda _text: {"ok": hit[0]["ok"], "why": hit[0].get("detail") or ""}
+        return lambda _text, _product="": {}
+    def _cached(_text, _product=""):
+        speaker = hit.get("화자 일관성")
+        topic = hit.get("주제 단일성")
+        out = {}
+        if speaker:
+            out.update(ok=bool(speaker.get("ok")), why=speaker.get("detail") or "")
+        if topic:
+            out.update(topic_ok=bool(topic.get("ok")),
+                       topic_why=topic.get("detail") or "", foreign_products=[])
+        return out
+    return _cached
 
 
 # ── 사람이 나오는가 / 쓰임이 번지는가 ─────────────────────────────────────
@@ -579,7 +595,8 @@ def _uses_wow(full, hooks, min_hits=2):
 
 def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
           speaker_judge=None, scene_ids=None, grounded=False, is_recipe=False,
-          source_count=None, targets=None, person_required=False, materials_text=""):
+          source_count=None, targets=None, person_required=False, materials_text="",
+          topic_required=False):
     """(checks, full_text) 반환. checks = [{name, ok, detail}, ...]
 
     style: {"beat_roles": [...], "templates": {role: [...]}, "chars_per_30s": int}
@@ -795,7 +812,10 @@ def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
     #     여기서 막으면 키가 마른 날 대본이 통째로 안 나온다.
     if speaker_judge is not None:
         try:
-            _v = speaker_judge(full) or {}
+            try:
+                _v = speaker_judge(full, product) or {}
+            except TypeError:  # 옛 판정기/테스트는 인자 하나 계약
+                _v = speaker_judge(full) or {}
         except Exception:      # noqa: BLE001 — 판정 실패가 대본 생성을 죽이면 안 된다
             _v = {}
         if isinstance(_v, dict) and isinstance(_v.get("ok"), bool):
@@ -804,6 +824,21 @@ def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
                                      ("말하는 사람이 도중에 바뀐다 — 훅에서 등장시킨 그 인물로 "
                                       "끝까지 꿰어라(3인칭은 '친구 남편'처럼 누구 것인지 밝혀라)")
                                      if not _v["ok"] else "OK"})
+        if product and isinstance(_v, dict) and isinstance(_v.get("topic_ok"), bool):
+            _foreign = ", ".join(str(x) for x in (_v.get("foreign_products") or [])[:4])
+            checks.append({"name": "주제 단일성", "ok": _v["topic_ok"],
+                           "detail": ((_v.get("topic_why") or "").strip()[:200]
+                                      or (("다른 제품이 섞였다: " + _foreign) if _foreign else
+                                          "대본의 중심 제품이 고정 주제와 다르다"))
+                                     if not _v["topic_ok"] else "OK"})
+        elif product and topic_required:
+            checks.append({"name": "주제 단일성", "ok": False,
+                           "detail": "고정 제품 주제를 확인하지 못해 결과를 내보내지 않는다"})
+    elif product and topic_required:
+        # 고정 주제 출구는 판정기 누락도 실패다. 호출부 하나가 judge를 빼먹었다고
+        # 조립/신규 경로만 검사를 우회하면 같은 사고가 다시 생긴다.
+        checks.append({"name": "주제 단일성", "ok": False,
+                       "detail": "고정 제품 주제 판정기가 없어 결과를 내보내지 않는다"})
 
     # ★수치 그라운딩(2026-08-16) — 재료를 준 경우에만. 지어낸 수치를 잡는다.
     ok_g, bad = grounding_check(full, facts_text)
@@ -920,17 +955,19 @@ def scene_grounding_check(beats, scene_ids, is_recipe=False, min_ratio=0.34, sou
 #: (2026-09-09 사장님 재발 제보. 09-07엔 프롬프트 가드만 넣었고 출구는 그대로 열려 있었다.)
 #: '재료 밖 판매처'도 치명이다(2026-09-11) — 소재는 맞아도 "다이소 매니저 지인"이 지어낸
 #: 말이면 그 대본은 거짓말이다. 고쳐서 내보낼 것이 아니라 그 스타일을 빼야 한다.
-FATAL_CHECKS = ("소재 일치", "재료 밖 판매처")
+FATAL_CHECKS = ("소재 일치", "주제 단일성", "재료 밖 판매처")
 
 
 def fatal_content_checks(full, product="", materials_text=""):
     """생성 방식과 무관하게 적용하는 소재·판매처 출구 검사 한 벌."""
     checks = []
-    toks = _product_tokens(product)
+    # 제품 중심어를 확정할 수 있을 때만 어휘 검사를 한다. 자유 주제("물때 청소")를
+    # 억지로 제품명처럼 잘라 검사하면 정상 이식 대본을 막는다. 의미 고정 작업은 아래
+    # 주제 단일성 판정이 별도로 맡는다.
+    toks = _product_core_tokens(product)
     if toks:
-        nf = norm(full)
-        # '네일펜'을 '네일'로 부르는 정상 축약은 허용한다. 오탐을 줄이기 위한 기존 기준이다.
-        hit = [t for t in toks if t in nf or (len(t) >= 3 and t[:2] in nf)]
+        from shopping_shorts import topic_contract
+        hit = topic_contract.topic_mentions(full, product)
         checks.append({"name": "소재 일치", "ok": bool(hit),
                        "detail": ("OK(%s)" % ", ".join(hit[:3])) if hit else
                                  ("대본에 「%s」 얘기가 한 번도 안 나온다 — 다른 소재로 "
