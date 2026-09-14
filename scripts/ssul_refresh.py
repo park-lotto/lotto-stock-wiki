@@ -37,9 +37,15 @@ def main():
     if _main_collect_running():
         print("[ssul_refresh] 전체 유튜브 수집 진행 중 — 건너뜀")
         return 0
-    if store.heavy_job_active():
-        print("[ssul_refresh] 렌더/믹스 진행 중 — 건너뜀")
-        return 0
+    # ★건너뛰지 말고 기다린다(2026-09-14 실측: 12:26·12:40 두 번 연속 렌더 중 스킵).
+    #   낮엔 렌더가 거의 늘 돌아 '스킵'이면 3시간 갱신이 사실상 안 돈다.
+    #   이 작업은 API 호출뿐이라 가볍다 — 최대 40분 기다린 뒤엔 그냥 돈다.
+    waited = 0
+    while store.heavy_job_active() and waited < 40 * 60:
+        time.sleep(60)
+        waited += 60
+    if waited:
+        print(f"[ssul_refresh] 렌더 양보 {waited // 60}분 대기 후 진행")
     try:
         from shopping_shorts import keypool
         keypool.resync_pools(store, verbose=False)
