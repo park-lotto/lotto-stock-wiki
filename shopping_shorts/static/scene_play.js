@@ -399,7 +399,7 @@ function phraseSyncOn(i){ return PHRASE_SYNC[i] !== false; }
 //   ① 끄는 순간 켜져 있던 컷(장면·시작·길이)을 CUTS[i]에 그대로 얼린다
 //   ② 컷 앞·뒤 가장자리를 끌면 **그 컷만** 바뀐다(하한 0.3초, 늘리기는 빈 시간까지 — 뒤 컷이 밀린다)
 //   ③ 장면을 빼면 그 컷 시간은 **앞 컷**이 받는다(첫 컷이면 뒤 컷)
-//   ④ 장면을 넣으면 **마지막 컷을 반으로** 나눠 갖는다
+//   ④ 장면을 넣으면 빈 시간이 있으면 **그걸 꽉 채우고**, 없으면 **마지막 컷을 반으로** 나눠 갖는다
 //   ⑤ 음성이 짧아지면 **마지막 컷**이 줄고, 모자라면 **알아서 안 채운다** —
 //      화면이 안내하고 [전체 살짝 느리게](SLOW[i]) 버튼만 준다
 //   ★FIXLEN(✋)·비율 배분·2.2초 쪼개기·0.8초 하한은 이 칸엔 안 쓴다.
@@ -419,12 +419,17 @@ function syncCuts(i, segIds, ttsDur){
     const nb = cuts[k - 1] || cuts[k];
     if (nb) nb.dur = _r2(nb.dur + d);
   }
-  // ④ 새로 들어온 장면 → 목록 자리 순서대로 끼우고, 마지막 컷을 반으로 나눠 갖는다
+  // ④ 새로 들어온 장면 — ★빈 시간이 있으면 **그 빈 시간을 꽉 채운다**(다른 컷 불변),
+  //   빈 시간이 없을 때만 마지막 컷을 반으로 나눠 갖는다(2026-09-14 사장님 "남은 부분 꽉차게 /
+  //   6번째 올리면 마지막 조각이 반씩"). 종전엔 빈 시간이 있어도 마지막 컷을 먼저 쪼개 맞춰둔 컷이 줄었다.
   for (const id of want){
     if (cuts.some(c => c.seg_id === id)) continue;
+    const gap = ttsDur - cuts.reduce((a, c) => a + c.dur, 0);
     const last = cuts[cuts.length - 1];
-    let d = ttsDur;
-    if (last){ d = _r2(last.dur / 2); last.dur = _r2(last.dur - d); }
+    let d;
+    if (!last) d = ttsDur;
+    else if (gap >= CUT_MIN - 0.005) d = _r2(gap);
+    else { d = _r2(last.dur / 2); last.dur = _r2(last.dur - d); }
     cuts.push({seg_id: id, dur: d});
   }
   // 순서는 목록(카드) 순서를 따른다 — 같은 장면이 여러 컷이면 그 무리째로 옮긴다
