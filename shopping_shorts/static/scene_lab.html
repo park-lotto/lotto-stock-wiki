@@ -2688,7 +2688,7 @@ function beatFill(i, clips){
            lack: Math.max(0, need - have),
            // ★구절 맞춤을 끈 칸은 담은 장면을 **줄여서 전부** 넣는다(2026-09-14) — 버려지는 장면이
            //   없으니 '안 나와요'가 거짓말이 된다(사장님 로컬 조작 캡쳐 1493). 남음은 0으로 본다.
-           over: CUTS[i] ? 0 : Math.max(0, have - need),
+           over: (typeof CUTS !== "undefined" && CUTS[i]) ? 0 : Math.max(0, have - need),
            gap: (typeof cutsGap === 'function') ? cutsGap(i) : 0,
            tinyN: ids.length - okIds.length,
            empty: cuts.length === 0,
