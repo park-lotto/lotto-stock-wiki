@@ -5927,6 +5927,120 @@ def api_mix_src(job_id: str, video_id: str, request: Request):
     return _range_mp4_response(src, request)
 
 
+# ── 전체재생용 저화질 합본(2026-09-14 사장님 "음성은 나오는데 화면이 끊겨 보인다") ──────
+#   종전 전체재생은 브라우저가 컷마다 원본 mp4의 그 초로 시크했다 — 컷마다 받기·디코딩을
+#   기다리느라 화면만 멈추고 음성은 흘렀다(09-02·09-03에 안전핀만 두 번 덧댐).
+#   화면이 보낸 컷 목록 그대로 360p 한 편으로 이어 붙여 두면 전체재생은 파일 하나를 틀면 된다.
+#   ★컷 계산은 화면(planClips) 한 곳 — 서버는 받은 목록을 붙이기만 한다(0순위-B).
+#   실측(job 1a91a10941ec, 33컷·42초): 동시 4개 인코딩 4.8초.
+_PVPROXY_LOCK = threading.Lock()
+_PVPROXY_BUSY: dict = {}          # job_id -> 만드는 중인 sig
+
+
+def _pvproxy_dir(job_id: str) -> Path:
+    return _MIX_WORK_DIR / job_id / "pvproxy"
+
+
+def _pvproxy_build(job_id: str, sig: str, cuts: list, srcs: dict) -> None:
+    import subprocess
+    from concurrent.futures import ThreadPoolExecutor
+    d = _pvproxy_dir(job_id)
+    tmp = d / f"_tmp_{sig}"
+    try:
+        tmp.mkdir(parents=True, exist_ok=True)
+
+        def enc(a):
+            k, c = a
+            dur = max(0.04, float(c["dur"]))
+            out = tmp / f"{k:04d}.ts"
+            src = srcs.get(c.get("video_id"))
+            vf = "scale=360:640:force_original_aspect_ratio=decrease,pad=360:640:(ow-iw)/2:(oh-ih)/2,fps=30,setsar=1"
+            if src:
+                take = float(c.get("src_dur") or 0) or dur
+                take = min(take, dur)
+                # 늘리기: 화면과 같은 배율 상한(MAX_SLOWMO 1.15) — 넘는 몫은 마지막 프레임 정지
+                slow = min(dur / take, 1.15) if take > 0 else 1.0
+                vf = f"setpts=(PTS-STARTPTS)*{slow:.5f}," + vf + f",tpad=stop_mode=clone:stop_duration={dur:.3f}"
+                cmd = ["ffmpeg", "-y", "-v", "error", "-threads", "1",
+                       "-ss", f"{float(c['start']):.3f}", "-t", f"{take:.3f}", "-i", str(src)]
+            else:   # 소재가 없으면 검은 화면으로 자리만 채운다 — 빼면 뒤 컷이 음성보다 앞선다
+                cmd = ["ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", "color=black:s=360x640:r=30"]
+            cmd += ["-an", "-vf", vf, "-t", f"{dur:.3f}", "-c:v", "libx264",
+                    "-preset", "ultrafast", "-crf", "30", "-pix_fmt", "yuv420p", str(out)]
+            r = subprocess.run(cmd, capture_output=True, timeout=120)
+            if r.returncode != 0 or not out.exists():
+                raise RuntimeError(r.stderr.decode("utf-8", "ignore")[-300:])
+            return out
+
+        with ThreadPoolExecutor(4) as ex:
+            parts = list(ex.map(enc, enumerate(cuts)))
+        lst = tmp / "list.txt"
+        lst.write_text("".join(f"file '{p.as_posix()}'\n" for p in parts), encoding="utf-8")
+        final_tmp = d / f"_{sig}.mp4"
+        r = subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "concat", "-safe", "0", "-i", str(lst),
+                            "-c", "copy", "-movflags", "+faststart", str(final_tmp)],
+                           capture_output=True, timeout=120)
+        if r.returncode != 0:
+            raise RuntimeError(r.stderr.decode("utf-8", "ignore")[-300:])
+        final_tmp.replace(d / f"{sig}.mp4")
+        for old in d.glob("*.mp4"):          # 최신 한 벌만 남긴다
+            if old.name != f"{sig}.mp4":
+                old.unlink(missing_ok=True)
+    except Exception as e:
+        print(f"[pvproxy] {job_id} {sig} 실패: {e}")
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+        with _PVPROXY_LOCK:
+            if _PVPROXY_BUSY.get(job_id) == sig:
+                _PVPROXY_BUSY.pop(job_id, None)
+
+
+@app.post("/api/mix/preview_proxy/{job_id}")
+def api_mix_preview_proxy(job_id: str, body: dict):
+    """body = {"cuts": [{"video_id","start","dur","src_dur"?}, ...]}
+    돌려주는 것 = {"sig", "state": "ready"|"building"} · ready면 url로 튼다."""
+    import hashlib
+    cuts = body.get("cuts") or []
+    if not isinstance(cuts, list) or not cuts or len(cuts) > 600:
+        return JSONResponse(status_code=422, content={"ok": False, "error": "컷 목록 필요"})
+    try:
+        norm = [{"video_id": str(c.get("video_id") or ""), "start": round(float(c.get("start") or 0), 3),
+                 "dur": round(float(c.get("dur") or 0), 3),
+                 "src_dur": round(float(c.get("src_dur") or 0), 3)} for c in cuts]
+    except (TypeError, ValueError):
+        return JSONResponse(status_code=422, content={"ok": False, "error": "컷 형식 오류"})
+    sig = hashlib.sha1(json.dumps(norm, sort_keys=True).encode()).hexdigest()[:16]
+    if (_pvproxy_dir(job_id) / f"{sig}.mp4").exists():
+        return {"ok": True, "sig": sig, "state": "ready", "url": f"/api/mix/preview_proxy/{job_id}/{sig}.mp4"}
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job:
+        return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
+    with _PVPROXY_LOCK:
+        if _PVPROXY_BUSY.get(job_id) == sig:
+            return {"ok": True, "sig": sig, "state": "building"}
+        if job_id in _PVPROXY_BUSY:        # 옛 편성을 만드는 중 — 끝나면 화면이 다시 부른다
+            return {"ok": True, "sig": sig, "state": "building"}
+        _PVPROXY_BUSY[job_id] = sig
+    try:
+        srcs = {k: v for k, v in (_resolve_sources(job, _MIX_WORK_DIR / job_id) or {}).items()
+                if v and Path(v).exists()}
+    except Exception:
+        srcs = {}
+    threading.Thread(target=_pvproxy_build, args=(job_id, sig, norm, srcs), daemon=True).start()
+    return {"ok": True, "sig": sig, "state": "building"}
+
+
+@app.get("/api/mix/preview_proxy/{job_id}/{name}")
+def api_mix_preview_proxy_file(job_id: str, name: str, request: Request):
+    import re as _re
+    if not _re.fullmatch(r"[0-9a-f]{16}\.mp4", name):
+        return JSONResponse(status_code=404, content={"ok": False})
+    p = _pvproxy_dir(job_id) / name
+    if not p.exists():
+        return JSONResponse(status_code=404, content={"ok": False})
+    return _range_mp4_response(p, request)
+
+
 @app.post("/api/mix/scene_lab/{job_id}/fill")
 def api_mix_scene_lab_fill(job_id: str, body: dict):
     """칸 하나를 **대사에 맞는 화면들로** 채운다(2026-08-16 사장님 "당연히 대본이랑
