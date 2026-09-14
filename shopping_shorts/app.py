@@ -9017,8 +9017,7 @@ _ALLOWED_VIDEO_HOSTS = ("cdninstagram.com", "fbcdn.net",
                         "tiktokcdn.com", "tiktokcdn-us.com", "tiktokcdn-eu.com",
                         "tiktokv.com",
                         "douyinvod.com", "douyinpic.com",
-                        # 샤오홍슈 신 mp4 CDN(2026-09-14 실측). 썸네일 허용 목록에는
-                        # 9/8에 넣었지만 영상 목록에서 빠져 담아도 인라인 재생이 400이었다.
+                        # 샤오홍슈 신·구 mp4 CDN(2026-09-14 라이브 실측).
                         "rednotecdn.com", "xhscdn.com",
                         # 핀터레스트 mp4(v1.pinimg.com) — 카드 인라인 재생용(2026-08-28).
                         # 실측: Referer만 있으면 200이라 프록시를 타면 그대로 흐른다.
