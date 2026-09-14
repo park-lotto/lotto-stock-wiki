@@ -389,7 +389,24 @@ def _shopping_blocked(name_t, cap_t, raw_cap=""):
         return True
     if _SUL_PERSON.search(raw_cap or ""):
         return True
-    return any(b in cap_t for b in _SUL_BLOCK)
+    hit = [b for b in _SUL_BLOCK if b in cap_t]
+    # ★'감동'만 걸리고 강한 썰 표식이 있으면 막지 않는다(2026-09-14 사장님 O
+    #   "한국 천재가 만들어 감동한 발명품"). 사연·다큐의 '감동'과 달리 여기선 반응어다.
+    if hit == ["감동"] and any(k in cap_t for k in _SUL_STRONG):
+        return False
+    return bool(hit)
+
+
+def _hook_blocked(cap_t):
+    """교양·뉴스 차단 — 단, 쇼핑 결과어가 함께 있으면 '특허'는 봐준다(2026-09-14).
+
+    사장님 O "한국 천재가 특허내 돈방석 앉은 제품"이 '특허' 한 단어로 막혔다.
+    '특허'는 _SUL_STRONG(썰 표식)에도 있어 두 목록이 서로 부딪히고 있었다.
+    """
+    hit = [k for k in _HOOK_BLOCK if k in cap_t]
+    if hit == ["특허"] and any(k in cap_t for k in ("제품", "돈방석", "떼돈", "대박")):
+        return False
+    return bool(hit)
 
 
 def _is_hook_product(name_t, cap_t):
@@ -398,8 +415,9 @@ def _is_hook_product(name_t, cap_t):
     '발명품' 한 단어로 판정하면 뉴스·교양 채널이 딸려 온다(라이브 오탐 실측:
     KNN NEWS·지식북·1분홀릭). 그래서 문맥어를 짝으로 요구하고, 교양 신호는 빼낸다.
     0순위-B: 이 판단은 여기 한 곳에서만 한다."""
-    blob = f"{name_t} {cap_t}"
-    if _hits(blob, _HOOK_BLOCK):
+    # ★차단은 **제목으로만**(2026-09-14 사장님 판정). 채널명까지 묶었더니 '쇼핑 치트키'
+    #   채널이 '치트키' 한 단어로 통째로 막혔다 — _is_misuse가 08-19에 이미 밟은 함정이다.
+    if _hook_blocked(cap_t):
         return False
     # 게임·이슈 채널은 채널명으로 막는다 — 제목으로는 못 가른다(_GAME_NAME 주석 참고).
     if _hits(name_t, _GAME_NAME):
@@ -412,7 +430,7 @@ def _is_hook_product(name_t, cap_t):
     #   "홍진경이 김나영에게 선물한 …의 정체"류가 통째로 들어온다 — 사장님이 X로 찍은
     #   24건의 공통점이 정확히 이것이었다. 제목 구조가 [사람]이 [쓴/선물한] [물건]이라
     #   물건이 아니라 사람이 주어다.
-    if _hits(cap_t, _CELEB_BLOCK):
+    if _hits(cap_t.replace("최애템", ""), _CELEB_BLOCK):   # '#최애템'은 연예인이 아니다(09-14)
         return False
     if _hits(name_t, _HOOK_NAME):        # 채널명이 이 장르면 제목이 밋밋해도 인정
         return True
@@ -480,9 +498,13 @@ _SUL_REACT = ["감탄", "놀란", "놀라", "당황", "극찬", "탐내", "인�
 #   '활용법·사용법·꿀템'은 여기 넣지 않는다(인테리어 배치 팁이 통째로 들어온다 — 실측).
 # 강한 후킹명사 — 이 말이 있으면 그 자체로 이 장르다(단독 통과).
 _SUL_STRONG = ["떼돈", "돈방석", "발명품", "특허", "100억", "억 번", "돈 쓸어", "돈쓸어",
-               "치트키", "베스트셀러"]
+               "치트키", "베스트셀러",
+               # ★2026-09-14 사장님 O: "이상한 가방만들어 초대박친 혼다" · "이상한 기능넣어
+               #   대박친 카시오" · "너무 황당한 곳에서 매출 폭등한 제품" — 돈이 터졌다는 결말어.
+               "대박친", "대박 친", "초대박", "매출 폭등", "매출폭등"]
 _SUL_NOUN = ["정체", "비밀", "발명품", "치트키", "반전", "발상", "특허", "떼돈",
-             "돈방석", "부자", "돈 쓸어", "돈쓸어", "100억", "억 번", "베스트셀러"]
+             "돈방석", "부자", "돈 쓸어", "돈쓸어", "100억", "억 번", "베스트셀러",
+             "대박친", "대박 친", "초대박", "매출 폭등", "매출폭등"]
 # ★사람(연예인)이 주인공이면 썰쇼핑이 아니다 — 사장님 X 24편의 뼈대다.
 #   실측: 따옴표로 시작한 게 X 24편 중 7편, O 145편 중 **0편**.
 _SUL_QUOTE = re.compile("^\\s*[" + '"“”' + "'`]")
@@ -519,7 +541,7 @@ _SUL_PERSON = re.compile(
 
 def _is_sul_ext(name_t, cap_t, raw_cap):
     """썰쇼핑 확장 관문 — 후킹명사 + (권위자 또는 반응). 사람 주인공은 뺀다."""
-    if _hits(cap_t, _HOOK_BLOCK):
+    if _hook_blocked(cap_t):
         return False
     if _hits(name_t, _GAME_NAME):        # 게임 채널 — 위 _GAME_NAME 주석 참고
         return False
@@ -533,6 +555,10 @@ def _is_sul_ext(name_t, cap_t, raw_cap):
     #      ★②를 뺐더니 이런 진짜 썰쇼핑이 106편이나 빠졌다(실측).
     #      예전에 ②로 "난리 난 일본 여배우"가 들어온 건 나라 이름이 권위자 목록에
     #      있었기 때문이고, 그건 위에서 뺐다.
+    # ★'제품'을 주어로 둔 반응 문형(2026-09-14 사장님 O): "역시 이런기술은 일본이
+    #   미쳤다는 제품" · "말도 안된다는 다이소 제품". 권위자 자리가 비어도 결은 같다.
+    if "제품" in cap_t and any(k in cap_t for k in ("미쳤다는", "말도 안된다는", "말도 안 된다는")):
+        return True
     if not any(k in cap_t for k in _SUL_NOUN):
         return (any(k in cap_t for k in _SUL_AUTH)
                 and any(k in cap_t for k in _SUL_REACT))
