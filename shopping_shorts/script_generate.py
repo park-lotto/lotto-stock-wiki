@@ -1193,6 +1193,55 @@ def generate_variations(structure, full_text, elem_modes, category_lookup, mode=
     return []
 
 
+PICKUP_MATERIAL_REWRITES = 2
+
+
+def generate_guarded_variations(structure, sources, elem_modes, category_lookup, mode="remake",
+                                my_topic="", subject="", n=3, rejection_reasons=None, **kwargs):
+    """픽업/구형 생성 결과도 스타일 생성과 같은 소재 출구 검사 뒤에만 반환한다.
+
+    담긴 전사 전부를 생성 재료로 쓰며, 소재가 샌 결과는 최대 두 번 새로 생성한다.
+    끝내 안전한 안이 없으면 빈 리스트를 반환해 호출부가 화면에 실패를 알리게 한다.
+    """
+    # 이 모듈의 기존 관례대로 지연 import한다(순환 import 방지).
+    from shopping_shorts import script_gate
+
+    sources = [s for s in (sources or [])
+               if isinstance(s, dict) and (s.get("full_text") or "").strip()]
+    material_text = _materials_text(sources)
+    full_text = "\n\n".join((s.get("full_text") or "").strip() for s in sources)
+    if not full_text:
+        return []
+
+    normalized_mode = {"A": "remake", "B": "transplant"}.get(mode, mode)
+    guard_product = ((my_topic or "").strip() if normalized_mode == "transplant"
+                     else (_sources_product(sources) or (subject or "").strip()))
+    if normalized_mode == "transplant" and (my_topic or "").strip():
+        material_text = material_text + "\n" + my_topic.strip()
+
+    wanted = max(1, min(int(n or 3), 5))
+    accepted = []
+    for _attempt in range(PICKUP_MATERIAL_REWRITES + 1):
+        batch = generate_variations(
+            structure, full_text, elem_modes, category_lookup, mode=mode,
+            my_topic=my_topic, subject=subject, n=max(1, wanted - len(accepted)), **kwargs)
+        if not batch:
+            break
+        for draft in batch:
+            fatal = script_gate.fatal_content_fail(
+                draft.get("script") or "", product=guard_product,
+                materials_text=material_text)
+            if fatal:
+                if rejection_reasons is not None:
+                    rejection_reasons.append({"reason": "소재이탈" if fatal == "소재 일치" else "판매처이탈",
+                                              "detail": fatal})
+                continue
+            accepted.append(draft)
+            if len(accepted) >= wanted:
+                return accepted
+    return accepted
+
+
 _REFINE_SCHEMA = {
     "type": "object",
     "properties": {"script": {"type": "string"}},

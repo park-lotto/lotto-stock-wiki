@@ -775,44 +775,9 @@ def check(style, beats, facts_text="", product="", seconds=30, assembled=False,
                                       % " / ".join('"%s"' % x for x in _ebad[:2]))
                                      if _ebad else "OK"})
 
-    # ★소재 일치(2026-08-18) — **출구 검사**. 이번 사고("재료는 네일펜인데 대본은 주방
-    #   기름 가림막")를 막으려고 지금까지 한 것은 전부 프롬프트에 경고를 더 넣는 일이었다.
-    #   그건 통로를 하나씩 막는 두더지잡기라, 새 통로가 생기면 또 샌다.
-    #   여기서 잡으면 **어디서 새든 결과에서 걸린다** — 출구는 하나뿐이다.
-    #   판정은 느슨하게: 제품명 토큰이 **하나라도** 나오면 통과. 대본이 제품을 '이거'로만
-    #   부르는 건 정상이므로 전체 일치를 요구하면 멀쩡한 대본을 반려한다(오탐이 더 나쁘다).
-    #   product를 안 주면 검사 자체를 건너뛴다 = 회귀 0.
-    if _product_tokens(product):
-        toks = _product_tokens(product)
-        nf = norm(full)
-        # 토큰 그대로 못 찾으면 **앞 2글자**로도 본다 — '네일펜'을 대본이 '네일'로만
-        # 부르는 건 정상이다. 오탐(멀쩡한 대본 반려)이 미탐보다 나쁘므로 느슨하게 잡는다.
-        hit = [t for t in toks if t in nf or (len(t) >= 3 and t[:2] in nf)]
-        checks.append({"name": "소재 일치", "ok": bool(hit),
-                       "detail": ("OK(%s)" % ", ".join(hit[:3])) if hit else
-                                 ("대본에 「%s」 얘기가 한 번도 안 나온다 — 다른 소재로 "
-                                  "샜을 가능성이 높다(재료 밖 소재 금지)" % product)})
-
-    # ★재료 밖 판매처(2026-09-11 사장님 "고질적으로 다른 내용이 두 개씩") — 위 '소재 일치'의
-    #   사각지대다. 그 검사는 **우리 제품 단어가 하나라도 있으면 통과**라, 소재는 맞는데
-    #   판매처·소속이 남의 것인 대본을 못 잡았다.
-    #   실측(work 79e2c2b40481): 재료 6편 전부 '반려동물 털 제거 젤 패드'인데 초안이
-    #   "여러분 다이소 가면 이거 무조건 데려오세요… 제 지인이 다이소 매니저로 있거든요".
-    #   뿌리는 스파인 57('다이소 내부인형')의 문장틀에 '다이소 점장'이 문자 그대로 박혀 있고,
-    #   프롬프트가 "틀 자체를 새로 짓지 마라"고 강제한 것 — 모델은 지시를 따랐다.
-    #   30일간 그 스타일을 고른 109건 중 50건이 같은 모양이었다(재료엔 다이소가 없는데).
-    #   판정은 좁게: RETAILERS의 이름이 대본에 나왔는데 **재료 원문 어디에도 없으면** 실패.
-    #   materials_text를 안 주면 검사 자체를 건너뛴다(회귀 0). '지인이 점장'·'품절'처럼
-    #   고유명사가 아닌 허위는 여기서 안 잡는다 — 그건 사실검증의 몫이라 넓히면 오탐이 난다.
-    if materials_text:
-        _mt = norm(materials_text).lower()
-        _nf = norm(full).lower()
-        leaked = [r for r in RETAILERS if r.lower() in _nf and r.lower() not in _mt]
-        checks.append({"name": "재료 밖 판매처", "ok": not leaked,
-                       "detail": ("OK" if not leaked else
-                                  ("대본에 「%s」가 나오는데 재료 어디에도 없다 — 문장틀에 박힌 "
-                                   "판매처를 그대로 쓴 것이다. 재료에 없는 판매처·소속·인맥은 "
-                                   "쓰지 말고 그 자리를 재료의 사실로 바꿔라" % ", ".join(leaked[:3])))})
+    # 소재·판매처 출구 검사는 모든 생성 경로가 이 함수 한 벌을 쓴다. 픽업 생성기도
+    # fatal_content_fail()로 같은 판정을 호출한다(2026-09-14 우회 경로 제거).
+    checks += fatal_content_checks(full, product=product, materials_text=materials_text)
 
     # ★훅 3초(2026-08-19) — 스타일이 선언할 때만. 위 함수 하나가 판단을 전담한다.
     checks += hook_checks(style, full, product)
@@ -956,6 +921,37 @@ def scene_grounding_check(beats, scene_ids, is_recipe=False, min_ratio=0.34, sou
 #: '재료 밖 판매처'도 치명이다(2026-09-11) — 소재는 맞아도 "다이소 매니저 지인"이 지어낸
 #: 말이면 그 대본은 거짓말이다. 고쳐서 내보낼 것이 아니라 그 스타일을 빼야 한다.
 FATAL_CHECKS = ("소재 일치", "재료 밖 판매처")
+
+
+def fatal_content_checks(full, product="", materials_text=""):
+    """생성 방식과 무관하게 적용하는 소재·판매처 출구 검사 한 벌."""
+    checks = []
+    toks = _product_tokens(product)
+    if toks:
+        nf = norm(full)
+        # '네일펜'을 '네일'로 부르는 정상 축약은 허용한다. 오탐을 줄이기 위한 기존 기준이다.
+        hit = [t for t in toks if t in nf or (len(t) >= 3 and t[:2] in nf)]
+        checks.append({"name": "소재 일치", "ok": bool(hit),
+                       "detail": ("OK(%s)" % ", ".join(hit[:3])) if hit else
+                                 ("대본에 「%s」 얘기가 한 번도 안 나온다 — 다른 소재로 "
+                                  "샜을 가능성이 높다(재료 밖 소재 금지)" % product)})
+
+    if materials_text:
+        mt = norm(materials_text).lower()
+        nf = norm(full).lower()
+        leaked = [r for r in RETAILERS if r.lower() in nf and r.lower() not in mt]
+        checks.append({"name": "재료 밖 판매처", "ok": not leaked,
+                       "detail": ("OK" if not leaked else
+                                  ("대본에 「%s」가 나오는데 재료 어디에도 없다 — 문장틀에 박힌 "
+                                   "판매처를 그대로 쓴 것이다. 재료에 없는 판매처·소속·인맥은 "
+                                   "쓰지 말고 그 자리를 재료의 사실로 바꿔라" % ", ".join(leaked[:3])))})
+    return checks
+
+
+def fatal_content_fail(full, product="", materials_text=""):
+    """대본 문자열 하나의 치명 소재 검사를 실행하고 실패 이름을 반환한다."""
+    return fatal_fail(fatal_content_checks(full, product=product,
+                                           materials_text=materials_text))
 
 
 def passed(checks):

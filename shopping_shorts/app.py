@@ -3484,6 +3484,16 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
     _seed_cta = (body.get("seed_cta") or "").strip()
     if _seed_hook:
         _gen_kw["seed_hook"] = _seed_hook
+    # ★픽업도 스타일 생성과 같은 재료 한 벌을 쓴다(2026-09-14).
+    # 종전에는 씨앗 1편만 프롬프트에 넣고 소재 출구 검사도 생략해, 같은 요청의 스타일 안은
+    # 정상인데 첫 번째 픽업 안만 전혀 다른 제품으로 나가는 우회 경로가 남아 있었다.
+    _pick_src, _pick_facts, _pick_job, _pick_jid, _pick_scene = _materials_for_generate(
+        it, body, store, _cid(request))
+    if not [x for x in (_pick_src or []) if (x.get("full_text") or "").strip()]:
+        return JSONResponse(status_code=422, content={
+            "ok": False,
+            "error": "재료(대본 원문)가 아직 없어요 — 1단계에서 담긴 영상의 대본 분석이 "
+                     "끝난 뒤 다시 눌러주세요. 급하면 '직접 쓰기'로 대본을 넣어도 됩니다."})
     # ★은행 예산을 여기서도 건다(2026-09-07). 스타일 경로(위)에는 재료 글자수로 은행을
     #   잘라내는 코드가 있는데 **이 픽업 경로에는 없었다** — 같은 판단이 한쪽에만 적힌
     #   0순위-B다. 실측 work 01e725b98569: 재료 233자인데 은행 1,832자 + 스타일 예시
@@ -3491,15 +3501,23 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
     #   ("3D 요술봉 카드케이스")으로 끌려갔다. 같은 사고가 2026-08-18에도 있었다
     #   (재료 750자 vs 은행 2,822자). 재료를 모르는 채 은행을 짜면 반드시 재발한다.
     if _gen_kw.get("bank_context"):
-        _pick_chars = len(it.get("full_text") or "")
+        _pick_chars = sum(len(s.get("full_text") or "")
+                          for s in (_pick_src or [])[:_FACTS_MAX_SOURCES])
         if _pick_chars:
             _trimmed = bank_assemble.assemble_bank_context(
                 store, it.get("category") or "", source_chars=_pick_chars)
             if _trimmed:
                 _gen_kw["bank_context"] = _trimmed
-    drafts = script_generate.generate_variations(
-        it.get("structure") or {}, it.get("full_text") or "", elem_modes, category_lookup, **_gen_kw)
+    _material_rejected = []
+    drafts = script_generate.generate_guarded_variations(
+        it.get("structure") or {}, _pick_src, elem_modes, category_lookup,
+        rejection_reasons=_material_rejected, **_gen_kw)
     if not drafts:
+        if _material_rejected:
+            return JSONResponse(status_code=502, content={
+                "ok": False,
+                "error": "재료와 다른 소재가 반복 생성되어 차단했습니다 — 다시 생성해주세요.",
+                "reasons": _material_rejected})
         return JSONResponse(status_code=502, content={"ok": False, "error": "생성 실패(Gemini 키 소진 또는 오류) — 잠시 후 재시도"})
     _pickup_rejected = []
     if _seed_hook:
@@ -3515,7 +3533,12 @@ def api_wiki_generate(request: Request, shortcode: str, body: dict):
         draft_id = uuid.uuid4().hex[:12]
         store.save_draft(draft_id, cid, shortcode, None, dr.get("hook", ""), dr.get("script", ""), None, "generate")
         dr["draft_id"] = draft_id
-    _resp = {"ok": True, "drafts": drafts}
+    _resp = {"ok": True, "drafts": drafts, "materials": {
+        "sources": [{"chars": len(s.get("full_text") or ""),
+                     "head": (s.get("full_text") or "")[:40]} for s in _pick_src],
+        "scene_points": _pick_scene.count("\n· ") if _pick_scene else 0,
+        "product_facts": bool(_facts_block_for_job(_pick_jid, store)),
+    }}
     # ★어긴 안이 왜 걸러졌는지 화면이 말할 수 있게 올린다(조용한 폴백 금지).
     if _pickup_rejected:
         _resp["pickup_rejected"] = _pickup_rejected
