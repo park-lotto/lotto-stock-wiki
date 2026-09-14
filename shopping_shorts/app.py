@@ -6872,6 +6872,7 @@ def api_mix_scene_lab_narration(job_id: str, beat_idx: int, body: dict,
     # AI가 미리 끊어준 호흡 줄도 옛 문장 것이라 버린다 — 안 버리면 _caption_segments가
     # preset을 대조(공백 무시 일치)에서 떨어뜨려 조용히 규칙 폴백으로 내려간다.
     beat["caption_lines"] = None
+    beat["caption_lines_human"] = False
     store.update_mix_job(job_id, edit_plan=plan)
     if body.get("regen") is False:
         return {"ok": True, "saved": True, "regen": False}
@@ -18831,6 +18832,7 @@ def _caplines_locked(store, job_id, body):
         # '↩ 자동으로' — 사람이 정한 줄을 지우고 규칙/AI 분할로 돌아간다.
         # ★caption_lines만 지우면 옛 경계 기준 cap_durs가 남아 자막이 밀린다 → 함께 비운다.
         hit["caption_lines"] = None
+        hit["caption_lines_human"] = False
         hit["cap_durs"] = None
         store.update_mix_job(job_id, edit_plan=plan)
         return {"ok": True, "lines": video_assemble._caption_segments(narr), "timed": False}
@@ -18841,6 +18843,7 @@ def _caplines_locked(store, job_id, body):
         return JSONResponse(status_code=422,
                             content={"ok": False, "error": "저장 안 됐어요 — 글자가 달라졌습니다. 줄만 나누고 붙이세요(글자를 지우거나 고치면 저장이 막힙니다). 되돌리려면 [↩ 자동으로]를 누르세요"})
     hit["caption_lines"] = lines
+    hit["caption_lines_human"] = True            # 사람이 정한 줄 — 짧은 줄 합치기 대상 아님(2026-09-14)
     hit["cap_durs"] = None                       # 옛 경계 기준 시간은 무효
     hit["cap_lead"] = hit.get("cap_lead", 0.0)
     tts = hit.get("tts_path")
