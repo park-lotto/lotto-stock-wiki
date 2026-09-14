@@ -67,7 +67,7 @@
         <span class="tl-len${getFix(i, c.seg_id) ? ' fixed' : ''}"
           ${getFix(i, c.seg_id) ? `title="내가 정한 길이 — 누르면 자동 배분으로 되돌립니다"
             onclick="event.stopPropagation();tlFixReset(${i},${k})"` : ''}
-          >${getFix(i, c.seg_id) ? '✋' : ''}${c.dur.toFixed(1)}s</span>
+          >${(getFix(i, c.seg_id) && !CUTS[i]) ? '✋' : ''}${c.dur.toFixed(1)}s</span>
         <span class="tl-edge" data-k="${k}" title="끌어서 이 컷의 길이 조절 — 늘리면 나머지 컷이 비례로 줄어듭니다"></span>
         <button type="button" class="tl-repbtn${inRep ? ' on' : ''}"
           title="${inRep ? '교체 모드 끄기' : `이 컷을 바꿉니다 — ${c.dur.toFixed(2)}초 고정 박스가 아래 소스 필름에 뜹니다`}"
@@ -324,10 +324,12 @@
           ed.removeEventListener('pointerup', up);
           ed.removeEventListener('pointercancel', up);
           cut.classList.remove('sizing');
-          const sec = Math.round((cut.offsetWidth / pps) * 100) / 100;
+          const sec = Math.round(((cut.offsetWidth + 2) / pps) * 100) / 100;   // 폭은 dur*pps-2로 그렸다
           const clips = planClips(lists[i] || [], beatDur(i), STRETCH[i], i);
           const c = clips[k];
-          if (c && Math.abs(sec - c.dur) >= 0.05) {
+          // ★구절 맞춤을 끈 칸 = 양옆 두 컷만(scene_play.js CUTS 규칙). ✋는 안 쓴다.
+          if (c && CUTS[i]) { if (Math.abs(sec - c.dur) >= 0.02) dragCut(i, k, sec); else g.tlMount(); }
+          else if (c && Math.abs(sec - c.dur) >= 0.05) {
             // ★전 컷이 ✋면 합계 보정이 마지막 컷에 몰려 방금 끈 길이가 되돌아갔다
             //   (2026-09-14 사장님 "줄여지는게 있고 안될때도 있고"). 끈 컷 말고 전부 ✋면
             //   **옆 컷**의 ✋를 풀어 그 컷이 차이를 받게 한다(칸 총초는 음성 그대로).

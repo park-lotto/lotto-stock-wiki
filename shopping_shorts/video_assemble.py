@@ -738,6 +738,25 @@ def plan_beat_clips_for(beat, tts_dur, src_durs, *, runout=0.0):
     #   컷1이 리드인(첫말 전 무음)을 얹고 마지막 컷이 꼬리를 얹는다. 재료가 구절보다
     #   적으면 마지막 재료가 남은 구절을 이어 커버한다. ✋수동 길이가 있으면 수동이
     #   이기고(아래 fixed_lens), 그땐 이 분기를 타지 않는다.
+    # ★구절 맞춤을 끈 칸 = 화면이 정한 컷 그대로(2026-09-14 사장님). 나누기·✋·늘려채우기 없음.
+    #   빈 시간은 화면이 렌더를 막는다. 그래도 들어오면(다른 입구) 마지막 컷을 늘려 멈추게 둔다.
+    _mc = [c for c in (beat.get("manual_cuts") or []) if c.get("video_id") in beat_src_durs]
+    if beat.get("phrase_sync") is False and _mc:
+        try:
+            _slow = max(1.0, float(beat.get("slow") or 1))
+        except (TypeError, ValueError):
+            _slow = 1.0
+        plan = []
+        for c in _mc:
+            d = float(c["dur"])
+            plan.append({"video_id": c["video_id"], "start": float(c["start"]),
+                         "src_dur": d, "out_dur": d * _slow, "seg_id": c.get("seg_id")})
+        gap = tts_dur - sum(c["out_dur"] for c in plan)
+        if gap > 1e-3 and plan:
+            plan[-1]["out_dur"] += gap
+        if runout > 0:
+            _extend_last_clip_for_runout(plan, segs, runout)
+        return plan
     _phrase_plan = None
     if beat.get("phrase_sync"):          # 구절맞춤 켬 = 구절이 ✋보다 우선(화면과 같은 규칙)
         _phrase_plan = _plan_phrase_clips(beat, segs, tts_dur)
