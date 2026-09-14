@@ -193,3 +193,133 @@ def test_trial_users_are_not_gated(monkeypatch):
 
     monkeypatch.setattr(app_mod, "access_level", lambda cid, cust=None: "ranking_only")
     assert app_mod._check_pc_device(999, _Req(), "/produce.html") is None
+
+
+# ── 🖥 골라 해제 (2026-09-15 사장님 "내가 선택해서 지우게") ────────────────────
+# 배경: API는 처음부터 slot을 받았는데 관리자 화면이 slot을 안 보내 **전부 해제만**
+#   됐다. 2대 상한이라 PC 1대 바꾼 회원에게 전부 해제를 쓰면 멀쩡한 PC까지 재등록
+#   (회원이 직접 눌러야 함)시켜야 한다 — 안 쓰는 칸만 빼주는 게 맞다.
+def _admin(client, app_mod):
+    """사장님(cid 0)으로 로그인 — device_reset은 관리자 전용이다."""
+    _login(client, app_mod, 0)
+
+
+def test_admin_can_release_one_slot_and_keep_the_other(client):
+    """★이 테스트가 이 기능의 존재 이유다 — 1대만 빼고 나머지는 살아 있어야 한다."""
+    c, app_mod = client
+    st = Store(app_mod.DB_PATH)
+    st.device_reset(4242)
+    st.device_register(4242, "old-pc", PC, "1.1.1.1")
+    st.device_register(4242, "using-pc", PC, "2.2.2.2")
+    _admin(c, app_mod)
+
+    r = c.post("/api/admin/customer/device_reset",
+               json={"customer_id": 4242, "slot": 1})
+    assert r.status_code == 200, r.text
+    body = r.json()
+    # ★응답이 '몇 대 지웠는지'를 말해야 한다 — ok:True 만 주면 화면이 조용한 실패를
+    #   "해제했습니다"로 덮는다(실사고 유형: 삭제가 저장출구에서 부활).
+    assert body["removed"] == 1 and body["left"] == 1, body
+    left = st.device_list(4242)
+    assert [d["slot"] for d in left] == [2], "1대만 빼야 하는데 다른 칸까지 지워졌다"
+    assert left[0]["device_id"] == "using-pc", "쓰던 PC가 지워졌다"
+
+
+def test_admin_release_all_when_slot_omitted(client):
+    """slot을 안 보내면 전부 해제 — 기존 동작이 그대로 살아 있어야 한다."""
+    c, app_mod = client
+    st = Store(app_mod.DB_PATH)
+    st.device_reset(4243)
+    st.device_register(4243, "a", PC, "1.1.1.1")
+    st.device_register(4243, "b", PC, "2.2.2.2")
+    _admin(c, app_mod)
+
+    body = c.post("/api/admin/customer/device_reset",
+                  json={"customer_id": 4243}).json()
+    assert body["removed"] == 2 and body["left"] == 0, body
+    assert st.device_list(4243) == []
+
+
+def test_release_refuses_a_slot_that_is_not_registered(client):
+    """★없는 칸을 "해제했습니다"라고 하면 안 된다 — 전엔 ok:True 였다."""
+    c, app_mod = client
+    st = Store(app_mod.DB_PATH)
+    st.device_reset(4244)
+    st.device_register(4244, "only", PC, "1.1.1.1")     # 1번만 등록
+    _admin(c, app_mod)
+
+    r = c.post("/api/admin/customer/device_reset",
+               json={"customer_id": 4244, "slot": 2})
+    assert r.status_code == 404, r.text
+    assert [d["slot"] for d in st.device_list(4244)] == [1], "거부했는데 DB가 바뀌었다"
+
+
+def test_release_rejects_out_of_range_and_non_numeric_slot(client):
+    """slot=99는 조용히 0건 삭제(ok:True)였고, slot='abc'는 int()에서 500이었다."""
+    c, app_mod = client
+    st = Store(app_mod.DB_PATH)
+    st.device_reset(4245)
+    st.device_register(4245, "keep", PC, "1.1.1.1")
+    _admin(c, app_mod)
+
+    for bad in (99, 0, -1, "abc"):
+        r = c.post("/api/admin/customer/device_reset",
+                   json={"customer_id": 4245, "slot": bad})
+        assert r.status_code == 400, f"slot={bad!r} 를 400으로 막지 않았다({r.status_code})"
+    assert [d["slot"] for d in st.device_list(4245)] == [1], "거부했는데 DB가 바뀌었다"
+
+
+def test_release_needs_admin(tmp_path, monkeypatch):
+    """해제는 사장님만 — 회원이 스스로 풀면 돌려쓰기를 막는 의미가 없다.
+
+    ★인증을 켜야 재진다. 꺼져 있으면(DASH_PASS 미설정=로컬 개발) 이 코드베이스는
+      전원 admin 취급이라 가드가 없어도 통과하는 **가짜 green**이 된다.
+    ★★`monkeypatch.setenv("DASH_PASS", …)`로는 안 켜진다 — _AUTH_ON은 app.py가 처음
+      import될 때 한 번만 읽힌다. 기존 관례대로 스위치를 직접 켠다
+      (test_bot_api.py·test_admin_customer_mgmt.py 가 같은 패턴).
+    """
+    from fastapi.testclient import TestClient
+    from shopping_shorts import app as app_mod
+
+    monkeypatch.setattr(app_mod, "DB_PATH", str(tmp_path / "t.db"))
+    monkeypatch.setattr(app_mod, "_AUTH_ON", True)
+    st = Store(app_mod.DB_PATH)
+    st.device_register(4246, "x", PC, "1.1.1.1")
+    c = TestClient(app_mod.app)
+    _login(c, app_mod, 4246)                       # 본인 계정으로 시도
+
+    r = c.post("/api/admin/customer/device_reset",
+               json={"customer_id": 4246, "slot": 1})
+    # 401/403(관리자 아님) 또는 402(유료 게이트)로 막힌다 — 어느 층이 막든 **지워지면
+    # 안 된다**가 계약이다. 실측 2026-09-15: 이 계정은 402가 먼저 걸린다.
+    assert r.status_code in (401, 402, 403), r.text
+    assert len(st.device_list(4246)) == 1, "관리자가 아닌데 지워졌다"
+
+    # ★관리자 가드 자체도 직접 재라 — 위가 402로 막히면 _require_admin은 안 태워진다.
+    #   이 함수가 '관리자 아님'을 정하는 한 곳이다.
+    assert app_mod._is_admin(4246) is False, "일반 회원이 관리자로 판정된다"
+    assert app_mod._is_admin(0) is True, "사장님(0)이 관리자가 아니라고 나온다"
+
+
+def test_admin_page_sends_the_chosen_slot(_=None):
+    """★화면이 slot을 **실제로 보내는지** 잠근다 — API가 받아도 화면이 안 보내면
+    '전부 해제'로 되돌아간다(그게 2026-09-15 전까지의 상태였다)."""
+    html = (pathlib.Path(__file__).resolve().parents[1]
+            / "static" / "admin.html").read_text(encoding="utf-8")
+    assert "body.slot = Number(ans)" in html, "고른 번호를 요청에 안 싣는다"
+    assert "해제할 PC 번호를 입력하세요" in html, "번호를 고르게 묻지 않는다"
+    # 응답을 보고 말해야 한다 — 전엔 실패해도 '해제했습니다'였다
+    assert "if(!r || !r.ok)" in html, "응답을 안 보고 성공이라고 말한다"
+
+
+def test_admin_page_has_no_dead_refresh_call(_=None):
+    """★`loadCustomers`는 이 파일에 **없는 함수**다. typeof 방어에 걸려 조용히 아무것도
+    안 했고, 그래서 해제·기간설정 후 화면이 갱신되지 않았다(2026-09-15 실측)."""
+    html = (pathlib.Path(__file__).resolve().parents[1]
+            / "static" / "admin.html").read_text(encoding="utf-8")
+    code = html.replace("//   `typeof loadCustomers==='function' && loadCustomers()` 였는데 그런 함수는", "")
+    assert "loadCustomers" not in code, "없는 함수를 다시 부르고 있다"
+    assert "async function refreshCustomers()" in html, "갱신 함수가 사라졌다"
+    # 갱신은 한 곳에서 정한다(0순위-B) — 실제 이름 둘을 그 안에서 부른다
+    body = html.split("async function refreshCustomers()", 1)[1][:260]
+    assert "load()" in body and "renderCustomers()" in body, body
