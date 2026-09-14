@@ -78,7 +78,13 @@
            title="재료가 ${f.lack.toFixed(1)}초 모자라 이 컷이 그만큼 늘어납니다"></span>` : ''}
       </div>`;
     }).join('');
-    const emptyHtml = clips.length ? '' :
+    // ★공백 표시(2026-09-14 사장님 "공백이라고 표기를 해주자") — 얼린 컷 칸에서 컷 뒤에 남은 빈 시간을
+    //   그 자리에 그대로 그린다. 계산은 cutsGap 한 곳(머리글 안내·완성본 막기와 같은 값).
+    const gapSec = (typeof cutsGap === 'function' && CUTS[i]) ? cutsGap(i) : 0;
+    const blankHtml = (clips.length && gapSec > 0)
+      ? `<div class="tl-gap tl-blank" style="left:${(acc * pps).toFixed(1)}px;width:${Math.max(18, gapSec * pps - 2).toFixed(1)}px"
+           title="${gapSec.toFixed(1)}초가 비어 있어요 — 앞 조각을 길게 하거나 [전체 살짝 느리게]를 눌러주세요">공백 ${gapSec.toFixed(1)}s</div>` : '';
+    const emptyHtml = clips.length ? blankHtml :
       `<div class="tl-gap" style="left:0;width:${(dur * pps).toFixed(1)}px">장면 없음 — 아래 소스에서 담아주세요</div>`;
     const stretchBadge = (f.stretching && f.lack > 0.1)
       ? `<span class="tl-badge warn">늘려 채움 중 (+${f.lack.toFixed(1)}초)</span>` : '';
