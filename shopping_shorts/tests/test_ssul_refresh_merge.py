@@ -37,3 +37,18 @@ def test_default_merge_unchanged(tmp_path):
     d = json.loads(store.get_setting("last_run::pinterest"))
     a = [i for i in d["items"] if i["shortcode"] == "a"][0]
     assert a["views"] == 1 and a["age_hours"] == 5.0
+
+
+def test_category_override_survives_recollect(tmp_path):
+    store = Store(tmp_path / "t.db")
+    store.set_category_overrides({"v1": "제품정체형"})
+    store.save_last_run_platform("youtube", [
+        {"shortcode": "v1", "category": "기타", "views": 1, "delta": 0},
+        {"shortcode": "v2", "category": "기타", "views": 1, "delta": 0}], "2026-09-14T00:00:00+00:00")
+    items, _ = _load(store)
+    assert items["v1"]["category"] == "제품정체형" and items["v2"]["category"] == "기타"
+    store.merge_last_run_platform("youtube", [
+        {"shortcode": "v1", "category": "기타", "views": 5, "delta": 0}],
+        "2026-09-14T03:00:00+00:00", update_existing=True)
+    items, _ = _load(store)
+    assert items["v1"]["category"] == "제품정체형"
