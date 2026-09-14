@@ -3737,7 +3737,7 @@ async function lensExtractThenSearch(shortcode){
   // 추출 성공 → 검색어를 **처음부터 다시** 뽑는다(append=false).
   // 옛 후보는 썸네일만 보고 지은 것이라 이어붙이면 틀린 것이 남는다.
   const st2=LENS_STATE[shortcode];
-  if(st2){ st2.reExtracting=false; st2.cnErr=''; st2.cnCands=[]; st2.cnNoNew=false; st2.cnLoading=true; _lensRerender(shortcode); }
+  if(st2){ st2.extractedNow=true; st2.reExtracting=false; st2.cnErr=''; st2.cnCands=[]; st2.cnNoNew=false; st2.cnLoading=true; _lensRerender(shortcode); }
   await fetchLensCnKeywords(shortcode, (st2&&st2.caption)||'', st2&&st2.frameBlob, false);
 }
 // ✅ 대본이 말한 제품을 검색어에 표시한다 (2026-09-08 사장님 "대본분석을 한 경우
@@ -4296,21 +4296,27 @@ function renderLens(shortcode, mountId){
   //   (사장님 "대본분석 전에도 저게 나올 때가 있는데 정확하지 않아서 분석 후 뽑기를 눌러야 잘된다").
   const _canExtract = shortcode!=='__single__';
   const _analyzed = st.hasSource!==false;
-  const prodBox = (!_analyzed && _canExtract)
-    ? `<div style="text-align:center;padding:10px 0 12px">
-        <div style="font-size:11px;color:var(--sub);margin-bottom:6px">화면만 보고 짐작한 제품이라 틀릴 수 있어요</div>
-        <div style="display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap">
-          <span style="font-size:11px;color:var(--sub);border:1px solid var(--line);border-radius:6px;padding:1px 7px">짐작한 제품</span>
-          <b style="font-size:15px;color:var(--sub)">${st.product?esc(st.product)+'?':'아직 모름'}</b>
-          <button onclick="lensExtractThenSearch('${shortcode}')" ${st.reExtracting?'disabled':''} title="이 영상의 대본·자막을 먼저 분석해 제품을 알아낸 뒤, 그 제품명으로 검색어를 다시 뽑습니다 (10~30초, 대본추출 1회 과금)" style="${_b};border-color:#e0a33d;color:#e0a33d;font-weight:700">${st.reExtracting?'⏳ 대본 분석 중… (10~30초)':'📝 대본 분석해서 정확히 찾기'}</button>
-        </div></div>`
-    : (st.product
-      ? `<div style="text-align:center;padding:10px 0 12px;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap">
-          <span style="font-size:11px;color:#34d399;border:1px solid #1d4f3c;border-radius:6px;padding:1px 7px">✅ 대본에서 찾은 제품</span>
-          <b style="font-size:16px">${esc(st.product)}</b>
-          ${_canExtract?`<button onclick="lensExtractThenSearch('${shortcode}')" ${st.reExtracting?'disabled':''} title="대본을 다시 분석해 검색어를 새로 뽑습니다 (대본추출 1회 과금)" style="${_b};font-size:12px;padding:3px 9px;color:var(--sub)">${st.reExtracting?'⏳ 분석 중…':'다시 분석'}</button>`:''}
+  // ★2026-09-14 사장님 "눈에 띄게 꼭 눌러보고 할 수 있게". 캡션만 있어도 hasSource가 참이라
+  //   '✅ 대본에서 찾은 제품'이 대본 분석 없이 떴다 — ✅는 **이번에 대본 분석을 실제로 돌린 뒤**
+  //   (st.extractedNow)만 붙인다. 그 전엔 짐작 제품 + 크고 눈에 띄는 분석 버튼.
+  const _done = !!st.extractedNow;
+  const _bigOrange='font-size:15px;padding:11px 22px;border-radius:12px;border:0;cursor:pointer;font-weight:800;background:#e0a33d;color:#111;box-shadow:0 0 0 3px rgba(224,163,61,.25)';
+  const prodBox = !_canExtract
+    ? (st.product?`<div style="text-align:center;padding:10px 0 12px"><b style="font-size:16px">${esc(st.product)}</b></div>`:'')
+    : (!_done
+      ? `<div style="text-align:center;margin:6px 0 12px;padding:14px 12px;border:2px solid #e0a33d;border-radius:14px;background:rgba(224,163,61,.08)">
+          <div style="display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+            <span style="font-size:11px;color:var(--sub);border:1px solid var(--line);border-radius:6px;padding:1px 7px">짐작한 제품</span>
+            <b style="font-size:15px;color:var(--sub)">${st.product?esc(st.product)+'?':'아직 모름'}</b>
+          </div>
+          <button onclick="lensExtractThenSearch('${shortcode}')" ${st.reExtracting?'disabled':''} title="이 영상의 대본·자막을 먼저 분석해 제품을 알아낸 뒤, 그 제품명으로 검색어를 다시 뽑습니다 (10~30초, 대본추출 1회 과금)" style="${_bigOrange}">${st.reExtracting?'⏳ 대본 분석 중… (10~30초)':'📝 대본 분석해서 정확히 찾기'}</button>
+          <div style="font-size:12px;color:#e0a33d;margin-top:8px">👉 먼저 눌러주세요 — 검색어가 훨씬 정확해져요</div>
         </div>`
-      : '');
+      : `<div style="text-align:center;margin:6px 0 12px;padding:12px;border:2px solid #1d4f3c;border-radius:14px;background:rgba(52,211,153,.07);display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap">
+          <span style="font-size:12px;color:#34d399;border:1px solid #1d4f3c;border-radius:6px;padding:1px 8px;font-weight:700">✅ 대본에서 찾은 제품</span>
+          <b style="font-size:17px">${esc(st.product||'')}</b>
+          <button onclick="lensExtractThenSearch('${shortcode}')" ${st.reExtracting?'disabled':''} title="대본을 다시 분석해 검색어를 새로 뽑습니다 (대본추출 1회 과금)" style="${_b};font-size:12px;padding:3px 9px;color:var(--sub)">${st.reExtracting?'⏳ 분석 중…':'다시 분석'}</button>
+        </div>`);
   // ── ① 검색어 ──
   const kwBox=`<div style="${_secCss}">
       <div style="${_lblCss}">${_num(1)}검색어</div>
@@ -4349,7 +4355,7 @@ function renderLens(shortcode, mountId){
         <div style="font-size:11.5px;color:var(--sub);margin-top:2px">${[c.en,c.zh,c.ja].filter(Boolean).map(esc).join(' · ')}</div>
       </div>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-        ${kw?`<button onclick="lensKwSearch('${shortcode}',${idx})" ${st.kwSearching?'disabled':''} title="'${esc(kw)}'로 검색해 이 창 아래 ③에 영상을 모아 보여줍니다(이동 없음, 무료). 가져오는 곳: 유튜브·핀터레스트·네이버클립" style="${_bAcc}">⬇ 아래로 모아서 보기</button>`:''}
+        ${kw?`<button onclick="lensKwSearch('${shortcode}',${idx})" ${st.kwSearching?'disabled':''} title="'${esc(kw)}'로 검색해 이 창 아래 ③에 영상을 모아 보여줍니다(이동 없음, 무료). 가져오는 곳: 유튜브·핀터레스트·네이버클립" style="${_b};background:var(--accent);border-color:var(--accent);color:#04201c;font-weight:800;font-size:14px;padding:8px 14px">🔎 아래로 모아서 보기</button>`:''}
         <span style="width:1px;height:22px;background:var(--line);margin:0 2px"></span>
         <span style="font-size:11px;color:var(--sub);white-space:nowrap">새 탭</span>
         ${plats.map(p=>p.url
@@ -4369,7 +4375,7 @@ function renderLens(shortcode, mountId){
       ${(!st.kwSearching&&st.kwCost!=null)?`<div style="font-size:11px;color:var(--sub);margin:4px 0">${st.kwCost>0?('이번 검색 $'+st.kwCost.toFixed(3)):'무료 검색'}</div>`:''}
       ${(!st.cnSearching&&st.cnCost!=null)?`<div style="font-size:11px;color:var(--sub);margin:4px 0">${st.cnCost>0?('이번 검색 $'+st.cnCost.toFixed(3)):'무료 검색'}</div>`:''}
       ${rows||`<div style="font-size:12px;color:var(--sub);padding:6px 0">아직 검색어가 없습니다 — 위 ①에 제품을 넣고 <b>✨ 검색어 만들기</b>를 누르세요.</div>`}
-      ${rows?`<div style="font-size:11.5px;color:var(--sub);margin-top:8px">⬇ 아래로 모아서 보기 = 유튜브·핀터레스트·네이버클립에서 찾아 이 창 아래 ③에 쌓음(무료) · 샤/도/틱/인/핀 = 그 사이트를 새 탭으로 열기</div>`:''}
+      ${rows?`<div style="font-size:11.5px;color:var(--sub);margin-top:8px">🔎 아래로 모아서 보기 = 유튜브·핀터레스트·네이버클립에서 찾아 이 창 아래 ③에 쌓음(무료) · 샤/도/틱/인/핀 = 그 사이트를 새 탭으로 열기</div>`:''}
     </div>`;
   // ── ③ 모인 영상 — sticky(칩+필터줄만. 2026-08-02 모바일 사고 주석 참고: 검색칸까지 넣으면 카드가 눌린다) ──
   const bar=`${prodBox}${kwBox}${findBox}
