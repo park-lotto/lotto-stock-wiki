@@ -352,14 +352,11 @@ body.grow #playerhost{overflow:visible;position:sticky;top:8px;align-self:flex-s
 .srcgroup.folded .srchead{opacity:.8}
 .palfold{margin-right:4px}
 .palrowwrap{position:relative}
-.palnav{position:absolute;top:40%;z-index:6;width:30px;height:56px;border:1px solid var(--line);
-  border-radius:8px;background:rgba(20,24,32,.88);color:var(--ink);font-size:15px;cursor:pointer;
-  transform:translateY(-50%);box-shadow:0 2px 10px rgba(0,0,0,.45)}
-.palnav:hover{background:var(--accent);color:#000}
-.palnav.l{left:-4px}.palnav.r{right:-4px}
-.palrowwrap.nonav .palnav{display:none}
-/* 소스 목록은 자기 안에서 세로로 스크롤한다 — 막대가 늘 보인다 */
-#palette{max-height:calc(100vh - 120px);max-height:min(calc(100vh - 120px), 900px);overflow-y:auto;overflow-x:hidden;padding-right:6px;scrollbar-width:auto}
+/* ★소스 목록은 자기 안에서 세로로 스크롤한다(2026-09-14 사장님 "스크롤 내리면 미리보기랑 뒤쪽 작업이
+   안 보인다"). 높이는 fitPalette()가 **보이는 화면 높이 − 위 작업칸** 으로 잡는다 — 그래서 페이지
+   전체가 안 내려가고 위 미리보기·칸은 늘 보인다. vh를 안 쓰는 이유: grow 모드에선 100vh=iframe
+   높이=내용 높이라 자기참조로 부푼다(935행 주석과 같은 함정). */
+#palette{max-height:var(--pal-h,560px);overflow-y:auto;overflow-x:hidden;padding-right:6px;scrollbar-width:auto}
 #palette::-webkit-scrollbar{width:12px}
 #palette::-webkit-scrollbar-track{background:#191c21;border-radius:6px}
 #palette::-webkit-scrollbar-thumb{background:#5a6270;border-radius:6px}
@@ -891,10 +888,8 @@ body.tight .tbrow{scrollbar-width:none;-ms-overflow-style:none;cursor:grab;paddi
 body.tight .tbrow::-webkit-scrollbar{display:none;height:0}
 body.tight .tbrow:active{cursor:grabbing}
 /* 소스 한 줄(영상별 가로 배열)도 같은 규칙 — 여기도 막대가 자리를 먹는다 */
-/* ★소스 한 줄은 막대를 다시 보인다(2026-09-14 사장님 "이렇게 넘어가게도") — 끌기 배선이 없어
-   막대를 숨기면 오른쪽 끝 조각에 갈 방법이 없었다. 얇게 + ◀▶ 버튼 + 휠 가로 이동 */
-body.tight .thumbs.oneline{scrollbar-width:thin}
-body.tight .thumbs.oneline::-webkit-scrollbar{height:8px}
+body.tight .thumbs.oneline{scrollbar-width:none;-ms-overflow-style:none}
+body.tight .thumbs.oneline::-webkit-scrollbar{display:none;height:0}
 
 /* 칸 안에서 펼친 필름 — 칸 폭에 눌리지 않게 최소 폭을 준다(1차 교훈: 150px에 눌리면
    필름이 제구실을 못 한다). 칸은 flex:0 0 auto라 이만큼 넓어진다. */
@@ -1704,6 +1699,22 @@ function toggleDup(on){ hideDup = on; render(); }
 //   접은 묶음은 브라우저에 기억한다(새로고침·다시 열어도 그대로). 키 = 묶음 제목.
 const PAL_FOLD = (() => { try { return new Set(JSON.parse(localStorage.getItem('sceneLab:palFold') || '[]')); } catch (e) { return new Set(); } })();
 function _palFoldSave(){ try { localStorage.setItem('sceneLab:palFold', JSON.stringify([...PAL_FOLD])); } catch (e) {} }
+// 소스 목록 높이 = 사람이 실제로 보는 화면 높이 − 목록 위쪽 끝 위치. 제작소 안(iframe)이면
+//   부모 창 기준으로 잰다 — iframe 자체 높이는 내용에 맞춰 늘어나 기준이 될 수 없다.
+function fitPalette(){
+  const pal = document.getElementById('palette'); if (!pal) return;
+  // 기준: 장면편집 맨 위를 화면 맨 위에 맞췄을 때 목록이 화면 바닥까지 딱 차는 높이.
+  //   (부모가 얼마나 내려가 있든 같은 값 — 스크롤할 때마다 높이가 출렁이지 않는다)
+  const topInLab = pal.getBoundingClientRect().top + (window.scrollY || 0);
+  let viewH = window.innerHeight;
+  try {
+    if (window.parent && window.parent !== window && window.frameElement) viewH = window.parent.innerHeight;
+  } catch (e) {}
+  const h = Math.max(260, Math.round(viewH - topInLab - 16));
+  document.documentElement.style.setProperty('--pal-h', h + 'px');
+}
+window.addEventListener('resize', () => { try { fitPalette(); } catch (e) {} });
+try { window.parent && window.parent !== window && window.parent.addEventListener('resize', () => { try { fitPalette(); } catch (e) {} }); } catch (e) {}
 function togglePalFold(key){ if (PAL_FOLD.has(key)) PAL_FOLD.delete(key); else PAL_FOLD.add(key); _palFoldSave(); render(); }
 function palFoldAll(fold){
   document.querySelectorAll('#palette .srcgroup[data-fold]').forEach(g => {
@@ -1711,20 +1722,7 @@ function palFoldAll(fold){
   });
   _palFoldSave(); render();
 }
-// ◀▶ — 한 번에 보이는 폭의 85%만큼 넘긴다(앞 카드 일부가 남아 어디서 이어지는지 보인다)
-function palScroll(btn, dir){
-  const row = btn.parentElement && btn.parentElement.querySelector('.thumbs.oneline');
-  // 숨은 탭에선 부드러운 이동이 아예 안 돈다(실측: smooth 0px / 즉시 300px) — 그땐 즉시
-  if (row) row.scrollBy({left: dir * Math.max(150, row.clientWidth * 0.85), behavior: document.hidden ? 'auto' : 'smooth'});
-}
-// 넘길 게 없는 줄은 ◀▶를 감춘다(그리기·창 크기 바뀔 때마다)
-function palNavSync(){
-  document.querySelectorAll('#palette .palrowwrap').forEach(w => {
-    const r = w.querySelector('.thumbs.oneline');
-    w.classList.toggle('nonav', !r || r.scrollWidth <= r.clientWidth + 2);
-  });
-}
-window.addEventListener('resize', () => { try { palNavSync(); } catch (e) {} });
+
 // 마우스 휠(세로)을 한 줄 목록에서는 가로로 — 줄 끝까지 가면 원래대로 페이지를 내린다
 document.addEventListener('wheel', e => {
   const row = e.target && e.target.closest && e.target.closest('#palette .thumbs.oneline');
@@ -2860,7 +2858,7 @@ function renderBand(){
     // 담기·빼기는 기존 기능(add/delSeg)을 그대로 쓴다 — 아래 소스에서 끌어다 놓거나 두 번 클릭.
     return `<div class="tbeat ${clips.length ? '' : 'empty'} ${playKey === 'beat:' + i ? 'on' : ''} ${sel === i ? 'sel' : ''}"
                  onclick="selBeat(${i});playBeatHere(${i}, event)"
-                 ondragover="if(palDrag){event.preventDefault();event.dataTransfer.dropEffect='copy';}"
+                 ondragover="if(palDrag||(dragFrom&&dragFrom.i!==${i})){event.preventDefault();event.dataTransfer.dropEffect=palDrag?'copy':'move';}"
                  ondrop="beatDrop(${i}, event)"
                  title="누르면 재생 · 아래 소스를 끌어다 놓거나 두 번 클릭하면 이 칸에 담깁니다">
         <div class="h"><b>${i+1}. ${b.role || '칸'}</b><span class="d ${
@@ -3035,7 +3033,7 @@ function render(){
       + `<button type="button" class="slotbtn" onclick="toggleDup(${hideDup?'false':'true'})"
            title="${hideDup ? '눌러서 가려진 조각까지 전부 펼칩니다' : '눌러서 비슷한 그림을 다시 접습니다'}"
            >${esc(groupCount(g, segs))}</button></span></div>
-      ${_folded ? '' : `<div class="palrowwrap">${groupMode==='src' ? `<button type="button" class="palnav l" onclick="palScroll(this,-1)" title="앞 조각들">◀</button><button type="button" class="palnav r" onclick="palScroll(this,1)" title="뒤 조각들">▶</button>` : ''}
+      ${_folded ? '' : `<div class="palrowwrap">
       <div class="thumbs${groupMode==='src'?' oneline':''}">`}${_folded ? '' : segs.map(s => `
         <div class="seg ${cur.has(s.sid)?'inthis':''} ${(outOfRange(s.sid)||tooShort(s.sid))?'oor':''}"
              style="${_MSEL.has(s.sid)?'outline:2px solid var(--accent);outline-offset:1px':''}"
@@ -3092,7 +3090,7 @@ function render(){
             </div>
         </div>`).join('')}${_folded ? '' : '</div></div>'}</div>`;
   }).join('');
-  try { palNavSync(); setTimeout(palNavSync, 400); } catch (e) {}   // 썸네일 폭이 잡힌 뒤 한 번 더
+  try { fitPalette(); } catch (e) {}
 
   // 필름스트립
   let totCuts = 0, totDur = 0, mineDur = 0, longCuts = 0;
