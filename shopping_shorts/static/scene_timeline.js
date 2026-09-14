@@ -56,8 +56,9 @@
       // 마지막 컷이 모자람을 흡수해 늘어난 경우 — 그 늘어난 꼬리를 빗금으로 표시
       //   (★보정 후 합계만 보여주면 정보가 0이 된다는 교훈: 보정분을 눈에 보이게)
       const isLast = k === clips.length - 1;
-      const stretchPx = (isLast && f.lack > 0.1 && !f.stretching)
-        ? Math.min(f.lack, c.dur) * pps : 0;
+      // ★빗금 표시는 뺐다(2026-09-14 사장님 "무슨 말인지 모르겠어, 저게 필요해?") — 뜻이 안 읽히고,
+      //   딱 맞는 칸(3.6/3.6)에도 떠서 틀린 경고였다. 모자람은 머리글 문구 한 곳에서만 알린다.
+      const stretchPx = 0;
       const inRep = REPLACE && REPLACE.i === i && REPLACE.k === k;
       return `<div class="tl-cut" data-k="${k}" data-seg="${c.seg_id}"
         style="left:${left.toFixed(1)}px;width:${wd.toFixed(1)}px"
