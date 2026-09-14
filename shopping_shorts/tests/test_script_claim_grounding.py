@@ -305,6 +305,19 @@ def test_invented_quote_or_id_is_rejected_even_when_model_claims_success():
         assert gate._claim_audit_errors(text, evidence, audited_verdict(text, evidence_id, quote))
 
 
+def test_live_quote_sentence_separator_variation_preserves_real_evidence():
+    text = "사용한 봉투는 꺼내 묶어서 정리해요."
+    evidence_id = "scene:toilet:bag:visual"
+    evidence = {"items": [{"evidence_id": evidence_id, "kind": "visual",
+        "text": "변기에서 비닐을 제거하고 묶는 모습\n사용했던 비닐이 밀봉되어 제거된다."}]}
+    quote = "변기에서 비닐을 제거하고 묶는 모습. 사용했던 비닐이 밀봉되어 제거된다."
+    assert not gate._claim_audit_errors(text, evidence, audited_verdict(text, evidence_id, quote))
+    changed = quote.replace("밀봉되어 제거", "완전히 살균")
+    assert gate._claim_audit_errors(text, evidence, audited_verdict(text, evidence_id, changed))
+    assert gate._quote_norm("1.5분") != gate._quote_norm("15분")
+    assert gate._quote_norm("0.5만원") != gate._quote_norm("05만원")
+
+
 def test_actual_observation_and_normal_subjective_reaction_remain_allowed():
     text = "변기를 펼쳐 비닐을 씌워요. 편하겠네요!"
     evidence = sg.claim_evidence(sources())

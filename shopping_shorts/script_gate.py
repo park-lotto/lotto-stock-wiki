@@ -837,7 +837,10 @@ def claim_units(text):
 
 
 def _quote_norm(text):
-    return re.sub(r"\s+", "", str(text or ""))
+    # 장면 설명과 변화가 줄바꿈으로 연결된 원문을 모델이 마침표+공백으로
+    # 인용하는 경우는 같은 문장이다. 글자·수치·소수점은 그대로 대조한다.
+    value = re.sub(r"(?<=[^\W\d_])\.(?=\s|$)", "", str(text or ""))
+    return re.sub(r"\s+", "", value)
 
 
 _CLAIM_QUANTITY = re.compile(
