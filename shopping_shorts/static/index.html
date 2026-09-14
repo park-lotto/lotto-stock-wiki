@@ -4295,9 +4295,9 @@ function renderLens(shortcode, mountId){
           style="flex:1;min-width:150px;max-width:280px;font-size:12px;padding:5px 8px;border-radius:8px;border:1px solid var(--line);background:#0d131c;color:var(--fg,inherit)">
         <button onclick="lensExpandKeyword('${shortcode}')" ${st.cnLoading?'disabled':''}
           title="넣은 소재로 검색어 조합을 여러 개 만들어 아래에 쌓습니다. 한국어만 넣어도 중국어까지 같이 나옵니다 — 무료" style="${btnCss};border-color:var(--accent);color:var(--accent);font-weight:700">${st.cnLoading?'⏳ 만드는 중…':'✨ 검색어 조합 만들기'}</button>
+          ${st.frameBlob?`<button onclick="lensMoreCnKeywords('${shortcode}')" ${st.cnLoading?'disabled':''} title="같은 장면으로 다른 각도의 검색어를 더 뽑습니다(이미 나온 건 빼고 아래에 쌓입니다). 무료 — 추가 비용 없음" style="${btnCss};border-color:var(--accent);color:var(--accent)">${st.cnLoading?'⏳ 뽑는 중…':'🔄 다른 검색어 더'}</button>`:''}
       </div>
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px">
-        <span style="font-size:12px;color:var(--sub)" title="🔎 여기서 = 유튜브·핀터레스트·네이버클립을 이 페이지 안에서 찾습니다(무료). 나머지 아이콘(📕샤오홍슈 🎶도우인 🎵틱톡 📷인스타 📌핀터레스트)은 그 사이트를 새 탭으로 엽니다 — 우리 비용 0원입니다">🔎 비슷한 영상 찾기 <span style="opacity:.7">— 🔎는 여기서(무료), 아이콘은 새 탭</span></span>
         ${/* ★언어 고르기(2026-09-08 사장님 "언어별로 누를 수 있게"). 고르면 아래 행의
              아이콘 5개가 통째로 그 언어 검색어로 바뀐다 — 버튼 25개를 깔지 않는 이유다. */''}
         <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-top:4px">
@@ -4319,7 +4319,6 @@ function renderLens(shortcode, mountId){
             ? '지금은 <b>해외 원본</b> — 샤오홍슈·도우인은 중국어, 틱톡·인스타·핀터레스트는 영어로 엽니다. 한국 영상을 보려면 <b>KR 한국어</b>를 누르세요.'
             : `지금은 <b>${(LENS_LANGS.find(L=>L.k===st.lang)||{}).label||''}</b> — 아래 다섯 곳을 모두 이 언어로 검색합니다.`}
         </div>
-        ${st.frameBlob?`<button onclick="lensMoreCnKeywords('${shortcode}')" ${st.cnLoading?'disabled':''} title="같은 장면으로 다른 각도의 검색어를 더 뽑습니다(이미 나온 건 빼고 아래에 쌓입니다). 무료 — 추가 비용 없음" style="${btnCss};border-color:var(--accent);color:var(--accent)">${st.cnLoading?'⏳ 뽑는 중…':'🔄 다른 검색어 더'}</button>`:''}
         ${st.cnNoNew?'<span style="font-size:11px;color:var(--sub)">더 나올 게 없어요 — 이 장면에서 뽑을 각도는 다 나왔습니다</span>':''}
         ${st.cnErr?`<span style="font-size:11px;color:#e0623d">${esc(st.cnErr)}</span>`:''}
         ${st.openNote?`<div style="font-size:11.5px;color:#e0a33d;padding:4px 0">⚠️ ${esc(st.openNote)}</div>`:''}
