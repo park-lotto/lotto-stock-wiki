@@ -21221,9 +21221,6 @@ def _materials_for_generate(item, body, store, cid, spines=None):
     if _jid:
         if not _job or int((_job or {}).get("customer_id") or 0) != int(cid or 0):
             raise ValueError("이 고객의 영상 작업이 아닙니다")
-    # 위의 ``isinstance(_wid, str)`` 정규화는 깨진 클라이언트 값이 여기까지
-    # 들어와 보강 호출 자체를 500으로 만들지 않게 한다. 캐시/DB 보강 실패도 아래
-    # ``except Exception``에서 흡수하되, 소유권 불일치는 그 전에 명시적으로 막는다.
     if not (_job or {}).get("extract") and _wid:
         try:
             _wex = _extract_from_work(_wid, cid, store)

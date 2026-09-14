@@ -38,6 +38,12 @@ from shopping_shorts.store import Store
 def client(tmp_path, monkeypatch):
     monkeypatch.setattr(appmod, "DB_PATH", str(tmp_path / "t.db"))
     monkeypatch.setattr(appmod, "_AUTH_ON", False)
+    # 성공경로는 생성기뿐 아니라 외부 의미판정도 격리한다. 그렇지 않으면
+    # 로컬 .env 유무에 따라 실제 Gemini를 호출해 200/502가 달라진다.
+    # 판정기 장애·주제 이탈의 fail-close는 test_script_topic_contract가 검증한다.
+    monkeypatch.setattr(appmod.script_generate, "_speaker_judge", lambda *a, **k: {
+        "ok": True, "why": "", "topic_ok": True, "topic_why": "", "foreign_products": []})
+    monkeypatch.setattr(appmod, "_wow_block_for", lambda *a, **k: "")
     return TestClient(appmod.app)
 
 
