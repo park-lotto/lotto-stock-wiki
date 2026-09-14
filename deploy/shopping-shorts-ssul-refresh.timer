@@ -1,0 +1,10 @@
+[Unit]
+Description=썰쇼핑 3시간 갱신 타이머
+# ★auto_deploy는 타이머 파일을 설치하지 않는다 — 바꾸면 수동 cp + daemon-reload
+
+[Timer]
+OnCalendar=*-*-* 00/3:40:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
