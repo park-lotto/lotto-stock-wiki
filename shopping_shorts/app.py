@@ -21313,6 +21313,9 @@ def _materials_for_generate(item, body, store, cid, spines=None):
         _topic_body["subject"] = _requested_frozen
     _topic_product = _topic_product_for_generate(item, _topic_body, _job, store)
     if _topic_product is None:
+        if (((_job or {}).get("_topic_resolution") or {}).get("error")
+                == "judge_unavailable"):
+            raise ValueError("AI 제품 판정 서비스가 일시적으로 응답하지 않습니다. 자동 재시도 후에도 연결되지 않았습니다. 잠시 후 다시 생성해 주세요")
         _frozen = str(body.get("topic_product") or "").strip()
         if _frozen:
             raise ValueError("전체 생성 때 확정한 제품 주제와 현재 자료가 다릅니다")
@@ -21322,7 +21325,7 @@ def _materials_for_generate(item, body, store, cid, spines=None):
             _topic_product = ""
         else:
             if ((_job or {}).get("_topic_resolution") or {}).get("method") == "unresolved":
-                raise ValueError("담긴 영상의 제품명이 달라 같은 제품인지 확인하지 못했습니다. 잠시 후 다시 생성해 주세요")
+                raise ValueError("영상 자료 판정 응답을 검증하지 못했습니다. 잠시 후 다시 생성해 주세요")
             raise ValueError("담긴 영상에 서로 다른 제품이 같은 수로 섞여 주제를 확정할 수 없습니다")
     _explicit_topic = bool(str(
         _topic_body.get("my_topic") or _topic_body.get("subject") or "").strip())
