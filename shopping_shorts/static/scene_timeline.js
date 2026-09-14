@@ -327,7 +327,17 @@
           const sec = Math.round((cut.offsetWidth / pps) * 100) / 100;
           const clips = planClips(lists[i] || [], beatDur(i), STRETCH[i], i);
           const c = clips[k];
-          if (c && Math.abs(sec - c.dur) >= 0.05) setFix(i, c.seg_id, sec);
+          if (c && Math.abs(sec - c.dur) >= 0.05) {
+            // ★전 컷이 ✋면 합계 보정이 마지막 컷에 몰려 방금 끈 길이가 되돌아갔다
+            //   (2026-09-14 사장님 "줄여지는게 있고 안될때도 있고"). 끈 컷 말고 전부 ✋면
+            //   **옆 컷**의 ✋를 풀어 그 컷이 차이를 받게 한다(칸 총초는 음성 그대로).
+            const others = clips.filter((x, j) => j !== k);
+            if (others.length && others.every(x => getFix(i, x.seg_id) > 0)) {
+              const nb = clips[k + 1] || clips[k - 1];
+              if (nb && nb.seg_id !== c.seg_id) FIXLEN[fixKey(i, nb.seg_id)] && delete FIXLEN[fixKey(i, nb.seg_id)];
+            }
+            setFix(i, c.seg_id, sec);
+          }
           else g.tlMount();                                 // 거의 안 움직임 — 원상 복구
           ue.stopPropagation();
         };

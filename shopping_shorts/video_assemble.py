@@ -744,8 +744,14 @@ def plan_beat_clips_for(beat, tts_dur, src_durs, *, runout=0.0):
     if _phrase_plan:
         plan = _phrase_plan
     else:
-        plan = _plan_beat_clips(segs, tts_dur, src_durs=beat_src_durs, max_shot=_max_shot,
-                                one_per_seg=_one)
+        # ★구절 맞춤을 **끈** 칸(표식 False) = 담은 장면이 전부 한 번씩(2026-09-14 사장님).
+        #   2.2초 쪼개기·0.8초 하한으로 뒤 장면을 버리던 규칙을 이 칸엔 안 쓴다 — 칸 총초는
+        #   음성 그대로, 장면 길이 비율로 나눈다. 화면 scene_play.js planClips와 같은 규칙.
+        _all_in = beat.get("phrase_sync") is False
+        plan = _plan_beat_clips(segs, tts_dur, min_clip=(0.0 if _all_in else _MIN_CLIP),
+                                src_durs=beat_src_durs,
+                                max_shot=(None if _all_in else _max_shot),
+                                one_per_seg=(_all_in or _one))
     # ✋ 손으로 정한 컷 길이가 있으면 먼저 반영한다(칸 총합은 안 바뀐다).
     #   단 구절맞춤 계획엔 덧입히지 않는다 — 구절 경계가 곧 정답이다.
     _fixed = {} if _phrase_plan else (beat.get("fixed_lens") or {})

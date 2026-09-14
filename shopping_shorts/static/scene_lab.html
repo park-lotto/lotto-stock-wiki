@@ -1060,8 +1060,6 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
     <span class="tbtot" id="tbtot"></span>
     <button type="button" id="pball2" class="act play" style="margin-left:12px;padding:3px 12px;font-size:12px"
             onclick="playAllHere(event)" title="1번 칸부터 끝까지 이어서 봅니다">▶️ 전체 재생</button>
-    <label style="cursor:pointer;font-size:11.5px;color:var(--dim)" title="장면마다 컷 하나씩, 멘트 시간을 길이 비례로 나눕니다">
-      <input type="checkbox" onchange="toggleOne(this.checked)"> 1장=1컷</label>
     <button type="button" id="ttsBtn" class="act" style="padding:3px 10px;font-size:11.5px"
             onclick="makeTts()" title="음성이 없는 칸의 음성을 만듭니다(1~2분)">🔊 음성 만들기</button>
     <button type="button" class="act" id="undobtn" style="padding:3px 10px;font-size:11.5px" disabled
@@ -1118,7 +1116,7 @@ body.tight .frslot.ingroup .frhead{top:4px;bottom:28px}
             title="자막과 음성까지 얹은 진짜 결과 — 누르면 만들어져요(20초쯤)">완성본 만들기</button>
   </div>
   <!-- ★줄 높이를 줄인다(2026-08-22) — 버튼 자체는 그대로고 위아래 여백만 뗀다. -->
-  <div class="lbl" style="display:flex;align-items:center;gap:14px;margin:0;min-height:0"><button class="act play" id="pball" onclick="playAll(event)">▶️ 전체 재생</button><label style="cursor:pointer" title="전체에 적용: 장면마다 컷 하나씩, 멘트 시간을 길이 비례로 나눕니다."><input type="checkbox" onchange="toggleOne(this.checked)"> 1장=1컷</label></div>
+  <div class="lbl" style="display:flex;align-items:center;gap:14px;margin:0;min-height:0"><button class="act play" id="pball" onclick="playAll(event)">▶️ 전체 재생</button></div>
   <!-- 재생 전 안내(2026-08-16) — 미리보기 칸이 통째로 비어 있으면 "여기가 뭐 하는
        자리인지" 알 수 없다. #player가 켜지면(.on) 이건 자동으로 숨는다. -->
   <div id="playerIdle">

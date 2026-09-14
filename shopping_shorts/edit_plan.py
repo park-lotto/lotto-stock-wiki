@@ -5811,6 +5811,10 @@ def apply_scene_lab(plan, seg_map, edits):
         # 표식이 없으면 렌더는 종전 배분 그대로다(옛 job 회귀 0).
         if eb.get("phrase"):
             beat["phrase_sync"] = True
+        elif eb.get("phrase") is False:
+            # ★끈 칸은 표식을 **남긴다**(2026-09-14 사장님 "구절맞춤을 끄면 담긴 장수가 다 나오게").
+            #   끔 = 담은 장면마다 1컷(렌더 plan_beat_clips_for). 표식 없는 옛 job은 종전 배분 그대로.
+            beat["phrase_sync"] = False
         else:
             beat.pop("phrase_sync", None)
         applied += 1

@@ -465,12 +465,17 @@ function planClips(segIds, ttsDur, spread, beatIdx){
       return clips;
     }
   }
-  if (onePerSeg){
+  // ★구절 맞춤을 **끈** 칸 = 담은 장면이 전부 한 번씩(2026-09-14 사장님 "구절맞춤을 끄면
+  //   담긴 장수가 다 나오게 / 전체길이는 정해져있고 / 마우스로 0.8이하든 조절").
+  //   종전엔 2.2초 쪼개기+0.8초 하한으로 뒤 장면이 '안 나옴'이 됐고, 경계를 끌면 컷이 다시
+  //   짜여 먹혔다 안 먹혔다 했다. 서버 plan_beat_clips_for의 phrase_sync False 분기와 짝이다.
+  const allIn = beatIdx != null && !phraseSyncOn(beatIdx);
+  if (onePerSeg || allIn){
     // 1장=1컷 · 비례 배분(라이브 _plan_beat_clips one_per_seg와 같은 규칙).
     // 나레이션 시간을 담은 장면들에 **길이 비례**로 나눈다 — 남으면 줄이고 모자라면 늘린다.
     // 담은 게 전부·순서대로·한 번씩 나오고, 긴 장면은 길게 짧은 장면은 짧게 비율이 유지된다.
     let usable = segments.filter(g => g.end - g.start > EPS);
-    while (usable.length > 1){
+    while (!allIn && usable.length > 1){
       const total = usable.reduce((a,g) => a + (g.end - g.start), 0);
       const scale = total > EPS ? ttsDur / total : 0;
       const small = usable.filter(g => (g.end - g.start) * scale < MIN_CLIP - EPS);
