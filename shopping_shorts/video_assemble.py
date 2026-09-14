@@ -1307,6 +1307,116 @@ def _caption_segments(narration, preset=None):
     return _wrap_long(out) or [narr]
 
 
+# ══ 짧은 자막 줄 합치기(2026-09-14 사장님 "0.몇 초 단위로도 끊긴다 — 규칙을 정교하게") ══
+# 실측(라이브 2,766칸): AI가 끊은 줄(caption_lines) 8,504개 중 **42%가 실제 발화 1초 미만**,
+#   규칙 분할은 11%. 원인은 AI 프롬프트의 "4~14자"·"3~4어절" — 글자로만 끊고 시간을 안 본다.
+# 규칙(아스트라·페이블 공동 설계 1단계):
+#   ① 1초(시간이 있으면) 또는 6자(공백·부호 제외) 미만 줄은 이웃과 합친다
+#   ② 문장 끝(. ? ! …)은 절대 넘지 않는다 — 짧아도 문장 경계는 지킨다
+#   ③ 합친 줄은 18자를 넘지 않는다(한 줄 폭). 넘으면 안 합친다
+#   ④ 이웃 둘 다 되면 **더 짧은 쪽**과 합친다
+#   사람이 직접 고친 줄은 이 함수를 부르지 않는다(호출부가 가른다).
+_CAP_TIDY_MIN_SEC = float(os.environ.get("CAPTION_TIDY_MIN_SEC", "1.0") or 1.0)
+_CAP_TIDY_MIN_CHARS = int(os.environ.get("CAPTION_TIDY_MIN_CHARS", "6") or 6)
+_CAP_TIDY_MAX_CHARS = int(os.environ.get("CAPTION_TIDY_MAX_CHARS", "18") or 18)
+
+
+def _cap_flat_len(s):
+    return len(re.sub(r"[\s.,?!…~'\"“”‘’、·]", "", s or ""))
+
+
+def _cap_ends_sentence(s):
+    return (s or "").rstrip().endswith((".", "?", "!", "…"))
+
+
+def _cap_sentence_ends(lines, narration):
+    """각 줄이 **원문에서** 문장 끝(. ? ! …)으로 끝나는지. 분할 결과는 줄 끝 부호를 떼므로
+    (_wrap_long·_strip_cap_tail) 줄만 보면 문장 경계를 모른다 — 원문 글자를 따라가 되찾는다."""
+    narr = narration or ""
+    pos, ends = 0, []
+    for ln in lines:
+        need = _cap_flat_len(ln)
+        seen = 0
+        while pos < len(narr) and seen < need:
+            if _cap_flat_len(narr[pos]):
+                seen += 1
+            pos += 1
+        j = pos
+        while j < len(narr) and not _cap_flat_len(narr[j]) and not narr[j].isspace():
+            j += 1                       # 줄 뒤에 붙은 부호들
+        ends.append(any(ch in ".?!…" for ch in narr[pos:j]) or _cap_ends_sentence(ln))
+        pos = j
+    return ends
+
+
+def _cap_ends_modifier(s):
+    """줄 끝 어절이 뒤 명사를 꾸미는 관형형인가(표면 판정 — '굽는'·'입힌'·'다칠'). 명사가 우연히
+    걸려도(비밀·채칼) '붙는 쪽' 오류라 합치기 방향만 바뀔 뿐 안전하다."""
+    w = re.sub(r"[.,?!…~'\"“”‘’、·]+$", "", (s or "").rstrip()).split()
+    if not w:
+        return False
+    t = w[-1]
+    if t.endswith(("는", "은", "던", "한", "된", "운", "인", "난", "진", "친", "린")):
+        return True
+    c = t[-1]
+    return 0xAC00 <= ord(c) <= 0xD7A3 and (ord(c) - 0xAC00) % 28 == 8 and not t.endswith("들")
+
+
+def tidy_caption_lines(lines, durs=None, narration=None):
+    """짧은 줄을 이웃과 합친다. 반환 (lines, durs) — durs는 합친 만큼 **더해서** 돌려준다
+    (합치기는 이웃끼리만이라 실측 초가 정확히 보존된다). durs가 None이면 글자수로만 판정.
+    narration을 주면 문장 끝을 원문에서 찾는다(★안 주면 줄 끝 부호만 봐서 놓칠 수 있다)."""
+    L = [str(x) for x in (lines or [])]
+    D = list(durs) if (durs is not None and len(durs) == len(L)) else None
+    if len(L) < 2:
+        return L, D
+    E = _cap_sentence_ends(L, narration) if narration else [_cap_ends_sentence(x) for x in L]
+
+    def short(k):
+        if _cap_flat_len(L[k]) < _CAP_TIDY_MIN_CHARS:
+            return True
+        return D is not None and D[k] < _CAP_TIDY_MIN_SEC
+
+    def can_join(a, b):      # a 바로 뒤에 b를 붙일 수 있나
+        return (not E[a]
+                and _cap_flat_len(L[a] + L[b]) <= _CAP_TIDY_MAX_CHARS)
+
+    changed = True
+    while changed and len(L) >= 2:
+        changed = False
+        # 가장 짧은 줄부터 처리해야 결과가 순서에 덜 휘둘린다
+        order = sorted(range(len(L)), key=lambda k: (D[k] if D else _cap_flat_len(L[k])))
+        for k in order:
+            if not short(k):
+                continue
+            cand = []
+            if k > 0 and can_join(k - 1, k):
+                cand.append(k - 1)
+            if k + 1 < len(L) and can_join(k, k + 1):
+                cand.append(k + 1)
+            if not cand:
+                continue
+            # 꾸미는 말과 꾸밈 받는 말을 먼저 붙인다("…굽는 | 사과 와플인데"),
+            #   그다음은 더 짧은 이웃과 합친다.
+            if (k - 1) in cand and _cap_ends_modifier(L[k - 1]):
+                nb = k - 1
+            elif (k + 1) in cand and _cap_ends_modifier(L[k]):
+                nb = k + 1
+            else:
+                # 뒤 이웃이 아직 자기 뒤 명사를 꾸미는 중이면(끝이 관형형) 그 이웃은 양보한다 —
+                #   먼저 차지하면 "굽는"이 "사과 와플인데"로 갈 자리가 상한에 막힌다.
+                nb = min(cand, key=lambda j: (j == k + 1 and _cap_ends_modifier(L[j]),
+                                              D[j] if D else _cap_flat_len(L[j])))
+            a, b = min(k, nb), max(k, nb)
+            L[a:b + 1] = [L[a].rstrip() + " " + L[b].lstrip()]
+            E[a:b + 1] = [E[b]]
+            if D is not None:
+                D[a:b + 1] = [D[a] + D[b]]
+            changed = True
+            break
+    return L, D
+
+
 def _caption_durations(segs, dur, real_durs=None):
     """각 구절의 표시 시간(초) 리스트를 반환. 기본은 글자수 비례(균등분할 X)지만,
     아주 짧은 구절(2~3자)이 순식간에 지나가지 않도록 _CAP_MIN_DUR 하한을 준다.
