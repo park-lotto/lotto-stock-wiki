@@ -1457,7 +1457,7 @@ def render_blur_mask(spec):
         # 경계가 칼로 자른 듯하면 흐림 티가 난다 — 늘 조금 부드럽게(soft와 별개).
         w = max(1, int(W * m["w"] / 100.0))
         h = max(1, int(H * m["h"] / 100.0))
-        feather = max(4, int(min(w, h) * 0.06))
+        feather = max(4, int(min(w, h) * (0.20 if m.get("soft",0)>=80 else 0.06)))
         layer, x, y = _mask_shape_layer(m, (255, 255, 255), 255, feather=feather)
         im.alpha_composite(layer, (x, y))
     return im

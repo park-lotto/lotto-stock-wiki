@@ -18019,7 +18019,8 @@ def api_produce_mix_settings(body: dict):
     """3단계 자막제거 등 렌더 전 설정 갱신. body: {job_id, subtitle_removal}."""
     job_id = (body.get("job_id") or "").strip()
     store = Store(DB_PATH)
-    if not job_id or not store.get_mix_job(job_id):
+    job = store.get_mix_job(job_id) if job_id else None
+    if not job:
         return JSONResponse(status_code=404, content={"ok": False, "error": "job 없음"})
     fields = {}
     if "subtitle_removal" in body:
@@ -18030,11 +18031,60 @@ def api_produce_mix_settings(body: dict):
         fields["caption_style"] = body.get("caption_style")  # dict or None
     if "deco" in body:
         fields["deco"] = body.get("deco")  # 워터마크·추가텍스트·오버레이·BGM dict or None
+        if isinstance(fields["deco"], dict) and fields["deco"].get("scene_style") is not None:
+            from .scene_style import validate_snapshot
+            try:
+                fields["deco"]["scene_style"] = validate_snapshot(fields["deco"]["scene_style"])
+            except (ValueError, TypeError) as exc:
+                return JSONResponse(status_code=422, content={"ok": False, "error": str(exc)})
+    if "scene_style" in body:
+        from .scene_style import validate_snapshot
+        try:
+            snapshot = validate_snapshot(body["scene_style"])
+        except (ValueError, TypeError) as exc:
+            return JSONResponse(status_code=422, content={"ok": False, "error": str(exc)})
+        fields["deco"] = {**(fields.get("deco") or job.get("deco") or {}), "scene_style": snapshot}
     if "seo" in body:
         fields["seo"] = body.get("seo")  # 6단계 SEO 일습 dict or None
     if fields:
         store.update_mix_job(job_id, **fields)
     return {"ok": True}
+
+
+@app.get("/api/produce/scene-style/assets/{asset_path:path}")
+def api_scene_style_asset(asset_path: str):
+    from .scene_style import ROOT
+    candidate = (ROOT / asset_path).resolve()
+    names = {"scene-style-ui-showcase.html", "precision20-ui.js", "precision20-ui.css", "precision20-data.js", "continuous20-data.js", "scene-style-connect.js", "scene-style-connect.css", "scene-style-decorations.js"}
+    allowed = (asset_path.startswith("out/") and asset_path[4:] in names)
+    allowed |= asset_path in {"shopping_shorts/static/scene-decoration-catalog.js", "shopping_shorts/static/caption-line-input.js", "out/scene-style-labels.js"}
+    allowed |= asset_path.startswith(("out/assets/scene-style/", "out/template_refs/", "out/장면꾸미기_작업대/")) and candidate.suffix.lower() in {".png", ".jpg", ".webp"}
+    allowed |= asset_path.startswith("shopping_shorts/static/fonts/") and candidate.suffix.lower() in {".ttf", ".otf", ".woff", ".woff2"}
+    if ".." in Path(asset_path).parts or "\\" in asset_path or not allowed or not candidate.is_relative_to(ROOT) or not candidate.is_file():
+        return JSONResponse(status_code=404, content={"error": "파일 없음"})
+    return FileResponse(candidate, headers={"Cache-Control": "no-cache"})
+
+
+@app.get("/api/produce/scene-style/context/{job_id}")
+def api_scene_style_context(job_id: str, request: Request, headcopy_text: str = ""):
+    from .scene_style import context_for
+    job = Store(DB_PATH).get_mix_job(job_id)
+    if not job or (not _is_admin(_cid(request)) and int(job.get("customer_id") or 0) != _cid(request)):
+        return JSONResponse(status_code=404, content={"error": "영상 없음"})
+    plan = job.get("edit_plan") or {}
+    beats = plan.get("beats") or []
+    tts = {b["beat_idx"]: b["tts_path"] for b in beats if b.get("tts_path")}
+    if not beats or len(tts) != len(beats):
+        return JSONResponse(status_code=409, content={"error": "음성·장면 준비를 먼저 완료해 주세요"})
+    try:
+        timeline = video_assemble._beat_timeline(plan, tts)
+    except Exception:
+        return JSONResponse(status_code=409, content={"error": "음성 파일을 확인할 수 없습니다. 미리보기를 다시 만들어 주세요"})
+    snapshot = (job.get("deco") or {}).get("scene_style")
+    context = context_for(timeline, {"text": headcopy_text[:2000]} if headcopy_text else job.get("headcopy"), snapshot, job_id)
+    for scene in context["scenes"]:
+        scene["media"] = f"/api/produce/mix/beatframe/{job_id}/{scene['beat_idx']}"
+    return {"context": context, "snapshot": snapshot}
 
 
 # 고정카피(헤드카피 후보) — 확정 대본에서 AI가 4개 뽑는다.

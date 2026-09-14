@@ -12,6 +12,7 @@ import subprocess
 import pytest
 
 PRODUCE_HTML = pathlib.Path(__file__).resolve().parents[1] / "static" / "produce.html"
+DECORATION_CATALOG = PRODUCE_HTML.with_name("scene-decoration-catalog.js")
 NODE = shutil.which("node")
 pytestmark = pytest.mark.skipif(NODE is None, reason="node 없음")
 
@@ -33,7 +34,8 @@ def _real_deps():
     # ★여기서 {script:'x'}를 발명하면 위 주석의 2026-07-17 사고를 그대로 되풀이하는 것이다.
     st = re.search(r"^const STATE = \{.*?\};", src, re.M)
     assert st, "STATE 선언을 못 찾았다 — suggestThumbTitles가 STATE.script를 읽는다"
-    return m.group(0) + "\n" + st.group(0) + "\n"
+    catalog = DECORATION_CATALOG.read_text(encoding="utf-8")
+    return "global.window = globalThis;\n" + catalog + "\n" + m.group(0) + "\n" + st.group(0) + "\n"
 
 
 def _slice_source():

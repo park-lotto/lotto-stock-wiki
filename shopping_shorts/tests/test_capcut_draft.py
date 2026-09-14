@@ -126,6 +126,29 @@ def test_assemble_folder_copies_assets_and_writes_draft(tmp_path):
     assert abs(draft["materials"]["videos"][0]["duration"] - 4_000_000) < 200_000
 
 
+def test_scene_style_export_puts_rendered_final_on_timeline_and_keeps_edit_tracks_disabled(tmp_path):
+    src = tmp_path / "src.mp4"; _mk_video(src, 4)
+    final = tmp_path / "final.mp4"; _mk_video(final, 1.6)
+    b0 = tmp_path / "b0.mp3"; _mk_audio(b0, 2.0)
+    b1 = tmp_path / "b1.mp3"; _mk_audio(b1, 1.5)
+    proj, _, _ = cd.assemble_draft_folder(
+        tmp_path / "drafts", "C:/cap/CapCut Drafts",
+        plan=_PLAN, timeline=_TIMELINE,
+        source_video_paths={"s0": str(src)}, tts_paths={0: str(b0), 1: str(b1)},
+        project_name="scene_style_j1", final_video=str(final),
+        deco={"scene_style": {"version": 1}})
+
+    draft = json.loads((proj / "draft_content.json").read_text(encoding="utf-8"))
+    materials = {m["id"]: m for m in draft["materials"]["videos"]}
+    visible = [s for t in draft["tracks"] for s in t["segments"] if s.get("visible")]
+    assert len(visible) == 1
+    assert materials[visible[0]["material_id"]]["path"].endswith("/final.mp4")
+    assert visible[0]["volume"] == 1.0
+    assert all(s.get("visible") is False and s.get("volume") == 0.0
+               for t in draft["tracks"] for s in t["segments"] if s is not visible[0])
+    assert abs(draft["duration"] - 1_600_000) < 200_000
+
+
 def test_missing_source_skips_video_but_keeps_audio_text():
     plan = {"beats": [{"beat_idx": 0, "role": "훅", "narration": "장면",
                        "primary": {"video_id": "gone", "start": 0.0, "end": 2.0}}]}

@@ -654,6 +654,37 @@ def build_draft(*, plan, timeline, source_video_paths, tts_paths, asset_paths,
     return draft, assets_to_copy
 
 
+def _promote_rendered_final(draft, capcut_path, dur_sec, canvas):
+    """장면꾸미기 완성본을 보이는 주 트랙으로 두고 편집 재료 트랙은 꺼 둔다."""
+    dur = _us(dur_sec)
+    if dur <= 0:
+        return False
+
+    for track in draft.get("tracks", []):
+        for seg in track.get("segments", []):
+            seg["visible"] = False
+            seg["volume"] = 0.0
+
+    cw, ch = canvas
+    sp, ca = _speed(), _canvas()
+    sc, ph, vs = _sound_channel_mapping(), _placeholder_info(), _vocal_separation()
+    for material, key in ((sp, "speeds"), (ca, "canvases"),
+                          (sc, "sound_channel_mappings"), (ph, "placeholder_infos"),
+                          (vs, "vocal_separations")):
+        draft["materials"][key].append(material)
+    vm = _video_material(capcut_path, "final", dur, cw, ch)
+    draft["materials"]["videos"].append(vm)
+    seg = _base_segment(vm["id"], 0, dur, source_start=0, source_dur=dur,
+                        volume=1.0,
+                        extra_refs=[sp["id"], ca["id"], sc["id"], ph["id"], vs["id"]])
+    track = {"id": _uid(), "type": "video", "attribute": 0, "flag": 0,
+             "name": "장면꾸미기 완성본", "is_default_name": False,
+             "segments": [seg]}
+    draft["tracks"].insert(0, track)
+    draft["duration"] = dur
+    return True
+
+
 def _skeleton(name, cw, ch, duration_us):
     """빈 draft 골격(0711 실측 기준). materials/tracks는 호출부가 채운다."""
     all_mat_keys = [
@@ -841,6 +872,9 @@ def assemble_draft_folder(out_root, base_abs, *, plan, timeline, source_video_pa
             _fdur = probe(final_video)
         except Exception:
             _fdur = 0.0
+        if (deco.get("scene_style") or {}) and _fdur > 0:
+            _promote_rendered_final(
+                draft, f"{base_abs}/{project}/final.mp4", _fdur, canvas)
         media.append({"path": f"{base_abs}/{project}/final.mp4", "name": "final.mp4",
                       "dur": _fdur, "w": cw2, "h": ch2})
     #   ③ 이미 복사해 둔 소스 원본·TTS도 보관함에 올려 바로 쓸 수 있게 한다.
