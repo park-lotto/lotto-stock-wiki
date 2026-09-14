@@ -10201,7 +10201,10 @@ async def api_lens_cn_keywords(request: Request, frame: UploadFile = File(None),
         _has = await asyncio.to_thread(_lens_has_script, source_url, None, source_shortcode)
     except Exception:                       # noqa: BLE001 — 판정 실패로 검색을 죽이지 않는다
         _has = False
-    return {"ok": True, "product": v.get("product", ""),
+    # ★제품명은 **대본이 있을 때만** 내려준다(2026-09-14 사장님 "대본분석 안 눌렀는데
+    #   대본이 말하는 제품이라고 뜬다"). 대본이 없으면 모델이 썸네일만 보고 지은 짐작인데,
+    #   화면은 이 값을 「📝 대본이 말하는 제품」·「✅ 대본의 제품」으로 그린다.
+    return {"ok": True, "product": v.get("product", "") if _has else "",
             "candidates": v.get("candidates", []),
             "has_source": _has}
 
