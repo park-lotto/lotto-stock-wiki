@@ -462,7 +462,15 @@ function freezeCuts(i){
   delete PHRASE_SYNC[i]; delete CUTS[i];   // 켜진 상태의 컷을 뜨려고 잠깐 켠다
   const clips = planClips(lists[i] || [], beatDur(i), STRETCH[i], i);
   if (was === false) PHRASE_SYNC[i] = false;
-  CUTS[i] = clips.map(c => ({seg_id: c.seg_id, dur: _r2(c.dur)}));
+  // 같은 장면이 연달아 나온 컷은 한 컷으로 합친다 — 화면은 같고(이어서 튼다) 경계만 준다.
+  //   (고객 제보 2026-09-14: 장면 2개·구절 3개면 1,1,2로 얼어 "1번이 두 조각"이 됐다)
+  const merged = [];
+  for (const c of clips){
+    const last = merged[merged.length - 1];
+    if (last && last.seg_id === c.seg_id) last.dur = _r2(last.dur + c.dur);
+    else merged.push({seg_id: c.seg_id, dur: _r2(c.dur)});
+  }
+  CUTS[i] = merged;
   delete SLOW[i];
 }
 // ② 경계 끌기 — k번 컷을 sec초로. 뒤 컷(마지막이면 없음)이 차이를 받는다.
@@ -512,7 +520,12 @@ function planClips(segIds, ttsDur, spread, beatIdx){
   if (!segments.length) return clips;
   // ★구절 맞춤을 끈 칸은 얼린 컷 그대로(위 CUTS 규칙). 얼린 게 없으면(옛 저장본) 지금 떠서 얼린다.
   if (beatIdx != null && !phraseSyncOn(beatIdx) && typeof lists !== 'undefined' && lists[beatIdx] === segIds){
-    if (!CUTS[beatIdx]) freezeCuts(beatIdx);
+    // 옛 저장본(끔인데 얼린 컷 없음) = **장면마다 한 컷, 자기 길이대로**. 구절 화면으로 뜨면
+    //   구절 맞춤을 안 쓰는 고객 화면이 통째로 바뀐다(고객 제보 2026-09-14). 넘치면 syncCuts가
+    //   뒤에서 줄이고, 모자라면 안내가 뜬다.
+    if (!CUTS[beatIdx]) CUTS[beatIdx] = segIds.filter(id => DATA.segments[id])
+      .map(id => ({seg_id: id, dur: _r2((typeof effLen === 'function' ? effLen(id) : 0)
+                                        || (DATA.segments[id].end - DATA.segments[id].start))}));
     const fc = frozenClips(beatIdx, segIds, ttsDur);
     if (fc) return fc;
   }
