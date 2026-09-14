@@ -397,7 +397,7 @@ function phraseSyncOn(i){ return PHRASE_SYNC[i] !== false; }
 // ══ 구절 맞춤을 끈 칸 = "그 화면 그대로" 규칙(2026-09-14 사장님 확정) ══════════════
 //   규칙은 이것뿐이다 — 계산으로 길이를 다시 나누지 않는다.
 //   ① 끄는 순간 켜져 있던 컷(장면·시작·길이)을 CUTS[i]에 그대로 얼린다
-//   ② 경계를 끌면 **양옆 두 컷만** 바뀐다(하한 0.3초)
+//   ② 컷 앞·뒤 가장자리를 끌면 **그 컷만** 바뀐다(하한 0.3초, 늘리기는 빈 시간까지 — 뒤 컷이 밀린다)
 //   ③ 장면을 빼면 그 컷 시간은 **앞 컷**이 받는다(첫 컷이면 뒤 컷)
 //   ④ 장면을 넣으면 **마지막 컷을 반으로** 나눠 갖는다
 //   ⑤ 음성이 짧아지면 **마지막 컷**이 줄고, 모자라면 **알아서 안 채운다** —
@@ -473,20 +473,18 @@ function freezeCuts(i){
   CUTS[i] = merged;
   delete SLOW[i];
 }
-// ② 경계 끌기 — k번 컷을 sec초로. 뒤 컷(마지막이면 없음)이 차이를 받는다.
+// ② 컷 길이 끌기 — **그 컷만** sec초로 바뀐다(2026-09-14 사장님 "다른 조각의 길이에 영향을 주면
+//   안 되고 전체 길이를 땡겨오는 걸로"). 늘리면 빈 시간에서 가져오고(뒤 컷들이 밀린다),
+//   빈 시간을 다 쓰면 거기서 멈춘다. 줄이면 그만큼 빈 시간이 생긴다(안내가 뜬다).
+function cutMaxSec(i, k){
+  const cuts = CUTS[i]; if (!cuts || !cuts[k]) return 0;
+  return cuts[k].dur + Math.max(0, beatDur(i) - cutsSum(i));
+}
 function dragCut(i, k, sec){
   const cuts = CUTS[i]; if (!cuts || !cuts[k]) return;
   const slow = SLOW[i] > 1 ? SLOW[i] : 1;
   delete SLOW[i];                       // 손대면 느리게는 풀린다 — 다시 고르게 한다
-  let d = Math.max(CUT_MIN, sec / slow);
-  const nb = cuts[k + 1];
-  if (nb){
-    const room = cuts[k].dur + nb.dur - CUT_MIN;
-    d = Math.min(d, room);
-    nb.dur = _r2(cuts[k].dur + nb.dur - d);
-  } else {
-    d = Math.min(d, beatDur(i) - (cutsSum(i) - cuts[k].dur));   // 음성 끝을 넘지 않는다
-  }
+  const d = Math.min(cutMaxSec(i, k), Math.max(CUT_MIN, sec / slow));
   cuts[k].dur = _r2(d);
   (typeof render === 'function' && render());
   if (typeof saveWork === 'function') { try { saveWork(); } catch (e) {} }
