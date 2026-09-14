@@ -258,11 +258,8 @@ body.tight .tbsegs{display:none}          /* 촘촘히에선 글자를 걷는다
 .tbtools button.danger:hover{background:var(--warn);color:#3a2a08}
 .tbtools label{display:flex;align-items:center;gap:3px;cursor:pointer}
 .tbeat .h{display:flex;align-items:baseline;gap:7px;font-size:12.5px;margin-bottom:6px}
-/* ★머리글은 칸 폭을 정하지 않는다(2026-09-14 사장님 "구절 맞춤 켤 때랑 끌 때랑 사이즈가 바뀐다").
-   켜면 [전체 늘리기]·"N초는 안 나와요"가 붙어 머리글이 길어지고, 그 길이만큼 칸이 넓어졌다.
-   width:0 + min-width:100% = 폭은 아래 카드·타임라인이 정하고, 머리글은 넘치면 줄바꿈한다. */
-.tbeat > .h{width:0;min-width:100%;flex-wrap:wrap;row-gap:3px}
-.tbeat > .cutgap{width:0;min-width:100%;box-sizing:border-box}   /* 빈 시간 안내도 칸 폭을 못 늘린다 */
+/* (2026-09-14 저녁 되돌림) 머리글이 칸 폭을 못 정하게 했더니 칸이 너무 좁아졌다 — 사장님 "예전처럼".
+   머리글·안내 줄이 다시 칸 최소 폭 역할을 한다. */
 .tbeat .h b{font-size:13.5px}
 .tbeat .h .d{color:var(--dim);font-family:ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums}
 /* ★자막 길이 짝표기 색 — 담은 재료(왼쪽)가 자막(오른쪽)을 채웠나로 갈린다.
