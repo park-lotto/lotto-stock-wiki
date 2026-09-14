@@ -67,7 +67,11 @@ def _ssul_channels(store, prev_items):
     if urls:
         from shopping_shorts.youtube_client import channels_from_video_urls
         out |= {ch["channel_id"] for ch in channels_from_video_urls(urls)}
-    return {c for c in out if str(c).startswith("UC")}
+    # 🚫 차단 채널은 긁지도 않는다(2026-09-14 실측: 대상 504 중 52개가 차단 채널).
+    #   화면은 /api/reference가 걸러 주지만, 긁으면 쿼터만 쓰고 DB에 다시 쌓인다.
+    #   removed_usernames는 소문자 — 비교도 소문자로.
+    blocked = store.removed_usernames()
+    return {c for c in out if str(c).startswith("UC") and str(c).lower() not in blocked}
 
 
 def _main_collect_running():
