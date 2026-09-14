@@ -525,7 +525,7 @@ def _is_direct_video(u):
         return True
     # 알려진 영상 CDN 호스트(샤오홍슈=xhscdn, 도우인=zjcdn/douyinvod, 인스타·쓰레드=
     # cdninstagram — 쓰레드 영상도 이 CDN에서 나온다). 페이지 도메인은 제외.
-    return any(h in u for h in ("xhscdn.com", "sns-video", "zjcdn.com", "douyinvod.com",
+    return any(h in u for h in ("xhscdn.com", "rednotecdn.com", "sns-video", "zjcdn.com", "douyinvod.com",
                                 "cdninstagram.com"))
 
 

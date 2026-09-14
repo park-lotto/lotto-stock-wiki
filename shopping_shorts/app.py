@@ -1466,8 +1466,8 @@ def api_saved(request: Request):
     return {"ok": True, "saved": sorted(store.saved_set(customer_id=_cid(request)))}
 
 
-def _enqueue_prewarm(store, shortcode, url, *, caption="", customer_id="0", category=None,
-                     manual=False):
+def _enqueue_prewarm(store, shortcode, url, *, caption="", customer_id="0", video_url="",
+                     category=None, manual=False):
     """담긴 영상의 사전분석(추출+구조분석)을 워커 큐에 걸어 제작소 1단계 로딩을 없앤다
     (2026-07-30, 설계 `2026-07-29-추출속도-3종묶음-design.md` §2①).
 
@@ -1491,6 +1491,7 @@ def _enqueue_prewarm(store, shortcode, url, *, caption="", customer_id="0", cate
         if store.queue_has_pending("prewarm", "shortcode", shortcode):
             return False
         store.enqueue("prewarm", {"shortcode": shortcode, "url": url, "caption": caption,
+                                  "video_url": video_url or "",
                                   "customer_id": str(customer_id), "category": category,
                                   # 사람이 직접 누른 분석은 일일 상한을 건너뛴다(2026-08-28).
                                   "manual": bool(manual)})
@@ -9016,6 +9017,8 @@ _ALLOWED_VIDEO_HOSTS = ("cdninstagram.com", "fbcdn.net",
                         "tiktokcdn.com", "tiktokcdn-us.com", "tiktokcdn-eu.com",
                         "tiktokv.com",
                         "douyinvod.com", "douyinpic.com",
+                        # 샤오홍슈 신·구 mp4 CDN(2026-09-14 라이브 실측).
+                        "rednotecdn.com", "xhscdn.com",
                         # 핀터레스트 mp4(v1.pinimg.com) — 카드 인라인 재생용(2026-08-28).
                         # 실측: Referer만 있으면 200이라 프록시를 타면 그대로 흐른다.
                         "pinimg.com",
@@ -9362,6 +9365,8 @@ def api_video(url: str):
             ref = "https://www.tiktok.com/"
         elif "douyin" in url:
             ref = "https://www.douyin.com/"
+        elif "rednotecdn" in url or "xhscdn" in url:
+            ref = "https://www.rednote.com/"
         r = requests.get(url, timeout=30, headers={
             "User-Agent": "Mozilla/5.0",
             "Referer": ref,
@@ -15562,7 +15567,8 @@ def api_grab(request: Request, background_tasks: BackgroundTasks,
     #   찍힌 실패가 계속 떠 있었다). 사장님이 다시 담는 건 '다시 해보라'는 뜻이다.
     store.autoload_reset(sc)
     background_tasks.add_task(_enrich_grab, url, sc, cid)   # 썸네일·조회수 등 보강
-    _enqueue_prewarm(Store(DB_PATH), sc, url, caption=(title or "")[:200], customer_id=cid)
+    _enqueue_prewarm(Store(DB_PATH), sc, url, caption=(title or "")[:200], customer_id=cid,
+                     video_url=vurl)
     return _grab_popup_html(True, "영상 즐겨찾기에 담겼어요!" if added else "이미 담겨 있어요",
                             f"{platform} · 왼쪽 ⭐영상 즐겨찾기에서 확인")
 
@@ -17088,7 +17094,8 @@ def api_basket_analyze(request: Request, body: dict):
             skipped += 1
             continue
         _enqueue_prewarm(store, c, url, caption=it.get("caption") or "",
-                         customer_id=str(cid), manual=True)
+                         customer_id=str(cid), video_url=it.get("video_url") or "",
+                         manual=True)
         out[c] = "queued"
         queued += 1
     return {"ok": True, "queued": queued, "skipped": skipped, "items": out,
@@ -17209,8 +17216,8 @@ def _is_grabbable_media(u):
 # 담기가 보낸 영상 주소로 받아들일 CDN(도우인=zjcdn/douyinvod, 샤오홍슈=xhscdn).
 # ★cdninstagram = 인스타·쓰레드 공용(2026-08-17 실측: 쓰레드 mp4가 이 CDN이다).
 #   여기 없으면 _is_grabbable_media가 False를 내고 영상 주소가 조용히 버려진다.
-_GRAB_MEDIA_HOSTS = ("zjcdn.com", "douyinvod.com", "xhscdn.com", "douyinpic.com",
-                     "cdninstagram.com")
+_GRAB_MEDIA_HOSTS = ("zjcdn.com", "douyinvod.com", "xhscdn.com", "rednotecdn.com",
+                     "douyinpic.com", "cdninstagram.com")
 
 
 _AUTOLOAD_MAX_ATTEMPTS = 3      # shortcode당 자동추출 총 시도 횟수(넘으면 영구 스킵)
