@@ -12127,7 +12127,7 @@ def _biz_block():
 
 # 사업자정보 기본값(사장님 제공 2026-09-14). admin 설정(biz_*)에 값이 있으면 그게 우선.
 _BIZ_DEFAULTS = {
-    "biz_name": "주식회사 메이커스랩스",
+    "biz_name": "주식회사 메이커스랩",
     "biz_owner": "정기영",
     "biz_regno": "104-87-04013",
     "biz_sales_no": "",
